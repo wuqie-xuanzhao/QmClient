@@ -2835,6 +2835,80 @@ void CHud::RenderSwitchCountdowns()
 
 		AnimState.m_aWasVisible[i] = ShouldShow;
 	}
+	//render team in freeze text
+	if(true)
+	{
+		int numInTeam = 0;
+		int numFrozen = 0;
+		int localTeamID = m_pClient->m_Teams.Team(m_pClient->m_Snap.m_LocalClientID);
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(!m_pClient->m_Snap.m_paPlayerInfos[i])
+				continue;
+
+			if(m_pClient->m_Teams.Team(i) == localTeamID)
+			{
+				numInTeam++;
+				if(m_pClient->m_aClients[i].m_RenderCur.m_Weapon == 5)
+					numFrozen++;
+			}
+			//numFrozen++;
+		}
+
+		char aBuf[64];
+		//str_format(aBuf, sizeof(aBuf), "%d / %d", m_pClient->m_Teams.Team(0), m_pClient->m_Teams.Team(localTeamID));
+		str_format(aBuf, sizeof(aBuf), "%d / %d", numInTeam - numFrozen, numInTeam);
+		//str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Teams.Team(1));
+		TextRender()->Text(0, m_Width / 2 - TextRender()->TextWidth(0, 10, aBuf, -1, -1.0f) / 2, 12, 10, aBuf, -1.0f);
+	}
+	//render frozen tee display
+	if(true)
+	{
+		CTeeRenderInfo FreezeInfo;
+
+		int Skin = m_pClient->m_Skins.Find("x_ninja");
+		if(Skin != -1)
+		{
+			const CSkin *pSkin = m_pClient->m_Skins.Get(Skin);
+			FreezeInfo.m_OriginalRenderSkin = pSkin->m_OriginalSkin;
+			FreezeInfo.m_ColorableRenderSkin = pSkin->m_ColorableSkin;
+			FreezeInfo.m_BloodColor = pSkin->m_BloodColor;
+			FreezeInfo.m_SkinMetrics = pSkin->m_Metrics;
+			FreezeInfo.m_ColorBody = ColorRGBA(1, 1, 1);
+			FreezeInfo.m_ColorFeet = ColorRGBA(1, 1, 1);
+			FreezeInfo.m_CustomColoredSkin = false;
+		}
+
+		int numInTeam = 0;
+		int numFrozen = 0;
+		float progressiveOffset = 0.0f;
+		int localTeamID = m_pClient->m_Teams.Team(m_pClient->m_Snap.m_LocalClientID);
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(!m_pClient->m_Snap.m_paPlayerInfos[i])
+				continue;
+
+			if(m_pClient->m_Teams.Team(i) == localTeamID)
+			{
+				numInTeam++;
+				CTeeRenderInfo TeeInfo = m_pClient->m_aClients[i].m_RenderInfo;
+				if(m_pClient->m_aClients[i].m_RenderCur.m_Weapon == 5)
+				{
+					TeeInfo = FreezeInfo;
+				}
+
+				TeeInfo.m_Size = 12.0f;
+
+				CAnimState *pIdleState = CAnimState::GetIdle();
+				vec2 OffsetToMid;
+				RenderTools()->GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
+				vec2 TeeRenderPos(m_Width/2 + 35.0f + progressiveOffset, 8.0f);
+
+				RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
+				progressiveOffset += 12.0f;
+			}
+		}
+	}
 }
 
 void CHud::RenderConnectionWarning()
