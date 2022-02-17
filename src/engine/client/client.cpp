@@ -2099,7 +2099,7 @@ static CServerCapabilities GetServerCapabilities(int Version, int Flags, bool Si
 	Result.m_AnyPlayerFlag = !Sixup;
 	Result.m_PingEx = false;
 	Result.m_AllowDummy = true;
-	Result.m_SyncWeaponInput = false;
+	Result.m_SyncWeaponInput = true;
 	if(Version >= 1)
 	{
 		Result.m_ChatTimeoutCode = Flags & SERVERCAPFLAG_CHATTIMEOUTCODE;
@@ -6584,50 +6584,6 @@ int CClient::PredictionMargin() const
 	const float ConnectionMargin = BaseMargin + ExcessLatencyMargin + JitterMargin + (ConnectionProblems ? 10.0f : 0.0f);
 
 	return std::clamp(round_to_int(ConnectionMargin), 1, 300);
-}
-
-int CClient::UdpConnectivity(int NetType)
-{
-	static const int NETTYPES[2] = {NETTYPE_IPV6, NETTYPE_IPV4};
-	int Connectivity = CONNECTIVITY_UNKNOWN;
-	for(int PossibleNetType : NETTYPES)
-	{
-		if((NetType & PossibleNetType) == 0)
-		{
-			continue;
-		}
-		NETADDR GlobalUdpAddr;
-		int NewConnectivity;
-		switch(m_aNetClient[CONN_MAIN].GetConnectivity(PossibleNetType, &GlobalUdpAddr))
-		{
-		case CONNECTIVITY::UNKNOWN:
-			NewConnectivity = CONNECTIVITY_UNKNOWN;
-			break;
-		case CONNECTIVITY::CHECKING:
-			NewConnectivity = CONNECTIVITY_CHECKING;
-			break;
-		case CONNECTIVITY::UNREACHABLE:
-			NewConnectivity = CONNECTIVITY_UNREACHABLE;
-			break;
-		case CONNECTIVITY::REACHABLE:
-			NewConnectivity = CONNECTIVITY_REACHABLE;
-			break;
-		case CONNECTIVITY::ADDRESS_KNOWN:
-			GlobalUdpAddr.port = 0;
-			if(m_HaveGlobalTcpAddr && NetType == (int)m_GlobalTcpAddr.type && net_addr_comp(&m_GlobalTcpAddr, &GlobalUdpAddr) != 0)
-			{
-				NewConnectivity = CONNECTIVITY_DIFFERING_UDP_TCP_IP_ADDRESSES;
-				break;
-			}
-			NewConnectivity = CONNECTIVITY_REACHABLE;
-			break;
-		default:
-			log_warn("client", "Invalid connectivity value");
-			return CONNECTIVITY_UNKNOWN;
-		}
-		Connectivity = std::max(Connectivity, NewConnectivity);
-	}
-	return Connectivity;
 }
 
 static bool ViewLinkImpl(const char *pLink)
