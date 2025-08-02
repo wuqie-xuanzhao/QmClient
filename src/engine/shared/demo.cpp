@@ -1016,19 +1016,19 @@ void CDemoPlayer::Play()
 	}
 }
 
-int CDemoPlayer::SeekPercent(float Percent)
+bool CDemoPlayer::SeekPercent(float Percent)
 {
 	int WantedTick = m_Info.m_Info.m_FirstTick + round_truncate((m_Info.m_Info.m_LastTick - m_Info.m_Info.m_FirstTick) * Percent);
 	return SetPos(WantedTick);
 }
 
-int CDemoPlayer::SeekTime(float Seconds)
+bool CDemoPlayer::SeekTime(float Seconds)
 {
 	int WantedTick = m_Info.m_Info.m_CurrentTick + round_truncate(Seconds * (float)SERVER_TICK_SPEED);
 	return SetPos(WantedTick);
 }
 
-int CDemoPlayer::SeekTick(ETickOffset TickOffset)
+bool CDemoPlayer::SeekTick(ETickOffset TickOffset)
 {
 	int WantedTick;
 	switch(TickOffset)
@@ -1052,10 +1052,10 @@ int CDemoPlayer::SeekTick(ETickOffset TickOffset)
 	return SetPos(WantedTick + 1);
 }
 
-int CDemoPlayer::SetPos(int WantedTick)
+bool CDemoPlayer::SetPos(int WantedTick)
 {
 	if(!m_File)
-		return -1;
+		return false;
 
 	// TODO: Early exit when WantedTick > m_Info.m_Info.m_CurrentTick && WantedTick <= m_Info.m_NextTick with https://github.com/ddnet/ddnet/issues/11681
 
@@ -1103,7 +1103,7 @@ int CDemoPlayer::SetPos(int WantedTick)
 		if(io_seek(m_File, m_vKeyFrames[KeyFrame].m_Filepos, IOSEEK_START) != 0)
 		{
 			Stop("Error seeking keyframe position");
-			return -1;
+			return false;
 		}
 		m_Info.m_NextTick = -1;
 		m_Info.m_Info.m_CurrentTick = -1;
@@ -1116,13 +1116,13 @@ int CDemoPlayer::SetPos(int WantedTick)
 		DoTick();
 		if(!IsPlaying())
 		{
-			return -1;
+			return false;
 		}
 	}
 
 	Play();
 
-	return 0;
+	return true;
 }
 
 void CDemoPlayer::SetSpeed(float Speed)
