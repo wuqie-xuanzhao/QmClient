@@ -732,7 +732,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				char aBuf[128];
 				str_format(aBuf, sizeof(aBuf), Localize("No local servers found (ports %d-%d)"), IServerBrowser::LAN_PORT_BEGIN, IServerBrowser::LAN_PORT_END);
 				Ui()->DoLabel(&Label, aBuf, 16.0f, TEXTALIGN_MC);
-
 				static CButtonContainer s_StartLocalServerButton;
 				if(DoButton_Menu(&s_StartLocalServerButton, Localize("Start and connect to local server"), 0, &Button))
 				{
