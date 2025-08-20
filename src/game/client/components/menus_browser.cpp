@@ -741,9 +741,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 						RefreshBrowserTab(true);
 						Connect("localhost");
 					}
-					else
+					else if(GameClient()->m_LocalServer.RunServer({}))
 					{
-						GameClient()->m_LocalServer.RunServer({});
 						Connect("localhost");
 					}
 				}
@@ -3812,6 +3811,11 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 		break;
 	case PAGE_LAN:
 		GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_BROWSER_LAN);
+		if(m_ForceRefreshLanPage)
+		{
+			RefreshBrowserTab(true);
+			m_ForceRefreshLanPage = false;
+		}
 		break;
 	case PAGE_FAVORITES:
 	case PAGE_FAVORITE_MAPS:
@@ -3825,7 +3829,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 		GameClient()->m_MenuBackground.ChangePosition(g_Config.m_UiPage - PAGE_FAVORITE_COMMUNITY_1 + CMenuBackground::POS_BROWSER_CUSTOM0);
 		break;
 	default:
-		dbg_assert_failed("ui_page invalid for RenderServerbrowser");
+		dbg_assert_failed("ui_page invalid for RenderServerbrowser: %d", g_Config.m_UiPage);
 	}
 
 	// clang-format off
