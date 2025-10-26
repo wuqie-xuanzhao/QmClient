@@ -497,7 +497,7 @@ private:
 	int m_CurrentChunk;
 	int m_ClientId;
 	CNetPacketConstruct m_Data;
-};
+ };
 
 // server side
 class CNetServer
