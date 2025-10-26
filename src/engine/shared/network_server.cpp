@@ -943,10 +943,6 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 {
 	while(true)
 	{
-		NETADDR Addr;
-		unsigned char aFakeNetData[NET_MAX_PACKETSIZE];
-		int FakeNetBytes = 0;
-
 		// check for a chunk
 		if(m_RecvUnpacker.FetchChunk(pChunk))
 			return 1;
@@ -954,6 +950,9 @@ int CNetServer::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken)
 			return 1;
 
 		// TODO: empty the recvinfo
+		NETADDR Addr;
+		unsigned char aFakeNetData[NET_MAX_PACKETSIZE];
+		int FakeNetBytes = 0;
 		unsigned char *pData;
 		int Bytes;
 		if(FakeNetPopReadyPacket(&Addr, aFakeNetData, &FakeNetBytes))
