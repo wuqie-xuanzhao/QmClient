@@ -217,7 +217,7 @@ void CEditor::DeleteSelectedLayer()
 
 void CEditor::TestMapLocally()
 {
-	const char *pFilenameNoMaps = str_startswith(m_aFilename, "maps/");
+	const char *pFilenameNoMaps = str_startswith(m_Map.m_aFilename, "maps/");
 	if(!pFilenameNoMaps)
 	{
 		ShowFileDialogError("该地图未保存在 maps/ 文件夹中。要在服务器上加载，必须保存到该目录。");

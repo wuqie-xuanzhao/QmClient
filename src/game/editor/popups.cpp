@@ -78,7 +78,6 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuFile(void *pContext, CUIRect Vie
 		else
 		{
 			pEditor->Reset();
-			pEditor->m_aFilename[0] = 0;
 		}
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
@@ -119,9 +118,9 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuFile(void *pContext, CUIRect Vie
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_SaveButton, "保存", 0, &Slot, BUTTONFLAG_LEFT, "按下[Ctrl+S] 保存当前地图."))
 	{
-		if(pEditor->m_aFilename[0] != '\0' && pEditor->m_ValidSaveFilename)
+		if(pEditor->m_Map.m_aFilename[0] != '\0' && pEditor->m_Map.m_ValidSaveFilename)
 		{
-			CallbackSaveMap(pEditor->m_aFilename, IStorage::TYPE_SAVE, pEditor);
+			CallbackSaveMap(pEditor->m_Map.m_aFilename, IStorage::TYPE_SAVE, pEditor);
 		}
 		else
 		{
@@ -143,7 +142,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuFile(void *pContext, CUIRect Vie
 	if(pEditor->DoButton_MenuItem(&s_SaveCopyButton, "保存副本", 0, &Slot, BUTTONFLAG_LEFT, "按下[Ctrl+Shift+Alt+S] 将当前地图另存为新名称."))
 	{
 		char aDefaultName[IO_MAX_PATH_LENGTH];
-		fs_split_file_extension(fs_filename(pEditor->m_aFilename), aDefaultName, sizeof(aDefaultName));
+		fs_split_file_extension(fs_filename(pEditor->m_Map.m_aFilename), aDefaultName, sizeof(aDefaultName));
 		pEditor->m_FileBrowser.ShowFileDialog(IStorage::TYPE_SAVE, CFileBrowser::EFileType::MAP, "保存地图", "保存副本", "maps", aDefaultName, CallbackSaveCopyMap, pEditor);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
@@ -2295,7 +2294,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEvent(void *pContext, CUIRect View, 
 		if(pEditor->DoButton_Editor(&s_CancelButton, "取消", 0, &Button, BUTTONFLAG_LEFT, nullptr))
 		{
 			if(pEditor->m_PopupEventType == POPEVENT_LOADDROP)
-				pEditor->m_aFilenamePending[0] = 0;
+				pEditor->m_aFilenamePendingLoad[0] = 0;
 
 			else if(pEditor->m_PopupEventType == POPEVENT_TILEART_BIG_IMAGE || pEditor->m_PopupEventType == POPEVENT_TILEART_MANY_COLORS)
 				pEditor->m_TileartImageInfo.Free();
@@ -2330,15 +2329,14 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEvent(void *pContext, CUIRect View, 
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_LOADDROP)
 		{
-			int Result = pEditor->Load(pEditor->m_aFilenamePending, IStorage::TYPE_ALL_OR_ABSOLUTE);
+			int Result = pEditor->Load(pEditor->m_aFilenamePendingLoad, IStorage::TYPE_ALL_OR_ABSOLUTE);
 			if(!Result)
-				dbg_msg("editor", "编辑指定地图文件“%s”失败", pEditor->m_aFilenamePending);
-			pEditor->m_aFilenamePending[0] = 0;
+				dbg_msg("editor", "编辑指定地图文件“%s”失败", pEditor->m_aFilenamePendingLoad);
+			pEditor->m_aFilenamePendingLoad[0] = 0;
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_NEW)
 		{
 			pEditor->Reset();
-			pEditor->m_aFilename[0] = 0;
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_PLACE_BORDER_TILES)
 		{
