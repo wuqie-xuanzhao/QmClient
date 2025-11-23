@@ -41,7 +41,7 @@ namespace
 
 	ivec2 MouseTile(CEditor *pEditor, const std::shared_ptr<CLayerTiles> &pLayer)
 	{
-		std::shared_ptr<CLayerGroup> pGroup = pEditor->GetSelectedGroup();
+		std::shared_ptr<CLayerGroup> pGroup = pEditor->Map()->SelectedGroup();
 		if(!pGroup || !pLayer)
 			return ivec2(0, 0);
 
@@ -317,7 +317,7 @@ void CEditorDrawingTools::FinishDrag(CEditor *pEditor, const std::pair<int, std:
 
 	if(Submitted)
 	{
-		std::shared_ptr<IEditorAction> pAction = std::make_shared<CEditorBrushDrawAction>(pEditor->Map(), pEditor->m_SelectedGroup);
+		std::shared_ptr<IEditorAction> pAction = std::make_shared<CEditorBrushDrawAction>(pEditor->Map(), pEditor->Map()->m_SelectedGroup);
 		if(!pAction->IsEmpty())
 			pEditor->Map()->m_EditorHistory.RecordAction(pAction, pActionName);
 	}
@@ -354,7 +354,7 @@ bool CEditorDrawingTools::HandleMapEditorInput(CEditor *pEditor, const std::pair
 		str_copy(pEditor->m_aTooltip, aTooltip);
 	}
 
-	if(Inside && pEditor->Ui()->CheckActiveItem(nullptr) && pEditor->Ui()->MouseButton(0) && !pEditor->m_QuadKnifeActive)
+	if(Inside && pEditor->Ui()->CheckActiveItem(nullptr) && pEditor->Ui()->MouseButton(0) && !pEditor->Map()->m_QuadKnife.m_Active)
 	{
 		pEditor->Ui()->SetActiveItem(this);
 		BeginDrag(pEditor, Tile.x, Tile.y, ActiveTool);
@@ -849,7 +849,7 @@ void CEditorDrawingTools::RenderPreview(CEditor *pEditor)
 	if(!m_Drawing || pEditor->m_ShowPicker)
 		return;
 
-	std::shared_ptr<CLayerGroup> pGroup = pEditor->GetSelectedGroup();
+	std::shared_ptr<CLayerGroup> pGroup = pEditor->Map()->SelectedGroup();
 	if(pGroup)
 		pGroup->MapScreen();
 

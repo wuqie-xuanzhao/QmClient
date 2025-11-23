@@ -209,7 +209,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupMenuTools(void *pContext, CUIRect Vi
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_BorderButton, "放置边框", 0, &Slot, BUTTONFLAG_LEFT, "使用选定层的索引为2的贴图向当前层添加两层宽的边框."))
 	{
-		std::shared_ptr<CLayerTiles> pT = std::static_pointer_cast<CLayerTiles>(pEditor->GetSelectedLayerType(0, LAYERTYPE_TILES));
+		std::shared_ptr<CLayerTiles> pT = std::static_pointer_cast<CLayerTiles>(pEditor->Map()->SelectedLayerType(0, LAYERTYPE_TILES));
 		if(pT && !pT->m_HasTele && !pT->m_HasSpeedup && !pT->m_HasSwitch && !pT->m_HasFront && !pT->m_HasTune)
 		{
 			pEditor->m_PopupEventType = POPEVENT_PLACE_BORDER_TILES;
@@ -607,13 +607,13 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 	static int s_DeleteButton = 0;
 
 	// don't allow deletion of game group
-	if(pEditor->Map()->m_pGameGroup != pEditor->GetSelectedGroup())
+	if(pEditor->Map()->m_pGameGroup != pEditor->Map()->SelectedGroup())
 	{
 		if(pEditor->DoButton_Editor(&s_DeleteButton, "删除组", 0, &Button, BUTTONFLAG_LEFT, "删除该组。"))
 		{
-			pEditor->Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionGroup>(pEditor->Map(), pEditor->m_SelectedGroup, true));
-			pEditor->Map()->DeleteGroup(pEditor->m_SelectedGroup);
-			pEditor->m_SelectedGroup = maximum(0, pEditor->m_SelectedGroup - 1);
+			pEditor->Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionGroup>(pEditor->Map(), pEditor->Map()->m_SelectedGroup, true));
+			pEditor->Map()->DeleteGroup(pEditor->Map()->m_SelectedGroup);
+			pEditor->Map()->m_SelectedGroup = maximum(0, pEditor->Map()->m_SelectedGroup - 1);
 			return CUi::POPUP_CLOSE_CURRENT;
 		}
 	}
@@ -671,7 +671,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 				else
 				{
 					// record undo
-					pEditor->Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(pEditor->Map(), pEditor->m_SelectedGroup, GameLayerIndex, "清理游戏图块", pGameLayer->m_TilesHistory));
+					pEditor->Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(pEditor->Map(), pEditor->Map()->m_SelectedGroup, GameLayerIndex, "清理游戏图块", pGameLayer->m_TilesHistory));
 				}
 				pGameLayer->ClearHistory();
 			}
@@ -680,7 +680,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 		}
 	}
 
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->Map()->m_pTeleLayer)
+	if(pEditor->Map()->SelectedGroup()->m_GameGroup && !pEditor->Map()->m_pTeleLayer)
 	{
 		// new tele layer
 		View.HSplitBottom(5.0f, &View, nullptr);
@@ -692,7 +692,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 		}
 	}
 
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->Map()->m_pSpeedupLayer)
+	if(pEditor->Map()->SelectedGroup()->m_GameGroup && !pEditor->Map()->m_pSpeedupLayer)
 	{
 		// new speedup layer
 		View.HSplitBottom(5.0f, &View, nullptr);
@@ -704,7 +704,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 		}
 	}
 
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->Map()->m_pTuneLayer)
+	if(pEditor->Map()->SelectedGroup()->m_GameGroup && !pEditor->Map()->m_pTuneLayer)
 	{
 		// new tune layer
 		View.HSplitBottom(5.0f, &View, nullptr);
@@ -716,7 +716,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 		}
 	}
 
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->Map()->m_pFrontLayer)
+	if(pEditor->Map()->SelectedGroup()->m_GameGroup && !pEditor->Map()->m_pFrontLayer)
 	{
 		// new front layer
 		View.HSplitBottom(5.0f, &View, nullptr);
@@ -728,7 +728,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 		}
 	}
 
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->Map()->m_pSwitchLayer)
+	if(pEditor->Map()->SelectedGroup()->m_GameGroup && !pEditor->Map()->m_pSwitchLayer)
 	{
 		// new Switch layer
 		View.HSplitBottom(5.0f, &View, nullptr);
@@ -768,34 +768,34 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 	}
 
 	// group name
-	if(!pEditor->GetSelectedGroup()->m_GameGroup)
+	if(!pEditor->Map()->SelectedGroup()->m_GameGroup)
 	{
 		View.HSplitBottom(5.0f, &View, nullptr);
 		View.HSplitBottom(12.0f, &View, &Button);
 		pEditor->Ui()->DoLabel(&Button, "名称:", 10.0f, TEXTALIGN_ML);
 		Button.VSplitLeft(40.0f, nullptr, &Button);
 		static CLineInput s_NameInput;
-		s_NameInput.SetBuffer(pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_aName, sizeof(pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_aName));
+		s_NameInput.SetBuffer(pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_aName, sizeof(pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_aName));
 		if(pEditor->DoEditBox(&s_NameInput, &Button, 10.0f))
 			pEditor->Map()->OnModify();
 	}
 
 	CProperty aProps[] = {
-		{"顺序", pEditor->m_SelectedGroup, PROPTYPE_INT, 0, (int)pEditor->Map()->m_vpGroups.size() - 1},
-		{"位置横", -pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_OffsetX, PROPTYPE_INT, -1000000, 1000000},
-		{"位置纵", -pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_OffsetY, PROPTYPE_INT, -1000000, 1000000},
-		{"视差横", pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ParallaxX, PROPTYPE_INT, -1000000, 1000000},
-		{"视差纵", pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ParallaxY, PROPTYPE_INT, -1000000, 1000000},
-		{"使用裁剪", pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_UseClipping, PROPTYPE_BOOL, 0, 1},
-		{"裁剪横", pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ClipX, PROPTYPE_INT, -1000000, 1000000},
-		{"裁剪纵", pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ClipY, PROPTYPE_INT, -1000000, 1000000},
-		{"裁剪宽", pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ClipW, PROPTYPE_INT, 0, 1000000},
-		{"裁剪高", pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ClipH, PROPTYPE_INT, 0, 1000000},
+		{"顺序", pEditor->Map()->m_SelectedGroup, PROPTYPE_INT, 0, (int)pEditor->Map()->m_vpGroups.size() - 1},
+		{"位置横", -pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_OffsetX, PROPTYPE_INT, -1000000, 1000000},
+		{"位置纵", -pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_OffsetY, PROPTYPE_INT, -1000000, 1000000},
+		{"视差横", pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ParallaxX, PROPTYPE_INT, -1000000, 1000000},
+		{"视差纵", pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ParallaxY, PROPTYPE_INT, -1000000, 1000000},
+		{"使用裁剪", pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_UseClipping, PROPTYPE_BOOL, 0, 1},
+		{"裁剪横", pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ClipX, PROPTYPE_INT, -1000000, 1000000},
+		{"裁剪纵", pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ClipY, PROPTYPE_INT, -1000000, 1000000},
+		{"裁剪宽", pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ClipW, PROPTYPE_INT, 0, 1000000},
+		{"裁剪高", pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ClipH, PROPTYPE_INT, 0, 1000000},
 		{nullptr},
 	};
 
 	// cut the properties that aren't needed
-	if(pEditor->GetSelectedGroup()->m_GameGroup)
+	if(pEditor->Map()->SelectedGroup()->m_GameGroup)
 		aProps[(int)EGroupProp::PROP_POS_X].m_pName = nullptr;
 
 	static int s_aIds[(int)EGroupProp::NUM_PROPS] = {0};
@@ -806,51 +806,51 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGroup(void *pContext, CUIRect View, 
 		pEditor->Map()->OnModify();
 	}
 
-	pEditor->Map()->m_LayerGroupPropTracker.Begin(pEditor->GetSelectedGroup().get(), Prop, State);
+	pEditor->Map()->m_LayerGroupPropTracker.Begin(pEditor->Map()->SelectedGroup().get(), Prop, State);
 
 	if(Prop == EGroupProp::PROP_ORDER)
 	{
-		pEditor->m_SelectedGroup = pEditor->Map()->MoveGroup(pEditor->m_SelectedGroup, NewVal);
+		pEditor->Map()->m_SelectedGroup = pEditor->Map()->MoveGroup(pEditor->Map()->m_SelectedGroup, NewVal);
 	}
 
 	// these can not be changed on the game group
-	if(!pEditor->GetSelectedGroup()->m_GameGroup)
+	if(!pEditor->Map()->SelectedGroup()->m_GameGroup)
 	{
 		if(Prop == EGroupProp::PROP_PARA_X)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ParallaxX = NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ParallaxX = NewVal;
 		}
 		else if(Prop == EGroupProp::PROP_PARA_Y)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ParallaxY = NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ParallaxY = NewVal;
 		}
 		else if(Prop == EGroupProp::PROP_POS_X)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_OffsetX = -NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_OffsetX = -NewVal;
 		}
 		else if(Prop == EGroupProp::PROP_POS_Y)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_OffsetY = -NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_OffsetY = -NewVal;
 		}
 		else if(Prop == EGroupProp::PROP_USE_CLIPPING)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_UseClipping = NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_UseClipping = NewVal;
 		}
 		else if(Prop == EGroupProp::PROP_CLIP_X)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ClipX = NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ClipX = NewVal;
 		}
 		else if(Prop == EGroupProp::PROP_CLIP_Y)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ClipY = NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ClipY = NewVal;
 		}
 		else if(Prop == EGroupProp::PROP_CLIP_W)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ClipW = NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ClipW = NewVal;
 		}
 		else if(Prop == EGroupProp::PROP_CLIP_H)
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->m_ClipH = NewVal;
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->m_ClipH = NewVal;
 		}
 	}
 
@@ -864,8 +864,8 @@ CUi::EPopupMenuFunctionResult CEditor::PopupLayer(void *pContext, CUIRect View, 
 	SLayerPopupContext *pPopup = (SLayerPopupContext *)pContext;
 	CEditor *pEditor = pPopup->m_pEditor;
 
-	std::shared_ptr<CLayerGroup> pCurrentGroup = pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup];
-	std::shared_ptr<CLayer> pCurrentLayer = pEditor->GetSelectedLayer(0);
+	std::shared_ptr<CLayerGroup> pCurrentGroup = pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup];
+	std::shared_ptr<CLayer> pCurrentLayer = pEditor->Map()->SelectedLayer(0);
 
 	if(!pCurrentLayer || !pCurrentGroup)
 		return CUi::POPUP_CLOSE_CURRENT;
@@ -898,8 +898,8 @@ CUi::EPopupMenuFunctionResult CEditor::PopupLayer(void *pContext, CUIRect View, 
 		static int s_DuplicationButton = 0;
 		if(pEditor->DoButton_Editor(&s_DuplicationButton, "复制层", 0, &DuplicateButton, BUTTONFLAG_LEFT, "创建所选层的相同副本."))
 		{
-			pEditor->Map()->m_vpGroups[pEditor->m_SelectedGroup]->DuplicateLayer(pEditor->m_vSelectedLayers[0]);
-			pEditor->Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionAddLayer>(pEditor->Map(), pEditor->m_SelectedGroup, pEditor->m_vSelectedLayers[0] + 1, true));
+			pEditor->Map()->m_vpGroups[pEditor->Map()->m_SelectedGroup]->DuplicateLayer(pEditor->Map()->m_vSelectedLayers[0]);
+			pEditor->Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionAddLayer>(pEditor->Map(), pEditor->Map()->m_SelectedGroup, pEditor->Map()->m_vSelectedLayers[0] + 1, true));
 			return CUi::POPUP_CLOSE_CURRENT;
 		}
 	}
@@ -923,8 +923,8 @@ CUi::EPopupMenuFunctionResult CEditor::PopupLayer(void *pContext, CUIRect View, 
 		View.HSplitBottom(10.0f, &View, nullptr);
 
 	CProperty aProps[] = {
-		{"组", pEditor->m_SelectedGroup, PROPTYPE_INT, 0, (int)pEditor->Map()->m_vpGroups.size() - 1},
-		{"顺序", pEditor->m_vSelectedLayers[0], PROPTYPE_INT, 0, (int)pCurrentGroup->m_vpLayers.size() - 1},
+		{"组", pEditor->Map()->m_SelectedGroup, PROPTYPE_INT, 0, (int)pEditor->Map()->m_vpGroups.size() - 1},
+		{"顺序", pEditor->Map()->m_vSelectedLayers[0], PROPTYPE_INT, 0, (int)pCurrentGroup->m_vpLayers.size() - 1},
 		{"细节", pCurrentLayer->m_Flags & LAYERFLAG_DETAIL, PROPTYPE_BOOL, 0, 1},
 		{nullptr},
 	};
@@ -948,18 +948,18 @@ CUi::EPopupMenuFunctionResult CEditor::PopupLayer(void *pContext, CUIRect View, 
 
 	if(Prop == ELayerProp::PROP_ORDER)
 	{
-		pEditor->SelectLayer(pCurrentGroup->MoveLayer(pEditor->m_vSelectedLayers[0], NewVal));
+		pEditor->Map()->SelectLayer(pCurrentGroup->MoveLayer(pEditor->Map()->m_vSelectedLayers[0], NewVal));
 	}
 	else if(Prop == ELayerProp::PROP_GROUP)
 	{
-		if(NewVal >= 0 && (size_t)NewVal < pEditor->Map()->m_vpGroups.size() && NewVal != pEditor->m_SelectedGroup)
+		if(NewVal >= 0 && (size_t)NewVal < pEditor->Map()->m_vpGroups.size() && NewVal != pEditor->Map()->m_SelectedGroup)
 		{
 			auto Position = std::find(pCurrentGroup->m_vpLayers.begin(), pCurrentGroup->m_vpLayers.end(), pCurrentLayer);
 			if(Position != pCurrentGroup->m_vpLayers.end())
 				pCurrentGroup->m_vpLayers.erase(Position);
 			pEditor->Map()->m_vpGroups[NewVal]->m_vpLayers.push_back(pCurrentLayer);
-			pEditor->m_SelectedGroup = NewVal;
-			pEditor->SelectLayer(pEditor->Map()->m_vpGroups[NewVal]->m_vpLayers.size() - 1);
+			pEditor->Map()->m_SelectedGroup = NewVal;
+			pEditor->Map()->SelectLayer(pEditor->Map()->m_vpGroups[NewVal]->m_vpLayers.size() - 1);
 		}
 	}
 	else if(Prop == ELayerProp::PROP_HQ)
@@ -976,12 +976,13 @@ CUi::EPopupMenuFunctionResult CEditor::PopupLayer(void *pContext, CUIRect View, 
 
 CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, bool Active)
 {
-	CEditor *pEditor = static_cast<CEditor *>(pContext);
-	std::vector<CQuad *> vpQuads = pEditor->GetSelectedQuads();
-	if(pEditor->m_SelectedQuadIndex < 0 || pEditor->m_SelectedQuadIndex >= (int)vpQuads.size())
+	CQuadPopupContext *pQuadPopupContext = static_cast<CQuadPopupContext *>(pContext);
+	CEditor *pEditor = pQuadPopupContext->m_pEditor;
+	std::vector<CQuad *> vpQuads = pEditor->Map()->SelectedQuads();
+	if(!in_range<int>(pQuadPopupContext->m_SelectedQuadIndex, 0, vpQuads.size() - 1))
 		return CUi::POPUP_CLOSE_CURRENT;
-	CQuad *pCurrentQuad = vpQuads[pEditor->m_SelectedQuadIndex];
-	std::shared_ptr<CLayerQuads> pLayer = std::static_pointer_cast<CLayerQuads>(pEditor->GetSelectedLayerType(0, LAYERTYPE_QUADS));
+	CQuad *pCurrentQuad = vpQuads[pQuadPopupContext->m_SelectedQuadIndex];
+	std::shared_ptr<CLayerQuads> pLayer = std::static_pointer_cast<CLayerQuads>(pEditor->Map()->SelectedLayerType(0, LAYERTYPE_QUADS));
 
 	CUIRect Button;
 
@@ -993,7 +994,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 		if(pLayer)
 		{
 			pEditor->Map()->OnModify();
-			pEditor->DeleteSelectedQuads();
+			pEditor->Map()->DeleteSelectedQuads();
 		}
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
@@ -1006,7 +1007,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 		static int s_AspectRatioButton = 0;
 		if(pEditor->DoButton_Editor(&s_AspectRatioButton, "纵横比", 0, &Button, BUTTONFLAG_LEFT, "根据其图像的纵横比调整当前方块的大小."))
 		{
-			pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->m_vSelectedQuads);
+			pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->Map()->m_vSelectedQuads);
 			for(auto &pQuad : vpQuads)
 			{
 				int Top = pQuad->m_aPoints[0].y;
@@ -1047,7 +1048,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 	static int s_CenterButton = 0;
 	if(pEditor->DoButton_Editor(&s_CenterButton, "居中枢轴", 0, &Button, BUTTONFLAG_LEFT, "将当前方块的枢轴点居中."))
 	{
-		pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->m_vSelectedQuads);
+		pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->Map()->m_vSelectedQuads);
 		int Top = pCurrentQuad->m_aPoints[0].y;
 		int Left = pCurrentQuad->m_aPoints[0].x;
 		int Bottom = pCurrentQuad->m_aPoints[0].y;
@@ -1078,7 +1079,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 	static int s_AlignButton = 0;
 	if(pEditor->DoButton_Editor(&s_AlignButton, "对齐", 0, &Button, BUTTONFLAG_LEFT, "对齐方块点的坐标."))
 	{
-		pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->m_vSelectedQuads);
+		pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->Map()->m_vSelectedQuads);
 		for(auto &pQuad : vpQuads)
 		{
 			for(int k = 1; k < 4; k++)
@@ -1098,7 +1099,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 	static int s_Button = 0;
 	if(pEditor->DoButton_Editor(&s_Button, "方形化", 0, &Button, BUTTONFLAG_LEFT, "将当前方块调整为正方形."))
 	{
-		pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->m_vSelectedQuads);
+		pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->Map()->m_vSelectedQuads);
 		for(auto &pQuad : vpQuads)
 		{
 			int Top = pQuad->m_aPoints[0].y;
@@ -1138,8 +1139,8 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 	static int s_SliceButton = 0;
 	if(pEditor->DoButton_Editor(&s_SliceButton, "切割", 0, &Button, BUTTONFLAG_LEFT, "启用方块刀模式."))
 	{
-		pEditor->m_QuadKnifeCount = 0;
-		pEditor->m_QuadKnifeActive = true;
+		pEditor->Map()->m_QuadKnife.m_Count = 0;
+		pEditor->Map()->m_QuadKnife.m_Active = true;
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
 
@@ -1160,7 +1161,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 		for(CQuad *pQuad : vpQuads)
 			s_vOriginalScalePoints.push_back(QuadPoints(pQuad));
 		if(pLayer)
-			pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->m_vSelectedQuads);
+			pEditor->Map()->m_QuadTracker.BeginQuadTrack(pLayer, pEditor->Map()->m_vSelectedQuads);
 	}
 	if(ScaleResult.m_State != EEditState::NONE && !s_vOriginalScalePoints.empty())
 	{
@@ -1179,7 +1180,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 
 	const int NumQuads = pLayer ? (int)pLayer->m_vQuads.size() : 0;
 	CProperty aProps[] = {
-		{"顺序", pEditor->m_vSelectedQuads[pEditor->m_SelectedQuadIndex], PROPTYPE_INT, 0, NumQuads},
+		{"顺序", pEditor->Map()->m_vSelectedQuads[pQuadPopupContext->m_SelectedQuadIndex], PROPTYPE_INT, 0, NumQuads},
 		{"位置横", fx2i(pCurrentQuad->m_aPoints[4].x), PROPTYPE_INT, -1000000, 1000000},
 		{"位置纵", fx2i(pCurrentQuad->m_aPoints[4].y), PROPTYPE_INT, -1000000, 1000000},
 		{"位置包络线", pCurrentQuad->m_PosEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
@@ -1194,7 +1195,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 	auto [State, Prop] = pEditor->DoPropertiesWithState<EQuadProp>(&View, aProps, s_aIds, &NewVal);
 	if(Prop != EQuadProp::PROP_NONE && (State == EEditState::START || State == EEditState::ONE_GO))
 	{
-		pEditor->Map()->m_QuadTracker.BeginQuadPropTrack(pLayer, pEditor->m_vSelectedQuads, Prop);
+		pEditor->Map()->m_QuadTracker.BeginQuadPropTrack(pLayer, pEditor->Map()->m_vSelectedQuads, Prop);
 	}
 
 	const float OffsetX = i2fx(NewVal) - pCurrentQuad->m_aPoints[4].x;
@@ -1202,8 +1203,8 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 
 	if(Prop == EQuadProp::PROP_ORDER && pLayer)
 	{
-		const int QuadIndex = pLayer->SwapQuads(pEditor->m_vSelectedQuads[pEditor->m_SelectedQuadIndex], NewVal);
-		pEditor->m_vSelectedQuads[pEditor->m_SelectedQuadIndex] = QuadIndex;
+		const int QuadIndex = pLayer->SwapQuads(pEditor->Map()->m_vSelectedQuads[pQuadPopupContext->m_SelectedQuadIndex], NewVal);
+		pEditor->Map()->m_vSelectedQuads[pQuadPopupContext->m_SelectedQuadIndex] = QuadIndex;
 	}
 
 	for(auto &pQuad : vpQuads)
@@ -1272,7 +1273,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 CUi::EPopupMenuFunctionResult CEditor::PopupSource(void *pContext, CUIRect View, bool Active)
 {
 	CEditor *pEditor = static_cast<CEditor *>(pContext);
-	CSoundSource *pSource = pEditor->GetSelectedSource();
+	CSoundSource *pSource = pEditor->Map()->SelectedSoundSource();
 	if(!pSource)
 		return CUi::POPUP_CLOSE_CURRENT;
 
@@ -1283,10 +1284,10 @@ CUi::EPopupMenuFunctionResult CEditor::PopupSource(void *pContext, CUIRect View,
 	static int s_DeleteButton = 0;
 	if(pEditor->DoButton_Editor(&s_DeleteButton, "删除", 0, &Button, BUTTONFLAG_LEFT, "删除当前声音源."))
 	{
-		std::shared_ptr<CLayerSounds> pLayer = std::static_pointer_cast<CLayerSounds>(pEditor->GetSelectedLayerType(0, LAYERTYPE_SOUNDS));
+		std::shared_ptr<CLayerSounds> pLayer = std::static_pointer_cast<CLayerSounds>(pEditor->Map()->SelectedLayerType(0, LAYERTYPE_SOUNDS));
 		if(pLayer)
 		{
-			pEditor->Map()->m_EditorHistory.Execute(std::make_shared<CEditorActionDeleteSoundSource>(pEditor->Map(), pEditor->m_SelectedGroup, pEditor->m_vSelectedLayers[0], pEditor->m_SelectedSource));
+			pEditor->Map()->m_EditorHistory.Execute(std::make_shared<CEditorActionDeleteSoundSource>(pEditor->Map(), pEditor->Map()->m_SelectedGroup, pEditor->Map()->m_vSelectedLayers[0], pEditor->Map()->m_SelectedSoundSource));
 		}
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
@@ -1305,7 +1306,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupSource(void *pContext, CUIRect View,
 	static int s_ShapeTypeButton = 0;
 	if(pEditor->DoButton_Editor(&s_ShapeTypeButton, s_apShapeNames[pSource->m_Shape.m_Type], 0, &ShapeButton, BUTTONFLAG_LEFT, "更改声音源形状."))
 	{
-		pEditor->Map()->m_EditorHistory.Execute(std::make_shared<CEditorActionEditSoundSourceShape>(pEditor->Map(), pEditor->m_SelectedGroup, pEditor->m_vSelectedLayers[0], pEditor->m_SelectedSource, (pSource->m_Shape.m_Type + 1) % CSoundShape::NUM_SHAPES));
+		pEditor->Map()->m_EditorHistory.Execute(std::make_shared<CEditorActionEditSoundSourceShape>(pEditor->Map(), pEditor->Map()->m_SelectedGroup, pEditor->Map()->m_vSelectedLayers[0], pEditor->Map()->m_SelectedSoundSource, (pSource->m_Shape.m_Type + 1) % CSoundShape::NUM_SHAPES));
 	}
 
 	CProperty aProps[] = {
@@ -1459,22 +1460,23 @@ CUi::EPopupMenuFunctionResult CEditor::PopupSource(void *pContext, CUIRect View,
 
 CUi::EPopupMenuFunctionResult CEditor::PopupPoint(void *pContext, CUIRect View, bool Active)
 {
-	CEditor *pEditor = static_cast<CEditor *>(pContext);
-	std::vector<CQuad *> vpQuads = pEditor->GetSelectedQuads();
-	if(!in_range<int>(pEditor->m_SelectedQuadIndex, 0, vpQuads.size() - 1))
+	CPointPopupContext *pPointPopupContext = static_cast<CPointPopupContext *>(pContext);
+	CEditor *pEditor = pPointPopupContext->m_pEditor;
+	std::vector<CQuad *> vpQuads = pEditor->Map()->SelectedQuads();
+	if(!in_range<int>(pPointPopupContext->m_SelectedQuadIndex, 0, vpQuads.size() - 1))
 		return CUi::POPUP_CLOSE_CURRENT;
-	CQuad *pCurrentQuad = vpQuads[pEditor->m_SelectedQuadIndex];
-	std::shared_ptr<CLayerQuads> pLayer = std::static_pointer_cast<CLayerQuads>(pEditor->GetSelectedLayerType(0, LAYERTYPE_QUADS));
+	CQuad *pCurrentQuad = vpQuads[pPointPopupContext->m_SelectedQuadIndex];
+	std::shared_ptr<CLayerQuads> pLayer = std::static_pointer_cast<CLayerQuads>(pEditor->Map()->SelectedLayerType(0, LAYERTYPE_QUADS));
 
-	const int X = fx2i(pCurrentQuad->m_aPoints[pEditor->m_SelectedQuadPoint].x);
-	const int Y = fx2i(pCurrentQuad->m_aPoints[pEditor->m_SelectedQuadPoint].y);
-	const int TextureU = fx2f(pCurrentQuad->m_aTexcoords[pEditor->m_SelectedQuadPoint].x) * 1024;
-	const int TextureV = fx2f(pCurrentQuad->m_aTexcoords[pEditor->m_SelectedQuadPoint].y) * 1024;
+	const int X = fx2i(pCurrentQuad->m_aPoints[pPointPopupContext->m_SelectedQuadPoint].x);
+	const int Y = fx2i(pCurrentQuad->m_aPoints[pPointPopupContext->m_SelectedQuadPoint].y);
+	const int TextureU = fx2f(pCurrentQuad->m_aTexcoords[pPointPopupContext->m_SelectedQuadPoint].x) * 1024;
+	const int TextureV = fx2f(pCurrentQuad->m_aTexcoords[pPointPopupContext->m_SelectedQuadPoint].y) * 1024;
 
 	CProperty aProps[] = {
 		{"位置横", X, PROPTYPE_INT, -1000000, 1000000},
 		{"位置纵", Y, PROPTYPE_INT, -1000000, 1000000},
-		{"颜色", PackColor(pCurrentQuad->m_aColors[pEditor->m_SelectedQuadPoint]), PROPTYPE_COLOR, 0, 0},
+		{"颜色", PackColor(pCurrentQuad->m_aColors[pPointPopupContext->m_SelectedQuadPoint]), PROPTYPE_COLOR, 0, 0},
 		{"纹理横", TextureU, PROPTYPE_INT, -1000000, 1000000},
 		{"纹理纵", TextureV, PROPTYPE_INT, -1000000, 1000000},
 		{nullptr},
@@ -1485,7 +1487,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupPoint(void *pContext, CUIRect View, 
 	auto [State, Prop] = pEditor->DoPropertiesWithState<EQuadPointProp>(&View, aProps, s_aIds, &NewVal);
 	if(Prop != EQuadPointProp::PROP_NONE && (State == EEditState::START || State == EEditState::ONE_GO))
 	{
-		pEditor->Map()->m_QuadTracker.BeginQuadPointPropTrack(pLayer, pEditor->m_vSelectedQuads, pEditor->m_SelectedQuadPoints);
+		pEditor->Map()->m_QuadTracker.BeginQuadPointPropTrack(pLayer, pEditor->Map()->m_vSelectedQuads, pEditor->Map()->m_SelectedQuadPoints);
 		pEditor->Map()->m_QuadTracker.AddQuadPointPropTrack(Prop);
 	}
 
@@ -1494,20 +1496,20 @@ CUi::EPopupMenuFunctionResult CEditor::PopupPoint(void *pContext, CUIRect View, 
 		if(Prop == EQuadPointProp::PROP_POS_X)
 		{
 			for(int v = 0; v < 4; v++)
-				if(pEditor->IsQuadCornerSelected(v))
+				if(pEditor->Map()->IsQuadCornerSelected(v))
 					pQuad->m_aPoints[v].x = i2fx(fx2i(pQuad->m_aPoints[v].x) + NewVal - X);
 		}
 		else if(Prop == EQuadPointProp::PROP_POS_Y)
 		{
 			for(int v = 0; v < 4; v++)
-				if(pEditor->IsQuadCornerSelected(v))
+				if(pEditor->Map()->IsQuadCornerSelected(v))
 					pQuad->m_aPoints[v].y = i2fx(fx2i(pQuad->m_aPoints[v].y) + NewVal - Y);
 		}
 		else if(Prop == EQuadPointProp::PROP_COLOR)
 		{
 			for(int v = 0; v < 4; v++)
 			{
-				if(pEditor->IsQuadCornerSelected(v))
+				if(pEditor->Map()->IsQuadCornerSelected(v))
 				{
 					pQuad->m_aColors[v] = UnpackColor(NewVal);
 				}
@@ -1516,13 +1518,13 @@ CUi::EPopupMenuFunctionResult CEditor::PopupPoint(void *pContext, CUIRect View, 
 		else if(Prop == EQuadPointProp::PROP_TEX_U)
 		{
 			for(int v = 0; v < 4; v++)
-				if(pEditor->IsQuadCornerSelected(v))
+				if(pEditor->Map()->IsQuadCornerSelected(v))
 					pQuad->m_aTexcoords[v].x = f2fx(fx2f(pQuad->m_aTexcoords[v].x) + (NewVal - TextureU) / 1024.0f);
 		}
 		else if(Prop == EQuadPointProp::PROP_TEX_V)
 		{
 			for(int v = 0; v < 4; v++)
-				if(pEditor->IsQuadCornerSelected(v))
+				if(pEditor->Map()->IsQuadCornerSelected(v))
 					pQuad->m_aTexcoords[v].y = f2fx(fx2f(pQuad->m_aTexcoords[v].y) + (NewVal - TextureV) / 1024.0f);
 		}
 	}
@@ -1539,7 +1541,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupPoint(void *pContext, CUIRect View, 
 CUi::EPopupMenuFunctionResult CEditor::PopupEnvPoint(void *pContext, CUIRect View, bool Active)
 {
 	CEditor *pEditor = static_cast<CEditor *>(pContext);
-	if(pEditor->m_SelectedEnvelope < 0 || pEditor->m_SelectedEnvelope >= (int)pEditor->Map()->m_vpEnvelopes.size())
+	if(pEditor->Map()->m_SelectedEnvelope < 0 || pEditor->Map()->m_SelectedEnvelope >= (int)pEditor->Map()->m_vpEnvelopes.size())
 		return CUi::POPUP_CLOSE_CURRENT;
 
 	const float RowHeight = 12.0f;
@@ -1547,9 +1549,9 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPoint(void *pContext, CUIRect Vie
 
 	pEditor->m_ActiveEnvelopePreview = EEnvelopePreview::SELECTED;
 
-	std::shared_ptr<CEnvelope> pEnvelope = pEditor->Map()->m_vpEnvelopes[pEditor->m_SelectedEnvelope];
+	std::shared_ptr<CEnvelope> pEnvelope = pEditor->Map()->m_vpEnvelopes[pEditor->Map()->m_SelectedEnvelope];
 
-	if(pEnvelope->GetChannels() == 4 && !pEditor->IsTangentSelected())
+	if(pEnvelope->GetChannels() == 4 && !pEditor->Map()->IsTangentSelected())
 	{
 		View.HSplitTop(RowHeight, &Row, &View);
 		View.HSplitTop(4.0f, nullptr, &View);
@@ -1557,7 +1559,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPoint(void *pContext, CUIRect Vie
 		Row.VSplitLeft(10.0f, nullptr, &EditBox);
 		pEditor->Ui()->DoLabel(&Label, "颜色：", RowHeight - 2.0f, TEXTALIGN_ML);
 
-		const auto SelectedPoint = pEditor->m_vSelectedEnvelopePoints.front();
+		const auto SelectedPoint = pEditor->Map()->m_vSelectedEnvelopePoints.front();
 		const int SelectedIndex = SelectedPoint.first;
 		auto *pValues = pEnvelope->m_vPoints[SelectedIndex].m_aValues;
 		const ColorRGBA Color = pEnvelope->m_vPoints[SelectedIndex].ColorValue();
@@ -1581,15 +1583,15 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPoint(void *pContext, CUIRect Vie
 
 				for(int Channel = 0; Channel < 4; ++Channel)
 				{
-					vpActions[Channel] = std::make_shared<CEditorActionEnvelopeEditPoint>(pEditor->Map(), pEditor->m_SelectedEnvelope, SelectedIndex, Channel, CEditorActionEnvelopeEditPoint::EEditType::VALUE, s_Values[Channel], f2fx(NewColor[Channel]));
+					vpActions[Channel] = std::make_shared<CEditorActionEnvelopeEditPoint>(pEditor->Map(), pEditor->Map()->m_SelectedEnvelope, SelectedIndex, Channel, CEditorActionEnvelopeEditPoint::EEditType::VALUE, s_Values[Channel], f2fx(NewColor[Channel]));
 				}
 
 				char aDisplay[256];
-				str_format(aDisplay, sizeof(aDisplay), "编辑包络线 %d 的第 %d 个点颜色", pEditor->m_SelectedEnvelope, SelectedIndex);
+				str_format(aDisplay, sizeof(aDisplay), "编辑包络线 %d 的第 %d 个点颜色", pEditor->Map()->m_SelectedEnvelope, SelectedIndex);
 				pEditor->Map()->m_EnvelopeEditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(pEditor->Map(), vpActions, aDisplay));
 			}
 
-			pEditor->m_UpdateEnvPointInfo = true;
+			pEditor->Map()->m_UpdateEnvPointInfo = true;
 			pEditor->Map()->OnModify();
 		};
 		static char s_ColorPickerButton;
@@ -1602,11 +1604,11 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPoint(void *pContext, CUIRect Vie
 	static float s_CurrentTime = 0;
 	static float s_CurrentValue = 0;
 
-	if(pEditor->m_UpdateEnvPointInfo)
+	if(pEditor->Map()->m_UpdateEnvPointInfo)
 	{
-		pEditor->m_UpdateEnvPointInfo = false;
+		pEditor->Map()->m_UpdateEnvPointInfo = false;
 
-		const auto &[CurrentTime, CurrentValue] = pEditor->EnvGetSelectedTimeAndValue();
+		const auto &[CurrentTime, CurrentValue] = pEditor->Map()->SelectedEnvelopeTimeAndValue();
 
 		// update displayed text
 		s_CurValueInput.SetFloat(fx2f(CurrentValue));
@@ -1635,26 +1637,26 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPoint(void *pContext, CUIRect Vie
 		float CurrentValue = s_CurValueInput.GetFloat();
 		if(!(absolute(CurrentTime - s_CurrentTime) < 0.0001f && absolute(CurrentValue - s_CurrentValue) < 0.0001f))
 		{
-			const auto &[OldTime, OldValue] = pEditor->EnvGetSelectedTimeAndValue();
+			const auto &[OldTime, OldValue] = pEditor->Map()->SelectedEnvelopeTimeAndValue();
 
-			if(pEditor->IsTangentInSelected())
+			if(pEditor->Map()->IsTangentInSelected())
 			{
-				auto [SelectedIndex, SelectedChannel] = pEditor->m_SelectedTangentInPoint;
+				auto [SelectedIndex, SelectedChannel] = pEditor->Map()->m_SelectedTangentInPoint;
 
-				pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionEditEnvelopePointValue>(pEditor->Map(), pEditor->m_SelectedEnvelope, SelectedIndex, SelectedChannel, CEditorActionEditEnvelopePointValue::EType::TANGENT_IN, OldTime, OldValue, CFixedTime::FromSeconds(CurrentTime), f2fx(CurrentValue)));
+				pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionEditEnvelopePointValue>(pEditor->Map(), pEditor->Map()->m_SelectedEnvelope, SelectedIndex, SelectedChannel, CEditorActionEditEnvelopePointValue::EType::TANGENT_IN, OldTime, OldValue, CFixedTime::FromSeconds(CurrentTime), f2fx(CurrentValue)));
 				CurrentTime = (pEnvelope->m_vPoints[SelectedIndex].m_Time + pEnvelope->m_vPoints[SelectedIndex].m_Bezier.m_aInTangentDeltaX[SelectedChannel]).AsSeconds();
 			}
-			else if(pEditor->IsTangentOutSelected())
+			else if(pEditor->Map()->IsTangentOutSelected())
 			{
-				auto [SelectedIndex, SelectedChannel] = pEditor->m_SelectedTangentOutPoint;
+				auto [SelectedIndex, SelectedChannel] = pEditor->Map()->m_SelectedTangentOutPoint;
 
-				pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionEditEnvelopePointValue>(pEditor->Map(), pEditor->m_SelectedEnvelope, SelectedIndex, SelectedChannel, CEditorActionEditEnvelopePointValue::EType::TANGENT_OUT, OldTime, OldValue, CFixedTime::FromSeconds(CurrentTime), f2fx(CurrentValue)));
+				pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionEditEnvelopePointValue>(pEditor->Map(), pEditor->Map()->m_SelectedEnvelope, SelectedIndex, SelectedChannel, CEditorActionEditEnvelopePointValue::EType::TANGENT_OUT, OldTime, OldValue, CFixedTime::FromSeconds(CurrentTime), f2fx(CurrentValue)));
 				CurrentTime = (pEnvelope->m_vPoints[SelectedIndex].m_Time + pEnvelope->m_vPoints[SelectedIndex].m_Bezier.m_aOutTangentDeltaX[SelectedChannel]).AsSeconds();
 			}
 			else
 			{
-				auto [SelectedIndex, SelectedChannel] = pEditor->m_vSelectedEnvelopePoints.front();
-				pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionEditEnvelopePointValue>(pEditor->Map(), pEditor->m_SelectedEnvelope, SelectedIndex, SelectedChannel, CEditorActionEditEnvelopePointValue::EType::POINT, OldTime, OldValue, CFixedTime::FromSeconds(CurrentTime), f2fx(CurrentValue)));
+				auto [SelectedIndex, SelectedChannel] = pEditor->Map()->m_vSelectedEnvelopePoints.front();
+				pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionEditEnvelopePointValue>(pEditor->Map(), pEditor->Map()->m_SelectedEnvelope, SelectedIndex, SelectedChannel, CEditorActionEditEnvelopePointValue::EType::POINT, OldTime, OldValue, CFixedTime::FromSeconds(CurrentTime), f2fx(CurrentValue)));
 
 				if(SelectedIndex != 0)
 				{
@@ -1678,24 +1680,24 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPoint(void *pContext, CUIRect Vie
 	View.HSplitTop(6.0f, nullptr, &View);
 	View.HSplitTop(RowHeight, &Row, &View);
 	static int s_DeleteButtonId = 0;
-	const char *pButtonText = pEditor->IsTangentSelected() ? "重置" : "删除";
-	const char *pTooltip = pEditor->IsTangentSelected() ? "将切线点重置为默认值。" : "删除当前包络点在所有通道上的数据。";
+	const char *pButtonText = pEditor->Map()->IsTangentSelected() ? "重置" : "删除";
+	const char *pTooltip = pEditor->Map()->IsTangentSelected() ? "将切线点重置为默认值。" : "删除当前包络点在所有通道上的数据。";
 	if(pEditor->DoButton_Editor(&s_DeleteButtonId, pButtonText, 0, &Row, BUTTONFLAG_LEFT, pTooltip))
 	{
-		if(pEditor->IsTangentInSelected())
+		if(pEditor->Map()->IsTangentInSelected())
 		{
-			auto [SelectedIndex, SelectedChannel] = pEditor->m_SelectedTangentInPoint;
-			pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionResetEnvelopePointTangent>(pEditor->Map(), pEditor->m_SelectedEnvelope, SelectedIndex, SelectedChannel, true));
+			auto [SelectedIndex, SelectedChannel] = pEditor->Map()->m_SelectedTangentInPoint;
+			pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionResetEnvelopePointTangent>(pEditor->Map(), pEditor->Map()->m_SelectedEnvelope, SelectedIndex, SelectedChannel, true));
 		}
-		else if(pEditor->IsTangentOutSelected())
+		else if(pEditor->Map()->IsTangentOutSelected())
 		{
-			auto [SelectedIndex, SelectedChannel] = pEditor->m_SelectedTangentOutPoint;
-			pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionResetEnvelopePointTangent>(pEditor->Map(), pEditor->m_SelectedEnvelope, SelectedIndex, SelectedChannel, false));
+			auto [SelectedIndex, SelectedChannel] = pEditor->Map()->m_SelectedTangentOutPoint;
+			pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionResetEnvelopePointTangent>(pEditor->Map(), pEditor->Map()->m_SelectedEnvelope, SelectedIndex, SelectedChannel, false));
 		}
 		else
 		{
-			auto [SelectedIndex, SelectedChannel] = pEditor->m_vSelectedEnvelopePoints.front();
-			pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionDeleteEnvelopePoint>(pEditor->Map(), pEditor->m_SelectedEnvelope, SelectedIndex));
+			auto [SelectedIndex, SelectedChannel] = pEditor->Map()->m_vSelectedEnvelopePoints.front();
+			pEditor->Map()->m_EnvelopeEditorHistory.Execute(std::make_shared<CEditorActionDeleteEnvelopePoint>(pEditor->Map(), pEditor->Map()->m_SelectedEnvelope, SelectedIndex));
 		}
 
 		return CUi::POPUP_CLOSE_CURRENT;
@@ -1762,13 +1764,13 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPointCurveType(void *pContext, CU
 
 	if(CurveType >= 0)
 	{
-		std::shared_ptr<CEnvelope> pEnvelope = pEditor->Map()->m_vpEnvelopes.at(pEditor->m_SelectedEnvelope);
+		std::shared_ptr<CEnvelope> pEnvelope = pEditor->Map()->m_vpEnvelopes.at(pEditor->Map()->m_SelectedEnvelope);
 
 		for(int c = 0; c < pEnvelope->GetChannels(); c++)
 		{
 			int FirstSelectedIndex = pEnvelope->m_vPoints.size();
 			int LastSelectedIndex = -1;
-			for(auto [SelectedIndex, SelectedChannel] : pEditor->m_vSelectedEnvelopePoints)
+			for(auto [SelectedIndex, SelectedChannel] : pEditor->Map()->m_vSelectedEnvelopePoints)
 			{
 				if(SelectedChannel == c)
 				{
@@ -1789,7 +1791,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPointCurveType(void *pContext, CU
 				HelperEnvelope.AddPoint(LastPoint.m_Time, {LastPoint.m_aValues[c], 0, 0, 0});
 				HelperEnvelope.m_vPoints[0].m_Curvetype = CurveType;
 
-				for(auto [SelectedIndex, SelectedChannel] : pEditor->m_vSelectedEnvelopePoints)
+				for(auto [SelectedIndex, SelectedChannel] : pEditor->Map()->m_vSelectedEnvelopePoints)
 				{
 					if(SelectedChannel == c)
 					{
@@ -1800,7 +1802,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPointCurveType(void *pContext, CU
 							HelperEnvelope.Eval(CurrentPoint.m_Time.AsSeconds(), Channels, 1);
 							int PrevValue = CurrentPoint.m_aValues[c];
 							CurrentPoint.m_aValues[c] = f2fx(Channels.r);
-							vpActions.push_back(std::make_shared<CEditorActionEnvelopeEditPoint>(pEditor->Map(), pEditor->m_SelectedEnvelope, SelectedIndex, SelectedChannel, CEditorActionEnvelopeEditPoint::EEditType::VALUE, PrevValue, CurrentPoint.m_aValues[c]));
+							vpActions.push_back(std::make_shared<CEditorActionEnvelopeEditPoint>(pEditor->Map(), pEditor->Map()->m_SelectedEnvelope, SelectedIndex, SelectedChannel, CEditorActionEnvelopeEditPoint::EEditType::VALUE, PrevValue, CurrentPoint.m_aValues[c]));
 						}
 					}
 				}
@@ -2566,7 +2568,7 @@ static int s_AutoMapConfigCurrent = -100;
 CUi::EPopupMenuFunctionResult CEditor::PopupSelectConfigAutoMap(void *pContext, CUIRect View, bool Active)
 {
 	CEditor *pEditor = static_cast<CEditor *>(pContext);
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(pEditor->GetSelectedLayer(0));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(pEditor->Map()->SelectedLayer(0));
 	CAutoMapper *pAutoMapper = &pEditor->Map()->m_vpImages[pLayer->m_Image]->m_AutoMapper;
 
 	const float ButtonHeight = 12.0f;
@@ -2605,7 +2607,7 @@ void CEditor::PopupSelectConfigAutoMapInvoke(int Current, float x, float y)
 	static SPopupMenuId s_PopupSelectConfigAutoMapId;
 	s_AutoMapConfigSelected = -100;
 	s_AutoMapConfigCurrent = Current;
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(GetSelectedLayer(0));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayer(0));
 	const int ItemCount = minimum(Map()->m_vpImages[pLayer->m_Image]->m_AutoMapper.ConfigNamesNum() + 1, 10); // +1 for None-entry
 	// Width for buttons is 120, 15 is the scrollbar width, 2 is the margin between both.
 	Ui()->DoPopupMenu(&s_PopupSelectConfigAutoMapId, x, y, 120.0f + 15.0f + 2.0f, 10.0f + 12.0f * ItemCount + 2.0f * (ItemCount - 1), this, PopupSelectConfigAutoMap);
@@ -2627,7 +2629,7 @@ static int s_AutoMapReferenceCurrent = -100;
 CUi::EPopupMenuFunctionResult CEditor::PopupSelectAutoMapReference(void *pContext, CUIRect View, bool Active)
 {
 	CEditor *pEditor = static_cast<CEditor *>(pContext);
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(pEditor->GetSelectedLayer(0));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(pEditor->Map()->SelectedLayer(0));
 
 	const float ButtonHeight = 12.0f;
 	const float ButtonMargin = 2.0f;
@@ -2664,7 +2666,7 @@ void CEditor::PopupSelectAutoMapReferenceInvoke(int Current, float x, float y)
 	static SPopupMenuId s_PopupSelectAutoMapReferenceId;
 	s_AutoMapReferenceSelected = -100;
 	s_AutoMapReferenceCurrent = Current;
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(GetSelectedLayer(0));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayer(0));
 	// Width for buttons is 120, 15 is the scrollbar width, 2 is the margin between both.
 	Ui()->DoPopupMenu(&s_PopupSelectAutoMapReferenceId, x, y, 120.0f + 15.0f + 2.0f, 26.0f + 14.0f * std::size(AUTOMAP_REFERENCE_NAMES) + 1, this, PopupSelectAutoMapReference);
 }
@@ -3228,11 +3230,11 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvelopeCurvetype(void *pContext, CU
 {
 	CEditor *pEditor = static_cast<CEditor *>(pContext);
 
-	if(pEditor->m_SelectedEnvelope < 0 || pEditor->m_SelectedEnvelope >= (int)pEditor->Map()->m_vpEnvelopes.size())
+	if(pEditor->Map()->m_SelectedEnvelope < 0 || pEditor->Map()->m_SelectedEnvelope >= (int)pEditor->Map()->m_vpEnvelopes.size())
 	{
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
-	std::shared_ptr<CEnvelope> pEnvelope = pEditor->Map()->m_vpEnvelopes[pEditor->m_SelectedEnvelope];
+	std::shared_ptr<CEnvelope> pEnvelope = pEditor->Map()->m_vpEnvelopes[pEditor->Map()->m_SelectedEnvelope];
 
 	if(pEditor->m_PopupEnvelopeSelectedPoint < 0 || pEditor->m_PopupEnvelopeSelectedPoint >= (int)pEnvelope->m_vPoints.size())
 	{
@@ -3255,7 +3257,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvelopeCurvetype(void *pContext, CU
 			{
 				SelectedPoint.m_Curvetype = Type;
 				pEditor->Map()->m_EnvelopeEditorHistory.RecordAction(std::make_shared<CEditorActionEnvelopeEditPoint>(pEditor->Map(),
-					pEditor->m_SelectedEnvelope, pEditor->m_PopupEnvelopeSelectedPoint, 0, CEditorActionEnvelopeEditPoint::EEditType::CURVE_TYPE, PrevCurve, SelectedPoint.m_Curvetype));
+					pEditor->Map()->m_SelectedEnvelope, pEditor->m_PopupEnvelopeSelectedPoint, 0, CEditorActionEnvelopeEditPoint::EEditType::CURVE_TYPE, PrevCurve, SelectedPoint.m_Curvetype));
 				pEditor->Map()->OnModify();
 				return CUi::POPUP_CLOSE_CURRENT;
 			}

@@ -177,9 +177,6 @@ public:
 	const CMapView *MapView() const { return &m_MapView; }
 	CLayerSelector *LayerSelector() { return &m_LayerSelector; }
 
-	void SelectNextLayer();
-	void SelectPreviousLayer();
-
 	void FillGameTiles(EGameTileOp FillTile) const;
 	bool CanFillGameTiles() const;
 	void AddQuadOrSound();
@@ -249,18 +246,6 @@ public:
 		m_AnimateTime = 0.0f;
 		m_AnimateSpeed = 1.0f;
 		m_AnimateUpdatePopup = false;
-
-		m_SelectedQuadEnvelope = -1;
-
-		m_vSelectedEnvelopePoints = {};
-		m_UpdateEnvPointInfo = false;
-		m_SelectedTangentInPoint = std::pair(-1, -1);
-		m_SelectedTangentOutPoint = std::pair(-1, -1);
-		m_CurrentQuadIndex = -1;
-
-		m_QuadKnifeActive = false;
-		m_QuadKnifeCount = 0;
-		std::fill(std::begin(m_aQuadKnifePoints), std::end(m_aQuadKnifePoints), vec2(0.0f, 0.0f));
 
 		for(size_t i = 0; i < std::size(m_aSavedColors); ++i)
 		{
@@ -422,41 +407,6 @@ public:
 	void RenderGameEntities(const std::shared_ptr<CLayerTiles> &pTiles);
 	void RenderSwitchEntities(const std::shared_ptr<CLayerTiles> &pTiles);
 
-	std::vector<CQuad *> GetSelectedQuads();
-	std::shared_ptr<CLayer> GetSelectedLayerType(int Index, int Type) const;
-	std::shared_ptr<CLayer> GetSelectedLayer(int Index) const;
-	std::shared_ptr<CLayerGroup> GetSelectedGroup() const;
-	CSoundSource *GetSelectedSource() const;
-	void SelectLayer(int LayerIndex, int GroupIndex = -1);
-	void AddSelectedLayer(int LayerIndex);
-	void SelectQuad(int Index);
-	void ToggleSelectQuad(int Index);
-	void DeselectQuads();
-	void DeselectQuadPoints();
-	void SelectQuadPoint(int QuadIndex, int Index);
-	void ToggleSelectQuadPoint(int QuadIndex, int Index);
-	void DeleteSelectedQuads();
-	bool IsQuadSelected(int Index) const;
-	bool IsQuadCornerSelected(int Index) const;
-	bool IsQuadPointSelected(int QuadIndex, int Index) const;
-	int FindSelectedQuadIndex(int Index) const;
-
-	int FindEnvPointIndex(int Index, int Channel) const;
-	void SelectEnvPoint(int Index);
-	void SelectEnvPoint(int Index, int Channel);
-	void ToggleEnvPoint(int Index, int Channel);
-	bool IsEnvPointSelected(int Index, int Channel) const;
-	bool IsEnvPointSelected(int Index) const;
-	void DeselectEnvPoints();
-	void SelectTangentOutPoint(int Index, int Channel);
-	bool IsTangentOutPointSelected(int Index, int Channel) const;
-	void SelectTangentInPoint(int Index, int Channel);
-	bool IsTangentInPointSelected(int Index, int Channel) const;
-	bool IsTangentInSelected() const;
-	bool IsTangentOutSelected() const;
-	bool IsTangentSelected() const;
-	std::pair<CFixedTime, int> EnvGetSelectedTimeAndValue() const;
-
 	template<typename E>
 	SEditResult<E> DoPropertiesWithState(CUIRect *pToolbox, CProperty *pProps, int *pIds, int *pNewVal, const std::vector<ColorRGBA> &vColors = {});
 	int DoProperties(CUIRect *pToolbox, CProperty *pProps, int *pIds, int *pNewVal, const std::vector<ColorRGBA> &vColors = {});
@@ -589,25 +539,6 @@ public:
 
 	bool m_ShowPicker;
 
-	std::vector<int> m_vSelectedLayers;
-	std::vector<int> m_vSelectedQuads;
-	int m_SelectedQuadPoint;
-	int m_SelectedQuadIndex;
-	int m_SelectedGroup;
-	int m_SelectedQuadPoints;
-	int m_SelectedEnvelope;
-	std::vector<std::pair<int, int>> m_vSelectedEnvelopePoints;
-	int m_SelectedQuadEnvelope;
-	int m_CurrentQuadIndex;
-	int m_SelectedSource;
-	std::pair<int, int> m_SelectedTangentInPoint;
-	std::pair<int, int> m_SelectedTangentOutPoint;
-	bool m_UpdateEnvPointInfo;
-
-	bool m_QuadKnifeActive;
-	int m_QuadKnifeCount;
-	vec2 m_aQuadKnifePoints[4];
-
 	// Color palette and pipette
 	ColorRGBA m_aSavedColors[8];
 	ColorRGBA m_PipetteColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -690,8 +621,24 @@ public:
 		CLayerTiles::SCommonPropState m_CommonPropState;
 	};
 	static CUi::EPopupMenuFunctionResult PopupLayer(void *pContext, CUIRect View, bool Active);
+	class CQuadPopupContext : public SPopupMenuId
+	{
+	public:
+		CEditor *m_pEditor;
+		int m_SelectedQuadIndex;
+		int m_Color;
+	};
+	CQuadPopupContext m_QuadPopupContext;
 	static CUi::EPopupMenuFunctionResult PopupQuad(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupSource(void *pContext, CUIRect View, bool Active);
+	class CPointPopupContext : public SPopupMenuId
+	{
+	public:
+		CEditor *m_pEditor;
+		int m_SelectedQuadPoint;
+		int m_SelectedQuadIndex;
+	};
+	CPointPopupContext m_PointPopupContext;
 	static CUi::EPopupMenuFunctionResult PopupPoint(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupEnvPoint(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupEnvPointMulti(void *pContext, CUIRect View, bool Active);
@@ -851,8 +798,6 @@ public:
 	void UpdateHotEnvelopePoint(const CUIRect &View, const CEnvelope *pEnvelope, int ActiveChannels);
 
 	void RenderMenubar(CUIRect Menubar);
-
-	void SelectGameLayer();
 
 	void DoAudioPreview(CUIRect View, const void *pPlayPauseButtonId, const void *pStopButtonId, const void *pSeekBarId, int SampleId);
 

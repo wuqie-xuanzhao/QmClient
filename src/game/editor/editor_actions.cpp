@@ -585,7 +585,7 @@ void CEditorActionAddLayer::Undo()
 
 	Map()->m_vpGroups[m_GroupIndex]->m_Collapse = false;
 	if(m_LayerIndex >= (int)vLayers.size())
-		Editor()->SelectLayer(vLayers.size() - 1, m_GroupIndex);
+		Map()->SelectLayer(vLayers.size() - 1, m_GroupIndex);
 
 	Map()->OnModify();
 }
@@ -613,7 +613,7 @@ void CEditorActionAddLayer::Redo()
 	vLayers.insert(vLayers.begin() + m_LayerIndex, m_pLayer);
 
 	Map()->m_vpGroups[m_GroupIndex]->m_Collapse = false;
-	Editor()->SelectLayer(m_LayerIndex, m_GroupIndex);
+	Map()->SelectLayer(m_LayerIndex, m_GroupIndex);
 	Map()->OnModify();
 }
 
@@ -647,7 +647,7 @@ void CEditorActionDeleteLayer::Redo()
 
 	Map()->m_vpGroups[m_GroupIndex]->m_Collapse = false;
 	if(m_LayerIndex >= (int)vLayers.size())
-		Editor()->SelectLayer(vLayers.size() - 1, m_GroupIndex);
+		Map()->SelectLayer(vLayers.size() - 1, m_GroupIndex);
 
 	Map()->OnModify();
 }
@@ -675,7 +675,7 @@ void CEditorActionDeleteLayer::Undo()
 	vLayers.insert(vLayers.begin() + m_LayerIndex, m_pLayer);
 
 	Map()->m_vpGroups[m_GroupIndex]->m_Collapse = false;
-	Editor()->SelectLayer(m_LayerIndex, m_GroupIndex);
+	Map()->SelectLayer(m_LayerIndex, m_GroupIndex);
 	Map()->OnModify();
 }
 
@@ -695,14 +695,14 @@ void CEditorActionGroup::Undo()
 	{
 		// Undo: add back the group
 		Map()->m_vpGroups.insert(Map()->m_vpGroups.begin() + m_GroupIndex, m_pGroup);
-		Editor()->m_SelectedGroup = m_GroupIndex;
+		Map()->m_SelectedGroup = m_GroupIndex;
 		Map()->OnModify();
 	}
 	else
 	{
 		// Undo: delete the group
 		Map()->DeleteGroup(m_GroupIndex);
-		Editor()->m_SelectedGroup = maximum(0, m_GroupIndex - 1);
+		Map()->m_SelectedGroup = maximum(0, m_GroupIndex - 1);
 	}
 
 	Map()->OnModify();
@@ -714,13 +714,13 @@ void CEditorActionGroup::Redo()
 	{
 		// Redo: add back the group
 		Map()->m_vpGroups.insert(Map()->m_vpGroups.begin() + m_GroupIndex, m_pGroup);
-		Editor()->m_SelectedGroup = m_GroupIndex;
+		Map()->m_SelectedGroup = m_GroupIndex;
 	}
 	else
 	{
 		// Redo: delete the group
 		Map()->DeleteGroup(m_GroupIndex);
-		Editor()->m_SelectedGroup = maximum(0, m_GroupIndex - 1);
+		Map()->m_SelectedGroup = maximum(0, m_GroupIndex - 1);
 	}
 
 	Map()->OnModify();
@@ -751,7 +751,7 @@ void CEditorActionEditGroupProp::Undo()
 
 	if(m_Prop == EGroupProp::PROP_ORDER)
 	{
-		Editor()->m_SelectedGroup = Map()->MoveGroup(m_Current, m_Previous);
+		Map()->m_SelectedGroup = Map()->MoveGroup(m_Current, m_Previous);
 	}
 	else
 	{
@@ -765,7 +765,7 @@ void CEditorActionEditGroupProp::Redo()
 
 	if(m_Prop == EGroupProp::PROP_ORDER)
 	{
-		Editor()->m_SelectedGroup = Map()->MoveGroup(m_Previous, m_Current);
+		Map()->m_SelectedGroup = Map()->MoveGroup(m_Previous, m_Current);
 	}
 	else
 	{
@@ -823,7 +823,7 @@ void CEditorActionEditLayerProp::Undo()
 
 	if(m_Prop == ELayerProp::PROP_ORDER)
 	{
-		Editor()->SelectLayer(pCurrentGroup->MoveLayer(m_Current, m_Previous));
+		Map()->SelectLayer(pCurrentGroup->MoveLayer(m_Current, m_Previous));
 	}
 	else
 	{
@@ -837,7 +837,7 @@ void CEditorActionEditLayerProp::Redo()
 
 	if(m_Prop == ELayerProp::PROP_ORDER)
 	{
-		Editor()->SelectLayer(pCurrentGroup->MoveLayer(m_Previous, m_Current));
+		Map()->SelectLayer(pCurrentGroup->MoveLayer(m_Previous, m_Current));
 	}
 	else
 	{
@@ -856,8 +856,8 @@ void CEditorActionEditLayerProp::Apply(int Value)
 			pPreviousGroup->m_vpLayers.insert(pPreviousGroup->m_vpLayers.begin() + m_LayerIndex, m_pLayer);
 		else
 			pPreviousGroup->m_vpLayers.push_back(m_pLayer);
-		Editor()->m_SelectedGroup = Value;
-		Editor()->SelectLayer(m_LayerIndex);
+		Map()->m_SelectedGroup = Value;
+		Map()->SelectLayer(m_LayerIndex);
 	}
 	else if(m_Prop == ELayerProp::PROP_HQ)
 	{
@@ -1158,8 +1158,8 @@ void CEditorActionEditLayersGroupAndOrder::Undo()
 		pPreviousGroup->m_vpLayers.insert(pPreviousGroup->m_vpLayers.begin() + m_LayerIndices[k++], pLayer);
 	}
 
-	Editor()->m_vSelectedLayers = m_LayerIndices;
-	Editor()->m_SelectedGroup = m_GroupIndex;
+	Map()->m_vSelectedLayers = m_LayerIndices;
+	Map()->m_SelectedGroup = m_GroupIndex;
 }
 
 void CEditorActionEditLayersGroupAndOrder::Redo()
@@ -1179,8 +1179,8 @@ void CEditorActionEditLayersGroupAndOrder::Redo()
 		pPreviousGroup->m_vpLayers.insert(pPreviousGroup->m_vpLayers.begin() + m_NewLayerIndices[k++], pLayer);
 	}
 
-	Editor()->m_vSelectedLayers = m_NewLayerIndices;
-	Editor()->m_SelectedGroup = m_NewGroupIndex;
+	Map()->m_vSelectedLayers = m_NewLayerIndices;
+	Map()->m_SelectedGroup = m_NewGroupIndex;
 }
 
 // -----------------------------------
@@ -1457,7 +1457,7 @@ CEditorActionEnvelopeAdd::CEditorActionEnvelopeAdd(CEditorMap *pMap, CEnvelope::
 	m_EnvelopeType(EnvelopeType)
 {
 	str_format(m_aDisplayText, sizeof(m_aDisplayText), "新增%s包络线", EnvelopeType == CEnvelope::EType::COLOR ? "颜色" : (EnvelopeType == CEnvelope::EType::POSITION ? "位置" : "声音"));
-	m_PreviousSelectedEnvelope = Editor()->m_SelectedEnvelope;
+	m_PreviousSelectedEnvelope = Editor()->Map()->m_SelectedEnvelope;
 }
 
 void CEditorActionEnvelopeAdd::Undo()
@@ -1465,14 +1465,14 @@ void CEditorActionEnvelopeAdd::Undo()
 	// Undo is removing the envelope, which was added at the back of the list
 	Map()->m_vpEnvelopes.pop_back();
 	Map()->OnModify();
-	Editor()->m_SelectedEnvelope = m_PreviousSelectedEnvelope;
+	Map()->m_SelectedEnvelope = m_PreviousSelectedEnvelope;
 }
 
 void CEditorActionEnvelopeAdd::Redo()
 {
 	// Redo is adding a new envelope at the back of the list
 	Map()->NewEnvelope(m_EnvelopeType);
-	Editor()->m_SelectedEnvelope = Map()->m_vpEnvelopes.size() - 1;
+	Map()->m_SelectedEnvelope = Map()->m_vpEnvelopes.size() - 1;
 }
 
 CEditorActionEnvelopeDelete::CEditorActionEnvelopeDelete(CEditorMap *pMap, int EnvelopeIndex, std::vector<std::shared_ptr<IEditorEnvelopeReference>> &vpObjectReferences, std::shared_ptr<CEnvelope> &pEnvelope) :
@@ -1519,7 +1519,7 @@ void CEditorActionEnvelopeEdit::Undo()
 	}
 	}
 	Map()->OnModify();
-	Editor()->m_SelectedEnvelope = m_EnvelopeIndex;
+	Map()->m_SelectedEnvelope = m_EnvelopeIndex;
 }
 
 void CEditorActionEnvelopeEdit::Redo()
@@ -1538,7 +1538,7 @@ void CEditorActionEnvelopeEdit::Redo()
 	}
 	}
 	Map()->OnModify();
-	Editor()->m_SelectedEnvelope = m_EnvelopeIndex;
+	Map()->m_SelectedEnvelope = m_EnvelopeIndex;
 }
 
 CEditorActionEnvelopeEditPointTime::CEditorActionEnvelopeEditPointTime(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, CFixedTime Previous, CFixedTime Current) :
@@ -1661,7 +1661,7 @@ void CEditorActionEditEnvelopePointValue::Apply(bool Undo)
 	}
 
 	Map()->OnModify();
-	Editor()->m_UpdateEnvPointInfo = true;
+	Map()->m_UpdateEnvPointInfo = true;
 }
 
 // ---------------------
@@ -1766,12 +1766,12 @@ void CEditorActionDeleteEnvelopePoint::Redo()
 	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvIndex];
 	pEnvelope->m_vPoints.erase(pEnvelope->m_vPoints.begin() + m_PointIndex);
 
-	auto pSelectedPointIt = std::find_if(Editor()->m_vSelectedEnvelopePoints.begin(), Editor()->m_vSelectedEnvelopePoints.end(), [this](const std::pair<int, int> Pair) {
+	auto pSelectedPointIt = std::find_if(Map()->m_vSelectedEnvelopePoints.begin(), Map()->m_vSelectedEnvelopePoints.end(), [this](const std::pair<int, int> Pair) {
 		return Pair.first == m_PointIndex;
 	});
 
-	if(pSelectedPointIt != Editor()->m_vSelectedEnvelopePoints.end())
-		Editor()->m_vSelectedEnvelopePoints.erase(pSelectedPointIt);
+	if(pSelectedPointIt != Map()->m_vSelectedEnvelopePoints.end())
+		Map()->m_vSelectedEnvelopePoints.erase(pSelectedPointIt);
 
 	Map()->OnModify();
 }
@@ -1826,7 +1826,7 @@ void CEditorActionDeleteSoundSource::Undo()
 {
 	std::shared_ptr<CLayerSounds> pLayerSounds = std::static_pointer_cast<CLayerSounds>(m_pLayer);
 	pLayerSounds->m_vSources.insert(pLayerSounds->m_vSources.begin() + m_SourceIndex, m_Source);
-	Editor()->m_SelectedSource = m_SourceIndex;
+	Map()->m_SelectedSoundSource = m_SourceIndex;
 	Map()->OnModify();
 }
 
@@ -1834,7 +1834,7 @@ void CEditorActionDeleteSoundSource::Redo()
 {
 	std::shared_ptr<CLayerSounds> pLayerSounds = std::static_pointer_cast<CLayerSounds>(m_pLayer);
 	pLayerSounds->m_vSources.erase(pLayerSounds->m_vSources.begin() + m_SourceIndex);
-	Editor()->m_SelectedSource--;
+	Map()->m_SelectedSoundSource--;
 	Map()->OnModify();
 }
 

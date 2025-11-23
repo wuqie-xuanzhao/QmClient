@@ -27,8 +27,8 @@ void CQuadEditTracker::BeginQuadTrack(const std::shared_ptr<CLayerQuads> &pLayer
 	m_Tracking = true;
 	m_vSelectedQuads.clear();
 	m_pLayer = pLayer;
-	m_GroupIndex = GroupIndex < 0 ? Editor()->m_SelectedGroup : GroupIndex;
-	m_LayerIndex = LayerIndex < 0 ? Editor()->m_vSelectedLayers[0] : LayerIndex;
+	m_GroupIndex = GroupIndex < 0 ? Map()->m_SelectedGroup : GroupIndex;
+	m_LayerIndex = LayerIndex < 0 ? Map()->m_vSelectedLayers[0] : LayerIndex;
 	// Init all points
 	for(auto QuadIndex : vSelectedQuads)
 	{
@@ -64,8 +64,8 @@ void CQuadEditTracker::BeginQuadPropTrack(const std::shared_ptr<CLayerQuads> &pL
 		return;
 	m_TrackedProp = Prop;
 	m_pLayer = pLayer;
-	m_GroupIndex = GroupIndex < 0 ? Editor()->m_SelectedGroup : GroupIndex;
-	m_LayerIndex = LayerIndex < 0 ? Editor()->m_vSelectedLayers[0] : LayerIndex;
+	m_GroupIndex = GroupIndex < 0 ? Map()->m_SelectedGroup : GroupIndex;
+	m_LayerIndex = LayerIndex < 0 ? Map()->m_vSelectedLayers[0] : LayerIndex;
 	m_vSelectedQuads = vSelectedQuads;
 	m_PreviousValues.clear();
 
@@ -128,8 +128,8 @@ void CQuadEditTracker::BeginQuadPointPropTrack(const std::shared_ptr<CLayerQuads
 		return;
 
 	m_pLayer = pLayer;
-	m_GroupIndex = GroupIndex < 0 ? Editor()->m_SelectedGroup : GroupIndex;
-	m_LayerIndex = LayerIndex < 0 ? Editor()->m_vSelectedLayers[0] : LayerIndex;
+	m_GroupIndex = GroupIndex < 0 ? Map()->m_SelectedGroup : GroupIndex;
+	m_LayerIndex = LayerIndex < 0 ? Map()->m_vSelectedLayers[0] : LayerIndex;
 	m_SelectedQuadPoints = SelectedQuadPoints;
 	m_vSelectedQuads = vSelectedQuads;
 	m_PreviousValuesPoint.clear();
@@ -322,9 +322,9 @@ void CEnvelopeEditorOperationTracker::HandlePointDragStart()
 {
 	// Figure out which points are selected and which channels
 	// Save their X and Y position (time and value)
-	auto pEnv = Map()->m_vpEnvelopes[Editor()->m_SelectedEnvelope];
+	auto pEnv = Map()->m_vpEnvelopes[Editor()->Map()->m_SelectedEnvelope];
 
-	for(auto [PointIndex, Channel] : Editor()->m_vSelectedEnvelopePoints)
+	for(auto [PointIndex, Channel] : Map()->m_vSelectedEnvelopePoints)
 	{
 		auto &Point = pEnv->m_vPoints[PointIndex];
 		auto &Data = m_SavedValues[PointIndex];
@@ -341,7 +341,7 @@ void CEnvelopeEditorOperationTracker::HandlePointDragEnd(bool Switch)
 	if(Switch && m_TrackedOp != EEnvelopeEditorOp::OP_SCALE)
 		return;
 
-	int EnvIndex = Editor()->m_SelectedEnvelope;
+	int EnvIndex = Editor()->Map()->m_SelectedEnvelope;
 	auto pEnv = Map()->m_vpEnvelopes[EnvIndex];
 	std::vector<std::shared_ptr<IEditorAction>> vpActions;
 
@@ -409,7 +409,7 @@ void CSoundSourceOperationTracker::End()
 		if(m_Data.m_OriginalPoint != m_pSource->m_Position)
 		{
 			Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionMoveSoundSource>(
-				Map(), Editor()->m_SelectedGroup, m_LayerIndex, Editor()->m_SelectedSource, m_Data.m_OriginalPoint, m_pSource->m_Position));
+				Map(), Map()->m_SelectedGroup, m_LayerIndex, Map()->m_SelectedSoundSource, m_Data.m_OriginalPoint, m_pSource->m_Position));
 		}
 	}
 
@@ -420,12 +420,12 @@ void CSoundSourceOperationTracker::End()
 
 int SPropTrackerHelper::GetDefaultGroupIndex(CEditorMap *pMap)
 {
-	return pMap->Editor()->m_SelectedGroup;
+	return pMap->m_SelectedGroup;
 }
 
 int SPropTrackerHelper::GetDefaultLayerIndex(CEditorMap *pMap)
 {
-	return pMap->Editor()->m_vSelectedLayers[0];
+	return pMap->m_vSelectedLayers[0];
 }
 
 // -----------------------------------------------------------------------
@@ -575,14 +575,14 @@ int CLayerTilesCommonPropTracker::PropToValue(ETilesCommonProp Prop)
 
 void CLayerGroupPropTracker::OnEnd(EGroupProp Prop, int Value)
 {
-	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionEditGroupProp>(Map(), Editor()->m_SelectedGroup, Prop, m_OriginalValue, Value));
+	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionEditGroupProp>(Map(), Map()->m_SelectedGroup, Prop, m_OriginalValue, Value));
 }
 
 int CLayerGroupPropTracker::PropToValue(EGroupProp Prop)
 {
 	switch(Prop)
 	{
-	case EGroupProp::PROP_ORDER: return Editor()->m_SelectedGroup;
+	case EGroupProp::PROP_ORDER: return Map()->m_SelectedGroup;
 	case EGroupProp::PROP_POS_X: return m_pObject->m_OffsetX;
 	case EGroupProp::PROP_POS_Y: return m_pObject->m_OffsetY;
 	case EGroupProp::PROP_PARA_X: return m_pObject->m_ParallaxX;
@@ -630,7 +630,7 @@ int CLayerSoundsPropTracker::PropToValue(ELayerSoundsProp Prop)
 
 void CSoundSourcePropTracker::OnEnd(ESoundProp Prop, int Value)
 {
-	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionEditSoundSourceProp>(Map(), m_OriginalGroupIndex, m_OriginalLayerIndex, Editor()->m_SelectedSource, Prop, m_OriginalValue, Value));
+	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionEditSoundSourceProp>(Map(), m_OriginalGroupIndex, m_OriginalLayerIndex, Map()->m_SelectedSoundSource, Prop, m_OriginalValue, Value));
 }
 
 int CSoundSourcePropTracker::PropToValue(ESoundProp Prop)
@@ -655,7 +655,7 @@ int CSoundSourcePropTracker::PropToValue(ESoundProp Prop)
 
 void CSoundSourceRectShapePropTracker::OnEnd(ERectangleShapeProp Prop, int Value)
 {
-	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionEditRectSoundSourceShapeProp>(Map(), m_OriginalGroupIndex, m_OriginalLayerIndex, Editor()->m_SelectedSource, Prop, m_OriginalValue, Value));
+	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionEditRectSoundSourceShapeProp>(Map(), m_OriginalGroupIndex, m_OriginalLayerIndex, Map()->m_SelectedSoundSource, Prop, m_OriginalValue, Value));
 }
 
 int CSoundSourceRectShapePropTracker::PropToValue(ERectangleShapeProp Prop)
@@ -670,7 +670,7 @@ int CSoundSourceRectShapePropTracker::PropToValue(ERectangleShapeProp Prop)
 
 void CSoundSourceCircleShapePropTracker::OnEnd(ECircleShapeProp Prop, int Value)
 {
-	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionEditCircleSoundSourceShapeProp>(Map(), m_OriginalGroupIndex, m_OriginalLayerIndex, Editor()->m_SelectedSource, Prop, m_OriginalValue, Value));
+	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionEditCircleSoundSourceShapeProp>(Map(), m_OriginalGroupIndex, m_OriginalLayerIndex, Map()->m_SelectedSoundSource, Prop, m_OriginalValue, Value));
 }
 
 int CSoundSourceCircleShapePropTracker::PropToValue(ECircleShapeProp Prop)
