@@ -68,14 +68,14 @@ void CGameControllerDDNet::HandleCharacterTiles(CCharacter *pChr, int MapIndex)
 			pChr->Die(ClientId, WEAPON_WORLD);
 			return;
 		}
-		if(g_Config.m_SvTeam == SV_TEAM_MANDATORY && (Team == TEAM_FLOCK || Teams().Count(Team) <= 1))
+		if(g_Config.m_SvTeam == SV_TEAM_MANDATORY && (Team == TEAM_FLOCK || Teams().TeamSize(Team) <= 1))
 		{
 			GameServer()->SendStartWarning(ClientId, "你必须与其他玩家组队才能开始");
 			//You have to be in a team with other tees to start
 			pChr->Die(ClientId, WEAPON_WORLD);
 			return;
 		}
-		if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && Team != TEAM_FLOCK && Teams().IsValidTeamNumber(Team) && Teams().Count(Team) < g_Config.m_SvMinTeamSize && !Teams().TeamFlock(Team))
+		if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && Team != TEAM_FLOCK && Teams().IsValidTeamNumber(Team) && Teams().TeamSize(Team) < g_Config.m_SvMinTeamSize && !Teams().TeamFlock(Team))
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf), "你的队伍人数少于 %d 人，因此队伍成绩将不会计入排名", g_Config.m_SvMinTeamSize);

@@ -789,7 +789,7 @@ void CGameContext::ConUnPractice(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	if(Teams.Count(Team) > g_Config.m_SvMaxTeamSize && pSelf->m_pController->Teams().TeamLocked(Team))
+	if(Teams.TeamSize(Team) > g_Config.m_SvMaxTeamSize && pSelf->m_pController->Teams().TeamLocked(Team))
 	{
 		log_info("chatresp", "Can't disable practice. This team exceeds the maximum allowed size of %d players for regular team", g_Config.m_SvMaxTeamSize);
 		return;
@@ -1245,7 +1245,7 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 				"这个队伍已用 /lock 锁定，只有队伍成员才能用 /lock 解锁" :
 				"这个队伍已用 /lock 锁定，只有队伍成员才能邀请你或用 /lock 解锁");
 	}
-	else if(Team != TEAM_FLOCK && m_pController->Teams().Count(Team) >= g_Config.m_SvMaxTeamSize && !m_pController->Teams().TeamFlock(Team) && !m_pController->Teams().IsPractice(Team))
+	else if(Team != TEAM_FLOCK && m_pController->Teams().TeamSize(Team) >= g_Config.m_SvMaxTeamSize && !m_pController->Teams().TeamFlock(Team) && !m_pController->Teams().IsPractice(Team))
 	{
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), "这个队伍已经达到最大人数上限 %d", g_Config.m_SvMaxTeamSize);
@@ -1260,7 +1260,7 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 		if(PracticeByDefault())
 		{
 			// joined an empty team
-			if(m_pController->Teams().Count(Team) == 1)
+			if(m_pController->Teams().TeamSize(Team) == 1)
 				m_pController->Teams().SetPractice(Team, true);
 		}
 
@@ -1385,7 +1385,7 @@ void CGameContext::ConTeam0Mode(IConsole::IResult *pResult, void *pUserData)
 	char aBuf[512];
 	if(Mode)
 	{
-		if(pController->Teams().Count(Team) > g_Config.m_SvMaxTeamSize)
+		if(pController->Teams().TeamSize(Team) > g_Config.m_SvMaxTeamSize)
 		{
 			str_format(aBuf, sizeof(aBuf), "无法关闭 team 0 模式。该队伍人数已超过普通队伍允许上限 %d", g_Config.m_SvMaxTeamSize);
 			pSelf->SendChatTarget(pResult->m_ClientId, aBuf);
