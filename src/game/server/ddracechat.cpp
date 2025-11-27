@@ -818,6 +818,7 @@ void CGameContext::ConUnPractice(IConsole::IResult *pResult, void *pUserData)
 
 	Teams.KillCharacterOrTeam(pResult->m_ClientId, Team);
 	Teams.SetPractice(Team, false);
+	pPlayer->Respawn();
 }
 
 void CGameContext::ConPracticeCmdList(IConsole::IResult *pResult, void *pUserData)
