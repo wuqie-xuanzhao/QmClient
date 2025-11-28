@@ -1488,7 +1488,6 @@ void CScoreboard::OnRender()
 	m_OpenTime = 1.0f;
 	m_Visibility = 1.0f;
 	m_AnimContentAlpha = 1.0f;
-
 	if(!GameClient()->m_Menus.IsActive() && !GameClient()->m_Chat.IsActive())
 	{
 		Ui()->StartCheck();
