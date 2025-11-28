@@ -1502,7 +1502,7 @@ void CScoreboard::OnRender()
 		return;
 	}
 
-	// 当记分板可见时（骗你的,不可见也查），为所有活跃玩家触发查询点
+<<	// 当记分板可见时（骗你的,不可见也查），为所有活跃玩家触发查询点
 	if(g_Config.m_QmScoreboardPoints || g_Config.m_QmScoreboardSortMode)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
