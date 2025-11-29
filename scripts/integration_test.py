@@ -68,17 +68,17 @@ class TestTimeout(namedtuple("TestTimeout", "")):
         raise TimeoutError("test timeout")
 
 
-class Timeout(namedtuple("Timeout", "id")):
+class Timeout(namedtuple("Timeout", ["id", "description"])):
     def raise_on_error(self, timeout_id):
         if timeout_id == self.id:
-            raise TimeoutError("timeout")
+            raise TimeoutError(f"timeout waiting for {self.description}")
 
 
 # This class is used to track that each timeout value is multiplied by
 # `timeout_multiplier` exactly once.
-class TimeoutParam(namedtuple("Timeout", "start unmultiplied_duration")):
-    def __new__(cls, duration):
-        return super().__new__(cls, time(), duration)
+class TimeoutParam(namedtuple("Timeout", ["start", "unmultiplied_duration", "description"])):
+    def __new__(cls, duration, description):
+        return super().__new__(cls, time(), duration, description)
 
     def remaining_duration(self, test_env):
         duration = test_env.runner.timeout_multiplier * self.unmultiplied_duration
@@ -248,7 +248,10 @@ add_path {relpath(self.runner.data_dir, tmp_dir)}
         self.full_stderrs = []
         self.test_timeout_queue = Queue()
         run_test_timeout_thread(
-            f"{self.name}_timeout", self, self.test_timeout_queue, TimeoutParam(timeout)
+            f"{self.name}_timeout",
+            self,
+            self.test_timeout_queue,
+            TimeoutParam(timeout, f"{self.name} test"),
         )
 
     def __del__(self):
@@ -337,7 +340,7 @@ def run_timeout_thread(name, test_env, input_queue, output_queue):
             try:
                 id, param = input_queue.get(timeout=timeout)
             except queue.Empty:
-                output_queue.put(Timeout(id))
+                output_queue.put(Timeout(id, param.description))
                 param = None
                 del id
             # TODO: quit this thread
@@ -436,10 +439,10 @@ class Runnable:
             f"{global_name}_exit", self.process, self.events, allow_unclean_exit
         )
 
-    def register_timeout(self, timeout):
+    def register_timeout(self, timeout, description):
         timeout_id = self.next_timeout_id
         self.next_timeout_id += 1
-        self.timeout_queue.put((timeout_id, TimeoutParam(timeout)))
+        self.timeout_queue.put((timeout_id, TimeoutParam(timeout, description)))
         return timeout_id
 
     def next_event(self, timeout_id):
@@ -456,24 +459,39 @@ class Runnable:
             else:
                 event.raise_on_error(None)
 
-    def wait_for_log(self, fn, timeout=1):
-        timeout_id = self.register_timeout(timeout)
+    def wait_for_log(self, fn, description, timeout=1):
+        timeout_id = self.register_timeout(timeout, description)
         while True:
             event = self.next_event(timeout_id)
             if isinstance(event, Exit):
-                raise EOFError("program exited before reaching wanted log line")
+                raise EOFError(f"program exited unexpectedly waiting for {description}")
             elif isinstance(event, Log):
                 if fn(event):
                     return event
 
     def wait_for_log_prefix(self, prefix, timeout=1):
-        self.wait_for_log(lambda log: log.line.startswith(prefix), timeout=timeout)
+        self.wait_for_log(
+            lambda log: log.line.startswith(prefix),
+            description=f"log line with prefix `{prefix}`",
+            timeout=timeout,
+        )
+
+    def wait_for_log_suffix(self, suffix, timeout=1):
+        self.wait_for_log(
+            lambda log: log.line.endswith(suffix),
+            description=f"log line with suffix `{suffix}`",
+            timeout=timeout,
+        )
 
     def wait_for_log_exact(self, line, timeout=1):
-        self.wait_for_log(lambda log: log.line == line, timeout=timeout)
+        self.wait_for_log(
+            lambda log: log.line == line,
+            description=f"log line exactly matching `{line}`",
+            timeout=timeout,
+        )
 
     def wait_for_exit(self, timeout=10):
-        timeout_id = self.register_timeout(timeout)
+        timeout_id = self.register_timeout(timeout, "exit")
         while True:
             event = self.next_event(timeout_id)
             if isinstance(event, Exit):
@@ -644,7 +662,7 @@ def meta_timeout(test_env):
     try:
         server.wait_for_exit(timeout=0.1)
     except TimeoutError as e:
-        if str(e) != "timeout":
+        if str(e) != "timeout waiting for exit":
             raise
     else:
         raise AssertionError("timeout should have triggered")
@@ -656,7 +674,7 @@ def meta_timeout(test_env):
 def meta_test_timeout(test_env):
     server = test_env.server()
     try:
-        server.wait_for_exit(timeout=0.1)
+        server.wait_for_exit(timeout=1)
     except TimeoutError as e:
         if str(e) != "test timeout":
             raise
@@ -704,6 +722,7 @@ def wait_for_kcp_status_line(server, predicate, timeout=5):
         try:
             status = server.wait_for_log(
                 lambda log: "transport=" in log.line and "id=" in log.line,
+                description="kcp status line with transport and id",
                 timeout=0.5,
             ).line
         except TimeoutError:
@@ -878,7 +897,11 @@ def kcp_weak_network_smoke(test_env):
     assert_kcp_metrics_present(status)
     if "fake_queue=" not in " ".join(server.full_stdout):
         server.command("kcp_status")
-        server.wait_for_log(lambda log: "fake_queue=" in log.line, timeout=5)
+        server.wait_for_log(
+            lambda log: "fake_queue=" in log.line,
+            description="kcp status line with fake_queue",
+            timeout=5,
+        )
     server.exit()
     client.wait_for_log_exact("client: offline error='Server shutdown'")
     client.exit()
@@ -913,7 +936,11 @@ def kcp_stress_many_clients(test_env):
             timeout=10,
         )
     server.command("kcp_status")
-    server.wait_for_log(lambda log: "sessions=4" in log.line, timeout=5)
+    server.wait_for_log(
+        lambda log: "sessions=4" in log.line,
+        description="kcp status line with sessions=4",
+        timeout=5,
+    )
 
     server.exit()
     for client in clients:
@@ -935,6 +962,7 @@ def kcp_timeout_drops_session(test_env):
     server.command("sv_net_fake_loss 100")
     server.wait_for_log(
         lambda log: "client dropped." in log.line or "has left the game" in log.line,
+        description="client drop or leave log line",
         timeout=12,
     )
     client.exit()
@@ -1045,6 +1073,7 @@ def smoke_test(test_env):
                 log.line.startswith("chat: *** client1 finished in:")
                 or log.line.startswith("chat: *** client2 finished in:")
             ),
+            description="log lines with client1 and client2 finishes",
             timeout=40,
         )
 
@@ -1339,12 +1368,8 @@ def server_can_register(test_env):
         ]
     )
     wait_for_startup([server])
-    server.wait_for_log(
-        lambda log: log.line.endswith("successfully registered"), timeout=5
-    )
-    server.wait_for_log(
-        lambda log: log.line.endswith("successfully registered"), timeout=5
-    )
+    server.wait_for_log_suffix("successfully registered", timeout=5)
+    server.wait_for_log_suffix("successfully registered", timeout=5)
     servers_json = mastersrv.servers_json()
     if (
         len(servers_json["servers"]) != 1
