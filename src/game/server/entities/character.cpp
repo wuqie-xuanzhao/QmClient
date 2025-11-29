@@ -1338,7 +1338,7 @@ void CCharacter::Snap(int SnappingClient)
 	DDNetCharacter.m_TargetX = m_Core.m_Input.m_TargetX;
 	DDNetCharacter.m_TargetY = m_Core.m_Input.m_TargetY;
 
-	// OVERRIDE_NONE is the default value, the object is zeroed, so it would incorrectly become 0
+	// OVERRIDE_NONE is the default value, SnapNewItem zeroes the object, so it would incorrectly become 0
 	DDNetCharacter.m_TuneZoneOverride = TuneZone::OVERRIDE_NONE;
 
 	Server()->SnapNewItem(Id, DDNetCharacter);
