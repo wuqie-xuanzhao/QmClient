@@ -84,6 +84,7 @@ class CScoreboard : public CComponent
 	} m_SoundMuteInfoAnimState;
 
 	void SetUiMousePos(vec2 Pos);
+	void LockMouse();
 
 	class CScoreboardPopupContext : public SPopupMenuId
 	{
