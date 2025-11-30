@@ -964,7 +964,7 @@ public:
 			const int FastPracticeDummyId = m_FastPractice.CurrentPracticeDummyId();
 			return FastPracticeDummyId >= 0 && m_Snap.m_LocalClientId >= 0 && !m_aClients[FastPracticeDummyId].m_Paused;
 		}
-		return g_Config.m_ClPredictDummy && Client()->DummyConnected() && m_Snap.m_LocalClientId >= 0 && m_PredictedDummyId >= 0 && !m_aClients[m_PredictedDummyId].m_Paused;
+		return g_Config.m_ClPredictDummy && Client()->DummyConnected() && m_Snap.m_LocalClientId >= 0 && m_aLocalIds[!g_Config.m_ClDummy] >= 0 && !m_aClients[m_aLocalIds[!g_Config.m_ClDummy]].m_Paused;
 	}
 	bool IsRenderingDummyMiniMap() const { return m_RenderingDummyMiniMap; }
 	void SetRenderingDummyMiniMap(bool Rendering) { m_RenderingDummyMiniMap = Rendering; }
@@ -1264,6 +1264,8 @@ private:
 	void DetectStrongHook();
 
 	int m_PredictedDummyId;
+	vec2 GetSmoothPos(int ClientId);
+
 	int m_IsDummySwapping;
 	bool m_RequestPredictionRefreshAfterConfigChange = false;
 	CCharOrder m_CharOrder;
