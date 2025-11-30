@@ -127,15 +127,12 @@ void CPickup::Tick()
 				{
 					pChr->GiveWeapon(m_Subtype);
 
-					if(GameWorld()->m_WorldConfig.m_IsDDRace && GameWorld()->m_WorldConfig.m_PredictDDRace)
-					{
-						if(m_Subtype == WEAPON_GRENADE)
-							GameWorld()->CreatePredictedSound(m_Pos, SOUND_PICKUP_GRENADE, pChr->GetCid());
-						else if(m_Subtype == WEAPON_SHOTGUN)
-							GameWorld()->CreatePredictedSound(m_Pos, SOUND_PICKUP_SHOTGUN, pChr->GetCid());
-						else if(m_Subtype == WEAPON_LASER)
-							GameWorld()->CreatePredictedSound(m_Pos, SOUND_PICKUP_SHOTGUN, pChr->GetCid());
-					}
+					if(m_Subtype == WEAPON_GRENADE)
+						GameWorld()->CreatePredictedSound(m_Pos, SOUND_PICKUP_GRENADE, pChr->GetCid());
+					else if(m_Subtype == WEAPON_SHOTGUN)
+						GameWorld()->CreatePredictedSound(m_Pos, SOUND_PICKUP_SHOTGUN, pChr->GetCid());
+					else if(m_Subtype == WEAPON_LASER)
+						GameWorld()->CreatePredictedSound(m_Pos, SOUND_PICKUP_SHOTGUN, pChr->GetCid());
 				}
 				break;
 
