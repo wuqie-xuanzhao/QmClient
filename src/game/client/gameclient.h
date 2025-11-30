@@ -170,9 +170,7 @@ public:
 	bool m_NoSkinChangeForFrozen;
 
 	bool m_DDRaceTeam;
-
 	bool m_PredictEvents;
-
 	char m_aGameType[16];
 };
 
@@ -1247,6 +1245,7 @@ private:
 	void UpdateRenderedCharacters();
 	void RefreshPredictionAfterConfigChange();
 	void RequestPredictionRefreshAfterConfigChange();
+	void HandlePredictedEvents(int Tick);
 
 	int m_aLastUpdateTick[MAX_CLIENTS] = {0};
 	void DetectStrongHook();
