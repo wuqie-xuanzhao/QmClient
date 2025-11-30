@@ -5,6 +5,12 @@
 #include <game/editor/editor.h>
 #include <game/editor/mapitems.h>
 #include <game/editor/mapitems/image.h>
+#include <game/editor/mapitems/layer.h>
+#include <game/editor/mapitems/layer_front.h>
+#include <game/editor/mapitems/layer_group.h>
+#include <game/editor/mapitems/layer_quads.h>
+#include <game/editor/mapitems/layer_sounds.h>
+#include <game/editor/mapitems/map.h>
 
 static const char *LayerTypeDisplayName(const std::shared_ptr<CLayer> &pLayer)
 {
