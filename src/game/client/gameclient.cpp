@@ -4812,6 +4812,8 @@ void CGameClient::OnPredict()
 		if(pDummyChar)
 			HandleRandomEmoteOnHit(pDummyChar, 1);
 
+		HandlePredictedEvents(Tick);
+
 		// fetch the current characters
 		if(Tick == FinalTickSelf)
 		{
@@ -6246,6 +6248,7 @@ void CGameClient::UpdatePrediction()
 	m_GameWorld.m_WorldConfig.m_PredictTeleport = false;
 	m_GameWorld.m_WorldConfig.m_BugDDRaceInput = m_GameInfo.m_BugDDRaceInput;
 	m_GameWorld.m_WorldConfig.m_NoWeakHookAndBounce = m_GameInfo.m_NoWeakHookAndBounce;
+	m_GameWorld.m_WorldConfig.m_PredictEvents = m_GameInfo.m_PredictEvents;
 
 	if(!m_Snap.m_pLocalCharacter)
 	{
