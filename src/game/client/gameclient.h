@@ -425,7 +425,6 @@ private:
 	// only used in OnNewSnapshot
 	bool m_GameOver = false;
 	bool m_GamePaused = false;
-	int m_PrevLocalId = -1;
 	SDemoHudPlaybackState m_DemoHudPlaybackState;
 	SDemoInputPlaybackState m_DemoInputPlaybackState;
 	int m_LastDemoHudRecordTick = -1;
