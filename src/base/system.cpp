@@ -3368,3 +3368,8 @@ void os_locale_str(char *locale, size_t length)
 	if(locale[0] == '\0' || str_comp(locale, "C") == 0 || str_comp(locale, "POSIX") == 0)
 		str_copy(locale, "en-US", length);
 }
+
+std::chrono::nanoseconds time_get_nanoseconds()
+{
+	return std::chrono::nanoseconds(time_get_impl());
+}

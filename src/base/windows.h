@@ -100,7 +100,7 @@ public:
  *
  * @return `true` on success, `false` on failure.
  *
- * @remark The caller must later call @link shell_update @endlink, iff the shell needs to be updated.
+ * @remark The caller must later call @link windows_shell_update @endlink, iff the shell needs to be updated.
  */
 bool windows_shell_register_protocol(const char *protocol_name, const char *executable, bool *updated);
 
@@ -117,7 +117,7 @@ bool windows_shell_register_protocol(const char *protocol_name, const char *exec
  *
  * @return `true` on success, `false` on failure.
  *
- * @remark The caller must later call @link shell_update @endlink, iff the shell needs to be updated.
+ * @remark The caller must later call @link windows_shell_update @endlink, iff the shell needs to be updated.
  */
 bool windows_shell_register_extension(const char *extension, const char *description, const char *executable_name, const char *executable, bool *updated);
 
@@ -132,7 +132,7 @@ bool windows_shell_register_extension(const char *extension, const char *descrip
  *
  * @return `true` on success, `false` on failure.
  *
- * @remark The caller must later call @link shell_update @endlink, iff the shell needs to be updated.
+ * @remark The caller must later call @link windows_shell_update @endlink, iff the shell needs to be updated.
  */
 bool windows_shell_register_application(const char *name, const char *executable, bool *updated);
 
@@ -148,7 +148,7 @@ bool windows_shell_register_application(const char *name, const char *executable
  *
  * @return `true` on success, `false` on failure.
  *
- * @remark The caller must later call @link shell_update @endlink, iff the shell needs to be updated.
+ * @remark The caller must later call @link windows_shell_update @endlink, iff the shell needs to be updated.
  */
 bool windows_shell_unregister_class(const char *shell_class, bool *updated);
 
@@ -162,7 +162,7 @@ bool windows_shell_unregister_class(const char *shell_class, bool *updated);
  *
  * @return `true` on success, `false` on failure.
  *
- * @remark The caller must later call @link shell_update @endlink, iff the shell needs to be updated.
+ * @remark The caller must later call @link windows_shell_update @endlink, iff the shell needs to be updated.
  */
 bool windows_shell_unregister_application(const char *executable, bool *updated);
 
