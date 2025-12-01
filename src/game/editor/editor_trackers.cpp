@@ -43,7 +43,7 @@ void CQuadEditTracker::BeginQuadTrack(const std::shared_ptr<CLayerQuads> &pLayer
 	for(auto QuadIndex : vSelectedQuads)
 	{
 		auto &pQuad = pLayer->m_vQuads[QuadIndex];
-		m_InitialPoints[QuadIndex] = std::vector<CPoint>(pQuad.m_aPoints, pQuad.m_aPoints + 5);
+		m_InitialPoints[QuadIndex] = std::vector<CPoint>(std::begin(pQuad.m_aPoints), std::end(pQuad.m_aPoints));
 		m_vSelectedQuads.push_back(QuadIndex);
 	}
 }
@@ -59,7 +59,7 @@ void CQuadEditTracker::EndQuadTrack()
 	for(auto QuadIndex : m_vSelectedQuads)
 	{
 		auto &pQuad = m_pLayer->m_vQuads[QuadIndex];
-		auto vCurrentPoints = std::vector<CPoint>(pQuad.m_aPoints, pQuad.m_aPoints + 5);
+		auto vCurrentPoints = std::vector<CPoint>(std::begin(pQuad.m_aPoints), std::end(pQuad.m_aPoints));
 		if(QuadPointChanged(vCurrentPoints, QuadIndex))
 			vpActions.push_back(std::make_shared<CEditorActionEditQuadPoint>(Map(), m_GroupIndex, m_LayerIndex, QuadIndex, m_InitialPoints[QuadIndex], vCurrentPoints));
 	}
@@ -83,7 +83,7 @@ void CQuadEditTracker::BeginQuadPropTrack(const std::shared_ptr<CLayerQuads> &pL
 	{
 		auto &Quad = pLayer->m_vQuads[QuadIndex];
 		if(Prop == EQuadProp::PROP_POS_X || Prop == EQuadProp::PROP_POS_Y)
-			m_InitialPoints[QuadIndex] = std::vector<CPoint>(Quad.m_aPoints, Quad.m_aPoints + 5);
+			m_InitialPoints[QuadIndex] = std::vector<CPoint>(std::begin(Quad.m_aPoints), std::end(Quad.m_aPoints));
 		else if(Prop == EQuadProp::PROP_POS_ENV)
 			m_PreviousValues[QuadIndex] = Quad.m_PosEnv;
 		else if(Prop == EQuadProp::PROP_POS_ENV_OFFSET)
@@ -109,7 +109,7 @@ void CQuadEditTracker::EndQuadPropTrack(EQuadProp Prop)
 		auto &Quad = m_pLayer->m_vQuads[QuadIndex];
 		if(Prop == EQuadProp::PROP_POS_X || Prop == EQuadProp::PROP_POS_Y)
 		{
-			auto vCurrentPoints = std::vector<CPoint>(Quad.m_aPoints, Quad.m_aPoints + 5);
+			auto vCurrentPoints = std::vector<CPoint>(std::begin(Quad.m_aPoints), std::end(Quad.m_aPoints));
 			if(QuadPointChanged(vCurrentPoints, QuadIndex))
 				vpActions.push_back(std::make_shared<CEditorActionEditQuadPoint>(Map(), m_GroupIndex, m_LayerIndex, QuadIndex, m_InitialPoints[QuadIndex], vCurrentPoints));
 		}
@@ -169,9 +169,7 @@ void CQuadEditTracker::AddQuadPointPropTrack(EQuadPointProp Prop)
 	{
 		auto &Quad = m_pLayer->m_vQuads[QuadIndex];
 		if(Prop == EQuadPointProp::PROP_POS_X || Prop == EQuadPointProp::PROP_POS_Y)
-		{
-			m_InitialPoints[QuadIndex] = std::vector<CPoint>(Quad.m_aPoints, Quad.m_aPoints + 5);
-		}
+			m_InitialPoints[QuadIndex] = std::vector<CPoint>(std::begin(Quad.m_aPoints), std::end(Quad.m_aPoints));
 		else if(Prop == EQuadPointProp::PROP_COLOR)
 		{
 			for(int v = 0; v < 4; v++)
@@ -220,7 +218,7 @@ void CQuadEditTracker::EndQuadPointPropTrack(EQuadPointProp Prop)
 		auto &Quad = m_pLayer->m_vQuads[QuadIndex];
 		if(Prop == EQuadPointProp::PROP_POS_X || Prop == EQuadPointProp::PROP_POS_Y)
 		{
-			auto vCurrentPoints = std::vector<CPoint>(Quad.m_aPoints, Quad.m_aPoints + 5);
+			auto vCurrentPoints = std::vector<CPoint>(std::begin(Quad.m_aPoints), std::end(Quad.m_aPoints));
 			if(QuadPointChanged(vCurrentPoints, QuadIndex))
 				vpActions.push_back(std::make_shared<CEditorActionEditQuadPoint>(Map(), m_GroupIndex, m_LayerIndex, QuadIndex, m_InitialPoints[QuadIndex], vCurrentPoints));
 		}
@@ -265,7 +263,7 @@ void CQuadEditTracker::EndQuadPointPropTrackAll()
 			auto &Quad = m_pLayer->m_vQuads[QuadIndex];
 			if(Prop == EQuadPointProp::PROP_POS_X || Prop == EQuadPointProp::PROP_POS_Y)
 			{
-				auto vCurrentPoints = std::vector<CPoint>(Quad.m_aPoints, Quad.m_aPoints + 5);
+				auto vCurrentPoints = std::vector<CPoint>(std::begin(Quad.m_aPoints), std::end(Quad.m_aPoints));
 				if(QuadPointChanged(vCurrentPoints, QuadIndex))
 					vpActions.push_back(std::make_shared<CEditorActionEditQuadPoint>(Map(), m_GroupIndex, m_LayerIndex, QuadIndex, m_InitialPoints[QuadIndex], vCurrentPoints));
 			}
