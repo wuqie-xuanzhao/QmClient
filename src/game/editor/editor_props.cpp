@@ -86,28 +86,30 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			int Step = Shift ? 1 : 45;
 
 			auto NewValueRes = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, Shift ? 1 : 45, Shift ? 1.0f : 10.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0);
-			if(NewValueRes.m_Value != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
-			{
-				*pNewVal = NewValueRes.m_Value;
-				if(NewValueRes.m_State != EEditState::NONE)
-				{
-					Change = i;
-				}
-				State = NewValueRes.m_State;
-			}
+			int NewValue = NewValueRes.m_Value;
 			if(DoButton_FontIcon(&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "减小值.", IGraphics::CORNER_L, 7.0f))
 			{
-				*pNewVal = (std::ceil((pProps[i].m_Value / (float)Step)) - 1) * Step;
-				if(*pNewVal < 0)
-					*pNewVal += 360;
-				Change = i;
+				NewValue = (std::ceil((pProps[i].m_Value / (float)Step)) - 1) * Step;
+				if(NewValue < 0)
+					NewValue += 360;
 				State = EEditState::ONE_GO;
 			}
 			if(DoButton_FontIcon(&pIds[i] + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "增加值.", IGraphics::CORNER_R, 7.0f))
 			{
-				*pNewVal = (pProps[i].m_Value + Step) / Step * Step % 360;
-				Change = i;
+				NewValue = (pProps[i].m_Value + Step) / Step * Step;
 				State = EEditState::ONE_GO;
+			}
+
+			if(NewValue != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
+			{
+				*pNewVal = NewValue % 360;
+				if(NewValueRes.m_State != EEditState::NONE)
+				{
+					Change = i;
+				}
+				Change = i;
+				if(State != EEditState::ONE_GO)
+					State = NewValueRes.m_State;
 			}
 		}
 		else if(pProps[i].m_Type == PROPTYPE_COLOR)
