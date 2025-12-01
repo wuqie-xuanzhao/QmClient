@@ -272,6 +272,7 @@ void CPlayers::RenderHookCollLine(
 
 	if(!GameClient()->m_GameInfo.m_AllowHookColl)
 		return;
+
 	bool Local = GameClient()->m_Snap.m_LocalClientId == ClientId;
 
 #if defined(CONF_VIDEORECORDER)
