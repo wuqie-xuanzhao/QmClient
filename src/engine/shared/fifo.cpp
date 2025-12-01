@@ -119,6 +119,8 @@ void CFifo::Update()
 
 #elif defined(CONF_FAMILY_WINDOWS)
 
+#include <base/windows.h>
+
 #include <windows.h>
 
 void CFifo::Init(IConsole *pConsole, const char *pFifoFile, int Flag)

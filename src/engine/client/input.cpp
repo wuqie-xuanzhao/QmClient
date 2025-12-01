@@ -6,6 +6,7 @@
 
 #include <base/perf_timer.h>
 #include <base/system.h>
+#include <base/windows.h>
 
 #include <engine/client.h>
 #include <engine/console.h>

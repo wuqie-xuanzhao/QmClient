@@ -12,6 +12,7 @@ void crashdump_init_if_available(const char *log_file_path)
 
 #include "log.h"
 #include "system.h"
+#include "windows.h"
 
 #include <atomic>
 #include <csignal>
