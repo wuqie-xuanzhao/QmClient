@@ -38,9 +38,10 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			Shifter.VSplitRight(10.0f, &Shifter, &Inc);
 			Shifter.VSplitLeft(10.0f, &Dec, &Shifter);
 			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0, pColor);
-			if(NewValueRes.m_Value != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
+			int NewValue = NewValueRes.m_Value;
+			if(NewValue != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
-				*pNewVal = NewValueRes.m_Value;
+				*pNewVal = NewValue;
 				if(NewValueRes.m_State != EEditState::NONE)
 				{
 					Change = i;
@@ -107,7 +108,6 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				{
 					Change = i;
 				}
-				Change = i;
 				if(State != EEditState::ONE_GO)
 					State = NewValueRes.m_State;
 			}
@@ -245,17 +245,18 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			CUIRect Inc, Dec;
 			char aBuf[8];
+			int CurValue = pProps[i].m_Value;
 
 			Shifter.VSplitRight(10.0f, &Shifter, &Inc);
 			Shifter.VSplitLeft(10.0f, &Dec, &Shifter);
 
-			if(pProps[i].m_Value <= 0 || pProps[i].m_Value > (int)Map()->m_vpEnvelopes.size())
+			if(CurValue <= 0 || CurValue > (int)Map()->m_vpEnvelopes.size())
 			{
 				str_copy(aBuf, "无:");
 			}
-			else if(Map()->m_vpEnvelopes[pProps[i].m_Value - 1]->m_aName[0])
+			else if(Map()->m_vpEnvelopes[CurValue - 1]->m_aName[0])
 			{
-				str_format(aBuf, sizeof(aBuf), "%s:", Map()->m_vpEnvelopes[pProps[i].m_Value - 1]->m_aName);
+				str_format(aBuf, sizeof(aBuf), "%s:", Map()->m_vpEnvelopes[CurValue - 1]->m_aName);
 				if(!str_endswith(aBuf, ":"))
 				{
 					aBuf[sizeof(aBuf) - 2] = ':';
@@ -267,10 +268,11 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				aBuf[0] = '\0';
 			}
 
-			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, aBuf, pProps[i].m_Value, 0, Map()->m_vpEnvelopes.size(), 1, 1.0f, "选择包络线.", false, false, IGraphics::CORNER_NONE);
-			if(NewValueRes.m_Value != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
+			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, aBuf, CurValue, 0, Map()->m_vpEnvelopes.size(), 1, 1.0f, "选择包络线.", false, false, IGraphics::CORNER_NONE);
+			int NewVal = NewValueRes.m_Value;
+			if(NewVal != CurValue || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
-				*pNewVal = NewValueRes.m_Value;
+				*pNewVal = NewVal;
 				if(NewValueRes.m_State != EEditState::NONE)
 				{
 					Change = i;
