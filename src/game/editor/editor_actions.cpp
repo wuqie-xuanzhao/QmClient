@@ -402,10 +402,11 @@ CEditorActionEditQuadProp::CEditorActionEditQuadProp(CEditorMap *pMap, int Group
 		"位置纵",
 		"位置包络线",
 		"位置包络线偏移",
-		"颜色",
+		nullptr,
 		"颜色包络线",
 		"颜色包络线偏移"};
 	static_assert(std::size(s_apNames) == (size_t)EQuadProp::NUM_PROPS);
+	dbg_assert(Prop != EQuadProp::PROP_COLOR, "Color prop implemented by CEditorActionEditQuadColor");
 	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑四边形 %s 属性（图层 %d，组 %d）", s_apNames[(int)m_Prop], m_LayerIndex, m_GroupIndex);
 }
 

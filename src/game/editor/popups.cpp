@@ -1187,6 +1187,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 		{"位置纵", fx2i(pCurrentQuad->m_aPoints[4].y), PROPTYPE_INT, -1000000, 1000000},
 		{"位置包络线", pCurrentQuad->m_PosEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
 		{"位置偏移", pCurrentQuad->m_PosEnvOffset, PROPTYPE_INT, -1000000, 1000000},
+		{"颜色", pQuadPopupContext->m_Color, PROPTYPE_COLOR, 0, 0},
 		{"颜色包络线", pCurrentQuad->m_ColorEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
 		{"颜色偏移", pCurrentQuad->m_ColorEnvOffset, PROPTYPE_INT, -1000000, 1000000},
 		{nullptr},
