@@ -99,6 +99,8 @@ private:
 	int m_QuadIndex;
 	std::vector<CPoint> m_vPreviousPoints;
 	std::vector<CPoint> m_vCurrentPoints;
+
+	void Apply(const std::vector<CPoint> &vValue);
 };
 
 class CEditorActionEditQuadColor : public CEditorActionLayerBase
