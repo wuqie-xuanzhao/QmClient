@@ -1381,6 +1381,19 @@ void CEditor::ApplyAxisAlignment(ivec2 &Offset) const
 	Offset.y = ((Axis == EAxis::AXIS_NONE || Axis == EAxis::AXIS_Y) ? Offset.y : 0);
 }
 
+static CColor AverageColor(const std::vector<CQuad *> &vpQuads)
+{
+	CColor Average = {0, 0, 0, 0};
+	for(CQuad *pQuad : vpQuads)
+	{
+		for(CColor Color : pQuad->m_aColors)
+		{
+			Average += Color;
+		}
+	}
+	return Average / std::size(CQuad{}.m_aColors) / vpQuads.size();
+}
+
 void CEditor::DoQuad(int LayerIndex, const std::shared_ptr<CLayerQuads> &pLayer, CQuad *pQuad, int Index)
 {
 	enum
@@ -1553,6 +1566,7 @@ void CEditor::DoQuad(int LayerIndex, const std::shared_ptr<CLayerQuads> &pLayer,
 					m_QuadPopupContext.m_pEditor = this;
 					m_QuadPopupContext.m_SelectedQuadIndex = Map()->FindSelectedQuadIndex(Index);
 					dbg_assert(m_QuadPopupContext.m_SelectedQuadIndex >= 0, "Selected quad index not found for quad popup");
+					m_QuadPopupContext.m_Color = PackColor(AverageColor(GetSelectedQuads()));
 					Ui()->DoPopupMenu(&m_QuadPopupContext, Ui()->MouseX(), Ui()->MouseY(), 120, 251, &m_QuadPopupContext, PopupQuad);
 					Ui()->DisableMouseLock();
 				}

@@ -1241,6 +1241,11 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 		{
 			pQuad->m_PosEnvOffset = NewVal;
 		}
+		else if(Prop == EQuadProp::PROP_COLOR)
+		{
+			pQuadPopupContext->m_Color = NewVal;
+			std::fill(std::begin(pQuad->m_aColors), std::end(pQuad->m_aColors), UnpackColor(NewVal));
+		}
 		else if(Prop == EQuadProp::PROP_COLOR_ENV)
 		{
 			int Index = std::clamp(NewVal - 1, -1, (int)pEditor->Map()->m_vpEnvelopes.size() - 1);
