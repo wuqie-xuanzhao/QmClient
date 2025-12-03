@@ -488,6 +488,11 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 		GameClient()->FormatStreamerName(ClientId, aNameBuf, sizeof(aNameBuf));
 		GameClient()->FormatStreamerClan(ClientId, aClanBuf, sizeof(aClanBuf));
 
+		CUIRect SpectatorRect, SpectatorRectLineBreak;
+		constexpr float Margin = 1.0f;
+		SpectatorRect.x = Cursor.m_X - Margin;
+		SpectatorRect.y = Cursor.m_Y;
+
 		if(g_Config.m_ClShowIds && !HideIdentity)
 		{
 			char aClientId[16];
@@ -525,6 +530,59 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 
 		CommaNeeded = true;
 		--RemainingSpectators;
+
+		bool LineBreakDetected = false;
+		SpectatorRect.h = Cursor.m_FontSize;
+
+		// detect line breaks
+		if(Cursor.m_Y != SpectatorRect.y)
+		{
+			LineBreakDetected = true;
+			SpectatorRectLineBreak.x = SpectatorList.x - Margin;
+			SpectatorRectLineBreak.y = Cursor.m_Y;
+			SpectatorRectLineBreak.h = Cursor.m_FontSize;
+			SpectatorRectLineBreak.w = Cursor.m_X - SpectatorList.x + 3 * Margin;
+
+			SpectatorRect.w = SpectatorList.x + SpectatorList.w + Margin - SpectatorRect.x;
+		}
+		else
+		{
+			SpectatorRect.w = Cursor.m_X - SpectatorRect.x + 2 * Margin;
+		}
+
+		if(m_MouseUnlocked)
+		{
+			int ButtonResult = Ui()->DoButtonLogic(&m_aPlayers[pInfo->m_ClientId].m_PlayerButtonId, 0, &SpectatorRect, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
+
+			if(LineBreakDetected && ButtonResult == 0)
+			{
+				ButtonResult = Ui()->DoButtonLogic(&m_aPlayers[pInfo->m_ClientId].m_SpectatorSecondLineButtonId, 0, &SpectatorRectLineBreak, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
+			}
+			if(ButtonResult != 0)
+			{
+				m_ScoreboardPopupContext.m_pScoreboard = this;
+				m_ScoreboardPopupContext.m_ClientId = pInfo->m_ClientId;
+				m_ScoreboardPopupContext.m_IsLocal = GameClient()->m_aLocalIds[0] == pInfo->m_ClientId ||
+								     (Client()->DummyConnected() && GameClient()->m_aLocalIds[1] == pInfo->m_ClientId);
+				m_ScoreboardPopupContext.m_IsSpectating = true;
+
+				Ui()->DoPopupMenu(&m_ScoreboardPopupContext, Ui()->MouseX(), Ui()->MouseY(), 110.0f,
+					m_ScoreboardPopupContext.m_IsLocal ? 30.0f : 60.0f, &m_ScoreboardPopupContext, PopupScoreboard);
+			}
+
+			if(Ui()->HotItem() == &m_aPlayers[pInfo->m_ClientId].m_PlayerButtonId || Ui()->HotItem() == &m_aPlayers[pInfo->m_ClientId].m_SpectatorSecondLineButtonId)
+			{
+				if(!LineBreakDetected)
+				{
+					SpectatorRect.Draw(TextRender()->DefaultTextSelectionColor(), IGraphics::CORNER_ALL, 2.5f);
+				}
+				else
+				{
+					SpectatorRect.Draw(TextRender()->DefaultTextSelectionColor(), IGraphics::CORNER_L, 2.5f);
+					SpectatorRectLineBreak.Draw(TextRender()->DefaultTextSelectionColor(), IGraphics::CORNER_R, 2.5f);
+				}
+			}
+		}
 	}
 
 	if(ShowMediaControls)
@@ -1124,6 +1182,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 					m_ScoreboardPopupContext.m_ClientId = ClientId;
 					m_ScoreboardPopupContext.m_IsLocal = GameClient()->m_aLocalIds[0] == ClientId ||
 									     (Client()->DummyConnected() && GameClient()->m_aLocalIds[1] == ClientId);
+					m_ScoreboardPopupContext.m_IsSpectating = false;
 
 					Ui()->DoPopupMenu(&m_ScoreboardPopupContext, Ui()->MouseX(), Ui()->MouseY(), 110.0f,
 						m_ScoreboardPopupContext.m_IsLocal ? 58.5f : 87.5f, &m_ScoreboardPopupContext, PopupScoreboard);
@@ -1970,29 +2029,32 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 	bool IsSpectating = pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_Active && pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == pPopupContext->m_ClientId;
 	ColorRGBA SpectateButtonColor = ColorRGBA(1.0f, 1.0f, 1.0f, (IsSpectating ? 0.25f : 0.5f) * pUi->ButtonColorMul(&pPopupContext->m_SpectateButton));
-	if(pUi->DoButton_PopupMenu(&pPopupContext->m_SpectateButton, Localize("Spectate"), &Container, FontSize, TEXTALIGN_MC, 0.0f, false, true, SpectateButtonColor))
+	if(!pPopupContext->m_IsSpectating)
 	{
-		if(IsSpectating)
+		if(pUi->DoButton_PopupMenu(&pPopupContext->m_SpectateButton, Localize("Spectate"), &Container, FontSize, TEXTALIGN_MC, 0.0f, false, true, SpectateButtonColor))
 		{
-			pScoreboard->GameClient()->m_Spectator.Spectate(SPEC_FREEVIEW);
-			pScoreboard->Console()->ExecuteLine("say /spec");
-		}
-		else
-		{
-			if(pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_Active)
+			if(IsSpectating)
 			{
-				pScoreboard->GameClient()->m_Spectator.Spectate(pPopupContext->m_ClientId);
+				pScoreboard->GameClient()->m_Spectator.Spectate(SPEC_FREEVIEW);
+				pScoreboard->Console()->ExecuteLine("say /spec");
 			}
 			else
 			{
-				// escape the name
-				char aEscapedCommand[2 * MAX_NAME_LENGTH + 32];
-				str_copy(aEscapedCommand, "say /spec \"");
-				char *pDst = aEscapedCommand + str_length(aEscapedCommand);
-				str_escape(&pDst, Client.m_aName, aEscapedCommand + sizeof(aEscapedCommand));
-				str_append(aEscapedCommand, "\"");
+				if(pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_Active)
+				{
+					pScoreboard->GameClient()->m_Spectator.Spectate(pPopupContext->m_ClientId);
+				}
+				else
+				{
+					// escape the name
+					char aEscapedCommand[2 * MAX_NAME_LENGTH + 32];
+					str_copy(aEscapedCommand, "say /spec \"");
+					char *pDst = aEscapedCommand + str_length(aEscapedCommand);
+					str_escape(&pDst, Client.m_aName, aEscapedCommand + sizeof(aEscapedCommand));
+					str_append(aEscapedCommand, "\"");
 
-				pScoreboard->Console()->ExecuteLine(aEscapedCommand);
+					pScoreboard->Console()->ExecuteLine(aEscapedCommand);
+				}
 			}
 		}
 	}
