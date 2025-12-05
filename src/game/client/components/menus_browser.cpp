@@ -33,6 +33,7 @@ using namespace FontIcons;
 
 static constexpr ColorRGBA gs_HighlightedTextColor = ColorRGBA(0.4f, 0.4f, 1.0f, 1.0f);
 
+<<<<<<< HEAD
 static ColorRGBA BrowserOpacityColor(ColorRGBA Color, float AlphaScale = 1.0f)
 {
 	if(Color.r == Color.g && Color.g == Color.b)
@@ -332,7 +333,7 @@ static const char *LocalizeFriendsCategory(const char *pCategory)
 	return pCategory;
 }
 
-static ColorRGBA PlayerBackgroundColor(bool Friend, bool Clan, bool Afk, bool Inside)
+static ColorRGBA PlayerBackgroundColor(bool Friend, bool Clan, bool Afk, bool InSelectedServer, bool Inside)
 {
 	const ColorRGBA FriendsColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClFriendsListFriendColor));
 	const ColorRGBA ClanColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClFriendsListClanColor));
@@ -346,7 +347,7 @@ static ColorRGBA PlayerBackgroundColor(bool Friend, bool Clan, bool Afk, bool In
 		i = 1;
 	else
 		i = 2;
-	return (Afk ? COLORS_AFK[i] : COLORS[i]).WithAlpha(Inside ? 0.45f : 0.3f);
+	return (Afk ? COLORS_AFK[i] : COLORS[i]).WithAlpha(0.3f + (Inside ? 0.15f : 0.0f) + (InSelectedServer ? 0.12f : 0.0f));
 }
 
 template<size_t N>
@@ -1953,7 +1954,7 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 		CUIRect Skin, Name, Clan, Score, Flag;
 		Name = Item.m_Rect;
 
-		const ColorRGBA Color = PlayerBackgroundColor(CurrentClient.m_FriendState == IFriends::FRIEND_PLAYER, CurrentClient.m_FriendState == IFriends::FRIEND_CLAN, CurrentClient.m_Afk, false);
+		const ColorRGBA Color = PlayerBackgroundColor(CurrentClient.m_FriendState == IFriends::FRIEND_PLAYER, CurrentClient.m_FriendState == IFriends::FRIEND_CLAN, CurrentClient.m_Afk, false, false);
 		Name.Draw(Color, IGraphics::CORNER_ALL, 4.0f);
 		Name.VSplitLeft(1.0f, nullptr, &Name);
 		Name.VSplitLeft(34.0f, &Score, &Name);
@@ -2449,9 +2450,11 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					}
 					GameClient()->m_Tooltips.DoToolTip(pListItemId, &Rect, TooltipText.c_str());
 				}
+<<<<<<< HEAD
 				++FriendTooltipIndex;
 				const bool IsOffline = Friend.ServerInfo() == nullptr;
-				const ColorRGBA Color = PlayerBackgroundColor(Friend.FriendState() == IFriends::FRIEND_PLAYER, Friend.FriendState() == IFriends::FRIEND_CLAN, IsOffline ? true : Friend.IsAfk(), Inside);
+				const bool InSelectedServer = m_SelectedIndex >= 0 && Friend.ServerInfo() && Friend.ServerInfo()->m_ServerIndex == ServerBrowser()->SortedGet(m_SelectedIndex)->m_ServerIndex;
+				const ColorRGBA Color = PlayerBackgroundColor(Friend.FriendState() == IFriends::FRIEND_PLAYER, Friend.FriendState() == IFriends::FRIEND_CLAN, IsOffline ? true : Friend.IsAfk(), InSelectedServer, Inside);
 				Rect.Draw(Color, IGraphics::CORNER_ALL, 5.0f);
 				Rect.Margin(2.0f, &Rect);
 
