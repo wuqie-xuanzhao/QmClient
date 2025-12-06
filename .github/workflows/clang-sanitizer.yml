@@ -34,7 +34,7 @@ jobs:
       CARGO_HTTP_MULTIPLEXING: false
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       UBSAN_OPTIONS: suppressions=../ubsan.supp:log_path=SAN:print_stacktrace=1:halt_on_error=0
-      ASAN_OPTIONS: log_path=SAN:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_leaks=0:halt_on_error=0
+      ASAN_OPTIONS: log_path=SAN:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_leaks=1:halt_on_error=0
       LSAN_OPTIONS: suppressions=../lsan.supp
     steps:
     - name: Checkout repository
@@ -55,7 +55,7 @@ jobs:
       run: |
         set -o pipefail
         rm -f clang-sanitizer-sanitizer.log
-        rm -f clang-sanitizer-client-server.status clang-sanitizer-tests.status
+        rm -f clang-sanitizer-client-server.status clang-sanitizer-tests.status clang-sanitizer-integration.status
         mkdir clang-sanitizer
         cd clang-sanitizer
         export CC=clang
@@ -134,10 +134,48 @@ jobs:
         fi
         echo "passed" > ../clang-sanitizer-tests.status
 
+    - name: Build mastersrv
+      run: |
+        set -o pipefail
+        cd src/mastersrv
+        cargo build 2>&1 | tee ../../clang-sanitizer-mastersrv.log
+        cp target/debug/mastersrv ../../clang-sanitizer
+
+    - name: Run integration tests with ASan and UBSan
+      continue-on-error: true
+      run: |
+        set -o pipefail
+        cd clang-sanitizer
+        rm -f integration_*/SAN.*
+        set +e
+        python ../scripts/integration_test.py --test-mastersrv . 2>&1 | tee ../clang-sanitizer-integration.log
+        integration_test_result=$?
+        set -e
+        failed=false
+        if [ $integration_test_result -ne 0 ]; then
+          echo -e "\033[31mFAILED: Integration test exit code $integration_test_result\033[m"
+          failed=true
+        fi
+        san_files=$(find . -maxdepth 2 -type f -path './integration_*/SAN.*' | sort)
+        if [ -n "$san_files" ]; then
+          echo -e "\033[31mFAILED: Sanitizer errors:\033[m"
+          while IFS= read -r san_file; do
+            [ -n "$san_file" ] || continue
+            echo "===== ${san_file#./} =====" | tee -a ../clang-sanitizer-sanitizer.log
+            cat "$san_file" | tee -a ../clang-sanitizer-sanitizer.log
+          done <<< "$san_files"
+          failed=true
+        fi
+        if [ "$failed" = true ]; then
+          echo "failed" > ../clang-sanitizer-integration.status
+          exit 1
+        fi
+        echo "passed" > ../clang-sanitizer-integration.status
+
     - name: Fail if ASan or UBSan checks failed
       run: |
         failed=false
-        for status_file in clang-sanitizer-client-server.status clang-sanitizer-tests.status; do
+        for status_file in clang-sanitizer-client-server.status clang-sanitizer-tests.status clang-sanitizer-integration.status; do
           if [ ! -f "$status_file" ]; then
             echo -e "\033[31mFAILED: Missing sanitizer status file $status_file\033[m"
             failed=true
@@ -159,5 +197,5 @@ jobs:
         python3 qmclient_scripts/gate/tools/ci_summary.py \
           --kind sanitizer \
           --status "${{ job.status }}" \
-          --logs clang-sanitizer-configure.log clang-sanitizer-build.log clang-sanitizer-client.log clang-sanitizer-server.log clang-sanitizer-tests.log clang-sanitizer-sanitizer.log \
+          --logs clang-sanitizer-configure.log clang-sanitizer-build.log clang-sanitizer-client.log clang-sanitizer-server.log clang-sanitizer-tests.log clang-sanitizer-mastersrv.log clang-sanitizer-integration.log clang-sanitizer-sanitizer.log \
           --output "$GITHUB_STEP_SUMMARY"
