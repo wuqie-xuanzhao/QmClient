@@ -306,6 +306,7 @@ public:
 	void SendServerAlert(const char *pMessage);
 	void SendModeratorAlert(int ToClientId, const char *pMessage);
 	void SendBroadcast(const char *pText, int ClientId, bool IsImportant = true);
+	void SendSkinChange7(int ClientId);
 
 	void List(int ClientId, const char *pFilter);
 
