@@ -2189,6 +2189,8 @@ set_src(BASE GLOB_RECURSE src/base
   log.h
   logger.h
   math.h
+  mem.cpp
+  mem.h
   perf_timer.h
   rust.h
   str.cpp
