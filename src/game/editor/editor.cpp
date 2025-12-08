@@ -12,7 +12,6 @@
 #include <base/system.h>
 
 #include <engine/client.h>
-#include <engine/console.h>
 #include <engine/engine.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
@@ -6978,7 +6977,6 @@ void CEditor::Init()
 	m_pClient = Kernel()->RequestInterface<IClient>();
 	m_pConfigManager = Kernel()->RequestInterface<IConfigManager>();
 	m_pConfig = m_pConfigManager->Values();
-	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
@@ -7119,6 +7117,7 @@ void CEditor::HandleWriterFinishJobs()
 			SetCollabStatus("同步失败：无法移动地图快照");
 		}
 		ShowFileDialogError("%s", pErrorMessage);
+		log_error("editor/save", "%s", pErrorMessage);
 		return;
 	}
 
@@ -7128,6 +7127,8 @@ void CEditor::HandleWriterFinishJobs()
 		UploadCollabSnapshot();
 		return;
 	}
+
+	log_trace("editor/save", "Saved map to '%s'.", pJob->RealFilename());
 
 	// send rcon.. if we can
 	if(Client()->RconAuthed() && g_Config.m_EdAutoMapReload)
@@ -7310,7 +7311,7 @@ bool CEditor::Save(const char *pFilename)
 
 	const auto &&ErrorHandler = [this](const char *pErrorMessage) {
 		ShowFileDialogError("%s", pErrorMessage);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor/save", pErrorMessage);
+		log_error("editor/save", "%s", pErrorMessage);
 	};
 	return Map()->Save(pFilename, ErrorHandler);
 }
@@ -7335,7 +7336,7 @@ bool CEditor::Load(const char *pFilename, int StorageType)
 {
 	const auto &&ErrorHandler = [this](const char *pErrorMessage) {
 		ShowFileDialogError("%s", pErrorMessage);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor/load", pErrorMessage);
+		log_error("editor/load", "%s", pErrorMessage);
 	};
 
 	Reset();
