@@ -4297,6 +4297,7 @@ void CGameClient::OnNewSnapshot()
 			}
 		}
 	}
+
 	if(g_Config.m_ClFreezeStars && !m_SuppressEvents)
 	{
 		for(auto &Character : m_Snap.m_aCharacters)
