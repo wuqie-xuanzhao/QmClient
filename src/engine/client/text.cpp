@@ -2037,7 +2037,6 @@ public:
 						CheckCursorAtCharacter(LastSelX + LastSelWidth, DrawY);
 						if(StartNewLine())
 						{
-							++pCursor->m_GlyphCount;
 							pLastGlyph = nullptr;
 							continue;
 						}
