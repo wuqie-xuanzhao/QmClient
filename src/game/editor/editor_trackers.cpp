@@ -510,7 +510,7 @@ int CLayerTilesPropTracker::PropToValue(ETilesProp Prop)
 	case ETilesProp::PROP_WIDTH: return m_pObject->m_Width;
 	case ETilesProp::PROP_IMAGE: return m_pObject->m_Image;
 	case ETilesProp::PROP_SEED: return m_pObject->m_Seed;
-	case ETilesProp::PROP_SHIFT_BY: return Editor()->m_ShiftBy;
+	case ETilesProp::PROP_SHIFT_BY: return Map()->m_ShiftBy;
 	default: return 0;
 	}
 }
@@ -567,7 +567,7 @@ bool CLayerTilesCommonPropTracker::EndChecker(ETilesCommonProp Prop, int Value)
 int CLayerTilesCommonPropTracker::PropToValue(ETilesCommonProp Prop)
 {
 	if(Prop == ETilesCommonProp::PROP_SHIFT_BY)
-		return Editor()->m_ShiftBy;
+		return Map()->m_ShiftBy;
 	return 0;
 }
 

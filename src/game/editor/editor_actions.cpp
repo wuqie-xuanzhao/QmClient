@@ -928,7 +928,7 @@ void CEditorActionEditLayerTilesProp::Undo()
 	}
 	else if(m_Prop == ETilesProp::PROP_SHIFT_BY)
 	{
-		Editor()->m_ShiftBy = m_Previous;
+		Map()->m_ShiftBy = m_Previous;
 	}
 	else if(m_Prop == ETilesProp::PROP_IMAGE)
 	{
@@ -1012,7 +1012,7 @@ void CEditorActionEditLayerTilesProp::Redo()
 	}
 	else if(m_Prop == ETilesProp::PROP_SHIFT_BY)
 	{
-		Editor()->m_ShiftBy = m_Current;
+		Map()->m_ShiftBy = m_Current;
 	}
 	else if(m_Prop == ETilesProp::PROP_IMAGE)
 	{

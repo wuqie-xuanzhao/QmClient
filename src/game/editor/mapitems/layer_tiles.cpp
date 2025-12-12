@@ -711,7 +711,7 @@ void CLayerTiles::Resize(int NewW, int NewH)
 
 void CLayerTiles::Shift(EShiftDirection Direction)
 {
-	ShiftImpl(m_pTiles, Direction, Editor()->m_ShiftBy);
+	ShiftImpl(m_pTiles, Direction, Map()->m_ShiftBy);
 }
 
 void CLayerTiles::ShowInfo()
@@ -1031,7 +1031,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{"宽度", m_Width, PROPTYPE_INT, 1, 100000},
 		{"高度", m_Height, PROPTYPE_INT, 1, 100000},
 		{"平移", 0, PROPTYPE_SHIFT, 0, 0},
-		{"平移量", Editor()->m_ShiftBy, PROPTYPE_INT, 1, 100000},
+		{"平移量", Map()->m_ShiftBy, PROPTYPE_INT, 1, 100000},
 		{"图像", m_Image, PROPTYPE_IMAGE, 0, 0},
 		{"颜色", PackColor(m_Color), PROPTYPE_COLOR, 0, 0},
 		{"颜色包络线", m_ColorEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
@@ -1090,7 +1090,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	}
 	else if(Prop == ETilesProp::PROP_SHIFT_BY)
 	{
-		Editor()->m_ShiftBy = NewVal;
+		Map()->m_ShiftBy = NewVal;
 	}
 	else if(Prop == ETilesProp::PROP_IMAGE)
 	{
@@ -1283,7 +1283,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 		{"宽度", State.m_Width, PROPTYPE_INT, 1, 100000},
 		{"高度", State.m_Height, PROPTYPE_INT, 1, 100000},
 		{"平移", 0, PROPTYPE_SHIFT, 0, 0},
-		{"平移量", pEditor->m_ShiftBy, PROPTYPE_INT, 1, 100000},
+		{"平移量", pEditorMap->m_ShiftBy, PROPTYPE_INT, 1, 100000},
 		{"颜色", State.m_Color, PROPTYPE_COLOR, 0, 0},
 		{nullptr},
 	};
@@ -1324,7 +1324,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 	}
 	else if(Prop == ETilesCommonProp::PROP_SHIFT_BY)
 	{
-		pEditor->m_ShiftBy = NewVal;
+		pEditorMap->m_ShiftBy = NewVal;
 	}
 	else if(Prop == ETilesCommonProp::PROP_COLOR)
 	{
