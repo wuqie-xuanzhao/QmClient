@@ -354,7 +354,7 @@ void CPlayer::Snap(int SnappingClient)
 	{
 		CNetObj_PlayerInfo PlayerInfo = {};
 		PlayerInfo.m_Latency = Latency;
-		PlayerInfo.m_Score = !g_Config.m_SvHideScore || SnappingClient == m_ClientId ? Score : -9999;
+		PlayerInfo.m_Score = !g_Config.m_SvHideScore || SnappingClient == m_ClientId ? Score : FinishTime::NOT_FINISHED_TIMESCORE;
 		PlayerInfo.m_Local = (int)(m_ClientId == SnappingClient && (m_Paused != PAUSE_PAUSED || SnappingClientVersion >= VERSION_DDNET_OLD));
 		PlayerInfo.m_ClientId = TranslatedId;
 		PlayerInfo.m_Team = m_Team;
