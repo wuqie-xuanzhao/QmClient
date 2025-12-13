@@ -354,7 +354,7 @@ void CPlayer::Snap(int SnappingClient)
 	{
 		CNetObj_PlayerInfo PlayerInfo = {};
 		PlayerInfo.m_Latency = Latency;
-		PlayerInfo.m_Score = Score;
+		PlayerInfo.m_Score = !g_Config.m_SvHideScore || SnappingClient == m_ClientId ? Score : -9999;
 		PlayerInfo.m_Local = (int)(m_ClientId == SnappingClient && (m_Paused != PAUSE_PAUSED || SnappingClientVersion >= VERSION_DDNET_OLD));
 		PlayerInfo.m_ClientId = TranslatedId;
 		PlayerInfo.m_Team = m_Team;
@@ -373,7 +373,7 @@ void CPlayer::Snap(int SnappingClient)
 			PlayerInfo.m_PlayerFlags |= protocol7::PLAYERFLAG_AIM;
 		if(Server()->IsRconAuthed(m_ClientId) && ((SnappingClient >= 0 && Server()->IsRconAuthed(SnappingClient)) || !Server()->HasAuthHidden(m_ClientId)))
 			PlayerInfo.m_PlayerFlags |= protocol7::PLAYERFLAG_ADMIN;
-		PlayerInfo.m_Score = Score;
+		PlayerInfo.m_Score = m_Score.has_value() && (!g_Config.m_SvHideScore || SnappingClient == m_ClientId) ? GameServer()->Score()->PlayerData(m_ClientId)->m_BestTime * 1000 : protocol7::FinishTime::NOT_FINISHED;
 		PlayerInfo.m_Latency = Latency;
 		Server()->SnapNewItem(TranslatedId, PlayerInfo);
 	}
@@ -464,6 +464,11 @@ void CPlayer::Snap(int SnappingClient)
 	IGameController::CFinishTime PlayerTime = GameServer()->m_pController->SnapPlayerTime(SnappingClient, this);
 	DDNetPlayer.m_FinishTimeSeconds = PlayerTime.m_Seconds;
 	DDNetPlayer.m_FinishTimeMillis = PlayerTime.m_Milliseconds;
+	if(g_Config.m_SvHideScore && SnappingClient != m_ClientId)
+	{
+		DDNetPlayer.m_FinishTimeSeconds = FinishTime::NOT_FINISHED_MILLIS;
+		DDNetPlayer.m_FinishTimeMillis = 0;
+	}
 	Server()->SnapNewItem(TranslatedId, DDNetPlayer);
 	if(Server()->IsSixup(SnappingClient) && m_pCharacter && m_pCharacter->m_DDRaceState == ERaceState::STARTED &&
 		GameServer()->m_apPlayers[SnappingClient]->m_TimerType == TIMERTYPE_SIXUP)
