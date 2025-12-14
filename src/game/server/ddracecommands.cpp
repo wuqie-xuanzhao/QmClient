@@ -580,7 +580,7 @@ void CGameContext::ConVoteNo(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	pSelf->ForceVote(pResult->m_ClientId, false);
+	pSelf->ForceVote(false);
 }
 
 void CGameContext::ConDrySave(IConsole::IResult *pResult, void *pUserData)
