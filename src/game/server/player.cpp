@@ -331,30 +331,13 @@ void CPlayer::Snap(int SnappingClient)
 	int SnappingClientVersion = GameServer()->GetClientVersion(SnappingClient);
 	int Latency = SnappingClient == SERVER_DEMO_CLIENT ? m_Latency.m_Min : GameServer()->m_apPlayers[SnappingClient]->m_aCurLatency[m_ClientId];
 
-	int Score;
-	// This is the time sent to the player while ingame (do not confuse to the one reported to the master server).
-	// Due to clients expecting this as a negative value, we have to make sure it's negative.
-	// Special numbers:
-	// -9999: means no time and isn't displayed in the scoreboard.
-	if(m_Score.has_value())
-	{
-		// shift the time by a second if the player actually took 9999
-		// seconds to finish the map.
-		if(m_Score.value() == 9999)
-			Score = -10000;
-		else
-			Score = -m_Score.value();
-	}
-	else
-	{
-		Score = -9999;
-	}
+	int Score = GameServer()->m_pController->SnapPlayerScore(SnappingClient, this);
 
 	if(!Server()->IsSixup(SnappingClient))
 	{
 		CNetObj_PlayerInfo PlayerInfo = {};
 		PlayerInfo.m_Latency = Latency;
-		PlayerInfo.m_Score = !g_Config.m_SvHideScore || SnappingClient == m_ClientId ? Score : FinishTime::NOT_FINISHED_TIMESCORE;
+		PlayerInfo.m_Score = Score;
 		PlayerInfo.m_Local = (int)(m_ClientId == SnappingClient && (m_Paused != PAUSE_PAUSED || SnappingClientVersion >= VERSION_DDNET_OLD));
 		PlayerInfo.m_ClientId = TranslatedId;
 		PlayerInfo.m_Team = m_Team;
@@ -373,7 +356,7 @@ void CPlayer::Snap(int SnappingClient)
 			PlayerInfo.m_PlayerFlags |= protocol7::PLAYERFLAG_AIM;
 		if(Server()->IsRconAuthed(m_ClientId) && ((SnappingClient >= 0 && Server()->IsRconAuthed(SnappingClient)) || !Server()->HasAuthHidden(m_ClientId)))
 			PlayerInfo.m_PlayerFlags |= protocol7::PLAYERFLAG_ADMIN;
-		PlayerInfo.m_Score = m_Score.has_value() && (!g_Config.m_SvHideScore || SnappingClient == m_ClientId) ? GameServer()->Score()->PlayerData(m_ClientId)->m_BestTime * 1000 : protocol7::FinishTime::NOT_FINISHED;
+		PlayerInfo.m_Score = Score;
 		PlayerInfo.m_Latency = Latency;
 		Server()->SnapNewItem(TranslatedId, PlayerInfo);
 	}
