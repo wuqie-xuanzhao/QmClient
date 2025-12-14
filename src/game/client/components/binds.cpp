@@ -6,6 +6,7 @@
 #include <base/system.h>
 
 #include <engine/config.h>
+#include <engine/console.h>
 #include <engine/shared/config.h>
 
 #include <game/client/components/chat.h>
@@ -197,19 +198,19 @@ static bool IsExactDebugGraphToggleCommand(const char *pCommand)
 	return str_comp_nocase(aNormalized, "toggle dbg_graphs 0 1") == 0;
 }
 
-static void ExecuteBindCommand(IConsole *pConsole, const char *pBind, const CGameClient *pGameClient, int Stroke)
+static void ExecuteBindCommand(IConsole *pConsole, const char *pBind, const CGameClient *pGameClient, int Stroke, int ClientId)
 {
 	if(!pBind)
 		return;
 	if(!ShouldAppendGoresPrevWeapon(pGameClient) || str_find(pBind, "+fire") == nullptr || str_find(pBind, "+prevweapon") != nullptr)
 	{
-		pConsole->ExecuteLineStroked(Stroke, pBind);
+		pConsole->ExecuteLineStroked(Stroke, pBind, ClientId);
 		return;
 	}
 
 	std::string Command(pBind);
 	Command += ";+prevweapon";
-	pConsole->ExecuteLineStroked(Stroke, Command.c_str());
+	pConsole->ExecuteLineStroked(Stroke, Command.c_str(), ClientId);
 }
 
 bool CBinds::CBindsSpecial::OnInput(const IInput::CEvent &Event)
@@ -351,7 +352,7 @@ bool CBinds::OnInput(const IInput::CEvent &Event)
 				const char *pBind = m_aapKeyBindings[ActiveModifierBind->m_ModifierMask][ActiveModifierBind->m_Key];
 				if(pBind)
 				{
-					ExecuteBindCommand(Console(), pBind, GameClient(), 0);
+					ExecuteBindCommand(Console(), pBind, GameClient(), 0, IConsole::CLIENT_ID_UNSPECIFIED);
 				}
 				m_vActiveBinds.erase(ActiveModifierBind);
 			}
@@ -371,7 +372,7 @@ bool CBinds::OnInput(const IInput::CEvent &Event)
 						m_MouseOnAction = true;
 					}
 				}
-				ExecuteBindCommand(Console(), pBind, GameClient(), 1);
+				ExecuteBindCommand(Console(), pBind, GameClient(), 1, IConsole::CLIENT_ID_UNSPECIFIED);
 				m_vActiveBinds.emplace_back(Event.m_Key, Mask);
 			};
 
@@ -393,7 +394,7 @@ bool CBinds::OnInput(const IInput::CEvent &Event)
 			// Have to check for nullptr again because the previous execute can unbind itself
 			if(m_aapKeyBindings[ActiveBind->m_ModifierMask][ActiveBind->m_Key])
 			{
-				ExecuteBindCommand(Console(), m_aapKeyBindings[ActiveBind->m_ModifierMask][ActiveBind->m_Key], GameClient(), 1);
+				ExecuteBindCommand(Console(), m_aapKeyBindings[ActiveBind->m_ModifierMask][ActiveBind->m_Key], GameClient(), 1, IConsole::CLIENT_ID_UNSPECIFIED);
 			}
 			Handled = true;
 		}
@@ -417,8 +418,7 @@ bool CBinds::OnInput(const IInput::CEvent &Event)
 			{
 				return;
 			}
-
-			ExecuteBindCommand(Console(), pBind, GameClient(), 0);
+			ExecuteBindCommand(Console(), pBind, GameClient(), 0, IConsole::CLIENT_ID_UNSPECIFIED);
 		};
 
 		// Release active bind that uses this primary key
