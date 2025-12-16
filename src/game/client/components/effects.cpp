@@ -407,6 +407,36 @@ void CEffects::HammerHit(vec2 Pos, float Alpha, float Volume)
 		GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_HAMMER_HIT, Volume, Pos);
 }
 
+// TClient: falling particles behind tee - similar to freeze snowflakes
+void CEffects::FootTrail(vec2 Pos, vec2 Direction, float Alpha)
+{
+	if(!m_Add50hz)
+		return;
+
+	// Spawn particle behind the tee (opposite to facing direction)
+	float BackOffset = -Direction.x * random_float(10.0f, 20.0f);
+
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_SNOWFLAKE;
+	p.m_Pos = Pos + vec2(BackOffset + random_float(-6.0f, 6.0f), random_float(-8.0f, 8.0f));
+	p.m_Vel = vec2(random_float(-10.0f, 10.0f), random_float(5.0f, 20.0f));
+	p.m_LifeSpan = random_float(0.8f, 1.5f);
+	p.m_StartSize = random_float(0.4f, 1.2f) * 16.0f; // varying sizes like freeze flakes
+	p.m_EndSize = p.m_StartSize * 0.3f;
+	p.m_UseAlphaFading = true;
+	p.m_StartAlpha = Alpha * 0.6f;
+	p.m_EndAlpha = 0.0f;
+	p.m_Rot = random_angle();
+	p.m_Rotspeed = random_float(-1.0f, 1.0f) * pi;
+	p.m_Gravity = random_float(150.0f, 300.0f); // fall down
+	p.m_Friction = 0.95f;
+	p.m_FlowAffected = 0.0f;
+	p.m_Collides = false;
+	p.m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, Alpha * 0.6f);
+	GameClient()->m_Particles.Add(CParticles::GROUP_EXTRA, &p);
+}
+
 void CEffects::OnRender()
 {
 	float Speed = 1.0f;

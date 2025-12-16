@@ -40,6 +40,7 @@ public:
 	void FreezingFlakes(vec2 Pos, vec2 Size, float Alpha);
 	void SparkleTrail(vec2 Pos, float Alpha);
 	void Confetti(vec2 Pos, float Alpha);
+	void FootTrail(vec2 Pos, vec2 Direction, float Alpha); // TClient: falling particles behind tee
 
 	void Update();
 };

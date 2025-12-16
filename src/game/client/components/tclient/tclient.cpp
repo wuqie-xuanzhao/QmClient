@@ -109,11 +109,11 @@ void CTClient::OnInit()
 		str_format(aError, sizeof(aError), TCLocalize("%s not found", DATA_VERSION_PATH), "data/tclient/gui_logo.png");
 	if(aError[0] == '\0')
 		CheckDataVersion(aError, sizeof(aError), Storage()->OpenFile(DATA_VERSION_PATH, IOFLAG_READ, IStorage::TYPE_ALL));
-	if(aError[0] != '\0')
-	{
-		SWarning Warning(aError, TCLocalize("You have probably only installed the TClient DDNet.exe which is not supported, please use the entire TClient folder", "data_version.h"));
-		Client()->AddWarning(Warning);
-	}
+	//if(aError[0] != '\0')
+	//{
+	//	SWarning Warning(aError, TCLocalize("喜报!您可能仅安装了需要DDNet.exe文件，请使用完整的TClient文件夹", "data_version.h"));
+	//	Client()->AddWarning(Warning);
+	//}
 }
 
 static bool LineShouldHighlight(const char *pLine, const char *pName)

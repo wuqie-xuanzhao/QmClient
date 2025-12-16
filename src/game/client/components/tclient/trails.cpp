@@ -4,6 +4,7 @@
 #include <engine/shared/config.h>
 
 #include <game/client/animstate.h>
+#include <game/client/components/effects.h>
 #include <game/client/gameclient.h>
 #include <game/client/render.h>
 
@@ -35,13 +36,43 @@ void CTrails::OnReset()
 
 void CTrails::OnRender()
 {
-	if(!g_Config.m_TcTeeTrail)
-		return;
-
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 
 	if(!GameClient()->m_Snap.m_pGameInfoObj)
+		return;
+
+	// TClient: Foot particles - render falling particles behind tee
+	if(g_Config.m_TcFootParticles)
+	{
+		for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
+		{
+			const bool Local = GameClient()->m_Snap.m_LocalClientId == ClientId;
+
+			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+				continue;
+
+			// Only render for local player (can be extended to others if desired)
+			if(!Local)
+				continue;
+
+			vec2 Position = GameClient()->m_aClients[ClientId].m_RenderPos;
+
+			// Get facing direction from character data
+			const CNetObj_Character &Cur = GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur;
+			float Angle = Cur.m_Angle / 256.0f;
+			vec2 Direction = direction(Angle);
+
+			float Alpha = 1.0f;
+			if(GameClient()->IsOtherTeam(ClientId))
+				Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+
+			GameClient()->m_Effects.FootTrail(Position, Direction, Alpha);
+		}
+	}
+
+	// Tee trail rendering
+	if(!g_Config.m_TcTeeTrail)
 		return;
 
 	Graphics()->TextureClear();

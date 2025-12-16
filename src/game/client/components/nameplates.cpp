@@ -15,7 +15,7 @@
 
 #include <memory>
 #include <vector>
-
+//枚举
 enum class EHookStrongWeakState
 {
 	WEAK,
@@ -1262,24 +1262,45 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	// Draw rounded rectangle background with slight border
 	// Use configured alpha value and colors (解析HSLA格式配置为RGBA)
 	float ConfigAlpha = g_Config.m_TcChatBubbleAlpha / 100.0f;
-	// 解析配置颜色 - CFGFLAG_COLALPHA 表示带alpha的HSLA格式
+
+	// ---------- Background ----------
 	ColorHSLA BgHSLA(g_Config.m_TcChatBubbleBgColor, true);
+	// 防止亮度过低/过高导致“发灰”
+	BgHSLA.l = std::clamp(BgHSLA.l, 0.15f, 0.85f);
+
 	ColorRGBA BgColor = color_cast<ColorRGBA>(BgHSLA);
+	// 背景跟随动画
 	BgColor.a *= BubbleAlpha * ConfigAlpha;
+
 	Graphics()->TextureClear();
-	Graphics()->DrawRect(BubbleX, BubbleY, BubbleWidth, BubbleHeight, BgColor, IGraphics::CORNER_ALL, Rounding);
+	Graphics()->DrawRect(
+		BubbleX, BubbleY,
+		BubbleWidth, BubbleHeight,
+		BgColor,
+		IGraphics::CORNER_ALL,
+		Rounding);
 
-	// 已移除禁言灰色雾效果
-
-	// Draw text centered in bubble with configured text color (with scale)
-	// 文字颜色不带alpha标志，按默认解析
+	// ---------- Text ----------
 	ColorHSLA TextHSLA(g_Config.m_TcChatBubbleTextColor, false);
+	// 保证文字亮度可读
+	TextHSLA.l = std::clamp(TextHSLA.l, 0.25f, 0.95f);
+
 	ColorRGBA TextColor = color_cast<ColorRGBA>(TextHSLA);
-	TextColor.a *= BubbleAlpha * ConfigAlpha;
+	// 文字比背景“抗 fade”
+	TextColor.a *= std::min(1.0f, BubbleAlpha * 1.2f) * ConfigAlpha;
+
+	// 自适应描边（反色而不是死黑）
+	ColorRGBA OutlineColor = TextColor;
+	OutlineColor.r = 1.0f - OutlineColor.r;
+	OutlineColor.g = 1.0f - OutlineColor.g;
+	OutlineColor.b = 1.0f - OutlineColor.b;
+	OutlineColor.a = 0.4f * TextColor.a;
+
 	TextRender()->TextColor(TextColor);
-	TextRender()->TextOutlineColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f * BubbleAlpha * ConfigAlpha));
+	TextRender()->TextOutlineColor(OutlineColor);
 	
 	// Center text horizontally in bubble (with scale)
+	// 中心文本位置计算
 	float ScaledTextWidth = TextWidth * AnimScale;
 	float ScaledTextHeight = TextHeight * AnimScale;
 	float TextX = BubbleX + (BubbleWidth - ScaledTextWidth) / 2.0f;
@@ -1297,6 +1318,7 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	TextRender()->SetRenderFlags(PrevFlags);
 
 	// Restore screen mapping
+	// 屏幕映射回游戏世界坐标
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 

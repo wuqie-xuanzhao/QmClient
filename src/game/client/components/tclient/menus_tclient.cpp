@@ -413,7 +413,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	// ***** LeftView ***** //
 	Column = LeftView;
 
-	// ***** Visual Miscellaneous ***** //
+	// ***** 视觉效果 ***** //
 	Column.HSplitTop(Margin, nullptr, &Column);
 	s_SectionBoxes.push_back(Column);
 	Column.HSplitTop(HeadlineHeight, &Label, &Column);
@@ -456,6 +456,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 		GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
 	}
 
+	//打开字体文件夹按钮,没有就创建
 	static CButtonContainer s_FontDirectoryId;
 	if(Ui()->DoButton_FontIcon(&s_FontDirectoryId, FONT_ICON_FOLDER, 0, &FontDirectory, IGraphics::CORNER_ALL))
 	{
@@ -516,9 +517,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	{
 		static std::vector<CButtonContainer> s_vButtonContainers = {{}, {}, {}};
 		int Value = g_Config.m_TcTinyTees ? (g_Config.m_TcTinyTeesOthers ? 2 : 1) : 0;
-		if(DoLine_RadioMenu(Column, TCLocalize("Tiny Tees"),
+		if(DoLine_RadioMenu(Column, TCLocalize("更小的Tee"),
 			   s_vButtonContainers,
-			   {Localize("None"), Localize("Own"), Localize("All")},
+			   {Localize("无"), Localize("自身"), Localize("全部")},
 			   {0, 1, 2},
 			   Value))
 		{
@@ -541,7 +542,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 		{
 			g_Config.m_TcFakeCtfFlags = Value;
 		}
-	}
+	}//尚不明确作用
 
 	Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
