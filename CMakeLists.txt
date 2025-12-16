@@ -977,6 +977,7 @@ else()
   set(CARGO_BUILD_DIR "")
   set(CARGO_BUILD ${CMAKE_COMMAND} -E env ${CARGO_BUILD_ENV} ${RUST_CARGO} build --locked --manifest-path "${PROJECT_SOURCE_DIR}/Cargo.toml")
   set(CARGO_TEST ${CMAKE_COMMAND} -E env ${CARGO_TEST_ENV} ${RUST_CARGO} test --locked)
+
 endif()
 if(MSVC)
   list(INSERT CARGO_BUILD 0 ${CMAKE_COMMAND} -E env $<$<CONFIG:Debug>:CFLAGS=/MTd> $<$<CONFIG:Debug>:CXXFLAGS=/MTd>)
