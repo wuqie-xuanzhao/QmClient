@@ -123,7 +123,6 @@ void CPlayer::Reset()
 	m_Whispers = true;
 
 	m_LastPause = 0;
-	m_Score.reset();
 
 	// Variable initialized:
 	m_LastSqlQuery = 0;
@@ -181,8 +180,6 @@ void CPlayer::Tick()
 
 	if(m_ChatScore > 0)
 		m_ChatScore--;
-
-	Server()->SetClientScore(m_ClientId, m_Score);
 
 	if(m_Moderating && m_Afk)
 	{
@@ -444,10 +441,20 @@ void CPlayer::Snap(int SnappingClient)
 	if(m_Paused == PAUSE_PAUSED)
 		DDNetPlayer.m_Flags |= EXPLAYERFLAG_PAUSED;
 
-	IGameController::CFinishTime PlayerTime = GameServer()->m_pController->SnapPlayerTime(SnappingClient, this);
-	DDNetPlayer.m_FinishTimeSeconds = PlayerTime.m_Seconds;
-	DDNetPlayer.m_FinishTimeMillis = PlayerTime.m_Milliseconds;
-	if(g_Config.m_SvHideScore && SnappingClient != m_ClientId)
+	std::optional<float> BestTime = GameServer()->Score()->PlayerData(m_ClientId)->m_BestTime;
+
+	// set precise finish time instead of timescore
+	if(BestTime.has_value() && (!g_Config.m_SvHideScore || SnappingClient == m_ClientId))
+	{
+		// same as in str_time_float
+		int64_t TimeMilliseconds = static_cast<int64_t>(std::roundf(BestTime.value() * 1000.0f));
+		int Seconds = static_cast<int>(TimeMilliseconds / 1000);
+		int Millis = static_cast<int>(TimeMilliseconds % 1000);
+
+		DDNetPlayer.m_FinishTimeSeconds = Seconds;
+		DDNetPlayer.m_FinishTimeMillis = Millis;
+	}
+	else
 	{
 		DDNetPlayer.m_FinishTimeSeconds = FinishTime::NOT_FINISHED_MILLIS;
 		DDNetPlayer.m_FinishTimeMillis = 0;
@@ -949,7 +956,7 @@ void CPlayer::ProcessScoreResult(CScorePlayerResult &Result)
 			if(Result.m_Data.m_Info.m_Time.has_value())
 			{
 				GameServer()->Score()->PlayerData(m_ClientId)->Set(Result.m_Data.m_Info.m_Time.value(), Result.m_Data.m_Info.m_aTimeCp);
-				m_Score = Result.m_Data.m_Info.m_Time;
+				Server()->SetClientScore(m_ClientId, Result.m_Data.m_Info.m_Time.value());
 			}
 			Server()->ExpireServerInfo();
 			int Birthday = Result.m_Data.m_Info.m_Birthday;
