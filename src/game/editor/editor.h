@@ -171,6 +171,8 @@ public:
 	CUi *Ui() { return &m_UI; }
 	CRenderMap *RenderMap() { return &m_RenderMap; }
 
+	CEditorMap *Map() { return &m_Map; }
+	const CEditorMap *Map() const { return &m_Map; }
 	CMapView *MapView() { return &m_MapView; }
 	const CMapView *MapView() const { return &m_MapView; }
 	CLayerSelector *LayerSelector() { return &m_LayerSelector; }
@@ -205,8 +207,8 @@ public:
 #undef REGISTER_QUICK_ACTION
 		m_ZoomEnvelopeX(1.0f, 0.1f, 600.0f),
 		m_ZoomEnvelopeY(640.0f, 0.1f, 32000.0f),
-		m_Map(this),
-		m_MapSettingsCommandContext(m_MapSettingsBackend.NewContext(&m_SettingsCommandInput))
+		m_MapSettingsCommandContext(m_MapSettingsBackend.NewContext(&m_SettingsCommandInput)),
+		m_Map(this)
 	{
 		m_EntitiesTexture.Invalidate();
 		m_FrontTexture.Invalidate();
@@ -319,7 +321,7 @@ public:
 	void OnWindowResize() override;
 	void OnClose() override;
 	void OnDialogClose();
-	bool HasUnsavedData() const override { return m_Map.m_Modified; }
+	bool HasUnsavedData() const override { return Map()->m_Modified; }
 	void UpdateMentions() override { m_Mentions++; }
 	void ResetMentions() override { m_Mentions = 0; }
 	void OnIngameMoved() override { m_IngameMoved = true; }
@@ -632,7 +634,6 @@ public:
 
 	const void *m_pUiGotContext = nullptr;
 
-	CEditorMap m_Map;
 	std::deque<std::shared_ptr<CDataFileWriterFinishJob>> m_WriterFinishJobs;
 
 	int m_ShiftBy;
@@ -897,6 +898,8 @@ public:
 	void AdjustBrushSpecialTiles(bool UseNextFree, int Adjust = 0);
 
 private:
+	CEditorMap m_Map;
+
 	CEditorHistory &ActiveHistory();
 
 	std::map<int, CPoint[5]> m_QuadDragOriginalPoints;

@@ -174,7 +174,7 @@ REGISTER_QUICK_ACTION(
 	AddSwitchLayer,
 	"添加开关层",
 	[&]() { AddSwitchLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pSwitchLayer; },
+	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || Map()->m_pSwitchLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的开关层.")
@@ -182,7 +182,7 @@ REGISTER_QUICK_ACTION(
 	AddTuneLayer,
 	"添加调整层",
 	[&]() { AddTuneLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pTuneLayer; },
+	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || Map()->m_pTuneLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的调整层.")
@@ -190,7 +190,7 @@ REGISTER_QUICK_ACTION(
 	AddSpeedupLayer,
 	"添加加速层",
 	[&]() { AddSpeedupLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pSpeedupLayer; },
+	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || Map()->m_pSpeedupLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的加速层.")
@@ -198,7 +198,7 @@ REGISTER_QUICK_ACTION(
 	AddTeleLayer,
 	"添加传送层",
 	[&]() { AddTeleLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pTeleLayer; },
+	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || Map()->m_pTeleLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的传送层.")
@@ -206,7 +206,7 @@ REGISTER_QUICK_ACTION(
 	AddFrontLayer,
 	"添加前景层",
 	[&]() { AddFrontLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pFrontLayer; },
+	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || Map()->m_pFrontLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的项目层.")
@@ -336,7 +336,7 @@ REGISTER_QUICK_ACTION(
 		std::shared_ptr<CLayer> pCurrentLayer = GetSelectedLayer(0);
 		if(!pCurrentLayer)
 			return true;
-		return m_Map.m_pGameLayer == pCurrentLayer;
+		return Map()->m_pGameLayer == pCurrentLayer;
 	},
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
