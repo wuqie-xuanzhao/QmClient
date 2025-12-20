@@ -767,7 +767,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 	// TODO: add preview
 
-		// ***** Freeze Chat ***** //
+		// ***** Gores演员专用 ***** //
 	Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
 	s_SectionBoxes.push_back(Column);
 	Column.HSplitTop(HeadlineHeight, &Label, &Column);
@@ -801,6 +801,23 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 
 	Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+
+		// ***** 计分板查分 ***** //
+	Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("计分板查分"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+
+	DoButton_CheckBoxAutoVMarginAndSet(
+		&g_Config.m_ClScoreboardPoints,
+		TCLocalize("显示计分板查分"),
+		&g_Config.m_ClScoreboardPoints,
+		&Column,
+		LineSize);
+
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+
 
 	// ***** RightView ***** //
 	LeftView = Column;
@@ -1156,6 +1173,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmcFootParticles, TCLocalize("启用粒子拖尾"), &g_Config.m_QmcFootParticles, &Column, LineSize);
 
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+
 
 
 
