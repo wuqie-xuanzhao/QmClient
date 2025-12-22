@@ -441,25 +441,11 @@ void CPlayer::Snap(int SnappingClient)
 	if(m_Paused == PAUSE_PAUSED)
 		DDNetPlayer.m_Flags |= EXPLAYERFLAG_PAUSED;
 
-	std::optional<float> BestTime = GameServer()->Score()->PlayerData(m_ClientId)->m_BestTime;
-
-	// set precise finish time instead of timescore
-	if(BestTime.has_value() && (!g_Config.m_SvHideScore || SnappingClient == m_ClientId))
-	{
-		// same as in str_time_float
-		int64_t TimeMilliseconds = static_cast<int64_t>(std::roundf(BestTime.value() * 1000.0f));
-		int Seconds = static_cast<int>(TimeMilliseconds / 1000);
-		int Millis = static_cast<int>(TimeMilliseconds % 1000);
-
-		DDNetPlayer.m_FinishTimeSeconds = Seconds;
-		DDNetPlayer.m_FinishTimeMillis = Millis;
-	}
-	else
-	{
-		DDNetPlayer.m_FinishTimeSeconds = FinishTime::NOT_FINISHED_MILLIS;
-		DDNetPlayer.m_FinishTimeMillis = 0;
-	}
+	IGameController::CFinishTime PlayerTime = GameServer()->m_pController->SnapPlayerTime(SnappingClient, this);
+	DDNetPlayer.m_FinishTimeSeconds = PlayerTime.m_Seconds;
+	DDNetPlayer.m_FinishTimeMillis = PlayerTime.m_Milliseconds;
 	Server()->SnapNewItem(TranslatedId, DDNetPlayer);
+
 	if(Server()->IsSixup(SnappingClient) && m_pCharacter && m_pCharacter->m_DDRaceState == ERaceState::STARTED &&
 		GameServer()->m_apPlayers[SnappingClient]->m_TimerType == TIMERTYPE_SIXUP)
 	{
