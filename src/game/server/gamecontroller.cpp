@@ -661,7 +661,7 @@ void IGameController::Snap(int SnappingClient)
 
 		protocol7::CNetObj_GameDataRace RaceData = {};
 		CFinishTime MapTime = SnapMapBestTime(SnappingClient);
-		int BestTime = MapTime.m_Seconds > 0 ? MapTime.m_Seconds * 1000 + MapTime.m_Milliseconds : -1;
+		int BestTime = !g_Config.m_SvHideScore && MapTime.m_Seconds > 0 ? MapTime.m_Seconds * 1000 + MapTime.m_Milliseconds : -1;
 
 		RaceData.m_BestTime = BestTime;
 		RaceData.m_Precision = 2;
