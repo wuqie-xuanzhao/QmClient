@@ -2201,6 +2201,8 @@ set_src(BASE GLOB_RECURSE src/base
   str.h
   system.cpp
   system.h
+  time.cpp
+  time.h
   tl/threading.h
   types.h
   unicode/confusables.cpp
