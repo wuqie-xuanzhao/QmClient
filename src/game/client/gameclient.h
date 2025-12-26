@@ -737,6 +737,8 @@ public:
 		bool m_Afk;
 		bool m_Paused;
 		bool m_Spec;
+		int m_FinishTimeSeconds;
+		int m_FinishTimeMillis;
 
 		// Editor allows 256 switches for now.
 		bool m_aSwitchStates[256];
@@ -934,6 +936,7 @@ public:
 	unsigned int m_DummyFire;
 	bool m_QmDummyInputForceSend = false;
 	bool m_ReceivedDDNetPlayer;
+	bool m_ReceivedDDNetPlayerFinishTimes;
 
 	CTeamsCore m_Teams;
 
@@ -1197,6 +1200,8 @@ public:
 	void ResetMultiView();
 	int FindFirstMultiViewId();
 	void CleanMultiViewId(int ClientId);
+	int m_MapBestTimeSeconds;
+	int m_MapBestTimeMillis;
 
 	// Q1menG Client Recognition
 	void ClearQ1menGSyncMarks();

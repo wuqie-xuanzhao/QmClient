@@ -1185,6 +1185,7 @@ void CGameClient::OnReset()
 	m_DummyFire = 0;
 	m_QmDummyInputForceSend = false;
 	m_ReceivedDDNetPlayer = false;
+	m_ReceivedDDNetPlayerFinishTimes = false;
 
 	m_Teams.Reset();
 	m_GameWorld.Clear();
@@ -1216,6 +1217,9 @@ void CGameClient::OnReset()
 		m_aAutoTeamLockDeadlineTick[Dummy] = 0;
 		m_aAutoTeamLockPending[Dummy] = false;
 	}
+
+	m_MapBestTimeSeconds = FinishTime::UNSET;
+	m_MapBestTimeMillis = 0;
 
 	// m_MapBugs and m_aTuningList are reset in LoadMapSettings
 
@@ -2864,6 +2868,20 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		const CNetMsg_Sv_SaveCode *pMsg = (CNetMsg_Sv_SaveCode *)pRawMsg;
 		OnSaveCodeNetMessage(pMsg);
 	}
+	else if(MsgId == NETMSGTYPE_SV_RECORD || MsgId == NETMSGTYPE_SV_RECORDLEGACY)
+	{
+		CNetMsg_Sv_Record *pMsg = static_cast<CNetMsg_Sv_Record *>(pRawMsg);
+		if(pMsg->m_ServerTimeBest > 0)
+		{
+			m_MapBestTimeSeconds = pMsg->m_ServerTimeBest / 100;
+			m_MapBestTimeMillis = (pMsg->m_ServerTimeBest % 100) * 10;
+		}
+		else if(m_MapBestTimeSeconds == FinishTime::UNSET)
+		{
+			m_MapBestTimeSeconds = FinishTime::NOT_FINISHED_MILLIS;
+			m_MapBestTimeMillis = 0;
+		}
+	}
 }
 
 void CGameClient::OnClientBrandsMessage(CUnpacker *pUnpacker)
@@ -3557,6 +3575,11 @@ void CGameClient::OnNewSnapshot()
 					m_aClients[Item.m_Id].m_Afk = pInfo->m_Flags & EXPLAYERFLAG_AFK;
 					m_aClients[Item.m_Id].m_Paused = pInfo->m_Flags & EXPLAYERFLAG_PAUSED;
 					m_aClients[Item.m_Id].m_Spec = pInfo->m_Flags & EXPLAYERFLAG_SPEC;
+					m_aClients[Item.m_Id].m_FinishTimeSeconds = pInfo->m_FinishTimeSeconds;
+					m_aClients[Item.m_Id].m_FinishTimeMillis = pInfo->m_FinishTimeMillis;
+
+					if(m_aClients[Item.m_Id].m_FinishTimeSeconds != FinishTime::UNSET)
+						m_ReceivedDDNetPlayerFinishTimes = true;
 
 					if(Item.m_Id == m_Snap.m_LocalClientId && (m_aClients[Item.m_Id].m_Paused || m_aClients[Item.m_Id].m_Spec))
 					{
@@ -3800,6 +3823,12 @@ void CGameClient::OnNewSnapshot()
 					m_aSwitchStateTeam[g_Config.m_ClDummy] = -1;
 				GotSwitchStateTeam = true;
 			}
+			else if(Item.m_Type == NETOBJTYPE_MAPBESTTIME)
+			{
+				const CNetObj_MapBestTime *pMapBestTimeData = static_cast<const CNetObj_MapBestTime *>(Item.m_pData);
+				m_MapBestTimeSeconds = pMapBestTimeData->m_MapBestTimeSeconds;
+				m_MapBestTimeMillis = pMapBestTimeData->m_MapBestTimeMillis;
+			}
 		}
 	}
 
@@ -3938,8 +3967,18 @@ void CGameClient::OnNewSnapshot()
 					if(HasPoints1 && Points1.m_Points != Points2.m_Points)
 						return Points1.m_Points > Points2.m_Points;
 				}
-				return (((TimeScore && pPlayer1->m_Score == -9999) ? std::numeric_limits<int>::min() : pPlayer1->m_Score) >
-					((TimeScore && pPlayer2->m_Score == -9999) ? std::numeric_limits<int>::min() : pPlayer2->m_Score));
+				if(m_ReceivedDDNetPlayerFinishTimes)
+				{
+					int TimeSeconds1 = m_aClients[pPlayer1->m_ClientId].m_FinishTimeSeconds;
+					int TimeSeconds2 = m_aClients[pPlayer2->m_ClientId].m_FinishTimeSeconds;
+					TimeSeconds1 = TimeSeconds1 == FinishTime::NOT_FINISHED_MILLIS ? std::numeric_limits<int>::max() : TimeSeconds1;
+					TimeSeconds2 = TimeSeconds2 == FinishTime::NOT_FINISHED_MILLIS ? std::numeric_limits<int>::max() : TimeSeconds2;
+					if(TimeSeconds1 == TimeSeconds2)
+						return m_aClients[pPlayer1->m_ClientId].m_FinishTimeMillis < m_aClients[pPlayer2->m_ClientId].m_FinishTimeMillis;
+					return TimeSeconds1 < TimeSeconds2;
+				}
+				return (((TimeScore && pPlayer1->m_Score == FinishTime::NOT_FINISHED_TIMESCORE) ? std::numeric_limits<int>::min() : pPlayer1->m_Score) >
+					((TimeScore && pPlayer2->m_Score == FinishTime::NOT_FINISHED_TIMESCORE) ? std::numeric_limits<int>::min() : pPlayer2->m_Score));
 			});
 
 	// sort player infos by DDRace Team (and score between)
