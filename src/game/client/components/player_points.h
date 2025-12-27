@@ -41,7 +41,7 @@ private:
 	std::map<std::string, std::shared_ptr<CHttpRequest>> m_ActiveRequests;
 	
 	// Constants
-	static constexpr int64_t CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+	static constexpr int64_t CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 	static constexpr int64_t FAIL_RETRY_DELAY_MS = 30 * 1000; // 30 seconds
 	static constexpr int MAX_CONCURRENT_REQUESTS = 2;
 	

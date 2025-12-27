@@ -119,7 +119,7 @@ SPlayerPointsResult CPlayerPoints::GetPoints(const char *pPlayerName)
 
 void CPlayerPoints::StartRequest(const char *pPlayerName)
 {
-	// URL encode player name
+	// URL encode player name1
 	char aEncodedName[256];
 	EscapeUrl(aEncodedName, sizeof(aEncodedName), pPlayerName);
 	
