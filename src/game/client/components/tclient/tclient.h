@@ -10,6 +10,77 @@
 
 #include <deque>
 
+// 玩家统计数据结构
+struct SPlayerStats
+{
+	// 存活时长统计
+	int m_TotalAliveTime = 0;      // 总存活时间（tick）
+	int m_MaxAliveTime = 0;        // 最大存活时间（tick）
+	int m_AliveCount = 0;          // 存活次数（用于计算平均）
+	int m_CurrentAliveStart = 0;   // 当前存活开始时间（tick）
+	bool m_IsAlive = false;        // 当前是否存活（未被freeze）
+	float m_FreezeX = 0.0f;        // 被冻结时的X位置
+	float m_FreezeY = 0.0f;        // 被冻结时的Y位置
+
+	// 被救/落水统计
+	int m_RescueCount = 0;         // 被救醒次数（被别人解冻）
+	int m_FreezeCount = 0;         // 落水次数（自己被冻结）
+
+	// 出钩统计
+	int m_HookLeftCount = 0;       // 向左出钩次数
+	int m_HookRightCount = 0;      // 向右出钩次数
+	bool m_WasHooking = false;     // 上一帧是否在出钩
+
+	void Reset()
+	{
+		m_TotalAliveTime = 0;
+		m_MaxAliveTime = 0;
+		m_AliveCount = 0;
+		m_CurrentAliveStart = 0;
+		m_IsAlive = false;
+		m_FreezeX = 0.0f;
+		m_FreezeY = 0.0f;
+		m_RescueCount = 0;
+		m_FreezeCount = 0;
+		m_HookLeftCount = 0;
+		m_HookRightCount = 0;
+		m_WasHooking = false;
+	}
+
+	float GetAverageAliveTime(int TickSpeed) const
+	{
+		if(m_AliveCount == 0)
+			return 0.0f;
+		return (float)m_TotalAliveTime / (float)m_AliveCount / (float)TickSpeed;
+	}
+
+	float GetMaxAliveTime(int TickSpeed) const
+	{
+		return (float)m_MaxAliveTime / (float)TickSpeed;
+	}
+
+	float GetCurrentAliveTime(int CurrentTick, int TickSpeed) const
+	{
+		if(!m_IsAlive || m_CurrentAliveStart == 0)
+			return 0.0f;
+		int AliveTime = CurrentTick - m_CurrentAliveStart;
+		return (float)AliveTime / (float)TickSpeed;
+	}
+
+	float GetHookLeftRatio() const
+	{
+		int Total = m_HookLeftCount + m_HookRightCount;
+		if(Total == 0)
+			return 0.5f;
+		return (float)m_HookLeftCount / (float)Total;
+	}
+
+	float GetHookRightRatio() const
+	{
+		return 1.0f - GetHookLeftRatio();
+	}
+};
+
 class CTClient : public CComponent
 {
 	std::deque<vec2> m_aAirRescuePositions[NUM_DUMMIES];
@@ -54,6 +125,11 @@ class CTClient : public CComponent
 	int64_t m_aLastFreezeMessageTime[NUM_DUMMIES] = {0, 0};
 	void CheckFreeze();
 
+	// 玩家统计跟踪
+	SPlayerStats m_aPlayerStats[NUM_DUMMIES];
+	void UpdatePlayerStats();
+	void TrackHookDirection(int Dummy);
+
 public:
 	CTClient();
 	int Sizeof() const override { return sizeof(*this); }
@@ -82,6 +158,10 @@ public:
 	char m_aVersionStr[10] = "0";
 
 	Regex m_RegexChatIgnore;
+
+	// 玩家统计公开接口
+	const SPlayerStats &GetPlayerStats(int Dummy = 0) const { return m_aPlayerStats[Dummy]; }
+	void ResetPlayerStats(int Dummy = -1); // -1 = 重置所有
 };
 
 #endif

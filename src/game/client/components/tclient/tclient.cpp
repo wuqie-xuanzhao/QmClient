@@ -559,6 +559,7 @@ void CTClient::OnRender()
 	DoFinishCheck();
 	CheckFreeze();
 	CheckWaterFall();
+	UpdatePlayerStats(); // 更新玩家统计
 }
 
 void CTClient::CheckFreeze()
@@ -786,6 +787,12 @@ void CTClient::OnStateChange(int OldState, int NewState)
 	SetForcedAspect();
 	for(auto &AirRescuePositions : m_aAirRescuePositions)
 		AirRescuePositions = {};
+
+	// 进入服务器时重置统计数据
+	if(NewState == IClient::STATE_ONLINE && g_Config.m_QmPlayerStatsResetOnJoin)
+	{
+		ResetPlayerStats(-1);
+	}
 }
 
 void CTClient::OnNewSnapshot()
@@ -994,4 +1001,121 @@ void CTClient::RenderCtfFlag(vec2 Pos, float Alpha)
 	Graphics()->QuadsSetRotation(0.0f);
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
 	Graphics()->RenderQuadContainerAsSprite(GameClient()->m_Items.m_ItemsQuadContainerIndex, QuadOffset, Pos.x, Pos.y - Size * 0.75f);
+}
+
+void CTClient::ResetPlayerStats(int Dummy)
+{
+	if(Dummy < 0)
+	{
+		// 重置所有
+		for(auto &Stats : m_aPlayerStats)
+			Stats.Reset();
+	}
+	else if(Dummy < NUM_DUMMIES)
+	{
+		m_aPlayerStats[Dummy].Reset();
+	}
+}
+
+void CTClient::UpdatePlayerStats()
+{
+	if(Client()->State() != IClient::STATE_ONLINE)
+		return;
+
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		// Only check for active dummy
+		if(Dummy == 1 && !Client()->DummyConnected())
+			continue;
+
+		const int ClientId = GameClient()->m_aLocalIds[Dummy];
+		if(ClientId < 0)
+			continue;
+
+		const auto &ClientData = GameClient()->m_aClients[ClientId];
+		if(!ClientData.m_Active)
+			continue;
+
+		const auto &Char = GameClient()->m_Snap.m_aCharacters[ClientId];
+		if(!Char.m_Active)
+			continue;
+
+		SPlayerStats &Stats = m_aPlayerStats[Dummy];
+		float CurrentX = (float)Char.m_Cur.m_X;
+		float CurrentY = (float)Char.m_Cur.m_Y;
+
+		// 检测 freeze 状态变化（用于存活时长统计）
+		bool IsInFreeze = ClientData.m_FreezeEnd != 0;
+
+		if(!IsInFreeze && !Stats.m_IsAlive)
+		{
+			// 刚解冻，开始计时
+			Stats.m_IsAlive = true;
+			Stats.m_CurrentAliveStart = Client()->GameTick(Dummy);
+
+			// 检查位置是否变化很大（重生了），如果是则不算被救醒
+			float Dist = 0.0f;
+			if(Stats.m_FreezeX != 0.0f || Stats.m_FreezeY != 0.0f)
+			{
+				float Dx = CurrentX - Stats.m_FreezeX;
+				float Dy = CurrentY - Stats.m_FreezeY;
+				Dist = std::sqrt(Dx * Dx + Dy * Dy);
+			}
+
+			// 如果位置变化小于200单位，说明是原地解冻，算被救醒
+			const float RespawnThreshold = 200.0f;
+			if(Dist < RespawnThreshold && (Stats.m_FreezeX != 0.0f || Stats.m_FreezeY != 0.0f))
+			{
+				Stats.m_RescueCount++;
+			}
+		}
+		else if(IsInFreeze && Stats.m_IsAlive)
+		{
+			// 刚被冻结，结束计时，落水次数+1，记录冻结位置
+			Stats.m_IsAlive = false;
+			Stats.m_FreezeCount++;
+			Stats.m_FreezeX = CurrentX;
+			Stats.m_FreezeY = CurrentY;
+			int AliveTime = Client()->GameTick(Dummy) - Stats.m_CurrentAliveStart;
+			if(AliveTime > 0)
+			{
+				Stats.m_TotalAliveTime += AliveTime;
+				Stats.m_AliveCount++;
+				if(AliveTime > Stats.m_MaxAliveTime)
+					Stats.m_MaxAliveTime = AliveTime;
+			}
+		}
+
+		// 跟踪出钩方向
+		TrackHookDirection(Dummy);
+	}
+}
+
+void CTClient::TrackHookDirection(int Dummy)
+{
+	const int ClientId = GameClient()->m_aLocalIds[Dummy];
+	if(ClientId < 0)
+		return;
+
+	const auto &Char = GameClient()->m_Snap.m_aCharacters[ClientId];
+	if(!Char.m_Active)
+		return;
+
+	SPlayerStats &Stats = m_aPlayerStats[Dummy];
+
+	// 检测 hook 状态
+	bool IsHooking = Char.m_Cur.m_HookState > 0 && Char.m_Cur.m_HookState != HOOK_RETRACTED;
+
+	// 检测开始出钩的瞬间
+	if(IsHooking && !Stats.m_WasHooking)
+	{
+		// 使用钩子位置相对于玩家位置来判断方向
+		float HookX = (float)(Char.m_Cur.m_HookX - Char.m_Cur.m_X);
+		if(HookX < 0)
+			Stats.m_HookLeftCount++;
+		else if(HookX > 0)
+			Stats.m_HookRightCount++;
+	}
+
+	Stats.m_WasHooking = IsHooking;
 }

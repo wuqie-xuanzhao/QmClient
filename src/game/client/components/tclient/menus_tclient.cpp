@@ -3284,6 +3284,35 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
+	// ========== 模块7: 玩家统计 ==========
+	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+	CUIRect Card7Start = Column;
+	s_GlassCards.push_back(Card7Start);
+
+	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+
+	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
+	TextRender()->TextColor(GetRainbowColor(6));
+	Ui()->DoLabel(&HeadlineRect, TCLocalize("玩家统计"), LG_HeadlineSize, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
+
+	// Checkbox: 显示玩家统计HUD
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsHud, TCLocalize("显示玩家统计HUD"), &g_Config.m_QmPlayerStatsHud, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	// Checkbox: 进入服务器时重置统计
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsResetOnJoin, TCLocalize("进入服务器时重置统计"), &g_Config.m_QmPlayerStatsResetOnJoin, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+	Column.y = CardContent.y;
+	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+
 	// === Scroll Region End ===
 	RightView.y = Column.y;
 	CUIRect ScrollRegion;

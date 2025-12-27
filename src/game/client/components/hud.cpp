@@ -1585,6 +1585,13 @@ inline float CHud::GetMovementInformationBoxHeight()
 	if(GameClient()->m_Snap.m_SpecInfo.m_Active && (GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == SPEC_FREEVIEW || GameClient()->m_aClients[GameClient()->m_Snap.m_SpecInfo.m_SpectatorId].m_SpecCharPresent))
 		return g_Config.m_ClShowhudPlayerPosition ? 3.0f * MOVEMENT_INFORMATION_LINE_HEIGHT + 2.0f : 0.0f;
 	float BoxHeight = 3.0f * MOVEMENT_INFORMATION_LINE_HEIGHT * (g_Config.m_ClShowhudPlayerPosition + g_Config.m_ClShowhudPlayerSpeed) + 2.0f * MOVEMENT_INFORMATION_LINE_HEIGHT * g_Config.m_ClShowhudPlayerAngle;
+	// 新增卡键状态显示行
+	BoxHeight += 1.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
+	// 新增玩家统计显示行（3行：存活时长、救醒/落水、出钩比例）
+	if(g_Config.m_QmPlayerStatsHud)
+	{
+		BoxHeight += 3.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
+	}
 	if(g_Config.m_ClShowhudPlayerPosition || g_Config.m_ClShowhudPlayerSpeed || g_Config.m_ClShowhudPlayerAngle)
 	{
 		BoxHeight += 2.0f;
@@ -1846,7 +1853,76 @@ void CHud::RenderMovementInformation()
 			TextRender()->Text(LeftX, y, Fontsize, "DA:", -1.0f);
 			str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Angle);
 			TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
+			y += MOVEMENT_INFORMATION_LINE_HEIGHT;
 		}
+	}
+
+	// 卡键状态显示 (cl_dummy_resetonswitch) - 彩虹动态渐变
+	{
+		const char *pStatusText;
+		if(g_Config.m_ClDummyResetOnSwitch == 0)
+			pStatusText = "卡键: OFF";
+		else if(g_Config.m_ClDummyResetOnSwitch == 1)
+			pStatusText = "卡键: ON";
+		else if(g_Config.m_ClDummyResetOnSwitch == 2)
+			pStatusText = "卡键: 重置本体";
+		else
+			pStatusText = "卡键: ?";
+
+		// 彩虹动态颜色
+		const float Time = Client()->GlobalTime();
+		const float Hue = std::fmod(Time * 0.2f, 1.0f);
+		ColorHSLA RainbowHsla(Hue, 0.75f, 0.6f, 1.0f);
+		ColorRGBA RainbowColor = color_cast<ColorRGBA>(RainbowHsla);
+
+		TextRender()->TextColor(RainbowColor);
+		TextRender()->Text(LeftX, y, Fontsize, pStatusText, -1.0f);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+	}
+
+	// 玩家统计HUD显示
+	if(g_Config.m_QmPlayerStatsHud)
+	{
+		const auto &Stats = GameClient()->m_TClient.GetPlayerStats(g_Config.m_ClDummy);
+		int TickSpeed = Client()->GameTickSpeed();
+		char aBuf[128];
+
+		// 彩虹动态颜色
+		const float Time = Client()->GlobalTime();
+		const float Hue = std::fmod(Time * 0.2f + 0.1f, 1.0f);
+		ColorHSLA RainbowHsla(Hue, 0.75f, 0.6f, 1.0f);
+		ColorRGBA RainbowColor = color_cast<ColorRGBA>(RainbowHsla);
+
+		// 平均/最大存活时长
+		float AvgAlive = Stats.GetAverageAliveTime(TickSpeed);
+		float MaxAlive = Stats.GetMaxAliveTime(TickSpeed);
+		str_format(aBuf, sizeof(aBuf), "存活: %.1fs/%.1fs", AvgAlive, MaxAlive);
+		TextRender()->TextColor(RainbowColor);
+		TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+		// 被救醒次数/落水次数
+		const float Hue2 = std::fmod(Time * 0.2f + 0.2f, 1.0f);
+		ColorHSLA RainbowHsla2(Hue2, 0.75f, 0.6f, 1.0f);
+		ColorRGBA RainbowColor2 = color_cast<ColorRGBA>(RainbowHsla2);
+		str_format(aBuf, sizeof(aBuf), "被救/落水: %d/%d", Stats.m_RescueCount, Stats.m_FreezeCount);
+		TextRender()->TextColor(RainbowColor2);
+		TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+		// 左侧/右侧出钩比例
+		const float Hue3 = std::fmod(Time * 0.2f + 0.3f, 1.0f);
+		ColorHSLA RainbowHsla3(Hue3, 0.75f, 0.6f, 1.0f);
+		ColorRGBA RainbowColor3 = color_cast<ColorRGBA>(RainbowHsla3);
+		float LeftRatio = Stats.GetHookLeftRatio() * 100.0f;
+		float RightRatio = Stats.GetHookRightRatio() * 100.0f;
+		str_format(aBuf, sizeof(aBuf), "出钩L/R: %.0f%%/%.0f%%", LeftRatio, RightRatio);
+		TextRender()->TextColor(RainbowColor3);
+		TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
 }
 
