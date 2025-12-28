@@ -346,6 +346,8 @@ class CNamePlatePartName : public CNamePlatePartText
 private:
 	char m_aText[std::max<size_t>(MAX_NAME_LENGTH, protocol7::MAX_NAME_ARRAY_SIZE)] = "";
 	float m_FontSize = -INFINITY;
+	bool m_IsLocal = false;
+	float m_Alpha = 1.0f;
 
 protected:
 	bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) override
@@ -354,6 +356,8 @@ protected:
 		if(!m_Visible)
 			return false;
 		m_Color = Data.m_Color;
+		m_IsLocal = Data.m_Local;
+		m_Alpha = Data.m_Color.a;
 		// TClient
 		if(g_Config.m_TcWarList)
 		{
@@ -371,6 +375,29 @@ protected:
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
+	}
+
+	void Render(CGameClient &This, vec2 Pos) const override
+	{
+		if(!m_TextContainerIndex.Valid())
+			return;
+
+		ColorRGBA OutlineColor, Color;
+		Color = m_Color;
+
+		// Rainbow name for local player (same style as QiMeng sidebar)
+		if(m_IsLocal && g_Config.m_QmRainbowName)
+		{
+			const float Time = This.Client()->GlobalTime();
+			const float Hue = std::fmod(Time * 0.15f, 1.0f);
+			ColorHSLA Hsla(Hue, 0.7f, 0.65f, m_Alpha);
+			Color = color_cast<ColorRGBA>(Hsla);
+		}
+
+		OutlineColor = s_OutlineColor.WithMultipliedAlpha(Color.a);
+		This.TextRender()->RenderTextContainer(m_TextContainerIndex,
+			Color, OutlineColor,
+			Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
 	}
 
 public:
