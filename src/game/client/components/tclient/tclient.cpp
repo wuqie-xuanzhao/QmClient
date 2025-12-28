@@ -1,4 +1,4 @@
-﻿#include "tclient.h"
+#include "tclient.h"
 
 #include "data_version.h"
 
@@ -105,15 +105,17 @@ void CTClient::OnInit()
 	FetchTClientInfo();
 
 	char aError[512] = "";
-	if(!Storage()->FileExists("tclient/gui_logo.png", IStorage::TYPE_ALL))
+	// 先在 tclient/ 目录找，找不到再返回上一级目录找
+	if(!Storage()->FileExists("tclient/gui_logo.png", IStorage::TYPE_ALL) &&
+	   !Storage()->FileExists("gui_logo.png", IStorage::TYPE_ALL))
 		str_format(aError, sizeof(aError), TCLocalize("%s not found", DATA_VERSION_PATH), "data/tclient/gui_logo.png");
 	if(aError[0] == '\0')
 		CheckDataVersion(aError, sizeof(aError), Storage()->OpenFile(DATA_VERSION_PATH, IOFLAG_READ, IStorage::TYPE_ALL));
-	//if(aError[0] != '\0')
-	//{
-	//	SWarning Warning(aError, TCLocalize("喜报!您可能仅安装了需要DDNet.exe文件，请使用完整的TClient文件夹", "data_version.h"));
-	//	Client()->AddWarning(Warning);
-	//}
+	if(aError[0] != '\0')
+	{
+		SWarning Warning(aError, TCLocalize("喜报!您可能仅安装了需要DDNet.exe文件，请使用完整的TClient文件夹", "data_version.h"));
+		Client()->AddWarning(Warning);
+	}
 }
 
 static bool LineShouldHighlight(const char *pLine, const char *pName)
