@@ -1035,27 +1035,21 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 
 
 	// ***** 终点恰分改名 ***** //
-	//Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
-	//s_SectionBoxes.push_back(Column);
-	//Column.HSplitTop(HeadlineHeight, &Label, &Column);
-	//Ui()->DoLabel(&Label, TCLocalize("Finish Name"), HeadlineFontSize, TEXTALIGN_ML);
-	//Column.HSplitTop(MarginSmall, nullptr, &Column);
+	Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Finish Name"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
 
-	//DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcChangeNameNearFinish, TCLocalize("Attempt to change your name when near finish"), &g_Config.m_TcChangeNameNearFinish, &Column, LineSize);
-	//// Column.HSplitTop(LineSize, &Button, &Column); // TODO finish scan radius
-	//// Ui()->DoScrollbarOption(&g_Config.m_TcPetSize, &g_Config.m_TcPetSize, &Button, TCLocalize("Pet size"), 10, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcChangeNameNearFinish, TCLocalize("Attempt to change your name when near finish"), &g_Config.m_TcChangeNameNearFinish, &Column, LineSize);
+	Column.HSplitTop(LineSize, &Button, &Column); // TODO finish scan radius
+	//Ui()->DoScrollbarOption(&g_Config.m_TcPetSize, &g_Config.m_TcPetSize, &Button, TCLocalize("Pet size"), 10, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
 	//Column.HSplitTop(LineSize + MarginExtraSmall, &Button, &Column);
-	//Button.VSplitMid(&Label, &Button);
-	
-
-	// 下面两句注释不用管
-	//Ui()->DoLabel(&Label, TCLocalize("Finish Name:"), FontSize, TEXTALIGN_ML);
-	//static CLineInput s_FinishName(g_Config.m_TcFinishName, sizeof(g_Config.m_TcFinishName));
-	// 上面两句注释不用管
-	
-	
-	//Ui()->DoEditBox(&s_FinishName, &Button, EditBoxFontSize);
-	//s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+	Button.VSplitMid(&Label, &Button);
+	Ui()->DoLabel(&Label, TCLocalize("Finish Name:"), FontSize, TEXTALIGN_ML);
+	static CLineInput s_FinishName(g_Config.m_TcFinishName, sizeof(g_Config.m_TcFinishName));
+	Ui()->DoEditBox(&s_FinishName, &Button, EditBoxFontSize);
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 
 	// ***** 消息气泡已迁移至『栖梦』侧栏 ***** //
 	Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
@@ -3204,7 +3198,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模块 6: 激光设置（脉冲） ==========
+	// ========== 模块 6: 激光设置 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card6Start = Column;
 	s_GlassCards.push_back(Card6Start);
