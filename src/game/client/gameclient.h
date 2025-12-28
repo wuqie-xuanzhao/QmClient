@@ -927,6 +927,8 @@ public:
 	void ApplyPreInputs(int Tick, bool Direct, CGameWorld &GameWorld);
 	bool GetDummyFastInput(CNetObj_PlayerInput &DummyFastInput, const CNetObj_PlayerInput *pDummyInputData, const class CCharacter *pDummyChar, int LocalTee, int DummyTee) const;
 
+	void ApplyPreInputs(int Tick, bool Direct, CGameWorld &GameWorld);
+
 	int m_aNextChangeInfo[NUM_DUMMIES];
 
 	// DDRace
