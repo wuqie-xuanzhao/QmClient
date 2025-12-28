@@ -149,10 +149,17 @@ class TestRunner:
                 error = None
                 if self.valgrind_memcheck:
                     error = env.check_valgrind_memcheck_errors()
+                    if error:
+                        tmp_dir_cleanup = False
         finally:
             if tmp_dir_cleanup:
                 shutil.rmtree(tmp_dir)
                 tmp_dir = None
+            elif error:
+                with open(
+                    os.path.join(tmp_dir, "test_failure.log"), "w", encoding="utf-8"
+                ) as test_failure_file:
+                    test_failure_file.write(error)
         return relpath(tmp_dir) if tmp_dir is not None else None, error
 
     def run_tests(self, tests):
