@@ -3372,19 +3372,19 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	MainView.HSplitTop(2.0f, nullptr, &MainView);
 	static CButtonContainer s_UiColorResetId;
 	const unsigned OldQmUiColor = g_Config.m_QmUiColor;
-	DoLine_ColorPicker(&s_UiColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmUiColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_UiColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiColor)), false, nullptr, false);
 	if(OldQmUiColor != g_Config.m_QmUiColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	static CButtonContainer s_MapBrowserColorResetId;
 	const unsigned OldQmMapBrowserColor = g_Config.m_QmMapBrowserColor;
-	DoLine_ColorPicker(&s_MapBrowserColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmMapBrowserColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_MapBrowserColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmMapBrowserColor)), false, nullptr, false);
 	if(OldQmMapBrowserColor != g_Config.m_QmMapBrowserColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	static CButtonContainer s_ScoreboardColorResetId;
 	const unsigned OldQmScoreboardColor = g_Config.m_QmScoreboardColor;
-	DoLine_ColorPicker(&s_ScoreboardColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmScoreboardColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_ScoreboardColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmScoreboardColor)), false, nullptr, false);
 	if(OldQmScoreboardColor != g_Config.m_QmScoreboardColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
@@ -3446,7 +3446,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					{
 						Info.m_Found = true;
 						char aTmpBackendName[256];
-						const bool IsDefault = str_comp_nocase(Info.m_pBackendName, CConfig::ms_pGfxBackend) == 0 && Info.m_Major == CConfig::ms_GfxGLMajor && Info.m_Minor == CConfig::ms_GfxGLMinor && Info.m_Patch == CConfig::ms_GfxGLPatch;
+					const bool IsDefault = str_comp_nocase(Info.m_pBackendName, DefaultConfig::GfxBackend) == 0 && Info.m_Major == DefaultConfig::GfxGLMajor && Info.m_Minor == DefaultConfig::GfxGLMinor && Info.m_Patch == DefaultConfig::GfxGLPatch;
 						FormatQmGraphicsBackendDisplayName(aTmpBackendName, sizeof(aTmpBackendName), Info.m_pBackendName, Info.m_Major, Info.m_Minor, Info.m_Patch, IsDefault);
 						s_vSupportedBackendInfos.push_back(Info);
 						s_vSupportedBackendNames.emplace_back(aTmpBackendName);
@@ -5778,7 +5778,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		}
 
 		static CButtonContainer s_BackgroundColor;
-		DoLine_ColorPicker(&s_BackgroundColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Chat background color"), &g_Config.m_ClChatBackgroundColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_ClChatBackgroundColor, true)), false, nullptr, true);
+		DoLine_ColorPicker(&s_BackgroundColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Chat background color"), &g_Config.m_ClChatBackgroundColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ClChatBackgroundColor, true)), false, nullptr, true);
 
 		// ***** Messages ***** //
 		DoAppearanceHeading(RightView, "appearance-messages-title", Localize("Messages"), HeadlineFontSize, HeadlineHeight);

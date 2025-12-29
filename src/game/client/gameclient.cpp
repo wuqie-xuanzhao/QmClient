@@ -477,12 +477,12 @@ static void MigrateJumpHintConfig()
 		if(str_comp(pNewValue, pNewDefault) == 0 && pLegacyValue[0] != '\0' && str_comp(pLegacyValue, pNewDefault) != 0)
 			str_copy(pNewValue, pLegacyValue, NewSize);
 	};
-	MigrateInt(g_Config.m_QmJumpHint, g_Config.m_TcJumpHintLegacy, CConfig::ms_QmJumpHint, CConfig::ms_TcJumpHintLegacy);
-	MigrateStr(g_Config.m_QmJumpHintText, sizeof(g_Config.m_QmJumpHintText), g_Config.m_TcJumpHintTextLegacy, CConfig::ms_pQmJumpHintText);
-	MigrateCol(g_Config.m_QmJumpHintColor, g_Config.m_TcJumpHintColorLegacy, CConfig::ms_QmJumpHintColor, CConfig::ms_TcJumpHintColorLegacy);
-	MigrateInt(g_Config.m_QmJumpHintX, g_Config.m_TcJumpHintXLegacy, CConfig::ms_QmJumpHintX, CConfig::ms_TcJumpHintXLegacy);
-	MigrateInt(g_Config.m_QmJumpHintY, g_Config.m_TcJumpHintYLegacy, CConfig::ms_QmJumpHintY, CConfig::ms_TcJumpHintYLegacy);
-	MigrateInt(g_Config.m_QmJumpHintSize, g_Config.m_TcJumpHintSizeLegacy, CConfig::ms_QmJumpHintSize, CConfig::ms_TcJumpHintSizeLegacy);
+	MigrateInt(g_Config.m_QmJumpHint, g_Config.m_TcJumpHintLegacy, DefaultConfig::QmJumpHint, DefaultConfig::TcJumpHintLegacy);
+	MigrateStr(g_Config.m_QmJumpHintText, sizeof(g_Config.m_QmJumpHintText), g_Config.m_TcJumpHintTextLegacy, DefaultConfig::QmJumpHintText);
+	MigrateCol(g_Config.m_QmJumpHintColor, g_Config.m_TcJumpHintColorLegacy, DefaultConfig::QmJumpHintColor, DefaultConfig::TcJumpHintColorLegacy);
+	MigrateInt(g_Config.m_QmJumpHintX, g_Config.m_TcJumpHintXLegacy, DefaultConfig::QmJumpHintX, DefaultConfig::TcJumpHintXLegacy);
+	MigrateInt(g_Config.m_QmJumpHintY, g_Config.m_TcJumpHintYLegacy, DefaultConfig::QmJumpHintY, DefaultConfig::TcJumpHintYLegacy);
+	MigrateInt(g_Config.m_QmJumpHintSize, g_Config.m_TcJumpHintSizeLegacy, DefaultConfig::QmJumpHintSize, DefaultConfig::TcJumpHintSizeLegacy);
 }
 
 static void GenerateTimeoutCode(char *pTimeoutCode)
