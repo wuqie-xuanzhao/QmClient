@@ -1420,7 +1420,11 @@ void CScoreboard::OnRender()
 		return;
 
 	if(ShouldHideFocusScoreboard(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideScoreboard != 0))
+	{
+		if(m_MouseUnlocked && m_LastMousePos.has_value())
+			LockMouse();
 		return;
+	}
 
 	// 当记分板可见时（骗你的,不可见也查），为所有活跃玩家触发查询点
 	if(g_Config.m_QmScoreboardPoints || g_Config.m_QmScoreboardSortMode)
@@ -1437,11 +1441,16 @@ void CScoreboard::OnRender()
 	// If scoreboard was opened by death/pause auto activation, ensure cursor locks back when it closes.
 	if(!IsActive() && m_MouseUnlocked)
 	{
-		Ui()->ClosePopupMenus();
-		m_MouseUnlocked = false;
 		if(m_LastMousePos.has_value())
-			SetUiMousePos(m_LastMousePos.value());
-		m_LastMousePos = Ui()->MousePos();
+		{
+			LockMouse();
+		}
+		else
+		{
+			Ui()->ClosePopupMenus();
+			m_MouseUnlocked = false;
+			m_LastMousePos = Ui()->MousePos();
+		}
 	}
 
 	const bool WantActive = IsActive();
