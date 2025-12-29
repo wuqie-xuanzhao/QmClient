@@ -779,7 +779,6 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	//
 	class IStorage *m_pStorage;
-	class IConsole *m_pConsole;
 	class IEngine *m_pEngine;
 
 	int m_CurIndex;
