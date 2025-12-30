@@ -143,6 +143,23 @@ fi
 export TW_VERSION_NAME=$ANDROID_VERSION_NAME
 
 function build_for_type() {
+	# Remove absolute build paths from binary
+	build_extra_cflags="-ffile-prefix-map=${ANDROID_TOOLCHAIN_ROOT}=ANDROID_TOOLCHAIN_ROOT"
+	if [[ "${BUILD_TYPE}" == "Release" ]]; then
+		build_extra_cflags="${build_extra_cflags} ${ANDROID_EXTRA_RELEASE_CFLAGS}"
+	fi
+
+	if [[ -n ${SOURCE_DATE_EPOCH:-} ]]; then
+		: # Prefer the explicitly passed date
+	elif [[ -f source_date_epoch ]]; then
+		SOURCE_DATE_EPOCH=$(cat source_date_epoch)
+	elif git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+		SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+	else
+		log_error "For reproducibility build inside a git repository, or provide either a SOURCE_DATE_EPOCH env. variable or source_date_epoch file, containing the seconds since Jan 1, 1970, 00:00:00 UTC"
+		exit 1
+	fi
+	export SOURCE_DATE_EPOCH
 	cmake \
 		-H. \
 		-G "Ninja" \
