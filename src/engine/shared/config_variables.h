@@ -328,7 +328,7 @@ MACRO_CONFIG_INT(ClVideoX264Crf, cl_video_crf, 18, 0, 51, CFGFLAG_CLIENT | CFGFL
 MACRO_CONFIG_INT(ClVideoX264Preset, cl_video_preset, 5, 0, 9, CFGFLAG_CLIENT | CFGFLAG_SAVE, "使用 libx264 编码视频时的预设，默认 5（medium），0 为 ultrafast，9 为 placebo（最慢，不推荐）")
 
 // debug
-MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, SERVER_MAX_CLIENTS, CFGFLAG_SERVER, "向服务器添加调试用分身（仅 Debug 构建）")
+MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, SERVER_MAX_CLIENTS, CFGFLAG_DEBUG_SERVER, "向服务器添加调试用分身（仅 Debug 构建）")
 
 MACRO_CONFIG_INT(DbgTuning, dbg_tuning, 0, 0, 2, CFGFLAG_CLIENT, "显示影响自身玩家的调整参数信息（0 = 关闭，1 = 显示已改变的，2 = 显示全部）")
 
