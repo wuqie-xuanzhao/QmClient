@@ -364,15 +364,6 @@ MACRO_CONFIG_INT(QmSttAutoSend, qm_stt_auto_send, 1, 0, 1, CFGFLAG_CLIENT | CFGF
 MACRO_CONFIG_INT(QmSttTeamChat, qm_stt_team_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "发送到团队聊天 (Send to team chat)")
 
 // Collision Hitbox Visualization / 碰撞体积可视化
-MACRO_CONFIG_INT(QmShowCollisionHitbox, qm_show_collision_hitbox, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示碰撞体积红线边框 (Show collision hitbox outlines)")
-MACRO_CONFIG_INT(QmCollisionHitboxTee, qm_collision_hitbox_tee, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Tee碰撞圆 (Show Tee collision circle)")
-MACRO_CONFIG_INT(QmCollisionHitboxFreeze, qm_collision_hitbox_freeze, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Freeze碰撞边框 (Show Freeze collision box)")
-MACRO_CONFIG_INT(QmCollisionHitboxDeepFreeze, qm_collision_hitbox_dfreeze, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Deep Freeze碰撞边框 (Show Deep Freeze collision box)")
-MACRO_CONFIG_INT(QmCollisionHitboxDeath, qm_collision_hitbox_death, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Death碰撞边框 (Show Death/Kill collision box)")
-MACRO_CONFIG_INT(QmCollisionHitboxSolid, qm_collision_hitbox_solid, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Solid碰撞边框 (Show Solid/Hookable collision box)")
-MACRO_CONFIG_COL(QmCollisionHitboxColorTee, qm_collision_hitbox_color_tee, 255, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tee碰撞圆颜色 (Tee collision circle color)")
+MACRO_CONFIG_INT(QmShowCollisionHitbox, qm_show_collision_hitbox, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示碰撞体积边框 (Show collision hitbox outlines)")
 MACRO_CONFIG_COL(QmCollisionHitboxColorFreeze, qm_collision_hitbox_color_freeze, 16711935, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Freeze碰撞边框颜色 (Freeze collision box color)")
-MACRO_CONFIG_COL(QmCollisionHitboxColorDFreeze, qm_collision_hitbox_color_dfreeze, 16776960, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Deep Freeze碰撞边框颜色 (Deep Freeze collision box color)")
-MACRO_CONFIG_COL(QmCollisionHitboxColorDeath, qm_collision_hitbox_color_death, 16711680, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Death碰撞边框颜色 (Death collision box color)")
-MACRO_CONFIG_COL(QmCollisionHitboxColorSolid, qm_collision_hitbox_color_solid, 65535, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Solid碰撞边框颜色 (Solid collision box color)")
 MACRO_CONFIG_INT(QmCollisionHitboxAlpha, qm_collision_hitbox_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞体积线条透明度 (Collision hitbox line alpha)")

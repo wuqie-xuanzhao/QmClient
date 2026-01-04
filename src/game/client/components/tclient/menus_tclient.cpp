@@ -3476,6 +3476,42 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
+	// ========== 模块8: 碰撞体积可视化 ==========
+	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+	CUIRect Card8Start_CollisionHitbox = Column;
+	s_GlassCards.push_back(Card8Start_CollisionHitbox);
+
+	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+
+	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
+	TextRender()->TextColor(GetRainbowColor(7));
+	Ui()->DoLabel(&HeadlineRect, TCLocalize("碰撞体积可视化"), LG_HeadlineSize, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
+
+	// Checkbox: 启用碰撞体积可视化
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmShowCollisionHitbox, TCLocalize("显示碰撞体积"), &g_Config.m_QmShowCollisionHitbox, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	if(g_Config.m_QmShowCollisionHitbox)
+	{
+		// ColorPicker: Freeze边框颜色
+		static CButtonContainer s_FreezeColorId;
+		DoLine_ColorPicker(&s_FreezeColorId, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("Freeze边框颜色"), &g_Config.m_QmCollisionHitboxColorFreeze, ColorRGBA(1.0f, 0.0f, 1.0f), false);
+
+		// Slider: 透明度
+		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+		Ui()->DoScrollbarOption(&g_Config.m_QmCollisionHitboxAlpha, &g_Config.m_QmCollisionHitboxAlpha, &Row, TCLocalize("透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+	}
+
+	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+	Column.y = CardContent.y;
+	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+
 	// ========== 模8: 收藏地图 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card8Start = Column;
