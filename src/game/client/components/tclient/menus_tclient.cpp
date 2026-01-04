@@ -3060,7 +3060,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 			Ui()->SetHotItem(&s_QQGroupButtonId);
 			if(Ui()->MouseButtonClicked(0))
 			{
-				Input()->SetClipboardText("1036393248");
+				Input()->SetClipboardText("1076765929");
 				s_QQCopied = true;
 				s_QQCopiedTime = Client()->LocalTime();
 			}
@@ -3079,7 +3079,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		else
 		{
 			TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f); // 金色
-			Ui()->DoLabel(&Row, "QQ群: 1036393248", LG_BodySize, TEXTALIGN_ML);
+			Ui()->DoLabel(&Row, "QQ群: 1076765929", LG_BodySize, TEXTALIGN_ML);
 		}
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		
