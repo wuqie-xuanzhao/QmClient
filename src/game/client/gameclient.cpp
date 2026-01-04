@@ -144,6 +144,7 @@ void CGameClient::OnConsoleInit()
 					      &m_Players,
 					      &m_MapLayersForeground,
 					      &m_Outlines,
+					      &m_CollisionHitbox,
 					      &m_Pet,
 					      &m_Particles.m_RenderExplosions,
 					      &m_NamePlates,

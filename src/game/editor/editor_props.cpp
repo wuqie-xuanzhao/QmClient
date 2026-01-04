@@ -39,7 +39,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			Shifter.VSplitRight(10.0f, &Shifter, &Inc);
 			Shifter.VSplitLeft(10.0f, &Dec, &Shifter);
 			str_format(aBuf, sizeof(aBuf), "%d", pProps[i].m_Value);
-			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "Use left mouse button to drag and change the value. Hold shift to be more precise. Right click to edit as text.", false, false, 0, pColor);
+			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0, pColor);
 			int NewValue = NewValueRes.m_Value;
 			if(NewValue != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
@@ -47,13 +47,13 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				Change = i;
 				State = NewValueRes.m_State;
 			}
-			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "Decrease value.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "减小值.", IGraphics::CORNER_L, 7.0f))
 			{
 				*pNewVal = std::clamp(pProps[i].m_Value - 1, pProps[i].m_Min, pProps[i].m_Max);
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "Increase value.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "增加值.", IGraphics::CORNER_R, 7.0f))
 			{
 				*pNewVal = std::clamp(pProps[i].m_Value + 1, pProps[i].m_Min, pProps[i].m_Max);
 				Change = i;
@@ -64,13 +64,13 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			CUIRect No, Yes;
 			Shifter.VSplitMid(&No, &Yes);
-			if(DoButton_Ex(&pIds[i], "No", !pProps[i].m_Value, &No, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
+			if(DoButton_Ex(&pIds[i], "否", !pProps[i].m_Value, &No, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
 			{
 				*pNewVal = 0;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_Ex(((char *)&pIds[i]) + 1, "Yes", pProps[i].m_Value, &Yes, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
+			if(DoButton_Ex(((char *)&pIds[i]) + 1, "是", pProps[i].m_Value, &Yes, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
 			{
 				*pNewVal = 1;
 				Change = i;
@@ -86,16 +86,16 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			int Step = Shift ? 1 : 45;
 			int Value = pProps[i].m_Value;
 
-			auto NewValueRes = UiDoValueSelector(&pIds[i], &Shifter, "", Value, pProps[i].m_Min, pProps[i].m_Max, Shift ? 1 : 45, Shift ? 1.0f : 10.0f, "Use left mouse button to drag and change the value. Hold shift to be more precise. Right click to edit as text.", false, false, 0);
+			auto NewValueRes = UiDoValueSelector(&pIds[i], &Shifter, "", Value, pProps[i].m_Min, pProps[i].m_Max, Shift ? 1 : 45, Shift ? 1.0f : 10.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0);
 			int NewValue = NewValueRes.m_Value;
-			if(DoButton_FontIcon(&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "Decrease value.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon(&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "减小值.", IGraphics::CORNER_L, 7.0f))
 			{
 				NewValue = (std::ceil((pProps[i].m_Value / (float)Step)) - 1) * Step;
 				if(NewValue < 0)
 					NewValue += 360;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(&pIds[i] + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "Increase value.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(&pIds[i] + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "增加值.", IGraphics::CORNER_R, 7.0f))
 			{
 				NewValue = (pProps[i].m_Value + Step) / Step * Step;
 				State = EEditState::ONE_GO;
@@ -125,7 +125,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			const char *pName;
 			if(pProps[i].m_Value < 0)
-				pName = "None";
+				pName = "无";
 			else
 				pName = m_Map.m_vpImages[pProps[i].m_Value]->m_aName;
 
@@ -152,25 +152,25 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			Shifter.VSplitRight(10.0f, &Shifter, &Down);
 			Shifter.Draw(ColorRGBA(1, 1, 1, 0.5f), IGraphics::CORNER_NONE, 0.0f);
 			Ui()->DoLabel(&Shifter, "Y", 10.0f, TEXTALIGN_MC);
-			if(DoButton_FontIcon(&pIds[i], FONT_ICON_MINUS, 0, &Left, BUTTONFLAG_LEFT, "Shift left.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon(&pIds[i], FONT_ICON_MINUS, 0, &Left, BUTTONFLAG_LEFT, "左移.", IGraphics::CORNER_L, 7.0f))
 			{
 				*pNewVal = (int)EShiftDirection::LEFT;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 3, FONT_ICON_PLUS, 0, &Right, BUTTONFLAG_LEFT, "Shift right.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 3, FONT_ICON_PLUS, 0, &Right, BUTTONFLAG_LEFT, "右移.", IGraphics::CORNER_R, 7.0f))
 			{
 				*pNewVal = (int)EShiftDirection::RIGHT;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 1, FONT_ICON_MINUS, 0, &Up, BUTTONFLAG_LEFT, "Shift up.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 1, FONT_ICON_MINUS, 0, &Up, BUTTONFLAG_LEFT, "上移.", IGraphics::CORNER_L, 7.0f))
 			{
 				*pNewVal = (int)EShiftDirection::UP;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Down, BUTTONFLAG_LEFT, "Shift down.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Down, BUTTONFLAG_LEFT, "下移.", IGraphics::CORNER_R, 7.0f))
 			{
 				*pNewVal = (int)EShiftDirection::DOWN;
 				Change = i;
@@ -181,7 +181,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			const char *pName;
 			if(pProps[i].m_Value < 0)
-				pName = "None";
+				pName = "无";
 			else
 				pName = m_Map.m_vpSounds[pProps[i].m_Value]->m_aName;
 
@@ -200,7 +200,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			const char *pName;
 			if(pProps[i].m_Value < 0 || pProps[i].m_Min < 0 || pProps[i].m_Min >= (int)m_Map.m_vpImages.size())
-				pName = "None";
+				pName = "无";
 			else
 				pName = m_Map.m_vpImages[pProps[i].m_Min]->m_AutoMapper.GetConfigName(pProps[i].m_Value);
 
@@ -219,7 +219,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		{
 			const char *pName;
 			if(pProps[i].m_Value < 0)
-				pName = "None";
+				pName = "无";
 			else
 				pName = AUTOMAP_REFERENCE_NAMES[pProps[i].m_Value];
 
@@ -245,7 +245,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 
 			if(CurValue <= 0 || CurValue > (int)m_Map.m_vpEnvelopes.size())
 			{
-				str_copy(aBuf, "None:");
+				str_copy(aBuf, "无:");
 			}
 			else if(m_Map.m_vpEnvelopes[CurValue - 1]->m_aName[0])
 			{
@@ -261,7 +261,7 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				aBuf[0] = '\0';
 			}
 
-			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, aBuf, CurValue, 0, m_Map.m_vpEnvelopes.size(), 1, 1.0f, "Select envelope.", false, false, IGraphics::CORNER_NONE);
+			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, aBuf, CurValue, 0, m_Map.m_vpEnvelopes.size(), 1, 1.0f, "选择包络线.", false, false, IGraphics::CORNER_NONE);
 			int NewVal = NewValueRes.m_Value;
 			if(NewVal != CurValue || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
@@ -270,13 +270,13 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				State = NewValueRes.m_State;
 			}
 
-			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "Select previous envelope.", IGraphics::CORNER_L, 7.0f))
+			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "选择上一个包络线.", IGraphics::CORNER_L, 7.0f))
 			{
 				*pNewVal = pProps[i].m_Value - 1;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
-			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "Select next envelope.", IGraphics::CORNER_R, 7.0f))
+			if(DoButton_FontIcon(((char *)&pIds[i]) + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "选择下一个包络线.", IGraphics::CORNER_R, 7.0f))
 			{
 				*pNewVal = pProps[i].m_Value + 1;
 				Change = i;

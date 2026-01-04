@@ -8,6 +8,10 @@
 
 #include <game/client/component.h>
 
+#if defined(CONF_WHISPER)
+#include <engine/client/stt.h>
+#endif
+
 #include <deque>
 #include <set>
 #include <string>
@@ -139,6 +143,18 @@ class CTClient : public CComponent
 	static void ConClearFavoriteMaps(IConsole::IResult *pResult, void *pUserData);
 	static void ConfigSaveFavoriteMaps(IConfigManager *pConfigManager, void *pUserData);
 
+	// Speech-to-Text (STT)
+#if defined(CONF_WHISPER)
+	CStt m_Stt;
+	bool m_SttInitialized = false;
+	int m_SttRecordingState = 0; // 0=idle, 1=recording
+	char m_aSttTranscription[2048] = ""; // Last transcription result
+	bool m_SttHasTranscription = false;
+	static void ConSttToggle(IConsole::IResult *pResult, void *pUserData);
+	void OnSttTranscription(const char *pText, bool IsFinal);
+	void InitStt();
+#endif
+
 public:
 	CTClient();
 	int Sizeof() const override { return sizeof(*this); }
@@ -178,6 +194,12 @@ public:
 	void RemoveFavoriteMap(const char *pMapName);
 	void ClearFavoriteMaps();
 	const std::set<std::string> &GetFavoriteMaps() const { return m_FavoriteMaps; }
+
+	// STT 公开接口
+#if defined(CONF_WHISPER)
+	bool IsSttRecording() const { return m_Stt.IsRecording(); }
+	const char *GetSttState() const { return m_Stt.GetStateString(); }
+#endif
 };
 
 #endif

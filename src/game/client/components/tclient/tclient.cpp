@@ -427,6 +427,11 @@ void CTClient::OnConsoleInit()
 	Console()->Register("remove_favorite_map", "s[map_name]", CFGFLAG_CLIENT, ConRemoveFavoriteMap, this, "Remove a map from favorites");
 	Console()->Register("clear_favorite_maps", "", CFGFLAG_CLIENT, ConClearFavoriteMaps, this, "Clear all favorite maps");
 
+#if defined(CONF_WHISPER)
+	// Speech-to-Text command (+stt: press to start, release to stop)
+	Console()->Register("+stt", "", CFGFLAG_CLIENT, ConSttToggle, this, "Hold to record voice, release to transcribe");
+#endif
+
 	// 注册保存回调
 	ConfigManager()->RegisterCallback(ConfigSaveFavoriteMaps, this);
 
@@ -565,6 +570,19 @@ void CTClient::OnRender()
 			ResetTClientInfoTask();
 		}
 	}
+
+#if defined(CONF_WHISPER)
+	// Initialize STT on first render if enabled
+	if(!m_SttInitialized && g_Config.m_QmSttEnabled)
+	{
+		InitStt();
+	}
+	// Update STT to process transcription results
+	if(m_SttInitialized)
+	{
+		m_Stt.Update();
+	}
+#endif
 
 	DoFinishCheck();
 	CheckFreeze();
@@ -1189,3 +1207,149 @@ void CTClient::ConfigSaveFavoriteMaps(IConfigManager *pConfigManager, void *pUse
 		pConfigManager->WriteLine(aBuf);
 	}
 }
+
+// ==================== Speech-to-Text (STT) ====================
+#if defined(CONF_WHISPER)
+
+void CTClient::InitStt()
+{
+	if(m_SttInitialized)
+		return;
+
+	log_info("stt", "Initializing Speech-to-Text...");
+
+	// Set transcription callback
+	m_Stt.SetTranscriptionCallback([this](const char *pText, bool IsFinal) {
+		OnSttTranscription(pText, IsFinal);
+	});
+
+	// Initialize with model path
+	if(m_Stt.Init(Console(), Storage(), g_Config.m_QmSttModelPath))
+	{
+		m_SttInitialized = true;
+		log_info("stt", "Speech-to-Text initialized successfully");
+	}
+	else
+	{
+		log_error("stt", "Failed to initialize Speech-to-Text: %s", m_Stt.GetError());
+	}
+}
+
+void CTClient::ConSttToggle(IConsole::IResult *pResult, void *pUserData)
+{
+	CTClient *pThis = static_cast<CTClient *>(pUserData);
+	int KeyPressed = pResult->GetInteger(0); // 1 = key down, 0 = key up
+
+	if(KeyPressed)
+	{
+		// Key pressed - start recording
+		if(!g_Config.m_QmSttEnabled)
+		{
+			log_info("stt", "STT is disabled (qm_stt_enabled = 0)");
+			return;
+		}
+
+		if(!pThis->m_SttInitialized)
+		{
+			pThis->InitStt();
+			if(!pThis->m_SttInitialized)
+			{
+				pThis->GameClient()->Echo("STT: 模型加载失败 (Model load failed)");
+				return;
+			}
+		}
+
+		if(pThis->m_Stt.IsRecording())
+			return;
+
+		// Set language before recording
+		pThis->m_Stt.SetLanguage(g_Config.m_QmSttLanguage);
+
+		pThis->m_Stt.StartRecording();
+		pThis->m_SttRecordingState = 1;
+
+		// Show recording bubble on local player
+		int LocalClientId = pThis->GameClient()->m_Snap.m_LocalClientId;
+		if(LocalClientId >= 0 && LocalClientId < MAX_CLIENTS)
+		{
+			CGameClient::CClientData &ClientData = pThis->GameClient()->m_aClients[LocalClientId];
+			str_copy(ClientData.m_aChatBubbleText, "🎤 录音中...");
+			ClientData.m_ChatBubbleStartTick = time_get();
+			ClientData.m_ChatBubbleExpireTick = time_get() + time_freq() * 60;
+		}
+	}
+	else
+	{
+		// Key released - stop recording and transcribe
+		if(!pThis->m_SttInitialized || !pThis->m_Stt.IsRecording())
+			return;
+
+		pThis->m_Stt.StopRecording();
+		pThis->m_SttRecordingState = 0;
+
+		// Show transcribing status in bubble
+		int LocalClientId = pThis->GameClient()->m_Snap.m_LocalClientId;
+		if(LocalClientId >= 0 && LocalClientId < MAX_CLIENTS)
+		{
+			CGameClient::CClientData &ClientData = pThis->GameClient()->m_aClients[LocalClientId];
+			str_copy(ClientData.m_aChatBubbleText, "⏳ 识别中...");
+			ClientData.m_ChatBubbleStartTick = time_get();
+			ClientData.m_ChatBubbleExpireTick = time_get() + time_freq() * 30;
+		}
+	}
+}
+
+void CTClient::OnSttTranscription(const char *pText, bool IsFinal)
+{
+	int LocalClientId = GameClient()->m_Snap.m_LocalClientId;
+	if(LocalClientId < 0 || LocalClientId >= MAX_CLIENTS)
+		return;
+
+	CGameClient::CClientData &ClientData = GameClient()->m_aClients[LocalClientId];
+
+	if(!pText || pText[0] == '\0')
+	{
+		// Show no speech detected in bubble
+		str_copy(ClientData.m_aChatBubbleText, "❌ 未检测到语音");
+		ClientData.m_ChatBubbleStartTick = time_get();
+		ClientData.m_ChatBubbleExpireTick = time_get() + time_freq() * 2;
+		return;
+	}
+
+	// Trim leading/trailing whitespace
+	char aText[2048];
+	str_copy(aText, pText);
+	str_utf8_trim_right(aText);
+
+	// Skip if empty after trim
+	const char *pTrimmed = aText;
+	while(*pTrimmed == ' ')
+		pTrimmed++;
+	if(*pTrimmed == '\0')
+	{
+		str_copy(ClientData.m_aChatBubbleText, "❌ 未检测到语音");
+		ClientData.m_ChatBubbleStartTick = time_get();
+		ClientData.m_ChatBubbleExpireTick = time_get() + time_freq() * 2;
+		return;
+	}
+
+	log_info("stt", "Transcription: \"%s\"", pTrimmed);
+
+	// Store transcription for sending
+	str_copy(m_aSttTranscription, pTrimmed);
+	m_SttHasTranscription = true;
+
+	// Show transcription in bubble for preview
+	str_copy(ClientData.m_aChatBubbleText, pTrimmed);
+	ClientData.m_ChatBubbleStartTick = time_get();
+	ClientData.m_ChatBubbleExpireTick = time_get() + time_freq() * g_Config.m_TcChatBubbleDuration;
+
+	// Auto send if enabled
+	if(g_Config.m_QmSttAutoSend)
+	{
+		int Team = g_Config.m_QmSttTeamChat ? 1 : 0;
+		GameClient()->m_Chat.SendChat(Team, pTrimmed);
+	}
+}
+
+#endif // CONF_WHISPER

@@ -69,6 +69,7 @@
 #include "components/tclient/bg_draw.h"
 #include "components/tclient/bindchat.h"
 #include "components/tclient/bindwheel.h"
+#include "components/tclient/collision_hitbox.h"
 #include "components/tclient/custom_communities.h"
 #include "components/tclient/mod.h"
 #include "components/tclient/outlines.h"
@@ -226,6 +227,7 @@ public:
 	CMod m_Mod;
 	CCustomCommunities m_CustomCommunities;
 	CPlayerPoints m_PlayerPoints;
+	CCollisionHitbox m_CollisionHitbox;
 
 private:
 	std::vector<class CComponent *> m_vpAll;

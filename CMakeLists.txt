@@ -146,6 +146,7 @@ option(DISCORD_DYNAMIC "Enable discovering Discord rich presence libraries at ru
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DEV "Don't generate stuff necessary for packaging" OFF)
 option(VULKAN "Enable the vulkan backend" ${AUTO_VULKAN_BACKEND})
+option(WHISPER "Enable built-in Speech-to-Text with whisper.cpp" OFF)
 
 option(EXCEPTION_HANDLING "Enable crashdumps (only works with Windows)" OFF)
 option(IPO "Enable interprocedural optimizations" OFF)
@@ -598,6 +599,40 @@ if(CLIENT AND VULKAN)
 else()
   set(VULKAN_LIBRARIES)
   set(VULKAN_INCLUDE_DIRS)
+endif()
+
+# Whisper.cpp for Speech-to-Text (CPU only)
+if(CLIENT AND WHISPER)
+  include(FetchContent)
+  set(WHISPER_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(WHISPER_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+  set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(GGML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  # CPU only - disable all GPU backends
+  set(GGML_CUDA OFF CACHE BOOL "" FORCE)
+  set(GGML_METAL OFF CACHE BOOL "" FORCE)
+  set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
+  set(GGML_SYCL OFF CACHE BOOL "" FORCE)
+  set(GGML_ROCM OFF CACHE BOOL "" FORCE)
+  set(GGML_HIPBLAS OFF CACHE BOOL "" FORCE)
+  set(GGML_OPENCL OFF CACHE BOOL "" FORCE)
+  # Use static runtime library to match main project (/MT instead of /MD)
+  set(GGML_STATIC ON CACHE BOOL "" FORCE)
+  if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
+  endif()
+  FetchContent_Declare(
+    whisper
+    GIT_REPOSITORY https://github.com/ggerganov/whisper.cpp.git
+    GIT_TAG v1.7.5
+    GIT_SHALLOW TRUE
+  )
+  FetchContent_MakeAvailable(whisper)
+  set(WHISPER_FOUND TRUE)
+  message(STATUS " * Whisper.cpp found (CPU-only STT enabled)")
+else()
+  set(WHISPER_FOUND FALSE)
 endif()
 
 message(STATUS "******** ${CMAKE_PROJECT_NAME} ********")
@@ -2451,6 +2486,8 @@ if(CLIENT)
     smooth_time.h
     sound.cpp
     sound.h
+    stt.cpp
+    stt.h
     sqlite.cpp
     steam.cpp
     text.cpp
@@ -2567,6 +2604,8 @@ if(CLIENT)
     components/tclient/bindchat.h
     components/tclient/bindwheel.cpp
     components/tclient/bindwheel.h
+    components/tclient/collision_hitbox.cpp
+    components/tclient/collision_hitbox.h
     components/tclient/colored_parts.h
     components/tclient/custom_communities.cpp
     components/tclient/custom_communities.h
@@ -2790,6 +2829,10 @@ if(CLIENT)
     endif()
   endif()
 
+  if(WHISPER AND WHISPER_FOUND)
+    list(APPEND LIBS_CLIENT whisper)
+  endif()
+
   if(TARGET_OS STREQUAL "windows")
     set(VERSION_EXECUTABLE "${CLIENT_EXECUTABLE}")
     set(VERSION_COMPANY "${CLIENT_EXECUTABLE} Team")
@@ -2901,6 +2944,11 @@ if(CLIENT)
 
   if(VULKAN)
     target_compile_definitions(game-client PRIVATE CONF_BACKEND_VULKAN)
+  endif()
+
+  if(WHISPER AND WHISPER_FOUND)
+    target_compile_definitions(game-client PRIVATE CONF_WHISPER)
+    target_include_directories(game-client PRIVATE ${whisper_SOURCE_DIR}/include)
   endif()
 
   list(APPEND TARGETS_OWN game-client)

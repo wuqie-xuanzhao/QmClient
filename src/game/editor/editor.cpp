@@ -740,7 +740,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// detail button
 		ToolbarTop.VSplitLeft(40.0f, &Button, &ToolbarTop);
 		static int s_HqButton = 0;
-		if(DoButton_Editor(&s_HqButton, "HD", m_ShowDetail, &Button, BUTTONFLAG_LEFT, "[Ctrl+H] Toggle high detail.") ||
+		if(DoButton_Editor(&s_HqButton, "HD", m_ShowDetail, &Button, BUTTONFLAG_LEFT, "[Ctrl+H] 切换高清细节.") ||
 			(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_H) && ModPressed))
 		{
 			m_ShowDetail = !m_ShowDetail;
@@ -751,7 +751,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// animation button
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 		static char s_AnimateButton;
-		if(DoButton_FontIcon(&s_AnimateButton, FONT_ICON_CIRCLE_PLAY, m_Animate, &Button, BUTTONFLAG_LEFT, "[Ctrl+M] Toggle animation.", IGraphics::CORNER_L) ||
+		if(DoButton_FontIcon(&s_AnimateButton, FONT_ICON_CIRCLE_PLAY, m_Animate, &Button, BUTTONFLAG_LEFT, "[Ctrl+M] 切换动画.", IGraphics::CORNER_L) ||
 			(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_M) && ModPressed))
 		{
 			m_AnimateStart = time_get();
@@ -761,7 +761,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// animation settings button
 		ToolbarTop.VSplitLeft(14.0f, &Button, &ToolbarTop);
 		static char s_AnimateSettingsButton;
-		if(DoButton_FontIcon(&s_AnimateSettingsButton, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, "Change the animation settings.", IGraphics::CORNER_R, 8.0f))
+		if(DoButton_FontIcon(&s_AnimateSettingsButton, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, "更改动画设置.", IGraphics::CORNER_R, 8.0f))
 		{
 			m_AnimateUpdatePopup = true;
 			static SPopupMenuId s_PopupAnimateSettingsId;
@@ -779,7 +779,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 
 		ToolbarTop.VSplitLeft(14.0f, &Button, &ToolbarTop);
 		static int s_ProofModeButton = 0;
-		if(DoButton_FontIcon(&s_ProofModeButton, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, "Select proof mode.", IGraphics::CORNER_R, 8.0f))
+		if(DoButton_FontIcon(&s_ProofModeButton, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, "选择验证模式.", IGraphics::CORNER_R, 8.0f))
 		{
 			static SPopupMenuId s_PopupProofModeId;
 			Ui()->DoPopupMenu(&s_PopupProofModeId, Button.x, Button.y + Button.h, 60.0f, 36.0f, this, PopupProofMode);
@@ -790,7 +790,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// zoom button
 		ToolbarTop.VSplitLeft(40.0f, &Button, &ToolbarTop);
 		static int s_ZoomButton = 0;
-		if(DoButton_Editor(&s_ZoomButton, "Zoom", m_PreviewZoom, &Button, BUTTONFLAG_LEFT, "Toggle preview of how layers will be zoomed ingame."))
+		if(DoButton_Editor(&s_ZoomButton, "Zoom", m_PreviewZoom, &Button, BUTTONFLAG_LEFT, "切换预览图层在游戏中的缩放方式."))
 		{
 			m_PreviewZoom = !m_PreviewZoom;
 		}
@@ -864,7 +864,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 			// flip buttons
 			ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 			static int s_FlipXButton = 0;
-			if(DoButton_FontIcon(&s_FlipXButton, FONT_ICON_ARROWS_LEFT_RIGHT, Enabled, &Button, BUTTONFLAG_LEFT, "[N] Flip the brush horizontally.", IGraphics::CORNER_L) || (Input()->KeyPress(KEY_N) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
+			if(DoButton_FontIcon(&s_FlipXButton, FONT_ICON_ARROWS_LEFT_RIGHT, Enabled, &Button, BUTTONFLAG_LEFT, "[N] 水平翻转画笔.", IGraphics::CORNER_L) || (Input()->KeyPress(KEY_N) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
 			{
 				for(auto &pLayer : m_pBrush->m_vpLayers)
 					pLayer->BrushFlipX();
@@ -872,7 +872,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 
 			ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 			static int s_FlipyButton = 0;
-			if(DoButton_FontIcon(&s_FlipyButton, FONT_ICON_ARROWS_UP_DOWN, Enabled, &Button, BUTTONFLAG_LEFT, "[M] Flip the brush vertically.", IGraphics::CORNER_R) || (Input()->KeyPress(KEY_M) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
+			if(DoButton_FontIcon(&s_FlipyButton, FONT_ICON_ARROWS_UP_DOWN, Enabled, &Button, BUTTONFLAG_LEFT, "[M] 垂直翻转画笔.", IGraphics::CORNER_R) || (Input()->KeyPress(KEY_M) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
 			{
 				for(auto &pLayer : m_pBrush->m_vpLayers)
 					pLayer->BrushFlipY();
@@ -905,7 +905,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 
 			ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 			static int s_CwButton = 0;
-			if(DoButton_FontIcon(&s_CwButton, FONT_ICON_ARROW_ROTATE_RIGHT, Enabled, &Button, BUTTONFLAG_LEFT, "[T] Rotate the brush clockwise.", IGraphics::CORNER_R) || (Input()->KeyPress(KEY_T) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
+			if(DoButton_FontIcon(&s_CwButton, FONT_ICON_ARROW_ROTATE_RIGHT, Enabled, &Button, BUTTONFLAG_LEFT, "[T] 顺时针旋转画笔.", IGraphics::CORNER_R) || (Input()->KeyPress(KEY_T) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
 			{
 				for(auto &pLayer : m_pBrush->m_vpLayers)
 					pLayer->BrushRotate(s_RotationAmount / 360.0f * pi * 2);
@@ -1045,7 +1045,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		{
 			ToolbarBottom.VSplitLeft(65.0f, &Button, &ToolbarBottom);
 			static int s_BrushDrawModeButton = 0;
-			if(DoButton_Editor(&s_BrushDrawModeButton, "Destructive", m_BrushDrawDestructive, &Button, BUTTONFLAG_LEFT, "[Ctrl+D] Toggle brush draw mode: preserve or override existing tiles.") ||
+			if(DoButton_Editor(&s_BrushDrawModeButton, "破坏性", m_BrushDrawDestructive, &Button, BUTTONFLAG_LEFT, "[Ctrl+D] 切换画笔绘制模式: 保留或覆盖现有图块.") ||
 				(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_D) && ModPressed && !ShiftPressed))
 				m_BrushDrawDestructive = !m_BrushDrawDestructive;
 			ToolbarBottom.VSplitLeft(5.0f, &Button, &ToolbarBottom);
@@ -3720,17 +3720,17 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 				if(m_Map.m_vpGroups[g]->m_vpLayers[i]->m_Type == LAYERTYPE_TILES)
 				{
 					std::shared_ptr<CLayerTiles> pTiles = std::static_pointer_cast<CLayerTiles>(m_Map.m_vpGroups[g]->m_vpLayers[i]);
-					str_copy(aBuf, pTiles->m_Image >= 0 ? m_Map.m_vpImages[pTiles->m_Image]->m_aName : "Tiles");
+					str_copy(aBuf, pTiles->m_Image >= 0 ? m_Map.m_vpImages[pTiles->m_Image]->m_aName : "图块");
 				}
 				else if(m_Map.m_vpGroups[g]->m_vpLayers[i]->m_Type == LAYERTYPE_QUADS)
 				{
 					std::shared_ptr<CLayerQuads> pQuads = std::static_pointer_cast<CLayerQuads>(m_Map.m_vpGroups[g]->m_vpLayers[i]);
-					str_copy(aBuf, pQuads->m_Image >= 0 ? m_Map.m_vpImages[pQuads->m_Image]->m_aName : "Quads");
+					str_copy(aBuf, pQuads->m_Image >= 0 ? m_Map.m_vpImages[pQuads->m_Image]->m_aName : "四边形");
 				}
 				else if(m_Map.m_vpGroups[g]->m_vpLayers[i]->m_Type == LAYERTYPE_SOUNDS)
 				{
 					std::shared_ptr<CLayerSounds> pSounds = std::static_pointer_cast<CLayerSounds>(m_Map.m_vpGroups[g]->m_vpLayers[i]);
-					str_copy(aBuf, pSounds->m_Sound >= 0 ? m_Map.m_vpSounds[pSounds->m_Sound]->m_aName : "Sounds");
+					str_copy(aBuf, pSounds->m_Sound >= 0 ? m_Map.m_vpSounds[pSounds->m_Sound]->m_aName : "声音");
 				}
 			}
 
@@ -3743,7 +3743,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 			bool Clicked;
 			bool Abrupted;
 			if(int Result = DoButton_DraggableEx(m_Map.m_vpGroups[g]->m_vpLayers[i].get(), aBuf, Checked, &Button, &Clicked, &Abrupted,
-				   BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, "Select layer. Hold shift to select multiple.", IGraphics::CORNER_R))
+				   BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, "选择图层. 按住Shift键以选择多个.", IGraphics::CORNER_R))
 			{
 				if(s_Operation == OP_NONE)
 				{
@@ -4020,11 +4020,11 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 			}
 		}
 
-		const char *pActionText = TotalCollapsed == m_Map.m_vpGroups.size() ? "Expand all" : "Collapse all";
+		const char *pActionText = TotalCollapsed == m_Map.m_vpGroups.size() ? "展开全部" : "折叠全部";
 
 		CollapseAllButton.HSplitTop(RowHeight, &CollapseAllButton, nullptr);
 		static int s_CollapseAllButton = 0;
-		if(DoButton_Editor(&s_CollapseAllButton, pActionText, 0, &CollapseAllButton, BUTTONFLAG_LEFT, "Expand or collapse all groups."))
+		if(DoButton_Editor(&s_CollapseAllButton, pActionText, 0, &CollapseAllButton, BUTTONFLAG_LEFT, "展开或折叠所有组."))
 		{
 			for(const auto &pGroup : m_Map.m_vpGroups)
 			{
@@ -6602,7 +6602,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	CUIRect FileButton;
 	static int s_FileButton = 0;
 	MenuBar.VSplitLeft(60.0f, &FileButton, &MenuBar);
-	if(DoButton_Ex(&s_FileButton, "File", 0, &FileButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_T, EditorFontSizes::MENU, TEXTALIGN_ML))
+	if(DoButton_Ex(&s_FileButton, "文件", 0, &FileButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_T, EditorFontSizes::MENU, TEXTALIGN_ML))
 	{
 		static SPopupMenuId s_PopupMenuFileId;
 		Ui()->DoPopupMenu(&s_PopupMenuFileId, FileButton.x, FileButton.y + FileButton.h - 1.0f, 120.0f, 188.0f, this, PopupMenuFile, PopupProperties);
@@ -6613,7 +6613,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	CUIRect ToolsButton;
 	static int s_ToolsButton = 0;
 	MenuBar.VSplitLeft(60.0f, &ToolsButton, &MenuBar);
-	if(DoButton_Ex(&s_ToolsButton, "Tools", 0, &ToolsButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_T, EditorFontSizes::MENU, TEXTALIGN_ML))
+	if(DoButton_Ex(&s_ToolsButton, "工具", 0, &ToolsButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_T, EditorFontSizes::MENU, TEXTALIGN_ML))
 	{
 		static SPopupMenuId s_PopupMenuToolsId;
 		Ui()->DoPopupMenu(&s_PopupMenuToolsId, ToolsButton.x, ToolsButton.y + ToolsButton.h - 1.0f, 200.0f, 78.0f, this, PopupMenuTools, PopupProperties);
@@ -6624,7 +6624,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	CUIRect SettingsButton;
 	static int s_SettingsButton = 0;
 	MenuBar.VSplitLeft(60.0f, &SettingsButton, &MenuBar);
-	if(DoButton_Ex(&s_SettingsButton, "Settings", 0, &SettingsButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_T, EditorFontSizes::MENU, TEXTALIGN_ML))
+	if(DoButton_Ex(&s_SettingsButton, "设置", 0, &SettingsButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_T, EditorFontSizes::MENU, TEXTALIGN_ML))
 	{
 		static SPopupMenuId s_PopupMenuSettingsId;
 		Ui()->DoPopupMenu(&s_PopupMenuSettingsId, SettingsButton.x, SettingsButton.y + SettingsButton.h - 1.0f, 280.0f, 148.0f, this, PopupMenuSettings, PopupProperties);
@@ -6648,11 +6648,11 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 		TextRender()->SetRenderFlags(0);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		static int s_ChangedIndicator;
-		DoButtonLogic(&s_ChangedIndicator, 0, &ChangedIndicator, BUTTONFLAG_NONE, "This map has unsaved changes."); // just for the tooltip, result unused
+		DoButtonLogic(&s_ChangedIndicator, 0, &ChangedIndicator, BUTTONFLAG_NONE, "此地图有未保存的更改."); // just for the tooltip, result unused
 	}
 
 	char aBuf[IO_MAX_PATH_LENGTH + 32];
-	str_format(aBuf, sizeof(aBuf), "File: %s", m_aFilename);
+	str_format(aBuf, sizeof(aBuf), "文件: %s", m_aFilename);
 	SLabelProperties Props;
 	Props.m_MaxWidth = MenuBar.w;
 	Props.m_EllipsisAtEnd = true;
@@ -6665,7 +6665,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	Ui()->DoLabel(&Info, aBuf, 10.0f, TEXTALIGN_MR);
 
 	static int s_HelpButton = 0;
-	if(DoButton_Editor(&s_HelpButton, "?", 0, &Help, BUTTONFLAG_LEFT, "[F1] Open the DDNet Wiki page for the map editor in a web browser.") ||
+	if(DoButton_Editor(&s_HelpButton, "?", 0, &Help, BUTTONFLAG_LEFT, "[F1] 在网页浏览器中打开地图编辑器的DDNet Wiki页面.") ||
 		(Input()->KeyPress(KEY_F1) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr))
 	{
 		const char *pLink = Localize("https://wiki.ddnet.org/wiki/Mapping");
@@ -6676,7 +6676,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	}
 
 	static int s_CloseButton = 0;
-	if(DoButton_Editor(&s_CloseButton, "×", 0, &Close, BUTTONFLAG_LEFT, "[Escape] Exit from the editor."))
+	if(DoButton_Editor(&s_CloseButton, "×", 0, &Close, BUTTONFLAG_LEFT, "[Escape] 退出编辑器."))
 	{
 		OnClose();
 		g_Config.m_ClEditor = 0;

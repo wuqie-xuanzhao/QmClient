@@ -355,3 +355,24 @@ MACRO_CONFIG_INT(QmLaserPulseAmplitude, qm_laser_pulse_amplitude, 50, 0, 100, CF
 MACRO_CONFIG_INT(QmLaserSize, qm_laser_size, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "激光大小/粗细 (百分比, 100=默认)")
 MACRO_CONFIG_INT(QmLaserRoundCaps, qm_laser_round_caps, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "激光圆角端点 (0=方角, 1=圆角)")
 MACRO_CONFIG_INT(QmLaserAlpha, qm_laser_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "激光半透明度 (0=完全透明, 100=不透明)")
+
+// Speech-to-Text (STT) / 语音转文字
+MACRO_CONFIG_INT(QmSttEnabled, qm_stt_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用语音转文字功能 (Enable Speech-to-Text)")
+MACRO_CONFIG_STR(QmSttModelPath, qm_stt_model_path, 256, "data/models/ggml-tiny.bin", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Whisper模型路径 (Whisper model path)")
+MACRO_CONFIG_STR(QmSttLanguage, qm_stt_language, 8, "auto", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音识别语言 (Language: auto, zh, en, ja, etc.)")
+MACRO_CONFIG_INT(QmSttAutoSend, qm_stt_auto_send, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "识别后自动发送聊天消息 (Auto send chat after transcription)")
+MACRO_CONFIG_INT(QmSttTeamChat, qm_stt_team_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "发送到团队聊天 (Send to team chat)")
+
+// Collision Hitbox Visualization / 碰撞体积可视化
+MACRO_CONFIG_INT(QmShowCollisionHitbox, qm_show_collision_hitbox, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示碰撞体积红线边框 (Show collision hitbox outlines)")
+MACRO_CONFIG_INT(QmCollisionHitboxTee, qm_collision_hitbox_tee, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Tee碰撞圆 (Show Tee collision circle)")
+MACRO_CONFIG_INT(QmCollisionHitboxFreeze, qm_collision_hitbox_freeze, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Freeze碰撞边框 (Show Freeze collision box)")
+MACRO_CONFIG_INT(QmCollisionHitboxDeepFreeze, qm_collision_hitbox_dfreeze, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Deep Freeze碰撞边框 (Show Deep Freeze collision box)")
+MACRO_CONFIG_INT(QmCollisionHitboxDeath, qm_collision_hitbox_death, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Death碰撞边框 (Show Death/Kill collision box)")
+MACRO_CONFIG_INT(QmCollisionHitboxSolid, qm_collision_hitbox_solid, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示Solid碰撞边框 (Show Solid/Hookable collision box)")
+MACRO_CONFIG_COL(QmCollisionHitboxColorTee, qm_collision_hitbox_color_tee, 255, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tee碰撞圆颜色 (Tee collision circle color)")
+MACRO_CONFIG_COL(QmCollisionHitboxColorFreeze, qm_collision_hitbox_color_freeze, 16711935, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Freeze碰撞边框颜色 (Freeze collision box color)")
+MACRO_CONFIG_COL(QmCollisionHitboxColorDFreeze, qm_collision_hitbox_color_dfreeze, 16776960, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Deep Freeze碰撞边框颜色 (Deep Freeze collision box color)")
+MACRO_CONFIG_COL(QmCollisionHitboxColorDeath, qm_collision_hitbox_color_death, 16711680, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Death碰撞边框颜色 (Death collision box color)")
+MACRO_CONFIG_COL(QmCollisionHitboxColorSolid, qm_collision_hitbox_color_solid, 65535, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Solid碰撞边框颜色 (Solid collision box color)")
+MACRO_CONFIG_INT(QmCollisionHitboxAlpha, qm_collision_hitbox_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞体积线条透明度 (Collision hitbox line alpha)")
