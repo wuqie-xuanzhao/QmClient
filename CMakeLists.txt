@@ -2197,6 +2197,8 @@ set_src(BASE GLOB_RECURSE src/base
   mem.h
   perf_timer.h
   rust.h
+  secure.cpp
+  secure.h
   str.cpp
   str.h
   system.cpp
