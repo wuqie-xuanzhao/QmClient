@@ -113,6 +113,8 @@ def parse_tunings(lines):
     def parse_value(value):
         value = value.strip()
         try:
+            if value.endswith("f / (float)SERVER_TICK_SPEED"):
+                return float(value.rstrip("f / (float)SERVER_TICK_SPEED")) / 50.0
             if value.endswith("f / SERVER_TICK_SPEED"):
                 return float(value.rstrip("f / SERVER_TICK_SPEED")) / 50.0
             return float(value.strip("f"))

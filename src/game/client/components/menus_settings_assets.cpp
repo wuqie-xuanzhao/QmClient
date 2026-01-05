@@ -4147,7 +4147,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	};
 
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	const float TabWidth = TabBar.w / NUMBER_OF_ASSETS_TABS;
+	const float TabWidth = TabBar.w / (float)NUMBER_OF_ASSETS_TABS;
 	static CButtonContainer s_aPageTabs[NUMBER_OF_ASSETS_TABS] = {};
 	static const char *s_apAssetsTabNames[NUMBER_OF_ASSETS_TABS] = {};
 	static char s_aAssetsLanguageFile[IO_MAX_PATH_LENGTH] = {};

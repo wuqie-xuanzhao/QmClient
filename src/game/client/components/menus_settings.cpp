@@ -1450,7 +1450,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		Checkboxes.VSplitLeft(MainView.w * 0.30f, &Checkboxes, &SkinPrefix);
 		MainView.HSplitTop(5.0f, nullptr, &MainView);
 		MainView.HSplitTop(EyeLineSize, &Eyes, &MainView);
-		Eyes.VSplitRight(EyeLineSize * NUM_EMOTES + 5.0f * (NUM_EMOTES - 1), nullptr, &Eyes);
+		Eyes.VSplitRight(EyeLineSize * (float)NUM_EMOTES + 5.0f * (float)(NUM_EMOTES - 1), nullptr, &Eyes);
 	}
 	else
 	{
@@ -5509,7 +5509,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	CUIRect TabBar, LeftView, RightView, Button;
 
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	const float TabWidth = TabBar.w / NUMBER_OF_APPEARANCE_TABS;
+	const float TabWidth = TabBar.w / (float)NUMBER_OF_APPEARANCE_TABS;
 	static CButtonContainer s_aPageTabs[NUMBER_OF_APPEARANCE_TABS] = {};
 	static const char *s_apAppearanceTabNames[NUMBER_OF_APPEARANCE_TABS] = {};
 	static char s_aAppearanceLanguageFile[IO_MAX_PATH_LENGTH] = {};
