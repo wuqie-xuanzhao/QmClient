@@ -3326,7 +3326,7 @@ int CServer::LoadMap(const char *pMapName)
 	{
 		return 0;
 	}
-	if(!m_pMap->Load(aBuf))
+	if(!m_pMap->Load(aBuf, IStorage::TYPE_ALL))
 	{
 		return 0;
 	}

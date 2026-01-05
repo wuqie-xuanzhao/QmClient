@@ -1612,7 +1612,7 @@ void CBackground::LoadBackground()
 		else
 		{
 			ResolveBackgroundEntitiesStoragePath(Storage(), pBackgroundEntities, ".map", aBuf, sizeof(aBuf));
-			if(m_pMap->Load(aBuf))
+			if(m_pMap->Load(aBuf, IStorage::TYPE_ALL))
 			{
 				m_pLayers->Init(m_pMap, true);
 				NeedImageLoading = true;

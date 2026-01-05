@@ -485,13 +485,13 @@ void CMenuBackground::LoadMenuBackground(bool HasDayHint, bool HasNightHint)
 
 		auto TryLoadTheme = [&](const char *pBasePath) -> bool {
 			str_format(aBuf, sizeof(aBuf), "%s.map", pBasePath);
-			if(Storage()->FileExists(aBuf, IStorage::TYPE_ALL) && m_pMap->Load(aBuf))
+			if(Storage()->FileExists(aBuf, IStorage::TYPE_ALL) && m_pMap->Load(aBuf, IStorage::TYPE_ALL))
 			{
 				m_Loaded = true;
 				return true;
 			}
 			char aFound[IO_MAX_PATH_LENGTH];
-			if(FindThemeFile(pBasePath, ".map", aFound, sizeof(aFound)) && m_pMap->Load(aFound))
+			if(FindThemeFile(pBasePath, ".map", aFound, sizeof(aFound)) && m_pMap->Load(aFound, IStorage::TYPE_ALL))
 			{
 				m_Loaded = true;
 				return true;

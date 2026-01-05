@@ -1742,7 +1742,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, SHA256_DI
 	m_SnapCrcErrors = 0;
 	GameClient()->InvalidateSnapshot();
 
-	if(!m_pMap->Load(pFilename))
+	if(!m_pMap->Load(pFilename, IStorage::TYPE_ALL))
 	{
 		str_format(s_aErrorMsg, sizeof(s_aErrorMsg), "map '%s' not found", pFilename);
 		return s_aErrorMsg;
