@@ -127,8 +127,6 @@ void CPlayerPoints::StartRequest(const char *pPlayerName)
 	char aUrl[512];
 	str_format(aUrl, sizeof(aUrl), "https://ddnet.org/players/?json2=%s", aEncodedName);
 	
-	dbg_msg("player_points", "StartRequest: name='%s', url='%s'", pPlayerName, aUrl);
-	
 	// Create request
 	auto pRequest = std::make_shared<CPlayerPointsRequest>(aUrl, pPlayerName);
 	pRequest->Timeout(CTimeout{10000, 30000, 100, 10});
@@ -166,16 +164,16 @@ void CPlayerPoints::ProcessCompletedRequests()
 			size_t DataSize = 0;
 			pRequest->Result(&pData, &DataSize);
 			
-			dbg_msg("player_points", "Response for '%s': %zu bytes, status=%d", Name.c_str(), DataSize, pRequest->StatusCode());
-			if(State == EHttpState::DONE)
-			{
-				const int Code = pRequest->StatusCode();
-				dbg_msg("player_points", "Response for '%s': http=%d", Name.c_str(), Code);
+		if(State == EHttpState::DONE)
+		{
+			const int Code = pRequest->StatusCode();
 
-				if(Code != 200)
-				{
-					Entry.m_Status = EPointsStatus::FAILED;
-					Entry.m_LastFailTime = time_get();
+			if(Code != 200)
+			{
+				// 只有出错时才输出详细日志
+				dbg_msg("player_points", "Response for '%s': %zu bytes, status=%d (failed)", Name.c_str(), DataSize, Code);
+				Entry.m_Status = EPointsStatus::FAILED;
+				Entry.m_LastFailTime = time_get();
 				}
 				else
 				{
@@ -208,7 +206,7 @@ void CPlayerPoints::ProcessCompletedRequests()
 							Entry.m_Points = Points;
 							Entry.m_Status = EPointsStatus::READY;
 							Entry.m_LastSuccessTime = time_get();
-							dbg_msg("player_points", "'%s' -> %d points", Name.c_str(), Points);
+							// 成功时不输出日志
 						}
 					}
 				}

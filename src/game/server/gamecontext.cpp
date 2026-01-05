@@ -4001,6 +4001,7 @@ void CGameContext::RegisterChatCommands()
 	Console()->Register("cancelswap", "", CFGFLAG_CHAT | CFGFLAG_SERVER, ConCancelSwap, this, "Cancel your swap request");
 	Console()->Register("save", "?r[code]", CFGFLAG_CHAT | CFGFLAG_SERVER, ConSave, this, "Save team with code r.");
 	Console()->Register("load", "?r[code]", CFGFLAG_CHAT | CFGFLAG_SERVER, ConLoad, this, "Load with code r. /load to check your existing saves");
+	Console()->Register("savelist", "", CFGFLAG_CHAT | CFGFLAG_SERVER, ConSaveList, this, "List all saves on the current map");
 	Console()->Register("map", "?r[map]", CFGFLAG_CHAT | CFGFLAG_SERVER | CFGFLAG_NONTEEHISTORIC, ConMap, this, "Vote a map by name");
 
 	Console()->Register("rankteam", "?r[player name]", CFGFLAG_CHAT | CFGFLAG_SERVER, ConTeamRank, this, "Shows the team rank of player with name r (your team rank by default)");

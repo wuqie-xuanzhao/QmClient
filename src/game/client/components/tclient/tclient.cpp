@@ -157,6 +157,49 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 		if(ClientId == LocalId)
 			str_copy(m_PreviousOwnMessage, pMsg->m_pMessage);
 
+		// === 恰分功能 ===
+		if(g_Config.m_QmQiaFenEnabled && ClientId != LocalId && pMsg->m_Team == 0)
+		{
+			// 检查是否是公屏消息且不是自己发的
+			const char *pMessage = pMsg->m_pMessage;
+			if(
+				str_find_nocase(pMessage, "有人恰吗")||
+				str_find_nocase(pMessage, "有人要吗")||
+				str_find_nocase(pMessage, "谁要")||
+				str_find_nocase(pMessage,"谁恰")||
+				str_find_nocase(pMessage,"有恰的吗")
+				)
+			{
+				// 发送回复
+				GameClient()->m_Chat.SendChat(0, "恰,谢谢佬");
+				
+				// 在名字后面加"恰"
+				char aNewName[MAX_NAME_LENGTH];
+				const char *pCurrentName = g_Config.m_PlayerName;
+				
+				// 检查名字是否已经以"恰"结尾
+				int NameLen = str_length(pCurrentName);
+				bool AlreadyHasQia = false;
+				
+				// 检查最后一个字符是否是"恰"（UTF-8：0xE6 0x81 0xB0）
+				if(NameLen >= 3 && 
+				   (unsigned char)pCurrentName[NameLen-3] == 0xE6 && 
+				   (unsigned char)pCurrentName[NameLen-2] == 0x81 && 
+				   (unsigned char)pCurrentName[NameLen-1] == 0xB0)
+				{
+					AlreadyHasQia = true;
+				}
+				
+				if(!AlreadyHasQia && NameLen + 3 < (int)sizeof(aNewName))
+				{
+					str_copy(aNewName, pCurrentName, sizeof(aNewName));
+					str_append(aNewName, "恰", sizeof(aNewName));
+					str_copy(g_Config.m_PlayerName, aNewName, sizeof(g_Config.m_PlayerName));
+					GameClient()->SendInfo(false);
+				}
+			}
+		}
+
 		bool PingMessage = false;
 
 		bool ValidIds = !(GameClient()->m_aLocalIds[0] < 0 || (GameClient()->Client()->DummyConnected() && GameClient()->m_aLocalIds[1] < 0));
@@ -426,6 +469,9 @@ void CTClient::OnConsoleInit()
 	Console()->Register("add_favorite_map", "s[map_name]", CFGFLAG_CLIENT, ConAddFavoriteMap, this, "Add a map to favorites");
 	Console()->Register("remove_favorite_map", "s[map_name]", CFGFLAG_CLIENT, ConRemoveFavoriteMap, this, "Remove a map from favorites");
 	Console()->Register("clear_favorite_maps", "", CFGFLAG_CLIENT, ConClearFavoriteMaps, this, "Clear all favorite maps");
+
+	// 本地存档列表命令
+	Console()->Register("savelist", "?s[map]", CFGFLAG_CLIENT, ConSaveList, this, "List local saves for current map (or specified map)");
 
 #if defined(CONF_WHISPER)
 	// Speech-to-Text command (+stt: press to start, release to stop)
@@ -1353,3 +1399,147 @@ void CTClient::OnSttTranscription(const char *pText, bool IsFinal)
 }
 
 #endif // CONF_WHISPER
+
+void CTClient::ConSaveList(IConsole::IResult *pResult, void *pUserData)
+{
+	CTClient *pThis = static_cast<CTClient *>(pUserData);
+	// 如果用户指定了地图名，使用指定的；否则使用当前地图
+	const char *pFilterMap = pResult->NumArguments() > 0 ? pResult->GetString(0) : pThis->Client()->GetCurrentMap();
+
+	// 打开本地存档文件
+	IOHANDLE File = pThis->Storage()->OpenFile(SAVES_FILE, IOFLAG_READ, IStorage::TYPE_SAVE);
+	if(!File)
+	{
+		pThis->GameClient()->Echo("No local saves file found (ddnet-saves.txt)");
+		return;
+	}
+
+	// 读取整个文件内容
+	char *pFileContent = io_read_all_str(File);
+	io_close(File);
+
+	if(!pFileContent)
+	{
+		pThis->GameClient()->Echo("Failed to read saves file");
+		return;
+	}
+
+	int Count = 0;
+	bool IsFirstLine = true;
+
+	// 显示标题
+	char aTitle[256];
+	if(pFilterMap && pFilterMap[0] != '\0')
+		str_format(aTitle, sizeof(aTitle), "=== Saves for '%s' ===", pFilterMap);
+	else
+		str_copy(aTitle, "=== All Local Saves ===");
+	pThis->GameClient()->Echo(aTitle);
+
+	// 逐行处理
+	char *pLine = pFileContent;
+	while(*pLine)
+	{
+		// 找到行尾
+		char *pLineEnd = pLine;
+		while(*pLineEnd && *pLineEnd != '\n' && *pLineEnd != '\r')
+			pLineEnd++;
+
+		// 保存行尾字符并临时设为结束符
+		char LineEndChar = *pLineEnd;
+		if(*pLineEnd)
+			*pLineEnd = '\0';
+
+		// 处理这一行
+		if(pLine[0] != '\0')
+		{
+			// 跳过表头
+			if(IsFirstLine)
+			{
+				IsFirstLine = false;
+				if(!str_startswith(pLine, "Time"))
+				{
+					// 如果第一行不是表头，也要处理
+					IsFirstLine = false;
+				}
+				else
+				{
+					// 跳过表头行
+					goto next_line;
+				}
+			}
+
+			// 解析 CSV 行: Time,Players,Map,Code
+			char aTime[64] = {0};
+			char aPlayers[256] = {0};
+			char aMap[128] = {0};
+			char aCode[128] = {0};
+
+			// 简单的 CSV 解析
+			const char *pCurrent = pLine;
+			char *apFields[4] = {aTime, aPlayers, aMap, aCode};
+			int FieldSizes[4] = {sizeof(aTime), sizeof(aPlayers), sizeof(aMap), sizeof(aCode)};
+			int FieldIndex = 0;
+			bool InQuotes = false;
+
+			for(int i = 0; pCurrent[i] && FieldIndex < 4; i++)
+			{
+				if(pCurrent[i] == '"')
+				{
+					InQuotes = !InQuotes;
+				}
+				else if(pCurrent[i] == ',' && !InQuotes)
+				{
+					FieldIndex++;
+				}
+				else if(FieldIndex < 4)
+				{
+					int Len = str_length(apFields[FieldIndex]);
+					if(Len < FieldSizes[FieldIndex] - 1)
+					{
+						apFields[FieldIndex][Len] = pCurrent[i];
+						apFields[FieldIndex][Len + 1] = '\0';
+					}
+				}
+			}
+
+			// 过滤地图
+			if(pFilterMap && pFilterMap[0] != '\0')
+			{
+				// 精确匹配地图名（不区分大小写）
+				if(str_comp_nocase(aMap, pFilterMap) != 0)
+					goto next_line;
+			}
+
+			// 输出格式: [玩家名] 密码 (地图: xxx, 保存时间: xxx)
+			char aOutput[512];
+			str_format(aOutput, sizeof(aOutput), "[%s] %s (Map: %s, Time: %s)",
+				aPlayers[0] ? aPlayers : "Unknown",
+				aCode[0] ? aCode : "no-code",
+				aMap[0] ? aMap : "Unknown",
+				aTime[0] ? aTime : "Unknown");
+			pThis->GameClient()->Echo(aOutput);
+			Count++;
+		}
+
+next_line:
+		// 恢复行尾字符并移动到下一行
+		if(LineEndChar)
+		{
+			*pLineEnd = LineEndChar;
+			pLine = pLineEnd + 1;
+			// 跳过 \r\n 的第二个字符
+			if(LineEndChar == '\r' && *pLine == '\n')
+				pLine++;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	free(pFileContent);
+
+	char aCountMsg[128];
+	str_format(aCountMsg, sizeof(aCountMsg), "Total: %d save(s)", Count);
+	pThis->GameClient()->Echo(aCountMsg);
+}

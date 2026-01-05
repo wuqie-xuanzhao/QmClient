@@ -936,6 +936,10 @@ public:
 	int FindFirstMultiViewId();
 	void CleanMultiViewId(int ClientId);
 
+	// Q1menG Client Recognition
+	static const char *InjectQ1menGMark(char *pBuffer, size_t BufferSize, const char *pClan);
+	static bool IsQ1menGClient(const char *pClan);
+
 private:
 	std::vector<CSnapEntities> m_vSnapEntities;
 	void SnapCollectEntities();

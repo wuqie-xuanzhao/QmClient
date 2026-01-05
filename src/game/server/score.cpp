@@ -395,3 +395,10 @@ void CScore::GetSaves(int ClientId)
 		return;
 	ExecPlayerThread(CScoreWorker::GetSaves, "get saves", ClientId, "", 0);
 }
+
+void CScore::ListSaves(int ClientId)
+{
+	if(RateLimitPlayer(ClientId))
+		return;
+	ExecPlayerThread(CScoreWorker::ListSaves, "list saves", ClientId, Server()->GetMapName(), 0);
+}

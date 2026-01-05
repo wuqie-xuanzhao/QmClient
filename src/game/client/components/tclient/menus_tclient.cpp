@@ -3023,24 +3023,25 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	static bool s_QQCopied = false;       // 是否已复制
 	
 	// 使用 MainView 来创建横跨两列的卡片
-	CUIRect FullWidthCard;
 	MainView.HSplitTop(LG_CardSpacing, nullptr, &MainView);
 	
-	// 计算卡片高度 (需要容纳 Tee 头像)
-	const float TeeSize = 50.0f;
-	const float InfoCardHeight = LG_CardPadding * 2 + maximum(TeeSize, LG_HeadlineSize + LG_HeadlineMargin + LG_LineHeight);
-	MainView.HSplitTop(InfoCardHeight, &FullWidthCard, &MainView);
-	s_GlassCards.push_back(FullWidthCard);
+	// 记录卡片起始位置
+	const float CardStartY = MainView.y;
+	CUIRect FullWidthCard = MainView;
 	
 	// 卡片内容区域
-	CUIRect CardInner = FullWidthCard;
-	CardInner.Margin(LG_CardPadding, &CardInner);
+	CUIRect CardInner = MainView;
+	CardInner.VSplitLeft(LG_CardPadding, nullptr, &CardInner);
+	CardInner.VSplitRight(LG_CardPadding, &CardInner, nullptr);
+	CardInner.HSplitTop(LG_CardPadding, nullptr, &CardInner);
 	
 	// 分成左右两部分
 	CUIRect LeftPart, RightPart;
 	CardInner.VSplitMid(&LeftPart, &RightPart, LG_CardSpacing * 2);
 	
 	// ===== 左半部分: QmClient 社区 =====
+	// 记录起始位置
+	const float LeftStartY = LeftPart.y;
 	// 标题
 	CUIRect LeftTitle, LeftContent;
 	LeftPart.HSplitTop(LG_HeadlineSize, &LeftTitle, &LeftContent);
@@ -3089,13 +3090,17 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	}
 	
 	// ===== 右半部分: QmClient 开发人员 =====
+	// 记录起始位置
+	const float RightStartY = RightPart.y;
 	// 左侧切出 Tee 头像区域
+	const float TeeSize = 50.0f;
 	CUIRect TeeRect, TextRect;
 	RightPart.VSplitLeft(TeeSize + LG_CardPadding, &TeeRect, &TextRect);
 	
-	// 渲染 Tee 头像
+	// 渲染 Tee 头像（使用固定位置）
+	vec2 TeePos = vec2(TeeRect.x + TeeSize * 0.5f, RightStartY + TeeSize * 0.5f + LG_CardPadding * 0.5f);
 	RenderDevSkin(
-		TeeRect.Center(),     // 位置
+		TeePos,               // 位置
 		TeeSize,              // 大小
 		"santa_tuzi",         // 皮肤名
 		"santa_tuzi",           // 备用皮肤
@@ -3120,6 +3125,42 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	TextRender()->TextColor(GetRainbowColor(-3));
 	Ui()->DoLabel(&Row, "栖梦", LG_BodySize + 2.0f, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	
+	// 感谢名单
+	RightContent.HSplitTop(LG_LineSpacing * 2, nullptr, &RightContent);
+	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
+	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
+	Ui()->DoLabel(&Row, "感谢名单:", LG_BodySize * 0.9f, TEXTALIGN_ML);
+	
+	// 第一行：5个名字
+	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
+	Ui()->DoLabel(&Row, "喵不一 鹑 椿雪绒绒 久桃 大恐龙", LG_BodySize * 0.85f, TEXTALIGN_ML);
+	
+	// 第二行：5个名字
+	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
+	Ui()->DoLabel(&Row, "唯诺 哇哇(哇啊嗷) 热心市民 星星冻 咩咩不啊", LG_BodySize * 0.85f, TEXTALIGN_ML);
+	
+	// 第三行：4个名字
+	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
+	Ui()->DoLabel(&Row, "窝窝头 半夏pr 塔塔喵 軽い猫 苏哲羽", LG_BodySize * 0.85f, TEXTALIGN_ML);
+
+	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
+	Ui()->DoLabel(&Row, "没有你们的支持我无法走的这么远,谢谢", LG_BodySize * 0.85f, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	
+	// 动态计算卡片高度：取左右两侧的最大高度
+	const float LeftUsedHeight = LeftContent.y - LeftStartY;
+	const float RightUsedHeight = RightContent.y - RightStartY;
+	const float ContentHeight = maximum(LeftUsedHeight, RightUsedHeight);
+	const float InfoCardHeight = ContentHeight + LG_CardPadding * 2;
+	
+	// 设置卡片实际高度并添加到背景列表
+	FullWidthCard.y = CardStartY;
+	FullWidthCard.h = InfoCardHeight;
+	s_GlassCards.push_back(FullWidthCard);
+	
+	// 更新 MainView 位置
+	MainView.HSplitTop(InfoCardHeight, nullptr, &MainView);
 	
 	// 更新 LeftView 和 RightView 的起始位置
 	MainView.HSplitTop(LG_CardSpacing, nullptr, &MainView);
@@ -3293,6 +3334,40 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClScoreboardPoints, TCLocalize("显示计分板查分"), &g_Config.m_ClScoreboardPoints, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+	Column.y = CardContent.y;
+	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+
+	// ========== 模块 3.5: 恰分 ==========
+	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+	CUIRect Card3_5Start = Column;
+	s_GlassCards.push_back(Card3_5Start);
+
+	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+
+	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
+	TextRender()->TextColor(GetRainbowColor(8));
+	Ui()->DoLabel(&HeadlineRect, TCLocalize("恰分"), LG_HeadlineSize, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
+
+	// Checkbox: 启用恰分功能
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmQiaFenEnabled, TCLocalize("启用恰分功能"), &g_Config.m_QmQiaFenEnabled, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	if(g_Config.m_QmQiaFenEnabled)
+	{
+		// 说明文本
+		CardContent.HSplitTop(LG_LineHeight * 2, &Row, &CardContent);
+		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.7f));
+		Ui()->DoLabel(&Row, TCLocalize("当有人在公屏发送\"有人恰吗?\"时\n自动回复\"恰\"并在名字后面加\"恰\""), LG_BodySize * 0.9f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+	}
 
 	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
 	Column.y = CardContent.y;

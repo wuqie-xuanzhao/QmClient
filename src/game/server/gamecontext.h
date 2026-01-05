@@ -490,6 +490,7 @@ private:
 	static void ConCancelSwap(IConsole::IResult *pResult, void *pUserData);
 	static void ConSave(IConsole::IResult *pResult, void *pUserData);
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
+	static void ConSaveList(IConsole::IResult *pResult, void *pUserData);
 	static void ConMap(IConsole::IResult *pResult, void *pUserData);
 	static void ConTeamRank(IConsole::IResult *pResult, void *pUserData);
 	static void ConRank(IConsole::IResult *pResult, void *pUserData);

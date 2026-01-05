@@ -71,6 +71,40 @@ void CTrails::OnRender()
 		}
 	}
 
+	// Q1menG Client Recognition: Foot particles for recognized clients
+	if(g_Config.m_QmClientMarkEnabled && g_Config.m_QmClientMarkTrail)
+	{
+		for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
+		{
+			const bool Local = GameClient()->m_Snap.m_LocalClientId == ClientId;
+
+			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+				continue;
+			
+			if(Local)
+				continue; // Skip local player (already handled above)
+
+			// Check if this is a Q1menG client
+			const char *pClan = GameClient()->m_aClients[ClientId].m_aClan;
+			if(!CGameClient::IsQ1menGClient(pClan))
+				continue;
+
+			vec2 Position = GameClient()->m_aClients[ClientId].m_RenderPos;
+
+			// Get facing direction from character data
+			const CNetObj_Character &Cur = GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur;
+			float Angle = Cur.m_Angle / 256.0f;
+			vec2 Direction = direction(Angle);
+
+			float Alpha = 1.0f;
+			if(GameClient()->IsOtherTeam(ClientId))
+				Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+
+			// Render foot trail for recognized Q1menG client
+			GameClient()->m_Effects.FootTrail(Position, Direction, Alpha);
+		}
+	}
+
 	// Tee trail rendering
 	if(!g_Config.m_TcTeeTrail)
 		return;

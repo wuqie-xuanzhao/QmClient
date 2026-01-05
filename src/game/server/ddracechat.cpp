@@ -1024,6 +1024,21 @@ void CGameContext::ConLoad(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Score()->GetSaves(pResult->m_ClientId);
 }
 
+void CGameContext::ConSaveList(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!CheckClientId(pResult->m_ClientId))
+		return;
+
+	if(!g_Config.m_SvSaveGames)
+	{
+		pSelf->SendChatTarget(pResult->m_ClientId, "Save-function is disabled on this server");
+		return;
+	}
+
+	pSelf->Score()->ListSaves(pResult->m_ClientId);
+}
+
 void CGameContext::ConTeamRank(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;

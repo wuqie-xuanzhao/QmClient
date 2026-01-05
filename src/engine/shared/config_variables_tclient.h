@@ -367,3 +367,10 @@ MACRO_CONFIG_INT(QmSttTeamChat, qm_stt_team_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGF
 MACRO_CONFIG_INT(QmShowCollisionHitbox, qm_show_collision_hitbox, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示碰撞体积边框 (Show collision hitbox outlines)")
 MACRO_CONFIG_COL(QmCollisionHitboxColorFreeze, qm_collision_hitbox_color_freeze, 16711935, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Freeze碰撞边框颜色 (Freeze collision box color)")
 MACRO_CONFIG_INT(QmCollisionHitboxAlpha, qm_collision_hitbox_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞体积线条透明度 (Collision hitbox line alpha)")
+
+// Q1menG Client Recognition / Q1menG客户端识别
+MACRO_CONFIG_INT(QmClientMarkEnabled, qm_client_mark_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用客户端标记识别 (Enable client recognition mark)")
+MACRO_CONFIG_INT(QmClientMarkTrail, qm_client_mark_trail, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "为识别的客户端启用脚步拖尾 (Enable foot trail for recognized clients)")
+
+// QiaFen (恰分) Module / 恰分模块
+MACRO_CONFIG_INT(QmQiaFenEnabled, qm_qiafen_enabled, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用恰分模块 (Enable QiaFen auto-response)")

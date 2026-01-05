@@ -1934,3 +1934,82 @@ bool CScoreWorker::GetSaves(IDbConnection *pSqlServer, const ISqlData *pGameData
 	}
 	return true;
 }
+
+bool CScoreWorker::ListSaves(IDbConnection *pSqlServer, const ISqlData *pGameData, char *pError, int ErrorSize)
+{
+	const auto *pData = dynamic_cast<const CSqlPlayerRequest *>(pGameData);
+	auto *pResult = dynamic_cast<CScorePlayerResult *>(pGameData->m_pResult.get());
+	auto *paMessages = pResult->m_Data.m_aaMessages;
+
+	char aCurrentTimestamp[512];
+	pSqlServer->ToUnixTimestamp("CURRENT_TIMESTAMP", aCurrentTimestamp, sizeof(aCurrentTimestamp));
+	char aTimestamp[512];
+	pSqlServer->ToUnixTimestamp("Timestamp", aTimestamp, sizeof(aTimestamp));
+
+	char aBuf[1024];
+	str_format(aBuf, sizeof(aBuf),
+		"SELECT Savegame, Code, %s-%s AS Ago "
+		"FROM %s_saves "
+		"WHERE Map = ? AND DDNet7 = %s "
+		"ORDER BY Timestamp DESC "
+		"LIMIT 10",
+		aCurrentTimestamp, aTimestamp,
+		pSqlServer->GetPrefix(), pSqlServer->False());
+	if(!pSqlServer->PrepareStatement(aBuf, pError, ErrorSize))
+	{
+		return false;
+	}
+	pSqlServer->BindString(1, pData->m_aMap);
+
+	int Line = 0;
+	str_format(paMessages[Line++], sizeof(paMessages[Line]), "------- Saves on %s -------", pData->m_aMap);
+
+	bool End = false;
+	while(!End && Line < CScorePlayerResult::MAX_MESSAGES - 1)
+	{
+		if(!pSqlServer->Step(&End, pError, ErrorSize))
+		{
+			return false;
+		}
+		if(!End)
+		{
+			char aSaveString[65536];
+			pSqlServer->GetString(1, aSaveString, sizeof(aSaveString));
+			char aCode[128];
+			pSqlServer->GetString(2, aCode, sizeof(aCode));
+			int Ago = pSqlServer->GetInt(3);
+
+			// Extract player name from savegame string
+			// Format: "TeamState\tMembersCount\t...\nPlayerName\t..."
+			char aPlayerName[MAX_NAME_LENGTH] = "Unknown";
+			const char *pNameStart = str_find(aSaveString, "\n");
+			if(pNameStart)
+			{
+				pNameStart++; // Skip newline
+				const char *pNameEnd = str_find(pNameStart, "\t");
+				if(pNameEnd)
+				{
+					int NameLen = minimum((int)(pNameEnd - pNameStart), (int)sizeof(aPlayerName) - 1);
+					str_copy(aPlayerName, pNameStart, NameLen + 1);
+				}
+			}
+
+			char aAgoString[40];
+			sqlstr::AgoTimeToString(Ago, aAgoString, sizeof(aAgoString));
+			str_format(paMessages[Line++], sizeof(paMessages[Line]),
+				"[%s] %s (%s ago)",
+				aPlayerName, aCode, aAgoString);
+		}
+	}
+
+	if(Line == 1)
+	{
+		str_copy(paMessages[0], "No saves found on this map", sizeof(paMessages[0]));
+	}
+	else
+	{
+		str_copy(paMessages[Line], "---------------------------", sizeof(paMessages[Line]));
+	}
+
+	return true;
+}

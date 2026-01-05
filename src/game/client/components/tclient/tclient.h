@@ -143,6 +143,9 @@ class CTClient : public CComponent
 	static void ConClearFavoriteMaps(IConsole::IResult *pResult, void *pUserData);
 	static void ConfigSaveFavoriteMaps(IConfigManager *pConfigManager, void *pUserData);
 
+	// 本地存档列表
+	static void ConSaveList(IConsole::IResult *pResult, void *pUserData);
+
 	// Speech-to-Text (STT)
 #if defined(CONF_WHISPER)
 	CStt m_Stt;
