@@ -1451,6 +1451,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		MainView.HSplitTop(5.0f, nullptr, &MainView);
 		MainView.HSplitTop(EyeLineSize, &Eyes, &MainView);
 		Eyes.VSplitRight(EyeLineSize * (float)NUM_EMOTES + 5.0f * (float)(NUM_EMOTES - 1), nullptr, &Eyes);
+
 	}
 	else
 	{

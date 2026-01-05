@@ -302,6 +302,7 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView)
 	const uint64_t SkinPartSwitchNode = UiAnimNodeKey("settings_tee7_skinpart_switch");
 
 	MainView.HSplitTop(20.0f, &ButtonBar, &MainView);
+
 	const float ButtonWidth = ButtonBar.w / (float)protocol7::NUM_SKINPARTS;
 
 	static CButtonContainer s_aSkinPartButtons[protocol7::NUM_SKINPARTS];
