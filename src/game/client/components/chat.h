@@ -191,6 +191,7 @@ class CChat : public CComponent
 	friend class CBindChat;
 	friend class CTranslate;
 	friend class CTClient;
+	friend class CPieMenu;
 
 public:
 	CChat();

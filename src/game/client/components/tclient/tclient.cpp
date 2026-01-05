@@ -9,6 +9,7 @@
 #include <engine/external/regex.h>
 #include <engine/external/tinyexpr.h>
 #include <engine/graphics.h>
+#include <engine/keys.h>
 #include <engine/shared/config.h>
 #include <engine/shared/json.h>
 
@@ -156,6 +157,16 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 		int LocalId = GameClient()->m_Snap.m_LocalClientId;
 		if(ClientId == LocalId)
 			str_copy(m_PreviousOwnMessage, pMsg->m_pMessage);
+
+		// === 复读功能: 保存最新的公屏消息 ===
+		if(ClientId >= 0 && ClientId < MAX_CLIENTS && pMsg->m_Team == 0)
+		{
+			// 保存最新的公屏消息（不是自己发的）
+			if(ClientId != LocalId && pMsg->m_pMessage[0] != '/')
+			{
+				str_copy(m_aLastChatMessage, pMsg->m_pMessage, sizeof(m_aLastChatMessage));
+			}
+		}
 
 		// === 恰分功能 ===
 		if(g_Config.m_QmQiaFenEnabled && ClientId != LocalId && pMsg->m_Team == 0)
@@ -1542,4 +1553,49 @@ next_line:
 	char aCountMsg[128];
 	str_format(aCountMsg, sizeof(aCountMsg), "Total: %d save(s)", Count);
 	pThis->GameClient()->Echo(aCountMsg);
+}
+
+// ========== 复读功能 ==========
+
+bool CTClient::OnInput(const IInput::CEvent &Event)
+{
+	// 检查是否启用复读功能
+	if(!g_Config.m_QmRepeatEnabled)
+		return false;
+
+	// 检查是否按下 Z 键
+	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_Z)
+	{
+		// 不在聊天、控制台、菜单活动时才处理
+		if(!GameClient()->m_Chat.IsActive() && 
+		   !GameClient()->m_GameConsole.IsActive() && 
+		   !GameClient()->m_Menus.IsActive())
+		{
+			RepeatLastMessage();
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void CTClient::RepeatLastMessage()
+{
+	// 检查是否有消息可以复读
+	if(m_aLastChatMessage[0] == '\0')
+	{
+		GameClient()->m_Chat.AddLine(-2, 0, "无消息可复读");
+		return;
+	}
+
+	// 检查冷却时间（1秒）
+	int64_t Now = time_get();
+	if(Now - m_LastRepeatTime < time_freq())
+	{
+		return;
+	}
+	m_LastRepeatTime = Now;
+
+	// 发送复读消息
+	GameClient()->m_Chat.SendChat(0, m_aLastChatMessage);
 }

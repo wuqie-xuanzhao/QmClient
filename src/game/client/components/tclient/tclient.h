@@ -146,6 +146,11 @@ class CTClient : public CComponent
 	// 本地存档列表
 	static void ConSaveList(IConsole::IResult *pResult, void *pUserData);
 
+	// 复读功能
+	char m_aLastChatMessage[2048] = "";  // 最新一条公屏消息
+	int64_t m_LastRepeatTime = 0;           // 上次复读时间
+	void RepeatLastMessage();
+
 	// Speech-to-Text (STT)
 #if defined(CONF_WHISPER)
 	CStt m_Stt;
@@ -165,6 +170,7 @@ public:
 	void OnMessage(int MsgType, void *pRawMsg) override;
 	void OnConsoleInit() override;
 	void OnRender() override;
+	bool OnInput(const IInput::CEvent &Event) override;
 
 	void OnStateChange(int OldState, int NewState) override;
 	void OnNewSnapshot() override;

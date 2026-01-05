@@ -173,6 +173,7 @@ void CGameClient::OnConsoleInit()
 					      &m_Statboard,
 					      &m_Motd,
 					      &m_Menus,
+					      &m_PieMenu,
 					      &m_Tooltips,
 					      &m_Scripting,
 					      &m_KeyBinder,
@@ -191,6 +192,8 @@ void CGameClient::OnConsoleInit()
 						  &m_Emoticon,
 						  &m_ImportantAlert,
 						  &m_Menus,
+						  &m_PieMenu,
+						  &m_TClient, // TClient repeat message
 						  &m_Controls,
 						  &m_TouchControls,
 						  &m_Binds});

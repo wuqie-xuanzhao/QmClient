@@ -3359,12 +3359,106 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmQiaFenEnabled, TCLocalize("启用恰分功能"), &g_Config.m_QmQiaFenEnabled, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
-	if(g_Config.m_QmQiaFenEnabled)
+	// if(g_Config.m_QmQiaFenEnabled)
+	// {
+	// 	// 说明文本
+	// 	CardContent.HSplitTop(LG_LineHeight * 2, &Row, &CardContent);
+	// 	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.7f));
+	// 	Ui()->DoLabel(&Row, TCLocalize("当有人在公屏发送\"有人恰吗?\"时\n自动回复\"恰\"并在名字后面加\"恰\""), LG_BodySize * 0.9f, TEXTALIGN_ML);
+	// 	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	// 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+	// }
+
+	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+	Column.y = CardContent.y;
+	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+
+	// ========== 模块 3.6: 饼菜单 ==========
+	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+	CUIRect Card3_6Start = Column;
+	s_GlassCards.push_back(Card3_6Start);
+
+	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+
+	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
+	TextRender()->TextColor(GetRainbowColor(9));
+	Ui()->DoLabel(&HeadlineRect, TCLocalize("饼菜单"), LG_HeadlineSize, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
+
+	// Checkbox: 启用饼菜单
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPieMenuEnabled, TCLocalize("启用饼菜单"), &g_Config.m_QmPieMenuEnabled, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	if(g_Config.m_QmPieMenuEnabled)
+	{
+		// Slider: UI大小
+		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+		Ui()->DoScrollbarOption(&g_Config.m_QmPieMenuScale, &g_Config.m_QmPieMenuScale, &Row, TCLocalize("UI大小"), 50, 200, &CUi::ms_LinearScrollbarScale, 0, "%");
+		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+		// Slider: 不透明度
+		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+		Ui()->DoScrollbarOption(&g_Config.m_QmPieMenuOpacity, &g_Config.m_QmPieMenuOpacity, &Row, TCLocalize("不透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+		// Slider: 检测距离
+		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+		Ui()->DoScrollbarOption(&g_Config.m_QmPieMenuMaxDistance, &g_Config.m_QmPieMenuMaxDistance, &Row, TCLocalize("检测距离"), 100, 2000);
+		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+		// 颜色设置标题
+		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LG_BodySize, &Row, &CardContent);
+		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
+		Ui()->DoLabel(&Row, TCLocalize("选项颜色"), LG_BodySize, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+		// ColorPicker: 颜色设置
+		static CButtonContainer s_PieMenuColorFriend, s_PieMenuColorWhisper, s_PieMenuColorMention;
+		static CButtonContainer s_PieMenuColorCopySkin, s_PieMenuColorSwap, s_PieMenuColorSpectate;
+		DoLine_ColorPicker(&s_PieMenuColorFriend, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("好友"), (unsigned int *)&g_Config.m_QmPieMenuColorFriend, ColorRGBA(0.9f, 0.3f, 0.4f), true);
+		DoLine_ColorPicker(&s_PieMenuColorWhisper, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("私聊"), (unsigned int *)&g_Config.m_QmPieMenuColorWhisper, ColorRGBA(0.5f, 0.35f, 0.7f), true);
+		DoLine_ColorPicker(&s_PieMenuColorMention, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("提及"), (unsigned int *)&g_Config.m_QmPieMenuColorMention, ColorRGBA(0.85f, 0.5f, 0.2f), true);
+		DoLine_ColorPicker(&s_PieMenuColorCopySkin, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("复制皮肤"), (unsigned int *)&g_Config.m_QmPieMenuColorCopySkin, ColorRGBA(0.25f, 0.55f, 0.8f), true);
+		DoLine_ColorPicker(&s_PieMenuColorSwap, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("交换"), (unsigned int *)&g_Config.m_QmPieMenuColorSwap, ColorRGBA(0.8f, 0.3f, 0.3f), true);
+		DoLine_ColorPicker(&s_PieMenuColorSpectate, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("观战"), (unsigned int *)&g_Config.m_QmPieMenuColorSpectate, ColorRGBA(0.45f, 0.55f, 0.6f), true);
+	}
+
+	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+	Column.y = CardContent.y;
+	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+
+	// ========== 模块 3.7: 复读 ==========
+	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+	CUIRect Card3_7Start = Column;
+	s_GlassCards.push_back(Card3_7Start);
+
+	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+
+	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
+	TextRender()->TextColor(GetRainbowColor(10));
+	Ui()->DoLabel(&HeadlineRect, TCLocalize("复读"), LG_HeadlineSize, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
+
+	// Checkbox: 启用复读功能
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRepeatEnabled, TCLocalize("启用复读功能"), &g_Config.m_QmRepeatEnabled, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	if(g_Config.m_QmRepeatEnabled)
 	{
 		// 说明文本
-		CardContent.HSplitTop(LG_LineHeight * 2, &Row, &CardContent);
+		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.7f));
-		Ui()->DoLabel(&Row, TCLocalize("当有人在公屏发送\"有人恰吗?\"时\n自动回复\"恰\"并在名字后面加\"恰\""), LG_BodySize * 0.9f, TEXTALIGN_ML);
+		Ui()->DoLabel(&Row, TCLocalize("按 Home 键复读最新一条消息"), LG_BodySize * 0.9f, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 	}

@@ -86,6 +86,7 @@
 #include "components/tooltips.h"
 #include "components/touch_controls.h"
 #include "components/voting.h"
+#include "components/pie_menu.h"
 
 #include <vector>
 
@@ -228,6 +229,7 @@ public:
 	CCustomCommunities m_CustomCommunities;
 	CPlayerPoints m_PlayerPoints;
 	CCollisionHitbox m_CollisionHitbox;
+	CPieMenu m_PieMenu;
 
 private:
 	std::vector<class CComponent *> m_vpAll;
