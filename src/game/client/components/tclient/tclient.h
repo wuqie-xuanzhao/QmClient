@@ -135,7 +135,7 @@ class CTClient : public CComponent
 	bool m_aWasInFreezeForUnspec[NUM_DUMMIES] = {false, false};
 	void CheckAutoUnspecOnUnfreeze();
 
-	// HJ大佬辅助 - 自动切换到解冻的Tee
+	// Auto Switch on Unfreeze (HJ大佬辅助)
 	bool m_aWasInFreezeForSwitch[NUM_DUMMIES] = {false, false};
 	void CheckAutoSwitchOnUnfreeze();
 
