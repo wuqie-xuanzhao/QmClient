@@ -92,7 +92,8 @@ void CMenusSettingsControls::OnInterfacesInit(CGameClient *pClient)
 		{EBindOptionGroup::CHAT, Localizable("Converse"), "+show_chat; chat all /c "},
 		{EBindOptionGroup::CHAT, Localizable("Chat command"), "+show_chat; chat all /"},
 		{EBindOptionGroup::CHAT, Localizable("Show chat"), "+show_chat"},
-		{EBindOptionGroup::CHAT, Localizable("Voice chat (STT)"), "+stt"},
+		{EBindOptionGroup::CHAT, Localizable("语言转文字"), "+stt"},
+		{EBindOptionGroup::CHAT, Localizable("复读"), "+qm_repeat"},
 		{EBindOptionGroup::DUMMY, Localizable("Toggle dummy"), "toggle cl_dummy 0 1"},
 		{EBindOptionGroup::DUMMY, Localizable("Dummy copy"), "toggle cl_dummy_copy_moves 0 1"},
 		{EBindOptionGroup::DUMMY, Localizable("Hammerfly dummy"), "toggle cl_dummy_hammer 0 1"},
@@ -187,7 +188,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	RenderSettingsBlock(MeasureSettingsMouseHeight(), &LeftColumn,
 		Localize("Mouse"), nullptr, nullptr, std::bind_front(&CMenusSettingsControls::RenderSettingsMouse, this));
 	RenderSettingsBlock(MeasureSettingsJoystickHeight(), &LeftColumn,
-		Localize("Controller"), nullptr, nullptr, std::bind_front(&CMenusSettingsControls::RenderSettingsJoystick, this));
+		Localizable("Controller"), nullptr, nullptr, std::bind_front(&CMenusSettingsControls::RenderSettingsJoystick, this));
 	RenderSettingsBindsBlock(EBindOptionGroup::MOVEMENT, &LeftColumn, Localize("Movement"));
 	RenderSettingsBindsBlock(EBindOptionGroup::WEAPON, &LeftColumn, Localize("Weapon"));
 
@@ -552,12 +553,6 @@ void CMenusSettingsControls::RenderSettingsBinds(EBindOptionGroup Group, CUIRect
 					GameClient()->m_Binds.Bind(KeyReaderResult.m_Bind.m_Key, BindOption.m_Command.c_str(), false, KeyReaderResult.m_Bind.m_ModifierMask);
 				}
 			}
-		}
-
-		if(Ui()->DoButton_FontIcon(&BindOption.m_AddBindButtonContainer, FONT_ICON_PLUS, BindOption.m_AddNewBind ? 1 : 0, &AddButton, BUTTONFLAG_LEFT))
-		{
-			BindOption.m_AddNewBind = true;
-			BindOption.m_AddNewBindActivate = true;
 		}
 	}
 }

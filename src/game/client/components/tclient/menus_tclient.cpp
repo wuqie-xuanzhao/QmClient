@@ -3019,42 +3019,28 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	CUIRect Row, LabelCol, ControlCol, CardContent, HeadlineRect;
 
 	// ========== 模块 0: QmClient 信息 (横跨整个宽度) ==========
-	static float s_QQCopiedTime = 0.0f;  // 记录复制时间
-	static bool s_QQCopied = false;       // 是否已复制
-	
-	// 使用 MainView 来创建横跨两列的卡片
+	static float s_QQCopiedTime = 0.0f;  
+	static bool s_QQCopied = false;       
 	MainView.HSplitTop(LG_CardSpacing, nullptr, &MainView);
-	
-	// 记录卡片起始位置
 	const float CardStartY = MainView.y;
 	CUIRect FullWidthCard = MainView;
-	
-	// 卡片内容区域
 	CUIRect CardInner = MainView;
 	CardInner.VSplitLeft(LG_CardPadding, nullptr, &CardInner);
 	CardInner.VSplitRight(LG_CardPadding, &CardInner, nullptr);
 	CardInner.HSplitTop(LG_CardPadding, nullptr, &CardInner);
-	
-	// 分成左右两部分
 	CUIRect LeftPart, RightPart;
 	CardInner.VSplitMid(&LeftPart, &RightPart, LG_CardSpacing * 2);
-	
-	// ===== 左半部分: QmClient 社区 =====
-	// 记录起始位置
 	const float LeftStartY = LeftPart.y;
-	// 标题
 	CUIRect LeftTitle, LeftContent;
 	LeftPart.HSplitTop(LG_HeadlineSize, &LeftTitle, &LeftContent);
 	TextRender()->TextColor(GetRainbowColor(-1));
 	Ui()->DoLabel(&LeftTitle, "QmClient 暂定社区", LG_HeadlineSize, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	LeftContent.HSplitTop(LG_HeadlineMargin, nullptr, &LeftContent);
-	
-	// QQ群复制按钮 (使用和收藏地图相同的点击逻辑)
+	// QQ群复制
 	LeftContent.HSplitTop(LG_LineHeight, &Row, &LeftContent);
 	{
 		static int s_QQGroupButtonId;
-		
 		// 检测点击
 		if(Ui()->MouseInside(&Row))
 		{
@@ -3066,38 +3052,27 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				s_QQCopiedTime = Client()->LocalTime();
 			}
 		}
-		
-		// 检查是否显示"已复制"（显示1.5秒）
 		if(s_QQCopied && Client()->LocalTime() - s_QQCopiedTime > 1.5f)
 			s_QQCopied = false;
-		
-		// 显示QQ群号或"已复制"
 		if(s_QQCopied)
 		{
-			TextRender()->TextColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色
+			TextRender()->TextColor(0.0f, 1.0f, 0.0f, 1.0f);
 			Ui()->DoLabel(&Row, TCLocalize("已复制"), LG_BodySize, TEXTALIGN_ML);
 		}
 		else
 		{
-			TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f); // 金色
+			TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f); 
 			Ui()->DoLabel(&Row, "QQ群: 1076765929", LG_BodySize, TEXTALIGN_ML);
 		}
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
-		
-		// 悬停提示
 		if(Ui()->HotItem() == &s_QQGroupButtonId)
 			GameClient()->m_Tooltips.DoToolTip(&s_QQGroupButtonId, &Row, TCLocalize("点击复制QQ群号"));
 	}
-	
-	// ===== 右半部分: QmClient 开发人员 =====
-	// 记录起始位置
+	//右侧
 	const float RightStartY = RightPart.y;
-	// 左侧切出 Tee 头像区域
 	const float TeeSize = 50.0f;
 	CUIRect TeeRect, TextRect;
 	RightPart.VSplitLeft(TeeSize + LG_CardPadding, &TeeRect, &TextRect);
-	
-	// 渲染 Tee 头像（使用固定位置）
 	vec2 TeePos = vec2(TeeRect.x + TeeSize * 0.5f, RightStartY + TeeSize * 0.5f + LG_CardPadding * 0.5f);
 	RenderDevSkin(
 		TeePos,               // 位置
@@ -3108,134 +3083,96 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		0, 0, 0,              // FeetColor, BodyColor, Emote
 		false,                 // 彩虹效果
 		true                  // Cute
-		//ColorRGBA(0.40f, 0.75f, 0.95f, 1.0f),  // 身体颜色 (天蓝色)
-		//ColorRGBA(0.95f, 0.55f, 0.75f, 1.0f)   // 脚颜色 (粉色)
 	);
-	
-	// 标题
 	CUIRect RightTitle, RightContent;
 	TextRect.HSplitTop(LG_HeadlineSize, &RightTitle, &RightContent);
 	TextRender()->TextColor(GetRainbowColor(-2));
 	Ui()->DoLabel(&RightTitle, "QmClient 开发人员", LG_HeadlineSize, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	RightContent.HSplitTop(LG_HeadlineMargin, nullptr, &RightContent);
-	
-	// 开发者名字
+	//我名字
 	RightContent.HSplitTop(LG_LineHeight, &Row, &RightContent);
 	TextRender()->TextColor(GetRainbowColor(-3));
 	Ui()->DoLabel(&Row, "栖梦", LG_BodySize + 2.0f, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	
 	// 感谢名单
 	RightContent.HSplitTop(LG_LineSpacing * 2, nullptr, &RightContent);
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
 	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
 	Ui()->DoLabel(&Row, "感谢名单:", LG_BodySize * 0.9f, TEXTALIGN_ML);
-	
-	// 第一行：5个名字
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
 	Ui()->DoLabel(&Row, "喵不一 鹑 椿雪绒绒 久桃 大恐龙", LG_BodySize * 0.85f, TEXTALIGN_ML);
-	
-	// 第二行：5个名字
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
 	Ui()->DoLabel(&Row, "唯诺 哇哇(哇啊嗷) 热心市民 星星冻 咩咩不啊", LG_BodySize * 0.85f, TEXTALIGN_ML);
-	
-	// 第三行：4个名字
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
 	Ui()->DoLabel(&Row, "窝窝头 半夏pr 塔塔喵 軽い猫 苏哲羽", LG_BodySize * 0.85f, TEXTALIGN_ML);
 
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
 	Ui()->DoLabel(&Row, "没有你们的支持我无法走的这么远,谢谢", LG_BodySize * 0.85f, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	
-	// 动态计算卡片高度：取左右两侧的最大高度
+
+
+
+
 	const float LeftUsedHeight = LeftContent.y - LeftStartY;
 	const float RightUsedHeight = RightContent.y - RightStartY;
 	const float ContentHeight = maximum(LeftUsedHeight, RightUsedHeight);
 	const float InfoCardHeight = ContentHeight + LG_CardPadding * 2;
-	
-	// 设置卡片实际高度并添加到背景列表
+
 	FullWidthCard.y = CardStartY;
 	FullWidthCard.h = InfoCardHeight;
 	s_GlassCards.push_back(FullWidthCard);
 	
-	// 更新 MainView 位置
 	MainView.HSplitTop(InfoCardHeight, nullptr, &MainView);
-	
-	// 更新 LeftView 和 RightView 的起始位置
 	MainView.HSplitTop(LG_CardSpacing, nullptr, &MainView);
 	MainView.VSplitMid(&LeftView, &RightView, LG_CardSpacing);
-	
-	// ***** LeftView ***** //
 	Column = LeftView;
 
 	// ========== 模块 1: 消息气泡 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card1Start = Column;
 	s_GlassCards.push_back(Card1Start);
-
-	// 卡片内边距
 	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
 	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
 	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
-
-	// 标题
 	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
 	TextRender()->TextColor(GetRainbowColor(0));
 	Ui()->DoLabel(&HeadlineRect, TCLocalize("消息气泡"), LG_HeadlineSize, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
 
-	// 控件布局
-	// Checkbox: 在玩家头顶显示聊天气泡
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcChatBubble, TCLocalize("在玩家头顶显示聊天气泡"), &g_Config.m_TcChatBubble, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 	if(g_Config.m_TcChatBubble)
 	{
-		// Checkbox: 显示正在输入的预览气泡
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcChatBubbleTyping, TCLocalize("显示正在输入的预览气泡"), &g_Config.m_TcChatBubbleTyping, &Row, LG_LineHeight);
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
-		// Checkbox: 聊天气泡随镜头缩放
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcChatBubbleZoomScale, TCLocalize("聊天气泡随镜头缩放"), &g_Config.m_TcChatBubbleZoomScale, &Row, LG_LineHeight);
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// Slider: 持续时间
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_TcChatBubbleDuration, &g_Config.m_TcChatBubbleDuration, &Row, TCLocalize("持续时间"), 1, 30, &CUi::ms_LinearScrollbarScale, 0, "s");
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
-		// Slider: 透明度
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_TcChatBubbleAlpha, &g_Config.m_TcChatBubbleAlpha, &Row, TCLocalize("透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// Slider: 字体大小
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_TcChatBubbleFontSize, &g_Config.m_TcChatBubbleFontSize, &Row, TCLocalize("字体大小"), 8, 24);
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// Slider: 最大宽度
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_TcChatBubbleMaxWidth, &g_Config.m_TcChatBubbleMaxWidth, &Row, TCLocalize("最大宽度"), 100, 400, &CUi::ms_LinearScrollbarScale, 0, "px");
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// Slider: 垂直偏移
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_TcChatBubbleOffsetY, &g_Config.m_TcChatBubbleOffsetY, &Row, TCLocalize("垂直偏移"), 20, 100);
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// Slider: 圆角
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_TcChatBubbleRounding, &g_Config.m_TcChatBubbleRounding, &Row, TCLocalize("圆角"), 0, 30);
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// Dropdown: 动画效果
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		static std::vector<const char *> s_ChatBubbleAnimDropDownNames;
 		s_ChatBubbleAnimDropDownNames = {TCLocalize("淡出"), TCLocalize("收缩"), TCLocalize("上滑")};
@@ -3249,15 +3186,12 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 			g_Config.m_TcChatBubbleAnimation = AnimSelectedNew;
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
-		// ColorPicker: 背景颜色
 		static CButtonContainer s_ChatBubbleBgColorId, s_ChatBubbleTextColorId;
 		DoLine_ColorPicker(&s_ChatBubbleBgColorId, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("背景颜色"), &g_Config.m_TcChatBubbleBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.8f), false, nullptr, true);
 
-		// ColorPicker: 文本颜色
 		DoLine_ColorPicker(&s_ChatBubbleTextColorId, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("文本颜色"), &g_Config.m_TcChatBubbleTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
 	}
 
-	// 卡片底部边距
 	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
@@ -3277,14 +3211,12 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
 
-	// Checkbox: 掉水里自动发言和表情
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFreezeChatEnabled, TCLocalize("掉水里自动发言和表情"), &g_Config.m_TcFreezeChatEnabled, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 	if(g_Config.m_TcFreezeChatEnabled)
 	{
-		// Checkbox: 掉水里发表情
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFreezeChatEmoticon, TCLocalize("掉水里发表情"), &g_Config.m_TcFreezeChatEmoticon, &Row, LG_LineHeight);
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
@@ -3296,7 +3228,6 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 			CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 		}
 
-		// EditBox: 聊天消息
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Row.VSplitLeft(LG_LabelWidth, &LabelCol, &ControlCol);
 		Ui()->DoLabel(&LabelCol, TCLocalize("聊天消息"), LG_BodySize, TEXTALIGN_ML);
@@ -3305,7 +3236,6 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		Ui()->DoEditBox(&s_FreezeChatMessageQiMeng, &ControlCol, LG_BodySize);
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
-		// Slider: 发送概率
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_TcFreezeChatChance, &g_Config.m_TcFreezeChatChance, &Row, TCLocalize("发送概率"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
@@ -3330,7 +3260,6 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
 
-	// Checkbox: 显示计分板查分
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClScoreboardPoints, TCLocalize("显示计分板查分"), &g_Config.m_ClScoreboardPoints, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
@@ -3339,7 +3268,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模块 3.5: 恰分 ==========
+	// ========== 模块 4: 恰分 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card3_5Start = Column;
 	s_GlassCards.push_back(Card3_5Start);
@@ -3353,27 +3282,14 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Ui()->DoLabel(&HeadlineRect, TCLocalize("恰分"), LG_HeadlineSize, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
-
-	// Checkbox: 启用恰分功能
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmQiaFenEnabled, TCLocalize("启用恰分功能"), &g_Config.m_QmQiaFenEnabled, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-	// if(g_Config.m_QmQiaFenEnabled)
-	// {
-	// 	// 说明文本
-	// 	CardContent.HSplitTop(LG_LineHeight * 2, &Row, &CardContent);
-	// 	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.7f));
-	// 	Ui()->DoLabel(&Row, TCLocalize("当有人在公屏发送\"有人恰吗?\"时\n自动回复\"恰\"并在名字后面加\"恰\""), LG_BodySize * 0.9f, TEXTALIGN_ML);
-	// 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	// 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-	// }
-
 	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模块 3.6: 饼菜单 ==========
+	// ========== 模块 5: 饼菜单 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card3_6Start = Column;
 	s_GlassCards.push_back(Card3_6Start);
@@ -3387,38 +3303,27 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Ui()->DoLabel(&HeadlineRect, TCLocalize("饼菜单"), LG_HeadlineSize, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
-
-	// Checkbox: 启用饼菜单
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPieMenuEnabled, TCLocalize("启用饼菜单"), &g_Config.m_QmPieMenuEnabled, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 	if(g_Config.m_QmPieMenuEnabled)
 	{
-		// Slider: UI大小
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_QmPieMenuScale, &g_Config.m_QmPieMenuScale, &Row, TCLocalize("UI大小"), 50, 200, &CUi::ms_LinearScrollbarScale, 0, "%");
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// Slider: 不透明度
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_QmPieMenuOpacity, &g_Config.m_QmPieMenuOpacity, &Row, TCLocalize("不透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// Slider: 检测距离
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_QmPieMenuMaxDistance, &g_Config.m_QmPieMenuMaxDistance, &Row, TCLocalize("检测距离"), 100, 2000);
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// 颜色设置标题
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 		CardContent.HSplitTop(LG_BodySize, &Row, &CardContent);
 		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
 		Ui()->DoLabel(&Row, TCLocalize("选项颜色"), LG_BodySize, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-		// ColorPicker: 颜色设置
 		static CButtonContainer s_PieMenuColorFriend, s_PieMenuColorWhisper, s_PieMenuColorMention;
 		static CButtonContainer s_PieMenuColorCopySkin, s_PieMenuColorSwap, s_PieMenuColorSpectate;
 		DoLine_ColorPicker(&s_PieMenuColorFriend, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("好友"), (unsigned int *)&g_Config.m_QmPieMenuColorFriend, ColorRGBA(0.9f, 0.3f, 0.4f), true);
@@ -3433,7 +3338,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模块 3.7: 复读 ==========
+	// ========== 模块 6: 复读 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card3_7Start = Column;
 	s_GlassCards.push_back(Card3_7Start);
@@ -3453,25 +3358,13 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRepeatEnabled, TCLocalize("启用复读功能"), &g_Config.m_QmRepeatEnabled, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
-	if(g_Config.m_QmRepeatEnabled)
-	{
-		// 说明文本
-		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.7f));
-		Ui()->DoLabel(&Row, TCLocalize("按 Home 键复读最新一条消息"), LG_BodySize * 0.9f, TEXTALIGN_ML);
-		TextRender()->TextColor(TextRender()->DefaultTextColor());
-		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-	}
-
 	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
-
-	// ***** RightView ***** //
 	LeftView = Column;
 	Column = RightView;
 
-	// ========== 模块 4: 粒子拖尾 ==========
+	// ========== 模块 7: 粒子拖尾 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card4Start = Column;
 	s_GlassCards.push_back(Card4Start);
@@ -3494,7 +3387,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模块 5: Hook辅助线 ==========
+	// ========== 模块 8: Hook辅助线 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card5Start = Column;
 	s_GlassCards.push_back(Card5Start);
@@ -3508,8 +3401,6 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Ui()->DoLabel(&HeadlineRect, TCLocalize("Hook辅助线"), LG_HeadlineSize, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
-
-	// Dropdown: 颜色模式
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	static std::vector<const char *> s_HookCollModeDropDownNamesQM;
 	s_HookCollModeDropDownNamesQM = {TCLocalize("武器跟随"), TCLocalize("墙体跟随 (默认)")};
@@ -3536,7 +3427,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模块 6: 激光设置 ==========
+	// ========== 模块 9: 激光设置 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card6Start = Column;
 	s_GlassCards.push_back(Card6Start);
@@ -3550,28 +3441,18 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Ui()->DoLabel(&HeadlineRect, TCLocalize("激光设置"), LG_HeadlineSize, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
-
-	// Checkbox: 增强激光特效
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmLaserEnhanced, TCLocalize("增强激光特效"), &g_Config.m_QmLaserEnhanced, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-	// Slider: 激光辉光强度
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	Ui()->DoScrollbarOption(&g_Config.m_QmLaserGlowIntensity, &g_Config.m_QmLaserGlowIntensity, &Row, TCLocalize("辉光强度"), 0, 100);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-	// Slider: 激光大小
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	Ui()->DoScrollbarOption(&g_Config.m_QmLaserSize, &g_Config.m_QmLaserSize, &Row, TCLocalize("激光大小"), 50, 200, &CUi::ms_LinearScrollbarScale, 0, "%");
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-	// Slider: 半透明
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	Ui()->DoScrollbarOption(&g_Config.m_QmLaserAlpha, &g_Config.m_QmLaserAlpha, &Row, TCLocalize("半透明"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-	// Checkbox: 圆角端点
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmLaserRoundCaps, TCLocalize("圆角端点"), &g_Config.m_QmLaserRoundCaps, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
@@ -3616,7 +3497,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模块7: 玩家统计 ==========
+	// ========== 模块10: 玩家统计 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card7Start = Column;
 	s_GlassCards.push_back(Card7Start);
@@ -3631,12 +3512,12 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
 
-	// Checkbox: 显示玩家统计HUD
+	// 显示玩家统计HUD
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsHud, TCLocalize("显示玩家统计HUD"), &g_Config.m_QmPlayerStatsHud, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
-	// Checkbox: 进入服务器时重置统计
+	// 进入服务器时重置统计
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsResetOnJoin, TCLocalize("进入服务器时重置统计"), &g_Config.m_QmPlayerStatsResetOnJoin, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
@@ -3645,7 +3526,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模块8: 碰撞体积可视化 ==========
+	// ========== 模块11: 碰撞体积可视化 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card8Start_CollisionHitbox = Column;
 	s_GlassCards.push_back(Card8Start_CollisionHitbox);
@@ -3660,18 +3541,15 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
 
-	// Checkbox: 启用碰撞体积可视化
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmShowCollisionHitbox, TCLocalize("显示碰撞体积"), &g_Config.m_QmShowCollisionHitbox, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 	if(g_Config.m_QmShowCollisionHitbox)
 	{
-		// ColorPicker: Freeze边框颜色
 		static CButtonContainer s_FreezeColorId;
 		DoLine_ColorPicker(&s_FreezeColorId, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("Freeze边框颜色"), &g_Config.m_QmCollisionHitboxColorFreeze, ColorRGBA(1.0f, 0.0f, 1.0f), false);
 
-		// Slider: 透明度
 		CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 		Ui()->DoScrollbarOption(&g_Config.m_QmCollisionHitboxAlpha, &g_Config.m_QmCollisionHitboxAlpha, &Row, TCLocalize("透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 		CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
@@ -3681,7 +3559,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// ========== 模8: 收藏地图 ==========
+	// ========== 模块12: 收藏地图 ==========
 	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
 	CUIRect Card8Start = Column;
 	s_GlassCards.push_back(Card8Start);
@@ -3761,7 +3639,37 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	Column.y = CardContent.y;
 	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 
-	// === Scroll Region End ===
+		// ========== 模块13: HJ大佬辅助 ==========
+	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+	CUIRect CardHJStart = Column;
+	s_GlassCards.push_back(CardHJStart);
+
+	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+
+	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
+	TextRender()->TextColor(GetRainbowColor(11));
+	Ui()->DoLabel(&HeadlineRect, TCLocalize("HJ大佬辅助"), LG_HeadlineSize, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
+
+	// 解冻自动取消旁观
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoUnspecOnUnfreeze, TCLocalize("解冻自动取消旁观"), &g_Config.m_QmAutoUnspecOnUnfreeze, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+	// 自动解冻的
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoSwitchOnUnfreeze, TCLocalize("自动切换到解冻的tee"), &g_Config.m_QmAutoUnspecOnUnfreeze, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+
+	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+	Column.y = CardContent.y;
+	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+
+
+	// === 滚动区域 Manba OUT! ===
 	RightView.y = Column.y;
 	CUIRect ScrollRegion;
 	ScrollRegion.x = MainView.x;

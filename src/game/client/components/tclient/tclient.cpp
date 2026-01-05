@@ -476,6 +476,9 @@ void CTClient::OnConsoleInit()
 
 	Console()->Register("emote_cycle", "", CFGFLAG_CLIENT, ConEmoteCycle, this, "Cycle through emotes");
 
+	// 复读功能命令
+	Console()->Register("+qm_repeat", "", CFGFLAG_CLIENT, ConRepeat, this, "复读");
+
 	// 收藏地图命令
 	Console()->Register("add_favorite_map", "s[map_name]", CFGFLAG_CLIENT, ConAddFavoriteMap, this, "Add a map to favorites");
 	Console()->Register("remove_favorite_map", "s[map_name]", CFGFLAG_CLIENT, ConRemoveFavoriteMap, this, "Remove a map from favorites");
@@ -644,6 +647,8 @@ void CTClient::OnRender()
 	DoFinishCheck();
 	CheckFreeze();
 	CheckWaterFall();
+	CheckAutoUnspecOnUnfreeze(); // 检测解冻自动取消旁观
+	CheckAutoSwitchOnUnfreeze(); // HJ大佬辅助 - 检测自动切换
 	UpdatePlayerStats(); // 更新玩家统计
 }
 
@@ -773,6 +778,115 @@ void CTClient::CheckWaterFall()
 
 		m_aWasInDeath[Dummy] = IsInDeath;
 	}
+}
+
+void CTClient::CheckAutoUnspecOnUnfreeze()
+{
+	if(Client()->State() != IClient::STATE_ONLINE)
+		return;
+	if(!g_Config.m_QmAutoUnspecOnUnfreeze)
+		return;
+
+	// 分别检查主玩家和dummy（每个Tee的旁观状态是独立的）
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		const int ClientId = GameClient()->m_aLocalIds[Dummy];
+		if(ClientId < 0)
+			continue;
+
+		const auto &ClientData = GameClient()->m_aClients[ClientId];
+		if(!ClientData.m_Active)
+			continue;
+
+		// 检查是否处于旁观状态
+		bool IsSpectating = GameClient()->m_Snap.m_SpecInfo.m_Active;
+
+		// 检查当前是否被 freeze
+		bool IsInFreeze = ClientData.m_FreezeEnd != 0;
+
+		// 检测从 freeze 到 unfreeze 的转换
+		if(m_aWasInFreezeForUnspec[Dummy] && !IsInFreeze && IsSpectating)
+		{
+			// 被解冻了，且当前处于旁观状态，直接发送网络包（最快方式）
+			if(Client()->IsSixup())
+			{
+				// 0.7协议
+				protocol7::CNetMsg_Cl_Say Msg7;
+				Msg7.m_Mode = protocol7::CHAT_ALL;
+				Msg7.m_Target = -1;
+				Msg7.m_pMessage = "/spec";
+				Client()->SendPackMsgActive(&Msg7, MSGFLAG_VITAL, true);
+			}
+			else
+			{
+				// 0.6协议
+				CNetMsg_Cl_Say Msg;
+				Msg.m_Team = 0; // 全体聊天
+				Msg.m_pMessage = "/spec";
+				Client()->SendPackMsgActive(&Msg, MSGFLAG_VITAL);
+			}
+		}
+
+		m_aWasInFreezeForUnspec[Dummy] = IsInFreeze;
+	}
+}
+
+void CTClient::CheckAutoSwitchOnUnfreeze()
+{
+	if(Client()->State() != IClient::STATE_ONLINE)
+		return;
+	if(!g_Config.m_QmAutoSwitchOnUnfreeze)
+		return;
+
+	// 必须有dummy连接
+	if(!Client()->DummyConnected())
+		return;
+
+	// 获取本体和dummy的ClientId
+	const int MainClientId = GameClient()->m_aLocalIds[0];
+	const int DummyClientId = GameClient()->m_aLocalIds[1];
+
+	if(MainClientId < 0 || DummyClientId < 0)
+		return;
+
+	const auto &MainClient = GameClient()->m_aClients[MainClientId];
+	const auto &DummyClient = GameClient()->m_aClients[DummyClientId];
+
+	if(!MainClient.m_Active || !DummyClient.m_Active)
+		return;
+
+	// 获取当前freeze状态
+	bool MainInFreeze = MainClient.m_FreezeEnd != 0;
+	bool DummyInFreeze = DummyClient.m_FreezeEnd != 0;
+
+	// 获取之前的freeze状态
+	bool MainWasInFreeze = m_aWasInFreezeForSwitch[0];
+	bool DummyWasInFreeze = m_aWasInFreezeForSwitch[1];
+
+	// 当前操控的是哪个 (0=本体, 1=dummy)
+	int CurrentDummy = g_Config.m_ClDummy;
+
+	// 核心逻辑：两个都曾被freeze，现在有一个解冻了
+	// 如果解冻的不是当前操控的，就切换
+	if(MainWasInFreeze && DummyWasInFreeze)
+	{
+		// 本体刚解冻，而当前操控的是dummy
+		if(!MainInFreeze && DummyInFreeze && CurrentDummy == 1)
+		{
+			// 切换到本体
+			Console()->ExecuteLine("cl_dummy 0");
+		}
+		// dummy刚解冻，而当前操控的是本体
+		else if(MainInFreeze && !DummyInFreeze && CurrentDummy == 0)
+		{
+			// 切换到dummy
+			Console()->ExecuteLine("cl_dummy 1");
+		}
+	}
+
+	// 更新状态
+	m_aWasInFreezeForSwitch[0] = MainInFreeze;
+	m_aWasInFreezeForSwitch[1] = DummyInFreeze;
 }
 
 bool CTClient::NeedUpdate()
@@ -1557,25 +1671,19 @@ next_line:
 
 // ========== 复读功能 ==========
 
+void CTClient::ConRepeat(IConsole::IResult *pResult, void *pUserData)
+{
+	CTClient *pThis = static_cast<CTClient *>(pUserData);
+	if(!pThis->GameClient())
+		return;
+	
+	// +命令：按键按下时触发
+	pThis->RepeatLastMessage();
+}
+
 bool CTClient::OnInput(const IInput::CEvent &Event)
 {
-	// 检查是否启用复读功能
-	if(!g_Config.m_QmRepeatEnabled)
-		return false;
-
-	// 检查是否按下 Z 键
-	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_Z)
-	{
-		// 不在聊天、控制台、菜单活动时才处理
-		if(!GameClient()->m_Chat.IsActive() && 
-		   !GameClient()->m_GameConsole.IsActive() && 
-		   !GameClient()->m_Menus.IsActive())
-		{
-			RepeatLastMessage();
-			return true;
-		}
-	}
-
+	// 不再需要在这里处理复读功能，已通过 +qm_repeat 命令绑定
 	return false;
 }
 

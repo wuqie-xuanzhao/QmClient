@@ -131,6 +131,14 @@ class CTClient : public CComponent
 	int64_t m_aLastFreezeMessageTime[NUM_DUMMIES] = {0, 0};
 	void CheckFreeze();
 
+	// Auto Unspec on Unfreeze
+	bool m_aWasInFreezeForUnspec[NUM_DUMMIES] = {false, false};
+	void CheckAutoUnspecOnUnfreeze();
+
+	// HJ大佬辅助 - 自动切换到解冻的Tee
+	bool m_aWasInFreezeForSwitch[NUM_DUMMIES] = {false, false};
+	void CheckAutoSwitchOnUnfreeze();
+
 	// 玩家统计跟踪
 	SPlayerStats m_aPlayerStats[NUM_DUMMIES];
 	void UpdatePlayerStats();
@@ -150,6 +158,7 @@ class CTClient : public CComponent
 	char m_aLastChatMessage[2048] = "";  // 最新一条公屏消息
 	int64_t m_LastRepeatTime = 0;           // 上次复读时间
 	void RepeatLastMessage();
+	static void ConRepeat(IConsole::IResult *pResult, void *pUserData);
 
 	// Speech-to-Text (STT)
 #if defined(CONF_WHISPER)
