@@ -7723,7 +7723,7 @@ static bool UnknownMapSettingCallback(const char *pCommand, void *pUser)
 void CGameClient::LoadMapSettings()
 {
 	IEngineMap *pMap = Kernel()->RequestInterface<IEngineMap>();
-	m_MapBugs = CMapBugs::Create(Client()->GetCurrentMap(), 0, SHA256_ZEROED);
+	m_MapBugs = CMapBugs::Create(Client()->GetCurrentMap(), 0, SHA256_DIGEST{});
 
 	// Reset Tunezones
 	for(int TuneZone = 0; TuneZone < TuneZone::NUM; TuneZone++)

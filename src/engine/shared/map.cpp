@@ -150,7 +150,7 @@ IOHANDLE CMap::File() const
 SHA256_DIGEST CMap::Sha256() const
 {
 	if(!IsLoaded())
-		return SHA256_ZEROED;
+		return SHA256_DIGEST{};
 	return m_DataFile.Sha256();
 }
 

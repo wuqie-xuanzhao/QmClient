@@ -1935,7 +1935,7 @@ namespace
 		if(!TryGetLocalAssetSourcePath(pStorage, Tab, pLocalName, aPath, sizeof(aPath)))
 			return false;
 
-		SHA256_DIGEST Sha256 = SHA256_ZEROED;
+		SHA256_DIGEST Sha256 = {};
 		if(!pStorage->CalculateHashes(aPath, IStorage::TYPE_SAVE, &Sha256))
 			return false;
 
