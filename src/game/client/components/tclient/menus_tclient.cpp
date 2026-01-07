@@ -3656,15 +3656,37 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
 
-	// 解冻自动取消旁观
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoUnspecOnUnfreeze, TCLocalize("解冻自动取消旁观"), &g_Config.m_QmAutoUnspecOnUnfreeze, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-	// 自动解冻的
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoSwitchOnUnfreeze, TCLocalize("自动切换到解冻的tee"), &g_Config.m_QmAutoUnspecOnUnfreeze, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
+	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+	Column.y = CardContent.y;
+	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+
+
+	// ========== 模块14: 按键显示 ==========
+
+	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+	CUIRect CardInputOverlayStart = Column;
+	s_GlassCards.push_back(CardInputOverlayStart);
+
+	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+
+	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
+	TextRender()->TextColor(GetRainbowColor(11));
+	Ui()->DoLabel(&HeadlineRect, TCLocalize("按键显示"), LG_HeadlineSize, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
+
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmInputOverlay, TCLocalize("显示按键"), &g_Config.m_QmInputOverlay, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
 	Column.y = CardContent.y;

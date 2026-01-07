@@ -397,6 +397,9 @@ MACRO_CONFIG_INT(QmAutoUnspecOnUnfreeze, qm_auto_unspec_on_unfreeze, 0, 0, 1, CF
 // HJ大佬辅助 - 自动切换到解冻的Tee
 MACRO_CONFIG_INT(QmAutoSwitchOnUnfreeze, qm_auto_switch_on_unfreeze, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "本体和dummy都freeze时，自动切换到先解冻的那个 (Auto switch to unfrozen tee when both are frozen)")
 
-// Input Overlay / 输入显示
-MACRO_CONFIG_INT(QmInputOverlay, qm_input_overlay, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用输入显示叠加层 (Enable input overlay)")
-MACRO_CONFIG_STR(QmInputOverlayLayout, qm_input_overlay_layout, 256, "data/input_overlay.json", CFGFLAG_CLIENT | CFGFLAG_SAVE, "输入显示配置文件路径 (Input overlay layout JSON file path)")
+// Input Overlay
+MACRO_CONFIG_INT(QmInputOverlay, qm_input_overlay, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show input overlay")
+MACRO_CONFIG_INT(QmInputOverlayX, qm_input_overlay_x, 90, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay horizontal position (percentage)")
+MACRO_CONFIG_INT(QmInputOverlayY, qm_input_overlay_y, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay vertical position (percentage)")
+MACRO_CONFIG_INT(QmInputOverlayScale, qm_input_overlay_scale, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay scale (percentage)")
+MACRO_CONFIG_INT(QmInputOverlayOpacity, qm_input_overlay_opacity, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay opacity (percentage)")

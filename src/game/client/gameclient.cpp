@@ -174,6 +174,7 @@ void CGameClient::OnConsoleInit()
 					      &m_Motd,
 					      &m_Menus,
 					      &m_PieMenu,
+					      &m_InputOverlay,
 					      &m_Tooltips,
 					      &m_Scripting,
 					      &m_KeyBinder,

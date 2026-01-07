@@ -2755,6 +2755,7 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 	if(handle == INVALID_HANDLE_VALUE)
 		return 1;
 
+	// Windows
 	*created = filetime_to_unixtime(&finddata.ftCreationTime);
 	*modified = filetime_to_unixtime(&finddata.ftLastWriteTime);
 	FindClose(handle);
@@ -2763,6 +2764,7 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 	if(stat(name, &sb))
 		return 1;
 
+	// Unix  
 	*created = sb.st_ctime;
 	*modified = sb.st_mtime;
 #else

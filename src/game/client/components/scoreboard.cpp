@@ -786,10 +786,9 @@ void CScoreboard::OnRender()
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	if(!IsActive())
-		return;
 
-	// Trigger points queries for all active players when scoreboard is visible (only when enabled)
+
+	// 当记分板可见时（骗你的,不可见也查），为所有活跃玩家触发查询点
 	if(g_Config.m_ClScoreboardPoints)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
@@ -801,13 +800,16 @@ void CScoreboard::OnRender()
 		}
 	}
 
+	if(!IsActive())
+		return;
+
 	if(!GameClient()->m_Menus.IsActive())
 	{
 		Ui()->StartCheck();
 		Ui()->Update();
 	}
 
-	// if the score board is active, then we should clear the motd message as well
+	// 如果记分板处于活动状态，则应同时清除每日公告消息。
 	if(GameClient()->m_Motd.IsActive())
 		GameClient()->m_Motd.Clear();
 
