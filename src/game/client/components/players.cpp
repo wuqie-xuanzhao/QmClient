@@ -404,6 +404,14 @@ void CPlayers::RenderHookCollLine(
 				{
 					// The hook misses the player, but also misses the solid
 					vLineSegments.emplace_back(LineStartPos, SegmentStartPos);
+					break;
+				}
+
+				// Retracting hooks don't go through hook teleporters
+				if(Hit && Hit != TILE_TELEINHOOK)
+				{
+					// The hook misses the player, but also misses the solid
+					vLineSegments.emplace_back(LineStartPos, SegmentStartPos);
 					HookTipLineSegment = IGraphics::CLineItem(SegmentStartPos, HitPos);
 					break;
 				}
