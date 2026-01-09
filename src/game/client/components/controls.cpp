@@ -24,6 +24,7 @@ CControls::CControls()
 	std::fill(std::begin(m_aMousePosOnAction), std::end(m_aMousePosOnAction), vec2(0.0f, 0.0f));
 	std::fill(std::begin(m_aTargetPos), std::end(m_aTargetPos), vec2(0.0f, 0.0f));
 	std::fill(std::begin(m_aMouseInputType), std::end(m_aMouseInputType), EMouseInputType::ABSOLUTE);
+	std::fill(std::begin(m_aShowWeaponTrajectory), std::end(m_aShowWeaponTrajectory), 0);
 }
 
 void CControls::OnReset()
@@ -135,6 +136,10 @@ void CControls::OnConsoleInit()
 	{
 		static CInputState s_State = {this, {&m_aShowHookColl[0], &m_aShowHookColl[1]}};
 		Console()->Register("+showhookcoll", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Show Hook Collision");
+	}
+	{
+		static CInputState s_State = {this, {&m_aShowWeaponTrajectory[0], &m_aShowWeaponTrajectory[1]}};
+		Console()->Register("+showweapontrajectory", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "显示武器弹道辅助线");
 	}
 
 	{

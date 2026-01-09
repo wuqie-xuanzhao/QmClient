@@ -3277,13 +3277,13 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
 	Ui()->DoLabel(&Row, "感谢名单:", LG_BodySize * 0.95f, TEXTALIGN_ML);
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
-	Ui()->DoLabel(&Row, "喵不一 鹑 椿雪绒绒 久桃 大恐龙", LG_BodySize * 0.8f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Row, "喵不一,久桃,椿雪绒绒,大恐龙,鹑", LG_BodySize * 0.8f, TEXTALIGN_ML);
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
-	Ui()->DoLabel(&Row, "唯诺 哇哇(哇啊嗷) 热心市民 星星冻 咩咩不啊", LG_BodySize * 0.8f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Row, "唯诺,哇哇(哇啊嗷),热心市民,星星冻,咩咩不啊", LG_BodySize * 0.8f, TEXTALIGN_ML);
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
-	Ui()->DoLabel(&Row, "窝窝头 半夏pr 塔塔喵 軽い猫 苏哲羽", LG_BodySize * 0.8f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Row, "窝窝头,半夏pr,塔塔喵,軽い猫,苏哲羽", LG_BodySize * 0.8f, TEXTALIGN_ML);
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
-	Ui()->DoLabel(&Row, "夏日 TsFreddie Zerol Acqua 千月 张宁我儿", LG_BodySize * 0.8f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Row, "夏日,TsFreddie,Zerol Acqua,千月,张宁我儿", LG_BodySize * 0.8f, TEXTALIGN_ML);
 
 
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
@@ -3453,6 +3453,10 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 
 	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHammerSwapSkin, TCLocalize("锤人换皮肤"), &g_Config.m_QmHammerSwapSkin, &Row, LG_LineHeight);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmWeaponTrajectory, TCLocalize("武器弹道辅助线"), &g_Config.m_QmWeaponTrajectory, &Row, LG_LineHeight);
 	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
