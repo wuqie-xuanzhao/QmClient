@@ -1073,6 +1073,17 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 	View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f), IGraphics::CORNER_B, 4.0f);
 
 	const int MaxEntries = ServerBrowser()->Communities().size();
+	if(MaxEntries == 0)
+	{
+		CUIRect ErrorLabel;
+		View.Margin(5.0f, &ErrorLabel);
+		SLabelProperties ErrorLabelProps;
+		ErrorLabelProps.m_MaxWidth = ErrorLabel.w;
+		ErrorLabelProps.SetColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
+		Ui()->DoLabel(&ErrorLabel, Localize("Error loading communities"), 10.0f, TEXTALIGN_MC, ErrorLabelProps);
+		return;
+	}
+
 	const int EntriesPerRow = 1;
 
 	static CScrollRegion s_ScrollRegion;
@@ -2519,7 +2530,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 			ToolBox.x += TransitionOffset;
 		}
 
-		if((g_Config.m_UiPage == PAGE_INTERNET || g_Config.m_UiPage == PAGE_FAVORITES) && !ServerBrowser()->Communities().empty())
+		if(g_Config.m_UiPage == PAGE_INTERNET || g_Config.m_UiPage == PAGE_FAVORITES)
 		{
 			CUIRect CommunityFilter;
 			ToolBox.HSplitTop(19.0f + 4.0f * 17.0f + CScrollRegion::HEIGHT_MAGIC_FIX, &CommunityFilter, &ToolBox);
