@@ -3845,7 +3845,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 	*/
 	// clang-format on
 
-	(void)DrawBackground;
+<<	(void)DrawBackground;
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
 	if(g_Config.m_UiPage == PAGE_FAVORITE_MAPS)
 	{
