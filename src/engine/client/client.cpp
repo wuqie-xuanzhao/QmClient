@@ -4989,7 +4989,7 @@ void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp, int 
 {
 	dbg_assert(State() == IClient::STATE_ONLINE, "Client must be online to record demo");
 
-	if(!m_pMap || !m_pMap->IsLoaded())
+<<	if(!m_pMap || !m_pMap->IsLoaded())
 	{
 		log_error("demo_recorder", "Map is not loaded yet.");
 		return;
@@ -5010,13 +5010,14 @@ void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp, int 
 		{
 			str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", pFilename, aTimestamp);
 		}
+
 	}
 	else
 	{
 		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
 	}
 
-	DemoRecorders()[Recorder].Start(
+<<	DemoRecorders()[Recorder].Start(
 		Storage(),
 		m_pConsole,
 		aFilename,
@@ -5025,7 +5026,7 @@ void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp, int 
 		m_pMap->Sha256(),
 		m_pMap->Crc(),
 		"client",
-		m_pMap->Size(),
+<<		m_pMap->Size(),
 		nullptr,
 		m_pMap->File(),
 		nullptr,
@@ -5091,7 +5092,7 @@ void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
 	CClient *pSelf = (CClient *)pUserData;
 
 	if(pSelf->State() != IClient::STATE_ONLINE)
-	{
+<<	{
 		log_error("demo_recorder", "Client is not online.");
 		return;
 	}
@@ -6369,7 +6370,7 @@ unsigned CClient::GetCurrentMapCrc() const
 void CClient::RaceRecord_Start(const char *pFilename)
 {
 	dbg_assert(State() == IClient::STATE_ONLINE, "Client must be online to record demo");
-	dbg_assert(m_pMap && m_pMap->IsLoaded(), "Map must be loaded to record demo");
+<<	dbg_assert(m_pMap && m_pMap->IsLoaded(), "Map must be loaded to record demo");
 
 	DemoRecorders()[RECORDER_RACE].Start(
 		Storage(),
@@ -6380,7 +6381,7 @@ void CClient::RaceRecord_Start(const char *pFilename)
 		m_pMap->Sha256(),
 		m_pMap->Crc(),
 		"client",
-		m_pMap->Size(),
+<<		m_pMap->Size(),
 		nullptr,
 		m_pMap->File(),
 		nullptr,
