@@ -6928,7 +6928,10 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClReplays, "Enable replays", Localize("Enable replays"), g_Config.m_ClReplays, &Button))
 	{
 		g_Config.m_ClReplays ^= 1;
-		Client()->DemoRecorder_UpdateReplayRecorder();
+		if(Client()->State() == IClient::STATE_ONLINE)
+		{
+			Client()->DemoRecorder_UpdateReplayRecorder();
+		}
 	}
 
 	Left.HSplitTop(20.0f, &Button, &Left);
