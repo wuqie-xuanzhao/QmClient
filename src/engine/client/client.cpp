@@ -6352,20 +6352,6 @@ const char *CClient::GetCurrentMapPath() const
 	return m_aCurrentMapPath;
 }
 
-SHA256_DIGEST CClient::GetCurrentMapSha256() const
-{
-	if(!m_pMap || !m_pMap->IsLoaded())
-		return SHA256_DIGEST{};
-	return m_pMap->Sha256();
-}
-
-unsigned CClient::GetCurrentMapCrc() const
-{
-	if(!m_pMap || !m_pMap->IsLoaded())
-		return 0;
-	return m_pMap->Crc();
-}
-
 void CClient::RaceRecord_Start(const char *pFilename)
 {
 	dbg_assert(State() == IClient::STATE_ONLINE, "Client must be online to record demo");
