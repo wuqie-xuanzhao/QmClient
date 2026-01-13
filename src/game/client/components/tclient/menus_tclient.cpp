@@ -3275,7 +3275,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	RightContent.HSplitTop(LG_HeadlineMargin, nullptr, &RightContent);
 	//我名字
 	RightContent.HSplitTop(LG_LineHeight, &Row, &RightContent);
-	TextRender()->TextColor(GetRainbowColor(-3));
+	TextRender()->TextColor(GetRainbowColor(-6));
 	Ui()->DoLabel(&Row, "栖梦(璇梦)", LG_BodySize + 2.0f, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	// 感谢名单
