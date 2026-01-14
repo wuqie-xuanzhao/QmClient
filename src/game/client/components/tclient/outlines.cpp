@@ -13,7 +13,9 @@ enum
 {
 	OUTLINE_NONE = 0,
 	OUTLINE_UNFREEZE,
+	OUTLINE_DEEPUNFREEZE,
 	OUTLINE_FREEZE,
+	OUTLINE_DEEPFREEZE,
 	OUTLINE_TELE,
 	OUTLINE_KILL,
 	OUTLINE_SOLID,
@@ -85,9 +87,13 @@ public:
 					const auto Tile = pTiles[Index].m_Index;
 					if(Tile == TILE_SOLID || Tile == TILE_NOHOOK)
 						pData[IndexOut] = OUTLINE_SOLID;
-					else if(Tile == TILE_FREEZE || Tile == TILE_DFREEZE || Tile == TILE_LFREEZE)
+					else if(Tile == TILE_DFREEZE)
+						pData[IndexOut] = OUTLINE_DEEPFREEZE;
+					else if(Tile == TILE_FREEZE || Tile == TILE_LFREEZE)
 						pData[IndexOut] = OUTLINE_FREEZE;
-					else if(Tile == TILE_UNFREEZE || Tile == TILE_DUNFREEZE || Tile == TILE_LUNFREEZE)
+					else if(Tile == TILE_DUNFREEZE)
+						pData[IndexOut] = OUTLINE_DEEPUNFREEZE;
+					else if(Tile == TILE_UNFREEZE || Tile == TILE_LUNFREEZE)
 						pData[IndexOut] = OUTLINE_UNFREEZE;
 					else if(Tile == TILE_DEATH)
 						pData[IndexOut] = OUTLINE_KILL;
@@ -190,8 +196,12 @@ void COutlines::OnRender()
 					return {g_Config.m_TcOutlineSolid, g_Config.m_TcOutlineWidthSolid, g_Config.m_TcOutlineColorSolid};
 				if(Type == OUTLINE_FREEZE)
 					return {g_Config.m_TcOutlineFreeze, g_Config.m_TcOutlineWidthFreeze, g_Config.m_TcOutlineColorFreeze};
+				if(Type == OUTLINE_DEEPFREEZE)
+					return {g_Config.m_TcOutlineFreeze, g_Config.m_TcOutlineWidthFreeze, g_Config.m_TcOutlineColorDeepFreeze};
 				if(Type == OUTLINE_UNFREEZE)
 					return {g_Config.m_TcOutlineUnfreeze, g_Config.m_TcOutlineWidthUnfreeze, g_Config.m_TcOutlineColorUnfreeze};
+				if(Type == OUTLINE_DEEPUNFREEZE)
+					return {g_Config.m_TcOutlineUnfreeze, g_Config.m_TcOutlineWidthUnfreeze, g_Config.m_TcOutlineColorDeepUnfreeze};
 				if(Type == OUTLINE_KILL)
 					return {g_Config.m_TcOutlineKill, g_Config.m_TcOutlineWidthKill, g_Config.m_TcOutlineColorKill};
 				if(Type == OUTLINE_TELE)

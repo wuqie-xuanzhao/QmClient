@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "mapimages.h"
 
+#include <base/color.h>
 #include <base/log.h>
 
 #include <engine/graphics.h>
@@ -40,6 +41,8 @@ void CMapImages::OnInit()
 	}
 
 	Console()->Chain("cl_text_entities_size", ConchainClTextEntitiesSize, this);
+	Console()->Chain("qm_entity_overlay_freeze_color", ConchainQmEntityOverlayColor, this);
+	Console()->Chain("qm_entity_overlay_unfreeze_color", ConchainQmEntityOverlayColor, this);
 }
 
 void CMapImages::Unload()
@@ -249,6 +252,53 @@ static bool IsValidTile(int LayerType, bool EntitiesAreMasked, EMapImageModType 
 	return true;
 }
 
+static bool IsFreezeOverlayTile(int TileIndex)
+{
+	return TileIndex == TILE_FREEZE || TileIndex == TILE_DFREEZE || TileIndex == TILE_LFREEZE;
+}
+
+static bool IsUnfreezeOverlayTile(int TileIndex)
+{
+	return TileIndex == TILE_UNFREEZE || TileIndex == TILE_DUNFREEZE || TileIndex == TILE_LUNFREEZE;
+}
+
+static void ApplyOverlayTintToTile(CImageInfo &Image, size_t OffsetX, size_t OffsetY, size_t Width, size_t Height, const ColorRGBA &Tint)
+{
+	const bool KeepOriginalRgb = Tint.r >= 0.999f && Tint.g >= 0.999f && Tint.b >= 0.999f;
+	if(KeepOriginalRgb && Tint.a >= 0.999f)
+		return;
+
+	for(size_t y = 0; y < Height; ++y)
+	{
+		for(size_t x = 0; x < Width; ++x)
+		{
+			const size_t PixelX = OffsetX + x;
+			const size_t PixelY = OffsetY + y;
+			const ColorRGBA Src = Image.PixelColor(PixelX, PixelY);
+			if(Src.a <= 0.0f)
+				continue;
+
+			ColorRGBA Out;
+			if(KeepOriginalRgb)
+			{
+				Out.r = Src.r;
+				Out.g = Src.g;
+				Out.b = Src.b;
+			}
+			else
+			{
+				const float Luma = Src.r * 0.2126f + Src.g * 0.7152f + Src.b * 0.0722f;
+				const float Intensity = Luma > 0.02f ? Luma : Src.a;
+				Out.r = Tint.r * Intensity;
+				Out.g = Tint.g * Intensity;
+				Out.b = Tint.b * Intensity;
+			}
+			Out.a = Src.a * Tint.a;
+			Image.SetPixelColor(PixelX, PixelY, Out);
+		}
+	}
+}
+
 IGraphics::CTextureHandle CMapImages::GetEntities(EMapImageEntityLayerType EntityLayerType)
 {
 	const bool EntitiesAreMasked = !GameClient()->m_GameInfo.m_DontMaskEntities;
@@ -283,11 +333,15 @@ IGraphics::CTextureHandle CMapImages::GetEntities(EMapImageEntityLayerType Entit
 
 		if(ImgInfo.m_pData != nullptr)
 		{
+			const ColorRGBA FreezeTint = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmEntityOverlayFreezeColor, true));
+			const ColorRGBA UnfreezeTint = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmEntityOverlayUnfreezeColor, true));
 			CImageInfo BuildImageInfo;
 			BuildImageInfo.m_Width = ImgInfo.m_Width;
 			BuildImageInfo.m_Height = ImgInfo.m_Height;
 			BuildImageInfo.m_Format = ImgInfo.m_Format;
 			BuildImageInfo.m_pData = static_cast<uint8_t *>(malloc(BuildImageInfo.DataSize()));
+			const size_t CopyWidth = ImgInfo.m_Width / 16;
+			const size_t CopyHeight = ImgInfo.m_Height / 16;
 
 			// build game layer
 			for(int LayerType = 0; LayerType < MAP_IMAGE_ENTITY_LAYER_TYPE_COUNT; ++LayerType)
@@ -300,6 +354,7 @@ IGraphics::CTextureHandle CMapImages::GetEntities(EMapImageEntityLayerType Entit
 				for(int i = 0; i < 256; ++i)
 				{
 					int TileIndex = i;
+					const int OriginalTileIndex = TileIndex;
 					if(IsValidTile(LayerType, EntitiesAreMasked, EntitiesModType, TileIndex))
 					{
 						if(LayerType == MAP_IMAGE_ENTITY_LAYER_TYPE_SWITCH && TileIndex == TILE_SWITCHTIMEDOPEN)
@@ -307,11 +362,17 @@ IGraphics::CTextureHandle CMapImages::GetEntities(EMapImageEntityLayerType Entit
 							TileIndex = 8;
 						}
 
-						const size_t CopyWidth = ImgInfo.m_Width / 16;
-						const size_t CopyHeight = ImgInfo.m_Height / 16;
 						const size_t OffsetX = (size_t)(TileIndex % 16) * CopyWidth;
 						const size_t OffsetY = (size_t)(TileIndex / 16) * CopyHeight;
 						BuildImageInfo.CopyRectFrom(ImgInfo, OffsetX, OffsetY, CopyWidth, CopyHeight, OffsetX, OffsetY);
+						if(IsFreezeOverlayTile(OriginalTileIndex))
+						{
+							ApplyOverlayTintToTile(BuildImageInfo, OffsetX, OffsetY, CopyWidth, CopyHeight, FreezeTint);
+						}
+						else if(IsUnfreezeOverlayTile(OriginalTileIndex))
+						{
+							ApplyOverlayTintToTile(BuildImageInfo, OffsetX, OffsetY, CopyWidth, CopyHeight, UnfreezeTint);
+						}
 					}
 				}
 
@@ -361,6 +422,31 @@ void CMapImages::ChangeEntitiesPath(const char *pPath)
 		str_format(m_aEntitiesPath, sizeof(m_aEntitiesPath), "assets/entities/%s", pPath);
 	}
 
+	ReloadEntitiesTextures();
+}
+
+void CMapImages::ConchainClTextEntitiesSize(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments())
+	{
+		CMapImages *pThis = static_cast<CMapImages *>(pUserData);
+		pThis->SetTextureScale(g_Config.m_ClTextEntitiesSize);
+	}
+}
+
+void CMapImages::ConchainQmEntityOverlayColor(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments())
+	{
+		CMapImages *pThis = static_cast<CMapImages *>(pUserData);
+		pThis->ReloadEntitiesTextures();
+	}
+}
+
+void CMapImages::ReloadEntitiesTextures()
+{
 	for(int ModType = 0; ModType < MAP_IMAGE_MOD_TYPE_COUNT * 2; ++ModType)
 	{
 		if(m_aEntitiesIsLoaded[ModType])
@@ -371,16 +457,6 @@ void CMapImages::ChangeEntitiesPath(const char *pPath)
 			}
 			m_aEntitiesIsLoaded[ModType] = false;
 		}
-	}
-}
-
-void CMapImages::ConchainClTextEntitiesSize(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
-{
-	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments())
-	{
-		CMapImages *pThis = static_cast<CMapImages *>(pUserData);
-		pThis->SetTextureScale(g_Config.m_ClTextEntitiesSize);
 	}
 }
 

@@ -813,7 +813,7 @@ private:
 	void RenderSettingsDDNet(CUIRect MainView);
 	void RenderSettingsAppearance(CUIRect MainView);
 
-	// found in menus_tclient.cpp
+	// found in menus_qmclient.cpp
 	void RenderSettingsTClient(CUIRect MainView);
 	void RenderSettingsTClientSettings(CUIRect MainView);
 	void RenderSettingsTClientBindWheel(CUIRect MainView);
