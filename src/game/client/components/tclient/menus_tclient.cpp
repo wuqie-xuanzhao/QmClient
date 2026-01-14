@@ -1067,9 +1067,13 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	};
 	Column.HSplitTop(ColorPickerLineSpacing, nullptr, &Column);
 	static CButtonContainer s_aOutlineButtonContainers[5];
+	static CButtonContainer s_OutlineDeepFreezeColorId;
+	static CButtonContainer s_OutlineDeepUnfreezeColorId;
 	DoOutlineType(s_aOutlineButtonContainers[0], TCLocalize("墙体"), g_Config.m_TcOutlineSolid, g_Config.m_TcOutlineWidthSolid, g_Config.m_TcOutlineColorSolid, CConfig::ms_TcOutlineColorSolid);
-	DoOutlineType(s_aOutlineButtonContainers[1], TCLocalize("冻结和深度冻结"), g_Config.m_TcOutlineFreeze, g_Config.m_TcOutlineWidthFreeze, g_Config.m_TcOutlineColorFreeze, CConfig::ms_TcOutlineColorFreeze);
+	DoOutlineType(s_aOutlineButtonContainers[1], TCLocalize("冻结"), g_Config.m_TcOutlineFreeze, g_Config.m_TcOutlineWidthFreeze, g_Config.m_TcOutlineColorFreeze, CConfig::ms_TcOutlineColorFreeze);
+	DoLine_ColorPicker(&s_OutlineDeepFreezeColorId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Column, TCLocalize("深度冻结颜色"), &g_Config.m_TcOutlineColorDeepFreeze, CConfig::ms_TcOutlineColorDeepFreeze, false, nullptr, true);
 	DoOutlineType(s_aOutlineButtonContainers[2], TCLocalize("解冻"), g_Config.m_TcOutlineUnfreeze, g_Config.m_TcOutlineWidthUnfreeze, g_Config.m_TcOutlineColorUnfreeze, CConfig::ms_TcOutlineColorUnfreeze);
+	DoLine_ColorPicker(&s_OutlineDeepUnfreezeColorId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Column, TCLocalize("深度解冻颜色"), &g_Config.m_TcOutlineColorDeepUnfreeze, CConfig::ms_TcOutlineColorDeepUnfreeze, false, nullptr, true);
 	DoOutlineType(s_aOutlineButtonContainers[3], TCLocalize("刺"), g_Config.m_TcOutlineKill, g_Config.m_TcOutlineWidthKill, g_Config.m_TcOutlineColorKill, CConfig::ms_TcOutlineColorKill);
 	DoOutlineType(s_aOutlineButtonContainers[4], TCLocalize("传送"), g_Config.m_TcOutlineTele, g_Config.m_TcOutlineWidthTele, g_Config.m_TcOutlineColorTele, CConfig::ms_TcOutlineColorTele);
 	Column.h -= ColorPickerLineSpacing;
@@ -3286,7 +3290,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
 	//TextRender()->TextColor(GetRainbowColor(-8));//彩虹循环效果
 	TextRender()->TextColor(ColorRGBA(0.95f, 0.8f, 0.2f, 1.0f));
-	Ui()->DoLabel(&Row, "喵不一,久桃,椿雪绒绒,芽芽,骨头", LG_BodySize * 1.1f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Row, "喵不一,久桃,椿雪绒绒,芽芽,骨头,cixin", LG_BodySize * 1.1f, TEXTALIGN_ML);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 	RightContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &RightContent);
@@ -3745,6 +3749,44 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		DoLine_ColorPicker(&s_ShotgunColorIdQM, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("散弹枪颜色"), &g_Config.m_QmShotgunColor, ColorRGBA(0.55f, 0.35f, 0.17f), false);
 		DoLine_ColorPicker(&s_LaserColorIdQM, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("激光枪颜色"), &g_Config.m_QmLaserColor, ColorRGBA(0.18f, 0.42f, 1.0f), false);
 		DoLine_ColorPicker(&s_GrenadeColorIdQM, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("榴弹枪颜色"), &g_Config.m_QmGrenadeColor, ColorRGBA(0.9f, 0.22f, 0.21f), false);
+	}
+
+	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+	Column.y = CardContent.y;
+	s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+
+	// ========== 模块 8.5: 实体层颜色 ==========
+	Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+	CUIRect CardEntityOverlayStart = Column;
+	s_GlassCards.push_back(CardEntityOverlayStart);
+
+	Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+	Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+	CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+
+	CardContent.HSplitTop(LG_HeadlineSize, &HeadlineRect, &CardContent);
+	TextRender()->TextColor(GetRainbowColor(6));
+	Ui()->DoLabel(&HeadlineRect, TCLocalize("实体层颜色"), LG_HeadlineSize, TEXTALIGN_ML);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CardContent.HSplitTop(LG_HeadlineMargin, nullptr, &CardContent);
+
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	Ui()->DoLabel(&Row, TCLocalize("需要开启实体层"), LG_BodySize, TEXTALIGN_ML);
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+	static CButtonContainer s_EntityOverlayFreezeColorId, s_EntityOverlayUnfreezeColorId;
+	static unsigned int s_PrevEntityOverlayFreezeColor = g_Config.m_QmEntityOverlayFreezeColor;
+	static unsigned int s_PrevEntityOverlayUnfreezeColor = g_Config.m_QmEntityOverlayUnfreezeColor;
+	DoLine_ColorPicker(&s_EntityOverlayFreezeColorId, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("冻结颜色"), &g_Config.m_QmEntityOverlayFreezeColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+	DoLine_ColorPicker(&s_EntityOverlayUnfreezeColorId, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("解冻颜色"), &g_Config.m_QmEntityOverlayUnfreezeColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+	CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+	Ui()->DoScrollbarOption(&g_Config.m_ClOverlayEntities, &g_Config.m_ClOverlayEntities, &Row, TCLocalize("叠层透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+	CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+	if(s_PrevEntityOverlayFreezeColor != g_Config.m_QmEntityOverlayFreezeColor || s_PrevEntityOverlayUnfreezeColor != g_Config.m_QmEntityOverlayUnfreezeColor)
+	{
+		GameClient()->m_MapImages.ChangeEntitiesPath(g_Config.m_ClAssetsEntities);
+		s_PrevEntityOverlayFreezeColor = g_Config.m_QmEntityOverlayFreezeColor;
+		s_PrevEntityOverlayUnfreezeColor = g_Config.m_QmEntityOverlayUnfreezeColor;
 	}
 
 	CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);

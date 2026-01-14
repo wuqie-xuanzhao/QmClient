@@ -99,15 +99,7 @@ void CMenusSettingsControls::OnInterfacesInit(CGameClient *pClient)
 		{EBindOptionGroup::DUMMY, Localizable("Dummy copy"), "toggle cl_dummy_copy_moves 0 1"},
 		{EBindOptionGroup::DUMMY, Localizable("Hammerfly dummy"), "toggle cl_dummy_hammer 0 1"},
 		//自定义BIND
-		{EBindOptionGroup::COMMON_BINDS, Localizable("DF"), "echo DF开启;bind_action +fire \"+fire; +toggle cl_dummy_hammer 1 0\""},
-		{EBindOptionGroup::COMMON_BINDS, Localizable("HDF"), "echo 开启hdf;bind_action +fire \"+toggle cl_dummy_hammer 1 0\""},
-		{EBindOptionGroup::COMMON_BINDS, Localizable("钩子飞"), "echo 钩子飞;cl_dummy_control 1; bind_action +hook \"+toggle cl_dummy_hook 1 0\""},
-		{EBindOptionGroup::COMMON_BINDS, Localizable("卡键开启"), "echo 卡键开启;cl_dummy_resetonswitch 0"},
-		{EBindOptionGroup::COMMON_BINDS, Localizable("卡键关闭"), "echo 卡键关闭;cl_dummy_resetonswitch 1"},
-		{EBindOptionGroup::COMMON_BINDS, Localizable("正常模式加钩子飞归位"), "echo 正常模式加钩子飞归位;cl_dummy_hammer 0;cl_dummy_control 0; bind_action +fire \"+fire\""},
-		{EBindOptionGroup::COMMON_BINDS, Localizable("分身自动换锤子开启"), "echo 开启分身自动换锤子;cl_dummy_restore_weapon 0"},
-		{EBindOptionGroup::COMMON_BINDS, Localizable("分身自动换锤子关闭"), "echo 关闭分身自动换锤子;cl_dummy_restore_weapon 1"},
-		{EBindOptionGroup::COMMON_BINDS, Localizable("八角定位"), "echo 你正在使用45度瞄准;+toggle cl_mouse_max_distance 2 400; +toggle_restore inp_mousesens 1"},
+		//{EBindOptionGroup::COMMON_BINDS, Localizable("八角定位"), "echo 你正在使用45度瞄准;+toggle cl_mouse_max_distance 2 400; +toggle_restore inp_mousesens 1"},
 
 		//自定义BIND END
 		{EBindOptionGroup::MISCELLANEOUS, Localizable("Emoticon"), "+emote"},
