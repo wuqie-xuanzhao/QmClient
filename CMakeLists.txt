@@ -2616,7 +2616,7 @@ if(CLIENT)
     components/tclient/custom_communities.cpp
     components/tclient/custom_communities.h
     components/tclient/data_version.h
-    components/tclient/menus_tclient.cpp
+    components/tclient/menus_qmclient.cpp
     components/tclient/mod.cpp
     components/tclient/mod.h
     components/tclient/outlines.cpp
