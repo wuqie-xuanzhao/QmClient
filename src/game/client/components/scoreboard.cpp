@@ -293,11 +293,15 @@ void CScoreboard::RenderTitle(CUIRect TitleBar, int Team, const char *pTitle)
 	dbg_assert(Team == TEAM_RED || Team == TEAM_BLUE, "Team invalid");
 
 	char aScore[128] = "";
-	if(GameClient()->m_GameInfo.m_TimeScore)
+	const CNetObj_GameInfo *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;
+	const bool TimeScore = GameClient()->m_GameInfo.m_TimeScore;
+	const bool Race7 = Client()->IsSixup() && pGameInfoObj && pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE;
+	if(GameClient()->m_ReceivedDDNetPlayerFinishTimes || TimeScore || Race7)
 	{
-		if(m_ServerRecord > 0)
+		if(GameClient()->m_MapBestTimeSeconds != FinishTime::NOT_FINISHED_MILLIS && GameClient()->m_MapBestTimeSeconds != FinishTime::UNSET)
 		{
-			str_time_float(m_ServerRecord, TIME_HOURS, aScore, sizeof(aScore));
+			const int64_t TimeCentiseconds = static_cast<int64_t>(GameClient()->m_MapBestTimeSeconds) * 100 + static_cast<int64_t>(GameClient()->m_MapBestTimeMillis) / 10;
+			str_time(TimeCentiseconds, TIME_HOURS, aScore, sizeof(aScore));
 		}
 	}
 	else if(GameClient()->IsTeamPlay())
