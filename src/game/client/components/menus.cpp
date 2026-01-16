@@ -299,7 +299,11 @@ int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const c
 		Ui()->DoLabel(&Box, pBoxText, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 
 	TextRender()->SetRenderFlags(0);
-	Ui()->DoLabel(&Label, pText, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_ML);
+	const float FontSize = Box.h * CUi::ms_FontmodHeight;
+	SLabelProperties Props;
+	Props.m_MaxWidth = Label.w;
+	Props.m_MinimumFontSize = FontSize * 0.7f;
+	Ui()->DoLabel(&Label, pText, FontSize, TEXTALIGN_ML, Props);
 
 	return Ui()->DoButtonLogic(pId, 0, pRect, Flags);
 }

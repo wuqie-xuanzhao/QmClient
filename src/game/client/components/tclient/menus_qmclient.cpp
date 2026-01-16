@@ -1021,6 +1021,29 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniVoteHud, TCLocalize("显示小型投票HUD"), &g_Config.m_TcMiniVoteHud, &Column, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniDebug, TCLocalize("显示位置和角度（小型调试）"), &g_Config.m_TcMiniDebug, &Column, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRenderCursorSpec, TCLocalize("自由观战时显示光标"), &g_Config.m_TcRenderCursorSpec, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClSmtcEnable, Localize("Enable system media controls"), &g_Config.m_ClSmtcEnable, &Column, LineSize);
+	if(g_Config.m_ClSmtcEnable)
+	{
+		CUIRect MediaButtons, PrevButton, PlayButton, NextButton;
+		Column.HSplitTop(LineSize, &MediaButtons, &Column);
+		MediaButtons.VSplitLeft((MediaButtons.w - MarginSmall * 2.0f) / 3.0f, &PrevButton, &MediaButtons);
+		MediaButtons.VSplitLeft(MarginSmall, nullptr, &MediaButtons);
+		MediaButtons.VSplitLeft((MediaButtons.w - MarginSmall) / 2.0f, &PlayButton, &MediaButtons);
+		MediaButtons.VSplitLeft(MarginSmall, nullptr, &MediaButtons);
+		NextButton = MediaButtons;
+
+		static CButtonContainer s_SmtcPrev;
+		if(DoButton_Menu(&s_SmtcPrev, Localize("Prev"), 0, &PrevButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f))
+			GameClient()->m_SystemMediaControls.Previous();
+
+		static CButtonContainer s_SmtcPlayPause;
+		if(DoButton_Menu(&s_SmtcPlayPause, Localize("Play/Pause"), 0, &PlayButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f))
+			GameClient()->m_SystemMediaControls.PlayPause();
+
+		static CButtonContainer s_SmtcNext;
+		if(DoButton_Menu(&s_SmtcNext, Localize("Next"), 0, &NextButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f))
+			GameClient()->m_SystemMediaControls.Next();
+	}
 
 	Column.HSplitTop(LineSize, &Button, &Column);
 	if(g_Config.m_TcRenderCursorSpec)

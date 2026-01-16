@@ -1689,11 +1689,6 @@ void CHud::RenderSpectatorCount()
 
 	float StartX = m_Width - BoxWidth;
 	float StartY = 285.0f - BoxHeight - 4; // 4 units distance to the next display;
-	if(g_Config.m_ClShowhudPlayerPosition || g_Config.m_ClShowhudPlayerSpeed || g_Config.m_ClShowhudPlayerAngle)
-	{
-		StartY -= 4;
-	}
-	StartY -= GetMovementInformationBoxHeight();
 
 	if(g_Config.m_ClShowhudScore)
 	{
@@ -1728,11 +1723,6 @@ void CHud::RenderDummyActions()
 
 	float StartX = m_Width - BoxWidth;
 	float StartY = 285.0f - BoxHeight - 4; // 4 units distance to the next display;
-	if(g_Config.m_ClShowhudPlayerPosition || g_Config.m_ClShowhudPlayerSpeed || g_Config.m_ClShowhudPlayerAngle)
-	{
-		StartY -= 4;
-	}
-	StartY -= GetMovementInformationBoxHeight();
 
 	if(g_Config.m_ClShowhudScore)
 	{
@@ -1760,56 +1750,91 @@ void CHud::RenderDummyActions()
 	Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_DummyCopyOffset, x, y);
 }
 
-void CHud::RenderKeyStatus()
+namespace
 {
-	const float Fontsize = 7.0f;
-	const float LineHeight = 9.0f;
-	const float PaddingX = 4.0f;
-	const float PaddingY = 3.0f;
-	const float StartX = 4.0f;
-	const float StartY = 45.0f;
+struct SKeyStatusLines
+{
+	const char *m_pKeyStatusText;
+	char m_aHammerLine[64];
+	char m_aControlLine[64];
+};
 
-	const char *pKeyStatusText = "卡键: ?";
+struct SKeyStatusLayout
+{
+	float m_X;
+	float m_Y;
+	float m_W;
+	float m_H;
+	float m_FontSize;
+	float m_LineHeight;
+	float m_PaddingX;
+	float m_PaddingY;
+};
+
+SKeyStatusLines GetKeyStatusLines(const CGameClient *pGameClient)
+{
+	SKeyStatusLines Lines{};
+	Lines.m_pKeyStatusText = "卡键: ?";
 	if(g_Config.m_ClDummyResetOnSwitch == 0)
-		pKeyStatusText = "卡键: ON";
+		Lines.m_pKeyStatusText = "卡键: ON";
 	else if(g_Config.m_ClDummyResetOnSwitch == 1)
-		pKeyStatusText = "卡键: OFF";
+		Lines.m_pKeyStatusText = "卡键: OFF";
 	else if(g_Config.m_ClDummyResetOnSwitch == 2)
-		pKeyStatusText = "卡键: 重置本体";
+		Lines.m_pKeyStatusText = "卡键: 重置本体";
 
-	const bool FirePressed = (GameClient()->m_Controls.m_aInputData[g_Config.m_ClDummy].m_Fire & 1) != 0;
+	const bool FirePressed = (pGameClient->m_Controls.m_aInputData[g_Config.m_ClDummy].m_Fire & 1) != 0;
 	const char *pHammerState = g_Config.m_ClDummyHammer ? (FirePressed ? "DF" : "HDF") : "正常锤";
-	char aHammerLine[64];
-	str_format(aHammerLine, sizeof(aHammerLine), "锤: %s", pHammerState);
+	str_format(Lines.m_aHammerLine, sizeof(Lines.m_aHammerLine), "锤: %s", pHammerState);
 
 	const char *pControlState = g_Config.m_ClDummyControl ? "开启" : "关闭";
-	char aControlLine[64];
-	str_format(aControlLine, sizeof(aControlLine), "分身控制: %s", pControlState);
+	str_format(Lines.m_aControlLine, sizeof(Lines.m_aControlLine), "分身控制: %s", pControlState);
 
-	float BoxWidth = TextRender()->TextWidth(Fontsize, pKeyStatusText, -1, -1.0f);
-	BoxWidth = maximum(BoxWidth, TextRender()->TextWidth(Fontsize, aHammerLine, -1, -1.0f));
-	BoxWidth = maximum(BoxWidth, TextRender()->TextWidth(Fontsize, aControlLine, -1, -1.0f));
-	BoxWidth += PaddingX * 2.0f;
+	return Lines;
+}
 
-	const float BoxHeight = LineHeight * 3.0f + PaddingY * 2.0f;
-	Graphics()->DrawRect(StartX, StartY, BoxWidth, BoxHeight, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_ALL, 5.0f);
+SKeyStatusLayout GetKeyStatusLayout(ITextRender *pTextRender, const SKeyStatusLines &Lines)
+{
+	SKeyStatusLayout Layout{};
+	Layout.m_FontSize = 7.0f;
+	Layout.m_LineHeight = 9.0f;
+	Layout.m_PaddingX = 4.0f;
+	Layout.m_PaddingY = 3.0f;
+	Layout.m_X = 476.0f;
+	Layout.m_Y = 38.0f;
 
-	float TextX = StartX + PaddingX;
-	float TextY = StartY + PaddingY;
+	Layout.m_W = pTextRender->TextWidth(Layout.m_FontSize, Lines.m_pKeyStatusText, -1, -1.0f);
+	Layout.m_W = maximum(Layout.m_W, pTextRender->TextWidth(Layout.m_FontSize, Lines.m_aHammerLine, -1, -1.0f));
+	Layout.m_W = maximum(Layout.m_W, pTextRender->TextWidth(Layout.m_FontSize, Lines.m_aControlLine, -1, -1.0f));
+	Layout.m_W += Layout.m_PaddingX * 2.0f;
 
-	const float Time = Client()->GlobalTime();
-	const float Hue = std::fmod(Time * 0.2f, 1.0f);
-	ColorHSLA RainbowHsla(Hue, 0.75f, 0.6f, 1.0f);
-	ColorRGBA RainbowColor = color_cast<ColorRGBA>(RainbowHsla);
+	Layout.m_H = Layout.m_LineHeight * 3.0f + Layout.m_PaddingY * 2.0f;
+	return Layout;
+}
+}
 
-	TextRender()->TextColor(RainbowColor);
-	TextRender()->Text(TextX, TextY, Fontsize, pKeyStatusText, -1.0f);
+void CHud::RenderKeyStatus()
+{
+	const SKeyStatusLines Lines = GetKeyStatusLines(GameClient());
+	const SKeyStatusLayout Layout = GetKeyStatusLayout(TextRender(), Lines);
+
+	Graphics()->DrawRect(Layout.m_X, Layout.m_Y, Layout.m_W, Layout.m_H, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_ALL, 5.0f);
+
+	float TextX = Layout.m_X + Layout.m_PaddingX;
+	float TextY = Layout.m_Y + Layout.m_PaddingY;
+
+	const float KeyTime = Client()->GlobalTime();
+	const float KeyHue = std::fmod(KeyTime * 0.2f, 1.0f);
+	ColorHSLA KeyRainbowHsla(KeyHue, 0.75f, 0.6f, 1.0f);
+	ColorRGBA KeyRainbowColor = color_cast<ColorRGBA>(KeyRainbowHsla);
+
+	TextRender()->TextColor(KeyRainbowColor);
+	TextRender()->Text(TextX, TextY, Layout.m_FontSize, Lines.m_pKeyStatusText, -1.0f);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	TextY += LineHeight;
+	TextY += Layout.m_LineHeight;
 
-	TextRender()->Text(TextX, TextY, Fontsize, aHammerLine, -1.0f);
-	TextY += LineHeight;
-	TextRender()->Text(TextX, TextY, Fontsize, aControlLine, -1.0f);
+	TextRender()->Text(TextX, TextY, Layout.m_FontSize, Lines.m_aHammerLine, -1.0f);
+	TextY += Layout.m_LineHeight;
+	TextRender()->Text(TextX, TextY, Layout.m_FontSize, Lines.m_aControlLine, -1.0f);
 }
 
 inline int CHud::GetDigitsIndex(int Value, int Max)
@@ -1929,20 +1954,25 @@ void CHud::RenderMovementInformation()
 {
 	const int ClientId = GameClient()->m_Snap.m_SpecInfo.m_Active ? GameClient()->m_Snap.m_SpecInfo.m_SpectatorId : GameClient()->m_Snap.m_LocalClientId;
 	const bool PosOnly = ClientId == SPEC_FREEVIEW || (GameClient()->m_aClients[ClientId].m_SpecCharPresent);
-	// Draw the information depending on settings: Position, speed and target angle
-	// This display is only to present the available information from the last snapshot, not to interpolate or predict
-	if(!g_Config.m_TcJumpHint && !g_Config.m_ClShowhudPlayerPosition && (PosOnly || (!g_Config.m_ClShowhudPlayerSpeed && !g_Config.m_ClShowhudPlayerAngle)))
-	{
-		return;
-	}
+	const bool ShowPosition = g_Config.m_ClShowhudPlayerPosition;
+	const bool ShowSpeed = !PosOnly && g_Config.m_ClShowhudPlayerSpeed;
+	const bool ShowAngle = !PosOnly && g_Config.m_ClShowhudPlayerAngle;
+	const bool ShowJumpHint = !PosOnly && g_Config.m_TcJumpHint;
+	const bool ShowStats = !PosOnly && g_Config.m_QmPlayerStatsHud;
+	const bool ShowMovementInfo = ShowPosition || ShowSpeed || ShowAngle || ShowJumpHint || ShowStats;
+
 	const float LineSpacer = 1.0f; // above and below each entry
 	const float Fontsize = 6.0f;
+	const float KeyStatusGap = 2.0f;
 
-	float BoxHeight = GetMovementInformationBoxHeight();
+	const SKeyStatusLines KeyStatusLines = GetKeyStatusLines(GameClient());
+	const SKeyStatusLayout KeyStatusLayout = GetKeyStatusLayout(TextRender(), KeyStatusLines);
+
+	float MovementBoxHeight = ShowMovementInfo ? GetMovementInformationBoxHeight() : 0.0f;
 	bool HasDummyInfo = false;
 	CMovementInformation DummyInfo{};
 
-	if(Client()->DummyConnected())
+	if(ShowMovementInfo && Client()->DummyConnected())
 	{
 		int DummyClientId = -1;
 
@@ -1978,19 +2008,19 @@ void CHud::RenderMovementInformation()
 		}
 	}
 
-	const bool ShowDummyPos = HasDummyInfo && g_Config.m_ClShowhudPlayerPosition && g_Config.m_TcShowhudDummyPosition;
-	const bool ShowDummySpeed = HasDummyInfo && !PosOnly && g_Config.m_ClShowhudPlayerSpeed && g_Config.m_TcShowhudDummySpeed;
-	const bool ShowDummyAngle = HasDummyInfo && !PosOnly && g_Config.m_ClShowhudPlayerAngle && g_Config.m_TcShowhudDummyAngle;
+	const bool ShowDummyPos = HasDummyInfo && ShowPosition && g_Config.m_TcShowhudDummyPosition;
+	const bool ShowDummySpeed = HasDummyInfo && ShowSpeed && g_Config.m_TcShowhudDummySpeed;
+	const bool ShowDummyAngle = HasDummyInfo && ShowAngle && g_Config.m_TcShowhudDummyAngle;
 
 	if(ShowDummyPos)
-		BoxHeight += 2.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
+		MovementBoxHeight += 2.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
 	if(ShowDummySpeed)
-		BoxHeight += 2.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
+		MovementBoxHeight += 2.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
 	if(ShowDummyAngle)
-		BoxHeight += 1.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
+		MovementBoxHeight += 1.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
 
 	float BoxWidth = 62.0f;
-	if(g_Config.m_TcJumpHint)
+	if(ShowJumpHint)
 	{
 		const float TitleWidth = TextRender()->TextWidth(Fontsize, "三格edge:");
 		const float LeftJumpWidth = TextRender()->TextWidth(Fontsize, "左跳");
@@ -2008,194 +2038,232 @@ void CHud::RenderMovementInformation()
 		BoxWidth = maximum(BoxWidth, NeededWidth);
 	}
 
-	float StartX = m_Width - BoxWidth;
-	float StartY = 285.0f - BoxHeight - 4.0f; // 4 units distance to the next display;
+	BoxWidth = maximum(BoxWidth, KeyStatusLayout.m_W);
+
+	float BoxHeight = KeyStatusLayout.m_H;
+	if(ShowMovementInfo && MovementBoxHeight > 0.0f)
+		BoxHeight += KeyStatusGap + MovementBoxHeight;
+
+	const bool ShowDummyActionsHud = g_Config.m_ClShowhudDummyActions &&
+		!(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER) &&
+		Client()->DummyConnected();
+	const float DummyActionsReserveY = ShowDummyActionsHud ? (29.0f + 4.0f) : 0.0f;
+
+	float StartX = KeyStatusLayout.m_X;
+	float StartY = 285.0f - BoxHeight - 4.0f;
 	if(g_Config.m_ClShowhudScore)
 	{
 		StartY -= 56.0f;
 	}
+	StartY -= DummyActionsReserveY;
+	StartX = minimum(StartX, m_Width - BoxWidth);
+	if(StartX < 0.0f)
+		StartX = 0.0f;
+	if(StartY < 0.0f)
+		StartY = 0.0f;
 
 	Graphics()->DrawRect(StartX, StartY, BoxWidth, BoxHeight, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_L, 5.0f);
 
-	const CMovementInformation Info = GetMovementInformation(ClientId, g_Config.m_ClDummy);
-
-	float y = StartY + LineSpacer * 2.0f;
-	const float LeftX = StartX + 2.0f;
-	const float RightX = m_Width - 2.0f;
-
-	if(g_Config.m_ClShowhudPlayerPosition)
+	const bool HasMovementContent = ShowMovementInfo && MovementBoxHeight > 0.0f;
+	if(HasMovementContent)
 	{
-		TextRender()->Text(LeftX, y, Fontsize, Localize("Position:"), -1.0f);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+		const CMovementInformation Info = GetMovementInformation(ClientId, g_Config.m_ClDummy);
 
-		TextRender()->Text(LeftX, y, Fontsize, "X:", -1.0f);
-		UpdateMovementInformationTextContainer(m_aPlayerPositionContainers[0], Fontsize, Info.m_Pos.x, m_aPlayerPrevPosition[0]);
+		float y = StartY + LineSpacer * 2.0f;
+		const float LeftX = StartX + 2.0f;
+		const float RightX = StartX + BoxWidth - 2.0f;
 
-		ColorRGBA TextColor = TextRender()->DefaultTextColor();
-		if(ShowDummyPos && fabsf(Info.m_Pos.x - DummyInfo.m_Pos.x) < 0.01f)
-			TextColor = ColorRGBA(0.2f, 1.0f, 0.2f, 1.0f);
-
-		RenderMovementInformationTextContainer(m_aPlayerPositionContainers[0], TextColor, RightX, y);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		TextRender()->Text(LeftX, y, Fontsize, "Y:", -1.0f);
-		UpdateMovementInformationTextContainer(m_aPlayerPositionContainers[1], Fontsize, Info.m_Pos.y, m_aPlayerPrevPosition[1]);
-		RenderMovementInformationTextContainer(m_aPlayerPositionContainers[1], TextRender()->DefaultTextColor(), RightX, y);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		if(ShowDummyPos)
+		if(ShowPosition)
 		{
-			char aBuf[32];
-
-			TextRender()->Text(LeftX, y, Fontsize, "DX:", -1.0f);
-			str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Pos.x);
-
-			ColorRGBA DummyTextColor = TextRender()->DefaultTextColor();
-			if(fabsf(Info.m_Pos.x - DummyInfo.m_Pos.x) < 0.01f)
-				DummyTextColor = ColorRGBA(0.2f, 1.0f, 0.2f, 1.0f);
-
-			TextRender()->TextColor(DummyTextColor);
-			TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			TextRender()->Text(LeftX, y, Fontsize, Localize("Position:"), -1.0f);
 			y += MOVEMENT_INFORMATION_LINE_HEIGHT;
 
-			TextRender()->Text(LeftX, y, Fontsize, "DY:", -1.0f);
-			str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Pos.y);
-			TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
+			TextRender()->Text(LeftX, y, Fontsize, "X:", -1.0f);
+			UpdateMovementInformationTextContainer(m_aPlayerPositionContainers[0], Fontsize, Info.m_Pos.x, m_aPlayerPrevPosition[0]);
+
+			ColorRGBA TextColor = TextRender()->DefaultTextColor();
+			if(ShowDummyPos && fabsf(Info.m_Pos.x - DummyInfo.m_Pos.x) < 0.01f)
+				TextColor = ColorRGBA(0.2f, 1.0f, 0.2f, 1.0f);
+
+			RenderMovementInformationTextContainer(m_aPlayerPositionContainers[0], TextColor, RightX, y);
 			y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+			TextRender()->Text(LeftX, y, Fontsize, "Y:", -1.0f);
+			UpdateMovementInformationTextContainer(m_aPlayerPositionContainers[1], Fontsize, Info.m_Pos.y, m_aPlayerPrevPosition[1]);
+			RenderMovementInformationTextContainer(m_aPlayerPositionContainers[1], TextRender()->DefaultTextColor(), RightX, y);
+			y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+			if(ShowDummyPos)
+			{
+				char aBuf[32];
+
+				TextRender()->Text(LeftX, y, Fontsize, "DX:", -1.0f);
+				str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Pos.x);
+
+				ColorRGBA DummyTextColor = TextRender()->DefaultTextColor();
+				if(fabsf(Info.m_Pos.x - DummyInfo.m_Pos.x) < 0.01f)
+					DummyTextColor = ColorRGBA(0.2f, 1.0f, 0.2f, 1.0f);
+
+				TextRender()->TextColor(DummyTextColor);
+				TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				TextRender()->Text(LeftX, y, Fontsize, "DY:", -1.0f);
+				str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Pos.y);
+				TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+			}
+		}
+
+		if(!PosOnly)
+		{
+			if(ShowSpeed)
+			{
+				TextRender()->Text(LeftX, y, Fontsize, Localize("Speed:"), -1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				const char aaCoordinates[][4] = {"X:", "Y:"};
+				for(int i = 0; i < 2; i++)
+				{
+					ColorRGBA Color(1.0f, 1.0f, 1.0f, 1.0f);
+					if(m_aLastPlayerSpeedChange[i] == ESpeedChange::INCREASE)
+						Color = ColorRGBA(0.0f, 1.0f, 0.0f, 1.0f);
+					if(m_aLastPlayerSpeedChange[i] == ESpeedChange::DECREASE)
+						Color = ColorRGBA(1.0f, 0.5f, 0.5f, 1.0f);
+					TextRender()->Text(LeftX, y, Fontsize, aaCoordinates[i], -1.0f);
+					UpdateMovementInformationTextContainer(m_aPlayerSpeedTextContainers[i], Fontsize, i == 0 ? Info.m_Speed.x : Info.m_Speed.y, m_aPlayerPrevSpeed[i]);
+					RenderMovementInformationTextContainer(m_aPlayerSpeedTextContainers[i], Color, RightX, y);
+					y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+				}
+
+				if(ShowDummySpeed)
+				{
+					char aBuf[32];
+
+					TextRender()->Text(LeftX, y, Fontsize, "DX:", -1.0f);
+					str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Speed.x);
+					TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
+					y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+					TextRender()->Text(LeftX, y, Fontsize, "DY:", -1.0f);
+					str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Speed.y);
+					TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
+					y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+				}
+
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+
+			if(ShowAngle)
+			{
+				TextRender()->Text(LeftX, y, Fontsize, Localize("Angle:"), -1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				UpdateMovementInformationTextContainer(m_PlayerAngleTextContainerIndex, Fontsize, Info.m_Angle, m_PlayerPrevAngle);
+				RenderMovementInformationTextContainer(m_PlayerAngleTextContainerIndex, TextRender()->DefaultTextColor(), RightX, y);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				if(ShowDummyAngle)
+				{
+					char aBuf[32];
+
+					TextRender()->Text(LeftX, y, Fontsize, "DA:", -1.0f);
+					str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Angle);
+					TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
+					y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+				}
+			}
+
+			if(ShowJumpHint)
+			{
+				TextRender()->Text(LeftX, y, Fontsize, "三格edge:", -1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				const char *pLeftJump = ".34|.31|.16";
+				const char *pLeftDoubleJump = ".41|.28|.25|.13";
+				const char *pRightJump = ".63|.66|.81";
+				const char *pRightDoubleJump = ".56|.69|.72|.84";
+
+				TextRender()->Text(LeftX, y, Fontsize, "左跳", -1.0f);
+				TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pLeftJump), y, Fontsize, pLeftJump, -1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				TextRender()->Text(LeftX, y, Fontsize, "左二跳", -1.0f);
+				TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pLeftDoubleJump), y, Fontsize, pLeftDoubleJump, -1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				TextRender()->Text(LeftX, y, Fontsize, "右跳", -1.0f);
+				TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pRightJump), y, Fontsize, pRightJump, -1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				TextRender()->Text(LeftX, y, Fontsize, "右二跳", -1.0f);
+				TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pRightDoubleJump), y, Fontsize, pRightDoubleJump, -1.0f);
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+			}
+
+			// 玩家统计HUD显示
+			if(ShowStats)
+			{
+				const auto &Stats = GameClient()->m_TClient.GetPlayerStats(g_Config.m_ClDummy);
+				int TickSpeed = Client()->GameTickSpeed();
+				char aBuf[128];
+
+				// 彩虹动态颜色
+				const float StatsTime = Client()->GlobalTime();
+				const float StatsHue = std::fmod(StatsTime * 0.2f + 0.1f, 1.0f);
+				ColorHSLA RainbowHsla(StatsHue, 0.75f, 0.6f, 1.0f);
+				ColorRGBA RainbowColor = color_cast<ColorRGBA>(RainbowHsla);
+
+				// 平均/最大存活时长
+				float AvgAlive = Stats.GetAverageAliveTime(TickSpeed);
+				float MaxAlive = Stats.GetMaxAliveTime(TickSpeed);
+				str_format(aBuf, sizeof(aBuf), "存活: %.1fs/%.1fs", AvgAlive, MaxAlive);
+				TextRender()->TextColor(RainbowColor);
+				TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				// 被救醒次数/落水次数
+				const float Hue2 = std::fmod(StatsTime * 0.2f + 0.2f, 1.0f);
+				ColorHSLA RainbowHsla2(Hue2, 0.75f, 0.6f, 1.0f);
+				ColorRGBA RainbowColor2 = color_cast<ColorRGBA>(RainbowHsla2);
+				str_format(aBuf, sizeof(aBuf), "被救/落水: %d/%d", Stats.m_RescueCount, Stats.m_FreezeCount);
+				TextRender()->TextColor(RainbowColor2);
+				TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+				// 左侧/右侧出钩比例
+				const float Hue3 = std::fmod(StatsTime * 0.2f + 0.3f, 1.0f);
+				ColorHSLA RainbowHsla3(Hue3, 0.75f, 0.6f, 1.0f);
+				ColorRGBA RainbowColor3 = color_cast<ColorRGBA>(RainbowHsla3);
+				float LeftRatio = Stats.GetHookLeftRatio() * 100.0f;
+				float RightRatio = Stats.GetHookRightRatio() * 100.0f;
+				str_format(aBuf, sizeof(aBuf), "出钩L/R: %.0f%%/%.0f%%", LeftRatio, RightRatio);
+				TextRender()->TextColor(RainbowColor3);
+				TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+			}
 		}
 	}
 
-	if(PosOnly)
-		return;
+	float KeyStatusY = StartY + BoxHeight - KeyStatusLayout.m_H;
+	float KeyTextX = StartX + KeyStatusLayout.m_PaddingX;
+	float KeyTextY = KeyStatusY + KeyStatusLayout.m_PaddingY;
 
-	if(g_Config.m_ClShowhudPlayerSpeed)
-	{
-		TextRender()->Text(LeftX, y, Fontsize, Localize("Speed:"), -1.0f);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+	const float KeyTime = Client()->GlobalTime();
+	const float KeyHue = std::fmod(KeyTime * 0.2f, 1.0f);
+	ColorHSLA KeyRainbowHsla(KeyHue, 0.75f, 0.6f, 1.0f);
+	ColorRGBA KeyRainbowColor = color_cast<ColorRGBA>(KeyRainbowHsla);
 
-		const char aaCoordinates[][4] = {"X:", "Y:"};
-		for(int i = 0; i < 2; i++)
-		{
-			ColorRGBA Color(1.0f, 1.0f, 1.0f, 1.0f);
-			if(m_aLastPlayerSpeedChange[i] == ESpeedChange::INCREASE)
-				Color = ColorRGBA(0.0f, 1.0f, 0.0f, 1.0f);
-			if(m_aLastPlayerSpeedChange[i] == ESpeedChange::DECREASE)
-				Color = ColorRGBA(1.0f, 0.5f, 0.5f, 1.0f);
-			TextRender()->Text(LeftX, y, Fontsize, aaCoordinates[i], -1.0f);
-			UpdateMovementInformationTextContainer(m_aPlayerSpeedTextContainers[i], Fontsize, i == 0 ? Info.m_Speed.x : Info.m_Speed.y, m_aPlayerPrevSpeed[i]);
-			RenderMovementInformationTextContainer(m_aPlayerSpeedTextContainers[i], Color, RightX, y);
-			y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-		}
-
-		if(ShowDummySpeed)
-		{
-			char aBuf[32];
-
-			TextRender()->Text(LeftX, y, Fontsize, "DX:", -1.0f);
-			str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Speed.x);
-			TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
-			y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-			TextRender()->Text(LeftX, y, Fontsize, "DY:", -1.0f);
-			str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Speed.y);
-			TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
-			y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-		}
-
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	}
-
-	if(g_Config.m_ClShowhudPlayerAngle)
-	{
-		TextRender()->Text(LeftX, y, Fontsize, Localize("Angle:"), -1.0f);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		UpdateMovementInformationTextContainer(m_PlayerAngleTextContainerIndex, Fontsize, Info.m_Angle, m_PlayerPrevAngle);
-		RenderMovementInformationTextContainer(m_PlayerAngleTextContainerIndex, TextRender()->DefaultTextColor(), RightX, y);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		if(ShowDummyAngle)
-		{
-			char aBuf[32];
-
-			TextRender()->Text(LeftX, y, Fontsize, "DA:", -1.0f);
-			str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Angle);
-			TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
-			y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-		}
-	}
-
-	if(g_Config.m_TcJumpHint)
-	{
-		TextRender()->Text(LeftX, y, Fontsize, "三格edge:", -1.0f);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		const char *pLeftJump = ".34|.31|.16";
-		const char *pLeftDoubleJump = ".41|.28|.25|.13";
-		const char *pRightJump = ".63|.66|.81";
-		const char *pRightDoubleJump = ".56|.69|.72|.84";
-
-		TextRender()->Text(LeftX, y, Fontsize, "左跳", -1.0f);
-		TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pLeftJump), y, Fontsize, pLeftJump, -1.0f);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		TextRender()->Text(LeftX, y, Fontsize, "左二跳", -1.0f);
-		TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pLeftDoubleJump), y, Fontsize, pLeftDoubleJump, -1.0f);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		TextRender()->Text(LeftX, y, Fontsize, "右跳", -1.0f);
-		TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pRightJump), y, Fontsize, pRightJump, -1.0f);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		TextRender()->Text(LeftX, y, Fontsize, "右二跳", -1.0f);
-		TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pRightDoubleJump), y, Fontsize, pRightDoubleJump, -1.0f);
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-	}
-
-	// 玩家统计HUD显示
-	if(g_Config.m_QmPlayerStatsHud)
-	{
-		const auto &Stats = GameClient()->m_TClient.GetPlayerStats(g_Config.m_ClDummy);
-		int TickSpeed = Client()->GameTickSpeed();
-		char aBuf[128];
-
-		// 彩虹动态颜色
-		const float Time = Client()->GlobalTime();
-		const float Hue = std::fmod(Time * 0.2f + 0.1f, 1.0f);
-		ColorHSLA RainbowHsla(Hue, 0.75f, 0.6f, 1.0f);
-		ColorRGBA RainbowColor = color_cast<ColorRGBA>(RainbowHsla);
-
-		// 平均/最大存活时长
-		float AvgAlive = Stats.GetAverageAliveTime(TickSpeed);
-		float MaxAlive = Stats.GetMaxAliveTime(TickSpeed);
-		str_format(aBuf, sizeof(aBuf), "存活: %.1fs/%.1fs", AvgAlive, MaxAlive);
-		TextRender()->TextColor(RainbowColor);
-		TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
-		TextRender()->TextColor(TextRender()->DefaultTextColor());
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		// 被救醒次数/落水次数
-		const float Hue2 = std::fmod(Time * 0.2f + 0.2f, 1.0f);
-		ColorHSLA RainbowHsla2(Hue2, 0.75f, 0.6f, 1.0f);
-		ColorRGBA RainbowColor2 = color_cast<ColorRGBA>(RainbowHsla2);
-		str_format(aBuf, sizeof(aBuf), "被救/落水: %d/%d", Stats.m_RescueCount, Stats.m_FreezeCount);
-		TextRender()->TextColor(RainbowColor2);
-		TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
-		TextRender()->TextColor(TextRender()->DefaultTextColor());
-		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
-
-		// 左侧/右侧出钩比例
-		const float Hue3 = std::fmod(Time * 0.2f + 0.3f, 1.0f);
-		ColorHSLA RainbowHsla3(Hue3, 0.75f, 0.6f, 1.0f);
-		ColorRGBA RainbowColor3 = color_cast<ColorRGBA>(RainbowHsla3);
-		float LeftRatio = Stats.GetHookLeftRatio() * 100.0f;
-		float RightRatio = Stats.GetHookRightRatio() * 100.0f;
-		str_format(aBuf, sizeof(aBuf), "出钩L/R: %.0f%%/%.0f%%", LeftRatio, RightRatio);
-		TextRender()->TextColor(RainbowColor3);
-		TextRender()->Text(LeftX, y, Fontsize, aBuf, -1.0f);
-		TextRender()->TextColor(TextRender()->DefaultTextColor());
-	}
+	TextRender()->TextColor(KeyRainbowColor);
+	TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, KeyStatusLines.m_pKeyStatusText, -1.0f);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	KeyTextY += KeyStatusLayout.m_LineHeight;
+	TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, KeyStatusLines.m_aHammerLine, -1.0f);
+	KeyTextY += KeyStatusLayout.m_LineHeight;
+	TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, KeyStatusLines.m_aControlLine, -1.0f);
 }
 
 void CHud::RenderSpectatorHud()
@@ -2375,7 +2443,6 @@ void CHud::OnRender()
 		if(g_Config.m_ClShowhudScore)
 			RenderScoreHud();
 		RenderDummyActions();
-		RenderKeyStatus();
 		RenderWarmupTimer();
 		RenderDummyMiniMap();
 		RenderTextInfo();
