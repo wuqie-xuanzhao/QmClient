@@ -2,7 +2,6 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "menus_start.h"
 
-#include <engine/client/updater.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
@@ -295,87 +294,6 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 	}
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-
-	CUIRect VersionUpdate;
-	MainView.HSplitBottom(20.0f, nullptr, &VersionUpdate);
-	VersionUpdate.VMargin(VMargin, &VersionUpdate);
-#if defined(CONF_AUTOUPDATE)
-	CUIRect UpdateButton;
-	VersionUpdate.VSplitRight(100.0f, &VersionUpdate, &UpdateButton);
-	VersionUpdate.VSplitRight(10.0f, &VersionUpdate, nullptr);
-
-	char aBuf[128];
-	const IUpdater::EUpdaterState State = Updater()->GetCurrentState();
-	const bool NeedUpdate = GameClient()->m_TClient.NeedUpdate();
-
-	if(State == IUpdater::CLEAN && NeedUpdate)
-	{
-		static CButtonContainer s_VersionUpdate;
-		if(GameClient()->m_Menus.DoButton_Menu(&s_VersionUpdate, Localize("Update now"), 0, &UpdateButton, BUTTONFLAG_LEFT, 0, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		{
-			Updater()->InitiateUpdate();
-		}
-	}
-	else if(State == IUpdater::NEED_RESTART)
-	{
-		static CButtonContainer s_VersionUpdate;
-		if(GameClient()->m_Menus.DoButton_Menu(&s_VersionUpdate, Localize("Restart"), 0, &UpdateButton, BUTTONFLAG_LEFT, 0, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		{
-			Client()->Restart();
-		}
-	}
-	else if(State >= IUpdater::GETTING_MANIFEST && State < IUpdater::NEED_RESTART)
-	{
-		Ui()->RenderProgressBar(UpdateButton, Updater()->GetCurrentPercent() / 100.0f);
-	}
-
-	if(State == IUpdater::CLEAN && NeedUpdate)
-	{
-		str_format(aBuf, sizeof(aBuf), Localize("TClient %s is out!"), GameClient()->m_TClient.m_aVersionStr);
-		TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
-	}
-	else if(State == IUpdater::CLEAN)
-	{
-		aBuf[0] = '\0';
-	}
-	else if(State >= IUpdater::GETTING_MANIFEST && State < IUpdater::NEED_RESTART)
-	{
-		char aCurrentFile[64];
-		Updater()->GetCurrentFile(aCurrentFile, sizeof(aCurrentFile));
-		str_format(aBuf, sizeof(aBuf), Localize("Downloading %s:"), aCurrentFile);
-	}
-	else if(State == IUpdater::FAIL)
-	{
-		str_copy(aBuf, Localize("Update failed! Check log…"));
-		TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
-	}
-	else if(State == IUpdater::NEED_RESTART)
-	{
-		str_copy(aBuf, Localize("DDNet Client updated!"));
-		TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
-	}
-	Ui()->DoLabel(&VersionUpdate, aBuf, 14.0f, TEXTALIGN_ML);
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
-#elif defined(CONF_INFORM_UPDATE)
-	if(str_comp(Client()->LatestVersion(), "0") != 0 && false)
-	{
-		CUIRect DownloadButton;
-		VersionUpdate.VSplitRight(100.0f, &VersionUpdate, &DownloadButton);
-		VersionUpdate.VSplitRight(10.0f, &VersionUpdate, nullptr);
-
-		static CButtonContainer s_DownloadButton;
-		if(GameClient()->m_Menus.DoButton_Menu(&s_DownloadButton, Localize("Download"), 0, &DownloadButton, BUTTONFLAG_LEFT, 0, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		{
-			Client()->ViewLink("https://ddnet.org/downloads/");
-		}
-
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), Localize("DDNet %s is out!"), Client()->LatestVersion());
-		SLabelProperties UpdateLabelProps;
-		UpdateLabelProps.SetColor(ColorRGBA(1.0f, 0.4f, 0.4f, 1.0f));
-		Ui()->DoLabel(&VersionUpdate, aBuf, 14.0f, TEXTALIGN_ML, UpdateLabelProps);
-	}
-#endif
 
 	if(NewPage != -1)
 	{
