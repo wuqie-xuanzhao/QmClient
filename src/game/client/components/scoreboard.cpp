@@ -235,14 +235,35 @@ void CScoreboard::RenderGoals(CUIRect Goals)
 
 void CScoreboard::RenderSpectators(CUIRect Spectators)
 {
-	Spectators.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, 7.5f);
-	Spectators.Margin(5.0f, &Spectators);
+	const bool ShowMediaControls = g_Config.m_ClSmtcEnable != 0;
+	CUIRect SpectatorPanel = Spectators;
+	CUIRect MediaPanel;
+	if(ShowMediaControls)
+	{
+		const float Gap = 5.0f;
+		const float SplitWidth = (Spectators.w - Gap) * 0.5f;
+		Spectators.VSplitLeft(SplitWidth, &SpectatorPanel, &MediaPanel);
+		MediaPanel.VSplitLeft(Gap, nullptr, &MediaPanel);
+	}
+
+	const float CornerRadius = 7.5f;
+	SpectatorPanel.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, CornerRadius);
+	CUIRect SpectatorList = SpectatorPanel;
+	SpectatorList.Margin(5.0f, &SpectatorList);
+
+	CUIRect MediaControls;
+	if(ShowMediaControls)
+	{
+		MediaPanel.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, CornerRadius);
+		MediaControls = MediaPanel;
+		MediaControls.Margin(5.0f, &MediaControls);
+	}
 
 	CTextCursor Cursor;
-	Cursor.SetPosition(Spectators.TopLeft());
+	Cursor.SetPosition(SpectatorList.TopLeft());
 	Cursor.m_FontSize = 11.0f;
-	Cursor.m_LineWidth = Spectators.w;
-	Cursor.m_MaxLines = round_truncate(Spectators.h / Cursor.m_FontSize);
+	Cursor.m_LineWidth = SpectatorList.w;
+	Cursor.m_MaxLines = round_truncate(SpectatorList.h / Cursor.m_FontSize);
 
 	int RemainingSpectators = 0;
 	for(const CNetObj_PlayerInfo *pInfo : GameClient()->m_Snap.m_apInfoByName)
@@ -324,6 +345,83 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 
 		CommaNeeded = true;
 		--RemainingSpectators;
+	}
+
+	if(ShowMediaControls)
+	{
+		RenderMediaControls(MediaControls);
+	}
+}
+
+void CScoreboard::RenderMediaControls(CUIRect Controls)
+{
+	CSystemMediaControls::SState MediaState;
+	const bool HasMedia = GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState);
+	const bool CanToggle = HasMedia && (MediaState.m_CanPlay || MediaState.m_CanPause);
+	const bool CanPrev = HasMedia && MediaState.m_CanPrev;
+	const bool CanNext = HasMedia && MediaState.m_CanNext;
+
+	char aMediaBuf[256];
+	aMediaBuf[0] = '\0';
+	if(HasMedia)
+	{
+		if(MediaState.m_aTitle[0] != '\0' && MediaState.m_aArtist[0] != '\0')
+			str_format(aMediaBuf, sizeof(aMediaBuf), "%s - %s", MediaState.m_aTitle, MediaState.m_aArtist);
+		else if(MediaState.m_aTitle[0] != '\0')
+			str_copy(aMediaBuf, MediaState.m_aTitle, sizeof(aMediaBuf));
+		else if(MediaState.m_aArtist[0] != '\0')
+			str_copy(aMediaBuf, MediaState.m_aArtist, sizeof(aMediaBuf));
+	}
+
+	CUIRect ButtonArea = Controls;
+	if(aMediaBuf[0] != '\0')
+	{
+		const float TitleFontSize = 10.0f;
+		const float TitleHeight = TitleFontSize + 1.0f;
+		CUIRect TitleRect;
+		ButtonArea.HSplitTop(TitleHeight, &TitleRect, &ButtonArea);
+		ButtonArea.HSplitTop(2.0f, nullptr, &ButtonArea);
+
+		SLabelProperties Props;
+		Props.m_MaxWidth = TitleRect.w;
+		Props.m_EllipsisAtEnd = true;
+		Props.m_MinimumFontSize = TitleFontSize;
+		Ui()->DoLabel(&TitleRect, aMediaBuf, TitleFontSize, TEXTALIGN_MC, Props);
+	}
+
+	CUIRect Row = ButtonArea;
+	const float LineSize = 20.0f;
+	if(Row.h > LineSize)
+	{
+		Row.HSplitTop((Row.h - LineSize) * 0.5f, nullptr, &Row);
+		Row.HSplitTop(LineSize, &Row, nullptr);
+	}
+
+	CUIRect PrevButton, PlayButton, NextButton;
+	const float Spacing = 5.0f;
+	Row.VSplitLeft((Row.w - 2.0f * Spacing) / 3.0f, &PrevButton, &Row);
+	Row.VSplitLeft(Spacing, nullptr, &Row);
+	Row.VSplitLeft((Row.w - Spacing) / 2.0f, &PlayButton, &Row);
+	Row.VSplitLeft(Spacing, nullptr, &Row);
+	NextButton = Row;
+
+	static CButtonContainer s_SmtcPrevButton;
+	if(Ui()->DoButton_FontIcon(&s_SmtcPrevButton, FontIcons::FONT_ICON_BACKWARD_STEP, 0, &PrevButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, CanPrev))
+	{
+		GameClient()->m_SystemMediaControls.Previous();
+	}
+
+	static CButtonContainer s_SmtcPlayButton;
+	const char *pPlayIcon = MediaState.m_Playing ? FontIcons::FONT_ICON_PAUSE : FontIcons::FONT_ICON_PLAY;
+	if(Ui()->DoButton_FontIcon(&s_SmtcPlayButton, pPlayIcon, 0, &PlayButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, CanToggle))
+	{
+		GameClient()->m_SystemMediaControls.PlayPause();
+	}
+
+	static CButtonContainer s_SmtcNextButton;
+	if(Ui()->DoButton_FontIcon(&s_SmtcNextButton, FontIcons::FONT_ICON_FORWARD_STEP, 0, &NextButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, CanNext))
+	{
+		GameClient()->m_SystemMediaControls.Next();
 	}
 }
 

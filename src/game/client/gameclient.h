@@ -66,6 +66,7 @@
 #include "components/sounds.h"
 #include "components/spectator.h"
 #include "components/statboard.h"
+#include "components/system_media_controls.h"
 #include "components/tclient/bg_draw.h"
 #include "components/tclient/bindchat.h"
 #include "components/tclient/bindwheel.h"
@@ -186,6 +187,7 @@ public:
 	CStatboard m_Statboard;
 	CSounds m_Sounds;
 	CEmoticon m_Emoticon;
+	CSystemMediaControls m_SystemMediaControls;
 
 	CDamageInd m_DamageInd;
 	CTouchControls m_TouchControls;
