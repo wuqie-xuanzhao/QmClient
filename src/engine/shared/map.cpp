@@ -161,11 +161,11 @@ unsigned CMap::Crc() const
 	return m_DataFile.Crc();
 }
 
-int CMap::MapSize() const
+int CMap::Size() const
 {
 	if(!IsLoaded())
 		return 0;
-	return m_DataFile.MapSize();
+	return m_DataFile.Size();
 }
 
 void CMap::ExtractTiles(CTile *pDest, size_t DestSize, const CTile *pSrc, size_t SrcSize)

@@ -7740,7 +7740,7 @@ void CGameClient::LoadMapSettings()
 		return;
 	}
 
-	m_MapBugs = CMapBugs::Create(Client()->GetCurrentMap(), pMap->MapSize(), pMap->Sha256());
+	m_MapBugs = CMapBugs::Create(Client()->GetCurrentMap(), pMap->Size(), pMap->Sha256());
 
 	// Load map tunings
 	int Start, Num;
