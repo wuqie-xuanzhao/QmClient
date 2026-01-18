@@ -3701,7 +3701,7 @@ int CServer::Run()
 					{
 						break;
 					}
-					UpdateServerInfo(true);
+					UpdateServerInfo(false);
 				}
 				else
 				{
