@@ -3787,7 +3787,7 @@ int CServer::Run()
 				m_pRegister->Update();
 
 				if(m_ServerInfoNeedsUpdate)
-					UpdateServerInfo();
+					UpdateServerInfo(false);
 
 				Antibot()->OnEngineTick();
 
