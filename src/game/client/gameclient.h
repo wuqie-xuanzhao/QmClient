@@ -938,6 +938,7 @@ public:
 	bool m_QmDummyInputForceSend = false;
 	bool m_ReceivedDDNetPlayer;
 	bool m_ReceivedDDNetPlayerFinishTimes;
+	bool m_ReceivedDDNetPlayerFinishTimesMillis;
 
 	CTeamsCore m_Teams;
 
