@@ -2745,7 +2745,7 @@ void CMenus::Render()
 {
 	CPerfTimer RenderTimer;
 	Ui()->MapScreen();
-	Ui()->ResetMouseSlow();
+	Ui()->SetMouseSlow(false);
 
 	static int s_Frame = 0;
 	if(s_Frame == 0)

@@ -696,7 +696,7 @@ public:
 	void RegisterPassiveHotItem(const void *pId, const CUIRect *pRect);
 	void ConvertMouseMove(float *pX, float *pY, IInput::ECursorType CursorType) const;
 	void UpdateTouchState(CTouchState &State) const;
-	void ResetMouseSlow() { m_MouseSlow = false; }
+	void SetMouseSlow(bool MouseSlow) { m_MouseSlow = MouseSlow; }
 
 	bool ConsumeHotkey(EHotkey Hotkey);
 	void ClearHotkeys() { m_HotkeysPressed = 0; }

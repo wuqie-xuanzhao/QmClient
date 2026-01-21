@@ -554,7 +554,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		Ui()->DoLabel(&SeekBar, aSeekBarLabel, SeekBar.h * 0.70f, TEXTALIGN_MC);
 
 		// do the logic
-		const bool Inside = Ui()->MouseInside(&SeekBar);
 		const auto &&SnapToTimelineMarker = [&](float AmountSeek) {
 			if(pInfo->m_NumTimelineMarkers <= 0)
 				return AmountSeek;
@@ -579,30 +578,24 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		{
 			if(!Ui()->MouseButton(0))
 			{
+				if(!m_PausedBeforeSeeking)
+				{
+					DemoPlayer()->Unpause();
+				}
 				Ui()->SetActiveItem(nullptr);
 			}
 			else
 			{
-				static float s_PrevAmount = 0.0f;
-				float AmountSeek = std::clamp((Ui()->MouseX() - SeekBar.x - Rounding) / (SeekBar.w - 2 * Rounding), 0.0f, 1.0f);
+				float SeekAmount = std::clamp((Ui()->MouseX() - SeekBar.x - Rounding) / (SeekBar.w - 2 * Rounding), 0.0f, 1.0f);
 				if(!Input()->ShiftIsPressed())
-					AmountSeek = SnapToTimelineMarker(AmountSeek);
-
+					SeekAmount = SnapToTimelineMarker(SeekAmount);
 				if(Input()->ShiftIsPressed())
 				{
-					AmountSeek = s_PrevAmount + (AmountSeek - s_PrevAmount) * 0.05f;
-					if(AmountSeek >= 0.0f && AmountSeek <= 1.0f && absolute(s_PrevAmount - AmountSeek) >= 0.0001f)
-					{
-						PositionToSeek = AmountSeek;
-					}
+					Ui()->SetMouseSlow(true);
 				}
-				else
+				if(absolute(m_PrevSeekAmount - SeekAmount) >= 0.0001f)
 				{
-					if(AmountSeek >= 0.0f && AmountSeek <= 1.0f && absolute(s_PrevAmount - AmountSeek) >= 0.001f)
-					{
-						s_PrevAmount = AmountSeek;
-						PositionToSeek = AmountSeek;
-					}
+					PositionToSeek = m_PrevSeekAmount = SeekAmount;
 				}
 			}
 		}
@@ -610,11 +603,17 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		{
 			if(Ui()->MouseButton(0))
 			{
+				m_PrevSeekAmount = -1.0f;
+				m_PausedBeforeSeeking = pInfo->m_Paused;
+				if(!pInfo->m_Paused)
+				{
+					DemoPlayer()->Pause();
+				}
 				Ui()->SetActiveItem(&s_SeekBarId);
 			}
 		}
 
-		if(Inside && !Ui()->MouseButton(0))
+		if(Ui()->MouseInside(&SeekBar) && !Ui()->MouseButton(0))
 			Ui()->SetHotItem(&s_SeekBarId);
 
 		if(Ui()->HotItem() == &s_SeekBarId)
