@@ -469,7 +469,6 @@ bool CSound::DecodeOpus(CSample &Sample, const void *pData, unsigned DataSize, c
 			log_error("sound/opus", "Decoded sample contains no frames. Filename='%s'", pContextName);
 			return false;
 		}
-
 		Sample.m_pData = pSampleData;
 		Sample.m_NumFrames = Pos;
 		Sample.m_Rate = 48000;
