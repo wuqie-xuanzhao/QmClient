@@ -462,10 +462,10 @@ bool CSound::DecodeOpus(CSample &Sample, const void *pData, unsigned DataSize, c
 			Pos += Read;
 		}
 
-		op_free(pOpusFile);
 		if(Pos <= 0)
 		{
 			free(pSampleData);
+			op_free(pOpusFile);
 			log_error("sound/opus", "Decoded sample contains no frames. Filename='%s'", pContextName);
 			return false;
 		}
