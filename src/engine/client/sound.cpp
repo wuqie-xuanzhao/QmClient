@@ -462,7 +462,7 @@ bool CSound::DecodeOpus(CSample &Sample, const void *pData, unsigned DataSize, c
 			Pos += Read;
 		}
 
-		if(Pos <= 0)
+<<		if(Pos <= 0)
 		{
 			free(pSampleData);
 			op_free(pOpusFile);
