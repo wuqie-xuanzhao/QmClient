@@ -50,93 +50,6 @@
 #endif
 
 /**
- * Utilities for debugging.
- *
- * @defgroup Debug Debugging
- */
-
-/**
- * Breaks into the debugger based on a test.
- *
- * @ingroup Debug
- *
- * @param test Result of the test.
- * @param fmt A printf styled format message that should be printed if the test fails.
- *
- * @remark Also works in release mode.
- *
- * @see dbg_break
- */
-#define dbg_assert(test, fmt, ...) \
-	do \
-	{ \
-		if(!(test)) \
-		{ \
-			dbg_assert_imp(__FILE__, __LINE__, fmt, ##__VA_ARGS__); \
-		} \
-	} while(false)
-
-/**
- * Breaks into the debugger with a message.
- *
- * @ingroup Debug
- * @param fmt A printf styled format message that should be printed in case the
- * code is reached.
- *
- * @remark Also works in release mode.
- *
- * @see dbg_break
- */
-#define dbg_assert_failed(fmt, ...) dbg_assert_imp(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
-
-/**
- * Use dbg_assert instead!
- *
- * @ingroup Debug
- */
-[[gnu::format(printf, 3, 4)]] [[noreturn]] void
-dbg_assert_imp(const char *filename, int line, const char *fmt, ...);
-
-/**
- * Checks whether the program is currently shutting down due to a failed
- * assert.
- *
- * @ingroup Debug
- *
- * @return indication whether the program is currently shutting down due to a
- * failed assert.
- */
-bool dbg_assert_has_failed();
-
-/**
- * Breaks into the debugger.
- *
- * @ingroup Debug
- *
- * @remark Also works in release mode.
- *
- * @see dbg_assert
- */
-[[noreturn]] void dbg_break();
-
-typedef std::function<void(const char *message)> DBG_ASSERT_HANDLER;
-void dbg_assert_set_handler(DBG_ASSERT_HANDLER handler);
-
-/**
- * Prints a debug message.
- *
- * @ingroup Debug
- *
- * @param sys A string that describes what system the message belongs to.
- * @param fmt A printf styled format string.
- *
- * @remark Also works in release mode.
- *
- * @see dbg_assert
- */
-[[gnu::format(printf, 2, 3)]] void dbg_msg(const char *sys, const char *fmt, ...);
-
-/**
  * File I/O related operations.
  *
  * @defgroup File-IO File I/O
@@ -170,26 +83,26 @@ enum
 /**
  * @ingroup File-IO
  */
-enum class EIoSeekOrigin
+enum ESeekOrigin
 {
 	/**
 	 * Start seeking from the beginning of the file.
 	 *
 	 * @see io_seek
 	 */
-	START = 0,
+	IOSEEK_START = 0,
 	/**
 	 * Start seeking from the current position.
 	 *
 	 * @see io_seek
 	 */
-	CURRENT = 1,
+	IOSEEK_CUR = 1,
 	/**
 	 * Start seeking from the end of the file.
 	 *
 	 * @see io_seek
 	 */
-	END = 2,
+	IOSEEK_END = 2,
 };
 
 /**
@@ -278,7 +191,7 @@ int io_skip(IOHANDLE io, int64_t size);
  *
  * @return `0` on success.
  */
-int io_seek(IOHANDLE io, int64_t offset, EIoSeekOrigin origin);
+int io_seek(IOHANDLE io, int64_t offset, ESeekOrigin origin);
 
 /**
  * Gets the current position in the file.
@@ -1164,258 +1077,6 @@ int str_utf8_dist_buffer(const char *a, const char *b, int *buf, int buf_len);
  * @remark The strings are treated as null-terminated strings.
  */
 int str_utf32_dist_buffer(const int *a, int a_len, const int *b, int b_len, int *buf, int buf_len);
-
-/**
- * Utilities for accessing the file system.
- *
- * @defgroup Filesystem Filesystem
- */
-
-/**
- * Lists the files and folders in a directory.
- *
- * @ingroup Filesystem
- *
- * @param dir Directory to list.
- * @param cb Callback function to call for each entry.
- * @param type Type of the directory.
- * @param user Pointer to give to the callback.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
-
-/**
- * Lists the files and folders in a directory and gets additional file information.
- *
- * @ingroup Filesystem
- *
- * @param dir Directory to list.
- * @param cb Callback function to call for each entry.
- * @param type Type of the directory.
- * @param user Pointer to give to the callback.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void *user);
-
-/**
- * Recursively creates parent directories for a file or directory.
- *
- * @ingroup Filesystem
- *
- * @param path File or directory for which to create parent directories.
- *
- * @return `0` on success. Negative value on failure.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_makedir_rec_for(const char *path);
-
-/**
- * Fetches per user configuration directory.
- *
- * @ingroup Filesystem
- *
- * @param appname Name of the application.
- * @param path Buffer that will receive the storage path.
- * @param max Size of the buffer.
- *
- * @return `0` on success. Negative value on failure.
- *
- * @remark Returns ~/.appname on UNIX based systems.
- * @remark Returns ~/Library/Applications Support/appname on macOS.
- * @remark Returns %APPDATA%/Appname on Windows based systems.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_storage_path(const char *appname, char *path, int max);
-
-/**
- * Gets the absolute path to the executable.
- *
- * @ingroup Filesystem
- *
- * @param buffer Buffer that will receive the path of the executable.
- * @param buffer_size Size of the buffer.
- *
- * @return `0` on success. Negative value on failure.
- *
- * @remark The executable name is included in the result.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_executable_path(char *buffer, int buffer_size);
-
-/**
- * Checks if a file exists.
- *
- * @ingroup Filesystem
- *
- * @param path The path to check.
- *
- * @return `1` if a file with the given path exists.
- * @return `0` on failure or if the file does not exist.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_is_file(const char *path);
-
-/**
- * Checks if a folder exists.
- *
- * @ingroup Filesystem
- *
- * @param path The path to check.
- *
- * @return `1` if a folder with the given path exists.
- * @return `0` on failure or if the folder does not exist.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_is_dir(const char *path);
-
-/**
- * Checks whether a given path is relative or absolute.
- *
- * @ingroup Filesystem
- *
- * @param path Path to check.
- *
- * @return `1` if relative, `0` if absolute.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_is_relative_path(const char *path);
-
-/**
- * Changes the current working directory.
- *
- * @ingroup Filesystem
- *
- * @param path New working directory path.
- *
- * @return `0` on success. `1` on failure.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_chdir(const char *path);
-
-/**
- * Gets the current working directory.
- *
- * @ingroup Filesystem
- *
- * @param buffer Buffer that will receive the current working directory.
- * @param buffer_size Size of the buffer.
- *
- * @return Pointer to the buffer on success, `nullptr` on failure.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] char *fs_getcwd(char *buffer, int buffer_size);
-
-/**
- * Gets the name of a file or folder specified by a path,
- * i.e. the last segment of the path.
- *
- * @ingroup Filesystem
- *
- * @param path Path from which to retrieve the filename.
- *
- * @return Filename of the path.
- *
- * @remark Supports forward and backward slashes as path segment separator.
- * @remark No distinction between files and folders is being made.
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] const char *fs_filename(const char *path);
-
-/**
- * Splits a filename into name (without extension) and file extension.
- *
- * @ingroup Filesystem
- *
- * @param filename The filename to split.
- * @param name Buffer that will receive the name without extension, may be nullptr.
- * @param name_size Size of the name buffer (ignored if name is nullptr).
- * @param extension Buffer that will receive the extension, may be nullptr.
- * @param extension_size Size of the extension buffer (ignored if extension is nullptr).
- *
- * @remark Does NOT handle forward and backward slashes.
- * @remark No distinction between files and folders is being made.
- * @remark The strings are treated as null-terminated strings.
- */
-void fs_split_file_extension(const char *filename, char *name, size_t name_size, char *extension = nullptr, size_t extension_size = 0);
-
-/**
- * Normalizes the given path: replaces backslashes with regular slashes
- * and removes trailing slashes.
- *
- * @ingroup Filesystem
- *
- * @param path Path to normalize.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-void fs_normalize_path(char *path);
-
-/**
- * Get the parent directory of a directory.
- *
- * @ingroup Filesystem
- *
- * @param path Path of the directory. The parent will be store in this buffer as well.
- *
- * @return `0` on success. `1` on failure.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_parent_dir(char *path);
-
-/**
- * Deletes a file.
- *
- * @ingroup Filesystem
- *
- * @param filename Path of the file to delete.
- *
- * @return `0` on success. `1` on failure.
- *
- * @remark The strings are treated as null-terminated strings.
- * @remark Returns an error if the path specifies a directory name.
- */
-[[nodiscard]] int fs_remove(const char *filename);
-
-/**
- * Renames the file or directory. If the paths differ the file will be moved.
- *
- * @ingroup Filesystem
- *
- * @param oldname The current path of a file or directory.
- * @param newname The new path for the file or directory.
- *
- * @return `0` on success. `1` on failure.
- *
- * @remark The strings are treated as null-terminated strings.
- */
-[[nodiscard]] int fs_rename(const char *oldname, const char *newname);
-
-/**
- * Gets the creation and the last modification date of a file or directory.
- *
- * @ingroup Filesystem
- *
- * @param name Path of a file or directory.
- * @param created Pointer where the creation time will be stored.
- * @param modified Pointer where the modification time will be stored.
- *
- * @return `0` on success. non-zero on failure.
- *
- * @remark The strings are treated as null-terminated strings.
- * @remark Returned time is in seconds since UNIX Epoch.
- */
-[[nodiscard]] int fs_file_time(const char *name, time_t *created, time_t *modified);
 
 /**
  * Swaps the endianness of data. Each element is swapped individually by reversing its bytes.
