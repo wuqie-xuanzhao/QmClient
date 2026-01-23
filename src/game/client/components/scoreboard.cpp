@@ -290,6 +290,32 @@ bool CScoreboard::OnInput(const IInput::CEvent &Event)
 
 void CScoreboard::RenderTitle(CUIRect TitleLabel, int Team, const char *pTitle, float TitleFontSize)
 {
+	const bool IsMapTitle = Team == TEAM_GAME && !GameClient()->IsTeamPlay();
+	if(IsMapTitle && m_MouseUnlocked && GameClient()->m_aMapDescription[0] != '\0')
+	{
+		const int ButtonResult = Ui()->DoButtonLogic(&m_MapTitleButtonId, 0, &TitleLabel, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
+		if(ButtonResult != 0)
+		{
+			m_MapTitlePopupContext.m_pScoreboard = this;
+
+			m_MapTitlePopupContext.m_FontSize = 12.0f;
+			const float MaxWidth = 300.0f;
+			const float Margin = 5.0f;
+			const char *pDescription = GameClient()->m_aMapDescription;
+			const float TextWidth = minimum(std::ceil(TextRender()->TextWidth(m_MapTitlePopupContext.m_FontSize, pDescription) + 0.5f), MaxWidth);
+			float TextHeight = 0.0f;
+			STextSizeProperties TextSizeProps{};
+			TextSizeProps.m_pHeight = &TextHeight;
+			TextRender()->TextWidth(m_MapTitlePopupContext.m_FontSize, pDescription, -1, TextWidth, 0, TextSizeProps);
+
+			Ui()->DoPopupMenu(&m_MapTitlePopupContext, Ui()->MouseX(), Ui()->MouseY(), TextWidth + Margin * 2, TextHeight + Margin * 2, &m_MapTitlePopupContext, CMapTitlePopupContext::Render);
+		}
+		if(Ui()->HotItem() == &m_MapTitleButtonId)
+		{
+			TitleLabel.Draw(ColorRGBA(0.7f, 0.7f, 0.7f, 0.3f), IGraphics::CORNER_ALL, 5.0f);
+		}
+	}
+
 	SLabelProperties Props;
 	Props.m_MaxWidth = TitleLabel.w;
 	Props.m_EllipsisAtEnd = true;
@@ -2075,6 +2101,16 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 			}
 		}
 	}
+
+	return CUi::POPUP_KEEP_OPEN;
+}
+
+CUi::EPopupMenuFunctionResult CScoreboard::CMapTitlePopupContext::Render(void *pContext, CUIRect View, bool Active)
+{
+	CMapTitlePopupContext *pPopupContext = static_cast<CMapTitlePopupContext *>(pContext);
+	CScoreboard *pScoreboard = pPopupContext->m_pScoreboard;
+
+	pScoreboard->TextRender()->Text(View.x, View.y, pPopupContext->m_FontSize, pScoreboard->GameClient()->m_aMapDescription, View.w);
 
 	return CUi::POPUP_KEEP_OPEN;
 }

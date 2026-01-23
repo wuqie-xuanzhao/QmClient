@@ -1209,6 +1209,7 @@ public:
 	void CleanMultiViewId(int ClientId);
 	int m_MapBestTimeSeconds;
 	int m_MapBestTimeMillis;
+	char m_aMapDescription[512];
 
 	// Q1menG Client Recognition
 	void ClearQ1menGSyncMarks();

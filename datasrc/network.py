@@ -962,4 +962,12 @@ Messages = [
             NetBool("m_Enable"),
         ],
     ),
+    NetMessageEx(
+        "Sv_MapInfo",
+        "map-info@netmsg.ddnet.org",
+        [
+            NetString("m_pDescription"),
+        ],
+    ),
+
 ]
