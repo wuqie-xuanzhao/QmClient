@@ -4759,8 +4759,6 @@ void CGameClient::OnPredict()
 		if(pDummyChar)
 			HandleRandomEmoteOnHit(pDummyChar, 1);
 
-		HandlePredictedEvents(Tick);
-
 		// fetch the current characters
 		if(Tick == FinalTickSelf)
 		{
@@ -4841,6 +4839,8 @@ void CGameClient::OnPredict()
 					m_Effects.AirJump(Pos, 1.0f, 1.0f);
 				}
 		}
+
+		HandlePredictedEvents(Tick);
 	}
 
 	if(FastInputTicks > 0)
