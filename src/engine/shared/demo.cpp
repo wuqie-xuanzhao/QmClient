@@ -1034,7 +1034,7 @@ int CDemoPlayer::SeekTick(ETickOffset TickOffset)
 	switch(TickOffset)
 	{
 	case TICK_CURRENT:
-		// TODO: WantedTick == m_Info.m_NextTick is used to update spectator info when paused so seeking must be done
+		// TODO: https://github.com/ddnet/ddnet/issues/11681
 		WantedTick = m_Info.m_Info.m_CurrentTick;
 		break;
 	case TICK_PREVIOUS:
@@ -1059,7 +1059,7 @@ int CDemoPlayer::SetPos(int WantedTick)
 
 	// TODO: Early exit when WantedTick > m_Info.m_Info.m_CurrentTick && WantedTick <= m_Info.m_NextTick with https://github.com/ddnet/ddnet/issues/11681
 
-	// TODO: WantedTick == m_Info.m_NextTick is used to update spectator info when paused so seeking must be done
+	// TODO: Early exit when WantedTick > m_Info.m_Info.m_CurrentTick && WantedTick <= m_Info.m_NextTick with https://github.com/ddnet/ddnet/issues/11681
 
 	int LastSeekableTick = m_Info.m_Info.m_LastTick;
 	if(m_Info.m_Info.m_LiveDemo)
@@ -1079,7 +1079,6 @@ int CDemoPlayer::SetPos(int WantedTick)
 	// Just the next tick
 	if(WantedTick == m_Info.m_NextTick + 1)
 	{
-		// This does handle looping correctly
 		DoTick();
 		Play();
 		return true;
@@ -1095,7 +1094,9 @@ int CDemoPlayer::SetPos(int WantedTick)
 	while(KeyFrame > 0 && m_vKeyFrames[KeyFrame].m_Tick > KeyFrameWantedTick)
 		KeyFrame--;
 
+	// TODO Remove `WantedTick <= m_Info.m_NextTick` with https://github.com/ddnet/ddnet/issues/11681
 	if(WantedTick <= m_Info.m_Info.m_CurrentTick || // if we are seeking backwards (must be <= for high bandwidth demos) OR
+		WantedTick <= m_Info.m_NextTick || // if seeking to current tick OR
 		m_Info.m_Info.m_CurrentTick < m_vKeyFrames[KeyFrame].m_Tick || // we are before the wanted KeyFrame OR
 		(KeyFrame != m_vKeyFrames.size() - 1 && m_Info.m_Info.m_CurrentTick >= m_vKeyFrames[KeyFrame + 1].m_Tick)) // we are after the wanted KeyFrame
 	{
