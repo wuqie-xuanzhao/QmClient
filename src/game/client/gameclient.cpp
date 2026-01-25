@@ -4849,8 +4849,6 @@ void CGameClient::OnPredict()
 		if(pDummyChar)
 			HandleRandomEmoteOnHit(pDummyChar, 1);
 
-		HandlePredictedEvents(Tick);
-
 		// fetch the current characters
 		if(Tick == FinalTickSelf)
 		{
@@ -4933,7 +4931,7 @@ void CGameClient::OnPredict()
 		}
 
 		HandlePredictedEvents(Tick);
-	}
+<<	}
 
 	if(FastInputTicks > 0)
 		m_PredictedWorld.CopyWorld(&m_RegularPredictedWorld);
