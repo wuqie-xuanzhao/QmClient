@@ -1131,6 +1131,8 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 				ServerBrowser()->FavoriteCommunitiesFilter().Add(pItemName);
 			}
 		}
+		GameClient()->m_Tooltips.DoToolTip(&s_vFavoriteButtonIds[ItemIndex], &FavoriteButton,
+			Favorite ? Localize("Click to remove this community from your favorites.") : Localize("Click to add this community to your favorites."));
 	};
 
 	s_vFavoriteButtonIds.resize(MaxEntries);
