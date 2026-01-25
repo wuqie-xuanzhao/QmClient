@@ -1060,8 +1060,6 @@ bool CDemoPlayer::SetPos(int WantedTick)
 
 	// TODO: Early exit when WantedTick > m_Info.m_Info.m_CurrentTick && WantedTick <= m_Info.m_NextTick with https://github.com/ddnet/ddnet/issues/11681
 
-	// TODO: Early exit when WantedTick > m_Info.m_Info.m_CurrentTick && WantedTick <= m_Info.m_NextTick with https://github.com/ddnet/ddnet/issues/11681
-
 	int LastSeekableTick = m_Info.m_Info.m_LastTick;
 	if(m_Info.m_Info.m_LiveDemo)
 	{
