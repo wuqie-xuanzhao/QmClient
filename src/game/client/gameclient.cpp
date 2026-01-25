@@ -4759,8 +4759,6 @@ void CGameClient::OnPredict()
 		if(pDummyChar)
 			HandleRandomEmoteOnHit(pDummyChar, 1);
 
-		HandlePredictedEvents(Tick);
-
 		// fetch the current characters
 		if(Tick == FinalTickSelf)
 		{
@@ -4886,6 +4884,8 @@ void CGameClient::OnPredict()
 				}
 			}
 		}
+
+		HandlePredictedEvents(Tick);
 	}
 
 	// detect mispredictions of other players and make corrections smoother when possible
