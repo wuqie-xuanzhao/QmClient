@@ -1251,7 +1251,31 @@ protected:
 
 	bool m_DummyNamePlatePreview = false;
 
-	bool m_JoinTutorial = false;
+	class CJoinTutorial
+	{
+	public:
+		bool m_Queued = false;
+		enum class EStatus
+		{
+			REFRESHING,
+			SERVER_LIST_ERROR,
+			NO_TUTORIAL_AVAILABLE,
+		};
+		EStatus m_Status = EStatus::REFRESHING;
+		bool m_TryRefresh = false;
+		bool m_TriedRefresh = false;
+		enum class ELocalServerState
+		{
+			NOT_TRIED,
+			TRY,
+			WAITING_STOP,
+			WAITING_START,
+		};
+		ELocalServerState m_LocalServerState = ELocalServerState::NOT_TRIED;
+		std::chrono::nanoseconds m_StateChange = std::chrono::nanoseconds(0);
+	};
+	CJoinTutorial m_JoinTutorial;
+
 	bool m_CreateDefaultFavoriteCommunities = false;
 	bool m_ForceRefreshLanPage = false;
 	float m_MenuPageTransitionDirection = 0.0f;
@@ -2254,6 +2278,7 @@ public:
 		POPUP_MESSAGE, // generic message popup (one button)
 		POPUP_CONFIRM, // generic confirmation popup (two buttons)
 		POPUP_FIRST_LAUNCH,
+		POPUP_JOIN_TUTORIAL,
 		POPUP_POINTS,
 		POPUP_DISCONNECTED,
 		POPUP_LANGUAGE,
@@ -2415,6 +2440,7 @@ public:
 	SSettingsWarmupFrameBudget *SettingsFrameBudget() { return &m_SettingsFrameBudget; }
 	int SettingsTextContainerCount();
 	int MenuTextPoolSizeForTesting() const;
+	void JoinTutorial();
 
 private:
 	struct SMenuTextPoolEntry
