@@ -1072,7 +1072,7 @@ void CServer::DoSnapshot()
 			m_pSnapshotBuilder->Init(m_aClients[i].m_Sixup);
 
 			// only snap events on global ticks
-			GameServer()->OnSnap(LiveObserver ? SERVER_DEMO_CLIENT : i, IsGlobalSnap);
+			GameServer()->OnSnap(LiveObserver ? SERVER_DEMO_CLIENT : i, IsGlobalSnap, !LiveObserver && m_aDemoRecorder[i].IsRecording());
 
 			// finish snapshot
 			CSnapshotBuffer Data;

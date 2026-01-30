@@ -326,7 +326,7 @@ public:
 	void OnShutdown(void *pPersistentData) override;
 
 	void OnTick() override;
-	void OnSnap(int ClientId, bool GlobalSnap) override;
+	void OnSnap(int ClientId, bool GlobalSnap, bool RecordingDemo) override;
 	void OnPostGlobalSnap() override;
 
 	void UpdatePlayerMaps();
