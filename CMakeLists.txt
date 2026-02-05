@@ -150,9 +150,6 @@ option(DISCORD_DYNAMIC "Enable discovering Discord rich presence libraries at ru
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DEV "Don't generate stuff necessary for packaging" OFF)
 option(VULKAN "Enable the vulkan backend" ${AUTO_VULKAN_BACKEND})
-option(WHISPER "Enable built-in Speech-to-Text with whisper.cpp" OFF)
-option(RMLUI "Enable RmlUI integration" ON)
-
 option(EXCEPTION_HANDLING "Enable crashdumps (only works with Windows)" OFF)
 option(IPO "Enable interprocedural optimizations" OFF)
 option(FUSE_LD "Linker to use" OFF)
@@ -606,40 +603,6 @@ else()
   set(VULKAN_INCLUDE_DIRS)
 endif()
 
-# Whisper.cpp for Speech-to-Text (CPU only)
-if(CLIENT AND WHISPER)
-  include(FetchContent)
-  set(WHISPER_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-  set(WHISPER_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-  set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-  set(GGML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  # CPU only - disable all GPU backends
-  set(GGML_CUDA OFF CACHE BOOL "" FORCE)
-  set(GGML_METAL OFF CACHE BOOL "" FORCE)
-  set(GGML_VULKAN OFF CACHE BOOL "" FORCE)
-  set(GGML_SYCL OFF CACHE BOOL "" FORCE)
-  set(GGML_ROCM OFF CACHE BOOL "" FORCE)
-  set(GGML_HIPBLAS OFF CACHE BOOL "" FORCE)
-  set(GGML_OPENCL OFF CACHE BOOL "" FORCE)
-  # Use static runtime library to match main project (/MT instead of /MD)
-  set(GGML_STATIC ON CACHE BOOL "" FORCE)
-  if(MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
-  endif()
-  FetchContent_Declare(
-    whisper
-    GIT_REPOSITORY https://github.com/ggerganov/whisper.cpp.git
-    GIT_TAG v1.7.5
-    GIT_SHALLOW TRUE
-  )
-  FetchContent_MakeAvailable(whisper)
-  set(WHISPER_FOUND TRUE)
-  message(STATUS " * Whisper.cpp found (CPU-only STT enabled)")
-else()
-  set(WHISPER_FOUND FALSE)
-endif()
-
 message(STATUS "******** ${CMAKE_PROJECT_NAME} ********")
 set(TARGET "Target OS: ${TARGET_OS} ${CMAKE_SYSTEM_PROCESSOR}")
 if(TARGET_OS STREQUAL "mac")
@@ -911,39 +874,6 @@ set(DEP_JSON $<TARGET_OBJECTS:json>)
 set(DEP_MD5)
 if(NOT CRYPTO_FOUND)
   set(DEP_MD5 $<TARGET_OBJECTS:md5>)
-endif()
-
-########################################################################
-# RMLUI
-########################################################################
-
-set(RMLUI_ENABLED OFF)
-if(CLIENT AND RMLUI)
-  set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-  set(RMLUI_SAMPLES OFF CACHE BOOL "" FORCE)
-  set(RMLUI_TESTS OFF CACHE BOOL "" FORCE)
-  set(RMLUI_LUA_BINDINGS OFF CACHE BOOL "" FORCE)
-  set(RMLUI_LOTTIE_PLUGIN OFF CACHE BOOL "" FORCE)
-  set(RMLUI_SVG_PLUGIN OFF CACHE BOOL "" FORCE)
-  set(RMLUI_HARFBUZZ_SAMPLE OFF CACHE BOOL "" FORCE)
-
-  if(FREETYPE_FOUND AND NOT TARGET Freetype::Freetype)
-    add_library(Freetype::Freetype INTERFACE IMPORTED)
-    set_target_properties(Freetype::Freetype PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${FREETYPE_LIBRARIES}"
-      INTERFACE_INCLUDE_DIRECTORIES "${FREETYPE_INCLUDE_DIRS}"
-    )
-  endif()
-
-  add_subdirectory(ddnet-libs/rmlui EXCLUDE_FROM_ALL)
-  if(MSVC)
-    foreach(target rmlui_core rmlui_debugger rmlui_lua)
-      if(TARGET ${target})
-        set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)
-      endif()
-    endforeach()
-  endif()
-  set(RMLUI_ENABLED ON)
 endif()
 
 ########################################################################
@@ -1595,6 +1525,13 @@ set(EXPECTED_DATA
   gui_icons.png
   gui_logo.png
   hud.png
+  "input overlay-Zac/mouse-no-movement.json"
+  "input overlay-Zac/mouse.json"
+  "input overlay-Zac/mouse.png"
+  "input overlay-Zac/wasd.json"
+  "input overlay-Zac/wasd.png"
+  "input overlay-Zac/参数.txt"
+  input_overlay.json
   languages/arabic.txt
   languages/azerbaijani.txt
   languages/belarusian.txt
@@ -2051,8 +1988,6 @@ set(EXPECTED_DATA
   themes/winter_day.map
   themes/winter_night.map
   touch_controls.json
-  ui/start_menu.rcss
-  ui/start_menu.rml
   wordlist.txt
 )
 
@@ -2087,6 +2022,41 @@ if(DATA_UI)
     COMMENT "Copy data/ui to build directory"
   )
   add_custom_target(copy_ui_data DEPENDS "${UI_DATA_STAMP}")
+endif()
+
+# Keep input overlay data in sync with the build directory when files change.
+set(DATA_INPUT_OVERLAY)
+foreach(datafile ${DATA})
+  if(datafile MATCHES "/data/input overlay-Zac/")
+    list(APPEND DATA_INPUT_OVERLAY ${datafile})
+  endif()
+endforeach()
+if(DATA_INPUT_OVERLAY)
+  set(INPUT_OVERLAY_DATA_STAMP "${PROJECT_BINARY_DIR}/data/input overlay-Zac/.input_overlay_data.stamp")
+  add_custom_command(
+    OUTPUT "${INPUT_OVERLAY_DATA_STAMP}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/data/input overlay-Zac"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/data/input overlay-Zac" "${PROJECT_BINARY_DIR}/data/input overlay-Zac"
+    COMMAND ${CMAKE_COMMAND} -E touch "${INPUT_OVERLAY_DATA_STAMP}"
+    DEPENDS ${DATA_INPUT_OVERLAY}
+    COMMENT "Copy data/input overlay-Zac to build directory"
+  )
+  add_custom_target(copy_input_overlay_data DEPENDS "${INPUT_OVERLAY_DATA_STAMP}")
+endif()
+
+# Keep input_overlay.json in sync with the build directory when it changes.
+set(INPUT_OVERLAY_CONFIG "${PROJECT_SOURCE_DIR}/data/input_overlay.json")
+if(EXISTS "${INPUT_OVERLAY_CONFIG}")
+  set(INPUT_OVERLAY_CONFIG_STAMP "${PROJECT_BINARY_DIR}/data/.input_overlay_config.stamp")
+  add_custom_command(
+    OUTPUT "${INPUT_OVERLAY_CONFIG_STAMP}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/data"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${INPUT_OVERLAY_CONFIG}" "${PROJECT_BINARY_DIR}/data/input_overlay.json"
+    COMMAND ${CMAKE_COMMAND} -E touch "${INPUT_OVERLAY_CONFIG_STAMP}"
+    DEPENDS "${INPUT_OVERLAY_CONFIG}"
+    COMMENT "Copy data/input_overlay.json to build directory"
+  )
+  add_custom_target(copy_input_overlay_config DEPENDS "${INPUT_OVERLAY_CONFIG_STAMP}")
 endif()
 set(COPY_FILES
   ${CURL_COPY_FILES}
@@ -2553,8 +2523,6 @@ if(CLIENT)
     smooth_time.h
     sound.cpp
     sound.h
-    stt.cpp
-    stt.h
     sqlite.cpp
     steam.cpp
     text.cpp
@@ -2625,12 +2593,8 @@ if(CLIENT)
     components/mapsounds.h
     components/menu_background.cpp
     components/menu_background.h
-    components/menu_particles.cpp
-    components/menu_particles.h
     components/menus.cpp
     components/menus.h
-    components/ui_effects.cpp
-    components/ui_effects.h
     components/menus_browser.cpp
     components/menus_demo.cpp
     components/menus_ingame.cpp
@@ -2718,6 +2682,8 @@ if(CLIENT)
     components/tooltips.h
     components/touch_controls.cpp
     components/touch_controls.h
+    components/ui_effects.cpp
+    components/ui_effects.h
     components/voting.cpp
     components/voting.h
     gameclient.cpp
@@ -2906,14 +2872,6 @@ if(CLIENT)
     endif()
   endif()
 
-  if(WHISPER AND WHISPER_FOUND)
-    list(APPEND LIBS_CLIENT whisper)
-  endif()
-
-  if(RMLUI_ENABLED)
-    list(APPEND LIBS_CLIENT RmlUi::Core)
-  endif()
-
   if(TARGET_OS STREQUAL "windows")
     set(VERSION_EXECUTABLE "${CLIENT_EXECUTABLE}")
     set(VERSION_COMPANY "${CLIENT_EXECUTABLE} Team")
@@ -2963,10 +2921,6 @@ if(CLIENT)
       PROPERTY OUTPUT_NAME ${CLIENT_EXECUTABLE}
   )
   target_link_libraries(game-client ${LIBS_CLIENT})
-  if(RMLUI_ENABLED)
-    target_compile_definitions(game-client PRIVATE CONF_RMLUI)
-  endif()
-
   if(MSVC)
     target_compile_options(game-client PRIVATE /bigobj) # TClient, required for ChaiScript
     target_link_options(game-client PRIVATE /ENTRY:mainCRTStartup)
@@ -3030,13 +2984,14 @@ if(CLIENT)
     target_compile_definitions(game-client PRIVATE CONF_BACKEND_VULKAN)
   endif()
 
-  if(WHISPER AND WHISPER_FOUND)
-    target_compile_definitions(game-client PRIVATE CONF_WHISPER)
-    target_include_directories(game-client PRIVATE ${whisper_SOURCE_DIR}/include)
-  endif()
-
   if(TARGET copy_ui_data)
     add_dependencies(game-client copy_ui_data)
+  endif()
+  if(TARGET copy_input_overlay_data)
+    add_dependencies(game-client copy_input_overlay_data)
+  endif()
+  if(TARGET copy_input_overlay_config)
+    add_dependencies(game-client copy_input_overlay_config)
   endif()
 
   list(APPEND TARGETS_OWN game-client)

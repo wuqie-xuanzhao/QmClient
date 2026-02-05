@@ -91,6 +91,9 @@ MACRO_CONFIG_INT(TcFreezeChatChance, tc_freeze_chat_chance, 30, 0, 100, CFGFLAG_
 // Player Stats HUD
 MACRO_CONFIG_INT(QmPlayerStatsHud, qm_player_stats_hud, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用玩家统计HUD显示")
 MACRO_CONFIG_INT(QmPlayerStatsResetOnJoin, qm_player_stats_reset_on_join, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "进入服务器时重置统计数据（0=累计统计, 1=进入服务器重置）")
+MACRO_CONFIG_STR(QmUnfinishedMapPlayer, qm_unfinished_map_player, 16, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "未完成图查询用玩家名")
+MACRO_CONFIG_INT(QmUnfinishedMapType, qm_unfinished_map_type, 0, 0, 13, CFGFLAG_CLIENT | CFGFLAG_SAVE, "未完成图筛选类型")
+MACRO_CONFIG_INT(QmUnfinishedMapAutoVote, qm_unfinished_map_auto_vote, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "未完成图自动发起投票")
 
 // Outline Variables
 MACRO_CONFIG_INT(TcOutline, tc_outline, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Draws outlines")
@@ -141,6 +144,14 @@ MACRO_CONFIG_STR(TcRegexChatIgnore, tc_regex_chat_ignore, 512, "", CFGFLAG_CLIEN
 // Misc visual
 MACRO_CONFIG_INT(TcWhiteFeet, tc_white_feet, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Render all feet as perfectly white base color")
 MACRO_CONFIG_STR(TcWhiteFeetSkin, tc_white_feet_skin, 255, "x_ninja", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Base skin for white feet")
+
+// Skin queue
+MACRO_CONFIG_INT(QmSkinQueueInterval, qm_skin_queue_interval, 60, 1, 120, CFGFLAG_CLIENT | CFGFLAG_SAVE, "皮肤队列切换间隔（秒）")
+MACRO_CONFIG_INT(QmSkinQueueLength, qm_skin_queue_length, 20, 0, 1024, CFGFLAG_CLIENT | CFGFLAG_SAVE, "皮肤队列最大长度")
+MACRO_CONFIG_INT(QmSkinQueueIndex, qm_skin_queue_index, 0, 0, 1024, CFGFLAG_CLIENT | CFGFLAG_SAVE, "皮肤队列当前位置")
+MACRO_CONFIG_INT(QmDummySkinQueueInterval, qm_dummy_skin_queue_interval, 60, 1, 120, CFGFLAG_CLIENT | CFGFLAG_SAVE, "分身皮肤队列切换间隔（秒）")
+MACRO_CONFIG_INT(QmDummySkinQueueLength, qm_dummy_skin_queue_length, 20, 0, 1024, CFGFLAG_CLIENT | CFGFLAG_SAVE, "分身皮肤队列最大长度")
+MACRO_CONFIG_INT(QmDummySkinQueueIndex, qm_dummy_skin_queue_index, 0, 0, 1024, CFGFLAG_CLIENT | CFGFLAG_SAVE, "分身皮肤队列当前位置")
 
 MACRO_CONFIG_INT(TcMiniDebug, tc_mini_debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show position and angle")
 
@@ -297,21 +308,36 @@ MACRO_CONFIG_STR(TcVolleyBallBetterBallSkin, tc_volleyball_better_ball_skin, 24,
 
 // Mod
 MACRO_CONFIG_INT(TcShowPlayerHitBoxes, tc_show_player_hit_boxes, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show player hit boxes (1 = predicted, 2 = predicted and unpredicted)")
-MACRO_CONFIG_INT(TcHideChatBubbles, tc_hide_chat_bubbles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide your own chat bubbles, only works when authed in remote console")
 
 // Chat Bubble Settings / 聊天气泡设置
-MACRO_CONFIG_INT(TcChatBubble, tc_chat_bubble, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在玩家头顶显示聊天气泡 (Show chat bubbles above players)")
-MACRO_CONFIG_INT(TcChatBubbleDuration, tc_chat_bubble_duration, 10, 1, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡显示时长（秒）(How long chat bubbles stay visible)")
-MACRO_CONFIG_INT(TcChatBubbleAlpha, tc_chat_bubble_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡透明度 0-100 (Chat bubble transparency)")
-MACRO_CONFIG_INT(TcChatBubbleFontSize, tc_chat_bubble_font_size, 12, 8, 24, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡字体大小 (Chat bubble font size)")
-MACRO_CONFIG_INT(TcChatBubbleTyping, tc_chat_bubble_typing, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "输入时显示实时预览气泡 (Show typing preview bubble)")
-MACRO_CONFIG_INT(TcChatBubbleMaxWidth, tc_chat_bubble_max_width, 200, 100, 400, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡最大宽度（像素）(Maximum bubble width in pixels)")
-MACRO_CONFIG_INT(TcChatBubbleOffsetY, tc_chat_bubble_offset_y, 50, 20, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡垂直偏移量 (Bubble vertical offset from player)")
-MACRO_CONFIG_INT(TcChatBubbleRounding, tc_chat_bubble_rounding, 10, 0, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡圆角半径 (Chat bubble corner rounding)")
-MACRO_CONFIG_COL(TcChatBubbleBgColor, tc_chat_bubble_bg_color, 404232960, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "聊天气泡背景颜色 (Chat bubble background color)")
-MACRO_CONFIG_COL(TcChatBubbleTextColor, tc_chat_bubble_text_color, 4294967295, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡文字颜色 (Chat bubble text color)")
-MACRO_CONFIG_INT(TcChatBubbleAnimation, tc_chat_bubble_animation, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "消失动画: 0=淡出 1=缩小 2=上滑 (Disappear animation: 0=fade 1=shrink 2=slide up)")
-MACRO_CONFIG_INT(TcChatBubbleZoomScale, tc_chat_bubble_zoom_scale, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "气泡随摄像机缩放变化 (Scale bubble with camera zoom)")
+MACRO_CONFIG_INT(QmHideChatBubbles, qm_hide_chat_bubbles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "隐藏自己的聊天气泡 (Hide your own chat bubbles, only works when authed in remote console)")
+MACRO_CONFIG_INT(QmChatBubble, qm_chat_bubble, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在玩家头顶显示聊天气泡 (Show chat bubbles above players)")
+MACRO_CONFIG_INT(QmChatBubbleDuration, qm_chat_bubble_duration, 10, 1, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡显示时长（秒）(How long chat bubbles stay visible)")
+MACRO_CONFIG_INT(QmChatBubbleAlpha, qm_chat_bubble_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡透明度 0-100 (Chat bubble transparency)")
+MACRO_CONFIG_INT(QmChatBubbleFontSize, qm_chat_bubble_font_size, 12, 8, 24, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡字体大小 (Chat bubble font size)")
+MACRO_CONFIG_INT(QmChatBubbleTyping, qm_chat_bubble_typing, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "输入时显示实时预览气泡 (Show typing preview bubble)")
+MACRO_CONFIG_INT(QmChatBubbleMaxWidth, qm_chat_bubble_max_width, 200, 100, 400, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡最大宽度（像素）(Maximum bubble width in pixels)")
+MACRO_CONFIG_INT(QmChatBubbleOffsetY, qm_chat_bubble_offset_y, 50, 20, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡垂直偏移量 (Bubble vertical offset from player)")
+MACRO_CONFIG_INT(QmChatBubbleRounding, qm_chat_bubble_rounding, 10, 0, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡圆角半径 (Chat bubble corner rounding)")
+MACRO_CONFIG_COL(QmChatBubbleBgColor, qm_chat_bubble_bg_color, 404232960, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "聊天气泡背景颜色 (Chat bubble background color)")
+MACRO_CONFIG_COL(QmChatBubbleTextColor, qm_chat_bubble_text_color, 4294967295, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡文字颜色 (Chat bubble text color)")
+MACRO_CONFIG_INT(QmChatBubbleAnimation, qm_chat_bubble_animation, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "消失动画: 0=淡出 1=缩小 2=上滑 (Disappear animation: 0=fade 1=shrink 2=slide up)")
+MACRO_CONFIG_INT(QmChatBubbleZoomScale, qm_chat_bubble_zoom_scale, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "气泡随摄像机缩放变化 (Scale bubble with camera zoom)")
+
+// Legacy Chat Bubble Settings (tc_ prefix)
+MACRO_CONFIG_INT(TcHideChatBubblesLegacy, tc_hide_chat_bubbles, 0, 0, 1, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleLegacy, tc_chat_bubble, 1, 0, 1, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleDurationLegacy, tc_chat_bubble_duration, 10, 1, 30, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleAlphaLegacy, tc_chat_bubble_alpha, 80, 0, 100, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleFontSizeLegacy, tc_chat_bubble_font_size, 12, 8, 24, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleTypingLegacy, tc_chat_bubble_typing, 1, 0, 1, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleMaxWidthLegacy, tc_chat_bubble_max_width, 200, 100, 400, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleOffsetYLegacy, tc_chat_bubble_offset_y, 50, 20, 100, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleRoundingLegacy, tc_chat_bubble_rounding, 10, 0, 30, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_COL(TcChatBubbleBgColorLegacy, tc_chat_bubble_bg_color, 404232960, CFGFLAG_CLIENT | CFGFLAG_COLALPHA, "Legacy chat bubble setting")
+MACRO_CONFIG_COL(TcChatBubbleTextColorLegacy, tc_chat_bubble_text_color, 4294967295, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleAnimationLegacy, tc_chat_bubble_animation, 0, 0, 2, CFGFLAG_CLIENT, "Legacy chat bubble setting")
+MACRO_CONFIG_INT(TcChatBubbleZoomScaleLegacy, tc_chat_bubble_zoom_scale, 1, 0, 1, CFGFLAG_CLIENT, "Legacy chat bubble setting")
 
 MACRO_CONFIG_INT(TcModWeapon, tc_mod_weapon, 0, 0, 1, CFGFLAG_CLIENT, "Run a command (default kill) when you point and shoot at someone, only works when authed in remote console")
 MACRO_CONFIG_STR(TcModWeaponCommand, tc_mod_weapon_command, 256, "rcon kill_pl", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Command to run with tc_mod_weapon, id is appended to end of command")
@@ -352,10 +378,12 @@ MACRO_CONFIG_INT(TcUiOnlyModified, tc_ui_only_modified, 0, 0, 1, CFGFLAG_CLIENT 
 // Scoreboard
 MACRO_CONFIG_INT(ClScoreboardPoints, cl_scoreboard_points, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show Points column in scoreboard (fetches from DDNet API)")
 MACRO_CONFIG_INT(ClScoreboardSortMode, cl_scoreboard_sort_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Scoreboard sort mode (0=score, 1=points)")
+MACRO_CONFIG_INT(QmScoreboardAnimOptim, qm_scoreboard_anim_optim, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "计分板动画优化")
 
 // Rainbow Name / 彩虹名字
 MACRO_CONFIG_INT(QmRainbowName, qm_rainbow_name, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用自己名字的彩虹色渲染")
 MACRO_CONFIG_INT(QmNameplateCoordX, qm_nameplate_coord_x, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示坐标X")
+MACRO_CONFIG_INT(QmNameplateCoordXAlignHint, qm_nameplate_coord_x_align_hint, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌X对齐提示")
 MACRO_CONFIG_INT(QmNameplateCoordY, qm_nameplate_coord_y, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示坐标Y")
 MACRO_CONFIG_INT(QmNameplateCoordsOwn, qm_nameplate_coords_own, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示自己坐标")
 MACRO_CONFIG_INT(QmNameplateCoords, qm_nameplate_coords, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示他人坐标")
@@ -369,13 +397,6 @@ MACRO_CONFIG_INT(QmLaserSize, qm_laser_size, 100, 50, 200, CFGFLAG_CLIENT | CFGF
 MACRO_CONFIG_INT(QmLaserRoundCaps, qm_laser_round_caps, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "激光圆角端点 (0=方角, 1=圆角)")
 MACRO_CONFIG_INT(QmLaserAlpha, qm_laser_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "激光半透明度 (0=完全透明, 100=不透明)")
 
-// Speech-to-Text (STT) / 语音转文字
-MACRO_CONFIG_INT(QmSttEnabled, qm_stt_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用语音转文字功能 (Enable Speech-to-Text)")
-MACRO_CONFIG_STR(QmSttModelPath, qm_stt_model_path, 256, "data/models/ggml-tiny.bin", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Whisper模型路径 (Whisper model path)")
-MACRO_CONFIG_STR(QmSttLanguage, qm_stt_language, 8, "auto", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音识别语言 (Language: auto, zh, en, ja, etc.)")
-MACRO_CONFIG_INT(QmSttAutoSend, qm_stt_auto_send, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "识别后自动发送聊天消息 (Auto send chat after transcription)")
-MACRO_CONFIG_INT(QmSttTeamChat, qm_stt_team_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "发送到团队聊天 (Send to team chat)")
-
 // Collision Hitbox Visualization / 碰撞体积可视化
 MACRO_CONFIG_INT(QmShowCollisionHitbox, qm_show_collision_hitbox, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示碰撞体积边框 (Show collision hitbox outlines)")
 MACRO_CONFIG_COL(QmCollisionHitboxColorFreeze, qm_collision_hitbox_color_freeze, 16711935, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Freeze碰撞边框颜色 (Freeze collision box color)")
@@ -384,6 +405,13 @@ MACRO_CONFIG_INT(QmCollisionHitboxAlpha, qm_collision_hitbox_alpha, 80, 0, 100, 
 // Entity overlay colors
 MACRO_CONFIG_COL(QmEntityOverlayFreezeColor, qm_entity_overlay_freeze_color, 0xFFFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Overlay entity color for freeze tiles")
 MACRO_CONFIG_COL(QmEntityOverlayUnfreezeColor, qm_entity_overlay_unfreeze_color, 0xFFFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Overlay entity color for unfreeze tiles")
+MACRO_CONFIG_INT(QmEntityOverlayDeathAlpha, qm_entity_overlay_death_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Overlay entity alpha for death tiles (0-100)")
+MACRO_CONFIG_INT(QmEntityOverlayFreezeAlpha, qm_entity_overlay_freeze_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Overlay entity alpha for freeze tiles (0-100)")
+MACRO_CONFIG_INT(QmEntityOverlayUnfreezeAlpha, qm_entity_overlay_unfreeze_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Overlay entity alpha for unfreeze tiles (0-100)")
+MACRO_CONFIG_INT(QmEntityOverlayDeepFreezeAlpha, qm_entity_overlay_deep_freeze_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Overlay entity alpha for deep freeze tiles (0-100)")
+MACRO_CONFIG_INT(QmEntityOverlayDeepUnfreezeAlpha, qm_entity_overlay_deep_unfreeze_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Overlay entity alpha for deep unfreeze tiles (0-100)")
+MACRO_CONFIG_INT(QmEntityOverlayTeleAlpha, qm_entity_overlay_tele_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Overlay entity alpha for tele tiles (0-100)")
+MACRO_CONFIG_INT(QmEntityOverlaySwitchAlpha, qm_entity_overlay_switch_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Overlay entity alpha for switch tiles (0-100)")
 
 // Q1menG Client Recognition / Q1menG客户端识别
 MACRO_CONFIG_INT(QmClientMarkEnabled, qm_client_mark_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用客户端标记识别 (Enable client recognition mark)")
@@ -409,6 +437,7 @@ MACRO_CONFIG_INT(QmPieMenuColorSpectate, qm_pie_menu_color_spectate, 0x738C99BF,
 // Repeat Message / 复读功能
 MACRO_CONFIG_INT(QmRepeatEnabled, qm_repeat_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用复读功能 (Enable repeat last message)")
 MACRO_CONFIG_INT(QmRepeatKey, qm_repeat_key, 278, 0, 512, CFGFLAG_CLIENT | CFGFLAG_SAVE, "复读快捷键 (Repeat key, default: Home=278)")
+MACRO_CONFIG_INT(QmSayNoPop, qm_say_nopop, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "输入时不显示打字表情 (Hide typing emoticon while chatting)")
 MACRO_CONFIG_INT(QmHammerSwapSkin, qm_hammer_swap_skin, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "锤人换皮肤 (Copy target skin on hammer hit)")
 MACRO_CONFIG_INT(QmRandomEmoteOnHit, qm_random_emote_on_hit, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "被锤/榴弹击中时随机表情 (Random emote on hammer/grenade hit)")
 MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用武器弹道辅助线 (Enable weapon trajectory)")
@@ -423,10 +452,10 @@ MACRO_CONFIG_INT(QmAutoCloseChatOnUnfreeze, qm_auto_close_chat_on_unfreeze, 0, 0
 
 // Input Overlay
 MACRO_CONFIG_INT(QmInputOverlay, qm_input_overlay, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show input overlay")
-MACRO_CONFIG_INT(QmInputOverlayX, qm_input_overlay_x, 90, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay horizontal position (percentage)")
-MACRO_CONFIG_INT(QmInputOverlayY, qm_input_overlay_y, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay vertical position (percentage)")
-MACRO_CONFIG_INT(QmInputOverlayScale, qm_input_overlay_scale, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay scale (percentage)")
+MACRO_CONFIG_INT(QmInputOverlayScale, qm_input_overlay_scale, 20, 1, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay scale (percentage)")
 MACRO_CONFIG_INT(QmInputOverlayOpacity, qm_input_overlay_opacity, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay opacity (percentage)")
+MACRO_CONFIG_INT(QmInputOverlayPosX, qm_input_overlay_pos_x, 71, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay X position (percentage)")
+MACRO_CONFIG_INT(QmInputOverlayPosY, qm_input_overlay_pos_y, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay Y position (percentage)")
 
 // Streamer Mode
 MACRO_CONFIG_INT(QmStreamerHideNames, qm_streamer_hide_names, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide non-friend names/clans and show client IDs instead")
@@ -448,15 +477,3 @@ MACRO_CONFIG_STR(QmBlockWordsReplacementChar, qm_block_words_replacement_char, 8
 MACRO_CONFIG_STR(QmBlockWordsList, qm_block_words_list, 1024, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "屏蔽词列表（用,分隔）")
 MACRO_CONFIG_STR(QmSidebarCardOrder, qm_sidebar_card_order, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "栖梦侧栏模块排序")
 
-// Menu Background Particles / 菜单背景粒子效果
-MACRO_CONFIG_INT(ClMenuParticles, cl_menu_particles, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用菜单背景粒子效果 (Enable menu background particle effects)")
-MACRO_CONFIG_INT(ClMenuParticleEffect, cl_menu_particle_effect, 1, 0, 5, CFGFLAG_CLIENT | CFGFLAG_SAVE, "粒子效果类型 (0=None, 1=Rainbow, 2=Pulse, 3=Wave, 4=Spiral, 5=Meteor)")
-MACRO_CONFIG_INT(ClMenuParticleAlpha, cl_menu_particle_alpha, 60, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "粒子透明度 0-100 (Particle opacity 0-100)")
-
-// Menu Transition Effects / 菜单过渡效果
-MACRO_CONFIG_INT(ClMenuTransitions, cl_menu_transitions, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用菜单过渡动画 (Enable menu transition animations)")
-MACRO_CONFIG_INT(ClMenuTransitionSpeed, cl_menu_transition_speed, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "过渡动画速度百分比 (Transition animation speed percentage)")
-
-// HUD Smooth Animations / HUD平滑动画
-MACRO_CONFIG_INT(ClHudAnimations, cl_hud_animations, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用HUD平滑动画 (Enable HUD smooth animations)")
-MACRO_CONFIG_INT(ClHudAnimationSpeed, cl_hud_animation_speed, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "HUD动画速度百分比 (HUD animation speed percentage)")

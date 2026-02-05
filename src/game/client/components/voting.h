@@ -4,6 +4,7 @@
 #define GAME_CLIENT_COMPONENTS_VOTING_H
 
 #include <engine/console.h>
+#include <engine/map.h>
 #include <engine/shared/memheap.h>
 
 #include <game/client/component.h>
@@ -32,6 +33,17 @@ class CVoting : public CComponent
 	CVoteOptionClient *m_pRecycleFirst;
 	CVoteOptionClient *m_pRecycleLast;
 
+	char m_aPendingMap[MAX_MAP_LENGTH];
+	char m_aPendingTypeKey[32];
+	char m_aPendingTypeLabel[64];
+	bool m_PendingTypeVoteActive;
+	bool m_PendingMapVoteReady;
+
+	int FindMapVoteOptionIndex(const char *pMapName) const;
+	int FindTypeVoteOptionIndex(const char *pTypeKey, const char *pTypeLabel) const;
+	bool MatchTypeVoteDescription(const char *pDescription) const;
+	bool TryCallPendingMapVote();
+
 	void RemoveOption(const char *pDescription);
 	void ClearOptions();
 	void Callvote(const char *pType, const char *pValue, const char *pReason);
@@ -48,6 +60,24 @@ public:
 	void OnMessage(int MsgType, void *pRawMsg) override;
 
 	void Render();
+
+	enum class EUnfinishedMapVoteAction
+	{
+		MAP_VOTE_SENT,
+		TYPE_VOTE_SENT,
+		NO_OPTION,
+	};
+
+	enum class EVoteResult
+	{
+		PASS,
+		FAIL,
+		ABORT,
+	};
+
+	EUnfinishedMapVoteAction StartUnfinishedMapVoteChain(const char *pMapName, const char *pTypeKey, const char *pTypeLabel);
+	void ClearUnfinishedMapVoteChain();
+	void OnVoteResult(EVoteResult Result);
 
 	void CallvoteSpectate(int ClientId, const char *pReason, bool ForceVote = false);
 	void CallvoteKick(int ClientId, const char *pReason, bool ForceVote = false);

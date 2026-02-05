@@ -17,6 +17,8 @@
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
+#include <engine/shared/http.h>
+#include <engine/shared/json.h>
 #include <engine/shared/localization.h>
 
 #include <generated/protocol.h>
@@ -36,9 +38,165 @@
 #include <game/localization.h>
 
 #include <chrono>
+#include <string>
+#include <unordered_map>
 
 using namespace FontIcons;
 using namespace std::chrono_literals;
+
+namespace
+{
+struct SUnfinishedMapsQuery
+{
+	enum class EState
+	{
+		IDLE,
+		RUNNING,
+		READY,
+		FAILED,
+	};
+
+	std::shared_ptr<CHttpRequest> m_pRequest;
+	std::unordered_map<std::string, std::vector<std::string>> m_UnfinishedByType;
+	EState m_State = EState::IDLE;
+
+	void Reset()
+	{
+		if(m_pRequest)
+			m_pRequest->Abort();
+		m_pRequest.reset();
+		m_UnfinishedByType.clear();
+		m_State = EState::IDLE;
+	}
+
+	void Start(IHttp *pHttp, const char *pPlayerName)
+	{
+		if(!pHttp || !pPlayerName || pPlayerName[0] == '\0')
+		{
+			Reset();
+			m_State = EState::FAILED;
+			return;
+		}
+
+		Reset();
+		m_State = EState::RUNNING;
+
+		char aEncodedName[256];
+		EscapeUrl(aEncodedName, sizeof(aEncodedName), pPlayerName);
+
+		char aUrl[512];
+		str_format(aUrl, sizeof(aUrl), "https://ddnet.org/players/?json2=%s", aEncodedName);
+
+		auto pRequest = std::make_shared<CHttpRequest>(aUrl);
+		pRequest->Timeout(CTimeout{10000, 30000, 100, 10});
+		pRequest->LogProgress(HTTPLOG::FAILURE);
+		pRequest->FailOnErrorStatus(false);
+		m_pRequest = pRequest;
+		pHttp->Run(pRequest);
+	}
+
+	bool IsReady() const { return m_State == EState::READY; }
+	bool IsLoading() const { return m_State == EState::RUNNING; }
+	bool HasData() const { return m_State == EState::READY; }
+
+	const std::vector<std::string> *FindType(const char *pTypeKey) const
+	{
+		if(!pTypeKey || pTypeKey[0] == '\0')
+			return nullptr;
+
+		auto It = m_UnfinishedByType.find(pTypeKey);
+		if(It != m_UnfinishedByType.end())
+			return &It->second;
+
+		if(const char *pRest = str_startswith(pTypeKey, "DDmaX "))
+		{
+			char aKey[32];
+			str_format(aKey, sizeof(aKey), "DDmaX.%s", pRest);
+			It = m_UnfinishedByType.find(aKey);
+			if(It != m_UnfinishedByType.end())
+				return &It->second;
+		}
+		if(const char *pRest = str_startswith(pTypeKey, "DDmaX."))
+		{
+			char aKey[32];
+			str_copy(aKey, "DDmaX ");
+			str_append(aKey, pRest, sizeof(aKey));
+			It = m_UnfinishedByType.find(aKey);
+			if(It != m_UnfinishedByType.end())
+				return &It->second;
+		}
+		return nullptr;
+	}
+
+	void Update()
+	{
+		if(!m_pRequest || !m_pRequest->Done())
+			return;
+
+		const EHttpState State = m_pRequest->State();
+		if(State != EHttpState::DONE || m_pRequest->StatusCode() != 200)
+		{
+			Reset();
+			m_State = EState::FAILED;
+			return;
+		}
+
+		json_value *pRoot = m_pRequest->ResultJson();
+		if(!pRoot || pRoot->type != json_object)
+		{
+			if(pRoot)
+				json_value_free(pRoot);
+			Reset();
+			m_State = EState::FAILED;
+			return;
+		}
+
+		const json_value *pTypes = json_object_get(pRoot, "types");
+		if(pTypes == &json_value_none || pTypes->type != json_object)
+		{
+			json_value_free(pRoot);
+			Reset();
+			m_State = EState::FAILED;
+			return;
+		}
+
+		for(unsigned i = 0; i < pTypes->u.object.length; ++i)
+		{
+			const char *pTypeName = pTypes->u.object.values[i].name;
+			const json_value *pTypeObj = pTypes->u.object.values[i].value;
+			if(!pTypeName || !pTypeObj || pTypeObj->type != json_object)
+				continue;
+
+			const json_value *pMaps = json_object_get(pTypeObj, "maps");
+			if(pMaps == &json_value_none || pMaps->type != json_object)
+				continue;
+
+			std::vector<std::string> Unfinished;
+			Unfinished.reserve(pMaps->u.object.length);
+			for(unsigned j = 0; j < pMaps->u.object.length; ++j)
+			{
+				const char *pMapName = pMaps->u.object.values[j].name;
+				const json_value *pMapObj = pMaps->u.object.values[j].value;
+				if(!pMapName || !pMapObj || pMapObj->type != json_object)
+					continue;
+
+				const json_value *pFinishes = json_object_get(pMapObj, "finishes");
+				int Finishes = 0;
+				if(pFinishes != &json_value_none && pFinishes->type == json_integer)
+					Finishes = (int)pFinishes->u.integer;
+				if(Finishes == 0)
+					Unfinished.emplace_back(pMapName);
+			}
+
+			m_UnfinishedByType.emplace(pTypeName, std::move(Unfinished));
+		}
+
+		json_value_free(pRoot);
+		m_pRequest.reset();
+		m_State = EState::READY;
+	}
+};
+} // namespace
 
 void CMenus::RenderGame(CUIRect MainView)
 {
@@ -1207,6 +1365,231 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Bottom.VMargin(20.0f, &Button);
 			Ui()->DoEditBox(&s_VoteCommandInput, &Button, 14.0f);
 		}
+	}
+}
+
+void CMenus::RenderUnfinishedMaps(CUIRect MainView)
+{
+	MainView.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
+	MainView.Margin(10.0f, &MainView);
+
+	CUIRect Row, Label, Button;
+	MainView.HSplitTop(24.0f, &Row, &MainView);
+	Ui()->DoLabel(&Row, Localize("未完成图"), 18.0f, TEXTALIGN_ML);
+
+	MainView.HSplitTop(6.0f, nullptr, &MainView);
+	MainView.HSplitTop(18.0f, &Row, &MainView);
+	Ui()->DoLabel(&Row, Localize("计算玩家某个模式下的未完成图"), 14.0f, TEXTALIGN_ML);
+	MainView.HSplitTop(18.0f, &Row, &MainView);
+	Ui()->DoLabel(&Row, Localize("并随机抽取一张"), 14.0f, TEXTALIGN_ML);
+
+	MainView.HSplitTop(10.0f, nullptr, &MainView);
+	MainView.HSplitTop(24.0f, &Row, &MainView);
+	Row.VSplitLeft(90.0f, &Label, &Row);
+	Ui()->DoLabel(&Label, Localize("玩家名:"), 14.0f, TEXTALIGN_ML);
+
+	static bool s_PlayerNameInit = false;
+	if(!s_PlayerNameInit)
+	{
+		if(g_Config.m_QmUnfinishedMapPlayer[0] == '\0')
+			str_copy(g_Config.m_QmUnfinishedMapPlayer, Client()->PlayerName(), sizeof(g_Config.m_QmUnfinishedMapPlayer));
+		s_PlayerNameInit = true;
+	}
+
+	static CLineInput s_PlayerNameInput(g_Config.m_QmUnfinishedMapPlayer, sizeof(g_Config.m_QmUnfinishedMapPlayer));
+	s_PlayerNameInput.SetEmptyText(Client()->PlayerName());
+	static bool s_NameDirty = false;
+	if(Ui()->DoEditBox(&s_PlayerNameInput, &Row, 12.0f))
+		s_NameDirty = true;
+
+	MainView.HSplitTop(6.0f, nullptr, &MainView);
+	MainView.HSplitTop(24.0f, &Row, &MainView);
+	Row.VSplitLeft(90.0f, &Label, &Row);
+	Ui()->DoLabel(&Label, Localize("地图类型:"), 14.0f, TEXTALIGN_ML);
+
+	const char *apTypeLabels[] = {
+		Localize("简单"),
+		Localize("中阶"),
+		Localize("高阶"),
+		Localize("古典 Easy"),
+		Localize("古典 Next"),
+		Localize("古典 Pro"),
+		Localize("古典 Nut"),
+		Localize("传统"),
+		Localize("单人"),
+		Localize("竞速"),
+		Localize("娱乐"),
+		Localize("事件"),
+		Localize("疯狂"),
+		Localize("分身"),
+	};
+	const char *apTypeKeys[] = {
+		"Novice",
+		"Moderate",
+		"Brutal",
+		"DDmaX Easy",
+		"DDmaX Next",
+		"DDmaX Pro",
+		"DDmaX Nut",
+		"Oldschool",
+		"Solo",
+		"Race",
+		"Fun",
+		"Event",
+		"Insane",
+		"Dummy",
+	};
+	static_assert(std::size(apTypeLabels) == std::size(apTypeKeys));
+	const int NumTypes = (int)std::size(apTypeLabels);
+	if(g_Config.m_QmUnfinishedMapType < 0 || g_Config.m_QmUnfinishedMapType >= NumTypes)
+		g_Config.m_QmUnfinishedMapType = 0;
+
+	static CUi::SDropDownState s_TypeDropDownState;
+	static CScrollRegion s_TypeDropDownScrollRegion;
+	s_TypeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_TypeDropDownScrollRegion;
+const int NewType = Ui()->DoDropDown(&Row, g_Config.m_QmUnfinishedMapType, apTypeLabels, NumTypes, s_TypeDropDownState);
+if(NewType != g_Config.m_QmUnfinishedMapType)
+	{
+		g_Config.m_QmUnfinishedMapType = NewType;
+		GameClient()->m_Voting.ClearUnfinishedMapVoteChain();
+	}
+	const char *pSelectedTypeKey = apTypeKeys[g_Config.m_QmUnfinishedMapType];
+	const char *pSelectedTypeLabel = apTypeLabels[g_Config.m_QmUnfinishedMapType];
+
+	MainView.HSplitTop(6.0f, nullptr, &MainView);
+	MainView.HSplitTop(20.0f, &Row, &MainView);
+if(DoButton_CheckBox(&g_Config.m_QmUnfinishedMapAutoVote, Localize("自动发起投票"), g_Config.m_QmUnfinishedMapAutoVote, &Row))
+	{
+		g_Config.m_QmUnfinishedMapAutoVote ^= 1;
+		if(!g_Config.m_QmUnfinishedMapAutoVote)
+			GameClient()->m_Voting.ClearUnfinishedMapVoteChain();
+	}
+
+	static SUnfinishedMapsQuery s_UnfinishedQuery;
+	s_UnfinishedQuery.Update();
+
+	std::vector<const char *> vUnfinishedMaps;
+	if(s_UnfinishedQuery.HasData())
+	{
+		const std::vector<std::string> *pUnfinished = s_UnfinishedQuery.FindType(pSelectedTypeKey);
+		if(pUnfinished)
+		{
+			vUnfinishedMaps.reserve(pUnfinished->size());
+			for(const std::string &MapName : *pUnfinished)
+				vUnfinishedMaps.push_back(MapName.c_str());
+		}
+	}
+
+	MainView.HSplitTop(18.0f, &Row, &MainView);
+	char aCountBuf[128];
+	if(s_UnfinishedQuery.IsLoading())
+	{
+		str_copy(aCountBuf, Localize("未完成图数据刷新中"));
+	}
+	else if(!s_UnfinishedQuery.HasData())
+	{
+		str_copy(aCountBuf, Localize("未获取未完成图数据"));
+	}
+	else
+	{
+		str_format(aCountBuf, sizeof(aCountBuf), Localize("未完成图数量: %d"), (int)vUnfinishedMaps.size());
+	}
+	Ui()->DoLabel(&Row, aCountBuf, 14.0f, TEXTALIGN_ML);
+
+	MainView.HSplitTop(10.0f, nullptr, &MainView);
+	MainView.HSplitTop(24.0f, &Row, &MainView);
+	Row.VSplitLeft(120.0f, &Button, &Row);
+	static CButtonContainer s_PickButton;
+	static char s_aPickedMap[MAX_MAP_LENGTH] = "";
+	static char s_aStatusText[128] = "";
+	static int s_PickedCopyId = 0;
+	static float s_PickedCopyTime = 0.0f;
+	static CButtonContainer s_PickedFavButton;
+	if(DoButton_Menu(&s_PickButton, Localize("随机抽取"), 0, &Button))
+	{
+		s_aStatusText[0] = '\0';
+		if(!g_Config.m_BrIndicateFinished)
+		{
+			str_copy(s_aStatusText, Localize("请先启用完成度显示"));
+		}
+		else if(s_NameDirty || !s_UnfinishedQuery.HasData())
+		{
+			if(!s_UnfinishedQuery.IsLoading())
+				s_UnfinishedQuery.Start(Http(), g_Config.m_QmUnfinishedMapPlayer);
+			s_NameDirty = false;
+			str_copy(s_aStatusText, Localize("未完成图数据刷新中，请稍后再试"));
+		}
+		else if(vUnfinishedMaps.empty())
+		{
+			str_copy(s_aStatusText, Localize("没有可抽取的未完成图"));
+			s_aPickedMap[0] = '\0';
+		}
+		else
+		{
+			int PickIndex = (int)(random_float() * vUnfinishedMaps.size());
+			if(PickIndex >= (int)vUnfinishedMaps.size())
+				PickIndex = (int)vUnfinishedMaps.size() - 1;
+			str_copy(s_aPickedMap, vUnfinishedMaps[PickIndex]);
+			s_PickedCopyTime = 0.0f;
+
+			if(g_Config.m_QmUnfinishedMapAutoVote)
+			{
+				const auto Action = GameClient()->m_Voting.StartUnfinishedMapVoteChain(s_aPickedMap, pSelectedTypeKey, pSelectedTypeLabel);
+				if(Action == CVoting::EUnfinishedMapVoteAction::MAP_VOTE_SENT)
+					str_copy(s_aStatusText, Localize("已自动发起投票"));
+				else if(Action == CVoting::EUnfinishedMapVoteAction::TYPE_VOTE_SENT)
+					str_copy(s_aStatusText, Localize("已自动发起切换类型投票"));
+				else
+					str_copy(s_aStatusText, Localize("未找到对应投票选项"));
+			}
+		}
+	}
+	if(s_aPickedMap[0] != '\0')
+	{
+		MainView.HSplitTop(20.0f, &Row, &MainView);
+		CUIRect RowLabel, RowFav;
+		Row.VSplitRight(120.0f, &RowLabel, &RowFav);
+
+		if(Ui()->MouseInside(&RowLabel))
+		{
+			Ui()->SetHotItem(&s_PickedCopyId);
+			if(Ui()->MouseButtonClicked(0))
+			{
+				Input()->SetClipboardText(s_aPickedMap);
+				s_PickedCopyTime = Client()->LocalTime();
+			}
+		}
+
+		if(s_PickedCopyTime > 0.0f && Client()->LocalTime() - s_PickedCopyTime < 1.5f)
+		{
+			TextRender()->TextColor(0.0f, 1.0f, 0.0f, 1.0f);
+			Ui()->DoLabel(&RowLabel, Localize("已复制"), 14.0f, TEXTALIGN_ML);
+		}
+		else
+		{
+			char aResultBuf[128];
+			str_format(aResultBuf, sizeof(aResultBuf), Localize("抽取结果: %s"), s_aPickedMap);
+			Ui()->DoLabel(&RowLabel, aResultBuf, 14.0f, TEXTALIGN_ML);
+		}
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+		if(Ui()->HotItem() == &s_PickedCopyId)
+			GameClient()->m_Tooltips.DoToolTip(&s_PickedCopyId, &RowLabel, Localize("点击复制地图名"));
+
+		const bool IsFavorite = GameClient()->m_TClient.IsFavoriteMap(s_aPickedMap);
+		if(DoButton_CheckBox(&s_PickedFavButton, TCLocalize("收藏地图"), IsFavorite, &RowFav))
+		{
+			if(IsFavorite)
+				GameClient()->m_TClient.RemoveFavoriteMap(s_aPickedMap);
+			else
+				GameClient()->m_TClient.AddFavoriteMap(s_aPickedMap);
+		}
+	}
+
+	if(s_aStatusText[0] != '\0')
+	{
+		MainView.HSplitTop(18.0f, &Row, &MainView);
+		Ui()->DoLabel(&Row, s_aStatusText, 14.0f, TEXTALIGN_ML);
 	}
 }
 

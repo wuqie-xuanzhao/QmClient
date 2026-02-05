@@ -3,6 +3,7 @@
 #include <base/log.h>
 
 #include <engine/demo.h>
+#include <engine/shared/config.h>
 #include <engine/sound.h>
 
 #include <game/client/components/camera.h>
@@ -19,6 +20,8 @@ CMapSounds::CMapSounds()
 
 void CMapSounds::Play(int Channel, int SoundId)
 {
+	if(g_Config.m_ClSndMuteMapSound)
+		return;
 	if(SoundId < 0 || SoundId >= m_Count)
 		return;
 
@@ -27,6 +30,8 @@ void CMapSounds::Play(int Channel, int SoundId)
 
 void CMapSounds::PlayAt(int Channel, int SoundId, vec2 Position)
 {
+	if(g_Config.m_ClSndMuteMapSound)
+		return;
 	if(SoundId < 0 || SoundId >= m_Count)
 		return;
 
@@ -137,6 +142,18 @@ void CMapSounds::OnRender()
 		return;
 
 	bool DemoPlayerPaused = Client()->State() == IClient::STATE_DEMOPLAYBACK && DemoPlayer()->BaseInfo()->m_Paused;
+	if(g_Config.m_ClSndMuteMapSound)
+	{
+		for(auto &Source : m_vSourceQueue)
+		{
+			if(Source.m_Voice.IsValid())
+			{
+				Sound()->StopVoice(Source.m_Voice);
+				Source.m_Voice = ISound::CVoiceHandle();
+			}
+		}
+		return;
+	}
 
 	// enqueue sounds
 	for(auto &Source : m_vSourceQueue)

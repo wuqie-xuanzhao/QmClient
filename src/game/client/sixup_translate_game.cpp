@@ -462,14 +462,17 @@ void *CGameClient::TranslateGameMsg(int *pMsgId, CUnpacker *pUnpacker, int Conn)
 			case protocol7::VOTE_END_ABORT:
 				m_Voting.OnReset();
 				m_Chat.AddLine(-1, 0, "Vote aborted");
+				m_Voting.OnVoteResult(CVoting::EVoteResult::ABORT);
 				break;
 			case protocol7::VOTE_END_PASS:
 				m_Voting.OnReset();
 				m_Chat.AddLine(-1, 0, pMsg7->m_ClientId == -1 ? "Admin forced vote yes" : "Vote passed");
+				m_Voting.OnVoteResult(CVoting::EVoteResult::PASS);
 				break;
 			case protocol7::VOTE_END_FAIL:
 				m_Voting.OnReset();
 				m_Chat.AddLine(-1, 0, pMsg7->m_ClientId == -1 ? "Admin forced vote no" : "Vote failed");
+				m_Voting.OnVoteResult(CVoting::EVoteResult::FAIL);
 			}
 		}
 

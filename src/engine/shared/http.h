@@ -74,6 +74,7 @@ class CHttpRequest : public IHttpRequest
 		case REQUEST::POST_JSON:
 			return "POST";
 		}
+		return nullptr;
 	}
 
 	char m_aUrl[256] = {0};

@@ -5207,7 +5207,10 @@ void CClient::RequestDDNetInfo()
 	if(g_Config.m_BrIndicateFinished)
 	{
 		char aEscaped[128];
-		EscapeUrl(aEscaped, sizeof(aEscaped), PlayerName());
+		const char *pName = PlayerName();
+		if(g_Config.m_QmUnfinishedMapPlayer[0] != '\0')
+			pName = g_Config.m_QmUnfinishedMapPlayer;
+		EscapeUrl(aEscaped, sizeof(aEscaped), pName);
 		str_append(aUrl, "?name=");
 		str_append(aUrl, aEscaped);
 	}

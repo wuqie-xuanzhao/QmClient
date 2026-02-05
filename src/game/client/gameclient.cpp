@@ -181,7 +181,6 @@ void CGameClient::OnConsoleInit()
 					      &m_KeyBinder,
 					      &m_GameConsole,
 					      &m_MenuBackground,
-					      &m_MenuParticles,
 					      &m_UiEffects});
 
 	// build the input stack
@@ -313,6 +312,32 @@ static void GenerateTimeoutCode(char *pTimeoutCode)
 	}
 }
 
+static void MigrateChatBubbleConfig()
+{
+	auto MigrateInt = [](int &NewValue, int LegacyValue, int NewDefault, int LegacyDefault) {
+		if(NewValue == NewDefault && LegacyValue != LegacyDefault)
+			NewValue = LegacyValue;
+	};
+	auto MigrateCol = [](unsigned &NewValue, unsigned LegacyValue, unsigned NewDefault, unsigned LegacyDefault) {
+		if(NewValue == NewDefault && LegacyValue != LegacyDefault)
+			NewValue = LegacyValue;
+	};
+
+	MigrateInt(g_Config.m_QmHideChatBubbles, g_Config.m_TcHideChatBubblesLegacy, CConfig::ms_QmHideChatBubbles, CConfig::ms_TcHideChatBubblesLegacy);
+	MigrateInt(g_Config.m_QmChatBubble, g_Config.m_TcChatBubbleLegacy, CConfig::ms_QmChatBubble, CConfig::ms_TcChatBubbleLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleDuration, g_Config.m_TcChatBubbleDurationLegacy, CConfig::ms_QmChatBubbleDuration, CConfig::ms_TcChatBubbleDurationLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleAlpha, g_Config.m_TcChatBubbleAlphaLegacy, CConfig::ms_QmChatBubbleAlpha, CConfig::ms_TcChatBubbleAlphaLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleFontSize, g_Config.m_TcChatBubbleFontSizeLegacy, CConfig::ms_QmChatBubbleFontSize, CConfig::ms_TcChatBubbleFontSizeLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleTyping, g_Config.m_TcChatBubbleTypingLegacy, CConfig::ms_QmChatBubbleTyping, CConfig::ms_TcChatBubbleTypingLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleMaxWidth, g_Config.m_TcChatBubbleMaxWidthLegacy, CConfig::ms_QmChatBubbleMaxWidth, CConfig::ms_TcChatBubbleMaxWidthLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleOffsetY, g_Config.m_TcChatBubbleOffsetYLegacy, CConfig::ms_QmChatBubbleOffsetY, CConfig::ms_TcChatBubbleOffsetYLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleRounding, g_Config.m_TcChatBubbleRoundingLegacy, CConfig::ms_QmChatBubbleRounding, CConfig::ms_TcChatBubbleRoundingLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleAnimation, g_Config.m_TcChatBubbleAnimationLegacy, CConfig::ms_QmChatBubbleAnimation, CConfig::ms_TcChatBubbleAnimationLegacy);
+	MigrateInt(g_Config.m_QmChatBubbleZoomScale, g_Config.m_TcChatBubbleZoomScaleLegacy, CConfig::ms_QmChatBubbleZoomScale, CConfig::ms_TcChatBubbleZoomScaleLegacy);
+	MigrateCol(g_Config.m_QmChatBubbleBgColor, g_Config.m_TcChatBubbleBgColorLegacy, CConfig::ms_QmChatBubbleBgColor, CConfig::ms_TcChatBubbleBgColorLegacy);
+	MigrateCol(g_Config.m_QmChatBubbleTextColor, g_Config.m_TcChatBubbleTextColorLegacy, CConfig::ms_QmChatBubbleTextColor, CConfig::ms_TcChatBubbleTextColorLegacy);
+}
+
 void CGameClient::InitializeLanguage()
 {
 	// set the language
@@ -335,6 +360,7 @@ void CGameClient::ForceUpdateConsoleRemoteCompletionSuggestions()
 void CGameClient::OnInit()
 {
 	const int64_t OnInitStart = time_get();
+	MigrateChatBubbleConfig();
 
 	Client()->SetLoadingCallback([this](IClient::ELoadingCallbackDetail Detail) {
 		const char *pTitle;
@@ -653,8 +679,11 @@ void CGameClient::OnReset()
 	m_PredictedTick = -1;
 	std::fill(std::begin(m_aLastNewPredictedTick), std::end(m_aLastNewPredictedTick), -1);
 	std::fill(std::begin(m_aLastHammerSkinSwapAttackTick), std::end(m_aLastHammerSkinSwapAttackTick), -1);
-	std::fill(std::begin(m_aLastRandomEmoteAttackTick), std::end(m_aLastRandomEmoteAttackTick), -1);
-	m_LastRandomEmoteDamageTick = -1;
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		std::fill(std::begin(m_aaLastRandomEmoteAttackTick[Dummy]), std::end(m_aaLastRandomEmoteAttackTick[Dummy]), -1);
+		m_aLastRandomEmoteDamageTick[Dummy] = -1;
+	}
 
 	m_LastRoundStartTick = -1;
 	m_LastRaceTick = -1;
@@ -2623,12 +2652,19 @@ void CGameClient::HandleHammerSkinSwap(CCharacter *pChar, int DummyIndex)
 	}
 }
 
-void CGameClient::HandleRandomEmoteOnHit(CCharacter *pLocalChar)
+void CGameClient::HandleRandomEmoteOnHit(CCharacter *pLocalChar, int DummyIndex)
 {
 	if(!g_Config.m_QmRandomEmoteOnHit || !pLocalChar)
 		return;
+	if(DummyIndex != 0 && !Client()->DummyConnected())
+		return;
 
 	const int LocalId = pLocalChar->GetCid();
+	int Conn = DummyIndex == 0 ? IClient::CONN_MAIN : IClient::CONN_DUMMY;
+	if(LocalId == m_Snap.m_LocalClientId)
+		Conn = g_Config.m_ClDummy;
+	else if(LocalId == m_PredictedDummyId)
+		Conn = !g_Config.m_ClDummy;
 	bool HammerTriggered = false;
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
@@ -2641,11 +2677,9 @@ void CGameClient::HandleRandomEmoteOnHit(CCharacter *pLocalChar)
 			continue;
 
 		const int AttackTick = pAttacker->GetAttackTick();
-		if(AttackTick == m_aLastRandomEmoteAttackTick[i])
-			continue;
-		m_aLastRandomEmoteAttackTick[i] = AttackTick;
-
 		if(AttackTick <= 0)
+			continue;
+		if(AttackTick == m_aaLastRandomEmoteAttackTick[DummyIndex][i])
 			continue;
 		if(pAttacker->GetActiveWeapon() != WEAPON_HAMMER || pAttacker->HammerHitDisabled())
 			continue;
@@ -2662,15 +2696,16 @@ void CGameClient::HandleRandomEmoteOnHit(CCharacter *pLocalChar)
 		if(length_squared(pLocalChar->GetPos() - ProjStartPos) <= MaxDist * MaxDist)
 		{
 			HammerTriggered = true;
+			m_aaLastRandomEmoteAttackTick[DummyIndex][i] = AttackTick;
 			break;
 		}
 	}
 
 	bool GrenadeTriggered = false;
 	const int DamageTick = pLocalChar->GetLastDamageTick();
-	if(DamageTick > 0 && DamageTick != m_LastRandomEmoteDamageTick)
+	if(DamageTick > 0 && DamageTick != m_aLastRandomEmoteDamageTick[DummyIndex])
 	{
-		m_LastRandomEmoteDamageTick = DamageTick;
+		m_aLastRandomEmoteDamageTick[DummyIndex] = DamageTick;
 		const int From = pLocalChar->GetLastDamageFrom();
 		if(pLocalChar->GetLastDamageWeapon() == WEAPON_GRENADE && From >= 0 && From != LocalId)
 			GrenadeTriggered = true;
@@ -2679,7 +2714,9 @@ void CGameClient::HandleRandomEmoteOnHit(CCharacter *pLocalChar)
 	if(HammerTriggered || GrenadeTriggered)
 	{
 		const int Emote = rand() % NUM_EMOTICONS;
-		m_Emoticon.Emote(Emote);
+		CNetMsg_Cl_Emoticon Msg;
+		Msg.m_Emoticon = Emote;
+		Client()->SendPackMsg(Conn, &Msg, MSGFLAG_VITAL);
 	}
 }
 
@@ -2864,7 +2901,9 @@ void CGameClient::OnPredict()
 		HandleHammerSkinSwap(pLocalChar, 0);
 		if(pDummyChar)
 			HandleHammerSkinSwap(pDummyChar, 1);
-		HandleRandomEmoteOnHit(pLocalChar);
+		HandleRandomEmoteOnHit(pLocalChar, 0);
+		if(pDummyChar)
+			HandleRandomEmoteOnHit(pDummyChar, 1);
 
 		// fetch the current characters
 		if(Tick == FinalTickSelf)

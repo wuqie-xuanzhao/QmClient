@@ -521,7 +521,7 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 			Console()->ExecuteLine(aBuf);
 			
 			char aMsg[128];
-			str_format(aMsg, sizeof(aMsg), "Removed %s from friends", pPlayerName);
+			str_format(aMsg, sizeof(aMsg), "已将 %s 移出好友", pPlayerName);
 			GameClient()->m_Chat.AddLine(-2, 0, aMsg);
 		}
 		else
@@ -530,7 +530,7 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 			Console()->ExecuteLine(aBuf);
 			
 			char aMsg[128];
-			str_format(aMsg, sizeof(aMsg), "Added %s to friends", pPlayerName);
+			str_format(aMsg, sizeof(aMsg), "已将 %s 添加为好友", pPlayerName);
 			GameClient()->m_Chat.AddLine(-2, 0, aMsg);
 		}
 		break;
@@ -601,7 +601,7 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 		
 		// Show notification
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "已复制 %s 的皮肤%s", pPlayerName, IsDummy ? " (Dummy)" : "");
+		str_format(aBuf, sizeof(aBuf), "已复制 %s 的皮肤%s", pPlayerName, IsDummy ? " (分身)" : "");
 		GameClient()->m_Chat.AddLine(-2, 0, aBuf);
 		break;
 	}
@@ -614,7 +614,7 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 		
 		if(LocalTeam != TargetTeam)
 		{
-			GameClient()->m_Chat.AddLine(-2, 0, "Cannot swap: Player is not in your team");
+			GameClient()->m_Chat.AddLine(-2, 0, "无法交换：对方不在你的队伍");
 			break;
 		}
 		

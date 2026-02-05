@@ -26,6 +26,7 @@ class CScoreboard : public CComponent
 	void RenderGoals(CUIRect Goals);
 	void RenderSpectators(CUIRect Spectators);
 	void RenderMediaControls(CUIRect Controls);
+	void RenderSoundMuteBar(CUIRect ScoreboardRect);
 	void RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart, int CountEnd, CScoreboardRenderState &State);
 	void RenderRecordingNotification(float x);
 
@@ -36,6 +37,9 @@ class CScoreboard : public CComponent
 
 	bool m_Active;
 	float m_ServerRecord;
+	float m_Visibility;
+	float m_OpenTime;
+	float m_AnimContentAlpha;
 
 	IGraphics::CTextureHandle m_DeadTeeTexture;
 

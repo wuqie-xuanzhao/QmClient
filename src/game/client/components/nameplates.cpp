@@ -44,6 +44,8 @@ public:
 	bool m_ShowCoordX;
 	bool m_ShowCoordY;
 	bool m_ShowCoords;
+	bool m_CoordXAlignHint;
+	bool m_CoordXAligned;
 	vec2 m_Coords;
 	float m_FontSizeCoords;
 	bool m_ShowDirection;
@@ -684,7 +686,11 @@ private:
 	float m_FontSize = -INFINITY;
 	bool m_ShowX = false;
 	bool m_ShowY = false;
+	bool m_CoordXAligned = false;
+	bool m_AlignHintEnabled = false;
 	char m_aText[64] = "";
+	char m_aTextX[32] = "";
+	STextContainerIndex m_TextContainerIndexX;
 
 	static float RoundCoord(float Value)
 	{
@@ -692,6 +698,12 @@ private:
 	}
 
 protected:
+	void Update(CGameClient &This, const CNamePlateData &Data) override
+	{
+		m_CoordXAligned = Data.m_CoordXAligned;
+		m_AlignHintEnabled = Data.m_CoordXAlignHint;
+		CNamePlatePartText::Update(This, Data);
+	}
 	bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) override
 	{
 		m_Visible = Data.m_ShowCoords && (Data.m_ShowCoordX || Data.m_ShowCoordY);
@@ -712,6 +724,7 @@ protected:
 		m_ShowY = Data.m_ShowCoordY;
 		m_Coords = vec2(RoundCoord(Data.m_Coords.x), RoundCoord(Data.m_Coords.y));
 
+		This.TextRender()->DeleteTextContainer(m_TextContainerIndexX);
 		if(m_ShowX && m_ShowY)
 			str_format(m_aText, sizeof(m_aText), "X:%.2f Y:%.2f", m_Coords.x, m_Coords.y);
 		else if(m_ShowX)
@@ -722,6 +735,31 @@ protected:
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
+
+		if(m_ShowX)
+		{
+			str_format(m_aTextX, sizeof(m_aTextX), "X:%.2f", m_Coords.x);
+			CTextCursor CursorX;
+			CursorX.m_FontSize = m_FontSize;
+			This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndexX, &CursorX, m_aTextX);
+		}
+	}
+	void Reset(CGameClient &This) override
+	{
+		CNamePlatePartText::Reset(This);
+		This.TextRender()->DeleteTextContainer(m_TextContainerIndexX);
+	}
+	void Render(CGameClient &This, vec2 Pos) const override
+	{
+		CNamePlatePartText::Render(This, Pos);
+		if(!m_AlignHintEnabled || !m_CoordXAligned || !m_ShowX || !m_TextContainerIndexX.Valid())
+			return;
+
+		const ColorRGBA HintColor = ColorRGBA(0.2f, 1.0f, 0.2f, m_Color.a);
+		const ColorRGBA OutlineColor = s_OutlineColor.WithMultipliedAlpha(m_Color.a);
+		const float LeftX = Pos.x - Size().x / 2.0f;
+		const float LeftY = Pos.y - Size().y / 2.0f;
+		This.TextRender()->RenderTextContainer(m_TextContainerIndexX, HintColor, OutlineColor, LeftX, LeftY);
 	}
 
 public:
@@ -992,7 +1030,41 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	Data.m_ShowCoordY = g_Config.m_QmNameplateCoordY != 0;
 	Data.m_ShowCoords = pPlayerInfo->m_Local ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
 	Data.m_Coords = Position / 32.0f;
-	Data.m_FontSizeCoords = Data.m_FontSizeClan;
+	Data.m_FontSizeCoords = 18.0f + 20.0f * g_Config.m_ClNamePlatesCoordsSize / 100.0f;
+	Data.m_CoordXAlignHint = g_Config.m_QmNameplateCoordXAlignHint != 0;
+	Data.m_CoordXAligned = false;
+	if(Data.m_CoordXAlignHint && Data.m_ShowCoordX)
+	{
+		const float Range = 64.0f;
+		const float RangeSq = Range * Range;
+		const float Tolerance = 0.03f;
+		const float SelfX = Data.m_Coords.x;
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			if(i == ClientId)
+				continue;
+			const CNetObj_PlayerInfo *pOtherInfo = GameClient()->m_Snap.m_apPlayerInfos[i];
+			if(!pOtherInfo)
+				continue;
+			if(!GameClient()->m_Snap.m_aCharacters[i].m_Active)
+				continue;
+			if(GameClient()->m_aClients[i].m_IsVolleyBall)
+				continue;
+
+			const vec2 OtherPos = GameClient()->m_aClients[i].m_RenderPos;
+			const float Dx = OtherPos.x - Position.x;
+			const float Dy = OtherPos.y - Position.y;
+			if(Dx * Dx + Dy * Dy > RangeSq)
+				continue;
+
+			const float OtherX = OtherPos.x / 32.0f;
+			if(std::abs(SelfX - OtherX) <= Tolerance)
+			{
+				Data.m_CoordXAligned = true;
+				break;
+			}
+		}
+	}
 
 	Data.m_FontSizeHookStrongWeak = 18.0f + 20.0f * g_Config.m_ClNamePlatesStrongSize / 100.0f;
 	Data.m_FontSizeDirection = 18.0f + 20.0f * g_Config.m_ClDirectionSize / 100.0f;
@@ -1112,6 +1184,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 {
 	const float FontSize = 18.0f + 20.0f * g_Config.m_ClNamePlatesSize / 100.0f;
 	const float FontSizeClan = 18.0f + 20.0f * g_Config.m_ClNamePlatesClanSize / 100.0f;
+	const float FontSizeCoords = 18.0f + 20.0f * g_Config.m_ClNamePlatesCoordsSize / 100.0f;
 
 	const float FontSizeDirection = 18.0f + 20.0f * g_Config.m_ClDirectionSize / 100.0f;
 	const float FontSizeHookStrongWeak = 18.0f + 20.0f * g_Config.m_ClNamePlatesStrongSize / 100.0f;
@@ -1147,7 +1220,9 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	Data.m_ShowCoordY = g_Config.m_QmNameplateCoordY != 0;
 	Data.m_ShowCoords = g_Config.m_QmNameplateCoords || g_Config.m_QmNameplateCoordsOwn;
 	Data.m_Coords = vec2(12.34f + Dummy, 56.78f + Dummy);
-	Data.m_FontSizeCoords = Data.m_FontSizeClan;
+	Data.m_FontSizeCoords = FontSizeCoords;
+	Data.m_CoordXAlignHint = g_Config.m_QmNameplateCoordXAlignHint != 0;
+	Data.m_CoordXAligned = false;
 
 	Data.m_ShowDirection = g_Config.m_ClShowDirection != 0 ? true : false;
 	Data.m_DirLeft = Data.m_DirJump = Data.m_DirRight = true;
@@ -1207,7 +1282,7 @@ void CNamePlates::ResetNamePlates()
 void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 {
 	// Check if chat bubbles are enabled
-	if(!g_Config.m_TcChatBubble)
+	if(!g_Config.m_QmChatBubble)
 		return;
 
 	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
@@ -1222,7 +1297,7 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 
 	// Check if this is local player who is currently typing
 	const bool IsLocalPlayer = (GameClient()->m_Snap.m_LocalClientId == ClientId);
-	if(IsLocalPlayer && GameClient()->m_Chat.IsActive() && g_Config.m_TcChatBubbleTyping)
+	if(IsLocalPlayer && GameClient()->m_Chat.IsActive() && g_Config.m_QmChatBubbleTyping)
 	{
 		const char *pInputText = GameClient()->m_Chat.GetInputText();
 		if(pInputText && pInputText[0] != '\0')
@@ -1279,7 +1354,7 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 
 		// Apply disappear animation based on animation type
 		// 0 = fade (default), 1 = shrink, 2 = slide up
-		int AnimationType = g_Config.m_TcChatBubbleAnimation;
+		int AnimationType = g_Config.m_QmChatBubbleAnimation;
 		switch(AnimationType)
 		{
 		case 1: // Shrink animation
@@ -1335,7 +1410,7 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	// We want bubble to scale inversely: zoom in = larger bubble, zoom out = smaller bubble
 	float CameraZoom = GameClient()->m_Camera.m_Zoom;
 	float ZoomScale = 1.0f;
-	if(g_Config.m_TcChatBubbleZoomScale && CameraZoom > 0.0f)
+	if(g_Config.m_QmChatBubbleZoomScale && CameraZoom > 0.0f)
 	{
 		// Apply zoom scaling with configurable intensity
 		// ZoomScale = 1/zoom means: zoom=0.5 -> scale=2, zoom=2 -> scale=0.5
@@ -1345,11 +1420,11 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	}
 
 	// Configure text rendering - use settings with zoom scaling
-	const float BaseFontSize = (float)g_Config.m_TcChatBubbleFontSize;
+	const float BaseFontSize = (float)g_Config.m_QmChatBubbleFontSize;
 	const float BasePadding = 12.0f;
-	const float BaseRounding = (float)g_Config.m_TcChatBubbleRounding;
-	const float BaseMaxWidth = (float)g_Config.m_TcChatBubbleMaxWidth;
-	const float BaseOffsetY = (float)g_Config.m_TcChatBubbleOffsetY * 2.0f;
+	const float BaseRounding = (float)g_Config.m_QmChatBubbleRounding;
+	const float BaseMaxWidth = (float)g_Config.m_QmChatBubbleMaxWidth;
+	const float BaseOffsetY = (float)g_Config.m_QmChatBubbleOffsetY * 2.0f;
 
 	// Apply zoom scaling to all dimensions
 	const float FontSize = BaseFontSize * ZoomScale;
@@ -1384,10 +1459,10 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 
 	// Draw rounded rectangle background with slight border
 	// Use configured alpha value and colors (解析HSLA格式配置为RGBA)
-	float ConfigAlpha = g_Config.m_TcChatBubbleAlpha / 100.0f;
+	float ConfigAlpha = g_Config.m_QmChatBubbleAlpha / 100.0f;
 
 	// ---------- Background ----------
-	ColorHSLA BgHSLA(g_Config.m_TcChatBubbleBgColor, true);
+	ColorHSLA BgHSLA(g_Config.m_QmChatBubbleBgColor, true);
 	// 防止亮度过低/过高导致“发灰”
 	BgHSLA.l = std::clamp(BgHSLA.l, 0.15f, 0.85f);
 
@@ -1404,7 +1479,7 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 		Rounding);
 
 	// ---------- Text ----------
-	ColorHSLA TextHSLA(g_Config.m_TcChatBubbleTextColor, false);
+	ColorHSLA TextHSLA(g_Config.m_QmChatBubbleTextColor, false);
 	// 保证文字亮度可读
 	TextHSLA.l = std::clamp(TextHSLA.l, 0.25f, 0.95f);
 

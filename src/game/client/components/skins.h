@@ -8,16 +8,21 @@
 #include <engine/shared/config.h>
 #include <engine/shared/jobs.h>
 
+#include <engine/client/enums.h>
+
 #include <game/client/component.h>
 #include <game/client/skin.h>
 
+#include <array>
 #include <chrono>
 #include <list>
 #include <optional>
 #include <set>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 class CHttpRequest;
 
@@ -246,6 +251,13 @@ public:
 	void RemoveFavorite(const char *pName);
 	bool IsFavorite(const char *pName) const;
 
+	const std::vector<std::string> &SkinQueue(int Dummy) const { return m_aSkinQueue[Dummy]; }
+	bool IsInSkinQueue(const char *pName, int Dummy) const;
+	bool AddSkinQueue(const char *pName, int Dummy);
+	bool RemoveSkinQueue(const char *pName, int Dummy);
+	void MoveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy);
+	void TrimSkinQueueToLimit(int Dummy);
+
 	void RandomizeSkin(int Dummy);
 
 	const char *SkinPrefix() const;
@@ -302,6 +314,9 @@ private:
 
 	CSkinList m_SkinList;
 	std::set<std::string> m_Favorites;
+	std::array<std::vector<std::string>, NUM_DUMMIES> m_aSkinQueue;
+	std::array<std::chrono::nanoseconds, NUM_DUMMIES> m_aSkinQueueElapsed = {};
+	std::array<std::optional<std::chrono::nanoseconds>, NUM_DUMMIES> m_aSkinQueueLastUpdate = {};
 
 	CSkin m_PlaceholderSkin;
 	char m_aEventSkinPrefix[MAX_SKIN_LENGTH];
@@ -320,7 +335,14 @@ private:
 	static void ConRemFavoriteSkin(IConsole::IResult *pResult, void *pUserData);
 	static void ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData);
 	void OnConfigSave(IConfigManager *pConfigManager);
+	static void ConAddSkinQueue(IConsole::IResult *pResult, void *pUserData);
+	static void ConAddDummySkinQueue(IConsole::IResult *pResult, void *pUserData);
+	static void ConfigSaveQueueCallback(IConfigManager *pConfigManager, void *pUserData);
+	void OnQueueConfigSave(IConfigManager *pConfigManager);
 	static void ConchainRefreshSkinList(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	void UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy);
+	void ApplySkinQueueCurrent(int Dummy);
+	void ClampSkinQueueIndex(int Dummy);
 
 	friend class CSkinProfiles;
 };

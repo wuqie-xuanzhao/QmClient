@@ -8,9 +8,6 @@
 
 #include <game/client/component.h>
 
-#if defined(CONF_WHISPER)
-#include <engine/client/stt.h>
-#endif
 
 #include <deque>
 #include <set>
@@ -177,6 +174,12 @@ class CTClient : public CComponent
 	void RepeatLastMessage();
 	static void ConRepeat(IConsole::IResult *pResult, void *pUserData);
 
+	// Swap倒计时提示
+	bool m_SwapCountdownActive = false;
+	int m_SwapCountdownStartTick = 0;
+	void StartSwapCountdown();
+	void ClearSwapCountdown();
+
 	// 好友上线提醒
 	struct SFriendOnlineState
 	{
@@ -192,17 +195,6 @@ class CTClient : public CComponent
 	int m_FriendAutoRefreshPrevSeconds = -1;
 	void CheckFriendOnline();
 
-	// Speech-to-Text (STT)
-#if defined(CONF_WHISPER)
-	CStt m_Stt;
-	bool m_SttInitialized = false;
-	int m_SttRecordingState = 0; // 0=idle, 1=recording
-	char m_aSttTranscription[2048] = ""; // Last transcription result
-	bool m_SttHasTranscription = false;
-	static void ConSttToggle(IConsole::IResult *pResult, void *pUserData);
-	void OnSttTranscription(const char *pText, bool IsFinal);
-	void InitStt();
-#endif
 
 public:
 	CTClient();
@@ -244,6 +236,10 @@ public:
 	const SPlayerStats &GetPlayerStats(int Dummy = 0) const { return m_aPlayerStats[Dummy]; }
 	void ResetPlayerStats(int Dummy = -1); // -1 = 重置所有
 
+	// Swap倒计时公开接口
+	bool HasSwapCountdown() const { return m_SwapCountdownActive; }
+	int GetSwapCountdownStartTick() const { return m_SwapCountdownStartTick; }
+
 	// 收藏地图公开接口
 	bool IsFavoriteMap(const char *pMapName) const;
 	void AddFavoriteMap(const char *pMapName);
@@ -253,11 +249,6 @@ public:
 	const char *GetCachedMapCategoryKey(const char *pMapName) const;
 	void UpdateMapCategoryCache(const char *pMapName, const char *pCategoryKey);
 
-	// STT 公开接口
-#if defined(CONF_WHISPER)
-	bool IsSttRecording() const { return m_Stt.IsRecording(); }
-	const char *GetSttState() const { return m_Stt.GetStateString(); }
-#endif
 };
 
 #endif

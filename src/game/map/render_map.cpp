@@ -597,7 +597,7 @@ void CRenderMap::RenderTile(int x, int y, unsigned char Index, float Scale, Colo
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
-void CRenderMap::RenderTilemap(CTile *pTiles, int w, int h, float Scale, ColorRGBA Color, int RenderFlags)
+void CRenderMap::RenderTilemap(CTile *pTiles, int w, int h, float Scale, ColorRGBA Color, int RenderFlags, FTileRenderFilter pFilter, void *pFilterUser)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -659,6 +659,8 @@ void CRenderMap::RenderTilemap(CTile *pTiles, int w, int h, float Scale, ColorRG
 			unsigned char Index = pTiles[c].m_Index;
 			if(Index)
 			{
+				if(pFilter && !pFilter(Index, pFilterUser))
+					continue;
 				unsigned char Flags = pTiles[c].m_Flags;
 
 				bool Render = false;
@@ -1013,7 +1015,7 @@ void CRenderMap::RenderTuneOverlay(CTuneTile *pTune, int w, int h, float Scale, 
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
-void CRenderMap::RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, ColorRGBA Color, int RenderFlags)
+void CRenderMap::RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, ColorRGBA Color, int RenderFlags, FTileRenderFilter pFilter, void *pFilterUser)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -1073,6 +1075,8 @@ void CRenderMap::RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, Colo
 			unsigned char Index = pTele[c].m_Type;
 			if(Index)
 			{
+				if(pFilter && !pFilter(Index, pFilterUser))
+					continue;
 				bool Render = false;
 				if(RenderFlags & LAYERRENDERFLAG_TRANSPARENT)
 					Render = true;
@@ -1130,7 +1134,7 @@ void CRenderMap::RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, Colo
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
-void CRenderMap::RenderSwitchmap(CSwitchTile *pSwitchTile, int w, int h, float Scale, ColorRGBA Color, int RenderFlags)
+void CRenderMap::RenderSwitchmap(CSwitchTile *pSwitchTile, int w, int h, float Scale, ColorRGBA Color, int RenderFlags, FTileRenderFilter pFilter, void *pFilterUser)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -1190,6 +1194,8 @@ void CRenderMap::RenderSwitchmap(CSwitchTile *pSwitchTile, int w, int h, float S
 			unsigned char Index = pSwitchTile[c].m_Type;
 			if(Index)
 			{
+				if(pFilter && !pFilter(Index, pFilterUser))
+					continue;
 				if(Index == TILE_SWITCHTIMEDOPEN)
 					Index = 8;
 

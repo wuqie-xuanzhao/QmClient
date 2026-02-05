@@ -955,6 +955,44 @@ void CHud::RenderTextInfo()
 
 }
 
+void CHud::RenderSwapCountdown()
+{
+	if(!GameClient()->m_TClient.HasSwapCountdown())
+		return;
+
+	const int StartTick = GameClient()->m_TClient.GetSwapCountdownStartTick();
+	if(StartTick <= 0)
+		return;
+
+	const int TickSpeed = Client()->GameTickSpeed();
+	const int CurTick = Client()->GameTick(g_Config.m_ClDummy);
+	const int ElapsedTicks = CurTick - StartTick;
+	if(ElapsedTicks < 0 || TickSpeed <= 0)
+		return;
+
+	static constexpr int SWAP_COUNTDOWN_SECONDS = 30;
+	const int SecondsLeft = SWAP_COUNTDOWN_SECONDS - (ElapsedTicks / TickSpeed);
+
+	const float FontSize = 8.0f;
+	const float X = 5.0f;
+	const float Y = m_Height - 12.0f;
+
+	char aBuf[64];
+	if(SecondsLeft > 0)
+	{
+		str_format(aBuf, sizeof(aBuf), "Swap倒计时:%d秒", SecondsLeft);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else
+	{
+		str_copy(aBuf, "可交换!");
+		TextRender()->TextColor(0.5f, 1.0f, 0.5f, 1.0f);
+	}
+
+	TextRender()->Text(X, Y, FontSize, aBuf, -1.0f);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+}
+
 void CHud::RenderConnectionWarning()
 {
 	if(Client()->ConnectionProblems())
@@ -1220,6 +1258,95 @@ void CHud::PreparePlayerStateQuads()
 	m_Team0ModeOffset = Graphics()->QuadContainerAddSprite(m_HudQuadContainerIndex, 0.f, 0.f, 12.f, 12.f);
 }
 
+void CHud::RenderMediaIsland(float AnchorX, float CenterY)
+{
+	CSystemMediaControls::SState MediaState;
+	if(!GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState))
+		return;
+
+	const bool HasTitle = MediaState.m_aTitle[0] != '\0';
+	const bool HasArtist = MediaState.m_aArtist[0] != '\0';
+	if(!HasTitle && !HasArtist)
+		return;
+
+	const float IslandHeight = 16.0f;
+	const float CoverSize = 14.0f;
+	const float PaddingX = 2.0f;
+	const float Gap = 3.0f;
+	const float TextMaxWidth = 70.0f;
+	const float IslandWidth = PaddingX + CoverSize + Gap + TextMaxWidth + PaddingX;
+	const float IslandX = AnchorX;
+	const float IslandY = CenterY - IslandHeight * 0.5f;
+
+	Graphics()->DrawRect(IslandX, IslandY, IslandWidth, IslandHeight, ColorRGBA(0.0f, 0.0f, 0.0f, 0.35f), IGraphics::CORNER_ALL, 4.0f);
+
+	const float CoverX = IslandX + PaddingX;
+	const float CoverY = IslandY + (IslandHeight - CoverSize) * 0.5f;
+	if(MediaState.m_AlbumArt.IsValid())
+	{
+		Graphics()->WrapClamp();
+		Graphics()->TextureSet(MediaState.m_AlbumArt);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+		IGraphics::CQuadItem QuadItem(CoverX, CoverY, CoverSize, CoverSize);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+	}
+	else
+	{
+		Graphics()->DrawRect(CoverX, CoverY, CoverSize, CoverSize, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 2.0f);
+	}
+
+	const float TextX = CoverX + CoverSize + Gap;
+	const float TextAreaW = IslandX + IslandWidth - PaddingX - TextX;
+	const float TitleSize = 7.0f;
+	const float ArtistSize = 6.0f;
+	const float TitleY = IslandY + 1.0f;
+	const float ArtistY = TitleY + TitleSize + 0.0f;
+
+	const unsigned int PrevFlags = TextRender()->GetRenderFlags();
+	const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PrevOutlineColor = TextRender()->GetTextOutlineColor();
+	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.9f);
+	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.35f);
+
+	if(HasTitle)
+	{
+		CTextCursor Cursor;
+		Cursor.m_FontSize = TitleSize;
+		Cursor.m_LineWidth = TextAreaW;
+		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
+		Cursor.SetPosition(vec2(TextX, TitleY));
+		TextRender()->TextEx(&Cursor, MediaState.m_aTitle);
+	}
+	if(HasArtist)
+	{
+		CTextCursor Cursor;
+		Cursor.m_FontSize = ArtistSize;
+		Cursor.m_LineWidth = TextAreaW;
+		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
+		Cursor.SetPosition(vec2(TextX, ArtistY));
+		TextRender()->TextEx(&Cursor, MediaState.m_aArtist);
+	}
+	TextRender()->TextColor(PrevTextColor);
+	TextRender()->TextOutlineColor(PrevOutlineColor);
+	TextRender()->SetRenderFlags(PrevFlags);
+
+	const float BarHeight = 2.0f;
+	const float BarY = IslandY + IslandHeight - BarHeight - 1.0f;
+	Graphics()->DrawRect(TextX, BarY, TextAreaW, BarHeight, ColorRGBA(1.0f, 1.0f, 1.0f, 0.15f), IGraphics::CORNER_ALL, 1.0f);
+	if(MediaState.m_DurationMs > 0)
+	{
+		const float Progress = std::clamp((float)MediaState.m_PositionMs / (float)MediaState.m_DurationMs, 0.0f, 1.0f);
+		if(Progress > 0.0f)
+		{
+			Graphics()->DrawRect(TextX, BarY, TextAreaW * Progress, BarHeight, ColorRGBA(1.0f, 1.0f, 1.0f, 0.6f), IGraphics::CORNER_ALL, 1.0f);
+		}
+	}
+}
+
 void CHud::RenderPlayerState(const int ClientId)
 {
 	Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
@@ -1336,6 +1463,8 @@ void CHud::RenderPlayerState(const int ClientId)
 			}
 		}
 	}
+
+	RenderMediaIsland(x + 4.0f, y);
 
 	// render capabilities
 	x = 5;
@@ -1683,32 +1812,33 @@ void CHud::RenderSpectatorCount()
 	char aBuf[16];
 	str_format(aBuf, sizeof(aBuf), "%d", Count);
 
-	const float Fontsize = 6.0f;
-	const float BoxHeight = 14.f;
-	const float BoxWidth = 13.f + TextRender()->TextWidth(Fontsize, aBuf);
+	const float Fontsize = 5.0f;
+	const float BoxHeight = 12.5f;
+	const float IconWidth = TextRender()->TextWidth(Fontsize, FontIcons::FONT_ICON_EYE);
+	const float TextWidth = TextRender()->TextWidth(Fontsize, aBuf);
+	const float BoxWidth = IconWidth + 3.0f + TextWidth + 10.0f;
 
-	float StartX = m_Width - BoxWidth;
-	float StartY = 285.0f - BoxHeight - 4; // 4 units distance to the next display;
+	float StartX = 0.0f;
+	float StartY = 0.0f;
+	const bool Seconds = g_Config.m_TcShowLocalTimeSeconds; // TClient
+	char aTimeStr[16];
+	str_timestamp_format(aTimeStr, sizeof(aTimeStr), Seconds ? "%H:%M.%S" : "%H:%M");
+	const float TimeWidth = std::round(TextRender()->TextBoundingBox(5.0f, aTimeStr).m_W);
+	const float TimeAnchorX = (m_Width / 7.0f) * 3.0f;
+	const float TimeLeft = TimeAnchorX - (TimeWidth + 15.0f);
+	StartX = TimeLeft - 5.0f - BoxWidth;
+	StartY = 0.0f;
 
-	if(g_Config.m_ClShowhudScore)
-	{
-		StartY -= 56;
-	}
+	Graphics()->DrawRect(StartX, StartY, BoxWidth, BoxHeight, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_B, 3.75f);
 
-	if(g_Config.m_ClShowhudDummyActions && !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER) && Client()->DummyConnected())
-	{
-		StartY = StartY - 29.0f - 4; // dummy actions height and padding
-	}
-
-	Graphics()->DrawRect(StartX, StartY, BoxWidth, BoxHeight, ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f), IGraphics::CORNER_L, 5.0f);
-
-	float y = StartY + BoxHeight / 3;
-	float x = StartX + 2;
+	const float y = StartY + (BoxHeight - Fontsize) / 2.0f;
+	float x = StartX + 5.0f;
 
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->Text(x, y, Fontsize, FontIcons::FONT_ICON_EYE, -1.0f);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-	TextRender()->Text(x + Fontsize + 3.f, y, Fontsize, aBuf, -1.0f);
+	x += IconWidth + 3.0f;
+	TextRender()->Text(x, y, Fontsize, aBuf, -1.0f);
 }
 
 void CHud::RenderDummyActions()
@@ -2446,6 +2576,7 @@ void CHud::OnRender()
 		RenderWarmupTimer();
 		RenderDummyMiniMap();
 		RenderTextInfo();
+		RenderSwapCountdown();
 		GameClient()->m_TClient.RenderCenterLines();
 		RenderLocalTime((m_Width / 7) * 3);
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)

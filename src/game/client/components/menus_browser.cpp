@@ -652,7 +652,7 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 	// buttons
 	{
 		CUIRect ButtonRefresh, ButtonConnect;
-		ConnectButtons.VSplitMid(&ButtonRefresh, &ButtonConnect, 5.0f);
+		ConnectButtons.VSplitMid(&ButtonRefresh, &ButtonConnect, 10.0f);
 
 		// refresh button
 		{

@@ -4,6 +4,8 @@
 #include <engine/shared/config.h>
 
 #include <game/client/gameclient.h>
+#include <game/client/pickup_data.h>
+#include <game/gamecore.h>
 #include <game/mapitems.h>
 
 // 地图层类型
@@ -175,14 +177,20 @@ void CCollisionHitbox::RenderTileHitboxes()
 			if(Type == HITBOX_NONE)
 				continue;
 
-			// 只检查freeze类型
+			// 只检查freeze与death类型
 			bool Enabled = false;
-			unsigned int Color = 0;
+			ColorRGBA RgbaColor;
 
 			if(Type == HITBOX_FREEZE)
 			{
 				Enabled = true;
-				Color = g_Config.m_QmCollisionHitboxColorFreeze;
+				RgbaColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmCollisionHitboxColorFreeze));
+				RgbaColor.a = Alpha;
+			}
+			else if(Type == HITBOX_DEATH)
+			{
+				Enabled = true;
+				RgbaColor = ColorRGBA(0.0f, 0.0f, 0.0f, Alpha);
 			}
 			else
 			{
@@ -190,8 +198,6 @@ void CCollisionHitbox::RenderTileHitboxes()
 			}
 
 			// 设置颜色
-			ColorRGBA RgbaColor = color_cast<ColorRGBA>(ColorHSLA(Color));
-			RgbaColor.a = Alpha;
 			Graphics()->SetColor(RgbaColor);
 
 			// 计算tile边界
@@ -237,10 +243,23 @@ void CCollisionHitbox::RenderTeeHitboxes()
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 
 	const float Alpha = g_Config.m_QmCollisionHitboxAlpha / 100.0f;
-	ColorRGBA TeeColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmCollisionHitboxColorFreeze));
-	TeeColor.a = Alpha;
-
 	Graphics()->TextureClear();
+	Graphics()->LinesBegin();
+
+	const float PointSize = 3.0f;
+	const float SampleOffset = CCharacterCore::PhysicalSize() / 3.0f;
+
+	auto IsFreezeTile = [](int Tile) {
+		return Tile == TILE_FREEZE || Tile == TILE_DFREEZE || Tile == TILE_LFREEZE;
+	};
+
+	auto DrawCross = [&](const vec2 &Pos, const ColorRGBA &Color) {
+		Graphics()->SetColor(Color);
+		IGraphics::CLineItem CrossLines[2] = {
+			{Pos.x - PointSize, Pos.y, Pos.x + PointSize, Pos.y},
+			{Pos.x, Pos.y - PointSize, Pos.x, Pos.y + PointSize}};
+		Graphics()->LinesDraw(CrossLines, 2);
+	};
 
 	for(const auto &Player : GameClient()->m_aClients)
 	{
@@ -265,21 +284,90 @@ void CCollisionHitbox::RenderTeeHitboxes()
 
 		vec2 Position = Player.m_RenderPos;
 
-		// 只绘制中心点标记,不绘制碰撞圆
-		Graphics()->LinesBegin();
-		// 使用黑色
-		ColorRGBA FinalColor = ColorRGBA(0.0f, 0.0f, 0.0f, PlayerAlpha);
-		Graphics()->SetColor(FinalColor);
+		// Freeze: center sample (tile-based)
+		const int Index = Collision()->GetPureMapIndex(Position);
+		const int Tile = Collision()->GetTileIndex(Index);
+		const int FrontTile = Collision()->GetFrontTileIndex(Index);
+		const int SwitchTile = Collision()->GetSwitchType(Index);
+		const bool FreezeHit = IsFreezeTile(Tile) || IsFreezeTile(FrontTile) || IsFreezeTile(SwitchTile);
+		const float FreezeAlpha = FreezeHit ? PlayerAlpha : PlayerAlpha * 0.35f;
+		ColorRGBA FreezeColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmCollisionHitboxColorFreeze));
+		FreezeColor.a = FreezeAlpha;
+		DrawCross(Position, FreezeColor);
 
-		// 绘制中心点标记(一个加长的十字)
-		const float CrossSize = 8.0f; // 加长线条
-		IGraphics::CLineItem CrossLines[2] = {
-			{Position.x - CrossSize, Position.y, Position.x + CrossSize, Position.y},
-			{Position.x, Position.y - CrossSize, Position.x, Position.y + CrossSize}};
-		Graphics()->LinesDraw(CrossLines, 2);
-
-		Graphics()->LinesEnd();
+		// Death: 4-point samples (collision-based)
+		const vec2 DeathOffsets[4] = {
+			{SampleOffset, SampleOffset},
+			{SampleOffset, -SampleOffset},
+			{-SampleOffset, SampleOffset},
+			{-SampleOffset, -SampleOffset}};
+		for(const vec2 &Offset : DeathOffsets)
+		{
+			const vec2 SamplePos = Position + Offset;
+			const bool DeathHit = Collision()->GetCollisionAt(SamplePos.x, SamplePos.y) == TILE_DEATH ||
+					      Collision()->GetFrontCollisionAt(SamplePos.x, SamplePos.y) == TILE_DEATH;
+			const float DeathAlpha = DeathHit ? PlayerAlpha : PlayerAlpha * 0.35f;
+			DrawCross(SamplePos, ColorRGBA(0.0f, 0.0f, 0.0f, DeathAlpha));
+		}
 	}
+
+	Graphics()->LinesEnd();
+}
+
+void CCollisionHitbox::RenderPickupHitboxes()
+{
+	const float Alpha = g_Config.m_QmCollisionHitboxAlpha / 100.0f;
+	if(Alpha <= 0.0f)
+		return;
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	const float PickupRadius = 14.0f + 6.0f; // pickup phys size + extra collision size
+	const ColorRGBA ShieldColor(1.0f, 1.0f, 0.0f, Alpha);
+
+	const bool IsSuper = GameClient()->IsLocalCharSuper();
+	const int SwitcherTeam = GameClient()->SwitchStateTeam();
+	auto &aSwitchers = GameClient()->Switchers();
+	const int Ticks = Client()->GameTick(g_Config.m_ClDummy) % Client()->GameTickSpeed();
+	const bool BlinkingPickup = (Ticks % 22) < 4;
+
+	Graphics()->TextureClear();
+	Graphics()->LinesBegin();
+
+	for(const CSnapEntities &Ent : GameClient()->SnapEntities())
+	{
+		const IClient::CSnapItem Item = Ent.m_Item;
+		if(Item.m_Type != NETOBJTYPE_PICKUP && Item.m_Type != NETOBJTYPE_DDNETPICKUP)
+			continue;
+
+		const CPickupData Data = ExtractPickupInfo(Item.m_Type, Item.m_pData, Ent.m_pDataEx);
+		if(Data.m_Type != POWERUP_ARMOR)
+			continue;
+
+		const bool Inactive = !IsSuper && Data.m_SwitchNumber > 0 && Data.m_SwitchNumber < (int)aSwitchers.size() &&
+				      !aSwitchers[Data.m_SwitchNumber].m_aStatus[SwitcherTeam];
+		if(Inactive && BlinkingPickup)
+			continue;
+
+		if(Data.m_Pos.x + PickupRadius < ScreenX0 || Data.m_Pos.x - PickupRadius > ScreenX1 ||
+		   Data.m_Pos.y + PickupRadius < ScreenY0 || Data.m_Pos.y - PickupRadius > ScreenY1)
+			continue;
+
+		Graphics()->SetColor(ShieldColor);
+		const float Left = Data.m_Pos.x - PickupRadius;
+		const float Right = Data.m_Pos.x + PickupRadius;
+		const float Top = Data.m_Pos.y - PickupRadius;
+		const float Bottom = Data.m_Pos.y + PickupRadius;
+		IGraphics::CLineItem aLines[4] = {
+			{Left, Top, Right, Top},
+			{Left, Bottom, Right, Bottom},
+			{Left, Top, Left, Bottom},
+			{Right, Top, Right, Bottom}};
+		Graphics()->LinesDraw(aLines, 4);
+	}
+
+	Graphics()->LinesEnd();
 }
 
 void CCollisionHitbox::OnRender()
@@ -295,4 +383,7 @@ void CCollisionHitbox::OnRender()
 
 	// 绘制Tee的碰撞体积
 	RenderTeeHitboxes();
+
+	// 绘制盾牌拾取的碰撞体积
+	RenderPickupHitboxes();
 }

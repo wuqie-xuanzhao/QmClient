@@ -17,6 +17,7 @@ using offset_ptr32 = unsigned int;
 #include <game/mapitems.h>
 #include <game/mapitems_ex.h>
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -210,7 +211,8 @@ protected:
 		bool m_IsTextured;
 	};
 
-	void UploadTileData(std::optional<CTileLayerVisuals> &VisualsOptional, int CurOverlay, bool AddAsSpeedup, bool IsGameLayer = false);
+	using FTileFilter = std::function<bool(unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay)>;
+	void UploadTileData(std::optional<CTileLayerVisuals> &VisualsOptional, int CurOverlay, bool AddAsSpeedup, bool IsGameLayer = false, FTileFilter Filter = nullptr);
 
 	virtual void RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params);
 	virtual void RenderTileLayerNoTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params);
@@ -296,6 +298,7 @@ class CRenderLayerEntityGame final : public CRenderLayerEntityBase
 public:
 	CRenderLayerEntityGame(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap);
 	void Init() override;
+	void Unload() override;
 
 protected:
 	void RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params) override;
@@ -303,6 +306,11 @@ protected:
 
 private:
 	ColorRGBA GetDeathBorderColor() const;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesDeath;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesFreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesUnfreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesDeepFreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesDeepUnfreeze;
 };
 
 class CRenderLayerEntityFront final : public CRenderLayerEntityBase
@@ -310,6 +318,19 @@ class CRenderLayerEntityFront final : public CRenderLayerEntityBase
 public:
 	CRenderLayerEntityFront(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap);
 	int GetDataIndex(unsigned int &TileSize) const override;
+	void Init() override;
+	void Unload() override;
+
+protected:
+	void RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params) override;
+	void RenderTileLayerNoTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params) override;
+
+private:
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesDeath;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesFreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesUnfreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesDeepFreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesDeepUnfreeze;
 };
 
 class CRenderLayerEntityTele final : public CRenderLayerEntityBase
@@ -370,6 +391,10 @@ protected:
 private:
 	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualSwitchNumberTop;
 	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualSwitchNumberBottom;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesFreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesUnfreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesDeepFreeze;
+	std::optional<CRenderLayerTile::CTileLayerVisuals> m_VisualTilesDeepUnfreeze;
 	CSwitchTile *m_pSwitchTiles;
 };
 

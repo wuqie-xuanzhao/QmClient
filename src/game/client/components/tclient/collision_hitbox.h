@@ -24,6 +24,7 @@ private:
 
 	void RenderTileHitboxes();
 	void RenderTeeHitboxes();
+	void RenderPickupHitboxes();
 
 public:
 	int Sizeof() const override { return sizeof(*this); }

@@ -589,7 +589,7 @@ void CRenderLayerTile::Init()
 	UploadTileData(m_VisualTiles, 0, false);
 }
 
-void CRenderLayerTile::UploadTileData(std::optional<CTileLayerVisuals> &VisualsOptional, int CurOverlay, bool AddAsSpeedup, bool IsGameLayer)
+void CRenderLayerTile::UploadTileData(std::optional<CTileLayerVisuals> &VisualsOptional, int CurOverlay, bool AddAsSpeedup, bool IsGameLayer, FTileFilter Filter)
 {
 	if(!Graphics()->IsTileBufferingEnabled())
 		return;
@@ -655,6 +655,8 @@ void CRenderLayerTile::UploadTileData(std::optional<CTileLayerVisuals> &VisualsO
 			unsigned char Flags = 0;
 			int AngleRotate = -1;
 			GetTileData(&Index, &Flags, &AngleRotate, x, y, CurOverlay);
+			if(Filter && !Filter(Index, Flags, AngleRotate, x, y, CurOverlay))
+				Index = 0;
 
 			// the amount of tiles handled before this tile
 			int TilesHandledCount = vTmpTiles.size();
@@ -1370,6 +1372,83 @@ bool CRenderLayerQuads::DoRender(const CRenderLayerParams &Params)
 /****************
  * Entity Layer *
  ****************/
+static float QmOverlayAlpha(int Value)
+{
+	return std::clamp(Value, 0, 100) / 100.0f;
+}
+
+static bool IsFreezeAlphaTile(int Index)
+{
+	return Index == TILE_FREEZE || Index == TILE_LFREEZE;
+}
+
+static bool IsUnfreezeAlphaTile(int Index)
+{
+	return Index == TILE_UNFREEZE || Index == TILE_LUNFREEZE;
+}
+
+static bool IsDeepFreezeAlphaTile(int Index)
+{
+	return Index == TILE_DFREEZE;
+}
+
+static bool IsDeepUnfreezeAlphaTile(int Index)
+{
+	return Index == TILE_DUNFREEZE;
+}
+
+static bool IsSpecialEntityAlphaTile(int Index)
+{
+	return Index == TILE_DEATH || IsFreezeAlphaTile(Index) || IsUnfreezeAlphaTile(Index) || IsDeepFreezeAlphaTile(Index) || IsDeepUnfreezeAlphaTile(Index);
+}
+
+static bool IsSpecialSwitchAlphaTile(int Index)
+{
+	return IsFreezeAlphaTile(Index) || IsUnfreezeAlphaTile(Index) || IsDeepFreezeAlphaTile(Index) || IsDeepUnfreezeAlphaTile(Index);
+}
+
+static bool FilterBaseEntityAlphaTile(unsigned char Index, void *pUser)
+{
+	(void)pUser;
+	return !IsSpecialEntityAlphaTile(Index);
+}
+
+static bool FilterDeathAlphaTile(unsigned char Index, void *pUser)
+{
+	(void)pUser;
+	return Index == TILE_DEATH;
+}
+
+static bool FilterFreezeAlphaTile(unsigned char Index, void *pUser)
+{
+	(void)pUser;
+	return IsFreezeAlphaTile(Index);
+}
+
+static bool FilterUnfreezeAlphaTile(unsigned char Index, void *pUser)
+{
+	(void)pUser;
+	return IsUnfreezeAlphaTile(Index);
+}
+
+static bool FilterDeepFreezeAlphaTile(unsigned char Index, void *pUser)
+{
+	(void)pUser;
+	return IsDeepFreezeAlphaTile(Index);
+}
+
+static bool FilterDeepUnfreezeAlphaTile(unsigned char Index, void *pUser)
+{
+	(void)pUser;
+	return IsDeepUnfreezeAlphaTile(Index);
+}
+
+static bool FilterBaseSwitchAlphaTile(unsigned char Index, void *pUser)
+{
+	(void)pUser;
+	return !IsSpecialSwitchAlphaTile(Index);
+}
+
 // BASE
 CRenderLayerEntityBase::CRenderLayerEntityBase(int GroupId, int LayerId, int Flags, CMapItemLayerTilemap *pLayerTilemap) :
 	CRenderLayerTile(GroupId, LayerId, Flags, pLayerTilemap) {}
@@ -1398,7 +1477,91 @@ CRenderLayerEntityGame::CRenderLayerEntityGame(int GroupId, int LayerId, int Fla
 
 void CRenderLayerEntityGame::Init()
 {
-	UploadTileData(m_VisualTiles, 0, false, true);
+	const std::optional<CClipRegion> LayerClip = m_LayerClip;
+	UploadTileData(m_VisualTiles, 0, false, true, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return !IsSpecialEntityAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesDeath, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return Index == TILE_DEATH;
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesFreeze, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return IsFreezeAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesUnfreeze, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return IsUnfreezeAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesDeepFreeze, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return IsDeepFreezeAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesDeepUnfreeze, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return IsDeepUnfreezeAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+}
+
+void CRenderLayerEntityGame::Unload()
+{
+	CRenderLayerTile::Unload();
+	if(m_VisualTilesDeath.has_value())
+	{
+		m_VisualTilesDeath->Unload();
+		m_VisualTilesDeath = std::nullopt;
+	}
+	if(m_VisualTilesFreeze.has_value())
+	{
+		m_VisualTilesFreeze->Unload();
+		m_VisualTilesFreeze = std::nullopt;
+	}
+	if(m_VisualTilesUnfreeze.has_value())
+	{
+		m_VisualTilesUnfreeze->Unload();
+		m_VisualTilesUnfreeze = std::nullopt;
+	}
+	if(m_VisualTilesDeepFreeze.has_value())
+	{
+		m_VisualTilesDeepFreeze->Unload();
+		m_VisualTilesDeepFreeze = std::nullopt;
+	}
+	if(m_VisualTilesDeepUnfreeze.has_value())
+	{
+		m_VisualTilesDeepUnfreeze->Unload();
+		m_VisualTilesDeepUnfreeze = std::nullopt;
+	}
 }
 
 void CRenderLayerEntityGame::RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
@@ -1407,13 +1570,34 @@ void CRenderLayerEntityGame::RenderTileLayerWithTileBuffer(const ColorRGBA &Colo
 	if(Params.m_RenderTileBorder)
 		RenderKillTileBorder(Color.Multiply(GetDeathBorderColor()));
 	RenderTileLayer(Color, Params);
+
+	auto RenderFiltered = [&](std::optional<CTileLayerVisuals> &Visuals, float Alpha) {
+		if(!Visuals.has_value() || Alpha <= 0.0f)
+			return;
+		RenderTileLayer(ColorRGBA(1.0f, 1.0f, 1.0f, Alpha), Params, &Visuals.value());
+	};
+
+	RenderFiltered(m_VisualTilesDeath, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeathAlpha));
+	RenderFiltered(m_VisualTilesFreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayFreezeAlpha));
+	RenderFiltered(m_VisualTilesUnfreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayUnfreezeAlpha));
+	RenderFiltered(m_VisualTilesDeepFreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepFreezeAlpha));
+	RenderFiltered(m_VisualTilesDeepUnfreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepUnfreezeAlpha));
 }
 
 void CRenderLayerEntityGame::RenderTileLayerNoTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
-	Graphics()->BlendNone();
-	RenderMap()->RenderTilemap(m_pTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_OPAQUE);
-	Graphics()->BlendNormal();
+	const int TileRenderFlags = Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0;
+
+	auto RenderFiltered = [&](ColorRGBA GroupColor, CRenderMap::FTileRenderFilter Filter) {
+		if(GroupColor.a <= 0.0f)
+			return;
+		Graphics()->BlendNone();
+		RenderMap()->RenderTilemap(m_pTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, GroupColor, TileRenderFlags | LAYERRENDERFLAG_OPAQUE, Filter);
+		Graphics()->BlendNormal();
+		RenderMap()->RenderTilemap(m_pTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, GroupColor, TileRenderFlags | LAYERRENDERFLAG_TRANSPARENT, Filter);
+	};
+
+	RenderFiltered(Color, FilterBaseEntityAlphaTile);
 
 	if(Params.m_RenderTileBorder)
 	{
@@ -1422,7 +1606,11 @@ void CRenderLayerEntityGame::RenderTileLayerNoTileBuffer(const ColorRGBA &Color,
 			32.0f, Color.Multiply(GetDeathBorderColor()), TILERENDERFLAG_EXTEND | LAYERRENDERFLAG_TRANSPARENT);
 	}
 
-	RenderMap()->RenderTilemap(m_pTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_TRANSPARENT);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeathAlpha)), FilterDeathAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayFreezeAlpha)), FilterFreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayUnfreezeAlpha)), FilterUnfreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepFreezeAlpha)), FilterDeepFreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepUnfreezeAlpha)), FilterDeepUnfreezeAlphaTile);
 }
 
 ColorRGBA CRenderLayerEntityGame::GetDeathBorderColor() const
@@ -1442,6 +1630,134 @@ int CRenderLayerEntityFront::GetDataIndex(unsigned int &TileSize) const
 {
 	TileSize = sizeof(CTile);
 	return m_pLayerTilemap->m_Front;
+}
+
+void CRenderLayerEntityFront::Init()
+{
+	const std::optional<CClipRegion> LayerClip = m_LayerClip;
+	UploadTileData(m_VisualTiles, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return !IsSpecialEntityAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesDeath, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return Index == TILE_DEATH;
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesFreeze, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return IsFreezeAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesUnfreeze, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return IsUnfreezeAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesDeepFreeze, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return IsDeepFreezeAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesDeepUnfreeze, 0, false, false, [](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Flags;
+		(void)AngleRotate;
+		(void)x;
+		(void)y;
+		(void)CurOverlay;
+		return IsDeepUnfreezeAlphaTile(Index);
+	});
+	m_LayerClip = LayerClip;
+}
+
+void CRenderLayerEntityFront::Unload()
+{
+	CRenderLayerTile::Unload();
+	if(m_VisualTilesDeath.has_value())
+	{
+		m_VisualTilesDeath->Unload();
+		m_VisualTilesDeath = std::nullopt;
+	}
+	if(m_VisualTilesFreeze.has_value())
+	{
+		m_VisualTilesFreeze->Unload();
+		m_VisualTilesFreeze = std::nullopt;
+	}
+	if(m_VisualTilesUnfreeze.has_value())
+	{
+		m_VisualTilesUnfreeze->Unload();
+		m_VisualTilesUnfreeze = std::nullopt;
+	}
+	if(m_VisualTilesDeepFreeze.has_value())
+	{
+		m_VisualTilesDeepFreeze->Unload();
+		m_VisualTilesDeepFreeze = std::nullopt;
+	}
+	if(m_VisualTilesDeepUnfreeze.has_value())
+	{
+		m_VisualTilesDeepUnfreeze->Unload();
+		m_VisualTilesDeepUnfreeze = std::nullopt;
+	}
+}
+
+void CRenderLayerEntityFront::RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
+{
+	Graphics()->BlendNormal();
+	RenderTileLayer(Color, Params);
+
+	auto RenderFiltered = [&](std::optional<CTileLayerVisuals> &Visuals, float Alpha) {
+		if(!Visuals.has_value() || Alpha <= 0.0f)
+			return;
+		RenderTileLayer(ColorRGBA(1.0f, 1.0f, 1.0f, Alpha), Params, &Visuals.value());
+	};
+
+	RenderFiltered(m_VisualTilesDeath, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeathAlpha));
+	RenderFiltered(m_VisualTilesFreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayFreezeAlpha));
+	RenderFiltered(m_VisualTilesUnfreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayUnfreezeAlpha));
+	RenderFiltered(m_VisualTilesDeepFreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepFreezeAlpha));
+	RenderFiltered(m_VisualTilesDeepUnfreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepUnfreezeAlpha));
+}
+
+void CRenderLayerEntityFront::RenderTileLayerNoTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
+{
+	const int TileRenderFlags = Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0;
+
+	auto RenderFiltered = [&](ColorRGBA GroupColor, CRenderMap::FTileRenderFilter Filter) {
+		if(GroupColor.a <= 0.0f)
+			return;
+		Graphics()->BlendNone();
+		RenderMap()->RenderTilemap(m_pTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, GroupColor, TileRenderFlags | LAYERRENDERFLAG_OPAQUE, Filter);
+		Graphics()->BlendNormal();
+		RenderMap()->RenderTilemap(m_pTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, GroupColor, TileRenderFlags | LAYERRENDERFLAG_TRANSPARENT, Filter);
+	};
+
+	RenderFiltered(Color, FilterBaseEntityAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeathAlpha)), FilterDeathAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayFreezeAlpha)), FilterFreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayUnfreezeAlpha)), FilterUnfreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepFreezeAlpha)), FilterDeepFreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepUnfreezeAlpha)), FilterDeepUnfreezeAlphaTile);
 }
 
 // TELE
@@ -1477,23 +1793,33 @@ void CRenderLayerEntityTele::Unload()
 
 void CRenderLayerEntityTele::RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
+	(void)Color;
 	Graphics()->BlendNormal();
-	RenderTileLayer(Color, Params);
+	const float TeleAlpha = QmOverlayAlpha(g_Config.m_QmEntityOverlayTeleAlpha);
+	if(TeleAlpha <= 0.0f)
+		return;
+	const ColorRGBA TeleColor(1.0f, 1.0f, 1.0f, TeleAlpha);
+	RenderTileLayer(TeleColor, Params);
 	if(Params.m_RenderText)
 	{
 		Graphics()->TextureSet(m_pMapImages->GetOverlayCenter());
-		RenderTileLayer(Color, Params, &m_VisualTeleNumbers.value());
+		RenderTileLayer(TeleColor, Params, &m_VisualTeleNumbers.value());
 	}
 }
 
 void CRenderLayerEntityTele::RenderTileLayerNoTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
+	(void)Color;
+	const float TeleAlpha = QmOverlayAlpha(g_Config.m_QmEntityOverlayTeleAlpha);
+	if(TeleAlpha <= 0.0f)
+		return;
+	const ColorRGBA TeleColor(1.0f, 1.0f, 1.0f, TeleAlpha);
 	Graphics()->BlendNone();
-	RenderMap()->RenderTelemap(m_pTeleTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_OPAQUE);
+	RenderMap()->RenderTelemap(m_pTeleTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, TeleColor, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_OPAQUE);
 	Graphics()->BlendNormal();
-	RenderMap()->RenderTelemap(m_pTeleTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_TRANSPARENT);
+	RenderMap()->RenderTelemap(m_pTeleTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, TeleColor, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_TRANSPARENT);
 	int OverlayRenderFlags = (Params.m_RenderText ? OVERLAYRENDERFLAG_TEXT : 0) | (Params.m_RenderInvalidTiles ? OVERLAYRENDERFLAG_EDITOR : 0);
-	RenderMap()->RenderTeleOverlay(m_pTeleTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, OverlayRenderFlags, Color.a);
+	RenderMap()->RenderTeleOverlay(m_pTeleTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, OverlayRenderFlags, TeleColor.a);
 }
 
 void CRenderLayerEntityTele::GetTileData(unsigned char *pIndex, unsigned char *pFlags, int *pAngleRotate, unsigned int x, unsigned int y, int CurOverlay) const
@@ -1606,9 +1932,66 @@ int CRenderLayerEntitySwitch::GetDataIndex(unsigned int &TileSize) const
 
 void CRenderLayerEntitySwitch::Init()
 {
-	UploadTileData(m_VisualTiles, 0, false);
-	UploadTileData(m_VisualSwitchNumberTop, 1, false);
-	UploadTileData(m_VisualSwitchNumberBottom, 2, false);
+	const std::optional<CClipRegion> LayerClip = m_LayerClip;
+	auto BaseFilter = [this](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Index;
+		(void)Flags;
+		(void)AngleRotate;
+		(void)CurOverlay;
+		const unsigned char Type = m_pSwitchTiles[y * m_pLayerTilemap->m_Width + x].m_Type;
+		return !IsSpecialSwitchAlphaTile(Type);
+	};
+
+	auto FreezeFilter = [this](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Index;
+		(void)Flags;
+		(void)AngleRotate;
+		(void)CurOverlay;
+		const unsigned char Type = m_pSwitchTiles[y * m_pLayerTilemap->m_Width + x].m_Type;
+		return IsFreezeAlphaTile(Type);
+	};
+
+	auto UnfreezeFilter = [this](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Index;
+		(void)Flags;
+		(void)AngleRotate;
+		(void)CurOverlay;
+		const unsigned char Type = m_pSwitchTiles[y * m_pLayerTilemap->m_Width + x].m_Type;
+		return IsUnfreezeAlphaTile(Type);
+	};
+
+	auto DeepFreezeFilter = [this](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Index;
+		(void)Flags;
+		(void)AngleRotate;
+		(void)CurOverlay;
+		const unsigned char Type = m_pSwitchTiles[y * m_pLayerTilemap->m_Width + x].m_Type;
+		return IsDeepFreezeAlphaTile(Type);
+	};
+
+	auto DeepUnfreezeFilter = [this](unsigned char Index, unsigned char Flags, int AngleRotate, unsigned int x, unsigned int y, int CurOverlay) {
+		(void)Index;
+		(void)Flags;
+		(void)AngleRotate;
+		(void)CurOverlay;
+		const unsigned char Type = m_pSwitchTiles[y * m_pLayerTilemap->m_Width + x].m_Type;
+		return IsDeepUnfreezeAlphaTile(Type);
+	};
+
+	UploadTileData(m_VisualTiles, 0, false, false, BaseFilter);
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualSwitchNumberTop, 1, false, false, BaseFilter);
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualSwitchNumberBottom, 2, false, false, BaseFilter);
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesFreeze, 0, false, false, FreezeFilter);
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesUnfreeze, 0, false, false, UnfreezeFilter);
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesDeepFreeze, 0, false, false, DeepFreezeFilter);
+	m_LayerClip = LayerClip;
+	UploadTileData(m_VisualTilesDeepUnfreeze, 0, false, false, DeepUnfreezeFilter);
+	m_LayerClip = LayerClip;
 }
 
 void CRenderLayerEntitySwitch::InitTileData()
@@ -1628,6 +2011,26 @@ void CRenderLayerEntitySwitch::Unload()
 	{
 		m_VisualSwitchNumberBottom->Unload();
 		m_VisualSwitchNumberBottom = std::nullopt;
+	}
+	if(m_VisualTilesFreeze.has_value())
+	{
+		m_VisualTilesFreeze->Unload();
+		m_VisualTilesFreeze = std::nullopt;
+	}
+	if(m_VisualTilesUnfreeze.has_value())
+	{
+		m_VisualTilesUnfreeze->Unload();
+		m_VisualTilesUnfreeze = std::nullopt;
+	}
+	if(m_VisualTilesDeepFreeze.has_value())
+	{
+		m_VisualTilesDeepFreeze->Unload();
+		m_VisualTilesDeepFreeze = std::nullopt;
+	}
+	if(m_VisualTilesDeepUnfreeze.has_value())
+	{
+		m_VisualTilesDeepUnfreeze->Unload();
+		m_VisualTilesDeepUnfreeze = std::nullopt;
 	}
 }
 
@@ -1649,25 +2052,64 @@ void CRenderLayerEntitySwitch::GetTileData(unsigned char *pIndex, unsigned char 
 
 void CRenderLayerEntitySwitch::RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
+	(void)Color;
 	Graphics()->BlendNormal();
-	RenderTileLayer(Color, Params);
-	if(Params.m_RenderText)
+	const float SwitchAlpha = QmOverlayAlpha(g_Config.m_QmEntityOverlaySwitchAlpha);
+	if(SwitchAlpha > 0.0f)
 	{
-		Graphics()->TextureSet(m_pMapImages->GetOverlayTop());
-		RenderTileLayer(Color, Params, &m_VisualSwitchNumberTop.value());
-		Graphics()->TextureSet(m_pMapImages->GetOverlayBottom());
-		RenderTileLayer(Color, Params, &m_VisualSwitchNumberBottom.value());
+		const ColorRGBA SwitchColor(1.0f, 1.0f, 1.0f, SwitchAlpha);
+		RenderTileLayer(SwitchColor, Params);
+		if(Params.m_RenderText)
+		{
+			Graphics()->TextureSet(m_pMapImages->GetOverlayTop());
+			RenderTileLayer(SwitchColor, Params, &m_VisualSwitchNumberTop.value());
+			Graphics()->TextureSet(m_pMapImages->GetOverlayBottom());
+			RenderTileLayer(SwitchColor, Params, &m_VisualSwitchNumberBottom.value());
+		}
 	}
+
+	auto RenderFiltered = [&](std::optional<CTileLayerVisuals> &Visuals, float Alpha) {
+		if(!Visuals.has_value() || Alpha <= 0.0f)
+			return;
+		RenderTileLayer(ColorRGBA(1.0f, 1.0f, 1.0f, Alpha), Params, &Visuals.value());
+	};
+
+	RenderFiltered(m_VisualTilesFreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayFreezeAlpha));
+	RenderFiltered(m_VisualTilesUnfreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayUnfreezeAlpha));
+	RenderFiltered(m_VisualTilesDeepFreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepFreezeAlpha));
+	RenderFiltered(m_VisualTilesDeepUnfreeze, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepUnfreezeAlpha));
 }
 
 void CRenderLayerEntitySwitch::RenderTileLayerNoTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
-	Graphics()->BlendNone();
-	RenderMap()->RenderSwitchmap(m_pSwitchTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_OPAQUE);
-	Graphics()->BlendNormal();
-	RenderMap()->RenderSwitchmap(m_pSwitchTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_TRANSPARENT);
-	int OverlayRenderFlags = (Params.m_RenderText ? OVERLAYRENDERFLAG_TEXT : 0) | (Params.m_RenderInvalidTiles ? OVERLAYRENDERFLAG_EDITOR : 0);
-	RenderMap()->RenderSwitchOverlay(m_pSwitchTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, OverlayRenderFlags, Color.a);
+	(void)Color;
+	const int TileRenderFlags = Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0;
+
+	auto RenderFiltered = [&](ColorRGBA GroupColor, CRenderMap::FTileRenderFilter Filter) {
+		if(GroupColor.a <= 0.0f)
+			return;
+		Graphics()->BlendNone();
+		RenderMap()->RenderSwitchmap(m_pSwitchTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, GroupColor, TileRenderFlags | LAYERRENDERFLAG_OPAQUE, Filter);
+		Graphics()->BlendNormal();
+		RenderMap()->RenderSwitchmap(m_pSwitchTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, GroupColor, TileRenderFlags | LAYERRENDERFLAG_TRANSPARENT, Filter);
+	};
+
+	const float SwitchAlpha = QmOverlayAlpha(g_Config.m_QmEntityOverlaySwitchAlpha);
+	const ColorRGBA SwitchColor(1.0f, 1.0f, 1.0f, SwitchAlpha);
+	if(SwitchAlpha > 0.0f)
+	{
+		RenderFiltered(SwitchColor, FilterBaseSwitchAlphaTile);
+		if(Params.m_RenderText)
+		{
+			int OverlayRenderFlags = (Params.m_RenderText ? OVERLAYRENDERFLAG_TEXT : 0) | (Params.m_RenderInvalidTiles ? OVERLAYRENDERFLAG_EDITOR : 0);
+			RenderMap()->RenderSwitchOverlay(m_pSwitchTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, OverlayRenderFlags, SwitchColor.a);
+		}
+	}
+
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayFreezeAlpha)), FilterFreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayUnfreezeAlpha)), FilterUnfreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepFreezeAlpha)), FilterDeepFreezeAlphaTile);
+	RenderFiltered(ColorRGBA(1.0f, 1.0f, 1.0f, QmOverlayAlpha(g_Config.m_QmEntityOverlayDeepUnfreezeAlpha)), FilterDeepUnfreezeAlphaTile);
 }
 
 // TUNE

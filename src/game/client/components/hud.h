@@ -68,6 +68,7 @@ class CHud : public CComponent
 	void RenderCursor();
 
 	void RenderTextInfo();
+	void RenderSwapCountdown();
 	void RenderDummyMiniMap();
 	bool GetDummyMiniMapRect(float &X, float &Y, float &W, float &H) const;
 	void RenderConnectionWarning();
@@ -78,6 +79,7 @@ class CHud : public CComponent
 
 	void PreparePlayerStateQuads();
 	void RenderPlayerState(int ClientId);
+	void RenderMediaIsland(float AnchorX, float CenterY);
 
 	int m_LastSpectatorCountTick;
 	void RenderSpectatorCount();

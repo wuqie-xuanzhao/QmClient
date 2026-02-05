@@ -3,10 +3,13 @@
 
 #include "skins.h"
 
+#include <algorithm>
+
 #include <base/log.h>
 #include <base/math.h>
 #include <base/system.h>
 
+#include <engine/config.h>
 #include <engine/engine.h>
 #include <engine/gfx/image_manipulation.h>
 #include <engine/graphics.h>
@@ -20,6 +23,31 @@
 #include <game/localization.h>
 
 using namespace std::chrono_literals;
+
+static int &SkinQueueIntervalVar(int Dummy)
+{
+	return Dummy ? g_Config.m_QmDummySkinQueueInterval : g_Config.m_QmSkinQueueInterval;
+}
+
+static int &SkinQueueLengthVar(int Dummy)
+{
+	return Dummy ? g_Config.m_QmDummySkinQueueLength : g_Config.m_QmSkinQueueLength;
+}
+
+static int &SkinQueueIndexVar(int Dummy)
+{
+	return Dummy ? g_Config.m_QmDummySkinQueueIndex : g_Config.m_QmSkinQueueIndex;
+}
+
+static char *SkinNameVar(int Dummy)
+{
+	return Dummy ? g_Config.m_ClDummySkin : g_Config.m_ClPlayerSkin;
+}
+
+static size_t SkinNameVarSize(int Dummy)
+{
+	return Dummy ? sizeof(g_Config.m_ClDummySkin) : sizeof(g_Config.m_ClPlayerSkin);
+}
 
 CSkins::CAbstractSkinLoadJob::CAbstractSkinLoadJob(CSkins *pSkins, const char *pName) :
 	m_pSkins(pSkins)
@@ -485,8 +513,11 @@ void CSkins::LoadSkinDirect(const char *pName)
 void CSkins::OnConsoleInit()
 {
 	ConfigManager()->RegisterCallback(CSkins::ConfigSaveCallback, this);
+	ConfigManager()->RegisterCallback(CSkins::ConfigSaveQueueCallback, this, ConfigDomain::TCLIENT);
 	Console()->Register("add_favorite_skin", "s[skin_name]", CFGFLAG_CLIENT, ConAddFavoriteSkin, this, "Add a skin as a favorite");
 	Console()->Register("remove_favorite_skin", "s[skin_name]", CFGFLAG_CLIENT, ConRemFavoriteSkin, this, "Remove a skin from the favorites");
+	Console()->Register("add_skin_queue", "s[skin_name]", CFGFLAG_CLIENT, ConAddSkinQueue, this, "Add a skin to the queue");
+	Console()->Register("add_dummy_skin_queue", "s[skin_name]", CFGFLAG_CLIENT, ConAddDummySkinQueue, this, "Add a skin to the dummy queue");
 
 	Console()->Chain("player_skin", ConchainRefreshSkinList, this);
 	Console()->Chain("dummy_skin", ConchainRefreshSkinList, this);
@@ -524,14 +555,19 @@ void CSkins::OnShutdown()
 
 void CSkins::OnUpdate()
 {
+	const std::chrono::nanoseconds Now = time_get_nanoseconds();
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		UpdateSkinQueue(Now, Dummy);
+	}
+
 	// Only update skins periodically to reduce FPS impact
-	const std::chrono::nanoseconds StartTime = time_get_nanoseconds();
 	const std::chrono::nanoseconds MaxTime = std::chrono::milliseconds(std::clamp(round_to_int(Client()->RenderFrameTime() * 50000.0f), 25, 500));
-	if(m_ContainerUpdateTime.has_value() && StartTime - m_ContainerUpdateTime.value() < MaxTime)
+	if(m_ContainerUpdateTime.has_value() && Now - m_ContainerUpdateTime.value() < MaxTime)
 	{
 		return;
 	}
-	m_ContainerUpdateTime = StartTime;
+	m_ContainerUpdateTime = Now;
 
 	// Update loaded state of managed skins which are not retrieved with the FindOrNullptr function
 	GameClient()->CollectManagedTeeRenderInfos([&](const char *pSkinName) {
@@ -545,7 +581,95 @@ void CSkins::OnUpdate()
 	CSkinLoadingStats Stats = LoadingStats();
 	UpdateUnloadSkins(Stats);
 	UpdateStartLoading(Stats);
-	UpdateFinishLoading(Stats, StartTime, MaxTime);
+	UpdateFinishLoading(Stats, Now, MaxTime);
+}
+
+void CSkins::ClampSkinQueueIndex(int Dummy)
+{
+	auto &Queue = m_aSkinQueue[Dummy];
+	int &QueueIndex = SkinQueueIndexVar(Dummy);
+	if(Queue.empty())
+	{
+		QueueIndex = 0;
+		return;
+	}
+	if(QueueIndex < 0 || QueueIndex >= (int)Queue.size())
+	{
+		QueueIndex = 0;
+	}
+}
+
+void CSkins::ApplySkinQueueCurrent(int Dummy)
+{
+	auto &Queue = m_aSkinQueue[Dummy];
+	if(Queue.empty())
+	{
+		return;
+	}
+
+	ClampSkinQueueIndex(Dummy);
+	const char *pTargetSkin = Queue[SkinQueueIndexVar(Dummy)].c_str();
+	char *pSkinName = SkinNameVar(Dummy);
+	if(str_comp(pSkinName, pTargetSkin) != 0)
+	{
+		str_copy(pSkinName, pTargetSkin, SkinNameVarSize(Dummy));
+		m_SkinList.ForceRefresh();
+		if(Dummy == 0)
+		{
+			if(Client()->State() == IClient::STATE_ONLINE)
+			{
+				GameClient()->SendInfo(false);
+			}
+		}
+		else if(Client()->DummyConnected())
+		{
+			GameClient()->SendDummyInfo(false);
+		}
+	}
+}
+
+void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
+{
+	TrimSkinQueueToLimit(Dummy);
+	auto &Queue = m_aSkinQueue[Dummy];
+	const int QueueInterval = SkinQueueIntervalVar(Dummy);
+	if(Queue.empty() || QueueInterval <= 0)
+	{
+		m_aSkinQueueLastUpdate[Dummy].reset();
+		m_aSkinQueueElapsed[Dummy] = 0ns;
+		return;
+	}
+
+	const bool Online = Dummy == 0 ? Client()->State() == IClient::STATE_ONLINE : Client()->DummyConnected();
+	if(!Online)
+	{
+		m_aSkinQueueLastUpdate[Dummy].reset();
+		return;
+	}
+
+	if(!m_aSkinQueueLastUpdate[Dummy].has_value())
+	{
+		m_aSkinQueueLastUpdate[Dummy] = Now;
+		ApplySkinQueueCurrent(Dummy);
+		return;
+	}
+
+	m_aSkinQueueElapsed[Dummy] += Now - m_aSkinQueueLastUpdate[Dummy].value();
+	m_aSkinQueueLastUpdate[Dummy] = Now;
+
+	const auto Interval = std::chrono::seconds(QueueInterval);
+	if(Interval <= 0ns)
+	{
+		return;
+	}
+
+	int &QueueIndex = SkinQueueIndexVar(Dummy);
+	while(m_aSkinQueueElapsed[Dummy] >= Interval)
+	{
+		m_aSkinQueueElapsed[Dummy] -= Interval;
+		QueueIndex = (QueueIndex + 1) % (int)Queue.size();
+		ApplySkinQueueCurrent(Dummy);
+	}
 }
 
 void CSkins::UpdateUnloadSkins(CSkinLoadingStats &Stats)
@@ -878,6 +1002,97 @@ bool CSkins::IsFavorite(const char *pName) const
 	return m_Favorites.contains(pName);
 }
 
+bool CSkins::IsInSkinQueue(const char *pName, int Dummy) const
+{
+	const auto &Queue = m_aSkinQueue[Dummy];
+	return std::find(Queue.begin(), Queue.end(), pName) != Queue.end();
+}
+
+bool CSkins::AddSkinQueue(const char *pName, int Dummy)
+{
+	if(!CSkin::IsValidName(pName))
+	{
+		log_error("skins", "Queue skin name '%s' is not valid", pName);
+		log_error("skins", "%s", CSkin::m_aSkinNameRestrictions);
+		return false;
+	}
+
+	if(IsInSkinQueue(pName, Dummy))
+	{
+		return false;
+	}
+
+	auto &Queue = m_aSkinQueue[Dummy];
+	if((int)Queue.size() >= SkinQueueLengthVar(Dummy))
+	{
+		return false;
+	}
+
+	Queue.emplace_back(pName);
+	ClampSkinQueueIndex(Dummy);
+	return true;
+}
+
+bool CSkins::RemoveSkinQueue(const char *pName, int Dummy)
+{
+	auto &Queue = m_aSkinQueue[Dummy];
+	auto It = std::find(Queue.begin(), Queue.end(), pName);
+	if(It == Queue.end())
+	{
+		return false;
+	}
+
+	const int RemovedIndex = (int)(It - Queue.begin());
+	Queue.erase(It);
+	int &QueueIndex = SkinQueueIndexVar(Dummy);
+	if(RemovedIndex < QueueIndex)
+	{
+		QueueIndex--;
+	}
+	ClampSkinQueueIndex(Dummy);
+	return true;
+}
+
+void CSkins::MoveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy)
+{
+	auto &Queue = m_aSkinQueue[Dummy];
+	if(FromIndex >= Queue.size() || ToIndex >= Queue.size() || FromIndex == ToIndex)
+	{
+		return;
+	}
+
+	std::string Moving = std::move(Queue[FromIndex]);
+	Queue.erase(Queue.begin() + FromIndex);
+	Queue.insert(Queue.begin() + ToIndex, std::move(Moving));
+
+	int CurrentIndex = SkinQueueIndexVar(Dummy);
+	if(CurrentIndex == (int)FromIndex)
+	{
+		CurrentIndex = (int)ToIndex;
+	}
+	else if(FromIndex < ToIndex && CurrentIndex > (int)FromIndex && CurrentIndex <= (int)ToIndex)
+	{
+		CurrentIndex--;
+	}
+	else if(FromIndex > ToIndex && CurrentIndex >= (int)ToIndex && CurrentIndex < (int)FromIndex)
+	{
+		CurrentIndex++;
+	}
+	SkinQueueIndexVar(Dummy) = CurrentIndex;
+	ClampSkinQueueIndex(Dummy);
+}
+
+void CSkins::TrimSkinQueueToLimit(int Dummy)
+{
+	auto &Queue = m_aSkinQueue[Dummy];
+	const int Limit = maximum(0, SkinQueueLengthVar(Dummy));
+	if((int)Queue.size() > Limit)
+	{
+		Queue.resize(Limit);
+	}
+	ClampSkinQueueIndex(Dummy);
+}
+
 void CSkins::RandomizeSkin(int Dummy)
 {
 	static const float s_aSchemes[] = {1.0f / 2.0f, 1.0f / 3.0f, 1.0f / -3.0f, 1.0f / 12.0f, 1.0f / -12.0f}; // complementary, triadic, analogous
@@ -1107,6 +1322,18 @@ void CSkins::ConRemFavoriteSkin(IConsole::IResult *pResult, void *pUserData)
 	pSelf->RemoveFavorite(pResult->GetString(0));
 }
 
+void CSkins::ConAddSkinQueue(IConsole::IResult *pResult, void *pUserData)
+{
+	auto *pSelf = static_cast<CSkins *>(pUserData);
+	pSelf->AddSkinQueue(pResult->GetString(0), 0);
+}
+
+void CSkins::ConAddDummySkinQueue(IConsole::IResult *pResult, void *pUserData)
+{
+	auto *pSelf = static_cast<CSkins *>(pUserData);
+	pSelf->AddSkinQueue(pResult->GetString(0), 1);
+}
+
 void CSkins::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	auto *pSelf = static_cast<CSkins *>(pUserData);
@@ -1120,6 +1347,28 @@ void CSkins::OnConfigSave(IConfigManager *pConfigManager)
 		char aBuffer[32 + MAX_SKIN_LENGTH];
 		str_format(aBuffer, sizeof(aBuffer), "add_favorite_skin \"%s\"", Favorite.c_str());
 		pConfigManager->WriteLine(aBuffer);
+	}
+}
+
+void CSkins::ConfigSaveQueueCallback(IConfigManager *pConfigManager, void *pUserData)
+{
+	auto *pSelf = static_cast<CSkins *>(pUserData);
+	pSelf->OnQueueConfigSave(pConfigManager);
+}
+
+void CSkins::OnQueueConfigSave(IConfigManager *pConfigManager)
+{
+	for(const auto &QueueSkin : m_aSkinQueue[0])
+	{
+		char aBuffer[32 + MAX_SKIN_LENGTH];
+		str_format(aBuffer, sizeof(aBuffer), "add_skin_queue \"%s\"", QueueSkin.c_str());
+		pConfigManager->WriteLine(aBuffer, ConfigDomain::TCLIENT);
+	}
+	for(const auto &QueueSkin : m_aSkinQueue[1])
+	{
+		char aBuffer[40 + MAX_SKIN_LENGTH];
+		str_format(aBuffer, sizeof(aBuffer), "add_dummy_skin_queue \"%s\"", QueueSkin.c_str());
+		pConfigManager->WriteLine(aBuffer, ConfigDomain::TCLIENT);
 	}
 }
 

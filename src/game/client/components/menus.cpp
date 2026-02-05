@@ -705,6 +705,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				NewPage = PAGE_GHOST;
 		}
 
+		Box.VSplitLeft(110.0f, &Button, &Box);
+		static CButtonContainer s_UnfinishedMapsButton;
+		if(DoButton_MenuTab(&s_UnfinishedMapsButton, Localize("未完成图"), ActivePage == PAGE_UNFINISHED_MAPS, &Button, IGraphics::CORNER_NONE))
+			NewPage = PAGE_UNFINISHED_MAPS;
+
 		Box.VSplitLeft(100.0f, &Button, &Box);
 		Box.VSplitLeft(4.0f, nullptr, &Box);
 		static CButtonContainer s_CallVoteButton;
@@ -1212,6 +1217,10 @@ void CMenus::Render()
 			else if(m_GamePage == PAGE_GHOST)
 			{
 				RenderGhost(MainView);
+			}
+			else if(m_GamePage == PAGE_UNFINISHED_MAPS)
+			{
+				RenderUnfinishedMaps(MainView);
 			}
 			else if(m_GamePage == PAGE_CALLVOTE)
 			{

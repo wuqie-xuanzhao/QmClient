@@ -1290,7 +1290,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		CGameClient::CClientData &ClientData = GameClient()->m_aClients[ClientId];
 		str_copy(ClientData.m_aChatBubbleText, pLine, sizeof(ClientData.m_aChatBubbleText));
 		ClientData.m_ChatBubbleStartTick = time();
-		ClientData.m_ChatBubbleExpireTick = time() + time_freq() * g_Config.m_TcChatBubbleDuration;
+		ClientData.m_ChatBubbleExpireTick = time() + time_freq() * g_Config.m_QmChatBubbleDuration;
 	}
 
 	// TClient
@@ -1543,6 +1543,8 @@ void CChat::OnPrepareLines(float y)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
 		else if(Line.m_Highlighted)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
+		else if(Line.m_Friend && g_Config.m_ClMessageFriend)
+			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor));
 		else if(Line.m_Team)
 			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
 		else // regular message

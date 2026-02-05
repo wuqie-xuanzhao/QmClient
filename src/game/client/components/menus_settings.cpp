@@ -657,6 +657,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
 
 	CSkins::CSkinList &SkinList = GameClient()->m_Skins.SkinList();
+	const int QueueDummy = m_Dummy;
+	int &QueueInterval = m_Dummy ? g_Config.m_QmDummySkinQueueInterval : g_Config.m_QmSkinQueueInterval;
+	int &QueueLength = m_Dummy ? g_Config.m_QmDummySkinQueueLength : g_Config.m_QmSkinQueueLength;
+	int &QueueIndex = m_Dummy ? g_Config.m_QmDummySkinQueueIndex : g_Config.m_QmSkinQueueIndex;
+	const auto &SkinQueue = GameClient()->m_Skins.SkinQueue(QueueDummy);
 	const CSkin *pDefaultSkin = GameClient()->m_Skins.Find("default");
 	const CSkins::CSkinContainer *pOwnSkinContainer = GameClient()->m_Skins.FindContainerOrNullptr(pSkinName[0] == '\0' ? "default" : pSkinName);
 	if(pOwnSkinContainer != nullptr && pOwnSkinContainer->IsSpecial())
@@ -851,6 +856,187 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	}
 	MainView.HSplitTop(5.0f, nullptr, &MainView);
 
+	CUIRect QueuePanel;
+	float QueuePanelWidth = MainView.w * 0.22f;
+	QueuePanelWidth = std::clamp(QueuePanelWidth, 150.0f, 240.0f);
+	QueuePanelWidth = std::min(QueuePanelWidth, MainView.w * 0.35f);
+	MainView.VSplitRight(QueuePanelWidth, &MainView, &QueuePanel);
+	QueuePanel.VSplitLeft(10.0f, nullptr, &QueuePanel);
+
+	{
+		const int UnfilteredCount = SkinList.UnfilteredCount();
+		const int QueueMaxLimit = UnfilteredCount > 0 ? UnfilteredCount : QueueLength;
+		const int PrevQueueLength = QueueLength;
+		if(QueueMaxLimit >= 0)
+		{
+			QueueLength = std::clamp(QueueLength, 0, QueueMaxLimit);
+		}
+		if(QueueLength != PrevQueueLength)
+		{
+			GameClient()->m_Skins.TrimSkinQueueToLimit(QueueDummy);
+		}
+
+		CUIRect QueueSection = QueuePanel;
+		CUIRect QueueHeader, QueueControls, QueueList;
+		QueueSection.HSplitTop(18.0f, &QueueHeader, &QueueSection);
+		char aQueueLabel[64];
+		str_format(aQueueLabel, sizeof(aQueueLabel), "%s (%d/%d)", Localize("皮肤队列"), (int)SkinQueue.size(), QueueLength);
+		Ui()->DoLabel(&QueueHeader, aQueueLabel, 14.0f, TEXTALIGN_ML);
+
+		QueueSection.HSplitTop(20.0f, &QueueControls, &QueueSection);
+		CUIRect IntervalRect, LengthRect;
+		QueueControls.VSplitMid(&IntervalRect, &LengthRect, 10.0f);
+		Ui()->DoScrollbarOption(&QueueInterval, &QueueInterval, &IntervalRect, Localize("切换间隔"), 1, 120, &CUi::ms_LinearScrollbarScale, 0, "s");
+		if(Ui()->DoScrollbarOption(&QueueLength, &QueueLength, &LengthRect, Localize("队列长度"), 0, QueueMaxLimit))
+		{
+			GameClient()->m_Skins.TrimSkinQueueToLimit(QueueDummy);
+		}
+
+		QueueSection.HSplitTop(5.0f, nullptr, &QueueSection);
+		QueueList = QueueSection;
+
+		static CListBox s_QueueListBox;
+		static std::vector<char> s_QueueItemIds;
+		static std::vector<char> s_QueueRemoveIds;
+		static int s_QueueDragIndex = -1;
+		static bool s_QueueDragging = false;
+		static vec2 s_QueueDragStart = vec2(0.0f, 0.0f);
+		static int s_QueueLastDummy = -1;
+
+		if(s_QueueLastDummy != QueueDummy)
+		{
+			s_QueueLastDummy = QueueDummy;
+			s_QueueDragIndex = -1;
+			s_QueueDragging = false;
+		}
+
+		if(s_QueueDragIndex >= (int)SkinQueue.size())
+		{
+			s_QueueDragIndex = -1;
+			s_QueueDragging = false;
+		}
+
+		if(SkinQueue.empty())
+		{
+			Ui()->DoLabel(&QueueList, Localize("队列为空"), 12.0f, TEXTALIGN_MC);
+		}
+		else
+		{
+			s_QueueItemIds.resize(SkinQueue.size());
+			s_QueueRemoveIds.resize(SkinQueue.size());
+
+			int DragTarget = s_QueueDragIndex;
+			int LastVisible = -1;
+			int RemoveIndex = -1;
+			if(s_QueueDragging)
+			{
+				DragTarget = -1;
+			}
+
+			s_QueueListBox.DoStart(20.0f, (int)SkinQueue.size(), 1, 1, -1, &QueueList, true, IGraphics::CORNER_ALL);
+			for(size_t i = 0; i < SkinQueue.size(); ++i)
+			{
+				const CListboxItem Item = s_QueueListBox.DoNextItem(&s_QueueItemIds[i], false, 3.0f);
+				if(!Item.m_Visible)
+				{
+					continue;
+				}
+
+				LastVisible = (int)i;
+				if(s_QueueDragging && DragTarget == -1 && Ui()->MouseY() < Item.m_Rect.y + Item.m_Rect.h * 0.5f)
+				{
+					DragTarget = (int)i;
+				}
+
+				if((int)i == QueueIndex)
+				{
+					Item.m_Rect.Draw(ColorRGBA(0.2f, 0.6f, 0.3f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
+				}
+				else if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
+				{
+					Item.m_Rect.Draw(ColorRGBA(0.4f, 0.4f, 1.0f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
+				}
+
+				CUIRect DragRect = Item.m_Rect;
+				CUIRect RemoveRect;
+				DragRect.VSplitRight(20.0f, &DragRect, &RemoveRect);
+				CUIRect DragArea = DragRect;
+
+				const float TeeSize = 16.0f;
+				CUIRect TeeRect, LabelRect;
+				DragRect.VSplitLeft(TeeSize + 6.0f, &TeeRect, &LabelRect);
+				TeeRect.VSplitLeft(3.0f, nullptr, &TeeRect);
+
+				char aEntryLabel[64];
+				str_format(aEntryLabel, sizeof(aEntryLabel), "%d. %s", (int)i + 1, SkinQueue[i].c_str());
+				LabelRect.VSplitLeft(4.0f, nullptr, &LabelRect);
+				Ui()->DoLabel(&LabelRect, aEntryLabel, 12.0f, TEXTALIGN_ML);
+
+				const CSkin *pQueueSkin = GameClient()->m_Skins.Find(SkinQueue[i].c_str());
+				CTeeRenderInfo QueueInfo = OwnSkinInfo;
+				QueueInfo.Apply(pQueueSkin);
+				QueueInfo.m_Size = TeeSize;
+				vec2 OffsetToMid;
+				CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &QueueInfo, OffsetToMid);
+				const vec2 TeeRenderPos = vec2(TeeRect.x + TeeRect.w / 2.0f, TeeRect.y + TeeRect.h / 2.0f + OffsetToMid.y);
+				RenderTools()->RenderTee(CAnimState::GetIdle(), &QueueInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
+
+				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+				const float RemoveAlpha = Ui()->HotItem() == &s_QueueRemoveIds[i] ? 0.2f : 0.0f;
+				TextRender()->TextColor(ColorRGBA(0.9f, 0.3f, 0.3f, 0.7f + RemoveAlpha));
+				Ui()->DoLabel(&RemoveRect, FONT_ICON_TRASH, 12.0f, TEXTALIGN_MC);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				TextRender()->SetRenderFlags(0);
+				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+				if(Ui()->DoButtonLogic(&s_QueueRemoveIds[i], 0, &RemoveRect, BUTTONFLAG_LEFT))
+				{
+					RemoveIndex = (int)i;
+				}
+				GameClient()->m_Tooltips.DoToolTip(&s_QueueRemoveIds[i], &RemoveRect, Localize("从队列移除"));
+
+				if(s_QueueDragIndex == -1 && Ui()->MouseButtonClicked(0) && Ui()->MouseHovered(&DragArea))
+				{
+					s_QueueDragIndex = (int)i;
+					s_QueueDragStart = Ui()->MousePos();
+					s_QueueDragging = false;
+				}
+			}
+			s_QueueListBox.DoEnd();
+
+			if(s_QueueDragging && DragTarget == -1)
+			{
+				DragTarget = LastVisible >= 0 ? LastVisible : s_QueueDragIndex;
+			}
+
+			if(s_QueueDragIndex >= 0 && Ui()->MouseButton(0))
+			{
+				if(!s_QueueDragging && distance(Ui()->MousePos(), s_QueueDragStart) > 5.0f)
+				{
+					s_QueueDragging = true;
+				}
+			}
+			else if(s_QueueDragIndex >= 0 && !Ui()->MouseButton(0))
+			{
+				if(s_QueueDragging && DragTarget >= 0 && DragTarget != s_QueueDragIndex)
+				{
+					GameClient()->m_Skins.MoveSkinQueueItem((size_t)s_QueueDragIndex, (size_t)DragTarget, QueueDummy);
+				}
+				s_QueueDragIndex = -1;
+				s_QueueDragging = false;
+			}
+
+			if(RemoveIndex >= 0 && RemoveIndex < (int)SkinQueue.size())
+			{
+				GameClient()->m_Skins.RemoveSkinQueue(SkinQueue[RemoveIndex].c_str(), QueueDummy);
+				s_QueueDragIndex = -1;
+				s_QueueDragging = false;
+			}
+		}
+
+		MainView.HSplitTop(5.0f, nullptr, &MainView);
+	}
+
 	// Layout bottom controls and use remainder for skin selector
 	CUIRect QuickSearch, DatabaseButton, DirectoryButton, RefreshButton;
 	MainView.HSplitBottom(20.0f, &MainView, &QuickSearch);
@@ -864,9 +1050,33 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	// Skin selector
 	static CListBox s_ListBox;
+	static std::vector<char> s_vQueueButtonIds;
 	std::vector<CSkins::CSkinListEntry> &vSkinList = SkinList.Skins();
 	int OldSelected = -1;
+	s_vQueueButtonIds.resize(vSkinList.size());
 	s_ListBox.DoStart(50.0f, vSkinList.size(), 4, 2, OldSelected, &MainView);
+	auto DoButton_SkinQueue = [&](const void *pButtonId, const void *pParentId, bool InQueue, bool Disabled, const CUIRect *pRect) {
+		if(InQueue || (pParentId != nullptr && Ui()->HotItem() == pParentId) || Ui()->HotItem() == pButtonId)
+		{
+			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+			const float Alpha = Ui()->HotItem() == pButtonId ? 0.2f : 0.0f;
+			ColorRGBA Color = InQueue ? ColorRGBA(0.2f, 0.8f, 0.4f, 0.8f + Alpha) : ColorRGBA(0.5f, 0.5f, 0.5f, 0.8f + Alpha);
+			if(Disabled && !InQueue)
+			{
+				Color = ColorRGBA(0.9f, 0.3f, 0.3f, 0.6f + Alpha);
+			}
+			TextRender()->TextColor(Color);
+			SLabelProperties Props;
+			Props.m_MaxWidth = pRect->w;
+			Ui()->DoLabel(pRect, InQueue ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, 12.0f, TEXTALIGN_MC, Props);
+			TextRender()->TextColor(TextRender()->DefaultTextColor());
+			TextRender()->SetRenderFlags(0);
+			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		}
+		const bool Clicked = Ui()->DoButtonLogic(pButtonId, 0, pRect, BUTTONFLAG_LEFT);
+		return Clicked && !Disabled;
+	};
 	for(size_t i = 0; i < vSkinList.size(); ++i)
 	{
 		CSkins::CSkinListEntry &SkinListEntry = vSkinList[i];
@@ -924,11 +1134,29 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			Graphics()->QuadsEnd();
 		}
 
-		// render skin favorite icon
+		// render skin favorite icon + queue icon
 		{
-			CUIRect FavIcon;
-			Item.m_Rect.HSplitTop(20.0f, &FavIcon, nullptr);
-			FavIcon.VSplitRight(20.0f, nullptr, &FavIcon);
+			CUIRect IconRow, FavIcon, QueueIcon;
+			Item.m_Rect.HSplitTop(20.0f, &IconRow, nullptr);
+			IconRow.VSplitRight(20.0f, &IconRow, &FavIcon);
+			IconRow.VSplitRight(2.0f, &IconRow, nullptr);
+			IconRow.VSplitRight(20.0f, &IconRow, &QueueIcon);
+			const bool InQueue = GameClient()->m_Skins.IsInSkinQueue(pSkinContainer->Name(), QueueDummy);
+			const bool QueueFull = !InQueue && (int)SkinQueue.size() >= QueueLength;
+			if(DoButton_SkinQueue(&s_vQueueButtonIds[i], SkinListEntry.ListItemId(), InQueue, QueueFull, &QueueIcon))
+			{
+				if(InQueue)
+				{
+					GameClient()->m_Skins.RemoveSkinQueue(pSkinContainer->Name(), QueueDummy);
+				}
+				else
+				{
+					GameClient()->m_Skins.AddSkinQueue(pSkinContainer->Name(), QueueDummy);
+				}
+			}
+			const char *pQueueTooltip = QueueFull && !InQueue ? Localize("队列已满") : (InQueue ? Localize("从队列移除") : Localize("加入队列"));
+			GameClient()->m_Tooltips.DoToolTip(&s_vQueueButtonIds[i], &QueueIcon, pQueueTooltip);
+
 			if(DoButton_Favorite(SkinListEntry.FavoriteButtonId(), SkinListEntry.ListItemId(), SkinListEntry.IsFavorite(), &FavIcon))
 			{
 				if(SkinListEntry.IsFavorite())
@@ -2622,6 +2850,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			{
 				if(Line.m_Highlighted)
 					TextRender()->TextColor(HighlightedColor);
+				else if(Line.m_Friend && g_Config.m_ClMessageFriend)
+					TextRender()->TextColor(FriendColor);
 				else if(Line.m_Team)
 					TextRender()->TextColor(TeamColor);
 				else if(Line.m_Player)
@@ -2772,6 +3002,9 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
 		if(g_Config.m_ClNamePlatesClan)
 			Ui()->DoScrollbarOption(&g_Config.m_ClNamePlatesClanSize, &g_Config.m_ClNamePlatesClanSize, &Button, Localize("Clan plates size"), -50, 100);
+
+		LeftView.HSplitTop(LineSize, &Button, &LeftView);
+		Ui()->DoScrollbarOption(&g_Config.m_ClNamePlatesCoordsSize, &g_Config.m_ClNamePlatesCoordsSize, &Button, Localize("坐标大小"), -50, 100);
 
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClNamePlatesTeamcolors, Localize("Use team colors for name plates"), &g_Config.m_ClNamePlatesTeamcolors, &LeftView, LineSize);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClNamePlatesFriendMark, Localize("Show friend icon in name plates"), &g_Config.m_ClNamePlatesFriendMark, &LeftView, LineSize);
@@ -3147,11 +3380,6 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 {
 	CUIRect Button, Left, Right, LeftLeft, Label;
 
-#if defined(CONF_AUTOUPDATE)
-	CUIRect UpdaterRect;
-	MainView.HSplitBottom(20.0f, &MainView, &UpdaterRect);
-	MainView.HSplitBottom(5.0f, &MainView, nullptr);
-#endif
 
 	// demo
 	CUIRect Demo;
@@ -3388,61 +3616,6 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	}
 #endif
 
-	// Updater
-#if defined(CONF_AUTOUPDATE)
-	{
-		const bool NeedUpdate = GameClient()->m_TClient.NeedUpdate();
-		const bool CheckingInfo = GameClient()->m_TClient.m_pTClientInfoTask && !GameClient()->m_TClient.m_pTClientInfoTask->Done();
-		const bool HasInfo = GameClient()->m_TClient.m_FetchedTClientInfo;
-		IUpdater::EUpdaterState State = Updater()->GetCurrentState();
-
-		char aBuf[256];
-		if(State == IUpdater::NEED_RESTART)
-		{
-			str_copy(aBuf, Localize("TClient Client updated!"));
-			m_NeedRestartUpdate = true;
-		}
-		else if(State == IUpdater::FAIL)
-			str_copy(aBuf, Localize("Update failed! Check log…"));
-		else if(State >= IUpdater::GETTING_MANIFEST && State < IUpdater::NEED_RESTART)
-			str_copy(aBuf, Localize("Updating…"));
-		else if(CheckingInfo)
-			str_copy(aBuf, Localize("Checking for updates…"));
-		else if(HasInfo)
-		{
-			if(NeedUpdate)
-				str_format(aBuf, sizeof(aBuf), Localize("TClient %s is available:"), GameClient()->m_TClient.m_aVersionStr);
-			else
-				str_copy(aBuf, Localize("Already up to date"));
-		}
-		else
-			str_copy(aBuf, Localize("Click Update to check"));
-
-		UpdaterRect.VSplitLeft(TextRender()->TextWidth(14.0f, aBuf, -1, -1.0f) + 10.0f, &UpdaterRect, &Button);
-		Button.VSplitLeft(100.0f, &Button, nullptr);
-		static CButtonContainer s_ButtonUpdate;
-		if(State >= IUpdater::GETTING_MANIFEST && State < IUpdater::NEED_RESTART)
-		{
-			Ui()->RenderProgressBar(Button, Updater()->GetCurrentPercent() / 100.0f);
-		}
-		else if(State == IUpdater::NEED_RESTART)
-		{
-			if(DoButton_Menu(&s_ButtonUpdate, Localize("Restart"), 0, &Button))
-			{
-				Client()->Restart();
-			}
-		}
-		else
-		{
-			if(DoButton_Menu(&s_ButtonUpdate, Localize("Update"), 0, &Button))
-			{
-				GameClient()->m_TClient.RequestUpdateCheckAndUpdate();
-			}
-		}
-
-		Ui()->DoLabel(&UpdaterRect, aBuf, 14.0f, TEXTALIGN_ML);
-	}
-#endif
 }
 
 CUi::EPopupMenuFunctionResult CMenus::PopupMapPicker(void *pContext, CUIRect View, bool Active)

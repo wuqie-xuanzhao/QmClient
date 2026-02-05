@@ -12,6 +12,7 @@
 #include <engine/storage.h>
 
 #include <generated/client_data.h>
+#include <generated/protocol.h>
 
 #include <game/client/components/camera.h>
 #include <game/client/components/menus.h>
@@ -23,6 +24,68 @@ CSoundLoading::CSoundLoading(CGameClient *pGameClient, bool Render) :
 	m_Render(Render)
 {
 	Abortable(true);
+}
+
+static bool IsSoundMuted(int SoundId)
+{
+	switch(SoundId)
+	{
+	case SOUND_GUN_FIRE:
+	case SOUND_SHOTGUN_FIRE:
+	case SOUND_GRENADE_FIRE:
+	case SOUND_HAMMER_FIRE:
+	case SOUND_HAMMER_HIT:
+	case SOUND_NINJA_FIRE:
+	case SOUND_NINJA_HIT:
+	case SOUND_GRENADE_EXPLODE:
+	case SOUND_LASER_FIRE:
+	case SOUND_LASER_BOUNCE:
+	case SOUND_HIT:
+		return g_Config.m_ClSndMuteWeapon != 0;
+
+	case SOUND_WEAPON_SWITCH:
+		return g_Config.m_ClSndMuteWeaponSwitch != 0;
+
+	case SOUND_WEAPON_NOAMMO:
+		return g_Config.m_ClSndMuteWeaponNoAmmo != 0;
+
+	case SOUND_HOOK_LOOP:
+	case SOUND_HOOK_ATTACH_GROUND:
+	case SOUND_HOOK_ATTACH_PLAYER:
+	case SOUND_HOOK_NOATTACH:
+		return g_Config.m_ClSndMuteHook != 0;
+
+	case SOUND_PLAYER_JUMP:
+	case SOUND_PLAYER_AIRJUMP:
+	case SOUND_BODY_LAND:
+	case SOUND_PLAYER_SKID:
+		return g_Config.m_ClSndMuteMovement != 0;
+
+	case SOUND_PLAYER_PAIN_SHORT:
+	case SOUND_PLAYER_PAIN_LONG:
+	case SOUND_PLAYER_DIE:
+	case SOUND_PLAYER_SPAWN:
+	case SOUND_TEE_CRY:
+		return g_Config.m_ClSndMutePlayerState != 0;
+
+	case SOUND_PICKUP_HEALTH:
+	case SOUND_PICKUP_ARMOR:
+	case SOUND_PICKUP_GRENADE:
+	case SOUND_PICKUP_SHOTGUN:
+	case SOUND_PICKUP_NINJA:
+	case SOUND_WEAPON_SPAWN:
+		return g_Config.m_ClSndMutePickup != 0;
+
+	case SOUND_CTF_DROP:
+	case SOUND_CTF_RETURN:
+	case SOUND_CTF_GRAB_PL:
+	case SOUND_CTF_GRAB_EN:
+	case SOUND_CTF_CAPTURE:
+		return g_Config.m_ClSndMuteFlag != 0;
+
+	default:
+		return false;
+	}
 }
 
 static const char *GetSoundFilename(const char *pFilename, IStorage *pStorage, char *pBuffer, size_t BufferSize)
@@ -254,6 +317,8 @@ void CSounds::Enqueue(int Channel, int SetId)
 		return;
 	if(Channel != CHN_MUSIC && g_Config.m_ClEditor)
 		return;
+	if(IsSoundMuted(SetId))
+		return;
 
 	m_aQueue[m_QueuePos].m_Channel = Channel;
 	m_aQueue[m_QueuePos++].m_SetId = SetId;
@@ -273,11 +338,15 @@ void CSounds::PlayAndRecord(int Channel, int SetId, float Volume, vec2 Position)
 
 void CSounds::Play(int Channel, int SetId, float Volume)
 {
+	if(IsSoundMuted(SetId))
+		return;
 	PlaySample(Channel, GetSampleId(SetId), 0, Volume);
 }
 
 void CSounds::PlayAt(int Channel, int SetId, float Volume, vec2 Position)
 {
+	if(IsSoundMuted(SetId))
+		return;
 	PlaySampleAt(Channel, GetSampleId(SetId), 0, Volume, Position);
 }
 
