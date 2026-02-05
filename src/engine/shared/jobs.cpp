@@ -3,6 +3,7 @@
 #include "jobs.h"
 
 #include <base/log.h>
+#include <base/thread.h>
 
 #include <algorithm>
 #include <chrono>
