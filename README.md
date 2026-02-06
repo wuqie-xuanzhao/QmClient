@@ -1,42 +1,40 @@
 
 # Q1menG Client  
 *A customized DDNet client based on TaterClient*  
-[![Build status](https://github.com/TaterClient/TClient/workflows/Build/badge.svg)](https://github.com/TaterClient/TClient/actions/workflows/build.yaml)
-
 
 ## 📝 Introduction 
 
-Q1menG_Client is a customized client built upon the foundations of TaterClient and the DDNet client.  
-It provides additional visual enhancements, personalized features, and small quality-of-life improvements while remaining compatible with DDNet gameplay.
+Q1menG_Client 是一款基于 TaterClient 和 DDNet 客户端构建的定制化客户端。  
+它在保持与 DDNet 游戏玩法兼容的同时，提供了额外的视觉增强效果、个性化功能以及若干提升使用体验的小改进。
 
 ## ✨ Features (Added / Modified)  
 
-- Improved UI elements and custom visual adjustments  
-- New effect and animation options  
-- Additional configuration toggles  
-- Client-side quality-of-life optimizations  
-- Personal custom features depending on your modifications  
+- 改进的用户界面元素和自定义视觉调整  
+- 新增特效与动画选项  
+- 扩展配置开关功能  
+- 客户端体验优化  
+- 基于您修改的个性化定制功能  
 
 ## 🏛 Credits 
-This project is based on the work of the following open-source projects:
+本项目基于以下开源项目的工作成果：
 Teeworlds — Magnus Auvinen
 
 DDRace — Shereef Marzouk
 
-DDNet — Dennis Felsing & contributors
+DDNet — Dennis Felsing 及贡献者
 
-TaterClient — community modifications
+TaterClient — 社区修改版
 
-Their original work remains licensed under the zlib/libpng license, and all original copyright notices have been preserved.
+其原始作品仍遵循 zlib/libpng 许可协议，所有原始版权声明均已保留。
 
 📜 License 
 
-This project follows the zlib/libpng license, identical to the upstream DDNet/TaterClient licensing terms.
-Modified versions must be clearly marked and original authorship must not be misrepresented.
+本项目遵循 zlib/libpng 许可协议，与上游 DDNet/TaterClient 的许可条款完全一致。
+修改版本必须明确标注，且不得歪曲原始作者身份。
 
 ## 📮 Notes 
 
-This client is purely a personal/custom modification project and is not affiliated with DDNet or TaterClient developers.
+本客户端纯属个人定制化修改项目，与DDNet或TaterClient开发者无关。
 ---
 
 
