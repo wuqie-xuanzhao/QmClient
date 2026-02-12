@@ -1837,7 +1837,7 @@ void CGameContext::ConRescue(IConsole::IResult *pResult, void *pUserData)
 	if(GoRescue)
 	{
 		pChr->Rescue();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 	}
 }
 
@@ -1911,7 +1911,7 @@ void CGameContext::ConBack(IConsole::IResult *pResult, void *pUserData)
 		}
 		pChr->GetLastRescueTeeRef(pPlayer->m_RescueMode) = pPlayer->m_LastDeath.value();
 		pChr->Rescue();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 	}
 }
 
@@ -1961,7 +1961,7 @@ void CGameContext::ConTeleTo(IConsole::IResult *pResult, void *pUserData)
 	// Teleport tee
 	pSelf->Teleport(pCallingCharacter, Pos);
 	pCallingCharacter->ResetJumps();
-	pCallingCharacter->UnFreeze();
+	pCallingCharacter->Unfreeze();
 	pCallingCharacter->ResetVelocity();
 	pCallingPlayer->m_LastTeleTee.Save(pCallingCharacter);
 }
@@ -2039,7 +2039,7 @@ void CGameContext::ConTeleXY(IConsole::IResult *pResult, void *pUserData)
 	// Teleport tee
 	pSelf->Teleport(pCallingCharacter, Pos);
 	pCallingCharacter->ResetJumps();
-	pCallingCharacter->UnFreeze();
+	pCallingCharacter->Unfreeze();
 	pCallingCharacter->ResetVelocity();
 	pCallingPlayer->m_LastTeleTee.Save(pCallingCharacter);
 }
@@ -2086,7 +2086,7 @@ void CGameContext::ConTeleCursor(IConsole::IResult *pResult, void *pUserData)
 	}
 	pSelf->Teleport(pChr, Pos);
 	pChr->ResetJumps();
-	pChr->UnFreeze();
+	pChr->Unfreeze();
 	pChr->ResetVelocity();
 	pPlayer->m_LastTeleTee.Save(pChr);
 }
@@ -2154,7 +2154,7 @@ void CGameContext::ConPracticeToTeleporter(IConsole::IResult *pResult, void *pUs
 
 		ConToTeleporter(pResult, pUserData);
 		pChr->ResetJumps();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 		pChr->ResetVelocity();
 		pChr->GetPlayer()->m_LastTeleTee.Save(pChr);
 	}
@@ -2174,7 +2174,7 @@ void CGameContext::ConPracticeToCheckTeleporter(IConsole::IResult *pResult, void
 
 		ConToCheckTeleporter(pResult, pUserData);
 		pChr->ResetJumps();
-		pChr->UnFreeze();
+		pChr->Unfreeze();
 		pChr->ResetVelocity();
 		pChr->GetPlayer()->m_LastTeleTee.Save(pChr);
 	}
@@ -2244,7 +2244,7 @@ void CGameContext::ConPracticeUnDeep(IConsole::IResult *pResult, void *pUserData
 		return;
 
 	pChr->SetDeepFrozen(false);
-	pChr->UnFreeze();
+	pChr->Unfreeze();
 }
 
 void CGameContext::ConPracticeDeep(IConsole::IResult *pResult, void *pUserData)
