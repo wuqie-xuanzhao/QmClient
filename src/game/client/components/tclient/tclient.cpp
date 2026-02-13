@@ -1079,6 +1079,10 @@ void CTClient::UpdateQmClientRecognition()
 	}
 	if(m_pQmClientUsersSendTask && m_pQmClientUsersSendTask->Done())
 	{
+		// Report can fail after center service restart (stale auth token).
+		// Clear token to force refetch on the next sync cycle.
+		if(m_pQmClientUsersSendTask->State() != EHttpState::DONE || m_pQmClientUsersSendTask->StatusCode() == 401)
+			m_aQmClientAuthToken[0] = '\0';
 		m_pQmClientUsersSendTask = nullptr;
 	}
 
