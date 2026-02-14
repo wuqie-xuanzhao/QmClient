@@ -757,7 +757,8 @@ MACRO_CONFIG_INT(SvConnlimitTime, sv_connlimit_time, 20, 0, 1000, CFGFLAG_SERVER
 MACRO_CONFIG_STR(SvConnLoggingServer, sv_conn_logging_server, 128, "", CFGFLAG_SERVER, "用于 IP 地址记录的 Unix 套接字服务器（仅限 Unix）")
 #endif
 
-MACRO_CONFIG_INT(ClUnpredictedShadow, cl_unpredicted_shadow, 0, -1, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示不可预测的阴影 tee（0 = 关闭，1 = 开启，-1 = 甚至在调试模式下不显示）")
+MACRO_CONFIG_INT(ClUnpredictedShadow, cl_unpredicted_shadow, 0, -1, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示不可预测的阴影 tee（0 = 关闭，1 = 自己，2 = 仅其他玩家，3 = 全部，-1 = 甚至在调试模式下不显示）")
+MACRO_CONFIG_INT(ClUnpredictedShadowAlpha, cl_unpredicted_shadow_alpha, 10, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "不可预测的阴影 tee 透明度（0 不可见，100 完全可见）")
 MACRO_CONFIG_INT(ClPredictFreeze, cl_predict_freeze, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "预测冻结图块（0 = 关闭，1 = 开启，2 = 部分（允许冻结时少量移动）")
 MACRO_CONFIG_INT(ClShowNinja, cl_show_ninja, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示忍者皮肤")
 MACRO_CONFIG_INT(ClShowHookCollOther, cl_show_hook_coll_other, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示其他玩家的钩子碰撞线（2条始终显示）")
