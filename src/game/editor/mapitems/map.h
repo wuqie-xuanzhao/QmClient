@@ -11,6 +11,7 @@
 #include <game/editor/editor_history.h>
 #include <game/editor/editor_server_settings.h>
 #include <game/editor/editor_trackers.h>
+#include <game/editor/map_view.h>
 #include <game/editor/mapitems/envelope.h>
 #include <game/editor/mapitems/layer.h>
 #include <game/editor/references.h>
@@ -154,6 +155,9 @@ public:
 	int m_SelectedSoundSource;
 
 	int m_ShiftBy;
+
+	// Component states
+	CMapView::CState m_MapViewState;
 
 	// Quad knife
 	class CQuadKnife
