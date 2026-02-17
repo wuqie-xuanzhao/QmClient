@@ -6150,14 +6150,9 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	Ui()->DoLabel(&Info, aBuf, 10.0f, TEXTALIGN_MR);
 
 	static int s_HelpButton = 0;
-	if(DoButton_Editor(&s_HelpButton, "?", 0, &Help, BUTTONFLAG_LEFT, "[F1] 在网页浏览器中打开地图编辑器维基页面。") ||
-		(Input()->KeyPress(KEY_F1) && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr))
+	if(DoButton_Editor(&s_HelpButton, "?", 0, &Help, BUTTONFLAG_LEFT, "[F1] 在网页浏览器中打开地图编辑器维基页面。"))
 	{
-		const char *pLink = Localize("https://wiki.ddnet.org/wiki/Mapping");
-		if(!Client()->ViewLink(pLink))
-		{
-			ShowFileDialogError("无法在默认浏览器中打开链接“%s”。", pLink);
-		}
+		m_QuickActionShowHelp.Call();
 	}
 
 	static int s_CloseButton = 0;
@@ -6165,6 +6160,15 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	{
 		OnClose();
 		g_Config.m_ClEditor = 0;
+	}
+}
+
+void CEditor::ShowHelp()
+{
+	const char *pLink = Localize("https://wiki.ddnet.org/wiki/Mapping");
+	if(!Client()->ViewLink(pLink))
+	{
+		ShowFileDialogError("无法在默认浏览器中打开链接“%s”。", pLink);
 	}
 }
 
@@ -7189,6 +7193,18 @@ void CEditor::OnUpdate()
 
 	// handle key presses
 	Input()->ConsumeEvents([&](const IInput::CEvent &Event) {
+		if(m_Dialog == DIALOG_NONE &&
+			CLineInput::GetActiveInput() == nullptr &&
+			Event.m_Key == KEY_F1)
+		{
+			if((Event.m_Flags & IInput::FLAG_PRESS) != 0 &&
+				(Event.m_Flags & IInput::FLAG_REPEAT) == 0)
+			{
+				m_QuickActionShowHelp.Call();
+			}
+			return;
+		}
+
 		OnInput(Event);
 	});
 
@@ -7204,19 +7220,6 @@ void CEditor::OnUpdate()
 
 void CEditor::OnInput(const IInput::CEvent &Event)
 {
-	if(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Event.m_Key == KEY_F1)
-	{
-		if((Event.m_Flags & IInput::FLAG_PRESS) != 0 && (Event.m_Flags & IInput::FLAG_REPEAT) == 0)
-		{
-			const char *pLink = Localize("https://wiki.ddnet.org/wiki/Mapping");
-			if(!Client()->ViewLink(pLink))
-			{
-				ShowFileDialogError("无法在默认浏览器中打开链接“%s”。", pLink);
-			}
-		}
-		return;
-	}
-
 	for(CEditorComponent &Component : m_vComponents)
 	{
 		// Events with flag `FLAG_RELEASE` must always be forwarded to all components so keys being
