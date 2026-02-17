@@ -2605,29 +2605,32 @@ void CEditor::DoMapEditor(CUIRect View)
 		if(MapView()->ProofMode()->IsModeMenu() && !m_ShowPicker)
 		{
 			MapView()->ProofMode()->ResetMenuBackgroundPositions();
-			for(int i = 0; i < (int)MapView()->ProofMode()->m_vMenuBackgroundPositions.size(); i++)
+			const std::vector<vec2> &Positions = MapView()->ProofMode()->MenuBackgroundPositions();
+			const int CurrentMenuProofIndex = MapView()->ProofMode()->CurrentMenuProofIndex();
+			for(int i = 0; i < (int)Positions.size(); i++)
 			{
-				vec2 Pos = MapView()->ProofMode()->m_vMenuBackgroundPositions[i];
-				Pos += MapView()->GetWorldOffset() - MapView()->ProofMode()->m_vMenuBackgroundPositions[MapView()->ProofMode()->m_CurrentMenuProofIndex];
+				const void *pPositionId = &Positions[i];
+				vec2 Pos = Positions[i];
+				Pos += MapView()->GetWorldOffset() - Positions[CurrentMenuProofIndex];
 				Pos.y -= 3.0f;
 
 				if(distance(Pos, m_MouseWorldNoParaPos) <= 20.0f)
 				{
-					Ui()->SetHotItem(&MapView()->ProofMode()->m_vMenuBackgroundPositions[i]);
+					Ui()->SetHotItem(pPositionId);
 
-					if(i != MapView()->ProofMode()->m_CurrentMenuProofIndex && Ui()->CheckActiveItem(&MapView()->ProofMode()->m_vMenuBackgroundPositions[i]))
+					if(i != CurrentMenuProofIndex && Ui()->CheckActiveItem(pPositionId))
 					{
 						if(!Ui()->MouseButton(0))
 						{
-							MapView()->ProofMode()->m_CurrentMenuProofIndex = i;
-							MapView()->SetWorldOffset(MapView()->ProofMode()->m_vMenuBackgroundPositions[i]);
+							MapView()->ProofMode()->SetCurrentMenuProofIndex(i);
+							MapView()->SetWorldOffset(Positions[i]);
 							Ui()->SetActiveItem(nullptr);
 						}
 					}
-					else if(Ui()->HotItem() == &MapView()->ProofMode()->m_vMenuBackgroundPositions[i])
+					else if(Ui()->HotItem() == pPositionId)
 					{
 						char aTooltipPrefix[32] = "切换验证位置到";
-						if(i == MapView()->ProofMode()->m_CurrentMenuProofIndex)
+						if(i == CurrentMenuProofIndex)
 							str_copy(aTooltipPrefix, "当前验证位置在");
 
 						char aNumBuf[8];
@@ -2637,15 +2640,15 @@ void CEditor::DoMapEditor(CUIRect View)
 							aNumBuf[0] = '\0';
 
 						char aTooltipPositions[128];
-						str_format(aTooltipPositions, sizeof(aTooltipPositions), "%s %s", MapView()->ProofMode()->m_vpMenuBackgroundPositionNames[i], aNumBuf);
+						str_format(aTooltipPositions, sizeof(aTooltipPositions), "%s %s", MapView()->ProofMode()->MenuBackgroundPositionName(i), aNumBuf);
 
-						for(int k : MapView()->ProofMode()->m_vMenuBackgroundCollisions.at(i))
+						for(int k : MapView()->ProofMode()->MenuBackgroundCollisions(i))
 						{
-							if(k == MapView()->ProofMode()->m_CurrentMenuProofIndex)
+							if(k == CurrentMenuProofIndex)
 								str_copy(aTooltipPrefix, "当前验证位置在");
 
-							Pos = MapView()->ProofMode()->m_vMenuBackgroundPositions[k];
-							Pos += MapView()->GetWorldOffset() - MapView()->ProofMode()->m_vMenuBackgroundPositions[MapView()->ProofMode()->m_CurrentMenuProofIndex];
+							Pos = Positions[k];
+							Pos += MapView()->GetWorldOffset() - Positions[CurrentMenuProofIndex];
 							Pos.y -= 3.0f;
 
 							if(distance(Pos, m_MouseWorldNoParaPos) > 20.0f)
@@ -2658,12 +2661,12 @@ void CEditor::DoMapEditor(CUIRect View)
 
 							char aTooltipPositionsCopy[128];
 							str_copy(aTooltipPositionsCopy, aTooltipPositions);
-							str_format(aTooltipPositions, sizeof(aTooltipPositions), "%s, %s %s", aTooltipPositionsCopy, MapView()->ProofMode()->m_vpMenuBackgroundPositionNames[k], aNumBuf);
+							str_format(aTooltipPositions, sizeof(aTooltipPositions), "%s, %s %s", aTooltipPositionsCopy, MapView()->ProofMode()->MenuBackgroundPositionName(k), aNumBuf);
 						}
 						str_format(m_aTooltip, sizeof(m_aTooltip), "%s %s.", aTooltipPrefix, aTooltipPositions);
 
 						if(Ui()->MouseButton(0))
-							Ui()->SetActiveItem(&MapView()->ProofMode()->m_vMenuBackgroundPositions[i]);
+							Ui()->SetActiveItem(pPositionId);
 					}
 					break;
 				}

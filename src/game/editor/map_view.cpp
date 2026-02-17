@@ -24,11 +24,6 @@ void CMapView::OnInit(CEditor *pEditor)
 	InitSubComponents();
 }
 
-void CMapView::OnReset()
-{
-	m_ProofMode.OnReset();
-}
-
 void CMapView::OnMapLoad()
 {
 	m_ProofMode.OnMapLoad();
@@ -36,18 +31,12 @@ void CMapView::OnMapLoad()
 
 bool CMapView::IsFocused()
 {
-	if(m_ProofMode.m_ProofBorders == CProofMode::PROOF_BORDER_MENU)
-		return GetWorldOffset() == m_ProofMode.m_vMenuBackgroundPositions[m_ProofMode.m_CurrentMenuProofIndex];
-	else
-		return GetWorldOffset() == vec2(0, 0);
+	return GetWorldOffset() == (m_ProofMode.IsModeMenu() ? m_ProofMode.CurrentMenuBackgroundPosition() : vec2(0.0f, 0.0f));
 }
 
 void CMapView::Focus()
 {
-	if(m_ProofMode.m_ProofBorders == CProofMode::PROOF_BORDER_MENU)
-		SetWorldOffset(m_ProofMode.m_vMenuBackgroundPositions[m_ProofMode.m_CurrentMenuProofIndex]);
-	else
-		SetWorldOffset({0, 0});
+	SetWorldOffset(m_ProofMode.IsModeMenu() ? m_ProofMode.CurrentMenuBackgroundPosition() : vec2(0.0f, 0.0f));
 }
 
 void CMapView::RenderGroupBorder()
