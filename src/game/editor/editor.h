@@ -576,16 +576,11 @@ public:
 	CMapSettingsBackend::CContext m_MapSettingsCommandContext;
 
 	CImageInfo m_TileartImageInfo;
-	void AddTileart(bool IgnoreHistory = false);
 	char m_aTileartFilename[IO_MAX_PATH_LENGTH];
 	void TileartCheckColors();
 
 	CImageInfo m_QuadArtImageInfo;
 	CQuadArtParameters m_QuadArtParameters;
-	void AddQuadArt(bool IgnoreHistory = false);
-
-	void PlaceBorderTiles();
-
 	// editor_ui.cpp
 	void UpdateTooltip(const void *pId, const CUIRect *pRect, const char *pToolTip);
 	ColorRGBA GetButtonColor(const void *pId, int Checked);

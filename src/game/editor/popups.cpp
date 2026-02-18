@@ -2332,7 +2332,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEvent(void *pContext, CUIRect View, 
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_PLACE_BORDER_TILES)
 		{
-			pEditor->PlaceBorderTiles();
+			pEditor->Map()->PlaceBorderTiles();
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_TILEART_BIG_IMAGE)
 		{
@@ -2340,11 +2340,13 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEvent(void *pContext, CUIRect View, 
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_TILEART_MANY_COLORS)
 		{
-			pEditor->AddTileart();
+			pEditor->Map()->AddTileArt(std::move(pEditor->m_TileartImageInfo), pEditor->m_aTileartFilename, false);
+			pEditor->OnDialogClose();
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_QUADART_BIG_IMAGE)
 		{
-			pEditor->AddQuadArt();
+			pEditor->Map()->AddQuadArt(std::move(pEditor->m_QuadArtImageInfo), pEditor->m_QuadArtParameters, false);
+			pEditor->OnDialogClose();
 		}
 		else if(pEditor->m_PopupEventType == POPEVENT_REMOVE_USED_IMAGE)
 		{
@@ -3343,7 +3345,8 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuadArt(void *pContext, CUIRect View
 		}
 		else
 		{
-			pEditor->AddQuadArt();
+			pEditor->Map()->AddQuadArt(std::move(pEditor->m_QuadArtImageInfo), pEditor->m_QuadArtParameters, false);
+			pEditor->OnDialogClose();
 		}
 		return CUi::POPUP_CLOSE_CURRENT;
 	}

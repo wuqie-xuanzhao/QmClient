@@ -45,6 +45,29 @@ void CEditorMap::ResetModifiedState()
 	m_LastSaveTime = Editor()->Client()->GlobalTime();
 }
 
+void CEditorMap::PlaceBorderTiles()
+{
+	std::shared_ptr<CLayerTiles> pT = std::static_pointer_cast<CLayerTiles>(SelectedLayerType(0, LAYERTYPE_TILES));
+
+	for(int i = 0; i < pT->m_Width * pT->m_Height; ++i)
+	{
+		if(i % pT->m_Width < 2 || i % pT->m_Width > pT->m_Width - 3 || i < pT->m_Width * 2 || i > pT->m_Width * (pT->m_Height - 2))
+		{
+			int x = i % pT->m_Width;
+			int y = i / pT->m_Width;
+
+			CTile Current = pT->m_pTiles[i];
+			Current.m_Index = 1;
+			pT->SetTile(x, y, Current);
+		}
+	}
+
+	int GameGroupIndex = std::find(m_vpGroups.begin(), m_vpGroups.end(), m_pGameGroup) - m_vpGroups.begin();
+	m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(this, GameGroupIndex), "工具“生成边框”");
+
+	OnModify();
+}
+
 void CEditorMap::Clean()
 {
 	m_aFilename[0] = '\0';

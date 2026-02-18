@@ -14,6 +14,7 @@
 #include <game/editor/mapitems/envelope.h>
 #include <game/editor/mapitems/layer.h>
 #include <game/editor/references.h>
+#include <game/editor/quadart.h>
 
 #include <functional>
 #include <memory>
@@ -259,6 +260,12 @@ public:
 	void SelectPreviousSound();
 	bool IsSoundUsed(int SoundIndex) const;
 	CSoundSource *SelectedSoundSource() const;
+
+	void PlaceBorderTiles();
+
+	void AddTileArt(CImageInfo &&Image, const char *pFilename, bool IgnoreHistory);
+
+	void AddQuadArt(CImageInfo &&Image, const CQuadArtParameters &Parameters, bool IgnoreHistory);
 
 private:
 	CEditor *m_pEditor;

@@ -1259,10 +1259,10 @@ void CEditorActionAppendMap::Redo()
 
 // ---------------------------
 
-CEditorActionTileArt::CEditorActionTileArt(CEditorMap *pMap, int PreviousImageCount, const char *pTileArtFile, std::vector<int> &vImageIndexMap) :
+CEditorActionTileArt::CEditorActionTileArt(CEditorMap *pMap, int PreviousImageCount, const char *pFilename, std::vector<int> &vImageIndexMap) :
 	IEditorAction(pMap), m_PreviousImageCount(PreviousImageCount), m_vImageIndexMap(vImageIndexMap)
 {
-	str_copy(m_aTileArtFile, pTileArtFile);
+	str_copy(m_aFilename, pFilename);
 	str_copy(m_aDisplayText, "图块艺术");
 }
 
@@ -1306,19 +1306,18 @@ void CEditorActionTileArt::Undo()
 
 void CEditorActionTileArt::Redo()
 {
-	if(!Graphics()->LoadPng(Editor()->m_TileartImageInfo, m_aTileArtFile, IStorage::TYPE_ALL))
+	CImageInfo Image;
+	if(!Graphics()->LoadPng(Image, m_aFilename, IStorage::TYPE_ALL))
 	{
-		Editor()->ShowFileDialogError("无法从文件“%s”加载图像。", m_aTileArtFile);
+		Editor()->ShowFileDialogError("无法从文件“%s”加载图像。", m_aFilename);
 		return;
 	}
-
-	IStorage::StripPathAndExtension(m_aTileArtFile, Editor()->m_aTileartFilename, sizeof(Editor()->m_aTileartFilename));
-	Editor()->AddTileart(true);
+	Map()->AddTileArt(std::move(Image), m_aFilename, true);
 }
 
 // ---------------------------
 
-CEditorActionQuadArt::CEditorActionQuadArt(CEditorMap *pMap, CQuadArtParameters Parameters) :
+CEditorActionQuadArt::CEditorActionQuadArt(CEditorMap *pMap, const CQuadArtParameters &Parameters) :
 	IEditorAction(pMap), m_Parameters(Parameters)
 {
 	str_copy(m_aDisplayText, "创建四边形画");
@@ -1332,15 +1331,13 @@ void CEditorActionQuadArt::Undo()
 
 void CEditorActionQuadArt::Redo()
 {
-	Editor()->m_QuadArtParameters = m_Parameters;
-	str_copy(Editor()->m_QuadArtParameters.m_aFilename, m_Parameters.m_aFilename, sizeof(Editor()->m_QuadArtParameters.m_aFilename));
-
-	if(!Graphics()->LoadPng(Editor()->m_QuadArtImageInfo, Editor()->m_QuadArtParameters.m_aFilename, IStorage::TYPE_ALL))
+	CImageInfo Image;
+	if(!Graphics()->LoadPng(Image, m_Parameters.m_aFilename, IStorage::TYPE_ALL))
 	{
-		Editor()->ShowFileDialogError("无法从文件“%s”加载图像。", Editor()->m_QuadArtParameters.m_aFilename);
+		Editor()->ShowFileDialogError("无法从文件“%s”加载图像。", m_Parameters.m_aFilename);
 		return;
 	}
-	Editor()->AddQuadArt(true);
+	Map()->AddQuadArt(std::move(Image), m_Parameters, true);
 }
 
 // ---------------------------------
