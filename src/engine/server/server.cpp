@@ -1877,6 +1877,24 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		SendMsg(&Packer, MSGFLAG_VITAL, ClientId);
 	}
 
+	{
+		bool VitalFlag = (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0;
+		bool NonVitalMsg = Sys && (Msg == NETMSG_INPUT || Msg == NETMSG_PING || Msg == NETMSG_PINGEX);
+		if(!VitalFlag && !NonVitalMsg)
+		{
+			if(g_Config.m_Debug)
+			{
+				log_debug(
+					"server",
+					"strange message ClientId=%d msg=%d data_size=%d (missing vital flag)",
+					ClientId,
+					Msg,
+					pPacket->m_DataSize);
+			}
+			return;
+		}
+	}
+
 	if(Sys)
 	{
 		// system message
@@ -1999,7 +2017,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_CLIENTVER)
 		{
-			if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientId].m_State == CClient::STATE_PREAUTH)
+			if(m_aClients[ClientId].m_State == CClient::STATE_PREAUTH)
 			{
 				CUuid *pConnectionId = (CUuid *)Unpacker.GetRaw(sizeof(*pConnectionId));
 				int DDNetVersion = Unpacker.GetInt();
@@ -2020,7 +2038,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_INFO)
 		{
-			if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientId].m_State == CClient::STATE_PREAUTH || m_aClients[ClientId].m_State == CClient::STATE_AUTH))
+			if((m_aClients[ClientId].m_State == CClient::STATE_PREAUTH || m_aClients[ClientId].m_State == CClient::STATE_AUTH))
 			{
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				if(Unpacker.Error())
@@ -2072,7 +2090,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_REQUEST_MAP_DATA)
 		{
-			if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) == 0 || m_aClients[ClientId].m_State < CClient::STATE_CONNECTING)
+			if(m_aClients[ClientId].m_State < CClient::STATE_CONNECTING)
 				return;
 
 			if(m_aClients[ClientId].m_Sixup)
@@ -2107,7 +2125,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_READY)
 		{
-			if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientId].m_State == CClient::STATE_CONNECTING))
+			if(m_aClients[ClientId].m_State == CClient::STATE_CONNECTING)
 			{
 				if(m_aClients[ClientId].m_IsLiveObserver)
 				{
@@ -2138,10 +2156,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_ENTERGAME)
 		{
-			if(m_aClients[ClientId].m_IsLiveObserver)
-				return;
-
-			if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientId].m_State == CClient::STATE_READY && GameServer()->IsClientReady(ClientId))
+	else if(m_aClients[ClientId].m_State >= CClient::STATE_READY && !m_aClients[ClientId].m_IsLiveObserver)
 			{
 				if(m_aClients[ClientId].m_KcpNegotiated && !m_NetServer.IsKcpActive(ClientId))
 				{
@@ -2341,7 +2356,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					m_aClients[ClientId].m_DDNetVersion = VERSION_DDNET_OLD;
 				}
 			}
-			else if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && IsRconAuthed(ClientId))
+			else if(IsRconAuthed(ClientId))
 			{
 				if(GameServer()->PlayerExists(ClientId) || m_aClients[ClientId].m_IsLiveObserver)
 				{
@@ -2360,10 +2375,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_RCON_AUTH)
 		{
-			if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) == 0)
-			{
-				return;
-			}
 			const char *pName = "";
 			if(!IsSixup(ClientId))
 			{
@@ -2505,7 +2516,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 		}
 	}
-	else if((pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientId].m_State >= CClient::STATE_READY && !m_aClients[ClientId].m_IsLiveObserver)
+	else if(m_aClients[ClientId].m_State >= CClient::STATE_READY && !m_aClients[ClientId].m_IsLiveObserver)
 	{
 		// game message
 		GameServer()->OnMessage(Msg, &Unpacker, ClientId);
