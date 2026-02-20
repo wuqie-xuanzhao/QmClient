@@ -3765,7 +3765,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     skin_transition_test.cpp
     skins_test.cpp
     render_target_test.cpp
-    shell_execute_test.cpp
+    windows_test.cpp
     snapshot_test.cpp
     steam_presence_test.cpp
     str_test.cpp
