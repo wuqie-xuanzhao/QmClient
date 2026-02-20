@@ -1,3 +1,5 @@
+#include "crashdump.h"
+
 #include "detect.h"
 
 #if defined(CONF_CRASHDUMP)
@@ -11,7 +13,6 @@ void crashdump_init_if_available(const char *log_file_path)
 #else
 
 #include "log.h"
-#include "system.h"
 #include "windows.h"
 
 #include <windows.h>

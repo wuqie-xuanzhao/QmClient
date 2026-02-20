@@ -2177,6 +2177,7 @@ set_src(BASE GLOB_RECURSE src/base
   color.cpp
   color.h
   crashdump.cpp
+  crashdump.h
   dbg.cpp
   dbg.h
   detect.h
