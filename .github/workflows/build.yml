@@ -37,7 +37,7 @@ jobs:
             output_name: TClient-windows.zip
             artifact_name: packaged-windows
           - name: macOS
-            os: macos-13
+            os: macos-latest
             package_ext: dmg
             output_name: TClient-macOS.dmg
             artifact_name: packaged-macos
@@ -162,7 +162,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     env:
-      ANDROID_APP_NAME: TClient
+      ANDROID_APP_NAME: QmClient
       ANDROID_PACKAGE_NAME: org.ddnet.client
       ANDROID_BUILD_DIR: build-android-release
     steps:
@@ -188,7 +188,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            cmake ninja-build pkg-config curl python3 python3-pip
+            cmake ninja-build pkg-config curl python3 python3-pip \
+            glslang-tools spirv-tools
           cargo install cargo-ndk
           rustup target add armv7-linux-androideabi
           rustup target add i686-linux-android
@@ -217,8 +218,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.apk" dist/TClient-android.apk
-          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.aab" dist/TClient-android.aab
+          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.apk" dist/QmClient-android.apk
+          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.aab" dist/QmClient-android.aab
           ls -lah dist
 
       - name: Upload Android artifact
@@ -226,8 +227,8 @@ jobs:
         with:
           name: packaged-android
           path: |
-            dist/TClient-android.apk
-            dist/TClient-android.aab
+            dist/QmClient-android.apk
+            dist/QmClient-android.aab
           if-no-files-found: error
           retention-days: 14
 
@@ -259,5 +260,5 @@ jobs:
             release-assets/TClient-windows.zip
             release-assets/TClient-ubuntu.tar.xz
             release-assets/TClient-macOS.dmg
-            release-assets/TClient-android.apk
-            release-assets/TClient-android.aab
+            release-assets/QmClient-android.apk
+            release-assets/QmClient-android.aab
