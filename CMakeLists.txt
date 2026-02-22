@@ -3415,7 +3415,8 @@ list(APPEND TARGETS_LINK rust_test)
 
 set(RUST_TEST_LIBS ${LIBS} $<TARGET_FILE:rust_test>)
 list(REMOVE_ITEM RUST_TEST_LIBS "-pthread")
-string(JOIN ";" RUST_TEST_LIBS_JOINED ${RUST_TEST_LIBS})
+# Use ',' as separator so the value can be passed through shell safely.
+string(JOIN "," RUST_TEST_LIBS_JOINED ${RUST_TEST_LIBS})
 string(GENEX_STRIP "${RUST_TEST_LIBS_JOINED}" RUST_TEST_LIBS_STRIPPED)
 add_custom_target(run_rust_tests
   COMMAND ${CMAKE_COMMAND} -E env "DDNET_TEST_LIBRARIES=${RUST_TEST_LIBS_STRIPPED}" ${CARGO_TEST}
