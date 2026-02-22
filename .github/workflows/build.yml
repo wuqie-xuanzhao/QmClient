@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     branches:
-      - main
+      [ main, master ]
     tags:
       - "v*"
       - "V*"
@@ -37,7 +37,7 @@ jobs:
             output_name: TClient-windows.zip
             artifact_name: packaged-windows
           - name: macOS
-            os: macos-13
+            os: macos-latest
             package_ext: dmg
             output_name: TClient-macOS.dmg
             artifact_name: packaged-macos
@@ -74,18 +74,28 @@ jobs:
           export HOMEBREW_NO_AUTO_UPDATE=1
           brew install \
             cmake ninja pkg-config python \
-            freetype sdl2 libpng libogg opus opusfile sqlite wavpack
-          python3 -m pip install --upgrade pip
-          python3 -m pip install dmgbuild
-          USER_BASE="$(python3 -m site --user-base)"
-          echo "${USER_BASE}/bin" >> "$GITHUB_PATH"
+            freetype sdl2 libpng libogg opus opusfile sqlite wavpack ffmpeg
+          python3 -m venv .venv-dmgbuild
+          . .venv-dmgbuild/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dmgbuild
+          echo "${PWD}/.venv-dmgbuild/bin" >> "$GITHUB_PATH"
 
-      - name: Configure (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
         run: >
           cmake -S . -B build -G Ninja
           -DCMAKE_BUILD_TYPE=Release
           -DDOWNLOAD_GTEST=ON
+
+      - name: Configure (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DDOWNLOAD_GTEST=ON \
+            -DCMAKE_OSX_SYSROOT="${SDKROOT}"
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
@@ -162,9 +172,12 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     env:
-      ANDROID_APP_NAME: TClient
+      ANDROID_APP_NAME: QmClient
       ANDROID_PACKAGE_NAME: org.ddnet.client
       ANDROID_BUILD_DIR: build-android-release
+      TW_KEY_NAME: /home/runner/.android/debug.keystore
+      TW_KEY_PW: android
+      TW_KEY_ALIAS: androiddebugkey
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -188,7 +201,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            cmake ninja-build pkg-config curl python3 python3-pip
+            cmake ninja-build pkg-config curl python3 python3-pip \
+            glslang-tools spirv-tools
           cargo install cargo-ndk
           rustup target add armv7-linux-androideabi
           rustup target add i686-linux-android
@@ -207,6 +221,23 @@ jobs:
             "ndk;26.1.10909125"
           yes | sdkmanager --licenses
 
+      - name: Prepare Android signing keystore
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "${TW_KEY_NAME}")"
+          if [ ! -f "${TW_KEY_NAME}" ]; then
+            keytool -genkeypair -v \
+              -keystore "${TW_KEY_NAME}" \
+              -storepass "${TW_KEY_PW}" \
+              -keypass "${TW_KEY_PW}" \
+              -alias "${TW_KEY_ALIAS}" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=GitHub Actions, OU=CI, O=QmClient, L=Unknown, ST=Unknown, C=US"
+          fi
+
       - name: Build Android APK/AAB
         shell: bash
         run: |
@@ -217,8 +248,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.apk" dist/TClient-android.apk
-          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.aab" dist/TClient-android.aab
+          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.apk" dist/QmClient-android.apk
+          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.aab" dist/QmClient-android.aab
           ls -lah dist
 
       - name: Upload Android artifact
@@ -226,8 +257,8 @@ jobs:
         with:
           name: packaged-android
           path: |
-            dist/TClient-android.apk
-            dist/TClient-android.aab
+            dist/QmClient-android.apk
+            dist/QmClient-android.aab
           if-no-files-found: error
           retention-days: 14
 
@@ -259,5 +290,5 @@ jobs:
             release-assets/TClient-windows.zip
             release-assets/TClient-ubuntu.tar.xz
             release-assets/TClient-macOS.dmg
-            release-assets/TClient-android.apk
-            release-assets/TClient-android.aab
+            release-assets/QmClient-android.apk
+            release-assets/QmClient-android.aab

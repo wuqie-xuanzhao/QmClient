@@ -27,7 +27,13 @@ fn main() {
         let libraries = env::var("DDNET_TEST_LIBRARIES")
             .expect("environment variable DDNET_TEST_LIBRARIES required but not found");
         let mut seen_library_dirs = HashSet::new();
-        for library in libraries.split(';') {
+        // Historically this list used ';'. Newer CMake uses ',' because ';'
+        // can be interpreted by POSIX shells when passed via custom commands.
+        for library in libraries.split(|ch| ch == ';' || ch == ',') {
+            let library = library.trim();
+            if library.is_empty() {
+                continue;
+            }
             let library = Path::new(library);
             let extension = library.extension().and_then(OsStr::to_str);
             let kind = match extension {

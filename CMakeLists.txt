@@ -3392,10 +3392,13 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   add_custom_target(run_tests
     DEPENDS run_cxx_tests
   )
-  if(NOT MSVC OR CMAKE_BUILD_TYPE STREQUAL Release)
+  if(NOT MSVC OR (NOT CMAKE_CONFIGURATION_TYPES AND CMAKE_BUILD_TYPE STREQUAL Release))
     # On MSVC, Rust tests only work in the release mode because we link our C++
     # code with the debug C standard library (/MTd) but Rust only supports
     # linking to the release C standard library (/MT).
+    #
+    # Multi-config generators (e.g. Visual Studio) don't have a reliable
+    # configure-time build type, so don't depend on Rust tests there.
     #
     # See also https://github.com/rust-lang/rust/issues/39016.
     add_dependencies(run_tests run_rust_tests)
@@ -3415,7 +3418,8 @@ list(APPEND TARGETS_LINK rust_test)
 
 set(RUST_TEST_LIBS ${LIBS} $<TARGET_FILE:rust_test>)
 list(REMOVE_ITEM RUST_TEST_LIBS "-pthread")
-string(JOIN ";" RUST_TEST_LIBS_JOINED ${RUST_TEST_LIBS})
+# Use ',' as separator so the value can be passed through shell safely.
+string(JOIN "," RUST_TEST_LIBS_JOINED ${RUST_TEST_LIBS})
 string(GENEX_STRIP "${RUST_TEST_LIBS_JOINED}" RUST_TEST_LIBS_STRIPPED)
 add_custom_target(run_rust_tests
   COMMAND ${CMAKE_COMMAND} -E env "DDNET_TEST_LIBRARIES=${RUST_TEST_LIBS_STRIPPED}" ${CARGO_TEST}
@@ -3928,7 +3932,13 @@ foreach(target ${TARGETS_OWN})
   target_include_directories(${target} PRIVATE src)
   target_include_directories(${target} PRIVATE src/rust-bridge)
   target_compile_definitions(${target} PRIVATE $<$<CONFIG:Debug>:CONF_DEBUG>)
-  target_include_directories(${target} SYSTEM PRIVATE ${CURL_INCLUDE_DIRS} ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
+  set(COMMON_SYSTEM_INCLUDE_DIRS ${CURL_INCLUDE_DIRS} ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
+  if(TARGET_OS STREQUAL "mac")
+    # Do not pass SDK usr/include explicitly on macOS. libc++ expects to
+    # control C/C++ header resolution and this explicit include can break it.
+    list(FILTER COMMON_SYSTEM_INCLUDE_DIRS EXCLUDE REGEX "/SDKs/[^/]+\\.sdk/usr/include$")
+  endif()
+  target_include_directories(${target} SYSTEM PRIVATE ${COMMON_SYSTEM_INCLUDE_DIRS})
   target_compile_definitions(${target} PRIVATE GLEW_STATIC)
   target_compile_definitions(${target} PRIVATE _FILE_OFFSET_BITS=64) # Ensure off_t is 64 bit for ftello and fseeko functions
   if(CRYPTO_FOUND)
