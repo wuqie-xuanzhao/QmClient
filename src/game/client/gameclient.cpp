@@ -2303,8 +2303,6 @@ int CGameClient::CurrentRaceTime() const
 	return (Client()->GameTick(g_Config.m_ClDummy) - m_LastRaceTick) / Client()->GameTickSpeed();
 }
 
-<<<<<<< HEAD
-=======
 bool CGameClient::IsTeamPlay() const
 {
 	return m_Snap.m_pGameInfoObj &&
@@ -2343,7 +2341,6 @@ bool CGameClient::AntiPingPlayers() const
 	       !m_Snap.m_SpecInfo.m_Active &&
 	       Client()->State() != IClient::STATE_DEMOPLAYBACK;
 }
-
 bool CGameClient::AntiPingGrenade() const
 {
 	return g_Config.m_ClAntiPing &&
@@ -2367,7 +2364,6 @@ bool CGameClient::AntiPingGunfire() const
 	       g_Config.m_ClAntiPingGunfire;
 }
 
->>>>>>> 83e771720a (Add `CGameClient::GetAnimationPlaybackSpeed` function)
 bool CGameClient::Predict() const
 {
 	if(!g_Config.m_ClPredict && !m_FastPractice.Enabled())

@@ -483,6 +483,21 @@ const char *IGameController::GetTeamName(int Team)
 	}
 }
 
+void IGameController::SetGamePaused(bool Paused)
+{
+	// Cannot unpause the game while gameover is active
+	if(m_GameOverTick != -1 && !Paused)
+	{
+		return;
+	}
+	GameServer()->m_World.m_Paused = Paused;
+}
+
+bool IGameController::IsGamePaused() const
+{
+	return GameServer()->m_World.m_Paused;
+}
+
 void IGameController::StartRound()
 {
 	ResetGame();
