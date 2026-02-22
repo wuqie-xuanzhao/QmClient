@@ -7,6 +7,7 @@ license = "Zlib"
 
 [lib]
 path = "lib.rs"
+doctest = false
 
 [dependencies]
 ddnet-base = { path = "../base" }

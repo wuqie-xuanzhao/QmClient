@@ -75,10 +75,11 @@ jobs:
           brew install \
             cmake ninja pkg-config python \
             freetype sdl2 libpng libogg opus opusfile sqlite wavpack
-          python3 -m pip install --upgrade pip
-          python3 -m pip install dmgbuild
-          USER_BASE="$(python3 -m site --user-base)"
-          echo "${USER_BASE}/bin" >> "$GITHUB_PATH"
+          python3 -m venv .venv-dmgbuild
+          . .venv-dmgbuild/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dmgbuild
+          echo "${PWD}/.venv-dmgbuild/bin" >> "$GITHUB_PATH"
 
       - name: Configure (Linux/macOS)
         if: runner.os != 'Windows'
@@ -165,6 +166,9 @@ jobs:
       ANDROID_APP_NAME: QmClient
       ANDROID_PACKAGE_NAME: org.ddnet.client
       ANDROID_BUILD_DIR: build-android-release
+      TW_KEY_NAME: /home/runner/.android/debug.keystore
+      TW_KEY_PW: android
+      TW_KEY_ALIAS: androiddebugkey
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -207,6 +211,23 @@ jobs:
             "build-tools;34.0.0" \
             "ndk;26.1.10909125"
           yes | sdkmanager --licenses
+
+      - name: Prepare Android signing keystore
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "${TW_KEY_NAME}")"
+          if [ ! -f "${TW_KEY_NAME}" ]; then
+            keytool -genkeypair -v \
+              -keystore "${TW_KEY_NAME}" \
+              -storepass "${TW_KEY_PW}" \
+              -keypass "${TW_KEY_PW}" \
+              -alias "${TW_KEY_ALIAS}" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=GitHub Actions, OU=CI, O=QmClient, L=Unknown, ST=Unknown, C=US"
+          fi
 
       - name: Build Android APK/AAB
         shell: bash
