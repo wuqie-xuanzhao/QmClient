@@ -2339,6 +2339,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				pName = Unpacker.GetString(CUnpacker::SANITIZE_CC); // login name, now used
 			}
 			const char *pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			bool SendRconCmds = true;
+			if(!IsSixup(ClientId))
+				SendRconCmds = Unpacker.GetInt() != 0;
 			if(Unpacker.Error())
 			{
 				return;
