@@ -1576,7 +1576,7 @@ void CEditorActionEnvelopeEdit::Redo()
 }
 
 CEditorActionEnvelopeEditPointTime::CEditorActionEnvelopeEditPointTime(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, CFixedTime Previous, CFixedTime Current) :
-	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Previous(Previous), m_Current(Current), m_pEnv(Map()->m_vpEnvelopes[EnvelopeIndex])
+	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Previous(Previous), m_Current(Current)
 {
 	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑点 %d 的时间（包络线 %d）", m_PointIndex, m_EnvelopeIndex);
 }
@@ -1593,7 +1593,7 @@ void CEditorActionEnvelopeEditPointTime::Redo()
 
 void CEditorActionEnvelopeEditPointTime::Apply(CFixedTime Value)
 {
-	m_pEnv->m_vPoints[m_PointIndex].m_Time = Value;
+	Map()->m_vpEnvelopes[m_EnvelopeIndex]->m_vPoints[m_PointIndex].m_Time = Value;
 	Map()->OnModify();
 }
 
