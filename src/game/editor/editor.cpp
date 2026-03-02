@@ -7129,24 +7129,19 @@ void CEditor::HandleWriterFinishJobs()
 	if(!pJob->Done())
 		return;
 	m_WriterFinishJobs.pop_front();
-	const bool CollabSnapshotJob = m_CollabSnapshotSavePending && str_comp(pJob->GetRealFilename(), QM_EDITOR_COLLAB_SNAPSHOT_PATH) == 0;
+	const bool CollabSnapshotJob = m_CollabSnapshotSavePending && str_comp(pJob->RealFilename(), QM_EDITOR_COLLAB_SNAPSHOT_PATH) == 0;
 
-	char aBuf[2 * IO_MAX_PATH_LENGTH + 128];
-	if(!Storage()->RenameFile(pJob->GetTempFilename(), pJob->GetRealFilename(), IStorage::TYPE_SAVE))
+	const char *pErrorMessage = pJob->ErrorMessage();
+	if(pErrorMessage[0] != '\0')
 	{
 		if(CollabSnapshotJob)
 		{
 			m_CollabSnapshotSavePending = false;
 			SetCollabStatus("同步失败：无法移动地图快照");
 		}
-		str_format(aBuf, sizeof(aBuf), "保存失败：无法将临时地图文件“%s”移动到“%s”。", pJob->GetTempFilename(), pJob->GetRealFilename());
-		ShowFileDialogError("%s", aBuf);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor/save", aBuf);
+		ShowFileDialogError("%s", pErrorMessage);
 		return;
 	}
-
-	str_format(aBuf, sizeof(aBuf), "保存“%s”完成", pJob->GetRealFilename());
-	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor/save", aBuf);
 
 	if(CollabSnapshotJob)
 	{
@@ -7163,8 +7158,8 @@ void CEditor::HandleWriterFinishJobs()
 
 		if(Client()->ServerAddress() != nullptr && net_addr_is_local(Client()->ServerAddress()))
 		{
-			char aMapName[128];
-			IStorage::StripPathAndExtension(pJob->GetRealFilename(), aMapName, sizeof(aMapName));
+			char aMapName[MAX_MAP_LENGTH];
+			IStorage::StripPathAndExtension(pJob->RealFilename(), aMapName, sizeof(aMapName));
 			if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
 				Client()->Rcon("hot_reload");
 		}
@@ -7328,8 +7323,12 @@ void CEditor::LoadCurrentMap()
 bool CEditor::Save(const char *pFilename)
 {
 	// Check if file with this name is already being saved at the moment
-	if(std::any_of(std::begin(m_WriterFinishJobs), std::end(m_WriterFinishJobs), [pFilename](const std::shared_ptr<CDataFileWriterFinishJob> &Job) { return str_comp(pFilename, Job->GetRealFilename()) == 0; }))
+	if(std::any_of(std::begin(m_WriterFinishJobs), std::end(m_WriterFinishJobs), [pFilename](const std::shared_ptr<CDataFileWriterFinishJob> &Job) {
+		   return str_comp(pFilename, Job->RealFilename()) == 0;
+	   }))
+	{
 		return false;
+	}
 
 	const auto &&ErrorHandler = [this](const char *pErrorMessage) {
 		ShowFileDialogError("%s", pErrorMessage);
