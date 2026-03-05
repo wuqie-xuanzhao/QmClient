@@ -2323,7 +2323,7 @@ void CSkins::RefreshEventSkins()
 
 	if(g_Config.m_Events)
 	{
-		if(time_season() == SEASON_XMAS)
+		if(time_season() == ETimeSeason::XMAS)
 		{
 			str_copy(m_aEventSkinPrefix, "santa");
 		}
