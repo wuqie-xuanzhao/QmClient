@@ -293,6 +293,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("cl_download_skins", ConchainRefreshSkins, this);
 	Console()->Chain("cl_download_community_skins", ConchainRefreshSkins, this);
 	Console()->Chain("cl_vanilla_skins_only", ConchainRefreshSkins, this);
+	Console()->Chain("events", ConchainRefreshEventSkins, this);
 
 	Console()->Chain("cl_dummy", ConchainSpecialDummy, this);
 
@@ -664,9 +665,6 @@ void CGameClient::OnConnected()
 		// people at start as the other info 64 packet is only sent after the first
 		// snap
 		Client()->Rcon("crashmeplx");
-
-		if(g_Config.m_ClAutoDemoOnConnect)
-			Client()->DemoRecorder_HandleAutoStart();
 
 		m_LocalServer.RconAuthIfPossible();
 	}
@@ -2457,7 +2455,11 @@ void CGameClient::OnNewSnapshot()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_Snap.m_aCharacters[i].m_Active && (m_Snap.m_aCharacters[i].m_Cur.m_Jumped & 2) && !(m_Snap.m_aCharacters[i].m_Prev.m_Jumped & 2))
-			if(!Predict() || (i != m_Snap.m_LocalClientId && (!AntiPingPlayers() || i != m_PredictedDummyId)))
+		{
+			bool IsDummy = Client()->DummyConnected() && i == m_aLocalIds[!g_Config.m_ClDummy];
+			bool IsLocalPlayer = i == m_Snap.m_LocalClientId;
+
+			if(!Predict() || (!IsLocalPlayer && !AntiPingPlayers()) || (!IsLocalPlayer && !IsDummy))
 			{
 				vec2 Pos = mix(vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
 					vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
@@ -2468,6 +2470,7 @@ void CGameClient::OnNewSnapshot()
 				const float Volume = 1.0f; // TODO snd_game_volume_others
 				m_Effects.AirJump(Pos, Alpha, Volume);
 			}
+		}
 	}
 	if(g_Config.m_ClFreezeStars && !m_SuppressEvents)
 	{
@@ -2737,6 +2740,46 @@ void CGameClient::HandleRandomEmoteOnHit(CCharacter *pLocalChar, int DummyIndex)
 	}
 }
 
+void CGameClient::ApplyPreInputs(int Tick, bool Direct, CGameWorld &GameWorld)
+{
+	if(!g_Config.m_ClAntiPingPreInput)
+		return;
+
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
+	{
+		if(CCharacter *pChar = GameWorld.GetCharacterById(ClientId))
+		{
+			if(ClientId == m_aLocalIds[0] || (Client()->DummyConnected() && ClientId == m_aLocalIds[1]))
+				continue;
+
+			const CNetMsg_Sv_PreInput PreInput = m_aClients[ClientId].m_aPreInputs[Tick % 200];
+			if(PreInput.m_IntendedTick != Tick)
+				continue;
+
+			//convert preinput to input
+			CNetObj_PlayerInput Input = {0};
+			Input.m_Direction = PreInput.m_Direction;
+			Input.m_TargetX = PreInput.m_TargetX;
+			Input.m_TargetY = PreInput.m_TargetY;
+			Input.m_Jump = PreInput.m_Jump;
+			Input.m_Fire = PreInput.m_Fire;
+			Input.m_Hook = PreInput.m_Hook;
+			Input.m_WantedWeapon = PreInput.m_WantedWeapon;
+			Input.m_NextWeapon = PreInput.m_NextWeapon;
+			Input.m_PrevWeapon = PreInput.m_PrevWeapon;
+
+			if(Direct)
+			{
+				pChar->OnDirectInput(&Input);
+			}
+			else
+			{
+				pChar->OnPredictedInput(&Input);
+			}
+		}
+	}
+}
+
 void CGameClient::OnPredict()
 {
 	// store the previous values so we can detect prediction errors
@@ -2872,35 +2915,7 @@ void CGameClient::OnPredict()
 		if(pDummyInputData && !DummyFirst)
 			pDummyChar->OnDirectInput(pDummyInputData);
 
-		if(g_Config.m_ClAntiPingPreInput)
-		{
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if(CCharacter *pChar = m_PredictedWorld.GetCharacterById(i))
-				{
-					if(pDummyChar == pChar || pLocalChar == pChar)
-						continue;
-
-					const CNetMsg_Sv_PreInput PreInput = m_aClients[i].m_aPreInputs[Tick % 200];
-					if(PreInput.m_IntendedTick != Tick)
-						continue;
-
-					//convert preinput to input
-					CNetObj_PlayerInput Input = {0};
-					Input.m_Direction = PreInput.m_Direction;
-					Input.m_TargetX = PreInput.m_TargetX;
-					Input.m_TargetY = PreInput.m_TargetY;
-					Input.m_Jump = PreInput.m_Jump;
-					Input.m_Fire = PreInput.m_Fire;
-					Input.m_Hook = PreInput.m_Hook;
-					Input.m_WantedWeapon = PreInput.m_WantedWeapon;
-					Input.m_NextWeapon = PreInput.m_NextWeapon;
-					Input.m_PrevWeapon = PreInput.m_PrevWeapon;
-
-					pChar->OnDirectInput(&Input);
-				}
-			}
-		}
+		ApplyPreInputs(Tick, true, m_PredictedWorld);
 
 		m_PredictedWorld.m_GameTick = Tick;
 		if(pInputData)
@@ -2908,35 +2923,7 @@ void CGameClient::OnPredict()
 		if(pDummyInputData)
 			pDummyChar->OnPredictedInput(pDummyInputData);
 
-		if(g_Config.m_ClAntiPingPreInput)
-		{
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if(CCharacter *pChar = m_PredictedWorld.GetCharacterById(i))
-				{
-					if(pDummyChar == pChar || pLocalChar == pChar)
-						continue;
-
-					const CNetMsg_Sv_PreInput PreInput = m_aClients[i].m_aPreInputs[Tick % 200];
-					if(PreInput.m_IntendedTick != Tick)
-						continue;
-
-					//convert preinput to input
-					CNetObj_PlayerInput Input = {0};
-					Input.m_Direction = PreInput.m_Direction;
-					Input.m_TargetX = PreInput.m_TargetX;
-					Input.m_TargetY = PreInput.m_TargetY;
-					Input.m_Jump = PreInput.m_Jump;
-					Input.m_Fire = PreInput.m_Fire;
-					Input.m_Hook = PreInput.m_Hook;
-					Input.m_WantedWeapon = PreInput.m_WantedWeapon;
-					Input.m_NextWeapon = PreInput.m_NextWeapon;
-					Input.m_PrevWeapon = PreInput.m_PrevWeapon;
-
-					pChar->OnPredictedInput(&Input);
-				}
-			}
-		}
+		ApplyPreInputs(Tick, false, m_PredictedWorld);
 
 		m_PredictedWorld.Tick();
 		HandleHammerSkinSwap(pLocalChar);
@@ -3014,6 +3001,7 @@ void CGameClient::OnPredict()
 				if(Events & COREEVENT_AIR_JUMP)
 					m_Effects.AirJump(Pos, 1.0f, 1.0f);
 		}
+
 	}
 
 	if(g_Config.m_TcFastInput)
@@ -4142,11 +4130,17 @@ void CGameClient::UpdatePrediction()
 				pLocalChar->OnDirectInput(pInput);
 			if(pDummyInput)
 				pDummyChar->OnDirectInput(pDummyInput);
+
+			ApplyPreInputs(Tick, true, m_GameWorld);
+
 			m_GameWorld.m_GameTick = Tick;
 			if(pInput)
 				pLocalChar->OnPredictedInput(pInput);
 			if(pDummyInput)
 				pDummyChar->OnPredictedInput(pDummyInput);
+
+			ApplyPreInputs(Tick, false, m_GameWorld);
+
 			m_GameWorld.Tick();
 
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -4376,7 +4370,6 @@ void CGameClient::UpdateRenderedCharacters()
 				Pos = GetFreezePos(i);
 			else if(g_Config.m_TcFastInput && (i == m_Snap.m_LocalClientId || (PredictDummy() && i == m_aLocalIds[!g_Config.m_ClDummy])))
 				Pos = GetFastInputPos(i);
-
 			if(i == m_Snap.m_LocalClientId || (PredictDummy() && i == m_aLocalIds[!g_Config.m_ClDummy]))
 			{
 				m_aClients[i].m_IsPredictedLocal = true;
@@ -5378,6 +5371,17 @@ void CGameClient::ConchainRefreshSkins(IConsole::IResult *pResult, void *pUserDa
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments() && pThis->m_Menus.IsInit())
 	{
+		pThis->RefreshSkins(CSkinDescriptor::FLAG_SIX);
+	}
+}
+
+void CGameClient::ConchainRefreshEventSkins(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	CGameClient *pThis = static_cast<CGameClient *>(pUserData);
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() && pThis->m_Menus.IsInit())
+	{
+		pThis->m_Skins.RefreshEventSkins();
 		pThis->RefreshSkins(CSkinDescriptor::FLAG_SIX);
 	}
 }

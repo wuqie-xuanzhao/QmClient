@@ -1073,6 +1073,17 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 	View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f), IGraphics::CORNER_B, 4.0f);
 
 	const int MaxEntries = ServerBrowser()->Communities().size();
+	if(MaxEntries == 0)
+	{
+		CUIRect ErrorLabel;
+		View.Margin(5.0f, &ErrorLabel);
+		SLabelProperties ErrorLabelProps;
+		ErrorLabelProps.m_MaxWidth = ErrorLabel.w;
+		ErrorLabelProps.SetColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
+		Ui()->DoLabel(&ErrorLabel, Localize("Error loading communities"), 10.0f, TEXTALIGN_MC, ErrorLabelProps);
+		return;
+	}
+
 	const int EntriesPerRow = 1;
 
 	static CScrollRegion s_ScrollRegion;
@@ -1085,19 +1096,21 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 	const auto &&GetItemName = [&](int ItemIndex) {
 		return ServerBrowser()->Communities()[ItemIndex].Id();
 	};
-	const auto &&GetItemDisplayName = [&](int ItemIndex) {
-		return ServerBrowser()->Communities()[ItemIndex].Name();
-	};
 	const auto &&RenderItem = [&](int ItemIndex, CUIRect Item, const void *pItemId, bool Active) {
+		const auto &Community = ServerBrowser()->Communities()[ItemIndex];
 		const float Alpha = (Active ? 0.9f : 0.2f) + (Ui()->HotItem() == pItemId ? 0.1f : 0.0f);
 
-		CUIRect Icon, Label, FavoriteButton;
+		CUIRect Icon, NameLabel, PlayerCountIcon, PlayerCountLabel, FavoriteButton;
 		Item.VSplitRight(Item.h, &Item, &FavoriteButton);
-		Item.Margin(Spacing, &Item);
-		Item.VSplitLeft(Item.h * 2.0f, &Icon, &Label);
-		Label.VSplitLeft(Spacing, nullptr, &Label);
+		Item.HMargin(Spacing, &Item);
+		Item.VSplitLeft(Spacing, nullptr, &Item);
+		Item.VSplitRight(1.0f, &Item, nullptr);
+		Item.VSplitLeft(Item.h * 2.0f, &Icon, &NameLabel);
+		NameLabel.VSplitLeft(Spacing, nullptr, &NameLabel);
+		NameLabel.VSplitRight(8.0f, &NameLabel, &PlayerCountIcon);
+		NameLabel.VSplitRight(25.0f, &NameLabel, &PlayerCountLabel);
 
-		const char *pItemName = GetItemName(ItemIndex);
+		const char *pItemName = Community.Id();
 		const CCommunityIcon *pIcon = m_CommunityIcons.Find(pItemName);
 		if(pIcon != nullptr)
 		{
@@ -1105,7 +1118,13 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 		}
 
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
-		Ui()->DoLabel(&Label, GetItemDisplayName(ItemIndex), Label.h * CUi::ms_FontmodHeight, TEXTALIGN_ML);
+		Ui()->DoLabel(&NameLabel, Community.Name(), NameLabel.h * CUi::ms_FontmodHeight, TEXTALIGN_ML);
+		char aNumPlayersLabel[8];
+		str_format(aNumPlayersLabel, sizeof(aNumPlayersLabel), "%d", Community.NumPlayers());
+		Ui()->DoLabel(&PlayerCountLabel, aNumPlayersLabel, 7.0f, TEXTALIGN_MR);
+		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+		Ui()->DoLabel(&PlayerCountIcon, FONT_ICON_USER, 7.0f, TEXTALIGN_MC);
+		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 		const bool Favorite = ServerBrowser()->FavoriteCommunitiesFilter().Filtered(pItemName);
@@ -1120,6 +1139,8 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 				ServerBrowser()->FavoriteCommunitiesFilter().Add(pItemName);
 			}
 		}
+		GameClient()->m_Tooltips.DoToolTip(&s_vFavoriteButtonIds[ItemIndex], &FavoriteButton,
+			Favorite ? Localize("Click to remove this community from your favorites.") : Localize("Click to add this community to your favorites."));
 	};
 
 	s_vFavoriteButtonIds.resize(MaxEntries);
@@ -1512,9 +1533,9 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		vvFriends[OfflineCategoryIndex].emplace_back(pFriendInfo);
 	}
 
-	for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumSortedServers(); ++ServerIndex)
+	for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumServers(); ++ServerIndex)
 	{
-		const CServerInfo *pEntry = ServerBrowser()->SortedGet(ServerIndex);
+		const CServerInfo *pEntry = ServerBrowser()->Get(ServerIndex);
 		if(pEntry->m_FriendState == IFriends::FRIEND_NO)
 			continue;
 
@@ -2519,7 +2540,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 			ToolBox.x += TransitionOffset;
 		}
 
-		if((g_Config.m_UiPage == PAGE_INTERNET || g_Config.m_UiPage == PAGE_FAVORITES) && !ServerBrowser()->Communities().empty())
+		if(g_Config.m_UiPage == PAGE_INTERNET || g_Config.m_UiPage == PAGE_FAVORITES)
 		{
 			CUIRect CommunityFilter;
 			ToolBox.HSplitTop(19.0f + 4.0f * 17.0f + CScrollRegion::HEIGHT_MAGIC_FIX, &CommunityFilter, &ToolBox);

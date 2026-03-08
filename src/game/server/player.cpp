@@ -352,10 +352,6 @@ void CPlayer::Snap(int SnappingClient)
 		Score = -9999;
 	}
 
-	// send 0 if times of others are not shown
-	if(SnappingClient != m_ClientId && g_Config.m_SvHideScore)
-		Score = -9999;
-
 	if(!Server()->IsSixup(SnappingClient))
 	{
 		CNetObj_PlayerInfo *pPlayerInfo = Server()->SnapNewItem<CNetObj_PlayerInfo>(TranslatedId);
@@ -363,7 +359,7 @@ void CPlayer::Snap(int SnappingClient)
 			return;
 
 		pPlayerInfo->m_Latency = Latency;
-		pPlayerInfo->m_Score = Score;
+		pPlayerInfo->m_Score = !g_Config.m_SvHideScore || SnappingClient == m_ClientId ? Score : -9999;
 		pPlayerInfo->m_Local = (int)(m_ClientId == SnappingClient && (m_Paused != PAUSE_PAUSED || SnappingClientVersion >= VERSION_DDNET_OLD));
 		pPlayerInfo->m_ClientId = TranslatedId;
 		pPlayerInfo->m_Team = m_Team;
@@ -386,7 +382,7 @@ void CPlayer::Snap(int SnappingClient)
 			pPlayerInfo->m_PlayerFlags |= protocol7::PLAYERFLAG_ADMIN;
 
 		// Times are in milliseconds for 0.7
-		pPlayerInfo->m_Score = m_Score.has_value() ? GameServer()->Score()->PlayerData(m_ClientId)->m_BestTime * 1000 : -1;
+		pPlayerInfo->m_Score = m_Score.has_value() && (!g_Config.m_SvHideScore || SnappingClient == m_ClientId) ? GameServer()->Score()->PlayerData(m_ClientId)->m_BestTime * 1000 : -1;
 		pPlayerInfo->m_Latency = Latency;
 	}
 

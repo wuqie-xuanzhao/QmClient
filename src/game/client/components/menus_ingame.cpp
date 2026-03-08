@@ -216,9 +216,25 @@ void CMenus::RenderGame(CUIRect MainView)
 	static CButtonContainer s_DisconnectButton;
 	if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
 	{
-		if(GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
+		if((GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0) ||
+			GameClient()->m_TouchControls.HasEditingChanges() ||
+			GameClient()->m_Menus.m_MenusIngameTouchControls.UnsavedChanges())
 		{
-			PopupConfirm(Localize("Disconnect"), Localize("Are you sure that you want to disconnect?"), Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnect);
+			char aBuf[256] = {'\0'};
+			if(GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
+			{
+				str_copy(aBuf, Localize("Are you sure that you want to disconnect?"));
+			}
+			if(GameClient()->m_TouchControls.HasEditingChanges() ||
+				GameClient()->m_Menus.m_MenusIngameTouchControls.UnsavedChanges())
+			{
+				if(aBuf[0] != '\0')
+				{
+					str_append(aBuf, "\n\n");
+				}
+				str_append(aBuf, Localize("There's an unsaved change in the touch controls editor, you might want to save it."));
+			}
+			PopupConfirm(Localize("Disconnect"), aBuf, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnect);
 		}
 		else
 		{
@@ -621,10 +637,6 @@ void CMenus::PopupConfirmChangeSelectedButton()
 	if(m_MenusIngameTouchControls.CheckCachedSettings())
 	{
 		GameClient()->m_TouchControls.SetSelectedButton(m_MenusIngameTouchControls.m_pNewSelectedButton);
-		if(m_MenusIngameTouchControls.m_pOldSelectedButton == nullptr)
-		{
-			m_MenusIngameTouchControls.m_pOldSelectedButton = GameClient()->m_TouchControls.NewButton();
-		}
 		m_MenusIngameTouchControls.SaveCachedSettingsToTarget(m_MenusIngameTouchControls.m_pOldSelectedButton);
 		// Update wild pointer.
 		if(m_MenusIngameTouchControls.m_pNewSelectedButton != nullptr)
