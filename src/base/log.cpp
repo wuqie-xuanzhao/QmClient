@@ -1,6 +1,8 @@
 #include "color.h"
+#include "dbg.h"
 #include "logger.h"
-#include "system.h"
+#include "str.h"
+#include "time.h"
 #include "windows.h"
 
 #include <atomic>
@@ -13,6 +15,8 @@
 #include <fcntl.h>
 #include <io.h>
 #else
+#include "io.h"
+
 #include <unistd.h>
 #endif
 
