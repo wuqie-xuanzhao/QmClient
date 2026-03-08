@@ -330,7 +330,6 @@ SEditResult<int> CEditor::UiDoValueSelector(void *pId, CUIRect *pRect, const cha
 void CEditor::RenderBackground(CUIRect View, IGraphics::CTextureHandle Texture, float Size, float Brightness) const
 {
 	Graphics()->TextureSet(Texture);
-	Graphics()->BlendNormal();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(Brightness, Brightness, Brightness, 1.0f);
 	Graphics()->QuadsSetSubset(0, 0, View.w / Size, View.h / Size);

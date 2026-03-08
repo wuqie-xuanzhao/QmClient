@@ -165,8 +165,6 @@ void CEmoticon::OnRender()
 
 	Ui()->MapScreen();
 
-	Graphics()->BlendNormal();
-
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(ui_token::color::SURFACE_OVERLAY.WithMultipliedAlpha(0.95f));

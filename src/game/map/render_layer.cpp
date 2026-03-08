@@ -633,7 +633,6 @@ bool CRenderLayerTile::DoRender(const CRenderLayerParams &Params)
 
 void CRenderLayerTile::RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
-	Graphics()->BlendNormal();
 	RenderTileLayer(Color, Params);
 }
 
@@ -1474,7 +1473,6 @@ void CRenderLayerQuads::Render(const CRenderLayerParams &Params)
 	float Alpha = Force ? 1.f : (100 - Params.m_EntityOverlayVal) / 100.0f;
 	if(!Graphics()->IsQuadBufferingEnabled() || !Params.m_TileAndQuadBuffering)
 	{
-		Graphics()->BlendNormal();
 		RenderMap()->ForceRenderQuads(m_pQuads, m_pLayerQuads->m_NumQuads, LAYERRENDERFLAG_TRANSPARENT, m_pEnvelopeManager->EnvelopeEval(), Alpha);
 	}
 	else
@@ -1724,7 +1722,6 @@ void CRenderLayerEntityGame::Unload()
 
 void CRenderLayerEntityGame::RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
-	Graphics()->BlendNormal();
 	if(Params.m_RenderTileBorder)
 		RenderKillTileBorder(Color.Multiply(GetDeathBorderColor()));
 	RenderTileLayer(Color, Params);
@@ -2000,7 +1997,6 @@ void CRenderLayerEntityTele::Unload()
 void CRenderLayerEntityTele::RenderTileLayerWithTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
 	(void)Color;
-	Graphics()->BlendNormal();
 	const float TeleAlpha = QmOverlayAlpha(g_Config.m_QmEntityOverlayTeleAlpha);
 	const ColorRGBA TeleColor(1.0f, 1.0f, 1.0f, TeleAlpha);
 	const float CheckpointAlpha = QmOverlayAlpha(g_Config.m_QmEntityOverlayTeleCheckpointAlpha);
@@ -2010,7 +2006,6 @@ void CRenderLayerEntityTele::RenderTileLayerWithTileBuffer(const ColorRGBA &Colo
 		RenderTileLayer(TeleColor, Params);
 	if(CheckpointAlpha > 0.0f && m_VisualCheckpointTiles.has_value())
 		RenderTileLayer(CheckpointColor, Params, &m_VisualCheckpointTiles.value());
-
 	if(Params.m_RenderText)
 	{
 		if(TeleAlpha > 0.0f && m_VisualTeleNumbers.has_value())
@@ -2318,7 +2313,6 @@ void CRenderLayerEntitySwitch::RenderTileLayerWithTileBuffer(const ColorRGBA &Co
 	if(!m_pSwitchTiles)
 		return;
 
-	Graphics()->BlendNormal();
 	const float SwitchAlpha = QmOverlayAlpha(g_Config.m_QmEntityOverlaySwitchAlpha);
 	const ColorRGBA SwitchColor(1.0f, 1.0f, 1.0f, SwitchAlpha);
 	if(SwitchAlpha > 0.0f)

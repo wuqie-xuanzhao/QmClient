@@ -556,7 +556,6 @@ void CFileBrowser::RenderFilePreview(CUIRect Preview)
 			}
 
 			Graphics()->TextureSet(m_PreviewImage);
-			Graphics()->BlendNormal();
 			Graphics()->QuadsBegin();
 			IGraphics::CQuadItem QuadItem(PreviewImage.x, PreviewImage.y, Width, Height);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);

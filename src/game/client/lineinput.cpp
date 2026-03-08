@@ -606,7 +606,6 @@ void CLineInput::RenderLegacyCandidates()
 
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
-	Graphics()->BlendNormal();
 
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.8f);
 	IGraphics::CQuadItem Quad(Position.x + 0.75f, Position.y + 0.75f, RectWidth, RectHeight);
