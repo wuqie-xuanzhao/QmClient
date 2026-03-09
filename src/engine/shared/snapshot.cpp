@@ -550,12 +550,11 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshotBuffer *pTo, co
 
 		if(Keep)
 		{
-			void *pObj = Builder.NewItem(pFromItem->Type(), pFromItem->Id(), ItemSize);
-			if(!pObj)
-				return -301;
-
 			// keep it
-			mem_copy(pObj, pFromItem->Data(), ItemSize);
+			if(!Builder.NewItem(pFromItem->InternalType(), pFromItem->Id(), pFromItem->Data(), ItemSize))
+			{
+				return -301;
+			}
 		}
 	}
 
@@ -603,7 +602,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshotBuffer *pTo, co
 		}
 		else
 		{
-			pNewData = (int *)Builder.NewItem(Type, Id, ItemSize);
+			pNewData = (int *)Builder.NewItemRaw(Type, Id, ItemSize);
 		}
 
 		if(!pNewData)
@@ -747,8 +746,11 @@ CSnapshotBuilder::CSnapshotBuilder()
 
 void CSnapshotBuilder::Init(bool Sixup)
 {
+	dbg_assert(!m_Building, "Snapshot builder is already building snapshot. Call `Finish` for each call to `Init`.");
 	m_DataSize = 0;
 	m_NumItems = 0;
+	m_Building = true;
+	m_HasDroppedItem = false;
 	m_Sixup = Sixup;
 
 	for(int i = 0; i < m_NumExtendedItemTypes; i++)
@@ -789,8 +791,22 @@ std::optional<int> CSnapshotBuilder::FindItemIndexByKey(int Key)
 	return std::nullopt;
 }
 
+int CSnapshotBuilder::FinishIfNoDroppedItems(CSnapshotBuffer *pSnapData)
+{
+	dbg_assert(m_Building, "Snapshot builder is not building snapshot. Call `FinishIfNoDroppedItems` after `Init`.");
+	if(m_HasDroppedItem)
+	{
+		m_Building = false;
+		return -1;
+	}
+	return Finish(pSnapData);
+}
+
 int CSnapshotBuilder::Finish(CSnapshotBuffer *pBuffer)
 {
+	dbg_assert(m_Building, "Snapshot builder is not building snapshot. Call `Finish` after `Init`.");
+	m_Building = false;
+
 	// flatten and make the snapshot
 	dbg_assert(m_NumItems <= CSnapshot::MAX_ITEMS, "Too many snap items");
 	CSnapshot *pSnap = pBuffer->AsSnapshot();
@@ -810,8 +826,10 @@ int CSnapshotBuilder::GetTypeFromIndex(int Index) const
 
 bool CSnapshotBuilder::AddExtendedItemType(int Index)
 {
-	dbg_assert(0 <= Index && Index < m_NumExtendedItemTypes, "index out of range");
-	int *pUuidItem = static_cast<int *>(NewItem(0, GetTypeFromIndex(Index), sizeof(CUuid))); // NETOBJTYPE_EX
+	dbg_assert(m_Building, "Snapshot builder is not building snapshot. Call `AddExtendedItemType` between `Init` and `Finish`.");
+	dbg_assert(0 <= Index && Index < m_NumExtendedItemTypes, "Index out of range: %d", Index);
+
+	int *pUuidItem = static_cast<int *>(NewItemRaw(0, GetTypeFromIndex(Index), sizeof(CUuid))); // NETOBJTYPE_EX
 	if(pUuidItem == nullptr)
 	{
 		return false;
@@ -847,12 +865,30 @@ int CSnapshotBuilder::GetExtendedItemTypeIndex(int TypeId)
 	return -1;
 }
 
-void *CSnapshotBuilder::NewItem(int Type, int Id, int Size)
+bool CSnapshotBuilder::NewItem(int Type, int Id, const void *pData, int Size)
 {
-	if(Id == -1)
+	dbg_assert(m_Building, "Snapshot builder is not building snapshot. Call `NewItem` between `Init` and `Finish`.");
+	if(m_HasDroppedItem)
 	{
-		return nullptr;
+		return false;
 	}
+	void *pUninitData = NewItemRaw(Type, Id, Size);
+	if(!pUninitData)
+	{
+		m_HasDroppedItem = true;
+		return false;
+	}
+	mem_copy(pUninitData, pData, Size);
+	return true;
+}
+
+void *CSnapshotBuilder::NewItemRaw(int Type, int Id, int Size)
+{
+	dbg_assert(m_Building, "Snapshot builder is not building snapshot. Call `NewItemRaw` between `Init` and `Finish`.");
+	const bool Extended = Type >= OFFSET_UUID;
+	dbg_assert((Type >= 0 && Type <= CSnapshot::MAX_TYPE) || Extended || (m_Sixup && Type >= -CSnapshot::MAX_TYPE && Type < 0), "Invalid snap item Type: %d", Type);
+	dbg_assert(Id >= 0 && Id <= CSnapshot::MAX_ID, "Invalid snap item Id: %d", Id);
+	dbg_assert(Size >= 0 && (size_t)Size <= CSnapshot::MAX_SIZE - sizeof(CSnapshot) - sizeof(CSnapshotItem) - sizeof(int), "Invalid snap item Size: %d", Size);
 
 	if(m_NumItems >= CSnapshot::MAX_ITEMS)
 	{

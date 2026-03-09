@@ -4895,10 +4895,14 @@ void CServer::SnapFreeId(int Id)
 	m_IdPool.FreeId(Id);
 }
 
-void *CServer::SnapNewItem(int Type, int Id, int Size)
+bool CServer::SnapNewItem(int Type, int Id, const void *pData, int Size)
 {
 	dbg_assert(Id >= -1 && Id <= 0xffff, "Invalid snap item Id: %d", Id);
-	return Id < 0 ? nullptr : m_SnapshotBuilder.NewItem(Type, Id, Size);
+	if(Id < 0)
+	{
+		return false;
+	}
+	return m_SnapshotBuilder.NewItem(Type, Id, pData, Size);
 }
 
 void CServer::SnapSetStaticsize(int ItemType, int Size)
