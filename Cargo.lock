@@ -174,6 +174,87 @@ dependencies = [
 ]
 
 [[package]]
+name = "libtw2-buffer"
+version = "0.0.1"
+source = "git+https://github.com/heinrich5991/libtw2#3a7f27ff256eab81f848af5abfd6c09a706b35ef"
+dependencies = [
+ "arrayvec",
+ "mac",
+]
+
+[[package]]
+name = "libtw2-common"
+version = "0.0.1"
+source = "git+https://github.com/heinrich5991/libtw2#3a7f27ff256eab81f848af5abfd6c09a706b35ef"
+dependencies = [
+ "arrayvec",
+ "zerocopy",
+]
+
+[[package]]
+name = "libtw2-gamenet-common"
+version = "0.0.1"
+source = "git+https://github.com/heinrich5991/libtw2#3a7f27ff256eab81f848af5abfd6c09a706b35ef"
+dependencies = [
+ "arrayvec",
+ "libtw2-buffer",
+ "libtw2-common",
+ "libtw2-packer",
+ "libtw2-warn",
+ "serde",
+ "serde_derive",
+ "uuid",
+ "zerocopy",
+]
+
+[[package]]
+name = "libtw2-gamenet-snap"
+version = "0.0.1"
+source = "git+https://github.com/heinrich5991/libtw2#3a7f27ff256eab81f848af5abfd6c09a706b35ef"
+dependencies = [
+ "libtw2-buffer",
+ "libtw2-common",
+ "libtw2-gamenet-common",
+ "libtw2-packer",
+ "libtw2-warn",
+]
+
+[[package]]
+name = "libtw2-packer"
+version = "0.0.1"
+source = "git+https://github.com/heinrich5991/libtw2#3a7f27ff256eab81f848af5abfd6c09a706b35ef"
+dependencies = [
+ "arrayvec",
+ "libtw2-buffer",
+ "libtw2-common",
+ "libtw2-warn",
+ "uuid",
+]
+
+[[package]]
+name = "libtw2-snapshot"
+version = "0.0.1"
+source = "git+https://github.com/heinrich5991/libtw2#3a7f27ff256eab81f848af5abfd6c09a706b35ef"
+dependencies = [
+ "libtw2-buffer",
+ "libtw2-common",
+ "libtw2-gamenet-common",
+ "libtw2-gamenet-snap",
+ "libtw2-packer",
+ "libtw2-warn",
+ "uuid",
+ "vec_map",
+]
+
+[[package]]
+name = "libtw2-warn"
+version = "0.0.1"
+source = "git+https://github.com/heinrich5991/libtw2#3a7f27ff256eab81f848af5abfd6c09a706b35ef"
+dependencies = [
+ "log 0.3.9",
+]
+
+[[package]]
 name = "link-cplusplus"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"

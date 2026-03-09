@@ -16,6 +16,7 @@ mod ffi {
     extern "Rust" {
         type CSnapshotBuilder;
 
+        // TODO(cxx 1.0.164): #[Self = "CSnapshotBuilder"]
         #[allow(unused_must_use)]
         pub fn CSnapshotBuilder_New() -> Box<CSnapshotBuilder>;
         pub fn Init(&mut self, sixup: bool);
@@ -29,7 +30,7 @@ mod ffi {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```
 /// # extern crate ddnet_test;
 /// use ddnet_engine_shared::CSnapshotBuffer_New;
 /// use ddnet_engine_shared::CSnapshotBuilder_New;
@@ -61,7 +62,7 @@ pub struct CSnapshotBuilder {
 }
 
 /// Creates a new [`CSnapshotBuilder`].
-/// ```no_run
+/// ```
 /// # extern crate ddnet_test;
 /// use ddnet_engine_shared::CSnapshotBuilder_New;
 ///
@@ -120,23 +121,17 @@ impl CSnapshotBuilder {
             Some(t) => t,
             None => return true, // dropping items from 0.7 snaps doesn't count as dropping
         };
-        let mut id: u16 = id.try_into().expect("id must fit into a 16-bit integer");
-        for _ in 0..128 {
-            return match self.builder.add_item(type_, id, data) {
-                Ok(()) => true,
-                Err(snap::BuilderError::DuplicateKey) => {
-                    // Work around #12070, try again with higher ID:
-                    id = id.wrapping_add(1);
-                    continue;
-                }
-                Err(snap::BuilderError::TooLongSnap | snap::BuilderError::TooManyItems) => {
-                    self.has_dropped_item = true;
-                    false
-                }
-            };
+        let id: u16 = id.try_into().expect("id must fit into a 16-bit integer");
+        match self.builder.add_item(type_, id, data) {
+            Ok(()) => true,
+            Err(snap::BuilderError::DuplicateKey) => {
+                panic!("duplicate key in snapshot type={type_} id={id}");
+            }
+            Err(snap::BuilderError::TooLongSnap | snap::BuilderError::TooManyItems) => {
+                self.has_dropped_item = true;
+                false
+            }
         }
-        // silently drop the item if there's no ID space
-        true
     }
 
     /// Finishes building the snapshot, erroring if any items were dropped.

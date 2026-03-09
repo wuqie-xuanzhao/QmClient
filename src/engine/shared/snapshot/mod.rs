@@ -27,7 +27,7 @@ mod ffi {
         /// It can be viewed as a slice of `i32`.
         type CSnapshotBuffer;
 
-        //
+        // TODO(cxx 1.0.164): #[Self = "CSnapshotBuffer"]
         /// Create a new [`CSnapshotBuffer`].
         ///
         /// See [`CSnapshotBuilder`] for an example.

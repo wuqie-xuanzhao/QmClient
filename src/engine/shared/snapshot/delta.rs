@@ -20,17 +20,19 @@ mod ffi {
     extern "Rust" {
         type CSnapshotDelta;
 
+        // TODO(cxx 1.0.164): #[Self = "CSnapshotDelta"]
         pub fn CSnapshotDelta_DiffItem(past: &[i32], current: &[i32], out: &mut [i32]);
         /// Create a new snapshot delta.
         ///
         /// # Example
         ///
-        /// ```no_run
+        /// ```
         /// # extern crate ddnet_test;
         /// use ddnet_engine_shared::CSnapshotDelta_New;
         ///
         /// let delta = CSnapshotDelta_New();
         /// ```
+        // TODO(cxx 1.0.164): #[Self = "CSnapshotDelta"]
         pub fn CSnapshotDelta_New() -> Box<CSnapshotDelta>;
         pub fn Clone(&mut self) -> Box<CSnapshotDelta>;
         pub fn GetDataRate(&self, type_: i32) -> u64;
@@ -78,7 +80,7 @@ struct Buffer {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```
 /// # extern crate ddnet_test;
 /// use ddnet_engine_shared::CSnapshotDelta_DiffItem;
 ///
@@ -100,7 +102,7 @@ pub fn CSnapshotDelta_DiffItem(past: &[i32], current: &[i32], out: &mut [i32]) {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```
 /// # extern crate ddnet_test;
 /// use ddnet_engine_shared::CSnapshotDelta_New;
 ///
@@ -119,14 +121,14 @@ impl CSnapshotDelta {
     #[allow(missing_docs)] // not implemented
     pub fn GetDataRate(&self, type_: i32) -> u64 {
         let _ = type_;
-
+        // TODO
         0
     }
 
     #[allow(missing_docs)] // not implemented
     pub fn GetDataUpdates(&self, type_: i32) -> u64 {
         let _ = type_;
-        //
+        // TODO
         0
     }
 
@@ -148,7 +150,7 @@ impl CSnapshotDelta {
     ///
     /// # Example
     ///
-    /// ```no_run
+    /// ```
     /// # extern crate ddnet_test;
     /// use ddnet_engine_shared::CSnapshotDelta_New;
     ///
@@ -174,7 +176,7 @@ impl CSnapshotDelta {
     ///
     /// # Example
     ///
-    /// ```no_run
+    /// ```
     /// # extern crate ddnet_test;
     /// use ddnet_engine_shared::CSnapshotDelta_New;
     ///
@@ -258,9 +260,11 @@ impl CSnapshotDelta {
 
 fn obj_size(static_sizes: &[u16], type_: u16) -> Option<u32> {
     let type_: usize = type_.into();
-    let size = *static_sizes.get(type_)?;
-    if size == 0 {
+    if type_ > static_sizes.len() {
         return None;
     }
-    Some(size.into())
+    if static_sizes[type_] == 0 {
+        return None;
+    }
+    Some(static_sizes[type_].into())
 }
