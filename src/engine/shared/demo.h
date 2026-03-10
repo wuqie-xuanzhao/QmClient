@@ -139,6 +139,7 @@ private:
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
 	int m_LastSnapshotDataSize;
 	CSnapshotDelta *m_pSnapshotDelta;
+	CSnapshotDelta *m_pSnapshotDeltaSixup;
 
 	bool m_UseVideo;
 #if defined(CONF_VIDEORECORDER)
@@ -165,12 +166,13 @@ private:
 	int64_t Time();
 	bool m_Sixup;
 
-public:
-	CDemoPlayer(CSnapshotDelta *pSnapshotDelta, bool UseVideo);
-	CDemoPlayer(CSnapshotDelta *pSnapshotDelta, bool UseVideo, TUpdateIntraTimesFunc &&UpdateIntraTimesFunc);
-	~CDemoPlayer() override;
+	CSnapshotDelta *SnapshotDelta();
+	void Construct(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo);
 
-	void Construct(CSnapshotDelta *pSnapshotDelta, bool UseVideo);
+public:
+	CDemoPlayer(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo);
+	CDemoPlayer(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo, TUpdateIntraTimesFunc &&UpdateIntraTimesFunc);
+	~CDemoPlayer() override;
 
 	void SetListener(IListener *pListener);
 
@@ -207,9 +209,10 @@ class CDemoEditor : public IDemoEditor
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 	CSnapshotDelta *m_pSnapshotDelta;
+	CSnapshotDelta *m_pSnapshotDeltaSixup;
 
 public:
-	virtual void Init(CSnapshotDelta *pSnapshotDelta, class IConsole *pConsole, class IStorage *pStorage);
+	virtual void Init(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, class IConsole *pConsole, class IStorage *pStorage);
 	bool Slice(const char *pDemo, const char *pDst, int StartTick, int EndTick, DEMOFUNC_FILTER pfnFilter, void *pUser) override;
 	bool Slice(const char *pDemo, const char *pDst, const std::vector<SDemoSliceSegment> &vSegments, DEMOFUNC_FILTER pfnFilter, void *pUser) override;
 };
