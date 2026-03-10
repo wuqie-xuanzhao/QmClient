@@ -1107,8 +1107,6 @@ void CServer::DoSnapshot()
 			}
 
 			// create delta
-			m_SnapshotDelta.SetStaticsize(protocol7::NETEVENTTYPE_SOUNDWORLD, m_aClients[i].m_Sixup);
-			m_SnapshotDelta.SetStaticsize(protocol7::NETEVENTTYPE_DAMAGE, m_aClients[i].m_Sixup);
 			char aDeltaData[CSnapshot::MAX_SIZE];
 			int DeltaSize = m_SnapshotDelta.CreateDelta(pDeltashot, pData, aDeltaData);
 
