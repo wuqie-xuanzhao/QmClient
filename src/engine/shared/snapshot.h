@@ -125,7 +125,7 @@ public:
 	void SetStaticsize(int ItemType, size_t Size);
 	const CData *EmptyDelta() const;
 	int CreateDelta(const CSnapshot *pFrom, const CSnapshot *pTo, void *pDstData);
-	int UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const void *pSrcData, int DataSize);
+	int UnpackDelta(const CSnapshot *pFrom, CSnapshotBuffer *pTo, const void *pSrcData, int DataSize);
 	int DebugDumpDelta(const void *pSrcData, int DataSize);
 };
 
@@ -197,7 +197,7 @@ public:
 	int *GetItemData(int Index);
 	std::optional<int> FindItemIndexByKey(int Key);
 
-	int Finish(void *pSnapdata);
+	int Finish(CSnapshotBuffer *pBuffer);
 };
 
 #endif // ENGINE_SNAPSHOT_H

@@ -516,7 +516,7 @@ int CSnapshotDelta::DebugDumpDelta(const void *pSrcData, int DataSize)
 	return 0;
 }
 
-int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const void *pSrcData, int DataSize)
+int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshotBuffer *pTo, const void *pSrcData, int DataSize)
 {
 	CData *pDelta = (CData *)pSrcData;
 	int *pData = (int *)pDelta->m_aData;
@@ -789,11 +789,11 @@ std::optional<int> CSnapshotBuilder::FindItemIndexByKey(int Key)
 	return std::nullopt;
 }
 
-int CSnapshotBuilder::Finish(void *pSnapData)
+int CSnapshotBuilder::Finish(CSnapshotBuffer *pBuffer)
 {
 	// flatten and make the snapshot
 	dbg_assert(m_NumItems <= CSnapshot::MAX_ITEMS, "Too many snap items");
-	CSnapshot *pSnap = (CSnapshot *)pSnapData;
+	CSnapshot *pSnap = pBuffer->AsSnapshot();
 	pSnap->m_DataSize = m_DataSize;
 	pSnap->m_NumItems = m_NumItems;
 	const size_t TotalSize = pSnap->TotalSize();
