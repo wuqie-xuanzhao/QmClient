@@ -1229,8 +1229,6 @@ void CMapSettingsBackend::CContext::UpdateFromString(const char *pStr)
 	m_vCurrentArgs.clear();
 	m_CommentOffset = -1;
 
-	const char *pIterator = pStr;
-
 	// Check for comment
 	const char *pEnd = pStr;
 	int InString = 0;
@@ -1264,7 +1262,7 @@ void CMapSettingsBackend::CContext::UpdateFromString(const char *pStr)
 	// End command at start of comment, if any
 	char aInputString[256];
 	str_copy(aInputString, pStr, m_CommentOffset != -1 ? m_CommentOffset + 1 : sizeof(aInputString));
-	pIterator = aInputString;
+	const char *pIterator = aInputString;
 
 	// Get the command/setting
 	m_aCommand[0] = '\0';
