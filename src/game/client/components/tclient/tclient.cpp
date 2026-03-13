@@ -2662,7 +2662,7 @@ void CTClient::CheckWaterFall()
 {
 	if(Client()->State() != IClient::STATE_ONLINE)
 		return;
-	if(!g_Config.m_TcWaterFallEnabled)
+	if(!g_Config.m_TcFreezeChatEnabled)
 		return;
 
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
@@ -2691,18 +2691,40 @@ void CTClient::CheckWaterFall()
 			int64_t Now = time_get();
 			int64_t FreqMs = time_freq() / 1000;
 
-			// Send heart emoticon (with 3 second cooldown)
-			if(g_Config.m_TcWaterFallEmoticon && Now - m_aLastWaterHeartTime[Dummy] > 3000 * FreqMs)
+			// Send emoticon (with 3 second cooldown)
+			if(g_Config.m_TcFreezeChatEmoticon && Now - m_aLastWaterHeartTime[Dummy] > 3000 * FreqMs)
 			{
-				GameClient()->m_Emoticon.Emote(EMOTICON_HEARTS); // Heart emoticon
+				GameClient()->m_Emoticon.Emote(g_Config.m_TcFreezeChatEmoticonId);
 				m_aLastWaterHeartTime[Dummy] = Now;
 			}
 
-			// Send chat message (with 5 second cooldown)
-			if(g_Config.m_TcWaterFallMessage[0] != '\0' && Now - m_aLastWaterMessageTime[Dummy] > 5000 * FreqMs)
+			// Send chat message (with 5 second cooldown and probability check)
+			if(g_Config.m_TcFreezeChatMessage[0] != '\0' && Now - m_aLastWaterMessageTime[Dummy] > 5000 * FreqMs)
 			{
-				GameClient()->m_Chat.SendChat(0, g_Config.m_TcWaterFallMessage);
-				m_aLastWaterMessageTime[Dummy] = Now;
+				int Chance = g_Config.m_TcFreezeChatChance;
+				if(Chance > 0 && (Chance >= 100 || (std::rand() % 100) < Chance))
+				{
+					char aMessages[128];
+					str_copy(aMessages, g_Config.m_TcFreezeChatMessage);
+
+					std::vector<const char *> vMessages;
+					char *pToken = strtok(aMessages, ",");
+					while(pToken != nullptr)
+					{
+						while(*pToken == ' ')
+							pToken++;
+						if(*pToken != '\0')
+							vMessages.push_back(pToken);
+						pToken = strtok(nullptr, ",");
+					}
+
+					if(!vMessages.empty())
+					{
+						const char *pSelectedMessage = vMessages[std::rand() % vMessages.size()];
+						GameClient()->m_Chat.SendChat(0, pSelectedMessage);
+						m_aLastWaterMessageTime[Dummy] = Now;
+					}
+				}
 			}
 		}
 
@@ -3337,6 +3359,17 @@ void CTClient::OnStateChange(int NewState, int OldState)
 			m_aFinishRestoreNameValid[i] = false;
 			m_aFinishRestoreRequested[i] = false;
 			m_aaFinishRestoreNames[i][0] = '\0';
+
+			m_aWasInDeath[i] = false;
+			m_aLastWaterFallTime[i] = 0;
+			m_aLastWaterHeartTime[i] = 0;
+			m_aLastWaterMessageTime[i] = 0;
+			m_aWasInFreeze[i] = false;
+			m_aLastFreezeEmoteTime[i] = 0;
+			m_aLastFreezeMessageTime[i] = 0;
+			m_aWasInFreezeForUnspec[i] = false;
+			m_aWasInFreezeForSwitch[i] = false;
+			m_aWasInFreezeForChatClose[i] = false;
 		}
 		m_FriendEnterOnline.clear();
 		m_FriendEnterInitialized = false;

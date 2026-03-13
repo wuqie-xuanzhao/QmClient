@@ -3986,7 +3986,10 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					"spider",
 					"贝塔塔塔",
 					"见月",
-					"咩子的银耳"
+					"咩子的银耳",
+					"Cancer",
+					"少女`",
+					"长亭寂寞独自愁"
 					};
 				const float SponsorFontSize = LG_BodySize * 1.1f;
 				const float MaxLineWidth = RightContent.w;
