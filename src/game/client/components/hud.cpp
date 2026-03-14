@@ -1510,7 +1510,7 @@ void CHud::RenderWarmupTimer()
 	else
 		str_format(aBuf, sizeof(aBuf), "%d", Seconds);
 	const float LabelWidth = w;
-	w = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
+	w = TextRender()->TextWidth(FontSize, Seconds < 5 ? "0.0" : aBuf, -1, -1.0f);
 	const float MaxWidth = maximum(LabelWidth, w);
 	const float BaseX = 150.0f * Graphics()->ScreenAspect() - MaxWidth / 2.0f;
 	const float BaseY = 50.0f;
