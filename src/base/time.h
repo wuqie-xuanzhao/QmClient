@@ -188,6 +188,20 @@ enum
 };
 
 /**
+ * Returns the number of milliseconds from a time float.
+ *
+ * Takes care to not introduce more rounding issues, which is what a naive
+ * `std::roundf(seconds * 1000.0)` would do.
+ *
+ * @ingroup Timestamp
+ *
+ * @param seconds Time in seconds.
+ *
+ * @return Number of milliseconds.
+ */
+int64_t time_milliseconds_from_seconds(float seconds);
+
+/**
  * Formats a time string.
  *
  * @ingroup Timestamp
