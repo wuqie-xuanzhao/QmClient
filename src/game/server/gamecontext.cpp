@@ -4104,7 +4104,6 @@ void CGameContext::OnInit(const void *pPersistentData)
 	{
 		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 	}
-
 	// HACK: only set static size for items, which were available in the first 0.7 release
 	// so new items don't break the snapshot delta
 	static const int OLD_NUM_NETOBJTYPES = 23;
