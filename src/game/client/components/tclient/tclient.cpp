@@ -308,17 +308,27 @@ void CTClient::OnInit()
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	FetchTClientInfo();
 
-	char aError[512] = "";
 	// 先在 qmclient/ 目录找，找不到再返回上一级目录找
-	if(!Storage()->FileExists("qmclient/gui_logo.png", IStorage::TYPE_ALL) &&
-	   !Storage()->FileExists("gui_logo.png", IStorage::TYPE_ALL))
-		str_format(aError, sizeof(aError), TCLocalize("%s not found", DATA_VERSION_PATH), "data/qmclient/gui_logo.png");
-	if(aError[0] == '\0')
-		CheckDataVersion(aError, sizeof(aError), Storage()->OpenFile(DATA_VERSION_PATH, IOFLAG_READ, IStorage::TYPE_ALL));
-	if(aError[0] != '\0')
+	const bool MissingQmClientFolder = !Storage()->FolderExists("qmclient", IStorage::TYPE_ALL);
+	const bool MissingGuiLogo =
+		!Storage()->FileExists("qmclient/gui_logo.png", IStorage::TYPE_ALL) &&
+		!Storage()->FileExists("gui_logo.png", IStorage::TYPE_ALL);
+
+	char aError[512] = "";
+	if(MissingQmClientFolder || MissingGuiLogo)
 	{
-		SWarning Warning(aError, TCLocalize("喜报!您可能仅安装了DDNet.exe文件，请使用完整的QmClient文件夹", "data_version.h"));
+		str_format(aError, sizeof(aError), TCLocalize("%s not found", DATA_VERSION_PATH), "data/qmclient/gui_logo.png");
+		SWarning Warning(aError, TCLocalize("喜报!你可能仅下载并替换了DDNet.exe,没有下载QmClient.zip\n请仔细阅读群公告的使用说明!!!", "data_version.h"));
 		Client()->AddWarning(Warning);
+	}
+	else
+	{
+		CheckDataVersion(aError, sizeof(aError), Storage()->OpenFile(DATA_VERSION_PATH, IOFLAG_READ, IStorage::TYPE_ALL));
+		if(aError[0] != '\0')
+		{
+			SWarning Warning(aError, TCLocalize("喜报!您可能仅安装了DDNet.exe文件，请使用完整的QmClient文件夹", "data_version.h"));
+			Client()->AddWarning(Warning);
+		}
 	}
 	LoadMapCategoryCache();
 
