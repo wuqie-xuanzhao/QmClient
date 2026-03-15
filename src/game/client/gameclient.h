@@ -947,7 +947,10 @@ public:
 	int LastRaceTick() const;
 	int CurrentRaceTime() const;
 
-	bool IsTeamPlay() const { return m_Snap.m_pGameInfoObj && m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS; }
+	bool IsTeamPlay() const;
+	bool IsWorldPaused() const;
+	bool IsDemoPlaybackPaused() const;
+	float GetAnimationPlaybackSpeed() const;
 
 	bool AntiPingPlayers() const { return m_FastPractice.ForcePredictPlayers() || (g_Config.m_ClAntiPing && g_Config.m_ClAntiPingPlayers && !m_Snap.m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK); }
 	bool AntiPingGrenade() const { return m_FastPractice.ForcePredictGrenade() || (g_Config.m_ClAntiPing && g_Config.m_ClAntiPingGrenade && !m_Snap.m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK); }
