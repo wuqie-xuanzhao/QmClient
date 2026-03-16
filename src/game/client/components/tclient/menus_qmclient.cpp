@@ -3767,7 +3767,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		case EQmModuleId::ChatBubble: return "消息气泡 liaotian qipao chat bubble typing 预览 yulan 镜头缩放 suofang 持续时间 chixu 透明度 touming 字体大小 ziti 最大宽度 kuandu 垂直偏移 pianyi 圆角 yuanjiao";
 		case EQmModuleId::GoresActor: return "gores 演员 actor 掉水 diaoshui 自动发言 zidong fayan 表情 biaoqing 表情id emoticon 发送概率 gaolv";
 		case EQmModuleId::KeyBinds: return "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding";
-		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 动画优化 donghua youhua 复读 fudu 自动加一 jia yi 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 武器弹道辅助线 dan dao fuzhuxian 位置跳跃提示 tiaoyue tishi";
+		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 自动加一 jia yi 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 武器弹道辅助线 dan dao fuzhuxian 位置跳跃提示 tiaoyue tishi";
 		case EQmModuleId::DummyMiniView: return "分身小窗 fenshen xiaochuang dummy mini view 预览 yulan 缩放 suofang 小窗大小 daxiao";
 		case EQmModuleId::Coords: return "显示坐标 xianshi zuobiao coords position 自己坐标 ziji 他人坐标 taren 显示x xianshi x 显示y xianshi y 对齐提示 duiqi tishi 严格对齐 yange duiqi";
 		case EQmModuleId::Streamer: return "主播模式 zhubo moshi 直播 zhibo 隐私 yinsi 非好友昵称改id feihaoyou nicheng id 非好友皮肤默认 pifu moren 计分板默认国旗 guoqi";
@@ -3919,10 +3919,11 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 			//右侧
 			const float RightStartY = RightPart.y;
 			const float TeeSize = std::clamp(50.0f * UiScale, 36.0f, 50.0f);
+			const float RightContentShift = LG_CardPadding * 0.40f;
 			CUIRect TeeRect, TextRect;
 				const float TeeTextOffset = TeeSize + LG_CardPadding * 0.65f;
 				RightPart.VSplitLeft(TeeTextOffset, &TeeRect, &TextRect);
-			vec2 TeePos = vec2(TeeRect.x + TeeSize * 0.5f, RightStartY + TeeSize * 0.5f + LG_CardPadding * 0.5f);
+			vec2 TeePos = vec2(TeeRect.x + TeeSize * 0.5f - RightContentShift, RightStartY + TeeSize * 0.5f + LG_CardPadding * 0.5f);
 			RenderDevSkin(
 				TeePos,               // 位置
 				TeeSize,              // 大小
@@ -3934,6 +3935,8 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				true                  // Cute
 			);
 			CUIRect RightContent = TextRect;
+			RightContent.x -= RightContentShift;
+			RightContent.w += RightContentShift;
 			DoModuleHeadline(RightContent, -2, TCLocalize("QmClient 开发人员"), TCLocalize("开发者与赞助名单"));
 			//我名字
 			RightContent.HSplitTop(LG_LineHeight, &Row, &RightContent);
@@ -3990,7 +3993,9 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					"咩子的银耳",
 					"Cancer",
 					"少女`",
-					"长亭寂寞独自愁"
+					"长亭寂寞独自愁",
+					"fantuan",
+					"无言鱼"
 					};
 				const float SponsorFontSize = LG_BodySize * 1.1f;
 				const float MaxLineWidth = RightContent.w;
@@ -4130,7 +4135,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					Ui()->DoScrollbarOption(&g_Config.m_QmChatBubbleAlpha, &g_Config.m_QmChatBubbleAlpha, &Row, TCLocalize("透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-					Ui()->DoScrollbarOption(&g_Config.m_QmChatBubbleFontSize, &g_Config.m_QmChatBubbleFontSize, &Row, TCLocalize("字体大小"), 20, 40);
+					Ui()->DoScrollbarOption(&g_Config.m_QmChatBubbleFontSize, &g_Config.m_QmChatBubbleFontSize, &Row, TCLocalize("字体大小"), 8, 32);
 					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 					static std::vector<const char *> s_ChatBubbleAnimDropDownNames;
@@ -4315,11 +4320,11 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				DoModuleHeadline(CardContent, 2, TCLocalize("梦的小功能"), TCLocalize("栖梦出品,必属精品"));
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmcFootParticles, TCLocalize("本地粒子（仅自己）"), &g_Config.m_QmcFootParticles, &Row, LG_LineHeight);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmcFootParticles, TCLocalize("本地粒子"), &g_Config.m_QmcFootParticles, &Row, LG_LineHeight);
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmClientMarkTrail, TCLocalize("远程粒子（同步他人本地粒子）"), &g_Config.m_QmClientMarkTrail, &Row, LG_LineHeight);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmClientMarkTrail, TCLocalize("远程粒子"), &g_Config.m_QmClientMarkTrail, &Row, LG_LineHeight);
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
@@ -4327,7 +4332,15 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmScoreboardAnimOptim, TCLocalize("计分板动画优化"), &g_Config.m_QmScoreboardAnimOptim, &Row, LG_LineHeight);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmChatFadeOutAnim, TCLocalize("聊天框动画"), &g_Config.m_QmChatFadeOutAnim, &Row, LG_LineHeight);
+				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmEmoticonSelectAnim, TCLocalize("表情动画"), &g_Config.m_QmEmoticonSelectAnim, &Row, LG_LineHeight);
+				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmScoreboardAnimOptim, TCLocalize("计分板动画"), &g_Config.m_QmScoreboardAnimOptim, &Row, LG_LineHeight);
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
@@ -4343,7 +4356,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRandomEmoteOnHit, TCLocalize("随机表情"), &g_Config.m_QmRandomEmoteOnHit, &Row, LG_LineHeight);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRandomEmoteOnHit, TCLocalize("受击随机表情"), &g_Config.m_QmRandomEmoteOnHit, &Row, LG_LineHeight);
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
@@ -4351,7 +4364,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRainbowName, TCLocalize("本地彩虹名字"), &g_Config.m_QmRainbowName, &Row, LG_LineHeight);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRainbowName, TCLocalize("彩虹名字"), &g_Config.m_QmRainbowName, &Row, LG_LineHeight);
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);

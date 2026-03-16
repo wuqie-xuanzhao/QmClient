@@ -202,9 +202,10 @@ void CChooseMaster::CJob::Run()
 	// Do a HEAD request to ensure that a connection is established and
 	// then do a GET request to check how fast we can get the server list.
 	//
-	// 10 seconds connection timeout, lower than 8KB/s for 10 seconds to
-	// fail.
-	CTimeout Timeout{10000, 0, 8000, 10};
+	// 10 seconds connection timeout, overall timeout to prevent getting stuck
+	// forever on HEAD responses in broken network setups, lower than 8KB/s for
+	// 10 seconds to fail.
+	CTimeout Timeout{10000, 15000, 8000, 10};
 	int aTimeMs[MAX_URLS];
 	int aAgeS[MAX_URLS];
 	for(int i = 0; i < m_pData->m_NumUrls; i++)
@@ -371,8 +372,9 @@ void CServerBrowserHttp::Update()
 			return;
 		}
 		m_pGetServers = HttpGet(pBestUrl);
-		// 10 seconds connection timeout, lower than 8KB/s for 10 seconds to fail.
-		m_pGetServers->Timeout(CTimeout{10000, 0, 8000, 10});
+		// 10 seconds connection timeout, include an overall timeout so refreshing
+		// cannot stall forever in pathological network environments.
+		m_pGetServers->Timeout(CTimeout{10000, 30000, 8000, 10});
 		m_pHttp->Run(m_pGetServers);
 		m_State = STATE_REFRESHING;
 	}

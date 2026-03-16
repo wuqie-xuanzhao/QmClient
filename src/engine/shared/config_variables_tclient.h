@@ -321,7 +321,7 @@ MACRO_CONFIG_INT(QmHideChatBubbles, qm_hide_chat_bubbles, 0, 0, 1, CFGFLAG_CLIEN
 MACRO_CONFIG_INT(QmChatBubble, qm_chat_bubble, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在玩家头顶显示聊天气泡 (Show chat bubbles above players)")
 MACRO_CONFIG_INT(QmChatBubbleDuration, qm_chat_bubble_duration, 10, 1, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡显示时长（秒）(How long chat bubbles stay visible)")
 MACRO_CONFIG_INT(QmChatBubbleAlpha, qm_chat_bubble_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡透明度 0-100 (Chat bubble transparency)")
-MACRO_CONFIG_INT(QmChatBubbleFontSize, qm_chat_bubble_font_size, 20, 20, 40, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡字体大小 (Chat bubble font size)")
+MACRO_CONFIG_INT(QmChatBubbleFontSize, qm_chat_bubble_font_size, 20, 8, 32, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡字体大小 (Chat bubble font size)")
 MACRO_CONFIG_COL(QmChatBubbleBgColor, qm_chat_bubble_bg_color, 404232960, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "聊天气泡背景颜色 (Chat bubble background color)")
 MACRO_CONFIG_COL(QmChatBubbleTextColor, qm_chat_bubble_text_color, 4294967295, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡文字颜色 (Chat bubble text color)")
 MACRO_CONFIG_INT(QmChatBubbleAnimation, qm_chat_bubble_animation, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "消失动画: 0=淡出 1=缩小 2=上滑 (Disappear animation: 0=fade 1=shrink 2=slide up)")
@@ -331,7 +331,7 @@ MACRO_CONFIG_INT(TcHideChatBubblesLegacy, tc_hide_chat_bubbles, 0, 0, 1, CFGFLAG
 MACRO_CONFIG_INT(TcChatBubbleLegacy, tc_chat_bubble, 1, 0, 1, CFGFLAG_CLIENT, "旧版聊天气泡设置")
 MACRO_CONFIG_INT(TcChatBubbleDurationLegacy, tc_chat_bubble_duration, 10, 1, 30, CFGFLAG_CLIENT, "旧版聊天气泡设置")
 MACRO_CONFIG_INT(TcChatBubbleAlphaLegacy, tc_chat_bubble_alpha, 80, 0, 100, CFGFLAG_CLIENT, "旧版聊天气泡设置")
-MACRO_CONFIG_INT(TcChatBubbleFontSizeLegacy, tc_chat_bubble_font_size, 20, 20, 40, CFGFLAG_CLIENT, "旧版聊天气泡设置")
+MACRO_CONFIG_INT(TcChatBubbleFontSizeLegacy, tc_chat_bubble_font_size, 20, 8, 32, CFGFLAG_CLIENT, "旧版聊天气泡设置")
 MACRO_CONFIG_COL(TcChatBubbleBgColorLegacy, tc_chat_bubble_bg_color, 404232960, CFGFLAG_CLIENT | CFGFLAG_COLALPHA, "旧版聊天气泡设置")
 MACRO_CONFIG_COL(TcChatBubbleTextColorLegacy, tc_chat_bubble_text_color, 4294967295, CFGFLAG_CLIENT, "旧版聊天气泡设置")
 MACRO_CONFIG_INT(TcChatBubbleAnimationLegacy, tc_chat_bubble_animation, 0, 0, 2, CFGFLAG_CLIENT, "旧版聊天气泡设置")
@@ -377,6 +377,8 @@ MACRO_CONFIG_INT(QmUiRuntimeV2Debug, qm_ui_runtime_v2_debug, 0, 0, 1, CFGFLAG_CL
 MACRO_CONFIG_INT(ClScoreboardPoints, cl_scoreboard_points, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在记分牌中显示分数列（从 DDNet API 获取）")
 MACRO_CONFIG_INT(ClScoreboardSortMode, cl_scoreboard_sort_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "记分牌排序模式（0=分数，1=分）")
 MACRO_CONFIG_INT(QmScoreboardAnimOptim, qm_scoreboard_anim_optim, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "计分板动画优化")
+MACRO_CONFIG_INT(QmChatFadeOutAnim, qm_chat_fade_out_anim, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天框淡出动画")
+MACRO_CONFIG_INT(QmEmoticonSelectAnim, qm_emoticon_select_anim, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "表情选择动画")
 
 // Rainbow Name / 彩虹名字
 MACRO_CONFIG_INT(QmRainbowName, qm_rainbow_name, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用自己名字的彩虹色渲染")

@@ -272,12 +272,13 @@ float CChat::EaseOutBack(float t)
 
 float CChat::CalculateAnimationAlpha(const float MessageAge, const bool ShowChat) const
 {
+	const bool UseFadeOutAnim = g_Config.m_QmChatFadeOutAnim != 0;
 	const float FadeInDuration = CHAT_ANIM_FADE_IN_DURATION;
 	const float FadeOutStart = CHAT_ANIM_FADE_OUT_START;
 	const float FadeOutDuration = CHAT_ANIM_FADE_OUT_DURATION;
 
 	const float FadeInT = std::clamp(MessageAge / FadeInDuration, 0.0f, 1.0f);
-	const float FadeOutT = ShowChat ? 0.0f : std::clamp((MessageAge - FadeOutStart) / FadeOutDuration, 0.0f, 1.0f);
+	const float FadeOutT = (ShowChat || !UseFadeOutAnim) ? 0.0f : std::clamp((MessageAge - FadeOutStart) / FadeOutDuration, 0.0f, 1.0f);
 
 	// Declarative composition: entry * timeout.
 	const float EntryAlpha = EaseOutQuad(FadeInT);
@@ -287,12 +288,13 @@ float CChat::CalculateAnimationAlpha(const float MessageAge, const bool ShowChat
 
 float CChat::CalculateAnimationOffsetX(const float MessageAge, const bool Emphasized, const bool ShowChat) const
 {
+	const bool UseFadeOutAnim = g_Config.m_QmChatFadeOutAnim != 0;
 	const float SlideInDuration = CHAT_ANIM_FADE_IN_DURATION;
 	const float FadeOutStart = CHAT_ANIM_FADE_OUT_START;
 	const float FadeOutDuration = CHAT_ANIM_FADE_OUT_DURATION;
 
 	const float SlideInT = std::clamp(MessageAge / SlideInDuration, 0.0f, 1.0f);
-	const float SlideOutT = ShowChat ? 0.0f : std::clamp((MessageAge - FadeOutStart) / FadeOutDuration, 0.0f, 1.0f);
+	const float SlideOutT = (ShowChat || !UseFadeOutAnim) ? 0.0f : std::clamp((MessageAge - FadeOutStart) / FadeOutDuration, 0.0f, 1.0f);
 
 	const float EntryAmplitude = Emphasized ? CHAT_ANIM_HIGHLIGHT_SLIDE : CHAT_ANIM_SLIDE_OFFSET;
 	const float EntryEase = Emphasized ? std::min(EaseOutBack(SlideInT), 1.08f) : EaseOutQuad(SlideInT);

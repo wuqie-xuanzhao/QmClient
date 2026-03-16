@@ -5232,14 +5232,29 @@ int main(int argc, const char **argv)
 
 	// execute config file
 	pConsole->SetUnknownCommandCallback(SaveUnknownCommandCallback, pClient);
+	static constexpr const char *pLegacyTClientConfigPath = "settings_tclient.cfg";
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
-		if(!pStorage->FileExists(s_aConfigDomains[ConfigDomain].m_aConfigPath, IStorage::TYPE_ALL))
-			continue;
-		if(!pConsole->ExecuteFile(s_aConfigDomains[ConfigDomain].m_aConfigPath))
+		const char *pConfigPath = s_aConfigDomains[ConfigDomain].m_aConfigPath;
+		if(!pStorage->FileExists(pConfigPath, IStorage::TYPE_ALL))
+		{
+			if(ConfigDomain == ConfigDomain::TCLIENT &&
+				pStorage->FileExists(pLegacyTClientConfigPath, IStorage::TYPE_ALL))
+			{
+				pConfigPath = pLegacyTClientConfigPath;
+				log_info("client", "loading legacy config '%s' because '%s' was not found",
+					pLegacyTClientConfigPath, s_aConfigDomains[ConfigDomain].m_aConfigPath);
+			}
+			else
+			{
+				continue;
+			}
+		}
+
+		if(!pConsole->ExecuteFile(pConfigPath))
 		{
 			char aError[2048];
-			str_format(aError, sizeof(aError), "Failed to load config from '%s'.", s_aConfigDomains[ConfigDomain].m_aConfigPath);
+			str_format(aError, sizeof(aError), "Failed to load config from '%s'.", pConfigPath);
 			log_error("client", "%s", aError);
 			pClient->ShowMessageBox({.m_pTitle = "Config File Error", .m_pMessage = aError});
 			PerformAllCleanup();

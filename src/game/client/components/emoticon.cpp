@@ -145,7 +145,8 @@ void CEmoticon::OnRender()
 	static const float s_OuterCircleRadius = 190.0f;
 
 	// 动画时间设置 - 基础动画时间
-	const float BaseAnimationTime = (float)g_Config.m_TcAnimateWheelTime / 1000.0f;
+	const bool UseSelectorAnim = g_Config.m_QmEmoticonSelectAnim != 0;
+	const float BaseAnimationTime = UseSelectorAnim ? (float)g_Config.m_TcAnimateWheelTime / 1000.0f : 0.0f;
 	// 实际动画时间（考虑分层延迟）
 	const float AnimationTime = BaseAnimationTime * 1.2f; // 增加20%时间让动画更流畅
 	const float ItemAnimationTime = AnimationTime / 2.0f;
