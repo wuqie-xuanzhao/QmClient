@@ -267,7 +267,7 @@ const char *CExplanations::ExplainDDNet(int Tile, int Layer)
 		break;
 	case TILE_OLDLASER:
 		if(Layer == LAYER_GAME || Layer == LAYER_FRONT)
-			return "全局旧式霰弹枪：霰弹枪会将其他目标始终拉向玩家，即使目标已经弹开也不例外。玩家无法击中自己。仅可在地图上的任意位置放置一块图块";
+			return "全局旧激光: 启用旧激光模式. 激光不能击中自己, 霰弹枪会将其他目标始终拉向玩家, 即使目标已经弹开也不例外. 仅可在地图上的任意位置放置一块图块.";
 		break;
 	case TILE_NPC:
 		if(Layer == LAYER_GAME || Layer == LAYER_FRONT)
@@ -279,7 +279,7 @@ const char *CExplanations::ExplainDDNet(int Tile, int Layer)
 		break;
 	case TILE_NOHIT:
 		if(Layer == LAYER_GAME || Layer == LAYER_FRONT)
-			return "全局关闭锤击其他人: 没有人可以锤击其他人.只在地图某处放置一个图块.";
+			return "全局关闭武器命中其他人: 没有人可以用武器攻击其他人.只在地图某处放置一个图块.";
 		break;
 	case TILE_NPH:
 		if(Layer == LAYER_GAME || Layer == LAYER_FRONT)
@@ -376,7 +376,7 @@ const char *CExplanations::ExplainDDNet(int Tile, int Layer)
 		break;
 	case ENTITY_OFFSET + ENTITY_WEAPON_GRENADE:
 		if(Layer == LAYER_GAME || Layer == LAYER_FRONT || Layer == LAYER_SWITCH)
-			return "榴弹发射器: 发射可推进Tee的榴弹.也称为火箭.";
+			return "榴弹发射器: 发射可推进tee的榴弹.也称为火箭.";
 		break;
 	case ENTITY_OFFSET + ENTITY_POWERUP_NINJA:
 		if(Layer == LAYER_GAME || Layer == LAYER_FRONT || Layer == LAYER_SWITCH)
