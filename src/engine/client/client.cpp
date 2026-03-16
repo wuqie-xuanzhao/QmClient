@@ -6707,6 +6707,19 @@ std::optional<int> CClient::ShowMessageBox(const IGraphics::CMessageBox &Message
 
 void CClient::GetGpuInfoString(char (&aGpuInfo)[512])
 {
+#if defined(CONF_HEADLESS_CLIENT)
+	if(m_pGraphics == nullptr || !m_pGraphics->IsBackendInitialized())
+	{
+		str_format(aGpuInfo, std::size(aGpuInfo),
+			"Configured graphics backend: headless\n"
+			"Graphics %s not yet initialized.",
+			m_pGraphics == nullptr ? "were" : "backend was");
+	}
+	else
+	{
+		str_copy(aGpuInfo, "Configured graphics backend: headless");
+	}
+#else
 	if(m_pGraphics == nullptr || !m_pGraphics->IsBackendInitialized())
 	{
 		str_format(aGpuInfo, std::size(aGpuInfo),
@@ -6732,6 +6745,7 @@ void CClient::GetGpuInfoString(char (&aGpuInfo)[512])
 			m_pGraphics->StreamedMemoryUsage() / 1024 / 1024,
 			m_pGraphics->StagingMemoryUsage() / 1024 / 1024);
 	}
+#endif
 }
 
 void CClient::SetLoggers(std::shared_ptr<ILogger> &&pFileLogger, std::shared_ptr<ILogger> &&pStdoutLogger, std::shared_ptr<ILogger> &&pPerfFileLogger)
