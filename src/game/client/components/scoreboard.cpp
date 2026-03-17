@@ -136,6 +136,7 @@ void CScoreboard::ConToggleScoreboardCursor(IConsole::IResult *pResult, void *pU
 
 	if(!pSelf->IsActive() ||
 		pSelf->GameClient()->m_Menus.IsActive() ||
+		pSelf->GameClient()->m_Chat.IsActive() ||
 		pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		return;
@@ -227,26 +228,17 @@ bool CScoreboard::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
 
 bool CScoreboard::OnInput(const IInput::CEvent &Event)
 {
-	if(!IsActive() || !m_MouseUnlocked)
-		return false;
-
-	// While using the scoreboard cursor, block gameplay mouse actions but still
-	// allow keyboard binds and text input to pass through.
-	if((Event.m_Flags & (IInput::FLAG_PRESS | IInput::FLAG_RELEASE)) == 0)
-		return false;
-
-	if(Event.m_Key == KEY_MOUSE_1 ||
-		Event.m_Key == KEY_MOUSE_2 ||
-		(Event.m_Key >= KEY_MOUSE_4 && Event.m_Key <= KEY_MOUSE_9) ||
-		Event.m_Key == KEY_MOUSE_WHEEL_UP ||
-		Event.m_Key == KEY_MOUSE_WHEEL_DOWN ||
-		Event.m_Key == KEY_MOUSE_WHEEL_LEFT ||
-		Event.m_Key == KEY_MOUSE_WHEEL_RIGHT)
+	if(m_MouseUnlocked && Event.m_Key == KEY_ESCAPE && (Event.m_Flags & IInput::FLAG_PRESS))
 	{
+		Ui()->ClosePopupMenus();
+		m_MouseUnlocked = false;
+		if(m_LastMousePos.has_value())
+			SetUiMousePos(m_LastMousePos.value());
+		m_LastMousePos = Ui()->MousePos();
 		return true;
 	}
 
-	return false;
+	return IsActive() && m_MouseUnlocked;
 }
 
 void CScoreboard::RenderTitle(CUIRect TitleBar, int Team, const char *pTitle)
@@ -1431,7 +1423,7 @@ void CScoreboard::OnRender()
 		}
 	}
 
-	if(!GameClient()->m_Menus.IsActive())
+	if(!GameClient()->m_Menus.IsActive() && !GameClient()->m_Chat.IsActive())
 	{
 		Ui()->StartCheck();
 		Ui()->Update();
@@ -1735,7 +1727,7 @@ void CScoreboard::OnRender()
 
 	RenderRecordingNotification((Screen.w / 7) * 4 + 10);
 
-	if(!GameClient()->m_Menus.IsActive())
+	if(!GameClient()->m_Menus.IsActive() && !GameClient()->m_Chat.IsActive())
 	{
 		Ui()->RenderPopupMenus();
 
@@ -1743,7 +1735,6 @@ void CScoreboard::OnRender()
 			RenderTools()->RenderCursor(Ui()->MousePos(), 24.0f);
 
 		Ui()->FinishCheck();
-		Ui()->ClearHotkeys();
 	}
 
 	TextRender()->TextColor(PrevTextColor);
