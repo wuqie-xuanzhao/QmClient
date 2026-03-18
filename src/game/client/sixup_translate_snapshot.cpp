@@ -26,8 +26,17 @@ int CGameClient::TranslateSnap(CSnapshotBuffer *pSnapDstSix, CSnapshot *pSnapSrc
 		const int Size = pSnapSrcSeven->GetItemSize(i);
 		const int ItemType = pSnapSrcSeven->GetItemType(i);
 
+		if(ItemType <= 0)
+		{
+			// Don't add extended item type descriptions, they get
+			// added implicitly (== 0).
+			//
+			// Don't add items of unknown item types either (< 0).
+			continue;
+		}
+
 		// ddnet ex snap items
-		if((ItemType > __NETOBJTYPE_UUID_HELPER && ItemType < OFFSET_NETMSGTYPE_UUID) || ItemType == NETOBJTYPE_EX)
+		if(ItemType >= OFFSET_UUID)
 		{
 			CUnpacker Unpacker;
 			Unpacker.Reset(pItem7->Data(), Size);
@@ -47,17 +56,14 @@ int CGameClient::TranslateSnap(CSnapshotBuffer *pSnapDstSix, CSnapshot *pSnapSrc
 
 		if(GetNetObjHandler7()->ValidateObj(ItemType, pItem7->Data(), Size) != 0)
 		{
-			if(ItemType > 0 && ItemType < CSnapshot::OFFSET_UUID_TYPE)
-			{
-				dbg_msg(
-					"sixup",
-					"invalidated index=%d type=%d (%s) size=%d id=%d",
-					i,
-					ItemType,
-					GetNetObjHandler7()->GetObjName(ItemType),
-					Size,
-					pItem7->Id());
-			}
+			dbg_msg(
+				"sixup",
+				"invalidated index=%d type=%d (%s) size=%d id=%d",
+				i,
+				ItemType,
+				GetNetObjHandler7()->GetObjName(ItemType),
+				Size,
+				pItem7->Id());
 			pSnapSrcSeven->InvalidateItem(i);
 			continue;
 		}
@@ -152,8 +158,8 @@ int CGameClient::TranslateSnap(CSnapshotBuffer *pSnapDstSix, CSnapshot *pSnapSrc
 	for(int i = 0; i < pSnapSrcSeven->NumItems(); i++)
 	{
 		const CSnapshotItem *pItem7 = pSnapSrcSeven->GetItem(i);
-		const int Size = pSnapSrcSeven->GetItemSize(i);
 		const int ItemType = pSnapSrcSeven->GetItemType(i);
+		const int Size = pSnapSrcSeven->GetItemSize(i);
 		// the first few items are a full match
 		// no translation needed
 		if(ItemType == protocol7::NETOBJTYPE_PROJECTILE ||
