@@ -5,9 +5,6 @@
 
 #include <base/cxx.h>
 
-#include <generated/protocol.h>
-#include <generated/protocol7.h>
-
 #include <cstddef>
 #include <cstdint>
 #include <memory>
