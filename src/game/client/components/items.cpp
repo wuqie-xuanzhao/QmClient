@@ -356,24 +356,26 @@ void CItems::RenderLaser(const CLaserData *pCurrent, bool IsPredicted)
 		TicksHead += Client()->IntraGameTick(g_Config.m_ClDummy);
 	}
 
-	RenderLaser(pCurrent->m_From, pCurrent->m_To, OuterColor, InnerColor, Ticks, TicksHead, Type, g_Config.m_RiLaserGlowIntensity);
 	if(Type == LASERTYPE_DRAGGER)
 	{
 		TicksHead *= (((pCurrent->m_Subtype >> 1) % 3) * 4.0f) + 1;
 		TicksHead *= (pCurrent->m_Subtype & 1) ? -1 : 1;
 	}
-	RenderLaser(pCurrent->m_From, pCurrent->m_To, OuterColor, InnerColor, Ticks, TicksHead, Type);
+	RenderLaser(pCurrent->m_From, pCurrent->m_To, OuterColor, InnerColor, Ticks, TicksHead, Type, g_Config.m_RiLaserGlowIntensity);
 }
 
 void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA InnerColor, float TicksBody, float TicksHead, int Type, float GlowIntensity) const
 {
 	int TuneZone = (Client()->State() == IClient::STATE_ONLINE && GameClient()->m_GameWorld.m_WorldConfig.m_UseTuneZones) ? Collision()->IsTune(Collision()->GetMapIndex(From)) : 0;
 	float Len = distance(Pos, From);
-	if(g_Config.m_RiBetterLasers)
+	const float GlowScale = GlowIntensity / 100.0f;
+	const bool UseEnhancedLaserGlow = g_Config.m_RiBetterLasers && GlowScale > 0.0f;
+	if(UseEnhancedLaserGlow)
 	{
 		if(Len > 0)
 		{
 			vec2 Dir = normalize_pre_length(Pos - From, Len);
+			const vec2 Perp(Dir.y, -Dir.x);
 
 			float Ms = TicksBody * 1000.0f / Client()->GameTickSpeed();
 			float a = Ms / GameClient()->GetTuning(TuneZone)->m_LaserBounceDelay;
@@ -384,19 +386,18 @@ void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA In
 			Graphics()->QuadsBegin();
 
 			constexpr int NumLayers = 13;
-
-			const float Alphas[NumLayers] = {
+			static constexpr float s_aAlphas[NumLayers] = {
 				0.02f, 0.03f, 0.04f, 0.05f, 0.06f, 0.08f, 0.10f,
 				0.15f, 0.25f, 0.45f, 0.65f, 0.85f, 1.0f};
-			const float Widths[NumLayers] = {
+			static constexpr float s_aWidths[NumLayers] = {
 				24.0f, 22.0f, 20.0f, 18.0f, 16.0f, 14.0f, 12.0f,
 				10.0f, 8.0f, 6.0f, 4.0f, 3.0f, 2.0f};
 
 			for(int i = 0; i < NumLayers; ++i)
 			{
-				float Alpha = Alphas[i] * (GlowIntensity / 100.0f);
-				float Offset = Widths[i] * Ia * (GlowIntensity / 100.0f);
-				vec2 Out = vec2(Dir.y, -Dir.x) * Offset;
+				float Alpha = s_aAlphas[i] * GlowScale;
+				float Offset = s_aWidths[i] * Ia * GlowScale;
+				vec2 Out = Perp * Offset;
 
 				ColorRGBA Color = (i == NumLayers - 1) ? ColorRGBA(1.0f, 1.0f, 1.0f, Alpha) : (i >= NumLayers - 2 ? InnerColor.WithMultipliedAlpha(Alpha) : OuterColor.WithMultipliedAlpha(Alpha));
 
@@ -464,32 +465,43 @@ void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA In
 		int CurParticle = (int)TicksHead % 3;
 		Graphics()->TextureSet(GameClient()->m_ParticlesSkin.m_aSpriteParticleSplat[CurParticle]);
 
-		vec2 Dir = normalize(Pos - From);
-		float ImpactAngle = angle(Dir);
-		Graphics()->QuadsSetRotation(ImpactAngle);
+		if(UseEnhancedLaserGlow)
+		{
+			vec2 Dir = Len > 0.0f ? normalize(Pos - From) : vec2(1.0f, 0.0f);
+			float ImpactAngle = angle(Dir);
+			Graphics()->QuadsSetRotation(ImpactAngle);
 
-		float ImpactDot = absolute(dot(Dir, vec2(1, 0)));
-		float AngleFactor = 1.0f - (ImpactDot * 0.3f);
+			float ImpactDot = absolute(dot(Dir, vec2(1, 0)));
+			float AngleFactor = 1.0f - (ImpactDot * 0.3f);
 
-		float BaseScale = 1.8f * AngleFactor;
-		Graphics()->SetColor(OuterColor.WithMultipliedAlpha(0.15f * (GlowIntensity / 100)));
-		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
+			float BaseScale = 1.8f * AngleFactor;
+			Graphics()->SetColor(OuterColor.WithMultipliedAlpha(0.15f * GlowScale));
+			Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
 
-		BaseScale = 1.5f * AngleFactor;
-		Graphics()->SetColor(OuterColor.WithMultipliedAlpha(0.25f * (GlowIntensity / 100)));
-		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
+			BaseScale = 1.5f * AngleFactor;
+			Graphics()->SetColor(OuterColor.WithMultipliedAlpha(0.25f * GlowScale));
+			Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
 
-		BaseScale = 1.2f * AngleFactor;
-		Graphics()->SetColor(OuterColor.WithMultipliedAlpha(0.45f * (GlowIntensity / 100)));
-		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
+			BaseScale = 1.2f * AngleFactor;
+			Graphics()->SetColor(OuterColor.WithMultipliedAlpha(0.45f * GlowScale));
+			Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
 
-		BaseScale = 0.9f * AngleFactor;
-		Graphics()->SetColor(InnerColor.WithMultipliedAlpha(0.65f * (GlowIntensity / 100)));
-		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
+			BaseScale = 0.9f * AngleFactor;
+			Graphics()->SetColor(InnerColor.WithMultipliedAlpha(0.65f * GlowScale));
+			Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
 
-		BaseScale = 0.6f * AngleFactor;
-		Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f * (GlowIntensity / 100)));
-		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
+			BaseScale = 0.6f * AngleFactor;
+			Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f * GlowScale));
+			Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, BaseScale, BaseScale);
+		}
+		else
+		{
+			Graphics()->QuadsSetRotation((int)TicksHead);
+			Graphics()->SetColor(OuterColor);
+			Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y);
+			Graphics()->SetColor(InnerColor);
+			Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_aParticleSplatOffset[CurParticle], Pos.x, Pos.y, 20.f / 24.f, 20.f / 24.f);
+		}
 	}
 }
 

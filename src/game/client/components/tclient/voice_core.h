@@ -201,6 +201,7 @@ class CRClientVoice
 
 	std::mutex m_SnapshotMutex;
 	int m_LocalClientIdSnap = -1;
+	std::array<int, 2> m_aLocalClientIdsSnap = {};
 	bool m_OnlineSnap = false;
 	bool m_SpecActiveSnap = false;
 	vec2 m_SpecPosSnap = vec2(0.0f, 0.0f);

@@ -1624,11 +1624,18 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 
 	const bool IsQ1menGRecognized = GameClient()->IsQ1menGClientRecognized(ClientId);
 	const bool AllowVoiceIconForClient = IsLocalClient || IsQ1menGRecognized;
-	if(Data.m_ShowName && AllowVoiceIconForClient && g_Config.m_RiVoiceEnable && g_Config.m_RiVoiceShowOverlay && g_Config.m_RiVoiceShowIndicator && (g_Config.m_RiVoiceIndicatorAboveSelf || !IsLocalClient))
+	const bool AllowVoiceRowForClient = Data.m_ShowName || IsLocalClient;
+	if(AllowVoiceRowForClient && AllowVoiceIconForClient && g_Config.m_RiVoiceEnable && g_Config.m_RiVoiceShowOverlay && g_Config.m_RiVoiceShowIndicator)
 	{
-		Data.m_ShowVoiceIndicator = true;
-		Data.m_VoiceActive = GameClient()->m_Voice.IsVoiceActive(ClientId);
-		Data.m_VoiceMuted = IsLocalClient ? (g_Config.m_RiVoiceMicMute != 0) : CommaListContainsName(g_Config.m_RiVoiceMute, ClientData.m_aName);
+		const bool VoiceActive = GameClient()->m_Voice.IsVoiceActive(ClientId);
+		const bool VoiceMuted = IsLocalClient ? (g_Config.m_RiVoiceMicMute != 0) : CommaListContainsName(g_Config.m_RiVoiceMute, ClientData.m_aName);
+		const bool AllowLocalVoiceIndicator = !IsLocalClient || g_Config.m_RiVoiceIndicatorAboveSelf || VoiceActive || VoiceMuted;
+		if(AllowLocalVoiceIndicator)
+		{
+			Data.m_ShowVoiceIndicator = true;
+			Data.m_VoiceActive = VoiceActive;
+			Data.m_VoiceMuted = VoiceMuted;
+		}
 	}
 
 	// Check if the nameplate is actually on screen
