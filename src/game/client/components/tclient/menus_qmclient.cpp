@@ -4316,8 +4316,10 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					"taffy",
 					"杀意没爱意",
 					"DYL",
-					"小信爱你喵",
-					"哆啦梦"
+					"小信",
+					"哆啦梦",
+					"菜菜羊",
+					"吃了吗chilem"
 					};
 				const float SponsorFontSize = LG_BodySize * 1.1f;
 				const float MaxLineWidth = RightContent.w;

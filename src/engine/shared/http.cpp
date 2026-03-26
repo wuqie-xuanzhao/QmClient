@@ -731,6 +731,9 @@ void CHttp::RunLoop()
 	m_Cv.notify_all();
 	Lock.unlock();
 
+	std::unordered_map<std::string, size_t> RunningRequestsPerHost;
+	RunningRequestsPerHost.reserve(HTTP_MAX_CONCURRENT_REQUESTS);
+
 	while(m_State == CHttp::RUNNING)
 	{
 		static int s_NextTimeout = std::numeric_limits<int>::max();
@@ -776,6 +779,18 @@ void CHttp::RunLoop()
 			{
 				auto RequestIt = m_RunningRequests.find(pMsg->easy_handle);
 				dbg_assert(RequestIt != m_RunningRequests.end(), "Running handle not added to map");
+				const std::string HostKey = HttpRequestHostKey(RequestIt->second->m_aUrl);
+				if(!HostKey.empty())
+				{
+					auto HostIt = RunningRequestsPerHost.find(HostKey);
+					if(HostIt != RunningRequestsPerHost.end())
+					{
+						if(HostIt->second > 1)
+							HostIt->second--;
+						else
+							RunningRequestsPerHost.erase(HostIt);
+					}
+				}
 				auto pRequest = std::move(RequestIt->second);
 				m_RunningRequests.erase(RequestIt);
 
@@ -789,17 +804,6 @@ void CHttp::RunLoop()
 		Lock.lock();
 		std::swap(m_PendingRequests, NewRequests);
 		Lock.unlock();
-
-		std::unordered_map<std::string, size_t> RunningRequestsPerHost;
-		RunningRequestsPerHost.reserve(m_RunningRequests.size());
-		for(const auto &ReqPair : m_RunningRequests)
-		{
-			const std::string HostKey = HttpRequestHostKey(ReqPair.second->m_aUrl);
-			if(!HostKey.empty())
-			{
-				RunningRequestsPerHost[HostKey]++;
-			}
-		}
 
 		decltype(m_PendingRequests) DeferredRequests = {};
 		while(!NewRequests.empty())

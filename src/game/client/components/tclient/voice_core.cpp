@@ -1269,6 +1269,7 @@ void CRClientVoice::UpdateClientSnapshot()
 	{
 		m_OnlineSnap = false;
 		m_LocalClientIdSnap = -1;
+		m_aLocalClientIdsSnap.fill(-1);
 		m_SpecActiveSnap = false;
 		m_SpecPosSnap = vec2(0.0f, 0.0f);
 		return;
@@ -1276,6 +1277,9 @@ void CRClientVoice::UpdateClientSnapshot()
 
 	m_OnlineSnap = true;
 	m_LocalClientIdSnap = m_pGameClient->m_Snap.m_LocalClientId;
+	m_aLocalClientIdsSnap.fill(-1);
+	for(size_t Dummy = 0; Dummy < m_aLocalClientIdsSnap.size(); ++Dummy)
+		m_aLocalClientIdsSnap[Dummy] = m_pGameClient->m_aLocalIds[Dummy];
 	m_SpecActiveSnap = m_pGameClient->m_Snap.m_SpecInfo.m_Active;
 	if(m_SpecActiveSnap)
 		m_SpecPosSnap = m_pGameClient->m_Camera.m_Center;
@@ -1283,6 +1287,7 @@ void CRClientVoice::UpdateClientSnapshot()
 	{
 		m_OnlineSnap = false;
 		m_LocalClientIdSnap = -1;
+		m_aLocalClientIdsSnap.fill(-1);
 		m_SpecActiveSnap = false;
 		m_SpecPosSnap = vec2(0.0f, 0.0f);
 		return;
@@ -1311,17 +1316,28 @@ void CRClientVoice::ProcessCapture()
 	const float TestGain = std::clamp(Config.m_RiVoiceVolume / 100.0f, 0.0f, 4.0f);
 
 	int LocalClientId = -1;
+	std::array<int, 2> aLocalClientIds = {};
+	aLocalClientIds.fill(-1);
 	vec2 LocalPos = vec2(0.0f, 0.0f);
 	bool Online = false;
 	{
 		std::lock_guard<std::mutex> Guard(m_SnapshotMutex);
 		Online = m_OnlineSnap;
 		LocalClientId = m_LocalClientIdSnap;
+		aLocalClientIds = m_aLocalClientIdsSnap;
 		if(LocalClientId >= 0 && LocalClientId < MAX_CLIENTS)
 			LocalPos = m_aClientPosSnap[LocalClientId];
 	}
 	if(!Online || LocalClientId < 0 || LocalClientId >= MAX_CLIENTS)
 		return;
+
+	const auto MarkLocalVoiceActive = [&](int64_t Timestamp) {
+		for(const int Id : aLocalClientIds)
+		{
+			if(Id >= 0 && Id < MAX_CLIENTS)
+				m_aLastHeard[Id].store(Timestamp);
+		}
+	};
 
 	const int64_t Now = time_get();
 	const bool UseVad = Config.m_RiVoiceVadEnable != 0;
@@ -1502,6 +1518,7 @@ void CRClientVoice::ProcessCapture()
 				PushPeerFrame(LocalClientId, aPcm, VOICE_FRAME_SAMPLES, TestGain, TestGain);
 				SDL_UnlockAudioDevice(m_OutputDevice);
 			}
+			MarkLocalVoiceActive(Now);
 			continue;
 		}
 
@@ -1540,7 +1557,7 @@ void CRClientVoice::ProcessCapture()
 			ServerAddrLocal = m_ServerAddr;
 		}
 		net_udp_send(m_Socket, &ServerAddrLocal, aPacket, (int)Offset);
-		m_aLastHeard[ClientId].store(Now);
+		MarkLocalVoiceActive(Now);
 		if(Config.m_RiVoiceDebug)
 		{
 			m_TxPackets++;

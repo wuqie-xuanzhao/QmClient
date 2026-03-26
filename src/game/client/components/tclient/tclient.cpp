@@ -2479,10 +2479,12 @@ void CTClient::CheckFriendOnline()
 	}
 	if(g_Config.m_QmFriendOnlineAutoRefresh)
 	{
-		if(Now >= m_FriendAutoRefreshNext)
+		const int CurrentType = pServerBrowser->GetCurrentType();
+		const bool AllowAutoRefresh = CurrentType != IServerBrowser::TYPE_LAN;
+		if(AllowAutoRefresh && Now >= m_FriendAutoRefreshNext)
 		{
 			if(!pServerBrowser->IsRefreshing() && !pServerBrowser->IsGettingServerlist())
-				pServerBrowser->Refresh(pServerBrowser->GetCurrentType(), true);
+				pServerBrowser->Refresh(CurrentType, false);
 			m_FriendAutoRefreshNext = Now + g_Config.m_QmFriendOnlineRefreshSeconds;
 		}
 	}
@@ -3740,6 +3742,7 @@ void CTClient::UpdateGoresMapProgress()
 	}
 
 	EnsureGoresBaselinePath();
+	const int MapCellCount = pCollision->GetWidth() * pCollision->GetHeight();
 	const size_t SegmentCount = m_vGoresPathSegmentLength.size();
 	if(!m_GoresPathValid || m_GoresPathTotalDistance <= 0.0f || m_vGoresPathPoints.size() < 2 ||
 		m_vGoresPathCumulativeDistance.size() != m_vGoresPathPoints.size() ||
@@ -3776,7 +3779,7 @@ void CTClient::UpdateGoresMapProgress()
 		const vec2 Pos = vec2((float)Char.m_Cur.m_X, (float)Char.m_Cur.m_Y);
 
 		const int PosIndex = pCollision->GetPureMapIndex(Pos);
-		const bool IsOnStart = PosIndex >= 0 && PosIndex < pCollision->GetWidth() * pCollision->GetHeight() &&
+		const bool IsOnStart = PosIndex >= 0 && PosIndex < MapCellCount &&
 			(pCollision->GetTileIndex(PosIndex) == TILE_START || pCollision->GetFrontTileIndex(PosIndex) == TILE_START);
 		if(IsOnStart)
 		{
@@ -3802,10 +3805,10 @@ void CTClient::UpdateGoresMapProgress()
 
 			const float T = std::clamp(dot(Pos - A, Delta) / LenSquared, 0.0f, 1.0f);
 			const vec2 Projection = A + Delta * T;
-			if(pCollision->IntersectLine(Pos, Projection, nullptr, nullptr) != 0)
-				return;
 			const float DistSquared = length_squared(Pos - Projection);
 			if(DistSquared >= BestDistSquared)
+				return;
+			if(pCollision->IntersectLine(Pos, Projection, nullptr, nullptr) != 0)
 				return;
 
 			BestDistSquared = DistSquared;
