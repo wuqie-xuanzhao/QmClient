@@ -4356,7 +4356,6 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		return;
 	}
 
-	static int s_SndEnable = g_Config.m_SndEnable;
 	static bool s_SndPackInit = false;
 	static char s_aSndPack[sizeof(g_Config.m_SndPack)] = "";
 
@@ -4424,11 +4423,11 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		UpdateMusicState();
 	}
 
-	const bool SndEnableChanged = g_Config.m_SndEnable && !s_SndEnable;
+	m_NeedRestartSound = g_Config.m_SndEnable && !Sound()->IsSoundEnabled();
 	if(!g_Config.m_SndEnable)
 	{
 		const bool PackChanged = str_comp(g_Config.m_SndPack, s_aSndPack) != 0;
-		m_NeedRestartSound = SndEnableChanged || PackChanged;
+		m_NeedRestartSound = m_NeedRestartSound || PackChanged;
 		s_SoundToggleCardHeight = maximum(MainView.y + SoundDeck.m_Style.m_Padding - SoundToggleCard.m_Rect.y, 270.0f);
 		EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);
 		return;
@@ -4607,7 +4606,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 
 	const bool PackChanged = str_comp(g_Config.m_SndPack, s_aSndPack) != 0;
-	m_NeedRestartSound = SndEnableChanged || PackChanged;
+		m_NeedRestartSound = m_NeedRestartSound || PackChanged;
 	EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);
 }
 
