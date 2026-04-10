@@ -6333,15 +6333,16 @@ void CEditor::Render()
 
 			if(Input()->ShiftIsPressed())
 			{
+				const int AdjustModifiers = Input()->ModifierIsPressed() ? (Input()->AltIsPressed() ? 2 : 1) : 0;
 				if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-					AdjustBrushSpecialTiles(false, -1);
+					AdjustBrushSpecialTiles(false, AdjustModifiers, -1);
 				if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-					AdjustBrushSpecialTiles(false, 1);
+					AdjustBrushSpecialTiles(false, AdjustModifiers, 1);
 			}
 
 			// Use ctrl+f to replace number in brush with next free
 			if(Input()->ModifierIsPressed() && Input()->KeyPress(KEY_F))
-				AdjustBrushSpecialTiles(true);
+				AdjustBrushSpecialTiles(true, 0, 0);
 		}
 	}
 
@@ -7273,14 +7274,27 @@ CEditorHistory &CEditor::ActiveHistory()
 	}
 }
 
-void CEditor::AdjustBrushSpecialTiles(bool UseNextFree, int Adjust)
+void CEditor::AdjustBrushSpecialTiles(bool UseNextFree, int AdjustModifiers, int AdjustValue)
 {
-	// Adjust m_Angle of speedup or m_Number field of tune, switch and tele tiles by `Adjust` if `UseNextFree` is false
-	// If `Adjust` is 0 and `UseNextFree` is false, then update numbers of brush tiles to global values
+	// Adjust m_Angle of speedup or m_Number field of tune, switch and tele tiles by `AdjustValue` if `UseNextFree` is false
+	// If `AdjustValue` is 0 and `UseNextFree` is false, then update numbers of brush tiles to global values
 	// If true, then use the next free number instead
 
-	auto &&AdjustNumber = [Adjust](auto &Number, short Limit = 255) {
-		Number = ((Number + Adjust) - 1 + Limit) % Limit + 1;
+	dbg_assert(AdjustValue == -1 || AdjustValue == 0 || AdjustValue == 1, "Invalid AdjustValue: %d", AdjustValue);
+	auto &&AdjustNumber = [AdjustValue](auto &Number, int Min, int Max) {
+		const int NumberInt = Number + AdjustValue; // Cast to int so this does not overflow unsigned char for some tiles
+		if(NumberInt < Min)
+		{
+			Number = Max;
+		}
+		else if(NumberInt > Max)
+		{
+			Number = Min;
+		}
+		else
+		{
+			Number = NumberInt;
+		}
 	};
 
 	for(auto &pLayer : m_pBrush->m_vpLayers)
@@ -7310,35 +7324,39 @@ void CEditor::AdjustBrushSpecialTiles(bool UseNextFree, int Adjust)
 						else if(IsTeleTileNumberUsedAny(pTeleLayer->m_pTiles[i].m_Index))
 							pTeleLayer->m_pTeleTile[i].m_Number = NextFreeTeleNumber;
 					}
-					else
-					{
-						AdjustNumber(pTeleLayer->m_pTeleTile[i].m_Number);
-					}
-
-					if(!UseNextFree && Adjust == 0 && IsTeleTileNumberUsedAny(pTeleLayer->m_pTiles[i].m_Index))
+					else if(AdjustValue == 0)
 					{
 						if(IsTeleTileCheckpoint(pTeleLayer->m_pTiles[i].m_Index))
 							pTeleLayer->m_pTeleTile[i].m_Number = m_TeleCheckpointNumber;
-						else
+						else if(IsTeleTileNumberUsedAny(pTeleLayer->m_pTiles[i].m_Index))
 							pTeleLayer->m_pTeleTile[i].m_Number = m_TeleNumber;
+					}
+					else if(AdjustModifiers == 0)
+					{
+						AdjustNumber(pTeleLayer->m_pTeleTile[i].m_Number, 1, 255);
 					}
 				}
 			}
 		}
-		else if(pLayerTiles->m_HasTune)
+		else if(pLayerTiles->m_HasTune && (!UseNextFree || Map()->m_pTuneLayer != nullptr))
 		{
-			if(!UseNextFree)
+			const int NextFreeNumber = UseNextFree ? Map()->m_pTuneLayer->FindNextFreeNumber() : 0;
+			std::shared_ptr<CLayerTune> pTuneLayer = std::static_pointer_cast<CLayerTune>(pLayer);
+			for(int y = 0; y < pTuneLayer->m_Height; y++)
 			{
-				std::shared_ptr<CLayerTune> pTuneLayer = std::static_pointer_cast<CLayerTune>(pLayer);
-				for(int y = 0; y < pTuneLayer->m_Height; y++)
+				for(int x = 0; x < pTuneLayer->m_Width; x++)
 				{
-					for(int x = 0; x < pTuneLayer->m_Width; x++)
-					{
-						int i = y * pTuneLayer->m_Width + x;
-						if(!IsValidTuneTile(pTuneLayer->m_pTiles[i].m_Index) || !pTuneLayer->m_pTuneTile[i].m_Number)
-							continue;
+					int i = y * pTuneLayer->m_Width + x;
+					if(!IsValidTuneTile(pTuneLayer->m_pTiles[i].m_Index) || (!UseNextFree && !pTuneLayer->m_pTuneTile[i].m_Number))
+						continue;
 
-						AdjustNumber(pTuneLayer->m_pTuneTile[i].m_Number);
+					if(UseNextFree)
+					{
+						pTuneLayer->m_pTuneTile[i].m_Number = NextFreeNumber;
+					}
+					else if(AdjustModifiers == 0)
+					{
+						AdjustNumber(pTuneLayer->m_pTuneTile[i].m_Number, 1, 255);
 					}
 				}
 			}
@@ -7356,39 +7374,51 @@ void CEditor::AdjustBrushSpecialTiles(bool UseNextFree, int Adjust)
 						continue;
 
 					if(UseNextFree)
+					{
 						pSwitchLayer->m_pSwitchTile[i].m_Number = NextFreeNumber;
-					else
-						AdjustNumber(pSwitchLayer->m_pSwitchTile[i].m_Number);
+					}
+					else if(AdjustModifiers == 0)
+					{
+						AdjustNumber(pSwitchLayer->m_pSwitchTile[i].m_Number, 1, 255);
+					}
+					else if(AdjustModifiers == 1)
+					{
+						AdjustNumber(pSwitchLayer->m_pSwitchTile[i].m_Delay, 0, 255);
+					}
 				}
 			}
 		}
-		else if(pLayerTiles->m_HasSpeedup)
+		else if(pLayerTiles->m_HasSpeedup && !UseNextFree)
 		{
-			if(!UseNextFree)
+			std::shared_ptr<CLayerSpeedup> pSpeedupLayer = std::static_pointer_cast<CLayerSpeedup>(pLayer);
+			for(int y = 0; y < pSpeedupLayer->m_Height; y++)
 			{
-				std::shared_ptr<CLayerSpeedup> pSpeedupLayer = std::static_pointer_cast<CLayerSpeedup>(pLayer);
-				for(int y = 0; y < pSpeedupLayer->m_Height; y++)
+				for(int x = 0; x < pSpeedupLayer->m_Width; x++)
 				{
-					for(int x = 0; x < pSpeedupLayer->m_Width; x++)
-					{
-						int i = y * pSpeedupLayer->m_Width + x;
-						if(!IsValidSpeedupTile(pSpeedupLayer->m_pTiles[i].m_Index))
-							continue;
+					int i = y * pSpeedupLayer->m_Width + x;
+					if(!IsValidSpeedupTile(pSpeedupLayer->m_pTiles[i].m_Index))
+						continue;
 
-						if(Adjust != 0)
-						{
-							AdjustNumber(pSpeedupLayer->m_pSpeedupTile[i].m_Angle, 359);
-						}
-						else
-						{
-							pSpeedupLayer->m_pSpeedupTile[i].m_Angle = m_SpeedupAngle;
-							pSpeedupLayer->m_SpeedupAngle = m_SpeedupAngle;
-						}
+					if(AdjustValue == 0)
+					{
+						pSpeedupLayer->m_pSpeedupTile[i].m_Angle = m_SpeedupAngle;
+						pSpeedupLayer->m_SpeedupAngle = m_SpeedupAngle;
+					}
+					else if(AdjustModifiers == 0)
+					{
+						AdjustNumber(pSpeedupLayer->m_pSpeedupTile[i].m_Angle, 0, 359);
+					}
+					else if(AdjustModifiers == 1)
+					{
+						AdjustNumber(pSpeedupLayer->m_pSpeedupTile[i].m_Force, 1, 255);
+					}
+					else if(AdjustModifiers == 2)
+					{
+						AdjustNumber(pSpeedupLayer->m_pSpeedupTile[i].m_MaxSpeed, 0, 255);
 					}
 				}
 			}
 		}
 	}
 }
-
 IEditor *CreateEditor() { return new CEditor; }
