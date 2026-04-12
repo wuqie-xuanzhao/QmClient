@@ -572,6 +572,7 @@ void CGameClient::OnDummySwap()
 	}
 	const int PrevDummyFire = m_DummyInput.m_Fire;
 	m_DummyInput = m_Controls.m_aInputData[!g_Config.m_ClDummy];
+	m_DummyControlReleaseFlags = 0;
 	m_Controls.m_aInputData[g_Config.m_ClDummy].m_Fire = PrevDummyFire;
 	m_IsDummySwapping = 1;
 }
@@ -783,6 +784,7 @@ void CGameClient::OnReset()
 	std::fill(std::begin(m_aNextChangeInfo), std::end(m_aNextChangeInfo), -1);
 	std::fill(std::begin(m_aLocalIds), std::end(m_aLocalIds), -1);
 	m_DummyInput = {};
+	m_DummyControlReleaseFlags = 0;
 	m_HammerInput = {};
 	m_DummyFire = 0;
 	m_ReceivedDDNetPlayer = false;
@@ -804,6 +806,7 @@ void CGameClient::OnReset()
 	std::fill(std::begin(m_aQ1menGSyncMarkUntil), std::end(m_aQ1menGSyncMarkUntil), 0);
 	std::fill(std::begin(m_aQ1menGSyncFootParticlesEnabled), std::end(m_aQ1menGSyncFootParticlesEnabled), false);
 	std::fill(std::begin(m_aQ1menGSyncRemoteParticlesEnabled), std::end(m_aQ1menGSyncRemoteParticlesEnabled), false);
+	std::fill(std::begin(m_aQmVoiceSyncMarkUntil), std::end(m_aQmVoiceSyncMarkUntil), 0);
 
 	m_PredictedDummyId = -1;
 	m_IsDummySwapping = false;
@@ -1179,6 +1182,188 @@ void CGameClient::FormatStreamerClan(int ClientId, char *pBuf, int BufSize) cons
 		str_copy(pBuf, m_aClients[ClientId].m_aClan, BufSize);
 	else
 		pBuf[0] = '\0';
+}
+
+namespace
+{
+bool IsAsciiDigit(char c)
+{
+	return c >= '0' && c <= '9';
+}
+
+void AppendVoteText(char *pBuf, int BufSize, int &Length, const char *pText, int TextLen)
+{
+	if(!pBuf || BufSize <= 0 || Length >= BufSize - 1 || !pText || TextLen <= 0)
+		return;
+
+	const int CopyLen = minimum(TextLen, BufSize - 1 - Length);
+	mem_copy(pBuf + Length, pText, CopyLen);
+	Length += CopyLen;
+	pBuf[Length] = '\0';
+}
+
+void AppendVoteText(char *pBuf, int BufSize, int &Length, const char *pText)
+{
+	if(!pText)
+		return;
+
+	AppendVoteText(pBuf, BufSize, Length, pText, str_length(pText));
+}
+
+struct SVoteClientLabel
+{
+	int m_ClientId = -1;
+	const char *m_pName = nullptr;
+	int m_NameLen = 0;
+	int m_Consumed = 0;
+};
+
+bool ParseQuotedVoteClientLabel(const char *pText, SVoteClientLabel &Out)
+{
+	if(!pText || *pText != '\'')
+		return false;
+
+	const char *pCursor = pText + 1;
+	while(*pCursor == ' ')
+		++pCursor;
+
+	if(!IsAsciiDigit(*pCursor))
+		return false;
+
+	int ClientId = 0;
+	do
+	{
+		ClientId = ClientId * 10 + (*pCursor - '0');
+		++pCursor;
+	} while(IsAsciiDigit(*pCursor));
+
+	if(*pCursor != ':' || pCursor[1] != ' ')
+		return false;
+
+	pCursor += 2;
+	const char *pQuoteEnd = str_find(pCursor, "'");
+	if(!pQuoteEnd || pQuoteEnd == pCursor)
+		return false;
+
+	Out.m_ClientId = ClientId;
+	Out.m_pName = pCursor;
+	Out.m_NameLen = (int)(pQuoteEnd - pCursor);
+	Out.m_Consumed = (int)(pQuoteEnd - pText) + 1;
+	return true;
+}
+
+bool ParseFullVoteClientLabel(const char *pText, SVoteClientLabel &Out)
+{
+	if(!pText)
+		return false;
+
+	const char *pCursor = pText;
+	while(*pCursor == ' ')
+		++pCursor;
+
+	if(!IsAsciiDigit(*pCursor))
+		return false;
+
+	int ClientId = 0;
+	do
+	{
+		ClientId = ClientId * 10 + (*pCursor - '0');
+		++pCursor;
+	} while(IsAsciiDigit(*pCursor));
+
+	if(*pCursor != ':' || pCursor[1] != ' ')
+		return false;
+
+	pCursor += 2;
+	if(*pCursor == '\0')
+		return false;
+
+	Out.m_ClientId = ClientId;
+	Out.m_pName = pCursor;
+	Out.m_NameLen = str_length(pCursor);
+	Out.m_Consumed = str_length(pText);
+	return true;
+}
+}
+
+void CGameClient::FormatStreamerVoteText(const char *pText, char *pBuf, int BufSize) const
+{
+	if(!pBuf || BufSize <= 0)
+		return;
+
+	pBuf[0] = '\0';
+	if(!pText)
+		return;
+
+	if(!g_Config.m_QmStreamerHideNames)
+	{
+		str_copy(pBuf, pText, BufSize);
+		return;
+	}
+
+	SVoteClientLabel Label;
+	if(ParseFullVoteClientLabel(pText, Label) && Label.m_ClientId >= 0 && Label.m_ClientId < MAX_CLIENTS &&
+		ShouldHideStreamerIdentity(Label.m_ClientId) &&
+		str_comp_num(m_aClients[Label.m_ClientId].m_aName, Label.m_pName, Label.m_NameLen) == 0 &&
+		m_aClients[Label.m_ClientId].m_aName[Label.m_NameLen] == '\0')
+	{
+		str_format(pBuf, BufSize, "%d", Label.m_ClientId);
+		return;
+	}
+
+	int Length = 0;
+	for(const char *pCursor = pText; *pCursor != '\0';)
+	{
+		bool Replaced = false;
+		SVoteClientLabel QuotedLabel;
+		if(ParseQuotedVoteClientLabel(pCursor, QuotedLabel) &&
+			QuotedLabel.m_ClientId >= 0 && QuotedLabel.m_ClientId < MAX_CLIENTS &&
+			ShouldHideStreamerIdentity(QuotedLabel.m_ClientId) &&
+			str_comp_num(m_aClients[QuotedLabel.m_ClientId].m_aName, QuotedLabel.m_pName, QuotedLabel.m_NameLen) == 0 &&
+			m_aClients[QuotedLabel.m_ClientId].m_aName[QuotedLabel.m_NameLen] == '\0')
+		{
+			char aClientId[16];
+			str_format(aClientId, sizeof(aClientId), "%d", QuotedLabel.m_ClientId);
+			AppendVoteText(pBuf, BufSize, Length, "'");
+			AppendVoteText(pBuf, BufSize, Length, aClientId);
+			AppendVoteText(pBuf, BufSize, Length, "'");
+			pCursor += QuotedLabel.m_Consumed;
+			Replaced = true;
+		}
+
+		if(!Replaced && *pCursor == '\'')
+		{
+			const char *pQuoteEnd = str_find(pCursor + 1, "'");
+			if(pQuoteEnd)
+			{
+				const int NameLen = (int)(pQuoteEnd - (pCursor + 1));
+				for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+				{
+					if(!ShouldHideStreamerIdentity(ClientId))
+						continue;
+
+					const char *pClientName = m_aClients[ClientId].m_aName;
+					if(str_comp_num(pClientName, pCursor + 1, NameLen) != 0 || pClientName[NameLen] != '\0')
+						continue;
+
+					char aClientId[16];
+					str_format(aClientId, sizeof(aClientId), "%d", ClientId);
+					AppendVoteText(pBuf, BufSize, Length, "'");
+					AppendVoteText(pBuf, BufSize, Length, aClientId);
+					AppendVoteText(pBuf, BufSize, Length, "'");
+					pCursor = pQuoteEnd + 1;
+					Replaced = true;
+					break;
+				}
+			}
+		}
+
+		if(Replaced)
+			continue;
+
+		AppendVoteText(pBuf, BufSize, Length, pCursor, 1);
+		++pCursor;
+	}
 }
 
 void CGameClient::OnRelease()
@@ -2524,7 +2709,23 @@ void CGameClient::OnNewSnapshot()
 	const int PredictedLocalDummy = g_Config.m_ClDummy ^ m_IsDummySwapping;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(m_Snap.m_aCharacters[i].m_Active && (m_Snap.m_aCharacters[i].m_Cur.m_Jumped & 2) && !(m_Snap.m_aCharacters[i].m_Prev.m_Jumped & 2))
+		const auto &Character = m_Snap.m_aCharacters[i];
+		if(!Character.m_Active)
+			continue;
+
+		const bool AirJumpByJumpedState = (Character.m_Cur.m_Jumped & 2) && !(Character.m_Prev.m_Jumped & 2);
+		bool AirJumpByJumpCount = false;
+		if(Character.m_HasExtendedDisplayInfo && Character.m_pPrevExtendedData != nullptr && Character.m_pPrevExtendedData->m_JumpedTotal != -1)
+		{
+			// Players with extra or endless jumps can reset the "dark feet" jumped bit
+			// in the same tick, so use the monotonically increasing air-jump counter as
+			// a fallback and verify it matches an upward jump impulse.
+			const bool JumpedTotalIncreased = Character.m_ExtendedData.m_JumpedTotal > Character.m_pPrevExtendedData->m_JumpedTotal;
+			const bool VelocityLooksLikeAirJump = Character.m_Cur.m_VelY < Character.m_Prev.m_VelY;
+			AirJumpByJumpCount = JumpedTotalIncreased && VelocityLooksLikeAirJump;
+		}
+
+		if(AirJumpByJumpedState || AirJumpByJumpCount)
 		{
 			bool IsDummy = Client()->DummyConnected() && i == m_aLocalIds[!g_Config.m_ClDummy];
 			bool IsLocalPlayer = i == m_Snap.m_LocalClientId;
@@ -2558,8 +2759,8 @@ void CGameClient::OnNewSnapshot()
 
 			if(UseSnapshotAirJump)
 			{
-				vec2 Pos = mix(vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
-					vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
+				vec2 Pos = mix(vec2(Character.m_Prev.m_X, Character.m_Prev.m_Y),
+					vec2(Character.m_Cur.m_X, Character.m_Cur.m_Y),
 					Client()->IntraGameTick(g_Config.m_ClDummy));
 				float Alpha = 1.0f;
 				if(IsOtherTeam(i))
@@ -6166,9 +6367,11 @@ void CGameClient::ClearQ1menGSyncMarks()
 	std::fill(std::begin(m_aQ1menGSyncMarkUntil), std::end(m_aQ1menGSyncMarkUntil), 0);
 	std::fill(std::begin(m_aQ1menGSyncFootParticlesEnabled), std::end(m_aQ1menGSyncFootParticlesEnabled), false);
 	std::fill(std::begin(m_aQ1menGSyncRemoteParticlesEnabled), std::end(m_aQ1menGSyncRemoteParticlesEnabled), false);
+	for(auto &aQid : m_aaQ1menGSyncQid)
+		aQid[0] = '\0';
 }
 
-void CGameClient::MarkQ1menGSyncClient(int ClientId, int64_t ExpireTick, bool FootParticlesEnabled, bool RemoteParticlesEnabled)
+void CGameClient::MarkQ1menGSyncClient(int ClientId, int64_t ExpireTick, bool FootParticlesEnabled, bool RemoteParticlesEnabled, const char *pQid)
 {
 	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
 		return;
@@ -6177,6 +6380,8 @@ void CGameClient::MarkQ1menGSyncClient(int ClientId, int64_t ExpireTick, bool Fo
 	m_aQ1menGSyncMarkUntil[ClientId] = maximum(m_aQ1menGSyncMarkUntil[ClientId], ExpireTick);
 	m_aQ1menGSyncFootParticlesEnabled[ClientId] = FootParticlesEnabled;
 	m_aQ1menGSyncRemoteParticlesEnabled[ClientId] = RemoteParticlesEnabled;
+	if(pQid && pQid[0] != '\0')
+		str_copy(m_aaQ1menGSyncQid[ClientId], pQid, sizeof(m_aaQ1menGSyncQid[ClientId]));
 }
 
 bool CGameClient::IsQ1menGClientRecognized(int ClientId) const
@@ -6190,10 +6395,39 @@ bool CGameClient::IsQ1menGClientRecognized(int ClientId) const
 	return false;
 }
 
+const char *CGameClient::GetQ1menGClientQid(int ClientId) const
+{
+	if(!IsQ1menGClientRecognized(ClientId))
+		return "";
+	return m_aaQ1menGSyncQid[ClientId];
+}
+
 bool CGameClient::ShouldRenderQ1menGRemoteFootParticles(int ClientId) const
 {
 	if(!IsQ1menGClientRecognized(ClientId))
 		return false;
 
 	return m_aQ1menGSyncRemoteParticlesEnabled[ClientId] && m_aQ1menGSyncFootParticlesEnabled[ClientId];
+}
+
+void CGameClient::ClearQmVoiceSyncMarks()
+{
+	std::fill(std::begin(m_aQmVoiceSyncMarkUntil), std::end(m_aQmVoiceSyncMarkUntil), 0);
+}
+
+void CGameClient::MarkQmVoiceSupportedClient(int ClientId, int64_t ExpireTick)
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return;
+	if(ExpireTick <= 0)
+		return;
+	m_aQmVoiceSyncMarkUntil[ClientId] = maximum(m_aQmVoiceSyncMarkUntil[ClientId], ExpireTick);
+}
+
+bool CGameClient::IsQmVoiceSupportedClient(int ClientId) const
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return false;
+
+	return m_aQmVoiceSyncMarkUntil[ClientId] > time_get();
 }

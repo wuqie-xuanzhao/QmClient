@@ -738,12 +738,21 @@ public:
 	void ApplyPreInputs(int Tick, bool Direct, CGameWorld &GameWorld);
 	bool GetDummyFastInput(CNetObj_PlayerInput &DummyFastInput, const CNetObj_PlayerInput *pDummyInputData, const class CCharacter *pDummyChar, int LocalTee, int DummyTee) const;
 
+	enum EDummyControlReleaseFlags
+	{
+		DUMMY_CONTROL_RELEASE_DIRECTION = 1 << 0,
+		DUMMY_CONTROL_RELEASE_JUMP = 1 << 1,
+		DUMMY_CONTROL_RELEASE_FIRE = 1 << 2,
+		DUMMY_CONTROL_RELEASE_HOOK = 1 << 3,
+	};
+
 	int m_aNextChangeInfo[NUM_DUMMIES];
 
 	// DDRace
 
 	int m_aLocalIds[NUM_DUMMIES];
 	CNetObj_PlayerInput m_DummyInput;
+	int m_DummyControlReleaseFlags{};
 	CNetObj_PlayerInput m_HammerInput;
 	unsigned int m_DummyFire;
 	bool m_ReceivedDDNetPlayer;
@@ -773,6 +782,7 @@ public:
 	bool ShouldHideStreamerSkin(int ClientId) const;
 	void FormatStreamerName(int ClientId, char *pBuf, int BufSize) const;
 	void FormatStreamerClan(int ClientId, char *pBuf, int BufSize) const;
+	void FormatStreamerVoteText(const char *pText, char *pBuf, int BufSize) const;
 
 	CGameWorld m_GameWorld;
 	CGameWorld m_PredictedWorld;
@@ -984,9 +994,13 @@ public:
 
 	// Q1menG Client Recognition
 	void ClearQ1menGSyncMarks();
-	void MarkQ1menGSyncClient(int ClientId, int64_t ExpireTick, bool FootParticlesEnabled, bool RemoteParticlesEnabled);
+	void MarkQ1menGSyncClient(int ClientId, int64_t ExpireTick, bool FootParticlesEnabled, bool RemoteParticlesEnabled, const char *pQid = nullptr);
 	bool IsQ1menGClientRecognized(int ClientId) const;
+	const char *GetQ1menGClientQid(int ClientId) const;
 	bool ShouldRenderQ1menGRemoteFootParticles(int ClientId) const;
+	void ClearQmVoiceSyncMarks();
+	void MarkQmVoiceSupportedClient(int ClientId, int64_t ExpireTick);
+	bool IsQmVoiceSupportedClient(int ClientId) const;
 
 private:
 	std::vector<CSnapEntities> m_vSnapEntities;
@@ -1014,6 +1028,8 @@ private:
 	int64_t m_aQ1menGSyncMarkUntil[MAX_CLIENTS] = {0};
 	bool m_aQ1menGSyncFootParticlesEnabled[MAX_CLIENTS] = {false};
 	bool m_aQ1menGSyncRemoteParticlesEnabled[MAX_CLIENTS] = {false};
+	char m_aaQ1menGSyncQid[MAX_CLIENTS][33] = {{0}};
+	int64_t m_aQmVoiceSyncMarkUntil[MAX_CLIENTS] = {0};
 
 	void LoadMapSettings();
 	CMapBugs m_MapBugs;

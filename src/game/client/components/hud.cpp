@@ -214,6 +214,14 @@ struct SSwapCountdownInfo
 	char m_aText[64] = {0};
 };
 
+struct SHudFrozenTeamInfo
+{
+	bool m_Available = false;
+	int m_NumInTeam = 0;
+	int m_NumFrozen = 0;
+	int m_LocalTeamId = 0;
+};
+
 struct SHudGameTimerInfo
 {
 	bool m_Visible = false;
@@ -241,6 +249,63 @@ struct SHudTopTimerCapsuleInfo
 	float m_TextY = 0.0f;
 	char m_aText[32] = {};
 };
+
+SHudFrozenTeamInfo BuildHudFrozenTeamInfo(const CGameClient &GameClient)
+{
+	SHudFrozenTeamInfo Result;
+	if(!GameClient.m_GameInfo.m_EntitiesDDRace)
+		return Result;
+
+	Result.m_Available = true;
+	if(GameClient.m_Snap.m_LocalClientId >= 0 && GameClient.m_Snap.m_SpecInfo.m_SpectatorId >= 0)
+	{
+		if(GameClient.m_Snap.m_SpecInfo.m_Active == 1 && GameClient.m_Snap.m_SpecInfo.m_SpectatorId != -1)
+			Result.m_LocalTeamId = GameClient.m_Teams.Team(GameClient.m_Snap.m_SpecInfo.m_SpectatorId);
+		else
+			Result.m_LocalTeamId = GameClient.m_Teams.Team(GameClient.m_Snap.m_LocalClientId);
+	}
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(!GameClient.m_Snap.m_apPlayerInfos[i])
+			continue;
+
+		if(GameClient.m_Teams.Team(i) == Result.m_LocalTeamId)
+		{
+			Result.m_NumInTeam++;
+			if(GameClient.m_aClients[i].m_FreezeEnd > 0 || GameClient.m_aClients[i].m_DeepFrozen)
+				Result.m_NumFrozen++;
+		}
+	}
+
+	return Result;
+}
+
+bool BuildHudFrozenSummaryText(const SHudFrozenTeamInfo &FrozenInfo, char *pBuf, size_t BufSize)
+{
+	pBuf[0] = '\0';
+	if(!FrozenInfo.m_Available || g_Config.m_TcShowFrozenText <= 0)
+		return false;
+
+	if(g_Config.m_TcShowFrozenText == 1)
+		str_format(pBuf, BufSize, "%d/%d", FrozenInfo.m_NumInTeam - FrozenInfo.m_NumFrozen, FrozenInfo.m_NumInTeam);
+	else if(g_Config.m_TcShowFrozenText == 2)
+		str_format(pBuf, BufSize, "%d/%d", FrozenInfo.m_NumFrozen, FrozenInfo.m_NumInTeam);
+	else
+		return false;
+
+	return true;
+}
+
+bool ShouldShowHudFrozenSummaryInStatus(bool ShowFrozenSummary, bool TimerVisible, bool StatusExpanded)
+{
+	return ShowFrozenSummary && TimerVisible && !StatusExpanded;
+}
+
+bool ShouldShowHudFrozenSummaryInBottomRow(bool ShowFrozenSummary, bool TimerVisible)
+{
+	return ShowFrozenSummary && !TimerVisible;
+}
 
 SHudGameTimerInfo BuildHudGameTimerInfo(const CGameClient &GameClient, const IClient &Client, ITextRender *pTextRender, float HudWidth)
 {
@@ -334,6 +399,11 @@ bool BuildHudRecordingStatusText(const CGameClient &GameClient, char *pBuf, size
 	AppendRecorderInfo(RECORDER_AUTO, Localize("Auto"));
 	AppendRecorderInfo(RECORDER_REPLAYS, Localize("Replay"));
 	return pBuf[0] != '\0';
+}
+
+bool ShouldRenderHudLocalTime(const CGameClient &GameClient)
+{
+	return g_Config.m_ClShowLocalTimeAlways || GameClient.m_Scoreboard.IsActive();
 }
 
 void DrawSmoothRoundedRect(IGraphics *pGraphics, float x, float y, float w, float h, float r, ColorRGBA Color, int Corners = IGraphics::CORNER_ALL)
@@ -1557,28 +1627,10 @@ void CHud::RenderTextInfo()
 	// render team in freeze text and last notify
 	if((g_Config.m_TcShowFrozenText > 0 || g_Config.m_TcShowFrozenHud > 0 || g_Config.m_TcNotifyWhenLast) && GameClient()->m_GameInfo.m_EntitiesDDRace)
 	{
-		int NumInTeam = 0;
-		int NumFrozen = 0;
-		int LocalTeamID = 0;
-		if(GameClient()->m_Snap.m_LocalClientId >= 0 && GameClient()->m_Snap.m_SpecInfo.m_SpectatorId >= 0)
-		{
-			if(GameClient()->m_Snap.m_SpecInfo.m_Active == 1 && GameClient()->m_Snap.m_SpecInfo.m_SpectatorId != -1)
-				LocalTeamID = GameClient()->m_Teams.Team(GameClient()->m_Snap.m_SpecInfo.m_SpectatorId);
-			else
-				LocalTeamID = GameClient()->m_Teams.Team(GameClient()->m_Snap.m_LocalClientId);
-		}
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(!GameClient()->m_Snap.m_apPlayerInfos[i])
-				continue;
-
-			if(GameClient()->m_Teams.Team(i) == LocalTeamID)
-			{
-				NumInTeam++;
-				if(GameClient()->m_aClients[i].m_FreezeEnd > 0 || GameClient()->m_aClients[i].m_DeepFrozen)
-					NumFrozen++;
-			}
-		}
+		const SHudFrozenTeamInfo FrozenInfo = BuildHudFrozenTeamInfo(*GameClient());
+		const int NumInTeam = FrozenInfo.m_NumInTeam;
+		const int NumFrozen = FrozenInfo.m_NumFrozen;
+		const int LocalTeamID = FrozenInfo.m_LocalTeamId;
 
 		// Notify when last
 		if(g_Config.m_TcNotifyWhenLast)
@@ -1596,11 +1648,8 @@ void CHud::RenderTextInfo()
 		}
 		// Show freeze text
 		char aBuf[64];
-		if(g_Config.m_TcShowFrozenText == 1)
-			str_format(aBuf, sizeof(aBuf), "%d / %d", NumInTeam - NumFrozen, NumInTeam);
-		else if(g_Config.m_TcShowFrozenText == 2)
-			str_format(aBuf, sizeof(aBuf), "%d / %d", NumFrozen, NumInTeam);
-		if(g_Config.m_TcShowFrozenText > 0)
+		const bool ShowFrozenSummary = BuildHudFrozenSummaryText(FrozenInfo, aBuf, sizeof(aBuf));
+		if(ShowFrozenSummary && !HasVisibleMediaIsland())
 			TextRender()->Text(m_Width / 2.0f - TextRender()->TextWidth(10.0f, aBuf) / 2.0f, 12.0f, 10.0f, aBuf);
 
 		// str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_aClients[GameClient()->m_Snap.m_LocalClientId].m_PrevPredicted.m_FreezeEnd);
@@ -1626,6 +1675,13 @@ void CHud::RenderTextInfo()
 				MaxTees = (int)(9.5f * (m_Width / m_Height) * 13.0f / TeeSize);
 			int MaxRows = g_Config.m_TcFrozenMaxRows;
 			float StartPos = m_Width / 2.0f + 38.0f * (m_Width / m_Height) / 1.78f;
+			const float AvoidanceRight = GetTopIslandAvoidanceRight();
+			if(AvoidanceRight > 0.0f)
+				StartPos = std::max(StartPos, AvoidanceRight + TeeSize * 0.5f + 4.0f);
+
+			const float RowLeft = StartPos - TeeSize * 0.5f;
+			const float AvailableRowWidth = std::max(TeeSize, m_Width - RowLeft);
+			MaxTees = std::max(1, std::min(MaxTees, (int)std::floor(AvailableRowWidth / TeeSize)));
 
 			int TotalRows = std::min(MaxRows, (NumInTeam + MaxTees - 1) / MaxTees);
 			Graphics()->TextureClear();
@@ -2346,26 +2402,165 @@ bool CHud::HasVisibleMediaIsland() const
 	if(HasActiveSwitchCountdown())
 		return true;
 
-	if(!g_Config.m_ClSmtcShowHud)
+	if(ShouldRenderHudLocalTime(*GameClient()))
+		return true;
+
+	if(g_Config.m_ClShowhudTimer)
+	{
+		const SHudGameTimerInfo TimerInfo = BuildHudGameTimerInfo(*GameClient(), *Client(), TextRender(), m_Width);
+		if(TimerInfo.m_Visible)
+			return true;
+	}
+
+	if(!(g_Config.m_ClSmtcEnable && g_Config.m_ClSmtcShowHud))
 		return false;
 
 	CSystemMediaControls::SState MediaState;
 	return GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState);
 }
 
+float CHud::GetTopIslandAvoidanceRight() const
+{
+	const bool ShowLocalTime = ShouldRenderHudLocalTime(*GameClient());
+	const SHudGameTimerInfo TimerInfo = g_Config.m_ClShowhudTimer ? BuildHudGameTimerInfo(*GameClient(), *Client(), TextRender(), m_Width) : SHudGameTimerInfo{};
+	const SHudTopTimerCapsuleInfo TimerCapsule = BuildHudTopTimerCapsuleInfo(TimerInfo);
+	const SHudFrozenTeamInfo FrozenInfo = BuildHudFrozenTeamInfo(*GameClient());
+	char aFrozenSummaryBuf[64];
+	const bool ShowFrozenSummary = BuildHudFrozenSummaryText(FrozenInfo, aFrozenSummaryBuf, sizeof(aFrozenSummaryBuf));
+
+	char aRecordingBuf[512];
+	const bool ShowRecordingStatus = TimerCapsule.m_Visible && BuildHudRecordingStatusText(*GameClient(), aRecordingBuf, sizeof(aRecordingBuf));
+	const bool ScoreboardExpanded = GameClient()->m_Scoreboard.IsActive();
+	const bool ShowFrozenSummaryInStatus = ShouldShowHudFrozenSummaryInStatus(ShowFrozenSummary, TimerCapsule.m_Visible, ScoreboardExpanded);
+	const int SpectatorCount = GetMediaIslandSpectatorCount(*GameClient(), *Client());
+	const bool ShowSpectator = SpectatorCount > 0;
+
+	CSystemMediaControls::SState MediaState;
+	const bool MediaHudEnabled = g_Config.m_ClSmtcEnable && g_Config.m_ClSmtcShowHud;
+	const bool HasMediaState = MediaHudEnabled && GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState);
+	const bool ShowTopRow = HasMediaState || ShowLocalTime || TimerCapsule.m_Visible || ShowRecordingStatus || ShowSpectator;
+	if(!ShowTopRow)
+		return 0.0f;
+
+	constexpr float CoverSize = 12.0f;
+	constexpr float PaddingX = 3.0f;
+	constexpr float Gap = 3.0f;
+	constexpr float SpectatorGap = 1.5f;
+	constexpr float TitleFontSize = 5.8f;
+	constexpr float MetaFontSize = 5.3f;
+	constexpr float ScreenPadding = 5.0f;
+	constexpr float GapToTimer = 6.0f;
+	constexpr float TimerToStatusGap = 6.0f;
+	constexpr float StatusPaddingLeft = 7.0f;
+	constexpr float StatusPaddingRight = 8.0f;
+	constexpr float StatusDotSize = 5.0f;
+	constexpr float StatusDotGap = 5.0f;
+	constexpr float StatusFontSize = 5.3f;
+
+	char aSpectatorBuf[16];
+	str_format(aSpectatorBuf, sizeof(aSpectatorBuf), "%d", SpectatorCount);
+
+	char aTimeBuf[16];
+	str_timestamp_format(aTimeBuf, sizeof(aTimeBuf), "%H:%M");
+	if(aTimeBuf[0] == '\0')
+		str_copy(aTimeBuf, "00:00", sizeof(aTimeBuf));
+
+	char aTimeSlotBuf[32];
+	const int Checkpoint = GetDisplayedCheckpoint(*GameClient());
+	if(Checkpoint > 0)
+		str_format(aTimeSlotBuf, sizeof(aTimeSlotBuf), "00:00 CP%d", Checkpoint);
+	else
+		str_copy(aTimeSlotBuf, "00:00", sizeof(aTimeSlotBuf));
+
+	const float TimeSlotWidth = std::round(TextRender()->TextBoundingBox(MetaFontSize, aTimeSlotBuf).m_W);
+	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+	const float SpectatorIconWidth = TextRender()->TextWidth(MetaFontSize, FontIcons::FONT_ICON_EYE);
+	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	const float SpectatorTextWidth = ShowSpectator ? TextRender()->TextWidth(MetaFontSize, aSpectatorBuf) : 0.0f;
+	const float SpectatorWidth = ShowSpectator ? SpectatorIconWidth + SpectatorGap + SpectatorTextWidth : 0.0f;
+	const float StatusTextWidth = ShowRecordingStatus ? std::round(TextRender()->TextBoundingBox(StatusFontSize, aRecordingBuf).m_W) : 0.0f;
+	const float RawCollapsedStatusWidth = StatusPaddingLeft + StatusDotSize + StatusPaddingRight;
+	const float RawExpandedStatusWidth = StatusPaddingLeft + StatusDotSize + StatusDotGap + StatusTextWidth + StatusPaddingRight;
+	const float FrozenSummaryTextWidth = ShowFrozenSummaryInStatus ? std::round(TextRender()->TextBoundingBox(StatusFontSize, aFrozenSummaryBuf).m_W) : 0.0f;
+	const float FrozenSummaryStatusWidth = ShowFrozenSummaryInStatus ? (StatusPaddingLeft + FrozenSummaryTextWidth + StatusPaddingRight) : 0.0f;
+	const bool ShowCover = HasMediaState;
+
+	float BaseWidth = PaddingX;
+	if(ShowCover)
+		BaseWidth += CoverSize;
+	if(ShowCover && (ShowSpectator || ShowLocalTime))
+		BaseWidth += Gap;
+	if(ShowSpectator)
+		BaseWidth += SpectatorWidth;
+	if(ShowSpectator && ShowLocalTime)
+		BaseWidth += Gap;
+	if(ShowLocalTime)
+		BaseWidth += TimeSlotWidth;
+	BaseWidth += PaddingX;
+	if(!ShowCover && !ShowSpectator && !ShowLocalTime)
+		BaseWidth = 0.0f;
+
+	const bool Expanded = HasMediaState && m_MediaIslandAnimState.m_VisualState == SHudMediaIslandAnimState::EVisualState::EXPANDED;
+	const float MaxTitleWidth = std::clamp(m_Width * 0.18f, 42.0f, 88.0f);
+	const float RightSlotWidth = ShowFrozenSummaryInStatus ? FrozenSummaryStatusWidth :
+		(ShowRecordingStatus ? (ScoreboardExpanded ? RawExpandedStatusWidth : RawCollapsedStatusWidth) : 0.0f);
+	const float RightSlotGap = TimerCapsule.m_Visible && RightSlotWidth > 0.0f ? TimerToStatusGap : 0.0f;
+	const float MaxIslandWidth = TimerCapsule.m_Visible ?
+		std::max(BaseWidth, TimerCapsule.m_BoxX - GapToTimer - RightSlotGap - RightSlotWidth - ScreenPadding) :
+		BaseWidth + (ShowCover ? (Gap + MaxTitleWidth) : 0.0f);
+	const float MaxExpandedTitleWidth = std::max(0.0f, MaxIslandWidth - BaseWidth - Gap);
+	const char *pDisplayTitle = HasMediaState && MediaState.m_aTitle[0] != '\0' ? MediaState.m_aTitle : "";
+	const float NaturalTitleWidth = std::round(TextRender()->TextBoundingBox(TitleFontSize, pDisplayTitle).m_W);
+	const float TitleWidth = (Expanded && ShowCover) ? std::clamp(NaturalTitleWidth, 0.0f, std::min(MaxTitleWidth, MaxExpandedTitleWidth)) : 0.0f;
+
+	float TargetWidth = BaseWidth;
+	if(Expanded && TitleWidth > 0.0f)
+		TargetWidth += Gap + TitleWidth;
+
+	float TargetX = m_Width * 0.5f - TargetWidth * 0.5f;
+	if(TimerCapsule.m_Visible)
+		TargetX = TargetWidth > 0.0f ? std::max(ScreenPadding, TimerCapsule.m_BoxX - GapToTimer - TargetWidth) : TimerCapsule.m_BoxX;
+	else
+	{
+		const float MaxTargetX = std::max(ScreenPadding, m_Width - ScreenPadding - TargetWidth);
+		TargetX = std::clamp(TargetX, ScreenPadding, MaxTargetX);
+	}
+
+	const float UnifiedRight = TimerCapsule.m_Visible ?
+		(TimerCapsule.m_BoxX + TimerCapsule.m_BoxW + (RightSlotWidth > 0.0f ? (RightSlotGap + RightSlotWidth) : 0.0f)) :
+		(TargetX + TargetWidth);
+	return UnifiedRight;
+}
+
 void CHud::RenderMediaIsland()
 {
 	CSystemMediaControls::SState MediaState;
-	const bool HasMediaState = g_Config.m_ClSmtcShowHud && GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState);
+	const bool MediaHudEnabled = g_Config.m_ClSmtcEnable && g_Config.m_ClSmtcShowHud;
+	const bool HasMediaState = MediaHudEnabled && GameClient()->m_SystemMediaControls.GetStateSnapshot(MediaState);
 
 	SSwapCountdownInfo SwapInfo;
 	const bool ShowSwapCountdown = BuildSwapCountdownInfo(*GameClient(), *Client(), SwapInfo);
 
 	char aSwitchCountdownBuf[256];
 	const bool ShowSwitchCountdown = BuildSwitchCountdownSummary(aSwitchCountdownBuf, sizeof(aSwitchCountdownBuf));
-	const bool ShowBottomRow = ShowSwapCountdown || ShowSwitchCountdown;
+	const SHudFrozenTeamInfo FrozenInfo = BuildHudFrozenTeamInfo(*GameClient());
+	char aFrozenSummaryBuf[64];
+	const bool ShowFrozenSummary = BuildHudFrozenSummaryText(FrozenInfo, aFrozenSummaryBuf, sizeof(aFrozenSummaryBuf));
 
-	if(!HasMediaState && !ShowBottomRow)
+	const bool ShowLocalTime = ShouldRenderHudLocalTime(*GameClient());
+	const SHudGameTimerInfo TimerInfo = g_Config.m_ClShowhudTimer ? BuildHudGameTimerInfo(*GameClient(), *Client(), TextRender(), m_Width) : SHudGameTimerInfo{};
+	const SHudTopTimerCapsuleInfo TimerCapsule = BuildHudTopTimerCapsuleInfo(TimerInfo);
+	char aRecordingBuf[512];
+	const bool ShowRecordingStatus = TimerCapsule.m_Visible && BuildHudRecordingStatusText(*GameClient(), aRecordingBuf, sizeof(aRecordingBuf));
+	const bool ScoreboardExpanded = GameClient()->m_Scoreboard.IsActive();
+	const bool ShowFrozenSummaryInStatus = ShouldShowHudFrozenSummaryInStatus(ShowFrozenSummary, TimerCapsule.m_Visible, ScoreboardExpanded);
+	const bool ShowFrozenSummaryInBottomRow = ShouldShowHudFrozenSummaryInBottomRow(ShowFrozenSummary, TimerCapsule.m_Visible);
+	const bool ShowBottomRow = ShowSwapCountdown || ShowSwitchCountdown || ShowFrozenSummaryInBottomRow;
+	const int SpectatorCount = GetMediaIslandSpectatorCount(*GameClient(), *Client());
+	const bool ShowSpectator = SpectatorCount > 0;
+	const bool ShowTopRow = HasMediaState || ShowLocalTime || TimerCapsule.m_Visible || ShowRecordingStatus || ShowSpectator;
+
+	if(!ShowTopRow && !ShowBottomRow)
 	{
 		m_MediaIslandAnimState.Reset();
 		return;
@@ -2408,9 +2603,6 @@ void CHud::RenderMediaIsland()
 
 	if(AnimState.m_VisualState == SHudMediaIslandAnimState::EVisualState::EXPANDED && Now >= AnimState.m_ExpandUntilTick)
 		AnimState.m_VisualState = SHudMediaIslandAnimState::EVisualState::MINIMIZED;
-
-	const int SpectatorCount = GetMediaIslandSpectatorCount(*GameClient(), *Client());
-	const bool ShowSpectator = SpectatorCount > 0;
 	const bool Expanded = HasMediaState && AnimState.m_VisualState == SHudMediaIslandAnimState::EVisualState::EXPANDED;
 
 	char aSpectatorBuf[16];
@@ -2467,28 +2659,72 @@ void CHud::RenderMediaIsland()
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	const float SpectatorTextWidth = ShowSpectator ? TextRender()->TextWidth(MetaFontSize, aSpectatorBuf) : 0.0f;
 	const float SpectatorWidth = ShowSpectator ? SpectatorIconWidth + SpectatorGap + SpectatorTextWidth : 0.0f;
-	const SHudGameTimerInfo TimerInfo = g_Config.m_ClShowhudTimer ? BuildHudGameTimerInfo(*GameClient(), *Client(), TextRender(), m_Width) : SHudGameTimerInfo{};
-	const SHudTopTimerCapsuleInfo TimerCapsule = BuildHudTopTimerCapsuleInfo(TimerInfo);
-	char aRecordingBuf[512];
-	const bool ShowRecordingStatus = TimerCapsule.m_Visible && BuildHudRecordingStatusText(*GameClient(), aRecordingBuf, sizeof(aRecordingBuf));
 	const float StatusTextWidth = ShowRecordingStatus ? std::round(TextRender()->TextBoundingBox(StatusFontSize, aRecordingBuf).m_W) : 0.0f;
 	const float RawCollapsedStatusWidth = StatusPaddingLeft + StatusDotSize + StatusPaddingRight;
 	const float RawExpandedStatusWidth = StatusPaddingLeft + StatusDotSize + StatusDotGap + StatusTextWidth + StatusPaddingRight;
-	const bool ScoreboardExpanded = GameClient()->m_Scoreboard.IsActive();
-	const float BaseWidth = PaddingX + CoverSize + (ShowSpectator ? Gap + SpectatorWidth : 0.0f) + Gap + TimeSlotWidth + PaddingX;
+	const float FrozenSummaryTextWidth = ShowFrozenSummaryInStatus ? std::round(TextRender()->TextBoundingBox(StatusFontSize, aFrozenSummaryBuf).m_W) : 0.0f;
+	const float FrozenSummaryStatusWidth = ShowFrozenSummaryInStatus ? (StatusPaddingLeft + FrozenSummaryTextWidth + StatusPaddingRight) : 0.0f;
+	struct SBottomTextLayoutItem
+	{
+		const char *m_pText = nullptr;
+		float m_Width = 0.0f;
+	};
+	std::array<SBottomTextLayoutItem, 3> aBottomLayoutItems{};
+	int BottomLayoutItemCount = 0;
+	const auto AddBottomLayoutItem = [&](const char *pText) {
+		if(pText == nullptr || pText[0] == '\0' || BottomLayoutItemCount >= (int)aBottomLayoutItems.size())
+			return;
+		aBottomLayoutItems[BottomLayoutItemCount].m_pText = pText;
+		aBottomLayoutItems[BottomLayoutItemCount].m_Width = std::round(TextRender()->TextBoundingBox(BottomFontSize, pText).m_W);
+		++BottomLayoutItemCount;
+	};
+	if(ShowSwapCountdown)
+		AddBottomLayoutItem(SwapInfo.m_aText);
+	if(ShowFrozenSummaryInBottomRow)
+		AddBottomLayoutItem(aFrozenSummaryBuf);
+	if(ShowSwitchCountdown)
+		AddBottomLayoutItem(aSwitchCountdownBuf);
+	float NaturalBottomContentWidth = 0.0f;
+	for(int i = 0; i < BottomLayoutItemCount; ++i)
+		NaturalBottomContentWidth += aBottomLayoutItems[i].m_Width;
+	if(BottomLayoutItemCount > 1)
+		NaturalBottomContentWidth += BottomRowItemGap * (BottomLayoutItemCount - 1);
+	const float DesiredBottomUnifiedWidth = BottomLayoutItemCount > 0 ? (NaturalBottomContentWidth + BottomRowPaddingX * 2.0f) : 0.0f;
+	const bool ShowCover = HasMediaState;
+	float BaseWidth = PaddingX;
+	if(ShowCover)
+		BaseWidth += CoverSize;
+	if(ShowCover && (ShowSpectator || ShowLocalTime))
+		BaseWidth += Gap;
+	if(ShowSpectator)
+		BaseWidth += SpectatorWidth;
+	if(ShowSpectator && ShowLocalTime)
+		BaseWidth += Gap;
+	if(ShowLocalTime)
+		BaseWidth += TimeSlotWidth;
+	BaseWidth += PaddingX;
+	if(!ShowCover && !ShowSpectator && !ShowLocalTime)
+		BaseWidth = 0.0f;
 	const float MaxTitleWidth = std::clamp(m_Width * 0.18f, 42.0f, 88.0f);
 	const float MaxIslandWidth = TimerCapsule.m_Visible ?
 		std::max(BaseWidth, TimerCapsule.m_BoxX - GapToTimer - ScreenPadding) :
-		BaseWidth + Gap + MaxTitleWidth;
+		BaseWidth + (ShowCover ? (Gap + MaxTitleWidth) : 0.0f);
 	const float MaxExpandedTitleWidth = std::max(0.0f, MaxIslandWidth - BaseWidth - Gap);
 	const float NaturalTitleWidth = std::round(TextRender()->TextBoundingBox(TitleFontSize, pDisplayTitle).m_W);
-	const float TitleWidth = Expanded ? std::clamp(NaturalTitleWidth, 0.0f, std::min(MaxTitleWidth, MaxExpandedTitleWidth)) : 0.0f;
+	const float TitleWidth = (Expanded && ShowCover) ? std::clamp(NaturalTitleWidth, 0.0f, std::min(MaxTitleWidth, MaxExpandedTitleWidth)) : 0.0f;
+	const float PlannedStatusWidth = ShowFrozenSummaryInStatus ? FrozenSummaryStatusWidth :
+		(ShowRecordingStatus ? (ScoreboardExpanded ? RawExpandedStatusWidth : RawCollapsedStatusWidth) : 0.0f);
 	float TargetWidth = BaseWidth;
 	if(Expanded && TitleWidth > 0.0f)
 		TargetWidth += Gap + TitleWidth;
+	float PlannedUnifiedWidth = TimerCapsule.m_Visible ?
+		(TargetWidth + GapToTimer + TimerCapsule.m_BoxW + (PlannedStatusWidth > 0.0f ? (TimerToStatusGap + PlannedStatusWidth) : 0.0f)) :
+		TargetWidth;
+	if(DesiredBottomUnifiedWidth > PlannedUnifiedWidth)
+		TargetWidth += DesiredBottomUnifiedWidth - PlannedUnifiedWidth;
 	float TargetX = m_Width * 0.5f - TargetWidth * 0.5f;
 	if(TimerCapsule.m_Visible)
-		TargetX = std::max(ScreenPadding, TimerCapsule.m_BoxX - GapToTimer - TargetWidth);
+		TargetX = TargetWidth > 0.0f ? std::max(ScreenPadding, TimerCapsule.m_BoxX - GapToTimer - TargetWidth) : TimerCapsule.m_BoxX;
 	else
 	{
 		const float MaxTargetX = std::max(ScreenPadding, m_Width - ScreenPadding - TargetWidth);
@@ -2537,13 +2773,15 @@ void CHud::RenderMediaIsland()
 	const float CoverY = IslandY + (BaseIslandHeight - CoverSize) * 0.5f;
 	const vec2 CoverCenter(CoverX + CoverSize * 0.5f, CoverY + CoverSize * 0.5f);
 	const float CoverRadius = CoverSize * 0.5f;
-	const float TimeSlotX = IslandX + IslandWidth - PaddingX - TimeSlotWidth;
+	const float RightMetaX = IslandX + IslandWidth - PaddingX;
+	const float TimeSlotX = ShowLocalTime ? (RightMetaX - TimeSlotWidth) : RightMetaX;
 	const float TimeY = IslandY + (BaseIslandHeight - MetaFontSize) * 0.5f - 0.5f;
 	const float TimeTextX = TimeSlotX + std::max(0.0f, TimeSlotWidth - TimeTextWidth);
-	const float SpectatorX = ShowSpectator ? (TimeSlotX - Gap - SpectatorWidth) : TimeSlotX;
+	const float SpectatorAnchorX = ShowLocalTime ? TimeSlotX : RightMetaX;
+	const float SpectatorX = ShowSpectator ? (SpectatorAnchorX - (ShowLocalTime ? Gap : 0.0f) - SpectatorWidth) : SpectatorAnchorX;
 	const float TitleBaseX = CoverX + CoverSize + Gap;
 	const float TitleX = TitleBaseX + TitleOffset;
-	const float TitleRight = (ShowSpectator ? SpectatorX : TimeSlotX) - Gap;
+	const float TitleRight = (ShowSpectator ? SpectatorX : (ShowLocalTime ? TimeSlotX : (IslandX + IslandWidth - PaddingX))) - Gap;
 	const float TitleAvailableWidth = std::max(0.0f, TitleRight - TitleX);
 	const float TitleY = IslandY + (BaseIslandHeight - TitleFontSize) * 0.5f - 0.5f;
 
@@ -2565,9 +2803,9 @@ void CHud::RenderMediaIsland()
 	const float StatusSectionX = TimerCapsule.m_BoxX + TimerCapsule.m_BoxW + TimerToStatusGap;
 	const float CollapsedStatusWidth = RawCollapsedStatusWidth;
 	const float ExpandedStatusWidth = RawExpandedStatusWidth;
-	const float TargetStatusWidth = ShowRecordingStatus ? (ScoreboardExpanded ? ExpandedStatusWidth : CollapsedStatusWidth) : 0.0f;
-	const float TargetStatusAlpha = ShowRecordingStatus ? 1.0f : 0.0f;
-	const float TargetTextAlpha = ShowRecordingStatus && ScoreboardExpanded ? 1.0f : 0.0f;
+	const float TargetStatusWidth = PlannedStatusWidth;
+	const float TargetStatusAlpha = (ShowFrozenSummaryInStatus || ShowRecordingStatus) ? 1.0f : 0.0f;
+	const float TargetTextAlpha = ShowFrozenSummaryInStatus ? 1.0f : (ShowRecordingStatus && ScoreboardExpanded ? 1.0f : 0.0f);
 
 	const uint64_t StatusBoxNode = HudRecordingStatusNodeKey("box");
 	const uint64_t StatusTextNode = HudRecordingStatusNodeKey("text");
@@ -2590,10 +2828,12 @@ void CHud::RenderMediaIsland()
 		(TimerCapsule.m_BoxX + TimerCapsule.m_BoxW + (RenderStatusSection ? (TimerToStatusGap + StatusWidth) : 0.0f)) :
 		(IslandX + IslandWidth);
 	const float UnifiedWidth = std::max(IslandWidth, UnifiedRight - IslandX);
+	const bool RenderLeftSection = ShowCover || ShowSpectator || ShowLocalTime;
+	const float TimerTextY = TimerCapsule.m_TextY;
 
 	DrawSmoothRoundedRect(Graphics(), IslandX, IslandY, UnifiedWidth, AnimatedIslandHeight, Radius, ColorRGBA(0.04f, 0.05f, 0.07f, 0.80f));
 
-	if(!MediaState.m_AlbumArt.IsValid())
+	if(ShowCover && !MediaState.m_AlbumArt.IsValid())
 	{
 		DrawSmoothCircle(Graphics(), CoverCenter, CoverRadius, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f));
 		const float PlaceholderFontSize = MetaFontSize;
@@ -2602,7 +2842,7 @@ void CHud::RenderMediaIsland()
 		TextRender()->Text(CoverX + (CoverSize - PlaceholderWidth) * 0.5f, CoverY + (CoverSize - PlaceholderFontSize) * 0.5f - 0.5f, PlaceholderFontSize, FontIcons::FONT_ICON_MUSIC, -1.0f);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	}
-	else
+	else if(ShowCover)
 	{
 		DrawTexturedCircle(Graphics(), MediaState.m_AlbumArt, CoverCenter, CoverRadius, AnimState.m_CoverRotation);
 	}
@@ -2617,7 +2857,7 @@ void CHud::RenderMediaIsland()
 		TextRender()->Text(SpectatorX + SpectatorIconWidth + SpectatorGap, TimeY, MetaFontSize, aSpectatorBuf, -1.0f);
 	}
 
-	if(TitleAlpha > 0.001f && TitleAvailableWidth > 2.0f)
+	if(ShowCover && TitleAlpha > 0.001f && TitleAvailableWidth > 2.0f)
 	{
 		CTextCursor Cursor;
 		Cursor.m_FontSize = TitleFontSize;
@@ -2628,19 +2868,25 @@ void CHud::RenderMediaIsland()
 		TextRender()->TextEx(&Cursor, pDisplayTitle);
 	}
 
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.86f);
-	TextRender()->Text(TimeTextX, TimeY, MetaFontSize, aTimeDisplayBuf, -1.0f);
+	if(ShowLocalTime)
+	{
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.86f);
+		TextRender()->Text(TimeTextX, TimeY, MetaFontSize, aTimeDisplayBuf, -1.0f);
+	}
 
 	if(TimerCapsule.m_Visible)
 	{
-		const float LeftDividerX = TimerCapsule.m_BoxX - GapToTimer * 0.5f;
-		Graphics()->DrawRect(LeftDividerX, IslandY + 4.0f, 0.75f, BaseIslandHeight - 8.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f), IGraphics::CORNER_ALL, 0.375f);
+		if(RenderLeftSection)
+		{
+			const float LeftDividerX = TimerCapsule.m_BoxX - GapToTimer * 0.5f;
+			Graphics()->DrawRect(LeftDividerX, IslandY + 4.0f, 0.75f, BaseIslandHeight - 8.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f), IGraphics::CORNER_ALL, 0.375f);
+		}
 
 		if(TimerCapsule.m_IsCritical)
 			TextRender()->TextColor(1.0f, 0.25f, 0.25f, TimerCapsule.m_Alpha);
 		else
 			TextRender()->TextColor(0.98f, 0.99f, 1.0f, 0.98f);
-		TextRender()->Text(TimerCapsule.m_TextX, TimerCapsule.m_TextY, TimerCapsule.m_FontSize, TimerCapsule.m_aText, -1.0f);
+		TextRender()->Text(TimerCapsule.m_TextX, TimerTextY, TimerCapsule.m_FontSize, TimerCapsule.m_aText, -1.0f);
 	}
 
 	if(RenderStatusSection)
@@ -2648,15 +2894,26 @@ void CHud::RenderMediaIsland()
 		const float DividerX = TimerCapsule.m_BoxX + TimerCapsule.m_BoxW + TimerToStatusGap * 0.5f;
 		Graphics()->DrawRect(DividerX, IslandY + 4.0f, 0.75f, BaseIslandHeight - 8.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * StatusAlpha), IGraphics::CORNER_ALL, 0.375f);
 
-		const vec2 DotCenter(StatusSectionX + StatusPaddingLeft + StatusDotSize * 0.5f, IslandY + BaseIslandHeight * 0.5f);
-		DrawSmoothCircle(Graphics(), DotCenter, StatusDotSize * 0.5f, ColorRGBA(1.0f, 0.15f, 0.15f, 0.95f * StatusAlpha));
-
-		if(StatusTextAlpha > 0.001f && StatusWidth > RawCollapsedStatusWidth + 2.0f)
+		if(ShowFrozenSummaryInStatus)
 		{
-			const float StatusTextX = StatusSectionX + StatusPaddingLeft + StatusDotSize + StatusDotGap;
 			const float StatusTextY = IslandY + (BaseIslandHeight - StatusFontSize) * 0.5f - 0.5f;
-			TextRender()->TextColor(0.97f, 0.98f, 1.0f, 0.90f * StatusTextAlpha);
-			TextRender()->Text(StatusTextX, StatusTextY, StatusFontSize, aRecordingBuf, -1.0f);
+			const float FrozenTextWidth = std::round(TextRender()->TextBoundingBox(StatusFontSize, aFrozenSummaryBuf).m_W);
+			const float FrozenTextX = StatusSectionX + std::max(0.0f, (StatusWidth - FrozenTextWidth) * 0.5f);
+			TextRender()->TextColor(0.97f, 0.98f, 1.0f, 0.92f * StatusAlpha);
+			TextRender()->Text(FrozenTextX, StatusTextY, StatusFontSize, aFrozenSummaryBuf, -1.0f);
+		}
+		else
+		{
+			const vec2 DotCenter(StatusSectionX + StatusPaddingLeft + StatusDotSize * 0.5f, IslandY + BaseIslandHeight * 0.5f);
+			DrawSmoothCircle(Graphics(), DotCenter, StatusDotSize * 0.5f, ColorRGBA(1.0f, 0.15f, 0.15f, 0.95f * StatusAlpha));
+
+			if(StatusTextAlpha > 0.001f && StatusWidth > RawCollapsedStatusWidth + 2.0f)
+			{
+				const float StatusTextX = StatusSectionX + StatusPaddingLeft + StatusDotSize + StatusDotGap;
+				const float StatusTextY = IslandY + (BaseIslandHeight - StatusFontSize) * 0.5f - 0.5f;
+				TextRender()->TextColor(0.97f, 0.98f, 1.0f, 0.90f * StatusTextAlpha);
+				TextRender()->Text(StatusTextX, StatusTextY, StatusFontSize, aRecordingBuf, -1.0f);
+			}
 		}
 	}
 
@@ -2714,19 +2971,90 @@ void CHud::RenderMediaIsland()
 			RenderBottomTextBlock(ContentX, ContentWidth, pText, Color, false);
 		};
 
-		if(ShowSwapCountdown && ShowSwitchCountdown)
+		const auto RenderBottomTextCenteredInBlock = [&](float X, float MaxWidth, const char *pText, const ColorRGBA &Color) {
+			if(pText == nullptr || pText[0] == '\0' || MaxWidth <= 0.0f)
+				return;
+
+			const float TextWidth = std::round(TextRender()->TextBoundingBox(BottomFontSize, pText).m_W);
+			TextRender()->TextColor(Color);
+			if(TextWidth <= MaxWidth + 0.01f)
+			{
+				TextRender()->Text(X + (MaxWidth - TextWidth) * 0.5f, BottomTextY, BottomFontSize, pText, -1.0f);
+				return;
+			}
+
+			RenderBottomTextBlock(X, MaxWidth, pText, Color, false);
+		};
+
+		struct SBottomTextItem
 		{
-			const float BlockWidth = std::max(0.0f, (ContentWidth - BottomRowItemGap) * 0.5f);
-			RenderBottomTextBlock(ContentX, BlockWidth, SwapInfo.m_aText, SwapTextColor, false);
-			RenderBottomTextBlock(ContentX + BlockWidth + BottomRowItemGap, BlockWidth, aSwitchCountdownBuf, SwitchTextColor, true);
+			const char *m_pText = nullptr;
+			ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+			float m_Width = 0.0f;
+		};
+
+		std::array<SBottomTextItem, 3> aBottomItems{};
+		int BottomItemCount = 0;
+		if(ShowSwapCountdown)
+			aBottomItems[BottomItemCount++] = {SwapInfo.m_aText, SwapTextColor, std::round(TextRender()->TextBoundingBox(BottomFontSize, SwapInfo.m_aText).m_W)};
+		if(ShowFrozenSummaryInBottomRow)
+			aBottomItems[BottomItemCount++] = {aFrozenSummaryBuf, SwitchTextColor, std::round(TextRender()->TextBoundingBox(BottomFontSize, aFrozenSummaryBuf).m_W)};
+		if(ShowSwitchCountdown)
+			aBottomItems[BottomItemCount++] = {aSwitchCountdownBuf, SwitchTextColor, std::round(TextRender()->TextBoundingBox(BottomFontSize, aSwitchCountdownBuf).m_W)};
+
+		if(BottomItemCount == 1)
+		{
+			RenderBottomTextCentered(aBottomItems[0].m_pText, aBottomItems[0].m_Color);
 		}
-		else if(ShowSwapCountdown)
+		else if(BottomItemCount > 1)
 		{
-			RenderBottomTextCentered(SwapInfo.m_aText, SwapTextColor);
-		}
-		else if(ShowSwitchCountdown)
-		{
-			RenderBottomTextCentered(aSwitchCountdownBuf, SwitchTextColor);
+			float SequenceWidth = 0.0f;
+			for(int i = 0; i < BottomItemCount; ++i)
+				SequenceWidth += aBottomItems[i].m_Width;
+			SequenceWidth += BottomRowItemGap * (BottomItemCount - 1);
+
+			if(SequenceWidth <= ContentWidth + 0.01f)
+			{
+				float DrawX = ContentX + (ContentWidth - SequenceWidth) * 0.5f;
+				for(int i = 0; i < BottomItemCount; ++i)
+				{
+					TextRender()->TextColor(aBottomItems[i].m_Color);
+					TextRender()->Text(DrawX, BottomTextY, BottomFontSize, aBottomItems[i].m_pText, -1.0f);
+					DrawX += aBottomItems[i].m_Width + BottomRowItemGap;
+				}
+			}
+			else
+			{
+				const float AvailableBlockWidth = std::max(0.0f, ContentWidth - BottomRowItemGap * (BottomItemCount - 1));
+				float TotalNaturalBlockWidth = 0.0f;
+				for(int i = 0; i < BottomItemCount; ++i)
+					TotalNaturalBlockWidth += aBottomItems[i].m_Width;
+
+				float CursorX = ContentX;
+				float RemainingWidth = AvailableBlockWidth;
+				float RemainingNaturalWidth = std::max(1.0f, TotalNaturalBlockWidth);
+				for(int i = 0; i < BottomItemCount; ++i)
+				{
+					const bool LastItem = i == BottomItemCount - 1;
+					float BlockWidth = RemainingWidth;
+					if(!LastItem)
+					{
+						BlockWidth = std::max(0.0f, std::round(RemainingWidth * (aBottomItems[i].m_Width / RemainingNaturalWidth)));
+						BlockWidth = std::min(BlockWidth, RemainingWidth);
+					}
+
+					if(BottomItemCount == 3 && i == 1)
+						RenderBottomTextCenteredInBlock(CursorX, BlockWidth, aBottomItems[i].m_pText, aBottomItems[i].m_Color);
+					else if(LastItem)
+						RenderBottomTextBlock(CursorX, BlockWidth, aBottomItems[i].m_pText, aBottomItems[i].m_Color, true);
+					else
+						RenderBottomTextBlock(CursorX, BlockWidth, aBottomItems[i].m_pText, aBottomItems[i].m_Color, false);
+
+					CursorX += BlockWidth + BottomRowItemGap;
+					RemainingWidth = std::max(0.0f, RemainingWidth - BlockWidth);
+					RemainingNaturalWidth = std::max(1.0f, RemainingNaturalWidth - aBottomItems[i].m_Width);
+				}
+			}
 		}
 	}
 
@@ -3915,11 +4243,14 @@ void CHud::RenderMapProgressBar()
 	const ColorRGBA TrackColor = LerpColor(ColorRGBA(0.02f, 0.03f, 0.03f, 0.78f), FillColor.WithAlpha(0.26f), 0.32f);
 	const ColorRGBA TextColor = LerpColor(ColorRGBA(0.92f, 0.97f, 1.0f, 1.0f), FillColor.WithAlpha(1.0f), 0.72f);
 
-	const float BarWidth = std::clamp(m_Width * 0.28f, 120.0f, 164.0f);
-	const float BarHeight = 10.0f;
+	const float WidthRatio = std::clamp(g_Config.m_QmPlayerStatsMapProgressWidth / 100.0f, 0.10f, 0.80f);
+	const float BarWidth = std::clamp(m_Width * WidthRatio, 80.0f, maximum(80.0f, m_Width - 12.0f));
+	const float BarHeight = (float)g_Config.m_QmPlayerStatsMapProgressHeight;
 	const float BarRadius = BarHeight * 0.5f;
-	const float BarX = std::round(m_Width * 0.5f - BarWidth * 0.5f);
-	const float BarY = std::round(m_Height - 16.0f);
+	const float RawBarX = m_Width * (g_Config.m_QmPlayerStatsMapProgressPosX / 100.0f) - BarWidth * 0.5f;
+	const float RawBarY = m_Height * (g_Config.m_QmPlayerStatsMapProgressPosY / 100.0f);
+	const float BarX = std::round(std::clamp(RawBarX, 6.0f, maximum(6.0f, m_Width - BarWidth - 6.0f)));
+	const float BarY = std::round(std::clamp(RawBarY, 6.0f, maximum(6.0f, m_Height - BarHeight - 6.0f)));
 	const float FillWidth = BarWidth * DisplayedProgress;
 
 	char aProgressText[32];
@@ -3928,10 +4259,11 @@ void CHud::RenderMapProgressBar()
 	else
 		str_copy(aProgressText, "--");
 
-	const float TextSize = 7.0f;
+	const float TextSize = std::clamp(BarHeight * 0.72f, 6.0f, 16.0f);
 	const float TextWidth = TextRender()->TextWidth(TextSize, aProgressText, -1, -1.0f);
-	const float TextX = std::round(m_Width * 0.5f - TextWidth * 0.5f);
-	const float TextY = BarY - 7.0f;
+	const float TextGap = std::clamp(BarHeight * 0.35f, 2.0f, 8.0f);
+	const float TextX = std::round(BarX + BarWidth * 0.5f - TextWidth * 0.5f);
+	const float TextY = std::round(std::clamp(BarY - TextSize - TextGap, 2.0f, maximum(2.0f, m_Height - TextSize - 2.0f)));
 
 	DrawSmoothRoundedRect(Graphics(), BarX, BarY, BarWidth, BarHeight, BarRadius, TrackColor);
 	if(FillWidth > 0.0f)
@@ -3955,16 +4287,16 @@ void CHud::RenderMapProgressBar()
 	if(TeeClientId >= 0 && TeeClientId < MAX_CLIENTS)
 	{
 		CTeeRenderInfo TeeInfo = GameClient()->m_aClients[TeeClientId].m_RenderInfo;
-		TeeInfo.m_Size = 17.0f;
+		TeeInfo.m_Size = std::clamp(BarHeight * 1.7f, 14.0f, 30.0f);
 
 		const float TeePadding = TeeInfo.m_Size * 0.28f;
 		const float TeeX = std::clamp(BarX + BarWidth * DisplayedProgress, BarX + TeePadding, BarX + BarWidth - TeePadding);
-		const float TeeAnchorY = BarY + BarHeight * 0.5f - 1.5f;
+		const float TeeAnchorY = BarY + BarHeight * 0.5f - std::clamp(BarHeight * 0.15f, 1.0f, 3.0f);
 		const CAnimState *pIdleState = CAnimState::GetIdle();
 		vec2 OffsetToMid;
 		CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
 
-		DrawSmoothCircle(Graphics(), vec2(TeeX, TeeAnchorY), 4.8f, FillColor.WithAlpha(0.22f));
+		DrawSmoothCircle(Graphics(), vec2(TeeX, TeeAnchorY), std::clamp(BarHeight * 0.48f, 4.0f, 10.0f), FillColor.WithAlpha(0.22f));
 		RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeX, TeeAnchorY + OffsetToMid.y));
 	}
 }
@@ -4233,6 +4565,7 @@ void CHud::OnRender()
 		if(g_Config.m_ClShowRecord)
 			RenderRecord();
 	}
+	GameClient()->m_Voice.RenderOverlay();
 	RenderCursor();
 }
 

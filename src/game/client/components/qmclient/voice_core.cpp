@@ -9,6 +9,7 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 #include <engine/shared/console.h>
+#include <engine/textrender.h>
 
 #include <game/client/gameclient.h>
 
@@ -33,6 +34,9 @@
 
 static constexpr int VOICE_CLIENT_SNAPSHOT_INTERVAL_MS = 10;
 static constexpr int VOICE_CONFIG_SNAPSHOT_INTERVAL_MS = 50;
+static constexpr int VOICE_OVERLAY_VISIBLE_MS = 180;
+static constexpr int VOICE_OVERLAY_MAX_SPEAKERS = 5;
+static constexpr const char *s_pVoiceOverlayMicIcon = "\xEF\x84\xB0";
 
 // !!WARNING!!
 // Voice full wrote by AI don't use that pls
@@ -2106,17 +2110,6 @@ void CRClientVoice::DecodeJitter()
 	}
 }
 
-bool CRClientVoice::IsVoiceActive(int ClientId) const
-{
-	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
-		return false;
-	const int64_t LastHeard = m_aLastHeard[ClientId].load();
-	if(LastHeard == 0)
-		return false;
-	constexpr int64_t ACTIVE_WINDOW_MS = 40;
-	return time_get() - LastHeard < (int64_t)time_freq() * ACTIVE_WINDOW_MS / 1000;
-}
-
 void CRClientVoice::StartWorker()
 {
 	if(m_Worker.joinable())
@@ -2284,4 +2277,196 @@ void CRClientVoice::OnRender()
 		m_AudioRefreshRequested.store(true);
 
 	StartWorker();
+}
+
+void CRClientVoice::RenderSpeakerOverlay()
+{
+	if(!m_pGameClient || !m_pGraphics || !g_Config.m_RiVoiceEnable || !g_Config.m_RiVoiceShowOverlay)
+		return;
+
+	ITextRender *pTextRender = m_pGameClient->TextRender();
+	if(!pTextRender)
+		return;
+
+	struct SSpeakerEntry
+	{
+		int m_ClientId = -1;
+		uint64_t m_OverlayOrder = 0;
+		bool m_IsLocal = false;
+		char m_aName[MAX_NAME_LENGTH] = {};
+	};
+
+	std::array<std::array<char, MAX_NAME_LENGTH>, MAX_CLIENTS> aaClientNames{};
+	std::array<int, 2> aLocalClientIds{};
+	aLocalClientIds.fill(-1);
+	int PreferredLocalId = -1;
+	bool Online = false;
+	{
+		std::lock_guard<std::mutex> Guard(m_SnapshotMutex);
+		Online = m_OnlineSnap;
+		if(!Online)
+			return;
+
+		PreferredLocalId = m_LocalClientIdSnap;
+		aLocalClientIds = m_aLocalClientIdsSnap;
+		aaClientNames = m_aClientNameSnap;
+	}
+
+	const int64_t Now = time_get();
+	const int64_t VisibleWindow = (int64_t)time_freq() * VOICE_OVERLAY_VISIBLE_MS / 1000;
+	const bool ShowLocalWhenActive = g_Config.m_RiVoiceShowWhenActive != 0;
+	std::array<bool, MAX_CLIENTS> aVisibleNow{};
+	aVisibleNow.fill(false);
+	std::vector<SSpeakerEntry> vEntries;
+	vEntries.reserve(MAX_CLIENTS);
+
+	bool LocalEntryAdded = false;
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		const int64_t LastHeard = m_aLastHeard[ClientId].load();
+		if(LastHeard <= 0)
+			continue;
+		if(Now - LastHeard >= VisibleWindow)
+			continue;
+
+		if(aaClientNames[ClientId][0] == '\0')
+			continue;
+
+		bool IsLocalSpeaker = false;
+		for(const int LocalId : aLocalClientIds)
+		{
+			if(LocalId == ClientId)
+			{
+				IsLocalSpeaker = true;
+				break;
+			}
+		}
+
+		if(IsLocalSpeaker)
+		{
+			if(!ShowLocalWhenActive)
+				continue;
+			if(PreferredLocalId >= 0 && ClientId != PreferredLocalId)
+				continue;
+			if(PreferredLocalId < 0 && LocalEntryAdded)
+				continue;
+			LocalEntryAdded = true;
+		}
+
+		aVisibleNow[ClientId] = true;
+		if(m_aOverlayOrder[ClientId] == 0)
+		{
+			m_aOverlayOrder[ClientId] = m_NextOverlayOrder++;
+			if(m_NextOverlayOrder == 0)
+				m_NextOverlayOrder = 1;
+		}
+
+		SSpeakerEntry &Entry = vEntries.emplace_back();
+		Entry.m_ClientId = ClientId;
+		Entry.m_OverlayOrder = m_aOverlayOrder[ClientId];
+		Entry.m_IsLocal = IsLocalSpeaker;
+		str_copy(Entry.m_aName, aaClientNames[ClientId].data(), sizeof(Entry.m_aName));
+	}
+
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		if(!aVisibleNow[ClientId])
+			m_aOverlayOrder[ClientId] = 0;
+	}
+
+	if(vEntries.empty())
+		return;
+
+	std::stable_sort(vEntries.begin(), vEntries.end(), [](const SSpeakerEntry &Left, const SSpeakerEntry &Right) {
+		if(Left.m_OverlayOrder != Right.m_OverlayOrder)
+			return Left.m_OverlayOrder < Right.m_OverlayOrder;
+		return Left.m_ClientId < Right.m_ClientId;
+	});
+
+	if(vEntries.size() > VOICE_OVERLAY_MAX_SPEAKERS)
+		vEntries.resize(VOICE_OVERLAY_MAX_SPEAKERS);
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	m_pGraphics->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	const float HudWidth = 300.0f * m_pGraphics->ScreenAspect();
+	const float HudHeight = 300.0f;
+	m_pGraphics->MapScreen(0.0f, 0.0f, HudWidth, HudHeight);
+
+	constexpr float PanelX = 6.0f;
+	constexpr float PanelY = 74.0f;
+	constexpr float RowHeight = 12.0f;
+	constexpr float RowGap = 2.0f;
+	constexpr float RowRadius = 5.0f;
+	constexpr float RowPaddingX = 3.0f;
+	constexpr float UserBoxWidth = 11.0f;
+	constexpr float UserToNameGap = 2.5f;
+	constexpr float NameToMicGap = 3.0f;
+	constexpr float NameFontSize = 5.5f;
+	constexpr float IconFontSize = 5.4f;
+	constexpr float UserIconFontSize = 5.1f;
+	constexpr float MaxNameWidth = 52.0f;
+
+	const unsigned int PrevFlags = pTextRender->GetRenderFlags();
+	const ColorRGBA PrevTextColor = pTextRender->GetTextColor();
+	const ColorRGBA PrevOutlineColor = pTextRender->GetTextOutlineColor();
+	pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
+	pTextRender->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.40f);
+
+	pTextRender->SetFontPreset(EFontPreset::ICON_FONT);
+	const float UserIconWidth = pTextRender->TextWidth(UserIconFontSize, FontIcons::FONT_ICON_USERS);
+	const float MicIconWidth = pTextRender->TextWidth(IconFontSize, s_pVoiceOverlayMicIcon);
+	pTextRender->SetFontPreset(EFontPreset::DEFAULT_FONT);
+
+	for(size_t Index = 0; Index < vEntries.size(); ++Index)
+	{
+		const SSpeakerEntry &Entry = vEntries[Index];
+		const float NameWidth = std::min(std::round(pTextRender->TextBoundingBox(NameFontSize, Entry.m_aName).m_W), MaxNameWidth);
+		const float RowWidth = RowPaddingX + UserBoxWidth + UserToNameGap + NameWidth + NameToMicGap + MicIconWidth + RowPaddingX;
+		const float RowY = PanelY + Index * (RowHeight + RowGap);
+		const float RowX = PanelX;
+
+		ColorRGBA RowColor(0.10f, 0.11f, 0.14f, 0.82f);
+		if(Entry.m_IsLocal)
+			RowColor = ColorRGBA(0.12f, 0.13f, 0.17f, 0.88f);
+		m_pGraphics->DrawRect(RowX, RowY, RowWidth, RowHeight, RowColor, IGraphics::CORNER_ALL, RowRadius);
+
+		const ColorRGBA UserBoxColor(1.0f, 1.0f, 1.0f, 0.10f);
+		m_pGraphics->DrawRect(RowX + 1.0f, RowY + 1.0f, UserBoxWidth, RowHeight - 2.0f, UserBoxColor, IGraphics::CORNER_ALL, RowRadius - 1.0f);
+
+		const float UserIconX = RowX + 1.0f + (UserBoxWidth - UserIconWidth) * 0.5f;
+		const float UserIconY = RowY + (RowHeight - UserIconFontSize) * 0.5f - 0.5f;
+		pTextRender->SetFontPreset(EFontPreset::ICON_FONT);
+		pTextRender->TextColor(1.0f, 1.0f, 1.0f, 0.82f);
+		pTextRender->Text(UserIconX, UserIconY, UserIconFontSize, FontIcons::FONT_ICON_USERS, -1.0f);
+
+		const float MicIconX = RowX + RowWidth - RowPaddingX - MicIconWidth;
+		const float MicIconY = RowY + (RowHeight - IconFontSize) * 0.5f - 0.5f;
+		pTextRender->TextColor(1.0f, 1.0f, 1.0f, 0.90f);
+		pTextRender->Text(MicIconX, MicIconY, IconFontSize, s_pVoiceOverlayMicIcon, -1.0f);
+
+		const float NameX = RowX + RowPaddingX + UserBoxWidth + UserToNameGap;
+		const float NameY = RowY + (RowHeight - NameFontSize) * 0.5f - 0.5f;
+		pTextRender->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		pTextRender->TextColor(0.97f, 0.98f, 1.0f, 0.94f);
+		if(NameWidth + 0.01f < std::round(pTextRender->TextBoundingBox(NameFontSize, Entry.m_aName).m_W))
+		{
+			CTextCursor Cursor;
+			Cursor.m_FontSize = NameFontSize;
+			Cursor.m_LineWidth = MaxNameWidth;
+			Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
+			Cursor.SetPosition(vec2(NameX, NameY));
+			pTextRender->TextEx(&Cursor, Entry.m_aName);
+		}
+		else
+		{
+			pTextRender->Text(NameX, NameY, NameFontSize, Entry.m_aName, -1.0f);
+		}
+	}
+
+	pTextRender->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	pTextRender->TextColor(PrevTextColor);
+	pTextRender->TextOutlineColor(PrevOutlineColor);
+	pTextRender->SetRenderFlags(PrevFlags);
+	m_pGraphics->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }

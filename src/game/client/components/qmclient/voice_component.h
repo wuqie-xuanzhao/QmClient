@@ -15,7 +15,7 @@ public:
 	void OnShutdown() override;
 	void OnRender() override;
 	void OnConsoleInit() override;
-	bool IsVoiceActive(int ClientId) const { return m_Voice.IsVoiceActive(ClientId); }
+	void RenderOverlay() { m_Voice.RenderSpeakerOverlay(); }
 
 private:
 	static void ConVoicePtt(IConsole::IResult *pResult, void *pUserData);

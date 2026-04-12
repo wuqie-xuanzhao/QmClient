@@ -422,6 +422,7 @@ void *CGameClient::TranslateGameMsg(int *pMsgId, CUnpacker *pUnpacker, int Conn)
 		pMsg->m_pReason = pMsg7->m_pReason;
 
 		char aBuf[128];
+		char aDisplayBuf[128];
 		if(pMsg7->m_Timeout)
 		{
 			if(pMsg7->m_ClientId != -1)
@@ -431,18 +432,21 @@ void *CGameClient::TranslateGameMsg(int *pMsgId, CUnpacker *pUnpacker, int Conn)
 				{
 				case protocol7::VOTE_START_OP:
 					str_format(aBuf, sizeof(aBuf), "'%s' called vote to change server option '%s' (%s)", pName, pMsg7->m_pDescription, pMsg7->m_pReason);
-					m_Chat.AddLine(-1, 0, aBuf);
+					FormatStreamerVoteText(aBuf, aDisplayBuf, sizeof(aDisplayBuf));
+					m_Chat.AddLine(-1, 0, aDisplayBuf);
 					break;
 				case protocol7::VOTE_START_KICK:
 				{
 					str_format(aBuf, sizeof(aBuf), "'%s' called for vote to kick '%s' (%s)", pName, pMsg7->m_pDescription, pMsg7->m_pReason);
-					m_Chat.AddLine(-1, 0, aBuf);
+					FormatStreamerVoteText(aBuf, aDisplayBuf, sizeof(aDisplayBuf));
+					m_Chat.AddLine(-1, 0, aDisplayBuf);
 					break;
 				}
 				case protocol7::VOTE_START_SPEC:
 				{
 					str_format(aBuf, sizeof(aBuf), "'%s' called for vote to move '%s' to spectators (%s)", pName, pMsg7->m_pDescription, pMsg7->m_pReason);
-					m_Chat.AddLine(-1, 0, aBuf);
+					FormatStreamerVoteText(aBuf, aDisplayBuf, sizeof(aDisplayBuf));
+					m_Chat.AddLine(-1, 0, aDisplayBuf);
 				}
 				}
 			}
@@ -453,11 +457,13 @@ void *CGameClient::TranslateGameMsg(int *pMsgId, CUnpacker *pUnpacker, int Conn)
 			{
 			case protocol7::VOTE_START_OP:
 				str_format(aBuf, sizeof(aBuf), "Admin forced server option '%s' (%s)", pMsg7->m_pDescription, pMsg7->m_pReason);
-				m_Chat.AddLine(-1, 0, aBuf);
+				FormatStreamerVoteText(aBuf, aDisplayBuf, sizeof(aDisplayBuf));
+				m_Chat.AddLine(-1, 0, aDisplayBuf);
 				break;
 			case protocol7::VOTE_START_SPEC:
 				str_format(aBuf, sizeof(aBuf), "Admin moved '%s' to spectator (%s)", pMsg7->m_pDescription, pMsg7->m_pReason);
-				m_Chat.AddLine(-1, 0, aBuf);
+				FormatStreamerVoteText(aBuf, aDisplayBuf, sizeof(aDisplayBuf));
+				m_Chat.AddLine(-1, 0, aDisplayBuf);
 				break;
 			case protocol7::VOTE_END_ABORT:
 				m_Voting.OnReset();

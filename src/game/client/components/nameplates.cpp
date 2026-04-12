@@ -56,7 +56,13 @@ struct SChatBubbleAnimState
 	float m_LastTargetScale = std::numeric_limits<float>::quiet_NaN();
 	float m_LastTargetSlide = std::numeric_limits<float>::quiet_NaN();
 	float m_LastTargetFillChars = std::numeric_limits<float>::quiet_NaN();
+	STextContainerIndex m_TextContainerIndex;
+	float m_CachedTextWidth = 0.0f;
+	float m_CachedTextHeight = 0.0f;
+	float m_CachedFontSize = -INFINITY;
+	float m_CachedLineWidth = -INFINITY;
 	char m_aCachedText[256] = "";
+	char m_aLayoutText[256] = "";
 };
 
 static uint64_t ChatBubbleAnimNodeKey(int ClientId)
@@ -171,24 +177,6 @@ static std::array<ENameplateCoreRow, kNameplateCoreRowCount> ParseNameplateCoreR
 	return Result;
 }
 
-static bool CommaListContainsName(const char *pList, const char *pName)
-{
-	if(!pList || pList[0] == '\0' || !pName || pName[0] == '\0')
-		return false;
-
-	char aToken[MAX_NAME_LENGTH];
-	const char *pCursor = pList;
-	while((pCursor = str_next_token(pCursor, ",", aToken, sizeof(aToken))))
-	{
-		char *pTrimmedToken = (char *)str_utf8_skip_whitespaces(aToken);
-		str_utf8_trim_right(pTrimmedToken);
-		if(pTrimmedToken[0] != '\0' && str_comp_nocase(pTrimmedToken, pName) == 0)
-			return true;
-	}
-
-	return false;
-}
-
 class CNamePlateData
 {
 public:
@@ -197,9 +185,6 @@ public:
 	ColorRGBA m_Color;
 	bool m_ShowName;
 	char m_aName[std::max<size_t>(MAX_NAME_LENGTH, protocol7::MAX_NAME_ARRAY_SIZE)];
-	bool m_ShowVoiceIndicator;
-	bool m_VoiceActive;
-	bool m_VoiceMuted;
 	bool m_ShowFriendMark;
 	bool m_ShowClientId;
 	int m_ClientId;
@@ -261,8 +246,6 @@ public:
 using PartsVector = std::vector<std::unique_ptr<CNamePlatePart>>;
 
 static constexpr ColorRGBA s_OutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f);
-static constexpr const char *s_pFontIconMicrophone = "\xEF\x84\xB0";
-static constexpr const char *s_pFontIconMicrophoneSlash = "\xEF\x84\xB1";
 
 class CNamePlatePartText : public CNamePlatePart
 {
@@ -1086,52 +1069,31 @@ public:
 		CNamePlatePartText(This) {}
 };
 
-class CNamePlatePartVoiceMark : public CNamePlatePartText
+class CNamePlatePartQmClientMark : public CNamePlatePartText
 {
 private:
 	float m_FontSize = -INFINITY;
-	bool m_Active = false;
-	bool m_Muted = false;
 
 protected:
 	bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) override
 	{
-		m_Visible = Data.m_ShowVoiceIndicator;
+		m_Visible = g_Config.m_QmClientShowBadge && Data.m_InGame && Data.m_ShowName && This.GetQ1menGClientQid(Data.m_ClientId)[0] != '\0';
 		if(!m_Visible)
 			return false;
-
-		const bool StateChanged = m_FontSize != Data.m_FontSize || m_Active != Data.m_VoiceActive || m_Muted != Data.m_VoiceMuted;
-		m_FontSize = Data.m_FontSize;
-		m_Active = Data.m_VoiceActive;
-		m_Muted = Data.m_VoiceMuted;
-
-		if(m_Muted)
-			m_Color = ColorRGBA(1.0f, 0.35f, 0.35f, Data.m_Color.a);
-		else if(m_Active)
-			m_Color = ColorRGBA(0.35f, 1.0f, 0.35f, Data.m_Color.a);
-		else
-			m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, Data.m_Color.a);
-
-		return StateChanged;
+		m_Color = ColorRGBA(0.38f, 0.89f, 1.0f, Data.m_Color.a);
+		return m_FontSize != Data.m_FontSize;
 	}
-
 	void UpdateText(CGameClient &This, const CNamePlateData &Data) override
 	{
-		(void)Data;
+		m_FontSize = Data.m_FontSize;
 		CTextCursor Cursor;
-		This.TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		Cursor.m_FontSize = m_FontSize;
-		const char *pIcon = m_Muted ? s_pFontIconMicrophoneSlash : s_pFontIconMicrophone;
-		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, pIcon);
-		This.TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, "Qm");
 	}
 
 public:
-	CNamePlatePartVoiceMark(CGameClient &This) :
-		CNamePlatePartText(This)
-	{
-		m_Padding.x = 4.0f;
-	}
+	CNamePlatePartQmClientMark(CGameClient &This) :
+		CNamePlatePartText(This) {}
 };
 
 // ***** Name Plates *****
@@ -1171,7 +1133,7 @@ private:
 	{
 		AddPart<CNamePlatePartCountry>(This); // TClient
 		AddPart<CNamePlatePartPing>(This); // TClient
-		AddPart<CNamePlatePartVoiceMark>(This); // Voice indicator
+		AddPart<CNamePlatePartQmClientMark>(This);
 		AddPart<CNamePlatePartIgnoreMark>(This); // TClient
 		AddPart<CNamePlatePartFriendMark>(This);
 		AddPart<CNamePlatePartClientId>(This, false);
@@ -1418,9 +1380,6 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 
 	Data.m_ShowName = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;
 	GameClient()->FormatStreamerName(ClientId, Data.m_aName, sizeof(Data.m_aName));
-	Data.m_ShowVoiceIndicator = false;
-	Data.m_VoiceActive = false;
-	Data.m_VoiceMuted = false;
 	Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark && GameClient()->m_aClients[ClientId].m_Friend;
 	Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;
 	Data.m_FontSize = 18.0f + 20.0f * g_Config.m_ClNamePlatesSize / 100.0f;
@@ -1609,31 +1568,6 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 		Data.m_ShowClan = true;
 	Data.m_Local = pPlayerInfo->m_Local;
 
-	bool IsLocalClient = Data.m_Local;
-	if(!IsLocalClient)
-	{
-		for(const int LocalId : GameClient()->m_aLocalIds)
-		{
-			if(LocalId == ClientId)
-			{
-				IsLocalClient = true;
-				break;
-			}
-		}
-	}
-
-	const bool IsQ1menGRecognized = GameClient()->IsQ1menGClientRecognized(ClientId);
-	const bool AllowVoiceIconForClient = IsLocalClient || IsQ1menGRecognized;
-	const bool AllowVoiceRowForClient = Data.m_ShowName || IsLocalClient;
-	if(AllowVoiceRowForClient && AllowVoiceIconForClient && g_Config.m_RiVoiceEnable && g_Config.m_RiVoiceShowOverlay && g_Config.m_RiVoiceShowIndicator)
-	{
-		const bool VoiceActive = GameClient()->m_Voice.IsVoiceActive(ClientId);
-		const bool VoiceMuted = IsLocalClient ? (g_Config.m_RiVoiceMicMute != 0) : CommaListContainsName(g_Config.m_RiVoiceMute, ClientData.m_aName);
-		Data.m_ShowVoiceIndicator = true;
-		Data.m_VoiceActive = VoiceActive;
-		Data.m_VoiceMuted = VoiceMuted;
-	}
-
 	// Check if the nameplate is actually on screen
 	CNamePlate &NamePlate = m_pData->m_aNamePlates[ClientId];
 	NamePlate.Update(*GameClient(), Data);
@@ -1661,9 +1595,6 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	str_copy(Data.m_aName, str_utf8_skip_whitespaces(pName));
 	str_utf8_trim_right(Data.m_aName);
 	Data.m_FontSize = FontSize;
-	Data.m_ShowVoiceIndicator = false;
-	Data.m_VoiceActive = false;
-	Data.m_VoiceMuted = false;
 
 	Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark;
 
@@ -1758,6 +1689,7 @@ void CNamePlates::ResetChatBubbleAnimState(int ClientId)
 	if(!AnimState.m_Initialized && AnimState.m_aCachedText[0] == '\0' && !RuntimeInitialized)
 		return;
 
+	TextRender()->DeleteTextContainer(AnimState.m_TextContainerIndex);
 	AnimState = SChatBubbleAnimState();
 	AnimRuntime.SetValue(NodeKey, EUiAnimProperty::ALPHA, 0.0f);
 	AnimRuntime.SetValue(NodeKey, EUiAnimProperty::SCALE, 1.0f);
@@ -1781,6 +1713,7 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	const bool RuntimeNeedsInit = AnimRuntime.GetValue(NodeKey, EUiAnimProperty::ALPHA, -1.0f) < -0.5f;
 	if(!AnimState.m_Initialized || RuntimeNeedsInit)
 	{
+		TextRender()->DeleteTextContainer(AnimState.m_TextContainerIndex);
 		AnimState = SChatBubbleAnimState();
 		AnimState.m_Initialized = true;
 		AnimRuntime.SetValue(NodeKey, EUiAnimProperty::ALPHA, 0.0f);
@@ -1938,26 +1871,17 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	// Convert screen-space position to interface coordinates
 	float InterfaceX = InterfaceX0 + ScreenPosX * InterfaceWidth;
 
-	// Chat bubbles always follow camera zoom.
-	float CameraZoom = GameClient()->m_Camera.m_Zoom;
-	float ZoomScale = 1.0f;
-	if(CameraZoom > 0.0f)
-	{
-		ZoomScale = 1.0f / CameraZoom;
-		ZoomScale = std::clamp(ZoomScale, 0.25f, 4.0f);
-	}
-
-	// Configure text rendering with fixed visual rules.
+	// Keep bubble sizing in screen space so rapid camera zoom does not force
+	// a full text relayout every frame.
 	constexpr float kBubblePadding = 12.0f;
 	constexpr float kBubbleRounding = 10.0f;
 	constexpr float kBubbleMaxWidth = 230.0f;
 	const float BaseFontSize = (float)g_Config.m_QmChatBubbleFontSize;
 
-	// Apply zoom scaling to all dimensions
-	const float FontSize = BaseFontSize * ZoomScale;
-	const float Padding = kBubblePadding * ZoomScale;
-	const float Rounding = kBubbleRounding * ZoomScale;
-	const float MaxWidth = kBubbleMaxWidth * ZoomScale;
+	const float FontSize = BaseFontSize;
+	const float Padding = kBubblePadding;
+	const float Rounding = kBubbleRounding;
+	const float MaxWidth = kBubbleMaxWidth;
 
 	// Anchor bubble to the top of the nameplate plus default nameplate spacing.
 	float NameplateTopWorldY = Position.y - (float)g_Config.m_ClNamePlatesOffset;
@@ -1968,18 +1892,58 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	const float ScreenPosNameplateTopY = (NameplateTopWorldY - ScreenY0) / ScreenHeight;
 	const float InterfaceNameplateTopY = InterfaceY0 + ScreenPosNameplateTopY * InterfaceHeight;
 
-	// Set anti-aliasing flags for smoother text
 	unsigned int PrevFlags = TextRender()->GetRenderFlags();
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
 
-	// Calculate text dimensions
-	CTextCursor MeasureCursor;
-	MeasureCursor.m_FontSize = FontSize;
-	MeasureCursor.m_LineWidth = MaxWidth;
-	MeasureCursor.m_Flags = 0;
-	TextRender()->TextEx(&MeasureCursor, pDisplayText);
-	float TextHeight = MeasureCursor.Height();
-	float TextWidth = MeasureCursor.m_LongestLineWidth;
+	const bool UseTextContainer = !IsTyping && std::abs(AnimScale - 1.0f) <= 0.001f;
+	const bool LayoutDirty = !AnimState.m_TextContainerIndex.Valid() ||
+		str_comp(AnimState.m_aLayoutText, pDisplayText) != 0 ||
+		AnimState.m_CachedFontSize != FontSize ||
+		AnimState.m_CachedLineWidth != MaxWidth;
+
+	if(!IsTyping && LayoutDirty)
+	{
+		TextRender()->DeleteTextContainer(AnimState.m_TextContainerIndex);
+
+		CTextCursor LayoutCursor;
+		LayoutCursor.m_FontSize = FontSize;
+		LayoutCursor.m_LineWidth = MaxWidth;
+		if(TextRender()->CreateTextContainer(AnimState.m_TextContainerIndex, &LayoutCursor, pDisplayText))
+		{
+			const STextBoundingBox BoundingBox = TextRender()->GetBoundingBoxTextContainer(AnimState.m_TextContainerIndex);
+			AnimState.m_CachedTextWidth = BoundingBox.m_W;
+			AnimState.m_CachedTextHeight = BoundingBox.m_H;
+			AnimState.m_CachedFontSize = FontSize;
+			AnimState.m_CachedLineWidth = MaxWidth;
+			str_copy(AnimState.m_aLayoutText, pDisplayText, sizeof(AnimState.m_aLayoutText));
+		}
+		else
+		{
+			AnimState.m_CachedTextWidth = 0.0f;
+			AnimState.m_CachedTextHeight = 0.0f;
+			AnimState.m_CachedFontSize = FontSize;
+			AnimState.m_CachedLineWidth = MaxWidth;
+			AnimState.m_aLayoutText[0] = '\0';
+		}
+	}
+
+	float TextHeight = 0.0f;
+	float TextWidth = 0.0f;
+	if(IsTyping)
+	{
+		CTextCursor MeasureCursor;
+		MeasureCursor.m_FontSize = FontSize;
+		MeasureCursor.m_LineWidth = MaxWidth;
+		MeasureCursor.m_Flags = 0;
+		TextRender()->TextEx(&MeasureCursor, pDisplayText);
+		TextHeight = MeasureCursor.Height();
+		TextWidth = MeasureCursor.m_LongestLineWidth;
+	}
+	else
+	{
+		TextHeight = AnimState.m_CachedTextHeight;
+		TextWidth = AnimState.m_CachedTextWidth;
+	}
 
 	// Calculate bubble dimensions and position (with scale animation)
 	float BubbleWidth = (TextWidth + Padding * 2.0f) * AnimScale;
@@ -1987,7 +1951,7 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 
 	// Position bubble above the nameplate with built-in nameplate spacing.
 	float AnimOffset = AnimSlideOffset;
-	const float BubbleGap = DEFAULT_PADDING * ZoomScale;
+	const float BubbleGap = DEFAULT_PADDING;
 	float BubbleX = InterfaceX - BubbleWidth / 2.0f;
 	float BubbleY = InterfaceNameplateTopY - BubbleGap - BubbleHeight + AnimOffset;
 
@@ -2014,27 +1978,32 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 
 	TextRender()->TextColor(TextColor);
 	TextRender()->TextOutlineColor(OutlineColor);
-	
-	// Center text horizontally in bubble (with scale)
-	// 中心文本位置计算
-	float ScaledTextWidth = TextWidth * AnimScale;
-	float ScaledTextHeight = TextHeight * AnimScale;
-	float TextX = BubbleX + (BubbleWidth - ScaledTextWidth) / 2.0f;
-	float TextY = BubbleY + (BubbleHeight - ScaledTextHeight) / 2.0f;
-	
-	CTextCursor Cursor;
-	Cursor.m_FontSize = FontSize * AnimScale;
-	Cursor.m_LineWidth = MaxWidth * AnimScale;
-	Cursor.m_Flags = TEXTFLAG_RENDER;
-	Cursor.SetPosition(vec2(TextX, TextY));
-	TextRender()->TextEx(&Cursor, pDisplayText);
-	
+
+	if(UseTextContainer && AnimState.m_TextContainerIndex.Valid())
+	{
+		const float TextX = BubbleX + (BubbleWidth - TextWidth) / 2.0f;
+		const float TextY = BubbleY + (BubbleHeight - TextHeight) / 2.0f;
+		TextRender()->RenderTextContainer(AnimState.m_TextContainerIndex, TextColor, OutlineColor, TextX, TextY);
+	}
+	else
+	{
+		const float ScaledTextWidth = TextWidth * AnimScale;
+		const float ScaledTextHeight = TextHeight * AnimScale;
+		const float TextX = BubbleX + (BubbleWidth - ScaledTextWidth) / 2.0f;
+		const float TextY = BubbleY + (BubbleHeight - ScaledTextHeight) / 2.0f;
+
+		CTextCursor Cursor;
+		Cursor.m_FontSize = FontSize * AnimScale;
+		Cursor.m_LineWidth = MaxWidth * AnimScale;
+		Cursor.m_Flags = TEXTFLAG_RENDER;
+		Cursor.SetPosition(vec2(TextX, TextY));
+		TextRender()->TextEx(&Cursor, pDisplayText);
+	}
+
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
 	TextRender()->SetRenderFlags(PrevFlags);
 
-	// Restore screen mapping
-	// 屏幕映射回游戏世界坐标
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
@@ -2051,8 +2020,7 @@ void CNamePlates::OnRender()
 	const bool ShowCoords = (g_Config.m_QmNameplateCoords || g_Config.m_QmNameplateCoordsOwn) &&
 				(g_Config.m_QmNameplateCoordX || g_Config.m_QmNameplateCoordY);
 	const bool ShowCoordXAlignHint = g_Config.m_QmNameplateCoordXAlignHint != 0;
-	const bool RenderVoiceOverlay = g_Config.m_RiVoiceEnable && g_Config.m_RiVoiceShowOverlay && g_Config.m_RiVoiceShowIndicator;
-	const bool RenderNameplates = g_Config.m_ClNamePlates || g_Config.m_ClNamePlatesOwn || ShowDirection != 0 || ShowCoords || ShowCoordXAlignHint || RenderVoiceOverlay;
+	const bool RenderNameplates = g_Config.m_ClNamePlates || g_Config.m_ClNamePlatesOwn || ShowDirection != 0 || ShowCoords || ShowCoordXAlignHint;
 	const bool RenderChatBubbles = g_Config.m_QmChatBubble != 0;
 	if(!RenderNameplates && !RenderChatBubbles)
 		return;
@@ -2101,6 +2069,8 @@ CNamePlates::CNamePlates() :
 
 CNamePlates::~CNamePlates()
 {
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+		ResetChatBubbleAnimState(i);
 	delete m_pData;
 }
 

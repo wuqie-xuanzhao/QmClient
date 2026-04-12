@@ -166,6 +166,20 @@ static int DetectDeepflyModeFromBindCommand(const char *pCommand)
 	return DEEPFLY_MODE_NORMAL;
 }
 
+static bool ShouldAppendGoresPrevWeapon(const CGameClient *pGameClient)
+{
+	return pGameClient != nullptr && pGameClient->m_TClient.ShouldAppendGoresPrevWeapon();
+}
+
+static void CopyBindCommandWithGoresPrevWeapon(char *pBuf, size_t BufSize, const char *pBind, const CGameClient *pGameClient)
+{
+	str_copy(pBuf, pBind ? pBind : "", BufSize);
+	if(!ShouldAppendGoresPrevWeapon(pGameClient))
+		return;
+	if(str_find(pBuf, "+fire") != nullptr && str_find(pBuf, "+prevweapon") == nullptr)
+		str_append(pBuf, ";+prevweapon", BufSize);
+}
+
 bool CBinds::CBindsSpecial::OnInput(const IInput::CEvent &Event)
 {
 	if((Event.m_Flags & (IInput::FLAG_PRESS | IInput::FLAG_RELEASE)) == 0)
@@ -285,6 +299,8 @@ bool CBinds::OnInput(const IInput::CEvent &Event)
 		{
 			const auto &&OnKeyPress = [&](int Mask) {
 				const char *pBind = m_aapKeyBindings[Mask][Event.m_Key];
+				char aBind[512];
+				CopyBindCommandWithGoresPrevWeapon(aBind, sizeof(aBind), pBind, GameClient());
 				if(g_Config.m_ClSubTickAiming)
 				{
 					if(str_comp("+fire", pBind) == 0 || str_comp("+hook", pBind) == 0)
@@ -292,7 +308,7 @@ bool CBinds::OnInput(const IInput::CEvent &Event)
 						m_MouseOnAction = true;
 					}
 				}
-				Console()->ExecuteLineStroked(1, pBind);
+				Console()->ExecuteLineStroked(1, aBind);
 				m_vActiveBinds.emplace_back(Event.m_Key, Mask);
 			};
 
@@ -315,7 +331,9 @@ bool CBinds::OnInput(const IInput::CEvent &Event)
 			// Have to check for nullptr again because the previous execute can unbind itself
 			if(m_aapKeyBindings[ActiveBind->m_ModifierMask][ActiveBind->m_Key])
 			{
-				Console()->ExecuteLineStroked(1, m_aapKeyBindings[ActiveBind->m_ModifierMask][ActiveBind->m_Key]);
+				char aBind[512];
+				CopyBindCommandWithGoresPrevWeapon(aBind, sizeof(aBind), m_aapKeyBindings[ActiveBind->m_ModifierMask][ActiveBind->m_Key], GameClient());
+				Console()->ExecuteLineStroked(1, aBind);
 			}
 			Handled = true;
 		}
@@ -340,7 +358,9 @@ bool CBinds::OnInput(const IInput::CEvent &Event)
 				return;
 			}
 
-			Console()->ExecuteLineStroked(0, pBind);
+			char aBind[512];
+			CopyBindCommandWithGoresPrevWeapon(aBind, sizeof(aBind), pBind, GameClient());
+			Console()->ExecuteLineStroked(0, aBind);
 		};
 
 		// Release active bind that uses this primary key

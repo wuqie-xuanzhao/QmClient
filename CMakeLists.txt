@@ -2946,6 +2946,10 @@ if(CLIENT)
   if(MSVC)
     target_compile_options(game-client PRIVATE /bigobj) # TClient, required for ChaiScript
     target_link_options(game-client PRIVATE /ENTRY:mainCRTStartup)
+    # Work around an MSVC LTCG ICE in lyrics_component.cpp by excluding only this file
+    # from whole-program optimization while keeping IPO enabled for the rest of the target.
+    set_source_files_properties(src/game/client/components/qmclient/lyrics_component.cpp PROPERTIES
+      COMPILE_OPTIONS "$<$<CONFIG:Release>:/GL->;$<$<CONFIG:RelWithDebInfo>:/GL->")
   endif()
 
   if(WIN32 AND NOT MSVC)

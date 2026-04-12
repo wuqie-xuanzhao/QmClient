@@ -486,8 +486,12 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 
 			if(Client()->RconAuthed())
 			{
+				char aDescription[VOTE_DESC_LENGTH];
+				char aReason[VOTE_REASON_LENGTH];
+				GameClient()->FormatStreamerVoteText(m_aDescription, aDescription, sizeof(aDescription));
+				GameClient()->FormatStreamerVoteText(m_aReason, aReason, sizeof(aReason));
 				char aBuf[512];
-				str_format(aBuf, sizeof(aBuf), "%s (%s)", m_aDescription, m_aReason);
+				str_format(aBuf, sizeof(aBuf), "%s (%s)", aDescription, aReason);
 				Client()->Notify("DDNet Vote", aBuf);
 				GameClient()->m_Sounds.Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 1.0f);
 			}
@@ -597,12 +601,17 @@ void CVoting::Render()
 
 	Ui()->DoLabel(&RightColumn, aBuf, 6.0f, TEXTALIGN_MR);
 
+	char aDescription[VOTE_DESC_LENGTH];
+	char aReason[VOTE_REASON_LENGTH];
+	GameClient()->FormatStreamerVoteText(VoteDescription(), aDescription, sizeof(aDescription));
+	GameClient()->FormatStreamerVoteText(VoteReason(), aReason, sizeof(aReason));
+
 	Props.m_MaxWidth = LeftColumn.w;
-	Ui()->DoLabel(&LeftColumn, VoteDescription(), 6.0f, TEXTALIGN_ML, Props);
+	Ui()->DoLabel(&LeftColumn, aDescription, 6.0f, TEXTALIGN_ML, Props);
 
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(6.0f, &Row, &View);
-	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), VoteReason());
+	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), aReason);
 	Props.m_MaxWidth = Row.w;
 	Ui()->DoLabel(&Row, aBuf, 6.0f, TEXTALIGN_ML, Props);
 
