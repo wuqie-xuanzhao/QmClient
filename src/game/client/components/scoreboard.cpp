@@ -1235,6 +1235,13 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 					TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 				}
 
+				if(!HideIdentity && g_Config.m_QmClientShowBadge && ClientId >= 0 && GameClient()->GetQ1menGClientQid(ClientId)[0] != '\0')
+				{
+					TextRender()->TextColor(ColorRGBA(0.38f, 0.89f, 1.0f, ItemAlpha));
+					TextRender()->TextEx(&Cursor, "Qm ");
+					TextRender()->TextColor(NameColor);
+				}
+
 				// TClient
 				if(!HideIdentity && ClientId >= 0 && g_Config.m_TcWarList && g_Config.m_TcWarListScoreboard && GameClient()->m_WarList.GetAnyWar(ClientId))
 					TextRender()->TextColor(GameClient()->m_WarList.GetNameplateColor(ClientId).WithMultipliedAlpha(ItemAlpha));

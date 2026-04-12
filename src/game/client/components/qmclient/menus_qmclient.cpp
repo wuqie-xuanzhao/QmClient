@@ -89,12 +89,14 @@ struct SAutoReplyRulePlain
 {
 	std::string m_Keywords;
 	std::string m_Reply;
+	bool m_AutoRename = false;
 };
 
 struct SAutoReplyRuleInputRow
 {
 	char m_aTrigger[512] = "";
 	char m_aReply[256] = "";
+	int m_AutoRename = 0;
 	CLineInput m_TriggerInput;
 	CLineInput m_ReplyInput;
 
@@ -104,6 +106,25 @@ struct SAutoReplyRuleInputRow
 		m_ReplyInput.SetBuffer(m_aReply, sizeof(m_aReply));
 	}
 };
+
+static char *ParseAutoReplyRulePrefix(char *pLine, bool &OutAutoRename, bool &OutHasExplicitFlag)
+{
+	OutAutoRename = false;
+	OutHasExplicitFlag = false;
+
+	char *pTrimmedLine = (char *)str_utf8_skip_whitespaces(pLine);
+	const char *pAfterPrefix = str_startswith_nocase(pTrimmedLine, "[rename]");
+	if(!pAfterPrefix)
+		pAfterPrefix = str_startswith_nocase(pTrimmedLine, "[r]");
+	if(pAfterPrefix)
+	{
+		OutAutoRename = true;
+		OutHasExplicitFlag = true;
+		pTrimmedLine = (char *)str_utf8_skip_whitespaces(pAfterPrefix);
+	}
+
+	return pTrimmedLine;
+}
 
 static bool CopyTrimmedString(const char *pSrc, char *pOut, size_t OutSize)
 {
@@ -119,11 +140,12 @@ static bool CopyTrimmedString(const char *pSrc, char *pOut, size_t OutSize)
 	return pOut[0] != '\0';
 }
 
-static std::unique_ptr<SAutoReplyRuleInputRow> CreateAutoReplyRuleInputRow(const char *pTrigger = "", const char *pReply = "")
+static std::unique_ptr<SAutoReplyRuleInputRow> CreateAutoReplyRuleInputRow(const char *pTrigger = "", const char *pReply = "", bool AutoRename = false)
 {
 	auto pRow = std::make_unique<SAutoReplyRuleInputRow>();
 	pRow->m_TriggerInput.Set(pTrigger);
 	pRow->m_ReplyInput.Set(pReply);
+	pRow->m_AutoRename = AutoRename ? 1 : 0;
 	return pRow;
 }
 
@@ -154,22 +176,27 @@ static void ParseAutoReplyRules(const char *pRules, std::vector<SAutoReplyRulePl
 		if(pLine[0] == '\0' || pLine[0] == '#')
 			continue;
 
-		const char *pArrowConst = str_find(pLine, "=>");
+		bool AutoRename = false;
+		bool HasExplicitFlag = false;
+		char *pRuleText = ParseAutoReplyRulePrefix(pLine, AutoRename, HasExplicitFlag);
+		(void)HasExplicitFlag;
+
+		const char *pArrowConst = str_find(pRuleText, "=>");
 		if(!pArrowConst)
 			continue;
 
-		char *pArrow = pLine + (pArrowConst - pLine);
+		char *pArrow = pRuleText + (pArrowConst - pRuleText);
 		*pArrow = '\0';
 		pArrow += 2;
 
-		char *pKeywords = (char *)str_utf8_skip_whitespaces(pLine);
+		char *pKeywords = (char *)str_utf8_skip_whitespaces(pRuleText);
 		str_utf8_trim_right(pKeywords);
 		char *pReply = (char *)str_utf8_skip_whitespaces(pArrow);
 		str_utf8_trim_right(pReply);
 		if(pKeywords[0] == '\0' || pReply[0] == '\0')
 			continue;
 
-		vOutRules.push_back({pKeywords, pReply});
+		vOutRules.push_back({pKeywords, pReply, AutoRename});
 	}
 }
 
@@ -185,7 +212,7 @@ static bool AutoReplyRowsMatchRules(const std::vector<std::unique_ptr<SAutoReply
 		const bool HasReply = CopyTrimmedString(pRow->m_ReplyInput.GetString(), aReply, sizeof(aReply));
 		if(!(HasTrigger && HasReply))
 			continue;
-		vCompleteRows.push_back({aTrigger, aReply});
+		vCompleteRows.push_back({aTrigger, aReply, pRow->m_AutoRename != 0});
 	}
 
 	if(vCompleteRows.size() != vRules.size())
@@ -194,7 +221,8 @@ static bool AutoReplyRowsMatchRules(const std::vector<std::unique_ptr<SAutoReply
 	for(size_t i = 0; i < vCompleteRows.size(); ++i)
 	{
 		if(str_comp(vCompleteRows[i].m_Keywords.c_str(), vRules[i].m_Keywords.c_str()) != 0 ||
-			str_comp(vCompleteRows[i].m_Reply.c_str(), vRules[i].m_Reply.c_str()) != 0)
+			str_comp(vCompleteRows[i].m_Reply.c_str(), vRules[i].m_Reply.c_str()) != 0 ||
+			vCompleteRows[i].m_AutoRename != vRules[i].m_AutoRename)
 			return false;
 	}
 	return true;
@@ -223,6 +251,8 @@ static void BuildAutoReplyRulesFromRows(const std::vector<std::unique_ptr<SAutoR
 
 		if(pOutRules[0] != '\0')
 			str_append(pOutRules, "\n", OutRulesSize);
+		if(pRow->m_AutoRename != 0)
+			str_append(pOutRules, "[rename] ", OutRulesSize);
 		str_append(pOutRules, aTrigger, OutRulesSize);
 		str_append(pOutRules, "=>", OutRulesSize);
 		str_append(pOutRules, aReply, OutRulesSize);
@@ -3620,6 +3650,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		Info,
 		ChatBubble,
 		GoresActor,
+		Gores,
 		KeyBinds,
 		MiniFeatures,
 		DummyMiniView,
@@ -3655,21 +3686,22 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		const char *m_pKey;
 	};
 
-	constexpr size_t kQmModuleCount = 21;
+	constexpr size_t kQmModuleCount = 22;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, kQmModuleCount> s_aQmModuleDefaults = {{
 		{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
 		{EQmModuleId::ChatBubble, EQmModuleColumn::Left, 0, "chat_bubble"},
 		{EQmModuleId::GoresActor, EQmModuleColumn::Left, 1, "gores_actor"},
-		{EQmModuleId::KeyBinds, EQmModuleColumn::Left, 2, "key_binds"},
-		{EQmModuleId::MiniFeatures, EQmModuleColumn::Left, 3, "mini_features"},
-		{EQmModuleId::Coords, EQmModuleColumn::Left, 4, "coords"},
-		{EQmModuleId::Streamer, EQmModuleColumn::Left, 5, "streamer"},
-		{EQmModuleId::FriendNotify, EQmModuleColumn::Left, 6, "friend_notify"},
-		{EQmModuleId::BlockWords, EQmModuleColumn::Left, 7, "block_words"},
-		{EQmModuleId::QiaFen, EQmModuleColumn::Left, 8, "qiafen"},
-		{EQmModuleId::PieMenu, EQmModuleColumn::Left, 9, "pie_menu"},
+		{EQmModuleId::Gores, EQmModuleColumn::Left, 2, "gores"},
+		{EQmModuleId::KeyBinds, EQmModuleColumn::Left, 3, "key_binds"},
+		{EQmModuleId::MiniFeatures, EQmModuleColumn::Left, 4, "mini_features"},
+		{EQmModuleId::Coords, EQmModuleColumn::Left, 5, "coords"},
+		{EQmModuleId::Streamer, EQmModuleColumn::Left, 6, "streamer"},
+		{EQmModuleId::FriendNotify, EQmModuleColumn::Left, 7, "friend_notify"},
+		{EQmModuleId::BlockWords, EQmModuleColumn::Left, 8, "block_words"},
+		{EQmModuleId::QiaFen, EQmModuleColumn::Left, 9, "qiafen"},
+		{EQmModuleId::PieMenu, EQmModuleColumn::Left, 10, "pie_menu"},
 		{EQmModuleId::EntityOverlay, EQmModuleColumn::Right, 1, "entity_overlay"},
 		{EQmModuleId::Laser, EQmModuleColumn::Right, 2, "laser"},
 		{EQmModuleId::PlayerStats, EQmModuleColumn::Right, 3, "player_stats"},
@@ -4032,6 +4064,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		{
 		case EQmModuleId::ChatBubble: return "消息气泡 liaotian qipao chat bubble typing 预览 yulan 镜头缩放 suofang 持续时间 chixu 透明度 touming 字体大小 ziti 最大宽度 kuandu 垂直偏移 pianyi 圆角 yuanjiao";
 		case EQmModuleId::GoresActor: return "gores 演员 actor 掉水 diaoshui 自动发言 zidong fayan 表情 biaoqing 表情id emoticon 发送概率 gaolv";
+		case EQmModuleId::Gores: return "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用";
 		case EQmModuleId::KeyBinds: return "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding";
 		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 武器弹道辅助线 dan dao fuzhuxian 位置跳跃提示 tiaoyue tishi";
 		case EQmModuleId::DummyMiniView: return "分身小窗 fenshen xiaochuang dummy mini view 预览 yulan 缩放 suofang 小窗大小 daxiao";
@@ -4039,7 +4072,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 		case EQmModuleId::Streamer: return "主播模式 zhubo moshi 直播 zhibo 隐私 yinsi 非好友昵称改id feihaoyou nicheng id 非好友皮肤默认 pifu moren 计分板默认国旗 guoqi";
 		case EQmModuleId::FriendNotify: return "好友提醒 haoyou tixing 好友上线 shangxian 自动刷新 zidong shuaxin 服务器列表 fuwuqi liebiao 刷新间隔 jiange 进图打招呼 jintu dazhaohu 大字显示 dazi xianshi";
 		case EQmModuleId::BlockWords: return "屏蔽词 pingbici block words 控制台显示 kongzhitai 启用列表 qiyong liebiao 按词长替换 cichang tihuan 多字符替换 duozifu tihuan";
-		case EQmModuleId::QiaFen: return "恰分 qiafen 自动回复 zidong huifu 冷却 lengque dummy 发言 fayan 关键词 guanjianci 回复 huifu 关键词回复 guanjianci huifu";
+		case EQmModuleId::QiaFen: return "关键词回复 guanjianci huifu 自动回复 zidong huifu 冷却 lengque dummy 发言 fayan 规则 guize 改名 gaiming 自动改名 zidong gaiming";
 		case EQmModuleId::PieMenu: return "饼菜单 bingcaidan pie menu 启用 qiyong ui大小 daxiao 不透明度 butouming 检测距离 jiance juli 改名名单 gaiming mingdan";
 		case EQmModuleId::EntityOverlay: return "实体层颜色 shiti ceng yanse 实体层 shiti entity overlay 死亡透明度 siwang 冻结透明度 dongjie 解冻透明度 jiedong 深度冻结 shendu dongjie 深度解冻 shendu jiedong 传送透明度 chuansong cp点透明度 cp checkpoint 开关透明度 kaiguan 叠层透明度 dieceng";
 		case EQmModuleId::Laser: return "激光设置 jiguang laser 增强特效 zengqiang texiao 辉光强度 huiguang qiangdu 激光大小 daxiao 半透明 bantouming 圆角端点 yuanjiao duandian 脉冲速度 maichong sudu 脉冲幅度 maichong fudu";
@@ -4542,6 +4575,38 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				HandleModuleDragState(pModule, s_GlassCards.back());
 			}
 			break;
+			case EQmModuleId::Gores:
+			{
+				Column.HSplitTop(LG_CardSpacing, nullptr, &Column);
+				CUIRect CardGoresStart = Column;
+				s_GlassCards.push_back(CardGoresStart);
+
+				Column.HSplitTop(LG_CardPadding, nullptr, &Column);
+				Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
+				CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
+				DoModuleHeadline(CardContent, 2, TCLocalize("Gores"), TCLocalize("King of Gores 自动切枪"));
+
+				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGores, TCLocalize("启用 Gores 自动切枪"), &g_Config.m_QmGores, &Row, LG_LineHeight);
+				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGoresDisableIfWeapons, TCLocalize("拿到其他武器时停用"), &g_Config.m_QmGoresDisableIfWeapons, &Row, LG_LineHeight);
+				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGoresAutoEnable, TCLocalize("Gores 模式自动启用"), &g_Config.m_QmGoresAutoEnable, &Row, LG_LineHeight);
+				CardContent.HSplitTop(LG_LineSpacing * 0.7f, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LG_LineHeight * 0.85f, &Row, &CardContent);
+
+				CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);
+				Column.y = CardContent.y;
+				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+				HandleModuleDragState(pModule, s_GlassCards.back());
+			}
+			break;
 			case EQmModuleId::KeyBinds:
 			{
 				// ========== 模块 2.5: 按键绑定 ==========
@@ -4600,6 +4665,10 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmClientMarkTrail, TCLocalize("远程粒子"), &g_Config.m_QmClientMarkTrail, &Row, LG_LineHeight);
+				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmClientShowBadge, TCLocalize("显示Qm标识"), &g_Config.m_QmClientShowBadge, &Row, LG_LineHeight);
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
@@ -4903,18 +4972,10 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				Column.HSplitTop(LG_CardPadding, nullptr, &Column);
 				Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 8, TCLocalize("关键词回复"), TCLocalize("恰分与关键词自动回复"));
+				DoModuleHeadline(CardContent, 8, TCLocalize("关键词回复"), TCLocalize("聊天关键词自动回复"));
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 				Ui()->DoScrollbarOption(&g_Config.m_QmAutoReplyCooldown, &g_Config.m_QmAutoReplyCooldown, &Row, TCLocalize("自动回复冷却"), 0, 30, &CUi::ms_LinearScrollbarScale, 0, TCLocalize(" 秒"));
-				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmQiaFenEnabled, TCLocalize("启用恰分功能"), &g_Config.m_QmQiaFenEnabled, &Row, LG_LineHeight);
-				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmQiaFenUseDummy, TCLocalize("使用分身回复"), &g_Config.m_QmQiaFenUseDummy, &Row, LG_LineHeight);
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 				auto SyncRuleRowsFromConfig = [](std::vector<std::unique_ptr<SAutoReplyRuleInputRow>> &vRows, bool &Inited, const char *pConfigRules) {
@@ -4924,7 +4985,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					const auto RebuildRows = [&]() {
 						vRows.clear();
 						for(const auto &Rule : vParsedRules)
-							vRows.push_back(CreateAutoReplyRuleInputRow(Rule.m_Keywords.c_str(), Rule.m_Reply.c_str()));
+							vRows.push_back(CreateAutoReplyRuleInputRow(Rule.m_Keywords.c_str(), Rule.m_Reply.c_str(), Rule.m_AutoRename));
 					};
 
 					bool HasActiveInput = false;
@@ -4948,75 +5009,6 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					}
 				};
 
-				static std::vector<std::unique_ptr<SAutoReplyRuleInputRow>> s_vQiaFenRuleRows;
-				static bool s_QiaFenRuleRowsInited = false;
-				static CButtonContainer s_QiaFenAddRuleButton;
-				static std::vector<CButtonContainer> s_vQiaFenRemoveRuleButtons;
-				SyncRuleRowsFromConfig(s_vQiaFenRuleRows, s_QiaFenRuleRowsInited, g_Config.m_QmQiaFenRules);
-
-				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LG_LabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, TCLocalize("恰分规则"), LG_BodySize, TEXTALIGN_ML);
-				CUIRect AddRuleButtonRect;
-				ControlCol.VSplitRight(maximum(LG_LineHeight, 24.0f * UiScale), &ControlCol, &AddRuleButtonRect);
-				if(DoButton_Menu(&s_QiaFenAddRuleButton, "+", 0, &AddRuleButtonRect))
-				{
-					auto pNewRule = CreateAutoReplyRuleInputRow();
-					pNewRule->m_TriggerInput.Activate(EInputPriority::UI);
-					s_vQiaFenRuleRows.push_back(std::move(pNewRule));
-				}
-				s_vQiaFenRemoveRuleButtons.resize(s_vQiaFenRuleRows.size());
-				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-				for(size_t i = 0; i < s_vQiaFenRuleRows.size();)
-				{
-					auto &pRuleRow = s_vQiaFenRuleRows[i];
-					pRuleRow->m_TriggerInput.SetEmptyText("");
-					pRuleRow->m_ReplyInput.SetEmptyText("");
-					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LG_LabelWidth, nullptr, &ControlCol);
-					CUIRect TriggerCol, SendCol, ReplyCol, RemoveButtonRect;
-					ControlCol.VSplitRight(maximum(LG_LineHeight, 24.0f * UiScale), &ControlCol, &RemoveButtonRect);
-					ControlCol.VSplitLeft(ControlCol.w * 0.45f, &TriggerCol, &ControlCol);
-					ControlCol.VSplitLeft(maximum(40.0f, 40.0f * UiScale), &SendCol, &ReplyCol);
-					Ui()->DoEditBox(&pRuleRow->m_TriggerInput, &TriggerCol, LG_BodySize);
-					Ui()->DoLabel(&SendCol, TCLocalize("发送"), LG_BodySize, TEXTALIGN_MC);
-					Ui()->DoEditBox(&pRuleRow->m_ReplyInput, &ReplyCol, LG_BodySize);
-					const bool RemoveClicked = DoButton_Menu(&s_vQiaFenRemoveRuleButtons[i], "-", 0, &RemoveButtonRect);
-					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-					if(RemoveClicked)
-					{
-						s_vQiaFenRuleRows.erase(s_vQiaFenRuleRows.begin() + i);
-						s_vQiaFenRemoveRuleButtons.erase(s_vQiaFenRemoveRuleButtons.begin() + i);
-						continue;
-					}
-					++i;
-				}
-
-				char aQiaFenRules[sizeof(g_Config.m_QmQiaFenRules)];
-				BuildAutoReplyRulesFromRows(s_vQiaFenRuleRows, aQiaFenRules, sizeof(aQiaFenRules));
-				str_copy(g_Config.m_QmQiaFenRules, aQiaFenRules, sizeof(g_Config.m_QmQiaFenRules));
-
-				bool QiaFenHalfFilled = false;
-				for(const auto &pRuleRow : s_vQiaFenRuleRows)
-				{
-					if(IsAutoReplyRuleRowHalfFilled(*pRuleRow))
-					{
-						QiaFenHalfFilled = true;
-						break;
-					}
-				}
-				if(QiaFenHalfFilled)
-				{
-					CardContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &CardContent);
-					TextRender()->TextColor(1.0f, 0.2f, 0.2f, 1.0f);
-					Ui()->DoLabel(&Row, TCLocalize("恰分规则两侧都需要填写"), LG_BodySize * 0.7f, TEXTALIGN_ML);
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
-					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-				}
-
-				CardContent.HSplitTop(LG_CardPadding * 0.7f, nullptr, &CardContent);
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmKeywordReplyEnabled, TCLocalize("启用关键词回复"), &g_Config.m_QmKeywordReplyEnabled, &Row, LG_LineHeight);
 				CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
@@ -5033,6 +5025,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LG_LabelWidth, &LabelCol, &ControlCol);
 				Ui()->DoLabel(&LabelCol, TCLocalize("关键词规则"), LG_BodySize, TEXTALIGN_ML);
+				CUIRect AddRuleButtonRect;
 				ControlCol.VSplitRight(maximum(LG_LineHeight, 24.0f * UiScale), &ControlCol, &AddRuleButtonRect);
 				if(DoButton_Menu(&s_KeywordAddRuleButton, "+", 0, &AddRuleButtonRect))
 				{
@@ -5050,10 +5043,12 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					pRuleRow->m_ReplyInput.SetEmptyText("");
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LG_LabelWidth, nullptr, &ControlCol);
-					CUIRect TriggerCol, SendCol, ReplyCol, RemoveButtonRect;
+					CUIRect RenameCol, TriggerCol, SendCol, ReplyCol, RemoveButtonRect;
 					ControlCol.VSplitRight(maximum(LG_LineHeight, 24.0f * UiScale), &ControlCol, &RemoveButtonRect);
+					ControlCol.VSplitLeft(maximum(62.0f, 62.0f * UiScale), &RenameCol, &ControlCol);
 					ControlCol.VSplitLeft(ControlCol.w * 0.45f, &TriggerCol, &ControlCol);
 					ControlCol.VSplitLeft(maximum(40.0f, 40.0f * UiScale), &SendCol, &ReplyCol);
+					DoButton_CheckBoxAutoVMarginAndSet(&pRuleRow->m_AutoRename, TCLocalize("改名"), &pRuleRow->m_AutoRename, &RenameCol, LG_LineHeight);
 					Ui()->DoEditBox(&pRuleRow->m_TriggerInput, &TriggerCol, LG_BodySize);
 					Ui()->DoLabel(&SendCol, TCLocalize("发送"), LG_BodySize, TEXTALIGN_MC);
 					Ui()->DoEditBox(&pRuleRow->m_ReplyInput, &ReplyCol, LG_BodySize);
@@ -5310,6 +5305,22 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 						static CButtonContainer s_MapProgressColorId;
 
 						DoLine_ColorPicker(&s_MapProgressColorId, LG_LineHeight, LG_BodySize, LG_LineSpacing, &CardContent, TCLocalize("进度条颜色"), &g_Config.m_QmPlayerStatsMapProgressColor, ColorRGBA(36.0f / 255.0f, 199.0f / 255.0f, 100.0f / 255.0f, 1.0f), false, nullptr, true);
+
+						CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+						Ui()->DoScrollbarOption(&g_Config.m_QmPlayerStatsMapProgressWidth, &g_Config.m_QmPlayerStatsMapProgressWidth, &Row, TCLocalize("进度条宽度"), 10, 80, &CUi::ms_LinearScrollbarScale, 0, "%");
+						CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+						CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+						Ui()->DoScrollbarOption(&g_Config.m_QmPlayerStatsMapProgressHeight, &g_Config.m_QmPlayerStatsMapProgressHeight, &Row, TCLocalize("进度条高度"), 6, 30, &CUi::ms_LinearScrollbarScale, 0, "px");
+						CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+						CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+						Ui()->DoScrollbarOption(&g_Config.m_QmPlayerStatsMapProgressPosX, &g_Config.m_QmPlayerStatsMapProgressPosX, &Row, TCLocalize("水平位置"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+						CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+						CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+						Ui()->DoScrollbarOption(&g_Config.m_QmPlayerStatsMapProgressPosY, &g_Config.m_QmPlayerStatsMapProgressPosY, &Row, TCLocalize("垂直位置"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+						CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 						CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsMapProgressDbgRoute, TCLocalize("显示地图点状路线调试"), &g_Config.m_QmPlayerStatsMapProgressDbgRoute, &Row, LG_LineHeight);
@@ -5728,7 +5739,7 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 				Column.HSplitTop(LG_CardPadding, nullptr, &Column);
 				Column.VSplitLeft(LG_CardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LG_CardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 12, TCLocalize("语音"), TCLocalize("语音连接与输入参数"));
+				DoModuleHeadline(CardContent, 12, TCLocalize("语音"), TCLocalize("语音连接、输入与显示"));
 
 				CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_RiVoiceEnable, TCLocalize("启用语音"), &g_Config.m_RiVoiceEnable, &Row, LG_LineHeight);
@@ -5736,6 +5747,17 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 
 				if(g_Config.m_RiVoiceEnable)
 				{
+					auto AddVoiceSectionLabel = [&](const char *pTitle, const char *pHint) {
+						CardContent.HSplitTop(LG_LineHeight * 0.78f, &Row, &CardContent);
+						Ui()->DoLabel(&Row, pTitle, LG_BodySize * 0.96f, TEXTALIGN_ML);
+						if(pHint != nullptr && pHint[0] != '\0')
+						{
+							CardContent.HSplitTop(LG_LineHeight * 0.68f, &Row, &CardContent);
+							Ui()->DoLabel(&Row, pHint, LG_BodySize * 0.72f, TEXTALIGN_ML);
+						}
+						CardContent.HSplitTop(LG_LineSpacing * 0.75f, nullptr, &CardContent);
+					};
+
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LG_LabelWidth, &LabelCol, &ControlCol);
 					Ui()->DoLabel(&LabelCol, TCLocalize("服务器"), LG_BodySize, TEXTALIGN_ML);
@@ -5750,11 +5772,11 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					static CLineInput s_VoiceToken(g_Config.m_RiVoiceToken, sizeof(g_Config.m_RiVoiceToken));
 					s_VoiceToken.SetEmptyText(TCLocalize("留空为公共房间"));
 					Ui()->DoEditBox(&s_VoiceToken, &ControlCol, LG_BodySize);
-					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+					CardContent.HSplitTop(LG_LineSpacing * 1.15f, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LG_LabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, TCLocalize("麦克风列表"), LG_BodySize, TEXTALIGN_ML);
+					Ui()->DoLabel(&LabelCol, TCLocalize("输入设备"), LG_BodySize, TEXTALIGN_ML);
 					static std::vector<std::string> s_VoiceInputDeviceDisplayNames;
 					static std::vector<std::string> s_VoiceInputDeviceConfigValues;
 					static std::vector<const char *> s_VoiceInputDeviceDropDownNames;
@@ -5846,21 +5868,6 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 					static CButtonContainer s_VoiceInputRefreshButton;
 					if(DoButton_Menu(&s_VoiceInputRefreshButton, TCLocalize("刷新"), 0, &VoiceInputRefreshButton))
 						RefreshVoiceInputDeviceList();
-					CardContent.HSplitTop(LG_LineSpacing * 0.7f, nullptr, &CardContent);
-
-					if(g_Config.m_RiVoiceToken[0] != '\0')
-					{
-						CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_RiVoiceGroupGlobal, TCLocalize("同密码全图收听"), &g_Config.m_RiVoiceGroupGlobal, &Row, LG_LineHeight);
-						CardContent.HSplitTop(LG_LineSpacing * 0.7f, nullptr, &CardContent);
-					}
-
-					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_RiVoiceStereo, TCLocalize("左右声道定位"), &g_Config.m_RiVoiceStereo, &Row, LG_LineHeight);
-					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-					Ui()->DoScrollbarOption(&g_Config.m_RiVoiceRadius, &g_Config.m_RiVoiceRadius, &Row, TCLocalize("衰减距离半径"), 1, 400, &CUi::ms_LinearScrollbarScale, 0, TCLocalize("格"));
 					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
@@ -5869,25 +5876,6 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
 					Ui()->DoScrollbarOption(&g_Config.m_RiVoiceMicVolume, &g_Config.m_RiVoiceMicVolume, &Row, TCLocalize("麦克风音量"), 0, 300, &CUi::ms_LinearScrollbarScale, 0, "%");
-					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-					Ui()->DoScrollbarOption(&g_Config.m_RiVoiceVolume, &g_Config.m_RiVoiceVolume, &Row, TCLocalize("播放音量"), 0, 400, &CUi::ms_LinearScrollbarScale, 0, "%");
-					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-					Ui()->DoScrollbarOption(&g_Config.m_RiVoiceTestMode, &g_Config.m_RiVoiceTestMode, &Row, TCLocalize("麦克风测试模式"), 0, 2, &CUi::ms_LinearScrollbarScale, 0, "");
-					CardContent.HSplitTop(LG_LineSpacing * 0.6f, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &CardContent);
-					const char *pVoiceTestModeHint = "";
-					if(g_Config.m_RiVoiceTestMode == 1)
-						pVoiceTestModeHint = TCLocalize("本地测试: 仅本机回放, 不发送到语音服务器");
-					else if(g_Config.m_RiVoiceTestMode == 2)
-						pVoiceTestModeHint = TCLocalize("服务器测试: 发送到语音服务器并回环");
-					else
-						pVoiceTestModeHint = TCLocalize("测试关闭: 正常语音模式");
-					Ui()->DoLabel(&Row, pVoiceTestModeHint, LG_BodySize * 0.7f, TEXTALIGN_ML);
 					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
@@ -5905,13 +5893,22 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 						CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 					}
 
+					CardContent.HSplitTop(LG_LineSpacing * 1.15f, nullptr, &CardContent);
+
 					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_RiVoiceShowOverlay, TCLocalize("显示语音叠加层"), &g_Config.m_RiVoiceShowOverlay, &Row, LG_LineHeight);
+					Ui()->DoScrollbarOption(&g_Config.m_RiVoiceVolume, &g_Config.m_RiVoiceVolume, &Row, TCLocalize("播放音量"), 0, 400, &CUi::ms_LinearScrollbarScale, 0, "%");
 					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
 
-					CardContent.HSplitTop(LG_LineHeight * 0.8f, &Row, &CardContent);
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
+					CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_RiVoiceShowOverlay, TCLocalize("显示左侧说话列表"), &g_Config.m_RiVoiceShowOverlay, &Row, LG_LineHeight);
 					CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+
+					if(g_Config.m_RiVoiceShowOverlay)
+					{
+						CardContent.HSplitTop(LG_LineHeight, &Row, &CardContent);
+						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_RiVoiceShowWhenActive, TCLocalize("自己说话时也显示"), &g_Config.m_RiVoiceShowWhenActive, &Row, LG_LineHeight);
+						CardContent.HSplitTop(LG_LineSpacing, nullptr, &CardContent);
+					}
 				}
 
 				CardContent.HSplitTop(LG_CardPadding, nullptr, &CardContent);

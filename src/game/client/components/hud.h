@@ -254,6 +254,7 @@ class CHud : public CComponent
 	void PreparePlayerStateQuads();
 	void RenderPlayerState(int ClientId);
 	bool HasVisibleMediaIsland() const;
+	float GetTopIslandAvoidanceRight() const;
 	void RenderMediaIsland();
 
 	int m_LastSpectatorCountTick;

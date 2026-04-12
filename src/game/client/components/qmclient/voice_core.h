@@ -170,6 +170,8 @@ class CRClientVoice
 	uint16_t m_LastPingSeq = 0;
 	std::array<SVoicePeer, MAX_CLIENTS> m_aPeers = {};
 	std::array<std::atomic<int64_t>, MAX_CLIENTS> m_aLastHeard = {};
+	std::array<uint64_t, MAX_CLIENTS> m_aOverlayOrder = {};
+	uint64_t m_NextOverlayOrder = 1;
 
 	std::atomic<bool> m_PttActive = false;
 	std::atomic<int64_t> m_PttReleaseDeadline = 0;
@@ -241,9 +243,9 @@ public:
 	void Init(CGameClient *pGameClient, IClient *pClient, IConsole *pConsole);
 	void OnShutdown();
 	void OnRender();
+	void RenderSpeakerOverlay();
 	void SetPttActive(bool Active);
 	void ListDevices();
-	bool IsVoiceActive(int ClientId) const;
 	int PingMs() const { return m_PingMs.load(); }
 	float MicLevel() const { return m_MicLevel.load(); }
 	bool IsCaptureUnavailable() const { return m_CaptureUnavailable; }

@@ -4,6 +4,7 @@
 #include <base/system.h>
 
 #include <engine/image.h>
+#include <engine/shared/config.h>
 
 #include <algorithm>
 #include <chrono>
@@ -670,6 +671,12 @@ void CSystemMediaControls::OnUpdate()
 bool CSystemMediaControls::GetStateSnapshot(SState &State) const
 {
 #if defined(CONF_FAMILY_WINDOWS)
+	if(!g_Config.m_ClSmtcEnable)
+	{
+		State = SState{};
+		return false;
+	}
+
 	if(m_pWinrt && m_pWinrt->m_HasMedia)
 	{
 		State = m_pWinrt->m_State;
@@ -683,6 +690,9 @@ bool CSystemMediaControls::GetStateSnapshot(SState &State) const
 void CSystemMediaControls::Previous()
 {
 #if defined(CONF_FAMILY_WINDOWS)
+	if(!g_Config.m_ClSmtcEnable)
+		return;
+
 	if(!m_pShared)
 		return;
 
@@ -694,6 +704,9 @@ void CSystemMediaControls::Previous()
 void CSystemMediaControls::PlayPause()
 {
 #if defined(CONF_FAMILY_WINDOWS)
+	if(!g_Config.m_ClSmtcEnable)
+		return;
+
 	if(!m_pShared)
 		return;
 
@@ -705,6 +718,9 @@ void CSystemMediaControls::PlayPause()
 void CSystemMediaControls::Next()
 {
 #if defined(CONF_FAMILY_WINDOWS)
+	if(!g_Config.m_ClSmtcEnable)
+		return;
+
 	if(!m_pShared)
 		return;
 

@@ -1,6 +1,8 @@
 #ifndef GAME_CLIENT_COMPONENTS_TCLIENT_TCLIENT_H
 #define GAME_CLIENT_COMPONENTS_TCLIENT_TCLIENT_H
 
+#include <base/hash.h>
+
 #include <engine/client/enums.h>
 #include <engine/external/regex.h>
 #include <engine/shared/console.h>
@@ -114,6 +116,7 @@ class CTClient : public CComponent
 	char m_PreviousOwnMessage[2048] = {};
 
 	bool SendNonDuplicateMessage(int Team, const char *pLine);
+	void TryAppendKeywordReplyRenameSuffix(bool UseDummy);
 
 	float m_FinishTextTimeout = 0.0f;
 	void DoFinishCheck();
@@ -123,7 +126,6 @@ class CTClient : public CComponent
 	bool ReplaceClientFromUpdate();
 
 	bool ServerCommandExists(const char *pCommand);
-	bool IsQiaFenFinishedMap() const;
 	int64_t m_LastAutoReplyTime = 0;
 
 	// Water Fall Detection
@@ -173,6 +175,9 @@ class CTClient : public CComponent
 	bool m_aGoresMapProgressValid[NUM_DUMMIES] = {false, false};
 	float m_aGoresMapProgress[NUM_DUMMIES] = {0.0f, 0.0f};
 	bool IsGoresGameMode() const;
+	bool IsGoresModuleEnabled() const;
+	bool HasBlockingGoresWeapon() const;
+	void UpdateGoresWeaponCycle();
 	void InvalidateGoresDistanceField();
 	void EnsureGoresDistanceField();
 	void BuildGoresDistanceField();
@@ -252,6 +257,7 @@ class CTClient : public CComponent
 	std::shared_ptr<CHttpRequest> m_pQmClientServerTimeTask = nullptr;
 	std::shared_ptr<CHttpRequest> m_pQmClientPlaytimeQueryTask = nullptr;
 	char m_aQmClientAuthToken[256] = "";
+	char m_aQmClientMachineHash[SHA256_MAXSTRSIZE] = "";
 	char m_aQmClientLifecycleSessionId[64] = "";
 	char m_aQmClientPlaytimeClientId[65] = "";
 	int64_t m_QmClientLastSync = 0;
@@ -277,6 +283,8 @@ class CTClient : public CComponent
 	void FinishQmClientAuthToken();
 	void FinishQmClientUsers();
 	void ResetQmClientRecognitionTasks();
+	bool EnsureQmClientMachineHash();
+	bool BuildQmClientRecognitionUrl(const char *pPath, char *pBuf, size_t BufSize, const char *pQuery = nullptr) const;
 	void InitQmClientLifecycle();
 	void UpdateQmClientLifecycleAndServerTime();
 	void SendQmClientLifecyclePing(const char *pEvent, std::shared_ptr<CHttpRequest> &pTaskSlot);
@@ -310,6 +318,7 @@ public:
 	void OnConsoleInit() override;
 	void OnRender() override;
 	bool OnInput(const IInput::CEvent &Event) override;
+	bool ShouldAppendGoresPrevWeapon() const;
 
 	void OnStateChange(int NewState, int OldState) override;
 	void OnNewSnapshot() override;

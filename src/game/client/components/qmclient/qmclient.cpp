@@ -2,6 +2,7 @@
 
 #include "data_version.h"
 
+#include <base/hash.h>
 #include <base/log.h>
 #include <base/str.h>
 #include <base/system.h>
@@ -39,24 +40,31 @@
 #include <cmath>
 #include <limits>
 #include <queue>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
+
+#if defined(CONF_FAMILY_WINDOWS)
+#include <windows.h>
+#endif
 
 static constexpr const char *TCLIENT_INFO_URL = "https://raw.githubusercontent.com/wxj881027/Q1menG_Client/master/docs/info.json";
 static constexpr const char *TCLIENT_UPDATE_EXE_URL = "https://github.com/wxj881027/Q1menG_Client/releases/latest/download/DDNet.exe";
 static constexpr const char *MAP_CATEGORY_CACHE_FILE = "qmclient/map_categories.json";
 static constexpr int64_t MAP_CATEGORY_CACHE_SAVE_DELAY_SEC = 5;
 static constexpr int QMCLIENT_SYNC_INTERVAL_SECONDS = 30;
-static constexpr const char *QMCLIENT_TOKEN_URL = "http://42.194.185.210:8080/token";
-static constexpr const char *QMCLIENT_REPORT_URL = "http://42.194.185.210:8080/report";
-static constexpr const char *QMCLIENT_USERS_URL = "http://42.194.185.210:8080/users.json";
+static constexpr int QMCLIENT_VOICE_SYNC_INTERVAL_SECONDS = 10;
+static constexpr const char *QMCLIENT_TOKEN_PATH = "/qm/token";
+static constexpr const char *QMCLIENT_REPORT_PATH = "/qm/report";
+static constexpr const char *QMCLIENT_USERS_PATH = "/qm/users.json";
 static constexpr const char *QMCLIENT_HEALTH_URL = "http://42.194.185.210:8080/healthz";
 static constexpr const char *QMCLIENT_PLAYTIME_START_URL = "http://42.194.185.210:8080/playtime/start";
 static constexpr const char *QMCLIENT_PLAYTIME_STOP_URL = "http://42.194.185.210:8080/playtime/stop";
 static constexpr const char *QMCLIENT_PLAYTIME_QUERY_URL = "http://42.194.185.210:8080/playtime/query";
 static constexpr const char *QMCLIENT_LIFECYCLE_MARKER_FILE = "qmclient/lifecycle_pending.marker";
 static constexpr const char *QMCLIENT_PLAYTIME_CLIENT_ID_FILE = "qmclient/playtime_client_id.txt";
+static constexpr const char *QMCLIENT_MACHINE_ID_FALLBACK_FILE = "qmclient/voice_machine_id.txt";
 static constexpr int QMCLIENT_SERVER_TIME_SYNC_INTERVAL_SECONDS = 15;
 static constexpr int QMCLIENT_PLAYTIME_QUERY_INTERVAL_SECONDS = 10;
 static constexpr int QMCLIENT_RECOVERY_RETRY_SECONDS = 3;
@@ -64,7 +72,6 @@ static constexpr int QMCLIENT_MARKER_FLUSH_INTERVAL_SECONDS = 5;
 static constexpr const char *DDNET_PLAYER_STATS_URL = "https://ddnet.org/players/?json2=";
 static constexpr int QMCLIENT_DDNET_PLAYER_SYNC_INTERVAL_SECONDS = 120;
 static constexpr int QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS = 10;
-static constexpr const char *s_pQiaFenDefaultReply = "我要恰!!谢谢佬!!!!";
 static constexpr const char *s_apKeywordNegationWords[] = {
 	"不",
 	"没",
@@ -87,8 +94,205 @@ static constexpr const char *s_apKeywordClauseContrastWords[] = {
 };
 static constexpr const char *s_pFriendEnterBroadcastDefaultText = "%s好友进入本服";
 
-static int QiaFenSeparatorLength(const char *pStr);
-static void ConvertLegacyQiaFenKeywordsToRules(const char *pKeywords, char *pOutRules, size_t OutRulesSize);
+static int AutoReplySeparatorLength(const char *pStr);
+static void AppendAutoReplyRuleBlock(char *pOutRules, size_t OutRulesSize, const char *pRules);
+
+struct SKeywordReplyRule
+{
+	std::string m_Keywords;
+	std::string m_Reply;
+	bool m_AutoRename = false;
+	bool m_HasExplicitRenameFlag = false;
+};
+
+static bool ParseQmClientServiceHostPort(const char *pAddrStr, char *pHost, size_t HostSize, int &Port)
+{
+	const char *pColon = str_rchr(pAddrStr, ':');
+	if(!pColon || pColon == pAddrStr || *(pColon + 1) == '\0')
+		return false;
+
+	str_truncate(pHost, HostSize, pAddrStr, pColon - pAddrStr);
+	if(pHost[0] == '[')
+	{
+		const int Len = str_length(pHost);
+		if(Len >= 2 && pHost[Len - 1] == ']')
+		{
+			mem_move(pHost, pHost + 1, Len - 2);
+			pHost[Len - 2] = '\0';
+		}
+	}
+
+	Port = str_toint(pColon + 1);
+	return Port > 0 && Port <= 65535;
+}
+
+static void TrimQmClientTextInPlace(char *pText)
+{
+	if(!pText || pText[0] == '\0')
+		return;
+	char *pTrimmed = (char *)str_utf8_skip_whitespaces(pText);
+	str_utf8_trim_right(pTrimmed);
+	if(pTrimmed != pText)
+		mem_move(pText, pTrimmed, str_length(pTrimmed) + 1);
+}
+
+static char *ParseAutoReplyRulePrefix(char *pLine, bool &OutAutoRename, bool &OutHasExplicitFlag)
+{
+	OutAutoRename = false;
+	OutHasExplicitFlag = false;
+
+	char *pTrimmedLine = (char *)str_utf8_skip_whitespaces(pLine);
+	const char *pAfterPrefix = str_startswith_nocase(pTrimmedLine, "[rename]");
+	if(!pAfterPrefix)
+		pAfterPrefix = str_startswith_nocase(pTrimmedLine, "[r]");
+	if(pAfterPrefix)
+	{
+		OutAutoRename = true;
+		OutHasExplicitFlag = true;
+		pTrimmedLine = (char *)str_utf8_skip_whitespaces(pAfterPrefix);
+	}
+
+	return pTrimmedLine;
+}
+
+static void ParseKeywordReplyRules(const char *pRules, std::vector<SKeywordReplyRule> &vOutRules)
+{
+	vOutRules.clear();
+	if(!pRules || pRules[0] == '\0')
+		return;
+
+	const char *pCursor = pRules;
+	while(*pCursor)
+	{
+		char aLine[1024];
+		int LineLen = 0;
+		while(*pCursor && *pCursor != '\n' && *pCursor != '\r')
+		{
+			if(LineLen < (int)sizeof(aLine) - 1)
+				aLine[LineLen++] = *pCursor;
+			++pCursor;
+		}
+		aLine[LineLen] = '\0';
+
+		while(*pCursor == '\n' || *pCursor == '\r')
+			++pCursor;
+
+		char *pLine = (char *)str_utf8_skip_whitespaces(aLine);
+		str_utf8_trim_right(pLine);
+		if(pLine[0] == '\0' || pLine[0] == '#')
+			continue;
+
+		bool AutoRename = false;
+		bool HasExplicitRenameFlag = false;
+		char *pRuleText = ParseAutoReplyRulePrefix(pLine, AutoRename, HasExplicitRenameFlag);
+		const char *pArrowConst = str_find(pRuleText, "=>");
+		if(!pArrowConst)
+			continue;
+
+		char *pArrow = pRuleText + (pArrowConst - pRuleText);
+		*pArrow = '\0';
+		pArrow += 2;
+
+		char *pKeywords = (char *)str_utf8_skip_whitespaces(pRuleText);
+		str_utf8_trim_right(pKeywords);
+		char *pReply = (char *)str_utf8_skip_whitespaces(pArrow);
+		str_utf8_trim_right(pReply);
+		if(pKeywords[0] == '\0' || pReply[0] == '\0')
+			continue;
+
+		vOutRules.push_back({pKeywords, pReply, AutoRename, HasExplicitRenameFlag});
+	}
+}
+
+static void BuildKeywordReplyRules(const std::vector<SKeywordReplyRule> &vRules, char *pOutRules, size_t OutRulesSize)
+{
+	if(!pOutRules || OutRulesSize == 0)
+		return;
+
+	pOutRules[0] = '\0';
+	for(const auto &Rule : vRules)
+	{
+		if(Rule.m_Keywords.empty() || Rule.m_Reply.empty())
+			continue;
+
+		if(pOutRules[0] != '\0')
+			str_append(pOutRules, "\n", OutRulesSize);
+		if(Rule.m_AutoRename)
+			str_append(pOutRules, "[rename] ", OutRulesSize);
+		str_append(pOutRules, Rule.m_Keywords.c_str(), OutRulesSize);
+		str_append(pOutRules, "=>", OutRulesSize);
+		str_append(pOutRules, Rule.m_Reply.c_str(), OutRulesSize);
+	}
+}
+
+static bool ReadQmClientAbsoluteTextFile(const char *pFilename, char *pBuf, size_t BufSize)
+{
+	if(!pFilename || !pBuf || BufSize == 0)
+		return false;
+
+	IOHANDLE File = io_open(pFilename, IOFLAG_READ);
+	if(!File)
+		return false;
+
+	const int Read = io_read(File, pBuf, (unsigned)(BufSize - 1));
+	io_close(File);
+	if(Read <= 0)
+		return false;
+
+	pBuf[Read] = '\0';
+	TrimQmClientTextInPlace(pBuf);
+	return pBuf[0] != '\0';
+}
+
+static bool ReadPlatformMachineIdentity(std::string &OutIdentity)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	HKEY Key = nullptr;
+	LONG OpenResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ | KEY_WOW64_64KEY, &Key);
+	if(OpenResult != ERROR_SUCCESS)
+		OpenResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ, &Key);
+	if(OpenResult == ERROR_SUCCESS && Key != nullptr)
+	{
+		wchar_t aValue[256] = {};
+		DWORD Type = 0;
+		DWORD Size = sizeof(aValue);
+		const LONG QueryResult = RegQueryValueExW(Key, L"MachineGuid", nullptr, &Type, reinterpret_cast<LPBYTE>(aValue), &Size);
+		RegCloseKey(Key);
+		if(QueryResult == ERROR_SUCCESS && Type == REG_SZ)
+		{
+			const auto Utf8 = windows_wide_to_utf8(aValue);
+			if(Utf8.has_value() && !Utf8->empty())
+			{
+				OutIdentity = *Utf8;
+				return true;
+			}
+		}
+	}
+#elif defined(CONF_PLATFORM_LINUX)
+	char aBuf[256];
+	if(ReadQmClientAbsoluteTextFile("/etc/machine-id", aBuf, sizeof(aBuf)) ||
+		ReadQmClientAbsoluteTextFile("/var/lib/dbus/machine-id", aBuf, sizeof(aBuf)))
+	{
+		OutIdentity = aBuf;
+		return true;
+	}
+#endif
+
+	return false;
+}
+
+static bool IsValidQmClientMachineHash(const char *pHash)
+{
+	if(!pHash || str_length(pHash) != SHA256_DIGEST_LENGTH * 2)
+		return false;
+
+	for(const char *p = pHash; *p; ++p)
+	{
+		if(!((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'f')))
+			return false;
+	}
+	return true;
+}
 
 static std::string BuildFriendEnterBroadcastText(const char *pTemplate, std::string_view FriendNames)
 {
@@ -375,14 +579,58 @@ void CTClient::OnInit()
 	}
 	LoadMapCategoryCache();
 
-	// 兼容旧版恰分关键词配置：首次升级时将“关键词列表”迁移为“关键词=>回复”规则。
-	if(g_Config.m_QmQiaFenRules[0] == '\0' && g_Config.m_QmQiaFenKeywords[0] != '\0')
+	// 兼容旧版恰分配置：将旧规则并入关键词回复，旧隐式关键词和预设触发词不再保留。
 	{
-		char aRules[sizeof(g_Config.m_QmQiaFenRules)];
-		ConvertLegacyQiaFenKeywordsToRules(g_Config.m_QmQiaFenKeywords, aRules, sizeof(aRules));
+		bool MigratedLegacyAutoReply = false;
+		char aMergedRules[sizeof(g_Config.m_QmKeywordReplyRules)];
+		str_copy(aMergedRules, g_Config.m_QmKeywordReplyRules, sizeof(aMergedRules));
 
-		if(aRules[0] != '\0')
-			str_copy(g_Config.m_QmQiaFenRules, aRules, sizeof(g_Config.m_QmQiaFenRules));
+		if(g_Config.m_QmQiaFenEnabled)
+		{
+			g_Config.m_QmKeywordReplyEnabled = 1;
+			g_Config.m_QmQiaFenEnabled = 0;
+			MigratedLegacyAutoReply = true;
+		}
+
+		if(g_Config.m_QmQiaFenUseDummy)
+		{
+			g_Config.m_QmKeywordReplyUseDummy = 1;
+			g_Config.m_QmQiaFenUseDummy = 0;
+			MigratedLegacyAutoReply = true;
+		}
+
+		if(g_Config.m_QmQiaFenRules[0] != '\0')
+		{
+			AppendAutoReplyRuleBlock(aMergedRules, sizeof(aMergedRules), g_Config.m_QmQiaFenRules);
+			g_Config.m_QmQiaFenRules[0] = '\0';
+			MigratedLegacyAutoReply = true;
+		}
+
+		if(g_Config.m_QmQiaFenKeywords[0] != '\0')
+		{
+			g_Config.m_QmQiaFenKeywords[0] = '\0';
+			MigratedLegacyAutoReply = true;
+		}
+
+		if(g_Config.m_QmKeywordReplyAutoRename)
+		{
+			std::vector<SKeywordReplyRule> vRules;
+			ParseKeywordReplyRules(aMergedRules, vRules);
+			for(auto &Rule : vRules)
+			{
+				if(!Rule.m_HasExplicitRenameFlag)
+					Rule.m_AutoRename = true;
+			}
+
+			char aMigratedRules[sizeof(g_Config.m_QmKeywordReplyRules)];
+			BuildKeywordReplyRules(vRules, aMigratedRules, sizeof(aMigratedRules));
+			str_copy(aMergedRules, aMigratedRules, sizeof(aMergedRules));
+			g_Config.m_QmKeywordReplyAutoRename = 0;
+			MigratedLegacyAutoReply = true;
+		}
+
+		if(MigratedLegacyAutoReply)
+			str_copy(g_Config.m_QmKeywordReplyRules, aMergedRules, sizeof(g_Config.m_QmKeywordReplyRules));
 	}
 
 	InitQmClientLifecycle();
@@ -435,17 +683,33 @@ bool CTClient::SendNonDuplicateMessage(int Team, const char *pLine)
 	return false;
 }
 
-static const char *s_apQiaFenPresetWords[] = {
-	"有人恰吗",
-	"有人要吗",
-	"有恰的吗",
-	"有人要分吗",
-	"有人恰分吗",
-	"有恰分的吗",
-	"有要分的吗",
-};
+void CTClient::TryAppendKeywordReplyRenameSuffix(bool UseDummy)
+{
+	char *pConfigName = UseDummy ? g_Config.m_ClDummyName : g_Config.m_PlayerName;
+	const int ConfigNameSize = UseDummy ? (int)sizeof(g_Config.m_ClDummyName) : (int)sizeof(g_Config.m_PlayerName);
+	if(!pConfigName || pConfigName[0] == '\0')
+		return;
 
-static int QiaFenSeparatorLength(const char *pStr)
+	const int NameLen = str_length(pConfigName);
+	const bool AlreadyHasQia = NameLen >= 3 &&
+		(unsigned char)pConfigName[NameLen - 3] == 0xE6 &&
+		(unsigned char)pConfigName[NameLen - 2] == 0x81 &&
+		(unsigned char)pConfigName[NameLen - 1] == 0xB0;
+	if(AlreadyHasQia || NameLen + 3 >= ConfigNameSize)
+		return;
+
+	char aNewName[MAX_NAME_LENGTH];
+	str_copy(aNewName, pConfigName, sizeof(aNewName));
+	str_append(aNewName, "恰", sizeof(aNewName));
+	str_copy(pConfigName, aNewName, ConfigNameSize);
+
+	if(UseDummy)
+		GameClient()->SendDummyInfo(false);
+	else
+		GameClient()->SendInfo(false);
+}
+
+static int AutoReplySeparatorLength(const char *pStr)
 {
 	const unsigned char C0 = (unsigned char)pStr[0];
 	if(C0 == ',' || C0 == ';' || C0 == '|' || C0 == '\n' || C0 == '\r')
@@ -496,7 +760,7 @@ static const char *FindDelimitedAutoReplyTokenEnd(const char *pTokenStart)
 			++pCursor;
 
 		const char *pAfterWhitespace = str_utf8_skip_whitespaces(pCursor);
-		if(*pAfterWhitespace != '\0' && QiaFenSeparatorLength(pAfterWhitespace) == 0)
+		if(*pAfterWhitespace != '\0' && AutoReplySeparatorLength(pAfterWhitespace) == 0)
 			return nullptr;
 		return pAfterWhitespace;
 	}
@@ -513,11 +777,11 @@ static bool ForEachAutoReplyToken(const char *pText, F &&Fn)
 	const char *pCursor = pText;
 	while(*pCursor)
 	{
-		int SepLen = QiaFenSeparatorLength(pCursor);
+		int SepLen = AutoReplySeparatorLength(pCursor);
 		while(*pCursor && SepLen > 0)
 		{
 			pCursor += SepLen;
-			SepLen = QiaFenSeparatorLength(pCursor);
+			SepLen = AutoReplySeparatorLength(pCursor);
 		}
 
 		if(*pCursor == '\0')
@@ -532,7 +796,7 @@ static bool ForEachAutoReplyToken(const char *pText, F &&Fn)
 		if(!pTokenEnd)
 		{
 			pTokenEnd = pCursor;
-			while(*pTokenEnd && QiaFenSeparatorLength(pTokenEnd) == 0)
+			while(*pTokenEnd && AutoReplySeparatorLength(pTokenEnd) == 0)
 				++pTokenEnd;
 		}
 
@@ -667,67 +931,19 @@ static EAutoReplyTokenMode ParseAutoReplyTokenMode(std::string_view Token, std::
 	return EAutoReplyTokenMode::Literal;
 }
 
-static void ConvertLegacyQiaFenKeywordsToRules(const char *pKeywords, char *pOutRules, size_t OutRulesSize)
+static void AppendAutoReplyRuleBlock(char *pOutRules, size_t OutRulesSize, const char *pRules)
 {
-	pOutRules[0] = '\0';
-	if(!pKeywords || pKeywords[0] == '\0')
+	if(!pOutRules || OutRulesSize == 0 || !pRules || pRules[0] == '\0')
 		return;
 
-	ForEachAutoReplyToken(pKeywords, [&](std::string_view Keyword) {
-		if(pOutRules[0] != '\0')
+	if(pOutRules[0] != '\0')
+	{
+		const int Len = str_length(pOutRules);
+		if(Len > 0 && pOutRules[Len - 1] != '\n')
 			str_append(pOutRules, "\n", OutRulesSize);
-		std::string KeywordString(Keyword);
-		str_append(pOutRules, KeywordString.c_str(), OutRulesSize);
-		str_append(pOutRules, "=>", OutRulesSize);
-		str_append(pOutRules, s_pQiaFenDefaultReply, OutRulesSize);
-		return false;
-	});
-}
-
-static bool IsQiaFenPresetWord(const char *pWord)
-{
-	for(const char *pPreset : s_apQiaFenPresetWords)
-	{
-		if(str_utf8_comp_nocase(pWord, pPreset) == 0)
-			return true;
 	}
-	return false;
-}
 
-static bool MessageMatchesQiaFenPreset(const char *pMessage)
-{
-	for(const char *pPreset : s_apQiaFenPresetWords)
-	{
-		if(str_utf8_find_nocase(pMessage, pPreset))
-			return true;
-	}
-	return false;
-}
-
-static bool MessageMatchesKeywordList(const char *pMessage, const char *pKeywords, bool SkipQiaFenPresetWords)
-{
-	if(!pKeywords || pKeywords[0] == '\0')
-		return false;
-
-	return ForEachAutoReplyToken(pKeywords, [&](std::string_view Token) {
-		std::string TokenString(Token);
-		if(SkipQiaFenPresetWords && IsQiaFenPresetWord(TokenString.c_str()))
-			return false;
-
-		std::string Pattern;
-		bool CaseInsensitive = true;
-		const EAutoReplyTokenMode Mode = ParseAutoReplyTokenMode(Token, Pattern, CaseInsensitive);
-		if(Mode != EAutoReplyTokenMode::Literal)
-		{
-			Regex Re(Pattern, CaseInsensitive);
-			if(Re.error().empty())
-				return Re.test(pMessage);
-			if(Mode == EAutoReplyTokenMode::RegexDelimited)
-				return false;
-		}
-
-		return str_utf8_find_nocase(pMessage, TokenString.c_str()) != nullptr;
-	});
+	str_append(pOutRules, pRules, OutRulesSize);
 }
 
 static bool IsKeywordClauseSeparatorCodepoint(int Codepoint)
@@ -859,13 +1075,15 @@ static bool MatchAutoReplyRuleKeywords(const char *pMessage, const char *pKeywor
 	});
 }
 
-static bool MatchAutoReplyRules(const char *pMessage, const char *pRules, char *pOutReply, size_t OutReplySize, bool UseNegationFilter)
+static bool MatchAutoReplyRules(const char *pMessage, const char *pRules, char *pOutReply, size_t OutReplySize, bool &OutAutoRename, bool UseNegationFilter)
 {
+	OutAutoRename = false;
 	if(!pRules || pRules[0] == '\0')
 		return false;
 
 	static constexpr int MAX_MATCHED_REPLIES = 32;
 	char aaMatchedReplies[MAX_MATCHED_REPLIES][256];
+	bool aMatchedRenameFlags[MAX_MATCHED_REPLIES] = {};
 	int MatchedReplyCount = 0;
 
 	const char *pCursor = pRules;
@@ -889,14 +1107,19 @@ static bool MatchAutoReplyRules(const char *pMessage, const char *pRules, char *
 		if(pLine[0] == '\0' || pLine[0] == '#')
 			continue;
 
-		const char *pArrowConst = str_find(pLine, "=>");
+		bool AutoRename = false;
+		bool HasExplicitRenameFlag = false;
+		char *pRuleText = ParseAutoReplyRulePrefix(pLine, AutoRename, HasExplicitRenameFlag);
+		(void)HasExplicitRenameFlag;
+
+		const char *pArrowConst = str_find(pRuleText, "=>");
 		if(!pArrowConst)
 			continue;
-		char *pArrow = pLine + (pArrowConst - pLine);
+		char *pArrow = pRuleText + (pArrowConst - pRuleText);
 		*pArrow = '\0';
 		pArrow += 2;
 
-		char *pKeywords = (char *)str_utf8_skip_whitespaces(pLine);
+		char *pKeywords = (char *)str_utf8_skip_whitespaces(pRuleText);
 		str_utf8_trim_right(pKeywords);
 		char *pReply = (char *)str_utf8_skip_whitespaces(pArrow);
 		str_utf8_trim_right(pReply);
@@ -908,6 +1131,7 @@ static bool MatchAutoReplyRules(const char *pMessage, const char *pRules, char *
 			if(MatchedReplyCount < MAX_MATCHED_REPLIES)
 			{
 				str_copy(aaMatchedReplies[MatchedReplyCount], pReply, sizeof(aaMatchedReplies[MatchedReplyCount]));
+				aMatchedRenameFlags[MatchedReplyCount] = AutoRename;
 			}
 			MatchedReplyCount++;
 		}
@@ -919,27 +1143,8 @@ static bool MatchAutoReplyRules(const char *pMessage, const char *pRules, char *
 	const int StoredReplyCount = MatchedReplyCount < MAX_MATCHED_REPLIES ? MatchedReplyCount : MAX_MATCHED_REPLIES;
 	const int PickedIndex = secure_rand_below(StoredReplyCount);
 	str_copy(pOutReply, aaMatchedReplies[PickedIndex], OutReplySize);
+	OutAutoRename = aMatchedRenameFlags[PickedIndex];
 	return true;
-}
-
-bool CTClient::IsQiaFenFinishedMap() const
-{
-	IServerBrowser *pServerBrowser = ServerBrowser();
-	if(!pServerBrowser)
-		return false;
-
-	const char *pCommunityId = CurrentCommunityIdForFinishCheck();
-	if(!pCommunityId)
-		return false;
-
-	const CCommunity *pCommunity = pServerBrowser->Community(pCommunityId);
-	if(!pCommunity)
-		return false;
-
-	const char *pMap = Client()->GetCurrentMap();
-	if(!pMap || pMap[0] == '\0')
-		return false;
-	return pCommunity->HasRank(pMap) == CServerInfo::RANK_RANKED;
 }
 
 const char *CTClient::CurrentCommunityIdForFinishCheck() const
@@ -1044,74 +1249,6 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 
 		bool AutoReplyHandled = false;
 
-		// === 恰分功能 ===
-		if(g_Config.m_QmQiaFenEnabled && !IsOwnMessage && pMsg->m_Team == 0 && pMsg->m_pMessage != nullptr)
-		{
-			if(!IsQiaFenFinishedMap())
-			{
-				const char *pMessage = pMsg->m_pMessage;
-				const bool IsValidCandidate = pMessage[0] != '\0' && pMessage[0] != '/';
-				char aReply[256] = "";
-				bool Matched = false;
-
-				if(IsValidCandidate)
-				{
-					if(MessageMatchesQiaFenPreset(pMessage))
-					{
-						str_copy(aReply, s_pQiaFenDefaultReply, sizeof(aReply));
-						Matched = true;
-					}
-					else if(MatchAutoReplyRules(pMessage, g_Config.m_QmQiaFenRules, aReply, sizeof(aReply), false))
-					{
-						Matched = true;
-					}
-					else if(MessageMatchesKeywordList(pMessage, g_Config.m_QmQiaFenKeywords, true))
-					{
-						str_copy(aReply, s_pQiaFenDefaultReply, sizeof(aReply));
-						Matched = true;
-					}
-				}
-
-				if(Matched)
-				{
-					const bool UseDummy = g_Config.m_QmQiaFenUseDummy && Client()->DummyConnected();
-					AutoReplyHandled = TrySendAutoReply(aReply, UseDummy);
-					if(AutoReplyHandled)
-					{
-						// 在名字后面加"恰"
-						char aNewName[MAX_NAME_LENGTH];
-						char *pConfigName = UseDummy ? g_Config.m_ClDummyName : g_Config.m_PlayerName;
-						const int NameBufSize = UseDummy ? (int)sizeof(g_Config.m_ClDummyName) : (int)sizeof(g_Config.m_PlayerName);
-						const char *pCurrentName = pConfigName;
-
-						// 检查名字是否已经以"恰"结尾
-						int NameLen = str_length(pCurrentName);
-						bool AlreadyHasQia = false;
-
-						// 检查最后一个字符是否是"恰"（UTF-8：0xE6 0x81 0xB0）
-						if(NameLen >= 3 &&
-							(unsigned char)pCurrentName[NameLen - 3] == 0xE6 &&
-							(unsigned char)pCurrentName[NameLen - 2] == 0x81 &&
-							(unsigned char)pCurrentName[NameLen - 1] == 0xB0)
-						{
-							AlreadyHasQia = true;
-						}
-
-						if(!AlreadyHasQia && NameLen + 3 < (int)sizeof(aNewName))
-						{
-							str_copy(aNewName, pCurrentName, sizeof(aNewName));
-							str_append(aNewName, "恰", sizeof(aNewName));
-							str_copy(pConfigName, aNewName, NameBufSize);
-							if(UseDummy)
-								GameClient()->SendDummyInfo(false);
-							else
-								GameClient()->SendInfo(false);
-						}
-					}
-				}
-			}
-		}
-
 		// === 关键词回复 ===
 		if(!AutoReplyHandled && g_Config.m_QmKeywordReplyEnabled && !IsOwnMessage && pMsg->m_Team == 0 && pMsg->m_pMessage != nullptr)
 		{
@@ -1119,10 +1256,13 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 			if(pMessage[0] != '\0' && pMessage[0] != '/')
 			{
 				char aReply[256] = "";
-				if(MatchAutoReplyRules(pMessage, g_Config.m_QmKeywordReplyRules, aReply, sizeof(aReply), true))
+				bool AutoRename = false;
+				if(MatchAutoReplyRules(pMessage, g_Config.m_QmKeywordReplyRules, aReply, sizeof(aReply), AutoRename, true))
 				{
 					const bool UseDummy = g_Config.m_QmKeywordReplyUseDummy && Client()->DummyConnected();
 					AutoReplyHandled = TrySendAutoReply(aReply, UseDummy);
+					if(AutoReplyHandled && AutoRename)
+						TryAppendKeywordReplyRenameSuffix(UseDummy);
 				}
 			}
 		}
@@ -1666,6 +1806,7 @@ void CTClient::OnRender()
 		CheckAutoSwitchOnUnfreeze(); // HJ大佬辅助 - 检测自动切换
 		CheckAutoCloseChatOnUnfreeze(); // HJ大佬辅助 - 检测解冻后关闭聊天
 		UpdatePlayerStats(); // 更新玩家统计
+		UpdateGoresWeaponCycle(); // Gores 锤枪自动切换
 		UpdateGoresMapProgress(); // 更新 Gores 地图路径进度
 	}
 
@@ -2261,12 +2402,110 @@ void CTClient::ResetQmClientRecognitionTasks()
 	m_QmClientLastSync = 0;
 }
 
+bool CTClient::BuildQmClientRecognitionUrl(const char *pPath, char *pBuf, size_t BufSize, const char *pQuery) const
+{
+	if(!pPath || pPath[0] == '\0' || !pBuf || BufSize == 0)
+		return false;
+	if(g_Config.m_RiVoiceServer[0] == '\0')
+		return false;
+
+	char aHost[128];
+	int Port = 0;
+	if(!ParseQmClientServiceHostPort(g_Config.m_RiVoiceServer, aHost, sizeof(aHost), Port))
+		return false;
+
+	const bool NeedsIpv6Brackets = str_find(aHost, ":") != nullptr;
+	if(pQuery && pQuery[0] != '\0')
+	{
+		if(NeedsIpv6Brackets)
+			str_format(pBuf, BufSize, "http://[%s]:%d%s?%s", aHost, Port, pPath, pQuery);
+		else
+			str_format(pBuf, BufSize, "http://%s:%d%s?%s", aHost, Port, pPath, pQuery);
+	}
+	else
+	{
+		if(NeedsIpv6Brackets)
+			str_format(pBuf, BufSize, "http://[%s]:%d%s", aHost, Port, pPath);
+		else
+			str_format(pBuf, BufSize, "http://%s:%d%s", aHost, Port, pPath);
+	}
+
+	return pBuf[0] != '\0';
+}
+
+bool CTClient::EnsureQmClientMachineHash()
+{
+	if(IsValidQmClientMachineHash(m_aQmClientMachineHash))
+		return true;
+
+	std::string Identity;
+	if(!ReadPlatformMachineIdentity(Identity))
+	{
+		char aLoaded[128] = "";
+		IOHANDLE File = Storage()->OpenFile(QMCLIENT_MACHINE_ID_FALLBACK_FILE, IOFLAG_READ, IStorage::TYPE_SAVE);
+		if(File)
+		{
+			const int Read = io_read(File, aLoaded, sizeof(aLoaded) - 1);
+			io_close(File);
+			if(Read > 0)
+			{
+				aLoaded[Read] = '\0';
+				TrimQmClientTextInPlace(aLoaded);
+				if(aLoaded[0] != '\0')
+					Identity = aLoaded;
+			}
+		}
+
+		if(Identity.empty())
+		{
+			unsigned char aRandom[32];
+			secure_random_fill(aRandom, sizeof(aRandom));
+
+			static constexpr const char HEX[] = "0123456789abcdef";
+			char aHex[sizeof(aRandom) * 2 + 1];
+			for(size_t i = 0; i < sizeof(aRandom); ++i)
+			{
+				aHex[i * 2] = HEX[aRandom[i] >> 4];
+				aHex[i * 2 + 1] = HEX[aRandom[i] & 0x0f];
+			}
+			aHex[sizeof(aHex) - 1] = '\0';
+			Identity = aHex;
+
+			Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE);
+			IOHANDLE OutFile = Storage()->OpenFile(QMCLIENT_MACHINE_ID_FALLBACK_FILE, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+			if(OutFile)
+			{
+				io_write(OutFile, Identity.c_str(), Identity.size());
+				io_write(OutFile, "\n", 1);
+				io_close(OutFile);
+			}
+		}
+	}
+
+	if(Identity.empty())
+		return false;
+
+	const SHA256_DIGEST Digest = sha256(Identity.data(), Identity.size());
+	sha256_str(Digest, m_aQmClientMachineHash, sizeof(m_aQmClientMachineHash));
+	return IsValidQmClientMachineHash(m_aQmClientMachineHash);
+}
+
 void CTClient::FetchQmClientAuthToken()
 {
 	if(m_pQmClientAuthTokenTask && !m_pQmClientAuthTokenTask->Done())
 		return;
 
-	m_pQmClientAuthTokenTask = HttpGet(QMCLIENT_TOKEN_URL);
+	if(!EnsureQmClientMachineHash())
+		return;
+
+	char aQuery[128];
+	str_format(aQuery, sizeof(aQuery), "machine_hash=%s", m_aQmClientMachineHash);
+
+	char aUrl[256];
+	if(!BuildQmClientRecognitionUrl(QMCLIENT_TOKEN_PATH, aUrl, sizeof(aUrl), aQuery))
+		return;
+
+	m_pQmClientAuthTokenTask = HttpGet(aUrl);
 	m_pQmClientAuthTokenTask->Timeout(CTimeout{10000, 0, 500, 10});
 	m_pQmClientAuthTokenTask->IpResolve(IPRESOLVE::V4);
 	m_pQmClientAuthTokenTask->LogProgress(HTTPLOG::FAILURE);
@@ -2278,6 +2517,8 @@ void CTClient::SendQmClientPlayerData()
 	if(m_aQmClientAuthToken[0] == '\0')
 		return;
 	if(m_pQmClientUsersSendTask && !m_pQmClientUsersSendTask->Done())
+		return;
+	if(!EnsureQmClientMachineHash())
 		return;
 
 	char aServerAddress[NETADDR_MAXSTRSIZE];
@@ -2291,6 +2532,8 @@ void CTClient::SendQmClientPlayerData()
 	JsonWriter.WriteStrValue(aServerAddress);
 	JsonWriter.WriteAttribute("auth_token");
 	JsonWriter.WriteStrValue(m_aQmClientAuthToken);
+	JsonWriter.WriteAttribute("machine_hash");
+	JsonWriter.WriteStrValue(m_aQmClientMachineHash);
 	JsonWriter.WriteAttribute("timestamp");
 	JsonWriter.WriteIntValue((int)time_timestamp());
 	JsonWriter.WriteAttribute("players");
@@ -2314,6 +2557,8 @@ void CTClient::SendQmClientPlayerData()
 		JsonWriter.WriteBoolValue(g_Config.m_QmcFootParticles != 0);
 		JsonWriter.WriteAttribute("remote_particles_enabled");
 		JsonWriter.WriteBoolValue(g_Config.m_QmClientMarkTrail != 0);
+		JsonWriter.WriteAttribute("voice_supported");
+		JsonWriter.WriteBoolValue(true);
 		JsonWriter.EndObject();
 	}
 
@@ -2321,7 +2566,11 @@ void CTClient::SendQmClientPlayerData()
 	JsonWriter.EndObject();
 
 	std::string JsonBody = JsonWriter.GetOutputString();
-	m_pQmClientUsersSendTask = HttpPostJson(QMCLIENT_REPORT_URL, JsonBody.c_str());
+	char aUrl[256];
+	if(!BuildQmClientRecognitionUrl(QMCLIENT_REPORT_PATH, aUrl, sizeof(aUrl)))
+		return;
+
+	m_pQmClientUsersSendTask = HttpPostJson(aUrl, JsonBody.c_str());
 	m_pQmClientUsersSendTask->Timeout(CTimeout{10000, 0, 500, 10});
 	m_pQmClientUsersSendTask->IpResolve(IPRESOLVE::V4);
 	m_pQmClientUsersSendTask->LogProgress(HTTPLOG::FAILURE);
@@ -2333,7 +2582,11 @@ void CTClient::FetchQmClientUsers()
 	if(m_pQmClientUsersTask && !m_pQmClientUsersTask->Done())
 		return;
 
-	m_pQmClientUsersTask = HttpGet(QMCLIENT_USERS_URL);
+	char aUrl[256];
+	if(!BuildQmClientRecognitionUrl(QMCLIENT_USERS_PATH, aUrl, sizeof(aUrl)))
+		return;
+
+	m_pQmClientUsersTask = HttpGet(aUrl);
 	m_pQmClientUsersTask->Timeout(CTimeout{10000, 0, 500, 10});
 	m_pQmClientUsersTask->IpResolve(IPRESOLVE::V4);
 	m_pQmClientUsersTask->LogProgress(HTTPLOG::FAILURE);
@@ -2352,6 +2605,8 @@ void CTClient::FinishQmClientAuthToken()
 	const json_value *pToken = JsonObjectField(pRoot, "auth_token");
 	if(pToken == &json_value_none)
 		pToken = JsonObjectField(pRoot, "token");
+	if(pToken == &json_value_none)
+		pToken = JsonObjectField(pRoot, "qid");
 	if(pToken != &json_value_none && pToken->type == json_string)
 	{
 		str_copy(m_aQmClientAuthToken, pToken->u.string.ptr, sizeof(m_aQmClientAuthToken));
@@ -2385,10 +2640,12 @@ void CTClient::FinishQmClientUsers()
 
 	char aServerAddress[NETADDR_MAXSTRSIZE];
 	net_addr_str(&Client()->ServerAddress(), aServerAddress, sizeof(aServerAddress), true);
-	const int SyncInterval = QMCLIENT_SYNC_INTERVAL_SECONDS;
+	const bool FastSync = g_Config.m_RiVoiceEnable || g_Config.m_QmClientShowBadge;
+	const int SyncInterval = FastSync ? QMCLIENT_VOICE_SYNC_INTERVAL_SECONDS : QMCLIENT_SYNC_INTERVAL_SECONDS;
 	const int64_t ExpireTick = time_get() + (int64_t)SyncInterval * time_freq() * 2;
 
 	GameClient()->ClearQ1menGSyncMarks();
+	GameClient()->ClearQmVoiceSyncMarks();
 
 	for(unsigned Index = 0; Index < pUsers->u.array.length; ++Index)
 	{
@@ -2411,6 +2668,10 @@ void CTClient::FinishQmClientUsers()
 			continue;
 
 		const int ClientId = json_int_get(pPlayerId);
+		const char *pQid = "";
+		const json_value *pQidField = JsonObjectField(pEntry, "qid");
+		if(pQidField != &json_value_none && pQidField->type == json_string)
+			pQid = pQidField->u.string.ptr;
 		bool FootParticlesEnabled = false;
 		const json_value *pFootParticlesEnabled = JsonObjectField(pEntry, "foot_particles_enabled");
 		JsonReadBoolean(pFootParticlesEnabled, FootParticlesEnabled);
@@ -2419,7 +2680,14 @@ void CTClient::FinishQmClientUsers()
 		const json_value *pRemoteParticlesEnabled = JsonObjectField(pEntry, "remote_particles_enabled");
 		JsonReadBoolean(pRemoteParticlesEnabled, RemoteParticlesEnabled);
 
-		GameClient()->MarkQ1menGSyncClient(ClientId, ExpireTick, FootParticlesEnabled, RemoteParticlesEnabled);
+		bool VoiceSupported = true;
+		const json_value *pVoiceSupported = JsonObjectField(pEntry, "voice_supported");
+		if(pVoiceSupported != &json_value_none)
+			JsonReadBoolean(pVoiceSupported, VoiceSupported);
+
+		GameClient()->MarkQ1menGSyncClient(ClientId, ExpireTick, FootParticlesEnabled, RemoteParticlesEnabled, pQid);
+		if(VoiceSupported)
+			GameClient()->MarkQmVoiceSupportedClient(ClientId, ExpireTick);
 	}
 
 	json_value_free(pRoot);
@@ -2448,6 +2716,7 @@ void CTClient::UpdateQmClientRecognition()
 		{
 			ResetQmClientRecognitionTasks();
 			GameClient()->ClearQ1menGSyncMarks();
+			GameClient()->ClearQmVoiceSyncMarks();
 		}
 		return;
 	}
@@ -2471,11 +2740,13 @@ void CTClient::UpdateQmClientRecognition()
 		m_pQmClientUsersSendTask = nullptr;
 	}
 
-	if(!g_Config.m_QmClientMarkTrail)
+	const bool NeedRecognition = g_Config.m_RiVoiceServer[0] != '\0';
+	if(!NeedRecognition)
 	{
 		if(m_pQmClientAuthTokenTask || m_pQmClientUsersTask || m_pQmClientUsersSendTask)
 			ResetQmClientRecognitionTasks();
 		GameClient()->ClearQ1menGSyncMarks();
+		GameClient()->ClearQmVoiceSyncMarks();
 		return;
 	}
 
@@ -2484,7 +2755,8 @@ void CTClient::UpdateQmClientRecognition()
 	if(!g_Config.m_HttpAllowInsecure)
 		g_Config.m_HttpAllowInsecure = 1;
 
-	const int SyncInterval = QMCLIENT_SYNC_INTERVAL_SECONDS;
+	const bool FastSync = g_Config.m_RiVoiceEnable || g_Config.m_QmClientShowBadge;
+	const int SyncInterval = FastSync ? QMCLIENT_VOICE_SYNC_INTERVAL_SECONDS : QMCLIENT_SYNC_INTERVAL_SECONDS;
 	const int64_t IntervalTicks = (int64_t)SyncInterval * time_freq();
 	const int64_t Now = time_get();
 
@@ -3397,16 +3669,20 @@ void CTClient::RenderMiniVoteHud()
 
 	CUIRect Row, LeftColumn, RightColumn, ProgressSpinner;
 	char aBuf[256];
+	char aVoteDescription[256];
+	char aVoteReason[256];
 
 	// Vote description
 	View.HSplitTop(6.0f, &Row, &View);
-	StripStr(GameClient()->m_Voting.VoteDescription(), aBuf, aBuf + sizeof(aBuf));
+	GameClient()->FormatStreamerVoteText(GameClient()->m_Voting.VoteDescription(), aVoteDescription, sizeof(aVoteDescription));
+	StripStr(aVoteDescription, aBuf, aBuf + sizeof(aBuf));
 	Ui()->DoLabel(&Row, aBuf, 6.0f, TEXTALIGN_ML, Props);
 
 	// Vote reason
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(4.0f, &Row, &View);
-	Ui()->DoLabel(&Row, GameClient()->m_Voting.VoteReason(), 4.0f, TEXTALIGN_ML, Props);
+	GameClient()->FormatStreamerVoteText(GameClient()->m_Voting.VoteReason(), aVoteReason, sizeof(aVoteReason));
+	Ui()->DoLabel(&Row, aVoteReason, 4.0f, TEXTALIGN_ML, Props);
 
 	// Time left
 	str_format(aBuf, sizeof(aBuf), Localize("%ds left"), GameClient()->m_Voting.SecondsLeft());
@@ -3624,6 +3900,41 @@ bool CTClient::IsGoresGameMode() const
 {
 	const char *pGameType = GameClient()->m_GameInfo.m_aGameType;
 	return pGameType != nullptr && pGameType[0] != '\0' && str_find_nocase(pGameType, "gores") != nullptr;
+}
+
+bool CTClient::IsGoresModuleEnabled() const
+{
+	return g_Config.m_QmGores != 0 || (g_Config.m_QmGoresAutoEnable != 0 && IsGoresGameMode());
+}
+
+bool CTClient::HasBlockingGoresWeapon() const
+{
+	if(!g_Config.m_QmGoresDisableIfWeapons || Client()->State() != IClient::STATE_ONLINE || !GameClient()->m_Snap.m_pLocalCharacter)
+		return false;
+
+	const CCharacterCore &Core = GameClient()->m_PredictedPrevChar;
+	return Core.m_aWeapons[WEAPON_SHOTGUN].m_Got ||
+		Core.m_aWeapons[WEAPON_GRENADE].m_Got ||
+		Core.m_aWeapons[WEAPON_LASER].m_Got ||
+		Core.m_aWeapons[WEAPON_NINJA].m_Got;
+}
+
+bool CTClient::ShouldAppendGoresPrevWeapon() const
+{
+	return Client()->State() == IClient::STATE_ONLINE &&
+		!GameClient()->m_Snap.m_SpecInfo.m_Active &&
+		GameClient()->m_Snap.m_pLocalCharacter != nullptr &&
+		IsGoresModuleEnabled() &&
+		!HasBlockingGoresWeapon();
+}
+
+void CTClient::UpdateGoresWeaponCycle()
+{
+	if(!ShouldAppendGoresPrevWeapon())
+		return;
+
+	if(GameClient()->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_HAMMER)
+		GameClient()->m_Controls.m_aInputData[g_Config.m_ClDummy].m_WantedWeapon = WEAPON_GUN + 1;
 }
 
 bool CTClient::IsGoresMapProgressEnabled() const

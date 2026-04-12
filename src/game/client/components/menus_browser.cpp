@@ -1268,14 +1268,16 @@ void CMenus::RenderServerbrowserInfo(CUIRect View)
 			static CButtonContainer s_CopyButton;
 			if(DoButton_Menu(&s_CopyButton, Localize("Copy info"), 0, &Button))
 			{
-				char aInfo[256];
+				char aInfo[512];
 				str_format(
 					aInfo,
 					sizeof(aInfo),
 					"%s\n"
-					"Address: ddnet://%s\n",
+					"Address: ddnet://%s\n"
+					"Map: %s\n",
 					pSelectedServer->m_aName,
-					pSelectedServer->m_aAddress);
+					pSelectedServer->m_aAddress,
+					pSelectedServer->m_aMap);
 				Input()->SetClipboardText(aInfo);
 			}
 		}
