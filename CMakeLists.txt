@@ -3018,6 +3018,8 @@ if(CLIENT)
     proof_mode.h
     quadart.cpp
     quadart.h
+    quad_knife.cpp
+    quad_knife.h
     quick_action.h
     quick_actions.cpp
     quick_actions.h

@@ -16,6 +16,7 @@
 #include <game/editor/mapitems/layer.h>
 #include <game/editor/references.h>
 #include <game/editor/quadart.h>
+#include <game/editor/quad_knife.h>
 
 #include <functional>
 #include <memory>
@@ -158,17 +159,7 @@ public:
 
 	// Component states
 	CMapView::CState m_MapViewState;
-
-	// Quad knife
-	class CQuadKnife
-	{
-	public:
-		bool m_Active;
-		int m_SelectedQuadIndex;
-		int m_Count;
-		vec2 m_aPoints[4];
-	};
-	CQuadKnife m_QuadKnife;
+	CQuadKnife::CState m_QuadKnifeState;
 
 	// Housekeeping
 	void Clean();

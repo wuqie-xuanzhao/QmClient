@@ -354,7 +354,7 @@ bool CEditorDrawingTools::HandleMapEditorInput(CEditor *pEditor, const std::pair
 		str_copy(pEditor->m_aTooltip, aTooltip);
 	}
 
-	if(Inside && pEditor->Ui()->CheckActiveItem(nullptr) && pEditor->Ui()->MouseButton(0) && !pEditor->Map()->m_QuadKnife.m_Active)
+	if(Inside && pEditor->Ui()->CheckActiveItem(nullptr) && pEditor->Ui()->MouseButton(0) && !pEditor->QuadKnife()->IsActive())
 	{
 		pEditor->Ui()->SetActiveItem(this);
 		BeginDrag(pEditor, Tile.x, Tile.y, ActiveTool);

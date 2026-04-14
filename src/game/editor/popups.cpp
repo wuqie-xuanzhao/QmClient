@@ -1139,8 +1139,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupQuad(void *pContext, CUIRect View, b
 	static int s_SliceButton = 0;
 	if(pEditor->DoButton_Editor(&s_SliceButton, "切割", 0, &Button, BUTTONFLAG_LEFT, "启用方块刀模式."))
 	{
-		pEditor->Map()->m_QuadKnife.m_Count = 0;
-		pEditor->Map()->m_QuadKnife.m_Active = true;
+		pEditor->QuadKnife()->Activate(pQuadPopupContext->m_SelectedQuadIndex);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
 
