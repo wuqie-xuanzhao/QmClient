@@ -217,6 +217,8 @@ std::unique_ptr<ILogger> log_logger_prefix_file(IOHANDLE file, const char *syste
  * @ingroup Log
  *
  * Logger for writing logs to the standard output (stdout).
+ *
+ * @remark This function can return `nullptr` if the standard output is not available.
  */
 std::unique_ptr<ILogger> log_logger_stdout();
 
