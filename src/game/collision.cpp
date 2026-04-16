@@ -797,15 +797,9 @@ int CCollision::IsTeleportHook(int Index) const
 	return 0;
 }
 
-int CCollision::IsSpeedup(int Index) const
+bool CCollision::IsSpeedup(int Index) const
 {
-	if(!m_pSpeedup || !IsValidTileIndex(Index, m_Width, m_Height))
-		return 0;
-
-	if(m_pSpeedup[Index].m_Force > 0)
-		return Index;
-
-	return 0;
+	return m_pSpeedup && IsValidTileIndex(Index, m_Width, m_Height) && m_pSpeedup[Index].m_Force > 0;
 }
 
 int CCollision::IsTune(int Index) const
