@@ -2193,6 +2193,8 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   config.h
   config_domains.h
   config_includes.h
+  config_tags.cpp
+  config_tags.h
   config_variables.h
   config_variables_qmclient.h
   console.cpp

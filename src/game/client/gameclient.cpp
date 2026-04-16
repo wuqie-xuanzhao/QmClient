@@ -48,6 +48,7 @@
 #include "render.h"
 
 #include <base/log.h>
+#include <engine/shared/config_tags.h>
 #include <base/math.h>
 #include <base/system.h>
 #include <base/vmath.h>
@@ -97,21 +98,21 @@ float EffectiveFastInputOffsetTicks(const CGameClient *pGameClient)
 	if(!g_Config.m_TcFastInput)
 		return 0.0f;
 
-	if(g_Config.m_BcFastInputMode == 0)
+	if(g_Config.m_QmFastInputMode == 0)
 	{
 		if(g_Config.m_TcFastInputAmount <= 0)
 			return 0.0f;
 		return g_Config.m_TcFastInputAmount / 20.0f;
 	}
 
-	if(g_Config.m_BcFastInputMode == 1)
+	if(g_Config.m_QmFastInputMode == 1)
 	{
-		if(g_Config.m_BcFastInputDeltaInput <= 0)
+		if(g_Config.m_QmFastInputDeltaInput <= 0)
 			return 0.0f;
-		return g_Config.m_BcFastInputDeltaInput / 100.0f;
+		return g_Config.m_QmFastInputDeltaInput / 100.0f;
 	}
 
-	const int GammaInputAmount = BcFastInputGammaUiToEffectiveAmount(g_Config.m_BcFastInputGammaInput);
+	const int GammaInputAmount = BcFastInputGammaUiToEffectiveAmount(g_Config.m_QmFastInputGammaInput);
 	if(GammaInputAmount <= 0)
 		return 0.0f;
 	return GammaInputAmount / 100.0f;
@@ -141,17 +142,17 @@ void ApplyFastInputOffset(float OffsetTicks, int &Tick, float &Intra)
 
 bool EffectiveFastInputOthers()
 {
-	return g_Config.m_BcFastInputMode == 0 && g_Config.m_TcFastInputOthers != 0;
+	return g_Config.m_QmFastInputMode == 0 && g_Config.m_TcFastInputOthers != 0;
 }
 
 bool EffectiveDeltaInputOthers()
 {
-	return g_Config.m_BcFastInputMode == 1 && g_Config.m_BcDeltaInputOthers != 0;
+	return g_Config.m_QmFastInputMode == 1 && g_Config.m_QmDeltaInputOthers != 0;
 }
 
 bool EffectiveGammaInputOthers()
 {
-	return g_Config.m_BcFastInputMode == 2 && g_Config.m_BcGammaInputOthers != 0;
+	return g_Config.m_QmFastInputMode == 2 && g_Config.m_QmGammaInputOthers != 0;
 }
 
 bool EffectiveAnyFastInputOthers()
@@ -447,6 +448,9 @@ void CGameClient::OnInit()
 {
 	const int64_t OnInitStart = time_get();
 	MigrateChatBubbleConfig();
+
+	// Initialize config tags system
+	InitConfigTags();
 
 	Client()->SetLoadingCallback([this](IClient::ELoadingCallbackDetail Detail) {
 		const char *pTitle;
@@ -5006,11 +5010,11 @@ int CGameClient::GetFastInputPredictionAmountMs()
 	if(!g_Config.m_TcFastInput)
 		return 0;
 
-	if(g_Config.m_BcFastInputMode == 0)
+	if(g_Config.m_QmFastInputMode == 0)
 		return std::max(0, g_Config.m_TcFastInputAmount);
-	if(g_Config.m_BcFastInputMode == 1)
-		return std::max(0, (g_Config.m_BcFastInputDeltaInput + 2) / 5);
-	return std::max(0, (BcFastInputGammaUiToEffectiveAmount(g_Config.m_BcFastInputGammaInput) + 2) / 5);
+	if(g_Config.m_QmFastInputMode == 1)
+		return std::max(0, (g_Config.m_QmFastInputDeltaInput + 2) / 5);
+	return std::max(0, (BcFastInputGammaUiToEffectiveAmount(g_Config.m_QmFastInputGammaInput) + 2) / 5);
 }
 
 int CGameClient::GetFastInputPredictionTicks()
