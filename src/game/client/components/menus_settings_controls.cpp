@@ -572,16 +572,61 @@ float CMenusSettingsControls::MeasureSettingsMouseHeight() const
 
 void CMenusSettingsControls::RenderSettingsMouse(CUIRect View)
 {
-	CUIRect Button;
-	View.HSplitTop(BUTTON_HEIGHT, &Button, &View);
-	Ui()->DoScrollbarOption(&g_Config.m_InpMousesens, &g_Config.m_InpMousesens, &Button, Localize("Ingame mouse sens."), 1, 500,
-		&CUi::ms_LogarithmicScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE);
+	// Ingame mouse sensitivity
+	{
+		CUIRect Label, Slider, ValueSelector;
+		View.HSplitTop(BUTTON_HEIGHT, &Label, &View);
+		Label.VSplitLeft(Label.w * 0.4f, &Label, &Slider);
+		Slider.VSplitRight(50.0f, &Slider, &ValueSelector);
+		Slider.VSplitRight(5.0f, &Slider, nullptr);
 
-	View.HSplitTop(BUTTON_SPACING, nullptr, &View);
+		// Label
+		Ui()->DoLabel(&Label, Localize("Ingame mouse sens."), FONT_SIZE, TEXTALIGN_ML);
 
-	View.HSplitTop(BUTTON_HEIGHT, &Button, &View);
-	Ui()->DoScrollbarOption(&g_Config.m_UiMousesens, &g_Config.m_UiMousesens, &Button, Localize("UI mouse sens."), 1, 500,
-		&CUi::ms_LogarithmicScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE | CUi::SCROLLBAR_OPTION_DELAYUPDATE);
+		// Slider
+		const int Min = 1, Max = 500;
+		int Value = g_Config.m_InpMousesens;
+		Value = CUi::ms_LogarithmicScrollbarScale.ToAbsolute(
+			Ui()->DoScrollbarH(&g_Config.m_InpMousesens, &Slider,
+				CUi::ms_LogarithmicScrollbarScale.ToRelative(Value, Min, Max)),
+			Min, Max);
+		g_Config.m_InpMousesens = Value;
+
+		// Value selector for manual input
+		SValueSelectorProperties Props;
+		Props.m_UseScroll = false;
+		g_Config.m_InpMousesens = (int)Ui()->DoValueSelector(&m_IngameMouseSensValueSelector, &ValueSelector, "",
+			g_Config.m_InpMousesens, 1, 500, Props);
+	}
+
+	View.HSplitTop(BIND_OPTION_SPACING, nullptr, &View);
+
+	// UI mouse sensitivity
+	{
+		CUIRect Label, Slider, ValueSelector;
+		View.HSplitTop(BUTTON_HEIGHT, &Label, &View);
+		Label.VSplitLeft(Label.w * 0.4f, &Label, &Slider);
+		Slider.VSplitRight(50.0f, &Slider, &ValueSelector);
+		Slider.VSplitRight(5.0f, &Slider, nullptr);
+
+		// Label
+		Ui()->DoLabel(&Label, Localize("UI mouse sens."), FONT_SIZE, TEXTALIGN_ML);
+
+		// Slider
+		const int Min = 1, Max = 500;
+		int Value = g_Config.m_UiMousesens;
+		Value = CUi::ms_LogarithmicScrollbarScale.ToAbsolute(
+			Ui()->DoScrollbarH(&g_Config.m_UiMousesens, &Slider,
+				CUi::ms_LogarithmicScrollbarScale.ToRelative(Value, Min, Max)),
+			Min, Max);
+		g_Config.m_UiMousesens = Value;
+
+		// Value selector for manual input
+		SValueSelectorProperties Props;
+		Props.m_UseScroll = false;
+		g_Config.m_UiMousesens = (int)Ui()->DoValueSelector(&m_UiMouseSensValueSelector, &ValueSelector, "",
+			g_Config.m_UiMousesens, 1, 500, Props);
+	}
 }
 
 float CMenusSettingsControls::MeasureSettingsJoystickHeight() const

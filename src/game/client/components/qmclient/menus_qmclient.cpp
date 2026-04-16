@@ -643,13 +643,18 @@ void CMenus::RenderSettingsTClient(CUIRect MainView)
 	MainView.HSplitTop(LineSize, &TabBar, &MainView);
 	const float TabWidth = TabBar.w / TabCount;
 	static CButtonContainer s_aPageTabs[NUMBER_OF_TCLIENT_TABS] = {};
-	const char *apTabNames[] = {
-		TCLocalize("Settings"),
-		TCLocalize("Bind Wheel"),
-		TCLocalize("War List"),
-		TCLocalize("Chat Binds"),
-		TCLocalize("Status Bar"),
-		TCLocalize("Info")};
+	static const char *s_apTClientTabNames[NUMBER_OF_TCLIENT_TABS] = {};
+	static char s_aTClientLanguageFile[IO_MAX_PATH_LENGTH] = {};
+	if(str_comp(s_aTClientLanguageFile, g_Config.m_ClLanguagefile) != 0)
+	{
+		str_copy(s_aTClientLanguageFile, g_Config.m_ClLanguagefile, sizeof(s_aTClientLanguageFile));
+		s_apTClientTabNames[TCLIENT_TAB_SETTINGS] = TCLocalize("Settings");
+		s_apTClientTabNames[TCLIENT_TAB_BINDWHEEL] = TCLocalize("Bind Wheel");
+		s_apTClientTabNames[TCLIENT_TAB_WARLIST] = TCLocalize("War List");
+		s_apTClientTabNames[TCLIENT_TAB_BINDCHAT] = TCLocalize("Chat Binds");
+		s_apTClientTabNames[TCLIENT_TAB_STATUSBAR] = TCLocalize("Status Bar");
+		s_apTClientTabNames[TCLIENT_TAB_INFO] = TCLocalize("Info");
+	}
 
 	for(int Tab = 0; Tab < NUMBER_OF_TCLIENT_TABS; ++Tab)
 	{
@@ -659,7 +664,7 @@ void CMenus::RenderSettingsTClient(CUIRect MainView)
 		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
 		const int Corners = Tab == 0 ? IGraphics::CORNER_L : Tab == NUMBER_OF_TCLIENT_TABS - 1 ? IGraphics::CORNER_R :
 													 IGraphics::CORNER_NONE;
-		if(DoButton_MenuTab(&s_aPageTabs[Tab], apTabNames[Tab], s_CurCustomTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		if(DoButton_MenuTab(&s_aPageTabs[Tab], s_apTClientTabNames[Tab], s_CurCustomTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
 			s_CurCustomTab = Tab;
 	}
 
@@ -3592,14 +3597,29 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	s_GlassCards.clear();
 
 	// === 动态彩色标题 ===
+	// Cache rainbow colors to avoid recalculating every frame
+	static float s_LastRainbowUpdateTime = 0.0f;
+	static ColorRGBA s_CachedRainbowColors[16];
+	constexpr int RainbowColorCount = 16;
+	
 	const float Time = Client()->GlobalTime();
 	bool ShowSearchModuleControls = true;
-	auto GetRainbowColor = [Time](int ModuleIndex) -> ColorRGBA {
-		// 每个模块有不同的相位偏移，形成彩虹波浪效果
-		const float Hue = std::fmod(Time * 0.15f + ModuleIndex * 0.12f, 1.0f);
-		// HSL 转 RGB（S=0.7, L=0.65 柔和饱和度）
-		ColorHSLA Hsla(Hue, 0.7f, 0.65f, 1.0f);
-		return color_cast<ColorRGBA>(Hsla);
+	if(Time - s_LastRainbowUpdateTime > 0.1f) // Update every 100ms
+	{
+		s_LastRainbowUpdateTime = Time;
+		for(int i = 0; i < RainbowColorCount; ++i)
+		{
+			const float Hue = std::fmod(Time * 0.15f + i * 0.12f, 1.0f);
+			ColorHSLA Hsla(Hue, 0.7f, 0.65f, 1.0f);
+			s_CachedRainbowColors[i] = color_cast<ColorRGBA>(Hsla);
+		}
+	}
+	
+	auto GetRainbowColor = [](int ModuleIndex) -> ColorRGBA {
+		int Index = ModuleIndex % RainbowColorCount;
+		if(Index < 0)
+			Index += RainbowColorCount;
+		return s_CachedRainbowColors[Index];
 	};
 
 	auto DoModuleHeadline = [&](CUIRect &Content, int RainbowIndex, const char *pTitle, const char *pTip) {
@@ -3642,18 +3662,26 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	};
 
 	// Avoid repeatedly scanning every key/modifier combination for each bind row.
-	std::unordered_map<std::string, CBindSlot> CommandBindCache;
-	CommandBindCache.reserve(64);
-	for(int Mod = 0; Mod < KeyModifier::COMBINATION_COUNT; ++Mod)
+	// Cache the bind map to avoid rebuilding it every frame
+	extern std::unordered_map<std::string, CBindSlot> g_CommandBindCache;
+	extern bool g_CommandBindCacheInitialized;
+	if(!g_CommandBindCacheInitialized)
 	{
-		for(int KeyId = 0; KeyId < KEY_LAST; ++KeyId)
+		g_CommandBindCache.clear();
+		g_CommandBindCache.reserve(64);
+		for(int Mod = 0; Mod < KeyModifier::COMBINATION_COUNT; ++Mod)
 		{
-			const char *pBind = GameClient()->m_Binds.Get(KeyId, Mod);
-			if(!pBind[0])
-				continue;
-			CommandBindCache.try_emplace(pBind, KeyId, Mod);
+			for(int KeyId = 0; KeyId < KEY_LAST; ++KeyId)
+			{
+				const char *pBind = GameClient()->m_Binds.Get(KeyId, Mod);
+				if(!pBind[0])
+					continue;
+				g_CommandBindCache.try_emplace(pBind, KeyId, Mod);
+			}
 		}
+		g_CommandBindCacheInitialized = true;
 	}
+	std::unordered_map<std::string, CBindSlot> &CommandBindCache = g_CommandBindCache;
 
 	CUIRect Row, LabelCol, ControlCol, CardContent;
 	static bool s_ShowSponsorQrCode = false;
@@ -7371,3 +7399,30 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	s_ScrollRegion.AddRect(ScrollRegion);
 	s_ScrollRegion.End();
 }
+
+void CMenus::PrewarmTClientAndQiMengPages()
+{
+	static bool s_Prewarmed = false;
+	if(s_Prewarmed)
+		return;
+	s_Prewarmed = true;
+
+	static CScrollRegion s_PrewarmScrollRegion;
+	static std::vector<CUIRect> s_PrewarmSectionBoxes;
+	static CButtonContainer s_PrewarmButtonContainer;
+	static std::vector<std::string> s_PrewarmStringVector;
+	static std::vector<const char *> s_PrewarmCharPtrVector;
+	static char s_PrewarmLanguageFile[IO_MAX_PATH_LENGTH] = {};
+	static const char *s_PrewarmTabNames[16] = {};
+
+	s_PrewarmScrollRegion.Reset();
+	s_PrewarmSectionBoxes.clear();
+	s_PrewarmStringVector.clear();
+	s_PrewarmCharPtrVector.clear();
+	s_PrewarmLanguageFile[0] = '\0';
+	for(int i = 0; i < 16; i++)
+		s_PrewarmTabNames[i] = nullptr;
+}
+
+std::unordered_map<std::string, CBindSlot> g_CommandBindCache;
+bool g_CommandBindCacheInitialized = false;

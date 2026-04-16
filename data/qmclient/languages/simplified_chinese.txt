@@ -1010,3 +1010,15 @@ Misc
 
 Auto
 == 自动
+
+Entity Preview
+== 实体层预览
+
+Toggle between game scene preview and raw texture
+== 在游戏场景预览和原始材质之间切换
+
+Are you sure you want to delete this asset?
+== 确定要删除此资源吗？
+
+Download this asset?
+== 确定要下载此资源吗？

@@ -1375,6 +1375,38 @@ void CMenus::OnInit()
 	m_DirectionQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 	Graphics()->QuadContainerAddSprite(m_DirectionQuadContainerIndex, 0.f, 0.f, 22.f);
 	Graphics()->QuadContainerUpload(m_DirectionQuadContainerIndex);
+
+	// Prewarm settings pages caches
+	PrewarmSettingsPages();
+}
+
+void CMenus::PrewarmSettingsPages()
+{
+	extern std::unordered_map<std::string, CBindSlot> g_CommandBindCache;
+	extern bool g_CommandBindCacheInitialized;
+
+	if(g_CommandBindCacheInitialized)
+		return;
+
+	g_CommandBindCache.clear();
+	g_CommandBindCache.reserve(64);
+	for(int Mod = 0; Mod < KeyModifier::COMBINATION_COUNT; ++Mod)
+	{
+		for(int KeyId = 0; KeyId < KEY_LAST; ++KeyId)
+		{
+			const char *pBind = GameClient()->m_Binds.Get(KeyId, Mod);
+			if(!pBind[0])
+				continue;
+			g_CommandBindCache.try_emplace(pBind, KeyId, Mod);
+		}
+	}
+	g_CommandBindCacheInitialized = true;
+
+	// Preload skin list to avoid lag when first entering settings
+	GameClient()->m_Skins.SkinList();
+
+	// Preload TClient and QiMeng pages static variables
+	PrewarmTClientAndQiMengPages();
 }
 
 void CMenus::ConchainBackgroundEntities(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

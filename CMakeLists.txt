@@ -561,6 +561,7 @@ find_package(Opus)
 find_package(Opusfile)
 find_package(PNG)
 find_package(Python3)
+find_package(WebP)
 find_package(Rust)
 find_package(SDL2)
 find_package(SQLite3)
@@ -657,6 +658,7 @@ show_dependency_status("Python3" Python3)
 show_dependency_status("SDL2" SDL2)
 show_dependency_status("SQLite3" SQLite3)
 show_dependency_status("Wavpack" WAVPACK)
+show_dependency_status("WebP" WebP)
 show_dependency_status("Zlib" ZLIB)
 if(DISCORD)
   show_dependency_status("DiscordSdk" DiscordSdk)
@@ -2007,6 +2009,7 @@ set(COPY_FILES
   ${WEBSOCKETS_COPY_FILES}
   ${DISCORDSDK_COPY_FILES}
   ${VULKAN_COPY_FILES}
+  ${WebP_COPY_FILES}
   ${CRASHDUMP_COPY_FILES}
   ${SSP_COPY_FILES}
 )
@@ -2369,6 +2372,12 @@ set(LIBS
 # Targets
 add_library(engine-gfx EXCLUDE_FROM_ALL OBJECT ${ENGINE_GFX})
 target_include_directories(engine-gfx PRIVATE ${PNG_INCLUDE_DIRS})
+if(WebP_FOUND)
+  target_include_directories(engine-gfx PRIVATE ${WebP_INCLUDE_DIRS})
+endif()
+if(VIDEORECORDER AND FFMPEG_FOUND)
+  target_include_directories(engine-gfx PRIVATE ${FFMPEG_INCLUDE_DIRS})
+endif()
 add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_EXTERNAL} ${ENGINE_INTERFACE} ${ENGINE_SHARED} ${ENGINE_UUID_SHARED} ${BASE})
 add_library(game-shared EXCLUDE_FROM_ALL OBJECT ${GAME_SHARED} ${GAME_GENERATED_SHARED})
 list(APPEND TARGETS_OWN engine-gfx engine-shared game-shared)
@@ -2815,6 +2824,7 @@ if(CLIENT)
     ${SDL2_LIBRARIES}
     ${WAVPACK_LIBRARIES}
     ${FFMPEG_LIBRARIES}
+    ${WebP_LIBRARIES}
 
     # Order of these three is important.
     ${OPUSFILE_LIBRARIES}
@@ -2917,6 +2927,7 @@ if(CLIENT)
     ${SDL2_INCLUDE_DIRS}
     ${WAVPACK_INCLUDE_DIRS}
     ${FFMPEG_INCLUDE_DIRS}
+    ${WebP_INCLUDE_DIRS}
     ${DISCORDSDK_INCLUDE_DIRS}
 
     ${VULKAN_INCLUDE_DIRS}

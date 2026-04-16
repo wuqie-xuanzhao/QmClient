@@ -4,9 +4,19 @@
 #include <base/system.h>
 
 #include <png.h>
+#include <webp/decode.h>
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+#include <libavutil/error.h>
+#include <libswscale/swscale.h>
+}
 
 #include <csetjmp>
 #include <cstdlib>
+#include <vector>
 
 bool CByteBufferReader::Read(void *pData, size_t Size)
 {
@@ -406,4 +416,111 @@ bool CImageLoader::SavePng(IOHANDLE File, const char *pFilename, const CImageInf
 	}
 	io_close(File);
 	return WriteSuccess;
+}
+
+bool CImageLoader::LoadWebp(CByteBufferReader &Reader, const char *pContextName, CImageInfo &Image)
+{
+	// Read all data from reader
+	const size_t DataSize = Reader.Size();
+	if(DataSize == 0)
+	{
+		log_error("webp", "empty data for '%s'", pContextName);
+		return false;
+	}
+
+	std::vector<uint8_t> vData(DataSize);
+	if(!Reader.Read(vData.data(), DataSize))
+	{
+		log_error("webp", "failed to read data for '%s'", pContextName);
+		return false;
+	}
+
+	// Use libwebp to decode WebP
+	int Width = 0, Height = 0;
+	
+	// First check if it's a valid WebP file and get dimensions
+	if(!WebPGetInfo(vData.data(), vData.size(), &Width, &Height))
+	{
+		log_error("webp", "invalid WebP data for '%s'", pContextName);
+		return false;
+	}
+
+	if(Width == 0 || Height == 0)
+	{
+		log_error("webp", "invalid image dimensions for '%s': %dx%d", pContextName, Width, Height);
+		return false;
+	}
+
+	// Decode to RGBA
+	uint8_t *pDecodedData = WebPDecodeRGBA(vData.data(), vData.size(), &Width, &Height);
+	if(!pDecodedData)
+	{
+		log_error("webp", "failed to decode WebP for '%s'", pContextName);
+		return false;
+	}
+
+	// Allocate output buffer and copy data (libwebp uses its own allocator)
+	const size_t DataSizeOut = Width * Height * 4;
+	uint8_t *pDestData = (uint8_t *)malloc(DataSizeOut);
+	if(!pDestData)
+	{
+		log_error("webp", "failed to allocate output buffer for '%s'", pContextName);
+		WebPFree(pDecodedData);
+		return false;
+	}
+
+	mem_copy(pDestData, pDecodedData, DataSizeOut);
+	WebPFree(pDecodedData);
+
+	// Fill image info
+	Image.m_Width = Width;
+	Image.m_Height = Height;
+	Image.m_Format = CImageInfo::FORMAT_RGBA;
+	Image.m_pData = pDestData;
+
+	return true;
+}
+
+bool CImageLoader::LoadWebp(IOHANDLE File, const char *pFilename, CImageInfo &Image)
+{
+	if(!File)
+	{
+		log_error("webp", "failed to open file for reading. filename='%s'", pFilename);
+		return false;
+	}
+
+	void *pFileData;
+	unsigned FileDataSize;
+	const bool ReadSuccess = io_read_all(File, &pFileData, &FileDataSize);
+	io_close(File);
+	if(!ReadSuccess)
+	{
+		log_error("webp", "failed to read file. filename='%s'", pFilename);
+		return false;
+	}
+
+	CByteBufferReader ImageReader(static_cast<const uint8_t *>(pFileData), FileDataSize);
+
+	const bool LoadResult = CImageLoader::LoadWebp(ImageReader, pFilename, Image);
+	free(pFileData);
+	if(!LoadResult)
+	{
+		log_error("webp", "failed to load image from file. filename='%s'", pFilename);
+		return false;
+	}
+
+	return true;
+}
+
+bool CImageLoader::LoadPng(const void *pData, size_t Size, const char *pContextName, CImageInfo &Image)
+{
+	CByteBufferReader Reader(static_cast<const uint8_t *>(pData), Size);
+	int PngliteIncompatible = 0;
+	return LoadPng(Reader, pContextName, Image, PngliteIncompatible);
+}
+
+bool CImageLoader::LoadWebp(const void *pData, size_t Size, const char *pContextName, CImageInfo &Image)
+{
+	CByteBufferReader Reader(static_cast<const uint8_t *>(pData), Size);
+	return LoadWebp(Reader, pContextName, Image);
 }
