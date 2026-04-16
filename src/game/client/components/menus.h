@@ -86,11 +86,14 @@ private:
 
 	// menus_settings_assets.cpp
 public:
+	class CAssetDecodeJob;
+
 	struct SCustomItem
 	{
 		IGraphics::CTextureHandle m_RenderTexture;
 
 		char m_aName[50];
+		std::shared_ptr<CAssetDecodeJob> m_pDecodeJob;
 
 		bool operator<(const SCustomItem &Other) const { return str_comp(m_aName, Other.m_aName) < 0; }
 	};
@@ -768,6 +771,7 @@ protected:
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
+	void PrewarmSettingsPages();
 	void RenderSettingsCustom(CUIRect MainView);
 
 	// found in menus_settings_controls.cpp
@@ -1051,6 +1055,7 @@ private:
 	void RenderSettingsTClientConfigs(CUIRect MainView);
 	void RenderSettingsTClientSidebar(CUIRect MainView);
 	void RenderSettingsQiMeng(CUIRect MainView);
+	void PrewarmTClientAndQiMengPages();
 	void RenderTeeCute(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, bool CuteEyes, float Alpha = 1.0f);
 
 	const CWarType *m_pRemoveWarType = nullptr;

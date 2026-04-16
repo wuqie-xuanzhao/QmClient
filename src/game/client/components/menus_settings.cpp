@@ -414,28 +414,38 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 void CMenus::RenderSettingsTee(CUIRect MainView)
 {
-	CUIRect TabBar, PlayerTab, DummyTab, ChangeInfo;
+	static int s_TeeSubTab = 0; // 0=Player, 1=Dummy, 2=Profiles
+	CUIRect TabBar, PlayerTab, DummyTab, ProfilesTab, ChangeInfo;
 	static bool s_TeeTabTransitionInitialized = false;
 	static bool s_PrevTeeDummy = false;
 	static float s_TeeTabTransitionDirection = 0.0f;
 	const uint64_t TeeTabSwitchNode = UiAnimNodeKey("settings_tee_tab_switch");
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
 	TabBar.VSplitMid(&TabBar, &ChangeInfo, 20.f);
-	TabBar.VSplitMid(&PlayerTab, &DummyTab);
+	TabBar.VSplitLeft(TabBar.w / 3.0f, &PlayerTab, &TabBar);
+	TabBar.VSplitLeft(TabBar.w / 3.0f, &DummyTab, &ProfilesTab);
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
 
 	static CButtonContainer s_PlayerTabButton;
-	if(DoButton_MenuTab(&s_PlayerTabButton, Localize("Player"), !m_Dummy, &PlayerTab, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f))
+	if(DoButton_MenuTab(&s_PlayerTabButton, Localize("Player"), s_TeeSubTab == 0, &PlayerTab, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f))
 	{
+		s_TeeSubTab = 0;
 		m_Dummy = false;
 		m_SkinListScrollToSelected = true;
 	}
 
 	static CButtonContainer s_DummyTabButton;
-	if(DoButton_MenuTab(&s_DummyTabButton, Localize("Dummy"), m_Dummy, &DummyTab, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
+	if(DoButton_MenuTab(&s_DummyTabButton, Localize("Dummy"), s_TeeSubTab == 1, &DummyTab, IGraphics::CORNER_NONE, nullptr, nullptr, nullptr, nullptr, 4.0f))
 	{
+		s_TeeSubTab = 1;
 		m_Dummy = true;
 		m_SkinListScrollToSelected = true;
+	}
+
+	static CButtonContainer s_ProfilesTabButton;
+	if(DoButton_MenuTab(&s_ProfilesTabButton, Localize("Profiles"), s_TeeSubTab == 2, &ProfilesTab, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
+	{
+		s_TeeSubTab = 2;
 	}
 
 	if(!s_TeeTabTransitionInitialized)
@@ -455,7 +465,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	float TransitionOffset = 0.0f;
 	bool TransitionActive = TransitionStrength > 0.0f && s_TeeTabTransitionDirection != 0.0f;
 
-	if(Client()->State() == IClient::STATE_ONLINE &&
+	if(s_TeeSubTab != 2 && Client()->State() == IClient::STATE_ONLINE &&
 		GameClient()->m_aNextChangeInfo[m_Dummy] > Client()->GameTick(m_Dummy))
 	{
 		char aChangeInfo[128], aTimeLeft[32];
@@ -471,6 +481,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		str_format(aStats, sizeof(aStats), "unloaded: %" PRIzu ", pending: %" PRIzu ", loading: %" PRIzu ",\nloaded: %" PRIzu ", error: %" PRIzu ", notfound: %" PRIzu,
 			Stats.m_NumUnloaded, Stats.m_NumPending, Stats.m_NumLoading, Stats.m_NumLoaded, Stats.m_NumError, Stats.m_NumNotFound);
 		Ui()->DoLabel(&ChangeInfo, aStats, 9.0f, TEXTALIGN_MR);
+	}
+
+	// Profiles 子标签页
+	if(s_TeeSubTab == 2)
+	{
+		RenderSettingsTClientProfiles(MainView);
+		return;
 	}
 
 	char *pSkinName;
@@ -2090,29 +2107,36 @@ void CMenus::RenderSettings(CUIRect MainView)
 	TabBar.HSplitTop(50.0f, &Button, &TabBar);
 	Button.Draw(ms_ColorTabbarActive, IGraphics::CORNER_BR, 10.0f);
 
-	const char *apTabs[SETTINGS_LENGTH] = {
-		Localize("Language"),
-		Localize("General"),
-		Localize("Player"),
-		Client()->IsSixup() ? "Tee 0.7" : Localize("Tee"),
-		Localize("Appearance"),
-		Localize("Controls"),
-		Localize("Graphics"),
-		Localize("Sound"),
-		Localize("DDNet"),
-		Localize("Assets"),
-		TCLocalize("TClient"),
-		TCLocalize("栖梦"),
-		Localize("Profiles"),
-		Localize("Configs")};
+	static const char *s_apTabs[SETTINGS_LENGTH] = {};
+	static char s_aTabsLanguageFile[IO_MAX_PATH_LENGTH] = {};
+	if(str_comp(s_aTabsLanguageFile, g_Config.m_ClLanguagefile) != 0)
+	{
+		str_copy(s_aTabsLanguageFile, g_Config.m_ClLanguagefile, sizeof(s_aTabsLanguageFile));
+		s_apTabs[SETTINGS_LANGUAGE] = Localize("Language");
+		s_apTabs[SETTINGS_GENERAL] = Localize("General");
+		s_apTabs[SETTINGS_PLAYER] = Localize("Player");
+		s_apTabs[SETTINGS_TEE] = Client()->IsSixup() ? "Tee 0.7" : Localize("Tee");
+		s_apTabs[SETTINGS_APPEARANCE] = Localize("Appearance");
+		s_apTabs[SETTINGS_CONTROLS] = Localize("Controls");
+		s_apTabs[SETTINGS_GRAPHICS] = Localize("Graphics");
+		s_apTabs[SETTINGS_SOUND] = Localize("Sound");
+		s_apTabs[SETTINGS_DDNET] = Localize("DDNet");
+		s_apTabs[SETTINGS_ASSETS] = Localize("Assets");
+		s_apTabs[SETTINGS_TCLIENT] = TCLocalize("TClient");
+		s_apTabs[SETTINGS_QIMENG] = TCLocalize("栖梦");
+		s_apTabs[SETTINGS_PROFILES] = Localize("Profiles");
+		s_apTabs[SETTINGS_CONFIGS] = Localize("Configs");
+	}
 
 	static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 
 	for(int i = 0; i < SETTINGS_LENGTH; i++)
 	{
+		if(i == SETTINGS_PROFILES)
+			continue; // Profiles 已合并到 Tee 页面
 		TabBar.HSplitTop(10.0f, nullptr, &TabBar);
 		TabBar.HSplitTop(26.0f, &Button, &TabBar);
-		if(DoButton_MenuTab(&s_aTabButtons[i], apTabs[i], g_Config.m_UiSettingsPage == i, &Button, IGraphics::CORNER_R, &m_aAnimatorsSettingsTab[i]))
+		if(DoButton_MenuTab(&s_aTabButtons[i], s_apTabs[i], g_Config.m_UiSettingsPage == i, &Button, IGraphics::CORNER_R, &m_aAnimatorsSettingsTab[i]))
 			g_Config.m_UiSettingsPage = i;
 	}
 
@@ -2521,19 +2545,24 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
 	const float TabWidth = TabBar.w / NUMBER_OF_APPEARANCE_TABS;
 	static CButtonContainer s_aPageTabs[NUMBER_OF_APPEARANCE_TABS] = {};
-	const char *apTabNames[NUMBER_OF_APPEARANCE_TABS] = {
-		Localize("HUD"),
-		Localize("Chat"),
-		Localize("Name Plate"),
-		Localize("Hook Collisions"),
-		Localize("Info Messages"),
-		Localize("Laser")};
+	static const char *s_apAppearanceTabNames[NUMBER_OF_APPEARANCE_TABS] = {};
+	static char s_aAppearanceLanguageFile[IO_MAX_PATH_LENGTH] = {};
+	if(str_comp(s_aAppearanceLanguageFile, g_Config.m_ClLanguagefile) != 0)
+	{
+		str_copy(s_aAppearanceLanguageFile, g_Config.m_ClLanguagefile, sizeof(s_aAppearanceLanguageFile));
+		s_apAppearanceTabNames[APPEARANCE_TAB_HUD] = Localize("HUD");
+		s_apAppearanceTabNames[APPEARANCE_TAB_CHAT] = Localize("Chat");
+		s_apAppearanceTabNames[APPEARANCE_TAB_NAME_PLATE] = Localize("Name Plate");
+		s_apAppearanceTabNames[APPEARANCE_TAB_HOOK_COLLISION] = Localize("Hook Collisions");
+		s_apAppearanceTabNames[APPEARANCE_TAB_INFO_MESSAGES] = Localize("Info Messages");
+		s_apAppearanceTabNames[APPEARANCE_TAB_LASER] = Localize("Laser");
+	}
 
 	for(int Tab = APPEARANCE_TAB_HUD; Tab < NUMBER_OF_APPEARANCE_TABS; ++Tab)
 	{
 		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
 		const int Corners = Tab == APPEARANCE_TAB_HUD ? IGraphics::CORNER_L : (Tab == NUMBER_OF_APPEARANCE_TABS - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
-		if(DoButton_MenuTab(&s_aPageTabs[Tab], apTabNames[Tab], s_CurTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		if(DoButton_MenuTab(&s_aPageTabs[Tab], s_apAppearanceTabNames[Tab], s_CurTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
 		{
 			s_CurTab = Tab;
 		}

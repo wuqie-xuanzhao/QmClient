@@ -340,6 +340,9 @@ Score limit
 Scoreboard
 == 计分板
 
+Scoreboard cursor
+== 计分板光标
+
 Screenshot
 == 截图
 
