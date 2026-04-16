@@ -1,4 +1,4 @@
-﻿#include <base/log.h>
+#include <base/log.h>
 #include <base/math.h>
 #include <base/str.h>
 #include <base/system.h>
@@ -8,6 +8,7 @@
 #include <engine/image.h>
 #include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
+#include <engine/shared/config_tags.h>
 #include <engine/shared/linereader.h>
 #include <engine/shared/localization.h>
 #include <engine/shared/protocol7.h>
@@ -915,7 +916,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	Button.VSplitLeft(150.0f, &ModeLabel, &ModeButtons);
 	Ui()->DoLabel(&ModeLabel, TCLocalize("Mode", QMCLIENT_LOCALIZATION_CONTEXT), FontSize, TEXTALIGN_ML);
 	static CButtonContainer s_FastInputModeFast, s_FastInputModeDeltaInput, s_FastInputModeGammaInput;
-	const int OldMode = g_Config.m_BcFastInputMode;
+	const int OldMode = g_Config.m_QmFastInputMode;
 	CUIRect Left, RightRest, Middle, Right;
 	ModeButtons.VSplitLeft((ModeButtons.w - 4.0f) / 3.0f, &Left, &RightRest);
 	RightRest.VSplitLeft(2.0f, nullptr, &RightRest);
@@ -925,48 +926,48 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	Middle.HMargin(2.0f, &Middle);
 	Right.HMargin(2.0f, &Right);
 
-	if(DoButtonLineSize_Menu(&s_FastInputModeFast, Localize("Fast input"), g_Config.m_BcFastInputMode == 0, &Left, LineSize, false, 0, IGraphics::CORNER_L, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		g_Config.m_BcFastInputMode = 0;
-	if(DoButtonLineSize_Menu(&s_FastInputModeDeltaInput, Localize("Delta input"), g_Config.m_BcFastInputMode == 1, &Middle, LineSize, false, 0, IGraphics::CORNER_NONE, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		g_Config.m_BcFastInputMode = 1;
-	if(DoButtonLineSize_Menu(&s_FastInputModeGammaInput, Localize("Gamma input"), g_Config.m_BcFastInputMode == 2, &Right, LineSize, false, 0, IGraphics::CORNER_R, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		g_Config.m_BcFastInputMode = 2;
+	if(DoButtonLineSize_Menu(&s_FastInputModeFast, Localize("Fast input"), g_Config.m_QmFastInputMode == 0, &Left, LineSize, false, 0, IGraphics::CORNER_L, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		g_Config.m_QmFastInputMode = 0;
+	if(DoButtonLineSize_Menu(&s_FastInputModeDeltaInput, Localize("Delta input"), g_Config.m_QmFastInputMode == 1, &Middle, LineSize, false, 0, IGraphics::CORNER_NONE, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		g_Config.m_QmFastInputMode = 1;
+	if(DoButtonLineSize_Menu(&s_FastInputModeGammaInput, Localize("Gamma input"), g_Config.m_QmFastInputMode == 2, &Right, LineSize, false, 0, IGraphics::CORNER_R, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		g_Config.m_QmFastInputMode = 2;
 
-	if(g_Config.m_BcFastInputMode != OldMode)
+	if(g_Config.m_QmFastInputMode != OldMode)
 	{
-		if(g_Config.m_BcFastInputMode == 1 && g_Config.m_BcFastInputDeltaInput <= 0)
+		if(g_Config.m_QmFastInputMode == 1 && g_Config.m_QmFastInputDeltaInput <= 0)
 		{
-			if(OldMode == 2 && g_Config.m_BcFastInputGammaInput > 0)
-				g_Config.m_BcFastInputDeltaInput = BcFastInputGammaUiToEffectiveAmount(g_Config.m_BcFastInputGammaInput);
+			if(OldMode == 2 && g_Config.m_QmFastInputGammaInput > 0)
+				g_Config.m_QmFastInputDeltaInput = BcFastInputGammaUiToEffectiveAmount(g_Config.m_QmFastInputGammaInput);
 			else if(g_Config.m_TcFastInputAmount > 0)
-				g_Config.m_BcFastInputDeltaInput = std::clamp(g_Config.m_TcFastInputAmount * 5, 0, 500);
+				g_Config.m_QmFastInputDeltaInput = std::clamp(g_Config.m_TcFastInputAmount * 5, 0, 500);
 		}
-		else if(g_Config.m_BcFastInputMode == 2 && g_Config.m_BcFastInputGammaInput <= 0)
+		else if(g_Config.m_QmFastInputMode == 2 && g_Config.m_QmFastInputGammaInput <= 0)
 		{
-			if(OldMode == 1 && g_Config.m_BcFastInputDeltaInput > 0)
-				g_Config.m_BcFastInputGammaInput = BcFastInputGammaEffectiveToUiAmount(g_Config.m_BcFastInputDeltaInput);
+			if(OldMode == 1 && g_Config.m_QmFastInputDeltaInput > 0)
+				g_Config.m_QmFastInputGammaInput = BcFastInputGammaEffectiveToUiAmount(g_Config.m_QmFastInputDeltaInput);
 			else if(g_Config.m_TcFastInputAmount > 0)
-				g_Config.m_BcFastInputGammaInput = BcFastInputGammaEffectiveToUiAmount(g_Config.m_TcFastInputAmount * 5);
+				g_Config.m_QmFastInputGammaInput = BcFastInputGammaEffectiveToUiAmount(g_Config.m_TcFastInputAmount * 5);
 		}
-		else if(g_Config.m_BcFastInputMode == 0 && g_Config.m_TcFastInputAmount <= 0)
+		else if(g_Config.m_QmFastInputMode == 0 && g_Config.m_TcFastInputAmount <= 0)
 		{
-			const int SourceAmount = OldMode == 2 ? BcFastInputGammaUiToEffectiveAmount(g_Config.m_BcFastInputGammaInput) : g_Config.m_BcFastInputDeltaInput;
+			const int SourceAmount = OldMode == 2 ? BcFastInputGammaUiToEffectiveAmount(g_Config.m_QmFastInputGammaInput) : g_Config.m_QmFastInputDeltaInput;
 			if(SourceAmount > 0)
 				g_Config.m_TcFastInputAmount = std::clamp((SourceAmount + 2) / 5, 0, 40);
 		}
 	}
 
 	Column.HSplitTop(LineSize, &Button, &Column);
-	if(g_Config.m_BcFastInputMode == 0)
+	if(g_Config.m_QmFastInputMode == 0)
 	{
 		DoSliderWithScaledValue(&g_Config.m_TcFastInputAmount, &g_Config.m_TcFastInputAmount, &Button, TCLocalize("Amount"), 1, 100, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
 	}
 	else
 	{
-		const bool GammaMode = g_Config.m_BcFastInputMode == 2;
+		const bool GammaMode = g_Config.m_QmFastInputMode == 2;
 		const int Min = 0;
 		const int Max = GammaMode ? BC_FAST_INPUT_GAMMA_UI_MAX : 500;
-		int *pAmountValue = GammaMode ? &g_Config.m_BcFastInputGammaInput : &g_Config.m_BcFastInputDeltaInput;
+		int *pAmountValue = GammaMode ? &g_Config.m_QmFastInputGammaInput : &g_Config.m_QmFastInputDeltaInput;
 		int Value = std::clamp(*pAmountValue, Min, Max);
 
 		char aBuf[256];
@@ -985,17 +986,17 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView)
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
 	if(g_Config.m_TcFastInput)
 	{
-		if(g_Config.m_BcFastInputMode == 0)
+		if(g_Config.m_QmFastInputMode == 0)
 			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInputOthers, Localize("Fast input others"), &g_Config.m_TcFastInputOthers, &Column, LineSize);
-		else if(g_Config.m_BcFastInputMode == 1)
-			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcDeltaInputOthers, Localize("Delta input others"), &g_Config.m_BcDeltaInputOthers, &Column, LineSize);
+		else if(g_Config.m_QmFastInputMode == 1)
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmDeltaInputOthers, Localize("Delta input others"), &g_Config.m_QmDeltaInputOthers, &Column, LineSize);
 		else
-			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcGammaInputOthers, Localize("Gamma input others"), &g_Config.m_BcGammaInputOthers, &Column, LineSize);
+			DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGammaInputOthers, Localize("Gamma input others"), &g_Config.m_QmGammaInputOthers, &Column, LineSize);
 	}
 	else
 		Column.HSplitTop(LineSize, nullptr, &Column);
 
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_BcFastInputAutoMargin, Localize("Auto margin"), &g_Config.m_BcFastInputAutoMargin, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmFastInputAutoMargin, Localize("Auto margin"), &g_Config.m_QmFastInputAutoMargin, &Column, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClSubTickAiming, TCLocalize("Sub-Tick aiming"), &g_Config.m_ClSubTickAiming, &Column, LineSize);
 	// A little extra spacing because these are multi line
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
@@ -2961,20 +2962,20 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 
 	size_t ChangesCount = 0;
 
-	CUIRect ApplyBar, TopBar, ListArea;
+	CUIRect ApplyBar, FilterBar, TagsBar, ListArea;
 	MainView.VSplitRight(5.0f, &MainView, nullptr); // padding for scrollbar
 	MainView.VSplitLeft(5.0f, nullptr, &MainView);
 	MainView.HSplitTop(LineSize + MarginSmall, &ApplyBar, &MainView);
-	MainView.HSplitTop(LineSize + MarginSmall, &TopBar, &ListArea);
+	MainView.HSplitTop(LineSize + MarginSmall, &FilterBar, &MainView);
+	MainView.HSplitTop((LineSize + MarginSmall) * 2, &TagsBar, &ListArea); // Two rows for tags
 	ListArea.HSplitTop(MarginSmall, nullptr, &ListArea);
 
 	static CLineInputBuffered<128> s_SearchInput;
 
 	ChangesCount = s_StagedInts.size() + s_StagedStrs.size() + s_StagedCols.size();
+	// Apply Bar - 应用/清除按钮 + 更改计数
 	{
-		CUIRect LeftHalf, RightHalf;
-		ApplyBar.VSplitMid(&LeftHalf, &RightHalf, 0.0f);
-		CUIRect Row = LeftHalf;
+		CUIRect Row = ApplyBar;
 		Row.HMargin(MarginSmall, &Row);
 		Row.h = LineSize;
 		Row.y = ApplyBar.y + (ApplyBar.h - LineSize) / 2.0f;
@@ -3027,42 +3028,138 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), Localize("Changes: %d"), (int)ChangesCount);
 		Ui()->DoLabel(&Counter, aBuf, FontSize, TEXTALIGN_ML);
-
-		CUIRect RightRow = RightHalf;
-		RightRow.h = LineSize;
-		RightRow.y = ApplyBar.y + (ApplyBar.h - LineSize) / 2.0f;
-		const float RightInset = 24.0f;
-		RightRow.VSplitLeft(RightInset, nullptr, &RightRow);
-		CUIRect TopCol1, TopCol2;
-		RightRow.VSplitMid(&TopCol1, &TopCol2, 0.0f);
-		if(DoButton_CheckBox(&g_Config.m_TcUiShowTClient, Localize("QmClient"), g_Config.m_TcUiShowTClient, &TopCol1))
-			g_Config.m_TcUiShowTClient ^= 1;
-		if(DoButton_CheckBox(&g_Config.m_TcUiCompactList, Localize("Compact List"), g_Config.m_TcUiCompactList, &TopCol2))
-			g_Config.m_TcUiCompactList ^= 1;
 	}
 
-	const float SearchLabelW = 60.0f;
+	// Filter Bar - 搜索 + 所有筛选条件整合在一行
+	const float SearchLabelW = 50.0f;
 	{
-		CUIRect SearchRow = TopBar;
-		SearchRow.h = LineSize;
-		SearchRow.y = TopBar.y + (TopBar.h - LineSize) / 2.0f;
+		CUIRect Row = FilterBar;
+		Row.HMargin(MarginSmall, &Row);
+		Row.h = LineSize;
+		Row.y = FilterBar.y + (FilterBar.h - LineSize) / 2.0f;
 
-		CUIRect LeftHalf, RightHalf;
-		SearchRow.VSplitMid(&LeftHalf, &RightHalf, 0.0f);
-
+		// 搜索框
 		CUIRect SearchLabel, SearchEdit;
-		LeftHalf.VSplitLeft(SearchLabelW, &SearchLabel, &SearchEdit);
+		Row.VSplitLeft(SearchLabelW, &SearchLabel, &Row);
+		Row.VSplitLeft(250.0f, &SearchEdit, &Row);
+		Row.VSplitLeft(MarginSmall, nullptr, &Row);
 		Ui()->DoLabel(&SearchLabel, Localize("Search"), FontSize, TEXTALIGN_ML);
 		Ui()->DoClearableEditBox(&s_SearchInput, &SearchEdit, EditBoxFontSize);
 
-		CUIRect RightCol1, RightCol2;
-		const float RightInset2 = 24.0f;
-		RightHalf.VSplitLeft(RightInset2, nullptr, &RightHalf);
-		RightHalf.VSplitMid(&RightCol1, &RightCol2, 0.0f);
-		if(DoButton_CheckBox(&g_Config.m_TcUiShowDDNet, Localize("DDNet"), g_Config.m_TcUiShowDDNet, &RightCol1))
+		// 分隔
+		Row.VSplitLeft(MarginSmall, nullptr, &Row);
+
+		// Domain 筛选 - DDNet / TClient / Qimeng
+		const float DomainWidth = 85.0f;
+		CUIRect DomainDDNet, DomainTClient, DomainQimeng;
+		Row.VSplitLeft(DomainWidth, &DomainDDNet, &Row);
+		Row.VSplitLeft(MarginSmall, nullptr, &Row);
+		Row.VSplitLeft(DomainWidth, &DomainTClient, &Row);
+		Row.VSplitLeft(MarginSmall, nullptr, &Row);
+		Row.VSplitLeft(DomainWidth, &DomainQimeng, &Row);
+		Row.VSplitLeft(Margin, nullptr, &Row);
+
+		if(DoButton_CheckBox(&g_Config.m_TcUiShowDDNet, Localize("DDNet"), g_Config.m_TcUiShowDDNet, &DomainDDNet))
 			g_Config.m_TcUiShowDDNet ^= 1;
-		if(DoButton_CheckBox(&g_Config.m_TcUiOnlyModified, Localize("Only modified"), g_Config.m_TcUiOnlyModified, &RightCol2))
+		if(DoButton_CheckBox(&g_Config.m_TcUiShowTClient, Localize("TClient"), g_Config.m_TcUiShowTClient, &DomainTClient))
+			g_Config.m_TcUiShowTClient ^= 1;
+		if(DoButton_CheckBox(&g_Config.m_TcUiShowQimeng, TCLocalize("QmClient", QMCLIENT_LOCALIZATION_CONTEXT), g_Config.m_TcUiShowQimeng, &DomainQimeng))
+			g_Config.m_TcUiShowQimeng ^= 1;
+
+		// 其他筛选 - 紧凑列表 / 仅显示已修改
+		const float FilterWidth = 90.0f;
+		CUIRect FilterCompact, FilterModified;
+		Row.VSplitLeft(FilterWidth, &FilterCompact, &Row);
+		Row.VSplitLeft(MarginSmall, nullptr, &Row);
+		Row.VSplitLeft(FilterWidth, &FilterModified, &Row);
+
+		if(DoButton_CheckBox(&g_Config.m_TcUiCompactList, Localize("Compact"), g_Config.m_TcUiCompactList, &FilterCompact))
+			g_Config.m_TcUiCompactList ^= 1;
+		if(DoButton_CheckBox(&g_Config.m_TcUiOnlyModified, Localize("Modified"), g_Config.m_TcUiOnlyModified, &FilterModified))
 			g_Config.m_TcUiOnlyModified ^= 1;
+	}
+
+	// Tags Filter Bar - Row 1
+	{
+		CUIRect TagsRow = TagsBar;
+		TagsRow.h = LineSize;
+		TagsRow.y = TagsBar.y;
+
+		const float TagLabelWidth = 40.0f;
+		CUIRect TagsLabel, TagsArea;
+		TagsRow.VSplitLeft(TagLabelWidth, &TagsLabel, &TagsArea);
+		Ui()->DoLabel(&TagsLabel, Localize("Tags"), FontSize, TEXTALIGN_ML);
+
+		// Calculate tag button width - fit 5 tags per row
+		const float TagMargin = 5.0f;
+		const int TagsPerRow = 5;
+		float TagBtnWidth = (TagsArea.w - TagMargin * (TagsPerRow - 1)) / TagsPerRow;
+
+		CUIRect TagBtn;
+		TagsArea.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagVisual, Localize("Visual"), g_Config.m_TcUiTagVisual, &TagBtn))
+			g_Config.m_TcUiTagVisual ^= 1;
+
+		TagsArea.VSplitLeft(TagMargin, nullptr, &TagsArea);
+		TagsArea.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagHud, Localize("HUD"), g_Config.m_TcUiTagHud, &TagBtn))
+			g_Config.m_TcUiTagHud ^= 1;
+
+		TagsArea.VSplitLeft(TagMargin, nullptr, &TagsArea);
+		TagsArea.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagInput, Localize("Input"), g_Config.m_TcUiTagInput, &TagBtn))
+			g_Config.m_TcUiTagInput ^= 1;
+
+		TagsArea.VSplitLeft(TagMargin, nullptr, &TagsArea);
+		TagsArea.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagChat, Localize("Chat"), g_Config.m_TcUiTagChat, &TagBtn))
+			g_Config.m_TcUiTagChat ^= 1;
+
+		TagsArea.VSplitLeft(TagMargin, nullptr, &TagsArea);
+		TagsArea.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagAudio, Localize("Audio"), g_Config.m_TcUiTagAudio, &TagBtn))
+			g_Config.m_TcUiTagAudio ^= 1;
+	}
+
+	// Tags Filter Bar - Row 2 (Automation, Social, Camera, Gameplay, Misc)
+	{
+		CUIRect TagsRow2 = TagsBar;
+		TagsRow2.h = LineSize;
+		TagsRow2.y = TagsBar.y + LineSize + 2.0f;
+
+		const float TagLabelWidth = 40.0f;
+		CUIRect TagsLabel2, TagsArea2;
+		TagsRow2.VSplitLeft(TagLabelWidth, &TagsLabel2, &TagsArea2);
+		// Leave label empty for second row alignment
+
+		const float TagMargin = 5.0f;
+		const int TagsPerRow = 5;
+		float TagBtnWidth = (TagsArea2.w - TagMargin * (TagsPerRow - 1)) / TagsPerRow;
+
+		CUIRect TagBtn;
+		TagsArea2.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea2);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagAutomation, Localize("Auto"), g_Config.m_TcUiTagAutomation, &TagBtn))
+			g_Config.m_TcUiTagAutomation ^= 1;
+
+		TagsArea2.VSplitLeft(TagMargin, nullptr, &TagsArea2);
+		TagsArea2.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea2);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagSocial, Localize("Social"), g_Config.m_TcUiTagSocial, &TagBtn))
+			g_Config.m_TcUiTagSocial ^= 1;
+
+		TagsArea2.VSplitLeft(TagMargin, nullptr, &TagsArea2);
+		TagsArea2.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea2);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagCamera, Localize("Camera"), g_Config.m_TcUiTagCamera, &TagBtn))
+			g_Config.m_TcUiTagCamera ^= 1;
+
+		TagsArea2.VSplitLeft(TagMargin, nullptr, &TagsArea2);
+		TagsArea2.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea2);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagGameplay, Localize("Gameplay"), g_Config.m_TcUiTagGameplay, &TagBtn))
+			g_Config.m_TcUiTagGameplay ^= 1;
+
+		TagsArea2.VSplitLeft(TagMargin, nullptr, &TagsArea2);
+		TagsArea2.VSplitLeft(TagBtnWidth, &TagBtn, &TagsArea2);
+		if(DoButton_CheckBox(&g_Config.m_TcUiTagMisc, Localize("Misc"), g_Config.m_TcUiTagMisc, &TagBtn))
+			g_Config.m_TcUiTagMisc ^= 1;
 	}
 
 	const int FlagMask = CFGFLAG_CLIENT;
@@ -3086,9 +3183,35 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 			return g_Config.m_TcUiShowDDNet != 0;
 		if(Domain == ConfigDomain::TCLIENT)
 			return g_Config.m_TcUiShowTClient != 0;
-		// only show DDNet and TClient domains
+		if(Domain == ConfigDomain::QIMENG)
+			return g_Config.m_TcUiShowQimeng != 0;
+		// only show DDNet, TClient and Qimeng domains
 		return false;
 	};
+
+	// Tags filter check
+	auto TagEnabled = [&](EConfigTag Tag) -> bool {
+		switch(Tag)
+		{
+		case EConfigTag::VISUAL: return g_Config.m_TcUiTagVisual != 0;
+		case EConfigTag::HUD: return g_Config.m_TcUiTagHud != 0;
+		case EConfigTag::INPUT: return g_Config.m_TcUiTagInput != 0;
+		case EConfigTag::CHAT: return g_Config.m_TcUiTagChat != 0;
+		case EConfigTag::AUDIO: return g_Config.m_TcUiTagAudio != 0;
+		case EConfigTag::AUTOMATION: return g_Config.m_TcUiTagAutomation != 0;
+		case EConfigTag::SOCIAL: return g_Config.m_TcUiTagSocial != 0;
+		case EConfigTag::CAMERA: return g_Config.m_TcUiTagCamera != 0;
+		case EConfigTag::GAMEPLAY: return g_Config.m_TcUiTagGameplay != 0;
+		case EConfigTag::MISC: return g_Config.m_TcUiTagMisc != 0;
+		default: return true;
+		}
+	};
+
+	// Check if any tag filter is enabled
+	bool AnyTagEnabled = g_Config.m_TcUiTagVisual || g_Config.m_TcUiTagHud || g_Config.m_TcUiTagInput ||
+						 g_Config.m_TcUiTagChat || g_Config.m_TcUiTagAudio || g_Config.m_TcUiTagAutomation ||
+						 g_Config.m_TcUiTagSocial || g_Config.m_TcUiTagCamera || g_Config.m_TcUiTagGameplay ||
+						 g_Config.m_TcUiTagMisc;
 
 	const char *pSearch = s_SearchInput.GetString();
 
@@ -3132,6 +3255,25 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 			if(!str_find_nocase(pName, pSearch) && !str_find_nocase(pHelp, pSearch))
 				continue;
 		}
+		// Tags filter
+		if(AnyTagEnabled)
+		{
+			std::vector<EConfigTag> vTags = ConfigTagsManager()->GetTagsForVariable(pVar->m_pScriptName);
+			bool HasEnabledTag = false;
+			for(EConfigTag Tag : vTags)
+			{
+				if(TagEnabled(Tag))
+				{
+					HasEnabledTag = true;
+					break;
+				}
+			}
+			// If variable has no tags but Misc is enabled, show it
+			if(vTags.empty() && g_Config.m_TcUiTagMisc)
+				HasEnabledTag = true;
+			if(!HasEnabledTag)
+				continue;
+		}
 		vpFiltered.push_back(pVar);
 	}
 
@@ -3151,6 +3293,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		{
 		case ConfigDomain::DDNET: return "DDNet";
 		case ConfigDomain::TCLIENT: return "TClient";
+		case ConfigDomain::QIMENG: return "Qimeng";
 		default: return "Other";
 		}
 	};
@@ -7228,4 +7371,3 @@ void CMenus::RenderSettingsQiMeng(CUIRect MainView)
 	s_ScrollRegion.AddRect(ScrollRegion);
 	s_ScrollRegion.End();
 }
-
