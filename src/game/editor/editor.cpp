@@ -2967,7 +2967,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 bool CEditor::ReplaceImage(const char *pFilename, int StorageType, bool CheckDuplicate)
 {
 	// check if we have that image already
-	char aBuf[128];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	IStorage::StripPathAndExtension(pFilename, aBuf, sizeof(aBuf));
 	if(CheckDuplicate)
 	{
@@ -3026,7 +3026,7 @@ bool CEditor::AddImage(const char *pFilename, int StorageType, void *pUser)
 	CEditor *pEditor = (CEditor *)pUser;
 
 	// check if we have that image already
-	char aBuf[128];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	IStorage::StripPathAndExtension(pFilename, aBuf, sizeof(aBuf));
 	for(const auto &pImage : pEditor->Map()->m_vpImages)
 	{
@@ -3083,7 +3083,7 @@ bool CEditor::AddSound(const char *pFilename, int StorageType, void *pUser)
 	CEditor *pEditor = (CEditor *)pUser;
 
 	// check if we have that sound already
-	char aBuf[128];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	IStorage::StripPathAndExtension(pFilename, aBuf, sizeof(aBuf));
 	for(const auto &pSound : pEditor->Map()->m_vpSounds)
 	{
@@ -3135,7 +3135,7 @@ bool CEditor::AddSound(const char *pFilename, int StorageType, void *pUser)
 bool CEditor::ReplaceSound(const char *pFilename, int StorageType, bool CheckDuplicate)
 {
 	// check if we have that sound already
-	char aBuf[128];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	IStorage::StripPathAndExtension(pFilename, aBuf, sizeof(aBuf));
 	if(CheckDuplicate)
 	{
