@@ -1146,6 +1146,12 @@ static int InitSearchList(std::vector<TName *> &vpSearchList, std::vector<TName>
 
 void CMenus::RenderSettingsCustom(CUIRect MainView)
 {
+	if(m_AssetsEditorState.m_Open)
+	{
+		RenderAssetsEditorScreen(MainView);
+		return;
+	}
+
 	CUIRect TabBar, CustomList, QuickSearch, DirectoryButton, ReloadButton, WorkshopHudView;
 	static bool s_AssetsTransitionInitialized = false;
 	static int s_PrevAssetsTab = ASSETS_TAB_ENTITIES;
@@ -2333,31 +2339,56 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		}
 	}
 
-	// Quick search - 底部按钮栏布局（从左到右：搜索框 | 间距 | 实体层预览 | 剩余空间 | 资源目录 | 间距 | 刷新）
-	MainView.HSplitBottom(20.0f, &MainView, &QuickSearch); // 底部栏高度20px
-	QuickSearch.VSplitLeft(250.0f, &QuickSearch, &DirectoryButton); // 搜索框250px
+	// Quick search - 底部按钮栏布局
+	MainView.HSplitBottom(ms_ButtonHeight, &MainView, &QuickSearch);
+	CUIRect AssetsEditorButton;
+	QuickSearch.VSplitLeft(220.0f, &QuickSearch, &DirectoryButton);
+	QuickSearch.HSplitTop(5.0f, nullptr, &QuickSearch);
 	if(Ui()->DoEditBox_Search(&s_aFilterInputs[s_CurCustomTab], &QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
 	{
 		gs_aInitCustomList[s_CurCustomTab] = true;
 	}
 
-	// 从右往左切分：先切刷新，再切资源目录，剩余空间在中间
-	DirectoryButton.VSplitRight(25.0f, &DirectoryButton, &ReloadButton); // 刷新按钮25px
-	DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr); // 间距10px
+	// 从右往左切分按钮
+	DirectoryButton.HSplitTop(5.0f, nullptr, &DirectoryButton);
+	DirectoryButton.VSplitRight(175.0f, nullptr, &DirectoryButton);
+	DirectoryButton.VSplitRight(25.0f, &DirectoryButton, &ReloadButton);
+	DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr);
+	DirectoryButton.VSplitRight(110.0f, &DirectoryButton, &AssetsEditorButton);
+	DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr);
+	static CButtonContainer s_AssetsEditorButton;
+	if(DoButton_Menu(&s_AssetsEditorButton, Localize("Assets editor"), 0, &AssetsEditorButton))
+	{
+		int AssetsEditorType = ASSETS_EDITOR_TYPE_GAME;
+		if(s_CurCustomTab == ASSETS_TAB_ENTITIES)
+			AssetsEditorType = ASSETS_EDITOR_TYPE_ENTITIES;
+		else if(s_CurCustomTab == ASSETS_TAB_EMOTICONS)
+			AssetsEditorType = ASSETS_EDITOR_TYPE_EMOTICONS;
+		else if(s_CurCustomTab == ASSETS_TAB_PARTICLES)
+			AssetsEditorType = ASSETS_EDITOR_TYPE_PARTICLES;
+		else if(s_CurCustomTab == ASSETS_TAB_HUD)
+			AssetsEditorType = ASSETS_EDITOR_TYPE_HUD;
+		else if(s_CurCustomTab == ASSETS_TAB_EXTRAS)
+			AssetsEditorType = ASSETS_EDITOR_TYPE_EXTRAS;
+		AssetsEditorOpen(AssetsEditorType);
+		return;
+	}
 
 	CUIRect AssetsDirButton;
-	DirectoryButton.VSplitRight(100.0f, &DirectoryButton, &AssetsDirButton); // 资源目录100px（从右切）
+	DirectoryButton.VSplitRight(100.0f, &DirectoryButton, &AssetsDirButton);
 
-	CUIRect ToggleRect;
+	// Entity Preview 按钮（仅实体层标签页显示）
 	if(s_CurCustomTab == ASSETS_TAB_ENTITIES)
 	{
-		DirectoryButton.VSplitLeft(10.0f, nullptr, &DirectoryButton); // 间距10px
-		DirectoryButton.VSplitLeft(100.0f, &ToggleRect, &DirectoryButton); // 实体层预览100px（从左切）
+		CUIRect ToggleRect;
+		DirectoryButton.VSplitRight(10.0f, &DirectoryButton, nullptr);
+		DirectoryButton.VSplitRight(100.0f, &DirectoryButton, &ToggleRect);
 		static CButtonContainer s_EntityPreviewToggleId;
 		if(DoButton_Menu(&s_EntityPreviewToggleId, Localize("Entity Preview"), s_EntityGamePreview, &ToggleRect))
 			s_EntityGamePreview = !s_EntityGamePreview;
 		GameClient()->m_Tooltips.DoToolTip(&s_EntityPreviewToggleId, &ToggleRect, Localize("Toggle between game scene preview and raw texture"));
 	}
+
 	static CButtonContainer s_AssetsDirId;
 	if(DoButton_Menu(&s_AssetsDirId, Localize("Assets directory"), 0, &AssetsDirButton))
 	{
