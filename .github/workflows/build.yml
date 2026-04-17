@@ -35,6 +35,7 @@ jobs:
     timeout-minutes: 120
     env:
       BUILD_TYPE: ${{ github.event.inputs.build_type || 'Release' }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       fail-fast: false
       matrix:
@@ -143,7 +144,6 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives/
-            /var/lib/apt/lists/
           key: apt-linux-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install Linux dependencies
@@ -164,10 +164,13 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           export HOMEBREW_NO_AUTO_UPDATE=1
-          brew install \
-            cmake ninja pkg-config python \
-            freetype sdl2 libpng webp libogg opus opusfile sqlite wavpack ffmpeg
-          brew link --overwrite cmake ninja pkg-config python freetype sdl2 libpng webp libogg opus opusfile sqlite wavpack ffmpeg
+          for pkg in cmake ninja pkg-config python freetype sdl2 libpng webp libogg opus opusfile sqlite wavpack ffmpeg; do
+            if brew list --formula "$pkg" &>/dev/null; then
+              brew link --overwrite "$pkg" 2>/dev/null || true
+            else
+              brew install "$pkg"
+            fi
+          done
           python3 -m venv .venv-dmgbuild
           . .venv-dmgbuild/bin/activate
           python -m pip install --upgrade pip
@@ -376,6 +379,7 @@ jobs:
       ANDROID_PACKAGE_NAME: org.ddnet.client
       ANDROID_BUILD_DIR: build-android-release
       ANDROID_NDK_VERSION: "26.1.10909125"
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       # Debug keystore credentials - safe to commit as these are standard Android debug keys
       # For production releases, use GitHub Secrets for keystore credentials
       TW_KEY_NAME: /home/runner/.android/debug.keystore
@@ -444,7 +448,6 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives/
-            /var/lib/apt/lists/
           key: apt-android-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Cache Rust Android targets
@@ -472,7 +475,7 @@ jobs:
           rustup target add x86_64-linux-android
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Android SDK components
         run: |

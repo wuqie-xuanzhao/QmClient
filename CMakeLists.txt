@@ -3466,7 +3466,7 @@ if(TARGET_OS AND TARGET_BITS)
     else()
       set(CPACK_SYSTEM_NAME "win${TARGET_BITS}")
     endif()
-    set(CPACK_GENERATOR "ZIP;7Z")
+    set(CPACK_GENERATOR ZIP)
   elseif(TARGET_OS STREQUAL "linux")
     # Let compiler tell its arch
     # Both gcc and clang support -dumpmachine
@@ -3760,13 +3760,46 @@ foreach(ext zip tar.gz tar.xz)
   list(APPEND PACKAGE_TARGETS package_${EXT_SLUG})
 endforeach()
 
+if(TARGET_OS STREQUAL "windows")
+  set(_7Z_TMPDIR pack_${CPACK_PACKAGE_FILE_NAME}_7z/${CPACK_PACKAGE_FILE_NAME})
+  set(_7Z_COPY_FILE_COMMANDS)
+  set(_7Z_COPY_DIR_COMMANDS)
+  set(_7Z_COPY_TARGET_COMMANDS)
+  foreach(file ${CPACK_FILES})
+    list(APPEND _7Z_COPY_FILE_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/${file} ${_7Z_TMPDIR}/)
+  endforeach()
+  foreach(file ${CPACK_GEN_FILES})
+    list(APPEND _7Z_COPY_FILE_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/${file} ${_7Z_TMPDIR}/${file})
+  endforeach()
+  foreach(dir ${CPACK_DIRS})
+    list(APPEND _7Z_COPY_DIR_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/${dir} ${_7Z_TMPDIR}/${dir})
+  endforeach()
+  foreach(target ${CPACK_TARGETS})
+    list(APPEND _7Z_COPY_TARGET_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${target}> ${_7Z_TMPDIR}/)
+  endforeach()
+  add_custom_command(OUTPUT ${CPACK_PACKAGE_FILE_NAME}.7z
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${_7Z_TMPDIR}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${_7Z_TMPDIR}
+    ${_7Z_COPY_FILE_COMMANDS}
+    ${_7Z_COPY_DIR_COMMANDS}
+    ${_7Z_COPY_TARGET_COMMANDS}
+    COMMAND ${CMAKE_COMMAND} -E chdir pack_${CPACK_PACKAGE_FILE_NAME}_7z 7z a -t7z -mx=9 ../${CPACK_PACKAGE_FILE_NAME}.7z ${CPACK_PACKAGE_FILE_NAME}/
+    DEPENDS ${CPACK_TARGETS}
+  )
+  add_custom_target(package_7z DEPENDS ${CPACK_PACKAGE_FILE_NAME}.7z)
+  list(APPEND PACKAGE_TARGETS package_7z)
+endif()
+
 set(PACKAGE_DEFAULT tar_xz)
 if(TARGET_OS STREQUAL "windows")
   set(PACKAGE_DEFAULT zip)
+  add_custom_target(package_default DEPENDS package_zip package_7z)
 elseif(TARGET_OS STREQUAL "mac")
   set(PACKAGE_DEFAULT dmg)
+  add_custom_target(package_default DEPENDS package_${PACKAGE_DEFAULT})
+else()
+  add_custom_target(package_default DEPENDS package_${PACKAGE_DEFAULT})
 endif()
-add_custom_target(package_default DEPENDS package_${PACKAGE_DEFAULT})
 
 add_custom_target(package_all DEPENDS ${PACKAGE_TARGETS})
 
