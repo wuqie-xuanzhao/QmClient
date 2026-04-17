@@ -255,31 +255,6 @@ jobs:
         shell: pwsh
         run: cmake --build build --config ${{ env.BUILD_TYPE }} --target package_default --parallel
 
-      - name: Create 7z package (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $packDir = Get-ChildItem -Path build -Directory -Filter "pack_*_zip" |
-            Sort-Object LastWriteTime -Descending |
-            Select-Object -First 1
-          if (-not $packDir) {
-            throw "No pack directory found"
-          }
-          Write-Host "Found pack directory: $($packDir.FullName)"
-          $innerDir = Get-ChildItem -Path $packDir.FullName -Directory | Select-Object -First 1
-          if (-not $innerDir) {
-            throw "No inner directory found in pack directory"
-          }
-          $sevenZipName = "$($innerDir.Name).7z"
-          Write-Host "Creating 7z from: $($innerDir.FullName)"
-          Write-Host "Output: $sevenZipName"
-          Push-Location $packDir.FullName
-          7z a -t7z -mx=9 "../$sevenZipName" $innerDir.Name
-          Pop-Location
-          Move-Item "build/$sevenZipName" dist/ -Force
-          Write-Host "Created: dist/$sevenZipName"
-
       - name: Collect package (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
