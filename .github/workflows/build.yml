@@ -46,8 +46,8 @@ jobs:
             artifact_name: packaged-linux
           - name: Windows
             os: windows-2022
-            package_ext: zip
-            output_name: QmClient-windows.zip
+            package_ext: 7z
+            output_name: QmClient-windows.7z
             artifact_name: packaged-windows
           - name: macOS
             os: macos-14
