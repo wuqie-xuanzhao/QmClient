@@ -47,6 +47,7 @@ jobs:
           - name: Windows
             os: windows-2022
             package_ext: zip
+            output_name: QmClient-windows.zip
             artifact_name: packaged-windows
           - name: macOS
             os: macos-14
@@ -327,19 +328,15 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $files = @(
-            "dist/${{ matrix.output_name }}"
-            (Get-ChildItem -Path dist -Filter "*.7z" | Select-Object -First 1).FullName
-          )
+          $files = Get-ChildItem -Path dist -File
+          if ($files.Count -eq 0) {
+            throw "No build artifacts found in dist/"
+          }
           foreach ($file in $files) {
-            if (-not (Test-Path $file)) {
-              throw "Build artifact not found: $file"
+            if ($file.Length -lt 1000000) {
+              throw "Build artifact too small: $($file.Name) ($($file.Length) bytes)"
             }
-            $size = (Get-Item $file).Length
-            if ($size -lt 1000000) {
-              throw "Build artifact too small: $file ($size bytes)"
-            }
-            Write-Host "Verified: $file ($size bytes)"
+            Write-Host "Verified: $($file.Name) ($($file.Length) bytes)"
           }
 
       - name: Build summary
@@ -352,7 +349,7 @@ jobs:
           echo "- **Build Type**: ${{ env.BUILD_TYPE }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           if [ "${{ runner.os }}" = "Windows" ]; then
-            echo "- **Artifacts**: ${{ matrix.output_name }}, QmClient-*-win64.7z" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifacts**: QmClient-windows.zip, QmClient-windows.7z" >> $GITHUB_STEP_SUMMARY
           else
             echo "- **Artifact**: ${{ matrix.output_name }}" >> $GITHUB_STEP_SUMMARY
           fi
@@ -437,8 +434,8 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
+            /var/cache/apt/archives/
+            /var/lib/apt/lists/
           key: apt-android-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Cache Rust Android targets
@@ -654,7 +651,7 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/QmClient-windows.zip
-            release-assets/QmClient-*-win64.7z
+            release-assets/QmClient-windows.7z
             release-assets/QmClient-ubuntu.tar.xz
             release-assets/QmClient-macOS.dmg
 
