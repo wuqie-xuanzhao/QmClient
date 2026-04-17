@@ -65,7 +65,7 @@ jobs:
             libvulkan-dev glslang-tools spirv-tools \
             libavcodec-dev libavformat-dev libavutil-dev \
             libswresample-dev libswscale-dev libx264-dev \
-            libpng-dev libcurl4-openssl-dev libssl-dev \
+            libpng-dev libwebp-dev libcurl4-openssl-dev libssl-dev \
             libogg-dev libopus-dev libopusfile-dev libwavpack-dev
 
       - name: Install macOS dependencies
@@ -74,7 +74,7 @@ jobs:
           export HOMEBREW_NO_AUTO_UPDATE=1
           brew install \
             cmake ninja pkg-config python \
-            freetype sdl2 libpng libogg opus opusfile sqlite wavpack ffmpeg
+            freetype sdl2 libpng webp libogg opus opusfile sqlite wavpack ffmpeg
           python3 -m venv .venv-dmgbuild
           . .venv-dmgbuild/bin/activate
           python -m pip install --upgrade pip
