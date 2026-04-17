@@ -116,6 +116,10 @@ jobs:
           key: homebrew-${{ runner.os }}-${{ hashFiles('.github/workflows/build.yml') }}
           restore-keys: homebrew-${{ runner.os }}-
 
+      - name: Link ccache (macOS)
+        if: runner.os == 'macOS'
+        run: brew link ccache
+
       - name: Setup ccache (Linux/macOS)
         if: runner.os != 'Windows'
         uses: hendrikmuhs/ccache-action@v1.2
