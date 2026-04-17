@@ -353,6 +353,7 @@ jobs:
 
       - name: Build summary
         if: always()
+        shell: bash
         run: |
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "- **Platform**: ${{ matrix.name }}" >> $GITHUB_STEP_SUMMARY
@@ -387,7 +388,6 @@ jobs:
       - name: Free disk space
         run: |
           sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           df -h
