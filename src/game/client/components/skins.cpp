@@ -518,7 +518,7 @@ void CSkins::LoadSkinDirect(const char *pName)
 void CSkins::OnConsoleInit()
 {
 	ConfigManager()->RegisterCallback(CSkins::ConfigSaveCallback, this);
-	ConfigManager()->RegisterCallback(CSkins::ConfigSaveQueueCallback, this, ConfigDomain::TCLIENT);
+	ConfigManager()->RegisterCallback(CSkins::ConfigSaveQueueCallback, this, ConfigDomain::QIMENG);
 	Console()->Register("add_favorite_skin", "s[skin_name]", CFGFLAG_CLIENT, ConAddFavoriteSkin, this, "Add a skin as a favorite");
 	Console()->Register("remove_favorite_skin", "s[skin_name]", CFGFLAG_CLIENT, ConRemFavoriteSkin, this, "Remove a skin from the favorites");
 	Console()->Register("add_skin_queue", "s[skin_name]", CFGFLAG_CLIENT, ConAddSkinQueue, this, "Add a skin to the queue");
@@ -1571,13 +1571,13 @@ void CSkins::OnQueueConfigSave(IConfigManager *pConfigManager)
 	{
 		char aBuffer[32 + MAX_SKIN_LENGTH];
 		str_format(aBuffer, sizeof(aBuffer), "add_skin_queue \"%s\"", QueueSkin.c_str());
-		pConfigManager->WriteLine(aBuffer, ConfigDomain::TCLIENT);
+		pConfigManager->WriteLine(aBuffer, ConfigDomain::QIMENG);
 	}
 	for(const auto &QueueSkin : m_aSkinQueue[1])
 	{
 		char aBuffer[40 + MAX_SKIN_LENGTH];
 		str_format(aBuffer, sizeof(aBuffer), "add_dummy_skin_queue \"%s\"", QueueSkin.c_str());
-		pConfigManager->WriteLine(aBuffer, ConfigDomain::TCLIENT);
+		pConfigManager->WriteLine(aBuffer, ConfigDomain::QIMENG);
 	}
 
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
@@ -1591,7 +1591,7 @@ void CSkins::OnQueueConfigSave(IConfigManager *pConfigManager)
 					str_format(aBuffer, sizeof(aBuffer), "add_skin_queue_preset \"%s\"", Preset.m_Name.c_str());
 				else
 					str_format(aBuffer, sizeof(aBuffer), "add_dummy_skin_queue_preset \"%s\"", Preset.m_Name.c_str());
-				pConfigManager->WriteLine(aBuffer, ConfigDomain::TCLIENT);
+				pConfigManager->WriteLine(aBuffer, ConfigDomain::QIMENG);
 			}
 
 			for(const auto &QueueSkin : Preset.m_Queue)
@@ -1601,7 +1601,7 @@ void CSkins::OnQueueConfigSave(IConfigManager *pConfigManager)
 					str_format(aBuffer, sizeof(aBuffer), "add_skin_queue_preset_item %d \"%s\"", PresetIndex, QueueSkin.c_str());
 				else
 					str_format(aBuffer, sizeof(aBuffer), "add_dummy_skin_queue_preset_item %d \"%s\"", PresetIndex, QueueSkin.c_str());
-				pConfigManager->WriteLine(aBuffer, ConfigDomain::TCLIENT);
+				pConfigManager->WriteLine(aBuffer, ConfigDomain::QIMENG);
 			}
 			PresetIndex++;
 		}

@@ -69,7 +69,6 @@ static constexpr int QMCLIENT_SERVER_TIME_SYNC_INTERVAL_SECONDS = 15;
 static constexpr int QMCLIENT_PLAYTIME_QUERY_INTERVAL_SECONDS = 10;
 static constexpr int QMCLIENT_RECOVERY_RETRY_SECONDS = 3;
 static constexpr int QMCLIENT_MARKER_FLUSH_INTERVAL_SECONDS = 5;
-static constexpr const char *QMCLIENT_LOCALIZATION_CONTEXT = "QmClient";
 static constexpr const char *DDNET_PLAYER_STATS_URL = "https://ddnet.org/players/?json2=";
 static constexpr int QMCLIENT_DDNET_PLAYER_SYNC_INTERVAL_SECONDS = 120;
 static constexpr int QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS = 10;
@@ -592,8 +591,8 @@ void CTClient::OnInit()
 	char aError[512] = "";
 	if(MissingQmClientFolder || MissingGuiLogo)
 	{
-		str_format(aError, sizeof(aError), TCLocalize("%s not found", DATA_VERSION_PATH), "data/qmclient/gui_logo.png");
-		SWarning Warning(aError, TCLocalize("You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.", "data_version.h"));
+		str_format(aError, sizeof(aError), Localize("%s not found", DATA_VERSION_PATH), "data/qmclient/gui_logo.png");
+		SWarning Warning(aError, Localize("You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.", "data_version.h"));
 		Client()->AddWarning(Warning);
 	}
 	else
@@ -601,7 +600,7 @@ void CTClient::OnInit()
 		CheckDataVersion(aError, sizeof(aError), Storage()->OpenFile(DATA_VERSION_PATH, IOFLAG_READ, IStorage::TYPE_ALL));
 		if(aError[0] != '\0')
 		{
-			SWarning Warning(aError, TCLocalize("You may have installed only DDNet.exe. Please use the full QmClient folder.", "data_version.h"));
+			SWarning Warning(aError, Localize("You may have installed only DDNet.exe. Please use the full QmClient folder.", "data_version.h"));
 			Client()->AddWarning(Warning);
 		}
 	}
@@ -1749,7 +1748,7 @@ void CTClient::DoFinishCheck()
 	if(!NearFinishTile(Player.m_RenderPos, TILE_FINISH))
 		return;
 	char aBuf[64];
-	str_format(aBuf, sizeof(aBuf), TCLocalize("Changing name to %s near finish"), pNewName);
+	str_format(aBuf, sizeof(aBuf), Localize("Changing name to %s near finish"), pNewName);
 	GameClient()->Echo(aBuf);
 	SendUrgentRename(Dummy, pNewName);
 }
@@ -1785,11 +1784,11 @@ void CTClient::OnRender()
 			{
 				if(!InfoOk || !m_FetchedTClientInfo)
 				{
-					Client()->AddWarning(SWarning(TCLocalize("Update", QMCLIENT_LOCALIZATION_CONTEXT), TCLocalize("Failed to check for updates", QMCLIENT_LOCALIZATION_CONTEXT)));
+					Client()->AddWarning(SWarning(Localize("Update"), Localize("Failed to check for updates")));
 				}
 				else if(!NeedUpdate())
 				{
-					Client()->AddWarning(SWarning(TCLocalize("Update", QMCLIENT_LOCALIZATION_CONTEXT), TCLocalize("You are already on the latest version", QMCLIENT_LOCALIZATION_CONTEXT)));
+					Client()->AddWarning(SWarning(Localize("Update"), Localize("You are already on the latest version")));
 				}
 				else
 				{
@@ -1810,11 +1809,11 @@ void CTClient::OnRender()
 			{
 				if(Client()->State() == IClient::STATE_ONLINE || Client()->EditorHasUnsavedData())
 				{
-					Client()->AddWarning(SWarning(TCLocalize("Update", QMCLIENT_LOCALIZATION_CONTEXT), TCLocalize("Update finished. Please restart the client", QMCLIENT_LOCALIZATION_CONTEXT)));
+					Client()->AddWarning(SWarning(Localize("Update"), Localize("Update finished. Please restart the client")));
 				}
 				else
 				{
-					Client()->AddWarning(SWarning(TCLocalize("Update", QMCLIENT_LOCALIZATION_CONTEXT), TCLocalize("Update finished. Restarting...", QMCLIENT_LOCALIZATION_CONTEXT)));
+					Client()->AddWarning(SWarning(Localize("Update"), Localize("Update finished. Restarting...")));
 					Client()->Restart();
 				}
 			}
@@ -1824,7 +1823,7 @@ void CTClient::OnRender()
 		{
 			if(m_aUpdateExeTmp[0] != '\0')
 				Storage()->RemoveBinaryFile(m_aUpdateExeTmp);
-			Client()->AddWarning(SWarning(TCLocalize("Update", QMCLIENT_LOCALIZATION_CONTEXT), TCLocalize("Update failed. Please try again", QMCLIENT_LOCALIZATION_CONTEXT)));
+			Client()->AddWarning(SWarning(Localize("Update"), Localize("Update failed. Please try again")));
 		}
 
 		ResetUpdateExeTask();
@@ -3105,8 +3104,8 @@ void CTClient::CheckFriendOnline()
 				if(It == m_FriendOnline.end())
 				{
 					char aBuf[256];
-					const char *pMap = pEntry->m_aMap[0] != '\0' ? pEntry->m_aMap : TCLocalize("Unknown", QMCLIENT_LOCALIZATION_CONTEXT);
-					str_format(aBuf, sizeof(aBuf), TCLocalize("Your friend %s is online and currently on map %s!", QMCLIENT_LOCALIZATION_CONTEXT), Client.m_aName, pMap);
+					const char *pMap = pEntry->m_aMap[0] != '\0' ? pEntry->m_aMap : Localize("Unknown");
+				str_format(aBuf, sizeof(aBuf), Localize("Your friend %s is online and currently on map %s!"), Client.m_aName, pMap);
 					GameClient()->m_Chat.Echo(aBuf);
 					SFriendOnlineState State;
 					State.m_LastSeen = Now;
@@ -3452,7 +3451,7 @@ void CTClient::RequestUpdateCheckAndUpdate()
 void CTClient::StartUpdateDownload()
 {
 #if !defined(CONF_FAMILY_WINDOWS)
-	Client()->AddWarning(SWarning(TCLocalize("Update", QMCLIENT_LOCALIZATION_CONTEXT), TCLocalize("Automatic updates are only supported on Windows", QMCLIENT_LOCALIZATION_CONTEXT)));
+	Client()->AddWarning(SWarning(Localize("Update"), Localize("Automatic updates are only supported on Windows")));
 	return;
 #endif
 
@@ -3466,7 +3465,7 @@ void CTClient::StartUpdateDownload()
 	m_pUpdateExeTask->IpResolve(IPRESOLVE::V4);
 	m_pUpdateExeTask->WriteToFile(Storage(), m_aUpdateExeTmp, -2);
 	Http()->Run(m_pUpdateExeTask);
-	Client()->AddWarning(SWarning(TCLocalize("Update", QMCLIENT_LOCALIZATION_CONTEXT), TCLocalize("Downloading update...", QMCLIENT_LOCALIZATION_CONTEXT)));
+	Client()->AddWarning(SWarning(Localize("Update"), Localize("Downloading update...")));
 }
 
 void CTClient::ResetUpdateExeTask()
@@ -3800,11 +3799,11 @@ void CTClient::RenderMiniVoteHud()
 	char aKey[64];
 	GameClient()->m_Binds.GetKey("vote yes", aKey, sizeof(aKey));
 	TextRender()->TextColor(GameClient()->m_Voting.TakenChoice() == 1 ? ColorRGBA(0.2f, 0.9f, 0.2f, 0.85f) : TextRender()->DefaultTextColor());
-	Ui()->DoLabel(&LeftColumn, aKey[0] == '\0' ? TCLocalize("Agree", QMCLIENT_LOCALIZATION_CONTEXT) : aKey, 0.5f, TEXTALIGN_ML);
+	Ui()->DoLabel(&LeftColumn, aKey[0] == '\0' ? Localize("Agree") : aKey, 0.5f, TEXTALIGN_ML);
 
 	GameClient()->m_Binds.GetKey("vote no", aKey, sizeof(aKey));
 	TextRender()->TextColor(GameClient()->m_Voting.TakenChoice() == -1 ? ColorRGBA(0.95f, 0.25f, 0.25f, 0.85f) : TextRender()->DefaultTextColor());
-	Ui()->DoLabel(&RightColumn, aKey[0] == '\0' ? TCLocalize("Disagree", QMCLIENT_LOCALIZATION_CONTEXT) : aKey, 0.5f, TEXTALIGN_MR);
+	Ui()->DoLabel(&RightColumn, aKey[0] == '\0' ? Localize("Disagree") : aKey, 0.5f, TEXTALIGN_MR);
 
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 }
@@ -5035,7 +5034,7 @@ void CTClient::RepeatLastMessage()
 	// 检查是否有消息可以复读
 	if(m_aLastChatMessage[0] == '\0')
 	{
-		GameClient()->m_Chat.AddLine(-2, 0, TCLocalize("No chat message available to repeat", QMCLIENT_LOCALIZATION_CONTEXT));
+		GameClient()->m_Chat.AddLine(-2, 0, Localize("No chat message available to repeat"));
 		return;
 	}
 

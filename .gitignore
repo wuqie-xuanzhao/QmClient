@@ -8,6 +8,7 @@ AGENTS.md
 
 # Local documentation (local only)
 dyl/
+.trae/
 
 bundle/
 !/other/bundle/

@@ -1646,46 +1646,6 @@ set(EXPECTED_DATA
   qmclient/fonts/Rubik-Regular.ttf
   qmclient/fonts/minecraft_font.ttf
   qmclient/gui_logo.png
-  qmclient/languages/arabic.txt
-  qmclient/languages/azerbaijani.txt
-  qmclient/languages/belarusian.txt
-  qmclient/languages/bosnian.txt
-  qmclient/languages/brazilian_portuguese.txt
-  qmclient/languages/bulgarian.txt
-  qmclient/languages/catalan.txt
-  qmclient/languages/chuvash.txt
-  qmclient/languages/czech.txt
-  qmclient/languages/danish.txt
-  qmclient/languages/dutch.txt
-  qmclient/languages/esperanto.txt
-  qmclient/languages/estonian.txt
-  qmclient/languages/finnish.txt
-  qmclient/languages/french.txt
-  qmclient/languages/galician.txt
-  qmclient/languages/german.txt
-  qmclient/languages/greek.txt
-  qmclient/languages/hungarian.txt
-  qmclient/languages/index.txt
-  qmclient/languages/italian.txt
-  qmclient/languages/japanese.txt
-  qmclient/languages/korean.txt
-  qmclient/languages/kyrgyz.txt
-  qmclient/languages/license.txt
-  qmclient/languages/norwegian.txt
-  qmclient/languages/persian.txt
-  qmclient/languages/polish.txt
-  qmclient/languages/portuguese.txt
-  qmclient/languages/romanian.txt
-  qmclient/languages/russian.txt
-  qmclient/languages/serbian.txt
-  qmclient/languages/serbian_cyrillic.txt
-  qmclient/languages/simplified_chinese.txt
-  qmclient/languages/slovak.txt
-  qmclient/languages/spanish.txt
-  qmclient/languages/swedish.txt
-  qmclient/languages/traditional_chinese.txt
-  qmclient/languages/turkish.txt
-  qmclient/languages/ukrainian.txt
   race_flag.png
   shader/pipeline.frag
   shader/pipeline.vert

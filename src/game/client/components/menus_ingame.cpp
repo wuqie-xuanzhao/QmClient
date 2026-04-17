@@ -965,7 +965,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		bool IsMapFavorite = GameClient()->m_TClient.IsFavoriteMap(CurrentServerInfo.m_aMap);
 		ServerInfo.HSplitBottom(20.0f, &ServerInfo, &Button);
 		static int s_AddFavMapButton = 0;
-		if(DoButton_CheckBox(&s_AddFavMapButton, TCLocalize("收藏地图"), IsMapFavorite, &Button))
+		if(DoButton_CheckBox(&s_AddFavMapButton, Localize("Favorite map"), IsMapFavorite, &Button))
 		{
 			if(IsMapFavorite)
 				GameClient()->m_TClient.RemoveFavoriteMap(CurrentServerInfo.m_aMap);
@@ -1501,14 +1501,14 @@ void CMenus::RenderUnfinishedMaps(CUIRect MainView)
 
 	MainView.HSplitTop(6.0f, nullptr, &MainView);
 	MainView.HSplitTop(18.0f, &Row, &MainView);
-	Ui()->DoLabel(&Row, Localize("计算玩家某个模式下的未完成图"), 14.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Row, Localize("Calculate unfinished maps for player in certain mode"), 14.0f, TEXTALIGN_ML);
 	MainView.HSplitTop(18.0f, &Row, &MainView);
 	Ui()->DoLabel(&Row, Localize("并随机抽取一张"), 14.0f, TEXTALIGN_ML);
 
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
 	MainView.HSplitTop(24.0f, &Row, &MainView);
 	Row.VSplitLeft(90.0f, &Label, &Row);
-	Ui()->DoLabel(&Label, Localize("玩家名:"), 14.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, Localize("Player name:"), 14.0f, TEXTALIGN_ML);
 
 	static bool s_PlayerNameInit = false;
 	if(!s_PlayerNameInit)
@@ -1530,20 +1530,20 @@ void CMenus::RenderUnfinishedMaps(CUIRect MainView)
 	Ui()->DoLabel(&Label, Localize("地图类型:"), 14.0f, TEXTALIGN_ML);
 
 	const char *apTypeLabels[] = {
-		Localize("简单"),
-		Localize("中阶"),
-		Localize("高阶"),
-		Localize("古典 Easy"),
-		Localize("古典 Next"),
-		Localize("古典 Pro"),
-		Localize("古典 Nut"),
-		Localize("传统"),
-		Localize("单人"),
-		Localize("竞速"),
-		Localize("娱乐"),
-		Localize("事件"),
-		Localize("疯狂"),
-		Localize("分身"),
+		Localize("Simple"),
+		Localize("Intermediate"),
+		Localize("Advanced"),
+		Localize("Classic Easy"),
+		Localize("Classic Next"),
+		Localize("Classic Pro"),
+		Localize("Classic Nut"),
+		Localize("Traditional"),
+		Localize("Solo"),
+		Localize("Race"),
+		Localize("Fun"),
+		Localize("Event"),
+		Localize("Insane"),
+		Localize("Dummy"),
 	};
 	const char *apTypeKeys[] = {
 		"Novice",
@@ -1606,7 +1606,7 @@ if(DoButton_CheckBox(&g_Config.m_QmUnfinishedMapAutoVote, Localize("自动发起
 	char aCountBuf[128];
 	if(s_UnfinishedQuery.IsLoading())
 	{
-		str_copy(aCountBuf, Localize("未完成图数据刷新中"));
+		str_copy(aCountBuf, Localize("Unfinished map data refreshing"));
 	}
 	else if(!s_UnfinishedQuery.HasData())
 	{
@@ -1614,7 +1614,7 @@ if(DoButton_CheckBox(&g_Config.m_QmUnfinishedMapAutoVote, Localize("自动发起
 	}
 	else
 	{
-		str_format(aCountBuf, sizeof(aCountBuf), Localize("未完成图数量: %d"), (int)vUnfinishedMaps.size());
+		str_format(aCountBuf, sizeof(aCountBuf), Localize("Unfinished map count: %d"), (int)vUnfinishedMaps.size());
 	}
 	Ui()->DoLabel(&Row, aCountBuf, 14.0f, TEXTALIGN_ML);
 
@@ -1627,7 +1627,7 @@ if(DoButton_CheckBox(&g_Config.m_QmUnfinishedMapAutoVote, Localize("自动发起
 	static int s_PickedCopyId = 0;
 	static float s_PickedCopyTime = 0.0f;
 	static CButtonContainer s_PickedFavButton;
-	if(DoButton_Menu(&s_PickButton, Localize("随机抽取"), 0, &Button))
+	if(DoButton_Menu(&s_PickButton, Localize("Random pick"), 0, &Button))
 	{
 		s_aStatusText[0] = '\0';
 		if(!g_Config.m_BrIndicateFinished)
@@ -1643,7 +1643,7 @@ if(DoButton_CheckBox(&g_Config.m_QmUnfinishedMapAutoVote, Localize("自动发起
 		}
 		else if(vUnfinishedMaps.empty())
 		{
-			str_copy(s_aStatusText, Localize("没有可抽取的未完成图"));
+			str_copy(s_aStatusText, Localize("No unfinished maps available"));
 			s_aPickedMap[0] = '\0';
 		}
 		else
@@ -1690,7 +1690,7 @@ if(DoButton_CheckBox(&g_Config.m_QmUnfinishedMapAutoVote, Localize("自动发起
 		else
 		{
 			char aResultBuf[128];
-			str_format(aResultBuf, sizeof(aResultBuf), Localize("抽取结果: %s"), s_aPickedMap);
+			str_format(aResultBuf, sizeof(aResultBuf), Localize("Pick result: %s"), s_aPickedMap);
 			Ui()->DoLabel(&RowLabel, aResultBuf, 14.0f, TEXTALIGN_ML);
 		}
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -1699,7 +1699,7 @@ if(DoButton_CheckBox(&g_Config.m_QmUnfinishedMapAutoVote, Localize("自动发起
 			GameClient()->m_Tooltips.DoToolTip(&s_PickedCopyId, &RowLabel, Localize("点击复制地图名"));
 
 		const bool IsFavorite = GameClient()->m_TClient.IsFavoriteMap(s_aPickedMap);
-		if(DoButton_CheckBox(&s_PickedFavButton, TCLocalize("收藏地图"), IsFavorite, &RowFav))
+		if(DoButton_CheckBox(&s_PickedFavButton, Localize("Favorite map"), IsFavorite, &RowFav))
 		{
 			if(IsFavorite)
 				GameClient()->m_TClient.RemoveFavoriteMap(s_aPickedMap);
@@ -1749,7 +1749,7 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 	{
 		NewPage = PAGE_FAVORITES;
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_FavoritesButton, &Button, Localize("收藏夹"));
+	GameClient()->m_Tooltips.DoToolTip(&s_FavoritesButton, &Button, Localize("Favorites"));
 
 	size_t FavoriteCommunityIndex = 0;
 	static CButtonContainer s_aFavoriteCommunityButtons[5];

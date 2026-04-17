@@ -54,11 +54,16 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
 
-      - name: Setup ccache
+      - name: Setup ccache (Linux/macOS)
+        if: runner.os != 'Windows'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ runner.os }}-${{ runner.arch }}
           max-size: 500M
+
+      - name: Setup sccache (Windows)
+        if: runner.os == 'Windows'
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Setup MSVC (Windows)
         if: runner.os == 'Windows'
@@ -145,10 +150,11 @@ jobs:
         run: >
           cmake -S . -B build -G Ninja
           -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
           -DPREFER_BUNDLED_LIBS=ON
           -DDOWNLOAD_GTEST=ON
+          -DCMAKE_OBJECT_PATH_MAX=1024
 
       - name: Build client (Linux/macOS)
         if: runner.os != 'Windows'
@@ -305,18 +311,20 @@ jobs:
           path: ddnet-libs/webp/android
           key: webp-android-v1.6.0-${{ hashFiles('.github/workflows/build.yml') }}
 
-      - name: Build WebP for Android
+      - name: Build WebP for Android (Parallel)
         if: steps.cache-webp.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
           git clone --depth 1 --branch v1.6.0 https://chromium.googlesource.com/webm/libwebp
           cd libwebp
-          mkdir build-android
           
           ANDROID_NDK_HOME="$ANDROID_HOME/ndk/26.1.10909125"
           
-          for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
+          # Build all ABIs in parallel using background jobs
+          build_abi() {
+            local ABI=$1
+            local DIR=$2
             mkdir -p "build-android/${ABI}"
             cmake -S . -B "build-android/${ABI}" \
               -G Ninja \
@@ -334,10 +342,20 @@ jobs:
               -DWEBP_BUILD_VWEBP=OFF \
               -DWEBP_BUILD_WEBPINFO=OFF \
               -DWEBP_BUILD_WEBPMUX=OFF \
-              -DWEBP_BUILD_WEBP_JS=OFF
-            cmake --build "build-android/${ABI}" --parallel
-            cmake --install "build-android/${ABI}"
-          done
+              -DWEBP_BUILD_WEBP_JS=OFF 2>&1 | tee "build-${ABI}.log"
+            cmake --build "build-android/${ABI}" --parallel 2>&1 | tee -a "build-${ABI}.log"
+            cmake --install "build-android/${ABI}" 2>&1 | tee -a "build-${ABI}.log"
+            echo "Completed ${ABI}"
+          }
+          
+          # Start all builds in parallel
+          build_abi armeabi-v7a libarm &
+          build_abi arm64-v8a libarm64 &
+          build_abi x86 lib32 &
+          build_abi x86_64 lib64 &
+          
+          # Wait for all background jobs
+          wait
           
           # Copy to ddnet-libs
           mkdir -p ../ddnet-libs/webp/include/webp
@@ -355,6 +373,8 @@ jobs:
             cp "install-${ABI}/lib/libwebpdemux.a" "../ddnet-libs/webp/android/${DIR}/" 2>/dev/null || true
             cp "install-${ABI}/lib/libwebpmux.a" "../ddnet-libs/webp/android/${DIR}/" 2>/dev/null || true
           done
+          
+          echo "All WebP builds completed"
 
       - name: Prepare Android signing keystore
         shell: bash
