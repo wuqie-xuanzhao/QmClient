@@ -830,6 +830,8 @@ public:
 	CRenderTools m_RenderTools;
 	CRenderMap m_RenderMap;
 
+	bool m_BackButtonHandledKeyBind = false;
+
 	void OnReset();
 
 	size_t ComponentCount() const { return m_vpAll.size(); }
@@ -1246,6 +1248,8 @@ private:
 	void RefreshPredictionAfterConfigChange();
 	void RequestPredictionRefreshAfterConfigChange();
 	void HandlePredictedEvents(int Tick);
+
+	void OnInput(const IInput::CEvent &Event);
 
 	int m_aLastUpdateTick[MAX_CLIENTS] = {0};
 	void DetectStrongHook();

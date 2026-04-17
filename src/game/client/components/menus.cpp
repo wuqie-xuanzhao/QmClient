@@ -6223,6 +6223,9 @@ void CMenus::OnRender()
 		LogPerfStage(Client(), "ui_update", StageTimer.ElapsedMs());
 	}
 
+	if(IsActive())
+		Ui()->DoBackButton();
+
 	{
 		CPerfTimer StageTimer;
 		Render();
@@ -6263,6 +6266,7 @@ void CMenus::OnRender()
 	if(IsActive())
 	{
 		CPerfTimer StageTimer;
+		Ui()->RenderBackButton();
 		RenderTools()->RenderCursor(Ui()->MousePos(), 24.0f);
 		LogPerfStage(Client(), "cursor_render", StageTimer.ElapsedMs());
 	}

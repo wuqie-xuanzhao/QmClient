@@ -553,6 +553,20 @@ void CGameClient::OnInit()
 
 	// propagate pointers
 	m_UI.Init(Kernel());
+	m_UI.SetOnBackButtonPressedCallback([this]() {
+		m_BackButtonHandledKeyBind = m_KeyBinder.HasPendingKeyReader();
+		if(m_BackButtonHandledKeyBind)
+			m_KeyBinder.AbortPendingKey();
+	});
+	m_UI.SetDispatchInputCallback([this](const IInput::CEvent &Event) {
+		if(m_BackButtonHandledKeyBind)
+		{
+			if(Event.m_Flags & IInput::FLAG_RELEASE)
+				m_BackButtonHandledKeyBind = false;
+			return;
+		}
+		OnInput(Event);
+	});
 	m_UiRuntimeV2.Init(this);
 	m_RenderTools.Init(Graphics(), TextRender(), this); // TClient
 	m_RenderMap.Init(Graphics(), TextRender());
@@ -764,17 +778,7 @@ void CGameClient::OnUpdate()
 
 	// handle key presses
 	Input()->ConsumeEvents([&](const IInput::CEvent &Event) {
-#if defined(CONF_QM_LIVE_CLIENT)
-		if(HandleLiveObserverInput(Event))
-			return;
-#endif
-		for(auto &pComponent : m_vpInput)
-		{
-			// Events with flag `FLAG_RELEASE` must always be forwarded to all components so keys being
-			// released can be handled in all components also after some components have been disabled.
-			if(pComponent->OnInput(Event) && (Event.m_Flags & ~IInput::FLAG_RELEASE) != 0)
-				break;
-		}
+		OnInput(Event);
 	});
 
 	if(g_Config.m_ClSubTickAiming && m_Binds.m_MouseOnAction)
@@ -926,6 +930,21 @@ void CGameClient::RecordDemoInputWheelEvent() const
 	CMsgPacker Msg(NETMSG_QM_DEMO_INPUT_WHEEL, false);
 	Msg.AddInt(WheelMask);
 	Client()->SendMsgActive(&Msg, MSGFLAG_RECORD | MSGFLAG_NOSEND);
+}
+
+void CGameClient::OnInput(const IInput::CEvent &Event)
+{
+#if defined(CONF_QM_LIVE_CLIENT)
+	if(HandleLiveObserverInput(Event))
+		return;
+#endif
+	for(auto &pComponent : m_vpInput)
+	{
+		// Events with flag `FLAG_RELEASE` must always be forwarded to all components so keys being
+		// released can be handled in all components also after some components have been disabled.
+		if(pComponent->OnInput(Event) && (Event.m_Flags & ~IInput::FLAG_RELEASE) != 0)
+			break;
+	}
 }
 
 void CGameClient::OnDummySwap()
