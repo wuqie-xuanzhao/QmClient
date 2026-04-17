@@ -97,12 +97,24 @@ jobs:
             -DDOWNLOAD_GTEST=ON \
             -DCMAKE_OSX_SYSROOT="${SDKROOT}"
 
+      - name: Prepare WebP library (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "ddnet-libs/libwebp.zip" -DestinationPath "ddnet-libs/libwebp-temp" -Force
+          New-Item -ItemType Directory -Path "ddnet-libs/webp/include/webp" -Force
+          New-Item -ItemType Directory -Path "ddnet-libs/webp/windows/lib64" -Force
+          Copy-Item -Path "ddnet-libs/libwebp-temp/libwebp-1.6.0-windows-x64/include/webp/*" -Destination "ddnet-libs/webp/include/webp/" -Force
+          Copy-Item -Path "ddnet-libs/libwebp-temp/libwebp-1.6.0-windows-x64/lib/*" -Destination "ddnet-libs/webp/windows/lib64/" -Force
+          Remove-Item -Recurse -Force "ddnet-libs/libwebp-temp"
+
       - name: Configure (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: >
           cmake -S . -B build -G "Visual Studio 17 2022" -A x64
           -DDOWNLOAD_GTEST=ON
+          -DPREFER_BUNDLED_LIBS=ON
 
       - name: Build client (Linux/macOS)
         if: runner.os != 'Windows'
@@ -220,6 +232,56 @@ jobs:
             "build-tools;34.0.0" \
             "ndk;26.1.10909125"
           yes | sdkmanager --licenses
+
+      - name: Build WebP for Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v1.4.0 https://chromium.googlesource.com/webm/libwebp
+          cd libwebp
+          mkdir build-android
+          
+          ANDROID_NDK_HOME="$ANDROID_HOME/ndk/26.1.10909125"
+          
+          for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
+            mkdir -p "build-android/${ABI}"
+            cmake -S . -B "build-android/${ABI}" \
+              -G Ninja \
+              -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" \
+              -DANDROID_ABI="${ABI}" \
+              -DANDROID_PLATFORM=android-24 \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX="${PWD}/install-${ABI}" \
+              -DWEBP_BUILD_ANIM_UTILS=OFF \
+              -DWEBP_BUILD_CWEBP=OFF \
+              -DWEBP_BUILD_DWEBP=OFF \
+              -DWEBP_BUILD_EXTRAS=OFF \
+              -DWEBP_BUILD_GIF2WEBP=OFF \
+              -DWEBP_BUILD_IMG2WEBP=OFF \
+              -DWEBP_BUILD_VWEBP=OFF \
+              -DWEBP_BUILD_WEBPINFO=OFF \
+              -DWEBP_BUILD_WEBPMUX=OFF \
+              -DWEBP_BUILD_WEBP_JS=OFF
+            cmake --build "build-android/${ABI}" --parallel
+            cmake --install "build-android/${ABI}"
+          done
+          
+          # Copy to ddnet-libs
+          mkdir -p ../ddnet-libs/webp/include/webp
+          cp -r install-arm64-v8a/include/webp/* ../ddnet-libs/webp/include/webp/
+          
+          for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
+            case "${ABI}" in
+              armeabi-v7a) DIR="libarm" ;;
+              arm64-v8a) DIR="libarm64" ;;
+              x86) DIR="lib32" ;;
+              x86_64) DIR="lib64" ;;
+            esac
+            mkdir -p "../ddnet-libs/webp/android/${DIR}"
+            cp "install-${ABI}/lib/libwebp.a" "../ddnet-libs/webp/android/${DIR}/"
+            cp "install-${ABI}/lib/libwebpdemux.a" "../ddnet-libs/webp/android/${DIR}/" 2>/dev/null || true
+            cp "install-${ABI}/lib/libwebpmux.a" "../ddnet-libs/webp/android/${DIR}/" 2>/dev/null || true
+          done
 
       - name: Prepare Android signing keystore
         shell: bash
