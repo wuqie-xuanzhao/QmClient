@@ -299,22 +299,21 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if (-not (Test-Path dist)) { New-Item -ItemType Directory -Path dist -Force | Out-Null }
-          Write-Host "Looking for *.${{ matrix.package_ext }} in build/..."
-          Get-ChildItem -Path build -Recurse -File -Filter "*.${{ matrix.package_ext }}" | ForEach-Object { Write-Host "  Found: $($_.FullName)" }
-          $pkg = Get-ChildItem -Path build -File -Filter "*.${{ matrix.package_ext }}" |
-            Where-Object { $_.Name -notmatch "-src\\." } |
+          Write-Host "Searching for *.${{ matrix.package_ext }} in build/..."
+          $pkg = Get-ChildItem -Path build -Recurse -File -Filter "QmClient*.${{ matrix.package_ext }}" |
             Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
           if (-not $pkg) {
+            Write-Host "QmClient* pattern failed, trying broader search..."
             $pkg = Get-ChildItem -Path build -Recurse -File -Filter "*.${{ matrix.package_ext }}" |
-              Where-Object { $_.Name -notmatch "-src\\." -and $_.Name -match "QmClient" } |
+              Where-Object { $_.Name -notmatch "-src\." } |
               Sort-Object LastWriteTime -Descending |
               Select-Object -First 1
           }
           if (-not $pkg) {
             throw "No package with extension .${{ matrix.package_ext }} found under build/"
           }
-          Write-Host "Copying: $($pkg.FullName) -> dist/${{ matrix.output_name }}"
+          Write-Host "Found: $($pkg.FullName) -> dist/${{ matrix.output_name }}"
           Copy-Item -Path $pkg.FullName -Destination "dist/${{ matrix.output_name }}"
           Get-ChildItem -Path dist
 
