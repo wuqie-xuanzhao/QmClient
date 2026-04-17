@@ -1,0 +1,243 @@
+# 临时文件：Android 并行构建优化配置片段
+# 用于参考优化的 Android 构建配置
+
+  build_webp_android:
+    name: Build WebP for Android
+    runs-on: ubuntu-22.04
+    if: false  # 当 WebP 库已提交到 ddnet-libs 后，可禁用此 job
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/sdk/ndk
+            ~/.android/sdk/platforms
+            ~/.android/sdk/build-tools
+          key: android-sdk-ndk-26.1.10909125
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager --install "ndk;26.1.10909125"
+          yes | sdkmanager --licenses
+
+      - name: Build WebP for all ABIs
+        run: |
+          # WebP 构建脚本
+          git clone --depth 1 --branch v1.6.0 https://chromium.googlesource.com/webm/libwebp
+          cd libwebp
+          ANDROID_NDK_HOME="$ANDROID_HOME/ndk/26.1.10909125"
+          for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
+            mkdir -p "build-${ABI}"
+            cmake -S . -B "build-${ABI}" \
+              -G Ninja \
+              -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" \
+              -DANDROID_ABI="${ABI}" \
+              -DANDROID_PLATFORM=android-24 \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DWEBP_BUILD_ANIM_UTILS=OFF \
+              -DWEBP_BUILD_CWEBP=OFF \
+              -DWEBP_BUILD_DWEBP=OFF \
+              -DWEBP_BUILD_EXTRAS=OFF \
+              -DWEBP_BUILD_GIF2WEBP=OFF \
+              -DWEBP_BUILD_IMG2WEBP=OFF \
+              -DWEBP_BUILD_VWEBP=OFF \
+              -DWEBP_BUILD_WEBPINFO=OFF \
+              -DWEBP_BUILD_WEBPMUX=OFF \
+              -DWEBP_BUILD_WEBP_JS=OFF
+            cmake --build "build-${ABI}" --parallel
+          done
+
+      - name: Upload WebP libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: webp-android-libs
+          path: libwebp/build-*/libwebp.a
+          retention-days: 30
+
+  build_android:
+    name: Android ${{ matrix.abi }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - abi: arm64-v8a
+            rust_target: aarch64-linux-android
+          - abi: armeabi-v7a
+            rust_target: armv7-linux-androideabi
+          - abi: x86_64
+            rust_target: x86_64-linux-android
+          - abi: x86
+            rust_target: i686-linux-android
+    env:
+      ANDROID_APP_NAME: QmClient
+      ANDROID_PACKAGE_NAME: org.ddnet.client
+      ANDROID_BUILD_DIR: build-android-${{ matrix.abi }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.abi }}
+
+      - name: Cache Rust target
+        uses: actions/cache@v4
+        with:
+          path: ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/${{ matrix.rust_target }}
+          key: rust-target-${{ matrix.rust_target }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo-ndk
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-ndk
+          key: cargo-ndk-${{ runner.os }}
+
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/sdk/ndk
+            ~/.android/sdk/platforms
+            ~/.android/sdk/build-tools
+          key: android-sdk-ndk-26.1.10909125
+
+      - name: Cache apt dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: apt-${{ runner.os }}-${{ hashFiles('.github/workflows/build.yml') }}
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake ninja-build pkg-config curl python3 python3-pip \
+            glslang-tools spirv-tools ccache
+          if [ ! -f ~/.cargo/bin/cargo-ndk ]; then
+            cargo install cargo-ndk
+          fi
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "ndk;26.1.10909125"
+          yes | sdkmanager --licenses
+
+      # WebP 库应该从 ddnet-libs 获取
+      # 如果尚未提交，CI 缓存会处理
+
+  build_android_combine:
+    name: Combine Android APK/AAB
+    runs-on: ubuntu-22.04
+    needs: build_android
+    timeout-minutes: 30
+    env:
+      ANDROID_APP_NAME: QmClient
+      ANDROID_PACKAGE_NAME: org.ddnet.client
+      ANDROID_BUILD_DIR: build-android-release
+      TW_KEY_NAME: /home/runner/.android/debug.keystore
+      TW_KEY_PW: android
+      TW_KEY_ALIAS: androiddebugkey
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download all ABI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: android-*
+          path: build-android-libs
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
+          yes | sdkmanager --licenses
+
+      - name: Prepare Android signing keystore
+        run: |
+          mkdir -p "$(dirname "${TW_KEY_NAME}")"
+          keytool -genkeypair -v \
+            -keystore "${TW_KEY_NAME}" \
+            -storepass "${TW_KEY_PW}" \
+            -keypass "${TW_KEY_PW}" \
+            -alias "${TW_KEY_ALIAS}" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=GitHub Actions, OU=CI, O=QmClient, L=Unknown, ST=Unknown, C=US"
+
+      - name: Build combined APK/AAB
+        run: |
+          chmod +x scripts/android/cmake_android.sh
+          # 使用合并后的库构建
+          scripts/android/cmake_android.sh all "${ANDROID_APP_NAME}" "${ANDROID_PACKAGE_NAME}" Release "${ANDROID_BUILD_DIR}"
+
+      - name: Collect Android package
+        run: |
+          mkdir -p dist
+          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.apk" dist/QmClient-android.apk
+          cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.aab" dist/QmClient-android.aab
+          ls -lah dist
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-android
+          path: |
+            dist/QmClient-android.apk
+            dist/QmClient-android.aab
+          if-no-files-found: error
+          retention-days: 14

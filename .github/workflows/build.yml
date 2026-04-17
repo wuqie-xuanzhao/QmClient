@@ -68,6 +68,15 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install ninja -y
 
+      - name: Cache apt dependencies
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives/*.deb
+            /var/lib/apt/lists
+          key: apt-linux-${{ hashFiles('.github/workflows/build.yml') }}
+
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
@@ -234,6 +243,20 @@ jobs:
             ~/.android/sdk/build-tools
           key: android-sdk-ndk-26.1.10909125
 
+      - name: Cache apt dependencies (Android)
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives/*.deb
+            /var/lib/apt/lists
+          key: apt-android-${{ hashFiles('.github/workflows/build.yml') }}
+
+      - name: Cache Rust Android targets
+        uses: actions/cache@v4
+        with:
+          path: ~/.rustup/toolchains/*/lib/rustlib
+          key: rust-android-targets-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Install host dependencies
         run: |
           sudo apt-get update
@@ -348,6 +371,17 @@ jobs:
           cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.apk" dist/QmClient-android.apk
           cp "${ANDROID_BUILD_DIR}/${ANDROID_APP_NAME}.aab" dist/QmClient-android.aab
           ls -lah dist
+
+      - name: Upload WebP libraries (for ddnet-libs)
+        if: steps.cache-webp.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: webp-android-libs
+          path: |
+            ddnet-libs/webp/android/
+            ddnet-libs/webp/include/
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
