@@ -104,6 +104,21 @@ jobs:
           python -m pip install dmgbuild
           echo "${PWD}/.venv-dmgbuild/bin" >> "$GITHUB_PATH"
 
+      - name: Copy WebP libraries for macOS
+        if: runner.os == 'macOS'
+        run: |
+          WEBP_LIBDIR=$(brew --prefix webp)/lib
+          mkdir -p ddnet-libs/webp/mac/lib64
+          cp "${WEBP_LIBDIR}/libwebp.7.dylib" ddnet-libs/webp/mac/lib64/ 2>/dev/null || true
+          cp "${WEBP_LIBDIR}/libwebpdemux.2.dylib" ddnet-libs/webp/mac/lib64/ 2>/dev/null || true
+          cp "${WEBP_LIBDIR}/libwebpmux.3.dylib" ddnet-libs/webp/mac/lib64/ 2>/dev/null || true
+          # Also copy to libarm64 for Apple Silicon
+          mkdir -p ddnet-libs/webp/mac/libarm64
+          cp "${WEBP_LIBDIR}/libwebp.7.dylib" ddnet-libs/webp/mac/libarm64/ 2>/dev/null || true
+          cp "${WEBP_LIBDIR}/libwebpdemux.2.dylib" ddnet-libs/webp/mac/libarm64/ 2>/dev/null || true
+          cp "${WEBP_LIBDIR}/libwebpmux.3.dylib" ddnet-libs/webp/mac/libarm64/ 2>/dev/null || true
+          ls -la ddnet-libs/webp/mac/lib64/
+
       - name: Configure (Linux)
         if: runner.os == 'Linux'
         run: >

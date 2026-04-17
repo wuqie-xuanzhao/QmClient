@@ -70,12 +70,25 @@ if(WebP_FOUND)
 endif()
 
 set(WebP_COPY_FILES)
-if(WebP_BUNDLED AND TARGET_OS STREQUAL "windows")
-  if(EXISTS "${EXTRA_WebP_LIBDIR}/libwebp.dll")
-    list(APPEND WebP_COPY_FILES
-      "${EXTRA_WebP_LIBDIR}/libwebp.dll"
-      "${EXTRA_WebP_LIBDIR}/libwebpdemux.dll"
-      "${EXTRA_WebP_LIBDIR}/libwebpmux.dll"
-    )
+if(WebP_BUNDLED)
+  if(TARGET_OS STREQUAL "windows")
+    if(EXISTS "${EXTRA_WebP_LIBDIR}/libwebp.dll")
+      list(APPEND WebP_COPY_FILES
+        "${EXTRA_WebP_LIBDIR}/libwebp.dll"
+        "${EXTRA_WebP_LIBDIR}/libwebpdemux.dll"
+        "${EXTRA_WebP_LIBDIR}/libwebpmux.dll"
+      )
+    endif()
+  elseif(TARGET_OS STREQUAL "mac")
+    # macOS dynamic libraries
+    if(EXISTS "${EXTRA_WebP_LIBDIR}/libwebp.7.dylib")
+      list(APPEND WebP_COPY_FILES "${EXTRA_WebP_LIBDIR}/libwebp.7.dylib")
+    endif()
+    if(EXISTS "${EXTRA_WebP_LIBDIR}/libwebpdemux.2.dylib")
+      list(APPEND WebP_COPY_FILES "${EXTRA_WebP_LIBDIR}/libwebpdemux.2.dylib")
+    endif()
+    if(EXISTS "${EXTRA_WebP_LIBDIR}/libwebpmux.3.dylib")
+      list(APPEND WebP_COPY_FILES "${EXTRA_WebP_LIBDIR}/libwebpmux.3.dylib")
+    endif()
   endif()
 endif()
