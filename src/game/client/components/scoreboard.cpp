@@ -1475,9 +1475,9 @@ void CScoreboard::OnRender()
 	const float SortButtonFontSize = 10.0f;
 	const char *pSortLabel = nullptr;
 	if(g_Config.m_ClScoreboardSortMode)
-		pSortLabel = TCLocalize("当前: 查分");
+		pSortLabel = Localize("Current: Ranks");
 	else
-		pSortLabel = TimeScore ? TCLocalize("当前: 时间") : TCLocalize("当前: 分数");
+		pSortLabel = TimeScore ? Localize("Current: Time") : Localize("Current: Score");
 	const float SortButtonWidth = TextRender()->TextWidth(SortButtonFontSize, pSortLabel) + 18.0f;
 	const ColorRGBA SortButtonBaseColor = g_Config.m_ClScoreboardSortMode ? ColorRGBA(0.25f, 0.55f, 0.8f, 0.6f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f);
 	const ColorRGBA SortButtonColor = SortButtonBaseColor.WithMultipliedAlpha(m_AnimContentAlpha);
@@ -1900,7 +1900,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 			}
 		}
 
-		pScoreboard->GameClient()->m_Tooltips.DoToolTip(&pPopupContext->m_FriendAction, &Action, Client.m_Friend ? Localize("移除好友") : Localize("Add friend"));
+		pScoreboard->GameClient()->m_Tooltips.DoToolTip(&pPopupContext->m_FriendAction, &Action, Client.m_Friend ? Localize("Remove friend") : Localize("Add friend"));
 
 		Action = CUiV2LegacyAdapter::ToCUIRect(vActions[1].m_Box);
 

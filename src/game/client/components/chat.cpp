@@ -1399,7 +1399,7 @@ void CChat::OnPrepareLines(float y)
 			// If hidden and there is translated text
 			if(pText != Line.m_aText)
 			{
-				pTranslatedError = TCLocalize("Translated text hidden due to streamer mode");
+				pTranslatedError = Localize("Translated text hidden due to streamer mode");
 			}
 			else if(Line.m_pTranslateResponse->m_Error)
 			{

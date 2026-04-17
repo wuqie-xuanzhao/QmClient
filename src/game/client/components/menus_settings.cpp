@@ -853,17 +853,17 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		CUIRect RotateMapRect;
 		QueueSection.HSplitTop(20.0f, &RotateMapRect, &QueueSection);
-		if(DoButton_CheckBox(&QueueRotateMap, Localize("轮换全图"), QueueRotateMap, &RotateMapRect))
+		if(DoButton_CheckBox(&QueueRotateMap, Localize("Rotate all maps"), QueueRotateMap, &RotateMapRect))
 		{
 			QueueRotateMap ^= 1;
 		}
-		GameClient()->m_Tooltips.DoToolTip(&QueueRotateMap, &RotateMapRect, Localize("获取全图玩家皮肤 ID 并自动作为轮换队列"));
+		GameClient()->m_Tooltips.DoToolTip(&QueueRotateMap, &RotateMapRect, Localize("Get all map players' skin IDs and auto add to rotate queue"));
 
 		QueueSection.HSplitTop(20.0f, &QueueControls, &QueueSection);
 		CUIRect IntervalRect, LengthRect;
 		QueueControls.VSplitMid(&IntervalRect, &LengthRect, 10.0f);
 		Ui()->DoScrollbarOption(&QueueInterval, &QueueInterval, &IntervalRect, Localize("切换间隔"), 5, 120, &CUi::ms_LinearScrollbarScale, 0, "s");
-		if(Ui()->DoScrollbarOption(&QueueLength, &QueueLength, &LengthRect, Localize("队列长度"), 0, QueueMaxLimit))
+		if(Ui()->DoScrollbarOption(&QueueLength, &QueueLength, &LengthRect, Localize("Queue length"), 0, QueueMaxLimit))
 		{
 			GameClient()->m_Skins.TrimSkinQueueToLimit(QueueDummy);
 		}
@@ -894,7 +894,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		if(SkinQueue.empty())
 		{
-			Ui()->DoLabel(&QueueList, Localize("队列为空"), 12.0f, TEXTALIGN_MC);
+			Ui()->DoLabel(&QueueList, Localize("Queue is empty"), 12.0f, TEXTALIGN_MC);
 		}
 		else
 		{
@@ -1017,7 +1017,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			QueuePresets.HSplitTop(18.0f, &PresetHeader, &QueuePresets);
 			const auto &vQueuePresets = GameClient()->m_Skins.SkinQueuePresets(QueueDummy);
 			char aPresetLabel[64];
-			str_format(aPresetLabel, sizeof(aPresetLabel), "%s (%d)", Localize("预设栏"), (int)vQueuePresets.size());
+			str_format(aPresetLabel, sizeof(aPresetLabel), "%s (%d)", Localize("Preset bar"), (int)vQueuePresets.size());
 			PresetHeader.VSplitLeft(6.0f, nullptr, &PresetHeader);
 			Ui()->DoLabel(&PresetHeader, aPresetLabel, 12.0f, TEXTALIGN_ML);
 
@@ -1027,7 +1027,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			PresetControls.VSplitLeft(110.0f, &SavePresetButton, nullptr);
 			static CButtonContainer s_SavePresetButton;
 			const bool DisableSavePreset = SkinQueue.empty();
-			if(DoButton_Menu(&s_SavePresetButton, Localize("保存当前"), DisableSavePreset ? -1 : 0, &SavePresetButton) && !DisableSavePreset)
+			if(DoButton_Menu(&s_SavePresetButton, Localize("Save current"), DisableSavePreset ? -1 : 0, &SavePresetButton) && !DisableSavePreset)
 			{
 				GameClient()->m_Skins.AddSkinQueuePresetFromCurrent(QueueDummy);
 			}
@@ -1082,7 +1082,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 					const bool ApplyHovered = Ui()->HotItem() == &s_vPresetApplyIds[i];
 					ApplyRect.Draw(ColorRGBA(0.25f, 0.6f, 0.35f, ApplyHovered ? 0.35f : 0.2f), IGraphics::CORNER_ALL, 3.0f);
-					Ui()->DoLabel(&ApplyRect, Localize("应用"), 10.0f, TEXTALIGN_MC);
+					Ui()->DoLabel(&ApplyRect, Localize("Apply"), 10.0f, TEXTALIGN_MC);
 					if(Ui()->DoButtonLogic(&s_vPresetApplyIds[i], 0, &ApplyRect, BUTTONFLAG_LEFT))
 					{
 						ApplyPresetIndex = (int)i;
@@ -1091,7 +1091,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 					const bool RemoveHovered = Ui()->HotItem() == &s_vPresetRemoveIds[i];
 					RemoveRect.Draw(ColorRGBA(0.75f, 0.25f, 0.25f, RemoveHovered ? 0.35f : 0.2f), IGraphics::CORNER_ALL, 3.0f);
-					Ui()->DoLabel(&RemoveRect, Localize("删除"), 10.0f, TEXTALIGN_MC);
+					Ui()->DoLabel(&RemoveRect, Localize("Delete"), 10.0f, TEXTALIGN_MC);
 					if(Ui()->DoButtonLogic(&s_vPresetRemoveIds[i], 0, &RemoveRect, BUTTONFLAG_LEFT))
 					{
 						RemovePresetIndex = (int)i;
@@ -1881,7 +1881,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		CUIRect RefreshButton;
 		HeaderRow.VSplitRight(80.0f, nullptr, &RefreshButton);
 		RefreshButton.VMargin(2.0f, &RefreshButton);
-		if(DoButton_Menu(&s_AudioPackRefreshButton, Localize("刷新"), 0, &RefreshButton))
+		if(DoButton_Menu(&s_AudioPackRefreshButton, Localize("Refresh"), 0, &RefreshButton))
 		{
 			RefreshAudioPacks(Storage(), s_vAudioPacks);
 		}
@@ -2122,8 +2122,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		s_apTabs[SETTINGS_SOUND] = Localize("Sound");
 		s_apTabs[SETTINGS_DDNET] = Localize("DDNet");
 		s_apTabs[SETTINGS_ASSETS] = Localize("Assets");
-		s_apTabs[SETTINGS_TCLIENT] = TCLocalize("TClient");
-		s_apTabs[SETTINGS_QIMENG] = TCLocalize("栖梦");
+		s_apTabs[SETTINGS_TCLIENT] = Localize("TClient");
+		s_apTabs[SETTINGS_QIMENG] = Localize("QmClient");
 		s_apTabs[SETTINGS_PROFILES] = Localize("Profiles");
 		s_apTabs[SETTINGS_CONFIGS] = Localize("Configs");
 	}
@@ -2635,7 +2635,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		DoLine_ColorPicker(&s_AuthedColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Authed name color in scoreboard"), &g_Config.m_ClAuthedPlayerColor, GreenDefault, false);
 		DoLine_ColorPicker(&s_SameClanColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Same clan color in scoreboard"), &g_Config.m_ClSameClanColor, GreenDefault, false);
 		DoLine_ColorPicker(&s_FriendsListFriendColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("好友列表中好友条目颜色"), &g_Config.m_ClFriendsListFriendColor, ColorRGBA(0.949f, 0.806f, 0.368f), false);
-		DoLine_ColorPicker(&s_FriendsListClanColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("好友列表中战队成员条目颜色"), &g_Config.m_ClFriendsListClanColor, ColorRGBA(0.336f, 0.231f, 0.867f), false);
+		DoLine_ColorPicker(&s_FriendsListClanColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Clan color in friends list"), &g_Config.m_ClFriendsListClanColor, ColorRGBA(0.336f, 0.231f, 0.867f), false);
 
 		// ***** DDRace HUD ***** //
 		Ui()->DoLabel_AutoLineSize(Localize("DDRace HUD"), HeadlineFontSize,
@@ -2660,9 +2660,9 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		// Switch for dummy actions display
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClShowhudDummyActions, Localize("Show dummy actions"), &g_Config.m_ClShowhudDummyActions, &RightView, LineSize);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClShowhudKeyStatusReset, Localize("显示卡键状态"), &g_Config.m_ClShowhudKeyStatusReset, &RightView, LineSize);
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClShowhudKeyStatusHammer, Localize("显示锤状态"), &g_Config.m_ClShowhudKeyStatusHammer, &RightView, LineSize);
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClShowhudKeyStatusControl, Localize("显示分身控制状态"), &g_Config.m_ClShowhudKeyStatusControl, &RightView, LineSize);
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClShowhudKeyStatusSync, Localize("显示分身同步状态"), &g_Config.m_ClShowhudKeyStatusSync, &RightView, LineSize);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClShowhudKeyStatusHammer, Localize("Show hammer status"), &g_Config.m_ClShowhudKeyStatusHammer, &RightView, LineSize);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClShowhudKeyStatusControl, Localize("Show dummy control status"), &g_Config.m_ClShowhudKeyStatusControl, &RightView, LineSize);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClShowhudKeyStatusSync, Localize("Show dummy sync status"), &g_Config.m_ClShowhudKeyStatusSync, &RightView, LineSize);
 
 		// Player movement information display settings
 		RightView.HSplitTop(MarginSmall, nullptr, &RightView); // TClient
@@ -3082,7 +3082,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			Ui()->DoScrollbarOption(&g_Config.m_ClNamePlatesClanSize, &g_Config.m_ClNamePlatesClanSize, &Button, Localize("Clan plates size"), -50, 100);
 
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
-		Ui()->DoScrollbarOption(&g_Config.m_ClNamePlatesCoordsSize, &g_Config.m_ClNamePlatesCoordsSize, &Button, Localize("坐标大小"), -50, 100);
+		Ui()->DoScrollbarOption(&g_Config.m_ClNamePlatesCoordsSize, &g_Config.m_ClNamePlatesCoordsSize, &Button, Localize("Coords size"), -50, 100);
 
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClNamePlatesTeamcolors, Localize("Use team colors for name plates"), &g_Config.m_ClNamePlatesTeamcolors, &LeftView, LineSize);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClNamePlatesFriendMark, Localize("Show friend icon in name plates"), &g_Config.m_ClNamePlatesFriendMark, &LeftView, LineSize);

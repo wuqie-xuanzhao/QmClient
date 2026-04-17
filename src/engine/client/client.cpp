@@ -5246,23 +5246,12 @@ int main(int argc, const char **argv)
 
 	// execute config file
 	pConsole->SetUnknownCommandCallback(SaveUnknownCommandCallback, pClient);
-	static constexpr const char *pLegacyTClientConfigPath = "settings_tclient.cfg";
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
 		const char *pConfigPath = s_aConfigDomains[ConfigDomain].m_aConfigPath;
 		if(!pStorage->FileExists(pConfigPath, IStorage::TYPE_ALL))
 		{
-			if(ConfigDomain == ConfigDomain::TCLIENT &&
-				pStorage->FileExists(pLegacyTClientConfigPath, IStorage::TYPE_ALL))
-			{
-				pConfigPath = pLegacyTClientConfigPath;
-				log_info("client", "loading legacy config '%s' because '%s' was not found",
-					pLegacyTClientConfigPath, s_aConfigDomains[ConfigDomain].m_aConfigPath);
-			}
-			else
-			{
-				continue;
-			}
+			continue;
 		}
 
 		if(!pConsole->ExecuteFile(pConfigPath))

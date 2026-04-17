@@ -299,8 +299,8 @@ MACRO_CONFIG_INT(TcModWeapon, tc_mod_weapon, 0, 0, 1, CFGFLAG_CLIENT, "当你指
 MACRO_CONFIG_STR(TcModWeaponCommand, tc_mod_weapon_command, 256, "rcon kill_pl", CFGFLAG_CLIENT | CFGFLAG_SAVE, "使用 tc_mod_weapon 运行的命令，id 附加到命令末尾")
 
 // Run on join
-MACRO_CONFIG_STR(TcExecuteOnConnect, tc_execute_on_connect, 100, "Run a console command before connect", CFGFLAG_CLIENT | CFGFLAG_SAVE, "")
-MACRO_CONFIG_STR(TcExecuteOnJoin, tc_execute_on_join, 100, "Run a console command on join", CFGFLAG_CLIENT | CFGFLAG_SAVE, "")
+MACRO_CONFIG_STR(TcExecuteOnConnect, tc_execute_on_connect, 100, "连接时运行的命令", CFGFLAG_CLIENT | CFGFLAG_SAVE, "")
+MACRO_CONFIG_STR(TcExecuteOnJoin, tc_execute_on_join, 100, "加入时运行的命令", CFGFLAG_CLIENT | CFGFLAG_SAVE, "")
 MACRO_CONFIG_INT(TcExecuteOnJoinDelay, tc_execute_on_join_delay, 2, 7, 50000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "勾选执行 tc_execute_on_join 之前的延迟")
 
 // Custom Communities
@@ -326,20 +326,19 @@ MACRO_CONFIG_INT(TcSidebarShowTime, tc_sidebar_show_time, 1, 0, 1, CFGFLAG_CLIEN
 MACRO_CONFIG_INT(TcSidebarShowServerInfo, tc_sidebar_show_server_info, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在侧边栏中显示服务器信息")
 
 // UI Settings
-MACRO_CONFIG_INT(TcUiShowTClient, tc_ui_show_tclient, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示 TClient 配置变量")
 MACRO_CONFIG_INT(TcUiShowQimeng, tc_ui_show_qimeng, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示栖梦配置变量")
 MACRO_CONFIG_INT(TcUiShowDDNet, tc_ui_show_ddnet, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示 DDNet 配置变量")
 MACRO_CONFIG_INT(TcUiCompactList, tc_ui_compact_list, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "对配置变量使用紧凑列表视图")
 MACRO_CONFIG_INT(TcUiOnlyModified, tc_ui_only_modified, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "只显示修改的配置变量")
 
 // Config Tags Filter Settings (default 0 = not filtering, 1 = show only this tag)
-MACRO_CONFIG_INT(TcUiTagVisual, tc_ui_tag_visual, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示视觉效果类")
-MACRO_CONFIG_INT(TcUiTagHud, tc_ui_tag_hud, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示界面显示类")
-MACRO_CONFIG_INT(TcUiTagInput, tc_ui_tag_input, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示输入优化类")
-MACRO_CONFIG_INT(TcUiTagChat, tc_ui_tag_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示聊天相关类")
-MACRO_CONFIG_INT(TcUiTagAudio, tc_ui_tag_audio, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示语音音效类")
-MACRO_CONFIG_INT(TcUiTagAutomation, tc_ui_tag_automation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示自动化功能类")
-MACRO_CONFIG_INT(TcUiTagSocial, tc_ui_tag_social, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示社交功能类")
-MACRO_CONFIG_INT(TcUiTagCamera, tc_ui_tag_camera, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示相机视野类")
-MACRO_CONFIG_INT(TcUiTagGameplay, tc_ui_tag_gameplay, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示游戏玩法类")
-MACRO_CONFIG_INT(TcUiTagMisc, tc_ui_tag_misc, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs筛选: 显示其他杂项")
+MACRO_CONFIG_INT(TcUiTagVisual, tc_ui_tag_visual, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示视觉效果类")
+MACRO_CONFIG_INT(TcUiTagHud, tc_ui_tag_hud, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示界面显示类")
+MACRO_CONFIG_INT(TcUiTagInput, tc_ui_tag_input, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示输入优化类")
+MACRO_CONFIG_INT(TcUiTagChat, tc_ui_tag_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示聊天相关类")
+MACRO_CONFIG_INT(TcUiTagAudio, tc_ui_tag_audio, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示语音音效类")
+MACRO_CONFIG_INT(TcUiTagAutomation, tc_ui_tag_automation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示自动化功能类")
+MACRO_CONFIG_INT(TcUiTagSocial, tc_ui_tag_social, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示社交功能类")
+MACRO_CONFIG_INT(TcUiTagCamera, tc_ui_tag_camera, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示相机视野类")
+MACRO_CONFIG_INT(TcUiTagGameplay, tc_ui_tag_gameplay, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示游戏玩法类")
+MACRO_CONFIG_INT(TcUiTagMisc, tc_ui_tag_misc, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Configs 筛选: 显示其他杂项")

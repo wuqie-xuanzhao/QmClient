@@ -1646,46 +1646,6 @@ set(EXPECTED_DATA
   qmclient/fonts/Rubik-Regular.ttf
   qmclient/fonts/minecraft_font.ttf
   qmclient/gui_logo.png
-  qmclient/languages/arabic.txt
-  qmclient/languages/azerbaijani.txt
-  qmclient/languages/belarusian.txt
-  qmclient/languages/bosnian.txt
-  qmclient/languages/brazilian_portuguese.txt
-  qmclient/languages/bulgarian.txt
-  qmclient/languages/catalan.txt
-  qmclient/languages/chuvash.txt
-  qmclient/languages/czech.txt
-  qmclient/languages/danish.txt
-  qmclient/languages/dutch.txt
-  qmclient/languages/esperanto.txt
-  qmclient/languages/estonian.txt
-  qmclient/languages/finnish.txt
-  qmclient/languages/french.txt
-  qmclient/languages/galician.txt
-  qmclient/languages/german.txt
-  qmclient/languages/greek.txt
-  qmclient/languages/hungarian.txt
-  qmclient/languages/index.txt
-  qmclient/languages/italian.txt
-  qmclient/languages/japanese.txt
-  qmclient/languages/korean.txt
-  qmclient/languages/kyrgyz.txt
-  qmclient/languages/license.txt
-  qmclient/languages/norwegian.txt
-  qmclient/languages/persian.txt
-  qmclient/languages/polish.txt
-  qmclient/languages/portuguese.txt
-  qmclient/languages/romanian.txt
-  qmclient/languages/russian.txt
-  qmclient/languages/serbian.txt
-  qmclient/languages/serbian_cyrillic.txt
-  qmclient/languages/simplified_chinese.txt
-  qmclient/languages/slovak.txt
-  qmclient/languages/spanish.txt
-  qmclient/languages/swedish.txt
-  qmclient/languages/traditional_chinese.txt
-  qmclient/languages/turkish.txt
-  qmclient/languages/ukrainian.txt
   race_flag.png
   shader/pipeline.frag
   shader/pipeline.vert
@@ -3215,9 +3175,9 @@ if(TOOLS)
       set(TOOL_LIBS ${LIBS})
       unset(EXTRA_TOOL_SRC)
       if(TOOL MATCHES "^(dilate|map_convert_07|map_optimize|map_extract|map_replace_image)$")
-        list(APPEND TOOL_INCLUDE_DIRS ${PNG_INCLUDE_DIRS})
+        list(APPEND TOOL_INCLUDE_DIRS ${PNG_INCLUDE_DIRS} ${WebP_INCLUDE_DIRS})
         list(APPEND TOOL_DEPS $<TARGET_OBJECTS:engine-gfx>)
-        list(APPEND TOOL_LIBS ${PNG_LIBRARIES})
+        list(APPEND TOOL_LIBS ${PNG_LIBRARIES} ${WebP_LIBRARIES})
       endif()
       if(TOOL MATCHES "^config_")
         list(APPEND EXTRA_TOOL_SRC "src/tools/config_common.h")
@@ -3365,7 +3325,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     $<TARGET_OBJECTS:rust-bridge-shared>
     ${DEPS}
   )
-  target_link_libraries(${TARGET_TESTRUNNER} ${PNG_LIBRARIES} ${GTEST_LIBRARIES} ${LIBS_SERVER})
+  target_link_libraries(${TARGET_TESTRUNNER} ${PNG_LIBRARIES} ${WebP_LIBRARIES} ${GTEST_LIBRARIES} ${LIBS_SERVER})
   target_include_directories(${TARGET_TESTRUNNER} SYSTEM PRIVATE ${GTEST_INCLUDE_DIRS})
 
   list(APPEND TARGETS_OWN ${TARGET_TESTRUNNER})
