@@ -179,17 +179,25 @@ jobs:
         run: |
           WEBP_LIBDIR=$(brew --prefix webp)/lib
           WEBP_OLD_ID=$(otool -D "${WEBP_LIBDIR}/libwebp.7.dylib" | tail -1)
+          SHARPYUV_OLD_ID=$(otool -D "${WEBP_LIBDIR}/libsharpyuv.0.dylib" 2>/dev/null | tail -1)
           for DIR in lib64 libarm64; do
             mkdir -p "ddnet-libs/webp/mac/${DIR}"
             cp "${WEBP_LIBDIR}/libwebp.7.dylib" "ddnet-libs/webp/mac/${DIR}/" 2>/dev/null || true
             cp "${WEBP_LIBDIR}/libwebpdemux.2.dylib" "ddnet-libs/webp/mac/${DIR}/" 2>/dev/null || true
             cp "${WEBP_LIBDIR}/libwebpmux.3.dylib" "ddnet-libs/webp/mac/${DIR}/" 2>/dev/null || true
+            cp "${WEBP_LIBDIR}/libsharpyuv.0.dylib" "ddnet-libs/webp/mac/${DIR}/" 2>/dev/null || true
             install_name_tool -id @rpath/libwebp.7.dylib "ddnet-libs/webp/mac/${DIR}/libwebp.7.dylib" 2>/dev/null || true
             install_name_tool -id @rpath/libwebpdemux.2.dylib "ddnet-libs/webp/mac/${DIR}/libwebpdemux.2.dylib" 2>/dev/null || true
             install_name_tool -id @rpath/libwebpmux.3.dylib "ddnet-libs/webp/mac/${DIR}/libwebpmux.3.dylib" 2>/dev/null || true
+            install_name_tool -id @rpath/libsharpyuv.0.dylib "ddnet-libs/webp/mac/${DIR}/libsharpyuv.0.dylib" 2>/dev/null || true
             if [ -n "${WEBP_OLD_ID}" ]; then
               install_name_tool -change "${WEBP_OLD_ID}" @rpath/libwebp.7.dylib "ddnet-libs/webp/mac/${DIR}/libwebpdemux.2.dylib" 2>/dev/null || true
               install_name_tool -change "${WEBP_OLD_ID}" @rpath/libwebp.7.dylib "ddnet-libs/webp/mac/${DIR}/libwebpmux.3.dylib" 2>/dev/null || true
+            fi
+            if [ -n "${SHARPYUV_OLD_ID}" ]; then
+              install_name_tool -change "${SHARPYUV_OLD_ID}" @rpath/libsharpyuv.0.dylib "ddnet-libs/webp/mac/${DIR}/libwebp.7.dylib" 2>/dev/null || true
+              install_name_tool -change "${SHARPYUV_OLD_ID}" @rpath/libsharpyuv.0.dylib "ddnet-libs/webp/mac/${DIR}/libwebpdemux.2.dylib" 2>/dev/null || true
+              install_name_tool -change "${SHARPYUV_OLD_ID}" @rpath/libsharpyuv.0.dylib "ddnet-libs/webp/mac/${DIR}/libwebpmux.3.dylib" 2>/dev/null || true
             fi
           done
           echo "Verifying WebP install_name:"
