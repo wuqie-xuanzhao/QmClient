@@ -2031,8 +2031,6 @@ CNamePlates::CNamePlates() :
 
 CNamePlates::~CNamePlates()
 {
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-		ResetChatBubbleAnimState(i, true);
 	delete m_pData;
 }
 

@@ -3712,11 +3712,12 @@ if(CLIENT AND DMGBUILD)
   list(APPEND PACKAGE_TARGETS package_dmg)
 endif()
 
-foreach(ext zip tar.gz tar.xz)
-  set(TAR_MODE c)
-  set(TAR_EXTRA_ARGS)
-  string(REPLACE . _ EXT_SLUG ${ext})
+if(TARGET_OS STREQUAL "windows")
+  find_program(7Z_EXECUTABLE 7z)
+endif()
 
+foreach(ext zip tar.gz tar.xz 7z)
+  string(REPLACE . _ EXT_SLUG ${ext})
   set(TMPDIR pack_${CPACK_PACKAGE_FILE_NAME}_${EXT_SLUG}/${CPACK_PACKAGE_FILE_NAME})
 
   set(COPY_FILE_COMMANDS)
@@ -3739,12 +3740,18 @@ foreach(ext zip tar.gz tar.xz)
     endif()
   endforeach()
 
+  set(PACKAGE_COMMAND)
   if(ext STREQUAL zip)
-    set(TAR_EXTRA_ARGS --format=zip)
+    set(PACKAGE_COMMAND COMMAND ${CMAKE_COMMAND} -E chdir pack_${CPACK_PACKAGE_FILE_NAME}_${EXT_SLUG} ${CMAKE_COMMAND} -E tar c ../${CPACK_PACKAGE_FILE_NAME}.${ext} --format=zip -- ${CPACK_PACKAGE_FILE_NAME}/)
   elseif(ext STREQUAL tar.gz)
-    set(TAR_MODE cz)
+    set(PACKAGE_COMMAND COMMAND ${CMAKE_COMMAND} -E chdir pack_${CPACK_PACKAGE_FILE_NAME}_${EXT_SLUG} ${CMAKE_COMMAND} -E tar cz ../${CPACK_PACKAGE_FILE_NAME}.${ext} -- ${CPACK_PACKAGE_FILE_NAME}/)
   elseif(ext STREQUAL tar.xz)
-    set(TAR_MODE cJ)
+    set(PACKAGE_COMMAND COMMAND ${CMAKE_COMMAND} -E chdir pack_${CPACK_PACKAGE_FILE_NAME}_${EXT_SLUG} ${CMAKE_COMMAND} -E tar cJ ../${CPACK_PACKAGE_FILE_NAME}.${ext} -- ${CPACK_PACKAGE_FILE_NAME}/)
+  elseif(ext STREQUAL 7z)
+    if(NOT 7Z_EXECUTABLE)
+      continue()
+    endif()
+    set(PACKAGE_COMMAND COMMAND ${CMAKE_COMMAND} -E chdir pack_${CPACK_PACKAGE_FILE_NAME}_${EXT_SLUG} ${7Z_EXECUTABLE} a -t7z -mx=5 ../${CPACK_PACKAGE_FILE_NAME}.${ext} ${CPACK_PACKAGE_FILE_NAME}/)
   endif()
   add_custom_command(OUTPUT ${CPACK_PACKAGE_FILE_NAME}.${ext}
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${TMPDIR}
@@ -3753,42 +3760,12 @@ foreach(ext zip tar.gz tar.xz)
     ${COPY_DIR_COMMANDS}
     ${COPY_TARGET_COMMANDS}
     ${STRIP_TARGET_COMMANDS}
-    COMMAND ${CMAKE_COMMAND} -E chdir pack_${CPACK_PACKAGE_FILE_NAME}_${EXT_SLUG} ${CMAKE_COMMAND} -E tar ${TAR_MODE} ../${CPACK_PACKAGE_FILE_NAME}.${ext} ${TAR_EXTRA_ARGS} -- ${CPACK_PACKAGE_FILE_NAME}/
+    ${PACKAGE_COMMAND}
     DEPENDS ${CPACK_TARGETS}
   )
   add_custom_target(package_${EXT_SLUG} DEPENDS ${CPACK_PACKAGE_FILE_NAME}.${ext})
   list(APPEND PACKAGE_TARGETS package_${EXT_SLUG})
 endforeach()
-
-if(TARGET_OS STREQUAL "windows")
-  set(_7Z_TMPDIR pack_${CPACK_PACKAGE_FILE_NAME}_7z/${CPACK_PACKAGE_FILE_NAME})
-  set(_7Z_COPY_FILE_COMMANDS)
-  set(_7Z_COPY_DIR_COMMANDS)
-  set(_7Z_COPY_TARGET_COMMANDS)
-  foreach(file ${CPACK_FILES})
-    list(APPEND _7Z_COPY_FILE_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/${file} ${_7Z_TMPDIR}/)
-  endforeach()
-  foreach(file ${CPACK_GEN_FILES})
-    list(APPEND _7Z_COPY_FILE_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/${file} ${_7Z_TMPDIR}/${file})
-  endforeach()
-  foreach(dir ${CPACK_DIRS})
-    list(APPEND _7Z_COPY_DIR_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/${dir} ${_7Z_TMPDIR}/${dir})
-  endforeach()
-  foreach(target ${CPACK_TARGETS})
-    list(APPEND _7Z_COPY_TARGET_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${target}> ${_7Z_TMPDIR}/)
-  endforeach()
-  add_custom_command(OUTPUT ${CPACK_PACKAGE_FILE_NAME}.7z
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${_7Z_TMPDIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${_7Z_TMPDIR}
-    ${_7Z_COPY_FILE_COMMANDS}
-    ${_7Z_COPY_DIR_COMMANDS}
-    ${_7Z_COPY_TARGET_COMMANDS}
-    COMMAND ${CMAKE_COMMAND} -E chdir pack_${CPACK_PACKAGE_FILE_NAME}_7z 7z a -t7z -mx=9 ../${CPACK_PACKAGE_FILE_NAME}.7z ${CPACK_PACKAGE_FILE_NAME}/
-    DEPENDS ${CPACK_TARGETS}
-  )
-  add_custom_target(package_7z DEPENDS ${CPACK_PACKAGE_FILE_NAME}.7z)
-  list(APPEND PACKAGE_TARGETS package_7z)
-endif()
 
 set(PACKAGE_DEFAULT tar_xz)
 if(TARGET_OS STREQUAL "windows")
