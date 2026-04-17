@@ -269,8 +269,7 @@ jobs:
           if (-not $innerDir) {
             throw "No inner directory found in pack directory"
           }
-          $version = $innerDir.Name -replace '^QmClient-', ''
-          $sevenZipName = "QmClient-${version}-win64.7z"
+          $sevenZipName = "$($innerDir.Name).7z"
           Write-Host "Creating 7z from: $($innerDir.FullName)"
           Write-Host "Output: $sevenZipName"
           Push-Location $packDir.FullName
@@ -297,15 +296,24 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          New-Item -ItemType Directory -Path dist -Force | Out-Null
-          $pkg = Get-ChildItem -Path build -Recurse -File -Filter "*.${{ matrix.package_ext }}" |
+          if (-not (Test-Path dist)) { New-Item -ItemType Directory -Path dist -Force | Out-Null }
+          Write-Host "Looking for *.${{ matrix.package_ext }} in build/..."
+          Get-ChildItem -Path build -Recurse -File -Filter "*.${{ matrix.package_ext }}" | ForEach-Object { Write-Host "  Found: $($_.FullName)" }
+          $pkg = Get-ChildItem -Path build -File -Filter "*.${{ matrix.package_ext }}" |
             Where-Object { $_.Name -notmatch "-src\\." } |
             Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
           if (-not $pkg) {
+            $pkg = Get-ChildItem -Path build -Recurse -File -Filter "*.${{ matrix.package_ext }}" |
+              Where-Object { $_.Name -notmatch "-src\\." -and $_.Name -match "QmClient" } |
+              Sort-Object LastWriteTime -Descending |
+              Select-Object -First 1
+          }
+          if (-not $pkg) {
             throw "No package with extension .${{ matrix.package_ext }} found under build/"
           }
-          Copy-Item -Path $pkg.FullName -Destination "dist\\${{ matrix.output_name }}"
+          Write-Host "Copying: $($pkg.FullName) -> dist/${{ matrix.output_name }}"
+          Copy-Item -Path $pkg.FullName -Destination "dist/${{ matrix.output_name }}"
           Get-ChildItem -Path dist
 
       - name: Upload packaged artifact
