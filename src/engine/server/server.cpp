@@ -4888,7 +4888,7 @@ void CServer::RegisterCommands()
 	Console()->SetCanUseCommandCallback(CanClientUseCommandCallback, this);
 }
 
-int CServer::SnapNewId()
+std::optional<int> CServer::SnapNewId()
 {
 	return m_IdPool.NewId();
 }
