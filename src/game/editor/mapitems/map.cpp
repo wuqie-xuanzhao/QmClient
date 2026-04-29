@@ -114,7 +114,7 @@ void CEditorMap::Clean()
 	m_ShiftBy = 1;
 
 	m_MapViewState.Reset(Editor());
-	Editor()->QuadKnife()->Deactivate();
+	m_QuadKnifeState.Reset();
 }
 
 void CEditorMap::CreateDefault()
@@ -356,7 +356,7 @@ void CEditorMap::SelectLayer(int LayerIndex, int GroupIndex)
 void CEditorMap::AddSelectedLayer(int LayerIndex)
 {
 	m_vSelectedLayers.push_back(LayerIndex);
-	Editor()->QuadKnife()->Deactivate();
+	m_QuadKnifeState.Reset();
 }
 
 void CEditorMap::SelectNextLayer()
