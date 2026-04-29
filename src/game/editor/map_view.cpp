@@ -134,8 +134,8 @@ void CEditor::DoMapEditor(CUIRect View)
 	const bool Inside = Ui()->MouseInside(&View);
 
 	// fetch mouse position
-	float wx = Ui()->MouseWorldX();
-	float wy = Ui()->MouseWorldY();
+	float wx = MapView()->MouseWorldX();
+	float wy = MapView()->MouseWorldY();
 	float mx = Ui()->MouseX();
 	float my = Ui()->MouseY();
 

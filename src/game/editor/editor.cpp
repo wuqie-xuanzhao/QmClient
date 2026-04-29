@@ -815,7 +815,7 @@ void CEditor::DoSoundSource(int LayerIndex, CSoundSource *pSource, int Index)
 		{
 			if(s_Operation == ESoundSourceOp::OP_MOVE)
 			{
-				vec2 Pos = Ui()->MouseWorldPos();
+				vec2 Pos = MapView()->MouseWorldPos();
 				if(MapView()->MapGrid()->IsEnabled() && !IgnoreGrid)
 				{
 					MapView()->MapGrid()->SnapToGrid(Pos);
@@ -884,7 +884,7 @@ void CEditor::DoSoundSource(int LayerIndex, CSoundSource *pSource, int Index)
 
 void CEditor::UpdateHotSoundSource(const CLayerSounds *pLayer)
 {
-	const vec2 MouseWorld = Ui()->MouseWorldPos();
+	const vec2 MouseWorld = MapView()->MouseWorldPos();
 
 	float MinDist = 500.0f;
 	const void *pMinSourceId = nullptr;
@@ -1394,7 +1394,7 @@ void CEditor::DoQuad(int LayerIndex, const std::shared_ptr<CLayerQuads> &pLayer,
 	const bool IgnoreGrid = Input()->AltIsPressed();
 
 	auto &&GetDragOffset = [&]() -> ivec2 {
-		vec2 Pos = Ui()->MouseWorldPos();
+		vec2 Pos = MapView()->MouseWorldPos();
 		if(MapView()->MapGrid()->IsEnabled() && !IgnoreGrid)
 		{
 			MapView()->MapGrid()->SnapToGrid(Pos);
@@ -1703,7 +1703,7 @@ void CEditor::DoQuadPoint(int LayerIndex, const std::shared_ptr<CLayerQuads> &pL
 	static ivec2 s_LastOffset;
 
 	auto &&GetDragOffset = [&]() -> ivec2 {
-		vec2 Pos = Ui()->MouseWorldPos();
+		vec2 Pos = MapView()->MouseWorldPos();
 		if(MapView()->MapGrid()->IsEnabled() && !IgnoreGrid)
 		{
 			MapView()->MapGrid()->SnapToGrid(Pos);
@@ -2057,7 +2057,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, CEnvelope *pEnvelope, int QuadI
 		{
 			if(m_QuadEnvelopePointOperation == EQuadEnvelopePointOperation::MOVE)
 			{
-				vec2 Pos = Ui()->MouseWorldPos();
+				vec2 Pos = MapView()->MouseWorldPos();
 				if(MapView()->MapGrid()->IsEnabled() && !IgnoreGrid)
 				{
 					MapView()->MapGrid()->SnapToGrid(Pos);
@@ -2118,7 +2118,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, CEnvelope *pEnvelope, int QuadI
 
 void CEditor::UpdateHotQuadPoint(const CLayerQuads *pLayer)
 {
-	const vec2 MouseWorld = Ui()->MouseWorldPos();
+	const vec2 MouseWorld = MapView()->MouseWorldPos();
 
 	float MinDist = 500.0f;
 	const void *pMinPointId = nullptr;
@@ -6017,7 +6017,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	char aTimeStr[6];
 	str_timestamp_format(aTimeStr, sizeof(aTimeStr), "%H:%M");
 
-	str_format(aBuf, sizeof(aBuf), "坐标X: %.1f, 坐标Y: %.1f, 缩放: %.1f, 动画: %.1f, 网格: %i  %s", Ui()->MouseWorldX() / 32.0f, Ui()->MouseWorldY() / 32.0f, MapView()->Zoom()->GetValue(), m_AnimateSpeed, MapView()->MapGrid()->Factor(), aTimeStr);
+	str_format(aBuf, sizeof(aBuf), "坐标X: %.1f, 坐标Y: %.1f, 缩放: %.1f, 动画: %.1f, 网格: %i  %s", MapView()->MouseWorldX() / 32.0f, MapView()->MouseWorldY() / 32.0f, MapView()->Zoom()->GetValue(), m_AnimateSpeed, MapView()->MapGrid()->Factor(), aTimeStr);
 	Ui()->DoLabel(&Info, aBuf, 10.0f, TEXTALIGN_MR);
 
 	static int s_HelpButton = 0;
@@ -6930,7 +6930,7 @@ void CEditor::MouseAxisLock(vec2 &CursorRel)
 		if(m_pBrush->IsEmpty() || Ui()->HotItem() != MapView())
 			return;
 
-		const vec2 CurrentWorldPos = vec2(Ui()->MouseWorldX(), Ui()->MouseWorldY()) / 32.0f;
+		const vec2 CurrentWorldPos = vec2(MapView()->MouseWorldX(), MapView()->MouseWorldY()) / 32.0f;
 
 		if(m_MouseAxisLockState == EAxisLock::Start)
 		{
@@ -7156,7 +7156,7 @@ void CEditor::OnRender()
 	m_pUiGotContext = nullptr;
 	Ui()->StartCheck();
 
-	Ui()->Update(MapView()->MouseWorldPos());
+	Ui()->Update();
 
 	Render();
 
