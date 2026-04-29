@@ -249,8 +249,8 @@ void CEditor::DoMapEditor(CUIRect View)
 		MapView()->MapGrid()->OnRender(View);
 	}
 
-	const bool ShouldPan = Ui()->HotItem() == &m_MapEditorId && ((Input()->ModifierIsPressed() && Ui()->MouseButton(0)) || Ui()->MouseButton(2));
-	if(m_pContainerPanned == &m_MapEditorId)
+	const bool ShouldPan = Ui()->HotItem() == MapView() && ((Input()->ModifierIsPressed() && Ui()->MouseButton(0)) || Ui()->MouseButton(2));
+	if(m_pContainerPanned == MapView())
 	{
 		// do panning
 		if(ShouldPan)
@@ -259,7 +259,7 @@ void CEditor::DoMapEditor(CUIRect View)
 				s_Operation = OP_PAN_EDITOR;
 			else
 				s_Operation = OP_PAN_WORLD;
-			Ui()->SetActiveItem(&m_MapEditorId);
+			Ui()->SetActiveItem(MapView());
 		}
 		else
 		{
@@ -278,7 +278,7 @@ void CEditor::DoMapEditor(CUIRect View)
 	if(Inside || m_DrawingTools.IsDrawing())
 	{
 		if(Inside)
-			Ui()->SetHotItem(&m_MapEditorId);
+			Ui()->SetHotItem(MapView());
 
 		// do global operations like pan and zoom
 		if(Ui()->CheckActiveItem(nullptr) && (Ui()->MouseButton(0) || Ui()->MouseButton(2)))
@@ -287,11 +287,11 @@ void CEditor::DoMapEditor(CUIRect View)
 			s_StartWy = wy;
 
 			if(ShouldPan && m_pContainerPanned == nullptr)
-				m_pContainerPanned = &m_MapEditorId;
+				m_pContainerPanned = MapView();
 		}
 
 		// brush editing
-		if(Ui()->HotItem() == &m_MapEditorId || m_DrawingTools.IsDrawing())
+		if(Ui()->HotItem() == MapView() || m_DrawingTools.IsDrawing())
 		{
 			if(m_ShowPicker)
 			{
@@ -356,7 +356,7 @@ void CEditor::DoMapEditor(CUIRect View)
 				m_DrawingTools.RenderPreview(this);
 			}
 
-			if(!DrawingToolsHandled && Ui()->CheckActiveItem(&m_MapEditorId))
+			if(!DrawingToolsHandled && Ui()->CheckActiveItem(MapView()))
 			{
 				CUIRect r;
 				r.x = s_StartWx;
@@ -473,7 +473,7 @@ void CEditor::DoMapEditor(CUIRect View)
 
 				if(!Input()->ModifierIsPressed() && Ui()->MouseButton(0) && s_Operation == OP_NONE && !m_QuadKnife.IsActive())
 				{
-					Ui()->SetActiveItem(&m_MapEditorId);
+					Ui()->SetActiveItem(MapView());
 
 					if(m_pBrush->IsEmpty())
 					{
@@ -682,7 +682,7 @@ void CEditor::DoMapEditor(CUIRect View)
 		}
 	}
 
-	if(Ui()->CheckActiveItem(&m_MapEditorId) && m_pContainerPanned == nullptr)
+	if(Ui()->CheckActiveItem(MapView()) && m_pContainerPanned == nullptr)
 	{
 		// release mouse
 		if(!Ui()->MouseButton(0))
