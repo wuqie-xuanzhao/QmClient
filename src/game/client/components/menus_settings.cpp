@@ -4778,7 +4778,7 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 	gs_LanguageScrollToSelected = false;
 	CUIRect ScrollRegion;
 	ScrollRegion.x = MainView.x;
-	ScrollRegion.y = Content.y + CScrollRegion::HEIGHT_MAGIC_FIX;
+	ScrollRegion.y = Content.y;
 	ScrollRegion.w = MainView.w;
 	ScrollRegion.h = 0.0f;
 	FinishSettingsScrollRegion(gs_LanguageScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_LANGUAGE);
