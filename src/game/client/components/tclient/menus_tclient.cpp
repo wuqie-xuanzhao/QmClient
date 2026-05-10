@@ -3345,7 +3345,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	ScrollRegion.h = 0.0f;
 	if(PrewarmOnly)
 	{
-		const float ContentHeight = std::ceil(ScrollRegion.y - (Viewport.y + ScrollOffset.y)) + CScrollRegion::HEIGHT_MAGIC_FIX;
+		const float ContentHeight = std::ceil(ScrollRegion.y - (Viewport.y + ScrollOffset.y));
 		s_ScrollRegion.SetContentHeightForNextFrame(ContentHeight);
 	}
 	else
