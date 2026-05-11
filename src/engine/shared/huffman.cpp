@@ -134,6 +134,9 @@ void CHuffman::Init()
 //***************************************************************
 int CHuffman::Compress(const void *pInput, int InputSize, void *pOutput, int OutputSize) const
 {
+	dbg_assert(InputSize >= 0, "Invalid InputSize: %d", InputSize);
+	dbg_assert(OutputSize > 0, "Invalid OutputSize: %d", OutputSize);
+
 	// this macro loads a symbol for a byte into bits and bitcount
 #define HUFFMAN_MACRO_LOADSYMBOL(Sym) \
 	do \
@@ -207,6 +210,9 @@ int CHuffman::Compress(const void *pInput, int InputSize, void *pOutput, int Out
 //***************************************************************
 int CHuffman::Decompress(const void *pInput, int InputSize, void *pOutput, int OutputSize) const
 {
+	dbg_assert(InputSize >= 0, "Invalid InputSize: %d", InputSize);
+	dbg_assert(OutputSize > 0, "Invalid OutputSize: %d", OutputSize);
+
 	// setup buffer pointers
 	unsigned char *pDst = (unsigned char *)pOutput;
 	unsigned char *pSrc = (unsigned char *)pInput;
