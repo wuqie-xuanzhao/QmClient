@@ -22,13 +22,12 @@ const unsigned CHuffman::ms_aFreqTable[HUFFMAN_MAX_SYMBOLS] = {
 	9, 10, 25, 22, 22, 17, 20, 16, 6, 16, 15, 20, 14, 18, 24, 335, 1517};
 
 namespace
+class CHuffmanConstructNode
 {
-
-	struct CHuffmanConstructNode
-	{
-		unsigned short m_NodeId;
-		int m_Frequency;
-	};
+public:
+	unsigned short m_NodeId;
+	int m_Frequency;
+};
 
 } // namespace
 
