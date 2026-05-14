@@ -1721,14 +1721,13 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, SHA256_DI
 	if((bool)m_LoadingCallback)
 		m_LoadingCallback(IClient::LOADING_CALLBACK_DETAIL_MAP);
 
-	// Stop demo recording before loading a new map.
+	// 加载新地图前停止 demo 录制。
 	for(int Recorder = 0; Recorder < RECORDER_MAX; Recorder++)
 	{
 		DemoRecorder(Recorder)->Stop(Recorder == RECORDER_REPLAYS ? IDemoRecorder::EStopMode::REMOVE_FILE : IDemoRecorder::EStopMode::KEEP_FILE);
 	}
 
-	// Unload the current map and reset all snapshots before loading a new map,
-	// because the snapshots are only valid for the old map.
+	// 加载新地图前卸载当前地图并重置所有快照，因为快照只对旧地图有效。
 	m_pMap->Unload();
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; Dummy++)
 	{
@@ -2748,7 +2747,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		}
 		else if(Msg == NETMSG_SNAP || Msg == NETMSG_SNAPSINGLE || Msg == NETMSG_SNAPEMPTY)
 		{
-			// We are not allowed to process snapshots yet.
+			// 还不能处理快照。
 			if(State() < IClient::STATE_LOADING ||
 				!m_pMap->IsLoaded())
 			{
