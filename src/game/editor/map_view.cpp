@@ -137,16 +137,6 @@ void CEditor::DoMapEditor(CUIRect View)
 	static float s_StartWx = 0;
 	static float s_StartWy = 0;
 
-	enum
-	{
-		OP_NONE = 0,
-		OP_BRUSH_GRAB,
-		OP_BRUSH_DRAW,
-		OP_BRUSH_PAINT,
-		OP_PAN_WORLD,
-		OP_PAN_EDITOR,
-	};
-
 	// remap the screen so it can display the whole tileset
 	if(m_ShowPicker)
 	{
@@ -206,8 +196,6 @@ void CEditor::DoMapEditor(CUIRect View)
 		}
 	}
 
-	static int s_Operation = OP_NONE;
-
 	// draw layer borders
 	std::pair<int, std::shared_ptr<CLayer>> apEditLayers[128];
 	size_t NumEditLayers = 0;
@@ -256,22 +244,22 @@ void CEditor::DoMapEditor(CUIRect View)
 		if(ShouldPan)
 		{
 			if(Input()->ShiftIsPressed())
-				s_Operation = OP_PAN_EDITOR;
+				Map()->m_MapViewState.m_ActiveOp = CMapView::EActiveOp::PAN_EDITOR;
 			else
-				s_Operation = OP_PAN_WORLD;
+				Map()->m_MapViewState.m_ActiveOp = CMapView::EActiveOp::PAN_WORLD;
 			Ui()->SetActiveItem(MapView());
 		}
 		else
 		{
-			s_Operation = OP_NONE;
+			Map()->m_MapViewState.m_ActiveOp = CMapView::EActiveOp::NONE;
 		}
 
-		if(s_Operation == OP_PAN_WORLD)
+		if(Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::PAN_WORLD)
 			MapView()->OffsetWorld(-Ui()->MouseDelta() * m_MouseWorldScale);
-		else if(s_Operation == OP_PAN_EDITOR)
+		else if(Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::PAN_EDITOR)
 			MapView()->OffsetEditor(-Ui()->MouseDelta() * m_MouseWorldScale);
 
-		if(s_Operation == OP_NONE)
+		if(Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::NONE)
 			m_pContainerPanned = nullptr;
 	}
 
@@ -350,7 +338,7 @@ void CEditor::DoMapEditor(CUIRect View)
 				str_copy(m_aTooltip, "使用鼠标左键用画笔绘制。右键清空画笔。按住 Alt 将鼠标移动锁定到单轴。");
 			}
 
-			const bool DrawingToolsHandled = (s_Operation == OP_NONE || m_DrawingTools.IsDrawing()) && m_pContainerPanned == nullptr && m_DrawingTools.HandleMapEditorInput(this, apEditLayers, NumEditLayers, Inside);
+			const bool DrawingToolsHandled = (Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::NONE || m_DrawingTools.IsDrawing()) && m_pContainerPanned == nullptr && m_DrawingTools.HandleMapEditorInput(this, apEditLayers, NumEditLayers, Inside);
 			if(DrawingToolsHandled)
 			{
 				m_DrawingTools.RenderPreview(this);
@@ -375,7 +363,7 @@ void CEditor::DoMapEditor(CUIRect View)
 					r.h = -r.h;
 				}
 
-				if(s_Operation == OP_BRUSH_DRAW)
+				if(Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::BRUSH_DRAW)
 				{
 					if(!m_pBrush->IsEmpty())
 					{
@@ -401,7 +389,7 @@ void CEditor::DoMapEditor(CUIRect View)
 						}
 					}
 				}
-				else if(s_Operation == OP_BRUSH_GRAB)
+				else if(Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::BRUSH_GRAB)
 				{
 					if(!Ui()->MouseButton(0))
 					{
@@ -439,7 +427,7 @@ void CEditor::DoMapEditor(CUIRect View)
 						Ui()->MapScreen();
 					}
 				}
-				else if(s_Operation == OP_BRUSH_PAINT)
+				else if(Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::BRUSH_PAINT)
 				{
 					if(!Ui()->MouseButton(0))
 					{
@@ -471,17 +459,17 @@ void CEditor::DoMapEditor(CUIRect View)
 					m_pBrush->Clear();
 				}
 
-				if(!Input()->ModifierIsPressed() && Ui()->MouseButton(0) && s_Operation == OP_NONE && !m_QuadKnife.IsActive())
+				if(!Input()->ModifierIsPressed() && Ui()->MouseButton(0) && Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::NONE && !m_QuadKnife.IsActive())
 				{
 					Ui()->SetActiveItem(MapView());
 
 					if(m_pBrush->IsEmpty())
 					{
-						s_Operation = OP_BRUSH_GRAB;
+						Map()->m_MapViewState.m_ActiveOp = CMapView::EActiveOp::BRUSH_GRAB;
 					}
 					else
 					{
-						s_Operation = OP_BRUSH_DRAW;
+						Map()->m_MapViewState.m_ActiveOp = CMapView::EActiveOp::BRUSH_DRAW;
 						for(size_t k = 0; k < NumEditLayers; k++)
 						{
 							size_t BrushIndex = k;
@@ -495,7 +483,7 @@ void CEditor::DoMapEditor(CUIRect View)
 
 					std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayerType(0, LAYERTYPE_TILES));
 					if(Input()->ShiftIsPressed() && pLayer)
-						s_Operation = OP_BRUSH_PAINT;
+						Map()->m_MapViewState.m_ActiveOp = CMapView::EActiveOp::BRUSH_PAINT;
 				}
 
 				if(!m_pBrush->IsEmpty())
@@ -687,7 +675,7 @@ void CEditor::DoMapEditor(CUIRect View)
 		// release mouse
 		if(!Ui()->MouseButton(0))
 		{
-			if(s_Operation == OP_BRUSH_DRAW)
+			if(Map()->m_MapViewState.m_ActiveOp == CMapView::EActiveOp::BRUSH_DRAW)
 			{
 				std::shared_ptr<IEditorAction> pAction = std::make_shared<CEditorBrushDrawAction>(Map(), Map()->m_SelectedGroup);
 
@@ -695,7 +683,7 @@ void CEditor::DoMapEditor(CUIRect View)
 					Map()->m_EditorHistory.RecordAction(pAction);
 			}
 
-			s_Operation = OP_NONE;
+			Map()->m_MapViewState.m_ActiveOp = CMapView::EActiveOp::NONE;
 			Ui()->SetActiveItem(nullptr);
 		}
 	}
