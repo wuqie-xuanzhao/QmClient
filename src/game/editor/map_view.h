@@ -32,6 +32,7 @@ public:
 
 	void RenderGroupBorder();
 	void RenderEditorMap();
+	void UpdateMouseWorld();
 
 	bool IsFocused();
 	void Focus();
