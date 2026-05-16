@@ -3634,6 +3634,8 @@ int CServer::Run()
 					m_ServerInfoFirstRequest = 0;
 					Kernel()->ReregisterInterface(GameServer());
 					Console()->StoreCommands(true);
+					GameServer()->OnInit(m_pPersistentData);
+					Console()->StoreCommands(false);
 
 					for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
 					{
@@ -3656,8 +3658,6 @@ int CServer::Run()
 						}
 					}
 
-					GameServer()->OnInit(m_pPersistentData);
-					Console()->StoreCommands(false);
 					if(ErrorShutdown())
 					{
 						break;
