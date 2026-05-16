@@ -19,6 +19,7 @@ struct CScrollRegionParams
 	ColorRGBA m_SliderColorHover;
 	ColorRGBA m_SliderColorGrabbed;
 	unsigned m_Flags;
+	bool m_ScrollHorizontal;
 
 	enum
 	{
@@ -39,6 +40,7 @@ struct CScrollRegionParams
 		m_SliderColorHover = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		m_SliderColorGrabbed = ColorRGBA(0.9f, 0.9f, 0.9f, 1.0f);
 		m_Flags = 0;
+		m_ScrollHorizontal = false;
 	}
 
 	ColorRGBA SliderColor(bool Active, bool Hovered) const
