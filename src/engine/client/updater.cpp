@@ -2,6 +2,7 @@
 
 #include <base/system.h>
 #include <base/dbg.h>
+#include <base/fs.h>
 #include <base/log.h>
 #include <base/str.h>
 
@@ -44,6 +45,13 @@ static inline bool IsUnreserved(unsigned char c)
 	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
 	       (c >= '0' && c <= '9') || c == '-' || c == '_' ||
 	       c == '.' || c == '~' || c == '/';
+}
+
+static bool IsAllowedUpdaterPath(const char *pPath)
+{
+	return fs_is_relative_path(pPath) &&
+	       str_find(pPath, "..") == nullptr &&
+	       str_valid_filename(fs_filename(pPath));
 }
 
 static void UrlEncodePath(const char *pIn, char *pOut, size_t OutSize)
@@ -351,8 +359,11 @@ void CUpdater::ParseUpdate()
 			for(int j = 0; j < json_array_length(pDownload); j++)
 			{
 				const char *pName = json_string_get(json_array_get(pDownload, j));
-				if(!pName)
+				if(!pName || !IsAllowedUpdaterPath(pName))
+				{
+					log_error("updater", "Update manifest contains invalid path to download: '%s'", pName == nullptr ? "(not a string)" : pName);
 					continue;
+				}
 
 				if(SkipSet.insert(pName).second)
 				{
@@ -367,8 +378,11 @@ void CUpdater::ParseUpdate()
 			for(int j = 0; j < json_array_length(pRemove); j++)
 			{
 				const char *pName = json_string_get(json_array_get(pRemove, j));
-				if(!pName)
+				if(!pName || !IsAllowedUpdaterPath(pName))
+				{
+					log_error("updater", "Update manifest contains invalid path to remove: '%s'", pName == nullptr ? "(not a string)" : pName);
 					continue;
+				}
 
 				if(SkipSet.insert(pName).second)
 				{
