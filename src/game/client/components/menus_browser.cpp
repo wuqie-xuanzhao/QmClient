@@ -1494,7 +1494,7 @@ void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,
 
 	vec2 ScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollbarWidth = 10.0f;
+	ScrollParams.m_ScrollbarThickness = 10.0f;
 	ScrollParams.m_ScrollbarMargin = 3.0f;
 	ScrollParams.m_ScrollUnit = 2.0f * ItemHeight;
 	ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
@@ -2152,7 +2152,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollbarWidth = 16.0f;
+	ScrollParams.m_ScrollbarThickness = 16.0f;
 	ScrollParams.m_ScrollbarMargin = 5.0f;
 	ScrollParams.m_ScrollUnit = 80.0f;
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
