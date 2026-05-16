@@ -459,10 +459,10 @@ void CUpdater::RunningUpdate()
 		if(Job.second)
 		{
 			const char *pFile = Job.first.c_str();
-			const size_t Length = str_length(pFile);
 			if(str_endswith_nocase(pFile, ".dll"))
 			{
 #if defined(CONF_FAMILY_WINDOWS)
+				const size_t Length = str_length(pFile);
 				char aBuf[512];
 				str_copy(aBuf, pFile, sizeof(aBuf)); // SDL
 				str_copy(aBuf + Length - 4, "-" PLAT_NAME, sizeof(aBuf) - Length + 4); // -win32
@@ -474,6 +474,7 @@ void CUpdater::RunningUpdate()
 			else if(str_endswith_nocase(pFile, ".so"))
 			{
 #if defined(CONF_PLATFORM_LINUX)
+				const size_t Length = str_length(pFile);
 				char aBuf[512];
 				str_copy(aBuf, pFile, sizeof(aBuf)); // libsteam_api
 				str_copy(aBuf + Length - 3, "-" PLAT_NAME, sizeof(aBuf) - Length + 3); // -linux-x86_64
