@@ -4331,7 +4331,7 @@ CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const
 	Params.m_ScrollUnit = 60.0f * UiScale;
 	Params.m_ScrollbarThickness = Style.m_ScrollbarWidth;
 	Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;
-	Params.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+	Params.m_ForceShowScrollbar = true;
 	return Params;
 }
 

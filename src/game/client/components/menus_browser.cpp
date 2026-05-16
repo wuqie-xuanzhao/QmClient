@@ -2155,7 +2155,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	ScrollParams.m_ScrollbarThickness = 16.0f;
 	ScrollParams.m_ScrollbarMargin = 5.0f;
 	ScrollParams.m_ScrollUnit = 80.0f;
-	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+	ScrollParams.m_ForceShowScrollbar = true;
 	s_ScrollRegion.Begin(&List, &ScrollOffset, &ScrollParams);
 	List.y += ScrollOffset.y;
 

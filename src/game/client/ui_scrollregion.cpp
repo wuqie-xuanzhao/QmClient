@@ -39,10 +39,9 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 		m_Params = *pParams;
 
 	const bool ContentOverflows = m_Params.m_ScrollHorizontal ? m_ContentSize > pClipRect->w : m_ContentSize > pClipRect->h;
-	const bool HasScrollBar = ContentOverflows || (m_Params.m_Flags & CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH);
+	const bool HasScrollBar = ContentOverflows || m_Params.m_ForceShowScrollbar;
 	m_ClipRect = *pClipRect;
 	CUIRect ScrollbarBg = SplitContentArea();
-
 	if(HasScrollBar)
 	{
 		if(m_Params.m_ScrollbarBgColor.a > 0.0f)
@@ -187,7 +186,7 @@ bool CScrollRegion::RectClipped(const CUIRect &Rect) const
 bool CScrollRegion::ScrollbarShown() const
 {
 	const bool ContentOverflows = m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
-	return ContentOverflows || (m_Params.m_Flags & CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH);
+	return ContentOverflows || m_Params.m_ForceShowScrollbar;
 }
 
 bool CScrollRegion::Animating() const

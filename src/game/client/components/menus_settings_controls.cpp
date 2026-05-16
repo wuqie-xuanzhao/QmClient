@@ -225,7 +225,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	static float s_PrevSettingsScrollY = 0.0f;
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ScrollUnit = 6.0f * BUTTON_HEIGHT;
-	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+	ScrollParams.m_ForceShowScrollbar = true;
 	CMenus::SSettingsScrollRegionFrame ScrollFrame = GameClient()->m_Menus.BeginSettingsScrollRegion(m_SettingsScrollRegion, &MainView, ScrollParams, s_PrevSettingsScrollY);
 	ScrollOffset = ScrollFrame.m_BeginOffset;
 	MainView.y += ScrollOffset.y;
