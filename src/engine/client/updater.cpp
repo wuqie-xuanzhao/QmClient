@@ -22,8 +22,6 @@
 #include <unistd.h>
 #endif
 
-using std::string;
-
 class CUpdaterFetchTask : public CHttpRequest
 {
 	char m_aBuf[256];
