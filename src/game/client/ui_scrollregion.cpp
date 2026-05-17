@@ -37,10 +37,10 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 {
 	if(pParams)
 		m_Params = *pParams;
-
-	const bool ContentOverflows = m_Params.m_ScrollHorizontal ? m_ContentSize > pClipRect->w : m_ContentSize > pClipRect->h;
-	const bool HasScrollBar = ContentOverflows || m_Params.m_ForceShowScrollbar;
 	m_ClipRect = *pClipRect;
+
+	const bool ContentOverflows = m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
+	const bool HasScrollBar = ContentOverflows || m_Params.m_ForceShowScrollbar;
 	CUIRect ScrollbarBg = SplitContentArea();
 	if(HasScrollBar)
 	{
