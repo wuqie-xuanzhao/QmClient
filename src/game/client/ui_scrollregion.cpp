@@ -40,32 +40,11 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 	m_ClipRect = *pClipRect;
 
 	CUIRect ScrollbarBg = SplitContentArea();
-	if(ScrollbarShown())
-	{
-		if(m_Params.m_ScrollbarBgColor.a > 0.0f)
-		{
-			const int Corners = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_B : IGraphics::CORNER_R;
-			ScrollbarBg.Draw(m_Params.m_ScrollbarBgColor, Corners, 4.0f);
-		}
-		if(m_Params.m_RailBgColor.a > 0.0f)
-		{
-			const float Rounding = m_Params.m_ScrollHorizontal ? m_RailRect.h / 2.0f : m_RailRect.w / 2.0f;
-			m_RailRect.Draw(m_Params.m_RailBgColor, IGraphics::CORNER_ALL, Rounding);
-		}
-	}
-	if(!ContentOverflows())
-	{
-		if(m_Params.m_ScrollHorizontal)
-			m_ContentScrollOff.x = 0.0f;
-		else
-			m_ContentScrollOff.y = 0.0f;
-	}
+	DrawBackground(ScrollbarBg);
 
-	if(m_Params.m_ClipBgColor.a > 0.0f)
-	{
-		const int CornersPartial = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_T : IGraphics::CORNER_L;
-		m_ClipRect.Draw(m_Params.m_ClipBgColor, ScrollbarShown() ? CornersPartial : IGraphics::CORNER_ALL, 4.0f);
-	}
+	if(!ContentOverflows())
+		m_ContentScrollOffset = 0.0f;
+	m_ContentSize = 0.0f;
 
 	Ui()->ClipEnable(&m_ClipRect);
 
@@ -227,6 +206,29 @@ CUIRect CScrollRegion::SplitContentArea()
 	}
 
 	return ScrollbarBg;
+}
+
+void CScrollRegion::DrawBackground(const CUIRect &ScrollbarBg)
+{
+	// only show scrollbar if required
+	if(ScrollbarShown())
+	{
+		if(m_Params.m_ScrollbarBgColor.a > 0.0f)
+		{
+			int Corners = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_B : IGraphics::CORNER_R;
+			ScrollbarBg.Draw(m_Params.m_ScrollbarBgColor, Corners, 4.0f);
+		}
+		if(m_Params.m_RailBgColor.a > 0.0f)
+		{
+			float Rounding = m_Params.m_ScrollHorizontal ? m_RailRect.h / 2.0f : m_RailRect.w / 2.0f;
+			m_RailRect.Draw(m_Params.m_RailBgColor, IGraphics::CORNER_ALL, Rounding);
+		}
+	}
+	if(m_Params.m_ClipBgColor.a > 0.0f)
+	{
+		int CornersPartial = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_T : IGraphics::CORNER_L;
+		m_ClipRect.Draw(m_Params.m_ClipBgColor, ScrollbarShown() ? CornersPartial : IGraphics::CORNER_ALL, 4.0f);
+	}
 }
 
 void CScrollRegion::DoScrollInput()
