@@ -3139,9 +3139,6 @@ protected:
 
 		if(Requires2DTextureArray)
 		{
-			int Image3DWidth = Width;
-			int Image3DHeight = Height;
-
 			int ConvertWidth = Width;
 			int ConvertHeight = Height;
 
@@ -3161,6 +3158,7 @@ protected:
 					return false;
 			}
 
+			int Image3DWidth, Image3DHeight;
 			bool Needs3DTexDel = false;
 			uint8_t *pTexData3D = static_cast<uint8_t *>(malloc((size_t)PixelSize * ConvertWidth * ConvertHeight));
 			if(pTexData3D == nullptr)
