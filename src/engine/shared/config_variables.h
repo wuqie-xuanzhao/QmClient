@@ -595,7 +595,7 @@ MACRO_CONFIG_INT(SvVoteMaxTotal, sv_vote_max_total, 0, 0, SERVER_MAX_CLIENTS, CF
 MACRO_CONFIG_INT(SvVoteVetoTime, sv_vote_veto_time, 20, 0, 1000, CFGFLAG_SERVER, "玩家可以否决地图更改投票之前服务器上的时间分钟数（0 = 禁用）")
 MACRO_CONFIG_INT(SvKillDelay, sv_kill_delay, 1, 0, 9999, CFGFLAG_SERVER, "击杀之间的最短时间（以秒为单位）")
 
-MACRO_CONFIG_INT(SvMapWindow, sv_map_window, 15, 0, 100, CFGFLAG_SERVER, "地图下载发送窗口")
+MACRO_CONFIG_INT(SvMapWindow, sv_map_window, 15, 1, 100, CFGFLAG_SERVER, "地图下载发送窗口")
 MACRO_CONFIG_INT(SvFastDownload, sv_fast_download, 1, 0, 1, CFGFLAG_SERVER, "实现地图的快速下载")
 
 MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG_SERVER, "疯狂霰弹枪子弹声音开/关")
