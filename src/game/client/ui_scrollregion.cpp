@@ -39,10 +39,8 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 		m_Params = *pParams;
 	m_ClipRect = *pClipRect;
 
-	const bool ContentOverflows = m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
-	const bool HasScrollBar = ContentOverflows || m_Params.m_ForceShowScrollbar;
 	CUIRect ScrollbarBg = SplitContentArea();
-	if(HasScrollBar)
+	if(ScrollbarShown())
 	{
 		if(m_Params.m_ScrollbarBgColor.a > 0.0f)
 		{
@@ -55,7 +53,7 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 			m_RailRect.Draw(m_Params.m_RailBgColor, IGraphics::CORNER_ALL, Rounding);
 		}
 	}
-	if(!ContentOverflows)
+	if(!ContentOverflows())
 	{
 		if(m_Params.m_ScrollHorizontal)
 			m_ContentScrollOff.x = 0.0f;
@@ -66,7 +64,7 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 	if(m_Params.m_ClipBgColor.a > 0.0f)
 	{
 		const int CornersPartial = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_T : IGraphics::CORNER_L;
-		m_ClipRect.Draw(m_Params.m_ClipBgColor, HasScrollBar ? CornersPartial : IGraphics::CORNER_ALL, 4.0f);
+		m_ClipRect.Draw(m_Params.m_ClipBgColor, ScrollbarShown() ? CornersPartial : IGraphics::CORNER_ALL, 4.0f);
 	}
 
 	Ui()->ClipEnable(&m_ClipRect);
