@@ -608,19 +608,8 @@ bool CMenusIngameTouchControls::RenderVisibilitySettingBlock(CUIRect Block)
 		Block.HSplitTop(ROWGAP, nullptr, &Block);
 		if(s_VisibilityScrollRegion.AddRect(EditBox))
 		{
-			EditBox.VSplitRight(EditBox.w / 2.0f + ROWGAP + ROWSIZE, &LeftButton, &MiddleButton);
+			EditBox.VSplitMid(&LeftButton, &MiddleButton);
 			MiddleButton.VSplitLeft(ScrollParam.m_ScrollbarThickness / 2.0f, nullptr, &MiddleButton);
-			MiddleButton.VSplitLeft(ROWSIZE, &HelpButton, &MiddleButton);
-			MiddleButton.VSplitLeft(ROWGAP, nullptr, &MiddleButton);
-			// We'll only do help button for the first extra menu visibility.
-			if(Current <= (unsigned)CTouchControls::EButtonVisibility::EXTRA_MENU_1)
-			{
-				const char *pHelpMessage = HelpMessageForVisibilityType((CTouchControls::EButtonVisibility)Current);
-				if(Ui()->DoButton_FontIcon(&s_aHelpButtons[Current], FontIcon::QUESTION, 0, &HelpButton, BUTTONFLAG_LEFT))
-				{
-					GameClient()->m_Menus.PopupMessage(Localize("Info"), pHelpMessage, Localize("Ok"));
-				}
-			}
 			if(Current < (unsigned)CTouchControls::EButtonVisibility::EXTRA_MENU_1)
 			{
 				Ui()->DoLabel(&LeftButton, ppVisibilities[Current], FONTSIZE, TEXTALIGN_ML);

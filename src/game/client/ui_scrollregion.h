@@ -144,6 +144,9 @@ public:
 	bool Animating() const;
 	bool Active() const;
 	const CScrollRegionParams &Params() const { return m_Params; }
+
+private:
+	CUIRect SplitContentArea();
 };
 
 #endif

@@ -39,43 +39,20 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 		m_Params = *pParams;
 
 	const bool ContentOverflows = m_Params.m_ScrollHorizontal ? m_ContentSize > pClipRect->w : m_ContentSize > pClipRect->h;
-	const bool ForceShowScrollbar = m_Params.m_Flags & CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+	const bool HasScrollBar = ContentOverflows || (m_Params.m_Flags & CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH);
+	m_ClipRect = *pClipRect;
+	CUIRect ScrollbarBg = SplitContentArea();
 
-	const bool HasScrollBar = ContentOverflows || ForceShowScrollbar;
-	CUIRect ScrollBarBg;
-	if(m_Params.m_ScrollHorizontal)
-		pClipRect->HSplitBottom(m_Params.m_ScrollbarThickness, HasScrollBar ? pClipRect : nullptr, &ScrollBarBg);
-	else
-		pClipRect->VSplitRight(m_Params.m_ScrollbarThickness, HasScrollBar ? pClipRect : nullptr, &ScrollBarBg);
-	if(m_Params.m_ScrollbarNoOuterMargin)
-	{
-		if(m_Params.m_ScrollHorizontal)
-		{
-			ScrollBarBg.VMargin(m_Params.m_ScrollbarMargin, &m_RailRect);
-			m_RailRect.HSplitTop(m_Params.m_ScrollbarMargin, nullptr, &m_RailRect);
-		}
-		else
-		{
-			ScrollBarBg.HMargin(m_Params.m_ScrollbarMargin, &m_RailRect);
-			m_RailRect.VSplitLeft(m_Params.m_ScrollbarMargin, nullptr, &m_RailRect);
-		}
-	}
-	else
-	{
-		ScrollBarBg.Margin(m_Params.m_ScrollbarMargin, &m_RailRect);
-	}
-
-	// only show scrollbar if required
 	if(HasScrollBar)
 	{
 		if(m_Params.m_ScrollbarBgColor.a > 0.0f)
 		{
-			int Corners = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_B : IGraphics::CORNER_R;
-			ScrollBarBg.Draw(m_Params.m_ScrollbarBgColor, Corners, 4.0f);
+			const int Corners = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_B : IGraphics::CORNER_R;
+			ScrollbarBg.Draw(m_Params.m_ScrollbarBgColor, Corners, 4.0f);
 		}
 		if(m_Params.m_RailBgColor.a > 0.0f)
 		{
-			float Rounding = m_Params.m_ScrollHorizontal ? m_RailRect.h / 2.0f : m_RailRect.w / 2.0f;
+			const float Rounding = m_Params.m_ScrollHorizontal ? m_RailRect.h / 2.0f : m_RailRect.w / 2.0f;
 			m_RailRect.Draw(m_Params.m_RailBgColor, IGraphics::CORNER_ALL, Rounding);
 		}
 	}
@@ -89,13 +66,13 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 
 	if(m_Params.m_ClipBgColor.a > 0.0f)
 	{
-		int CornersPartial = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_T : IGraphics::CORNER_L;
-		pClipRect->Draw(m_Params.m_ClipBgColor, HasScrollBar ? CornersPartial : IGraphics::CORNER_ALL, 4.0f);
+		const int CornersPartial = m_Params.m_ScrollHorizontal ? IGraphics::CORNER_T : IGraphics::CORNER_L;
+		m_ClipRect.Draw(m_Params.m_ClipBgColor, HasScrollBar ? CornersPartial : IGraphics::CORNER_ALL, 4.0f);
 	}
 
-	Ui()->ClipEnable(pClipRect);
+	Ui()->ClipEnable(&m_ClipRect);
 
-	m_ClipRect = *pClipRect;
+	*pClipRect = m_ClipRect;
 	m_ContentSize = 0.0f;
 	*pOutOffset = m_ContentScrollOff;
 }
@@ -106,11 +83,9 @@ void CScrollRegion::End()
 
 	const float ClipSize = m_Params.m_ScrollHorizontal ? m_ClipRect.w : m_ClipRect.h;
 
-	// only show scrollbar if content overflows
 	if(m_ContentSize <= ClipSize)
 		return;
 
-	// scroll wheel
 	CUIRect RegionRect = m_ClipRect;
 	if(m_Params.m_ScrollHorizontal)
 		RegionRect.h += m_Params.m_ScrollbarThickness;
@@ -130,7 +105,6 @@ void CScrollRegion::End()
 		if(!ProgrammaticScroll)
 			m_ScrollSpeedMultiplier = 1.0f;
 
-		// TClient: Hack to allow slider scroll adjustment
 		if(Input()->ModifierIsPressed())
 			m_ScrollDirection = SCROLLRELATIVE_NONE;
 
@@ -178,14 +152,14 @@ void CScrollRegion::End()
 	if(absolute(m_AnimInitScrollPos - m_AnimTargetScrollPos) < 0.5f)
 		m_AnimTime = 0.0f;
 
-	if(m_AnimTime > 0.0f && !Input()->ModifierIsPressed()) // TClient: Hack to allow slider scroll adjustment
+	if(m_AnimTime > 0.0f && !Input()->ModifierIsPressed())
 	{
 		m_AnimTime -= Client()->RenderFrameTime();
 		if(m_AnimTime < 0.0f)
 		{
 			m_AnimTime = 0.0f;
 		}
-		float AnimProgress = (1.0f - std::pow(m_AnimTime / m_AnimTimeMax, 3.0f)); // cubic ease out
+		const float AnimProgress = (1.0f - std::pow(m_AnimTime / m_AnimTimeMax, 3.0f));
 		m_ScrollPos = m_AnimInitScrollPos + (m_AnimTargetScrollPos - m_AnimInitScrollPos) * AnimProgress;
 	}
 	else
@@ -200,7 +174,7 @@ void CScrollRegion::End()
 	const bool InsideSlider = Ui()->MouseHovered(&Slider);
 	const bool InsideRail = Ui()->MouseHovered(&m_RailRect);
 
-	float MousePos = m_Params.m_ScrollHorizontal ? Ui()->MouseX() : Ui()->MouseY();
+	const float MousePos = m_Params.m_ScrollHorizontal ? Ui()->MouseX() : Ui()->MouseY();
 	if(Ui()->CheckActiveItem(pId) && Ui()->MouseButton(0))
 	{
 		m_ScrollPos += (MousePos - (SliderPos + m_SliderGrabPos)) / MaxSlider * MaxScroll;
@@ -243,7 +217,7 @@ void CScrollRegion::End()
 	else
 		m_ContentScrollOff.y = -m_ScrollPos;
 
-	float Rounding = m_Params.m_ScrollHorizontal ? Slider.h / 2.0f : Slider.w / 2.0f;
+	const float Rounding = m_Params.m_ScrollHorizontal ? Slider.h / 2.0f : Slider.w / 2.0f;
 	Slider.Draw(m_Params.SliderColor(Grabbed, Ui()->HotItem() == pId), IGraphics::CORNER_ALL, Rounding);
 }
 
@@ -343,7 +317,8 @@ bool CScrollRegion::RectClipped(const CUIRect &Rect) const
 
 bool CScrollRegion::ScrollbarShown() const
 {
-	return m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
+	const bool ContentOverflows = m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
+	return ContentOverflows || (m_Params.m_Flags & CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH);
 }
 
 bool CScrollRegion::Animating() const
@@ -354,4 +329,32 @@ bool CScrollRegion::Animating() const
 bool CScrollRegion::Active() const
 {
 	return Ui()->ActiveItem() == &m_ScrollPos;
+}
+
+CUIRect CScrollRegion::SplitContentArea()
+{
+	CUIRect ScrollbarBg;
+	if(m_Params.m_ScrollHorizontal)
+		m_ClipRect.HSplitBottom(m_Params.m_ScrollbarThickness, ScrollbarShown() ? &m_ClipRect : nullptr, &ScrollbarBg);
+	else
+		m_ClipRect.VSplitRight(m_Params.m_ScrollbarThickness, ScrollbarShown() ? &m_ClipRect : nullptr, &ScrollbarBg);
+	if(m_Params.m_ScrollbarNoOuterMargin)
+	{
+		if(m_Params.m_ScrollHorizontal)
+		{
+			ScrollbarBg.VMargin(m_Params.m_ScrollbarMargin, &m_RailRect);
+			m_RailRect.HSplitTop(m_Params.m_ScrollbarMargin, nullptr, &m_RailRect);
+		}
+		else
+		{
+			ScrollbarBg.HMargin(m_Params.m_ScrollbarMargin, &m_RailRect);
+			m_RailRect.VSplitLeft(m_Params.m_ScrollbarMargin, nullptr, &m_RailRect);
+		}
+	}
+	else
+	{
+		ScrollbarBg.Margin(m_Params.m_ScrollbarMargin, &m_RailRect);
+	}
+
+	return ScrollbarBg;
 }
