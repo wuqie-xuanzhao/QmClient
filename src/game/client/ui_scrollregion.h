@@ -147,6 +147,10 @@ public:
 
 private:
 	CUIRect SplitContentArea();
+	void DoScrollInput();
+	void UpdateHotScrollRegion();
+	void AdvanceAnimation();
+	void DoSlider();
 };
 
 #endif
