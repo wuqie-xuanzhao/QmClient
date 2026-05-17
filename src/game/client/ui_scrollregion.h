@@ -135,6 +135,7 @@ public:
 	float ContentScrollOffsetY() const { return m_ContentScrollOff.y; }
 	void DoEdgeScrolling();
 	bool RectClipped(const CUIRect &Rect) const;
+	bool ContentOverflows() const;
 	bool ScrollbarShown() const;
 	bool Animating() const;
 	bool Active() const;

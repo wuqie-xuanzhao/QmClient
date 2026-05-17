@@ -161,7 +161,7 @@ void CScrollRegion::SetContentHeightForNextFrame(float ContentHeight)
 
 void CScrollRegion::DoEdgeScrolling()
 {
-	if(!ScrollbarShown())
+	if(!ContentOverflows())
 		return;
 
 	const float ClipPos = m_Params.m_ScrollHorizontal ? m_ClipRect.x : m_ClipRect.y;
@@ -183,10 +183,14 @@ bool CScrollRegion::RectClipped(const CUIRect &Rect) const
 	return (m_ClipRect.x > (Rect.x + Rect.w) || (m_ClipRect.x + m_ClipRect.w) < Rect.x || m_ClipRect.y > (Rect.y + Rect.h) || (m_ClipRect.y + m_ClipRect.h) < Rect.y);
 }
 
+bool CScrollRegion::ContentOverflows() const
+{
+	return m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
+}
+
 bool CScrollRegion::ScrollbarShown() const
 {
-	const bool ContentOverflows = m_Params.m_ScrollHorizontal ? m_ContentSize > m_ClipRect.w : m_ContentSize > m_ClipRect.h;
-	return ContentOverflows || m_Params.m_ForceShowScrollbar;
+	return ContentOverflows() || m_Params.m_ForceShowScrollbar;
 }
 
 bool CScrollRegion::Animating() const
