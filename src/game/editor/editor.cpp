@@ -42,6 +42,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <iterator>
 #include <limits>
@@ -4289,7 +4290,7 @@ namespace
 
 }
 
-void CEditor::UpdateHotEnvelopePoint(const CUIRect &View, const CEnvelope *pEnvelope, int ActiveChannels)
+void CEditor::UpdateHotEnvelopeObject(const CUIRect &View, const CEnvelope *pEnvelope, int ActiveChannels)
 {
 	if(!Ui()->MouseInside(&View))
 		return;
@@ -4341,6 +4342,15 @@ void CEditor::UpdateHotEnvelopePoint(const CUIRect &View, const CEnvelope *pEnve
 	if(pMinPointId != nullptr)
 	{
 		Ui()->SetHotItem(pMinPointId);
+	}
+	else if(!m_Animate && pEnvelope->EndTime() > 0.0f)
+	{
+		const float Time = m_AnimateTime * m_AnimateSpeed;
+		const float LoopedTime = std::fmod(Time, pEnvelope->EndTime());
+		if(absolute(EnvelopeToScreenX(View, Time) - MousePos.x) < 20.0f || absolute(EnvelopeToScreenX(View, LoopedTime) - MousePos.x) < 20.0f)
+		{
+			Ui()->SetHotItem(&m_AnimateTime);
+		}
 	}
 }
 
@@ -4968,6 +4978,79 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			RenderEnvelopeEditorColorBar(ColorBar, pEnvelope);
 		}
 
+		// 处理时间条拖动。
+		{
+			if(s_Operation == EEnvelopeEditorOp::OP_NONE)
+			{
+				UpdateHotEnvelopeObject(View, pEnvelope.get(), s_ActiveChannels);
+			}
+
+			ColorRGBA BarColor;
+			if(Ui()->CheckActiveItem(&m_AnimateTime))
+			{
+				if(s_Operation == EEnvelopeEditorOp::OP_SELECT)
+				{
+					const float dx = s_MouseXStart - Ui()->MouseX();
+					const float dy = s_MouseYStart - Ui()->MouseY();
+
+					if(dx * dx + dy * dy > 20.0f)
+						s_Operation = EEnvelopeEditorOp::OP_DRAG_TIME_BAR;
+				}
+
+				if(s_Operation == EEnvelopeEditorOp::OP_DRAG_TIME_BAR)
+				{
+					const float DeltaX = ScreenToEnvelopeDX(View, Ui()->MouseDeltaX()) * (Input()->ModifierIsPressed() ? 0.05f : 1.0f);
+					m_AnimateTime += DeltaX / m_AnimateSpeed;
+					m_AnimateTime = std::max(m_AnimateTime, 0.0f);
+				}
+
+				if(!Ui()->MouseButton(0))
+				{
+					Ui()->SetActiveItem(nullptr);
+					s_Operation = EEnvelopeEditorOp::OP_NONE;
+				}
+
+				BarColor = ColorRGBA(1.0f, 1.0f, 0.0f, 0.8f);
+				str_copy(m_aTooltip, "时间条：左键拖动，按住 Ctrl 精细调整。");
+			}
+			else if(Ui()->HotItem() == &m_AnimateTime)
+			{
+				if(Ui()->MouseButton(0))
+				{
+					Ui()->SetActiveItem(&m_AnimateTime);
+					s_Operation = EEnvelopeEditorOp::OP_SELECT;
+
+					s_MouseXStart = Ui()->MouseX();
+					s_MouseYStart = Ui()->MouseY();
+				}
+
+				BarColor = ColorRGBA(1.0f, 1.0f, 0.0f, 0.8f);
+				str_copy(m_aTooltip, "时间条：左键拖动，按住 Ctrl 精细调整。");
+			}
+			else
+			{
+				BarColor = ColorRGBA(1.0f, 1.0f, 0.0f, 0.5f);
+			}
+
+			const float Time = m_AnimateTime * m_AnimateSpeed;
+			const float BarWidth = 1.5f;
+			CUIRect TimeBar{
+				EnvelopeToScreenX(View, Time) - BarWidth / 2.0f,
+				View.y,
+				BarWidth,
+				View.h,
+			};
+			TimeBar.Draw(BarColor, IGraphics::CORNER_NONE, 0.0f);
+
+			const float EndTime = pEnvelope->EndTime();
+			if(EndTime > 0.0f && Time > EndTime)
+			{
+				const float LoopedTime = std::fmod(Time, EndTime);
+				TimeBar.x = EnvelopeToScreenX(View, LoopedTime) - BarWidth / 2.0f;
+				TimeBar.Draw(BarColor, IGraphics::CORNER_NONE, 0.0f);
+			}
+		}
+
 		// render handles
 		if(CurrentEnvelopeSwitched)
 		{
@@ -4983,7 +5066,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 			if(s_Operation == EEnvelopeEditorOp::OP_NONE)
 			{
-				UpdateHotEnvelopePoint(View, pEnvelope.get(), s_ActiveChannels);
+				UpdateHotEnvelopeObject(View, pEnvelope.get(), s_ActiveChannels);
 				if(!Ui()->MouseButton(0))
 					Map()->m_EnvOpTracker.Stop(false);
 			}
