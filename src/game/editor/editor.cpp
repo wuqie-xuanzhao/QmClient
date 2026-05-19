@@ -443,13 +443,21 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 
 		ToolbarTop.VSplitLeft(5.0f, nullptr, &ToolbarTop);
 
-		// animation button
+		// animation buttons
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
-		static char s_AnimateButton;
-		if(DoButton_FontIcon(&s_AnimateButton, FONT_ICON_CIRCLE_PLAY, m_Animate, &Button, BUTTONFLAG_LEFT, "[Ctrl+M] 切换动画.", IGraphics::CORNER_L) ||
+		static char s_JumpStartButton = 0;
+		if(DoButton_FontIcon(&s_JumpStartButton, FONT_ICON_BACKWARD_STEP, false, &Button, BUTTONFLAG_LEFT, "跳到动画开头。", IGraphics::CORNER_L))
+		{
+			m_AnimateTime = 0;
+			m_Animate = false;
+		}
+
+		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
+		static char s_AnimateButton = 0;
+		if(DoButton_FontIcon(&s_AnimateButton, FONT_ICON_CIRCLE_PLAY, m_Animate, &Button, BUTTONFLAG_LEFT, "[Ctrl+M] 切换动画.", IGraphics::CORNER_NONE) ||
 			(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_M) && ModPressed))
 		{
-			m_AnimateStart = Client()->GlobalTime();
+			m_AnimateStart = Client()->GlobalTime() - m_AnimateTime;
 			m_Animate = !m_Animate;
 		}
 
@@ -6796,6 +6804,9 @@ void CEditor::Reset(bool CreateDefault)
 	m_ActiveEnvelopePreview = EEnvelopePreview::NONE;
 	m_QuadEnvelopePointOperation = EQuadEnvelopePointOperation::NONE;
 
+	m_AnimateTime = 0;
+	m_Animate = false;
+
 	m_ResetZoomEnvelope = true;
 	m_SettingsCommandInput.Clear();
 	m_MapSettingsCommandContext.Reset();
@@ -7129,8 +7140,6 @@ void CEditor::OnRender()
 
 	if(m_Animate)
 		m_AnimateTime = Client()->GlobalTime() - m_AnimateStart;
-	else
-		m_AnimateTime = 0;
 
 	m_pUiGotContext = nullptr;
 	Ui()->StartCheck();
