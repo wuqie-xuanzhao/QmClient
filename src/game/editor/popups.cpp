@@ -3222,9 +3222,9 @@ CUi::EPopupMenuFunctionResult CEditor::PopupAnimateSettings(void *pContext, CUIR
 		pEditor->m_AnimateSpeed = std::clamp(s_SpeedInput.GetFloat(), MIN_ANIM_SPEED, MAX_ANIM_SPEED);
 	}
 
-	// adjust start time to avoid jumps in animation
-	float AnimateSpeedRatio = OldAnimateSpeed / pEditor->m_AnimateSpeed;
-	float Time = pEditor->Client()->GlobalTime();
+	// 调整起始时间，避免动画速度变化时跳变。
+	const float AnimateSpeedRatio = OldAnimateSpeed / pEditor->m_AnimateSpeed;
+	const float Time = pEditor->Client()->GlobalTime();
 	pEditor->m_AnimateStart = Time + (pEditor->m_AnimateStart - Time) * AnimateSpeedRatio;
 	if(!pEditor->m_Animate)
 	{
