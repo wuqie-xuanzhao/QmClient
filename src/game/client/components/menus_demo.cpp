@@ -2576,16 +2576,16 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		const float TightSpacing = 4.0f;
 		const float GroupSpacing = 6.0f;
 
-		const bool HasSingleSelection =
+		bool HasSingleSelection =
 			NumSelectedDemos() == 1 &&
 			m_DemolistSelectedIndex >= 0 &&
 			m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 			IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 		CDemoItem *pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
-		const int NumSelectedDeletable = NumSelectedDeletableDemos();
+		int NumSelectedDeletable = NumSelectedDeletableDemos();
 		CUIRect LeftGroup = MainRow;
 		CUIRect RightGroup;
-		const bool CanRenderDemo =
+		bool CanRenderDemo =
 #if defined(CONF_VIDEORECORDER)
 			!BrowsingScreenshots && HasSingleSelection && !pSelectedItem->m_IsDir && pSelectedItem->IsDemoFile();
 #else
@@ -2748,6 +2748,19 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			SetIconMode(false);
 		}
 
+		HasSingleSelection =
+			NumSelectedDemos() == 1 &&
+			m_DemolistSelectedIndex >= 0 &&
+			m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
+			IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
+		pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+		NumSelectedDeletable = NumSelectedDeletableDemos();
+#if defined(CONF_VIDEORECORDER)
+		CanRenderDemo = !BrowsingScreenshots && HasSingleSelection && !pSelectedItem->m_IsDir && pSelectedItem->IsDemoFile();
+#else
+		CanRenderDemo = false;
+#endif
+
 		if(m_aCurrentDemoFolder[0] != '\0')
 		{
 			if(HasSingleSelection && IsDemoItemDeletable(*pSelectedItem))
@@ -2861,13 +2874,13 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		SelectAllDemos();
 	}
 
-	const bool HasSingleSelection =
+	bool HasSingleSelection =
 		NumSelectedDemos() == 1 &&
 		m_DemolistSelectedIndex >= 0 &&
 		m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 	CDemoItem *pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
-	const int NumSelectedDeletable = NumSelectedDeletableDemos();
+	int NumSelectedDeletable = NumSelectedDeletableDemos();
 
 	// refresh button
 	{
@@ -2984,6 +2997,14 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		}
 		SetIconMode(false);
 	}
+
+	HasSingleSelection =
+		NumSelectedDemos() == 1 &&
+		m_DemolistSelectedIndex >= 0 &&
+		m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
+		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
+	pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+	NumSelectedDeletable = NumSelectedDeletableDemos();
 
 	if(m_aCurrentDemoFolder[0] != '\0')
 	{
