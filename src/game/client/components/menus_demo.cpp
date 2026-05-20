@@ -2956,9 +2956,13 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		SetIconMode(true);
 		static CButtonContainer s_PlayButton;
 		const char *pOpenIcon = pSelectedItem->m_IsDir ? FONT_ICON_FOLDER_OPEN : (BrowsingScreenshots ? FONT_ICON_IMAGE : FONT_ICON_PLAY);
-		if(DoButton_Menu(&s_PlayButton, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) || (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
+		const bool ActivateSelectedItem = DoButton_Menu(&s_PlayButton, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated ||
+						  Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) ||
+						  (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive());
+		SetIconMode(false);
+
+		if(ActivateSelectedItem)
 		{
-			SetIconMode(false);
 			if(pSelectedItem->m_IsDir) // folder
 			{
 				m_DemoSearchInput.Clear();
@@ -3014,9 +3018,10 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				return;
 			}
 		}
-		SetIconMode(false);
 	}
 
+	// The selected item can disappear when returning to the parent of a folder
+	// that was deleted externally, so all later controls must re-check it.
 	HasSingleSelection =
 		NumSelectedDemos() == 1 &&
 		m_DemolistSelectedIndex >= 0 &&
