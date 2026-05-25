@@ -1302,9 +1302,7 @@ bool CCharacter::UnFreeze()
 {
 	if(m_FreezeTime > 0)
 	{
-		if(m_Core.m_ActiveWeapon < 0 || m_Core.m_ActiveWeapon >= NUM_WEAPONS)
-			m_Core.m_ActiveWeapon = WEAPON_GUN;
-		if(!m_Core.m_aWeapons[m_Core.m_ActiveWeapon].m_Got)
+		if(m_Core.m_ActiveWeapon < 0 || m_Core.m_ActiveWeapon >= NUM_WEAPONS || !m_Core.m_aWeapons[m_Core.m_ActiveWeapon].m_Got)
 			m_Core.m_ActiveWeapon = WEAPON_GUN;
 		m_FreezeTime = 0;
 		m_Core.m_FreezeStart = 0;
