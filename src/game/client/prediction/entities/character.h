@@ -183,7 +183,7 @@ private:
 
 	// DDRace
 
-	static bool IsSwitchActiveCb(int Number, void *pUser);
+	static bool IsSwitchActiveCb(unsigned char Number, void *pUser);
 	void HandleTiles(int Index);
 	bool TryPredictTeleport(int MapIndex);
 	bool TryPredictCheckpointTeleport(bool ResetVelocity, bool ReleaseHookedPlayers);
