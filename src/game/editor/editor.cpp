@@ -59,6 +59,16 @@ static constexpr int QM_EDITOR_COLLAB_PUSH_DELAY_MS = 1000;
 static constexpr int QM_EDITOR_COLLAB_MAX_MAP_BYTES = 18 * 1024 * 1024;
 static constexpr int QM_EDITOR_COLLAB_MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
 
+static const char *const CURVE_TYPE_NAMES_SHORT[] = {"阶", "线", "慢", "快", "滑", "贝"};
+static_assert(std::size(CURVE_TYPE_NAMES_SHORT) == NUM_CURVETYPES);
+
+static const char *CurveTypeNameShort(int CurveType)
+{
+	if(0 <= CurveType && CurveType < (int)std::size(CURVE_TYPE_NAMES_SHORT))
+		return CURVE_TYPE_NAMES_SHORT[CurveType];
+	return "!?";
+}
+
 static const json_value *EditorCollabJsonField(const json_value *pObject, const char *pName)
 {
 	if(!pObject || pObject->type != json_object)
@@ -4906,14 +4916,10 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				CurveButton.w = CurveBar.h;
 				CurveButton.x -= CurveButton.w / 2.0f;
 				const void *pId = &pEnvelope->m_vPoints[i].m_Curvetype;
-				static const char *const TYPE_NAMES[NUM_CURVETYPES] = {"阶", "线", "慢", "快", "滑", "贝"};
-				const char *pTypeName = "!?";
-				if(0 <= pEnvelope->m_vPoints[i].m_Curvetype && pEnvelope->m_vPoints[i].m_Curvetype < (int)std::size(TYPE_NAMES))
-					pTypeName = TYPE_NAMES[pEnvelope->m_vPoints[i].m_Curvetype];
 
 				if(CurveButton.x >= View.x)
 				{
-					const int ButtonResult = DoButton_Editor(pId, pTypeName, 0, &CurveButton, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, "切换曲线类型（阶=阶梯，线=线性，慢=慢入，快=快出，滑=平滑，贝=贝塞尔）。");
+					const int ButtonResult = DoButton_Editor(pId, CurveTypeNameShort(pEnvelope->m_vPoints[i].m_Curvetype), 0, &CurveButton, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, "切换曲线类型（阶=阶梯，线=线性，慢=慢入，快=快出，滑=平滑，贝=贝塞尔）。");
 					if(ButtonResult == 1)
 					{
 						const int PrevCurve = pEnvelope->m_vPoints[i].m_Curvetype;

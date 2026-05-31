@@ -29,6 +29,9 @@ namespace
 {
 	using SQuadPointArray = std::array<CPoint, 5>;
 
+	static const char *const CURVE_TYPE_NAMES[] = {"阶梯", "线性", "缓慢", "快速", "平滑", "贝塞尔"};
+	static_assert(std::size(CURVE_TYPE_NAMES) == NUM_CURVETYPES);
+
 	SQuadPointArray QuadPoints(const CQuad *pQuad)
 	{
 		SQuadPointArray aPoints;
@@ -1732,31 +1735,31 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPointCurveType(void *pContext, CU
 	static int s_ButtonLinearId;
 	CUIRect ButtonLinear;
 	View.HSplitTop(RowHeight, &ButtonLinear, &View);
-	if(pEditor->DoButton_MenuItem(&s_ButtonLinearId, "线性", 0, &ButtonLinear))
+	if(pEditor->DoButton_MenuItem(&s_ButtonLinearId, CURVE_TYPE_NAMES[CURVETYPE_LINEAR], 0, &ButtonLinear))
 		CurveType = CURVETYPE_LINEAR;
 
 	static int s_ButtonSlowId;
 	CUIRect ButtonSlow;
 	View.HSplitTop(RowHeight, &ButtonSlow, &View);
-	if(pEditor->DoButton_MenuItem(&s_ButtonSlowId, "慢入", 0, &ButtonSlow))
+	if(pEditor->DoButton_MenuItem(&s_ButtonSlowId, CURVE_TYPE_NAMES[CURVETYPE_SLOW], 0, &ButtonSlow))
 		CurveType = CURVETYPE_SLOW;
 
 	static int s_ButtonFastId;
 	CUIRect ButtonFast;
 	View.HSplitTop(RowHeight, &ButtonFast, &View);
-	if(pEditor->DoButton_MenuItem(&s_ButtonFastId, "快出", 0, &ButtonFast))
+	if(pEditor->DoButton_MenuItem(&s_ButtonFastId, CURVE_TYPE_NAMES[CURVETYPE_FAST], 0, &ButtonFast))
 		CurveType = CURVETYPE_FAST;
 
 	static int s_ButtonStepId;
 	CUIRect ButtonStep;
 	View.HSplitTop(RowHeight, &ButtonStep, &View);
-	if(pEditor->DoButton_MenuItem(&s_ButtonStepId, "阶梯", 0, &ButtonStep))
+	if(pEditor->DoButton_MenuItem(&s_ButtonStepId, CURVE_TYPE_NAMES[CURVETYPE_STEP], 0, &ButtonStep))
 		CurveType = CURVETYPE_STEP;
 
 	static int s_ButtonSmoothId;
 	CUIRect ButtonSmooth;
 	View.HSplitTop(RowHeight, &ButtonSmooth, &View);
-	if(pEditor->DoButton_MenuItem(&s_ButtonSmoothId, "平滑", 0, &ButtonSmooth))
+	if(pEditor->DoButton_MenuItem(&s_ButtonSmoothId, CURVE_TYPE_NAMES[CURVETYPE_SMOOTH], 0, &ButtonSmooth))
 		CurveType = CURVETYPE_SMOOTH;
 
 	std::vector<std::shared_ptr<IEditorAction>> vpActions;
@@ -3243,7 +3246,6 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvelopeCurvetype(void *pContext, CU
 	}
 	CEnvPoint_runtime &SelectedPoint = pEnvelope->m_vPoints[pEditor->m_PopupEnvelopeSelectedPoint];
 
-	static const char *const TYPE_NAMES[NUM_CURVETYPES] = {"阶梯", "线性", "缓慢", "快速", "平滑", "贝塞尔"};
 	static char s_aButtonIds[NUM_CURVETYPES] = {0};
 
 	for(int Type = 0; Type < NUM_CURVETYPES; Type++)
@@ -3251,7 +3253,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvelopeCurvetype(void *pContext, CU
 		CUIRect Button;
 		View.HSplitTop(14.0f, &Button, &View);
 
-		if(pEditor->DoButton_MenuItem(&s_aButtonIds[Type], TYPE_NAMES[Type], Type == SelectedPoint.m_Curvetype, &Button))
+		if(pEditor->DoButton_MenuItem(&s_aButtonIds[Type], CURVE_TYPE_NAMES[Type], Type == SelectedPoint.m_Curvetype, &Button))
 		{
 			const int PrevCurve = SelectedPoint.m_Curvetype;
 			if(PrevCurve != Type)
