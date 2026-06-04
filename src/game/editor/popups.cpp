@@ -2720,7 +2720,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupTele(void *pContext, CUIRect View, b
 		pEd->Map()->m_pTeleLayer->GetPos(pEd->m_ViewTeleNumber, -1, TeleX, TeleY);
 		if(TeleX != -1 && TeleY != -1)
 		{
-			pEd->MapView()->SetWorldOffset({32.0f * TeleX + 0.5f, 32.0f * TeleY + 0.5f});
+			pEd->MapView()->SetWorldOffset({32.0f * (TeleX + 0.5f), 32.0f * (TeleY + 0.5f)});
 			return true;
 		}
 		return false;
@@ -2885,7 +2885,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupSwitch(void *pContext, CUIRect View,
 		pEditor->Map()->m_pSwitchLayer->GetPos(pEditor->m_ViewSwitch, -1, SwitchPos);
 		if(SwitchPos != ivec2(-1, -1))
 		{
-			pEditor->MapView()->SetWorldOffset({32.0f * SwitchPos.x + 0.5f, 32.0f * SwitchPos.y + 0.5f});
+			pEditor->MapView()->SetWorldOffset({32.0f * (SwitchPos.x + 0.5f), 32.0f * (SwitchPos.y + 0.5f)});
 			return true;
 		}
 		return false;
@@ -2987,7 +2987,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupTune(void *pContext, CUIRect View, b
 
 		if(TunePos != ivec2(-1, -1))
 		{
-			pEditor->MapView()->SetWorldOffset({32.0f * TunePos.x + 0.5f, 32.0f * TunePos.y + 0.5f});
+			pEditor->MapView()->SetWorldOffset({32.0f * (TunePos.x + 0.5f), 32.0f * (TunePos.y + 0.5f)});
 			return true;
 		}
 		return false;
@@ -3097,7 +3097,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupGoto(void *pContext, CUIRect View, b
 	static int s_Button;
 	if(pEditor->DoButton_Editor(&s_Button, "前往", 0, &Button, BUTTONFLAG_LEFT, nullptr))
 	{
-		pEditor->MapView()->SetWorldOffset({32.0f * s_GotoPos.x + 0.5f, 32.0f * s_GotoPos.y + 0.5f});
+		pEditor->MapView()->SetWorldOffset({32.0f * (s_GotoPos.x + 0.5f), 32.0f * (s_GotoPos.y + 0.5f)});
 	}
 
 	return CUi::POPUP_KEEP_OPEN;
