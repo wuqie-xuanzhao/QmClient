@@ -1716,7 +1716,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupEnvPointMulti(void *pContext, CUIRec
 	static int s_CurveButtonId = 0;
 	CUIRect CurveButton;
 	View.HSplitTop(RowHeight, &CurveButton, &View);
-	if(pEditor->DoButton_Editor(&s_CurveButtonId, "投影到", 0, &CurveButton, BUTTONFLAG_LEFT, "将所有选中的包络点投影到首尾两点之间的曲线上。"))
+	if(pEditor->DoButton_MenuItem(&s_CurveButtonId, "投影到", 0, &CurveButton, BUTTONFLAG_LEFT, "将所有选中的包络点投影到首尾两点之间的曲线上。"))
 	{
 		static SPopupMenuId s_PopupCurveTypeId;
 		pEditor->Ui()->DoPopupMenu(&s_PopupCurveTypeId, pEditor->Ui()->MouseX(), pEditor->Ui()->MouseY(), 80, 80, pEditor, PopupEnvPointCurveType);

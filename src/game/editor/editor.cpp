@@ -5115,7 +5115,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 									else if(Map()->m_vSelectedEnvelopePoints.size() > 1)
 									{
 										static SPopupMenuId s_PopupEnvPointMultiId;
-										Ui()->DoPopupMenu(&s_PopupEnvPointMultiId, Ui()->MouseX(), Ui()->MouseY(), 80, 22, this, PopupEnvPointMulti);
+										Ui()->DoPopupMenu(&s_PopupEnvPointMultiId, Ui()->MouseX(), Ui()->MouseY(), 100, 22, this, PopupEnvPointMulti);
 									}
 									Ui()->SetActiveItem(nullptr);
 									s_Operation = EEnvelopeEditorOp::OP_NONE;
