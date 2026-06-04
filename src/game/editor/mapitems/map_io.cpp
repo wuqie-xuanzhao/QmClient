@@ -61,6 +61,15 @@ static bool CheckedTileLayerCount(int Width, int Height, size_t &TileCount)
 void CDataFileWriterFinishJob::Run()
 {
 	m_Writer.Finish();
+
+	if(!m_pStorage->RenameFile(m_aTempFilename, m_aRealFilename, IStorage::TYPE_SAVE))
+	{
+		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "Saving failed: Could not move temporary map file '%s' to '%s'.", m_aTempFilename, m_aRealFilename);
+		log_error("editor/save", "%s", m_aErrorMessage);
+		return;
+	}
+
+	log_trace("editor/save", "Saved map to '%s'.", m_aRealFilename);
 }
 
 CDataFileWriterFinishJob::CDataFileWriterFinishJob(const char *pRealFilename, const char *pTempFilename, CDataFileWriter &&Writer) :
