@@ -194,6 +194,7 @@ protected:
 	int m_ScreenRefreshRate;
 	float m_ScreenHiDPIScale;
 	float m_ScreenAspectOverride = 0.0f;
+	ivec2 m_DesktopSize;
 
 public:
 	enum
