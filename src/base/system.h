@@ -82,26 +82,26 @@ enum
 /**
  * @ingroup File-IO
  */
-enum ESeekOrigin
+enum class EIoSeekOrigin
 {
 	/**
 	 * Start seeking from the beginning of the file.
 	 *
 	 * @see io_seek
 	 */
-	IOSEEK_START = 0,
+	START = 0,
 	/**
 	 * Start seeking from the current position.
 	 *
 	 * @see io_seek
 	 */
-	IOSEEK_CUR = 1,
+	CURRENT = 1,
 	/**
 	 * Start seeking from the end of the file.
 	 *
 	 * @see io_seek
 	 */
-	IOSEEK_END = 2,
+	END = 2,
 };
 
 /**
@@ -190,7 +190,7 @@ int io_skip(IOHANDLE io, int64_t size);
  *
  * @return `0` on success.
  */
-int io_seek(IOHANDLE io, int64_t offset, ESeekOrigin origin);
+int io_seek(IOHANDLE io, int64_t offset, EIoSeekOrigin origin);
 
 /**
  * Gets the current position in the file.
