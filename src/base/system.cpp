@@ -385,6 +385,13 @@ IOHANDLE io_current_exe()
 #define ASYNC_BUFSIZE (8 * 1024)
 #define ASYNC_LOCAL_BUFSIZE (64 * 1024)
 
+enum class EAsyncIoFinishState : unsigned char
+{
+	RUNNING,
+	CLOSE,
+	EXIT,
+};
+
 struct ASYNCIO
 {
 	CLock lock;
@@ -398,15 +405,8 @@ struct ASYNCIO
 	unsigned int write_pos;
 
 	int error;
-	unsigned char finish;
+	EAsyncIoFinishState finish;
 	unsigned char refcount;
-};
-
-enum
-{
-	ASYNCIO_RUNNING,
-	ASYNCIO_CLOSE,
-	ASYNCIO_EXIT,
 };
 
 struct BUFFERS
@@ -463,9 +463,9 @@ static void aio_thread(void *user)
 
 		if(aio->read_pos == aio->write_pos)
 		{
-			if(aio->finish != ASYNCIO_RUNNING)
+			if(aio->finish != EAsyncIoFinishState::RUNNING)
 			{
-				if(aio->finish == ASYNCIO_CLOSE)
+				if(aio->finish == EAsyncIoFinishState::CLOSE)
 				{
 					io_close(aio->io);
 				}
@@ -531,7 +531,7 @@ ASYNCIO *aio_new(IOHANDLE io)
 	aio->read_pos = 0;
 	aio->write_pos = 0;
 	aio->error = 0;
-	aio->finish = ASYNCIO_RUNNING;
+	aio->finish = EAsyncIoFinishState::RUNNING;
 	aio->refcount = 2;
 
 	aio->thread = thread_init(aio_thread, aio, "aio");
@@ -660,7 +660,7 @@ void aio_close(ASYNCIO *aio)
 {
 	{
 		CLockScope ls(aio->lock);
-		aio->finish = ASYNCIO_CLOSE;
+		aio->finish = EAsyncIoFinishState::CLOSE;
 	}
 	sphore_signal(&aio->sphore);
 }
@@ -672,9 +672,9 @@ void aio_wait(ASYNCIO *aio)
 		CLockScope ls(aio->lock);
 		thread = aio->thread;
 		aio->thread = nullptr;
-		if(aio->finish == ASYNCIO_RUNNING)
+		if(aio->finish == EAsyncIoFinishState::RUNNING)
 		{
-			aio->finish = ASYNCIO_EXIT;
+			aio->finish = EAsyncIoFinishState::EXIT;
 		}
 	}
 	sphore_signal(&aio->sphore);
