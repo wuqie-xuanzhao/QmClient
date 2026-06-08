@@ -1122,7 +1122,7 @@ void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_makedir_rec_for(const char *path);
+[[nodiscard]] int fs_makedir_rec_for(const char *path);
 
 /**
  * Fetches per user configuration directory.
@@ -1141,7 +1141,7 @@ int fs_makedir_rec_for(const char *path);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_storage_path(const char *appname, char *path, int max);
+[[nodiscard]] int fs_storage_path(const char *appname, char *path, int max);
 
 /**
  * Gets the absolute path to the executable.
@@ -1157,7 +1157,7 @@ int fs_storage_path(const char *appname, char *path, int max);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_executable_path(char *buffer, int buffer_size);
+[[nodiscard]] int fs_executable_path(char *buffer, int buffer_size);
 
 /**
  * Checks if a file exists.
@@ -1171,7 +1171,7 @@ int fs_executable_path(char *buffer, int buffer_size);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_is_file(const char *path);
+[[nodiscard]] int fs_is_file(const char *path);
 
 /**
  * Checks if a folder exists.
@@ -1185,7 +1185,7 @@ int fs_is_file(const char *path);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_is_dir(const char *path);
+[[nodiscard]] int fs_is_dir(const char *path);
 
 /**
  * Checks whether a given path is relative or absolute.
@@ -1198,7 +1198,7 @@ int fs_is_dir(const char *path);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_is_relative_path(const char *path);
+[[nodiscard]] int fs_is_relative_path(const char *path);
 
 /**
  * Changes the current working directory.
@@ -1211,7 +1211,7 @@ int fs_is_relative_path(const char *path);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_chdir(const char *path);
+[[nodiscard]] int fs_chdir(const char *path);
 
 /**
  * Gets the current working directory.
@@ -1225,7 +1225,7 @@ int fs_chdir(const char *path);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-char *fs_getcwd(char *buffer, int buffer_size);
+[[nodiscard]] char *fs_getcwd(char *buffer, int buffer_size);
 
 /**
  * Gets the name of a file or folder specified by a path,
@@ -1241,7 +1241,7 @@ char *fs_getcwd(char *buffer, int buffer_size);
  * @remark No distinction between files and folders is being made.
  * @remark The strings are treated as null-terminated strings.
  */
-const char *fs_filename(const char *path);
+[[nodiscard]] const char *fs_filename(const char *path);
 
 /**
  * Splits a filename into name (without extension) and file extension.
@@ -1283,7 +1283,7 @@ void fs_normalize_path(char *path);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_parent_dir(char *path);
+[[nodiscard]] int fs_parent_dir(char *path);
 
 /**
  * Deletes a file.
@@ -1297,7 +1297,7 @@ int fs_parent_dir(char *path);
  * @remark The strings are treated as null-terminated strings.
  * @remark Returns an error if the path specifies a directory name.
  */
-int fs_remove(const char *filename);
+[[nodiscard]] int fs_remove(const char *filename);
 
 /**
  * Renames the file or directory. If the paths differ the file will be moved.
@@ -1311,7 +1311,7 @@ int fs_remove(const char *filename);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_rename(const char *oldname, const char *newname);
+[[nodiscard]] int fs_rename(const char *oldname, const char *newname);
 
 /**
  * Gets the creation and the last modification date of a file or directory.
@@ -1327,7 +1327,7 @@ int fs_rename(const char *oldname, const char *newname);
  * @remark The strings are treated as null-terminated strings.
  * @remark Returned time is in seconds since UNIX Epoch.
  */
-int fs_file_time(const char *name, time_t *created, time_t *modified);
+[[nodiscard]] int fs_file_time(const char *name, time_t *created, time_t *modified);
 
 /**
  * Swaps the endianness of data. Each element is swapped individually by reversing its bytes.

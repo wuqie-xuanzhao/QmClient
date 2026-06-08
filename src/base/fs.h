@@ -15,7 +15,7 @@
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_makedir(const char *path);
+[[nodiscard]] int fs_makedir(const char *path);
 
 /**
  * Removes a directory.
@@ -30,6 +30,6 @@ int fs_makedir(const char *path);
  *
  * @remark The strings are treated as null-terminated strings.
  */
-int fs_removedir(const char *path);
+[[nodiscard]] int fs_removedir(const char *path);
 
 #endif

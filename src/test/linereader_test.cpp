@@ -34,7 +34,7 @@ void TestFileLineReaderRaw(const char *pWritten, unsigned WrittenLength, std::in
 		EXPECT_FALSE(pActualLastLine) << "Line reader returned more lines than expected. Unexpected last line: '" << pActualLastLine << "'";
 	}
 
-	fs_remove(Info.m_aFilename);
+	EXPECT_FALSE(fs_remove(Info.m_aFilename));
 }
 
 void TestFileLineReaderRaw(const char *pWritten, unsigned WrittenLength, std::initializer_list<const char *> pReads, bool ExpectSuccess)

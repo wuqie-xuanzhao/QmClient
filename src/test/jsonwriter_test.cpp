@@ -52,7 +52,7 @@ public:
 		}
 		else
 		{
-			fs_remove(m_aOutputFilename);
+			EXPECT_FALSE(fs_remove(m_aOutputFilename));
 		}
 	}
 };
