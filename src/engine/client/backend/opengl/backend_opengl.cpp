@@ -195,6 +195,7 @@ static void ParseVersionString(EBackendType BackendType, const char *pStr, int &
 				break;
 			}
 			aCurNumberStr[CurNumberStrLen++] = *pStr;
+			aCurNumberStr[CurNumberStrLen++] = (char)*pStr;
 			LastWasNumber = true;
 		}
 		else if(LastWasNumber && (*pStr == '.' || *pStr == ' ' || *pStr == '\0'))
