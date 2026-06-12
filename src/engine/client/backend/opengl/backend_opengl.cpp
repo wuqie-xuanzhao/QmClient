@@ -180,40 +180,57 @@ static void ParseVersionString(EBackendType BackendType, const char *pStr, int &
 				pStr += StrLenGLESCM;
 		}
 
-		char aCurNumberStr[32];
-		size_t CurNumberStrLen = 0;
-		size_t TotalNumbersPassed = 0;
-		int aNumbers[3] = {0};
-		bool LastWasNumber = false;
-		while(*pStr && TotalNumbersPassed < 3)
+	char aCurNumberStr[32];
+	size_t CurNumberStrLen = 0;
+	size_t TotalNumbersPassed = 0;
+	int aNumbers[3] = {0};
+	bool LastWasNumber = false;
+	bool Error = false;
+	while(*pStr && TotalNumbersPassed < 3)
+	{
+		if(str_isnum(*pStr))
 		{
-			if(str_isnum(*pStr))
+			if(CurNumberStrLen >= std::size(aCurNumberStr) - 1)
 			{
-				aCurNumberStr[CurNumberStrLen++] = (char)*pStr;
-				LastWasNumber = true;
-			}
-			else if(LastWasNumber && (*pStr == '.' || *pStr == ' '))
-			{
-				if(CurNumberStrLen > 0)
-				{
-					aCurNumberStr[CurNumberStrLen] = 0;
-					aNumbers[TotalNumbersPassed++] = str_toint(aCurNumberStr);
-					CurNumberStrLen = 0;
-				}
-
-				LastWasNumber = false;
-
-				if(*pStr != '.')
-					break;
-			}
-			else
-			{
+				Error = true;
 				break;
 			}
+			aCurNumberStr[CurNumberStrLen++] = (char)*pStr;
+			LastWasNumber = true;
+		}
+		else if(LastWasNumber && (*pStr == '.' || *pStr == ' '))
+		{
+			if(CurNumberStrLen > 0)
+			{
+				aCurNumberStr[CurNumberStrLen] = 0;
+				aNumbers[TotalNumbersPassed++] = str_toint(aCurNumberStr);
+				CurNumberStrLen = 0;
+			}
 
-			++pStr;
+			LastWasNumber = false;
+
+			if(*pStr != '.')
+				break;
+		}
+		else
+		{
+			break;
 		}
 
+		++pStr;
+	}
+
+	if(Error || TotalNumbersPassed == 0)
+	{
+		// Use the newest supported OpenGL version if the version string could not be parsed.
+		// We assume that the format was changed in a future driver that supports all OpenGL
+		// capabilities that we use.
+		VersionMajor = 3;
+		VersionMinor = BackendType == BACKEND_TYPE_OPENGL_ES ? 0 : 3;
+		VersionPatch = 0;
+	}
+	else
+	{
 		VersionMajor = aNumbers[0];
 		VersionMinor = aNumbers[1];
 		VersionPatch = aNumbers[2];
