@@ -185,7 +185,7 @@ static void ParseVersionString(EBackendType BackendType, const char *pStr, int &
 	int aNumbers[3] = {0};
 	bool LastWasNumber = false;
 	bool Error = false;
-	while(true)
+	while(*pStr && TotalNumbersPassed < 3)
 	{
 		if(str_isnum(*pStr))
 		{
@@ -194,7 +194,6 @@ static void ParseVersionString(EBackendType BackendType, const char *pStr, int &
 				Error = true;
 				break;
 			}
-			aCurNumberStr[CurNumberStrLen++] = *pStr;
 			aCurNumberStr[CurNumberStrLen++] = (char)*pStr;
 			LastWasNumber = true;
 		}
