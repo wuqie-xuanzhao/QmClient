@@ -8,7 +8,7 @@
 
 int CGameClient::TranslateSnap(CSnapshotBuffer *pSnapDstSix, CSnapshot *pSnapSrcSeven, int Conn, bool Dummy)
 {
-	rust::Box<CSnapshotBuilder> pBuilder = CSnapshotBuilder_New();
+	rust::Box<CSnapshotBuilder> pBuilder = CSnapshotBuilder::New();
 	pBuilder->Init(false);
 
 	float LocalTime = Client()->LocalTime();
@@ -440,7 +440,7 @@ int CGameClient::TranslateSnap(CSnapshotBuffer *pSnapDstSix, CSnapshot *pSnapSrc
 
 int CGameClient::OnDemoRecSnap7(CSnapshot *pFrom, CSnapshotBuffer *pTo, int Conn)
 {
-	rust::Box<CSnapshotBuilder> pBuilder = CSnapshotBuilder_New();
+	rust::Box<CSnapshotBuilder> pBuilder = CSnapshotBuilder::New();
 	pBuilder->Init(false);
 
 	{
