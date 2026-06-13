@@ -85,6 +85,26 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
+      - name: Prepare Linux (non-fancy)
+        if: runner.os == 'Linux'
+        run: |
+          curl -LO https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4-Linux-x86_64.tar.gz
+          sudo tar --strip-components 1 -C /usr -xf cmake-3.13.4-Linux-x86_64.tar.gz
+          # Our minimum supported Rust version (MSRV)
+          rustup default 1.85.0
+          sudo rm -rf /var/lib/mysql/ /var/run/mysqld
+          sudo mkdir /var/lib/mysql/ /var/run/mysqld/
+          sudo chown mysql:mysql /var/lib/mysql/ /var/run/mysqld/
+          sudo mysqld --initialize-insecure --user=mysql --basedir=/usr --datadir=/var/lib/mysql/
+          sudo /usr/bin/mysqld_safe --basedir=/usr --datadir='/var/lib/mysql/' &
+          sleep 10
+          sudo mysql <<EOF
+          CREATE DATABASE ddnet;
+          CREATE USER 'ddnet'@'localhost' IDENTIFIED BY 'thebestpassword';
+          GRANT ALL PRIVILEGES ON ddnet.* TO 'ddnet'@'localhost';
+          FLUSH PRIVILEGES;
+          EOF
+
       - name: Setup Python
         id: setup-python
         uses: actions/setup-python@v6
