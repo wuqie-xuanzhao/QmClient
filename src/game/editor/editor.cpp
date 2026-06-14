@@ -5010,6 +5010,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					s_Operation = EEnvelopeEditorOp::OP_NONE;
 				}
 
+				m_ActiveEnvelopePreview = EEnvelopePreview::SELECTED;
 				BarColor = ColorRGBA(1.0f, 1.0f, 0.0f, 0.8f);
 				str_copy(m_aTooltip, "时间条：左键拖动，按住 Ctrl 精细调整。");
 			}
@@ -5024,6 +5025,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					s_MouseYStart = Ui()->MouseY();
 				}
 
+				m_ActiveEnvelopePreview = EEnvelopePreview::SELECTED;
 				BarColor = ColorRGBA(1.0f, 1.0f, 0.0f, 0.8f);
 				str_copy(m_aTooltip, "时间条：左键拖动，按住 Ctrl 精细调整。");
 			}
@@ -6128,7 +6130,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	char aTimeStr[6];
 	str_timestamp_format(aTimeStr, sizeof(aTimeStr), "%H:%M");
 
-	str_format(aBuf, sizeof(aBuf), "坐标X: %.1f, 坐标Y: %.1f, 缩放: %.1f, 动画: %.1f, 网格: %i  %s", MapView()->MouseWorldPos().x / 32.0f, MapView()->MouseWorldPos().y / 32.0f, MapView()->Zoom()->GetValue(), m_AnimateSpeed, MapView()->MapGrid()->Factor(), aTimeStr);
+	str_format(aBuf, sizeof(aBuf), "坐标X: %.1f, 坐标Y: %.1f, 缩放: %.1f, 时间: %.1f, 动画: %.1f, 网格: %i  %s", MapView()->MouseWorldPos().x / 32.0f, MapView()->MouseWorldPos().y / 32.0f, MapView()->Zoom()->GetValue(), m_AnimateTime * m_AnimateSpeed, m_AnimateSpeed, MapView()->MapGrid()->Factor(), aTimeStr);
 	Ui()->DoLabel(&Info, aBuf, 10.0f, TEXTALIGN_MR);
 
 	static int s_HelpButton = 0;
