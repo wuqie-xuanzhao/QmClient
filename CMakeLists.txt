@@ -1598,47 +1598,6 @@ set(EXPECTED_DATA
   qmclient/icons/qm_icons_4x.json
   qmclient/icons/qm_icons_4x.png
   qmclient/icons/README.md
-  qmclient/languages/index.txt
-  qmclient/languages/arabic.txt
-  qmclient/languages/azerbaijani.txt
-  qmclient/languages/belarusian.txt
-  qmclient/languages/bosnian.txt
-  qmclient/languages/brazilian_portuguese.txt
-  qmclient/languages/bulgarian.txt
-  qmclient/languages/catalan.txt
-  qmclient/languages/chuvash.txt
-  qmclient/languages/czech.txt
-  qmclient/languages/danish.txt
-  qmclient/languages/dutch.txt
-  qmclient/languages/english.txt
-  qmclient/languages/esperanto.txt
-  qmclient/languages/estonian.txt
-  qmclient/languages/finnish.txt
-  qmclient/languages/french.txt
-  qmclient/languages/galician.txt
-  qmclient/languages/german.txt
-  qmclient/languages/greek.txt
-  qmclient/languages/hungarian.txt
-  qmclient/languages/italian.txt
-  qmclient/languages/japanese.txt
-  qmclient/languages/korean.txt
-  qmclient/languages/kyrgyz.txt
-  qmclient/languages/norwegian.txt
-  qmclient/languages/persian.txt
-  qmclient/languages/polish.txt
-  qmclient/languages/portuguese.txt
-  qmclient/languages/README.txt
-  qmclient/languages/romanian.txt
-  qmclient/languages/russian.txt
-  qmclient/languages/serbian.txt
-  qmclient/languages/serbian_cyrillic.txt
-  qmclient/languages/simplified_chinese.txt
-  qmclient/languages/slovak.txt
-  qmclient/languages/spanish.txt
-  qmclient/languages/swedish.txt
-  qmclient/languages/traditional_chinese.txt
-  qmclient/languages/turkish.txt
-  qmclient/languages/ukrainian.txt
   mapres/basic_freeze.png
   mapres/bg_cloud1.png
   mapres/bg_cloud2.png
