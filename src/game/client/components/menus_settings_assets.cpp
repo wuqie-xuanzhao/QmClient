@@ -95,6 +95,53 @@ namespace
 		return "idle";
 	}
 
+	struct SSettingsAssetsVisibleAdmission
+	{
+		int m_FirstCombined = -1;
+		int m_EndCombined = -1;
+		int m_LocalCount = 0;
+		int m_VisibleStarts = 0;
+		int m_PrefetchStarts = 0;
+		int m_BackgroundStarts = 0;
+
+		bool IsCombinedVisible(int CombinedIndex) const
+		{
+			return m_FirstCombined >= 0 && CombinedIndex >= m_FirstCombined && CombinedIndex < m_EndCombined;
+		}
+
+		void Record(bool Visible, bool Prefetch)
+		{
+			if(Visible)
+				++m_VisibleStarts;
+			else if(Prefetch)
+				++m_PrefetchStarts;
+			else
+				++m_BackgroundStarts;
+		}
+	};
+
+	enum class EAssetsVisiblePreflightState
+	{
+		IDLE,
+		PLANNING,
+		WARMING_VISIBLE,
+		READY_TO_SHOW,
+		VISIBLE,
+	};
+
+	struct SSettingsAssetsVisiblePreflight
+	{
+		EAssetsVisiblePreflightState m_State = EAssetsVisiblePreflightState::IDLE;
+		int m_VisibleCount = 0;
+		int m_HalfVisibleCount = 0;
+		int m_ReadyCount = 0;
+		int m_NotReadyCount = 0;
+		int m_ThumbStartsBeforeVisible = 0;
+		int m_ThumbStartsDuringDraw = 0;
+		bool m_VisibleReady = false;
+		bool m_GeometryStable = false;
+	};
+
 }
 
 typedef std::function<void()> TMenuAssetScanLoadedFunc;
@@ -2158,6 +2205,33 @@ namespace
 		return pDisplayName;
 	}
 
+	static bool IsCustomAssetSelectedByTab(int Tab, const char *pName)
+	{
+		if(pName == nullptr || pName[0] == '\0')
+			return false;
+		if(Tab == ASSETS_TAB_ENTITIES)
+			return str_comp(pName, g_Config.m_ClAssetsEntities) == 0;
+		if(Tab == ASSETS_TAB_GAME)
+			return str_comp(pName, g_Config.m_ClAssetGame) == 0;
+		if(Tab == ASSETS_TAB_EMOTICONS)
+			return str_comp(pName, g_Config.m_ClAssetEmoticons) == 0;
+		if(Tab == ASSETS_TAB_PARTICLES)
+			return str_comp(pName, g_Config.m_ClAssetParticles) == 0;
+		if(Tab == ASSETS_TAB_HUD)
+			return str_comp(pName, g_Config.m_ClAssetHud) == 0;
+		if(Tab == ASSETS_TAB_GUI_CURSOR)
+			return str_comp(pName, g_Config.m_ClAssetGuiCursor) == 0;
+		if(Tab == ASSETS_TAB_ARROW)
+			return str_comp(pName, g_Config.m_ClAssetArrow) == 0;
+		if(Tab == ASSETS_TAB_STRONG_WEAK)
+			return str_comp(pName, g_Config.m_ClAssetStrongWeak) == 0;
+		if(Tab == ASSETS_TAB_ENTITY_BG)
+			return IsEntityBgConfigSelected(pName);
+		if(Tab == ASSETS_TAB_EXTRAS)
+			return str_comp(pName, g_Config.m_ClAssetExtras) == 0;
+		return false;
+	}
+
 	struct SNamedSingleFileNameScanUser
 	{
 		std::vector<std::string> *m_pNames;
@@ -4128,14 +4202,9 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	const SAssetResourceCategory *pCurrentCategory = AssetResourceCategoryByTab(s_CurCustomTab);
 	SMenuAssetScanUser LazyLoadUser;
 	LazyLoadUser.m_pUser = this;
-	constexpr int MaxPreviewUploadsPerFrame = 1;
 	constexpr size_t MaxPreviewUploadBytesPerFrame = ASSET_PREVIEW_UPLOAD_MAX_BYTES_PER_FRAME;
-	constexpr int MaxPreviewDecodeStartsPerFrame = 6;
-	constexpr int MaxPreviewHighPriorityDecodeStartsPerFrame = 12;
 	constexpr int MaxPreviewDecodeFinalizesPerFrame = 1;
 	constexpr double MaxPreviewDecodeFinalizeMsPerFrame = 2.0;
-	constexpr int MaxWorkshopThumbStartsPerFrame = 16;
-	constexpr int MaxWorkshopThumbHighPriorityStartsPerFrame = 32;
 	constexpr int PreviewPrefetchRows = 2;
 	IEngineGraphics *pEngineGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	const bool WindowActive = pEngineGraphics == nullptr || pEngineGraphics->WindowActive() != 0;
@@ -4146,6 +4215,9 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	int PreviewDecodeStartsThisFrame = 0;
 	int PreviewDecodeFinalizesThisFrame = 0;
 	int WorkshopThumbStartsThisFrame = 0;
+	SSettingsAssetsVisibleAdmission CombinedVisibleAdmission;
+	SSettingsAssetsVisiblePreflight *pActiveVisiblePreflight = nullptr;
+	int VisiblePreviewStartsDuringDraw = 0;
 	size_t SearchListSize = 0;
 	auto &vDecodeQueue = m_aaCustomPreviewDecodeQueue[s_CurCustomTab];
 	auto &vReadyQueue = m_aaCustomPreviewReadyQueue[s_CurCustomTab];
@@ -4156,6 +4228,8 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	static int s_AssetsPostScrollRecoveryFrames = 0;
 	static int s_AssetsLastFirstVisibleIndex[NUMBER_OF_ASSETS_TABS] = {-1};
 	static int s_AssetsLastLastVisibleIndex[NUMBER_OF_ASSETS_TABS] = {-1};
+	static int s_AssetsLastFirstVisibleCombinedIndex[NUMBER_OF_ASSETS_TABS] = {-1};
+	static int s_AssetsLastLastVisibleCombinedIndex[NUMBER_OF_ASSETS_TABS] = {-1};
 	static int s_AssetsLastFirstVisibleDownloadableIndex[NUMBER_OF_ASSETS_TABS] = {-1};
 	static int s_AssetsLastLastVisibleDownloadableIndex[NUMBER_OF_ASSETS_TABS] = {-1};
 	const bool AssetsScrollInteraction = m_SettingsScrollActive || s_AssetsScrollActiveLastFrame;
@@ -4167,6 +4241,29 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		s_AssetsScrollCooldownFrames > 0, m_SettingsScrollActive, false, s_AssetsPostScrollRecoveryFrames);
 	int RemainingHeavyResourceBatches = SettingsResourceSharedHeavyBudget(ResourceFrameContext, 4, 1);
 	const SQmPerformanceMetrics &PerfSnapshot = GameClient()->m_QmMonitoring.Snapshot().m_Performance;
+	SSettingsAdaptiveBudgetInput AdaptiveBudgetInput;
+	AdaptiveBudgetInput.m_FrameMsAverage = PerfSnapshot.m_FrameTimeMs;
+	AdaptiveBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeSpikeMs > 0.0f ? PerfSnapshot.m_FrameTimeSpikeMs : PerfSnapshot.m_FrameTimeMs;
+	AdaptiveBudgetInput.m_TargetFrameMs = 8.333f;
+	AdaptiveBudgetInput.m_ScrollActive = ResourceFrameContext.m_ScrollActive;
+	AdaptiveBudgetInput.m_JumpScrollActive = ResourceFrameContext.m_JumpScrollActive;
+	AdaptiveBudgetInput.m_PostScrollRecoveryFrames = ResourceFrameContext.m_PostScrollRecoveryFrames;
+	AdaptiveBudgetInput.m_BackgroundBacklog = (int)vDecodeQueue.size() + (int)vReadyQueue.size();
+	AdaptiveBudgetInput.m_WindowActive = WindowActive;
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = SettingsAdaptiveBudgetStep(AdaptiveBudgetInput, m_AssetsAdaptiveBudgetState);
+	// Telemetry contract: event=settings_adaptive_budget.
+	LogSettingsAdaptiveBudget("assets", AdaptiveBudgetInput, AdaptiveBudget);
+	const bool AssetsScrollPressure = ResourceFrameContext.m_ScrollActive || ResourceFrameContext.m_JumpScrollActive;
+	const int AdaptivePrefetchTokens = AssetsScrollPressure ? 0 : AdaptiveBudget.m_PrefetchTokens;
+	const int AdaptiveBackgroundTokens = AssetsScrollPressure ? 0 : AdaptiveBudget.m_BackgroundTokens;
+	const int MaxPreviewDecodeStartsPerFrame = maximum(1, AdaptiveBudget.m_VisibleTokens + AdaptivePrefetchTokens + AdaptiveBackgroundTokens);
+	const int MaxPreviewHighPriorityDecodeStartsPerFrame = maximum(MaxPreviewDecodeStartsPerFrame, AdaptiveBudget.m_VisibleTokens + AdaptivePrefetchTokens);
+	const int MaxWorkshopThumbStartsPerFrameAdaptive = maximum(1, AdaptiveBudget.m_VisibleTokens + AdaptivePrefetchTokens + AdaptiveBackgroundTokens);
+	const int MaxWorkshopThumbHighPriorityStartsPerFrame = maximum(MaxWorkshopThumbStartsPerFrameAdaptive, AdaptiveBudget.m_VisibleTokens);
+	const int MaxWorkshopThumbJumpStartsPerFrame = maximum(1, minimum(MaxWorkshopThumbStartsPerFrameAdaptive, AdaptiveBudget.m_VisibleTokens));
+	const int MaxPreviewUploadsPerFrame = maximum(1, AdaptiveBudget.m_GpuUploadTokens);
+	RemainingHeavyResourceBatches = SettingsResourceClampSharedHeavyBudget(AdaptiveBudget.m_GpuUploadTokens, ResourceFrameContext, 4, 1);
+	m_SettingsFrameBudget.m_MaxGpuUploads = maximum(m_SettingsFrameBudget.m_MaxGpuUploads, AdaptiveBudget.m_GpuUploadTokens);
 	const size_t TextureMemoryUsageBytes = Graphics()->TextureMemoryUsage();
 	auto CountResidentPreviewBytes = [&]() {
 		size_t ResidentBytes = 0;
@@ -4277,19 +4374,19 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	auto StartPreviewDecode = [&](size_t Index, bool HighPriority) {
 		const int CurTab = s_CurCustomTab;
 		if(CurTab < ASSETS_TAB_ENTITIES || CurTab >= NUMBER_OF_ASSETS_TABS)
-			return;
+			return false;
 		if(!SettingsAssetListCanStartPreviewDecode(
 			   m_aAssetLoadStates[CurTab] == ASSET_LOAD_STATE_LOADING,
 			   m_aAssetLoadStates[CurTab] == ASSET_LOAD_STATE_MERGING,
 			   m_aAssetLoadStates[CurTab] == ASSET_LOAD_STATE_LOADED))
-			return;
+			return false;
 		if(!SettingsAssetWorkAllowedWhileWindowInactive(WindowActive, HighPriority))
-			return;
+			return false;
 		SCustomItem *pItem = GetCustomItemMutable(CurTab, Index);
 		if(pItem == nullptr || !SettingsResourceCanUseHighPriorityBudget(PreviewDecodeStartsThisFrame, MaxPreviewDecodeStartsPerFrame, MaxPreviewHighPriorityDecodeStartsPerFrame, HighPriority))
-			return;
+			return false;
 		if(CurTab == ASSETS_TAB_ENTITY_BG && static_cast<SCustomEntityBg *>(pItem)->m_IsDirectory)
-			return;
+			return false;
 		if(CurTab == ASSETS_TAB_ENTITY_BG)
 		{
 			if(SWorkshopHudState *pWorkshopState = WorkshopStateByTab(CurTab))
@@ -4304,12 +4401,12 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					   PreviewBudgetBytes,
 					   TextureMemoryUsageBytes,
 					   WorkshopThumbStartsThisFrame,
-					   MaxWorkshopThumbStartsPerFrame,
+					   MaxWorkshopThumbStartsPerFrameAdaptive,
 					   MaxWorkshopThumbHighPriorityStartsPerFrame,
 					   Storage(),
 					   Engine(),
 					   Http()))
-					return;
+					return false;
 			}
 		}
 		if(pItem->m_PreviewState == SCustomItem::PREVIEW_STATE_LOADING)
@@ -4327,12 +4424,12 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					vDecodeQueue.push_front(Handle);
 				}
 			}
-			return;
+			return false;
 		}
 		if(pItem->m_RenderTexture.IsValid() && pItem->m_PreviewResidentBytes >= PreviewTextureSizeBytesEstimate(pItem->m_PreviewRequestedTextureSize))
-			return;
+			return false;
 		if(pItem->m_PreviewState == SCustomItem::PREVIEW_STATE_READY || pItem->m_PreviewState == SCustomItem::PREVIEW_STATE_LOADED)
-			return;
+			return false;
 		pItem->m_PreviewImage.Free();
 		pItem->m_PreviewEpoch = PreviewEpoch;
 		pItem->m_PreviewListIndex = Index;
@@ -4404,19 +4501,29 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			else
 				vDecodeQueue.push_back(Handle);
 			++PreviewDecodeStartsThisFrame;
+			if(HighPriority && pActiveVisiblePreflight != nullptr)
+				++pActiveVisiblePreflight->m_ThumbStartsBeforeVisible;
+			else if(HighPriority && pActiveVisiblePreflight == nullptr)
+				++VisiblePreviewStartsDuringDraw;
+			return true;
 		}
 		else
 		{
 			pItem->m_PreviewHighPriority = false;
 			pItem->m_PreviewState = SCustomItem::PREVIEW_STATE_FAILED;
 		}
+		return false;
 	};
 
 	auto SchedulePreviewRange = [&](int FirstIndex, int LastIndex, int ItemsPerRow) {
 		if(SearchListSize == 0 || FirstIndex < 0 || LastIndex < 0)
 			return;
 		for(int Index = FirstIndex; Index <= LastIndex && PreviewDecodeStartsThisFrame < MaxPreviewHighPriorityDecodeStartsPerFrame; ++Index)
-			StartPreviewDecode((size_t)Index, SettingsAssetPreviewShouldPrioritizeVisibleRange(Index, FirstIndex, LastIndex));
+		{
+			const bool Started = StartPreviewDecode((size_t)Index, SettingsAssetPreviewShouldPrioritizeVisibleRange(Index, FirstIndex, LastIndex));
+			if(Started)
+				CombinedVisibleAdmission.Record(true, false);
+		}
 
 		const int PrefetchItems = maximum(1, ItemsPerRow) * PreviewPrefetchRows;
 		const int FirstRelevant = maximum(0, FirstIndex - PrefetchItems);
@@ -4425,8 +4532,30 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		{
 			if(SettingsAssetPreviewShouldPrioritizeVisibleRange(Index, FirstIndex, LastIndex))
 				continue;
-			StartPreviewDecode((size_t)Index, false);
+			const bool Started = StartPreviewDecode((size_t)Index, false);
+			if(Started)
+				CombinedVisibleAdmission.Record(false, true);
 		}
+	};
+
+	auto SelectedCustomAssetIndex = [&](int Tab, size_t CurrentSearchListSize) {
+		for(size_t Index = 0; Index < CurrentSearchListSize; ++Index)
+		{
+			const SCustomItem *pItem = GetCustomItem(Tab, Index);
+			if(pItem != nullptr && IsCustomAssetSelectedByTab(Tab, pItem->m_aName))
+				return (int)Index;
+		}
+		return -1;
+	};
+
+	auto SelectedCombinedAssetIndex = [&](int Tab, const std::vector<size_t> &vVisibleLocalAssetIndices) {
+		for(size_t CombinedIndex = 0; CombinedIndex < vVisibleLocalAssetIndices.size(); ++CombinedIndex)
+		{
+			const SCustomItem *pItem = GetCustomItem(Tab, vVisibleLocalAssetIndices[CombinedIndex]);
+			if(pItem != nullptr && IsCustomAssetSelectedByTab(Tab, pItem->m_aName))
+				return (int)CombinedIndex;
+		}
+		return -1;
 	};
 
 	auto RenderCardBadge = [&](const CUIRect &Rect, const char *pLabel, const ColorRGBA &FillColor, float FontSize) {
@@ -4921,7 +5050,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			UploadBlocked = true;
 			UploadBlockReason = ESettingsWarmupMissReason::GPU_UPLOAD_BUDGET;
 		}
-		LogSettingsResourcePerf(SETTINGS_ASSETS, "upload", (int)UploadedBytesThisFrame, (int)MaxPreviewUploadBytesPerFrame, (int)vReadyQueue.size(), UploadBlocked ? UploadBlockReason : ESettingsWarmupMissReason::NONE, 0.0);
+		LogSettingsResourcePerf(SETTINGS_ASSETS, "upload", UploadedPreviewsThisFrame, MaxPreviewUploadsPerFrame, (int)vReadyQueue.size(), UploadBlocked ? UploadBlockReason : ESettingsWarmupMissReason::NONE, 0.0);
 		char aDrainExtra[192];
 		str_format(aDrainExtra, sizeof(aDrainExtra), "tab=%d processed=%d bytes_budget=%u queue_remaining=%d bytes_used=%u",
 			s_CurCustomTab, UploadedPreviewsThisFrame, (unsigned)MaxPreviewUploadBytesPerFrame, (int)vReadyQueue.size(),
@@ -4933,6 +5062,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	{
 		static CListBox s_ListBox;
 		const int LocalColumns = maximum(1, (int)(CustomList.w / (Margin + TextureWidth)));
+		OldSelected = SelectedCustomAssetIndex(s_CurCustomTab, SearchListSize);
 		s_ListBox.DoStart(TextureHeight + AssetCardTextReserve + AssetCardFooterSpacing + Margin, SearchListSize, LocalColumns, 1, OldSelected, &CustomList, false);
 		static std::vector<CButtonContainer> s_vLocalDeleteButtons;
 		s_vLocalDeleteButtons.resize(SearchListSize);
@@ -4942,62 +5072,15 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		char aDeleteLocalName[IO_MAX_PATH_LENGTH] = "";
 		int FirstVisibleIndex = -1;
 		int LastVisibleIndex = -1;
-		for(size_t i = 0; i < SearchListSize; ++i)
+		const float LocalRowHeight = TextureHeight + AssetCardTextReserve + AssetCardFooterSpacing + Margin;
+		const SSettingsSkinListVisibleRange LocalVisibleRange = SettingsSkinListVisibleRangeForScroll(
+			s_ListBox.ScrollOffsetY(), s_ListBox.ViewHeight(), LocalRowHeight, LocalColumns, (int)SearchListSize, 1);
+		s_ListBox.SkipItems(LocalVisibleRange.m_FirstItem);
+		for(size_t i = LocalVisibleRange.m_FirstItem; i < (size_t)LocalVisibleRange.m_EndItem; ++i)
 		{
 			const SCustomItem *pItem = GetCustomItem(s_CurCustomTab, i);
 			if(pItem == nullptr)
 				continue;
-
-			if(s_CurCustomTab == ASSETS_TAB_ENTITIES)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetsEntities) == 0)
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_GAME)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetGame) == 0)
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_EMOTICONS)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetEmoticons) == 0)
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_PARTICLES)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetParticles) == 0)
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_HUD)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetHud) == 0)
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_GUI_CURSOR)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetGuiCursor) == 0)
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_ARROW)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetArrow) == 0)
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_STRONG_WEAK)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetStrongWeak) == 0)
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_ENTITY_BG)
-			{
-				if(IsEntityBgConfigSelected(pItem->m_aName))
-					OldSelected = i;
-			}
-			else if(s_CurCustomTab == ASSETS_TAB_EXTRAS)
-			{
-				if(str_comp(pItem->m_aName, g_Config.m_ClAssetExtras) == 0)
-					OldSelected = i;
-			}
 
 			const CListboxItem Item = s_ListBox.DoNextItem(pItem, OldSelected >= 0 && (size_t)OldSelected == i);
 			CUIRect ItemRect = Item.m_Rect;
@@ -5059,6 +5142,12 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				}
 			}
 		}
+		s_ListBox.SkipItems((int)SearchListSize - LocalVisibleRange.m_EndItem);
+		char aLocalListFrameExtra[192];
+		str_format(aLocalListFrameExtra, sizeof(aLocalListFrameExtra), "tab=%d items_total=%d items_rendered=%d items_skipped=%d rows_total=%d rows_visible=%d first=%d end=%d",
+			s_CurCustomTab, LocalVisibleRange.m_TotalItems, LocalVisibleRange.m_RenderedItems, LocalVisibleRange.m_SkippedItems,
+			LocalVisibleRange.m_TotalRows, LocalVisibleRange.m_VisibleRows, LocalVisibleRange.m_FirstItem, LocalVisibleRange.m_EndItem);
+		LogAssetsPerfStage("assets_local_list_frame", 0.0, true, aLocalListFrameExtra);
 		if(FirstVisibleIndex >= 0)
 		{
 			SchedulePreviewRange(FirstVisibleIndex, LastVisibleIndex, LocalColumns);
@@ -5515,7 +5604,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		bool RefreshLocalList = false;
 
 		constexpr int MaxWorkshopThumbDecodeFinalizesPerFrame = 1;
-		constexpr int MaxWorkshopThumbUploadsPerFrame = 1;
+		const int MaxWorkshopThumbUploadsPerFrame = maximum(1, AdaptiveBudget.m_GpuUploadTokens);
 		constexpr size_t MaxWorkshopThumbUploadBytesPerFrame = ASSET_PREVIEW_UPLOAD_MAX_BYTES_PER_FRAME;
 		constexpr double MaxWorkshopThumbDecodeFinalizeMsPerFrame = 1.0;
 		int WorkshopGpuUploadsThisFrame = 0;
@@ -5754,7 +5843,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				WorkshopUploadBlocked = true;
 				WorkshopUploadBlockReason = ESettingsWarmupMissReason::GPU_UPLOAD_BUDGET;
 			}
-			LogSettingsResourcePerf(SETTINGS_ASSETS, "upload", (int)WorkshopThumbUploadedBytesThisFrame, (int)MaxWorkshopThumbUploadBytesPerFrame, (int)WorkshopState.m_vReadyThumbQueue.size(), WorkshopUploadBlocked ? WorkshopUploadBlockReason : ESettingsWarmupMissReason::NONE, 0.0);
+			LogSettingsResourcePerf(SETTINGS_ASSETS, "upload", WorkshopGpuUploadsThisFrame, MaxWorkshopThumbUploadsPerFrame, (int)WorkshopState.m_vReadyThumbQueue.size(), WorkshopUploadBlocked ? WorkshopUploadBlockReason : ESettingsWarmupMissReason::NONE, 0.0);
 			char aWorkshopFinalizeExtra[160];
 			str_format(aWorkshopFinalizeExtra, sizeof(aWorkshopFinalizeExtra), "tab=%d finalized=%d deferred=%d ready_queue=%d recovery_frames=%d heavy_batches_left=%d",
 				s_CurCustomTab, WorkshopThumbFinalizesThisFrame, DeferredWorkshopThumbs, (int)WorkshopState.m_vReadyThumbQueue.size(),
@@ -5875,7 +5964,8 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		{
 			const int Columns = std::max(1, static_cast<int>(WorkshopListArea.w / (Margin + TextureWidth)));
 			static CListBox s_WorkshopAssetsListBox;
-			s_WorkshopAssetsListBox.DoStart(TextureHeight + AssetCardTextReserve + AssetCardFooterSpacing + Margin, CombinedCount, Columns, 1, -1, &WorkshopListArea, false);
+			const int OldCombinedSelected = SelectedCombinedAssetIndex(s_CurCustomTab, vVisibleLocalAssetIndices);
+			s_WorkshopAssetsListBox.DoStart(TextureHeight + AssetCardTextReserve + AssetCardFooterSpacing + Margin, CombinedCount, Columns, 1, OldCombinedSelected, &WorkshopListArea, false);
 
 			static std::vector<CButtonContainer> s_vWorkshopLocalDeleteButtons;
 			s_vWorkshopLocalDeleteButtons.resize(LocalAssetTotalCount);
@@ -5885,7 +5975,6 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			static size_t s_PendingDownloadAssetIndex = SIZE_MAX;
 			static CUi::SConfirmPopupContext s_WorkshopDownloadConfirmPopup;
 
-			int OldCombinedSelected = -1;
 			bool DeleteLocalRequested = false;
 			char aDeleteLocalName[IO_MAX_PATH_LENGTH] = "";
 			bool DownloadRequested = false;
@@ -5898,6 +5987,20 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			int LastVisibleLocalIndex = -1;
 			int FirstVisibleDownloadableIndex = -1;
 			int LastVisibleDownloadableIndex = -1;
+			const float WorkshopRowHeight = TextureHeight + AssetCardTextReserve + AssetCardFooterSpacing + Margin;
+			const SSettingsSkinListVisibleRange WorkshopVisibleRange = SettingsSkinListVisibleRangeForScroll(
+				s_WorkshopAssetsListBox.ScrollOffsetY(), s_WorkshopAssetsListBox.ViewHeight(), WorkshopRowHeight, Columns, (int)CombinedCount, 1);
+			CombinedVisibleAdmission.m_FirstCombined = WorkshopVisibleRange.m_FirstItem;
+			CombinedVisibleAdmission.m_EndCombined = WorkshopVisibleRange.m_EndItem;
+			CombinedVisibleAdmission.m_LocalCount = (int)LocalAssetCount;
+			const int PreviousFirstVisibleCombinedIndex = s_AssetsLastFirstVisibleCombinedIndex[s_CurCustomTab];
+			const int PreviousLastVisibleCombinedIndex = s_AssetsLastLastVisibleCombinedIndex[s_CurCustomTab];
+			const int WorkshopVisibleJumpThreshold = maximum(1, Columns) * 2;
+			const bool WorkshopListJumpScrollActive =
+				WorkshopVisibleRange.m_FirstItem < WorkshopVisibleRange.m_EndItem && PreviousFirstVisibleCombinedIndex >= 0 &&
+				(abs(WorkshopVisibleRange.m_FirstItem - PreviousFirstVisibleCombinedIndex) >= WorkshopVisibleJumpThreshold ||
+					abs((WorkshopVisibleRange.m_EndItem - 1) - PreviousLastVisibleCombinedIndex) >= WorkshopVisibleJumpThreshold);
+			const int WorkshopThumbStartLimitThisFrame = WorkshopListJumpScrollActive ? MaxWorkshopThumbJumpStartsPerFrame : MaxWorkshopThumbStartsPerFrameAdaptive;
 			auto StartWorkshopThumb = [&](SWorkshopHudAsset &Asset, bool HighPriority) {
 				const int TargetTextureSize = SettingsAssetPreviewBudgetedTextureSize(
 					WORKSHOP_ASSET_PREVIEW_MAX_TEXTURE_SIZE,
@@ -5932,7 +6035,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				}
 				if(Asset.m_pThumbTask)
 					return false;
-				if(!SettingsResourceCanUseHighPriorityBudget(WorkshopThumbStartsThisFrame, MaxWorkshopThumbStartsPerFrame, MaxWorkshopThumbHighPriorityStartsPerFrame, HighPriority))
+				if(!SettingsResourceCanUseHighPriorityBudget(WorkshopThumbStartsThisFrame, WorkshopThumbStartLimitThisFrame, MaxWorkshopThumbHighPriorityStartsPerFrame, HighPriority))
 					return false;
 				if(!SettingsAssetWorkAllowedWhileWindowInactive(WindowActive, HighPriority))
 					return false;
@@ -5978,6 +6081,76 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				LogAssetsPerfStage("assets_workshop_thumb_start_remote", ThumbStartTimer.ElapsedMs(), false, aExtra);
 				return true;
 			};
+			SSettingsAssetsVisiblePreflight VisiblePreflight;
+			auto RunAssetsVisibleReadyPreflight = [&]() {
+				CPerfTimer PreflightTimer;
+				VisiblePreflight.m_State = EAssetsVisiblePreflightState::PLANNING;
+				VisiblePreflight.m_VisibleCount = maximum(0, WorkshopVisibleRange.m_EndItem - WorkshopVisibleRange.m_FirstItem);
+				VisiblePreflight.m_HalfVisibleCount = Columns;
+				VisiblePreflight.m_GeometryStable = CombinedCount > 0 && Columns > 0 && WorkshopRowHeight > 0.0f;
+
+				if(WorkshopVisibleRange.m_FirstItem < WorkshopVisibleRange.m_EndItem)
+				{
+					const int FirstLocalListIndex = WorkshopVisibleRange.m_FirstItem;
+					const int LastLocalListIndex = minimum(WorkshopVisibleRange.m_EndItem - 1, (int)LocalAssetCount - 1);
+					if(FirstLocalListIndex <= LastLocalListIndex)
+					{
+						for(int LocalListIndex = FirstLocalListIndex; LocalListIndex <= LastLocalListIndex; ++LocalListIndex)
+						{
+							const size_t LocalAssetIndex = vVisibleLocalAssetIndices[LocalListIndex];
+							const SCustomItem *pLocalItem = GetCustomItem(s_CurCustomTab, LocalAssetIndex);
+							if(pLocalItem != nullptr && pLocalItem->m_RenderTexture.IsValid())
+								++VisiblePreflight.m_ReadyCount;
+							else
+								++VisiblePreflight.m_NotReadyCount;
+						}
+						const int FirstLocalAsset = (int)vVisibleLocalAssetIndices[FirstLocalListIndex];
+						const int LastLocalAsset = (int)vVisibleLocalAssetIndices[LastLocalListIndex];
+						pActiveVisiblePreflight = &VisiblePreflight;
+						SchedulePreviewRange(FirstLocalAsset, LastLocalAsset, Columns);
+						pActiveVisiblePreflight = nullptr;
+					}
+				}
+
+				VisiblePreflight.m_State = EAssetsVisiblePreflightState::WARMING_VISIBLE;
+				const int PrefetchEnd = minimum((int)CombinedCount, WorkshopVisibleRange.m_EndItem + (AssetsScrollPressure ? 0 : Columns));
+				for(int CombinedIndex = WorkshopVisibleRange.m_FirstItem; CombinedIndex < PrefetchEnd; ++CombinedIndex)
+				{
+					if(CombinedIndex < (int)LocalAssetCount)
+						continue;
+					const int DownloadableIndex = CombinedIndex - (int)LocalAssetCount;
+					if(DownloadableIndex < 0 || DownloadableIndex >= (int)vVisibleDownloadableAssetIndices.size())
+						continue;
+					SWorkshopHudAsset &Asset = WorkshopState.m_vAssets[vVisibleDownloadableAssetIndices[DownloadableIndex]];
+					const bool Visible = CombinedVisibleAdmission.IsCombinedVisible(CombinedIndex);
+					if(Visible)
+					{
+						if(Asset.m_ThumbTexture.IsValid())
+							++VisiblePreflight.m_ReadyCount;
+						else
+							++VisiblePreflight.m_NotReadyCount;
+					}
+					if(StartWorkshopThumb(Asset, Visible))
+					{
+						CombinedVisibleAdmission.Record(Visible, !Visible);
+						++VisiblePreflight.m_ThumbStartsBeforeVisible;
+					}
+				}
+				VisiblePreflight.m_ThumbStartsDuringDraw = VisiblePreviewStartsDuringDraw;
+				VisiblePreflight.m_VisibleReady = VisiblePreflight.m_NotReadyCount == 0;
+				VisiblePreflight.m_State = VisiblePreflight.m_VisibleReady ? EAssetsVisiblePreflightState::READY_TO_SHOW : EAssetsVisiblePreflightState::WARMING_VISIBLE;
+				char aPreflightExtra[256];
+				str_format(aPreflightExtra, sizeof(aPreflightExtra), "stage=assets_visible_preflight status=%d visible_count=%d half_visible_count=%d ready_count=%d not_ready_count=%d visible_ready=%d geometry_stable=%d thumb_starts_before_visible=%d thumb_starts_during_draw=%d",
+					(int)VisiblePreflight.m_State, VisiblePreflight.m_VisibleCount, VisiblePreflight.m_HalfVisibleCount, VisiblePreflight.m_ReadyCount, VisiblePreflight.m_NotReadyCount,
+					VisiblePreflight.m_VisibleReady ? 1 : 0, VisiblePreflight.m_GeometryStable ? 1 : 0, VisiblePreflight.m_ThumbStartsBeforeVisible, VisiblePreflight.m_ThumbStartsDuringDraw);
+				LogAssetsPerfStage("assets_visible_preflight", PreflightTimer.ElapsedMs(), true, aPreflightExtra);
+				char aGeometryExtra[192];
+				str_format(aGeometryExtra, sizeof(aGeometryExtra), "stage=assets_card_geometry tab=%d columns=%d row_height=%.2f first=%d end=%d stable=%d",
+					s_CurCustomTab, Columns, WorkshopRowHeight, WorkshopVisibleRange.m_FirstItem, WorkshopVisibleRange.m_EndItem, VisiblePreflight.m_GeometryStable ? 1 : 0);
+				LogAssetsPerfStage("assets_card_geometry", 0.0, true, aGeometryExtra);
+				VisiblePreflight.m_State = EAssetsVisiblePreflightState::VISIBLE;
+			};
+			RunAssetsVisibleReadyPreflight();
 			auto RenderAssetStatusTag = [&](const CUIRect &TagRect, bool Downloaded) {
 				CUIRect StatusRect = TagRect;
 				const ColorRGBA TagColor = Downloaded ? ColorRGBA(0.18f, 0.62f, 0.32f, 0.88f) : ColorRGBA(0.52f, 0.52f, 0.58f, 0.82f);
@@ -5989,7 +6162,8 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				Ui()->DoLabel(&StatusRect, Localize(Downloaded ? "Downloaded" : "Not downloaded"), 7.5f, TEXTALIGN_MC, StatusLabelProps);
 			};
 
-			for(size_t ListIndex = 0; ListIndex < CombinedCount; ++ListIndex)
+			s_WorkshopAssetsListBox.SkipItems(WorkshopVisibleRange.m_FirstItem);
+			for(size_t ListIndex = WorkshopVisibleRange.m_FirstItem; ListIndex < (size_t)WorkshopVisibleRange.m_EndItem; ++ListIndex)
 			{
 				if(ListIndex < LocalAssetCount)
 				{
@@ -5999,8 +6173,6 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 						continue;
 
 					const bool Selected = IsLocalAssetSelected(pItem->m_aName);
-					if(Selected)
-						OldCombinedSelected = static_cast<int>(ListIndex);
 
 					const CListboxItem Item = s_WorkshopAssetsListBox.DoNextItem(pItem, Selected);
 					CUIRect ItemRect = Item.m_Rect;
@@ -6181,7 +6353,8 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					if(FirstVisibleDownloadableIndex < 0)
 						FirstVisibleDownloadableIndex = VisibleDownloadableIndex;
 					LastVisibleDownloadableIndex = VisibleDownloadableIndex;
-					StartWorkshopThumb(Asset, SettingsWorkshopThumbShouldStartHighPriority(VisibleDownloadableIndex, FirstVisibleDownloadableIndex, LastVisibleDownloadableIndex));
+					const bool CombinedVisible = CombinedVisibleAdmission.IsCombinedVisible((int)ListIndex);
+					(void)CombinedVisible;
 
 					const CUIRect CardRect = ItemRect;
 					const bool Downloading = Asset.m_pDownloadTask && !Asset.m_pDownloadTask->Done();
@@ -6290,6 +6463,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					}
 				}
 			}
+			s_WorkshopAssetsListBox.SkipItems((int)CombinedCount - WorkshopVisibleRange.m_EndItem);
 			if(FirstVisibleLocalIndex >= 0)
 			{
 				SchedulePreviewRange(FirstVisibleLocalIndex, LastVisibleLocalIndex, Columns);
@@ -6299,19 +6473,23 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				LogAssetsPerfStage("assets_preview_decode_start_visible", 0.0, PreviewDecodeStartsThisFrame > 0, aVisibleExtra);
 			}
 			char aExtra[160];
-			str_format(aExtra, sizeof(aExtra), "tab=%d combined=%d local_visible=%d remote_visible=%d thumb_starts=%d",
-				s_CurCustomTab, (int)CombinedCount, (int)LocalAssetCount, (int)vVisibleDownloadableAssetIndices.size(), WorkshopThumbStartsThisFrame);
+			str_format(aExtra, sizeof(aExtra), "tab=%d combined=%d local_total=%d remote_total=%d rendered=%d thumb_starts=%d visible_first=1 visible_starts=%d prefetch_starts=%d background_starts=%d visible_ready=%d geometry_stable=%d thumb_starts_before_visible=%d thumb_starts_during_draw=%d",
+				s_CurCustomTab, (int)CombinedCount, (int)LocalAssetCount, (int)vVisibleDownloadableAssetIndices.size(), WorkshopVisibleRange.m_RenderedItems, WorkshopThumbStartsThisFrame,
+				CombinedVisibleAdmission.m_VisibleStarts, CombinedVisibleAdmission.m_PrefetchStarts, CombinedVisibleAdmission.m_BackgroundStarts,
+				VisiblePreflight.m_VisibleReady ? 1 : 0, VisiblePreflight.m_GeometryStable ? 1 : 0, VisiblePreflight.m_ThumbStartsBeforeVisible, VisiblePreflight.m_ThumbStartsDuringDraw);
 			LogAssetsPerfStage("assets_preview_draw_workshop_cards", WorkshopCardsTimer.ElapsedMs(), false, aExtra);
+			char aWorkshopListFrameExtra[192];
+			str_format(aWorkshopListFrameExtra, sizeof(aWorkshopListFrameExtra), "tab=%d items_total=%d items_rendered=%d items_skipped=%d rows_total=%d rows_visible=%d first=%d end=%d",
+				s_CurCustomTab, WorkshopVisibleRange.m_TotalItems, WorkshopVisibleRange.m_RenderedItems, WorkshopVisibleRange.m_SkippedItems,
+				WorkshopVisibleRange.m_TotalRows, WorkshopVisibleRange.m_VisibleRows, WorkshopVisibleRange.m_FirstItem, WorkshopVisibleRange.m_EndItem);
+			LogAssetsPerfStage("assets_workshop_list_frame", 0.0, true, aWorkshopListFrameExtra);
 
 			const int NewCombinedSelected = s_WorkshopAssetsListBox.DoEnd();
 			const bool WorkshopListScrollActive = s_WorkshopAssetsListBox.ScrollbarActive() || s_WorkshopAssetsListBox.ScrollbarAnimating();
 			const int PreviousFirstVisibleDownloadableIndex = s_AssetsLastFirstVisibleDownloadableIndex[s_CurCustomTab];
 			const int PreviousLastVisibleDownloadableIndex = s_AssetsLastLastVisibleDownloadableIndex[s_CurCustomTab];
-			const int WorkshopVisibleJumpThreshold = maximum(1, Columns) * 2;
-			const bool WorkshopListJumpScrollActive =
-				FirstVisibleDownloadableIndex >= 0 && PreviousFirstVisibleDownloadableIndex >= 0 &&
-				(abs(FirstVisibleDownloadableIndex - PreviousFirstVisibleDownloadableIndex) >= WorkshopVisibleJumpThreshold ||
-					abs(LastVisibleDownloadableIndex - PreviousLastVisibleDownloadableIndex) >= WorkshopVisibleJumpThreshold);
+			s_AssetsLastFirstVisibleCombinedIndex[s_CurCustomTab] = WorkshopVisibleRange.m_FirstItem < WorkshopVisibleRange.m_EndItem ? WorkshopVisibleRange.m_FirstItem : -1;
+			s_AssetsLastLastVisibleCombinedIndex[s_CurCustomTab] = WorkshopVisibleRange.m_FirstItem < WorkshopVisibleRange.m_EndItem ? WorkshopVisibleRange.m_EndItem - 1 : -1;
 			s_AssetsLastFirstVisibleDownloadableIndex[s_CurCustomTab] = FirstVisibleDownloadableIndex;
 			s_AssetsLastLastVisibleDownloadableIndex[s_CurCustomTab] = LastVisibleDownloadableIndex;
 			m_SettingsScrollActive = m_SettingsScrollActive || WorkshopListScrollActive;

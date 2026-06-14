@@ -406,6 +406,42 @@ TEST(SectionLoader, FarCompactSectionAdvancesWithoutRendering)
 	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 50.0f);
 }
 
+TEST(SectionLoader, CompactRenderUpdatesCachedHeightForSkippedFrames)
+{
+	CSectionLoader Loader;
+	Loader.SetProgressiveEnabled(true);
+	int CompactRenderCount = 0;
+
+	auto MakeSections = [&]() {
+		SSettingsSection Section = MakeTestSection("Compact Height", 50.0f);
+		Section.m_RenderCompactFn = [&CompactRenderCount](CUIRect &Rect) -> float {
+			++CompactRenderCount;
+			return ConsumeHeight(Rect, 80.0f);
+		};
+		Section.m_RenderFullFn = [](CUIRect &Rect) -> float {
+			return ConsumeHeight(Rect, 80.0f);
+		};
+		return std::vector<SSettingsSection>{Section};
+	};
+
+	Loader.Register(MakeSections());
+	Loader.Begin(CUIRect{0, 0, 400, 240}, 0.0f);
+	EXPECT_TRUE(Loader.Process());
+
+	Loader.Register(MakeSections());
+	Loader.Begin(CUIRect{0, 0, 400, 240}, 0.0f);
+	EXPECT_TRUE(Loader.Process());
+	EXPECT_EQ(CompactRenderCount, 1);
+	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 80.0f);
+
+	Loader.m_ScrollY = -1000.0f;
+	Loader.Register(MakeSections());
+	Loader.Begin(CUIRect{0, 0, 400, 240}, 0.0f);
+	EXPECT_TRUE(Loader.Process());
+	EXPECT_EQ(CompactRenderCount, 1);
+	EXPECT_FLOAT_EQ(Loader.GetRunningColumn().y, 80.0f);
+}
+
 TEST(SectionLoader, FullSectionsAfterUnfinishedSectionStillRender)
 {
 	CSectionLoader Loader;

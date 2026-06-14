@@ -377,6 +377,8 @@ public:
 		int m_VisibleBackgroundRequested = 0;
 		int m_VisibleNonterminalWaiting = 0;
 		int m_UnderfedStreak = 0;
+		int m_FallbackSweepScanned = 0;
+		int m_FallbackSweepStarted = 0;
 		float m_FrameTimeAverageMs = 0.0f;
 		float m_RenderFrameTimeMs = 0.0f;
 		bool m_AdmissionInvariantViolated = false;

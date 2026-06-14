@@ -297,9 +297,16 @@ public:
 private:
 	/**
 	 * The initial dimension of the atlas textures.
-	 * Results in 1 MB of memory being used per texture.
+	 *
+	 * QmClient: 提高到 2048 (4 MB per texture; NUM_FONT_TEXTURES=2 → 8 MB total).
+	 * 原因：中文界面字形密度远高于英文 (GBK 常用 3500+ 字)，1024 (1 MB) 几乎必然
+	 * 在首帧渲染设置页时填满，触发 IncreaseGlyphMapSize → UnloadTextures + 翻倍
+	 * 重分配 + UploadTextures 全量重传，造成 ESC 打开 / 切 tab 首帧的 GPU 上传尖峰
+	 * (实测 settings_page_content 单次 355ms 的一部分来自此)。2048 容纳约 4000
+	 * 字形，足以覆盖中文常用字集，从源头消除运行时扩容。
+	 * 代价：启动多占 6 MB 显存，对所有桌面 GPU 可接受。
 	 */
-	static constexpr int INITIAL_ATLAS_DIMENSION = 1024;
+	static constexpr int INITIAL_ATLAS_DIMENSION = 2048;
 
 	/**
 	 * The maximum dimension of the atlas textures.

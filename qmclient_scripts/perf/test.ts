@@ -24,6 +24,7 @@ import {
   isUiRebuildEvent,
   isWorkDrainEvent,
   pagePerformanceAttribution,
+  settingsTextAnalysis,
   snapshot,
 } from './lib/stats.ts';
 
@@ -83,6 +84,14 @@ function testReportIncludesInteractionAndDeviceSections() {
   assert.match(html, /设备资源/);
   assert.match(html, /页面性能归因/);
   assert.match(html, /Section Top-10/);
+}
+
+function testReportShowsGenerationDuration() {
+  const entries = parseLog(readFixture('sample.log'));
+  const html = generateReport(entries, 'sample.log', null, undefined, 123.456);
+
+  assert.match(html, /Report Generation/);
+  assert.match(html, /123\.5ms/);
 }
 
 function testReportAttributesPagePerformanceEvents() {
@@ -155,8 +164,15 @@ function testFpsSummaryTelemetryFeedsReportAndBundleSummary() {
 
   const html = generateReport(entries, 'qm_perf_fps.log', null);
   assert.match(html, /FPS 摘要/);
+  assert.match(html, /FPS Avg/);
+  assert.match(html, /FPS Min/);
+  assert.match(html, /FPS Max/);
+  assert.match(html, /Frame Avg/);
+  assert.match(html, /Frame Max/);
   assert.match(html, /settings_open/);
+  assert.match(html, /60\.0/);
   assert.match(html, /45\.0/);
+  assert.match(html, /120\.0/);
 }
 
 function testMissingFpsSummaryWarnsThatSettingsAcceptanceIsIncomplete() {
@@ -200,6 +216,338 @@ function testTargetSettingsVerdictUsesIngameEscFpsSummaryWindow() {
   assert.equal(summary.targetSettings.verdictAvailable, true);
   assert.equal(summary.targetSettings.spikeCount, 1);
   assert.doesNotMatch(summary.quality.warnings.join('\n'), /missing ingame\/online/i);
+}
+
+function testStableTextCoverageBlocksSettingsAcceptanceEvenWithBackgroundHotspots() {
+  const entries = parseLog([
+    '2026-06-11 01:59:58 I perf/settings-text: event=settings_text_prebuild built=120 reused=24 remaining=3 budget=160 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 01:59:59 I perf/settings: event=settings_text_miss scope=target_settings page=settings:tee tab=appearance subtab=assets key=qm.ui.preview reason=cache_miss',
+    '2026-06-11 02:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":144.000,"fps_min":120.000,"fps_max":180.000,"frame_ms_avg":6.944,"frame_ms_p95":8.000,"frame_ms_p99":9.000,"frame_ms_max":9.000,"cap_limited":0}',
+    '2026-06-11 02:00:03 I perf/interaction: event=list_frame page=server_browser items_total=3200 rows_visible=24 rows_rendered=24 rows_iterated=3200 rows_skipped=3176 dur_ms=48.500 frame=22 source=server_browser',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_stable_text_blocker.log', { invalidLines: 0, totalLines: 4 });
+
+  assert.equal(summary.targetSettings.verdict, 'PASS');
+  assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.missCount, 1);
+  assert.equal(summary.targetSettings.stableTextCoverage.staleCount, 0);
+  assert.equal(summary.targetSettings.stableTextCoverage.prebuildRemainingBeforeTarget, 3);
+  assert.match(summary.targetSettings.stableTextCoverage.samples.join('\n'), /settings_text_miss/);
+
+  const html = generateReport(entries, 'qm_perf_stable_text_blocker.log', null);
+  assert.match(html, /不足以验收/);
+  assert.match(html, /stable text/i);
+  assert.match(html, /hit rate=0\.0%/);
+  assert.match(html, /reuse rate=0\.0%/);
+  assert.match(html, /text_new=0/);
+  assert.match(html, /text_reused=0/);
+  assert.doesNotMatch(html, /server browser.*PASS/i);
+}
+
+function testStableTextCoverageIgnoresOrdinarySettingsPagesOutsideTargetWindow() {
+  const entries = parseLog([
+    '2026-06-11 02:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":144.000,"fps_min":120.000,"fps_max":180.000,"frame_ms_avg":6.944,"frame_ms_p95":8.000,"frame_ms_p99":9.000,"frame_ms_max":9.000,"cap_limited":0}',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_plan_collection units_done=10 units_total=10 remaining=0 budget=1 complete=1 dirty=0 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:tee tab=appearance subtab=assets operation=settings_open frame=40 candidates=12 hits=12 reused=12 miss=0 stale=0 text_new=0 text_reused=12 planned=12 unplanned=0',
+    '2026-06-11 02:00:01 I perf/settings-text: event=settings_text_prebuild built=40 reused=10 remaining=7 budget=80 phase=before_target scope=settings operation=settings_open',
+    '2026-06-11 02:00:01 I perf/settings-text: event=settings_text_miss scope=settings page=settings:qmclient tab=0 subtab=-1 key=settings:12:0:-1:qmclient-theme-title:fs140:al8:mw2600:us100:cm1:ch1 reason=missing operation=settings_open frame=42',
+    '2026-06-11 02:00:02 I perf/settings-text: event=settings_text_stale scope=settings page=settings:tclient tab=0 subtab=-1 key=settings:11:0:-1:tclient-theme-title:fs140:al8:mw2600:us100:cm1:ch1 reason=style operation=settings_tab_switch frame=43',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_ordinary_settings_text.log', { invalidLines: 0, totalLines: 4 });
+
+  assert.equal(summary.targetSettings.verdict, 'PASS');
+  assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, false);
+  assert.equal(summary.targetSettings.stableTextCoverage.missCount, 0);
+  assert.equal(summary.targetSettings.stableTextCoverage.staleCount, 0);
+  assert.equal(summary.targetSettings.stableTextCoverage.prebuildRemainingBeforeTarget, 0);
+  assert.equal(summary.targetSettings.stableTextCoverage.utilizationAvailable, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.candidateTotal, 12);
+  assert.equal(summary.targetSettings.stableTextCoverage.hitCount, 12);
+  assert.equal(summary.targetSettings.stableTextCoverage.reuseCount, 12);
+  assert.equal(summary.targetSettings.stableTextCoverage.hitRate, 100);
+  assert.equal(summary.targetSettings.stableTextCoverage.reuseRate, 100);
+  assert.equal(summary.targetSettings.stableTextCoverage.samples.join('\n'), '');
+}
+
+function testStableTextCoverageIncludesLaterTargetWindows() {
+  const entries = parseLog([
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_prebuild built=32 reused=8 remaining=0 budget=64 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:tee tab=appearance subtab=assets operation=settings_open frame=40 candidates=8 hits=8 reused=8 miss=0 stale=0 text_new=0 text_reused=8 planned=8 unplanned=0',
+    '2026-06-11 02:00:01 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":144.000,"fps_min":120.000,"fps_max":180.000,"frame_ms_avg":6.944,"frame_ms_p95":8.000,"frame_ms_p99":9.000,"frame_ms_max":9.000,"cap_limited":0}',
+    '2026-06-11 02:00:03 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:qmclient tab=0 subtab=0 operation=settings_subtab_switch frame=77 candidates=4 hits=3 reused=3 miss=1 stale=0 text_new=0 text_reused=3 planned=3 unplanned=1',
+    '2026-06-11 02:00:03 I perf/settings: event=settings_text_miss scope=target_settings page=settings:qmclient tab=0 subtab=0 key=late_key reason=missing operation=settings_subtab_switch frame=77',
+    '2026-06-11 02:00:04 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_subtab_switch","context":"online","page":"settings:qmclient","tab":"0","sample_frames":30,"sample_seconds":0.500,"fps_avg":144.000,"fps_min":120.000,"fps_max":180.000,"frame_ms_avg":6.944,"frame_ms_p95":8.000,"frame_ms_p99":9.000,"frame_ms_max":9.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_later_target_window_text.log', { invalidLines: 0, totalLines: 6 });
+
+  assert.equal(summary.targetSettings.verdict, 'PASS');
+  assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.missCount, 1);
+  assert.equal(summary.targetSettings.stableTextCoverage.candidateTotal, 12);
+  assert.match(summary.targetSettings.stableTextCoverage.samples.join('\n'), /late_key/);
+}
+
+function testStableTextCoverageSeparatesPlanCoverageFromUtilization() {
+  const entries = parseLog([
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_prebuild built=32 reused=8 remaining=0 budget=64 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:tclient tab=4 subtab=4 operation=settings_open frame=40 candidates=10 hits=7 reused=7 miss=3 stale=0 text_new=0 text_reused=7 planned=7 unplanned=3',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_miss scope=target_settings page=settings:tclient tab=4 subtab=4 key=missing_a reason=missing plan_status=missing_descriptor operation=settings_open frame=40',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_miss scope=target_settings page=settings:tclient tab=4 subtab=4 key=missing_b reason=missing plan_status=missing_descriptor operation=settings_open frame=40',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_stale scope=target_settings page=settings:tclient tab=4 subtab=4 key=stale_c reason=style plan_status=key_mismatch operation=settings_open frame=40',
+    '2026-06-11 02:00:01 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tclient","tab":"4","sample_frames":30,"sample_seconds":0.500,"fps_avg":144.000,"fps_min":120.000,"fps_max":180.000,"frame_ms_avg":6.944,"frame_ms_p95":8.000,"frame_ms_p99":9.000,"frame_ms_max":9.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_plan_coverage.log', { invalidLines: 0, totalLines: 6 });
+
+  assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.planCoverageAvailable, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.planCandidateCount, 7);
+  assert.equal(summary.targetSettings.stableTextCoverage.visibleCandidateCount, 10);
+  assert.equal(summary.targetSettings.stableTextCoverage.unplannedVisibleCount, 3);
+  assert.equal(summary.targetSettings.stableTextCoverage.keyMismatchCount, 1);
+  assert.match(summary.targetSettings.stableTextCoverage.consistencyWarnings.join('\n'), /unplanned visible stable text/);
+  assert.match(summary.targetSettings.stableTextCoverage.samples.join('\n'), /plan_status=missing_descriptor/);
+
+  const html = generateReport(entries, 'qm_perf_plan_coverage.log', null);
+  assert.match(html, /Plan Coverage/);
+  assert.match(html, /Unplanned/);
+  assert.match(html, /Key Mismatch/);
+  assert.match(html, /missing_descriptor/);
+  assert.match(html, /key_mismatch/);
+}
+
+function testStableTextCoverageUsesPrebuildRemainingBeforeTargetOnly() {
+  const entries = parseLog([
+    '2026-06-11 01:59:59 I perf/settings-text: event=settings_text_prebuild built=32 reused=8 remaining=5 budget=64 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:tee tab=appearance subtab=assets operation=settings_open frame=40 candidates=8 hits=8 reused=8 miss=0 stale=0 text_new=0 text_reused=8 planned=8 unplanned=0',
+    '2026-06-11 02:00:01 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":144.000,"fps_min":120.000,"fps_max":180.000,"frame_ms_avg":6.944,"frame_ms_p95":8.000,"frame_ms_p99":9.000,"frame_ms_max":9.000,"cap_limited":0}',
+    '2026-06-11 02:00:02 I perf/settings-text: event=settings_text_prebuild built=5 reused=40 remaining=0 budget=64 phase=before_target scope=target_settings operation=settings_open',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_prebuild_after_target.log', { invalidLines: 0, totalLines: 4 });
+
+  assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.prebuildRemainingBeforeTarget, 5);
+}
+
+function testStableTextCoverageBlocksWhenPlanCollectionIncompleteBeforeTarget() {
+  const entries = parseLog([
+    '2026-06-11 01:59:59 I perf/settings-text: event=settings_text_plan_collection units_done=2 units_total=10 remaining=8 budget=1 complete=0 dirty=0 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_prebuild built=32 reused=8 remaining=0 budget=64 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:tee tab=appearance subtab=assets operation=settings_open frame=40 candidates=8 hits=8 reused=8 miss=0 stale=0 text_new=0 text_reused=8 planned=8 unplanned=0',
+    '2026-06-11 02:00:01 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":144.000,"fps_min":120.000,"fps_max":180.000,"frame_ms_avg":6.944,"frame_ms_p95":8.000,"frame_ms_p99":9.000,"frame_ms_max":9.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_plan_collection_incomplete.log', { invalidLines: 0, totalLines: 4 });
+
+  assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.planCollectionAvailable, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.planCollectionComplete, false);
+  assert.equal(summary.targetSettings.stableTextCoverage.planCollectionRemainingBeforeTarget, 8);
+  assert.equal(summary.targetSettings.stableTextCoverage.prebuildRemainingBeforeTarget, 0);
+  assert.match(summary.targetSettings.stableTextCoverage.consistencyWarnings.join('\n'), /stable text plan collection incomplete/);
+
+  const html = generateReport(entries, 'qm_perf_plan_collection_incomplete.log', null);
+  assert.match(html, /Plan Collection/);
+  assert.match(html, /Collection Remaining/);
+  assert.match(html, /Container Remaining/);
+  assert.match(html, /Visible Coverage/);
+}
+
+function testStableTextCoverageBlocksWhenTargetUsageIsMissing() {
+  const entries = parseLog([
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_prebuild built=32 reused=8 remaining=0 budget=64 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:01 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":144.000,"fps_min":120.000,"fps_max":180.000,"frame_ms_avg":6.944,"frame_ms_p95":8.000,"frame_ms_p99":9.000,"frame_ms_max":9.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_missing_usage.log', { invalidLines: 0, totalLines: 2 });
+
+  assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.utilizationAvailable, false);
+  assert.match(summary.targetSettings.stableTextCoverage.consistencyWarnings.join('\n'), /missing settings_text_usage/);
+}
+
+function testAssetsVisibleFirstAdmissionAppearsInSummaryAndReport() {
+  const entries = parseLog([
+    '2026-06-14 02:15:22 I perf/assets: {"system":"perf/assets","frame":40,"page":"assets","stage":"assets_preview_draw_workshop_cards","duration_ms":41.332,"tab":1,"combined":797,"local_total":23,"remote_total":774,"rendered":42,"thumb_starts":12,"visible_first":1,"visible_starts":12,"prefetch_starts":0,"background_starts":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_assets_visible_first.log', { invalidLines: 0, totalLines: 1 });
+
+  assert.equal(summary.assetsPreviewAdmission.available, true);
+  assert.equal(summary.assetsPreviewAdmission.visibleFirstAvailable, true);
+  assert.equal(summary.assetsPreviewAdmission.maxDurationMs, 41.332);
+  assert.equal(summary.assetsPreviewAdmission.maxRendered, 42);
+  assert.equal(summary.assetsPreviewAdmission.maxThumbStarts, 12);
+  assert.equal(summary.assetsPreviewAdmission.visibleStarts, 12);
+  assert.equal(summary.assetsPreviewAdmission.prefetchStarts, 0);
+  assert.equal(summary.assetsPreviewAdmission.backgroundStarts, 0);
+
+  const html = generateReport(entries, 'qm_perf_assets_visible_first.log', null);
+  assert.match(html, /Assets Visible-First Admission/);
+  assert.match(html, /VISIBLE-FIRST/);
+  assert.match(html, /Visible Starts/);
+  assert.match(html, /Prefetch Starts/);
+  assert.match(html, /Background Starts/);
+}
+
+function testAssetsVisibleReadyRequiresEveryPreflightReady() {
+  const entries = parseLog([
+    '2026-06-14 03:33:42 I perf/assets: {"system":"perf/assets","frame":40,"page":"assets","stage":"assets_visible_preflight","duration_ms":1.000,"tab":1,"visible_count":24,"half_visible_count":6,"ready_count":24,"not_ready_count":0,"visible_ready":1,"geometry_stable":1,"thumb_starts_before_visible":0,"thumb_starts_during_draw":0}',
+    '2026-06-14 03:33:43 I perf/assets: {"system":"perf/assets","frame":41,"page":"assets","stage":"assets_visible_preflight","duration_ms":1.000,"tab":1,"visible_count":24,"half_visible_count":6,"ready_count":20,"not_ready_count":4,"visible_ready":0,"geometry_stable":1,"thumb_starts_before_visible":4,"thumb_starts_during_draw":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_assets_mixed_visible_ready.log', { invalidLines: 0, totalLines: 2 });
+
+  assert.equal(summary.assetsVisibleReady.available, true);
+  assert.equal(summary.assetsVisibleReady.visibleReadyAvailable, false);
+  assert.equal(summary.assetsVisibleReady.notReadyCount, 4);
+  assert.match(summary.quality.warnings.join('\n'), /not_ready_count > 0/);
+}
+
+function testAssetsGeometryIgnoresEmptyOrMissingFieldSamples() {
+  const entries = parseLog([
+    '2026-06-14 03:33:42 I perf/assets: {"system":"perf/assets","frame":40,"page":"assets","stage":"assets_visible_preflight","duration_ms":1.000,"tab":1,"visible_count":24,"half_visible_count":6,"ready_count":24,"not_ready_count":0,"visible_ready":1,"geometry_stable":1,"thumb_starts_before_visible":0,"thumb_starts_during_draw":0}',
+    '2026-06-14 03:33:43 I perf/assets: {"system":"perf/assets","frame":41,"page":"assets","stage":"assets_preview_draw_workshop_cards","duration_ms":1.000,"tab":1,"combined":0,"rendered":0,"thumb_starts":0,"visible_first":1,"visible_starts":0,"prefetch_starts":0,"background_starts":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_assets_empty_draw.log', { invalidLines: 0, totalLines: 2 });
+
+  assert.equal(summary.assetsVisibleReady.available, true);
+  assert.equal(summary.assetsVisibleReady.geometryStable, true);
+  assert.doesNotMatch(summary.quality.warnings.join('\n'), /geometry unstable/);
+}
+
+function testDemoBrowserPhasesAppearInSummaryAndReport() {
+  const entries = parseLog([
+    '2026-06-14 04:00:00 I perf/interaction: event=demo_browser_startup page=demo_browser items_total=120 items_scanned=120 items_done=120 remaining=0 metadata_remaining=240 budget=0 dur_ms=12.000 trigger=populate source=demos sort=3 fetch_info=1',
+    '2026-06-14 04:00:01 I perf/interaction: event=demo_browser_header_fetch page=demo_browser items_total=120 items_scanned=2 items_done=2 visible_first=20 visible_end=40 visible_scanned=2 visible_done=2 background_scanned=0 background_done=0 remaining=118 budget=2 dur_ms=4.500 trigger=list_frame source=demos sort=3 fetch_info=1',
+    '2026-06-14 04:00:02 I perf/interaction: event=demo_browser_date_fetch page=demo_browser items_total=120 items_scanned=4 items_done=4 visible_first=20 visible_end=40 visible_scanned=4 visible_done=4 background_scanned=0 background_done=0 remaining=116 budget=4 dur_ms=3.200 trigger=list_frame source=demos sort=3 fetch_info=1',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_demo_browser.log', { invalidLines: 0, totalLines: 3 });
+  assert.equal(summary.demoBrowser.available, true);
+  assert.equal(summary.demoBrowser.startupCount, 1);
+  assert.equal(summary.demoBrowser.headerFetchCount, 1);
+  assert.equal(summary.demoBrowser.dateFetchCount, 1);
+  assert.equal(summary.demoBrowser.visibleScanned, 6);
+  assert.equal(summary.demoBrowser.visibleDone, 6);
+  assert.equal(summary.demoBrowser.backgroundScanned, 0);
+  assert.equal(summary.demoBrowser.maxRemaining, 118);
+  assert.equal(summary.demoBrowser.maxMetadataRemaining, 240);
+  const html = generateReport(entries, 'qm_perf_demo_browser.log');
+  assert.match(html, /Demo Browser/);
+  assert.match(html, /demo_browser_header_fetch/);
+  assert.match(html, /visible_scanned=2/);
+  assert.match(html, /visible scanned/);
+  assert.match(html, /metadata_remaining=240/);
+  assert.match(html, /remaining=118/);
+}
+
+function testSettingsTextAnalysisAggregatesMissesByLocationReasonAndOperation() {
+  const entries = parseLog([
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_prebuild built=10 reused=4 remaining=2 budget=16 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:01 I perf/settings: event=settings_text_miss scope=target_settings page=settings:tee tab=appearance subtab=assets key=alpha reason=missing operation=settings_open frame=42',
+    '2026-06-11 02:00:02 I perf/settings: event=settings_text_stale scope=target_settings page=settings:tee tab=appearance subtab=assets key=beta reason=style operation=settings_open frame=43',
+    '2026-06-11 02:00:03 I perf/settings: event=settings_text_miss scope=target_settings page=settings:tee tab=appearance subtab=assets key=gamma reason=missing operation=settings_tab_switch frame=44',
+    '2026-06-11 02:00:04 I perf/settings: event=settings_text_miss scope=settings page=settings:qmclient tab=0 subtab=-1 key=delta reason=cache_miss operation=settings_open frame=45',
+  ].join('\n'));
+
+  const analysis = settingsTextAnalysis(entries);
+
+  assert.equal(analysis.summary.missCount, 3);
+  assert.equal(analysis.summary.staleCount, 1);
+  assert.equal(analysis.summary.prebuildCount, 1);
+  assert.equal(analysis.summary.remainingPositiveCount, 1);
+  assert.equal(analysis.topByLocation[0].location, 'settings:tee / appearance / assets');
+  assert.equal(analysis.topByLocation[0].missCount, 2);
+  assert.equal(analysis.topByLocation[0].staleCount, 1);
+  assert.equal(analysis.topByReason[0].reason, 'missing');
+  assert.equal(analysis.topByReason[0].missCount, 2);
+  assert.equal(analysis.topByOperation[0].operation, 'settings_open');
+  assert.equal(analysis.topByOperation[0].missCount, 2);
+  assert.equal(analysis.prebuildSeries[0].built, 10);
+  assert.equal(analysis.eventTimeline[0].event, 'settings_text_prebuild');
+  assert.equal(analysis.eventTimeline.at(-1)?.event, 'settings_text_miss');
+}
+
+function testReportIncludesTextPoolMissAnalysisCharts() {
+  const longKey = 'settings:1:-1:-1:settings-shell-title:fs160:al10:mw1475:us100:cm1:ch369197882:very-long-stable-text-key-that-must-not-wrap-vertically';
+  const entries = parseLog([
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_prebuild built=10 reused=4 remaining=2 budget=16 phase=before_target scope=target_settings operation=settings_open',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:tee tab=appearance subtab=assets operation=settings_open frame=40 candidates=8 hits=6 reused=5 miss=2 stale=0 text_new=1 text_reused=5 planned=6 unplanned=2',
+    `2026-06-11 02:00:01 I perf/settings: event=settings_text_miss scope=target_settings page=settings:tee tab=appearance subtab=assets key=${longKey} reason=missing operation=settings_open frame=42`,
+  ].join('\n'));
+
+  const html = generateReport(entries, 'qm_perf_text_analysis.log', null);
+
+  assert.match(html, /文本池 Miss 分析/);
+  assert.match(html, /chart-text-location-top/);
+  assert.match(html, /chart-text-reason-top/);
+  assert.match(html, /chart-text-operation-top/);
+  assert.match(html, /chart-text-prebuild/);
+  assert.match(html, /chart-text-timeline/);
+  assert.match(html, /settings_text_prebuild/);
+  assert.match(html, /settings_text_miss/);
+  assert.match(html, /<h2>文本池 Miss 分析<\/h2>[\s\S]*Stable Text Coverage[\s\S]*Hit Rate[\s\S]*75\.0%[\s\S]*Reuse Rate[\s\S]*62\.5%/);
+  assert.match(html, /<h2>文本池 Miss 分析<\/h2>[\s\S]*Text New[\s\S]*1[\s\S]*Text Reused[\s\S]*5/);
+  assert.match(html, /table-scroll/);
+  assert.match(html, /sample-key-cell/);
+  assert.match(html, /white-space:nowrap/);
+  assert.match(html, new RegExp(`title="${longKey}`));
+  assert.doesNotMatch(html, new RegExp(`>\\s*${longKey}\\s*<`));
+}
+
+function testAdaptiveBudgetEventsAppearInSummaryAndReport() {
+  const entries = parseLog([
+    '2026-06-14 05:00:00 I perf/settings-resource: event=settings_adaptive_budget mode=idle reason=progress frame_ms_avg=5.000 frame_ms_p95=6.000 target_ms=8.333 visible_tokens=8 prefetch_tokens=4 background_tokens=3 gpu_upload_tokens=2 text_tokens=6 demo_tokens=4 backlog=120 scroll=0 jump_scroll=0',
+    '2026-06-14 05:00:01 I perf/settings-resource: event=settings_adaptive_budget mode=frame_pressure reason=frame_pressure frame_ms_avg=14.000 frame_ms_p95=20.000 target_ms=8.333 visible_tokens=2 prefetch_tokens=0 background_tokens=0 gpu_upload_tokens=1 text_tokens=1 demo_tokens=1 backlog=120 scroll=0 jump_scroll=0',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_adaptive_budget.log', { invalidLines: 0, totalLines: 2 });
+  assert.equal(summary.adaptiveBudget.available, true);
+  assert.equal(summary.adaptiveBudget.eventCount, 2);
+  assert.equal(summary.adaptiveBudget.framePressureCount, 1);
+  assert.equal(summary.adaptiveBudget.maxBackgroundTokens, 3);
+  assert.equal(summary.adaptiveBudget.maxVisibleTokens, 8);
+
+  const html = generateReport(entries, 'qm_perf_adaptive_budget.log');
+  assert.match(html, /Adaptive Budget/);
+  assert.match(html, /frame_pressure/);
+  assert.match(html, /Visible Tokens/);
+}
+
+function testAdaptiveBudgetMissingWarnsWhenResourceWindowsExist() {
+  const entries = parseLog([
+    '2026-06-14 05:00:00 I perf/assets: {"system":"perf/assets","stage":"assets_preview_draw_workshop_cards","duration_ms":4.000,"tab":1,"combined":10,"rendered":10,"thumb_starts":1,"visible_first":1,"visible_starts":1,"prefetch_starts":0,"background_starts":0}',
+    '2026-06-14 05:00:01 I perf/interaction: event=demo_browser_header_fetch page=demo_browser items_total=10 items_scanned=1 items_done=1 remaining=9 budget=1 dur_ms=1.000 trigger=list_frame source=demos sort=3 fetch_info=1',
+    '2026-06-14 05:00:02 I perf/settings-text: event=settings_text_prebuild built=1 reused=0 remaining=1 budget=1 phase=before_target scope=target_settings operation=settings_open',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_missing_adaptive_budget.log', { invalidLines: 0, totalLines: 3 });
+  assert.equal(summary.adaptiveBudget.available, false);
+  assert.match(summary.quality.warnings.join('\n'), /adaptive budget telemetry missing/);
+}
+
+function testReportPreservesFailVerdictWhenStableTextIsNotBlocking() {
+  const entries = parseLog([
+    '2026-06-11 02:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"ingame_esc_open","context":"online","page":"game","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":60.000,"fps_min":30.000,"fps_max":120.000,"frame_ms_avg":16.667,"frame_ms_p95":20.000,"frame_ms_p99":45.000,"frame_ms_max":45.000,"cap_limited":0}',
+    '2026-06-11 02:00:00 I perf/settings-text: event=settings_text_plan_collection units_done=1 units_total=1 remaining=0 budget=1 complete=1 dirty=0 phase=before_target scope=target_settings operation=ingame_esc_open',
+    '2026-06-11 02:00:01 I perf/settings-text: event=settings_text_prebuild built=80 reused=20 remaining=0 budget=100 phase=before_target scope=target_settings operation=ingame_esc_open',
+    '2026-06-11 01:59:59 I perf/settings-text: event=settings_text_usage scope=target_settings page=game tab=none subtab=-1 operation=ingame_esc_open frame=41 candidates=20 hits=20 reused=20 miss=0 stale=0 text_new=0 text_reused=20 planned=20 unplanned=0',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_fail_verdict.log', { invalidLines: 0, totalLines: 2 });
+  assert.equal(summary.targetSettings.verdict, 'FAIL');
+  assert.equal(summary.targetSettings.verdictAvailable, true);
+  assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, false);
+
+  const html = generateReport(entries, 'qm_perf_fail_verdict.log', null);
+  assert.match(html, /当前目标判定：<span class="badge bad">FAIL<\/span>/);
+  assert.doesNotMatch(html, /当前目标判定：<span class="badge bad">不足以验收<\/span>/);
 }
 
 function testGenericIngamePageContentDoesNotSatisfyOnlineCoverageWarning() {
@@ -493,7 +841,9 @@ function testSummaryJsonMarksUnavailableVerdictForEmptyFrameSamples() {
 function testAnalyzeWritesBundleAndArchiveSummaryFiles() {
   const source = readFileSync(new URL('./analyze.ts', import.meta.url), 'utf-8');
 
-  assert.match(source, /parseLogWithDiagnostics/);
+  assert.match(source, /createReadStream/);
+  assert.match(source, /createInterface/);
+  assert.match(source, /parseLine/);
   assert.match(source, /perf_summary\.json/);
   assert.match(source, /\$\{logName\}_summary\.json/);
   assert.match(source, /summarizeForBundle/);
@@ -503,6 +853,7 @@ testParseKeepsEventOnlyPerfLines();
 testParseSupportsJsonLinesEvents();
 testParseLogWithDiagnosticsCountsInvalidLines();
 testReportIncludesInteractionAndDeviceSections();
+testReportShowsGenerationDuration();
 testReportAttributesPagePerformanceEvents();
 testServerBrowserListFrameAttributionUsesRowCounts();
 testQmUiRuntimeAttributionUsesDedicatedKind();
@@ -510,6 +861,21 @@ testFpsSummaryTelemetryFeedsReportAndBundleSummary();
 testMissingFpsSummaryWarnsThatSettingsAcceptanceIsIncomplete();
 testTargetSettingsVerdictIgnoresServerBrowserFrames();
 testTargetSettingsVerdictUsesIngameEscFpsSummaryWindow();
+testStableTextCoverageBlocksSettingsAcceptanceEvenWithBackgroundHotspots();
+testStableTextCoverageIgnoresOrdinarySettingsPagesOutsideTargetWindow();
+testStableTextCoverageIncludesLaterTargetWindows();
+testStableTextCoverageUsesPrebuildRemainingBeforeTargetOnly();
+testStableTextCoverageBlocksWhenPlanCollectionIncompleteBeforeTarget();
+testStableTextCoverageBlocksWhenTargetUsageIsMissing();
+testAssetsVisibleFirstAdmissionAppearsInSummaryAndReport();
+testAssetsVisibleReadyRequiresEveryPreflightReady();
+testAssetsGeometryIgnoresEmptyOrMissingFieldSamples();
+testDemoBrowserPhasesAppearInSummaryAndReport();
+testSettingsTextAnalysisAggregatesMissesByLocationReasonAndOperation();
+testReportIncludesTextPoolMissAnalysisCharts();
+testAdaptiveBudgetEventsAppearInSummaryAndReport();
+testAdaptiveBudgetMissingWarnsWhenResourceWindowsExist();
+testReportPreservesFailVerdictWhenStableTextIsNotBlocking();
 testGenericIngamePageContentDoesNotSatisfyOnlineCoverageWarning();
 testPerfEventClassifiersKeepBoundariesTight();
 testPageSwitchBoundaryDoesNotEnterDurationAttribution();

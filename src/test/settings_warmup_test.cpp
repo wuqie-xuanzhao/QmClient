@@ -214,8 +214,10 @@ TEST(SettingsWarmup, SettingsFrameBudgetResetsBeforeUpdatePhaseConsumers)
 	ASSERT_NE(OnRenderPos, std::string::npos);
 	const std::string OnUpdateBody = GameClientSource.substr(OnUpdatePos, OnRenderPos - OnUpdatePos);
 	EXPECT_NE(OnUpdateBody.find("const bool TeeSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_TEE;"), std::string::npos);
+	EXPECT_NE(OnUpdateBody.find("const bool AssetsSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_ASSETS;"), std::string::npos);
 	EXPECT_NE(OnUpdateBody.find("m_Skins.PrepareSettingsThroughputForFrame();"), std::string::npos);
-	EXPECT_NE(OnUpdateBody.find("m_Menus.ResetSettingsFrameBudgetForFrame(TeeSettingsActive, FrameSkinUploadBudget);"), std::string::npos);
+	EXPECT_NE(OnUpdateBody.find("const int FrameGpuUploadLimit = m_Menus.SettingsGpuUploadLimitForFrame(TeeSettingsActive, AssetsSettingsActive, m_Skins.SettingsGpuUploadLimiterUnitsForFrame());"), std::string::npos);
+	EXPECT_NE(OnUpdateBody.find("m_Menus.ResetSettingsFrameBudgetForFrame(TeeSettingsActive, AssetsSettingsActive, FrameSkinUploadBudget);"), std::string::npos);
 
 	std::ifstream MenusFile(TestSourcePath("src/game/client/components/menus.cpp"));
 	ASSERT_TRUE(MenusFile.good());
@@ -234,8 +236,12 @@ TEST(SettingsWarmup, SettingsFrameBudgetResetsBeforeUpdatePhaseConsumers)
 	std::stringstream MenusHeaderBuffer;
 	MenusHeaderBuffer << MenusHeaderFile.rdbuf();
 	const std::string MenusHeaderSource = MenusHeaderBuffer.str();
+	EXPECT_NE(MenusHeaderSource.find("int SettingsGpuUploadLimitForFrame(bool TeeSettingsActive, bool AssetsSettingsActive, int TeeSkinGpuUploadLimiterUnits) const"), std::string::npos);
+	EXPECT_NE(MenusHeaderSource.find("if(AssetsSettingsActive)"), std::string::npos);
+	EXPECT_NE(MenusHeaderSource.find("return 8;"), std::string::npos);
 	EXPECT_NE(MenusHeaderSource.find("m_SettingsFrameBudget = SSettingsWarmupFrameBudget{};"), std::string::npos);
 	EXPECT_NE(MenusHeaderSource.find("SettingsApplyActiveTeeSkinFrameBudget(m_SettingsFrameBudget, TeeSettingsActive);"), std::string::npos);
+	EXPECT_NE(MenusHeaderSource.find("m_SettingsFrameBudget.m_MaxGpuUploads = 8;"), std::string::npos);
 }
 
 TEST(SettingsWarmup, LoadingPrewarmDoesNotPumpResourceWork)
@@ -252,15 +258,73 @@ TEST(SettingsWarmup, LoadingPrewarmDoesNotPumpResourceWork)
 	ASSERT_NE(OnUpdatePos, std::string::npos);
 	const std::string PrewarmBody = GameClientSource.substr(PrewarmPos, OnUpdatePos - PrewarmPos);
 
-	EXPECT_NE(PrewarmBody.find("(void)pLoadingCaption;"), std::string::npos);
-	EXPECT_NE(PrewarmBody.find("(void)pLoadingMessage;"), std::string::npos);
-	EXPECT_NE(PrewarmBody.find("return;"), std::string::npos);
-	EXPECT_EQ(PrewarmBody.find("m_Menus.PrewarmSettingsRuntimeCaches(MainView);"), std::string::npos);
-	EXPECT_EQ(PrewarmBody.find("m_Skins.UpdateForSettingsWarmup();"), std::string::npos);
-	EXPECT_EQ(PrewarmBody.find("m_Menus.RenderLoading(pLoadingCaption, pLoadingMessage, 0);"), std::string::npos);
+	EXPECT_NE(PrewarmBody.find("m_Menus.PrewarmSettingsPages();"), std::string::npos);
+	EXPECT_NE(PrewarmBody.find("m_Menus.RenderLoading(pLoadingCaption, pLoadingMessage, 1);"), std::string::npos);
+	EXPECT_NE(PrewarmBody.find("m_Menus.PrewarmSettingsTextPoolForLoading(TEXT_PREWARM_BUDGET_PER_STEP);"), std::string::npos);
+	EXPECT_NE(PrewarmBody.find("State.m_LastBuiltTextContainers = m_Menus.SettingsTextContainerCount();"), std::string::npos);
+	EXPECT_NE(PrewarmBody.find("State.m_LastMissingTextPlanItems = m_Menus.SettingsTextPrebuildRemaining();"), std::string::npos);
+	EXPECT_NE(PrewarmBody.find("State.m_LastMissingTextPlanCollectionUnits = m_Menus.SettingsTextPlanCollectionRemaining();"), std::string::npos);
+	EXPECT_NE(PrewarmBody.find("SettingsLoadingPrewarmAdvance(State, m_Menus.SettingsTextContainerCount(), m_Menus.SettingsTextPrebuildRemaining(), m_Menus.SettingsTextPlanCollectionRemaining());"), std::string::npos);
+	EXPECT_EQ(PrewarmBody.find("SettingsTextPoolEntryCount()"), std::string::npos);
+	EXPECT_EQ(PrewarmBody.find("(void)pLoadingCaption;"), std::string::npos);
+	EXPECT_EQ(PrewarmBody.find("(void)pLoadingMessage;"), std::string::npos);
+	EXPECT_EQ(PrewarmBody.find("return;"), std::string::npos);
 	EXPECT_NE(GameClientSource.find("PrewarmSettingsRuntimeCachesDuringLoading(pLoadingDDNetCaption, pLoadingMessageAssets);"), std::string::npos);
 	EXPECT_EQ(PrewarmBody.find("maximum(CMenus::SettingsRuntimeCacheWarmupSteps() * 4, 1)"), std::string::npos);
 	EXPECT_EQ(PrewarmBody.find("m_Skins.OnUpdate();"), std::string::npos);
+}
+
+TEST(SettingsResourceJobs, LoadingPrewarmAdvanceRequiresNoProgressToFinish)
+{
+	SSettingsLoadingPrewarmState State;
+	State.m_LastBuiltTextContainers = 10;
+	State.m_LastMissingTextPlanItems = 2;
+	State.m_LastMissingTextPlanCollectionUnits = 1;
+
+	SettingsLoadingPrewarmAdvance(State, 18, 1, 1);
+	EXPECT_EQ(State.m_CompletedSteps, 1);
+	EXPECT_EQ(State.m_ConsecutiveNoProgressSteps, 0);
+	EXPECT_EQ(State.m_LastBuiltTextContainers, 18);
+	EXPECT_EQ(State.m_LastMissingTextPlanItems, 1);
+	EXPECT_EQ(State.m_LastMissingTextPlanCollectionUnits, 1);
+	EXPECT_FALSE(State.m_WarmupReady);
+
+	SettingsLoadingPrewarmAdvance(State, 18, 1, 1);
+	EXPECT_EQ(State.m_CompletedSteps, 2);
+	EXPECT_EQ(State.m_ConsecutiveNoProgressSteps, 1);
+	EXPECT_EQ(State.m_LastBuiltTextContainers, 18);
+	EXPECT_EQ(State.m_LastMissingTextPlanItems, 1);
+	EXPECT_EQ(State.m_LastMissingTextPlanCollectionUnits, 1);
+	EXPECT_FALSE(State.m_WarmupReady);
+
+	SettingsLoadingPrewarmAdvance(State, 18, 0, 1);
+	EXPECT_EQ(State.m_CompletedSteps, 3);
+	EXPECT_EQ(State.m_ConsecutiveNoProgressSteps, 0);
+	EXPECT_EQ(State.m_LastBuiltTextContainers, 18);
+	EXPECT_EQ(State.m_LastMissingTextPlanItems, 0);
+	EXPECT_EQ(State.m_LastMissingTextPlanCollectionUnits, 1);
+	EXPECT_FALSE(State.m_WarmupReady);
+
+	SettingsLoadingPrewarmAdvance(State, 18, 0, 0);
+	EXPECT_EQ(State.m_CompletedSteps, 4);
+	EXPECT_EQ(State.m_ConsecutiveNoProgressSteps, 0);
+	EXPECT_EQ(State.m_LastBuiltTextContainers, 18);
+	EXPECT_EQ(State.m_LastMissingTextPlanItems, 0);
+	EXPECT_EQ(State.m_LastMissingTextPlanCollectionUnits, 0);
+	EXPECT_TRUE(State.m_WarmupReady);
+}
+
+TEST(SettingsResourceJobs, LoadingPrewarmProgressDetectionIsStrictlyIncreasing)
+{
+	EXPECT_TRUE(SettingsLoadingPrewarmMadeProgress(3, 4));
+	EXPECT_FALSE(SettingsLoadingPrewarmMadeProgress(4, 4));
+	EXPECT_FALSE(SettingsLoadingPrewarmMadeProgress(5, 4));
+	EXPECT_TRUE(SettingsLoadingPrewarmMadeProgress(4, 4, 3, 2));
+	EXPECT_TRUE(SettingsLoadingPrewarmMadeProgress(4, 4, -1, 2));
+	EXPECT_FALSE(SettingsLoadingPrewarmMadeProgress(4, 4, 2, 2));
+	EXPECT_TRUE(SettingsLoadingPrewarmMadeProgress(4, 4, 2, 2, 3, 2));
+	EXPECT_TRUE(SettingsLoadingPrewarmMadeProgress(4, 4, 2, 2, -1, 2));
+	EXPECT_FALSE(SettingsLoadingPrewarmMadeProgress(4, 4, 2, 2, 2, 2));
 }
 
 TEST(SettingsWarmup, TClientPrewarmOnlyPathStillAdvancesVisibleSectionLoaders)
@@ -279,17 +343,19 @@ TEST(SettingsWarmup, TClientPrewarmOnlyPathStillAdvancesVisibleSectionLoaders)
 
 	const size_t LeftPrewarmPos = RenderBody.find("if(PrewarmOnly)\n\t\t{", RenderBody.find("s_VisualFontLoader.Register"));
 	ASSERT_NE(LeftPrewarmPos, std::string::npos);
-	const size_t LeftReturnPos = RenderBody.find("return;", LeftPrewarmPos);
-	ASSERT_NE(LeftReturnPos, std::string::npos);
-	const std::string LeftPrewarmBody = RenderBody.substr(LeftPrewarmPos, LeftReturnPos - LeftPrewarmPos);
+	const size_t RightColumnPos = RenderBody.find("// ***** RightView *****", LeftPrewarmPos);
+	ASSERT_NE(RightColumnPos, std::string::npos);
+	const std::string LeftPrewarmBody = RenderBody.substr(LeftPrewarmPos, RightColumnPos - LeftPrewarmPos);
 	EXPECT_NE(LeftPrewarmBody.find("s_VisualFontLoader.Process();"), std::string::npos);
 
 	const size_t RightPrewarmPos = RenderBody.find("if(PrewarmOnly)\n\t\t{", RenderBody.find("s_RightSectionLoader.Register"));
 	ASSERT_NE(RightPrewarmPos, std::string::npos);
-	const size_t RightReturnPos = RenderBody.find("return;", RightPrewarmPos);
-	ASSERT_NE(RightReturnPos, std::string::npos);
-	const std::string RightPrewarmBody = RenderBody.substr(RightPrewarmPos, RightReturnPos - RightPrewarmPos);
+	const size_t RightElsePos = RenderBody.find("else\n\t\t{", RightPrewarmPos);
+	ASSERT_NE(RightElsePos, std::string::npos);
+	const std::string RightPrewarmBody = RenderBody.substr(RightPrewarmPos, RightElsePos - RightPrewarmPos);
 	EXPECT_NE(RightPrewarmBody.find("s_RightSectionLoader.Process();"), std::string::npos);
+	EXPECT_EQ(RightPrewarmBody.find("return;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("s_ScrollRegion.SetContentHeightForNextFrame("), std::string::npos);
 }
 
 TEST(SettingsWarmup, TClientSectionLoadersEnableDeferredFarMeasurement)
@@ -389,9 +455,30 @@ TEST(SettingsRuntimeCache, InvalidationReasonNamesAreStable)
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::FONT_CHANGED), "font_changed");
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::BACKEND_CHANGED), "backend_changed");
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::WINDOW_OR_SCALE_CHANGED), "window_or_scale_changed");
+	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::DPI_CHANGED), "dpi_changed");
+	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::UI_SCALE_CHANGED), "ui_scale_changed");
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::CONFIG_HASH_CHANGED), "config_hash_changed");
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::SECTION_SIZE_CHANGED), "section_size_changed");
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::RESOURCE_DIRECTORY_CHANGED), "resource_directory_changed");
+}
+
+TEST(SettingsRuntimeCache, ClearsTextPoolOnlyForContentChangingReasons)
+{
+	// 只有真正改变 label 文字内容、字形或渲染后端的 reason 才全池失效。
+	EXPECT_TRUE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::LANGUAGE_CHANGED));
+	EXPECT_TRUE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::FONT_CHANGED));
+	EXPECT_TRUE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::BACKEND_CHANGED));
+
+	// 布局尺寸 / 控件配置状态变化不影响文字内容或字形；DoMenuLabelStreamed 的
+	// SizeChanged / TextChanged / ColorChanged 单 entry 检测已兜底，不需要全池失效。
+	// 这是 ingame ESC 打开设置时 OnReset -> CONFIG_HASH_CHANGED 不再清池、
+	// 避免“闪 + 卡 + 重加载文本池”的语义保障。
+	EXPECT_FALSE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::WINDOW_OR_SCALE_CHANGED));
+	EXPECT_FALSE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::DPI_CHANGED));
+	EXPECT_FALSE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::UI_SCALE_CHANGED));
+	EXPECT_FALSE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::CONFIG_HASH_CHANGED));
+	EXPECT_FALSE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::SECTION_SIZE_CHANGED));
+	EXPECT_FALSE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::RESOURCE_DIRECTORY_CHANGED));
 }
 
 TEST(SettingsRuntimeCache, RuntimeKeyMismatchNamesDirtyReason)
@@ -1634,6 +1721,73 @@ TEST(SettingsResourceJobs, JumpScrollUsesSameHeavyBudgetGateAsImmediateScroll)
 	EXPECT_FALSE(SettingsResourceOversizedUploadAllowed(JumpScroll, false, ESettingsResourcePriority::VISIBLE, 0, 2 * 1024 * 1024, 1 * 1024 * 1024));
 }
 
+TEST(SettingsResourceJobs, AdaptiveBudgetGrowsOnStableFrames)
+{
+	SSettingsAdaptiveBudgetState State;
+	SSettingsAdaptiveBudgetInput Input;
+	Input.m_FrameMsAverage = 4.0f;
+	Input.m_FrameMsP95 = 5.0f;
+	Input.m_TargetFrameMs = 8.333f;
+	Input.m_BackgroundBacklog = 120;
+	Input.m_VisibleWaiting = 0;
+	Input.m_WindowActive = true;
+
+	const SSettingsAdaptiveBudgetOutput First = SettingsAdaptiveBudgetStep(Input, State);
+	const SSettingsAdaptiveBudgetOutput Second = SettingsAdaptiveBudgetStep(Input, State);
+
+	EXPECT_EQ(First.m_Mode, ESettingsAdaptiveBudgetMode::IDLE);
+	EXPECT_EQ(Second.m_Reason, ESettingsAdaptiveBudgetReason::PROGRESS);
+	EXPECT_GE(Second.m_BackgroundTokens, First.m_BackgroundTokens);
+	EXPECT_GT(Second.m_TextPrebuildTokens, 0);
+	EXPECT_GT(Second.m_DemoMetadataTokens, 0);
+}
+
+TEST(SettingsResourceJobs, AdaptiveBudgetCutsBackgroundOnFramePressure)
+{
+	SSettingsAdaptiveBudgetState State;
+	SSettingsAdaptiveBudgetInput Stable;
+	Stable.m_FrameMsAverage = 4.0f;
+	Stable.m_FrameMsP95 = 5.0f;
+	Stable.m_TargetFrameMs = 8.333f;
+	Stable.m_BackgroundBacklog = 120;
+	Stable.m_WindowActive = true;
+	SettingsAdaptiveBudgetStep(Stable, State);
+	SettingsAdaptiveBudgetStep(Stable, State);
+
+	SSettingsAdaptiveBudgetInput Pressure = Stable;
+	Pressure.m_FrameMsAverage = 14.0f;
+	Pressure.m_FrameMsP95 = 20.0f;
+	const SSettingsAdaptiveBudgetOutput Output = SettingsAdaptiveBudgetStep(Pressure, State);
+
+	EXPECT_EQ(Output.m_Mode, ESettingsAdaptiveBudgetMode::FRAME_PRESSURE);
+	EXPECT_EQ(Output.m_Reason, ESettingsAdaptiveBudgetReason::FRAME_PRESSURE);
+	EXPECT_EQ(Output.m_BackgroundTokens, 0);
+	EXPECT_LE(Output.m_PrefetchTokens, 1);
+	EXPECT_GE(Output.m_VisibleTokens, 1);
+}
+
+TEST(SettingsResourceJobs, AdaptiveBudgetKeepsVisibleTokensDuringScroll)
+{
+	SSettingsAdaptiveBudgetState State;
+	SSettingsAdaptiveBudgetInput Input;
+	Input.m_FrameMsAverage = 5.0f;
+	Input.m_FrameMsP95 = 6.0f;
+	Input.m_TargetFrameMs = 8.333f;
+	Input.m_BackgroundBacklog = 120;
+	Input.m_VisibleWaiting = 12;
+	Input.m_ScrollActive = true;
+	Input.m_JumpScrollActive = true;
+	Input.m_WindowActive = true;
+
+	const SSettingsAdaptiveBudgetOutput Output = SettingsAdaptiveBudgetStep(Input, State);
+
+	EXPECT_EQ(Output.m_Mode, ESettingsAdaptiveBudgetMode::SCROLL_ACTIVE);
+	EXPECT_EQ(Output.m_BackgroundTokens, 0);
+	EXPECT_EQ(Output.m_PrefetchTokens, 0);
+	EXPECT_GE(Output.m_VisibleTokens, 1);
+	EXPECT_GE(Output.m_GpuUploadTokens, 1);
+}
+
 TEST(SettingsResourceJobs, TeeSkinBackgroundRequestBudgetOnlyRunsOnIdleFrames)
 {
 	const SSettingsResourceFrameContext Idle = {false, false, 0};
@@ -1909,6 +2063,68 @@ TEST(SettingsResourceJobs, CountryFlagPlanHandlesEmptyInput)
 {
 	const std::vector<int> vPlan = BuildSettingsCountryFlagWarmupPlan({});
 	EXPECT_TRUE(vPlan.empty());
+}
+
+TEST(SettingsWarmup, MenuTextPrebuildDoesNotRenderPages)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/menus.h");
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string QmClient = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	EXPECT_TRUE(Menus.find("PrebuildSettingsMenuTextPool(int Budget") != std::string::npos);
+	EXPECT_TRUE(Header.find("PrebuildSettingsMenuTextPool(int Budget, const char *pScopeOverride") != std::string::npos);
+	EXPECT_TRUE(Header.find("PrebuildSettingsMenuTextPool(Budget, \"target_settings\", \"settings_open\")") != std::string::npos);
+	EXPECT_TRUE(Menus.find("event=settings_text_prebuild") != std::string::npos);
+	EXPECT_TRUE(Menus.find("built=%d reused=%d remaining=%d budget=%d phase=%s scope=%s operation=%s") != std::string::npos);
+	EXPECT_TRUE(Menus.find("phase=before_target") != std::string::npos);
+	EXPECT_TRUE(Menus.find("scope=target_settings") != std::string::npos);
+	EXPECT_EQ(Header.find("PrebuildVisibleSettingsTextPool"), std::string::npos);
+	EXPECT_EQ(Menus.find("void CMenus::PrebuildVisibleSettingsTextPool"), std::string::npos);
+	EXPECT_EQ(Menus.find("PrebuildVisibleSettingsTextPool(ContentView"), std::string::npos);
+	EXPECT_EQ(Menus.find("RenderSettingsTClient(MainView, true)"), std::string::npos);
+	EXPECT_EQ(Menus.find("RenderSettingsQmClient(MainView, false, true)"), std::string::npos);
+	EXPECT_NE(TClient.find("PrewarmOnly"), std::string::npos);
+	EXPECT_NE(QmClient.find("PrewarmOnly"), std::string::npos);
+}
+
+TEST(SettingsWarmup, MenuTextPrebuildLogsRemainingMissingPlanItems)
+{
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const size_t BodyStart = Menus.find("void CMenus::PrebuildSettingsMenuTextPool(int Budget, const char *pScopeOverride, const char *pOperationOverride)");
+	ASSERT_NE(BodyStart, std::string::npos);
+	const size_t BodyEnd = Menus.find("int CMenus::PrebuildSettingsTextPoolForLoading(int Budget, const char *pOperationOverride)", BodyStart);
+	ASSERT_NE(BodyEnd, std::string::npos);
+	const std::string Body = Menus.substr(BodyStart, BodyEnd - BodyStart);
+
+	EXPECT_NE(Body.find("PrebuildSettingsTextPoolForLoading(Budget, pOperationOverride);"), std::string::npos);
+	EXPECT_NE(Body.find("m_SettingsMenuTextLastPrebuildStats"), std::string::npos);
+	EXPECT_NE(Body.find("m_SettingsMenuTextPlanCursor"), std::string::npos);
+	EXPECT_NE(Body.find("const int RemainingMissing = m_SettingsMenuTextLastPrebuildStats.m_Remaining;"), std::string::npos);
+	EXPECT_EQ(Body.find("const int RemainingMissing = CountMissingSettingsMenuTextPlanItems();"), std::string::npos);
+	EXPECT_NE(Body.find("Built, Reused, RemainingMissing, Budget"), std::string::npos);
+	EXPECT_EQ(Body.find("Built, Reused, RemainingBudget, Budget"), std::string::npos);
+}
+
+TEST(SettingsWarmup, AssetsUploadPerfLogsGpuUploadBudgetNotByteBudget)
+{
+	const std::string Assets = ReadTestSourceFile("src/game/client/components/menus_settings_assets.cpp");
+
+	EXPECT_EQ(Assets.find("LogSettingsResourcePerf(SETTINGS_ASSETS, \"upload\", (int)UploadedBytesThisFrame, (int)MaxPreviewUploadBytesPerFrame"), std::string::npos);
+	EXPECT_EQ(Assets.find("LogSettingsResourcePerf(SETTINGS_ASSETS, \"upload\", (int)WorkshopThumbUploadedBytesThisFrame, (int)MaxWorkshopThumbUploadBytesPerFrame"), std::string::npos);
+	EXPECT_NE(Assets.find("LogSettingsResourcePerf(SETTINGS_ASSETS, \"upload\", UploadedPreviewsThisFrame, MaxPreviewUploadsPerFrame"), std::string::npos);
+	EXPECT_NE(Assets.find("LogSettingsResourcePerf(SETTINGS_ASSETS, \"upload\", WorkshopGpuUploadsThisFrame, MaxWorkshopThumbUploadsPerFrame"), std::string::npos);
+}
+
+TEST(SettingsWarmup, TClientVisualSettingsUseStableTextIdsForPrebuildCoverage)
+{
+	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+
+	EXPECT_NE(TClient.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-visual-font-cursor-title\""), std::string::npos);
+	EXPECT_NE(TClient.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-hammer-mode\""), std::string::npos);
+	EXPECT_NE(TClient.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-cursor-scale\""), std::string::npos);
+	EXPECT_NE(TClient.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-wheel-animate-ms\""), std::string::npos);
+	EXPECT_NE(TClient.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-wheel-animate-off\""), std::string::npos);
 }
 
 TEST(SettingsWarmup, PassiveTooltipOnlyUiHelpersStayOutOfButtonLogic)

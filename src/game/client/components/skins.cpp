@@ -150,6 +150,22 @@ static void LogSettingsSkinSourceWaitEvent(const char *pSkinName, const char *pR
 	QmPerfLogPayload("perf/settings-skin-source", aPayload);
 }
 
+static void LogSettingsSkinStartLoadingFallbackSweepEvent(int ItemsTotal, int ItemsScanned, int ItemsStarted, int ItemsSkipped, bool Invoked, double DurationMs, const char *pReason)
+{
+	if(g_Config.m_QmPerfDebug == 0 && g_Config.m_QmPerfLogfile == 0)
+		return;
+	char aPayload[256];
+	str_format(aPayload, sizeof(aPayload), "event=skin_start_loading_fallback_sweep items_total=%d items_scanned=%d items_started=%d items_skipped=%d invoked=%d dur_ms=%.3f reason=%s",
+		ItemsTotal,
+		ItemsScanned,
+		ItemsStarted,
+		ItemsSkipped,
+		Invoked ? 1 : 0,
+		DurationMs,
+		pReason != nullptr ? pReason : "none");
+	QmPerfLogPayload("perf/settings-skin-source", aPayload);
+}
+
 static void LogSettingsSkinSourceWarmupEvent(const char *pEvent, const char *pExtra = nullptr)
 {
 	if(g_Config.m_QmPerfDebug == 0 && g_Config.m_QmPerfLogfile == 0)
@@ -1779,14 +1795,30 @@ void CSkins::UpdateStartLoading(CSkinLoadingStats &Stats)
 		}
 	}
 
+	int FallbackScanned = 0;
+	int FallbackStarted = 0;
+	int FallbackSkipped = 0;
+	const auto FallbackStartTime = time_get_nanoseconds();
 	for(auto &[_, pSkinContainer] : m_Skins)
 	{
+		++FallbackScanned;
 		if(pSkinContainer->m_UsageEntryIterator.has_value() || pSkinContainer->m_BackgroundEntryIterator.has_value())
+		{
+			++FallbackSkipped;
 			continue;
+		}
 		if(!StartLoadJob(pSkinContainer.get(), ESettingsResourcePriority::BACKGROUND))
 		{
 			break;
 		}
+		++FallbackStarted;
+	}
+	m_SettingsSourceAdmissionTelemetry.m_FallbackSweepScanned = FallbackScanned;
+	m_SettingsSourceAdmissionTelemetry.m_FallbackSweepStarted = FallbackStarted;
+	if(FallbackScanned > 0)
+	{
+		const double FallbackDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - FallbackStartTime).count();
+		LogSettingsSkinStartLoadingFallbackSweepEvent((int)m_Skins.size(), FallbackScanned, FallbackStarted, FallbackSkipped, true, FallbackDurationMs, "fallback_sweep");
 	}
 	m_SettingsSourceAdmissionTelemetry.m_RealInflight = (int)Stats.RealInflight();
 	m_SettingsSourceAdmissionTelemetry.m_LoadingWindowUsed = (int)Stats.m_NumLoading;

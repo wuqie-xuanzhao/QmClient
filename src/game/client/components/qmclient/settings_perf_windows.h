@@ -67,6 +67,7 @@ public:
 
 	bool HasActiveWindow() const { return m_Active; }
 	const char *ActiveOperation() const { return m_Active ? m_Summary.m_aOperation : "none"; }
+	const char *ActivePage() const { return m_Active ? m_Summary.m_aPage : ""; }
 
 	SQmSettingsPerfWindowFrameResult RecordFrame(float RenderFrameTimeSeconds, double MenuDurationMs, bool ScrollInputActive)
 	{

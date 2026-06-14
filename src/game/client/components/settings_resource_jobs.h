@@ -165,6 +165,65 @@ enum class ESettingsSkinThroughputControllerReason
 	PROGRESS,
 };
 
+enum class ESettingsAdaptiveBudgetMode
+{
+	IDLE = 0,
+	SCROLL_ACTIVE,
+	POST_SCROLL_RECOVERY,
+	FRAME_PRESSURE,
+	WINDOW_INACTIVE,
+};
+
+enum class ESettingsAdaptiveBudgetReason
+{
+	NONE = 0,
+	PROGRESS,
+	FRAME_PRESSURE,
+	SCROLL,
+	WINDOW_INACTIVE,
+	BACKLOG_EMPTY,
+};
+
+struct SSettingsAdaptiveBudgetInput
+{
+	float m_FrameMsAverage = 0.0f;
+	float m_FrameMsP95 = 0.0f;
+	float m_TargetFrameMs = 8.333f;
+	bool m_ScrollActive = false;
+	bool m_JumpScrollActive = false;
+	int m_PostScrollRecoveryFrames = 0;
+	int m_VisibleWaiting = 0;
+	int m_BackgroundBacklog = 0;
+	bool m_GpuBudgetExhausted = false;
+	bool m_FinalizeBudgetExhausted = false;
+	bool m_UploadBudgetExhausted = false;
+	bool m_WindowActive = true;
+};
+
+struct SSettingsAdaptiveBudgetState
+{
+	bool m_Initialized = false;
+	int m_HealthyFrames = 0;
+	int m_BackgroundWindow = 1;
+	int m_PrefetchWindow = 1;
+	int m_VisibleWindow = 2;
+	int m_GpuUploadWindow = 1;
+	int m_TextPrebuildWindow = 1;
+	int m_DemoMetadataWindow = 1;
+};
+
+struct SSettingsAdaptiveBudgetOutput
+{
+	int m_VisibleTokens = 0;
+	int m_PrefetchTokens = 0;
+	int m_BackgroundTokens = 0;
+	int m_GpuUploadTokens = 0;
+	int m_TextPrebuildTokens = 0;
+	int m_DemoMetadataTokens = 0;
+	ESettingsAdaptiveBudgetMode m_Mode = ESettingsAdaptiveBudgetMode::IDLE;
+	ESettingsAdaptiveBudgetReason m_Reason = ESettingsAdaptiveBudgetReason::NONE;
+};
+
 struct SSettingsSkinBackgroundWindowInput
 {
 	int m_CurrentLimit = 0;
@@ -246,6 +305,16 @@ struct SSettingsSkinThroughputControllerOutput
 	ESettingsSkinThroughputControllerReason m_Reason = ESettingsSkinThroughputControllerReason::NONE;
 };
 
+struct SSettingsLoadingPrewarmState
+{
+	int m_CompletedSteps = 0;
+	int m_ConsecutiveNoProgressSteps = 0;
+	int m_LastBuiltTextContainers = 0;
+	int m_LastMissingTextPlanItems = -1;
+	int m_LastMissingTextPlanCollectionUnits = -1;
+	bool m_WarmupReady = false;
+};
+
 enum class ESettingsWorkshopCatalogSource
 {
 	LOCAL_ONLY = 0,
@@ -272,6 +341,8 @@ float SettingsSkinPreviewSize(float RowHeight, float PreviewWidth, float Request
 float SettingsSkinPreviewSize(float RowHeight, float PreviewWidth, float RequestedSize, float PreviewBoundsWidth, float PreviewBoundsHeight);
 float SettingsSkinPreviewCenterOffset(float PreviewMinX, float PreviewMaxX);
 SSettingsSkinListVisibleRange SettingsSkinListVisibleRangeForScroll(float ScrollY, float ViewHeight, float RowHeight, int ItemsPerRow, int TotalItems, int ExtraRows);
+bool SettingsSkinListEntryVisualReady(bool SourceReady, bool TerminalFailure, bool PreviewCacheReady);
+bool SettingsSkinListEntrySourceSettled(bool SourceReady, bool TerminalFailure);
 bool SettingsSkinListEntryReady(bool SourceReady, bool TerminalFailure, bool PreviewCacheReady);
 SSettingsSkinListPlan BuildSettingsSkinListPlan(std::vector<SSettingsSkinListEntry> vEntries);
 std::vector<int> BuildSettingsCountryFlagWarmupPlan(const std::vector<int> &vCountryCodes);
@@ -292,6 +363,10 @@ int SettingsSkinListFirstPageWarmupEntries(float ListHeight, float RowHeight, in
 int SettingsTeeSkinListFirstPageWarmupEntries(float ListHeight);
 int SettingsLoadingPrewarmMaxAttempts(int BaseWarmupSteps, int TeeFirstPageEntries);
 bool SettingsLoadingPrewarmShouldKeepPumping(bool WarmupReady, int CompletedSteps, int MaxAttempts, int ConsecutiveNoProgressSteps);
+bool SettingsLoadingPrewarmMadeProgress(int PreviousTextPoolEntries, int NewTextPoolEntries);
+bool SettingsLoadingPrewarmMadeProgress(int PreviousTextPoolEntries, int NewTextPoolEntries, int PreviousMissingTextPlanItems, int NewMissingTextPlanItems);
+bool SettingsLoadingPrewarmMadeProgress(int PreviousTextPoolEntries, int NewTextPoolEntries, int PreviousMissingTextPlanItems, int NewMissingTextPlanItems, int PreviousMissingTextPlanCollectionUnits, int NewMissingTextPlanCollectionUnits);
+void SettingsLoadingPrewarmAdvance(SSettingsLoadingPrewarmState &State, int NewTextPoolEntries, int MissingTextPlanItems, int MissingTextPlanCollectionUnits);
 int SettingsSkinListPrefetchCount(int FirstVisibleIndex, int LastVisibleIndex, int ItemsPerRow, int PrefetchRows, int TotalEntries);
 int SettingsSkinListBackgroundWarmupCount(int TotalEntries, int MaxEntriesPerFrame);
 bool SettingsSkinBackgroundWarmupShouldRun(bool PageVisible, bool VisibleBacklog, bool InputActive);
@@ -318,11 +393,14 @@ int SettingsSkinSourceLoadVisibleWindow(const SSettingsResourceFrameContext &Con
 int SettingsSkinSourceCountFuseLimit(const SSettingsResourceFrameContext &Context, bool TeeSettingsActive, int LoadedMax);
 SSettingsSkinBackgroundWindowOutput SettingsSkinBackgroundWindowUpdate(const SSettingsSkinBackgroundWindowInput &Input);
 SSettingsSkinThroughputControllerOutput SettingsSkinThroughputControllerStep(const SSettingsSkinThroughputControllerInput &Input, SSettingsSkinThroughputControllerState &State);
+SSettingsAdaptiveBudgetOutput SettingsAdaptiveBudgetStep(const SSettingsAdaptiveBudgetInput &Input, SSettingsAdaptiveBudgetState &State);
 const char *SettingsSkinBackgroundRequestBlockReasonName(ESettingsSkinBackgroundRequestBlockReason Reason);
 const char *SettingsSkinSourceAdmissionBlockReasonName(ESettingsSkinSourceAdmissionBlockReason Reason);
 const char *SettingsSkinBackgroundWindowDecisionName(ESettingsSkinBackgroundWindowDecision Decision);
 const char *SettingsSkinThroughputControllerModeName(ESettingsSkinThroughputControllerMode Mode);
 const char *SettingsSkinThroughputControllerReasonName(ESettingsSkinThroughputControllerReason Reason);
+const char *SettingsAdaptiveBudgetModeName(ESettingsAdaptiveBudgetMode Mode);
+const char *SettingsAdaptiveBudgetReasonName(ESettingsAdaptiveBudgetReason Reason);
 const char *SettingsSkinEffectiveFrameContextName(const SSettingsResourceFrameContext &Context, bool TeeSettingsActive);
 size_t SettingsSkinSourceBytesEstimate(int Width, int Height, int PixelCopies);
 bool SettingsSkinResidencyShouldReclaim(bool BytesBudgetExceeded, bool CountFuseExceeded);

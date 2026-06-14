@@ -203,7 +203,10 @@ bool CSectionLoader::Process()
 			{
 				Section.m_State = ESettingsSectionState::COMPACT;
 				if(Section.m_RenderCompactFn)
-					Section.m_RenderCompactFn(m_RunningColumn);
+				{
+					Section.m_CachedHeight = Section.m_RenderCompactFn(m_RunningColumn);
+					Section.m_HasCachedHeight = true;
+				}
 				else
 					m_RunningColumn.y += Section.m_CachedHeight;
 			}
@@ -241,7 +244,10 @@ bool CSectionLoader::Process()
 				break;
 			}
 			if(Section.m_RenderCompactFn)
-				Section.m_RenderCompactFn(m_RunningColumn);
+			{
+				Section.m_CachedHeight = Section.m_RenderCompactFn(m_RunningColumn);
+				Section.m_HasCachedHeight = true;
+			}
 			else
 				m_RunningColumn.y += Section.m_CachedHeight;
 			++m_CurrentIndex;
@@ -389,7 +395,10 @@ bool CSectionLoader::Warmup(const SSessionUiCache *pCache, float TimeBudgetMs)
 		// In or near viewport: render the registered real warmup path to populate glyphs/cache.
 		const CPerfTimer SectTimer;
 		if(Section.m_RenderCompactFn)
-			Section.m_RenderCompactFn(m_MainView);
+		{
+			Section.m_CachedHeight = Section.m_RenderCompactFn(m_MainView);
+			Section.m_HasCachedHeight = true;
+		}
 		Section.m_State = ESettingsSectionState::COMPACT;
 
 		const double Elapsed = SectTimer.ElapsedMs();

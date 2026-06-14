@@ -115,6 +115,11 @@ function rawField(e: PerfEntry, name: string): unknown {
   return (e.fields as Record<string, unknown>)[name];
 }
 
+function hasField(e: PerfEntry, name: string): boolean {
+  const Value = rawField(e, name);
+  return Value !== undefined && Value !== null && Value !== '';
+}
+
 export function entryDurationMs(e: PerfEntry): number | null {
   const Raw = rawField(e, 'duration_ms') ?? rawField(e, 'dur_ms') ?? rawField(e, 'dur');
   if (Raw === undefined || Raw === null || Raw === '') {
@@ -245,10 +250,643 @@ export interface TargetSettingsSnapshot {
   spikeCount: number;
   verdict: Verdict;
   verdictAvailable: boolean;
+  stableTextCoverage: StableTextCoverageSummary;
+}
+
+export interface AssetsPreviewAdmissionSummary {
+  available: boolean;
+  visibleFirstAvailable: boolean;
+  eventCount: number;
+  maxDurationMs: number;
+  maxRendered: number;
+  maxThumbStarts: number;
+  visibleStarts: number;
+  prefetchStarts: number;
+  backgroundStarts: number;
+  samples: string[];
+}
+
+export interface AssetsVisibleReadySummary {
+  available: boolean;
+  visibleReadyAvailable: boolean;
+  geometryStable: boolean;
+  thumbStartsBeforeVisible: number;
+  thumbStartsDuringDraw: number;
+  visibleCount: number;
+  notReadyCount: number;
+  eventCount: number;
+  samples: string[];
+}
+
+export interface DemoBrowserPhaseSummary {
+  available: boolean;
+  startupCount: number;
+  headerFetchCount: number;
+  dateFetchCount: number;
+  previewLoadCount: number;
+  visibleScanned: number;
+  visibleDone: number;
+  backgroundScanned: number;
+  backgroundDone: number;
+  maxDurationMs: number;
+  maxRemaining: number;
+  maxMetadataRemaining: number;
+  samples: string[];
+}
+
+export interface AdaptiveBudgetSummary {
+  available: boolean;
+  eventCount: number;
+  framePressureCount: number;
+  maxVisibleTokens: number;
+  maxPrefetchTokens: number;
+  maxBackgroundTokens: number;
+  maxGpuUploadTokens: number;
+  maxTextTokens: number;
+  maxDemoTokens: number;
+  samples: string[];
+}
+
+export interface StableTextCoverageSummary {
+  acceptanceBlocked: boolean;
+  utilizationAvailable: boolean;
+  planCoverageAvailable: boolean;
+  planCandidateCount: number;
+  visibleCandidateCount: number;
+  unplannedVisibleCount: number;
+  keyMismatchCount: number;
+  candidateTotal: number;
+  hitCount: number;
+  reuseCount: number;
+  missCount: number;
+  staleCount: number;
+  hitRate: number;
+  reuseRate: number;
+  textNew: number;
+  textReused: number;
+  prebuildRemainingBeforeTarget: number;
+  planCollectionAvailable: boolean;
+  planCollectionComplete: boolean;
+  planCollectionUnitsTotal: number;
+  planCollectionUnitsDone: number;
+  planCollectionRemainingBeforeTarget: number;
+  planCollectionBudget: number;
+  planCollectionPhase: string;
+  planCollectionScope: string;
+  planCollectionOperation: string;
+  consistencyWarnings: string[];
+  samples: string[];
+}
+
+export interface SettingsTextAnalysisLocationStats {
+  location: string;
+  page: string;
+  tab: string;
+  subtab: string;
+  missCount: number;
+  staleCount: number;
+}
+
+export interface SettingsTextAnalysisReasonStats {
+  reason: string;
+  missCount: number;
+  staleCount: number;
+}
+
+export interface SettingsTextAnalysisOperationStats {
+  operation: string;
+  missCount: number;
+  staleCount: number;
+}
+
+export interface SettingsTextAnalysisPrebuildSample {
+  timestamp: string;
+  scope: string;
+  operation: string;
+  built: number;
+  reused: number;
+  remaining: number;
+  budget: number;
+}
+
+export interface SettingsTextAnalysisEventSample {
+  timestamp: string;
+  event: 'settings_text_prebuild' | 'settings_text_miss' | 'settings_text_stale' | 'settings_text_usage';
+  page: string;
+  tab: string;
+  subtab: string;
+  reason: string;
+  planStatus: string;
+  operation: string;
+  built: number;
+  reused: number;
+  remaining: number;
+  key: string;
+}
+
+export interface SettingsTextAnalysisSummary {
+  missCount: number;
+  staleCount: number;
+  targetMissCount: number;
+  targetStaleCount: number;
+  prebuildCount: number;
+  remainingPositiveCount: number;
+}
+
+export interface SettingsTextAnalysisResult {
+  summary: SettingsTextAnalysisSummary;
+  topByLocation: SettingsTextAnalysisLocationStats[];
+  topByReason: SettingsTextAnalysisReasonStats[];
+  topByOperation: SettingsTextAnalysisOperationStats[];
+  prebuildSeries: SettingsTextAnalysisPrebuildSample[];
+  eventTimeline: SettingsTextAnalysisEventSample[];
+}
+
+interface StableTextEvent {
+  timestamp: string;
+  event: 'settings_text_prebuild' | 'settings_text_miss' | 'settings_text_stale' | 'settings_text_usage' | 'settings_text_plan_collection';
+  scope: string;
+  page: string;
+  tab: string;
+  subtab: string;
+  key: string;
+  reason: string;
+  operation: string;
+  phase: string;
+  remaining: number;
+  candidates: number;
+  hits: number;
+  reused: number;
+  miss: number;
+  stale: number;
+  textNew: number;
+  textReused: number;
+  planned: number;
+  unplanned: number;
+  unitsDone: number;
+  unitsTotal: number;
+  budget: number;
+  complete: boolean;
+  dirty: boolean;
+  sample: string;
+}
+
+interface AdaptiveBudgetEvent {
+  timestamp: string;
+  mode: string;
+  reason: string;
+  frameMsAvg: number;
+  frameMsP95: number;
+  targetMs: number;
+  visibleTokens: number;
+  prefetchTokens: number;
+  backgroundTokens: number;
+  gpuUploadTokens: number;
+  textTokens: number;
+  demoTokens: number;
+  backlog: number;
+  scroll: number;
+  jumpScroll: number;
+  sample: string;
+}
+
+function isStableTextEvent(e: PerfEntry): boolean {
+  const Event = field(e, 'event');
+  return Event === 'settings_text_prebuild' || Event === 'settings_text_miss' || Event === 'settings_text_stale' || Event === 'settings_text_usage' || Event === 'settings_text_plan_collection';
+}
+
+function isAdaptiveBudgetEvent(e: PerfEntry): boolean {
+  return e.system === 'perf/settings-resource' && field(e, 'event') === 'settings_adaptive_budget';
+}
+
+function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
+  return entries
+    .filter(isStableTextEvent)
+    .map(e => {
+      const event = field(e, 'event') as StableTextEvent['event'];
+      const scope = field(e, 'scope');
+      const page = field(e, 'page');
+      const tab = field(e, 'tab');
+      const subtab = field(e, 'subtab');
+      const key = field(e, 'key');
+      const reason = field(e, 'reason');
+      const planStatus = field(e, 'plan_status');
+      const operation = field(e, 'operation');
+      const phase = field(e, 'phase');
+      const remaining = numberField(e, 'remaining');
+      const candidates = numberField(e, 'candidates');
+      const hits = numberField(e, 'hits');
+      const reused = numberField(e, 'reused');
+      const miss = numberField(e, 'miss');
+      const stale = numberField(e, 'stale');
+      const textNew = numberField(e, 'text_new');
+      const textReused = numberField(e, 'text_reused');
+      const planned = numberField(e, 'planned');
+      const unplanned = numberField(e, 'unplanned');
+      const unitsDone = numberField(e, 'units_done');
+      const unitsTotal = numberField(e, 'units_total');
+      const budget = numberField(e, 'budget');
+      const complete = numberField(e, 'complete') > 0;
+      const dirty = numberField(e, 'dirty') > 0;
+      const parts = [
+        `event=${event}`,
+        scope.length > 0 ? `scope=${scope}` : '',
+        page.length > 0 ? `page=${page}` : '',
+        tab.length > 0 ? `tab=${tab}` : '',
+        subtab.length > 0 ? `subtab=${subtab}` : '',
+        key.length > 0 ? `key=${key}` : '',
+        reason.length > 0 ? `reason=${reason}` : '',
+        planStatus.length > 0 ? `plan_status=${planStatus}` : '',
+        operation.length > 0 ? `operation=${operation}` : '',
+        phase.length > 0 ? `phase=${phase}` : '',
+        event === 'settings_text_prebuild' ? `remaining=${remaining}` : '',
+        event === 'settings_text_usage' ? `candidates=${candidates}` : '',
+        event === 'settings_text_usage' ? `hits=${hits}` : '',
+        event === 'settings_text_usage' ? `reused=${reused}` : '',
+        event === 'settings_text_usage' ? `miss=${miss}` : '',
+        event === 'settings_text_usage' ? `stale=${stale}` : '',
+        event === 'settings_text_usage' ? `planned=${planned}` : '',
+        event === 'settings_text_usage' ? `unplanned=${unplanned}` : '',
+        event === 'settings_text_plan_collection' ? `units_done=${unitsDone}` : '',
+        event === 'settings_text_plan_collection' ? `units_total=${unitsTotal}` : '',
+        event === 'settings_text_plan_collection' ? `remaining=${remaining}` : '',
+        event === 'settings_text_plan_collection' ? `budget=${budget}` : '',
+        event === 'settings_text_plan_collection' ? `complete=${complete ? 1 : 0}` : '',
+        event === 'settings_text_plan_collection' ? `dirty=${dirty ? 1 : 0}` : '',
+      ].filter(Boolean);
+      return {
+        timestamp: e.timestamp,
+        event,
+        scope,
+        page,
+        tab,
+        subtab,
+        key,
+        reason,
+        planStatus,
+        operation,
+        phase,
+        remaining,
+        candidates,
+        hits,
+        reused,
+        miss,
+        stale,
+        textNew,
+        textReused,
+        planned,
+        unplanned,
+        unitsDone,
+        unitsTotal,
+        budget,
+        complete,
+        dirty,
+        sample: parts.join(' '),
+      };
+    });
+}
+
+export function adaptiveBudgetSummary(entries: PerfEntry[]): AdaptiveBudgetSummary {
+  const events: AdaptiveBudgetEvent[] = entries.filter(isAdaptiveBudgetEvent).map(e => {
+    const mode = field(e, 'mode');
+    const reason = field(e, 'reason');
+    const frameMsAvg = numberField(e, 'frame_ms_avg');
+    const frameMsP95 = numberField(e, 'frame_ms_p95');
+    const targetMs = numberField(e, 'target_ms');
+    const visibleTokens = numberField(e, 'visible_tokens');
+    const prefetchTokens = numberField(e, 'prefetch_tokens');
+    const backgroundTokens = numberField(e, 'background_tokens');
+    const gpuUploadTokens = numberField(e, 'gpu_upload_tokens');
+    const textTokens = numberField(e, 'text_tokens');
+    const demoTokens = numberField(e, 'demo_tokens');
+    const backlog = numberField(e, 'backlog');
+    const scroll = numberField(e, 'scroll');
+    const jumpScroll = numberField(e, 'jump_scroll');
+    const sample = summaryKv(
+      ['event', 'settings_adaptive_budget'],
+      ['mode', mode],
+      ['reason', reason],
+      ['frame_ms_avg', frameMsAvg.toFixed(3)],
+      ['frame_ms_p95', frameMsP95.toFixed(3)],
+      ['target_ms', targetMs.toFixed(3)],
+      ['visible_tokens', String(visibleTokens)],
+      ['prefetch_tokens', String(prefetchTokens)],
+      ['background_tokens', String(backgroundTokens)],
+      ['gpu_upload_tokens', String(gpuUploadTokens)],
+      ['text_tokens', String(textTokens)],
+      ['demo_tokens', String(demoTokens)],
+      ['backlog', String(backlog)],
+      ['scroll', String(scroll)],
+      ['jump_scroll', String(jumpScroll)],
+    );
+    return { timestamp: e.timestamp, mode, reason, frameMsAvg, frameMsP95, targetMs, visibleTokens, prefetchTokens, backgroundTokens, gpuUploadTokens, textTokens, demoTokens, backlog, scroll, jumpScroll, sample };
+  });
+  return {
+    available: events.length > 0,
+    eventCount: events.length,
+    framePressureCount: events.filter(event => event.reason === 'frame_pressure').length,
+    maxVisibleTokens: events.reduce((max, event) => Math.max(max, event.visibleTokens), 0),
+    maxPrefetchTokens: events.reduce((max, event) => Math.max(max, event.prefetchTokens), 0),
+    maxBackgroundTokens: events.reduce((max, event) => Math.max(max, event.backgroundTokens), 0),
+    maxGpuUploadTokens: events.reduce((max, event) => Math.max(max, event.gpuUploadTokens), 0),
+    maxTextTokens: events.reduce((max, event) => Math.max(max, event.textTokens), 0),
+    maxDemoTokens: events.reduce((max, event) => Math.max(max, event.demoTokens), 0),
+    samples: events.sort((a, b) => b.frameMsP95 - a.frameMsP95 || b.frameMsAvg - a.frameMsAvg).map(event => event.sample).slice(0, 8),
+  };
+}
+
+function isTargetStableTextEvent(event: StableTextEvent): boolean {
+  const scope = event.scope.toLowerCase();
+  return scope.includes('target');
+}
+
+function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): StableTextCoverageSummary {
+  const events = stableTextEvents(entries).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  const targetSummaryTimes = targetFps
+    .map(summary => summary.timestamp)
+    .filter(timestamp => timestamp.length > 0)
+    .sort((a, b) => a.localeCompare(b));
+  const firstTargetSummaryTime = targetSummaryTimes.length > 0
+    ? targetSummaryTimes[0]
+    : selectTargetSettingsFrameEntries(entries)
+        .map(entry => entry.timestamp)
+        .sort((a, b) => a.localeCompare(b))[0] ?? '';
+
+  const relevantMisses = events.filter(event =>
+    event.event === 'settings_text_miss' &&
+    isTargetStableTextEvent(event));
+  const relevantStales = events.filter(event =>
+    event.event === 'settings_text_stale' &&
+    isTargetStableTextEvent(event));
+  const relevantUsage = events.filter(event =>
+    event.event === 'settings_text_usage' &&
+    isTargetStableTextEvent(event));
+  const targetPrebuilds = events
+    .filter(event =>
+      event.event === 'settings_text_prebuild' &&
+      isTargetStableTextEvent(event));
+  const targetCollections = events
+    .filter(event =>
+      event.event === 'settings_text_plan_collection' &&
+      isTargetStableTextEvent(event));
+  const prebuildSnapshots = targetSummaryTimes.length > 0
+    ? targetSummaryTimes
+        .map(summaryTime => targetPrebuilds.filter(event => event.timestamp.localeCompare(summaryTime) <= 0).at(-1))
+        .filter((event): event is StableTextEvent => event !== undefined)
+    : firstTargetSummaryTime.length > 0
+      ? targetPrebuilds.filter(event => event.timestamp.localeCompare(firstTargetSummaryTime) <= 0).slice(-1)
+      : [];
+  const prebuildBeforeTarget = prebuildSnapshots
+    .sort((a, b) => b.remaining - a.remaining || a.timestamp.localeCompare(b.timestamp))
+    .at(0);
+  const prebuildRemainingBeforeTarget = prebuildBeforeTarget?.remaining ?? 0;
+  const collectionSnapshots = targetSummaryTimes.length > 0
+    ? targetSummaryTimes
+        .map(summaryTime => targetCollections.filter(event => event.timestamp.localeCompare(summaryTime) <= 0).at(-1))
+        .filter((event): event is StableTextEvent => event !== undefined)
+    : firstTargetSummaryTime.length > 0
+      ? targetCollections.filter(event => event.timestamp.localeCompare(firstTargetSummaryTime) <= 0).slice(-1)
+      : [];
+  const collectionBeforeTarget = collectionSnapshots
+    .sort((a, b) => b.remaining - a.remaining || a.timestamp.localeCompare(b.timestamp))
+    .at(0);
+  const planCollectionAvailable = targetFps.length === 0 || targetCollections.length > 0;
+  const planCollectionComplete = targetFps.length === 0 || (collectionBeforeTarget?.complete ?? false);
+  const planCollectionUnitsTotal = collectionBeforeTarget?.unitsTotal ?? 0;
+  const planCollectionUnitsDone = collectionBeforeTarget?.unitsDone ?? 0;
+  const planCollectionRemainingBeforeTarget = collectionBeforeTarget?.remaining ?? 0;
+  const planCollectionBudget = collectionBeforeTarget?.budget ?? 0;
+  const planCollectionPhase = collectionBeforeTarget?.phase ?? '';
+  const planCollectionScope = collectionBeforeTarget?.scope ?? '';
+  const planCollectionOperation = collectionBeforeTarget?.operation ?? '';
+  const candidateTotal = relevantUsage.reduce((sum, event) => sum + event.candidates, 0);
+  const hitCount = relevantUsage.reduce((sum, event) => sum + event.hits, 0);
+  const reuseCount = relevantUsage.reduce((sum, event) => sum + event.reused, 0);
+  const usageMissCount = relevantUsage.reduce((sum, event) => sum + event.miss, 0);
+  const usageStaleCount = relevantUsage.reduce((sum, event) => sum + event.stale, 0);
+  const textNew = relevantUsage.reduce((sum, event) => sum + event.textNew, 0);
+  const textReused = relevantUsage.reduce((sum, event) => sum + event.textReused, 0);
+  const planCandidateCount = relevantUsage.reduce((sum, event) => sum + event.planned, 0);
+  const unplannedVisibleCount = relevantUsage.reduce((sum, event) => sum + event.unplanned, 0);
+  const visibleCandidateCount = candidateTotal;
+  const hasPlanCounters = relevantUsage.some(event => event.planned > 0 || event.unplanned > 0);
+  const planCoverageAvailable = targetFps.length === 0 || hasPlanCounters;
+  const keyMismatchCount = [...relevantMisses, ...relevantStales].filter(event => event.planStatus === 'key_mismatch').length;
+  const missCount = Math.max(relevantMisses.length, usageMissCount);
+  const staleCount = Math.max(relevantStales.length, usageStaleCount);
+  const utilizationAvailable = targetFps.length === 0 || relevantUsage.length > 0;
+  const consistencyWarnings: string[] = [];
+  if(targetFps.length > 0 && relevantUsage.length === 0) {
+    consistencyWarnings.push('missing settings_text_usage for target settings window');
+  }
+  if(targetFps.length > 0 && relevantUsage.length > 0 && !planCoverageAvailable) {
+    consistencyWarnings.push('missing stable text plan coverage counters for target settings window');
+  }
+  if(targetFps.length > 0 && !planCollectionAvailable) {
+    consistencyWarnings.push('missing stable text plan collection counters for target settings window');
+  }
+  if(planCollectionAvailable && !planCollectionComplete) {
+    consistencyWarnings.push(`stable text plan collection incomplete: ${planCollectionRemainingBeforeTarget}`);
+  }
+  if(unplannedVisibleCount > 0) {
+    consistencyWarnings.push(`unplanned visible stable text candidates: ${unplannedVisibleCount}`);
+  }
+  if(keyMismatchCount > 0) {
+    consistencyWarnings.push(`stable text key mismatches: ${keyMismatchCount}`);
+  }
+  if(candidateTotal > 0 && hitCount + missCount + staleCount < candidateTotal) {
+    consistencyWarnings.push('stable text usage counters do not cover all candidates');
+  }
+  if(textNew > 0) {
+    consistencyWarnings.push(`target stable text created ${textNew} text containers during visible usage`);
+  }
+  const samples = [...relevantMisses, ...relevantStales, ...(prebuildRemainingBeforeTarget > 0 && prebuildBeforeTarget ? [prebuildBeforeTarget] : []), ...(planCollectionRemainingBeforeTarget > 0 && collectionBeforeTarget ? [collectionBeforeTarget] : []), ...consistencyWarnings.map(warning => ({
+    timestamp: firstTargetSummaryTime || '',
+    event: 'settings_text_usage' as const,
+    scope: 'target_settings',
+    page: '',
+    tab: '',
+    subtab: '',
+    key: '',
+    reason: warning,
+    planStatus: '',
+    operation: '',
+    phase: '',
+    remaining: 0,
+    candidates: 0,
+    hits: 0,
+    reused: 0,
+    miss: 0,
+    stale: 0,
+    textNew: 0,
+    textReused: 0,
+    planned: 0,
+    unplanned: 0,
+    unitsDone: 0,
+    unitsTotal: 0,
+    budget: 0,
+    complete: false,
+    dirty: false,
+    sample: `event=settings_text_usage scope=target_settings reason=${warning.replaceAll(' ', '_')}`,
+  }))]
+    .sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+    .map(event => event.sample)
+    .slice(0, 8);
+
+  return {
+    acceptanceBlocked: missCount > 0 || staleCount > 0 || prebuildRemainingBeforeTarget > 0 || !planCollectionAvailable || !planCollectionComplete || !utilizationAvailable || !planCoverageAvailable || unplannedVisibleCount > 0 || keyMismatchCount > 0 || textNew > 0,
+    utilizationAvailable,
+    planCoverageAvailable,
+    planCandidateCount,
+    visibleCandidateCount,
+    unplannedVisibleCount,
+    keyMismatchCount,
+    candidateTotal,
+    hitCount,
+    reuseCount,
+    missCount,
+    staleCount,
+    hitRate: candidateTotal > 0 ? (hitCount / candidateTotal) * 100 : 0,
+    reuseRate: candidateTotal > 0 ? (reuseCount / candidateTotal) * 100 : 0,
+    textNew,
+    textReused,
+    prebuildRemainingBeforeTarget,
+    planCollectionAvailable,
+    planCollectionComplete,
+    planCollectionUnitsTotal,
+    planCollectionUnitsDone,
+    planCollectionRemainingBeforeTarget,
+    planCollectionBudget,
+    planCollectionPhase,
+    planCollectionScope,
+    planCollectionOperation,
+    consistencyWarnings,
+    samples,
+  };
+}
+
+function stableTextEventsDetailed(entries: PerfEntry[]) {
+  return entries
+    .filter(isStableTextEvent)
+    .map(e => ({
+      timestamp: e.timestamp,
+      event: field(e, 'event') as 'settings_text_prebuild' | 'settings_text_miss' | 'settings_text_stale' | 'settings_text_usage',
+      scope: field(e, 'scope'),
+      page: field(e, 'page'),
+      tab: field(e, 'tab'),
+      subtab: field(e, 'subtab'),
+      reason: field(e, 'reason'),
+      planStatus: field(e, 'plan_status'),
+      operation: field(e, 'operation'),
+      built: numberField(e, 'built'),
+      reused: numberField(e, 'reused'),
+      remaining: numberField(e, 'remaining'),
+      budget: numberField(e, 'budget'),
+      key: field(e, 'key'),
+    }));
+}
+
+function stableTextLocation(page: string, tab: string, subtab: string): string {
+  return `${page || '-'} / ${tab || '-'} / ${subtab || '-'}`;
+}
+
+export function settingsTextAnalysis(entries: PerfEntry[]): SettingsTextAnalysisResult {
+  const events = stableTextEventsDetailed(entries).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  const missCount = events.filter(event => event.event === 'settings_text_miss').length;
+  const staleCount = events.filter(event => event.event === 'settings_text_stale').length;
+  const targetMissCount = events.filter(event => event.event === 'settings_text_miss' && String(event.scope).includes('target')).length;
+  const targetStaleCount = events.filter(event => event.event === 'settings_text_stale' && String(event.scope).includes('target')).length;
+  const prebuildCount = events.filter(event => event.event === 'settings_text_prebuild').length;
+  const remainingPositiveCount = events.filter(event => event.event === 'settings_text_prebuild' && event.remaining > 0).length;
+
+  const byLocation = new Map<string, SettingsTextAnalysisLocationStats>();
+  const byReason = new Map<string, SettingsTextAnalysisReasonStats>();
+  const byOperation = new Map<string, SettingsTextAnalysisOperationStats>();
+  const prebuildSeries: SettingsTextAnalysisPrebuildSample[] = [];
+
+  for (const event of events) {
+    const location = stableTextLocation(event.page, event.tab, event.subtab);
+    const locationStats = byLocation.get(location) ?? {
+      location,
+      page: event.page || '-',
+      tab: event.tab || '-',
+      subtab: event.subtab || '-',
+      missCount: 0,
+      staleCount: 0,
+    };
+    const reasonStats = byReason.get(event.reason || '-') ?? {
+      reason: event.reason || '-',
+      missCount: 0,
+      staleCount: 0,
+    };
+    const operationStats = byOperation.get(event.operation || '-') ?? {
+      operation: event.operation || '-',
+      missCount: 0,
+      staleCount: 0,
+    };
+
+    if (event.event === 'settings_text_miss') {
+      locationStats.missCount += 1;
+      reasonStats.missCount += 1;
+      operationStats.missCount += 1;
+    } else if (event.event === 'settings_text_stale') {
+      locationStats.staleCount += 1;
+      reasonStats.staleCount += 1;
+      operationStats.staleCount += 1;
+    } else if (event.event === 'settings_text_prebuild') {
+      prebuildSeries.push({
+        timestamp: event.timestamp,
+        scope: event.scope || '-',
+        operation: event.operation || '-',
+        built: event.built,
+        reused: event.reused,
+        remaining: event.remaining,
+        budget: event.budget,
+      });
+    }
+
+    byLocation.set(location, locationStats);
+    byReason.set(reasonStats.reason, reasonStats);
+    byOperation.set(operationStats.operation, operationStats);
+  }
+
+  const topByLocation = [...byLocation.values()].sort((a, b) => b.missCount - a.missCount || b.staleCount - a.staleCount || a.location.localeCompare(b.location));
+  const topByReason = [...byReason.values()].sort((a, b) => b.missCount - a.missCount || b.staleCount - a.staleCount || a.reason.localeCompare(b.reason));
+  const topByOperation = [...byOperation.values()].sort((a, b) => b.missCount - a.missCount || b.staleCount - a.staleCount || a.operation.localeCompare(b.operation));
+
+  return {
+    summary: {
+      missCount,
+      staleCount,
+      targetMissCount,
+      targetStaleCount,
+      prebuildCount,
+      remainingPositiveCount,
+    },
+    topByLocation,
+    topByReason,
+    topByOperation,
+    prebuildSeries,
+    eventTimeline: events.map(event => ({
+      timestamp: event.timestamp,
+      event: event.event,
+      page: event.page || '-',
+      tab: event.tab || '-',
+      subtab: event.subtab || '-',
+      reason: event.reason || '-',
+      planStatus: event.planStatus || '-',
+      operation: event.operation || '-',
+      built: event.built,
+      reused: event.reused,
+      remaining: event.remaining,
+      key: event.key || '-',
+    })),
+  };
 }
 
 export function targetSettingsSnapshot(entries: PerfEntry[]): TargetSettingsSnapshot {
   const targetFps = fpsSummaries(entries).filter(isTargetSettingsFpsSummary);
+  const stableText = stableTextCoverage(entries, targetFps);
   if(targetFps.length > 0) {
     const durations = targetFps.map(s => s.frameMsP99);
     const percentiles = calcPercentiles(durations);
@@ -258,6 +896,7 @@ export function targetSettingsSnapshot(entries: PerfEntry[]): TargetSettingsSnap
       spikeCount,
       verdict: computeVerdict(percentiles, spikeCount),
       verdictAvailable: true,
+      stableTextCoverage: stableText,
     };
   }
   const targetEntries = selectTargetSettingsFrameEntries(entries);
@@ -269,6 +908,160 @@ export function targetSettingsSnapshot(entries: PerfEntry[]): TargetSettingsSnap
     spikeCount: spikes.length,
     verdict: 'WARN',
     verdictAvailable: false,
+    stableTextCoverage: stableText,
+  };
+}
+
+export function assetsPreviewAdmissionSummary(entries: PerfEntry[]): AssetsPreviewAdmissionSummary {
+  const events = entries
+    .filter(entry => entry.system === 'perf/assets' && field(entry, 'stage') === 'assets_preview_draw_workshop_cards')
+    .map(entry => {
+      const visibleFirst = numberField(entry, 'visible_first');
+      const rendered = numberField(entry, 'rendered');
+      const thumbStarts = numberField(entry, 'thumb_starts');
+      const visibleStarts = numberField(entry, 'visible_starts');
+      const prefetchStarts = numberField(entry, 'prefetch_starts');
+      const backgroundStarts = numberField(entry, 'background_starts');
+      const durationMs = entryDurationMs(entry) ?? 0;
+      const sample = [
+        'stage=assets_preview_draw_workshop_cards',
+        `tab=${field(entry, 'tab')}`,
+        `combined=${field(entry, 'combined')}`,
+        `rendered=${rendered}`,
+        `thumb_starts=${thumbStarts}`,
+        `visible_first=${visibleFirst}`,
+        `visible_starts=${visibleStarts}`,
+        `prefetch_starts=${prefetchStarts}`,
+        `background_starts=${backgroundStarts}`,
+        `duration_ms=${durationMs.toFixed(3)}`,
+      ].join(' ');
+      return { visibleFirst, rendered, thumbStarts, visibleStarts, prefetchStarts, backgroundStarts, durationMs, sample };
+    });
+  return {
+    available: events.length > 0,
+    visibleFirstAvailable: events.some(event => event.visibleFirst === 1),
+    eventCount: events.length,
+    maxDurationMs: events.reduce((max, event) => Math.max(max, event.durationMs), 0),
+    maxRendered: events.reduce((max, event) => Math.max(max, event.rendered), 0),
+    maxThumbStarts: events.reduce((max, event) => Math.max(max, event.thumbStarts), 0),
+    visibleStarts: events.reduce((sum, event) => sum + event.visibleStarts, 0),
+    prefetchStarts: events.reduce((sum, event) => sum + event.prefetchStarts, 0),
+    backgroundStarts: events.reduce((sum, event) => sum + event.backgroundStarts, 0),
+    samples: events
+      .sort((a, b) => b.durationMs - a.durationMs)
+      .map(event => event.sample)
+      .slice(0, 8),
+  };
+}
+
+export function assetsVisibleReadySummary(entries: PerfEntry[]): AssetsVisibleReadySummary {
+  const preflightEvents = entries
+    .filter(entry => entry.system === 'perf/assets' && field(entry, 'stage') === 'assets_visible_preflight')
+    .map(entry => {
+      const visibleReady = numberField(entry, 'visible_ready');
+      const geometryStable = numberField(entry, 'geometry_stable');
+      const thumbStartsBeforeVisible = numberField(entry, 'thumb_starts_before_visible');
+      const thumbStartsDuringDraw = numberField(entry, 'thumb_starts_during_draw');
+      const visibleCount = numberField(entry, 'visible_count');
+      const notReadyCount = numberField(entry, 'not_ready_count');
+      const sample = [
+        'stage=assets_visible_preflight',
+        `tab=${field(entry, 'tab')}`,
+        `visible_ready=${visibleReady}`,
+        `geometry_stable=${geometryStable}`,
+        `visible_count=${visibleCount}`,
+        `not_ready_count=${notReadyCount}`,
+        `thumb_starts_before_visible=${thumbStartsBeforeVisible}`,
+        `thumb_starts_during_draw=${thumbStartsDuringDraw}`,
+      ].join(' ');
+      return { visibleReady, geometryStable, hasGeometryStable: hasField(entry, 'geometry_stable'), thumbStartsBeforeVisible, thumbStartsDuringDraw, visibleCount, notReadyCount, sample };
+    });
+  const drawEvents = entries
+    .filter(entry => entry.system === 'perf/assets' && field(entry, 'stage') === 'assets_preview_draw_workshop_cards')
+    .map(entry => ({
+      thumbStartsDuringDraw: numberField(entry, 'thumb_starts_during_draw'),
+      geometryStable: numberField(entry, 'geometry_stable'),
+      hasGeometryStable: hasField(entry, 'geometry_stable'),
+      rendered: numberField(entry, 'rendered'),
+    }));
+  const thumbStartsDuringDraw = preflightEvents.reduce((sum, event) => sum + event.thumbStartsDuringDraw, 0) +
+    drawEvents.reduce((sum, event) => sum + event.thumbStartsDuringDraw, 0);
+  if (thumbStartsDuringDraw > 0) {
+    // thumbStartsDuringDraw > 0 blocks visible-ready acceptance.
+  }
+  const relevantPreflightEvents = preflightEvents.filter(event => event.visibleCount > 0 && event.hasGeometryStable);
+  const relevantDrawEvents = drawEvents.filter(event => event.rendered > 0 && event.hasGeometryStable);
+  const geometryStableIsFalse = relevantPreflightEvents.some(event => event.geometryStable === 0) ||
+    relevantDrawEvents.some(event => event.geometryStable === 0);
+  const geometryStable = (relevantPreflightEvents.length > 0 || relevantDrawEvents.length > 0) && !geometryStableIsFalse;
+  if (geometryStable === false) {
+    // Keep this condition explicit because geometry instability blocks visible-ready acceptance.
+  }
+  const lastPreflight = preflightEvents.at(-1);
+  const visibleReadyAvailable = preflightEvents.length > 0 &&
+    lastPreflight !== undefined &&
+    lastPreflight.visibleReady === 1 &&
+    lastPreflight.notReadyCount === 0;
+  const notReadyCount = lastPreflight !== undefined ? lastPreflight.notReadyCount : 0;
+  return {
+    available: preflightEvents.length > 0,
+    visibleReadyAvailable,
+    geometryStable,
+    thumbStartsBeforeVisible: preflightEvents.reduce((sum, event) => sum + event.thumbStartsBeforeVisible, 0),
+    thumbStartsDuringDraw,
+    visibleCount: preflightEvents.reduce((sum, event) => Math.max(sum, event.visibleCount), 0),
+    notReadyCount,
+    eventCount: preflightEvents.length,
+    samples: preflightEvents.map(event => event.sample).slice(0, 8),
+  };
+}
+
+function isDemoBrowserPhaseEvent(e: PerfEntry): boolean {
+  const event = eventName(e);
+  return e.system === PERF_SYSTEM.INTERACTION && (
+    event === 'demo_browser_startup' ||
+    event === 'demo_browser_header_fetch' ||
+    event === 'demo_browser_date_fetch' ||
+    event === 'demo_browser_preview_load'
+  );
+}
+
+export function demoBrowserPhaseSummary(entries: PerfEntry[]): DemoBrowserPhaseSummary {
+  const events = entries.filter(isDemoBrowserPhaseEvent);
+  const samples = events.slice(0, 12).map(e => summaryKv(
+    ['event', eventName(e)],
+    ['items_total', field(e, 'items_total')],
+    ['items_scanned', field(e, 'items_scanned')],
+    ['items_done', field(e, 'items_done')],
+    ['visible_first', field(e, 'visible_first')],
+    ['visible_end', field(e, 'visible_end')],
+    ['visible_scanned', field(e, 'visible_scanned')],
+    ['visible_done', field(e, 'visible_done')],
+    ['background_scanned', field(e, 'background_scanned')],
+    ['background_done', field(e, 'background_done')],
+    ['remaining', field(e, 'remaining')],
+    ['metadata_remaining', field(e, 'metadata_remaining')],
+    ['budget', field(e, 'budget')],
+    ['dur_ms', String(fieldDuration(e))],
+    ['trigger', field(e, 'trigger')],
+    ['source', field(e, 'source')],
+    ['sort', field(e, 'sort')],
+    ['fetch_info', field(e, 'fetch_info')],
+  ));
+  return {
+    available: events.length > 0,
+    startupCount: events.filter(e => eventName(e) === 'demo_browser_startup').length,
+    headerFetchCount: events.filter(e => eventName(e) === 'demo_browser_header_fetch').length,
+    dateFetchCount: events.filter(e => eventName(e) === 'demo_browser_date_fetch').length,
+    previewLoadCount: events.filter(e => eventName(e) === 'demo_browser_preview_load').length,
+    visibleScanned: events.reduce((sum, e) => sum + numberField(e, 'visible_scanned'), 0),
+    visibleDone: events.reduce((sum, e) => sum + numberField(e, 'visible_done'), 0),
+    backgroundScanned: events.reduce((sum, e) => sum + numberField(e, 'background_scanned'), 0),
+    backgroundDone: events.reduce((sum, e) => sum + numberField(e, 'background_done'), 0),
+    maxDurationMs: events.reduce((max, e) => Math.max(max, fieldDuration(e)), 0),
+    maxRemaining: events.reduce((max, e) => Math.max(max, numberField(e, 'remaining')), 0),
+    maxMetadataRemaining: events.reduce((max, e) => Math.max(max, numberField(e, 'metadata_remaining')), 0),
+    samples,
   };
 }
 
@@ -428,6 +1221,22 @@ export function pagePerformanceAttribution(entries: PerfEntry[]): AttributionEnt
           ['rows_iterated', field(e, 'rows_iterated')],
           ['rows_processed', field(e, 'rows_processed')],
           ['rows_skipped', field(e, 'rows_skipped')],
+        ),
+      ));
+    } else if (isDemoBrowserPhaseEvent(e)) {
+      attribution.push(makeEntry(
+        e,
+        'List Interaction',
+        summaryKv(
+          ['event', event],
+          ['items_total', field(e, 'items_total')],
+          ['remaining', field(e, 'remaining')],
+        ),
+        summaryKv(
+          ['items_scanned', field(e, 'items_scanned')],
+          ['items_done', field(e, 'items_done')],
+          ['budget', field(e, 'budget')],
+          ['trigger', field(e, 'trigger')],
         ),
       ));
     } else if (isUiRebuildEvent(e)) {

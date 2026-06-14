@@ -271,6 +271,124 @@ TEST(Skins, TeeSkinListVirtualizationKeepsTotalListLength)
 	EXPECT_NE(RenderTeeBody.find("rows_total=%d rows_visible=%d rows_rendered=%d rows_iterated=%d rows_skipped=%d"), std::string::npos);
 }
 
+TEST(Skins, TeeSkinListStableIdleAvoidsFullBackgroundScan)
+{
+	std::ifstream File(TestSourcePath("src/game/client/components/menus_settings.cpp"));
+	ASSERT_TRUE(File.good());
+	std::stringstream Buffer;
+	Buffer << File.rdbuf();
+	const std::string Source = Buffer.str();
+	const size_t RenderTeePos = Source.find("void CMenus::RenderSettingsTee(CUIRect MainView)");
+	ASSERT_NE(RenderTeePos, std::string::npos);
+	const size_t RenderTeeEnd = Source.find("void CMenus::RenderSettingsAppearance", RenderTeePos);
+	ASSERT_NE(RenderTeeEnd, std::string::npos);
+	const std::string RenderTeeBody = Source.substr(RenderTeePos, RenderTeeEnd - RenderTeePos);
+
+	EXPECT_NE(Source.find("bool m_BackgroundRequestScanComplete = false;"), std::string::npos);
+	EXPECT_NE(Source.find("int m_BackgroundRequestScanListSize = -1;"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("VisibleSourceSettled && BackgroundRequestBudget > 0"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("!gs_TeeSettingsPageState.m_BackgroundRequestScanComplete"), std::string::npos);
+	EXPECT_EQ(RenderTeeBody.find("SkinStatsBeforeBackgroundRequest.m_NumUnloaded > 0"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("gs_TeeSettingsPageState.m_BackgroundRequestScanComplete = true;"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("event=tee_skin_background_scan"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("items_total=%d items_scanned=%d items_skipped_visible=%d requests_issued=%d complete=%d budget=%d dur_ms=%.3f block_reason=%s"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("event=tee_skin_list_prescan"), std::string::npos);
+	EXPECT_EQ(RenderTeeBody.find("visual_ready_count=%d"), std::string::npos);
+}
+
+TEST(Skins, TeeSkinListSeparatesVisualReadyFromSourceSettled)
+{
+	std::ifstream JobsFile(TestSourcePath("src/game/client/components/settings_resource_jobs.cpp"));
+	ASSERT_TRUE(JobsFile.good());
+	std::stringstream JobsBuffer;
+	JobsBuffer << JobsFile.rdbuf();
+	const std::string JobsSource = JobsBuffer.str();
+
+	EXPECT_NE(JobsSource.find("bool SettingsSkinListEntryVisualReady(bool SourceReady, bool TerminalFailure, bool PreviewCacheReady)"), std::string::npos);
+	EXPECT_NE(JobsSource.find("bool SettingsSkinListEntrySourceSettled(bool SourceReady, bool TerminalFailure)"), std::string::npos);
+	EXPECT_NE(JobsSource.find("return SourceReady || TerminalFailure || PreviewCacheReady;"), std::string::npos);
+	EXPECT_NE(JobsSource.find("return SourceReady || TerminalFailure;"), std::string::npos);
+
+	std::ifstream MenusFile(TestSourcePath("src/game/client/components/menus_settings.cpp"));
+	ASSERT_TRUE(MenusFile.good());
+	std::stringstream MenusBuffer;
+	MenusBuffer << MenusFile.rdbuf();
+	const std::string MenusSource = MenusBuffer.str();
+	const size_t RenderTeePos = MenusSource.find("void CMenus::RenderSettingsTee(CUIRect MainView)");
+	ASSERT_NE(RenderTeePos, std::string::npos);
+	const size_t RenderTeeEnd = MenusSource.find("void CMenus::RenderSettingsAppearance", RenderTeePos);
+	ASSERT_NE(RenderTeeEnd, std::string::npos);
+	const std::string RenderTeeBody = MenusSource.substr(RenderTeePos, RenderTeeEnd - RenderTeePos);
+
+	EXPECT_NE(RenderTeeBody.find("VisibleVisualReadyCount"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("VisibleSourceSettledCount"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("const bool VisibleSourceSettled = VisibleSourceSettledCount == (int)vVisibleSkinIndices.size();"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("m_SettingsHighPrioritySettled = VisibleSourceSettled;"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("FrameContext.m_HighPrioritySettled = VisibleSourceSettled;"), std::string::npos);
+	EXPECT_EQ(RenderTeeBody.find("m_SettingsHighPrioritySettled = VisibleSettled;"), std::string::npos);
+	EXPECT_EQ(RenderTeeBody.find("FrameContext.m_HighPrioritySettled = VisibleSettled;"), std::string::npos);
+}
+
+TEST(Skins, TeeStartLoadingFallbackSweepIsBoundedAndLogged)
+{
+	std::ifstream HeaderFile(TestSourcePath("src/game/client/components/skins.h"));
+	ASSERT_TRUE(HeaderFile.good());
+	std::stringstream HeaderBuffer;
+	HeaderBuffer << HeaderFile.rdbuf();
+	const std::string HeaderSource = HeaderBuffer.str();
+	EXPECT_NE(HeaderSource.find("m_FallbackSweepScanned"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("m_FallbackSweepStarted"), std::string::npos);
+	EXPECT_EQ(HeaderSource.find("m_SettingsSourceFallbackSweepCursor"), std::string::npos);
+
+	std::ifstream SourceFile(TestSourcePath("src/game/client/components/skins.cpp"));
+	ASSERT_TRUE(SourceFile.good());
+	std::stringstream SourceBuffer;
+	SourceBuffer << SourceFile.rdbuf();
+	const std::string Source = SourceBuffer.str();
+	const size_t StartLoadingPos = Source.find("void CSkins::UpdateStartLoading(CSkinLoadingStats &Stats)");
+	ASSERT_NE(StartLoadingPos, std::string::npos);
+	const size_t StartLoadingEnd = Source.find("CSkins::ESkinProcessResult CSkins::ProcessSkinContainer", StartLoadingPos);
+	ASSERT_NE(StartLoadingEnd, std::string::npos);
+	const std::string StartLoading = Source.substr(StartLoadingPos, StartLoadingEnd - StartLoadingPos);
+
+	EXPECT_NE(Source.find("event=skin_start_loading_fallback_sweep"), std::string::npos);
+	EXPECT_NE(Source.find("items_total=%d items_scanned=%d items_started=%d items_skipped=%d invoked=%d dur_ms=%.3f reason=%s"), std::string::npos);
+	EXPECT_NE(StartLoading.find("LogSettingsSkinStartLoadingFallbackSweepEvent("), std::string::npos);
+	EXPECT_NE(StartLoading.find("disabled_explicit_queues"), std::string::npos);
+	EXPECT_EQ(StartLoading.find("std::advance("), std::string::npos);
+	EXPECT_EQ(StartLoading.find("for(auto &[_, pSkinContainer] : m_Skins)\n\t{"), std::string::npos);
+}
+
+TEST(Skins, SettingsAssetsListVirtualizationKeepsTotalListLength)
+{
+	std::ifstream File(TestSourcePath("src/game/client/components/menus_settings_assets.cpp"));
+	ASSERT_TRUE(File.good());
+	std::stringstream Buffer;
+	Buffer << File.rdbuf();
+	const std::string Source = Buffer.str();
+	const size_t LocalListPos = Source.find("if(!UsesCombinedAssetList(pCurrentCategory))");
+	ASSERT_NE(LocalListPos, std::string::npos);
+	const size_t WorkshopListPos = Source.find("if(const SAssetResourceCategory *pCategory = AssetResourceCategoryByTab(s_CurCustomTab); UsesCombinedAssetList(pCategory) && WorkshopHudView.h > 0.0f)", LocalListPos);
+	ASSERT_NE(WorkshopListPos, std::string::npos);
+	const std::string LocalListBody = Source.substr(LocalListPos, WorkshopListPos - LocalListPos);
+	const size_t WorkshopListEnd = Source.find("if(Ui()->DoEditBox_Search", WorkshopListPos);
+	ASSERT_NE(WorkshopListEnd, std::string::npos);
+	const std::string WorkshopListBody = Source.substr(WorkshopListPos, WorkshopListEnd - WorkshopListPos);
+
+	EXPECT_NE(LocalListBody.find("SettingsSkinListVisibleRangeForScroll("), std::string::npos);
+	EXPECT_NE(LocalListBody.find("OldSelected = SelectedCustomAssetIndex(s_CurCustomTab, SearchListSize);"), std::string::npos);
+	EXPECT_NE(LocalListBody.find("s_ListBox.SkipItems("), std::string::npos);
+	EXPECT_NE(LocalListBody.find("assets_local_list_frame"), std::string::npos);
+	EXPECT_EQ(LocalListBody.find("for(size_t i = 0; i < SearchListSize; ++i)"), std::string::npos);
+
+	EXPECT_NE(WorkshopListBody.find("SettingsSkinListVisibleRangeForScroll("), std::string::npos);
+	EXPECT_NE(WorkshopListBody.find("OldCombinedSelected = SelectedCombinedAssetIndex(s_CurCustomTab, vVisibleLocalAssetIndices);"), std::string::npos);
+	EXPECT_NE(WorkshopListBody.find("s_WorkshopAssetsListBox.SkipItems("), std::string::npos);
+	EXPECT_NE(WorkshopListBody.find("abs(WorkshopVisibleRange.m_FirstItem - PreviousFirstVisibleCombinedIndex)"), std::string::npos);
+	EXPECT_NE(WorkshopListBody.find("assets_workshop_list_frame"), std::string::npos);
+	EXPECT_EQ(WorkshopListBody.find("for(size_t ListIndex = 0; ListIndex < CombinedCount; ++ListIndex)"), std::string::npos);
+}
+
 TEST(Skins, TeePriorityRequestsReclaimBackgroundRequestedBeforeAdmittedBackgroundWork)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -385,8 +503,8 @@ TEST(Skins, GpuUploadLimiterResetsBeforeSkinUpdateConsumesBudget)
 	const std::string OnUpdateBody = Source.substr(OnUpdatePos, OnRenderPos - OnUpdatePos);
 	EXPECT_NE(OnUpdateBody.find("m_Skins.PrepareSettingsThroughputForFrame();"), std::string::npos);
 	EXPECT_NE(OnUpdateBody.find("m_GpuUploadLimiter.OnFrameStart(FrameGpuUploadLimit);"), std::string::npos);
-	EXPECT_NE(OnUpdateBody.find("const int FrameGpuUploadLimit = TeeSettingsActive ? m_Skins.SettingsGpuUploadLimiterUnitsForFrame() : CGpuUploadLimiter::DefaultMaxUploadsPerFrame();"), std::string::npos);
-	EXPECT_NE(OnUpdateBody.find("m_Menus.ResetSettingsFrameBudgetForFrame(TeeSettingsActive, FrameSkinUploadBudget);"), std::string::npos);
+	EXPECT_NE(OnUpdateBody.find("const int FrameGpuUploadLimit = m_Menus.SettingsGpuUploadLimitForFrame(TeeSettingsActive, AssetsSettingsActive, m_Skins.SettingsGpuUploadLimiterUnitsForFrame());"), std::string::npos);
+	EXPECT_NE(OnUpdateBody.find("m_Menus.ResetSettingsFrameBudgetForFrame(TeeSettingsActive, AssetsSettingsActive, FrameSkinUploadBudget);"), std::string::npos);
 
 	const size_t OnRenderEnd = Source.find("const ColorRGBA ClearColor", OnRenderPos);
 	ASSERT_NE(OnRenderEnd, std::string::npos);
@@ -487,7 +605,7 @@ TEST(Skins, TeeSettingsListUsesIdleBackgroundRequestsAfterVisibleSettle)
 	EXPECT_EQ(RenderTeeBody.find("std::find(vVisibleSkinIndices.begin(), vVisibleSkinIndices.end(), BackgroundIndex)"), std::string::npos);
 	EXPECT_EQ(RenderTeeBody.find("std::find(vVisibleSkinIndices.begin(), vVisibleSkinIndices.end(), i)"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("const bool RequestWindowScrollBlocked = SkinListScrollInteraction || s_SkinListScrollCooldownFrames > 0;"), std::string::npos);
-	EXPECT_NE(RenderTeeBody.find("const bool VisibleSettled = VisibleReadyCount == (int)vVisibleSkinIndices.size();"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("const bool VisibleSourceSettled = VisibleSourceSettledCount == (int)vVisibleSkinIndices.size();"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("const int DefaultBackgroundRequestBudget = Throughput.m_BackgroundRequestBudget;"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("const auto BackgroundBudgetDecision = SettingsSkinBackgroundRequestBudgetDecision({"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("const int BackgroundRequestBudget = BackgroundBudgetDecision.m_RequestBudget;"), std::string::npos);
@@ -607,7 +725,7 @@ TEST(Skins, TeeSettingsListEmitsRequestWindowPerfLogs)
 	EXPECT_NE(Source.find("event=admission_invariant_violation pending=%d loading=%d real_inflight=%d count_fuse_limit=%d"), std::string::npos);
 	EXPECT_NE(Source.find("if(gs_TeeListDrainPerfSession.m_Active)\n\t\t\tLogTeeListDrainSummary(Client(), GameClient()->m_Skins, GameClient()->m_Skins.LoadingStats(), false, RefreshNowNs);"), std::string::npos);
 	EXPECT_NE(Source.find("BeginTeeListDrainPerfSession(GameClient()->m_Skins, RefreshNowNs);"), std::string::npos);
-	EXPECT_NE(Source.find("m_SettingsHighPrioritySettled = VisibleSettled;"), std::string::npos);
+	EXPECT_NE(Source.find("m_SettingsHighPrioritySettled = VisibleSourceSettled;"), std::string::npos);
 	EXPECT_NE(Source.find("if(PerfDebugEnabled() &&"), std::string::npos);
 	EXPECT_NE(Source.find("if(m_SettingsRuntimeMetadata.m_LastPage != SETTINGS_TEE)"), std::string::npos);
 }
