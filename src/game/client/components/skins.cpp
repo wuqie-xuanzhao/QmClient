@@ -2382,6 +2382,7 @@ void CSkins::ProcessSkinDirectoryScanJob()
 	if(m_vPendingSkinDirectoryEntries.empty())
 		return;
 
+	bool DirectoryScanDirty = false;
 	SSettingsResourceMergeBudget MergeBudget;
 	MergeBudget.m_MaxListEntries = 64;
 	while(m_SkinDirectoryMergeCursor < m_vPendingSkinDirectoryEntries.size() && SettingsResourceConsumeMergeEntry(MergeBudget, SettingsFrameBudgetOrNull(GameClient())))
@@ -2421,7 +2422,7 @@ void CSkins::ProcessSkinDirectoryScanJob()
 				{
 					pSkinContainer->SetState(pSkinContainer->DetermineInitialState(), ESettingsResourcePriority::VISIBLE);
 				}
-				m_SkinList.m_NeedsUpdate = true;
+				DirectoryScanDirty = true;
 			}
 			continue;
 		}
@@ -2430,8 +2431,10 @@ void CSkins::ProcessSkinDirectoryScanJob()
 		auto &&pSkinContainer = std::make_unique<CSkinContainer>(std::move(SkinContainer));
 		pSkinContainer->SetState(pSkinContainer->DetermineInitialState());
 		m_Skins.insert({pSkinContainer->Name(), std::move(pSkinContainer)});
-		m_SkinList.m_NeedsUpdate = true;
+		DirectoryScanDirty = true;
 	}
+	if(DirectoryScanDirty)
+		m_SkinList.m_NeedsUpdate = true;
 
 	if(m_SkinDirectoryMergeCursor >= m_vPendingSkinDirectoryEntries.size())
 	{
@@ -2446,7 +2449,7 @@ void CSkins::ProcessSkinListPlanJob()
 	{
 		auto Result = m_pSkinListPlanJob->TakeResult();
 		LogSkinSettingsResourcePerf("complete", (int)Result.m_Plan.m_vNames.size(), (int)Result.m_UnfilteredCount, 0, ESettingsWarmupMissReason::NONE, 0.0);
-		if(!m_SkinList.m_NeedsUpdate && SettingsSkinListPlanGenerationMatches({Result.m_Generation, Result.m_Plan}, m_SkinListPlanGeneration))
+		if(SettingsSkinListPlanGenerationMatches({Result.m_Generation, Result.m_Plan}, m_SkinListPlanGeneration))
 		{
 			m_vPendingSkinListMergeEntries = std::move(Result.m_Plan.m_vEntries);
 			m_vPendingSkinListEntries.clear();
@@ -2454,21 +2457,19 @@ void CSkins::ProcessSkinListPlanJob()
 			m_SkinListMergeCursor = 0;
 			m_PendingSkinListUnfilteredCount = Result.m_UnfilteredCount;
 			m_HasPendingSkinListMergePlan = true;
+			// 不清除 m_NeedsUpdate：让它在合并完成后，如果目录扫描还有新数据，
+			// 下一帧能 queue 新 plan job 捕获新皮肤。合并期间 entries 非空不会打断。
 		}
 		m_pSkinListPlanJob.reset();
 	}
 
-	if(m_SkinList.m_NeedsUpdate)
+	if(m_SkinList.m_NeedsUpdate && m_pSkinListPlanJob == nullptr && m_vPendingSkinListMergeEntries.empty())
 	{
-		m_vPendingSkinListMergeEntries.clear();
 		m_vPendingSkinListEntries.clear();
 		m_HasPendingSkinListMergePlan = false;
 		m_SkinListMergeCursor = 0;
-		if(m_pSkinListPlanJob == nullptr)
-		{
-			QueueSkinListPlanJob(m_SkinList.m_Dummy >= 0 ? m_SkinList.m_Dummy : 0);
-			m_SkinList.m_NeedsUpdate = false;
-		}
+		QueueSkinListPlanJob(m_SkinList.m_Dummy >= 0 ? m_SkinList.m_Dummy : 0);
+		m_SkinList.m_NeedsUpdate = false;
 		return;
 	}
 
