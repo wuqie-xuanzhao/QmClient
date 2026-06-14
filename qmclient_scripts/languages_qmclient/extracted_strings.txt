@@ -1,20 +1,43 @@
  min
  seconds
  seconds (never)
+"%s" is not compatible with pnglite and cannot be loaded by old DDNet versions:
+%.2f KiB
+%.2f MiB
 %c Team %d
+%d dummies
+%d dummy
+%d items selected
+%d more cut segments
+%d new mentions
+%d of %d server
+%d of %d servers
+%d player
 %d players
+%d selected items were deleted, but %d items could not be deleted. The first failing item was '%s'.
+%d servers, %d users
+%d servers, %d users, %d dummies
 %d teams
+%d user
+%d users
+%d/%d KiB (%.1f KiB/s)
 %ds left
+%i minute left
+%i minutes left
+%i second left
+%i seconds left
 %s and %s have swapped
 %s canceled the swap with %s
 %s canceled the swap with you
 %s current race time is %s
+%s from %s
 %s has requested to swap with %s
 %s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
 %s not found
 %s translating to %s
 %s translating to %s before send
 %s translating to %s failed: %s
+%s wins!
 '%s' called for vote to force-pause '%s' for %s seconds (reason: %s)
 '%s' called for vote to kick '%s' (reason: %s)
 '%s' called for vote to kick you
@@ -37,60 +60,185 @@
 '%s' unlocked your team.
 '%s' was force-paused for %s seconds
 '%s' would have timed out, but can use timeout protection now
+(Fetching Update Info)
+(On Latest)
+(paused)
+(Update required)
 +%d more codes
 - Save codes in order:
 - Save owners in order:
 - You have %d saves on this map!
 /map is disabled
+/times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
+1 new mention
+1 star
+2 stars
+3 stars
 3D Background
+4 stars
 45° Aim
-API key
+5 stars
+9+ new mentions
+_ or ' ' = blank spacer
+a = View angle
+A demo with this name already exists
+A folder with this name already exists
+A screenshot with this name already exists
+A Tee
+Abort
+Activate
+Activate all
+Active color
 Active disconnect
 Active moderator mode disabled because you are afk.
 Active moderator mode disabled for you.
 Active moderator mode enabled for you.
-Add Bind
-Add Entry
-Add Group
-Add Item
+Active: Fire
+Active: Hook
+Add
 Add [group] [clan] [reason]:
 Add [group] [name] [reason]:
+Add a bind to the bindwheel
+Add a chat bind
+Add a clan war entry
+Add a colored skin to a dummy queue preset
+Add a colored skin to a queue preset
+Add a colored skin to the dummy queue
+Add a colored skin to the queue
+Add a community as a favorite
+Add a community to the exclusion filter
+Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
+Add a dummy queue preset
+Add a foe
+Add a friend
+Add a friend category
+Add a map to favorites
+Add a name war entry
+Add a prehashed rcon key
+Add a profile
+Add a queue preset
+Add a rcon key
+Add a server as a favorite
+Add a skin as a favorite
+Add a skin to a dummy queue preset
+Add a skin to a queue preset
+Add a skin to the dummy queue
+Add a skin to the queue
+add a sqlserver
+Add a type to the exclusion filter for a specific community
+Add a voting option
+Add Bind
+Add command
+Add current cut to the export list
+Add demo timeline marker
+Add Entry
+Add friend
+Add friends by entering their name below or by clicking their name in the player list.
+Add Group
+Add Item
+Add one
 Add team clan:
 Add team name:
+Add to blocked words
+Add to category
+Add to queue
 Add war clan:
 Add war name:
+Add/remove Client-IDs to spectate them exclusively (-1 to reset)
+Added %d missing required slot(s).
+Address
+Adds a specific war entry
+Adds default chat binds
 Adjust game camera and FOV settings
 Adjust opacity of entity layers
+Adjust the opacity of entities belonging to other teams, such as tees and name plates
 Adjust your prediction margin while frozen
+Advanced
 Advanced options
+AFR
 After Load
 Afterimage pop
 Agree
+Aim
+Aim bind
+Alive: %.1fs/%.1fs
 All
+All combined
 All players
+All stars
 Allow Duplicate Entries
 Allow mic permission in system settings, then reopen voice
+Allows maps to render with more detail
+Alpha
 Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
 Always show
+Always show chat
+Always show other players' hook collision lines
+Always show own player's hook collision line
 Always translate
 Amount
+And pick one randomly
+Angle:
 Animation
 Animation duration
 Animation range
 Anti Latency Tools
 Anti Ping Smoothing
+AntiPing (latency compensation)
+AntiPing: predict grenade path
+AntiPing: predict other players
+AntiPing: predict weapons
+API key
+Appearance
+Applied to %d same-family part(s).
 Apply
+Apply a saved profile by 1-based index to the current tee
 Apply Changes
+Apply this preset to the current queue
+Are you sure that you want to delete %d selected items?
+Are you sure that you want to delete '%s'?
+Are you sure that you want to delete the demo '%s'?
+Are you sure that you want to delete the folder '%s'?
+Are you sure that you want to delete the screenshot '%s'?
+Are you sure that you want to delete this button?
+Are you sure that you want to discard the current changes to the touch controls?
+Are you sure that you want to disconnect and play this demo?
+Are you sure that you want to disconnect and switch to a different server?
+Are you sure that you want to disconnect your dummy?
+Are you sure that you want to disconnect?
+Are you sure that you want to import the touch controls from the clipboard? This will overwrite your current touch controls.
+Are you sure that you want to quit?
 Are you sure that you want to remove '%s' from your war groups?
+Are you sure that you want to remove the clan '%s' from your friends list?
+Are you sure that you want to remove the player '%s' from your friends list?
+Are you sure that you want to reset the controls to their defaults?
+Are you sure that you want to reset the touch controls to default?
+Are you sure that you want to restart?
+Are you sure you want to delete this asset?
+Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
+ASI
 Aspect ratio preset
+Asset with this name already exists.
+Assets
+Assets directory
+Assets editor
 Attempt to change your name when near finish
 Audio
 Audio backend init failed
 Audio backend init failed, try switching devices and check details
+Audio file was exported, but reload failed. Restart sound to apply it.
 Audio init failed, check details below and logs
 Audio issue
+Audio pack exported.
+Audio packs
+Audio slots
+AUS
+Authed name color in scoreboard
+Authenticate to rcon
+Authenticate to rcon with a username
 Authorized player forced vote '%s'
 Auto
+auto
 Auto agree vote
 Auto chat in water
 Auto chat when dying in water
@@ -107,135 +255,293 @@ Auto refresh server list
 Auto reject vote
 Auto reply
 Auto reply cooldown
+Auto save chat log
+Auto start vote
 Auto switch to the tee that got unfrozen
 Auto team lock
 Auto translate received messages
 Auto translate sent messages
 Auto unmute when speaking
 Auto unspec on unfreeze
+Auto-sync player camera
 Auto-toggle fast input
 Auto-toggle fast input others
+Auto-translate incoming messages
+Auto-translate outgoing messages
 Automatic updates are only supported on Windows
+Automatically adds voting options for all maps
 Automatically close the current chat after waking from freeze
+Automatically create statboard csv
+Automatically record demos
 Automatically reply to muted players
 Automatically reply while the window is unfocused
+Automatically take game over screenshot
+Automatically take statboard screenshot
+Avg %.*f   ↓ %.*f   ↑ %.*f
 Axiom auto login failed
 Axiom auto login failed, retrying
 Axiom auto login succeeded
 Axiom dummy password
 Axiom main account password
-Background Draw
+Axis
+Background
 Background color
+Background Draw
+Background music volume
+Ban a certain nickname
+Ban ip for x minutes for any reason
+Ban ip range for x minutes for any reason
+Ban player in a region
+Ban player with ip/client id for x minutes for any reason
+Ban range in a region
 Based on a pile of Windows... stuff
+Basic
+Behavior
+Behavior type
+Benchmark frame times for number of seconds to file, then quit
+Best
+Bind key to execute a command or view keybindings
 Bind Wheel
 Bind Wheel Key
 Black
+Blend mode
 Blue
+Blue team
+Blue team wins!
+Body
 Both
 Both sides of keyword rules must be filled
 Bounce
 Brightness shift
+Broadcast message
+Browser
 Brutal
 Bubble opacity
 Buffer memory
+Built-in
 Button - Disabled
 Button - Enabled
-CP opacity
+Button position is outside of the screen.
+Buttons
+c = Player position
+Calculate unfinished maps for player in certain mode
+Call vote
 Camera
 Camera & FOV
+Can only drop onto same-size parts.
 Can't /spec that quickly.
 Can't disable team 0 mode. This team exceeds the maximum allowed size of %s players for regular team
 Can't enable team 0 mode with practice mode on.
+Can't find a Tutorial server
 Can't invite players to this team
 Can't invite this quickly
 Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
 Can't swap with yourself
+Cancel
+Cancel your swap request
+Candidate files
+Category
 Change indicator offset based on distance to other tees
+Change map
+Change ready state (0.7 only)
+Change settings
+Change the skip duration
+Change zoom
 Changes: %d
 Changing name to %s near finish
 Chat
+Chat background color
 Chat Binds
-Chat Bubble
-Chat Translate Button UI
 Chat box button appearance settings
+Chat Bubble
+Chat command
+Chat command (e.g. showall 1)
+Chat export failed
+Chat font size
+Chat log retention days
 Chat message
+Chat sound volume
+Chat Translate Button UI
 Chat translation settings
+Chat width
 Chat word filtering
 Check if voice server address is reachable
 Check if your dummy is being bullied while you control the main tee
 Check input device, system default mic, and mic permission first
 Check output device, confirm headphones/speakers are still online
+Checking for existing player with your name
+CHN
+Choose country flag
+Choose default eyes when joining a server
+Choose export name first.
+Choose whether to browse replays or screenshots
 Clan
+Clan color in friends list
+Clan Members
+Clan plates size
 Clan: %s
 Classic
 Classic easy
+Classic Easy
+Classic Next
 Classic next
 Classic nut
+Classic Nut
 Classic pro
+Classic Pro
+Clear
+Clear all favorite maps
 Clear Changes
+Clear chat messages
+Clear current cut (right click to clear all cuts)
+Clear friend note
+Clear local console
+Clear note
+Clear remote console
+Clears the voting options
+Click to add this community to favorites
+Click to copy map name
 Click to copy QQ group number
 Click to copy the map name
+Click to copy this clan's name to clipboard
+Click to copy this player's name to clipboard
+Click to remove this clan from your friends list.
+Click to remove this community from favorites
+Click to remove this player from your friends list.
+Click to select server. Double click to join your friend.
 Click to set color
+Client
 Client CPU usage is high
 Client frame time is abnormal
+Client IDs size
+Client message
 Client performance pressure is high
 Client prediction time is high
+Close
+Close the demo player
 Color
 Colors
 Colors in chat
 Colors in scoreboard
+Colors of the hook collision line, in case of a possible collision with:
 Combo
 Command
 Command is not available on solo servers
 Command:
 Commands run in the console
 Common key bindings
+Communities
+Community
 Community links, updates, and sponsors moved to the Contributors tab
 Compact
 Concurrency (0 = auto)
 Config
-Config Files
+Config directory
 Config file: data/input_overlay.json
+Config Files
+Configs
 Configure background 3D particle effects
 Configure hammer skin steal and skin transition animations
 Confirm both are on same server, same room, and support voice
+Connect address error
+Connect dummy
+Connect dummy to enable
 Connect to server first to establish voice network link
+Connect to the specified host/ip
 Connected
 Connected, no one is speaking
 Connected, waiting for first ping
+Connecting dummy
+Connecting to
 Connection disconnected
 Connection downstream
 Connection elevated
 Connection normal
+Connection Problems…
 Connection severely abnormal
 Connection upstream
+Console
 Console color
+Continue anyway?
 Contributors
+Control dummy
+Controller
+Controller jitter tolerance
+Controls
+Converse
+Converse with the last person you whispered to (private message)
+Coords size
 Copied
+Copy
+Copy info
+Copy name
 Copy skin
+Could not check for existing player with your name. Check your internet connection.
+Could not connect dummy
 Could not find your Team
+Could not get server list from master server
+Could not load default touch controls from file. See local console for details.
 Could not load sponsor QR code. Check the Base64 data
+Could not load touch controls from clipboard. See local console for details.
+Could not load touch controls from file. See local console for details.
+Could not preview this image
+Could not resolve connect address '%s'. See local console for details.
+Could not save downloaded map. Try manually deleting this file: %s
+Could not save touch controls to file. See local console for details.
+Count players only
+Countries
+CP opacity
+Create a random skin
+Created
+Credits
 Crescent
 Cube
+Current
 Current aspect ratio:
 Current aspect ratio: Show default
+Current cut is invalid or already added
+Current file
 Current rescue mode: %s
 Current status
+Current: Ranks
+Current: Score
+Current: Time
+custom
 Custom
 Custom API key
-Custom Font:
 Custom aspect ratio
 Custom colors
+Custom Font:
 Custom prompt template
 Customize translate button and menu colors
+Cut interval
+Cut length
+Cut segments
 Cute:
-DDNet
-DDNet/total CPU
-DF
+Cycle through emotes
+d = Prediction latency
 Damn grenadiers, all go to spa!
 Damn grenadiers, just die!
+Date
+Days
+DDmaX
+DDmaX Easy
+DDmaX Next
+DDmaX Nut
+DDmaX Pro
+DDNet
+DDNet Client needs to be restarted to complete update!
+ddnet-saves.txt is empty
+ddnet-saves.txt not found
+DDNet/total CPU
+DDRace HUD
+DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
+Deactivate
+Deactivate all
 Death opacity
+Deaths
 Debug graph
+Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 Debug performance graph panel
 Deep freeze color
 Deep freeze opacity
@@ -244,148 +550,361 @@ Deep unfreeze opacity
 DeepSeek
 DeepSeek API key
 Default
+default
 Default input open failed
+Default length
 Default output open failed
+Default zoom
 Delay
 Delete
+Delete button
+Delete command
+Delete demo
+Delete folder
+Delete screenshot
+Delete selected items
+Delete skin
+Delete this preset
+Demo
+Demo marker added
+Demofile: %s
+Demos
+Demos directory
+Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
+Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
+Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_muteip <ip> <seconds> <reason>'
+Deselect
+Desktop fullscreen
 Detailed reason
 Detection distance
 Detection time
 Developers and sponsors
+DF
 Diamond
+died
+Difficulty stars
+Direct touch input while ingame
+Direct touch input while spectating
+Direction Keys
+disable
 Disable after picking up other weapons
 Disagree
+Discard
+Discard changes
+Disconnect
+Disconnect dummy
+Disconnect from the server
 Disconnected
 Discord
 Display mode
 Dissolve
 Do not translate server messages
+Donor (drag parts from left)
+Donor Asset
 Dont predict other players if you are frozen
+DONT USE THIS! USE add_bindwheel INSTEAD!
+Door Laser Inner Color
+Door Laser Outline Color
+Download community skins
+Download failed
+Download skins
+Download this asset?
+Downloaded
+Downloading map
 Downloading update...
+Drag HUD modules with the left mouse button
+Dragger Inner Color
+Dragger Outline Color
 Dragging, collapsing, search, and usage history are preserved per category
+Draw on the in game background
 Draw where mouse is
+Draw!
 Drawing a big pie in the sky
 Dream Features
 Drift direction
 Drift intensity
 Drift smoothness
+Drop on right canvas to replace one part.
+Dummies are not allowed on this server
 Dummy
+Dummy Control: %s
+Dummy copy
+Dummy fire
+Dummy hammer fly
+Dummy hook
+Dummy jump
+Dummy mini view
+Dummy sync: %s
 Dummy Window
 Dummy window size
 Dummy window zoom
+Dump the current savestring
+Dump zone tuning in zone x
+dumps all sqlservers readservers = r, writeservers = w
+Dumps the antibot status
+Duplicate
 Duration
+Dynamic Camera
 Dynamic FOV intensity
 Dynamic FOV smoothness
 Dynamic Island
 Each tab has a clear purpose
 Echo follows the original chat color
 Echo text color when not inheriting chat color
+Echo the text
+Echo the text in chat window
 Edge margin
+Edit
+Edit audio pack
 Edit Entry
+Edit HUD
+Edit note
+Edit skin texture
+Edit touch controls
+Editor
 Elevated
 Emotes are disabled.
+Emoticon
 Emoticon ID
+Emoticons
+enable
 Enable 3D background particles
-Enable Deleting
-Enable FTAPI auto-translate (may overload the service)
-Enable Gores mode
-Enable Jelly Tee
-Enable Zen mode
 Enable camera drift
+Enable chat with all/team mode
+Enable cheats for your current team's run, but you can't earn a rank
+Enable controller
+Enable Deleting
 Enable dummy window
 Enable dynamic FOV
+Enable FTAPI auto-translate (may overload the service)
+Enable game sounds
+Enable ghost
+Enable Gores mode
+Enable gun sound
+Enable highlighted chat sound
+Enable Jelly Tee
 Enable keyword reply
+Enable long pain sound (used when shooting in freeze)
+Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 Enable mod weapon on %d: %s
 Enable pie menu
+Enable regular chat sound
 Enable repeat
+Enable replays
+Enable server message sound
 Enable speedrun timer
 Enable stereo positioning
 Enable system media control
+Enable team chat sound
 Enable tee trails
 Enable thinking mode (slower)
 Enable voice
 Enable warlist
 Enable word filter list
+Enable Zen mode
+Enables/disables active moderator mode for the player
 Endless hook has been activated
 Endless hook has been deactivated
 Endpoint
 Endpoint (optional)
 Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
+Enter Password
+Enter Username
+Entities
+Entities background color
+Entity Background Image
 Entity Layer Colors
+Entity Preview
+entity_bg (Workshop)
+Erase items on the in game background
+Error
+Error checking player name
+Error loading communities
+Error loading demo
+Error loading touch controls
+Error opening screenshot
+Error playing demo
+Error saving settings
+Error saving touch controls
+ESC replay minutes
+EUR
+Evaluate an expression
 Event
+Example of usage
 Example: name1|name2|name3
+Exclude
 Execute before connecting
+Execute files on key press/release
+Execute hovered bindwheel bind
 Execute on connect
+Execute the specified file
+Existing Player
 Expand module
-FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
+Export
+Export cut as a separate demo
+Export demo cut
+Export name contains invalid characters.
+Export selected
+Export selected file
+Export to clipboard
+Exported %d chat messages
+Exported to %s
+Extras
+f = Frame rate
 Fade and slide
 Fade in
 Fade only
 Fade out
 Fade trail alpha
+Failed saving the replay!
 Failed to check for updates
+Failed to copy main asset image.
 Failed to create bgdraw folder
+Failed to export audio pack file.
+Failed to export demo cut
+Failed to export skin files.
+Failed to load
+Failed to load main asset: %s
+Failed to prepare main asset image.
+Failed to preview candidate file.
+Failed to preview import file.
 Failed to read saves file
+Failed to write PNG export.
 Fake CTF flags
 Fallback simple noise reduction strength
 Fast input (reduce visual latency)
 Fast input others
+Fast practice
+Fat skins (DDFat)
+Favorite
+Favorite map
 Favorite maps
+Favorites
 Feature Search
+Feet
+Fetch Info
+File
+File '%s' already exists, do you want to overwrite it?
+File already exists, do you want to overwrite it?
+Filter connecting players
+Find all ban records for the specified IP address
 Finish Name
 Finish Name:
+Fire
+First page in console
 Flip:
+Folder
+Folder Link
+Follow
+Following
 Font size
+Force a vote to yes/no
+Force a voting option
+Force high bandwidth mode when spectating (1 = on, 0 = off)
+Force i to pause for i seconds
+Force vote
 Found %d modules
+FPM
+Frags
 Frame rate
 Frame time
+Frankenstein (drop parts on right)
+Free move
+Free-View
 Freeview cursor opacity
 Freeze
 Freeze border color
+Freeze Laser Inner Color
+Freeze Laser Outline Color
 Freeze opacity
 Freeze stars
 Friend
+Friend color in friends list
+Friend heart
+Friend message
+Friend note
 Friend Notifications
 Friend online and join notifications
+Friends
 Frozen Margin
+FSAA samples
+FTAPI
+FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 Full map listen in same room
+Fullscreen
 Fun
 Functions
+Game
+Game info
+Game over
+Game paused
+Game sound volume
 Game time margin
+Game type
+Game types:
 Game/predicted tick
 Gameplay
 Gap aim rescue
+General
+Get all map players' skin IDs and auto add to rotate queue
+Getting game info
+Getting server list from master server
+Ghost
 Ghost tools
+Ghosts directory
 Github
+Give back right to vote to player with client ID
+Give back right to vote to player with IP address
+Give back right to vote to player with list index
+Gives a grenade launcher to you
+Gives a laser to you
+Gives a shotgun to you
+Gives all weapons to you
+Gives jetpack to you
+Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
+Gives you as many jumps as you specify
+Gives you endless hook
+Gives you infinite jump
 Global toggle key
 Glow alpha
 Glow intensity
 Glow offset
+Go back one marker
+Go back one tick
+Go back the specified duration
+Go forward one marker
+Go forward one tick
+Go forward the specified duration
 Gores Actor
-Gores Mode
 Gores auto weapon switch
+Gores Mode
 Gores mode key
+Grabs
+Graphics
+Graphics card
 Greeting text
+Grenade
 Group name
 Guide line color
-HDF
-HJ Assist
-HJ assist
-HUD
+Hammer
 Hammer Mode:
 Hammer skin steal
+Hammer: %s
+Has people playing
+Has save
+HDF
 Heart
-Hide Echo messages
-Hide HUD
-Hide Settings Tabs
-Hide UI for focused gameplay
+Height
+Help: %s
 Hide death/respawn effects
 Hide direction indicators
+Hide Echo messages
 Hide explosion effects
 Hide freeze effects
 Hide ghosts of frozen players
 Hide guide lines
 Hide hammer effects
+Hide HUD
 Hide indicator for tees on your screen
 Hide input emoticon
 Hide join/version prompts
@@ -397,16 +916,45 @@ Hide names
 Hide player messages
 Hide scoreboard
 Hide server prompt notifications
+Hide Settings Tabs
 Hide sponsor QR code
+Hide UI for focused gameplay
 Hide weapon muzzle flashes
+High Detail
+High to low
+Highlight Color
+Highlighted message
 Hitbox mode
+HJ Assist
+HJ assist
 Hold left click for free camera
+Hook
+Hook collision line
+Hook collision line opacity
+Hook collisions
+Hook Collisions
+Hook line tip
+Hook Strength
+Hooking L/R: %.0f%%/%.0f%%
 Horizontal position
 Hours
+https://ddnet.org/discord
+https://wiki.ddnet.org/
+https://wiki.ddnet.org/wiki/Mapping
+https://wiki.ddnet.org/wiki/Touch_controls
+HUD
+HUD editor preview
+HUD rainbow colors
+Hue
+i = Receive rate
 I am a robot
 I am away from the game window
 I muted you
 Idiot word filter
+Import from clipboard
+Inactive color
+Incoming language
+Indicate map finish
 Indicator alive color
 Indicator in freeze color
 Indicator max distance
@@ -417,7 +965,11 @@ Indicator opacity
 Indicator safe color
 Indicator size
 Info
+Info Messages
+Ingame controller mode
+Ingame controller sens.
 Ingame cursor scale
+Ingame mouse sens.
 Initializing assets
 Initializing components
 Initializing map logic
@@ -431,80 +983,199 @@ Input overlay display
 Input switch
 Insane
 Interface
-Invalid ID
-Invalid X coordinate.
-Invalid Y coordinate.
+Intermediate
+Internet
+Internet (From online source)
 Invalid client id to kick
 Invalid client id to move to spectators
+Invalid Demo
+Invalid ID
 Invalid option
 Invalid spectator id used
 Invalid translation backend
+Invalid X coordinate.
+Invalid Y coordinate.
+Invite a person to a locked team
 Invites are disabled
 Is your dummy being bullied while you control the main tee?
+It's recommended that you check the settings to adjust them to your liking before joining a server.
+j = Latency jitter
 Jelly duration
 Jelly others
 Jelly strength
 Jitter
-Join QQ group
 Join a team to enable practice mode, which means you can use /r, but can't earn a rank.
 Join a team to use swap feature, which means you can swap positions with each other.
+Join blue
+Join game
+Join QQ group
+Join red
+Join the team of the specified player
+Join Tutorial Server
+Jump
+Jump hint text
+k = Resend loss
 Kaomoji
 Key Bindings
+Key Presses
+Key Sticking: ?
+Key Sticking: Off
+Key Sticking: On
+Key Sticking: Reset Self
 Keyword Reply
 Keyword rules
+Kick player
+Kick player with specified id for any reason
 Kick voting requires %s players
 Kill
 Kill Protection enabled. If you really want to join the spectators, first type /kill
+Kill yourself to restart
+Kill yourself when kill-protected during a long game (use f1, kill for regular kill)
+killed themselves
+Kills a player and announces the kill
+Kills team and disables practice mode
 King of Gores auto weapon switch
+l = Local time
 L select  R swap  M select only
-LLM provider
+Label
+Label type
+LAN
+Language
 Large text announcement for friend joining
 Large text content
-Laser Enhancement
+Laser
 Laser effect enhancement
+Laser Enhancement
 Laser preview
 Laser settings
 Laser size
 Laser style
+Last page in console
 Latency
+Layout
+Leak IP
+Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
+Learn
 Leave empty to disable
 Leave empty to join public room
 Leave empty to use default prompt
 Left jump
+Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets.
 Left/right channel width
+Length
 Lenny:
+Lets you join team i (shows your team if left blank)
+Lht.
+LibreTranslate
 Line width
+Lines %d - %d (%s)
+List all commands that are available in practice mode
+List all commands which are accessible for given access level
+List all commands which are accessible for users
+List all name bans
+List all rcon keys
+List all saves on the current map
+List all tuning variables and their values
+List available voice devices
+List connected players with optional case-insensitive substring matching filter
+List foes
+List friends
+List KCP/legacy transport status and weak-network simulation metrics
+List local saves for current map (or specified map)
+List players containing name or all players
 Literal
 Live director
+LLM API
+LLM provider
 Load
+Load drawings from a given csv file (defaults to map name)
+Load with code r. /load to check your existing saves
 Loaded %d items
 Loaded %d items (discarded %d items)
+Loading assets...
+Loading commands…
 Loading DDNet Client
+Loading Demo
 Loading demo file from storage
+Loading demo files
+Loading demo info
+Loading ghost files
+Loading map
 Loading map file from storage
+Loading maps…
+Loading menu images
+Loading race demo files
+Loading screenshot files
 Loading skin files
+Loading sound files
+Loading…
 Local
 Local + Dummy
-Local Time
 Local only
 Local particle effects
+Local saves
 Local test mode
 Local test mode, no server needed
+Local Time
+Local-only
 Lock delay
+Lock team
+Locked
+Log the network
+Logout of econ
+Logout of rcon
+Long press on a touch button to select it.
+Low to high
+Main Asset
+Main menu
+Make dummy fire
+Make dummy hook
+Make dummy jump
 Make sure the backend supports OpenAI-compatible thinking parameters
+Makes you a ninja
+Makes you live frozen
+Makes you move 1 tile down
+Makes you move 1 tile left
+Makes you move 1 tile right
+Makes you move 1 tile up
+Makes you super
+Manual
 Manual concurrency: %d
+Manual source file
+Map
+Map browser color
+Map browser opacity
 Map danger border
+Map Preview
 Map progress bar
+Map Progress: %.1f%%
+Map Progress: --
+Map size
+Map sound volume
+Map type:
+Mark demo
+Mark the beginning of a cut (right click to reset)
+Mark the beginning of a demo cut
+Mark the end of a cut (right click to reset)
+Mark the end of a demo cut
+Markers
+Match %d of %d
 Matched with callable peer
+Max CSVs
+Max demos
+Max Screenshots
 Max size
 Max visible notifications
 Maximum rows
+may cause delay
 Memory
 Mention
 Menu background
+Menu opened. Press Esc key again to close menu.
 Menu option - normal
 Menu option - selected
 Message to send in chat:
+Messages
 Messages that already look like the target language will skip auto-translate
 Microphone
 Microphone permission denied by system
@@ -512,60 +1183,136 @@ Microphone volume
 Milliseconds
 Min size
 Minimize module
+Minimize the client
 Minimum match chars
 Minimum time
 Minutes
 Misc
+Miscellaneous
 Mixed
+Mode
 Model
 Moderate
+Moderator alert
 Modified
+Modules snap to screen edges, center lines and other HUD modules while dragging
+MOTD
+Mouse
+Move dummy left
+Move dummy right
 Move Echo and important system prompts to right-side popups
+Move left
+Move player to spectators
+Move right
+Move to category
+Moved ingame
+Movement
+Moves to the point with x/y-coordinates ii
+Moves to the tile with x/y-number ii
+Multi-View
+Mute
 Mute death/respawn sounds
+Mute emoticons
 Mute hammer sounds
 Mute jump sounds
 Mute microphone
+Mute player
+Mute player with client ID
+Mute player with IP address
+Mute when not active
 Mute:
 Muted
+my_%s
+n = Prediction latency
+NA
 Name
+Name Plate
+Name plates offset
+Name plates size
 Name:
 Name: %s
 Need to have started the map to swap with a player.
 Negative stability buffer (for Gores)
+Net
+Netversion
+New button
 New IME
+New name:
+New preset name
+New random timeout code
 New UI
+News
 Next
+Next page in console
+Next weapon
+Nickname
 No
+No active QmClient reports yet
 No animation
+No answer from server yet.
+No assets
+No assets available for composition.
+No assets found.
 No audio issues detected
+No audio slots found.
+No buttons match your filter criteria
 No callable peer found
+No candidate file selected.
 No changes since last save
+No chat log selected
 No chat message available to repeat
 No chat message to translate
+No controller found. Plug in a controller.
+No corresponding vote option found
+No demo is being recorded
+No demo selected
+No demo with this filename exists
 No director players available
 No empty team left.
 No favorite maps yet
 No input device available
 No items to write
 No local saves file found (ddnet-saves.txt)
+No local servers found (ports %d-%d)
+No login required
+No matching assets.
 No matching features found. Try other keywords
 No more blocking entity layers in the world of TeeWorlds
 No noise reduction
 No obvious anomaly
 No output device available
+No password
 No peer
+No player nearby
 No player with this name found.
+No presets yet
+No preview
+No results
 No safe position found
 No saved profiles available yet. Save one first.
+No screenshot selected
+No server selected
+No servers found
+No servers match your filter criteria
+No skins match your filter criteria
+No space for button
 No status bar items
+No unfinished maps available
 Noise reduction mode
 None
 Normal
+Normal Color
+Normal message
+NOT CONNECTED
 Not connected to a game server
 Not connected to server
+Not downloaded
 Not enabled
+Not in the current browser list
 Not open, check input device or mic permission
 Not open, check output device
+Note
+Nothing hookable
 Notification background
 Notification hold time
 Notification text size
@@ -574,41 +1321,69 @@ Notify when friends come online
 Notify when only one tee is still alive:
 Novice
 Numeric-only messages will be skipped
+o = Send rate
 Off
 Official community links
+Offline
 Ohhhhhhhhhhhhhhhh
 Ok
 Oldschool
+On
 Online Players
+Only .wv files are supported right now.
 Only Apple Can Do
+Only save improvements
 Only show after joining a team
 Only show outlines in the entities layer
 Only show when the other Tee is not on screen
 Only what you can't imagine, nothing Dream can't do
 Only what you can't imagine, nothing Dream can't do!
 Opacity
+Opacity of freeze bars inside freeze
+Open bindwheel selector
 Open color picker
+Open emote selector
+Open pie menu
+Open rename dialog
+Open spectator mode selector
+Open the directory that contains the configuration and user files
+Open the directory to add custom assets
+Open the directory to add custom skins
+Open the directory to add custom themes
+Open the folder containing demo files
+Open the folder containing screenshots
+Open the saves file
+Open the settings file
 OpenAI
 OpenAI API key
 Opened
+Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 Optimistic prediction along stable direction
 Option color
 Other
+Outgoing language
 Outline opacity
 Output device
 Output device not found
 Output device open failed
 Output device open failed, try reconnecting speakers/headphones or reselecting output device
 Output switch
+Overlay entities
 Override
 Override Entry
 Override Group
 Override Selected
 Overview cards show a lightweight guide to the client and page structure
 Overwrite clan even if empty
+p = Ping latency
+Pack name
 Page guide
 Panel opacity
+Parent Folder
 Parsing voice server address
+Part color updated.
+Part reset to default asset.
+Part updated.
 Particle alpha
 Particle collision
 Particle color
@@ -620,22 +1395,42 @@ Particle speed
 Particle trail
 Particle twinkle
 Particle type
+Particles
+Password
+Password incorrect
+Pause
+Pause the current demo
+Pause/unpause game
+Personal best:
+Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status
 Pet
-Pet Skin:
 Pet alpha
 Pet size
+Pet Skin:
+Pick result: %s
 Pickup range
+Pie menu
 Pie Menu
+Ping
+Ping the current server
+Pistol
 Play a slide-in rotation animation when switching weapons
+Play back a demo
+Play background music
+Play the current demo
 Play/Pause
+Play/pause the current demo
 Playback volume
-Player Stats
+Player
 Player already invited
+Player country:
 Player data
 Player indicator
 Player is on a different team
+Player name:
 Player not found
 Player range
+Player Stats
 Player stats and info display
 Players
 Players are not allowed to chat from VPNs at this time
@@ -643,109 +1438,276 @@ Players can collide on this server
 Players can hook each other on this server
 Players can't collide on this server
 Players can't hook each other on this server
+Please add a valid cut first
+Please balance teams!
+Please enable finished indicator first
 Please enable voice first
+Please enter your nickname below.
+Please save your changes before duplicating a button.
 Please use %s as friend name
+Please use a different filename
+Please wait…
+Points
 Popup animation
 Position jump hint
+Position jump tip
+Position:
 Practice mode can't be enabled in team 0 mode.
 Practice mode can't be enabled while team save or load is in progress
 Practice mode enabled for your team, happy practicing!
 Practice mode is disabled
+Predict events (experimental)
 Predicted ghost opacity
 Prediction
-Prediction Margin
 Prediction jitter is obvious, latency changes are large
 Prediction latency is elevated, prediction path pressure is high
 Prediction margin
+Prediction Margin
 Prediction time
 Preparing demo playback
+Preset bar
+Press a key…
+Press Esc to exit the HUD editor
+Prev. weapon
+Preview
+Preview 'Hook collisions' being pressed
+Preview built with %d skipped slot(s).
+Preview button visibility while the editor is active.
+Preview dummy nameplate
+Preview import file
+Preview player nameplate
+Preview selected file
 Previous
+Previous page in console
+Print command executed by this keybinding or all binds
+Print command executed by this name or all chat binds
+Privately messages someone's current time in this current running race (your time by default)
+Privately shows you your current time in this current running race in the broadcast message
 Profiles
 Profiles file
 Progress bar color
 Progress bar height
 Progress bar width
+Publicly messages everyone your current time in this current running race
 Pulse
 Pulse amplitude
 Pulse speed
 Pulse strength
 Push radius
 Push strength
+Push-to-talk for voice chat
+Puts you into deep freeze
+Puts you into freeze
+Puts you into solo part
+Puts you out of deep freeze
+Puts you out of freeze
+Puts you out of live freeze
+Puts you out of solo part
 Pyramid
-QQ group: 1076765929 (click to copy)
+q = Connection quality
+Qm
+qm_profile_queue: index must be between 1 and %d
 QmClient
+QmClient chat log
 QmClient Community
-QmClient Settings
+QmClient online distribution
 QmClient overview
+QmClient Settings
+QQ group: 1076765929 (click to copy)
+Quads are used for background decoration
+Queue is empty
+Queue is full
 Quick action menu for players
 Quickly locate feature modules
+Quit
+Quit the client
 Quitting. Please wait…
-RNNoise noise reduction
-RNNoise noise reduction (unavailable in this build)
-RNNoise noise reduction strength
-RNNoise not integrated in current build, will fallback to simple noise reduction
+r = Race time
 Race
 Rainbow
-Rainbow Tees
 Rainbow hook
 Rainbow name
 Rainbow others
 Rainbow speed
+Rainbow Tees
 Rainbow weapons
 Random
 Random emoticon
+Random map
+Random pick
+Random unfinished map
+Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
+Ratio
 Reason
+Reason:
+Rebinds the client's listening address and port
 Receive
 Receiving
+Reconnect in %d sec
+Record demo
+Record to a file
 Red
+Red team
+Red team wins!
 Refresh
 Refresh interval
+Refresh Rate
 Regex
 Region
+Regular background color
 Regular expression
+Relative path
+Reload
+Reload the announcements
+Reload the censorlist
+Reload the map
+Reload the map while preserving the state of tees and teams
+Reload the maplist
+Reloaded images.
+Reloaded images. %d slot(s) fell back to main asset.
+Remote console
 Remote particle effects
-Remove Bind
-Remove Item
-Remove War Group
+Remove
 Remove [group] [clan]:
 Remove [group] [name]:
+Remove a bind from the bindwheel
+Remove a chat bind
+Remove a clan war entry
+Remove a community from the exclusion filter
+Remove a community from the favorites
+Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
+Remove a foe
+Remove a friend
+Remove a friend category
+Remove a map from favorites
+Remove a name war entry
+Remove a rcon key
+Remove a server from favorites
+Remove a skin from the favorites
+Remove a type from the exclusion filter for a specific community
+remove a voting option
+Remove Bind
+Remove chat
+Remove friend
 Remove from favorites
+Remove from queue
+Remove Item
 Remove prediction & antiping in freeze
+Remove right to vote from player with client ID
+Remove right to vote from player with IP address
 Remove team clan:
 Remove team name:
 Remove war clan:
+Remove War Group
 Remove war name:
+Removes all bindwheel binds
+Removes all chat binds
+Removes all weapons from you
+Removes endless hook from you
+Removes infinite jump from you
+Removes ninja from you
+Removes super from you
+Removes the grenade launcher from you
+Removes the jetpack from you
+Removes the laser from you
+Removes the shotgun from you
+removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
 Rename
+Rename a friend category
+Rename demo
+Rename folder
 Rename queue
+Rename screenshot
+Rename: %s
 Render all custom colored feet as white feet skin
+Render complete
+Render cut to video
+Render demo
 Render ghosts as circles
 Render tiny tees instead of circles
+Renderer
+Renders your frame rate in the top right
+Repeat message
+Repeat the latest chat message
 Replace mode
 Replace non-friend names with ID
 Replace non-friend skins with default
+Replace video
 Replacement chars
+Replay
+Replay feature is disabled!
+Reply
 Reply with dummy
+Request to swap your tee with another team member
+Requesting to join the game
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 Rescue mode switched to %s
+Rescue to a nearby air tile
+Rescue/Freeze: %d/%d
 Resend signs detected, connection quality is suspicious
 Reset
+Reset a config to its default value
+Reset All
+Reset all drawings on the background
+Reset all or one tuning variable to default
+Reset column widths
+Reset controls
+Reset default
+Reset dummy
+Reset filter
+Reset layout
 Reset position of mouse when opening bindwheel
 Reset stats when joining a server
+Reset to defaults
+Reset zone tuning in zone x or in all zones
+Restart
+Restart in x seconds (0 = abort)
+Restart the client
 Restarting. Please wait…
+Rifle Laser Inner Color
+Rifle Laser Outline Color
 Right jump
+Right-click to disable auto-translate
+Right-click to enable auto-translate
 Ring
+RNNoise noise reduction
+RNNoise noise reduction (unavailable in this build)
+RNNoise noise reduction strength
+RNNoise not integrated in current build, will fallback to simple noise reduction
 Rollback rate
 Room
 Room password
-Rotate with cursor
-Rotate with cursor like gun
+Rotate all maps
+Round
+Round %d/%d
 Rounded caps
 Route Echo messages to notifications
 Route server system prompts to notifications (except blacklist)
 Run chai script
-SMTC
+Run on join
+Run server
+SA
+Same as "vote no"
+Same clan color in scoreboard
+Sat.
 Save
+Save a replay of the last defined amount of seconds
+Save all changes before switching selected button?
+Save all changes before turning off the editor?
+Save asset before closing?
+Save banlist in a file
+Save changes
+Save current
+Save current queue as a new preset
+Save drawings to a given csv file (defaults to map name)
 Save failed!
+Save ghost
+Save last %d min
+Save power by lowering refresh rate (higher input latency)
+Save skin
+Save team with code r.
+Save the best demo of each race
+Save unsent chat draft
 Save-function is disabled on this server
 Save/Load Clan
 Save/Load Colors
@@ -753,93 +1715,228 @@ Save/Load Emote
 Save/Load Flag
 Save/Load Name
 Save/Load Skin
+Saves file
+Say in chat
+Say in chat as dummy
+Say in team chat
+Say in team chat as dummy
+Score
+Score limit
+Scoreboard
+Scoreboard color
+Scoreboard cursor
+Scoreboard opacity
 Scoreboard point check
 Scores are private on this server
 Scores are public on this server
+Screen
 Screen center line color
 Screen center line width
+Screenshot
+Screenshots
+Screenshots directory
 Search
+Search donor asset
+Search main asset
+Searching
 Seconds
 SecretId
 SecretKey
 See how much you act
+Select all chat
+Select button by touch
+Select export
+Selected %d
+Selected button not visible
+Selected candidate
+Selected candidate %d/%d under cursor.
+Selected pack
+Selected server
 Selected timertype is not supported by your client
+Selection
 Self
 Self only
 Send
 Send & Receive
+Send /load as dummy
+Send /lock as dummy
+Send /pause as dummy
+Send /rescue as dummy
+Send /save as dummy
+Send /spec as dummy
+Send /team as dummy
+Send a moderator alert message to player
+Send a server alert message to all players
 Send emoticon in water
 Send probability
 Send source language
+Send specified command to rcon
 Send target language
 Send translation method
 Sending and receiving
 Sending initial client info
 Sending locally, suggest the other party unmute or confirm they can receive
 Sending, waiting for peer echo
+Sends a command to the antibot
 Separate with commas
 Server
-Server IP
-Server RTT is elevated, response path is unstable
+Server address:
+Server alert
+Server best:
+Server could not be started
+Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
 Server does not allow voting to kick players
 Server does not allow voting to move players to spectators
+Server executable not found, can't run server
+Server filter
+Server info
+Server IP
 Server kick/spec votes are no longer actively moderated.
 Server kick/spec votes will now be actively moderated.
+Server not full
 Server rollback
+Server RTT is elevated, response path is unstable
+Set a voice server to enable QmClient distribution
+Set all to Rifle
+Set camera position relative to current view in the map
+Set camera position to x and y in the map
 Set color
+Set current demo speed
+Set ddrace team for a player
+Set force-pause timer of i to 0.
+Set friend category
+Set friend note
+Set microphone mute state (0=on, 1=mute)
+Set team for a player (spectators = -1, game = 0)
+Set team for all players (spectators = -1, game = 0)
+Set timeout protection code s
+Set voice input device
+Set voice output device
+Set your checkpoints based on another player
+Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided
+Sets your tee's eye emote
 Settings
+Settings file
 Severe
+Shape
+Shotgun
+Shotgun Laser Inner Color
+Shotgun Laser Outline Color
 Show %s group
-Show Coordinates
-Show Qm badge
-Show Tee, map, and weapon interaction hitboxes
-Show X
-Show Y
+Show all
+Show all buttons
 Show all enabled outlines
+Show all votes (page 0 by default, 20 entries per page)
 Show all warlist groups
 Show any enabled Indicators
+Show background quads
+Show banlist (page 1 by default, 20 entries per page)
 Show blocked words in console
-Show chat bubbles above Tees
+Show chat
 Show chat bubbles above players
+Show chat bubbles above Tees
 Show chat messages above players
+Show clan above name plates
 Show clan if war
+Show client IDs (scoreboard, chat, spectating)
+Show client IDs in name plates
+Show client IDs on a separate line
 Show collision and weapon interaction
 Show colors in spectator selection
 Show compact vote HUD
+Show Coordinates
 Show coordinates above players
 Show coordinates of yourself and others
 Show country flags in nameplates
+Show DDNet map finishes in server browser
+Show DDRace HUD
+Show Directory
 Show dotted map route debug
+Show dummy actions
+Show dummy control status
+Show dummy sync status
+Show entities
+Show finish messages
+Show FPS
+Show freeze bars
+Show friend icon in name plates
+Show friends only
+Show ghost
 Show grenade and laser trajectory preview
+Show Grid
+Show hammer status
+Show health, shields and ammo
 Show hitbox mode
+Show Hook Collision
+Show hook strength icon indicator
+Show hook strength number indicator
+Show HUD
+Show info about the map with name r gives (current map by default)
+Show information about this server
+Show ingame HUD
 Show inputs
+Show IP addresses in rcon commands (1 = on, 0 = off)
+Show jumps indicator
 Show katan on frozen players
+Show key stuck status
+Show kill messages
 Show labels on status bar items
+Show list of mutes (page 1 by default, 20 entries per page)
+Show list of vote mutes (page 1 by default, 20 entries per page)
+Show local time always
+Show logs of the last i seconds
 Show moving tiles in entities
+Show name plates
+Show names in chat in team colors
+Show number of spectators
 Show on key
+Show only chat messages from friends
+Show only chat messages from team members
 Show only freeze Players
 Show other players' coordinates
+Show other players' hook collision lines
 Show other tees' trails
+Show others
+Show others (own team only)
 Show outdated version warning
 Show own coordinates
+Show own player's hook collision line
 Show ping colored circle in nameplates
+Show player position
+Show player speed
 Show player stats HUD
+Show player target angle
+Show players' key presses
 Show position and angle (mini debug)
+Show Qm badge
+Show score
+Show scoreboard
 Show seconds on clock
 Show skin names in nameplate
 Show song info in top-left corner
+Show spectator cursor
 Show sponsor QR code
+Show stats
 Show status bar
 Show team
 Show tee status bar
+Show Tee, map, and weapon interaction hitboxes
+Show text entities
 Show the cursor while free spectating
 Show the number of frozen tees
 Show the number of tees still alive
 Show the pet
 Show the screen center line
+Show the server rules
+Show tiles layers from BG map
 Show unpredicted ghosts for other players
 Show voice connection status
+Show votes window after voting
 Show wake-up popup on the other tee
+Show weapon trajectory guide
+Show Workshop Assets
+Show X
+Show Y
 Showing players from other teams is disabled
 Showing the checkpoint times for '%s' with a race time of %s
 Showing the checkpoint times is not allowed on this server.
@@ -850,78 +1947,174 @@ Showing the team rank of other players is not allowed on this server.
 Showing the team top 5 is not allowed on this server.
 Showing the times of others is not allowed on this server.
 Showing the top is not allowed on this server.
+Shows five points of the global point ladder beginning with rank i (1 by default)
+Shows five team ranks of the ladder or of a player beginning with rank i (1 by default, -1 for worst)
+Shows gameplay information for this server
+Shows help to command r, general help if left blank
+Shows the credits of the DDNet mod
+Shows the global points of a player beginning with name r (your rank by default)
+Shows the rank of player with name r (your rank by default)
+Shows the team rank of player with name r (your team rank by default)
+Shows the top ranks of the global and regional ladder beginning with rank i (1 by default, -1 for worst)
 Shrink
 Shrug:
+Shut down
+Silently disconnect from the current server while keeping Tee timeout protection
+Simple
 Simple noise reduction
 Simple noise reduction strength
 Size
+Size of hook strength icon and number indicator
+Size of key press icons
+Skin
+Skin could not be found.
+Skin could not be loaded due to an error. Check the local console for details.
+Skin Database
+Skin is loading.
+Skin prefix
+Skin queue
 Skin transition
 Skin transition duration
 Skin transition type
 Skin: %s
+Skins directory
+Skip the main menu
+Skip Tutorial
 Slide left
+Slow down the demo
 Smaller tees
+Smooth Dynamic Camera
 Smooth fade
+SMTC
 Social
 Solid
 Solid tile outline opacity
 Solo
 Some fonts could not be loaded. Check the local console for details.
+Some map images could not be loaded. Check the local console for details.
+Some map sounds could not be loaded. Check the local console for details.
+Something hookable
+Sound
+Sound error
+Sound volume
+Source file does not exist.
+Source file is empty.
 Speaker
+Specify command accessibility for given access level
 Spectate
+Spectate a player by Id
+Spectate mode
+Spectate next
+Spectate previous
+Spectate teleport
+Spectate the closest player
+Spectate the next player
+Spectate the previous player
+Spectators
 Speech trigger threshold
 Speed
-Speedrun Timer
+Speed up the demo
+Speed:
 Speedrun countdown timer
+Speedrun Timer
 Sphere
 Spin pop
 Sponsor QR code Base64 data is not configured
 Sponsor support
 Sponsors:
+Spree
 Staging memory
 Star
+Start and connect to local server
 Start here to quickly diagnose if the issue is with device, server, or room
 Start holding the hook before loading the savegame to keep the hook
+Start playback of ghosts
+Start recording a demo
+Start recording a video
+Statboard
+Status
 Status Bar
-Status Bar Codes:
-Status Scheme:
 Status bar alpha
+Status Bar Codes:
 Status bar color
 Status bar height
 Status normal, check details below if still experiencing issues
+Status Scheme:
+Stop practice
+Stop record
+Stop recording
+Stop recording a demo
+Stop recording a video
+Stop server
+Stop the current demo
 Streamed memory
 Streamer Mode
+Strict gametype filter
 Strict mode
 Stroke fade time
+Strong Weak Hook
 Sub-Tick aiming
+Successfully saved the replay!
+Sudden Death
+Suicides
+Super
 Support ♥
+Swap
 Swap ghosts with regular players
 Swap is disabled on this server.
 Swap is not available on forced solo servers.
 Switch
+Switch dummy to grenade
+Switch dummy to gun
+Switch dummy to hammer
+Switch dummy to laser
+Switch dummy to next weapon
+Switch dummy to previous weapon
+Switch dummy to shotgun
 Switch failed
+Switch interval
 Switch opacity
+Switch spectator mode
+Switch team
+Switch to grenade
+Switch to gun
+Switch to hammer
+Switch to laser
+Switch to next weapon
+Switch to previous weapon
+Switch to shotgun
+Switch weapon on pickup
+Switch weapon when out of ammo
 Switched to
 Switching
 Switching back to default input
 Switching back to default output
+Sync Workshop Assets
+System
 System default
 System media control
+System message
 System prompt text
-TClient
-TClient Developers
-TClient Links
 Tags
+Take a screenshot
 Taper trail width
 Target language
 Target language ratio
+TClient
+TClient Developers
+TClient Links
+Team
+Team %d
+Team %d (%d/%d)
 Team can't be loaded while in team 0 mode
 Team can't be loaded while practice is enabled
 Team can't be loaded while racing
 Team can't be saved while a dragger is active
 Team can't be saved while in team 0 mode
+Team chat
 Team is already in practice mode
 Team load already in progress
+Team message
 Team mode can't be changed while racing
 Team mode change disabled
 Team mode change is disabled on this server.
@@ -931,17 +2124,20 @@ Team save in progress. You'll be able to load with '/load %s'
 Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails
 Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue
 Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue
+Teams
 Teams are available on this server; if the team is locked, any team member dying will kill the whole team
 Teams are disabled
 Teams are not available on this server; if the team is locked, any team member dying will kill the whole team
 Tee
-Tee Trails
+Tee 0.7
 Tee hitbox
 Tee hitbox color
 Tee size
 Tee status bar
 Tee trail color
+Tee Trails
 Tele
+Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart
 Teleport grenade disabled
 Teleport grenade enabled
 Teleport gun disabled
@@ -949,29 +2145,56 @@ Teleport gun enabled
 Teleport laser disabled
 Teleport laser enabled
 Teleport opacity
+Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)
+Teleport yourself to player or to where you are spectating/or looking if no player name is given
+Teleport yourself to the last auto rescue position before you died (use sv_rescue 1 to enable this feature)
+Teleport yourself to the last location you teleported to
+Teleport yourself to the specified coordinates. A tilde (~) can be used to denote your current position, e.g. '/tpxy ~1 ~' to teleport one tile to the right
+Teleports player i (or you) to player i (or you to where you look at)
+Teleports you to checkpoint teleporter i
+Teleports you to teleporter i
+Temporarily set a config value while pressed
 Temporary free camera
 Tencent Cloud
 Tencent Cloud SecretId
 Tencent Cloud SecretKey
+Text
 Text alpha
 Text color
 Texture memory
 Thank you for your company and trust. This is what gives me the courage to keep going.
 Thanks for supporting QmClient
+The audio device couldn't be initialised.
+The best voice chat, of course!
 The Config tab reuses QmClient's client config browser
+The force pause timer is now over, you can exit with /spec
+The format of texture %s is not RGBA which will cause visual bugs.
 The Functions tab contains tools, automation, and gameplay helpers
 The HUD tab collects overlays, counters, voice display, and top components
+The name "default" is reserved.
+The selected button is not visible. Do you want to deselect it or edit its visibility?
+The selected button is overlapping with other buttons.
+The selected part stays highlighted while you adjust its color.
+The server is running a non-standard tuning on a pure game type.
 The Visuals tab contains appearance and rendering options
-The best voice chat, of course!
-The force pause timer is now over, you can exit with /spec
+The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
+Theme
+Themes directory
+There are unsaved changes in the touch controls editor. Saving first is recommended.
 There is no checkpoint teleporter with that index on the map.
 There is no teleporter with that index on the map.
+There is not enough space available for the button. Check its visibilities and size.
+There is not enough space available to place another button.
 There is nowhere to go back to.
 There's a %s second delay between map-votes, please wait %s seconds.
 There's a %s second wait time between kick votes for each player please wait %s second(s)
+There's an unsaved change in the touch controls editor, you might want to save it.
+There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
 This ID is not connected
+This name cannot be used for files and folders
 This server has an initial chat delay, you will be able to talk in %s seconds.
+This skin name cannot be used.
 This team already has the maximum allowed size of %s players
 This team can't be locked
 This team can't have the mode changed
@@ -981,71 +2204,187 @@ This team is locked using /lock. Only members of the team can invite you or unlo
 This team is locked using /lock. Only members of the team can unlock it using /lock.
 This team started already
 This team was disbanded because there are more players than allowed in the team.
+tile
 Tile outlines
+Time
+TIME EXPIRED!
+Time limit
+Time limit: %d min
 Time to wait before changing team: %s
 Timer is displayed in %s
 Timer isn't displayed.
 Tiny Tee Size
 To save all players in your team have to be alive and not in '/spec'
+Toggle auto camera
+Toggle between game scene preview and raw texture
+Toggle config value
+Toggle config value via keypress
+Toggle Do Not Disturb (no chat and server messages)
+Toggle dummy
+Toggle dyncam
+Toggle fast practice mode
+Toggle ghost
 Toggle ghost key
+Toggle keyboard shortcuts
+Toggle local console
+Toggle microphone mute
+Toggle or set the switch on or off for the specified time (or indefinitely by default)
+Toggle receiving whispers
+Toggle remote console
+Toggle scoreboard cursor
+Toggle team between team 0 and team mode. This mode will make your team behave like team 0.
+Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock
+Toggle tune variable
+Toggles collision
+Toggles hit others
+Toggles hook collision
+Toggles invincible mode
+Toggles pause
+Toggles pause on the currently voted player
+Toggles spec (if not available behaves as /pause)
+Toggles spec on the currently voted player
+Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status
 Too many translation tasks
+Total
+Traditional
 Trail alpha
 Trail length
 Trail width
 Translate
-Translate ID:
 Translate button
+Translate ID:
+Translate last message (of a given name)
+Translate last message of the person with this id
 Translate only when needed
 Translate:
+Translated text hidden due to streamer mode
 Translating to %s...
 Translation backend invalid, sending original
 Translation queue full, sending original
 Translation service
+Translation Settings
+transmits your player name to info.ddnet.org
 Troubleshooting suggestions
+Try again
 Try reselecting input device, confirm default mic or headset mic is online
 Try reselecting output device, confirm headphones/speakers are online
+Try to predict other entities to reduce lag feeling at high latency
 Try toggling voice or reconnecting to server
 Trying Axiom auto login
 Trying Axiom dummy auto login
+Trying to determine UDP connectivity…
+Tune in zone a variable to value
 Tune layer opacity
+Tune variable to value
+Tune variable to value or show current value
+Tutorial
 Twinkle strength
+Type
+Type switch vote started automatically
+Types
+u = Snapshot latency
+UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
+UDP seems to be filtered.
 UDP socket not open
+UI Color
+UI controller sens.
+UI mouse sens.
+UI opacity
 UI scale
+Unable to delete %d selected items. The first failing item was '%s'.
+Unable to delete skin
+Unable to delete the demo '%s'
+Unable to delete the folder '%s'. Make sure it's empty first.
+Unable to delete the screenshot '%s'
+Unable to open the screenshot file
+Unable to rename the demo
+Unable to rename the folder
+Unable to rename the screenshot
+Unable to save the skin
+Unable to save the skin with a reserved name
+Unban a certain nickname
+Unban all entries
+Unban ip range
+Unban ip/banlist entry
+Unbind all keys
+Unbind key
 Uncertainty duration
 Unclassified audio issue
+Unfinished map
+Unfinished map count: %d
+Unfinished map data is refreshing, please try again later
+Unfinished map data not fetched
+Unfinished map data refreshing
+Unfinished maps
 Unflip:
 Unfreeze
 Unfreeze automation helpers
 Unfreeze opacity
+Uninvite player from team
 Unknown
 Unknown argument. Check '/rescuemode list'
 Unknown emote... Say /emote
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
+Unlock a team
+Unmute
+Unmute emoticons
+Unmute player with client ID
+Unmute player with IP address
+Unmute player with list index
 Unmute:
 Unpredicted ghost opacity
+Unregister protocol and file extensions
+Unsaved changes
 Update
+Update a rcon key
+Update a rcon key with prehashed data
 Update failed. Please try again
 Update finished. Please restart the client
 Update finished. Restarting...
 Update notice
+Update or add a specific war group
 Updating feature list...
+Uploading map data to GPU
+Usage: %s %s
 Use 12 hour clock
 Use colored skins for frozen tees
+Use current map as background
 Use custom skins instead of the ninja tee
 Use default flags on scoreboard
 Use default input
 Use default output
+Use default voice input device
+Use default voice output device
 Use embedded HUD progress bar
+Use emote
+Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 Use multi-char replacement based on word length
 Use new smoothing algorithm
+Use old chat style
 Use original style
+Use sounds
+Use team colors for name plates
+Use the mouse wheel on a hovered module to scale it by 5%
 Use the top tabs to browse QmClient features by category
+Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
+Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 Use warlist colors instead of regular colors
 Use warlist groups for indicator
+v = Velocity
+V-Sync
+Vanilla skins only
+Version
 Vertical position
+Video Background
+Video name:
+Video was saved to '%s'
+Videos directory
 View latest updates
 View margin
+View switch found (at offset) with given number
+View tele found (at offset) with given number
+Visibility
 Visual
 Visual: Effects
 Visual: Font & Cursor
@@ -1054,9 +2393,18 @@ Visuals
 Voice
 Voice activation release delay
 Voice bitrate
+Voice chat
 Voice distance radius (tiles)
+Vote a map by name
+Vote command:
+Vote description:
+Vote no
+Vote started automatically
+Vote yes
+Vote yes/no
 Voting
 Wait for current vote to end before calling a new one.
+Waiting for snapshot
 Waiting to open
 Waiting to open input device
 Waiting to open output device
@@ -1064,28 +2412,53 @@ War Entries
 War Groups
 War List
 Warlist
+Warmup
 Warning
-Weapon Trajectory
+Weapon
 Weapon animation
 Weapon interaction range
 Weapon range color
 Weapon switch animation
+Weapon Trajectory
+Weapon trajectory
+Weapons
 Website
-What kind of Gores do you want to run?
+Welcome to DDNet
 What kind of blockbuster do you want to shoot?
+What kind of Gores do you want to run?
 What kind of laser do you want?
 What kind of life do you want to run?
 What's done is done, no use saying more
 Wheel animate
+When you cross the start line, show a ghost tee replicating the movements of your best time
+Whether a switch is deactivated by default (otherwise activated)
+Whether to show players at any distance (off by default), optional i = 0 for off else for on
+Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only
+Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on
+Whether to use ninja jetpack or not. Makes jetpack look more awesome
+Which message to display on zone enter; use 0 for normal area
+Which message to display on zone leave; use 0 for normal area
 Whisper
+Whisper something to someone (private message)
 Who stuffed OBS in here
 Why are you slowmo replaying to read this?
 Width
+Width and height are required to be within the range from %d to %d.
+Width of others' hook collision line
+Width of your own hook collision line
+Windowed
+Windowed borderless
+Windowed fullscreen
 Word Filter
+Write local console contents to a text file
+Write remote console contents to a text file
 Writing item %d failed
 Written %d items
+Wrong button settings
+x = DDNet CPU% / total CPU%
 X alignment color
 X alignment hint with me
+y = DDNet memory usage
 Yes
 You and other player need to have started the map
 You and the other player must not be paused.
@@ -1142,28 +2515,34 @@ You have to be in a team (from 1-63)
 You have to be in a team to play on this server and all of your team will die if the team is locked
 You have to wait %s seconds until you can swap
 You have unlimited air jumps
+You have unsaved changes.
 You have used practice mode already
 You haven't previously teleported. Use /tp before using this command.
 You lost your jetpack gun
-You may have installed only DDNet.exe. Please use the full QmClient folder.
-You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.
 You must join a team and play with somebody or else you can't play
+You must restart the game for all settings to take effect.
 You must wait %s seconds before making another vote.
 You must wait %s seconds before making your first vote.
+You will be disconnected from the server.
 You will no longer see all tees on this server
 You will not receive any further global chat and server messages
 You will not receive any further whispers
 You will now see all tees on this server, no matter the distance
 You will receive global chat and server messages
 You will receive whispers
+You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 You're the last one!
 Your current race time is %s
 Your current version is outdated. Please update from the QQ group.
 Your favorite map manager
+Your favorite maps appear here
 Your friend %s is online and currently on map %s!
 Your locked team was killed because '%s' %s
+Your movements are not taken into account when calculating the line colors
+Your nickname '%s' is already used (%d points). Do you still want to use it?
 Your profile
+Your skin
 Your swap request timed out %s seconds ago, use /swap again to request
 Your team has been killed because it contains an invalid tee state
 Your team has not started yet
@@ -1171,32 +2550,106 @@ Your team is currently saving
 Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
 Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
+z = Zoom
 Zen Mode
 Zen mode key
 Zhipu AI
 Zhipu API key
-_ or ' ' = blank spacer
-a = View angle
-c = Player position
-d = Prediction latency
-died
-disable
-enable
-f = Frame rate
-i = Receive rate
-j = Latency jitter
-k = Resend loss
-killed themselves
-l = Local time
-n = Prediction latency
-o = Send rate
-p = Ping latency
-q = Connection quality
-qm_profile_queue: index must be between 1 and %d
-r = Race time
-u = Snapshot latency
-v = Velocity
-x = DDNet CPU% / total CPU%
-y = DDNet memory usage
-z = Zoom
+Zoom decrease
+Zoom in
+Zoom increase
+Zoom out
 ⚠️ FTAPI is a free service. Excessive use may cause service suspension.
+⚠️ LibreTranslate API Key not set
+⚠️ LLM API Key not configured
+⚠️ Tencent Cloud API not configured
+[Auto camera]	Active
+[Auto camera]	Disabled
+[Auto camera]	Enabled
+[Auto camera]	Inactive
+[Auto camera]	Unavailable for this player
+[data_version.h]	You may have installed only DDNet.exe. Please use the full QmClient folder.
+[data_version.h]	You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.
+[Demo details]	map not included
+[Demo playback]	Go to Live
+[Demo playback]	Live
+[Demo player duration]	%s min.
+[Demo player duration]	%s sec.
+[Direct touch input]	Active action
+[Direct touch input]	Aim
+[Direct touch input]	Disabled
+[Direct touch input]	Fire
+[Direct touch input]	Hook
+[Graphics error]	A render command failed. Try to update your GPU drivers.
+[Graphics error]	An error during command recording occurred. Try to update your GPU drivers.
+[Graphics error]	Could not initialize the given graphics backend, reverting to the default backend now.
+[Graphics error]	Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
+[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Failed to swap framebuffers. Try to update your GPU drivers.
+[Graphics error]	Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
+[Graphics error]	Submitting the render commands failed. Try to update your GPU drivers.
+[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Hammer Mode]	Normal
+[Hammer Mode]	Rotate with cursor
+[Hammer Mode]	Rotate with cursor like gun
+[Hertz]	Hz
+[Important alert message]	Press Esc or Tab to dismiss…
+[Ingame controller mode]	Absolute
+[Ingame controller mode]	Relative
+[Outlines]	Width
+[Predefined touch button behaviors]	Emoticon
+[Predefined touch button behaviors]	Extra Menu
+[Predefined touch button behaviors]	Ingame Menu
+[Predefined touch button behaviors]	Joystick Action
+[Predefined touch button behaviors]	Joystick Aim
+[Predefined touch button behaviors]	Joystick Fire
+[Predefined touch button behaviors]	Joystick Hook
+[Predefined touch button behaviors]	Spectate
+[Predefined touch button behaviors]	Swap Action
+[Predefined touch button behaviors]	Use Action
+[Show name plates]	All
+[Show name plates]	None
+[Show name plates]	Others
+[Show name plates]	Own
+[Show players' key presses]	All
+[Show players' key presses]	None
+[Show players' key presses]	Others
+[Show players' key presses]	Own
+[skins]	Body
+[skins]	Decoration
+[skins]	Eyes
+[skins]	Feet
+[skins]	Hands
+[skins]	Marking
+[Spectating]	Following %d: %s
+[Spectating]	Following %s
+[Spectating Camera Mode Icon]	AUTO
+[Spectators]	%d others…
+[Start menu]	Play
+[Team and size]	%d\n(%d/%d)
+[Team size]	maximum
+[Team size]	minimum
+[Team status]	allowed
+[Team status]	forbidden
+[Team status]	required
+[Team status]	solo
+[Touch button behavior]	Bind
+[Touch button behavior]	Bind Toggle
+[Touch button behavior]	Predefined
+[Touch button label type]	Icon
+[Touch button label type]	Localized
+[Touch button label type]	Plain
+[Touch button shape]	Circle
+[Touch button shape]	Rectangle
+[Touch button visibilities]	Allow dummy
+[Touch button visibilities]	Demo Player
+[Touch button visibilities]	Dummy connected
+[Touch button visibilities]	Extra Menu
+[Touch button visibilities]	Ingame
+[Touch button visibilities]	Rcon Authed
+[Touch button visibilities]	Vote Active
+[Touch button visibilities]	Zoom Allowed
+[Touch button visibility preview]	Excluded
+[Touch button visibility preview]	Ignore
+[Touch button visibility preview]	Included
+[Translation credits: Add your own name here when you update translations]	English translation by the DDNet Team

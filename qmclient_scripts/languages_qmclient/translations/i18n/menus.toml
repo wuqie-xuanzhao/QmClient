@@ -1,0 +1,2708 @@
+[[message]]
+key = "%s from %s"
+[message.translations]
+simplified_chinese = "%s（来自 %s）"
+
+[[message]]
+key = "(Fetching Update Info)"
+[message.translations]
+simplified_chinese = "(正在获取更新信息)"
+
+[[message]]
+key = "(On Latest)"
+[message.translations]
+simplified_chinese = "(已是最新版本)"
+
+[[message]]
+key = "(Update required)"
+[message.translations]
+simplified_chinese = "（需要更新）"
+
+[[message]]
+key = "1 star"
+[message.translations]
+simplified_chinese = "1 星"
+
+[[message]]
+key = "2 stars"
+[message.translations]
+simplified_chinese = "2 星"
+
+[[message]]
+key = "3 stars"
+[message.translations]
+simplified_chinese = "3 星"
+
+[[message]]
+key = "4 stars"
+[message.translations]
+simplified_chinese = "4 星"
+
+[[message]]
+key = "5 stars"
+[message.translations]
+simplified_chinese = "5 星"
+
+[[message]]
+key = "A Tee"
+[message.translations]
+simplified_chinese = "其他玩家"
+
+[[message]]
+key = "Activate"
+[message.translations]
+simplified_chinese = "启用"
+
+[[message]]
+key = "Activate all"
+[message.translations]
+simplified_chinese = "全部启用"
+
+[[message]]
+key = "Add"
+[message.translations]
+simplified_chinese = "添加"
+
+[[message]]
+key = "Add to queue"
+[message.translations]
+simplified_chinese = "加入队列"
+
+[[message]]
+key = "Added %d missing required slot(s)."
+[message.translations]
+simplified_chinese = "已补充 %d 个缺失的必需槽位。"
+
+[[message]]
+key = "Adjust the opacity of entities belonging to other teams, such as tees and name plates"
+[message.translations]
+simplified_chinese = "调整单人区域或其他队伍中玩家的不透明度"
+
+[[message]]
+key = "Advanced"
+[message.translations]
+simplified_chinese = "高阶"
+
+[[message]]
+key = "Aim bind"
+[message.translations]
+simplified_chinese = "操作轴绑定"
+
+[[message]]
+key = "All stars"
+[message.translations]
+simplified_chinese = "全部星级"
+
+[[message]]
+key = "Allows maps to render with more detail"
+[message.translations]
+simplified_chinese = "允许地图渲染更多细节"
+
+[[message]]
+key = "Alpha"
+[message.translations]
+simplified_chinese = "透明度"
+
+[[message]]
+key = "Always show chat"
+[message.translations]
+simplified_chinese = "始终显示聊天框"
+
+[[message]]
+key = "Always show other players' hook collision lines"
+[message.translations]
+simplified_chinese = "始终显示其他玩家的钩索辅助线"
+
+[[message]]
+key = "Always show own player's hook collision line"
+[message.translations]
+simplified_chinese = "始终显示自己的钩索辅助线"
+
+[[message]]
+key = "And pick one randomly"
+[message.translations]
+simplified_chinese = "并随机抽取一张"
+
+[[message]]
+key = "AntiPing (latency compensation)"
+[message.translations]
+simplified_chinese = "延迟补偿（AntiPing）"
+
+[[message]]
+key = "AntiPing: predict grenade path"
+[message.translations]
+simplified_chinese = "延迟补偿：预测榴弹炮路径"
+
+[[message]]
+key = "AntiPing: predict other players"
+[message.translations]
+simplified_chinese = "延迟补偿：预测其他玩家"
+
+[[message]]
+key = "AntiPing: predict weapons"
+[message.translations]
+simplified_chinese = "延迟补偿：预测武器"
+
+[[message]]
+key = "Applied to %d same-family part(s)."
+[message.translations]
+simplified_chinese = "已应用到 %d 个同族部件。"
+
+[[message]]
+key = "Apply"
+[message.translations]
+simplified_chinese = "应用"
+
+[[message]]
+key = "Apply this preset to the current queue"
+[message.translations]
+simplified_chinese = "一键应用此预设到当前队列"
+
+[[message]]
+key = "Are you sure that you want to delete '%s'?"
+[message.translations]
+simplified_chinese = "你确定要删除'%s'吗？"
+
+[[message]]
+key = "Are you sure that you want to disconnect your dummy?"
+[message.translations]
+simplified_chinese = "确定要断开分身连接吗？"
+
+[[message]]
+key = "Are you sure that you want to disconnect?"
+[message.translations]
+simplified_chinese = "确定要断开连接吗？"
+
+[[message]]
+key = "Are you sure that you want to reset the controls to their defaults?"
+[message.translations]
+simplified_chinese = "确定要将当前的控制恢复至默认设置？"
+
+[[message]]
+key = "Are you sure you want to delete this asset?"
+[message.translations]
+simplified_chinese = "确定要删除此资源吗？"
+
+[[message]]
+key = "Asset with this name already exists."
+[message.translations]
+simplified_chinese = "同名材质已存在。"
+
+[[message]]
+key = "Assets directory"
+[message.translations]
+simplified_chinese = "资源目录"
+
+[[message]]
+key = "Assets editor"
+[message.translations]
+simplified_chinese = "材质编辑器"
+
+[[message]]
+key = "Audio file was exported, but reload failed. Restart sound to apply it."
+[message.translations]
+simplified_chinese = "音频文件已导出，但重新加载失败。请重启声音以应用更改。"
+
+[[message]]
+key = "Audio pack exported."
+[message.translations]
+simplified_chinese = "音频包已导出"
+
+[[message]]
+key = "Audio packs"
+[message.translations]
+simplified_chinese = "音频包"
+
+[[message]]
+key = "Audio slots"
+[message.translations]
+simplified_chinese = "音频槽位"
+
+[[message]]
+key = "Authed name color in scoreboard"
+[message.translations]
+simplified_chinese = "管理权限者名字计分板显示颜色"
+
+[[message]]
+key = "auto"
+[message.translations]
+simplified_chinese = "自动"
+
+[[message]]
+key = "Auto save chat log"
+[message.translations]
+simplified_chinese = "自动保存聊天记录"
+
+[[message]]
+key = "Auto start vote"
+[message.translations]
+simplified_chinese = "自动发起投票"
+
+[[message]]
+key = "Automatically create statboard csv"
+[message.translations]
+simplified_chinese = "自动将统计板导出为 csv 文件"
+
+[[message]]
+key = "Automatically record demos"
+[message.translations]
+simplified_chinese = "自动录制回放"
+
+[[message]]
+key = "Automatically take game over screenshot"
+[message.translations]
+simplified_chinese = "自动对游戏结束画面截图"
+
+[[message]]
+key = "Automatically take statboard screenshot"
+[message.translations]
+simplified_chinese = "自动对统计板截图"
+
+[[message]]
+key = "Axis"
+[message.translations]
+simplified_chinese = "轴"
+
+[[message]]
+key = "Background"
+[message.translations]
+simplified_chinese = "背景"
+
+[[message]]
+key = "Background music volume"
+[message.translations]
+simplified_chinese = "背景音乐音量"
+
+[[message]]
+key = "Basic"
+[message.translations]
+simplified_chinese = "基本"
+
+[[message]]
+key = "Blend mode"
+[message.translations]
+simplified_chinese = "叠加模式"
+
+[[message]]
+key = "Body"
+[message.translations]
+simplified_chinese = "身体"
+
+[[message]]
+key = "Built-in"
+[message.translations]
+simplified_chinese = "内置"
+
+[[message]]
+key = "Calculate unfinished maps for player in certain mode"
+[message.translations]
+simplified_chinese = "计算玩家某个模式下的未完成图"
+
+[[message]]
+key = "Can only drop onto same-size parts."
+[message.translations]
+simplified_chinese = "只能拖放到同尺寸部件上。"
+
+[[message]]
+key = "Can't find a Tutorial server"
+[message.translations]
+simplified_chinese = "无法找到教学服务器"
+
+[[message]]
+key = "Candidate files"
+[message.translations]
+simplified_chinese = "候选文件"
+
+[[message]]
+key = "Change settings"
+[message.translations]
+simplified_chinese = "变更设置"
+
+[[message]]
+key = "Chat background color"
+[message.translations]
+simplified_chinese = "聊天背景色"
+
+[[message]]
+key = "Chat command"
+[message.translations]
+simplified_chinese = "聊天框指令（/）"
+
+[[message]]
+key = "Chat command (e.g. showall 1)"
+[message.translations]
+simplified_chinese = "聊天指令（例如: showall 1）"
+
+[[message]]
+key = "Chat font size"
+[message.translations]
+simplified_chinese = "聊天字体大小"
+
+[[message]]
+key = "Chat log retention days"
+[message.translations]
+simplified_chinese = "聊天记录保留天数"
+
+[[message]]
+key = "Chat sound volume"
+[message.translations]
+simplified_chinese = "聊天提示音量"
+
+[[message]]
+key = "Chat width"
+[message.translations]
+simplified_chinese = "聊天框宽度"
+
+[[message]]
+key = "Choose country flag"
+[message.translations]
+simplified_chinese = "选择国家旗帜"
+
+[[message]]
+key = "Choose default eyes when joining a server"
+[message.translations]
+simplified_chinese = "进入服务器时的默认表情"
+
+[[message]]
+key = "Choose export name first."
+[message.translations]
+simplified_chinese = "请先填写导出名称。"
+
+[[message]]
+key = "Clan color in friends list"
+[message.translations]
+simplified_chinese = "好友列表中战队成员条目颜色"
+
+[[message]]
+key = "Clan plates size"
+[message.translations]
+simplified_chinese = "战队名称大小"
+
+[[message]]
+key = "Classic Easy"
+[message.translations]
+simplified_chinese = "经典 Easy"
+
+[[message]]
+key = "Classic Next"
+[message.translations]
+simplified_chinese = "经典 Next"
+
+[[message]]
+key = "Classic Nut"
+[message.translations]
+simplified_chinese = "经典 Nut"
+
+[[message]]
+key = "Classic Pro"
+[message.translations]
+simplified_chinese = "经典 Pro"
+
+[[message]]
+key = "Click to copy map name"
+[message.translations]
+simplified_chinese = "点击复制地图名"
+
+[[message]]
+key = "Client"
+[message.translations]
+simplified_chinese = "客户端"
+
+[[message]]
+key = "Client IDs size"
+[message.translations]
+simplified_chinese = "客户端 ID 大小"
+
+[[message]]
+key = "Client message"
+[message.translations]
+simplified_chinese = "客户端消息"
+
+[[message]]
+key = "Close"
+[message.translations]
+simplified_chinese = "关闭"
+
+[[message]]
+key = "Colors of the hook collision line, in case of a possible collision with:"
+[message.translations]
+simplified_chinese = "辅助线颜色（当瞄准以下实体物时）："
+
+[[message]]
+key = "Community"
+[message.translations]
+simplified_chinese = "社区"
+
+[[message]]
+key = "Config directory"
+[message.translations]
+simplified_chinese = "配置目录（cfg）"
+
+[[message]]
+key = "Connect dummy"
+[message.translations]
+simplified_chinese = "连接分身"
+
+[[message]]
+key = "Connecting dummy"
+[message.translations]
+simplified_chinese = "正在连接分身"
+
+[[message]]
+key = "Console"
+[message.translations]
+simplified_chinese = "控制台"
+
+[[message]]
+key = "Control dummy"
+[message.translations]
+simplified_chinese = "控制分身"
+
+[[message]]
+key = "Controller"
+[message.translations]
+simplified_chinese = "手柄"
+
+[[message]]
+key = "Controller jitter tolerance"
+[message.translations]
+simplified_chinese = "摇杆死区"
+
+[[message]]
+key = "Converse"
+[message.translations]
+simplified_chinese = "继续私聊"
+
+[[message]]
+key = "Coords size"
+[message.translations]
+simplified_chinese = "坐标大小"
+
+[[message]]
+key = "Copied"
+[message.translations]
+simplified_chinese = "已复制"
+
+[[message]]
+key = "Could not load default touch controls from file. See local console for details."
+[message.translations]
+simplified_chinese = "无法从文件加载默认触控设置。检查本地控制台以获取详情。"
+
+[[message]]
+key = "Could not load touch controls from clipboard. See local console for details."
+[message.translations]
+simplified_chinese = "无法从剪贴板加载触控设置。检查本地控制台以获取详情。"
+
+[[message]]
+key = "Could not load touch controls from file. See local console for details."
+[message.translations]
+simplified_chinese = "无法从文件加载触控设置。检查本地控制台以获取详情。"
+
+[[message]]
+key = "Create a random skin"
+[message.translations]
+simplified_chinese = "随机创造皮肤"
+
+[[message]]
+key = "Credits"
+[message.translations]
+simplified_chinese = "制作名单"
+
+[[message]]
+key = "Current"
+[message.translations]
+simplified_chinese = "当前"
+
+[[message]]
+key = "Current file"
+[message.translations]
+simplified_chinese = "当前文件"
+
+[[message]]
+key = "custom"
+[message.translations]
+simplified_chinese = "自定义"
+
+[[message]]
+key = "Custom colors"
+[message.translations]
+simplified_chinese = "自定义颜色"
+
+[[message]]
+key = "Days"
+[message.translations]
+simplified_chinese = "天"
+
+[[message]]
+key = "DDNet Client needs to be restarted to complete update!"
+[message.translations]
+simplified_chinese = "DDNet 客户端需要重新启动才能完成更新！"
+
+[[message]]
+key = "DDRace HUD"
+[message.translations]
+simplified_chinese = "DDRace HUD"
+
+[[message]]
+key = "Deactivate"
+[message.translations]
+simplified_chinese = "停用"
+
+[[message]]
+key = "Deactivate all"
+[message.translations]
+simplified_chinese = "全部停用"
+
+[[message]]
+key = "Default"
+[message.translations]
+simplified_chinese = "默认"
+
+[[message]]
+key = "default"
+[message.translations]
+simplified_chinese = "默认"
+
+[[message]]
+key = "Default length"
+[message.translations]
+simplified_chinese = "默认时长"
+
+[[message]]
+key = "Default zoom"
+[message.translations]
+simplified_chinese = "默认缩放"
+
+[[message]]
+key = "Delete"
+[message.translations]
+simplified_chinese = "删除"
+
+[[message]]
+key = "Delete skin"
+[message.translations]
+simplified_chinese = "删除皮肤"
+
+[[message]]
+key = "Delete this preset"
+[message.translations]
+simplified_chinese = "删除该预设"
+
+[[message]]
+key = "Demo marker added"
+[message.translations]
+simplified_chinese = "已添加回放标记"
+
+[[message]]
+key = "Desktop fullscreen"
+[message.translations]
+simplified_chinese = "无边框全屏"
+
+[[message]]
+key = "Direction Keys"
+[message.translations]
+simplified_chinese = "方向键"
+
+[[message]]
+key = "Discard"
+[message.translations]
+simplified_chinese = "舍弃更改"
+
+[[message]]
+key = "Disconnect dummy"
+[message.translations]
+simplified_chinese = "断开分身连接"
+
+[[message]]
+key = "Discord"
+[message.translations]
+simplified_chinese = "Discord"
+
+[[message]]
+key = "Donor (drag parts from left)"
+[message.translations]
+simplified_chinese = "来源材质（从左侧拖拽部件）"
+
+[[message]]
+key = "Donor Asset"
+[message.translations]
+simplified_chinese = "来源材质"
+
+[[message]]
+key = "Door Laser Inner Color"
+[message.translations]
+simplified_chinese = "激光门实心颜色"
+
+[[message]]
+key = "Door Laser Outline Color"
+[message.translations]
+simplified_chinese = "激光门外框颜色"
+
+[[message]]
+key = "Download community skins"
+[message.translations]
+simplified_chinese = "下载社区皮肤"
+
+[[message]]
+key = "Download failed"
+[message.translations]
+simplified_chinese = "下载失败"
+
+[[message]]
+key = "Download skins"
+[message.translations]
+simplified_chinese = "下载官方皮肤"
+
+[[message]]
+key = "Download this asset?"
+[message.translations]
+simplified_chinese = "确定要下载此资源吗？"
+
+[[message]]
+key = "Downloaded"
+[message.translations]
+simplified_chinese = "已下载"
+
+[[message]]
+key = "Dragger Inner Color"
+[message.translations]
+simplified_chinese = "光索实心颜色"
+
+[[message]]
+key = "Dragger Outline Color"
+[message.translations]
+simplified_chinese = "光索外框颜色"
+
+[[message]]
+key = "Drop on right canvas to replace one part."
+[message.translations]
+simplified_chinese = "拖到右侧画布可替换一个部件。"
+
+[[message]]
+key = "Dummies are not allowed on this server"
+[message.translations]
+simplified_chinese = "此服务器不允许分身"
+
+[[message]]
+key = "Dummy copy"
+[message.translations]
+simplified_chinese = "分身同步动作"
+
+[[message]]
+key = "Dummy fire"
+[message.translations]
+simplified_chinese = "分身开火"
+
+[[message]]
+key = "Dummy hammer fly"
+[message.translations]
+simplified_chinese = "分身锤飞"
+
+[[message]]
+key = "Dummy hook"
+[message.translations]
+simplified_chinese = "分身钩"
+
+[[message]]
+key = "Dummy jump"
+[message.translations]
+simplified_chinese = "分身跳"
+
+[[message]]
+key = "Dynamic Camera"
+[message.translations]
+simplified_chinese = "动态视野"
+
+[[message]]
+key = "Edit audio pack"
+[message.translations]
+simplified_chinese = "编辑音频包"
+
+[[message]]
+key = "Edit HUD"
+[message.translations]
+simplified_chinese = "编辑 HUD"
+
+[[message]]
+key = "Edit skin texture"
+[message.translations]
+simplified_chinese = "编辑皮肤贴图"
+
+[[message]]
+key = "Edit touch controls"
+[message.translations]
+simplified_chinese = "编辑触控设置"
+
+[[message]]
+key = "Emoticon"
+[message.translations]
+simplified_chinese = "表情"
+
+[[message]]
+key = "Emoticons"
+[message.translations]
+simplified_chinese = "表情"
+
+[[message]]
+key = "Enable controller"
+[message.translations]
+simplified_chinese = "使用手柄"
+
+[[message]]
+key = "Enable game sounds"
+[message.translations]
+simplified_chinese = "启用游戏声音"
+
+[[message]]
+key = "Enable ghost"
+[message.translations]
+simplified_chinese = "启用影子"
+
+[[message]]
+key = "Enable gun sound"
+[message.translations]
+simplified_chinese = "启用手枪声音"
+
+[[message]]
+key = "Enable highlighted chat sound"
+[message.translations]
+simplified_chinese = "启用聊天被提及消息提示音"
+
+[[message]]
+key = "Enable long pain sound (used when shooting in freeze)"
+[message.translations]
+simplified_chinese = "启用冻结呼叫声"
+
+[[message]]
+key = "Enable regular chat sound"
+[message.translations]
+simplified_chinese = "启用聊天消息提示音"
+
+[[message]]
+key = "Enable replays"
+[message.translations]
+simplified_chinese = "启用短时回放"
+
+[[message]]
+key = "Enable server message sound"
+[message.translations]
+simplified_chinese = "启用服务器消息提示音"
+
+[[message]]
+key = "Enable team chat sound"
+[message.translations]
+simplified_chinese = "启用队伍聊天消息提示音"
+
+[[message]]
+key = "Entities"
+[message.translations]
+simplified_chinese = "实体"
+
+[[message]]
+key = "Entities background color"
+[message.translations]
+simplified_chinese = "实体层背景颜色"
+
+[[message]]
+key = "Entity Background Image"
+[message.translations]
+simplified_chinese = "实体层背景图"
+
+[[message]]
+key = "Entity Preview"
+[message.translations]
+simplified_chinese = "实体层预览"
+
+[[message]]
+key = "entity_bg (Workshop)"
+[message.translations]
+simplified_chinese = "entity_bg（Workshop）"
+
+[[message]]
+key = "Error loading touch controls"
+[message.translations]
+simplified_chinese = "加载触控设置错误"
+
+[[message]]
+key = "ESC replay minutes"
+[message.translations]
+simplified_chinese = "ESC 保存回放分钟数"
+
+[[message]]
+key = "Export"
+[message.translations]
+simplified_chinese = "导出"
+
+[[message]]
+key = "Export name contains invalid characters."
+[message.translations]
+simplified_chinese = "导出名称包含无效字符。"
+
+[[message]]
+key = "Export selected file"
+[message.translations]
+simplified_chinese = "导出已选文件"
+
+[[message]]
+key = "Exported to %s"
+[message.translations]
+simplified_chinese = "已导出到 %s"
+
+[[message]]
+key = "Extras"
+[message.translations]
+simplified_chinese = "其他"
+
+[[message]]
+key = "Failed to copy main asset image."
+[message.translations]
+simplified_chinese = "复制主要资源图片失败。"
+
+[[message]]
+key = "Failed to export audio pack file."
+[message.translations]
+simplified_chinese = "导出音频包文件失败"
+
+[[message]]
+key = "Failed to export skin files."
+[message.translations]
+simplified_chinese = "导出皮肤文件失败。"
+
+[[message]]
+key = "Failed to load"
+[message.translations]
+simplified_chinese = "加载失败"
+
+[[message]]
+key = "Failed to load main asset: %s"
+[message.translations]
+simplified_chinese = "加载主材质失败：%s"
+
+[[message]]
+key = "Failed to prepare main asset image."
+[message.translations]
+simplified_chinese = "准备主要资源图片失败。"
+
+[[message]]
+key = "Failed to preview candidate file."
+[message.translations]
+simplified_chinese = "试听候选文件失败。"
+
+[[message]]
+key = "Failed to preview import file."
+[message.translations]
+simplified_chinese = "试听导入文件失败。"
+
+[[message]]
+key = "Failed to write PNG export."
+[message.translations]
+simplified_chinese = "写入 PNG 导出文件失败。"
+
+[[message]]
+key = "Fast practice"
+[message.translations]
+simplified_chinese = "快速练习"
+
+[[message]]
+key = "Fat skins (DDFat)"
+[message.translations]
+simplified_chinese = "胖胖的皮肤（DDFat）"
+
+[[message]]
+key = "Feet"
+[message.translations]
+simplified_chinese = "脚"
+
+[[message]]
+key = "Fire"
+[message.translations]
+simplified_chinese = "开火"
+
+[[message]]
+key = "Force vote"
+[message.translations]
+simplified_chinese = "强制投票"
+
+[[message]]
+key = "Frankenstein (drop parts on right)"
+[message.translations]
+simplified_chinese = "拼合结果（将部件拖放到右侧）"
+
+[[message]]
+key = "Free move"
+[message.translations]
+simplified_chinese = "自由移动"
+
+[[message]]
+key = "Freeze Laser Inner Color"
+[message.translations]
+simplified_chinese = "冻结激光实心颜色"
+
+[[message]]
+key = "Freeze Laser Outline Color"
+[message.translations]
+simplified_chinese = "冻结激光外框颜色"
+
+[[message]]
+key = "Friend color in friends list"
+[message.translations]
+simplified_chinese = "好友列表中好友条目颜色"
+
+[[message]]
+key = "Friend heart"
+[message.translations]
+simplified_chinese = "好友爱心"
+
+[[message]]
+key = "Friend message"
+[message.translations]
+simplified_chinese = "好友消息"
+
+[[message]]
+key = "FSAA samples"
+[message.translations]
+simplified_chinese = "全屏抗锯齿（FSAA）采样倍数"
+
+[[message]]
+key = "Fullscreen"
+[message.translations]
+simplified_chinese = "独占全屏"
+
+[[message]]
+key = "Game info"
+[message.translations]
+simplified_chinese = "游戏信息"
+
+[[message]]
+key = "Game sound volume"
+[message.translations]
+simplified_chinese = "游戏音效音量"
+
+[[message]]
+key = "Gameplay"
+[message.translations]
+simplified_chinese = "游戏玩法"
+
+[[message]]
+key = "Get all map players' skin IDs and auto add to rotate queue"
+[message.translations]
+simplified_chinese = "获取全图玩家皮肤 ID 并自动作为轮换队列"
+
+[[message]]
+key = "Ghosts directory"
+[message.translations]
+simplified_chinese = "影子目录"
+
+[[message]]
+key = "Graphics card"
+[message.translations]
+simplified_chinese = "显卡"
+
+[[message]]
+key = "Grenade"
+[message.translations]
+simplified_chinese = "榴弹炮"
+
+[[message]]
+key = "Hammer"
+[message.translations]
+simplified_chinese = "锤子"
+
+[[message]]
+key = "High Detail"
+[message.translations]
+simplified_chinese = "显示地图细节"
+
+[[message]]
+key = "High to low"
+[message.translations]
+simplified_chinese = "由高到低"
+
+[[message]]
+key = "Highlight Color"
+[message.translations]
+simplified_chinese = "相关信息颜色"
+
+[[message]]
+key = "Highlighted message"
+[message.translations]
+simplified_chinese = "被提及消息"
+
+[[message]]
+key = "Hook"
+[message.translations]
+simplified_chinese = "钩索"
+
+[[message]]
+key = "Hook collision line"
+[message.translations]
+simplified_chinese = "钩索辅助线"
+
+[[message]]
+key = "Hook collision line opacity"
+[message.translations]
+simplified_chinese = "辅助线不透明度"
+
+[[message]]
+key = "Hook Collisions"
+[message.translations]
+simplified_chinese = "瞄准辅助"
+
+[[message]]
+key = "Hook collisions"
+[message.translations]
+simplified_chinese = "钩索辅助线"
+
+[[message]]
+key = "Hook line tip"
+[message.translations]
+simplified_chinese = "辅助线提示（实际可钩中 Tee 的长度）"
+
+[[message]]
+key = "Hook Strength"
+[message.translations]
+simplified_chinese = "钩索强度"
+
+[[message]]
+key = "https://ddnet.org/discord"
+[message.translations]
+simplified_chinese = "https://chat.teeworlds.cn/"
+
+[[message]]
+key = "https://wiki.ddnet.org/"
+[message.translations]
+simplified_chinese = "https://wiki.ddnet.org/wiki/Main_Page/zh"
+
+[[message]]
+key = "HUD"
+[message.translations]
+simplified_chinese = "HUD"
+
+[[message]]
+key = "HUD rainbow colors"
+[message.translations]
+simplified_chinese = "HUD 彩虹色"
+
+[[message]]
+key = "Hue"
+[message.translations]
+simplified_chinese = "色调"
+
+[[message]]
+key = "Info Messages"
+[message.translations]
+simplified_chinese = "消息"
+
+[[message]]
+key = "Ingame controller mode"
+[message.translations]
+simplified_chinese = "游戏内手柄瞄准模式"
+
+[[message]]
+key = "Ingame controller sens."
+[message.translations]
+simplified_chinese = "摇杆灵敏度（游戏）"
+
+[[message]]
+key = "Ingame mouse sens."
+[message.translations]
+simplified_chinese = "鼠标灵敏度（游戏）"
+
+[[message]]
+key = "Intermediate"
+[message.translations]
+simplified_chinese = "中阶"
+
+[[message]]
+key = "Internet (From online source)"
+[message.translations]
+simplified_chinese = "Internet（来源于网络）"
+
+[[message]]
+key = "Join blue"
+[message.translations]
+simplified_chinese = "加入蓝队"
+
+[[message]]
+key = "Join game"
+[message.translations]
+simplified_chinese = "加入游戏"
+
+[[message]]
+key = "Join red"
+[message.translations]
+simplified_chinese = "加入红队"
+
+[[message]]
+key = "Jump"
+[message.translations]
+simplified_chinese = "跳跃"
+
+[[message]]
+key = "Key Presses"
+[message.translations]
+simplified_chinese = "按键显示"
+
+[[message]]
+key = "Kick player"
+[message.translations]
+simplified_chinese = "踢出玩家"
+
+[[message]]
+key = "Kill"
+[message.translations]
+simplified_chinese = "自杀"
+
+[[message]]
+key = "Laser"
+[message.translations]
+simplified_chinese = "激光"
+
+[[message]]
+key = "Learn"
+[message.translations]
+simplified_chinese = "教程 Wiki"
+
+[[message]]
+key = "Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets."
+[message.translations]
+simplified_chinese = "左键点击右侧部件可调色，拖拽可替换部件，右键可重置。"
+
+[[message]]
+key = "Lht."
+[message.translations]
+simplified_chinese = "亮度"
+
+[[message]]
+key = "Loading assets..."
+[message.translations]
+simplified_chinese = "正在加载资源..."
+
+[[message]]
+key = "Loading ghost files"
+[message.translations]
+simplified_chinese = "正在加载影子文件"
+
+[[message]]
+key = "Loading…"
+[message.translations]
+simplified_chinese = "正在加载…"
+
+[[message]]
+key = "Local-only"
+[message.translations]
+simplified_chinese = "仅本地资源"
+
+[[message]]
+key = "Lock team"
+[message.translations]
+simplified_chinese = "锁定队伍"
+
+[[message]]
+key = "Low to high"
+[message.translations]
+simplified_chinese = "由低到高"
+
+[[message]]
+key = "Main Asset"
+[message.translations]
+simplified_chinese = "主材质"
+
+[[message]]
+key = "Manual source file"
+[message.translations]
+simplified_chinese = "手动源文件"
+
+[[message]]
+key = "Map browser color"
+[message.translations]
+simplified_chinese = "地图浏览器颜色"
+
+[[message]]
+key = "Map browser opacity"
+[message.translations]
+simplified_chinese = "地图浏览器不透明度"
+
+[[message]]
+key = "Map Preview"
+[message.translations]
+simplified_chinese = "地图预览"
+
+[[message]]
+key = "Map sound volume"
+[message.translations]
+simplified_chinese = "地图音效音量"
+
+[[message]]
+key = "Map type:"
+[message.translations]
+simplified_chinese = "地图类型:"
+
+[[message]]
+key = "Mark demo"
+[message.translations]
+simplified_chinese = "标记回放"
+
+[[message]]
+key = "Max CSVs"
+[message.translations]
+simplified_chinese = "最大 CSV 数"
+
+[[message]]
+key = "Max demos"
+[message.translations]
+simplified_chinese = "最大回放数"
+
+[[message]]
+key = "Max Screenshots"
+[message.translations]
+simplified_chinese = "最大截图数"
+
+[[message]]
+key = "may cause delay"
+[message.translations]
+simplified_chinese = "可能会产生延迟"
+
+[[message]]
+key = "Menu opened. Press Esc key again to close menu."
+[message.translations]
+simplified_chinese = "菜单已打开，再次点击 Esc 以关闭"
+
+[[message]]
+key = "Miscellaneous"
+[message.translations]
+simplified_chinese = "杂项"
+
+[[message]]
+key = "Mode"
+[message.translations]
+simplified_chinese = "模式"
+
+[[message]]
+key = "MOTD"
+[message.translations]
+simplified_chinese = "公告"
+
+[[message]]
+key = "Mouse"
+[message.translations]
+simplified_chinese = "鼠标"
+
+[[message]]
+key = "Move left"
+[message.translations]
+simplified_chinese = "向左移动"
+
+[[message]]
+key = "Move player to spectators"
+[message.translations]
+simplified_chinese = "将玩家移至旁观位"
+
+[[message]]
+key = "Move right"
+[message.translations]
+simplified_chinese = "向右移动"
+
+[[message]]
+key = "Movement"
+[message.translations]
+simplified_chinese = "移动"
+
+[[message]]
+key = "Mute when not active"
+[message.translations]
+simplified_chinese = "在后台时静音"
+
+[[message]]
+key = "my_%s"
+[message.translations]
+simplified_chinese = "我的_%s"
+
+[[message]]
+key = "Name Plate"
+[message.translations]
+simplified_chinese = "昵称板块"
+
+[[message]]
+key = "Name plates offset"
+[message.translations]
+simplified_chinese = "昵称距离"
+
+[[message]]
+key = "Name plates size"
+[message.translations]
+simplified_chinese = "昵称大小"
+
+[[message]]
+key = "New preset name"
+[message.translations]
+simplified_chinese = "新预设名称"
+
+[[message]]
+key = "New random timeout code"
+[message.translations]
+simplified_chinese = "随机生成新的超时代码（Timeout 代码）"
+
+[[message]]
+key = "News"
+[message.translations]
+simplified_chinese = "新闻"
+
+[[message]]
+key = "Next weapon"
+[message.translations]
+simplified_chinese = "下一个武器"
+
+[[message]]
+key = "No assets"
+[message.translations]
+simplified_chinese = "没有资源"
+
+[[message]]
+key = "No assets available for composition."
+[message.translations]
+simplified_chinese = "没有可用于合成的材质。"
+
+[[message]]
+key = "No assets found."
+[message.translations]
+simplified_chinese = "未找到材质。"
+
+[[message]]
+key = "No audio slots found."
+[message.translations]
+simplified_chinese = "未找到音频槽位。"
+
+[[message]]
+key = "No candidate file selected."
+[message.translations]
+simplified_chinese = "未选择候选文件。"
+
+[[message]]
+key = "No controller found. Plug in a controller."
+[message.translations]
+simplified_chinese = "未检测到任何手柄。请尝试重新连接手柄。"
+
+[[message]]
+key = "No corresponding vote option found"
+[message.translations]
+simplified_chinese = "未找到对应投票选项"
+
+[[message]]
+key = "No demo is being recorded"
+[message.translations]
+simplified_chinese = "当前没有正在录制的回放"
+
+[[message]]
+key = "No matching assets."
+[message.translations]
+simplified_chinese = "没有匹配的材质。"
+
+[[message]]
+key = "No presets yet"
+[message.translations]
+simplified_chinese = "暂无预设"
+
+[[message]]
+key = "No preview"
+[message.translations]
+simplified_chinese = "无预览"
+
+[[message]]
+key = "No skins match your filter criteria"
+[message.translations]
+simplified_chinese = "没有皮肤满足设置的筛选条件"
+
+[[message]]
+key = "No unfinished maps available"
+[message.translations]
+simplified_chinese = "没有可抽取的未完成图"
+
+[[message]]
+key = "Normal Color"
+[message.translations]
+simplified_chinese = "非相关信息颜色"
+
+[[message]]
+key = "Normal message"
+[message.translations]
+simplified_chinese = "普通消息"
+
+[[message]]
+key = "Not downloaded"
+[message.translations]
+simplified_chinese = "未下载"
+
+[[message]]
+key = "Nothing hookable"
+[message.translations]
+simplified_chinese = "未瞄准任何实体物"
+
+[[message]]
+key = "Only .wv files are supported right now."
+[message.translations]
+simplified_chinese = "当前仅支持 .wv 文件"
+
+[[message]]
+key = "Only save improvements"
+[message.translations]
+simplified_chinese = "只保存更佳记录"
+
+[[message]]
+key = "Opacity"
+[message.translations]
+simplified_chinese = "不透明度"
+
+[[message]]
+key = "Opacity of freeze bars inside freeze"
+[message.translations]
+simplified_chinese = "解冻进度条不透明度"
+
+[[message]]
+key = "Open rename dialog"
+[message.translations]
+simplified_chinese = "打开重命名弹窗"
+
+[[message]]
+key = "Open the directory that contains the configuration and user files"
+[message.translations]
+simplified_chinese = "打开存有配置文件与用户文件的文件夹路径"
+
+[[message]]
+key = "Open the directory to add custom assets"
+[message.translations]
+simplified_chinese = "打开用以添加自定义资源的文件夹路径"
+
+[[message]]
+key = "Open the directory to add custom skins"
+[message.translations]
+simplified_chinese = "打开用以添加自定义皮肤的文件夹路径"
+
+[[message]]
+key = "Open the directory to add custom themes"
+[message.translations]
+simplified_chinese = "打开用以添加自定义主题的文件夹路径"
+
+[[message]]
+key = "Open the saves file"
+[message.translations]
+simplified_chinese = "打开存档密码文件"
+
+[[message]]
+key = "Open the settings file"
+[message.translations]
+simplified_chinese = "打开设置文件"
+
+[[message]]
+key = "Other"
+[message.translations]
+simplified_chinese = "其他"
+
+[[message]]
+key = "Overlay entities"
+[message.translations]
+simplified_chinese = "显示实体层"
+
+[[message]]
+key = "Pack name"
+[message.translations]
+simplified_chinese = "包名"
+
+[[message]]
+key = "Part color updated."
+[message.translations]
+simplified_chinese = "部件颜色已更新。"
+
+[[message]]
+key = "Part reset to default asset."
+[message.translations]
+simplified_chinese = "部件已重置为默认材质。"
+
+[[message]]
+key = "Part updated."
+[message.translations]
+simplified_chinese = "部件已更新。"
+
+[[message]]
+key = "Particles"
+[message.translations]
+simplified_chinese = "粒子"
+
+[[message]]
+key = "Pause"
+[message.translations]
+simplified_chinese = "暂停"
+
+[[message]]
+key = "Pick result: %s"
+[message.translations]
+simplified_chinese = "抽取结果: %s"
+
+[[message]]
+key = "Pie menu"
+[message.translations]
+simplified_chinese = "饼菜单"
+
+[[message]]
+key = "Pistol"
+[message.translations]
+simplified_chinese = "手枪"
+
+[[message]]
+key = "Play background music"
+[message.translations]
+simplified_chinese = "播放背景音乐"
+
+[[message]]
+key = "Player name:"
+[message.translations]
+simplified_chinese = "玩家名:"
+
+[[message]]
+key = "Please enable finished indicator first"
+[message.translations]
+simplified_chinese = "请先启用完成度显示"
+
+[[message]]
+key = "Please wait…"
+[message.translations]
+simplified_chinese = "请稍等…"
+
+[[message]]
+key = "Predict events (experimental)"
+[message.translations]
+simplified_chinese = "预测事件（实验性）"
+
+[[message]]
+key = "Preset bar"
+[message.translations]
+simplified_chinese = "预设栏"
+
+[[message]]
+key = "Prev. weapon"
+[message.translations]
+simplified_chinese = "上一个武器"
+
+[[message]]
+key = "Preview 'Hook collisions' being pressed"
+[message.translations]
+simplified_chinese = "预览按下时的钩索辅助线"
+
+[[message]]
+key = "Preview built with %d skipped slot(s)."
+[message.translations]
+simplified_chinese = "预览已生成，但跳过了 %d 个槽位。"
+
+[[message]]
+key = "Preview dummy nameplate"
+[message.translations]
+simplified_chinese = "预览分身名牌"
+
+[[message]]
+key = "Preview import file"
+[message.translations]
+simplified_chinese = "试听导入文件"
+
+[[message]]
+key = "Preview player nameplate"
+[message.translations]
+simplified_chinese = "预览玩家名牌"
+
+[[message]]
+key = "Preview selected file"
+[message.translations]
+simplified_chinese = "试听已选文件"
+
+[[message]]
+key = "Quads are used for background decoration"
+[message.translations]
+simplified_chinese = "显示用作背景装饰的贴图"
+
+[[message]]
+key = "Queue is empty"
+[message.translations]
+simplified_chinese = "队列为空"
+
+[[message]]
+key = "Queue is full"
+[message.translations]
+simplified_chinese = "队列已满"
+
+[[message]]
+key = "Random pick"
+[message.translations]
+simplified_chinese = "随机抽取"
+
+[[message]]
+key = "Reason:"
+[message.translations]
+simplified_chinese = "理由："
+
+[[message]]
+key = "Record demo"
+[message.translations]
+simplified_chinese = "录制回放"
+
+[[message]]
+key = "Refresh Rate"
+[message.translations]
+simplified_chinese = "刷新率"
+
+[[message]]
+key = "Regular background color"
+[message.translations]
+simplified_chinese = "原图层背景颜色"
+
+[[message]]
+key = "Relative path"
+[message.translations]
+simplified_chinese = "相对路径"
+
+[[message]]
+key = "Reload"
+[message.translations]
+simplified_chinese = "重新加载"
+
+[[message]]
+key = "Reloaded images."
+[message.translations]
+simplified_chinese = "已重新加载图像。"
+
+[[message]]
+key = "Reloaded images. %d slot(s) fell back to main asset."
+[message.translations]
+simplified_chinese = "已重新加载图像。%d 个槽位已回退到主材质。"
+
+[[message]]
+key = "Remote console"
+[message.translations]
+simplified_chinese = "远程控制台"
+
+[[message]]
+key = "Remove"
+[message.translations]
+simplified_chinese = "删除"
+
+[[message]]
+key = "Remove from queue"
+[message.translations]
+simplified_chinese = "从队列移除"
+
+[[message]]
+key = "Rename"
+[message.translations]
+simplified_chinese = "改名"
+
+[[message]]
+key = "Renderer"
+[message.translations]
+simplified_chinese = "渲染设置"
+
+[[message]]
+key = "Renders your frame rate in the top right"
+[message.translations]
+simplified_chinese = "在右上角显示帧率"
+
+[[message]]
+key = "Repeat message"
+[message.translations]
+simplified_chinese = "复读"
+
+[[message]]
+key = "Reset All"
+[message.translations]
+simplified_chinese = "全部重置"
+
+[[message]]
+key = "Reset controls"
+[message.translations]
+simplified_chinese = "恢复默认设置"
+
+[[message]]
+key = "Reset layout"
+[message.translations]
+simplified_chinese = "重置布局"
+
+[[message]]
+key = "Rifle Laser Inner Color"
+[message.translations]
+simplified_chinese = "激光枪弹道实心颜色"
+
+[[message]]
+key = "Rifle Laser Outline Color"
+[message.translations]
+simplified_chinese = "激光枪弹道外框颜色"
+
+[[message]]
+key = "Rotate all maps"
+[message.translations]
+simplified_chinese = "轮换全图"
+
+[[message]]
+key = "Round"
+[message.translations]
+simplified_chinese = "回合数"
+
+[[message]]
+key = "Run on join"
+[message.translations]
+simplified_chinese = "进入时执行"
+
+[[message]]
+key = "Run server"
+[message.translations]
+simplified_chinese = "运行服务器"
+
+[[message]]
+key = "Same clan color in scoreboard"
+[message.translations]
+simplified_chinese = "相同战队计分板显示颜色"
+
+[[message]]
+key = "Sat."
+[message.translations]
+simplified_chinese = "饱和度"
+
+[[message]]
+key = "Save all changes before turning off the editor?"
+[message.translations]
+simplified_chinese = "是否在关闭编辑器前保存更改？"
+
+[[message]]
+key = "Save asset before closing?"
+[message.translations]
+simplified_chinese = "关闭前保存材质吗？"
+
+[[message]]
+key = "Save current"
+[message.translations]
+simplified_chinese = "保存当前"
+
+[[message]]
+key = "Save current queue as a new preset"
+[message.translations]
+simplified_chinese = "一键保存当前队列为新预设"
+
+[[message]]
+key = "Save ghost"
+[message.translations]
+simplified_chinese = "保存影子"
+
+[[message]]
+key = "Save last %d min"
+[message.translations]
+simplified_chinese = "保存前 %d 分钟"
+
+[[message]]
+key = "Save power by lowering refresh rate (higher input latency)"
+[message.translations]
+simplified_chinese = "省电模式（限制帧率上限以降低功耗但也将提高输入延迟）"
+
+[[message]]
+key = "Save the best demo of each race"
+[message.translations]
+simplified_chinese = "保存每场游戏最佳记录的回放"
+
+[[message]]
+key = "Save unsent chat draft"
+[message.translations]
+simplified_chinese = "保存未发送的聊天草稿"
+
+[[message]]
+key = "Saves file"
+[message.translations]
+simplified_chinese = "存档密码文件"
+
+[[message]]
+key = "Score limit"
+[message.translations]
+simplified_chinese = "目标得分"
+
+[[message]]
+key = "Scoreboard"
+[message.translations]
+simplified_chinese = "计分板"
+
+[[message]]
+key = "Scoreboard color"
+[message.translations]
+simplified_chinese = "记分板颜色"
+
+[[message]]
+key = "Scoreboard cursor"
+[message.translations]
+simplified_chinese = "计分板光标"
+
+[[message]]
+key = "Scoreboard opacity"
+[message.translations]
+simplified_chinese = "记分板不透明度"
+
+[[message]]
+key = "Screen"
+[message.translations]
+simplified_chinese = "滤色"
+
+[[message]]
+key = "Search"
+[message.translations]
+simplified_chinese = "搜索"
+
+[[message]]
+key = "Search donor asset"
+[message.translations]
+simplified_chinese = "搜索来源材质"
+
+[[message]]
+key = "Search main asset"
+[message.translations]
+simplified_chinese = "搜索主材质"
+
+[[message]]
+key = "Selected candidate"
+[message.translations]
+simplified_chinese = "已选候选文件"
+
+[[message]]
+key = "Selected candidate %d/%d under cursor."
+[message.translations]
+simplified_chinese = "已选中光标下的候选项 %d/%d。"
+
+[[message]]
+key = "Selected pack"
+[message.translations]
+simplified_chinese = "当前音频包"
+
+[[message]]
+key = "Set all to Rifle"
+[message.translations]
+simplified_chinese = "统一为激光枪颜色"
+
+[[message]]
+key = "Settings file"
+[message.translations]
+simplified_chinese = "设置文件"
+
+[[message]]
+key = "Shotgun"
+[message.translations]
+simplified_chinese = "霰弹枪"
+
+[[message]]
+key = "Shotgun Laser Inner Color"
+[message.translations]
+simplified_chinese = "霰弹枪弹道实心颜色"
+
+[[message]]
+key = "Shotgun Laser Outline Color"
+[message.translations]
+simplified_chinese = "霰弹枪弹道外框颜色"
+
+[[message]]
+key = "Show all"
+[message.translations]
+simplified_chinese = "显示所有玩家"
+
+[[message]]
+key = "Show background quads"
+[message.translations]
+simplified_chinese = "显示背景贴图"
+
+[[message]]
+key = "Show clan above name plates"
+[message.translations]
+simplified_chinese = "显示战队名称"
+
+[[message]]
+key = "Show client IDs (scoreboard, chat, spectating)"
+[message.translations]
+simplified_chinese = "显示客户端 ID（记分板、聊天、观战）"
+
+[[message]]
+key = "Show client IDs in name plates"
+[message.translations]
+simplified_chinese = "显示客户端 ID"
+
+[[message]]
+key = "Show client IDs on a separate line"
+[message.translations]
+simplified_chinese = "客户端 ID 换行显示"
+
+[[message]]
+key = "Show DDRace HUD"
+[message.translations]
+simplified_chinese = "显示 DDRace HUD"
+
+[[message]]
+key = "Show dummy actions"
+[message.translations]
+simplified_chinese = "显示分身状态"
+
+[[message]]
+key = "Show dummy control status"
+[message.translations]
+simplified_chinese = "显示分身控制状态"
+
+[[message]]
+key = "Show dummy sync status"
+[message.translations]
+simplified_chinese = "显示分身同步状态"
+
+[[message]]
+key = "Show entities"
+[message.translations]
+simplified_chinese = "实体层显示开关"
+
+[[message]]
+key = "Show finish messages"
+[message.translations]
+simplified_chinese = "显示完成消息"
+
+[[message]]
+key = "Show FPS"
+[message.translations]
+simplified_chinese = "显示 FPS"
+
+[[message]]
+key = "Show freeze bars"
+[message.translations]
+simplified_chinese = "显示解冻进度条"
+
+[[message]]
+key = "Show friend icon in name plates"
+[message.translations]
+simplified_chinese = "在昵称中显示好友图标"
+
+[[message]]
+key = "Show ghost"
+[message.translations]
+simplified_chinese = "显示影子"
+
+[[message]]
+key = "Show Grid"
+[message.translations]
+simplified_chinese = "显示网格"
+
+[[message]]
+key = "Show hammer status"
+[message.translations]
+simplified_chinese = "显示锤状态"
+
+[[message]]
+key = "Show health, shields and ammo"
+[message.translations]
+simplified_chinese = "显示生命、护甲与弹药栏"
+
+[[message]]
+key = "Show hook strength icon indicator"
+[message.translations]
+simplified_chinese = "显示钩索强度图标"
+
+[[message]]
+key = "Show hook strength number indicator"
+[message.translations]
+simplified_chinese = "显示钩索强度数值"
+
+[[message]]
+key = "Show HUD"
+[message.translations]
+simplified_chinese = "HUD 开关"
+
+[[message]]
+key = "Show jumps indicator"
+[message.translations]
+simplified_chinese = "显示可跳跃次数"
+
+[[message]]
+key = "Show key stuck status"
+[message.translations]
+simplified_chinese = "显示卡键状态"
+
+[[message]]
+key = "Show kill messages"
+[message.translations]
+simplified_chinese = "显示击杀消息"
+
+[[message]]
+key = "Show local time always"
+[message.translations]
+simplified_chinese = "始终显示本地时间"
+
+[[message]]
+key = "Show name plates"
+[message.translations]
+simplified_chinese = "显示昵称"
+
+[[message]]
+key = "Show names in chat in team colors"
+[message.translations]
+simplified_chinese = "以队伍颜色显示玩家昵称"
+
+[[message]]
+key = "Show number of spectators"
+[message.translations]
+simplified_chinese = "显示旁观者人数"
+
+[[message]]
+key = "Show only chat messages from friends"
+[message.translations]
+simplified_chinese = "只显示好友聊天消息"
+
+[[message]]
+key = "Show only chat messages from team members"
+[message.translations]
+simplified_chinese = "只显示队伍聊天消息"
+
+[[message]]
+key = "Show other players' hook collision lines"
+[message.translations]
+simplified_chinese = "显示其他玩家的钩索辅助线"
+
+[[message]]
+key = "Show others"
+[message.translations]
+simplified_chinese = "显示其他玩家"
+
+[[message]]
+key = "Show others (own team only)"
+[message.translations]
+simplified_chinese = "仅显示同队伍"
+
+[[message]]
+key = "Show own player's hook collision line"
+[message.translations]
+simplified_chinese = "显示自己的钩索辅助线"
+
+[[message]]
+key = "Show player position"
+[message.translations]
+simplified_chinese = "显示玩家坐标"
+
+[[message]]
+key = "Show player speed"
+[message.translations]
+simplified_chinese = "显示玩家速度"
+
+[[message]]
+key = "Show player target angle"
+[message.translations]
+simplified_chinese = "显示玩家瞄准角度"
+
+[[message]]
+key = "Show players' key presses"
+[message.translations]
+simplified_chinese = "显示按键"
+
+[[message]]
+key = "Show score"
+[message.translations]
+simplified_chinese = "显示分数"
+
+[[message]]
+key = "Show spectator cursor"
+[message.translations]
+simplified_chinese = "显示旁观者光标"
+
+[[message]]
+key = "Show text entities"
+[message.translations]
+simplified_chinese = "显示文本实体"
+
+[[message]]
+key = "Show tiles layers from BG map"
+[message.translations]
+simplified_chinese = "显示实体层背景地图的图块层"
+
+[[message]]
+key = "Show votes window after voting"
+[message.translations]
+simplified_chinese = "投票后不关闭投票窗口"
+
+[[message]]
+key = "Show Workshop Assets"
+[message.translations]
+simplified_chinese = "显示商店资源"
+
+[[message]]
+key = "Simple"
+[message.translations]
+simplified_chinese = "简单"
+
+[[message]]
+key = "Size of hook strength icon and number indicator"
+[message.translations]
+simplified_chinese = "钩索强度图标与数值的大小"
+
+[[message]]
+key = "Size of key press icons"
+[message.translations]
+simplified_chinese = "按键显示图标大小"
+
+[[message]]
+key = "Skin"
+[message.translations]
+simplified_chinese = "皮肤"
+
+[[message]]
+key = "Skin could not be found."
+[message.translations]
+simplified_chinese = "未找到皮肤。"
+
+[[message]]
+key = "Skin could not be loaded due to an error. Check the local console for details."
+[message.translations]
+simplified_chinese = "加载皮肤时出错。检查本地控制台以获取详细信息。"
+
+[[message]]
+key = "Skin Database"
+[message.translations]
+simplified_chinese = "皮肤数据库"
+
+[[message]]
+key = "Skin is loading."
+[message.translations]
+simplified_chinese = "皮肤正在加载。"
+
+[[message]]
+key = "Skin prefix"
+[message.translations]
+simplified_chinese = "皮肤名称前缀"
+
+[[message]]
+key = "Skin queue"
+[message.translations]
+simplified_chinese = "皮肤队列"
+
+[[message]]
+key = "Skins directory"
+[message.translations]
+simplified_chinese = "皮肤目录"
+
+[[message]]
+key = "Skip the main menu"
+[message.translations]
+simplified_chinese = "跳过主菜单"
+
+[[message]]
+key = "Smooth Dynamic Camera"
+[message.translations]
+simplified_chinese = "平滑动态视野"
+
+[[message]]
+key = "Something hookable"
+[message.translations]
+simplified_chinese = "可钩索的方块"
+
+[[message]]
+key = "Sound volume"
+[message.translations]
+simplified_chinese = "音量"
+
+[[message]]
+key = "Source file does not exist."
+[message.translations]
+simplified_chinese = "源文件不存在"
+
+[[message]]
+key = "Source file is empty."
+[message.translations]
+simplified_chinese = "源文件为空"
+
+[[message]]
+key = "Spectate"
+[message.translations]
+simplified_chinese = "旁观"
+
+[[message]]
+key = "Spectate mode"
+[message.translations]
+simplified_chinese = "观战模式"
+
+[[message]]
+key = "Spectate next"
+[message.translations]
+simplified_chinese = "旁观下一个"
+
+[[message]]
+key = "Spectate previous"
+[message.translations]
+simplified_chinese = "旁观上一个"
+
+[[message]]
+key = "Spectate teleport"
+[message.translations]
+simplified_chinese = "观战传送"
+
+[[message]]
+key = "Statboard"
+[message.translations]
+simplified_chinese = "统计板"
+
+[[message]]
+key = "Status"
+[message.translations]
+simplified_chinese = "状态"
+
+[[message]]
+key = "Stop practice"
+[message.translations]
+simplified_chinese = "停止练习"
+
+[[message]]
+key = "Stop record"
+[message.translations]
+simplified_chinese = "停止录制"
+
+[[message]]
+key = "Stop server"
+[message.translations]
+simplified_chinese = "停止服务器"
+
+[[message]]
+key = "Strong Weak Hook"
+[message.translations]
+simplified_chinese = "强弱钩"
+
+[[message]]
+key = "Switch interval"
+[message.translations]
+simplified_chinese = "切换间隔"
+
+[[message]]
+key = "Switch weapon on pickup"
+[message.translations]
+simplified_chinese = "拾取武器时自动装备"
+
+[[message]]
+key = "Switch weapon when out of ammo"
+[message.translations]
+simplified_chinese = "子弹打空时自动切换武器"
+
+[[message]]
+key = "Sync Workshop Assets"
+[message.translations]
+simplified_chinese = "同步商店资源"
+
+[[message]]
+key = "System message"
+[message.translations]
+simplified_chinese = "系统消息"
+
+[[message]]
+key = "Team chat"
+[message.translations]
+simplified_chinese = "队伍聊天"
+
+[[message]]
+key = "Team message"
+[message.translations]
+simplified_chinese = "队伍消息"
+
+[[message]]
+key = "Teams"
+[message.translations]
+simplified_chinese = "组队"
+
+[[message]]
+key = "Text"
+[message.translations]
+simplified_chinese = "文字"
+
+[[message]]
+key = "The name \"default\" is reserved."
+[message.translations]
+simplified_chinese = "“default” 是保留名称。"
+
+[[message]]
+key = "The selected part stays highlighted while you adjust its color."
+[message.translations]
+simplified_chinese = "调色时会持续高亮当前选中的部件。"
+
+[[message]]
+key = "Themes directory"
+[message.translations]
+simplified_chinese = "主题目录"
+
+[[message]]
+key = "There are unsaved changes in the touch controls editor. Saving first is recommended."
+[message.translations]
+simplified_chinese = "触控控件编辑器中有未保存的更改，建议先保存。"
+
+[[message]]
+key = "This skin name cannot be used."
+[message.translations]
+simplified_chinese = "此皮肤名称不能使用。"
+
+[[message]]
+key = "tile"
+[message.translations]
+simplified_chinese = "瓦片"
+
+[[message]]
+key = "Time"
+[message.translations]
+simplified_chinese = "用时"
+
+[[message]]
+key = "Time limit"
+[message.translations]
+simplified_chinese = "时间限制"
+
+[[message]]
+key = "Toggle between game scene preview and raw texture"
+[message.translations]
+simplified_chinese = "在游戏场景预览和原始材质之间切换"
+
+[[message]]
+key = "Toggle dummy"
+[message.translations]
+simplified_chinese = "切换分身"
+
+[[message]]
+key = "Toggle dyncam"
+[message.translations]
+simplified_chinese = "动态视野开关"
+
+[[message]]
+key = "Toggle ghost"
+[message.translations]
+simplified_chinese = "影子记录开关"
+
+[[message]]
+key = "Traditional"
+[message.translations]
+simplified_chinese = "繁体"
+
+[[message]]
+key = "Try to predict other entities to reduce lag feeling at high latency"
+[message.translations]
+simplified_chinese = "尝试预测其他实体来降低高延迟带来的卡顿感"
+
+[[message]]
+key = "Tutorial"
+[message.translations]
+simplified_chinese = "教学"
+
+[[message]]
+key = "Type switch vote started automatically"
+[message.translations]
+simplified_chinese = "已自动发起切换类型投票"
+
+[[message]]
+key = "UI Color"
+[message.translations]
+simplified_chinese = "界面颜色"
+
+[[message]]
+key = "UI controller sens."
+[message.translations]
+simplified_chinese = "摇杆灵敏度（界面）"
+
+[[message]]
+key = "UI mouse sens."
+[message.translations]
+simplified_chinese = "鼠标灵敏度（界面）"
+
+[[message]]
+key = "UI opacity"
+[message.translations]
+simplified_chinese = "界面不透明度"
+
+[[message]]
+key = "Unable to delete skin"
+[message.translations]
+simplified_chinese = "无法删除皮肤"
+
+[[message]]
+key = "Unfinished map count: %d"
+[message.translations]
+simplified_chinese = "未完成图数量: %d"
+
+[[message]]
+key = "Unfinished map data is refreshing, please try again later"
+[message.translations]
+simplified_chinese = "未完成图数据刷新中，请稍后再试"
+
+[[message]]
+key = "Unfinished map data not fetched"
+[message.translations]
+simplified_chinese = "未获取未完成图数据"
+
+[[message]]
+key = "Unfinished map data refreshing"
+[message.translations]
+simplified_chinese = "未完成图数据刷新中"
+
+[[message]]
+key = "Unfinished maps"
+[message.translations]
+simplified_chinese = "未完成图"
+
+[[message]]
+key = "Unregister protocol and file extensions"
+[message.translations]
+simplified_chinese = "解除协议与文件类型关联"
+
+[[message]]
+key = "Unsaved changes"
+[message.translations]
+simplified_chinese = "更改未保存"
+
+[[message]]
+key = "Use current map as background"
+[message.translations]
+simplified_chinese = "使用当前地图作为实体层背景地图"
+
+[[message]]
+key = "Use old chat style"
+[message.translations]
+simplified_chinese = "旧版聊天框"
+
+[[message]]
+key = "Use team colors for name plates"
+[message.translations]
+simplified_chinese = "用队伍颜色显示昵称"
+
+[[message]]
+key = "V-Sync"
+[message.translations]
+simplified_chinese = "垂直同步"
+
+[[message]]
+key = "Vanilla skins only"
+[message.translations]
+simplified_chinese = "只显示原生皮肤"
+
+[[message]]
+key = "Video Background"
+[message.translations]
+simplified_chinese = "视频背景"
+
+[[message]]
+key = "Voice chat"
+[message.translations]
+simplified_chinese = "说话"
+
+[[message]]
+key = "Vote command:"
+[message.translations]
+simplified_chinese = "投票命令："
+
+[[message]]
+key = "Vote description:"
+[message.translations]
+simplified_chinese = "投票描述："
+
+[[message]]
+key = "Vote no"
+[message.translations]
+simplified_chinese = "反对"
+
+[[message]]
+key = "Vote started automatically"
+[message.translations]
+simplified_chinese = "已自动发起投票"
+
+[[message]]
+key = "Vote yes"
+[message.translations]
+simplified_chinese = "赞成"
+
+[[message]]
+key = "Voting"
+[message.translations]
+simplified_chinese = "投票"
+
+[[message]]
+key = "Weapon"
+[message.translations]
+simplified_chinese = "武器"
+
+[[message]]
+key = "Weapon trajectory"
+[message.translations]
+simplified_chinese = "武器弹道辅助线"
+
+[[message]]
+key = "Weapons"
+[message.translations]
+simplified_chinese = "武器"
+
+[[message]]
+key = "Website"
+[message.translations]
+simplified_chinese = "官网"
+
+[[message]]
+key = "When you cross the start line, show a ghost tee replicating the movements of your best time"
+[message.translations]
+simplified_chinese = "当越过起跑线时，游戏里将有影子回放你的最佳成绩"
+
+[[message]]
+key = "Width of others' hook collision line"
+[message.translations]
+simplified_chinese = "其他玩家的钩索辅助线宽度"
+
+[[message]]
+key = "Width of your own hook collision line"
+[message.translations]
+simplified_chinese = "自己的钩索辅助线宽度"
+
+[[message]]
+key = "Windowed"
+[message.translations]
+simplified_chinese = "窗口化"
+
+[[message]]
+key = "Windowed borderless"
+[message.translations]
+simplified_chinese = "无边框窗口"
+
+[[message]]
+key = "Windowed fullscreen"
+[message.translations]
+simplified_chinese = "窗口化全屏"
+
+[[message]]
+key = "You have unsaved changes."
+[message.translations]
+simplified_chinese = "你有未保存的更改。"
+
+[[message]]
+key = "You must restart the game for all settings to take effect."
+[message.translations]
+simplified_chinese = "你需要重启游戏来使新设置生效。"
+
+[[message]]
+key = "Your movements are not taken into account when calculating the line colors"
+[message.translations]
+simplified_chinese = "移动所造成的瞄准偏移将不计入考量"
+
+[[message]]
+key = "Your skin"
+[message.translations]
+simplified_chinese = "你的皮肤"
+
+[[message]]
+key = "Zoom in"
+[message.translations]
+simplified_chinese = "放大视野"
+
+[[message]]
+key = "Zoom out"
+[message.translations]
+simplified_chinese = "缩小视野"
+
+[[message]]
+key = "Hz"
+context = "Hertz"
+[message.translations]
+simplified_chinese = "Hz"
+
+[[message]]
+key = "Absolute"
+context = "Ingame controller mode"
+[message.translations]
+simplified_chinese = "绝对"
+
+[[message]]
+key = "Relative"
+context = "Ingame controller mode"
+[message.translations]
+simplified_chinese = "相对"
+
+[[message]]
+key = "All"
+context = "Show name plates"
+[message.translations]
+simplified_chinese = "全体"
+
+[[message]]
+key = "None"
+context = "Show name plates"
+[message.translations]
+simplified_chinese = "无"
+
+[[message]]
+key = "Others"
+context = "Show name plates"
+[message.translations]
+simplified_chinese = "他人"
+
+[[message]]
+key = "Own"
+context = "Show name plates"
+[message.translations]
+simplified_chinese = "自身"
+
+[[message]]
+key = "All"
+context = "Show players' key presses"
+[message.translations]
+simplified_chinese = "全体"
+
+[[message]]
+key = "None"
+context = "Show players' key presses"
+[message.translations]
+simplified_chinese = "禁用"
+
+[[message]]
+key = "Others"
+context = "Show players' key presses"
+[message.translations]
+simplified_chinese = "他人"
+
+[[message]]
+key = "Own"
+context = "Show players' key presses"
+[message.translations]
+simplified_chinese = "自身"
+
+[[message]]
+key = "Play"
+context = "Start menu"
+[message.translations]
+simplified_chinese = "开始游戏"
+
+[[message]]
+key = "maximum"
+context = "Team size"
+[message.translations]
+simplified_chinese = "最大人数"
+
+[[message]]
+key = "minimum"
+context = "Team size"
+[message.translations]
+simplified_chinese = "最小人数"
+
+[[message]]
+key = "allowed"
+context = "Team status"
+[message.translations]
+simplified_chinese = "允许"
+
+[[message]]
+key = "forbidden"
+context = "Team status"
+[message.translations]
+simplified_chinese = "禁止"
+
+[[message]]
+key = "required"
+context = "Team status"
+[message.translations]
+simplified_chinese = "强制"
+
+[[message]]
+key = "solo"
+context = "Team status"
+[message.translations]
+simplified_chinese = "单人"
+
+[[message]]
+key = "English translation by the DDNet Team"
+context = "Translation credits: Add your own name here when you update translations"
+[message.translations]
+simplified_chinese = "简体中文翻译由以下人员贡献：MK124, CarolVlCznYu, MC_TYH, Yangfl, Eki, Night_L, TsFreddie, Dan_cao, Momo, cheeser0613, By, Bamcane, Pioooooo, 豆腐渣, XCWQW1, Zerol Acqua"

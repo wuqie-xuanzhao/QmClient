@@ -10,6 +10,40 @@ python qmclient_scripts/gate/check_docs.py
 
 当你改了 `AGENTS.md`、`CLAUDE.md`、`docs/ai-workflow/`、`docs/superpowers/plans/`、`docs/superpowers/specs/`、governance workflow 文件或 gate 脚本后，都要跑这一项。
 
+## i18n 脚本工作流
+
+当改动 `qmclient_scripts/languages_qmclient/`、`data/languages/simplified_chinese.txt`，或任何会新增/删除 `Localize`、`Localizable`、`Register` help 文本的源码时，默认按这条顺序验证：
+
+```bash
+python qmclient_scripts/languages_qmclient/extract_strings.py
+python qmclient_scripts/languages_qmclient/generate_all.py
+python qmclient_scripts/languages_qmclient/validate.py
+python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0
+```
+
+说明：
+
+- `extract_strings.py` 负责从全 `src/` 提取 active source keys，并输出分类统计。
+- `translations/i18n/*.toml` 是按代码模块拆分的翻译维护源；单条记录可同时维护多语言翻译，不要求全语言补齐。
+- `data/languages/simplified_chinese.txt` 是运行时生成产物，不作为手工维护的长期真相源。
+- `generate_all.py` 会以英文 source key 作为缺省回退，并在生成简中运行时文件时保留已有的非 active 条目。
+- `review_duplicate_entries.py` 是只读审查脚本；duplicate/similar 报告用于人工收口，unused 口径必须基于最终 active source key 集合。
+- `translate_with_local_http.py` 通过本地 HTTP 模型补翻译；`simplified_chinese` 只写 `translations_draft/simplified_chinese/*.toml` 草稿，其他语言可直接回填 `translations/i18n/*.toml`，不属于运行时生成主链。
+
+### 历史译法审计
+
+当需要核对当前 `translations/i18n/*.toml` 是否偏离项目既有简中口径时，补跑历史译法审计：
+
+```bash
+python qmclient_scripts/languages_qmclient/audit_translation_drift.py --git-ref HEAD
+```
+
+说明：
+
+- 这是只读审计，不参与运行时生成链。
+- 结果只用于人工判断历史译法是否需要回退或统一风格。
+- 它不替代 `extract_strings.py` / `generate_all.py` / `validate.py`，也不阻断 `validate.py`。
+
 ## 构建
 
 Windows 推荐：

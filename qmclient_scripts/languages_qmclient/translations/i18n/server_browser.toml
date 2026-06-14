@@ -1,0 +1,544 @@
+[[message]]
+key = "%d dummies"
+[message.translations]
+simplified_chinese = "%d 个分身"
+
+[[message]]
+key = "%d dummy"
+[message.translations]
+simplified_chinese = "%d 个分身"
+
+[[message]]
+key = "%d of %d server"
+[message.translations]
+simplified_chinese = "符合条件 %d / 总共 %d 个服务器"
+
+[[message]]
+key = "%d of %d servers"
+[message.translations]
+simplified_chinese = "符合条件 %d / 总共 %d 个服务器"
+
+[[message]]
+key = "%d player"
+[message.translations]
+simplified_chinese = "%d 在线玩家"
+
+[[message]]
+key = "%d servers, %d users"
+[message.translations]
+simplified_chinese = "%d 个服务器，%d 个用户"
+
+[[message]]
+key = "%d servers, %d users, %d dummies"
+[message.translations]
+simplified_chinese = "%d 个服务器，%d 个用户，%d 个分身"
+
+[[message]]
+key = "%d user"
+[message.translations]
+simplified_chinese = "%d 个用户"
+
+[[message]]
+key = "%d users"
+[message.translations]
+simplified_chinese = "%d 个用户"
+
+[[message]]
+key = "Add friends by entering their name below or by clicking their name in the player list."
+[message.translations]
+simplified_chinese = "在下方输入好友名称或点击玩家列表中的好友名称即可添加好友"
+
+[[message]]
+key = "Add to category"
+[message.translations]
+simplified_chinese = "添加到分类"
+
+[[message]]
+key = "Are you sure that you want to disconnect and switch to a different server?"
+[message.translations]
+simplified_chinese = "确定要断开此服务器连接并进入其他服务器吗？"
+
+[[message]]
+key = "Are you sure that you want to remove the clan '%s' from your friends list?"
+[message.translations]
+simplified_chinese = "确定要将战队 \"%s\" 从你的好友列表中删除？"
+
+[[message]]
+key = "Are you sure that you want to remove the player '%s' from your friends list?"
+[message.translations]
+simplified_chinese = "确定要将好友 \"%s\" 从你的好友列表中删除？"
+
+[[message]]
+key = "Brutal"
+[message.translations]
+simplified_chinese = "高阶"
+
+[[message]]
+key = "Category"
+[message.translations]
+simplified_chinese = "分类"
+
+[[message]]
+key = "Clan"
+[message.translations]
+simplified_chinese = "战队"
+
+[[message]]
+key = "Clear note"
+[message.translations]
+simplified_chinese = "移除备注"
+
+[[message]]
+key = "Click to add this community to favorites"
+[message.translations]
+simplified_chinese = "点击将该社区加入收藏"
+
+[[message]]
+key = "Click to copy this clan's name to clipboard"
+[message.translations]
+simplified_chinese = "点击复制该战队名字到剪贴板"
+
+[[message]]
+key = "Click to copy this player's name to clipboard"
+[message.translations]
+simplified_chinese = "点击复制该玩家名字到剪贴板"
+
+[[message]]
+key = "Click to remove this clan from your friends list."
+[message.translations]
+simplified_chinese = "单击从你的好友列表移除此战队"
+
+[[message]]
+key = "Click to remove this community from favorites"
+[message.translations]
+simplified_chinese = "点击将该社区移出收藏"
+
+[[message]]
+key = "Click to remove this player from your friends list."
+[message.translations]
+simplified_chinese = "单击从你的好友列表移除此玩家"
+
+[[message]]
+key = "Click to select server. Double click to join your friend."
+[message.translations]
+simplified_chinese = "单击以选择此服务器。双击加入好友所在服务器。"
+
+[[message]]
+key = "Communities"
+[message.translations]
+simplified_chinese = "社区"
+
+[[message]]
+key = "Copy info"
+[message.translations]
+simplified_chinese = "复制服务器信息"
+
+[[message]]
+key = "Count players only"
+[message.translations]
+simplified_chinese = "屏蔽旁观位"
+
+[[message]]
+key = "Countries"
+[message.translations]
+simplified_chinese = "国家"
+
+[[message]]
+key = "DDmaX"
+[message.translations]
+simplified_chinese = "DDmaX"
+
+[[message]]
+key = "DDmaX Easy"
+[message.translations]
+simplified_chinese = "DDmaX Easy"
+
+[[message]]
+key = "DDmaX Next"
+[message.translations]
+simplified_chinese = "DDmaX Next"
+
+[[message]]
+key = "DDmaX Nut"
+[message.translations]
+simplified_chinese = "DDmaX Nut"
+
+[[message]]
+key = "DDmaX Pro"
+[message.translations]
+simplified_chinese = "DDmaX Pro"
+
+[[message]]
+key = "ddnet-saves.txt is empty"
+[message.translations]
+simplified_chinese = "ddnet-saves.txt 为空"
+
+[[message]]
+key = "ddnet-saves.txt not found"
+[message.translations]
+simplified_chinese = "未找到 ddnet-saves.txt"
+
+[[message]]
+key = "Difficulty stars"
+[message.translations]
+simplified_chinese = "难度星级"
+
+[[message]]
+key = "Disconnect"
+[message.translations]
+simplified_chinese = "断开连接"
+
+[[message]]
+key = "Dummy"
+[message.translations]
+simplified_chinese = "分身"
+
+[[message]]
+key = "Edit note"
+[message.translations]
+simplified_chinese = "编辑备注"
+
+[[message]]
+key = "Error loading communities"
+[message.translations]
+simplified_chinese = "加载社区列表失败"
+
+[[message]]
+key = "Could not get server list from master server"
+[message.translations]
+simplified_chinese = "无法从主服务器获取服务器列表"
+
+[[message]]
+key = "Event"
+[message.translations]
+simplified_chinese = "活动"
+
+[[message]]
+key = "Example of usage"
+[message.translations]
+simplified_chinese = "用途示例"
+
+[[message]]
+key = "Exclude"
+[message.translations]
+simplified_chinese = "排除"
+
+[[message]]
+key = "Favorite"
+[message.translations]
+simplified_chinese = "收藏"
+
+[[message]]
+key = "Filter connecting players"
+[message.translations]
+simplified_chinese = "筛选正在连接的玩家"
+
+[[message]]
+key = "Friend note"
+[message.translations]
+simplified_chinese = "好友备注"
+
+[[message]]
+key = "Friends"
+[message.translations]
+simplified_chinese = "好友"
+
+[[message]]
+key = "Fun"
+[message.translations]
+simplified_chinese = "娱乐"
+
+[[message]]
+key = "Game type"
+[message.translations]
+simplified_chinese = "游戏模式"
+
+[[message]]
+key = "Game types:"
+[message.translations]
+simplified_chinese = "游戏模式："
+
+[[message]]
+key = "Getting server list from master server"
+[message.translations]
+simplified_chinese = "正在从主服务器获取服务器列表"
+
+[[message]]
+key = "Has people playing"
+[message.translations]
+simplified_chinese = "有玩家"
+
+[[message]]
+key = "Has save"
+[message.translations]
+simplified_chinese = "有存档"
+
+[[message]]
+key = "Indicate map finish"
+[message.translations]
+simplified_chinese = "标记已完成的地图"
+
+[[message]]
+key = "Insane"
+[message.translations]
+simplified_chinese = "疯狂"
+
+[[message]]
+key = "Leak IP"
+[message.translations]
+simplified_chinese = "暴露IP"
+
+[[message]]
+key = "Local saves"
+[message.translations]
+simplified_chinese = "本地存档"
+
+[[message]]
+key = "Map"
+[message.translations]
+simplified_chinese = "地图"
+
+[[message]]
+key = "Moderate"
+[message.translations]
+simplified_chinese = "中阶"
+
+[[message]]
+key = "Move to category"
+[message.translations]
+simplified_chinese = "移动到分类"
+
+[[message]]
+key = "No active QmClient reports yet"
+[message.translations]
+simplified_chinese = "暂无活跃的栖梦客户端上报"
+
+[[message]]
+key = "No favorite maps yet"
+[message.translations]
+simplified_chinese = "暂无收藏地图"
+
+[[message]]
+key = "No login required"
+[message.translations]
+simplified_chinese = "无需登录"
+
+[[message]]
+key = "No password"
+[message.translations]
+simplified_chinese = "没有密码"
+
+[[message]]
+key = "No server selected"
+[message.translations]
+simplified_chinese = "未选择服务器"
+
+[[message]]
+key = "None"
+[message.translations]
+simplified_chinese = "无"
+
+[[message]]
+key = "Not in the current browser list"
+[message.translations]
+simplified_chinese = "不在当前浏览器列表中"
+
+[[message]]
+key = "No servers found"
+[message.translations]
+simplified_chinese = "未检测到任何服务器"
+traditional_chinese = "未檢測到任何伺服器"
+korean = "서버를 찾을 수 없음"
+japanese = "サーバーが見つかりません"
+
+[[message]]
+key = "No servers match your filter criteria"
+[message.translations]
+simplified_chinese = "没有服务器满足设置的筛选条件"
+traditional_chinese = "沒有伺服器符合設定的篩選條件"
+korean = "필터에 일치하는 서버가 없음"
+japanese = "フィルタに適合するサーバーが見つかりません"
+
+[[message]]
+key = "Note"
+[message.translations]
+simplified_chinese = "备注"
+
+[[message]]
+key = "Novice"
+[message.translations]
+simplified_chinese = "简单"
+
+[[message]]
+key = "Oldschool"
+[message.translations]
+simplified_chinese = "传统"
+
+[[message]]
+key = "Ping"
+[message.translations]
+simplified_chinese = "延迟"
+
+[[message]]
+key = "Player country:"
+[message.translations]
+simplified_chinese = "玩家国家 / 地区："
+
+[[message]]
+key = "Qm"
+[message.translations]
+simplified_chinese = "栖梦"
+
+[[message]]
+key = "QmClient online distribution"
+[message.translations]
+simplified_chinese = "栖梦客户端在线分布"
+
+[[message]]
+key = "Remove friend"
+[message.translations]
+simplified_chinese = "删除好友"
+
+[[message]]
+key = "Reset filter"
+[message.translations]
+simplified_chinese = "重置筛选"
+
+[[message]]
+key = "Selected server"
+[message.translations]
+simplified_chinese = "已选中服务器"
+
+[[message]]
+key = "Server address:"
+[message.translations]
+simplified_chinese = "服务器地址："
+
+[[message]]
+key = "Server filter"
+[message.translations]
+simplified_chinese = "服务器筛选"
+
+[[message]]
+key = "AFR"
+[message.translations]
+simplified_chinese = "非洲"
+traditional_chinese = "非洲"
+korean = "아프리카"
+
+[[message]]
+key = "ASI"
+[message.translations]
+simplified_chinese = "亚洲"
+traditional_chinese = "亞洲"
+korean = "아시아"
+
+[[message]]
+key = "AUS"
+[message.translations]
+simplified_chinese = "澳洲"
+traditional_chinese = "澳洲"
+korean = "호주"
+
+[[message]]
+key = "CHN"
+[message.translations]
+simplified_chinese = "中国"
+traditional_chinese = "中國"
+korean = "중국"
+
+[[message]]
+key = "Clan Members"
+[message.translations]
+simplified_chinese = "战队成员"
+
+[[message]]
+key = "EUR"
+[message.translations]
+simplified_chinese = "欧洲"
+traditional_chinese = "歐洲"
+korean = "유럽"
+
+[[message]]
+key = "NA"
+[message.translations]
+simplified_chinese = "北美"
+traditional_chinese = "北美"
+korean = "북미"
+
+[[message]]
+key = "No local servers found (ports %d-%d)"
+[message.translations]
+simplified_chinese = "未找到本地服务器（端口 %d-%d）"
+
+[[message]]
+key = "Offline"
+[message.translations]
+simplified_chinese = "离线"
+
+[[message]]
+key = "Reset column widths"
+[message.translations]
+simplified_chinese = "重置列宽"
+
+[[message]]
+key = "SA"
+[message.translations]
+simplified_chinese = "南美"
+traditional_chinese = "南美"
+korean = "남미"
+
+[[message]]
+key = "Server not full"
+[message.translations]
+simplified_chinese = "服务器未满"
+
+[[message]]
+key = "Set a voice server to enable QmClient distribution"
+[message.translations]
+simplified_chinese = "需要先配置语音服务器，才能启用栖梦客户端在线分布"
+
+[[message]]
+key = "Show friends only"
+[message.translations]
+simplified_chinese = "只显示好友"
+
+[[message]]
+key = "Solo"
+[message.translations]
+simplified_chinese = "单人"
+
+[[message]]
+key = "Strict gametype filter"
+[message.translations]
+simplified_chinese = "严格游戏模式筛选"
+
+[[message]]
+key = "Start and connect to local server"
+[message.translations]
+simplified_chinese = "启动并连接到本地服务器"
+
+[[message]]
+key = "Types"
+[message.translations]
+simplified_chinese = "模式"
+
+[[message]]
+key = "Unfinished map"
+[message.translations]
+simplified_chinese = "未完成的地图"
+
+[[message]]
+key = "Unknown"
+[message.translations]
+simplified_chinese = "未知"
+
+[[message]]
+key = "Version"
+[message.translations]
+simplified_chinese = "版本"
+
+[[message]]
+key = "Your favorite maps appear here"
+[message.translations]
+simplified_chinese = "你收藏的地图会显示在这里"

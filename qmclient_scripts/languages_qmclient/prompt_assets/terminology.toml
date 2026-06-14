@@ -1,0 +1,27 @@
+[[term]]
+source = "Clan"
+simplified_chinese = "战队"
+traditional_chinese = "戰隊"
+korean = "클랜"
+japanese = "クラン"
+
+[[term]]
+source = "Dummy"
+simplified_chinese = "分身"
+traditional_chinese = "分身"
+korean = "더미"
+japanese = "ダミー"
+
+[[term]]
+source = "Server"
+simplified_chinese = "服务器"
+traditional_chinese = "伺服器"
+korean = "서버"
+japanese = "サーバー"
+
+[[term]]
+source = "Map"
+simplified_chinese = "地图"
+traditional_chinese = "地圖"
+korean = "맵"
+japanese = "マップ"

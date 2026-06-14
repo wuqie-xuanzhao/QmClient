@@ -1,0 +1,429 @@
+[[message]]
+key = "%.2f KiB"
+[message.translations]
+simplified_chinese = "%.2f KiB"
+
+[[message]]
+key = "%.2f MiB"
+[message.translations]
+simplified_chinese = "%.2f MiB"
+
+[[message]]
+key = "%d items selected"
+[message.translations]
+simplified_chinese = "已选择 %d 项"
+
+[[message]]
+key = "%d more cut segments"
+[message.translations]
+simplified_chinese = "还有 %d 个裁剪片段"
+
+[[message]]
+key = "%d selected items were deleted, but %d items could not be deleted. The first failing item was '%s'."
+[message.translations]
+simplified_chinese = "已删除 %d 个选中项，但有 %d 项无法删除。第一个失败项是“%s”。"
+
+[[message]]
+key = "Add current cut to the export list"
+[message.translations]
+simplified_chinese = "将当前片段加入导出列表"
+
+[[message]]
+key = "All combined"
+[message.translations]
+simplified_chinese = "全部文件"
+
+[[message]]
+key = "Are you sure that you want to delete %d selected items?"
+[message.translations]
+simplified_chinese = "确定要删除 %d 个选中项吗？"
+
+[[message]]
+key = "Are you sure that you want to delete the demo '%s'?"
+[message.translations]
+simplified_chinese = "确定要删除回放文件 \"%s\" ？"
+
+[[message]]
+key = "Are you sure that you want to delete the folder '%s'?"
+[message.translations]
+simplified_chinese = "确定要删除文件夹 \"%s\" ？"
+
+[[message]]
+key = "Are you sure that you want to delete the screenshot '%s'?"
+[message.translations]
+simplified_chinese = "确定要删除截图“%s”吗？"
+
+[[message]]
+key = "Are you sure that you want to disconnect and play this demo?"
+[message.translations]
+simplified_chinese = "确定要断开当前连接并播放这个录像吗？"
+
+[[message]]
+key = "Change the skip duration"
+[message.translations]
+simplified_chinese = "变更指定时长"
+
+[[message]]
+key = "Choose whether to browse replays or screenshots"
+[message.translations]
+simplified_chinese = "选择浏览录像还是截图"
+
+[[message]]
+key = "Clear current cut (right click to clear all cuts)"
+[message.translations]
+simplified_chinese = "清除当前片段（右键清除全部片段）"
+
+[[message]]
+key = "Close the demo player"
+[message.translations]
+simplified_chinese = "关闭回放"
+
+[[message]]
+key = "Could not preview this image"
+[message.translations]
+simplified_chinese = "无法预览这张图片"
+
+[[message]]
+key = "Created"
+[message.translations]
+simplified_chinese = "创建日期"
+
+[[message]]
+key = "Current cut is invalid or already added"
+[message.translations]
+simplified_chinese = "当前裁剪无效或已添加"
+
+[[message]]
+key = "Cut interval"
+[message.translations]
+simplified_chinese = "裁剪区间"
+
+[[message]]
+key = "Cut length"
+[message.translations]
+simplified_chinese = "裁剪时长"
+
+[[message]]
+key = "Cut segments"
+[message.translations]
+simplified_chinese = "裁剪片段"
+
+[[message]]
+key = "Date"
+[message.translations]
+simplified_chinese = "日期"
+
+[[message]]
+key = "Delete demo"
+[message.translations]
+simplified_chinese = "删除回放"
+
+[[message]]
+key = "Delete folder"
+[message.translations]
+simplified_chinese = "删除文件夹"
+
+[[message]]
+key = "Delete screenshot"
+[message.translations]
+simplified_chinese = "删除截图"
+
+[[message]]
+key = "Delete selected items"
+[message.translations]
+simplified_chinese = "删除选中项"
+
+[[message]]
+key = "Demo"
+[message.translations]
+simplified_chinese = "回放"
+
+[[message]]
+key = "Demofile: %s"
+[message.translations]
+simplified_chinese = "回放文件：%s"
+
+[[message]]
+key = "Demos directory"
+[message.translations]
+simplified_chinese = "回放目录"
+
+[[message]]
+key = "Error opening screenshot"
+[message.translations]
+simplified_chinese = "打开截图时出错"
+
+[[message]]
+key = "Export cut as a separate demo"
+[message.translations]
+simplified_chinese = "另存为新回放文件"
+
+[[message]]
+key = "Export demo cut"
+[message.translations]
+simplified_chinese = "另存裁剪部分"
+
+[[message]]
+key = "Failed to export demo cut"
+[message.translations]
+simplified_chinese = "导出回放裁剪失败"
+
+[[message]]
+key = "Fetch Info"
+[message.translations]
+simplified_chinese = "回放信息"
+
+[[message]]
+key = "File already exists, do you want to overwrite it?"
+[message.translations]
+simplified_chinese = "文件已存在，是否覆盖？"
+
+[[message]]
+key = "Folder"
+[message.translations]
+simplified_chinese = "文件夹"
+
+[[message]]
+key = "Folder Link"
+[message.translations]
+simplified_chinese = "文件夹链接"
+
+[[message]]
+key = "Go back one marker"
+[message.translations]
+simplified_chinese = "返回上一个标记"
+
+[[message]]
+key = "Go back one tick"
+[message.translations]
+simplified_chinese = "上一个 tick"
+
+[[message]]
+key = "Go back the specified duration"
+[message.translations]
+simplified_chinese = "快退指定时长"
+
+[[message]]
+key = "Go forward one marker"
+[message.translations]
+simplified_chinese = "跳至下一个标记"
+
+[[message]]
+key = "Go forward one tick"
+[message.translations]
+simplified_chinese = "下一个 tick"
+
+[[message]]
+key = "Go forward the specified duration"
+[message.translations]
+simplified_chinese = "快进指定时长"
+
+[[message]]
+key = "Invalid Demo"
+[message.translations]
+simplified_chinese = "回放文件无效或已损坏"
+
+[[message]]
+key = "Length"
+[message.translations]
+simplified_chinese = "时长"
+
+[[message]]
+key = "Loading demo files"
+[message.translations]
+simplified_chinese = "正在加载回放文件"
+
+[[message]]
+key = "Loading screenshot files"
+[message.translations]
+simplified_chinese = "正在加载截图文件"
+
+[[message]]
+key = "Map size"
+[message.translations]
+simplified_chinese = "地图占用空间"
+
+[[message]]
+key = "Mark the beginning of a cut (right click to reset)"
+[message.translations]
+simplified_chinese = "标记裁剪起点 (右键重置)"
+
+[[message]]
+key = "Mark the end of a cut (right click to reset)"
+[message.translations]
+simplified_chinese = "标记裁剪终点 (右键重置)"
+
+[[message]]
+key = "Markers"
+[message.translations]
+simplified_chinese = "标记"
+
+[[message]]
+key = "Netversion"
+[message.translations]
+simplified_chinese = "网络版本"
+
+[[message]]
+key = "No demo selected"
+[message.translations]
+simplified_chinese = "未选择回放"
+
+[[message]]
+key = "No screenshot selected"
+[message.translations]
+simplified_chinese = "未选择截图"
+
+[[message]]
+key = "Open the folder containing demo files"
+[message.translations]
+simplified_chinese = "打开存放录像文件的文件夹"
+
+[[message]]
+key = "Open the folder containing screenshots"
+[message.translations]
+simplified_chinese = "打开存放截图的文件夹"
+
+[[message]]
+key = "Parent Folder"
+[message.translations]
+simplified_chinese = "上级目录"
+
+[[message]]
+key = "Pause the current demo"
+[message.translations]
+simplified_chinese = "暂停回放"
+
+[[message]]
+key = "Play the current demo"
+[message.translations]
+simplified_chinese = "播放回放"
+
+[[message]]
+key = "Please add a valid cut first"
+[message.translations]
+simplified_chinese = "请先添加有效裁剪片段"
+
+[[message]]
+key = "Please use a different filename"
+[message.translations]
+simplified_chinese = "请使用不同的文件名"
+
+[[message]]
+key = "Remove chat"
+[message.translations]
+simplified_chinese = "删除消息记录"
+
+[[message]]
+key = "Render cut to video"
+[message.translations]
+simplified_chinese = "渲染裁剪部分"
+
+[[message]]
+key = "Screenshot"
+[message.translations]
+simplified_chinese = "截图"
+
+[[message]]
+key = "Screenshots"
+[message.translations]
+simplified_chinese = "截图"
+
+[[message]]
+key = "Screenshots directory"
+[message.translations]
+simplified_chinese = "截图目录"
+
+[[message]]
+key = "Selection"
+[message.translations]
+simplified_chinese = "已选项"
+
+[[message]]
+key = "Size"
+[message.translations]
+simplified_chinese = "大小"
+
+[[message]]
+key = "Slow down the demo"
+[message.translations]
+simplified_chinese = "减慢播放速度"
+
+[[message]]
+key = "Speed up the demo"
+[message.translations]
+simplified_chinese = "加快播放速度"
+
+[[message]]
+key = "Stop the current demo"
+[message.translations]
+simplified_chinese = "结束回放"
+
+[[message]]
+key = "Toggle auto camera"
+[message.translations]
+simplified_chinese = "切换自动视角"
+
+[[message]]
+key = "Toggle keyboard shortcuts"
+[message.translations]
+simplified_chinese = "启用/禁用键盘快捷键"
+
+[[message]]
+key = "Type"
+[message.translations]
+simplified_chinese = "模式"
+
+[[message]]
+key = "Unable to delete %d selected items. The first failing item was '%s'."
+[message.translations]
+simplified_chinese = "无法删除 %d 个选中项。第一个失败项是“%s”。"
+
+[[message]]
+key = "Unable to delete the demo '%s'"
+[message.translations]
+simplified_chinese = "无法删除回放文件 \"%s\""
+
+[[message]]
+key = "Unable to delete the folder '%s'. Make sure it's empty first."
+[message.translations]
+simplified_chinese = "无法删除 \"%s\" ，请确保你已清空该文件夹"
+
+[[message]]
+key = "Unable to delete the screenshot '%s'"
+[message.translations]
+simplified_chinese = "无法删除截图“%s”"
+
+[[message]]
+key = "Unable to open the screenshot file"
+[message.translations]
+simplified_chinese = "无法打开截图文件"
+
+[[message]]
+key = "map not included"
+context = "Demo details"
+[message.translations]
+simplified_chinese = "未包含地图"
+
+[[message]]
+key = "Go to Live"
+context = "Demo playback"
+[message.translations]
+simplified_chinese = "跳转到实时"
+
+[[message]]
+key = "Live"
+context = "Demo playback"
+[message.translations]
+simplified_chinese = "实时"
+
+[[message]]
+key = "%s min."
+context = "Demo player duration"
+[message.translations]
+simplified_chinese = "%s 分"
+
+[[message]]
+key = "%s sec."
+context = "Demo player duration"
+[message.translations]
+simplified_chinese = "%s 秒"

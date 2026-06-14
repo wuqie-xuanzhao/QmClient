@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+"""Shared i18n store for module-scoped translation TOML files."""
+
+from __future__ import annotations
+
+import tomllib
+from dataclasses import dataclass
+from pathlib import Path
+
+try:
+    from . import source_keys
+except ImportError:  # pragma: no cover - script entrypoint fallback
+    import source_keys
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+TRANSLATIONS_DIR = SCRIPT_DIR / "translations" / "i18n"
+
+
+@dataclass(frozen=True)
+class Message:
+    key: str
+    context: str = ""
+
+    def identity(self) -> tuple[str, str]:
+        return (self.key, self.context)
+
+
+def toml_quote(value: str) -> str:
+    escaped = (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+    )
+    return f'"{escaped}"'
+
+
+def module_name_for_source(source: Path | None) -> str:
+    if source is None:
+        return "misc"
+
+    normalized = source.as_posix()
+    if "/menus_browser." in normalized:
+        return "server_browser"
+    if "/menus_demo." in normalized:
+        return "demo"
+    if (
+        "/menus_ingame_touch_controls." in normalized
+        or "/touch_controls." in normalized
+    ):
+        return "touch_controls"
+    if "/chat." in normalized or "/translate/" in normalized:
+        return "chat"
+    if "/gameclient.cpp" in normalized or "/menus.cpp" in normalized:
+        return "loading"
+    if "/components/qmclient/" in normalized:
+        return "qmclient"
+    if "/components/tclient/" in normalized:
+        return "tclient"
+    if "/menus_" in normalized or "/menus." in normalized:
+        return "menus"
+    return "misc"
+
+
+def sorted_records(
+    records: list[tuple[Message, dict[str, str]]],
+) -> list[tuple[Message, dict[str, str]]]:
+    return sorted(
+        records, key=lambda item: (item[0].context.casefold(), item[0].key.casefold())
+    )
+
+
+def load_language_store() -> dict[str, dict[tuple[str, str], dict[str, str]]]:
+    store: dict[str, dict[tuple[str, str], dict[str, str]]] = {}
+    if not TRANSLATIONS_DIR.exists():
+        return store
+
+    for path in sorted(TRANSLATIONS_DIR.glob("*.toml")):
+        with path.open("rb") as file:
+            data = tomllib.load(file)
+        entries = data.get("message", [])
+        module_entries: dict[tuple[str, str], dict[str, str]] = {}
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            key = entry.get("key", "")
+            context = entry.get("context", "")
+            translations = entry.get("translations", {})
+            if not key or not isinstance(translations, dict):
+                continue
+            normalized = {
+                language: translation
+                for language, translation in translations.items()
+                if isinstance(language, str)
+                and isinstance(translation, str)
+                and translation
+            }
+            if normalized:
+                module_entries[(key, context)] = normalized
+        store[path.stem] = module_entries
+    return store
+
+
+def language_map_for(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]], language: str
+) -> dict[tuple[str, str], str]:
+    flattened: dict[tuple[str, str], str] = {}
+    for module_entries in store.values():
+        for identity, translations in module_entries.items():
+            translation = translations.get(language, "")
+            if translation:
+                flattened[identity] = translation
+    return flattened
+
+
+def missing_translations_for(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+    identities: list[tuple[str, str]] | tuple[tuple[str, str], ...],
+    language: str,
+) -> list[tuple[str, str]]:
+    flattened = language_map_for(store, language)
+    return [identity for identity in identities if not flattened.get(identity, "")]
+
+
+def dump_module(messages: list[tuple[Message, dict[str, str]]]) -> str:
+    lines: list[str] = []
+    for message, translations in sorted_records(messages):
+        lines.append("[[message]]")
+        lines.append(f"key = {toml_quote(message.key)}")
+        if message.context:
+            lines.append(f"context = {toml_quote(message.context)}")
+        lines.append("[message.translations]")
+        for language in sorted(translations):
+            lines.append(f"{language} = {toml_quote(translations[language])}")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def write_language_store(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+) -> None:
+    TRANSLATIONS_DIR.mkdir(parents=True, exist_ok=True)
+    for existing in TRANSLATIONS_DIR.glob("*.toml"):
+        if existing.stem not in store:
+            existing.unlink()
+    for module_name, entries in sorted(store.items()):
+        path = TRANSLATIONS_DIR / f"{module_name}.toml"
+        messages = [
+            (Message(key, context), translations)
+            for (key, context), translations in entries.items()
+        ]
+        path.write_text(dump_module(messages), encoding="utf-8", newline="\n")
+
+
+def build_module_store_from_records(
+    records: list[source_keys.SourceKeyRecord],
+    translations_by_identity: dict[tuple[str, str], dict[str, str]],
+) -> dict[str, dict[tuple[str, str], dict[str, str]]]:
+    store: dict[str, dict[tuple[str, str], dict[str, str]]] = {}
+    assigned: set[tuple[str, str]] = set()
+    for record in records:
+        identity = record.identity()
+        if identity in assigned:
+            continue
+        assigned.add(identity)
+        module_name = module_name_for_source(record.source)
+        translations = translations_by_identity.get(identity, {})
+        store.setdefault(module_name, {})[identity] = dict(sorted(translations.items()))
+    return {module: entries for module, entries in store.items() if entries}

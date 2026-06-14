@@ -1,0 +1,3999 @@
+[[message]]
+key = "%s and %s have swapped"
+[message.translations]
+simplified_chinese = "%s 与 %s 已完成交换"
+
+[[message]]
+key = "%s canceled the swap with %s"
+[message.translations]
+simplified_chinese = "%s 已取消与 %s 的交换"
+
+[[message]]
+key = "%s canceled the swap with you"
+[message.translations]
+simplified_chinese = "%s 已取消与你的交换"
+
+[[message]]
+key = "%s current race time is %s"
+[message.translations]
+simplified_chinese = "%s 当前的比赛用时是 %s"
+
+[[message]]
+key = "%s has requested to swap with %s"
+[message.translations]
+simplified_chinese = "%s 请求与 %s 交换位置"
+
+[[message]]
+key = "%s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s."
+[message.translations]
+simplified_chinese = "%s 请求与你交换。请等待 %s 秒后输入 /swap %s 完成"
+
+[[message]]
+key = "'%s' called for vote to force-pause '%s' for %s seconds (reason: %s)"
+[message.translations]
+simplified_chinese = "'%s' 发起了暂停 '%s' %s 秒的投票（原因：%s）"
+
+[[message]]
+key = "'%s' called for vote to kick '%s' (reason: %s)"
+[message.translations]
+simplified_chinese = "'%s' 发起了踢出 '%s' 的投票（原因：%s）"
+
+[[message]]
+key = "'%s' called for vote to kick you"
+[message.translations]
+simplified_chinese = "'%s' 发起了针对你的踢人投票"
+
+[[message]]
+key = "'%s' called for vote to move '%s' to spectators (reason: %s)"
+[message.translations]
+simplified_chinese = "'%s' 发起了将 '%s' 移到旁观的投票（原因：%s）"
+
+[[message]]
+key = "'%s' called for vote to move you to spectators"
+[message.translations]
+simplified_chinese = "'%s' 发起了针对你的旁观投票"
+
+[[message]]
+key = "'%s' called for vote to mute '%s' (reason: %s)"
+[message.translations]
+simplified_chinese = "'%s' 发起了禁言 '%s' 的投票（原因：%s）"
+
+[[message]]
+key = "'%s' called vote to %s practice mode for your team. Current votes %s/%s"
+[message.translations]
+simplified_chinese = "'%s' 发起了%s队伍练习模式投票。当前票数 %s/%s"
+
+[[message]]
+key = "'%s' called vote to change server option: %s"
+[message.translations]
+simplified_chinese = "'%s' 发起了服务器选项投票：%s"
+
+[[message]]
+key = "'%s' called vote to change server option: %s (reason: %s)"
+[message.translations]
+simplified_chinese = "'%s' 发起了服务器选项投票：%s（原因：%s）"
+
+[[message]]
+key = "'%s' disabled practice mode for your team"
+[message.translations]
+simplified_chinese = "'%s' 关闭了你们队伍的练习模式"
+
+[[message]]
+key = "'%s' disabled team 0 mode."
+[message.translations]
+simplified_chinese = "'%s' 关闭了 team 0 模式"
+
+[[message]]
+key = "'%s' enabled team 0 mode. This will make your team behave like team 0."
+[message.translations]
+simplified_chinese = "'%s' 开启了 team 0 模式。你们的队伍现在会按 team 0 规则运作"
+
+[[message]]
+key = "'%s' invited '%s' to your team."
+[message.translations]
+simplified_chinese = "'%s' 邀请了 '%s' 加入你们的队伍"
+
+[[message]]
+key = "'%s' invited you to team %s. Use /team %s to join"
+[message.translations]
+simplified_chinese = "'%s' 邀请你加入 %s 队。输入 /team %s 即可加入"
+
+[[message]]
+key = "'%s' is not a valid option on this server"
+[message.translations]
+simplified_chinese = "'%s' 不是本服务器可用的投票选项"
+
+[[message]]
+key = "'%s' joined team %s"
+[message.translations]
+simplified_chinese = "'%s' 加入了 %s 队"
+
+[[message]]
+key = "'%s' joined team 0"
+[message.translations]
+simplified_chinese = "'%s' 加入了 0 队"
+
+[[message]]
+key = "'%s' locked your team."
+[message.translations]
+simplified_chinese = "'%s' 锁定了你们的队伍"
+
+[[message]]
+key = "'%s' locked your team. After the race starts, killing will kill everyone in your team."
+[message.translations]
+simplified_chinese = "'%s' 锁定了你们的队伍。比赛开始后，任何人 kill 都会导致整队死亡"
+
+[[message]]
+key = "'%s' unlocked your team."
+[message.translations]
+simplified_chinese = "'%s' 解锁了你们的队伍"
+
+[[message]]
+key = "'%s' was force-paused for %s seconds"
+[message.translations]
+simplified_chinese = "'%s' 被强制暂停了 %s 秒"
+
+[[message]]
+key = "'%s' would have timed out, but can use timeout protection now"
+[message.translations]
+simplified_chinese = "'%s' 原本会超时掉线，但现在可以使用超时保护"
+
+[[message]]
+key = "/map is disabled"
+[message.translations]
+simplified_chinese = "本服务器已禁用 /map"
+
+[[message]]
+key = "3D Background"
+[message.translations]
+simplified_chinese = "3D背景"
+
+[[message]]
+key = "45° Aim"
+[message.translations]
+simplified_chinese = "45°瞄准"
+
+[[message]]
+key = "Active disconnect"
+[message.translations]
+simplified_chinese = "主动断开"
+
+[[message]]
+key = "Active moderator mode disabled because you are afk."
+[message.translations]
+simplified_chinese = "由于你已挂机，主动管理员模式已关闭"
+
+[[message]]
+key = "Active moderator mode disabled for you."
+[message.translations]
+simplified_chinese = "已为你关闭主动管理员模式"
+
+[[message]]
+key = "Active moderator mode enabled for you."
+[message.translations]
+simplified_chinese = "已为你开启主动管理员模式"
+
+[[message]]
+key = "Adjust game camera and FOV settings"
+[message.translations]
+simplified_chinese = "调整游戏镜头和视野设置"
+
+[[message]]
+key = "Adjust opacity of entity layers"
+[message.translations]
+simplified_chinese = "调整各个实体层的透明度"
+
+[[message]]
+key = "Advanced options"
+[message.translations]
+simplified_chinese = "高级选项"
+
+[[message]]
+key = "Afterimage pop"
+[message.translations]
+simplified_chinese = "残影弹出"
+
+[[message]]
+key = "All players"
+[message.translations]
+simplified_chinese = "所有人"
+
+[[message]]
+key = "Allow mic permission in system settings, then reopen voice"
+[message.translations]
+simplified_chinese = "需要在系统设置里允许麦克风权限，然后重新打开语音"
+
+[[message]]
+key = "Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)"
+[message.translations]
+simplified_chinese = "其他服务器的类似提示也尝试改走通知栏（例如自定义单人区域提示，按黑名单排除）"
+
+[[message]]
+key = "Always show"
+[message.translations]
+simplified_chinese = "始终显示"
+
+[[message]]
+key = "Always translate"
+[message.translations]
+simplified_chinese = "始终翻译"
+
+[[message]]
+key = "Animation"
+[message.translations]
+simplified_chinese = "动画效果"
+
+[[message]]
+key = "Animation duration"
+[message.translations]
+simplified_chinese = "动画持续多久"
+
+[[message]]
+key = "Animation range"
+[message.translations]
+simplified_chinese = "动画范围"
+
+[[message]]
+key = "API key"
+[message.translations]
+simplified_chinese = "API 密钥"
+
+[[message]]
+key = "Aspect ratio preset"
+[message.translations]
+simplified_chinese = "纵横比预设"
+
+[[message]]
+key = "Audio"
+[message.translations]
+simplified_chinese = "语音音效"
+
+[[message]]
+key = "Audio backend init failed"
+[message.translations]
+simplified_chinese = "音频后端初始化失败"
+
+[[message]]
+key = "Audio backend init failed, try switching devices and check details"
+[message.translations]
+simplified_chinese = "音频后端初始化失败，建议切换设备后重试，并查看详细原因"
+
+[[message]]
+key = "Audio init failed, check details below and logs"
+[message.translations]
+simplified_chinese = "音频初始化失败，建议查看下方详细原因并结合日志排查"
+
+[[message]]
+key = "Audio issue"
+[message.translations]
+simplified_chinese = "音频问题"
+
+[[message]]
+key = "Authorized player forced vote '%s'"
+[message.translations]
+simplified_chinese = "授权玩家强制将当前投票设为 '%s'"
+
+[[message]]
+key = "Auto chat in water"
+[message.translations]
+simplified_chinese = "水中自动发言"
+
+[[message]]
+key = "Auto chat when dying in water"
+[message.translations]
+simplified_chinese = "在水中死亡时自动说话"
+
+[[message]]
+key = "Auto concurrency: %d (smart default)"
+[message.translations]
+simplified_chinese = "自动并发数：%d（智能默认）"
+
+[[message]]
+key = "Auto disable when time expires"
+[message.translations]
+simplified_chinese = "时间耗尽后自动禁用"
+
+[[message]]
+key = "Auto enable in Gores mode"
+[message.translations]
+simplified_chinese = "Gores 模式自动启用"
+
+[[message]]
+key = "Auto gain control for mic (AGC, experimental)"
+[message.translations]
+simplified_chinese = "自动平衡麦克风音量（AGC，实验性）"
+
+[[message]]
+key = "Auto greet friends entering map"
+[message.translations]
+simplified_chinese = "自动问候进图的好友"
+
+[[message]]
+key = "Auto hot-reload after external saves"
+[message.translations]
+simplified_chinese = "外部保存后自动热重载"
+
+[[message]]
+key = "Auto login Axiom server"
+[message.translations]
+simplified_chinese = "自动登录 Axiom 服务器"
+
+[[message]]
+key = "Auto refresh server list"
+[message.translations]
+simplified_chinese = "自动刷新服务器列表"
+
+[[message]]
+key = "Auto reply cooldown"
+[message.translations]
+simplified_chinese = "自动回复冷却"
+
+[[message]]
+key = "Auto switch to the tee that got unfrozen"
+[message.translations]
+simplified_chinese = "自动切换到解冻的 Tee"
+
+[[message]]
+key = "Auto team lock"
+[message.translations]
+simplified_chinese = "自动锁队"
+
+[[message]]
+key = "Auto translate received messages"
+[message.translations]
+simplified_chinese = "自动翻译收到的消息"
+
+[[message]]
+key = "Auto translate sent messages"
+[message.translations]
+simplified_chinese = "自动翻译发送的消息"
+
+[[message]]
+key = "Auto unmute when speaking"
+[message.translations]
+simplified_chinese = "自动检测说话时开麦"
+
+[[message]]
+key = "Auto unspec on unfreeze"
+[message.translations]
+simplified_chinese = "解冻自动取消旁观"
+
+[[message]]
+key = "Auto-toggle fast input"
+[message.translations]
+simplified_chinese = "自动开关快速输入"
+
+[[message]]
+key = "Auto-toggle fast input others"
+[message.translations]
+simplified_chinese = "自动开关快速输入其他玩家"
+
+[[message]]
+key = "Automatically close the current chat after waking from freeze"
+[message.translations]
+simplified_chinese = "从冻结状态中醒来自动关闭聊天框"
+
+[[message]]
+key = "Axiom dummy password"
+[message.translations]
+simplified_chinese = "Axiom 分身密码"
+
+[[message]]
+key = "Axiom main account password"
+[message.translations]
+simplified_chinese = "Axiom 主号密码"
+
+[[message]]
+key = "Background color"
+[message.translations]
+simplified_chinese = "背景颜色"
+
+[[message]]
+key = "Based on a pile of Windows... stuff"
+[message.translations]
+simplified_chinese = "基于Win的一坨所拉的一泡"
+
+[[message]]
+key = "Both"
+[message.translations]
+simplified_chinese = "两者"
+
+[[message]]
+key = "Both sides of keyword rules must be filled"
+[message.translations]
+simplified_chinese = "关键词规则的两侧都必须填写"
+
+[[message]]
+key = "Bounce"
+[message.translations]
+simplified_chinese = "弹跳"
+
+[[message]]
+key = "Brightness shift"
+[message.translations]
+simplified_chinese = "明暗切换"
+
+[[message]]
+key = "Bubble opacity"
+[message.translations]
+simplified_chinese = "气泡不透明度"
+
+[[message]]
+key = "Buffer memory"
+[message.translations]
+simplified_chinese = "缓冲内存"
+
+[[message]]
+key = "Camera & FOV"
+[message.translations]
+simplified_chinese = "镜头与视野"
+
+[[message]]
+key = "Can't /spec that quickly."
+[message.translations]
+simplified_chinese = "你不能这么快再次 /spec"
+
+[[message]]
+key = "Can't disable team 0 mode. This team exceeds the maximum allowed size of %s players for regular team"
+[message.translations]
+simplified_chinese = "无法关闭 team 0 模式。该队伍人数已超过普通队伍允许上限 %s"
+
+[[message]]
+key = "Can't enable team 0 mode with practice mode on."
+[message.translations]
+simplified_chinese = "开启练习模式时不能启用 team 0 模式"
+
+[[message]]
+key = "Can't invite players to this team"
+[message.translations]
+simplified_chinese = "当前这个队伍不能邀请玩家"
+
+[[message]]
+key = "Can't invite this quickly"
+[message.translations]
+simplified_chinese = "你发送邀请太快了，请稍后再试"
+
+[[message]]
+key = "Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3."
+[message.translations]
+simplified_chinese = "无法识别 /tpxy 参数"
+
+[[message]]
+key = "Can't swap with yourself"
+[message.translations]
+simplified_chinese = "你不能和自己交换位置"
+
+[[message]]
+key = "Chat"
+[message.translations]
+simplified_chinese = "聊天"
+
+[[message]]
+key = "Chat box button appearance settings"
+[message.translations]
+simplified_chinese = "聊天框按钮外观设置"
+
+[[message]]
+key = "Chat Bubble"
+[message.translations]
+simplified_chinese = "消息气泡"
+
+[[message]]
+key = "Chat message"
+[message.translations]
+simplified_chinese = "聊天消息"
+
+[[message]]
+key = "Chat Translate Button UI"
+[message.translations]
+simplified_chinese = "聊天翻译按钮UI"
+
+[[message]]
+key = "Chat translation settings"
+[message.translations]
+simplified_chinese = "聊天翻译设置"
+
+[[message]]
+key = "Chat word filtering"
+[message.translations]
+simplified_chinese = "聊天屏蔽词过滤"
+
+[[message]]
+key = "Check if voice server address is reachable"
+[message.translations]
+simplified_chinese = "建议检查语音服务器地址是否可用"
+
+[[message]]
+key = "Check if your dummy is being bullied while you control the main tee"
+[message.translations]
+simplified_chinese = "看看你操控本体的时候分身有没有被别人欺负"
+
+[[message]]
+key = "Check input device, system default mic, and mic permission first"
+[message.translations]
+simplified_chinese = "建议先检查输入设备、系统默认麦克风和麦克风权限"
+
+[[message]]
+key = "Check output device, confirm headphones/speakers are still online"
+[message.translations]
+simplified_chinese = "建议先检查输出设备，确认耳机或扬声器仍在线"
+
+[[message]]
+key = "Classic"
+[message.translations]
+simplified_chinese = "古典"
+
+[[message]]
+key = "Classic easy"
+[message.translations]
+simplified_chinese = "古典 easy"
+
+[[message]]
+key = "Classic next"
+[message.translations]
+simplified_chinese = "古典 next"
+
+[[message]]
+key = "Classic nut"
+[message.translations]
+simplified_chinese = "古典 nut"
+
+[[message]]
+key = "Classic pro"
+[message.translations]
+simplified_chinese = "古典 pro"
+
+[[message]]
+key = "Click to copy QQ group number"
+[message.translations]
+simplified_chinese = "点击复制QQ群号"
+
+[[message]]
+key = "Click to copy the map name"
+[message.translations]
+simplified_chinese = "点击复制地图名"
+
+[[message]]
+key = "Click to set color"
+[message.translations]
+simplified_chinese = "点击以设置颜色"
+
+[[message]]
+key = "Client CPU usage is high"
+[message.translations]
+simplified_chinese = "客户端 CPU 占用偏高"
+
+[[message]]
+key = "Client frame time is abnormal"
+[message.translations]
+simplified_chinese = "客户端帧时间异常"
+
+[[message]]
+key = "Client performance pressure is high"
+[message.translations]
+simplified_chinese = "客户端性能压力偏高"
+
+[[message]]
+key = "Client prediction time is high"
+[message.translations]
+simplified_chinese = "客户端预测耗时偏高"
+
+[[message]]
+key = "Combo"
+[message.translations]
+simplified_chinese = "连击"
+
+[[message]]
+key = "Command is not available on solo servers"
+[message.translations]
+simplified_chinese = "这个命令在 solo 服务器上不可用"
+
+[[message]]
+key = "Common key bindings"
+[message.translations]
+simplified_chinese = "常见的按键绑定"
+
+[[message]]
+key = "Community links, updates, and sponsors moved to the Contributors tab"
+[message.translations]
+simplified_chinese = "社区链接、更新与赞助名单已移到贡献者页"
+
+[[message]]
+key = "Concurrency (0 = auto)"
+[message.translations]
+simplified_chinese = "并发数（0 = 自动）"
+
+[[message]]
+key = "Config"
+[message.translations]
+simplified_chinese = "配置"
+
+[[message]]
+key = "Config file: data/input_overlay.json"
+[message.translations]
+simplified_chinese = "配置文件: data/input_overlay.json"
+
+[[message]]
+key = "Configure background 3D particle effects"
+[message.translations]
+simplified_chinese = "配置背景 3D 粒子效果"
+
+[[message]]
+key = "Configure hammer skin steal and skin transition animations"
+[message.translations]
+simplified_chinese = "调整锤中偷皮和换皮动画"
+
+[[message]]
+key = "Confirm both are on same server, same room, and support voice"
+[message.translations]
+simplified_chinese = "建议确认双方在同服、同房间，并且对方也支持语音"
+
+[[message]]
+key = "Connect to server first to establish voice network link"
+[message.translations]
+simplified_chinese = "需要先进入服务器，语音网络链路才会建立"
+
+[[message]]
+key = "Connected, no one is speaking"
+[message.translations]
+simplified_chinese = "已联通，暂时无人说话"
+
+[[message]]
+key = "Connected, waiting for first ping"
+[message.translations]
+simplified_chinese = "已连接，等待首个 ping"
+
+[[message]]
+key = "Connection disconnected"
+[message.translations]
+simplified_chinese = "连接断开"
+
+[[message]]
+key = "Connection downstream"
+[message.translations]
+simplified_chinese = "连接下行"
+
+[[message]]
+key = "Connection elevated"
+[message.translations]
+simplified_chinese = "连接偏高"
+
+[[message]]
+key = "Connection normal"
+[message.translations]
+simplified_chinese = "连接正常"
+
+[[message]]
+key = "Connection severely abnormal"
+[message.translations]
+simplified_chinese = "连接严重异常"
+
+[[message]]
+key = "Connection upstream"
+[message.translations]
+simplified_chinese = "连接上行"
+
+[[message]]
+key = "Console color"
+[message.translations]
+simplified_chinese = "控制台颜色"
+
+[[message]]
+key = "Could not find your Team"
+[message.translations]
+simplified_chinese = "找不到你的队伍"
+
+[[message]]
+key = "Could not load sponsor QR code. Check the Base64 data"
+[message.translations]
+simplified_chinese = "无法加载支持二维码。请检查 Base64 内容"
+
+[[message]]
+key = "CP opacity"
+[message.translations]
+simplified_chinese = "CP点不透明度"
+
+[[message]]
+key = "Crescent"
+[message.translations]
+simplified_chinese = "月牙"
+
+[[message]]
+key = "Cube"
+[message.translations]
+simplified_chinese = "方块"
+
+[[message]]
+key = "Current aspect ratio:"
+[message.translations]
+simplified_chinese = "当前宽高比:"
+
+[[message]]
+key = "Current aspect ratio: Show default"
+[message.translations]
+simplified_chinese = "当前宽高比: 显示默认"
+
+[[message]]
+key = "Current rescue mode: %s"
+[message.translations]
+simplified_chinese = "当前救援模式：%s"
+
+[[message]]
+key = "Current status"
+[message.translations]
+simplified_chinese = "当前状态"
+
+[[message]]
+key = "Custom API key"
+[message.translations]
+simplified_chinese = "自定义 API 密钥"
+
+[[message]]
+key = "Custom aspect ratio"
+[message.translations]
+simplified_chinese = "自定义宽高比"
+
+[[message]]
+key = "Custom prompt template"
+[message.translations]
+simplified_chinese = "自定义提示词模板"
+
+[[message]]
+key = "Customize translate button and menu colors"
+[message.translations]
+simplified_chinese = "自定义翻译按钮和菜单颜色"
+
+[[message]]
+key = "Damn grenadiers, all go to spa!"
+[message.translations]
+simplified_chinese = "他妈的炸弹人全给我去Spa!"
+
+[[message]]
+key = "Damn grenadiers, just die!"
+[message.translations]
+simplified_chinese = "他妈的炸弹人都给我死啊!"
+
+[[message]]
+key = "DDNet/total CPU"
+[message.translations]
+simplified_chinese = "DDNet/总 CPU"
+
+[[message]]
+key = "Death opacity"
+[message.translations]
+simplified_chinese = "死亡不透明度"
+
+[[message]]
+key = "Debug graph"
+[message.translations]
+simplified_chinese = "调试图表"
+
+[[message]]
+key = "Debug performance graph panel"
+[message.translations]
+simplified_chinese = "调试性能图表面板"
+
+[[message]]
+key = "Deep freeze opacity"
+[message.translations]
+simplified_chinese = "深度冻结不透明度"
+
+[[message]]
+key = "Deep unfreeze opacity"
+[message.translations]
+simplified_chinese = "深度解冻不透明度"
+
+[[message]]
+key = "DeepSeek"
+[message.translations]
+simplified_chinese = "DeepSeek"
+
+[[message]]
+key = "DeepSeek API key"
+[message.translations]
+simplified_chinese = "DeepSeek API 密钥"
+
+[[message]]
+key = "Default input open failed"
+[message.translations]
+simplified_chinese = "默认输入打开失败"
+
+[[message]]
+key = "Default output open failed"
+[message.translations]
+simplified_chinese = "默认输出打开失败"
+
+[[message]]
+key = "Detailed reason"
+[message.translations]
+simplified_chinese = "详细原因"
+
+[[message]]
+key = "Detection distance"
+[message.translations]
+simplified_chinese = "检测距离"
+
+[[message]]
+key = "Detection time"
+[message.translations]
+simplified_chinese = "判定时间"
+
+[[message]]
+key = "Developers and sponsors"
+[message.translations]
+simplified_chinese = "开发以及赞助者"
+
+[[message]]
+key = "Diamond"
+[message.translations]
+simplified_chinese = "钻石"
+
+[[message]]
+key = "died"
+[message.translations]
+simplified_chinese = "死亡"
+
+[[message]]
+key = "disable"
+[message.translations]
+simplified_chinese = "关闭"
+
+[[message]]
+key = "Disable after picking up other weapons"
+[message.translations]
+simplified_chinese = "拿到其他武器时停用"
+
+[[message]]
+key = "Disconnected"
+[message.translations]
+simplified_chinese = "连接已断开"
+
+[[message]]
+key = "Display mode"
+[message.translations]
+simplified_chinese = "显示模式"
+
+[[message]]
+key = "Dissolve"
+[message.translations]
+simplified_chinese = "消散"
+
+[[message]]
+key = "Dragging, collapsing, search, and usage history are preserved per category"
+[message.translations]
+simplified_chinese = "拖拽、折叠、搜索和使用历史会在每个分类中保留"
+
+[[message]]
+key = "Drawing a big pie in the sky"
+[message.translations]
+simplified_chinese = "画一张大饼"
+
+[[message]]
+key = "Dream Features"
+[message.translations]
+simplified_chinese = "梦的小功能"
+
+[[message]]
+key = "Drift direction"
+[message.translations]
+simplified_chinese = "漂移方向"
+
+[[message]]
+key = "Drift intensity"
+[message.translations]
+simplified_chinese = "漂移强度"
+
+[[message]]
+key = "Drift smoothness"
+[message.translations]
+simplified_chinese = "漂移平滑度"
+
+[[message]]
+key = "Dummy Window"
+[message.translations]
+simplified_chinese = "分身小窗"
+
+[[message]]
+key = "Dummy window size"
+[message.translations]
+simplified_chinese = "分身小窗大小"
+
+[[message]]
+key = "Dummy window zoom"
+[message.translations]
+simplified_chinese = "分身小窗缩放"
+
+[[message]]
+key = "Duration"
+[message.translations]
+simplified_chinese = "持续时间"
+
+[[message]]
+key = "Dynamic FOV intensity"
+[message.translations]
+simplified_chinese = "动态视野强度"
+
+[[message]]
+key = "Dynamic FOV smoothness"
+[message.translations]
+simplified_chinese = "动态视野平滑度"
+
+[[message]]
+key = "Dynamic Island"
+[message.translations]
+simplified_chinese = "灵动岛"
+
+[[message]]
+key = "Each tab has a clear purpose"
+[message.translations]
+simplified_chinese = "每个标签页都有明确职责"
+
+[[message]]
+key = "Echo follows the original chat color"
+[message.translations]
+simplified_chinese = "Echo 跟随聊天里当时的实际颜色"
+
+[[message]]
+key = "Echo text color when not inheriting chat color"
+[message.translations]
+simplified_chinese = "Echo 不跟随聊天颜色时的文字颜色"
+
+[[message]]
+key = "Edge margin"
+[message.translations]
+simplified_chinese = "贴边边距"
+
+[[message]]
+key = "Elevated"
+[message.translations]
+simplified_chinese = "偏高"
+
+[[message]]
+key = "Emotes are disabled."
+[message.translations]
+simplified_chinese = "本服务器已禁用表情功能"
+
+[[message]]
+key = "Emoticon ID"
+[message.translations]
+simplified_chinese = "表情 ID"
+
+[[message]]
+key = "enable"
+[message.translations]
+simplified_chinese = "开启"
+
+[[message]]
+key = "Enable 3D background particles"
+[message.translations]
+simplified_chinese = "启用 3D 背景粒子"
+
+[[message]]
+key = "Enable camera drift"
+[message.translations]
+simplified_chinese = "启用镜头漂移"
+
+[[message]]
+key = "Enable dummy window"
+[message.translations]
+simplified_chinese = "启用分身小窗"
+
+[[message]]
+key = "Enable dynamic FOV"
+[message.translations]
+simplified_chinese = "启用动态视野"
+
+[[message]]
+key = "Enable FTAPI auto-translate (may overload the service)"
+[message.translations]
+simplified_chinese = "启用 FTAPI 自动翻译（可能导致服务过载）"
+
+[[message]]
+key = "Enable Gores mode"
+[message.translations]
+simplified_chinese = "启用 Gores 模式"
+
+[[message]]
+key = "Enable keyword reply"
+[message.translations]
+simplified_chinese = "启用关键词回复"
+
+[[message]]
+key = "Enable pie menu"
+[message.translations]
+simplified_chinese = "启用饼菜单"
+
+[[message]]
+key = "Enable repeat"
+[message.translations]
+simplified_chinese = "启用复读"
+
+[[message]]
+key = "Enable speedrun timer"
+[message.translations]
+simplified_chinese = "启用速通计时器"
+
+[[message]]
+key = "Enable stereo positioning"
+[message.translations]
+simplified_chinese = "启用立体声定位"
+
+[[message]]
+key = "Enable system media control"
+[message.translations]
+simplified_chinese = "启用系统媒体控制"
+
+[[message]]
+key = "Enable thinking mode (slower)"
+[message.translations]
+simplified_chinese = "启用思考模式（较慢）"
+
+[[message]]
+key = "Enable voice"
+[message.translations]
+simplified_chinese = "启用语音"
+
+[[message]]
+key = "Enable word filter list"
+[message.translations]
+simplified_chinese = "启用屏蔽词列表"
+
+[[message]]
+key = "Enable Zen mode"
+[message.translations]
+simplified_chinese = "启用禅模式"
+
+[[message]]
+key = "Endless hook has been activated"
+[message.translations]
+simplified_chinese = "无限钩已开启"
+
+[[message]]
+key = "Endless hook has been deactivated"
+[message.translations]
+simplified_chinese = "无限钩已关闭"
+
+[[message]]
+key = "Endpoint"
+[message.translations]
+simplified_chinese = "端点"
+
+[[message]]
+key = "Endpoint (optional)"
+[message.translations]
+simplified_chinese = "端点 (可选)"
+
+[[message]]
+key = "Enter /practice mode or restart to avoid the entire team being killed in 60 seconds"
+[message.translations]
+simplified_chinese = "请输入 /practice 或重新开始，否则整队将在 60 秒后被处死"
+
+[[message]]
+key = "Entity Layer Colors"
+[message.translations]
+simplified_chinese = "实体层颜色"
+
+[[message]]
+key = "Example: name1|name2|name3"
+[message.translations]
+simplified_chinese = "示例: 名字1|名字2|名字3"
+
+[[message]]
+key = "Expand module"
+[message.translations]
+simplified_chinese = "展开模块"
+
+[[message]]
+key = "Fade and slide"
+[message.translations]
+simplified_chinese = "淡入并滑入"
+
+[[message]]
+key = "Fade in"
+[message.translations]
+simplified_chinese = "淡入"
+
+[[message]]
+key = "Fade only"
+[message.translations]
+simplified_chinese = "仅淡入"
+
+[[message]]
+key = "Fade out"
+[message.translations]
+simplified_chinese = "淡出"
+
+[[message]]
+key = "Fallback simple noise reduction strength"
+[message.translations]
+simplified_chinese = "回退后的简单降噪强度"
+
+[[message]]
+key = "Favorite maps"
+[message.translations]
+simplified_chinese = "收藏地图"
+
+[[message]]
+key = "Feature Search"
+[message.translations]
+simplified_chinese = "功能搜索"
+
+[[message]]
+key = "Font size"
+[message.translations]
+simplified_chinese = "字体大小"
+
+[[message]]
+key = "Found %d modules"
+[message.translations]
+simplified_chinese = "匹配到 %d 个模块"
+
+[[message]]
+key = "Frame rate"
+[message.translations]
+simplified_chinese = "帧率"
+
+[[message]]
+key = "Frame time"
+[message.translations]
+simplified_chinese = "帧时间"
+
+[[message]]
+key = "Freeze border color"
+[message.translations]
+simplified_chinese = "Freeze 边框颜色"
+
+[[message]]
+key = "Freeze opacity"
+[message.translations]
+simplified_chinese = "冻结不透明度"
+
+[[message]]
+key = "Friend"
+[message.translations]
+simplified_chinese = "好友"
+
+[[message]]
+key = "Friend Notifications"
+[message.translations]
+simplified_chinese = "好友提醒"
+
+[[message]]
+key = "Friend online and join notifications"
+[message.translations]
+simplified_chinese = "好友上线和加入提醒"
+
+[[message]]
+key = "Full map listen in same room"
+[message.translations]
+simplified_chinese = "同房间全图收听"
+
+[[message]]
+key = "Functions"
+[message.translations]
+simplified_chinese = "功能"
+
+[[message]]
+key = "Game time margin"
+[message.translations]
+simplified_chinese = "游戏时间边距"
+
+[[message]]
+key = "Game/predicted tick"
+[message.translations]
+simplified_chinese = "游戏/预测 Tick"
+
+[[message]]
+key = "Gap aim rescue"
+[message.translations]
+simplified_chinese = "瞄缝救人"
+
+[[message]]
+key = "Global toggle key"
+[message.translations]
+simplified_chinese = "全局开关键"
+
+[[message]]
+key = "Glow alpha"
+[message.translations]
+simplified_chinese = "辉光透明度"
+
+[[message]]
+key = "Glow intensity"
+[message.translations]
+simplified_chinese = "辉光强度"
+
+[[message]]
+key = "Glow offset"
+[message.translations]
+simplified_chinese = "辉光偏移"
+
+[[message]]
+key = "Gores Actor"
+[message.translations]
+simplified_chinese = "Gores演员专用"
+
+[[message]]
+key = "Gores auto weapon switch"
+[message.translations]
+simplified_chinese = "Gores自动武器切换"
+
+[[message]]
+key = "Gores Mode"
+[message.translations]
+simplified_chinese = "Gores 模式"
+
+[[message]]
+key = "Gores mode key"
+[message.translations]
+simplified_chinese = "Gores 模式按键"
+
+[[message]]
+key = "Greeting text"
+[message.translations]
+simplified_chinese = "打招呼文本"
+
+[[message]]
+key = "Guide line color"
+[message.translations]
+simplified_chinese = "辅助线颜色"
+
+[[message]]
+key = "Hammer skin steal"
+[message.translations]
+simplified_chinese = "锤中偷皮"
+
+[[message]]
+key = "Heart"
+[message.translations]
+simplified_chinese = "爱心"
+
+[[message]]
+key = "Hide death/respawn effects"
+[message.translations]
+simplified_chinese = "隐藏死亡/重生特效"
+
+[[message]]
+key = "Hide direction indicators"
+[message.translations]
+simplified_chinese = "隐藏方向"
+
+[[message]]
+key = "Hide Echo messages"
+[message.translations]
+simplified_chinese = "隐藏 Echo 消息"
+
+[[message]]
+key = "Hide explosion effects"
+[message.translations]
+simplified_chinese = "隐藏炮击特效"
+
+[[message]]
+key = "Hide freeze effects"
+[message.translations]
+simplified_chinese = "隐藏冻结特效"
+
+[[message]]
+key = "Hide guide lines"
+[message.translations]
+simplified_chinese = "隐藏辅助线"
+
+[[message]]
+key = "Hide hammer effects"
+[message.translations]
+simplified_chinese = "隐藏锤击特效"
+
+[[message]]
+key = "Hide HUD"
+[message.translations]
+simplified_chinese = "隐藏 HUD"
+
+[[message]]
+key = "Hide input emoticon"
+[message.translations]
+simplified_chinese = "隐藏输入表情"
+
+[[message]]
+key = "Hide join/version prompts"
+[message.translations]
+simplified_chinese = "隐藏入场/版本提示"
+
+[[message]]
+key = "Hide jump effects"
+[message.translations]
+simplified_chinese = "隐藏跳跃特效"
+
+[[message]]
+key = "Hide kill/finish messages"
+[message.translations]
+simplified_chinese = "隐藏击杀/完成"
+
+[[message]]
+key = "Hide map progress"
+[message.translations]
+simplified_chinese = "隐藏地图进度"
+
+[[message]]
+key = "Hide nameplates"
+[message.translations]
+simplified_chinese = "隐藏名字板"
+
+[[message]]
+key = "Hide names"
+[message.translations]
+simplified_chinese = "隐藏名字"
+
+[[message]]
+key = "Hide player messages"
+[message.translations]
+simplified_chinese = "隐藏玩家消息"
+
+[[message]]
+key = "Hide scoreboard"
+[message.translations]
+simplified_chinese = "隐藏记分板"
+
+[[message]]
+key = "Hide server prompt notifications"
+[message.translations]
+simplified_chinese = "隐藏服务器提示通知"
+
+[[message]]
+key = "Hide sponsor QR code"
+[message.translations]
+simplified_chinese = "隐藏赞助码"
+
+[[message]]
+key = "Hide UI for focused gameplay"
+[message.translations]
+simplified_chinese = "隐去UI专注游戏"
+
+[[message]]
+key = "Hide weapon muzzle flashes"
+[message.translations]
+simplified_chinese = "隐藏武器火焰"
+
+[[message]]
+key = "Hitbox mode"
+[message.translations]
+simplified_chinese = "碰撞箱模式"
+
+[[message]]
+key = "HJ Assist"
+[message.translations]
+simplified_chinese = "HJ辅助"
+
+[[message]]
+key = "HJ assist"
+[message.translations]
+simplified_chinese = "HJ 大佬辅助"
+
+[[message]]
+key = "Horizontal position"
+[message.translations]
+simplified_chinese = "水平位置"
+
+[[message]]
+key = "Hours"
+[message.translations]
+simplified_chinese = "小时"
+
+[[message]]
+key = "I am a robot"
+[message.translations]
+simplified_chinese = "我 是 机 器 人"
+
+[[message]]
+key = "Idiot word filter"
+[message.translations]
+simplified_chinese = "傻逼词过滤器"
+
+[[message]]
+key = "Input device"
+[message.translations]
+simplified_chinese = "输入设备"
+
+[[message]]
+key = "Input device not found"
+[message.translations]
+simplified_chinese = "输入设备不存在"
+
+[[message]]
+key = "Input device open failed"
+[message.translations]
+simplified_chinese = "输入设备打开失败"
+
+[[message]]
+key = "Input device open failed, try reconnecting headset/mic or reselecting input device"
+[message.translations]
+simplified_chinese = "输入设备打开失败，建议重插耳机/麦克风后刷新，或重新选择输入设备"
+
+[[message]]
+key = "Input overlay"
+[message.translations]
+simplified_chinese = "按键显示"
+
+[[message]]
+key = "Input overlay display"
+[message.translations]
+simplified_chinese = "按键显示叠加"
+
+[[message]]
+key = "Input switch"
+[message.translations]
+simplified_chinese = "输入切换"
+
+[[message]]
+key = "Interface"
+[message.translations]
+simplified_chinese = "界面"
+
+[[message]]
+key = "Invalid client id to kick"
+[message.translations]
+simplified_chinese = "用于踢人的客户端 ID 无效"
+
+[[message]]
+key = "Invalid client id to move to spectators"
+[message.translations]
+simplified_chinese = "用于移至旁观的客户端 ID 无效"
+
+[[message]]
+key = "Invalid option"
+[message.translations]
+simplified_chinese = "无效的投票选项"
+
+[[message]]
+key = "Invalid spectator id used"
+[message.translations]
+simplified_chinese = "无效的旁观目标 ID"
+
+[[message]]
+key = "Invalid X coordinate."
+[message.translations]
+simplified_chinese = "无效的 X 坐标"
+
+[[message]]
+key = "Invalid Y coordinate."
+[message.translations]
+simplified_chinese = "无效的 Y 坐标"
+
+[[message]]
+key = "Invites are disabled"
+[message.translations]
+simplified_chinese = "本服务器已禁用队伍邀请"
+
+[[message]]
+key = "Is your dummy being bullied while you control the main tee?"
+[message.translations]
+simplified_chinese = "在你操控本体的时候分身有没有被欺负呢?"
+
+[[message]]
+key = "Jitter"
+[message.translations]
+simplified_chinese = "抖动"
+
+[[message]]
+key = "Join a team to enable practice mode, which means you can use /r, but can't earn a rank."
+[message.translations]
+simplified_chinese = "先加入队伍才能开启练习模式。开启后可以使用 /r，但不会获得排名"
+
+[[message]]
+key = "Join a team to use swap feature, which means you can swap positions with each other."
+[message.translations]
+simplified_chinese = "先加入队伍后才能使用交换功能，也就是和队友互换位置"
+
+[[message]]
+key = "Join QQ group"
+[message.translations]
+simplified_chinese = "加入QQ群"
+
+[[message]]
+key = "Key Bindings"
+[message.translations]
+simplified_chinese = "按键绑定"
+
+[[message]]
+key = "Keyword Reply"
+[message.translations]
+simplified_chinese = "关键词回复"
+
+[[message]]
+key = "Keyword rules"
+[message.translations]
+simplified_chinese = "关键词规则"
+
+[[message]]
+key = "Kick voting requires %s players"
+[message.translations]
+simplified_chinese = "踢人投票至少需要 %s 名玩家"
+
+[[message]]
+key = "Kill Protection enabled. If you really want to join the spectators, first type /kill"
+[message.translations]
+simplified_chinese = "已启用防自杀保护。如果你确实想进入旁观，请先输入 /kill"
+
+[[message]]
+key = "killed themselves"
+[message.translations]
+simplified_chinese = "自杀"
+
+[[message]]
+key = "King of Gores auto weapon switch"
+[message.translations]
+simplified_chinese = "King of Gores 自动切换枪"
+
+[[message]]
+key = "Large text announcement for friend joining"
+[message.translations]
+simplified_chinese = "大字播报进服好友"
+
+[[message]]
+key = "Large text content"
+[message.translations]
+simplified_chinese = "大字文案"
+
+[[message]]
+key = "Laser effect enhancement"
+[message.translations]
+simplified_chinese = "激光效果增强"
+
+[[message]]
+key = "Laser Enhancement"
+[message.translations]
+simplified_chinese = "激光增强"
+
+[[message]]
+key = "Laser preview"
+[message.translations]
+simplified_chinese = "激光预览"
+
+[[message]]
+key = "Laser settings"
+[message.translations]
+simplified_chinese = "激光设置"
+
+[[message]]
+key = "Laser size"
+[message.translations]
+simplified_chinese = "激光大小"
+
+[[message]]
+key = "Laser style"
+[message.translations]
+simplified_chinese = "激光样式"
+
+[[message]]
+key = "Latency"
+[message.translations]
+simplified_chinese = "延迟"
+
+[[message]]
+key = "Leave empty to disable"
+[message.translations]
+simplified_chinese = "留空以禁用"
+
+[[message]]
+key = "Leave empty to join public room"
+[message.translations]
+simplified_chinese = "留空以进入公共房间"
+
+[[message]]
+key = "Leave empty to use default prompt"
+[message.translations]
+simplified_chinese = "留空使用默认提示词"
+
+[[message]]
+key = "Left jump"
+[message.translations]
+simplified_chinese = "左跳"
+
+[[message]]
+key = "Left/right channel width"
+[message.translations]
+simplified_chinese = "左右声道宽度"
+
+[[message]]
+key = "Line width"
+[message.translations]
+simplified_chinese = "线宽"
+
+[[message]]
+key = "List available voice devices"
+[message.translations]
+simplified_chinese = "列出可用语音设备"
+
+[[message]]
+key = "Literal"
+[message.translations]
+simplified_chinese = "字面"
+
+[[message]]
+key = "LLM provider"
+[message.translations]
+simplified_chinese = "LLM 提供商"
+
+[[message]]
+key = "Local"
+[message.translations]
+simplified_chinese = "本地"
+
+[[message]]
+key = "Local + Dummy"
+[message.translations]
+simplified_chinese = "本地 + 分身"
+
+[[message]]
+key = "Local only"
+[message.translations]
+simplified_chinese = "仅本地"
+
+[[message]]
+key = "Local particle effects"
+[message.translations]
+simplified_chinese = "本地粒子效果"
+
+[[message]]
+key = "Local test mode"
+[message.translations]
+simplified_chinese = "本地测试模式"
+
+[[message]]
+key = "Local test mode, no server needed"
+[message.translations]
+simplified_chinese = "本地测试模式，无需服务器"
+
+[[message]]
+key = "Lock delay"
+[message.translations]
+simplified_chinese = "锁队延迟"
+
+[[message]]
+key = "Make sure the backend supports OpenAI-compatible thinking parameters"
+[message.translations]
+simplified_chinese = "确保后端支持 OpenAI 兼容的思考参数"
+
+[[message]]
+key = "Manual concurrency: %d"
+[message.translations]
+simplified_chinese = "手动并发数：%d"
+
+[[message]]
+key = "Map danger border"
+[message.translations]
+simplified_chinese = "地图危险边界"
+
+[[message]]
+key = "Map progress bar"
+[message.translations]
+simplified_chinese = "地图进度条"
+
+[[message]]
+key = "Matched with callable peer"
+[message.translations]
+simplified_chinese = "已匹配到可通话对端"
+
+[[message]]
+key = "Max size"
+[message.translations]
+simplified_chinese = "最大尺寸"
+
+[[message]]
+key = "Max visible notifications"
+[message.translations]
+simplified_chinese = "最多同时显示几条"
+
+[[message]]
+key = "Memory"
+[message.translations]
+simplified_chinese = "内存"
+
+[[message]]
+key = "Messages that already look like the target language will skip auto-translate"
+[message.translations]
+simplified_chinese = "看起来已经是目标语言的消息会跳过自动翻译"
+
+[[message]]
+key = "Microphone"
+[message.translations]
+simplified_chinese = "麦克风"
+
+[[message]]
+key = "Microphone permission denied by system"
+[message.translations]
+simplified_chinese = "麦克风权限被系统拒绝"
+
+[[message]]
+key = "Microphone volume"
+[message.translations]
+simplified_chinese = "麦克风音量"
+
+[[message]]
+key = "Milliseconds"
+[message.translations]
+simplified_chinese = "毫秒"
+
+[[message]]
+key = "Min size"
+[message.translations]
+simplified_chinese = "最小尺寸"
+
+[[message]]
+key = "Minimize module"
+[message.translations]
+simplified_chinese = "最小化模块"
+
+[[message]]
+key = "Minimum match chars"
+[message.translations]
+simplified_chinese = "最少匹配字符数"
+
+[[message]]
+key = "Minutes"
+[message.translations]
+simplified_chinese = "分钟"
+
+[[message]]
+key = "Mixed"
+[message.translations]
+simplified_chinese = "混合"
+
+[[message]]
+key = "Model"
+[message.translations]
+simplified_chinese = "模型"
+
+[[message]]
+key = "Move Echo and important system prompts to right-side popups"
+[message.translations]
+simplified_chinese = "把 Echo 和需要关注的系统提示移到右侧弹出显示"
+
+[[message]]
+key = "Mute death/respawn sounds"
+[message.translations]
+simplified_chinese = "静音死亡/重生"
+
+[[message]]
+key = "Mute hammer sounds"
+[message.translations]
+simplified_chinese = "静音锤击"
+
+[[message]]
+key = "Mute jump sounds"
+[message.translations]
+simplified_chinese = "静音跳跃"
+
+[[message]]
+key = "Mute microphone"
+[message.translations]
+simplified_chinese = "静音麦克风"
+
+[[message]]
+key = "Muted"
+[message.translations]
+simplified_chinese = "已静音"
+
+[[message]]
+key = "Need to have started the map to swap with a player."
+[message.translations]
+simplified_chinese = "你需要先开始地图，才能和其他玩家交换位置"
+
+[[message]]
+key = "New IME"
+[message.translations]
+simplified_chinese = "新版IME"
+
+[[message]]
+key = "New UI"
+[message.translations]
+simplified_chinese = "新版UI"
+
+[[message]]
+key = "Next"
+[message.translations]
+simplified_chinese = "下一个"
+
+[[message]]
+key = "No animation"
+[message.translations]
+simplified_chinese = "无动画"
+
+[[message]]
+key = "No audio issues detected"
+[message.translations]
+simplified_chinese = "未发现音频异常"
+
+[[message]]
+key = "No callable peer found"
+[message.translations]
+simplified_chinese = "当前未发现可通话对端"
+
+[[message]]
+key = "No empty team left."
+[message.translations]
+simplified_chinese = "已经没有空队伍了"
+
+[[message]]
+key = "No input device available"
+[message.translations]
+simplified_chinese = "系统没有可用输入设备"
+
+[[message]]
+key = "No matching features found. Try other keywords"
+[message.translations]
+simplified_chinese = "未找到匹配的功能模块。请尝试其他关键词"
+
+[[message]]
+key = "No more blocking entity layers in the world of TeeWorlds"
+[message.translations]
+simplified_chinese = "Teeworlds的世界不会再出现挡人的实体层了"
+
+[[message]]
+key = "No noise reduction"
+[message.translations]
+simplified_chinese = "不降噪"
+
+[[message]]
+key = "No obvious anomaly"
+[message.translations]
+simplified_chinese = "暂无明显异常"
+
+[[message]]
+key = "No output device available"
+[message.translations]
+simplified_chinese = "系统没有可用输出设备"
+
+[[message]]
+key = "No peer"
+[message.translations]
+simplified_chinese = "暂无对端"
+
+[[message]]
+key = "No player with this name found."
+[message.translations]
+simplified_chinese = "没有找到这个名字的玩家"
+
+[[message]]
+key = "Noise reduction mode"
+[message.translations]
+simplified_chinese = "降噪模式"
+
+[[message]]
+key = "Normal"
+[message.translations]
+simplified_chinese = "正常"
+
+[[message]]
+key = "Not connected to a game server"
+[message.translations]
+simplified_chinese = "当前未连接到游戏服务器"
+
+[[message]]
+key = "Not connected to server"
+[message.translations]
+simplified_chinese = "未进入服务器"
+
+[[message]]
+key = "Not enabled"
+[message.translations]
+simplified_chinese = "未启用"
+
+[[message]]
+key = "Not open, check input device or mic permission"
+[message.translations]
+simplified_chinese = "未打开，请检查输入设备或麦克风权限"
+
+[[message]]
+key = "Not open, check output device"
+[message.translations]
+simplified_chinese = "未打开，请检查输出设备"
+
+[[message]]
+key = "Notification background"
+[message.translations]
+simplified_chinese = "通知背景"
+
+[[message]]
+key = "Notification hold time"
+[message.translations]
+simplified_chinese = "每条显示多久"
+
+[[message]]
+key = "Notification text size"
+[message.translations]
+simplified_chinese = "通知文字大小"
+
+[[message]]
+key = "Notifications"
+[message.translations]
+simplified_chinese = "通知栏"
+
+[[message]]
+key = "Notify when friends come online"
+[message.translations]
+simplified_chinese = "好友上线提醒"
+
+[[message]]
+key = "Numeric-only messages will be skipped"
+[message.translations]
+simplified_chinese = "纯数字消息会直接跳过"
+
+[[message]]
+key = "Official community links"
+[message.translations]
+simplified_chinese = "官方社区入口"
+
+[[message]]
+key = "Ohhhhhhhhhhhhhhhh"
+[message.translations]
+simplified_chinese = "噢噢噢噢噢噢噢噢噢噢噢噢噢噢噢噢"
+
+[[message]]
+key = "Only Apple Can Do"
+[message.translations]
+simplified_chinese = "只有 Apple 才能做到"
+
+[[message]]
+key = "Only show when the other Tee is not on screen"
+[message.translations]
+simplified_chinese = "仅当另一个Tee不在屏幕上时显示"
+
+[[message]]
+key = "Only what you can't imagine, nothing Dream can't do"
+[message.translations]
+simplified_chinese = "只有你想不到,没有梦做不到"
+
+[[message]]
+key = "Only what you can't imagine, nothing Dream can't do!"
+[message.translations]
+simplified_chinese = "只有你想不到，没有梦做不到！"
+
+[[message]]
+key = "Open color picker"
+[message.translations]
+simplified_chinese = "打开选色"
+
+[[message]]
+key = "OpenAI"
+[message.translations]
+simplified_chinese = "OpenAI"
+
+[[message]]
+key = "OpenAI API key"
+[message.translations]
+simplified_chinese = "OpenAI API 密钥"
+
+[[message]]
+key = "Opened"
+[message.translations]
+simplified_chinese = "已打开"
+
+[[message]]
+key = "Option color"
+[message.translations]
+simplified_chinese = "选项颜色"
+
+[[message]]
+key = "Output device"
+[message.translations]
+simplified_chinese = "输出设备"
+
+[[message]]
+key = "Output device not found"
+[message.translations]
+simplified_chinese = "输出设备不存在"
+
+[[message]]
+key = "Output device open failed"
+[message.translations]
+simplified_chinese = "输出设备打开失败"
+
+[[message]]
+key = "Output device open failed, try reconnecting speakers/headphones or reselecting output device"
+[message.translations]
+simplified_chinese = "输出设备打开失败，建议重插耳机/扬声器后刷新，或重新选择输出设备"
+
+[[message]]
+key = "Output switch"
+[message.translations]
+simplified_chinese = "输出切换"
+
+[[message]]
+key = "Overview cards show a lightweight guide to the client and page structure"
+[message.translations]
+simplified_chinese = "概览卡展示客户端与页面结构的轻量说明"
+
+[[message]]
+key = "Page guide"
+[message.translations]
+simplified_chinese = "页面说明"
+
+[[message]]
+key = "Panel opacity"
+[message.translations]
+simplified_chinese = "面板不透明度"
+
+[[message]]
+key = "Parsing voice server address"
+[message.translations]
+simplified_chinese = "正在解析语音服务器地址"
+
+[[message]]
+key = "Particle alpha"
+[message.translations]
+simplified_chinese = "粒子透明度"
+
+[[message]]
+key = "Particle collision"
+[message.translations]
+simplified_chinese = "粒子碰撞"
+
+[[message]]
+key = "Particle color"
+[message.translations]
+simplified_chinese = "粒子颜色"
+
+[[message]]
+key = "Particle count"
+[message.translations]
+simplified_chinese = "粒子数量"
+
+[[message]]
+key = "Particle depth"
+[message.translations]
+simplified_chinese = "粒子深度"
+
+[[message]]
+key = "Particle glow"
+[message.translations]
+simplified_chinese = "粒子辉光"
+
+[[message]]
+key = "Particle pulse"
+[message.translations]
+simplified_chinese = "粒子脉冲"
+
+[[message]]
+key = "Particle speed"
+[message.translations]
+simplified_chinese = "粒子速度"
+
+[[message]]
+key = "Particle trail"
+[message.translations]
+simplified_chinese = "粒子拖尾"
+
+[[message]]
+key = "Particle twinkle"
+[message.translations]
+simplified_chinese = "粒子闪烁"
+
+[[message]]
+key = "Particle type"
+[message.translations]
+simplified_chinese = "粒子类型"
+
+[[message]]
+key = "Pickup range"
+[message.translations]
+simplified_chinese = "拾取物范围"
+
+[[message]]
+key = "Pie Menu"
+[message.translations]
+simplified_chinese = "饼菜单"
+
+[[message]]
+key = "Play a slide-in rotation animation when switching weapons"
+[message.translations]
+simplified_chinese = "切换武器时播放滑入旋转动画"
+
+[[message]]
+key = "Play/Pause"
+[message.translations]
+simplified_chinese = "播放/暂停"
+
+[[message]]
+key = "Playback volume"
+[message.translations]
+simplified_chinese = "播放音量"
+
+[[message]]
+key = "Player already invited"
+[message.translations]
+simplified_chinese = "该玩家已经被邀请过了"
+
+[[message]]
+key = "Player data"
+[message.translations]
+simplified_chinese = "玩家数据"
+
+[[message]]
+key = "Player is on a different team"
+[message.translations]
+simplified_chinese = "目标玩家不在你的队伍里"
+
+[[message]]
+key = "Player not found"
+[message.translations]
+simplified_chinese = "未找到该玩家"
+
+[[message]]
+key = "Player range"
+[message.translations]
+simplified_chinese = "玩家范围"
+
+[[message]]
+key = "Player Stats"
+[message.translations]
+simplified_chinese = "玩家统计"
+
+[[message]]
+key = "Player stats and info display"
+[message.translations]
+simplified_chinese = "玩家统计与信息显示"
+
+[[message]]
+key = "Players"
+[message.translations]
+simplified_chinese = "玩家"
+
+[[message]]
+key = "Players are not allowed to chat from VPNs at this time"
+[message.translations]
+simplified_chinese = "当前使用 VPN 的玩家不允许发言"
+
+[[message]]
+key = "Players can collide on this server"
+[message.translations]
+simplified_chinese = "本服务器允许玩家碰撞"
+
+[[message]]
+key = "Players can hook each other on this server"
+[message.translations]
+simplified_chinese = "本服务器允许玩家互钩"
+
+[[message]]
+key = "Players can't collide on this server"
+[message.translations]
+simplified_chinese = "本服务器不允许玩家碰撞"
+
+[[message]]
+key = "Players can't hook each other on this server"
+[message.translations]
+simplified_chinese = "本服务器不允许玩家互钩"
+
+[[message]]
+key = "Please enable voice first"
+[message.translations]
+simplified_chinese = "请先启用语音"
+
+[[message]]
+key = "Please use %s as friend name"
+[message.translations]
+simplified_chinese = "请使用 %s 作为好友名称"
+
+[[message]]
+key = "Popup animation"
+[message.translations]
+simplified_chinese = "弹出动画"
+
+[[message]]
+key = "Position jump hint"
+[message.translations]
+simplified_chinese = "位置跳跃提示"
+
+[[message]]
+key = "Practice mode can't be enabled in team 0 mode."
+[message.translations]
+simplified_chinese = "0 队模式下不能开启练习模式"
+
+[[message]]
+key = "Practice mode can't be enabled while team save or load is in progress"
+[message.translations]
+simplified_chinese = "队伍正在存档或读档时，不能开启练习模式"
+
+[[message]]
+key = "Practice mode enabled for your team, happy practicing!"
+[message.translations]
+simplified_chinese = "你的队伍已开启练习模式，祝你练习愉快！"
+
+[[message]]
+key = "Practice mode is disabled"
+[message.translations]
+simplified_chinese = "本服务器已禁用练习模式"
+
+[[message]]
+key = "Prediction"
+[message.translations]
+simplified_chinese = "预测"
+
+[[message]]
+key = "Prediction jitter is obvious, latency changes are large"
+[message.translations]
+simplified_chinese = "预测波动明显，延迟变化较大"
+
+[[message]]
+key = "Prediction latency is elevated, prediction path pressure is high"
+[message.translations]
+simplified_chinese = "预测值抬升，预测链路压力偏高"
+
+[[message]]
+key = "Prediction margin"
+[message.translations]
+simplified_chinese = "预测边距"
+
+[[message]]
+key = "Prediction time"
+[message.translations]
+simplified_chinese = "预测耗时"
+
+[[message]]
+key = "Previous"
+[message.translations]
+simplified_chinese = "上一个"
+
+[[message]]
+key = "Progress bar color"
+[message.translations]
+simplified_chinese = "进度条颜色"
+
+[[message]]
+key = "Progress bar height"
+[message.translations]
+simplified_chinese = "进度条高度"
+
+[[message]]
+key = "Progress bar width"
+[message.translations]
+simplified_chinese = "进度条宽度"
+
+[[message]]
+key = "Pulse amplitude"
+[message.translations]
+simplified_chinese = "脉冲幅度"
+
+[[message]]
+key = "Pulse speed"
+[message.translations]
+simplified_chinese = "脉冲速度"
+
+[[message]]
+key = "Pulse strength"
+[message.translations]
+simplified_chinese = "脉冲强度"
+
+[[message]]
+key = "Push radius"
+[message.translations]
+simplified_chinese = "推动半径"
+
+[[message]]
+key = "Push strength"
+[message.translations]
+simplified_chinese = "推动强度"
+
+[[message]]
+key = "Push-to-talk for voice chat"
+[message.translations]
+simplified_chinese = "语音聊天按键说话"
+
+[[message]]
+key = "Pyramid"
+[message.translations]
+simplified_chinese = "金字塔"
+
+[[message]]
+key = "QmClient Community"
+[message.translations]
+simplified_chinese = "栖梦社区"
+
+[[message]]
+key = "QmClient overview"
+[message.translations]
+simplified_chinese = "栖梦边栏概览"
+
+[[message]]
+key = "QQ group: 1076765929 (click to copy)"
+[message.translations]
+simplified_chinese = "QQ群: 1076765929（点击复制）"
+
+[[message]]
+key = "Quick action menu for players"
+[message.translations]
+simplified_chinese = "对玩家快捷操作菜单"
+
+[[message]]
+key = "Quickly locate feature modules"
+[message.translations]
+simplified_chinese = "快速定位功能模块"
+
+[[message]]
+key = "Rainbow name"
+[message.translations]
+simplified_chinese = "彩虹名字"
+
+[[message]]
+key = "Random"
+[message.translations]
+simplified_chinese = "随机"
+
+[[message]]
+key = "Random emoticon"
+[message.translations]
+simplified_chinese = "随机表情"
+
+[[message]]
+key = "Receive"
+[message.translations]
+simplified_chinese = "接收"
+
+[[message]]
+key = "Receiving"
+[message.translations]
+simplified_chinese = "正在接收"
+
+[[message]]
+key = "Refresh interval"
+[message.translations]
+simplified_chinese = "刷新间隔"
+
+[[message]]
+key = "Regex"
+[message.translations]
+simplified_chinese = "正则"
+
+[[message]]
+key = "Region"
+[message.translations]
+simplified_chinese = "地域"
+
+[[message]]
+key = "Regular expression"
+[message.translations]
+simplified_chinese = "正则表达式"
+
+[[message]]
+key = "Remote particle effects"
+[message.translations]
+simplified_chinese = "远程粒子效果"
+
+[[message]]
+key = "Remove from favorites"
+[message.translations]
+simplified_chinese = "取消收藏"
+
+[[message]]
+key = "Rename queue"
+[message.translations]
+simplified_chinese = "改名名单"
+
+[[message]]
+key = "Replace mode"
+[message.translations]
+simplified_chinese = "替换模式"
+
+[[message]]
+key = "Replace non-friend names with ID"
+[message.translations]
+simplified_chinese = "用 ID 替换非好友名称"
+
+[[message]]
+key = "Replace non-friend skins with default"
+[message.translations]
+simplified_chinese = "用默认皮肤替换非好友皮肤"
+
+[[message]]
+key = "Replacement chars"
+[message.translations]
+simplified_chinese = "替换字符"
+
+[[message]]
+key = "Reply with dummy"
+[message.translations]
+simplified_chinese = "使用分身回复"
+
+[[message]]
+key = "Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled."
+[message.translations]
+simplified_chinese = "本服未开启 rescue，且你所在队伍也没有开启 /practice。注意：练习模式下无法获得排名"
+
+[[message]]
+key = "Rescue mode switched to %s"
+[message.translations]
+simplified_chinese = "救援模式已切换为 %s"
+
+[[message]]
+key = "Resend signs detected, connection quality is suspicious"
+[message.translations]
+simplified_chinese = "存在重发迹象，链路质量可疑"
+
+[[message]]
+key = "Reset stats when joining a server"
+[message.translations]
+simplified_chinese = "进入服务器时重置统计"
+
+[[message]]
+key = "Right jump"
+[message.translations]
+simplified_chinese = "右跳"
+
+[[message]]
+key = "Ring"
+[message.translations]
+simplified_chinese = "圆环"
+
+[[message]]
+key = "RNNoise noise reduction"
+[message.translations]
+simplified_chinese = "RNNoise 降噪"
+
+[[message]]
+key = "RNNoise noise reduction (unavailable in this build)"
+[message.translations]
+simplified_chinese = "RNNoise 降噪（当前构建不可用）"
+
+[[message]]
+key = "RNNoise noise reduction strength"
+[message.translations]
+simplified_chinese = "RNNoise 降噪强度"
+
+[[message]]
+key = "RNNoise not integrated in current build, will fallback to simple noise reduction"
+[message.translations]
+simplified_chinese = "当前构建未集成 RNNoise，将自动回退到简单降噪"
+
+[[message]]
+key = "Rollback rate"
+[message.translations]
+simplified_chinese = "回拉率"
+
+[[message]]
+key = "Room"
+[message.translations]
+simplified_chinese = "房间"
+
+[[message]]
+key = "Room password"
+[message.translations]
+simplified_chinese = "房间密码"
+
+[[message]]
+key = "Rounded caps"
+[message.translations]
+simplified_chinese = "圆角端点"
+
+[[message]]
+key = "Route Echo messages to notifications"
+[message.translations]
+simplified_chinese = "Echo 消息改走通知栏"
+
+[[message]]
+key = "Route server system prompts to notifications (except blacklist)"
+[message.translations]
+simplified_chinese = "服务器系统提示改走通知栏（黑名单除外）"
+
+[[message]]
+key = "Run chai script"
+[message.translations]
+simplified_chinese = "运行 chai 脚本"
+
+[[message]]
+key = "Save-function is disabled on this server"
+[message.translations]
+simplified_chinese = "本服务器已禁用存档功能"
+
+[[message]]
+key = "Scoreboard point check"
+[message.translations]
+simplified_chinese = "计分板查分"
+
+[[message]]
+key = "Scores are private on this server"
+[message.translations]
+simplified_chinese = "本服务器的成绩是私密的"
+
+[[message]]
+key = "Scores are public on this server"
+[message.translations]
+simplified_chinese = "本服务器的成绩是公开的"
+
+[[message]]
+key = "Seconds"
+[message.translations]
+simplified_chinese = "秒"
+
+[[message]]
+key = "SecretId"
+[message.translations]
+simplified_chinese = "SecretId"
+
+[[message]]
+key = "SecretKey"
+[message.translations]
+simplified_chinese = "SecretKey"
+
+[[message]]
+key = "See how much you act"
+[message.translations]
+simplified_chinese = "看看你有多演"
+
+[[message]]
+key = "Selected timertype is not supported by your client"
+[message.translations]
+simplified_chinese = "你当前客户端不支持所选计时器类型"
+
+[[message]]
+key = "Self only"
+[message.translations]
+simplified_chinese = "仅自己"
+
+[[message]]
+key = "Send"
+[message.translations]
+simplified_chinese = "发送"
+
+[[message]]
+key = "Send & Receive"
+[message.translations]
+simplified_chinese = "收发"
+
+[[message]]
+key = "Send emoticon in water"
+[message.translations]
+simplified_chinese = "水中发送表情"
+
+[[message]]
+key = "Send probability"
+[message.translations]
+simplified_chinese = "发送概率"
+
+[[message]]
+key = "Send source language"
+[message.translations]
+simplified_chinese = "发送源语言"
+
+[[message]]
+key = "Send target language"
+[message.translations]
+simplified_chinese = "发送目标语言"
+
+[[message]]
+key = "Send translation method"
+[message.translations]
+simplified_chinese = "发送翻译方式"
+
+[[message]]
+key = "Sending and receiving"
+[message.translations]
+simplified_chinese = "正在发送和接收"
+
+[[message]]
+key = "Sending locally, suggest the other party unmute or confirm they can receive"
+[message.translations]
+simplified_chinese = "本地正在发送，建议让对方开麦或确认对方是否能接收"
+
+[[message]]
+key = "Sending, waiting for peer echo"
+[message.translations]
+simplified_chinese = "正在发送，等待对端回声"
+
+[[message]]
+key = "Separate with commas"
+[message.translations]
+simplified_chinese = "用 , 分隔"
+
+[[message]]
+key = "Server"
+[message.translations]
+simplified_chinese = "服务器"
+
+[[message]]
+key = "Server does not allow voting to kick players"
+[message.translations]
+simplified_chinese = "本服务器不允许发起踢人投票"
+
+[[message]]
+key = "Server does not allow voting to move players to spectators"
+[message.translations]
+simplified_chinese = "本服务器不允许发起移至旁观投票"
+
+[[message]]
+key = "Server IP"
+[message.translations]
+simplified_chinese = "服务器IP"
+
+[[message]]
+key = "Server kick/spec votes are no longer actively moderated."
+[message.translations]
+simplified_chinese = "服务器的踢人/旁观投票已不再由主动管理员模式接管"
+
+[[message]]
+key = "Server kick/spec votes will now be actively moderated."
+[message.translations]
+simplified_chinese = "服务器的踢人/旁观投票现在会被主动管理员模式接管"
+
+[[message]]
+key = "Server rollback"
+[message.translations]
+simplified_chinese = "时间回拉"
+
+[[message]]
+key = "Server RTT is elevated, response path is unstable"
+[message.translations]
+simplified_chinese = "服务器 RTT 抬升，回包链路波动较明显"
+
+[[message]]
+key = "Set color"
+[message.translations]
+simplified_chinese = "设置颜色"
+
+[[message]]
+key = "Set microphone mute state (0=on, 1=mute)"
+[message.translations]
+simplified_chinese = "设置麦克风静音状态（0=开启，1=静音）"
+
+[[message]]
+key = "Set voice input device"
+[message.translations]
+simplified_chinese = "设置语音输入设备"
+
+[[message]]
+key = "Set voice output device"
+[message.translations]
+simplified_chinese = "设置语音输出设备"
+
+[[message]]
+key = "Severe"
+[message.translations]
+simplified_chinese = "严重"
+
+[[message]]
+key = "Show blocked words in console"
+[message.translations]
+simplified_chinese = "在控制台中显示被屏蔽的词语"
+
+[[message]]
+key = "Show chat bubbles above players"
+[message.translations]
+simplified_chinese = "在玩家头顶显示聊天气泡"
+
+[[message]]
+key = "Show chat bubbles above Tees"
+[message.translations]
+simplified_chinese = "在Tee上方显示对话气泡"
+
+[[message]]
+key = "Show chat messages above players"
+[message.translations]
+simplified_chinese = "在玩家头顶显示聊天消息"
+
+[[message]]
+key = "Show collision and weapon interaction"
+[message.translations]
+simplified_chinese = "显示碰撞和武器交互"
+
+[[message]]
+key = "Show Coordinates"
+[message.translations]
+simplified_chinese = "显示坐标"
+
+[[message]]
+key = "Show coordinates above players"
+[message.translations]
+simplified_chinese = "在玩家头顶显示坐标"
+
+[[message]]
+key = "Show coordinates of yourself and others"
+[message.translations]
+simplified_chinese = "显示自己和他人的坐标"
+
+[[message]]
+key = "Show dotted map route debug"
+[message.translations]
+simplified_chinese = "显示地图点状路线调试"
+
+[[message]]
+key = "Show grenade and laser trajectory preview"
+[message.translations]
+simplified_chinese = "显示枪榴弹和激光轨迹预览"
+
+[[message]]
+key = "Show hitbox mode"
+[message.translations]
+simplified_chinese = "显示碰撞箱模式"
+
+[[message]]
+key = "Show inputs"
+[message.translations]
+simplified_chinese = "显示按键"
+
+[[message]]
+key = "Show on key"
+[message.translations]
+simplified_chinese = "按键显示"
+
+[[message]]
+key = "Show other players' coordinates"
+[message.translations]
+simplified_chinese = "显示他人坐标"
+
+[[message]]
+key = "Show outdated version warning"
+[message.translations]
+simplified_chinese = "显示版本过旧提示"
+
+[[message]]
+key = "Show own coordinates"
+[message.translations]
+simplified_chinese = "显示自己坐标"
+
+[[message]]
+key = "Show player stats HUD"
+[message.translations]
+simplified_chinese = "显示玩家统计 HUD"
+
+[[message]]
+key = "Show Qm badge"
+[message.translations]
+simplified_chinese = "显示 Qm 标识"
+
+[[message]]
+key = "Show song info in top-left corner"
+[message.translations]
+simplified_chinese = "在左上角显示歌曲信息"
+
+[[message]]
+key = "Show sponsor QR code"
+[message.translations]
+simplified_chinese = "显示赞助码"
+
+[[message]]
+key = "Show team"
+[message.translations]
+simplified_chinese = "显示队伍"
+
+[[message]]
+key = "Show Tee, map, and weapon interaction hitboxes"
+[message.translations]
+simplified_chinese = "显示 Tee、地图和武器交互碰撞箱"
+
+[[message]]
+key = "Show voice connection status"
+[message.translations]
+simplified_chinese = "显示语音连接状态"
+
+[[message]]
+key = "Show wake-up popup on the other tee"
+[message.translations]
+simplified_chinese = "在另一侧tee显示唤醒提示"
+
+[[message]]
+key = "Show X"
+[message.translations]
+simplified_chinese = "显示X"
+
+[[message]]
+key = "Show Y"
+[message.translations]
+simplified_chinese = "显示Y"
+
+[[message]]
+key = "Showing players from other teams is disabled"
+[message.translations]
+simplified_chinese = "本服务器已禁用显示其他队伍玩家"
+
+[[message]]
+key = "Showing the checkpoint times for '%s' with a race time of %s"
+[message.translations]
+simplified_chinese = "正在显示 '%s' 的 checkpoint 时间，当前成绩为 %s"
+
+[[message]]
+key = "Showing the checkpoint times is not allowed on this server."
+[message.translations]
+simplified_chinese = "本服务器不允许查看 checkpoint 时间"
+
+[[message]]
+key = "Showing the global points of other players is not allowed on this server."
+[message.translations]
+simplified_chinese = "本服务器不允许查看其他玩家的全局积分"
+
+[[message]]
+key = "Showing the global top points is not allowed on this server."
+[message.translations]
+simplified_chinese = "本服务器不允许查看全局积分排行榜"
+
+[[message]]
+key = "Showing the rank of other players is not allowed on this server."
+[message.translations]
+simplified_chinese = "本服务器不允许查看其他玩家的排名"
+
+[[message]]
+key = "Showing the team rank of other players is not allowed on this server."
+[message.translations]
+simplified_chinese = "本服务器不允许查看其他玩家的队伍排名"
+
+[[message]]
+key = "Showing the team top 5 is not allowed on this server."
+[message.translations]
+simplified_chinese = "本服务器不允许查看队伍前 5 名"
+
+[[message]]
+key = "Showing the times of others is not allowed on this server."
+[message.translations]
+simplified_chinese = "本服务器不允许查看其他玩家的成绩"
+
+[[message]]
+key = "Showing the top is not allowed on this server."
+[message.translations]
+simplified_chinese = "本服务器不允许查看排行榜"
+
+[[message]]
+key = "Shrink"
+[message.translations]
+simplified_chinese = "收缩"
+
+[[message]]
+key = "Simple noise reduction"
+[message.translations]
+simplified_chinese = "简单降噪"
+
+[[message]]
+key = "Simple noise reduction strength"
+[message.translations]
+simplified_chinese = "简单降噪强度"
+
+[[message]]
+key = "Skin transition"
+[message.translations]
+simplified_chinese = "皮肤切换"
+
+[[message]]
+key = "Skin transition duration"
+[message.translations]
+simplified_chinese = "换皮动画时长"
+
+[[message]]
+key = "Skin transition type"
+[message.translations]
+simplified_chinese = "换皮动画类型"
+
+[[message]]
+key = "Slide left"
+[message.translations]
+simplified_chinese = "向左滑切"
+
+[[message]]
+key = "Smooth fade"
+[message.translations]
+simplified_chinese = "柔和淡变"
+
+[[message]]
+key = "SMTC"
+[message.translations]
+simplified_chinese = "系统媒体控制"
+
+[[message]]
+key = "Speaker"
+[message.translations]
+simplified_chinese = "扬声器"
+
+[[message]]
+key = "Speech trigger threshold"
+[message.translations]
+simplified_chinese = "说话触发阈值"
+
+[[message]]
+key = "Speedrun countdown timer"
+[message.translations]
+simplified_chinese = "速通倒计时器"
+
+[[message]]
+key = "Speedrun Timer"
+[message.translations]
+simplified_chinese = "速通计时器"
+
+[[message]]
+key = "Sphere"
+[message.translations]
+simplified_chinese = "球体"
+
+[[message]]
+key = "Spin pop"
+[message.translations]
+simplified_chinese = "旋转弹出"
+
+[[message]]
+key = "Sponsor QR code Base64 data is not configured"
+[message.translations]
+simplified_chinese = "支持二维码的 Base64 内容未配置"
+
+[[message]]
+key = "Sponsor support"
+[message.translations]
+simplified_chinese = "赞助支持"
+
+[[message]]
+key = "Sponsors:"
+[message.translations]
+simplified_chinese = "赞助者:"
+
+[[message]]
+key = "Staging memory"
+[message.translations]
+simplified_chinese = "暂存内存"
+
+[[message]]
+key = "Star"
+[message.translations]
+simplified_chinese = "星形"
+
+[[message]]
+key = "Start here to quickly diagnose if the issue is with device, server, or room"
+[message.translations]
+simplified_chinese = "先看这里，可以快速判断卡在设备、服务器还是房间"
+
+[[message]]
+key = "Start holding the hook before loading the savegame to keep the hook"
+[message.translations]
+simplified_chinese = "如果想保留钩子状态，请在读档前先按住钩子"
+
+[[message]]
+key = "Status normal, check details below if still experiencing issues"
+[message.translations]
+simplified_chinese = "当前状态正常，如仍异常请查看下方详细原因"
+
+[[message]]
+key = "Streamed memory"
+[message.translations]
+simplified_chinese = "流式内存"
+
+[[message]]
+key = "Streamer Mode"
+[message.translations]
+simplified_chinese = "主播模式"
+
+[[message]]
+key = "Strict mode"
+[message.translations]
+simplified_chinese = "严格模式"
+
+[[message]]
+key = "Swap is disabled on this server."
+[message.translations]
+simplified_chinese = "本服务器已禁用交换功能"
+
+[[message]]
+key = "Swap is not available on forced solo servers."
+[message.translations]
+simplified_chinese = "强制 solo 服务器上不能使用交换功能"
+
+[[message]]
+key = "Switch"
+[message.translations]
+simplified_chinese = "切换"
+
+[[message]]
+key = "Switch failed"
+[message.translations]
+simplified_chinese = "切换失败"
+
+[[message]]
+key = "Switch opacity"
+[message.translations]
+simplified_chinese = "开关不透明度"
+
+[[message]]
+key = "Switched to"
+[message.translations]
+simplified_chinese = "已切换"
+
+[[message]]
+key = "Switching"
+[message.translations]
+simplified_chinese = "正在切换"
+
+[[message]]
+key = "Switching back to default input"
+[message.translations]
+simplified_chinese = "正在切回默认输入"
+
+[[message]]
+key = "Switching back to default output"
+[message.translations]
+simplified_chinese = "正在切回默认输出"
+
+[[message]]
+key = "System default"
+[message.translations]
+simplified_chinese = "系统默认"
+
+[[message]]
+key = "System media control"
+[message.translations]
+simplified_chinese = "系统媒体控制"
+
+[[message]]
+key = "System prompt text"
+[message.translations]
+simplified_chinese = "系统提示文字颜色"
+
+[[message]]
+key = "Target language"
+[message.translations]
+simplified_chinese = "目标语言"
+
+[[message]]
+key = "Target language ratio"
+[message.translations]
+simplified_chinese = "目标语言比例"
+
+[[message]]
+key = "Team can't be loaded while in team 0 mode"
+[message.translations]
+simplified_chinese = "处于 0 队模式时不能读档"
+
+[[message]]
+key = "Team can't be loaded while practice is enabled"
+[message.translations]
+simplified_chinese = "开启练习模式时不能读档"
+
+[[message]]
+key = "Team can't be loaded while racing"
+[message.translations]
+simplified_chinese = "比赛进行中时不能读档"
+
+[[message]]
+key = "Team can't be saved while a dragger is active"
+[message.translations]
+simplified_chinese = "有拖拽器生效时不能保存队伍存档"
+
+[[message]]
+key = "Team can't be saved while in team 0 mode"
+[message.translations]
+simplified_chinese = "处于 0 队模式时不能保存队伍存档"
+
+[[message]]
+key = "Team is already in practice mode"
+[message.translations]
+simplified_chinese = "队伍已经处于练习模式"
+
+[[message]]
+key = "Team load already in progress"
+[message.translations]
+simplified_chinese = "队伍读档已在进行中"
+
+[[message]]
+key = "Team mode can't be changed while racing"
+[message.translations]
+simplified_chinese = "比赛进行中时不能切换队伍模式"
+
+[[message]]
+key = "Team mode change disabled"
+[message.translations]
+simplified_chinese = "当前不允许切换队伍模式"
+
+[[message]]
+key = "Team mode change is disabled on this server."
+[message.translations]
+simplified_chinese = "本服务器已禁用队伍模式切换"
+
+[[message]]
+key = "Team save already in progress"
+[message.translations]
+simplified_chinese = "队伍存档已在进行中"
+
+[[message]]
+key = "Team save disabled for teams in practice mode"
+[message.translations]
+simplified_chinese = "练习模式下不能保存队伍存档"
+
+[[message]]
+key = "Teams are available on this server; if the team is locked, any team member dying will kill the whole team"
+[message.translations]
+simplified_chinese = "本服务器允许组队；队伍上锁后，队内任意玩家死亡都会导致全队死亡"
+
+[[message]]
+key = "Teams are disabled"
+[message.translations]
+simplified_chinese = "队伍功能已禁用"
+
+[[message]]
+key = "Teams are not available on this server; if the team is locked, any team member dying will kill the whole team"
+[message.translations]
+simplified_chinese = "本服务器不允许组队；队伍上锁后，队内任意玩家死亡都会导致全队死亡"
+
+[[message]]
+key = "Tee hitbox"
+[message.translations]
+simplified_chinese = "Tee 碰撞箱"
+
+[[message]]
+key = "Tee hitbox color"
+[message.translations]
+simplified_chinese = "Tee 碰撞箱颜色"
+
+[[message]]
+key = "Teleport grenade disabled"
+[message.translations]
+simplified_chinese = "传送手雷已关闭"
+
+[[message]]
+key = "Teleport grenade enabled"
+[message.translations]
+simplified_chinese = "传送手雷已开启"
+
+[[message]]
+key = "Teleport gun disabled"
+[message.translations]
+simplified_chinese = "传送枪已关闭"
+
+[[message]]
+key = "Teleport gun enabled"
+[message.translations]
+simplified_chinese = "传送枪已开启"
+
+[[message]]
+key = "Teleport laser disabled"
+[message.translations]
+simplified_chinese = "传送激光已关闭"
+
+[[message]]
+key = "Teleport laser enabled"
+[message.translations]
+simplified_chinese = "传送激光已开启"
+
+[[message]]
+key = "Teleport opacity"
+[message.translations]
+simplified_chinese = "传送不透明度"
+
+[[message]]
+key = "Tencent Cloud SecretId"
+[message.translations]
+simplified_chinese = "腾讯云 SecretId"
+
+[[message]]
+key = "Tencent Cloud SecretKey"
+[message.translations]
+simplified_chinese = "腾讯云 SecretKey"
+
+[[message]]
+key = "Text color"
+[message.translations]
+simplified_chinese = "文本颜色"
+
+[[message]]
+key = "Texture memory"
+[message.translations]
+simplified_chinese = "纹理内存"
+
+[[message]]
+key = "Thank you for your company and trust. This is what gives me the courage to keep going."
+[message.translations]
+simplified_chinese = "感谢您的陪伴与信任.正是如此,才给了我继续前行的勇气"
+
+[[message]]
+key = "Thanks for supporting QmClient"
+[message.translations]
+simplified_chinese = "感谢您为 QmClient 做出的贡献"
+
+[[message]]
+key = "The best voice chat, of course!"
+[message.translations]
+simplified_chinese = "当然是最好的语音啦!"
+
+[[message]]
+key = "The Config tab reuses QmClient's client config browser"
+[message.translations]
+simplified_chinese = "配置页复用栖梦里的客户端配置浏览器"
+
+[[message]]
+key = "The force pause timer is now over, you can exit with /spec"
+[message.translations]
+simplified_chinese = "强制暂停计时已结束，你现在可以用 /spec 退出"
+
+[[message]]
+key = "The Functions tab contains tools, automation, and gameplay helpers"
+[message.translations]
+simplified_chinese = "功能页包含工具、自动化和游戏辅助"
+
+[[message]]
+key = "The HUD tab collects overlays, counters, voice display, and top components"
+[message.translations]
+simplified_chinese = "HUD 页收集叠加层、计数器、语音显示和顶部组件"
+
+[[message]]
+key = "The Visuals tab contains appearance and rendering options"
+[message.translations]
+simplified_chinese = "视觉页包含外观和渲染相关选项"
+
+[[message]]
+key = "There is no checkpoint teleporter with that index on the map."
+[message.translations]
+simplified_chinese = "这张地图上没有这个编号的 checkpoint 传送器"
+
+[[message]]
+key = "There is no teleporter with that index on the map."
+[message.translations]
+simplified_chinese = "这张地图上没有这个编号的传送器"
+
+[[message]]
+key = "There is nowhere to go back to."
+[message.translations]
+simplified_chinese = "没有可回退的位置"
+
+[[message]]
+key = "There's a %s second delay between map-votes, please wait %s seconds."
+[message.translations]
+simplified_chinese = "两次换图投票之间需要间隔 %s 秒，请再等待 %s 秒"
+
+[[message]]
+key = "There's a %s second wait time between kick votes for each player please wait %s second(s)"
+[message.translations]
+simplified_chinese = "每名玩家两次踢人投票之间需要间隔 %s 秒，请再等待 %s 秒"
+
+[[message]]
+key = "Thinking mode requires a reasoning model"
+[message.translations]
+simplified_chinese = "启用思考模式需要使用推理模型"
+
+[[message]]
+key = "This server has an initial chat delay, you will be able to talk in %s seconds."
+[message.translations]
+simplified_chinese = "本服务器启用了初始发言延迟，你还需要等待 %s 秒才能说话"
+
+[[message]]
+key = "This team already has the maximum allowed size of %s players"
+[message.translations]
+simplified_chinese = "这个队伍已经达到最大人数上限 %s"
+
+[[message]]
+key = "This team can't be locked"
+[message.translations]
+simplified_chinese = "这个队伍不能被锁定"
+
+[[message]]
+key = "This team can't have the mode changed"
+[message.translations]
+simplified_chinese = "这个队伍不能切换模式"
+
+[[message]]
+key = "This team cannot finish anymore because '%s' left the team before hitting the start"
+[message.translations]
+simplified_chinese = "这个队伍已无法完赛，因为 '%s' 在碰到起点前离开了队伍"
+
+[[message]]
+key = "This team is currently saving"
+[message.translations]
+simplified_chinese = "这个队伍当前正在保存"
+
+[[message]]
+key = "This team is locked using /lock. Only members of the team can invite you or unlock it using /lock."
+[message.translations]
+simplified_chinese = "这个队伍已用 /lock 锁定，只有队伍成员才能邀请你或用 /lock 解锁"
+
+[[message]]
+key = "This team is locked using /lock. Only members of the team can unlock it using /lock."
+[message.translations]
+simplified_chinese = "这个队伍已用 /lock 锁定，只有队伍成员才能用 /lock 解锁"
+
+[[message]]
+key = "This team started already"
+[message.translations]
+simplified_chinese = "这个队伍已经开始了"
+
+[[message]]
+key = "This team was disbanded because there are more players than allowed in the team."
+[message.translations]
+simplified_chinese = "该队伍因人数超过允许上限而被解散"
+
+[[message]]
+key = "Time to wait before changing team: %s"
+[message.translations]
+simplified_chinese = "距离下次切换队伍还需等待：%s"
+
+[[message]]
+key = "Timer is displayed in %s"
+[message.translations]
+simplified_chinese = "计时器当前显示在 %s"
+
+[[message]]
+key = "Timer isn't displayed."
+[message.translations]
+simplified_chinese = "计时器当前不显示"
+
+[[message]]
+key = "To save all players in your team have to be alive and not in '/spec'"
+[message.translations]
+simplified_chinese = "要保存队伍，队内所有玩家都必须存活且不能处于 '/spec'"
+
+[[message]]
+key = "Toggle microphone mute"
+[message.translations]
+simplified_chinese = "切换麦克风静音"
+
+[[message]]
+key = "Trail alpha"
+[message.translations]
+simplified_chinese = "拖尾透明度"
+
+[[message]]
+key = "Trail length"
+[message.translations]
+simplified_chinese = "拖尾长度"
+
+[[message]]
+key = "Translate"
+[message.translations]
+simplified_chinese = "翻译"
+
+[[message]]
+key = "Translate button"
+[message.translations]
+simplified_chinese = "翻译按钮"
+
+[[message]]
+key = "Translate only when needed"
+[message.translations]
+simplified_chinese = "仅在需要时翻译"
+
+[[message]]
+key = "Troubleshooting suggestions"
+[message.translations]
+simplified_chinese = "建议排查"
+
+[[message]]
+key = "Try reselecting input device, confirm default mic or headset mic is online"
+[message.translations]
+simplified_chinese = "建议重新选择输入设备，并确认默认麦克风或耳机麦克风仍在线"
+
+[[message]]
+key = "Try reselecting output device, confirm headphones/speakers are online"
+[message.translations]
+simplified_chinese = "建议重新选择输出设备，并确认耳机或扬声器仍在线"
+
+[[message]]
+key = "Try toggling voice or reconnecting to server"
+[message.translations]
+simplified_chinese = "建议重新切换语音开关或重试进入服务器"
+
+[[message]]
+key = "Tune layer opacity"
+[message.translations]
+simplified_chinese = "叠层不透明度"
+
+[[message]]
+key = "Twinkle strength"
+[message.translations]
+simplified_chinese = "闪烁强度"
+
+[[message]]
+key = "UDP socket not open"
+[message.translations]
+simplified_chinese = "UDP 套接字未打开"
+
+[[message]]
+key = "UI scale"
+[message.translations]
+simplified_chinese = "UI 大小"
+
+[[message]]
+key = "Unclassified audio issue"
+[message.translations]
+simplified_chinese = "音频异常未分类"
+
+[[message]]
+key = "Unfreeze automation helpers"
+[message.translations]
+simplified_chinese = "解冻相关自动化辅助"
+
+[[message]]
+key = "Unfreeze opacity"
+[message.translations]
+simplified_chinese = "解冻不透明度"
+
+[[message]]
+key = "Unknown argument. Check '/rescuemode list'"
+[message.translations]
+simplified_chinese = "未知 rescue 模式参数"
+
+[[message]]
+key = "Unknown emote... Say /emote"
+[message.translations]
+simplified_chinese = "未知表情命令"
+
+[[message]]
+key = "Unknown parameter. Accepted values: default, gametimer, broadcast, both, none"
+[message.translations]
+simplified_chinese = "未知参数。可用值：default、gametimer、broadcast、both、none"
+
+[[message]]
+key = "Unknown status"
+[message.translations]
+simplified_chinese = "未知状态"
+
+[[message]]
+key = "Updating feature list..."
+[message.translations]
+simplified_chinese = "更新功能列表..."
+
+[[message]]
+key = "Use default flags on scoreboard"
+[message.translations]
+simplified_chinese = "在记分板上使用默认旗"
+
+[[message]]
+key = "Use default input"
+[message.translations]
+simplified_chinese = "使用默认输入"
+
+[[message]]
+key = "Use default output"
+[message.translations]
+simplified_chinese = "使用默认输出"
+
+[[message]]
+key = "Use default voice input device"
+[message.translations]
+simplified_chinese = "使用默认语音输入设备"
+
+[[message]]
+key = "Use default voice output device"
+[message.translations]
+simplified_chinese = "使用默认语音输出设备"
+
+[[message]]
+key = "Use embedded HUD progress bar"
+[message.translations]
+simplified_chinese = "使用 HUD 内嵌进度条"
+
+[[message]]
+key = "Use multi-char replacement based on word length"
+[message.translations]
+simplified_chinese = "根据词语长度使用多字符替换"
+
+[[message]]
+key = "Use original style"
+[message.translations]
+simplified_chinese = "使用原始样式"
+
+[[message]]
+key = "Use the top tabs to browse QmClient features by category"
+[message.translations]
+simplified_chinese = "通过顶部页签按分类浏览栖梦边栏功能"
+
+[[message]]
+key = "Vertical position"
+[message.translations]
+simplified_chinese = "垂直位置"
+
+[[message]]
+key = "View latest updates"
+[message.translations]
+simplified_chinese = "查看最新更新"
+
+[[message]]
+key = "View margin"
+[message.translations]
+simplified_chinese = "视野外边距"
+
+[[message]]
+key = "Visuals"
+[message.translations]
+simplified_chinese = "视觉"
+
+[[message]]
+key = "Voice"
+[message.translations]
+simplified_chinese = "语音"
+
+[[message]]
+key = "Voice activation release delay"
+[message.translations]
+simplified_chinese = "语音激活释放延迟"
+
+[[message]]
+key = "Voice bitrate"
+[message.translations]
+simplified_chinese = "语音码率"
+
+[[message]]
+key = "Voice distance radius (tiles)"
+[message.translations]
+simplified_chinese = "语音距离半径（格）"
+
+[[message]]
+key = "Wait for current vote to end before calling a new one."
+[message.translations]
+simplified_chinese = "请先等待当前投票结束，再发起新的投票"
+
+[[message]]
+key = "Waiting to open"
+[message.translations]
+simplified_chinese = "等待打开"
+
+[[message]]
+key = "Waiting to open input device"
+[message.translations]
+simplified_chinese = "等待打开输入设备"
+
+[[message]]
+key = "Waiting to open output device"
+[message.translations]
+simplified_chinese = "等待打开输出设备"
+
+[[message]]
+key = "Weapon animation"
+[message.translations]
+simplified_chinese = "武器动画"
+
+[[message]]
+key = "Weapon interaction range"
+[message.translations]
+simplified_chinese = "武器交互范围"
+
+[[message]]
+key = "Weapon range color"
+[message.translations]
+simplified_chinese = "武器范围颜色"
+
+[[message]]
+key = "Weapon switch animation"
+[message.translations]
+simplified_chinese = "武器切换动画"
+
+[[message]]
+key = "Weapon Trajectory"
+[message.translations]
+simplified_chinese = "武器辅助线"
+
+[[message]]
+key = "What kind of blockbuster do you want to shoot?"
+[message.translations]
+simplified_chinese = "你想拍出怎样的大片"
+
+[[message]]
+key = "What kind of Gores do you want to run?"
+[message.translations]
+simplified_chinese = "你想跑出怎样的Gores?"
+
+[[message]]
+key = "What kind of laser do you want?"
+[message.translations]
+simplified_chinese = "你想做出怎样的激光?"
+
+[[message]]
+key = "What kind of life do you want to run?"
+[message.translations]
+simplified_chinese = "你想跑出怎样的人生?"
+
+[[message]]
+key = "What's done is done, no use saying more"
+[message.translations]
+simplified_chinese = "事已至此,多说无益"
+
+[[message]]
+key = "Who stuffed OBS in here"
+[message.translations]
+simplified_chinese = "谁把OBS塞进来了"
+
+[[message]]
+key = "Word Filter"
+[message.translations]
+simplified_chinese = "屏蔽词"
+
+[[message]]
+key = "X alignment color"
+[message.translations]
+simplified_chinese = "X 对齐颜色"
+
+[[message]]
+key = "X alignment hint with me"
+[message.translations]
+simplified_chinese = "与我 X 对齐提示"
+
+[[message]]
+key = "You and other player need to have started the map"
+[message.translations]
+simplified_chinese = "你和对方都需要先开始地图，才能交换位置"
+
+[[message]]
+key = "You and the other player must not be paused."
+[message.translations]
+simplified_chinese = "你和对方都不能处于暂停状态，才能交换位置"
+
+[[message]]
+key = "You are force-paused for %s seconds."
+[message.translations]
+simplified_chinese = "你正处于强制暂停状态，还需等待 %s 秒"
+
+[[message]]
+key = "You are in team %s having %s players"
+[message.translations]
+simplified_chinese = "你当前在 %s 队，队伍里有 %s 人"
+
+[[message]]
+key = "You are in this team already"
+[message.translations]
+simplified_chinese = "你已经在这个队伍里了"
+
+[[message]]
+key = "You are not allowed to vote because we're currently checking for VPNs. Try again in ~30 seconds."
+[message.translations]
+simplified_chinese = "当前正在检查你的 VPN 状态，约 30 秒后再尝试发起投票"
+
+[[message]]
+key = "You are not allowed to vote because you appear to be using a VPN. Try connecting without a VPN or contacting an admin if you think this is a mistake."
+[message.translations]
+simplified_chinese = "你当前看起来正在使用 VPN，暂时不能发起投票。如有误判，请关闭 VPN 或联系管理员"
+
+[[message]]
+key = "You are not permitted to talk for the next %s seconds."
+[message.translations]
+simplified_chinese = "你接下来 %s 秒内不能发言"
+
+[[message]]
+key = "You are not permitted to vote for the next %s seconds."
+[message.translations]
+simplified_chinese = "你接下来 %s 秒内不能发起投票"
+
+[[message]]
+key = "You are now in a solo part"
+[message.translations]
+simplified_chinese = "你现在处于单人区域"
+
+[[message]]
+key = "You are now out of the solo part"
+[message.translations]
+simplified_chinese = "你现在已离开单人区域"
+
+[[message]]
+key = "You are running a vote, please try again after the vote is done!"
+[message.translations]
+simplified_chinese = "你正在发起投票，请等当前投票结束后再试"
+
+[[message]]
+key = "You can collide with others"
+[message.translations]
+simplified_chinese = "你现在可以与其他玩家碰撞"
+
+[[message]]
+key = "You can hammer hit others"
+[message.translations]
+simplified_chinese = "你现在可以用锤子攻击其他玩家"
+
+[[message]]
+key = "You can hit others"
+[message.translations]
+simplified_chinese = "你现在可以攻击其他玩家"
+
+[[message]]
+key = "You can hook others"
+[message.translations]
+simplified_chinese = "你现在可以钩中其他玩家"
+
+[[message]]
+key = "You can kick only your team member"
+[message.translations]
+simplified_chinese = "你只能踢自己队伍里的成员"
+
+[[message]]
+key = "You can now jump %s times"
+[message.translations]
+simplified_chinese = "你现在可以跳跃 %s 次"
+
+[[message]]
+key = "You can now use the preset eye emotes."
+[message.translations]
+simplified_chinese = "你现在可以使用预设眼部表情"
+
+[[message]]
+key = "You can only move your team member to spectators"
+[message.translations]
+simplified_chinese = "你只能把自己队伍里的成员移到旁观"
+
+[[message]]
+key = "You can only vote after logging in."
+[message.translations]
+simplified_chinese = "登录后才可以发起投票"
+
+[[message]]
+key = "You can see other players. To disable this use DDNet client and type /showothers"
+[message.translations]
+simplified_chinese = "你当前可以看到其他玩家"
+
+[[message]]
+key = "You can shoot others with grenade"
+[message.translations]
+simplified_chinese = "你现在可以用手雷攻击其他玩家"
+
+[[message]]
+key = "You can shoot others with laser"
+[message.translations]
+simplified_chinese = "你现在可以用激光攻击其他玩家"
+
+[[message]]
+key = "You can shoot others with shotgun"
+[message.translations]
+simplified_chinese = "你现在可以用散弹枪攻击其他玩家"
+
+[[message]]
+key = "You can't change teams that fast!"
+[message.translations]
+simplified_chinese = "你切换队伍太快了"
+
+[[message]]
+key = "You can't change teams while you are dead/a spectator."
+[message.translations]
+simplified_chinese = "死亡或旁观时不能切换队伍"
+
+[[message]]
+key = "You can't check your team while you are dead/a spectator."
+[message.translations]
+simplified_chinese = "死亡或旁观时不能查看当前队伍"
+
+[[message]]
+key = "You can't collide with others"
+[message.translations]
+simplified_chinese = "你现在不能与其他玩家碰撞"
+
+[[message]]
+key = "You can't hammer hit others"
+[message.translations]
+simplified_chinese = "你现在不能用锤子攻击其他玩家"
+
+[[message]]
+key = "You can't hit others"
+[message.translations]
+simplified_chinese = "你现在不能攻击其他玩家"
+
+[[message]]
+key = "You can't hook others"
+[message.translations]
+simplified_chinese = "你现在不能钩中其他玩家"
+
+[[message]]
+key = "You can't join super team if you don't have super rights"
+[message.translations]
+simplified_chinese = "没有 super 权限时不能加入 super 队伍"
+
+[[message]]
+key = "You can't kick authorized players"
+[message.translations]
+simplified_chinese = "你不能踢已授权玩家"
+
+[[message]]
+key = "You can't kick yourself"
+[message.translations]
+simplified_chinese = "你不能踢自己"
+
+[[message]]
+key = "You can't move authorized players to spectators"
+[message.translations]
+simplified_chinese = "你不能把已授权玩家移到旁观"
+
+[[message]]
+key = "You can't move yourself to spectators"
+[message.translations]
+simplified_chinese = "你不能把自己移到旁观"
+
+[[message]]
+key = "You can't shoot others with grenade"
+[message.translations]
+simplified_chinese = "你现在不能用手雷攻击其他玩家"
+
+[[message]]
+key = "You can't shoot others with laser"
+[message.translations]
+simplified_chinese = "你现在不能用激光攻击其他玩家"
+
+[[message]]
+key = "You can't shoot others with shotgun"
+[message.translations]
+simplified_chinese = "你现在不能用散弹枪攻击其他玩家"
+
+[[message]]
+key = "You canceled the swap with %s"
+[message.translations]
+simplified_chinese = "你已取消与 %s 的交换"
+
+[[message]]
+key = "You died, but will stay in practice until you use kill."
+[message.translations]
+simplified_chinese = "你已经死亡，但会继续保持练习模式，直到你输入 kill"
+
+[[message]]
+key = "You do not have a pending swap request."
+[message.translations]
+simplified_chinese = "你当前没有待处理的交换请求"
+
+[[message]]
+key = "You don't have any eye emotes, remember to bind some."
+[message.translations]
+simplified_chinese = "你当前没有可用的眼部表情，记得先绑定"
+
+[[message]]
+key = "You don't have unlimited air jumps"
+[message.translations]
+simplified_chinese = "你现在没有无限空跳了"
+
+[[message]]
+key = "You have a jetpack gun"
+[message.translations]
+simplified_chinese = "你现在拥有喷气背包枪"
+
+[[message]]
+key = "You have already requested to swap with %s."
+[message.translations]
+simplified_chinese = "你已经向 %s 发过交换请求了"
+
+[[message]]
+key = "You have requested to swap with %s. Use /cancelswap to cancel the request."
+[message.translations]
+simplified_chinese = "你已向 %s 发出交换请求。输入 /cancelswap 可取消"
+
+[[message]]
+key = "You have started racing already"
+[message.translations]
+simplified_chinese = "你已经开始比赛了"
+
+[[message]]
+key = "You have to be in a team (from 1-63)"
+[message.translations]
+simplified_chinese = "你必须在队伍中（1 到 63 队）"
+
+[[message]]
+key = "You have to be in a team to play on this server and all of your team will die if the team is locked"
+[message.translations]
+simplified_chinese = "你必须加入队伍才能在本服务器游玩；队伍上锁后，队内任意玩家死亡都会导致全队死亡"
+
+[[message]]
+key = "You have to wait %s seconds until you can swap"
+[message.translations]
+simplified_chinese = "你还需要等待 %s 秒才能交换"
+
+[[message]]
+key = "You have unlimited air jumps"
+[message.translations]
+simplified_chinese = "你现在拥有无限空跳"
+
+[[message]]
+key = "You have used practice mode already"
+[message.translations]
+simplified_chinese = "你已经用过练习模式了"
+
+[[message]]
+key = "You haven't previously teleported. Use /tp before using this command."
+[message.translations]
+simplified_chinese = "你之前没有传送过，请先使用 /tp"
+
+[[message]]
+key = "You lost your jetpack gun"
+[message.translations]
+simplified_chinese = "你失去了喷气背包枪"
+
+[[message]]
+key = "You must join a team and play with somebody or else you can't play"
+[message.translations]
+simplified_chinese = "你必须加入一个队伍并和其他人一起玩，否则无法开始"
+
+[[message]]
+key = "You must wait %s seconds before making another vote."
+[message.translations]
+simplified_chinese = "再次发起投票前还需要等待 %s 秒"
+
+[[message]]
+key = "You must wait %s seconds before making your first vote."
+[message.translations]
+simplified_chinese = "首次发起投票前还需要等待 %s 秒"
+
+[[message]]
+key = "You will no longer see all tees on this server"
+[message.translations]
+simplified_chinese = "你现在不会再看到本服所有 tee 了"
+
+[[message]]
+key = "You will not receive any further global chat and server messages"
+[message.translations]
+simplified_chinese = "你将不再接收全局聊天和服务器消息"
+
+[[message]]
+key = "You will not receive any further whispers"
+[message.translations]
+simplified_chinese = "你将不再接收悄悄话"
+
+[[message]]
+key = "You will now see all tees on this server, no matter the distance"
+[message.translations]
+simplified_chinese = "你现在会看到本服所有 tee，不再受距离限制"
+
+[[message]]
+key = "You will receive global chat and server messages"
+[message.translations]
+simplified_chinese = "你将继续接收全局聊天和服务器消息"
+
+[[message]]
+key = "You will receive whispers"
+[message.translations]
+simplified_chinese = "你将继续接收悄悄话"
+
+[[message]]
+key = "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled."
+[message.translations]
+simplified_chinese = "你当前不在开启了 /practice 的队伍中。注意：练习模式下无法获得排名"
+
+[[message]]
+key = "Your current race time is %s"
+[message.translations]
+simplified_chinese = "你当前的比赛用时是 %s"
+
+[[message]]
+key = "Your favorite map manager"
+[message.translations]
+simplified_chinese = "你最爱的地图管家"
+
+[[message]]
+key = "Your locked team was killed because '%s' %s"
+[message.translations]
+simplified_chinese = "你的锁队全员被处死，因为 '%s' %s 了"
+
+[[message]]
+key = "Your swap request timed out %s seconds ago, use /swap again to request"
+[message.translations]
+simplified_chinese = "你的交换请求已在 %s 秒前超时，请重新输入 /swap 发起"
+
+[[message]]
+key = "Your team has been killed because it contains an invalid tee state"
+[message.translations]
+simplified_chinese = "你的队伍因包含无效 tee 状态而被处死"
+
+[[message]]
+key = "Your team has not started yet"
+[message.translations]
+simplified_chinese = "你的队伍还没有开始"
+
+[[message]]
+key = "Your team is currently saving"
+[message.translations]
+simplified_chinese = "你的队伍当前正在保存"
+
+[[message]]
+key = "Your team was killed because it couldn't finish anymore and hasn't entered /practice mode"
+[message.translations]
+simplified_chinese = "你的队伍因已无法完赛且未进入 /practice 模式而被处死"
+
+[[message]]
+key = "Your team was unlocked by an unlock team tile"
+[message.translations]
+simplified_chinese = "你的队伍已被解锁队伍图块解除锁定"
+
+[[message]]
+key = "Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee"
+[message.translations]
+simplified_chinese = "你的 timeout code 已设置"
+
+[[message]]
+key = "Zen Mode"
+[message.translations]
+simplified_chinese = "禅模式"
+
+[[message]]
+key = "Zen mode key"
+[message.translations]
+simplified_chinese = "禅模式按键"
+
+[[message]]
+key = "Zhipu AI"
+[message.translations]
+simplified_chinese = "智谱 AI"
+
+[[message]]
+key = "Zhipu API key"
+[message.translations]
+simplified_chinese = "智谱 API 密钥"
+
+[[message]]
+key = "⚠️ FTAPI is a free service. Excessive use may cause service suspension."
+[message.translations]
+simplified_chinese = "⚠️ FTAPI 是免费服务，过度使用可能导致服务暂停"

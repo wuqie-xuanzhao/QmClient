@@ -1,0 +1,644 @@
+[[message]]
+key = "%d/%d KiB (%.1f KiB/s)"
+[message.translations]
+simplified_chinese = "%d/%d KiB（%.1f KiB/s）"
+
+[[message]]
+key = "%i minute left"
+[message.translations]
+simplified_chinese = "还剩下 %i 分钟"
+
+[[message]]
+key = "%i minutes left"
+[message.translations]
+simplified_chinese = "还剩下 %i 分钟"
+
+[[message]]
+key = "%i second left"
+[message.translations]
+simplified_chinese = "还剩下 %i 秒钟"
+
+[[message]]
+key = "%i seconds left"
+[message.translations]
+simplified_chinese = "还剩下 %i 秒钟"
+
+[[message]]
+key = "(paused)"
+[message.translations]
+simplified_chinese = "(暂停)"
+
+[[message]]
+key = "A demo with this name already exists"
+[message.translations]
+simplified_chinese = "已经存在同名回放"
+
+[[message]]
+key = "A folder with this name already exists"
+[message.translations]
+simplified_chinese = "已经存在同名文件夹"
+
+[[message]]
+key = "A screenshot with this name already exists"
+[message.translations]
+simplified_chinese = "已经存在同名截图"
+
+[[message]]
+key = "Abort"
+[message.translations]
+simplified_chinese = "取消"
+
+[[message]]
+key = "Address"
+[message.translations]
+simplified_chinese = "地址"
+
+[[message]]
+key = "Appearance"
+[message.translations]
+simplified_chinese = "游戏界面"
+
+[[message]]
+key = "Are you sure that you want to quit?"
+[message.translations]
+simplified_chinese = "确定要退出吗？"
+
+[[message]]
+key = "Are you sure that you want to restart?"
+[message.translations]
+simplified_chinese = "确定要重新开始？"
+
+[[message]]
+key = "Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced."
+[message.translations]
+simplified_chinese = "你确定要保存皮肤吗？如果已经存在同名皮肤，将会被替换。"
+
+[[message]]
+key = "Assets"
+[message.translations]
+simplified_chinese = "资源"
+
+[[message]]
+key = "Browser"
+[message.translations]
+simplified_chinese = "浏览"
+
+[[message]]
+key = "Call vote"
+[message.translations]
+simplified_chinese = "发起投票"
+
+[[message]]
+key = "Change ready state (0.7 only)"
+[message.translations]
+simplified_chinese = "更改就绪状态（仅限 0.7）"
+
+[[message]]
+key = "Checking for existing player with your name"
+[message.translations]
+simplified_chinese = "正在查找该昵称的 DDNet 记录"
+
+[[message]]
+key = "Configs"
+[message.translations]
+simplified_chinese = "客户端配置"
+
+[[message]]
+key = "Connected"
+[message.translations]
+simplified_chinese = "连接成功"
+
+[[message]]
+key = "Connecting to"
+[message.translations]
+simplified_chinese = "正在连接到"
+
+[[message]]
+key = "Continue anyway?"
+[message.translations]
+simplified_chinese = "仍要退出？"
+
+[[message]]
+key = "Contributors"
+[message.translations]
+simplified_chinese = "贡献者"
+
+[[message]]
+key = "Controls"
+[message.translations]
+simplified_chinese = "控制"
+
+[[message]]
+key = "Could not check for existing player with your name. Check your internet connection."
+[message.translations]
+simplified_chinese = "无法验证是否已存在相同名称的玩家。请检查你的网络连接。"
+
+[[message]]
+key = "DDNet"
+[message.translations]
+simplified_chinese = "DDNet"
+
+[[message]]
+key = "DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you."
+[message.translations]
+simplified_chinese = "DDraceNetwork 是一款在线合作游戏，你和你团体里的 Tee 的目标是抵达地图的终点。作为新手你应该从有着最简单的地图的简单（Novice） 服务器入门。根据延迟来选择离你相近的服务器。"
+
+[[message]]
+key = "Demos"
+[message.translations]
+simplified_chinese = "回放"
+
+[[message]]
+key = "Downloading map"
+[message.translations]
+simplified_chinese = "正在下载地图"
+
+[[message]]
+key = "Editor"
+[message.translations]
+simplified_chinese = "编辑器"
+
+[[message]]
+key = "Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)"
+[message.translations]
+simplified_chinese = "使用指定 bug 启用地图兼容模式（例如：grenade-doubleexplosion@ddnet.tw）"
+
+[[message]]
+key = "Error"
+[message.translations]
+simplified_chinese = "错误"
+
+[[message]]
+key = "Error checking player name"
+[message.translations]
+simplified_chinese = "检查玩家名称时出错"
+
+[[message]]
+key = "Error loading demo"
+[message.translations]
+simplified_chinese = "回放加载错误"
+
+[[message]]
+key = "Existing Player"
+[message.translations]
+simplified_chinese = "玩家已存在"
+
+[[message]]
+key = "Favorite map"
+[message.translations]
+simplified_chinese = "收藏地图"
+
+[[message]]
+key = "Favorites"
+[message.translations]
+simplified_chinese = "收藏夹"
+
+[[message]]
+key = "File '%s' already exists, do you want to overwrite it?"
+[message.translations]
+simplified_chinese = "文件名 \"%s\" 已经存在，是否要覆盖该文件？"
+
+[[message]]
+key = "Game"
+[message.translations]
+simplified_chinese = "游戏"
+
+[[message]]
+key = "General"
+[message.translations]
+simplified_chinese = "常规"
+
+[[message]]
+key = "Getting game info"
+[message.translations]
+simplified_chinese = "正在获取游戏信息"
+
+[[message]]
+key = "Ghost"
+[message.translations]
+simplified_chinese = "影子"
+
+[[message]]
+key = "Graphics"
+[message.translations]
+simplified_chinese = "图像"
+
+[[message]]
+key = "Initializing assets"
+[message.translations]
+simplified_chinese = "正在初始化资源"
+
+[[message]]
+key = "Initializing components"
+[message.translations]
+simplified_chinese = "正在初始化游戏引擎"
+
+[[message]]
+key = "Initializing map logic"
+[message.translations]
+simplified_chinese = "正在初始化地图逻辑"
+
+[[message]]
+key = "Internet"
+[message.translations]
+simplified_chinese = "互联网"
+
+[[message]]
+key = "It's recommended that you check the settings to adjust them to your liking before joining a server."
+[message.translations]
+simplified_chinese = "建议你在进入服务器前检查一下设置并根据你的喜好进行调整。"
+
+[[message]]
+key = "Join Tutorial Server"
+[message.translations]
+simplified_chinese = "进入教学服务器"
+
+[[message]]
+key = "Kill yourself to restart"
+[message.translations]
+simplified_chinese = "自杀重新开始"
+
+[[message]]
+key = "LAN"
+[message.translations]
+simplified_chinese = "局域网"
+
+[[message]]
+key = "Language"
+[message.translations]
+simplified_chinese = "语言"
+
+[[message]]
+key = "Loading DDNet Client"
+[message.translations]
+simplified_chinese = "加载 DDNet 客户端中…"
+
+[[message]]
+key = "Loading Demo"
+[message.translations]
+simplified_chinese = "正在加载回放"
+
+[[message]]
+key = "Loading demo info"
+[message.translations]
+simplified_chinese = "正在加载回放信息"
+
+[[message]]
+key = "Loading demo file from storage"
+[message.translations]
+simplified_chinese = "正在从硬盘中加载回放文件"
+
+[[message]]
+key = "Loading map file from storage"
+[message.translations]
+simplified_chinese = "正在从硬盘中加载地图文件"
+
+[[message]]
+key = "Loading menu images"
+[message.translations]
+simplified_chinese = "正在加载主菜单图片"
+
+[[message]]
+key = "Main menu"
+[message.translations]
+simplified_chinese = "主菜单"
+
+[[message]]
+key = "Name"
+[message.translations]
+simplified_chinese = "名称"
+
+[[message]]
+key = "New name:"
+[message.translations]
+simplified_chinese = "新文件名："
+
+[[message]]
+key = "Nickname"
+[message.translations]
+simplified_chinese = "昵称"
+
+[[message]]
+key = "No"
+[message.translations]
+simplified_chinese = "否"
+
+[[message]]
+key = "No answer from server yet."
+[message.translations]
+simplified_chinese = "服务器无响应"
+
+[[message]]
+key = "Ok"
+[message.translations]
+simplified_chinese = "确定"
+
+[[message]]
+key = "Password"
+[message.translations]
+simplified_chinese = "密码"
+
+[[message]]
+key = "Password incorrect"
+[message.translations]
+simplified_chinese = "密码错误"
+
+[[message]]
+key = "Player"
+[message.translations]
+simplified_chinese = "玩家"
+
+[[message]]
+key = "Please enter your nickname below."
+[message.translations]
+simplified_chinese = "请在下方输入你的昵称。"
+
+[[message]]
+key = "Preparing demo playback"
+[message.translations]
+simplified_chinese = "正在准备回放"
+
+[[message]]
+key = "Profiles"
+[message.translations]
+simplified_chinese = "配置文件"
+
+[[message]]
+key = "Quit"
+[message.translations]
+simplified_chinese = "退出"
+
+[[message]]
+key = "Quitting. Please wait…"
+[message.translations]
+simplified_chinese = "正在退出，请稍等"
+
+[[message]]
+key = "Reconnect in %d sec"
+[message.translations]
+simplified_chinese = "%d 秒后重新连接"
+
+[[message]]
+key = "Refresh"
+[message.translations]
+simplified_chinese = "刷新"
+
+[[message]]
+key = "Rename demo"
+[message.translations]
+simplified_chinese = "重命名回放"
+
+[[message]]
+key = "Rename folder"
+[message.translations]
+simplified_chinese = "重命名文件夹"
+
+[[message]]
+key = "Rename screenshot"
+[message.translations]
+simplified_chinese = "重命名截图"
+
+[[message]]
+key = "Render complete"
+[message.translations]
+simplified_chinese = "渲染完毕"
+
+[[message]]
+key = "Render demo"
+[message.translations]
+simplified_chinese = "渲染回放"
+
+[[message]]
+key = "Replace video"
+[message.translations]
+simplified_chinese = "替换视频"
+
+[[message]]
+key = "Requesting to join the game"
+[message.translations]
+simplified_chinese = "正在请求加入游戏"
+
+[[message]]
+key = "Restart"
+[message.translations]
+simplified_chinese = "重新开始"
+
+[[message]]
+key = "Restarting. Please wait…"
+[message.translations]
+simplified_chinese = "正在重启，请稍等"
+
+[[message]]
+key = "Save skin"
+[message.translations]
+simplified_chinese = "保存皮肤"
+
+[[message]]
+key = "Sending initial client info"
+[message.translations]
+simplified_chinese = "正在发送初始客户端信息"
+
+[[message]]
+key = "Server info"
+[message.translations]
+simplified_chinese = "服务器信息"
+
+[[message]]
+key = "Settings"
+[message.translations]
+simplified_chinese = "设置"
+
+[[message]]
+key = "Show chat"
+[message.translations]
+simplified_chinese = "显示聊天框"
+
+[[message]]
+key = "Show DDNet map finishes in server browser"
+[message.translations]
+simplified_chinese = "在服务器浏览器中显示已完成的 DDNet 地图"
+
+[[message]]
+key = "Show ingame HUD"
+[message.translations]
+simplified_chinese = "显示 HUD"
+
+[[message]]
+key = "Skip Tutorial"
+[message.translations]
+simplified_chinese = "跳过教学"
+
+[[message]]
+key = "Some fonts could not be loaded. Check the local console for details."
+[message.translations]
+simplified_chinese = "未能加载某些字体。检查本地控制台以获取详情。"
+
+[[message]]
+key = "Sound"
+[message.translations]
+simplified_chinese = "声音"
+
+[[message]]
+key = "Speed"
+[message.translations]
+simplified_chinese = "速度"
+
+[[message]]
+key = "Switch team"
+[message.translations]
+simplified_chinese = "切换队伍"
+
+[[message]]
+key = "TClient"
+[message.translations]
+simplified_chinese = "TClient"
+
+[[message]]
+key = "Tee"
+[message.translations]
+simplified_chinese = "Tee"
+
+[[message]]
+key = "Tee 0.7"
+[message.translations]
+simplified_chinese = "Tee 0.7"
+
+[[message]]
+key = "The server is running a non-standard tuning on a pure game type."
+[message.translations]
+simplified_chinese = "此服务器运行着经过调整的非标准游戏模式。"
+
+[[message]]
+key = "Theme"
+[message.translations]
+simplified_chinese = "主题"
+
+[[message]]
+key = "There's an unsaved change in the touch controls editor, you might want to save it."
+[message.translations]
+simplified_chinese = "触控控件编辑器中有未保存的更改，建议先保存。"
+
+[[message]]
+key = "There's an unsaved map in the editor, you might want to save it."
+[message.translations]
+simplified_chinese = "编辑器中有尚未保存的地图，你或需要保存"
+
+[[message]]
+key = "This name cannot be used for files and folders"
+[message.translations]
+simplified_chinese = "此名称不能用于文件和文件夹"
+
+[[message]]
+key = "transmits your player name to info.ddnet.org"
+[message.translations]
+simplified_chinese = "将会发送你的玩家昵称到 info.ddnet.org"
+
+[[message]]
+key = "Try again"
+[message.translations]
+simplified_chinese = "重试"
+
+[[message]]
+key = "Trying to determine UDP connectivity…"
+[message.translations]
+simplified_chinese = "正在尝试检测 UDP 连接…"
+
+[[message]]
+key = "Tune in zone a variable to value"
+[message.translations]
+simplified_chinese = "将区域 a 的变量调到指定值"
+
+[[message]]
+key = "Tune variable to value"
+[message.translations]
+simplified_chinese = "将变量调到指定值"
+
+[[message]]
+key = "UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators."
+[message.translations]
+simplified_chinese = "UDP 与 TCP 的 IP 地址并不相同。请尝试屏蔽 VPN 、代理网络以及网络加速器。"
+
+[[message]]
+key = "UDP seems to be filtered."
+[message.translations]
+simplified_chinese = "UDP 疑似被过滤"
+
+[[message]]
+key = "Unable to rename the demo"
+[message.translations]
+simplified_chinese = "无法重命名这个回放"
+
+[[message]]
+key = "Unable to rename the folder"
+[message.translations]
+simplified_chinese = "无法重命名这个文件夹"
+
+[[message]]
+key = "Unable to rename the screenshot"
+[message.translations]
+simplified_chinese = "无法重命名截图"
+
+[[message]]
+key = "Unable to save the skin"
+[message.translations]
+simplified_chinese = "无法保存皮肤"
+
+[[message]]
+key = "Unable to save the skin with a reserved name"
+[message.translations]
+simplified_chinese = "无法保存使用保留名称的皮肤"
+
+[[message]]
+key = "Use k key to kill (restart), q to pause and watch other players. See settings for other key binds."
+[message.translations]
+simplified_chinese = "使用 K 键 自杀以重新开始，使用 Q 键 可以暂停以旁观他人或查看地图。在设置中可以查看其他按键绑定。"
+
+[[message]]
+key = "Use sounds"
+[message.translations]
+simplified_chinese = "开启声音"
+
+[[message]]
+key = "Video name:"
+[message.translations]
+simplified_chinese = "视频名称"
+
+[[message]]
+key = "Video was saved to '%s'"
+[message.translations]
+simplified_chinese = "视频保存至 \"%s\""
+
+[[message]]
+key = "Videos directory"
+[message.translations]
+simplified_chinese = "视频目录"
+
+[[message]]
+key = "Warning"
+[message.translations]
+simplified_chinese = "警告"
+
+[[message]]
+key = "Welcome to DDNet"
+[message.translations]
+simplified_chinese = "欢迎加入 DDNet"
+
+[[message]]
+key = "Why are you slowmo replaying to read this?"
+[message.translations]
+simplified_chinese = "所以你为什么要慢速回放来看这个"
+
+[[message]]
+key = "Yes"
+[message.translations]
+simplified_chinese = "是"
+
+[[message]]
+key = "You will be disconnected from the server."
+[message.translations]
+simplified_chinese = "你将从当前服务器断开连接。"
+
+[[message]]
+key = "Your nickname '%s' is already used (%d points). Do you still want to use it?"
+[message.translations]
+simplified_chinese = "你使用的昵称 \"%s\" 在 DDNet 中有 %d 分的记录，这可能表示该昵称已经被其他玩家使用过。确认要使用这个名字吗？"

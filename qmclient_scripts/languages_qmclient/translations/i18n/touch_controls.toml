@@ -1,0 +1,483 @@
+[[message]]
+key = "Active color"
+[message.translations]
+simplified_chinese = "按键激活时颜色"
+
+[[message]]
+key = "Active: Fire"
+[message.translations]
+simplified_chinese = "当前：开火"
+
+[[message]]
+key = "Active: Hook"
+[message.translations]
+simplified_chinese = "当前：钩索"
+
+[[message]]
+key = "Add command"
+[message.translations]
+simplified_chinese = "添加命令"
+
+[[message]]
+key = "Aim"
+[message.translations]
+simplified_chinese = "瞄准"
+
+[[message]]
+key = "Are you sure that you want to delete this button?"
+[message.translations]
+simplified_chinese = "你确定要删除这个按键吗？"
+
+[[message]]
+key = "Are you sure that you want to discard the current changes to the touch controls?"
+[message.translations]
+simplified_chinese = "确定要放弃当前对触控设置的更改吗？"
+
+[[message]]
+key = "Are you sure that you want to import the touch controls from the clipboard? This will overwrite your current touch controls."
+[message.translations]
+simplified_chinese = "您确定要从剪贴板导入触控设置吗？这将覆盖当前的触控设置。"
+
+[[message]]
+key = "Are you sure that you want to reset the touch controls to default?"
+[message.translations]
+simplified_chinese = "确定要将触控设置重置为默认设置吗？"
+
+[[message]]
+key = "Behavior"
+[message.translations]
+simplified_chinese = "行为"
+
+[[message]]
+key = "Behavior type"
+[message.translations]
+simplified_chinese = "行为类型"
+
+[[message]]
+key = "Button position is outside of the screen."
+[message.translations]
+simplified_chinese = "按键的位置在屏幕之外。"
+
+[[message]]
+key = "Buttons"
+[message.translations]
+simplified_chinese = "按键"
+
+[[message]]
+key = "Command"
+[message.translations]
+simplified_chinese = "命令"
+
+[[message]]
+key = "Could not save touch controls to file. See local console for details."
+[message.translations]
+simplified_chinese = "无法将触控设置保存到文件。检查本地控制台以获取详情。"
+
+[[message]]
+key = "Delete button"
+[message.translations]
+simplified_chinese = "删除按键"
+
+[[message]]
+key = "Delete command"
+[message.translations]
+simplified_chinese = "删除命令"
+
+[[message]]
+key = "Deselect"
+[message.translations]
+simplified_chinese = "取消选择"
+
+[[message]]
+key = "Direct touch input while ingame"
+[message.translations]
+simplified_chinese = "游戏时直接触摸操作"
+
+[[message]]
+key = "Direct touch input while spectating"
+[message.translations]
+simplified_chinese = "旁观时直接触摸操作"
+
+[[message]]
+key = "Discard changes"
+[message.translations]
+simplified_chinese = "放弃更改"
+
+[[message]]
+key = "Duplicate"
+[message.translations]
+simplified_chinese = "复制"
+
+[[message]]
+key = "Edit"
+[message.translations]
+simplified_chinese = "更改"
+
+[[message]]
+key = "Error saving touch controls"
+[message.translations]
+simplified_chinese = "保存触控设置错误"
+
+[[message]]
+key = "Export to clipboard"
+[message.translations]
+simplified_chinese = "导出到剪贴板"
+
+[[message]]
+key = "File"
+[message.translations]
+simplified_chinese = "文件"
+
+[[message]]
+key = "Height"
+[message.translations]
+simplified_chinese = "高"
+
+[[message]]
+key = "https://wiki.ddnet.org/wiki/Touch_controls"
+[message.translations]
+simplified_chinese = "https://wiki.ddnet.org/wiki/Touch_controls/zh"
+
+[[message]]
+key = "Import from clipboard"
+[message.translations]
+simplified_chinese = "从剪贴板导入"
+
+[[message]]
+key = "Inactive color"
+[message.translations]
+simplified_chinese = "按键未激活时颜色"
+
+[[message]]
+key = "Label"
+[message.translations]
+simplified_chinese = "标签"
+
+[[message]]
+key = "Label type"
+[message.translations]
+simplified_chinese = "标签种类"
+
+[[message]]
+key = "Layout"
+[message.translations]
+simplified_chinese = "布局"
+
+[[message]]
+key = "Long press on a touch button to select it."
+[message.translations]
+simplified_chinese = "长按一个按键即可选择。"
+
+[[message]]
+key = "New button"
+[message.translations]
+simplified_chinese = "新按键"
+
+[[message]]
+key = "No buttons match your filter criteria"
+[message.translations]
+simplified_chinese = "没有按键符合你的筛选条件"
+
+[[message]]
+key = "No space for button"
+[message.translations]
+simplified_chinese = "空间不足"
+
+[[message]]
+key = "Please save your changes before duplicating a button."
+[message.translations]
+simplified_chinese = "请在复制按键之前先保存更改。"
+
+[[message]]
+key = "Preview"
+[message.translations]
+simplified_chinese = "预览"
+
+[[message]]
+key = "Preview button visibility while the editor is active."
+[message.translations]
+simplified_chinese = "按键编辑器打开时用于预览按键的可见度"
+
+[[message]]
+key = "Reset to defaults"
+[message.translations]
+simplified_chinese = "恢复默认设置"
+
+[[message]]
+key = "Save all changes before switching selected button?"
+[message.translations]
+simplified_chinese = "切换当前选择的按键前保存对当前按键的更改？"
+
+[[message]]
+key = "Save changes"
+[message.translations]
+simplified_chinese = "保存更改"
+
+[[message]]
+key = "Select button by touch"
+[message.translations]
+simplified_chinese = "在屏幕上选择按键"
+
+[[message]]
+key = "Selected button not visible"
+[message.translations]
+simplified_chinese = "选中的按键不可见"
+
+[[message]]
+key = "Shape"
+[message.translations]
+simplified_chinese = "形状"
+
+[[message]]
+key = "Show all buttons"
+[message.translations]
+simplified_chinese = "显示所有按键"
+
+[[message]]
+key = "The selected button is not visible. Do you want to deselect it or edit its visibility?"
+[message.translations]
+simplified_chinese = "选中的按键在当前可见度下不可见。你想取消选择该按键还是更改它的可见度？"
+
+[[message]]
+key = "The selected button is overlapping with other buttons."
+[message.translations]
+simplified_chinese = "选中的按键和其它按键重合。"
+
+[[message]]
+key = "There is not enough space available for the button. Check its visibilities and size."
+[message.translations]
+simplified_chinese = "屏幕上空闲位置不足。建议检查它的可见度和大小。"
+
+[[message]]
+key = "There is not enough space available to place another button."
+[message.translations]
+simplified_chinese = "屏幕上剩余空间不足以增加一个新按键。"
+
+[[message]]
+key = "Visibility"
+[message.translations]
+simplified_chinese = "可见度"
+
+[[message]]
+key = "Width"
+[message.translations]
+simplified_chinese = "宽度"
+
+[[message]]
+key = "Width and height are required to be within the range from %d to %d."
+[message.translations]
+simplified_chinese = "按键的宽和高需要在%d到%d内。"
+
+[[message]]
+key = "Wrong button settings"
+[message.translations]
+simplified_chinese = "错误的按键设置"
+
+[[message]]
+key = "You'll lose unsaved changes after deselecting."
+[message.translations]
+simplified_chinese = "你的更改在取消选择后不会被保存。"
+
+[[message]]
+key = "Active action"
+context = "Direct touch input"
+[message.translations]
+simplified_chinese = "当前动作"
+
+[[message]]
+key = "Aim"
+context = "Direct touch input"
+[message.translations]
+simplified_chinese = "瞄准"
+
+[[message]]
+key = "Disabled"
+context = "Direct touch input"
+[message.translations]
+simplified_chinese = "禁用"
+
+[[message]]
+key = "Fire"
+context = "Direct touch input"
+[message.translations]
+simplified_chinese = "开火"
+
+[[message]]
+key = "Hook"
+context = "Direct touch input"
+[message.translations]
+simplified_chinese = "钩索"
+
+[[message]]
+key = "Emoticon"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "表情选择器"
+
+[[message]]
+key = "Extra Menu"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "额外菜单开关"
+
+[[message]]
+key = "Ingame Menu"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "游戏内菜单"
+
+[[message]]
+key = "Joystick Action"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "摇杆：使用行为"
+
+[[message]]
+key = "Joystick Aim"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "摇杆：瞄准"
+
+[[message]]
+key = "Joystick Fire"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "摇杆：开火"
+
+[[message]]
+key = "Joystick Hook"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "摇杆：出钩"
+
+[[message]]
+key = "Spectate"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "旁观者菜单"
+
+[[message]]
+key = "Swap Action"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "切换行为"
+
+[[message]]
+key = "Use Action"
+context = "Predefined touch button behaviors"
+[message.translations]
+simplified_chinese = "使用行为"
+
+[[message]]
+key = "Bind"
+context = "Touch button behavior"
+[message.translations]
+simplified_chinese = "绑定"
+
+[[message]]
+key = "Bind Toggle"
+context = "Touch button behavior"
+[message.translations]
+simplified_chinese = "绑定切换"
+
+[[message]]
+key = "Predefined"
+context = "Touch button behavior"
+[message.translations]
+simplified_chinese = "预设"
+
+[[message]]
+key = "Icon"
+context = "Touch button label type"
+[message.translations]
+simplified_chinese = "图标化"
+
+[[message]]
+key = "Localized"
+context = "Touch button label type"
+[message.translations]
+simplified_chinese = "自动翻译"
+
+[[message]]
+key = "Plain"
+context = "Touch button label type"
+[message.translations]
+simplified_chinese = "普通"
+
+[[message]]
+key = "Circle"
+context = "Touch button shape"
+[message.translations]
+simplified_chinese = "圆形"
+
+[[message]]
+key = "Rectangle"
+context = "Touch button shape"
+[message.translations]
+simplified_chinese = "矩形"
+
+[[message]]
+key = "Allow dummy"
+context = "Touch button visibilities"
+[message.translations]
+simplified_chinese = "允许分身"
+
+[[message]]
+key = "Demo Player"
+context = "Touch button visibilities"
+[message.translations]
+simplified_chinese = "播放回放时"
+
+[[message]]
+key = "Dummy connected"
+context = "Touch button visibilities"
+[message.translations]
+simplified_chinese = "分身已连接"
+
+[[message]]
+key = "Extra Menu"
+context = "Touch button visibilities"
+[message.translations]
+simplified_chinese = "额外菜单"
+
+[[message]]
+key = "Ingame"
+context = "Touch button visibilities"
+[message.translations]
+simplified_chinese = "在游戏内时"
+
+[[message]]
+key = "Rcon Authed"
+context = "Touch button visibilities"
+[message.translations]
+simplified_chinese = "登入管理员"
+
+[[message]]
+key = "Vote Active"
+context = "Touch button visibilities"
+[message.translations]
+simplified_chinese = "当前有投票"
+
+[[message]]
+key = "Zoom Allowed"
+context = "Touch button visibilities"
+[message.translations]
+simplified_chinese = "允许缩放时"
+
+[[message]]
+key = "Excluded"
+context = "Touch button visibility preview"
+[message.translations]
+simplified_chinese = "排除"
+
+[[message]]
+key = "Ignore"
+context = "Touch button visibility preview"
+[message.translations]
+simplified_chinese = "忽略"
+
+[[message]]
+key = "Included"
+context = "Touch button visibility preview"
+[message.translations]
+simplified_chinese = "包含"

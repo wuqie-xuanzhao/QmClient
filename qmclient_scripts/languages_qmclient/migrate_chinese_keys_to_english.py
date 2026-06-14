@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""Legacy helper to migrate QmClient Localize("Chinese") keys to English keys.
+"""Legacy helper to report QmClient Chinese localization keys.
 
-The active QmClient localization model uses English source keys and keeps
-data/qmclient/languages/english.txt empty. This script is retained only for
+The active QmClient localization model uses English source keys and stores
+translations only under data/languages/. This script is retained only for
 cleanup if old or newly introduced Chinese source keys need to be migrated.
 
 The migration map comes from generate_all.py's legacy Chinese-to-English seed
-tables, EXTRA_TRANSLATIONS below, static notification rules, and, for backward
-compatibility, any old reverse-map entries still present in english.txt:
+tables, EXTRA_TRANSLATIONS below, and static notification rules.
 
-    Chinese key
-    == English key
+It no longer rewrites source files. It only reports:
+- direct Localize("中文") keys
+- remaining bare Chinese literals
+- suggested English-key mappings when known
 
-It only rewrites direct Localize("...") literal keys when a matching Chinese key
-exists in those migration maps. Unknown keys are reported for manual follow-up.
+Unknown keys are reported for manual follow-up.
 """
 
 from __future__ import annotations
@@ -27,12 +27,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
-LEGACY_ENGLISH_REVERSE_TRANSLATIONS = (
-    PROJECT_ROOT / "data" / "qmclient" / "languages" / "english.txt"
-)
-SIMPLIFIED_CHINESE = (
-    PROJECT_ROOT / "data" / "qmclient" / "languages" / "simplified_chinese.txt"
-)
+SIMPLIFIED_CHINESE = PROJECT_ROOT / "data" / "languages" / "simplified_chinese.txt"
 BASE_SIMPLIFIED_CHINESE = PROJECT_ROOT / "data" / "languages" / "simplified_chinese.txt"
 REPORT_PATH = PROJECT_ROOT / "tmp" / "qmclient_language_migration_report.txt"
 STATIC_RULES_HEADER = (
@@ -44,13 +39,6 @@ STATIC_RULES_HEADER = (
     / "qmclient"
     / "hud_notification_static_rules.h"
 )
-
-SOURCE_ROOTS = [
-    PROJECT_ROOT / "src" / "game" / "client" / "components" / "qmclient",
-    PROJECT_ROOT / "src" / "game" / "client" / "components" / "tclient",
-    PROJECT_ROOT / "src" / "game" / "client" / "QmUi",
-    PROJECT_ROOT / "src" / "game" / "client" / "gameclient.cpp",
-]
 
 LOCALIZE_LITERAL_RE = re.compile(r'Localize\(\s*"((?:[^"\\]|\\.)*)"')
 STRING_LITERAL_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
@@ -316,16 +304,6 @@ def read_text_preserve(path: Path) -> tuple[str, str, bool]:
     return data.decode(encoding), newline, has_bom
 
 
-def write_text_preserve(path: Path, text: str, newline: str, has_bom: bool) -> None:
-    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
-    if newline == "\r\n":
-        normalized = normalized.replace("\n", "\r\n")
-    data = normalized.encode("utf-8")
-    if has_bom:
-        data = b"\xef\xbb\xbf" + data
-    path.write_bytes(data)
-
-
 def cpp_unescape_key(raw: str) -> str:
     result: list[str] = []
     i = 0
@@ -399,15 +377,9 @@ def read_existing_simplified(path: Path) -> OrderedDict[str, str]:
 
 
 def iter_source_files() -> list[Path]:
-    paths: list[Path] = []
-    for root in SOURCE_ROOTS:
-        if root.is_file():
-            paths.append(root)
-            continue
-        for path in sorted(root.rglob("*")):
-            if path.suffix in {".cpp", ".h"}:
-                paths.append(path)
-    return sorted(paths)
+    import source_keys
+
+    return source_keys.iter_source_files()
 
 
 def merge_translation(
@@ -455,7 +427,7 @@ def migrate_static_rules(
 ) -> int:
     if not path.exists():
         return 0
-    text, newline, has_bom = read_text_preserve(path)
+    text, _, _ = read_text_preserve(path)
     replacements = 0
 
     def replace(match: re.Match[str]) -> str:
@@ -467,9 +439,7 @@ def migrate_static_rules(
             return f'X("{cpp_escape_key(english)}", "{cpp_escape_key(english)}")'
         return match.group(0)
 
-    updated = STATIC_RULE_RE.sub(replace, text)
-    if replacements and not dry_run:
-        write_text_preserve(path, updated, newline, has_bom)
+    STATIC_RULE_RE.sub(replace, text)
     return replacements
 
 
@@ -478,7 +448,7 @@ def migrate_source_file(
     cn_to_en: OrderedDict[str, str],
     dry_run: bool,
 ) -> tuple[int, list[tuple[int, str]], list[tuple[int, str]]]:
-    text, newline, has_bom = read_text_preserve(path)
+    text, _, _ = read_text_preserve(path)
     replacements = 0
     unknown: list[tuple[int, str]] = []
 
@@ -506,8 +476,6 @@ def migrate_source_file(
         if contains_han(key):
             remaining.append((line_number(updated, match.start(1)), key))
 
-    if replacements and not dry_run:
-        write_text_preserve(path, updated, newline, has_bom)
     return replacements, unknown, remaining
 
 
@@ -543,18 +511,6 @@ def write_simplified_chinese(
         if english not in merged and english != chinese:
             merged[english] = chinese
 
-    if not dry_run:
-        _, newline, has_bom = (
-            read_text_preserve(SIMPLIFIED_CHINESE)
-            if SIMPLIFIED_CHINESE.exists()
-            else ("", "\n", False)
-        )
-        lines: list[str] = []
-        for english, chinese in merged.items():
-            lines.append(english)
-            lines.append(f"== {chinese}")
-            lines.append("")
-        write_text_preserve(SIMPLIFIED_CHINESE, "\n".join(lines), newline, has_bom)
     return len(merged), skipped_base
 
 
@@ -618,10 +574,15 @@ def write_report(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dry-run", action="store_true", help="Only report changes")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=True,
+        help="Report only; retained for backward compatibility",
+    )
     args = parser.parse_args()
 
-    pairs = read_language_pairs(LEGACY_ENGLISH_REVERSE_TRANSLATIONS)
+    pairs = read_language_pairs(BASE_SIMPLIFIED_CHINESE)
     cn_to_en, en_to_cn, collisions = build_maps(pairs)
     existing_simplified = read_existing_simplified(SIMPLIFIED_CHINESE)
 

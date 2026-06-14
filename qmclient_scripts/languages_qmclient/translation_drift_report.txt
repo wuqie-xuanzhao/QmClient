@@ -1,0 +1,18 @@
+git_ref=HEAD
+diff_count=4
+
+%d/%d KiB (%.1f KiB/s)
+OLD=%d/%d KiB (%.1f KiB/s)
+NEW=%d/%d KiB（%.1f KiB/s）
+
+List all commands which are accessible for users
+OLD=列出用户可以访问的所有命令
+NEW=列出普通玩家可用的所有命令
+
+Netversion
+OLD=Netversion
+NEW=网络版本
+
+Start and connect to local server
+OLD=开启并连接到本地服务器
+NEW=启动并连接到本地服务器

@@ -68,6 +68,33 @@
 - `qmclient_scripts/tw_api.py`
 - `qmclient_scripts/update.zsh`
 
+`qmclient_scripts/languages_qmclient/` 语言脚本入口：
+
+- `source_keys.py`：共享源码 key 提取器，扫描全 `src/`，提取 `Localize` / `Localizable`、`Register` help 和 QmClient 间接 key
+- `extract_strings.py`：写出 `extracted_strings.txt`，并生成 `extracted_audit_report.json`；active key 清单继续只承载 i18n 主链 source key，审计报告另外输出 `must_i18n`、`business_data`、`test_only`、`needs_review`、`violation`
+- `translations/i18n/*.toml`：按代码模块拆分的翻译维护源；单条记录可同时维护多语言翻译，不要求全量语言留空
+- `generate_all.py`：从当前源码 key 和模块化 TOML 维护源生成 `data/languages/simplified_chinese.txt`，缺失时回退英文 key，并保留已有非 active 条目
+- `review_duplicate_entries.py`：只读审查重复、相似、空译文和疑似未使用项；unused 直接按最终 active source key 集合判断，避免 context 漂移误报
+- `audit_translation_drift.py`：只读对比当前 `translations/i18n/*.toml` 与 Git 历史里的 `data/languages/simplified_chinese.txt`，用于审查历史译法是否被新维护源改偏；默认基线为 `HEAD`
+- `translate_with_local_http.py`：通过 OpenAI 兼容本地 HTTP 接口补翻译；`simplified_chinese` 只生成 draft 供人工审阅，其他语言可直接回填主 TOML 维护源
+- `validate.py`：校验提取文件与审计报告新鲜度、生成产物覆盖、模块化 i18n store 可读性和 legacy overlay 删除状态；`violation` 会返回失败，`needs_review` 只作为人工清理 backlog 提示
+
+推荐 i18n 工作流：
+
+1. 修改源码中的英文 key 或新增 `Localize` / `Localizable` / `Register` help 调用
+2. 运行 `python qmclient_scripts/languages_qmclient/extract_strings.py`
+3. 按需更新 `qmclient_scripts/languages_qmclient/translations/i18n/*.toml`
+4. 运行 `python qmclient_scripts/languages_qmclient/generate_all.py`
+5. 运行 `python qmclient_scripts/languages_qmclient/validate.py` 与 `python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
+
+说明：
+
+- `data/languages/simplified_chinese.txt` 是运行时生成产物，不再作为手工维护的长期真相源。
+- `translations/i18n/*.toml` 才是翻译维护源；按代码模块拆分，单条记录可带多语言翻译，未填写的语言在生成时回退英文 key。
+- `translations_draft/simplified_chinese/*.toml` 是本地 HTTP 模型生成的简中草稿维护源，用于人工审阅或后续合并，不参与运行时生成链；非简中语言默认可直接回填 `translations/i18n/*.toml`。
+- 字符串分类按职责判断，不再按“是不是中文”判断是否漏翻译：客户端自有展示文案进入 i18n；兼容匹配/解析字面量留在业务层；测试样本文本只留测试。
+- 当需要核对“当前 TOML 是否偏离项目原有简中口径”时，运行 `audit_translation_drift.py`。它是历史译法审计工具，不参与运行时生成链，也不阻断 `validate.py`。
+
 ## 推荐入口
 
 ### 仓库级门禁
