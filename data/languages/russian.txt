@@ -241,6 +241,15 @@
 9+ new mentions
 == 9+ новых упоминаний
 
+=== All Local Saves ===
+== === Все локальные сохранения ===
+
+=== Saves for '%s' ===
+== === Сохранения для '%s' ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s (карта: %s, время: %s)
+
 _ or ' ' = blank spacer
 == _ или ' ' = пустой разделитель
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == Альфа
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== Также направлять похожие подсказки с других серверов в уведомления (например, кастомные соло-подсказки; чёрный список всё ещё действует)
 
 Always show
 == Всегда показывать
@@ -956,7 +962,7 @@ Bubble opacity
 == Непрозрачность пузырька
 
 Buffer memory
-== Буферная память
+== Память буферов
 
 Built-in
 == Встроенный
@@ -1153,11 +1159,11 @@ Classic Easy
 Classic easy
 == Классический easy
 
-Classic next
-== Классический next
-
 Classic Next
 == Классический Next
+
+Classic next
+== Классический next
 
 Classic Nut
 == Классический Nut
@@ -1367,10 +1373,10 @@ Connection disconnected
 == Соединение разорвано
 
 Connection downstream
-== Исходящее соединение
+== Входящий трафик
 
 Connection elevated
-== Повышенное соединение
+== Соединение слегка нестабильно
 
 Connection normal
 == Нормальное соединение
@@ -1379,10 +1385,10 @@ Connection Problems…
 == Проблемы с подключением…
 
 Connection severely abnormal
-== Сильно аномальное соединение
+== Соединение серьёзно нестабильно
 
 Connection upstream
-== Входящее соединение
+== Исходящий трафик
 
 Console
 == Консоль
@@ -1522,11 +1528,11 @@ Current: Score
 Current: Time
 == Текущее: Время
 
-custom
-== пользовательский
-
 Custom
 == Пользовательский
+
+custom
+== пользовательский
 
 Custom API key
 == Пользовательский API-ключ
@@ -1569,6 +1575,9 @@ Damn grenadiers, all go to spa!
 
 Damn grenadiers, just die!
 == Чёртовы гренадёры, сдохните!
+
+Data
+== Данные
 
 Date
 == Дата
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == Подробная причина
 
+Detect compatible solo prompts from custom servers
+== Определять совместимые соло-подсказки с пользовательских серверов
+
 Detection distance
 == Дистанция обнаружения
 
@@ -1767,6 +1779,9 @@ disable
 
 Disable after picking up other weapons
 == Отключить после подбора другого оружия
+
+Disabled
+== Отключено
 
 Disagree
 == Не согласиться
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == Загрузка обновления...
+
+Downscaled (0.78)
+== Уменьшенный масштаб (0.78)
 
 Drag HUD modules with the left mouse button
 == Перетаскивайте модули HUD левой кнопкой мыши
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == Избранное
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: токены + 12 виджетов
+
 Feature Search
 == Поиск функций
 
@@ -2412,6 +2433,9 @@ Force i to pause for i seconds
 
 Force vote
 == Принудительное голосование
+
+Forms
+== Формы
 
 Found %d modules
 == Найдено %d модулей
@@ -2531,7 +2555,7 @@ Game types:
 == Типы игр:
 
 Game/predicted tick
-== Игровой/предсказанный тик
+== Игра/предсказанный tick
 
 Gameplay
 == Геймплей
@@ -2689,6 +2713,9 @@ Heart
 Height
 == Высота
 
+Hello from ui_widget::Modal
+== Привет от ui_widget::Modal
+
 Help: %s
 == Помощь: %s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == Скрыть QR-код спонсора
 
+Hide toast
+== Скрыть toast
+
 Hide UI for focused gameplay
 == Скрыть UI для сосредоточенной игры
 
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == Часы
+
+Hover for tooltip
+== Наведите для подсказки
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Рекомендуется проверить настройки и подстроить их под себя перед подключением к серверу.
 
+Item %d
+== Элемент %d
+
 j = Latency jitter
 == j = Джиттер задержки
 
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == Присоединиться к обучающему серверу
+
+Join, version, rules, and help messages stay in chat instead of popups
+== Сообщения о входе, версии, правилах и помощи остаются в чате, а не всплывают
 
 Jump
 == Прыжок
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == Переместить дамми вправо
 
-Move Echo and important system prompts to right-side popups
-== Переместить Echo и важные системные подсказки во всплывающие окна справа
-
 Move left
 == Двигаться влево
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == Имя: %s
 
+Native scale (1.0)
+== Нативный масштаб (1.0)
+
 Need to have started the map to swap with a player.
 == Необходимо начать карту, чтобы обменяться с игроком.
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == Версия сети
+
+new
+== новое
 
 New button
 == Новая кнопка
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == Нет сообщения для перевода
+
+No code
+== Нет кода
 
 No controller found. Plug in a controller.
 == Контроллер не найден. Подключите контроллер.
@@ -3917,7 +3962,7 @@ NOT CONNECTED
 == НЕ ПОДКЛЮЧЕНО
 
 Not connected to a game server
-== Не подключён к игровому серверу
+== Нет подключения к игровому серверу
 
 Not connected to server
 == Не подключён к серверу
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == Открыть выбор эмоций
 
+Open modal
+== Открыть модальное окно
+
 Open pie menu
 == Открыть круговое меню
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == Переопределить выбранное
+
+Overview
+== Обзор
 
 Overview cards show a lightweight guide to the client and page structure
 == Карточки обзора показывают лёгкое руководство по клиенту и структуре страницы.
@@ -4231,11 +4282,11 @@ Pick result: %s
 Pickup range
 == Диапазон подбора
 
-Pie Menu
-== Пи-меню
-
 Pie menu
 == Круговое меню
+
+Pie Menu
+== Пи-меню
 
 Ping
 == Пинг
@@ -4382,15 +4433,15 @@ Prediction
 == Предсказание
 
 Prediction jitter is obvious, latency changes are large
-== Джиттер предсказания очевиден, изменения задержки велики.
+== Дрожание предсказания заметно, задержка сильно меняется
 
 Prediction latency is elevated, prediction path pressure is high
-== Задержка предсказания повышена, нагрузка на канал предсказания высока.
-
-Prediction margin
-== Запас предсказания
+== Задержка предсказания повышена, нагрузка на путь предсказания высокая
 
 Prediction Margin
+== Запас предсказания
+
+Prediction margin
 == Запас предсказания
 
 Prediction time
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == Нажмите клавишу…
+
+Press ESC to close. Watch the scale-in spring on open.
+== Нажмите ESC, чтобы закрыть. Посмотрите на пружинное масштабирование при открытии.
 
 Press Esc to exit the HUD editor
 == Нажмите Esc, чтобы выйти из редактора HUD
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == Предыдущая страница в консоли
+
+Primary
+== Основная
 
 Print command executed by this keybinding or all binds
 == Вывести команду, выполняемую этой привязкой клавиш, или все привязки
@@ -4628,7 +4685,7 @@ Rebinds the client's listening address and port
 == Переназначает адрес и порт прослушивания клиента
 
 Receive
-== Приём
+== Получение
 
 Receiving
 == Приём
@@ -4937,7 +4994,7 @@ Rescue/Freeze: %d/%d
 == Спасение/Заморозка: %d/%d
 
 Resend signs detected, connection quality is suspicious
-== Сбросить статистику при входе на сервер
+== Обнаружены признаки повторной отправки, качество соединения сомнительно
 
 Reset
 == Сбросить
@@ -5027,7 +5084,7 @@ RNNoise not integrated in current build, will fallback to simple noise reduction
 == Частота отката
 
 Rollback rate
-== Комната
+== Частота откатов
 
 Room
 == Пароль комнаты
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Направлять системные подсказки сервера в уведомления (кроме чёрного списка)
-
-Route server system prompts to notifications (except blacklist)
-== Запустить скрипт chai
 
 Run chai script
 == Функция сохранения отключена на этом сервере
@@ -5221,6 +5275,9 @@ Search main asset
 Searching
 == Поиск
 
+Secondary
+== Вторичная
+
 Seconds
 == Секунды
 
@@ -5273,7 +5330,7 @@ Self only
 == Отправить
 
 Send
-== Отправить и получить
+== Отправка
 
 Send & Receive
 == Отправить эмоцию в воде
@@ -5456,7 +5513,7 @@ Settings file
 == Файл настроек
 
 Severe
-== Серьёзный
+== Серьёзно
 
 Shape
 == Форма
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == Показать список банов (страница 1 по умолчанию, 20 записей на странице)
+
+Show basic server information
+== Показывать базовую информацию сервера
 
 Show blocked words in console
 == Показывать заблокированные слова в консоли
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == Показать HUD
+
+Show important server prompts
+== Показывать важные подсказки сервера
+
+Show important server prompts and Echo messages as popups
+== Показывать важные подсказки сервера и сообщения Echo во всплывающих уведомлениях
+
+Show important server prompts as notifications
+== Показывать важные подсказки сервера как уведомления
 
 Show info about the map with name r gives (current map by default)
 == Показать информацию о карте с именем r (по умолчанию текущая карта)
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == Показывать секунды на часах
 
+Show server help and usage messages
+== Показывать справку и сообщения об использовании сервера
+
 Show skin names in nameplate
 == Показывать названия скинов в табличке с именем
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == Показывать слои тайлов с фоновой карты сущностей
+
+Show toast
+== Показать toast
+
+Show unknown server messages
+== Показывать неизвестные сообщения сервера
 
 Show unpredicted ghosts for other players
 == Показывать непредсказанных призраков для других игроков
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == Эта команда была расформирована, так как в ней больше игроков, чем разрешено.
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== Эту подсказку предоставляет ui_widget::Tooltip — тонкая обёртка над CTooltips.
+
 tile
 == тайл
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == Чтобы сохранить команду, все игроки в ней должны быть живы и не в '/spec'
+
+Toast uses UiTokens + QmMotion slide
+== Toast использует UiTokens + слайд QmMotion
 
 Toggle auto camera
 == Переключить авто-камеру
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == Всего
+
+Total: %d save(s)
+== Всего: %d сохранений
 
 Traditional
 == Традиционный
@@ -6843,6 +6930,9 @@ Twinkle strength
 
 Type
 == Тип
+
+Type something...
+== Введите что-нибудь...
 
 Type switch vote started automatically
 == Автоматически начато голосование за смену типа
@@ -7086,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == Использовать новый алгоритм сглаживания
+
+Use notification category filters
+== Использовать фильтры категорий уведомлений
 
 Use old chat style
 == Использовать старый стиль чата

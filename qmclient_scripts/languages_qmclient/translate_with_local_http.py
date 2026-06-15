@@ -29,64 +29,291 @@ MAX_PARALLEL_REQUESTS = 10
 SAME_SOURCE_ALLOWED_BY_LANGUAGE = {
     "german": {
         "%c Team %d",
-        "Alpha", "Animation", "Audio", "Auto", "Chat", "Clan", "Classic Easy",
-        "Classic Next", "Classic Nut", "Classic Pro", "Client", "Combo",
-        "Community", "Controller", "Credits", "Dummy", "Editor", "Emoticon",
-        "Emoticons", "Event", "Extras", "Hammer", "Info", "Internet", "Jitter",
-        "Kaomoji", "Laser", "Layout", "Live", "Name", "Name:", "Name: %s",
-        "Normal", "Offline", "Ohhhhhhhhhhhhhhhh", "Pause", "Position:",
-        "Regex", "Region", "Renderer", "Ring", "Screenshot", "Screenshots",
-        "Server", "Skin", "Skin: %s", "Solo", "Status", "System", "Tags",
-        "Team", "Team %d", "Team %d (%d/%d)", "Teams", "Tele", "Text",
-        "Tutorial", "Update", "Version", "z = Zoom", "Clan: %s", "Hammer: %s",
+        "Alpha",
+        "Animation",
+        "Audio",
+        "Auto",
+        "Chat",
+        "Clan",
+        "Classic Easy",
+        "Classic Next",
+        "Classic Nut",
+        "Classic Pro",
+        "Client",
+        "Combo",
+        "Community",
+        "Controller",
+        "Credits",
+        "Dummy",
+        "Editor",
+        "Emoticon",
+        "Emoticons",
+        "Event",
+        "Extras",
+        "Hammer",
+        "Info",
+        "Internet",
+        "Jitter",
+        "Kaomoji",
+        "Laser",
+        "Layout",
+        "Live",
+        "Name",
+        "Name:",
+        "Name: %s",
+        "Normal",
+        "Offline",
+        "Ohhhhhhhhhhhhhhhh",
+        "Pause",
+        "Position:",
+        "Regex",
+        "Region",
+        "Renderer",
+        "Ring",
+        "Screenshot",
+        "Screenshots",
+        "Server",
+        "Skin",
+        "Skin: %s",
+        "Solo",
+        "Status",
+        "System",
+        "Tags",
+        "Team",
+        "Team %d",
+        "Team %d (%d/%d)",
+        "Teams",
+        "Tele",
+        "Text",
+        "Tutorial",
+        "Update",
+        "Version",
+        "z = Zoom",
+        "Clan: %s",
+        "Hammer: %s",
     },
     "spanish": {
-        " min", "%d dummies", "%d dummy", "%s min.",
-        "Audio", "Auto", "Chat", "Clan", "Color", "Combo", "Demos", "Editor",
-        "Dummy", "Endpoint", "Error", "Extras", "General", "Internet", "Jitter",
-        "Kaomoji", "Literal", "Local", "Local + Dummy", "Manual", "No",
-        "Normal", "Ohhhhhhhhhhhhhhhh", "Regex", "Simple", "Skin", "Social",
-        "Solo", "solo", "Tele", "Total", "Tutorial", "Visual", "z = Zoom", "Clan: %s",
+        " min",
+        "%d dummies",
+        "%d dummy",
+        "%s min.",
+        "Audio",
+        "Auto",
+        "Chat",
+        "Clan",
+        "Color",
+        "Combo",
+        "Demos",
+        "Editor",
+        "Dummy",
+        "Endpoint",
+        "Error",
+        "Extras",
+        "General",
+        "Internet",
+        "Jitter",
+        "Kaomoji",
+        "Literal",
+        "Local",
+        "Local + Dummy",
+        "Manual",
+        "No",
+        "Normal",
+        "Ohhhhhhhhhhhhhhhh",
+        "Regex",
+        "Simple",
+        "Skin",
+        "Social",
+        "Solo",
+        "solo",
+        "Tele",
+        "Total",
+        "Tutorial",
+        "Visual",
+        "z = Zoom",
+        "Clan: %s",
     },
     "french": {
-        " min", "%d dummies", "%d dummy", "%s min.",
-        "Animation", "Audio", "Auto", "Chat", "Clan", "Classic Easy",
-        "Classic Next", "Classic Nut", "Classic Pro", "Client", "Combo",
-        "Compact", "Console", "Cube", "Date", "Dummy", "Frags", "Gameplay",
-        "Interface", "Internet", "Kaomoji", "Local", "Local + Dummy",
-        "Alpha", "Laser", "Mention", "Messages", "Microphone", "Minutes", "Mode", "Mute", "Net", "Normal",
-        "Note", "Notifications", "Points", "Ratio", "Regex", "Sat.", "Score",
-        "Simple", "Skin", "Social", "Solo", "Suicides", "Total", "Type",
-        "Types", "Version", "maximum", "minimum", "Pause", "Rectangle", "solo",
+        " min",
+        "%d dummies",
+        "%d dummy",
+        "%s min.",
+        "Animation",
+        "Audio",
+        "Auto",
+        "Chat",
+        "Clan",
+        "Classic Easy",
+        "Classic Next",
+        "Classic Nut",
+        "Classic Pro",
+        "Client",
+        "Combo",
+        "Compact",
+        "Console",
+        "Cube",
+        "Date",
+        "Dummy",
+        "Frags",
+        "Gameplay",
+        "Interface",
+        "Internet",
+        "Kaomoji",
+        "Local",
+        "Local + Dummy",
+        "Alpha",
+        "Laser",
+        "Mention",
+        "Messages",
+        "Microphone",
+        "Minutes",
+        "Mode",
+        "Mute",
+        "Net",
+        "Normal",
+        "Note",
+        "Notifications",
+        "Points",
+        "Ratio",
+        "Regex",
+        "Sat.",
+        "Score",
+        "Simple",
+        "Skin",
+        "Social",
+        "Solo",
+        "Suicides",
+        "Total",
+        "Type",
+        "Types",
+        "Version",
+        "maximum",
+        "minimum",
+        "Pause",
+        "Rectangle",
+        "solo",
         "z = Zoom",
     },
     "brazilian_portuguese": {
-        " min", "%d dummies", "%d dummy", "%s min.",
-        "Chat", "Combo", "Config", "Console", "Dummy", "Editor", "Emoticon",
-        "Emoticons", "Endpoint", "Extras", "Interface", "Internet", "Jitter",
-        "Kaomoji", "Laser", "Layout", "Literal", "Local", "Local + Dummy",
-        "Manual", "Mouse", "Normal", "Offline", "Ok", "Regex", "Skin",
-        "Social", "Solo", "solo", "Status", "Tags", "Tele", "Total", "Tutorial",
-        "Visual", "auto", "Ohhhhhhhhhhhhhhhh", "tile", "z = Zoom",
+        " min",
+        "%d dummies",
+        "%d dummy",
+        "%s min.",
+        "Chat",
+        "Combo",
+        "Config",
+        "Console",
+        "Dummy",
+        "Editor",
+        "Emoticon",
+        "Emoticons",
+        "Endpoint",
+        "Extras",
+        "Interface",
+        "Internet",
+        "Jitter",
+        "Kaomoji",
+        "Laser",
+        "Layout",
+        "Literal",
+        "Local",
+        "Local + Dummy",
+        "Manual",
+        "Mouse",
+        "Normal",
+        "Offline",
+        "Ok",
+        "Regex",
+        "Skin",
+        "Social",
+        "Solo",
+        "solo",
+        "Status",
+        "Tags",
+        "Tele",
+        "Total",
+        "Tutorial",
+        "Visual",
+        "auto",
+        "Ohhhhhhhhhhhhhhhh",
+        "tile",
+        "z = Zoom",
     },
     "portuguese": {
-        " min", "%d dummies", "%d dummy", "%s min.",
-        "Auto", "Chat", "Classic Easy", "Classic Next", "Classic Nut",
-        "Classic Pro", "Combo", "Dummy", "Editor", "Emoticon", "Emoticons",
-        "Endpoint", "Extras", "Frags", "Interface", "Internet", "Jitter",
-        "Kaomoji", "Laser", "Literal", "Local", "Local + Dummy", "Manual",
-        "Normal", "Offline", "Ok", "Regex", "Shotgun", "Skin", "Social",
-        "Solo", "solo", "Tele", "Total", "Tutorial", "Visual", "Ohhhhhhhhhhhhhhhh",
-        "tile", "z = Zoom",
+        " min",
+        "%d dummies",
+        "%d dummy",
+        "%s min.",
+        "Auto",
+        "Chat",
+        "Classic Easy",
+        "Classic Next",
+        "Classic Nut",
+        "Classic Pro",
+        "Combo",
+        "Dummy",
+        "Editor",
+        "Emoticon",
+        "Emoticons",
+        "Endpoint",
+        "Extras",
+        "Frags",
+        "Interface",
+        "Internet",
+        "Jitter",
+        "Kaomoji",
+        "Laser",
+        "Literal",
+        "Local",
+        "Local + Dummy",
+        "Manual",
+        "Normal",
+        "Offline",
+        "Ok",
+        "Regex",
+        "Shotgun",
+        "Skin",
+        "Social",
+        "Solo",
+        "solo",
+        "Tele",
+        "Total",
+        "Tutorial",
+        "Visual",
+        "Ohhhhhhhhhhhhhhhh",
+        "tile",
+        "z = Zoom",
     },
     "turkish": {
-        "Dummy", "Kaomoji", "Model", "Net", "Normal", "Skin", "Solo", "solo",
-        "minimum", "Ohhhhhhhhhhhhhhhh",
+        "Dummy",
+        "Kaomoji",
+        "Model",
+        "Net",
+        "Normal",
+        "Skin",
+        "Solo",
+        "solo",
+        "minimum",
+        "Ohhhhhhhhhhhhhhhh",
     },
     "polish": {
-        " min", "%s min.", "Audio", "Auto", "Folder", "Internet", "Kaomoji",
-        "Laser", "Model", "Offline", "Regex", "Region", "Restart", "Solo", "solo",
-        "Status", "System",
+        " min",
+        "%s min.",
+        "Audio",
+        "Auto",
+        "Folder",
+        "Internet",
+        "Kaomoji",
+        "Laser",
+        "Model",
+        "Offline",
+        "Regex",
+        "Region",
+        "Restart",
+        "Solo",
+        "solo",
+        "Status",
+        "System",
     },
 }
 
@@ -158,7 +385,9 @@ def collect_tasks(
     records=None,
     store=None,
 ) -> list[TranslationTask]:
-    records = records if records is not None else source_keys.collect_source_key_records()
+    records = (
+        records if records is not None else source_keys.collect_source_key_records()
+    )
     store = store if store is not None else i18n_store.load_language_store()
     translations = i18n_store.language_map_for(store, language)
     skipped = existing_draft_identities or set()
@@ -210,8 +439,8 @@ def simplified_reference(
     task: TranslationTask,
     store: dict[str, dict[tuple[str, str], dict[str, str]]],
 ) -> str:
-    return store.get(task.module, {}).get(task.identity, {}).get(
-        "simplified_chinese", ""
+    return (
+        store.get(task.module, {}).get(task.identity, {}).get("simplified_chinese", "")
     )
 
 
@@ -281,7 +510,10 @@ def render_prompt(
 
 
 def extract_placeholders(text: str) -> list[str]:
-    return re.findall(r"%(?:\d+\$)?[+#0\- ]?(?:\d+|\*)?(?:\.\d+|\.\*)?[hljztL]*[diuoxXfFeEgGaAcspn%]", text)
+    return re.findall(
+        r"%(?:\d+\$)?[+#0\- ]?(?:\d+|\*)?(?:\.\d+|\.\*)?[hljztL]*[diuoxXfFeEgGaAcspn%]",
+        text,
+    )
 
 
 def extract_digits(text: str) -> list[str]:
@@ -299,7 +531,9 @@ def contains_hangul(text: str) -> bool:
 
 
 def contains_kana(text: str) -> bool:
-    return any("\u3040" <= char <= "\u30ff" or "\u31f0" <= char <= "\u31ff" for char in text)
+    return any(
+        "\u3040" <= char <= "\u30ff" or "\u31f0" <= char <= "\u31ff" for char in text
+    )
 
 
 def contains_cjk(text: str) -> bool:
@@ -307,7 +541,9 @@ def contains_cjk(text: str) -> bool:
 
 
 def contains_cyrillic(text: str) -> bool:
-    return any("\u0400" <= char <= "\u04ff" or "\u0500" <= char <= "\u052f" for char in text)
+    return any(
+        "\u0400" <= char <= "\u04ff" or "\u0500" <= char <= "\u052f" for char in text
+    )
 
 
 def contains_latin_letter(text: str) -> bool:
@@ -325,13 +561,45 @@ def may_keep_source_text(source: str) -> bool:
     if re.fullmatch(r"[\W\d_%.:/\\-]+", source):
         return True
     if source in {
-        "DDNet", "QmClient", "TClient", "OpenAI", "API", "HUD", "Hz", "FPS",
-        "Ping", "Super", "Demo", "DDmaX", "DeepSeek", "Discord", "Github",
-        "LibreTranslate", "SecretId", "SecretKey", "Tee", "Tee 0.7", "Qm",
-        "DDRace HUD", "Lenny:", "my_%s", "entity_bg (Workshop)",
-        "Tencent Cloud", "Tencent Cloud SecretId", "Tencent Cloud SecretKey",
-        "Zhipu AI", "V-Sync", "DDmaX Easy", "DDmaX Next", "DDmaX Nut",
-        "DDmaX Pro", "Brutal", "Fun", "Insane", "Moderate", "Novice",
+        "DDNet",
+        "QmClient",
+        "TClient",
+        "OpenAI",
+        "API",
+        "HUD",
+        "Hz",
+        "FPS",
+        "Ping",
+        "Super",
+        "Demo",
+        "DDmaX",
+        "DeepSeek",
+        "Discord",
+        "Github",
+        "LibreTranslate",
+        "SecretId",
+        "SecretKey",
+        "Tee",
+        "Tee 0.7",
+        "Qm",
+        "DDRace HUD",
+        "Lenny:",
+        "my_%s",
+        "entity_bg (Workshop)",
+        "Tencent Cloud",
+        "Tencent Cloud SecretId",
+        "Tencent Cloud SecretKey",
+        "Zhipu AI",
+        "V-Sync",
+        "DDmaX Easy",
+        "DDmaX Next",
+        "DDmaX Nut",
+        "DDmaX Pro",
+        "Brutal",
+        "Fun",
+        "Insane",
+        "Moderate",
+        "Novice",
         "Oldschool",
     }:
         return True
@@ -345,7 +613,9 @@ def may_keep_source_text(source: str) -> bool:
 
 
 def may_keep_source_text_for_language(language: str, source: str) -> bool:
-    return source in SAME_SOURCE_ALLOWED_BY_LANGUAGE.get(language, set()) or may_keep_source_text(source)
+    return source in SAME_SOURCE_ALLOWED_BY_LANGUAGE.get(
+        language, set()
+    ) or may_keep_source_text(source)
 
 
 def language_quality_failure(language: str, source: str, translation: str) -> str:
@@ -359,19 +629,34 @@ def language_quality_failure(language: str, source: str, translation: str) -> st
         )
     if extract_digits(source) != extract_digits(translation):
         return f"digit mismatch: expected {extract_digits(source)!r}, got {extract_digits(translation)!r}"
-    if source.strip() == translation and not may_keep_source_text_for_language(language, source):
+    if source.strip() == translation and not may_keep_source_text_for_language(
+        language, source
+    ):
         return "suspect prompt echo or unchanged source"
     if language == "traditional_chinese":
         simplified_only_chars = set("们这为没个队战图连实时后声显项击启级")
         if sum(1 for char in translation if char in simplified_only_chars) >= 2:
             return "traditional_chinese output contains too many simplified characters"
-    if language == "korean" and contains_latin_letter(source) and not contains_hangul(translation):
+    if (
+        language == "korean"
+        and contains_latin_letter(source)
+        and not contains_hangul(translation)
+    ):
         if not may_keep_source_text_for_language(language, source):
             return "korean output does not contain Hangul"
-    if language == "japanese" and contains_latin_letter(source) and not contains_kana(translation) and not contains_cjk(translation):
+    if (
+        language == "japanese"
+        and contains_latin_letter(source)
+        and not contains_kana(translation)
+        and not contains_cjk(translation)
+    ):
         if not may_keep_source_text_for_language(language, source):
             return "japanese output does not contain Japanese text"
-    if language == "russian" and contains_latin_letter(source) and not contains_cyrillic(translation):
+    if (
+        language == "russian"
+        and contains_latin_letter(source)
+        and not contains_cyrillic(translation)
+    ):
         if not may_keep_source_text_for_language(language, source):
             return "russian output does not contain cyrillic text"
     return ""
@@ -415,7 +700,9 @@ def validate_json_translations(
         if identity not in requested:
             failures.append(f"unexpected identity returned: {identity!r}")
             continue
-        reason = language_quality_failure(language, requested[identity].source_text, translation)
+        reason = language_quality_failure(
+            language, requested[identity].source_text, translation
+        )
         if reason:
             failures.append(f"{reason}: {identity!r}")
             continue
@@ -488,7 +775,9 @@ def parse_translation_output(
                         )
                         continue
                 translation = item.get("translation", "")
-                reason = language_quality_failure(language, task.source_text, translation)
+                reason = language_quality_failure(
+                    language, task.source_text, translation
+                )
                 if reason:
                     failures.append(f"{reason}: {task.identity!r}")
                     continue
@@ -509,7 +798,9 @@ def parse_translation_output(
     return translated, failures
 
 
-def load_existing_draft_module(language: str, module: str) -> dict[tuple[str, str], dict[str, str]]:
+def load_existing_draft_module(
+    language: str, module: str
+) -> dict[tuple[str, str], dict[str, str]]:
     path = TRANSLATIONS_DRAFT_DIR / language / f"{module}.toml"
     if not path.exists():
         return {}
@@ -544,10 +835,14 @@ def load_existing_valid_draft_identities(
     if not draft_dir.exists():
         return valid
     for path in sorted(draft_dir.glob("*.toml")):
-        for identity, translations in load_existing_draft_module(language, path.stem).items():
+        for identity, translations in load_existing_draft_module(
+            language, path.stem
+        ).items():
             translation = translations.get(language, "")
             source = source_texts.get(identity, identity[0])
-            if translation and not language_quality_failure(language, source, translation):
+            if translation and not language_quality_failure(
+                language, source, translation
+            ):
                 valid.add(identity)
     return valid
 
@@ -565,10 +860,14 @@ def load_valid_draft_translations(
         module = path.stem
         if modules and module not in modules:
             continue
-        for identity, translations in load_existing_draft_module(language, module).items():
+        for identity, translations in load_existing_draft_module(
+            language, module
+        ).items():
             translation = translations.get(language, "")
             source = source_texts.get(identity, identity[0])
-            if translation and not language_quality_failure(language, source, translation):
+            if translation and not language_quality_failure(
+                language, source, translation
+            ):
                 by_module.setdefault(module, {})[identity] = translation
     return by_module
 
@@ -597,7 +896,9 @@ def write_draft_module(
     source_texts = source_texts or {}
     merged = {
         identity: translation_map
-        for identity, translation_map in load_existing_draft_module(language, module).items()
+        for identity, translation_map in load_existing_draft_module(
+            language, module
+        ).items()
         if not language_quality_failure(
             language,
             source_texts.get(identity, identity[0]),
@@ -615,7 +916,9 @@ def write_draft_module(
         (i18n_store.Message(key, context), translation_map)
         for (key, context), translation_map in merged.items()
     ]
-    out_path.write_text(i18n_store.dump_module(messages), encoding="utf-8", newline="\n")
+    out_path.write_text(
+        i18n_store.dump_module(messages), encoding="utf-8", newline="\n"
+    )
     return out_path
 
 
@@ -669,8 +972,7 @@ def write_back_draft(
     written = 0
     for module, tasks in sorted(active_by_module.items()):
         translations = {
-            task.identity: draft_by_module[module][task.identity]
-            for task in tasks
+            task.identity: draft_by_module[module][task.identity] for task in tasks
         }
         write_back_module(language, module, tasks, translations, store)
         written += len(translations)
@@ -722,7 +1024,13 @@ def translate_task_batches(
     jobs: list[tuple[str, int, list[TranslationTask]]] = []
     for module, module_tasks in sorted(tasks_by_module.items()):
         for index in range(0, len(module_tasks), batch_size):
-            jobs.append((module, index // batch_size + 1, module_tasks[index : index + batch_size]))
+            jobs.append(
+                (
+                    module,
+                    index // batch_size + 1,
+                    module_tasks[index : index + batch_size],
+                )
+            )
     translated_by_module = {module: {} for module in tasks_by_module}
     failures_by_module = {module: [] for module in tasks_by_module}
 
@@ -740,21 +1048,32 @@ def translate_task_batches(
         return module, batch_number, batch_translations, batch_failures
 
     if parallel_requests > 1 and len(jobs) > 1:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=parallel_requests) as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=parallel_requests
+        ) as executor:
             futures = [executor.submit(run, job) for job in jobs]
             for future in concurrent.futures.as_completed(futures):
-                module, batch_number, batch_translations, batch_failures = future.result()
+                module, batch_number, batch_translations, batch_failures = (
+                    future.result()
+                )
                 translated_by_module[module].update(batch_translations)
                 failures_by_module[module].extend(batch_failures)
                 if progress:
-                    progress(module, batch_number, len(batch_translations), len(batch_failures))
+                    progress(
+                        module,
+                        batch_number,
+                        len(batch_translations),
+                        len(batch_failures),
+                    )
     else:
         for job in jobs:
             module, batch_number, batch_translations, batch_failures = run(job)
             translated_by_module[module].update(batch_translations)
             failures_by_module[module].extend(batch_failures)
             if progress:
-                progress(module, batch_number, len(batch_translations), len(batch_failures))
+                progress(
+                    module, batch_number, len(batch_translations), len(batch_failures)
+                )
     return translated_by_module, failures_by_module
 
 
@@ -798,14 +1117,18 @@ def main() -> None:
     client = None
     if not args.write_back:
         if not args.base_url or not args.model:
-            raise SystemExit("--base-url and --model are required unless --write-back is used")
+            raise SystemExit(
+                "--base-url and --model are required unless --write-back is used"
+            )
         client = LocalHttpClient(
             base_url=args.base_url,
             model=args.model,
             api_key=resolve_api_key(args.api_key),
             timeout_seconds=args.timeout,
             max_tokens=args.max_tokens,
-            chat_extra_body=build_chat_extra_body(args.chat_extra_json, args.reasoning_effort),
+            chat_extra_body=build_chat_extra_body(
+                args.chat_extra_json, args.reasoning_effort
+            ),
         )
     for language in languages:
         if args.write_back:
@@ -863,10 +1186,12 @@ def main() -> None:
             prompt_assets=prompt_assets,
             store=store,
             parallel_requests=args.parallel_requests,
-            progress=lambda module, batch_number, translated_count, failure_count: print(
-                f"{language}: completed {module} batch {batch_number} "
-                f"({translated_count} translated, {failure_count} failed)",
-                flush=True,
+            progress=lambda module, batch_number, translated_count, failure_count: (
+                print(
+                    f"{language}: completed {module} batch {batch_number} "
+                    f"({translated_count} translated, {failure_count} failed)",
+                    flush=True,
+                )
             ),
         )
         for module, module_tasks in sorted(grouped.items()):

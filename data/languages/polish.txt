@@ -241,6 +241,15 @@
 9+ new mentions
 == 9+ nowych wzmianek
 
+=== All Local Saves ===
+== === Wszystkie lokalne save'y ===
+
+=== Saves for '%s' ===
+== === Save'y dla '%s' ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s (mapa: %s, czas: %s)
+
 _ or ' ' = blank spacer
 == _ lub ' ' = pusty odstępnik
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == Alfa
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== Przekierowuj podobne powiadomienia z innych serwerów do powiadomień (np. niestandardowe solo; lista blokowania nadal obowiązuje)
 
 Always show
 == Zawsze pokazuj
@@ -956,7 +962,7 @@ Bubble opacity
 == Nieprzezroczystość dymka
 
 Buffer memory
-== Pamięć bufora
+== Pamięć buforów
 
 Built-in
 == Wbudowane
@@ -1153,11 +1159,11 @@ Classic Easy
 Classic easy
 == Klasyczny łatwy
 
-Classic next
-== Klasyczny następny
-
 Classic Next
 == Klasyczny Next
+
+Classic next
+== Klasyczny następny
 
 Classic Nut
 == Klasyczny Nut
@@ -1367,10 +1373,10 @@ Connection disconnected
 == Połączenie rozłączone
 
 Connection downstream
-== Połączenie downstream
+== Połączenie pobieranie
 
 Connection elevated
-== Połączenie podwyższone
+== Połączenie lekko niestabilne
 
 Connection normal
 == Połączenie normalne
@@ -1379,10 +1385,10 @@ Connection Problems…
 == Problemy z połączeniem…
 
 Connection severely abnormal
-== Połączenie poważnie nieprawidłowe
+== Połączenie poważnie niestabilne
 
 Connection upstream
-== Połączenie upstream
+== Połączenie wysyłanie
 
 Console
 == Konsola
@@ -1522,11 +1528,11 @@ Current: Score
 Current: Time
 == Obecnie: Czas
 
-custom
-== niestandardowy
-
 Custom
 == Niestandardowy
+
+custom
+== niestandardowy
 
 Custom API key
 == Niestandardowy klucz API
@@ -1570,6 +1576,9 @@ Damn grenadiers, all go to spa!
 Damn grenadiers, just die!
 == Cholerni granatnicy, po prostu zgińcie!
 
+Data
+== Dane
+
 Date
 == Data
 
@@ -1604,7 +1613,7 @@ ddnet-saves.txt not found
 == Nie znaleziono ddnet-saves.txt
 
 DDNet/total CPU
-== DDNet/całkowite CPU
+== DDNet/łączny CPU
 
 DDRace HUD
 == DDRace HUD
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == Szczegółowy powód
 
+Detect compatible solo prompts from custom servers
+== Wykrywaj zgodne komunikaty solo z niestandardowych serwerów
+
 Detection distance
 == Dystans wykrywania
 
@@ -1767,6 +1779,9 @@ disable
 
 Disable after picking up other weapons
 == Wyłącz po podniesieniu innej broni
+
+Disabled
+== Wyłączone
 
 Disagree
 == Nie zgadzam się
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == Pobieranie aktualizacji...
+
+Downscaled (0.78)
+== Pomniejszone (0.78)
 
 Drag HUD modules with the left mouse button
 == Przeciągaj moduły HUD lewym przyciskiem myszy
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == Ulubione
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: tokeny + 12 widgetów
+
 Feature Search
 == Wyszukiwanie funkcji
 
@@ -2413,6 +2434,9 @@ Force i to pause for i seconds
 Force vote
 == Wymuś głosowanie
 
+Forms
+== Formularze
+
 Found %d modules
 == Znaleziono %d modułów
 
@@ -2426,7 +2450,7 @@ Frame rate
 == Liczba klatek na sekundę
 
 Frame time
-== Czas ramki
+== Czas klatki
 
 Frankenstein (drop parts on right)
 == Frankenstein (upuść części po prawej)
@@ -2531,7 +2555,7 @@ Game types:
 == Typy gier:
 
 Game/predicted tick
-== Tick gry/przewidywania
+== Gra/przewidziany tick
 
 Gameplay
 == Rozgrywka
@@ -2689,6 +2713,9 @@ Heart
 Height
 == Wysokość
 
+Hello from ui_widget::Modal
+== Witaj z ui_widget::Modal
+
 Help: %s
 == Pomoc: %s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == Ukryj kod QR sponsora
 
+Hide toast
+== Ukryj toast
+
 Hide UI for focused gameplay
 == Ukryj interfejs dla skupionej rozgrywki
 
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == Godziny
+
+Hover for tooltip
+== Najedź, aby zobaczyć podpowiedź
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Zaleca się sprawdzenie ustawień i dostosowanie ich do własnych preferencji przed dołączeniem na serwer.
 
+Item %d
+== Element %d
+
 j = Latency jitter
 == j = Drganie opóźnienia
 
@@ -3014,7 +3050,7 @@ Jelly strength
 == Siła jelly
 
 Jitter
-== Drganie
+== Jitter
 
 Join a team to enable practice mode, which means you can use /r, but can't earn a rank.
 == Dołącz do drużyny, aby włączyć tryb treningowy, co oznacza, że możesz używać /r, ale nie zdobędziesz rankingu.
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == Dołącz do serwera samouczka
+
+Join, version, rules, and help messages stay in chat instead of popups
+== Komunikaty wejścia, wersji, zasad i pomocy zostają na czacie zamiast w popupach
 
 Jump
 == Skok
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == Przesuń kukłę w prawo
 
-Move Echo and important system prompts to right-side popups
-== Przenieś Echo i ważne komunikaty systemowe do wyskakujących okienek po prawej stronie
-
 Move left
 == Przesuń w lewo
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == Nazwa: %s
 
+Native scale (1.0)
+== Natywna skala (1.0)
+
 Need to have started the map to swap with a player.
 == Musisz rozpocząć mapę, aby zamienić się miejscami z graczem.
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == Wersja sieciowa
+
+new
+== nowe
 
 New button
 == Nowy przycisk
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == Brak wiadomości czatu do przetłumaczenia
+
+No code
+== Brak kodu
 
 No controller found. Plug in a controller.
 == Nie znaleziono kontrolera. Podłącz kontroler.
@@ -3917,7 +3962,7 @@ NOT CONNECTED
 == NIE POŁĄCZONY
 
 Not connected to a game server
-== Nie połączono z serwerem gry
+== Brak połączenia z serwerem gry
 
 Not connected to server
 == Nie połączono z serwerem
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == Otwórz selektor emotek
 
+Open modal
+== Otwórz modal
+
 Open pie menu
 == Otwórz menu kołowe
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == Nadpisz zaznaczone
+
+Overview
+== Przegląd
 
 Overview cards show a lightweight guide to the client and page structure
 == Karty przeglądu pokazują lekki przewodnik po kliencie i strukturze strony
@@ -4231,10 +4282,10 @@ Pick result: %s
 Pickup range
 == Zasięg podnoszenia
 
-Pie Menu
+Pie menu
 == Menu kołowe
 
-Pie menu
+Pie Menu
 == Menu kołowe
 
 Ping
@@ -4379,22 +4430,22 @@ Predicted ghost opacity
 == Nieprzezroczystość przewidywanego ducha
 
 Prediction
-== Przewidywanie
+== Predykcja
 
 Prediction jitter is obvious, latency changes are large
-== Drganie przewidywania jest oczywiste, zmiany opóźnienia są duże
+== Jitter predykcji jest wyraźny, opóźnienie mocno się zmienia
 
 Prediction latency is elevated, prediction path pressure is high
-== Opóźnienie przewidywania jest podwyższone, ciśnienie ścieżki przewidywania jest wysokie
-
-Prediction margin
-== Margines przewidywania
+== Opóźnienie predykcji jest podwyższone, ścieżka predykcji jest mocno obciążona
 
 Prediction Margin
 == Margines przewidywania
 
+Prediction margin
+== Margines predykcji
+
 Prediction time
-== Czas przewidywania
+== Czas predykcji
 
 Preparing demo playback
 == Przygotowywanie odtwarzania dema
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == Naciśnij klawisz…
+
+Press ESC to close. Watch the scale-in spring on open.
+== Naciśnij ESC, aby zamknąć. Zobacz sprężyste skalowanie przy otwieraniu.
 
 Press Esc to exit the HUD editor
 == Naciśnij Esc, aby wyjść z edytora HUD
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == Poprzednia strona w konsoli
+
+Primary
+== Główne
 
 Print command executed by this keybinding or all binds
 == Wydrukuj polecenie wykonane przez to przypisanie klawisza lub wszystkie przypisania
@@ -4628,7 +4685,7 @@ Rebinds the client's listening address and port
 == Ponownie wiąże adres i port nasłuchiwania klienta
 
 Receive
-== Odbierz
+== Odbiór
 
 Receiving
 == Odbieranie
@@ -5027,7 +5084,7 @@ RNNoise not integrated in current build, will fallback to simple noise reduction
 == RNNoise nie jest zintegrowane w bieżącej kompilacji, nastąpi powrót do prostej redukcji szumów
 
 Rollback rate
-== Wskaźnik wycofania
+== Częstość cofnięć
 
 Room
 == Pokój
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Przekierowuj wiadomości Echo do powiadomień
-
-Route server system prompts to notifications (except blacklist)
-== Przekierowuj komunikaty systemowe serwera do powiadomień (z wyjątkiem listy blokowania)
 
 Run chai script
 == Uruchom skrypt chai
@@ -5221,6 +5275,9 @@ Search main asset
 Searching
 == Szukanie
 
+Secondary
+== Drugorzędne
+
 Seconds
 == Sekundy
 
@@ -5273,7 +5330,7 @@ Self only
 == Tylko ja
 
 Send
-== Wyślij
+== Wysyłanie
 
 Send & Receive
 == Wyślij i odbierz
@@ -5456,7 +5513,7 @@ Settings file
 == Plik ustawień
 
 Severe
-== Poważny
+== Poważne
 
 Shape
 == Kształt
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == Pokaż listę banów (domyślnie strona 1, 20 wpisów na stronę)
+
+Show basic server information
+== Pokazuj podstawowe informacje serwera
 
 Show blocked words in console
 == Pokaż zablokowane słowa w konsoli
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == Pokaż HUD
+
+Show important server prompts
+== Pokazuj ważne komunikaty serwera
+
+Show important server prompts and Echo messages as popups
+== Pokazuj ważne komunikaty serwera i wiadomości Echo jako wyskakujące powiadomienia
+
+Show important server prompts as notifications
+== Pokazuj ważne komunikaty serwera jako powiadomienia
 
 Show info about the map with name r gives (current map by default)
 == Pokaż informacje o mapie o nazwie r (domyślnie bieżąca mapa)
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == Pokaż sekundy na zegarze
 
+Show server help and usage messages
+== Pokazuj pomoc serwera i komunikaty użycia
+
 Show skin names in nameplate
 == Pokaż nazwy skórek przy nazwach
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == Pokaż warstwy kafelków z mapy tła encji
+
+Show toast
+== Pokaż toast
+
+Show unknown server messages
+== Pokazuj nieznane wiadomości serwera
 
 Show unpredicted ghosts for other players
 == Pokaż nieprzewidziane duchy innych graczy
@@ -6074,7 +6152,7 @@ Spree
 == Seria
 
 Staging memory
-== Pamięć tymczasowa
+== Pamięć staging
 
 Star
 == Gwiazda
@@ -6146,7 +6224,7 @@ Stop the current demo
 == Zatrzymaj bieżące demo
 
 Streamed memory
-== Pamięć strumieniowa
+== Pamięć strumieniowana
 
 Streamer Mode
 == Tryb streamera
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == Ta drużyna została rozwiązana, ponieważ ma więcej graczy niż dozwolono.
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== Ta podpowiedź pochodzi z ui_widget::Tooltip, cienkiej nakładki na CTooltips.
+
 tile
 == kafelek
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == Aby zapisać, wszyscy gracze w twojej drużynie muszą żyć i nie być w '/spec'
+
+Toast uses UiTokens + QmMotion slide
+== Toast używa UiTokens + slajdu QmMotion
 
 Toggle auto camera
 == Przełącz automatyczną kamerę
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == Łącznie
+
+Total: %d save(s)
+== Razem: %d save'ów
 
 Traditional
 == Tradycyjny
@@ -6843,6 +6930,9 @@ Twinkle strength
 
 Type
 == Typ
+
+Type something...
+== Wpisz coś...
 
 Type switch vote started automatically
 == Głosowanie zmiany typu rozpoczęte automatycznie
@@ -7086,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == Użyj nowego algorytmu wygładzania
+
+Use notification category filters
+== Używaj filtrów kategorii powiadomień
 
 Use old chat style
 == Użyj starego stylu czatu

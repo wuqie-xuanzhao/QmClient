@@ -137,7 +137,12 @@ class LocalHttpClient:
                 raise RuntimeError(
                     f"local HTTP request failed: {exc.code} {exc.reason}: {detail}"
                 ) from exc
-            except (urllib.error.URLError, http.client.HTTPException, TimeoutError, OSError) as exc:
+            except (
+                urllib.error.URLError,
+                http.client.HTTPException,
+                TimeoutError,
+                OSError,
+            ) as exc:
                 last_error = exc
                 if attempt < self.max_retries:
                     time.sleep(self.retry_backoff_seconds * (attempt + 1))

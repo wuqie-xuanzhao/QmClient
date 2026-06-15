@@ -23,7 +23,10 @@ def load_historical_map(git_ref: str) -> dict[tuple[str, str], str]:
     temp_path = Path(".git") / "tmp_hist_simplified_chinese_for_audit.txt"
     temp_path.write_text(content, encoding="utf-8", newline="\n")
     try:
-        return {identity: values[1] for identity, values in twlang.translations(temp_path).items()}
+        return {
+            identity: values[1]
+            for identity, values in twlang.translations(temp_path).items()
+        }
     finally:
         temp_path.unlink(missing_ok=True)
 
@@ -31,7 +34,10 @@ def load_historical_map(git_ref: str) -> dict[tuple[str, str], str]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--git-ref", default="HEAD")
-    parser.add_argument("--output", default="qmclient_scripts/languages_qmclient/translation_drift_report.txt")
+    parser.add_argument(
+        "--output",
+        default="qmclient_scripts/languages_qmclient/translation_drift_report.txt",
+    )
     args = parser.parse_args()
 
     historical = load_historical_map(args.git_ref)

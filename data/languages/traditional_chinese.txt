@@ -241,6 +241,15 @@
 9+ new mentions
 == 9+ 條新被提及訊息
 
+=== All Local Saves ===
+== === 全部本地存檔 ===
+
+=== Saves for '%s' ===
+== === '%s' 的本地存檔 ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s（地圖: %s，保存時間: %s）
+
 _ or ' ' = blank spacer
 == _ 或 ' ' = 空白間隔
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == 透明度
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== 其他伺服器的類似提示也嘗試改走通知欄（例如自訂單人區域提示，按黑名單排除）
 
 Always show
 == 始終顯示
@@ -956,7 +962,7 @@ Bubble opacity
 == 氣泡不透明度
 
 Buffer memory
-== 緩衝記憶體
+== 緩衝區記憶體
 
 Built-in
 == 內建
@@ -1153,11 +1159,11 @@ Classic Easy
 Classic easy
 == 古典 easy
 
-Classic next
-== 古典 next
-
 Classic Next
 == 經典 Next
+
+Classic next
+== 古典 next
 
 Classic Nut
 == 經典 Nut
@@ -1364,13 +1370,13 @@ Connecting to
 == 正在連線到
 
 Connection disconnected
-== 連線斷開
+== 連線已斷開
 
 Connection downstream
 == 連線下行
 
 Connection elevated
-== 連線偏高
+== 連線略有異常
 
 Connection normal
 == 連線正常
@@ -1522,10 +1528,10 @@ Current: Score
 Current: Time
 == 目前：時間
 
-custom
+Custom
 == 自訂
 
-Custom
+custom
 == 自訂
 
 Custom API key
@@ -1569,6 +1575,9 @@ Damn grenadiers, all go to spa!
 
 Damn grenadiers, just die!
 == 他媽的炸彈人都給我死啊!
+
+Data
+== 資料
 
 Date
 == 日期
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == 詳細原因
 
+Detect compatible solo prompts from custom servers
+== 偵測自訂伺服器的相容單人區域提示
+
 Detection distance
 == 檢測距離
 
@@ -1768,6 +1780,9 @@ disable
 Disable after picking up other weapons
 == 拿到其他武器時停用
 
+Disabled
+== 已停用
+
 Disagree
 == 反對
 
@@ -1787,7 +1802,7 @@ Disconnect from the server
 == 與伺服器中斷連線
 
 Disconnected
-== 連線已斷開
+== 已斷開
 
 Discord
 == Discord
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == 正在下載更新...
+
+Downscaled (0.78)
+== 降採樣縮放 (0.78)
 
 Drag HUD modules with the left mouse button
 == 按住滑鼠左鍵拖曳 HUD 模組
@@ -1991,7 +2009,7 @@ Editor
 == 編輯器
 
 Elevated
-== 偏高
+== 注意
 
 Emotes are disabled.
 == 本伺服器已禁用表情功能
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == 收藏夾
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: token + 12 個控制項
+
 Feature Search
 == 功能搜尋
 
@@ -2413,6 +2434,9 @@ Force i to pause for i seconds
 Force vote
 == 強制投票
 
+Forms
+== 表單
+
 Found %d modules
 == 匹配到 %d 個模組
 
@@ -2426,7 +2450,7 @@ Frame rate
 == 幀率
 
 Frame time
-== 幀時間
+== 影格耗時
 
 Frankenstein (drop parts on right)
 == 拼合結果（將部件拖曳到右側）
@@ -2531,7 +2555,7 @@ Game types:
 == 遊戲模式：
 
 Game/predicted tick
-== 遊戲/預測 Tick
+== 遊戲/預測 tick
 
 Gameplay
 == 遊戲玩法
@@ -2689,6 +2713,9 @@ Heart
 Height
 == 高度
 
+Hello from ui_widget::Modal
+== 來自 ui_widget::Modal 的問候
+
 Help: %s
 == 幫助：%s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == 隱藏贊助碼
 
+Hide toast
+== 隱藏 toast
+
 Hide UI for focused gameplay
 == 隱去UI專注遊戲
 
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == 小時
+
+Hover for tooltip
+== 懸停查看提示
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == 建議你在進入伺服器前檢查一下設定並根據你的喜好進行調整。
 
+Item %d
+== 項目 %d
+
 j = Latency jitter
 == j = 延遲抖動
 
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == 進入教學伺服器
+
+Join, version, rules, and help messages stay in chat instead of popups
+== 入場、版本、規則和說明訊息會留在聊天裡，不彈出顯示
 
 Jump
 == 跳躍
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == 讓分身向右移動
 
-Move Echo and important system prompts to right-side popups
-== 把 Echo 和需要關注的系統提示移到右側彈出顯示
-
 Move left
 == 向左移動
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == 名稱：%s
 
+Native scale (1.0)
+== 原生縮放 (1.0)
+
 Need to have started the map to swap with a player.
 == 你需要先開始地圖，才能和其他玩家交換位置
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == 網路版本
+
+new
+== 新增
 
 New button
 == 新按鍵
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == 沒有可翻譯的訊息
+
+No code
+== 無密碼
 
 No controller found. Plug in a controller.
 == 找不到控制器。請連接控制器。
@@ -3917,7 +3962,7 @@ NOT CONNECTED
 == 連線未成功
 
 Not connected to a game server
-== 當前未連線到遊戲伺服器
+== 未連線到遊戲伺服器
 
 Not connected to server
 == 未進入伺服器
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == 打開表情選擇器
 
+Open modal
+== 開啟彈窗
+
 Open pie menu
 == 打開圓餅選單
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == 覆蓋選定項
+
+Overview
+== 概覽
 
 Overview cards show a lightweight guide to the client and page structure
 == 概覽卡展示用戶端與頁面結構的輕量說明
@@ -4231,10 +4282,10 @@ Pick result: %s
 Pickup range
 == 拾取物範圍
 
-Pie Menu
+Pie menu
 == 餅選單
 
-Pie menu
+Pie Menu
 == 餅選單
 
 Ping
@@ -4382,16 +4433,16 @@ Prediction
 == 預測
 
 Prediction jitter is obvious, latency changes are large
-== 預測波動明顯，延遲變化較大
+== 預測抖動明顯，延遲變化較大
 
 Prediction latency is elevated, prediction path pressure is high
-== 預測值抬升，預測鏈路壓力偏高
-
-Prediction margin
-== 預測邊距
+== 預測延遲偏高，預測鏈路壓力較高
 
 Prediction Margin
 == 預測邊際
+
+Prediction margin
+== 預測邊距
 
 Prediction time
 == 預測耗時
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == 按任意鍵…
+
+Press ESC to close. Watch the scale-in spring on open.
+== 按 ESC 關閉。開啟時可以觀察縮放彈簧動畫。
 
 Press Esc to exit the HUD editor
 == 按 Esc 退出 HUD 編輯器
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == 控制台上一頁
+
+Primary
+== 主要
 
 Print command executed by this keybinding or all binds
 == 列印此按鍵綁定或所有綁定執行的命令
@@ -4937,7 +4994,7 @@ Rescue/Freeze: %d/%d
 == 被救/落水：%d/%d
 
 Resend signs detected, connection quality is suspicious
-== 存在重發跡象，鏈路品質可疑
+== 偵測到重發跡象，連線品質可疑
 
 Reset
 == 重置
@@ -5027,7 +5084,7 @@ RNNoise not integrated in current build, will fallback to simple noise reduction
 == 當前建置未整合 RNNoise，將自動回退到簡單降噪
 
 Rollback rate
-== 回拉率
+== 回滾率
 
 Room
 == 房間
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo 訊息改走通知欄
-
-Route server system prompts to notifications (except blacklist)
-== 伺服器系統提示改走通知欄（黑名單除外）
 
 Run chai script
 == 運行 chai 腳本
@@ -5221,6 +5275,9 @@ Search main asset
 Searching
 == 正在搜尋
 
+Secondary
+== 次要
+
 Seconds
 == 秒
 
@@ -5273,7 +5330,7 @@ Self only
 == 僅自己
 
 Send
-== 傳送
+== 發送
 
 Send & Receive
 == 收發
@@ -5387,10 +5444,10 @@ Server not full
 == 伺服器未滿
 
 Server rollback
-== 時間回拉
+== 伺服器回滾
 
 Server RTT is elevated, response path is unstable
-== 伺服器 RTT 抬升，回包鏈路波動較明顯
+== 伺服器 RTT 偏高，回應鏈路不穩定
 
 Set a voice server to enable QmClient distribution
 == 設定語音伺服器以啟用 QmClient 線上分佈
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == 顯示封禁列表（預設第 1 頁，每頁 20 條）
+
+Show basic server information
+== 顯示基礎伺服器資訊
 
 Show blocked words in console
 == 在控制台中顯示被屏蔽的詞語
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == 顯示 HUD
+
+Show important server prompts
+== 顯示重要伺服器提示
+
+Show important server prompts and Echo messages as popups
+== 把重要伺服器提示和 Echo 訊息彈出顯示
+
+Show important server prompts as notifications
+== 重要伺服器提示改走通知欄
 
 Show info about the map with name r gives (current map by default)
 == 顯示有關名稱為 r 的地圖的資訊（預設為目前地圖）
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == 在時間處顯示秒數
 
+Show server help and usage messages
+== 顯示伺服器說明和用法訊息
+
 Show skin names in nameplate
 == 在玩家暱稱旁顯示皮膚名
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == 顯示實體層背景地圖的圖塊層
+
+Show toast
+== 顯示 toast
+
+Show unknown server messages
+== 顯示未知伺服器訊息
 
 Show unpredicted ghosts for other players
 == 顯示其他玩家未預測的影子
@@ -6146,7 +6224,7 @@ Stop the current demo
 == 結束回放
 
 Streamed memory
-== 流式記憶體
+== 串流記憶體
 
 Streamer Mode
 == 主播模式
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == 該隊伍因人數超過允許上限而被解散
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== 這個提示由 ui_widget::Tooltip 提供，它是 CTooltips 上的一層薄封裝。
+
 tile
 == 瓦片
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == 要儲存隊伍，隊內所有玩家都必須存活且不能處於 '/spec'
+
+Toast uses UiTokens + QmMotion slide
+== Toast 使用 UiTokens + QmMotion 滑入效果
 
 Toggle auto camera
 == 切換自動視角
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == 總計
+
+Total: %d save(s)
+== 總計: %d 個存檔
 
 Traditional
 == 傳統
@@ -6843,6 +6930,9 @@ Twinkle strength
 
 Type
 == 類型
+
+Type something...
+== 輸入點什麼...
 
 Type switch vote started automatically
 == 已自動發起切換類型投票
@@ -7086,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == 使用新的平滑演算法
+
+Use notification category filters
+== 使用通知欄分類過濾
 
 Use old chat style
 == 舊版聊天框

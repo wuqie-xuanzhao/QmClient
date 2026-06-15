@@ -4717,8 +4717,8 @@ void CTClient::MaybeShowLocalSaveJoinHint()
 			PlayersLine += ",";
 			CodesLine += ",";
 		}
-		PlayersLine += pEntry->m_Players.empty() ? "Unknown" : pEntry->m_Players;
-		CodesLine += pEntry->m_Code.empty() ? "no-code" : pEntry->m_Code;
+		PlayersLine += pEntry->m_Players.empty() ? Localize("Unknown") : pEntry->m_Players;
+		CodesLine += pEntry->m_Code.empty() ? Localize("No code") : pEntry->m_Code;
 	}
 	if(DisplayCount < (int)vMatchedEntries.size())
 	{
@@ -4750,9 +4750,9 @@ void CTClient::ConSaveList(IConsole::IResult *pResult, void *pUserData)
 	// 显示标题
 	char aTitle[256];
 	if(pFilterMap && pFilterMap[0] != '\0')
-		str_format(aTitle, sizeof(aTitle), "=== Saves for '%s' ===", pFilterMap);
+		str_format(aTitle, sizeof(aTitle), Localize("=== Saves for '%s' ==="), pFilterMap);
 	else
-		str_copy(aTitle, "=== All Local Saves ===");
+		str_copy(aTitle, Localize("=== All Local Saves ==="));
 	pThis->GameClient()->Echo(aTitle);
 
 	for(const SLocalSaveEntry &Entry : vEntries)
@@ -4767,17 +4767,17 @@ void CTClient::ConSaveList(IConsole::IResult *pResult, void *pUserData)
 
 		// 输出格式: [玩家名] 密码 (地图: xxx, 保存时间: xxx)
 		char aOutput[512];
-		str_format(aOutput, sizeof(aOutput), "[%s] %s (Map: %s, Time: %s)",
-			Entry.m_Players.empty() ? "Unknown" : Entry.m_Players.c_str(),
-			Entry.m_Code.empty() ? "no-code" : Entry.m_Code.c_str(),
-			Entry.m_Map.empty() ? "Unknown" : Entry.m_Map.c_str(),
-			Entry.m_Time.empty() ? "Unknown" : Entry.m_Time.c_str());
+		str_format(aOutput, sizeof(aOutput), Localize("[%s] %s (Map: %s, Time: %s)"),
+			Entry.m_Players.empty() ? Localize("Unknown") : Entry.m_Players.c_str(),
+			Entry.m_Code.empty() ? Localize("No code") : Entry.m_Code.c_str(),
+			Entry.m_Map.empty() ? Localize("Unknown") : Entry.m_Map.c_str(),
+			Entry.m_Time.empty() ? Localize("Unknown") : Entry.m_Time.c_str());
 		pThis->GameClient()->Echo(aOutput);
 		Count++;
 	}
 
 	char aCountMsg[128];
-	str_format(aCountMsg, sizeof(aCountMsg), "Total: %d save(s)", Count);
+	str_format(aCountMsg, sizeof(aCountMsg), Localize("Total: %d save(s)"), Count);
 	pThis->GameClient()->Echo(aCountMsg);
 }
 

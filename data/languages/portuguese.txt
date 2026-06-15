@@ -241,6 +241,15 @@
 9+ new mentions
 == 9+ novas menções
 
+=== All Local Saves ===
+== === Todos os saves locais ===
+
+=== Saves for '%s' ===
+== === Saves de '%s' ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s (mapa: %s, hora: %s)
+
 _ or ' ' = blank spacer
 == _ ou ' ' = espaço em branco
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == Alfa
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== Também encaminhar avisos semelhantes de outros servidores para notificações (por exemplo, avisos de solo personalizados; a lista negra ainda se aplica)
 
 Always show
 == Mostrar sempre
@@ -956,7 +962,7 @@ Bubble opacity
 == Opacidade da bolha
 
 Buffer memory
-== Memória intermédia
+== Memória de buffer
 
 Built-in
 == Integrado
@@ -1153,11 +1159,11 @@ Classic Easy
 Classic easy
 == Clássico fácil
 
-Classic next
-== Clássico seguinte
-
 Classic Next
 == Classic Next
+
+Classic next
+== Clássico seguinte
 
 Classic Nut
 == Classic Nut
@@ -1364,13 +1370,13 @@ Connecting to
 == A ligar a
 
 Connection disconnected
-== Conexão desconectada
+== Ligação desligada
 
 Connection downstream
-== Conexão descendente
+== Ligação downstream
 
 Connection elevated
-== Conexão elevada
+== Ligação ligeiramente instável
 
 Connection normal
 == Conexão normal
@@ -1379,10 +1385,10 @@ Connection Problems…
 == Problemas de Conexão…
 
 Connection severely abnormal
-== Conexão severamente anormal
+== Ligação gravemente anormal
 
 Connection upstream
-== Conexão ascendente
+== Ligação upstream
 
 Console
 == Consola
@@ -1522,11 +1528,11 @@ Current: Score
 Current: Time
 == Atual: Tempo
 
-custom
-== personalizado
-
 Custom
 == Personalizado
+
+custom
+== personalizado
 
 Custom API key
 == Chave de API personalizada
@@ -1570,6 +1576,9 @@ Damn grenadiers, all go to spa!
 Damn grenadiers, just die!
 == Malditos granadeiros, morram!
 
+Data
+== Dados
+
 Date
 == Data
 
@@ -1604,7 +1613,7 @@ ddnet-saves.txt not found
 == ddnet-saves.txt não encontrado
 
 DDNet/total CPU
-== CPU DDNet/total
+== DDNet/CPU total
 
 DDRace HUD
 == HUD DDRace
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == Motivo detalhado
 
+Detect compatible solo prompts from custom servers
+== Detetar avisos de solo compatíveis de servidores personalizados
+
 Detection distance
 == Distância de deteção
 
@@ -1768,6 +1780,9 @@ disable
 Disable after picking up other weapons
 == Desativar ao pegar noutras armas
 
+Disabled
+== Desativado
+
 Disagree
 == Discordar
 
@@ -1787,7 +1802,7 @@ Disconnect from the server
 == Desconectar do servidor
 
 Disconnected
-== Desconectado
+== Desligado
 
 Discord
 == Discord
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == A transferir atualização...
+
+Downscaled (0.78)
+== Reduzido (0.78)
 
 Drag HUD modules with the left mouse button
 == Arrasta os módulos HUD com o botão esquerdo do rato
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == Favoritos
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: tokens + 12 widgets
+
 Feature Search
 == Pesquisa de Funcionalidades
 
@@ -2413,6 +2434,9 @@ Force i to pause for i seconds
 Force vote
 == Forçar votação
 
+Forms
+== Formulários
+
 Found %d modules
 == %d módulos encontrados
 
@@ -2426,7 +2450,7 @@ Frame rate
 == Taxa de frames
 
 Frame time
-== Tempo de frame
+== Tempo de fotograma
 
 Frankenstein (drop parts on right)
 == Frankenstein (largue partes à direita)
@@ -2531,7 +2555,7 @@ Game types:
 == Tipos de jogo:
 
 Game/predicted tick
-== Tick de jogo/previsto
+== Jogo/tick previsto
 
 Gameplay
 == Jogabilidade
@@ -2689,6 +2713,9 @@ Heart
 Height
 == Altura
 
+Hello from ui_widget::Modal
+== Olá de ui_widget::Modal
+
 Help: %s
 == Ajuda: %s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == Ocultar código QR do patrocinador
 
+Hide toast
+== Ocultar toast
+
 Hide UI for focused gameplay
 == Ocultar IU para jogabilidade focada
 
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == Horas
+
+Hover for tooltip
+== Passe o rato para ver a dica
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == É recomendado que verifiques as definições para as ajustares ao teu gosto antes de entrares num servidor.
 
+Item %d
+== Item %d
+
 j = Latency jitter
 == j = Jitter de latência
 
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == Entrar no Servidor Tutorial
+
+Join, version, rules, and help messages stay in chat instead of popups
+== Mensagens de entrada, versão, regras e ajuda ficam no chat em vez de pop-ups
 
 Jump
 == Saltar
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == Mover dummy para a direita
 
-Move Echo and important system prompts to right-side popups
-== Mover Echo e avisos importantes do sistema para pop-ups do lado direito
-
 Move left
 == Mover para a esquerda
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == Nome: %s
 
+Native scale (1.0)
+== Escala nativa (1.0)
+
 Need to have started the map to swap with a player.
 == Precisa de ter começado o mapa para trocar de lugar com um jogador.
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == Versão de Rede
+
+new
+== novo
 
 New button
 == Novo botão
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == Nenhuma mensagem de chat para traduzir
+
+No code
+== Sem código
 
 No controller found. Plug in a controller.
 == Nenhum comando encontrado. Ligue um comando.
@@ -3917,7 +3962,7 @@ NOT CONNECTED
 == NÃO CONECTADO
 
 Not connected to a game server
-== Não conectado a um servidor de jogo
+== Não ligado a um servidor de jogo
 
 Not connected to server
 == Não conectado ao servidor
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == Abrir seletor de emotes
 
+Open modal
+== Abrir modal
+
 Open pie menu
 == Abrir menu circular
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == Substituir Selecionado
+
+Overview
+== Visão geral
 
 Overview cards show a lightweight guide to the client and page structure
 == Os cartões de visão geral mostram um guia leve para o cliente e a estrutura da página
@@ -4231,11 +4282,11 @@ Pick result: %s
 Pickup range
 == Alcance de recolha
 
-Pie Menu
-== Menu de Pizza
-
 Pie menu
 == Menu circular
+
+Pie Menu
+== Menu de Pizza
 
 Ping
 == Ping
@@ -4382,16 +4433,16 @@ Prediction
 == Previsão
 
 Prediction jitter is obvious, latency changes are large
-== O jitter da previsão é óbvio, as mudanças de latência são grandes
+== O jitter de previsão é evidente, a latência varia bastante
 
 Prediction latency is elevated, prediction path pressure is high
-== A latência da previsão está elevada, a pressão do caminho de previsão está alta
-
-Prediction margin
-== Margem de previsão
+== A latência de previsão está elevada, o caminho de previsão está sob alta pressão
 
 Prediction Margin
 == Margem de Predição
+
+Prediction margin
+== Margem de previsão
 
 Prediction time
 == Tempo de previsão
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == Carrega numa tecla…
+
+Press ESC to close. Watch the scale-in spring on open.
+== Prima ESC para fechar. Observe a animação elástica de escala ao abrir.
 
 Press Esc to exit the HUD editor
 == Carrega Esc para sair do editor HUD
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == Página anterior na consola
+
+Primary
+== Primário
 
 Print command executed by this keybinding or all binds
 == Imprimir comando executado por este atalho de teclado ou todos os atalhos
@@ -4628,7 +4685,7 @@ Rebinds the client's listening address and port
 == Reassocia o endereço e porta de escuta do cliente
 
 Receive
-== Receber
+== Receção
 
 Receiving
 == A receber
@@ -4937,7 +4994,7 @@ Rescue/Freeze: %d/%d
 == Resgate/Congelamento: %d/%d
 
 Resend signs detected, connection quality is suspicious
-== Sinais de reenvio detetados, a qualidade da conexão é suspeita
+== Sinais de reenvio detetados, a qualidade da ligação é suspeita
 
 Reset
 == Reiniciar
@@ -5027,7 +5084,7 @@ RNNoise not integrated in current build, will fallback to simple noise reduction
 == RNNoise não integrado na compilação atual, irá recorrer à redução de ruído simples
 
 Rollback rate
-== Taxa de reversão
+== Taxa de rollback
 
 Room
 == Sala
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Encaminhar mensagens Echo para notificações
-
-Route server system prompts to notifications (except blacklist)
-== Encaminhar avisos do sistema do servidor para notificações (exceto lista negra)
 
 Run chai script
 == Executar script chai
@@ -5221,6 +5275,9 @@ Search main asset
 Searching
 == A pesquisar
 
+Secondary
+== Secundário
+
 Seconds
 == Segundos
 
@@ -5273,7 +5330,7 @@ Self only
 == Apenas eu
 
 Send
-== Enviar
+== Envio
 
 Send & Receive
 == Enviar e Receber
@@ -5387,7 +5444,7 @@ Server not full
 == Servidor não cheio
 
 Server rollback
-== Retrocesso do servidor
+== Rollback do servidor
 
 Server RTT is elevated, response path is unstable
 == O RTT do servidor está elevado, o caminho de resposta está instável
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == Mostrar lista de bans (página 1 por defeito, 20 entradas por página)
+
+Show basic server information
+== Mostrar informações básicas do servidor
 
 Show blocked words in console
 == Mostrar palavras bloqueadas na consola
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == Mostrar HUD
+
+Show important server prompts
+== Mostrar avisos importantes do servidor
+
+Show important server prompts and Echo messages as popups
+== Mostrar avisos importantes do servidor e mensagens Echo como pop-ups
+
+Show important server prompts as notifications
+== Mostrar avisos importantes do servidor como notificações
 
 Show info about the map with name r gives (current map by default)
 == Mostrar informação sobre o mapa com nome r (mapa atual por defeito)
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == Mostrar segundos no relógio
 
+Show server help and usage messages
+== Mostrar ajuda e mensagens de uso do servidor
+
 Show skin names in nameplate
 == Mostrar nomes de pele na placa de nome
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == Mostrar camadas de tiles do mapa de fundo
+
+Show toast
+== Mostrar toast
+
+Show unknown server messages
+== Mostrar mensagens desconhecidas do servidor
 
 Show unpredicted ghosts for other players
 == Mostrar fantasmas não previstos para outros jogadores
@@ -6074,7 +6152,7 @@ Spree
 == Série
 
 Staging memory
-== Memória de estágio
+== Memória de staging
 
 Star
 == Estrela
@@ -6146,7 +6224,7 @@ Stop the current demo
 == Parar a demo atual
 
 Streamed memory
-== Memória transmitida
+== Memória de streaming
 
 Streamer Mode
 == Modo Streamer
@@ -6488,7 +6566,7 @@ Text color
 == Cor do texto
 
 Texture memory
-== Memória de textura
+== Memória de texturas
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
 == Obrigado pela sua companhia e confiança. É isto que me dá coragem para continuar.
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == Esta equipa foi dissolvida porque há mais jogadores do que o permitido na equipa.
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== Esta dica é fornecida por ui_widget::Tooltip, uma camada fina sobre CTooltips.
+
 tile
 == tile
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == Para guardar, todos os jogadores na sua equipa têm de estar vivos e não em '/spec'
+
+Toast uses UiTokens + QmMotion slide
+== Toast usa UiTokens + slide QmMotion
 
 Toggle auto camera
 == Alternar câmara automática
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == Total
+
+Total: %d save(s)
+== Total: %d save(s)
 
 Traditional
 == Tradicional
@@ -6843,6 +6930,9 @@ Twinkle strength
 
 Type
 == Tipo
+
+Type something...
+== Escreva algo...
 
 Type switch vote started automatically
 == Votação de troca de tipo iniciada automaticamente
@@ -7086,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == Usar novo algoritmo de suavização
+
+Use notification category filters
+== Usar filtros de categoria de notificações
 
 Use old chat style
 == Usar estilo de chat antigo

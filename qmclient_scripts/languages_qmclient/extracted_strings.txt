@@ -79,6 +79,9 @@
 45° Aim
 5 stars
 9+ new mentions
+=== All Local Saves ===
+=== Saves for '%s' ===
+[%s] %s (Map: %s, Time: %s)
 _ or ' ' = blank spacer
 a = View angle
 A demo with this name already exists
@@ -170,7 +173,6 @@ Allow Duplicate Entries
 Allow mic permission in system settings, then reopen voice
 Allows maps to render with more detail
 Alpha
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
 Always show
 Always show chat
 Always show other players' hook collision lines
@@ -381,14 +383,14 @@ Clan Members
 Clan plates size
 Clan: %s
 Classic
-Classic Easy
 Classic easy
-Classic next
+Classic Easy
 Classic Next
-Classic Nut
+Classic next
 Classic nut
-Classic pro
+Classic Nut
 Classic Pro
+Classic pro
 Clear
 Clear all favorite maps
 Clear Changes
@@ -522,6 +524,7 @@ Cycle through emotes
 d = Prediction latency
 Damn grenadiers, all go to spa!
 Damn grenadiers, just die!
+Data
 Date
 Days
 DDmaX
@@ -576,6 +579,7 @@ Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_mut
 Deselect
 Desktop fullscreen
 Detailed reason
+Detect compatible solo prompts from custom servers
 Detection distance
 Detection time
 Developers and sponsors
@@ -588,6 +592,7 @@ Direct touch input while spectating
 Direction Keys
 disable
 Disable after picking up other weapons
+Disabled
 Disagree
 Discard
 Discard changes
@@ -612,6 +617,7 @@ Download this asset?
 Downloaded
 Downloading map
 Downloading update...
+Downscaled (0.78)
 Drag HUD modules with the left mouse button
 Dragger Inner Color
 Dragger Outline Color
@@ -780,6 +786,7 @@ Favorite
 Favorite map
 Favorite maps
 Favorites
+feat-003 dogfood: tokens + 12 widgets
 Feature Search
 Feet
 Fetch Info
@@ -803,6 +810,7 @@ Force a voting option
 Force high bandwidth mode when spectating (1 = on, 0 = off)
 Force i to pause for i seconds
 Force vote
+Forms
 Found %d modules
 FPM
 Frags
@@ -895,6 +903,7 @@ Has save
 HDF
 Heart
 Height
+Hello from ui_widget::Modal
 Help: %s
 Hide death/respawn effects
 Hide direction indicators
@@ -918,6 +927,7 @@ Hide scoreboard
 Hide server prompt notifications
 Hide Settings Tabs
 Hide sponsor QR code
+Hide toast
 Hide UI for focused gameplay
 Hide weapon muzzle flashes
 High Detail
@@ -925,8 +935,8 @@ High to low
 Highlight Color
 Highlighted message
 Hitbox mode
-HJ Assist
 HJ assist
+HJ Assist
 Hold left click for free camera
 Hook
 Hook collision line
@@ -938,6 +948,7 @@ Hook Strength
 Hooking L/R: %.0f%%/%.0f%%
 Horizontal position
 Hours
+Hover for tooltip
 https://ddnet.org/discord
 https://wiki.ddnet.org/
 https://wiki.ddnet.org/wiki/Mapping
@@ -999,6 +1010,7 @@ Invite a person to a locked team
 Invites are disabled
 Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
+Item %d
 j = Latency jitter
 Jelly duration
 Jelly others
@@ -1012,6 +1024,7 @@ Join QQ group
 Join red
 Join the team of the specified player
 Join Tutorial Server
+Join, version, rules, and help messages stay in chat instead of popups
 Jump
 Jump hint text
 k = Resend loss
@@ -1200,7 +1213,6 @@ MOTD
 Mouse
 Move dummy left
 Move dummy right
-Move Echo and important system prompts to right-side popups
 Move left
 Move player to spectators
 Move right
@@ -1231,10 +1243,12 @@ Name plates offset
 Name plates size
 Name:
 Name: %s
+Native scale (1.0)
 Need to have started the map to swap with a player.
 Negative stability buffer (for Gores)
 Net
 Netversion
+new
 New button
 New IME
 New name:
@@ -1262,6 +1276,7 @@ No changes since last save
 No chat log selected
 No chat message available to repeat
 No chat message to translate
+No code
 No controller found. Plug in a controller.
 No corresponding vote option found
 No demo is being recorded
@@ -1343,6 +1358,7 @@ Opacity of freeze bars inside freeze
 Open bindwheel selector
 Open color picker
 Open emote selector
+Open modal
 Open pie menu
 Open rename dialog
 Open spectator mode selector
@@ -1373,6 +1389,7 @@ Override
 Override Entry
 Override Group
 Override Selected
+Overview
 Overview cards show a lightweight guide to the client and page structure
 Overwrite clan even if empty
 p = Ping latency
@@ -1461,12 +1478,13 @@ Predicted ghost opacity
 Prediction
 Prediction jitter is obvious, latency changes are large
 Prediction latency is elevated, prediction path pressure is high
-Prediction Margin
 Prediction margin
+Prediction Margin
 Prediction time
 Preparing demo playback
 Preset bar
 Press a key…
+Press ESC to close. Watch the scale-in spring on open.
 Press Esc to exit the HUD editor
 Prev. weapon
 Preview
@@ -1479,6 +1497,7 @@ Preview player nameplate
 Preview selected file
 Previous
 Previous page in console
+Primary
 Print command executed by this keybinding or all binds
 Print command executed by this name or all chat binds
 Privately messages someone's current time in this current running race (your time by default)
@@ -1682,7 +1701,6 @@ Round
 Round %d/%d
 Rounded caps
 Route Echo messages to notifications
-Route server system prompts to notifications (except blacklist)
 Run chai script
 Run on join
 Run server
@@ -1739,6 +1757,7 @@ Search
 Search donor asset
 Search main asset
 Searching
+Secondary
 Seconds
 SecretId
 SecretKey
@@ -1831,6 +1850,7 @@ Show all warlist groups
 Show any enabled Indicators
 Show background quads
 Show banlist (page 1 by default, 20 entries per page)
+Show basic server information
 Show blocked words in console
 Show chat
 Show chat bubbles above players
@@ -1871,6 +1891,9 @@ Show Hook Collision
 Show hook strength icon indicator
 Show hook strength number indicator
 Show HUD
+Show important server prompts
+Show important server prompts and Echo messages as popups
+Show important server prompts as notifications
 Show info about the map with name r gives (current map by default)
 Show information about this server
 Show ingame HUD
@@ -1912,6 +1935,7 @@ Show Qm badge
 Show score
 Show scoreboard
 Show seconds on clock
+Show server help and usage messages
 Show skin names in nameplate
 Show song info in top-left corner
 Show spectator cursor
@@ -1929,6 +1953,8 @@ Show the pet
 Show the screen center line
 Show the server rules
 Show tiles layers from BG map
+Show toast
+Show unknown server messages
 Show unpredicted ghosts for other players
 Show voice connection status
 Show votes window after voting
@@ -2204,6 +2230,7 @@ This team is locked using /lock. Only members of the team can invite you or unlo
 This team is locked using /lock. Only members of the team can unlock it using /lock.
 This team started already
 This team was disbanded because there are more players than allowed in the team.
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
 tile
 Tile outlines
 Time
@@ -2215,6 +2242,7 @@ Timer is displayed in %s
 Timer isn't displayed.
 Tiny Tee Size
 To save all players in your team have to be alive and not in '/spec'
+Toast uses UiTokens + QmMotion slide
 Toggle auto camera
 Toggle between game scene preview and raw texture
 Toggle config value
@@ -2246,6 +2274,7 @@ Toggles spec on the currently voted player
 Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status
 Too many translation tasks
 Total
+Total: %d save(s)
 Traditional
 Trail alpha
 Trail length
@@ -2280,6 +2309,7 @@ Tune variable to value or show current value
 Tutorial
 Twinkle strength
 Type
+Type something...
 Type switch vote started automatically
 Types
 u = Snapshot latency
@@ -2361,6 +2391,7 @@ Use emote
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 Use multi-char replacement based on word length
 Use new smoothing algorithm
+Use notification category filters
 Use old chat style
 Use original style
 Use sounds

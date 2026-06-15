@@ -241,6 +241,15 @@
 9+ new mentions
 == 9개 이상의 새 멘션
 
+=== All Local Saves ===
+== === 모든 로컬 저장 ===
+
+=== Saves for '%s' ===
+== === '%s'의 저장 ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s (맵: %s, 시간: %s)
+
 _ or ' ' = blank spacer
 == _ 또는 ' ' = 빈 공백
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == 알파
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== 다른 서버의 유사한 프롬프트도 알림으로 라우팅 (예: 커스텀 솔로 프롬프트, 블랙리스트는 여전히 적용됨)
 
 Always show
 == 항상 표시
@@ -1153,11 +1159,11 @@ Classic Easy
 Classic easy
 == 클래식 easy
 
-Classic next
-== 클래식 next
-
 Classic Next
 == 클래식 Next
+
+Classic next
+== 클래식 next
 
 Classic Nut
 == 클래식 Nut
@@ -1367,10 +1373,10 @@ Connection disconnected
 == 연결 끊김
 
 Connection downstream
-== 연결 다운스트림
+== 연결 수신
 
 Connection elevated
-== 연결 높음
+== 연결이 다소 불안정함
 
 Connection normal
 == 연결 정상
@@ -1379,10 +1385,10 @@ Connection Problems…
 == 연결 문제…
 
 Connection severely abnormal
-== 연결 심각한 이상
+== 연결이 심각하게 비정상임
 
 Connection upstream
-== 연결 업스트림
+== 연결 송신
 
 Console
 == 콘솔
@@ -1522,10 +1528,10 @@ Current: Score
 Current: Time
 == 현재: 시간
 
-custom
+Custom
 == 사용자 정의
 
-Custom
+custom
 == 사용자 정의
 
 Custom API key
@@ -1570,6 +1576,9 @@ Damn grenadiers, all go to spa!
 Damn grenadiers, just die!
 == 망할 수류탄병들, 그냥 죽어!
 
+Data
+== 데이터
+
 Date
 == 날짜
 
@@ -1604,7 +1613,7 @@ ddnet-saves.txt not found
 == ddnet-saves.txt를 찾을 수 없음
 
 DDNet/total CPU
-== DDNet/총 CPU
+== DDNet/전체 CPU
 
 DDRace HUD
 == DDRace HUD
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == 상세 이유
 
+Detect compatible solo prompts from custom servers
+== 커스텀 서버의 호환 솔로 알림 감지
+
 Detection distance
 == 감지 거리
 
@@ -1768,6 +1780,9 @@ disable
 Disable after picking up other weapons
 == 다른 무기를 집으면 비활성화
 
+Disabled
+== 비활성화
+
 Disagree
 == 반대
 
@@ -1787,7 +1802,7 @@ Disconnect from the server
 == 서버 연결 끊기
 
 Disconnected
-== 연결 해제됨
+== 끊김
 
 Discord
 == Discord
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == 업데이트 다운로드 중...
+
+Downscaled (0.78)
+== 축소 배율 (0.78)
 
 Drag HUD modules with the left mouse button
 == 마우스 왼쪽 버튼으로 HUD 모듈 드래그
@@ -1991,7 +2009,7 @@ Editor
 == 편집기
 
 Elevated
-== 높음
+== 주의
 
 Emotes are disabled.
 == 이모티콘이 비활성화되었습니다.
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == 즐겨찾기
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: 토큰 + 위젯 12개
+
 Feature Search
 == 기능 검색
 
@@ -2412,6 +2433,9 @@ Force i to pause for i seconds
 
 Force vote
 == 강제 투표
+
+Forms
+== 폼
 
 Found %d modules
 == %d개의 모듈을 찾음
@@ -2531,7 +2555,7 @@ Game types:
 == 게임 유형:
 
 Game/predicted tick
-== 게임/예측 틱
+== 게임/예측 tick
 
 Gameplay
 == 게임플레이
@@ -2689,6 +2713,9 @@ Heart
 Height
 == 높이
 
+Hello from ui_widget::Modal
+== ui_widget::Modal에서 인사
+
 Help: %s
 == 도움말: %s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == 스폰서 QR 코드 숨기기
 
+Hide toast
+== 토스트 숨기기
+
 Hide UI for focused gameplay
 == 집중 플레이를 위해 UI 숨기기
 
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == 시간
+
+Hover for tooltip
+== 마우스를 올려 툴팁 보기
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == 서버에 접속하기 전에 설정을 확인하여 취향에 맞게 조정하는 것이 좋습니다.
 
+Item %d
+== 항목 %d
+
 j = Latency jitter
 == j = 지터
 
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == 튜토리얼 서버 참가
+
+Join, version, rules, and help messages stay in chat instead of popups
+== 입장, 버전, 규칙, 도움말 메시지는 팝업 대신 채팅에 유지됩니다
 
 Jump
 == 점프
@@ -3158,7 +3197,7 @@ Last page in console
 == 콘솔 마지막 페이지
 
 Latency
-== 지연 시간
+== 지연
 
 Layout
 == 레이아웃
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == 더미 오른쪽으로 이동
 
-Move Echo and important system prompts to right-side popups
-== Echo와 중요한 시스템 프롬프트를 오른쪽 팝업으로 이동
-
 Move left
 == 왼쪽으로 이동
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == 이름: %s
 
+Native scale (1.0)
+== 기본 배율 (1.0)
+
 Need to have started the map to swap with a player.
 == 플레이어와 교체하려면 맵을 시작해야 합니다.
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == 네트워크 버전
+
+new
+== 신규
 
 New button
 == 새 버튼
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == 번역할 채팅 메시지 없음
+
+No code
+== 코드 없음
 
 No controller found. Plug in a controller.
 == 컨트롤러를 찾을 수 없습니다. 컨트롤러를 연결하세요.
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == 이모트 선택기 열기
 
+Open modal
+== 모달 열기
+
 Open pie menu
 == 파이 메뉴 열기
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == 선택 항목 재정의
+
+Overview
+== 개요
 
 Overview cards show a lightweight guide to the client and page structure
 == 개요 카드는 클라이언트와 페이지 구조에 대한 간단한 안내를 보여줍니다.
@@ -4231,10 +4282,10 @@ Pick result: %s
 Pickup range
 == 획득 범위
 
-Pie Menu
+Pie menu
 == 파이 메뉴
 
-Pie menu
+Pie Menu
 == 파이 메뉴
 
 Ping
@@ -4382,15 +4433,15 @@ Prediction
 == 예측
 
 Prediction jitter is obvious, latency changes are large
-== 예측 지터가 뚜렷하며, 지연 변화가 큽니다
+== 예측 지터가 뚜렷하고 지연 변화가 큼
 
 Prediction latency is elevated, prediction path pressure is high
-== 예측 지연이 상승했으며, 예측 경로 부하가 높습니다
-
-Prediction margin
-== 예측 여유
+== 예측 지연이 높고 예측 경로 부하가 큼
 
 Prediction Margin
+== 예측 여유
+
+Prediction margin
 == 예측 여유
 
 Prediction time
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == 키를 누르세요…
+
+Press ESC to close. Watch the scale-in spring on open.
+== ESC를 눌러 닫습니다. 열릴 때 스케일 인 스프링을 확인하세요.
 
 Press Esc to exit the HUD editor
 == Esc를 눌러 HUD 편집기 종료
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == 콘솔에서 이전 페이지
+
+Primary
+== 주요
 
 Print command executed by this keybinding or all binds
 == 이 키 바인딩 또는 모든 바인딩이 실행한 명령 출력
@@ -4937,7 +4994,7 @@ Rescue/Freeze: %d/%d
 == 구조/빙결: %d/%d
 
 Resend signs detected, connection quality is suspicious
-== 재전송 신호 감지, 연결 품질이 의심스러움
+== 재전송 징후가 감지되어 연결 품질이 의심됨
 
 Reset
 == 초기화
@@ -5027,7 +5084,7 @@ RNNoise not integrated in current build, will fallback to simple noise reduction
 == 현재 빌드에 RNNoise가 통합되지 않음, 단순 노이즈 감소로 대체됨
 
 Rollback rate
-== 롤백율
+== 롤백 비율
 
 Room
 == 방
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo 메시지를 알림으로 전달
-
-Route server system prompts to notifications (except blacklist)
-== 서버 시스템 프롬프트를 알림으로 전달 (블랙리스트 제외)
 
 Run chai script
 == chai 스크립트 실행
@@ -5221,6 +5275,9 @@ Search main asset
 Searching
 == 검색 중
 
+Secondary
+== 보조
+
 Seconds
 == 초
 
@@ -5273,7 +5330,7 @@ Self only
 == 자신만
 
 Send
-== 보내기
+== 송신
 
 Send & Receive
 == 보내기 및 받기
@@ -5390,7 +5447,7 @@ Server rollback
 == 서버 롤백
 
 Server RTT is elevated, response path is unstable
-== 서버 RTT 상승, 응답 경로 불안정
+== 서버 RTT가 높고 응답 경로가 불안정함
 
 Set a voice server to enable QmClient distribution
 == QmClient 분포를 활성화하려면 음성 서버를 설정하세요
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == 차단 목록 표시 (기본 1페이지, 페이지당 20개 항목)
+
+Show basic server information
+== 기본 서버 정보 표시
 
 Show blocked words in console
 == 차단된 단어를 콘솔에 표시
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == HUD 표시
+
+Show important server prompts
+== 중요한 서버 알림 표시
+
+Show important server prompts and Echo messages as popups
+== 중요한 서버 알림과 Echo 메시지를 팝업으로 표시
+
+Show important server prompts as notifications
+== 중요한 서버 알림을 알림으로 표시
 
 Show info about the map with name r gives (current map by default)
 == 이름이 r인 맵에 대한 정보 표시 (기본값은 현재 맵)
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == 시계에 초 표시
 
+Show server help and usage messages
+== 서버 도움말 및 사용법 메시지 표시
+
 Show skin names in nameplate
 == 이름표에 스킨 이름 표시
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == BG 맵의 타일 레이어 표시
+
+Show toast
+== 토스트 표시
+
+Show unknown server messages
+== 알 수 없는 서버 메시지 표시
 
 Show unpredicted ghosts for other players
 == 다른 플레이어의 예측되지 않은 고스트 표시
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == 팀 허용 인원을 초과하는 플레이어가 있어 팀이 해체되었습니다.
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== 이 툴팁은 ui_widget::Tooltip에서 제공하며 CTooltips 위의 얇은 래퍼입니다.
+
 tile
 == 타일
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == 모든 플레이어를 저장하려면 팀의 모든 플레이어가 살아 있고 '/spec' 상태가 아니어야 합니다.
+
+Toast uses UiTokens + QmMotion slide
+== Toast는 UiTokens + QmMotion 슬라이드를 사용
 
 Toggle auto camera
 == 자동 카메라 전환
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == 합계
+
+Total: %d save(s)
+== 총 %d개 저장
 
 Traditional
 == 번체
@@ -6843,6 +6930,9 @@ Twinkle strength
 
 Type
 == 유형
+
+Type something...
+== 무언가 입력...
 
 Type switch vote started automatically
 == 유형 전환 투표가 자동으로 시작되었습니다
@@ -7086,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == 새 평활화 알고리즘 사용
+
+Use notification category filters
+== 알림 카테고리 필터 사용
 
 Use old chat style
 == 이전 채팅 스타일 사용

@@ -241,6 +241,15 @@
 9+ new mentions
 == 9+ 件の新しいメンション
 
+=== All Local Saves ===
+== === すべてのローカルセーブ ===
+
+=== Saves for '%s' ===
+== === '%s' のセーブ ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s（マップ: %s、時間: %s）
+
 _ or ' ' = blank spacer
 == _ または ' ' = 空白スペーサー
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == アルファ
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== 他のサーバーからの類似プロンプトも通知にルーティングする（例：カスタムソロプロンプト、ブラックリストは適用されます）
 
 Always show
 == 常に表示
@@ -1153,11 +1159,11 @@ Classic Easy
 Classic easy
 == クラシックイージー
 
-Classic next
-== クラシックネクスト
-
 Classic Next
 == クラシック Next
+
+Classic next
+== クラシックネクスト
 
 Classic Nut
 == クラシック Nut
@@ -1370,7 +1376,7 @@ Connection downstream
 == 接続下り
 
 Connection elevated
-== 接続が高い
+== 接続がやや不安定です
 
 Connection normal
 == 接続正常
@@ -1379,7 +1385,7 @@ Connection Problems…
 == 接続の問題…
 
 Connection severely abnormal
-== 接続が深刻に異常です
+== 接続が大きく異常です
 
 Connection upstream
 == 接続上り
@@ -1522,10 +1528,10 @@ Current: Score
 Current: Time
 == 現在: タイム
 
-custom
+Custom
 == カスタム
 
-Custom
+custom
 == カスタム
 
 Custom API key
@@ -1570,6 +1576,9 @@ Damn grenadiers, all go to spa!
 Damn grenadiers, just die!
 == くそったれグレネーダーども、死んでしまえ！
 
+Data
+== データ
+
 Date
 == 日付
 
@@ -1604,7 +1613,7 @@ ddnet-saves.txt not found
 == ddnet-saves.txt が見つかりません
 
 DDNet/total CPU
-== DDNet/合計CPU
+== DDNet/総CPU
 
 DDRace HUD
 == DDRace HUD
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == 詳細な理由
 
+Detect compatible solo prompts from custom servers
+== カスタムサーバーの互換ソロ通知を検出
+
 Detection distance
 == 検出距離
 
@@ -1768,6 +1780,9 @@ disable
 Disable after picking up other weapons
 == 他の武器を拾った後に無効化
 
+Disabled
+== 無効
+
 Disagree
 == 反対
 
@@ -1787,7 +1802,7 @@ Disconnect from the server
 == サーバーから切断
 
 Disconnected
-== 切断されました
+== 切断
 
 Discord
 == Discord
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == アップデートをダウンロード中...
+
+Downscaled (0.78)
+== 縮小表示 (0.78)
 
 Drag HUD modules with the left mouse button
 == 左マウスボタンで HUD モジュールをドラッグ
@@ -1991,7 +2009,7 @@ Editor
 == エディター
 
 Elevated
-== 高い
+== 注意
 
 Emotes are disabled.
 == エモートは無効です。
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == お気に入り
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: トークン + 12 ウィジェット
+
 Feature Search
 == 機能検索
 
@@ -2412,6 +2433,9 @@ Force i to pause for i seconds
 
 Force vote
 == 投票を強制
+
+Forms
+== フォーム
 
 Found %d modules
 == %d 個のモジュールが見つかりました
@@ -2531,7 +2555,7 @@ Game types:
 == ゲームタイプ：
 
 Game/predicted tick
-== ゲーム/予測ティック
+== ゲーム/予測tick
 
 Gameplay
 == ゲームプレイ
@@ -2689,6 +2713,9 @@ Heart
 Height
 == 高さ
 
+Hello from ui_widget::Modal
+== ui_widget::Modal からこんにちは
+
 Help: %s
 == ヘルプ: %s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == スポンサーQRコードを非表示
 
+Hide toast
+== トーストを隠す
+
 Hide UI for focused gameplay
 == 集中プレイのためにUIを非表示
 
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == 時間
+
+Hover for tooltip
+== ホバーでツールチップ
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == サーバーに参加する前に、設定を確認して自分好みに調整することをお勧めします。
 
+Item %d
+== 項目 %d
+
 j = Latency jitter
 == j = レイテンシジッター
 
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == チュートリアルサーバーに参加
+
+Join, version, rules, and help messages stay in chat instead of popups
+== 参加、バージョン、ルール、ヘルプのメッセージはポップアップではなくチャットに残ります
 
 Jump
 == ジャンプ
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == ダミーを右に移動
 
-Move Echo and important system prompts to right-side popups
-== Echoと重要なシステムプロンプトを右側のポップアップに移動
-
 Move left
 == 左に移動
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == 名前: %s
 
+Native scale (1.0)
+== ネイティブスケール (1.0)
+
 Need to have started the map to swap with a player.
 == プレイヤーと交換するには、マップを開始している必要があります。
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == ネットバージョン
+
+new
+== 新規
 
 New button
 == 新しいボタン
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == 翻訳するチャットメッセージがありません
+
+No code
+== コードなし
 
 No controller found. Plug in a controller.
 == コントローラーが見つかりません。コントローラーを接続してください。
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == エモートセレクターを開く
 
+Open modal
+== モーダルを開く
+
 Open pie menu
 == パイメニューを開く
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == 選択項目を上書き
+
+Overview
+== 概要
 
 Overview cards show a lightweight guide to the client and page structure
 == 概要カードはクライアントとページ構造の軽量ガイドを表示します
@@ -4231,10 +4282,10 @@ Pick result: %s
 Pickup range
 == ピックアップ範囲
 
-Pie Menu
+Pie menu
 == パイメニュー
 
-Pie menu
+Pie Menu
 == パイメニュー
 
 Ping
@@ -4382,15 +4433,15 @@ Prediction
 == 予測
 
 Prediction jitter is obvious, latency changes are large
-== 予測ジッターが顕著で、レイテンシの変動が大きいです
+== 予測ジッターが目立ち、レイテンシ変動が大きいです
 
 Prediction latency is elevated, prediction path pressure is high
-== 予測レイテンシが上昇し、予測パスの負荷が高いです
-
-Prediction margin
-== 予測マージン
+== 予測レイテンシが高く、予測経路の負荷が高いです
 
 Prediction Margin
+== 予測マージン
+
+Prediction margin
 == 予測マージン
 
 Prediction time
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == キーを押してください…
+
+Press ESC to close. Watch the scale-in spring on open.
+== ESCで閉じます。開くときのスケールインスプリングを確認してください。
 
 Press Esc to exit the HUD editor
 == Esc で HUD エディターを終了
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == コンソールの前のページ
+
+Primary
+== プライマリ
 
 Print command executed by this keybinding or all binds
 == このキーバインドで実行されるコマンド、またはすべてのバインドを表示
@@ -4937,7 +4994,7 @@ Rescue/Freeze: %d/%d
 == レスキュー/フリーズ: %d/%d
 
 Resend signs detected, connection quality is suspicious
-== 再送の兆候が検出されました。接続品質に疑念があります
+== 再送の兆候があり、接続品質が疑わしいです
 
 Reset
 == リセット
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echoメッセージを通知にルーティング
-
-Route server system prompts to notifications (except blacklist)
-== サーバーのシステムプロンプトを通知にルーティング（ブラックリストを除く）
 
 Run chai script
 == chaiスクリプトを実行
@@ -5220,6 +5274,9 @@ Search main asset
 
 Searching
 == 検索中
+
+Secondary
+== セカンダリ
 
 Seconds
 == 秒
@@ -5390,7 +5447,7 @@ Server rollback
 == サーバーロールバック
 
 Server RTT is elevated, response path is unstable
-== サーバーRTTが上昇し、応答パスが不安定です
+== サーバーRTTが高く、応答経路が不安定です
 
 Set a voice server to enable QmClient distribution
 == QmClient分布を有効にするには、ボイスサーバーを設定してください
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == BANリストを表示します（既定はページ 1、各ページ 20 件）
+
+Show basic server information
+== 基本的なサーバー情報を表示
 
 Show blocked words in console
 == ブロックされた単語をコンソールに表示
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == HUD表示切替
+
+Show important server prompts
+== 重要なサーバー通知を表示
+
+Show important server prompts and Echo messages as popups
+== 重要なサーバー通知とEchoメッセージをポップアップで表示
+
+Show important server prompts as notifications
+== 重要なサーバー通知を通知欄に表示
 
 Show info about the map with name r gives (current map by default)
 == 名前 r のマップの情報を表示（デフォルトで現在のマップ）
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == 時計に秒を表示
 
+Show server help and usage messages
+== サーバーのヘルプと使用方法を表示
+
 Show skin names in nameplate
 == ネームプレートにスキン名を表示
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == 背景マップのタイルレイヤーを表示
+
+Show toast
+== トーストを表示
+
+Show unknown server messages
+== 不明なサーバーメッセージを表示
 
 Show unpredicted ghosts for other players
 == 他のプレイヤーの未予測ゴーストを表示
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == このチームは許容人数を超えているため解散されました。
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== このツールチップは ui_widget::Tooltip が提供しています。CTooltips の薄いラッパーです。
+
 tile
 == タイル
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == 保存するには、チーム内のすべてのプレイヤーが生存していて '/spec' 状態でない必要があります
+
+Toast uses UiTokens + QmMotion slide
+== Toast は UiTokens + QmMotion スライドを使用
 
 Toggle auto camera
 == 自動カメラの切り替え
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == 合計
+
+Total: %d save(s)
+== 合計: %d 個のセーブ
 
 Traditional
 == 繁体
@@ -6843,6 +6930,9 @@ Twinkle strength
 
 Type
 == タイプ
+
+Type something...
+== 何か入力...
 
 Type switch vote started automatically
 == タイプ切り替え投票を自動で開始しました
@@ -7086,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == 新しいスムージングアルゴリズムを使用
+
+Use notification category filters
+== 通知カテゴリーフィルターを使用
 
 Use old chat style
 == 古いチャットスタイルを使用

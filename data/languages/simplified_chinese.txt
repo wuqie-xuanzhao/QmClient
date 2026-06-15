@@ -241,6 +241,15 @@
 9+ new mentions
 == 9+ 条新被提及消息
 
+=== All Local Saves ===
+== === 全部本地存档 ===
+
+=== Saves for '%s' ===
+== === '%s' 的本地存档 ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s（地图: %s，保存时间: %s）
+
 _ or ' ' = blank spacer
 == _ 或 ' ' = 空白间隔
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == 透明度
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== 其他服务器的类似提示也尝试改走通知栏（例如自定义单人区域提示，按黑名单排除）
 
 Always show
 == 始终显示
@@ -956,7 +962,7 @@ Bubble opacity
 == 气泡不透明度
 
 Buffer memory
-== 缓冲内存
+== 缓冲区内存
 
 Built-in
 == 内置
@@ -1147,11 +1153,11 @@ Clan: %s
 Classic
 == 古典
 
-Classic easy
-== 古典 easy
-
 Classic Easy
 == 经典 Easy
+
+Classic easy
+== 古典 easy
 
 Classic Next
 == 经典 Next
@@ -1165,11 +1171,11 @@ Classic Nut
 Classic nut
 == 古典 nut
 
-Classic pro
-== 古典 pro
-
 Classic Pro
 == 经典 Pro
+
+Classic pro
+== 古典 pro
 
 Clear
 == 清空
@@ -1364,13 +1370,13 @@ Connecting to
 == 正在连接到
 
 Connection disconnected
-== 连接断开
+== 连接已断开
 
 Connection downstream
 == 连接下行
 
 Connection elevated
-== 连接偏高
+== 连接略有异常
 
 Connection normal
 == 连接正常
@@ -1522,10 +1528,10 @@ Current: Score
 Current: Time
 == 当前: 时间
 
-custom
+Custom
 == 自定义
 
-Custom
+custom
 == 自定义
 
 Custom API key
@@ -1569,6 +1575,9 @@ Damn grenadiers, all go to spa!
 
 Damn grenadiers, just die!
 == 他妈的炸弹人都给我死啊!
+
+Data
+== 数据
 
 Date
 == 日期
@@ -1651,10 +1660,10 @@ DeepSeek
 DeepSeek API key
 == DeepSeek API 密钥
 
-default
+Default
 == 默认
 
-Default
+default
 == 默认
 
 Default input open failed
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == 详细原因
 
+Detect compatible solo prompts from custom servers
+== 检测自定义服务器的兼容单人区域提示
+
 Detection distance
 == 检测距离
 
@@ -1768,6 +1780,9 @@ disable
 Disable after picking up other weapons
 == 拿到其他武器时停用
 
+Disabled
+== 已禁用
+
 Disagree
 == 反对
 
@@ -1787,7 +1802,7 @@ Disconnect from the server
 == 与服务器断开连接
 
 Disconnected
-== 连接已断开
+== 已断开
 
 Discord
 == Discord
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == 正在下载更新...
+
+Downscaled (0.78)
+== 降采样缩放 (0.78)
 
 Drag HUD modules with the left mouse button
 == 按住鼠标左键拖动 HUD 模块
@@ -1991,7 +2009,7 @@ Editor
 == 编辑器
 
 Elevated
-== 偏高
+== 注意
 
 Emotes are disabled.
 == 本服务器已禁用表情功能
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == 收藏夹
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: token + 12 个控件
+
 Feature Search
 == 功能搜索
 
@@ -2413,6 +2434,9 @@ Force i to pause for i seconds
 Force vote
 == 强制投票
 
+Forms
+== 表单
+
 Found %d modules
 == 匹配到 %d 个模块
 
@@ -2426,7 +2450,7 @@ Frame rate
 == 帧率
 
 Frame time
-== 帧时间
+== 帧耗时
 
 Frankenstein (drop parts on right)
 == 拼合结果（将部件拖放到右侧）
@@ -2531,7 +2555,7 @@ Game types:
 == 游戏模式：
 
 Game/predicted tick
-== 游戏/预测 Tick
+== 游戏/预测 tick
 
 Gameplay
 == 游戏玩法
@@ -2689,6 +2713,9 @@ Heart
 Height
 == 高
 
+Hello from ui_widget::Modal
+== 来自 ui_widget::Modal 的问候
+
 Help: %s
 == 帮助：%s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == 隐藏赞助码
 
+Hide toast
+== 隐藏 toast
+
 Hide UI for focused gameplay
 == 隐去UI专注游戏
 
@@ -2797,11 +2827,11 @@ Hook collision line
 Hook collision line opacity
 == 辅助线不透明度
 
-Hook collisions
-== 钩索辅助线
-
 Hook Collisions
 == 瞄准辅助
+
+Hook collisions
+== 钩索辅助线
 
 Hook line tip
 == 辅助线提示（实际可钩中 Tee 的长度）
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == 小时
+
+Hover for tooltip
+== 悬停查看提示
 
 https://ddnet.org/discord
 == https://chat.teeworlds.cn/
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == 建议你在进入服务器前检查一下设置并根据你的喜好进行调整。
 
+Item %d
+== 项目 %d
+
 j = Latency jitter
 == j = 延迟抖动
 
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == 进入教学服务器
+
+Join, version, rules, and help messages stay in chat instead of popups
+== 入场、版本、规则和帮助消息会留在聊天里，不弹出显示
 
 Jump
 == 跳跃
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == 让分身向右移动
 
-Move Echo and important system prompts to right-side popups
-== 把 Echo 和需要关注的系统提示移到右侧弹出显示
-
 Move left
 == 向左移动
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == 名称：%s
 
+Native scale (1.0)
+== 原生缩放 (1.0)
+
 Need to have started the map to swap with a player.
 == 你需要先开始地图，才能和其他玩家交换位置
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == 网络版本
+
+new
+== 新增
 
 New button
 == 新按键
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == 没有可翻译的消息
+
+No code
+== 无密码
 
 No controller found. Plug in a controller.
 == 未检测到任何手柄。请尝试重新连接手柄。
@@ -3917,7 +3962,7 @@ NOT CONNECTED
 == 连接未成功
 
 Not connected to a game server
-== 当前未连接到游戏服务器
+== 未连接到游戏服务器
 
 Not connected to server
 == 未进入服务器
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == 打开表情选择器
 
+Open modal
+== 打开弹窗
+
 Open pie menu
 == 打开饼菜单
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == 覆盖选定项
+
+Overview
+== 概览
 
 Overview cards show a lightweight guide to the client and page structure
 == 概览卡展示客户端与页面结构的轻量说明
@@ -4382,10 +4433,10 @@ Prediction
 == 预测
 
 Prediction jitter is obvious, latency changes are large
-== 预测波动明显，延迟变化较大
+== 预测抖动明显，延迟变化较大
 
 Prediction latency is elevated, prediction path pressure is high
-== 预测值抬升，预测链路压力偏高
+== 预测延迟偏高，预测链路压力较高
 
 Prediction Margin
 == 预测量
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == 按任意键…
+
+Press ESC to close. Watch the scale-in spring on open.
+== 按 ESC 关闭。打开时可以观察缩放弹簧动画。
 
 Press Esc to exit the HUD editor
 == 按 Esc 退出 HUD 编辑器
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == 控制台上一页
+
+Primary
+== 主要
 
 Print command executed by this keybinding or all binds
 == 打印此键绑定或所有绑定执行的命令
@@ -4937,7 +4994,7 @@ Rescue/Freeze: %d/%d
 == 被救/落水：%d/%d
 
 Resend signs detected, connection quality is suspicious
-== 存在重发迹象，链路质量可疑
+== 检测到重发迹象，连接质量可疑
 
 Reset
 == 重置
@@ -5027,7 +5084,7 @@ RNNoise not integrated in current build, will fallback to simple noise reduction
 == 当前构建未集成 RNNoise，将自动回退到简单降噪
 
 Rollback rate
-== 回拉率
+== 回滚率
 
 Room
 == 房间
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo 消息改走通知栏
-
-Route server system prompts to notifications (except blacklist)
-== 服务器系统提示改走通知栏（黑名单除外）
 
 Run chai script
 == 运行 chai 脚本
@@ -5221,6 +5275,9 @@ Search main asset
 Searching
 == 正在搜索
 
+Secondary
+== 次要
+
 Seconds
 == 秒
 
@@ -5387,10 +5444,10 @@ Server not full
 == 服务器未满
 
 Server rollback
-== 时间回拉
+== 服务器回滚
 
 Server RTT is elevated, response path is unstable
-== 服务器 RTT 抬升，回包链路波动较明显
+== 服务器 RTT 偏高，响应链路不稳定
 
 Set a voice server to enable QmClient distribution
 == 需要先配置语音服务器，才能启用栖梦客户端在线分布
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == 显示封禁列表（默认第 1 页，每页 20 条）
+
+Show basic server information
+== 显示基础服务器信息
 
 Show blocked words in console
 == 在控制台中显示被屏蔽的词语
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == HUD 开关
+
+Show important server prompts
+== 显示重要服务器提示
+
+Show important server prompts and Echo messages as popups
+== 把重要服务器提示和 Echo 消息弹出显示
+
+Show important server prompts as notifications
+== 重要服务器提示改走通知栏
 
 Show info about the map with name r gives (current map by default)
 == 显示有关名称为 r 的地图的信息（默认为当前地图）
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == 在时间处显示秒数
 
+Show server help and usage messages
+== 显示服务器帮助和用法说明
+
 Show skin names in nameplate
 == 在玩家昵称旁显示皮肤名
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == 显示实体层背景地图的图块层
+
+Show toast
+== 显示 toast
+
+Show unknown server messages
+== 显示未知服务器消息
 
 Show unpredicted ghosts for other players
 == 显示其他玩家未预测的影子
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == 该队伍因人数超过允许上限而被解散
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== 这个提示由 ui_widget::Tooltip 提供，它是 CTooltips 上的一层薄封装。
+
 tile
 == 瓦片
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == 要保存队伍，队内所有玩家都必须存活且不能处于 '/spec'
+
+Toast uses UiTokens + QmMotion slide
+== Toast 使用 UiTokens + QmMotion 滑入效果
 
 Toggle auto camera
 == 切换自动视角
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == 总计
+
+Total: %d save(s)
+== 总计: %d 个存档
 
 Traditional
 == 繁体
@@ -6844,6 +6931,9 @@ Twinkle strength
 Type
 == 类型
 
+Type something...
+== 输入点什么...
+
 Type switch vote started automatically
 == 已自动发起切换类型投票
 
@@ -6861,9 +6951,6 @@ UDP seems to be filtered.
 
 UDP socket not open
 == UDP 套接字未打开
-
-UI Color
-== 界面颜色
 
 UI color
 == 用户界面颜色
@@ -7089,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == 使用新的平滑算法
+
+Use notification category filters
+== 使用通知栏分类过滤
 
 Use old chat style
 == 旧版聊天框

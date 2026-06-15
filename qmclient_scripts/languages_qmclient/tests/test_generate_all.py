@@ -24,7 +24,10 @@ class GenerateAllTest(unittest.TestCase):
         )
 
     def test_generate_configured_languages_writes_each_language(self):
-        strings = [generate_all.SourceString("Server"), generate_all.SourceString("Clan")]
+        strings = [
+            generate_all.SourceString("Server"),
+            generate_all.SourceString("Clan"),
+        ]
         store = {
             "menus": {
                 ("Server", ""): {
@@ -40,18 +43,58 @@ class GenerateAllTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             out_dir = Path(tmp)
-            with mock.patch.object(generate_all, "BASE_LANGUAGES_DIR", out_dir), mock.patch.object(
-                generate_all.i18n_store,
-                "load_language_store",
-                return_value=store,
+            with (
+                mock.patch.object(generate_all, "BASE_LANGUAGES_DIR", out_dir),
+                mock.patch.object(
+                    generate_all.i18n_store,
+                    "load_language_store",
+                    return_value=store,
+                ),
             ):
                 written = generate_all.generate_configured_languages(
                     strings, ["simplified_chinese", "russian"]
                 )
 
             self.assertEqual(written, 2)
-            self.assertIn("== 服务器", (out_dir / "simplified_chinese.txt").read_text(encoding="utf-8"))
-            self.assertIn("== Сервер", (out_dir / "russian.txt").read_text(encoding="utf-8"))
+            self.assertIn(
+                "== 服务器",
+                (out_dir / "simplified_chinese.txt").read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                "== Сервер", (out_dir / "russian.txt").read_text(encoding="utf-8")
+            )
+
+    def test_simplified_chinese_generation_drops_stale_runtime_entries(self):
+        strings = [generate_all.SourceString("Server")]
+        store = {
+            "menus": {
+                ("Server", ""): {
+                    "simplified_chinese": "服务器",
+                },
+            }
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp)
+            (out_dir / "simplified_chinese.txt").write_text(
+                "Old notification key\n== 旧通知\n\nServer\n== 旧服务器\n",
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(generate_all, "BASE_LANGUAGES_DIR", out_dir),
+                mock.patch.object(
+                    generate_all.i18n_store,
+                    "load_language_store",
+                    return_value=store,
+                ),
+            ):
+                generate_all.generate_configured_languages(
+                    strings, ["simplified_chinese"]
+                )
+
+            generated = (out_dir / "simplified_chinese.txt").read_text(encoding="utf-8")
+            self.assertIn("Server\n== 服务器", generated)
+            self.assertNotIn("Old notification key", generated)
 
 
 if __name__ == "__main__":

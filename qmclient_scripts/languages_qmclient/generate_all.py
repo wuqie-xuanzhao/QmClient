@@ -147,7 +147,8 @@ def runtime_language_path(language: str) -> Path:
 
 
 def generate_configured_languages(
-    strings: list[SourceString], languages: list[str] | tuple[str, ...] = GENERATED_LANGUAGES
+    strings: list[SourceString],
+    languages: list[str] | tuple[str, ...] = GENERATED_LANGUAGES,
 ) -> int:
     for language in languages:
         print(f"\n--- Syncing {language}.txt ---")
@@ -159,12 +160,7 @@ def generate_configured_languages(
 def write_language_file(
     path: Path, entries: list[tuple[tuple[str, str], str]], language: str
 ) -> None:
-    existing_entries = (
-        read_existing_language_entries(path) if language == "simplified_chinese" else {}
-    )
-    merged_entries = dict(existing_entries)
-    for identity, translation in entries:
-        merged_entries[identity] = translation
+    merged_entries = dict(entries)
     sorted_entries = sorted(
         merged_entries.items(),
         key=lambda item: (item[0][1].casefold(), item[0][0].casefold()),

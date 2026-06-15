@@ -241,6 +241,15 @@
 9+ new mentions
 == 9+ neue Erwähnungen
 
+=== All Local Saves ===
+== === Alle lokalen Saves ===
+
+=== Saves for '%s' ===
+== === Saves für '%s' ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s (Map: %s, Zeit: %s)
+
 _ or ' ' = blank spacer
 == _ oder ' ' = leerer Abstandshalter
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == Alpha
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== Ähnliche Meldungen von anderen Servern ebenfalls als Benachrichtigungen umleiten (z. B. benutzerdefinierte Solo-Hinweise; Blacklist gilt weiterhin)
 
 Always show
 == Immer anzeigen
@@ -1153,11 +1159,11 @@ Classic Easy
 Classic easy
 == Klassisch einfach
 
-Classic next
-== Klassisch nächste
-
 Classic Next
 == Classic Next
+
+Classic next
+== Klassisch nächste
 
 Classic Nut
 == Classic Nut
@@ -1367,10 +1373,10 @@ Connection disconnected
 == Verbindung getrennt
 
 Connection downstream
-== Verbindung abwärts
+== Verbindung Downstream
 
 Connection elevated
-== Verbindung erhöht
+== Verbindung leicht auffällig
 
 Connection normal
 == Verbindung normal
@@ -1379,10 +1385,10 @@ Connection Problems…
 == Verbindungsprobleme…
 
 Connection severely abnormal
-== Verbindung stark abnormal
+== Verbindung stark auffällig
 
 Connection upstream
-== Verbindung aufwärts
+== Verbindung Upstream
 
 Console
 == Konsole
@@ -1522,11 +1528,11 @@ Current: Score
 Current: Time
 == Aktuell: Zeit
 
-custom
-== benutzerdefiniert
-
 Custom
 == Benutzerdefiniert
+
+custom
+== benutzerdefiniert
 
 Custom API key
 == Benutzerdefinierter API-Schlüssel
@@ -1570,6 +1576,9 @@ Damn grenadiers, all go to spa!
 Damn grenadiers, just die!
 == Verdammte Granatwerfer, sterbt einfach!
 
+Data
+== Daten
+
 Date
 == Datum
 
@@ -1604,7 +1613,7 @@ ddnet-saves.txt not found
 == ddnet-saves.txt nicht gefunden
 
 DDNet/total CPU
-== DDNet/Gesamt-CPU
+== DDNet/CPU gesamt
 
 DDRace HUD
 == DDRace HUD
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == Detaillierter Grund
 
+Detect compatible solo prompts from custom servers
+== Kompatible Solo-Hinweise von benutzerdefinierten Servern erkennen
+
 Detection distance
 == Erkennungsdistanz
 
@@ -1767,6 +1779,9 @@ disable
 
 Disable after picking up other weapons
 == Deaktivieren nach Aufnehmen anderer Waffen
+
+Disabled
+== Deaktiviert
 
 Disagree
 == Ablehnen
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == Update wird heruntergeladen...
+
+Downscaled (0.78)
+== Herunterskaliert (0.78)
 
 Drag HUD modules with the left mouse button
 == Ziehe HUD-Module mit der linken Maustaste
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == Favoriten
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: Tokens + 12 Widgets
+
 Feature Search
 == Funktionssuche
 
@@ -2413,6 +2434,9 @@ Force i to pause for i seconds
 Force vote
 == Abstimmung erzwingen
 
+Forms
+== Formulare
+
 Found %d modules
 == %d Module gefunden
 
@@ -2426,7 +2450,7 @@ Frame rate
 == Bildrate
 
 Frame time
-== Frame-Zeit
+== Framezeit
 
 Frankenstein (drop parts on right)
 == Frankenstein (Teile auf rechts ziehen)
@@ -2531,7 +2555,7 @@ Game types:
 == Spieltypen:
 
 Game/predicted tick
-== Spiel-/Vorhersage-Tick
+== Spiel/vorhergesagter Tick
 
 Gameplay
 == Spielweise
@@ -2689,6 +2713,9 @@ Heart
 Height
 == Höhe
 
+Hello from ui_widget::Modal
+== Hallo von ui_widget::Modal
+
 Help: %s
 == Hilfe: %s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == Sponsor-QR-Code ausblenden
 
+Hide toast
+== Toast ausblenden
+
 Hide UI for focused gameplay
 == UI für fokussiertes Gameplay ausblenden
 
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == Stunden
+
+Hover for tooltip
+== Für Tooltip bewegen
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Es wird empfohlen, die Einstellungen zu überprüfen und nach deinen Wünschen anzupassen, bevor du einem Server beitrittst.
 
+Item %d
+== Eintrag %d
+
 j = Latency jitter
 == j = Latenz-Jitter
 
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == Tutorial-Server beitreten
+
+Join, version, rules, and help messages stay in chat instead of popups
+== Beitritt-, Versions-, Regel- und Hilfemeldungen bleiben im Chat statt als Popups
 
 Jump
 == Springen
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == Dummy nach rechts bewegen
 
-Move Echo and important system prompts to right-side popups
-== Echo und wichtige System-Prompts zu Popups auf der rechten Seite verschieben
-
 Move left
 == Nach links bewegen
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == Name: %s
 
+Native scale (1.0)
+== Native Skalierung (1.0)
+
 Need to have started the map to swap with a player.
 == Du musst die Karte gestartet haben, um mit einem Spieler zu tauschen.
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == Netzversion
+
+new
+== neu
 
 New button
 == Neuer Button
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == Keine Chat-Nachricht zum Übersetzen
+
+No code
+== Kein Code
 
 No controller found. Plug in a controller.
 == Kein Controller gefunden. Schließe einen Controller an.
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == Emote-Auswahl öffnen
 
+Open modal
+== Modal öffnen
+
 Open pie menu
 == Kreis-Menü öffnen
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == Auswahl überschreiben
+
+Overview
+== Übersicht
 
 Overview cards show a lightweight guide to the client and page structure
 == Übersichtskarten zeigen eine leichte Anleitung zum Client und zur Seitenstruktur
@@ -4231,11 +4282,11 @@ Pick result: %s
 Pickup range
 == Aufnahmebereich
 
-Pie Menu
-== Pie-Menü
-
 Pie menu
 == Kreis-Menü
+
+Pie Menu
+== Pie-Menü
 
 Ping
 == Ping
@@ -4382,16 +4433,16 @@ Prediction
 == Vorhersage
 
 Prediction jitter is obvious, latency changes are large
-== Vorhersage-Jitter ist offensichtlich, Latenzänderungen sind groß
+== Vorhersage-Jitter ist deutlich, Latenz schwankt stark
 
 Prediction latency is elevated, prediction path pressure is high
-== Vorhersage-Latenz ist erhöht, Vorhersagepfad-Druck ist hoch
-
-Prediction margin
-== Vorhersagerand
+== Vorhersagelatenz ist erhöht, Vorhersagepfad ist stark belastet
 
 Prediction Margin
 == Vorhersage-Spanne
+
+Prediction margin
+== Vorhersagepuffer
 
 Prediction time
 == Vorhersagezeit
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == Drücke eine Taste…
+
+Press ESC to close. Watch the scale-in spring on open.
+== Zum Schließen ESC drücken. Beim Öffnen die Scale-in-Feder beobachten.
 
 Press Esc to exit the HUD editor
 == Drücke Esc, um den HUD-Editor zu verlassen
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == Vorherige Seite in der Konsole
+
+Primary
+== Primär
 
 Print command executed by this keybinding or all binds
 == Befehl ausgeben, der durch diese Tastenbelegung ausgeführt wird, oder alle Belegungen
@@ -4937,7 +4994,7 @@ Rescue/Freeze: %d/%d
 == Rettung/Freeze: %d/%d
 
 Resend signs detected, connection quality is suspicious
-== Erneute Sendungen erkannt, Verbindungsqualität ist verdächtig
+== Anzeichen für erneutes Senden erkannt, Verbindungsqualität ist fraglich
 
 Reset
 == Zurücksetzen
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo-Nachrichten als Benachrichtigungen umleiten
-
-Route server system prompts to notifications (except blacklist)
-== Server-System-Prompts als Benachrichtigungen umleiten (außer Blacklist)
 
 Run chai script
 == Chai-Skript ausführen
@@ -5220,6 +5274,9 @@ Search main asset
 
 Searching
 == Suche
+
+Secondary
+== Sekundär
 
 Seconds
 == Sekunden
@@ -5390,7 +5447,7 @@ Server rollback
 == Server-Rollback
 
 Server RTT is elevated, response path is unstable
-== Server-RTT ist erhöht, der Antwortpfad ist instabil
+== Server-RTT ist erhöht, Antwortpfad ist instabil
 
 Set a voice server to enable QmClient distribution
 == Setze einen Sprachserver, um die QmClient-Verteilung zu aktivieren
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == Bannliste anzeigen (standardmäßig Seite 1, 20 Einträge pro Seite)
+
+Show basic server information
+== Grundlegende Server-Informationen anzeigen
 
 Show blocked words in console
 == Blockierte Wörter in der Konsole anzeigen
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == HUD anzeigen
+
+Show important server prompts
+== Wichtige Server-Hinweise anzeigen
+
+Show important server prompts and Echo messages as popups
+== Wichtige Server-Hinweise und Echo-Nachrichten als Popups anzeigen
+
+Show important server prompts as notifications
+== Wichtige Server-Hinweise als Benachrichtigungen anzeigen
 
 Show info about the map with name r gives (current map by default)
 == Informationen über die Karte mit Namen r anzeigen (standardmäßig aktuelle Karte)
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == Sekunden auf der Uhr anzeigen
 
+Show server help and usage messages
+== Server-Hilfe und Nutzungshinweise anzeigen
+
 Show skin names in nameplate
 == Skin-Namen im Namensschild anzeigen
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == Kachelebenen aus der Hintergrundkarte anzeigen
+
+Show toast
+== Toast anzeigen
+
+Show unknown server messages
+== Unbekannte Server-Nachrichten anzeigen
 
 Show unpredicted ghosts for other players
 == Unvorhergesagte Geister für andere Spieler anzeigen
@@ -6146,7 +6224,7 @@ Stop the current demo
 == Aktuelle Demo stoppen
 
 Streamed memory
-== Gestreamter Speicher
+== Streaming-Speicher
 
 Streamer Mode
 == Streamer-Modus
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == Dieses Team wurde aufgelöst, weil es mehr Spieler als erlaubt enthält.
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== Dieser Tooltip kommt von ui_widget::Tooltip, einer dünnen Hülle über CTooltips.
+
 tile
 == Kachel
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == Um zu speichern, müssen alle Spieler in deinem Team am Leben sein und nicht in '/spec'
+
+Toast uses UiTokens + QmMotion slide
+== Toast nutzt UiTokens + QmMotion-Slide
 
 Toggle auto camera
 == Automatische Kamera umschalten
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == Gesamt
+
+Total: %d save(s)
+== Gesamt: %d Save(s)
 
 Traditional
 == Traditionell
@@ -6843,6 +6930,9 @@ Twinkle strength
 
 Type
 == Typ
+
+Type something...
+== Etwas eingeben...
 
 Type switch vote started automatically
 == Typ-Wechsel-Abstimmung automatisch gestartet
@@ -7086,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == Neuen Glättungsalgorithmus verwenden
+
+Use notification category filters
+== Benachrichtigungskategorien filtern
 
 Use old chat style
 == Alten Chat-Stil verwenden

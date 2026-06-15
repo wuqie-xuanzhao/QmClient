@@ -8,7 +8,6 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from qmclient_scripts.languages_qmclient import i18n_store
 from qmclient_scripts.languages_qmclient import local_http_client
 from qmclient_scripts.languages_qmclient import translate_with_local_http
 
@@ -115,14 +114,17 @@ simplified_chinese = "开始游戏"
                 ("Quit", ""): {"simplified_chinese": "Quit"},
             }
         }
-        with mock.patch.object(
-            translate_with_local_http.source_keys,
-            "collect_source_key_records",
-            return_value=records,
-        ), mock.patch.object(
-            translate_with_local_http.i18n_store,
-            "load_language_store",
-            return_value=store,
+        with (
+            mock.patch.object(
+                translate_with_local_http.source_keys,
+                "collect_source_key_records",
+                return_value=records,
+            ),
+            mock.patch.object(
+                translate_with_local_http.i18n_store,
+                "load_language_store",
+                return_value=store,
+            ),
         ):
             tasks = translate_with_local_http.collect_tasks("simplified_chinese")
         self.assertEqual([task.identity for task in tasks], [("Quit", "")])
@@ -135,14 +137,17 @@ simplified_chinese = "开始游戏"
                 identity=mock.Mock(return_value=("Auto reply", "")),
             )
         ]
-        with mock.patch.object(
-            translate_with_local_http.source_keys,
-            "collect_source_key_records",
-            return_value=records,
-        ), mock.patch.object(
-            translate_with_local_http.i18n_store,
-            "load_language_store",
-            return_value={},
+        with (
+            mock.patch.object(
+                translate_with_local_http.source_keys,
+                "collect_source_key_records",
+                return_value=records,
+            ),
+            mock.patch.object(
+                translate_with_local_http.i18n_store,
+                "load_language_store",
+                return_value={},
+            ),
         ):
             tasks = translate_with_local_http.collect_tasks("korean")
         self.assertEqual(len(tasks), 1)
@@ -169,7 +174,9 @@ simplified_chinese = "开始游戏"
         )
 
     def test_should_write_draft_by_default_for_all_languages(self):
-        self.assertTrue(translate_with_local_http.should_write_draft("simplified_chinese"))
+        self.assertTrue(
+            translate_with_local_http.should_write_draft("simplified_chinese")
+        )
         self.assertTrue(translate_with_local_http.should_write_draft("korean"))
         self.assertFalse(
             translate_with_local_http.should_write_draft("korean", write_back=True)
@@ -381,18 +388,26 @@ simplified_chinese = "开始游戏"
                 "1",
                 "--resume",
             ]
-            with mock.patch.object(sys, "argv", argv), mock.patch.object(
-                translate_with_local_http.source_keys,
-                "collect_source_key_records",
-                return_value=records,
-            ), mock.patch.object(
-                translate_with_local_http.i18n_store,
-                "load_language_store",
-                return_value=store,
-            ), mock.patch.object(
-                translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
-            ), mock.patch.object(
-                translate_with_local_http, "LocalHttpClient", return_value=fake_client
+            with (
+                mock.patch.object(sys, "argv", argv),
+                mock.patch.object(
+                    translate_with_local_http.source_keys,
+                    "collect_source_key_records",
+                    return_value=records,
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "load_language_store",
+                    return_value=store,
+                ),
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http,
+                    "LocalHttpClient",
+                    return_value=fake_client,
+                ),
             ):
                 translate_with_local_http.main()
             fake_client.chat_completion.assert_called_once()
@@ -421,16 +436,21 @@ simplified_chinese = "开始游戏"
                 "local-model",
                 "--dry-run",
             ]
-            with mock.patch.object(sys, "argv", argv), mock.patch.object(
-                translate_with_local_http.source_keys,
-                "collect_source_key_records",
-                return_value=records,
-            ), mock.patch.object(
-                translate_with_local_http.i18n_store,
-                "load_language_store",
-                return_value=store,
-            ), mock.patch.object(
-                translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+            with (
+                mock.patch.object(sys, "argv", argv),
+                mock.patch.object(
+                    translate_with_local_http.source_keys,
+                    "collect_source_key_records",
+                    return_value=records,
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "load_language_store",
+                    return_value=store,
+                ),
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
             ):
                 translate_with_local_http.main()
             self.assertFalse((draft_root / "simplified_chinese").exists())
@@ -469,23 +489,31 @@ simplified_chinese = "开始游戏"
                 "--batch-size",
                 "1",
             ]
-            with mock.patch.object(sys, "argv", argv), mock.patch.object(
-                translate_with_local_http.source_keys,
-                "collect_source_key_records",
-                return_value=records,
-            ), mock.patch.object(
-                translate_with_local_http.i18n_store,
-                "load_language_store",
-                return_value=store,
-            ), mock.patch.object(
-                translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
-            ), mock.patch.object(
-                translate_with_local_http, "LocalHttpClient", return_value=fake_client
+            with (
+                mock.patch.object(sys, "argv", argv),
+                mock.patch.object(
+                    translate_with_local_http.source_keys,
+                    "collect_source_key_records",
+                    return_value=records,
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "load_language_store",
+                    return_value=store,
+                ),
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http,
+                    "LocalHttpClient",
+                    return_value=fake_client,
+                ),
             ):
                 translate_with_local_http.main()
-            content = (
-                draft_root / "simplified_chinese" / "menus.toml"
-            ).read_text(encoding="utf-8")
+            content = (draft_root / "simplified_chinese" / "menus.toml").read_text(
+                encoding="utf-8"
+            )
             self.assertIn('key = "Quit"', content)
             self.assertNotIn('key = "Play"', content)
 

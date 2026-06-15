@@ -241,6 +241,15 @@
 9+ new mentions
 == 9+ yeni bahsedilme
 
+=== All Local Saves ===
+== === Tüm yerel saveler ===
+
+=== Saves for '%s' ===
+== === '%s' için saveler ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s (harita: %s, zaman: %s)
+
 _ or ' ' = blank spacer
 == _ veya ' ' = boşluk
 
@@ -513,9 +522,6 @@ Allows maps to render with more detail
 
 Alpha
 == Alfa
-
-Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
-== Diğer sunuculardaki benzer uyarıları da bildirimlere yönlendir (örneğin özel solo uyarıları; kara liste hala geçerlidir)
 
 Always show
 == Her zaman göster
@@ -1153,11 +1159,11 @@ Classic Easy
 Classic easy
 == Klasik kolay
 
-Classic next
-== Klasik sonraki
-
 Classic Next
 == Klasik Next
+
+Classic next
+== Klasik sonraki
 
 Classic Nut
 == Klasik Nut
@@ -1367,10 +1373,10 @@ Connection disconnected
 == Bağlantı kesildi
 
 Connection downstream
-== Bağlantı aşağı akış
+== Bağlantı indirme
 
 Connection elevated
-== Bağlantı yükseldi
+== Bağlantı biraz dengesiz
 
 Connection normal
 == Bağlantı normal
@@ -1382,7 +1388,7 @@ Connection severely abnormal
 == Bağlantı ciddi şekilde anormal
 
 Connection upstream
-== Bağlantı yukarı akış
+== Bağlantı yükleme
 
 Console
 == Konsol
@@ -1522,11 +1528,11 @@ Current: Score
 Current: Time
 == Geçerli: Süre
 
-custom
-== özel
-
 Custom
 == Özel
+
+custom
+== özel
 
 Custom API key
 == Özel API anahtarı
@@ -1569,6 +1575,9 @@ Damn grenadiers, all go to spa!
 
 Damn grenadiers, just die!
 == Lanet olası bombacılar, ölün artık!
+
+Data
+== Veri
 
 Date
 == Tarih
@@ -1732,6 +1741,9 @@ Desktop fullscreen
 Detailed reason
 == Ayrıntılı sebep
 
+Detect compatible solo prompts from custom servers
+== Özel sunuculardaki uyumlu solo uyarılarını algıla
+
 Detection distance
 == Algılama mesafesi
 
@@ -1767,6 +1779,9 @@ disable
 
 Disable after picking up other weapons
 == Diğer silahları aldıktan sonra devre dışı bırak
+
+Disabled
+== Devre dışı
 
 Disagree
 == Reddet
@@ -1839,6 +1854,9 @@ Downloading map
 
 Downloading update...
 == Güncelleme indiriliyor...
+
+Downscaled (0.78)
+== Küçültülmüş (0.78)
 
 Drag HUD modules with the left mouse button
 == HUD modüllerini sol fare tuşuyla sürükleyin
@@ -1991,7 +2009,7 @@ Editor
 == Düzenleyici
 
 Elevated
-== Yükseldi
+== Yüksek
 
 Emotes are disabled.
 == İfadeler devre dışı.
@@ -2344,6 +2362,9 @@ Favorite maps
 Favorites
 == Favoriler
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: tokenlar + 12 widget
+
 Feature Search
 == Özellik Arama
 
@@ -2412,6 +2433,9 @@ Force i to pause for i seconds
 
 Force vote
 == Oylamayı zorla
+
+Forms
+== Formlar
 
 Found %d modules
 == %d modül bulundu
@@ -2531,7 +2555,7 @@ Game types:
 == Oyun türleri:
 
 Game/predicted tick
-== Oyun/tahmini tick
+== Oyun/tahmin tick
 
 Gameplay
 == Oynanış
@@ -2689,6 +2713,9 @@ Heart
 Height
 == Yükseklik
 
+Hello from ui_widget::Modal
+== ui_widget::Modal'dan merhaba
+
 Help: %s
 == Yardım: %s
 
@@ -2758,6 +2785,9 @@ Hide Settings Tabs
 Hide sponsor QR code
 == Sponsor QR kodunu gizle
 
+Hide toast
+== Toast'ı gizle
+
 Hide UI for focused gameplay
 == Odaklanmış oyun için arayüzü gizle
 
@@ -2817,6 +2847,9 @@ Horizontal position
 
 Hours
 == Saat
+
+Hover for tooltip
+== İpucu için üzerine gel
 
 https://ddnet.org/discord
 == https://ddnet.org/discord
@@ -3001,6 +3034,9 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Bir sunucuya katılmadan önce ayarları kontrol edip beğeninize göre ayarlamanız önerilir.
 
+Item %d
+== Öğe %d
+
 j = Latency jitter
 == j = Gecikme titreşimi
 
@@ -3039,6 +3075,9 @@ Join the team of the specified player
 
 Join Tutorial Server
 == Eğitim Sunucusuna Katıl
+
+Join, version, rules, and help messages stay in chat instead of popups
+== Katılma, sürüm, kurallar ve yardım mesajları açılır bildirim yerine sohbette kalır
 
 Jump
 == Zıpla
@@ -3604,9 +3643,6 @@ Move dummy left
 Move dummy right
 == Dummy'yi sağa hareket ettir
 
-Move Echo and important system prompts to right-side popups
-== Echo ve önemli sistem uyarılarını sağ taraftaki açılır pencerelere taşı
-
 Move left
 == Sola hareket et
 
@@ -3697,6 +3733,9 @@ Name:
 Name: %s
 == İsim: %s
 
+Native scale (1.0)
+== Yerel ölçek (1.0)
+
 Need to have started the map to swap with a player.
 == Bir oyuncuyla yer değiştirmek için haritayı başlatmış olmanız gerekir.
 
@@ -3708,6 +3747,9 @@ Net
 
 Netversion
 == Ağ sürümü
+
+new
+== yeni
 
 New button
 == Yeni düğme
@@ -3789,6 +3831,9 @@ No chat message available to repeat
 
 No chat message to translate
 == Çevrilecek sohbet mesajı yok
+
+No code
+== Kod yok
 
 No controller found. Plug in a controller.
 == Kumanda bulunamadı. Bir kumanda bağlayın.
@@ -4033,6 +4078,9 @@ Open color picker
 Open emote selector
 == İfade seçiciyi aç
 
+Open modal
+== Modalı aç
+
 Open pie menu
 == Pasta menüsünü aç
 
@@ -4122,6 +4170,9 @@ Override Group
 
 Override Selected
 == Seçileni Geçersiz Kıl
+
+Overview
+== Genel bakış
 
 Overview cards show a lightweight guide to the client and page structure
 == Genel bakış kartları, istemci ve sayfa yapısına hafif bir rehber gösterir
@@ -4231,11 +4282,11 @@ Pick result: %s
 Pickup range
 == Toplama aralığı
 
-Pie Menu
-== Pasta Menüsü
-
 Pie menu
 == Pasta menüsü
+
+Pie Menu
+== Pasta Menüsü
 
 Ping
 == Ping
@@ -4382,16 +4433,16 @@ Prediction
 == Tahmin
 
 Prediction jitter is obvious, latency changes are large
-== Tahmin titreşimi belirgin, gecikme değişiklikleri büyük
+== Tahmin titreşimi belirgin, gecikme değişimleri büyük
 
 Prediction latency is elevated, prediction path pressure is high
-== Tahmin gecikmesi yükseldi, tahmin yolu baskısı yüksek
-
-Prediction margin
-== Tahmin marjı
+== Tahmin gecikmesi yüksek, tahmin yolu baskısı fazla
 
 Prediction Margin
 == Tahmin Marjı
+
+Prediction margin
+== Tahmin payı
 
 Prediction time
 == Tahmin süresi
@@ -4404,6 +4455,9 @@ Preset bar
 
 Press a key…
 == Bir tuşa basın…
+
+Press ESC to close. Watch the scale-in spring on open.
+== Kapatmak için ESC'ye bas. Açılırken ölçek yay animasyonunu izle.
 
 Press Esc to exit the HUD editor
 == HUD düzenleyiciden çıkmak için Esc tuşuna basın
@@ -4440,6 +4494,9 @@ Previous
 
 Previous page in console
 == Konsolda önceki sayfa
+
+Primary
+== Birincil
 
 Print command executed by this keybinding or all binds
 == Bu tuş bağlantısı veya tüm bağlantılar tarafından yürütülen komutu yazdır
@@ -4628,7 +4685,7 @@ Rebinds the client's listening address and port
 == İstemcinin dinleme adresini ve portunu yeniden bağlar
 
 Receive
-== Al
+== Alma
 
 Receiving
 == Alınıyor
@@ -4937,7 +4994,7 @@ Rescue/Freeze: %d/%d
 == Kurtarma/Donma: %d/%d
 
 Resend signs detected, connection quality is suspicious
-== Yeniden gönderme işaretleri tespit edildi, bağlantı kalitesi şüpheli
+== Yeniden gönderme belirtileri algılandı, bağlantı kalitesi şüpheli
 
 Reset
 == Sıfırla
@@ -5049,9 +5106,6 @@ Rounded caps
 
 Route Echo messages to notifications
 == Echo mesajlarını bildirimlere yönlendir
-
-Route server system prompts to notifications (except blacklist)
-== Sunucu sistem uyarılarını bildirimlere yönlendir (kara liste hariç)
 
 Run chai script
 == chai betiğini çalıştır
@@ -5221,6 +5275,9 @@ Search main asset
 Searching
 == Aranıyor
 
+Secondary
+== İkincil
+
 Seconds
 == Saniye
 
@@ -5273,7 +5330,7 @@ Self only
 == Yalnızca kendim
 
 Send
-== Gönder
+== Gönderme
 
 Send & Receive
 == Gönder ve Al
@@ -5390,7 +5447,7 @@ Server rollback
 == Sunucu geri alma
 
 Server RTT is elevated, response path is unstable
-== Sunucu RTT'si yükseldi, yanıt yolu dengesiz
+== Sunucu RTT değeri yüksek, yanıt yolu kararsız
 
 Set a voice server to enable QmClient distribution
 == QmClient dağılımını etkinleştirmek için bir ses sunucusu ayarlayın
@@ -5456,7 +5513,7 @@ Settings file
 == Ayarlar dosyası
 
 Severe
-== Şiddetli
+== Ciddi
 
 Shape
 == Şekil
@@ -5496,6 +5553,9 @@ Show background quads
 
 Show banlist (page 1 by default, 20 entries per page)
 == Yasak listesini göster (varsayılan sayfa 1, sayfa başına 20 giriş)
+
+Show basic server information
+== Temel sunucu bilgilerini göster
 
 Show blocked words in console
 == Konsolda engellenen kelimeleri göster
@@ -5616,6 +5676,15 @@ Show hook strength number indicator
 
 Show HUD
 == HUD'u göster
+
+Show important server prompts
+== Önemli sunucu uyarılarını göster
+
+Show important server prompts and Echo messages as popups
+== Önemli sunucu uyarılarını ve Echo mesajlarını açılır bildirim olarak göster
+
+Show important server prompts as notifications
+== Önemli sunucu uyarılarını bildirim olarak göster
 
 Show info about the map with name r gives (current map by default)
 == r adındaki harita hakkında bilgi gösterir (varsayılan olarak geçerli harita)
@@ -5740,6 +5809,9 @@ Show scoreboard
 Show seconds on clock
 == Saatte saniyeleri göster
 
+Show server help and usage messages
+== Sunucu yardım ve kullanım mesajlarını göster
+
 Show skin names in nameplate
 == İsim levhasında görünüm adlarını göster
 
@@ -5790,6 +5862,12 @@ Show the server rules
 
 Show tiles layers from BG map
 == BG haritasından döşeme katmanlarını göster
+
+Show toast
+== Toast'ı göster
+
+Show unknown server messages
+== Bilinmeyen sunucu mesajlarını göster
 
 Show unpredicted ghosts for other players
 == Diğer oyuncular için tahmin edilmemiş hayaletleri göster
@@ -6074,7 +6152,7 @@ Spree
 == Seri
 
 Staging memory
-== Aşamalı bellek
+== Hazırlama belleği
 
 Star
 == Yıldız
@@ -6146,7 +6224,7 @@ Stop the current demo
 == Geçerli demoyu durdur
 
 Streamed memory
-== Akış bellek
+== Akış belleği
 
 Streamer Mode
 == Yayıncı Modu
@@ -6616,6 +6694,9 @@ This team started already
 This team was disbanded because there are more players than allowed in the team.
 == Bu takım, takımda izin verilenden daha fazla oyuncu olduğu için dağıtıldı.
 
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== Bu ipucu ui_widget::Tooltip tarafından sağlanır; CTooltips üzerinde ince bir sarmalayıcıdır.
+
 tile
 == döşeme
 
@@ -6648,6 +6729,9 @@ Tiny Tee Size
 
 To save all players in your team have to be alive and not in '/spec'
 == Takımdaki tüm oyuncuları kaydetmek için hayatta olmalı ve '/spec' durumunda olmamalıdır
+
+Toast uses UiTokens + QmMotion slide
+== Toast, UiTokens + QmMotion kaydırma kullanır
 
 Toggle auto camera
 == Otomatik kamerayı aç/kapat
@@ -6741,6 +6825,9 @@ Too many translation tasks
 
 Total
 == Toplam
+
+Total: %d save(s)
+== Toplam: %d save
 
 Traditional
 == Geleneksel
@@ -6843,6 +6930,9 @@ Twinkle strength
 
 Type
 == Tür
+
+Type something...
+== Bir şey yaz...
 
 Type switch vote started automatically
 == Tür değiştirme oylaması otomatik olarak başlatıldı
@@ -7086,6 +7176,9 @@ Use multi-char replacement based on word length
 
 Use new smoothing algorithm
 == Yeni düzeltme algoritması kullan
+
+Use notification category filters
+== Bildirim kategorisi filtrelerini kullan
 
 Use old chat style
 == Eski sohbet stilini kullan

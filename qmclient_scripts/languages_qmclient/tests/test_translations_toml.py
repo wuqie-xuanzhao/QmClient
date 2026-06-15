@@ -49,7 +49,7 @@ class I18nTomlTest(unittest.TestCase):
             text,
         )
         self.assertIn(
-            '[message.translations]\n'
+            "[message.translations]\n"
             'japanese = "アンチピングスムージング"\n'
             'korean = "양"\n'
             'simplified_chinese = "平滑预测"\n'
@@ -97,12 +97,12 @@ simplified_chinese = "应用"
 
             text = path.read_text(encoding="utf-8")
             self.assertIn(
-                '[message.translations]\n'
+                "[message.translations]\n"
                 'simplified_chinese = "平滑预测"\n'
                 'japanese = "アンチピングスムージング"\n'
                 'traditional_chinese = "預測量"\n'
                 'korean = "양"\n'
-                '\n[[message]]',
+                "\n[[message]]",
                 text,
             )
             tomllib.loads(text)
@@ -133,7 +133,9 @@ simplified_chinese = "应用"
             {("Play", "Start menu"): "开始游戏"},
         )
 
-    def test_missing_translations_for_reports_identities_without_selected_language(self):
+    def test_missing_translations_for_reports_identities_without_selected_language(
+        self,
+    ):
         store = {
             "menus": {
                 ("Play", "Start menu"): {
