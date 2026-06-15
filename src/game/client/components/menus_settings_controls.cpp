@@ -10,11 +10,11 @@
 #include <engine/shared/localization.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/key_binder.h>
 #include <game/client/components/menus.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/client/ui.h>
 #include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
@@ -96,18 +96,18 @@ void CMenusSettingsControls::OnInterfacesInit(CGameClient *pClient)
 		{EBindOptionGroup::CHAT, Localizable("Show chat"), "+show_chat"},
 		{EBindOptionGroup::CHAT, Localizable("Repeat message"), "+qm_repeat"},
 		{EBindOptionGroup::CHAT, Localizable("Voice chat"), "+qm_voice_ptt"},
-		{EBindOptionGroup::DUMMY, Localizable("切换分身"), "toggle cl_dummy 0 1"},
-		{EBindOptionGroup::DUMMY, Localizable("分身跳跃"), "+toggle_restore cl_dummy_jump 1"},
-		{EBindOptionGroup::DUMMY, Localizable("分身开火"), "+toggle_restore cl_dummy_fire 1"},
-		{EBindOptionGroup::DUMMY, Localizable("分身钩子"), "+toggle_restore cl_dummy_hook 1"},
-		{EBindOptionGroup::DUMMY, Localizable("分身复制移动"), "toggle cl_dummy_copy_moves 0 1"},
-		{EBindOptionGroup::DUMMY, Localizable("分身锤子飞"), "toggle cl_dummy_hammer 0 1"},
-		{EBindOptionGroup::DUMMY, Localizable("控制分身"), "toggle cl_dummy_control 1 0"},
+		{EBindOptionGroup::DUMMY, Localizable("Toggle dummy"), "toggle cl_dummy 0 1"},
+		{EBindOptionGroup::DUMMY, Localizable("Dummy jump"), "+toggle_restore cl_dummy_jump 1"},
+		{EBindOptionGroup::DUMMY, Localizable("Dummy fire"), "+toggle_restore cl_dummy_fire 1"},
+		{EBindOptionGroup::DUMMY, Localizable("Dummy hook"), "+toggle_restore cl_dummy_hook 1"},
+		{EBindOptionGroup::DUMMY, Localizable("Dummy copy"), "toggle cl_dummy_copy_moves 0 1"},
+		{EBindOptionGroup::DUMMY, Localizable("Dummy hammer fly"), "toggle cl_dummy_hammer 0 1"},
+		{EBindOptionGroup::DUMMY, Localizable("Control dummy"), "toggle cl_dummy_control 1 0"},
 		{EBindOptionGroup::MISCELLANEOUS, Localizable("Emoticon"), "+emote"},
-		{EBindOptionGroup::MISCELLANEOUS, Localizable("旁观模式"), "+spectate"},
-		{EBindOptionGroup::MISCELLANEOUS, Localizable("旁观传送"), "qm_spec_teleport"},
-		{EBindOptionGroup::MISCELLANEOUS, Localizable("旁观下一个玩家"), "spectate_next"},
-		{EBindOptionGroup::MISCELLANEOUS, Localizable("旁观上一个玩家"), "spectate_previous"},
+		{EBindOptionGroup::MISCELLANEOUS, Localizable("Spectate mode"), "+spectate"},
+		{EBindOptionGroup::MISCELLANEOUS, Localizable("Spectate teleport"), "qm_spec_teleport"},
+		{EBindOptionGroup::MISCELLANEOUS, Localizable("Spectate next"), "spectate_next"},
+		{EBindOptionGroup::MISCELLANEOUS, Localizable("Spectate previous"), "spectate_previous"},
 		{EBindOptionGroup::MISCELLANEOUS, Localizable("Console"), "toggle_local_console"},
 		{EBindOptionGroup::MISCELLANEOUS, Localizable("Remote console"), "toggle_remote_console"},
 		{EBindOptionGroup::MISCELLANEOUS, Localizable("Screenshot"), "screenshot"},
@@ -211,7 +211,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	// Right column
 	RenderSettingsBindsBlock(EBindOptionGroup::VOTING, &RightColumn, Localize("Voting"));
 	RenderSettingsBindsBlock(EBindOptionGroup::CHAT, &RightColumn, Localize("Chat"));
-	RenderSettingsBindsBlock(EBindOptionGroup::DUMMY, &RightColumn, Localize("分身"));
+	RenderSettingsBindsBlock(EBindOptionGroup::DUMMY, &RightColumn, Localize("Dummy"));
 	RenderSettingsBindsBlock(EBindOptionGroup::MISCELLANEOUS, &RightColumn, Localize("Miscellaneous"));
 	if(std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }))
 	{

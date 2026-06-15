@@ -442,29 +442,29 @@ void CMenus::RenderGame(CUIRect MainView)
 	const bool LiveDirectorActive = Client()->QmLiveDirectorActive();
 	const bool ReportDisabledOnAxiom = GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity();
 
-	const char *pDisconnectButtonLabel = Localize("断开连接");
+	const char *pDisconnectButtonLabel = Localize("Disconnect");
 	const char *pDummyButtonLabel = nullptr;
 	if(!LiveDirectorActive)
 	{
-		pDummyButtonLabel = Localize("连接分身");
+		pDummyButtonLabel = Localize("Connect dummy");
 		if(Client()->DummyConnecting())
-			pDummyButtonLabel = Localize("正在连接分身");
+			pDummyButtonLabel = Localize("Connecting dummy");
 		else if(Client()->DummyConnected())
-			pDummyButtonLabel = Localize("断开分身");
+			pDummyButtonLabel = Localize("Disconnect dummy");
 	}
-	const char *pEditHudButtonLabel = Localize("编辑 HUD");
-	const char *pDemoButtonLabel = Recording ? Localize("停止录制") : Localize("录制 Demo");
+	const char *pEditHudButtonLabel = Localize("Edit HUD");
+	const char *pDemoButtonLabel = Recording ? Localize("Stop record") : Localize("Record demo");
 	char aSaveReplayButtonLabel[64];
-	str_format(aSaveReplayButtonLabel, sizeof(aSaveReplayButtonLabel), Localize("保存最近 %d 分钟"), g_Config.m_ClEscReplayLengthMinutes);
-	const char *pDemoMarkerButtonLabel = Localize("标记 Demo");
+	str_format(aSaveReplayButtonLabel, sizeof(aSaveReplayButtonLabel), Localize("Save last %d min"), g_Config.m_ClEscReplayLengthMinutes);
+	const char *pDemoMarkerButtonLabel = Localize("Mark demo");
 	const char *pReportButtonLabel = "举报";
-	const char *pSpectateButtonLabel = Localize("旁观");
-	const char *pJoinRedButtonLabel = Localize("加入红队");
-	const char *pJoinBlueButtonLabel = Localize("加入蓝队");
-	const char *pJoinGameButtonLabel = Localize("加入游戏");
-	const char *pKillButtonLabel = Localize("自杀");
-	const char *pPauseButtonLabel = (!Paused && !Spec) ? Localize("暂停") : Localize("加入游戏");
-	const char *pFastPracticeLabel = FastPracticeEnabled ? Localize("结束练习") : Localize("快速练习");
+	const char *pSpectateButtonLabel = Localize("Spectate");
+	const char *pJoinRedButtonLabel = Localize("Join red");
+	const char *pJoinBlueButtonLabel = Localize("Join blue");
+	const char *pJoinGameButtonLabel = Localize("Join game");
+	const char *pKillButtonLabel = Localize("Kill");
+	const char *pPauseButtonLabel = (!Paused && !Spec) ? Localize("Pause") : Localize("Join game");
+	const char *pFastPracticeLabel = FastPracticeEnabled ? Localize("Stop practice") : Localize("Fast practice");
 
 	const float SpectateButtonWidth = CalcMenuButtonWidth(pSpectateButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
 	const float JoinRedButtonWidth = CalcMenuButtonWidth(pJoinRedButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
@@ -603,7 +603,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 	UtilityButtonBar.VSplitRight(DisconnectButtonWidth, &UtilityButtonBar, &Button);
 	static CButtonContainer s_DisconnectButton;
-	if(DoButton_Menu(&s_DisconnectButton, Localize("断开连接"), 0, &Button))
+	if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
 	{
 		if((GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0) ||
 			GameClient()->m_TouchControls.HasEditingChanges() ||
@@ -612,7 +612,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			char aBuf[256] = {'\0'};
 			if(GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
 			{
-				str_copy(aBuf, Localize("确定要断开连接吗？"));
+				str_copy(aBuf, Localize("Are you sure that you want to disconnect?"));
 			}
 			if(GameClient()->m_TouchControls.HasEditingChanges() ||
 				GameClient()->m_Menus.m_MenusIngameTouchControls.UnsavedChanges())
@@ -621,9 +621,9 @@ void CMenus::RenderGame(CUIRect MainView)
 				{
 					str_append(aBuf, "\n\n");
 				}
-				str_append(aBuf, Localize("触控控件编辑器里还有未保存的修改，建议先保存。"));
+				str_append(aBuf, Localize("There are unsaved changes in the touch controls editor. Saving first is recommended."));
 			}
-			PopupConfirm(Localize("断开连接"), aBuf, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnect);
+			PopupConfirm(Localize("Disconnect"), aBuf, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnect);
 		}
 		else
 		{
@@ -642,12 +642,12 @@ void CMenus::RenderGame(CUIRect MainView)
 		if(!Client()->DummyAllowed())
 		{
 			DoButton_Menu(&s_DummyButton, pDummyButtonLabel, 1, &Button);
-			GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("此服务器不允许使用分身"));
+			GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Dummies are not allowed on this server"));
 		}
 		else if(Client()->DummyConnectingDelayed())
 		{
 			DoButton_Menu(&s_DummyButton, pDummyButtonLabel, 1, &Button);
-			GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("请稍候…"));
+			GameClient()->m_Tooltips.DoToolTip(&s_DummyButton, &Button, Localize("Please wait…"));
 		}
 		else if(Client()->DummyConnecting())
 		{
@@ -663,7 +663,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			{
 				if(GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
 				{
-					PopupConfirm(Localize("断开分身"), Localize("确定要断开你的分身吗？"), Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnectDummy);
+					PopupConfirm(Localize("Disconnect dummy"), Localize("Are you sure that you want to disconnect your dummy?"), Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDisconnectDummy);
 				}
 				else
 				{
@@ -1296,7 +1296,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	CUIRect Label;
 	ServerInfo.HSplitTop(FontSizeTitle, &Label, &ServerInfo);
 	ServerInfo.HSplitTop(5.0f, nullptr, &ServerInfo);
-	Ui()->DoLabel(&Label, Localize("Server info"), FontSizeTitle, TEXTALIGN_ML);
+	DoIngameMenuLabel(PAGE_SERVER_INFO, "ingame-server-info-title", &Label, Localize("Server info"), FontSizeTitle, TEXTALIGN_ML);
 
 	ServerInfo.HSplitTop(FontSizeBody, &Label, &ServerInfo);
 	ServerInfo.HSplitTop(FontSizeBody, nullptr, &ServerInfo);
@@ -1304,30 +1304,36 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	ServerInfo.HSplitTop(FontSizeBody, &Label, &ServerInfo);
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Address"), CurrentServerInfo.m_aAddress);
-	Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+	auto DoServerInfoField = [&](const char *pTextId, CUIRect *pRow, const char *pLabelText, const char *pValueText) {
+		char aLabel[128];
+		str_format(aLabel, sizeof(aLabel), "%s:", pLabelText);
+		CUIRect LabelRect, ValueRect;
+		const float LabelWidth = TextRender()->TextWidth(FontSizeBody, aLabel) + 8.0f;
+		pRow->VSplitLeft(LabelWidth, &LabelRect, &ValueRect);
+		DoIngameMenuLabel(PAGE_SERVER_INFO, pTextId, &LabelRect, aLabel, FontSizeBody, TEXTALIGN_ML);
+		Ui()->DoLabel(&ValueRect, pValueText, FontSizeBody, TEXTALIGN_ML);
+	};
+	DoServerInfoField("ingame-server-info-address-label", &Label, Localize("Address"), CurrentServerInfo.m_aAddress);
 
 	if(GameClient()->m_Snap.m_pLocalInfo)
 	{
 		ServerInfo.HSplitTop(FontSizeBody, &Label, &ServerInfo);
-		str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Ping"), GameClient()->m_Snap.m_pLocalInfo->m_Latency);
-		Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+		str_format(aBuf, sizeof(aBuf), "%d", GameClient()->m_Snap.m_pLocalInfo->m_Latency);
+		DoServerInfoField("ingame-server-info-ping-label", &Label, Localize("Ping"), aBuf);
 	}
 
 	ServerInfo.HSplitTop(FontSizeBody, &Label, &ServerInfo);
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Version"), CurrentServerInfo.m_aVersion);
-	Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+	DoServerInfoField("ingame-server-info-version-label", &Label, Localize("Version"), CurrentServerInfo.m_aVersion);
 
 	ServerInfo.HSplitTop(FontSizeBody, &Label, &ServerInfo);
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Password"), CurrentServerInfo.m_Flags & SERVER_FLAG_PASSWORD ? Localize("Yes") : Localize("No"));
-	Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+	DoServerInfoField("ingame-server-info-password-label", &Label, Localize("Password"), CurrentServerInfo.m_Flags & SERVER_FLAG_PASSWORD ? Localize("Yes") : Localize("No"));
 
 	const CCommunity *pCommunity = ServerBrowser()->Community(CurrentServerInfo.m_aCommunityId);
 	if(pCommunity != nullptr)
 	{
 		ServerInfo.HSplitTop(FontSizeBody, &Label, &ServerInfo);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Community"));
-		Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+		DoIngameMenuLabel(PAGE_SERVER_INFO, "ingame-server-info-community-label", &Label, aBuf, FontSizeBody, TEXTALIGN_ML);
 
 		const CCommunityIcon *pIcon = m_CommunityIcons.Find(pCommunity->Id());
 		if(pIcon != nullptr)
@@ -1400,15 +1406,13 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	GameInfo.HSplitTop(FontSizeTitle, &Label, &GameInfo);
 	GameInfo.HSplitTop(5.0f, nullptr, &GameInfo);
-	Ui()->DoLabel(&Label, Localize("Game info"), FontSizeTitle, TEXTALIGN_ML);
+	DoIngameMenuLabel(PAGE_SERVER_INFO, "ingame-game-info-title", &Label, Localize("Game info"), FontSizeTitle, TEXTALIGN_ML);
 
 	GameInfo.HSplitTop(FontSizeBody, &Label, &GameInfo);
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Game type"), CurrentServerInfo.m_aGameType);
-	Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+	DoServerInfoField("ingame-game-info-type-label", &Label, Localize("Game type"), CurrentServerInfo.m_aGameType);
 
 	GameInfo.HSplitTop(FontSizeBody, &Label, &GameInfo);
-	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Map"), CurrentServerInfo.m_aMap);
-	Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+	DoServerInfoField("ingame-game-info-map-label", &Label, Localize("Map"), CurrentServerInfo.m_aMap);
 
 	const auto *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;
 	if(pGameInfoObj)
@@ -1416,22 +1420,22 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		if(pGameInfoObj->m_ScoreLimit)
 		{
 			GameInfo.HSplitTop(FontSizeBody, &Label, &GameInfo);
-			str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Score limit"), pGameInfoObj->m_ScoreLimit);
-			Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+			str_format(aBuf, sizeof(aBuf), "%d", pGameInfoObj->m_ScoreLimit);
+			DoServerInfoField("ingame-game-info-score-limit-label", &Label, Localize("Score limit"), aBuf);
 		}
 
 		if(pGameInfoObj->m_TimeLimit)
 		{
 			GameInfo.HSplitTop(FontSizeBody, &Label, &GameInfo);
-			str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), pGameInfoObj->m_TimeLimit);
-			Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+			str_format(aBuf, sizeof(aBuf), "%d min", pGameInfoObj->m_TimeLimit);
+			DoServerInfoField("ingame-game-info-time-limit-label", &Label, Localize("Time limit"), aBuf);
 		}
 
 		if(pGameInfoObj->m_RoundCurrent && pGameInfoObj->m_RoundNum)
 		{
 			GameInfo.HSplitTop(FontSizeBody, &Label, &GameInfo);
-			str_format(aBuf, sizeof(aBuf), Localize("Round %d/%d"), pGameInfoObj->m_RoundCurrent, pGameInfoObj->m_RoundNum);
-			Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+			str_format(aBuf, sizeof(aBuf), "%d/%d", pGameInfoObj->m_RoundCurrent, pGameInfoObj->m_RoundNum);
+			DoServerInfoField("ingame-game-info-round-label", &Label, Localize("Round"), aBuf);
 		}
 	}
 
@@ -1461,23 +1465,23 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		if((Config()->m_SvTeam == SV_TEAM_ALLOWED || Config()->m_SvTeam == SV_TEAM_MANDATORY) && (Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize || Config()->m_SvMaxTeamSize != CConfig::ms_SvMaxTeamSize))
 		{
 			if(Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize && Config()->m_SvMaxTeamSize != CConfig::ms_SvMaxTeamSize)
-				str_format(aBuf, sizeof(aBuf), "%s: %s (%s %d, %s %d)", Localize("Teams"), pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
+				str_format(aBuf, sizeof(aBuf), "%s (%s %d, %s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
 			else if(Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize)
-				str_format(aBuf, sizeof(aBuf), "%s: %s (%s %d)", Localize("Teams"), pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize);
+				str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize);
 			else
-				str_format(aBuf, sizeof(aBuf), "%s: %s (%s %d)", Localize("Teams"), pTeamMode, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
+				str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
 		}
 		else
 		{
-			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Teams"), pTeamMode);
+			str_format(aBuf, sizeof(aBuf), "%s", pTeamMode);
 		}
 		GameInfo.HSplitTop(FontSizeBody, &Label, &GameInfo);
-		Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+		DoServerInfoField("ingame-game-info-teams-label", &Label, Localize("Teams"), aBuf);
 	}
 
 	GameInfo.HSplitTop(FontSizeBody, &Label, &GameInfo);
-	str_format(aBuf, sizeof(aBuf), "%s: %d/%d", Localize("Players"), GameClient()->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients);
-	Ui()->DoLabel(&Label, aBuf, FontSizeBody, TEXTALIGN_ML);
+	str_format(aBuf, sizeof(aBuf), "%d/%d", GameClient()->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients);
+	DoServerInfoField("ingame-game-info-players-label", &Label, Localize("Players"), aBuf);
 
 	if(CurrentServerInfo.m_aMap[0] != '\0' && GameInfo.h >= 34.0f)
 	{
@@ -1494,8 +1498,8 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		GameInfo.HSplitTop(8.0f, nullptr, &GameInfo);
 		GameInfo.HSplitTop(22.0f, &NoteRow, &GameInfo);
 		NoteRow.VSplitLeft(72.0f, &NoteLabel, &NoteInput);
-		str_format(aBuf, sizeof(aBuf), "%s:", Localize("备注"));
-		Ui()->DoLabel(&NoteLabel, aBuf, FontSizeBody, TEXTALIGN_ML);
+		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Note"));
+		DoIngameMenuLabel(PAGE_SERVER_INFO, "ingame-game-info-note", &NoteLabel, aBuf, FontSizeBody, TEXTALIGN_ML);
 		if(Ui()->DoEditBox(&s_MapNoteInput, &NoteInput, FontSizeBody * 0.85f))
 			GameClient()->m_TClient.SetMapNote(CurrentServerInfo.m_aMap, s_MapNoteInput.GetString());
 	}
@@ -1512,7 +1516,7 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 	CUIRect MotdHeader;
 	Motd.HSplitTop(2.0f * MotdFontSize, &MotdHeader, &Motd);
 	Motd.HSplitTop(5.0f, nullptr, &Motd);
-	Ui()->DoLabel(&MotdHeader, Localize("MOTD"), 2.0f * MotdFontSize, TEXTALIGN_ML);
+	DoIngameMenuLabel(PAGE_SERVER_INFO, "ingame-server-info-motd-title", &MotdHeader, Localize("MOTD"), 2.0f * MotdFontSize, TEXTALIGN_ML);
 
 	if(!GameClient()->m_Motd.ServerMotd()[0])
 		return;
@@ -1799,7 +1803,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		s_ControlPage = EServerControlTab::KICKVOTE;
 
 	static CButtonContainer s_Button2;
-	if(DoButton_MenuTab(&s_Button2, Localize("移动玩家到旁观者"), s_ControlPage == EServerControlTab::SPECVOTE, &TabBar, IGraphics::CORNER_NONE))
+	if(DoButton_MenuTab(&s_Button2, Localize("Move player to spectators"), s_ControlPage == EServerControlTab::SPECVOTE, &TabBar, IGraphics::CORNER_NONE))
 		s_ControlPage = EServerControlTab::SPECVOTE;
 
 	if(!s_ControlPageTransitionInitialized)
@@ -2071,7 +2075,7 @@ void CMenus::RenderUnfinishedMaps(CUIRect MainView)
 		Localize("Fun"),
 		Localize("Event"),
 		Localize("Insane"),
-		Localize("分身"),
+		Localize("Dummy"),
 	};
 	const char *apTypeKeys[] = {
 		"Novice",
@@ -2288,7 +2292,7 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 	{
 		NewPage = PAGE_FAVORITE_MAPS;
 	}
-	GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("收藏地图"));
+	GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("Favorite map"));
 
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);

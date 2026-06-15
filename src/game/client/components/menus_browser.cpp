@@ -107,38 +107,38 @@ static const char *FavoriteMapCategoryKeyFromText(const char *pText)
 static const char *FavoriteMapCategoryDisplayName(const char *pType)
 {
 	if(!pType || pType[0] == '\0')
-		return Localize("未知");
+		return Localize("Unknown");
 	if(str_comp_nocase(pType, "DDmaX Easy") == 0)
-		return Localize("古典.easy");
+		return Localize("DDmaX Easy");
 	if(str_comp_nocase(pType, "DDmaX Next") == 0)
-		return Localize("古典.next");
+		return Localize("DDmaX Next");
 	if(str_comp_nocase(pType, "DDmaX Pro") == 0)
-		return Localize("古典.pro");
+		return Localize("DDmaX Pro");
 	if(str_comp_nocase(pType, "DDmaX Nut") == 0)
-		return Localize("古典.nut");
+		return Localize("DDmaX Nut");
 	if(str_comp_nocase(pType, "DDmaX") == 0)
-		return Localize("古典");
+		return Localize("DDmaX");
 	if(str_comp_nocase(pType, "Novice") == 0)
-		return Localize("简单");
+		return Localize("Novice");
 	if(str_comp_nocase(pType, "Moderate") == 0)
-		return Localize("中阶");
+		return Localize("Moderate");
 	if(str_comp_nocase(pType, "Brutal") == 0)
-		return Localize("高阶");
+		return Localize("Brutal");
 	if(str_comp_nocase(pType, "Insane") == 0)
-		return Localize("疯狂");
+		return Localize("Insane");
 	if(str_comp_nocase(pType, "Dummy") == 0)
-		return Localize("分身");
+		return Localize("Dummy");
 	if(str_comp_nocase(pType, "Solo") == 0)
-		return Localize("单人");
+		return Localize("Solo");
 	if(str_comp_nocase(pType, "Oldschool") == 0)
-		return Localize("传统");
+		return Localize("Oldschool");
 	if(str_comp_nocase(pType, "Race") == 0)
-		return Localize("竞速");
+		return Localize("Race");
 	if(str_comp_nocase(pType, "Fun") == 0)
-		return Localize("娱乐");
+		return Localize("Fun");
 	if(str_comp_nocase(pType, "Event") == 0)
 		return Localize("Event");
-	return Localize("未知");
+	return Localize("Unknown");
 }
 
 static bool TryParseVoteMapDifficulty(const char *pDescription, const char *pMapName, char *pOut, int OutSize)
@@ -996,7 +996,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				if(pMapNote && pMapNote[0] != '\0' && Ui()->MouseHovered(&Button))
 				{
 					static char s_aMapNoteTooltip[512];
-					str_format(s_aMapNoteTooltip, sizeof(s_aMapNoteTooltip), "%s: %s", Localize("备注"), pMapNote);
+					str_format(s_aMapNoteTooltip, sizeof(s_aMapNoteTooltip), "%s: %s", Localize("Note"), pMapNote);
 					Ui()->DoButtonLogic(&pItem->m_aMap, 0, &Button, BUTTONFLAG_NONE);
 					GameClient()->m_Tooltips.DoToolTip(&pItem->m_aMap, &Button, s_aMapNoteTooltip, 320.0f);
 				}
@@ -3388,8 +3388,8 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 	char aSavesPath[IO_MAX_PATH_LENGTH];
 	Storage()->GetCompletePath(IStorage::TYPE_SAVE, SAVES_FILE, aSavesPath, sizeof(aSavesPath));
 
-	RenderPanelHeader(FavoritePanel, Localize("收藏地图"), Localize("玩家收藏的地图会显示在这里"), s_FavoriteMapsExpanded, s_FavoriteMapsHeaderButton);
-	RenderPanelHeader(SavesPanel, Localize("本地存档"), aSavesPath, s_LocalSavesExpanded, s_LocalSavesHeaderButton);
+	RenderPanelHeader(FavoritePanel, Localize("Favorite map"), Localize("Your favorite maps appear here"), s_FavoriteMapsExpanded, s_FavoriteMapsHeaderButton);
+	RenderPanelHeader(SavesPanel, Localize("Local saves"), aSavesPath, s_LocalSavesExpanded, s_LocalSavesHeaderButton);
 
 	static std::vector<SLocalSaveDisplayEntry> s_vSaveEntries;
 	static int64_t s_LastSaveReloadTick = 0;
@@ -3451,14 +3451,14 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 
 	auto GetFavoriteMapCategory = [&](const char *pMapName) -> const char * {
 		if(!pMapName || pMapName[0] == '\0')
-			return Localize("未知");
+			return Localize("Unknown");
 		const auto It = s_MapCategories.find(pMapName);
 		if(It != s_MapCategories.end() && !It->second.empty())
 			return FavoriteMapCategoryDisplayName(It->second.c_str());
 		const char *pCachedCategory = GameClient()->m_TClient.GetCachedMapCategoryKey(pMapName);
 		if(pCachedCategory)
 			return FavoriteMapCategoryDisplayName(pCachedCategory);
-		return Localize("未知");
+		return Localize("Unknown");
 	};
 
 	auto GetFavoriteMapDifficulty = [&](const char *pMapName, char *pOut, int OutSize) {
@@ -3467,7 +3467,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			if(TryParseVoteMapDifficulty(pOption->m_aDescription, pMapName, pOut, OutSize))
 				return;
 		}
-		str_copy(pOut, Localize("未知"), OutSize);
+		str_copy(pOut, Localize("Unknown"), OutSize);
 	};
 
 	auto HasLocalSaveForMap = [&](const char *pMapName) {
@@ -3505,7 +3505,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		const std::set<std::string> &FavoriteMaps = GameClient()->m_TClient.GetFavoriteMaps();
 		if(FavoriteMaps.empty())
 		{
-			Ui()->DoLabel(&FavoritePanel, Localize("暂无收藏地图"), 13.0f, TEXTALIGN_MC);
+			Ui()->DoLabel(&FavoritePanel, Localize("No favorite maps yet"), 13.0f, TEXTALIGN_MC);
 		}
 		else
 		{
@@ -3515,11 +3515,11 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			CUIRect HeaderMap, HeaderCategory, HeaderDifficulty, HeaderNote, HeaderSaved;
 			SplitFavoriteMapColumns(HeaderRow, &HeaderMap, &HeaderCategory, &HeaderDifficulty, &HeaderNote, &HeaderSaved);
 			TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1.0f);
-			DoFavoriteMapColumnLabel(HeaderMap, Localize("地图"), 10.0f);
-			DoFavoriteMapColumnLabel(HeaderCategory, Localize("分类"), 10.0f);
-			DoFavoriteMapColumnLabel(HeaderDifficulty, Localize("难度星级"), 10.0f);
-			DoFavoriteMapColumnLabel(HeaderNote, Localize("备注"), 10.0f);
-			DoFavoriteMapColumnLabel(HeaderSaved, Localize("是否存档"), 10.0f, TEXTALIGN_MR);
+			DoFavoriteMapColumnLabel(HeaderMap, Localize("Map"), 10.0f);
+			DoFavoriteMapColumnLabel(HeaderCategory, Localize("Category"), 10.0f);
+			DoFavoriteMapColumnLabel(HeaderDifficulty, Localize("Difficulty stars"), 10.0f);
+			DoFavoriteMapColumnLabel(HeaderNote, Localize("Note"), 10.0f);
+			DoFavoriteMapColumnLabel(HeaderSaved, Localize("Has save"), 10.0f, TEXTALIGN_MR);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 			static CListBox s_FavoriteMapsListBox;
@@ -3543,14 +3543,14 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 					char aDifficulty[32];
 					GetFavoriteMapDifficulty(MapName.c_str(), aDifficulty, sizeof(aDifficulty));
 					const char *pNote = GameClient()->m_TClient.GetMapNote(MapName.c_str());
-					const char *pSaved = HasLocalSaveForMap(MapName.c_str()) ? Localize("是") : Localize("否");
+					const char *pSaved = HasLocalSaveForMap(MapName.c_str()) ? Localize("Yes") : Localize("No");
 
 					TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f);
 					DoFavoriteMapColumnLabel(MapColumn, MapName.c_str(), 12.0f);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					DoFavoriteMapColumnLabel(CategoryColumn, GetFavoriteMapCategory(MapName.c_str()), 11.0f);
 					DoFavoriteMapColumnLabel(DifficultyColumn, aDifficulty, 11.0f);
-					DoFavoriteMapColumnLabel(NoteColumn, pNote && pNote[0] != '\0' ? pNote : Localize("无"), 11.0f);
+					DoFavoriteMapColumnLabel(NoteColumn, pNote && pNote[0] != '\0' ? pNote : Localize("None"), 11.0f);
 					DoFavoriteMapColumnLabel(SavedColumn, pSaved, 11.0f, TEXTALIGN_MR);
 				}
 				++FavoriteMapIndex;
@@ -3564,12 +3564,12 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 
 	if(!s_SaveFileExists)
 	{
-		Ui()->DoLabel(&SavesPanel, Localize("未找到 ddnet-saves.txt"), 13.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&SavesPanel, Localize("ddnet-saves.txt not found"), 13.0f, TEXTALIGN_MC);
 		return;
 	}
 	if(s_vSaveEntries.empty())
 	{
-		Ui()->DoLabel(&SavesPanel, Localize("ddnet-saves.txt 暂无内容"), 13.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&SavesPanel, Localize("ddnet-saves.txt is empty"), 13.0f, TEXTALIGN_MC);
 		return;
 	}
 

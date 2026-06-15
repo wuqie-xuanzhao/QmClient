@@ -16,9 +16,9 @@
 
 namespace
 {
-	void LogPerfStage(IClient *pClient, const char *pStage, const double DurationMs, const bool Force = false, const char *pExtra = nullptr)
+	void LogPerfStage(IClient *pClient, const char *pPage, const char *pStage, const double DurationMs, const bool Force = false, const char *pExtra = nullptr)
 	{
-		QmPerfLogStage("perf/ui_runtime", pStage, DurationMs, Force, pClient, nullptr, nullptr, pExtra);
+		QmPerfLogStage("perf/ui_runtime", pStage, DurationMs, Force, pClient, pPage, nullptr, pExtra);
 	}
 }
 
@@ -75,19 +75,19 @@ void CUiRuntimeV2::OnRender()
 		CPerfTimer StageTimer;
 		m_Tree.BeginFrame();
 		TreeBeginMs = StageTimer.ElapsedMs();
-		LogPerfStage(m_pGameClient->Client(), "tree_begin_frame", TreeBeginMs);
+		LogPerfStage(m_pGameClient->Client(), m_aPerfPage[0] != '\0' ? m_aPerfPage : nullptr, "tree_begin_frame", TreeBeginMs);
 	}
 	{
 		CPerfTimer StageTimer;
 		m_AnimRuntime.Advance(Dt);
 		AnimAdvanceMs = StageTimer.ElapsedMs();
-		LogPerfStage(m_pGameClient->Client(), "anim_advance", AnimAdvanceMs);
+		LogPerfStage(m_pGameClient->Client(), m_aPerfPage[0] != '\0' ? m_aPerfPage : nullptr, "anim_advance", AnimAdvanceMs);
 	}
 	{
 		CPerfTimer StageTimer;
 		m_RenderBridge.BeginFrame();
 		RenderBridgeBeginMs = StageTimer.ElapsedMs();
-		LogPerfStage(m_pGameClient->Client(), "render_bridge_begin_frame", RenderBridgeBeginMs);
+		LogPerfStage(m_pGameClient->Client(), m_aPerfPage[0] != '\0' ? m_aPerfPage : nullptr, "render_bridge_begin_frame", RenderBridgeBeginMs);
 	}
 	{
 		CPerfTimer StageTimer;
@@ -95,7 +95,7 @@ void CUiRuntimeV2::OnRender()
 		TreeEndMs = StageTimer.ElapsedMs();
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "dt_ms=%.3f", Dt * 1000.0f);
-		LogPerfStage(m_pGameClient->Client(), "tree_end_frame", TreeEndMs, false, aExtra);
+		LogPerfStage(m_pGameClient->Client(), m_aPerfPage[0] != '\0' ? m_aPerfPage : nullptr, "tree_end_frame", TreeEndMs, false, aExtra);
 	}
 
 	m_LastStats.m_BuildTreeMs = TreeBeginMs + TreeEndMs;
@@ -117,7 +117,7 @@ void CUiRuntimeV2::OnRender()
 
 	char aExtra[96];
 	str_format(aExtra, sizeof(aExtra), "nodes=%d", m_LastStats.m_NodeCount);
-	LogPerfStage(m_pGameClient->Client(), "ui_runtime_total", RenderTimer.ElapsedMs(), false, aExtra);
+	LogPerfStage(m_pGameClient->Client(), m_aPerfPage[0] != '\0' ? m_aPerfPage : nullptr, "ui_runtime_total", RenderTimer.ElapsedMs(), false, aExtra);
 
 	char aPayload[256];
 	str_format(aPayload, sizeof(aPayload),

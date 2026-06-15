@@ -631,7 +631,8 @@ void CUi::FlushQuadBatch() const
 
 	Graphics()->TextureClear();
 	Graphics()->SetColor(m_QuadBatchColor);
-	Graphics()->RenderQuadContainerAsSpriteMultiple(m_QuadBatchContainerIndex, 0, (int)m_vQuadBatchSprites.size(), m_vQuadBatchSprites.data());
+	for(const IGraphics::SRenderSpriteInfo &Info : m_vQuadBatchSprites)
+		Graphics()->RenderQuadContainerEx(m_QuadBatchContainerIndex, 0, -1, Info.m_Pos.x, Info.m_Pos.y);
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_vQuadBatchSprites.clear();
 	m_QuadBatchContainerIndex = -1;

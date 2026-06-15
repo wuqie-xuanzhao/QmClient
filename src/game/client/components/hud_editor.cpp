@@ -17,60 +17,60 @@
 
 namespace
 {
-constexpr float EPSILON = QmHudEditor::EPSILON;
-constexpr float HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::EPSILON;
-constexpr const char *JUMP_HINT_DEFAULT_TEXT = "这是示例文本";
+	constexpr float EPSILON = QmHudEditor::EPSILON;
+	constexpr float HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::EPSILON;
+	constexpr const char *JUMP_HINT_DEFAULT_TEXT = "这是示例文本";
 
-float Clamp01(float Value)
-{
-	return std::clamp(Value, 0.0f, 1.0f);
-}
-
-void DecodeEscapedNewlines(const char *pInput, char *pOutput, size_t OutputSize)
-{
-	if(OutputSize == 0)
-		return;
-
-	size_t OutPos = 0;
-	for(size_t InPos = 0; pInput != nullptr && pInput[InPos] != '\0' && OutPos + 1 < OutputSize; ++InPos)
+	float Clamp01(float Value)
 	{
-		if(pInput[InPos] == '\\' && pInput[InPos + 1] == 'n')
-		{
-			pOutput[OutPos++] = '\n';
-			++InPos;
-		}
-		else
-		{
-			pOutput[OutPos++] = pInput[InPos];
-		}
+		return std::clamp(Value, 0.0f, 1.0f);
 	}
-	pOutput[OutPos] = '\0';
-}
 
-void EncodeEscapedNewlines(const char *pInput, char *pOutput, size_t OutputSize)
-{
-	if(OutputSize == 0)
-		return;
-
-	size_t OutPos = 0;
-	for(size_t InPos = 0; pInput != nullptr && pInput[InPos] != '\0' && OutPos + 1 < OutputSize; ++InPos)
+	void DecodeEscapedNewlines(const char *pInput, char *pOutput, size_t OutputSize)
 	{
-		if(pInput[InPos] == '\r')
-			continue;
-		if(pInput[InPos] == '\n')
+		if(OutputSize == 0)
+			return;
+
+		size_t OutPos = 0;
+		for(size_t InPos = 0; pInput != nullptr && pInput[InPos] != '\0' && OutPos + 1 < OutputSize; ++InPos)
 		{
-			if(OutPos + 2 >= OutputSize)
-				break;
-			pOutput[OutPos++] = '\\';
-			pOutput[OutPos++] = 'n';
+			if(pInput[InPos] == '\\' && pInput[InPos + 1] == 'n')
+			{
+				pOutput[OutPos++] = '\n';
+				++InPos;
+			}
+			else
+			{
+				pOutput[OutPos++] = pInput[InPos];
+			}
 		}
-		else
-		{
-			pOutput[OutPos++] = pInput[InPos];
-		}
+		pOutput[OutPos] = '\0';
 	}
-	pOutput[OutPos] = '\0';
-}
+
+	void EncodeEscapedNewlines(const char *pInput, char *pOutput, size_t OutputSize)
+	{
+		if(OutputSize == 0)
+			return;
+
+		size_t OutPos = 0;
+		for(size_t InPos = 0; pInput != nullptr && pInput[InPos] != '\0' && OutPos + 1 < OutputSize; ++InPos)
+		{
+			if(pInput[InPos] == '\r')
+				continue;
+			if(pInput[InPos] == '\n')
+			{
+				if(OutPos + 2 >= OutputSize)
+					break;
+				pOutput[OutPos++] = '\\';
+				pOutput[OutPos++] = 'n';
+			}
+			else
+			{
+				pOutput[OutPos++] = pInput[InPos];
+			}
+		}
+		pOutput[OutPos] = '\0';
+	}
 }
 
 CHudEditor::CHudEditor()
@@ -701,7 +701,7 @@ void CHudEditor::RenderJumpHintTextEditor(const CUIRect &Screen)
 
 	CUIRect Title;
 	Content.HSplitTop(18.0f, &Title, &Content);
-	Ui()->DoLabel(&Title, Localize("位置跳跃提示"), 10.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Title, Localize("Position jump tip"), 10.0f, TEXTALIGN_ML);
 	Content.HSplitTop(5.0f, nullptr, &Content);
 
 	CUIRect EditBox;
