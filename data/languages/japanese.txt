@@ -1,3 +1,72 @@
+ min
+== 分
+
+ seconds
+== 秒
+
+ seconds (never)
+== 秒数（決して）
+
+"%s" is not compatible with pnglite and cannot be loaded by old DDNet versions:
+== "%s"はpngliteと互換性がなく、古いDDNetバージョンでは読み込むことができません。
+
+%.2f KiB
+== %.2f KiB
+
+%.2f MiB
+== %.2f MiB
+
+%c Team %d
+== %c チーム %d
+
+%d dummies
+== %d ダミー
+
+%d dummy
+== %d ダミー
+
+%d items selected
+== %d 項目選択中
+
+%d more cut segments
+== さらに %d 個のカットセグメント
+
+%d new mentions
+== %d 件の新しいメンション
+
+%d of %d server
+== %d/%d サーバー
+
+%d of %d servers
+== %d/%d サーバー
+
+%d player
+== %d プレイヤー
+
+%d players
+== %d プレイヤー
+
+%d selected items were deleted, but %d items could not be deleted. The first failing item was '%s'.
+== %d 個の選択項目は削除されましたが、%d 個の項目は削除できませんでした。最初に失敗した項目は「%s」です。
+
+%d servers, %d users
+== %d サーバー、%d ユーザー
+
+%d servers, %d users, %d dummies
+== %d サーバー、%d ユーザー、%d ダミー
+
+%d teams
+== %d チーム
+
+%d user
+== %d ユーザー
+
+%d users
+== %d ユーザー
+
+%d/%d KiB (%.1f KiB/s)
+== %d/%d KiB (%.1f KiB/s)
+
 %ds left
 == 残り %d 秒
 
@@ -13,134 +82,2429 @@
 %i seconds left
 == 残り %i 秒
 
+%s and %s have swapped
+== %s と %s が交換しました
+
+%s canceled the swap with %s
+== %s が %s との交換をキャンセルしました
+
+%s canceled the swap with you
+== %s があなたとの交換をキャンセルしました
+
+%s current race time is %s
+== %s の現在のレースタイムは %s です
+
+%s from %s
+== %s（%s から）
+
+%s has requested to swap with %s
+== %s が %s との交換をリクエストしました
+
+%s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
+== %s があなたとの交換をリクエストしました。交換を完了するには %s 秒待ってから /swap %s と入力してください。
+
+%s not found
+== %s が見つかりません
+
+%s translating to %s
+== %sから%sへの翻訳
+
+%s translating to %s before send
+== %sから%sへの翻訳（送信前）
+
+%s translating to %s failed: %s
+== %sから%sへの翻訳失敗: %s
+
 %s wins!
-== %s の勝ち!
+== %s 勝利！
+
+'%s' called for vote to force-pause '%s' for %s seconds (reason: %s)
+== '%s' が '%s' を %s 秒間強制ポーズする投票を呼びかけました（理由：%s）
+
+'%s' called for vote to kick '%s' (reason: %s)
+== '%s' が '%s' をキックする投票を呼びかけました（理由：%s）
+
+'%s' called for vote to kick you
+== '%s' があなたをキックする投票を呼びかけました
+
+'%s' called for vote to move '%s' to spectators (reason: %s)
+== '%s' が '%s' を観戦者に移動する投票を呼びかけました（理由：%s）
+
+'%s' called for vote to move you to spectators
+== '%s' があなたを観戦者に移動する投票を呼びかけました
+
+'%s' called for vote to mute '%s' (reason: %s)
+== '%s' が '%s' をミュートする投票を呼びかけました（理由：%s）
+
+'%s' called vote to %s practice mode for your team. Current votes %s/%s
+== '%s' があなたのチームの練習モードを %s する投票を呼びかけました。現在の票数 %s/%s
+
+'%s' called vote to change server option: %s
+== '%s' がサーバーオプションを変更する投票を呼びかけました：%s
+
+'%s' called vote to change server option: %s (reason: %s)
+== '%s' がサーバーオプションを変更する投票を呼びかけました：%s（理由：%s）
+
+'%s' disabled practice mode for your team
+== '%s' があなたのチームの練習モードを無効にしました
+
+'%s' disabled team 0 mode.
+== '%s' がチーム 0 モードを無効にしました。
+
+'%s' enabled team 0 mode. This will make your team behave like team 0.
+== '%s' がチーム 0 モードを有効にしました。これであなたのチームはチーム 0 のように動作します。
+
+'%s' invited '%s' to your team.
+== '%s' が '%s' をあなたのチームに招待しました。
+
+'%s' invited you to team %s. Use /team %s to join
+== '%s' があなたをチーム %s に招待しました。/team %s と入力して参加してください
+
+'%s' is not a valid option on this server
+== '%s' はこのサーバーでは有効なオプションではありません
+
+'%s' joined team %s
+== '%s' がチーム %s に参加しました
+
+'%s' joined team 0
+== '%s' がチーム 0 に参加しました
+
+'%s' locked your team.
+== '%s' があなたのチームをロックしました。
+
+'%s' locked your team. After the race starts, killing will kill everyone in your team.
+== '%s' があなたのチームをロックしました。レース開始後、自殺するとチーム全員が死にます。
+
+'%s' unlocked your team.
+== '%s' があなたのチームのロックを解除しました。
+
+'%s' was force-paused for %s seconds
+== '%s' が %s 秒間強制ポーズされました
+
+'%s' would have timed out, but can use timeout protection now
+== '%s' はタイムアウトするところでしたが、タイムアウト保護が使用可能になりました
+
+(Fetching Update Info)
+== （更新情報を取得中）
+
+(On Latest)
+== （最新です）
+
+(paused)
+== （一時停止）
+
+(Update required)
+== （更新が必要です）
+
++%d more codes
+== さらに %d 個のコード
+
+- Save codes in order:
+== - セーブコードを順に:
+
+- Save owners in order:
+== - セーブ所有者を順に:
+
+- You have %d saves on this map!
+== - このマップに %d 個のセーブがあります！
+
+/map is disabled
+== /map は無効です
+
+/times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
+== /times ?s?i は、サーバーの直近 5 回のタイム、または名前が s で始まるプレイヤーのタイムを i 番目から表示します（i は既定で 1、-1 は最初）
+
+1 new mention
+== 1 件の新しいメンション
+
+1 star
+== 1 つ星
+
+2 stars
+== 2 つ星
+
+3 stars
+== 3 つ星
+
+3D Background
+== 3D背景
+
+4 stars
+== 4 つ星
+
+45° Aim
+== 45°エイム
+
+5 stars
+== 5 つ星
+
+9+ new mentions
+== 9+ 件の新しいメンション
+
+_ or ' ' = blank spacer
+== _ または ' ' = 空白スペーサー
+
+a = View angle
+== a = 視野角度
+
+A demo with this name already exists
+== 同名のデモが既に存在します
+
+A folder with this name already exists
+== 同名のフォルダが既に存在します
+
+A screenshot with this name already exists
+== 同名のスクリーンショットが既に存在します
+
+A Tee
+== 他のプレイヤー
 
 Abort
-== 中止
+== キャンセル
+
+Activate
+== 有効
+
+Activate all
+== すべて有効
+
+Active color
+== アクティブ時の色
+
+Active disconnect
+== アクティブ切断
+
+Active moderator mode disabled because you are afk.
+== AFKのためアクティブモデレーターモードが無効になりました。
+
+Active moderator mode disabled for you.
+== あなたに対してアクティブモデレーターモードが無効になりました。
+
+Active moderator mode enabled for you.
+== あなたに対してアクティブモデレーターモードが有効になりました。
+
+Active: Fire
+== 現在：発射
+
+Active: Hook
+== 現在：フック
 
 Add
 == 追加
 
-Add Friend
-== 友達追加
+Add [group] [clan] [reason]:
+== [グループ] [クラン] [理由] を追加:
+
+Add [group] [name] [reason]:
+== [グループ] [名前] [理由] を追加:
+
+Add a bind to the bindwheel
+== バインドホイールにバインドを追加
+
+Add a chat bind
+== チャットバインドを追加
+
+Add a clan war entry
+== クラン戦エントリーを追加
+
+Add a colored skin to a dummy queue preset
+== ダミーキュープリセットにカラースキンを追加
+
+Add a colored skin to a queue preset
+== キュープリセットにカラースキンを追加
+
+Add a colored skin to the dummy queue
+== ダミーキューにカラースキンを追加
+
+Add a colored skin to the queue
+== キューにカラースキンを追加
+
+Add a community as a favorite
+== コミュニティをお気に入りに追加
+
+Add a community to the exclusion filter
+== コミュニティを除外フィルターに追加
+
+Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
+== 特定のコミュニティの除外フィルターに国を追加（ISO 3166-1 数値コード）
+
+Add a dummy queue preset
+== ダミーキュープリセットを追加
+
+Add a foe
+== 敵を追加
+
+Add a friend
+== フレンドを追加
+
+Add a friend category
+== フレンドカテゴリを追加
+
+Add a map to favorites
+== マップをお気に入りに追加
+
+Add a name war entry
+== 名前戦エントリーを追加
+
+Add a prehashed rcon key
+== プリハッシュ化された rcon キーを追加
+
+Add a profile
+== プロフィールを追加
+
+Add a queue preset
+== キュープリセットを追加
+
+Add a rcon key
+== rcon キーを追加
+
+Add a server as a favorite
+== サーバーをお気に入りに追加
+
+Add a skin as a favorite
+== スキンをお気に入りに追加
+
+Add a skin to a dummy queue preset
+== ダミーキュープリセットにスキンを追加
+
+Add a skin to a queue preset
+== キュープリセットにスキンを追加
+
+Add a skin to the dummy queue
+== ダミーキューにスキンを追加
+
+Add a skin to the queue
+== キューにスキンを追加
+
+add a sqlserver
+== SQL サーバーを追加
+
+Add a type to the exclusion filter for a specific community
+== 特定のコミュニティの除外フィルターにタイプを追加
+
+Add a voting option
+== 投票オプションを追加
+
+Add Bind
+== バインドを追加
+
+Add command
+== コマンドを追加
+
+Add current cut to the export list
+== 現在のカットをエクスポートリストに追加
+
+Add demo timeline marker
+== デモタイムラインマーカーを追加
+
+Add Entry
+== エントリーを追加
+
+Add friend
+== フレンド追加
+
+Add friends by entering their name below or by clicking their name in the player list.
+== フレンドを追加するには、下の名前入力欄に入力するか、プレイヤーリストで名前をクリックしてください。
+
+Add Group
+== グループを追加
+
+Add Item
+== アイテムを追加
+
+Add one
+== {"key": "Add one", "context": "", "translation": "追加", "notes": ""}
+
+Add team clan:
+== チームクランを追加:
+
+Add team name:
+== チーム名を追加:
+
+Add to blocked words
+== {"key": "Add to blocked words", "context": "", "translation": "ブロックワードに追加", "notes": ""}
+
+Add to category
+== カテゴリに追加
+
+Add to queue
+== キューに追加
+
+Add war clan:
+== 敵対クランを追加:
+
+Add war name:
+== 敵対名を追加:
+
+Add/remove Client-IDs to spectate them exclusively (-1 to reset)
+== それらを独占的に観戦するためにクライアントIDを追加/削除（-1 でリセット）
+
+Added %d missing required slot(s).
+== 不足している必須スロット %d 個を追加しました。
 
 Address
 == アドレス
 
+Adds a specific war entry
+== 特定の戦争エントリーを追加します
+
+Adds default chat binds
+== デフォルトのチャットバインドを追加します
+
+Adjust game camera and FOV settings
+== ゲームカメラとFOV設定の調整
+
+Adjust opacity of entity layers
+== エンティティレイヤーの不透明度を調整
+
+Adjust the opacity of entities belonging to other teams, such as tees and name plates
+== 他のチームのエンティティ（Teeやネームプレートなど）の不透明度を調整
+
+Adjust your prediction margin while frozen
+== 凍結時の予測マージンを調整
+
+Advanced
+== 高度
+
+Advanced options
+== 詳細オプション
+
+AFR
+== アフリカ
+
+After Load
+== ロード後
+
+Afterimage pop
+== 残像ポップ
+
+Agree
+== 同意
+
+Aim
+== エイム
+
+Aim bind
+== 照準キーバインド
+
+Alive: %.1fs/%.1fs
+== 生存: %.1f秒/%.1f秒
+
 All
-== 全部
+== すべて
+
+All combined
+== すべてのファイル
+
+All players
+== すべてのプレイヤー
+
+All stars
+== すべての星
+
+Allow Duplicate Entries
+== 重複エントリーを許可
+
+Allow mic permission in system settings, then reopen voice
+== システム設定でマイク許可を許可し、その後ボイスを再度開いてください
+
+Allows maps to render with more detail
+== マップをより詳細に描画できるようにする
+
+Alpha
+== アルファ
+
+Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
+== 他のサーバーからの類似プロンプトも通知にルーティングする（例：カスタムソロプロンプト、ブラックリストは適用されます）
+
+Always show
+== 常に表示
+
+Always show chat
+== 常にチャットを表示
+
+Always show other players' hook collision lines
+== 他のプレイヤーのフック補助線を常に表示
+
+Always show own player's hook collision line
+== 自分のフック補助線を常に表示
+
+Always translate
+== 常に翻訳
+
+Amount
+== 量
+
+And pick one randomly
+== その中からランダムに一つ選びます
+
+Angle:
+== 角度:
+
+Animation
+== アニメーション
+
+Animation duration
+== アニメーションの長さ
+
+Animation range
+== アニメーション範囲
+
+Anti Latency Tools
+== アンチラグツール
+
+Anti Ping Smoothing
+== アンチピングスムージング
+
+AntiPing (latency compensation)
+== AntiPing（レイテンシ補正）
+
+AntiPing: predict grenade path
+== AntiPing: グレネード軌道予測
+
+AntiPing: predict other players
+== AntiPing: 他のプレイヤーを予測
+
+AntiPing: predict weapons
+== AntiPing: 武器を予測
+
+API key
+== APIキー
+
+Appearance
+== 外観
+
+Applied to %d same-family part(s).
+== 同じファミリーの %d 個のパーツに適用されました。
+
+Apply
+== 適用
+
+Apply a saved profile by 1-based index to the current tee
+== 保存したプロファイルを1から始まるインデックスで現在のTeeに適用
+
+Apply Changes
+== 変更を適用
+
+Apply this preset to the current queue
+== このプリセットを現在のキューに適用
+
+Are you sure that you want to delete %d selected items?
+== 選択した %d 個の項目を削除してもよろしいですか？
+
+Are you sure that you want to delete '%s'?
+== '%s'を削除してもよろしいですか？
+
+Are you sure that you want to delete the demo '%s'?
+== デモ「%s」を削除してもよろしいですか？
+
+Are you sure that you want to delete the folder '%s'?
+== フォルダ「%s」を削除してもよろしいですか？
+
+Are you sure that you want to delete the screenshot '%s'?
+== スクリーンショット「%s」を削除してもよろしいですか？
+
+Are you sure that you want to delete this button?
+== このボタンを削除してもよろしいですか？
+
+Are you sure that you want to discard the current changes to the touch controls?
+== タッチコントロールの現在の変更を破棄してもよろしいですか？
+
+Are you sure that you want to disconnect and play this demo?
+== 接続を切断してこのデモを再生してもよろしいですか？
+
+Are you sure that you want to disconnect and switch to a different server?
+== 切断して別のサーバーに切り替えてもよろしいですか？
+
+Are you sure that you want to disconnect your dummy?
+== ダミーを切断してもよろしいですか？
+
+Are you sure that you want to disconnect?
+== 切断してもよろしいですか？
+
+Are you sure that you want to import the touch controls from the clipboard? This will overwrite your current touch controls.
+== クリップボードからタッチコントロールをインポートしてもよろしいですか？現在の設定は上書きされます。
 
 Are you sure that you want to quit?
-== 終了してもよろしいですか？
+== 本当に終了してもよろしいですか？
+
+Are you sure that you want to remove '%s' from your war groups?
+== 敵対グループから '%s' を削除してもよろしいですか？
+
+Are you sure that you want to remove the clan '%s' from your friends list?
+== 友達リストからクラン '%s' を削除してもよろしいですか？
+
+Are you sure that you want to remove the player '%s' from your friends list?
+== 友達リストからプレイヤー '%s' を削除してもよろしいですか？
+
+Are you sure that you want to reset the controls to their defaults?
+== コントロールをデフォルトにリセットしてもよろしいですか？
+
+Are you sure that you want to reset the touch controls to default?
+== タッチコントロールをデフォルトにリセットしてもよろしいですか？
+
+Are you sure that you want to restart?
+== 本当に再起動してもよろしいですか？
+
+Are you sure you want to delete this asset?
+== このアセットを削除してもよろしいですか？
+
+Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
+== スキンを保存してもよろしいですか？同じ名前のスキンが既にある場合は置き換えられます。
+
+ASI
+== アジア
+
+Aspect ratio preset
+== アスペクト比プリセット
+
+Asset with this name already exists.
+== この名前のアセットは既に存在します。
+
+Assets
+== アセット
+
+Assets directory
+== アセットディレクトリ
+
+Assets editor
+== アセットエディタ
+
+Attempt to change your name when near finish
+== 終了間際に名前を変更しようとする
+
+Audio
+== オーディオ
+
+Audio backend init failed
+== オーディオバックエンドの初期化に失敗しました
+
+Audio backend init failed, try switching devices and check details
+== オーディオバックエンドの初期化に失敗しました。デバイスを切り替えて詳細を確認してください
+
+Audio file was exported, but reload failed. Restart sound to apply it.
+== オーディオファイルはエクスポートされましたが、再読み込みに失敗しました。適用するにはサウンドを再起動してください。
+
+Audio init failed, check details below and logs
+== オーディオの初期化に失敗しました。以下の詳細とログを確認してください
+
+Audio issue
+== オーディオの問題
+
+Audio pack exported.
+== オーディオパックをエクスポートしました。
+
+Audio packs
+== オーディオパック
+
+Audio slots
+== オーディオスロット
+
+AUS
+== オーストラリア
+
+Authed name color in scoreboard
+== スコアボードでの認証済み名前の色
+
+Authenticate to rcon
+== rcon 認証
+
+Authenticate to rcon with a username
+== ユーザー名で rcon 認証
+
+Authorized player forced vote '%s'
+== 権限のあるプレイヤーが投票を強制しました：'%s'
+
+Auto
+== 自動
+
+auto
+== 自動
+
+Auto agree vote
+== 投票に自動同意
+
+Auto chat in water
+== 水中で自動チャット
+
+Auto chat when dying in water
+== 水中で死亡時に自動で発言
+
+Auto concurrency: %d (smart default)
+== 自動並行性：%d（スマートデフォルト）
+
+Auto disable when time expires
+== 時間切れで自動無効化
+
+Auto enable in Gores mode
+== Goresモードで自動有効化
+
+Auto execute
+== 自動実行
+
+Auto gain control for mic (AGC, experimental)
+== マイクの自動ゲイン制御（AGC、実験的）
+
+Auto greet friends entering map
+== マップに入ったフレンドに自動挨拶
+
+Auto hot-reload after external saves
+== 外部保存後に自動ホットリロード
+
+Auto login Axiom server
+== Axiomサーバーに自動ログイン
+
+Auto map vote
+== 自動マップ投票
+
+Auto refresh server list
+== サーバーリストを自動更新
+
+Auto reject vote
+== 投票を自動拒否
+
+Auto reply
+== 自動返信
+
+Auto reply cooldown
+== 自動返信のクールダウン
+
+Auto save chat log
+== チャットログを自動保存
+
+Auto start vote
+== 自動で投票を開始
+
+Auto switch to the tee that got unfrozen
+== フリーズ解除されたTeeに自動切り替え
+
+Auto team lock
+== 自動チームロック
+
+Auto translate received messages
+== 受信メッセージを自動翻訳
+
+Auto translate sent messages
+== 送信メッセージを自動翻訳
+
+Auto unmute when speaking
+== 発話時に自動ミュート解除
+
+Auto unspec on unfreeze
+== フリーズ解除時に自動観戦解除
+
+Auto-sync player camera
+== プレイヤーカメラを自動同期
+
+Auto-toggle fast input
+== 高速入力を自動トグル
+
+Auto-toggle fast input others
+== 他のプレイヤーの高速入力を自動トグル
+
+Auto-translate incoming messages
+== 受信メッセージの自動翻訳
+
+Auto-translate outgoing messages
+== 送信メッセージの自動翻訳
+
+Automatic updates are only supported on Windows
+== 自動更新はWindowsのみ対応
+
+Automatically adds voting options for all maps
+== すべてのマップに自動的に投票オプションを追加
+
+Automatically close the current chat after waking from freeze
+== フリーズから復帰したら現在のチャットを自動的に閉じる
+
+Automatically create statboard csv
+== 自動で統計ボードのCSVを作成
 
 Automatically record demos
-== 自動的にデモを保存する
+== 自動でデモを録画
+
+Automatically reply to muted players
+== ミュートされたプレイヤーに自動返信
+
+Automatically reply while the window is unfocused
+== ウィンドウがフォーカスされていないときに自動返信
 
 Automatically take game over screenshot
-== 自動的にスクリーンショットを保存する
+== ゲーム終了時に自動でスクリーンショットを撮る
+
+Automatically take statboard screenshot
+== 統計ボードを自動でスクリーンショット
+
+Avg %.*f   ↓ %.*f   ↑ %.*f
+== 平均 %.*f   ↓ %.*f   ↑ %.*f
+
+Axiom auto login failed
+== Axiom 自動ログイン失敗
+
+Axiom auto login failed, retrying
+== Axiom 自動ログイン失敗、再試行中
+
+Axiom auto login succeeded
+== Axiom 自動ログイン成功
+
+Axiom dummy password
+== Axiomダミーパスワード
+
+Axiom main account password
+== Axiomメインアカウントパスワード
+
+Axis
+== 軸
+
+Background
+== 背景
+
+Background color
+== 背景色
+
+Background Draw
+== 背景描画
+
+Background music volume
+== BGM音量
+
+Ban a certain nickname
+== 特定のニックネームをBAN
+
+Ban ip for x minutes for any reason
+== IP を任意の理由で x 分間 BAN
+
+Ban ip range for x minutes for any reason
+== IP 範囲を任意の理由で x 分間 BAN
+
+Ban player in a region
+== リージョン内のプレイヤーをBAN
+
+Ban player with ip/client id for x minutes for any reason
+== 任意の理由で IP/クライアントID のプレイヤーを x 分間 BAN
+
+Ban range in a region
+== リージョン内の範囲をBAN
+
+Based on a pile of Windows... stuff
+== Windowsの山...みたいなものに基づいています
+
+Basic
+== 基本
+
+Behavior
+== 動作
+
+Behavior type
+== 動作タイプ
+
+Benchmark frame times for number of seconds to file, then quit
+== 指定秒数のフレームタイムをファイルにベンチマークして終了
+
+Best
+== ベスト
+
+Bind key to execute a command or view keybindings
+== キーをバインドしてコマンドを実行、またはキーバインドを表示
+
+Bind Wheel
+== バインドホイール
+
+Bind Wheel Key
+== バインドホイールキー
+
+Black
+== 黒
+
+Blend mode
+== ブレンドモード
+
+Blue
+== 青
 
 Blue team
 == 青チーム
 
 Blue team wins!
-== 青チームの勝ち！
+== 青チーム勝利！
 
 Body
-== 体
+== 胴体
+
+Both
+== 両方
+
+Both sides of keyword rules must be filled
+== キーワードルールの両側を入力する必要があります
+
+Bounce
+== バウンス
+
+Brightness shift
+== 明るさシフト
+
+Broadcast message
+== ブロードキャストメッセージ
+
+Browser
+== ブラウザ
+
+Brutal
+== 過酷
+
+Bubble opacity
+== バブルの不透明度
+
+Buffer memory
+== バッファメモリ
+
+Built-in
+== 内蔵
+
+Button - Disabled
+== ボタン - 無効
+
+Button - Enabled
+== ボタン - 有効
+
+Button position is outside of the screen.
+== ボタンの位置が画面の外にあります。
+
+Buttons
+== ボタン
+
+c = Player position
+== c = プレイヤー位置
+
+Calculate unfinished maps for player in certain mode
+== 特定モードでの未完了マップをプレイヤーごとに計算
 
 Call vote
-== 投票作成
+== 投票を開始
+
+Camera
+== カメラ
+
+Camera & FOV
+== カメラとFOV
+
+Can only drop onto same-size parts.
+== 同じサイズのパーツにのみドロップできます。
+
+Can't /spec that quickly.
+== そんなに早く /spec できません。
+
+Can't disable team 0 mode. This team exceeds the maximum allowed size of %s players for regular team
+== チーム0モードを無効にできません。このチームは通常チームの最大許容サイズ %s 人を超えています
+
+Can't enable team 0 mode with practice mode on.
+== 練習モードがオンのときはチーム0モードを有効にできません。
+
+Can't find a Tutorial server
+== チュートリアルサーバーが見つかりません
+
+Can't invite players to this team
+== このチームにプレイヤーを招待できません
+
+Can't invite this quickly
+== こんなに早く招待できません
+
+Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
+== 指定された引数を認識できません。使用法: /tpxy x y（例: /tpxy 9 3）
+
+Can't swap with yourself
+== 自分自身とは交換できません
+
+Cancel
+== キャンセル
+
+Cancel your swap request
+== スワップリクエストをキャンセル
+
+Candidate files
+== 候補ファイル
+
+Category
+== カテゴリ
+
+Change indicator offset based on distance to other tees
+== 他のTeeとの距離に基づいてインジケーターオフセットを変更
+
+Change map
+== マップ変更
+
+Change ready state (0.7 only)
+== 準備状態を変更（0.7のみ）
 
 Change settings
-== 設定変更
+== 設定を変更
+
+Change the skip duration
+== スキップ時間を変更
+
+Change zoom
+== ズーム変更
+
+Changes: %d
+== 変更: %d
+
+Changing name to %s near finish
+== 終了間際に名前を %s に変更
 
 Chat
 == チャット
 
+Chat background color
+== チャット背景色
+
+Chat Binds
+== チャットバインド
+
+Chat box button appearance settings
+== チャットボックスボタンの外観設定
+
+Chat Bubble
+== チャットバブル
+
+Chat command
+== チャットコマンド
+
+Chat command (e.g. showall 1)
+== チャットコマンド（例: showall 1）
+
+Chat export failed
+== チャットエクスポート失敗
+
+Chat font size
+== チャットフォントサイズ
+
+Chat log retention days
+== チャットログ保持日数
+
+Chat message
+== チャットメッセージ
+
+Chat sound volume
+== チャットサウンド音量
+
+Chat Translate Button UI
+== チャット翻訳ボタンUI
+
+Chat translation settings
+== チャット翻訳設定
+
+Chat width
+== チャット幅
+
+Chat word filtering
+== チャット単語フィルタリング
+
+Check if voice server address is reachable
+== ボイスサーバーアドレスに到達可能か確認
+
+Check if your dummy is being bullied while you control the main tee
+== メインTeeを操作中にダミーがいじめられていないか確認
+
+Check input device, system default mic, and mic permission first
+== 最初に入力デバイス、システムのデフォルトマイク、マイクの許可を確認してください
+
+Check output device, confirm headphones/speakers are still online
+== 出力デバイスを確認し、ヘッドホン/スピーカーがまだ動作していることを確認してください
+
+Checking for existing player with your name
+== 同じ名前のプレイヤーを確認中
+
+CHN
+== 中国
+
+Choose country flag
+== 国旗を選択
+
+Choose default eyes when joining a server
+== サーバー参加時のデフォルトの目の表情を選択
+
+Choose export name first.
+== 最初にエクスポート名を選択してください。
+
+Choose whether to browse replays or screenshots
+== リプレイまたはスクリーンショットを閲覧するかを選択
+
 Clan
 == クラン
+
+Clan color in friends list
+== フレンドリストでのクランの色
+
+Clan Members
+== クランメンバー
+
+Clan plates size
+== クランプレートサイズ
+
+Clan: %s
+== クラン: %s
+
+Classic
+== クラシック
+
+Classic Easy
+== クラシック Easy
+
+Classic easy
+== クラシックイージー
+
+Classic next
+== クラシックネクスト
+
+Classic Next
+== クラシック Next
+
+Classic Nut
+== クラシック Nut
+
+Classic nut
+== クラシックナット
+
+Classic Pro
+== クラシック Pro
+
+Classic pro
+== クラシックプロ
+
+Clear
+== クリア
+
+Clear all favorite maps
+== すべてのお気に入りマップをクリア
+
+Clear Changes
+== 変更をクリア
+
+Clear chat messages
+== チャットメッセージをクリア
+
+Clear current cut (right click to clear all cuts)
+== 現在のカットをクリア (右クリックですべてのカットをクリア)
+
+Clear friend note
+== フレンドメモをクリア
+
+Clear local console
+== ローカルコンソールをクリア
+
+Clear note
+== メモをクリア
+
+Clear remote console
+== リモートコンソールをクリア
+
+Clears the voting options
+== 投票オプションをクリア
+
+Click to add this community to favorites
+== このコミュニティをお気に入りに追加するにはクリック
+
+Click to copy map name
+== クリックでマップ名をコピー
+
+Click to copy QQ group number
+== クリックしてQQグループ番号をコピー
+
+Click to copy the map name
+== クリックしてマップ名をコピー
+
+Click to copy this clan's name to clipboard
+== このクラン名をクリップボードにコピーするにはクリック
+
+Click to copy this player's name to clipboard
+== このプレイヤー名をクリップボードにコピーするにはクリック
+
+Click to remove this clan from your friends list.
+== このクランを友達リストから削除するにはクリック
+
+Click to remove this community from favorites
+== このコミュニティをお気に入りから削除するにはクリック
+
+Click to remove this player from your friends list.
+== このプレイヤーを友達リストから削除するにはクリック
+
+Click to select server. Double click to join your friend.
+== クリックでサーバーを選択。ダブルクリックで友達のサーバーに参加。
+
+Click to set color
+== クリックして色を設定
 
 Client
 == クライアント
 
+Client CPU usage is high
+== クライアントのCPU使用率が高いです
+
+Client frame time is abnormal
+== クライアントのフレーム時間が異常です
+
+Client IDs size
+== クライアントIDサイズ
+
+Client message
+== クライアントメッセージ
+
+Client performance pressure is high
+== クライアントのパフォーマンス負荷が高いです
+
+Client prediction time is high
+== クライアントの予測時間が高いです
+
+Close
+== 閉じる
+
+Close the demo player
+== デモプレイヤーを閉じる
+
+Color
+== 色
+
+Colors
+== 色
+
+Colors in chat
+== チャット内の色
+
+Colors in scoreboard
+== スコアボード内の色
+
+Colors of the hook collision line, in case of a possible collision with:
+== フック補助線の色（以下の対象との衝突が可能な場合）:
+
+Combo
+== コンボ
+
+Command
+== コマンド
+
+Command is not available on solo servers
+== このコマンドはソロサーバーでは利用できません
+
+Command:
+== コマンド:
+
+Commands run in the console
+== コンソールで実行されるコマンド
+
+Common key bindings
+== 一般的なキーバインド
+
+Communities
+== コミュニティ
+
+Community
+== コミュニティ
+
+Community links, updates, and sponsors moved to the Contributors tab
+== コミュニティリンク、アップデート、スポンサーは「貢献者」タブに移動しました
+
+Compact
+== コンパクト
+
+Concurrency (0 = auto)
+== 並行性（0 = 自動）
+
+Config
+== 設定
+
+Config directory
+== 設定ディレクトリ
+
+Config file: data/input_overlay.json
+== 設定ファイル: data/input_overlay.json
+
+Config Files
+== 設定ファイル
+
+Configs
+== コンフィグ
+
+Configure background 3D particle effects
+== 背景3Dパーティクル効果を設定
+
+Configure hammer skin steal and skin transition animations
+== ハンマースキンスティールとスキン遷移アニメーションを設定
+
+Confirm both are on same server, same room, and support voice
+== 両方が同じサーバー、同じ部屋にいて、ボイスをサポートしていることを確認
+
+Connect address error
+== 接続アドレスエラー
+
+Connect dummy
+== ダミーを接続
+
+Connect dummy to enable
+== 有効にするにはダミーを接続
+
+Connect to server first to establish voice network link
+== まずサーバーに接続して、ボイスネットワークリンクを確立してください
+
+Connect to the specified host/ip
+== 指定されたホスト/IPに接続
+
+Connected
+== 接続完了
+
+Connected, no one is speaking
+== 接続済み、誰も話していません
+
+Connected, waiting for first ping
+== 接続済み、最初のpingを待機中
+
+Connecting dummy
+== ダミーを接続中
+
 Connecting to
-== 接続先
+== に接続中
+
+Connection disconnected
+== 接続が切断されました
+
+Connection downstream
+== 接続下り
+
+Connection elevated
+== 接続が高い
+
+Connection normal
+== 接続正常
 
 Connection Problems…
-== 接続中に問題が発生
+== 接続の問題…
+
+Connection severely abnormal
+== 接続が深刻に異常です
+
+Connection upstream
+== 接続上り
 
 Console
 == コンソール
 
+Console color
+== コンソールの色
+
+Continue anyway?
+== それでも終了しますか？
+
+Contributors
+== コントリビューター
+
+Control dummy
+== ダミーを操作
+
+Controller
+== コントローラー
+
+Controller jitter tolerance
+== コントローラーのジッター許容範囲
+
 Controls
 == コントロール
 
+Converse
+== 返信
+
+Converse with the last person you whispered to (private message)
+== 最後に whisper した人と会話（プライベートメッセージ）
+
+Coords size
+== 座標サイズ
+
+Copied
+== コピーしました
+
+Copy
+== コピー
+
+Copy info
+== 情報をコピー
+
+Copy name
+== 名前をコピー
+
+Copy skin
+== スキンをコピー
+
+Could not check for existing player with your name. Check your internet connection.
+== 同じ名前のプレイヤーを確認できませんでした。インターネット接続を確認してください。
+
+Could not connect dummy
+== ダミーに接続できませんでした
+
+Could not find your Team
+== あなたのチームが見つかりませんでした
+
+Could not get server list from master server
+== マスターサーバーからサーバーリストを取得できませんでした
+
+Could not load default touch controls from file. See local console for details.
+== デフォルトのタッチコントロールをファイルから読み込めませんでした。詳細はローカルコンソールを確認してください。
+
+Could not load sponsor QR code. Check the Base64 data
+== スポンサーQRコードを読み込めませんでした。Base64データを確認してください
+
+Could not load touch controls from clipboard. See local console for details.
+== タッチコントロールをクリップボードから読み込めませんでした。詳細はローカルコンソールを確認してください。
+
+Could not load touch controls from file. See local console for details.
+== タッチコントロールをファイルから読み込めませんでした。詳細はローカルコンソールを確認してください。
+
+Could not preview this image
+== この画像をプレビューできません
+
+Could not resolve connect address '%s'. See local console for details.
+== 接続アドレス '%s' を解決できませんでした。詳細はローカルコンソールを確認してください。
+
+Could not save downloaded map. Try manually deleting this file: %s
+== ダウンロードしたマップを保存できませんでした。次のファイルを手動で削除してみてください: %s
+
+Could not save touch controls to file. See local console for details.
+== タッチコントロールをファイルに保存できませんでした。詳細はローカルコンソールを確認してください。
+
 Count players only
-== 実際のプレイヤー数を表示
+== プレイヤーのみカウント
+
+Countries
+== 国
+
+CP opacity
+== CPの不透明度
+
+Create a random skin
+== ランダムスキンを作成
+
+Created
+== 作成日
+
+Credits
+== クレジット
+
+Crescent
+== 三日月
+
+Cube
+== 立方体
 
 Current
-== 現行
+== 現在
+
+Current aspect ratio:
+== 現在のアスペクト比:
+
+Current aspect ratio: Show default
+== 現在のアスペクト比: デフォルトを表示
+
+Current cut is invalid or already added
+== 現在のカットは無効か、既に追加されています
+
+Current file
+== 現在のファイル
+
+Current rescue mode: %s
+== 現在のレスキューモード: %s
+
+Current status
+== 現在の状態
+
+Current: Ranks
+== 現在: ランク
+
+Current: Score
+== 現在: スコア
+
+Current: Time
+== 現在: タイム
+
+custom
+== カスタム
+
+Custom
+== カスタム
+
+Custom API key
+== カスタムAPIキー
+
+Custom aspect ratio
+== カスタムアスペクト比
 
 Custom colors
-== 色変更
+== カスタムカラー
+
+Custom Font:
+== カスタムフォント:
+
+Custom prompt template
+== カスタムプロンプトテンプレート
+
+Customize translate button and menu colors
+== 翻訳ボタンとメニューの色をカスタマイズ
+
+Cut interval
+== カット間隔
+
+Cut length
+== カット長
+
+Cut segments
+== カットセグメント
+
+Cute:
+== かわいい:
+
+Cycle through emotes
+== エモートを順に表示
+
+d = Prediction latency
+== d = 予測遅延
+
+Damn grenadiers, all go to spa!
+== くそったれグレネーダーども、全員スパに行け！
+
+Damn grenadiers, just die!
+== くそったれグレネーダーども、死んでしまえ！
+
+Date
+== 日付
+
+Days
+== 日
+
+DDmaX
+== DDmaX
+
+DDmaX Easy
+== DDmaX Easy
+
+DDmaX Next
+== DDmaX Next
+
+DDmaX Nut
+== DDmaX Nut
+
+DDmaX Pro
+== DDmaX Pro
+
+DDNet
+== DDNet
+
+DDNet Client needs to be restarted to complete update!
+== DDNetクライアントを再起動してアップデートを完了する必要があります！
+
+ddnet-saves.txt is empty
+== ddnet-saves.txt は空です
+
+ddnet-saves.txt not found
+== ddnet-saves.txt が見つかりません
+
+DDNet/total CPU
+== DDNet/合計CPU
+
+DDRace HUD
+== DDRace HUD
+
+DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
+== DDraceNetwork は協力型オンラインゲームで、あなたとあなたの Tee のグループがマップのゴールに到達することを目指します。初心者は最も簡単なマップがある Novice サーバーから始めるべきです。自分の近くのサーバーを選ぶために ping を考慮してください。
+
+Deactivate
+== 無効
+
+Deactivate all
+== すべて無効
+
+Death opacity
+== 死亡時の不透明度
+
+Deaths
+== デス数
+
+Debug graph
+== デバッググラフ
+
+Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
+== デバッグモードが有効になりました。Ctrl+Shift+D でデバッグモードを無効にします。
+
+Debug performance graph panel
+== デバッグパフォーマンスグラフパネル
+
+Deep freeze color
+== 深凍結色
+
+Deep freeze opacity
+== ディープフリーズの不透明度
+
+Deep unfreeze color
+== 深解凍色
+
+Deep unfreeze opacity
+== ディープアンフリーズの不透明度
+
+DeepSeek
+== DeepSeek
+
+DeepSeek API key
+== DeepSeek APIキー
+
+Default
+== デフォルト
+
+default
+== デフォルト
+
+Default input open failed
+== デフォルト入力のオープンに失敗しました
+
+Default length
+== デフォルトの長さ
+
+Default output open failed
+== デフォルト出力のオープンに失敗しました
+
+Default zoom
+== デフォルトのズーム
+
+Delay
+== 遅延
 
 Delete
 == 削除
 
+Delete button
+== ボタンを削除
+
+Delete command
+== コマンドを削除
+
 Delete demo
 == デモを削除
+
+Delete folder
+== フォルダを削除
+
+Delete screenshot
+== スクリーンショットを削除
+
+Delete selected items
+== 選択した項目を削除
+
+Delete skin
+== スキンを削除
+
+Delete this preset
+== このプリセットを削除
+
+Demo
+== デモ
+
+Demo marker added
+== デモマーカーを追加しました
 
 Demofile: %s
 == デモファイル: %s
 
 Demos
-== デモ録画
+== デモ
+
+Demos directory
+== デモディレクトリ
+
+Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
+== 指定された引数の数に応じて、自分をテレポートします。(0.) 観戦中または狙っている場所 (1.) 指定されたプレイヤー名
+
+Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
+== 非推奨。「muteid <client_id> <秒数> <理由>」または「muteip <ip> <秒数> <理由>」を使用してください。
+
+Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_muteip <ip> <seconds> <reason>'
+== 非推奨。「vote_muteid <client_id> <秒数> <理由>」または「vote_muteip <ip> <秒数> <理由>」を使用してください。
+
+Deselect
+== 選択解除
+
+Desktop fullscreen
+== デスクトップ全画面
+
+Detailed reason
+== 詳細な理由
+
+Detection distance
+== 検出距離
+
+Detection time
+== 検出時間
+
+Developers and sponsors
+== 開発者とスポンサー
+
+DF
+== DF
+
+Diamond
+== ダイヤモンド
+
+died
+== 死亡
+
+Difficulty stars
+== 難易度の星
+
+Direct touch input while ingame
+== ゲーム中の直接タッチ入力
+
+Direct touch input while spectating
+== 観戦中の直接タッチ入力
+
+Direction Keys
+== 方向キー
+
+disable
+== 無効
+
+Disable after picking up other weapons
+== 他の武器を拾った後に無効化
+
+Disagree
+== 反対
+
+Discard
+== 破棄
+
+Discard changes
+== 変更を破棄
 
 Disconnect
 == 切断
 
+Disconnect dummy
+== ダミーを切断
+
+Disconnect from the server
+== サーバーから切断
+
 Disconnected
 == 切断されました
+
+Discord
+== Discord
+
+Display mode
+== 表示モード
+
+Dissolve
+== 溶解
+
+Do not translate server messages
+== サーバーメッセージを翻訳しない
+
+Donor (drag parts from left)
+== 提供元（左からパーツをドラッグ）
+
+Donor Asset
+== 提供元アセット
+
+Dont predict other players if you are frozen
+== 凍結中は他のプレイヤーを予測しない
+
+DONT USE THIS! USE add_bindwheel INSTEAD!
+== これを使わないで！代わりに add_bindwheel を使ってください！
+
+Door Laser Inner Color
+== ドアレーザー内側の色
+
+Door Laser Outline Color
+== ドアレーザー外枠の色
+
+Download community skins
+== コミュニティスキンをダウンロード
+
+Download failed
+== ダウンロード失敗
+
+Download skins
+== 公式スキンをダウンロード
+
+Download this asset?
+== このアセットをダウンロードしますか？
+
+Downloaded
+== ダウンロード済み
 
 Downloading map
 == マップをダウンロード中
 
+Downloading update...
+== アップデートをダウンロード中...
+
+Drag HUD modules with the left mouse button
+== 左マウスボタンで HUD モジュールをドラッグ
+
+Dragger Inner Color
+== ドラッガー内側の色
+
+Dragger Outline Color
+== ドラッガー外枠の色
+
+Dragging, collapsing, search, and usage history are preserved per category
+== ドラッグ、折りたたみ、検索、使用履歴はカテゴリごとに保存されます
+
+Draw on the in game background
+== ゲーム内背景に描画
+
+Draw where mouse is
+== マウスの位置に描画
+
 Draw!
 == 引き分け！
+
+Drawing a big pie in the sky
+== 大空に大きなパイを描く
+
+Dream Features
+== 夢の機能
+
+Drift direction
+== ドリフト方向
+
+Drift intensity
+== ドリフト強度
+
+Drift smoothness
+== ドリフトの滑らかさ
+
+Drop on right canvas to replace one part.
+== 右側のキャンバスにドロップして一つのパーツを置き換えます
+
+Dummies are not allowed on this server
+== このサーバーではダミーは許可されていません
+
+Dummy
+== ダミー
+
+Dummy Control: %s
+== ダミーコントロール: %s
+
+Dummy copy
+== ダミーに同期
+
+Dummy fire
+== ダミーが発射
+
+Dummy hammer fly
+== ダミーハンマーフライ
+
+Dummy hook
+== ダミーがフック
+
+Dummy jump
+== ダミーがジャンプ
+
+Dummy mini view
+== ダミーミニビュー
+
+Dummy sync: %s
+== ダミー同期: %s
+
+Dummy Window
+== ダミーウィンドウ
+
+Dummy window size
+== ダミーウィンドウサイズ
+
+Dummy window zoom
+== ダミーウィンドウのズーム
+
+Dump the current savestring
+== 現在のセーブ文字列をダンプ
+
+Dump zone tuning in zone x
+== ゾーン x のゾーンチューニングをダンプ
+
+dumps all sqlservers readservers = r, writeservers = w
+== すべての SQL サーバーをダンプ（readservers = r, writeservers = w）
+
+Dumps the antibot status
+== アンチボットのステータスをダンプ
+
+Duplicate
+== 複製
+
+Duration
+== 持続時間
 
 Dynamic Camera
 == 動的カメラ
 
+Dynamic FOV intensity
+== 動的FOV強度
+
+Dynamic FOV smoothness
+== 動的FOVの滑らかさ
+
+Dynamic Island
+== ダイナミックアイランド
+
+Each tab has a clear purpose
+== 各タブには明確な目的があります
+
+Echo follows the original chat color
+== Echoは元のチャット色に従います
+
+Echo text color when not inheriting chat color
+== チャット色を継承しない場合のEchoテキスト色
+
+Echo the text
+== テキストをエコー
+
+Echo the text in chat window
+== チャットウィンドウにテキストをエコー
+
+Edge margin
+== エッジマージン
+
+Edit
+== 編集
+
+Edit audio pack
+== オーディオパックを編集
+
+Edit Entry
+== エントリーを編集
+
+Edit HUD
+== HUDを編集
+
+Edit note
+== メモを編集
+
+Edit skin texture
+== スキンテクスチャを編集
+
+Edit touch controls
+== タッチコントロールを編集
+
+Editor
+== エディター
+
+Elevated
+== 高い
+
+Emotes are disabled.
+== エモートは無効です。
+
 Emoticon
 == 絵文字
+
+Emoticon ID
+== 絵文字ID
+
+Emoticons
+== 絵文字
+
+enable
+== 有効
+
+Enable 3D background particles
+== 3D背景パーティクルを有効化
+
+Enable camera drift
+== カメラドリフトを有効化
+
+Enable chat with all/team mode
+== 全員/チームモードのチャットを有効にする
+
+Enable cheats for your current team's run, but you can't earn a rank
+== 現在のチームのランでチートを有効にするが、ランクは獲得できません
+
+Enable controller
+== コントローラーを有効
+
+Enable Deleting
+== 削除を有効化
+
+Enable dummy window
+== ダミーウィンドウを有効化
+
+Enable dynamic FOV
+== 動的FOVを有効化
+
+Enable FTAPI auto-translate (may overload the service)
+== FTAPI自動翻訳を有効化（サービスに過負荷がかかる可能性があります）
+
+Enable game sounds
+== ゲームサウンドを有効
+
+Enable ghost
+== ゴーストを有効
+
+Enable Gores mode
+== Goresモードを有効化
+
+Enable gun sound
+== ピストルサウンドを有効
+
+Enable highlighted chat sound
+== ハイライトチャットサウンドを有効
+
+Enable Jelly Tee
+== ゼリーティーを有効化
+
+Enable keyword reply
+== キーワード返信を有効化
+
+Enable long pain sound (used when shooting in freeze)
+== 長い痛みのサウンドを有効（フリーズ中に射撃時に使用）
+
+Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
+== 指定されたバグを使用してマップ互換モードを有効にする（例：grenade-doubleexplosion@ddnet.tw）
+
+Enable mod weapon on %d: %s
+== %d で MOD 武器を有効化: %s
+
+Enable pie menu
+== パイメニューを有効化
+
+Enable regular chat sound
+== 通常チャットサウンドを有効
+
+Enable repeat
+== リピートを有効化
+
+Enable replays
+== リプレイを有効
+
+Enable server message sound
+== サーバーメッセージサウンドを有効
+
+Enable speedrun timer
+== スピードラインタイマーを有効化
+
+Enable stereo positioning
+== ステレオポジショニングを有効化
+
+Enable system media control
+== システムメディアコントロールを有効化
+
+Enable team chat sound
+== チームチャットサウンドを有効
+
+Enable tee trails
+== ティートレイルを有効化
+
+Enable thinking mode (slower)
+== 思考モードを有効化（低速）
+
+Enable voice
+== ボイスを有効化
+
+Enable warlist
+== 敵対リストを有効化
+
+Enable word filter list
+== 単語フィルターリストを有効化
+
+Enable Zen mode
+== Zenモードを有効化
+
+Enables/disables active moderator mode for the player
+== プレイヤーのアクティブモデレーターモードを有効/無効にする
+
+Endless hook has been activated
+== エンドレスフックが有効化されました
+
+Endless hook has been deactivated
+== エンドレスフックが無効化されました
+
+Endpoint
+== エンドポイント
+
+Endpoint (optional)
+== エンドポイント（オプション）
+
+Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
+== /practice モードに入るか、リスタートしてください。そうしないと60秒後にチーム全員が処刑されます
+
+Enter Password
+== パスワードを入力
+
+Enter Username
+== ユーザー名を入力
+
+Entities
+== エンティティ
+
+Entities background color
+== エンティティ背景色
+
+Entity Background Image
+== エンティティ背景画像
+
+Entity Layer Colors
+== エンティティレイヤーの色
+
+Entity Preview
+== エンティティプレビュー
+
+entity_bg (Workshop)
+== entity_bg (Workshop)
+
+Erase items on the in game background
+== ゲーム内背景のアイテムを消去
 
 Error
 == エラー
 
+Error checking player name
+== プレイヤー名の確認エラー
+
+Error loading communities
+== コミュニティの読み込みエラー
+
 Error loading demo
-== デモの読み込みに失敗しました
+== デモの読み込みエラー
+
+Error loading touch controls
+== タッチコントロールの読み込みエラー
+
+Error opening screenshot
+== スクリーンショットを開くエラー
+
+Error playing demo
+== デモ再生エラー
+
+Error saving settings
+== 設定保存エラー
+
+Error saving touch controls
+== タッチコントロール保存エラー
+
+ESC replay minutes
+== ESCリプレイの分数
+
+EUR
+== ヨーロッパ
+
+Evaluate an expression
+== 式を評価
+
+Event
+== イベント
+
+Example of usage
+== 使用例
+
+Example: name1|name2|name3
+== 例: 名前1|名前2|名前3
+
+Exclude
+== 除外
+
+Execute before connecting
+== 接続前に実行
+
+Execute files on key press/release
+== キー押下/解放時にファイルを実行
+
+Execute hovered bindwheel bind
+== ホバー中のバインドホイールバインドを実行
+
+Execute on connect
+== 接続時に実行
+
+Execute the specified file
+== 指定されたファイルを実行
+
+Existing Player
+== 既存のプレイヤー
+
+Expand module
+== モジュールを展開
+
+Export
+== エクスポート
+
+Export cut as a separate demo
+== カットを別のデモとしてエクスポート
+
+Export demo cut
+== デモカットをエクスポート
+
+Export name contains invalid characters.
+== エクスポート名に無効な文字が含まれています。
+
+Export selected
+== 選択項目をエクスポート
+
+Export selected file
+== 選択したファイルをエクスポート
+
+Export to clipboard
+== クリップボードにエクスポート
+
+Exported %d chat messages
+== %d 件のチャットメッセージをエクスポートしました
+
+Exported to %s
+== %s にエクスポートしました
+
+Extras
+== その他
+
+f = Frame rate
+== f = フレームレート
+
+Fade and slide
+== フェード＆スライド
+
+Fade in
+== フェードイン
+
+Fade only
+== フェードのみ
+
+Fade out
+== フェードアウト
+
+Fade trail alpha
+== トレイルのフェードアルファ
+
+Failed saving the replay!
+== リプレイの保存に失敗しました！
+
+Failed to check for updates
+== アップデートの確認に失敗
+
+Failed to copy main asset image.
+== メインアセット画像のコピーに失敗しました。
+
+Failed to create bgdraw folder
+== bgdraw フォルダの作成に失敗
+
+Failed to export audio pack file.
+== オーディオパックファイルのエクスポートに失敗しました。
+
+Failed to export demo cut
+== デモカットのエクスポートに失敗しました
+
+Failed to export skin files.
+== スキンファイルのエクスポートに失敗しました。
+
+Failed to load
+== 読み込みに失敗
+
+Failed to load main asset: %s
+== メインアセットの読み込みに失敗: %s
+
+Failed to prepare main asset image.
+== メインアセット画像の準備に失敗しました。
+
+Failed to preview candidate file.
+== 候補ファイルのプレビューに失敗しました。
+
+Failed to preview import file.
+== インポートファイルのプレビューに失敗しました。
+
+Failed to read saves file
+== セーブファイルの読み取りに失敗
+
+Failed to write PNG export.
+== PNGエクスポートの書き込みに失敗しました。
+
+Fake CTF flags
+== 偽のCTFフラッグ
+
+Fallback simple noise reduction strength
+== フォールバック簡易ノイズリダクション強度
+
+Fast input (reduce visual latency)
+== 高速入力（視覚的遅延を低減）
+
+Fast input others
+== 他のプレイヤーの高速入力
+
+Fast practice
+== 高速練習
+
+Fat skins (DDFat)
+== ふとっちょスキン（DDFat）
 
 Favorite
 == お気に入り
 
+Favorite map
+== お気に入りマップ
+
+Favorite maps
+== お気に入りのマップ
+
 Favorites
 == お気に入り
+
+Feature Search
+== 機能検索
 
 Feet
 == 足
 
+Fetch Info
+== 情報取得
+
+File
+== ファイル
+
+File '%s' already exists, do you want to overwrite it?
+== ファイル「%s」は既に存在します。上書きしますか？
+
+File already exists, do you want to overwrite it?
+== ファイルは既に存在します。上書きしますか？
+
+Filter connecting players
+== 接続中のプレイヤーをフィルター
+
+Find all ban records for the specified IP address
+== 指定された IP アドレスのすべての BAN 記録を検索
+
+Finish Name
+== フィニッシュ名
+
+Finish Name:
+== フィニッシュ名:
+
 Fire
-== 射撃
+== 発射
+
+First page in console
+== コンソールの最初のページ
+
+Flip:
+== 反転:
 
 Folder
 == フォルダ
 
+Folder Link
+== フォルダリンク
+
+Follow
+== フォロー
+
+Following
+== フォロー中
+
+Font size
+== フォントサイズ
+
+Force a vote to yes/no
+== 投票を賛成/反対に強制
+
+Force a voting option
+== 投票オプションを強制
+
+Force high bandwidth mode when spectating (1 = on, 0 = off)
+== 観戦時に高帯域幅モードを強制（1 = オン、0 = オフ）
+
+Force i to pause for i seconds
+== i を i 秒間強制一時停止
+
 Force vote
-== 強制投票
+== 投票を強制
+
+Found %d modules
+== %d 個のモジュールが見つかりました
+
+FPM
+== FPM
+
+Frags
+== キル数
+
+Frame rate
+== フレームレート
+
+Frame time
+== フレーム時間
+
+Frankenstein (drop parts on right)
+== フランケン（右側にパーツをドロップ）
+
+Free move
+== 自由移動
 
 Free-View
-== 自由視点
+== フリービュー
+
+Freeview cursor opacity
+== 自由視点カーソルの不透明度
+
+Freeze
+== 凍結
+
+Freeze border color
+== フリーズ枠の色
+
+Freeze Laser Inner Color
+== フリーズレーザー内側の色
+
+Freeze Laser Outline Color
+== フリーズレーザー外枠の色
+
+Freeze opacity
+== フリーズの不透明度
+
+Freeze stars
+== 凍結星
+
+Friend
+== フレンド
+
+Friend color in friends list
+== フレンドリストでのフレンドの色
+
+Friend heart
+== フレンドハート
+
+Friend message
+== フレンドメッセージ
+
+Friend note
+== フレンドメモ
+
+Friend Notifications
+== フレンド通知
+
+Friend online and join notifications
+== フレンドのオンライン・参加通知
+
+Friends
+== フレンド
+
+Frozen Margin
+== 凍結マージン
+
+FSAA samples
+== FSAAサンプル数
+
+FTAPI
+== FTAPI
+
+FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
+== FTAPIの自動翻訳は過負荷防止のため無効になっています。必要に応じて設定で有効にしてください。
+
+Full map listen in same room
+== 同じ部屋でフルマップリスン
+
+Fullscreen
+== 全画面表示
+
+Fun
+== Fun
+
+Functions
+== 機能
 
 Game
 == ゲーム
@@ -151,86 +2515,1370 @@ Game info
 Game over
 == ゲームオーバー
 
+Game paused
+== ゲーム一時停止中
+
+Game sound volume
+== ゲームサウンド音量
+
+Game time margin
+== ゲームタイムマージン
+
 Game type
 == ゲームタイプ
 
 Game types:
-== ゲームタイプ:
+== ゲームタイプ：
+
+Game/predicted tick
+== ゲーム/予測ティック
+
+Gameplay
+== ゲームプレイ
+
+Gap aim rescue
+== 隙間エイムレスキュー
 
 General
-== 一般
+== 全般
+
+Get all map players' skin IDs and auto add to rotate queue
+== マップ全プレイヤーのスキンIDを取得して自動でローテーションキューに追加
+
+Getting game info
+== ゲーム情報を取得中
+
+Getting server list from master server
+== マスターサーバーからサーバーリストを取得中
+
+Ghost
+== ゴースト
+
+Ghost tools
+== ゴーストツール
+
+Ghosts directory
+== ゴーストディレクトリ
+
+Github
+== Github
+
+Give back right to vote to player with client ID
+== クライアントIDのプレイヤーに投票権を戻す
+
+Give back right to vote to player with IP address
+== IPアドレスのプレイヤーに投票権を戻す
+
+Give back right to vote to player with list index
+== リストインデックスのプレイヤーに投票権を戻す
+
+Gives a grenade launcher to you
+== グレネードランチャーをあなたに与える
+
+Gives a laser to you
+== レーザーをあなたに与える
+
+Gives a shotgun to you
+== ショットガンをあなたに与える
+
+Gives all weapons to you
+== すべての武器をあなたに与える
+
+Gives jetpack to you
+== ジェットパックをあなたに与える
+
+Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
+== ID i の武器をあなたに与える（all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5）
+
+Gives you as many jumps as you specify
+== 指定した数だけジャンプを与える
+
+Gives you endless hook
+== エンドレスフックを与える
+
+Gives you infinite jump
+== 無限ジャンプを与える
+
+Global toggle key
+== グローバルトグルキー
+
+Glow alpha
+== グローアルファ
+
+Glow intensity
+== グロー強度
+
+Glow offset
+== グローオフセット
+
+Go back one marker
+== 前のマーカーに戻る
+
+Go back one tick
+== 一ティック戻る
+
+Go back the specified duration
+== 指定時間戻る
+
+Go forward one marker
+== 次のマーカーに進む
+
+Go forward one tick
+== 一ティック進む
+
+Go forward the specified duration
+== 指定時間進む
+
+Gores Actor
+== Gores俳優専用
+
+Gores auto weapon switch
+== Gores自動武器切り替え
+
+Gores Mode
+== Goresモード
+
+Gores mode key
+== Goresモードキー
+
+Grabs
+== グラブ数
 
 Graphics
-== グラフィック
+== グラフィックス
+
+Graphics card
+== グラフィックカード
+
+Greeting text
+== 挨拶テキスト
 
 Grenade
 == グレネード
 
+Group name
+== グループ名
+
+Guide line color
+== ガイドラインの色
+
 Hammer
 == ハンマー
 
+Hammer Mode:
+== ハンマーモード:
+
+Hammer skin steal
+== ハンマースキンスティール
+
+Hammer: %s
+== ハンマー: %s
+
 Has people playing
-== プレイヤーがいるサーバー
+== プレイヤーあり
+
+Has save
+== セーブあり
+
+HDF
+== HDF
+
+Heart
+== ハート
+
+Height
+== 高さ
+
+Help: %s
+== ヘルプ: %s
+
+Hide death/respawn effects
+== 死亡/リスポーン効果を非表示
+
+Hide direction indicators
+== 方向インジケーターを非表示
+
+Hide Echo messages
+== Echoメッセージを非表示
+
+Hide explosion effects
+== 爆発効果を非表示
+
+Hide freeze effects
+== フリーズ効果を非表示
+
+Hide ghosts of frozen players
+== 凍結プレイヤーのゴーストを非表示
+
+Hide guide lines
+== ガイドラインを非表示
+
+Hide hammer effects
+== ハンマー効果を非表示
+
+Hide HUD
+== HUDを非表示
+
+Hide indicator for tees on your screen
+== 画面上のTeeのインジケーターを非表示
+
+Hide input emoticon
+== 入力絵文字を非表示
+
+Hide join/version prompts
+== 参加/バージョンプロンプトを非表示
+
+Hide jump effects
+== ジャンプ効果を非表示
+
+Hide kill/finish messages
+== キル/フィニッシュメッセージを非表示
+
+Hide map progress
+== マップ進行度を非表示
+
+Hide nameplates
+== ネームプレートを非表示
+
+Hide names
+== 名前を非表示
+
+Hide player messages
+== プレイヤーメッセージを非表示
+
+Hide scoreboard
+== スコアボードを非表示
+
+Hide server prompt notifications
+== サーバープロンプト通知を非表示
+
+Hide Settings Tabs
+== 設定タブを非表示
+
+Hide sponsor QR code
+== スポンサーQRコードを非表示
+
+Hide UI for focused gameplay
+== 集中プレイのためにUIを非表示
+
+Hide weapon muzzle flashes
+== 武器の発射炎を非表示
 
 High Detail
-== 高解像度マップを表示
+== 高精細
+
+High to low
+== 高い順
+
+Highlight Color
+== ハイライト色
+
+Highlighted message
+== ハイライトメッセージ
+
+Hitbox mode
+== ヒットボックスモード
+
+HJ assist
+== HJアシスト
+
+HJ Assist
+== HJアシスト
+
+Hold left click for free camera
+== 左クリックを押し続けるとフリーカメラ
 
 Hook
 == フック
 
+Hook collision line
+== フック補助線
+
+Hook collision line opacity
+== フック補助線の不透明度
+
+Hook Collisions
+== フック補助線
+
+Hook collisions
+== フック補助線
+
+Hook line tip
+== フック線の先端
+
+Hook Strength
+== フック強度
+
+Hooking L/R: %.0f%%/%.0f%%
+== フック L/R: %.0f%%/%.0f%%
+
+Horizontal position
+== 水平位置
+
+Hours
+== 時間
+
+https://ddnet.org/discord
+== https://ddnet.org/discord
+
+https://wiki.ddnet.org/
+== https://wiki.ddnet.org/
+
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
+https://wiki.ddnet.org/wiki/Touch_controls
+== https://wiki.ddnet.org/wiki/Touch_controls
+
+HUD
+== HUD
+
+HUD editor preview
+== HUD エディタープレビュー
+
+HUD rainbow colors
+== HUDレインボーカラー
+
+Hue
+== 色相
+
+i = Receive rate
+== i = 受信レート
+
+I am a robot
+== 私はロボットです
+
+I am away from the game window
+== ゲームウィンドウから離れています
+
+I muted you
+== あなたをミュートしました
+
+Idiot word filter
+== バカ単語フィルター
+
+Import from clipboard
+== クリップボードからインポート
+
+Inactive color
+== 非アクティブ時の色
+
+Incoming language
+== 受信言語
+
+Indicate map finish
+== マップクリアを表示
+
+Indicator alive color
+== インジケーター生存色
+
+Indicator in freeze color
+== インジケーター凍結色
+
+Indicator max distance
+== インジケーター最大距離
+
+Indicator max offset
+== インジケーター最大オフセット
+
+Indicator min offset
+== インジケーター最小オフセット
+
+Indicator offset
+== インジケーターオフセット
+
+Indicator opacity
+== インジケーター不透明度
+
+Indicator safe color
+== インジケーターセーフ色
+
+Indicator size
+== インジケーターサイズ
+
+Info
+== 情報
+
+Info Messages
+== 情報メッセージ
+
+Ingame controller mode
+== ゲーム内コントローラーモード
+
+Ingame controller sens.
+== ゲーム内コントローラー感度
+
+Ingame cursor scale
+== ゲーム内カーソルスケール
+
+Ingame mouse sens.
+== ゲーム内マウス感度
+
+Initializing assets
+== アセットを初期化中
+
+Initializing components
+== コンポーネントを初期化中
+
+Initializing map logic
+== マップロジックを初期化中
+
+Input
+== 入力
+
+Input device
+== 入力デバイス
+
+Input device not found
+== 入力デバイスが見つかりません
+
+Input device open failed
+== 入力デバイスのオープンに失敗しました
+
+Input device open failed, try reconnecting headset/mic or reselecting input device
+== 入力デバイスのオープンに失敗しました。ヘッドセット/マイクを再接続するか、入力デバイスを再選択してください
+
+Input overlay
+== 入力オーバーレイ
+
+Input overlay display
+== 入力オーバーレイ表示
+
+Input switch
+== 入力切り替え
+
+Insane
+== Insane
+
+Interface
+== インターフェース
+
+Intermediate
+== 中級
+
+Internet
+== インターネット
+
+Internet (From online source)
+== インターネット（オンラインソースから）
+
+Invalid client id to kick
+== キックするクライアントIDが無効です
+
+Invalid client id to move to spectators
+== 観戦者に移動するクライアントIDが無効です
+
 Invalid Demo
 == 無効なデモ
+
+Invalid ID
+== 無効なID
+
+Invalid option
+== 無効なオプション
+
+Invalid spectator id used
+== 無効な観戦者IDが使用されました
+
+Invalid translation backend
+== 無効な翻訳バックエンド
+
+Invalid X coordinate.
+== 無効なX座標です。
+
+Invalid Y coordinate.
+== 無効なY座標です。
+
+Invite a person to a locked team
+== ロックされたチームに人を招待
+
+Invites are disabled
+== 招待は無効です
+
+Is your dummy being bullied while you control the main tee?
+== メインTeeを操作中にダミーがいじめられていませんか？
+
+It's recommended that you check the settings to adjust them to your liking before joining a server.
+== サーバーに参加する前に、設定を確認して自分好みに調整することをお勧めします。
+
+j = Latency jitter
+== j = レイテンシジッター
+
+Jelly duration
+== ゼリー持続時間
+
+Jelly others
+== 他のプレイヤーもゼリーティー
+
+Jelly strength
+== ゼリー強度
+
+Jitter
+== ジッター
+
+Join a team to enable practice mode, which means you can use /r, but can't earn a rank.
+== チームに参加して練習モードを有効にすると、/r が使えるようになりますが、ランクは獲得できません。
+
+Join a team to use swap feature, which means you can swap positions with each other.
+== チームに参加すると交換機能が使えるようになり、お互いの位置を交換できます。
 
 Join blue
 == 青チームに参加
 
+Join game
+== ゲームに参加
+
+Join QQ group
+== QQグループに参加
+
 Join red
 == 赤チームに参加
+
+Join the team of the specified player
+== 指定されたプレイヤーのチームに参加
+
+Join Tutorial Server
+== チュートリアルサーバーに参加
 
 Jump
 == ジャンプ
 
+Jump hint text
+== ジャンプヒントテキスト
+
+k = Resend loss
+== k = 再送損失
+
+Kaomoji
+== 顔文字
+
+Key Bindings
+== キーバインド
+
+Key Presses
+== キー表示
+
+Key Sticking: ?
+== キースティッキング: ?
+
+Key Sticking: Off
+== キースティッキング: オフ
+
+Key Sticking: On
+== キースティッキング: オン
+
+Key Sticking: Reset Self
+== キースティッキング: 自分をリセット
+
+Keyword Reply
+== キーワード返信
+
+Keyword rules
+== キーワードルール
+
 Kick player
 == プレイヤーをキック
+
+Kick player with specified id for any reason
+== 指定された ID のプレイヤーを任意の理由でキック
+
+Kick voting requires %s players
+== キック投票には %s 人のプレイヤーが必要です
+
+Kill
+== 自殺
+
+Kill Protection enabled. If you really want to join the spectators, first type /kill
+== 自殺防止が有効です。本当に観戦者になりたい場合は、最初に /kill と入力してください
+
+Kill yourself to restart
+== 自殺して再スタート
+
+Kill yourself when kill-protected during a long game (use f1, kill for regular kill)
+== ロングゲーム中にキルプロテクトされているときに自殺（通常のキルは f1 + kill）
+
+killed themselves
+== 自殺しました
+
+Kills a player and announces the kill
+== プレイヤーをキルしてキルを告知
+
+Kills team and disables practice mode
+== チームをキルしてプラクティスモードを無効にする
+
+King of Gores auto weapon switch
+== King of Gores 自動武器切り替え
+
+l = Local time
+== l = ローカルタイム
+
+L select  R swap  M select only
+== 左選択　右入れ替え　中のみ選択
+
+Label
+== ラベル
+
+Label type
+== ラベルタイプ
+
+LAN
+== LAN
 
 Language
 == 言語
 
-MOTD
-== 説明
+Large text announcement for friend joining
+== フレンド参加時の大きなテキスト告知
+
+Large text content
+== 大きなテキスト内容
+
+Laser
+== レーザー
+
+Laser effect enhancement
+== レーザー効果の強化
+
+Laser Enhancement
+== レーザー強化
+
+Laser preview
+== レーザープレビュー
+
+Laser settings
+== レーザー設定
+
+Laser size
+== レーザーサイズ
+
+Laser style
+== レーザースタイル
+
+Last page in console
+== コンソールの最後のページ
+
+Latency
+== レイテンシ
+
+Layout
+== レイアウト
+
+Leak IP
+== IP漏洩
+
+Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
+== 各サーバーに ping を送信して IP アドレスを漏洩し、その過程でレイテンシも取得
+
+Learn
+== 学習Wiki
+
+Leave empty to disable
+== 空のままにすると無効
+
+Leave empty to join public room
+== 空のままにすると公開ルームに参加
+
+Leave empty to use default prompt
+== 空のままにするとデフォルトのプロンプトを使用
+
+Left jump
+== 左ジャンプ
+
+Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets.
+== 左クリックでフランケンパーツの色を変更します。パーツをドラッグして置き換え、右クリックでリセットします。
+
+Left/right channel width
+== 左右チャンネル幅
+
+Length
+== 長さ
+
+Lenny:
+== Lenny:
+
+Lets you join team i (shows your team if left blank)
+== チーム i に参加できるようにする（空白の場合は自分のチームを表示）
+
+Lht.
+== 明るさ
+
+LibreTranslate
+== LibreTranslate
+
+Line width
+== 線幅
+
+Lines %d - %d (%s)
+== 行 %d - %d (%s)
+
+List all commands that are available in practice mode
+== プラクティスモードで利用可能なすべてのコマンドを一覧表示
+
+List all commands which are accessible for given access level
+== 指定されたアクセスレベルでアクセス可能なすべてのコマンドを一覧表示
+
+List all commands which are accessible for users
+== 一般ユーザーがアクセス可能なすべてのコマンドを一覧表示
+
+List all name bans
+== すべての名前BANを一覧表示
+
+List all rcon keys
+== すべての rcon キーを一覧表示
+
+List all saves on the current map
+== 現在のマップのすべてのセーブを一覧表示
+
+List all tuning variables and their values
+== すべてのチューニング変数とその値を一覧表示
+
+List available voice devices
+== 利用可能なボイスデバイスを一覧表示
+
+List connected players with optional case-insensitive substring matching filter
+== 接続中のプレイヤーを一覧表示（オプションで大文字小文字を区別しない部分一致フィルター）
+
+List foes
+== 敵を一覧表示
+
+List friends
+== フレンドを一覧表示
+
+List KCP/legacy transport status and weak-network simulation metrics
+== KCP/レガシートランスポートステータスと弱体ネットワークシミュレーションメトリクスを一覧表示
+
+List local saves for current map (or specified map)
+== 現在のマップ（または指定マップ）のローカルセーブを一覧表示
+
+List players containing name or all players
+== 名前に一致するプレイヤー、またはすべてのプレイヤーを一覧表示
+
+Literal
+== リテラル
+
+Live director
+== ライブディレクター
+
+LLM API
+== LLM API
+
+LLM provider
+== LLMプロバイダー
+
+Load
+== ロード
+
+Load drawings from a given csv file (defaults to map name)
+== 指定されたCSVファイルから描画をロード（デフォルトはマップ名）
+
+Load with code r. /load to check your existing saves
+== コード r でロード。/load で既存のセーブを確認
+
+Loaded %d items
+== %d アイテムをロードしました
+
+Loaded %d items (discarded %d items)
+== %d アイテムをロード（%d アイテムを破棄）しました
+
+Loading assets...
+== アセットを読み込み中...
+
+Loading commands…
+== コマンドを読み込み中…
+
+Loading DDNet Client
+== DDNet クライアントを読み込み中...
+
+Loading Demo
+== デモを読み込み中
+
+Loading demo file from storage
+== ストレージからデモファイルを読み込み中
+
+Loading demo files
+== デモファイルを読み込み中
+
+Loading demo info
+== デモ情報を読み込み中
+
+Loading ghost files
+== ゴーストファイルを読み込み中
+
+Loading map
+== マップを読み込み中
+
+Loading map file from storage
+== ストレージからマップファイルを読み込み中
+
+Loading maps…
+== マップを読み込み中…
+
+Loading menu images
+== メニュー画像を読み込み中
+
+Loading race demo files
+== レースデモファイルを読み込み中
+
+Loading screenshot files
+== スクリーンショットファイルを読み込み中
+
+Loading skin files
+== スキンファイルを読み込み中
+
+Loading sound files
+== サウンドファイルを読み込み中
+
+Loading…
+== 読み込み中…
+
+Local
+== ローカル
+
+Local + Dummy
+== ローカル＋ダミー
+
+Local only
+== ローカルのみ
+
+Local particle effects
+== ローカルパーティクル効果
+
+Local saves
+== ローカルセーブ
+
+Local test mode
+== ローカルテストモード
+
+Local test mode, no server needed
+== ローカルテストモード、サーバー不要
+
+Local Time
+== ローカル時刻
+
+Local-only
+== ローカル限定
+
+Lock delay
+== ロック遅延
+
+Lock team
+== チームをロック
+
+Locked
+== ロック済み
+
+Log the network
+== ネットワークをログ
+
+Logout of econ
+== econ からログアウト
+
+Logout of rcon
+== rcon からログアウト
+
+Long press on a touch button to select it.
+== タッチボタンを長押しして選択します。
+
+Low to high
+== 低い順
+
+Main Asset
+== メインアセット
+
+Main menu
+== メインメニュー
+
+Make dummy fire
+== ダミーを発射させる
+
+Make dummy hook
+== ダミーをフックさせる
+
+Make dummy jump
+== ダミーをジャンプさせる
+
+Make sure the backend supports OpenAI-compatible thinking parameters
+== バックエンドがOpenAI互換の思考パラメーターをサポートしていることを確認してください
+
+Makes you a ninja
+== あなたを忍者にする
+
+Makes you live frozen
+== あなたをライブフリーズ状態にする
+
+Makes you move 1 tile down
+== 1タイル下に移動させる
+
+Makes you move 1 tile left
+== 1タイル左に移動させる
+
+Makes you move 1 tile right
+== 1タイル右に移動させる
+
+Makes you move 1 tile up
+== 1タイル上に移動させる
+
+Makes you super
+== あなたをスーパーにする
+
+Manual
+== 手動
+
+Manual concurrency: %d
+== 手動並行性: %d
+
+Manual source file
+== 手動ソースファイル
 
 Map
 == マップ
 
+Map browser color
+== マップブラウザーの色
+
+Map browser opacity
+== マップブラウザーの不透明度
+
+Map danger border
+== マップ危険境界
+
+Map Preview
+== マッププレビュー
+
+Map progress bar
+== マップ進行度バー
+
+Map Progress: %.1f%%
+== マップ進捗: %.1f%%
+
+Map Progress: --
+== マップ進捗: --
+
+Map size
+== マップサイズ
+
+Map sound volume
+== マップサウンド音量
+
+Map type:
+== マップタイプ:
+
+Mark demo
+== デモにマーク
+
+Mark the beginning of a cut (right click to reset)
+== カット開始をマーク (右クリックでリセット)
+
+Mark the beginning of a demo cut
+== デモカットの開始をマーク
+
+Mark the end of a cut (right click to reset)
+== カット終了をマーク (右クリックでリセット)
+
+Mark the end of a demo cut
+== デモカットの終了をマーク
+
+Markers
+== マーカー
+
+Match %d of %d
+== 一致 %d / %d
+
+Matched with callable peer
+== 通話可能なピアとマッチしました
+
+Max CSVs
+== 最大CSV数
+
+Max demos
+== 最大デモ数
+
+Max Screenshots
+== 最大スクリーンショット数
+
+Max size
+== 最大サイズ
+
+Max visible notifications
+== 最大表示通知数
+
+Maximum rows
+== 最大行数
+
+may cause delay
+== 遅延が発生する可能性があります
+
+Memory
+== メモリ
+
+Mention
+== メンション
+
+Menu background
+== メニューの背景
+
+Menu opened. Press Esc key again to close menu.
+== メニューを開きました。もう一度Escキーを押すと閉じます。
+
+Menu option - normal
+== メニューオプション - 通常
+
+Menu option - selected
+== メニューオプション - 選択
+
+Message to send in chat:
+== チャットで送信するメッセージ:
+
+Messages
+== メッセージ
+
+Messages that already look like the target language will skip auto-translate
+== すでにターゲット言語のように見えるメッセージは自動翻訳をスキップします
+
+Microphone
+== マイク
+
+Microphone permission denied by system
+== システムによってマイクの許可が拒否されました
+
+Microphone volume
+== マイク音量
+
+Milliseconds
+== ミリ秒
+
+Min size
+== 最小サイズ
+
+Minimize module
+== モジュールを最小化
+
+Minimize the client
+== クライアントを最小化
+
+Minimum match chars
+== 最小一致文字数
+
+Minimum time
+== 最小時間
+
+Minutes
+== 分
+
+Misc
+== その他
+
+Miscellaneous
+== その他
+
+Mixed
+== 混合
+
+Mode
+== モード
+
+Model
+== モデル
+
+Moderate
+== Moderate
+
+Moderator alert
+== モデレーターアラート
+
+Modified
+== 変更済みのみ
+
+Modules snap to screen edges, center lines and other HUD modules while dragging
+== ドラッグ中、モジュールは画面端、中央線、他の HUD モジュールにスナップ
+
+MOTD
+== MOTD
+
+Mouse
+== マウス
+
+Move dummy left
+== ダミーを左に移動
+
+Move dummy right
+== ダミーを右に移動
+
+Move Echo and important system prompts to right-side popups
+== Echoと重要なシステムプロンプトを右側のポップアップに移動
+
 Move left
-== 左移動
+== 左に移動
 
 Move player to spectators
-== プレイヤーを観戦席に移動
+== プレイヤーを観戦者に移動
 
 Move right
-== 右移動
+== 右に移動
+
+Move to category
+== カテゴリに移動
+
+Moved ingame
+== ゲーム内で移動しました
 
 Movement
-== 動き
+== 移動
+
+Moves to the point with x/y-coordinates ii
+== x/y 座標 ii のポイントに移動
+
+Moves to the tile with x/y-number ii
+== x/y 番号 ii のタイルに移動
+
+Multi-View
+== マルチビュー
+
+Mute
+== ミュート
+
+Mute death/respawn sounds
+== 死亡/リスポーン音をミュート
+
+Mute emoticons
+== 絵文字をミュート
+
+Mute hammer sounds
+== ハンマー音をミュート
+
+Mute jump sounds
+== ジャンプ音をミュート
+
+Mute microphone
+== マイクをミュート
+
+Mute player
+== プレイヤーをミュート
+
+Mute player with client ID
+== クライアントIDでプレイヤーをミュート
+
+Mute player with IP address
+== IPアドレスでプレイヤーをミュート
 
 Mute when not active
 == 非アクティブ時にミュート
 
+Mute:
+== ミュート:
+
+Muted
+== ミュート中
+
+my_%s
+== my_%s
+
+n = Prediction latency
+== n = 予測遅延
+
+NA
+== 北米
+
 Name
 == 名前
+
+Name Plate
+== ネームプレート
+
+Name plates offset
+== ネームプレートのオフセット
+
+Name plates size
+== ネームプレートサイズ
+
+Name:
+== 名前:
+
+Name: %s
+== 名前: %s
+
+Need to have started the map to swap with a player.
+== プレイヤーと交換するには、マップを開始している必要があります。
+
+Negative stability buffer (for Gores)
+== 負の安定性バッファ（Gores用）
+
+Net
+== ネットキル
+
+Netversion
+== ネットバージョン
+
+New button
+== 新しいボタン
+
+New IME
+== 新しいIME
+
+New name:
+== 新しい名前：
+
+New preset name
+== 新しいプリセット名
+
+New random timeout code
+== 新しいランダムタイムアウトコード
+
+New UI
+== 新しいUI
+
+News
+== ニュース
+
+Next
+== 次へ
+
+Next page in console
+== コンソールの次のページ
 
 Next weapon
 == 次の武器
 
 Nickname
-== ハンドルネーム
+== ニックネーム
 
 No
 == いいえ
 
+No active QmClient reports yet
+== アクティブなQmClient報告はまだありません
+
+No animation
+== アニメーションなし
+
+No answer from server yet.
+== サーバーからの応答がまだありません。
+
+No assets
+== アセットがありません
+
+No assets available for composition.
+== 合成に利用可能なアセットがありません。
+
+No assets found.
+== アセットが見つかりません。
+
+No audio issues detected
+== オーディオの問題は検出されませんでした
+
+No audio slots found.
+== オーディオスロットが見つかりません。
+
+No buttons match your filter criteria
+== フィルター条件に一致するボタンがありません
+
+No callable peer found
+== 通話可能なピアが見つかりませんでした
+
+No candidate file selected.
+== 候補ファイルが選択されていません。
+
+No changes since last save
+== 最後の保存から変更なし
+
+No chat log selected
+== チャットログが選択されていません
+
+No chat message available to repeat
+== 繰り返すチャットメッセージがありません
+
+No chat message to translate
+== 翻訳するチャットメッセージがありません
+
+No controller found. Plug in a controller.
+== コントローラーが見つかりません。コントローラーを接続してください。
+
+No corresponding vote option found
+== 対応する投票オプションが見つかりません
+
+No demo is being recorded
+== デモは録画されていません
+
+No demo selected
+== デモが選択されていません
+
+No demo with this filename exists
+== このファイル名のデモは存在しません
+
+No director players available
+== 利用可能なディレクタープレイヤーがいません
+
+No empty team left.
+== 空いているチームはもうありません。
+
+No favorite maps yet
+== お気に入りのマップはまだありません
+
+No input device available
+== 利用可能な入力デバイスがありません
+
+No items to write
+== 書き込むアイテムがありません
+
+No local saves file found (ddnet-saves.txt)
+== ローカルセーブファイルが見つかりません（ddnet-saves.txt）
+
+No local servers found (ports %d-%d)
+== ローカルサーバーが見つかりません（ポート %d-%d）
+
+No login required
+== ログイン不要
+
+No matching assets.
+== 一致するアセットはありません。
+
+No matching features found. Try other keywords
+== 一致する機能が見つかりませんでした。他のキーワードをお試しください
+
+No more blocking entity layers in the world of TeeWorlds
+== TeeWorldsの世界にブロッキングエンティティレイヤーはもうありません
+
+No noise reduction
+== ノイズリダクションなし
+
+No obvious anomaly
+== 明らかな異常はありません
+
+No output device available
+== 利用可能な出力デバイスがありません
+
 No password
-== パスワードがないサーバー
+== パスワードなし
+
+No peer
+== ピアなし
+
+No player nearby
+== 近くにプレイヤーがいません
+
+No player with this name found.
+== この名前のプレイヤーは見つかりませんでした。
+
+No presets yet
+== プリセットはまだありません
+
+No preview
+== プレビューなし
+
+No results
+== 結果なし
+
+No safe position found
+== 安全な位置が見つかりません
+
+No saved profiles available yet. Save one first.
+== 保存されたプロファイルがまだありません。最初に保存してください。
+
+No screenshot selected
+== スクリーンショットが選択されていません
+
+No server selected
+== サーバーが選択されていません
 
 No servers found
 == サーバーが見つかりません
@@ -238,104 +3886,2105 @@ No servers found
 No servers match your filter criteria
 == フィルタに適合するサーバーが見つかりません
 
+No skins match your filter criteria
+== フィルター条件に一致するスキンはありません
+
+No space for button
+== ボタンを配置するスペースがありません
+
+No status bar items
+== ステータスバーアイテムなし
+
+No unfinished maps available
+== 未完了マップはありません
+
+Noise reduction mode
+== ノイズリダクションモード
+
+None
+== なし
+
+Normal
+== 通常
+
+Normal Color
+== 通常色
+
+Normal message
+== 通常メッセージ
+
+NOT CONNECTED
+== 未接続
+
+Not connected to a game server
+== ゲームサーバーに接続していません
+
+Not connected to server
+== サーバーに接続していません
+
+Not downloaded
+== 未ダウンロード
+
+Not enabled
+== 有効になっていません
+
+Not in the current browser list
+== 現在のブラウザリストにありません
+
+Not open, check input device or mic permission
+== 開いていません。入力デバイスまたはマイクの許可を確認してください
+
+Not open, check output device
+== 開いていません。出力デバイスを確認してください
+
+Note
+== メモ
+
+Nothing hookable
+== フック可能なものはありません
+
+Notification background
+== 通知背景
+
+Notification hold time
+== 通知表示時間
+
+Notification text size
+== 通知文字サイズ
+
+Notifications
+== 通知
+
+Notify when friends come online
+== フレンドがオンラインになったら通知
+
+Notify when only one tee is still alive:
+== 一人だけ生き残ったときに通知:
+
+Novice
+== Novice
+
+Numeric-only messages will be skipped
+== 数字のみのメッセージはスキップされます
+
+o = Send rate
+== o = 送信レート
+
+Off
+== オフ
+
+Official community links
+== 公式コミュニティリンク
+
+Offline
+== オフライン
+
+Ohhhhhhhhhhhhhhhh
+== うおおおおおおおおおおおお
+
 Ok
-== Ok
+== 確認
+
+Oldschool
+== Oldschool
+
+On
+== オン
+
+Online Players
+== オンラインプレイヤー
+
+Only .wv files are supported right now.
+== 現在は .wv ファイルのみ対応しています。
+
+Only Apple Can Do
+== Appleにしかできない
+
+Only save improvements
+== 改善時のみ保存
+
+Only show after joining a team
+== チーム参加後にのみ表示
+
+Only show outlines in the entities layer
+== エンティティレイヤーのみ輪郭を表示
+
+Only show when the other Tee is not on screen
+== 相手のTeeが画面にいないときのみ表示
+
+Only what you can't imagine, nothing Dream can't do
+== 想像できないことだけ、夢にできないことはない
+
+Only what you can't imagine, nothing Dream can't do!
+== 想像できないことだけ、夢にできないことはない！
+
+Opacity
+== 不透明度
+
+Opacity of freeze bars inside freeze
+== フリーズ中の解凍バーの不透明度
+
+Open bindwheel selector
+== バインドホイールセレクターを開く
+
+Open color picker
+== カラーピッカーを開く
+
+Open emote selector
+== エモートセレクターを開く
+
+Open pie menu
+== パイメニューを開く
+
+Open rename dialog
+== 名前変更ダイアログを開く
+
+Open spectator mode selector
+== 観戦モードセレクターを開く
+
+Open the directory that contains the configuration and user files
+== 設定ファイルとユーザーファイルを含むディレクトリを開く
+
+Open the directory to add custom assets
+== カスタムアセットを追加するディレクトリを開く
+
+Open the directory to add custom skins
+== カスタムスキンを追加するディレクトリを開く
+
+Open the directory to add custom themes
+== カスタムテーマを追加するディレクトリを開く
+
+Open the folder containing demo files
+== デモファイルを含むフォルダを開く
+
+Open the folder containing screenshots
+== スクリーンショットを含むフォルダを開く
+
+Open the saves file
+== セーブファイルを開く
+
+Open the settings file
+== 設定ファイルを開く
+
+OpenAI
+== OpenAI
+
+OpenAI API key
+== OpenAI APIキー
+
+Opened
+== 開いています
+
+Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
+== 観戦者数から除外し、非認証プレイヤーに認証ステータスを非表示にする（1 = 非表示、0 = 表示）
+
+Optimistic prediction along stable direction
+== 安定方向に沿った楽観的予測
+
+Option color
+== オプションの色
+
+Other
+== その他
+
+Outgoing language
+== 送信言語
+
+Outline opacity
+== 輪郭の不透明度
+
+Output device
+== 出力デバイス
+
+Output device not found
+== 出力デバイスが見つかりません
+
+Output device open failed
+== 出力デバイスのオープンに失敗しました
+
+Output device open failed, try reconnecting speakers/headphones or reselecting output device
+== 出力デバイスのオープンに失敗しました。スピーカー/ヘッドホンを再接続するか、出力デバイスを再選択してください
+
+Output switch
+== 出力切り替え
+
+Overlay entities
+== エンティティをオーバーレイ
+
+Override
+== 上書き
+
+Override Entry
+== エントリーを上書き
+
+Override Group
+== グループを上書き
+
+Override Selected
+== 選択項目を上書き
+
+Overview cards show a lightweight guide to the client and page structure
+== 概要カードはクライアントとページ構造の軽量ガイドを表示します
+
+Overwrite clan even if empty
+== 空でもクランを上書き
+
+p = Ping latency
+== p = Ping レイテンシ
+
+Pack name
+== パック名
+
+Page guide
+== ページガイド
+
+Panel opacity
+== パネルの不透明度
 
 Parent Folder
 == 親フォルダ
+
+Parsing voice server address
+== ボイスサーバーアドレスを解析中
+
+Part color updated.
+== パーツの色が更新されました。
+
+Part reset to default asset.
+== パーツをデフォルトアセットにリセットしました。
+
+Part updated.
+== パーツが更新されました。
+
+Particle alpha
+== パーティクルアルファ
+
+Particle collision
+== パーティクル衝突
+
+Particle color
+== パーティクル色
+
+Particle count
+== パーティクル数
+
+Particle depth
+== パーティクル深度
+
+Particle glow
+== パーティクルグロー
+
+Particle pulse
+== パーティクルパルス
+
+Particle speed
+== パーティクル速度
+
+Particle trail
+== パーティクルトレイル
+
+Particle twinkle
+== パーティクルきらめき
+
+Particle type
+== パーティクルタイプ
+
+Particles
+== パーティクル
 
 Password
 == パスワード
 
 Password incorrect
-== パスワードが正しくありません
+== パスワードが間違っています
+
+Pause
+== 一時停止
+
+Pause the current demo
+== 現在のデモを一時停止
+
+Pause/unpause game
+== ゲームを一時停止/再開
+
+Personal best:
+== 自己ベスト:
+
+Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status
+== 時間表示の個人設定（ブロードキャストまたはゲーム/ラウンドタイマー）、timer s（s = broadcast: ブロードキャスト、gametimer: ゲーム/ラウンドタイマー、cycle: サイクル、both: 両方、none: タイマーなし、空: 現在のステータス表示）
+
+Pet
+== ペット
+
+Pet alpha
+== ペットの透明度
+
+Pet size
+== ペットのサイズ
+
+Pet Skin:
+== ペットスキン:
+
+Pick result: %s
+== 抽選結果: %s
+
+Pickup range
+== ピックアップ範囲
+
+Pie Menu
+== パイメニュー
+
+Pie menu
+== パイメニュー
 
 Ping
 == Ping
 
+Ping the current server
+== 現在のサーバーに Ping
+
 Pistol
 == ピストル
 
+Play a slide-in rotation animation when switching weapons
+== 武器切り替え時にスライドイン回転アニメーションを再生
+
+Play back a demo
+== デモを再生
+
 Play background music
-== BGM
+== BGMを再生
+
+Play the current demo
+== 現在のデモを再生
+
+Play/Pause
+== 再生/一時停止
+
+Play/pause the current demo
+== 現在のデモを再生/一時停止
+
+Playback volume
+== 再生音量
 
 Player
 == プレイヤー
 
+Player already invited
+== そのプレイヤーはすでに招待されています
+
 Player country:
-== 所在地:
+== プレイヤーの国：
+
+Player data
+== プレイヤーデータ
+
+Player indicator
+== プレイヤーインジケーター
+
+Player is on a different team
+== そのプレイヤーは別のチームにいます
+
+Player name:
+== プレイヤー名:
+
+Player not found
+== プレイヤーが見つかりません
+
+Player range
+== プレイヤー範囲
+
+Player Stats
+== プレイヤー統計
+
+Player stats and info display
+== プレイヤー統計と情報表示
 
 Players
-== プレーヤー
+== プレイヤー
+
+Players are not allowed to chat from VPNs at this time
+== 現在VPNからのチャットは許可されていません
+
+Players can collide on this server
+== このサーバーではプレイヤー同士が衝突できます
+
+Players can hook each other on this server
+== このサーバーではプレイヤー同士がフックできます
+
+Players can't collide on this server
+== このサーバーではプレイヤー同士は衝突できません
+
+Players can't hook each other on this server
+== このサーバーではプレイヤー同士はフックできません
+
+Please add a valid cut first
+== まず有効なカットを追加してください
 
 Please balance teams!
-== チーム人数が偏っています！
+== チームバランスを取ってください！
+
+Please enable finished indicator first
+== 先に完了表示を有効にしてください
+
+Please enable voice first
+== 最初にボイスを有効にしてください
+
+Please enter your nickname below.
+== 以下にニックネームを入力してください。
+
+Please save your changes before duplicating a button.
+== ボタンを複製する前に変更を保存してください。
+
+Please use %s as friend name
+== フレンド名として %s を使用してください
+
+Please use a different filename
+== 別のファイル名を使用してください
+
+Please wait…
+== お待ちください…
+
+Points
+== ポイント
+
+Popup animation
+== ポップアップアニメーション
+
+Position jump hint
+== 位置ジャンプヒント
+
+Position jump tip
+== 位置ジャンプのヒント
+
+Position:
+== 位置:
+
+Practice mode can't be enabled in team 0 mode.
+== チーム0モードでは練習モードを有効にできません。
+
+Practice mode can't be enabled while team save or load is in progress
+== チームの保存または読み込み中は練習モードを有効にできません
+
+Practice mode enabled for your team, happy practicing!
+== あなたのチームで練習モードが有効になりました。練習頑張ってください！
+
+Practice mode is disabled
+== 練習モードは無効です
+
+Predict events (experimental)
+== イベント予測（実験的）
+
+Predicted ghost opacity
+== 予測ゴーストの不透明度
+
+Prediction
+== 予測
+
+Prediction jitter is obvious, latency changes are large
+== 予測ジッターが顕著で、レイテンシの変動が大きいです
+
+Prediction latency is elevated, prediction path pressure is high
+== 予測レイテンシが上昇し、予測パスの負荷が高いです
+
+Prediction margin
+== 予測マージン
+
+Prediction Margin
+== 予測マージン
+
+Prediction time
+== 予測時間
+
+Preparing demo playback
+== デモ再生を準備中
+
+Preset bar
+== プリセットバー
+
+Press a key…
+== キーを押してください…
+
+Press Esc to exit the HUD editor
+== Esc で HUD エディターを終了
 
 Prev. weapon
 == 前の武器
 
+Preview
+== プレビュー
+
+Preview 'Hook collisions' being pressed
+== 押されたときの「フック補助線」をプレビュー
+
+Preview built with %d skipped slot(s).
+== プレビューは %d スロットをスキップして生成されました。
+
+Preview button visibility while the editor is active.
+== エディターがアクティブな間のボタンのプレビュー表示
+
+Preview dummy nameplate
+== ダミーのネームプレートをプレビュー
+
+Preview import file
+== インポートファイルをプレビュー
+
+Preview player nameplate
+== プレイヤーのネームプレートをプレビュー
+
+Preview selected file
+== 選択したファイルをプレビュー
+
+Previous
+== 前へ
+
+Previous page in console
+== コンソールの前のページ
+
+Print command executed by this keybinding or all binds
+== このキーバインドで実行されるコマンド、またはすべてのバインドを表示
+
+Print command executed by this name or all chat binds
+== この名前で実行されるコマンドまたはすべてのチャットバインドを表示
+
+Privately messages someone's current time in this current running race (your time by default)
+== 現在のレースの誰かのタイムをプライベートメッセージで送信（デフォルトは自分のタイム）
+
+Privately shows you your current time in this current running race in the broadcast message
+== ブロードキャストメッセージで現在のレースの自分のタイムをプライベート表示
+
+Profiles
+== プロファイル
+
+Profiles file
+== プロファイルファイル
+
+Progress bar color
+== プログレスバーの色
+
+Progress bar height
+== プログレスバーの高さ
+
+Progress bar width
+== プログレスバーの幅
+
+Publicly messages everyone your current time in this current running race
+== 現在のレースの自分のタイムを全員に公開メッセージ
+
+Pulse
+== パルス
+
+Pulse amplitude
+== パルス振幅
+
+Pulse speed
+== パルス速度
+
+Pulse strength
+== パルス強度
+
+Push radius
+== プッシュ半径
+
+Push strength
+== プッシュ強度
+
+Push-to-talk for voice chat
+== ボイスチャットのプッシュトーク
+
+Puts you into deep freeze
+== ディープフリーズ状態にする
+
+Puts you into freeze
+== フリーズ状態にする
+
+Puts you into solo part
+== ソロパートにする
+
+Puts you out of deep freeze
+== ディープフリーズから脱出させる
+
+Puts you out of freeze
+== フリーズから脱出させる
+
+Puts you out of live freeze
+== ライブフリーズから脱出させる
+
+Puts you out of solo part
+== ソロパートから脱出させる
+
+Pyramid
+== ピラミッド
+
+q = Connection quality
+== q = 接続品質
+
+Qm
+== Qm
+
+qm_profile_queue: index must be between 1 and %d
+== qm_profile_queue: インデックスは 1 から %d の間でなければなりません
+
+QmClient
+== QmClient
+
+QmClient chat log
+== QmClient チャットログ
+
+QmClient Community
+== 栖夢コミュニティ
+
+QmClient online distribution
+== QmClientオンライン分布
+
+QmClient overview
+== 栖夢サイドバー概要
+
+QmClient Settings
+== QmClient 設定
+
+QQ group: 1076765929 (click to copy)
+== QQグループ: 1076765929（クリックしてコピー）
+
+Quads are used for background decoration
+== クワッドは背景装飾に使用されます
+
+Queue is empty
+== キューは空です
+
+Queue is full
+== キューがいっぱいです
+
+Quick action menu for players
+== プレイヤー向けクイックアクションメニュー
+
+Quickly locate feature modules
+== 機能モジュールを素早く見つける
+
 Quit
 == 終了
 
+Quit the client
+== クライアントを終了
+
+Quitting. Please wait…
+== 終了しています。お待ちください...
+
+r = Race time
+== r = レースタイム
+
+Race
+== レース
+
+Rainbow
+== 虹
+
+Rainbow hook
+== 虹色フック
+
+Rainbow name
+== 虹色の名前
+
+Rainbow others
+== 他のプレイヤーも虹色に
+
+Rainbow speed
+== 虹色の変化速度
+
+Rainbow Tees
+== 虹色Tee
+
+Rainbow weapons
+== 虹色武器
+
+Random
+== ランダム
+
+Random emoticon
+== ランダム絵文字
+
+Random map
+== ランダムマップ
+
+Random pick
+== ランダム抽選
+
+Random unfinished map
+== 未完了のランダムマップ
+
+Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
+== プレイヤーカラーをランダム化（0=すべて、1=体、2=足、3=スキン、4=フラッグ）例：0011 = スキンとフラッグをランダム化 [数字は位置]
+
+Ratio
+== 比率
+
+Reason
+== 理由
+
 Reason:
 == 理由:
+
+Rebinds the client's listening address and port
+== クライアントのリスニングアドレスとポートを再バインド
+
+Receive
+== 受信
+
+Receiving
+== 受信中
+
+Reconnect in %d sec
+== %d 秒後に再接続
+
+Record demo
+== デモを録画
+
+Record to a file
+== ファイルに記録
+
+Red
+== 赤
 
 Red team
 == 赤チーム
 
 Red team wins!
-== 赤チームの勝ち！
+== 赤チーム勝利！
+
+Refresh
+== 更新
+
+Refresh interval
+== 更新間隔
+
+Refresh Rate
+== リフレッシュレート
+
+Regex
+== 正規表現
+
+Region
+== 地域
+
+Regular background color
+== 通常の背景色
+
+Regular expression
+== 正規表現
+
+Relative path
+== 相対パス
+
+Reload
+== 再読み込み
+
+Reload the announcements
+== アナウンスを再読み込み
+
+Reload the censorlist
+== 検閲リストを再読み込み
+
+Reload the map
+== マップを再読み込み
+
+Reload the map while preserving the state of tees and teams
+== Tee とチームの状態を保持したままマップを再読み込み
+
+Reload the maplist
+== マップリストを再読み込み
+
+Reloaded images.
+== 画像を再読み込みしました。
+
+Reloaded images. %d slot(s) fell back to main asset.
+== 画像を再読み込みしました。%d スロットがメインアセットにフォールバックしました。
 
 Remote console
 == リモートコンソール
 
+Remote particle effects
+== リモートパーティクル効果
+
 Remove
 == 削除
 
+Remove [group] [clan]:
+== [グループ] [クラン] を削除:
+
+Remove [group] [name]:
+== [グループ] [名前] を削除:
+
+Remove a bind from the bindwheel
+== バインドホイールからバインドを削除
+
+Remove a chat bind
+== チャットバインドを削除
+
+Remove a clan war entry
+== クラン戦エントリーを削除
+
+Remove a community from the exclusion filter
+== コミュニティを除外フィルターから削除
+
+Remove a community from the favorites
+== コミュニティをお気に入りから削除
+
+Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
+== 特定のコミュニティの除外フィルターから国を削除（ISO 3166-1 数値コード）
+
+Remove a foe
+== 敵を削除
+
+Remove a friend
+== フレンドを削除
+
+Remove a friend category
+== フレンドカテゴリを削除
+
+Remove a map from favorites
+== お気に入りからマップを削除
+
+Remove a name war entry
+== 名前戦エントリーを削除
+
+Remove a rcon key
+== rcon キーを削除
+
+Remove a server from favorites
+== サーバーをお気に入りから削除
+
+Remove a skin from the favorites
+== スキンをお気に入りから削除
+
+Remove a type from the exclusion filter for a specific community
+== 特定のコミュニティの除外フィルターからタイプを削除
+
+remove a voting option
+== 投票オプションを削除
+
+Remove Bind
+== バインドを削除
+
+Remove chat
+== チャットを削除
+
 Remove friend
-== 友達を削除
+== フレンドを削除
+
+Remove from favorites
+== お気に入りから削除
+
+Remove from queue
+== キューから削除
+
+Remove Item
+== アイテムを削除
+
+Remove prediction & antiping in freeze
+== 凍結中は予測＆アンチピングを削除
+
+Remove right to vote from player with client ID
+== クライアントIDのプレイヤーから投票権を削除
+
+Remove right to vote from player with IP address
+== IPアドレスのプレイヤーから投票権を削除
+
+Remove team clan:
+== チームクランを削除:
+
+Remove team name:
+== チーム名を削除:
+
+Remove war clan:
+== 敵対クランを削除:
+
+Remove War Group
+== 敵対グループを削除
+
+Remove war name:
+== 敵対名を削除:
+
+Removes all bindwheel binds
+== すべてのバインドホイールバインドを削除
+
+Removes all chat binds
+== すべてのチャットバインドを削除
+
+Removes all weapons from you
+== あなたからすべての武器を削除
+
+Removes endless hook from you
+== あなたからエンドレスフックを削除
+
+Removes infinite jump from you
+== あなたから無限ジャンプを削除
+
+Removes ninja from you
+== あなたから忍者を削除
+
+Removes super from you
+== あなたからスーパーを削除
+
+Removes the grenade launcher from you
+== あなたからグレネードランチャーを削除
+
+Removes the jetpack from you
+== あなたからジェットパックを削除
+
+Removes the laser from you
+== あなたからレーザーを削除
+
+Removes the shotgun from you
+== あなたからショットガンを削除
+
+removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
+== ID i の武器をあなたから削除（all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5）
+
+Rename
+== 名前変更
+
+Rename a friend category
+== フレンドカテゴリの名前を変更
 
 Rename demo
-== デモの名前変更
+== デモの名前を変更
+
+Rename folder
+== フォルダの名前を変更
+
+Rename queue
+== 名前変更キュー
+
+Rename screenshot
+== スクリーンショットの名前を変更
+
+Rename: %s
+== 名前変更: %s
+
+Render all custom colored feet as white feet skin
+== カスタムカラーの足をすべて白い足スキンとしてレンダリング
+
+Render complete
+== レンダリング完了
+
+Render cut to video
+== カットをビデオにレンダリング
+
+Render demo
+== デモをレンダリング
+
+Render ghosts as circles
+== ゴーストを円としてレンダリング
+
+Render tiny tees instead of circles
+== 円の代わりに小さなTeeをレンダリング
+
+Renderer
+== レンダラー
+
+Renders your frame rate in the top right
+== 右上にフレームレートを表示
+
+Repeat message
+== リピート
+
+Repeat the latest chat message
+== 最新のチャットメッセージを繰り返す
+
+Replace mode
+== 置換モード
+
+Replace non-friend names with ID
+== フレンド以外の名前をIDで置き換え
+
+Replace non-friend skins with default
+== フレンド以外のスキンをデフォルトに置き換え
+
+Replace video
+== ビデオを置き換え
+
+Replacement chars
+== 置換文字
+
+Replay
+== リプレイ
+
+Replay feature is disabled!
+== リプレイ機能は無効です！
+
+Reply
+== 返信
+
+Reply with dummy
+== ダミーで返信
+
+Request to swap your tee with another team member
+== チームメンバーと Tee を交換するリクエスト
+
+Requesting to join the game
+== ゲームへの参加をリクエスト中
+
+Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
+== このサーバーではレスキューが有効になっておらず、/practice がオンになっているチームにもいません。注意：練習モードではランクを獲得できません。
+
+Rescue mode switched to %s
+== レスキューモードが %s に切り替わりました
+
+Rescue to a nearby air tile
+== 近くの空気タイルにレスキュー
+
+Rescue/Freeze: %d/%d
+== レスキュー/フリーズ: %d/%d
+
+Resend signs detected, connection quality is suspicious
+== 再送の兆候が検出されました。接続品質に疑念があります
+
+Reset
+== リセット
+
+Reset a config to its default value
+== 設定をデフォルト値にリセット
+
+Reset All
+== すべてリセット
+
+Reset all drawings on the background
+== 背景のすべての描画をリセット
+
+Reset all or one tuning variable to default
+== すべてまたは単一のチューニング変数を既定値に戻す
+
+Reset column widths
+== 列幅をリセット
+
+Reset controls
+== コントロールをリセット
+
+Reset default
+== デフォルトにリセット
+
+Reset dummy
+== ダミーをリセット
 
 Reset filter
-== フィルタをリセット
+== フィルターをリセット
+
+Reset layout
+== レイアウトをリセット
+
+Reset position of mouse when opening bindwheel
+== バインドホイールを開くときにマウスの位置をリセット
+
+Reset stats when joining a server
+== サーバー参加時に統計をリセット
+
+Reset to defaults
+== デフォルトにリセット
+
+Reset zone tuning in zone x or in all zones
+== ゾーン x または全ゾーンのゾーンチューニングをリセット
+
+Restart
+== 再起動
+
+Restart in x seconds (0 = abort)
+== x 秒後に再起動（0 = 中止）
+
+Restart the client
+== クライアントを再起動
+
+Restarting. Please wait…
+== 再起動中。お待ちください...
+
+Rifle Laser Inner Color
+== ライフルレーザー内側の色
+
+Rifle Laser Outline Color
+== ライフルレーザー外枠の色
+
+Right jump
+== 右ジャンプ
+
+Right-click to disable auto-translate
+== 右クリックで自動翻訳を無効化
+
+Right-click to enable auto-translate
+== 右クリックで自動翻訳を有効化
+
+Ring
+== リング
+
+RNNoise noise reduction
+== RNNoiseノイズリダクション
+
+RNNoise noise reduction (unavailable in this build)
+== RNNoiseノイズリダクション（このビルドでは利用不可）
+
+RNNoise noise reduction strength
+== RNNoiseノイズリダクション強度
+
+RNNoise not integrated in current build, will fallback to simple noise reduction
+== 現在のビルドではRNNoiseが統合されていません。簡易ノイズリダクションにフォールバックします
+
+Rollback rate
+== ロールバック率
+
+Room
+== ルーム
+
+Room password
+== ルームパスワード
+
+Rotate all maps
+== 全マップをローテーション
+
+Round
+== ラウンド
+
+Round %d/%d
+== ラウンド %d/%d
+
+Rounded caps
+== 丸みを帯びたキャップ
+
+Route Echo messages to notifications
+== Echoメッセージを通知にルーティング
+
+Route server system prompts to notifications (except blacklist)
+== サーバーのシステムプロンプトを通知にルーティング（ブラックリストを除く）
+
+Run chai script
+== chaiスクリプトを実行
+
+Run on join
+== 参加時に実行
+
+Run server
+== サーバーを実行
+
+SA
+== 南米
+
+Same as "vote no"
+== "vote no" と同じ
+
+Same clan color in scoreboard
+== スコアボードでの同じクランの色
+
+Sat.
+== 彩度
+
+Save
+== 保存
+
+Save a replay of the last defined amount of seconds
+== 最後に指定した秒数のリプレイを保存
+
+Save all changes before switching selected button?
+== 選択中のボタンを切り替える前に変更を保存しますか？
+
+Save all changes before turning off the editor?
+== エディタを閉じる前にすべての変更を保存しますか？
+
+Save asset before closing?
+== 閉じる前にアセットを保存しますか？
+
+Save banlist in a file
+== BANリストをファイルに保存
+
+Save changes
+== 変更を保存
+
+Save current
+== 現在を保存
+
+Save current queue as a new preset
+== 現在のキューを新しいプリセットとして保存
+
+Save drawings to a given csv file (defaults to map name)
+== 描画を指定されたCSVファイルに保存（デフォルトはマップ名）
+
+Save failed!
+== 保存に失敗しました！
+
+Save ghost
+== ゴーストを保存
+
+Save last %d min
+== 過去 %d 分を保存
+
+Save power by lowering refresh rate (higher input latency)
+== リフレッシュレートを下げて省電力（入力遅延が増加）
+
+Save skin
+== スキンを保存
+
+Save team with code r.
+== チームをコード r で保存
+
+Save the best demo of each race
+== 各レースのベストデモを保存
+
+Save unsent chat draft
+== 未送信のチャット下書きを保存
+
+Save-function is disabled on this server
+== このサーバーでは保存機能が無効です
+
+Save/Load Clan
+== クランの保存/ロード
+
+Save/Load Colors
+== 色の保存/ロード
+
+Save/Load Emote
+== エモートの保存/ロード
+
+Save/Load Flag
+== フラッグの保存/ロード
+
+Save/Load Name
+== 名前の保存/ロード
+
+Save/Load Skin
+== スキンの保存/ロード
+
+Saves file
+== セーブファイル
+
+Say in chat
+== チャットで発言
+
+Say in chat as dummy
+== ダミーとしてチャットで発言
+
+Say in team chat
+== チームチャットで発言
+
+Say in team chat as dummy
+== ダミーとしてチームチャットで発言
 
 Score
 == スコア
 
 Score limit
-== スコア上限
+== 得点制限
 
 Scoreboard
 == スコアボード
 
+Scoreboard color
+== スコアボードの色
+
+Scoreboard cursor
+== スコアボードカーソル
+
+Scoreboard opacity
+== スコアボードの不透明度
+
+Scoreboard point check
+== スコアボードポイント確認
+
+Scores are private on this server
+== このサーバーではスコアは非公開です
+
+Scores are public on this server
+== このサーバーではスコアは公開されています
+
+Screen
+== スクリーン
+
+Screen center line color
+== 画面中央線の色
+
+Screen center line width
+== 画面中央線の幅
+
 Screenshot
 == スクリーンショット
 
+Screenshots
+== スクリーンショット
+
+Screenshots directory
+== スクリーンショットディレクトリ
+
+Search
+== 検索
+
+Search donor asset
+== 提供元アセットを検索
+
+Search main asset
+== メインアセットを検索
+
+Searching
+== 検索中
+
+Seconds
+== 秒
+
+SecretId
+== SecretId
+
+SecretKey
+== SecretKey
+
+See how much you act
+== どれだけ演技しているかを見る
+
+Select all chat
+== チャットをすべて選択
+
+Select button by touch
+== タッチでボタンを選択
+
+Select export
+== エクスポートを選択
+
+Selected %d
+== 選択中 %d
+
+Selected button not visible
+== 選択中のボタンが非表示です
+
+Selected candidate
+== 選択した候補
+
+Selected candidate %d/%d under cursor.
+== カーソル下の選択候補 %d/%d。
+
+Selected pack
+== 選択したパック
+
+Selected server
+== 選択中のサーバー
+
+Selected timertype is not supported by your client
+== 選択されたタイマータイプはお使いのクライアントでサポートされていません
+
+Selection
+== 選択
+
+Self
+== 自身
+
+Self only
+== 自分のみ
+
+Send
+== 送信
+
+Send & Receive
+== 送受信
+
+Send /load as dummy
+== ダミーとして /load を送信
+
+Send /lock as dummy
+== ダミーとして /lock を送信
+
+Send /pause as dummy
+== ダミーとして /pause を送信
+
+Send /rescue as dummy
+== ダミーとして /rescue を送信
+
+Send /save as dummy
+== ダミーとして /save を送信
+
+Send /spec as dummy
+== ダミーとして /spec を送信
+
+Send /team as dummy
+== ダミーとして /team を送信
+
+Send a moderator alert message to player
+== プレイヤーにモデレーターアラートメッセージを送信
+
+Send a server alert message to all players
+== 全プレイヤーにサーバーアラートメッセージを送信
+
+Send emoticon in water
+== 水中で絵文字を送信
+
+Send probability
+== 送信確率
+
+Send source language
+== 送信元言語
+
+Send specified command to rcon
+== 指定されたコマンドを rcon に送信
+
+Send target language
+== 送信先言語
+
+Send translation method
+== 翻訳方法を送信
+
+Sending and receiving
+== 送受信中
+
+Sending initial client info
+== 初期クライアント情報を送信中
+
+Sending locally, suggest the other party unmute or confirm they can receive
+== ローカルで送信中です。相手にミュート解除を促すか、受信できることを確認してください
+
+Sending, waiting for peer echo
+== 送信中、ピアのエコーを待っています
+
+Sends a command to the antibot
+== コマンドをアンチボットに送信
+
+Separate with commas
+== カンマで区切る
+
+Server
+== サーバー
+
 Server address:
-== IP アドレス:
+== サーバーアドレス：
+
+Server alert
+== サーバーアラート
+
+Server best:
+== サーバーベスト:
+
+Server could not be started
+== サーバーを起動できませんでした
+
+Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
+== サーバーを起動できませんでした。アプリ設定で通知許可を付与して、サーバーがバックグラウンドで実行できるようにしてください。
+
+Server does not allow voting to kick players
+== このサーバーではキック投票は許可されていません
+
+Server does not allow voting to move players to spectators
+== このサーバーでは観戦者への移動投票は許可されていません
+
+Server executable not found, can't run server
+== サーバー実行ファイルが見つかりません。サーバーを実行できません。
+
+Server filter
+== サーバーフィルター
 
 Server info
 == サーバー情報
 
+Server IP
+== サーバーIP
+
+Server kick/spec votes are no longer actively moderated.
+== サーバーのキック/観戦投票はアクティブモデレートされなくなりました。
+
+Server kick/spec votes will now be actively moderated.
+== サーバーのキック/観戦投票はこれからアクティブモデレートされます。
+
 Server not full
-== 空きがあるサーバー
+== サーバーが満員ではない
+
+Server rollback
+== サーバーロールバック
+
+Server RTT is elevated, response path is unstable
+== サーバーRTTが上昇し、応答パスが不安定です
+
+Set a voice server to enable QmClient distribution
+== QmClient分布を有効にするには、ボイスサーバーを設定してください
+
+Set all to Rifle
+== すべてをライフル色に設定
+
+Set camera position relative to current view in the map
+== マップ内の現在のビューに対するカメラ位置を設定
+
+Set camera position to x and y in the map
+== カメラ位置をマップ内の x と y に設定
+
+Set color
+== 色を設定
+
+Set current demo speed
+== 現在のデモ速度を設定
+
+Set ddrace team for a player
+== プレイヤーに DDRace チームを設定
+
+Set force-pause timer of i to 0.
+== i の強制一時停止タイマーを 0 に設定
+
+Set friend category
+== フレンドカテゴリを設定
+
+Set friend note
+== フレンドメモを設定
+
+Set microphone mute state (0=on, 1=mute)
+== マイクのミュート状態を設定（0=オン、1=ミュート）
+
+Set team for a player (spectators = -1, game = 0)
+== プレイヤーのチームを設定（観戦 = -1、ゲーム = 0）
+
+Set team for all players (spectators = -1, game = 0)
+== 全プレイヤーのチームを設定（観戦 = -1、ゲーム = 0）
+
+Set timeout protection code s
+== タイムアウト保護コード s を設定
+
+Set voice input device
+== ボイス入力デバイスを設定
+
+Set voice output device
+== ボイス出力デバイスを設定
+
+Set your checkpoints based on another player
+== 別のプレイヤーに基づいてチェックポイントを設定
+
+Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided
+== 二つの救助モード（自動または手動）のどちらかを設定します。引数がない場合は現在のモードを表示します
+
+Sets your tee's eye emote
+== Tee の目のエモートを設定
+
+Settings
+== 設定
+
+Settings file
+== 設定ファイル
+
+Severe
+== 深刻
+
+Shape
+== 形状
 
 Shotgun
 == ショットガン
 
+Shotgun Laser Inner Color
+== ショットガンレーザー内側の色
+
+Shotgun Laser Outline Color
+== ショットガンレーザー外枠の色
+
+Show %s group
+== %s グループを表示
+
+Show all
+== すべて表示
+
+Show all buttons
+== すべてのボタンを表示
+
+Show all enabled outlines
+== 有効なすべての輪郭を表示
+
+Show all votes (page 0 by default, 20 entries per page)
+== すべての投票を表示します（既定はページ 0、各ページ 20 件）
+
+Show all warlist groups
+== すべての敵対グループを表示
+
+Show any enabled Indicators
+== 有効なインジケーターを表示
+
+Show background quads
+== 背景クワッドを表示
+
+Show banlist (page 1 by default, 20 entries per page)
+== BANリストを表示します（既定はページ 1、各ページ 20 件）
+
+Show blocked words in console
+== ブロックされた単語をコンソールに表示
+
 Show chat
 == チャットを表示
 
+Show chat bubbles above players
+== プレイヤーの上にチャットバブルを表示
+
+Show chat bubbles above Tees
+== Teeの上にチャットバブルを表示
+
+Show chat messages above players
+== プレイヤーの上にチャットメッセージを表示
+
+Show clan above name plates
+== ネームプレートの上にクランを表示
+
+Show clan if war
+== 敵対がある場合はクランを表示
+
+Show client IDs (scoreboard, chat, spectating)
+== クライアントIDを表示（スコアボード、チャット、観戦）
+
+Show client IDs in name plates
+== ネームプレートにクライアントIDを表示
+
+Show client IDs on a separate line
+== クライアントIDを別の行に表示
+
+Show collision and weapon interaction
+== 衝突と武器の相互作用を表示
+
+Show colors in spectator selection
+== 観戦選択で色を表示
+
+Show compact vote HUD
+== コンパクト投票HUDを表示
+
+Show Coordinates
+== 座標を表示
+
+Show coordinates above players
+== プレイヤーの上に座標を表示
+
+Show coordinates of yourself and others
+== 自分と他のプレイヤーの座標を表示
+
+Show country flags in nameplates
+== ネームプレートに国旗を表示
+
+Show DDNet map finishes in server browser
+== サーバーブラウザに DDNet マップのクリア状況を表示
+
+Show DDRace HUD
+== DDRace HUDを表示
+
+Show Directory
+== ディレクトリを表示
+
+Show dotted map route debug
+== 点線マップルートのデバッグ表示
+
+Show dummy actions
+== ダミーのアクションを表示
+
+Show dummy control status
+== ダミーの操作状態を表示
+
+Show dummy sync status
+== ダミーの同期状態を表示
+
+Show entities
+== エンティティ表示切替
+
+Show finish messages
+== フィニッシュメッセージを表示
+
+Show FPS
+== FPSを表示
+
+Show freeze bars
+== フリーズバーを表示
+
+Show friend icon in name plates
+== ネームプレートにフレンドアイコンを表示
+
 Show friends only
-== 友達がいるサーバー
+== フレンドのみ表示
+
+Show ghost
+== ゴーストを表示
+
+Show grenade and laser trajectory preview
+== グレネードとレーザーの軌道プレビューを表示
+
+Show Grid
+== グリッドを表示
+
+Show hammer status
+== ハンマー状態を表示
+
+Show health, shields and ammo
+== 体力、シールド、弾薬を表示
+
+Show hitbox mode
+== ヒットボックスモードを表示
+
+Show Hook Collision
+== フック衝突表示
+
+Show hook strength icon indicator
+== フック強度アイコンを表示
+
+Show hook strength number indicator
+== フック強度数値を表示
+
+Show HUD
+== HUD表示切替
+
+Show info about the map with name r gives (current map by default)
+== 名前 r のマップの情報を表示（デフォルトで現在のマップ）
+
+Show information about this server
+== このサーバーに関する情報を表示
 
 Show ingame HUD
-== ゲーム内で HUD を表示
+== ゲーム内 HUD を表示
+
+Show inputs
+== 入力を表示
+
+Show IP addresses in rcon commands (1 = on, 0 = off)
+== rcon コマンドで IP アドレスを表示（1 = オン、0 = オフ）
+
+Show jumps indicator
+== ジャンプ回数表示
+
+Show katan on frozen players
+== 凍結プレイヤーに刀を表示
+
+Show key stuck status
+== キー固定状態を表示
+
+Show kill messages
+== キルメッセージを表示
+
+Show labels on status bar items
+== ステータスバーアイテムにラベルを表示
+
+Show list of mutes (page 1 by default, 20 entries per page)
+== ミュート一覧を表示します（既定はページ 1、各ページ 20 件）
+
+Show list of vote mutes (page 1 by default, 20 entries per page)
+== 投票ミュート一覧を表示します（既定はページ 1、各ページ 20 件）
+
+Show local time always
+== 常にローカル時間を表示
+
+Show logs of the last i seconds
+== 最後の i 秒間のログを表示
+
+Show moving tiles in entities
+== エンティティ内の動くタイルを表示
 
 Show name plates
-== 名前を表示
+== ネームプレートを表示
+
+Show names in chat in team colors
+== チャットで名前をチームカラーで表示
+
+Show number of spectators
+== 観戦者数を表示
+
+Show on key
+== キーで表示
+
+Show only chat messages from friends
+== フレンドからのチャットのみ表示
+
+Show only chat messages from team members
+== チームメンバーからのチャットのみ表示
+
+Show only freeze Players
+== 凍結プレイヤーのみ表示
+
+Show other players' coordinates
+== 他のプレイヤーの座標を表示
+
+Show other players' hook collision lines
+== 他のプレイヤーのフック補助線を表示
+
+Show other tees' trails
+== 他のTeeのトレイルを表示
+
+Show others
+== 他のプレイヤーを表示
+
+Show others (own team only)
+== 他のプレイヤーを表示（自分のチームのみ）
+
+Show outdated version warning
+== 古いバージョンの警告を表示
+
+Show own coordinates
+== 自分の座標を表示
+
+Show own player's hook collision line
+== 自分のフック補助線を表示
+
+Show ping colored circle in nameplates
+== ネームプレートにping色の円を表示
+
+Show player position
+== プレイヤーの座標を表示
+
+Show player speed
+== プレイヤーの速度を表示
+
+Show player stats HUD
+== プレイヤー統計HUDを表示
+
+Show player target angle
+== プレイヤーの照準角度を表示
+
+Show players' key presses
+== プレイヤーのキー入力を表示
+
+Show position and angle (mini debug)
+== 位置と角度を表示（ミニデバッグ）
+
+Show Qm badge
+== Qmバッジを表示
+
+Show score
+== スコアを表示
+
+Show scoreboard
+== スコアボードを表示
+
+Show seconds on clock
+== 時計に秒を表示
+
+Show skin names in nameplate
+== ネームプレートにスキン名を表示
+
+Show song info in top-left corner
+== 左上に曲情報を表示
+
+Show spectator cursor
+== 観戦者カーソルを表示
+
+Show sponsor QR code
+== スポンサーQRコードを表示
+
+Show stats
+== 統計を表示
+
+Show status bar
+== ステータスバーを表示
+
+Show team
+== チームを表示
+
+Show tee status bar
+== Teeステータスバーを表示
+
+Show Tee, map, and weapon interaction hitboxes
+== Tee、マップ、武器の相互作用のヒットボックスを表示
+
+Show text entities
+== テキストエンティティを表示
+
+Show the cursor while free spectating
+== 自由観戦中にカーソルを表示
+
+Show the number of frozen tees
+== 凍結Teeの数を表示
+
+Show the number of tees still alive
+== 生存Teeの数を表示
+
+Show the pet
+== ペットを表示
+
+Show the screen center line
+== 画面中央線を表示
+
+Show the server rules
+== サーバールールを表示
+
+Show tiles layers from BG map
+== 背景マップのタイルレイヤーを表示
+
+Show unpredicted ghosts for other players
+== 他のプレイヤーの未予測ゴーストを表示
+
+Show voice connection status
+== ボイス接続状態を表示
+
+Show votes window after voting
+== 投票後に投票ウィンドウを閉じない
+
+Show wake-up popup on the other tee
+== 相手のTeeにウェイクアップポップアップを表示
+
+Show weapon trajectory guide
+== 武器軌道ガイドを表示
+
+Show Workshop Assets
+== Workshopアセットを表示
+
+Show X
+== Xを表示
+
+Show Y
+== Yを表示
+
+Showing players from other teams is disabled
+== 他のチームのプレイヤー表示は無効です
+
+Showing the checkpoint times for '%s' with a race time of %s
+== '%s' のチェックポイントタイム（レースタイム %s）を表示しています
+
+Showing the checkpoint times is not allowed on this server.
+== このサーバーではチェックポイントタイムの表示は許可されていません。
+
+Showing the global points of other players is not allowed on this server.
+== このサーバーでは他のプレイヤーのグローバルポイントを表示することは許可されていません。
+
+Showing the global top points is not allowed on this server.
+== このサーバーではグローバルトップポイントの表示は許可されていません。
+
+Showing the rank of other players is not allowed on this server.
+== このサーバーでは他のプレイヤーのランクを表示することは許可されていません。
+
+Showing the team rank of other players is not allowed on this server.
+== このサーバーでは他のプレイヤーのチームランクを表示することは許可されていません。
+
+Showing the team top 5 is not allowed on this server.
+== このサーバーではチームトップ5の表示は許可されていません。
+
+Showing the times of others is not allowed on this server.
+== このサーバーでは他のプレイヤーのタイムを表示することは許可されていません。
+
+Showing the top is not allowed on this server.
+== このサーバーではトップの表示は許可されていません。
+
+Shows five points of the global point ladder beginning with rank i (1 by default)
+== グローバルポイントランキングの i 位から 5 件を表示します（既定は 1）
+
+Shows five team ranks of the ladder or of a player beginning with rank i (1 by default, -1 for worst)
+== チームランキングまたはプレイヤーランキングの i 位から 5 件を表示します（既定は 1、-1 は最下位）
+
+Shows gameplay information for this server
+== このサーバーのゲームプレイ情報を表示
+
+Shows help to command r, general help if left blank
+== コマンド r のヘルプを表示。空白の場合は一般ヘルプ
+
+Shows the credits of the DDNet mod
+== DDNet mod のクレジットを表示
+
+Shows the global points of a player beginning with name r (your rank by default)
+== 名前 r で始まるプレイヤーのグローバルポイントを表示（デフォルトで自分のランク）
+
+Shows the rank of player with name r (your rank by default)
+== 名前 r のプレイヤーのランクを表示（デフォルトで自分のランク）
+
+Shows the team rank of player with name r (your team rank by default)
+== 名前 r のプレイヤーのチームランクを表示（デフォルトで自分のチームランク）
+
+Shows the top ranks of the global and regional ladder beginning with rank i (1 by default, -1 for worst)
+== グローバルおよびリージョナルラダーの上位ランクを i 位から表示（デフォルト1、-1 で最下位）
+
+Shrink
+== 縮小
+
+Shrug:
+== 肩をすくめる:
+
+Shut down
+== シャットダウン
+
+Silently disconnect from the current server while keeping Tee timeout protection
+== Tee タイムアウト保護を維持したまま、サイレントに現在のサーバーから切断
+
+Simple
+== 簡易
+
+Simple noise reduction
+== 簡易ノイズリダクション
+
+Simple noise reduction strength
+== 簡易ノイズリダクション強度
+
+Size
+== サイズ
+
+Size of hook strength icon and number indicator
+== フック強度アイコンと数値表示のサイズ
+
+Size of key press icons
+== キー表示アイコンのサイズ
+
+Skin
+== スキン
+
+Skin could not be found.
+== スキンが見つかりませんでした。
+
+Skin could not be loaded due to an error. Check the local console for details.
+== エラーのためスキンを読み込めませんでした。詳細はローカルコンソールを確認してください。
+
+Skin Database
+== スキンデータベース
+
+Skin is loading.
+== スキンを読み込み中。
+
+Skin prefix
+== スキン名プレフィックス
+
+Skin queue
+== スインキュー
+
+Skin transition
+== スキン遷移
+
+Skin transition duration
+== スキン遷移時間
+
+Skin transition type
+== スキン遷移タイプ
+
+Skin: %s
+== スキン: %s
+
+Skins directory
+== スキンディレクトリ
+
+Skip the main menu
+== メインメニューをスキップ
+
+Skip Tutorial
+== チュートリアルをスキップ
+
+Slide left
+== 左にスライド
+
+Slow down the demo
+== デモを遅くする
+
+Smaller tees
+== 小さいTee
+
+Smooth Dynamic Camera
+== スムーズ動的カメラ
+
+Smooth fade
+== スムーズフェード
+
+SMTC
+== SMTC
+
+Social
+== ソーシャル
+
+Solid
+== ソリッド
+
+Solid tile outline opacity
+== ソリッドタイル輪郭の不透明度
+
+Solo
+== ソロ
+
+Some fonts could not be loaded. Check the local console for details.
+== 一部のフォントを読み込めませんでした。詳細はローカルコンソールを確認してください。
+
+Some map images could not be loaded. Check the local console for details.
+== 一部のマップ画像を読み込めませんでした。詳細はローカルコンソールを確認してください。
+
+Some map sounds could not be loaded. Check the local console for details.
+== 一部のマップサウンドを読み込めませんでした。詳細はローカルコンソールを確認してください。
+
+Something hookable
+== フック可能なもの
 
 Sound
 == サウンド
@@ -343,68 +5992,1205 @@ Sound
 Sound error
 == サウンドエラー
 
+Sound volume
+== 音量
+
+Source file does not exist.
+== ソースファイルが存在しません。
+
+Source file is empty.
+== ソースファイルは空です。
+
+Speaker
+== スピーカー
+
+Specify command accessibility for given access level
+== 指定されたアクセスレベルに対するコマンドアクセス権を指定
+
 Spectate
-== 観戦席
+== 観戦
+
+Spectate a player by Id
+== IDでプレイヤーを観戦
+
+Spectate mode
+== 観戦モード
 
 Spectate next
-== 次の人を見る
+== 次のプレイヤーを観戦
 
 Spectate previous
-== 前の人を見る
+== 前のプレイヤーを観戦
 
-Spectator mode
-== 観戦モード
+Spectate teleport
+== 観戦テレポート
+
+Spectate the closest player
+== 最も近いプレイヤーを観戦
+
+Spectate the next player
+== 次のプレイヤーを観戦
+
+Spectate the previous player
+== 前のプレイヤーを観戦
 
 Spectators
 == 観戦者
 
+Speech trigger threshold
+== 発話トリガーしきい値
+
+Speed
+== 速度
+
+Speed up the demo
+== デモを速くする
+
+Speed:
+== 速度:
+
+Speedrun countdown timer
+== スピードランカウントダウンタイマー
+
+Speedrun Timer
+== スピードランタイマー
+
+Sphere
+== 球体
+
+Spin pop
+== スピンポップ
+
+Sponsor QR code Base64 data is not configured
+== スポンサーQRコードのBase64データが設定されていません
+
+Sponsor support
+== スポンサーサポート
+
+Sponsors:
+== スポンサー:
+
+Spree
+== 連続キル
+
+Staging memory
+== ステージングメモリ
+
+Star
+== 星
+
+Start and connect to local server
+== ローカルサーバーを起動して接続
+
+Start here to quickly diagnose if the issue is with device, server, or room
+== ここから始めて、問題がデバイス、サーバー、ルームのいずれにあるかを迅速に診断します
+
+Start holding the hook before loading the savegame to keep the hook
+== フックを維持するには、セーブゲームをロードする前にフックを押し続けてください
+
+Start playback of ghosts
+== ゴーストの再生を開始
+
+Start recording a demo
+== デモの録画を開始
+
+Start recording a video
+== 動画の録画を開始
+
+Statboard
+== 統計ボード
+
+Status
+== ステータス
+
+Status Bar
+== ステータスバー
+
+Status bar alpha
+== ステータスバーの不透明度
+
+Status Bar Codes:
+== ステータスバーコード:
+
+Status bar color
+== ステータスバーの色
+
+Status bar height
+== ステータスバーの高さ
+
+Status normal, check details below if still experiencing issues
+== 状態は正常です。問題が続く場合は以下の詳細を確認してください
+
+Status Scheme:
+== ステータススキーム:
+
+Stop practice
+== 練習を停止
+
 Stop record
-== 録画停止
+== 録画を停止
+
+Stop recording
+== 録音停止
+
+Stop recording a demo
+== デモの録画を停止
+
+Stop recording a video
+== 動画の録画を停止
+
+Stop server
+== サーバーを停止
+
+Stop the current demo
+== 現在のデモを停止
+
+Streamed memory
+== ストリームメモリ
+
+Streamer Mode
+== ストリーマーモード
 
 Strict gametype filter
-== ゲームタイプ完全一致検索
+== 厳密なゲームタイプフィルター
+
+Strict mode
+== 厳格モード
+
+Stroke fade time
+== ストロークフェード時間
+
+Strong Weak Hook
+== 強弱フック
+
+Sub-Tick aiming
+== サブティック照準
+
+Successfully saved the replay!
+== リプレイの保存に成功しました！
 
 Sudden Death
 == サドンデス
 
+Suicides
+== 自殺数
+
+Super
+== スーパー
+
+Support ♥
+== サポート ♥
+
+Swap
+== スワップ
+
+Swap ghosts with regular players
+== ゴーストと通常プレイヤーを入れ替え
+
+Swap is disabled on this server.
+== このサーバーでは交換は無効です。
+
+Swap is not available on forced solo servers.
+== 強制ソロサーバーでは交換は利用できません。
+
+Switch
+== 切り替え
+
+Switch dummy to grenade
+== ダミーをグレネードに切り替え
+
+Switch dummy to gun
+== ダミーをガンに切り替え
+
+Switch dummy to hammer
+== ダミーをハンマーに切り替え
+
+Switch dummy to laser
+== ダミーをレーザーに切り替え
+
+Switch dummy to next weapon
+== ダミーを次の武器に切り替え
+
+Switch dummy to previous weapon
+== ダミーを前の武器に切り替え
+
+Switch dummy to shotgun
+== ダミーをショットガンに切り替え
+
+Switch failed
+== 切り替えに失敗しました
+
+Switch interval
+== 切り替え間隔
+
+Switch opacity
+== 切り替え不透明度
+
+Switch spectator mode
+== 観戦モードを切り替え
+
+Switch team
+== チームを切り替え
+
+Switch to grenade
+== グレネードに切り替え
+
+Switch to gun
+== ガンに切り替え
+
+Switch to hammer
+== ハンマーに切り替え
+
+Switch to laser
+== レーザーに切り替え
+
+Switch to next weapon
+== 次の武器に切り替え
+
+Switch to previous weapon
+== 前の武器に切り替え
+
+Switch to shotgun
+== ショットガンに切り替え
+
 Switch weapon on pickup
-== 拾った武器に持ちかえる
+== 拾った武器に自動切り替え
+
+Switch weapon when out of ammo
+== 弾切れ時に自動で武器切り替え
+
+Switched to
+== 切り替えました
+
+Switching
+== 切り替え中
+
+Switching back to default input
+== デフォルト入力に戻しています
+
+Switching back to default output
+== デフォルト出力に戻しています
+
+Sync Workshop Assets
+== Workshopアセットを同期
+
+System
+== システム
+
+System default
+== システムデフォルト
+
+System media control
+== システムメディアコントロール
+
+System message
+== システムメッセージ
+
+System prompt text
+== システムプロンプトテキスト
+
+Tags
+== タグ
+
+Take a screenshot
+== スクリーンショットを撮る
+
+Taper trail width
+== トレイル幅を先細り
+
+Target language
+== ターゲット言語
+
+Target language ratio
+== ターゲット言語比率
+
+TClient
+== TClient
+
+TClient Developers
+== TClient 開発者
+
+TClient Links
+== TClient リンク
 
 Team
 == チーム
 
+Team %d
+== チーム %d
+
+Team %d (%d/%d)
+== チーム %d (%d/%d)
+
+Team can't be loaded while in team 0 mode
+== チーム0モード中はチームをロードできません
+
+Team can't be loaded while practice is enabled
+== 練習モードが有効な間はチームをロードできません
+
+Team can't be loaded while racing
+== レース中はチームをロードできません
+
+Team can't be saved while a dragger is active
+== ドラッガーがアクティブな間はチームを保存できません
+
+Team can't be saved while in team 0 mode
+== チーム0モード中はチームを保存できません
+
 Team chat
 == チームチャット
 
+Team is already in practice mode
+== チームはすでに練習モードです
+
+Team load already in progress
+== チームのロードはすでに進行中です
+
+Team message
+== チームメッセージ
+
+Team mode can't be changed while racing
+== レース中はチームモードを変更できません
+
+Team mode change disabled
+== チームモードの変更は無効です
+
+Team mode change is disabled on this server.
+== このサーバーではチームモードの変更は無効です。
+
+Team save already in progress
+== チームの保存はすでに進行中です
+
+Team save disabled for teams in practice mode
+== 練習モードのチームはチーム保存が無効です
+
+Team save in progress. You'll be able to load with '/load %s'
+== チームセーブ進行中。「/load %s」でロードできるようになります。
+
+Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails
+== チームセーブ進行中。成功時は「/load %s」、失敗時は「/load %s」でロードできます。
+
+Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue
+== %s によるチームセーブ成功。データベース接続に失敗したため、衝突を避けるために生成されたセーブコードを使用します。%s で「/load %s」を使用して続行
+
+Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue
+== %s によるチームセーブ成功。データベース接続に失敗したため、衝突を避けるために生成されたセーブコードを使用します。「/load %s」で続行
+
+Teams
+== チーム
+
+Teams are available on this server; if the team is locked, any team member dying will kill the whole team
+== このサーバーではチームが利用可能です。チームがロックされている場合、チームメンバーが死亡するとチーム全員が死にます
+
+Teams are disabled
+== チームは無効です
+
+Teams are not available on this server; if the team is locked, any team member dying will kill the whole team
+== このサーバーではチームは利用できません。チームがロックされている場合、チームメンバーが死亡するとチーム全員が死にます
+
+Tee
+== Tee
+
+Tee 0.7
+== Tee 0.7
+
+Tee hitbox
+== Teeヒットボックス
+
+Tee hitbox color
+== Teeヒットボックスの色
+
+Tee size
+== Teeのサイズ
+
+Tee status bar
+== Teeステータスバー
+
+Tee trail color
+== Teeトレイルの色
+
+Tee Trails
+== Teeトレイル
+
+Tele
+== テレポート
+
+Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart
+== ホバーしたテレポート入口/出口またはチェックポイントテレポートと対応する相手の間で自由観戦カメラをテレポート
+
+Teleport grenade disabled
+== テレポートグレネードが無効になりました
+
+Teleport grenade enabled
+== テレポートグレネードが有効になりました
+
+Teleport gun disabled
+== テレポートガンが無効になりました
+
+Teleport gun enabled
+== テレポートガンが有効になりました
+
+Teleport laser disabled
+== テレポートレーザーが無効になりました
+
+Teleport laser enabled
+== テレポートレーザーが有効になりました
+
+Teleport opacity
+== テレポート不透明度
+
+Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)
+== 自動レスキューモードが有効な場合はフリーズからテレポートアウト。それ以外の場合は、接地していればレスキュー用の位置を設定し、接地していなければフリーズからテレポートアウト（sv_rescue 1 でこの機能を有効化）
+
+Teleport yourself to player or to where you are spectating/or looking if no player name is given
+== プレイヤー名が指定されていない場合は、観戦中または見ている場所に自分をテレポート
+
+Teleport yourself to the last auto rescue position before you died (use sv_rescue 1 to enable this feature)
+== 死亡前の最後の自動レスキュー位置に自分をテレポート（sv_rescue 1 でこの機能を有効化）
+
+Teleport yourself to the last location you teleported to
+== 最後にテレポートした場所に自分をテレポート
+
+Teleport yourself to the specified coordinates. A tilde (~) can be used to denote your current position, e.g. '/tpxy ~1 ~' to teleport one tile to the right
+== 指定座標へテレポートします。チルダ（~）は現在位置を表せます。例: '/tpxy ~1 ~' で右へ一タイル移動します
+
+Teleports player i (or you) to player i (or you to where you look at)
+== プレイヤー i（またはあなた）をプレイヤー i（またはあなたが見ている場所）にテレポート
+
+Teleports you to checkpoint teleporter i
+== チェックポイントテレポーター i にテレポート
+
+Teleports you to teleporter i
+== テレポーター i にテレポート
+
+Temporarily set a config value while pressed
+== 押している間、設定値を一時的に設定
+
+Temporary free camera
+== 一時フリーカメラ
+
+Tencent Cloud
+== テンセントクラウド
+
+Tencent Cloud SecretId
+== テンセントクラウド SecretId
+
+Tencent Cloud SecretKey
+== テンセントクラウド SecretKey
+
+Text
+== テキスト
+
+Text alpha
+== テキストの不透明度
+
+Text color
+== テキスト色
+
+Texture memory
+== テクスチャメモリ
+
+Thank you for your company and trust. This is what gives me the courage to keep going.
+== ご愛顧と信頼に感謝します。それが私に前進する勇気を与えてくれます。
+
+Thanks for supporting QmClient
+== QmClientへのご支援ありがとうございます
+
 The audio device couldn't be initialised.
-== オーディオデバイスの初期化に失敗しました。
+== オーディオデバイスを初期化できませんでした。
+
+The best voice chat, of course!
+== もちろん最高のボイスチャットです！
+
+The Config tab reuses QmClient's client config browser
+== 設定タブはQmClientのクライアント設定ブラウザを再利用しています
+
+The force pause timer is now over, you can exit with /spec
+== 強制ポーズタイマーが終了しました。/spec で退出できます
+
+The format of texture %s is not RGBA which will cause visual bugs.
+== テクスチャ %s のフォーマットが RGBA ではありません。これにより表示の不具合が発生する可能性があります。
+
+The Functions tab contains tools, automation, and gameplay helpers
+== 機能タブにはツール、自動化、ゲームプレイヘルパーが含まれています
+
+The HUD tab collects overlays, counters, voice display, and top components
+== HUDタブにはオーバーレイ、カウンター、ボイス表示、トップコンポーネントが集められています
+
+The name "default" is reserved.
+== 「default」という名前は予約されています。
+
+The selected button is not visible. Do you want to deselect it or edit its visibility?
+== 選択中のボタンは表示されていません。選択を解除するか、表示設定を編集しますか？
+
+The selected button is overlapping with other buttons.
+== 選択中のボタンが他のボタンと重なっています。
+
+The selected part stays highlighted while you adjust its color.
+== 選択したパーツは色調整中もハイライトされたままになります。
 
 The server is running a non-standard tuning on a pure game type.
-== サーバーが MOD を導入しているようです。
+== サーバーは純正ゲームタイプで非標準のチューニングを実行しています。
+
+The Visuals tab contains appearance and rendering options
+== ビジュアルタブには外観とレンダリングオプションが含まれています
+
+The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
+== テクスチャ %s の幅が %d で割り切れないか、高さが %d で割り切れません。これにより表示の不具合が発生する可能性があります。
+
+Theme
+== テーマ
+
+Themes directory
+== テーマディレクトリ
+
+There are unsaved changes in the touch controls editor. Saving first is recommended.
+== タッチコントロールエディタに未保存の変更があります。最初に保存することをお勧めします。
+
+There is no checkpoint teleporter with that index on the map.
+== そのインデックスのチェックポイントテレポーターはマップ上にありません。
+
+There is no teleporter with that index on the map.
+== そのインデックスのテレポーターはマップ上にありません。
+
+There is not enough space available for the button. Check its visibilities and size.
+== ボタンを配置するのに十分なスペースがありません。表示設定とサイズを確認してください。
+
+There is not enough space available to place another button.
+== 別のボタンを配置するのに十分なスペースがありません。
+
+There is nowhere to go back to.
+== 戻る場所がありません。
+
+There's a %s second delay between map-votes, please wait %s seconds.
+== マップ投票の間には %s 秒の遅延があります。%s 秒お待ちください。
+
+There's a %s second wait time between kick votes for each player please wait %s second(s)
+== 各プレイヤーのキック投票の間には %s 秒の待機時間があります。%s 秒お待ちください
+
+There's an unsaved change in the touch controls editor, you might want to save it.
+== タッチコントロールエディターに未保存の変更があります。保存することをお勧めします。
+
+There's an unsaved map in the editor, you might want to save it.
+== エディターに未保存のマップがあります。保存することをお勧めします。
+
+Thinking mode requires a reasoning model
+== 思考モードには推論モデルが必要です
+
+This ID is not connected
+== このIDは接続されていません
+
+This name cannot be used for files and folders
+== この名前はファイルやフォルダに使用できません
+
+This server has an initial chat delay, you will be able to talk in %s seconds.
+== このサーバーには最初のチャット遅延があり、%s 秒後に発言できるようになります。
+
+This skin name cannot be used.
+== このスキン名は使用できません。
+
+This team already has the maximum allowed size of %s players
+== このチームはすでに最大許容サイズ %s 人に達しています
+
+This team can't be locked
+== このチームはロックできません
+
+This team can't have the mode changed
+== このチームはモードを変更できません
+
+This team cannot finish anymore because '%s' left the team before hitting the start
+== このチームはもう完走できません。'%s' がスタート前にチームを離脱したためです
+
+This team is currently saving
+== このチームは現在保存中です
+
+This team is locked using /lock. Only members of the team can invite you or unlock it using /lock.
+== このチームは /lock でロックされています。チームメンバーのみが招待するか、/lock でロックを解除できます。
+
+This team is locked using /lock. Only members of the team can unlock it using /lock.
+== このチームは /lock でロックされています。チームメンバーのみが /lock でロックを解除できます。
+
+This team started already
+== このチームはすでに開始しています
+
+This team was disbanded because there are more players than allowed in the team.
+== このチームは許容人数を超えているため解散されました。
+
+tile
+== タイル
+
+Tile outlines
+== タイル輪郭
+
+Time
+== 時間
+
+TIME EXPIRED!
+== 時間切れ！
+
+Time limit
+== 時間制限
 
 Time limit: %d min
-== 時間上限: %d 分
+== 時間制限: %d 分
+
+Time to wait before changing team: %s
+== チーム変更までの待機時間: %s
+
+Timer is displayed in %s
+== タイマーは %s に表示されています
+
+Timer isn't displayed.
+== タイマーは表示されていません。
+
+Tiny Tee Size
+== 小さなTeeのサイズ
+
+To save all players in your team have to be alive and not in '/spec'
+== 保存するには、チーム内のすべてのプレイヤーが生存していて '/spec' 状態でない必要があります
+
+Toggle auto camera
+== 自動カメラの切り替え
+
+Toggle between game scene preview and raw texture
+== ゲームシーンプレビューと生テクスチャの切り替え
+
+Toggle config value
+== 設定値をトグル
+
+Toggle config value via keypress
+== キー押下で設定値をトグル
+
+Toggle Do Not Disturb (no chat and server messages)
+== おやすみモードを切り替え（チャットとサーバーメッセージなし）
+
+Toggle dummy
+== ダミー切替
+
+Toggle dyncam
+== 動的カメラ切替
+
+Toggle fast practice mode
+== 高速練習モードの切り替え
+
+Toggle ghost
+== ゴースト切替
+
+Toggle ghost key
+== ゴーストキーの切り替え
+
+Toggle keyboard shortcuts
+== キーボードショートカットの切り替え
+
+Toggle local console
+== ローカルコンソールを切り替え
+
+Toggle microphone mute
+== マイクミュートの切り替え
+
+Toggle or set the switch on or off for the specified time (or indefinitely by default)
+== 指定された時間（デフォルトは無期限）スイッチをオン/オフに切り替えまたは設定
+
+Toggle receiving whispers
+== Whisper 受信の切り替え
+
+Toggle remote console
+== リモートコンソールを切り替え
+
+Toggle scoreboard cursor
+== スコアボードカーソルの切り替え
+
+Toggle team between team 0 and team mode. This mode will make your team behave like team 0.
+== チーム 0 とチームモードを切り替え。このモードではチームがチーム 0 のように動作します。
+
+Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock
+== チームロックを切り替え。他の人が参加できなくなり、プレイヤーが死ぬとチームが再スタートします。/lock 0 でロック解除、/lock 1 でロック
+
+Toggle tune variable
+== チューニング変数をトグル
+
+Toggles collision
+== 衝突判定の切り替え
+
+Toggles hit others
+== 他者への攻撃の切り替え
+
+Toggles hook collision
+== フック衝突の切り替え
+
+Toggles invincible mode
+== 無敵モードの切り替え
+
+Toggles pause
+== 一時停止の切り替え
+
+Toggles pause on the currently voted player
+== 現在投票されているプレイヤーの一時停止を切り替え
+
+Toggles spec (if not available behaves as /pause)
+== 観戦の切り替え（利用不可の場合は /pause として動作）
+
+Toggles spec on the currently voted player
+== 現在投票されているプレイヤーの観戦を切り替え
+
+Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status
+== 標準の目のエモートの使用をオン/オフに切り替え。eyeemote s（s = on: オン、off: オフ、toggle: 切り替え、空: 現在の状態表示）
+
+Too many translation tasks
+== 翻訳タスクが多すぎます
+
+Total
+== 合計
+
+Traditional
+== 繁体
+
+Trail alpha
+== トレイルアルファ
+
+Trail length
+== トレイルの長さ
+
+Trail width
+== トレイル幅
+
+Translate
+== 翻訳
+
+Translate button
+== 翻訳ボタン
+
+Translate ID:
+== 翻訳ID:
+
+Translate last message (of a given name)
+== （指定された名前の）最後のメッセージを翻訳
+
+Translate last message of the person with this id
+== このIDの人の最後のメッセージを翻訳
+
+Translate only when needed
+== 必要なときだけ翻訳
+
+Translate:
+== 翻訳:
+
+Translated text hidden due to streamer mode
+== ストリーマーモードのため翻訳テキストは非表示
+
+Translating to %s...
+== %sに翻訳中...
+
+Translation backend invalid, sending original
+== 翻訳バックエンドが無効なため、原文を送信
+
+Translation queue full, sending original
+== 翻訳キューがいっぱいのため、原文を送信
+
+Translation service
+== 翻訳サービス
+
+Translation Settings
+== 翻訳設定
+
+transmits your player name to info.ddnet.org
+== プレイヤー名を info.ddnet.org に送信します
+
+Troubleshooting suggestions
+== トラブルシューティングの提案
 
 Try again
-== もう一度
+== 再試行
+
+Try reselecting input device, confirm default mic or headset mic is online
+== 入力デバイスを再選択し、デフォルトのマイクまたはヘッドセットマイクがオンラインであることを確認してください
+
+Try reselecting output device, confirm headphones/speakers are online
+== 出力デバイスを再選択し、ヘッドホン/スピーカーがオンラインであることを確認してください
+
+Try to predict other entities to reduce lag feeling at high latency
+== 他のエンティティを予測して高レイテンシ時のラグ感を軽減
+
+Try toggling voice or reconnecting to server
+== ボイスを切り替えるか、サーバーに再接続してみてください
+
+Trying Axiom auto login
+== Axiom 自動ログインを試行中
+
+Trying Axiom dummy auto login
+== Axiom ダミー自動ログインを試行中
+
+Trying to determine UDP connectivity…
+== UDP 接続性を確認中...
+
+Tune in zone a variable to value
+== ゾーン a の変数を値に調整
+
+Tune layer opacity
+== チューンレイヤーの不透明度
+
+Tune variable to value
+== 変数を値に調整
+
+Tune variable to value or show current value
+== 変数を指定値にチューニング、または現在値を表示
+
+Tutorial
+== チュートリアル
+
+Twinkle strength
+== きらめき強度
 
 Type
 == タイプ
 
+Type switch vote started automatically
+== タイプ切り替え投票を自動で開始しました
+
+Types
+== タイプ
+
+u = Snapshot latency
+== u = スナップショットレイテンシ
+
+UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
+== UDP と TCP の IP アドレスが異なっているようです。VPN、プロキシ、ネットワークアクセラレーターを無効にしてみてください。
+
+UDP seems to be filtered.
+== UDP がフィルタリングされているようです。
+
+UDP socket not open
+== UDPソケットが開いていません
+
+UI color
+== UI の色
+
+UI controller sens.
+== UIコントローラー感度
+
+UI mouse sens.
+== UIマウス感度
+
+UI opacity
+== UI の不透明度
+
+UI scale
+== UIスケール
+
+Unable to delete %d selected items. The first failing item was '%s'.
+== 選択された %d 個の項目を削除できません。最初に失敗した項目は「%s」です。
+
+Unable to delete skin
+== スキンを削除できません
+
+Unable to delete the demo '%s'
+== デモ「%s」を削除できません
+
+Unable to delete the folder '%s'. Make sure it's empty first.
+== フォルダ「%s」を削除できません。最初にフォルダが空であることを確認してください。
+
+Unable to delete the screenshot '%s'
+== スクリーンショット「%s」を削除できません
+
+Unable to open the screenshot file
+== スクリーンショットファイルを開けません
+
 Unable to rename the demo
-== デモの名前を変更できません。
+== デモの名前を変更できません
+
+Unable to rename the folder
+== フォルダの名前を変更できません
+
+Unable to rename the screenshot
+== スクリーンショットの名前を変更できません
+
+Unable to save the skin
+== スキンを保存できません
+
+Unable to save the skin with a reserved name
+== 予約済みの名前でスキンを保存できません
+
+Unban a certain nickname
+== 特定のニックネームのBANを解除
+
+Unban all entries
+== すべてのエントリーのBANを解除
+
+Unban ip range
+== IP範囲のBANを解除
+
+Unban ip/banlist entry
+== IP/BANリストエントリーのBANを解除
+
+Unbind all keys
+== すべてのキーバインドを解除
+
+Unbind key
+== キーバインドを解除
+
+Uncertainty duration
+== 不確実性の持続時間
+
+Unclassified audio issue
+== 未分類のオーディオ問題
+
+Unfinished map
+== 未完了のマップ
+
+Unfinished map count: %d
+== 未完了マップ数: %d
+
+Unfinished map data is refreshing, please try again later
+== 未完了マップデータを更新中です。後でもう一度お試しください
+
+Unfinished map data not fetched
+== 未完了マップデータが取得されていません
+
+Unfinished map data refreshing
+== 未完了マップデータを更新中
+
+Unfinished maps
+== 未完了マップ
+
+Unflip:
+== 反転解除:
+
+Unfreeze
+== 解凍
+
+Unfreeze automation helpers
+== アンフリーズ自動化ヘルパー
+
+Unfreeze opacity
+== アンフリーズの不透明度
+
+Uninvite player from team
+== プレイヤーをチームから招待解除
+
+Unknown
+== 不明
+
+Unknown argument. Check '/rescuemode list'
+== 不明な引数です。'/rescuemode list' を確認してください
+
+Unknown emote... Say /emote
+== 不明なエモートです... /emote と言ってください
+
+Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
+== 不明なパラメーターです。使用可能な値: default, gametimer, broadcast, both, none
+
+Unknown status
+== 不明な状態
+
+Unlock a team
+== チームのロック解除
+
+Unmute
+== ミュート解除
+
+Unmute emoticons
+== 絵文字のミュート解除
+
+Unmute player with client ID
+== クライアントIDでプレイヤーのミュート解除
+
+Unmute player with IP address
+== IPアドレスでプレイヤーのミュート解除
+
+Unmute player with list index
+== リストインデックスでプレイヤーのミュート解除
+
+Unmute:
+== ミュート解除:
+
+Unpredicted ghost opacity
+== 未予測ゴーストの不透明度
+
+Unregister protocol and file extensions
+== プロトコルとファイル拡張子の関連付けを解除
+
+Unsaved changes
+== 未保存の変更
+
+Update
+== アップデート
+
+Update a rcon key
+== rcon キーを更新
+
+Update a rcon key with prehashed data
+== プリハッシュ化データで rcon キーを更新
+
+Update failed. Please try again
+== アップデートに失敗しました。もう一度お試しください
+
+Update finished. Please restart the client
+== アップデートが完了しました。クライアントを再起動してください
+
+Update finished. Restarting...
+== アップデートが完了しました。再起動中...
+
+Update notice
+== 更新のお知らせ
+
+Update or add a specific war group
+== 特定の敵対グループを更新または追加
+
+Updating feature list...
+== 機能リストを更新中...
+
+Uploading map data to GPU
+== GPU にマップデータをアップロード中
+
+Usage: %s %s
+== 使用方法: %s %s
+
+Use 12 hour clock
+== 12時間制を使用
+
+Use colored skins for frozen tees
+== 凍結Teeに色付きスキンを使用
+
+Use current map as background
+== 現在のマップを背景として使用
+
+Use custom skins instead of the ninja tee
+== 忍者Teeの代わりにカスタムスキンを使用
+
+Use default flags on scoreboard
+== スコアボードでデフォルトの旗を使用
+
+Use default input
+== デフォルトの入力を使う
+
+Use default output
+== デフォルトの出力を使う
+
+Use default voice input device
+== デフォルトのボイス入力デバイスを使う
+
+Use default voice output device
+== デフォルトのボイス出力デバイスを使う
+
+Use embedded HUD progress bar
+== 埋め込みHUDプログレスバーを使用
+
+Use emote
+== エモートを使用
+
+Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
+== K キーで自殺（再スタート）、Q キーで一時停止して他のプレイヤーを観戦できます。他のキーバインドは設定を参照してください。
+
+Use multi-char replacement based on word length
+== 単語の長さに基づいて複数文字の置換を使用
+
+Use new smoothing algorithm
+== 新しいスムージングアルゴリズムを使用
+
+Use old chat style
+== 古いチャットスタイルを使用
+
+Use original style
+== オリジナルスタイルを使用
 
 Use sounds
-== サウンド全般を使用
+== サウンドを使用
 
 Use team colors for name plates
-== 名前表示にチームカラーを使う
+== ネームプレートにチームカラーを使用
+
+Use the mouse wheel on a hovered module to scale it by 5%
+== ホバーしたモジュール上でマウスホイールを使用すると5%ずつ拡大縮小
+
+Use the top tabs to browse QmClient features by category
+== 上部のタブを使ってカテゴリごとに栖夢辺欄の機能を閲覧
+
+Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
+== お気に入りをグループ化するには、`add_favorite` の後にこれを使用します。`begin_favorite_group` で開始
+
+Use this before `add_favorite` to group favorites. End with `end_favorite_group`
+== お気に入りをグループ化するには、`add_favorite` の前にこれを使用します。`end_favorite_group` で終了
+
+Use warlist colors instead of regular colors
+== 通常の色の代わりに敵対リストの色を使用
+
+Use warlist groups for indicator
+== インジケーターに敵対リストグループを使用
+
+v = Velocity
+== v = Velocity（速度）
 
 V-Sync
-== V-Sync
+== 垂直同期
+
+Vanilla skins only
+== バニラスキンのみ
 
 Version
 == バージョン
+
+Vertical position
+== 垂直位置
+
+Video Background
+== ビデオ背景
+
+Video name:
+== ビデオ名：
+
+Video was saved to '%s'
+== ビデオは「%s」に保存されました
+
+Videos directory
+== ビデオディレクトリ
+
+View latest updates
+== 最新のアップデートを見る
+
+View margin
+== ビューマージン
+
+View switch found (at offset) with given number
+== 指定された番号のスイッチ（オフセット付き）を表示
+
+View tele found (at offset) with given number
+== 指定された番号のテレポート（オフセット付き）を表示
+
+Visibility
+== 表示
+
+Visual
+== 視覚設定
+
+Visual: Effects
+== 視覚設定: エフェクト
+
+Visual: Font & Cursor
+== 視覚設定: フォントとカーソル
+
+Visual: Nameplates
+== 視覚設定: ネームプレート
+
+Visuals
+== ビジュアル
+
+Voice
+== ボイス
+
+Voice activation release delay
+== ボイスアクティベーション解放遅延
+
+Voice bitrate
+== ボイスビットレート
+
+Voice chat
+== ボイスチャット
+
+Voice distance radius (tiles)
+== ボイス距離半径（タイル）
+
+Vote a map by name
+== 名前でマップに投票
 
 Vote command:
 == 投票コマンド:
@@ -415,2991 +7201,854 @@ Vote description:
 Vote no
 == 反対
 
+Vote started automatically
+== 自動で投票を開始しました
+
 Vote yes
 == 賛成
+
+Vote yes/no
+== 賛成/反対の投票
 
 Voting
 == 投票
 
+Wait for current vote to end before calling a new one.
+== 現在の投票が終了するのを待ってから新しい投票を呼びかけてください。
+
+Waiting for snapshot
+== スナップショット待機中
+
+Waiting to open
+== 開くのを待っています
+
+Waiting to open input device
+== 入力デバイスを開くのを待っています
+
+Waiting to open output device
+== 出力デバイスを開くのを待っています
+
+War Entries
+== 敵対エントリー
+
+War Groups
+== 敵対グループ
+
+War List
+== 敵対リスト
+
+Warlist
+== 敵対リスト
+
 Warmup
-== 準備中
+== ウォームアップ
+
+Warning
+== 警告
 
 Weapon
 == 武器
 
-Yes
-== はい
+Weapon animation
+== 武器アニメーション
 
-You must restart the game for all settings to take effect.
-== 設定を反映するためにはゲームの再起動が必要です。
+Weapon interaction range
+== 武器の相互作用範囲
 
-New name:
-== 新しいファイル名:
+Weapon range color
+== 武器範囲の色
 
-Max demos
-== デモの最大数
+Weapon switch animation
+== 武器切り替えアニメーション
 
-Internet
-== オンライン
+Weapon trajectory
+== 武器弾道補助線
 
-News
-== ニュース
+Weapon Trajectory
+== 武器軌道
 
-Join game
-== ゲームに参加
+Weapons
+== 武器
 
-FSAA samples
-== FSAA サンプル数
-
-Sat.
-== 彩度
-
-LAN
-== LAN
-
-Sound volume
-== 音量
-
-Record demo
-== デモを録画
-
-Miscellaneous
-== その他
-
-UI Color
-== UI カラー
-
-Max Screenshots
-== スクリーンショットの最大数
-
-Hue
-== 色相
-
-Your skin
-== あなたのスキン
-
-Reset to defaults
-== 初期設定に戻す
-
-Laser
-== レーザー
-
-Lht.
-== 明るさ
-
-Alpha
-== 透明度
-
-Name plates size
-== 名前表示の大きさ
-
-Successfully saved the replay!
-== リプレイ保存完了しました!
-
-Replay feature is disabled!
-== リプレイ機能はオフにしました!
-
-The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
-== テクスチ %s の幅は %d で割り切れなません、もしくは高さは %d で割り切れません。この場合、画面バグが発生する可能性があります。
-
-Warning
-== 注意
-
-Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
-== デバッグモードをオンにしました。オフにするには、Ctrl+Shift+D を押してください。
-
-Game paused
-== 一時停止しました
-
-Server best:
-== サーバー最高記録:
-
-Personal best:
-== 個人最高記録:
-
-Reset
-== リセット
-
-Browser
-== サーバー
-
-Ghost
-== ゴースト
-
-Loading DDNet Client
-== DDNet Client 読み込み中
-
-Reconnect in %d sec
-== 再接続まであと %d 秒
-
-Render demo
-== デモを描画
-
-Replace video
-== 動画を変更
-
-File already exists, do you want to overwrite it?
-== ファイルはすでに存在しています、上書きしますか？
-
-Are you sure that you want to disconnect?
-== 接続を切断しますか？
-
-Disconnect Dummy
-== ダミーの接続を切断
-
-Are you sure that you want to disconnect your dummy?
-== ダミーへの接続を切断しますか？
+Website
+== ウェブサイト
 
 Welcome to DDNet
 == DDNet へようこそ
 
-DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
-== DDraceNetwork は、協力型のオンラインゲームです。チーム中の Tee と協力して、マップ上のゴールを目指しましょう！初心者の方は、最も簡単なマップを使っている Novice サーバーから始めることをおすすめします。サーバー選ぶ時は ping を考慮して、近くのサーバーを選んでください。
+What kind of blockbuster do you want to shoot?
+== どんな大作を撮りたいですか？
 
-Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
-== K ボタンでキル（やり直す）、Q ボタンで一時停止して観戦することができます。他のキーバインドは設定画面を参照してください。
+What kind of Gores do you want to run?
+== どんなGoresを走りたいですか？
 
-It's recommended that you check the settings to adjust them to your liking before joining a server.
-== サーバーに参加する前に、設定を確認して、自分の好みに合わせて、キーバインドを調整することをお勧めします。
+What kind of laser do you want?
+== どんなレーザーが欲しいですか？
 
-Please enter your nickname below.
-== ハンドルネームを入力してください。
+What kind of life do you want to run?
+== どんな人生を走りたいですか？
 
-Existing Player
-== 既存のプレーヤー
+What's done is done, no use saying more
+== 済んだことは仕方ない、もう言っても無駄だ
 
-Your nickname '%s' is already used (%d points). Do you still want to use it?
-== ハンドルネーム「%s」は DDNet で %d ポイントに記録があります。それでも使いたいですか？
+Wheel animate
+== ホイールアニメーション
 
-Checking for existing player with your name
-== 既存のプレーヤーの中でハンドルネームを検索しています。
+When you cross the start line, show a ghost tee replicating the movements of your best time
+== スタートラインを越えたとき、ベストタイムの動きを再現するゴーストTeeを表示
 
-Speed
-== 速度
+Whether a switch is deactivated by default (otherwise activated)
+== スイッチがデフォルトで無効かどうか（それ以外は有効）
 
-Video name:
-== 動画の名前
+Whether to show players at any distance (off by default), optional i = 0 for off else for on
+== 任意の距離のプレイヤーを表示するかどうか（デフォルトオフ）、オプション i = 0 でオフ、それ以外でオン
 
-Show DDNet map finishes in server browser
-== サーバー・ブラウザーで完成した DDNet マップを表示する
+Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only
+== 他のチームのプレイヤーを表示するかどうか（デフォルトオフ）、オプション i = 0 でオフ、i = 1 でオン、i = 2 で自チームのみ
 
-transmits your player name to info.ddnet.org
-== ハンドルネームを info.ddnet.org に送信します
+Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on
+== 観戦時に他のチームのプレイヤーを表示するかどうか（デフォルトオン）、オプション i = 0 でオフ、それ以外でオン
 
-Theme
-== テーマ
+Whether to use ninja jetpack or not. Makes jetpack look more awesome
+== 忍者ジェットパックを使用するかどうか。ジェットパックをよりかっこよく見せる
 
-Getting server list from master server
-== マスターサーバーからサーバーリストを取得しています
+Which message to display on zone enter; use 0 for normal area
+== ゾーン進入時に表示するメッセージ。0 で通常エリア
 
-Search
-== 検索キーワード
+Which message to display on zone leave; use 0 for normal area
+== ゾーン退出時に表示するメッセージ。0 で通常エリア
 
-Exclude
-== 除外キーワード
+Whisper
+== ウィスパー
 
-%d of %d servers
-== %d / %d コのサーバー
+Whisper something to someone (private message)
+== 誰かに何か Whisper（プライベートメッセージ）
 
-%d of %d server
-== %d / %d コのサーバー
+Who stuffed OBS in here
+== 誰がここにOBSを詰め込んだんだ
 
-%d players
-== %d 人のプレーヤー
+Why are you slowmo replaying to read this?
+== なぜスローモーションでこれを読んでいるのですか？
 
-%d player
-== %d 人のプレーヤー
+Width
+== 幅
 
-Filter connecting players
-== 接続中のプレーヤーをフィルタする
+Width and height are required to be within the range from %d to %d.
+== 幅と高さは%dから%dの範囲内である必要があります。
 
-Indicate map finish
-== 完成したマップをハイライトする
+Width of others' hook collision line
+== 他人のフック補助線の太さ
 
-Unfinished map
-== 未完成のマップ
-
-Countries
-== 国
-
-Types
-== タイプ
-
-Leak IP
-== IP を漏洩する
-
-Remove chat
-== チャット履歴を削除
-
-%.2f MiB
-== %.2f MiB
-
-%.2f KiB
-== %.2f KiB
-
-Demo
-== デモ録画
-
-Markers
-== ブックマーク
-
-Length
-== 長さ
-
-Date
-== 日付
-
-Fetch Info
-== デモ情報
-
-Demos directory
-== デモ・ディレクトリー
-
-Connecting dummy
-== ダミーを接続中
-
-Connect Dummy
-== ダミーに接続
-
-Kill
-== キル
-
-Pause
-== 観察
-
-Deactivate
-== 無効にする
-
-Activate
-== 有効にする
-
-Save
-== 保存
-
-Smooth Dynamic Camera
-== 滑らかな動的カメラ
-
-Switch weapon when out of ammo
-== 弾薬切れの時に武器を切り替え
-
-Show only chat messages from friends
-== 友たちからのメッセージのみを表示
-
-Show clan above name plates
-== 名前の上に所属クランを表示
-
-Clan plates size
-== クラン表示サイズ
-
-Skip the main menu
-== メインメニューをスキップ
-
-Refresh Rate
-== リフレッシュ・レート
-
-Themes directory
-== テーマ・ディレクトリー
-
-Automatically take statboard screenshot
-== リザルト画面で自動スクショ
-
-Automatically create statboard csv
-== リザルト CSV ファイルを自動生成
-
-Max CSVs
-== 最大 CSV ファイル数
-
-Download skins
-== スキンをダウンロード
-
-Vanilla skins only
-== オリジナルスキンのみ
-
-Fat skins (DDFat)
-== まるいスキン（DDFat）
-
-Skin prefix
-== スキンの接頭辞
-
-Skin Database
-== スキン・データーベース
-
-Skins directory
-== スキン・ディレクトリー
-
-Hook collisions
-== フックライン
-
-Zoom in
-== 拡大
-
-Zoom out
-== 縮小
-
-Default zoom
-== デフォルト倍率
-
-Show others
-== 他のプレイヤーを表示
-
-Show all
-== すべてのプレイヤーを表示
-
-Toggle dyncam
-== 動的カメラ切り替え
-
-Toggle dummy
-== ダミー切り替え
-
-Toggle ghost
-== ゴースト切り替え
-
-Dummy copy
-== ダミーシンクロ
-
-Hammerfly dummy
-== ハンマーフライモード
-
-Converse
-== 送信先を引き継ぎ
-
-Statboard
-== リザルト画面
-
-Lock team
-== チームをロック
-
-Show entities
-== オブジェを表示
-
-Show HUD
-== HUD を表示
-
-Chat command
-== チャットコマンド
-
-Dummy
-== ダミー
+Width of your own hook collision line
+== 自分のフック補助線の太さ
 
 Windowed
 == ウィンドウモード
 
 Windowed borderless
-== ウィンドウモード・枠なし
+== ボーダーレスウィンドウ
 
-Desktop fullscreen
-== フルスクリーン
+Windowed fullscreen
+== ウィンドウ全画面
 
-Fullscreen
-== 独占フルスクリーン
+Word Filter
+== 単語フィルター
 
-may cause delay
-== 遅延する可能性あり
+Write local console contents to a text file
+== ローカルコンソールの内容をテキストファイルに書き込み
 
-Screen
-== 画面
+Write remote console contents to a text file
+== リモートコンソールの内容をテキストファイルに書き込み
 
-Enable game sounds
-== 音声
+Writing item %d failed
+== アイテム %d の書き込みに失敗
 
-Enable gun sound
-== 銃声 SFX
+Written %d items
+== %d アイテムを書き込みました
 
-Enable long pain sound (used when shooting in freeze)
-== フリーズ時の叫び
+Wrong button settings
+== ボタン設定エラー
 
-Enable server message sound
-== サーバーメッセージ受信音
+x = DDNet CPU% / total CPU%
+== x = DDNet CPU% / 合計 CPU%
 
-Enable regular chat sound
-== 普通チャット受信音
+X alignment color
+== X整列色
 
-Enable team chat sound
-== チームチャット受信音
+X alignment hint with me
+== 私とのX整列ヒント
 
-Enable highlighted chat sound
-== メンション・メッセージ受信音
+y = DDNet memory usage
+== y = DDNet メモリ使用量
 
-Game sound volume
-== ゲーム SFX 音量
+Yes
+== はい
 
-Chat sound volume
-== 受信音音量
+You and other player need to have started the map
+== あなたと相手はマップを開始している必要があります
 
-Map sound volume
-== マップ SFX 音量
+You and the other player must not be paused.
+== あなたと相手はポーズ状態であってはなりません。
 
-Background music volume
-== BGM 音量
+You are already on the latest version
+== すでに最新バージョンです
 
-HUD
-== HUD
+You are force-paused for %s seconds.
+== あなたは %s 秒間強制ポーズされています。
 
-DDNet
-== DDNet
+You are in team %s having %s players
+== あなたはチーム %s にいて、%s 人のプレイヤーがいます
 
-Assets
-== 素材
+You are in this team already
+== あなたはすでにこのチームにいます
 
-DDNet Client needs to be restarted to complete update!
-== アップデートを完了するには、DDNet クライアントの再起動が必要です。
+You are not allowed to vote because we're currently checking for VPNs. Try again in ~30 seconds.
+== 現在VPNをチェック中のため、投票は許可されていません。約30秒後にもう一度お試しください。
 
-Show score
-== スコアを表示
+You are not allowed to vote because you appear to be using a VPN. Try connecting without a VPN or contacting an admin if you think this is a mistake.
+== VPNを使用しているように見えるため、投票は許可されていません。VPNなしで接続するか、誤りだと思われる場合は管理者に連絡してください。
 
-Show names in chat in team colors
-== チームの色でハンドルネームを表示
+You are not in practice
+== 練習モードではありません
 
-Show kill messages
-== キル情報を表示
+You are not permitted to talk for the next %s seconds.
+== 次の %s 秒間は発言が許可されていません。
 
-Show votes window after voting
-== 投票完了後にウィンドウを閉じない
+You are not permitted to vote for the next %s seconds.
+== 次の %s 秒間は投票が許可されていません。
 
-Use old chat style
-== 古いチャットボックスを使用
+You are now in a solo part
+== あなたはソロパートに入りました
 
-Messages
-== メッセージ
+You are now out of the solo part
+== あなたはソロパートを出ました
 
-System message
-== システムメッセージ
+You are running a vote, please try again after the vote is done!
+== あなたは投票を実行中です。投票が終わったらもう一度お試しください！
 
-Highlighted message
-== メンションメッセージ
+You can collide with others
+== 他のプレイヤーと衝突できます
 
-Team message
-== チームメッセージ
+You can hammer hit others
+== 他のプレイヤーをハンマーで叩けます
 
-Friend message
-== 友たちからのメッセージ
+You can hit others
+== 他のプレイヤーを攻撃できます
 
-Normal message
-== 普通のメッセージ
+You can hook others
+== 他のプレイヤーをフックできます
 
-Client message
-== クライアントのメッセージ
+You can kick only your team member
+== 自分のチームメンバーのみキックできます
 
-Preview
-== プレビュー
+You can now jump %s times
+== あなたは %s 回ジャンプできるようになりました
 
-Save the best demo of each race
-== レースの最高記録のデモを保存
+You can now use the preset eye emotes.
+== プリセットの目エモートが使えるようになりました。
 
-Default length
-== デフォルト長さ
+You can only move your team member to spectators
+== 自分のチームメンバーのみ観戦者に移動できます
 
-Enable replays
-== リプレイ機能
+You can only vote after logging in.
+== ログイン後にのみ投票できます。
 
-Show ghost
-== ゴーストを表示
+You can see other players. To disable this use DDNet client and type /showothers
+== 他のプレイヤーが見えます。無効にするにはDDNetクライアントで /showothers と入力してください
 
-Save ghost
-== ゴーストを保存
+You can shoot others with grenade
+== グレネードで他のプレイヤーを撃てます
 
-Gameplay
-== ゲーム
+You can shoot others with laser
+== レーザーで他のプレイヤーを撃てます
 
-Overlay entities
-== 重ねオブジェ
+You can shoot others with shotgun
+== ショットガンで他のプレイヤーを撃てます
 
-Size
-== サイズ
+You can't change teams that fast!
+== そんなに早くチームを変更できません！
 
-Show text entities
-== 文字オブジェを表示
+You can't change teams while you are dead/a spectator.
+== 死亡中または観戦中はチームを変更できません。
 
-Show others (own team only)
-== 同チームの他のプレーヤーを表示
+You can't check your team while you are dead/a spectator.
+== 死亡中または観戦中はチームを確認できません。
 
-Show quads
-== 背景を表示
+You can't collide with others
+== 他のプレイヤーと衝突できません
 
-AntiPing
-== AntiPing
+You can't hammer hit others
+== 他のプレイヤーをハンマーで叩けません
 
-AntiPing: predict other players
-== AntiPing: 他のプレーヤーを予測
+You can't hit others
+== 他のプレイヤーを攻撃できません
 
-AntiPing: predict weapons
-== AntiPing: 武器を予測
+You can't hook others
+== 他のプレイヤーをフックできません
 
-AntiPing: predict grenade paths
-== AntiPing: 手榴弾の軌跡を予測
+You can't join super team if you don't have super rights
+== スーパー権限がないとスーパーチームに参加できません
 
-Show other players' hook collision lines
-== 他のプレーヤーのフックラインを表示
+You can't kick authorized players
+== 権限のあるプレイヤーをキックできません
 
-Background
-== 背景
+You can't kick yourself
+== 自分自身をキックできません
 
-Use current map as background
-== 現在のマップを背景にする
+You can't move authorized players to spectators
+== 権限のあるプレイヤーを観戦者に移動できません
 
-Show tiles layers from BG map
-== 背景マップのタイル層を表示
+You can't move yourself to spectators
+== 自分自身を観戦者に移動できません
 
-New random timeout code
-== ランダムにタイムアウト・コードを生成
+You can't shoot others with grenade
+== グレネードで他のプレイヤーを撃てません
 
-DDNet %s is available:
-== DDNet %s がリリースされました。
+You can't shoot others with laser
+== レーザーで他のプレイヤーを撃てません
 
-Update now
-== 今すぐ更新
+You can't shoot others with shotgun
+== ショットガンで他のプレイヤーを撃てません
 
-Updating…
-== 更新中…
+You canceled the swap with %s
+== あなたは %s との交換をキャンセルしました
 
-DDNet Client updated!
-== DDNet Client が更新しました!
+You died, but will stay in practice until you use kill.
+== 死亡しましたが、kill を使うまで練習モードのままです。
 
-No updates available
-== 新しいバージョンはありません
+You do not have a pending swap request.
+== 保留中の交換リクエストはありません。
 
-Check now
-== 更新を確認
+You don't have any eye emotes, remember to bind some.
+== 目のエモートがありません。バインドするのを忘れないでください。
 
-Entities
-== オブジェ
+You don't have unlimited air jumps
+== 無制限の空中ジャンプはありません
 
-Emoticons
-== 絵文字
+You have a jetpack gun
+== ジェットパックガンを持っています
 
-Particles
-== 粒子
+You have already requested to swap with %s.
+== あなたはすでに %s との交換をリクエストしています。
 
-Assets directory
-== 素材ディレクトリー
+You have requested to swap with %s. Use /cancelswap to cancel the request.
+== あなたは %s との交換をリクエストしました。/cancelswap でリクエストをキャンセルできます。
 
-Discord
-== Discord
+You have started racing already
+== あなたはすでにレースを開始しています
 
-https://ddnet.org/discord
-== https://ddnet.org/discord
+You have to be in a team (from 1-63)
+== チーム（1〜63）に所属している必要があります
 
-Learn
-== チュートリアル
+You have to be in a team to play on this server and all of your team will die if the team is locked
+== このサーバーでプレイするにはチームに所属している必要があり、チームがロックされているとチーム全員が死にます
 
-https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+You have to wait %s seconds until you can swap
+== 交換できるまで %s 秒待つ必要があります
 
-Website
-== ウェブ
+You have unlimited air jumps
+== 無制限の空中ジャンプがあります
 
-Settings
-== 設定
+You have unsaved changes.
+== 未保存の変更があります。
 
-Stop server
-== サーバーを停止
+You have used practice mode already
+== あなたはすでに練習モードを使用しました
 
-Run server
-== サーバーを起動
+You haven't previously teleported. Use /tp before using this command.
+== 以前にテレポートしていません。このコマンドを使用する前に /tp を使用してください。
 
-Server executable not found, can't run server
-== サーバープログラムが見つかりません。サーバー起動できません。
+You lost your jetpack gun
+== ジェットパックガンを失いました
 
-Editor
-== エディター
+You must join a team and play with somebody or else you can't play
+== チームに参加して誰かとプレイしなければなりません。そうしないとプレイできません
 
-[Start menu]
-Play
-== スタート
+You must restart the game for all settings to take effect.
+== すべての設定を有効にするには、ゲームを再起動する必要があります。
 
-DDNet %s is out!
-== DDNet %s がリリースされました！
+You must wait %s seconds before making another vote.
+== 次の投票を行うには %s 秒待つ必要があります。
 
-Downloading %s:
-== %s をダウンロード中:
+You must wait %s seconds before making your first vote.
+== 最初の投票を行うには %s 秒待つ必要があります。
 
-Update failed! Check log…
-== 更新に失敗しました！ログを確認してください。
+You will be disconnected from the server.
+== サーバーから切断されます。
 
-Restart
-== やり直す
+You will no longer see all tees on this server
+== このサーバーのすべてのTeeはもう見えなくなります
 
-Time
-== 時間
+You will not receive any further global chat and server messages
+== これ以上グローバルチャットとサーバーメッセージを受信しなくなります
 
-Manual
-== 手動
+You will not receive any further whispers
+== これ以上ささやきを受信しなくなります
 
-Race
-== レース
+You will now see all tees on this server, no matter the distance
+== 距離に関係なく、このサーバーのすべてのTeeが見えるようになります
 
-Auto
-== 自動
+You will receive global chat and server messages
+== グローバルチャットとサーバーメッセージを受信します
 
-Replay
-== リプレー
+You will receive whispers
+== ささやきを受信します
 
-Follow
-== フォロー
+You'll lose unsaved changes after deselecting.
+== 選択解除後、未保存の変更は失われます。
 
-Frags
-== キル
+You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
+== あなたは/practiceがオンになっているチームにいません。注意：練習モードではランクを獲得できません。
 
-Deaths
-== 総キル
+You're the last one!
+== 最後の一人です！
 
-Suicides
-== 自殺
+Your current race time is %s
+== あなたの現在のレースタイムは %s です
 
-Ratio
-== キル率
+Your current version is outdated. Please update from the QQ group.
+== 現在のバージョンは古いです。QQ グループから更新してください。
 
-Net
-== 純キル
+Your favorite map manager
+== あなたの大好きなマップマネージャー
 
-FPM
-== キル/分
+Your favorite maps appear here
+== お気に入りのマップがここに表示されます
 
-Spree
-== コンボ
+Your friend %s is online and currently on map %s!
+== 友達 %s がオンラインで、現在マップ %s にいます！
 
-Best
-== 最高
+Your locked team was killed because '%s' %s
+== ロックされたあなたのチームは、'%s' が %s したため処刑されました
 
-Grabs
-== 旗取り
+Your movements are not taken into account when calculating the line colors
+== 線の色を計算する際、自分の移動は考慮されません
 
-1 new mention
-== 1 件の新しいメンション
+Your nickname '%s' is already used (%d points). Do you still want to use it?
+== ニックネーム「%s」は既に使用されています（%d ポイント）。それでも使用しますか？
 
-%d new mentions
-== %d 件の新しいメンション
+Your profile
+== あなたのプロフィール
 
-9+ new mentions
-== 9+ 件の新しいメンション
+Your skin
+== 自分のスキン
 
-[Translation credits: Add your own name here when you update translations]
-English translation by the DDNet Team
-== Japanese translation by orange and Eana Hufwe
+Your swap request timed out %s seconds ago, use /swap again to request
+== あなたの交換リクエストは %s 秒前にタイムアウトしました。もう一度 /swap でリクエストしてください
 
-[Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 
+Your team has been killed because it contains an invalid tee state
+== あなたのチームは無効なTee状態を含むため処刑されました
 
-[Graphics error]
-Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
-== 
+Your team has not started yet
+== あなたのチームはまだ開始していません
 
-[Graphics error]
-An error during command recording occurred. Try to update your GPU drivers.
-== 
+Your team is currently saving
+== あなたのチームは現在保存中です
 
-[Graphics error]
-A render command failed. Try to update your GPU drivers.
-== 
+Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
+== あなたのチームはもう完走できず、/practiceモードにも入っていないため処刑されました
 
-[Graphics error]
-Submitting the render commands failed. Try to update your GPU drivers.
-== 
+Your team was unlocked by an unlock team tile
+== あなたのチームはチームロック解除タイルによってロック解除されました
 
-[Graphics error]
-Failed to swap framebuffers. Try to update your GPU drivers.
-== 
+Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
+== タイムアウトコードが設定されました。0.7クライアントはタイムアウト時にTeeを取り戻せませんが、0.6クライアントはあなたのTeeを主張できます
 
-[Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 
+z = Zoom
+== z = Zoom（ズーム）
 
-[Graphics error]
-Could not initialize the given graphics backend, reverting to the default backend now.
-== 
+Zen Mode
+== Zenモード
 
-[Graphics error]
-Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
-== 
+Zen mode key
+== Zenモードキー
 
-Could not resolve connect address '%s'. See local console for details.
-== 
+Zhipu AI
+== 智譜AI
 
-Connect address error
-== 
+Zhipu API key
+== 智譜APIキー
 
-Press Ctrl+Shift+G to disable debug graphs.
-== 
+Zoom decrease
+== ズーム縮小
 
-Could not save downloaded map. Try manually deleting this file: %s
-== 
+Zoom in
+== ズームイン
 
-Could not connect dummy
-== 
+Zoom increase
+== ズーム拡大
 
-Error playing demo
-== 
+Zoom out
+== ズームアウト
 
-Failed saving the replay!
-== 
+⚠️ FTAPI is a free service. Excessive use may cause service suspension.
+== ⚠️ FTAPIは無料サービスです。過度の使用はサービスの停止を引き起こす可能性があります。
 
-Saving settings to '%s' failed
-== 
+⚠️ LibreTranslate API Key not set
+== ⚠️ LibreTranslate APIキーが設定されていません
 
-Error saving settings
-== 
+⚠️ LLM API Key not configured
+== ⚠️ LLM APIキーが設定されていません
 
-No demo with this filename exists
-== 
-
-"%s" is not compatible with pnglite and cannot be loaded by old DDNet versions:
-== 
-
-The format of texture %s is not RGBA which will cause visual bugs.
-== 
-
-Preparing demo playback
-== 
-
-Connected
-== 
-
-Loading map file from storage
-== 
-
-Loading demo file from storage
-== 
-
-Some fonts could not be loaded. Check the local console for details.
-== 
-
-Initializing components
-== 
-
-Why are you slowmo replaying to read this?
-== 
-
-Initializing assets
-== 
-
-Initializing map logic
-== 
-
-Sending initial client info
-== 
-
-Quitting. Please wait…
-== 
-
-Restarting. Please wait…
-== 
-
-Loading skin files
-== 
-
-Team save in progress. You'll be able to load with '/load %s'
-== 
-
-Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails
-== 
-
-Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue
-== 
-
-Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue
-== 
-
-Save failed!
-== 
-
-Auto-sync player camera
-== 
-
-[Auto camera]
-Disabled
-== 
-
-[Auto camera]
-Enabled
-== 
-
-[Auto camera]
-Unavailable for this player
-== 
-
-[Auto camera]
-Inactive
-== 
+⚠️ Tencent Cloud API not configured
+== ⚠️ Tencent Cloud APIが設定されていません
 
 [Auto camera]
 Active
-== 
-
-Searching
-== 
-
-Enter Username
-== 
-
-Enter Password
-== 
-
-NOT CONNECTED
-== 
-
-Match %d of %d
-== 
-
-No results
-== 
-
-Lines %d - %d (%s)
-== 
-
-Locked
-== 
-
-Following
-== 
-
-Loading commands…
-== 
-
-Loading maps…
-== 
-
-Position:
-== 
-
-Speed:
-== 
-
-Angle:
-== 
-
-Multi-View
-== 
-
-[Spectating]
-Following %d: %s
-== 
-
-[Spectating]
-Following %s
-== 
-
-[Spectating Camera Mode Icon]
-AUTO
-== 
-
-[Important alert message]
-Press Esc or Tab to dismiss…
-== 
-
-Server alert
-== 
-
-Moderator alert
-== 
-
-Team %d
-== 
-
-Press a key…
-== 
-
-Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
-== 
-
-Server could not be started
-== 
-
-Some map images could not be loaded. Check the local console for details.
-== 
-
-Loading map
-== 
-
-Uploading map data to GPU
-== 
-
-Some map sounds could not be loaded. Check the local console for details.
-== 
-
-Loading menu themes
-== 
-
-Main menu
-== 
-
-Rename folder
-== 
-
-Render complete
-== 
-
-Are you sure that you want to restart?
-== 
-
-Save skin
-== 
-
-Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== 
-
-There's an unsaved map in the editor, you might want to save it.
-== 
-
-Continue anyway?
-== 
-
-This name cannot be used for files and folders
-== 
-
-A demo with this name already exists
-== 
-
-A folder with this name already exists
-== 
-
-Unable to rename the folder
-== 
-
-File '%s' already exists, do you want to overwrite it?
-== 
-
-(paused)
-== 
-
-You will be disconnected from the server.
-== 
-
-Videos directory
-== 
-
-Video was saved to '%s'
-== 
-
-Join Tutorial Server
-== 
-
-Skip Tutorial
-== 
-
-Cancel
-== 
-
-Error checking player name
-== 
-
-Could not check for existing player with your name. Check your internet connection.
-== 
-
-Unable to save the skin with a reserved name
-== 
-
-Unable to save the skin
-== 
-
-Trying to determine UDP connectivity…
-== 
-
-UDP seems to be filtered.
-== 
-
-UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
-== 
-
-No answer from server yet.
-== 
-
-%d/%d KiB (%.1f KiB/s)
-== 
-
-Getting game info
-== 
-
-Requesting to join the game
-== 
-
-Loading menu images
-== 
-
-AFR
-== 
-
-ASI
-== 
-
-AUS
-== 
-
-EUR
-== 
-
-NA
-== 
-
-SA
-== 
-
-CHN
-== 
-
-No local servers found (ports %d-%d)
-== 
-
-Could not get server list from master server
-== 
-
-Example of usage
-== 
-
-Are you sure that you want to disconnect and switch to a different server?
-== 
-
-No login required
-== 
-
-Communities
-== 
-
-Copy info
-== 
-
-No server selected
-== 
-
-Online friends (%d)
-== 
-
-Online clanmates (%d)
-== 
-
-[friends (server browser)]
-Offline (%d)
-== 
-
-Click to select server. Double click to join your friend.
-== 
-
-Click to remove this player from your friends list.
-== 
-
-Click to remove this clan from your friends list.
-== 
-
-Add friends by entering their name below or by clicking their name in the player list.
-== 
-
-Add clanmates by entering their clan below and leaving the name blank.
-== 
-
-Are you sure that you want to remove the player '%s' from your friends list?
-== 
-
-Are you sure that you want to remove the clan '%s' from your friends list?
-== 
-
-Add Clan
-== 
-
-Server filter
-== 
-
-Friends
-== 
-
-[Demo playback]
-Live
-== 
-
-[Demo playback]
-Go to Live
-== 
-
-Play the current demo
-== 
-
-Pause the current demo
-== 
-
-Stop the current demo
-== 
-
-Go back the specified duration
-== 
-
-[Demo player duration]
-%s min.
-== 
-
-[Demo player duration]
-%s sec.
-== 
-
-Change the skip duration
-== 
-
-Go forward the specified duration
-== 
-
-Go back one tick
-== 
-
-Go forward one tick
-== 
-
-Go back one marker
-== 
-
-Go forward one marker
-== 
-
-Slow down the demo
-== 
-
-Speed up the demo
-== 
-
-Mark the beginning of a cut (right click to reset)
-== 
-
-Mark the end of a cut (right click to reset)
-== 
-
-Export cut as a separate demo
-== 
-
-Close the demo player
-== 
-
-Toggle keyboard shortcuts
-== 
-
-Toggle auto camera
-== 
-
-Export demo cut
-== 
-
-Cut interval
-== 
-
-Cut length
-== 
-
-Render cut to video
-== 
-
-Please use a different filename
-== 
-
-Loading demo files
-== 
-
-All combined
-== 
-
-No demo selected
-== 
-
-Folder Link
-== 
-
-Created
-== 
-
-Netversion
-== 
-
-Map size
-== 
+== アクティブ
+
+[Auto camera]
+Disabled
+== 無効
+
+[Auto camera]
+Enabled
+== 有効
+
+[Auto camera]
+Inactive
+== 非アクティブ
+
+[Auto camera]
+Unavailable for this player
+== このプレイヤーには利用不可
+
+[data_version.h]
+You may have installed only DDNet.exe. Please use the full QmClient folder.
+== DDNet.exe のみをインストールした可能性があります。完全な QmClient フォルダを使用してください。
+
+[data_version.h]
+You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.
+== DDNet.exe のみを置き換え、QmClient.zip をスキップした可能性があります。\n完全な QmClient パッケージをインストールしてください。
 
 [Demo details]
 map not included
-== 
-
-Open the directory that contains the demo files
-== 
-
-Are you sure that you want to disconnect and play this demo?
-== 
-
-Are you sure that you want to delete the folder '%s'?
-== 
-
-Are you sure that you want to delete the demo '%s'?
-== 
-
-Delete folder
-== 
-
-Unable to delete the demo '%s'
-== 
-
-Unable to delete the folder '%s'. Make sure it's empty first.
-== 
-
-Dummy is not allowed on this server
-== 
-
-Please wait…
-== 
-
-Edit touch controls
-== 
-
-Unsaved changes
-== 
-
-Save all changes before turning off the editor?
-== 
-
-Close
-== 
-
-Error loading touch controls
-== 
-
-Could not load touch controls from file. See local console for details.
-== 
-
-Could not load default touch controls from file. See local console for details.
-== 
-
-Could not load touch controls from clipboard. See local console for details.
-== 
-
-Community
-== 
-
-Round %d/%d
-== 
-
-[Team status]
-forbidden
-== 
-
-[Team status]
-solo
-== 
-
-[Team status]
-allowed
-== 
-
-[Team status]
-required
-== 
-
-Teams
-== 
-
-[Team size]
-minimum
-== 
-
-[Team size]
-maximum
-== 
-
-Loading…
-== 
-
-Loading ghost files
-== 
-
-Ghosts directory
-== 
-
-Activate all
-== 
-
-Deactivate all
-== 
-
-Menu opened. Press Esc key again to close menu.
-== 
-
-Layout
-== 
-
-Visibility
-== 
-
-Behavior
-== 
-
-Save changes
-== 
-
-Discard changes
-== 
-
-Delete button
-== 
-
-Are you sure that you want to delete this button?
-== 
-
-Duplicate
-== 
-
-New button already created
-== 
-
-A new button has already been created, please save or delete it before creating another one.
-== 
-
-Please save your changes before duplicating a button.
-== 
-
-No space for button
-== 
-
-There is not enough space available to place another button.
-== 
-
-There is not enough space available to place another button with this size. The button has been resized.
-== 
-
-Deselect
-== 
-
-You'll lose unsaved changes after deselecting.
-== 
-
-Width
-== 
-
-Height
-== 
-
-Shape
-== 
-
-[Touch button shape]
-Rectangle
-== 
-
-[Touch button shape]
-Circle
-== 
-
-[Touch button label type]
-Plain
-== 
-
-[Touch button label type]
-Localized
-== 
-
-[Touch button label type]
-Icon
-== 
-
-Behavior type
-== 
-
-[Touch button behavior]
-Bind
-== 
-
-[Touch button behavior]
-Bind Toggle
-== 
-
-[Touch button behavior]
-Predefined
-== 
-
-Command
-== 
-
-Label
-== 
-
-Label type
-== 
-
-Add command
-== 
-
-Delete command
-== 
-
-[Touch button visibility preview]
-Included
-== 
-
-[Touch button visibility preview]
-Excluded
-== 
-
-[Touch button visibility preview]
-Ignore
-== 
-
-Long press on a touch button to select it.
-== 
-
-New button
-== 
-
-Select button by touch
-== 
-
-No buttons match your filter criteria
-== 
-
-File
-== 
-
-Buttons
-== 
-
-Active color
-== 
-
-Inactive color
-== 
-
-Direct touch input while ingame
-== 
-
-[Direct touch input]
-Disabled
-== 
+== マップ未含
+
+[Demo playback]
+Go to Live
+== ライブに移動
+
+[Demo playback]
+Live
+== ライブ
+
+[Demo player duration]
+%s min.
+== %s 分
+
+[Demo player duration]
+%s sec.
+== %s 秒
 
 [Direct touch input]
 Active action
-== 
+== 実行中のアクション
 
 [Direct touch input]
 Aim
-== 
+== 照準
+
+[Direct touch input]
+Disabled
+== 無効
 
 [Direct touch input]
 Fire
-== 
+== 発射
 
 [Direct touch input]
 Hook
-== 
-
-Direct touch input while spectating
-== 
-
-Preview button visibility while the editor is active.
-== 
-
-Show all buttons
-== 
-
-https://wiki.ddnet.org/wiki/Touch_controls
-== 
-
-Error saving touch controls
-== 
-
-Could not save touch controls to file. See local console for details.
-== 
-
-Are you sure that you want to discard the current changes to the touch controls?
-== 
-
-Are you sure that you want to reset the touch controls to default?
-== 
-
-Import from clipboard
-== 
-
-Are you sure that you want to import the touch controls from the clipboard? This will overwrite your current touch controls.
-== 
-
-Export to clipboard
-== 
-
-Save all changes before switching selected button?
-== 
-
-Discard
-== 
-
-There is not enough space available for the button. Check its visibilities and size.
-== 
-
-Selected button not visible
-== 
-
-The selected button is not visible. Do you want to deselect it or edit its visibility?
-== 
-
-Edit
-== 
-
-Width and height are required to be within the range from %d to %d.
-== 
-
-Button position is outside of the screen.
-== 
-
-The selected button is overlapping with other buttons.
-== 
-
-Wrong button settings
-== 
-
-[Touch button visibilities]
-Ingame
-== 
-
-[Touch button visibilities]
-Zoom Allowed
-== 
-
-[Touch button visibilities]
-Vote Active
-== 
-
-[Touch button visibilities]
-Dummy Allowed
-== 
-
-[Touch button visibilities]
-Dummy Connected
-== 
-
-[Touch button visibilities]
-Rcon Authed
-== 
-
-[Touch button visibilities]
-Demo Player
-== 
-
-[Touch button visibilities]
-Extra Menu
-== 
-
-[Predefined touch button behaviors]
-Ingame Menu
-== 
-
-[Predefined touch button behaviors]
-Extra Menu
-== 
-
-[Predefined touch button behaviors]
-Emoticon
-== 
-
-[Predefined touch button behaviors]
-Spectate
-== 
-
-[Predefined touch button behaviors]
-Swap Action
-== 
-
-[Predefined touch button behaviors]
-Use Action
-== 
-
-[Predefined touch button behaviors]
-Joystick Action
-== 
-
-[Predefined touch button behaviors]
-Joystick Aim
-== 
-
-[Predefined touch button behaviors]
-Joystick Fire
-== 
-
-[Predefined touch button behaviors]
-Joystick Hook
-== 
-
-[Hertz]
-Hz
-== 
-
-Save power by lowering refresh rate (higher input latency)
-== 
-
-Settings file
-== 
-
-Open the settings file
-== 
-
-Saves file
-== 
-
-Open the saves file
-== 
-
-Config directory
-== 
-
-Open the directory that contains the configuration and user files
-== 
-
-Open the directory to add custom themes
-== 
-
-Player info change cooldown
-== 
-
-Download community skins
-== 
-
-This skin name cannot be used.
-== 
-
-Skin could not be loaded due to an error. Check the local console for details.
-== 
-
-Skin could not be found.
-== 
-
-Create a random skin
-== 
-
-Choose default eyes when joining a server
-== 
-
-No skins match your filter criteria
-== 
-
-Open the directory to add custom skins
-== 
-
-Windowed fullscreen
-== 
-
-Allows maps to render with more detail
-== 
-
-Show FPS
-== 
-
-Renders your frame rate in the top right
-== 
-
-Renderer
-== 
-
-default
-== 
-
-custom
-== 
-
-Graphics card
-== 
-
-auto
-== 
-
-Tee
-== 
-
-Appearance
-== 
-
-Name Plate
-== 
-
-Hook Collisions
-== 
-
-Info Messages
-== 
-
-Show health, shields and ammo
-== 
-
-Show local time always
-== 
-
-Show spectator cursor
-== 
-
-Authed name color in scoreboard
-== 
-
-Same clan color in scoreboard
-== 
-
-DDRace HUD
-== 
-
-Show client IDs (scoreboard, chat, spectator)
-== 
-
-Show DDRace HUD
-== 
-
-Show jumps indicator
-== 
-
-Show number of spectators
-== 
-
-Show dummy actions
-== 
-
-Show player position
-== 
-
-Show player speed
-== 
-
-Show player target angle
-== 
-
-Show freeze bars
-== 
-
-Opacity of freeze bars inside freeze
-== 
-
-Always show chat
-== 
-
-Show only chat messages from team members
-== 
-
-Censor profanity
-== 
-
-Chat font size
-== 
-
-Chat width
-== 
-
-Chat background color
-== 
-
-[Show name plates]
-None
-== 
-
-[Show name plates]
-Own
-== 
-
-[Show name plates]
-Others
-== 
-
-[Show name plates]
-All
-== 
-
-Name plates offset
-== 
-
-Show friend icon in name plates
-== 
-
-Show client IDs in name plates
-== 
-
-Show client IDs on a separate line
-== 
-
-Client IDs size
-== 
-
-Hook Strength
-== 
-
-Show hook strength icon indicator
-== 
-
-Show hook strength number indicator
-== 
-
-Size of hook strength icon and number indicator
-== 
-
-Key Presses
-== 
-
-Show players' key presses
-== 
-
-[Show players' key presses]
-None
-== 
-
-[Show players' key presses]
-Own
-== 
-
-[Show players' key presses]
-Others
-== 
-
-[Show players' key presses]
-All
-== 
-
-Size of key press icons
-== 
-
-Preview player's name plate
-== 
-
-Preview dummy's name plate
-== 
-
-Hook collision line
-== 
-
-Show own player's hook collision line
-== 
-
-Always show own player's hook collision line
-== 
-
-Always show other players' hook collision lines
-== 
-
-Width of your own hook collision line
-== 
-
-Width of others' hook collision line
-== 
-
-Hook collision line opacity
-== 
-
-Colors of the hook collision line, in case of a possible collision with:
-== 
-
-Your movements are not taken into account when calculating the line colors
-== 
-
-Nothing hookable
-== 
-
-Something hookable
-== 
-
-A Tee
-== 
-
-Preview 'Hook collisions' being pressed
-== 
-
-Show finish messages
-== 
-
-Normal Color
-== 
-
-Highlight Color
-== 
-
-Weapons
-== 
-
-Rifle Laser Outline Color
-== 
-
-Rifle Laser Inner Color
-== 
-
-Shotgun Laser Outline Color
-== 
-
-Shotgun Laser Inner Color
-== 
-
-Door Laser Outline Color
-== 
-
-Door Laser Inner Color
-== 
-
-Freeze Laser Outline Color
-== 
-
-Freeze Laser Inner Color
-== 
-
-Dragger Outline Color
-== 
-
-Dragger Inner Color
-== 
-
-Set all to Rifle
-== 
-
-Enable ghost
-== 
-
-When you cross the start line, show a ghost tee replicating the movements of your best time
-== 
-
-Opacity
-== 
-
-Only save improvements
-== 
-
-Adjust the opacity of entities belonging to other teams, such as tees and name plates
-== 
-
-Quads are used for background decoration
-== 
-
-Tries to predict other entities to give a feel of low latency
-== 
-
-AntiPing: prediction margin
-== 
-
-Regular background color
-== 
-
-Entities background color
-== 
-
-Run on join
-== 
-
-Chat command (e.g. showall 1)
-== 
-
-Unregister protocol and file extensions
-== 
-
-Basic
-== 
-
-Custom
-== 
-
-Are you sure that you want to delete '%s'?
-== 
-
-Delete skin
-== 
-
-Unable to delete skin
-== 
-
-Extras
-== 
-
-Loading assets
-== 
-
-Open the directory to add custom assets
-== 
-
-Reset controls
-== 
-
-Are you sure that you want to reset the controls to their defaults?
-== 
-
-Mouse
-== 
-
-Controller
-== 
-
-Ingame mouse sens.
-== 
-
-UI mouse sens.
-== 
-
-Enable controller
-== 
-
-Ingame controller mode
-== 
-
-[Ingame controller mode]
-Relative
-== 
-
-[Ingame controller mode]
-Absolute
-== 
-
-Ingame controller sens.
-== 
-
-UI controller sens.
-== 
-
-Controller jitter tolerance
-== 
-
-No controller found. Plug in a controller.
-== 
-
-Axis
-== 
-
-Status
-== 
-
-Aim bind
-== 
-
-Tutorial
-== 
-
-Can't find a Tutorial server
-== 
-
-Download
-== 
-
-Loading race demo files
-== 
-
-[Spectators]
-%d others…
-== 
-
-Super
-== 
-
-[Team and size]
-%d\n(%d/%d)
-== 
-
-Team %d (%d/%d)
-== 
-
-[skins]
-Body
-== 
-
-[skins]
-Marking
-== 
-
-[skins]
-Decoration
-== 
-
-[skins]
-Hands
-== 
-
-[skins]
-Feet
-== 
-
-[skins]
-Eyes
-== 
-
-Loading sound files
-== 
-
-Aim
-== 
-
-Active: Fire
-== 
-
-Active: Hook
-== 
-
-Moved ingame
-== 
-
-https://wiki.ddnet.org/wiki/Mapping
-== 
-
-
-Translated text hidden due to streamer mode
-== 
-
-TClient
-== 
-
-(On Latest)
-== 
-
-(Fetching Update Info)
-== 
-
-[bgdraw]
-Failed to create bgdraw folder
-== 
-
-[bgdraw]
-No items to write
-== 
-
-[bgdraw]
-No changes since last save
-== 
-
-[bgdraw]
-Writing item %d failed
-== 
-
-[bgdraw]
-Written %d items
-== 
-
-[bgdraw]
-Loaded %d items
-== 
-
-[bgdraw]
-Loaded %d items (discarded %d items)
-== 
-
-Kaomoji
-== 
-
-Shrug:
-== 
-
-Flip:
-== 
-
-Unflip:
-== 
-
-Cute:
-== 
-
-Lenny:
-== 
-
-Warlist
-== 
-
-Add war name:
-== 
-
-Add war clan:
-== 
-
-Add team name:
-== 
-
-Add team clan:
-== 
-
-Remove war name:
-== 
-
-Remove war clan:
-== 
-
-Remove team name:
-== 
-
-Remove team clan:
-== 
-
-Add [group] [name] [reason]:
-== 
-
-Add [group] [clan] [reason]:
-== 
-
-Remove [group] [name]:
-== 
-
-Remove [group] [clan]:
-== 
-
-Other
-== 
-
-Translate:
-== 
-
-Translate ID:
-== 
-
-Mute:
-== 
-
-Unmute:
-== 
-
-Settings
-== 
-
-Bind Wheel
-== 
-
-War List
-== 
-
-Chat Binds
-== 
-
-Status Bar
-== 
-
-Info
-== 
-
-Visual
-== 
-
-Custom Font: 
-== 
+== フック
+
+[Graphics error]
+A render command failed. Try to update your GPU drivers.
+== レンダリングコマンドが失敗しました。GPUドライバーを更新してみてください。
+
+[Graphics error]
+An error during command recording occurred. Try to update your GPU drivers.
+== コマンド記録中にエラーが発生しました。GPUドライバーを更新してみてください。
+
+[Graphics error]
+Could not initialize the given graphics backend, reverting to the default backend now.
+== 指定されたグラフィックスバックエンドを初期化できませんでした。デフォルトのバックエンドに戻します。
+
+[Graphics error]
+Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
+== 指定されたグラフィックスバックエンドを初期化できませんでした。おそらく、内蔵グラフィックスのドライバーがインストールされていないためです。
+
+[Graphics error]
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== 初期化に失敗しました。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
+
+[Graphics error]
+Failed to swap framebuffers. Try to update your GPU drivers.
+== フレームバッファのスワップに失敗しました。GPUドライバーを更新してみてください。
+
+[Graphics error]
+Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
+== VRAM が不足しています。'cl_skins_loaded_max' を低い値に設定するか、カスタムアセット（スキン、エンティティなど）、特に高解像度のものを削除してみてください。
+
+[Graphics error]
+Submitting the render commands failed. Try to update your GPU drivers.
+== レンダリングコマンドの送信に失敗しました。GPUドライバーを更新してみてください。
+
+[Graphics error]
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== 不明なエラー。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
 
 [Hammer Mode]
 Normal
-== 
+== 通常（回転なし）
 
 [Hammer Mode]
 Rotate with cursor
-== 
+== カーソルに合わせて回転（垂直）
 
 [Hammer Mode]
 Rotate with cursor like gun
-== 
-
-Hammer Mode: 
-== 
-
-Ingame cursor scale
-== 
-
-Wheel animate
-== 
-
-Show ping colored circle in nameplates
-== 
-
-Show country flags in nameplates
-== 
-
-Hide nameplates in spec
-== 
-
-Show skin names in nameplate
-== 
-
-Freeze stars
-== 
-
-Color frozen tee skins
-== 
-
-Show katan on frozen players
-== 
-
-Render all custom colored feet as white feet skin
-== 
-
-Tiny Tees
-== 
-
-Tiny Tee Size
-== 
-
-Fake CTF flags
-== 
-
-Input
-== 
-
-Fast Inputs (-20ms visual delay)
-== 
-
-Extra tick other tees (increases other tees latency, \nmakes dragging slightly easier when using fast input)
-== 
-
-Anti Latency Tools
-== 
-
-Prediction Margin
-== 
-
-Remove prediction & antiping in freeze
-== 
-
-Amount
-== 
-
-Delay
-== 
-
-Dont predict other players if you are frozen
-== 
-
-Adjust your prediction margin while frozen
-== 
-
-Frozen Margin
-== 
-
-Anti Ping Smoothing
-== 
-
-Use new smoothing algorithm
-== 
-
-Optimistic prediction along stable direction
-== 
-
-Negative stability buffer (for Gores)
-== 
-
-Uncertainty duration
-== 
-
-Auto execute
-== 
-
-Voting
-== 
-
-Auto vote no to map changes when far
-== 
-
-Minimum Time
-== 
-
-Message to send in chat:
-== 
-
-Leave empty to disable
-== 
-
-Auto Reply
-== 
-
-Auto reply to muted players
-== 
-
-Auto reply when tabbed out
-== 
-
-Player Indicator
-== 
-
-Show any enabled Indicators
-== 
-
-Hide indicator for tees on your screen
-== 
-
-Show only freeze Players
-== 
-
-Only show after joining a team
-== 
-
-Render tiny tees instead of circles
-== 
-
-Use warlist groups for indicator
-== 
-
-Indicator size
-== 
-
-Indicator opacity
-== 
-
-Change indicator offset based on distance to other tees
-== 
-
-Indicator min offset
-== 
-
-Indicator max offset
-== 
-
-Indicator max distance
-== 
-
-Indicator offset
-== 
-
-Use warlist colors instead of regular colors
-== 
-
-Show all warlist groups
-== 
-
-Indicator alive color
-== 
-
-Indicator in freeze color
-== 
-
-Indicator safe color
-== 
-
-Pet
-== 
-
-Show the pet
-== 
-
-Pet size
-== 
-
-Pet alpha
-== 
-
-Pet Skin:
-== 
-
-HUD
-== 
-
-Show mini vote HUD
-== 
-
-Show position and angle (mini debug)
-== 
-
-Show your cursor when in free spectate
-== 
-
-Spectate cursor alpha
-== 
-
-Show when you are the last alive
-== 
-
-Last!
-== 
-
-Horizontal Position
-== 
-
-Vertical Position
-== 
-
-Font Size
-== 
-
-Show screen center lines
-== 
-
-Screen center line color
-== 
-
-Screen center line width
-== 
-
-Frozen Tee Display
-== 
-
-Show frozen tee display
-== 
-
-Use skins instead of ninja tees
-== 
-
-Max Rows
-== 
-
-Tee Size
-== 
-
-Tees left alive text
-== 
-
-Count frozen tees
-== 
-
-Tile Outlines
-== 
-
-Show any enabled outlines
-== 
-
-Only show outlines in entities
-== 
+== 銃のようにカーソルに合わせて回転（平行）
+
+[Hertz]
+Hz
+== Hz
+
+[Important alert message]
+Press Esc or Tab to dismiss…
+== Esc または Tab キーを押して閉じる…
+
+[Ingame controller mode]
+Absolute
+== 絶対値
+
+[Ingame controller mode]
+Relative
+== 相対
 
 [Outlines]
 Width
-== 
-
-Unhook & hook
-== 
-
-Freeze & deep
-== 
-
-Unfreeze & undeep
-== 
-
-Kill
-== 
-
-Tele
-== 
-
-Outline freeze & deep
-== 
-
-Outline walls
-== 
-
-Outline teleporter
-== 
-
-Outline unfreeze & undeep
-== 
-
-Outline kill
-== 
-
-Outline width
-== 
-
-Outline alpha
-== 
-
-Outline Alpha (walls)
-== 
-
-Freeze outline color
-== 
-
-Walls outline color
-== 
-
-Teleporter outline color
-== 
-
-Unfreeze outline color
-== 
-
-Kill outline color
-== 
-
-Ghost Tools
-== 
-
-Show unpredicted ghosts for other players
-== 
-
-Swap ghosts and normal players
-== 
-
-Predicted alpha
-== 
-
-Unpredicted alpha
-== 
-
-Hide ghosts of frozen players
-== 
-
-Render ghosts as circles
-== 
-
-Toggle ghosts key
-== 
-
-Rainbow
-== 
-
-Rainbow Tees
-== 
-
-Rainbow weapons
-== 
-
-Rainbow hook
-== 
-
-Rainbow others
-== 
-
-Pulse
-== 
-
-Black
-== 
-
-Random
-== 
-
-Rainbow speed
-== 
-
-Tee Trails
-== 
-
-Enable tee trails
-== 
-
-Show other tees' trails
-== 
-
-Fade trail alpha
-== 
-
-Taper trail width
-== 
-
-Solid
-== 
-
-Tee
-== 
-
-Speed
-== 
-
-Tee trail color
-== 
-
-Trail width
-== 
-
-Trail length
-== 
-
-Trail alpha
-== 
-
-Background Draw
-== 
-
-Color
-== 
-
-Time until strokes disappear
-== 
-
- seconds (never)
-== 
-
- seconds
-== 
-
-Width
-== 
-
-Draw where mouse is
-== 
-
-Finish Name
-== 
-
-Attempt to change your name when near finish
-== 
-
-Finish Name:
-== 
-
-Name:
-== 
-
-Name
-== 
-
-Command:
-== 
-
-Command
-== 
-
-Override Selected
-== 
-
-Add Bind
-== 
-
-Remove Bind
-== 
-
-The command is ran in console not chat
-== 
-
-Use left mouse to select
-== 
-
-Use right mouse to swap with selected
-== 
-
-Use middle mouse select without copy
-== 
-
-Bind Wheel Key
-== 
-
-Reset position of mouse when opening bindwheel
-== 
-
-War Entries
-== 
-
-Edit Entry
-== 
-
-Clan
-== 
-
-Reason
-== 
-
-Override Entry
-== 
-
-Add Entry
-== 
-
-Allow Duplicate Entries
-== 
-
-Enable warlist
-== 
-
-Colors in chat
-== 
-
-Colors in scoreboard
-== 
-
-Colors in spectate select
-== 
-
-Show clan if war
-== 
-
-War Groups
-== 
-
-Are you sure that you want to remove '%s' from your war groups?
-== 
-
-Remove War Group
-== 
-
-Yes
-== 
-
-No
-== 
-
-Override Group
-== 
-
-Add Group
-== 
-
-Online Players
-== 
-
-Show status bar
-== 
-
-Show labels on status bar items
-== 
-
-Status bar height
-== 
-
-Local Time
-== 
-
-Use 12 hour clock
-== 
-
-Show seconds on clock
-== 
-
-Colors
-== 
-
-Status bar color
-== 
-
-Text color
-== 
-
-Status bar alpha
-== 
-
-Text alpha
-== 
-
-Status Bar Codes:
-== 
-
-a = Angle
-== 
-
-p = Ping
-== 
-
-d = Prediction
-== 
-
-c = Position
-== 
-
-l = Local Time
-== 
-
-r = Race Time
-== 
-
-f = FPS
-== 
-
-v = Velocity
-== 
-
-z = Zoom
-== 
-
-_ or ' ' = Space
-== 
-
-Apply
-== 
-
-Status Scheme:
-== 
-
-Add Item
-== 
-
-Remove Item
-== 
-
-TClient Links
-== 
-
-Discord
-== 
-
-Website
-== 
-
-Github
-== 
-
-Support ♥
-== 
-
-Config Files
-== 
-
-TClient Settings
-== 
-
-Profiles
-== 
-
-TClient Developers
-== 
-
-Hide Settings Tabs
-== 
-
-Integration
-== 
-
-Enable Discord Integration
-== 
-
-Name: %s
-== 
-
-Clan: %s
-== 
-
-Skin: %s
-== 
-
-Your profile
-== 
-
-After Load
-== 
-
-Save/Load Skin
-== 
-
-Save/Load Colors
-== 
-
-Save/Load Emote
-== 
-
-Save/Load Name
-== 
-
-Save/Load Clan
-== 
-
-Save/Load Flag
-== 
-
-Load
-== 
-
-Save
-== 
-
-Delete
-== 
-
-Override
-== 
-
-Dummy
-== 
-
-Custom colors
-== 
-
-Overwrite clan even if empty
-== 
-
-Profiles file
-== 
-
-Activating mod weapon on %d: %s\n
-== 
-
-[data_version.h]
-You have probably only installed the TClient DDNet.exe which is not supported, please use the entire TClient folder
-== 
-
-Changing name to %s near finish
-== 
-
-[translate]
-%s translating to %s
-== 
-
-[translate]
-%s to %s failed: %s
-== 
-
-Minimum Target Language Characters
-== 対象言語の最小文字数
-
-Target Language Ratio
-== 対象言語の比率
-
-Auto-translate skips text that already looks like the target language.
-== すでに対象言語らしく見える文章は自動翻訳をスキップします。
-
-Numeric-only messages are skipped locally.
-== 数字だけのメッセージはローカルでスキップします。
-
-Concurrency (1 = automatic)
-== 並列数（1 = 自動）
+== 幅
+
+[Predefined touch button behaviors]
+Emoticon
+== 絵文字
+
+[Predefined touch button behaviors]
+Extra Menu
+== 追加メニュー
+
+[Predefined touch button behaviors]
+Ingame Menu
+== ゲーム内メニュー
+
+[Predefined touch button behaviors]
+Joystick Action
+== ジョイスティック操作
+
+[Predefined touch button behaviors]
+Joystick Aim
+== ジョイスティック照準
+
+[Predefined touch button behaviors]
+Joystick Fire
+== ジョイスティック発射
+
+[Predefined touch button behaviors]
+Joystick Hook
+== ジョイスティックフック
+
+[Predefined touch button behaviors]
+Spectate
+== 観戦
+
+[Predefined touch button behaviors]
+Swap Action
+== 操作入れ替え
+
+[Predefined touch button behaviors]
+Use Action
+== アクション使用
+
+[Show name plates]
+All
+== すべて
+
+[Show name plates]
+None
+== なし
+
+[Show name plates]
+Others
+== 他人
+
+[Show name plates]
+Own
+== 自分
+
+[Show players' key presses]
+All
+== すべて
+
+[Show players' key presses]
+None
+== なし
+
+[Show players' key presses]
+Others
+== 他人
+
+[Show players' key presses]
+Own
+== 自分
+
+[skins]
+Body
+== ボディ
+
+[skins]
+Decoration
+== デコレーション
+
+[skins]
+Eyes
+== 目
+
+[skins]
+Feet
+== 足
+
+[skins]
+Hands
+== 手
+
+[skins]
+Marking
+== マーキング
+
+[Spectating]
+Following %d: %s
+== %d をフォロー中: %s
+
+[Spectating]
+Following %s
+== %s をフォロー中
+
+[Spectating Camera Mode Icon]
+AUTO
+== 自動
+
+[Spectators]
+%d others…
+== その他 %d 人…
+
+[Start menu]
+Play
+== プレイ
+
+[Team and size]
+%d\n(%d/%d)
+== %d\n(%d/%d)
+
+[Team size]
+maximum
+== 最大
+
+[Team size]
+minimum
+== 最小
+
+[Team status]
+allowed
+== 許可
+
+[Team status]
+forbidden
+== 禁止
+
+[Team status]
+required
+== 必須
+
+[Team status]
+solo
+== ソロ
+
+[Touch button behavior]
+Bind
+== バインド
+
+[Touch button behavior]
+Bind Toggle
+== バインド切り替え
+
+[Touch button behavior]
+Predefined
+== プリセット
+
+[Touch button label type]
+Icon
+== アイコン化
+
+[Touch button label type]
+Localized
+== 自動翻訳
+
+[Touch button label type]
+Plain
+== 普通
+
+[Touch button shape]
+Circle
+== 円形
+
+[Touch button shape]
+Rectangle
+== 矩形
+
+[Touch button visibilities]
+Allow dummy
+== ダミーを許可
+
+[Touch button visibilities]
+Demo Player
+== デモプレイヤー
+
+[Touch button visibilities]
+Dummy connected
+== ダミー接続中
+
+[Touch button visibilities]
+Extra Menu
+== 追加メニュー
+
+[Touch button visibilities]
+Ingame
+== ゲーム内
+
+[Touch button visibilities]
+Rcon Authed
+== RCON認証済み
+
+[Touch button visibilities]
+Vote Active
+== 投票アクティブ
+
+[Touch button visibilities]
+Zoom Allowed
+== ズーム許可時
+
+[Touch button visibility preview]
+Excluded
+== 除外
+
+[Touch button visibility preview]
+Ignore
+== 無視
+
+[Touch button visibility preview]
+Included
+== 含む
+
+[Translation credits: Add your own name here when you update translations]
+English translation by the DDNet Team
+== DDNet チームによる英語翻訳

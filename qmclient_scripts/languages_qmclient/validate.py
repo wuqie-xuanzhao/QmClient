@@ -21,6 +21,7 @@ import twlang_qmclient as twlang
 
 errors = []
 count = 0
+parsed_language_files = 0
 legacy_overlay_dir = os.path.join(
     os.path.dirname(__file__), "..", "..", "data", "qmclient", "languages"
 )
@@ -59,28 +60,33 @@ else:
     count += 1
     print("  OK: extracted_audit_report.json is readable")
 
-base_simplified = os.path.join(
-    os.path.dirname(__file__), "..", "..", "data", "languages", "simplified_chinese.txt"
-)
-base_simplified_keys = set()
-if os.path.exists(base_simplified):
-    try:
-        base_trans = twlang.translations(base_simplified)
-        base_simplified_keys = set(base_trans.keys())
-    except Exception as e:
-        errors.append(f"base simplified_chinese.txt: {e}")
-
 active_source_keys = sorted(
     (item.key, item.context)
     for item in extracted_strings
     if not generate_all.is_chinese(item.key)
 )
-missing_base_keys = sorted(set(active_source_keys) - base_simplified_keys)
-if missing_base_keys:
-    errors.append(f"simplified_chinese.txt: missing_base_keys={missing_base_keys[:10]}")
-    print(f"  FAIL: simplified_chinese.txt: missing_base_keys={missing_base_keys[:10]}")
-else:
-    print(f"  OK: simplified_chinese.txt covers {len(active_source_keys)} source keys")
+
+for language in generate_all.GENERATED_LANGUAGES:
+    path = generate_all.runtime_language_path(language)
+    if not path.exists():
+        errors.append(f"{language}.txt is missing")
+        print(f"  FAIL: {language}.txt is missing")
+        continue
+    try:
+        parsed = twlang.translations(path)
+    except Exception as e:
+        errors.append(f"{language}.txt: {e}")
+        print(f"  FAIL: {language}.txt: {e}")
+        continue
+    parsed_language_files += 1
+    missing_base_keys = sorted(set(active_source_keys) - set(parsed.keys()))
+    if missing_base_keys:
+        errors.append(f"{language}.txt: missing_base_keys={missing_base_keys[:10]}")
+        print(f"  FAIL: {language}.txt: missing_base_keys={missing_base_keys[:10]}")
+    else:
+        print(f"  OK: {language}.txt covers {len(active_source_keys)} source keys")
+
+if parsed_language_files == len(generate_all.GENERATED_LANGUAGES):
     count += 1
 
 loaded_i18n_store = i18n_store.load_language_store()
@@ -115,6 +121,16 @@ if missing_toml_simplified:
 else:
     print("  NOTE: TOML missing simplified_chinese translations: 0")
 
+for language in generate_all.GENERATED_LANGUAGES:
+    missing_toml = i18n_store.missing_translations_for(
+        loaded_i18n_store, active_source_keys, language
+    )
+    if missing_toml:
+        errors.append(f"TOML missing {language} translations: {len(missing_toml)}")
+        print(f"  FAIL: TOML missing {language} translations: {len(missing_toml)}")
+        for key, context in missing_toml[:10]:
+            print(f"    - [{context}] {key}" if context else f"    - {key}")
+
 if os.path.isdir(legacy_overlay_dir):
     errors.append("legacy overlay directory still exists: data/qmclient/languages")
     print("  FAIL: legacy overlay directory still exists: data/qmclient/languages")
@@ -146,4 +162,7 @@ if errors:
     print(f"{len(errors)} files with errors!")
     sys.exit(1)
 else:
-    print(f"All {count} language files parse correctly!")
+    print(
+        f"All validation checks passed. "
+        f"Parsed {parsed_language_files} generated language files."
+    )

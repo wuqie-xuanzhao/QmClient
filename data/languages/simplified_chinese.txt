@@ -212,7 +212,7 @@
 == 本服务器已禁用 /map
 
 /times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
-== /times ?s?i 显示服务器最近 5 次成绩，或名称以 s 开头玩家从第 i 条开始的 5 次成绩（i 默认 1，-1 表示第一条）
+== /times ?s?i 显示服务器最近 5 次成绩，或名称以 s 开头玩家从第 i 条开始的成绩（i 默认 1，-1 表示第一条）
 
 1 new mention
 == 1 条新被提及消息
@@ -581,7 +581,7 @@ Apply
 == 应用
 
 Apply a saved profile by 1-based index to the current tee
-== 按当前角色通过序号应用模板
+== 按从 1 开始的序号将已保存的模板应用到当前角色
 
 Apply Changes
 == 应用更改
@@ -1010,7 +1010,7 @@ Can't invite this quickly
 == 你发送邀请太快了，请稍后再试
 
 Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
-== 无法识别 /tpxy 参数
+== 无法识别指定参数。用法：/tpxy x y，例如 /tpxy 9 3。
 
 Can't swap with yourself
 == 你不能和自己交换位置
@@ -7655,7 +7655,7 @@ Your team was unlocked by an unlock team tile
 == 你的队伍已被解锁队伍图块解除锁定
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
-== 你的 timeout code 已设置
+== 你的 timeout code 已设置。0.7 客户端超时后无法取回自己的 tee，但 0.6 客户端可以接管你的 tee
 
 z = Zoom
 == z = Zoom（缩放）
@@ -8054,4 +8054,4 @@ Included
 
 [Translation credits: Add your own name here when you update translations]
 English translation by the DDNet Team
-== 简体中文翻译由以下人员贡献：MK124, CarolVlCznYu, MC_TYH, Yangfl, Eki, Night_L, TsFreddie, Dan_cao, Momo, cheeser0613, By, Bamcane, Pioooooo, 豆腐渣, XCWQW1, Zerol Acqua
+== 简体中文翻译由 DDNet 团队和 QmClient 贡献者维护

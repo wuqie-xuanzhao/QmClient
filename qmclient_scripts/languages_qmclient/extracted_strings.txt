@@ -237,8 +237,8 @@ Authed name color in scoreboard
 Authenticate to rcon
 Authenticate to rcon with a username
 Authorized player forced vote '%s'
-auto
 Auto
+auto
 Auto agree vote
 Auto chat in water
 Auto chat when dying in water
@@ -381,12 +381,12 @@ Clan Members
 Clan plates size
 Clan: %s
 Classic
-Classic easy
 Classic Easy
+Classic easy
 Classic next
 Classic Next
-Classic nut
 Classic Nut
+Classic nut
 Classic pro
 Classic Pro
 Clear
@@ -1409,8 +1409,8 @@ Pet size
 Pet Skin:
 Pick result: %s
 Pickup range
-Pie menu
 Pie Menu
+Pie menu
 Ping
 Ping the current server
 Pistol

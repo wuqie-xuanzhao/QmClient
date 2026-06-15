@@ -73,7 +73,7 @@
 - `source_keys.py`：共享源码 key 提取器，扫描全 `src/`，提取 `Localize` / `Localizable`、`Register` help 和 QmClient 间接 key
 - `extract_strings.py`：写出 `extracted_strings.txt`，并生成 `extracted_audit_report.json`；active key 清单继续只承载 i18n 主链 source key，审计报告另外输出 `must_i18n`、`business_data`、`test_only`、`needs_review`、`violation`
 - `translations/i18n/*.toml`：按代码模块拆分的翻译维护源；单条记录可同时维护多语言翻译，不要求全量语言留空
-- `generate_all.py`：从当前源码 key 和模块化 TOML 维护源生成 `data/languages/simplified_chinese.txt`，缺失时回退英文 key，并保留已有非 active 条目
+- `generate_all.py`：从当前源码 key 和模块化 TOML 维护源生成 `generate_all.GENERATED_LANGUAGES` 中登记的 `data/languages/*.txt`，缺失时回退英文 key
 - `review_duplicate_entries.py`：只读审查重复、相似、空译文和疑似未使用项；unused 直接按最终 active source key 集合判断，避免 context 漂移误报
 - `audit_translation_drift.py`：只读对比当前 `translations/i18n/*.toml` 与 Git 历史里的 `data/languages/simplified_chinese.txt`，用于审查历史译法是否被新维护源改偏；默认基线为 `HEAD`
 - `translate_with_local_http.py`：通过 OpenAI-compatible HTTP 接口生成翻译 draft；所有语言默认只写 `translations_draft/<language>/*.toml`，审核通过后才允许显式 `--write-back` 回填主 TOML 维护源
@@ -92,6 +92,7 @@
 - `data/languages/simplified_chinese.txt` 是运行时生成产物，不再作为手工维护的长期真相源。
 - `translations/i18n/*.toml` 才是翻译维护源；按代码模块拆分，单条记录可带多语言翻译，未填写的语言在生成时回退英文 key。
 - `translations_draft/<language>/*.toml` 是 HTTP 模型生成的草稿维护源，用于人工审阅或后续回填，不参与运行时生成链；所有语言都先走 draft，回填必须显式使用 `--write-back`。
+- 新增英文 source key 后，推荐流程是：`extract_strings.py` 提取 key -> `translate_with_local_http.py --languages ...` 生成多语言 draft -> 人工审核 draft -> `--write-back` 回填主 TOML -> `generate_all.py` 生成运行时语言文件 -> `validate.py` 验证。
 - 字符串分类按职责判断，不再按“是不是中文”判断是否漏翻译：客户端自有展示文案进入 i18n；兼容匹配/解析字面量留在业务层；测试样本文本只留测试。
 - 当需要核对“当前 TOML 是否偏离项目原有简中口径”时，运行 `audit_translation_drift.py`。它是历史译法审计工具，不参与运行时生成链，也不阻断 `validate.py`。
 

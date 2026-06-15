@@ -220,6 +220,63 @@ simplified_chinese = "开始游戏"
         self.assertIn("unchanged source", failures[1])
         self.assertIn("missing translation", failures[2])
 
+    def test_parse_translation_output_rejects_reordered_json_items(self):
+        tasks = [
+            translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play"),
+            translate_with_local_http.TranslationTask("menus", ("Quit", ""), "Quit"),
+        ]
+
+        translations, failures = translate_with_local_http.parse_translation_output(
+            json.dumps(
+                [
+                    {"key": "Quit", "context": "", "translation": "退出"},
+                    {"key": "Play", "context": "", "translation": "开始游戏"},
+                ],
+                ensure_ascii=False,
+            ),
+            tasks,
+            "simplified_chinese",
+        )
+
+        self.assertEqual(translations, {})
+        self.assertTrue(any("unexpected identity order" in item for item in failures))
+
+    def test_russian_quality_requires_cyrillic_for_translated_text(self):
+        self.assertEqual(
+            translate_with_local_http.language_quality_failure(
+                "russian", "Server browser", "Браузер серверов"
+            ),
+            "",
+        )
+        self.assertIn(
+            "cyrillic",
+            translate_with_local_http.language_quality_failure(
+                "russian", "Server browser", "Server list"
+            ),
+        )
+
+    def test_russian_quality_allows_product_names(self):
+        self.assertEqual(
+            translate_with_local_http.language_quality_failure(
+                "russian", "QmClient", "QmClient"
+            ),
+            "",
+        )
+
+    def test_language_specific_same_source_allowlist_is_narrow(self):
+        self.assertEqual(
+            translate_with_local_http.language_quality_failure(
+                "spanish", "Solo", "Solo"
+            ),
+            "",
+        )
+        self.assertIn(
+            "unchanged source",
+            translate_with_local_http.language_quality_failure(
+                "spanish", "Server list", "Server list"
+            ),
+        )
+
     def test_load_existing_draft_identities_reads_existing_module_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             draft_root = Path(tmp)
@@ -246,6 +303,34 @@ simplified_chinese = "开始游戏"
             translate_with_local_http.parse_csv_values(" a, b ,,c "),
             ["a", "b", "c"],
         )
+
+    def test_translate_task_batches_allows_ten_parallel_requests(self):
+        tasks_by_module = {
+            "menus": [
+                translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play")
+                for _ in range(11)
+            ]
+        }
+        fake_executor = mock.MagicMock()
+        fake_executor.__enter__.return_value.submit.side_effect = RuntimeError("stop")
+
+        with mock.patch.object(
+            translate_with_local_http.concurrent.futures,
+            "ThreadPoolExecutor",
+            return_value=fake_executor,
+        ) as executor_cls:
+            with self.assertRaises(RuntimeError):
+                translate_with_local_http.translate_task_batches(
+                    client=mock.Mock(),
+                    language="simplified_chinese",
+                    tasks_by_module=tasks_by_module,
+                    batch_size=1,
+                    prompt_assets=("", "", ""),
+                    store={},
+                    parallel_requests=10,
+                )
+
+        executor_cls.assert_called_once_with(max_workers=10)
 
     def test_main_resume_module_and_limit_skip_existing_draft(self):
         records = [

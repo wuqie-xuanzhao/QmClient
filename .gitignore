@@ -14,6 +14,7 @@ docs/dyl/BestClient/
 
 # Local perf tooling artifacts
 qmclient_scripts/perf/node_modules/
+qmclient_scripts/languages_qmclient/translations_draft/
 
 # Local Codex screenshots
 .codex-*.png

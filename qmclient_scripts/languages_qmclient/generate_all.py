@@ -6,13 +6,30 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-import i18n_store
+try:
+    from . import i18n_store
+except ImportError:  # pragma: no cover - script entrypoint fallback
+    import i18n_store
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[1]
 STRINGS_FILE = SCRIPT_DIR / "extracted_strings.txt"
 BASE_LANGUAGES_DIR = PROJECT_ROOT / "data" / "languages"
 BASE_SIMPLIFIED_CHINESE = BASE_LANGUAGES_DIR / "simplified_chinese.txt"
+GENERATED_LANGUAGES = (
+    "simplified_chinese",
+    "traditional_chinese",
+    "japanese",
+    "korean",
+    "russian",
+    "german",
+    "spanish",
+    "french",
+    "brazilian_portuguese",
+    "portuguese",
+    "turkish",
+    "polish",
+)
 SIMPLIFIED_CHINESE_PASSTHROUGH_KEYS = {
     "%.2f KiB",
     "%.2f MiB",
@@ -77,13 +94,17 @@ def read_strings() -> list[SourceString]:
 
 
 def format_language_entry(key: str, context: str, translation: str) -> str:
+    translation = translation.replace("\r", "\\r").replace("\n", "\\n")
     if context:
         return f"[{context}]\n{key}\n== {translation}"
     return f"{key}\n== {translation}"
 
 
 def read_existing_language_entries(path: Path) -> dict[tuple[str, str], str]:
-    import twlang_qmclient as twlang
+    try:
+        from . import twlang_qmclient as twlang
+    except ImportError:  # pragma: no cover - script entrypoint fallback
+        import twlang_qmclient as twlang
 
     if not path.exists():
         return {}
@@ -121,6 +142,20 @@ def generate_language_entries(
     return entries
 
 
+def runtime_language_path(language: str) -> Path:
+    return BASE_LANGUAGES_DIR / f"{language}.txt"
+
+
+def generate_configured_languages(
+    strings: list[SourceString], languages: list[str] | tuple[str, ...] = GENERATED_LANGUAGES
+) -> int:
+    for language in languages:
+        print(f"\n--- Syncing {language}.txt ---")
+        entries = generate_language_entries(strings, language)
+        write_language_file(runtime_language_path(language), entries, language)
+    return len(languages)
+
+
 def write_language_file(
     path: Path, entries: list[tuple[tuple[str, str], str]], language: str
 ) -> None:
@@ -154,13 +189,12 @@ def main() -> None:
     strings = read_strings()
     print(f"\nLoaded {len(strings)} unique strings")
 
-    print("\n--- Syncing simplified_chinese.txt ---")
-    entries = generate_language_entries(strings, "simplified_chinese")
-    write_language_file(BASE_SIMPLIFIED_CHINESE, entries, "simplified_chinese")
+    updated_count = generate_configured_languages(strings)
 
     print(f"\n{'=' * 60}")
     print("Done! QmClient translations synced into:")
-    print(f"  {BASE_SIMPLIFIED_CHINESE}")
+    for language in GENERATED_LANGUAGES:
+        print(f"  {runtime_language_path(language)}")
     print(f"{'=' * 60}")
 
     chinese_keys = sum(1 for item in strings if is_chinese(item.key))
@@ -169,7 +203,7 @@ def main() -> None:
     print(f"  Source strings containing CJK: {chinese_keys}")
     print(f"  English source keys: {english_keys}")
     print(f"  Total unique strings: {len(strings)}")
-    print("  Base language files updated: 1")
+    print(f"  Base language files updated: {updated_count}")
 
 
 if __name__ == "__main__":

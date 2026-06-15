@@ -25,6 +25,70 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 TRANSLATIONS_DRAFT_DIR = SCRIPT_DIR / "translations_draft"
 PROMPT_ASSETS_DIR = SCRIPT_DIR / "prompt_assets"
 INDEXED_LINE_RE = re.compile(r"^\s*(\d+)[\.)]\s*(.*)\s*$")
+MAX_PARALLEL_REQUESTS = 10
+SAME_SOURCE_ALLOWED_BY_LANGUAGE = {
+    "german": {
+        "%c Team %d",
+        "Alpha", "Animation", "Audio", "Auto", "Chat", "Clan", "Classic Easy",
+        "Classic Next", "Classic Nut", "Classic Pro", "Client", "Combo",
+        "Community", "Controller", "Credits", "Dummy", "Editor", "Emoticon",
+        "Emoticons", "Event", "Extras", "Hammer", "Info", "Internet", "Jitter",
+        "Kaomoji", "Laser", "Layout", "Live", "Name", "Name:", "Name: %s",
+        "Normal", "Offline", "Ohhhhhhhhhhhhhhhh", "Pause", "Position:",
+        "Regex", "Region", "Renderer", "Ring", "Screenshot", "Screenshots",
+        "Server", "Skin", "Skin: %s", "Solo", "Status", "System", "Tags",
+        "Team", "Team %d", "Team %d (%d/%d)", "Teams", "Tele", "Text",
+        "Tutorial", "Update", "Version", "z = Zoom", "Clan: %s", "Hammer: %s",
+    },
+    "spanish": {
+        " min", "%d dummies", "%d dummy", "%s min.",
+        "Audio", "Auto", "Chat", "Clan", "Color", "Combo", "Demos", "Editor",
+        "Dummy", "Endpoint", "Error", "Extras", "General", "Internet", "Jitter",
+        "Kaomoji", "Literal", "Local", "Local + Dummy", "Manual", "No",
+        "Normal", "Ohhhhhhhhhhhhhhhh", "Regex", "Simple", "Skin", "Social",
+        "Solo", "solo", "Tele", "Total", "Tutorial", "Visual", "z = Zoom", "Clan: %s",
+    },
+    "french": {
+        " min", "%d dummies", "%d dummy", "%s min.",
+        "Animation", "Audio", "Auto", "Chat", "Clan", "Classic Easy",
+        "Classic Next", "Classic Nut", "Classic Pro", "Client", "Combo",
+        "Compact", "Console", "Cube", "Date", "Dummy", "Frags", "Gameplay",
+        "Interface", "Internet", "Kaomoji", "Local", "Local + Dummy",
+        "Alpha", "Laser", "Mention", "Messages", "Microphone", "Minutes", "Mode", "Mute", "Net", "Normal",
+        "Note", "Notifications", "Points", "Ratio", "Regex", "Sat.", "Score",
+        "Simple", "Skin", "Social", "Solo", "Suicides", "Total", "Type",
+        "Types", "Version", "maximum", "minimum", "Pause", "Rectangle", "solo",
+        "z = Zoom",
+    },
+    "brazilian_portuguese": {
+        " min", "%d dummies", "%d dummy", "%s min.",
+        "Chat", "Combo", "Config", "Console", "Dummy", "Editor", "Emoticon",
+        "Emoticons", "Endpoint", "Extras", "Interface", "Internet", "Jitter",
+        "Kaomoji", "Laser", "Layout", "Literal", "Local", "Local + Dummy",
+        "Manual", "Mouse", "Normal", "Offline", "Ok", "Regex", "Skin",
+        "Social", "Solo", "solo", "Status", "Tags", "Tele", "Total", "Tutorial",
+        "Visual", "auto", "Ohhhhhhhhhhhhhhhh", "tile", "z = Zoom",
+    },
+    "portuguese": {
+        " min", "%d dummies", "%d dummy", "%s min.",
+        "Auto", "Chat", "Classic Easy", "Classic Next", "Classic Nut",
+        "Classic Pro", "Combo", "Dummy", "Editor", "Emoticon", "Emoticons",
+        "Endpoint", "Extras", "Frags", "Interface", "Internet", "Jitter",
+        "Kaomoji", "Laser", "Literal", "Local", "Local + Dummy", "Manual",
+        "Normal", "Offline", "Ok", "Regex", "Shotgun", "Skin", "Social",
+        "Solo", "solo", "Tele", "Total", "Tutorial", "Visual", "Ohhhhhhhhhhhhhhhh",
+        "tile", "z = Zoom",
+    },
+    "turkish": {
+        "Dummy", "Kaomoji", "Model", "Net", "Normal", "Skin", "Solo", "solo",
+        "minimum", "Ohhhhhhhhhhhhhhhh",
+    },
+    "polish": {
+        " min", "%s min.", "Audio", "Auto", "Folder", "Internet", "Kaomoji",
+        "Laser", "Model", "Offline", "Regex", "Region", "Restart", "Solo", "solo",
+        "Status", "System",
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -166,6 +230,14 @@ def render_prompt(
         "traditional_chinese": "Traditional Chinese",
         "korean": "Korean",
         "japanese": "Japanese",
+        "russian": "Russian",
+        "german": "German",
+        "spanish": "Spanish",
+        "french": "French",
+        "brazilian_portuguese": "Brazilian Portuguese",
+        "portuguese": "Portuguese",
+        "turkish": "Turkish",
+        "polish": "Polish",
     }
     lines = [
         "# QmClient translation task",
@@ -234,6 +306,10 @@ def contains_cjk(text: str) -> bool:
     return any("\u4e00" <= char <= "\u9fff" for char in text)
 
 
+def contains_cyrillic(text: str) -> bool:
+    return any("\u0400" <= char <= "\u04ff" or "\u0500" <= char <= "\u052f" for char in text)
+
+
 def contains_latin_letter(text: str) -> bool:
     return any("a" <= char.lower() <= "z" for char in text)
 
@@ -268,6 +344,10 @@ def may_keep_source_text(source: str) -> bool:
     return False
 
 
+def may_keep_source_text_for_language(language: str, source: str) -> bool:
+    return source in SAME_SOURCE_ALLOWED_BY_LANGUAGE.get(language, set()) or may_keep_source_text(source)
+
+
 def language_quality_failure(language: str, source: str, translation: str) -> str:
     translation = translation.strip()
     if not translation:
@@ -279,18 +359,21 @@ def language_quality_failure(language: str, source: str, translation: str) -> st
         )
     if extract_digits(source) != extract_digits(translation):
         return f"digit mismatch: expected {extract_digits(source)!r}, got {extract_digits(translation)!r}"
-    if source.strip() == translation and not may_keep_source_text(source):
+    if source.strip() == translation and not may_keep_source_text_for_language(language, source):
         return "suspect prompt echo or unchanged source"
     if language == "traditional_chinese":
         simplified_only_chars = set("们这为没个队战图连实时后声显项击启级")
         if sum(1 for char in translation if char in simplified_only_chars) >= 2:
             return "traditional_chinese output contains too many simplified characters"
     if language == "korean" and contains_latin_letter(source) and not contains_hangul(translation):
-        if not may_keep_source_text(source):
+        if not may_keep_source_text_for_language(language, source):
             return "korean output does not contain Hangul"
     if language == "japanese" and contains_latin_letter(source) and not contains_kana(translation) and not contains_cjk(translation):
-        if not may_keep_source_text(source):
+        if not may_keep_source_text_for_language(language, source):
             return "japanese output does not contain Japanese text"
+    if language == "russian" and contains_latin_letter(source) and not contains_cyrillic(translation):
+        if not may_keep_source_text_for_language(language, source):
+            return "russian output does not contain cyrillic text"
     return ""
 
 
@@ -397,6 +480,13 @@ def parse_translation_output(
             translated: dict[tuple[str, str], str] = {}
             failures: list[str] = []
             for task, item in zip(tasks, payload):
+                if "key" in item or "context" in item:
+                    identity = (item.get("key"), item.get("context", ""))
+                    if identity != task.identity:
+                        failures.append(
+                            f"unexpected identity order: expected {task.identity!r}, got {identity!r}"
+                        )
+                        continue
                 translation = item.get("translation", "")
                 reason = language_quality_failure(language, task.source_text, translation)
                 if reason:
@@ -628,7 +718,7 @@ def translate_task_batches(
     parallel_requests: int = 1,
     progress: Callable[[str, int, int, int], None] | None = None,
 ) -> tuple[dict[str, dict[tuple[str, str], str]], dict[str, list[str]]]:
-    parallel_requests = max(1, min(parallel_requests, 3))
+    parallel_requests = max(1, min(parallel_requests, MAX_PARALLEL_REQUESTS))
     jobs: list[tuple[str, int, list[TranslationTask]]] = []
     for module, module_tasks in sorted(tasks_by_module.items()):
         for index in range(0, len(module_tasks), batch_size):

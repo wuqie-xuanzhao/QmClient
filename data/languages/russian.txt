@@ -1,5 +1,74 @@
+ min
+== мин
+
+ seconds
+== секунд
+
+ seconds (never)
+== секунд (никогда)
+
+"%s" is not compatible with pnglite and cannot be loaded by old DDNet versions:
+== "%s" несовместим с pnglite и не может быть загружен старыми версиями DDNet:
+
+%.2f KiB
+== %.2f KiB
+
+%.2f MiB
+== %.2f MiB
+
+%c Team %d
+== %c Команда %d
+
+%d dummies
+== %d дамми
+
+%d dummy
+== %d дамми
+
+%d items selected
+== Выбрано %d элементов
+
+%d more cut segments
+== Ещё %d отрезков обрезки
+
+%d new mentions
+== %d новых упоминаний
+
+%d of %d server
+== %d из %d сервера
+
+%d of %d servers
+== %d из %d серверов
+
+%d player
+== %d игрок
+
+%d players
+== %d игроков
+
+%d selected items were deleted, but %d items could not be deleted. The first failing item was '%s'.
+== %d выбранных элементов удалено, но %d элементов не удалось удалить. Первый неудачный элемент: «%s».
+
+%d servers, %d users
+== %d серверов, %d пользователей
+
+%d servers, %d users, %d dummies
+== %d серверов, %d пользователей, %d дамми
+
+%d teams
+== %d команд
+
+%d user
+== %d пользователь
+
+%d users
+== %d пользователей
+
+%d/%d KiB (%.1f KiB/s)
+== %d/%d КиБ (%.1f КиБ/с)
+
 %ds left
-== осталось %d сек
+== осталось %d с
 
 %i minute left
 == Осталась %i минута
@@ -13,137 +82,2429 @@
 %i seconds left
 == Осталось %i секунд
 
+%s and %s have swapped
+== %s и %s обменялись
+
+%s canceled the swap with %s
+== %s отменил(а) обмен с %s
+
+%s canceled the swap with you
+== %s отменил(а) обмен с вами
+
+%s current race time is %s
+== Текущее время заезда %s: %s
+
+%s from %s
+== %s из %s
+
+%s has requested to swap with %s
+== %s запросил(а) обмен с %s
+
+%s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
+== %s запросил(а) обмен с вами. Чтобы завершить обмен, подождите %s секунд и введите /swap %s.
+
+%s not found
+== %s не найден
+
+%s translating to %s
+== %s переводится на %s
+
+%s translating to %s before send
+== %s переводится на %s перед отправкой
+
+%s translating to %s failed: %s
+== %s перевод на %s не удался: %s
+
 %s wins!
-== %s победил!
+== %s побеждает!
+
+'%s' called for vote to force-pause '%s' for %s seconds (reason: %s)
+== '%s' инициировал(а) голосование за принудительную паузу '%s' на %s секунд (причина: %s)
+
+'%s' called for vote to kick '%s' (reason: %s)
+== '%s' инициировал(а) голосование за кик '%s' (причина: %s)
+
+'%s' called for vote to kick you
+== '%s' инициировал(а) голосование за ваш кик
+
+'%s' called for vote to move '%s' to spectators (reason: %s)
+== '%s' инициировал(а) голосование за перемещение '%s' в зрители (причина: %s)
+
+'%s' called for vote to move you to spectators
+== '%s' инициировал(а) голосование за ваше перемещение в зрители
+
+'%s' called for vote to mute '%s' (reason: %s)
+== '%s' инициировал(а) голосование за мут '%s' (причина: %s)
+
+'%s' called vote to %s practice mode for your team. Current votes %s/%s
+== '%s' инициировал(а) голосование за %s режим тренировки для вашей команды. Текущие голоса: %s/%s
+
+'%s' called vote to change server option: %s
+== '%s' инициировал(а) голосование за изменение опции сервера: %s
+
+'%s' called vote to change server option: %s (reason: %s)
+== '%s' инициировал(а) голосование за изменение опции сервера: %s (причина: %s)
+
+'%s' disabled practice mode for your team
+== '%s' отключил(а) режим тренировки для вашей команды
+
+'%s' disabled team 0 mode.
+== '%s' отключил(а) режим команды 0.
+
+'%s' enabled team 0 mode. This will make your team behave like team 0.
+== '%s' включил(а) режим команды 0. Теперь ваша команда будет вести себя как команда 0.
+
+'%s' invited '%s' to your team.
+== '%s' пригласил(а) '%s' в вашу команду.
+
+'%s' invited you to team %s. Use /team %s to join
+== '%s' пригласил(а) вас в команду %s. Используйте /team %s, чтобы присоединиться.
+
+'%s' is not a valid option on this server
+== '%s' не является допустимой опцией на этом сервере
+
+'%s' joined team %s
+== '%s' присоединился(ась) к команде %s
+
+'%s' joined team 0
+== '%s' присоединился(ась) к команде 0
+
+'%s' locked your team.
+== '%s' заблокировал(а) вашу команду.
+
+'%s' locked your team. After the race starts, killing will kill everyone in your team.
+== '%s' заблокировал(а) вашу команду. После старта заезда убийство убьёт всех в команде.
+
+'%s' unlocked your team.
+== '%s' разблокировал(а) вашу команду.
+
+'%s' was force-paused for %s seconds
+== '%s' был(а) принудительно поставлен(а) на паузу на %s секунд
+
+'%s' would have timed out, but can use timeout protection now
+== '%s' мог(ла) бы вылететь по таймауту, но использует защиту от таймаута
+
+(Fetching Update Info)
+== (Получение информации об обновлении)
+
+(On Latest)
+== (Последняя версия)
+
+(paused)
+== (пауза)
+
+(Update required)
+== (Требуется обновление)
+
++%d more codes
+== ещё %d кодов
+
+- Save codes in order:
+== - Коды сохранений по порядку:
+
+- Save owners in order:
+== - Владельцы сохранений по порядку:
+
+- You have %d saves on this map!
+== - У вас есть %d сохранений на этой карте!
+
+/map is disabled
+== /map отключён
+
+/times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
+== /times ?s?i показывает последние 5 результатов сервера или игрока, имя которого начинается с s, начиная с результата i (i = 1 по умолчанию, -1 для первого)
+
+1 new mention
+== 1 новое упоминание
+
+1 star
+== 1 звезда
+
+2 stars
+== 2 звезды
+
+3 stars
+== 3 звезды
+
+3D Background
+== 3D-фон
+
+4 stars
+== 4 звезды
+
+45° Aim
+== Прицел 45°
+
+5 stars
+== 5 звезд
+
+9+ new mentions
+== 9+ новых упоминаний
+
+_ or ' ' = blank spacer
+== _ или ' ' = пустой разделитель
+
+a = View angle
+== a = Угол обзора
+
+A demo with this name already exists
+== Демо с таким именем уже существует
+
+A folder with this name already exists
+== Папка с таким именем уже существует
+
+A screenshot with this name already exists
+== Скриншот с таким именем уже существует
+
+A Tee
+== Игрок
 
 Abort
 == Отмена
 
+Activate
+== Включить
+
+Activate all
+== Включить все
+
+Active color
+== Цвет при активации
+
+Active disconnect
+== Активное отключение
+
+Active moderator mode disabled because you are afk.
+== Режим активного модератора отключён, так как вы AFK.
+
+Active moderator mode disabled for you.
+== Режим активного модератора для вас отключён.
+
+Active moderator mode enabled for you.
+== Режим активного модератора для вас включён.
+
+Active: Fire
+== Активно: Огонь
+
+Active: Hook
+== Активно: Крюк
+
 Add
 == Добавить
 
-Add Friend
+Add [group] [clan] [reason]:
+== Добавить [группа] [клан] [причина]:
+
+Add [group] [name] [reason]:
+== Добавить [группа] [имя] [причина]:
+
+Add a bind to the bindwheel
+== Добавить привязку на колёсико привязок
+
+Add a chat bind
+== Добавить чат-привязку
+
+Add a clan war entry
+== Добавить запись войны кланов
+
+Add a colored skin to a dummy queue preset
+== Добавить цветной скин в пресет очереди дамми
+
+Add a colored skin to a queue preset
+== Добавить цветной скин в пресет очереди
+
+Add a colored skin to the dummy queue
+== Добавить цветной скин в очередь дамми
+
+Add a colored skin to the queue
+== Добавить цветной скин в очередь
+
+Add a community as a favorite
+== Добавить сообщество в избранное
+
+Add a community to the exclusion filter
+== Добавить сообщество в фильтр исключения
+
+Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
+== Добавить страну в фильтр исключения для конкретного сообщества (ISO 3166-1 числовой)
+
+Add a dummy queue preset
+== Добавить пресет очереди дамми
+
+Add a foe
+== Добавить врага
+
+Add a friend
 == Добавить друга
+
+Add a friend category
+== Добавить категорию друзей
+
+Add a map to favorites
+== Добавить карту в избранное
+
+Add a name war entry
+== Добавить запись войны имён
+
+Add a prehashed rcon key
+== Добавить предварительно хэшированный ключ rcon
+
+Add a profile
+== Добавить профиль
+
+Add a queue preset
+== Добавить пресет очереди
+
+Add a rcon key
+== Добавить ключ rcon
+
+Add a server as a favorite
+== Добавить сервер в избранное
+
+Add a skin as a favorite
+== Добавить скин в избранное
+
+Add a skin to a dummy queue preset
+== Добавить скин в пресет очереди дамми
+
+Add a skin to a queue preset
+== Добавить скин в пресет очереди
+
+Add a skin to the dummy queue
+== Добавить скин в очередь дамми
+
+Add a skin to the queue
+== Добавить скин в очередь
+
+add a sqlserver
+== добавить sql-сервер
+
+Add a type to the exclusion filter for a specific community
+== Добавить тип в фильтр исключения для конкретного сообщества
+
+Add a voting option
+== Добавить вариант голосования
+
+Add Bind
+== Добавить привязку
+
+Add command
+== Добавить команду
+
+Add current cut to the export list
+== Добавить текущий отрезок в список экспорта
+
+Add demo timeline marker
+== Добавить маркер временной шкалы демо
+
+Add Entry
+== Добавить запись
+
+Add friend
+== Добавить друга
+
+Add friends by entering their name below or by clicking their name in the player list.
+== Добавляйте друзей, введя их имя ниже или нажав на их имя в списке игроков.
+
+Add Group
+== Добавить группу
+
+Add Item
+== Добавить элемент
+
+Add one
+== Добавить один
+
+Add team clan:
+== Добавить дружественный клан:
+
+Add team name:
+== Добавить дружественное имя:
+
+Add to blocked words
+== Добавить в заблокированные слова
+
+Add to category
+== Добавить в категорию
+
+Add to queue
+== Добавить в очередь
+
+Add war clan:
+== Добавить враждебный клан:
+
+Add war name:
+== Добавить враждебное имя:
+
+Add/remove Client-IDs to spectate them exclusively (-1 to reset)
+== Добавить/удалить ID клиентов для наблюдения только за ними (-1 для сброса)
+
+Added %d missing required slot(s).
+== Добавлено %d недостающих обязательных слотов.
 
 Address
 == Адрес
 
+Adds a specific war entry
+== Добавляет конкретную запись войны
+
+Adds default chat binds
+== Добавляет стандартные чат-привязки
+
+Adjust game camera and FOV settings
+== Настройка игровой камеры и FOV
+
+Adjust opacity of entity layers
+== Регулировка прозрачности слоёв объектов
+
+Adjust the opacity of entities belonging to other teams, such as tees and name plates
+== Настроить прозрачность объектов других команд, таких как ти и таблички с именами
+
+Adjust your prediction margin while frozen
+== Настроить запас предсказания во время заморозки
+
+Advanced
+== Расширенные
+
+Advanced options
+== Расширенные настройки
+
+AFR
+== Африка
+
+After Load
+== После загрузки
+
+Afterimage pop
+== Всплытие послесвечения
+
+Agree
+== Согласиться
+
+Aim
+== Прицел
+
+Aim bind
+== Привязка оси
+
+Alive: %.1fs/%.1fs
+== Жив: %.1fs/%.1fs
+
 All
 == Все
 
+All combined
+== Все вместе
+
+All players
+== Все игроки
+
+All stars
+== Все звезды
+
+Allow Duplicate Entries
+== Разрешить повторяющиеся записи
+
+Allow mic permission in system settings, then reopen voice
+== Разрешите доступ к микрофону в настройках системы, затем снова включите голос.
+
+Allows maps to render with more detail
+== Позволяет картам отображаться с большей детализацией
+
+Alpha
+== Альфа
+
+Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)
+== Также направлять похожие подсказки с других серверов в уведомления (например, кастомные соло-подсказки; чёрный список всё ещё действует)
+
+Always show
+== Всегда показывать
+
+Always show chat
+== Всегда показывать чат
+
+Always show other players' hook collision lines
+== Всегда показывать линии столкновения крюка других игроков
+
+Always show own player's hook collision line
+== Всегда показывать линию столкновения собственного крюка
+
+Always translate
+== Всегда переводить
+
+Amount
+== Количество
+
+And pick one randomly
+== И выбрать одну случайно
+
+Angle:
+== Угол:
+
+Animation
+== Анимация
+
+Animation duration
+== Длительность анимации
+
+Animation range
+== Диапазон анимации
+
+Anti Latency Tools
+== Инструменты против задержки
+
+Anti Ping Smoothing
+== Сглаживание антипинга
+
+AntiPing (latency compensation)
+== AntiPing (компенсация задержки)
+
+AntiPing: predict grenade path
+== AntiPing: предсказывать траекторию гранаты
+
+AntiPing: predict other players
+== AntiPing: предсказывать других игроков
+
+AntiPing: predict weapons
+== AntiPing: предсказывать оружие
+
+API key
+== API-ключ
+
+Appearance
+== Внешний вид
+
+Applied to %d same-family part(s).
+== Применено к %d частям того же семейства.
+
+Apply
+== Применить
+
+Apply a saved profile by 1-based index to the current tee
+== Применить сохранённый профиль по индексу (начиная с 1) к текущему ти
+
+Apply Changes
+== Применить изменения
+
+Apply this preset to the current queue
+== Применить этот пресет к текущей очереди
+
+Are you sure that you want to delete %d selected items?
+== Вы уверены, что хотите удалить %d выбранных элементов?
+
+Are you sure that you want to delete '%s'?
+== Вы уверены, что хотите удалить '%s'?
+
+Are you sure that you want to delete the demo '%s'?
+== Вы уверены, что хотите удалить демо «%s»?
+
+Are you sure that you want to delete the folder '%s'?
+== Вы уверены, что хотите удалить папку «%s»?
+
+Are you sure that you want to delete the screenshot '%s'?
+== Вы уверены, что хотите удалить скриншот «%s»?
+
+Are you sure that you want to delete this button?
+== Вы уверены, что хотите удалить эту кнопку?
+
+Are you sure that you want to discard the current changes to the touch controls?
+== Вы уверены, что хотите отменить текущие изменения сенсорного управления?
+
+Are you sure that you want to disconnect and play this demo?
+== Вы уверены, что хотите отключиться и воспроизвести это демо?
+
+Are you sure that you want to disconnect and switch to a different server?
+== Вы уверены, что хотите отключиться и переключиться на другой сервер?
+
+Are you sure that you want to disconnect your dummy?
+== Вы уверены, что хотите отключить дамми?
+
+Are you sure that you want to disconnect?
+== Вы уверены, что хотите отключиться?
+
+Are you sure that you want to import the touch controls from the clipboard? This will overwrite your current touch controls.
+== Вы уверены, что хотите импортировать сенсорное управление из буфера обмена? Это перезапишет текущие настройки.
+
 Are you sure that you want to quit?
-== Вы действительно желаете выйти?
+== Вы уверены, что хотите выйти?
+
+Are you sure that you want to remove '%s' from your war groups?
+== Вы уверены, что хотите удалить '%s' из ваших вражеских групп?
+
+Are you sure that you want to remove the clan '%s' from your friends list?
+== Вы уверены, что хотите удалить клан '%s' из списка друзей?
+
+Are you sure that you want to remove the player '%s' from your friends list?
+== Вы уверены, что хотите удалить игрока '%s' из списка друзей?
+
+Are you sure that you want to reset the controls to their defaults?
+== Вы уверены, что хотите сбросить управление на стандартное?
+
+Are you sure that you want to reset the touch controls to default?
+== Вы уверены, что хотите сбросить сенсорное управление на стандартное?
+
+Are you sure that you want to restart?
+== Вы уверены, что хотите перезапустить?
+
+Are you sure you want to delete this asset?
+== Вы уверены, что хотите удалить этот ресурс?
+
+Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
+== Вы уверены, что хотите сохранить скин? Если скин с таким именем уже существует, он будет заменён.
+
+ASI
+== Азия
+
+Aspect ratio preset
+== Пресет соотношения сторон
+
+Asset with this name already exists.
+== Ресурс с таким именем уже существует.
+
+Assets
+== Ресурсы
+
+Assets directory
+== Папка ресурсов
+
+Assets editor
+== Редактор ресурсов
+
+Attempt to change your name when near finish
+== Попытаться сменить имя при приближении к финишу
+
+Audio
+== Аудио
+
+Audio backend init failed
+== Ошибка инициализации аудиобэкенда
+
+Audio backend init failed, try switching devices and check details
+== Ошибка инициализации аудиобэкенда, попробуйте переключить устройства и проверьте детали.
+
+Audio file was exported, but reload failed. Restart sound to apply it.
+== Аудиофайл экспортирован, но перезагрузка не удалась. Перезапустите звук для применения.
+
+Audio init failed, check details below and logs
+== Ошибка инициализации аудио, проверьте детали ниже и логи.
+
+Audio issue
+== Проблема с аудио
+
+Audio pack exported.
+== Аудиопакет экспортирован.
+
+Audio packs
+== Аудиопакеты
+
+Audio slots
+== Аудиослоты
+
+AUS
+== Австралия
+
+Authed name color in scoreboard
+== Цвет имени авторизованного в таблице лидеров
+
+Authenticate to rcon
+== Аутентификация в rcon
+
+Authenticate to rcon with a username
+== Аутентификация в rcon с именем пользователя
+
+Authorized player forced vote '%s'
+== Авторизованный игрок принудительно установил голосование '%s'
+
+Auto
+== Авто
+
+auto
+== авто
+
+Auto agree vote
+== Автосогласие на голосование
+
+Auto chat in water
+== Авточат в воде
+
+Auto chat when dying in water
+== Автосообщение при смерти в воде
+
+Auto concurrency: %d (smart default)
+== Автоконкурентность: %d (умное значение по умолчанию)
+
+Auto disable when time expires
+== Автоотключение по истечении времени
+
+Auto enable in Gores mode
+== Автовключение в режиме Gores
+
+Auto execute
+== Автовыполнение
+
+Auto gain control for mic (AGC, experimental)
+== Авторегулировка усиления микрофона (AGC, экспериментально)
+
+Auto greet friends entering map
+== Автоприветствие друзей, заходящих на карту
+
+Auto hot-reload after external saves
+== Автогорячая перезагрузка после внешнего сохранения
+
+Auto login Axiom server
+== Автовход на сервер Axiom
+
+Auto map vote
+== Автоголосование за карту
+
+Auto refresh server list
+== Автообновление списка серверов
+
+Auto reject vote
+== Автоотклонение голосования
+
+Auto reply
+== Автоответ
+
+Auto reply cooldown
+== Кулдаун автоответа
+
+Auto save chat log
+== Автосохранение лога чата
+
+Auto start vote
+== Автоматически начать голосование
+
+Auto switch to the tee that got unfrozen
+== Автопереключение на ти, который разморозился
+
+Auto team lock
+== Автоблокировка команды
+
+Auto translate received messages
+== Автоперевод полученных сообщений
+
+Auto translate sent messages
+== Автоперевод отправленных сообщений
+
+Auto unmute when speaking
+== Автовключение микрофона при речи
+
+Auto unspec on unfreeze
+== Автовыход из зрителей при разморозке
+
+Auto-sync player camera
+== Автосинхронизация камеры игрока
+
+Auto-toggle fast input
+== Автопереключение быстрого ввода
+
+Auto-toggle fast input others
+== Автопереключение быстрого ввода для других
+
+Auto-translate incoming messages
+== Автоперевод входящих сообщений
+
+Auto-translate outgoing messages
+== Автоперевод исходящих сообщений
+
+Automatic updates are only supported on Windows
+== Автоматические обновления поддерживаются только на Windows
+
+Automatically adds voting options for all maps
+== Автоматически добавляет варианты голосования для всех карт
+
+Automatically close the current chat after waking from freeze
+== Автоматически закрывать текущий чат после пробуждения от заморозки
+
+Automatically create statboard csv
+== Автоматически создавать csv статистики
 
 Automatically record demos
-== Записывать демо
+== Автоматически записывать демки
+
+Automatically reply to muted players
+== Автоматически отвечать заглушённым игрокам
+
+Automatically reply while the window is unfocused
+== Автоматически отвечать, когда окно не в фокусе
 
 Automatically take game over screenshot
-== Делать снимок результатов игры
+== Автоматически делать скриншот окончания игры
+
+Automatically take statboard screenshot
+== Автоматически делать скриншот статистики
+
+Avg %.*f   ↓ %.*f   ↑ %.*f
+== Средн. %.*f   ↓ %.*f   ↑ %.*f
+
+Axiom auto login failed
+== Ошибка автоматического входа в Axiom
+
+Axiom auto login failed, retrying
+== Ошибка автоматического входа в Axiom, повторная попытка
+
+Axiom auto login succeeded
+== Автоматический вход в Axiom выполнен успешно
+
+Axiom dummy password
+== Пароль дамми на Axiom
+
+Axiom main account password
+== Пароль основной учётной записи Axiom
+
+Axis
+== Ось
+
+Background
+== Фон
+
+Background color
+== Цвет фона
+
+Background Draw
+== Рисование на фоне
+
+Background music volume
+== Громкость фоновой музыки
+
+Ban a certain nickname
+== Забанить определённый никнейм
+
+Ban ip for x minutes for any reason
+== Забанить IP на x минут по любой причине
+
+Ban ip range for x minutes for any reason
+== Забанить диапазон IP на x минут по любой причине
+
+Ban player in a region
+== Забанить игрока в регионе
+
+Ban player with ip/client id for x minutes for any reason
+== Забанить игрока по IP/ID клиента на x минут по любой причине
+
+Ban range in a region
+== Забанить диапазон в регионе
+
+Based on a pile of Windows... stuff
+== Основано на куче Windows... штук
+
+Basic
+== Основные
+
+Behavior
+== Поведение
+
+Behavior type
+== Тип поведения
+
+Benchmark frame times for number of seconds to file, then quit
+== Записать времена кадров в течение указанного количества секунд в файл, затем выйти
+
+Best
+== Лучший
+
+Bind key to execute a command or view keybindings
+== Привязать клавишу для выполнения команды или просмотреть привязки клавиш
+
+Bind Wheel
+== Колёсико привязок
+
+Bind Wheel Key
+== Клавиша колёсика привязок
+
+Black
+== Чёрный
+
+Blend mode
+== Режим смешивания
+
+Blue
+== Синий
 
 Blue team
-== Синие
+== Синяя команда
 
 Blue team wins!
-== Синие победили!
+== Синяя команда побеждает!
 
 Body
 == Тело
 
+Both
+== Оба
+
+Both sides of keyword rules must be filled
+== Обе стороны правил ключевых слов должны быть заполнены
+
+Bounce
+== Отскок
+
+Brightness shift
+== Сдвиг яркости
+
+Broadcast message
+== Широковещательное сообщение
+
+Browser
+== Обзор
+
+Brutal
+== Брутал
+
+Bubble opacity
+== Непрозрачность пузырька
+
+Buffer memory
+== Буферная память
+
+Built-in
+== Встроенный
+
+Button - Disabled
+== Кнопка - Отключена
+
+Button - Enabled
+== Кнопка - Включена
+
+Button position is outside of the screen.
+== Позиция кнопки находится за пределами экрана.
+
+Buttons
+== Кнопки
+
+c = Player position
+== c = Позиция игрока
+
+Calculate unfinished maps for player in certain mode
+== Рассчитать незавершенные карты для игрока в определенном режиме
+
 Call vote
-== Голосование
+== Предложить голосование
+
+Camera
+== Камера
+
+Camera & FOV
+== Камера и FOV
+
+Can only drop onto same-size parts.
+== Можно перетаскивать только на части того же размера.
+
+Can't /spec that quickly.
+== Нельзя так быстро использовать /spec.
+
+Can't disable team 0 mode. This team exceeds the maximum allowed size of %s players for regular team
+== Нельзя отключить режим команды 0. Эта команда превышает максимально допустимый размер в %s игроков для обычной команды.
+
+Can't enable team 0 mode with practice mode on.
+== Нельзя включить режим команды 0 при включённом режиме тренировки.
+
+Can't find a Tutorial server
+== Не удалось найти обучающий сервер
+
+Can't invite players to this team
+== Нельзя приглашать игроков в эту команду
+
+Can't invite this quickly
+== Нельзя приглашать так быстро
+
+Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
+== Не удаётся распознать указанные аргументы. Использование: /tpxy x y, например /tpxy 9 3.
+
+Can't swap with yourself
+== Нельзя обменяться с самим собой
+
+Cancel
+== Отмена
+
+Cancel your swap request
+== Отменить ваш запрос на обмен
+
+Candidate files
+== Файлы-кандидаты
+
+Category
+== Категория
+
+Change indicator offset based on distance to other tees
+== Смещать индикатор в зависимости от расстояния до других ти
+
+Change map
+== Сменить карту
+
+Change ready state (0.7 only)
+== Изменить состояние готовности (только 0.7)
 
 Change settings
 == Изменить настройки
 
+Change the skip duration
+== Изменить длительность пропуска
+
+Change zoom
+== Изменить масштаб
+
+Changes: %d
+== Изменений: %d
+
+Changing name to %s near finish
+== Смена имени на %s возле финиша
+
 Chat
 == Чат
+
+Chat background color
+== Цвет фона чата
+
+Chat Binds
+== Чат-привязки
+
+Chat box button appearance settings
+== Настройки внешнего вида кнопок окна чата
+
+Chat Bubble
+== Пузырёк чата
+
+Chat command
+== Команда чата
+
+Chat command (e.g. showall 1)
+== Команда чата (например: showall 1)
+
+Chat export failed
+== Ошибка экспорта чата
+
+Chat font size
+== Размер шрифта чата
+
+Chat log retention days
+== Дни хранения лога чата
+
+Chat message
+== Сообщение чата
+
+Chat sound volume
+== Громкость звука чата
+
+Chat Translate Button UI
+== Интерфейс кнопки перевода чата
+
+Chat translation settings
+== Настройки перевода чата
+
+Chat width
+== Ширина чата
+
+Chat word filtering
+== Фильтрация слов в чате
+
+Check if voice server address is reachable
+== Проверьте, доступен ли адрес голосового сервера.
+
+Check if your dummy is being bullied while you control the main tee
+== Проверьте, не обижают ли ваше дамми, пока вы управляете основным ти.
+
+Check input device, system default mic, and mic permission first
+== Сначала проверьте устройство ввода, системный микрофон по умолчанию и разрешения микрофона.
+
+Check output device, confirm headphones/speakers are still online
+== Сначала проверьте устройство вывода, убедитесь, что наушники/колонки всё ещё работают.
+
+Checking for existing player with your name
+== Проверка существующего игрока с вашим именем
+
+CHN
+== Китай
+
+Choose country flag
+== Выбрать флаг страны
+
+Choose default eyes when joining a server
+== Выбрать выражение лица по умолчанию при входе на сервер
+
+Choose export name first.
+== Сначала введите имя экспорта.
+
+Choose whether to browse replays or screenshots
+== Выберите просмотр демо или скриншотов
 
 Clan
 == Клан
 
+Clan color in friends list
+== Цвет клана в списке друзей
+
+Clan Members
+== Члены клана
+
+Clan plates size
+== Размер табличек клана
+
+Clan: %s
+== Клан: %s
+
+Classic
+== Классический
+
+Classic Easy
+== Классический Easy
+
+Classic easy
+== Классический easy
+
+Classic next
+== Классический next
+
+Classic Next
+== Классический Next
+
+Classic Nut
+== Классический Nut
+
+Classic nut
+== Классический nut
+
+Classic Pro
+== Классический Pro
+
+Classic pro
+== Классический pro
+
+Clear
+== Очистить
+
+Clear all favorite maps
+== Очистить все избранные карты
+
+Clear Changes
+== Очистить изменения
+
+Clear chat messages
+== Очистить сообщения чата
+
+Clear current cut (right click to clear all cuts)
+== Очистить текущий отрезок (правый клик — очистить все отрезки)
+
+Clear friend note
+== Очистить заметку друга
+
+Clear local console
+== Очистить локальную консоль
+
+Clear note
+== Удалить заметку
+
+Clear remote console
+== Очистить удалённую консоль
+
+Clears the voting options
+== Очищает варианты голосования
+
+Click to add this community to favorites
+== Нажмите, чтобы добавить это сообщество в избранное
+
+Click to copy map name
+== Нажмите, чтобы скопировать название карты
+
+Click to copy QQ group number
+== Нажмите, чтобы скопировать номер QQ-группы
+
+Click to copy the map name
+== Нажмите, чтобы скопировать название карты
+
+Click to copy this clan's name to clipboard
+== Нажмите, чтобы скопировать название этого клана в буфер обмена
+
+Click to copy this player's name to clipboard
+== Нажмите, чтобы скопировать имя этого игрока в буфер обмена
+
+Click to remove this clan from your friends list.
+== Нажмите, чтобы удалить этот клан из списка друзей.
+
+Click to remove this community from favorites
+== Нажмите, чтобы удалить это сообщество из избранного
+
+Click to remove this player from your friends list.
+== Нажмите, чтобы удалить этого игрока из списка друзей.
+
+Click to select server. Double click to join your friend.
+== Нажмите, чтобы выбрать сервер. Дважды нажмите, чтобы присоединиться к другу.
+
+Click to set color
+== Нажмите, чтобы установить цвет
+
 Client
 == Клиент
+
+Client CPU usage is high
+== Высокая загрузка CPU клиента
+
+Client frame time is abnormal
+== Аномальное время кадра клиента
+
+Client IDs size
+== Размер ID клиента
+
+Client message
+== Сообщение клиента
+
+Client performance pressure is high
+== Высокая нагрузка на производительность клиента
+
+Client prediction time is high
+== Высокое время предсказания клиента
+
+Close
+== Закрыть
+
+Close the demo player
+== Закрыть проигрыватель демо
+
+Color
+== Цвет
+
+Colors
+== Цвета
+
+Colors in chat
+== Цвета в чате
+
+Colors in scoreboard
+== Цвета в таблице результатов
+
+Colors of the hook collision line, in case of a possible collision with:
+== Цвета линии столкновения крюка при возможном столкновении с:
+
+Combo
+== Комбо
+
+Command
+== Команда
+
+Command is not available on solo servers
+== Команда недоступна на соло-серверах
+
+Command:
+== Команда:
+
+Commands run in the console
+== Команды, выполняемые в консоли
+
+Common key bindings
+== Распространённые привязки клавиш
+
+Communities
+== Сообщества
+
+Community
+== Сообщество
+
+Community links, updates, and sponsors moved to the Contributors tab
+== Ссылки сообщества, обновления и спонсоры перенесены на вкладку «Участники»
+
+Compact
+== Компактный
+
+Concurrency (0 = auto)
+== Конкурентность (0 = авто)
+
+Config
+== Конфиг
+
+Config directory
+== Папка конфигурации
+
+Config file: data/input_overlay.json
+== Файл конфига: data/input_overlay.json
+
+Config Files
+== Файлы конфигурации
+
+Configs
+== Конфиги
+
+Configure background 3D particle effects
+== Настройка фоновых 3D-частиц
+
+Configure hammer skin steal and skin transition animations
+== Настройка анимаций кражи скина молотом и смены скина
+
+Confirm both are on same server, same room, and support voice
+== Убедитесь, что оба находятся на одном сервере, в одной комнате и поддерживают голос.
+
+Connect address error
+== Ошибка адреса подключения
+
+Connect dummy
+== Подключить дамми
+
+Connect dummy to enable
+== Подключите дамми для включения
+
+Connect to server first to establish voice network link
+== Сначала подключитесь к серверу, чтобы установить голосовую сетевую связь.
+
+Connect to the specified host/ip
+== Подключиться к указанному хосту/IP
+
+Connected
+== Подключено
+
+Connected, no one is speaking
+== Подключено, никто не говорит
+
+Connected, waiting for first ping
+== Подключено, ожидание первого пинга
+
+Connecting dummy
+== Подключение дамми
 
 Connecting to
 == Подключение к
 
+Connection disconnected
+== Соединение разорвано
+
+Connection downstream
+== Исходящее соединение
+
+Connection elevated
+== Повышенное соединение
+
+Connection normal
+== Нормальное соединение
+
 Connection Problems…
-== Проблемы со связью…
+== Проблемы с подключением…
+
+Connection severely abnormal
+== Сильно аномальное соединение
+
+Connection upstream
+== Входящее соединение
 
 Console
 == Консоль
 
+Console color
+== Цвет консоли
+
+Continue anyway?
+== Всё равно продолжить?
+
+Contributors
+== Авторы
+
+Control dummy
+== Управление дамми
+
+Controller
+== Контроллер
+
+Controller jitter tolerance
+== Допуск дрожания контроллера
+
 Controls
 == Управление
 
+Converse
+== Продолжить личное сообщение
+
+Converse with the last person you whispered to (private message)
+== Поговорить с последним человеком, которому вы шептали (личное сообщение)
+
+Coords size
+== Размер координат
+
+Copied
+== Скопировано
+
+Copy
+== Копировать
+
+Copy info
+== Копировать информацию
+
+Copy name
+== Копировать имя
+
+Copy skin
+== Копировать скин
+
+Could not check for existing player with your name. Check your internet connection.
+== Не удалось проверить существующего игрока с вашим именем. Проверьте подключение к интернету.
+
+Could not connect dummy
+== Не удалось подключить дамми
+
+Could not find your Team
+== Не удалось найти вашу команду
+
+Could not get server list from master server
+== Не удалось получить список серверов от мастер-сервера
+
+Could not load default touch controls from file. See local console for details.
+== Не удалось загрузить стандартное сенсорное управление из файла. Подробности в локальной консоли.
+
+Could not load sponsor QR code. Check the Base64 data
+== Не удалось загрузить QR-код спонсора. Проверьте данные Base64.
+
+Could not load touch controls from clipboard. See local console for details.
+== Не удалось загрузить сенсорное управление из буфера обмена. Подробности в локальной консоли.
+
+Could not load touch controls from file. See local console for details.
+== Не удалось загрузить сенсорное управление из файла. Подробности в локальной консоли.
+
+Could not preview this image
+== Не удалось просмотреть это изображение
+
+Could not resolve connect address '%s'. See local console for details.
+== Не удалось разрешить адрес подключения '%s'. Подробности смотрите в локальной консоли.
+
+Could not save downloaded map. Try manually deleting this file: %s
+== Не удалось сохранить загруженную карту. Попробуйте вручную удалить этот файл: %s
+
+Could not save touch controls to file. See local console for details.
+== Не удалось сохранить сенсорное управление в файл. Подробности в локальной консоли.
+
 Count players only
-== Считать только игроков
+== Только игроки
+
+Countries
+== Страны
+
+CP opacity
+== Непрозрачность CP
+
+Create a random skin
+== Создать случайный скин
+
+Created
+== Создано
+
+Credits
+== Авторы
+
+Crescent
+== Полумесяц
+
+Cube
+== Куб
 
 Current
 == Текущий
 
+Current aspect ratio:
+== Текущее соотношение сторон:
+
+Current aspect ratio: Show default
+== Текущее соотношение сторон: Показать по умолчанию
+
+Current cut is invalid or already added
+== Текущий отрезок недействителен или уже добавлен
+
+Current file
+== Текущий файл
+
+Current rescue mode: %s
+== Текущий режим спасения: %s
+
+Current status
+== Текущий статус
+
+Current: Ranks
+== Текущее: Ранги
+
+Current: Score
+== Текущее: Очки
+
+Current: Time
+== Текущее: Время
+
+custom
+== пользовательский
+
+Custom
+== Пользовательский
+
+Custom API key
+== Пользовательский API-ключ
+
+Custom aspect ratio
+== Пользовательское соотношение сторон
+
 Custom colors
-== Свои цвета
+== Пользовательские цвета
+
+Custom Font:
+== Пользовательский шрифт:
+
+Custom prompt template
+== Пользовательский шаблон промпта
+
+Customize translate button and menu colors
+== Настройка цветов кнопки перевода и меню
+
+Cut interval
+== Интервал обрезки
+
+Cut length
+== Длина обрезки
+
+Cut segments
+== Отрезки обрезки
+
+Cute:
+== Мило:
+
+Cycle through emotes
+== Циклическое переключение эмоций
+
+d = Prediction latency
+== d = Задержка предсказания
+
+Damn grenadiers, all go to spa!
+== Чёртовы гренадёры, все в спа!
+
+Damn grenadiers, just die!
+== Чёртовы гренадёры, сдохните!
+
+Date
+== Дата
+
+Days
+== Дней
+
+DDmaX
+== DDmaX
+
+DDmaX Easy
+== DDmaX Easy
+
+DDmaX Next
+== DDmaX Next
+
+DDmaX Nut
+== DDmaX Nut
+
+DDmaX Pro
+== DDmaX Pro
+
+DDNet
+== DDNet
+
+DDNet Client needs to be restarted to complete update!
+== Для завершения обновления необходимо перезапустить клиент DDNet!
+
+ddnet-saves.txt is empty
+== ddnet-saves.txt пуст
+
+ddnet-saves.txt not found
+== ddnet-saves.txt не найден
+
+DDNet/total CPU
+== DDNet/общий CPU
+
+DDRace HUD
+== DDRace HUD
+
+DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
+== DDraceNetwork — это кооперативная онлайн-игра, где ваша цель и цель вашей группы ти — достичь финиша карты. Новичкам стоит начинать на серверах Novice, где находятся самые простые карты. Учитывайте пинг при выборе ближайшего к вам сервера.
+
+Deactivate
+== Отключить
+
+Deactivate all
+== Отключить все
+
+Death opacity
+== Непрозрачность смерти
+
+Deaths
+== Смерти
+
+Debug graph
+== График отладки
+
+Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
+== Режим отладки включён. Нажмите Ctrl+Shift+D, чтобы отключить режим отладки.
+
+Debug performance graph panel
+== Панель графика производительности отладки
+
+Deep freeze color
+== Цвет глубокой заморозки
+
+Deep freeze opacity
+== Непрозрачность глубокой заморозки
+
+Deep unfreeze color
+== Цвет глубокой разморозки
+
+Deep unfreeze opacity
+== Непрозрачность глубокой разморозки
+
+DeepSeek
+== DeepSeek
+
+DeepSeek API key
+== API-ключ DeepSeek
+
+Default
+== По умолчанию
+
+default
+== по умолчанию
+
+Default input open failed
+== Ошибка открытия устройства ввода по умолчанию
+
+Default length
+== Длина по умолчанию
+
+Default output open failed
+== Ошибка открытия устройства вывода по умолчанию
+
+Default zoom
+== Масштаб по умолчанию
+
+Delay
+== Задержка
 
 Delete
 == Удалить
 
+Delete button
+== Удалить кнопку
+
+Delete command
+== Удалить команду
+
 Delete demo
 == Удалить демо
 
+Delete folder
+== Удалить папку
+
+Delete screenshot
+== Удалить скриншот
+
+Delete selected items
+== Удалить выбранные элементы
+
+Delete skin
+== Удалить скин
+
+Delete this preset
+== Удалить этот пресет
+
+Demo
+== Демо
+
+Demo marker added
+== Маркер демки добавлен
+
 Demofile: %s
-== Демо: %s
+== Файл демо: %s
 
 Demos
 == Демо
 
+Demos directory
+== Каталог демо
+
+Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
+== В зависимости от количества переданных аргументов, телепортироваться: (0.) туда, куда вы смотрите или за кем наблюдаете; (1.) к указанному игроку
+
+Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
+== Устарело. Используйте 'muteid <client_id> <seconds> <reason>' или 'muteip <ip> <seconds> <reason>'
+
+Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_muteip <ip> <seconds> <reason>'
+== Устарело. Используйте 'vote_muteid <client_id> <seconds> <reason>' или 'vote_muteip <ip> <seconds> <reason>'
+
+Deselect
+== Отменить выбор
+
+Desktop fullscreen
+== Полноэкранный режим рабочего стола
+
+Detailed reason
+== Подробная причина
+
+Detection distance
+== Дистанция обнаружения
+
+Detection time
+== Время обнаружения
+
+Developers and sponsors
+== Разработчики и спонсоры
+
+DF
+== DF
+
+Diamond
+== Ромб
+
+died
+== умер
+
+Difficulty stars
+== Звёзды сложности
+
+Direct touch input while ingame
+== Прямое касание в игре
+
+Direct touch input while spectating
+== Прямое касание при наблюдении
+
+Direction Keys
+== Клавиши направления
+
+disable
+== отключить
+
+Disable after picking up other weapons
+== Отключить после подбора другого оружия
+
+Disagree
+== Не согласиться
+
+Discard
+== Отменить
+
+Discard changes
+== Отменить изменения
+
 Disconnect
 == Отключиться
+
+Disconnect dummy
+== Отключить дамми
+
+Disconnect from the server
+== Отключиться от сервера
 
 Disconnected
 == Отключено
 
+Discord
+== Discord
+
+Display mode
+== Режим отображения
+
+Dissolve
+== Растворение
+
+Do not translate server messages
+== Не переводить сообщения сервера
+
+Donor (drag parts from left)
+== Донор (перетащите части слева)
+
+Donor Asset
+== Ресурс донора
+
+Dont predict other players if you are frozen
+== Не предсказывать других игроков, если вы заморожены
+
+DONT USE THIS! USE add_bindwheel INSTEAD!
+== НЕ ИСПОЛЬЗУЙТЕ ЭТО! ИСПОЛЬЗУЙТЕ add_bindwheel ВМЕСТО!
+
+Door Laser Inner Color
+== Внутренний цвет лазера двери
+
+Door Laser Outline Color
+== Внешний цвет лазера двери
+
+Download community skins
+== Загрузить скины сообщества
+
+Download failed
+== Загрузка не удалась
+
+Download skins
+== Загрузить скины
+
+Download this asset?
+== Загрузить этот ресурс?
+
+Downloaded
+== Загружено
+
 Downloading map
-== Скачивание карты
+== Загрузка карты
+
+Downloading update...
+== Загрузка обновления...
+
+Drag HUD modules with the left mouse button
+== Перетаскивайте модули HUD левой кнопкой мыши
+
+Dragger Inner Color
+== Внутренний цвет драггера
+
+Dragger Outline Color
+== Внешний цвет драггера
+
+Dragging, collapsing, search, and usage history are preserved per category
+== Перетаскивание, свёртывание, поиск и история использования сохраняются для каждой категории.
+
+Draw on the in game background
+== Рисовать на игровом фоне
+
+Draw where mouse is
+== Рисовать там, где находится мышь
 
 Draw!
 == Ничья!
 
+Drawing a big pie in the sky
+== Рисуем большой пирог в небе
+
+Dream Features
+== Мечтательные функции
+
+Drift direction
+== Направление дрейфа
+
+Drift intensity
+== Интенсивность дрейфа
+
+Drift smoothness
+== Плавность дрейфа
+
+Drop on right canvas to replace one part.
+== Перетащите на правое полотно, чтобы заменить одну часть.
+
+Dummies are not allowed on this server
+== Дамми не разрешены на этом сервере
+
+Dummy
+== Дамми
+
+Dummy Control: %s
+== Управление дамми: %s
+
+Dummy copy
+== Копия дамми
+
+Dummy fire
+== Огонь дамми
+
+Dummy hammer fly
+== Hammer fly дамми
+
+Dummy hook
+== Крюк дамми
+
+Dummy jump
+== Прыжок дамми
+
+Dummy mini view
+== Мини-вид дамми
+
+Dummy sync: %s
+== Синхронизация дамми: %s
+
+Dummy Window
+== Окно дамми
+
+Dummy window size
+== Размер окна дамми
+
+Dummy window zoom
+== Масштаб окна дамми
+
+Dump the current savestring
+== Сбросить текущую строку сохранения
+
+Dump zone tuning in zone x
+== Сбросить настройки зоны в зоне x
+
+dumps all sqlservers readservers = r, writeservers = w
+== выгружает все sql-серверы (readservers = r, writeservers = w)
+
+Dumps the antibot status
+== Выгружает статус антибота
+
+Duplicate
+== Дублировать
+
+Duration
+== Длительность
+
 Dynamic Camera
 == Динамическая камера
 
+Dynamic FOV intensity
+== Интенсивность динамического FOV
+
+Dynamic FOV smoothness
+== Плавность динамического FOV
+
+Dynamic Island
+== Динамический остров
+
+Each tab has a clear purpose
+== Каждая вкладка имеет чёткое назначение
+
+Echo follows the original chat color
+== Echo следует за фактическим цветом чата
+
+Echo text color when not inheriting chat color
+== Цвет текста Echo, когда не наследует цвет чата
+
+Echo the text
+== Вывести текст
+
+Echo the text in chat window
+== Вывести текст в окно чата
+
+Edge margin
+== Отступ от края
+
+Edit
+== Редактировать
+
+Edit audio pack
+== Редактировать аудиопакет
+
+Edit Entry
+== Редактировать запись
+
+Edit HUD
+== Редактировать HUD
+
+Edit note
+== Редактировать заметку
+
+Edit skin texture
+== Редактировать текстуру скина
+
+Edit touch controls
+== Редактировать сенсорное управление
+
+Editor
+== Редактор
+
+Elevated
+== Повышено
+
+Emotes are disabled.
+== Эмоции отключены.
+
 Emoticon
-== Эмоции
+== Эмотикон
+
+Emoticon ID
+== ID эмоции
+
+Emoticons
+== Эмотиконы
+
+enable
+== включить
+
+Enable 3D background particles
+== Включить фоновые 3D-частицы
+
+Enable camera drift
+== Включить дрейф камеры
+
+Enable chat with all/team mode
+== Включить чат со всеми/командой
+
+Enable cheats for your current team's run, but you can't earn a rank
+== Включить читы для текущего забега вашей команды, но вы не сможете получить ранг
+
+Enable controller
+== Включить контроллер
+
+Enable Deleting
+== Включить удаление
+
+Enable dummy window
+== Включить окно дамми
+
+Enable dynamic FOV
+== Включить динамический FOV
+
+Enable FTAPI auto-translate (may overload the service)
+== Включить автоперевод FTAPI (может перегрузить сервис)
+
+Enable game sounds
+== Включить звуки игры
+
+Enable ghost
+== Включить призрак
+
+Enable Gores mode
+== Включить режим Gores
+
+Enable gun sound
+== Включить звук пистолета
+
+Enable highlighted chat sound
+== Включить звук упоминания в чате
+
+Enable Jelly Tee
+== Включить желе-ти
+
+Enable keyword reply
+== Включить ответ по ключевым словам
+
+Enable long pain sound (used when shooting in freeze)
+== Включить длинный звук боли (используется при стрельбе в заморозке)
+
+Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
+== Включить режим совместимости карты с указанным багом (пример: grenade-doubleexplosion@ddnet.tw)
+
+Enable mod weapon on %d: %s
+== Включить модовое оружие на %d: %s
+
+Enable pie menu
+== Включить пи-меню
+
+Enable regular chat sound
+== Включить обычный звук чата
+
+Enable repeat
+== Включить повтор
+
+Enable replays
+== Включить повторы
+
+Enable server message sound
+== Включить звук сообщения сервера
+
+Enable speedrun timer
+== Включить таймер спидран
+
+Enable stereo positioning
+== Включить стереопозиционирование
+
+Enable system media control
+== Включить системное управление медиа
+
+Enable team chat sound
+== Включить звук командного чата
+
+Enable tee trails
+== Включить следы ти
+
+Enable thinking mode (slower)
+== Включить режим размышления (медленнее)
+
+Enable voice
+== Включить голос
+
+Enable warlist
+== Включить список врагов
+
+Enable word filter list
+== Включить список фильтрации слов
+
+Enable Zen mode
+== Включить Zen-режим
+
+Enables/disables active moderator mode for the player
+== Включает/отключает режим активного модератора для игрока
+
+Endless hook has been activated
+== Бесконечный крюк активирован
+
+Endless hook has been deactivated
+== Бесконечный крюк деактивирован
+
+Endpoint
+== Конечная точка
+
+Endpoint (optional)
+== Конечная точка (опционально)
+
+Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
+== Войдите в режим /practice или перезапуститесь, чтобы избежать убийства всей команды через 60 секунд.
+
+Enter Password
+== Введите пароль
+
+Enter Username
+== Введите имя пользователя
+
+Entities
+== Сущности
+
+Entities background color
+== Цвет фона сущностей
+
+Entity Background Image
+== Фоновое изображение сущностей
+
+Entity Layer Colors
+== Цвета слоёв объектов
+
+Entity Preview
+== Предпросмотр сущностей
+
+entity_bg (Workshop)
+== entity_bg (Мастерская)
+
+Erase items on the in game background
+== Стирать элементы на игровом фоне
 
 Error
 == Ошибка
 
+Error checking player name
+== Ошибка проверки имени игрока
+
+Error loading communities
+== Ошибка загрузки сообществ
+
 Error loading demo
-== Ошибка при загрузке демо
+== Ошибка загрузки демо
+
+Error loading touch controls
+== Ошибка загрузки сенсорного управления
+
+Error opening screenshot
+== Ошибка открытия скриншота
+
+Error playing demo
+== Ошибка воспроизведения демо
+
+Error saving settings
+== Ошибка сохранения настроек
+
+Error saving touch controls
+== Ошибка сохранения сенсорного управления
+
+ESC replay minutes
+== Минуты повтора ESC
+
+EUR
+== Европа
+
+Evaluate an expression
+== Вычислить выражение
+
+Event
+== Событие
+
+Example of usage
+== Пример использования
+
+Example: name1|name2|name3
+== Пример: имя1|имя2|имя3
+
+Exclude
+== Исключить
+
+Execute before connecting
+== Выполнить перед подключением
+
+Execute files on key press/release
+== Выполнять файлы при нажатии/отпускании клавиши
+
+Execute hovered bindwheel bind
+== Выполнить наведённую привязку колёсика
+
+Execute on connect
+== Выполнить при подключении
+
+Execute the specified file
+== Выполнить указанный файл
+
+Existing Player
+== Существующий игрок
+
+Expand module
+== Развернуть модуль
+
+Export
+== Экспорт
+
+Export cut as a separate demo
+== Экспортировать отрезок как отдельное демо
+
+Export demo cut
+== Экспорт обрезки демо
+
+Export name contains invalid characters.
+== Имя экспорта содержит недопустимые символы.
+
+Export selected
+== Экспортировать выбранное
+
+Export selected file
+== Экспортировать выбранный файл
+
+Export to clipboard
+== Экспорт в буфер обмена
+
+Exported %d chat messages
+== Экспортировано %d сообщений чата
+
+Exported to %s
+== Экспортировано в %s
+
+Extras
+== Дополнительно
+
+f = Frame rate
+== f = Частота кадров
+
+Fade and slide
+== Исчезновение и скольжение
+
+Fade in
+== Исчезновение
+
+Fade only
+== Только исчезновение
+
+Fade out
+== Появление
+
+Fade trail alpha
+== Затухание альфа-канала следа
+
+Failed saving the replay!
+== Не удалось сохранить повтор!
+
+Failed to check for updates
+== Не удалось проверить обновления
+
+Failed to copy main asset image.
+== Не удалось скопировать основное изображение ресурса.
+
+Failed to create bgdraw folder
+== Не удалось создать папку bgdraw
+
+Failed to export audio pack file.
+== Не удалось экспортировать файл аудиопакета.
+
+Failed to export demo cut
+== Не удалось экспортировать обрезку демо
+
+Failed to export skin files.
+== Не удалось экспортировать файлы скина.
+
+Failed to load
+== Не удалось загрузить
+
+Failed to load main asset: %s
+== Не удалось загрузить основной ресурс: %s
+
+Failed to prepare main asset image.
+== Не удалось подготовить основное изображение ресурса.
+
+Failed to preview candidate file.
+== Не удалось предпросмотреть файл-кандидат.
+
+Failed to preview import file.
+== Не удалось предпросмотреть импортируемый файл.
+
+Failed to read saves file
+== Не удалось прочитать файл сохранений
+
+Failed to write PNG export.
+== Не удалось записать PNG экспорт.
+
+Fake CTF flags
+== Фальшивые флаги CTF
+
+Fallback simple noise reduction strength
+== Запасная простая сила шумоподавления
+
+Fast input (reduce visual latency)
+== Быстрый ввод (уменьшает визуальную задержку)
+
+Fast input others
+== Быстрый ввод для других
+
+Fast practice
+== Быстрая практика
+
+Fat skins (DDFat)
+== Толстые скины (DDFat)
 
 Favorite
-== Избранный
+== Избранное
+
+Favorite map
+== Избранная карта
+
+Favorite maps
+== Избранные карты
 
 Favorites
-== Избранные
+== Избранное
+
+Feature Search
+== Поиск функций
 
 Feet
 == Ноги
 
+Fetch Info
+== Получить информацию
+
+File
+== Файл
+
+File '%s' already exists, do you want to overwrite it?
+== Файл «%s» уже существует. Перезаписать его?
+
+File already exists, do you want to overwrite it?
+== Файл уже существует, перезаписать его?
+
+Filter connecting players
+== Фильтр подключающихся игроков
+
+Find all ban records for the specified IP address
+== Найти все записи банов для указанного IP-адреса
+
+Finish Name
+== Имя на финише
+
+Finish Name:
+== Имя на финише:
+
 Fire
-== Стрелять
+== Огонь
+
+First page in console
+== Первая страница в консоли
+
+Flip:
+== Отразить:
 
 Folder
 == Папка
 
+Folder Link
+== Ссылка на папку
+
+Follow
+== Следовать
+
+Following
+== Следую
+
+Font size
+== Размер шрифта
+
+Force a vote to yes/no
+== Принудительно принять/отклонить голосование
+
+Force a voting option
+== Принудительный вариант голосования
+
+Force high bandwidth mode when spectating (1 = on, 0 = off)
+== Принудительный режим высокой пропускной способности при наблюдении (1 = вкл, 0 = выкл)
+
+Force i to pause for i seconds
+== Принудительно поставить на паузу i на i секунд
+
 Force vote
-== Форсировать
+== Принудительное голосование
+
+Found %d modules
+== Найдено %d модулей
+
+FPM
+== Убийств/мин
+
+Frags
+== Фраги
+
+Frame rate
+== Частота кадров
+
+Frame time
+== Время кадра
+
+Frankenstein (drop parts on right)
+== Франкенштейн (перетащите части справа)
+
+Free move
+== Свободное движение
 
 Free-View
 == Свободный обзор
 
+Freeview cursor opacity
+== Непрозрачность курсора в свободном обзоре
+
+Freeze
+== Заморозка
+
+Freeze border color
+== Цвет границы Freeze
+
+Freeze Laser Inner Color
+== Внутренний цвет лазера заморозки
+
+Freeze Laser Outline Color
+== Внешний цвет лазера заморозки
+
+Freeze opacity
+== Непрозрачность заморозки
+
+Freeze stars
+== Звёзды заморозки
+
+Friend
+== Друг
+
+Friend color in friends list
+== Цвет друга в списке друзей
+
+Friend heart
+== Сердечко друга
+
+Friend message
+== Сообщение друга
+
+Friend note
+== Заметка о друге
+
+Friend Notifications
+== Уведомления о друзьях
+
+Friend online and join notifications
+== Уведомления о входе друзей в игру
+
+Friends
+== Друзья
+
+Frozen Margin
+== Запас при заморозке
+
+FSAA samples
+== Сэмплы FSAA
+
+FTAPI
+== FTAPI
+
+FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
+== Автоперевод FTAPI отключён для предотвращения перегрузки. Включите в настройках при необходимости.
+
+Full map listen in same room
+== Прослушивание всей карты в той же комнате
+
 Fullscreen
-== Полноэкранный（настр.)
+== Полноэкранный режим
+
+Fun
+== Развлечение
+
+Functions
+== Функции
 
 Game
 == Игра
@@ -154,98 +2515,1682 @@ Game info
 Game over
 == Игра окончена
 
+Game paused
+== Игра на паузе
+
+Game sound volume
+== Громкость звуков игры
+
+Game time margin
+== Отступ времени игры
+
 Game type
 == Тип игры
 
 Game types:
-== Типы игры:
+== Типы игр:
+
+Game/predicted tick
+== Игровой/предсказанный тик
+
+Gameplay
+== Геймплей
+
+Gap aim rescue
+== Спасение через щель
 
 General
-== Основное
+== Общие
+
+Get all map players' skin IDs and auto add to rotate queue
+== Получить ID скинов всех игроков на карте и добавить в очередь смены
+
+Getting game info
+== Получение информации об игре
+
+Getting server list from master server
+== Получение списка серверов от мастер-сервера
+
+Ghost
+== Призрак
+
+Ghost tools
+== Инструменты призраков
+
+Ghosts directory
+== Папка призраков
+
+Github
+== Github
+
+Give back right to vote to player with client ID
+== Вернуть право голоса игроку с ID клиента
+
+Give back right to vote to player with IP address
+== Вернуть право голоса игроку с IP-адресом
+
+Give back right to vote to player with list index
+== Вернуть право голоса игроку с индексом в списке
+
+Gives a grenade launcher to you
+== Даёт вам гранатомёт
+
+Gives a laser to you
+== Даёт вам лазер
+
+Gives a shotgun to you
+== Даёт вам дробовик
+
+Gives all weapons to you
+== Даёт вам всё оружие
+
+Gives jetpack to you
+== Даёт вам реактивный ранец
+
+Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
+== Даёт вам оружие с id i (все = -1, молот = 0, пистолет = 1, дробовик = 2, граната = 3, лазер = 4, ниндзя = 5)
+
+Gives you as many jumps as you specify
+== Даёт вам столько прыжков, сколько вы укажете
+
+Gives you endless hook
+== Даёт вам бесконечный крюк
+
+Gives you infinite jump
+== Даёт вам бесконечный прыжок
+
+Global toggle key
+== Глобальная клавиша переключения
+
+Glow alpha
+== Альфа свечения
+
+Glow intensity
+== Интенсивность свечения
+
+Glow offset
+== Смещение свечения
+
+Go back one marker
+== Назад на одну метку
+
+Go back one tick
+== Назад на один тик
+
+Go back the specified duration
+== Назад на указанную длительность
+
+Go forward one marker
+== Вперёд на одну метку
+
+Go forward one tick
+== Вперёд на один тик
+
+Go forward the specified duration
+== Вперёд на указанную длительность
+
+Gores Actor
+== Актёр Gores
+
+Gores auto weapon switch
+== Автосмена оружия Gores
+
+Gores Mode
+== Режим Gores
+
+Gores mode key
+== Клавиша режима Gores
+
+Grabs
+== Захваты
 
 Graphics
 == Графика
 
+Graphics card
+== Видеокарта
+
+Greeting text
+== Текст приветствия
+
 Grenade
-== Гранатомёт
+== Граната
+
+Group name
+== Имя группы
+
+Guide line color
+== Цвет направляющей линии
 
 Hammer
 == Молот
 
+Hammer Mode:
+== Режим молота:
+
+Hammer skin steal
+== Кража скина молотом
+
+Hammer: %s
+== Молот: %s
+
 Has people playing
-== Не пустой сервер
+== Есть игроки
+
+Has save
+== Есть сохранение
+
+HDF
+== HDF
+
+Heart
+== Сердце
+
+Height
+== Высота
+
+Help: %s
+== Помощь: %s
+
+Hide death/respawn effects
+== Скрыть эффекты смерти/возрождения
+
+Hide direction indicators
+== Скрыть индикаторы направления
+
+Hide Echo messages
+== Скрыть сообщения Echo
+
+Hide explosion effects
+== Скрыть эффекты взрывов
+
+Hide freeze effects
+== Скрыть эффекты заморозки
+
+Hide ghosts of frozen players
+== Скрывать призраков замороженных игроков
+
+Hide guide lines
+== Скрыть направляющие линии
+
+Hide hammer effects
+== Скрыть эффекты молота
+
+Hide HUD
+== Скрыть HUD
+
+Hide indicator for tees on your screen
+== Скрывать индикатор для ти на вашем экране
+
+Hide input emoticon
+== Скрыть вводимую эмоцию
+
+Hide join/version prompts
+== Скрыть подсказки о входе/версии
+
+Hide jump effects
+== Скрыть эффекты прыжка
+
+Hide kill/finish messages
+== Скрыть сообщения об убийстве/финише
+
+Hide map progress
+== Скрыть прогресс карты
+
+Hide nameplates
+== Скрыть таблички с именами
+
+Hide names
+== Скрыть имена
+
+Hide player messages
+== Скрыть сообщения игроков
+
+Hide scoreboard
+== Скрыть таблицу очков
+
+Hide server prompt notifications
+== Скрыть уведомления-подсказки сервера
+
+Hide Settings Tabs
+== Скрыть вкладки настроек
+
+Hide sponsor QR code
+== Скрыть QR-код спонсора
+
+Hide UI for focused gameplay
+== Скрыть UI для сосредоточенной игры
+
+Hide weapon muzzle flashes
+== Скрыть вспышки оружия
 
 High Detail
 == Высокая детализация
 
+High to low
+== От высокого к низкому
+
+Highlight Color
+== Цвет выделения
+
+Highlighted message
+== Выделенное сообщение
+
+Hitbox mode
+== Режим хитбоксов
+
+HJ assist
+== Помощь HJ
+
+HJ Assist
+== Помощь HJ
+
+Hold left click for free camera
+== Зажмите левую кнопку мыши для свободной камеры
+
 Hook
 == Крюк
 
+Hook collision line
+== Линия столкновения крюка
+
+Hook collision line opacity
+== Прозрачность линии столкновения крюка
+
+Hook Collisions
+== Столкновения крюка
+
+Hook collisions
+== Столкновения крюка
+
+Hook line tip
+== Кончик линии крюка
+
+Hook Strength
+== Сила крюка
+
+Hooking L/R: %.0f%%/%.0f%%
+== Зацеп крюком В/П: %.0f%%/%.0f%%
+
+Horizontal position
+== Горизонтальное положение
+
+Hours
+== Часы
+
+https://ddnet.org/discord
+== https://ddnet.org/discord
+
+https://wiki.ddnet.org/
+== https://wiki.ddnet.org/
+
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
+https://wiki.ddnet.org/wiki/Touch_controls
+== https://wiki.ddnet.org/wiki/Touch_controls
+
+HUD
+== HUD
+
+HUD editor preview
+== Предпросмотр редактора HUD
+
+HUD rainbow colors
+== Радужные цвета HUD
+
+Hue
+== Оттенок
+
+i = Receive rate
+== i = Скорость приёма
+
+I am a robot
+== Я робот
+
+I am away from the game window
+== Я отошёл от окна игры
+
+I muted you
+== Я вас заглушил
+
+Idiot word filter
+== Фильтр идиотских слов
+
+Import from clipboard
+== Импорт из буфера обмена
+
+Inactive color
+== Цвет бездействия
+
+Incoming language
+== Входящий язык
+
+Indicate map finish
+== Отметить пройденную карту
+
+Indicator alive color
+== Цвет индикатора живого
+
+Indicator in freeze color
+== Цвет индикатора в заморозке
+
+Indicator max distance
+== Максимальное расстояние индикатора
+
+Indicator max offset
+== Максимальное смещение индикатора
+
+Indicator min offset
+== Минимальное смещение индикатора
+
+Indicator offset
+== Смещение индикатора
+
+Indicator opacity
+== Непрозрачность индикатора
+
+Indicator safe color
+== Цвет индикатора в безопасности
+
+Indicator size
+== Размер индикатора
+
+Info
+== Информация
+
+Info Messages
+== Информационные сообщения
+
+Ingame controller mode
+== Режим контроллера в игре
+
+Ingame controller sens.
+== Чувствительность контроллера (игра)
+
+Ingame cursor scale
+== Масштаб курсора в игре
+
+Ingame mouse sens.
+== Чувствительность мыши (игра)
+
+Initializing assets
+== Инициализация ресурсов
+
+Initializing components
+== Инициализация компонентов
+
+Initializing map logic
+== Инициализация логики карты
+
+Input
+== Ввод
+
+Input device
+== Устройство ввода
+
+Input device not found
+== Устройство ввода не найдено
+
+Input device open failed
+== Ошибка открытия устройства ввода
+
+Input device open failed, try reconnecting headset/mic or reselecting input device
+== Ошибка открытия устройства ввода, попробуйте переподключить гарнитуру/микрофон или выбрать другое устройство ввода.
+
+Input overlay
+== Наложение ввода
+
+Input overlay display
+== Отображение наложения ввода
+
+Input switch
+== Переключение ввода
+
+Insane
+== Безумие
+
+Interface
+== Интерфейс
+
+Intermediate
+== Средний
+
+Internet
+== Интернет
+
+Internet (From online source)
+== Интернет (из онлайн-источника)
+
+Invalid client id to kick
+== Неверный ID клиента для кика
+
+Invalid client id to move to spectators
+== Неверный ID клиента для перемещения в зрители
+
 Invalid Demo
-== Нерабочее демо
+== Недействительное демо
+
+Invalid ID
+== Неверный ID
+
+Invalid option
+== Неверная опция
+
+Invalid spectator id used
+== Использован неверный ID зрителя
+
+Invalid translation backend
+== Неверный бэкенд перевода
+
+Invalid X coordinate.
+== Неверная координата X.
+
+Invalid Y coordinate.
+== Неверная координата Y.
+
+Invite a person to a locked team
+== Пригласить человека в заблокированную команду
+
+Invites are disabled
+== Приглашения отключены
+
+Is your dummy being bullied while you control the main tee?
+== Обижают ли ваше дамми, пока вы управляете основным ти?
+
+It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Рекомендуется проверить настройки и подстроить их под себя перед подключением к серверу.
+
+j = Latency jitter
+== j = Джиттер задержки
+
+Jelly duration
+== Длительность желе
+
+Jelly others
+== Желе для других
+
+Jelly strength
+== Сила желе
+
+Jitter
+== Джиттер
+
+Join a team to enable practice mode, which means you can use /r, but can't earn a rank.
+== Присоединитесь к команде, чтобы включить режим тренировки. Это позволит использовать /r, но не даст получить ранг.
+
+Join a team to use swap feature, which means you can swap positions with each other.
+== Присоединитесь к команде, чтобы использовать функцию обмена, то есть меняться позициями друг с другом.
 
 Join blue
-== За синих
+== Присоединиться к синим
+
+Join game
+== Присоединиться к игре
+
+Join QQ group
+== Вступить в QQ-группу
 
 Join red
-== За красных
+== Присоединиться к красным
+
+Join the team of the specified player
+== Присоединиться к команде указанного игрока
+
+Join Tutorial Server
+== Присоединиться к обучающему серверу
 
 Jump
 == Прыжок
 
+Jump hint text
+== Текст подсказки о прыжке
+
+k = Resend loss
+== k = Потери при повторной отправке
+
+Kaomoji
+== Каомодзи
+
+Key Bindings
+== Привязки клавиш
+
+Key Presses
+== Нажатия клавиш
+
+Key Sticking: ?
+== Залипание клавиш: ?
+
+Key Sticking: Off
+== Залипание клавиш: Выкл
+
+Key Sticking: On
+== Залипание клавиш: Вкл
+
+Key Sticking: Reset Self
+== Залипание клавиш: Сбросить себя
+
+Keyword Reply
+== Ответ по ключевым словам
+
+Keyword rules
+== Правила ключевых слов
+
 Kick player
-== Выгнать игрока
+== Кикнуть игрока
+
+Kick player with specified id for any reason
+== Кикнуть игрока с указанным id по любой причине
+
+Kick voting requires %s players
+== Для голосования за кик требуется %s игроков
+
+Kill
+== Убить
+
+Kill Protection enabled. If you really want to join the spectators, first type /kill
+== Защита от убийства включена. Если вы действительно хотите перейти в зрители, сначала введите /kill.
+
+Kill yourself to restart
+== Убейте себя, чтобы начать заново
+
+Kill yourself when kill-protected during a long game (use f1, kill for regular kill)
+== Самоубийство при защите от убийства во время долгой игры (используйте f1, kill для обычного самоубийства)
+
+killed themselves
+== совершил(а) самоубийство
+
+Kills a player and announces the kill
+== Убивает игрока и объявляет об убийстве
+
+Kills team and disables practice mode
+== Убивает команду и отключает режим практики
+
+King of Gores auto weapon switch
+== Автосмена оружия King of Gores
+
+l = Local time
+== l = Местное время
+
+L select  R swap  M select only
+== ЛКМ выбрать  ПКМ обменять  СКМ только выбрать
+
+Label
+== Метка
+
+Label type
+== Тип метки
+
+LAN
+== ЛВС
 
 Language
 == Язык
 
-MOTD
-== MOTD
+Large text announcement for friend joining
+== Крупнотекстовое объявление о входе друга
+
+Large text content
+== Содержание крупного текста
+
+Laser
+== Лазер
+
+Laser effect enhancement
+== Улучшение эффекта лазера
+
+Laser Enhancement
+== Улучшение лазера
+
+Laser preview
+== Предпросмотр лазера
+
+Laser settings
+== Настройки лазера
+
+Laser size
+== Размер лазера
+
+Laser style
+== Стиль лазера
+
+Last page in console
+== Последняя страница в консоли
+
+Latency
+== Задержка
+
+Layout
+== Раскладка
+
+Leak IP
+== Утечка IP
+
+Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
+== Раскрывает ваш IP-адрес всем серверам, пингуя каждый из них, также получая задержку в процессе
+
+Learn
+== Обучение
+
+Leave empty to disable
+== Оставьте пустым для отключения
+
+Leave empty to join public room
+== Оставьте пустым для входа в публичную комнату
+
+Leave empty to use default prompt
+== Оставьте пустым для использования промпта по умолчанию
+
+Left jump
+== Левый прыжок
+
+Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets.
+== Левый клик по части Франкенштейна для тонирования. Перетащите части для замены. Правый клик сбрасывает.
+
+Left/right channel width
+== Ширина левого/правого канала
+
+Length
+== Длительность
+
+Lenny:
+== Ленни:
+
+Lets you join team i (shows your team if left blank)
+== Позволяет присоединиться к команде i (оставьте пустым, чтобы показать вашу команду)
+
+Lht.
+== Ярк.
+
+LibreTranslate
+== LibreTranslate
+
+Line width
+== Ширина линии
+
+Lines %d - %d (%s)
+== Строки %d - %d (%s)
+
+List all commands that are available in practice mode
+== Список всех команд, доступных в режиме практики
+
+List all commands which are accessible for given access level
+== Список всех команд, доступных для данного уровня доступа
+
+List all commands which are accessible for users
+== Список всех команд, доступных для пользователей
+
+List all name bans
+== Список всех банов имён
+
+List all rcon keys
+== Список всех ключей rcon
+
+List all saves on the current map
+== Список всех сохранений на текущей карте
+
+List all tuning variables and their values
+== Список всех переменных тюнинга и их значений
+
+List available voice devices
+== Список доступных голосовых устройств
+
+List connected players with optional case-insensitive substring matching filter
+== Список подключённых игроков с опциональным фильтром по подстроке без учёта регистра
+
+List foes
+== Список врагов
+
+List friends
+== Список друзей
+
+List KCP/legacy transport status and weak-network simulation metrics
+== Список статуса транспорта KCP/легаси и метрик симуляции слабой сети
+
+List local saves for current map (or specified map)
+== Список локальных сохранений для текущей карты (или указанной)
+
+List players containing name or all players
+== Список игроков, содержащих имя, или всех игроков
+
+Literal
+== Буквально
+
+Live director
+== Прямой режиссёр
+
+LLM API
+== LLM API
+
+LLM provider
+== Поставщик LLM
+
+Load
+== Загрузить
+
+Load drawings from a given csv file (defaults to map name)
+== Загрузить рисунки из указанного CSV-файла (по умолчанию имя карты)
+
+Load with code r. /load to check your existing saves
+== Загрузить с кодом r. /load для проверки существующих сохранений
+
+Loaded %d items
+== Загружено %d элементов
+
+Loaded %d items (discarded %d items)
+== Загружено %d элементов (отброшено %d)
+
+Loading assets...
+== Загрузка ресурсов...
+
+Loading commands…
+== Загрузка команд…
+
+Loading DDNet Client
+== Загрузка клиента DDNet
+
+Loading Demo
+== Загрузка демо
+
+Loading demo file from storage
+== Загрузка файла демо из хранилища
+
+Loading demo files
+== Загрузка файлов демо
+
+Loading demo info
+== Загрузка информации о демо
+
+Loading ghost files
+== Загрузка файлов призраков
+
+Loading map
+== Загрузка карты
+
+Loading map file from storage
+== Загрузка файла карты из хранилища
+
+Loading maps…
+== Загрузка карт…
+
+Loading menu images
+== Загрузка изображений меню
+
+Loading race demo files
+== Загрузка файлов демо забегов
+
+Loading screenshot files
+== Загрузка файлов скриншотов
+
+Loading skin files
+== Загрузка файлов скинов
+
+Loading sound files
+== Загрузка звуковых файлов
+
+Loading…
+== Загрузка…
+
+Local
+== Локальный
+
+Local + Dummy
+== Локальный + дамми
+
+Local only
+== Только локальный
+
+Local particle effects
+== Локальные эффекты частиц
+
+Local saves
+== Локальные сохранения
+
+Local test mode
+== Режим локального тестирования
+
+Local test mode, no server needed
+== Режим локального тестирования, сервер не требуется
+
+Local Time
+== Местное время
+
+Local-only
+== Только локально
+
+Lock delay
+== Задержка блокировки
+
+Lock team
+== Заблокировать команду
+
+Locked
+== Заблокировано
+
+Log the network
+== Логировать сеть
+
+Logout of econ
+== Выйти из econ
+
+Logout of rcon
+== Выйти из rcon
+
+Long press on a touch button to select it.
+== Долгое нажатие на кнопку для выбора.
+
+Low to high
+== От низкого к высокому
+
+Main Asset
+== Основной ресурс
+
+Main menu
+== Главное меню
+
+Make dummy fire
+== Заставить дамми стрелять
+
+Make dummy hook
+== Заставить дамми зацепиться крюком
+
+Make dummy jump
+== Заставить дамми прыгнуть
+
+Make sure the backend supports OpenAI-compatible thinking parameters
+== Убедитесь, что бэкенд поддерживает совместимые с OpenAI параметры размышления.
+
+Makes you a ninja
+== Делает вас ниндзя
+
+Makes you live frozen
+== Делает вас живым замороженным
+
+Makes you move 1 tile down
+== Перемещает вас на 1 тайл вниз
+
+Makes you move 1 tile left
+== Перемещает вас на 1 тайл влево
+
+Makes you move 1 tile right
+== Перемещает вас на 1 тайл вправо
+
+Makes you move 1 tile up
+== Перемещает вас на 1 тайл вверх
+
+Makes you super
+== Делает вас супером
+
+Manual
+== Вручную
+
+Manual concurrency: %d
+== Ручная конкурентность: %d
+
+Manual source file
+== Ручной исходный файл
 
 Map
 == Карта
 
+Map browser color
+== Цвет браузера карт
+
+Map browser opacity
+== Прозрачность браузера карт
+
+Map danger border
+== Опасная граница карты
+
+Map Preview
+== Предпросмотр карты
+
+Map progress bar
+== Индикатор прогресса карты
+
+Map Progress: %.1f%%
+== Прогресс карты: %.1f%%
+
+Map Progress: --
+== Прогресс карты: --
+
+Map size
+== Размер карты
+
+Map sound volume
+== Громкость звуков карты
+
+Map type:
+== Тип карты:
+
+Mark demo
+== Отметить демку
+
+Mark the beginning of a cut (right click to reset)
+== Отметить начало обрезки (правый клик — сбросить)
+
+Mark the beginning of a demo cut
+== Отметить начало обрезки демо
+
+Mark the end of a cut (right click to reset)
+== Отметить конец обрезки (правый клик — сбросить)
+
+Mark the end of a demo cut
+== Отметить конец обрезки демо
+
+Markers
+== Метки
+
+Match %d of %d
+== Результат %d из %d
+
+Matched with callable peer
+== Найден вызываемый пир
+
+Max CSVs
+== Макс. CSV
+
+Max demos
+== Макс. демок
+
+Max Screenshots
+== Макс. скриншотов
+
+Max size
+== Максимальный размер
+
+Max visible notifications
+== Максимум видимых уведомлений
+
+Maximum rows
+== Максимум строк
+
+may cause delay
+== может вызвать задержку
+
+Memory
+== Память
+
+Mention
+== Упоминание
+
+Menu background
+== Фон меню
+
+Menu opened. Press Esc key again to close menu.
+== Меню открыто. Нажмите Esc снова, чтобы закрыть меню.
+
+Menu option - normal
+== Пункт меню - обычный
+
+Menu option - selected
+== Пункт меню - выбранный
+
+Message to send in chat:
+== Сообщение для отправки в чат:
+
+Messages
+== Сообщения
+
+Messages that already look like the target language will skip auto-translate
+== Сообщения, которые уже выглядят как целевой язык, пропустят автоперевод.
+
+Microphone
+== Микрофон
+
+Microphone permission denied by system
+== Доступ к микрофону запрещён системой
+
+Microphone volume
+== Громкость микрофона
+
+Milliseconds
+== Миллисекунды
+
+Min size
+== Минимальный размер
+
+Minimize module
+== Свернуть модуль
+
+Minimize the client
+== Свернуть клиент
+
+Minimum match chars
+== Минимальное количество символов для совпадения
+
+Minimum time
+== Минимальное время
+
+Minutes
+== Минуты
+
+Misc
+== Разное
+
+Miscellaneous
+== Разное
+
+Mixed
+== Смешанный
+
+Mode
+== Режим
+
+Model
+== Модель
+
+Moderate
+== Средний
+
+Moderator alert
+== Предупреждение модератора
+
+Modified
+== Изменённые
+
+Modules snap to screen edges, center lines and other HUD modules while dragging
+== Модули привязываются к краям экрана, центральным линиям и другим модулям HUD при перетаскивании
+
+MOTD
+== MOTD
+
+Mouse
+== Мышь
+
+Move dummy left
+== Переместить дамми влево
+
+Move dummy right
+== Переместить дамми вправо
+
+Move Echo and important system prompts to right-side popups
+== Переместить Echo и важные системные подсказки во всплывающие окна справа
+
 Move left
-== Шаг влево
+== Двигаться влево
 
 Move player to spectators
-== Сделать наблюдателем
+== Переместить игрока в наблюдатели
 
 Move right
-== Шаг вправо
+== Двигаться вправо
+
+Move to category
+== Переместить в категорию
+
+Moved ingame
+== Перемещено в игре
 
 Movement
-== Перемещение
+== Движение
+
+Moves to the point with x/y-coordinates ii
+== Перемещает в точку с координатами x/y ii
+
+Moves to the tile with x/y-number ii
+== Перемещает на тайл с номером x/y ii
+
+Multi-View
+== Мульти-обзор
+
+Mute
+== Заглушить
+
+Mute death/respawn sounds
+== Отключить звуки смерти/возрождения
+
+Mute emoticons
+== Заглушить эмоции
+
+Mute hammer sounds
+== Отключить звуки молота
+
+Mute jump sounds
+== Отключить звуки прыжка
+
+Mute microphone
+== Отключить микрофон
+
+Mute player
+== Заглушить игрока
+
+Mute player with client ID
+== Заглушить игрока по ID клиента
+
+Mute player with IP address
+== Заглушить игрока по IP-адресу
 
 Mute when not active
-== Глушить звуки, когда игра неактивна
+== Отключить звук в фоне
+
+Mute:
+== Заглушить:
+
+Muted
+== Заглушён
+
+my_%s
+== моя_%s
+
+n = Prediction latency
+== n = Задержка предсказания
+
+NA
+== Северная Америка
 
 Name
 == Имя
 
+Name Plate
+== Табличка с именем
+
+Name plates offset
+== Смещение табличек с именами
+
+Name plates size
+== Размер табличек с именами
+
+Name:
+== Имя:
+
+Name: %s
+== Имя: %s
+
+Need to have started the map to swap with a player.
+== Необходимо начать карту, чтобы обменяться с игроком.
+
+Negative stability buffer (for Gores)
+== Буфер отрицательной стабильности (для Gores)
+
+Net
+== Нетто
+
+Netversion
+== Версия сети
+
+New button
+== Новая кнопка
+
+New IME
+== Новый IME
+
+New name:
+== Новое имя:
+
+New preset name
+== Новое имя пресета
+
+New random timeout code
+== Новый случайный код тайм-аута
+
+New UI
+== Новый UI
+
+News
+== Новости
+
+Next
+== Следующий
+
+Next page in console
+== Следующая страница в консоли
+
 Next weapon
-== След. оружие
+== Следующее оружие
 
 Nickname
-== Имя
+== Никнейм
 
 No
 == Нет
 
+No active QmClient reports yet
+== Пока нет активных отчётов QmClient
+
+No animation
+== Без анимации
+
+No answer from server yet.
+== Ответ от сервера ещё не получен.
+
+No assets
+== Нет ресурсов
+
+No assets available for composition.
+== Нет доступных ресурсов для композиции.
+
+No assets found.
+== Ресурсы не найдены.
+
+No audio issues detected
+== Проблем с аудио не обнаружено
+
+No audio slots found.
+== Аудиослоты не найдены.
+
+No buttons match your filter criteria
+== Нет кнопок, соответствующих вашему фильтру
+
+No callable peer found
+== Вызываемый пир не найден
+
+No candidate file selected.
+== Файл-кандидат не выбран.
+
+No changes since last save
+== Нет изменений с последнего сохранения
+
+No chat log selected
+== Не выбран лог чата
+
+No chat message available to repeat
+== Нет доступного сообщения чата для повтора
+
+No chat message to translate
+== Нет сообщения для перевода
+
+No controller found. Plug in a controller.
+== Контроллер не найден. Подключите контроллер.
+
+No corresponding vote option found
+== Соответствующий вариант голосования не найден
+
+No demo is being recorded
+== Демка не записывается
+
+No demo selected
+== Демо не выбрано
+
+No demo with this filename exists
+== Демо с таким именем файла не существует
+
+No director players available
+== Нет доступных игроков для режиссуры
+
+No empty team left.
+== Не осталось пустых команд.
+
+No favorite maps yet
+== Пока нет избранных карт
+
+No input device available
+== Нет доступных устройств ввода
+
+No items to write
+== Нет элементов для записи
+
+No local saves file found (ddnet-saves.txt)
+== Файл локальных сохранений не найден (ddnet-saves.txt)
+
+No local servers found (ports %d-%d)
+== Локальные серверы не найдены (порты %d-%d)
+
+No login required
+== Вход не требуется
+
+No matching assets.
+== Нет подходящих ресурсов.
+
+No matching features found. Try other keywords
+== Совпадающих функций не найдено. Попробуйте другие ключевые слова.
+
+No more blocking entity layers in the world of TeeWorlds
+== В мире Teeworlds больше не будет блокирующих слоёв объектов.
+
+No noise reduction
+== Без шумоподавления
+
+No obvious anomaly
+== Очевидных аномалий нет
+
+No output device available
+== Нет доступных устройств вывода
+
 No password
 == Без пароля
 
+No peer
+== Нет пира
+
+No player nearby
+== Рядом нет игроков
+
+No player with this name found.
+== Игрок с таким именем не найден.
+
+No presets yet
+== Пока нет пресетов
+
+No preview
+== Нет предпросмотра
+
+No results
+== Нет результатов
+
+No safe position found
+== Безопасная позиция не найдена
+
+No saved profiles available yet. Save one first.
+== Сохранённых профилей пока нет. Сначала сохраните один.
+
+No screenshot selected
+== Скриншот не выбран
+
+No server selected
+== Сервер не выбран
+
 No servers found
-== Сервера не найдены
+== Серверы не найдены
 
 No servers match your filter criteria
-== Нет серверов, подходящих под ваш фильтр
+== Ни один сервер не соответствует вашим критериям фильтра
+
+No skins match your filter criteria
+== Нет скинов, соответствующих вашим критериям фильтра
+
+No space for button
+== Нет места для кнопки
+
+No status bar items
+== Нет элементов строки состояния
+
+No unfinished maps available
+== Нет доступных незавершенных карт
+
+Noise reduction mode
+== Режим шумоподавления
+
+None
+== Нет
+
+Normal
+== Нормальный
+
+Normal Color
+== Обычный цвет
+
+Normal message
+== Обычное сообщение
+
+NOT CONNECTED
+== НЕ ПОДКЛЮЧЕНО
+
+Not connected to a game server
+== Не подключён к игровому серверу
+
+Not connected to server
+== Не подключён к серверу
+
+Not downloaded
+== Не загружено
+
+Not enabled
+== Не включено
+
+Not in the current browser list
+== Нет в текущем списке браузера
+
+Not open, check input device or mic permission
+== Не открыто, проверьте устройство ввода или разрешение микрофона.
+
+Not open, check output device
+== Не открыто, проверьте устройство вывода.
+
+Note
+== Заметка
+
+Nothing hookable
+== Ничего не зацепляется
+
+Notification background
+== Фон уведомления
+
+Notification hold time
+== Время удержания уведомления
+
+Notification text size
+== Размер текста уведомления
+
+Notifications
+== Уведомления
+
+Notify when friends come online
+== Уведомлять, когда друзья заходят в игру
+
+Notify when only one tee is still alive:
+== Уведомлять, когда остался только один ти:
+
+Novice
+== Новичок
+
+Numeric-only messages will be skipped
+== Сообщения, содержащие только цифры, будут пропущены.
+
+o = Send rate
+== o = Скорость отправки
+
+Off
+== Выкл
+
+Official community links
+== Официальные ссылки сообщества
+
+Offline
+== Офлайн
+
+Ohhhhhhhhhhhhhhhh
+== Оооооооооооооооооо
 
 Ok
 == ОК
 
+Oldschool
+== Олдскул
+
+On
+== Вкл
+
+Online Players
+== Игроки онлайн
+
+Only .wv files are supported right now.
+== Сейчас поддерживаются только файлы .wv.
+
+Only Apple Can Do
+== Только Apple может
+
+Only save improvements
+== Сохранять только улучшения
+
+Only show after joining a team
+== Показывать только после присоединения к команде
+
+Only show outlines in the entities layer
+== Показывать только контуры в слое объектов
+
+Only show when the other Tee is not on screen
+== Показывать только тогда, когда другой ти не на экране
+
+Only what you can't imagine, nothing Dream can't do
+== Только то, что вы не можете себе представить, нет ничего, что Dream не может сделать
+
+Only what you can't imagine, nothing Dream can't do!
+== Только то, что вы не можете себе представить, нет ничего, что Dream не может сделать!
+
+Opacity
+== Прозрачность
+
+Opacity of freeze bars inside freeze
+== Прозрачность полос разморозки внутри заморозки
+
+Open bindwheel selector
+== Открыть селектор колёсика привязок
+
+Open color picker
+== Открыть выбор цвета
+
+Open emote selector
+== Открыть выбор эмоций
+
+Open pie menu
+== Открыть круговое меню
+
+Open rename dialog
+== Открыть диалог переименования
+
+Open spectator mode selector
+== Открыть выбор режима наблюдателя
+
+Open the directory that contains the configuration and user files
+== Открыть папку, содержащую файлы конфигурации и пользовательские файлы
+
+Open the directory to add custom assets
+== Открыть папку для добавления пользовательских ресурсов
+
+Open the directory to add custom skins
+== Открыть папку для добавления пользовательских скинов
+
+Open the directory to add custom themes
+== Открыть папку для добавления пользовательских тем
+
+Open the folder containing demo files
+== Открыть папку с файлами демо
+
+Open the folder containing screenshots
+== Открыть папку со скриншотами
+
+Open the saves file
+== Открыть файл сохранений
+
+Open the settings file
+== Открыть файл настроек
+
+OpenAI
+== OpenAI
+
+OpenAI API key
+== API-ключ OpenAI
+
+Opened
+== Открыто
+
+Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
+== Отказаться от подсчёта наблюдателей и скрыть статус авторизации для неавторизованных игроков (1 = скрыт, 0 = показан)
+
+Optimistic prediction along stable direction
+== Оптимистичное предсказание вдоль стабильного направления
+
+Option color
+== Цвет опции
+
+Other
+== Другое
+
+Outgoing language
+== Исходящий язык
+
+Outline opacity
+== Непрозрачность контура
+
+Output device
+== Устройство вывода
+
+Output device not found
+== Устройство вывода не найдено
+
+Output device open failed
+== Ошибка открытия устройства вывода
+
+Output device open failed, try reconnecting speakers/headphones or reselecting output device
+== Ошибка открытия устройства вывода, попробуйте переподключить колонки/наушники или выбрать другое устройство вывода.
+
+Output switch
+== Переключение вывода
+
+Overlay entities
+== Наложение сущностей
+
+Override
+== Переопределить
+
+Override Entry
+== Переопределить запись
+
+Override Group
+== Переопределить группу
+
+Override Selected
+== Переопределить выбранное
+
+Overview cards show a lightweight guide to the client and page structure
+== Карточки обзора показывают лёгкое руководство по клиенту и структуре страницы.
+
+Overwrite clan even if empty
+== Перезаписывать клан, даже если он пуст
+
+p = Ping latency
+== p = Пинг
+
+Pack name
+== Имя пакета
+
+Page guide
+== Руководство по странице
+
+Panel opacity
+== Непрозрачность панели
+
 Parent Folder
-== Родительский каталог
+== Родительская папка
+
+Parsing voice server address
+== Разбор адреса голосового сервера
+
+Part color updated.
+== Цвет части обновлен.
+
+Part reset to default asset.
+== Часть сброшена на ресурс по умолчанию.
+
+Part updated.
+== Часть обновлена.
+
+Particle alpha
+== Альфа частиц
+
+Particle collision
+== Столкновение частиц
+
+Particle color
+== Цвет частиц
+
+Particle count
+== Количество частиц
+
+Particle depth
+== Глубина частиц
+
+Particle glow
+== Свечение частиц
+
+Particle pulse
+== Пульсация частиц
+
+Particle speed
+== Скорость частиц
+
+Particle trail
+== След частиц
+
+Particle twinkle
+== Мерцание частиц
+
+Particle type
+== Тип частиц
+
+Particles
+== Частицы
 
 Password
 == Пароль
@@ -253,935 +4198,1001 @@ Password
 Password incorrect
 == Неверный пароль
 
+Pause
+== Пауза
+
+Pause the current demo
+== Приостановить текущее демо
+
+Pause/unpause game
+== Поставить/снять игру на паузу
+
+Personal best:
+== Личный рекорд:
+
+Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status
+== Личная настройка отображения времени в широковещательном или игровом/раундовом таймере, timer s, где s = broadcast для широковещательного, gametimer для игрового/раундового таймера, cycle для цикла, both для обоих, none без таймера и ничего для отображения текущего статуса
+
+Pet
+== Питомец
+
+Pet alpha
+== Альфа питомца
+
+Pet size
+== Размер питомца
+
+Pet Skin:
+== Скин питомца:
+
+Pick result: %s
+== Результат выбора: %s
+
+Pickup range
+== Диапазон подбора
+
+Pie Menu
+== Пи-меню
+
+Pie menu
+== Круговое меню
+
 Ping
 == Пинг
+
+Ping the current server
+== Пинговать текущий сервер
 
 Pistol
 == Пистолет
 
+Play a slide-in rotation animation when switching weapons
+== Воспроизводить анимацию вращения при смене оружия
+
+Play back a demo
+== Воспроизвести демо
+
 Play background music
-== Включить фоновую музыку
+== Играть фоновую музыку
+
+Play the current demo
+== Воспроизвести текущее демо
+
+Play/Pause
+== Воспроизведение/Пауза
+
+Play/pause the current demo
+== Воспроизвести/поставить на паузу текущее демо
+
+Playback volume
+== Громкость воспроизведения
 
 Player
 == Игрок
 
+Player already invited
+== Игрок уже приглашён
+
 Player country:
 == Страна игрока:
+
+Player data
+== Данные игрока
+
+Player indicator
+== Индикатор игрока
+
+Player is on a different team
+== Игрок находится в другой команде
+
+Player name:
+== Имя игрока:
+
+Player not found
+== Игрок не найден
+
+Player range
+== Диапазон игроков
+
+Player Stats
+== Статистика игрока
+
+Player stats and info display
+== Отображение статистики и информации об игроке
 
 Players
 == Игроки
 
+Players are not allowed to chat from VPNs at this time
+== В настоящее время игрокам с VPN запрещено общаться в чате.
+
+Players can collide on this server
+== На этом сервере игроки могут сталкиваться
+
+Players can hook each other on this server
+== На этом сервере игроки могут цепляться друг за друга
+
+Players can't collide on this server
+== На этом сервере игроки не могут сталкиваться
+
+Players can't hook each other on this server
+== На этом сервере игроки не могут цепляться друг за друга
+
+Please add a valid cut first
+== Сначала добавьте действительный отрезок обрезки
+
 Please balance teams!
-== Сбалансируйте команды!
+== Пожалуйста, сбалансируйте команды!
+
+Please enable finished indicator first
+== Пожалуйста, сначала включите индикатор завершения
+
+Please enable voice first
+== Пожалуйста, сначала включите голос.
+
+Please enter your nickname below.
+== Пожалуйста, введите свой никнейм ниже.
+
+Please save your changes before duplicating a button.
+== Пожалуйста, сохраните изменения перед дублированием кнопки.
+
+Please use %s as friend name
+== Пожалуйста, используйте %s в качестве имени друга
+
+Please use a different filename
+== Пожалуйста, используйте другое имя файла
+
+Please wait…
+== Пожалуйста, подождите…
+
+Points
+== Очки
+
+Popup animation
+== Анимация всплытия
+
+Position jump hint
+== Подсказка о прыжке с позиции
+
+Position jump tip
+== Подсказка о прыжке в позицию
+
+Position:
+== Позиция:
+
+Practice mode can't be enabled in team 0 mode.
+== Режим тренировки нельзя включить в режиме команды 0.
+
+Practice mode can't be enabled while team save or load is in progress
+== Режим тренировки нельзя включить, пока выполняется сохранение или загрузка команды.
+
+Practice mode enabled for your team, happy practicing!
+== Режим тренировки включён для вашей команды, удачной тренировки!
+
+Practice mode is disabled
+== Режим тренировки отключён
+
+Predict events (experimental)
+== Предсказывать события (экспериментально)
+
+Predicted ghost opacity
+== Непрозрачность предсказанного призрака
+
+Prediction
+== Предсказание
+
+Prediction jitter is obvious, latency changes are large
+== Джиттер предсказания очевиден, изменения задержки велики.
+
+Prediction latency is elevated, prediction path pressure is high
+== Задержка предсказания повышена, нагрузка на канал предсказания высока.
+
+Prediction margin
+== Запас предсказания
+
+Prediction Margin
+== Запас предсказания
+
+Prediction time
+== Время предсказания
+
+Preparing demo playback
+== Подготовка воспроизведения демо
+
+Preset bar
+== Панель пресетов
+
+Press a key…
+== Нажмите клавишу…
+
+Press Esc to exit the HUD editor
+== Нажмите Esc, чтобы выйти из редактора HUD
 
 Prev. weapon
 == Пред. оружие
 
+Preview
+== Предпросмотр
+
+Preview 'Hook collisions' being pressed
+== Предпросмотр нажатия 'Столкновения крюка'
+
+Preview built with %d skipped slot(s).
+== Предпросмотр создан с пропуском %d слотов.
+
+Preview button visibility while the editor is active.
+== Видимость кнопки при активном редакторе.
+
+Preview dummy nameplate
+== Предпросмотр таблички дамми
+
+Preview import file
+== Предпросмотр импортируемого файла
+
+Preview player nameplate
+== Предпросмотр таблички игрока
+
+Preview selected file
+== Предпросмотр выбранного файла
+
+Previous
+== Предыдущий
+
+Previous page in console
+== Предыдущая страница в консоли
+
+Print command executed by this keybinding or all binds
+== Вывести команду, выполняемую этой привязкой клавиш, или все привязки
+
+Print command executed by this name or all chat binds
+== Вывести команду, выполняемую по этому имени, или все чат-привязки
+
+Privately messages someone's current time in this current running race (your time by default)
+== Приватно сообщить чьё-то текущее время в этом забеге (по умолчанию ваше время)
+
+Privately shows you your current time in this current running race in the broadcast message
+== Приватно показывает ваше текущее время в этом забеге в широковещательном сообщении
+
+Profiles
+== Профили
+
+Profiles file
+== Файл профилей
+
+Progress bar color
+== Цвет индикатора прогресса
+
+Progress bar height
+== Высота индикатора прогресса
+
+Progress bar width
+== Ширина индикатора прогресса
+
+Publicly messages everyone your current time in this current running race
+== Публично сообщает всем ваше текущее время в этом забеге
+
+Pulse
+== Пульс
+
+Pulse amplitude
+== Амплитуда пульсации
+
+Pulse speed
+== Скорость пульсации
+
+Pulse strength
+== Сила пульсации
+
+Push radius
+== Радиус толчка
+
+Push strength
+== Сила толчка
+
+Push-to-talk for voice chat
+== Нажми и говори для голосового чата
+
+Puts you into deep freeze
+== Помещает вас в глубокую заморозку
+
+Puts you into freeze
+== Помещает вас в заморозку
+
+Puts you into solo part
+== Помещает вас в соло-часть
+
+Puts you out of deep freeze
+== Выводит вас из глубокой заморозки
+
+Puts you out of freeze
+== Выводит вас из заморозки
+
+Puts you out of live freeze
+== Выводит вас из живой заморозки
+
+Puts you out of solo part
+== Выводит вас из соло-части
+
+Pyramid
+== Пирамида
+
+q = Connection quality
+== q = Качество соединения
+
+Qm
+== Qm
+
+qm_profile_queue: index must be between 1 and %d
+== qm_profile_queue: индекс должен быть от 1 до %d
+
+QmClient
+== QmClient
+
+QmClient chat log
+== Лог чата QmClient
+
+QmClient Community
+== Сообщество QmClient
+
+QmClient online distribution
+== Онлайн-распределение QmClient
+
+QmClient overview
+== Обзор QmClient
+
+QmClient Settings
+== Настройки QmClient
+
+QQ group: 1076765929 (click to copy)
+== QQ-группа: 1076765929 (нажмите, чтобы скопировать)
+
+Quads are used for background decoration
+== Квады используются для фонового декора
+
+Queue is empty
+== Очередь пуста
+
+Queue is full
+== Очередь заполнена
+
+Quick action menu for players
+== Меню быстрых действий для игроков
+
+Quickly locate feature modules
+== Быстрый поиск функциональных модулей
+
 Quit
-== Выход
+== Выйти
+
+Quit the client
+== Выйти из клиента
+
+Quitting. Please wait…
+== Выход. Пожалуйста, подождите…
+
+r = Race time
+== r = Время забега
+
+Race
+== Забег
+
+Rainbow
+== Радуга
+
+Rainbow hook
+== Радужный крюк
+
+Rainbow name
+== Радужное имя
+
+Rainbow others
+== Радуга для всех!
+
+Rainbow speed
+== Скорость смены цвета
+
+Rainbow Tees
+== Радужные ти
+
+Rainbow weapons
+== Радужное оружие
+
+Random
+== Случайно
+
+Random emoticon
+== Случайная эмоция
+
+Random map
+== Случайная карта
+
+Random pick
+== Случайный выбор
+
+Random unfinished map
+== Случайная незавершённая карта
+
+Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
+== Случайный цвет игрока (0 = все, 1 = тело, 2 = ноги, 3 = скин, 4 = флаг) пример: 0011 = случайный скин и флаг [цифра — позиция]
+
+Ratio
+== Соотношение
+
+Reason
+== Причина
 
 Reason:
 == Причина:
 
+Rebinds the client's listening address and port
+== Переназначает адрес и порт прослушивания клиента
+
+Receive
+== Приём
+
+Receiving
+== Приём
+
+Reconnect in %d sec
+== Переподключение через %d сек
+
+Record demo
+== Записать демку
+
+Record to a file
+== Записать в файл
+
+Red
+== Красный
+
 Red team
-== Красные
+== Красная команда
 
 Red team wins!
-== Красные победили!
+== Красная команда побеждает!
+
+Refresh
+== Обновить
+
+Refresh interval
+== Интервал обновления
+
+Refresh Rate
+== Частота обновления
+
+Regex
+== Регулярное выражение
+
+Region
+== Регион
+
+Regular background color
+== Обычный цвет фона
+
+Regular expression
+== Регулярное выражение
+
+Relative path
+== Относительный путь
+
+Reload
+== Перезагрузить
+
+Reload the announcements
+== Перезагрузить объявления
+
+Reload the censorlist
+== Перезагрузить список цензуры
+
+Reload the map
+== Перезагрузить карту
+
+Reload the map while preserving the state of tees and teams
+== Перезагрузить карту, сохранив состояние ти и команд
+
+Reload the maplist
+== Перезагрузить список карт
+
+Reloaded images.
+== Изображения перезагружены.
+
+Reloaded images. %d slot(s) fell back to main asset.
+== Изображения перезагружены. %d слотов вернулись к основному ресурсу.
 
 Remote console
-== Консоль сервера
+== Удаленная консоль
+
+Remote particle effects
+== Удалить из избранного
 
 Remove
 == Удалить
 
+Remove [group] [clan]:
+== Удалить [группа] [клан]:
+
+Remove [group] [name]:
+== Удалить [группа] [имя]:
+
+Remove a bind from the bindwheel
+== Удалить привязку с колёсика привязок
+
+Remove a chat bind
+== Удалить чат-привязку
+
+Remove a clan war entry
+== Удалить запись войны кланов
+
+Remove a community from the exclusion filter
+== Удалить сообщество из фильтра исключения
+
+Remove a community from the favorites
+== Удалить сообщество из избранного
+
+Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
+== Удалить страну из фильтра исключения для конкретного сообщества (ISO 3166-1 числовой)
+
+Remove a foe
+== Удалить врага
+
+Remove a friend
+== Удалить друга
+
+Remove a friend category
+== Удалить категорию друзей
+
+Remove a map from favorites
+== Удалить карту из избранного
+
+Remove a name war entry
+== Удалить запись войны имён
+
+Remove a rcon key
+== Удалить ключ rcon
+
+Remove a server from favorites
+== Удалить сервер из избранного
+
+Remove a skin from the favorites
+== Удалить скин из избранного
+
+Remove a type from the exclusion filter for a specific community
+== Удалить тип из фильтра исключения для конкретного сообщества
+
+remove a voting option
+== удалить вариант голосования
+
+Remove Bind
+== Удалить привязку
+
+Remove chat
+== Удалить чат
+
 Remove friend
 == Удалить друга
+
+Remove from favorites
+== Очередь переименования
+
+Remove from queue
+== Удалить из очереди
+
+Remove Item
+== Удалить элемент
+
+Remove prediction & antiping in freeze
+== Убрать предсказание и антипинг в заморозке
+
+Remove right to vote from player with client ID
+== Лишить права голоса игрока с ID клиента
+
+Remove right to vote from player with IP address
+== Лишить права голоса игрока с IP-адресом
+
+Remove team clan:
+== Удалить дружественный клан:
+
+Remove team name:
+== Удалить дружественное имя:
+
+Remove war clan:
+== Удалить враждебный клан:
+
+Remove War Group
+== Удалить вражескую группу
+
+Remove war name:
+== Удалить враждебное имя:
+
+Removes all bindwheel binds
+== Удаляет все привязки с колёсика привязок
+
+Removes all chat binds
+== Удаляет все чат-привязки
+
+Removes all weapons from you
+== Удаляет у вас всё оружие
+
+Removes endless hook from you
+== Удаляет у вас бесконечный крюк
+
+Removes infinite jump from you
+== Удаляет у вас бесконечный прыжок
+
+Removes ninja from you
+== Удаляет у вас ниндзя
+
+Removes super from you
+== Удаляет у вас супер
+
+Removes the grenade launcher from you
+== Удаляет у вас гранатомёт
+
+Removes the jetpack from you
+== Удаляет у вас реактивный ранец
+
+Removes the laser from you
+== Удаляет у вас лазер
+
+Removes the shotgun from you
+== Удаляет у вас дробовик
+
+removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
+== удаляет у вас оружие с id i (все = -1, молот = 0, пистолет = 1, дробовик = 2, граната = 3, лазер = 4, ниндзя = 5)
+
+Rename
+== Переименовать
+
+Rename a friend category
+== Переименовать категорию друзей
 
 Rename demo
 == Переименовать демо
 
+Rename folder
+== Переименовать папку
+
+Rename queue
+== Режим замены
+
+Rename screenshot
+== Переименовать скриншот
+
+Rename: %s
+== Переименовать: %s
+
+Render all custom colored feet as white feet skin
+== Отображать все кастомные цвета ног как белый скин ног
+
+Render complete
+== Рендер завершён
+
+Render cut to video
+== Рендерить отрезок в видео
+
+Render demo
+== Рендерить демо
+
+Render ghosts as circles
+== Отображать призраков в виде кругов
+
+Render tiny tees instead of circles
+== Отображать мини-ти вместо кругов
+
+Renderer
+== Рендерер
+
+Renders your frame rate in the top right
+== Отображает частоту кадров в правом верхнем углу
+
+Repeat message
+== Повторить сообщение
+
+Repeat the latest chat message
+== Повторить последнее сообщение чата
+
+Replace mode
+== Заменить имена не-друзей на ID
+
+Replace non-friend names with ID
+== Заменить скины не-друзей на стандартный
+
+Replace non-friend skins with default
+== Символы замены
+
+Replace video
+== Заменить видео
+
+Replacement chars
+== Ответить дамми
+
+Replay
+== Повтор
+
+Replay feature is disabled!
+== Функция повтора отключена!
+
+Reply
+== Ответить
+
+Reply with dummy
+== Спасение не включено на этом сервере, и вы не в команде с включённым /practice. Обратите внимание, что с включённым режимом тренировки нельзя получить ранг.
+
+Request to swap your tee with another team member
+== Запросить обмен вашего ти с другим членом команды
+
+Requesting to join the game
+== Запрос на присоединение к игре
+
+Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
+== Rescue не включён на этом сервере, и вы не в команде с включённым /practice. Обратите внимание, что с включённым тренировочным режимом нельзя получить рейтинг.
+
+Rescue mode switched to %s
+== Режим rescue переключён на %s
+
+Rescue to a nearby air tile
+== Спастись на ближайшую воздушную клетку
+
+Rescue/Freeze: %d/%d
+== Спасение/Заморозка: %d/%d
+
+Resend signs detected, connection quality is suspicious
+== Сбросить статистику при входе на сервер
+
+Reset
+== Сбросить
+
+Reset a config to its default value
+== Сбросить настройку до значения по умолчанию
+
+Reset All
+== Сбросить все
+
+Reset all drawings on the background
+== Сбросить все рисунки на фоне
+
+Reset all or one tuning variable to default
+== Сбросить все или одну переменную тюнинга до значения по умолчанию
+
+Reset column widths
+== Сбросить ширину столбцов
+
+Reset controls
+== Сбросить управление
+
+Reset default
+== Сбросить настройки по умолчанию
+
+Reset dummy
+== Сбросить дамми
+
 Reset filter
-== Сбросить фильтры
+== Сбросить фильтр
+
+Reset layout
+== Сбросить расположение
+
+Reset position of mouse when opening bindwheel
+== Сбросить позицию мыши при открытии колёсика привязок
+
+Reset stats when joining a server
+== Правый прыжок
+
+Reset to defaults
+== Сброс на стандартные
+
+Reset zone tuning in zone x or in all zones
+== Сбросить тюнинг зоны в зоне x или во всех зонах
+
+Restart
+== Перезапустить
+
+Restart in x seconds (0 = abort)
+== Перезапуск через x секунд (0 = отмена)
+
+Restart the client
+== Перезапустить клиент
+
+Restarting. Please wait…
+== Перезапуск. Пожалуйста, подождите…
+
+Rifle Laser Inner Color
+== Внутренний цвет лазера винтовки
+
+Rifle Laser Outline Color
+== Внешний цвет лазера винтовки
+
+Right jump
+== Кольцо
+
+Right-click to disable auto-translate
+== Правый клик для отключения автоперевода
+
+Right-click to enable auto-translate
+== Правый клик для включения автоперевода
+
+Ring
+== Шумоподавление RNNoise
+
+RNNoise noise reduction
+== Шумоподавление RNNoise (недоступно в этой сборке)
+
+RNNoise noise reduction (unavailable in this build)
+== Сила шумоподавления RNNoise
+
+RNNoise noise reduction strength
+== RNNoise не интегрирован в текущую сборку, будет использовано простое шумоподавление.
+
+RNNoise not integrated in current build, will fallback to simple noise reduction
+== Частота отката
+
+Rollback rate
+== Комната
+
+Room
+== Пароль комнаты
+
+Room password
+== Закруглённые концы
+
+Rotate all maps
+== Сменить все карты
+
+Round
+== Раунд
+
+Round %d/%d
+== Раунд %d/%d
+
+Rounded caps
+== Направлять сообщения Echo в уведомления
+
+Route Echo messages to notifications
+== Направлять системные подсказки сервера в уведомления (кроме чёрного списка)
+
+Route server system prompts to notifications (except blacklist)
+== Запустить скрипт chai
+
+Run chai script
+== Функция сохранения отключена на этом сервере
+
+Run on join
+== Выполнить при входе
+
+Run server
+== Запустить сервер
+
+SA
+== Южная Америка
+
+Same as "vote no"
+== То же, что и "vote no"
+
+Same clan color in scoreboard
+== Цвет одного клана в таблице лидеров
+
+Sat.
+== Нас.
+
+Save
+== Сохранить
+
+Save a replay of the last defined amount of seconds
+== Сохранить повтор за последние заданное количество секунд
+
+Save all changes before switching selected button?
+== Сохранить все изменения перед переключением выбранной кнопки?
+
+Save all changes before turning off the editor?
+== Сохранить все изменения перед закрытием редактора?
+
+Save asset before closing?
+== Сохранить ресурс перед закрытием?
+
+Save banlist in a file
+== Сохранить список банов в файл
+
+Save changes
+== Сохранить изменения
+
+Save current
+== Сохранить текущий
+
+Save current queue as a new preset
+== Сохранить текущую очередь как новый пресет
+
+Save drawings to a given csv file (defaults to map name)
+== Сохранить рисунки в указанный CSV-файл (по умолчанию имя карты)
+
+Save failed!
+== Ошибка сохранения!
+
+Save ghost
+== Сохранить призрак
+
+Save last %d min
+== Сохранить последние %d мин
+
+Save power by lowering refresh rate (higher input latency)
+== Экономия энергии за счет снижения частоты обновления (более высокая задержка ввода)
+
+Save skin
+== Сохранить скин
+
+Save team with code r.
+== Сохранить команду с кодом r.
+
+Save the best demo of each race
+== Сохранять лучшую демку каждого забега
+
+Save unsent chat draft
+== Сохранять черновик неотправленного сообщения чата
+
+Save-function is disabled on this server
+== Проверка очков в таблице
+
+Save/Load Clan
+== Сохранить/Загрузить клан
+
+Save/Load Colors
+== Сохранить/Загрузить цвета
+
+Save/Load Emote
+== Сохранить/Загрузить эмоцию
+
+Save/Load Flag
+== Сохранить/Загрузить флаг
+
+Save/Load Name
+== Сохранить/Загрузить имя
+
+Save/Load Skin
+== Сохранить/Загрузить скин
+
+Saves file
+== Файл сохранений
+
+Say in chat
+== Сказать в чат
+
+Say in chat as dummy
+== Сказать в чат от имени дамми
+
+Say in team chat
+== Сказать в командный чат
+
+Say in team chat as dummy
+== Сказать в командный чат от имени дамми
 
 Score
-== Счёт
+== Очки
 
 Score limit
 == Лимит очков
 
 Scoreboard
-== Табло
+== Таблица лидеров
 
-Screenshot
-== Снимок
+Scoreboard color
+== Цвет таблицы лидеров
 
-Server address:
-== Адрес сервера:
+Scoreboard cursor
+== Курсор таблицы лидеров
 
-Server info
-== Информация
+Scoreboard opacity
+== Прозрачность таблицы лидеров
 
-Server not full
-== Сервер не заполнен
+Scoreboard point check
+== Очки на этом сервере приватны
 
-Shotgun
-== Дробовик
+Scores are private on this server
+== Очки на этом сервере публичны
 
-Show chat
-== Показывать чат
+Scores are public on this server
+== Секунды
 
-Show friends only
-== Только с друзьями
-
-Show ingame HUD
-== Показывать внутриигровой HUD
-
-Show name plates
-== Показывать имена игроков
-
-Sound
-== Звук
-
-Sound error
-== Ошибка звука
-
-Spectate
-== Наблюдать
-
-Spectate next
-== Наблюдать за след.
-
-Spectate previous
-== Наблюдать за пред.
-
-Spectator mode
-== Наблюдатель
-
-Spectators
-== Наблюдатели
-
-Stop record
-== Стоп
-
-Strict gametype filter
-== Строгий фильтр р-мов
-
-Sudden Death
-== Внезапная смерть
-
-Switch weapon on pickup
-== Переключать оружие при подборе
-
-Switch weapon when out of ammo
-== Переключать оружие без патронов
-
-Show only chat messages from friends
-== Показывать только сообщения от друзей
-
-Show clan above name plates
-== Показывать клан
-
-Automatically take statboard screenshot
-== Делать снимок результатов
-
-Team
-== Команда
-
-Team chat
-== Командный чат
-
-The audio device couldn't be initialised.
-== Аудио устройство не может быть инициализировано.
-
-The server is running a non-standard tuning on a pure game type.
-== Сервер запущен с нестандартными настройками на стандартном типе игры.
-
-Time limit: %d min
-== Лимит времени: %d
-
-Try again
-== ОК
-
-Type
-== Тип
-
-Unable to rename the demo
-== Невозможно переименовать демо
-
-Use sounds
-== Использовать звуки
-
-
-Clan
-== Клан
-
-Custom colors
-== Свои цвета
-
-Delete
-== Удалить
-
-Name
-== Имя
-
-No
-== Нет
-
-Yes
-== Да
-
-Save
-== Сохранить
-
-HUD
-== HUD
-
-Website
-== Сайт
-
-Settings
-== Настройки
-
-Dummy
-== Дамми
-
-Discord
-== Дискорд
-
-Profiles
-== Профили
-
-Visual
-== Визуал
-
-Custom Font: 
-==     Шрифт: 
-
-Hide nameplates in spec
-== Скрывать имена в режиме наблюдателя
-
-Show skin names in nameplate
-== Показывать название скина около имени
-
-Freeze stars
-== Звёзды при заморозки
-
-Color frozen tee skins
-== Цветные замороженые скины
-
-Render all custom colored feet as white feet skin
-== Все ноги в белые ноги выбранного скина
-
-Show position and angle (mini debug)
-== Показывать позицию и угол прицела игрока (mini debug)
-
-Show your cursor when in free spectate
-== Показывать курсор в режиме наблюдателя
-
-Spectate cursor alpha
-== Прозр. курсора
-
-Show when you are the last alive
-== Показывать когда остался последний выживший
-
-Frozen Tee Display
-== Дисплей замороженных тии
-
-Show frozen tee display
-== Показывать дисплей замороженных тии
-
-Use skins instead of ninja tees
-== Использовать скины игроков вместо скина ниндзя
-
-Only show after joining a team
-== Показывать только в команде
-
-Max Rows
-== Макс. кол. строк
-
-Tee Size
-== Размер тии
-
-Tees left alive text
-== Текст оставшихся тии
-
-Count frozen tees
-== Считать замороженных тии
-
-Input
-== Ввод
-
-Fast Inputs (-20ms visual delay)
-== Быстрый ввод (-20ms визуальной задержки)
-
-Anti Latency Tools
-== Инструменты для устранения задержек
-
-Remove prediction & antiping in freeze
-== Убрать предсказания & антипинг в заморозке
-
-Amount
-== Кол.
-
-Delay
-== Задерж.
-
-Dont predict other players if you are frozen
-== Не предсказывать других игроков, если вы заморожены
-
-Adjust your prediction margin while frozen
-== Отрегулировать предсказания пока вы заморожены
-
-Frozen Margin
-== Предел в заморозке
-
-Tile Outlines
-== Обводка тайлов
-
-Show any enabled outlines
-== Показывать все включенные обводки
-
-Only show outlines in entities
-== Показывать обводку только в энтити
-
-Outline freeze & deep
-== Обводка заморозки и дип-фриза
-
-Outline walls
-== Обводка стен
-
-Outline teleporter
-== Обводка телепортов
-
-Outline unfreeze & undeep
-== Обводка разморозки и андип-фриза
-
-Outline width
-== Толщина обводки
-
-Outline alpha
-== Прозрачн. обводки
-
-Outline Alpha (walls)
-== Прозрачн. обводки (для стен)
-
-Freeze outline color
-== Цвет обводки заморозки
-
-Walls outline color
-== Цвет обводки стен
-
-Teleporter outline color
-== Цвет обводки телепортов
-
-Unfreeze outline color
-== Цвет обводки разморозки
-
-Optimistic prediction along stable direction
-== Оптимальное предсказание по стабильному направлению
-
-Negative stability buffer (for Gores)
-== Отрицательный буфер стабильности (для Gores)
-
-Uncertainty duration
-== Длител. неопредел.
-
-Other
-== Другое
-
-Ghost Tools
-== Призрачные инструменты
-
-Show unpredicted ghosts for other players
-== Показывайте непредсказуемых призраков для других игроков
-
-Swap ghosts and normal players
-== Поменять местами призраков и игроков
-
-Predicted alpha
-== Прозрачн. предсказ.
-
-Unpredicted alpha
-== Прозрачн. непредсказ.
-
-Hide ghosts of frozen players
-== Убрать призраков замороженных игроков
-
-Render ghosts as circles
-== Показывать призраков как круги
-
-Player Indicator
-== Индикатор игроков
-
-Show any enabled Indicators
-== Показывать индикаторы
-
-Hide indicator for tees on your screen
-== Убрать индикатор если игрок на экране
-
-Show only freeze Players
-== Показывать только игроков в заморозке
-
-Render tiny tees instead of circles
-== Показывать маленьких тии вместо кругов
-
-Use warlist groups for indicator
-== Использовать группы из Списка воинов для индикатора
-
-Indicator size
-== Размер индикатора
-
-Indicator opacity
-== Прозрачн. индикатора
-
-Change indicator offset based on distance to other tees
-== Изм. смещ. индикатора в зависимости от расст. до других тии
-
-Indicator min offset
-== Мин. смещ. индикатора
-
-Indicator max offset
-== Макс. смещ. индикатора
-
-Indicator max distance
-== Макс. дист. индикатора
-
-Indicator offset
-== Смещение индикатора
-
-Indicator alive color
-== Цвет игрока не в заморозке
-
-Indicator in freeze color
-== Цвет игрока в заморозке
-
-Indicator safe color
-== Цвет игрока в безопасности
-
-Rainbow
-== Радуга
-
-Rainbow Tees
-== Радужные тии
-
-Rainbow weapons
-== Радужное оружие
-
-Rainbow hook
-== Радужный крюк
-
-Rainbow others
-== Радужные другие тии
-
-Rainbow speed
-== Скорость радуги
-
-Pulse
-== Пульс
-
-Black
-== Черный
-
-Random
-== Рандом
-
-Tee Trails
-== Трейл тии
-
-Enable tee trails
-== Включить трейлы
-
-Fade trail alpha
-== Затухание трейла
-
-Taper trail width
-== Сужающаяся ширина трейла
-
-Trail width
-== Ширина трейла
-
-Trail length
-== Длина трейла
-
-Trail alpha
-== Прозрачность трейла
-
-Tee trail color
-== Цвет трейла
-
-Name:
-== Название:
-
-Command:
-== Команда:
-
-Override Selected
-== Изменить выделенный
-
-Remove Bind
-== Удалить
-
-Add Bind
-== Добавить
-
-Use left mouse to select
-== Чтобы выбрать используй ЛКМ
-
-Use right mouse to swap with selected
-== Используй ПКМ чтобы заменить выделенный
-
-Use middle mouse select without copy
-== Используй колесико мыши чтобы выбрать без копированния
-
-Reset position of mouse when opening bindwheel
-== Сбрасывать позицию мыши при открытии
-
-Warlist
-== Список войн
-
-Name
-== Игрок
-
-Clan
-== Клан
-
-War Entries
-== Игроки & Кланы
-
-Edit Entry
-== Редактирование
-
-Override Entry
-== Изменить игрока
-
-Add Entry
-== Добавить игрока
-
-Allow Duplicate Entries
-== Разрешить копии
-
-Enable warlist
-== Включить
-
-Colors in chat
-== Цвета в чате
-
-Colors in scoreboard
-== Цвета в табе
-
-War Groups
-== Группы
-
-Override Group
-== Изменить группу
-
-Add Group
-== Добавить группу
-
-Online Players
-== Игроки на сервере
-
-Show clan if war
-== Показывать клан
-
-Chat Binds
-== Бинды для чата
-
-Kaomoji
-== Каомодзи
-
-Shrug:
-== Пожать плечами:
-
-Flip:
-== Перевернуть стол:
-
-Unflip:
-== Поставить стол:
-
-Mute:
-== Мьют:
-
-Status Bar
-== Статус бар 
-
-Show status bar
-== Показывать статус бар
-
-Show labels on status bar items
-== Показывать текст на предметах статус бара
-
-Status bar height
-== Высота статус бара
-
-Local Time
-== Локальное время
-
-Use 12 hour clock
-== Использовать 12 часовую систему
-
-Show seconds on clock
-== Показывать секунды
-
-Colors
-== Цвета
-
-Status bar color
-== Цвет статус бара
-
-Text color
-== Цвет текста
-
-Status bar alpha
-== Прозрачность статус бара
-
-Text alpha
-== Прозрачность текста
-
-Status Bar Codes:
-== Коды статус бара
-
-a = Angle
-== a = Angle (Угол)
-
-p = Ping
-== p = Ping (Пинг)
-
-d = Prediction
-== d = Prediction (Предсказание)
-
-c = Position
-== c = Position (Позиция)
-
-l = Local Time
-== l = Local Time (Локал. время)
-
-r = Race Time
-== r = Race Time (Время гонки)
-
-f = FPS
-== f = FPS (Кадров в секунду)
-
-v = Velocity
-== v = Velocity (Скорость)
-
-z = Zoom
-== z = Zoom (Приближение)
-
-Add Item
-== Добавить
-
-Remove Item
-== Удалить
-
-Status Scheme:
-== Схема:
-
-Apply
-== Применить
-
-Info
-== Информация
-
-TClient Links
-== Ссылки TClient
-
-Support ♥
-== Поддержать ♥
-
-TClient Settings
-== Настройки TClient
-
-Config Files
-== Конфиг файлы
-
-TClient Developers
-== Разработчики TClient
-
-Hide Settings Tabs
-== Скрыть вкладки в настройках
-
-Your profile
-== Ваш профиль
-
-Profiles file
-== Файл с Профилями
-
-Save/Load Skin
-== Сохр./Загр. Скин
-
-Save/Load Colors
-== Сохр./Загр. Цвета
-
-Save/Load Emote
-== Сохр./Загр. Эмоц. 
-
-Save/Load Name
-== Сохр./Загр. Имя
-
-Save/Load Clan
-== Сохр./Загр. Клан
-
-Save/Load Flag
-== Сохр./Загр. Флаг
-
-Load
-== Загрузить
-
-Override
-== Изменить
-
-Command
-== Command
-
-Extra tick other tees (increases other tees latency, \nmakes dragging slightly easier when using fast input)
-== Дополнительный тик других тии (увеличивает задержку других тии,\n немного облегчает перетаскивание при использовании быстрого ввода)
-
-Prediction Margin
-== Предел предсказания
-
-Anti Ping Smoothing
-== Плавный Антипинг 
-
-Use new smoothing algorithm
-== Использовать новый анти-пинг
-
-Use warlist colors instead of regular colors
-== Используйте цвета списка вместо обычных цветов
-
-Show all warlist groups
-== Показывать все группы
-
-Last!
-== Последний!
-
-Outline kill
-== Обводка смерти
-
-Kill outline color
-== Цвет обводки смерти
-
-Reason
-== Причина
-
-Are you sure that you want to remove '%s' from your war groups?
-== Вы уверены, что хотите удалить '%s' из своих групп?
-
-Remove War Group
-== Удалить группу
-
-Color
-== Цвет
-
-Github
-== Github
-
-Integration
-== Интеграция
-
-Enable Discord Integration
-== Включить Интеграцию Discord (Discord RPC)
-
-Name: %s
-== Имя: %s
-
-Clan: %s
-== Клан: %s
-
-Skin: %s
-== Скин: %s
-
-After Load
-== После загрузки
-
-TClient
-== TClient
-
-Voting
-== Голосования
-
-Auto vote no to map changes when far
-== Авто-голосование за "нет" при смене карты если вы далеко
-
-Minimum Time
-== Минимальное время
-
-Leave empty to disable
-== Оставьте пустым чтобы отключить
-
-Message to send in chat:
-== Сообщение для отправки в чат
-
-Auto Reply
-== Авто-ответ
-
-Auto reply to muted players
-== Авто-ответ игрокам в мюте
-
-Auto reply when tabbed out
-== Авто-ответ когда не в игре
-
-Show other tees' trails
-== Показывать трейл других тии
-
-Solid
-== Статический
-
-Tee
-== Тии
-
-Speed
-== Скорость
-
-Colors in spectate select
-== Выбор цветов в наблюдателях
-
-Translated text hidden due to streamer mode
-== Переведенный текст скрыт из-за режима стримера
-
-(On Latest)
-== (Актуальная версия)
-
-(Fetching Update Info)
-== (Получение информации об обновлениях)
-
-[bgdraw]
-Failed to create bgdraw folder
-== Не удалось создать папку bgdraw
-
-[bgdraw]
-Writing item %d failed
-== Не удалось записать элемент %d
-
-[bgdraw]
-Written %d items
-== Записано элементов: %d
-
-[bgdraw]
-Loaded %d items
-== Загружено элементов: %d
-
-[bgdraw]
-Loaded %d items (discarded %d items)
-== Загружено элементов: %d (отброшено элементов: %d)
-
-Cute:
-== Мило:
-
-Lenny:
-== Ленни:
-
-Add war name:
-== Добавить имя в войну:
-
-Add war clan:
-== Добавить клан в войну:
-
-Add team name:
-== Добавить имя в команду:
-
-Add team clan:
-== Добавить клан в команду:
-
-Remove war name:
-== Убрать имя из войны:
-
-Remove team name:
-== Убрать имя из команды:
-
-Remove team clan:
-== Убрать клан из команды:
-
-Add [group] [name] [reason]:
-== Добавить [группа] [клан] [причина]:
-
-Add [group] [clan] [reason]:
-== Добавить [группа] [клан] [причина]:
-
-Remove [group] [name]:
-== Убрать игрока [группа] [имя]:
-
-Remove [group] [clan]:
-== Убрать клан [группа] [клан]:
-
-Translate:
-== Перевести:
-
-Translate ID:
-== Перевести ID:
-
-Unmute:
-== Снять мут:
-
-Bind Wheel
-== Колесо биндов
-
-War List
-== Список войн
-
-Bind Wheel Key
-== Клавиша колеса биндов
-
-[Hammer Mode]
-Normal
-== Обычный
-
-[Hammer Mode]
-Rotate with cursor
-== Вращение с курсором
-
-[Hammer Mode]
-Rotate with cursor like gun
-== Вращение с курсором как у пистолета
-
-Hammer Mode: 
-== Режим молота: 
-
-Ingame cursor scale
-== Масштаб курсора в игре
-
-Wheel animate
-== Анимация колеса
-
-Show katan on frozen players
-== Показывать катану на замороженных игроках
-
-Tiny Tees
-== Маленькие тии
-
-Tiny Tee Size
-== Размер маленьких тии
-
-Pet
-== Питомец
-
-Show the pet
-== Показать питомца
-
-Pet size
-== Размер питомца
-
-Pet alpha
-== Прозрачность питомца
-
-Pet Skin:
-== Скин питомца:
-
-Show mini vote HUD
-== Показывать мини-HUD голосования
-
-Horizontal Position
-== Горизонтальная позиция
-
-Vertical Position
-== Вертикальная позиция
-
-Font Size
-== Размер шрифта
-
-Show screen center lines
-== Показывать центральные линии экрана
+Screen
+== Экран
 
 Screen center line color
 == Цвет центральной линии экрана
@@ -1189,116 +5200,2855 @@ Screen center line color
 Screen center line width
 == Ширина центральной линии экрана
 
-Toggle ghosts key
-== Клавиша переключения призраков
+Screenshot
+== Скриншот
 
-Background Draw
-== Фоновое рисование
+Screenshots
+== Скриншоты
 
- seconds (never)
-==  секунд (никогда)
+Screenshots directory
+== Каталог скриншотов
 
- seconds
-==  секунд
+Search
+== Поиск
+
+Search donor asset
+== Поиск ресурса донора
+
+Search main asset
+== Поиск основного ресурса
+
+Searching
+== Поиск
+
+Seconds
+== Секунды
+
+SecretId
+== SecretKey
+
+SecretKey
+== Посмотри, насколько ты актёрствуешь
+
+See how much you act
+== Выбранный тип таймера не поддерживается вашим клиентом
+
+Select all chat
+== Выбрать весь чат
+
+Select button by touch
+== Выбрать кнопку касанием
+
+Select export
+== Выбрать экспорт
+
+Selected %d
+== Выбрано %d
+
+Selected button not visible
+== Выбранная кнопка не видна
+
+Selected candidate
+== Выбранный кандидат
+
+Selected candidate %d/%d under cursor.
+== Выбран кандидат %d/%d под курсором.
+
+Selected pack
+== Выбранный пакет
+
+Selected server
+== Выбранный сервер
+
+Selected timertype is not supported by your client
+== Только себе
+
+Selection
+== Выбор
+
+Self
+== Себя
+
+Self only
+== Отправить
+
+Send
+== Отправить и получить
+
+Send & Receive
+== Отправить эмоцию в воде
+
+Send /load as dummy
+== Отправить /load от имени дамми
+
+Send /lock as dummy
+== Отправить /lock от имени дамми
+
+Send /pause as dummy
+== Отправить /pause от имени дамми
+
+Send /rescue as dummy
+== Отправить /rescue от имени дамми
+
+Send /save as dummy
+== Отправить /save от имени дамми
+
+Send /spec as dummy
+== Отправить /spec от имени дамми
+
+Send /team as dummy
+== Отправить /team от имени дамми
+
+Send a moderator alert message to player
+== Отправить предупреждение модератора игроку
+
+Send a server alert message to all players
+== Отправить предупреждение сервера всем игрокам
+
+Send emoticon in water
+== Вероятность отправки
+
+Send probability
+== Отправить исходный язык
+
+Send source language
+== Отправить целевой язык
+
+Send specified command to rcon
+== Отправить указанную команду в rcon
+
+Send target language
+== Отправить целевой язык
+
+Send translation method
+== Способ отправки перевода
+
+Sending and receiving
+== Отправка и получение
+
+Sending initial client info
+== Отправка начальной информации клиента
+
+Sending locally, suggest the other party unmute or confirm they can receive
+== Отправка локально, предложите собеседнику включить микрофон или подтвердить, что он может принимать
+
+Sending, waiting for peer echo
+== Отправка, ожидание эха от собеседника
+
+Sends a command to the antibot
+== Отправляет команду антиботу
+
+Separate with commas
+== Разделяйте запятыми
+
+Server
+== Сервер
+
+Server address:
+== Адрес сервера:
+
+Server alert
+== Предупреждение сервера
+
+Server best:
+== Лучший на сервере:
+
+Server could not be started
+== Не удалось запустить сервер
+
+Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
+== Не удалось запустить сервер. Убедитесь, что в настройках приложения предоставлено разрешение на уведомления, чтобы сервер мог работать в фоновом режиме.
+
+Server does not allow voting to kick players
+== Сервер не разрешает голосование за кик игроков
+
+Server does not allow voting to move players to spectators
+== Сервер не разрешает голосование за перемещение игроков в наблюдатели
+
+Server executable not found, can't run server
+== Исполняемый файл сервера не найден, невозможно запустить сервер
+
+Server filter
+== Фильтр серверов
+
+Server info
+== Информация о сервере
+
+Server IP
+== IP сервера
+
+Server kick/spec votes are no longer actively moderated.
+== Голосования за кик/спек на сервере больше не контролируются активным модератором.
+
+Server kick/spec votes will now be actively moderated.
+== Голосования за кик/спек на сервере теперь будут контролироваться активным модератором.
+
+Server not full
+== Сервер не заполнен
+
+Server rollback
+== Откат сервера
+
+Server RTT is elevated, response path is unstable
+== RTT сервера повышен, путь ответа нестабилен
+
+Set a voice server to enable QmClient distribution
+== Установите голосовой сервер, чтобы включить распределение QmClient
+
+Set all to Rifle
+== Установить все на винтовку
+
+Set camera position relative to current view in the map
+== Установить позицию камеры относительно текущего вида на карте
+
+Set camera position to x and y in the map
+== Установить позицию камеры на x и y на карте
+
+Set color
+== Установить цвет
+
+Set current demo speed
+== Установить скорость текущего демо
+
+Set ddrace team for a player
+== Установить команду DDRace для игрока
+
+Set force-pause timer of i to 0.
+== Установить таймер принудительной паузы i в 0.
+
+Set friend category
+== Установить категорию друга
+
+Set friend note
+== Установить заметку друга
+
+Set microphone mute state (0=on, 1=mute)
+== Установить состояние отключения микрофона (0=вкл, 1=выкл)
+
+Set team for a player (spectators = -1, game = 0)
+== Установить команду для игрока (наблюдатели = -1, игра = 0)
+
+Set team for all players (spectators = -1, game = 0)
+== Установить команду для всех игроков (наблюдатели = -1, игра = 0)
+
+Set timeout protection code s
+== Установить код защиты от тайм-аута s
+
+Set voice input device
+== Установить устройство ввода голоса
+
+Set voice output device
+== Установить устройство вывода голоса
+
+Set your checkpoints based on another player
+== Установить ваши чекпоинты на основе другого игрока
+
+Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided
+== Устанавливает один из двух режимов спасения (авто или вручную). Выводит текущий режим, если аргументы не указаны.
+
+Sets your tee's eye emote
+== Устанавливает эмоцию глаз вашего ти
+
+Settings
+== Настройки
+
+Settings file
+== Файл настроек
+
+Severe
+== Серьёзный
+
+Shape
+== Форма
+
+Shotgun
+== Дробовик
+
+Shotgun Laser Inner Color
+== Внутренний цвет лазера дробовика
+
+Shotgun Laser Outline Color
+== Внешний цвет лазера дробовика
+
+Show %s group
+== Показать группу %s
+
+Show all
+== Показать всех
+
+Show all buttons
+== Показать все кнопки
+
+Show all enabled outlines
+== Показать все включённые контуры
+
+Show all votes (page 0 by default, 20 entries per page)
+== Показать все голосования (страница 0 по умолчанию, 20 записей на странице)
+
+Show all warlist groups
+== Показать все вражеские группы
+
+Show any enabled Indicators
+== Показать все включённые индикаторы
+
+Show background quads
+== Показать фоновые квады
+
+Show banlist (page 1 by default, 20 entries per page)
+== Показать список банов (страница 1 по умолчанию, 20 записей на странице)
+
+Show blocked words in console
+== Показывать заблокированные слова в консоли
+
+Show chat
+== Показать чат
+
+Show chat bubbles above players
+== Показывать облака чата над игроками
+
+Show chat bubbles above Tees
+== Показывать облака чата над Ти
+
+Show chat messages above players
+== Показывать сообщения чата над игроками
+
+Show clan above name plates
+== Показать клан над табличками с именами
+
+Show clan if war
+== Показывать клан, если вражда
+
+Show client IDs (scoreboard, chat, spectating)
+== Показывать ID клиента (таблица лидеров, чат, наблюдение)
+
+Show client IDs in name plates
+== Показывать ID клиента в табличках с именами
+
+Show client IDs on a separate line
+== Показывать ID клиента на отдельной строке
+
+Show collision and weapon interaction
+== Показывать коллизию и взаимодействие с оружием
+
+Show colors in spectator selection
+== Показывать цвета в выборе наблюдателя
+
+Show compact vote HUD
+== Показать компактный HUD голосования
+
+Show Coordinates
+== Показывать координаты
+
+Show coordinates above players
+== Показывать координаты над игроками
+
+Show coordinates of yourself and others
+== Показывать свои и чужие координаты
+
+Show country flags in nameplates
+== Показывать флаги стран в табличках с именами
+
+Show DDNet map finishes in server browser
+== Показывать пройденные карты DDNet в браузере серверов
+
+Show DDRace HUD
+== Показать DDRace HUD
+
+Show Directory
+== Показать каталог
+
+Show dotted map route debug
+== Показывать отладку точечного маршрута карты
+
+Show dummy actions
+== Показать действия дамми
+
+Show dummy control status
+== Показать статус управления дамми
+
+Show dummy sync status
+== Показать статус синхронизации дамми
+
+Show entities
+== Показать сущности
+
+Show finish messages
+== Показывать сообщения о финише
+
+Show FPS
+== Показать FPS
+
+Show freeze bars
+== Показать полосы разморозки
+
+Show friend icon in name plates
+== Показывать иконку друга в табличках с именами
+
+Show friends only
+== Показывать только друзей
+
+Show ghost
+== Показать призрак
+
+Show grenade and laser trajectory preview
+== Показывать предпросмотр траектории гранаты и лазера
+
+Show Grid
+== Показать сетку
+
+Show hammer status
+== Показать статус молота
+
+Show health, shields and ammo
+== Показывать здоровье, щиты и патроны
+
+Show hitbox mode
+== Показывать режим хитбоксов
+
+Show Hook Collision
+== Показать коллизию крюка
+
+Show hook strength icon indicator
+== Показывать значок силы крюка
+
+Show hook strength number indicator
+== Показывать числовой индикатор силы крюка
+
+Show HUD
+== Показать HUD
+
+Show info about the map with name r gives (current map by default)
+== Показать информацию о карте с именем r (по умолчанию текущая карта)
+
+Show information about this server
+== Показать информацию об этом сервере
+
+Show ingame HUD
+== Показать внутриигровой HUD
+
+Show inputs
+== Показывать вводы
+
+Show IP addresses in rcon commands (1 = on, 0 = off)
+== Показывать IP-адреса в командах rcon (1 = вкл, 0 = выкл)
+
+Show jumps indicator
+== Показывать индикатор прыжков
+
+Show katan on frozen players
+== Показывать катану на замороженных игроках
+
+Show key stuck status
+== Показывать статус залипших клавиш
+
+Show kill messages
+== Показывать сообщения об убийствах
+
+Show labels on status bar items
+== Показывать метки на элементах строки состояния
+
+Show list of mutes (page 1 by default, 20 entries per page)
+== Показать список заглушений (страница 1 по умолчанию, 20 записей на странице)
+
+Show list of vote mutes (page 1 by default, 20 entries per page)
+== Показать список заглушений голосования (страница 1 по умолчанию, 20 записей на странице)
+
+Show local time always
+== Всегда показывать местное время
+
+Show logs of the last i seconds
+== Показать логи за последние i секунд
+
+Show moving tiles in entities
+== Показывать движущиеся плитки в объектах
+
+Show name plates
+== Показывать таблички с именами
+
+Show names in chat in team colors
+== Показывать имена в чате цветами команды
+
+Show number of spectators
+== Показывать количество наблюдателей
+
+Show on key
+== Показывать по нажатию клавиши
+
+Show only chat messages from friends
+== Показывать только сообщения чата от друзей
+
+Show only chat messages from team members
+== Показывать только сообщения чата от членов команды
+
+Show only freeze Players
+== Показывать только замороженных игроков
+
+Show other players' coordinates
+== Показывать координаты других игроков
+
+Show other players' hook collision lines
+== Показывать линии столкновения крюка других игроков
+
+Show other tees' trails
+== Показывать следы других ти
+
+Show others
+== Показать других
+
+Show others (own team only)
+== Показать других (только своя команда)
+
+Show outdated version warning
+== Показывать предупреждение об устаревшей версии
+
+Show own coordinates
+== Показывать свои координаты
+
+Show own player's hook collision line
+== Показывать линию столкновения собственного крюка
+
+Show ping colored circle in nameplates
+== Показывать цветной кружок пинга в табличках с именами
+
+Show player position
+== Показывать позицию игрока
+
+Show player speed
+== Показывать скорость игрока
+
+Show player stats HUD
+== Показывать HUD статистики игрока
+
+Show player target angle
+== Показывать угол прицела игрока
+
+Show players' key presses
+== Показывать нажатия клавиш игроков
+
+Show position and angle (mini debug)
+== Показывать позицию и угол (мини-отладка)
+
+Show Qm badge
+== Показывать значок Qm
+
+Show score
+== Показать счет
+
+Show scoreboard
+== Показать таблицу счёта
+
+Show seconds on clock
+== Показывать секунды на часах
+
+Show skin names in nameplate
+== Показывать названия скинов в табличке с именем
+
+Show song info in top-left corner
+== Показывать информацию о песне в левом верхнем углу
+
+Show spectator cursor
+== Показывать курсор наблюдателя
+
+Show sponsor QR code
+== Показывать QR-код спонсора
+
+Show stats
+== Показать статистику
+
+Show status bar
+== Показать строку состояния
+
+Show team
+== Показывать команду
+
+Show tee status bar
+== Показать строку состояния ти
+
+Show Tee, map, and weapon interaction hitboxes
+== Показывать хитбоксы взаимодействия Ти, карты и оружия
+
+Show text entities
+== Показывать текстовые сущности
+
+Show the cursor while free spectating
+== Показывать курсор при свободном наблюдении
+
+Show the number of frozen tees
+== Показывать количество замороженных ти
+
+Show the number of tees still alive
+== Показывать количество живых ти
+
+Show the pet
+== Показать питомца
+
+Show the screen center line
+== Показать центральную линию экрана
+
+Show the server rules
+== Показать правила сервера
+
+Show tiles layers from BG map
+== Показывать слои тайлов с фоновой карты сущностей
+
+Show unpredicted ghosts for other players
+== Показывать непредсказанных призраков для других игроков
+
+Show voice connection status
+== Показывать статус голосового соединения
+
+Show votes window after voting
+== Показывать окно голосования после голосования
+
+Show wake-up popup on the other tee
+== Показывать всплывающее окно пробуждения на другом Ти
+
+Show weapon trajectory guide
+== Показать направляющую траектории оружия
+
+Show Workshop Assets
+== Показывать ресурсы Мастерской
+
+Show X
+== Показывать X
+
+Show Y
+== Показывать Y
+
+Showing players from other teams is disabled
+== Отображение игроков из других команд отключено
+
+Showing the checkpoint times for '%s' with a race time of %s
+== Показываю время чекпоинтов для '%s' с временем забега %s
+
+Showing the checkpoint times is not allowed on this server.
+== На этом сервере не разрешено просматривать время чекпоинтов.
+
+Showing the global points of other players is not allowed on this server.
+== На этом сервере не разрешено просматривать глобальные очки других игроков.
+
+Showing the global top points is not allowed on this server.
+== На этом сервере не разрешено просматривать таблицу глобальных очков.
+
+Showing the rank of other players is not allowed on this server.
+== На этом сервере не разрешено просматривать рейтинг других игроков.
+
+Showing the team rank of other players is not allowed on this server.
+== На этом сервере не разрешено просматривать командный рейтинг других игроков.
+
+Showing the team top 5 is not allowed on this server.
+== На этом сервере не разрешено просматривать топ-5 команд.
+
+Showing the times of others is not allowed on this server.
+== На этом сервере не разрешено просматривать время других игроков.
+
+Showing the top is not allowed on this server.
+== На этом сервере не разрешено просматривать топ.
+
+Shows five points of the global point ladder beginning with rank i (1 by default)
+== Показывает 5 очков глобальной таблицы рейтинга, начиная с ранга i (по умолчанию 1)
+
+Shows five team ranks of the ladder or of a player beginning with rank i (1 by default, -1 for worst)
+== Показывает 5 командных рангов таблицы или игрока, начиная с ранга i (по умолчанию 1, -1 для худшего)
+
+Shows gameplay information for this server
+== Показывает информацию о геймплее для этого сервера
+
+Shows help to command r, general help if left blank
+== Показывает справку по команде r, общую справку, если оставить пустым
+
+Shows the credits of the DDNet mod
+== Показывает титры мода DDNet
+
+Shows the global points of a player beginning with name r (your rank by default)
+== Показывает глобальные очки игрока, имя которого начинается с r (по умолчанию ваш ранг)
+
+Shows the rank of player with name r (your rank by default)
+== Показывает ранг игрока с именем r (по умолчанию ваш ранг)
+
+Shows the team rank of player with name r (your team rank by default)
+== Показывает командный ранг игрока с именем r (по умолчанию ваш командный ранг)
+
+Shows the top ranks of the global and regional ladder beginning with rank i (1 by default, -1 for worst)
+== Показывает лучшие ранги глобальной и региональной таблицы, начиная с ранга i (1 по умолчанию, -1 для худшего)
+
+Shrink
+== Свернуть
+
+Shrug:
+== Пожатие плечами:
+
+Shut down
+== Завершить работу
+
+Silently disconnect from the current server while keeping Tee timeout protection
+== Тихо отключиться от текущего сервера, сохранив защиту от тайм-аута ти
+
+Simple
+== Простой
+
+Simple noise reduction
+== Простое шумоподавление
+
+Simple noise reduction strength
+== Сила простого шумоподавления
+
+Size
+== Размер
+
+Size of hook strength icon and number indicator
+== Размер значка и числового индикатора силы крюка
+
+Size of key press icons
+== Размер иконок нажатий клавиш
+
+Skin
+== Скин
+
+Skin could not be found.
+== Скин не найден.
+
+Skin could not be loaded due to an error. Check the local console for details.
+== Не удалось загрузить скин из-за ошибки. Подробности в локальной консоли.
+
+Skin Database
+== База данных скинов
+
+Skin is loading.
+== Скин загружается.
+
+Skin prefix
+== Префикс скина
+
+Skin queue
+== Очередь скинов
+
+Skin transition
+== Смена скина
+
+Skin transition duration
+== Длительность анимации смены скина
+
+Skin transition type
+== Тип анимации смены скина
+
+Skin: %s
+== Скин: %s
+
+Skins directory
+== Папка скинов
+
+Skip the main menu
+== Пропустить главное меню
+
+Skip Tutorial
+== Пропустить обучение
+
+Slide left
+== Сдвиг влево
+
+Slow down the demo
+== Замедлить демо
+
+Smaller tees
+== Маленькие ти
+
+Smooth Dynamic Camera
+== Плавная динамическая камера
+
+Smooth fade
+== Плавное затухание
+
+SMTC
+== SMTC
+
+Social
+== Социальное
+
+Solid
+== Сплошной
+
+Solid tile outline opacity
+== Непрозрачность контура сплошных плиток
+
+Solo
+== Соло
+
+Some fonts could not be loaded. Check the local console for details.
+== Некоторые шрифты не удалось загрузить. Подробности смотрите в локальной консоли.
+
+Some map images could not be loaded. Check the local console for details.
+== Некоторые изображения карты не удалось загрузить. Подробности смотрите в локальной консоли.
+
+Some map sounds could not be loaded. Check the local console for details.
+== Некоторые звуки карты не удалось загрузить. Подробности смотрите в локальной консоли.
+
+Something hookable
+== Что-то зацепляемое
+
+Sound
+== Звук
+
+Sound error
+== Ошибка звука
+
+Sound volume
+== Громкость звука
+
+Source file does not exist.
+== Исходный файл не существует.
+
+Source file is empty.
+== Исходный файл пуст.
+
+Speaker
+== Динамик
+
+Specify command accessibility for given access level
+== Указать доступность команды для данного уровня доступа
+
+Spectate
+== Наблюдать
+
+Spectate a player by Id
+== Наблюдать за игроком по ID
+
+Spectate mode
+== Режим наблюдения
+
+Spectate next
+== Следующий наблюдаемый
+
+Spectate previous
+== Предыдущий наблюдаемый
+
+Spectate teleport
+== Телепорт наблюдения
+
+Spectate the closest player
+== Наблюдать за ближайшим игроком
+
+Spectate the next player
+== Наблюдать за следующим игроком
+
+Spectate the previous player
+== Наблюдать за предыдущим игроком
+
+Spectators
+== Наблюдатели
+
+Speech trigger threshold
+== Порог срабатывания речи
+
+Speed
+== Скорость
+
+Speed up the demo
+== Ускорить демо
+
+Speed:
+== Скорость:
+
+Speedrun countdown timer
+== Таймер обратного отсчёта спидран
+
+Speedrun Timer
+== Таймер спидран
+
+Sphere
+== Сфера
+
+Spin pop
+== Вращающееся появление
+
+Sponsor QR code Base64 data is not configured
+== Данные QR-кода спонсора в Base64 не настроены
+
+Sponsor support
+== Поддержка спонсоров
+
+Sponsors:
+== Спонсоры:
+
+Spree
+== Серия
+
+Staging memory
+== Промежуточная память
+
+Star
+== Звезда
+
+Start and connect to local server
+== Запустить и подключиться к локальному серверу
+
+Start here to quickly diagnose if the issue is with device, server, or room
+== Начните здесь, чтобы быстро определить, проблема в устройстве, сервере или комнате
+
+Start holding the hook before loading the savegame to keep the hook
+== Начните удерживать крюк перед загрузкой сохранения, чтобы сохранить крюк
+
+Start playback of ghosts
+== Начать воспроизведение призраков
+
+Start recording a demo
+== Начать запись демо
+
+Start recording a video
+== Начать запись видео
+
+Statboard
+== Статистика
+
+Status
+== Статус
+
+Status Bar
+== Строка состояния
+
+Status bar alpha
+== Альфа строки состояния
+
+Status Bar Codes:
+== Коды строки состояния:
+
+Status bar color
+== Цвет строки состояния
+
+Status bar height
+== Высота строки состояния
+
+Status normal, check details below if still experiencing issues
+== Статус в норме, если проблемы остаются, проверьте подробные причины ниже
+
+Status Scheme:
+== Схема состояния:
+
+Stop practice
+== Остановить практику
+
+Stop record
+== Остановить запись
+
+Stop recording
+== Остановить запись
+
+Stop recording a demo
+== Остановить запись демо
+
+Stop recording a video
+== Остановить запись видео
+
+Stop server
+== Остановить сервер
+
+Stop the current demo
+== Остановить текущее демо
+
+Streamed memory
+== Потоковая память
+
+Streamer Mode
+== Режим стримера
+
+Strict gametype filter
+== Строгий фильтр типа игры
+
+Strict mode
+== Строгий режим
+
+Stroke fade time
+== Время затухания штриха
+
+Strong Weak Hook
+== Сильный/Слабый крюк
+
+Sub-Tick aiming
+== Прицеливание Sub-Tick
+
+Successfully saved the replay!
+== Повтор успешно сохранён!
+
+Sudden Death
+== Внезапная смерть
+
+Suicides
+== Самоубийства
+
+Super
+== Супер
+
+Support ♥
+== Поддержка ♥
+
+Swap
+== Обмен
+
+Swap ghosts with regular players
+== Поменять местами призраков и обычных игроков
+
+Swap is disabled on this server.
+== Обмен отключён на этом сервере.
+
+Swap is not available on forced solo servers.
+== Обмен недоступен на принудительных соло-серверах.
+
+Switch
+== Переключить
+
+Switch dummy to grenade
+== Переключить дамми на гранату
+
+Switch dummy to gun
+== Переключить дамми на пистолет
+
+Switch dummy to hammer
+== Переключить дамми на молот
+
+Switch dummy to laser
+== Переключить дамми на лазер
+
+Switch dummy to next weapon
+== Переключить дамми на следующее оружие
+
+Switch dummy to previous weapon
+== Переключить дамми на предыдущее оружие
+
+Switch dummy to shotgun
+== Переключить дамми на дробовик
+
+Switch failed
+== Переключение не удалось
+
+Switch interval
+== Интервал переключения
+
+Switch opacity
+== Непрозрачность переключателя
+
+Switch spectator mode
+== Переключить режим наблюдателя
+
+Switch team
+== Сменить команду
+
+Switch to grenade
+== Переключиться на гранату
+
+Switch to gun
+== Переключиться на пистолет
+
+Switch to hammer
+== Переключиться на молот
+
+Switch to laser
+== Переключиться на лазер
+
+Switch to next weapon
+== Переключиться на следующее оружие
+
+Switch to previous weapon
+== Переключиться на предыдущее оружие
+
+Switch to shotgun
+== Переключиться на дробовик
+
+Switch weapon on pickup
+== Переключать оружие при подборе
+
+Switch weapon when out of ammo
+== Переключать оружие при окончании патронов
+
+Switched to
+== Переключено на
+
+Switching
+== Переключение
+
+Switching back to default input
+== Переключение обратно на устройство ввода по умолчанию
+
+Switching back to default output
+== Переключение обратно на устройство вывода по умолчанию
+
+Sync Workshop Assets
+== Синхронизировать ресурсы Мастерской
+
+System
+== Система
+
+System default
+== Системное значение по умолчанию
+
+System media control
+== Системное управление медиа
+
+System message
+== Системное сообщение
+
+System prompt text
+== Цвет текста системных подсказок
+
+Tags
+== Теги
+
+Take a screenshot
+== Сделать скриншот
+
+Taper trail width
+== Сужающаяся ширина следа
+
+Target language
+== Целевой язык
+
+Target language ratio
+== Соотношение целевого языка
+
+TClient
+== TClient
+
+TClient Developers
+== Разработчики TClient
+
+TClient Links
+== Ссылки TClient
+
+Team
+== Команда
+
+Team %d
+== Команда %d
+
+Team %d (%d/%d)
+== Команда %d (%d/%d)
+
+Team can't be loaded while in team 0 mode
+== Команду нельзя загрузить в режиме команды 0
+
+Team can't be loaded while practice is enabled
+== Команду нельзя загрузить, пока включён тренировочный режим
+
+Team can't be loaded while racing
+== Команду нельзя загрузить во время забега
+
+Team can't be saved while a dragger is active
+== Команду нельзя сохранить, пока активен драггер
+
+Team can't be saved while in team 0 mode
+== Команду нельзя сохранить в режиме команды 0
+
+Team chat
+== Командный чат
+
+Team is already in practice mode
+== Команда уже в тренировочном режиме
+
+Team load already in progress
+== Загрузка команды уже выполняется
+
+Team message
+== Сообщение команды
+
+Team mode can't be changed while racing
+== Режим команды нельзя изменить во время забега
+
+Team mode change disabled
+== Изменение режима команды отключено
+
+Team mode change is disabled on this server.
+== Изменение режима команды отключено на этом сервере.
+
+Team save already in progress
+== Сохранение команды уже выполняется
+
+Team save disabled for teams in practice mode
+== Сохранение команды отключено для команд в тренировочном режиме
+
+Team save in progress. You'll be able to load with '/load %s'
+== Сохранение команды выполняется. Вы сможете загрузиться с помощью '/load %s'
+
+Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails
+== Сохранение команды выполняется. Вы сможете загрузиться с помощью '/load %s' в случае успеха или '/load %s' в случае неудачи
+
+Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue
+== Команда успешно сохранена %s. Соединение с базой данных не удалось, используется сгенерированный код сохранения во избежание коллизий. Используйте '/load %s' на %s для продолжения
+
+Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue
+== Команда успешно сохранена %s. Соединение с базой данных не удалось, используется сгенерированный код сохранения во избежание коллизий. Используйте '/load %s' для продолжения
+
+Teams
+== Команды
+
+Teams are available on this server; if the team is locked, any team member dying will kill the whole team
+== На этом сервере разрешены команды; если команда заблокирована, смерть любого участника убьёт всю команду
+
+Teams are disabled
+== Команды отключены
+
+Teams are not available on this server; if the team is locked, any team member dying will kill the whole team
+== На этом сервере команды недоступны; если команда заблокирована, смерть любого участника убьёт всю команду
+
+Tee
+== Ти
+
+Tee 0.7
+== Ти 0.7
+
+Tee hitbox
+== Хитбокс Ти
+
+Tee hitbox color
+== Цвет хитбокса Ти
+
+Tee size
+== Размер ти
+
+Tee status bar
+== Строка состояния ти
+
+Tee trail color
+== Цвет следа ти
+
+Tee Trails
+== Следы ти
+
+Tele
+== Телепорт
+
+Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart
+== Телепортировать свободную камеру наблюдателя между наведённым телепортом входа/выхода или чекпоинтом и соответствующим объектом
+
+Teleport grenade disabled
+== Телепорт-граната отключена
+
+Teleport grenade enabled
+== Телепорт-граната включена
+
+Teleport gun disabled
+== Телепорт-пушка отключена
+
+Teleport gun enabled
+== Телепорт-пушка включена
+
+Teleport laser disabled
+== Телепорт-лазер отключен
+
+Teleport laser enabled
+== Телепорт-лазер включен
+
+Teleport opacity
+== Непрозрачность телепорта
+
+Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)
+== Телепортироваться из заморозки, если включён режим автоспасения; в противном случае установит позицию для спасения, если на земле, и телепортирует из заморозки, если нет (используйте sv_rescue 1 для включения этой функции)
+
+Teleport yourself to player or to where you are spectating/or looking if no player name is given
+== Телепортироваться к игроку или туда, куда вы смотрите/за кем наблюдаете, если имя игрока не указано
+
+Teleport yourself to the last auto rescue position before you died (use sv_rescue 1 to enable this feature)
+== Телепортироваться на последнюю позицию автоспасения перед смертью (используйте sv_rescue 1 для включения этой функции)
+
+Teleport yourself to the last location you teleported to
+== Телепортироваться на последнюю позицию, куда вы телепортировались
+
+Teleport yourself to the specified coordinates. A tilde (~) can be used to denote your current position, e.g. '/tpxy ~1 ~' to teleport one tile to the right
+== Телепортироваться на указанные координаты. Тильда (~) обозначает вашу текущую позицию, например '/tpxy ~1 ~' для телепортации на один тайл вправо
+
+Teleports player i (or you) to player i (or you to where you look at)
+== Телепортирует игрока i (или вас) к игроку i (или вас туда, куда вы смотрите)
+
+Teleports you to checkpoint teleporter i
+== Телепортирует вас к чекпоинту-телепорту i
+
+Teleports you to teleporter i
+== Телепортирует вас к телепорту i
+
+Temporarily set a config value while pressed
+== Временно установить значение настройки при нажатии
+
+Temporary free camera
+== Временная свободная камера
+
+Tencent Cloud
+== Тенсент Клауд
+
+Tencent Cloud SecretId
+== SecretId Тенсент Клауд
+
+Tencent Cloud SecretKey
+== SecretKey Тенсент Клауд
+
+Text
+== Текст
+
+Text alpha
+== Альфа текста
+
+Text color
+== Цвет текста
+
+Texture memory
+== Память текстур
+
+Thank you for your company and trust. This is what gives me the courage to keep going.
+== Спасибо за вашу компанию и доверие. Именно это даёт мне смелость продолжать.
+
+Thanks for supporting QmClient
+== Спасибо за поддержку QmClient
+
+The audio device couldn't be initialised.
+== Не удалось инициализировать аудиоустройство.
+
+The best voice chat, of course!
+== Лучший голосовой чат, конечно!
+
+The Config tab reuses QmClient's client config browser
+== Вкладка «Конфиг» использует браузер конфигов клиента QmClient
+
+The force pause timer is now over, you can exit with /spec
+== Время принудительной паузы истекло, вы можете выйти с помощью /spec
+
+The format of texture %s is not RGBA which will cause visual bugs.
+== Формат текстуры %s не RGBA, что вызовет визуальные ошибки.
+
+The Functions tab contains tools, automation, and gameplay helpers
+== Вкладка «Функции» содержит инструменты, автоматизацию и игровые помощники
+
+The HUD tab collects overlays, counters, voice display, and top components
+== Вкладка «HUD» собирает наложения, счётчики, отображение голоса и верхние компоненты
+
+The name "default" is reserved.
+== Имя "default" зарезервировано.
+
+The selected button is not visible. Do you want to deselect it or edit its visibility?
+== Выбранная кнопка не видна. Хотите отменить выбор или изменить её видимость?
+
+The selected button is overlapping with other buttons.
+== Выбранная кнопка пересекается с другими кнопками.
+
+The selected part stays highlighted while you adjust its color.
+== Выбранная часть остается подсвеченной, пока вы настраиваете ее цвет.
+
+The server is running a non-standard tuning on a pure game type.
+== Сервер использует нестандартные настройки в чистом игровом режиме.
+
+The Visuals tab contains appearance and rendering options
+== Вкладка «Визуал» содержит настройки внешнего вида и рендеринга
+
+The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
+== Ширина текстуры %s не делится на %d, или высота не делится на %d, что может вызвать визуальные ошибки.
+
+Theme
+== Тема
+
+Themes directory
+== Папка тем
+
+There are unsaved changes in the touch controls editor. Saving first is recommended.
+== В редакторе сенсорного управления есть несохраненные изменения. Рекомендуется сначала сохранить.
+
+There is no checkpoint teleporter with that index on the map.
+== На карте нет телепорта к чекпоинту с таким индексом.
+
+There is no teleporter with that index on the map.
+== На карте нет телепорта с таким индексом.
+
+There is not enough space available for the button. Check its visibilities and size.
+== Недостаточно места для кнопки. Проверьте её видимость и размер.
+
+There is not enough space available to place another button.
+== Недостаточно места для размещения ещё одной кнопки.
+
+There is nowhere to go back to.
+== Нет места, куда можно вернуться.
+
+There's a %s second delay between map-votes, please wait %s seconds.
+== Между голосованиями за смену карты должна быть задержка в %s секунд, подождите ещё %s секунд.
+
+There's a %s second wait time between kick votes for each player please wait %s second(s)
+== Между голосованиями за кик для каждого игрока должна быть задержка в %s секунд, подождите ещё %s секунд.
+
+There's an unsaved change in the touch controls editor, you might want to save it.
+== В редакторе сенсорного управления есть несохранённые изменения, возможно, стоит их сохранить.
+
+There's an unsaved map in the editor, you might want to save it.
+== В редакторе есть несохранённая карта, возможно, стоит её сохранить.
+
+Thinking mode requires a reasoning model
+== Для режима размышления требуется модель рассуждения
+
+This ID is not connected
+== Этот ID не подключён
+
+This name cannot be used for files and folders
+== Это имя нельзя использовать для файлов и папок
+
+This server has an initial chat delay, you will be able to talk in %s seconds.
+== На этом сервере есть начальная задержка чата, вы сможете говорить через %s секунд.
+
+This skin name cannot be used.
+== Это имя скина использовать нельзя.
+
+This team already has the maximum allowed size of %s players
+== Эта команда уже достигла максимального размера в %s игроков
+
+This team can't be locked
+== Эту команду нельзя заблокировать
+
+This team can't have the mode changed
+== У этой команды нельзя изменить режим
+
+This team cannot finish anymore because '%s' left the team before hitting the start
+== Эта команда больше не может финишировать, потому что '%s' покинул команду до касания старта
+
+This team is currently saving
+== Эта команда сейчас сохраняется
+
+This team is locked using /lock. Only members of the team can invite you or unlock it using /lock.
+== Эта команда заблокирована с помощью /lock. Только участники команды могут пригласить вас или разблокировать её с помощью /lock.
+
+This team is locked using /lock. Only members of the team can unlock it using /lock.
+== Эта команда заблокирована с помощью /lock. Только участники команды могут разблокировать её с помощью /lock.
+
+This team started already
+== Эта команда уже начала
+
+This team was disbanded because there are more players than allowed in the team.
+== Эта команда была расформирована, так как в ней больше игроков, чем разрешено.
+
+tile
+== тайл
+
+Tile outlines
+== Контуры плиток
+
+Time
+== Время
+
+TIME EXPIRED!
+== ВРЕМЯ ИСТЕКЛО!
+
+Time limit
+== Лимит времени
+
+Time limit: %d min
+== Лимит времени: %d мин
+
+Time to wait before changing team: %s
+== Время ожидания перед сменой команды: %s
+
+Timer is displayed in %s
+== Таймер отображается в %s
+
+Timer isn't displayed.
+== Таймер не отображается.
+
+Tiny Tee Size
+== Размер мини-ти
+
+To save all players in your team have to be alive and not in '/spec'
+== Чтобы сохранить команду, все игроки в ней должны быть живы и не в '/spec'
+
+Toggle auto camera
+== Переключить авто-камеру
+
+Toggle between game scene preview and raw texture
+== Переключение между предпросмотром игровой сцены и сырой текстурой
+
+Toggle config value
+== Переключить значение настройки
+
+Toggle config value via keypress
+== Переключить значение настройки по нажатию клавиши
+
+Toggle Do Not Disturb (no chat and server messages)
+== Переключить режим "Не беспокоить" (без сообщений чата и сервера)
+
+Toggle dummy
+== Переключить дамми
+
+Toggle dyncam
+== Переключить динамическую камеру
+
+Toggle fast practice mode
+== Переключить режим быстрой практики
+
+Toggle ghost
+== Переключить призрак
+
+Toggle ghost key
+== Переключить клавишу призрака
+
+Toggle keyboard shortcuts
+== Включить/отключить горячие клавиши
+
+Toggle local console
+== Переключить локальную консоль
+
+Toggle microphone mute
+== Переключить отключение микрофона
+
+Toggle or set the switch on or off for the specified time (or indefinitely by default)
+== Включить или выключить переключатель на указанное время (или бессрочно по умолчанию)
+
+Toggle receiving whispers
+== Переключить приём шёпота
+
+Toggle remote console
+== Переключить удалённую консоль
+
+Toggle scoreboard cursor
+== Переключить курсор таблицы счёта
+
+Toggle team between team 0 and team mode. This mode will make your team behave like team 0.
+== Переключить команду между командой 0 и командным режимом. Этот режим заставит вашу команду вести себя как команда 0.
+
+Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock
+== Переключить блокировку команды, чтобы никто другой не мог присоединиться, и команда перезапускалась при смерти игрока. /lock 0 для разблокировки, /lock 1 для блокировки
+
+Toggle tune variable
+== Переключить переменную тюнинга
+
+Toggles collision
+== Переключить коллизию
+
+Toggles hit others
+== Переключить попадание по другим
+
+Toggles hook collision
+== Переключить коллизию крюка
+
+Toggles invincible mode
+== Переключить режим неуязвимости
+
+Toggles pause
+== Переключить паузу
+
+Toggles pause on the currently voted player
+== Переключить паузу для текущего голосуемого игрока
+
+Toggles spec (if not available behaves as /pause)
+== Переключить наблюдение (если недоступно, работает как /pause)
+
+Toggles spec on the currently voted player
+== Переключить наблюдение за текущим голосуемым игроком
+
+Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status
+== Включить/выключить использование стандартных эмоций глаз, eyeemote s, где s = on для вкл, off для выкл, toggle для переключения и ничего для отображения текущего статуса
+
+Too many translation tasks
+== Слишком много задач перевода
+
+Total
+== Всего
+
+Traditional
+== Традиционный
+
+Trail alpha
+== Прозрачность следа
+
+Trail length
+== Длина следа
+
+Trail width
+== Ширина следа
+
+Translate
+== Перевести
+
+Translate button
+== Кнопка перевода
+
+Translate ID:
+== ID перевода:
+
+Translate last message (of a given name)
+== Перевести последнее сообщение (указанного имени)
+
+Translate last message of the person with this id
+== Перевести последнее сообщение человека с этим ID
+
+Translate only when needed
+== Переводить только при необходимости
+
+Translate:
+== Перевести:
+
+Translated text hidden due to streamer mode
+== Переведённый текст скрыт из-за режима стримера
+
+Translating to %s...
+== Перевод на %s...
+
+Translation backend invalid, sending original
+== Бэкенд перевода недействителен, отправка оригинала
+
+Translation queue full, sending original
+== Очередь перевода заполнена, отправка оригинала
+
+Translation service
+== Сервис перевода
+
+Translation Settings
+== Настройки перевода
+
+transmits your player name to info.ddnet.org
+== передаёт ваше имя игрока на info.ddnet.org
+
+Troubleshooting suggestions
+== Рекомендации по устранению неполадок
+
+Try again
+== Попробовать снова
+
+Try reselecting input device, confirm default mic or headset mic is online
+== Попробуйте заново выбрать устройство ввода, убедитесь, что микрофон по умолчанию или гарнитура онлайн
+
+Try reselecting output device, confirm headphones/speakers are online
+== Попробуйте заново выбрать устройство вывода, убедитесь, что наушники/динамики онлайн
+
+Try to predict other entities to reduce lag feeling at high latency
+== Попытаться предсказать другие сущности для уменьшения ощущения задержки при высокой задержке
+
+Try toggling voice or reconnecting to server
+== Попробуйте переключить голос или переподключиться к серверу
+
+Trying Axiom auto login
+== Попытка автоматического входа в Axiom
+
+Trying Axiom dummy auto login
+== Попытка автоматического входа дамми в Axiom
+
+Trying to determine UDP connectivity…
+== Попытка определить UDP-соединение…
+
+Tune in zone a variable to value
+== Настроить переменную в зоне a на значение
+
+Tune layer opacity
+== Непрозрачность слоя настройки
+
+Tune variable to value
+== Настроить переменную на значение
+
+Tune variable to value or show current value
+== Установить переменную тюнинга в значение или показать текущее значение
+
+Tutorial
+== Обучение
+
+Twinkle strength
+== Сила мерцания
+
+Type
+== Тип
+
+Type switch vote started automatically
+== Автоматически начато голосование за смену типа
+
+Types
+== Типы
+
+u = Snapshot latency
+== u = Задержка снимка
+
+UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
+== IP-адреса UDP и TCP различаются. Попробуйте отключить VPN, прокси или сетевые ускорители.
+
+UDP seems to be filtered.
+== UDP, похоже, фильтруется.
+
+UDP socket not open
+== UDP-сокет не открыт
+
+UI color
+== Цвет интерфейса
+
+UI controller sens.
+== Чувствительность контроллера (интерфейс)
+
+UI mouse sens.
+== Чувствительность мыши (интерфейс)
+
+UI opacity
+== Прозрачность интерфейса
+
+UI scale
+== Масштаб UI
+
+Unable to delete %d selected items. The first failing item was '%s'.
+== Не удалось удалить %d выбранных элементов. Первый неудачный элемент: «%s».
+
+Unable to delete skin
+== Не удалось удалить скин
+
+Unable to delete the demo '%s'
+== Не удалось удалить демо «%s»
+
+Unable to delete the folder '%s'. Make sure it's empty first.
+== Не удалось удалить папку «%s». Убедитесь, что она пуста.
+
+Unable to delete the screenshot '%s'
+== Не удалось удалить скриншот «%s»
+
+Unable to open the screenshot file
+== Не удалось открыть файл скриншота
+
+Unable to rename the demo
+== Не удалось переименовать демо
+
+Unable to rename the folder
+== Не удалось переименовать папку
+
+Unable to rename the screenshot
+== Не удалось переименовать скриншот
+
+Unable to save the skin
+== Не удалось сохранить скин
+
+Unable to save the skin with a reserved name
+== Не удалось сохранить скин с зарезервированным именем
+
+Unban a certain nickname
+== Разбанить определённый никнейм
+
+Unban all entries
+== Разбанить все записи
+
+Unban ip range
+== Разбанить диапазон IP
+
+Unban ip/banlist entry
+== Разбанить IP/запись в списке банов
+
+Unbind all keys
+== Отвязать все клавиши
+
+Unbind key
+== Отвязать клавишу
+
+Uncertainty duration
+== Длительность неопределённости
+
+Unclassified audio issue
+== Неклассифицированная аудио-проблема
+
+Unfinished map
+== Незавершённая карта
+
+Unfinished map count: %d
+== Количество незавершенных карт: %d
+
+Unfinished map data is refreshing, please try again later
+== Данные незавершенных карт обновляются, повторите попытку позже
+
+Unfinished map data not fetched
+== Данные незавершенных карт не получены
+
+Unfinished map data refreshing
+== Обновление данных незавершенных карт
+
+Unfinished maps
+== Незавершенные карты
+
+Unflip:
+== Отменить отражение:
+
+Unfreeze
+== Разморозка
+
+Unfreeze automation helpers
+== Помощники автоматизации разморозки
+
+Unfreeze opacity
+== Непрозрачность разморозки
+
+Uninvite player from team
+== Отменить приглашение игрока в команду
+
+Unknown
+== Неизвестно
+
+Unknown argument. Check '/rescuemode list'
+== Неизвестный аргумент. Проверьте '/rescuemode list'
+
+Unknown emote... Say /emote
+== Неизвестная эмоция... Скажите /emote
+
+Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
+== Неизвестный параметр. Допустимые значения: default, gametimer, broadcast, both, none
+
+Unknown status
+== Неизвестный статус
+
+Unlock a team
+== Разблокировать команду
+
+Unmute
+== Снять заглушение
+
+Unmute emoticons
+== Снять заглушение эмоций
+
+Unmute player with client ID
+== Снять заглушение с игрока по ID клиента
+
+Unmute player with IP address
+== Снять заглушение с игрока по IP-адресу
+
+Unmute player with list index
+== Снять заглушение с игрока по индексу в списке
+
+Unmute:
+== Снять заглушение:
+
+Unpredicted ghost opacity
+== Непрозрачность непредсказанного призрака
+
+Unregister protocol and file extensions
+== Отменить регистрацию протокола и расширений файлов
+
+Unsaved changes
+== Несохраненные изменения
+
+Update
+== Обновить
+
+Update a rcon key
+== Обновить rcon ключ
+
+Update a rcon key with prehashed data
+== Обновить rcon ключ с предварительно хэшированными данными
+
+Update failed. Please try again
+== Обновление не удалось. Пожалуйста, попробуйте снова
+
+Update finished. Please restart the client
+== Обновление завершено. Пожалуйста, перезапустите клиент
+
+Update finished. Restarting...
+== Обновление завершено. Перезапуск...
+
+Update notice
+== Обновить уведомление
+
+Update or add a specific war group
+== Обновить или добавить конкретную вражескую группу
+
+Updating feature list...
+== Обновление списка функций...
+
+Uploading map data to GPU
+== Загрузка данных карты на GPU
+
+Usage: %s %s
+== Использование: %s %s
+
+Use 12 hour clock
+== Использовать 12-часовой формат
+
+Use colored skins for frozen tees
+== Использовать цветные скины для замороженных ти
+
+Use current map as background
+== Использовать текущую карту как фон
+
+Use custom skins instead of the ninja tee
+== Использовать пользовательские скины вместо скина ниндзя
+
+Use default flags on scoreboard
+== Использовать флаги по умолчанию на табло
+
+Use default input
+== Использовать устройство ввода по умолчанию
+
+Use default output
+== Использовать устройство вывода по умолчанию
+
+Use default voice input device
+== Использовать устройство ввода голоса по умолчанию
+
+Use default voice output device
+== Использовать устройство вывода голоса по умолчанию
+
+Use embedded HUD progress bar
+== Использовать встроенную шкалу прогресса HUD
+
+Use emote
+== Использовать эмоцию
+
+Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
+== Используйте клавишу K, чтобы убить (перезапустить), Q, чтобы поставить на паузу и смотреть за другими игроками. Другие привязки клавиш смотрите в настройках.
+
+Use multi-char replacement based on word length
+== Использовать замену несколькими символами в зависимости от длины слова
+
+Use new smoothing algorithm
+== Использовать новый алгоритм сглаживания
+
+Use old chat style
+== Использовать старый стиль чата
+
+Use original style
+== Использовать оригинальный стиль
+
+Use sounds
+== Использовать звуки
+
+Use team colors for name plates
+== Использовать цвета команды для табличек с именами
+
+Use the mouse wheel on a hovered module to scale it by 5%
+== Используйте колесо мыши на наведённом модуле для масштабирования на 5%
+
+Use the top tabs to browse QmClient features by category
+== Используйте верхние вкладки для просмотра функций QmClient по категориям
+
+Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
+== Используйте это после `add_favorite` для группировки избранного. Начните с `begin_favorite_group`
+
+Use this before `add_favorite` to group favorites. End with `end_favorite_group`
+== Используйте это перед `add_favorite` для группировки избранного. Завершите с `end_favorite_group`
+
+Use warlist colors instead of regular colors
+== Использовать цвета списка врагов вместо обычных
+
+Use warlist groups for indicator
+== Использовать группы списка врагов для индикатора
+
+v = Velocity
+== v = Скорость
+
+V-Sync
+== V-Sync
+
+Vanilla skins only
+== Только ванильные скины
+
+Version
+== Версия
+
+Vertical position
+== Вертикальное положение
+
+Video Background
+== Фоновое видео
+
+Video name:
+== Имя видео:
+
+Video was saved to '%s'
+== Видео сохранено в «%s»
+
+Videos directory
+== Каталог видео
+
+View latest updates
+== Посмотреть последние обновления
+
+View margin
+== Поле обзора
+
+View switch found (at offset) with given number
+== Просмотр найденного переключателя (со смещением) с заданным номером
+
+View tele found (at offset) with given number
+== Просмотр найденного телепорта (со смещением) с заданным номером
+
+Visibility
+== Видимость
+
+Visual
+== Визуал
+
+Visual: Effects
+== Визуал: Эффекты
+
+Visual: Font & Cursor
+== Визуал: Шрифт и курсор
+
+Visual: Nameplates
+== Визуал: Таблички с именами
+
+Visuals
+== Визуал
+
+Voice
+== Голос
+
+Voice activation release delay
+== Задержка отпускания активации голоса
+
+Voice bitrate
+== Битрейт голоса
+
+Voice chat
+== Голосовой чат
+
+Voice distance radius (tiles)
+== Радиус расстояния голоса (тайлы)
+
+Vote a map by name
+== Проголосовать за карту по имени
+
+Vote command:
+== Команда голосования:
+
+Vote description:
+== Описание голосования:
+
+Vote no
+== Против
+
+Vote started automatically
+== Голосование запущено автоматически
+
+Vote yes
+== За
+
+Vote yes/no
+== Голосовать да/нет
+
+Voting
+== Голосование
+
+Wait for current vote to end before calling a new one.
+== Дождитесь окончания текущего голосования, прежде чем начинать новое.
+
+Waiting for snapshot
+== Ожидание снимка
+
+Waiting to open
+== Ожидание открытия
+
+Waiting to open input device
+== Ожидание открытия устройства ввода
+
+Waiting to open output device
+== Ожидание открытия устройства вывода
+
+War Entries
+== Записи врагов
+
+War Groups
+== Группы врагов
+
+War List
+== Список врагов
+
+Warlist
+== Список врагов
+
+Warmup
+== Разминка
+
+Warning
+== Предупреждение
+
+Weapon
+== Оружие
+
+Weapon animation
+== Анимация оружия
+
+Weapon interaction range
+== Диапазон взаимодействия оружия
+
+Weapon range color
+== Цвет диапазона оружия
+
+Weapon switch animation
+== Анимация смены оружия
+
+Weapon trajectory
+== Траектория оружия
+
+Weapon Trajectory
+== Траектория оружия
+
+Weapons
+== Оружие
+
+Website
+== Веб-сайт
+
+Welcome to DDNet
+== Добро пожаловать в DDNet
+
+What kind of blockbuster do you want to shoot?
+== Какой блокбастер вы хотите снять?
+
+What kind of Gores do you want to run?
+== Какой Gores вы хотите пробежать?
+
+What kind of laser do you want?
+== Какой лазер вы хотите?
+
+What kind of life do you want to run?
+== Какую жизнь вы хотите прожить?
+
+What's done is done, no use saying more
+== Что сделано, то сделано, бесполезно говорить больше
+
+Wheel animate
+== Анимация колёсика
+
+When you cross the start line, show a ghost tee replicating the movements of your best time
+== Когда пересекаешь стартовую линию, показывать призрачного ти, повторяющего движения твоего лучшего времени
+
+Whether a switch is deactivated by default (otherwise activated)
+== Отключён ли переключатель по умолчанию (иначе включён)
+
+Whether to show players at any distance (off by default), optional i = 0 for off else for on
+== Показывать ли игроков на любом расстоянии (по умолчанию выкл), необязательно i = 0 для выкл, иначе для вкл
+
+Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only
+== Показывать ли игроков из других команд (по умолчанию выкл), необязательно i = 0 для выкл, i = 1 для вкл, i = 2 только для своей команды
+
+Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on
+== Показывать ли игроков из других команд при наблюдении (по умолчанию вкл), необязательно i = 0 для выкл, иначе для вкл
+
+Whether to use ninja jetpack or not. Makes jetpack look more awesome
+== Использовать ли ниндзя-джетпак. Делает джетпак более крутым
+
+Which message to display on zone enter; use 0 for normal area
+== Какое сообщение показывать при входе в зону; используйте 0 для обычной зоны
+
+Which message to display on zone leave; use 0 for normal area
+== Какое сообщение показывать при выходе из зоны; используйте 0 для обычной зоны
+
+Whisper
+== Шёпот
+
+Whisper something to someone (private message)
+== Шепнуть что-то кому-то (личное сообщение)
+
+Who stuffed OBS in here
+== Кто засунул сюда OBS
+
+Why are you slowmo replaying to read this?
+== Зачем вы читаете это в замедленном повторе?
 
 Width
 == Ширина
 
-Draw where mouse is
-== Рисовать в месте курсора
+Width and height are required to be within the range from %d to %d.
+== Ширина и высота должны быть в диапазоне от %d до %d.
 
-Finish Name
-== Имя при финише
+Width of others' hook collision line
+== Ширина линии столкновения крюка других
 
-Attempt to change your name when near finish
-== Попытаться изменить имя при приближении к финишу
+Width of your own hook collision line
+== Ширина линии столкновения твоего крюка
 
-Finish Name:
-== Имя при финише:
+Windowed
+== Оконный режим
 
-Overwrite clan even if empty
-== Перезаписать клан, даже если пустой
+Windowed borderless
+== Оконный без рамки
 
-Changing name to %s near finish
-== Изменение имени на %s возле финиша
+Windowed fullscreen
+== Оконный полноэкранный
 
-[translate]
-%s translating to %s
-== %s переводит на %s
+Word Filter
+== Фильтр слов
 
-[translate]
-%s to %s failed: %s
-== %s на %s не удался: %s
+Write local console contents to a text file
+== Записать содержимое локальной консоли в текстовый файл
 
-[bgdraw]
-No items to write
-== 
+Write remote console contents to a text file
+== Записать содержимое удалённой консоли в текстовый файл
 
-[bgdraw]
-No changes since last save
-== 
+Writing item %d failed
+== Не удалось записать элемент %d
 
-Remove war clan:
-== 
+Written %d items
+== Записано %d элементов
 
-Show ping colored circle in nameplates
-== 
+Wrong button settings
+== Неверные настройки кнопки
 
-Show country flags in nameplates
-== 
+x = DDNet CPU% / total CPU%
+== x = DDNet CPU% / общий CPU%
 
-Fake CTF flags
-== 
+X alignment color
+== Цвет выравнивания по X
 
-Auto execute
-== 
+X alignment hint with me
+== Подсказка выравнивания по X со мной
+
+y = DDNet memory usage
+== y = использование памяти DDNet
+
+Yes
+== Да
+
+You and other player need to have started the map
+== Вы и другой игрок должны начать карту
+
+You and the other player must not be paused.
+== Вы и другой игрок не должны быть на паузе.
+
+You are already on the latest version
+== У вас уже установлена последняя версия
+
+You are force-paused for %s seconds.
+== Вы находитесь в принудительной паузе на %s секунд.
+
+You are in team %s having %s players
+== Вы в команде %s, в ней %s игроков
+
+You are in this team already
+== Вы уже в этой команде
+
+You are not allowed to vote because we're currently checking for VPNs. Try again in ~30 seconds.
+== Вам не разрешено голосовать, так как сейчас проверяется ваш VPN. Попробуйте снова через ~30 секунд.
+
+You are not allowed to vote because you appear to be using a VPN. Try connecting without a VPN or contacting an admin if you think this is a mistake.
+== Вам не разрешено голосовать, так как похоже, что вы используете VPN. Попробуйте подключиться без VPN или свяжитесь с администратором, если считаете это ошибкой.
+
+You are not in practice
+== Вы не в режиме практики
+
+You are not permitted to talk for the next %s seconds.
+== Вам запрещено говорить в течение следующих %s секунд.
+
+You are not permitted to vote for the next %s seconds.
+== Вам запрещено голосовать в течение следующих %s секунд.
+
+You are now in a solo part
+== Теперь вы в соло-части
+
+You are now out of the solo part
+== Теперь вы вышли из соло-части
+
+You are running a vote, please try again after the vote is done!
+== Вы проводите голосование, попробуйте снова после его завершения!
+
+You can collide with others
+== Вы можете сталкиваться с другими
+
+You can hammer hit others
+== Вы можете бить других молотом
+
+You can hit others
+== Вы можете атаковать других
+
+You can hook others
+== Вы можете зацепить других крюком
+
+You can kick only your team member
+== Вы можете кикнуть только члена своей команды
+
+You can now jump %s times
+== Теперь вы можете прыгать %s раз
+
+You can now use the preset eye emotes.
+== Теперь вы можете использовать предустановленные эмоции глаз.
+
+You can only move your team member to spectators
+== Вы можете переместить в наблюдатели только члена своей команды
+
+You can only vote after logging in.
+== Голосовать можно только после входа в систему.
+
+You can see other players. To disable this use DDNet client and type /showothers
+== Вы можете видеть других игроков. Чтобы отключить это, используйте клиент DDNet и введите /showothers
+
+You can shoot others with grenade
+== Вы можете стрелять в других из гранатомёта
+
+You can shoot others with laser
+== Вы можете стрелять в других из лазера
+
+You can shoot others with shotgun
+== Вы можете стрелять в других из дробовика
+
+You can't change teams that fast!
+== Вы не можете так быстро менять команды!
+
+You can't change teams while you are dead/a spectator.
+== Вы не можете менять команду, будучи мёртвым/наблюдателем.
+
+You can't check your team while you are dead/a spectator.
+== Вы не можете проверить свою команду, будучи мёртвым/наблюдателем.
+
+You can't collide with others
+== Вы не можете сталкиваться с другими
+
+You can't hammer hit others
+== Вы не можете бить других молотом
+
+You can't hit others
+== Вы не можете атаковать других
+
+You can't hook others
+== Вы не можете зацепить других крюком
+
+You can't join super team if you don't have super rights
+== Вы не можете присоединиться к супер-команде без прав супера
+
+You can't kick authorized players
+== Вы не можете кикнуть авторизованных игроков
+
+You can't kick yourself
+== Вы не можете кикнуть себя
+
+You can't move authorized players to spectators
+== Вы не можете переместить авторизованных игроков в наблюдатели
+
+You can't move yourself to spectators
+== Вы не можете переместить себя в наблюдатели
+
+You can't shoot others with grenade
+== Вы не можете стрелять в других из гранатомёта
+
+You can't shoot others with laser
+== Вы не можете стрелять в других из лазера
+
+You can't shoot others with shotgun
+== Вы не можете стрелять в других из дробовика
+
+You canceled the swap with %s
+== Вы отменили обмен с %s
+
+You died, but will stay in practice until you use kill.
+== Вы умерли, но останетесь в тренировочном режиме, пока не используете kill.
+
+You do not have a pending swap request.
+== У вас нет ожидающего запроса на обмен.
+
+You don't have any eye emotes, remember to bind some.
+== У вас нет эмоций глаз, не забудьте назначить некоторые.
+
+You don't have unlimited air jumps
+== У вас больше нет бесконечных прыжков в воздухе
+
+You have a jetpack gun
+== У вас есть реактивная пушка
+
+You have already requested to swap with %s.
+== Вы уже отправили запрос на обмен с %s.
+
+You have requested to swap with %s. Use /cancelswap to cancel the request.
+== Вы запросили обмен с %s. Используйте /cancelswap, чтобы отменить запрос.
+
+You have started racing already
+== Вы уже начали забег
+
+You have to be in a team (from 1-63)
+== Вы должны быть в команде (от 1 до 63)
+
+You have to be in a team to play on this server and all of your team will die if the team is locked
+== Вы должны быть в команде, чтобы играть на этом сервере, и вся ваша команда умрёт, если команда заблокирована
+
+You have to wait %s seconds until you can swap
+== Вы должны подождать %s секунд, прежде чем сможете обменяться
+
+You have unlimited air jumps
+== У вас есть бесконечные прыжки в воздухе
+
+You have unsaved changes.
+== У вас есть несохранённые изменения.
+
+You have used practice mode already
+== Вы уже использовали тренировочный режим
+
+You haven't previously teleported. Use /tp before using this command.
+== Вы ранее не телепортировались. Используйте /tp перед этой командой.
+
+You lost your jetpack gun
+== Вы потеряли реактивную пушку
+
+You must join a team and play with somebody or else you can't play
+== Вы должны присоединиться к команде и играть с кем-то, иначе вы не сможете играть
+
+You must restart the game for all settings to take effect.
+== Вам нужно перезапустить игру, чтобы все настройки вступили в силу.
+
+You must wait %s seconds before making another vote.
+== Вы должны подождать %s секунд перед следующим голосованием.
+
+You must wait %s seconds before making your first vote.
+== Вы должны подождать %s секунд перед первым голосованием.
+
+You will be disconnected from the server.
+== Вы будете отключены от сервера.
+
+You will no longer see all tees on this server
+== Вы больше не будете видеть всех ти на этом сервере
+
+You will not receive any further global chat and server messages
+== Вы больше не будете получать глобальные сообщения чата и сервера
+
+You will not receive any further whispers
+== Вы больше не будете получать шёпот
+
+You will now see all tees on this server, no matter the distance
+== Теперь вы будете видеть всех ти на этом сервере, независимо от расстояния
+
+You will receive global chat and server messages
+== Вы будете получать глобальные сообщения чата и сервера
+
+You will receive whispers
+== Вы будете получать шёпот
+
+You'll lose unsaved changes after deselecting.
+== Вы потеряете несохранённые изменения после отмены выбора.
+
+You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
+== Вы не в команде с включённым /practice. Обратите внимание, что с включённым тренировочным режимом нельзя получить рейтинг.
+
+You're the last one!
+== Ты последний!
+
+Your current race time is %s
+== Ваше текущее время забега: %s
+
+Your current version is outdated. Please update from the QQ group.
+== Ваша текущая версия устарела. Пожалуйста, обновитесь из группы QQ.
+
+Your favorite map manager
+== Ваш любимый менеджер карт
+
+Your favorite maps appear here
+== Ваши избранные карты появятся здесь
+
+Your friend %s is online and currently on map %s!
+== Ваш друг %s онлайн и сейчас на карте %s!
+
+Your locked team was killed because '%s' %s
+== Ваша заблокированная команда была убита, потому что '%s' %s
+
+Your movements are not taken into account when calculating the line colors
+== Твои движения не учитываются при расчёте цветов линий
+
+Your nickname '%s' is already used (%d points). Do you still want to use it?
+== Ваш никнейм «%s» уже используется (%d очков). Вы всё ещё хотите его использовать?
+
+Your profile
+== Ваш профиль
+
+Your skin
+== Твой скин
+
+Your swap request timed out %s seconds ago, use /swap again to request
+== Ваш запрос на обмен истёк %s секунд назад, используйте /swap снова для запроса
+
+Your team has been killed because it contains an invalid tee state
+== Ваша команда была убита, так как содержит недопустимое состояние ти
+
+Your team has not started yet
+== Ваша команда ещё не начала
+
+Your team is currently saving
+== Ваша команда сейчас сохраняется
+
+Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
+== Ваша команда была убита, так как больше не может финишировать и не вошла в режим /practice
+
+Your team was unlocked by an unlock team tile
+== Ваша команда была разблокирована тайлом разблокировки команды
+
+Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
+== Ваш код тайм-аута установлен. Клиенты 0.7 не могут вернуть своих ти после тайм-аута; однако клиент 0.6 может завладеть вашим ти
+
+z = Zoom
+== z = Масштаб
+
+Zen Mode
+== Режим Дзен
+
+Zen mode key
+== Клавиша режима Дзен
+
+Zhipu AI
+== Zhipu AI
+
+Zhipu API key
+== Ключ API Zhipu
+
+Zoom decrease
+== Уменьшить масштаб
+
+Zoom in
+== Приблизить
+
+Zoom increase
+== Увеличить масштаб
+
+Zoom out
+== Отдалить
+
+⚠️ FTAPI is a free service. Excessive use may cause service suspension.
+== ⚠️ FTAPI — это бесплатный сервис. Чрезмерное использование может привести к приостановке обслуживания.
+
+⚠️ LibreTranslate API Key not set
+== ⚠️ Ключ API LibreTranslate не установлен
+
+⚠️ LLM API Key not configured
+== ⚠️ Ключ LLM API не настроен
+
+⚠️ Tencent Cloud API not configured
+== ⚠️ API Тенсент Клауд не настроен
+
+[Auto camera]
+Active
+== Активен
+
+[Auto camera]
+Disabled
+== Отключено
+
+[Auto camera]
+Enabled
+== Включено
+
+[Auto camera]
+Inactive
+== Неактивен
+
+[Auto camera]
+Unavailable for this player
+== Недоступно для этого игрока
+
+[data_version.h]
+You may have installed only DDNet.exe. Please use the full QmClient folder.
+== Возможно, вы установили только DDNet.exe. Пожалуйста, используйте полную папку QmClient.
+
+[data_version.h]
+You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.
+== Возможно, вы заменили только DDNet.exe и пропустили QmClient.zip.\nПожалуйста, установите полный пакет QmClient.
+
+[Demo details]
+map not included
+== карта не включена
+
+[Demo playback]
+Go to Live
+== Перейти к прямой трансляции
+
+[Demo playback]
+Live
+== Прямая трансляция
+
+[Demo player duration]
+%s min.
+== %s мин.
+
+[Demo player duration]
+%s sec.
+== %s сек.
+
+[Direct touch input]
+Active action
+== Активное действие
+
+[Direct touch input]
+Aim
+== Прицел
+
+[Direct touch input]
+Disabled
+== Отключено
+
+[Direct touch input]
+Fire
+== Огонь
+
+[Direct touch input]
+Hook
+== Крюк
+
+[Graphics error]
+A render command failed. Try to update your GPU drivers.
+== Ошибка команды рендеринга. Попробуйте обновить драйверы GPU.
+
+[Graphics error]
+An error during command recording occurred. Try to update your GPU drivers.
+== Произошла ошибка во время записи команд. Попробуйте обновить драйверы GPU.
+
+[Graphics error]
+Could not initialize the given graphics backend, reverting to the default backend now.
+== Не удалось инициализировать указанный графический бэкенд, сейчас будет выполнен откат к бэкенду по умолчанию.
+
+[Graphics error]
+Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
+== Не удалось инициализировать указанный графический бэкенд. Вероятно, вы не установили драйвер встроенной видеокарты.
+
+[Graphics error]
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== Ошибка инициализации. Попробуйте изменить gfx_backend на OpenGL или Vulkan в файле settings_ddnet.cfg в папке конфигурации и повторите попытку.
+
+[Graphics error]
+Failed to swap framebuffers. Try to update your GPU drivers.
+== Не удалось переключить буферы кадров. Попробуйте обновить драйверы GPU.
+
+[Graphics error]
+Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
+== Не хватает видеопамяти. Попробуйте установить 'cl_skins_loaded_max' на меньшее значение или удалить пользовательские ресурсы (скины, сущности и т.д.), особенно с высоким разрешением.
+
+[Graphics error]
+Submitting the render commands failed. Try to update your GPU drivers.
+== Ошибка отправки команд рендеринга. Попробуйте обновить драйверы GPU.
+
+[Graphics error]
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== Неизвестная ошибка. Попробуйте изменить gfx_backend на OpenGL или Vulkan в файле settings_ddnet.cfg в папке конфигурации и повторите попытку.
+
+[Hammer Mode]
+Normal
+== Обычный
+
+[Hammer Mode]
+Rotate with cursor
+== Вращать с курсором
+
+[Hammer Mode]
+Rotate with cursor like gun
+== Вращать с курсором как оружие
+
+[Hertz]
+Hz
+== Гц
+
+[Important alert message]
+Press Esc or Tab to dismiss…
+== Нажмите Esc или Tab, чтобы закрыть…
+
+[Ingame controller mode]
+Absolute
+== Абсолютный
+
+[Ingame controller mode]
+Relative
+== Относительный
 
 [Outlines]
 Width
-== 
+== Ширина
 
-Unhook & hook
-== 
+[Predefined touch button behaviors]
+Emoticon
+== Эмоция
 
-Freeze & deep
-== 
+[Predefined touch button behaviors]
+Extra Menu
+== Дополнительное меню
 
-Unfreeze & undeep
-== 
+[Predefined touch button behaviors]
+Ingame Menu
+== Меню в игре
 
-Kill
-== 
+[Predefined touch button behaviors]
+Joystick Action
+== Джойстик: Действие
 
-Tele
-== 
+[Predefined touch button behaviors]
+Joystick Aim
+== Джойстик: Прицел
 
-Time until strokes disappear
-== 
+[Predefined touch button behaviors]
+Joystick Fire
+== Джойстик: Огонь
 
-The command is ran in console not chat
-== 
+[Predefined touch button behaviors]
+Joystick Hook
+== Джойстик: Крюк
 
-_ or ' ' = Space
-== 
+[Predefined touch button behaviors]
+Spectate
+== Наблюдение
 
-Activating mod weapon on %d: %s\n
-== 
+[Predefined touch button behaviors]
+Swap Action
+== Сменить действие
 
-[data_version.h]
-You have probably only installed the TClient DDNet.exe which is not supported, please use the entire TClient folder
-== 
+[Predefined touch button behaviors]
+Use Action
+== Использовать действие
 
-Minimum Target Language Characters
-== Минимальное число символов целевого языка
+[Show name plates]
+All
+== Все
 
-Target Language Ratio
-== Доля целевого языка
+[Show name plates]
+None
+== Нет
 
-Auto-translate skips text that already looks like the target language.
-== Автоперевод пропускает текст, который уже выглядит как целевой язык.
+[Show name plates]
+Others
+== Другие
 
-Numeric-only messages are skipped locally.
-== Сообщения только из цифр пропускаются локально.
+[Show name plates]
+Own
+== Свой
 
-Concurrency (1 = automatic)
-== Параллелизм (1 = автоматически)
+[Show players' key presses]
+All
+== Все
+
+[Show players' key presses]
+None
+== Нет
+
+[Show players' key presses]
+Others
+== Другие
+
+[Show players' key presses]
+Own
+== Свой
+
+[skins]
+Body
+== Тело
+
+[skins]
+Decoration
+== Украшение
+
+[skins]
+Eyes
+== Глаза
+
+[skins]
+Feet
+== Ступни
+
+[skins]
+Hands
+== Руки
+
+[skins]
+Marking
+== Маркировка
+
+[Spectating]
+Following %d: %s
+== Следую за %d: %s
+
+[Spectating]
+Following %s
+== Следую за %s
+
+[Spectating Camera Mode Icon]
+AUTO
+== АВТО
+
+[Spectators]
+%d others…
+== %d других…
+
+[Start menu]
+Play
+== Играть
+
+[Team and size]
+%d\n(%d/%d)
+== %d\n(%d/%d)
+
+[Team size]
+maximum
+== максимум
+
+[Team size]
+minimum
+== минимум
+
+[Team status]
+allowed
+== разрешено
+
+[Team status]
+forbidden
+== запрещено
+
+[Team status]
+required
+== обязательно
+
+[Team status]
+solo
+== соло
+
+[Touch button behavior]
+Bind
+== Привязка
+
+[Touch button behavior]
+Bind Toggle
+== Переключение привязки
+
+[Touch button behavior]
+Predefined
+== Предопределённый
+
+[Touch button label type]
+Icon
+== Иконка
+
+[Touch button label type]
+Localized
+== Локализовано
+
+[Touch button label type]
+Plain
+== Обычный
+
+[Touch button shape]
+Circle
+== Круг
+
+[Touch button shape]
+Rectangle
+== Прямоугольник
+
+[Touch button visibilities]
+Allow dummy
+== Разрешить дамми
+
+[Touch button visibilities]
+Demo Player
+== Просмотр демо
+
+[Touch button visibilities]
+Dummy connected
+== Дамми подключён
+
+[Touch button visibilities]
+Extra Menu
+== Дополнительное меню
+
+[Touch button visibilities]
+Ingame
+== В игре
+
+[Touch button visibilities]
+Rcon Authed
+== Администратор Rcon
+
+[Touch button visibilities]
+Vote Active
+== Активное голосование
+
+[Touch button visibilities]
+Zoom Allowed
+== Разрешено при масштабировании
+
+[Touch button visibility preview]
+Excluded
+== Исключено
+
+[Touch button visibility preview]
+Ignore
+== Игнорировать
+
+[Touch button visibility preview]
+Included
+== Включено
+
+[Translation credits: Add your own name here when you update translations]
+English translation by the DDNet Team
+== Русский перевод от команды DDNet

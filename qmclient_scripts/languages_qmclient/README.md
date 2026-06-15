@@ -7,7 +7,7 @@
 - `translations/i18n/*.toml` 是翻译维护源。
 - TOML 按代码模块拆分，不按语言拆分。
 - 每个 `[[message]]` 使用英文 source key 作为 `key`，可选 `context`，并在 `[message.translations]` 下维护一个或多个语言译文。
-- `data/languages/simplified_chinese.txt` 是生成产物。
+- `data/languages/*.txt` 是生成产物；当前由 `generate_all.py` 统一生成 `GENERATED_LANGUAGES` 中登记的运行时语言文件。
 - `translations_draft/<language>/*.toml` 是模型生成的待审核草稿，不参与运行时生成链。
 
 ## 常规 i18n 工作流
@@ -27,11 +27,36 @@ python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-gr
 python -m unittest discover qmclient_scripts/languages_qmclient/tests -v
 ```
 
+## 新增英文 key 后的多语言维护流程
+
+新增英文 source key 后，先提取 active key，再让模型只为缺失语言生成 draft：
+
+```bash
+python qmclient_scripts/languages_qmclient/extract_strings.py
+python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages simplified_chinese,traditional_chinese,japanese,korean,russian,german,spanish,french,brazilian_portuguese,portuguese,turkish,polish --base-url https://api.deepseek.com --model deepseek-v4-flash --chat-extra-json '{"thinking":{"type":"disabled"}}' --batch-size 1024 --parallel-requests 10 --resume
+```
+
+审核 `translations_draft/<language>/*.toml` 后，显式回填维护源：
+
+```bash
+python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages simplified_chinese,traditional_chinese,japanese,korean,russian,german,spanish,french,brazilian_portuguese,portuguese,turkish,polish --write-back --resume
+```
+
+回填后必须生成运行时语言文件并验证：
+
+```bash
+python qmclient_scripts/languages_qmclient/generate_all.py
+python qmclient_scripts/languages_qmclient/validate.py
+python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0
+```
+
+不要手工编辑 `data/languages/*.txt` 来维护翻译；需要改译文时改 `translations/i18n/*.toml`，再重新生成。
+
 ## 主要脚本
 
 - `extract_strings.py`：从 `src/` 提取 active 英文 source keys，写出 `extracted_strings.txt` 和 `extracted_audit_report.json`。
-- `generate_all.py`：根据 active keys 和 `translations/i18n/*.toml` 生成运行时语言文件。
-- `validate.py`：校验提取结果新鲜度、简中覆盖、模块化 TOML 可读性、legacy overlay 删除状态和 blocking audit violations。
+- `generate_all.py`：根据 active keys 和 `translations/i18n/*.toml` 生成 `GENERATED_LANGUAGES` 中登记的运行时语言文件。
+- `validate.py`：校验提取结果新鲜度、全部生成语言文件覆盖、模块化 TOML 可读性、legacy overlay 删除状态和 blocking audit violations。
 - `review_duplicate_entries.py`：只读报告重复、相似、空译文和疑似未使用项，用于人工清理。
 - `audit_translation_drift.py`：把当前 TOML 译文和 Git 历史里的简中译法做只读对比。
 - `translate_with_local_http.py`：生成本地模型翻译草稿；审核通过后，可显式 `--write-back` 回填 `translations/i18n/*.toml`。
@@ -40,8 +65,10 @@ python -m unittest discover qmclient_scripts/languages_qmclient/tests -v
 
 所有模型生成的语言都必须先进入 draft：
 
+示例：
+
 ```bash
-python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages traditional_chinese,korean,japanese --base-url http://127.0.0.1:1337/v1 --model local-model --batch-size 1024 --resume
+python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages traditional_chinese,korean,japanese --base-url http://127.0.0.1:1337/v1 --model local-model --batch-size 1024 --parallel-requests 1 --resume
 ```
 
 回填前必须审核 `translations_draft/<language>/*.toml`，至少检查：
@@ -54,7 +81,7 @@ python qmclient_scripts/languages_qmclient/translate_with_local_http.py --langua
 审核通过后，才允许显式回填：
 
 ```bash
-python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages korean --base-url http://127.0.0.1:1337/v1 --model local-model --module server_browser --write-back --resume
+python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages korean --module server_browser --write-back --resume
 ```
 
 回填后必须重新运行 `generate_all.py`、`validate.py` 和 `review_duplicate_entries.py`。
