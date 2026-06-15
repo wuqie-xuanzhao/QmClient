@@ -4,9 +4,9 @@
 
 ```bash
 cd qmclient_scripts/perf
-npm install
-npx tsx analyze.ts          # 自动读取最新日志
-npx tsx analyze.ts path/to/qm_perf_xxx.log  # 指定日志文件
+bun install
+bun analyze.ts          # 自动读取最新日志
+bun analyze.ts path/to/qm_perf_xxx.log  # 指定日志文件
 ```
 
 ## 前置条件
@@ -49,6 +49,6 @@ qm_perf_logfile 1
 ## 开发
 
 ```bash
-npm run analyze    # 等同于 npx tsx analyze.ts
-npm test           # 使用 test/sample.log 和内联边界样本验证解析/报表
+bun run analyze    # 等同于 bun analyze.ts
+bun run test       # 使用 test/sample.log 和内联边界样本验证解析/报表
 ```

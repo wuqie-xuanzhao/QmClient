@@ -1,10 +1,11 @@
-#!/usr/bin/env npx tsx
+#!/usr/bin/env bun
 // analyze.ts — QmClient 性能日志分析入口
-// 用法: npx tsx analyze.ts [log文件路径]
+// 用法: bun analyze.ts [log文件路径]
 //       如果不传路径，自动读取 %APPDATA%/DDNet/dumps/QmClient_Perf/ 下最新日志
 //       自动检测上一次报告对应的日志，生成对比分析
 
-import { readFileSync, writeFileSync, readdirSync, statSync, mkdirSync, existsSync } from 'node:fs';
+import { createReadStream, writeFileSync, readdirSync, statSync, mkdirSync, existsSync } from 'node:fs';
+import { createInterface } from 'node:readline';
 import { join, basename } from 'node:path';
 
 const PERF_DIR = () => join(process.env.APPDATA ?? '', 'DDNet', 'dumps', 'QmClient_Perf');
@@ -43,19 +44,43 @@ function findPreviousLog(currentLogPath: string): string | null {
 }
 
 async function main() {
-  const { parseLogWithDiagnostics } = await import('./lib/parse.ts');
+  const startedAt = performance.now();
+  const { parseLine } = await import('./lib/parse.ts');
   const { generateReport } = await import('./lib/report.ts');
   const { snapshot, compareSessions } = await import('./lib/stats.ts');
   const { summarizeForBundle } = await import('./lib/quality.ts');
 
+  async function parseLogFileWithDiagnostics(path: string) {
+    const entries = [];
+    let totalLines = 0;
+    let invalidLines = 0;
+    const lines = createInterface({
+      input: createReadStream(path, { encoding: 'utf-8' }),
+      crlfDelay: Infinity,
+    });
+    for await (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (line.length === 0) {
+        continue;
+      }
+      totalLines++;
+      const entry = parseLine(line);
+      if (entry === null) {
+        invalidLines++;
+        continue;
+      }
+      entries.push(entry);
+    }
+    return { entries, diagnostics: { totalLines, invalidLines } };
+  }
+
   const logPath = process.argv[2] ?? findLatestLog();
   console.log(`读取: ${logPath}`);
 
-  const content = readFileSync(logPath, 'utf-8');
-  console.log(`解析中... ${content.split('\n').length} 行`);
-
-  const parsed = parseLogWithDiagnostics(content);
+  console.log('解析中...（流式读取）');
+  const parsed = await parseLogFileWithDiagnostics(logPath);
   const entries = parsed.entries;
+  console.log(`解析行数: ${parsed.diagnostics.totalLines}`);
   console.log(`有效条目: ${entries.length}`);
   if (parsed.diagnostics.invalidLines > 0) {
     console.log(`忽略无效行: ${parsed.diagnostics.invalidLines}`);
@@ -69,8 +94,7 @@ async function main() {
   const prevLogPath = findPreviousLog(logPath);
   if (prevLogPath) {
     try {
-      const prevContent = readFileSync(prevLogPath, 'utf-8');
-      const prevParsed = parseLogWithDiagnostics(prevContent);
+      const prevParsed = await parseLogFileWithDiagnostics(prevLogPath);
       const prevEntries = prevParsed.entries;
       if (prevEntries.length > 0) {
         const prevSnapshot = snapshot(prevEntries, prevLogPath);
@@ -90,7 +114,7 @@ async function main() {
     console.log('无历史日志可对比（首次分析）');
   }
 
-  const reportHtml = generateReport(entries, logPath, comparison, parsed.diagnostics);
+  const reportHtml = generateReport(entries, logPath, comparison, parsed.diagnostics, performance.now() - startedAt);
   const summaryJson = summarizeForBundle(entries, logPath, parsed.diagnostics);
 
   // 输出到 Perf_Report/ 子目录
