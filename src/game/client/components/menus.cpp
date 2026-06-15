@@ -109,6 +109,7 @@ namespace
 	constexpr float MENU_TAB_DEFAULT_W_OFFSET = 0.0f;
 	constexpr float MENU_TAB_DEFAULT_H_OFFSET = 3.0f;
 	constexpr float MENU_TAB_ANIM_EPSILON = 0.0001f;
+	int s_LastPlanCollectionScreenBucket = -1;
 	bool PerfDebugEnabled()
 	{
 		return QmPerfEnabled();
@@ -4928,6 +4929,13 @@ bool CMenus::AdvanceSettingsMenuTextPlanCollection(int Budget, const char *pOper
 {
 	m_SettingsMenuTextLastCollectionStats = {};
 	m_SettingsMenuTextLastCollectionStats.m_Budget = maximum(Budget, 0);
+	if(Budget > 0 && Ui()->Screen() != nullptr)
+	{
+		const int CurrentScreenBucket = round_to_int(Ui()->Screen()->w);
+		if(s_LastPlanCollectionScreenBucket >= 0 && s_LastPlanCollectionScreenBucket != CurrentScreenBucket)
+			m_SettingsMenuTextPlanCollectionDirty = true;
+		s_LastPlanCollectionScreenBucket = CurrentScreenBucket;
+	}
 	PrepareSettingsMenuTextPlanCollectionUnits(pOperationOverride);
 	m_SettingsMenuTextLastCollectionStats.m_UnitsTotal = (int)m_vSettingsMenuTextPlanCollectionUnits.size();
 	if(Budget <= 0 || Ui()->Screen() == nullptr)
