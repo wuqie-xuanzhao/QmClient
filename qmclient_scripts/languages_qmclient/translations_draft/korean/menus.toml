@@ -1,0 +1,2708 @@
+[[message]]
+key = "%s from %s"
+[message.translations]
+korean = "%s (출처: %s)"
+
+[[message]]
+key = "(Fetching Update Info)"
+[message.translations]
+korean = "(데이터 업데이트 정보를 가져오고 있습니다.)"
+
+[[message]]
+key = "(On Latest)"
+[message.translations]
+korean = "(최신 상태)"
+
+[[message]]
+key = "(Update required)"
+[message.translations]
+korean = "(업데이트가 필요합니다.)"
+
+[[message]]
+key = "1 star"
+[message.translations]
+korean = "1성"
+
+[[message]]
+key = "2 stars"
+[message.translations]
+korean = "2성"
+
+[[message]]
+key = "3 stars"
+[message.translations]
+korean = "3성"
+
+[[message]]
+key = "4 stars"
+[message.translations]
+korean = "4성"
+
+[[message]]
+key = "5 stars"
+[message.translations]
+korean = "5성"
+
+[[message]]
+key = "A Tee"
+[message.translations]
+korean = "다른 티"
+
+[[message]]
+key = "Activate"
+[message.translations]
+korean = "활성화"
+
+[[message]]
+key = "Activate all"
+[message.translations]
+korean = "모두 활성화"
+
+[[message]]
+key = "Add"
+[message.translations]
+korean = "추가"
+
+[[message]]
+key = "Add to queue"
+[message.translations]
+korean = "대기열에 추가"
+
+[[message]]
+key = "Added %d missing required slot(s)."
+[message.translations]
+korean = "누락된 필수 슬롯 %d개를 추가했습니다."
+
+[[message]]
+key = "Adjust the opacity of entities belonging to other teams, such as tees and name plates"
+[message.translations]
+korean = "다른 팀의 엔티티(티, 이름표 등) 불투명도 조정"
+
+[[message]]
+key = "Advanced"
+[message.translations]
+korean = "고급"
+
+[[message]]
+key = "Aim bind"
+[message.translations]
+korean = "조준 키 바인딩"
+
+[[message]]
+key = "All stars"
+[message.translations]
+korean = "모든 별점"
+
+[[message]]
+key = "Allows maps to render with more detail"
+[message.translations]
+korean = "맵을 더 자세히 렌더링하도록 허용"
+
+[[message]]
+key = "Alpha"
+[message.translations]
+korean = "알파"
+
+[[message]]
+key = "Always show chat"
+[message.translations]
+korean = "채팅 항상 표시"
+
+[[message]]
+key = "Always show other players' hook collision lines"
+[message.translations]
+korean = "다른 플레이어의 갈고리 충돌선 항상 표시"
+
+[[message]]
+key = "Always show own player's hook collision line"
+[message.translations]
+korean = "자신의 갈고리 충돌선 항상 표시"
+
+[[message]]
+key = "And pick one randomly"
+[message.translations]
+korean = "무작위로 하나 선택"
+
+[[message]]
+key = "AntiPing (latency compensation)"
+[message.translations]
+korean = "안티핑(지연 보정)"
+
+[[message]]
+key = "AntiPing: predict grenade path"
+[message.translations]
+korean = "안티핑: 유탄 경로 예측"
+
+[[message]]
+key = "AntiPing: predict other players"
+[message.translations]
+korean = "안티핑: 다른 플레이어 예측"
+
+[[message]]
+key = "AntiPing: predict weapons"
+[message.translations]
+korean = "안티핑: 무기 예측"
+
+[[message]]
+key = "Applied to %d same-family part(s)."
+[message.translations]
+korean = "같은 계열 부품 %d개에 적용됨."
+
+[[message]]
+key = "Apply"
+[message.translations]
+korean = "적용"
+
+[[message]]
+key = "Apply this preset to the current queue"
+[message.translations]
+korean = "이 프리셋을 현재 대기열에 적용"
+
+[[message]]
+key = "Are you sure that you want to delete '%s'?"
+[message.translations]
+korean = "'%s'을(를) 삭제하시겠습니까?"
+
+[[message]]
+key = "Are you sure that you want to disconnect your dummy?"
+[message.translations]
+korean = "더미 연결을 해제하시겠습니까?"
+
+[[message]]
+key = "Are you sure that you want to disconnect?"
+[message.translations]
+korean = "연결을 해제하시겠습니까?"
+
+[[message]]
+key = "Are you sure that you want to reset the controls to their defaults?"
+[message.translations]
+korean = "컨트롤을 기본값으로 초기화하시겠습니까?"
+
+[[message]]
+key = "Are you sure you want to delete this asset?"
+[message.translations]
+korean = "이 에셋을 삭제하시겠습니까?"
+
+[[message]]
+key = "Asset with this name already exists."
+[message.translations]
+korean = "같은 이름의 에셋이 이미 존재합니다."
+
+[[message]]
+key = "Assets directory"
+[message.translations]
+korean = "에셋 디렉터리"
+
+[[message]]
+key = "Assets editor"
+[message.translations]
+korean = "에셋 편집기"
+
+[[message]]
+key = "Audio file was exported, but reload failed. Restart sound to apply it."
+[message.translations]
+korean = "오디오 파일이 내보내졌으나 다시 로드에 실패했습니다. 사운드를 다시 시작하여 적용하세요."
+
+[[message]]
+key = "Audio pack exported."
+[message.translations]
+korean = "오디오 팩이 내보내졌습니다."
+
+[[message]]
+key = "Audio packs"
+[message.translations]
+korean = "오디오 팩"
+
+[[message]]
+key = "Audio slots"
+[message.translations]
+korean = "오디오 슬롯"
+
+[[message]]
+key = "Authed name color in scoreboard"
+[message.translations]
+korean = "점수판에서 인증된 이름 색상"
+
+[[message]]
+key = "auto"
+[message.translations]
+korean = "자동"
+
+[[message]]
+key = "Auto save chat log"
+[message.translations]
+korean = "채팅 로그 자동 저장"
+
+[[message]]
+key = "Auto start vote"
+[message.translations]
+korean = "투표 자동 시작"
+
+[[message]]
+key = "Automatically create statboard csv"
+[message.translations]
+korean = "통계판 CSV 자동 생성"
+
+[[message]]
+key = "Automatically record demos"
+[message.translations]
+korean = "데모 자동 녹화"
+
+[[message]]
+key = "Automatically take game over screenshot"
+[message.translations]
+korean = "게임 오버 스크린샷 자동 촬영"
+
+[[message]]
+key = "Automatically take statboard screenshot"
+[message.translations]
+korean = "통계판 스크린샷 자동 촬영"
+
+[[message]]
+key = "Axis"
+[message.translations]
+korean = "축"
+
+[[message]]
+key = "Background"
+[message.translations]
+korean = "배경"
+
+[[message]]
+key = "Background music volume"
+[message.translations]
+korean = "배경 음악 볼륨"
+
+[[message]]
+key = "Basic"
+[message.translations]
+korean = "기본"
+
+[[message]]
+key = "Blend mode"
+[message.translations]
+korean = "혼합 모드"
+
+[[message]]
+key = "Body"
+[message.translations]
+korean = "몸통"
+
+[[message]]
+key = "Built-in"
+[message.translations]
+korean = "내장"
+
+[[message]]
+key = "Calculate unfinished maps for player in certain mode"
+[message.translations]
+korean = "특정 모드에서 플레이어의 미완료 맵 계산"
+
+[[message]]
+key = "Can only drop onto same-size parts."
+[message.translations]
+korean = "같은 크기의 부품에만 드롭할 수 있습니다."
+
+[[message]]
+key = "Can't find a Tutorial server"
+[message.translations]
+korean = "튜토리얼 서버를 찾을 수 없습니다."
+
+[[message]]
+key = "Candidate files"
+[message.translations]
+korean = "후보 파일"
+
+[[message]]
+key = "Change settings"
+[message.translations]
+korean = "설정 변경"
+
+[[message]]
+key = "Chat background color"
+[message.translations]
+korean = "채팅 배경색"
+
+[[message]]
+key = "Chat command"
+[message.translations]
+korean = "채팅 명령어"
+
+[[message]]
+key = "Chat command (e.g. showall 1)"
+[message.translations]
+korean = "채팅 명령어 (예: showall 1)"
+
+[[message]]
+key = "Chat font size"
+[message.translations]
+korean = "채팅 글꼴 크기"
+
+[[message]]
+key = "Chat log retention days"
+[message.translations]
+korean = "채팅 기록 보관 일수"
+
+[[message]]
+key = "Chat sound volume"
+[message.translations]
+korean = "채팅 알림 음량"
+
+[[message]]
+key = "Chat width"
+[message.translations]
+korean = "채팅 너비"
+
+[[message]]
+key = "Choose country flag"
+[message.translations]
+korean = "국기 선택"
+
+[[message]]
+key = "Choose default eyes when joining a server"
+[message.translations]
+korean = "서버 접속 시 기본 눈 모양 선택"
+
+[[message]]
+key = "Choose export name first."
+[message.translations]
+korean = "내보내기 이름을 먼저 선택하세요."
+
+[[message]]
+key = "Clan color in friends list"
+[message.translations]
+korean = "친구 목록에서 클랜 색상"
+
+[[message]]
+key = "Clan plates size"
+[message.translations]
+korean = "클랜 플레이트 크기"
+
+[[message]]
+key = "Classic Easy"
+[message.translations]
+korean = "클래식 Easy"
+
+[[message]]
+key = "Classic Next"
+[message.translations]
+korean = "클래식 Next"
+
+[[message]]
+key = "Classic Nut"
+[message.translations]
+korean = "클래식 Nut"
+
+[[message]]
+key = "Classic Pro"
+[message.translations]
+korean = "클래식 Pro"
+
+[[message]]
+key = "Click to copy map name"
+[message.translations]
+korean = "클릭하여 맵 이름 복사"
+
+[[message]]
+key = "Client"
+[message.translations]
+korean = "클라이언트"
+
+[[message]]
+key = "Client IDs size"
+[message.translations]
+korean = "클라이언트 ID 크기"
+
+[[message]]
+key = "Client message"
+[message.translations]
+korean = "클라이언트 메시지"
+
+[[message]]
+key = "Close"
+[message.translations]
+korean = "닫기"
+
+[[message]]
+key = "Colors of the hook collision line, in case of a possible collision with:"
+[message.translations]
+korean = "후크 충돌선 색상 (다음과 충돌 가능할 때):"
+
+[[message]]
+key = "Community"
+[message.translations]
+korean = "커뮤니티"
+
+[[message]]
+key = "Config directory"
+[message.translations]
+korean = "설정 디렉터리"
+
+[[message]]
+key = "Connect dummy"
+[message.translations]
+korean = "더미 연결"
+
+[[message]]
+key = "Connecting dummy"
+[message.translations]
+korean = "더미 연결 중"
+
+[[message]]
+key = "Console"
+[message.translations]
+korean = "콘솔"
+
+[[message]]
+key = "Control dummy"
+[message.translations]
+korean = "더미 제어"
+
+[[message]]
+key = "Controller"
+[message.translations]
+korean = "컨트롤러"
+
+[[message]]
+key = "Controller jitter tolerance"
+[message.translations]
+korean = "컨트롤러 지터 허용 범위"
+
+[[message]]
+key = "Converse"
+[message.translations]
+korean = "계속 귓속말"
+
+[[message]]
+key = "Coords size"
+[message.translations]
+korean = "좌표 크기"
+
+[[message]]
+key = "Copied"
+[message.translations]
+korean = "복사됨"
+
+[[message]]
+key = "Could not load default touch controls from file. See local console for details."
+[message.translations]
+korean = "파일에서 기본 터치 컨트롤을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요."
+
+[[message]]
+key = "Could not load touch controls from clipboard. See local console for details."
+[message.translations]
+korean = "클립보드에서 터치 컨트롤을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요."
+
+[[message]]
+key = "Could not load touch controls from file. See local console for details."
+[message.translations]
+korean = "파일에서 터치 컨트롤을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요."
+
+[[message]]
+key = "Create a random skin"
+[message.translations]
+korean = "무작위 스킨 생성"
+
+[[message]]
+key = "Credits"
+[message.translations]
+korean = "크레딧"
+
+[[message]]
+key = "Current"
+[message.translations]
+korean = "현재"
+
+[[message]]
+key = "Current file"
+[message.translations]
+korean = "현재 파일"
+
+[[message]]
+key = "custom"
+[message.translations]
+korean = "사용자 정의"
+
+[[message]]
+key = "Custom colors"
+[message.translations]
+korean = "사용자 정의 색상"
+
+[[message]]
+key = "Days"
+[message.translations]
+korean = "일"
+
+[[message]]
+key = "DDNet Client needs to be restarted to complete update!"
+[message.translations]
+korean = "DDNet 클라이언트를 다시 시작해야 업데이트가 완료됩니다!"
+
+[[message]]
+key = "DDRace HUD"
+[message.translations]
+korean = "DDRace HUD"
+
+[[message]]
+key = "Deactivate"
+[message.translations]
+korean = "비활성화"
+
+[[message]]
+key = "Deactivate all"
+[message.translations]
+korean = "모두 비활성화"
+
+[[message]]
+key = "default"
+[message.translations]
+korean = "기본값"
+
+[[message]]
+key = "Default"
+[message.translations]
+korean = "기본값"
+
+[[message]]
+key = "Default length"
+[message.translations]
+korean = "기본 길이"
+
+[[message]]
+key = "Default zoom"
+[message.translations]
+korean = "기본 줌"
+
+[[message]]
+key = "Delete"
+[message.translations]
+korean = "삭제"
+
+[[message]]
+key = "Delete skin"
+[message.translations]
+korean = "스킨 삭제"
+
+[[message]]
+key = "Delete this preset"
+[message.translations]
+korean = "이 프리셋 삭제"
+
+[[message]]
+key = "Demo marker added"
+[message.translations]
+korean = "데모 마커 추가됨"
+
+[[message]]
+key = "Desktop fullscreen"
+[message.translations]
+korean = "데스크탑 전체화면"
+
+[[message]]
+key = "Direction Keys"
+[message.translations]
+korean = "방향 키"
+
+[[message]]
+key = "Discard"
+[message.translations]
+korean = "취소"
+
+[[message]]
+key = "Disconnect dummy"
+[message.translations]
+korean = "더미 연결 해제"
+
+[[message]]
+key = "Discord"
+[message.translations]
+korean = "Discord"
+
+[[message]]
+key = "Donor (drag parts from left)"
+[message.translations]
+korean = "기증자 (왼쪽에서 부품 드래그)"
+
+[[message]]
+key = "Donor Asset"
+[message.translations]
+korean = "기증자 에셋"
+
+[[message]]
+key = "Door Laser Inner Color"
+[message.translations]
+korean = "문 레이저 내부 색상"
+
+[[message]]
+key = "Door Laser Outline Color"
+[message.translations]
+korean = "문 레이저 외곽선 색상"
+
+[[message]]
+key = "Download community skins"
+[message.translations]
+korean = "커뮤니티 스킨 다운로드"
+
+[[message]]
+key = "Download failed"
+[message.translations]
+korean = "다운로드 실패"
+
+[[message]]
+key = "Download skins"
+[message.translations]
+korean = "스킨 다운로드"
+
+[[message]]
+key = "Download this asset?"
+[message.translations]
+korean = "이 에셋을 다운로드하시겠습니까?"
+
+[[message]]
+key = "Downloaded"
+[message.translations]
+korean = "다운로드됨"
+
+[[message]]
+key = "Dragger Inner Color"
+[message.translations]
+korean = "드래거 내부 색상"
+
+[[message]]
+key = "Dragger Outline Color"
+[message.translations]
+korean = "드래거 외곽선 색상"
+
+[[message]]
+key = "Drop on right canvas to replace one part."
+[message.translations]
+korean = "오른쪽 캔버스에 드롭하여 부품을 교체하세요."
+
+[[message]]
+key = "Dummies are not allowed on this server"
+[message.translations]
+korean = "이 서버에서는 더미가 허용되지 않습니다"
+
+[[message]]
+key = "Dummy copy"
+[message.translations]
+korean = "더미 복사"
+
+[[message]]
+key = "Dummy fire"
+[message.translations]
+korean = "더미 발사"
+
+[[message]]
+key = "Dummy hammer fly"
+[message.translations]
+korean = "더미 해머 플라이"
+
+[[message]]
+key = "Dummy hook"
+[message.translations]
+korean = "더미 후크"
+
+[[message]]
+key = "Dummy jump"
+[message.translations]
+korean = "더미 점프"
+
+[[message]]
+key = "Dynamic Camera"
+[message.translations]
+korean = "동적 카메라"
+
+[[message]]
+key = "Edit audio pack"
+[message.translations]
+korean = "오디오 팩 편집"
+
+[[message]]
+key = "Edit HUD"
+[message.translations]
+korean = "HUD 편집"
+
+[[message]]
+key = "Edit skin texture"
+[message.translations]
+korean = "스킨 텍스처 편집"
+
+[[message]]
+key = "Edit touch controls"
+[message.translations]
+korean = "터치 컨트롤 편집"
+
+[[message]]
+key = "Emoticon"
+[message.translations]
+korean = "이모티콘"
+
+[[message]]
+key = "Emoticons"
+[message.translations]
+korean = "이모티콘"
+
+[[message]]
+key = "Enable controller"
+[message.translations]
+korean = "컨트롤러 사용"
+
+[[message]]
+key = "Enable game sounds"
+[message.translations]
+korean = "게임 사운드 활성화"
+
+[[message]]
+key = "Enable ghost"
+[message.translations]
+korean = "고스트 활성화"
+
+[[message]]
+key = "Enable gun sound"
+[message.translations]
+korean = "총 사운드 활성화"
+
+[[message]]
+key = "Enable highlighted chat sound"
+[message.translations]
+korean = "강조 표시된 채팅 사운드 활성화"
+
+[[message]]
+key = "Enable long pain sound (used when shooting in freeze)"
+[message.translations]
+korean = "긴 고통 사운드 활성화 (프리즈에서 발사 시 사용)"
+
+[[message]]
+key = "Enable regular chat sound"
+[message.translations]
+korean = "일반 채팅 사운드 활성화"
+
+[[message]]
+key = "Enable replays"
+[message.translations]
+korean = "리플레이 활성화"
+
+[[message]]
+key = "Enable server message sound"
+[message.translations]
+korean = "서버 메시지 사운드 활성화"
+
+[[message]]
+key = "Enable team chat sound"
+[message.translations]
+korean = "팀 채팅 사운드 활성화"
+
+[[message]]
+key = "Entities"
+[message.translations]
+korean = "엔티티"
+
+[[message]]
+key = "Entities background color"
+[message.translations]
+korean = "엔티티 배경색"
+
+[[message]]
+key = "Entity Background Image"
+[message.translations]
+korean = "엔티티 배경 이미지"
+
+[[message]]
+key = "Entity Preview"
+[message.translations]
+korean = "엔티티 미리보기"
+
+[[message]]
+key = "entity_bg (Workshop)"
+[message.translations]
+korean = "entity_bg (워크샵)"
+
+[[message]]
+key = "Error loading touch controls"
+[message.translations]
+korean = "터치 컨트롤 로딩 오류"
+
+[[message]]
+key = "ESC replay minutes"
+[message.translations]
+korean = "ESC 리플레이 저장 시간(분)"
+
+[[message]]
+key = "Export"
+[message.translations]
+korean = "내보내기"
+
+[[message]]
+key = "Export name contains invalid characters."
+[message.translations]
+korean = "내보내기 이름에 유효하지 않은 문자가 포함되어 있습니다."
+
+[[message]]
+key = "Export selected file"
+[message.translations]
+korean = "선택한 파일 내보내기"
+
+[[message]]
+key = "Exported to %s"
+[message.translations]
+korean = "%s(으)로 내보냈습니다"
+
+[[message]]
+key = "Extras"
+[message.translations]
+korean = "기타"
+
+[[message]]
+key = "Failed to copy main asset image."
+[message.translations]
+korean = "주요 에셋 이미지 복사 실패."
+
+[[message]]
+key = "Failed to export audio pack file."
+[message.translations]
+korean = "오디오 팩 파일 내보내기 실패."
+
+[[message]]
+key = "Failed to export skin files."
+[message.translations]
+korean = "스킨 파일 내보내기 실패."
+
+[[message]]
+key = "Failed to load"
+[message.translations]
+korean = "로드 실패"
+
+[[message]]
+key = "Failed to load main asset: %s"
+[message.translations]
+korean = "주요 에셋 로드 실패: %s"
+
+[[message]]
+key = "Failed to prepare main asset image."
+[message.translations]
+korean = "주요 에셋 이미지 준비 실패."
+
+[[message]]
+key = "Failed to preview candidate file."
+[message.translations]
+korean = "후보 파일 미리보기 실패."
+
+[[message]]
+key = "Failed to preview import file."
+[message.translations]
+korean = "가져오기 파일 미리보기 실패."
+
+[[message]]
+key = "Failed to write PNG export."
+[message.translations]
+korean = "PNG 내보내기 파일 쓰기 실패."
+
+[[message]]
+key = "Fast practice"
+[message.translations]
+korean = "빠른 연습"
+
+[[message]]
+key = "Fat skins (DDFat)"
+[message.translations]
+korean = "뚱뚱한 스킨 (DDFat)"
+
+[[message]]
+key = "Feet"
+[message.translations]
+korean = "발"
+
+[[message]]
+key = "Fire"
+[message.translations]
+korean = "발사"
+
+[[message]]
+key = "Force vote"
+[message.translations]
+korean = "강제 투표"
+
+[[message]]
+key = "Frankenstein (drop parts on right)"
+[message.translations]
+korean = "프랑켄슈타인 (부품을 오른쪽에 드롭)"
+
+[[message]]
+key = "Free move"
+[message.translations]
+korean = "자유 이동"
+
+[[message]]
+key = "Freeze Laser Inner Color"
+[message.translations]
+korean = "얼음 레이저 내부 색상"
+
+[[message]]
+key = "Freeze Laser Outline Color"
+[message.translations]
+korean = "얼음 레이저 외곽선 색상"
+
+[[message]]
+key = "Friend color in friends list"
+[message.translations]
+korean = "친구 목록에서 친구 색상"
+
+[[message]]
+key = "Friend heart"
+[message.translations]
+korean = "친구 하트"
+
+[[message]]
+key = "Friend message"
+[message.translations]
+korean = "친구 메시지"
+
+[[message]]
+key = "FSAA samples"
+[message.translations]
+korean = "FSAA 샘플 수"
+
+[[message]]
+key = "Fullscreen"
+[message.translations]
+korean = "전체 화면"
+
+[[message]]
+key = "Game info"
+[message.translations]
+korean = "게임 정보"
+
+[[message]]
+key = "Game sound volume"
+[message.translations]
+korean = "게임 사운드 볼륨"
+
+[[message]]
+key = "Gameplay"
+[message.translations]
+korean = "게임플레이"
+
+[[message]]
+key = "Get all map players' skin IDs and auto add to rotate queue"
+[message.translations]
+korean = "모든 맵 플레이어의 스킨 ID를 가져와 자동으로 순환 대기열에 추가"
+
+[[message]]
+key = "Ghosts directory"
+[message.translations]
+korean = "고스트 디렉터리"
+
+[[message]]
+key = "Graphics card"
+[message.translations]
+korean = "그래픽 카드"
+
+[[message]]
+key = "Grenade"
+[message.translations]
+korean = "유탄"
+
+[[message]]
+key = "Hammer"
+[message.translations]
+korean = "망치"
+
+[[message]]
+key = "High Detail"
+[message.translations]
+korean = "높은 디테일"
+
+[[message]]
+key = "High to low"
+[message.translations]
+korean = "높음에서 낮음으로"
+
+[[message]]
+key = "Highlight Color"
+[message.translations]
+korean = "강조 색상"
+
+[[message]]
+key = "Highlighted message"
+[message.translations]
+korean = "강조 메시지"
+
+[[message]]
+key = "Hook"
+[message.translations]
+korean = "갈고리"
+
+[[message]]
+key = "Hook collision line"
+[message.translations]
+korean = "갈고리 충돌선"
+
+[[message]]
+key = "Hook collision line opacity"
+[message.translations]
+korean = "충돌선 불투명도"
+
+[[message]]
+key = "Hook Collisions"
+[message.translations]
+korean = "갈고리 충돌 보조"
+
+[[message]]
+key = "Hook collisions"
+[message.translations]
+korean = "갈고리 충돌선"
+
+[[message]]
+key = "Hook line tip"
+[message.translations]
+korean = "갈고리선 끝"
+
+[[message]]
+key = "Hook Strength"
+[message.translations]
+korean = "갈고리 강도"
+
+[[message]]
+key = "https://ddnet.org/discord"
+[message.translations]
+korean = "https://ddnet.org/discord"
+
+[[message]]
+key = "https://wiki.ddnet.org/"
+[message.translations]
+korean = "https://wiki.ddnet.org/"
+
+[[message]]
+key = "HUD"
+[message.translations]
+korean = "HUD"
+
+[[message]]
+key = "HUD rainbow colors"
+[message.translations]
+korean = "HUD 무지개 색상"
+
+[[message]]
+key = "Hue"
+[message.translations]
+korean = "색조"
+
+[[message]]
+key = "Info Messages"
+[message.translations]
+korean = "정보 메시지"
+
+[[message]]
+key = "Ingame controller mode"
+[message.translations]
+korean = "게임 내 컨트롤러 모드"
+
+[[message]]
+key = "Ingame controller sens."
+[message.translations]
+korean = "게임 내 컨트롤러 감도"
+
+[[message]]
+key = "Ingame mouse sens."
+[message.translations]
+korean = "게임 내 마우스 감도"
+
+[[message]]
+key = "Intermediate"
+[message.translations]
+korean = "중급"
+
+[[message]]
+key = "Internet (From online source)"
+[message.translations]
+korean = "인터넷 (온라인 소스)"
+
+[[message]]
+key = "Join blue"
+[message.translations]
+korean = "블루팀 참가"
+
+[[message]]
+key = "Join game"
+[message.translations]
+korean = "게임 참가"
+
+[[message]]
+key = "Join red"
+[message.translations]
+korean = "레드팀 참가"
+
+[[message]]
+key = "Jump"
+[message.translations]
+korean = "점프"
+
+[[message]]
+key = "Key Presses"
+[message.translations]
+korean = "키 입력"
+
+[[message]]
+key = "Kick player"
+[message.translations]
+korean = "플레이어 추방"
+
+[[message]]
+key = "Kill"
+[message.translations]
+korean = "자살"
+
+[[message]]
+key = "Laser"
+[message.translations]
+korean = "레이저"
+
+[[message]]
+key = "Learn"
+[message.translations]
+korean = "배우기"
+
+[[message]]
+key = "Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets."
+[message.translations]
+korean = "왼쪽 클릭으로 프랑켄슈타인 부위 색상을 변경하세요. 드래그로 부위를 교체하고, 오른쪽 클릭으로 초기화합니다."
+
+[[message]]
+key = "Lht."
+[message.translations]
+korean = "밝기"
+
+[[message]]
+key = "Loading assets..."
+[message.translations]
+korean = "에셋 로딩 중..."
+
+[[message]]
+key = "Loading ghost files"
+[message.translations]
+korean = "고스트 파일 로딩 중"
+
+[[message]]
+key = "Loading…"
+[message.translations]
+korean = "로딩 중…"
+
+[[message]]
+key = "Local-only"
+[message.translations]
+korean = "로컬 전용"
+
+[[message]]
+key = "Lock team"
+[message.translations]
+korean = "팀 잠금"
+
+[[message]]
+key = "Low to high"
+[message.translations]
+korean = "낮음에서 높음"
+
+[[message]]
+key = "Main Asset"
+[message.translations]
+korean = "메인 에셋"
+
+[[message]]
+key = "Manual source file"
+[message.translations]
+korean = "수동 소스 파일"
+
+[[message]]
+key = "Map browser color"
+[message.translations]
+korean = "맵 브라우저 색상"
+
+[[message]]
+key = "Map browser opacity"
+[message.translations]
+korean = "맵 브라우저 불투명도"
+
+[[message]]
+key = "Map Preview"
+[message.translations]
+korean = "맵 미리보기"
+
+[[message]]
+key = "Map sound volume"
+[message.translations]
+korean = "맵 사운드 볼륨"
+
+[[message]]
+key = "Map type:"
+[message.translations]
+korean = "맵 유형:"
+
+[[message]]
+key = "Mark demo"
+[message.translations]
+korean = "데모 표시"
+
+[[message]]
+key = "Max CSVs"
+[message.translations]
+korean = "최대 CSV 수"
+
+[[message]]
+key = "Max demos"
+[message.translations]
+korean = "최대 데모 수"
+
+[[message]]
+key = "Max Screenshots"
+[message.translations]
+korean = "최대 스크린샷 수"
+
+[[message]]
+key = "may cause delay"
+[message.translations]
+korean = "지연이 발생할 수 있음"
+
+[[message]]
+key = "Menu opened. Press Esc key again to close menu."
+[message.translations]
+korean = "메뉴가 열렸습니다. Esc 키를 다시 누르면 메뉴가 닫힙니다."
+
+[[message]]
+key = "Miscellaneous"
+[message.translations]
+korean = "기타"
+
+[[message]]
+key = "Mode"
+[message.translations]
+korean = "모드"
+
+[[message]]
+key = "MOTD"
+[message.translations]
+korean = "공지"
+
+[[message]]
+key = "Mouse"
+[message.translations]
+korean = "마우스"
+
+[[message]]
+key = "Move left"
+[message.translations]
+korean = "왼쪽으로 이동"
+
+[[message]]
+key = "Move player to spectators"
+[message.translations]
+korean = "플레이어를 관전자로 이동"
+
+[[message]]
+key = "Move right"
+[message.translations]
+korean = "오른쪽으로 이동"
+
+[[message]]
+key = "Movement"
+[message.translations]
+korean = "이동"
+
+[[message]]
+key = "Mute when not active"
+[message.translations]
+korean = "비활성화 시 음소거"
+
+[[message]]
+key = "my_%s"
+[message.translations]
+korean = "내_%s"
+
+[[message]]
+key = "Name Plate"
+[message.translations]
+korean = "이름표"
+
+[[message]]
+key = "Name plates offset"
+[message.translations]
+korean = "이름표 오프셋"
+
+[[message]]
+key = "Name plates size"
+[message.translations]
+korean = "이름표 크기"
+
+[[message]]
+key = "New preset name"
+[message.translations]
+korean = "새 프리셋 이름"
+
+[[message]]
+key = "New random timeout code"
+[message.translations]
+korean = "새 무작위 타임아웃 코드"
+
+[[message]]
+key = "News"
+[message.translations]
+korean = "뉴스"
+
+[[message]]
+key = "Next weapon"
+[message.translations]
+korean = "다음 무기"
+
+[[message]]
+key = "No assets"
+[message.translations]
+korean = "자산 없음"
+
+[[message]]
+key = "No assets available for composition."
+[message.translations]
+korean = "합성에 사용할 수 있는 자산이 없습니다."
+
+[[message]]
+key = "No assets found."
+[message.translations]
+korean = "자산을 찾을 수 없습니다."
+
+[[message]]
+key = "No audio slots found."
+[message.translations]
+korean = "오디오 슬롯을 찾을 수 없습니다."
+
+[[message]]
+key = "No candidate file selected."
+[message.translations]
+korean = "후보 파일이 선택되지 않았습니다."
+
+[[message]]
+key = "No controller found. Plug in a controller."
+[message.translations]
+korean = "컨트롤러를 찾을 수 없습니다. 컨트롤러를 연결하세요."
+
+[[message]]
+key = "No corresponding vote option found"
+[message.translations]
+korean = "해당 투표 옵션을 찾을 수 없음"
+
+[[message]]
+key = "No demo is being recorded"
+[message.translations]
+korean = "녹화 중인 데모가 없음"
+
+[[message]]
+key = "No matching assets."
+[message.translations]
+korean = "일치하는 자산이 없습니다."
+
+[[message]]
+key = "No presets yet"
+[message.translations]
+korean = "아직 프리셋이 없음"
+
+[[message]]
+key = "No preview"
+[message.translations]
+korean = "미리보기 없음"
+
+[[message]]
+key = "No skins match your filter criteria"
+[message.translations]
+korean = "필터 조건에 맞는 스킨이 없음"
+
+[[message]]
+key = "No unfinished maps available"
+[message.translations]
+korean = "완료되지 않은 맵 없음"
+
+[[message]]
+key = "Normal Color"
+[message.translations]
+korean = "일반 색상"
+
+[[message]]
+key = "Normal message"
+[message.translations]
+korean = "일반 메시지"
+
+[[message]]
+key = "Not downloaded"
+[message.translations]
+korean = "다운로드되지 않음"
+
+[[message]]
+key = "Nothing hookable"
+[message.translations]
+korean = "걸 수 있는 대상 없음"
+
+[[message]]
+key = "Only .wv files are supported right now."
+[message.translations]
+korean = "현재 .wv 파일만 지원됩니다."
+
+[[message]]
+key = "Only save improvements"
+[message.translations]
+korean = "향상된 기록만 저장"
+
+[[message]]
+key = "Opacity"
+[message.translations]
+korean = "불투명도"
+
+[[message]]
+key = "Opacity of freeze bars inside freeze"
+[message.translations]
+korean = "프리즈 내 프리즈 바 불투명도"
+
+[[message]]
+key = "Open rename dialog"
+[message.translations]
+korean = "이름 변경 대화상자 열기"
+
+[[message]]
+key = "Open the directory that contains the configuration and user files"
+[message.translations]
+korean = "설정 및 사용자 파일이 있는 디렉토리 열기"
+
+[[message]]
+key = "Open the directory to add custom assets"
+[message.translations]
+korean = "사용자 정의 에셋을 추가할 디렉토리 열기"
+
+[[message]]
+key = "Open the directory to add custom skins"
+[message.translations]
+korean = "사용자 정의 스킨을 추가할 디렉토리 열기"
+
+[[message]]
+key = "Open the directory to add custom themes"
+[message.translations]
+korean = "사용자 정의 테마를 추가할 디렉토리 열기"
+
+[[message]]
+key = "Open the saves file"
+[message.translations]
+korean = "저장 파일 열기"
+
+[[message]]
+key = "Open the settings file"
+[message.translations]
+korean = "설정 파일 열기"
+
+[[message]]
+key = "Other"
+[message.translations]
+korean = "기타"
+
+[[message]]
+key = "Overlay entities"
+[message.translations]
+korean = "엔티티 오버레이"
+
+[[message]]
+key = "Pack name"
+[message.translations]
+korean = "팩 이름"
+
+[[message]]
+key = "Part color updated."
+[message.translations]
+korean = "부위 색상이 업데이트되었습니다."
+
+[[message]]
+key = "Part reset to default asset."
+[message.translations]
+korean = "부위가 기본 에셋으로 재설정되었습니다."
+
+[[message]]
+key = "Part updated."
+[message.translations]
+korean = "부위가 업데이트되었습니다."
+
+[[message]]
+key = "Particles"
+[message.translations]
+korean = "파티클"
+
+[[message]]
+key = "Pause"
+[message.translations]
+korean = "일시정지"
+
+[[message]]
+key = "Pick result: %s"
+[message.translations]
+korean = "선택 결과: %s"
+
+[[message]]
+key = "Pie menu"
+[message.translations]
+korean = "파이 메뉴"
+
+[[message]]
+key = "Pistol"
+[message.translations]
+korean = "권총"
+
+[[message]]
+key = "Play background music"
+[message.translations]
+korean = "배경 음악 재생"
+
+[[message]]
+key = "Player name:"
+[message.translations]
+korean = "플레이어 이름:"
+
+[[message]]
+key = "Please enable finished indicator first"
+[message.translations]
+korean = "먼저 완료 표시를 활성화하세요"
+
+[[message]]
+key = "Please wait…"
+[message.translations]
+korean = "잠시 기다려 주세요…"
+
+[[message]]
+key = "Predict events (experimental)"
+[message.translations]
+korean = "이벤트 예측 (실험적)"
+
+[[message]]
+key = "Preset bar"
+[message.translations]
+korean = "프리셋 바"
+
+[[message]]
+key = "Prev. weapon"
+[message.translations]
+korean = "이전 무기"
+
+[[message]]
+key = "Preview 'Hook collisions' being pressed"
+[message.translations]
+korean = "'훅 충돌' 눌림 미리보기"
+
+[[message]]
+key = "Preview built with %d skipped slot(s)."
+[message.translations]
+korean = "%d개의 건너뛴 슬롯으로 미리보기가 생성되었습니다."
+
+[[message]]
+key = "Preview dummy nameplate"
+[message.translations]
+korean = "더미 이름표 미리보기"
+
+[[message]]
+key = "Preview import file"
+[message.translations]
+korean = "가져온 파일 미리 듣기"
+
+[[message]]
+key = "Preview player nameplate"
+[message.translations]
+korean = "플레이어 이름표 미리보기"
+
+[[message]]
+key = "Preview selected file"
+[message.translations]
+korean = "선택한 파일 미리 듣기"
+
+[[message]]
+key = "Quads are used for background decoration"
+[message.translations]
+korean = "배경 장식에 사용되는 쿼드 표시"
+
+[[message]]
+key = "Queue is empty"
+[message.translations]
+korean = "대기열이 비어 있음"
+
+[[message]]
+key = "Queue is full"
+[message.translations]
+korean = "대기열이 가득 참"
+
+[[message]]
+key = "Random pick"
+[message.translations]
+korean = "무작위 선택"
+
+[[message]]
+key = "Reason:"
+[message.translations]
+korean = "사유:"
+
+[[message]]
+key = "Record demo"
+[message.translations]
+korean = "데모 녹화"
+
+[[message]]
+key = "Refresh Rate"
+[message.translations]
+korean = "재생률"
+
+[[message]]
+key = "Regular background color"
+[message.translations]
+korean = "일반 배경색"
+
+[[message]]
+key = "Relative path"
+[message.translations]
+korean = "상대 경로"
+
+[[message]]
+key = "Reload"
+[message.translations]
+korean = "다시 불러오기"
+
+[[message]]
+key = "Reloaded images."
+[message.translations]
+korean = "이미지를 다시 불러왔습니다."
+
+[[message]]
+key = "Reloaded images. %d slot(s) fell back to main asset."
+[message.translations]
+korean = "이미지를 다시 불러왔습니다. %d개 슬롯이 기본 에셋으로 대체되었습니다."
+
+[[message]]
+key = "Remote console"
+[message.translations]
+korean = "원격 콘솔"
+
+[[message]]
+key = "Remove"
+[message.translations]
+korean = "제거"
+
+[[message]]
+key = "Remove from queue"
+[message.translations]
+korean = "대기열에서 제거"
+
+[[message]]
+key = "Rename"
+[message.translations]
+korean = "이름 바꾸기"
+
+[[message]]
+key = "Renderer"
+[message.translations]
+korean = "렌더러"
+
+[[message]]
+key = "Renders your frame rate in the top right"
+[message.translations]
+korean = "오른쪽 상단에 프레임 속도 표시"
+
+[[message]]
+key = "Repeat message"
+[message.translations]
+korean = "메시지 반복"
+
+[[message]]
+key = "Reset All"
+[message.translations]
+korean = "모두 초기화"
+
+[[message]]
+key = "Reset controls"
+[message.translations]
+korean = "컨트롤 초기화"
+
+[[message]]
+key = "Reset layout"
+[message.translations]
+korean = "레이아웃 초기화"
+
+[[message]]
+key = "Rifle Laser Inner Color"
+[message.translations]
+korean = "라이플 레이저 내부 색상"
+
+[[message]]
+key = "Rifle Laser Outline Color"
+[message.translations]
+korean = "라이플 레이저 외곽선 색상"
+
+[[message]]
+key = "Rotate all maps"
+[message.translations]
+korean = "모든 맵 순환"
+
+[[message]]
+key = "Round"
+[message.translations]
+korean = "라운드"
+
+[[message]]
+key = "Run on join"
+[message.translations]
+korean = "접속 시 실행"
+
+[[message]]
+key = "Run server"
+[message.translations]
+korean = "서버 실행"
+
+[[message]]
+key = "Same clan color in scoreboard"
+[message.translations]
+korean = "점수판에서 같은 클랜 색상"
+
+[[message]]
+key = "Sat."
+[message.translations]
+korean = "채도"
+
+[[message]]
+key = "Save all changes before turning off the editor?"
+[message.translations]
+korean = "편집기를 닫기 전에 모든 변경 사항을 저장하시겠습니까?"
+
+[[message]]
+key = "Save asset before closing?"
+[message.translations]
+korean = "닫기 전에 에셋을 저장하시겠습니까?"
+
+[[message]]
+key = "Save current"
+[message.translations]
+korean = "현재 저장"
+
+[[message]]
+key = "Save current queue as a new preset"
+[message.translations]
+korean = "현재 대기열을 새 프리셋으로 저장"
+
+[[message]]
+key = "Save ghost"
+[message.translations]
+korean = "고스트 저장"
+
+[[message]]
+key = "Save last %d min"
+[message.translations]
+korean = "마지막 %d분 저장"
+
+[[message]]
+key = "Save power by lowering refresh rate (higher input latency)"
+[message.translations]
+korean = "재생률을 낮춰 전력 절약 (입력 지연 증가)"
+
+[[message]]
+key = "Save the best demo of each race"
+[message.translations]
+korean = "각 레이스의 최고 데모 저장"
+
+[[message]]
+key = "Save unsent chat draft"
+[message.translations]
+korean = "전송되지 않은 채팅 초안 저장"
+
+[[message]]
+key = "Saves file"
+[message.translations]
+korean = "파일 저장"
+
+[[message]]
+key = "Score limit"
+[message.translations]
+korean = "점수 제한"
+
+[[message]]
+key = "Scoreboard"
+[message.translations]
+korean = "점수판"
+
+[[message]]
+key = "Scoreboard color"
+[message.translations]
+korean = "점수판 색상"
+
+[[message]]
+key = "Scoreboard cursor"
+[message.translations]
+korean = "점수판 커서"
+
+[[message]]
+key = "Scoreboard opacity"
+[message.translations]
+korean = "점수판 불투명도"
+
+[[message]]
+key = "Screen"
+[message.translations]
+korean = "화면"
+
+[[message]]
+key = "Search"
+[message.translations]
+korean = "검색"
+
+[[message]]
+key = "Search donor asset"
+[message.translations]
+korean = "기증자 에셋 검색"
+
+[[message]]
+key = "Search main asset"
+[message.translations]
+korean = "메인 에셋 검색"
+
+[[message]]
+key = "Selected candidate"
+[message.translations]
+korean = "선택된 후보"
+
+[[message]]
+key = "Selected candidate %d/%d under cursor."
+[message.translations]
+korean = "커서 아래 선택된 후보 %d/%d."
+
+[[message]]
+key = "Selected pack"
+[message.translations]
+korean = "선택된 팩"
+
+[[message]]
+key = "Set all to Rifle"
+[message.translations]
+korean = "모두 라이플로 설정"
+
+[[message]]
+key = "Settings file"
+[message.translations]
+korean = "설정 파일"
+
+[[message]]
+key = "Shotgun"
+[message.translations]
+korean = "샷건"
+
+[[message]]
+key = "Shotgun Laser Inner Color"
+[message.translations]
+korean = "샷건 레이저 내부 색상"
+
+[[message]]
+key = "Shotgun Laser Outline Color"
+[message.translations]
+korean = "샷건 레이저 외곽선 색상"
+
+[[message]]
+key = "Show all"
+[message.translations]
+korean = "모두 표시"
+
+[[message]]
+key = "Show background quads"
+[message.translations]
+korean = "배경 쿼드 표시"
+
+[[message]]
+key = "Show clan above name plates"
+[message.translations]
+korean = "이름표 위에 클랜 표시"
+
+[[message]]
+key = "Show client IDs (scoreboard, chat, spectating)"
+[message.translations]
+korean = "클라이언트 ID 표시 (점수판, 채팅, 관전)"
+
+[[message]]
+key = "Show client IDs in name plates"
+[message.translations]
+korean = "이름표에 클라이언트 ID 표시"
+
+[[message]]
+key = "Show client IDs on a separate line"
+[message.translations]
+korean = "클라이언트 ID를 별도 줄에 표시"
+
+[[message]]
+key = "Show DDRace HUD"
+[message.translations]
+korean = "DDRace HUD 표시"
+
+[[message]]
+key = "Show dummy actions"
+[message.translations]
+korean = "더미 동작 표시"
+
+[[message]]
+key = "Show dummy control status"
+[message.translations]
+korean = "더미 제어 상태 표시"
+
+[[message]]
+key = "Show dummy sync status"
+[message.translations]
+korean = "더미 동기화 상태 표시"
+
+[[message]]
+key = "Show entities"
+[message.translations]
+korean = "엔티티 표시"
+
+[[message]]
+key = "Show finish messages"
+[message.translations]
+korean = "완료 메시지 표시"
+
+[[message]]
+key = "Show FPS"
+[message.translations]
+korean = "FPS 표시"
+
+[[message]]
+key = "Show freeze bars"
+[message.translations]
+korean = "얼음 해제 진행바 표시"
+
+[[message]]
+key = "Show friend icon in name plates"
+[message.translations]
+korean = "이름표에 친구 아이콘 표시"
+
+[[message]]
+key = "Show ghost"
+[message.translations]
+korean = "고스트 표시"
+
+[[message]]
+key = "Show Grid"
+[message.translations]
+korean = "그리드 표시"
+
+[[message]]
+key = "Show hammer status"
+[message.translations]
+korean = "해머 상태 표시"
+
+[[message]]
+key = "Show health, shields and ammo"
+[message.translations]
+korean = "체력, 방어력, 탄약 표시"
+
+[[message]]
+key = "Show hook strength icon indicator"
+[message.translations]
+korean = "갈고리 강도 아이콘 표시"
+
+[[message]]
+key = "Show hook strength number indicator"
+[message.translations]
+korean = "갈고리 강도 숫자 표시"
+
+[[message]]
+key = "Show HUD"
+[message.translations]
+korean = "HUD 표시"
+
+[[message]]
+key = "Show jumps indicator"
+[message.translations]
+korean = "점프 횟수 표시"
+
+[[message]]
+key = "Show key stuck status"
+[message.translations]
+korean = "키 고정 상태 표시"
+
+[[message]]
+key = "Show kill messages"
+[message.translations]
+korean = "처치 메시지 표시"
+
+[[message]]
+key = "Show local time always"
+[message.translations]
+korean = "항상 로컬 시간 표시"
+
+[[message]]
+key = "Show name plates"
+[message.translations]
+korean = "이름표 표시"
+
+[[message]]
+key = "Show names in chat in team colors"
+[message.translations]
+korean = "채팅에서 팀 색상으로 이름 표시"
+
+[[message]]
+key = "Show number of spectators"
+[message.translations]
+korean = "관전자 수 표시"
+
+[[message]]
+key = "Show only chat messages from friends"
+[message.translations]
+korean = "친구 채팅 메시지만 표시"
+
+[[message]]
+key = "Show only chat messages from team members"
+[message.translations]
+korean = "팀 채팅 메시지만 표시"
+
+[[message]]
+key = "Show other players' hook collision lines"
+[message.translations]
+korean = "다른 플레이어의 갈고리 충돌선 표시"
+
+[[message]]
+key = "Show others"
+[message.translations]
+korean = "다른 플레이어 표시"
+
+[[message]]
+key = "Show others (own team only)"
+[message.translations]
+korean = "다른 플레이어 표시 (자신 팀만)"
+
+[[message]]
+key = "Show own player's hook collision line"
+[message.translations]
+korean = "자신의 갈고리 충돌선 표시"
+
+[[message]]
+key = "Show player position"
+[message.translations]
+korean = "플레이어 위치 표시"
+
+[[message]]
+key = "Show player speed"
+[message.translations]
+korean = "플레이어 속도 표시"
+
+[[message]]
+key = "Show player target angle"
+[message.translations]
+korean = "플레이어 조준 각도 표시"
+
+[[message]]
+key = "Show players' key presses"
+[message.translations]
+korean = "플레이어 키 입력 표시"
+
+[[message]]
+key = "Show score"
+[message.translations]
+korean = "점수 표시"
+
+[[message]]
+key = "Show spectator cursor"
+[message.translations]
+korean = "관전자 커서 표시"
+
+[[message]]
+key = "Show text entities"
+[message.translations]
+korean = "텍스트 엔티티 표시"
+
+[[message]]
+key = "Show tiles layers from BG map"
+[message.translations]
+korean = "BG 맵의 타일 레이어 표시"
+
+[[message]]
+key = "Show votes window after voting"
+[message.translations]
+korean = "투표 후 투표 창 표시"
+
+[[message]]
+key = "Show Workshop Assets"
+[message.translations]
+korean = "워크샵 에셋 표시"
+
+[[message]]
+key = "Simple"
+[message.translations]
+korean = "간단"
+
+[[message]]
+key = "Size of hook strength icon and number indicator"
+[message.translations]
+korean = "갈고리 강도 아이콘 및 숫자 표시 크기"
+
+[[message]]
+key = "Size of key press icons"
+[message.translations]
+korean = "키 입력 아이콘 크기"
+
+[[message]]
+key = "Skin"
+[message.translations]
+korean = "스킨"
+
+[[message]]
+key = "Skin could not be found."
+[message.translations]
+korean = "스킨을 찾을 수 없습니다."
+
+[[message]]
+key = "Skin could not be loaded due to an error. Check the local console for details."
+[message.translations]
+korean = "오류로 인해 스킨을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요."
+
+[[message]]
+key = "Skin Database"
+[message.translations]
+korean = "스킨 데이터베이스"
+
+[[message]]
+key = "Skin is loading."
+[message.translations]
+korean = "스킨을 불러오는 중입니다."
+
+[[message]]
+key = "Skin prefix"
+[message.translations]
+korean = "스킨 접두사"
+
+[[message]]
+key = "Skin queue"
+[message.translations]
+korean = "스킨 대기열"
+
+[[message]]
+key = "Skins directory"
+[message.translations]
+korean = "스킨 디렉터리"
+
+[[message]]
+key = "Skip the main menu"
+[message.translations]
+korean = "메인 메뉴 건너뛰기"
+
+[[message]]
+key = "Smooth Dynamic Camera"
+[message.translations]
+korean = "부드러운 동적 카메라"
+
+[[message]]
+key = "Something hookable"
+[message.translations]
+korean = "갈고리 가능 블록"
+
+[[message]]
+key = "Sound volume"
+[message.translations]
+korean = "사운드 볼륨"
+
+[[message]]
+key = "Source file does not exist."
+[message.translations]
+korean = "소스 파일이 존재하지 않습니다."
+
+[[message]]
+key = "Source file is empty."
+[message.translations]
+korean = "소스 파일이 비어 있습니다."
+
+[[message]]
+key = "Spectate"
+[message.translations]
+korean = "관전"
+
+[[message]]
+key = "Spectate mode"
+[message.translations]
+korean = "관전 모드"
+
+[[message]]
+key = "Spectate next"
+[message.translations]
+korean = "다음 관전"
+
+[[message]]
+key = "Spectate previous"
+[message.translations]
+korean = "이전 관전"
+
+[[message]]
+key = "Spectate teleport"
+[message.translations]
+korean = "관전 순간이동"
+
+[[message]]
+key = "Statboard"
+[message.translations]
+korean = "통계판"
+
+[[message]]
+key = "Status"
+[message.translations]
+korean = "상태"
+
+[[message]]
+key = "Stop practice"
+[message.translations]
+korean = "연습 중지"
+
+[[message]]
+key = "Stop record"
+[message.translations]
+korean = "녹화 중지"
+
+[[message]]
+key = "Stop server"
+[message.translations]
+korean = "서버 중지"
+
+[[message]]
+key = "Strong Weak Hook"
+[message.translations]
+korean = "강약 갈고리"
+
+[[message]]
+key = "Switch interval"
+[message.translations]
+korean = "전환 간격"
+
+[[message]]
+key = "Switch weapon on pickup"
+[message.translations]
+korean = "획득 시 무기 자동 장착"
+
+[[message]]
+key = "Switch weapon when out of ammo"
+[message.translations]
+korean = "탄약 소진 시 무기 자동 전환"
+
+[[message]]
+key = "Sync Workshop Assets"
+[message.translations]
+korean = "워크샵 자산 동기화"
+
+[[message]]
+key = "System message"
+[message.translations]
+korean = "시스템 메시지"
+
+[[message]]
+key = "Team chat"
+[message.translations]
+korean = "팀 채팅"
+
+[[message]]
+key = "Team message"
+[message.translations]
+korean = "팀 메시지"
+
+[[message]]
+key = "Teams"
+[message.translations]
+korean = "팀"
+
+[[message]]
+key = "Text"
+[message.translations]
+korean = "텍스트"
+
+[[message]]
+key = "The name \"default\" is reserved."
+[message.translations]
+korean = "\"default\" 이름은 예약되어 있습니다."
+
+[[message]]
+key = "The selected part stays highlighted while you adjust its color."
+[message.translations]
+korean = "선택한 부품은 색상을 조정하는 동안 계속 강조 표시됩니다."
+
+[[message]]
+key = "Themes directory"
+[message.translations]
+korean = "테마 디렉터리"
+
+[[message]]
+key = "There are unsaved changes in the touch controls editor. Saving first is recommended."
+[message.translations]
+korean = "터치 컨트롤 편집기에 저장되지 않은 변경 사항이 있습니다. 먼저 저장하는 것이 좋습니다."
+
+[[message]]
+key = "This skin name cannot be used."
+[message.translations]
+korean = "이 스킨 이름은 사용할 수 없습니다."
+
+[[message]]
+key = "tile"
+[message.translations]
+korean = "타일"
+
+[[message]]
+key = "Time"
+[message.translations]
+korean = "시간"
+
+[[message]]
+key = "Time limit"
+[message.translations]
+korean = "시간 제한"
+
+[[message]]
+key = "Toggle between game scene preview and raw texture"
+[message.translations]
+korean = "게임 장면 미리보기와 원본 텍스처 간 전환"
+
+[[message]]
+key = "Toggle dummy"
+[message.translations]
+korean = "더미 전환"
+
+[[message]]
+key = "Toggle dyncam"
+[message.translations]
+korean = "동적 카메라 전환"
+
+[[message]]
+key = "Toggle ghost"
+[message.translations]
+korean = "고스트 전환"
+
+[[message]]
+key = "Traditional"
+[message.translations]
+korean = "번체"
+
+[[message]]
+key = "Try to predict other entities to reduce lag feeling at high latency"
+[message.translations]
+korean = "높은 지연 시간에서 느낌을 줄이기 위해 다른 개체 예측 시도"
+
+[[message]]
+key = "Tutorial"
+[message.translations]
+korean = "튜토리얼"
+
+[[message]]
+key = "Type switch vote started automatically"
+[message.translations]
+korean = "유형 전환 투표가 자동으로 시작되었습니다"
+
+[[message]]
+key = "UI color"
+[message.translations]
+korean = "UI 색상"
+
+[[message]]
+key = "UI controller sens."
+[message.translations]
+korean = "UI 컨트롤러 감도"
+
+[[message]]
+key = "UI mouse sens."
+[message.translations]
+korean = "UI 마우스 감도"
+
+[[message]]
+key = "UI opacity"
+[message.translations]
+korean = "UI 불투명도"
+
+[[message]]
+key = "Unable to delete skin"
+[message.translations]
+korean = "스킨을 삭제할 수 없습니다"
+
+[[message]]
+key = "Unfinished map count: %d"
+[message.translations]
+korean = "미완료 맵 수: %d"
+
+[[message]]
+key = "Unfinished map data is refreshing, please try again later"
+[message.translations]
+korean = "미완료 맵 데이터가 새로고침 중입니다. 나중에 다시 시도해 주세요"
+
+[[message]]
+key = "Unfinished map data not fetched"
+[message.translations]
+korean = "미완료 맵 데이터를 가져오지 못했습니다"
+
+[[message]]
+key = "Unfinished map data refreshing"
+[message.translations]
+korean = "미완료 맵 데이터 새로고침 중"
+
+[[message]]
+key = "Unfinished maps"
+[message.translations]
+korean = "미완료 맵"
+
+[[message]]
+key = "Unregister protocol and file extensions"
+[message.translations]
+korean = "프로토콜 및 파일 확장자 등록 해제"
+
+[[message]]
+key = "Unsaved changes"
+[message.translations]
+korean = "저장되지 않은 변경 사항"
+
+[[message]]
+key = "Use current map as background"
+[message.translations]
+korean = "현재 맵을 배경으로 사용"
+
+[[message]]
+key = "Use old chat style"
+[message.translations]
+korean = "이전 채팅 스타일 사용"
+
+[[message]]
+key = "Use team colors for name plates"
+[message.translations]
+korean = "이름표에 팀 색상 사용"
+
+[[message]]
+key = "V-Sync"
+[message.translations]
+korean = "V-Sync"
+
+[[message]]
+key = "Vanilla skins only"
+[message.translations]
+korean = "바닐라 스킨만 표시"
+
+[[message]]
+key = "Video Background"
+[message.translations]
+korean = "비디오 배경"
+
+[[message]]
+key = "Voice chat"
+[message.translations]
+korean = "음성 채팅"
+
+[[message]]
+key = "Vote command:"
+[message.translations]
+korean = "투표 명령:"
+
+[[message]]
+key = "Vote description:"
+[message.translations]
+korean = "투표 설명:"
+
+[[message]]
+key = "Vote no"
+[message.translations]
+korean = "반대"
+
+[[message]]
+key = "Vote started automatically"
+[message.translations]
+korean = "자동으로 투표가 시작됨"
+
+[[message]]
+key = "Vote yes"
+[message.translations]
+korean = "찬성"
+
+[[message]]
+key = "Voting"
+[message.translations]
+korean = "투표"
+
+[[message]]
+key = "Weapon"
+[message.translations]
+korean = "무기"
+
+[[message]]
+key = "Weapon trajectory"
+[message.translations]
+korean = "무기 궤적 보조선"
+
+[[message]]
+key = "Weapons"
+[message.translations]
+korean = "무기"
+
+[[message]]
+key = "Website"
+[message.translations]
+korean = "웹사이트"
+
+[[message]]
+key = "When you cross the start line, show a ghost tee replicating the movements of your best time"
+[message.translations]
+korean = "시작선을 넘으면 최고 기록의 움직임을 재현하는 고스트 티를 표시"
+
+[[message]]
+key = "Width of others' hook collision line"
+[message.translations]
+korean = "다른 플레이어의 갈고리 충돌선 너비"
+
+[[message]]
+key = "Width of your own hook collision line"
+[message.translations]
+korean = "자신의 갈고리 충돌선 너비"
+
+[[message]]
+key = "Windowed"
+[message.translations]
+korean = "창 모드"
+
+[[message]]
+key = "Windowed borderless"
+[message.translations]
+korean = "테두리 없는 창"
+
+[[message]]
+key = "Windowed fullscreen"
+[message.translations]
+korean = "창 전체화면"
+
+[[message]]
+key = "You have unsaved changes."
+[message.translations]
+korean = "저장되지 않은 변경 사항이 있습니다."
+
+[[message]]
+key = "You must restart the game for all settings to take effect."
+[message.translations]
+korean = "모든 설정을 적용하려면 게임을 다시 시작해야 합니다."
+
+[[message]]
+key = "Your movements are not taken into account when calculating the line colors"
+[message.translations]
+korean = "선 색상 계산 시 이동으로 인한 조준 오프셋은 고려되지 않음"
+
+[[message]]
+key = "Your skin"
+[message.translations]
+korean = "내 스킨"
+
+[[message]]
+key = "Zoom in"
+[message.translations]
+korean = "확대"
+
+[[message]]
+key = "Zoom out"
+[message.translations]
+korean = "축소"
+
+[[message]]
+key = "Hz"
+context = "Hertz"
+[message.translations]
+korean = "Hz"
+
+[[message]]
+key = "Absolute"
+context = "Ingame controller mode"
+[message.translations]
+korean = "절대값"
+
+[[message]]
+key = "Relative"
+context = "Ingame controller mode"
+[message.translations]
+korean = "상대적"
+
+[[message]]
+key = "All"
+context = "Show name plates"
+[message.translations]
+korean = "모두"
+
+[[message]]
+key = "None"
+context = "Show name plates"
+[message.translations]
+korean = "없음"
+
+[[message]]
+key = "Others"
+context = "Show name plates"
+[message.translations]
+korean = "타인"
+
+[[message]]
+key = "Own"
+context = "Show name plates"
+[message.translations]
+korean = "자신"
+
+[[message]]
+key = "All"
+context = "Show players' key presses"
+[message.translations]
+korean = "모두"
+
+[[message]]
+key = "None"
+context = "Show players' key presses"
+[message.translations]
+korean = "비활성화"
+
+[[message]]
+key = "Others"
+context = "Show players' key presses"
+[message.translations]
+korean = "타인"
+
+[[message]]
+key = "Own"
+context = "Show players' key presses"
+[message.translations]
+korean = "자신"
+
+[[message]]
+key = "Play"
+context = "Start menu"
+[message.translations]
+korean = "플레이"
+
+[[message]]
+key = "maximum"
+context = "Team size"
+[message.translations]
+korean = "최대"
+
+[[message]]
+key = "minimum"
+context = "Team size"
+[message.translations]
+korean = "최소 인원"
+
+[[message]]
+key = "allowed"
+context = "Team status"
+[message.translations]
+korean = "허용"
+
+[[message]]
+key = "forbidden"
+context = "Team status"
+[message.translations]
+korean = "금지"
+
+[[message]]
+key = "required"
+context = "Team status"
+[message.translations]
+korean = "필수"
+
+[[message]]
+key = "solo"
+context = "Team status"
+[message.translations]
+korean = "솔로"
+
+[[message]]
+key = "English translation by the DDNet Team"
+context = "Translation credits: Add your own name here when you update translations"
+[message.translations]
+korean = "한국어 번역: DDNet 팀"

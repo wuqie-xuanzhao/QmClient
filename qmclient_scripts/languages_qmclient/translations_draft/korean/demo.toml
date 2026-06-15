@@ -1,0 +1,434 @@
+[[message]]
+key = "%.2f KiB"
+[message.translations]
+korean = "%.2f KiB"
+
+[[message]]
+key = "%.2f MiB"
+[message.translations]
+korean = "%.2f MiB"
+
+[[message]]
+key = "%d items selected"
+[message.translations]
+korean = "%d개 항목 선택됨"
+
+[[message]]
+key = "%d more cut segments"
+[message.translations]
+korean = "추가로 %d개의 잘라낸 구간"
+
+[[message]]
+key = "%d selected items were deleted, but %d items could not be deleted. The first failing item was '%s'."
+[message.translations]
+korean = "%d개의 선택된 항목이 삭제되었지만, %d개 항목은 삭제할 수 없습니다. 첫 번째 실패 항목은 '%s'입니다."
+
+[[message]]
+key = "Add current cut to the export list"
+[message.translations]
+korean = "현재 잘라낸 구간을 내보내기 목록에 추가"
+
+[[message]]
+key = "All combined"
+[message.translations]
+korean = "모든 파일"
+
+[[message]]
+key = "Are you sure that you want to delete %d selected items?"
+[message.translations]
+korean = "선택한 %d개 항목을 삭제하시겠습니까?"
+
+[[message]]
+key = "Are you sure that you want to delete the demo '%s'?"
+[message.translations]
+korean = "데모 '%s'을(를) 삭제하시겠습니까?"
+
+[[message]]
+key = "Are you sure that you want to delete the folder '%s'?"
+[message.translations]
+korean = "폴더 '%s'을(를) 삭제하시겠습니까?"
+
+[[message]]
+key = "Are you sure that you want to delete the screenshot '%s'?"
+[message.translations]
+korean = "스크린샷 '%s'을(를) 삭제하시겠습니까?"
+
+[[message]]
+key = "Are you sure that you want to disconnect and play this demo?"
+[message.translations]
+korean = "연결을 끊고 이 데모를 재생하시겠습니까?"
+
+[[message]]
+key = "Change the skip duration"
+[message.translations]
+korean = "건너뛰기 시간 변경"
+
+[[message]]
+key = "Choose whether to browse replays or screenshots"
+[message.translations]
+korean = "데모 또는 스크린샷을 탐색할지 선택"
+
+[[message]]
+key = "Clear current cut (right click to clear all cuts)"
+[message.translations]
+korean = "현재 잘라낸 구간 지우기 (우클릭으로 모든 구간 지우기)"
+
+[[message]]
+key = "Close the demo player"
+[message.translations]
+korean = "데모 플레이어 닫기"
+
+[[message]]
+key = "Could not preview this image"
+[message.translations]
+korean = "이 이미지를 미리 볼 수 없습니다"
+
+[[message]]
+key = "Created"
+[message.translations]
+korean = "생성 날짜"
+
+[[message]]
+key = "Current cut is invalid or already added"
+[message.translations]
+korean = "현재 잘라낸 구간이 유효하지 않거나 이미 추가됨"
+
+[[message]]
+key = "Cut interval"
+[message.translations]
+korean = "잘라내기 구간"
+
+[[message]]
+key = "Cut length"
+[message.translations]
+korean = "잘라낸 길이"
+
+[[message]]
+key = "Cut segments"
+[message.translations]
+korean = "잘라낸 구간"
+
+[[message]]
+key = "Date"
+[message.translations]
+korean = "날짜"
+
+[[message]]
+key = "Delete demo"
+[message.translations]
+korean = "데모 삭제"
+
+[[message]]
+key = "Delete folder"
+[message.translations]
+korean = "폴더 삭제"
+
+[[message]]
+key = "Delete screenshot"
+[message.translations]
+korean = "스크린샷 삭제"
+
+[[message]]
+key = "Delete selected items"
+[message.translations]
+korean = "선택한 항목 삭제"
+
+[[message]]
+key = "Demo"
+[message.translations]
+korean = "데모"
+
+[[message]]
+key = "Demofile: %s"
+[message.translations]
+korean = "데모 파일: %s"
+
+[[message]]
+key = "Demos directory"
+[message.translations]
+korean = "데모 디렉터리"
+
+[[message]]
+key = "Error opening screenshot"
+[message.translations]
+korean = "스크린샷 열기 오류"
+
+[[message]]
+key = "Export cut as a separate demo"
+[message.translations]
+korean = "잘라낸 구간을 별도 데모로 내보내기"
+
+[[message]]
+key = "Export demo cut"
+[message.translations]
+korean = "데모 잘라낸 부분 내보내기"
+
+[[message]]
+key = "Failed to export demo cut"
+[message.translations]
+korean = "데모 잘라낸 부분 내보내기 실패"
+
+[[message]]
+key = "Fetch Info"
+[message.translations]
+korean = "정보 가져오기"
+
+[[message]]
+key = "File already exists, do you want to overwrite it?"
+[message.translations]
+korean = "파일이 이미 존재합니다. 덮어쓰시겠습니까?"
+
+[[message]]
+key = "Folder"
+[message.translations]
+korean = "폴더"
+
+[[message]]
+key = "Folder Link"
+[message.translations]
+korean = "폴더 링크"
+
+[[message]]
+key = "Go back one marker"
+[message.translations]
+korean = "이전 마커로 이동"
+
+[[message]]
+key = "Go back one tick"
+[message.translations]
+korean = "한 틱 뒤로 이동"
+
+[[message]]
+key = "Go back the specified duration"
+[message.translations]
+korean = "지정된 시간만큼 뒤로 이동"
+
+[[message]]
+key = "Go forward one marker"
+[message.translations]
+korean = "다음 마커로 이동"
+
+[[message]]
+key = "Go forward one tick"
+[message.translations]
+korean = "한 틱 앞으로 이동"
+
+[[message]]
+key = "Go forward the specified duration"
+[message.translations]
+korean = "지정된 시간만큼 앞으로 이동"
+
+[[message]]
+key = "Invalid Demo"
+[message.translations]
+korean = "유효하지 않은 데모"
+
+[[message]]
+key = "Length"
+[message.translations]
+korean = "길이"
+
+[[message]]
+key = "Loading Demo"
+[message.translations]
+korean = "데모 로딩 중"
+
+[[message]]
+key = "Loading demo files"
+[message.translations]
+korean = "데모 파일 로딩 중"
+
+[[message]]
+key = "Loading demo info"
+[message.translations]
+korean = "데모 정보 로딩 중"
+
+[[message]]
+key = "Loading screenshot files"
+[message.translations]
+korean = "스크린샷 파일 로딩 중"
+
+[[message]]
+key = "Map size"
+[message.translations]
+korean = "맵 크기"
+
+[[message]]
+key = "Mark the beginning of a cut (right click to reset)"
+[message.translations]
+korean = "잘라내기 시작 지점 표시 (우클릭으로 초기화)"
+
+[[message]]
+key = "Mark the end of a cut (right click to reset)"
+[message.translations]
+korean = "잘라내기 끝 지점 표시 (우클릭으로 초기화)"
+
+[[message]]
+key = "Markers"
+[message.translations]
+korean = "마커"
+
+[[message]]
+key = "Netversion"
+[message.translations]
+korean = "네트워크 버전"
+
+[[message]]
+key = "No demo selected"
+[message.translations]
+korean = "선택된 데모 없음"
+
+[[message]]
+key = "No screenshot selected"
+[message.translations]
+korean = "선택된 스크린샷 없음"
+
+[[message]]
+key = "Open the folder containing demo files"
+[message.translations]
+korean = "데모 파일이 있는 폴더 열기"
+
+[[message]]
+key = "Open the folder containing screenshots"
+[message.translations]
+korean = "스크린샷이 있는 폴더 열기"
+
+[[message]]
+key = "Parent Folder"
+[message.translations]
+korean = "상위 폴더"
+
+[[message]]
+key = "Pause the current demo"
+[message.translations]
+korean = "현재 데모 일시 정지"
+
+[[message]]
+key = "Play the current demo"
+[message.translations]
+korean = "현재 데모 재생"
+
+[[message]]
+key = "Please add a valid cut first"
+[message.translations]
+korean = "유효한 잘라내기 구간을 먼저 추가하세요"
+
+[[message]]
+key = "Please use a different filename"
+[message.translations]
+korean = "다른 파일 이름을 사용하세요"
+
+[[message]]
+key = "Remove chat"
+[message.translations]
+korean = "채팅 제거"
+
+[[message]]
+key = "Render cut to video"
+[message.translations]
+korean = "잘라낸 구간을 비디오로 렌더링"
+
+[[message]]
+key = "Screenshot"
+[message.translations]
+korean = "스크린샷"
+
+[[message]]
+key = "Screenshots"
+[message.translations]
+korean = "스크린샷"
+
+[[message]]
+key = "Screenshots directory"
+[message.translations]
+korean = "스크린샷 디렉터리"
+
+[[message]]
+key = "Selection"
+[message.translations]
+korean = "선택 항목"
+
+[[message]]
+key = "Size"
+[message.translations]
+korean = "크기"
+
+[[message]]
+key = "Slow down the demo"
+[message.translations]
+korean = "데모 속도 느리게"
+
+[[message]]
+key = "Speed up the demo"
+[message.translations]
+korean = "데모 속도 빠르게"
+
+[[message]]
+key = "Stop the current demo"
+[message.translations]
+korean = "현재 데모 중지"
+
+[[message]]
+key = "Toggle auto camera"
+[message.translations]
+korean = "자동 카메라 전환"
+
+[[message]]
+key = "Toggle keyboard shortcuts"
+[message.translations]
+korean = "키보드 단축키 전환"
+
+[[message]]
+key = "Unable to delete %d selected items. The first failing item was '%s'."
+[message.translations]
+korean = "%d개의 선택된 항목을 삭제할 수 없습니다. 첫 번째 실패 항목은 '%s'입니다."
+
+[[message]]
+key = "Unable to delete the demo '%s'"
+[message.translations]
+korean = "데모 '%s'을(를) 삭제할 수 없습니다"
+
+[[message]]
+key = "Unable to delete the folder '%s'. Make sure it's empty first."
+[message.translations]
+korean = "폴더 '%s'을(를) 삭제할 수 없습니다. 먼저 폴더가 비어 있는지 확인하세요."
+
+[[message]]
+key = "Unable to delete the screenshot '%s'"
+[message.translations]
+korean = "스크린샷 '%s'을(를) 삭제할 수 없습니다"
+
+[[message]]
+key = "Unable to open the screenshot file"
+[message.translations]
+korean = "스크린샷 파일을 열 수 없습니다"
+
+[[message]]
+key = "map not included"
+context = "Demo details"
+[message.translations]
+korean = "맵이 포함되지 않음"
+
+[[message]]
+key = "Go to Live"
+context = "Demo playback"
+[message.translations]
+korean = "실시간으로 이동"
+
+[[message]]
+key = "Live"
+context = "Demo playback"
+[message.translations]
+korean = "실시간"
+
+[[message]]
+key = "%s min."
+context = "Demo player duration"
+[message.translations]
+korean = "%s분"
+
+[[message]]
+key = "%s sec."
+context = "Demo player duration"
+[message.translations]
+korean = "%s초"

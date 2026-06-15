@@ -1,0 +1,649 @@
+[[message]]
+key = "%c Team %d"
+[message.translations]
+japanese = "チーム %c、人数 %d"
+
+[[message]]
+key = "%d players"
+[message.translations]
+japanese = "%d人のプレイヤー"
+
+[[message]]
+key = "%d teams"
+[message.translations]
+japanese = "%d チーム"
+
+[[message]]
+key = "%d/%d KiB (%.1f KiB/s)"
+[message.translations]
+japanese = "%d/%d KiB (%.1f KiB/s)"
+
+[[message]]
+key = "%i minute left"
+[message.translations]
+japanese = "残り %i 分"
+
+[[message]]
+key = "%i minutes left"
+[message.translations]
+japanese = "残り %i 分"
+
+[[message]]
+key = "%i second left"
+[message.translations]
+japanese = "残り %i 秒"
+
+[[message]]
+key = "%i seconds left"
+[message.translations]
+japanese = "残り %i 秒"
+
+[[message]]
+key = "(paused)"
+[message.translations]
+japanese = "（一時停止）"
+
+[[message]]
+key = "A demo with this name already exists"
+[message.translations]
+japanese = "同名のデモが既に存在します"
+
+[[message]]
+key = "A folder with this name already exists"
+[message.translations]
+japanese = "同名のフォルダが既に存在します"
+
+[[message]]
+key = "A screenshot with this name already exists"
+[message.translations]
+japanese = "同名のスクリーンショットが既に存在します"
+
+[[message]]
+key = "Abort"
+[message.translations]
+japanese = "キャンセル"
+
+[[message]]
+key = "Address"
+[message.translations]
+japanese = "アドレス"
+
+[[message]]
+key = "Appearance"
+[message.translations]
+japanese = "外観"
+
+[[message]]
+key = "Are you sure that you want to quit?"
+[message.translations]
+japanese = "本当に終了してもよろしいですか？"
+
+[[message]]
+key = "Are you sure that you want to restart?"
+[message.translations]
+japanese = "本当に再起動してもよろしいですか？"
+
+[[message]]
+key = "Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced."
+[message.translations]
+japanese = "スキンを保存してもよろしいですか？同じ名前のスキンが既にある場合は置き換えられます。"
+
+[[message]]
+key = "Assets"
+[message.translations]
+japanese = "アセット"
+
+[[message]]
+key = "Browser"
+[message.translations]
+japanese = "ブラウザ"
+
+[[message]]
+key = "Call vote"
+[message.translations]
+japanese = "投票を開始"
+
+[[message]]
+key = "Change ready state (0.7 only)"
+[message.translations]
+japanese = "準備状態を変更（0.7のみ）"
+
+[[message]]
+key = "Checking for existing player with your name"
+[message.translations]
+japanese = "同じ名前のプレイヤーを確認中"
+
+[[message]]
+key = "Configs"
+[message.translations]
+japanese = "コンフィグ"
+
+[[message]]
+key = "Connected"
+[message.translations]
+japanese = "接続完了"
+
+[[message]]
+key = "Connecting to"
+[message.translations]
+japanese = "に接続中"
+
+[[message]]
+key = "Continue anyway?"
+[message.translations]
+japanese = "それでも終了しますか？"
+
+[[message]]
+key = "Contributors"
+[message.translations]
+japanese = "コントリビューター"
+
+[[message]]
+key = "Controls"
+[message.translations]
+japanese = "コントロール"
+
+[[message]]
+key = "Could not check for existing player with your name. Check your internet connection."
+[message.translations]
+japanese = "同じ名前のプレイヤーを確認できませんでした。インターネット接続を確認してください。"
+
+[[message]]
+key = "DDNet"
+[message.translations]
+japanese = "DDNet"
+
+[[message]]
+key = "DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you."
+[message.translations]
+japanese = "DDraceNetwork は協力型オンラインゲームで、あなたとあなたの Tee のグループがマップのゴールに到達することを目指します。初心者は最も簡単なマップがある Novice サーバーから始めるべきです。自分の近くのサーバーを選ぶために ping を考慮してください。"
+
+[[message]]
+key = "Demos"
+[message.translations]
+japanese = "デモ"
+
+[[message]]
+key = "Downloading map"
+[message.translations]
+japanese = "マップをダウンロード中"
+
+[[message]]
+key = "Editor"
+[message.translations]
+japanese = "エディター"
+
+[[message]]
+key = "Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)"
+[message.translations]
+japanese = "指定されたバグを使用してマップ互換モードを有効にする（例：grenade-doubleexplosion@ddnet.tw）"
+
+[[message]]
+key = "Error"
+[message.translations]
+japanese = "エラー"
+
+[[message]]
+key = "Error checking player name"
+[message.translations]
+japanese = "プレイヤー名の確認エラー"
+
+[[message]]
+key = "Error loading demo"
+[message.translations]
+japanese = "デモの読み込みエラー"
+
+[[message]]
+key = "Existing Player"
+[message.translations]
+japanese = "既存のプレイヤー"
+
+[[message]]
+key = "Favorite map"
+[message.translations]
+japanese = "お気に入りマップ"
+
+[[message]]
+key = "Favorites"
+[message.translations]
+japanese = "お気に入り"
+
+[[message]]
+key = "File '%s' already exists, do you want to overwrite it?"
+[message.translations]
+japanese = "ファイル「%s」は既に存在します。上書きしますか？"
+
+[[message]]
+key = "Game"
+[message.translations]
+japanese = "ゲーム"
+
+[[message]]
+key = "General"
+[message.translations]
+japanese = "全般"
+
+[[message]]
+key = "Getting game info"
+[message.translations]
+japanese = "ゲーム情報を取得中"
+
+[[message]]
+key = "Ghost"
+[message.translations]
+japanese = "ゴースト"
+
+[[message]]
+key = "Graphics"
+[message.translations]
+japanese = "グラフィックス"
+
+[[message]]
+key = "Initializing assets"
+[message.translations]
+japanese = "アセットを初期化中"
+
+[[message]]
+key = "Initializing components"
+[message.translations]
+japanese = "コンポーネントを初期化中"
+
+[[message]]
+key = "Initializing map logic"
+[message.translations]
+japanese = "マップロジックを初期化中"
+
+[[message]]
+key = "Internet"
+[message.translations]
+japanese = "インターネット"
+
+[[message]]
+key = "It's recommended that you check the settings to adjust them to your liking before joining a server."
+[message.translations]
+japanese = "サーバーに参加する前に、設定を確認して自分好みに調整することをお勧めします。"
+
+[[message]]
+key = "Join Tutorial Server"
+[message.translations]
+japanese = "チュートリアルサーバーに参加"
+
+[[message]]
+key = "Kill yourself to restart"
+[message.translations]
+japanese = "自殺して再スタート"
+
+[[message]]
+key = "LAN"
+[message.translations]
+japanese = "LAN"
+
+[[message]]
+key = "Language"
+[message.translations]
+japanese = "言語"
+
+[[message]]
+key = "Loading DDNet Client"
+[message.translations]
+japanese = "DDNet クライアントを読み込み中..."
+
+[[message]]
+key = "Loading demo file from storage"
+[message.translations]
+japanese = "ストレージからデモファイルを読み込み中"
+
+[[message]]
+key = "Loading map file from storage"
+[message.translations]
+japanese = "ストレージからマップファイルを読み込み中"
+
+[[message]]
+key = "Loading menu images"
+[message.translations]
+japanese = "メニュー画像を読み込み中"
+
+[[message]]
+key = "Main menu"
+[message.translations]
+japanese = "メインメニュー"
+
+[[message]]
+key = "Name"
+[message.translations]
+japanese = "名前"
+
+[[message]]
+key = "New name:"
+[message.translations]
+japanese = "新しい名前："
+
+[[message]]
+key = "Nickname"
+[message.translations]
+japanese = "ニックネーム"
+
+[[message]]
+key = "No"
+[message.translations]
+japanese = "いいえ"
+
+[[message]]
+key = "No answer from server yet."
+[message.translations]
+japanese = "サーバーからの応答がまだありません。"
+
+[[message]]
+key = "Ok"
+[message.translations]
+japanese = "確認"
+
+[[message]]
+key = "Password"
+[message.translations]
+japanese = "パスワード"
+
+[[message]]
+key = "Password incorrect"
+[message.translations]
+japanese = "パスワードが間違っています"
+
+[[message]]
+key = "Player"
+[message.translations]
+japanese = "プレイヤー"
+
+[[message]]
+key = "Please enter your nickname below."
+[message.translations]
+japanese = "以下にニックネームを入力してください。"
+
+[[message]]
+key = "Preparing demo playback"
+[message.translations]
+japanese = "デモ再生を準備中"
+
+[[message]]
+key = "Profiles"
+[message.translations]
+japanese = "プロファイル"
+
+[[message]]
+key = "Quit"
+[message.translations]
+japanese = "終了"
+
+[[message]]
+key = "Quitting. Please wait…"
+[message.translations]
+japanese = "終了しています。お待ちください..."
+
+[[message]]
+key = "Reconnect in %d sec"
+[message.translations]
+japanese = "%d 秒後に再接続"
+
+[[message]]
+key = "Refresh"
+[message.translations]
+japanese = "更新"
+
+[[message]]
+key = "Rename demo"
+[message.translations]
+japanese = "デモの名前を変更"
+
+[[message]]
+key = "Rename folder"
+[message.translations]
+japanese = "フォルダの名前を変更"
+
+[[message]]
+key = "Rename screenshot"
+[message.translations]
+japanese = "スクリーンショットの名前を変更"
+
+[[message]]
+key = "Render complete"
+[message.translations]
+japanese = "レンダリング完了"
+
+[[message]]
+key = "Render demo"
+[message.translations]
+japanese = "デモをレンダリング"
+
+[[message]]
+key = "Replace video"
+[message.translations]
+japanese = "ビデオを置き換え"
+
+[[message]]
+key = "Requesting to join the game"
+[message.translations]
+japanese = "ゲームへの参加をリクエスト中"
+
+[[message]]
+key = "Restart"
+[message.translations]
+japanese = "再起動"
+
+[[message]]
+key = "Restarting. Please wait…"
+[message.translations]
+japanese = "再起動中。お待ちください..."
+
+[[message]]
+key = "Save skin"
+[message.translations]
+japanese = "スキンを保存"
+
+[[message]]
+key = "Sending initial client info"
+[message.translations]
+japanese = "初期クライアント情報を送信中"
+
+[[message]]
+key = "Server info"
+[message.translations]
+japanese = "サーバー情報"
+
+[[message]]
+key = "Settings"
+[message.translations]
+japanese = "設定"
+
+[[message]]
+key = "Show chat"
+[message.translations]
+japanese = "チャットを表示"
+
+[[message]]
+key = "Show DDNet map finishes in server browser"
+[message.translations]
+japanese = "サーバーブラウザに DDNet マップのクリア状況を表示"
+
+[[message]]
+key = "Show ingame HUD"
+[message.translations]
+japanese = "ゲーム内 HUD を表示"
+
+[[message]]
+key = "Skip Tutorial"
+[message.translations]
+japanese = "チュートリアルをスキップ"
+
+[[message]]
+key = "Some fonts could not be loaded. Check the local console for details."
+[message.translations]
+japanese = "一部のフォントを読み込めませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Sound"
+[message.translations]
+japanese = "サウンド"
+
+[[message]]
+key = "Speed"
+[message.translations]
+japanese = "速度"
+
+[[message]]
+key = "Switch team"
+[message.translations]
+japanese = "チームを切り替え"
+
+[[message]]
+key = "TClient"
+[message.translations]
+japanese = "TClient"
+
+[[message]]
+key = "Tee"
+[message.translations]
+japanese = "Tee"
+
+[[message]]
+key = "Tee 0.7"
+[message.translations]
+japanese = "Tee 0.7"
+
+[[message]]
+key = "The server is running a non-standard tuning on a pure game type."
+[message.translations]
+japanese = "サーバーは純正ゲームタイプで非標準のチューニングを実行しています。"
+
+[[message]]
+key = "Theme"
+[message.translations]
+japanese = "テーマ"
+
+[[message]]
+key = "There's an unsaved change in the touch controls editor, you might want to save it."
+[message.translations]
+japanese = "タッチコントロールエディターに未保存の変更があります。保存することをお勧めします。"
+
+[[message]]
+key = "There's an unsaved map in the editor, you might want to save it."
+[message.translations]
+japanese = "エディターに未保存のマップがあります。保存することをお勧めします。"
+
+[[message]]
+key = "This name cannot be used for files and folders"
+[message.translations]
+japanese = "この名前はファイルやフォルダに使用できません"
+
+[[message]]
+key = "transmits your player name to info.ddnet.org"
+[message.translations]
+japanese = "プレイヤー名を info.ddnet.org に送信します"
+
+[[message]]
+key = "Try again"
+[message.translations]
+japanese = "再試行"
+
+[[message]]
+key = "Trying to determine UDP connectivity…"
+[message.translations]
+japanese = "UDP 接続性を確認中..."
+
+[[message]]
+key = "Tune in zone a variable to value"
+[message.translations]
+japanese = "ゾーン a の変数を値に調整"
+
+[[message]]
+key = "Tune variable to value"
+[message.translations]
+japanese = "変数を値に調整"
+
+[[message]]
+key = "UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators."
+[message.translations]
+japanese = "UDP と TCP の IP アドレスが異なっているようです。VPN、プロキシ、ネットワークアクセラレーターを無効にしてみてください。"
+
+[[message]]
+key = "UDP seems to be filtered."
+[message.translations]
+japanese = "UDP がフィルタリングされているようです。"
+
+[[message]]
+key = "Unable to rename the demo"
+[message.translations]
+japanese = "デモの名前を変更できません"
+
+[[message]]
+key = "Unable to rename the folder"
+[message.translations]
+japanese = "フォルダの名前を変更できません"
+
+[[message]]
+key = "Unable to rename the screenshot"
+[message.translations]
+japanese = "スクリーンショットの名前を変更できません"
+
+[[message]]
+key = "Unable to save the skin"
+[message.translations]
+japanese = "スキンを保存できません"
+
+[[message]]
+key = "Unable to save the skin with a reserved name"
+[message.translations]
+japanese = "予約済みの名前でスキンを保存できません"
+
+[[message]]
+key = "Use k key to kill (restart), q to pause and watch other players. See settings for other key binds."
+[message.translations]
+japanese = "K キーで自殺（再スタート）、Q キーで一時停止して他のプレイヤーを観戦できます。他のキーバインドは設定を参照してください。"
+
+[[message]]
+key = "Use sounds"
+[message.translations]
+japanese = "サウンドを使用"
+
+[[message]]
+key = "Video name:"
+[message.translations]
+japanese = "ビデオ名："
+
+[[message]]
+key = "Video was saved to '%s'"
+[message.translations]
+japanese = "ビデオは「%s」に保存されました"
+
+[[message]]
+key = "Videos directory"
+[message.translations]
+japanese = "ビデオディレクトリ"
+
+[[message]]
+key = "Warning"
+[message.translations]
+japanese = "警告"
+
+[[message]]
+key = "Welcome to DDNet"
+[message.translations]
+japanese = "DDNet へようこそ"
+
+[[message]]
+key = "Why are you slowmo replaying to read this?"
+[message.translations]
+japanese = "なぜスローモーションでこれを読んでいるのですか？"
+
+[[message]]
+key = "Yes"
+[message.translations]
+japanese = "はい"
+
+[[message]]
+key = "You will be disconnected from the server."
+[message.translations]
+japanese = "サーバーから切断されます。"
+
+[[message]]
+key = "Your nickname '%s' is already used (%d points). Do you still want to use it?"
+[message.translations]
+japanese = "ニックネーム「%s」は既に使用されています（%d ポイント）。それでも使用しますか？"

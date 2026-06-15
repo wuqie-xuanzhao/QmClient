@@ -1,0 +1,724 @@
+[[message]]
+key = "%c Team %d"
+[message.translations]
+traditional_chinese = "%c 隊伍 %d"
+
+[[message]]
+key = "%d players"
+[message.translations]
+traditional_chinese = "%d 位玩家"
+
+[[message]]
+key = "%d teams"
+[message.translations]
+traditional_chinese = "%d 個隊伍"
+
+[[message]]
+key = "%d/%d KiB (%.1f KiB/s)"
+[message.translations]
+traditional_chinese = "%d/%d KiB（%.1f KiB/s）"
+
+[[message]]
+key = "%i minute left"
+[message.translations]
+traditional_chinese = "還剩下 %i 分鐘"
+
+[[message]]
+key = "%i minutes left"
+[message.translations]
+traditional_chinese = "還剩下 %i 分鐘"
+
+[[message]]
+key = "%i second left"
+[message.translations]
+traditional_chinese = "還剩下 %i 秒鐘"
+
+[[message]]
+key = "%i seconds left"
+[message.translations]
+traditional_chinese = "還剩下 %i 秒鐘"
+
+[[message]]
+key = "(paused)"
+[message.translations]
+traditional_chinese = "(暫停)"
+
+[[message]]
+key = "A demo with this name already exists"
+[message.translations]
+traditional_chinese = "已經存在同名回放"
+
+[[message]]
+key = "A folder with this name already exists"
+[message.translations]
+traditional_chinese = "已經存在同名資料夾"
+
+[[message]]
+key = "A screenshot with this name already exists"
+[message.translations]
+traditional_chinese = "已經存在同名截圖"
+
+[[message]]
+key = "Abort"
+[message.translations]
+traditional_chinese = "取消"
+
+[[message]]
+key = "Address"
+[message.translations]
+traditional_chinese = "地址"
+
+[[message]]
+key = "Appearance"
+[message.translations]
+traditional_chinese = "遊戲介面"
+
+[[message]]
+key = "Are you sure that you want to quit?"
+[message.translations]
+traditional_chinese = "確定要退出嗎？"
+
+[[message]]
+key = "Are you sure that you want to restart?"
+[message.translations]
+traditional_chinese = "確定要重新開始？"
+
+[[message]]
+key = "Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced."
+[message.translations]
+traditional_chinese = "你確定要儲存你的皮膚嗎？如果已經存在同名皮膚，將會被取代。"
+
+[[message]]
+key = "Assets"
+[message.translations]
+traditional_chinese = "資源"
+
+[[message]]
+key = "Browser"
+[message.translations]
+traditional_chinese = "瀏覽"
+
+[[message]]
+key = "Call vote"
+[message.translations]
+traditional_chinese = "發起投票"
+
+[[message]]
+key = "Cancel"
+[message.translations]
+traditional_chinese = "取消"
+
+[[message]]
+key = "Change ready state (0.7 only)"
+[message.translations]
+traditional_chinese = "更改就緒狀態（僅限 0.7）"
+
+[[message]]
+key = "Checking for existing player with your name"
+[message.translations]
+traditional_chinese = "正在查找該暱稱的 DDNet 記錄"
+
+[[message]]
+key = "Configs"
+[message.translations]
+traditional_chinese = "客戶端配置"
+
+[[message]]
+key = "Connected"
+[message.translations]
+traditional_chinese = "連線成功"
+
+[[message]]
+key = "Connecting to"
+[message.translations]
+traditional_chinese = "正在連線到"
+
+[[message]]
+key = "Continue anyway?"
+[message.translations]
+traditional_chinese = "仍要退出？"
+
+[[message]]
+key = "Contributors"
+[message.translations]
+traditional_chinese = "貢獻者"
+
+[[message]]
+key = "Controls"
+[message.translations]
+traditional_chinese = "控制"
+
+[[message]]
+key = "Could not check for existing player with your name. Check your internet connection."
+[message.translations]
+traditional_chinese = "無法驗證是否已存在相同名稱的玩家。請檢查你的網路連線。"
+
+[[message]]
+key = "DDNet"
+[message.translations]
+traditional_chinese = "DDNet"
+
+[[message]]
+key = "DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you."
+[message.translations]
+traditional_chinese = "DDraceNetwork 是一款線上合作遊戲，你和你團體裡的 Tee 的目標是抵達地圖的終點。作為新手你應該從有著最簡單的地圖的簡單（Novice）伺服器入門。根據延遲來選擇離你相近的伺服器。"
+
+[[message]]
+key = "Demos"
+[message.translations]
+traditional_chinese = "回放"
+
+[[message]]
+key = "Disconnected"
+[message.translations]
+traditional_chinese = "已中斷連線"
+
+[[message]]
+key = "Downloading map"
+[message.translations]
+traditional_chinese = "正在下載地圖"
+
+[[message]]
+key = "Editor"
+[message.translations]
+traditional_chinese = "編輯器"
+
+[[message]]
+key = "Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)"
+[message.translations]
+traditional_chinese = "使用指定 bug 啟用地圖相容模式（例如：grenade-doubleexplosion@ddnet.tw）"
+
+[[message]]
+key = "Error"
+[message.translations]
+traditional_chinese = "錯誤"
+
+[[message]]
+key = "Error checking player name"
+[message.translations]
+traditional_chinese = "檢查玩家名稱時出錯"
+
+[[message]]
+key = "Error loading demo"
+[message.translations]
+traditional_chinese = "回放載入錯誤"
+
+[[message]]
+key = "Existing Player"
+[message.translations]
+traditional_chinese = "玩家已存在"
+
+[[message]]
+key = "Favorite map"
+[message.translations]
+traditional_chinese = "收藏地圖"
+
+[[message]]
+key = "Favorites"
+[message.translations]
+traditional_chinese = "收藏夾"
+
+[[message]]
+key = "File '%s' already exists, do you want to overwrite it?"
+[message.translations]
+traditional_chinese = "檔案 \"%s\" 已經存在，是否要覆蓋該檔案？"
+
+[[message]]
+key = "Game"
+[message.translations]
+traditional_chinese = "遊戲"
+
+[[message]]
+key = "General"
+[message.translations]
+traditional_chinese = "常規"
+
+[[message]]
+key = "Getting game info"
+[message.translations]
+traditional_chinese = "正在獲取遊戲資訊"
+
+[[message]]
+key = "Ghost"
+[message.translations]
+traditional_chinese = "影子"
+
+[[message]]
+key = "Graphics"
+[message.translations]
+traditional_chinese = "圖像"
+
+[[message]]
+key = "Hold left click for free camera"
+[message.translations]
+traditional_chinese = "按住左鍵以使用自由鏡頭"
+
+[[message]]
+key = "Initializing assets"
+[message.translations]
+traditional_chinese = "正在初始化資源"
+
+[[message]]
+key = "Initializing components"
+[message.translations]
+traditional_chinese = "正在初始化遊戲引擎"
+
+[[message]]
+key = "Initializing map logic"
+[message.translations]
+traditional_chinese = "正在初始化地圖邏輯"
+
+[[message]]
+key = "Internet"
+[message.translations]
+traditional_chinese = "網際網路"
+
+[[message]]
+key = "It's recommended that you check the settings to adjust them to your liking before joining a server."
+[message.translations]
+traditional_chinese = "建議你在進入伺服器前檢查一下設定並根據你的喜好進行調整。"
+
+[[message]]
+key = "Join Tutorial Server"
+[message.translations]
+traditional_chinese = "進入教學伺服器"
+
+[[message]]
+key = "Kill yourself to restart"
+[message.translations]
+traditional_chinese = "自殺重新開始"
+
+[[message]]
+key = "LAN"
+[message.translations]
+traditional_chinese = "區域網路"
+
+[[message]]
+key = "Language"
+[message.translations]
+traditional_chinese = "語言"
+
+[[message]]
+key = "Live director"
+[message.translations]
+traditional_chinese = "即時導播"
+
+[[message]]
+key = "Loading DDNet Client"
+[message.translations]
+traditional_chinese = "正在載入 DDNet 客戶端…"
+
+[[message]]
+key = "Loading demo file from storage"
+[message.translations]
+traditional_chinese = "正在從硬碟中載入回放檔案"
+
+[[message]]
+key = "Loading map file from storage"
+[message.translations]
+traditional_chinese = "正在從硬碟中載入地圖檔案"
+
+[[message]]
+key = "Loading menu images"
+[message.translations]
+traditional_chinese = "正在載入主選單圖片"
+
+[[message]]
+key = "Loading skin files"
+[message.translations]
+traditional_chinese = "正在載入皮膚檔案"
+
+[[message]]
+key = "Main menu"
+[message.translations]
+traditional_chinese = "主選單"
+
+[[message]]
+key = "Name"
+[message.translations]
+traditional_chinese = "名稱"
+
+[[message]]
+key = "New name:"
+[message.translations]
+traditional_chinese = "新名稱："
+
+[[message]]
+key = "Nickname"
+[message.translations]
+traditional_chinese = "暱稱"
+
+[[message]]
+key = "No"
+[message.translations]
+traditional_chinese = "否"
+
+[[message]]
+key = "No answer from server yet."
+[message.translations]
+traditional_chinese = "伺服器無回應"
+
+[[message]]
+key = "No director players available"
+[message.translations]
+traditional_chinese = "無可用的導演玩家"
+
+[[message]]
+key = "Ok"
+[message.translations]
+traditional_chinese = "確定"
+
+[[message]]
+key = "Password"
+[message.translations]
+traditional_chinese = "密碼"
+
+[[message]]
+key = "Password incorrect"
+[message.translations]
+traditional_chinese = "密碼錯誤"
+
+[[message]]
+key = "Player"
+[message.translations]
+traditional_chinese = "玩家"
+
+[[message]]
+key = "Players"
+[message.translations]
+traditional_chinese = "玩家"
+
+[[message]]
+key = "Please enter your nickname below."
+[message.translations]
+traditional_chinese = "請在下方輸入你的暱稱。"
+
+[[message]]
+key = "Preparing demo playback"
+[message.translations]
+traditional_chinese = "正在準備回放"
+
+[[message]]
+key = "Profiles"
+[message.translations]
+traditional_chinese = "設定檔"
+
+[[message]]
+key = "QmClient"
+[message.translations]
+traditional_chinese = "QmClient"
+
+[[message]]
+key = "Quit"
+[message.translations]
+traditional_chinese = "退出"
+
+[[message]]
+key = "Quitting. Please wait…"
+[message.translations]
+traditional_chinese = "正在退出，請稍等…"
+
+[[message]]
+key = "Reconnect in %d sec"
+[message.translations]
+traditional_chinese = "%d 秒後重新連線"
+
+[[message]]
+key = "Refresh"
+[message.translations]
+traditional_chinese = "重新整理"
+
+[[message]]
+key = "Rename demo"
+[message.translations]
+traditional_chinese = "重新命名回放"
+
+[[message]]
+key = "Rename folder"
+[message.translations]
+traditional_chinese = "重新命名資料夾"
+
+[[message]]
+key = "Rename screenshot"
+[message.translations]
+traditional_chinese = "重新命名截圖"
+
+[[message]]
+key = "Render complete"
+[message.translations]
+traditional_chinese = "渲染完畢"
+
+[[message]]
+key = "Render demo"
+[message.translations]
+traditional_chinese = "渲染回放"
+
+[[message]]
+key = "Replace video"
+[message.translations]
+traditional_chinese = "取代視訊"
+
+[[message]]
+key = "Requesting to join the game"
+[message.translations]
+traditional_chinese = "正在請求加入遊戲"
+
+[[message]]
+key = "Reset"
+[message.translations]
+traditional_chinese = "重設"
+
+[[message]]
+key = "Restart"
+[message.translations]
+traditional_chinese = "重新開始"
+
+[[message]]
+key = "Restarting. Please wait…"
+[message.translations]
+traditional_chinese = "正在重新啟動，請稍等…"
+
+[[message]]
+key = "Save failed!"
+[message.translations]
+traditional_chinese = "儲存失敗！"
+
+[[message]]
+key = "Save skin"
+[message.translations]
+traditional_chinese = "儲存皮膚"
+
+[[message]]
+key = "Sending initial client info"
+[message.translations]
+traditional_chinese = "正在發送初始客戶端資訊"
+
+[[message]]
+key = "Server info"
+[message.translations]
+traditional_chinese = "伺服器資訊"
+
+[[message]]
+key = "Settings"
+[message.translations]
+traditional_chinese = "設定"
+
+[[message]]
+key = "Show chat"
+[message.translations]
+traditional_chinese = "顯示聊天框"
+
+[[message]]
+key = "Show DDNet map finishes in server browser"
+[message.translations]
+traditional_chinese = "在伺服器瀏覽器中顯示已完成的 DDNet 地圖"
+
+[[message]]
+key = "Show ingame HUD"
+[message.translations]
+traditional_chinese = "顯示 HUD"
+
+[[message]]
+key = "Skip Tutorial"
+[message.translations]
+traditional_chinese = "跳過教學"
+
+[[message]]
+key = "Some fonts could not be loaded. Check the local console for details."
+[message.translations]
+traditional_chinese = "未能載入某些字型。檢查本地控制台以獲取詳情。"
+
+[[message]]
+key = "Sound"
+[message.translations]
+traditional_chinese = "聲音"
+
+[[message]]
+key = "Speed"
+[message.translations]
+traditional_chinese = "速度"
+
+[[message]]
+key = "Switch team"
+[message.translations]
+traditional_chinese = "切換隊伍"
+
+[[message]]
+key = "TClient"
+[message.translations]
+traditional_chinese = "TClient"
+
+[[message]]
+key = "Team save in progress. You'll be able to load with '/load %s'"
+[message.translations]
+traditional_chinese = "隊伍存檔進行中。存檔成功後你可以使用 '/load %s' 載入"
+
+[[message]]
+key = "Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails"
+[message.translations]
+traditional_chinese = "隊伍存檔進行中。若存檔成功，你可以使用 '/load %s' 載入；若失敗，則使用 '/load %s' 載入"
+
+[[message]]
+key = "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue"
+[message.translations]
+traditional_chinese = "隊伍已由 %s 成功儲存。資料庫連線失敗，已改用產生的存檔代碼以避免衝突。請在 %s 上使用 '/load %s' 繼續"
+
+[[message]]
+key = "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue"
+[message.translations]
+traditional_chinese = "隊伍已由 %s 成功儲存。資料庫連線失敗，已改用產生的存檔代碼以避免衝突。請使用 '/load %s' 繼續"
+
+[[message]]
+key = "Tee"
+[message.translations]
+traditional_chinese = "Tee"
+
+[[message]]
+key = "Tee 0.7"
+[message.translations]
+traditional_chinese = "Tee 0.7"
+
+[[message]]
+key = "Temporary free camera"
+[message.translations]
+traditional_chinese = "暫時自由鏡頭"
+
+[[message]]
+key = "The server is running a non-standard tuning on a pure game type."
+[message.translations]
+traditional_chinese = "此伺服器在純淨遊戲類型上使用了非標準調校。"
+
+[[message]]
+key = "Theme"
+[message.translations]
+traditional_chinese = "主題"
+
+[[message]]
+key = "There's an unsaved change in the touch controls editor, you might want to save it."
+[message.translations]
+traditional_chinese = "觸控控制編輯器中有未儲存的變更，建議先儲存。"
+
+[[message]]
+key = "There's an unsaved map in the editor, you might want to save it."
+[message.translations]
+traditional_chinese = "編輯器中有尚未儲存的地圖，建議先儲存。"
+
+[[message]]
+key = "This name cannot be used for files and folders"
+[message.translations]
+traditional_chinese = "此名稱不能用於檔案和資料夾"
+
+[[message]]
+key = "transmits your player name to info.ddnet.org"
+[message.translations]
+traditional_chinese = "將會發送你的玩家暱稱到 info.ddnet.org"
+
+[[message]]
+key = "Try again"
+[message.translations]
+traditional_chinese = "重試"
+
+[[message]]
+key = "Trying to determine UDP connectivity…"
+[message.translations]
+traditional_chinese = "正在嘗試偵測 UDP 連線…"
+
+[[message]]
+key = "Tune in zone a variable to value"
+[message.translations]
+traditional_chinese = "將區域 a 的變數調到指定值"
+
+[[message]]
+key = "Tune variable to value"
+[message.translations]
+traditional_chinese = "將變數調到指定值"
+
+[[message]]
+key = "UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators."
+[message.translations]
+traditional_chinese = "UDP 與 TCP 的 IP 地址並不相同。請嘗試停用 VPN、代理伺服器或網路加速器。"
+
+[[message]]
+key = "UDP seems to be filtered."
+[message.translations]
+traditional_chinese = "UDP 疑似被過濾"
+
+[[message]]
+key = "Unable to rename the demo"
+[message.translations]
+traditional_chinese = "無法重新命名這個回放"
+
+[[message]]
+key = "Unable to rename the folder"
+[message.translations]
+traditional_chinese = "無法重新命名這個資料夾"
+
+[[message]]
+key = "Unable to rename the screenshot"
+[message.translations]
+traditional_chinese = "無法重新命名截圖"
+
+[[message]]
+key = "Unable to save the skin"
+[message.translations]
+traditional_chinese = "無法儲存皮膚"
+
+[[message]]
+key = "Unable to save the skin with a reserved name"
+[message.translations]
+traditional_chinese = "無法儲存使用保留名稱的皮膚"
+
+[[message]]
+key = "Use k key to kill (restart), q to pause and watch other players. See settings for other key binds."
+[message.translations]
+traditional_chinese = "使用 K 鍵自殺以重新開始，使用 Q 鍵暫停以旁觀他人。在設定中可以查看其他按鍵綁定。"
+
+[[message]]
+key = "Use sounds"
+[message.translations]
+traditional_chinese = "開啟聲音"
+
+[[message]]
+key = "Video name:"
+[message.translations]
+traditional_chinese = "影片名稱："
+
+[[message]]
+key = "Video was saved to '%s'"
+[message.translations]
+traditional_chinese = "影片已儲存至 \"%s\""
+
+[[message]]
+key = "Videos directory"
+[message.translations]
+traditional_chinese = "影片目錄"
+
+[[message]]
+key = "Warning"
+[message.translations]
+traditional_chinese = "警告"
+
+[[message]]
+key = "Welcome to DDNet"
+[message.translations]
+traditional_chinese = "歡迎加入 DDNet"
+
+[[message]]
+key = "Why are you slowmo replaying to read this?"
+[message.translations]
+traditional_chinese = "所以你為什麼要慢速回放來看這個？"
+
+[[message]]
+key = "Yes"
+[message.translations]
+traditional_chinese = "是"
+
+[[message]]
+key = "You will be disconnected from the server."
+[message.translations]
+traditional_chinese = "你將從目前伺服器中斷連線。"
+
+[[message]]
+key = "Your nickname '%s' is already used (%d points). Do you still want to use it?"
+[message.translations]
+traditional_chinese = "你使用的暱稱 \"%s\" 已有 %d 分記錄，這可能表示該暱稱已被其他玩家使用過。確認要使用這個名字嗎？"

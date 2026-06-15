@@ -1,0 +1,2755 @@
+[[message]]
+key = "\"%s\" is not compatible with pnglite and cannot be loaded by old DDNet versions:"
+[message.translations]
+japanese = "\"%s\"はpngliteと互換性がなく、古いDDNetバージョンでは読み込むことができません。"
+
+[[message]]
+key = "%c Team %d"
+[message.translations]
+japanese = "%c チーム %d"
+
+[[message]]
+key = "%d new mentions"
+[message.translations]
+japanese = "%d 件の新しいメンション"
+
+[[message]]
+key = "%d players"
+[message.translations]
+japanese = "%d プレイヤー"
+
+[[message]]
+key = "%d teams"
+[message.translations]
+japanese = "%d チーム"
+
+[[message]]
+key = "%s wins!"
+[message.translations]
+japanese = "%s 勝利！"
+
+[[message]]
+key = "- Save codes in order:"
+[message.translations]
+japanese = "- セーブコードを順に:"
+
+[[message]]
+key = "- Save owners in order:"
+[message.translations]
+japanese = "- セーブ所有者を順に:"
+
+[[message]]
+key = "- You have %d saves on this map!"
+[message.translations]
+japanese = "- このマップに %d 個のセーブがあります！"
+
+[[message]]
+key = "/times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)"
+[message.translations]
+japanese = "/times ?s?i は、サーバーの直近 5 回のタイム、または名前が s で始まるプレイヤーのタイムを i 番目から表示します（i は既定で 1、-1 は最初）"
+
+[[message]]
+key = "1 new mention"
+[message.translations]
+japanese = "1 件の新しいメンション"
+
+[[message]]
+key = "9+ new mentions"
+[message.translations]
+japanese = "9+ 件の新しいメンション"
+
+[[message]]
+key = "_ or ' ' = blank spacer"
+[message.translations]
+japanese = "_ または ' ' = 空白スペーサー"
+
+[[message]]
+key = "a = View angle"
+[message.translations]
+japanese = "a = 視野角度"
+
+[[message]]
+key = "Add a colored skin to a dummy queue preset"
+[message.translations]
+japanese = "ダミーキュープリセットにカラースキンを追加"
+
+[[message]]
+key = "Add a colored skin to a queue preset"
+[message.translations]
+japanese = "キュープリセットにカラースキンを追加"
+
+[[message]]
+key = "Add a colored skin to the dummy queue"
+[message.translations]
+japanese = "ダミーキューにカラースキンを追加"
+
+[[message]]
+key = "Add a colored skin to the queue"
+[message.translations]
+japanese = "キューにカラースキンを追加"
+
+[[message]]
+key = "Add a community as a favorite"
+[message.translations]
+japanese = "コミュニティをお気に入りに追加"
+
+[[message]]
+key = "Add a community to the exclusion filter"
+[message.translations]
+japanese = "コミュニティを除外フィルターに追加"
+
+[[message]]
+key = "Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)"
+[message.translations]
+japanese = "特定のコミュニティの除外フィルターに国を追加（ISO 3166-1 数値コード）"
+
+[[message]]
+key = "Add a dummy queue preset"
+[message.translations]
+japanese = "ダミーキュープリセットを追加"
+
+[[message]]
+key = "Add a foe"
+[message.translations]
+japanese = "敵を追加"
+
+[[message]]
+key = "Add a friend"
+[message.translations]
+japanese = "フレンドを追加"
+
+[[message]]
+key = "Add a friend category"
+[message.translations]
+japanese = "フレンドカテゴリを追加"
+
+[[message]]
+key = "Add a prehashed rcon key"
+[message.translations]
+japanese = "プリハッシュ化された rcon キーを追加"
+
+[[message]]
+key = "Add a queue preset"
+[message.translations]
+japanese = "キュープリセットを追加"
+
+[[message]]
+key = "Add a rcon key"
+[message.translations]
+japanese = "rcon キーを追加"
+
+[[message]]
+key = "Add a server as a favorite"
+[message.translations]
+japanese = "サーバーをお気に入りに追加"
+
+[[message]]
+key = "Add a skin as a favorite"
+[message.translations]
+japanese = "スキンをお気に入りに追加"
+
+[[message]]
+key = "Add a skin to a dummy queue preset"
+[message.translations]
+japanese = "ダミーキュープリセットにスキンを追加"
+
+[[message]]
+key = "Add a skin to a queue preset"
+[message.translations]
+japanese = "キュープリセットにスキンを追加"
+
+[[message]]
+key = "Add a skin to the dummy queue"
+[message.translations]
+japanese = "ダミーキューにスキンを追加"
+
+[[message]]
+key = "Add a skin to the queue"
+[message.translations]
+japanese = "キューにスキンを追加"
+
+[[message]]
+key = "add a sqlserver"
+[message.translations]
+japanese = "SQL サーバーを追加"
+
+[[message]]
+key = "Add a type to the exclusion filter for a specific community"
+[message.translations]
+japanese = "特定のコミュニティの除外フィルターにタイプを追加"
+
+[[message]]
+key = "Add a voting option"
+[message.translations]
+japanese = "投票オプションを追加"
+
+[[message]]
+key = "Add demo timeline marker"
+[message.translations]
+japanese = "デモタイムラインマーカーを追加"
+
+[[message]]
+key = "Add friend"
+[message.translations]
+japanese = "フレンド追加"
+
+[[message]]
+key = "Add/remove Client-IDs to spectate them exclusively (-1 to reset)"
+[message.translations]
+japanese = "それらを独占的に観戦するためにクライアントIDを追加/削除（-1 でリセット）"
+
+[[message]]
+key = "Alive: %.1fs/%.1fs"
+[message.translations]
+japanese = "生存: %.1f秒/%.1f秒"
+
+[[message]]
+key = "Angle:"
+[message.translations]
+japanese = "角度:"
+
+[[message]]
+key = "Authenticate to rcon"
+[message.translations]
+japanese = "rcon 認証"
+
+[[message]]
+key = "Authenticate to rcon with a username"
+[message.translations]
+japanese = "ユーザー名で rcon 認証"
+
+[[message]]
+key = "Auto"
+[message.translations]
+japanese = "自動"
+
+[[message]]
+key = "Auto reply"
+[message.translations]
+japanese = "自動返信"
+
+[[message]]
+key = "Auto-sync player camera"
+[message.translations]
+japanese = "プレイヤーカメラを自動同期"
+
+[[message]]
+key = "Automatically adds voting options for all maps"
+[message.translations]
+japanese = "すべてのマップに自動的に投票オプションを追加"
+
+[[message]]
+key = "Avg %.*f   ↓ %.*f   ↑ %.*f"
+[message.translations]
+japanese = "平均 %.*f   ↓ %.*f   ↑ %.*f"
+
+[[message]]
+key = "Axiom auto login failed"
+[message.translations]
+japanese = "Axiom 自動ログイン失敗"
+
+[[message]]
+key = "Axiom auto login failed, retrying"
+[message.translations]
+japanese = "Axiom 自動ログイン失敗、再試行中"
+
+[[message]]
+key = "Axiom auto login succeeded"
+[message.translations]
+japanese = "Axiom 自動ログイン成功"
+
+[[message]]
+key = "Ban a certain nickname"
+[message.translations]
+japanese = "特定のニックネームをBAN"
+
+[[message]]
+key = "Ban ip for x minutes for any reason"
+[message.translations]
+japanese = "IP を任意の理由で x 分間 BAN"
+
+[[message]]
+key = "Ban ip range for x minutes for any reason"
+[message.translations]
+japanese = "IP 範囲を任意の理由で x 分間 BAN"
+
+[[message]]
+key = "Ban player in a region"
+[message.translations]
+japanese = "リージョン内のプレイヤーをBAN"
+
+[[message]]
+key = "Ban player with ip/client id for x minutes for any reason"
+[message.translations]
+japanese = "任意の理由で IP/クライアントID のプレイヤーを x 分間 BAN"
+
+[[message]]
+key = "Ban range in a region"
+[message.translations]
+japanese = "リージョン内の範囲をBAN"
+
+[[message]]
+key = "Benchmark frame times for number of seconds to file, then quit"
+[message.translations]
+japanese = "指定秒数のフレームタイムをファイルにベンチマークして終了"
+
+[[message]]
+key = "Best"
+[message.translations]
+japanese = "ベスト"
+
+[[message]]
+key = "Bind key to execute a command or view keybindings"
+[message.translations]
+japanese = "キーをバインドしてコマンドを実行、またはキーバインドを表示"
+
+[[message]]
+key = "Blue team"
+[message.translations]
+japanese = "青チーム"
+
+[[message]]
+key = "Blue team wins!"
+[message.translations]
+japanese = "青チーム勝利！"
+
+[[message]]
+key = "Broadcast message"
+[message.translations]
+japanese = "ブロードキャストメッセージ"
+
+[[message]]
+key = "c = Player position"
+[message.translations]
+japanese = "c = プレイヤー位置"
+
+[[message]]
+key = "Cancel"
+[message.translations]
+japanese = "キャンセル"
+
+[[message]]
+key = "Cancel your swap request"
+[message.translations]
+japanese = "スワップリクエストをキャンセル"
+
+[[message]]
+key = "Change map"
+[message.translations]
+japanese = "マップ変更"
+
+[[message]]
+key = "Change zoom"
+[message.translations]
+japanese = "ズーム変更"
+
+[[message]]
+key = "Chat export failed"
+[message.translations]
+japanese = "チャットエクスポート失敗"
+
+[[message]]
+key = "Clear"
+[message.translations]
+japanese = "クリア"
+
+[[message]]
+key = "Clear friend note"
+[message.translations]
+japanese = "フレンドメモをクリア"
+
+[[message]]
+key = "Clear local console"
+[message.translations]
+japanese = "ローカルコンソールをクリア"
+
+[[message]]
+key = "Clear remote console"
+[message.translations]
+japanese = "リモートコンソールをクリア"
+
+[[message]]
+key = "Clears the voting options"
+[message.translations]
+japanese = "投票オプションをクリア"
+
+[[message]]
+key = "Connect address error"
+[message.translations]
+japanese = "接続アドレスエラー"
+
+[[message]]
+key = "Connect dummy to enable"
+[message.translations]
+japanese = "有効にするにはダミーを接続"
+
+[[message]]
+key = "Connect to the specified host/ip"
+[message.translations]
+japanese = "指定されたホスト/IPに接続"
+
+[[message]]
+key = "Connection Problems…"
+[message.translations]
+japanese = "接続の問題…"
+
+[[message]]
+key = "Converse with the last person you whispered to (private message)"
+[message.translations]
+japanese = "最後に whisper した人と会話（プライベートメッセージ）"
+
+[[message]]
+key = "Copy skin"
+[message.translations]
+japanese = "スキンをコピー"
+
+[[message]]
+key = "Could not connect dummy"
+[message.translations]
+japanese = "ダミーに接続できませんでした"
+
+[[message]]
+key = "Could not resolve connect address '%s'. See local console for details."
+[message.translations]
+japanese = "接続アドレス '%s' を解決できませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Could not save downloaded map. Try manually deleting this file: %s"
+[message.translations]
+japanese = "ダウンロードしたマップを保存できませんでした。次のファイルを手動で削除してみてください: %s"
+
+[[message]]
+key = "Current: Ranks"
+[message.translations]
+japanese = "現在: ランク"
+
+[[message]]
+key = "Current: Score"
+[message.translations]
+japanese = "現在: スコア"
+
+[[message]]
+key = "Current: Time"
+[message.translations]
+japanese = "現在: タイム"
+
+[[message]]
+key = "Custom"
+[message.translations]
+japanese = "カスタム"
+
+[[message]]
+key = "d = Prediction latency"
+[message.translations]
+japanese = "d = 予測遅延"
+
+[[message]]
+key = "Deaths"
+[message.translations]
+japanese = "デス数"
+
+[[message]]
+key = "Debug mode enabled. Press Ctrl+Shift+D to disable debug mode."
+[message.translations]
+japanese = "デバッグモードが有効になりました。Ctrl+Shift+D でデバッグモードを無効にします。"
+
+[[message]]
+key = "Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name"
+[message.translations]
+japanese = "指定された引数の数に応じて、自分をテレポートします。(0.) 観戦中または狙っている場所 (1.) 指定されたプレイヤー名"
+
+[[message]]
+key = "Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'"
+[message.translations]
+japanese = "非推奨。「muteid <client_id> <秒数> <理由>」または「muteip <ip> <秒数> <理由>」を使用してください。"
+
+[[message]]
+key = "Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_muteip <ip> <seconds> <reason>'"
+[message.translations]
+japanese = "非推奨。「vote_muteid <client_id> <秒数> <理由>」または「vote_muteip <ip> <秒数> <理由>」を使用してください。"
+
+[[message]]
+key = "DF"
+[message.translations]
+japanese = "DF"
+
+[[message]]
+key = "Disconnect from the server"
+[message.translations]
+japanese = "サーバーから切断"
+
+[[message]]
+key = "Drag HUD modules with the left mouse button"
+[message.translations]
+japanese = "左マウスボタンで HUD モジュールをドラッグ"
+
+[[message]]
+key = "Draw!"
+[message.translations]
+japanese = "引き分け！"
+
+[[message]]
+key = "Dummy Control: %s"
+[message.translations]
+japanese = "ダミーコントロール: %s"
+
+[[message]]
+key = "Dummy mini view"
+[message.translations]
+japanese = "ダミーミニビュー"
+
+[[message]]
+key = "Dummy sync: %s"
+[message.translations]
+japanese = "ダミー同期: %s"
+
+[[message]]
+key = "Dump the current savestring"
+[message.translations]
+japanese = "現在のセーブ文字列をダンプ"
+
+[[message]]
+key = "Dump zone tuning in zone x"
+[message.translations]
+japanese = "ゾーン x のゾーンチューニングをダンプ"
+
+[[message]]
+key = "dumps all sqlservers readservers = r, writeservers = w"
+[message.translations]
+japanese = "すべての SQL サーバーをダンプ（readservers = r, writeservers = w）"
+
+[[message]]
+key = "Dumps the antibot status"
+[message.translations]
+japanese = "アンチボットのステータスをダンプ"
+
+[[message]]
+key = "Echo the text"
+[message.translations]
+japanese = "テキストをエコー"
+
+[[message]]
+key = "Enable cheats for your current team's run, but you can't earn a rank"
+[message.translations]
+japanese = "現在のチームのランでチートを有効にするが、ランクは獲得できません"
+
+[[message]]
+key = "Enables/disables active moderator mode for the player"
+[message.translations]
+japanese = "プレイヤーのアクティブモデレーターモードを有効/無効にする"
+
+[[message]]
+key = "Enter Password"
+[message.translations]
+japanese = "パスワードを入力"
+
+[[message]]
+key = "Enter Username"
+[message.translations]
+japanese = "ユーザー名を入力"
+
+[[message]]
+key = "Error playing demo"
+[message.translations]
+japanese = "デモ再生エラー"
+
+[[message]]
+key = "Error saving settings"
+[message.translations]
+japanese = "設定保存エラー"
+
+[[message]]
+key = "Execute files on key press/release"
+[message.translations]
+japanese = "キー押下/解放時にファイルを実行"
+
+[[message]]
+key = "Execute the specified file"
+[message.translations]
+japanese = "指定されたファイルを実行"
+
+[[message]]
+key = "Export selected"
+[message.translations]
+japanese = "選択項目をエクスポート"
+
+[[message]]
+key = "Exported %d chat messages"
+[message.translations]
+japanese = "%d 件のチャットメッセージをエクスポートしました"
+
+[[message]]
+key = "f = Frame rate"
+[message.translations]
+japanese = "f = フレームレート"
+
+[[message]]
+key = "Failed saving the replay!"
+[message.translations]
+japanese = "リプレイの保存に失敗しました！"
+
+[[message]]
+key = "Find all ban records for the specified IP address"
+[message.translations]
+japanese = "指定された IP アドレスのすべての BAN 記録を検索"
+
+[[message]]
+key = "First page in console"
+[message.translations]
+japanese = "コンソールの最初のページ"
+
+[[message]]
+key = "Follow"
+[message.translations]
+japanese = "フォロー"
+
+[[message]]
+key = "Following"
+[message.translations]
+japanese = "フォロー中"
+
+[[message]]
+key = "Force a vote to yes/no"
+[message.translations]
+japanese = "投票を賛成/反対に強制"
+
+[[message]]
+key = "Force a voting option"
+[message.translations]
+japanese = "投票オプションを強制"
+
+[[message]]
+key = "Force high bandwidth mode when spectating (1 = on, 0 = off)"
+[message.translations]
+japanese = "観戦時に高帯域幅モードを強制（1 = オン、0 = オフ）"
+
+[[message]]
+key = "Force i to pause for i seconds"
+[message.translations]
+japanese = "i を i 秒間強制一時停止"
+
+[[message]]
+key = "FPM"
+[message.translations]
+japanese = "FPM"
+
+[[message]]
+key = "Frags"
+[message.translations]
+japanese = "キル数"
+
+[[message]]
+key = "Free-View"
+[message.translations]
+japanese = "フリービュー"
+
+[[message]]
+key = "Game over"
+[message.translations]
+japanese = "ゲームオーバー"
+
+[[message]]
+key = "Game paused"
+[message.translations]
+japanese = "ゲーム一時停止中"
+
+[[message]]
+key = "Give back right to vote to player with client ID"
+[message.translations]
+japanese = "クライアントIDのプレイヤーに投票権を戻す"
+
+[[message]]
+key = "Give back right to vote to player with IP address"
+[message.translations]
+japanese = "IPアドレスのプレイヤーに投票権を戻す"
+
+[[message]]
+key = "Give back right to vote to player with list index"
+[message.translations]
+japanese = "リストインデックスのプレイヤーに投票権を戻す"
+
+[[message]]
+key = "Gives a grenade launcher to you"
+[message.translations]
+japanese = "グレネードランチャーをあなたに与える"
+
+[[message]]
+key = "Gives a laser to you"
+[message.translations]
+japanese = "レーザーをあなたに与える"
+
+[[message]]
+key = "Gives a shotgun to you"
+[message.translations]
+japanese = "ショットガンをあなたに与える"
+
+[[message]]
+key = "Gives all weapons to you"
+[message.translations]
+japanese = "すべての武器をあなたに与える"
+
+[[message]]
+key = "Gives jetpack to you"
+[message.translations]
+japanese = "ジェットパックをあなたに与える"
+
+[[message]]
+key = "Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)"
+[message.translations]
+japanese = "ID i の武器をあなたに与える（all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5）"
+
+[[message]]
+key = "Gives you as many jumps as you specify"
+[message.translations]
+japanese = "指定した数だけジャンプを与える"
+
+[[message]]
+key = "Gives you endless hook"
+[message.translations]
+japanese = "エンドレスフックを与える"
+
+[[message]]
+key = "Gives you infinite jump"
+[message.translations]
+japanese = "無限ジャンプを与える"
+
+[[message]]
+key = "Grabs"
+[message.translations]
+japanese = "グラブ数"
+
+[[message]]
+key = "Hammer: %s"
+[message.translations]
+japanese = "ハンマー: %s"
+
+[[message]]
+key = "HDF"
+[message.translations]
+japanese = "HDF"
+
+[[message]]
+key = "Help: %s"
+[message.translations]
+japanese = "ヘルプ: %s"
+
+[[message]]
+key = "Hold left click for free camera"
+[message.translations]
+japanese = "左クリックを押し続けるとフリーカメラ"
+
+[[message]]
+key = "Hooking L/R: %.0f%%/%.0f%%"
+[message.translations]
+japanese = "フック L/R: %.0f%%/%.0f%%"
+
+[[message]]
+key = "https://wiki.ddnet.org/wiki/Mapping"
+[message.translations]
+japanese = "https://wiki.ddnet.org/wiki/Mapping"
+
+[[message]]
+key = "HUD editor preview"
+[message.translations]
+japanese = "HUD エディタープレビュー"
+
+[[message]]
+key = "i = Receive rate"
+[message.translations]
+japanese = "i = 受信レート"
+
+[[message]]
+key = "Invite a person to a locked team"
+[message.translations]
+japanese = "ロックされたチームに人を招待"
+
+[[message]]
+key = "j = Latency jitter"
+[message.translations]
+japanese = "j = レイテンシジッター"
+
+[[message]]
+key = "Join the team of the specified player"
+[message.translations]
+japanese = "指定されたプレイヤーのチームに参加"
+
+[[message]]
+key = "Jump hint text"
+[message.translations]
+japanese = "ジャンプヒントテキスト"
+
+[[message]]
+key = "k = Resend loss"
+[message.translations]
+japanese = "k = 再送損失"
+
+[[message]]
+key = "Key Sticking: ?"
+[message.translations]
+japanese = "キースティッキング: ?"
+
+[[message]]
+key = "Key Sticking: Off"
+[message.translations]
+japanese = "キースティッキング: オフ"
+
+[[message]]
+key = "Key Sticking: On"
+[message.translations]
+japanese = "キースティッキング: オン"
+
+[[message]]
+key = "Key Sticking: Reset Self"
+[message.translations]
+japanese = "キースティッキング: 自分をリセット"
+
+[[message]]
+key = "Kick player with specified id for any reason"
+[message.translations]
+japanese = "指定された ID のプレイヤーを任意の理由でキック"
+
+[[message]]
+key = "Kill yourself when kill-protected during a long game (use f1, kill for regular kill)"
+[message.translations]
+japanese = "ロングゲーム中にキルプロテクトされているときに自殺（通常のキルは f1 + kill）"
+
+[[message]]
+key = "Kills a player and announces the kill"
+[message.translations]
+japanese = "プレイヤーをキルしてキルを告知"
+
+[[message]]
+key = "Kills team and disables practice mode"
+[message.translations]
+japanese = "チームをキルしてプラクティスモードを無効にする"
+
+[[message]]
+key = "l = Local time"
+[message.translations]
+japanese = "l = ローカルタイム"
+
+[[message]]
+key = "Last page in console"
+[message.translations]
+japanese = "コンソールの最後のページ"
+
+[[message]]
+key = "Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process"
+[message.translations]
+japanese = "各サーバーに ping を送信して IP アドレスを漏洩し、その過程でレイテンシも取得"
+
+[[message]]
+key = "Lets you join team i (shows your team if left blank)"
+[message.translations]
+japanese = "チーム i に参加できるようにする（空白の場合は自分のチームを表示）"
+
+[[message]]
+key = "Lines %d - %d (%s)"
+[message.translations]
+japanese = "行 %d - %d (%s)"
+
+[[message]]
+key = "List all commands that are available in practice mode"
+[message.translations]
+japanese = "プラクティスモードで利用可能なすべてのコマンドを一覧表示"
+
+[[message]]
+key = "List all commands which are accessible for given access level"
+[message.translations]
+japanese = "指定されたアクセスレベルでアクセス可能なすべてのコマンドを一覧表示"
+
+[[message]]
+key = "List all commands which are accessible for users"
+[message.translations]
+japanese = "一般ユーザーがアクセス可能なすべてのコマンドを一覧表示"
+
+[[message]]
+key = "List all name bans"
+[message.translations]
+japanese = "すべての名前BANを一覧表示"
+
+[[message]]
+key = "List all rcon keys"
+[message.translations]
+japanese = "すべての rcon キーを一覧表示"
+
+[[message]]
+key = "List all saves on the current map"
+[message.translations]
+japanese = "現在のマップのすべてのセーブを一覧表示"
+
+[[message]]
+key = "List all tuning variables and their values"
+[message.translations]
+japanese = "すべてのチューニング変数とその値を一覧表示"
+
+[[message]]
+key = "List connected players with optional case-insensitive substring matching filter"
+[message.translations]
+japanese = "接続中のプレイヤーを一覧表示（オプションで大文字小文字を区別しない部分一致フィルター）"
+
+[[message]]
+key = "List foes"
+[message.translations]
+japanese = "敵を一覧表示"
+
+[[message]]
+key = "List friends"
+[message.translations]
+japanese = "フレンドを一覧表示"
+
+[[message]]
+key = "List KCP/legacy transport status and weak-network simulation metrics"
+[message.translations]
+japanese = "KCP/レガシートランスポートステータスと弱体ネットワークシミュレーションメトリクスを一覧表示"
+
+[[message]]
+key = "List players containing name or all players"
+[message.translations]
+japanese = "名前に一致するプレイヤー、またはすべてのプレイヤーを一覧表示"
+
+[[message]]
+key = "Live director"
+[message.translations]
+japanese = "ライブディレクター"
+
+[[message]]
+key = "Load with code r. /load to check your existing saves"
+[message.translations]
+japanese = "コード r でロード。/load で既存のセーブを確認"
+
+[[message]]
+key = "Loading commands…"
+[message.translations]
+japanese = "コマンドを読み込み中…"
+
+[[message]]
+key = "Loading map"
+[message.translations]
+japanese = "マップを読み込み中"
+
+[[message]]
+key = "Loading maps…"
+[message.translations]
+japanese = "マップを読み込み中…"
+
+[[message]]
+key = "Loading race demo files"
+[message.translations]
+japanese = "レースデモファイルを読み込み中"
+
+[[message]]
+key = "Loading skin files"
+[message.translations]
+japanese = "スキンファイルを読み込み中"
+
+[[message]]
+key = "Loading sound files"
+[message.translations]
+japanese = "サウンドファイルを読み込み中"
+
+[[message]]
+key = "Locked"
+[message.translations]
+japanese = "ロック済み"
+
+[[message]]
+key = "Log the network"
+[message.translations]
+japanese = "ネットワークをログ"
+
+[[message]]
+key = "Logout of econ"
+[message.translations]
+japanese = "econ からログアウト"
+
+[[message]]
+key = "Logout of rcon"
+[message.translations]
+japanese = "rcon からログアウト"
+
+[[message]]
+key = "Make dummy fire"
+[message.translations]
+japanese = "ダミーを発射させる"
+
+[[message]]
+key = "Make dummy hook"
+[message.translations]
+japanese = "ダミーをフックさせる"
+
+[[message]]
+key = "Make dummy jump"
+[message.translations]
+japanese = "ダミーをジャンプさせる"
+
+[[message]]
+key = "Makes you a ninja"
+[message.translations]
+japanese = "あなたを忍者にする"
+
+[[message]]
+key = "Makes you live frozen"
+[message.translations]
+japanese = "あなたをライブフリーズ状態にする"
+
+[[message]]
+key = "Makes you move 1 tile down"
+[message.translations]
+japanese = "1タイル下に移動させる"
+
+[[message]]
+key = "Makes you move 1 tile left"
+[message.translations]
+japanese = "1タイル左に移動させる"
+
+[[message]]
+key = "Makes you move 1 tile right"
+[message.translations]
+japanese = "1タイル右に移動させる"
+
+[[message]]
+key = "Makes you move 1 tile up"
+[message.translations]
+japanese = "1タイル上に移動させる"
+
+[[message]]
+key = "Makes you super"
+[message.translations]
+japanese = "あなたをスーパーにする"
+
+[[message]]
+key = "Manual"
+[message.translations]
+japanese = "手動"
+
+[[message]]
+key = "Map Progress: %.1f%%"
+[message.translations]
+japanese = "マップ進捗: %.1f%%"
+
+[[message]]
+key = "Map Progress: --"
+[message.translations]
+japanese = "マップ進捗: --"
+
+[[message]]
+key = "Mark the beginning of a demo cut"
+[message.translations]
+japanese = "デモカットの開始をマーク"
+
+[[message]]
+key = "Mark the end of a demo cut"
+[message.translations]
+japanese = "デモカットの終了をマーク"
+
+[[message]]
+key = "Match %d of %d"
+[message.translations]
+japanese = "一致 %d / %d"
+
+[[message]]
+key = "Mention"
+[message.translations]
+japanese = "メンション"
+
+[[message]]
+key = "Messages"
+[message.translations]
+japanese = "メッセージ"
+
+[[message]]
+key = "Minimize the client"
+[message.translations]
+japanese = "クライアントを最小化"
+
+[[message]]
+key = "Moderator alert"
+[message.translations]
+japanese = "モデレーターアラート"
+
+[[message]]
+key = "Modules snap to screen edges, center lines and other HUD modules while dragging"
+[message.translations]
+japanese = "ドラッグ中、モジュールは画面端、中央線、他の HUD モジュールにスナップ"
+
+[[message]]
+key = "Move dummy left"
+[message.translations]
+japanese = "ダミーを左に移動"
+
+[[message]]
+key = "Move dummy right"
+[message.translations]
+japanese = "ダミーを右に移動"
+
+[[message]]
+key = "Moved ingame"
+[message.translations]
+japanese = "ゲーム内で移動しました"
+
+[[message]]
+key = "Moves to the point with x/y-coordinates ii"
+[message.translations]
+japanese = "x/y 座標 ii のポイントに移動"
+
+[[message]]
+key = "Moves to the tile with x/y-number ii"
+[message.translations]
+japanese = "x/y 番号 ii のタイルに移動"
+
+[[message]]
+key = "Multi-View"
+[message.translations]
+japanese = "マルチビュー"
+
+[[message]]
+key = "Mute"
+[message.translations]
+japanese = "ミュート"
+
+[[message]]
+key = "Mute emoticons"
+[message.translations]
+japanese = "絵文字をミュート"
+
+[[message]]
+key = "Mute player with client ID"
+[message.translations]
+japanese = "クライアントIDでプレイヤーをミュート"
+
+[[message]]
+key = "Mute player with IP address"
+[message.translations]
+japanese = "IPアドレスでプレイヤーをミュート"
+
+[[message]]
+key = "n = Prediction latency"
+[message.translations]
+japanese = "n = 予測遅延"
+
+[[message]]
+key = "Net"
+[message.translations]
+japanese = "ネットキル"
+
+[[message]]
+key = "Next page in console"
+[message.translations]
+japanese = "コンソールの次のページ"
+
+[[message]]
+key = "No chat log selected"
+[message.translations]
+japanese = "チャットログが選択されていません"
+
+[[message]]
+key = "No demo with this filename exists"
+[message.translations]
+japanese = "このファイル名のデモは存在しません"
+
+[[message]]
+key = "No director players available"
+[message.translations]
+japanese = "利用可能なディレクタープレイヤーがいません"
+
+[[message]]
+key = "No player nearby"
+[message.translations]
+japanese = "近くにプレイヤーがいません"
+
+[[message]]
+key = "No results"
+[message.translations]
+japanese = "結果なし"
+
+[[message]]
+key = "NOT CONNECTED"
+[message.translations]
+japanese = "未接続"
+
+[[message]]
+key = "o = Send rate"
+[message.translations]
+japanese = "o = 送信レート"
+
+[[message]]
+key = "Open emote selector"
+[message.translations]
+japanese = "エモートセレクターを開く"
+
+[[message]]
+key = "Open pie menu"
+[message.translations]
+japanese = "パイメニューを開く"
+
+[[message]]
+key = "Open spectator mode selector"
+[message.translations]
+japanese = "観戦モードセレクターを開く"
+
+[[message]]
+key = "Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)"
+[message.translations]
+japanese = "観戦者数から除外し、非認証プレイヤーに認証ステータスを非表示にする（1 = 非表示、0 = 表示）"
+
+[[message]]
+key = "p = Ping latency"
+[message.translations]
+japanese = "p = Ping レイテンシ"
+
+[[message]]
+key = "Pause/unpause game"
+[message.translations]
+japanese = "ゲームを一時停止/再開"
+
+[[message]]
+key = "Personal best:"
+[message.translations]
+japanese = "自己ベスト:"
+
+[[message]]
+key = "Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status"
+[message.translations]
+japanese = "時間表示の個人設定（ブロードキャストまたはゲーム/ラウンドタイマー）、timer s（s = broadcast: ブロードキャスト、gametimer: ゲーム/ラウンドタイマー、cycle: サイクル、both: 両方、none: タイマーなし、空: 現在のステータス表示）"
+
+[[message]]
+key = "Pet"
+[message.translations]
+japanese = "ペット"
+
+[[message]]
+key = "Ping the current server"
+[message.translations]
+japanese = "現在のサーバーに Ping"
+
+[[message]]
+key = "Play back a demo"
+[message.translations]
+japanese = "デモを再生"
+
+[[message]]
+key = "Play/pause the current demo"
+[message.translations]
+japanese = "現在のデモを再生/一時停止"
+
+[[message]]
+key = "Please balance teams!"
+[message.translations]
+japanese = "チームバランスを取ってください！"
+
+[[message]]
+key = "Points"
+[message.translations]
+japanese = "ポイント"
+
+[[message]]
+key = "Position jump tip"
+[message.translations]
+japanese = "位置ジャンプのヒント"
+
+[[message]]
+key = "Position:"
+[message.translations]
+japanese = "位置:"
+
+[[message]]
+key = "Press a key…"
+[message.translations]
+japanese = "キーを押してください…"
+
+[[message]]
+key = "Press Esc to exit the HUD editor"
+[message.translations]
+japanese = "Esc で HUD エディターを終了"
+
+[[message]]
+key = "Previous page in console"
+[message.translations]
+japanese = "コンソールの前のページ"
+
+[[message]]
+key = "Print command executed by this keybinding or all binds"
+[message.translations]
+japanese = "このキーバインドで実行されるコマンド、またはすべてのバインドを表示"
+
+[[message]]
+key = "Privately messages someone's current time in this current running race (your time by default)"
+[message.translations]
+japanese = "現在のレースの誰かのタイムをプライベートメッセージで送信（デフォルトは自分のタイム）"
+
+[[message]]
+key = "Privately shows you your current time in this current running race in the broadcast message"
+[message.translations]
+japanese = "ブロードキャストメッセージで現在のレースの自分のタイムをプライベート表示"
+
+[[message]]
+key = "Publicly messages everyone your current time in this current running race"
+[message.translations]
+japanese = "現在のレースの自分のタイムを全員に公開メッセージ"
+
+[[message]]
+key = "Puts you into deep freeze"
+[message.translations]
+japanese = "ディープフリーズ状態にする"
+
+[[message]]
+key = "Puts you into freeze"
+[message.translations]
+japanese = "フリーズ状態にする"
+
+[[message]]
+key = "Puts you into solo part"
+[message.translations]
+japanese = "ソロパートにする"
+
+[[message]]
+key = "Puts you out of deep freeze"
+[message.translations]
+japanese = "ディープフリーズから脱出させる"
+
+[[message]]
+key = "Puts you out of freeze"
+[message.translations]
+japanese = "フリーズから脱出させる"
+
+[[message]]
+key = "Puts you out of live freeze"
+[message.translations]
+japanese = "ライブフリーズから脱出させる"
+
+[[message]]
+key = "Puts you out of solo part"
+[message.translations]
+japanese = "ソロパートから脱出させる"
+
+[[message]]
+key = "q = Connection quality"
+[message.translations]
+japanese = "q = 接続品質"
+
+[[message]]
+key = "QmClient"
+[message.translations]
+japanese = "QmClient"
+
+[[message]]
+key = "QmClient chat log"
+[message.translations]
+japanese = "QmClient チャットログ"
+
+[[message]]
+key = "Quit the client"
+[message.translations]
+japanese = "クライアントを終了"
+
+[[message]]
+key = "r = Race time"
+[message.translations]
+japanese = "r = レースタイム"
+
+[[message]]
+key = "Race"
+[message.translations]
+japanese = "レース"
+
+[[message]]
+key = "Random map"
+[message.translations]
+japanese = "ランダムマップ"
+
+[[message]]
+key = "Random unfinished map"
+[message.translations]
+japanese = "未完了のランダムマップ"
+
+[[message]]
+key = "Ratio"
+[message.translations]
+japanese = "比率"
+
+[[message]]
+key = "Rebinds the client's listening address and port"
+[message.translations]
+japanese = "クライアントのリスニングアドレスとポートを再バインド"
+
+[[message]]
+key = "Record to a file"
+[message.translations]
+japanese = "ファイルに記録"
+
+[[message]]
+key = "Red team"
+[message.translations]
+japanese = "赤チーム"
+
+[[message]]
+key = "Red team wins!"
+[message.translations]
+japanese = "赤チーム勝利！"
+
+[[message]]
+key = "Reload the announcements"
+[message.translations]
+japanese = "アナウンスを再読み込み"
+
+[[message]]
+key = "Reload the censorlist"
+[message.translations]
+japanese = "検閲リストを再読み込み"
+
+[[message]]
+key = "Reload the map"
+[message.translations]
+japanese = "マップを再読み込み"
+
+[[message]]
+key = "Reload the map while preserving the state of tees and teams"
+[message.translations]
+japanese = "Tee とチームの状態を保持したままマップを再読み込み"
+
+[[message]]
+key = "Reload the maplist"
+[message.translations]
+japanese = "マップリストを再読み込み"
+
+[[message]]
+key = "Remove a community from the exclusion filter"
+[message.translations]
+japanese = "コミュニティを除外フィルターから削除"
+
+[[message]]
+key = "Remove a community from the favorites"
+[message.translations]
+japanese = "コミュニティをお気に入りから削除"
+
+[[message]]
+key = "Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)"
+[message.translations]
+japanese = "特定のコミュニティの除外フィルターから国を削除（ISO 3166-1 数値コード）"
+
+[[message]]
+key = "Remove a foe"
+[message.translations]
+japanese = "敵を削除"
+
+[[message]]
+key = "Remove a friend"
+[message.translations]
+japanese = "フレンドを削除"
+
+[[message]]
+key = "Remove a friend category"
+[message.translations]
+japanese = "フレンドカテゴリを削除"
+
+[[message]]
+key = "Remove a rcon key"
+[message.translations]
+japanese = "rcon キーを削除"
+
+[[message]]
+key = "Remove a server from favorites"
+[message.translations]
+japanese = "サーバーをお気に入りから削除"
+
+[[message]]
+key = "Remove a skin from the favorites"
+[message.translations]
+japanese = "スキンをお気に入りから削除"
+
+[[message]]
+key = "Remove a type from the exclusion filter for a specific community"
+[message.translations]
+japanese = "特定のコミュニティの除外フィルターからタイプを削除"
+
+[[message]]
+key = "remove a voting option"
+[message.translations]
+japanese = "投票オプションを削除"
+
+[[message]]
+key = "Remove right to vote from player with client ID"
+[message.translations]
+japanese = "クライアントIDのプレイヤーから投票権を削除"
+
+[[message]]
+key = "Remove right to vote from player with IP address"
+[message.translations]
+japanese = "IPアドレスのプレイヤーから投票権を削除"
+
+[[message]]
+key = "Removes all weapons from you"
+[message.translations]
+japanese = "あなたからすべての武器を削除"
+
+[[message]]
+key = "Removes endless hook from you"
+[message.translations]
+japanese = "あなたからエンドレスフックを削除"
+
+[[message]]
+key = "Removes infinite jump from you"
+[message.translations]
+japanese = "あなたから無限ジャンプを削除"
+
+[[message]]
+key = "Removes ninja from you"
+[message.translations]
+japanese = "あなたから忍者を削除"
+
+[[message]]
+key = "Removes super from you"
+[message.translations]
+japanese = "あなたからスーパーを削除"
+
+[[message]]
+key = "Removes the grenade launcher from you"
+[message.translations]
+japanese = "あなたからグレネードランチャーを削除"
+
+[[message]]
+key = "Removes the jetpack from you"
+[message.translations]
+japanese = "あなたからジェットパックを削除"
+
+[[message]]
+key = "Removes the laser from you"
+[message.translations]
+japanese = "あなたからレーザーを削除"
+
+[[message]]
+key = "Removes the shotgun from you"
+[message.translations]
+japanese = "あなたからショットガンを削除"
+
+[[message]]
+key = "removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)"
+[message.translations]
+japanese = "ID i の武器をあなたから削除（all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5）"
+
+[[message]]
+key = "Rename a friend category"
+[message.translations]
+japanese = "フレンドカテゴリの名前を変更"
+
+[[message]]
+key = "Rename: %s"
+[message.translations]
+japanese = "名前変更: %s"
+
+[[message]]
+key = "Replay"
+[message.translations]
+japanese = "リプレイ"
+
+[[message]]
+key = "Replay feature is disabled!"
+[message.translations]
+japanese = "リプレイ機能は無効です！"
+
+[[message]]
+key = "Request to swap your tee with another team member"
+[message.translations]
+japanese = "チームメンバーと Tee を交換するリクエスト"
+
+[[message]]
+key = "Rescue/Freeze: %d/%d"
+[message.translations]
+japanese = "レスキュー/フリーズ: %d/%d"
+
+[[message]]
+key = "Reset"
+[message.translations]
+japanese = "リセット"
+
+[[message]]
+key = "Reset a config to its default value"
+[message.translations]
+japanese = "設定をデフォルト値にリセット"
+
+[[message]]
+key = "Reset all or one tuning variable to default"
+[message.translations]
+japanese = "すべてまたは単一のチューニング変数を既定値に戻す"
+
+[[message]]
+key = "Reset default"
+[message.translations]
+japanese = "デフォルトにリセット"
+
+[[message]]
+key = "Reset dummy"
+[message.translations]
+japanese = "ダミーをリセット"
+
+[[message]]
+key = "Reset zone tuning in zone x or in all zones"
+[message.translations]
+japanese = "ゾーン x または全ゾーンのゾーンチューニングをリセット"
+
+[[message]]
+key = "Restart in x seconds (0 = abort)"
+[message.translations]
+japanese = "x 秒後に再起動（0 = 中止）"
+
+[[message]]
+key = "Restart the client"
+[message.translations]
+japanese = "クライアントを再起動"
+
+[[message]]
+key = "Round %d/%d"
+[message.translations]
+japanese = "ラウンド %d/%d"
+
+[[message]]
+key = "Same as \"vote no\""
+[message.translations]
+japanese = "\"vote no\" と同じ"
+
+[[message]]
+key = "Save"
+[message.translations]
+japanese = "保存"
+
+[[message]]
+key = "Save a replay of the last defined amount of seconds"
+[message.translations]
+japanese = "最後に指定した秒数のリプレイを保存"
+
+[[message]]
+key = "Save banlist in a file"
+[message.translations]
+japanese = "BANリストをファイルに保存"
+
+[[message]]
+key = "Save failed!"
+[message.translations]
+japanese = "保存に失敗しました！"
+
+[[message]]
+key = "Save team with code r."
+[message.translations]
+japanese = "チームをコード r で保存"
+
+[[message]]
+key = "Say in chat as dummy"
+[message.translations]
+japanese = "ダミーとしてチャットで発言"
+
+[[message]]
+key = "Say in team chat as dummy"
+[message.translations]
+japanese = "ダミーとしてチームチャットで発言"
+
+[[message]]
+key = "Score"
+[message.translations]
+japanese = "スコア"
+
+[[message]]
+key = "Searching"
+[message.translations]
+japanese = "検索中"
+
+[[message]]
+key = "Select all chat"
+[message.translations]
+japanese = "チャットをすべて選択"
+
+[[message]]
+key = "Select export"
+[message.translations]
+japanese = "エクスポートを選択"
+
+[[message]]
+key = "Selected %d"
+[message.translations]
+japanese = "選択中 %d"
+
+[[message]]
+key = "Send /load as dummy"
+[message.translations]
+japanese = "ダミーとして /load を送信"
+
+[[message]]
+key = "Send /lock as dummy"
+[message.translations]
+japanese = "ダミーとして /lock を送信"
+
+[[message]]
+key = "Send /pause as dummy"
+[message.translations]
+japanese = "ダミーとして /pause を送信"
+
+[[message]]
+key = "Send /rescue as dummy"
+[message.translations]
+japanese = "ダミーとして /rescue を送信"
+
+[[message]]
+key = "Send /save as dummy"
+[message.translations]
+japanese = "ダミーとして /save を送信"
+
+[[message]]
+key = "Send /spec as dummy"
+[message.translations]
+japanese = "ダミーとして /spec を送信"
+
+[[message]]
+key = "Send /team as dummy"
+[message.translations]
+japanese = "ダミーとして /team を送信"
+
+[[message]]
+key = "Send a moderator alert message to player"
+[message.translations]
+japanese = "プレイヤーにモデレーターアラートメッセージを送信"
+
+[[message]]
+key = "Send a server alert message to all players"
+[message.translations]
+japanese = "全プレイヤーにサーバーアラートメッセージを送信"
+
+[[message]]
+key = "Send specified command to rcon"
+[message.translations]
+japanese = "指定されたコマンドを rcon に送信"
+
+[[message]]
+key = "Sends a command to the antibot"
+[message.translations]
+japanese = "コマンドをアンチボットに送信"
+
+[[message]]
+key = "Server alert"
+[message.translations]
+japanese = "サーバーアラート"
+
+[[message]]
+key = "Server best:"
+[message.translations]
+japanese = "サーバーベスト:"
+
+[[message]]
+key = "Server could not be started"
+[message.translations]
+japanese = "サーバーを起動できませんでした"
+
+[[message]]
+key = "Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background."
+[message.translations]
+japanese = "サーバーを起動できませんでした。アプリ設定で通知許可を付与して、サーバーがバックグラウンドで実行できるようにしてください。"
+
+[[message]]
+key = "Server executable not found, can't run server"
+[message.translations]
+japanese = "サーバー実行ファイルが見つかりません。サーバーを実行できません。"
+
+[[message]]
+key = "Set camera position relative to current view in the map"
+[message.translations]
+japanese = "マップ内の現在のビューに対するカメラ位置を設定"
+
+[[message]]
+key = "Set camera position to x and y in the map"
+[message.translations]
+japanese = "カメラ位置をマップ内の x と y に設定"
+
+[[message]]
+key = "Set current demo speed"
+[message.translations]
+japanese = "現在のデモ速度を設定"
+
+[[message]]
+key = "Set ddrace team for a player"
+[message.translations]
+japanese = "プレイヤーに DDRace チームを設定"
+
+[[message]]
+key = "Set force-pause timer of i to 0."
+[message.translations]
+japanese = "i の強制一時停止タイマーを 0 に設定"
+
+[[message]]
+key = "Set friend category"
+[message.translations]
+japanese = "フレンドカテゴリを設定"
+
+[[message]]
+key = "Set friend note"
+[message.translations]
+japanese = "フレンドメモを設定"
+
+[[message]]
+key = "Set team for a player (spectators = -1, game = 0)"
+[message.translations]
+japanese = "プレイヤーのチームを設定（観戦 = -1、ゲーム = 0）"
+
+[[message]]
+key = "Set team for all players (spectators = -1, game = 0)"
+[message.translations]
+japanese = "全プレイヤーのチームを設定（観戦 = -1、ゲーム = 0）"
+
+[[message]]
+key = "Set timeout protection code s"
+[message.translations]
+japanese = "タイムアウト保護コード s を設定"
+
+[[message]]
+key = "Set your checkpoints based on another player"
+[message.translations]
+japanese = "別のプレイヤーに基づいてチェックポイントを設定"
+
+[[message]]
+key = "Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided"
+[message.translations]
+japanese = "二つの救助モード（自動または手動）のどちらかを設定します。引数がない場合は現在のモードを表示します"
+
+[[message]]
+key = "Sets your tee's eye emote"
+[message.translations]
+japanese = "Tee の目のエモートを設定"
+
+[[message]]
+key = "Show all votes (page 0 by default, 20 entries per page)"
+[message.translations]
+japanese = "すべての投票を表示します（既定はページ 0、各ページ 20 件）"
+
+[[message]]
+key = "Show banlist (page 1 by default, 20 entries per page)"
+[message.translations]
+japanese = "BANリストを表示します（既定はページ 1、各ページ 20 件）"
+
+[[message]]
+key = "Show Directory"
+[message.translations]
+japanese = "ディレクトリを表示"
+
+[[message]]
+key = "Show Hook Collision"
+[message.translations]
+japanese = "フック衝突表示"
+
+[[message]]
+key = "Show info about the map with name r gives (current map by default)"
+[message.translations]
+japanese = "名前 r のマップの情報を表示（デフォルトで現在のマップ）"
+
+[[message]]
+key = "Show information about this server"
+[message.translations]
+japanese = "このサーバーに関する情報を表示"
+
+[[message]]
+key = "Show IP addresses in rcon commands (1 = on, 0 = off)"
+[message.translations]
+japanese = "rcon コマンドで IP アドレスを表示（1 = オン、0 = オフ）"
+
+[[message]]
+key = "Show list of mutes (page 1 by default, 20 entries per page)"
+[message.translations]
+japanese = "ミュート一覧を表示します（既定はページ 1、各ページ 20 件）"
+
+[[message]]
+key = "Show list of vote mutes (page 1 by default, 20 entries per page)"
+[message.translations]
+japanese = "投票ミュート一覧を表示します（既定はページ 1、各ページ 20 件）"
+
+[[message]]
+key = "Show logs of the last i seconds"
+[message.translations]
+japanese = "最後の i 秒間のログを表示"
+
+[[message]]
+key = "Show scoreboard"
+[message.translations]
+japanese = "スコアボードを表示"
+
+[[message]]
+key = "Show stats"
+[message.translations]
+japanese = "統計を表示"
+
+[[message]]
+key = "Show the server rules"
+[message.translations]
+japanese = "サーバールールを表示"
+
+[[message]]
+key = "Show weapon trajectory guide"
+[message.translations]
+japanese = "武器軌道ガイドを表示"
+
+[[message]]
+key = "Shows five points of the global point ladder beginning with rank i (1 by default)"
+[message.translations]
+japanese = "グローバルポイントランキングの i 位から五件を表示します（既定は 1）"
+
+[[message]]
+key = "Shows five team ranks of the ladder or of a player beginning with rank i (1 by default, -1 for worst)"
+[message.translations]
+japanese = "チームランキングまたはプレイヤーランキングの i 位から五件を表示します（既定は 1、-1 は最下位）"
+
+[[message]]
+key = "Shows gameplay information for this server"
+[message.translations]
+japanese = "このサーバーのゲームプレイ情報を表示"
+
+[[message]]
+key = "Shows help to command r, general help if left blank"
+[message.translations]
+japanese = "コマンド r のヘルプを表示。空白の場合は一般ヘルプ"
+
+[[message]]
+key = "Shows the credits of the DDNet mod"
+[message.translations]
+japanese = "DDNet mod のクレジットを表示"
+
+[[message]]
+key = "Shows the global points of a player beginning with name r (your rank by default)"
+[message.translations]
+japanese = "名前 r で始まるプレイヤーのグローバルポイントを表示（デフォルトで自分のランク）"
+
+[[message]]
+key = "Shows the rank of player with name r (your rank by default)"
+[message.translations]
+japanese = "名前 r のプレイヤーのランクを表示（デフォルトで自分のランク）"
+
+[[message]]
+key = "Shows the team rank of player with name r (your team rank by default)"
+[message.translations]
+japanese = "名前 r のプレイヤーのチームランクを表示（デフォルトで自分のチームランク）"
+
+[[message]]
+key = "Shows the top ranks of the global and regional ladder beginning with rank i (1 by default, -1 for worst)"
+[message.translations]
+japanese = "グローバルおよびリージョナルラダーの上位ランクを i 位から表示（デフォルト1、-1 で最下位）"
+
+[[message]]
+key = "Shut down"
+[message.translations]
+japanese = "シャットダウン"
+
+[[message]]
+key = "Silently disconnect from the current server while keeping Tee timeout protection"
+[message.translations]
+japanese = "Tee タイムアウト保護を維持したまま、サイレントに現在のサーバーから切断"
+
+[[message]]
+key = "Some map images could not be loaded. Check the local console for details."
+[message.translations]
+japanese = "一部のマップ画像を読み込めませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Some map sounds could not be loaded. Check the local console for details."
+[message.translations]
+japanese = "一部のマップサウンドを読み込めませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Sound error"
+[message.translations]
+japanese = "サウンドエラー"
+
+[[message]]
+key = "Specify command accessibility for given access level"
+[message.translations]
+japanese = "指定されたアクセスレベルに対するコマンドアクセス権を指定"
+
+[[message]]
+key = "Spectate the closest player"
+[message.translations]
+japanese = "最も近いプレイヤーを観戦"
+
+[[message]]
+key = "Spectate the next player"
+[message.translations]
+japanese = "次のプレイヤーを観戦"
+
+[[message]]
+key = "Spectate the previous player"
+[message.translations]
+japanese = "前のプレイヤーを観戦"
+
+[[message]]
+key = "Spectators"
+[message.translations]
+japanese = "観戦者"
+
+[[message]]
+key = "Speed:"
+[message.translations]
+japanese = "速度:"
+
+[[message]]
+key = "Spree"
+[message.translations]
+japanese = "連続キル"
+
+[[message]]
+key = "Start playback of ghosts"
+[message.translations]
+japanese = "ゴーストの再生を開始"
+
+[[message]]
+key = "Start recording a demo"
+[message.translations]
+japanese = "デモの録画を開始"
+
+[[message]]
+key = "Start recording a video"
+[message.translations]
+japanese = "動画の録画を開始"
+
+[[message]]
+key = "Stop recording"
+[message.translations]
+japanese = "録音停止"
+
+[[message]]
+key = "Stop recording a demo"
+[message.translations]
+japanese = "デモの録画を停止"
+
+[[message]]
+key = "Stop recording a video"
+[message.translations]
+japanese = "動画の録画を停止"
+
+[[message]]
+key = "Successfully saved the replay!"
+[message.translations]
+japanese = "リプレイの保存に成功しました！"
+
+[[message]]
+key = "Sudden Death"
+[message.translations]
+japanese = "サドンデス"
+
+[[message]]
+key = "Suicides"
+[message.translations]
+japanese = "自殺数"
+
+[[message]]
+key = "Super"
+[message.translations]
+japanese = "スーパー"
+
+[[message]]
+key = "Swap"
+[message.translations]
+japanese = "スワップ"
+
+[[message]]
+key = "Switch dummy to grenade"
+[message.translations]
+japanese = "ダミーをグレネードに切り替え"
+
+[[message]]
+key = "Switch dummy to gun"
+[message.translations]
+japanese = "ダミーをガンに切り替え"
+
+[[message]]
+key = "Switch dummy to hammer"
+[message.translations]
+japanese = "ダミーをハンマーに切り替え"
+
+[[message]]
+key = "Switch dummy to laser"
+[message.translations]
+japanese = "ダミーをレーザーに切り替え"
+
+[[message]]
+key = "Switch dummy to next weapon"
+[message.translations]
+japanese = "ダミーを次の武器に切り替え"
+
+[[message]]
+key = "Switch dummy to previous weapon"
+[message.translations]
+japanese = "ダミーを前の武器に切り替え"
+
+[[message]]
+key = "Switch dummy to shotgun"
+[message.translations]
+japanese = "ダミーをショットガンに切り替え"
+
+[[message]]
+key = "Switch spectator mode"
+[message.translations]
+japanese = "観戦モードを切り替え"
+
+[[message]]
+key = "Switch to grenade"
+[message.translations]
+japanese = "グレネードに切り替え"
+
+[[message]]
+key = "Switch to gun"
+[message.translations]
+japanese = "ガンに切り替え"
+
+[[message]]
+key = "Switch to hammer"
+[message.translations]
+japanese = "ハンマーに切り替え"
+
+[[message]]
+key = "Switch to laser"
+[message.translations]
+japanese = "レーザーに切り替え"
+
+[[message]]
+key = "Switch to next weapon"
+[message.translations]
+japanese = "次の武器に切り替え"
+
+[[message]]
+key = "Switch to previous weapon"
+[message.translations]
+japanese = "前の武器に切り替え"
+
+[[message]]
+key = "Switch to shotgun"
+[message.translations]
+japanese = "ショットガンに切り替え"
+
+[[message]]
+key = "System"
+[message.translations]
+japanese = "システム"
+
+[[message]]
+key = "Take a screenshot"
+[message.translations]
+japanese = "スクリーンショットを撮る"
+
+[[message]]
+key = "Team %d"
+[message.translations]
+japanese = "チーム %d"
+
+[[message]]
+key = "Team %d (%d/%d)"
+[message.translations]
+japanese = "チーム %d (%d/%d)"
+
+[[message]]
+key = "Team save in progress. You'll be able to load with '/load %s'"
+[message.translations]
+japanese = "チームセーブ進行中。「/load %s」でロードできるようになります。"
+
+[[message]]
+key = "Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails"
+[message.translations]
+japanese = "チームセーブ進行中。成功時は「/load %s」、失敗時は「/load %s」でロードできます。"
+
+[[message]]
+key = "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue"
+[message.translations]
+japanese = "%s によるチームセーブ成功。データベース接続に失敗したため、衝突を避けるために生成されたセーブコードを使用します。%s で「/load %s」を使用して続行"
+
+[[message]]
+key = "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue"
+[message.translations]
+japanese = "%s によるチームセーブ成功。データベース接続に失敗したため、衝突を避けるために生成されたセーブコードを使用します。「/load %s」で続行"
+
+[[message]]
+key = "Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart"
+[message.translations]
+japanese = "ホバーしたテレポート入口/出口またはチェックポイントテレポートと対応する相手の間で自由観戦カメラをテレポート"
+
+[[message]]
+key = "Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)"
+[message.translations]
+japanese = "自動レスキューモードが有効な場合はフリーズからテレポートアウト。それ以外の場合は、接地していればレスキュー用の位置を設定し、接地していなければフリーズからテレポートアウト（sv_rescue 1 でこの機能を有効化）"
+
+[[message]]
+key = "Teleport yourself to player or to where you are spectating/or looking if no player name is given"
+[message.translations]
+japanese = "プレイヤー名が指定されていない場合は、観戦中または見ている場所に自分をテレポート"
+
+[[message]]
+key = "Teleport yourself to the last auto rescue position before you died (use sv_rescue 1 to enable this feature)"
+[message.translations]
+japanese = "死亡前の最後の自動レスキュー位置に自分をテレポート（sv_rescue 1 でこの機能を有効化）"
+
+[[message]]
+key = "Teleport yourself to the last location you teleported to"
+[message.translations]
+japanese = "最後にテレポートした場所に自分をテレポート"
+
+[[message]]
+key = "Teleport yourself to the specified coordinates. A tilde (~) can be used to denote your current position, e.g. '/tpxy ~1 ~' to teleport one tile to the right"
+[message.translations]
+japanese = "指定座標へテレポートします。チルダ（~）は現在位置を表せます。例: '/tpxy ~1 ~' で右へ一タイル移動します"
+
+[[message]]
+key = "Teleports player i (or you) to player i (or you to where you look at)"
+[message.translations]
+japanese = "プレイヤー i（またはあなた）をプレイヤー i（またはあなたが見ている場所）にテレポート"
+
+[[message]]
+key = "Teleports you to checkpoint teleporter i"
+[message.translations]
+japanese = "チェックポイントテレポーター i にテレポート"
+
+[[message]]
+key = "Teleports you to teleporter i"
+[message.translations]
+japanese = "テレポーター i にテレポート"
+
+[[message]]
+key = "Temporarily set a config value while pressed"
+[message.translations]
+japanese = "押している間、設定値を一時的に設定"
+
+[[message]]
+key = "Temporary free camera"
+[message.translations]
+japanese = "一時フリーカメラ"
+
+[[message]]
+key = "The audio device couldn't be initialised."
+[message.translations]
+japanese = "オーディオデバイスを初期化できませんでした。"
+
+[[message]]
+key = "The format of texture %s is not RGBA which will cause visual bugs."
+[message.translations]
+japanese = "テクスチャ %s のフォーマットが RGBA ではありません。これにより表示の不具合が発生する可能性があります。"
+
+[[message]]
+key = "The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs."
+[message.translations]
+japanese = "テクスチャ %s の幅が %d で割り切れないか、高さが %d で割り切れません。これにより表示の不具合が発生する可能性があります。"
+
+[[message]]
+key = "TIME EXPIRED!"
+[message.translations]
+japanese = "時間切れ！"
+
+[[message]]
+key = "Time limit: %d min"
+[message.translations]
+japanese = "時間制限: %d 分"
+
+[[message]]
+key = "Toggle config value"
+[message.translations]
+japanese = "設定値をトグル"
+
+[[message]]
+key = "Toggle config value via keypress"
+[message.translations]
+japanese = "キー押下で設定値をトグル"
+
+[[message]]
+key = "Toggle Do Not Disturb (no chat and server messages)"
+[message.translations]
+japanese = "おやすみモードを切り替え（チャットとサーバーメッセージなし）"
+
+[[message]]
+key = "Toggle local console"
+[message.translations]
+japanese = "ローカルコンソールを切り替え"
+
+[[message]]
+key = "Toggle or set the switch on or off for the specified time (or indefinitely by default)"
+[message.translations]
+japanese = "指定された時間（デフォルトは無期限）スイッチをオン/オフに切り替えまたは設定"
+
+[[message]]
+key = "Toggle receiving whispers"
+[message.translations]
+japanese = "Whisper 受信の切り替え"
+
+[[message]]
+key = "Toggle remote console"
+[message.translations]
+japanese = "リモートコンソールを切り替え"
+
+[[message]]
+key = "Toggle scoreboard cursor"
+[message.translations]
+japanese = "スコアボードカーソルの切り替え"
+
+[[message]]
+key = "Toggle team between team 0 and team mode. This mode will make your team behave like team 0."
+[message.translations]
+japanese = "チーム 0 とチームモードを切り替え。このモードではチームがチーム 0 のように動作します。"
+
+[[message]]
+key = "Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock"
+[message.translations]
+japanese = "チームロックを切り替え。他の人が参加できなくなり、プレイヤーが死ぬとチームが再スタートします。/lock 0 でロック解除、/lock 1 でロック"
+
+[[message]]
+key = "Toggle tune variable"
+[message.translations]
+japanese = "チューニング変数をトグル"
+
+[[message]]
+key = "Toggles collision"
+[message.translations]
+japanese = "衝突判定の切り替え"
+
+[[message]]
+key = "Toggles hit others"
+[message.translations]
+japanese = "他者への攻撃の切り替え"
+
+[[message]]
+key = "Toggles hook collision"
+[message.translations]
+japanese = "フック衝突の切り替え"
+
+[[message]]
+key = "Toggles invincible mode"
+[message.translations]
+japanese = "無敵モードの切り替え"
+
+[[message]]
+key = "Toggles pause"
+[message.translations]
+japanese = "一時停止の切り替え"
+
+[[message]]
+key = "Toggles pause on the currently voted player"
+[message.translations]
+japanese = "現在投票されているプレイヤーの一時停止を切り替え"
+
+[[message]]
+key = "Toggles spec (if not available behaves as /pause)"
+[message.translations]
+japanese = "観戦の切り替え（利用不可の場合は /pause として動作）"
+
+[[message]]
+key = "Toggles spec on the currently voted player"
+[message.translations]
+japanese = "現在投票されているプレイヤーの観戦を切り替え"
+
+[[message]]
+key = "Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status"
+[message.translations]
+japanese = "標準の目のエモートの使用をオン/オフに切り替え。eyeemote s（s = on: オン、off: オフ、toggle: 切り替え、空: 現在の状態表示）"
+
+[[message]]
+key = "Total"
+[message.translations]
+japanese = "合計"
+
+[[message]]
+key = "Trying Axiom auto login"
+[message.translations]
+japanese = "Axiom 自動ログインを試行中"
+
+[[message]]
+key = "Trying Axiom dummy auto login"
+[message.translations]
+japanese = "Axiom ダミー自動ログインを試行中"
+
+[[message]]
+key = "Tune variable to value or show current value"
+[message.translations]
+japanese = "変数を指定値にチューニング、または現在値を表示"
+
+[[message]]
+key = "u = Snapshot latency"
+[message.translations]
+japanese = "u = スナップショットレイテンシ"
+
+[[message]]
+key = "Unban a certain nickname"
+[message.translations]
+japanese = "特定のニックネームのBANを解除"
+
+[[message]]
+key = "Unban all entries"
+[message.translations]
+japanese = "すべてのエントリーのBANを解除"
+
+[[message]]
+key = "Unban ip range"
+[message.translations]
+japanese = "IP範囲のBANを解除"
+
+[[message]]
+key = "Unban ip/banlist entry"
+[message.translations]
+japanese = "IP/BANリストエントリーのBANを解除"
+
+[[message]]
+key = "Unbind all keys"
+[message.translations]
+japanese = "すべてのキーバインドを解除"
+
+[[message]]
+key = "Unbind key"
+[message.translations]
+japanese = "キーバインドを解除"
+
+[[message]]
+key = "Uninvite player from team"
+[message.translations]
+japanese = "プレイヤーをチームから招待解除"
+
+[[message]]
+key = "Unlock a team"
+[message.translations]
+japanese = "チームのロック解除"
+
+[[message]]
+key = "Unmute"
+[message.translations]
+japanese = "ミュート解除"
+
+[[message]]
+key = "Unmute emoticons"
+[message.translations]
+japanese = "絵文字のミュート解除"
+
+[[message]]
+key = "Unmute player with client ID"
+[message.translations]
+japanese = "クライアントIDでプレイヤーのミュート解除"
+
+[[message]]
+key = "Unmute player with IP address"
+[message.translations]
+japanese = "IPアドレスでプレイヤーのミュート解除"
+
+[[message]]
+key = "Unmute player with list index"
+[message.translations]
+japanese = "リストインデックスでプレイヤーのミュート解除"
+
+[[message]]
+key = "Update a rcon key"
+[message.translations]
+japanese = "rcon キーを更新"
+
+[[message]]
+key = "Update a rcon key with prehashed data"
+[message.translations]
+japanese = "プリハッシュ化データで rcon キーを更新"
+
+[[message]]
+key = "Update notice"
+[message.translations]
+japanese = "更新のお知らせ"
+
+[[message]]
+key = "Uploading map data to GPU"
+[message.translations]
+japanese = "GPU にマップデータをアップロード中"
+
+[[message]]
+key = "Usage: %s %s"
+[message.translations]
+japanese = "使用方法: %s %s"
+
+[[message]]
+key = "Use emote"
+[message.translations]
+japanese = "エモートを使用"
+
+[[message]]
+key = "Use the mouse wheel on a hovered module to scale it by 5%"
+[message.translations]
+japanese = "ホバーしたモジュール上でマウスホイールを使用すると5%ずつ拡大縮小"
+
+[[message]]
+key = "Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`"
+[message.translations]
+japanese = "お気に入りをグループ化するには、`add_favorite` の後にこれを使用します。`begin_favorite_group` で開始"
+
+[[message]]
+key = "Use this before `add_favorite` to group favorites. End with `end_favorite_group`"
+[message.translations]
+japanese = "お気に入りをグループ化するには、`add_favorite` の前にこれを使用します。`end_favorite_group` で終了"
+
+[[message]]
+key = "v = Velocity"
+[message.translations]
+japanese = "v = Velocity（速度）"
+
+[[message]]
+key = "View switch found (at offset) with given number"
+[message.translations]
+japanese = "指定された番号のスイッチ（オフセット付き）を表示"
+
+[[message]]
+key = "View tele found (at offset) with given number"
+[message.translations]
+japanese = "指定された番号のテレポート（オフセット付き）を表示"
+
+[[message]]
+key = "Vote a map by name"
+[message.translations]
+japanese = "名前でマップに投票"
+
+[[message]]
+key = "Vote yes/no"
+[message.translations]
+japanese = "賛成/反対の投票"
+
+[[message]]
+key = "Waiting for snapshot"
+[message.translations]
+japanese = "スナップショット待機中"
+
+[[message]]
+key = "Warmup"
+[message.translations]
+japanese = "ウォームアップ"
+
+[[message]]
+key = "Whether a switch is deactivated by default (otherwise activated)"
+[message.translations]
+japanese = "スイッチがデフォルトで無効かどうか（それ以外は有効）"
+
+[[message]]
+key = "Whether to show players at any distance (off by default), optional i = 0 for off else for on"
+[message.translations]
+japanese = "任意の距離のプレイヤーを表示するかどうか（デフォルトオフ）、オプション i = 0 でオフ、それ以外でオン"
+
+[[message]]
+key = "Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only"
+[message.translations]
+japanese = "他のチームのプレイヤーを表示するかどうか（デフォルトオフ）、オプション i = 0 でオフ、i = 1 でオン、i = 2 で自チームのみ"
+
+[[message]]
+key = "Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on"
+[message.translations]
+japanese = "観戦時に他のチームのプレイヤーを表示するかどうか（デフォルトオン）、オプション i = 0 でオフ、それ以外でオン"
+
+[[message]]
+key = "Whether to use ninja jetpack or not. Makes jetpack look more awesome"
+[message.translations]
+japanese = "忍者ジェットパックを使用するかどうか。ジェットパックをよりかっこよく見せる"
+
+[[message]]
+key = "Which message to display on zone enter; use 0 for normal area"
+[message.translations]
+japanese = "ゾーン進入時に表示するメッセージ。0 で通常エリア"
+
+[[message]]
+key = "Which message to display on zone leave; use 0 for normal area"
+[message.translations]
+japanese = "ゾーン退出時に表示するメッセージ。0 で通常エリア"
+
+[[message]]
+key = "Whisper"
+[message.translations]
+japanese = "ウィスパー"
+
+[[message]]
+key = "Whisper something to someone (private message)"
+[message.translations]
+japanese = "誰かに何か Whisper（プライベートメッセージ）"
+
+[[message]]
+key = "Write local console contents to a text file"
+[message.translations]
+japanese = "ローカルコンソールの内容をテキストファイルに書き込み"
+
+[[message]]
+key = "Write remote console contents to a text file"
+[message.translations]
+japanese = "リモートコンソールの内容をテキストファイルに書き込み"
+
+[[message]]
+key = "x = DDNet CPU% / total CPU%"
+[message.translations]
+japanese = "x = DDNet CPU% / 合計 CPU%"
+
+[[message]]
+key = "y = DDNet memory usage"
+[message.translations]
+japanese = "y = DDNet メモリ使用量"
+
+[[message]]
+key = "You are already on the latest version"
+[message.translations]
+japanese = "すでに最新バージョンです"
+
+[[message]]
+key = "Your current version is outdated. Please update from the QQ group."
+[message.translations]
+japanese = "現在のバージョンは古いです。QQ グループから更新してください。"
+
+[[message]]
+key = "z = Zoom"
+[message.translations]
+japanese = "z = Zoom（ズーム）"
+
+[[message]]
+key = "Zoom decrease"
+[message.translations]
+japanese = "ズーム縮小"
+
+[[message]]
+key = "Zoom increase"
+[message.translations]
+japanese = "ズーム拡大"
+
+[[message]]
+key = "Active"
+context = "Auto camera"
+[message.translations]
+japanese = "アクティブ"
+
+[[message]]
+key = "Disabled"
+context = "Auto camera"
+[message.translations]
+japanese = "無効"
+
+[[message]]
+key = "Enabled"
+context = "Auto camera"
+[message.translations]
+japanese = "有効"
+
+[[message]]
+key = "Inactive"
+context = "Auto camera"
+[message.translations]
+japanese = "非アクティブ"
+
+[[message]]
+key = "Unavailable for this player"
+context = "Auto camera"
+[message.translations]
+japanese = "このプレイヤーには利用不可"
+
+[[message]]
+key = "A render command failed. Try to update your GPU drivers."
+context = "Graphics error"
+[message.translations]
+japanese = "レンダリングコマンドが失敗しました。GPUドライバーを更新してみてください。"
+
+[[message]]
+key = "An error during command recording occurred. Try to update your GPU drivers."
+context = "Graphics error"
+[message.translations]
+japanese = "コマンド記録中にエラーが発生しました。GPUドライバーを更新してみてください。"
+
+[[message]]
+key = "Could not initialize the given graphics backend, reverting to the default backend now."
+context = "Graphics error"
+[message.translations]
+japanese = "指定されたグラフィックスバックエンドを初期化できませんでした。デフォルトのバックエンドに戻します。"
+
+[[message]]
+key = "Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card."
+context = "Graphics error"
+[message.translations]
+japanese = "指定されたグラフィックスバックエンドを初期化できませんでした。おそらく、内蔵グラフィックスのドライバーがインストールされていないためです。"
+
+[[message]]
+key = "Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again."
+context = "Graphics error"
+[message.translations]
+japanese = "初期化に失敗しました。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。"
+
+[[message]]
+key = "Failed to swap framebuffers. Try to update your GPU drivers."
+context = "Graphics error"
+[message.translations]
+japanese = "フレームバッファのスワップに失敗しました。GPUドライバーを更新してみてください。"
+
+[[message]]
+key = "Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution."
+context = "Graphics error"
+[message.translations]
+japanese = "VRAM が不足しています。'cl_skins_loaded_max' を低い値に設定するか、カスタムアセット（スキン、エンティティなど）、特に高解像度のものを削除してみてください。"
+
+[[message]]
+key = "Submitting the render commands failed. Try to update your GPU drivers."
+context = "Graphics error"
+[message.translations]
+japanese = "レンダリングコマンドの送信に失敗しました。GPUドライバーを更新してみてください。"
+
+[[message]]
+key = "Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again."
+context = "Graphics error"
+[message.translations]
+japanese = "不明なエラー。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。"
+
+[[message]]
+key = "Press Esc or Tab to dismiss…"
+context = "Important alert message"
+[message.translations]
+japanese = "Esc または Tab キーを押して閉じる…"
+
+[[message]]
+key = "Body"
+context = "skins"
+[message.translations]
+japanese = "ボディ"
+
+[[message]]
+key = "Decoration"
+context = "skins"
+[message.translations]
+japanese = "デコレーション"
+
+[[message]]
+key = "Eyes"
+context = "skins"
+[message.translations]
+japanese = "目"
+
+[[message]]
+key = "Feet"
+context = "skins"
+[message.translations]
+japanese = "足"
+
+[[message]]
+key = "Hands"
+context = "skins"
+[message.translations]
+japanese = "手"
+
+[[message]]
+key = "Marking"
+context = "skins"
+[message.translations]
+japanese = "マーキング"
+
+[[message]]
+key = "Following %d: %s"
+context = "Spectating"
+[message.translations]
+japanese = "%d をフォロー中: %s"
+
+[[message]]
+key = "Following %s"
+context = "Spectating"
+[message.translations]
+japanese = "%s をフォロー中"
+
+[[message]]
+key = "AUTO"
+context = "Spectating Camera Mode Icon"
+[message.translations]
+japanese = "自動"
+
+[[message]]
+key = "%d others…"
+context = "Spectators"
+[message.translations]
+japanese = "その他 %d 人…"
+
+[[message]]
+key = "%d\\n(%d/%d)"
+context = "Team and size"
+[message.translations]
+japanese = "%d\\n(%d/%d)"

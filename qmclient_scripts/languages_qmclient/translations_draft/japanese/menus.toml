@@ -1,0 +1,2708 @@
+[[message]]
+key = "%s from %s"
+[message.translations]
+japanese = "%s（%s から）"
+
+[[message]]
+key = "(Fetching Update Info)"
+[message.translations]
+japanese = "（更新情報を取得中）"
+
+[[message]]
+key = "(On Latest)"
+[message.translations]
+japanese = "（最新です）"
+
+[[message]]
+key = "(Update required)"
+[message.translations]
+japanese = "（更新が必要です）"
+
+[[message]]
+key = "1 star"
+[message.translations]
+japanese = "1 つ星"
+
+[[message]]
+key = "2 stars"
+[message.translations]
+japanese = "2 つ星"
+
+[[message]]
+key = "3 stars"
+[message.translations]
+japanese = "3 つ星"
+
+[[message]]
+key = "4 stars"
+[message.translations]
+japanese = "4 つ星"
+
+[[message]]
+key = "5 stars"
+[message.translations]
+japanese = "5 つ星"
+
+[[message]]
+key = "A Tee"
+[message.translations]
+japanese = "他のプレイヤー"
+
+[[message]]
+key = "Activate"
+[message.translations]
+japanese = "有効"
+
+[[message]]
+key = "Activate all"
+[message.translations]
+japanese = "すべて有効"
+
+[[message]]
+key = "Add"
+[message.translations]
+japanese = "追加"
+
+[[message]]
+key = "Add to queue"
+[message.translations]
+japanese = "キューに追加"
+
+[[message]]
+key = "Added %d missing required slot(s)."
+[message.translations]
+japanese = "不足している必須スロット %d 個を追加しました。"
+
+[[message]]
+key = "Adjust the opacity of entities belonging to other teams, such as tees and name plates"
+[message.translations]
+japanese = "他のチームのエンティティ（Teeやネームプレートなど）の不透明度を調整"
+
+[[message]]
+key = "Advanced"
+[message.translations]
+japanese = "高度"
+
+[[message]]
+key = "Aim bind"
+[message.translations]
+japanese = "照準キーバインド"
+
+[[message]]
+key = "All stars"
+[message.translations]
+japanese = "すべての星"
+
+[[message]]
+key = "Allows maps to render with more detail"
+[message.translations]
+japanese = "マップをより詳細に描画できるようにする"
+
+[[message]]
+key = "Alpha"
+[message.translations]
+japanese = "アルファ"
+
+[[message]]
+key = "Always show chat"
+[message.translations]
+japanese = "常にチャットを表示"
+
+[[message]]
+key = "Always show other players' hook collision lines"
+[message.translations]
+japanese = "他のプレイヤーのフック補助線を常に表示"
+
+[[message]]
+key = "Always show own player's hook collision line"
+[message.translations]
+japanese = "自分のフック補助線を常に表示"
+
+[[message]]
+key = "And pick one randomly"
+[message.translations]
+japanese = "その中からランダムに一つ選びます"
+
+[[message]]
+key = "AntiPing (latency compensation)"
+[message.translations]
+japanese = "AntiPing（レイテンシ補正）"
+
+[[message]]
+key = "AntiPing: predict grenade path"
+[message.translations]
+japanese = "AntiPing: グレネード軌道予測"
+
+[[message]]
+key = "AntiPing: predict other players"
+[message.translations]
+japanese = "AntiPing: 他のプレイヤーを予測"
+
+[[message]]
+key = "AntiPing: predict weapons"
+[message.translations]
+japanese = "AntiPing: 武器を予測"
+
+[[message]]
+key = "Applied to %d same-family part(s)."
+[message.translations]
+japanese = "同じファミリーの %d 個のパーツに適用されました。"
+
+[[message]]
+key = "Apply"
+[message.translations]
+japanese = "適用"
+
+[[message]]
+key = "Apply this preset to the current queue"
+[message.translations]
+japanese = "このプリセットを現在のキューに適用"
+
+[[message]]
+key = "Are you sure that you want to delete '%s'?"
+[message.translations]
+japanese = "'%s'を削除してもよろしいですか？"
+
+[[message]]
+key = "Are you sure that you want to disconnect your dummy?"
+[message.translations]
+japanese = "ダミーを切断してもよろしいですか？"
+
+[[message]]
+key = "Are you sure that you want to disconnect?"
+[message.translations]
+japanese = "切断してもよろしいですか？"
+
+[[message]]
+key = "Are you sure that you want to reset the controls to their defaults?"
+[message.translations]
+japanese = "コントロールをデフォルトにリセットしてもよろしいですか？"
+
+[[message]]
+key = "Are you sure you want to delete this asset?"
+[message.translations]
+japanese = "このアセットを削除してもよろしいですか？"
+
+[[message]]
+key = "Asset with this name already exists."
+[message.translations]
+japanese = "この名前のアセットは既に存在します。"
+
+[[message]]
+key = "Assets directory"
+[message.translations]
+japanese = "アセットディレクトリ"
+
+[[message]]
+key = "Assets editor"
+[message.translations]
+japanese = "アセットエディタ"
+
+[[message]]
+key = "Audio file was exported, but reload failed. Restart sound to apply it."
+[message.translations]
+japanese = "オーディオファイルはエクスポートされましたが、再読み込みに失敗しました。適用するにはサウンドを再起動してください。"
+
+[[message]]
+key = "Audio pack exported."
+[message.translations]
+japanese = "オーディオパックをエクスポートしました。"
+
+[[message]]
+key = "Audio packs"
+[message.translations]
+japanese = "オーディオパック"
+
+[[message]]
+key = "Audio slots"
+[message.translations]
+japanese = "オーディオスロット"
+
+[[message]]
+key = "Authed name color in scoreboard"
+[message.translations]
+japanese = "スコアボードでの認証済み名前の色"
+
+[[message]]
+key = "auto"
+[message.translations]
+japanese = "自動"
+
+[[message]]
+key = "Auto save chat log"
+[message.translations]
+japanese = "チャットログを自動保存"
+
+[[message]]
+key = "Auto start vote"
+[message.translations]
+japanese = "自動で投票を開始"
+
+[[message]]
+key = "Automatically create statboard csv"
+[message.translations]
+japanese = "自動で統計ボードのCSVを作成"
+
+[[message]]
+key = "Automatically record demos"
+[message.translations]
+japanese = "自動でデモを録画"
+
+[[message]]
+key = "Automatically take game over screenshot"
+[message.translations]
+japanese = "ゲーム終了時に自動でスクリーンショットを撮る"
+
+[[message]]
+key = "Automatically take statboard screenshot"
+[message.translations]
+japanese = "統計ボードを自動でスクリーンショット"
+
+[[message]]
+key = "Axis"
+[message.translations]
+japanese = "軸"
+
+[[message]]
+key = "Background"
+[message.translations]
+japanese = "背景"
+
+[[message]]
+key = "Background music volume"
+[message.translations]
+japanese = "BGM音量"
+
+[[message]]
+key = "Basic"
+[message.translations]
+japanese = "基本"
+
+[[message]]
+key = "Blend mode"
+[message.translations]
+japanese = "ブレンドモード"
+
+[[message]]
+key = "Body"
+[message.translations]
+japanese = "胴体"
+
+[[message]]
+key = "Built-in"
+[message.translations]
+japanese = "内蔵"
+
+[[message]]
+key = "Calculate unfinished maps for player in certain mode"
+[message.translations]
+japanese = "特定モードでの未完了マップをプレイヤーごとに計算"
+
+[[message]]
+key = "Can only drop onto same-size parts."
+[message.translations]
+japanese = "同じサイズのパーツにのみドロップできます。"
+
+[[message]]
+key = "Can't find a Tutorial server"
+[message.translations]
+japanese = "チュートリアルサーバーが見つかりません"
+
+[[message]]
+key = "Candidate files"
+[message.translations]
+japanese = "候補ファイル"
+
+[[message]]
+key = "Change settings"
+[message.translations]
+japanese = "設定を変更"
+
+[[message]]
+key = "Chat background color"
+[message.translations]
+japanese = "チャット背景色"
+
+[[message]]
+key = "Chat command"
+[message.translations]
+japanese = "チャットコマンド"
+
+[[message]]
+key = "Chat command (e.g. showall 1)"
+[message.translations]
+japanese = "チャットコマンド（例: showall 1）"
+
+[[message]]
+key = "Chat font size"
+[message.translations]
+japanese = "チャットフォントサイズ"
+
+[[message]]
+key = "Chat log retention days"
+[message.translations]
+japanese = "チャットログ保持日数"
+
+[[message]]
+key = "Chat sound volume"
+[message.translations]
+japanese = "チャットサウンド音量"
+
+[[message]]
+key = "Chat width"
+[message.translations]
+japanese = "チャット幅"
+
+[[message]]
+key = "Choose country flag"
+[message.translations]
+japanese = "国旗を選択"
+
+[[message]]
+key = "Choose default eyes when joining a server"
+[message.translations]
+japanese = "サーバー参加時のデフォルトの目の表情を選択"
+
+[[message]]
+key = "Choose export name first."
+[message.translations]
+japanese = "最初にエクスポート名を選択してください。"
+
+[[message]]
+key = "Clan color in friends list"
+[message.translations]
+japanese = "フレンドリストでのクランの色"
+
+[[message]]
+key = "Clan plates size"
+[message.translations]
+japanese = "クランプレートサイズ"
+
+[[message]]
+key = "Classic Easy"
+[message.translations]
+japanese = "クラシック Easy"
+
+[[message]]
+key = "Classic Next"
+[message.translations]
+japanese = "クラシック Next"
+
+[[message]]
+key = "Classic Nut"
+[message.translations]
+japanese = "クラシック Nut"
+
+[[message]]
+key = "Classic Pro"
+[message.translations]
+japanese = "クラシック Pro"
+
+[[message]]
+key = "Click to copy map name"
+[message.translations]
+japanese = "クリックでマップ名をコピー"
+
+[[message]]
+key = "Client"
+[message.translations]
+japanese = "クライアント"
+
+[[message]]
+key = "Client IDs size"
+[message.translations]
+japanese = "クライアントIDサイズ"
+
+[[message]]
+key = "Client message"
+[message.translations]
+japanese = "クライアントメッセージ"
+
+[[message]]
+key = "Close"
+[message.translations]
+japanese = "閉じる"
+
+[[message]]
+key = "Colors of the hook collision line, in case of a possible collision with:"
+[message.translations]
+japanese = "フック補助線の色（以下の対象との衝突が可能な場合）:"
+
+[[message]]
+key = "Community"
+[message.translations]
+japanese = "コミュニティ"
+
+[[message]]
+key = "Config directory"
+[message.translations]
+japanese = "設定ディレクトリ"
+
+[[message]]
+key = "Connect dummy"
+[message.translations]
+japanese = "ダミーを接続"
+
+[[message]]
+key = "Connecting dummy"
+[message.translations]
+japanese = "ダミーを接続中"
+
+[[message]]
+key = "Console"
+[message.translations]
+japanese = "コンソール"
+
+[[message]]
+key = "Control dummy"
+[message.translations]
+japanese = "ダミーを操作"
+
+[[message]]
+key = "Controller"
+[message.translations]
+japanese = "コントローラー"
+
+[[message]]
+key = "Controller jitter tolerance"
+[message.translations]
+japanese = "コントローラーのジッター許容範囲"
+
+[[message]]
+key = "Converse"
+[message.translations]
+japanese = "返信"
+
+[[message]]
+key = "Coords size"
+[message.translations]
+japanese = "座標サイズ"
+
+[[message]]
+key = "Copied"
+[message.translations]
+japanese = "コピーしました"
+
+[[message]]
+key = "Could not load default touch controls from file. See local console for details."
+[message.translations]
+japanese = "デフォルトのタッチコントロールをファイルから読み込めませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Could not load touch controls from clipboard. See local console for details."
+[message.translations]
+japanese = "タッチコントロールをクリップボードから読み込めませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Could not load touch controls from file. See local console for details."
+[message.translations]
+japanese = "タッチコントロールをファイルから読み込めませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Create a random skin"
+[message.translations]
+japanese = "ランダムスキンを作成"
+
+[[message]]
+key = "Credits"
+[message.translations]
+japanese = "クレジット"
+
+[[message]]
+key = "Current"
+[message.translations]
+japanese = "現在"
+
+[[message]]
+key = "Current file"
+[message.translations]
+japanese = "現在のファイル"
+
+[[message]]
+key = "custom"
+[message.translations]
+japanese = "カスタム"
+
+[[message]]
+key = "Custom colors"
+[message.translations]
+japanese = "カスタムカラー"
+
+[[message]]
+key = "Days"
+[message.translations]
+japanese = "日"
+
+[[message]]
+key = "DDNet Client needs to be restarted to complete update!"
+[message.translations]
+japanese = "DDNetクライアントを再起動してアップデートを完了する必要があります！"
+
+[[message]]
+key = "DDRace HUD"
+[message.translations]
+japanese = "DDRace HUD"
+
+[[message]]
+key = "Deactivate"
+[message.translations]
+japanese = "無効"
+
+[[message]]
+key = "Deactivate all"
+[message.translations]
+japanese = "すべて無効"
+
+[[message]]
+key = "default"
+[message.translations]
+japanese = "デフォルト"
+
+[[message]]
+key = "Default"
+[message.translations]
+japanese = "デフォルト"
+
+[[message]]
+key = "Default length"
+[message.translations]
+japanese = "デフォルトの長さ"
+
+[[message]]
+key = "Default zoom"
+[message.translations]
+japanese = "デフォルトのズーム"
+
+[[message]]
+key = "Delete"
+[message.translations]
+japanese = "削除"
+
+[[message]]
+key = "Delete skin"
+[message.translations]
+japanese = "スキンを削除"
+
+[[message]]
+key = "Delete this preset"
+[message.translations]
+japanese = "このプリセットを削除"
+
+[[message]]
+key = "Demo marker added"
+[message.translations]
+japanese = "デモマーカーを追加しました"
+
+[[message]]
+key = "Desktop fullscreen"
+[message.translations]
+japanese = "デスクトップ全画面"
+
+[[message]]
+key = "Direction Keys"
+[message.translations]
+japanese = "方向キー"
+
+[[message]]
+key = "Discard"
+[message.translations]
+japanese = "破棄"
+
+[[message]]
+key = "Disconnect dummy"
+[message.translations]
+japanese = "ダミーを切断"
+
+[[message]]
+key = "Discord"
+[message.translations]
+japanese = "Discord"
+
+[[message]]
+key = "Donor (drag parts from left)"
+[message.translations]
+japanese = "提供元（左からパーツをドラッグ）"
+
+[[message]]
+key = "Donor Asset"
+[message.translations]
+japanese = "提供元アセット"
+
+[[message]]
+key = "Door Laser Inner Color"
+[message.translations]
+japanese = "ドアレーザー内側の色"
+
+[[message]]
+key = "Door Laser Outline Color"
+[message.translations]
+japanese = "ドアレーザー外枠の色"
+
+[[message]]
+key = "Download community skins"
+[message.translations]
+japanese = "コミュニティスキンをダウンロード"
+
+[[message]]
+key = "Download failed"
+[message.translations]
+japanese = "ダウンロード失敗"
+
+[[message]]
+key = "Download skins"
+[message.translations]
+japanese = "公式スキンをダウンロード"
+
+[[message]]
+key = "Download this asset?"
+[message.translations]
+japanese = "このアセットをダウンロードしますか？"
+
+[[message]]
+key = "Downloaded"
+[message.translations]
+japanese = "ダウンロード済み"
+
+[[message]]
+key = "Dragger Inner Color"
+[message.translations]
+japanese = "ドラッガー内側の色"
+
+[[message]]
+key = "Dragger Outline Color"
+[message.translations]
+japanese = "ドラッガー外枠の色"
+
+[[message]]
+key = "Drop on right canvas to replace one part."
+[message.translations]
+japanese = "右側のキャンバスにドロップして一つのパーツを置き換えます"
+
+[[message]]
+key = "Dummies are not allowed on this server"
+[message.translations]
+japanese = "このサーバーではダミーは許可されていません"
+
+[[message]]
+key = "Dummy copy"
+[message.translations]
+japanese = "ダミーに同期"
+
+[[message]]
+key = "Dummy fire"
+[message.translations]
+japanese = "ダミーが発射"
+
+[[message]]
+key = "Dummy hammer fly"
+[message.translations]
+japanese = "ダミーハンマーフライ"
+
+[[message]]
+key = "Dummy hook"
+[message.translations]
+japanese = "ダミーがフック"
+
+[[message]]
+key = "Dummy jump"
+[message.translations]
+japanese = "ダミーがジャンプ"
+
+[[message]]
+key = "Dynamic Camera"
+[message.translations]
+japanese = "動的カメラ"
+
+[[message]]
+key = "Edit audio pack"
+[message.translations]
+japanese = "オーディオパックを編集"
+
+[[message]]
+key = "Edit HUD"
+[message.translations]
+japanese = "HUDを編集"
+
+[[message]]
+key = "Edit skin texture"
+[message.translations]
+japanese = "スキンテクスチャを編集"
+
+[[message]]
+key = "Edit touch controls"
+[message.translations]
+japanese = "タッチコントロールを編集"
+
+[[message]]
+key = "Emoticon"
+[message.translations]
+japanese = "絵文字"
+
+[[message]]
+key = "Emoticons"
+[message.translations]
+japanese = "絵文字"
+
+[[message]]
+key = "Enable controller"
+[message.translations]
+japanese = "コントローラーを有効"
+
+[[message]]
+key = "Enable game sounds"
+[message.translations]
+japanese = "ゲームサウンドを有効"
+
+[[message]]
+key = "Enable ghost"
+[message.translations]
+japanese = "ゴーストを有効"
+
+[[message]]
+key = "Enable gun sound"
+[message.translations]
+japanese = "ピストルサウンドを有効"
+
+[[message]]
+key = "Enable highlighted chat sound"
+[message.translations]
+japanese = "ハイライトチャットサウンドを有効"
+
+[[message]]
+key = "Enable long pain sound (used when shooting in freeze)"
+[message.translations]
+japanese = "長い痛みのサウンドを有効（フリーズ中に射撃時に使用）"
+
+[[message]]
+key = "Enable regular chat sound"
+[message.translations]
+japanese = "通常チャットサウンドを有効"
+
+[[message]]
+key = "Enable replays"
+[message.translations]
+japanese = "リプレイを有効"
+
+[[message]]
+key = "Enable server message sound"
+[message.translations]
+japanese = "サーバーメッセージサウンドを有効"
+
+[[message]]
+key = "Enable team chat sound"
+[message.translations]
+japanese = "チームチャットサウンドを有効"
+
+[[message]]
+key = "Entities"
+[message.translations]
+japanese = "エンティティ"
+
+[[message]]
+key = "Entities background color"
+[message.translations]
+japanese = "エンティティ背景色"
+
+[[message]]
+key = "Entity Background Image"
+[message.translations]
+japanese = "エンティティ背景画像"
+
+[[message]]
+key = "Entity Preview"
+[message.translations]
+japanese = "エンティティプレビュー"
+
+[[message]]
+key = "entity_bg (Workshop)"
+[message.translations]
+japanese = "entity_bg (Workshop)"
+
+[[message]]
+key = "Error loading touch controls"
+[message.translations]
+japanese = "タッチコントロールの読み込みエラー"
+
+[[message]]
+key = "ESC replay minutes"
+[message.translations]
+japanese = "ESCリプレイの分数"
+
+[[message]]
+key = "Export"
+[message.translations]
+japanese = "エクスポート"
+
+[[message]]
+key = "Export name contains invalid characters."
+[message.translations]
+japanese = "エクスポート名に無効な文字が含まれています。"
+
+[[message]]
+key = "Export selected file"
+[message.translations]
+japanese = "選択したファイルをエクスポート"
+
+[[message]]
+key = "Exported to %s"
+[message.translations]
+japanese = "%s にエクスポートしました"
+
+[[message]]
+key = "Extras"
+[message.translations]
+japanese = "その他"
+
+[[message]]
+key = "Failed to copy main asset image."
+[message.translations]
+japanese = "メインアセット画像のコピーに失敗しました。"
+
+[[message]]
+key = "Failed to export audio pack file."
+[message.translations]
+japanese = "オーディオパックファイルのエクスポートに失敗しました。"
+
+[[message]]
+key = "Failed to export skin files."
+[message.translations]
+japanese = "スキンファイルのエクスポートに失敗しました。"
+
+[[message]]
+key = "Failed to load"
+[message.translations]
+japanese = "読み込みに失敗"
+
+[[message]]
+key = "Failed to load main asset: %s"
+[message.translations]
+japanese = "メインアセットの読み込みに失敗: %s"
+
+[[message]]
+key = "Failed to prepare main asset image."
+[message.translations]
+japanese = "メインアセット画像の準備に失敗しました。"
+
+[[message]]
+key = "Failed to preview candidate file."
+[message.translations]
+japanese = "候補ファイルのプレビューに失敗しました。"
+
+[[message]]
+key = "Failed to preview import file."
+[message.translations]
+japanese = "インポートファイルのプレビューに失敗しました。"
+
+[[message]]
+key = "Failed to write PNG export."
+[message.translations]
+japanese = "PNGエクスポートの書き込みに失敗しました。"
+
+[[message]]
+key = "Fast practice"
+[message.translations]
+japanese = "高速練習"
+
+[[message]]
+key = "Fat skins (DDFat)"
+[message.translations]
+japanese = "ふとっちょスキン（DDFat）"
+
+[[message]]
+key = "Feet"
+[message.translations]
+japanese = "足"
+
+[[message]]
+key = "Fire"
+[message.translations]
+japanese = "発射"
+
+[[message]]
+key = "Force vote"
+[message.translations]
+japanese = "投票を強制"
+
+[[message]]
+key = "Frankenstein (drop parts on right)"
+[message.translations]
+japanese = "フランケン（右側にパーツをドロップ）"
+
+[[message]]
+key = "Free move"
+[message.translations]
+japanese = "自由移動"
+
+[[message]]
+key = "Freeze Laser Inner Color"
+[message.translations]
+japanese = "フリーズレーザー内側の色"
+
+[[message]]
+key = "Freeze Laser Outline Color"
+[message.translations]
+japanese = "フリーズレーザー外枠の色"
+
+[[message]]
+key = "Friend color in friends list"
+[message.translations]
+japanese = "フレンドリストでのフレンドの色"
+
+[[message]]
+key = "Friend heart"
+[message.translations]
+japanese = "フレンドハート"
+
+[[message]]
+key = "Friend message"
+[message.translations]
+japanese = "フレンドメッセージ"
+
+[[message]]
+key = "FSAA samples"
+[message.translations]
+japanese = "FSAAサンプル数"
+
+[[message]]
+key = "Fullscreen"
+[message.translations]
+japanese = "全画面表示"
+
+[[message]]
+key = "Game info"
+[message.translations]
+japanese = "ゲーム情報"
+
+[[message]]
+key = "Game sound volume"
+[message.translations]
+japanese = "ゲームサウンド音量"
+
+[[message]]
+key = "Gameplay"
+[message.translations]
+japanese = "ゲームプレイ"
+
+[[message]]
+key = "Get all map players' skin IDs and auto add to rotate queue"
+[message.translations]
+japanese = "マップ全プレイヤーのスキンIDを取得して自動でローテーションキューに追加"
+
+[[message]]
+key = "Ghosts directory"
+[message.translations]
+japanese = "ゴーストディレクトリ"
+
+[[message]]
+key = "Graphics card"
+[message.translations]
+japanese = "グラフィックカード"
+
+[[message]]
+key = "Grenade"
+[message.translations]
+japanese = "グレネード"
+
+[[message]]
+key = "Hammer"
+[message.translations]
+japanese = "ハンマー"
+
+[[message]]
+key = "High Detail"
+[message.translations]
+japanese = "高精細"
+
+[[message]]
+key = "High to low"
+[message.translations]
+japanese = "高い順"
+
+[[message]]
+key = "Highlight Color"
+[message.translations]
+japanese = "ハイライト色"
+
+[[message]]
+key = "Highlighted message"
+[message.translations]
+japanese = "ハイライトメッセージ"
+
+[[message]]
+key = "Hook"
+[message.translations]
+japanese = "フック"
+
+[[message]]
+key = "Hook collision line"
+[message.translations]
+japanese = "フック補助線"
+
+[[message]]
+key = "Hook collision line opacity"
+[message.translations]
+japanese = "フック補助線の不透明度"
+
+[[message]]
+key = "Hook Collisions"
+[message.translations]
+japanese = "フック補助線"
+
+[[message]]
+key = "Hook collisions"
+[message.translations]
+japanese = "フック補助線"
+
+[[message]]
+key = "Hook line tip"
+[message.translations]
+japanese = "フック線の先端"
+
+[[message]]
+key = "Hook Strength"
+[message.translations]
+japanese = "フック強度"
+
+[[message]]
+key = "https://ddnet.org/discord"
+[message.translations]
+japanese = "https://ddnet.org/discord"
+
+[[message]]
+key = "https://wiki.ddnet.org/"
+[message.translations]
+japanese = "https://wiki.ddnet.org/"
+
+[[message]]
+key = "HUD"
+[message.translations]
+japanese = "HUD"
+
+[[message]]
+key = "HUD rainbow colors"
+[message.translations]
+japanese = "HUDレインボーカラー"
+
+[[message]]
+key = "Hue"
+[message.translations]
+japanese = "色相"
+
+[[message]]
+key = "Info Messages"
+[message.translations]
+japanese = "情報メッセージ"
+
+[[message]]
+key = "Ingame controller mode"
+[message.translations]
+japanese = "ゲーム内コントローラーモード"
+
+[[message]]
+key = "Ingame controller sens."
+[message.translations]
+japanese = "ゲーム内コントローラー感度"
+
+[[message]]
+key = "Ingame mouse sens."
+[message.translations]
+japanese = "ゲーム内マウス感度"
+
+[[message]]
+key = "Intermediate"
+[message.translations]
+japanese = "中級"
+
+[[message]]
+key = "Internet (From online source)"
+[message.translations]
+japanese = "インターネット（オンラインソースから）"
+
+[[message]]
+key = "Join blue"
+[message.translations]
+japanese = "青チームに参加"
+
+[[message]]
+key = "Join game"
+[message.translations]
+japanese = "ゲームに参加"
+
+[[message]]
+key = "Join red"
+[message.translations]
+japanese = "赤チームに参加"
+
+[[message]]
+key = "Jump"
+[message.translations]
+japanese = "ジャンプ"
+
+[[message]]
+key = "Key Presses"
+[message.translations]
+japanese = "キー表示"
+
+[[message]]
+key = "Kick player"
+[message.translations]
+japanese = "プレイヤーをキック"
+
+[[message]]
+key = "Kill"
+[message.translations]
+japanese = "自殺"
+
+[[message]]
+key = "Laser"
+[message.translations]
+japanese = "レーザー"
+
+[[message]]
+key = "Learn"
+[message.translations]
+japanese = "学習Wiki"
+
+[[message]]
+key = "Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets."
+[message.translations]
+japanese = "左クリックでフランケンパーツの色を変更します。パーツをドラッグして置き換え、右クリックでリセットします。"
+
+[[message]]
+key = "Lht."
+[message.translations]
+japanese = "明るさ"
+
+[[message]]
+key = "Loading assets..."
+[message.translations]
+japanese = "アセットを読み込み中..."
+
+[[message]]
+key = "Loading ghost files"
+[message.translations]
+japanese = "ゴーストファイルを読み込み中"
+
+[[message]]
+key = "Loading…"
+[message.translations]
+japanese = "読み込み中…"
+
+[[message]]
+key = "Local-only"
+[message.translations]
+japanese = "ローカル限定"
+
+[[message]]
+key = "Lock team"
+[message.translations]
+japanese = "チームをロック"
+
+[[message]]
+key = "Low to high"
+[message.translations]
+japanese = "低い順"
+
+[[message]]
+key = "Main Asset"
+[message.translations]
+japanese = "メインアセット"
+
+[[message]]
+key = "Manual source file"
+[message.translations]
+japanese = "手動ソースファイル"
+
+[[message]]
+key = "Map Preview"
+[message.translations]
+japanese = "マッププレビュー"
+
+[[message]]
+key = "Map sound volume"
+[message.translations]
+japanese = "マップサウンド音量"
+
+[[message]]
+key = "Map type:"
+[message.translations]
+japanese = "マップタイプ:"
+
+[[message]]
+key = "Mark demo"
+[message.translations]
+japanese = "デモにマーク"
+
+[[message]]
+key = "Max CSVs"
+[message.translations]
+japanese = "最大CSV数"
+
+[[message]]
+key = "Max demos"
+[message.translations]
+japanese = "最大デモ数"
+
+[[message]]
+key = "Max Screenshots"
+[message.translations]
+japanese = "最大スクリーンショット数"
+
+[[message]]
+key = "may cause delay"
+[message.translations]
+japanese = "遅延が発生する可能性があります"
+
+[[message]]
+key = "Menu opened. Press Esc key again to close menu."
+[message.translations]
+japanese = "メニューを開きました。もう一度Escキーを押すと閉じます。"
+
+[[message]]
+key = "Miscellaneous"
+[message.translations]
+japanese = "その他"
+
+[[message]]
+key = "Mode"
+[message.translations]
+japanese = "モード"
+
+[[message]]
+key = "MOTD"
+[message.translations]
+japanese = "MOTD"
+
+[[message]]
+key = "Mouse"
+[message.translations]
+japanese = "マウス"
+
+[[message]]
+key = "Move left"
+[message.translations]
+japanese = "左に移動"
+
+[[message]]
+key = "Move player to spectators"
+[message.translations]
+japanese = "プレイヤーを観戦者に移動"
+
+[[message]]
+key = "Move right"
+[message.translations]
+japanese = "右に移動"
+
+[[message]]
+key = "Movement"
+[message.translations]
+japanese = "移動"
+
+[[message]]
+key = "Mute when not active"
+[message.translations]
+japanese = "非アクティブ時にミュート"
+
+[[message]]
+key = "my_%s"
+[message.translations]
+japanese = "my_%s"
+
+[[message]]
+key = "Name Plate"
+[message.translations]
+japanese = "ネームプレート"
+
+[[message]]
+key = "Name plates offset"
+[message.translations]
+japanese = "ネームプレートのオフセット"
+
+[[message]]
+key = "Name plates size"
+[message.translations]
+japanese = "ネームプレートサイズ"
+
+[[message]]
+key = "New preset name"
+[message.translations]
+japanese = "新しいプリセット名"
+
+[[message]]
+key = "New random timeout code"
+[message.translations]
+japanese = "新しいランダムタイムアウトコード"
+
+[[message]]
+key = "News"
+[message.translations]
+japanese = "ニュース"
+
+[[message]]
+key = "Next weapon"
+[message.translations]
+japanese = "次の武器"
+
+[[message]]
+key = "No assets"
+[message.translations]
+japanese = "アセットがありません"
+
+[[message]]
+key = "No assets available for composition."
+[message.translations]
+japanese = "合成に利用可能なアセットがありません。"
+
+[[message]]
+key = "No assets found."
+[message.translations]
+japanese = "アセットが見つかりません。"
+
+[[message]]
+key = "No audio slots found."
+[message.translations]
+japanese = "オーディオスロットが見つかりません。"
+
+[[message]]
+key = "No candidate file selected."
+[message.translations]
+japanese = "候補ファイルが選択されていません。"
+
+[[message]]
+key = "No controller found. Plug in a controller."
+[message.translations]
+japanese = "コントローラーが見つかりません。コントローラーを接続してください。"
+
+[[message]]
+key = "No corresponding vote option found"
+[message.translations]
+japanese = "対応する投票オプションが見つかりません"
+
+[[message]]
+key = "No demo is being recorded"
+[message.translations]
+japanese = "デモは録画されていません"
+
+[[message]]
+key = "No matching assets."
+[message.translations]
+japanese = "一致するアセットはありません。"
+
+[[message]]
+key = "No presets yet"
+[message.translations]
+japanese = "プリセットはまだありません"
+
+[[message]]
+key = "No preview"
+[message.translations]
+japanese = "プレビューなし"
+
+[[message]]
+key = "No skins match your filter criteria"
+[message.translations]
+japanese = "フィルター条件に一致するスキンはありません"
+
+[[message]]
+key = "No unfinished maps available"
+[message.translations]
+japanese = "未完了マップはありません"
+
+[[message]]
+key = "Normal Color"
+[message.translations]
+japanese = "通常色"
+
+[[message]]
+key = "Normal message"
+[message.translations]
+japanese = "通常メッセージ"
+
+[[message]]
+key = "Not downloaded"
+[message.translations]
+japanese = "未ダウンロード"
+
+[[message]]
+key = "Nothing hookable"
+[message.translations]
+japanese = "フック可能なものはありません"
+
+[[message]]
+key = "Only .wv files are supported right now."
+[message.translations]
+japanese = "現在は .wv ファイルのみ対応しています。"
+
+[[message]]
+key = "Only save improvements"
+[message.translations]
+japanese = "改善時のみ保存"
+
+[[message]]
+key = "Opacity"
+[message.translations]
+japanese = "不透明度"
+
+[[message]]
+key = "Opacity of freeze bars inside freeze"
+[message.translations]
+japanese = "フリーズ中の解凍バーの不透明度"
+
+[[message]]
+key = "Open rename dialog"
+[message.translations]
+japanese = "名前変更ダイアログを開く"
+
+[[message]]
+key = "Open the directory that contains the configuration and user files"
+[message.translations]
+japanese = "設定ファイルとユーザーファイルを含むディレクトリを開く"
+
+[[message]]
+key = "Open the directory to add custom assets"
+[message.translations]
+japanese = "カスタムアセットを追加するディレクトリを開く"
+
+[[message]]
+key = "Open the directory to add custom skins"
+[message.translations]
+japanese = "カスタムスキンを追加するディレクトリを開く"
+
+[[message]]
+key = "Open the directory to add custom themes"
+[message.translations]
+japanese = "カスタムテーマを追加するディレクトリを開く"
+
+[[message]]
+key = "Open the saves file"
+[message.translations]
+japanese = "セーブファイルを開く"
+
+[[message]]
+key = "Open the settings file"
+[message.translations]
+japanese = "設定ファイルを開く"
+
+[[message]]
+key = "Other"
+[message.translations]
+japanese = "その他"
+
+[[message]]
+key = "Overlay entities"
+[message.translations]
+japanese = "エンティティをオーバーレイ"
+
+[[message]]
+key = "Pack name"
+[message.translations]
+japanese = "パック名"
+
+[[message]]
+key = "Part color updated."
+[message.translations]
+japanese = "パーツの色が更新されました。"
+
+[[message]]
+key = "Part reset to default asset."
+[message.translations]
+japanese = "パーツをデフォルトアセットにリセットしました。"
+
+[[message]]
+key = "Part updated."
+[message.translations]
+japanese = "パーツが更新されました。"
+
+[[message]]
+key = "Particles"
+[message.translations]
+japanese = "パーティクル"
+
+[[message]]
+key = "Pause"
+[message.translations]
+japanese = "一時停止"
+
+[[message]]
+key = "Pick result: %s"
+[message.translations]
+japanese = "抽選結果: %s"
+
+[[message]]
+key = "Pie menu"
+[message.translations]
+japanese = "パイメニュー"
+
+[[message]]
+key = "Pistol"
+[message.translations]
+japanese = "ピストル"
+
+[[message]]
+key = "Play background music"
+[message.translations]
+japanese = "BGMを再生"
+
+[[message]]
+key = "Player name:"
+[message.translations]
+japanese = "プレイヤー名:"
+
+[[message]]
+key = "Please enable finished indicator first"
+[message.translations]
+japanese = "先に完了表示を有効にしてください"
+
+[[message]]
+key = "Please wait…"
+[message.translations]
+japanese = "お待ちください…"
+
+[[message]]
+key = "Predict events (experimental)"
+[message.translations]
+japanese = "イベント予測（実験的）"
+
+[[message]]
+key = "Preset bar"
+[message.translations]
+japanese = "プリセットバー"
+
+[[message]]
+key = "Prev. weapon"
+[message.translations]
+japanese = "前の武器"
+
+[[message]]
+key = "Preview 'Hook collisions' being pressed"
+[message.translations]
+japanese = "押されたときの「フック補助線」をプレビュー"
+
+[[message]]
+key = "Preview built with %d skipped slot(s)."
+[message.translations]
+japanese = "プレビューは %d スロットをスキップして生成されました。"
+
+[[message]]
+key = "Preview dummy nameplate"
+[message.translations]
+japanese = "ダミーのネームプレートをプレビュー"
+
+[[message]]
+key = "Preview import file"
+[message.translations]
+japanese = "インポートファイルをプレビュー"
+
+[[message]]
+key = "Preview player nameplate"
+[message.translations]
+japanese = "プレイヤーのネームプレートをプレビュー"
+
+[[message]]
+key = "Preview selected file"
+[message.translations]
+japanese = "選択したファイルをプレビュー"
+
+[[message]]
+key = "Quads are used for background decoration"
+[message.translations]
+japanese = "クワッドは背景装飾に使用されます"
+
+[[message]]
+key = "Queue is empty"
+[message.translations]
+japanese = "キューは空です"
+
+[[message]]
+key = "Queue is full"
+[message.translations]
+japanese = "キューがいっぱいです"
+
+[[message]]
+key = "Random pick"
+[message.translations]
+japanese = "ランダム抽選"
+
+[[message]]
+key = "Reason:"
+[message.translations]
+japanese = "理由:"
+
+[[message]]
+key = "Record demo"
+[message.translations]
+japanese = "デモを録画"
+
+[[message]]
+key = "Refresh Rate"
+[message.translations]
+japanese = "リフレッシュレート"
+
+[[message]]
+key = "Regular background color"
+[message.translations]
+japanese = "通常の背景色"
+
+[[message]]
+key = "Relative path"
+[message.translations]
+japanese = "相対パス"
+
+[[message]]
+key = "Reload"
+[message.translations]
+japanese = "再読み込み"
+
+[[message]]
+key = "Reloaded images."
+[message.translations]
+japanese = "画像を再読み込みしました。"
+
+[[message]]
+key = "Reloaded images. %d slot(s) fell back to main asset."
+[message.translations]
+japanese = "画像を再読み込みしました。%d スロットがメインアセットにフォールバックしました。"
+
+[[message]]
+key = "Remote console"
+[message.translations]
+japanese = "リモートコンソール"
+
+[[message]]
+key = "Remove"
+[message.translations]
+japanese = "削除"
+
+[[message]]
+key = "Remove from queue"
+[message.translations]
+japanese = "キューから削除"
+
+[[message]]
+key = "Rename"
+[message.translations]
+japanese = "名前変更"
+
+[[message]]
+key = "Renderer"
+[message.translations]
+japanese = "レンダラー"
+
+[[message]]
+key = "Renders your frame rate in the top right"
+[message.translations]
+japanese = "右上にフレームレートを表示"
+
+[[message]]
+key = "Repeat message"
+[message.translations]
+japanese = "リピート"
+
+[[message]]
+key = "Reset All"
+[message.translations]
+japanese = "すべてリセット"
+
+[[message]]
+key = "Reset controls"
+[message.translations]
+japanese = "コントロールをリセット"
+
+[[message]]
+key = "Reset layout"
+[message.translations]
+japanese = "レイアウトをリセット"
+
+[[message]]
+key = "Rifle Laser Inner Color"
+[message.translations]
+japanese = "ライフルレーザー内側の色"
+
+[[message]]
+key = "Rifle Laser Outline Color"
+[message.translations]
+japanese = "ライフルレーザー外枠の色"
+
+[[message]]
+key = "Rotate all maps"
+[message.translations]
+japanese = "全マップをローテーション"
+
+[[message]]
+key = "Round"
+[message.translations]
+japanese = "ラウンド"
+
+[[message]]
+key = "Run on join"
+[message.translations]
+japanese = "参加時に実行"
+
+[[message]]
+key = "Run server"
+[message.translations]
+japanese = "サーバーを実行"
+
+[[message]]
+key = "Same clan color in scoreboard"
+[message.translations]
+japanese = "スコアボードでの同じクランの色"
+
+[[message]]
+key = "Sat."
+[message.translations]
+japanese = "彩度"
+
+[[message]]
+key = "Save all changes before turning off the editor?"
+[message.translations]
+japanese = "エディタを閉じる前にすべての変更を保存しますか？"
+
+[[message]]
+key = "Save asset before closing?"
+[message.translations]
+japanese = "閉じる前にアセットを保存しますか？"
+
+[[message]]
+key = "Save current"
+[message.translations]
+japanese = "現在を保存"
+
+[[message]]
+key = "Save current queue as a new preset"
+[message.translations]
+japanese = "現在のキューを新しいプリセットとして保存"
+
+[[message]]
+key = "Save ghost"
+[message.translations]
+japanese = "ゴーストを保存"
+
+[[message]]
+key = "Save last %d min"
+[message.translations]
+japanese = "過去 %d 分を保存"
+
+[[message]]
+key = "Save power by lowering refresh rate (higher input latency)"
+[message.translations]
+japanese = "リフレッシュレートを下げて省電力（入力遅延が増加）"
+
+[[message]]
+key = "Save the best demo of each race"
+[message.translations]
+japanese = "各レースのベストデモを保存"
+
+[[message]]
+key = "Save unsent chat draft"
+[message.translations]
+japanese = "未送信のチャット下書きを保存"
+
+[[message]]
+key = "Saves file"
+[message.translations]
+japanese = "セーブファイル"
+
+[[message]]
+key = "Score limit"
+[message.translations]
+japanese = "得点制限"
+
+[[message]]
+key = "Scoreboard"
+[message.translations]
+japanese = "スコアボード"
+
+[[message]]
+key = "Scoreboard cursor"
+[message.translations]
+japanese = "スコアボードカーソル"
+
+[[message]]
+key = "Screen"
+[message.translations]
+japanese = "スクリーン"
+
+[[message]]
+key = "Search"
+[message.translations]
+japanese = "検索"
+
+[[message]]
+key = "Search donor asset"
+[message.translations]
+japanese = "提供元アセットを検索"
+
+[[message]]
+key = "Search main asset"
+[message.translations]
+japanese = "メインアセットを検索"
+
+[[message]]
+key = "Selected candidate"
+[message.translations]
+japanese = "選択した候補"
+
+[[message]]
+key = "Selected candidate %d/%d under cursor."
+[message.translations]
+japanese = "カーソル下の選択候補 %d/%d。"
+
+[[message]]
+key = "Selected pack"
+[message.translations]
+japanese = "選択したパック"
+
+[[message]]
+key = "Set all to Rifle"
+[message.translations]
+japanese = "すべてをライフル色に設定"
+
+[[message]]
+key = "Settings file"
+[message.translations]
+japanese = "設定ファイル"
+
+[[message]]
+key = "Shotgun"
+[message.translations]
+japanese = "ショットガン"
+
+[[message]]
+key = "Shotgun Laser Inner Color"
+[message.translations]
+japanese = "ショットガンレーザー内側の色"
+
+[[message]]
+key = "Shotgun Laser Outline Color"
+[message.translations]
+japanese = "ショットガンレーザー外枠の色"
+
+[[message]]
+key = "Show all"
+[message.translations]
+japanese = "すべて表示"
+
+[[message]]
+key = "Show background quads"
+[message.translations]
+japanese = "背景クワッドを表示"
+
+[[message]]
+key = "Show clan above name plates"
+[message.translations]
+japanese = "ネームプレートの上にクランを表示"
+
+[[message]]
+key = "Show client IDs (scoreboard, chat, spectating)"
+[message.translations]
+japanese = "クライアントIDを表示（スコアボード、チャット、観戦）"
+
+[[message]]
+key = "Show client IDs in name plates"
+[message.translations]
+japanese = "ネームプレートにクライアントIDを表示"
+
+[[message]]
+key = "Show client IDs on a separate line"
+[message.translations]
+japanese = "クライアントIDを別の行に表示"
+
+[[message]]
+key = "Show DDRace HUD"
+[message.translations]
+japanese = "DDRace HUDを表示"
+
+[[message]]
+key = "Show dummy actions"
+[message.translations]
+japanese = "ダミーのアクションを表示"
+
+[[message]]
+key = "Show dummy control status"
+[message.translations]
+japanese = "ダミーの操作状態を表示"
+
+[[message]]
+key = "Show dummy sync status"
+[message.translations]
+japanese = "ダミーの同期状態を表示"
+
+[[message]]
+key = "Show entities"
+[message.translations]
+japanese = "エンティティ表示切替"
+
+[[message]]
+key = "Show finish messages"
+[message.translations]
+japanese = "フィニッシュメッセージを表示"
+
+[[message]]
+key = "Show FPS"
+[message.translations]
+japanese = "FPSを表示"
+
+[[message]]
+key = "Show freeze bars"
+[message.translations]
+japanese = "フリーズバーを表示"
+
+[[message]]
+key = "Show friend icon in name plates"
+[message.translations]
+japanese = "ネームプレートにフレンドアイコンを表示"
+
+[[message]]
+key = "Show ghost"
+[message.translations]
+japanese = "ゴーストを表示"
+
+[[message]]
+key = "Show Grid"
+[message.translations]
+japanese = "グリッドを表示"
+
+[[message]]
+key = "Show hammer status"
+[message.translations]
+japanese = "ハンマー状態を表示"
+
+[[message]]
+key = "Show health, shields and ammo"
+[message.translations]
+japanese = "体力、シールド、弾薬を表示"
+
+[[message]]
+key = "Show hook strength icon indicator"
+[message.translations]
+japanese = "フック強度アイコンを表示"
+
+[[message]]
+key = "Show hook strength number indicator"
+[message.translations]
+japanese = "フック強度数値を表示"
+
+[[message]]
+key = "Show HUD"
+[message.translations]
+japanese = "HUD表示切替"
+
+[[message]]
+key = "Show jumps indicator"
+[message.translations]
+japanese = "ジャンプ回数表示"
+
+[[message]]
+key = "Show key stuck status"
+[message.translations]
+japanese = "キー固定状態を表示"
+
+[[message]]
+key = "Show kill messages"
+[message.translations]
+japanese = "キルメッセージを表示"
+
+[[message]]
+key = "Show local time always"
+[message.translations]
+japanese = "常にローカル時間を表示"
+
+[[message]]
+key = "Show name plates"
+[message.translations]
+japanese = "ネームプレートを表示"
+
+[[message]]
+key = "Show names in chat in team colors"
+[message.translations]
+japanese = "チャットで名前をチームカラーで表示"
+
+[[message]]
+key = "Show number of spectators"
+[message.translations]
+japanese = "観戦者数を表示"
+
+[[message]]
+key = "Show only chat messages from friends"
+[message.translations]
+japanese = "フレンドからのチャットのみ表示"
+
+[[message]]
+key = "Show only chat messages from team members"
+[message.translations]
+japanese = "チームメンバーからのチャットのみ表示"
+
+[[message]]
+key = "Show other players' hook collision lines"
+[message.translations]
+japanese = "他のプレイヤーのフック補助線を表示"
+
+[[message]]
+key = "Show others"
+[message.translations]
+japanese = "他のプレイヤーを表示"
+
+[[message]]
+key = "Show others (own team only)"
+[message.translations]
+japanese = "他のプレイヤーを表示（自分のチームのみ）"
+
+[[message]]
+key = "Show own player's hook collision line"
+[message.translations]
+japanese = "自分のフック補助線を表示"
+
+[[message]]
+key = "Show player position"
+[message.translations]
+japanese = "プレイヤーの座標を表示"
+
+[[message]]
+key = "Show player speed"
+[message.translations]
+japanese = "プレイヤーの速度を表示"
+
+[[message]]
+key = "Show player target angle"
+[message.translations]
+japanese = "プレイヤーの照準角度を表示"
+
+[[message]]
+key = "Show players' key presses"
+[message.translations]
+japanese = "プレイヤーのキー入力を表示"
+
+[[message]]
+key = "Show score"
+[message.translations]
+japanese = "スコアを表示"
+
+[[message]]
+key = "Show spectator cursor"
+[message.translations]
+japanese = "観戦者カーソルを表示"
+
+[[message]]
+key = "Show text entities"
+[message.translations]
+japanese = "テキストエンティティを表示"
+
+[[message]]
+key = "Show tiles layers from BG map"
+[message.translations]
+japanese = "背景マップのタイルレイヤーを表示"
+
+[[message]]
+key = "Show votes window after voting"
+[message.translations]
+japanese = "投票後に投票ウィンドウを閉じない"
+
+[[message]]
+key = "Show Workshop Assets"
+[message.translations]
+japanese = "Workshopアセットを表示"
+
+[[message]]
+key = "Simple"
+[message.translations]
+japanese = "簡易"
+
+[[message]]
+key = "Size of hook strength icon and number indicator"
+[message.translations]
+japanese = "フック強度アイコンと数値表示のサイズ"
+
+[[message]]
+key = "Size of key press icons"
+[message.translations]
+japanese = "キー表示アイコンのサイズ"
+
+[[message]]
+key = "Skin"
+[message.translations]
+japanese = "スキン"
+
+[[message]]
+key = "Skin could not be found."
+[message.translations]
+japanese = "スキンが見つかりませんでした。"
+
+[[message]]
+key = "Skin could not be loaded due to an error. Check the local console for details."
+[message.translations]
+japanese = "エラーのためスキンを読み込めませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Skin Database"
+[message.translations]
+japanese = "スキンデータベース"
+
+[[message]]
+key = "Skin is loading."
+[message.translations]
+japanese = "スキンを読み込み中。"
+
+[[message]]
+key = "Skin prefix"
+[message.translations]
+japanese = "スキン名プレフィックス"
+
+[[message]]
+key = "Skin queue"
+[message.translations]
+japanese = "スインキュー"
+
+[[message]]
+key = "Skins directory"
+[message.translations]
+japanese = "スキンディレクトリ"
+
+[[message]]
+key = "Skip the main menu"
+[message.translations]
+japanese = "メインメニューをスキップ"
+
+[[message]]
+key = "Smooth Dynamic Camera"
+[message.translations]
+japanese = "スムーズ動的カメラ"
+
+[[message]]
+key = "Something hookable"
+[message.translations]
+japanese = "フック可能なもの"
+
+[[message]]
+key = "Sound volume"
+[message.translations]
+japanese = "音量"
+
+[[message]]
+key = "Source file does not exist."
+[message.translations]
+japanese = "ソースファイルが存在しません。"
+
+[[message]]
+key = "Source file is empty."
+[message.translations]
+japanese = "ソースファイルは空です。"
+
+[[message]]
+key = "Spectate"
+[message.translations]
+japanese = "観戦"
+
+[[message]]
+key = "Spectate mode"
+[message.translations]
+japanese = "観戦モード"
+
+[[message]]
+key = "Spectate next"
+[message.translations]
+japanese = "次のプレイヤーを観戦"
+
+[[message]]
+key = "Spectate previous"
+[message.translations]
+japanese = "前のプレイヤーを観戦"
+
+[[message]]
+key = "Spectate teleport"
+[message.translations]
+japanese = "観戦テレポート"
+
+[[message]]
+key = "Statboard"
+[message.translations]
+japanese = "統計ボード"
+
+[[message]]
+key = "Status"
+[message.translations]
+japanese = "ステータス"
+
+[[message]]
+key = "Stop practice"
+[message.translations]
+japanese = "練習を停止"
+
+[[message]]
+key = "Stop record"
+[message.translations]
+japanese = "録画を停止"
+
+[[message]]
+key = "Stop server"
+[message.translations]
+japanese = "サーバーを停止"
+
+[[message]]
+key = "Strong Weak Hook"
+[message.translations]
+japanese = "強弱フック"
+
+[[message]]
+key = "Switch interval"
+[message.translations]
+japanese = "切り替え間隔"
+
+[[message]]
+key = "Switch weapon on pickup"
+[message.translations]
+japanese = "拾った武器に自動切り替え"
+
+[[message]]
+key = "Switch weapon when out of ammo"
+[message.translations]
+japanese = "弾切れ時に自動で武器切り替え"
+
+[[message]]
+key = "Sync Workshop Assets"
+[message.translations]
+japanese = "Workshopアセットを同期"
+
+[[message]]
+key = "System message"
+[message.translations]
+japanese = "システムメッセージ"
+
+[[message]]
+key = "Team chat"
+[message.translations]
+japanese = "チームチャット"
+
+[[message]]
+key = "Team message"
+[message.translations]
+japanese = "チームメッセージ"
+
+[[message]]
+key = "Teams"
+[message.translations]
+japanese = "チーム"
+
+[[message]]
+key = "Text"
+[message.translations]
+japanese = "テキスト"
+
+[[message]]
+key = "The name \"default\" is reserved."
+[message.translations]
+japanese = "「default」という名前は予約されています。"
+
+[[message]]
+key = "The selected part stays highlighted while you adjust its color."
+[message.translations]
+japanese = "選択したパーツは色調整中もハイライトされたままになります。"
+
+[[message]]
+key = "Themes directory"
+[message.translations]
+japanese = "テーマディレクトリ"
+
+[[message]]
+key = "There are unsaved changes in the touch controls editor. Saving first is recommended."
+[message.translations]
+japanese = "タッチコントロールエディタに未保存の変更があります。最初に保存することをお勧めします。"
+
+[[message]]
+key = "This skin name cannot be used."
+[message.translations]
+japanese = "このスキン名は使用できません。"
+
+[[message]]
+key = "tile"
+[message.translations]
+japanese = "タイル"
+
+[[message]]
+key = "Time"
+[message.translations]
+japanese = "時間"
+
+[[message]]
+key = "Time limit"
+[message.translations]
+japanese = "時間制限"
+
+[[message]]
+key = "Toggle between game scene preview and raw texture"
+[message.translations]
+japanese = "ゲームシーンプレビューと生テクスチャの切り替え"
+
+[[message]]
+key = "Toggle dummy"
+[message.translations]
+japanese = "ダミー切替"
+
+[[message]]
+key = "Toggle dyncam"
+[message.translations]
+japanese = "動的カメラ切替"
+
+[[message]]
+key = "Toggle ghost"
+[message.translations]
+japanese = "ゴースト切替"
+
+[[message]]
+key = "Traditional"
+[message.translations]
+japanese = "繁体"
+
+[[message]]
+key = "Try to predict other entities to reduce lag feeling at high latency"
+[message.translations]
+japanese = "他のエンティティを予測して高レイテンシ時のラグ感を軽減"
+
+[[message]]
+key = "Tutorial"
+[message.translations]
+japanese = "チュートリアル"
+
+[[message]]
+key = "Type switch vote started automatically"
+[message.translations]
+japanese = "タイプ切り替え投票を自動で開始しました"
+
+[[message]]
+key = "UI controller sens."
+[message.translations]
+japanese = "UIコントローラー感度"
+
+[[message]]
+key = "UI mouse sens."
+[message.translations]
+japanese = "UIマウス感度"
+
+[[message]]
+key = "Unable to delete skin"
+[message.translations]
+japanese = "スキンを削除できません"
+
+[[message]]
+key = "Unfinished map count: %d"
+[message.translations]
+japanese = "未完了マップ数: %d"
+
+[[message]]
+key = "Unfinished map data is refreshing, please try again later"
+[message.translations]
+japanese = "未完了マップデータを更新中です。後でもう一度お試しください"
+
+[[message]]
+key = "Unfinished map data not fetched"
+[message.translations]
+japanese = "未完了マップデータが取得されていません"
+
+[[message]]
+key = "Unfinished map data refreshing"
+[message.translations]
+japanese = "未完了マップデータを更新中"
+
+[[message]]
+key = "Unfinished maps"
+[message.translations]
+japanese = "未完了マップ"
+
+[[message]]
+key = "Unregister protocol and file extensions"
+[message.translations]
+japanese = "プロトコルとファイル拡張子の関連付けを解除"
+
+[[message]]
+key = "Unsaved changes"
+[message.translations]
+japanese = "未保存の変更"
+
+[[message]]
+key = "Use current map as background"
+[message.translations]
+japanese = "現在のマップを背景として使用"
+
+[[message]]
+key = "Use old chat style"
+[message.translations]
+japanese = "古いチャットスタイルを使用"
+
+[[message]]
+key = "Use team colors for name plates"
+[message.translations]
+japanese = "ネームプレートにチームカラーを使用"
+
+[[message]]
+key = "V-Sync"
+[message.translations]
+japanese = "垂直同期"
+
+[[message]]
+key = "Vanilla skins only"
+[message.translations]
+japanese = "バニラスキンのみ"
+
+[[message]]
+key = "Video Background"
+[message.translations]
+japanese = "ビデオ背景"
+
+[[message]]
+key = "Voice chat"
+[message.translations]
+japanese = "ボイスチャット"
+
+[[message]]
+key = "Vote command:"
+[message.translations]
+japanese = "投票コマンド:"
+
+[[message]]
+key = "Vote description:"
+[message.translations]
+japanese = "投票の説明:"
+
+[[message]]
+key = "Vote no"
+[message.translations]
+japanese = "反対"
+
+[[message]]
+key = "Vote started automatically"
+[message.translations]
+japanese = "自動で投票を開始しました"
+
+[[message]]
+key = "Vote yes"
+[message.translations]
+japanese = "賛成"
+
+[[message]]
+key = "Voting"
+[message.translations]
+japanese = "投票"
+
+[[message]]
+key = "Weapon"
+[message.translations]
+japanese = "武器"
+
+[[message]]
+key = "Weapon trajectory"
+[message.translations]
+japanese = "武器弾道補助線"
+
+[[message]]
+key = "Weapons"
+[message.translations]
+japanese = "武器"
+
+[[message]]
+key = "Website"
+[message.translations]
+japanese = "ウェブサイト"
+
+[[message]]
+key = "When you cross the start line, show a ghost tee replicating the movements of your best time"
+[message.translations]
+japanese = "スタートラインを越えたとき、ベストタイムの動きを再現するゴーストTeeを表示"
+
+[[message]]
+key = "Width of others' hook collision line"
+[message.translations]
+japanese = "他人のフック補助線の太さ"
+
+[[message]]
+key = "Width of your own hook collision line"
+[message.translations]
+japanese = "自分のフック補助線の太さ"
+
+[[message]]
+key = "Windowed"
+[message.translations]
+japanese = "ウィンドウモード"
+
+[[message]]
+key = "Windowed borderless"
+[message.translations]
+japanese = "ボーダーレスウィンドウ"
+
+[[message]]
+key = "Windowed fullscreen"
+[message.translations]
+japanese = "ウィンドウ全画面"
+
+[[message]]
+key = "You have unsaved changes."
+[message.translations]
+japanese = "未保存の変更があります。"
+
+[[message]]
+key = "You must restart the game for all settings to take effect."
+[message.translations]
+japanese = "すべての設定を有効にするには、ゲームを再起動する必要があります。"
+
+[[message]]
+key = "Your movements are not taken into account when calculating the line colors"
+[message.translations]
+japanese = "線の色を計算する際、自分の移動は考慮されません"
+
+[[message]]
+key = "Your skin"
+[message.translations]
+japanese = "自分のスキン"
+
+[[message]]
+key = "Zoom in"
+[message.translations]
+japanese = "ズームイン"
+
+[[message]]
+key = "Zoom out"
+[message.translations]
+japanese = "ズームアウト"
+
+[[message]]
+key = "地图浏览器透明度"
+[message.translations]
+japanese = "マップブラウザの不透明度"
+
+[[message]]
+key = "地图浏览器颜色"
+[message.translations]
+japanese = "マップブラウザの色"
+
+[[message]]
+key = "界面透明度"
+[message.translations]
+japanese = "UIの不透明度"
+
+[[message]]
+key = "界面颜色"
+[message.translations]
+japanese = "UIの色"
+
+[[message]]
+key = "计分板透明度"
+[message.translations]
+japanese = "スコアボードの不透明度"
+
+[[message]]
+key = "计分板颜色"
+[message.translations]
+japanese = "スコアボードの色"
+
+[[message]]
+key = "Hz"
+context = "Hertz"
+[message.translations]
+japanese = "Hz"
+
+[[message]]
+key = "Absolute"
+context = "Ingame controller mode"
+[message.translations]
+japanese = "絶対値"
+
+[[message]]
+key = "Relative"
+context = "Ingame controller mode"
+[message.translations]
+japanese = "相対"
+
+[[message]]
+key = "All"
+context = "Show name plates"
+[message.translations]
+japanese = "すべて"
+
+[[message]]
+key = "None"
+context = "Show name plates"
+[message.translations]
+japanese = "なし"
+
+[[message]]
+key = "Others"
+context = "Show name plates"
+[message.translations]
+japanese = "他人"
+
+[[message]]
+key = "Own"
+context = "Show name plates"
+[message.translations]
+japanese = "自分"
+
+[[message]]
+key = "All"
+context = "Show players' key presses"
+[message.translations]
+japanese = "すべて"
+
+[[message]]
+key = "None"
+context = "Show players' key presses"
+[message.translations]
+japanese = "なし"
+
+[[message]]
+key = "Others"
+context = "Show players' key presses"
+[message.translations]
+japanese = "他人"
+
+[[message]]
+key = "Own"
+context = "Show players' key presses"
+[message.translations]
+japanese = "自分"
+
+[[message]]
+key = "Play"
+context = "Start menu"
+[message.translations]
+japanese = "プレイ"
+
+[[message]]
+key = "maximum"
+context = "Team size"
+[message.translations]
+japanese = "最大"
+
+[[message]]
+key = "minimum"
+context = "Team size"
+[message.translations]
+japanese = "最小"
+
+[[message]]
+key = "allowed"
+context = "Team status"
+[message.translations]
+japanese = "許可"
+
+[[message]]
+key = "forbidden"
+context = "Team status"
+[message.translations]
+japanese = "禁止"
+
+[[message]]
+key = "required"
+context = "Team status"
+[message.translations]
+japanese = "必須"
+
+[[message]]
+key = "solo"
+context = "Team status"
+[message.translations]
+japanese = "ソロ"
+
+[[message]]
+key = "English translation by the DDNet Team"
+context = "Translation credits: Add your own name here when you update translations"
+[message.translations]
+japanese = "DDNet チームによる英語翻訳"

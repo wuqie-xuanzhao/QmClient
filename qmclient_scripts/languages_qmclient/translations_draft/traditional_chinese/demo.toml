@@ -1,0 +1,499 @@
+[[message]]
+key = "%.2f KiB"
+[message.translations]
+traditional_chinese = "%.2f KiB"
+
+[[message]]
+key = "%.2f MiB"
+[message.translations]
+traditional_chinese = "%.2f MiB"
+
+[[message]]
+key = "%d items selected"
+[message.translations]
+traditional_chinese = "已選擇 %d 項"
+
+[[message]]
+key = "%d more cut segments"
+[message.translations]
+traditional_chinese = "還有 %d 個裁剪片段"
+
+[[message]]
+key = "%d selected items were deleted, but %d items could not be deleted. The first failing item was '%s'."
+[message.translations]
+traditional_chinese = "已刪除 %d 個選中項，但有 %d 項無法刪除。第一個失敗項是「%s」。"
+
+[[message]]
+key = "Abort"
+[message.translations]
+traditional_chinese = "中止"
+
+[[message]]
+key = "Add current cut to the export list"
+[message.translations]
+traditional_chinese = "將當前片段加入匯出列表"
+
+[[message]]
+key = "All combined"
+[message.translations]
+traditional_chinese = "全部檔案"
+
+[[message]]
+key = "Are you sure that you want to delete %d selected items?"
+[message.translations]
+traditional_chinese = "確定要刪除 %d 個選中項嗎？"
+
+[[message]]
+key = "Are you sure that you want to delete the demo '%s'?"
+[message.translations]
+traditional_chinese = "確定要刪除回放檔案「%s」嗎？"
+
+[[message]]
+key = "Are you sure that you want to delete the folder '%s'?"
+[message.translations]
+traditional_chinese = "確定要刪除資料夾「%s」嗎？"
+
+[[message]]
+key = "Are you sure that you want to delete the screenshot '%s'?"
+[message.translations]
+traditional_chinese = "確定要刪除截圖「%s」嗎？"
+
+[[message]]
+key = "Are you sure that you want to disconnect and play this demo?"
+[message.translations]
+traditional_chinese = "確定要斷開當前連線並播放這個回放嗎？"
+
+[[message]]
+key = "Change the skip duration"
+[message.translations]
+traditional_chinese = "變更指定時長"
+
+[[message]]
+key = "Choose whether to browse replays or screenshots"
+[message.translations]
+traditional_chinese = "選擇瀏覽回放還是截圖"
+
+[[message]]
+key = "Clear current cut (right click to clear all cuts)"
+[message.translations]
+traditional_chinese = "清除當前片段（右鍵清除全部片段）"
+
+[[message]]
+key = "Close the demo player"
+[message.translations]
+traditional_chinese = "關閉回放"
+
+[[message]]
+key = "Could not preview this image"
+[message.translations]
+traditional_chinese = "無法預覽此圖片"
+
+[[message]]
+key = "Created"
+[message.translations]
+traditional_chinese = "建立日期"
+
+[[message]]
+key = "Current cut is invalid or already added"
+[message.translations]
+traditional_chinese = "當前裁剪無效或已新增"
+
+[[message]]
+key = "Cut interval"
+[message.translations]
+traditional_chinese = "裁剪區間"
+
+[[message]]
+key = "Cut length"
+[message.translations]
+traditional_chinese = "裁剪時長"
+
+[[message]]
+key = "Cut segments"
+[message.translations]
+traditional_chinese = "裁剪片段"
+
+[[message]]
+key = "Date"
+[message.translations]
+traditional_chinese = "日期"
+
+[[message]]
+key = "Delete demo"
+[message.translations]
+traditional_chinese = "刪除回放"
+
+[[message]]
+key = "Delete folder"
+[message.translations]
+traditional_chinese = "刪除資料夾"
+
+[[message]]
+key = "Delete screenshot"
+[message.translations]
+traditional_chinese = "刪除截圖"
+
+[[message]]
+key = "Delete selected items"
+[message.translations]
+traditional_chinese = "刪除選中項"
+
+[[message]]
+key = "Demo"
+[message.translations]
+traditional_chinese = "回放"
+
+[[message]]
+key = "Demofile: %s"
+[message.translations]
+traditional_chinese = "回放檔案：%s"
+
+[[message]]
+key = "Demos directory"
+[message.translations]
+traditional_chinese = "回放目錄"
+
+[[message]]
+key = "Disconnect"
+[message.translations]
+traditional_chinese = "斷開連線"
+
+[[message]]
+key = "Error"
+[message.translations]
+traditional_chinese = "錯誤"
+
+[[message]]
+key = "Error loading demo"
+[message.translations]
+traditional_chinese = "載入回放出錯"
+
+[[message]]
+key = "Error opening screenshot"
+[message.translations]
+traditional_chinese = "開啟截圖時出錯"
+
+[[message]]
+key = "Export cut as a separate demo"
+[message.translations]
+traditional_chinese = "另存為新回放檔案"
+
+[[message]]
+key = "Export demo cut"
+[message.translations]
+traditional_chinese = "另存裁剪部分"
+
+[[message]]
+key = "Failed to export demo cut"
+[message.translations]
+traditional_chinese = "匯出回放裁剪失敗"
+
+[[message]]
+key = "Fetch Info"
+[message.translations]
+traditional_chinese = "回放資訊"
+
+[[message]]
+key = "File already exists, do you want to overwrite it?"
+[message.translations]
+traditional_chinese = "檔案已存在，是否覆蓋？"
+
+[[message]]
+key = "Folder"
+[message.translations]
+traditional_chinese = "資料夾"
+
+[[message]]
+key = "Folder Link"
+[message.translations]
+traditional_chinese = "資料夾連結"
+
+[[message]]
+key = "Go back one marker"
+[message.translations]
+traditional_chinese = "回到上一個標記"
+
+[[message]]
+key = "Go back one tick"
+[message.translations]
+traditional_chinese = "上一個 tick"
+
+[[message]]
+key = "Go back the specified duration"
+[message.translations]
+traditional_chinese = "快退指定時長"
+
+[[message]]
+key = "Go forward one marker"
+[message.translations]
+traditional_chinese = "跳至下一個標記"
+
+[[message]]
+key = "Go forward one tick"
+[message.translations]
+traditional_chinese = "下一個 tick"
+
+[[message]]
+key = "Go forward the specified duration"
+[message.translations]
+traditional_chinese = "快進指定時長"
+
+[[message]]
+key = "Invalid Demo"
+[message.translations]
+traditional_chinese = "回放檔案無效或已損壞"
+
+[[message]]
+key = "Length"
+[message.translations]
+traditional_chinese = "時長"
+
+[[message]]
+key = "Loading Demo"
+[message.translations]
+traditional_chinese = "正在載入回放"
+
+[[message]]
+key = "Loading demo files"
+[message.translations]
+traditional_chinese = "正在載入回放檔案"
+
+[[message]]
+key = "Loading demo info"
+[message.translations]
+traditional_chinese = "正在載入回放資訊"
+
+[[message]]
+key = "Loading screenshot files"
+[message.translations]
+traditional_chinese = "正在載入截圖檔案"
+
+[[message]]
+key = "Map"
+[message.translations]
+traditional_chinese = "地圖"
+
+[[message]]
+key = "Map size"
+[message.translations]
+traditional_chinese = "地圖佔用空間"
+
+[[message]]
+key = "Mark the beginning of a cut (right click to reset)"
+[message.translations]
+traditional_chinese = "標記裁剪起點（右鍵重置）"
+
+[[message]]
+key = "Mark the end of a cut (right click to reset)"
+[message.translations]
+traditional_chinese = "標記裁剪終點（右鍵重置）"
+
+[[message]]
+key = "Markers"
+[message.translations]
+traditional_chinese = "標記"
+
+[[message]]
+key = "Netversion"
+[message.translations]
+traditional_chinese = "網路版本"
+
+[[message]]
+key = "New name:"
+[message.translations]
+traditional_chinese = "新名稱："
+
+[[message]]
+key = "No"
+[message.translations]
+traditional_chinese = "否"
+
+[[message]]
+key = "No demo selected"
+[message.translations]
+traditional_chinese = "未選擇回放"
+
+[[message]]
+key = "No screenshot selected"
+[message.translations]
+traditional_chinese = "未選擇截圖"
+
+[[message]]
+key = "Ok"
+[message.translations]
+traditional_chinese = "確定"
+
+[[message]]
+key = "Open the folder containing demo files"
+[message.translations]
+traditional_chinese = "開啟存放回放檔案的資料夾"
+
+[[message]]
+key = "Open the folder containing screenshots"
+[message.translations]
+traditional_chinese = "開啟存放截圖的資料夾"
+
+[[message]]
+key = "Parent Folder"
+[message.translations]
+traditional_chinese = "上層資料夾"
+
+[[message]]
+key = "Pause the current demo"
+[message.translations]
+traditional_chinese = "暫停回放"
+
+[[message]]
+key = "Play the current demo"
+[message.translations]
+traditional_chinese = "播放回放"
+
+[[message]]
+key = "Please add a valid cut first"
+[message.translations]
+traditional_chinese = "請先新增有效裁剪片段"
+
+[[message]]
+key = "Please use a different filename"
+[message.translations]
+traditional_chinese = "請使用不同的檔案名稱"
+
+[[message]]
+key = "Remove chat"
+[message.translations]
+traditional_chinese = "刪除訊息記錄"
+
+[[message]]
+key = "Render cut to video"
+[message.translations]
+traditional_chinese = "渲染裁剪部分"
+
+[[message]]
+key = "Replay"
+[message.translations]
+traditional_chinese = "重播"
+
+[[message]]
+key = "Screenshot"
+[message.translations]
+traditional_chinese = "截圖"
+
+[[message]]
+key = "Screenshots"
+[message.translations]
+traditional_chinese = "截圖"
+
+[[message]]
+key = "Screenshots directory"
+[message.translations]
+traditional_chinese = "截圖目錄"
+
+[[message]]
+key = "Selection"
+[message.translations]
+traditional_chinese = "已選項"
+
+[[message]]
+key = "Size"
+[message.translations]
+traditional_chinese = "大小"
+
+[[message]]
+key = "Slow down the demo"
+[message.translations]
+traditional_chinese = "減慢播放速度"
+
+[[message]]
+key = "Speed up the demo"
+[message.translations]
+traditional_chinese = "加快播放速度"
+
+[[message]]
+key = "Stop the current demo"
+[message.translations]
+traditional_chinese = "結束回放"
+
+[[message]]
+key = "This name cannot be used for files and folders"
+[message.translations]
+traditional_chinese = "此名稱不能用於檔案和資料夾"
+
+[[message]]
+key = "Toggle auto camera"
+[message.translations]
+traditional_chinese = "切換自動視角"
+
+[[message]]
+key = "Toggle keyboard shortcuts"
+[message.translations]
+traditional_chinese = "啟用/停用鍵盤快速鍵"
+
+[[message]]
+key = "Type"
+[message.translations]
+traditional_chinese = "類型"
+
+[[message]]
+key = "Unable to delete %d selected items. The first failing item was '%s'."
+[message.translations]
+traditional_chinese = "無法刪除 %d 個選中項。第一個失敗項是「%s」。"
+
+[[message]]
+key = "Unable to delete the demo '%s'"
+[message.translations]
+traditional_chinese = "無法刪除回放檔案「%s」"
+
+[[message]]
+key = "Unable to delete the folder '%s'. Make sure it's empty first."
+[message.translations]
+traditional_chinese = "無法刪除資料夾「%s」，請確保您已清空該資料夾"
+
+[[message]]
+key = "Unable to delete the screenshot '%s'"
+[message.translations]
+traditional_chinese = "無法刪除截圖「%s」"
+
+[[message]]
+key = "Unable to open the screenshot file"
+[message.translations]
+traditional_chinese = "無法開啟截圖檔案"
+
+[[message]]
+key = "Version"
+[message.translations]
+traditional_chinese = "版本"
+
+[[message]]
+key = "Yes"
+[message.translations]
+traditional_chinese = "是"
+
+[[message]]
+key = "map not included"
+context = "Demo details"
+[message.translations]
+traditional_chinese = "未包含地圖"
+
+[[message]]
+key = "Go to Live"
+context = "Demo playback"
+[message.translations]
+traditional_chinese = "跳轉到即時"
+
+[[message]]
+key = "Live"
+context = "Demo playback"
+[message.translations]
+traditional_chinese = "即時"
+
+[[message]]
+key = "%s min."
+context = "Demo player duration"
+[message.translations]
+traditional_chinese = "%s 分"
+
+[[message]]
+key = "%s sec."
+context = "Demo player duration"
+[message.translations]
+traditional_chinese = "%s 秒"

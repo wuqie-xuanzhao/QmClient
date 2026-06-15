@@ -1,0 +1,483 @@
+[[message]]
+key = "Active color"
+[message.translations]
+japanese = "アクティブ時の色"
+
+[[message]]
+key = "Active: Fire"
+[message.translations]
+japanese = "現在：発射"
+
+[[message]]
+key = "Active: Hook"
+[message.translations]
+japanese = "現在：フック"
+
+[[message]]
+key = "Add command"
+[message.translations]
+japanese = "コマンドを追加"
+
+[[message]]
+key = "Aim"
+[message.translations]
+japanese = "エイム"
+
+[[message]]
+key = "Are you sure that you want to delete this button?"
+[message.translations]
+japanese = "このボタンを削除してもよろしいですか？"
+
+[[message]]
+key = "Are you sure that you want to discard the current changes to the touch controls?"
+[message.translations]
+japanese = "タッチコントロールの現在の変更を破棄してもよろしいですか？"
+
+[[message]]
+key = "Are you sure that you want to import the touch controls from the clipboard? This will overwrite your current touch controls."
+[message.translations]
+japanese = "クリップボードからタッチコントロールをインポートしてもよろしいですか？現在の設定は上書きされます。"
+
+[[message]]
+key = "Are you sure that you want to reset the touch controls to default?"
+[message.translations]
+japanese = "タッチコントロールをデフォルトにリセットしてもよろしいですか？"
+
+[[message]]
+key = "Behavior"
+[message.translations]
+japanese = "動作"
+
+[[message]]
+key = "Behavior type"
+[message.translations]
+japanese = "動作タイプ"
+
+[[message]]
+key = "Button position is outside of the screen."
+[message.translations]
+japanese = "ボタンの位置が画面の外にあります。"
+
+[[message]]
+key = "Buttons"
+[message.translations]
+japanese = "ボタン"
+
+[[message]]
+key = "Command"
+[message.translations]
+japanese = "コマンド"
+
+[[message]]
+key = "Could not save touch controls to file. See local console for details."
+[message.translations]
+japanese = "タッチコントロールをファイルに保存できませんでした。詳細はローカルコンソールを確認してください。"
+
+[[message]]
+key = "Delete button"
+[message.translations]
+japanese = "ボタンを削除"
+
+[[message]]
+key = "Delete command"
+[message.translations]
+japanese = "コマンドを削除"
+
+[[message]]
+key = "Deselect"
+[message.translations]
+japanese = "選択解除"
+
+[[message]]
+key = "Direct touch input while ingame"
+[message.translations]
+japanese = "ゲーム中の直接タッチ入力"
+
+[[message]]
+key = "Direct touch input while spectating"
+[message.translations]
+japanese = "観戦中の直接タッチ入力"
+
+[[message]]
+key = "Discard changes"
+[message.translations]
+japanese = "変更を破棄"
+
+[[message]]
+key = "Duplicate"
+[message.translations]
+japanese = "複製"
+
+[[message]]
+key = "Edit"
+[message.translations]
+japanese = "編集"
+
+[[message]]
+key = "Error saving touch controls"
+[message.translations]
+japanese = "タッチコントロール保存エラー"
+
+[[message]]
+key = "Export to clipboard"
+[message.translations]
+japanese = "クリップボードにエクスポート"
+
+[[message]]
+key = "File"
+[message.translations]
+japanese = "ファイル"
+
+[[message]]
+key = "Height"
+[message.translations]
+japanese = "高さ"
+
+[[message]]
+key = "https://wiki.ddnet.org/wiki/Touch_controls"
+[message.translations]
+japanese = "https://wiki.ddnet.org/wiki/Touch_controls"
+
+[[message]]
+key = "Import from clipboard"
+[message.translations]
+japanese = "クリップボードからインポート"
+
+[[message]]
+key = "Inactive color"
+[message.translations]
+japanese = "非アクティブ時の色"
+
+[[message]]
+key = "Label"
+[message.translations]
+japanese = "ラベル"
+
+[[message]]
+key = "Label type"
+[message.translations]
+japanese = "ラベルタイプ"
+
+[[message]]
+key = "Layout"
+[message.translations]
+japanese = "レイアウト"
+
+[[message]]
+key = "Long press on a touch button to select it."
+[message.translations]
+japanese = "タッチボタンを長押しして選択します。"
+
+[[message]]
+key = "New button"
+[message.translations]
+japanese = "新しいボタン"
+
+[[message]]
+key = "No buttons match your filter criteria"
+[message.translations]
+japanese = "フィルター条件に一致するボタンがありません"
+
+[[message]]
+key = "No space for button"
+[message.translations]
+japanese = "ボタンを配置するスペースがありません"
+
+[[message]]
+key = "Please save your changes before duplicating a button."
+[message.translations]
+japanese = "ボタンを複製する前に変更を保存してください。"
+
+[[message]]
+key = "Preview"
+[message.translations]
+japanese = "プレビュー"
+
+[[message]]
+key = "Preview button visibility while the editor is active."
+[message.translations]
+japanese = "エディターがアクティブな間のボタンのプレビュー表示"
+
+[[message]]
+key = "Reset to defaults"
+[message.translations]
+japanese = "デフォルトにリセット"
+
+[[message]]
+key = "Save all changes before switching selected button?"
+[message.translations]
+japanese = "選択中のボタンを切り替える前に変更を保存しますか？"
+
+[[message]]
+key = "Save changes"
+[message.translations]
+japanese = "変更を保存"
+
+[[message]]
+key = "Select button by touch"
+[message.translations]
+japanese = "タッチでボタンを選択"
+
+[[message]]
+key = "Selected button not visible"
+[message.translations]
+japanese = "選択中のボタンが非表示です"
+
+[[message]]
+key = "Shape"
+[message.translations]
+japanese = "形状"
+
+[[message]]
+key = "Show all buttons"
+[message.translations]
+japanese = "すべてのボタンを表示"
+
+[[message]]
+key = "The selected button is not visible. Do you want to deselect it or edit its visibility?"
+[message.translations]
+japanese = "選択中のボタンは表示されていません。選択を解除するか、表示設定を編集しますか？"
+
+[[message]]
+key = "The selected button is overlapping with other buttons."
+[message.translations]
+japanese = "選択中のボタンが他のボタンと重なっています。"
+
+[[message]]
+key = "There is not enough space available for the button. Check its visibilities and size."
+[message.translations]
+japanese = "ボタンを配置するのに十分なスペースがありません。表示設定とサイズを確認してください。"
+
+[[message]]
+key = "There is not enough space available to place another button."
+[message.translations]
+japanese = "別のボタンを配置するのに十分なスペースがありません。"
+
+[[message]]
+key = "Visibility"
+[message.translations]
+japanese = "表示"
+
+[[message]]
+key = "Width"
+[message.translations]
+japanese = "幅"
+
+[[message]]
+key = "Width and height are required to be within the range from %d to %d."
+[message.translations]
+japanese = "幅と高さは%dから%dの範囲内である必要があります。"
+
+[[message]]
+key = "Wrong button settings"
+[message.translations]
+japanese = "ボタン設定エラー"
+
+[[message]]
+key = "You'll lose unsaved changes after deselecting."
+[message.translations]
+japanese = "選択解除後、未保存の変更は失われます。"
+
+[[message]]
+key = "Active action"
+context = "Direct touch input"
+[message.translations]
+japanese = "実行中のアクション"
+
+[[message]]
+key = "Aim"
+context = "Direct touch input"
+[message.translations]
+japanese = "照準"
+
+[[message]]
+key = "Disabled"
+context = "Direct touch input"
+[message.translations]
+japanese = "無効"
+
+[[message]]
+key = "Fire"
+context = "Direct touch input"
+[message.translations]
+japanese = "発射"
+
+[[message]]
+key = "Hook"
+context = "Direct touch input"
+[message.translations]
+japanese = "フック"
+
+[[message]]
+key = "Emoticon"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "絵文字"
+
+[[message]]
+key = "Extra Menu"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "追加メニュー"
+
+[[message]]
+key = "Ingame Menu"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "ゲーム内メニュー"
+
+[[message]]
+key = "Joystick Action"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "ジョイスティック操作"
+
+[[message]]
+key = "Joystick Aim"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "ジョイスティック照準"
+
+[[message]]
+key = "Joystick Fire"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "ジョイスティック発射"
+
+[[message]]
+key = "Joystick Hook"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "ジョイスティックフック"
+
+[[message]]
+key = "Spectate"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "観戦"
+
+[[message]]
+key = "Swap Action"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "操作入れ替え"
+
+[[message]]
+key = "Use Action"
+context = "Predefined touch button behaviors"
+[message.translations]
+japanese = "アクション使用"
+
+[[message]]
+key = "Bind"
+context = "Touch button behavior"
+[message.translations]
+japanese = "バインド"
+
+[[message]]
+key = "Bind Toggle"
+context = "Touch button behavior"
+[message.translations]
+japanese = "バインド切り替え"
+
+[[message]]
+key = "Predefined"
+context = "Touch button behavior"
+[message.translations]
+japanese = "プリセット"
+
+[[message]]
+key = "Icon"
+context = "Touch button label type"
+[message.translations]
+japanese = "アイコン化"
+
+[[message]]
+key = "Localized"
+context = "Touch button label type"
+[message.translations]
+japanese = "自動翻訳"
+
+[[message]]
+key = "Plain"
+context = "Touch button label type"
+[message.translations]
+japanese = "普通"
+
+[[message]]
+key = "Circle"
+context = "Touch button shape"
+[message.translations]
+japanese = "円形"
+
+[[message]]
+key = "Rectangle"
+context = "Touch button shape"
+[message.translations]
+japanese = "矩形"
+
+[[message]]
+key = "Allow dummy"
+context = "Touch button visibilities"
+[message.translations]
+japanese = "ダミーを許可"
+
+[[message]]
+key = "Demo Player"
+context = "Touch button visibilities"
+[message.translations]
+japanese = "デモプレイヤー"
+
+[[message]]
+key = "Dummy connected"
+context = "Touch button visibilities"
+[message.translations]
+japanese = "ダミー接続中"
+
+[[message]]
+key = "Extra Menu"
+context = "Touch button visibilities"
+[message.translations]
+japanese = "追加メニュー"
+
+[[message]]
+key = "Ingame"
+context = "Touch button visibilities"
+[message.translations]
+japanese = "ゲーム内"
+
+[[message]]
+key = "Rcon Authed"
+context = "Touch button visibilities"
+[message.translations]
+japanese = "RCON認証済み"
+
+[[message]]
+key = "Vote Active"
+context = "Touch button visibilities"
+[message.translations]
+japanese = "投票アクティブ"
+
+[[message]]
+key = "Zoom Allowed"
+context = "Touch button visibilities"
+[message.translations]
+japanese = "ズーム許可時"
+
+[[message]]
+key = "Excluded"
+context = "Touch button visibility preview"
+[message.translations]
+japanese = "除外"
+
+[[message]]
+key = "Ignore"
+context = "Touch button visibility preview"
+[message.translations]
+japanese = "無視"
+
+[[message]]
+key = "Included"
+context = "Touch button visibility preview"
+[message.translations]
+japanese = "含む"

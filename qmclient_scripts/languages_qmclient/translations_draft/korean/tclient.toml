@@ -1,0 +1,1560 @@
+[[message]]
+key = " min"
+[message.translations]
+korean = "분"
+
+[[message]]
+key = " seconds"
+[message.translations]
+korean = "초"
+
+[[message]]
+key = " seconds (never)"
+[message.translations]
+korean = "초 (절대로)"
+
+[[message]]
+key = "%ds left"
+[message.translations]
+korean = "%d초 남음"
+
+[[message]]
+key = "%s not found"
+[message.translations]
+korean = "%s를 찾을 수 없습니다."
+
+[[message]]
+key = "+%d more codes"
+[message.translations]
+korean = "+%d 개의 코드 더 있음"
+
+[[message]]
+key = "Add [group] [clan] [reason]:"
+[message.translations]
+korean = "추가 [그룹] [클랜] [사유]:"
+
+[[message]]
+key = "Add [group] [name] [reason]:"
+[message.translations]
+korean = "추가 [그룹] [이름] [사유]:"
+
+[[message]]
+key = "Add a bind to the bindwheel"
+[message.translations]
+korean = "바인드 휠에 바인드 추가"
+
+[[message]]
+key = "Add a chat bind"
+[message.translations]
+korean = "채팅 바인드 추가"
+
+[[message]]
+key = "Add a clan war entry"
+[message.translations]
+korean = "클랜 워 항목 추가"
+
+[[message]]
+key = "Add a map to favorites"
+[message.translations]
+korean = "맵을 즐겨찾기에 추가"
+
+[[message]]
+key = "Add a name war entry"
+[message.translations]
+korean = "이름 워 항목 추가"
+
+[[message]]
+key = "Add a profile"
+[message.translations]
+korean = "프로필 추가"
+
+[[message]]
+key = "Add Bind"
+[message.translations]
+korean = "바인드 추가"
+
+[[message]]
+key = "Add Entry"
+[message.translations]
+korean = "항목 추가"
+
+[[message]]
+key = "Add Group"
+[message.translations]
+korean = "그룹 추가"
+
+[[message]]
+key = "Add Item"
+[message.translations]
+korean = "아이템 추가"
+
+[[message]]
+key = "Add team clan:"
+[message.translations]
+korean = "팀 클랜 추가:"
+
+[[message]]
+key = "Add team name:"
+[message.translations]
+korean = "팀 이름 추가:"
+
+[[message]]
+key = "Add war clan:"
+[message.translations]
+korean = "워 클랜 추가:"
+
+[[message]]
+key = "Add war name:"
+[message.translations]
+korean = "워 이름 추가:"
+
+[[message]]
+key = "Adds a specific war entry"
+[message.translations]
+korean = "특정 워 항목 추가"
+
+[[message]]
+key = "Adds default chat binds"
+[message.translations]
+korean = "기본 채팅 바인드 추가"
+
+[[message]]
+key = "Adjust your prediction margin while frozen"
+[message.translations]
+korean = "얼었을 때 예측 여백 조정"
+
+[[message]]
+key = "After Load"
+[message.translations]
+korean = "로드 후"
+
+[[message]]
+key = "Agree"
+[message.translations]
+korean = "동의"
+
+[[message]]
+key = "Allow Duplicate Entries"
+[message.translations]
+korean = "중복 항목 허용"
+
+[[message]]
+key = "Amount"
+[message.translations]
+korean = "양"
+
+[[message]]
+key = "Anti Latency Tools"
+[message.translations]
+korean = "지연 보정 도구"
+
+[[message]]
+key = "Anti Ping Smoothing"
+[message.translations]
+korean = "핑 스무딩"
+
+[[message]]
+key = "Apply a saved profile by 1-based index to the current tee"
+[message.translations]
+korean = "1부터 시작하는 인덱스로 저장된 프로필을 현재 티에 적용"
+
+[[message]]
+key = "Apply Changes"
+[message.translations]
+korean = "변경 사항 적용"
+
+[[message]]
+key = "Are you sure that you want to remove '%s' from your war groups?"
+[message.translations]
+korean = "'%s'을(를) 워 그룹에서 제거하시겠습니까?"
+
+[[message]]
+key = "Attempt to change your name when near finish"
+[message.translations]
+korean = "결승선 근처에서 이름 변경 시도"
+
+[[message]]
+key = "Auto agree vote"
+[message.translations]
+korean = "자동 투표 동의"
+
+[[message]]
+key = "Auto execute"
+[message.translations]
+korean = "자동 실행"
+
+[[message]]
+key = "Auto map vote"
+[message.translations]
+korean = "자동 맵 투표"
+
+[[message]]
+key = "Auto reject vote"
+[message.translations]
+korean = "자동 투표 거부"
+
+[[message]]
+key = "Automatic updates are only supported on Windows"
+[message.translations]
+korean = "자동 업데이트는 Windows에서만 지원됩니다"
+
+[[message]]
+key = "Automatically reply to muted players"
+[message.translations]
+korean = "음소거된 플레이어에게 자동 응답"
+
+[[message]]
+key = "Automatically reply while the window is unfocused"
+[message.translations]
+korean = "창이 비활성화된 상태에서 자동 응답"
+
+[[message]]
+key = "Background Draw"
+[message.translations]
+korean = "배경 그리기"
+
+[[message]]
+key = "Bind Wheel"
+[message.translations]
+korean = "바인드 휠"
+
+[[message]]
+key = "Bind Wheel Key"
+[message.translations]
+korean = "바인드 휠 키"
+
+[[message]]
+key = "Black"
+[message.translations]
+korean = "검정"
+
+[[message]]
+key = "Blue"
+[message.translations]
+korean = "파랑"
+
+[[message]]
+key = "Camera"
+[message.translations]
+korean = "카메라"
+
+[[message]]
+key = "Change indicator offset based on distance to other tees"
+[message.translations]
+korean = "다른 티와의 거리에 따라 표시기 오프셋 변경"
+
+[[message]]
+key = "Changes: %d"
+[message.translations]
+korean = "변경 사항: %d"
+
+[[message]]
+key = "Changing name to %s near finish"
+[message.translations]
+korean = "결승선 근처에서 이름을 %s(으)로 변경"
+
+[[message]]
+key = "Chat Binds"
+[message.translations]
+korean = "채팅 바인드"
+
+[[message]]
+key = "Clan: %s"
+[message.translations]
+korean = "클랜: %s"
+
+[[message]]
+key = "Clear all favorite maps"
+[message.translations]
+korean = "모든 즐겨찾기 맵 지우기"
+
+[[message]]
+key = "Clear Changes"
+[message.translations]
+korean = "변경 사항 지우기"
+
+[[message]]
+key = "Color"
+[message.translations]
+korean = "색상"
+
+[[message]]
+key = "Colors"
+[message.translations]
+korean = "색상"
+
+[[message]]
+key = "Colors in chat"
+[message.translations]
+korean = "채팅에서의 색상"
+
+[[message]]
+key = "Colors in scoreboard"
+[message.translations]
+korean = "점수판에서의 색상"
+
+[[message]]
+key = "Command:"
+[message.translations]
+korean = "명령어:"
+
+[[message]]
+key = "Commands run in the console"
+[message.translations]
+korean = "콘솔에서 실행되는 명령어"
+
+[[message]]
+key = "Compact"
+[message.translations]
+korean = "간결"
+
+[[message]]
+key = "Config Files"
+[message.translations]
+korean = "설정 파일"
+
+[[message]]
+key = "Custom Font:"
+[message.translations]
+korean = "사용자 정의 글꼴:"
+
+[[message]]
+key = "Cute:"
+[message.translations]
+korean = "귀여움:"
+
+[[message]]
+key = "Cycle through emotes"
+[message.translations]
+korean = "이모트 순환"
+
+[[message]]
+key = "Deep freeze color"
+[message.translations]
+korean = "깊은 얼음 색상"
+
+[[message]]
+key = "Deep unfreeze color"
+[message.translations]
+korean = "깊은 해동 색상"
+
+[[message]]
+key = "Delay"
+[message.translations]
+korean = "지연"
+
+[[message]]
+key = "Disagree"
+[message.translations]
+korean = "반대"
+
+[[message]]
+key = "Dont predict other players if you are frozen"
+[message.translations]
+korean = "얼어 있을 때 다른 플레이어 예측 안 함"
+
+[[message]]
+key = "DONT USE THIS! USE add_bindwheel INSTEAD!"
+[message.translations]
+korean = "사용하지 마세요! 대신 add_bindwheel을 사용하세요!"
+
+[[message]]
+key = "Downloading update..."
+[message.translations]
+korean = "업데이트 다운로드 중..."
+
+[[message]]
+key = "Draw on the in game background"
+[message.translations]
+korean = "게임 배경에 그리기"
+
+[[message]]
+key = "Draw where mouse is"
+[message.translations]
+korean = "마우스 위치에 그리기"
+
+[[message]]
+key = "Edit Entry"
+[message.translations]
+korean = "항목 편집"
+
+[[message]]
+key = "Enable Deleting"
+[message.translations]
+korean = "삭제 활성화"
+
+[[message]]
+key = "Enable Jelly Tee"
+[message.translations]
+korean = "젤리 티 활성화"
+
+[[message]]
+key = "Enable mod weapon on %d: %s"
+[message.translations]
+korean = "%d에서 모드 무기 활성화: %s"
+
+[[message]]
+key = "Enable tee trails"
+[message.translations]
+korean = "티 꼬리 활성화"
+
+[[message]]
+key = "Enable warlist"
+[message.translations]
+korean = "적대 목록 활성화"
+
+[[message]]
+key = "Erase items on the in game background"
+[message.translations]
+korean = "게임 배경의 항목 지우기"
+
+[[message]]
+key = "Evaluate an expression"
+[message.translations]
+korean = "표현식 평가"
+
+[[message]]
+key = "Execute before connecting"
+[message.translations]
+korean = "연결 전 실행"
+
+[[message]]
+key = "Execute hovered bindwheel bind"
+[message.translations]
+korean = "가리킨 바인드휠 바인드 실행"
+
+[[message]]
+key = "Execute on connect"
+[message.translations]
+korean = "연결 시 실행"
+
+[[message]]
+key = "Fade trail alpha"
+[message.translations]
+korean = "꼬리 알파 페이드"
+
+[[message]]
+key = "Failed to check for updates"
+[message.translations]
+korean = "업데이트 확인 실패"
+
+[[message]]
+key = "Failed to create bgdraw folder"
+[message.translations]
+korean = "bgdraw 폴더 생성 실패"
+
+[[message]]
+key = "Failed to read saves file"
+[message.translations]
+korean = "저장 파일 읽기 실패"
+
+[[message]]
+key = "Fake CTF flags"
+[message.translations]
+korean = "가짜 CTF 깃발"
+
+[[message]]
+key = "Fast input (reduce visual latency)"
+[message.translations]
+korean = "빠른 입력 (시각적 지연 감소)"
+
+[[message]]
+key = "Fast input others"
+[message.translations]
+korean = "다른 플레이어 빠른 입력"
+
+[[message]]
+key = "Finish Name"
+[message.translations]
+korean = "완료 이름"
+
+[[message]]
+key = "Finish Name:"
+[message.translations]
+korean = "완료 이름:"
+
+[[message]]
+key = "Flip:"
+[message.translations]
+korean = "뒤집기:"
+
+[[message]]
+key = "Freeview cursor opacity"
+[message.translations]
+korean = "자유 시점 커서 불투명도"
+
+[[message]]
+key = "Freeze"
+[message.translations]
+korean = "얼림"
+
+[[message]]
+key = "Freeze stars"
+[message.translations]
+korean = "얼림 별"
+
+[[message]]
+key = "Frozen Margin"
+[message.translations]
+korean = "얼림 여유"
+
+[[message]]
+key = "Ghost tools"
+[message.translations]
+korean = "유령 도구"
+
+[[message]]
+key = "Github"
+[message.translations]
+korean = "Github"
+
+[[message]]
+key = "Group name"
+[message.translations]
+korean = "그룹 이름"
+
+[[message]]
+key = "Hammer Mode:"
+[message.translations]
+korean = "망치 모드:"
+
+[[message]]
+key = "Hide ghosts of frozen players"
+[message.translations]
+korean = "얼린 플레이어의 유령 숨기기"
+
+[[message]]
+key = "Hide indicator for tees on your screen"
+[message.translations]
+korean = "화면 내 티 표시기 숨기기"
+
+[[message]]
+key = "Hide Settings Tabs"
+[message.translations]
+korean = "설정 탭 숨기기"
+
+[[message]]
+key = "I am away from the game window"
+[message.translations]
+korean = "게임 창에서 자리 비움"
+
+[[message]]
+key = "I muted you"
+[message.translations]
+korean = "당신을 음소거했습니다"
+
+[[message]]
+key = "Indicator alive color"
+[message.translations]
+korean = "표시기 생존 색상"
+
+[[message]]
+key = "Indicator in freeze color"
+[message.translations]
+korean = "표시기 얼음 색상"
+
+[[message]]
+key = "Indicator max distance"
+[message.translations]
+korean = "표시기 최대 거리"
+
+[[message]]
+key = "Indicator max offset"
+[message.translations]
+korean = "표시기 최대 오프셋"
+
+[[message]]
+key = "Indicator min offset"
+[message.translations]
+korean = "표시기 최소 오프셋"
+
+[[message]]
+key = "Indicator offset"
+[message.translations]
+korean = "표시기 오프셋"
+
+[[message]]
+key = "Indicator opacity"
+[message.translations]
+korean = "표시기 불투명도"
+
+[[message]]
+key = "Indicator safe color"
+[message.translations]
+korean = "표시기 안전 색상"
+
+[[message]]
+key = "Indicator size"
+[message.translations]
+korean = "표시기 크기"
+
+[[message]]
+key = "Info"
+[message.translations]
+korean = "정보"
+
+[[message]]
+key = "Ingame cursor scale"
+[message.translations]
+korean = "게임 내 커서 배율"
+
+[[message]]
+key = "Input"
+[message.translations]
+korean = "입력"
+
+[[message]]
+key = "Jelly duration"
+[message.translations]
+korean = "젤리 지속 시간"
+
+[[message]]
+key = "Jelly others"
+[message.translations]
+korean = "다른 플레이어도 젤리 티"
+
+[[message]]
+key = "Jelly strength"
+[message.translations]
+korean = "젤리 강도"
+
+[[message]]
+key = "Kaomoji"
+[message.translations]
+korean = "카오모지"
+
+[[message]]
+key = "L select  R swap  M select only"
+[message.translations]
+korean = "L 선택  R 교체  M만 선택"
+
+[[message]]
+key = "Lenny:"
+[message.translations]
+korean = "레니 ͡° ͜ʖ ͡°:"
+
+[[message]]
+key = "List local saves for current map (or specified map)"
+[message.translations]
+korean = "현재 맵(또는 지정된 맵)의 로컬 저장 목록"
+
+[[message]]
+key = "Load"
+[message.translations]
+korean = "불러오기"
+
+[[message]]
+key = "Load drawings from a given csv file (defaults to map name)"
+[message.translations]
+korean = "지정된 CSV 파일에서 그림 불러오기 (기본값: 맵 이름)"
+
+[[message]]
+key = "Loaded %d items"
+[message.translations]
+korean = "%d개 항목 불러옴"
+
+[[message]]
+key = "Loaded %d items (discarded %d items)"
+[message.translations]
+korean = "%d개 항목 불러옴 (%d개 항목 폐기)"
+
+[[message]]
+key = "Local Time"
+[message.translations]
+korean = "현지 시간"
+
+[[message]]
+key = "Maximum rows"
+[message.translations]
+korean = "최대 행 수"
+
+[[message]]
+key = "Message to send in chat:"
+[message.translations]
+korean = "채팅으로 보낼 메시지:"
+
+[[message]]
+key = "Minimum time"
+[message.translations]
+korean = "최소 시간"
+
+[[message]]
+key = "Misc"
+[message.translations]
+korean = "기타"
+
+[[message]]
+key = "Modified"
+[message.translations]
+korean = "수정됨"
+
+[[message]]
+key = "Mute:"
+[message.translations]
+korean = "음소거:"
+
+[[message]]
+key = "Name:"
+[message.translations]
+korean = "이름:"
+
+[[message]]
+key = "Name: %s"
+[message.translations]
+korean = "이름: %s"
+
+[[message]]
+key = "Negative stability buffer (for Gores)"
+[message.translations]
+korean = "음수 안정성 버퍼 (Gores용)"
+
+[[message]]
+key = "No changes since last save"
+[message.translations]
+korean = "마지막 저장 이후 변경 사항 없음"
+
+[[message]]
+key = "No chat message available to repeat"
+[message.translations]
+korean = "반복할 채팅 메시지가 없음"
+
+[[message]]
+key = "No items to write"
+[message.translations]
+korean = "쓸 항목이 없음"
+
+[[message]]
+key = "No local saves file found (ddnet-saves.txt)"
+[message.translations]
+korean = "로컬 저장 파일을 찾을 수 없음 (ddnet-saves.txt)"
+
+[[message]]
+key = "No safe position found"
+[message.translations]
+korean = "안전한 위치를 찾을 수 없음"
+
+[[message]]
+key = "No saved profiles available yet. Save one first."
+[message.translations]
+korean = "저장된 프로필이 없습니다. 먼저 저장하세요."
+
+[[message]]
+key = "No status bar items"
+[message.translations]
+korean = "상태 표시줄 항목 없음"
+
+[[message]]
+key = "Notify when only one tee is still alive:"
+[message.translations]
+korean = "한 명의 티만 살아있을 때 알림:"
+
+[[message]]
+key = "Online Players"
+[message.translations]
+korean = "온라인 플레이어"
+
+[[message]]
+key = "Only show after joining a team"
+[message.translations]
+korean = "팀에 참가한 후에만 표시"
+
+[[message]]
+key = "Only show outlines in the entities layer"
+[message.translations]
+korean = "엔티티 레이어에서만 윤곽선 표시"
+
+[[message]]
+key = "Open bindwheel selector"
+[message.translations]
+korean = "바인드휠 선택기 열기"
+
+[[message]]
+key = "Optimistic prediction along stable direction"
+[message.translations]
+korean = "안정적인 방향으로 낙관적 예측"
+
+[[message]]
+key = "Outline opacity"
+[message.translations]
+korean = "윤곽선 불투명도"
+
+[[message]]
+key = "Override"
+[message.translations]
+korean = "재정의"
+
+[[message]]
+key = "Override Entry"
+[message.translations]
+korean = "항목 재정의"
+
+[[message]]
+key = "Override Group"
+[message.translations]
+korean = "그룹 재정의"
+
+[[message]]
+key = "Override Selected"
+[message.translations]
+korean = "선택 항목 재정의"
+
+[[message]]
+key = "Overwrite clan even if empty"
+[message.translations]
+korean = "비어 있어도 클랜 덮어쓰기"
+
+[[message]]
+key = "Pet alpha"
+[message.translations]
+korean = "펫 투명도"
+
+[[message]]
+key = "Pet size"
+[message.translations]
+korean = "펫 크기"
+
+[[message]]
+key = "Pet Skin:"
+[message.translations]
+korean = "펫 스킨:"
+
+[[message]]
+key = "Player indicator"
+[message.translations]
+korean = "플레이어 표시기"
+
+[[message]]
+key = "Predicted ghost opacity"
+[message.translations]
+korean = "예측 고스트 불투명도"
+
+[[message]]
+key = "Prediction Margin"
+[message.translations]
+korean = "예측 여유"
+
+[[message]]
+key = "Print command executed by this name or all chat binds"
+[message.translations]
+korean = "이 이름 또는 모든 채팅 바인드로 실행된 명령 출력"
+
+[[message]]
+key = "Profiles file"
+[message.translations]
+korean = "프로필 파일"
+
+[[message]]
+key = "Pulse"
+[message.translations]
+korean = "펄스"
+
+[[message]]
+key = "qm_profile_queue: index must be between 1 and %d"
+[message.translations]
+korean = "qm_profile_queue: 인덱스는 1에서 %d 사이여야 합니다"
+
+[[message]]
+key = "QmClient Settings"
+[message.translations]
+korean = "QmClient 설정"
+
+[[message]]
+key = "Rainbow"
+[message.translations]
+korean = "무지개"
+
+[[message]]
+key = "Rainbow hook"
+[message.translations]
+korean = "무지개 갈고리"
+
+[[message]]
+key = "Rainbow others"
+[message.translations]
+korean = "모두에게 무지개 적용"
+
+[[message]]
+key = "Rainbow speed"
+[message.translations]
+korean = "색상 변화 속도"
+
+[[message]]
+key = "Rainbow Tees"
+[message.translations]
+korean = "무지개 티"
+
+[[message]]
+key = "Rainbow weapons"
+[message.translations]
+korean = "무지개 무기"
+
+[[message]]
+key = "Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]"
+[message.translations]
+korean = "플레이어 색상 무작위화 (0 = 전체, 1 = 몸, 2 = 발, 3 = 스킨, 4 = 깃발) 예: 0011 = 스킨과 깃발 무작위화 [숫자는 위치]"
+
+[[message]]
+key = "Reason"
+[message.translations]
+korean = "이유"
+
+[[message]]
+key = "Red"
+[message.translations]
+korean = "빨간색"
+
+[[message]]
+key = "Remove [group] [clan]:"
+[message.translations]
+korean = "제거 [그룹] [클랜]:"
+
+[[message]]
+key = "Remove [group] [name]:"
+[message.translations]
+korean = "제거 [그룹] [이름]:"
+
+[[message]]
+key = "Remove a bind from the bindwheel"
+[message.translations]
+korean = "바인드휠에서 바인드 제거"
+
+[[message]]
+key = "Remove a chat bind"
+[message.translations]
+korean = "채팅 바인드 제거"
+
+[[message]]
+key = "Remove a clan war entry"
+[message.translations]
+korean = "클랜 적대 항목 제거"
+
+[[message]]
+key = "Remove a map from favorites"
+[message.translations]
+korean = "즐겨찾기에서 맵 제거"
+
+[[message]]
+key = "Remove a name war entry"
+[message.translations]
+korean = "이름 적대 항목 제거"
+
+[[message]]
+key = "Remove Bind"
+[message.translations]
+korean = "바인드 제거"
+
+[[message]]
+key = "Remove Item"
+[message.translations]
+korean = "항목 제거"
+
+[[message]]
+key = "Remove prediction & antiping in freeze"
+[message.translations]
+korean = "얼음 상태에서 예측 및 안티핑 제거"
+
+[[message]]
+key = "Remove team clan:"
+[message.translations]
+korean = "팀 클랜 제거:"
+
+[[message]]
+key = "Remove team name:"
+[message.translations]
+korean = "팀 이름 제거:"
+
+[[message]]
+key = "Remove war clan:"
+[message.translations]
+korean = "적대 클랜 제거:"
+
+[[message]]
+key = "Remove War Group"
+[message.translations]
+korean = "적대 그룹 제거"
+
+[[message]]
+key = "Remove war name:"
+[message.translations]
+korean = "적대 이름 제거:"
+
+[[message]]
+key = "Removes all bindwheel binds"
+[message.translations]
+korean = "모든 바인드휠 바인드 제거"
+
+[[message]]
+key = "Removes all chat binds"
+[message.translations]
+korean = "모든 채팅 바인드 제거"
+
+[[message]]
+key = "Render all custom colored feet as white feet skin"
+[message.translations]
+korean = "모든 사용자 지정 발 색상을 흰색 발 스킨으로 렌더링"
+
+[[message]]
+key = "Render ghosts as circles"
+[message.translations]
+korean = "고스트를 원으로 렌더링"
+
+[[message]]
+key = "Render tiny tees instead of circles"
+[message.translations]
+korean = "원 대신 작은 티로 렌더링"
+
+[[message]]
+key = "Repeat the latest chat message"
+[message.translations]
+korean = "최신 채팅 메시지 반복"
+
+[[message]]
+key = "Rescue to a nearby air tile"
+[message.translations]
+korean = "근처 공기 타일로 구조"
+
+[[message]]
+key = "Reset all drawings on the background"
+[message.translations]
+korean = "배경의 모든 그림 초기화"
+
+[[message]]
+key = "Reset position of mouse when opening bindwheel"
+[message.translations]
+korean = "바인드휠 열 때 마우스 위치 초기화"
+
+[[message]]
+key = "Save drawings to a given csv file (defaults to map name)"
+[message.translations]
+korean = "그림을 지정된 CSV 파일에 저장 (기본값: 맵 이름)"
+
+[[message]]
+key = "Save/Load Clan"
+[message.translations]
+korean = "클랜 저장/불러오기"
+
+[[message]]
+key = "Save/Load Colors"
+[message.translations]
+korean = "색상 저장/불러오기"
+
+[[message]]
+key = "Save/Load Emote"
+[message.translations]
+korean = "이모트 저장/불러오기"
+
+[[message]]
+key = "Save/Load Flag"
+[message.translations]
+korean = "국기 저장/불러오기"
+
+[[message]]
+key = "Save/Load Name"
+[message.translations]
+korean = "이름 저장/불러오기"
+
+[[message]]
+key = "Save/Load Skin"
+[message.translations]
+korean = "스킨 저장/불러오기"
+
+[[message]]
+key = "Screen center line color"
+[message.translations]
+korean = "화면 중심선 색상"
+
+[[message]]
+key = "Screen center line width"
+[message.translations]
+korean = "화면 중심선 두께"
+
+[[message]]
+key = "Self"
+[message.translations]
+korean = "자신"
+
+[[message]]
+key = "Show %s group"
+[message.translations]
+korean = "%s 그룹 표시"
+
+[[message]]
+key = "Show all enabled outlines"
+[message.translations]
+korean = "활성화된 모든 윤곽선 표시"
+
+[[message]]
+key = "Show all warlist groups"
+[message.translations]
+korean = "모든 적대 목록 그룹 표시"
+
+[[message]]
+key = "Show any enabled Indicators"
+[message.translations]
+korean = "활성화된 표시기 표시"
+
+[[message]]
+key = "Show clan if war"
+[message.translations]
+korean = "적대 관계 시 클랜 표시"
+
+[[message]]
+key = "Show colors in spectator selection"
+[message.translations]
+korean = "관전 선택에서 색상 표시"
+
+[[message]]
+key = "Show compact vote HUD"
+[message.translations]
+korean = "소형 투표 HUD 표시"
+
+[[message]]
+key = "Show country flags in nameplates"
+[message.translations]
+korean = "이름표에 국가 국기 표시"
+
+[[message]]
+key = "Show katan on frozen players"
+[message.translations]
+korean = "얼린 플레이어에 카타나 표시"
+
+[[message]]
+key = "Show labels on status bar items"
+[message.translations]
+korean = "상태 표시줄 항목에 레이블 표시"
+
+[[message]]
+key = "Show moving tiles in entities"
+[message.translations]
+korean = "엔티티에 움직이는 타일 표시"
+
+[[message]]
+key = "Show only freeze Players"
+[message.translations]
+korean = "얼린 플레이어만 표시"
+
+[[message]]
+key = "Show other tees' trails"
+[message.translations]
+korean = "다른 티의 궤적 표시"
+
+[[message]]
+key = "Show ping colored circle in nameplates"
+[message.translations]
+korean = "이름표에 핑 색상 원 표시"
+
+[[message]]
+key = "Show position and angle (mini debug)"
+[message.translations]
+korean = "위치와 각도 표시 (미니 디버그)"
+
+[[message]]
+key = "Show seconds on clock"
+[message.translations]
+korean = "시계에 초 표시"
+
+[[message]]
+key = "Show skin names in nameplate"
+[message.translations]
+korean = "이름표에 스킨 이름 표시"
+
+[[message]]
+key = "Show status bar"
+[message.translations]
+korean = "상태 표시줄 표시"
+
+[[message]]
+key = "Show tee status bar"
+[message.translations]
+korean = "티 상태 표시줄 표시"
+
+[[message]]
+key = "Show the cursor while free spectating"
+[message.translations]
+korean = "자유 관전 중 커서 표시"
+
+[[message]]
+key = "Show the number of frozen tees"
+[message.translations]
+korean = "얼린 티 수 표시"
+
+[[message]]
+key = "Show the number of tees still alive"
+[message.translations]
+korean = "살아있는 티 수 표시"
+
+[[message]]
+key = "Show the pet"
+[message.translations]
+korean = "펫 표시"
+
+[[message]]
+key = "Show the screen center line"
+[message.translations]
+korean = "화면 중심선 표시"
+
+[[message]]
+key = "Show unpredicted ghosts for other players"
+[message.translations]
+korean = "다른 플레이어의 예측되지 않은 고스트 표시"
+
+[[message]]
+key = "Shrug:"
+[message.translations]
+korean = "어깨 으쓱:"
+
+[[message]]
+key = "Skin: %s"
+[message.translations]
+korean = "스킨: %s"
+
+[[message]]
+key = "Smaller tees"
+[message.translations]
+korean = "작은 티"
+
+[[message]]
+key = "Social"
+[message.translations]
+korean = "소셜"
+
+[[message]]
+key = "Solid"
+[message.translations]
+korean = "단색"
+
+[[message]]
+key = "Solid tile outline opacity"
+[message.translations]
+korean = "고체 타일 윤곽선 불투명도"
+
+[[message]]
+key = "Spectate a player by Id"
+[message.translations]
+korean = "ID로 플레이어 관전"
+
+[[message]]
+key = "Status Bar"
+[message.translations]
+korean = "상태 표시줄"
+
+[[message]]
+key = "Status bar alpha"
+[message.translations]
+korean = "상태 표시줄 투명도"
+
+[[message]]
+key = "Status Bar Codes:"
+[message.translations]
+korean = "상태 표시줄 코드:"
+
+[[message]]
+key = "Status bar color"
+[message.translations]
+korean = "상태 표시줄 색상"
+
+[[message]]
+key = "Status bar height"
+[message.translations]
+korean = "상태 표시줄 높이"
+
+[[message]]
+key = "Status Scheme:"
+[message.translations]
+korean = "상태 구성:"
+
+[[message]]
+key = "Stroke fade time"
+[message.translations]
+korean = "획 사라짐 시간"
+
+[[message]]
+key = "Sub-Tick aiming"
+[message.translations]
+korean = "서브틱 조준"
+
+[[message]]
+key = "Support ♥"
+[message.translations]
+korean = "후원 ♥"
+
+[[message]]
+key = "Swap ghosts with regular players"
+[message.translations]
+korean = "유령과 일반 플레이어 교체"
+
+[[message]]
+key = "Tags"
+[message.translations]
+korean = "태그"
+
+[[message]]
+key = "Taper trail width"
+[message.translations]
+korean = "테이퍼 트레일 너비"
+
+[[message]]
+key = "TClient Developers"
+[message.translations]
+korean = "TClient 개발자"
+
+[[message]]
+key = "TClient Links"
+[message.translations]
+korean = "TClient 링크"
+
+[[message]]
+key = "Tee size"
+[message.translations]
+korean = "티 크기"
+
+[[message]]
+key = "Tee status bar"
+[message.translations]
+korean = "티 상태 표시줄"
+
+[[message]]
+key = "Tee trail color"
+[message.translations]
+korean = "티 트레일 색상"
+
+[[message]]
+key = "Tee Trails"
+[message.translations]
+korean = "티 트레일"
+
+[[message]]
+key = "Tele"
+[message.translations]
+korean = "텔레"
+
+[[message]]
+key = "Text alpha"
+[message.translations]
+korean = "텍스트 투명도"
+
+[[message]]
+key = "Tile outlines"
+[message.translations]
+korean = "타일 외곽선"
+
+[[message]]
+key = "Tiny Tee Size"
+[message.translations]
+korean = "미니 티 크기"
+
+[[message]]
+key = "Toggle fast practice mode"
+[message.translations]
+korean = "빠른 연습 모드 전환"
+
+[[message]]
+key = "Toggle ghost key"
+[message.translations]
+korean = "고스트 키 전환"
+
+[[message]]
+key = "Trail width"
+[message.translations]
+korean = "트레일 너비"
+
+[[message]]
+key = "Translate ID:"
+[message.translations]
+korean = "번역 ID:"
+
+[[message]]
+key = "Translate:"
+[message.translations]
+korean = "번역:"
+
+[[message]]
+key = "Uncertainty duration"
+[message.translations]
+korean = "불확실성 지속 시간"
+
+[[message]]
+key = "Unflip:"
+[message.translations]
+korean = "뒤집기 취소:"
+
+[[message]]
+key = "Unfreeze"
+[message.translations]
+korean = "해동"
+
+[[message]]
+key = "Unmute:"
+[message.translations]
+korean = "음소거 해제:"
+
+[[message]]
+key = "Unpredicted ghost opacity"
+[message.translations]
+korean = "예측되지 않은 고스트 불투명도"
+
+[[message]]
+key = "Update"
+[message.translations]
+korean = "업데이트"
+
+[[message]]
+key = "Update failed. Please try again"
+[message.translations]
+korean = "업데이트 실패. 다시 시도하세요"
+
+[[message]]
+key = "Update finished. Please restart the client"
+[message.translations]
+korean = "업데이트 완료. 클라이언트를 다시 시작하세요"
+
+[[message]]
+key = "Update finished. Restarting..."
+[message.translations]
+korean = "업데이트 완료. 다시 시작 중..."
+
+[[message]]
+key = "Update or add a specific war group"
+[message.translations]
+korean = "특정 전쟁 그룹 업데이트 또는 추가"
+
+[[message]]
+key = "Use 12 hour clock"
+[message.translations]
+korean = "12시간제 사용"
+
+[[message]]
+key = "Use colored skins for frozen tees"
+[message.translations]
+korean = "얼린 티에 컬러 스킨 사용"
+
+[[message]]
+key = "Use custom skins instead of the ninja tee"
+[message.translations]
+korean = "닌자 티 대신 사용자 정의 스킨 사용"
+
+[[message]]
+key = "Use new smoothing algorithm"
+[message.translations]
+korean = "새 평활화 알고리즘 사용"
+
+[[message]]
+key = "Use warlist colors instead of regular colors"
+[message.translations]
+korean = "일반 색상 대신 전쟁 목록 색상 사용"
+
+[[message]]
+key = "Use warlist groups for indicator"
+[message.translations]
+korean = "표시기에 전쟁 목록 그룹 사용"
+
+[[message]]
+key = "Visual"
+[message.translations]
+korean = "시각"
+
+[[message]]
+key = "Visual: Effects"
+[message.translations]
+korean = "시각: 효과"
+
+[[message]]
+key = "Visual: Font & Cursor"
+[message.translations]
+korean = "시각: 글꼴 및 커서"
+
+[[message]]
+key = "Visual: Nameplates"
+[message.translations]
+korean = "시각: 이름표"
+
+[[message]]
+key = "War Entries"
+[message.translations]
+korean = "적대 항목"
+
+[[message]]
+key = "War Groups"
+[message.translations]
+korean = "적대 그룹"
+
+[[message]]
+key = "War List"
+[message.translations]
+korean = "전쟁 목록"
+
+[[message]]
+key = "Warlist"
+[message.translations]
+korean = "적대 목록"
+
+[[message]]
+key = "Wheel animate"
+[message.translations]
+korean = "휠 애니메이션"
+
+[[message]]
+key = "Writing item %d failed"
+[message.translations]
+korean = "%d번 항목 쓰기 실패"
+
+[[message]]
+key = "Written %d items"
+[message.translations]
+korean = "%d개 항목 작성됨"
+
+[[message]]
+key = "You are not in practice"
+[message.translations]
+korean = "연습 모드가 아닙니다"
+
+[[message]]
+key = "You're the last one!"
+[message.translations]
+korean = "당신이 마지막이에요!"
+
+[[message]]
+key = "Your friend %s is online and currently on map %s!"
+[message.translations]
+korean = "친구 %s님이 온라인이며 현재 맵 %s에 있습니다!"
+
+[[message]]
+key = "Your profile"
+[message.translations]
+korean = "내 프로필"
+
+[[message]]
+key = "You may have installed only DDNet.exe. Please use the full QmClient folder."
+context = "data_version.h"
+[message.translations]
+korean = "DDNet.exe만 설치했을 수 있습니다. 전체 QmClient 폴더를 사용하세요."
+
+[[message]]
+key = "You may have replaced only DDNet.exe and skipped QmClient.zip.\\nPlease install the full QmClient package."
+context = "data_version.h"
+[message.translations]
+korean = "DDNet.exe만 교체하고 QmClient.zip을 건너뛰었을 수 있습니다.\\n전체 QmClient 패키지를 설치하세요."
+
+[[message]]
+key = "Normal"
+context = "Hammer Mode"
+[message.translations]
+korean = "일반 (회전 안 함)"
+
+[[message]]
+key = "Rotate with cursor"
+context = "Hammer Mode"
+[message.translations]
+korean = "커서와 함께 회전 (수직)"
+
+[[message]]
+key = "Rotate with cursor like gun"
+context = "Hammer Mode"
+[message.translations]
+korean = "총처럼 커서와 함께 회전 (수평)"
+
+[[message]]
+key = "Width"
+context = "Outlines"
+[message.translations]
+korean = "너비"

@@ -1,0 +1,1940 @@
+[[message]]
+key = " min"
+[message.translations]
+traditional_chinese = "分鐘"
+
+[[message]]
+key = " seconds"
+[message.translations]
+traditional_chinese = "秒"
+
+[[message]]
+key = " seconds (never)"
+[message.translations]
+traditional_chinese = "秒（不消失）"
+
+[[message]]
+key = "%ds left"
+[message.translations]
+traditional_chinese = "還剩 %d 秒"
+
+[[message]]
+key = "%s not found"
+[message.translations]
+traditional_chinese = "未找到 %s"
+
+[[message]]
+key = "+%d more codes"
+[message.translations]
+traditional_chinese = "還有 %d 個代碼"
+
+[[message]]
+key = "- Save codes in order:"
+[message.translations]
+traditional_chinese = "- 按順序儲存代碼："
+
+[[message]]
+key = "- Save owners in order:"
+[message.translations]
+traditional_chinese = "- 按順序儲存擁有者："
+
+[[message]]
+key = "- You have %d saves on this map!"
+[message.translations]
+traditional_chinese = "- 你在這張地圖上有 %d 個存檔！"
+
+[[message]]
+key = "_ or ' ' = blank spacer"
+[message.translations]
+traditional_chinese = "_ 或 ' ' = 空白間距"
+
+[[message]]
+key = "a = View angle"
+[message.translations]
+traditional_chinese = "a = 視角角度"
+
+[[message]]
+key = "Add [group] [clan] [reason]:"
+[message.translations]
+traditional_chinese = "新增 [組名] [戰隊名] [原因]："
+
+[[message]]
+key = "Add [group] [name] [reason]:"
+[message.translations]
+traditional_chinese = "新增 [組名] [玩家名] [原因]："
+
+[[message]]
+key = "Add a bind to the bindwheel"
+[message.translations]
+traditional_chinese = "向綁定輪盤新增綁定"
+
+[[message]]
+key = "Add a chat bind"
+[message.translations]
+traditional_chinese = "新增聊天綁定"
+
+[[message]]
+key = "Add a clan war entry"
+[message.translations]
+traditional_chinese = "新增戰隊敵對條目"
+
+[[message]]
+key = "Add a map to favorites"
+[message.translations]
+traditional_chinese = "將地圖新增到收藏夾"
+
+[[message]]
+key = "Add a name war entry"
+[message.translations]
+traditional_chinese = "新增名字敵對條目"
+
+[[message]]
+key = "Add a profile"
+[message.translations]
+traditional_chinese = "新增個人資料"
+
+[[message]]
+key = "Add Bind"
+[message.translations]
+traditional_chinese = "新增綁定"
+
+[[message]]
+key = "Add Entry"
+[message.translations]
+traditional_chinese = "新增條目"
+
+[[message]]
+key = "Add Group"
+[message.translations]
+traditional_chinese = "新增群組"
+
+[[message]]
+key = "Add Item"
+[message.translations]
+traditional_chinese = "新增項"
+
+[[message]]
+key = "Add team clan:"
+[message.translations]
+traditional_chinese = "新增友好戰隊："
+
+[[message]]
+key = "Add team name:"
+[message.translations]
+traditional_chinese = "新增友好玩家："
+
+[[message]]
+key = "Add war clan:"
+[message.translations]
+traditional_chinese = "新增敵對戰隊："
+
+[[message]]
+key = "Add war name:"
+[message.translations]
+traditional_chinese = "新增敵對玩家："
+
+[[message]]
+key = "Adds a specific war entry"
+[message.translations]
+traditional_chinese = "新增指定敵對條目"
+
+[[message]]
+key = "Adds default chat binds"
+[message.translations]
+traditional_chinese = "新增預設聊天綁定"
+
+[[message]]
+key = "Adjust your prediction margin while frozen"
+[message.translations]
+traditional_chinese = "調整凍結時的預測邊際"
+
+[[message]]
+key = "After Load"
+[message.translations]
+traditional_chinese = "載入後"
+
+[[message]]
+key = "Agree"
+[message.translations]
+traditional_chinese = "同意"
+
+[[message]]
+key = "All"
+[message.translations]
+traditional_chinese = "全部"
+
+[[message]]
+key = "Allow Duplicate Entries"
+[message.translations]
+traditional_chinese = "允許重複條目"
+
+[[message]]
+key = "Amount"
+[message.translations]
+traditional_chinese = "預測量"
+
+[[message]]
+key = "Anti Latency Tools"
+[message.translations]
+traditional_chinese = "延遲補償工具"
+
+[[message]]
+key = "Anti Ping Smoothing"
+[message.translations]
+traditional_chinese = "平滑預測"
+
+[[message]]
+key = "Apply"
+[message.translations]
+traditional_chinese = "套用"
+
+[[message]]
+key = "Apply a saved profile by 1-based index to the current tee"
+[message.translations]
+traditional_chinese = "將已儲存的設定檔按 1 起始的索引套用到當前 tee"
+
+[[message]]
+key = "Apply Changes"
+[message.translations]
+traditional_chinese = "套用變更"
+
+[[message]]
+key = "Are you sure that you want to remove '%s' from your war groups?"
+[message.translations]
+traditional_chinese = "您確定要從敵對群組中移除 '%s' 嗎？"
+
+[[message]]
+key = "Attempt to change your name when near finish"
+[message.translations]
+traditional_chinese = "接近終點時嘗試改名"
+
+[[message]]
+key = "Audio"
+[message.translations]
+traditional_chinese = "音訊"
+
+[[message]]
+key = "Auto"
+[message.translations]
+traditional_chinese = "自動"
+
+[[message]]
+key = "Auto agree vote"
+[message.translations]
+traditional_chinese = "自動同意投票"
+
+[[message]]
+key = "Auto execute"
+[message.translations]
+traditional_chinese = "自動執行"
+
+[[message]]
+key = "Auto map vote"
+[message.translations]
+traditional_chinese = "自動地圖投票"
+
+[[message]]
+key = "Auto reject vote"
+[message.translations]
+traditional_chinese = "自動拒絕投票"
+
+[[message]]
+key = "Auto reply"
+[message.translations]
+traditional_chinese = "自動回覆"
+
+[[message]]
+key = "Automatic updates are only supported on Windows"
+[message.translations]
+traditional_chinese = "自動更新僅支援 Windows"
+
+[[message]]
+key = "Automatically reply to muted players"
+[message.translations]
+traditional_chinese = "對已封鎖發言的玩家自動回覆"
+
+[[message]]
+key = "Automatically reply while the window is unfocused"
+[message.translations]
+traditional_chinese = "視窗失去焦點時自動回覆"
+
+[[message]]
+key = "Background Draw"
+[message.translations]
+traditional_chinese = "背景繪製"
+
+[[message]]
+key = "Bind Wheel"
+[message.translations]
+traditional_chinese = "綁定輪盤"
+
+[[message]]
+key = "Bind Wheel Key"
+[message.translations]
+traditional_chinese = "喚出滾輪綁鍵"
+
+[[message]]
+key = "Black"
+[message.translations]
+traditional_chinese = "黑色"
+
+[[message]]
+key = "Blue"
+[message.translations]
+traditional_chinese = "藍色"
+
+[[message]]
+key = "c = Player position"
+[message.translations]
+traditional_chinese = "c = 玩家位置"
+
+[[message]]
+key = "Camera"
+[message.translations]
+traditional_chinese = "鏡頭視野"
+
+[[message]]
+key = "Change indicator offset based on distance to other tees"
+[message.translations]
+traditional_chinese = "根據與其他 Tee 的距離變更指示器偏移量"
+
+[[message]]
+key = "Changes: %d"
+[message.translations]
+traditional_chinese = "變更數：%d"
+
+[[message]]
+key = "Changing name to %s near finish"
+[message.translations]
+traditional_chinese = "接近終點時改名為 %s"
+
+[[message]]
+key = "Chat"
+[message.translations]
+traditional_chinese = "聊天"
+
+[[message]]
+key = "Chat Binds"
+[message.translations]
+traditional_chinese = "聊天綁定"
+
+[[message]]
+key = "Clan"
+[message.translations]
+traditional_chinese = "戰隊"
+
+[[message]]
+key = "Clan: %s"
+[message.translations]
+traditional_chinese = "戰隊：%s"
+
+[[message]]
+key = "Clear all favorite maps"
+[message.translations]
+traditional_chinese = "清空全部收藏地圖"
+
+[[message]]
+key = "Clear Changes"
+[message.translations]
+traditional_chinese = "清除變更"
+
+[[message]]
+key = "Color"
+[message.translations]
+traditional_chinese = "顏色"
+
+[[message]]
+key = "Colors"
+[message.translations]
+traditional_chinese = "顏色"
+
+[[message]]
+key = "Colors in chat"
+[message.translations]
+traditional_chinese = "在聊天欄中的顏色"
+
+[[message]]
+key = "Colors in scoreboard"
+[message.translations]
+traditional_chinese = "在記分板中的顏色"
+
+[[message]]
+key = "Command"
+[message.translations]
+traditional_chinese = "指令"
+
+[[message]]
+key = "Command:"
+[message.translations]
+traditional_chinese = "指令："
+
+[[message]]
+key = "Commands run in the console"
+[message.translations]
+traditional_chinese = "在控制台中執行的命令"
+
+[[message]]
+key = "Compact"
+[message.translations]
+traditional_chinese = "緊湊列表"
+
+[[message]]
+key = "Config Files"
+[message.translations]
+traditional_chinese = "設定檔"
+
+[[message]]
+key = "Custom colors"
+[message.translations]
+traditional_chinese = "自訂顏色"
+
+[[message]]
+key = "Custom Font:"
+[message.translations]
+traditional_chinese = "自訂字型："
+
+[[message]]
+key = "Cute:"
+[message.translations]
+traditional_chinese = "可愛："
+
+[[message]]
+key = "Cycle through emotes"
+[message.translations]
+traditional_chinese = "循環顯示表情"
+
+[[message]]
+key = "d = Prediction latency"
+[message.translations]
+traditional_chinese = "d = 預測延遲"
+
+[[message]]
+key = "DDNet"
+[message.translations]
+traditional_chinese = "DDNet"
+
+[[message]]
+key = "Deep freeze color"
+[message.translations]
+traditional_chinese = "深度凍結顏色"
+
+[[message]]
+key = "Deep unfreeze color"
+[message.translations]
+traditional_chinese = "深度解凍顏色"
+
+[[message]]
+key = "Delay"
+[message.translations]
+traditional_chinese = "延遲"
+
+[[message]]
+key = "Delete"
+[message.translations]
+traditional_chinese = "刪除"
+
+[[message]]
+key = "Disagree"
+[message.translations]
+traditional_chinese = "反對"
+
+[[message]]
+key = "Disconnected"
+[message.translations]
+traditional_chinese = "已斷線"
+
+[[message]]
+key = "Discord"
+[message.translations]
+traditional_chinese = "Discord"
+
+[[message]]
+key = "Dont predict other players if you are frozen"
+[message.translations]
+traditional_chinese = "被凍結時不預測其他玩家"
+
+[[message]]
+key = "DONT USE THIS! USE add_bindwheel INSTEAD!"
+[message.translations]
+traditional_chinese = "不要使用這個！請使用 add_bindwheel 代替！"
+
+[[message]]
+key = "Downloading update..."
+[message.translations]
+traditional_chinese = "正在下載更新..."
+
+[[message]]
+key = "Draw on the in game background"
+[message.translations]
+traditional_chinese = "在遊戲背景上繪製"
+
+[[message]]
+key = "Draw where mouse is"
+[message.translations]
+traditional_chinese = "在滑鼠所在位置繪製"
+
+[[message]]
+key = "Dummy"
+[message.translations]
+traditional_chinese = "分身"
+
+[[message]]
+key = "Edit Entry"
+[message.translations]
+traditional_chinese = "編輯條目"
+
+[[message]]
+key = "Elevated"
+[message.translations]
+traditional_chinese = "已提升"
+
+[[message]]
+key = "Enable Deleting"
+[message.translations]
+traditional_chinese = "啟用刪除"
+
+[[message]]
+key = "Enable Jelly Tee"
+[message.translations]
+traditional_chinese = "啟用 Q 彈 Tee"
+
+[[message]]
+key = "Enable mod weapon on %d: %s"
+[message.translations]
+traditional_chinese = "在 %d 上啟用模組武器：%s"
+
+[[message]]
+key = "Enable tee trails"
+[message.translations]
+traditional_chinese = "啟用 Tee 拖尾"
+
+[[message]]
+key = "Enable warlist"
+[message.translations]
+traditional_chinese = "啟用敵對列表"
+
+[[message]]
+key = "Erase items on the in game background"
+[message.translations]
+traditional_chinese = "擦除遊戲背景中的內容"
+
+[[message]]
+key = "Evaluate an expression"
+[message.translations]
+traditional_chinese = "評估表達式"
+
+[[message]]
+key = "Execute before connecting"
+[message.translations]
+traditional_chinese = "連線前執行"
+
+[[message]]
+key = "Execute hovered bindwheel bind"
+[message.translations]
+traditional_chinese = "執行當前懸停的綁定輪盤綁定"
+
+[[message]]
+key = "Execute on connect"
+[message.translations]
+traditional_chinese = "連線時執行"
+
+[[message]]
+key = "f = Frame rate"
+[message.translations]
+traditional_chinese = "f = 幀率"
+
+[[message]]
+key = "Fade trail alpha"
+[message.translations]
+traditional_chinese = "淡化拖尾透明度"
+
+[[message]]
+key = "Failed to check for updates"
+[message.translations]
+traditional_chinese = "檢查更新失敗"
+
+[[message]]
+key = "Failed to create bgdraw folder"
+[message.translations]
+traditional_chinese = "建立 bgdraw 資料夾失敗"
+
+[[message]]
+key = "Failed to read saves file"
+[message.translations]
+traditional_chinese = "讀取存檔檔案失敗"
+
+[[message]]
+key = "Fake CTF flags"
+[message.translations]
+traditional_chinese = "偽 CTF 旗幟"
+
+[[message]]
+key = "Fast input (reduce visual latency)"
+[message.translations]
+traditional_chinese = "快速輸入（降低視覺延遲）"
+
+[[message]]
+key = "Fast input others"
+[message.translations]
+traditional_chinese = "快速輸入其他玩家"
+
+[[message]]
+key = "Finish Name"
+[message.translations]
+traditional_chinese = "終點前改名"
+
+[[message]]
+key = "Finish Name:"
+[message.translations]
+traditional_chinese = "恰分名稱："
+
+[[message]]
+key = "Flip:"
+[message.translations]
+traditional_chinese = "翻轉："
+
+[[message]]
+key = "Font size"
+[message.translations]
+traditional_chinese = "字型大小"
+
+[[message]]
+key = "Freeview cursor opacity"
+[message.translations]
+traditional_chinese = "自由旁觀游標不透明度"
+
+[[message]]
+key = "Freeze"
+[message.translations]
+traditional_chinese = "凍結"
+
+[[message]]
+key = "Freeze stars"
+[message.translations]
+traditional_chinese = "顯示凍結效果的星星動畫"
+
+[[message]]
+key = "Frozen Margin"
+[message.translations]
+traditional_chinese = "凍結預測值"
+
+[[message]]
+key = "Gameplay"
+[message.translations]
+traditional_chinese = "遊戲玩法"
+
+[[message]]
+key = "Ghost tools"
+[message.translations]
+traditional_chinese = "影子工具"
+
+[[message]]
+key = "Github"
+[message.translations]
+traditional_chinese = "Github"
+
+[[message]]
+key = "Gores Mode"
+[message.translations]
+traditional_chinese = "Gores 模式"
+
+[[message]]
+key = "Group name"
+[message.translations]
+traditional_chinese = "分組名稱"
+
+[[message]]
+key = "Hammer Mode:"
+[message.translations]
+traditional_chinese = "錘子模式："
+
+[[message]]
+key = "Hide ghosts of frozen players"
+[message.translations]
+traditional_chinese = "隱藏凍結玩家的影子"
+
+[[message]]
+key = "Hide indicator for tees on your screen"
+[message.translations]
+traditional_chinese = "其他玩家在螢幕內時隱藏指示器"
+
+[[message]]
+key = "Hide Settings Tabs"
+[message.translations]
+traditional_chinese = "隱藏設定選項卡"
+
+[[message]]
+key = "Horizontal position"
+[message.translations]
+traditional_chinese = "水平位置"
+
+[[message]]
+key = "HUD"
+[message.translations]
+traditional_chinese = "HUD"
+
+[[message]]
+key = "i = Receive rate"
+[message.translations]
+traditional_chinese = "i = 接收速率"
+
+[[message]]
+key = "I am away from the game window"
+[message.translations]
+traditional_chinese = "我不在遊戲視窗前"
+
+[[message]]
+key = "I muted you"
+[message.translations]
+traditional_chinese = "我封鎖你了"
+
+[[message]]
+key = "Indicator alive color"
+[message.translations]
+traditional_chinese = "指示器存活顏色"
+
+[[message]]
+key = "Indicator in freeze color"
+[message.translations]
+traditional_chinese = "指示器凍結顏色"
+
+[[message]]
+key = "Indicator max distance"
+[message.translations]
+traditional_chinese = "指示器最大距離"
+
+[[message]]
+key = "Indicator max offset"
+[message.translations]
+traditional_chinese = "指示器最大偏移量"
+
+[[message]]
+key = "Indicator min offset"
+[message.translations]
+traditional_chinese = "指示器最小偏移量"
+
+[[message]]
+key = "Indicator offset"
+[message.translations]
+traditional_chinese = "指示器偏移量"
+
+[[message]]
+key = "Indicator opacity"
+[message.translations]
+traditional_chinese = "指示器不透明度"
+
+[[message]]
+key = "Indicator safe color"
+[message.translations]
+traditional_chinese = "指示器安全顏色"
+
+[[message]]
+key = "Indicator size"
+[message.translations]
+traditional_chinese = "顯示大小"
+
+[[message]]
+key = "Info"
+[message.translations]
+traditional_chinese = "資訊"
+
+[[message]]
+key = "Ingame cursor scale"
+[message.translations]
+traditional_chinese = "遊戲內游標縮放"
+
+[[message]]
+key = "Input"
+[message.translations]
+traditional_chinese = "輸入"
+
+[[message]]
+key = "j = Latency jitter"
+[message.translations]
+traditional_chinese = "j = 延遲抖動"
+
+[[message]]
+key = "Jelly duration"
+[message.translations]
+traditional_chinese = "回彈時長"
+
+[[message]]
+key = "Jelly others"
+[message.translations]
+traditional_chinese = "其他玩家也使用 Q 彈 Tee"
+
+[[message]]
+key = "Jelly strength"
+[message.translations]
+traditional_chinese = "Q 彈強度"
+
+[[message]]
+key = "k = Resend loss"
+[message.translations]
+traditional_chinese = "k = 重傳丟失"
+
+[[message]]
+key = "Kaomoji"
+[message.translations]
+traditional_chinese = "表情符號"
+
+[[message]]
+key = "Kill"
+[message.translations]
+traditional_chinese = "殺死"
+
+[[message]]
+key = "l = Local time"
+[message.translations]
+traditional_chinese = "l = 本地時間"
+
+[[message]]
+key = "L select  R swap  M select only"
+[message.translations]
+traditional_chinese = "左鍵選擇  右鍵交換  中鍵僅選擇"
+
+[[message]]
+key = "Leave empty to disable"
+[message.translations]
+traditional_chinese = "留空以停用"
+
+[[message]]
+key = "Lenny:"
+[message.translations]
+traditional_chinese = "Lenny ͡° ͜ʖ ͡°："
+
+[[message]]
+key = "List local saves for current map (or specified map)"
+[message.translations]
+traditional_chinese = "列出當前地圖（或指定地圖）的本地存檔"
+
+[[message]]
+key = "Load"
+[message.translations]
+traditional_chinese = "載入"
+
+[[message]]
+key = "Load drawings from a given csv file (defaults to map name)"
+[message.translations]
+traditional_chinese = "從指定 CSV 檔案載入繪圖（預設使用地圖名稱）"
+
+[[message]]
+key = "Loaded %d items"
+[message.translations]
+traditional_chinese = "已載入 %d 項"
+
+[[message]]
+key = "Loaded %d items (discarded %d items)"
+[message.translations]
+traditional_chinese = "已載入 %d 項（丟棄 %d 項）"
+
+[[message]]
+key = "Local Time"
+[message.translations]
+traditional_chinese = "本地時間"
+
+[[message]]
+key = "Maximum rows"
+[message.translations]
+traditional_chinese = "最大行數"
+
+[[message]]
+key = "Message to send in chat:"
+[message.translations]
+traditional_chinese = "要在聊天中傳送的訊息："
+
+[[message]]
+key = "Minimum time"
+[message.translations]
+traditional_chinese = "最短時間"
+
+[[message]]
+key = "Misc"
+[message.translations]
+traditional_chinese = "其他雜項"
+
+[[message]]
+key = "Modified"
+[message.translations]
+traditional_chinese = "僅已修改"
+
+[[message]]
+key = "Mute:"
+[message.translations]
+traditional_chinese = "禁言："
+
+[[message]]
+key = "n = Prediction latency"
+[message.translations]
+traditional_chinese = "n = 預測延遲"
+
+[[message]]
+key = "Name"
+[message.translations]
+traditional_chinese = "名稱"
+
+[[message]]
+key = "Name:"
+[message.translations]
+traditional_chinese = "名稱："
+
+[[message]]
+key = "Name: %s"
+[message.translations]
+traditional_chinese = "名稱：%s"
+
+[[message]]
+key = "Negative stability buffer (for Gores)"
+[message.translations]
+traditional_chinese = "負穩定性緩衝（用於 Gores）"
+
+[[message]]
+key = "No"
+[message.translations]
+traditional_chinese = "否"
+
+[[message]]
+key = "No changes since last save"
+[message.translations]
+traditional_chinese = "自上次儲存後沒有變更"
+
+[[message]]
+key = "No chat message available to repeat"
+[message.translations]
+traditional_chinese = "沒有可重複傳送的聊天訊息"
+
+[[message]]
+key = "No items to write"
+[message.translations]
+traditional_chinese = "沒有可寫入的項目"
+
+[[message]]
+key = "No local saves file found (ddnet-saves.txt)"
+[message.translations]
+traditional_chinese = "未找到本地存檔檔案（ddnet-saves.txt）"
+
+[[message]]
+key = "No safe position found"
+[message.translations]
+traditional_chinese = "未找到安全位置"
+
+[[message]]
+key = "No saved profiles available yet. Save one first."
+[message.translations]
+traditional_chinese = "沒有可用模板，請先儲存一個模板。"
+
+[[message]]
+key = "No status bar items"
+[message.translations]
+traditional_chinese = "暫無狀態欄項目"
+
+[[message]]
+key = "None"
+[message.translations]
+traditional_chinese = "無"
+
+[[message]]
+key = "Normal"
+[message.translations]
+traditional_chinese = "正常"
+
+[[message]]
+key = "Notify when only one tee is still alive:"
+[message.translations]
+traditional_chinese = "當只剩一名存活者時提示："
+
+[[message]]
+key = "o = Send rate"
+[message.translations]
+traditional_chinese = "o = 傳送速率"
+
+[[message]]
+key = "Off"
+[message.translations]
+traditional_chinese = "關閉"
+
+[[message]]
+key = "On"
+[message.translations]
+traditional_chinese = "開啟"
+
+[[message]]
+key = "Online Players"
+[message.translations]
+traditional_chinese = "線上玩家"
+
+[[message]]
+key = "Only show after joining a team"
+[message.translations]
+traditional_chinese = "僅在加入隊伍後顯示"
+
+[[message]]
+key = "Only show outlines in the entities layer"
+[message.translations]
+traditional_chinese = "僅在實體層中顯示輪廓"
+
+[[message]]
+key = "Open bindwheel selector"
+[message.translations]
+traditional_chinese = "開啟綁定輪盤選擇器"
+
+[[message]]
+key = "Optimistic prediction along stable direction"
+[message.translations]
+traditional_chinese = "沿穩定方向更樂觀的預測"
+
+[[message]]
+key = "Other"
+[message.translations]
+traditional_chinese = "其他"
+
+[[message]]
+key = "Outline opacity"
+[message.translations]
+traditional_chinese = "輪廓不透明度"
+
+[[message]]
+key = "Override"
+[message.translations]
+traditional_chinese = "覆蓋"
+
+[[message]]
+key = "Override Entry"
+[message.translations]
+traditional_chinese = "覆蓋條目"
+
+[[message]]
+key = "Override Group"
+[message.translations]
+traditional_chinese = "覆蓋群組"
+
+[[message]]
+key = "Override Selected"
+[message.translations]
+traditional_chinese = "覆蓋選定項"
+
+[[message]]
+key = "Overwrite clan even if empty"
+[message.translations]
+traditional_chinese = "即使戰隊為空也覆蓋"
+
+[[message]]
+key = "p = Ping latency"
+[message.translations]
+traditional_chinese = "p = Ping 延遲"
+
+[[message]]
+key = "Pet"
+[message.translations]
+traditional_chinese = "寵物"
+
+[[message]]
+key = "Pet alpha"
+[message.translations]
+traditional_chinese = "寵物透明度"
+
+[[message]]
+key = "Pet size"
+[message.translations]
+traditional_chinese = "寵物大小"
+
+[[message]]
+key = "Pet Skin:"
+[message.translations]
+traditional_chinese = "寵物皮膚："
+
+[[message]]
+key = "Player indicator"
+[message.translations]
+traditional_chinese = "玩家指示器"
+
+[[message]]
+key = "Predicted ghost opacity"
+[message.translations]
+traditional_chinese = "預測影子不透明度"
+
+[[message]]
+key = "Prediction Margin"
+[message.translations]
+traditional_chinese = "預測邊際"
+
+[[message]]
+key = "Print command executed by this name or all chat binds"
+[message.translations]
+traditional_chinese = "列印該名稱或所有聊天綁定執行的指令"
+
+[[message]]
+key = "Profiles"
+[message.translations]
+traditional_chinese = "模板"
+
+[[message]]
+key = "Profiles file"
+[message.translations]
+traditional_chinese = "設定檔"
+
+[[message]]
+key = "Pulse"
+[message.translations]
+traditional_chinese = "脈衝"
+
+[[message]]
+key = "q = Connection quality"
+[message.translations]
+traditional_chinese = "q = 連線品質"
+
+[[message]]
+key = "qm_profile_queue: index must be between 1 and %d"
+[message.translations]
+traditional_chinese = "qm_profile_queue：序號必須在 1 到 %d 之間"
+
+[[message]]
+key = "QmClient"
+[message.translations]
+traditional_chinese = "QmClient"
+
+[[message]]
+key = "QmClient Settings"
+[message.translations]
+traditional_chinese = "QmClient 設定"
+
+[[message]]
+key = "r = Race time"
+[message.translations]
+traditional_chinese = "r = 競速時間"
+
+[[message]]
+key = "Rainbow"
+[message.translations]
+traditional_chinese = "彩虹"
+
+[[message]]
+key = "Rainbow hook"
+[message.translations]
+traditional_chinese = "彩虹色鉤索"
+
+[[message]]
+key = "Rainbow others"
+[message.translations]
+traditional_chinese = "將彩虹帶給每個人！"
+
+[[message]]
+key = "Rainbow speed"
+[message.translations]
+traditional_chinese = "顏色變化速度"
+
+[[message]]
+key = "Rainbow Tees"
+[message.translations]
+traditional_chinese = "彩虹色 Tee"
+
+[[message]]
+key = "Rainbow weapons"
+[message.translations]
+traditional_chinese = "彩虹色武器"
+
+[[message]]
+key = "Random"
+[message.translations]
+traditional_chinese = "隨機"
+
+[[message]]
+key = "Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]"
+[message.translations]
+traditional_chinese = "隨機化玩家顏色（0 = 全部、1 = 身體、2 = 腳、3 = 皮膚、4 = 旗幟）範例：0011 = 隨機化皮膚和旗幟 [數字是位置]"
+
+[[message]]
+key = "Reason"
+[message.translations]
+traditional_chinese = "原因"
+
+[[message]]
+key = "Red"
+[message.translations]
+traditional_chinese = "紅色"
+
+[[message]]
+key = "Remove [group] [clan]:"
+[message.translations]
+traditional_chinese = "刪除 [組名] [戰隊名]："
+
+[[message]]
+key = "Remove [group] [name]:"
+[message.translations]
+traditional_chinese = "刪除 [組名] [玩家名]："
+
+[[message]]
+key = "Remove a bind from the bindwheel"
+[message.translations]
+traditional_chinese = "從綁定輪盤移除綁定"
+
+[[message]]
+key = "Remove a chat bind"
+[message.translations]
+traditional_chinese = "刪除聊天綁定"
+
+[[message]]
+key = "Remove a clan war entry"
+[message.translations]
+traditional_chinese = "移除戰隊敵對條目"
+
+[[message]]
+key = "Remove a map from favorites"
+[message.translations]
+traditional_chinese = "從收藏夾中刪除地圖"
+
+[[message]]
+key = "Remove a name war entry"
+[message.translations]
+traditional_chinese = "移除名字敵對條目"
+
+[[message]]
+key = "Remove Bind"
+[message.translations]
+traditional_chinese = "刪除綁定"
+
+[[message]]
+key = "Remove Item"
+[message.translations]
+traditional_chinese = "刪除項"
+
+[[message]]
+key = "Remove prediction & antiping in freeze"
+[message.translations]
+traditional_chinese = "在凍結時移除預測 & 延遲補償"
+
+[[message]]
+key = "Remove team clan:"
+[message.translations]
+traditional_chinese = "刪除友好戰隊："
+
+[[message]]
+key = "Remove team name:"
+[message.translations]
+traditional_chinese = "刪除友好玩家："
+
+[[message]]
+key = "Remove war clan:"
+[message.translations]
+traditional_chinese = "刪除敵對戰隊："
+
+[[message]]
+key = "Remove War Group"
+[message.translations]
+traditional_chinese = "刪除敵對群組"
+
+[[message]]
+key = "Remove war name:"
+[message.translations]
+traditional_chinese = "刪除敵對玩家："
+
+[[message]]
+key = "Removes all bindwheel binds"
+[message.translations]
+traditional_chinese = "移除全部綁定輪盤綁定"
+
+[[message]]
+key = "Removes all chat binds"
+[message.translations]
+traditional_chinese = "刪除所有聊天綁定"
+
+[[message]]
+key = "Render all custom colored feet as white feet skin"
+[message.translations]
+traditional_chinese = "將所有自訂腳部顏色渲染為白色"
+
+[[message]]
+key = "Render ghosts as circles"
+[message.translations]
+traditional_chinese = "將影子渲染為圓圈"
+
+[[message]]
+key = "Render tiny tees instead of circles"
+[message.translations]
+traditional_chinese = "渲染成迷你 Tee 而不是圓圈"
+
+[[message]]
+key = "Repeat the latest chat message"
+[message.translations]
+traditional_chinese = "複讀最新聊天訊息"
+
+[[message]]
+key = "Rescue to a nearby air tile"
+[message.translations]
+traditional_chinese = "救援到附近空氣格"
+
+[[message]]
+key = "Reset"
+[message.translations]
+traditional_chinese = "重設"
+
+[[message]]
+key = "Reset all drawings on the background"
+[message.translations]
+traditional_chinese = "重設背景上的所有繪圖"
+
+[[message]]
+key = "Reset position of mouse when opening bindwheel"
+[message.translations]
+traditional_chinese = "開啟綁定輪盤時重設滑鼠位置"
+
+[[message]]
+key = "Save"
+[message.translations]
+traditional_chinese = "儲存"
+
+[[message]]
+key = "Save drawings to a given csv file (defaults to map name)"
+[message.translations]
+traditional_chinese = "將繪圖儲存到指定的 CSV 檔案（預設使用地圖名稱）"
+
+[[message]]
+key = "Save/Load Clan"
+[message.translations]
+traditional_chinese = "儲存/載入戰隊"
+
+[[message]]
+key = "Save/Load Colors"
+[message.translations]
+traditional_chinese = "儲存/載入顏色"
+
+[[message]]
+key = "Save/Load Emote"
+[message.translations]
+traditional_chinese = "儲存/載入表情"
+
+[[message]]
+key = "Save/Load Flag"
+[message.translations]
+traditional_chinese = "儲存/載入國旗"
+
+[[message]]
+key = "Save/Load Name"
+[message.translations]
+traditional_chinese = "儲存/載入名稱"
+
+[[message]]
+key = "Save/Load Skin"
+[message.translations]
+traditional_chinese = "儲存/載入皮膚"
+
+[[message]]
+key = "Screen center line color"
+[message.translations]
+traditional_chinese = "螢幕中心線顏色"
+
+[[message]]
+key = "Screen center line width"
+[message.translations]
+traditional_chinese = "螢幕中心線寬度"
+
+[[message]]
+key = "Search"
+[message.translations]
+traditional_chinese = "搜尋"
+
+[[message]]
+key = "Self"
+[message.translations]
+traditional_chinese = "自身"
+
+[[message]]
+key = "Settings"
+[message.translations]
+traditional_chinese = "設定"
+
+[[message]]
+key = "Severe"
+[message.translations]
+traditional_chinese = "嚴重"
+
+[[message]]
+key = "Show %s group"
+[message.translations]
+traditional_chinese = "顯示 %s 分組"
+
+[[message]]
+key = "Show all enabled outlines"
+[message.translations]
+traditional_chinese = "顯示所有啟用的輪廓"
+
+[[message]]
+key = "Show all warlist groups"
+[message.translations]
+traditional_chinese = "顯示所有敵對群組"
+
+[[message]]
+key = "Show any enabled Indicators"
+[message.translations]
+traditional_chinese = "開啟玩家指示器"
+
+[[message]]
+key = "Show clan if war"
+[message.translations]
+traditional_chinese = "如果有敵對則顯示戰隊"
+
+[[message]]
+key = "Show colors in spectator selection"
+[message.translations]
+traditional_chinese = "旁觀選擇中顯示顏色"
+
+[[message]]
+key = "Show compact vote HUD"
+[message.translations]
+traditional_chinese = "顯示小型投票 HUD"
+
+[[message]]
+key = "Show country flags in nameplates"
+[message.translations]
+traditional_chinese = "在玩家暱稱旁顯示國旗"
+
+[[message]]
+key = "Show katan on frozen players"
+[message.translations]
+traditional_chinese = "在被凍結的玩家身上顯示武士刀"
+
+[[message]]
+key = "Show labels on status bar items"
+[message.translations]
+traditional_chinese = "在狀態欄上顯示條目標籤"
+
+[[message]]
+key = "Show moving tiles in entities"
+[message.translations]
+traditional_chinese = "在實體層顯示移動方塊"
+
+[[message]]
+key = "Show only freeze Players"
+[message.translations]
+traditional_chinese = "僅顯示凍結玩家"
+
+[[message]]
+key = "Show other tees' trails"
+[message.translations]
+traditional_chinese = "顯示其他 Tee 的拖尾"
+
+[[message]]
+key = "Show ping colored circle in nameplates"
+[message.translations]
+traditional_chinese = "在玩家暱稱旁顯示延遲顏色圓圈"
+
+[[message]]
+key = "Show position and angle (mini debug)"
+[message.translations]
+traditional_chinese = "顯示位置和角度（小型除錯）"
+
+[[message]]
+key = "Show seconds on clock"
+[message.translations]
+traditional_chinese = "在時間處顯示秒數"
+
+[[message]]
+key = "Show skin names in nameplate"
+[message.translations]
+traditional_chinese = "在玩家暱稱旁顯示皮膚名"
+
+[[message]]
+key = "Show status bar"
+[message.translations]
+traditional_chinese = "顯示狀態欄"
+
+[[message]]
+key = "Show tee status bar"
+[message.translations]
+traditional_chinese = "顯示 Tee 狀態欄"
+
+[[message]]
+key = "Show the cursor while free spectating"
+[message.translations]
+traditional_chinese = "自由觀戰時顯示游標"
+
+[[message]]
+key = "Show the number of frozen tees"
+[message.translations]
+traditional_chinese = "顯示凍結 Tee 的數量"
+
+[[message]]
+key = "Show the number of tees still alive"
+[message.translations]
+traditional_chinese = "顯示剩餘存活 Tee 的數量"
+
+[[message]]
+key = "Show the pet"
+[message.translations]
+traditional_chinese = "顯示寵物"
+
+[[message]]
+key = "Show the screen center line"
+[message.translations]
+traditional_chinese = "顯示螢幕中心線"
+
+[[message]]
+key = "Show unpredicted ghosts for other players"
+[message.translations]
+traditional_chinese = "顯示其他玩家未預測的影子"
+
+[[message]]
+key = "Shrug:"
+[message.translations]
+traditional_chinese = "聳肩："
+
+[[message]]
+key = "Skin: %s"
+[message.translations]
+traditional_chinese = "皮膚：%s"
+
+[[message]]
+key = "Smaller tees"
+[message.translations]
+traditional_chinese = "小尺寸 Tee"
+
+[[message]]
+key = "Social"
+[message.translations]
+traditional_chinese = "社交功能"
+
+[[message]]
+key = "Solid"
+[message.translations]
+traditional_chinese = "純色"
+
+[[message]]
+key = "Solid tile outline opacity"
+[message.translations]
+traditional_chinese = "牆體輪廓不透明度"
+
+[[message]]
+key = "Spectate a player by Id"
+[message.translations]
+traditional_chinese = "按 ID 旁觀玩家"
+
+[[message]]
+key = "Speed"
+[message.translations]
+traditional_chinese = "速度"
+
+[[message]]
+key = "Status Bar"
+[message.translations]
+traditional_chinese = "狀態欄"
+
+[[message]]
+key = "Status bar alpha"
+[message.translations]
+traditional_chinese = "狀態欄透明度"
+
+[[message]]
+key = "Status Bar Codes:"
+[message.translations]
+traditional_chinese = "狀態欄代碼："
+
+[[message]]
+key = "Status bar color"
+[message.translations]
+traditional_chinese = "狀態欄顏色"
+
+[[message]]
+key = "Status bar height"
+[message.translations]
+traditional_chinese = "狀態欄高度"
+
+[[message]]
+key = "Status Scheme:"
+[message.translations]
+traditional_chinese = "狀態方案："
+
+[[message]]
+key = "Stroke fade time"
+[message.translations]
+traditional_chinese = "筆畫消失時間"
+
+[[message]]
+key = "Sub-Tick aiming"
+[message.translations]
+traditional_chinese = "Sub-Tick 瞄準"
+
+[[message]]
+key = "Support ♥"
+[message.translations]
+traditional_chinese = "支援 ♥"
+
+[[message]]
+key = "Swap ghosts with regular players"
+[message.translations]
+traditional_chinese = "交換影子與普通玩家"
+
+[[message]]
+key = "Tags"
+[message.translations]
+traditional_chinese = "標籤"
+
+[[message]]
+key = "Taper trail width"
+[message.translations]
+traditional_chinese = "錐形拖尾寬度"
+
+[[message]]
+key = "TClient"
+[message.translations]
+traditional_chinese = "TClient"
+
+[[message]]
+key = "TClient Developers"
+[message.translations]
+traditional_chinese = "TClient 開發人員"
+
+[[message]]
+key = "TClient Links"
+[message.translations]
+traditional_chinese = "TClient 連結"
+
+[[message]]
+key = "Tee"
+[message.translations]
+traditional_chinese = "Tee"
+
+[[message]]
+key = "Tee size"
+[message.translations]
+traditional_chinese = "Tee 大小"
+
+[[message]]
+key = "Tee status bar"
+[message.translations]
+traditional_chinese = "Tee 狀態欄"
+
+[[message]]
+key = "Tee trail color"
+[message.translations]
+traditional_chinese = "Tee 拖尾顏色"
+
+[[message]]
+key = "Tee Trails"
+[message.translations]
+traditional_chinese = "Tee 拖尾"
+
+[[message]]
+key = "Tele"
+[message.translations]
+traditional_chinese = "傳送輪廓"
+
+[[message]]
+key = "Text alpha"
+[message.translations]
+traditional_chinese = "文字透明度"
+
+[[message]]
+key = "Text color"
+[message.translations]
+traditional_chinese = "文字顏色"
+
+[[message]]
+key = "Tile outlines"
+[message.translations]
+traditional_chinese = "牆體輪廓"
+
+[[message]]
+key = "Tiny Tee Size"
+[message.translations]
+traditional_chinese = "迷你 Tee 大小"
+
+[[message]]
+key = "Toggle fast practice mode"
+[message.translations]
+traditional_chinese = "切換快速練習模式"
+
+[[message]]
+key = "Toggle ghost key"
+[message.translations]
+traditional_chinese = "切換影子鍵"
+
+[[message]]
+key = "Trail alpha"
+[message.translations]
+traditional_chinese = "拖尾透明度"
+
+[[message]]
+key = "Trail length"
+[message.translations]
+traditional_chinese = "拖尾長度"
+
+[[message]]
+key = "Trail width"
+[message.translations]
+traditional_chinese = "拖尾寬度"
+
+[[message]]
+key = "Translate ID:"
+[message.translations]
+traditional_chinese = "翻譯 ID："
+
+[[message]]
+key = "Translate:"
+[message.translations]
+traditional_chinese = "翻譯："
+
+[[message]]
+key = "u = Snapshot latency"
+[message.translations]
+traditional_chinese = "u = 快照延遲"
+
+[[message]]
+key = "Uncertainty duration"
+[message.translations]
+traditional_chinese = "不確定性持續時間"
+
+[[message]]
+key = "Unflip:"
+[message.translations]
+traditional_chinese = "取消翻轉："
+
+[[message]]
+key = "Unfreeze"
+[message.translations]
+traditional_chinese = "解凍"
+
+[[message]]
+key = "Unknown"
+[message.translations]
+traditional_chinese = "未知"
+
+[[message]]
+key = "Unmute:"
+[message.translations]
+traditional_chinese = "取消禁言："
+
+[[message]]
+key = "Unpredicted ghost opacity"
+[message.translations]
+traditional_chinese = "未預測影子不透明度"
+
+[[message]]
+key = "Update"
+[message.translations]
+traditional_chinese = "更新"
+
+[[message]]
+key = "Update failed. Please try again"
+[message.translations]
+traditional_chinese = "更新失敗，請重試"
+
+[[message]]
+key = "Update finished. Please restart the client"
+[message.translations]
+traditional_chinese = "更新完成，請重新啟動用戶端"
+
+[[message]]
+key = "Update finished. Restarting..."
+[message.translations]
+traditional_chinese = "更新完成，正在重新啟動..."
+
+[[message]]
+key = "Update notice"
+[message.translations]
+traditional_chinese = "更新通知"
+
+[[message]]
+key = "Update or add a specific war group"
+[message.translations]
+traditional_chinese = "更新或新增指定敵對分組"
+
+[[message]]
+key = "Use 12 hour clock"
+[message.translations]
+traditional_chinese = "使用 12 小時制"
+
+[[message]]
+key = "Use colored skins for frozen tees"
+[message.translations]
+traditional_chinese = "凍結 Tee 使用彩色皮膚"
+
+[[message]]
+key = "Use custom skins instead of the ninja tee"
+[message.translations]
+traditional_chinese = "使用自訂皮膚代替忍者 Tee"
+
+[[message]]
+key = "Use new smoothing algorithm"
+[message.translations]
+traditional_chinese = "使用新的平滑演算法"
+
+[[message]]
+key = "Use warlist colors instead of regular colors"
+[message.translations]
+traditional_chinese = "使用敵對列表顏色而不是常規顏色"
+
+[[message]]
+key = "Use warlist groups for indicator"
+[message.translations]
+traditional_chinese = "使用敵對列表作為指示器"
+
+[[message]]
+key = "v = Velocity"
+[message.translations]
+traditional_chinese = "v = 速度"
+
+[[message]]
+key = "Vertical position"
+[message.translations]
+traditional_chinese = "垂直位置"
+
+[[message]]
+key = "Visual"
+[message.translations]
+traditional_chinese = "視覺效果"
+
+[[message]]
+key = "Visual: Effects"
+[message.translations]
+traditional_chinese = "視覺：特效"
+
+[[message]]
+key = "Visual: Font & Cursor"
+[message.translations]
+traditional_chinese = "視覺：字型與游標"
+
+[[message]]
+key = "Visual: Nameplates"
+[message.translations]
+traditional_chinese = "視覺：名牌"
+
+[[message]]
+key = "Voting"
+[message.translations]
+traditional_chinese = "投票"
+
+[[message]]
+key = "War Entries"
+[message.translations]
+traditional_chinese = "敵對條目"
+
+[[message]]
+key = "War Groups"
+[message.translations]
+traditional_chinese = "敵對群組"
+
+[[message]]
+key = "War List"
+[message.translations]
+traditional_chinese = "戰爭列表"
+
+[[message]]
+key = "Warlist"
+[message.translations]
+traditional_chinese = "敵對列表"
+
+[[message]]
+key = "Website"
+[message.translations]
+traditional_chinese = "網站"
+
+[[message]]
+key = "Wheel animate"
+[message.translations]
+traditional_chinese = "滾輪動畫"
+
+[[message]]
+key = "Width"
+[message.translations]
+traditional_chinese = "寬度"
+
+[[message]]
+key = "Writing item %d failed"
+[message.translations]
+traditional_chinese = "寫入第 %d 項失敗"
+
+[[message]]
+key = "Written %d items"
+[message.translations]
+traditional_chinese = "已寫入 %d 項"
+
+[[message]]
+key = "x = DDNet CPU% / total CPU%"
+[message.translations]
+traditional_chinese = "x = DDNet CPU% / 總 CPU%"
+
+[[message]]
+key = "y = DDNet memory usage"
+[message.translations]
+traditional_chinese = "y = DDNet 記憶體使用量"
+
+[[message]]
+key = "Yes"
+[message.translations]
+traditional_chinese = "是"
+
+[[message]]
+key = "You are already on the latest version"
+[message.translations]
+traditional_chinese = "你已是最新版本"
+
+[[message]]
+key = "You are not in practice"
+[message.translations]
+traditional_chinese = "你目前不在練習模式中"
+
+[[message]]
+key = "You're the last one!"
+[message.translations]
+traditional_chinese = "就剩你一個啦！"
+
+[[message]]
+key = "Your current version is outdated. Please update from the QQ group."
+[message.translations]
+traditional_chinese = "你目前的版本已過時。請從 QQ 群組更新。"
+
+[[message]]
+key = "Your friend %s is online and currently on map %s!"
+[message.translations]
+traditional_chinese = "你的好友 %s 線上，目前在地圖 %s！"
+
+[[message]]
+key = "Your profile"
+[message.translations]
+traditional_chinese = "您的個人資料"
+
+[[message]]
+key = "z = Zoom"
+[message.translations]
+traditional_chinese = "z = 縮放"
+
+[[message]]
+key = "Zen Mode"
+[message.translations]
+traditional_chinese = "禪模式"
+
+[[message]]
+key = "You may have installed only DDNet.exe. Please use the full QmClient folder."
+context = "data_version.h"
+[message.translations]
+traditional_chinese = "你可能只安裝了 DDNet.exe。請使用完整的 QmClient 資料夾。"
+
+[[message]]
+key = "You may have replaced only DDNet.exe and skipped QmClient.zip.\\nPlease install the full QmClient package."
+context = "data_version.h"
+[message.translations]
+traditional_chinese = "你可能只替換了 DDNet.exe 而跳過了 QmClient.zip。\\n請安裝完整的 QmClient 套件。"
+
+[[message]]
+key = "Normal"
+context = "Hammer Mode"
+[message.translations]
+traditional_chinese = "正常（不旋轉）"
+
+[[message]]
+key = "Rotate with cursor"
+context = "Hammer Mode"
+[message.translations]
+traditional_chinese = "隨游標旋轉（垂直）"
+
+[[message]]
+key = "Rotate with cursor like gun"
+context = "Hammer Mode"
+[message.translations]
+traditional_chinese = "像槍一樣隨游標旋轉（平行）"
+
+[[message]]
+key = "Width"
+context = "Outlines"
+[message.translations]
+traditional_chinese = "寬度"

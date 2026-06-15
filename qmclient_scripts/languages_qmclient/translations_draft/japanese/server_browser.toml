@@ -1,0 +1,529 @@
+[[message]]
+key = "%d dummies"
+[message.translations]
+japanese = "%d ダミー"
+
+[[message]]
+key = "%d dummy"
+[message.translations]
+japanese = "%d ダミー"
+
+[[message]]
+key = "%d of %d server"
+[message.translations]
+japanese = "%d/%d サーバー"
+
+[[message]]
+key = "%d of %d servers"
+[message.translations]
+japanese = "%d/%d サーバー"
+
+[[message]]
+key = "%d player"
+[message.translations]
+japanese = "%d プレイヤー"
+
+[[message]]
+key = "%d servers, %d users"
+[message.translations]
+japanese = "%d サーバー、%d ユーザー"
+
+[[message]]
+key = "%d servers, %d users, %d dummies"
+[message.translations]
+japanese = "%d サーバー、%d ユーザー、%d ダミー"
+
+[[message]]
+key = "%d user"
+[message.translations]
+japanese = "%d ユーザー"
+
+[[message]]
+key = "%d users"
+[message.translations]
+japanese = "%d ユーザー"
+
+[[message]]
+key = "Add friends by entering their name below or by clicking their name in the player list."
+[message.translations]
+japanese = "フレンドを追加するには、下の名前入力欄に入力するか、プレイヤーリストで名前をクリックしてください。"
+
+[[message]]
+key = "Add to category"
+[message.translations]
+japanese = "カテゴリに追加"
+
+[[message]]
+key = "AFR"
+[message.translations]
+japanese = "アフリカ"
+
+[[message]]
+key = "Are you sure that you want to disconnect and switch to a different server?"
+[message.translations]
+japanese = "切断して別のサーバーに切り替えてもよろしいですか？"
+
+[[message]]
+key = "Are you sure that you want to remove the clan '%s' from your friends list?"
+[message.translations]
+japanese = "友達リストからクラン '%s' を削除してもよろしいですか？"
+
+[[message]]
+key = "Are you sure that you want to remove the player '%s' from your friends list?"
+[message.translations]
+japanese = "友達リストからプレイヤー '%s' を削除してもよろしいですか？"
+
+[[message]]
+key = "ASI"
+[message.translations]
+japanese = "アジア"
+
+[[message]]
+key = "AUS"
+[message.translations]
+japanese = "オーストラリア"
+
+[[message]]
+key = "Brutal"
+[message.translations]
+japanese = "過酷"
+
+[[message]]
+key = "Category"
+[message.translations]
+japanese = "カテゴリ"
+
+[[message]]
+key = "CHN"
+[message.translations]
+japanese = "中国"
+
+[[message]]
+key = "Clan"
+[message.translations]
+japanese = "クラン"
+
+[[message]]
+key = "Clan Members"
+[message.translations]
+japanese = "クランメンバー"
+
+[[message]]
+key = "Clear note"
+[message.translations]
+japanese = "メモをクリア"
+
+[[message]]
+key = "Click to add this community to favorites"
+[message.translations]
+japanese = "このコミュニティをお気に入りに追加するにはクリック"
+
+[[message]]
+key = "Click to copy this clan's name to clipboard"
+[message.translations]
+japanese = "このクラン名をクリップボードにコピーするにはクリック"
+
+[[message]]
+key = "Click to copy this player's name to clipboard"
+[message.translations]
+japanese = "このプレイヤー名をクリップボードにコピーするにはクリック"
+
+[[message]]
+key = "Click to remove this clan from your friends list."
+[message.translations]
+japanese = "このクランを友達リストから削除するにはクリック"
+
+[[message]]
+key = "Click to remove this community from favorites"
+[message.translations]
+japanese = "このコミュニティをお気に入りから削除するにはクリック"
+
+[[message]]
+key = "Click to remove this player from your friends list."
+[message.translations]
+japanese = "このプレイヤーを友達リストから削除するにはクリック"
+
+[[message]]
+key = "Click to select server. Double click to join your friend."
+[message.translations]
+japanese = "クリックでサーバーを選択。ダブルクリックで友達のサーバーに参加。"
+
+[[message]]
+key = "Communities"
+[message.translations]
+japanese = "コミュニティ"
+
+[[message]]
+key = "Copy info"
+[message.translations]
+japanese = "情報をコピー"
+
+[[message]]
+key = "Could not get server list from master server"
+[message.translations]
+japanese = "マスターサーバーからサーバーリストを取得できませんでした"
+
+[[message]]
+key = "Count players only"
+[message.translations]
+japanese = "プレイヤーのみカウント"
+
+[[message]]
+key = "Countries"
+[message.translations]
+japanese = "国"
+
+[[message]]
+key = "DDmaX"
+[message.translations]
+japanese = "DDmaX"
+
+[[message]]
+key = "DDmaX Easy"
+[message.translations]
+japanese = "DDmaX Easy"
+
+[[message]]
+key = "DDmaX Next"
+[message.translations]
+japanese = "DDmaX Next"
+
+[[message]]
+key = "DDmaX Nut"
+[message.translations]
+japanese = "DDmaX Nut"
+
+[[message]]
+key = "DDmaX Pro"
+[message.translations]
+japanese = "DDmaX Pro"
+
+[[message]]
+key = "ddnet-saves.txt is empty"
+[message.translations]
+japanese = "ddnet-saves.txt は空です"
+
+[[message]]
+key = "ddnet-saves.txt not found"
+[message.translations]
+japanese = "ddnet-saves.txt が見つかりません"
+
+[[message]]
+key = "Difficulty stars"
+[message.translations]
+japanese = "難易度の星"
+
+[[message]]
+key = "Disconnect"
+[message.translations]
+japanese = "切断"
+
+[[message]]
+key = "Dummy"
+[message.translations]
+japanese = "ダミー"
+
+[[message]]
+key = "Edit note"
+[message.translations]
+japanese = "メモを編集"
+
+[[message]]
+key = "Error loading communities"
+[message.translations]
+japanese = "コミュニティの読み込みエラー"
+
+[[message]]
+key = "EUR"
+[message.translations]
+japanese = "ヨーロッパ"
+
+[[message]]
+key = "Event"
+[message.translations]
+japanese = "イベント"
+
+[[message]]
+key = "Example of usage"
+[message.translations]
+japanese = "使用例"
+
+[[message]]
+key = "Exclude"
+[message.translations]
+japanese = "除外"
+
+[[message]]
+key = "Favorite"
+[message.translations]
+japanese = "お気に入り"
+
+[[message]]
+key = "Filter connecting players"
+[message.translations]
+japanese = "接続中のプレイヤーをフィルター"
+
+[[message]]
+key = "Friend note"
+[message.translations]
+japanese = "フレンドメモ"
+
+[[message]]
+key = "Friends"
+[message.translations]
+japanese = "フレンド"
+
+[[message]]
+key = "Fun"
+[message.translations]
+japanese = "Fun"
+
+[[message]]
+key = "Game type"
+[message.translations]
+japanese = "ゲームタイプ"
+
+[[message]]
+key = "Game types:"
+[message.translations]
+japanese = "ゲームタイプ："
+
+[[message]]
+key = "Getting server list from master server"
+[message.translations]
+japanese = "マスターサーバーからサーバーリストを取得中"
+
+[[message]]
+key = "Has people playing"
+[message.translations]
+japanese = "プレイヤーあり"
+
+[[message]]
+key = "Has save"
+[message.translations]
+japanese = "セーブあり"
+
+[[message]]
+key = "Indicate map finish"
+[message.translations]
+japanese = "マップクリアを表示"
+
+[[message]]
+key = "Insane"
+[message.translations]
+japanese = "Insane"
+
+[[message]]
+key = "Leak IP"
+[message.translations]
+japanese = "IP漏洩"
+
+[[message]]
+key = "Local saves"
+[message.translations]
+japanese = "ローカルセーブ"
+
+[[message]]
+key = "Map"
+[message.translations]
+japanese = "マップ"
+
+[[message]]
+key = "Moderate"
+[message.translations]
+japanese = "Moderate"
+
+[[message]]
+key = "Move to category"
+[message.translations]
+japanese = "カテゴリに移動"
+
+[[message]]
+key = "NA"
+[message.translations]
+japanese = "北米"
+
+[[message]]
+key = "No active QmClient reports yet"
+[message.translations]
+japanese = "アクティブなQmClient報告はまだありません"
+
+[[message]]
+key = "No favorite maps yet"
+[message.translations]
+japanese = "お気に入りのマップはまだありません"
+
+[[message]]
+key = "No local servers found (ports %d-%d)"
+[message.translations]
+japanese = "ローカルサーバーが見つかりません（ポート %d-%d）"
+
+[[message]]
+key = "No login required"
+[message.translations]
+japanese = "ログイン不要"
+
+[[message]]
+key = "No password"
+[message.translations]
+japanese = "パスワードなし"
+
+[[message]]
+key = "No server selected"
+[message.translations]
+japanese = "サーバーが選択されていません"
+
+[[message]]
+key = "No servers found"
+[message.translations]
+japanese = "サーバーが見つかりません"
+
+[[message]]
+key = "No servers match your filter criteria"
+[message.translations]
+japanese = "フィルタに適合するサーバーが見つかりません"
+
+[[message]]
+key = "None"
+[message.translations]
+japanese = "なし"
+
+[[message]]
+key = "Not in the current browser list"
+[message.translations]
+japanese = "現在のブラウザリストにありません"
+
+[[message]]
+key = "Note"
+[message.translations]
+japanese = "メモ"
+
+[[message]]
+key = "Novice"
+[message.translations]
+japanese = "Novice"
+
+[[message]]
+key = "Offline"
+[message.translations]
+japanese = "オフライン"
+
+[[message]]
+key = "Oldschool"
+[message.translations]
+japanese = "Oldschool"
+
+[[message]]
+key = "Ping"
+[message.translations]
+japanese = "Ping"
+
+[[message]]
+key = "Player country:"
+[message.translations]
+japanese = "プレイヤーの国："
+
+[[message]]
+key = "Qm"
+[message.translations]
+japanese = "Qm"
+
+[[message]]
+key = "QmClient online distribution"
+[message.translations]
+japanese = "QmClientオンライン分布"
+
+[[message]]
+key = "Remove friend"
+[message.translations]
+japanese = "フレンドを削除"
+
+[[message]]
+key = "Reset column widths"
+[message.translations]
+japanese = "列幅をリセット"
+
+[[message]]
+key = "Reset filter"
+[message.translations]
+japanese = "フィルターをリセット"
+
+[[message]]
+key = "SA"
+[message.translations]
+japanese = "南米"
+
+[[message]]
+key = "Selected server"
+[message.translations]
+japanese = "選択中のサーバー"
+
+[[message]]
+key = "Server address:"
+[message.translations]
+japanese = "サーバーアドレス："
+
+[[message]]
+key = "Server filter"
+[message.translations]
+japanese = "サーバーフィルター"
+
+[[message]]
+key = "Server not full"
+[message.translations]
+japanese = "サーバーが満員ではない"
+
+[[message]]
+key = "Set a voice server to enable QmClient distribution"
+[message.translations]
+japanese = "QmClient分布を有効にするには、ボイスサーバーを設定してください"
+
+[[message]]
+key = "Show friends only"
+[message.translations]
+japanese = "フレンドのみ表示"
+
+[[message]]
+key = "Solo"
+[message.translations]
+japanese = "ソロ"
+
+[[message]]
+key = "Start and connect to local server"
+[message.translations]
+japanese = "ローカルサーバーを起動して接続"
+
+[[message]]
+key = "Strict gametype filter"
+[message.translations]
+japanese = "厳密なゲームタイプフィルター"
+
+[[message]]
+key = "Type"
+[message.translations]
+japanese = "タイプ"
+
+[[message]]
+key = "Types"
+[message.translations]
+japanese = "タイプ"
+
+[[message]]
+key = "Unfinished map"
+[message.translations]
+japanese = "未完了のマップ"
+
+[[message]]
+key = "Unknown"
+[message.translations]
+japanese = "不明"
+
+[[message]]
+key = "Version"
+[message.translations]
+japanese = "バージョン"
+
+[[message]]
+key = "Your favorite maps appear here"
+[message.translations]
+japanese = "お気に入りのマップがここに表示されます"
