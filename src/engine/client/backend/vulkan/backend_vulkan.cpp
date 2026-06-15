@@ -1848,7 +1848,7 @@ protected:
 			}
 			if(!FoundAllocation)
 			{
-				typename SMemoryBlockCache<Id>::SMemoryCacheType::SMemoryCacheHeap *pNewHeap = new typename SMemoryBlockCache<Id>::SMemoryCacheType::SMemoryCacheHeap();
+				typename SMemoryBlockCache<Id>::SMemoryCacheType::SMemoryCacheHeap *pNewHeap = new SMemoryBlockCache<Id>::SMemoryCacheType::SMemoryCacheHeap();
 
 				VkBuffer TmpBuffer;
 				if(!GetBufferImpl(MemoryBlockSize * BlockCount, RequiresMapping ? MEMORY_BLOCK_USAGE_STAGING : MEMORY_BLOCK_USAGE_BUFFER, TmpBuffer, TmpBufferMemory, BufferUsage, BufferProperties))
@@ -2080,7 +2080,7 @@ protected:
 			}
 			if(!FoundAllocation)
 			{
-				typename SMemoryBlockCache<Id>::SMemoryCacheType::SMemoryCacheHeap *pNewHeap = new typename SMemoryBlockCache<Id>::SMemoryCacheType::SMemoryCacheHeap();
+				typename SMemoryBlockCache<Id>::SMemoryCacheType::SMemoryCacheHeap *pNewHeap = new SMemoryBlockCache<Id>::SMemoryCacheType::SMemoryCacheHeap();
 
 				if(!GetImageMemoryImpl(MemoryBlockSize * BlockCount, RequiredMemoryTypeBits, TmpBufferMemory, BufferProperties))
 				{
