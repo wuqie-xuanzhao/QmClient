@@ -3,6 +3,8 @@
 import tomllib
 import unittest
 from pathlib import Path
+from unittest import mock
+import tempfile
 
 from qmclient_scripts.languages_qmclient import i18n_store
 
@@ -54,6 +56,56 @@ class I18nTomlTest(unittest.TestCase):
             'traditional_chinese = "預測量"',
             text,
         )
+
+    def test_patch_module_store_removes_internal_translation_blank_lines(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            translations_dir = Path(tmp)
+            path = translations_dir / "menus.toml"
+            path.write_text(
+                """[[message]]
+key = "Anti Ping Smoothing"
+[message.translations]
+simplified_chinese = "平滑预测"
+
+japanese = "アンチピングスムージング"
+traditional_chinese = "預測量"
+
+[[message]]
+key = "Apply"
+[message.translations]
+simplified_chinese = "应用"
+""",
+                encoding="utf-8",
+                newline="\n",
+            )
+
+            with mock.patch.object(i18n_store, "TRANSLATIONS_DIR", translations_dir):
+                i18n_store.patch_module_store(
+                    "menus",
+                    {
+                        ("Anti Ping Smoothing", ""): {
+                            "simplified_chinese": "平滑预测",
+                            "japanese": "アンチピングスムージング",
+                            "traditional_chinese": "預測量",
+                            "korean": "양",
+                        },
+                        ("Apply", ""): {
+                            "simplified_chinese": "应用",
+                        },
+                    },
+                )
+
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(
+                '[message.translations]\n'
+                'simplified_chinese = "平滑预测"\n'
+                'japanese = "アンチピングスムージング"\n'
+                'traditional_chinese = "預測量"\n'
+                'korean = "양"\n'
+                '\n[[message]]',
+                text,
+            )
+            tomllib.loads(text)
 
     def test_module_name_for_source_uses_code_boundaries(self):
         self.assertEqual(

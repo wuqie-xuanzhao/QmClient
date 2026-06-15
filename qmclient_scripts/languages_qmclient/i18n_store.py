@@ -195,7 +195,7 @@ def _patch_message_block(
     replaced = False
     insert_at: int | None = None
 
-    for line in lines:
+    for index, line in enumerate(lines):
         stripped = line.strip()
         if stripped == "[message.translations]":
             in_translations = True
@@ -206,6 +206,10 @@ def _patch_message_block(
             continue
         elif in_translations and " = " in stripped:
             insert_at = len(patched) + 1
+        elif in_translations and not stripped:
+            remaining = lines[index + 1 :]
+            if any(" = " in item.strip() for item in remaining):
+                continue
         patched.append(line)
 
     if not replaced:
