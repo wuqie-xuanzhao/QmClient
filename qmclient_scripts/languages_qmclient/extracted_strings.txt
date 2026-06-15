@@ -237,8 +237,8 @@ Authed name color in scoreboard
 Authenticate to rcon
 Authenticate to rcon with a username
 Authorized player forced vote '%s'
-Auto
 auto
+Auto
 Auto agree vote
 Auto chat in water
 Auto chat when dying in water
@@ -383,8 +383,8 @@ Clan: %s
 Classic
 Classic easy
 Classic Easy
-Classic Next
 Classic next
+Classic Next
 Classic nut
 Classic Nut
 Classic pro
@@ -506,8 +506,8 @@ Current status
 Current: Ranks
 Current: Score
 Current: Time
-custom
 Custom
+custom
 Custom API key
 Custom aspect ratio
 Custom colors
@@ -549,8 +549,8 @@ Deep unfreeze color
 Deep unfreeze opacity
 DeepSeek
 DeepSeek API key
-Default
 default
+Default
 Default input open failed
 Default length
 Default output open failed
@@ -931,8 +931,8 @@ Hold left click for free camera
 Hook
 Hook collision line
 Hook collision line opacity
-Hook collisions
 Hook Collisions
+Hook collisions
 Hook line tip
 Hook Strength
 Hooking L/R: %.0f%%/%.0f%%
@@ -1461,8 +1461,8 @@ Predicted ghost opacity
 Prediction
 Prediction jitter is obvious, latency changes are large
 Prediction latency is elevated, prediction path pressure is high
-Prediction margin
 Prediction Margin
+Prediction margin
 Prediction time
 Preparing demo playback
 Preset bar
@@ -2286,7 +2286,7 @@ u = Snapshot latency
 UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
 UDP seems to be filtered.
 UDP socket not open
-UI Color
+UI color
 UI controller sens.
 UI mouse sens.
 UI opacity

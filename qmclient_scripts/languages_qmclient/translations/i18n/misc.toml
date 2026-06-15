@@ -1,2755 +1,4393 @@
 [[message]]
 key = "\"%s\" is not compatible with pnglite and cannot be loaded by old DDNet versions:"
 [message.translations]
+japanese = "\"%s\"はpngliteと互換性がなく、古いDDNetバージョンでは読み込むことができません。"
+korean = "\"%s\"는 pnglite와 호환되지 않으며 이전 버전의 DDNet에서는 로드할 수 없습니다."
 simplified_chinese = "\"%s\" 与 pnglite 不兼容，无法被旧版本 DDNet 加载"
+traditional_chinese = "\"%s\" 與 pnglite 不相容，無法被舊版本 DDNet 載入"
 
 [[message]]
 key = "%c Team %d"
 [message.translations]
+japanese = "%c チーム %d"
+korean = "%c Team %d"
 simplified_chinese = "%c 队伍 %d"
+traditional_chinese = "%c 隊伍 %d"
 
 [[message]]
 key = "%d new mentions"
 [message.translations]
+japanese = "%d 件の新しいメンション"
+korean = "%d 개의 새로운 언급"
 simplified_chinese = "%d 条新被提及消息"
+traditional_chinese = "%d 條新被提及訊息"
 
 [[message]]
 key = "%d players"
 [message.translations]
+japanese = "%d プレイヤー"
+korean = "%d명의 플레이어"
 simplified_chinese = "%d 在线玩家"
+traditional_chinese = "%d 在線玩家"
 
 [[message]]
 key = "%d teams"
 [message.translations]
+japanese = "%d チーム"
+korean = "%d개 팀"
 simplified_chinese = "%d 个队伍"
+traditional_chinese = "%d 個隊伍"
 
 [[message]]
 key = "%s wins!"
 [message.translations]
+japanese = "%s 勝利！"
+korean = "%s가 승리했습니다!"
 simplified_chinese = "%s 胜利！"
+traditional_chinese = "%s 勝利！"
 
 [[message]]
 key = "- Save codes in order:"
 [message.translations]
+japanese = "- セーブコードを順に:"
+korean = "- 저장 코드 순서:"
 simplified_chinese = "- 密码依次为:"
+traditional_chinese = "- 密碼依序為:"
 
 [[message]]
 key = "- Save owners in order:"
 [message.translations]
+japanese = "- セーブ所有者を順に:"
+korean = "- 저장 소유자 순서:"
 simplified_chinese = "- 保存者按顺序是:"
+traditional_chinese = "- 儲存者按順序是:"
 
 [[message]]
 key = "- You have %d saves on this map!"
 [message.translations]
+japanese = "- このマップに %d 個のセーブがあります！"
+korean = "- 이 맵에 %d개의 저장이 있습니다!"
 simplified_chinese = "- 您在这张图有%d个存档！"
+traditional_chinese = "- 您在這張地圖有 %d 個存檔！"
 
 [[message]]
 key = "/times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)"
 [message.translations]
+japanese = "/times ?s?i は、サーバーの直近 5 回のタイム、または名前が s で始まるプレイヤーのタイムを i 番目から表示します（i は既定で 1、-1 は最初）"
+korean = "/times ?s?i 는 이름 s로 시작하는 서버 또는 플레이어의 최근 5개 기록을 시간 i부터 표시합니다 (i = 기본값 1, -1은 처음)"
 simplified_chinese = "/times ?s?i 显示服务器最近 5 次成绩，或名称以 s 开头玩家从第 i 条开始的 5 次成绩（i 默认 1，-1 表示第一条）"
+traditional_chinese = "/times ?s?i 顯示伺服器最近 5 次成績，或名稱以 s 開頭玩家從第 i 條開始的五次成績（i 預設 1，-1 表示第一條）"
 
 [[message]]
 key = "1 new mention"
 [message.translations]
+japanese = "1 件の新しいメンション"
+korean = "1개의 새 멘션"
 simplified_chinese = "1 条新被提及消息"
+traditional_chinese = "1 條新被提及訊息"
 
 [[message]]
 key = "9+ new mentions"
 [message.translations]
+japanese = "9+ 件の新しいメンション"
+korean = "9개 이상의 새 멘션"
 simplified_chinese = "9+ 条新被提及消息"
+traditional_chinese = "9+ 條新被提及訊息"
 
 [[message]]
 key = "_ or ' ' = blank spacer"
 [message.translations]
+japanese = "_ または ' ' = 空白スペーサー"
+korean = "_ 또는 ' ' = 빈 공백"
 simplified_chinese = "_ 或 ' ' = 空白间隔"
+traditional_chinese = "_ 或 ' ' = 空白間隔"
 
 [[message]]
 key = "a = View angle"
 [message.translations]
+japanese = "a = 視野角度"
+korean = "a = 시야 각도"
 simplified_chinese = "a = 视角角度"
+traditional_chinese = "a = 視角角度"
 
 [[message]]
 key = "Add a colored skin to a dummy queue preset"
 [message.translations]
+japanese = "ダミーキュープリセットにカラースキンを追加"
+korean = "더미 큐 프리셋에 컬러 스킨 추가"
 simplified_chinese = "为分身队列预设添加彩色皮肤"
+traditional_chinese = "為分身佇列預設新增彩色皮膚"
 
 [[message]]
 key = "Add a colored skin to a queue preset"
 [message.translations]
+japanese = "キュープリセットにカラースキンを追加"
+korean = "큐 프리셋에 컬러 스킨 추가"
 simplified_chinese = "为队列预设添加彩色皮肤"
+traditional_chinese = "為佇列預設新增彩色皮膚"
 
 [[message]]
 key = "Add a colored skin to the dummy queue"
 [message.translations]
+japanese = "ダミーキューにカラースキンを追加"
+korean = "더미 큐에 컬러 스킨 추가"
 simplified_chinese = "为分身队列添加彩色皮肤"
+traditional_chinese = "為分身佇列新增彩色皮膚"
 
 [[message]]
 key = "Add a colored skin to the queue"
 [message.translations]
+japanese = "キューにカラースキンを追加"
+korean = "큐에 컬러 스킨 추가"
 simplified_chinese = "为队列添加彩色皮肤"
+traditional_chinese = "為佇列新增彩色皮膚"
 
 [[message]]
 key = "Add a community as a favorite"
 [message.translations]
+japanese = "コミュニティをお気に入りに追加"
+korean = "커뮤니티를 즐겨찾기에 추가"
 simplified_chinese = "将社区添加为收藏夹"
+traditional_chinese = "將社群新增為收藏"
 
 [[message]]
 key = "Add a community to the exclusion filter"
 [message.translations]
+japanese = "コミュニティを除外フィルターに追加"
+korean = "커뮤니티를 제외 필터에 추가"
 simplified_chinese = "将社区加入排除筛选"
+traditional_chinese = "將社群加入排除篩選"
 
 [[message]]
 key = "Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)"
 [message.translations]
+japanese = "特定のコミュニティの除外フィルターに国を追加（ISO 3166-1 数値コード）"
+korean = "특정 커뮤니티의 제외 필터에 국가 추가 (ISO 3166-1 숫자 코드)"
 simplified_chinese = "将国家/地区加入指定社区的排除筛选（ISO 3166-1 数字编码）"
+traditional_chinese = "將國家/地區加入指定社群的排除篩選（ISO 3166-1 數字編碼）"
 
 [[message]]
 key = "Add a dummy queue preset"
 [message.translations]
+japanese = "ダミーキュープリセットを追加"
+korean = "더미 큐 프리셋 추가"
 simplified_chinese = "添加分身队列预设"
+traditional_chinese = "新增分身佇列預設"
 
 [[message]]
 key = "Add a foe"
 [message.translations]
+japanese = "敵を追加"
+korean = "적 추가"
 simplified_chinese = "添加一个敌人"
+traditional_chinese = "新增一個敵人"
 
 [[message]]
 key = "Add a friend"
 [message.translations]
+japanese = "フレンドを追加"
+korean = "친구 추가"
 simplified_chinese = "添加好友"
+traditional_chinese = "新增好友"
 
 [[message]]
 key = "Add a friend category"
 [message.translations]
+japanese = "フレンドカテゴリを追加"
+korean = "친구 카테고리 추가"
 simplified_chinese = "添加好友类别"
+traditional_chinese = "新增好友類別"
 
 [[message]]
 key = "Add a prehashed rcon key"
 [message.translations]
+japanese = "プリハッシュ化された rcon キーを追加"
+korean = "사전 해시된 rcon 키 추가"
 simplified_chinese = "添加预哈希的 rcon 密钥"
+traditional_chinese = "新增預哈希的 rcon 金鑰"
 
 [[message]]
 key = "Add a queue preset"
 [message.translations]
+japanese = "キュープリセットを追加"
+korean = "큐 프리셋 추가"
 simplified_chinese = "添加队列预设"
+traditional_chinese = "新增佇列預設"
 
 [[message]]
 key = "Add a rcon key"
 [message.translations]
+japanese = "rcon キーを追加"
+korean = "rcon 키 추가"
 simplified_chinese = "添加 rcon 键"
+traditional_chinese = "新增 rcon 鍵"
 
 [[message]]
 key = "Add a server as a favorite"
 [message.translations]
+japanese = "サーバーをお気に入りに追加"
+korean = "서버를 즐겨찾기에 추가"
 simplified_chinese = "将服务器添加为收藏夹"
+traditional_chinese = "將伺服器新增為收藏"
 
 [[message]]
 key = "Add a skin as a favorite"
 [message.translations]
+japanese = "スキンをお気に入りに追加"
+korean = "스킨을 즐겨찾기에 추가"
 simplified_chinese = "将皮肤添加为收藏夹"
+traditional_chinese = "將皮膚新增為收藏"
 
 [[message]]
 key = "Add a skin to a dummy queue preset"
 [message.translations]
+japanese = "ダミーキュープリセットにスキンを追加"
+korean = "더미 큐 프리셋에 스킨 추가"
 simplified_chinese = "向分身队列预设添加皮肤"
+traditional_chinese = "向分身佇列預設新增皮膚"
 
 [[message]]
 key = "Add a skin to a queue preset"
 [message.translations]
+japanese = "キュープリセットにスキンを追加"
+korean = "큐 프리셋에 스킨 추가"
 simplified_chinese = "将皮肤添加到队列预设"
+traditional_chinese = "將皮膚新增到佇列預設"
 
 [[message]]
 key = "Add a skin to the dummy queue"
 [message.translations]
+japanese = "ダミーキューにスキンを追加"
+korean = "더미 큐에 스킨 추가"
 simplified_chinese = "向分身队列添加皮肤"
+traditional_chinese = "向分身佇列新增皮膚"
 
 [[message]]
 key = "Add a skin to the queue"
 [message.translations]
+japanese = "キューにスキンを追加"
+korean = "큐에 스킨 추가"
 simplified_chinese = "将皮肤添加到队列中"
+traditional_chinese = "將皮膚新增到佇列中"
 
 [[message]]
 key = "add a sqlserver"
 [message.translations]
+japanese = "SQL サーバーを追加"
+korean = "SQL 서버 추가"
 simplified_chinese = "添加一个 SQL 服务器"
+traditional_chinese = "新增一個 SQL 伺服器"
 
 [[message]]
 key = "Add a type to the exclusion filter for a specific community"
 [message.translations]
+japanese = "特定のコミュニティの除外フィルターにタイプを追加"
+korean = "특정 커뮤니티의 제외 필터에 유형 추가"
 simplified_chinese = "将类型加入指定社区的排除筛选"
+traditional_chinese = "將類型加入指定社群的排除篩選"
 
 [[message]]
 key = "Add a voting option"
 [message.translations]
+japanese = "投票オプションを追加"
+korean = "투표 옵션 추가"
 simplified_chinese = "添加投票选项"
+traditional_chinese = "新增投票選項"
 
 [[message]]
 key = "Add demo timeline marker"
 [message.translations]
+japanese = "デモタイムラインマーカーを追加"
+korean = "데모 타임라인 마커 추가"
 simplified_chinese = "添加回放时间线标记"
+traditional_chinese = "新增回放時間線標記"
 
 [[message]]
 key = "Add friend"
 [message.translations]
+japanese = "フレンド追加"
+korean = "친구 추가"
 simplified_chinese = "添加好友"
+traditional_chinese = "新增好友"
 
 [[message]]
 key = "Add/remove Client-IDs to spectate them exclusively (-1 to reset)"
 [message.translations]
+japanese = "それらを独占的に観戦するためにクライアントIDを追加/削除（-1 でリセット）"
+korean = "독점 관전할 클라이언트 ID 추가/제거 (-1은 초기화)"
 simplified_chinese = "添加/移除要专门旁观的客户端 ID（-1 重置）"
+traditional_chinese = "新增/移除要專門旁觀的客戶端 ID（-1 重置）"
 
 [[message]]
 key = "Alive: %.1fs/%.1fs"
 [message.translations]
+japanese = "生存: %.1f秒/%.1f秒"
+korean = "생존: %.1fs/%.1fs"
 simplified_chinese = "存活：%.1fs/%.1fs"
+traditional_chinese = "存活：%.1fs/%.1fs"
 
 [[message]]
 key = "Angle:"
 [message.translations]
+japanese = "角度:"
+korean = "각도:"
 simplified_chinese = "角度"
+traditional_chinese = "角度："
 
 [[message]]
 key = "Authenticate to rcon"
 [message.translations]
+japanese = "rcon 認証"
+korean = "rcon 인증"
 simplified_chinese = "进行 rcon 认证"
+traditional_chinese = "進行 rcon 認證"
 
 [[message]]
 key = "Authenticate to rcon with a username"
 [message.translations]
+japanese = "ユーザー名で rcon 認証"
+korean = "사용자 이름으로 rcon 인증"
 simplified_chinese = "使用用户名进行 rcon 认证"
+traditional_chinese = "使用使用者名稱進行 rcon 認證"
 
 [[message]]
 key = "Auto"
 [message.translations]
+japanese = "自動"
+korean = "자동"
 simplified_chinese = "自动"
+traditional_chinese = "自動"
 
 [[message]]
 key = "Auto reply"
 [message.translations]
+japanese = "自動返信"
+korean = "자동 응답"
 simplified_chinese = "自动回复"
+traditional_chinese = "自動回覆"
 
 [[message]]
 key = "Auto-sync player camera"
 [message.translations]
+japanese = "プレイヤーカメラを自動同期"
+korean = "플레이어 카메라 자동 동기화"
 simplified_chinese = "自动同步玩家视角"
+traditional_chinese = "自動同步玩家視角"
 
 [[message]]
 key = "Automatically adds voting options for all maps"
 [message.translations]
+japanese = "すべてのマップに自動的に投票オプションを追加"
+korean = "모든 맵에 투표 옵션 자동 추가"
 simplified_chinese = "自动为所有地图添加投票选项"
+traditional_chinese = "自動為所有地圖新增投票選項"
 
 [[message]]
 key = "Avg %.*f   ↓ %.*f   ↑ %.*f"
 [message.translations]
+japanese = "平均 %.*f   ↓ %.*f   ↑ %.*f"
+korean = "평균 %.*f   ↓ %.*f   ↑ %.*f"
 simplified_chinese = "平均 %.*f   ↓ %.*f   ↑ %.*f"
+traditional_chinese = "平均 %.*f   ↓ %.*f   ↑ %.*f"
 
 [[message]]
 key = "Axiom auto login failed"
 [message.translations]
+japanese = "Axiom 自動ログイン失敗"
+korean = "Axiom 자동 로그인 실패"
 simplified_chinese = "Axiom 自动登录失败"
+traditional_chinese = "Axiom 自動登入失敗"
 
 [[message]]
 key = "Axiom auto login failed, retrying"
 [message.translations]
+japanese = "Axiom 自動ログイン失敗、再試行中"
+korean = "Axiom 자동 로그인 실패, 재시도 중"
 simplified_chinese = "Axiom 自动登录失败，正在重试"
+traditional_chinese = "Axiom 自動登入失敗，正在重試"
 
 [[message]]
 key = "Axiom auto login succeeded"
 [message.translations]
+japanese = "Axiom 自動ログイン成功"
+korean = "Axiom 자동 로그인 성공"
 simplified_chinese = "Axiom 自动登录成功"
+traditional_chinese = "Axiom 自動登入成功"
 
 [[message]]
 key = "Ban a certain nickname"
 [message.translations]
+japanese = "特定のニックネームをBAN"
+korean = "특정 닉네임 차단"
 simplified_chinese = "禁止某个昵称"
+traditional_chinese = "禁止某個暱稱"
 
 [[message]]
 key = "Ban ip for x minutes for any reason"
 [message.translations]
+japanese = "IP を任意の理由で x 分間 BAN"
+korean = "모든 사유로 IP를 x분 동안 차단"
 simplified_chinese = "按任意原因封禁 IP x 分钟"
+traditional_chinese = "按任意原因封禁 IP x 分鐘"
 
 [[message]]
 key = "Ban ip range for x minutes for any reason"
 [message.translations]
+japanese = "IP 範囲を任意の理由で x 分間 BAN"
+korean = "모든 사유로 IP 범위를 x분 동안 차단"
 simplified_chinese = "按任意原因封禁 IP 段 x 分钟"
+traditional_chinese = "按任意原因封禁 IP 段 x 分鐘"
 
 [[message]]
 key = "Ban player in a region"
 [message.translations]
+japanese = "リージョン内のプレイヤーをBAN"
+korean = "지역 내 플레이어 차단"
 simplified_chinese = "禁止某个地区的玩家"
+traditional_chinese = "禁止某個地區的玩家"
 
 [[message]]
 key = "Ban player with ip/client id for x minutes for any reason"
 [message.translations]
+japanese = "任意の理由で IP/クライアントID のプレイヤーを x 分間 BAN"
+korean = "모든 사유로 플레이어(IP/클라이언트 ID)를 x분 동안 차단"
 simplified_chinese = "按任意原因封禁玩家（IP/客户端 ID）x 分钟"
+traditional_chinese = "按任意原因封禁玩家（IP/客戶端 ID）x 分鐘"
 
 [[message]]
 key = "Ban range in a region"
 [message.translations]
+japanese = "リージョン内の範囲をBAN"
+korean = "지역 내 IP 범위 차단"
 simplified_chinese = "封禁指定区域内的 IP 段"
+traditional_chinese = "封禁指定區域內的 IP 段"
 
 [[message]]
 key = "Benchmark frame times for number of seconds to file, then quit"
 [message.translations]
+japanese = "指定秒数のフレームタイムをファイルにベンチマークして終了"
+korean = "지정된 초 동안 프레임 시간을 파일에 벤치마크한 후 종료"
 simplified_chinese = "将指定秒数的帧时间基准写入文件，然后退出"
+traditional_chinese = "將指定秒數的幀時間基準寫入檔案，然後退出"
 
 [[message]]
 key = "Best"
 [message.translations]
+japanese = "ベスト"
+korean = "최고"
 simplified_chinese = "最高"
+traditional_chinese = "最佳"
 
 [[message]]
 key = "Bind key to execute a command or view keybindings"
 [message.translations]
+japanese = "キーをバインドしてコマンドを実行、またはキーバインドを表示"
+korean = "키를 바인딩하여 명령 실행 또는 키바인딩 보기"
 simplified_chinese = "绑定按键以执行命令或查看按键绑定"
+traditional_chinese = "綁定按鍵以執行命令或檢視按鍵綁定"
 
 [[message]]
 key = "Blue team"
 [message.translations]
+japanese = "青チーム"
+korean = "블루 팀"
 simplified_chinese = "蓝队"
+traditional_chinese = "藍隊"
 
 [[message]]
 key = "Blue team wins!"
 [message.translations]
+japanese = "青チーム勝利！"
+korean = "블루 팀 승리!"
 simplified_chinese = "蓝队胜利！"
+traditional_chinese = "藍隊勝利！"
 
 [[message]]
 key = "Broadcast message"
 [message.translations]
+japanese = "ブロードキャストメッセージ"
+korean = "방송 메시지"
 simplified_chinese = "广播消息"
+traditional_chinese = "廣播訊息"
 
 [[message]]
 key = "c = Player position"
 [message.translations]
+japanese = "c = プレイヤー位置"
+korean = "c = 플레이어 위치"
 simplified_chinese = "c = 玩家坐标"
+traditional_chinese = "c = 玩家座標"
 
 [[message]]
 key = "Cancel"
 [message.translations]
+japanese = "キャンセル"
+korean = "취소"
 simplified_chinese = "取消"
+traditional_chinese = "取消"
 
 [[message]]
 key = "Cancel your swap request"
 [message.translations]
+japanese = "スワップリクエストをキャンセル"
+korean = "교환 요청 취소"
 simplified_chinese = "取消你的交换请求"
+traditional_chinese = "取消你的交換請求"
 
 [[message]]
 key = "Change map"
 [message.translations]
+japanese = "マップ変更"
+korean = "맵 변경"
 simplified_chinese = "更改地图"
+traditional_chinese = "更改地圖"
 
 [[message]]
 key = "Change zoom"
 [message.translations]
+japanese = "ズーム変更"
+korean = "줌 변경"
 simplified_chinese = "更改缩放比例"
+traditional_chinese = "更改縮放比例"
 
 [[message]]
 key = "Chat export failed"
 [message.translations]
+japanese = "チャットエクスポート失敗"
+korean = "채팅 내보내기 실패"
 simplified_chinese = "聊天记录导出失败"
+traditional_chinese = "聊天記錄匯出失敗"
 
 [[message]]
 key = "Clear"
 [message.translations]
+japanese = "クリア"
+korean = "지우기"
 simplified_chinese = "清空"
+traditional_chinese = "清空"
 
 [[message]]
 key = "Clear friend note"
 [message.translations]
+japanese = "フレンドメモをクリア"
+korean = "친구 메모 지우기"
 simplified_chinese = "清除好友备注"
+traditional_chinese = "清除好友備註"
 
 [[message]]
 key = "Clear local console"
 [message.translations]
+japanese = "ローカルコンソールをクリア"
+korean = "로컬 콘솔 지우기"
 simplified_chinese = "清空本地控制台"
+traditional_chinese = "清空本地控制台"
 
 [[message]]
 key = "Clear remote console"
 [message.translations]
+japanese = "リモートコンソールをクリア"
+korean = "원격 콘솔 지우기"
 simplified_chinese = "清空远程控制台"
+traditional_chinese = "清空遠端控制台"
 
 [[message]]
 key = "Clears the voting options"
 [message.translations]
+japanese = "投票オプションをクリア"
+korean = "투표 옵션 지우기"
 simplified_chinese = "清除投票选项"
+traditional_chinese = "清除投票選項"
 
 [[message]]
 key = "Connect address error"
 [message.translations]
+japanese = "接続アドレスエラー"
+korean = "연결 주소 오류"
 simplified_chinese = "连接地址错误"
+traditional_chinese = "連線位址錯誤"
 
 [[message]]
 key = "Connect dummy to enable"
 [message.translations]
+japanese = "有効にするにはダミーを接続"
+korean = "더미 연결 필요"
 simplified_chinese = "连接分身后可启用"
+traditional_chinese = "連線分身後可啟用"
 
 [[message]]
 key = "Connect to the specified host/ip"
 [message.translations]
+japanese = "指定されたホスト/IPに接続"
+korean = "지정된 호스트/IP에 연결"
 simplified_chinese = "连接到指定主机/ip"
+traditional_chinese = "連線到指定主機/ip"
 
 [[message]]
 key = "Connection Problems…"
 [message.translations]
+japanese = "接続の問題…"
+korean = "연결 문제…"
 simplified_chinese = "连接中断…"
+traditional_chinese = "連線中斷…"
 
 [[message]]
 key = "Converse with the last person you whispered to (private message)"
 [message.translations]
+japanese = "最後に whisper した人と会話（プライベートメッセージ）"
+korean = "마지막 귓속말 대상과 대화 (귓속말)"
 simplified_chinese = "与上一个私聊对象继续对话（私聊）"
+traditional_chinese = "與上一個私聊對象繼續對話（私聊）"
 
 [[message]]
 key = "Copy skin"
 [message.translations]
+japanese = "スキンをコピー"
+korean = "스킨 복사"
 simplified_chinese = "复制皮肤"
+traditional_chinese = "複製皮膚"
 
 [[message]]
 key = "Could not connect dummy"
 [message.translations]
+japanese = "ダミーに接続できませんでした"
+korean = "더미 연결 실패"
 simplified_chinese = "无法连接分身"
+traditional_chinese = "無法連線分身"
 
 [[message]]
 key = "Could not resolve connect address '%s'. See local console for details."
 [message.translations]
+japanese = "接続アドレス '%s' を解決できませんでした。詳細はローカルコンソールを確認してください。"
+korean = "연결 주소 '%s'를 확인할 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요."
 simplified_chinese = "无法解析连接地址 '%s'。检查本地控制台以获取详情。"
+traditional_chinese = "無法解析連線位址 '%s'。檢查本地控制台以取得詳細資訊。"
 
 [[message]]
 key = "Could not save downloaded map. Try manually deleting this file: %s"
 [message.translations]
+japanese = "ダウンロードしたマップを保存できませんでした。次のファイルを手動で削除してみてください: %s"
+korean = "다운로드한 맵을 저장할 수 없습니다. 다음 파일을 수동으로 삭제해 보세요: %s"
 simplified_chinese = "地图下载失败，请尝试手动删除此文件：%s"
+traditional_chinese = "地圖下載失敗，請嘗試手動刪除此檔案：%s"
 
 [[message]]
 key = "Current: Ranks"
 [message.translations]
+japanese = "現在: ランク"
+korean = "현재: 순위"
 simplified_chinese = "当前: 查分"
+traditional_chinese = "目前：排名"
 
 [[message]]
 key = "Current: Score"
 [message.translations]
+japanese = "現在: スコア"
+korean = "현재: 점수"
 simplified_chinese = "当前: 分数"
+traditional_chinese = "目前：分數"
 
 [[message]]
 key = "Current: Time"
 [message.translations]
+japanese = "現在: タイム"
+korean = "현재: 시간"
 simplified_chinese = "当前: 时间"
+traditional_chinese = "目前：時間"
 
 [[message]]
 key = "Custom"
 [message.translations]
+japanese = "カスタム"
+korean = "사용자 정의"
 simplified_chinese = "自定义"
+traditional_chinese = "自訂"
 
 [[message]]
 key = "d = Prediction latency"
 [message.translations]
+japanese = "d = 予測遅延"
+korean = "d = 예측 지연 시간"
 simplified_chinese = "d = 预测延迟"
+traditional_chinese = "d = 預測延遲"
 
 [[message]]
 key = "Deaths"
 [message.translations]
+japanese = "デス数"
+korean = "사망 수"
 simplified_chinese = "死亡数"
+traditional_chinese = "死亡數"
 
 [[message]]
 key = "Debug mode enabled. Press Ctrl+Shift+D to disable debug mode."
 [message.translations]
+japanese = "デバッグモードが有効になりました。Ctrl+Shift+D でデバッグモードを無効にします。"
+korean = "디버그 모드 활성화됨. Ctrl+Shift+D를 눌러 디버그 모드를 비활성화하세요."
 simplified_chinese = "调试模式已启用。按 Ctrl+Shift+D 禁用调试模式。"
+traditional_chinese = "除錯模式已啟用。按 Ctrl+Shift+D 停用除錯模式。"
 
 [[message]]
 key = "Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name"
 [message.translations]
+japanese = "指定された引数の数に応じて、自分をテレポートします。(0.) 観戦中または狙っている場所 (1.) 指定されたプレイヤー名"
+korean = "인수 개수에 따라 자신을 (0) 관전 중이거나 조준 중인 위치로, (1) 지정된 플레이어 이름으로 순간이동"
 simplified_chinese = "根据参数数量，将自己传送到：(0) 当前旁观或瞄准的位置；(1) 指定玩家"
+traditional_chinese = "根據參數數量，將自己傳送到：(0) 目前旁觀或瞄準的位置；(1) 指定玩家"
 
 [[message]]
 key = "Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'"
 [message.translations]
+japanese = "非推奨。「muteid <client_id> <秒数> <理由>」または「muteip <ip> <秒数> <理由>」を使用してください。"
+korean = "사용 중단됨. 'muteid <client_id> <초> <이유>' 또는 'muteip <ip> <초> <이유>'를 사용하세요."
 simplified_chinese = "已弃用。使用“muteid <client_id> <秒数> <原因>”或“muteip <ip> <秒数> <原因>”"
+traditional_chinese = "已棄用。使用「muteid <client_id> <秒數> <原因>」或「muteip <ip> <秒數> <原因>」"
 
 [[message]]
 key = "Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_muteip <ip> <seconds> <reason>'"
 [message.translations]
+japanese = "非推奨。「vote_muteid <client_id> <秒数> <理由>」または「vote_muteip <ip> <秒数> <理由>」を使用してください。"
+korean = "사용 중단됨. 'vote_muteid <client_id> <초> <이유>' 또는 'vote_muteip <ip> <초> <이유>'를 사용하세요."
 simplified_chinese = "已弃用。使用“vote_muteid <client_id> <秒数> <原因>”或“vote_muteip <ip> <秒数> <原因>”"
+traditional_chinese = "已棄用。使用「vote_muteid <client_id> <秒數> <原因>」或「vote_muteip <ip> <秒數> <原因>」"
 
 [[message]]
 key = "DF"
 [message.translations]
+japanese = "DF"
+korean = "DF"
 simplified_chinese = "DF"
+traditional_chinese = "DF"
 
 [[message]]
 key = "Disconnect from the server"
 [message.translations]
+japanese = "サーバーから切断"
+korean = "서버 연결 끊기"
 simplified_chinese = "与服务器断开连接"
+traditional_chinese = "與伺服器中斷連線"
 
 [[message]]
 key = "Drag HUD modules with the left mouse button"
 [message.translations]
+japanese = "左マウスボタンで HUD モジュールをドラッグ"
+korean = "마우스 왼쪽 버튼으로 HUD 모듈 드래그"
 simplified_chinese = "按住鼠标左键拖动 HUD 模块"
+traditional_chinese = "按住滑鼠左鍵拖曳 HUD 模組"
 
 [[message]]
 key = "Draw!"
 [message.translations]
+japanese = "引き分け！"
+korean = "무승부!"
 simplified_chinese = "平局！"
+traditional_chinese = "平手！"
 
 [[message]]
 key = "Dummy Control: %s"
 [message.translations]
+japanese = "ダミーコントロール: %s"
+korean = "더미 제어: %s"
 simplified_chinese = "分身控制：%s"
+traditional_chinese = "分身控制：%s"
 
 [[message]]
 key = "Dummy mini view"
 [message.translations]
+japanese = "ダミーミニビュー"
+korean = "더미 미니 뷰"
 simplified_chinese = "分身小窗"
+traditional_chinese = "分身小視窗"
 
 [[message]]
 key = "Dummy sync: %s"
 [message.translations]
+japanese = "ダミー同期: %s"
+korean = "더미 동기화: %s"
 simplified_chinese = "分身同步：%s"
+traditional_chinese = "分身同步：%s"
 
 [[message]]
 key = "Dump the current savestring"
 [message.translations]
+japanese = "現在のセーブ文字列をダンプ"
+korean = "현재 저장 문자열 내보내기"
 simplified_chinese = "导出当前存档字符串"
+traditional_chinese = "匯出目前存檔字串"
 
 [[message]]
 key = "Dump zone tuning in zone x"
 [message.translations]
+japanese = "ゾーン x のゾーンチューニングをダンプ"
+korean = "영역 x의 튜닝 내보내기"
 simplified_chinese = "导出区域 x 的调参配置"
+traditional_chinese = "匯出區域 x 的調參配置"
 
 [[message]]
 key = "dumps all sqlservers readservers = r, writeservers = w"
 [message.translations]
+japanese = "すべての SQL サーバーをダンプ（readservers = r, writeservers = w）"
+korean = "모든 SQL 서버 내보내기 (readservers = r, writeservers = w)"
 simplified_chinese = "导出全部 SQL 服务器（readservers = r, writeservers = w）"
+traditional_chinese = "匯出全部 SQL 伺服器（readservers = r, writeservers = w）"
 
 [[message]]
 key = "Dumps the antibot status"
 [message.translations]
+japanese = "アンチボットのステータスをダンプ"
+korean = "안티봇 상태 내보내기"
 simplified_chinese = "导出反机器人状态"
-
-[[message]]
-key = "Enable cheats for your current team's run, but you can't earn a rank"
-[message.translations]
-simplified_chinese = "为你当前队伍启用作弊，但将无法获得排名"
-
-[[message]]
-key = "Enables/disables active moderator mode for the player"
-[message.translations]
-simplified_chinese = "启用/禁用该玩家的活跃管理员模式"
-
-[[message]]
-key = "Enter Password"
-[message.translations]
-simplified_chinese = "输入密码"
-
-[[message]]
-key = "Enter Username"
-[message.translations]
-simplified_chinese = "输入账号名称"
-
-[[message]]
-key = "Error playing demo"
-[message.translations]
-simplified_chinese = "回放播放错误"
-
-[[message]]
-key = "Error saving settings"
-[message.translations]
-simplified_chinese = "保存设置错误"
-
-[[message]]
-key = "Export selected"
-[message.translations]
-simplified_chinese = "导出选中项"
-
-[[message]]
-key = "Exported %d chat messages"
-[message.translations]
-simplified_chinese = "已导出 %d 条聊天消息"
-
-[[message]]
-key = "f = Frame rate"
-[message.translations]
-simplified_chinese = "f = 帧率"
-
-[[message]]
-key = "Failed saving the replay!"
-[message.translations]
-simplified_chinese = "保存回放失败！"
-
-[[message]]
-key = "Find all ban records for the specified IP address"
-[message.translations]
-simplified_chinese = "查询指定 IP 的全部封禁记录"
-
-[[message]]
-key = "First page in console"
-[message.translations]
-simplified_chinese = "控制台第一页"
-
-[[message]]
-key = "Follow"
-[message.translations]
-simplified_chinese = "跟随"
-
-[[message]]
-key = "Following"
-[message.translations]
-simplified_chinese = "当前"
-
-[[message]]
-key = "Force a vote to yes/no"
-[message.translations]
-simplified_chinese = "强制投票赞成/反对"
-
-[[message]]
-key = "Force a voting option"
-[message.translations]
-simplified_chinese = "强制投票选项"
-
-[[message]]
-key = "Force high bandwidth mode when spectating (1 = on, 0 = off)"
-[message.translations]
-simplified_chinese = "旁观时强制高带宽模式（1 = 开，0 = 关）"
-
-[[message]]
-key = "Force i to pause for i seconds"
-[message.translations]
-simplified_chinese = "强制 ID 为 i 的玩家暂停 i 秒"
-
-[[message]]
-key = "FPM"
-[message.translations]
-simplified_chinese = "击杀/分"
-
-[[message]]
-key = "Frags"
-[message.translations]
-simplified_chinese = "击杀数"
-
-[[message]]
-key = "Free-View"
-[message.translations]
-simplified_chinese = "自由视角"
-
-[[message]]
-key = "Game over"
-[message.translations]
-simplified_chinese = "游戏结束"
-
-[[message]]
-key = "Game paused"
-[message.translations]
-simplified_chinese = "游戏已暂停"
-
-[[message]]
-key = "Give back right to vote to player with client ID"
-[message.translations]
-simplified_chinese = "将投票权归还给拥有客户端 ID 的玩家"
-
-[[message]]
-key = "Give back right to vote to player with IP address"
-[message.translations]
-simplified_chinese = "将投票权还给有IP地址的玩家"
-
-[[message]]
-key = "Give back right to vote to player with list index"
-[message.translations]
-simplified_chinese = "将投票权归还给列表索引的玩家"
-
-[[message]]
-key = "Gives a grenade launcher to you"
-[message.translations]
-simplified_chinese = "给你一个榴弹炮发射器"
-
-[[message]]
-key = "Gives a laser to you"
-[message.translations]
-simplified_chinese = "给予你激光枪"
-
-[[message]]
-key = "Gives a shotgun to you"
-[message.translations]
-simplified_chinese = "给你一把霰弹枪"
-
-[[message]]
-key = "Gives all weapons to you"
-[message.translations]
-simplified_chinese = "所有武器都给你"
-
-[[message]]
-key = "Gives jetpack to you"
-[message.translations]
-simplified_chinese = "给你喷气背包"
-
-[[message]]
-key = "Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)"
-[message.translations]
-simplified_chinese = "给你 id 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，手榴弹 = 3，激光 = 4，忍者 = 5）"
-
-[[message]]
-key = "Gives you as many jumps as you specify"
-[message.translations]
-simplified_chinese = "给予你指定次数的跳跃"
-
-[[message]]
-key = "Gives you endless hook"
-[message.translations]
-simplified_chinese = "给予你无限钩子"
-
-[[message]]
-key = "Gives you infinite jump"
-[message.translations]
-simplified_chinese = "给你无限跳跃"
-
-[[message]]
-key = "Grabs"
-[message.translations]
-simplified_chinese = "得旗数"
-
-[[message]]
-key = "Hammer: %s"
-[message.translations]
-simplified_chinese = "锤：%s"
-
-[[message]]
-key = "HDF"
-[message.translations]
-simplified_chinese = "HDF"
-
-[[message]]
-key = "Help: %s"
-[message.translations]
-simplified_chinese = "帮助：%s"
-
-[[message]]
-key = "Hold left click for free camera"
-[message.translations]
-simplified_chinese = "按住左键自由镜头"
-
-[[message]]
-key = "Hooking L/R: %.0f%%/%.0f%%"
-[message.translations]
-simplified_chinese = "出钩 L/R：%.0f%%/%.0f%%"
-
-[[message]]
-key = "https://wiki.ddnet.org/wiki/Mapping"
-[message.translations]
-simplified_chinese = "https://wiki.ddnet.org/index.php?title=Mapping/zh&variant=zh-hans"
-
-[[message]]
-key = "HUD editor preview"
-[message.translations]
-simplified_chinese = "HUD 编辑器预览"
-
-[[message]]
-key = "i = Receive rate"
-[message.translations]
-simplified_chinese = "i = 接收速率"
-
-[[message]]
-key = "Invite a person to a locked team"
-[message.translations]
-simplified_chinese = "邀请某人加入锁定的队伍"
-
-[[message]]
-key = "j = Latency jitter"
-[message.translations]
-simplified_chinese = "j = 延迟抖动"
-
-[[message]]
-key = "Join the team of the specified player"
-[message.translations]
-simplified_chinese = "加入指定玩家的队伍"
-
-[[message]]
-key = "Jump hint text"
-[message.translations]
-simplified_chinese = "跳跃提示文本"
-
-[[message]]
-key = "k = Resend loss"
-[message.translations]
-simplified_chinese = "k = 重发丢包率"
-
-[[message]]
-key = "Key Sticking: ?"
-[message.translations]
-simplified_chinese = "卡键：?"
-
-[[message]]
-key = "Key Sticking: Off"
-[message.translations]
-simplified_chinese = "卡键：关"
-
-[[message]]
-key = "Key Sticking: On"
-[message.translations]
-simplified_chinese = "卡键：开"
-
-[[message]]
-key = "Key Sticking: Reset Self"
-[message.translations]
-simplified_chinese = "卡键：重置本体"
-
-[[message]]
-key = "Kick player with specified id for any reason"
-[message.translations]
-simplified_chinese = "按任意原因踢出指定 ID 的玩家"
-
-[[message]]
-key = "Kill yourself when kill-protected during a long game (use f1, kill for regular kill)"
-[message.translations]
-simplified_chinese = "在长局 kill 保护时自杀（普通自杀请用 f1 + kill）"
-
-[[message]]
-key = "Kills a player and announces the kill"
-[message.translations]
-simplified_chinese = "击杀一名玩家并广播击杀信息"
-
-[[message]]
-key = "Kills team and disables practice mode"
-[message.translations]
-simplified_chinese = "击杀队伍并关闭练习模式"
-
-[[message]]
-key = "l = Local time"
-[message.translations]
-simplified_chinese = "l = 本地时间"
-
-[[message]]
-key = "Last page in console"
-[message.translations]
-simplified_chinese = "控制台最后一页"
-
-[[message]]
-key = "Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process"
-[message.translations]
-simplified_chinese = "通过逐个 ping 服务器泄露你的 IP，同时会获取延迟"
-
-[[message]]
-key = "Lets you join team i (shows your team if left blank)"
-[message.translations]
-simplified_chinese = "让你加入队伍 i（留空则显示你的队伍）"
-
-[[message]]
-key = "Lines %d - %d (%s)"
-[message.translations]
-simplified_chinese = "行 %d - %d (%s)"
+traditional_chinese = "匯出反機器人狀態"
 
 [[message]]
 key = "Echo the text"
 [message.translations]
+japanese = "テキストをエコー"
+korean = "텍스트 에코"
 simplified_chinese = "回显文本"
+traditional_chinese = "回顯文字"
+
+[[message]]
+key = "Enable cheats for your current team's run, but you can't earn a rank"
+[message.translations]
+japanese = "現在のチームのランでチートを有効にするが、ランクは獲得できません"
+korean = "현재 팀 실행에 치트 활성화, 단 순위 획득 불가"
+simplified_chinese = "为你当前队伍启用作弊，但将无法获得排名"
+traditional_chinese = "為你目前隊伍啟用作弊，但將無法獲得排名"
+
+[[message]]
+key = "Enables/disables active moderator mode for the player"
+[message.translations]
+japanese = "プレイヤーのアクティブモデレーターモードを有効/無効にする"
+korean = "플레이어의 활성 중재자 모드 활성화/비활성화"
+simplified_chinese = "启用/禁用该玩家的活跃管理员模式"
+traditional_chinese = "啟用/停用該玩家的活躍管理員模式"
+
+[[message]]
+key = "Enter Password"
+[message.translations]
+japanese = "パスワードを入力"
+korean = "비밀번호 입력"
+simplified_chinese = "输入密码"
+traditional_chinese = "輸入密碼"
+
+[[message]]
+key = "Enter Username"
+[message.translations]
+japanese = "ユーザー名を入力"
+korean = "사용자 이름 입력"
+simplified_chinese = "输入账号名称"
+traditional_chinese = "輸入使用者名稱"
+
+[[message]]
+key = "Error playing demo"
+[message.translations]
+japanese = "デモ再生エラー"
+korean = "데모 재생 오류"
+simplified_chinese = "回放播放错误"
+traditional_chinese = "回放播放錯誤"
+
+[[message]]
+key = "Error saving settings"
+[message.translations]
+japanese = "設定保存エラー"
+korean = "설정 저장 오류"
+simplified_chinese = "保存设置错误"
+traditional_chinese = "儲存設定錯誤"
 
 [[message]]
 key = "Execute files on key press/release"
 [message.translations]
+japanese = "キー押下/解放時にファイルを実行"
+korean = "키 누름/뗌 시 파일 실행"
 simplified_chinese = "在按下/释放按键时执行文件"
+traditional_chinese = "在按下/放開按鍵時執行檔案"
 
 [[message]]
 key = "Execute the specified file"
 [message.translations]
+japanese = "指定されたファイルを実行"
+korean = "지정된 파일 실행"
 simplified_chinese = "执行指定文件"
+traditional_chinese = "執行指定檔案"
+
+[[message]]
+key = "Export selected"
+[message.translations]
+japanese = "選択項目をエクスポート"
+korean = "선택 항목 내보내기"
+simplified_chinese = "导出选中项"
+traditional_chinese = "匯出選取項目"
+
+[[message]]
+key = "Exported %d chat messages"
+[message.translations]
+japanese = "%d 件のチャットメッセージをエクスポートしました"
+korean = "%d개의 채팅 메시지 내보냄"
+simplified_chinese = "已导出 %d 条聊天消息"
+traditional_chinese = "已匯出 %d 條聊天訊息"
+
+[[message]]
+key = "f = Frame rate"
+[message.translations]
+japanese = "f = フレームレート"
+korean = "f = 프레임 속도"
+simplified_chinese = "f = 帧率"
+traditional_chinese = "f = 幀率"
+
+[[message]]
+key = "Failed saving the replay!"
+[message.translations]
+japanese = "リプレイの保存に失敗しました！"
+korean = "리플레이 저장 실패!"
+simplified_chinese = "保存回放失败！"
+traditional_chinese = "儲存回放失敗！"
+
+[[message]]
+key = "Find all ban records for the specified IP address"
+[message.translations]
+japanese = "指定された IP アドレスのすべての BAN 記録を検索"
+korean = "지정된 IP 주소의 모든 차단 기록 찾기"
+simplified_chinese = "查询指定 IP 的全部封禁记录"
+traditional_chinese = "查詢指定 IP 的全部封禁記錄"
+
+[[message]]
+key = "First page in console"
+[message.translations]
+japanese = "コンソールの最初のページ"
+korean = "콘솔 첫 페이지"
+simplified_chinese = "控制台第一页"
+traditional_chinese = "控制台第一頁"
+
+[[message]]
+key = "Follow"
+[message.translations]
+japanese = "フォロー"
+korean = "팔로우"
+simplified_chinese = "跟随"
+traditional_chinese = "跟隨"
+
+[[message]]
+key = "Following"
+[message.translations]
+japanese = "フォロー中"
+korean = "현재"
+simplified_chinese = "当前"
+traditional_chinese = "目前"
+
+[[message]]
+key = "Force a vote to yes/no"
+[message.translations]
+japanese = "投票を賛成/反対に強制"
+korean = "투표를 찬성/반대로 강제"
+simplified_chinese = "强制投票赞成/反对"
+traditional_chinese = "強制投票贊成/反對"
+
+[[message]]
+key = "Force a voting option"
+[message.translations]
+japanese = "投票オプションを強制"
+korean = "투표 옵션 강제"
+simplified_chinese = "强制投票选项"
+traditional_chinese = "強制投票選項"
+
+[[message]]
+key = "Force high bandwidth mode when spectating (1 = on, 0 = off)"
+[message.translations]
+japanese = "観戦時に高帯域幅モードを強制（1 = オン、0 = オフ）"
+korean = "관전 시 고대역폭 모드 강제 (1 = 켜기, 0 = 끄기)"
+simplified_chinese = "旁观时强制高带宽模式（1 = 开，0 = 关）"
+traditional_chinese = "旁觀時強制高頻寬模式（1 = 開，0 = 關）"
+
+[[message]]
+key = "Force i to pause for i seconds"
+[message.translations]
+japanese = "i を i 秒間強制一時停止"
+korean = "i를 i초 동안 일시정지 강제"
+simplified_chinese = "强制 ID 为 i 的玩家暂停 i 秒"
+traditional_chinese = "強制 ID 為 i 的玩家暫停 i 秒"
+
+[[message]]
+key = "FPM"
+[message.translations]
+japanese = "FPM"
+korean = "분당 킬"
+simplified_chinese = "击杀/分"
+traditional_chinese = "擊殺/分"
+
+[[message]]
+key = "Frags"
+[message.translations]
+japanese = "キル数"
+korean = "킬 수"
+simplified_chinese = "击杀数"
+traditional_chinese = "擊殺數"
+
+[[message]]
+key = "Free-View"
+[message.translations]
+japanese = "フリービュー"
+korean = "자유 시점"
+simplified_chinese = "自由视角"
+traditional_chinese = "自由視角"
+
+[[message]]
+key = "Game over"
+[message.translations]
+japanese = "ゲームオーバー"
+korean = "게임 오버"
+simplified_chinese = "游戏结束"
+traditional_chinese = "遊戲結束"
+
+[[message]]
+key = "Game paused"
+[message.translations]
+japanese = "ゲーム一時停止中"
+korean = "게임 일시정지됨"
+simplified_chinese = "游戏已暂停"
+traditional_chinese = "遊戲已暫停"
+
+[[message]]
+key = "Give back right to vote to player with client ID"
+[message.translations]
+japanese = "クライアントIDのプレイヤーに投票権を戻す"
+korean = "클라이언트 ID를 가진 플레이어에게 투표권 되돌려주기"
+simplified_chinese = "将投票权归还给拥有客户端 ID 的玩家"
+traditional_chinese = "將投票權歸還給擁有客戶端 ID 的玩家"
+
+[[message]]
+key = "Give back right to vote to player with IP address"
+[message.translations]
+japanese = "IPアドレスのプレイヤーに投票権を戻す"
+korean = "IP 주소를 가진 플레이어에게 투표권 되돌려주기"
+simplified_chinese = "将投票权还给有IP地址的玩家"
+traditional_chinese = "將投票權歸還給有 IP 位址的玩家"
+
+[[message]]
+key = "Give back right to vote to player with list index"
+[message.translations]
+japanese = "リストインデックスのプレイヤーに投票権を戻す"
+korean = "목록 인덱스를 가진 플레이어에게 투표권 되돌려주기"
+simplified_chinese = "将投票权归还给列表索引的玩家"
+traditional_chinese = "將投票權歸還給列表索引的玩家"
+
+[[message]]
+key = "Gives a grenade launcher to you"
+[message.translations]
+japanese = "グレネードランチャーをあなたに与える"
+korean = "유탄 발사기를 지급합니다"
+simplified_chinese = "给你一个榴弹炮发射器"
+traditional_chinese = "給你一個榴彈炮發射器"
+
+[[message]]
+key = "Gives a laser to you"
+[message.translations]
+japanese = "レーザーをあなたに与える"
+korean = "레이저를 지급합니다"
+simplified_chinese = "给予你激光枪"
+traditional_chinese = "給予你雷射槍"
+
+[[message]]
+key = "Gives a shotgun to you"
+[message.translations]
+japanese = "ショットガンをあなたに与える"
+korean = "샷건을 지급합니다"
+simplified_chinese = "给你一把霰弹枪"
+traditional_chinese = "給你一把霰彈槍"
+
+[[message]]
+key = "Gives all weapons to you"
+[message.translations]
+japanese = "すべての武器をあなたに与える"
+korean = "모든 무기를 지급합니다"
+simplified_chinese = "所有武器都给你"
+traditional_chinese = "所有武器都給你"
+
+[[message]]
+key = "Gives jetpack to you"
+[message.translations]
+japanese = "ジェットパックをあなたに与える"
+korean = "제트팩을 지급합니다"
+simplified_chinese = "给你喷气背包"
+traditional_chinese = "給你噴氣背包"
+
+[[message]]
+key = "Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)"
+[message.translations]
+japanese = "ID i の武器をあなたに与える（all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5）"
+korean = "ID i의 무기를 지급합니다 (전체 = -1, 망치 = 0, 총 = 1, 샷건 = 2, 유탄 = 3, 레이저 = 4, 닌자 = 5)"
+simplified_chinese = "给你 id 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，手榴弹 = 3，激光 = 4，忍者 = 5）"
+traditional_chinese = "給你 id 為 i 的武器（全部 = -1，錘子 = 0，槍 = 1，霰彈槍 = 2，榴彈 = 3，雷射 = 4，忍者 = 5）"
+
+[[message]]
+key = "Gives you as many jumps as you specify"
+[message.translations]
+japanese = "指定した数だけジャンプを与える"
+korean = "지정한 만큼 점프를 지급합니다"
+simplified_chinese = "给予你指定次数的跳跃"
+traditional_chinese = "給予你指定次數的跳躍"
+
+[[message]]
+key = "Gives you endless hook"
+[message.translations]
+japanese = "エンドレスフックを与える"
+korean = "무한 갈고리를 지급합니다"
+simplified_chinese = "给予你无限钩子"
+traditional_chinese = "給予你無限鉤子"
+
+[[message]]
+key = "Gives you infinite jump"
+[message.translations]
+japanese = "無限ジャンプを与える"
+korean = "무한 점프를 지급합니다"
+simplified_chinese = "给你无限跳跃"
+traditional_chinese = "給你無限跳躍"
+
+[[message]]
+key = "Grabs"
+[message.translations]
+japanese = "グラブ数"
+korean = "깃발 획득"
+simplified_chinese = "得旗数"
+traditional_chinese = "得旗數"
+
+[[message]]
+key = "Hammer: %s"
+[message.translations]
+japanese = "ハンマー: %s"
+korean = "망치: %s"
+simplified_chinese = "锤：%s"
+traditional_chinese = "錘：%s"
+
+[[message]]
+key = "HDF"
+[message.translations]
+japanese = "HDF"
+korean = "HDF"
+simplified_chinese = "HDF"
+traditional_chinese = "HDF"
+
+[[message]]
+key = "Help: %s"
+[message.translations]
+japanese = "ヘルプ: %s"
+korean = "도움말: %s"
+simplified_chinese = "帮助：%s"
+traditional_chinese = "幫助：%s"
+
+[[message]]
+key = "Hold left click for free camera"
+[message.translations]
+japanese = "左クリックを押し続けるとフリーカメラ"
+korean = "왼쪽 클릭을 누르면 자유 카메라"
+simplified_chinese = "按住左键自由镜头"
+traditional_chinese = "按住左鍵自由鏡頭"
+
+[[message]]
+key = "Hooking L/R: %.0f%%/%.0f%%"
+[message.translations]
+japanese = "フック L/R: %.0f%%/%.0f%%"
+korean = "갈고리 L/R: %.0f%%/%.0f%%"
+simplified_chinese = "出钩 L/R：%.0f%%/%.0f%%"
+traditional_chinese = "出鉤 L/R：%.0f%%/%.0f%%"
+
+[[message]]
+key = "https://wiki.ddnet.org/wiki/Mapping"
+[message.translations]
+japanese = "https://wiki.ddnet.org/wiki/Mapping"
+korean = "https://wiki.ddnet.org/wiki/Mapping"
+simplified_chinese = "https://wiki.ddnet.org/index.php?title=Mapping/zh&variant=zh-hans"
+traditional_chinese = "https://wiki.ddnet.org/wiki/Mapping"
+
+[[message]]
+key = "HUD editor preview"
+[message.translations]
+japanese = "HUD エディタープレビュー"
+korean = "HUD 편집기 미리보기"
+simplified_chinese = "HUD 编辑器预览"
+traditional_chinese = "HUD 編輯器預覽"
+
+[[message]]
+key = "i = Receive rate"
+[message.translations]
+japanese = "i = 受信レート"
+korean = "i = 수신 속도"
+simplified_chinese = "i = 接收速率"
+traditional_chinese = "i = 接收速率"
+
+[[message]]
+key = "Invite a person to a locked team"
+[message.translations]
+japanese = "ロックされたチームに人を招待"
+korean = "잠긴 팀에 사람 초대"
+simplified_chinese = "邀请某人加入锁定的队伍"
+traditional_chinese = "邀請某人加入鎖定的隊伍"
+
+[[message]]
+key = "j = Latency jitter"
+[message.translations]
+japanese = "j = レイテンシジッター"
+korean = "j = 지터"
+simplified_chinese = "j = 延迟抖动"
+traditional_chinese = "j = 延遲抖動"
+
+[[message]]
+key = "Join the team of the specified player"
+[message.translations]
+japanese = "指定されたプレイヤーのチームに参加"
+korean = "지정된 플레이어의 팀에 합류"
+simplified_chinese = "加入指定玩家的队伍"
+traditional_chinese = "加入指定玩家的隊伍"
+
+[[message]]
+key = "Jump hint text"
+[message.translations]
+japanese = "ジャンプヒントテキスト"
+korean = "점프 힌트 텍스트"
+simplified_chinese = "跳跃提示文本"
+traditional_chinese = "跳躍提示文字"
+
+[[message]]
+key = "k = Resend loss"
+[message.translations]
+japanese = "k = 再送損失"
+korean = "k = 재전송 손실"
+simplified_chinese = "k = 重发丢包率"
+traditional_chinese = "k = 重發遺失率"
+
+[[message]]
+key = "Key Sticking: ?"
+[message.translations]
+japanese = "キースティッキング: ?"
+korean = "키 고정: ?"
+simplified_chinese = "卡键：?"
+traditional_chinese = "卡鍵：?"
+
+[[message]]
+key = "Key Sticking: Off"
+[message.translations]
+japanese = "キースティッキング: オフ"
+korean = "키 고정: 끄기"
+simplified_chinese = "卡键：关"
+traditional_chinese = "卡鍵：關"
+
+[[message]]
+key = "Key Sticking: On"
+[message.translations]
+japanese = "キースティッキング: オン"
+korean = "키 고정: 켜기"
+simplified_chinese = "卡键：开"
+traditional_chinese = "卡鍵：開"
+
+[[message]]
+key = "Key Sticking: Reset Self"
+[message.translations]
+japanese = "キースティッキング: 自分をリセット"
+korean = "키 고정: 본체 초기화"
+simplified_chinese = "卡键：重置本体"
+traditional_chinese = "卡鍵：重置本體"
+
+[[message]]
+key = "Kick player with specified id for any reason"
+[message.translations]
+japanese = "指定された ID のプレイヤーを任意の理由でキック"
+korean = "지정된 ID의 플레이어를 아무 이유로 추방"
+simplified_chinese = "按任意原因踢出指定 ID 的玩家"
+traditional_chinese = "按任意原因踢出指定 ID 的玩家"
+
+[[message]]
+key = "Kill yourself when kill-protected during a long game (use f1, kill for regular kill)"
+[message.translations]
+japanese = "ロングゲーム中にキルプロテクトされているときに自殺（通常のキルは f1 + kill）"
+korean = "긴 게임 중 킬 보호 상태에서 자살 (일반 자살은 f1, kill 사용)"
+simplified_chinese = "在长局 kill 保护时自杀（普通自杀请用 f1 + kill）"
+traditional_chinese = "在長局 kill 保護時自殺（普通自殺請用 f1 + kill）"
+
+[[message]]
+key = "Kills a player and announces the kill"
+[message.translations]
+japanese = "プレイヤーをキルしてキルを告知"
+korean = "플레이어를 죽이고 킬을 알림"
+simplified_chinese = "击杀一名玩家并广播击杀信息"
+traditional_chinese = "擊殺一名玩家並廣播擊殺資訊"
+
+[[message]]
+key = "Kills team and disables practice mode"
+[message.translations]
+japanese = "チームをキルしてプラクティスモードを無効にする"
+korean = "팀을 죽이고 연습 모드 비활성화"
+simplified_chinese = "击杀队伍并关闭练习模式"
+traditional_chinese = "擊殺隊伍並關閉練習模式"
+
+[[message]]
+key = "l = Local time"
+[message.translations]
+japanese = "l = ローカルタイム"
+korean = "l = 로컬 시간"
+simplified_chinese = "l = 本地时间"
+traditional_chinese = "l = 本地時間"
+
+[[message]]
+key = "Last page in console"
+[message.translations]
+japanese = "コンソールの最後のページ"
+korean = "콘솔 마지막 페이지"
+simplified_chinese = "控制台最后一页"
+traditional_chinese = "控制台最後一頁"
+
+[[message]]
+key = "Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process"
+[message.translations]
+japanese = "各サーバーに ping を送信して IP アドレスを漏洩し、その過程でレイテンシも取得"
+korean = "모든 서버에 핑을 보내 IP 주소를 노출하며, 동시에 지연 시간을 획득"
+simplified_chinese = "通过逐个 ping 服务器泄露你的 IP，同时会获取延迟"
+traditional_chinese = "透過逐個 ping 伺服器洩漏你的 IP，同時會取得延遲"
+
+[[message]]
+key = "Lets you join team i (shows your team if left blank)"
+[message.translations]
+japanese = "チーム i に参加できるようにする（空白の場合は自分のチームを表示）"
+korean = "팀 i에 합류 (비워두면 현재 팀 표시)"
+simplified_chinese = "让你加入队伍 i（留空则显示你的队伍）"
+traditional_chinese = "讓你加入隊伍 i（留空則顯示你的隊伍）"
+
+[[message]]
+key = "Lines %d - %d (%s)"
+[message.translations]
+japanese = "行 %d - %d (%s)"
+korean = "줄 %d - %d (%s)"
+simplified_chinese = "行 %d - %d (%s)"
+traditional_chinese = "行 %d - %d (%s)"
 
 [[message]]
 key = "List all commands that are available in practice mode"
 [message.translations]
+japanese = "プラクティスモードで利用可能なすべてのコマンドを一覧表示"
+korean = "연습 모드에서 사용 가능한 모든 명령 나열"
 simplified_chinese = "列出练习模式下可用的所有命令"
+traditional_chinese = "列出練習模式下可用的所有命令"
 
 [[message]]
 key = "List all commands which are accessible for given access level"
 [message.translations]
+japanese = "指定されたアクセスレベルでアクセス可能なすべてのコマンドを一覧表示"
+korean = "지정된 접근 수준에서 사용 가능한 모든 명령 나열"
 simplified_chinese = "列出指定访问级别可用的所有命令"
+traditional_chinese = "列出指定存取層級可用的所有命令"
 
 [[message]]
 key = "List all commands which are accessible for users"
 [message.translations]
+japanese = "一般ユーザーがアクセス可能なすべてのコマンドを一覧表示"
+korean = "일반 플레이어가 사용할 수 있는 모든 명령 나열"
 simplified_chinese = "列出普通玩家可用的所有命令"
+traditional_chinese = "列出一般玩家可用的所有命令"
 
 [[message]]
 key = "List all name bans"
 [message.translations]
+japanese = "すべての名前BANを一覧表示"
+korean = "모든 이름 차단 나열"
 simplified_chinese = "列出全部昵称封禁"
+traditional_chinese = "列出全部暱稱封禁"
 
 [[message]]
 key = "List all rcon keys"
 [message.translations]
+japanese = "すべての rcon キーを一覧表示"
+korean = "모든 rcon 키 나열"
 simplified_chinese = "列出所有 rcon 键"
+traditional_chinese = "列出所有 rcon 鍵"
 
 [[message]]
 key = "List all saves on the current map"
 [message.translations]
+japanese = "現在のマップのすべてのセーブを一覧表示"
+korean = "현재 맵의 모든 저장 나열"
 simplified_chinese = "列出当前地图上的所有保存"
+traditional_chinese = "列出目前地圖上的所有存檔"
 
 [[message]]
 key = "List all tuning variables and their values"
 [message.translations]
+japanese = "すべてのチューニング変数とその値を一覧表示"
+korean = "모든 튜닝 변수와 값 나열"
 simplified_chinese = "列出所有调整变量及其值"
-
-[[message]]
-key = "Specify command accessibility for given access level"
-[message.translations]
-simplified_chinese = "为指定访问级别设置命令可访问性"
+traditional_chinese = "列出所有調整變數及其值"
 
 [[message]]
 key = "List connected players with optional case-insensitive substring matching filter"
 [message.translations]
+japanese = "接続中のプレイヤーを一覧表示（オプションで大文字小文字を区別しない部分一致フィルター）"
+korean = "연결된 플레이어 나열 (선택적 대소문자 구분 없는 부분 문자열 필터)"
 simplified_chinese = "列出在线玩家，可选不区分大小写的子串筛选"
+traditional_chinese = "列出在線玩家，可選不區分大小寫的子串篩選"
 
 [[message]]
 key = "List foes"
 [message.translations]
+japanese = "敵を一覧表示"
+korean = "적 목록"
 simplified_chinese = "列出敌人"
+traditional_chinese = "列出敵人"
 
 [[message]]
 key = "List friends"
 [message.translations]
+japanese = "フレンドを一覧表示"
+korean = "친구 목록"
 simplified_chinese = "列出好友"
+traditional_chinese = "列出好友"
 
 [[message]]
 key = "List KCP/legacy transport status and weak-network simulation metrics"
 [message.translations]
+japanese = "KCP/レガシートランスポートステータスと弱体ネットワークシミュレーションメトリクスを一覧表示"
+korean = "KCP/레거시 전송 상태 및 약한 네트워크 시뮬레이션 지표 나열"
 simplified_chinese = "列出 KCP/旧传输状态和弱网模拟指标"
+traditional_chinese = "列出 KCP/舊傳輸狀態和弱網模擬指標"
 
 [[message]]
 key = "List players containing name or all players"
 [message.translations]
+japanese = "名前に一致するプレイヤー、またはすべてのプレイヤーを一覧表示"
+korean = "이름이 포함된 플레이어 또는 모든 플레이어 나열"
 simplified_chinese = "列出名称匹配的玩家，或列出全部玩家"
+traditional_chinese = "列出名稱匹配的玩家，或列出全部玩家"
 
 [[message]]
 key = "Live director"
 [message.translations]
+japanese = "ライブディレクター"
+korean = "라이브 디렉터"
 simplified_chinese = "直播导播"
+traditional_chinese = "直播導播"
 
 [[message]]
 key = "Load with code r. /load to check your existing saves"
 [message.translations]
+japanese = "コード r でロード。/load で既存のセーブを確認"
+korean = "코드 r로 불러오기. /load로 기존 저장 확인"
 simplified_chinese = "使用代码 r 载入；可用 /load 查看已有存档"
+traditional_chinese = "使用代碼 r 載入；可用 /load 查看已有存檔"
 
 [[message]]
 key = "Loading commands…"
 [message.translations]
+japanese = "コマンドを読み込み中…"
+korean = "명령 로딩 중…"
 simplified_chinese = "正在加载指令…"
+traditional_chinese = "正在載入指令…"
 
 [[message]]
 key = "Loading map"
 [message.translations]
+japanese = "マップを読み込み中"
+korean = "맵 로딩 중"
 simplified_chinese = "加载地图"
+traditional_chinese = "載入地圖"
 
 [[message]]
 key = "Loading maps…"
 [message.translations]
+japanese = "マップを読み込み中…"
+korean = "맵 로딩 중…"
 simplified_chinese = "加载地图中…"
+traditional_chinese = "載入地圖中…"
 
 [[message]]
 key = "Loading race demo files"
 [message.translations]
+japanese = "レースデモファイルを読み込み中"
+korean = "리플레이 파일 로딩 중"
 simplified_chinese = "正在加载回放文件"
+traditional_chinese = "正在載入回放檔案"
 
 [[message]]
 key = "Loading skin files"
 [message.translations]
+japanese = "スキンファイルを読み込み中"
+korean = "스킨 파일 로딩 중"
 simplified_chinese = "正在加载皮肤文件"
+traditional_chinese = "正在載入皮膚檔案"
 
 [[message]]
 key = "Loading sound files"
 [message.translations]
+japanese = "サウンドファイルを読み込み中"
+korean = "사운드 파일 로딩 중"
 simplified_chinese = "正在加载声音文件"
+traditional_chinese = "正在載入聲音檔案"
 
 [[message]]
 key = "Locked"
 [message.translations]
+japanese = "ロック済み"
+korean = "잠김"
 simplified_chinese = "锁定"
+traditional_chinese = "鎖定"
 
 [[message]]
 key = "Log the network"
 [message.translations]
+japanese = "ネットワークをログ"
+korean = "네트워크 로그 기록"
 simplified_chinese = "记录网络"
+traditional_chinese = "記錄網路"
 
 [[message]]
 key = "Logout of econ"
 [message.translations]
+japanese = "econ からログアウト"
+korean = "econ 로그아웃"
 simplified_chinese = "退出 econ 登录"
+traditional_chinese = "登出 econ"
 
 [[message]]
 key = "Logout of rcon"
 [message.translations]
+japanese = "rcon からログアウト"
+korean = "rcon 로그아웃"
 simplified_chinese = "退出 rcon 登录"
+traditional_chinese = "登出 rcon"
 
 [[message]]
 key = "Make dummy fire"
 [message.translations]
+japanese = "ダミーを発射させる"
+korean = "더미 발사"
 simplified_chinese = "让分身开火"
+traditional_chinese = "讓分身開火"
 
 [[message]]
 key = "Make dummy hook"
 [message.translations]
+japanese = "ダミーをフックさせる"
+korean = "더미 갈고리"
 simplified_chinese = "让分身出钩"
+traditional_chinese = "讓分身出鉤"
 
 [[message]]
 key = "Make dummy jump"
 [message.translations]
+japanese = "ダミーをジャンプさせる"
+korean = "더미 점프"
 simplified_chinese = "让分身跳跃"
+traditional_chinese = "讓分身跳躍"
 
 [[message]]
 key = "Makes you a ninja"
 [message.translations]
+japanese = "あなたを忍者にする"
+korean = "닌자로 만듭니다"
 simplified_chinese = "让你成为一名忍者"
+traditional_chinese = "讓你成為一名忍者"
 
 [[message]]
 key = "Makes you live frozen"
 [message.translations]
+japanese = "あなたをライブフリーズ状態にする"
+korean = "라이브 프리즈 상태로 만듭니다"
 simplified_chinese = "使你进入 live freeze 状态"
+traditional_chinese = "使你進入 live freeze 狀態"
 
 [[message]]
 key = "Makes you move 1 tile down"
 [message.translations]
+japanese = "1タイル下に移動させる"
+korean = "1타일 아래로 이동"
 simplified_chinese = "让你向下移动 1 个方块"
+traditional_chinese = "讓你向下移動 1 個方塊"
 
 [[message]]
 key = "Makes you move 1 tile left"
 [message.translations]
+japanese = "1タイル左に移動させる"
+korean = "1타일 왼쪽으로 이동"
 simplified_chinese = "让你向左移动 1 个方块"
+traditional_chinese = "讓你向左移動 1 個方塊"
 
 [[message]]
 key = "Makes you move 1 tile right"
 [message.translations]
+japanese = "1タイル右に移動させる"
+korean = "1타일 오른쪽으로 이동"
 simplified_chinese = "让你向右移动 1 个方块"
+traditional_chinese = "讓你向右移動 1 個方塊"
 
 [[message]]
 key = "Makes you move 1 tile up"
 [message.translations]
+japanese = "1タイル上に移動させる"
+korean = "1타일 위로 이동"
 simplified_chinese = "让你向上移动 1 个方块"
+traditional_chinese = "讓你向上移動 1 個方塊"
 
 [[message]]
 key = "Makes you super"
 [message.translations]
+japanese = "あなたをスーパーにする"
+korean = "슈퍼로 만듭니다"
 simplified_chinese = "让你超级"
+traditional_chinese = "讓你超級"
 
 [[message]]
 key = "Manual"
 [message.translations]
+japanese = "手動"
+korean = "수동"
 simplified_chinese = "手动"
+traditional_chinese = "手動"
 
 [[message]]
 key = "Map Progress: %.1f%%"
 [message.translations]
+japanese = "マップ進捗: %.1f%%"
+korean = "맵 진행: %.1f%%"
 simplified_chinese = "地图进度：%.1f%%"
+traditional_chinese = "地圖進度：%.1f%%"
 
 [[message]]
 key = "Map Progress: --"
 [message.translations]
+japanese = "マップ進捗: --"
+korean = "맵 진행: --"
 simplified_chinese = "地图进度：--"
+traditional_chinese = "地圖進度：--"
 
 [[message]]
 key = "Mark the beginning of a demo cut"
 [message.translations]
+japanese = "デモカットの開始をマーク"
+korean = "데모 컷 시작 표시"
 simplified_chinese = "标记回放剪辑起点"
+traditional_chinese = "標記回放剪輯起點"
 
 [[message]]
 key = "Mark the end of a demo cut"
 [message.translations]
+japanese = "デモカットの終了をマーク"
+korean = "데모 컷 끝 표시"
 simplified_chinese = "标记回放剪辑终点"
+traditional_chinese = "標記回放剪輯終點"
 
 [[message]]
 key = "Match %d of %d"
 [message.translations]
+japanese = "一致 %d / %d"
+korean = "결과 %d / 총 %d"
 simplified_chinese = "结果 %d / 总共 %d 则"
+traditional_chinese = "結果 %d / 總共 %d 則"
 
 [[message]]
 key = "Mention"
 [message.translations]
+japanese = "メンション"
+korean = "멘션"
 simplified_chinese = "提及"
+traditional_chinese = "提及"
 
 [[message]]
 key = "Messages"
 [message.translations]
+japanese = "メッセージ"
+korean = "메시지"
 simplified_chinese = "消息"
+traditional_chinese = "訊息"
 
 [[message]]
 key = "Minimize the client"
 [message.translations]
+japanese = "クライアントを最小化"
+korean = "클라이언트 최소화"
 simplified_chinese = "最小化客户端"
+traditional_chinese = "最小化客戶端"
 
 [[message]]
 key = "Moderator alert"
 [message.translations]
+japanese = "モデレーターアラート"
+korean = "중재자 알림"
 simplified_chinese = "管理员提醒"
+traditional_chinese = "管理員提醒"
 
 [[message]]
 key = "Modules snap to screen edges, center lines and other HUD modules while dragging"
 [message.translations]
+japanese = "ドラッグ中、モジュールは画面端、中央線、他の HUD モジュールにスナップ"
+korean = "드래그 시 모듈이 화면 가장자리, 중앙선 및 다른 HUD 모듈에 스냅"
 simplified_chinese = "拖动时模块会吸附到屏幕边缘、中线和其他 HUD 模块"
+traditional_chinese = "拖曳時模組會吸附到螢幕邊緣、中線和其他 HUD 模組"
 
 [[message]]
 key = "Move dummy left"
 [message.translations]
+japanese = "ダミーを左に移動"
+korean = "더미 왼쪽으로 이동"
 simplified_chinese = "让分身向左移动"
+traditional_chinese = "讓分身向左移動"
 
 [[message]]
 key = "Move dummy right"
 [message.translations]
+japanese = "ダミーを右に移動"
+korean = "더미 오른쪽으로 이동"
 simplified_chinese = "让分身向右移动"
+traditional_chinese = "讓分身向右移動"
 
 [[message]]
 key = "Moved ingame"
 [message.translations]
+japanese = "ゲーム内で移動しました"
+korean = "게임 내에서 이동됨"
 simplified_chinese = "在游戏内已移动"
+traditional_chinese = "在遊戲內已移動"
 
 [[message]]
 key = "Moves to the point with x/y-coordinates ii"
 [message.translations]
+japanese = "x/y 座標 ii のポイントに移動"
+korean = "x/y 좌표 ii의 지점으로 이동"
 simplified_chinese = "移动到 x/y 坐标 ii 的点"
+traditional_chinese = "移動到 x/y 座標 ii 的點"
 
 [[message]]
 key = "Moves to the tile with x/y-number ii"
 [message.translations]
+japanese = "x/y 番号 ii のタイルに移動"
+korean = "x/y 번호 ii의 타일로 이동"
 simplified_chinese = "移动到 x/y 编号 ii 的图块"
+traditional_chinese = "移動到 x/y 編號 ii 的圖塊"
 
 [[message]]
 key = "Multi-View"
 [message.translations]
+japanese = "マルチビュー"
+korean = "멀티뷰"
 simplified_chinese = "多人同框视角"
+traditional_chinese = "多人同框視角"
 
 [[message]]
 key = "Mute"
 [message.translations]
+japanese = "ミュート"
+korean = "음소거"
 simplified_chinese = "静音"
+traditional_chinese = "靜音"
 
 [[message]]
 key = "Mute emoticons"
 [message.translations]
+japanese = "絵文字をミュート"
+korean = "이모티콘 음소거"
 simplified_chinese = "屏蔽表情"
+traditional_chinese = "屏蔽表情"
 
 [[message]]
 key = "Mute player with client ID"
 [message.translations]
+japanese = "クライアントIDでプレイヤーをミュート"
+korean = "클라이언트 ID로 플레이어 음소거"
 simplified_chinese = "使用客户端 ID 将玩家静音"
+traditional_chinese = "使用客戶端 ID 將玩家靜音"
 
 [[message]]
 key = "Mute player with IP address"
 [message.translations]
+japanese = "IPアドレスでプレイヤーをミュート"
+korean = "IP 주소로 플레이어 음소거"
 simplified_chinese = "按 IP 地址静音玩家"
+traditional_chinese = "按 IP 位址將玩家靜音"
 
 [[message]]
 key = "n = Prediction latency"
 [message.translations]
+japanese = "n = 予測遅延"
+korean = "n = 예측 지연"
 simplified_chinese = "n = 预测延迟"
+traditional_chinese = "n = 預測延遲"
 
 [[message]]
 key = "Net"
 [message.translations]
+japanese = "ネットキル"
+korean = "순 킬"
 simplified_chinese = "净击杀"
+traditional_chinese = "淨擊殺"
 
 [[message]]
 key = "Next page in console"
 [message.translations]
+japanese = "コンソールの次のページ"
+korean = "콘솔 다음 페이지"
 simplified_chinese = "控制台下一页"
+traditional_chinese = "控制台下一頁"
 
 [[message]]
 key = "No chat log selected"
 [message.translations]
+japanese = "チャットログが選択されていません"
+korean = "선택된 채팅 기록 없음"
 simplified_chinese = "未选择聊天记录"
+traditional_chinese = "未選取聊天記錄"
 
 [[message]]
 key = "No demo with this filename exists"
 [message.translations]
+japanese = "このファイル名のデモは存在しません"
+korean = "이 파일명의 데모가 존재하지 않음"
 simplified_chinese = "此回放文件不存在"
+traditional_chinese = "此回放檔案不存在"
 
 [[message]]
 key = "No director players available"
 [message.translations]
+japanese = "利用可能なディレクタープレイヤーがいません"
+korean = "사용 가능한 디렉터 플레이어 없음"
 simplified_chinese = "暂无可导播玩家"
+traditional_chinese = "暫無可導播玩家"
 
 [[message]]
 key = "No player nearby"
 [message.translations]
+japanese = "近くにプレイヤーがいません"
+korean = "근처에 플레이어 없음"
 simplified_chinese = "没有玩家在准心附近"
+traditional_chinese = "沒有玩家在準心附近"
 
 [[message]]
 key = "No results"
 [message.translations]
+japanese = "結果なし"
+korean = "결과 없음"
 simplified_chinese = "无结果"
+traditional_chinese = "無結果"
 
 [[message]]
 key = "NOT CONNECTED"
 [message.translations]
+japanese = "未接続"
+korean = "연결되지 않음"
 simplified_chinese = "连接未成功"
+traditional_chinese = "連線未成功"
 
 [[message]]
 key = "o = Send rate"
 [message.translations]
+japanese = "o = 送信レート"
+korean = "o = 전송 속도"
 simplified_chinese = "o = 发送速率"
+traditional_chinese = "o = 傳送速率"
 
 [[message]]
 key = "Open emote selector"
 [message.translations]
+japanese = "エモートセレクターを開く"
+korean = "이모트 선택기 열기"
 simplified_chinese = "打开表情选择器"
+traditional_chinese = "打開表情選擇器"
 
 [[message]]
 key = "Open pie menu"
 [message.translations]
+japanese = "パイメニューを開く"
+korean = "파이 메뉴 열기"
 simplified_chinese = "打开饼菜单"
+traditional_chinese = "打開圓餅選單"
 
 [[message]]
 key = "Open spectator mode selector"
 [message.translations]
+japanese = "観戦モードセレクターを開く"
+korean = "관전 모드 선택기 열기"
 simplified_chinese = "打开旁观者模式选择器"
+traditional_chinese = "打開旁觀者模式選擇器"
 
 [[message]]
 key = "Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)"
 [message.translations]
+japanese = "観戦者数から除外し、非認証プレイヤーに認証ステータスを非表示にする（1 = 非表示、0 = 表示）"
+korean = "관전자 수에서 제외되고 인증되지 않은 플레이어에게 인증 상태 숨기기 (1 = 숨김, 0 = 표시)"
 simplified_chinese = "选择退出观众计数并对未经授权的玩家隐藏身份验证状态（1 = 隐藏，0 = 显示）"
+traditional_chinese = "選擇退出觀眾計數並對未經授權的玩家隱藏驗證狀態（1 = 隱藏，0 = 顯示）"
 
 [[message]]
 key = "p = Ping latency"
 [message.translations]
+japanese = "p = Ping レイテンシ"
+korean = "p = 핑 지연 시간"
 simplified_chinese = "p = Ping 延迟"
+traditional_chinese = "p = Ping 延遲"
 
 [[message]]
 key = "Pause/unpause game"
 [message.translations]
+japanese = "ゲームを一時停止/再開"
+korean = "게임 일시정지/재개"
 simplified_chinese = "暂停/恢复游戏"
+traditional_chinese = "暫停/恢復遊戲"
 
 [[message]]
 key = "Personal best:"
 [message.translations]
+japanese = "自己ベスト:"
+korean = "개인 최고 기록:"
 simplified_chinese = "个人最佳"
+traditional_chinese = "個人最佳："
 
 [[message]]
 key = "Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status"
 [message.translations]
+japanese = "時間表示の個人設定（ブロードキャストまたはゲーム/ラウンドタイマー）、timer s（s = broadcast: ブロードキャスト、gametimer: ゲーム/ラウンドタイマー、cycle: サイクル、both: 両方、none: タイマーなし、空: 現在のステータス表示）"
+korean = "방송 또는 게임/라운드 타이머에 시간을 표시하는 개인 설정, 타이머 s, 여기서 s = broadcast는 방송, gametimer는 게임/라운드 타이머, cycle은 주기, both는 둘 다, none은 타이머 없음, 아무것도 입력하지 않으면 현재 상태 표시"
 simplified_chinese = "在广播或游戏/回合计时器中显示时间的个人设置，计时器 s，其中 s = 广播的广播，游戏/回合计时器的游戏计时器，循环的循环，两者都适用，无计时器且不显示当前状态"
+traditional_chinese = "在廣播或遊戲/回合計時器中顯示時間的個人設定，計時器 s，其中 s = broadcast 為廣播，gametimer 為遊戲/回合計時器，cycle 為循環，both 為兩者，none 為無計時器，空白為顯示目前狀態"
 
 [[message]]
 key = "Pet"
 [message.translations]
+japanese = "ペット"
+korean = "펫"
 simplified_chinese = "宠物"
+traditional_chinese = "寵物"
 
 [[message]]
 key = "Ping the current server"
 [message.translations]
+japanese = "現在のサーバーに Ping"
+korean = "현재 서버에 핑 보내기"
 simplified_chinese = "Ping 当前服务器"
+traditional_chinese = "Ping 目前伺服器"
 
 [[message]]
 key = "Play back a demo"
 [message.translations]
+japanese = "デモを再生"
+korean = "데모 재생"
 simplified_chinese = "播放回放"
+traditional_chinese = "播放回放"
 
 [[message]]
 key = "Play/pause the current demo"
 [message.translations]
+japanese = "現在のデモを再生/一時停止"
+korean = "현재 데모 재생/일시정지"
 simplified_chinese = "播放/暂停当前回放"
+traditional_chinese = "播放/暫停目前回放"
 
 [[message]]
 key = "Please balance teams!"
 [message.translations]
+japanese = "チームバランスを取ってください！"
+korean = "팀 균형을 맞춰주세요!"
 simplified_chinese = "队伍人数不平衡！"
+traditional_chinese = "隊伍人數不平衡！"
 
 [[message]]
 key = "Points"
 [message.translations]
+japanese = "ポイント"
+korean = "포인트"
 simplified_chinese = "分数"
+traditional_chinese = "分數"
 
 [[message]]
 key = "Position jump tip"
 [message.translations]
+japanese = "位置ジャンプのヒント"
+korean = "위치 점프 팁"
 simplified_chinese = "位置跳转提示"
+traditional_chinese = "位置跳轉提示"
 
 [[message]]
 key = "Position:"
 [message.translations]
+japanese = "位置:"
+korean = "위치:"
 simplified_chinese = "坐标"
+traditional_chinese = "座標："
 
 [[message]]
 key = "Press a key…"
 [message.translations]
+japanese = "キーを押してください…"
+korean = "키를 누르세요…"
 simplified_chinese = "按任意键…"
+traditional_chinese = "按任意鍵…"
 
 [[message]]
 key = "Press Esc to exit the HUD editor"
 [message.translations]
+japanese = "Esc で HUD エディターを終了"
+korean = "Esc를 눌러 HUD 편집기 종료"
 simplified_chinese = "按 Esc 退出 HUD 编辑器"
+traditional_chinese = "按 Esc 退出 HUD 編輯器"
 
 [[message]]
 key = "Previous page in console"
 [message.translations]
+japanese = "コンソールの前のページ"
+korean = "콘솔에서 이전 페이지"
 simplified_chinese = "控制台上一页"
+traditional_chinese = "控制台上一頁"
 
 [[message]]
 key = "Print command executed by this keybinding or all binds"
 [message.translations]
+japanese = "このキーバインドで実行されるコマンド、またはすべてのバインドを表示"
+korean = "이 키 바인딩 또는 모든 바인딩이 실행한 명령 출력"
 simplified_chinese = "打印此键绑定或所有绑定执行的命令"
+traditional_chinese = "列印此按鍵綁定或所有綁定執行的命令"
 
 [[message]]
 key = "Privately messages someone's current time in this current running race (your time by default)"
 [message.translations]
+japanese = "現在のレースの誰かのタイムをプライベートメッセージで送信（デフォルトは自分のタイム）"
+korean = "현재 진행 중인 레이스에서 특정인의 현재 시간을 개인 메시지로 보냄 (기본값은 당신의 시간)"
 simplified_chinese = "私聊发送某人在当前竞速中的时间（默认发送你的时间）"
+traditional_chinese = "私聊傳送某人在目前競速中的時間（預設傳送你的時間）"
 
 [[message]]
 key = "Privately shows you your current time in this current running race in the broadcast message"
 [message.translations]
+japanese = "ブロードキャストメッセージで現在のレースの自分のタイムをプライベート表示"
+korean = "방송 메시지에 현재 진행 중인 레이스의 당신 시간을 개인적으로 표시"
 simplified_chinese = "在广播中私聊显示你当前竞速时间"
+traditional_chinese = "在廣播中私聊顯示你目前競速時間"
 
 [[message]]
 key = "Publicly messages everyone your current time in this current running race"
 [message.translations]
+japanese = "現在のレースの自分のタイムを全員に公開メッセージ"
+korean = "현재 진행 중인 레이스의 당신 시간을 모든 사람에게 공개 메시지로 보냄"
 simplified_chinese = "公开发送你当前竞速时间给所有人"
+traditional_chinese = "公開發送你的目前競速時間給所有人"
 
 [[message]]
 key = "Puts you into deep freeze"
 [message.translations]
+japanese = "ディープフリーズ状態にする"
+korean = "깊은 빙결 상태로 만듦"
 simplified_chinese = "让你陷入深度冻结"
+traditional_chinese = "讓你陷入深度凍結"
 
 [[message]]
 key = "Puts you into freeze"
 [message.translations]
+japanese = "フリーズ状態にする"
+korean = "빙결 상태로 만듦"
 simplified_chinese = "让你陷入冻结状态"
+traditional_chinese = "讓你陷入凍結狀態"
 
 [[message]]
 key = "Puts you into solo part"
 [message.translations]
+japanese = "ソロパートにする"
+korean = "솔로 파트로 만듦"
 simplified_chinese = "使你进入 solo 状态"
+traditional_chinese = "使你進入 solo 狀態"
 
 [[message]]
 key = "Puts you out of deep freeze"
 [message.translations]
+japanese = "ディープフリーズから脱出させる"
+korean = "깊은 빙결 상태에서 해제"
 simplified_chinese = "让你摆脱深度冰冻"
+traditional_chinese = "讓你擺脫深度凍結"
 
 [[message]]
 key = "Puts you out of freeze"
 [message.translations]
+japanese = "フリーズから脱出させる"
+korean = "빙결 상태에서 해제"
 simplified_chinese = "让你摆脱冰冻状态"
+traditional_chinese = "讓你擺脫凍結狀態"
 
 [[message]]
 key = "Puts you out of live freeze"
 [message.translations]
+japanese = "ライブフリーズから脱出させる"
+korean = "라이브 빙결 상태에서 해제"
 simplified_chinese = "让你摆脱实时冻结"
+traditional_chinese = "讓你擺脫即時凍結"
 
 [[message]]
 key = "Puts you out of solo part"
 [message.translations]
+japanese = "ソロパートから脱出させる"
+korean = "솔로 파트에서 해제"
 simplified_chinese = "使你退出 solo 状态"
+traditional_chinese = "使你退出 solo 狀態"
 
 [[message]]
 key = "q = Connection quality"
 [message.translations]
+japanese = "q = 接続品質"
+korean = "q = 연결 품질"
 simplified_chinese = "q = 连接质量"
+traditional_chinese = "q = 連線品質"
 
 [[message]]
 key = "QmClient"
 [message.translations]
+japanese = "QmClient"
+korean = "QmClient"
 simplified_chinese = "栖梦"
+traditional_chinese = "栖梦"
 
 [[message]]
 key = "QmClient chat log"
 [message.translations]
+japanese = "QmClient チャットログ"
+korean = "QmClient 채팅 로그"
 simplified_chinese = "QmClient 聊天记录"
+traditional_chinese = "栖梦聊天記錄"
 
 [[message]]
 key = "Quit the client"
 [message.translations]
+japanese = "クライアントを終了"
+korean = "클라이언트 종료"
 simplified_chinese = "退出客户端"
+traditional_chinese = "退出客戶端"
 
 [[message]]
 key = "r = Race time"
 [message.translations]
+japanese = "r = レースタイム"
+korean = "r = 레이스 시간"
 simplified_chinese = "r = 比赛时间"
+traditional_chinese = "r = 競速時間"
 
 [[message]]
 key = "Race"
 [message.translations]
+japanese = "レース"
+korean = "레이스"
 simplified_chinese = "竞速"
+traditional_chinese = "競速"
 
 [[message]]
 key = "Random map"
 [message.translations]
+japanese = "ランダムマップ"
+korean = "무작위 맵"
 simplified_chinese = "随机地图"
+traditional_chinese = "隨機地圖"
 
 [[message]]
 key = "Random unfinished map"
 [message.translations]
+japanese = "未完了のランダムマップ"
+korean = "무작위 미완료 맵"
 simplified_chinese = "随机未通关地图"
+traditional_chinese = "隨機未通關地圖"
 
 [[message]]
 key = "Ratio"
 [message.translations]
+japanese = "比率"
+korean = "비율"
 simplified_chinese = "K/D"
+traditional_chinese = "K/D"
 
 [[message]]
 key = "Rebinds the client's listening address and port"
 [message.translations]
+japanese = "クライアントのリスニングアドレスとポートを再バインド"
+korean = "클라이언트의 수신 주소와 포트를 다시 바인딩"
 simplified_chinese = "重新绑定客户端的监听地址和端口"
+traditional_chinese = "重新綁定客戶端的監聽位址和埠"
 
 [[message]]
 key = "Record to a file"
 [message.translations]
+japanese = "ファイルに記録"
+korean = "파일에 기록"
 simplified_chinese = "记录到文件"
+traditional_chinese = "記錄到檔案"
 
 [[message]]
 key = "Red team"
 [message.translations]
+japanese = "赤チーム"
+korean = "레드 팀"
 simplified_chinese = "红队"
+traditional_chinese = "紅隊"
 
 [[message]]
 key = "Red team wins!"
 [message.translations]
+japanese = "赤チーム勝利！"
+korean = "레드 팀 승리!"
 simplified_chinese = "红队胜利！"
+traditional_chinese = "紅隊勝利！"
 
 [[message]]
 key = "Reload the announcements"
 [message.translations]
+japanese = "アナウンスを再読み込み"
+korean = "공지사항 다시 불러오기"
 simplified_chinese = "重新加载公告"
+traditional_chinese = "重新載入公告"
 
 [[message]]
 key = "Reload the censorlist"
 [message.translations]
+japanese = "検閲リストを再読み込み"
+korean = "검열 목록 다시 불러오기"
 simplified_chinese = "重新加载审查列表"
+traditional_chinese = "重新載入審查列表"
 
 [[message]]
 key = "Reload the map"
 [message.translations]
+japanese = "マップを再読み込み"
+korean = "맵 다시 불러오기"
 simplified_chinese = "重新加载地图"
+traditional_chinese = "重新載入地圖"
 
 [[message]]
 key = "Reload the map while preserving the state of tees and teams"
 [message.translations]
+japanese = "Tee とチームの状態を保持したままマップを再読み込み"
+korean = "티와 팀 상태를 유지하면서 맵 다시 불러오기"
 simplified_chinese = "重新加载地图并保留 Tee 与队伍状态"
+traditional_chinese = "重新載入地圖並保留 Tee 與隊伍狀態"
 
 [[message]]
 key = "Reload the maplist"
 [message.translations]
+japanese = "マップリストを再読み込み"
+korean = "맵 목록 다시 불러오기"
 simplified_chinese = "重新加载地图列表"
+traditional_chinese = "重新載入地圖列表"
 
 [[message]]
 key = "Remove a community from the exclusion filter"
 [message.translations]
+japanese = "コミュニティを除外フィルターから削除"
+korean = "제외 필터에서 커뮤니티 제거"
 simplified_chinese = "将社区从排除筛选中移除"
+traditional_chinese = "將社群從排除篩選中移除"
 
 [[message]]
 key = "Remove a community from the favorites"
 [message.translations]
+japanese = "コミュニティをお気に入りから削除"
+korean = "즐겨찾기에서 커뮤니티 제거"
 simplified_chinese = "从收藏夹中删除社区"
+traditional_chinese = "從收藏中移除社群"
 
 [[message]]
 key = "Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)"
 [message.translations]
+japanese = "特定のコミュニティの除外フィルターから国を削除（ISO 3166-1 数値コード）"
+korean = "특정 커뮤니티의 제외 필터에서 국가 제거 (ISO 3166-1 숫자 코드)"
 simplified_chinese = "将国家/地区从指定社区的排除筛选中移除（ISO 3166-1 数字编码）"
+traditional_chinese = "將國家/地區從指定社群的排除篩選中移除（ISO 3166-1 數字編碼）"
 
 [[message]]
 key = "Remove a foe"
 [message.translations]
+japanese = "敵を削除"
+korean = "적 제거"
 simplified_chinese = "移除一个敌人"
+traditional_chinese = "移除一個敵人"
 
 [[message]]
 key = "Remove a friend"
 [message.translations]
+japanese = "フレンドを削除"
+korean = "친구 삭제"
 simplified_chinese = "删除好友"
+traditional_chinese = "移除好友"
 
 [[message]]
 key = "Remove a friend category"
 [message.translations]
+japanese = "フレンドカテゴリを削除"
+korean = "친구 카테고리 삭제"
 simplified_chinese = "删除好友类别"
+traditional_chinese = "移除好友類別"
 
 [[message]]
 key = "Remove a rcon key"
 [message.translations]
+japanese = "rcon キーを削除"
+korean = "rcon 키 삭제"
 simplified_chinese = "删除 rcon 密钥"
+traditional_chinese = "移除 rcon 金鑰"
 
 [[message]]
 key = "Remove a server from favorites"
 [message.translations]
+japanese = "サーバーをお気に入りから削除"
+korean = "즐겨찾기에서 서버 제거"
 simplified_chinese = "从收藏夹中删除服务器"
+traditional_chinese = "從收藏中移除伺服器"
 
 [[message]]
 key = "Remove a skin from the favorites"
 [message.translations]
+japanese = "スキンをお気に入りから削除"
+korean = "즐겨찾기에서 스킨 제거"
 simplified_chinese = "从收藏夹中删除皮肤"
+traditional_chinese = "從收藏中移除皮膚"
 
 [[message]]
 key = "Remove a type from the exclusion filter for a specific community"
 [message.translations]
+japanese = "特定のコミュニティの除外フィルターからタイプを削除"
+korean = "특정 커뮤니티의 제외 필터에서 유형 제거"
 simplified_chinese = "将类型从指定社区的排除筛选中移除"
+traditional_chinese = "將類型從指定社群的排除篩選中移除"
 
 [[message]]
 key = "remove a voting option"
 [message.translations]
+japanese = "投票オプションを削除"
+korean = "투표 옵션 제거"
 simplified_chinese = "删除投票选项"
+traditional_chinese = "移除投票選項"
 
 [[message]]
 key = "Remove right to vote from player with client ID"
 [message.translations]
+japanese = "クライアントIDのプレイヤーから投票権を削除"
+korean = "클라이언트 ID를 가진 플레이어의 투표권 제거"
 simplified_chinese = "删除具有客户端 ID 的玩家的投票权"
+traditional_chinese = "移除具有客戶端 ID 的玩家的投票權"
 
 [[message]]
 key = "Remove right to vote from player with IP address"
 [message.translations]
+japanese = "IPアドレスのプレイヤーから投票権を削除"
+korean = "IP 주소를 가진 플레이어의 투표권 제거"
 simplified_chinese = "删除具有IP地址的玩家的投票权"
+traditional_chinese = "移除具有 IP 位址的玩家的投票權"
 
 [[message]]
 key = "Removes all weapons from you"
 [message.translations]
+japanese = "あなたからすべての武器を削除"
+korean = "모든 무기 제거"
 simplified_chinese = "移除你身上的所有武器"
+traditional_chinese = "移除你身上的所有武器"
 
 [[message]]
 key = "Removes endless hook from you"
 [message.translations]
+japanese = "あなたからエンドレスフックを削除"
+korean = "무한 후크 제거"
 simplified_chinese = "移除你的无限钩子"
+traditional_chinese = "移除你的無限鉤子"
 
 [[message]]
 key = "Removes infinite jump from you"
 [message.translations]
+japanese = "あなたから無限ジャンプを削除"
+korean = "무한 점프 제거"
 simplified_chinese = "消除你的无限跳跃"
+traditional_chinese = "消除你的無限跳躍"
 
 [[message]]
 key = "Removes ninja from you"
 [message.translations]
+japanese = "あなたから忍者を削除"
+korean = "닌자 제거"
 simplified_chinese = "移除你身上的忍者"
+traditional_chinese = "移除你身上的忍者"
 
 [[message]]
 key = "Removes super from you"
 [message.translations]
+japanese = "あなたからスーパーを削除"
+korean = "슈퍼 상태 제거"
 simplified_chinese = "移除你的超级状态"
+traditional_chinese = "移除你的超級狀態"
 
 [[message]]
 key = "Removes the grenade launcher from you"
 [message.translations]
+japanese = "あなたからグレネードランチャーを削除"
+korean = "유탄 발사기 제거"
 simplified_chinese = "移除你身上的榴弹炮发射器"
+traditional_chinese = "移除你身上的榴彈炮發射器"
 
 [[message]]
 key = "Removes the jetpack from you"
 [message.translations]
+japanese = "あなたからジェットパックを削除"
+korean = "제트팩 제거"
 simplified_chinese = "从你身上取下喷气背包"
+traditional_chinese = "從你身上取下噴氣背包"
 
 [[message]]
 key = "Removes the laser from you"
 [message.translations]
+japanese = "あなたからレーザーを削除"
+korean = "레이저 제거"
 simplified_chinese = "将激光从你身上移除"
+traditional_chinese = "將雷射從你身上移除"
 
 [[message]]
 key = "Removes the shotgun from you"
 [message.translations]
+japanese = "あなたからショットガンを削除"
+korean = "샷건 제거"
 simplified_chinese = "从你身上拿走霰弹枪"
+traditional_chinese = "從你身上拿走霰彈槍"
 
 [[message]]
 key = "removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)"
 [message.translations]
+japanese = "ID i の武器をあなたから削除（all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5）"
+korean = "ID i의 무기 제거 (전체 = -1, 망치 = 0, 총 = 1, 샷건 = 2, 유탄 = 3, 레이저 = 4, 닌자 = 5)"
 simplified_chinese = "从你身上移除 ID 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，手榴弹 = 3，激光 = 4，忍者 = 5）"
+traditional_chinese = "從你身上移除 ID 為 i 的武器（全部 = -1，錘子 = 0，槍 = 1，霰彈槍 = 2，榴彈 = 3，雷射 = 4，忍者 = 5）"
 
 [[message]]
 key = "Rename a friend category"
 [message.translations]
+japanese = "フレンドカテゴリの名前を変更"
+korean = "친구 카테고리 이름 바꾸기"
 simplified_chinese = "重命名好友类别"
+traditional_chinese = "重新命名好友類別"
 
 [[message]]
 key = "Rename: %s"
 [message.translations]
+japanese = "名前変更: %s"
+korean = "이름 바꾸기: %s"
 simplified_chinese = "改名: %s"
+traditional_chinese = "重新命名：%s"
 
 [[message]]
 key = "Replay"
 [message.translations]
+japanese = "リプレイ"
+korean = "리플레이"
 simplified_chinese = "回放"
+traditional_chinese = "回放"
 
 [[message]]
 key = "Replay feature is disabled!"
 [message.translations]
+japanese = "リプレイ機能は無効です！"
+korean = "리플레이 기능이 비활성화되었습니다!"
 simplified_chinese = "短时回放功能未启用！"
+traditional_chinese = "回放功能未啟用！"
 
 [[message]]
 key = "Request to swap your tee with another team member"
 [message.translations]
+japanese = "チームメンバーと Tee を交換するリクエスト"
+korean = "다른 팀원과 티 교체 요청"
 simplified_chinese = "请求与另一名队友交换 Tee"
+traditional_chinese = "請求與另一名隊友交換 Tee"
 
 [[message]]
 key = "Rescue/Freeze: %d/%d"
 [message.translations]
+japanese = "レスキュー/フリーズ: %d/%d"
+korean = "구조/빙결: %d/%d"
 simplified_chinese = "被救/落水：%d/%d"
+traditional_chinese = "被救/落水：%d/%d"
 
 [[message]]
 key = "Reset"
 [message.translations]
+japanese = "リセット"
+korean = "초기화"
 simplified_chinese = "重置"
+traditional_chinese = "重置"
 
 [[message]]
 key = "Reset a config to its default value"
 [message.translations]
+japanese = "設定をデフォルト値にリセット"
+korean = "설정을 기본값으로 초기화"
 simplified_chinese = "将配置重置为其默认值"
+traditional_chinese = "將設定重置為其預設值"
 
 [[message]]
 key = "Reset all or one tuning variable to default"
 [message.translations]
+japanese = "すべてまたは単一のチューニング変数を既定値に戻す"
+korean = "모든 또는 하나의 튜닝 변수를 기본값으로 초기화"
 simplified_chinese = "将全部或单个调参变量重置为默认值"
+traditional_chinese = "將全部或單個調參變數重置為預設值"
 
 [[message]]
 key = "Reset default"
 [message.translations]
+japanese = "デフォルトにリセット"
+korean = "기본값으로 초기화"
 simplified_chinese = "恢复默认"
+traditional_chinese = "恢復預設"
 
 [[message]]
 key = "Reset dummy"
 [message.translations]
+japanese = "ダミーをリセット"
+korean = "더미 초기화"
 simplified_chinese = "重置分身"
+traditional_chinese = "重置分身"
 
 [[message]]
 key = "Reset zone tuning in zone x or in all zones"
 [message.translations]
+japanese = "ゾーン x または全ゾーンのゾーンチューニングをリセット"
+korean = "영역 x 또는 모든 영역의 영역 튜닝 초기화"
 simplified_chinese = "重置区域 x（或全部区域）的调参配置"
+traditional_chinese = "重置區域 x（或全部區域）的調參配置"
 
 [[message]]
 key = "Restart in x seconds (0 = abort)"
 [message.translations]
+japanese = "x 秒後に再起動（0 = 中止）"
+korean = "x초 후 재시작 (0 = 중단)"
 simplified_chinese = "在 x 秒后重新启动（0 = 中止）"
+traditional_chinese = "在 x 秒後重新啟動（0 = 中止）"
 
 [[message]]
 key = "Restart the client"
 [message.translations]
+japanese = "クライアントを再起動"
+korean = "클라이언트 재시작"
 simplified_chinese = "重启客户端"
+traditional_chinese = "重新啟動客戶端"
 
 [[message]]
 key = "Round %d/%d"
 [message.translations]
+japanese = "ラウンド %d/%d"
+korean = "라운드 %d/%d"
 simplified_chinese = "轮次 %d/%d"
+traditional_chinese = "回合 %d/%d"
 
 [[message]]
 key = "Same as \"vote no\""
 [message.translations]
+japanese = "\"vote no\" と同じ"
+korean = "\"반대 투표\"와 동일"
 simplified_chinese = "与“投反对票”相同"
+traditional_chinese = "與「投反對票」相同"
 
 [[message]]
 key = "Save"
 [message.translations]
+japanese = "保存"
+korean = "저장"
 simplified_chinese = "保存"
+traditional_chinese = "儲存"
 
 [[message]]
 key = "Save a replay of the last defined amount of seconds"
 [message.translations]
+japanese = "最後に指定した秒数のリプレイを保存"
+korean = "마지막으로 지정된 초의 리플레이 저장"
 simplified_chinese = "保存最近设定秒数的回放"
+traditional_chinese = "儲存最近設定秒數的回放"
 
 [[message]]
 key = "Save banlist in a file"
 [message.translations]
+japanese = "BANリストをファイルに保存"
+korean = "차단 목록을 파일에 저장"
 simplified_chinese = "将禁止列表保存在文件中"
+traditional_chinese = "將封禁列表儲存在檔案中"
 
 [[message]]
 key = "Save failed!"
 [message.translations]
+japanese = "保存に失敗しました！"
+korean = "저장 실패!"
 simplified_chinese = "保存失败！"
+traditional_chinese = "儲存失敗！"
 
 [[message]]
 key = "Save team with code r."
 [message.translations]
+japanese = "チームをコード r で保存"
+korean = "코드 r로 팀 저장"
 simplified_chinese = "将队伍保存为代码 r"
+traditional_chinese = "將隊伍儲存為代碼 r"
 
 [[message]]
 key = "Say in chat as dummy"
 [message.translations]
+japanese = "ダミーとしてチャットで発言"
+korean = "더미로 채팅 말하기"
 simplified_chinese = "让分身在聊天中发言"
+traditional_chinese = "讓分身在聊天中發言"
 
 [[message]]
 key = "Say in team chat as dummy"
 [message.translations]
+japanese = "ダミーとしてチームチャットで発言"
+korean = "더미로 팀 채팅 말하기"
 simplified_chinese = "让分身在队伍聊天中发言"
+traditional_chinese = "讓分身在隊伍聊天中發言"
 
 [[message]]
 key = "Score"
 [message.translations]
+japanese = "スコア"
+korean = "점수"
 simplified_chinese = "分数"
+traditional_chinese = "分數"
 
 [[message]]
 key = "Searching"
 [message.translations]
+japanese = "検索中"
+korean = "검색 중"
 simplified_chinese = "正在搜索"
+traditional_chinese = "正在搜尋"
 
 [[message]]
 key = "Select all chat"
 [message.translations]
+japanese = "チャットをすべて選択"
+korean = "모든 채팅 선택"
 simplified_chinese = "全选聊天记录"
+traditional_chinese = "全選聊天記錄"
 
 [[message]]
 key = "Select export"
 [message.translations]
+japanese = "エクスポートを選択"
+korean = "내보내기 선택"
 simplified_chinese = "选择导出内容"
+traditional_chinese = "選擇匯出內容"
 
 [[message]]
 key = "Selected %d"
 [message.translations]
+japanese = "選択中 %d"
+korean = "%d개 선택됨"
 simplified_chinese = "已选择 %d 项"
+traditional_chinese = "已選取 %d 項"
 
 [[message]]
 key = "Send /load as dummy"
 [message.translations]
+japanese = "ダミーとして /load を送信"
+korean = "더미로 /load 보내기"
 simplified_chinese = "让分身发送 /load"
+traditional_chinese = "讓分身傳送 /load"
 
 [[message]]
 key = "Send /lock as dummy"
 [message.translations]
+japanese = "ダミーとして /lock を送信"
+korean = "더미로 /lock 보내기"
 simplified_chinese = "让分身发送 /lock"
+traditional_chinese = "讓分身傳送 /lock"
 
 [[message]]
 key = "Send /pause as dummy"
 [message.translations]
+japanese = "ダミーとして /pause を送信"
+korean = "더미로 /pause 보내기"
 simplified_chinese = "让分身发送 /pause"
+traditional_chinese = "讓分身傳送 /pause"
 
 [[message]]
 key = "Send /rescue as dummy"
 [message.translations]
+japanese = "ダミーとして /rescue を送信"
+korean = "더미로 /rescue 보내기"
 simplified_chinese = "让分身发送 /rescue"
+traditional_chinese = "讓分身傳送 /rescue"
 
 [[message]]
 key = "Send /save as dummy"
 [message.translations]
+japanese = "ダミーとして /save を送信"
+korean = "더미로 /save 보내기"
 simplified_chinese = "让分身发送 /save"
+traditional_chinese = "讓分身傳送 /save"
 
 [[message]]
 key = "Send /spec as dummy"
 [message.translations]
+japanese = "ダミーとして /spec を送信"
+korean = "더미로 /spec 보내기"
 simplified_chinese = "让分身发送 /spec"
+traditional_chinese = "讓分身傳送 /spec"
 
 [[message]]
 key = "Send /team as dummy"
 [message.translations]
+japanese = "ダミーとして /team を送信"
+korean = "더미로 /team 보내기"
 simplified_chinese = "让分身发送 /team"
+traditional_chinese = "讓分身傳送 /team"
 
 [[message]]
 key = "Send a moderator alert message to player"
 [message.translations]
+japanese = "プレイヤーにモデレーターアラートメッセージを送信"
+korean = "플레이어에게 중재자 경고 메시지 보내기"
 simplified_chinese = "向玩家发送管理员提醒消息"
+traditional_chinese = "向玩家傳送管理員提醒訊息"
 
 [[message]]
 key = "Send a server alert message to all players"
 [message.translations]
+japanese = "全プレイヤーにサーバーアラートメッセージを送信"
+korean = "모든 플레이어에게 서버 경고 메시지 보내기"
 simplified_chinese = "向所有玩家发送服务器警报消息"
+traditional_chinese = "向所有玩家傳送伺服器警報訊息"
 
 [[message]]
 key = "Send specified command to rcon"
 [message.translations]
+japanese = "指定されたコマンドを rcon に送信"
+korean = "지정된 명령을 rcon으로 보내기"
 simplified_chinese = "向 rcon 发送指定命令"
+traditional_chinese = "向 rcon 傳送指定命令"
 
 [[message]]
 key = "Sends a command to the antibot"
 [message.translations]
+japanese = "コマンドをアンチボットに送信"
+korean = "안티봇에 명령 보내기"
 simplified_chinese = "向反机器人发送命令"
+traditional_chinese = "向反機器人傳送命令"
 
 [[message]]
 key = "Server alert"
 [message.translations]
+japanese = "サーバーアラート"
+korean = "서버 알림"
 simplified_chinese = "服务器提醒"
+traditional_chinese = "伺服器提醒"
 
 [[message]]
 key = "Server best:"
 [message.translations]
+japanese = "サーバーベスト:"
+korean = "서버 최고 기록:"
 simplified_chinese = "服务器最佳"
+traditional_chinese = "伺服器最佳："
 
 [[message]]
 key = "Server could not be started"
 [message.translations]
+japanese = "サーバーを起動できませんでした"
+korean = "서버를 시작할 수 없습니다"
 simplified_chinese = "无法启动服务器"
+traditional_chinese = "無法啟動伺服器"
 
 [[message]]
 key = "Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background."
 [message.translations]
+japanese = "サーバーを起動できませんでした。アプリ設定で通知許可を付与して、サーバーがバックグラウンドで実行できるようにしてください。"
+korean = "서버를 시작할 수 없습니다. 서버가 백그라운드에서 실행될 수 있도록 앱 설정에서 알림 권한을 부여했는지 확인하세요."
 simplified_chinese = "服务器无法启动。请确保在应用程序设置中授予通知权限，以便服务器可以在后台运行。"
+traditional_chinese = "伺服器無法啟動。請確保在應用程式設定中授予通知權限，以便伺服器可以在背景執行。"
 
 [[message]]
 key = "Server executable not found, can't run server"
 [message.translations]
+japanese = "サーバー実行ファイルが見つかりません。サーバーを実行できません。"
+korean = "서버 실행 파일을 찾을 수 없어 서버를 실행할 수 없습니다"
 simplified_chinese = "未检测到服务器的可执行文件，无法运行服务器"
+traditional_chinese = "未偵測到伺服器的可執行檔，無法執行伺服器"
 
 [[message]]
 key = "Set camera position relative to current view in the map"
 [message.translations]
+japanese = "マップ内の現在のビューに対するカメラ位置を設定"
+korean = "맵의 현재 보기를 기준으로 카메라 위치 설정"
 simplified_chinese = "设置相对于地图中当前视图的相机位置"
+traditional_chinese = "設定相對於地圖中目前視圖的相機位置"
 
 [[message]]
 key = "Set camera position to x and y in the map"
 [message.translations]
+japanese = "カメラ位置をマップ内の x と y に設定"
+korean = "맵에서 카메라 위치를 x와 y로 설정"
 simplified_chinese = "将相机位置设置为地图中的 x 和 y"
+traditional_chinese = "將相機位置設定為地圖中的 x 和 y"
 
 [[message]]
 key = "Set current demo speed"
 [message.translations]
+japanese = "現在のデモ速度を設定"
+korean = "현재 데모 속도 설정"
 simplified_chinese = "设置当前回放速度"
+traditional_chinese = "設定目前回放速度"
 
 [[message]]
 key = "Set ddrace team for a player"
 [message.translations]
+japanese = "プレイヤーに DDRace チームを設定"
+korean = "플레이어의 DDRace 팀 설정"
 simplified_chinese = "为玩家设置 DDRace 队伍"
+traditional_chinese = "為玩家設定 DDRace 隊伍"
 
 [[message]]
 key = "Set force-pause timer of i to 0."
 [message.translations]
+japanese = "i の強制一時停止タイマーを 0 に設定"
+korean = "i의 강제 일시정지 타이머를 0으로 설정"
 simplified_chinese = "将 i 的强制暂停计时器设置为 0。"
+traditional_chinese = "將 i 的強制暫停計時器設定為 0。"
 
 [[message]]
 key = "Set friend category"
 [message.translations]
+japanese = "フレンドカテゴリを設定"
+korean = "친구 카테고리 설정"
 simplified_chinese = "设置好友类别"
+traditional_chinese = "設定好友類別"
 
 [[message]]
 key = "Set friend note"
 [message.translations]
+japanese = "フレンドメモを設定"
+korean = "친구 메모 설정"
 simplified_chinese = "设置好友备注"
+traditional_chinese = "設定好友備註"
 
 [[message]]
 key = "Set team for a player (spectators = -1, game = 0)"
 [message.translations]
+japanese = "プレイヤーのチームを設定（観戦 = -1、ゲーム = 0）"
+korean = "플레이어 팀 설정 (관전 = -1, 게임 = 0)"
 simplified_chinese = "设置玩家队伍（旁观 = -1，游戏 = 0）"
+traditional_chinese = "設定玩家隊伍（旁觀 = -1，遊戲 = 0）"
 
 [[message]]
 key = "Set team for all players (spectators = -1, game = 0)"
 [message.translations]
+japanese = "全プレイヤーのチームを設定（観戦 = -1、ゲーム = 0）"
+korean = "모든 플레이어 팀 설정 (관전 = -1, 게임 = 0)"
 simplified_chinese = "设置所有玩家队伍（旁观 = -1，游戏 = 0）"
+traditional_chinese = "設定所有玩家隊伍（旁觀 = -1，遊戲 = 0）"
 
 [[message]]
 key = "Set timeout protection code s"
 [message.translations]
+japanese = "タイムアウト保護コード s を設定"
+korean = "타임아웃 보호 코드 s 설정"
 simplified_chinese = "设置超时保护码"
+traditional_chinese = "設定超時保護碼"
 
 [[message]]
 key = "Set your checkpoints based on another player"
 [message.translations]
+japanese = "別のプレイヤーに基づいてチェックポイントを設定"
+korean = "다른 플레이어를 기준으로 체크포인트 설정"
 simplified_chinese = "根据其他玩家设置你的检查点"
+traditional_chinese = "根據其他玩家設定你的檢查點"
 
 [[message]]
 key = "Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided"
 [message.translations]
+japanese = "二つの救助モード（自動または手動）のどちらかを設定します。引数がない場合は現在のモードを表示します"
+korean = "두 가지 구조 모드(자동 또는 수동) 중 하나를 설정합니다. 인수가 제공되지 않으면 현재 모드를 출력합니다."
 simplified_chinese = "设置两种救援模式之一（自动或手动）。如果没有提供参数则打印当前模式"
+traditional_chinese = "設定兩種救援模式之一（自動或手動）。如果沒有提供參數則顯示目前模式"
 
 [[message]]
 key = "Sets your tee's eye emote"
 [message.translations]
+japanese = "Tee の目のエモートを設定"
+korean = "티의 눈 이모트를 설정합니다."
 simplified_chinese = "设置你的 Tee 眼部表情"
+traditional_chinese = "設定你的 Tee 眼部表情"
 
 [[message]]
 key = "Show all votes (page 0 by default, 20 entries per page)"
 [message.translations]
+japanese = "すべての投票を表示します（既定はページ 0、各ページ 20 件）"
+korean = "모든 투표 표시 (기본 0페이지, 페이지당 20개 항목)"
 simplified_chinese = "显示全部投票（默认第 0 页，每页 20 条）"
+traditional_chinese = "顯示全部投票（預設第 0 頁，每頁 20 條）"
 
 [[message]]
 key = "Show banlist (page 1 by default, 20 entries per page)"
 [message.translations]
+japanese = "BANリストを表示します（既定はページ 1、各ページ 20 件）"
+korean = "차단 목록 표시 (기본 1페이지, 페이지당 20개 항목)"
 simplified_chinese = "显示封禁列表（默认第 1 页，每页 20 条）"
+traditional_chinese = "顯示封禁列表（預設第 1 頁，每頁 20 條）"
 
 [[message]]
 key = "Show Directory"
 [message.translations]
+japanese = "ディレクトリを表示"
+korean = "디렉터리 표시"
 simplified_chinese = "显示目录"
+traditional_chinese = "顯示目錄"
 
 [[message]]
 key = "Show Hook Collision"
 [message.translations]
+japanese = "フック衝突表示"
+korean = "훅 충돌 표시"
 simplified_chinese = "显示钩子碰撞"
+traditional_chinese = "顯示鉤索碰撞"
 
 [[message]]
 key = "Show info about the map with name r gives (current map by default)"
 [message.translations]
+japanese = "名前 r のマップの情報を表示（デフォルトで現在のマップ）"
+korean = "이름이 r인 맵에 대한 정보 표시 (기본값은 현재 맵)"
 simplified_chinese = "显示有关名称为 r 的地图的信息（默认为当前地图）"
-
-[[message]]
-key = "Show IP addresses in rcon commands (1 = on, 0 = off)"
-[message.translations]
-simplified_chinese = "在 rcon 命令中显示 IP 地址（1 = 打开，0 = 关闭）"
-
-[[message]]
-key = "Show list of mutes (page 1 by default, 20 entries per page)"
-[message.translations]
-simplified_chinese = "显示静音列表（默认第 1 页，每页 20 条）"
-
-[[message]]
-key = "Show list of vote mutes (page 1 by default, 20 entries per page)"
-[message.translations]
-simplified_chinese = "显示投票静音列表（默认第 1 页，每页 20 条）"
-
-[[message]]
-key = "Show logs of the last i seconds"
-[message.translations]
-simplified_chinese = "显示最后 i 秒的日志"
-
-[[message]]
-key = "Show scoreboard"
-[message.translations]
-simplified_chinese = "显示记分牌"
-
-[[message]]
-key = "Show stats"
-[message.translations]
-simplified_chinese = "显示统计数据"
-
-[[message]]
-key = "Shows five points of the global point ladder beginning with rank i (1 by default)"
-[message.translations]
-simplified_chinese = "显示全局积分榜从第 i 名开始的 5 条（默认 1）"
-
-[[message]]
-key = "Shows five team ranks of the ladder or of a player beginning with rank i (1 by default, -1 for worst)"
-[message.translations]
-simplified_chinese = "显示天梯队伍排名（或玩家排名）从第 i 名开始的 5 条（默认 1，-1 为最差）"
-
-[[message]]
-key = "Shows gameplay information for this server"
-[message.translations]
-simplified_chinese = "显示该服务器的游戏信息"
-
-[[message]]
-key = "Shows help to command r, general help if left blank"
-[message.translations]
-simplified_chinese = "显示命令 r 的帮助，如果留空则显示一般帮助"
-
-[[message]]
-key = "Shows the credits of the DDNet mod"
-[message.translations]
-simplified_chinese = "显示 DDNet mod 的制作人员"
-
-[[message]]
-key = "Shows the global points of a player beginning with name r (your rank by default)"
-[message.translations]
-simplified_chinese = "显示名称以 r 开头玩家的全局积分（默认你的排名）"
-
-[[message]]
-key = "Shows the rank of player with name r (your rank by default)"
-[message.translations]
-simplified_chinese = "显示名称为 r 的玩家排名（默认你的排名）"
-
-[[message]]
-key = "Shows the team rank of player with name r (your team rank by default)"
-[message.translations]
-simplified_chinese = "显示名称为 r 的玩家队伍排名（默认你的队伍排名）"
-
-[[message]]
-key = "Shows the top ranks of the global and regional ladder beginning with rank i (1 by default, -1 for worst)"
-[message.translations]
-simplified_chinese = "显示全局与区域天梯从第 i 名开始的前列排名（默认 1，-1 为最差）"
-
-[[message]]
-key = "Shut down"
-[message.translations]
-simplified_chinese = "关闭"
-
-[[message]]
-key = "Some map images could not be loaded. Check the local console for details."
-[message.translations]
-simplified_chinese = "未能加载某些地图图片。检查本地控制台以获取详情。"
-
-[[message]]
-key = "Some map sounds could not be loaded. Check the local console for details."
-[message.translations]
-simplified_chinese = "未能加载某些地图音效。检查本地控制台以获取详情。"
-
-[[message]]
-key = "Sound error"
-[message.translations]
-simplified_chinese = "音频错误"
-
-[[message]]
-key = "Spectate the closest player"
-[message.translations]
-simplified_chinese = "旁观最近的玩家"
-
-[[message]]
-key = "Spectate the next player"
-[message.translations]
-simplified_chinese = "旁观下一名玩家"
-
-[[message]]
-key = "Spectate the previous player"
-[message.translations]
-simplified_chinese = "旁观上一名玩家"
-
-[[message]]
-key = "Spectators"
-[message.translations]
-simplified_chinese = "旁观者"
-
-[[message]]
-key = "Speed:"
-[message.translations]
-simplified_chinese = "速度"
-
-[[message]]
-key = "Spree"
-[message.translations]
-simplified_chinese = "连杀"
-
-[[message]]
-key = "Start playback of ghosts"
-[message.translations]
-simplified_chinese = "开始播放鬼影"
-
-[[message]]
-key = "Start recording a demo"
-[message.translations]
-simplified_chinese = "开始录制回放"
-
-[[message]]
-key = "Start recording a video"
-[message.translations]
-simplified_chinese = "开始录制视频"
-
-[[message]]
-key = "Stop recording"
-[message.translations]
-simplified_chinese = "停止录音"
-
-[[message]]
-key = "Stop recording a demo"
-[message.translations]
-simplified_chinese = "停止录制回放"
-
-[[message]]
-key = "Stop recording a video"
-[message.translations]
-simplified_chinese = "停止录制视频"
-
-[[message]]
-key = "Successfully saved the replay!"
-[message.translations]
-simplified_chinese = "成功保存短时回放！"
-
-[[message]]
-key = "Sudden Death"
-[message.translations]
-simplified_chinese = "决胜"
-
-[[message]]
-key = "Suicides"
-[message.translations]
-simplified_chinese = "自杀数"
-
-[[message]]
-key = "Super"
-[message.translations]
-simplified_chinese = "无敌"
-
-[[message]]
-key = "Swap"
-[message.translations]
-simplified_chinese = "交换"
-
-[[message]]
-key = "Switch dummy to grenade"
-[message.translations]
-simplified_chinese = "切换分身到手雷"
-
-[[message]]
-key = "Switch dummy to gun"
-[message.translations]
-simplified_chinese = "切换分身到手枪"
-
-[[message]]
-key = "Switch dummy to hammer"
-[message.translations]
-simplified_chinese = "切换分身到锤子"
-
-[[message]]
-key = "Switch dummy to laser"
-[message.translations]
-simplified_chinese = "切换分身到激光"
-
-[[message]]
-key = "Switch dummy to next weapon"
-[message.translations]
-simplified_chinese = "切换分身到下一把武器"
-
-[[message]]
-key = "Switch dummy to previous weapon"
-[message.translations]
-simplified_chinese = "切换分身到上一把武器"
-
-[[message]]
-key = "Switch dummy to shotgun"
-[message.translations]
-simplified_chinese = "切换分身到散弹枪"
-
-[[message]]
-key = "Switch spectator mode"
-[message.translations]
-simplified_chinese = "切换旁观模式"
-
-[[message]]
-key = "Switch to grenade"
-[message.translations]
-simplified_chinese = "切换到榴弹炮"
-
-[[message]]
-key = "Switch to gun"
-[message.translations]
-simplified_chinese = "切换到枪"
-
-[[message]]
-key = "Switch to hammer"
-[message.translations]
-simplified_chinese = "切换到锤子"
-
-[[message]]
-key = "Switch to laser"
-[message.translations]
-simplified_chinese = "切换到激光"
-
-[[message]]
-key = "Switch to next weapon"
-[message.translations]
-simplified_chinese = "切换到下一个武器"
-
-[[message]]
-key = "Switch to previous weapon"
-[message.translations]
-simplified_chinese = "切换到上一个武器"
-
-[[message]]
-key = "Switch to shotgun"
-[message.translations]
-simplified_chinese = "切换到霰弹枪"
-
-[[message]]
-key = "System"
-[message.translations]
-simplified_chinese = "系统"
-
-[[message]]
-key = "Take a screenshot"
-[message.translations]
-simplified_chinese = "截图"
-
-[[message]]
-key = "Team %d"
-[message.translations]
-simplified_chinese = "队伍 %d"
-
-[[message]]
-key = "Team %d (%d/%d)"
-[message.translations]
-simplified_chinese = "队伍 %d (%d/%d)"
-
-[[message]]
-key = "Team save in progress. You'll be able to load with '/load %s'"
-[message.translations]
-simplified_chinese = "队伍存档进行中，之后可以用 '/load %s' 载入"
-
-[[message]]
-key = "Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails"
-[message.translations]
-simplified_chinese = "队伍存档进行中，成功后可用 '/load %s' 载入，失败时可用 '/load %s' 载入"
-
-[[message]]
-key = "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue"
-[message.translations]
-simplified_chinese = "队伍已由 %s 成功存档。数据库连接失败，因此改用生成的存档码避免冲突。请在 %s 上用 '/load %s' 继续"
-
-[[message]]
-key = "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue"
-[message.translations]
-simplified_chinese = "队伍已由 %s 成功存档。数据库连接失败，因此改用生成的存档码避免冲突。用 '/load %s' 继续"
-
-[[message]]
-key = "Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart"
-[message.translations]
-simplified_chinese = "在悬停的传送入口/出口或检查点传送点与其对应点之间传送自由观战镜头"
-
-[[message]]
-key = "Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)"
-[message.translations]
-simplified_chinese = "若启用自动救援模式，则直接将你传送出冻结；否则，落地时会记录救援位置，未落地则直接传送出冻结（用 sv_rescue 1 启用）"
-
-[[message]]
-key = "Teleport yourself to player or to where you are spectating/or looking if no player name is given"
-[message.translations]
-simplified_chinese = "若未给出玩家名，则将自己传送到目标玩家，或传送到你当前旁观/瞄准的位置"
-
-[[message]]
-key = "Teleport yourself to the last auto rescue position before you died (use sv_rescue 1 to enable this feature)"
-[message.translations]
-simplified_chinese = "将自己传送到死亡前的最后一个自动救援位置（使用 sv_rescue 1 启用此功能）"
-
-[[message]]
-key = "Teleport yourself to the last location you teleported to"
-[message.translations]
-simplified_chinese = "将自己传送到上次传送到的位置"
-
-[[message]]
-key = "Teleport yourself to the specified coordinates. A tilde (~) can be used to denote your current position, e.g. '/tpxy ~1 ~' to teleport one tile to the right"
-[message.translations]
-simplified_chinese = "将自己传送到指定坐标。波浪号 (~) 表示当前位置，例如 '/tpxy ~1 ~' 表示向右传送一格"
-
-[[message]]
-key = "Teleports player i (or you) to player i (or you to where you look at)"
-[message.translations]
-simplified_chinese = "将玩家 i（或你）传送到玩家 i（或将你传送到你所看的位置）"
-
-[[message]]
-key = "Teleports you to checkpoint teleporter i"
-[message.translations]
-simplified_chinese = "将你传送到检查点传送器 i"
-
-[[message]]
-key = "Teleports you to teleporter i"
-[message.translations]
-simplified_chinese = "将你传送到传送器 i"
-
-[[message]]
-key = "Temporarily set a config value while pressed"
-[message.translations]
-simplified_chinese = "按下时临时设置配置值"
-
-[[message]]
-key = "Temporary free camera"
-[message.translations]
-simplified_chinese = "临时自由镜头"
-
-[[message]]
-key = "The audio device couldn't be initialised."
-[message.translations]
-simplified_chinese = "初始化音频设备失败。"
-
-[[message]]
-key = "The format of texture %s is not RGBA which will cause visual bugs."
-[message.translations]
-simplified_chinese = "纹理文件 %s 并非 RGBA 格式，这可能会导致显示错误。"
-
-[[message]]
-key = "The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs."
-[message.translations]
-simplified_chinese = "纹理文件 %s 的宽度无法被 %d 整除，或者高度无法被 %d 整除，这可能会导致显示错误。"
-
-[[message]]
-key = "TIME EXPIRED!"
-[message.translations]
-simplified_chinese = "时间耗尽！"
-
-[[message]]
-key = "Time limit: %d min"
-[message.translations]
-simplified_chinese = "规定时限：%d 分钟"
-
-[[message]]
-key = "Toggle config value"
-[message.translations]
-simplified_chinese = "切换配置值"
-
-[[message]]
-key = "Toggle config value via keypress"
-[message.translations]
-simplified_chinese = "通过按键切换配置值"
-
-[[message]]
-key = "Toggle Do Not Disturb (no chat and server messages)"
-[message.translations]
-simplified_chinese = "切换请勿打扰（无聊天和服务器消息）"
-
-[[message]]
-key = "Toggle local console"
-[message.translations]
-simplified_chinese = "切换本地控制台"
-
-[[message]]
-key = "Toggle or set the switch on or off for the specified time (or indefinitely by default)"
-[message.translations]
-simplified_chinese = "在指定时间内切换或设置开关为开/关（默认无限时）"
-
-[[message]]
-key = "Toggle receiving whispers"
-[message.translations]
-simplified_chinese = "切换接收私语"
-
-[[message]]
-key = "Toggle remote console"
-[message.translations]
-simplified_chinese = "切换远程控制台"
-
-[[message]]
-key = "Toggle scoreboard cursor"
-[message.translations]
-simplified_chinese = "切换记分板光标"
-
-[[message]]
-key = "Toggle team between team 0 and team mode. This mode will make your team behave like team 0."
-[message.translations]
-simplified_chinese = "在 team 0 和 team 模式间切换。该模式会让你的队伍按 team 0 规则运行"
-
-[[message]]
-key = "Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock"
-[message.translations]
-simplified_chinese = "切换队伍锁定，这样其他人就无法加入，因此当一名玩家死亡时队伍会重新开始。 /lock 0 解锁，/lock 1 锁定"
-
-[[message]]
-key = "Toggle tune variable"
-[message.translations]
-simplified_chinese = "切换调整变量"
-
-[[message]]
-key = "Toggles collision"
-[message.translations]
-simplified_chinese = "切换碰撞"
-
-[[message]]
-key = "Toggles hit others"
-[message.translations]
-simplified_chinese = "切换打别人"
-
-[[message]]
-key = "Toggles hook collision"
-[message.translations]
-simplified_chinese = "切换钩子碰撞"
-
-[[message]]
-key = "Toggles invincible mode"
-[message.translations]
-simplified_chinese = "切换无敌模式"
-
-[[message]]
-key = "Toggles pause"
-[message.translations]
-simplified_chinese = "切换暂停"
-
-[[message]]
-key = "Toggles pause on the currently voted player"
-[message.translations]
-simplified_chinese = "切换当前投票玩家的暂停状态"
-
-[[message]]
-key = "Toggles spec (if not available behaves as /pause)"
-[message.translations]
-simplified_chinese = "切换旁观（如果不可用，则表现为 /pause）"
-
-[[message]]
-key = "Toggles spec on the currently voted player"
-[message.translations]
-simplified_chinese = "切换当前投票玩家的旁观"
-
-[[message]]
-key = "Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status"
-[message.translations]
-simplified_chinese = "打开/关闭标准眼睛表情的使用，eyeemote s，其中 s = on 表示打开，off 表示关闭，toggle 表示切换，不显示当前状态"
-
-[[message]]
-key = "Total"
-[message.translations]
-simplified_chinese = "总计"
-
-[[message]]
-key = "Trying Axiom auto login"
-[message.translations]
-simplified_chinese = "正在尝试 Axiom 自动登录"
-
-[[message]]
-key = "Trying Axiom dummy auto login"
-[message.translations]
-simplified_chinese = "正在尝试 Axiom 分身自动登录"
-
-[[message]]
-key = "Tune variable to value or show current value"
-[message.translations]
-simplified_chinese = "将变量调到指定值，或显示当前值"
-
-[[message]]
-key = "u = Snapshot latency"
-[message.translations]
-simplified_chinese = "u = 快照延迟"
-
-[[message]]
-key = "Unban a certain nickname"
-[message.translations]
-simplified_chinese = "解封某个昵称"
-
-[[message]]
-key = "Unban all entries"
-[message.translations]
-simplified_chinese = "取消禁止所有条目"
-
-[[message]]
-key = "Unban ip range"
-[message.translations]
-simplified_chinese = "解除 IP 段封禁"
-
-[[message]]
-key = "Unban ip/banlist entry"
-[message.translations]
-simplified_chinese = "解除 IP/封禁列表条目"
-
-[[message]]
-key = "Unbind all keys"
-[message.translations]
-simplified_chinese = "解除所有按键的绑定"
-
-[[message]]
-key = "Unbind key"
-[message.translations]
-simplified_chinese = "解除按键绑定"
-
-[[message]]
-key = "Uninvite player from team"
-[message.translations]
-simplified_chinese = "取消对玩家的队伍邀请"
-
-[[message]]
-key = "Unlock a team"
-[message.translations]
-simplified_chinese = "解锁队伍"
-
-[[message]]
-key = "Unmute"
-[message.translations]
-simplified_chinese = "取消静音"
-
-[[message]]
-key = "Unmute emoticons"
-[message.translations]
-simplified_chinese = "取消屏蔽表情"
-
-[[message]]
-key = "Unmute player with client ID"
-[message.translations]
-simplified_chinese = "使用客户端 ID 取消玩家静音"
-
-[[message]]
-key = "Unmute player with IP address"
-[message.translations]
-simplified_chinese = "按 IP 地址取消玩家静音"
-
-[[message]]
-key = "Unmute player with list index"
-[message.translations]
-simplified_chinese = "按列表索引取消玩家静音"
-
-[[message]]
-key = "Update a rcon key"
-[message.translations]
-simplified_chinese = "更新 rcon 密钥"
-
-[[message]]
-key = "Update a rcon key with prehashed data"
-[message.translations]
-simplified_chinese = "使用预哈希数据更新 rcon 密钥"
-
-[[message]]
-key = "Update notice"
-[message.translations]
-simplified_chinese = "更新提示"
-
-[[message]]
-key = "Uploading map data to GPU"
-[message.translations]
-simplified_chinese = "正在将地图数据传输至显卡"
-
-[[message]]
-key = "Usage: %s %s"
-[message.translations]
-simplified_chinese = "用法：%s %s"
-
-[[message]]
-key = "Use emote"
-[message.translations]
-simplified_chinese = "使用表情"
-
-[[message]]
-key = "Use the mouse wheel on a hovered module to scale it by 5%"
-[message.translations]
-simplified_chinese = "将鼠标悬停在 HUD 模块上并滚动滚轮可按 5% 缩放"
-
-[[message]]
-key = "Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`"
-[message.translations]
-simplified_chinese = "在 `add_favorite` 之后使用它来对收藏夹进行分组。从“begin_favorite_group”开始"
-
-[[message]]
-key = "Use this before `add_favorite` to group favorites. End with `end_favorite_group`"
-[message.translations]
-simplified_chinese = "在“add_favorite”之前使用它来对收藏夹进行分组。以“end_favorite_group”结束"
-
-[[message]]
-key = "v = Velocity"
-[message.translations]
-simplified_chinese = "v = Velocity（速度）"
-
-[[message]]
-key = "View switch found (at offset) with given number"
-[message.translations]
-simplified_chinese = "查看给定编号找到的开关（在偏移处）"
-
-[[message]]
-key = "View tele found (at offset) with given number"
-[message.translations]
-simplified_chinese = "查看给定编号的 tele（带偏移）"
-
-[[message]]
-key = "Vote a map by name"
-[message.translations]
-simplified_chinese = "按名称对地图进行投票"
-
-[[message]]
-key = "Vote yes/no"
-[message.translations]
-simplified_chinese = "投票赞成/反对"
-
-[[message]]
-key = "Waiting for snapshot"
-[message.translations]
-simplified_chinese = "等待快照"
-
-[[message]]
-key = "Warmup"
-[message.translations]
-simplified_chinese = "热身"
-
-[[message]]
-key = "Whether a switch is deactivated by default (otherwise activated)"
-[message.translations]
-simplified_chinese = "开关是否默认禁用（否则激活）"
-
-[[message]]
-key = "Whether to show players at any distance (off by default), optional i = 0 for off else for on"
-[message.translations]
-simplified_chinese = "是否显示任意距离的玩家（默认关闭），可选 i = 0 为关闭，否则为打开"
-
-[[message]]
-key = "Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only"
-[message.translations]
-simplified_chinese = "是否显示其他队伍玩家（默认关），可选 i = 0 关，i = 1 开，i = 2 仅本队"
-
-[[message]]
-key = "Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on"
-[message.translations]
-simplified_chinese = "旁观时是否显示其他队伍玩家（默认开），可选 i = 0 关，其他值开"
-
-[[message]]
-key = "Whether to use ninja jetpack or not. Makes jetpack look more awesome"
-[message.translations]
-simplified_chinese = "是否使用忍者喷气背包。让喷气背包看起来更酷"
-
-[[message]]
-key = "Which message to display on zone enter; use 0 for normal area"
-[message.translations]
-simplified_chinese = "输入区域时显示哪些消息；使用 0 表示正常区域"
-
-[[message]]
-key = "Which message to display on zone leave; use 0 for normal area"
-[message.translations]
-simplified_chinese = "离开区域时显示哪些消息；使用 0 表示正常区域"
-
-[[message]]
-key = "Whisper"
-[message.translations]
-simplified_chinese = "私聊"
-
-[[message]]
-key = "Whisper something to someone (private message)"
-[message.translations]
-simplified_chinese = "向某人发送私聊消息"
-
-[[message]]
-key = "Write local console contents to a text file"
-[message.translations]
-simplified_chinese = "将本地控制台内容写入文本文件"
-
-[[message]]
-key = "Write remote console contents to a text file"
-[message.translations]
-simplified_chinese = "将远程控制台内容写入文本文件"
-
-[[message]]
-key = "x = DDNet CPU% / total CPU%"
-[message.translations]
-simplified_chinese = "x = DDNet CPU% / 总 CPU%"
-
-[[message]]
-key = "y = DDNet memory usage"
-[message.translations]
-simplified_chinese = "y = DDNet 内存占用"
-
-[[message]]
-key = "You are already on the latest version"
-[message.translations]
-simplified_chinese = "当前已是最新版本"
-
-[[message]]
-key = "Your current version is outdated. Please update from the QQ group."
-[message.translations]
-simplified_chinese = "当前版本不是最新版，请前往 QQ 群更新最新版"
-
-[[message]]
-key = "z = Zoom"
-[message.translations]
-simplified_chinese = "z = Zoom（缩放）"
-
-[[message]]
-key = "Zoom decrease"
-[message.translations]
-simplified_chinese = "缩小视角"
-
-[[message]]
-key = "Zoom increase"
-[message.translations]
-simplified_chinese = "放大视角"
+traditional_chinese = "顯示有關名稱為 r 的地圖的資訊（預設為目前地圖）"
 
 [[message]]
 key = "Show information about this server"
 [message.translations]
+japanese = "このサーバーに関する情報を表示"
+korean = "이 서버에 대한 정보 표시"
 simplified_chinese = "显示服务器信息"
+traditional_chinese = "顯示伺服器資訊"
+
+[[message]]
+key = "Show IP addresses in rcon commands (1 = on, 0 = off)"
+[message.translations]
+japanese = "rcon コマンドで IP アドレスを表示（1 = オン、0 = オフ）"
+korean = "rcon 명령에 IP 주소 표시 (1 = 켜기, 0 = 끄기)"
+simplified_chinese = "在 rcon 命令中显示 IP 地址（1 = 打开，0 = 关闭）"
+traditional_chinese = "在 rcon 命令中顯示 IP 位址（1 = 開啟，0 = 關閉）"
+
+[[message]]
+key = "Show list of mutes (page 1 by default, 20 entries per page)"
+[message.translations]
+japanese = "ミュート一覧を表示します（既定はページ 1、各ページ 20 件）"
+korean = "음소거 목록 표시 (기본 1페이지, 페이지당 20개 항목)"
+simplified_chinese = "显示静音列表（默认第 1 页，每页 20 条）"
+traditional_chinese = "顯示靜音列表（預設第 1 頁，每頁 20 條）"
+
+[[message]]
+key = "Show list of vote mutes (page 1 by default, 20 entries per page)"
+[message.translations]
+japanese = "投票ミュート一覧を表示します（既定はページ 1、各ページ 20 件）"
+korean = "투표 음소거 목록 표시 (기본 1페이지, 페이지당 20개 항목)"
+simplified_chinese = "显示投票静音列表（默认第 1 页，每页 20 条）"
+traditional_chinese = "顯示投票靜音列表（預設第 1 頁，每頁 20 條）"
+
+[[message]]
+key = "Show logs of the last i seconds"
+[message.translations]
+japanese = "最後の i 秒間のログを表示"
+korean = "마지막 i초의 로그 표시"
+simplified_chinese = "显示最后 i 秒的日志"
+traditional_chinese = "顯示最後 i 秒的記錄"
+
+[[message]]
+key = "Show scoreboard"
+[message.translations]
+japanese = "スコアボードを表示"
+korean = "점수판 표시"
+simplified_chinese = "显示记分牌"
+traditional_chinese = "顯示計分板"
+
+[[message]]
+key = "Show stats"
+[message.translations]
+japanese = "統計を表示"
+korean = "통계 표시"
+simplified_chinese = "显示统计数据"
+traditional_chinese = "顯示統計資料"
 
 [[message]]
 key = "Show the server rules"
 [message.translations]
+japanese = "サーバールールを表示"
+korean = "서버 규칙 표시"
 simplified_chinese = "显示服务器规则"
+traditional_chinese = "顯示伺服器規則"
 
 [[message]]
 key = "Show weapon trajectory guide"
 [message.translations]
+japanese = "武器軌道ガイドを表示"
+korean = "무기 궤적 가이드 표시"
 simplified_chinese = "显示武器弹道辅助线"
+traditional_chinese = "顯示武器彈道輔助線"
+
+[[message]]
+key = "Shows five points of the global point ladder beginning with rank i (1 by default)"
+[message.translations]
+japanese = "グローバルポイントランキングの i 位から五件を表示します（既定は 1）"
+korean = "랭크 i부터 전역 포인트 순위 5개를 표시합니다 (기본값 1)"
+simplified_chinese = "显示全局积分榜从第 i 名开始的 5 条（默认 1）"
+traditional_chinese = "顯示全域積分榜從第 i 名開始的五條（預設 1）"
+
+[[message]]
+key = "Shows five team ranks of the ladder or of a player beginning with rank i (1 by default, -1 for worst)"
+[message.translations]
+japanese = "チームランキングまたはプレイヤーランキングの i 位から五件を表示します（既定は 1、-1 は最下位）"
+korean = "랭크 i부터 순위표 또는 플레이어의 팀 순위 5개를 표시합니다 (기본값 1, 최하위는 -1)"
+simplified_chinese = "显示天梯队伍排名（或玩家排名）从第 i 名开始的 5 条（默认 1，-1 为最差）"
+traditional_chinese = "顯示天梯隊伍排名（或玩家排名）從第 i 名開始的五條（預設 1，-1 為最差）"
+
+[[message]]
+key = "Shows gameplay information for this server"
+[message.translations]
+japanese = "このサーバーのゲームプレイ情報を表示"
+korean = "이 서버의 게임플레이 정보 표시"
+simplified_chinese = "显示该服务器的游戏信息"
+traditional_chinese = "顯示該伺服器的遊戲資訊"
+
+[[message]]
+key = "Shows help to command r, general help if left blank"
+[message.translations]
+japanese = "コマンド r のヘルプを表示。空白の場合は一般ヘルプ"
+korean = "명령어 r에 대한 도움말 표시, 비워두면 일반 도움말 표시"
+simplified_chinese = "显示命令 r 的帮助，如果留空则显示一般帮助"
+traditional_chinese = "顯示命令 r 的說明，如果留空則顯示一般說明"
+
+[[message]]
+key = "Shows the credits of the DDNet mod"
+[message.translations]
+japanese = "DDNet mod のクレジットを表示"
+korean = "DDNet 모드의 크레딧 표시"
+simplified_chinese = "显示 DDNet mod 的制作人员"
+traditional_chinese = "顯示 DDNet mod 的製作人員"
+
+[[message]]
+key = "Shows the global points of a player beginning with name r (your rank by default)"
+[message.translations]
+japanese = "名前 r で始まるプレイヤーのグローバルポイントを表示（デフォルトで自分のランク）"
+korean = "이름이 r로 시작하는 플레이어의 글로벌 포인트 표시 (기본값은 당신의 순위)"
+simplified_chinese = "显示名称以 r 开头玩家的全局积分（默认你的排名）"
+traditional_chinese = "顯示名稱以 r 開頭玩家的全域積分（預設你的排名）"
+
+[[message]]
+key = "Shows the rank of player with name r (your rank by default)"
+[message.translations]
+japanese = "名前 r のプレイヤーのランクを表示（デフォルトで自分のランク）"
+korean = "이름이 r인 플레이어의 순위 표시 (기본값은 당신의 순위)"
+simplified_chinese = "显示名称为 r 的玩家排名（默认你的排名）"
+traditional_chinese = "顯示名稱為 r 的玩家排名（預設你的排名）"
+
+[[message]]
+key = "Shows the team rank of player with name r (your team rank by default)"
+[message.translations]
+japanese = "名前 r のプレイヤーのチームランクを表示（デフォルトで自分のチームランク）"
+korean = "이름이 r인 플레이어의 팀 순위 표시 (기본값은 당신의 팀 순위)"
+simplified_chinese = "显示名称为 r 的玩家队伍排名（默认你的队伍排名）"
+traditional_chinese = "顯示名稱為 r 的玩家隊伍排名（預設你的隊伍排名）"
+
+[[message]]
+key = "Shows the top ranks of the global and regional ladder beginning with rank i (1 by default, -1 for worst)"
+[message.translations]
+japanese = "グローバルおよびリージョナルラダーの上位ランクを i 位から表示（デフォルト1、-1 で最下位）"
+korean = "순위 i부터 시작하는 글로벌 및 지역 래더의 상위 순위 표시 (기본값 1, -1은 최하위)"
+simplified_chinese = "显示全局与区域天梯从第 i 名开始的前列排名（默认 1，-1 为最差）"
+traditional_chinese = "顯示全域與區域天梯從第 i 名開始的前列排名（預設 1，-1 為最差）"
+
+[[message]]
+key = "Shut down"
+[message.translations]
+japanese = "シャットダウン"
+korean = "종료"
+simplified_chinese = "关闭"
+traditional_chinese = "關機"
 
 [[message]]
 key = "Silently disconnect from the current server while keeping Tee timeout protection"
 [message.translations]
+japanese = "Tee タイムアウト保護を維持したまま、サイレントに現在のサーバーから切断"
+korean = "Tee 타임아웃 보호를 유지하면서 현재 서버에서 자동 연결 해제"
 simplified_chinese = "静默断开当前服务器连接，用于保留 Tee 超时保护"
+traditional_chinese = "靜默中斷目前伺服器連線，用於保留 Tee 超時保護"
+
+[[message]]
+key = "Some map images could not be loaded. Check the local console for details."
+[message.translations]
+japanese = "一部のマップ画像を読み込めませんでした。詳細はローカルコンソールを確認してください。"
+korean = "일부 맵 이미지를 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요."
+simplified_chinese = "未能加载某些地图图片。检查本地控制台以获取详情。"
+traditional_chinese = "未能載入某些地圖圖片。檢查本地控制台以取得詳細資訊。"
+
+[[message]]
+key = "Some map sounds could not be loaded. Check the local console for details."
+[message.translations]
+japanese = "一部のマップサウンドを読み込めませんでした。詳細はローカルコンソールを確認してください。"
+korean = "일부 맵 사운드를 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요."
+simplified_chinese = "未能加载某些地图音效。检查本地控制台以获取详情。"
+traditional_chinese = "未能載入某些地圖音效。檢查本地控制台以取得詳細資訊。"
+
+[[message]]
+key = "Sound error"
+[message.translations]
+japanese = "サウンドエラー"
+korean = "사운드 오류"
+simplified_chinese = "音频错误"
+traditional_chinese = "音效錯誤"
+
+[[message]]
+key = "Specify command accessibility for given access level"
+[message.translations]
+japanese = "指定されたアクセスレベルに対するコマンドアクセス権を指定"
+korean = "지정된 접근 수준에 대한 명령어 접근성 지정"
+simplified_chinese = "为指定访问级别设置命令可访问性"
+traditional_chinese = "為指定存取層級設定命令可存取性"
+
+[[message]]
+key = "Spectate the closest player"
+[message.translations]
+japanese = "最も近いプレイヤーを観戦"
+korean = "가장 가까운 플레이어 관전"
+simplified_chinese = "旁观最近的玩家"
+traditional_chinese = "旁觀最近的玩家"
+
+[[message]]
+key = "Spectate the next player"
+[message.translations]
+japanese = "次のプレイヤーを観戦"
+korean = "다음 플레이어 관전"
+simplified_chinese = "旁观下一名玩家"
+traditional_chinese = "旁觀下一名玩家"
+
+[[message]]
+key = "Spectate the previous player"
+[message.translations]
+japanese = "前のプレイヤーを観戦"
+korean = "이전 플레이어 관전"
+simplified_chinese = "旁观上一名玩家"
+traditional_chinese = "旁觀上一名玩家"
+
+[[message]]
+key = "Spectators"
+[message.translations]
+japanese = "観戦者"
+korean = "관전자"
+simplified_chinese = "旁观者"
+traditional_chinese = "旁觀者"
+
+[[message]]
+key = "Speed:"
+[message.translations]
+japanese = "速度:"
+korean = "속도:"
+simplified_chinese = "速度"
+traditional_chinese = "速度："
+
+[[message]]
+key = "Spree"
+[message.translations]
+japanese = "連続キル"
+korean = "연속 처치"
+simplified_chinese = "连杀"
+traditional_chinese = "連殺"
+
+[[message]]
+key = "Start playback of ghosts"
+[message.translations]
+japanese = "ゴーストの再生を開始"
+korean = "고스트 재생 시작"
+simplified_chinese = "开始播放鬼影"
+traditional_chinese = "開始播放鬼影"
+
+[[message]]
+key = "Start recording a demo"
+[message.translations]
+japanese = "デモの録画を開始"
+korean = "데모 녹화 시작"
+simplified_chinese = "开始录制回放"
+traditional_chinese = "開始錄製回放"
+
+[[message]]
+key = "Start recording a video"
+[message.translations]
+japanese = "動画の録画を開始"
+korean = "비디오 녹화 시작"
+simplified_chinese = "开始录制视频"
+traditional_chinese = "開始錄製影片"
+
+[[message]]
+key = "Stop recording"
+[message.translations]
+japanese = "録音停止"
+korean = "녹음 중지"
+simplified_chinese = "停止录音"
+traditional_chinese = "停止錄音"
+
+[[message]]
+key = "Stop recording a demo"
+[message.translations]
+japanese = "デモの録画を停止"
+korean = "데모 녹화 중지"
+simplified_chinese = "停止录制回放"
+traditional_chinese = "停止錄製回放"
+
+[[message]]
+key = "Stop recording a video"
+[message.translations]
+japanese = "動画の録画を停止"
+korean = "비디오 녹화 중지"
+simplified_chinese = "停止录制视频"
+traditional_chinese = "停止錄製影片"
+
+[[message]]
+key = "Successfully saved the replay!"
+[message.translations]
+japanese = "リプレイの保存に成功しました！"
+korean = "리플레이를 성공적으로 저장했습니다!"
+simplified_chinese = "成功保存短时回放！"
+traditional_chinese = "成功儲存回放！"
+
+[[message]]
+key = "Sudden Death"
+[message.translations]
+japanese = "サドンデス"
+korean = "서든 데스"
+simplified_chinese = "决胜"
+traditional_chinese = "驟死賽"
+
+[[message]]
+key = "Suicides"
+[message.translations]
+japanese = "自殺数"
+korean = "자살"
+simplified_chinese = "自杀数"
+traditional_chinese = "自殺數"
+
+[[message]]
+key = "Super"
+[message.translations]
+japanese = "スーパー"
+korean = "슈퍼"
+simplified_chinese = "无敌"
+traditional_chinese = "無敵"
+
+[[message]]
+key = "Swap"
+[message.translations]
+japanese = "スワップ"
+korean = "교체"
+simplified_chinese = "交换"
+traditional_chinese = "交換"
+
+[[message]]
+key = "Switch dummy to grenade"
+[message.translations]
+japanese = "ダミーをグレネードに切り替え"
+korean = "더미를 수류탄으로 전환"
+simplified_chinese = "切换分身到手雷"
+traditional_chinese = "切換分身到榴彈"
+
+[[message]]
+key = "Switch dummy to gun"
+[message.translations]
+japanese = "ダミーをガンに切り替え"
+korean = "더미를 총으로 전환"
+simplified_chinese = "切换分身到手枪"
+traditional_chinese = "切換分身到手槍"
+
+[[message]]
+key = "Switch dummy to hammer"
+[message.translations]
+japanese = "ダミーをハンマーに切り替え"
+korean = "더미를 망치로 전환"
+simplified_chinese = "切换分身到锤子"
+traditional_chinese = "切換分身到錘子"
+
+[[message]]
+key = "Switch dummy to laser"
+[message.translations]
+japanese = "ダミーをレーザーに切り替え"
+korean = "더미를 레이저로 전환"
+simplified_chinese = "切换分身到激光"
+traditional_chinese = "切換分身到雷射"
+
+[[message]]
+key = "Switch dummy to next weapon"
+[message.translations]
+japanese = "ダミーを次の武器に切り替え"
+korean = "더미를 다음 무기로 전환"
+simplified_chinese = "切换分身到下一把武器"
+traditional_chinese = "切換分身到下一把武器"
+
+[[message]]
+key = "Switch dummy to previous weapon"
+[message.translations]
+japanese = "ダミーを前の武器に切り替え"
+korean = "더미를 이전 무기로 전환"
+simplified_chinese = "切换分身到上一把武器"
+traditional_chinese = "切換分身到上一把武器"
+
+[[message]]
+key = "Switch dummy to shotgun"
+[message.translations]
+japanese = "ダミーをショットガンに切り替え"
+korean = "더미를 샷건으로 전환"
+simplified_chinese = "切换分身到散弹枪"
+traditional_chinese = "切換分身到霰彈槍"
+
+[[message]]
+key = "Switch spectator mode"
+[message.translations]
+japanese = "観戦モードを切り替え"
+korean = "관전 모드 전환"
+simplified_chinese = "切换旁观模式"
+traditional_chinese = "切換旁觀模式"
+
+[[message]]
+key = "Switch to grenade"
+[message.translations]
+japanese = "グレネードに切り替え"
+korean = "수류탄으로 전환"
+simplified_chinese = "切换到榴弹炮"
+traditional_chinese = "切換到榴彈"
+
+[[message]]
+key = "Switch to gun"
+[message.translations]
+japanese = "ガンに切り替え"
+korean = "총으로 전환"
+simplified_chinese = "切换到枪"
+traditional_chinese = "切換到槍"
+
+[[message]]
+key = "Switch to hammer"
+[message.translations]
+japanese = "ハンマーに切り替え"
+korean = "망치로 전환"
+simplified_chinese = "切换到锤子"
+traditional_chinese = "切換到錘子"
+
+[[message]]
+key = "Switch to laser"
+[message.translations]
+japanese = "レーザーに切り替え"
+korean = "레이저로 전환"
+simplified_chinese = "切换到激光"
+traditional_chinese = "切換到雷射"
+
+[[message]]
+key = "Switch to next weapon"
+[message.translations]
+japanese = "次の武器に切り替え"
+korean = "다음 무기로 전환"
+simplified_chinese = "切换到下一个武器"
+traditional_chinese = "切換到下一個武器"
+
+[[message]]
+key = "Switch to previous weapon"
+[message.translations]
+japanese = "前の武器に切り替え"
+korean = "이전 무기로 전환"
+simplified_chinese = "切换到上一个武器"
+traditional_chinese = "切換到上一個武器"
+
+[[message]]
+key = "Switch to shotgun"
+[message.translations]
+japanese = "ショットガンに切り替え"
+korean = "샷건으로 전환"
+simplified_chinese = "切换到霰弹枪"
+traditional_chinese = "切換到霰彈槍"
+
+[[message]]
+key = "System"
+[message.translations]
+japanese = "システム"
+korean = "시스템"
+simplified_chinese = "系统"
+traditional_chinese = "系統"
+
+[[message]]
+key = "Take a screenshot"
+[message.translations]
+japanese = "スクリーンショットを撮る"
+korean = "스크린샷 찍기"
+simplified_chinese = "截图"
+traditional_chinese = "截圖"
+
+[[message]]
+key = "Team %d"
+[message.translations]
+japanese = "チーム %d"
+korean = "팀 %d"
+simplified_chinese = "队伍 %d"
+traditional_chinese = "隊伍 %d"
+
+[[message]]
+key = "Team %d (%d/%d)"
+[message.translations]
+japanese = "チーム %d (%d/%d)"
+korean = "팀 %d (%d/%d)"
+simplified_chinese = "队伍 %d (%d/%d)"
+traditional_chinese = "隊伍 %d (%d/%d)"
+
+[[message]]
+key = "Team save in progress. You'll be able to load with '/load %s'"
+[message.translations]
+japanese = "チームセーブ進行中。「/load %s」でロードできるようになります。"
+korean = "팀 저장 진행 중입니다. '/load %s'로 불러올 수 있습니다."
+simplified_chinese = "队伍存档进行中，之后可以用 '/load %s' 载入"
+traditional_chinese = "隊伍存檔進行中，之後可以用 '/load %s' 載入"
+
+[[message]]
+key = "Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails"
+[message.translations]
+japanese = "チームセーブ進行中。成功時は「/load %s」、失敗時は「/load %s」でロードできます。"
+korean = "팀 저장 진행 중입니다. 저장 성공 시 '/load %s'로, 실패 시 '/load %s'로 불러올 수 있습니다."
+simplified_chinese = "队伍存档进行中，成功后可用 '/load %s' 载入，失败时可用 '/load %s' 载入"
+traditional_chinese = "隊伍存檔進行中，成功後可用 '/load %s' 載入，失敗時可用 '/load %s' 載入"
+
+[[message]]
+key = "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue"
+[message.translations]
+japanese = "%s によるチームセーブ成功。データベース接続に失敗したため、衝突を避けるために生成されたセーブコードを使用します。%s で「/load %s」を使用して続行"
+korean = "%s 님이 팀을 성공적으로 저장했습니다. 데이터베이스 연결에 실패하여 충돌을 피하기 위해 생성된 저장 코드를 사용합니다. %s에서 '/load %s'를 사용하여 계속하세요."
+simplified_chinese = "队伍已由 %s 成功存档。数据库连接失败，因此改用生成的存档码避免冲突。请在 %s 上用 '/load %s' 继续"
+traditional_chinese = "隊伍已由 %s 成功存檔。資料庫連線失敗，因此改用產生的存檔碼避免衝突。請在 %s 上用 '/load %s' 繼續"
+
+[[message]]
+key = "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue"
+[message.translations]
+japanese = "%s によるチームセーブ成功。データベース接続に失敗したため、衝突を避けるために生成されたセーブコードを使用します。「/load %s」で続行"
+korean = "%s 님이 팀을 성공적으로 저장했습니다. 데이터베이스 연결에 실패하여 충돌을 피하기 위해 생성된 저장 코드를 사용합니다. '/load %s'를 사용하여 계속하세요."
+simplified_chinese = "队伍已由 %s 成功存档。数据库连接失败，因此改用生成的存档码避免冲突。用 '/load %s' 继续"
+traditional_chinese = "隊伍已由 %s 成功存檔。資料庫連線失敗，因此改用產生的存檔碼避免衝突。用 '/load %s' 繼續"
+
+[[message]]
+key = "Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart"
+[message.translations]
+japanese = "ホバーしたテレポート入口/出口またはチェックポイントテレポートと対応する相手の間で自由観戦カメラをテレポート"
+korean = "마우스 오버된 텔레포트 입/출구 또는 체크포인트 텔레포트와 일치하는 상대 지점 사이로 자유 관전 카메라를 순간이동합니다."
+simplified_chinese = "在悬停的传送入口/出口或检查点传送点与其对应点之间传送自由观战镜头"
+traditional_chinese = "在懸停的傳送入口/出口或檢查點傳送點與其對應點之間傳送自由觀戰鏡頭"
+
+[[message]]
+key = "Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)"
+[message.translations]
+japanese = "自動レスキューモードが有効な場合はフリーズからテレポートアウト。それ以外の場合は、接地していればレスキュー用の位置を設定し、接地していなければフリーズからテレポートアウト（sv_rescue 1 でこの機能を有効化）"
+korean = "자동 구조 모드가 활성화된 경우 동결 상태에서 순간이동합니다. 그렇지 않으면 착지 시 구조 위치를 설정하고, 착지하지 않은 경우 동결 상태에서 순간이동합니다 (sv_rescue 1을 사용하여 이 기능을 활성화)."
+simplified_chinese = "若启用自动救援模式，则直接将你传送出冻结；否则，落地时会记录救援位置，未落地则直接传送出冻结（用 sv_rescue 1 启用）"
+traditional_chinese = "若啟用自動救援模式，則直接將你傳送出的凍結；否則，落地時會記錄救援位置，未落地則直接傳送出的凍結（用 sv_rescue 1 啟用）"
+
+[[message]]
+key = "Teleport yourself to player or to where you are spectating/or looking if no player name is given"
+[message.translations]
+japanese = "プレイヤー名が指定されていない場合は、観戦中または見ている場所に自分をテレポート"
+korean = "플레이어 이름이 주어지지 않으면 자신을 해당 플레이어 또는 관전/바라보는 위치로 순간이동합니다."
+simplified_chinese = "若未给出玩家名，则将自己传送到目标玩家，或传送到你当前旁观/瞄准的位置"
+traditional_chinese = "若未給出玩家名，則將自己傳送到目標玩家，或傳送到你目前旁觀/瞄準的位置"
+
+[[message]]
+key = "Teleport yourself to the last auto rescue position before you died (use sv_rescue 1 to enable this feature)"
+[message.translations]
+japanese = "死亡前の最後の自動レスキュー位置に自分をテレポート（sv_rescue 1 でこの機能を有効化）"
+korean = "죽기 전 마지막 자동 구조 위치로 순간이동합니다 (sv_rescue 1을 사용하여 이 기능을 활성화)."
+simplified_chinese = "将自己传送到死亡前的最后一个自动救援位置（使用 sv_rescue 1 启用此功能）"
+traditional_chinese = "將自己傳送到死亡前的最後一個自動救援位置（使用 sv_rescue 1 啟用此功能）"
+
+[[message]]
+key = "Teleport yourself to the last location you teleported to"
+[message.translations]
+japanese = "最後にテレポートした場所に自分をテレポート"
+korean = "마지막으로 순간이동한 위치로 순간이동합니다."
+simplified_chinese = "将自己传送到上次传送到的位置"
+traditional_chinese = "將自己傳送到上次傳送到的位置"
+
+[[message]]
+key = "Teleport yourself to the specified coordinates. A tilde (~) can be used to denote your current position, e.g. '/tpxy ~1 ~' to teleport one tile to the right"
+[message.translations]
+japanese = "指定座標へテレポートします。チルダ（~）は現在位置を表せます。例: '/tpxy ~1 ~' で右へ一タイル移動します"
+korean = "지정된 좌표로 순간이동합니다. 물결표(~)는 현재 위치를 나타내는 데 사용할 수 있습니다. 예: '/tpxy ~1 ~'는 오른쪽으로 한 타일 순간이동합니다."
+simplified_chinese = "将自己传送到指定坐标。波浪号 (~) 表示当前位置，例如 '/tpxy ~1 ~' 表示向右传送一格"
+traditional_chinese = "將自己傳送到指定座標。波浪號 (~) 表示目前位置，例如 '/tpxy ~1 ~' 表示向右傳送一格"
+
+[[message]]
+key = "Teleports player i (or you) to player i (or you to where you look at)"
+[message.translations]
+japanese = "プレイヤー i（またはあなた）をプレイヤー i（またはあなたが見ている場所）にテレポート"
+korean = "플레이어 i(또는 당신)를 플레이어 i(또는 당신이 바라보는 곳)로 순간이동합니다."
+simplified_chinese = "将玩家 i（或你）传送到玩家 i（或将你传送到你所看的位置）"
+traditional_chinese = "將玩家 i（或你）傳送到玩家 i（或將你傳送到你所看的位置）"
+
+[[message]]
+key = "Teleports you to checkpoint teleporter i"
+[message.translations]
+japanese = "チェックポイントテレポーター i にテレポート"
+korean = "체크포인트 텔레포터 i로 순간이동합니다."
+simplified_chinese = "将你传送到检查点传送器 i"
+traditional_chinese = "將你傳送到檢查點傳送器 i"
+
+[[message]]
+key = "Teleports you to teleporter i"
+[message.translations]
+japanese = "テレポーター i にテレポート"
+korean = "텔레포터 i로 순간이동합니다."
+simplified_chinese = "将你传送到传送器 i"
+traditional_chinese = "將你傳送到傳送器 i"
+
+[[message]]
+key = "Temporarily set a config value while pressed"
+[message.translations]
+japanese = "押している間、設定値を一時的に設定"
+korean = "누르는 동안 임시로 설정값 설정"
+simplified_chinese = "按下时临时设置配置值"
+traditional_chinese = "按下時暫時設定設定值"
+
+[[message]]
+key = "Temporary free camera"
+[message.translations]
+japanese = "一時フリーカメラ"
+korean = "임시 자유 카메라"
+simplified_chinese = "临时自由镜头"
+traditional_chinese = "暫時自由鏡頭"
+
+[[message]]
+key = "The audio device couldn't be initialised."
+[message.translations]
+japanese = "オーディオデバイスを初期化できませんでした。"
+korean = "오디오 장치를 초기화할 수 없습니다."
+simplified_chinese = "初始化音频设备失败。"
+traditional_chinese = "初始化音效裝置失敗。"
+
+[[message]]
+key = "The format of texture %s is not RGBA which will cause visual bugs."
+[message.translations]
+japanese = "テクスチャ %s のフォーマットが RGBA ではありません。これにより表示の不具合が発生する可能性があります。"
+korean = "텍스처 %s의 형식이 RGBA가 아니므로 시각적 버그가 발생할 수 있습니다."
+simplified_chinese = "纹理文件 %s 并非 RGBA 格式，这可能会导致显示错误。"
+traditional_chinese = "紋理檔案 %s 並非 RGBA 格式，這可能會導致顯示錯誤。"
+
+[[message]]
+key = "The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs."
+[message.translations]
+japanese = "テクスチャ %s の幅が %d で割り切れないか、高さが %d で割り切れません。これにより表示の不具合が発生する可能性があります。"
+korean = "텍스처 %s의 너비가 %d로 나누어 떨어지지 않거나 높이가 %d로 나누어 떨어지지 않아 시각적 버그가 발생할 수 있습니다."
+simplified_chinese = "纹理文件 %s 的宽度无法被 %d 整除，或者高度无法被 %d 整除，这可能会导致显示错误。"
+traditional_chinese = "紋理檔案 %s 的寬度無法被 %d 整除，或者高度無法被 %d 整除，這可能會導致顯示錯誤。"
+
+[[message]]
+key = "TIME EXPIRED!"
+[message.translations]
+japanese = "時間切れ！"
+korean = "시간 초과!"
+simplified_chinese = "时间耗尽！"
+traditional_chinese = "時間耗盡！"
+
+[[message]]
+key = "Time limit: %d min"
+[message.translations]
+japanese = "時間制限: %d 分"
+korean = "시간 제한: %d분"
+simplified_chinese = "规定时限：%d 分钟"
+traditional_chinese = "時間限制：%d 分鐘"
+
+[[message]]
+key = "Toggle config value"
+[message.translations]
+japanese = "設定値をトグル"
+korean = "설정값 전환"
+simplified_chinese = "切换配置值"
+traditional_chinese = "切換設定值"
+
+[[message]]
+key = "Toggle config value via keypress"
+[message.translations]
+japanese = "キー押下で設定値をトグル"
+korean = "키 입력으로 설정값 전환"
+simplified_chinese = "通过按键切换配置值"
+traditional_chinese = "透過按鍵切換設定值"
+
+[[message]]
+key = "Toggle Do Not Disturb (no chat and server messages)"
+[message.translations]
+japanese = "おやすみモードを切り替え（チャットとサーバーメッセージなし）"
+korean = "방해 금지 전환 (채팅 및 서버 메시지 없음)"
+simplified_chinese = "切换请勿打扰（无聊天和服务器消息）"
+traditional_chinese = "切換請勿打擾（無聊天和伺服器訊息）"
+
+[[message]]
+key = "Toggle local console"
+[message.translations]
+japanese = "ローカルコンソールを切り替え"
+korean = "로컬 콘솔 전환"
+simplified_chinese = "切换本地控制台"
+traditional_chinese = "切換本地控制台"
+
+[[message]]
+key = "Toggle or set the switch on or off for the specified time (or indefinitely by default)"
+[message.translations]
+japanese = "指定された時間（デフォルトは無期限）スイッチをオン/オフに切り替えまたは設定"
+korean = "지정된 시간 동안 스위치를 켜거나 끄도록 전환 또는 설정 (기본값은 무기한)"
+simplified_chinese = "在指定时间内切换或设置开关为开/关（默认无限时）"
+traditional_chinese = "在指定時間內切換或設定開關為開/關（預設無限時）"
+
+[[message]]
+key = "Toggle receiving whispers"
+[message.translations]
+japanese = "Whisper 受信の切り替え"
+korean = "귓속말 수신 전환"
+simplified_chinese = "切换接收私语"
+traditional_chinese = "切換接收私語"
+
+[[message]]
+key = "Toggle remote console"
+[message.translations]
+japanese = "リモートコンソールを切り替え"
+korean = "원격 콘솔 전환"
+simplified_chinese = "切换远程控制台"
+traditional_chinese = "切換遠端控制台"
+
+[[message]]
+key = "Toggle scoreboard cursor"
+[message.translations]
+japanese = "スコアボードカーソルの切り替え"
+korean = "점수판 커서 전환"
+simplified_chinese = "切换记分板光标"
+traditional_chinese = "切換計分板游標"
+
+[[message]]
+key = "Toggle team between team 0 and team mode. This mode will make your team behave like team 0."
+[message.translations]
+japanese = "チーム 0 とチームモードを切り替え。このモードではチームがチーム 0 のように動作します。"
+korean = "팀 0과 팀 모드 사이를 전환합니다. 이 모드는 팀이 팀 0처럼 작동하게 합니다."
+simplified_chinese = "在 team 0 和 team 模式间切换。该模式会让你的队伍按 team 0 规则运行"
+traditional_chinese = "在 team 0 和 team 模式間切換。該模式會讓你的隊伍按 team 0 規則執行"
+
+[[message]]
+key = "Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock"
+[message.translations]
+japanese = "チームロックを切り替え。他の人が参加できなくなり、プレイヤーが死ぬとチームが再スタートします。/lock 0 でロック解除、/lock 1 でロック"
+korean = "팀 잠금을 전환하여 다른 사람이 참가할 수 없고 플레이어가 죽으면 팀이 다시 시작됩니다. /lock 0은 잠금 해제, /lock 1은 잠금."
+simplified_chinese = "切换队伍锁定，这样其他人就无法加入，因此当一名玩家死亡时队伍会重新开始。 /lock 0 解锁，/lock 1 锁定"
+traditional_chinese = "切換隊伍鎖定，這樣其他人就無法加入，因此當一名玩家死亡時隊伍會重新開始。/lock 0 解鎖，/lock 1 鎖定"
+
+[[message]]
+key = "Toggle tune variable"
+[message.translations]
+japanese = "チューニング変数をトグル"
+korean = "튠 변수 전환"
+simplified_chinese = "切换调整变量"
+traditional_chinese = "切換調整變數"
+
+[[message]]
+key = "Toggles collision"
+[message.translations]
+japanese = "衝突判定の切り替え"
+korean = "충돌 전환"
+simplified_chinese = "切换碰撞"
+traditional_chinese = "切換碰撞"
+
+[[message]]
+key = "Toggles hit others"
+[message.translations]
+japanese = "他者への攻撃の切り替え"
+korean = "다른 사람 때리기 전환"
+simplified_chinese = "切换打别人"
+traditional_chinese = "切換擊打他人"
+
+[[message]]
+key = "Toggles hook collision"
+[message.translations]
+japanese = "フック衝突の切り替え"
+korean = "훅 충돌 전환"
+simplified_chinese = "切换钩子碰撞"
+traditional_chinese = "切換鉤索碰撞"
+
+[[message]]
+key = "Toggles invincible mode"
+[message.translations]
+japanese = "無敵モードの切り替え"
+korean = "무적 모드 전환"
+simplified_chinese = "切换无敌模式"
+traditional_chinese = "切換無敵模式"
+
+[[message]]
+key = "Toggles pause"
+[message.translations]
+japanese = "一時停止の切り替え"
+korean = "일시 정지 전환"
+simplified_chinese = "切换暂停"
+traditional_chinese = "切換暫停"
+
+[[message]]
+key = "Toggles pause on the currently voted player"
+[message.translations]
+japanese = "現在投票されているプレイヤーの一時停止を切り替え"
+korean = "현재 투표된 플레이어의 일시 정지 전환"
+simplified_chinese = "切换当前投票玩家的暂停状态"
+traditional_chinese = "切換目前投票玩家的暫停狀態"
+
+[[message]]
+key = "Toggles spec (if not available behaves as /pause)"
+[message.translations]
+japanese = "観戦の切り替え（利用不可の場合は /pause として動作）"
+korean = "관전 전환 (사용 불가능 시 /pause처럼 작동)"
+simplified_chinese = "切换旁观（如果不可用，则表现为 /pause）"
+traditional_chinese = "切換旁觀（如果不可用，則表現為 /pause）"
+
+[[message]]
+key = "Toggles spec on the currently voted player"
+[message.translations]
+japanese = "現在投票されているプレイヤーの観戦を切り替え"
+korean = "현재 투표된 플레이어의 관전 전환"
+simplified_chinese = "切换当前投票玩家的旁观"
+traditional_chinese = "切換目前投票玩家的旁觀"
+
+[[message]]
+key = "Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status"
+[message.translations]
+japanese = "標準の目のエモートの使用をオン/オフに切り替え。eyeemote s（s = on: オン、off: オフ、toggle: 切り替え、空: 現在の状態表示）"
+korean = "표준 눈 이모트 사용 켜기/끄기 전환, eyeemote s, 여기서 s = on은 켜기, off는 끄기, toggle은 전환, 아무것도 없으면 현재 상태 표시"
+simplified_chinese = "打开/关闭标准眼睛表情的使用，eyeemote s，其中 s = on 表示打开，off 表示关闭，toggle 表示切换，不显示当前状态"
+traditional_chinese = "開啟/關閉標準眼睛表情的使用，eyeemote s，其中 s = on 表示開啟，off 表示關閉，toggle 表示切換，空白則顯示目前狀態"
+
+[[message]]
+key = "Total"
+[message.translations]
+japanese = "合計"
+korean = "합계"
+simplified_chinese = "总计"
+traditional_chinese = "總計"
+
+[[message]]
+key = "Trying Axiom auto login"
+[message.translations]
+japanese = "Axiom 自動ログインを試行中"
+korean = "Axiom 자동 로그인 시도 중"
+simplified_chinese = "正在尝试 Axiom 自动登录"
+traditional_chinese = "正在嘗試 Axiom 自動登入"
+
+[[message]]
+key = "Trying Axiom dummy auto login"
+[message.translations]
+japanese = "Axiom ダミー自動ログインを試行中"
+korean = "Axiom 더미 자동 로그인 시도 중"
+simplified_chinese = "正在尝试 Axiom 分身自动登录"
+traditional_chinese = "正在嘗試 Axiom 分身自動登入"
+
+[[message]]
+key = "Tune variable to value or show current value"
+[message.translations]
+japanese = "変数を指定値にチューニング、または現在値を表示"
+korean = "변수를 값으로 조정하거나 현재 값 표시"
+simplified_chinese = "将变量调到指定值，或显示当前值"
+traditional_chinese = "將變數調整到指定值，或顯示目前值"
+
+[[message]]
+key = "u = Snapshot latency"
+[message.translations]
+japanese = "u = スナップショットレイテンシ"
+korean = "u = 스냅샷 지연 시간"
+simplified_chinese = "u = 快照延迟"
+traditional_chinese = "u = 快照延遲"
+
+[[message]]
+key = "Unban a certain nickname"
+[message.translations]
+japanese = "特定のニックネームのBANを解除"
+korean = "특정 닉네임 차단 해제"
+simplified_chinese = "解封某个昵称"
+traditional_chinese = "解封某個暱稱"
+
+[[message]]
+key = "Unban all entries"
+[message.translations]
+japanese = "すべてのエントリーのBANを解除"
+korean = "모든 항목 차단 해제"
+simplified_chinese = "取消禁止所有条目"
+traditional_chinese = "解封所有條目"
+
+[[message]]
+key = "Unban ip range"
+[message.translations]
+japanese = "IP範囲のBANを解除"
+korean = "IP 범위 차단 해제"
+simplified_chinese = "解除 IP 段封禁"
+traditional_chinese = "解除 IP 段封禁"
+
+[[message]]
+key = "Unban ip/banlist entry"
+[message.translations]
+japanese = "IP/BANリストエントリーのBANを解除"
+korean = "IP/차단 목록 항목 차단 해제"
+simplified_chinese = "解除 IP/封禁列表条目"
+traditional_chinese = "解除 IP/封禁列表條目"
+
+[[message]]
+key = "Unbind all keys"
+[message.translations]
+japanese = "すべてのキーバインドを解除"
+korean = "모든 키 바인딩 해제"
+simplified_chinese = "解除所有按键的绑定"
+traditional_chinese = "解除所有按鍵的綁定"
+
+[[message]]
+key = "Unbind key"
+[message.translations]
+japanese = "キーバインドを解除"
+korean = "키 바인딩 해제"
+simplified_chinese = "解除按键绑定"
+traditional_chinese = "解除按鍵綁定"
+
+[[message]]
+key = "Uninvite player from team"
+[message.translations]
+japanese = "プレイヤーをチームから招待解除"
+korean = "팀에서 플레이어 초대 취소"
+simplified_chinese = "取消对玩家的队伍邀请"
+traditional_chinese = "取消對玩家的隊伍邀請"
+
+[[message]]
+key = "Unlock a team"
+[message.translations]
+japanese = "チームのロック解除"
+korean = "팀 잠금 해제"
+simplified_chinese = "解锁队伍"
+traditional_chinese = "解鎖隊伍"
+
+[[message]]
+key = "Unmute"
+[message.translations]
+japanese = "ミュート解除"
+korean = "음소거 해제"
+simplified_chinese = "取消静音"
+traditional_chinese = "取消靜音"
+
+[[message]]
+key = "Unmute emoticons"
+[message.translations]
+japanese = "絵文字のミュート解除"
+korean = "이모티콘 음소거 해제"
+simplified_chinese = "取消屏蔽表情"
+traditional_chinese = "取消屏蔽表情"
+
+[[message]]
+key = "Unmute player with client ID"
+[message.translations]
+japanese = "クライアントIDでプレイヤーのミュート解除"
+korean = "클라이언트 ID로 플레이어 음소거 해제"
+simplified_chinese = "使用客户端 ID 取消玩家静音"
+traditional_chinese = "使用客戶端 ID 取消玩家靜音"
+
+[[message]]
+key = "Unmute player with IP address"
+[message.translations]
+japanese = "IPアドレスでプレイヤーのミュート解除"
+korean = "IP 주소로 플레이어 음소거 해제"
+simplified_chinese = "按 IP 地址取消玩家静音"
+traditional_chinese = "按 IP 位址取消玩家靜音"
+
+[[message]]
+key = "Unmute player with list index"
+[message.translations]
+japanese = "リストインデックスでプレイヤーのミュート解除"
+korean = "목록 인덱스로 플레이어 음소거 해제"
+simplified_chinese = "按列表索引取消玩家静音"
+traditional_chinese = "按列表索引取消玩家靜音"
+
+[[message]]
+key = "Update a rcon key"
+[message.translations]
+japanese = "rcon キーを更新"
+korean = "rcon 키 업데이트"
+simplified_chinese = "更新 rcon 密钥"
+traditional_chinese = "更新 rcon 金鑰"
+
+[[message]]
+key = "Update a rcon key with prehashed data"
+[message.translations]
+japanese = "プリハッシュ化データで rcon キーを更新"
+korean = "사전 해시된 데이터로 rcon 키 업데이트"
+simplified_chinese = "使用预哈希数据更新 rcon 密钥"
+traditional_chinese = "使用預哈希資料更新 rcon 金鑰"
+
+[[message]]
+key = "Update notice"
+[message.translations]
+japanese = "更新のお知らせ"
+korean = "공지 업데이트"
+simplified_chinese = "更新提示"
+traditional_chinese = "更新提示"
+
+[[message]]
+key = "Uploading map data to GPU"
+[message.translations]
+japanese = "GPU にマップデータをアップロード中"
+korean = "맵 데이터를 GPU에 업로드 중"
+simplified_chinese = "正在将地图数据传输至显卡"
+traditional_chinese = "正在將地圖資料傳輸至顯示卡"
+
+[[message]]
+key = "Usage: %s %s"
+[message.translations]
+japanese = "使用方法: %s %s"
+korean = "사용법: %s %s"
+simplified_chinese = "用法：%s %s"
+traditional_chinese = "用法：%s %s"
+
+[[message]]
+key = "Use emote"
+[message.translations]
+japanese = "エモートを使用"
+korean = "이모트 사용"
+simplified_chinese = "使用表情"
+traditional_chinese = "使用表情"
+
+[[message]]
+key = "Use the mouse wheel on a hovered module to scale it by 5%"
+[message.translations]
+japanese = "ホバーしたモジュール上でマウスホイールを使用すると5%ずつ拡大縮小"
+korean = "마우스를 올린 모듈에서 휠을 사용하여 5%씩 크기 조정"
+simplified_chinese = "将鼠标悬停在 HUD 模块上并滚动滚轮可按 5% 缩放"
+traditional_chinese = "將滑鼠懸停在 HUD 模組上並滾動滾輪可按 5% 縮放"
+
+[[message]]
+key = "Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`"
+[message.translations]
+japanese = "お気に入りをグループ化するには、`add_favorite` の後にこれを使用します。`begin_favorite_group` で開始"
+korean = "`add_favorite` 후에 사용하여 즐겨찾기를 그룹화합니다. `begin_favorite_group`으로 시작"
+simplified_chinese = "在 `add_favorite` 之后使用它来对收藏夹进行分组。从“begin_favorite_group”开始"
+traditional_chinese = "在 `add_favorite` 之後使用它來對收藏進行分組。從「begin_favorite_group」開始"
+
+[[message]]
+key = "Use this before `add_favorite` to group favorites. End with `end_favorite_group`"
+[message.translations]
+japanese = "お気に入りをグループ化するには、`add_favorite` の前にこれを使用します。`end_favorite_group` で終了"
+korean = "`add_favorite` 전에 사용하여 즐겨찾기를 그룹화합니다. `end_favorite_group`으로 종료"
+simplified_chinese = "在“add_favorite”之前使用它来对收藏夹进行分组。以“end_favorite_group”结束"
+traditional_chinese = "在「add_favorite」之前使用它來對收藏進行分組。以「end_favorite_group」結束"
+
+[[message]]
+key = "v = Velocity"
+[message.translations]
+japanese = "v = Velocity（速度）"
+korean = "v = 속도"
+simplified_chinese = "v = Velocity（速度）"
+traditional_chinese = "v = 速度"
+
+[[message]]
+key = "View switch found (at offset) with given number"
+[message.translations]
+japanese = "指定された番号のスイッチ（オフセット付き）を表示"
+korean = "주어진 번호로 찾은 스위치 보기 (오프셋 위치)"
+simplified_chinese = "查看给定编号找到的开关（在偏移处）"
+traditional_chinese = "檢視指定編號找到的開關（在偏移處）"
+
+[[message]]
+key = "View tele found (at offset) with given number"
+[message.translations]
+japanese = "指定された番号のテレポート（オフセット付き）を表示"
+korean = "주어진 번호로 찾은 텔레포트 보기 (오프셋 위치)"
+simplified_chinese = "查看给定编号的 tele（带偏移）"
+traditional_chinese = "檢視指定編號的傳送器（帶偏移）"
+
+[[message]]
+key = "Vote a map by name"
+[message.translations]
+japanese = "名前でマップに投票"
+korean = "이름으로 맵 투표"
+simplified_chinese = "按名称对地图进行投票"
+traditional_chinese = "按名稱對地圖進行投票"
+
+[[message]]
+key = "Vote yes/no"
+[message.translations]
+japanese = "賛成/反対の投票"
+korean = "찬성/반대 투표"
+simplified_chinese = "投票赞成/反对"
+traditional_chinese = "投票贊成/反對"
+
+[[message]]
+key = "Waiting for snapshot"
+[message.translations]
+japanese = "スナップショット待機中"
+korean = "스냅샷 대기 중"
+simplified_chinese = "等待快照"
+traditional_chinese = "等待快照"
+
+[[message]]
+key = "Warmup"
+[message.translations]
+japanese = "ウォームアップ"
+korean = "워밍업"
+simplified_chinese = "热身"
+traditional_chinese = "暖身"
+
+[[message]]
+key = "Whether a switch is deactivated by default (otherwise activated)"
+[message.translations]
+japanese = "スイッチがデフォルトで無効かどうか（それ以外は有効）"
+korean = "스위치가 기본적으로 비활성화되어 있는지 여부 (그렇지 않으면 활성화)"
+simplified_chinese = "开关是否默认禁用（否则激活）"
+traditional_chinese = "開關是否預設停用（否則啟用）"
+
+[[message]]
+key = "Whether to show players at any distance (off by default), optional i = 0 for off else for on"
+[message.translations]
+japanese = "任意の距離のプレイヤーを表示するかどうか（デフォルトオフ）、オプション i = 0 でオフ、それ以外でオン"
+korean = "모든 거리에서 플레이어를 표시할지 여부 (기본값 꺼짐), 선택적 i = 0은 꺼짐, 그 외는 켜짐"
+simplified_chinese = "是否显示任意距离的玩家（默认关闭），可选 i = 0 为关闭，否则为打开"
+traditional_chinese = "是否顯示任意距離的玩家（預設關閉），可選 i = 0 為關閉，否則為開啟"
+
+[[message]]
+key = "Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only"
+[message.translations]
+japanese = "他のチームのプレイヤーを表示するかどうか（デフォルトオフ）、オプション i = 0 でオフ、i = 1 でオン、i = 2 で自チームのみ"
+korean = "다른 팀의 플레이어를 표시할지 여부 (기본값 꺼짐), 선택적 i = 0은 꺼짐, i = 1은 켜짐, i = 2는 자신의 팀만"
+simplified_chinese = "是否显示其他队伍玩家（默认关），可选 i = 0 关，i = 1 开，i = 2 仅本队"
+traditional_chinese = "是否顯示其他隊伍玩家（預設關），可選 i = 0 關，i = 1 開，i = 2 僅本隊"
+
+[[message]]
+key = "Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on"
+[message.translations]
+japanese = "観戦時に他のチームのプレイヤーを表示するかどうか（デフォルトオン）、オプション i = 0 でオフ、それ以外でオン"
+korean = "관전 시 다른 팀의 플레이어를 표시할지 여부 (기본값 켜짐), 선택적 i = 0은 꺼짐, 그 외는 켜짐"
+simplified_chinese = "旁观时是否显示其他队伍玩家（默认开），可选 i = 0 关，其他值开"
+traditional_chinese = "旁觀時是否顯示其他隊伍玩家（預設開），可選 i = 0 關，其他值開"
+
+[[message]]
+key = "Whether to use ninja jetpack or not. Makes jetpack look more awesome"
+[message.translations]
+japanese = "忍者ジェットパックを使用するかどうか。ジェットパックをよりかっこよく見せる"
+korean = "닌자 제트팩 사용 여부. 제트팩을 더 멋지게 보이게 함"
+simplified_chinese = "是否使用忍者喷气背包。让喷气背包看起来更酷"
+traditional_chinese = "是否使用忍者噴氣背包。讓噴氣背包看起來更酷"
+
+[[message]]
+key = "Which message to display on zone enter; use 0 for normal area"
+[message.translations]
+japanese = "ゾーン進入時に表示するメッセージ。0 で通常エリア"
+korean = "구역 진입 시 표시할 메시지; 0은 일반 구역"
+simplified_chinese = "输入区域时显示哪些消息；使用 0 表示正常区域"
+traditional_chinese = "進入區域時顯示哪些訊息；使用 0 表示正常區域"
+
+[[message]]
+key = "Which message to display on zone leave; use 0 for normal area"
+[message.translations]
+japanese = "ゾーン退出時に表示するメッセージ。0 で通常エリア"
+korean = "구역 이탈 시 표시할 메시지; 0은 일반 구역"
+simplified_chinese = "离开区域时显示哪些消息；使用 0 表示正常区域"
+traditional_chinese = "離開區域時顯示哪些訊息；使用 0 表示正常區域"
+
+[[message]]
+key = "Whisper"
+[message.translations]
+japanese = "ウィスパー"
+korean = "귓속말"
+simplified_chinese = "私聊"
+traditional_chinese = "私聊"
+
+[[message]]
+key = "Whisper something to someone (private message)"
+[message.translations]
+japanese = "誰かに何か Whisper（プライベートメッセージ）"
+korean = "누군가에게 귓속말 보내기 (개인 메시지)"
+simplified_chinese = "向某人发送私聊消息"
+traditional_chinese = "向某人傳送私聊訊息"
+
+[[message]]
+key = "Write local console contents to a text file"
+[message.translations]
+japanese = "ローカルコンソールの内容をテキストファイルに書き込み"
+korean = "로컬 콘솔 내용을 텍스트 파일에 쓰기"
+simplified_chinese = "将本地控制台内容写入文本文件"
+traditional_chinese = "將本地控制台內容寫入文字檔案"
+
+[[message]]
+key = "Write remote console contents to a text file"
+[message.translations]
+japanese = "リモートコンソールの内容をテキストファイルに書き込み"
+korean = "원격 콘솔 내용을 텍스트 파일에 쓰기"
+simplified_chinese = "将远程控制台内容写入文本文件"
+traditional_chinese = "將遠端控制台內容寫入文字檔案"
+
+[[message]]
+key = "x = DDNet CPU% / total CPU%"
+[message.translations]
+japanese = "x = DDNet CPU% / 合計 CPU%"
+korean = "x = DDNet CPU% / 전체 CPU%"
+simplified_chinese = "x = DDNet CPU% / 总 CPU%"
+traditional_chinese = "x = DDNet CPU% / 總 CPU%"
+
+[[message]]
+key = "y = DDNet memory usage"
+[message.translations]
+japanese = "y = DDNet メモリ使用量"
+korean = "y = DDNet 메모리 사용량"
+simplified_chinese = "y = DDNet 内存占用"
+traditional_chinese = "y = DDNet 記憶體使用量"
+
+[[message]]
+key = "You are already on the latest version"
+[message.translations]
+japanese = "すでに最新バージョンです"
+korean = "이미 최신 버전입니다"
+simplified_chinese = "当前已是最新版本"
+traditional_chinese = "目前已是最新版本"
+
+[[message]]
+key = "Your current version is outdated. Please update from the QQ group."
+[message.translations]
+japanese = "現在のバージョンは古いです。QQ グループから更新してください。"
+korean = "현재 버전이 오래되었습니다. QQ 그룹에서 업데이트하세요."
+simplified_chinese = "当前版本不是最新版，请前往 QQ 群更新最新版"
+traditional_chinese = "您目前版本不是最新版，請前往 QQ 群組更新最新版"
+
+[[message]]
+key = "z = Zoom"
+[message.translations]
+japanese = "z = Zoom（ズーム）"
+korean = "z = 확대/축소"
+simplified_chinese = "z = Zoom（缩放）"
+traditional_chinese = "z = 縮放"
+
+[[message]]
+key = "Zoom decrease"
+[message.translations]
+japanese = "ズーム縮小"
+korean = "축소"
+simplified_chinese = "缩小视角"
+traditional_chinese = "縮小視角"
+
+[[message]]
+key = "Zoom increase"
+[message.translations]
+japanese = "ズーム拡大"
+korean = "확대"
+simplified_chinese = "放大视角"
+traditional_chinese = "放大視角"
 
 [[message]]
 key = "Active"
 context = "Auto camera"
 [message.translations]
+japanese = "アクティブ"
+korean = "활성"
 simplified_chinese = "已激活"
+traditional_chinese = "已啟用"
 
 [[message]]
 key = "Disabled"
 context = "Auto camera"
 [message.translations]
+japanese = "無効"
+korean = "비활성화됨"
 simplified_chinese = "已禁用"
+traditional_chinese = "已停用"
 
 [[message]]
 key = "Enabled"
 context = "Auto camera"
 [message.translations]
+japanese = "有効"
+korean = "활성화됨"
 simplified_chinese = "已启用"
+traditional_chinese = "已啟用"
 
 [[message]]
 key = "Inactive"
 context = "Auto camera"
 [message.translations]
+japanese = "非アクティブ"
+korean = "비활성"
 simplified_chinese = "未激活"
+traditional_chinese = "未啟用"
 
 [[message]]
 key = "Unavailable for this player"
 context = "Auto camera"
 [message.translations]
+japanese = "このプレイヤーには利用不可"
+korean = "이 플레이어에게 사용 불가"
 simplified_chinese = "此玩家不可用"
+traditional_chinese = "此玩家不可用"
 
 [[message]]
 key = "A render command failed. Try to update your GPU drivers."
 context = "Graphics error"
 [message.translations]
+japanese = "レンダリングコマンドが失敗しました。GPUドライバーを更新してみてください。"
+korean = "렌더 명령이 실패했습니다. GPU 드라이버를 업데이트해 보세요."
 simplified_chinese = "渲染指令错误。请尝试更新显卡驱动程序"
+traditional_chinese = "渲染指令錯誤。請嘗試更新顯卡驅動程式"
 
 [[message]]
 key = "An error during command recording occurred. Try to update your GPU drivers."
 context = "Graphics error"
 [message.translations]
+japanese = "コマンド記録中にエラーが発生しました。GPUドライバーを更新してみてください。"
+korean = "명령 기록 중 오류가 발생했습니다. GPU 드라이버를 업데이트해 보세요."
 simplified_chinese = "指令记录期间检测到错误。请尝试更新显卡驱动程序。"
+traditional_chinese = "指令記錄期間偵測到錯誤。請嘗試更新顯卡驅動程式。"
 
 [[message]]
 key = "Could not initialize the given graphics backend, reverting to the default backend now."
 context = "Graphics error"
 [message.translations]
+japanese = "指定されたグラフィックスバックエンドを初期化できませんでした。デフォルトのバックエンドに戻します。"
+korean = "지정된 그래픽 백엔드를 초기화할 수 없어 기본 백엔드로 되돌립니다."
 simplified_chinese = "无法初始化当前配置的图形后端，正在将配置回退至默认图形后端。"
+traditional_chinese = "無法初始化當前配置的圖形後端，正在將配置回退至預設圖形後端。"
 
 [[message]]
 key = "Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card."
 context = "Graphics error"
 [message.translations]
+japanese = "指定されたグラフィックスバックエンドを初期化できませんでした。おそらく、内蔵グラフィックスのドライバーがインストールされていないためです。"
+korean = "지정된 그래픽 백엔드를 초기화할 수 없습니다. 내장 그래픽 드라이버가 설치되지 않았을 수 있습니다."
 simplified_chinese = "无法初始化当前配置的图形后端，请检查此电脑是否已安装集成显卡的驱动程序。"
+traditional_chinese = "無法初始化當前配置的圖形後端，請檢查此電腦是否已安裝內建顯示卡的驅動程式。"
 
 [[message]]
 key = "Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again."
 context = "Graphics error"
 [message.translations]
+japanese = "初期化に失敗しました。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。"
+korean = "초기화 중 실패했습니다. 설정 디렉토리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경한 후 다시 시도하세요."
 simplified_chinese = "初始化失败。请尝试打开配置目录中的设置文件（settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。"
+traditional_chinese = "初始化失敗。請嘗試打開配置目錄中的設定檔（settings_ddnet.cfg）並將「gfx_backend」設定為「gfx_backend OpenGL」或「gfx_backend Vulkan」再重試。"
 
 [[message]]
 key = "Failed to swap framebuffers. Try to update your GPU drivers."
 context = "Graphics error"
 [message.translations]
+japanese = "フレームバッファのスワップに失敗しました。GPUドライバーを更新してみてください。"
+korean = "프레임버퍼 교체 실패. GPU 드라이버를 업데이트해 보세요."
 simplified_chinese = "帧缓存交替失败。请尝试更新显卡驱动程序。"
+traditional_chinese = "幀緩衝區交換失敗。請嘗試更新顯卡驅動程式。"
 
 [[message]]
 key = "Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution."
 context = "Graphics error"
 [message.translations]
+japanese = "VRAM が不足しています。'cl_skins_loaded_max' を低い値に設定するか、カスタムアセット（スキン、エンティティなど）、特に高解像度のものを削除してみてください。"
+korean = "VRAM 부족. 'cl_skins_loaded_max' 값을 낮추거나 사용자 정의 에셋(스킨, 엔티티 등), 특히 고해상도 에셋을 제거해 보세요."
 simplified_chinese = "显存不足。请尝试将 'cl_skins_loaded_max' 设置为较低的值或移除自定义资源（皮肤、实体等），尤其是高分辨率的资源。"
+traditional_chinese = "視訊記憶體不足。請嘗試將 'cl_skins_loaded_max' 設定為較低的值或移除自訂資源（皮膚、實體等），尤其是高解析度的資源。"
 
 [[message]]
 key = "Submitting the render commands failed. Try to update your GPU drivers."
 context = "Graphics error"
 [message.translations]
+japanese = "レンダリングコマンドの送信に失敗しました。GPUドライバーを更新してみてください。"
+korean = "렌더 명령 제출에 실패했습니다. GPU 드라이버를 업데이트해 보세요."
 simplified_chinese = "渲染指令提交失败。请尝试更新显卡驱动程序。"
+traditional_chinese = "渲染指令提交失敗。請嘗試更新顯卡驅動程式。"
 
 [[message]]
 key = "Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again."
 context = "Graphics error"
 [message.translations]
+japanese = "不明なエラー。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。"
+korean = "알 수 없는 오류입니다. 설정 디렉터리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요."
 simplified_chinese = "未知错误。请尝试打开配置目录中的设置文件（settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。"
+traditional_chinese = "未知錯誤。請嘗試打開配置目錄中的設定檔（settings_ddnet.cfg）並將「gfx_backend」設定為「gfx_backend OpenGL」或「gfx_backend Vulkan」再重試。"
 
 [[message]]
 key = "Press Esc or Tab to dismiss…"
 context = "Important alert message"
 [message.translations]
+japanese = "Esc または Tab キーを押して閉じる…"
+korean = "Esc 또는 Tab을 눌러 닫기…"
 simplified_chinese = "按 Esc 或 Tab 关闭…"
+traditional_chinese = "按 Esc 或 Tab 關閉…"
 
 [[message]]
 key = "Body"
 context = "skins"
 [message.translations]
+japanese = "ボディ"
+korean = "몸통"
 simplified_chinese = "身体"
+traditional_chinese = "身體"
 
 [[message]]
 key = "Decoration"
 context = "skins"
 [message.translations]
+japanese = "デコレーション"
+korean = "장식"
 simplified_chinese = "装饰"
+traditional_chinese = "裝飾"
 
 [[message]]
 key = "Eyes"
 context = "skins"
 [message.translations]
+japanese = "目"
+korean = "눈"
 simplified_chinese = "眼睛"
+traditional_chinese = "眼睛"
 
 [[message]]
 key = "Feet"
 context = "skins"
 [message.translations]
+japanese = "足"
+korean = "발"
 simplified_chinese = "脚"
+traditional_chinese = "腳"
 
 [[message]]
 key = "Hands"
 context = "skins"
 [message.translations]
+japanese = "手"
+korean = "손"
 simplified_chinese = "手"
+traditional_chinese = "手"
 
 [[message]]
 key = "Marking"
 context = "skins"
 [message.translations]
+japanese = "マーキング"
+korean = "표시"
 simplified_chinese = "标记"
+traditional_chinese = "標記"
 
 [[message]]
 key = "Following %d: %s"
 context = "Spectating"
 [message.translations]
+japanese = "%d をフォロー中: %s"
+korean = "관전 중 %d: %s"
 simplified_chinese = "正在旁观 %d: %s"
+traditional_chinese = "正在旁觀 %d: %s"
 
 [[message]]
 key = "Following %s"
 context = "Spectating"
 [message.translations]
+japanese = "%s をフォロー中"
+korean = "관전 중 %s"
 simplified_chinese = "正在旁观 %s"
+traditional_chinese = "正在旁觀 %s"
 
 [[message]]
 key = "AUTO"
 context = "Spectating Camera Mode Icon"
 [message.translations]
+japanese = "自動"
+korean = "자동"
 simplified_chinese = "自动"
+traditional_chinese = "自動"
 
 [[message]]
 key = "%d others…"
 context = "Spectators"
 [message.translations]
+japanese = "その他 %d 人…"
+korean = "%d 명 더…"
 simplified_chinese = "%d 其他…"
+traditional_chinese = "%d 其他…"
 
 [[message]]
 key = "%d\\n(%d/%d)"
 context = "Team and size"
 [message.translations]
+japanese = "%d\\n(%d/%d)"
+korean = "%d\\n(%d/%d)"
 simplified_chinese = "%d\\n(%d/%d)"
+traditional_chinese = "%d\\n(%d/%d)"

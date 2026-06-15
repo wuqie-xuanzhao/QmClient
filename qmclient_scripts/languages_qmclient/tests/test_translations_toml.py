@@ -27,6 +27,34 @@ class I18nTomlTest(unittest.TestCase):
             parsed["message"][0]["translations"]["simplified_chinese"], "开始游戏"
         )
 
+    def test_dump_module_keeps_translation_lines_contiguous(self):
+        text = i18n_store.dump_module(
+            [
+                (
+                    i18n_store.Message("Anti Ping Smoothing"),
+                    {
+                        "simplified_chinese": "平滑预测",
+                        "japanese": "アンチピングスムージング",
+                        "traditional_chinese": "預測量",
+                        "korean": "양",
+                    },
+                )
+            ]
+        )
+
+        self.assertNotIn(
+            'simplified_chinese = "平滑预测"\n\njapanese = ',
+            text,
+        )
+        self.assertIn(
+            '[message.translations]\n'
+            'japanese = "アンチピングスムージング"\n'
+            'korean = "양"\n'
+            'simplified_chinese = "平滑预测"\n'
+            'traditional_chinese = "預測量"',
+            text,
+        )
+
     def test_module_name_for_source_uses_code_boundaries(self):
         self.assertEqual(
             i18n_store.module_name_for_source(

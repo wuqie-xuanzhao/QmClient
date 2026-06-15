@@ -1,254 +1,407 @@
 [[message]]
 key = "%s translating to %s"
 [message.translations]
+japanese = "%sから%sへの翻訳"
+korean = "%s이(가) %s(으)로 번역 중"
 simplified_chinese = "%s 正在翻译为 %s"
+traditional_chinese = "%s 正在翻譯為 %s"
 
 [[message]]
 key = "%s translating to %s before send"
 [message.translations]
+japanese = "%sから%sへの翻訳（送信前）"
+korean = "%s이(가) %s(으)로 번역 후 전송"
 simplified_chinese = "%s 正在翻译为 %s 后发送"
+traditional_chinese = "%s 正在翻譯為 %s 後發送"
 
 [[message]]
 key = "%s translating to %s failed: %s"
 [message.translations]
+japanese = "%sから%sへの翻訳失敗: %s"
+korean = "%s을(를) %s(으)로 번역 실패: %s"
 simplified_chinese = "%s 翻译为 %s 失败: %s"
+traditional_chinese = "%s 翻譯為 %s 失敗: %s"
 
 [[message]]
 key = "Add one"
 [message.translations]
+japanese = "{\"key\": \"Add one\", \"context\": \"\", \"translation\": \"追加\", \"notes\": \"\"}"
+korean = "하나 추가"
 simplified_chinese = "加一"
+traditional_chinese = "加一"
 
 [[message]]
 key = "Add to blocked words"
 [message.translations]
+japanese = "{\"key\": \"Add to blocked words\", \"context\": \"\", \"translation\": \"ブロックワードに追加\", \"notes\": \"\"}"
+korean = "차단 단어에 추가"
 simplified_chinese = "添加到屏蔽词"
+traditional_chinese = "添加到屏蔽詞"
 
 [[message]]
 key = "All"
 [message.translations]
+japanese = "すべて"
+korean = "전체"
 simplified_chinese = "全体"
+traditional_chinese = "全體"
 
 [[message]]
 key = "Auto-translate incoming messages"
 [message.translations]
+japanese = "受信メッセージの自動翻訳"
+korean = "수신 메시지 자동 번역"
 simplified_chinese = "自动翻译收到的消息"
+traditional_chinese = "自動翻譯收到的訊息"
 
 [[message]]
 key = "Auto-translate outgoing messages"
 [message.translations]
+japanese = "送信メッセージの自動翻訳"
+korean = "발신 메시지 자동 번역"
 simplified_chinese = "自动翻译发送的消息"
+traditional_chinese = "自動翻譯發送的訊息"
 
 [[message]]
 key = "Button - Disabled"
 [message.translations]
+japanese = "ボタン - 無効"
+korean = "버튼 - 비활성화"
 simplified_chinese = "按钮 - 未启用"
+traditional_chinese = "按鈕 - 未啟用"
 
 [[message]]
 key = "Button - Enabled"
 [message.translations]
+japanese = "ボタン - 有効"
+korean = "버튼 - 활성화"
 simplified_chinese = "按钮 - 已启用"
+traditional_chinese = "按鈕 - 已啟用"
 
 [[message]]
 key = "Clear chat messages"
 [message.translations]
+japanese = "チャットメッセージをクリア"
+korean = "채팅 메시지 지우기"
 simplified_chinese = "清除聊天消息"
+traditional_chinese = "清除聊天訊息"
 
 [[message]]
 key = "Copy"
 [message.translations]
+japanese = "コピー"
+korean = "복사"
 simplified_chinese = "复制"
+traditional_chinese = "複製"
 
 [[message]]
 key = "Copy name"
 [message.translations]
+japanese = "名前をコピー"
+korean = "이름 복사"
 simplified_chinese = "复制名字"
+traditional_chinese = "複製名字"
 
 [[message]]
 key = "Do not translate server messages"
 [message.translations]
+japanese = "サーバーメッセージを翻訳しない"
+korean = "서버 메시지 번역 안 함"
 simplified_chinese = "不翻译服务器消息"
+traditional_chinese = "不翻譯伺服器訊息"
 
 [[message]]
 key = "Echo the text in chat window"
 [message.translations]
+japanese = "チャットウィンドウにテキストをエコー"
+korean = "채팅창에 텍스트 출력"
 simplified_chinese = "在聊天窗口输出文本"
+traditional_chinese = "在聊天視窗輸出文字"
 
 [[message]]
 key = "Enable chat with all/team mode"
 [message.translations]
+japanese = "全員/チームモードのチャットを有効にする"
+korean = "전체/팀 채팅 모드 활성화"
 simplified_chinese = "启用与所有人/队伍聊天模式"
+traditional_chinese = "啟用與所有人/隊伍聊天模式"
 
 [[message]]
 key = "FTAPI"
 [message.translations]
+japanese = "FTAPI"
+korean = "FTAPI"
 simplified_chinese = "FTAPI"
+traditional_chinese = "FTAPI"
 
 [[message]]
 key = "FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed."
 [message.translations]
+japanese = "FTAPIの自動翻訳は過負荷防止のため無効になっています。必要に応じて設定で有効にしてください。"
+korean = "과부하 방지를 위해 FTAPI 자동 번역이 비활성화되었습니다. 필요 시 설정에서 활성화하세요."
 simplified_chinese = "FTAPI 自动翻译已禁用以防止过载。如需启用请在设置中配置。"
+traditional_chinese = "FTAPI 自動翻譯已禁用以防止過載。如需啟用請在設定中配置。"
 
 [[message]]
 key = "Incoming language"
 [message.translations]
+japanese = "受信言語"
+korean = "수신 언어"
 simplified_chinese = "接收语言"
+traditional_chinese = "接收語言"
 
 [[message]]
 key = "Invalid ID"
 [message.translations]
+japanese = "無効なID"
+korean = "잘못된 ID"
 simplified_chinese = "无效的 ID"
+traditional_chinese = "無效的 ID"
 
 [[message]]
 key = "Invalid translation backend"
 [message.translations]
+japanese = "無効な翻訳バックエンド"
+korean = "잘못된 번역 백엔드"
 simplified_chinese = "无效的翻译后端"
+traditional_chinese = "無效的翻譯後端"
 
 [[message]]
 key = "LibreTranslate"
 [message.translations]
+japanese = "LibreTranslate"
+korean = "LibreTranslate"
 simplified_chinese = "Libre 翻译"
+traditional_chinese = "Libre 翻譯"
 
 [[message]]
 key = "LLM API"
 [message.translations]
+japanese = "LLM API"
+korean = "LLM API"
 simplified_chinese = "LLM API"
+traditional_chinese = "LLM API"
 
 [[message]]
 key = "Menu background"
 [message.translations]
+japanese = "メニューの背景"
+korean = "메뉴 배경"
 simplified_chinese = "菜单背景"
+traditional_chinese = "選單背景"
 
 [[message]]
 key = "Menu option - normal"
 [message.translations]
+japanese = "メニューオプション - 通常"
+korean = "메뉴 옵션 - 일반"
 simplified_chinese = "菜单选项 - 普通"
+traditional_chinese = "選單選項 - 普通"
 
 [[message]]
 key = "Menu option - selected"
 [message.translations]
+japanese = "メニューオプション - 選択"
+korean = "메뉴 옵션 - 선택됨"
 simplified_chinese = "菜单选项 - 选中"
+traditional_chinese = "選單選項 - 選中"
 
 [[message]]
 key = "Mute player"
 [message.translations]
+japanese = "プレイヤーをミュート"
+korean = "플레이어 음소거"
 simplified_chinese = "屏蔽玩家"
+traditional_chinese = "屏蔽玩家"
 
 [[message]]
 key = "No chat message to translate"
 [message.translations]
+japanese = "翻訳するチャットメッセージがありません"
+korean = "번역할 채팅 메시지 없음"
 simplified_chinese = "没有可翻译的消息"
+traditional_chinese = "沒有可翻譯的訊息"
 
 [[message]]
 key = "Off"
 [message.translations]
+japanese = "オフ"
+korean = "끄기"
 simplified_chinese = "关"
+traditional_chinese = "關"
 
 [[message]]
 key = "On"
 [message.translations]
+japanese = "オン"
+korean = "켜기"
 simplified_chinese = "开"
+traditional_chinese = "開"
 
 [[message]]
 key = "Outgoing language"
 [message.translations]
+japanese = "送信言語"
+korean = "발신 언어"
 simplified_chinese = "发送语言"
+traditional_chinese = "發送語言"
 
 [[message]]
 key = "Reply"
 [message.translations]
+japanese = "返信"
+korean = "답장"
 simplified_chinese = "回复"
+traditional_chinese = "回覆"
 
 [[message]]
 key = "Right-click to disable auto-translate"
 [message.translations]
+japanese = "右クリックで自動翻訳を無効化"
+korean = "우클릭하여 자동 번역 비활성화"
 simplified_chinese = "右键关闭自动翻译"
+traditional_chinese = "右鍵關閉自動翻譯"
 
 [[message]]
 key = "Right-click to enable auto-translate"
 [message.translations]
+japanese = "右クリックで自動翻訳を有効化"
+korean = "우클릭하여 자동 번역 활성화"
 simplified_chinese = "右键开启自动翻译"
+traditional_chinese = "右鍵開啟自動翻譯"
 
 [[message]]
 key = "Say in chat"
 [message.translations]
+japanese = "チャットで発言"
+korean = "채팅으로 말하기"
 simplified_chinese = "在聊天中说"
+traditional_chinese = "在聊天中說"
 
 [[message]]
 key = "Say in team chat"
 [message.translations]
+japanese = "チームチャットで発言"
+korean = "팀 채팅으로 말하기"
 simplified_chinese = "在队伍聊天中说"
+traditional_chinese = "在隊伍聊天中說"
 
 [[message]]
 key = "Team"
 [message.translations]
+japanese = "チーム"
+korean = "팀"
 simplified_chinese = "队伍"
+traditional_chinese = "隊伍"
 
 [[message]]
 key = "Tencent Cloud"
 [message.translations]
+japanese = "テンセントクラウド"
+korean = "Tencent Cloud"
 simplified_chinese = "腾讯云"
+traditional_chinese = "騰訊雲"
 
 [[message]]
 key = "This ID is not connected"
 [message.translations]
+japanese = "このIDは接続されていません"
+korean = "이 ID는 연결되지 않음"
 simplified_chinese = "该 ID 未连接"
+traditional_chinese = "該 ID 未連線"
 
 [[message]]
 key = "Too many translation tasks"
 [message.translations]
+japanese = "翻訳タスクが多すぎます"
+korean = "번역 작업이 너무 많음"
 simplified_chinese = "翻译任务过多"
+traditional_chinese = "翻譯任務過多"
 
 [[message]]
 key = "Translate last message (of a given name)"
 [message.translations]
+japanese = "（指定された名前の）最後のメッセージを翻訳"
+korean = "마지막 메시지 번역 (지정된 이름)"
 simplified_chinese = "翻译最后一条消息（给定名称）"
+traditional_chinese = "翻譯最後一條訊息（給定名稱）"
 
 [[message]]
 key = "Translate last message of the person with this id"
 [message.translations]
+japanese = "このIDの人の最後のメッセージを翻訳"
+korean = "이 ID를 가진 사람의 마지막 메시지 번역"
 simplified_chinese = "翻译具有此 ID 的人的最后一条消息"
+traditional_chinese = "翻譯具有此 ID 的人的最後一條訊息"
 
 [[message]]
 key = "Translated text hidden due to streamer mode"
 [message.translations]
+japanese = "ストリーマーモードのため翻訳テキストは非表示"
+korean = "스트리머 모드로 인해 번역 텍스트 숨김"
 simplified_chinese = "由于主播模式，隐藏翻译文本"
+traditional_chinese = "由於主播模式，隱藏翻譯文字"
 
 [[message]]
 key = "Translating to %s..."
 [message.translations]
+japanese = "%sに翻訳中..."
+korean = "%s(으)로 번역 중..."
 simplified_chinese = "正在翻译为 %s..."
+traditional_chinese = "正在翻譯為 %s..."
 
 [[message]]
 key = "Translation backend invalid, sending original"
 [message.translations]
+japanese = "翻訳バックエンドが無効なため、原文を送信"
+korean = "번역 백엔드가 유효하지 않아 원문 전송"
 simplified_chinese = "翻译后端无效，发送原文"
+traditional_chinese = "翻譯後端無效，發送原文"
 
 [[message]]
 key = "Translation queue full, sending original"
 [message.translations]
+japanese = "翻訳キューがいっぱいのため、原文を送信"
+korean = "번역 큐가 가득 차서 원문 전송"
 simplified_chinese = "翻译队列已满，发送原文"
+traditional_chinese = "翻譯佇列已滿，發送原文"
 
 [[message]]
 key = "Translation service"
 [message.translations]
+japanese = "翻訳サービス"
+korean = "번역 서비스"
 simplified_chinese = "翻译服务"
+traditional_chinese = "翻譯服務"
 
 [[message]]
 key = "Translation Settings"
 [message.translations]
+japanese = "翻訳設定"
+korean = "번역 설정"
 simplified_chinese = "翻译设置"
+traditional_chinese = "翻譯設定"
 
 [[message]]
 key = "⚠️ LibreTranslate API Key not set"
 [message.translations]
+japanese = "⚠️ LibreTranslate APIキーが設定されていません"
+korean = "⚠️ LibreTranslate API 키가 설정되지 않음"
 simplified_chinese = "⚠️ Libre 翻译 API 密钥未设置"
+traditional_chinese = "⚠️ Libre 翻譯 API 金鑰未設定"
 
 [[message]]
 key = "⚠️ LLM API Key not configured"
 [message.translations]
+japanese = "⚠️ LLM APIキーが設定されていません"
+korean = "⚠️ LLM API 키가 구성되지 않음"
 simplified_chinese = "⚠️ LLM API 密钥未配置"
+traditional_chinese = "⚠️ LLM API 金鑰未設定"
 
 [[message]]
 key = "⚠️ Tencent Cloud API not configured"
 [message.translations]
+japanese = "⚠️ Tencent Cloud APIが設定されていません"
+korean = "⚠️ Tencent Cloud API가 구성되지 않음"
 simplified_chinese = "⚠️ 腾讯云 API 密钥未配置"
+traditional_chinese = "⚠️ 騰訊雲 API 金鑰未設定"

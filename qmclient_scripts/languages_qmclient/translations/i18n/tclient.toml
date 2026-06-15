@@ -1,1562 +1,2493 @@
 [[message]]
 key = " min"
 [message.translations]
+japanese = "分"
+korean = "분"
 simplified_chinese = " 分钟"
+traditional_chinese = "分鐘"
 
 [[message]]
 key = " seconds"
 [message.translations]
+japanese = "秒"
+korean = "초"
 simplified_chinese = " 秒"
+traditional_chinese = "秒"
 
 [[message]]
 key = " seconds (never)"
 [message.translations]
+japanese = "秒数（決して）"
+korean = "초 (절대로)"
 simplified_chinese = " 秒 (不消失)"
+traditional_chinese = "秒（不消失）"
 
 [[message]]
 key = "%ds left"
 [message.translations]
+japanese = "残り %d 秒"
+korean = "%d초 남음"
 simplified_chinese = "还剩 %d 秒"
+traditional_chinese = "還剩 %d 秒"
 
 [[message]]
 key = "%s not found"
 [message.translations]
+japanese = "%s が見つかりません"
+korean = "%s를 찾을 수 없습니다."
 simplified_chinese = "未找到 %s"
+traditional_chinese = "未找到 %s"
 
 [[message]]
 key = "+%d more codes"
 [message.translations]
+japanese = "さらに %d 個のコード"
+korean = "+%d 개의 코드 더 있음"
 simplified_chinese = "还有 %d 个代码"
+traditional_chinese = "還有 %d 個代碼"
 
 [[message]]
 key = "Add [group] [clan] [reason]:"
 [message.translations]
+japanese = "[グループ] [クラン] [理由] を追加:"
+korean = "추가 [그룹] [클랜] [사유]:"
 simplified_chinese = "添加 [组名] [战队名] [原因]"
+traditional_chinese = "新增 [組名] [戰隊名] [原因]："
 
 [[message]]
 key = "Add [group] [name] [reason]:"
 [message.translations]
+japanese = "[グループ] [名前] [理由] を追加:"
+korean = "추가 [그룹] [이름] [사유]:"
 simplified_chinese = "添加 [组名] [玩家名] [原因]"
+traditional_chinese = "新增 [組名] [玩家名] [原因]："
 
 [[message]]
 key = "Add a bind to the bindwheel"
 [message.translations]
+japanese = "バインドホイールにバインドを追加"
+korean = "바인드 휠에 바인드 추가"
 simplified_chinese = "向绑定轮盘添加绑定"
+traditional_chinese = "向綁定輪盤新增綁定"
 
 [[message]]
 key = "Add a chat bind"
 [message.translations]
+japanese = "チャットバインドを追加"
+korean = "채팅 바인드 추가"
 simplified_chinese = "添加聊天绑定"
+traditional_chinese = "新增聊天綁定"
 
 [[message]]
 key = "Add a clan war entry"
 [message.translations]
+japanese = "クラン戦エントリーを追加"
+korean = "클랜 워 항목 추가"
 simplified_chinese = "添加战队敌对条目"
+traditional_chinese = "新增戰隊敵對條目"
 
 [[message]]
 key = "Add a map to favorites"
 [message.translations]
+japanese = "マップをお気に入りに追加"
+korean = "맵을 즐겨찾기에 추가"
 simplified_chinese = "将地图添加到收藏夹"
+traditional_chinese = "將地圖新增到收藏夾"
 
 [[message]]
 key = "Add a name war entry"
 [message.translations]
+japanese = "名前戦エントリーを追加"
+korean = "이름 워 항목 추가"
 simplified_chinese = "添加名字敌对条目"
+traditional_chinese = "新增名字敵對條目"
 
 [[message]]
 key = "Add a profile"
 [message.translations]
+japanese = "プロフィールを追加"
+korean = "프로필 추가"
 simplified_chinese = "添加个人资料"
+traditional_chinese = "新增個人資料"
 
 [[message]]
 key = "Add Bind"
 [message.translations]
+japanese = "バインドを追加"
+korean = "바인드 추가"
 simplified_chinese = "添加绑定"
+traditional_chinese = "新增綁定"
 
 [[message]]
 key = "Add Entry"
 [message.translations]
+japanese = "エントリーを追加"
+korean = "항목 추가"
 simplified_chinese = "添加条目"
+traditional_chinese = "新增條目"
 
 [[message]]
 key = "Add Group"
 [message.translations]
+japanese = "グループを追加"
+korean = "그룹 추가"
 simplified_chinese = "添加群组"
+traditional_chinese = "新增群組"
 
 [[message]]
 key = "Add Item"
 [message.translations]
+japanese = "アイテムを追加"
+korean = "아이템 추가"
 simplified_chinese = "添加项"
+traditional_chinese = "新增項"
 
 [[message]]
 key = "Add team clan:"
 [message.translations]
+japanese = "チームクランを追加:"
+korean = "팀 클랜 추가:"
 simplified_chinese = "添加友好战队:"
+traditional_chinese = "新增友好戰隊："
 
 [[message]]
 key = "Add team name:"
 [message.translations]
+japanese = "チーム名を追加:"
+korean = "팀 이름 추가:"
 simplified_chinese = "添加友好玩家:"
+traditional_chinese = "新增友好玩家："
 
 [[message]]
 key = "Add war clan:"
 [message.translations]
+japanese = "敵対クランを追加:"
+korean = "워 클랜 추가:"
 simplified_chinese = "添加敌对战队:"
+traditional_chinese = "新增敵對戰隊："
 
 [[message]]
 key = "Add war name:"
 [message.translations]
+japanese = "敵対名を追加:"
+korean = "워 이름 추가:"
 simplified_chinese = "添加敌对玩家:"
+traditional_chinese = "新增敵對玩家："
 
 [[message]]
 key = "Adds a specific war entry"
 [message.translations]
+japanese = "特定の戦争エントリーを追加します"
+korean = "특정 워 항목 추가"
 simplified_chinese = "添加指定敌对条目"
+traditional_chinese = "新增指定敵對條目"
 
 [[message]]
 key = "Adds default chat binds"
 [message.translations]
+japanese = "デフォルトのチャットバインドを追加します"
+korean = "기본 채팅 바인드 추가"
 simplified_chinese = "添加默认聊天绑定"
+traditional_chinese = "新增預設聊天綁定"
 
 [[message]]
 key = "Adjust your prediction margin while frozen"
 [message.translations]
+japanese = "凍結時の予測マージンを調整"
+korean = "얼었을 때 예측 여백 조정"
 simplified_chinese = "调整冻结时的预测量"
+traditional_chinese = "調整凍結時的預測邊際"
 
 [[message]]
 key = "After Load"
 [message.translations]
+japanese = "ロード後"
+korean = "로드 후"
 simplified_chinese = "加载后"
+traditional_chinese = "載入後"
 
 [[message]]
 key = "Agree"
 [message.translations]
+japanese = "同意"
+korean = "동의"
 simplified_chinese = "同意"
+traditional_chinese = "同意"
 
 [[message]]
 key = "Allow Duplicate Entries"
 [message.translations]
+japanese = "重複エントリーを許可"
+korean = "중복 항목 허용"
 simplified_chinese = "允许重复条目"
+traditional_chinese = "允許重複條目"
 
 [[message]]
 key = "Amount"
 [message.translations]
+japanese = "量"
+korean = "양"
 simplified_chinese = "预测量"
+traditional_chinese = "預測量"
 
 [[message]]
 key = "Anti Latency Tools"
 [message.translations]
+japanese = "アンチラグツール"
+korean = "지연 보정 도구"
 simplified_chinese = "延迟补偿工具"
+traditional_chinese = "延遲補償工具"
 
 [[message]]
 key = "Anti Ping Smoothing"
 [message.translations]
+japanese = "アンチピングスムージング"
+korean = "핑 스무딩"
 simplified_chinese = "平滑预测"
+traditional_chinese = "平滑預測"
 
 [[message]]
 key = "Apply a saved profile by 1-based index to the current tee"
 [message.translations]
+japanese = "保存したプロファイルを1から始まるインデックスで現在のTeeに適用"
+korean = "1부터 시작하는 인덱스로 저장된 프로필을 현재 티에 적용"
 simplified_chinese = "按当前角色通过序号应用模板"
+traditional_chinese = "將已儲存的設定檔按 1 起始的索引套用到當前 tee"
 
 [[message]]
 key = "Apply Changes"
 [message.translations]
+japanese = "変更を適用"
+korean = "변경 사항 적용"
 simplified_chinese = "应用更改"
+traditional_chinese = "套用變更"
 
 [[message]]
 key = "Are you sure that you want to remove '%s' from your war groups?"
 [message.translations]
+japanese = "敵対グループから '%s' を削除してもよろしいですか？"
+korean = "'%s'을(를) 워 그룹에서 제거하시겠습니까?"
 simplified_chinese = "您确定要从您的敌对群组中删除 '%s' 吗？"
+traditional_chinese = "您確定要從敵對群組中移除 '%s' 嗎？"
 
 [[message]]
 key = "Attempt to change your name when near finish"
 [message.translations]
+japanese = "終了間際に名前を変更しようとする"
+korean = "결승선 근처에서 이름 변경 시도"
 simplified_chinese = "过终点前尝试改名"
+traditional_chinese = "接近終點時嘗試改名"
 
 [[message]]
 key = "Auto agree vote"
 [message.translations]
+japanese = "投票に自動同意"
+korean = "자동 투표 동의"
 simplified_chinese = "自动同意投票"
+traditional_chinese = "自動同意投票"
 
 [[message]]
 key = "Auto execute"
 [message.translations]
+japanese = "自動実行"
+korean = "자동 실행"
 simplified_chinese = "自动执行"
+traditional_chinese = "自動執行"
 
 [[message]]
 key = "Auto map vote"
 [message.translations]
+japanese = "自動マップ投票"
+korean = "자동 맵 투표"
 simplified_chinese = "自动地图投票"
+traditional_chinese = "自動地圖投票"
 
 [[message]]
 key = "Auto reject vote"
 [message.translations]
+japanese = "投票を自動拒否"
+korean = "자동 투표 거부"
 simplified_chinese = "自动拒绝投票"
+traditional_chinese = "自動拒絕投票"
 
 [[message]]
 key = "Automatic updates are only supported on Windows"
 [message.translations]
+japanese = "自動更新はWindowsのみ対応"
+korean = "자동 업데이트는 Windows에서만 지원됩니다"
 simplified_chinese = "自动更新仅支持 Windows"
+traditional_chinese = "自動更新僅支援 Windows"
 
 [[message]]
 key = "Automatically reply to muted players"
 [message.translations]
+japanese = "ミュートされたプレイヤーに自動返信"
+korean = "음소거된 플레이어에게 자동 응답"
 simplified_chinese = "对已屏蔽发言的玩家自动回复"
+traditional_chinese = "對已封鎖發言的玩家自動回覆"
 
 [[message]]
 key = "Automatically reply while the window is unfocused"
 [message.translations]
+japanese = "ウィンドウがフォーカスされていないときに自動返信"
+korean = "창이 비활성화된 상태에서 자동 응답"
 simplified_chinese = "切屏时自动回复"
+traditional_chinese = "視窗失去焦點時自動回覆"
 
 [[message]]
 key = "Background Draw"
 [message.translations]
+japanese = "背景描画"
+korean = "배경 그리기"
 simplified_chinese = "背景绘制"
+traditional_chinese = "背景繪製"
 
 [[message]]
 key = "Bind Wheel"
 [message.translations]
+japanese = "バインドホイール"
+korean = "바인드 휠"
 simplified_chinese = "绑定轮盘"
+traditional_chinese = "綁定輪盤"
 
 [[message]]
 key = "Bind Wheel Key"
 [message.translations]
+japanese = "バインドホイールキー"
+korean = "바인드 휠 키"
 simplified_chinese = "唤出滚轮绑键"
+traditional_chinese = "喚出滾輪綁鍵"
 
 [[message]]
 key = "Black"
 [message.translations]
+japanese = "黒"
+korean = "검정"
 simplified_chinese = "黑色"
+traditional_chinese = "黑色"
 
 [[message]]
 key = "Blue"
 [message.translations]
+japanese = "青"
+korean = "파랑"
 simplified_chinese = "蓝色"
+traditional_chinese = "藍色"
 
 [[message]]
 key = "Camera"
 [message.translations]
+japanese = "カメラ"
+korean = "카메라"
 simplified_chinese = "镜头视野"
+traditional_chinese = "鏡頭視野"
 
 [[message]]
 key = "Change indicator offset based on distance to other tees"
 [message.translations]
+japanese = "他のTeeとの距離に基づいてインジケーターオフセットを変更"
+korean = "다른 티와의 거리에 따라 표시기 오프셋 변경"
 simplified_chinese = "根据与其他 Tee 的距离更改指示器偏移量"
+traditional_chinese = "根據與其他 Tee 的距離變更指示器偏移量"
 
 [[message]]
 key = "Changes: %d"
 [message.translations]
+japanese = "変更: %d"
+korean = "변경 사항: %d"
 simplified_chinese = "更改数: %d"
+traditional_chinese = "變更數：%d"
 
 [[message]]
 key = "Changing name to %s near finish"
 [message.translations]
+japanese = "終了間際に名前を %s に変更"
+korean = "결승선 근처에서 이름을 %s(으)로 변경"
 simplified_chinese = "接近终点时改名为 %s"
+traditional_chinese = "接近終點時改名為 %s"
 
 [[message]]
 key = "Chat Binds"
 [message.translations]
+japanese = "チャットバインド"
+korean = "채팅 바인드"
 simplified_chinese = "聊天绑定"
+traditional_chinese = "聊天綁定"
 
 [[message]]
 key = "Clan: %s"
 [message.translations]
+japanese = "クラン: %s"
+korean = "클랜: %s"
 simplified_chinese = "战队：%s"
+traditional_chinese = "戰隊：%s"
 
 [[message]]
 key = "Clear all favorite maps"
 [message.translations]
+japanese = "すべてのお気に入りマップをクリア"
+korean = "모든 즐겨찾기 맵 지우기"
 simplified_chinese = "清空全部收藏地图"
+traditional_chinese = "清空全部收藏地圖"
 
 [[message]]
 key = "Clear Changes"
 [message.translations]
+japanese = "変更をクリア"
+korean = "변경 사항 지우기"
 simplified_chinese = "清除更改"
+traditional_chinese = "清除變更"
 
 [[message]]
 key = "Color"
 [message.translations]
+japanese = "色"
+korean = "색상"
 simplified_chinese = "颜色"
+traditional_chinese = "顏色"
 
 [[message]]
 key = "Colors"
 [message.translations]
+japanese = "色"
+korean = "색상"
 simplified_chinese = "颜色"
+traditional_chinese = "顏色"
 
 [[message]]
 key = "Colors in chat"
 [message.translations]
+japanese = "チャット内の色"
+korean = "채팅에서의 색상"
 simplified_chinese = "在聊天栏中的颜色"
+traditional_chinese = "在聊天欄中的顏色"
 
 [[message]]
 key = "Colors in scoreboard"
 [message.translations]
+japanese = "スコアボード内の色"
+korean = "점수판에서의 색상"
 simplified_chinese = "在记分板中的颜色"
+traditional_chinese = "在記分板中的顏色"
 
 [[message]]
 key = "Command:"
 [message.translations]
+japanese = "コマンド:"
+korean = "명령어:"
 simplified_chinese = "指令:"
+traditional_chinese = "指令："
 
 [[message]]
 key = "Commands run in the console"
 [message.translations]
+japanese = "コンソールで実行されるコマンド"
+korean = "콘솔에서 실행되는 명령어"
 simplified_chinese = "在控制台中执行的命令"
+traditional_chinese = "在控制台中執行的命令"
 
 [[message]]
 key = "Compact"
 [message.translations]
+japanese = "コンパクト"
+korean = "간결"
 simplified_chinese = "紧凑列表"
+traditional_chinese = "緊湊列表"
 
 [[message]]
 key = "Config Files"
 [message.translations]
+japanese = "設定ファイル"
+korean = "설정 파일"
 simplified_chinese = "配置文件"
+traditional_chinese = "設定檔"
 
 [[message]]
 key = "Custom Font:"
 [message.translations]
+japanese = "カスタムフォント:"
+korean = "사용자 정의 글꼴:"
 simplified_chinese = "自定义字体:"
+traditional_chinese = "自訂字型："
 
 [[message]]
 key = "Cute:"
 [message.translations]
+japanese = "かわいい:"
+korean = "귀여움:"
 simplified_chinese = "可爱："
+traditional_chinese = "可愛："
 
 [[message]]
 key = "Cycle through emotes"
 [message.translations]
+japanese = "エモートを順に表示"
+korean = "이모트 순환"
 simplified_chinese = "循环显示表情"
+traditional_chinese = "循環顯示表情"
 
 [[message]]
 key = "Deep freeze color"
 [message.translations]
+japanese = "深凍結色"
+korean = "깊은 얼음 색상"
 simplified_chinese = "深度冻结颜色"
+traditional_chinese = "深度凍結顏色"
 
 [[message]]
 key = "Deep unfreeze color"
 [message.translations]
+japanese = "深解凍色"
+korean = "깊은 해동 색상"
 simplified_chinese = "深度解冻颜色"
+traditional_chinese = "深度解凍顏色"
 
 [[message]]
 key = "Delay"
 [message.translations]
+japanese = "遅延"
+korean = "지연"
 simplified_chinese = "延迟"
+traditional_chinese = "延遲"
 
 [[message]]
 key = "Disagree"
 [message.translations]
+japanese = "反対"
+korean = "반대"
 simplified_chinese = "反对"
+traditional_chinese = "反對"
 
 [[message]]
 key = "Dont predict other players if you are frozen"
 [message.translations]
+japanese = "凍結中は他のプレイヤーを予測しない"
+korean = "얼어 있을 때 다른 플레이어 예측 안 함"
 simplified_chinese = "被冻结时不预测其他玩家"
+traditional_chinese = "被凍結時不預測其他玩家"
 
 [[message]]
 key = "DONT USE THIS! USE add_bindwheel INSTEAD!"
 [message.translations]
+japanese = "これを使わないで！代わりに add_bindwheel を使ってください！"
+korean = "사용하지 마세요! 대신 add_bindwheel을 사용하세요!"
 simplified_chinese = "不要使用这个！使用 add_bindwheel 代替！"
+traditional_chinese = "不要使用這個！請使用 add_bindwheel 代替！"
 
 [[message]]
 key = "Downloading update..."
 [message.translations]
+japanese = "アップデートをダウンロード中..."
+korean = "업데이트 다운로드 중..."
 simplified_chinese = "正在下载更新..."
+traditional_chinese = "正在下載更新..."
 
 [[message]]
 key = "Draw on the in game background"
 [message.translations]
+japanese = "ゲーム内背景に描画"
+korean = "게임 배경에 그리기"
 simplified_chinese = "在游戏背景上绘制"
+traditional_chinese = "在遊戲背景上繪製"
 
 [[message]]
 key = "Draw where mouse is"
 [message.translations]
+japanese = "マウスの位置に描画"
+korean = "마우스 위치에 그리기"
 simplified_chinese = "绘制鼠标所在位置"
+traditional_chinese = "在滑鼠所在位置繪製"
 
 [[message]]
 key = "Edit Entry"
 [message.translations]
+japanese = "エントリーを編集"
+korean = "항목 편집"
 simplified_chinese = "编辑条目"
+traditional_chinese = "編輯條目"
 
 [[message]]
 key = "Enable Deleting"
 [message.translations]
+japanese = "削除を有効化"
+korean = "삭제 활성화"
 simplified_chinese = "启用删除"
+traditional_chinese = "啟用刪除"
 
 [[message]]
 key = "Enable Jelly Tee"
 [message.translations]
+japanese = "ゼリーティーを有効化"
+korean = "젤리 티 활성화"
 simplified_chinese = "启用 Q 弹 Tee"
+traditional_chinese = "啟用 Q 彈 Tee"
 
 [[message]]
 key = "Enable mod weapon on %d: %s"
 [message.translations]
+japanese = "%d で MOD 武器を有効化: %s"
+korean = "%d에서 모드 무기 활성화: %s"
 simplified_chinese = "在 %d 上启用模组武器: %s"
+traditional_chinese = "在 %d 上啟用模組武器：%s"
 
 [[message]]
 key = "Enable tee trails"
 [message.translations]
+japanese = "ティートレイルを有効化"
+korean = "티 꼬리 활성화"
 simplified_chinese = "启用 Tee 拖尾"
+traditional_chinese = "啟用 Tee 拖尾"
 
 [[message]]
 key = "Enable warlist"
 [message.translations]
+japanese = "敵対リストを有効化"
+korean = "적대 목록 활성화"
 simplified_chinese = "启用敌对列表"
+traditional_chinese = "啟用敵對列表"
 
 [[message]]
 key = "Erase items on the in game background"
 [message.translations]
+japanese = "ゲーム内背景のアイテムを消去"
+korean = "게임 배경의 항목 지우기"
 simplified_chinese = "擦除游戏背景中的内容"
+traditional_chinese = "擦除遊戲背景中的內容"
 
 [[message]]
 key = "Evaluate an expression"
 [message.translations]
+japanese = "式を評価"
+korean = "표현식 평가"
 simplified_chinese = "评估表达式"
+traditional_chinese = "評估表達式"
 
 [[message]]
 key = "Execute before connecting"
 [message.translations]
+japanese = "接続前に実行"
+korean = "연결 전 실행"
 simplified_chinese = "连接前执行"
+traditional_chinese = "連線前執行"
 
 [[message]]
 key = "Execute hovered bindwheel bind"
 [message.translations]
+japanese = "ホバー中のバインドホイールバインドを実行"
+korean = "가리킨 바인드휠 바인드 실행"
 simplified_chinese = "执行当前悬停的绑定轮盘绑定"
+traditional_chinese = "執行當前懸停的綁定輪盤綁定"
 
 [[message]]
 key = "Execute on connect"
 [message.translations]
+japanese = "接続時に実行"
+korean = "연결 시 실행"
 simplified_chinese = "连接时执行"
+traditional_chinese = "連線時執行"
 
 [[message]]
 key = "Fade trail alpha"
 [message.translations]
+japanese = "トレイルのフェードアルファ"
+korean = "꼬리 알파 페이드"
 simplified_chinese = "淡化拖尾"
+traditional_chinese = "淡化拖尾透明度"
 
 [[message]]
 key = "Failed to check for updates"
 [message.translations]
+japanese = "アップデートの確認に失敗"
+korean = "업데이트 확인 실패"
 simplified_chinese = "检查更新失败"
+traditional_chinese = "檢查更新失敗"
 
 [[message]]
 key = "Failed to create bgdraw folder"
 [message.translations]
+japanese = "bgdraw フォルダの作成に失敗"
+korean = "bgdraw 폴더 생성 실패"
 simplified_chinese = "创建 bgdraw 文件夹失败"
-
-[[message]]
-key = "Fake CTF flags"
-[message.translations]
-simplified_chinese = "伪 CTF 旗帜"
-
-[[message]]
-key = "Fast input (reduce visual latency)"
-[message.translations]
-simplified_chinese = "快速输入（降低视觉延迟）"
-
-[[message]]
-key = "Fast input others"
-[message.translations]
-simplified_chinese = "快速输入其他玩家"
-
-[[message]]
-key = "Finish Name"
-[message.translations]
-simplified_chinese = "终点前改名"
-
-[[message]]
-key = "Finish Name:"
-[message.translations]
-simplified_chinese = "恰分名称:"
-
-[[message]]
-key = "Flip:"
-[message.translations]
-simplified_chinese = "翻转："
-
-[[message]]
-key = "Freeview cursor opacity"
-[message.translations]
-simplified_chinese = "自由旁观光标不透明度"
-
-[[message]]
-key = "Freeze"
-[message.translations]
-simplified_chinese = "冻结"
-
-[[message]]
-key = "Freeze stars"
-[message.translations]
-simplified_chinese = "显示冻结效果的星星动画"
-
-[[message]]
-key = "Frozen Margin"
-[message.translations]
-simplified_chinese = "冻结预测值"
-
-[[message]]
-key = "Ghost tools"
-[message.translations]
-simplified_chinese = "影子工具"
-
-[[message]]
-key = "Github"
-[message.translations]
-simplified_chinese = "Github"
-
-[[message]]
-key = "Group name"
-[message.translations]
-simplified_chinese = "分组名称"
-
-[[message]]
-key = "Hammer Mode:"
-[message.translations]
-simplified_chinese = "锤子模式:"
-
-[[message]]
-key = "Hide ghosts of frozen players"
-[message.translations]
-simplified_chinese = "隐藏冻结玩家的影子"
-
-[[message]]
-key = "Hide indicator for tees on your screen"
-[message.translations]
-simplified_chinese = "其他玩家在屏幕内时隐藏指示器"
-
-[[message]]
-key = "Hide Settings Tabs"
-[message.translations]
-simplified_chinese = "隐藏设置选项卡"
-
-[[message]]
-key = "I am away from the game window"
-[message.translations]
-simplified_chinese = "我不在游戏窗口前"
-
-[[message]]
-key = "I muted you"
-[message.translations]
-simplified_chinese = "我屏蔽你了"
-
-[[message]]
-key = "Indicator alive color"
-[message.translations]
-simplified_chinese = "指示器存活颜色"
-
-[[message]]
-key = "Indicator in freeze color"
-[message.translations]
-simplified_chinese = "指示器冻结颜色"
-
-[[message]]
-key = "Indicator max distance"
-[message.translations]
-simplified_chinese = "指示器最大距离"
-
-[[message]]
-key = "Indicator max offset"
-[message.translations]
-simplified_chinese = "指示器最大偏移量"
-
-[[message]]
-key = "Indicator min offset"
-[message.translations]
-simplified_chinese = "指示器最小偏移量"
-
-[[message]]
-key = "Indicator offset"
-[message.translations]
-simplified_chinese = "指示器偏移量"
-
-[[message]]
-key = "Indicator opacity"
-[message.translations]
-simplified_chinese = "指示器不透明度"
-
-[[message]]
-key = "Indicator safe color"
-[message.translations]
-simplified_chinese = "指示器安全颜色"
-
-[[message]]
-key = "Indicator size"
-[message.translations]
-simplified_chinese = "显示大小"
-
-[[message]]
-key = "Info"
-[message.translations]
-simplified_chinese = "信息"
-
-[[message]]
-key = "Ingame cursor scale"
-[message.translations]
-simplified_chinese = "游戏内光标缩放"
-
-[[message]]
-key = "Input"
-[message.translations]
-simplified_chinese = "输入"
-
-[[message]]
-key = "Jelly duration"
-[message.translations]
-simplified_chinese = "回弹时长"
-
-[[message]]
-key = "Jelly others"
-[message.translations]
-simplified_chinese = "其他玩家也使用 Q 弹 Tee"
-
-[[message]]
-key = "Jelly strength"
-[message.translations]
-simplified_chinese = "Q 弹强度"
-
-[[message]]
-key = "Kaomoji"
-[message.translations]
-simplified_chinese = "表情符号"
-
-[[message]]
-key = "L select  R swap  M select only"
-[message.translations]
-simplified_chinese = "左键选择  右键交换  中键仅选择"
-
-[[message]]
-key = "Lenny:"
-[message.translations]
-simplified_chinese = "Lenny ͡° ͜ʖ ͡°:"
-
-[[message]]
-key = "List local saves for current map (or specified map)"
-[message.translations]
-simplified_chinese = "列出当前地图（或指定地图）的本地保存"
-
-[[message]]
-key = "Load"
-[message.translations]
-simplified_chinese = "加载"
-
-[[message]]
-key = "Load drawings from a given csv file (defaults to map name)"
-[message.translations]
-simplified_chinese = "从指定 CSV 文件加载绘图（默认使用地图名）"
-
-[[message]]
-key = "Loaded %d items"
-[message.translations]
-simplified_chinese = "已加载 %d 项"
-
-[[message]]
-key = "Loaded %d items (discarded %d items)"
-[message.translations]
-simplified_chinese = "已加载 %d 项（丢弃 %d 项）"
-
-[[message]]
-key = "Local Time"
-[message.translations]
-simplified_chinese = "本地时间"
-
-[[message]]
-key = "Maximum rows"
-[message.translations]
-simplified_chinese = "最大行数"
-
-[[message]]
-key = "Message to send in chat:"
-[message.translations]
-simplified_chinese = "要在聊天中发送的消息："
-
-[[message]]
-key = "Minimum time"
-[message.translations]
-simplified_chinese = "最短时间"
-
-[[message]]
-key = "Misc"
-[message.translations]
-simplified_chinese = "其他杂项"
-
-[[message]]
-key = "Modified"
-[message.translations]
-simplified_chinese = "仅已修改"
-
-[[message]]
-key = "Mute:"
-[message.translations]
-simplified_chinese = "禁言："
-
-[[message]]
-key = "Name:"
-[message.translations]
-simplified_chinese = "名称:"
-
-[[message]]
-key = "Name: %s"
-[message.translations]
-simplified_chinese = "名称：%s"
-
-[[message]]
-key = "Negative stability buffer (for Gores)"
-[message.translations]
-simplified_chinese = "负稳定性缓冲（用于 Gores）"
-
-[[message]]
-key = "No changes since last save"
-[message.translations]
-simplified_chinese = "自上次保存后没有更改"
-
-[[message]]
-key = "No items to write"
-[message.translations]
-simplified_chinese = "没有可写入的项目"
-
-[[message]]
-key = "No safe position found"
-[message.translations]
-simplified_chinese = "未找到安全位置"
-
-[[message]]
-key = "No saved profiles available yet. Save one first."
-[message.translations]
-simplified_chinese = "没有可用模板，请先保存一个模板。"
-
-[[message]]
-key = "No status bar items"
-[message.translations]
-simplified_chinese = "暂无状态栏项目"
-
-[[message]]
-key = "Notify when only one tee is still alive:"
-[message.translations]
-simplified_chinese = "当只剩一名存活者时提示:"
-
-[[message]]
-key = "Online Players"
-[message.translations]
-simplified_chinese = "在线玩家"
-
-[[message]]
-key = "Only show after joining a team"
-[message.translations]
-simplified_chinese = "仅在加入队伍后显示"
-
-[[message]]
-key = "Only show outlines in the entities layer"
-[message.translations]
-simplified_chinese = "仅在实体层中显示轮廓"
-
-[[message]]
-key = "Open bindwheel selector"
-[message.translations]
-simplified_chinese = "打开绑定轮盘选择器"
-
-[[message]]
-key = "Optimistic prediction along stable direction"
-[message.translations]
-simplified_chinese = "沿稳定方向更乐观的预测"
-
-[[message]]
-key = "Outline opacity"
-[message.translations]
-simplified_chinese = "轮廓不透明度"
-
-[[message]]
-key = "Override"
-[message.translations]
-simplified_chinese = "覆盖"
-
-[[message]]
-key = "Override Entry"
-[message.translations]
-simplified_chinese = "覆盖条目"
-
-[[message]]
-key = "Override Group"
-[message.translations]
-simplified_chinese = "覆盖群组"
-
-[[message]]
-key = "Override Selected"
-[message.translations]
-simplified_chinese = "覆盖选定项"
-
-[[message]]
-key = "Overwrite clan even if empty"
-[message.translations]
-simplified_chinese = "即使战队为空也覆盖"
-
-[[message]]
-key = "Pet alpha"
-[message.translations]
-simplified_chinese = "宠物透明度"
-
-[[message]]
-key = "Pet size"
-[message.translations]
-simplified_chinese = "宠物大小"
-
-[[message]]
-key = "Pet Skin:"
-[message.translations]
-simplified_chinese = "宠物皮肤:"
-
-[[message]]
-key = "Player indicator"
-[message.translations]
-simplified_chinese = "玩家指示器"
-
-[[message]]
-key = "Predicted ghost opacity"
-[message.translations]
-simplified_chinese = "预测影子不透明度"
-
-[[message]]
-key = "Prediction Margin"
-[message.translations]
-simplified_chinese = "预测量"
-
-[[message]]
-key = "Print command executed by this name or all chat binds"
-[message.translations]
-simplified_chinese = "打印该名称或所有聊天绑定执行的命令"
-
-[[message]]
-key = "Profiles file"
-[message.translations]
-simplified_chinese = "配置文件"
-
-[[message]]
-key = "Pulse"
-[message.translations]
-simplified_chinese = "脉冲"
-
-[[message]]
-key = "qm_profile_queue: index must be between 1 and %d"
-[message.translations]
-simplified_chinese = "qm_profile_queue：序号必须在 1 到 %d 之间"
-
-[[message]]
-key = "QmClient Settings"
-[message.translations]
-simplified_chinese = "QmClient 设置"
-
-[[message]]
-key = "Rainbow"
-[message.translations]
-simplified_chinese = "彩虹"
-
-[[message]]
-key = "Rainbow hook"
-[message.translations]
-simplified_chinese = "彩虹色钩索"
-
-[[message]]
-key = "Rainbow others"
-[message.translations]
-simplified_chinese = "将彩虹带给每个人！"
-
-[[message]]
-key = "Rainbow speed"
-[message.translations]
-simplified_chinese = "颜色变化速度"
-
-[[message]]
-key = "Rainbow Tees"
-[message.translations]
-simplified_chinese = "彩虹色 Tee"
-
-[[message]]
-key = "Rainbow weapons"
-[message.translations]
-simplified_chinese = "彩虹色武器"
-
-[[message]]
-key = "Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]"
-[message.translations]
-simplified_chinese = "随机化玩家颜色（0 = 全部、1 = 身体、2 = 脚、3 = 皮肤、4 = 旗帜）示例：0011 = 随机化皮肤和旗帜 [数字是位置]"
-
-[[message]]
-key = "Reason"
-[message.translations]
-simplified_chinese = "原因"
-
-[[message]]
-key = "Red"
-[message.translations]
-simplified_chinese = "红色"
-
-[[message]]
-key = "Remove [group] [clan]:"
-[message.translations]
-simplified_chinese = "删除 [组名] [战队名] [原因]"
-
-[[message]]
-key = "Remove [group] [name]:"
-[message.translations]
-simplified_chinese = "删除 [组名] [玩家名] [原因]"
-
-[[message]]
-key = "Remove a bind from the bindwheel"
-[message.translations]
-simplified_chinese = "从绑定轮盘移除绑定"
-
-[[message]]
-key = "Remove a chat bind"
-[message.translations]
-simplified_chinese = "删除聊天绑定"
-
-[[message]]
-key = "Remove a clan war entry"
-[message.translations]
-simplified_chinese = "移除战队敌对条目"
-
-[[message]]
-key = "Remove a map from favorites"
-[message.translations]
-simplified_chinese = "从收藏夹中删除地图"
-
-[[message]]
-key = "Remove a name war entry"
-[message.translations]
-simplified_chinese = "移除名字敌对条目"
-
-[[message]]
-key = "Remove Bind"
-[message.translations]
-simplified_chinese = "删除绑定"
-
-[[message]]
-key = "Remove Item"
-[message.translations]
-simplified_chinese = "删除项"
-
-[[message]]
-key = "Remove prediction & antiping in freeze"
-[message.translations]
-simplified_chinese = "在冻结时移除预测 & 延迟补偿"
-
-[[message]]
-key = "Remove team clan:"
-[message.translations]
-simplified_chinese = "删除友好战队:"
-
-[[message]]
-key = "Remove team name:"
-[message.translations]
-simplified_chinese = "删除友好玩家:"
-
-[[message]]
-key = "Remove war clan:"
-[message.translations]
-simplified_chinese = "删除敌对战队"
-
-[[message]]
-key = "Remove War Group"
-[message.translations]
-simplified_chinese = "删除敌对群组"
-
-[[message]]
-key = "Remove war name:"
-[message.translations]
-simplified_chinese = "删除敌对玩家:"
-
-[[message]]
-key = "Removes all bindwheel binds"
-[message.translations]
-simplified_chinese = "移除全部绑定轮盘绑定"
-
-[[message]]
-key = "Removes all chat binds"
-[message.translations]
-simplified_chinese = "删除所有聊天绑定"
-
-[[message]]
-key = "Render all custom colored feet as white feet skin"
-[message.translations]
-simplified_chinese = "将所有自定义脚部颜色渲染为白色"
-
-[[message]]
-key = "Render ghosts as circles"
-[message.translations]
-simplified_chinese = "将影子渲染为圆圈"
-
-[[message]]
-key = "Render tiny tees instead of circles"
-[message.translations]
-simplified_chinese = "渲染成迷你 Tee 而不是圆圈"
-
-[[message]]
-key = "Repeat the latest chat message"
-[message.translations]
-simplified_chinese = "复读最新聊天消息"
-
-[[message]]
-key = "Rescue to a nearby air tile"
-[message.translations]
-simplified_chinese = "救援到附近空气格"
-
-[[message]]
-key = "Reset all drawings on the background"
-[message.translations]
-simplified_chinese = "重置背景上的所有绘图"
-
-[[message]]
-key = "Reset position of mouse when opening bindwheel"
-[message.translations]
-simplified_chinese = "打开 快捷绑定轮盘 时重置鼠标位置"
-
-[[message]]
-key = "Save drawings to a given csv file (defaults to map name)"
-[message.translations]
-simplified_chinese = "将绘图保存到给定的 csv 文件（默认为地图名称）"
-
-[[message]]
-key = "Save/Load Clan"
-[message.translations]
-simplified_chinese = "保存/加载战队"
-
-[[message]]
-key = "Save/Load Colors"
-[message.translations]
-simplified_chinese = "保存/加载颜色"
-
-[[message]]
-key = "Save/Load Emote"
-[message.translations]
-simplified_chinese = "保存/加载表情"
-
-[[message]]
-key = "Save/Load Flag"
-[message.translations]
-simplified_chinese = "保存/加载国旗"
-
-[[message]]
-key = "Save/Load Name"
-[message.translations]
-simplified_chinese = "保存/加载名称"
-
-[[message]]
-key = "Save/Load Skin"
-[message.translations]
-simplified_chinese = "保存/加载皮肤"
+traditional_chinese = "建立 bgdraw 資料夾失敗"
 
 [[message]]
 key = "Failed to read saves file"
 [message.translations]
+japanese = "セーブファイルの読み取りに失敗"
+korean = "저장 파일 읽기 실패"
 simplified_chinese = "读取存档文件失败"
 traditional_chinese = "讀取存檔檔案失敗"
 
 [[message]]
+key = "Fake CTF flags"
+[message.translations]
+japanese = "偽のCTFフラッグ"
+korean = "가짜 CTF 깃발"
+simplified_chinese = "伪 CTF 旗帜"
+traditional_chinese = "偽 CTF 旗幟"
+
+[[message]]
+key = "Fast input (reduce visual latency)"
+[message.translations]
+japanese = "高速入力（視覚的遅延を低減）"
+korean = "빠른 입력 (시각적 지연 감소)"
+simplified_chinese = "快速输入（降低视觉延迟）"
+traditional_chinese = "快速輸入（降低視覺延遲）"
+
+[[message]]
+key = "Fast input others"
+[message.translations]
+japanese = "他のプレイヤーの高速入力"
+korean = "다른 플레이어 빠른 입력"
+simplified_chinese = "快速输入其他玩家"
+traditional_chinese = "快速輸入其他玩家"
+
+[[message]]
+key = "Finish Name"
+[message.translations]
+japanese = "フィニッシュ名"
+korean = "완료 이름"
+simplified_chinese = "终点前改名"
+traditional_chinese = "終點前改名"
+
+[[message]]
+key = "Finish Name:"
+[message.translations]
+japanese = "フィニッシュ名:"
+korean = "완료 이름:"
+simplified_chinese = "恰分名称:"
+traditional_chinese = "恰分名稱："
+
+[[message]]
+key = "Flip:"
+[message.translations]
+japanese = "反転:"
+korean = "뒤집기:"
+simplified_chinese = "翻转："
+traditional_chinese = "翻轉："
+
+[[message]]
+key = "Freeview cursor opacity"
+[message.translations]
+japanese = "自由視点カーソルの不透明度"
+korean = "자유 시점 커서 불투명도"
+simplified_chinese = "自由旁观光标不透明度"
+traditional_chinese = "自由旁觀游標不透明度"
+
+[[message]]
+key = "Freeze"
+[message.translations]
+japanese = "凍結"
+korean = "얼림"
+simplified_chinese = "冻结"
+traditional_chinese = "凍結"
+
+[[message]]
+key = "Freeze stars"
+[message.translations]
+japanese = "凍結星"
+korean = "얼림 별"
+simplified_chinese = "显示冻结效果的星星动画"
+traditional_chinese = "顯示凍結效果的星星動畫"
+
+[[message]]
+key = "Frozen Margin"
+[message.translations]
+japanese = "凍結マージン"
+korean = "얼림 여유"
+simplified_chinese = "冻结预测值"
+traditional_chinese = "凍結預測值"
+
+[[message]]
+key = "Ghost tools"
+[message.translations]
+japanese = "ゴーストツール"
+korean = "유령 도구"
+simplified_chinese = "影子工具"
+traditional_chinese = "影子工具"
+
+[[message]]
+key = "Github"
+[message.translations]
+japanese = "Github"
+korean = "Github"
+simplified_chinese = "Github"
+traditional_chinese = "Github"
+
+[[message]]
+key = "Group name"
+[message.translations]
+japanese = "グループ名"
+korean = "그룹 이름"
+simplified_chinese = "分组名称"
+traditional_chinese = "分組名稱"
+
+[[message]]
+key = "Hammer Mode:"
+[message.translations]
+japanese = "ハンマーモード:"
+korean = "망치 모드:"
+simplified_chinese = "锤子模式:"
+traditional_chinese = "錘子模式："
+
+[[message]]
+key = "Hide ghosts of frozen players"
+[message.translations]
+japanese = "凍結プレイヤーのゴーストを非表示"
+korean = "얼린 플레이어의 유령 숨기기"
+simplified_chinese = "隐藏冻结玩家的影子"
+traditional_chinese = "隱藏凍結玩家的影子"
+
+[[message]]
+key = "Hide indicator for tees on your screen"
+[message.translations]
+japanese = "画面上のTeeのインジケーターを非表示"
+korean = "화면 내 티 표시기 숨기기"
+simplified_chinese = "其他玩家在屏幕内时隐藏指示器"
+traditional_chinese = "其他玩家在螢幕內時隱藏指示器"
+
+[[message]]
+key = "Hide Settings Tabs"
+[message.translations]
+japanese = "設定タブを非表示"
+korean = "설정 탭 숨기기"
+simplified_chinese = "隐藏设置选项卡"
+traditional_chinese = "隱藏設定選項卡"
+
+[[message]]
+key = "I am away from the game window"
+[message.translations]
+japanese = "ゲームウィンドウから離れています"
+korean = "게임 창에서 자리 비움"
+simplified_chinese = "我不在游戏窗口前"
+traditional_chinese = "我不在遊戲視窗前"
+
+[[message]]
+key = "I muted you"
+[message.translations]
+japanese = "あなたをミュートしました"
+korean = "당신을 음소거했습니다"
+simplified_chinese = "我屏蔽你了"
+traditional_chinese = "我封鎖你了"
+
+[[message]]
+key = "Indicator alive color"
+[message.translations]
+japanese = "インジケーター生存色"
+korean = "표시기 생존 색상"
+simplified_chinese = "指示器存活颜色"
+traditional_chinese = "指示器存活顏色"
+
+[[message]]
+key = "Indicator in freeze color"
+[message.translations]
+japanese = "インジケーター凍結色"
+korean = "표시기 얼음 색상"
+simplified_chinese = "指示器冻结颜色"
+traditional_chinese = "指示器凍結顏色"
+
+[[message]]
+key = "Indicator max distance"
+[message.translations]
+japanese = "インジケーター最大距離"
+korean = "표시기 최대 거리"
+simplified_chinese = "指示器最大距离"
+traditional_chinese = "指示器最大距離"
+
+[[message]]
+key = "Indicator max offset"
+[message.translations]
+japanese = "インジケーター最大オフセット"
+korean = "표시기 최대 오프셋"
+simplified_chinese = "指示器最大偏移量"
+traditional_chinese = "指示器最大偏移量"
+
+[[message]]
+key = "Indicator min offset"
+[message.translations]
+japanese = "インジケーター最小オフセット"
+korean = "표시기 최소 오프셋"
+simplified_chinese = "指示器最小偏移量"
+traditional_chinese = "指示器最小偏移量"
+
+[[message]]
+key = "Indicator offset"
+[message.translations]
+japanese = "インジケーターオフセット"
+korean = "표시기 오프셋"
+simplified_chinese = "指示器偏移量"
+traditional_chinese = "指示器偏移量"
+
+[[message]]
+key = "Indicator opacity"
+[message.translations]
+japanese = "インジケーター不透明度"
+korean = "표시기 불투명도"
+simplified_chinese = "指示器不透明度"
+traditional_chinese = "指示器不透明度"
+
+[[message]]
+key = "Indicator safe color"
+[message.translations]
+japanese = "インジケーターセーフ色"
+korean = "표시기 안전 색상"
+simplified_chinese = "指示器安全颜色"
+traditional_chinese = "指示器安全顏色"
+
+[[message]]
+key = "Indicator size"
+[message.translations]
+japanese = "インジケーターサイズ"
+korean = "표시기 크기"
+simplified_chinese = "显示大小"
+traditional_chinese = "顯示大小"
+
+[[message]]
+key = "Info"
+[message.translations]
+japanese = "情報"
+korean = "정보"
+simplified_chinese = "信息"
+traditional_chinese = "資訊"
+
+[[message]]
+key = "Ingame cursor scale"
+[message.translations]
+japanese = "ゲーム内カーソルスケール"
+korean = "게임 내 커서 배율"
+simplified_chinese = "游戏内光标缩放"
+traditional_chinese = "遊戲內游標縮放"
+
+[[message]]
+key = "Input"
+[message.translations]
+japanese = "入力"
+korean = "입력"
+simplified_chinese = "输入"
+traditional_chinese = "輸入"
+
+[[message]]
+key = "Jelly duration"
+[message.translations]
+japanese = "ゼリー持続時間"
+korean = "젤리 지속 시간"
+simplified_chinese = "回弹时长"
+traditional_chinese = "回彈時長"
+
+[[message]]
+key = "Jelly others"
+[message.translations]
+japanese = "他のプレイヤーもゼリーティー"
+korean = "다른 플레이어도 젤리 티"
+simplified_chinese = "其他玩家也使用 Q 弹 Tee"
+traditional_chinese = "其他玩家也使用 Q 彈 Tee"
+
+[[message]]
+key = "Jelly strength"
+[message.translations]
+japanese = "ゼリー強度"
+korean = "젤리 강도"
+simplified_chinese = "Q 弹强度"
+traditional_chinese = "Q 彈強度"
+
+[[message]]
+key = "Kaomoji"
+[message.translations]
+japanese = "顔文字"
+korean = "카오모지"
+simplified_chinese = "表情符号"
+traditional_chinese = "表情符號"
+
+[[message]]
+key = "L select  R swap  M select only"
+[message.translations]
+japanese = "左選択　右入れ替え　中のみ選択"
+korean = "L 선택  R 교체  M만 선택"
+simplified_chinese = "左键选择  右键交换  中键仅选择"
+traditional_chinese = "左鍵選擇  右鍵交換  中鍵僅選擇"
+
+[[message]]
+key = "Lenny:"
+[message.translations]
+japanese = "Lenny:"
+korean = "레니 ͡° ͜ʖ ͡°:"
+simplified_chinese = "Lenny ͡° ͜ʖ ͡°:"
+traditional_chinese = "Lenny ͡° ͜ʖ ͡°："
+
+[[message]]
+key = "List local saves for current map (or specified map)"
+[message.translations]
+japanese = "現在のマップ（または指定マップ）のローカルセーブを一覧表示"
+korean = "현재 맵(또는 지정된 맵)의 로컬 저장 목록"
+simplified_chinese = "列出当前地图（或指定地图）的本地保存"
+traditional_chinese = "列出當前地圖（或指定地圖）的本地存檔"
+
+[[message]]
+key = "Load"
+[message.translations]
+japanese = "ロード"
+korean = "불러오기"
+simplified_chinese = "加载"
+traditional_chinese = "載入"
+
+[[message]]
+key = "Load drawings from a given csv file (defaults to map name)"
+[message.translations]
+japanese = "指定されたCSVファイルから描画をロード（デフォルトはマップ名）"
+korean = "지정된 CSV 파일에서 그림 불러오기 (기본값: 맵 이름)"
+simplified_chinese = "从指定 CSV 文件加载绘图（默认使用地图名）"
+traditional_chinese = "從指定 CSV 檔案載入繪圖（預設使用地圖名稱）"
+
+[[message]]
+key = "Loaded %d items"
+[message.translations]
+japanese = "%d アイテムをロードしました"
+korean = "%d개 항목 불러옴"
+simplified_chinese = "已加载 %d 项"
+traditional_chinese = "已載入 %d 項"
+
+[[message]]
+key = "Loaded %d items (discarded %d items)"
+[message.translations]
+japanese = "%d アイテムをロード（%d アイテムを破棄）しました"
+korean = "%d개 항목 불러옴 (%d개 항목 폐기)"
+simplified_chinese = "已加载 %d 项（丢弃 %d 项）"
+traditional_chinese = "已載入 %d 項（丟棄 %d 項）"
+
+[[message]]
+key = "Local Time"
+[message.translations]
+japanese = "ローカル時刻"
+korean = "현지 시간"
+simplified_chinese = "本地时间"
+traditional_chinese = "本地時間"
+
+[[message]]
+key = "Maximum rows"
+[message.translations]
+japanese = "最大行数"
+korean = "최대 행 수"
+simplified_chinese = "最大行数"
+traditional_chinese = "最大行數"
+
+[[message]]
+key = "Message to send in chat:"
+[message.translations]
+japanese = "チャットで送信するメッセージ:"
+korean = "채팅으로 보낼 메시지:"
+simplified_chinese = "要在聊天中发送的消息："
+traditional_chinese = "要在聊天中傳送的訊息："
+
+[[message]]
+key = "Minimum time"
+[message.translations]
+japanese = "最小時間"
+korean = "최소 시간"
+simplified_chinese = "最短时间"
+traditional_chinese = "最短時間"
+
+[[message]]
+key = "Misc"
+[message.translations]
+japanese = "その他"
+korean = "기타"
+simplified_chinese = "其他杂项"
+traditional_chinese = "其他雜項"
+
+[[message]]
+key = "Modified"
+[message.translations]
+japanese = "変更済みのみ"
+korean = "수정됨"
+simplified_chinese = "仅已修改"
+traditional_chinese = "僅已修改"
+
+[[message]]
+key = "Mute:"
+[message.translations]
+japanese = "ミュート:"
+korean = "음소거:"
+simplified_chinese = "禁言："
+traditional_chinese = "禁言："
+
+[[message]]
+key = "Name:"
+[message.translations]
+japanese = "名前:"
+korean = "이름:"
+simplified_chinese = "名称:"
+traditional_chinese = "名稱："
+
+[[message]]
+key = "Name: %s"
+[message.translations]
+japanese = "名前: %s"
+korean = "이름: %s"
+simplified_chinese = "名称：%s"
+traditional_chinese = "名稱：%s"
+
+[[message]]
+key = "Negative stability buffer (for Gores)"
+[message.translations]
+japanese = "負の安定性バッファ（Gores用）"
+korean = "음수 안정성 버퍼 (Gores용)"
+simplified_chinese = "负稳定性缓冲（用于 Gores）"
+traditional_chinese = "負穩定性緩衝（用於 Gores）"
+
+[[message]]
+key = "No changes since last save"
+[message.translations]
+japanese = "最後の保存から変更なし"
+korean = "마지막 저장 이후 변경 사항 없음"
+simplified_chinese = "自上次保存后没有更改"
+traditional_chinese = "自上次儲存後沒有變更"
+
+[[message]]
 key = "No chat message available to repeat"
 [message.translations]
+japanese = "繰り返すチャットメッセージがありません"
+korean = "반복할 채팅 메시지가 없음"
 simplified_chinese = "没有可重复发送的聊天消息"
+traditional_chinese = "沒有可重複傳送的聊天訊息"
+
+[[message]]
+key = "No items to write"
+[message.translations]
+japanese = "書き込むアイテムがありません"
+korean = "쓸 항목이 없음"
+simplified_chinese = "没有可写入的项目"
+traditional_chinese = "沒有可寫入的項目"
 
 [[message]]
 key = "No local saves file found (ddnet-saves.txt)"
 [message.translations]
+japanese = "ローカルセーブファイルが見つかりません（ddnet-saves.txt）"
+korean = "로컬 저장 파일을 찾을 수 없음 (ddnet-saves.txt)"
 simplified_chinese = "未找到本地存档文件（ddnet-saves.txt）"
 traditional_chinese = "未找到本地存檔檔案（ddnet-saves.txt）"
 
 [[message]]
+key = "No safe position found"
+[message.translations]
+japanese = "安全な位置が見つかりません"
+korean = "안전한 위치를 찾을 수 없음"
+simplified_chinese = "未找到安全位置"
+traditional_chinese = "未找到安全位置"
+
+[[message]]
+key = "No saved profiles available yet. Save one first."
+[message.translations]
+japanese = "保存されたプロファイルがまだありません。最初に保存してください。"
+korean = "저장된 프로필이 없습니다. 먼저 저장하세요."
+simplified_chinese = "没有可用模板，请先保存一个模板。"
+traditional_chinese = "沒有可用模板，請先儲存一個模板。"
+
+[[message]]
+key = "No status bar items"
+[message.translations]
+japanese = "ステータスバーアイテムなし"
+korean = "상태 표시줄 항목 없음"
+simplified_chinese = "暂无状态栏项目"
+traditional_chinese = "暫無狀態欄項目"
+
+[[message]]
+key = "Notify when only one tee is still alive:"
+[message.translations]
+japanese = "一人だけ生き残ったときに通知:"
+korean = "한 명의 티만 살아있을 때 알림:"
+simplified_chinese = "当只剩一名存活者时提示:"
+traditional_chinese = "當只剩一名存活者時提示："
+
+[[message]]
+key = "Online Players"
+[message.translations]
+japanese = "オンラインプレイヤー"
+korean = "온라인 플레이어"
+simplified_chinese = "在线玩家"
+traditional_chinese = "線上玩家"
+
+[[message]]
+key = "Only show after joining a team"
+[message.translations]
+japanese = "チーム参加後にのみ表示"
+korean = "팀에 참가한 후에만 표시"
+simplified_chinese = "仅在加入队伍后显示"
+traditional_chinese = "僅在加入隊伍後顯示"
+
+[[message]]
+key = "Only show outlines in the entities layer"
+[message.translations]
+japanese = "エンティティレイヤーのみ輪郭を表示"
+korean = "엔티티 레이어에서만 윤곽선 표시"
+simplified_chinese = "仅在实体层中显示轮廓"
+traditional_chinese = "僅在實體層中顯示輪廓"
+
+[[message]]
+key = "Open bindwheel selector"
+[message.translations]
+japanese = "バインドホイールセレクターを開く"
+korean = "바인드휠 선택기 열기"
+simplified_chinese = "打开绑定轮盘选择器"
+traditional_chinese = "開啟綁定輪盤選擇器"
+
+[[message]]
+key = "Optimistic prediction along stable direction"
+[message.translations]
+japanese = "安定方向に沿った楽観的予測"
+korean = "안정적인 방향으로 낙관적 예측"
+simplified_chinese = "沿稳定方向更乐观的预测"
+traditional_chinese = "沿穩定方向更樂觀的預測"
+
+[[message]]
+key = "Outline opacity"
+[message.translations]
+japanese = "輪郭の不透明度"
+korean = "윤곽선 불투명도"
+simplified_chinese = "轮廓不透明度"
+traditional_chinese = "輪廓不透明度"
+
+[[message]]
+key = "Override"
+[message.translations]
+japanese = "上書き"
+korean = "재정의"
+simplified_chinese = "覆盖"
+traditional_chinese = "覆蓋"
+
+[[message]]
+key = "Override Entry"
+[message.translations]
+japanese = "エントリーを上書き"
+korean = "항목 재정의"
+simplified_chinese = "覆盖条目"
+traditional_chinese = "覆蓋條目"
+
+[[message]]
+key = "Override Group"
+[message.translations]
+japanese = "グループを上書き"
+korean = "그룹 재정의"
+simplified_chinese = "覆盖群组"
+traditional_chinese = "覆蓋群組"
+
+[[message]]
+key = "Override Selected"
+[message.translations]
+japanese = "選択項目を上書き"
+korean = "선택 항목 재정의"
+simplified_chinese = "覆盖选定项"
+traditional_chinese = "覆蓋選定項"
+
+[[message]]
+key = "Overwrite clan even if empty"
+[message.translations]
+japanese = "空でもクランを上書き"
+korean = "비어 있어도 클랜 덮어쓰기"
+simplified_chinese = "即使战队为空也覆盖"
+traditional_chinese = "即使戰隊為空也覆蓋"
+
+[[message]]
+key = "Pet alpha"
+[message.translations]
+japanese = "ペットの透明度"
+korean = "펫 투명도"
+simplified_chinese = "宠物透明度"
+traditional_chinese = "寵物透明度"
+
+[[message]]
+key = "Pet size"
+[message.translations]
+japanese = "ペットのサイズ"
+korean = "펫 크기"
+simplified_chinese = "宠物大小"
+traditional_chinese = "寵物大小"
+
+[[message]]
+key = "Pet Skin:"
+[message.translations]
+japanese = "ペットスキン:"
+korean = "펫 스킨:"
+simplified_chinese = "宠物皮肤:"
+traditional_chinese = "寵物皮膚："
+
+[[message]]
+key = "Player indicator"
+[message.translations]
+japanese = "プレイヤーインジケーター"
+korean = "플레이어 표시기"
+simplified_chinese = "玩家指示器"
+traditional_chinese = "玩家指示器"
+
+[[message]]
+key = "Predicted ghost opacity"
+[message.translations]
+japanese = "予測ゴーストの不透明度"
+korean = "예측 고스트 불투명도"
+simplified_chinese = "预测影子不透明度"
+traditional_chinese = "預測影子不透明度"
+
+[[message]]
+key = "Prediction Margin"
+[message.translations]
+japanese = "予測マージン"
+korean = "예측 여유"
+simplified_chinese = "预测量"
+traditional_chinese = "預測邊際"
+
+[[message]]
+key = "Print command executed by this name or all chat binds"
+[message.translations]
+japanese = "この名前で実行されるコマンドまたはすべてのチャットバインドを表示"
+korean = "이 이름 또는 모든 채팅 바인드로 실행된 명령 출력"
+simplified_chinese = "打印该名称或所有聊天绑定执行的命令"
+traditional_chinese = "列印該名稱或所有聊天綁定執行的指令"
+
+[[message]]
+key = "Profiles file"
+[message.translations]
+japanese = "プロファイルファイル"
+korean = "프로필 파일"
+simplified_chinese = "配置文件"
+traditional_chinese = "設定檔"
+
+[[message]]
+key = "Pulse"
+[message.translations]
+japanese = "パルス"
+korean = "펄스"
+simplified_chinese = "脉冲"
+traditional_chinese = "脈衝"
+
+[[message]]
+key = "qm_profile_queue: index must be between 1 and %d"
+[message.translations]
+japanese = "qm_profile_queue: インデックスは 1 から %d の間でなければなりません"
+korean = "qm_profile_queue: 인덱스는 1에서 %d 사이여야 합니다"
+simplified_chinese = "qm_profile_queue：序号必须在 1 到 %d 之间"
+traditional_chinese = "qm_profile_queue：序號必須在 1 到 %d 之間"
+
+[[message]]
+key = "QmClient Settings"
+[message.translations]
+japanese = "QmClient 設定"
+korean = "QmClient 설정"
+simplified_chinese = "QmClient 设置"
+traditional_chinese = "QmClient 設定"
+
+[[message]]
+key = "Rainbow"
+[message.translations]
+japanese = "虹"
+korean = "무지개"
+simplified_chinese = "彩虹"
+traditional_chinese = "彩虹"
+
+[[message]]
+key = "Rainbow hook"
+[message.translations]
+japanese = "虹色フック"
+korean = "무지개 갈고리"
+simplified_chinese = "彩虹色钩索"
+traditional_chinese = "彩虹色鉤索"
+
+[[message]]
+key = "Rainbow others"
+[message.translations]
+japanese = "他のプレイヤーも虹色に"
+korean = "모두에게 무지개 적용"
+simplified_chinese = "将彩虹带给每个人！"
+traditional_chinese = "將彩虹帶給每個人！"
+
+[[message]]
+key = "Rainbow speed"
+[message.translations]
+japanese = "虹色の変化速度"
+korean = "색상 변화 속도"
+simplified_chinese = "颜色变化速度"
+traditional_chinese = "顏色變化速度"
+
+[[message]]
+key = "Rainbow Tees"
+[message.translations]
+japanese = "虹色Tee"
+korean = "무지개 티"
+simplified_chinese = "彩虹色 Tee"
+traditional_chinese = "彩虹色 Tee"
+
+[[message]]
+key = "Rainbow weapons"
+[message.translations]
+japanese = "虹色武器"
+korean = "무지개 무기"
+simplified_chinese = "彩虹色武器"
+traditional_chinese = "彩虹色武器"
+
+[[message]]
+key = "Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]"
+[message.translations]
+japanese = "プレイヤーカラーをランダム化（0=すべて、1=体、2=足、3=スキン、4=フラッグ）例：0011 = スキンとフラッグをランダム化 [数字は位置]"
+korean = "플레이어 색상 무작위화 (0 = 전체, 1 = 몸, 2 = 발, 3 = 스킨, 4 = 깃발) 예: 0011 = 스킨과 깃발 무작위화 [숫자는 위치]"
+simplified_chinese = "随机化玩家颜色（0 = 全部、1 = 身体、2 = 脚、3 = 皮肤、4 = 旗帜）示例：0011 = 随机化皮肤和旗帜 [数字是位置]"
+traditional_chinese = "隨機化玩家顏色（0 = 全部、1 = 身體、2 = 腳、3 = 皮膚、4 = 旗幟）範例：0011 = 隨機化皮膚和旗幟 [數字是位置]"
+
+[[message]]
+key = "Reason"
+[message.translations]
+japanese = "理由"
+korean = "이유"
+simplified_chinese = "原因"
+traditional_chinese = "原因"
+
+[[message]]
+key = "Red"
+[message.translations]
+japanese = "赤"
+korean = "빨간색"
+simplified_chinese = "红色"
+traditional_chinese = "紅色"
+
+[[message]]
+key = "Remove [group] [clan]:"
+[message.translations]
+japanese = "[グループ] [クラン] を削除:"
+korean = "제거 [그룹] [클랜]:"
+simplified_chinese = "删除 [组名] [战队名] [原因]"
+traditional_chinese = "刪除 [組名] [戰隊名]："
+
+[[message]]
+key = "Remove [group] [name]:"
+[message.translations]
+japanese = "[グループ] [名前] を削除:"
+korean = "제거 [그룹] [이름]:"
+simplified_chinese = "删除 [组名] [玩家名] [原因]"
+traditional_chinese = "刪除 [組名] [玩家名]："
+
+[[message]]
+key = "Remove a bind from the bindwheel"
+[message.translations]
+japanese = "バインドホイールからバインドを削除"
+korean = "바인드휠에서 바인드 제거"
+simplified_chinese = "从绑定轮盘移除绑定"
+traditional_chinese = "從綁定輪盤移除綁定"
+
+[[message]]
+key = "Remove a chat bind"
+[message.translations]
+japanese = "チャットバインドを削除"
+korean = "채팅 바인드 제거"
+simplified_chinese = "删除聊天绑定"
+traditional_chinese = "刪除聊天綁定"
+
+[[message]]
+key = "Remove a clan war entry"
+[message.translations]
+japanese = "クラン戦エントリーを削除"
+korean = "클랜 적대 항목 제거"
+simplified_chinese = "移除战队敌对条目"
+traditional_chinese = "移除戰隊敵對條目"
+
+[[message]]
+key = "Remove a map from favorites"
+[message.translations]
+japanese = "お気に入りからマップを削除"
+korean = "즐겨찾기에서 맵 제거"
+simplified_chinese = "从收藏夹中删除地图"
+traditional_chinese = "從收藏夾中刪除地圖"
+
+[[message]]
+key = "Remove a name war entry"
+[message.translations]
+japanese = "名前戦エントリーを削除"
+korean = "이름 적대 항목 제거"
+simplified_chinese = "移除名字敌对条目"
+traditional_chinese = "移除名字敵對條目"
+
+[[message]]
+key = "Remove Bind"
+[message.translations]
+japanese = "バインドを削除"
+korean = "바인드 제거"
+simplified_chinese = "删除绑定"
+traditional_chinese = "刪除綁定"
+
+[[message]]
+key = "Remove Item"
+[message.translations]
+japanese = "アイテムを削除"
+korean = "항목 제거"
+simplified_chinese = "删除项"
+traditional_chinese = "刪除項"
+
+[[message]]
+key = "Remove prediction & antiping in freeze"
+[message.translations]
+japanese = "凍結中は予測＆アンチピングを削除"
+korean = "얼음 상태에서 예측 및 안티핑 제거"
+simplified_chinese = "在冻结时移除预测 & 延迟补偿"
+traditional_chinese = "在凍結時移除預測 & 延遲補償"
+
+[[message]]
+key = "Remove team clan:"
+[message.translations]
+japanese = "チームクランを削除:"
+korean = "팀 클랜 제거:"
+simplified_chinese = "删除友好战队:"
+traditional_chinese = "刪除友好戰隊："
+
+[[message]]
+key = "Remove team name:"
+[message.translations]
+japanese = "チーム名を削除:"
+korean = "팀 이름 제거:"
+simplified_chinese = "删除友好玩家:"
+traditional_chinese = "刪除友好玩家："
+
+[[message]]
+key = "Remove war clan:"
+[message.translations]
+japanese = "敵対クランを削除:"
+korean = "적대 클랜 제거:"
+simplified_chinese = "删除敌对战队"
+traditional_chinese = "刪除敵對戰隊："
+
+[[message]]
+key = "Remove War Group"
+[message.translations]
+japanese = "敵対グループを削除"
+korean = "적대 그룹 제거"
+simplified_chinese = "删除敌对群组"
+traditional_chinese = "刪除敵對群組"
+
+[[message]]
+key = "Remove war name:"
+[message.translations]
+japanese = "敵対名を削除:"
+korean = "적대 이름 제거:"
+simplified_chinese = "删除敌对玩家:"
+traditional_chinese = "刪除敵對玩家："
+
+[[message]]
+key = "Removes all bindwheel binds"
+[message.translations]
+japanese = "すべてのバインドホイールバインドを削除"
+korean = "모든 바인드휠 바인드 제거"
+simplified_chinese = "移除全部绑定轮盘绑定"
+traditional_chinese = "移除全部綁定輪盤綁定"
+
+[[message]]
+key = "Removes all chat binds"
+[message.translations]
+japanese = "すべてのチャットバインドを削除"
+korean = "모든 채팅 바인드 제거"
+simplified_chinese = "删除所有聊天绑定"
+traditional_chinese = "刪除所有聊天綁定"
+
+[[message]]
+key = "Render all custom colored feet as white feet skin"
+[message.translations]
+japanese = "カスタムカラーの足をすべて白い足スキンとしてレンダリング"
+korean = "모든 사용자 지정 발 색상을 흰색 발 스킨으로 렌더링"
+simplified_chinese = "将所有自定义脚部颜色渲染为白色"
+traditional_chinese = "將所有自訂腳部顏色渲染為白色"
+
+[[message]]
+key = "Render ghosts as circles"
+[message.translations]
+japanese = "ゴーストを円としてレンダリング"
+korean = "고스트를 원으로 렌더링"
+simplified_chinese = "将影子渲染为圆圈"
+traditional_chinese = "將影子渲染為圓圈"
+
+[[message]]
+key = "Render tiny tees instead of circles"
+[message.translations]
+japanese = "円の代わりに小さなTeeをレンダリング"
+korean = "원 대신 작은 티로 렌더링"
+simplified_chinese = "渲染成迷你 Tee 而不是圆圈"
+traditional_chinese = "渲染成迷你 Tee 而不是圓圈"
+
+[[message]]
+key = "Repeat the latest chat message"
+[message.translations]
+japanese = "最新のチャットメッセージを繰り返す"
+korean = "최신 채팅 메시지 반복"
+simplified_chinese = "复读最新聊天消息"
+traditional_chinese = "複讀最新聊天訊息"
+
+[[message]]
+key = "Rescue to a nearby air tile"
+[message.translations]
+japanese = "近くの空気タイルにレスキュー"
+korean = "근처 공기 타일로 구조"
+simplified_chinese = "救援到附近空气格"
+traditional_chinese = "救援到附近空氣格"
+
+[[message]]
+key = "Reset all drawings on the background"
+[message.translations]
+japanese = "背景のすべての描画をリセット"
+korean = "배경의 모든 그림 초기화"
+simplified_chinese = "重置背景上的所有绘图"
+traditional_chinese = "重設背景上的所有繪圖"
+
+[[message]]
+key = "Reset position of mouse when opening bindwheel"
+[message.translations]
+japanese = "バインドホイールを開くときにマウスの位置をリセット"
+korean = "바인드휠 열 때 마우스 위치 초기화"
+simplified_chinese = "打开 快捷绑定轮盘 时重置鼠标位置"
+traditional_chinese = "開啟綁定輪盤時重設滑鼠位置"
+
+[[message]]
+key = "Save drawings to a given csv file (defaults to map name)"
+[message.translations]
+japanese = "描画を指定されたCSVファイルに保存（デフォルトはマップ名）"
+korean = "그림을 지정된 CSV 파일에 저장 (기본값: 맵 이름)"
+simplified_chinese = "将绘图保存到给定的 csv 文件（默认为地图名称）"
+traditional_chinese = "將繪圖儲存到指定的 CSV 檔案（預設使用地圖名稱）"
+
+[[message]]
+key = "Save/Load Clan"
+[message.translations]
+japanese = "クランの保存/ロード"
+korean = "클랜 저장/불러오기"
+simplified_chinese = "保存/加载战队"
+traditional_chinese = "儲存/載入戰隊"
+
+[[message]]
+key = "Save/Load Colors"
+[message.translations]
+japanese = "色の保存/ロード"
+korean = "색상 저장/불러오기"
+simplified_chinese = "保存/加载颜色"
+traditional_chinese = "儲存/載入顏色"
+
+[[message]]
+key = "Save/Load Emote"
+[message.translations]
+japanese = "エモートの保存/ロード"
+korean = "이모트 저장/불러오기"
+simplified_chinese = "保存/加载表情"
+traditional_chinese = "儲存/載入表情"
+
+[[message]]
+key = "Save/Load Flag"
+[message.translations]
+japanese = "フラッグの保存/ロード"
+korean = "국기 저장/불러오기"
+simplified_chinese = "保存/加载国旗"
+traditional_chinese = "儲存/載入國旗"
+
+[[message]]
+key = "Save/Load Name"
+[message.translations]
+japanese = "名前の保存/ロード"
+korean = "이름 저장/불러오기"
+simplified_chinese = "保存/加载名称"
+traditional_chinese = "儲存/載入名稱"
+
+[[message]]
+key = "Save/Load Skin"
+[message.translations]
+japanese = "スキンの保存/ロード"
+korean = "스킨 저장/불러오기"
+simplified_chinese = "保存/加载皮肤"
+traditional_chinese = "儲存/載入皮膚"
+
+[[message]]
 key = "Screen center line color"
 [message.translations]
+japanese = "画面中央線の色"
+korean = "화면 중심선 색상"
 simplified_chinese = "屏幕中心线颜色"
+traditional_chinese = "螢幕中心線顏色"
 
 [[message]]
 key = "Screen center line width"
 [message.translations]
+japanese = "画面中央線の幅"
+korean = "화면 중심선 두께"
 simplified_chinese = "屏幕中心线宽度"
+traditional_chinese = "螢幕中心線寬度"
 
 [[message]]
 key = "Self"
 [message.translations]
+japanese = "自身"
+korean = "자신"
 simplified_chinese = "自身"
+traditional_chinese = "自身"
 
 [[message]]
 key = "Show %s group"
 [message.translations]
+japanese = "%s グループを表示"
+korean = "%s 그룹 표시"
 simplified_chinese = "显示 %s 分组"
+traditional_chinese = "顯示 %s 分組"
 
 [[message]]
 key = "Show all enabled outlines"
 [message.translations]
+japanese = "有効なすべての輪郭を表示"
+korean = "활성화된 모든 윤곽선 표시"
 simplified_chinese = "显示所有启用的轮廓"
+traditional_chinese = "顯示所有啟用的輪廓"
 
 [[message]]
 key = "Show all warlist groups"
 [message.translations]
+japanese = "すべての敵対グループを表示"
+korean = "모든 적대 목록 그룹 표시"
 simplified_chinese = "显示所有敌对群组"
+traditional_chinese = "顯示所有敵對群組"
 
 [[message]]
 key = "Show any enabled Indicators"
 [message.translations]
+japanese = "有効なインジケーターを表示"
+korean = "활성화된 표시기 표시"
 simplified_chinese = "开启玩家指示器"
+traditional_chinese = "開啟玩家指示器"
 
 [[message]]
 key = "Show clan if war"
 [message.translations]
+japanese = "敵対がある場合はクランを表示"
+korean = "적대 관계 시 클랜 표시"
 simplified_chinese = "如果有敌对则显示战队"
+traditional_chinese = "如果有敵對則顯示戰隊"
 
 [[message]]
 key = "Show colors in spectator selection"
 [message.translations]
+japanese = "観戦選択で色を表示"
+korean = "관전 선택에서 색상 표시"
 simplified_chinese = "旁观选择中显示颜色"
+traditional_chinese = "旁觀選擇中顯示顏色"
 
 [[message]]
 key = "Show compact vote HUD"
 [message.translations]
+japanese = "コンパクト投票HUDを表示"
+korean = "소형 투표 HUD 표시"
 simplified_chinese = "显示小型投票 HUD"
+traditional_chinese = "顯示小型投票 HUD"
 
 [[message]]
 key = "Show country flags in nameplates"
 [message.translations]
+japanese = "ネームプレートに国旗を表示"
+korean = "이름표에 국가 국기 표시"
 simplified_chinese = "在玩家昵称旁显示国旗"
+traditional_chinese = "在玩家暱稱旁顯示國旗"
 
 [[message]]
 key = "Show katan on frozen players"
 [message.translations]
+japanese = "凍結プレイヤーに刀を表示"
+korean = "얼린 플레이어에 카타나 표시"
 simplified_chinese = "在被冻结的玩家身上显示武士刀"
+traditional_chinese = "在被凍結的玩家身上顯示武士刀"
 
 [[message]]
 key = "Show labels on status bar items"
 [message.translations]
+japanese = "ステータスバーアイテムにラベルを表示"
+korean = "상태 표시줄 항목에 레이블 표시"
 simplified_chinese = "在状态栏上显示条目标签"
+traditional_chinese = "在狀態欄上顯示條目標籤"
 
 [[message]]
 key = "Show moving tiles in entities"
 [message.translations]
+japanese = "エンティティ内の動くタイルを表示"
+korean = "엔티티에 움직이는 타일 표시"
 simplified_chinese = "在实体层显示移动方块"
+traditional_chinese = "在實體層顯示移動方塊"
 
 [[message]]
 key = "Show only freeze Players"
 [message.translations]
+japanese = "凍結プレイヤーのみ表示"
+korean = "얼린 플레이어만 표시"
 simplified_chinese = "仅显示冻结玩家"
+traditional_chinese = "僅顯示凍結玩家"
 
 [[message]]
 key = "Show other tees' trails"
 [message.translations]
+japanese = "他のTeeのトレイルを表示"
+korean = "다른 티의 궤적 표시"
 simplified_chinese = "显示其他 Tee 的拖尾"
+traditional_chinese = "顯示其他 Tee 的拖尾"
 
 [[message]]
 key = "Show ping colored circle in nameplates"
 [message.translations]
+japanese = "ネームプレートにping色の円を表示"
+korean = "이름표에 핑 색상 원 표시"
 simplified_chinese = "在玩家昵称旁显示延迟颜色圆圈"
+traditional_chinese = "在玩家暱稱旁顯示延遲顏色圓圈"
 
 [[message]]
 key = "Show position and angle (mini debug)"
 [message.translations]
+japanese = "位置と角度を表示（ミニデバッグ）"
+korean = "위치와 각도 표시 (미니 디버그)"
 simplified_chinese = "显示位置和角度（小型调试）"
+traditional_chinese = "顯示位置和角度（小型除錯）"
 
 [[message]]
 key = "Show seconds on clock"
 [message.translations]
+japanese = "時計に秒を表示"
+korean = "시계에 초 표시"
 simplified_chinese = "在时间处显示秒数"
+traditional_chinese = "在時間處顯示秒數"
 
 [[message]]
 key = "Show skin names in nameplate"
 [message.translations]
+japanese = "ネームプレートにスキン名を表示"
+korean = "이름표에 스킨 이름 표시"
 simplified_chinese = "在玩家昵称旁显示皮肤名"
+traditional_chinese = "在玩家暱稱旁顯示皮膚名"
 
 [[message]]
 key = "Show status bar"
 [message.translations]
+japanese = "ステータスバーを表示"
+korean = "상태 표시줄 표시"
 simplified_chinese = "显示状态栏"
+traditional_chinese = "顯示狀態欄"
 
 [[message]]
 key = "Show tee status bar"
 [message.translations]
+japanese = "Teeステータスバーを表示"
+korean = "티 상태 표시줄 표시"
 simplified_chinese = "显示 Tee 状态栏"
+traditional_chinese = "顯示 Tee 狀態欄"
 
 [[message]]
 key = "Show the cursor while free spectating"
 [message.translations]
+japanese = "自由観戦中にカーソルを表示"
+korean = "자유 관전 중 커서 표시"
 simplified_chinese = "自由观战时显示光标"
+traditional_chinese = "自由觀戰時顯示游標"
 
 [[message]]
 key = "Show the number of frozen tees"
 [message.translations]
+japanese = "凍結Teeの数を表示"
+korean = "얼린 티 수 표시"
 simplified_chinese = "显示冻结 Tee 的数量"
+traditional_chinese = "顯示凍結 Tee 的數量"
 
 [[message]]
 key = "Show the number of tees still alive"
 [message.translations]
+japanese = "生存Teeの数を表示"
+korean = "살아있는 티 수 표시"
 simplified_chinese = "显示剩余存活 Tee 的数量"
+traditional_chinese = "顯示剩餘存活 Tee 的數量"
 
 [[message]]
 key = "Show the pet"
 [message.translations]
+japanese = "ペットを表示"
+korean = "펫 표시"
 simplified_chinese = "显示宠物"
+traditional_chinese = "顯示寵物"
 
 [[message]]
 key = "Show the screen center line"
 [message.translations]
+japanese = "画面中央線を表示"
+korean = "화면 중심선 표시"
 simplified_chinese = "显示屏幕中心线"
+traditional_chinese = "顯示螢幕中心線"
 
 [[message]]
 key = "Show unpredicted ghosts for other players"
 [message.translations]
+japanese = "他のプレイヤーの未予測ゴーストを表示"
+korean = "다른 플레이어의 예측되지 않은 고스트 표시"
 simplified_chinese = "显示其他玩家未预测的影子"
+traditional_chinese = "顯示其他玩家未預測的影子"
 
 [[message]]
 key = "Shrug:"
 [message.translations]
+japanese = "肩をすくめる:"
+korean = "어깨 으쓱:"
 simplified_chinese = "耸肩："
+traditional_chinese = "聳肩："
 
 [[message]]
 key = "Skin: %s"
 [message.translations]
+japanese = "スキン: %s"
+korean = "스킨: %s"
 simplified_chinese = "皮肤：%s"
+traditional_chinese = "皮膚：%s"
 
 [[message]]
 key = "Smaller tees"
 [message.translations]
+japanese = "小さいTee"
+korean = "작은 티"
 simplified_chinese = "小尺寸 Tee"
+traditional_chinese = "小尺寸 Tee"
 
 [[message]]
 key = "Social"
 [message.translations]
+japanese = "ソーシャル"
+korean = "소셜"
 simplified_chinese = "社交功能"
+traditional_chinese = "社交功能"
 
 [[message]]
 key = "Solid"
 [message.translations]
+japanese = "ソリッド"
+korean = "단색"
 simplified_chinese = "纯色"
+traditional_chinese = "純色"
 
 [[message]]
 key = "Solid tile outline opacity"
 [message.translations]
+japanese = "ソリッドタイル輪郭の不透明度"
+korean = "고체 타일 윤곽선 불투명도"
 simplified_chinese = "墙体轮廓不透明度"
+traditional_chinese = "牆體輪廓不透明度"
 
 [[message]]
 key = "Spectate a player by Id"
 [message.translations]
+japanese = "IDでプレイヤーを観戦"
+korean = "ID로 플레이어 관전"
 simplified_chinese = "按 ID 旁观玩家"
+traditional_chinese = "按 ID 旁觀玩家"
 
 [[message]]
 key = "Status Bar"
 [message.translations]
+japanese = "ステータスバー"
+korean = "상태 표시줄"
 simplified_chinese = "状态栏"
+traditional_chinese = "狀態欄"
 
 [[message]]
 key = "Status bar alpha"
 [message.translations]
+japanese = "ステータスバーの不透明度"
+korean = "상태 표시줄 투명도"
 simplified_chinese = "状态栏透明度"
+traditional_chinese = "狀態欄透明度"
 
 [[message]]
 key = "Status Bar Codes:"
 [message.translations]
+japanese = "ステータスバーコード:"
+korean = "상태 표시줄 코드:"
 simplified_chinese = "状态栏代码："
+traditional_chinese = "狀態欄代碼："
 
 [[message]]
 key = "Status bar color"
 [message.translations]
+japanese = "ステータスバーの色"
+korean = "상태 표시줄 색상"
 simplified_chinese = "状态栏颜色"
+traditional_chinese = "狀態欄顏色"
 
 [[message]]
 key = "Status bar height"
 [message.translations]
+japanese = "ステータスバーの高さ"
+korean = "상태 표시줄 높이"
 simplified_chinese = "状态栏高度"
+traditional_chinese = "狀態欄高度"
 
 [[message]]
 key = "Status Scheme:"
 [message.translations]
+japanese = "ステータススキーム:"
+korean = "상태 구성:"
 simplified_chinese = "状态方案："
+traditional_chinese = "狀態方案："
 
 [[message]]
 key = "Stroke fade time"
 [message.translations]
+japanese = "ストロークフェード時間"
+korean = "획 사라짐 시간"
 simplified_chinese = "笔画消失时间"
+traditional_chinese = "筆畫消失時間"
 
 [[message]]
 key = "Sub-Tick aiming"
 [message.translations]
+japanese = "サブティック照準"
+korean = "서브틱 조준"
 simplified_chinese = "Sub-Tick 瞄准"
+traditional_chinese = "Sub-Tick 瞄準"
 
 [[message]]
 key = "Support ♥"
 [message.translations]
+japanese = "サポート ♥"
+korean = "후원 ♥"
 simplified_chinese = "支持 ♥"
+traditional_chinese = "支援 ♥"
 
 [[message]]
 key = "Swap ghosts with regular players"
 [message.translations]
+japanese = "ゴーストと通常プレイヤーを入れ替え"
+korean = "유령과 일반 플레이어 교체"
 simplified_chinese = "交换影子与普通玩家"
+traditional_chinese = "交換影子與普通玩家"
 
 [[message]]
 key = "Tags"
 [message.translations]
+japanese = "タグ"
+korean = "태그"
 simplified_chinese = "标签"
+traditional_chinese = "標籤"
 
 [[message]]
 key = "Taper trail width"
 [message.translations]
+japanese = "トレイル幅を先細り"
+korean = "테이퍼 트레일 너비"
 simplified_chinese = "锥形拖尾宽度"
+traditional_chinese = "錐形拖尾寬度"
 
 [[message]]
 key = "TClient Developers"
 [message.translations]
+japanese = "TClient 開発者"
+korean = "TClient 개발자"
 simplified_chinese = "TClient 开发人员"
+traditional_chinese = "TClient 開發人員"
 
 [[message]]
 key = "TClient Links"
 [message.translations]
+japanese = "TClient リンク"
+korean = "TClient 링크"
 simplified_chinese = "TClient 链接"
+traditional_chinese = "TClient 連結"
 
 [[message]]
 key = "Tee size"
 [message.translations]
+japanese = "Teeのサイズ"
+korean = "티 크기"
 simplified_chinese = "Tee 大小"
+traditional_chinese = "Tee 大小"
 
 [[message]]
 key = "Tee status bar"
 [message.translations]
+japanese = "Teeステータスバー"
+korean = "티 상태 표시줄"
 simplified_chinese = "Tee 状态栏"
+traditional_chinese = "Tee 狀態欄"
 
 [[message]]
 key = "Tee trail color"
 [message.translations]
+japanese = "Teeトレイルの色"
+korean = "티 트레일 색상"
 simplified_chinese = "Tee 拖尾颜色"
+traditional_chinese = "Tee 拖尾顏色"
 
 [[message]]
 key = "Tee Trails"
 [message.translations]
+japanese = "Teeトレイル"
+korean = "티 트레일"
 simplified_chinese = "Tee 拖尾"
+traditional_chinese = "Tee 拖尾"
 
 [[message]]
 key = "Tele"
 [message.translations]
+japanese = "テレポート"
+korean = "텔레"
 simplified_chinese = "传送轮廓"
+traditional_chinese = "傳送輪廓"
 
 [[message]]
 key = "Text alpha"
 [message.translations]
+japanese = "テキストの不透明度"
+korean = "텍스트 투명도"
 simplified_chinese = "文字透明度"
+traditional_chinese = "文字透明度"
 
 [[message]]
 key = "Tile outlines"
 [message.translations]
+japanese = "タイル輪郭"
+korean = "타일 외곽선"
 simplified_chinese = "墙体轮廓"
+traditional_chinese = "牆體輪廓"
 
 [[message]]
 key = "Tiny Tee Size"
 [message.translations]
+japanese = "小さなTeeのサイズ"
+korean = "미니 티 크기"
 simplified_chinese = "迷你 Tee 大小"
+traditional_chinese = "迷你 Tee 大小"
 
 [[message]]
 key = "Toggle fast practice mode"
 [message.translations]
+japanese = "高速練習モードの切り替え"
+korean = "빠른 연습 모드 전환"
 simplified_chinese = "切换快速练习模式"
+traditional_chinese = "切換快速練習模式"
 
 [[message]]
 key = "Toggle ghost key"
 [message.translations]
+japanese = "ゴーストキーの切り替え"
+korean = "고스트 키 전환"
 simplified_chinese = "切换影子键"
+traditional_chinese = "切換影子鍵"
 
 [[message]]
 key = "Trail width"
 [message.translations]
+japanese = "トレイル幅"
+korean = "트레일 너비"
 simplified_chinese = "拖尾宽度"
+traditional_chinese = "拖尾寬度"
 
 [[message]]
 key = "Translate ID:"
 [message.translations]
+japanese = "翻訳ID:"
+korean = "번역 ID:"
 simplified_chinese = "翻译 ID:"
+traditional_chinese = "翻譯 ID："
 
 [[message]]
 key = "Translate:"
 [message.translations]
+japanese = "翻訳:"
+korean = "번역:"
 simplified_chinese = "翻译："
+traditional_chinese = "翻譯："
 
 [[message]]
 key = "Uncertainty duration"
 [message.translations]
+japanese = "不確実性の持続時間"
+korean = "불확실성 지속 시간"
 simplified_chinese = "不确定性持续时间"
+traditional_chinese = "不確定性持續時間"
 
 [[message]]
 key = "Unflip:"
 [message.translations]
+japanese = "反転解除:"
+korean = "뒤집기 취소:"
 simplified_chinese = "取消翻转："
+traditional_chinese = "取消翻轉："
 
 [[message]]
 key = "Unfreeze"
 [message.translations]
+japanese = "解凍"
+korean = "해동"
 simplified_chinese = "解冻"
+traditional_chinese = "解凍"
 
 [[message]]
 key = "Unmute:"
 [message.translations]
+japanese = "ミュート解除:"
+korean = "음소거 해제:"
 simplified_chinese = "取消禁言："
+traditional_chinese = "取消禁言："
 
 [[message]]
 key = "Unpredicted ghost opacity"
 [message.translations]
+japanese = "未予測ゴーストの不透明度"
+korean = "예측되지 않은 고스트 불투명도"
 simplified_chinese = "未预测影子不透明度"
+traditional_chinese = "未預測影子不透明度"
 
 [[message]]
 key = "Update"
 [message.translations]
+japanese = "アップデート"
+korean = "업데이트"
 simplified_chinese = "更新"
+traditional_chinese = "更新"
 
 [[message]]
 key = "Update failed. Please try again"
 [message.translations]
+japanese = "アップデートに失敗しました。もう一度お試しください"
+korean = "업데이트 실패. 다시 시도하세요"
 simplified_chinese = "更新失败，请重试"
+traditional_chinese = "更新失敗，請重試"
 
 [[message]]
 key = "Update finished. Please restart the client"
 [message.translations]
+japanese = "アップデートが完了しました。クライアントを再起動してください"
+korean = "업데이트 완료. 클라이언트를 다시 시작하세요"
 simplified_chinese = "更新完成，请重启客户端"
+traditional_chinese = "更新完成，請重新啟動用戶端"
 
 [[message]]
 key = "Update finished. Restarting..."
 [message.translations]
+japanese = "アップデートが完了しました。再起動中..."
+korean = "업데이트 완료. 다시 시작 중..."
 simplified_chinese = "更新完成，正在重启..."
+traditional_chinese = "更新完成，正在重新啟動..."
 
 [[message]]
 key = "Update or add a specific war group"
 [message.translations]
+japanese = "特定の敵対グループを更新または追加"
+korean = "특정 전쟁 그룹 업데이트 또는 추가"
 simplified_chinese = "更新或添加指定敌对分组"
+traditional_chinese = "更新或新增指定敵對分組"
 
 [[message]]
 key = "Use 12 hour clock"
 [message.translations]
+japanese = "12時間制を使用"
+korean = "12시간제 사용"
 simplified_chinese = "使用 12 小时制"
+traditional_chinese = "使用 12 小時制"
 
 [[message]]
 key = "Use colored skins for frozen tees"
 [message.translations]
+japanese = "凍結Teeに色付きスキンを使用"
+korean = "얼린 티에 컬러 스킨 사용"
 simplified_chinese = "冻结 Tee 使用彩色皮肤"
+traditional_chinese = "凍結 Tee 使用彩色皮膚"
 
 [[message]]
 key = "Use custom skins instead of the ninja tee"
 [message.translations]
+japanese = "忍者Teeの代わりにカスタムスキンを使用"
+korean = "닌자 티 대신 사용자 정의 스킨 사용"
 simplified_chinese = "使用自定义皮肤代替忍者 Tee"
+traditional_chinese = "使用自訂皮膚代替忍者 Tee"
 
 [[message]]
 key = "Use new smoothing algorithm"
 [message.translations]
+japanese = "新しいスムージングアルゴリズムを使用"
+korean = "새 평활화 알고리즘 사용"
 simplified_chinese = "使用新的平滑算法"
+traditional_chinese = "使用新的平滑演算法"
 
 [[message]]
 key = "Use warlist colors instead of regular colors"
 [message.translations]
+japanese = "通常の色の代わりに敵対リストの色を使用"
+korean = "일반 색상 대신 전쟁 목록 색상 사용"
 simplified_chinese = "使用敌对列表颜色而不是常规颜色"
+traditional_chinese = "使用敵對列表顏色而不是常規顏色"
 
 [[message]]
 key = "Use warlist groups for indicator"
 [message.translations]
+japanese = "インジケーターに敵対リストグループを使用"
+korean = "표시기에 전쟁 목록 그룹 사용"
 simplified_chinese = "使用敌对列表作为指示器"
+traditional_chinese = "使用敵對列表作為指示器"
 
 [[message]]
 key = "Visual"
 [message.translations]
+japanese = "視覚設定"
+korean = "시각"
 simplified_chinese = "视觉效果"
+traditional_chinese = "視覺效果"
 
 [[message]]
 key = "Visual: Effects"
 [message.translations]
+japanese = "視覚設定: エフェクト"
+korean = "시각: 효과"
 simplified_chinese = "视觉：特效"
+traditional_chinese = "視覺：特效"
 
 [[message]]
 key = "Visual: Font & Cursor"
 [message.translations]
+japanese = "視覚設定: フォントとカーソル"
+korean = "시각: 글꼴 및 커서"
 simplified_chinese = "视觉：字体与光标"
+traditional_chinese = "視覺：字型與游標"
 
 [[message]]
 key = "Visual: Nameplates"
 [message.translations]
+japanese = "視覚設定: ネームプレート"
+korean = "시각: 이름표"
 simplified_chinese = "视觉：名牌"
+traditional_chinese = "視覺：名牌"
 
 [[message]]
 key = "War Entries"
 [message.translations]
+japanese = "敵対エントリー"
+korean = "적대 항목"
 simplified_chinese = "敌对条目"
+traditional_chinese = "敵對條目"
 
 [[message]]
 key = "War Groups"
 [message.translations]
+japanese = "敵対グループ"
+korean = "적대 그룹"
 simplified_chinese = "敌对群组"
+traditional_chinese = "敵對群組"
 
 [[message]]
 key = "War List"
 [message.translations]
+japanese = "敵対リスト"
+korean = "전쟁 목록"
 simplified_chinese = "战争列表"
+traditional_chinese = "戰爭列表"
 
 [[message]]
 key = "Warlist"
 [message.translations]
+japanese = "敵対リスト"
+korean = "적대 목록"
 simplified_chinese = "敌对列表"
+traditional_chinese = "敵對列表"
 
 [[message]]
 key = "Wheel animate"
 [message.translations]
+japanese = "ホイールアニメーション"
+korean = "휠 애니메이션"
 simplified_chinese = "滚轮动画"
+traditional_chinese = "滾輪動畫"
 
 [[message]]
 key = "Writing item %d failed"
 [message.translations]
+japanese = "アイテム %d の書き込みに失敗"
+korean = "%d번 항목 쓰기 실패"
 simplified_chinese = "写入第 %d 项失败"
+traditional_chinese = "寫入第 %d 項失敗"
 
 [[message]]
 key = "Written %d items"
 [message.translations]
+japanese = "%d アイテムを書き込みました"
+korean = "%d개 항목 작성됨"
 simplified_chinese = "已写入 %d 项"
+traditional_chinese = "已寫入 %d 項"
 
 [[message]]
 key = "You are not in practice"
 [message.translations]
+japanese = "練習モードではありません"
+korean = "연습 모드가 아닙니다"
 simplified_chinese = "你当前不在练习模式中"
+traditional_chinese = "你目前不在練習模式中"
 
 [[message]]
 key = "You're the last one!"
 [message.translations]
+japanese = "最後の一人です！"
+korean = "당신이 마지막이에요!"
 simplified_chinese = "就你一个啦!"
+traditional_chinese = "就剩你一個啦！"
 
 [[message]]
 key = "Your friend %s is online and currently on map %s!"
 [message.translations]
+japanese = "友達 %s がオンラインで、現在マップ %s にいます！"
+korean = "친구 %s님이 온라인이며 현재 맵 %s에 있습니다!"
 simplified_chinese = "你的好友 %s 在线，当前在地图 %s！"
+traditional_chinese = "你的好友 %s 線上，目前在地圖 %s！"
 
 [[message]]
 key = "Your profile"
 [message.translations]
+japanese = "あなたのプロフィール"
+korean = "내 프로필"
 simplified_chinese = "您的个人资料"
+traditional_chinese = "您的個人資料"
 
 [[message]]
 key = "You may have installed only DDNet.exe. Please use the full QmClient folder."
 context = "data_version.h"
 [message.translations]
+japanese = "DDNet.exe のみをインストールした可能性があります。完全な QmClient フォルダを使用してください。"
+korean = "DDNet.exe만 설치했을 수 있습니다. 전체 QmClient 폴더를 사용하세요."
 simplified_chinese = "你可能只安装了 DDNet.exe。请使用完整的 QmClient 文件夹。"
+traditional_chinese = "你可能只安裝了 DDNet.exe。請使用完整的 QmClient 資料夾。"
 
 [[message]]
 key = "You may have replaced only DDNet.exe and skipped QmClient.zip.\\nPlease install the full QmClient package."
 context = "data_version.h"
 [message.translations]
+japanese = "DDNet.exe のみを置き換え、QmClient.zip をスキップした可能性があります。\n完全な QmClient パッケージをインストールしてください。"
+korean = "DDNet.exe만 교체하고 QmClient.zip을 건너뛰었을 수 있습니다.\\n전체 QmClient 패키지를 설치하세요."
 simplified_chinese = "喜报! 你可能仅下载并替换了 DDNet.exe 文件，没有下载 QmClient.zip\\n请仔细阅读群公告的使用说明!!!"
+traditional_chinese = "你可能只替換了 DDNet.exe 而跳過了 QmClient.zip。\\n請安裝完整的 QmClient 套件。"
 
 [[message]]
 key = "Normal"
 context = "Hammer Mode"
 [message.translations]
+japanese = "通常（回転なし）"
+korean = "일반 (회전 안 함)"
 simplified_chinese = "正常(不旋转)"
+traditional_chinese = "正常（不旋轉）"
 
 [[message]]
 key = "Rotate with cursor"
 context = "Hammer Mode"
 [message.translations]
+japanese = "カーソルに合わせて回転（垂直）"
+korean = "커서와 함께 회전 (수직)"
 simplified_chinese = "随光标旋转(垂直)"
+traditional_chinese = "隨游標旋轉（垂直）"
 
 [[message]]
 key = "Rotate with cursor like gun"
 context = "Hammer Mode"
 [message.translations]
+japanese = "銃のようにカーソルに合わせて回転（平行）"
+korean = "총처럼 커서와 함께 회전 (수평)"
 simplified_chinese = "像枪一样随光标旋转(平行)"
+traditional_chinese = "像槍一樣隨游標旋轉（平行）"
 
 [[message]]
 key = "Width"
 context = "Outlines"
 [message.translations]
+japanese = "幅"
+korean = "너비"
 simplified_chinese = "宽度"
+traditional_chinese = "寬度"

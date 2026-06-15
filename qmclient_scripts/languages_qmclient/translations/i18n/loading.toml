@@ -1,644 +1,1031 @@
 [[message]]
 key = "%d/%d KiB (%.1f KiB/s)"
 [message.translations]
+japanese = "%d/%d KiB (%.1f KiB/s)"
+korean = "%d/%d KiB (%.1f KiB/s)"
 simplified_chinese = "%d/%d KiB（%.1f KiB/s）"
+traditional_chinese = "%d/%d KiB（%.1f KiB/s）"
 
 [[message]]
 key = "%i minute left"
 [message.translations]
+japanese = "残り %i 分"
+korean = "%i분 남음"
 simplified_chinese = "还剩下 %i 分钟"
+traditional_chinese = "還剩下 %i 分鐘"
 
 [[message]]
 key = "%i minutes left"
 [message.translations]
+japanese = "残り %i 分"
+korean = "%i 분 남음"
 simplified_chinese = "还剩下 %i 分钟"
+traditional_chinese = "還剩下 %i 分鐘"
 
 [[message]]
 key = "%i second left"
 [message.translations]
+japanese = "残り %i 秒"
+korean = "%i 초 남음"
 simplified_chinese = "还剩下 %i 秒钟"
+traditional_chinese = "還剩下 %i 秒鐘"
 
 [[message]]
 key = "%i seconds left"
 [message.translations]
+japanese = "残り %i 秒"
+korean = "%i 초 남음"
 simplified_chinese = "还剩下 %i 秒钟"
+traditional_chinese = "還剩下 %i 秒鐘"
 
 [[message]]
 key = "(paused)"
 [message.translations]
+japanese = "（一時停止）"
+korean = "(일시 중지됨)"
 simplified_chinese = "(暂停)"
+traditional_chinese = "(暫停)"
 
 [[message]]
 key = "A demo with this name already exists"
 [message.translations]
+japanese = "同名のデモが既に存在します"
+korean = "이 이름의 데모가 이미 존재합니다."
 simplified_chinese = "已经存在同名回放"
+traditional_chinese = "已經存在同名回放"
 
 [[message]]
 key = "A folder with this name already exists"
 [message.translations]
+japanese = "同名のフォルダが既に存在します"
+korean = "이 이름을 가진 폴더가 이미 존재합니다"
 simplified_chinese = "已经存在同名文件夹"
+traditional_chinese = "已經存在同名資料夾"
 
 [[message]]
 key = "A screenshot with this name already exists"
 [message.translations]
+japanese = "同名のスクリーンショットが既に存在します"
+korean = "스크린샷 이름이 이미 존재합니다."
 simplified_chinese = "已经存在同名截图"
+traditional_chinese = "已經存在同名截圖"
 
 [[message]]
 key = "Abort"
 [message.translations]
+japanese = "キャンセル"
+korean = "중단"
 simplified_chinese = "取消"
+traditional_chinese = "取消"
 
 [[message]]
 key = "Address"
 [message.translations]
+japanese = "アドレス"
+korean = "주소"
 simplified_chinese = "地址"
+traditional_chinese = "地址"
 
 [[message]]
 key = "Appearance"
 [message.translations]
+japanese = "外観"
+korean = "외형"
 simplified_chinese = "游戏界面"
+traditional_chinese = "遊戲介面"
 
 [[message]]
 key = "Are you sure that you want to quit?"
 [message.translations]
+japanese = "本当に終了してもよろしいですか？"
+korean = "정말 종료하시겠습니까?"
 simplified_chinese = "确定要退出吗？"
+traditional_chinese = "確定要退出嗎？"
 
 [[message]]
 key = "Are you sure that you want to restart?"
 [message.translations]
+japanese = "本当に再起動してもよろしいですか？"
+korean = "정말 다시 시작하시겠습니까?"
 simplified_chinese = "确定要重新开始？"
+traditional_chinese = "確定要重新開始？"
 
 [[message]]
 key = "Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced."
 [message.translations]
+japanese = "スキンを保存してもよろしいですか？同じ名前のスキンが既にある場合は置き換えられます。"
+korean = "스킨을 저장하시겠습니까? 같은 이름의 스킨이 이미 존재하면 교체됩니다."
 simplified_chinese = "你确定要保存皮肤吗？如果已经存在同名皮肤，将会被替换。"
+traditional_chinese = "你確定要儲存你的皮膚嗎？如果已經存在同名皮膚，將會被取代。"
 
 [[message]]
 key = "Assets"
 [message.translations]
+japanese = "アセット"
+korean = "에셋"
 simplified_chinese = "资源"
+traditional_chinese = "資源"
 
 [[message]]
 key = "Browser"
 [message.translations]
+japanese = "ブラウザ"
+korean = "브라우저"
 simplified_chinese = "浏览"
+traditional_chinese = "瀏覽"
 
 [[message]]
 key = "Call vote"
 [message.translations]
+japanese = "投票を開始"
+korean = "투표 요청"
 simplified_chinese = "发起投票"
+traditional_chinese = "發起投票"
 
 [[message]]
 key = "Change ready state (0.7 only)"
 [message.translations]
+japanese = "準備状態を変更（0.7のみ）"
+korean = "준비 상태 변경 (0.7 전용)"
 simplified_chinese = "更改就绪状态（仅限 0.7）"
+traditional_chinese = "更改就緒狀態（僅限 0.7）"
 
 [[message]]
 key = "Checking for existing player with your name"
 [message.translations]
+japanese = "同じ名前のプレイヤーを確認中"
+korean = "당신의 이름을 가진 기존 플레이어 확인 중"
 simplified_chinese = "正在查找该昵称的 DDNet 记录"
+traditional_chinese = "正在查找該暱稱的 DDNet 記錄"
 
 [[message]]
 key = "Configs"
 [message.translations]
+japanese = "コンフィグ"
+korean = "설정 파일"
 simplified_chinese = "客户端配置"
+traditional_chinese = "客戶端配置"
 
 [[message]]
 key = "Connected"
 [message.translations]
+japanese = "接続完了"
+korean = "연결됨"
 simplified_chinese = "连接成功"
+traditional_chinese = "連線成功"
 
 [[message]]
 key = "Connecting to"
 [message.translations]
+japanese = "に接続中"
+korean = "연결 중"
 simplified_chinese = "正在连接到"
+traditional_chinese = "正在連線到"
 
 [[message]]
 key = "Continue anyway?"
 [message.translations]
+japanese = "それでも終了しますか？"
+korean = "그래도 계속하시겠습니까?"
 simplified_chinese = "仍要退出？"
+traditional_chinese = "仍要退出？"
 
 [[message]]
 key = "Contributors"
 [message.translations]
+japanese = "コントリビューター"
+korean = "기여자"
 simplified_chinese = "贡献者"
+traditional_chinese = "貢獻者"
 
 [[message]]
 key = "Controls"
 [message.translations]
+japanese = "コントロール"
+korean = "조작"
 simplified_chinese = "控制"
+traditional_chinese = "控制"
 
 [[message]]
 key = "Could not check for existing player with your name. Check your internet connection."
 [message.translations]
+japanese = "同じ名前のプレイヤーを確認できませんでした。インターネット接続を確認してください。"
+korean = "당신의 이름을 가진 기존 플레이어를 확인할 수 없습니다. 인터넷 연결을 확인하세요."
 simplified_chinese = "无法验证是否已存在相同名称的玩家。请检查你的网络连接。"
+traditional_chinese = "無法驗證是否已存在相同名稱的玩家。請檢查你的網路連線。"
 
 [[message]]
 key = "DDNet"
 [message.translations]
+japanese = "DDNet"
+korean = "DDNet"
 simplified_chinese = "DDNet"
+traditional_chinese = "DDNet"
 
 [[message]]
 key = "DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you."
 [message.translations]
+japanese = "DDraceNetwork は協力型オンラインゲームで、あなたとあなたの Tee のグループがマップのゴールに到達することを目指します。初心者は最も簡単なマップがある Novice サーバーから始めるべきです。自分の近くのサーバーを選ぶために ping を考慮してください。"
+korean = "DDraceNetwork는 협동 온라인 게임으로, 당신과 당신의 티 그룹이 맵의 결승선에 도달하는 것이 목표입니다. 초보자는 가장 쉬운 맵이 있는 Novice 서버에서 시작해야 합니다. 핑을 고려하여 가까운 서버를 선택하세요."
 simplified_chinese = "DDraceNetwork 是一款在线合作游戏，你和你团体里的 Tee 的目标是抵达地图的终点。作为新手你应该从有着最简单的地图的简单（Novice） 服务器入门。根据延迟来选择离你相近的服务器。"
+traditional_chinese = "DDraceNetwork 是一款線上合作遊戲，你和你團體裡的 Tee 的目標是抵達地圖的終點。作為新手你應該從有著最簡單的地圖的簡單（Novice）伺服器入門。根據延遲來選擇離你相近的伺服器。"
 
 [[message]]
 key = "Demos"
 [message.translations]
+japanese = "デモ"
+korean = "데모"
 simplified_chinese = "回放"
+traditional_chinese = "回放"
 
 [[message]]
 key = "Downloading map"
 [message.translations]
+japanese = "マップをダウンロード中"
+korean = "맵 다운로드 중"
 simplified_chinese = "正在下载地图"
+traditional_chinese = "正在下載地圖"
 
 [[message]]
 key = "Editor"
 [message.translations]
+japanese = "エディター"
+korean = "편집기"
 simplified_chinese = "编辑器"
+traditional_chinese = "編輯器"
 
 [[message]]
 key = "Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)"
 [message.translations]
+japanese = "指定されたバグを使用してマップ互換モードを有効にする（例：grenade-doubleexplosion@ddnet.tw）"
+korean = "지정된 버그를 사용하여 맵 호환 모드 활성화 (예: grenade-doubleexplosion@ddnet.tw)"
 simplified_chinese = "使用指定 bug 启用地图兼容模式（例如：grenade-doubleexplosion@ddnet.tw）"
+traditional_chinese = "使用指定 bug 啟用地圖相容模式（例如：grenade-doubleexplosion@ddnet.tw）"
 
 [[message]]
 key = "Error"
 [message.translations]
+japanese = "エラー"
+korean = "오류"
 simplified_chinese = "错误"
+traditional_chinese = "錯誤"
 
 [[message]]
 key = "Error checking player name"
 [message.translations]
+japanese = "プレイヤー名の確認エラー"
+korean = "플레이어 이름 확인 오류"
 simplified_chinese = "检查玩家名称时出错"
+traditional_chinese = "檢查玩家名稱時出錯"
 
 [[message]]
 key = "Error loading demo"
 [message.translations]
+japanese = "デモの読み込みエラー"
+korean = "데모 로딩 오류"
 simplified_chinese = "回放加载错误"
+traditional_chinese = "回放載入錯誤"
 
 [[message]]
 key = "Existing Player"
 [message.translations]
+japanese = "既存のプレイヤー"
+korean = "기존 플레이어"
 simplified_chinese = "玩家已存在"
+traditional_chinese = "玩家已存在"
 
 [[message]]
 key = "Favorite map"
 [message.translations]
+japanese = "お気に入りマップ"
+korean = "즐겨찾는 맵"
 simplified_chinese = "收藏地图"
+traditional_chinese = "收藏地圖"
 
 [[message]]
 key = "Favorites"
 [message.translations]
+japanese = "お気に入り"
+korean = "즐겨찾기"
 simplified_chinese = "收藏夹"
+traditional_chinese = "收藏夾"
 
 [[message]]
 key = "File '%s' already exists, do you want to overwrite it?"
 [message.translations]
+japanese = "ファイル「%s」は既に存在します。上書きしますか？"
+korean = "파일 '%s'이(가) 이미 존재합니다. 덮어쓰시겠습니까?"
 simplified_chinese = "文件名 \"%s\" 已经存在，是否要覆盖该文件？"
+traditional_chinese = "檔案 \"%s\" 已經存在，是否要覆蓋該檔案？"
 
 [[message]]
 key = "Game"
 [message.translations]
+japanese = "ゲーム"
+korean = "게임"
 simplified_chinese = "游戏"
+traditional_chinese = "遊戲"
 
 [[message]]
 key = "General"
 [message.translations]
+japanese = "全般"
+korean = "일반"
 simplified_chinese = "常规"
+traditional_chinese = "常規"
 
 [[message]]
 key = "Getting game info"
 [message.translations]
+japanese = "ゲーム情報を取得中"
+korean = "게임 정보를 가져오는 중"
 simplified_chinese = "正在获取游戏信息"
+traditional_chinese = "正在獲取遊戲資訊"
 
 [[message]]
 key = "Ghost"
 [message.translations]
+japanese = "ゴースト"
+korean = "고스트"
 simplified_chinese = "影子"
+traditional_chinese = "影子"
 
 [[message]]
 key = "Graphics"
 [message.translations]
+japanese = "グラフィックス"
+korean = "그래픽"
 simplified_chinese = "图像"
+traditional_chinese = "圖像"
 
 [[message]]
 key = "Initializing assets"
 [message.translations]
+japanese = "アセットを初期化中"
+korean = "에셋 초기화 중"
 simplified_chinese = "正在初始化资源"
+traditional_chinese = "正在初始化資源"
 
 [[message]]
 key = "Initializing components"
 [message.translations]
+japanese = "コンポーネントを初期化中"
+korean = "게임 엔진 초기화 중"
 simplified_chinese = "正在初始化游戏引擎"
+traditional_chinese = "正在初始化遊戲引擎"
 
 [[message]]
 key = "Initializing map logic"
 [message.translations]
+japanese = "マップロジックを初期化中"
+korean = "맵 로직 초기화 중"
 simplified_chinese = "正在初始化地图逻辑"
+traditional_chinese = "正在初始化地圖邏輯"
 
 [[message]]
 key = "Internet"
 [message.translations]
+japanese = "インターネット"
+korean = "인터넷"
 simplified_chinese = "互联网"
+traditional_chinese = "網際網路"
 
 [[message]]
 key = "It's recommended that you check the settings to adjust them to your liking before joining a server."
 [message.translations]
+japanese = "サーバーに参加する前に、設定を確認して自分好みに調整することをお勧めします。"
+korean = "서버에 접속하기 전에 설정을 확인하여 취향에 맞게 조정하는 것이 좋습니다."
 simplified_chinese = "建议你在进入服务器前检查一下设置并根据你的喜好进行调整。"
+traditional_chinese = "建議你在進入伺服器前檢查一下設定並根據你的喜好進行調整。"
 
 [[message]]
 key = "Join Tutorial Server"
 [message.translations]
+japanese = "チュートリアルサーバーに参加"
+korean = "튜토리얼 서버 참가"
 simplified_chinese = "进入教学服务器"
+traditional_chinese = "進入教學伺服器"
 
 [[message]]
 key = "Kill yourself to restart"
 [message.translations]
+japanese = "自殺して再スタート"
+korean = "자살하여 다시 시작"
 simplified_chinese = "自杀重新开始"
+traditional_chinese = "自殺重新開始"
 
 [[message]]
 key = "LAN"
 [message.translations]
+japanese = "LAN"
+korean = "LAN"
 simplified_chinese = "局域网"
+traditional_chinese = "區域網路"
 
 [[message]]
 key = "Language"
 [message.translations]
+japanese = "言語"
+korean = "언어"
 simplified_chinese = "语言"
+traditional_chinese = "語言"
 
 [[message]]
 key = "Loading DDNet Client"
 [message.translations]
+japanese = "DDNet クライアントを読み込み中..."
+korean = "DDNet 클라이언트 로딩 중"
 simplified_chinese = "加载 DDNet 客户端中…"
+traditional_chinese = "正在載入 DDNet 客戶端…"
 
 [[message]]
 key = "Loading Demo"
 [message.translations]
+japanese = "デモを読み込み中"
+korean = "데모 로딩 중"
 simplified_chinese = "正在加载回放"
-
-[[message]]
-key = "Loading demo info"
-[message.translations]
-simplified_chinese = "正在加载回放信息"
+traditional_chinese = "正在載入回放"
 
 [[message]]
 key = "Loading demo file from storage"
 [message.translations]
+japanese = "ストレージからデモファイルを読み込み中"
+korean = "저장소에서 데모 파일 로딩 중"
 simplified_chinese = "正在从硬盘中加载回放文件"
+traditional_chinese = "正在從硬碟中載入回放檔案"
+
+[[message]]
+key = "Loading demo info"
+[message.translations]
+japanese = "デモ情報を読み込み中"
+korean = "데모 정보 로딩 중"
+simplified_chinese = "正在加载回放信息"
+traditional_chinese = "正在載入回放資訊"
 
 [[message]]
 key = "Loading map file from storage"
 [message.translations]
+japanese = "ストレージからマップファイルを読み込み中"
+korean = "저장소에서 맵 파일 로딩 중"
 simplified_chinese = "正在从硬盘中加载地图文件"
+traditional_chinese = "正在從硬碟中載入地圖檔案"
 
 [[message]]
 key = "Loading menu images"
 [message.translations]
+japanese = "メニュー画像を読み込み中"
+korean = "메뉴 이미지 로딩 중"
 simplified_chinese = "正在加载主菜单图片"
+traditional_chinese = "正在載入主選單圖片"
 
 [[message]]
 key = "Main menu"
 [message.translations]
+japanese = "メインメニュー"
+korean = "메인 메뉴"
 simplified_chinese = "主菜单"
+traditional_chinese = "主選單"
 
 [[message]]
 key = "Name"
 [message.translations]
+japanese = "名前"
+korean = "이름"
 simplified_chinese = "名称"
+traditional_chinese = "名稱"
 
 [[message]]
 key = "New name:"
 [message.translations]
+japanese = "新しい名前："
+korean = "새 파일 이름:"
 simplified_chinese = "新文件名："
+traditional_chinese = "新名稱："
 
 [[message]]
 key = "Nickname"
 [message.translations]
+japanese = "ニックネーム"
+korean = "닉네임"
 simplified_chinese = "昵称"
+traditional_chinese = "暱稱"
 
 [[message]]
 key = "No"
 [message.translations]
+japanese = "いいえ"
+korean = "아니오"
 simplified_chinese = "否"
+traditional_chinese = "否"
 
 [[message]]
 key = "No answer from server yet."
 [message.translations]
+japanese = "サーバーからの応答がまだありません。"
+korean = "서버에서 아직 응답이 없습니다."
 simplified_chinese = "服务器无响应"
+traditional_chinese = "伺服器無回應"
 
 [[message]]
 key = "Ok"
 [message.translations]
+japanese = "確認"
+korean = "확인"
 simplified_chinese = "确定"
+traditional_chinese = "確定"
 
 [[message]]
 key = "Password"
 [message.translations]
+japanese = "パスワード"
+korean = "비밀번호"
 simplified_chinese = "密码"
+traditional_chinese = "密碼"
 
 [[message]]
 key = "Password incorrect"
 [message.translations]
+japanese = "パスワードが間違っています"
+korean = "비밀번호가 올바르지 않음"
 simplified_chinese = "密码错误"
+traditional_chinese = "密碼錯誤"
 
 [[message]]
 key = "Player"
 [message.translations]
+japanese = "プレイヤー"
+korean = "플레이어"
 simplified_chinese = "玩家"
+traditional_chinese = "玩家"
 
 [[message]]
 key = "Please enter your nickname below."
 [message.translations]
+japanese = "以下にニックネームを入力してください。"
+korean = "아래에 닉네임을 입력하세요."
 simplified_chinese = "请在下方输入你的昵称。"
+traditional_chinese = "請在下方輸入你的暱稱。"
 
 [[message]]
 key = "Preparing demo playback"
 [message.translations]
+japanese = "デモ再生を準備中"
+korean = "데모 재생 준비 중"
 simplified_chinese = "正在准备回放"
+traditional_chinese = "正在準備回放"
 
 [[message]]
 key = "Profiles"
 [message.translations]
+japanese = "プロファイル"
+korean = "프로필"
 simplified_chinese = "配置文件"
+traditional_chinese = "設定檔"
 
 [[message]]
 key = "Quit"
 [message.translations]
+japanese = "終了"
+korean = "종료"
 simplified_chinese = "退出"
+traditional_chinese = "退出"
 
 [[message]]
 key = "Quitting. Please wait…"
 [message.translations]
+japanese = "終了しています。お待ちください..."
+korean = "종료 중입니다. 잠시 기다려 주세요…"
 simplified_chinese = "正在退出，请稍等"
+traditional_chinese = "正在退出，請稍等…"
 
 [[message]]
 key = "Reconnect in %d sec"
 [message.translations]
+japanese = "%d 秒後に再接続"
+korean = "%d초 후 재연결"
 simplified_chinese = "%d 秒后重新连接"
+traditional_chinese = "%d 秒後重新連線"
 
 [[message]]
 key = "Refresh"
 [message.translations]
+japanese = "更新"
+korean = "새로고침"
 simplified_chinese = "刷新"
+traditional_chinese = "重新整理"
 
 [[message]]
 key = "Rename demo"
 [message.translations]
+japanese = "デモの名前を変更"
+korean = "데모 이름 바꾸기"
 simplified_chinese = "重命名回放"
+traditional_chinese = "重新命名回放"
 
 [[message]]
 key = "Rename folder"
 [message.translations]
+japanese = "フォルダの名前を変更"
+korean = "폴더 이름 바꾸기"
 simplified_chinese = "重命名文件夹"
+traditional_chinese = "重新命名資料夾"
 
 [[message]]
 key = "Rename screenshot"
 [message.translations]
+japanese = "スクリーンショットの名前を変更"
+korean = "스크린샷 이름 바꾸기"
 simplified_chinese = "重命名截图"
+traditional_chinese = "重新命名截圖"
 
 [[message]]
 key = "Render complete"
 [message.translations]
+japanese = "レンダリング完了"
+korean = "렌더링 완료"
 simplified_chinese = "渲染完毕"
+traditional_chinese = "渲染完畢"
 
 [[message]]
 key = "Render demo"
 [message.translations]
+japanese = "デモをレンダリング"
+korean = "데모 렌더링"
 simplified_chinese = "渲染回放"
+traditional_chinese = "渲染回放"
 
 [[message]]
 key = "Replace video"
 [message.translations]
+japanese = "ビデオを置き換え"
+korean = "비디오 교체"
 simplified_chinese = "替换视频"
+traditional_chinese = "取代視訊"
 
 [[message]]
 key = "Requesting to join the game"
 [message.translations]
+japanese = "ゲームへの参加をリクエスト中"
+korean = "게임 참가 요청 중"
 simplified_chinese = "正在请求加入游戏"
+traditional_chinese = "正在請求加入遊戲"
 
 [[message]]
 key = "Restart"
 [message.translations]
+japanese = "再起動"
+korean = "다시 시작"
 simplified_chinese = "重新开始"
+traditional_chinese = "重新開始"
 
 [[message]]
 key = "Restarting. Please wait…"
 [message.translations]
+japanese = "再起動中。お待ちください..."
+korean = "다시 시작 중입니다. 잠시 기다려 주세요…"
 simplified_chinese = "正在重启，请稍等"
+traditional_chinese = "正在重新啟動，請稍等…"
 
 [[message]]
 key = "Save skin"
 [message.translations]
+japanese = "スキンを保存"
+korean = "스킨 저장"
 simplified_chinese = "保存皮肤"
+traditional_chinese = "儲存皮膚"
 
 [[message]]
 key = "Sending initial client info"
 [message.translations]
+japanese = "初期クライアント情報を送信中"
+korean = "초기 클라이언트 정보 전송 중"
 simplified_chinese = "正在发送初始客户端信息"
+traditional_chinese = "正在發送初始客戶端資訊"
 
 [[message]]
 key = "Server info"
 [message.translations]
+japanese = "サーバー情報"
+korean = "서버 정보"
 simplified_chinese = "服务器信息"
+traditional_chinese = "伺服器資訊"
 
 [[message]]
 key = "Settings"
 [message.translations]
+japanese = "設定"
+korean = "설정"
 simplified_chinese = "设置"
+traditional_chinese = "設定"
 
 [[message]]
 key = "Show chat"
 [message.translations]
+japanese = "チャットを表示"
+korean = "채팅 표시"
 simplified_chinese = "显示聊天框"
+traditional_chinese = "顯示聊天框"
 
 [[message]]
 key = "Show DDNet map finishes in server browser"
 [message.translations]
+japanese = "サーバーブラウザに DDNet マップのクリア状況を表示"
+korean = "서버 브라우저에서 DDNet 맵 완료 표시"
 simplified_chinese = "在服务器浏览器中显示已完成的 DDNet 地图"
+traditional_chinese = "在伺服器瀏覽器中顯示已完成的 DDNet 地圖"
 
 [[message]]
 key = "Show ingame HUD"
 [message.translations]
+japanese = "ゲーム内 HUD を表示"
+korean = "인게임 HUD 표시"
 simplified_chinese = "显示 HUD"
+traditional_chinese = "顯示 HUD"
 
 [[message]]
 key = "Skip Tutorial"
 [message.translations]
+japanese = "チュートリアルをスキップ"
+korean = "튜토리얼 건너뛰기"
 simplified_chinese = "跳过教学"
+traditional_chinese = "跳過教學"
 
 [[message]]
 key = "Some fonts could not be loaded. Check the local console for details."
 [message.translations]
+japanese = "一部のフォントを読み込めませんでした。詳細はローカルコンソールを確認してください。"
+korean = "일부 글꼴을 로드할 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요."
 simplified_chinese = "未能加载某些字体。检查本地控制台以获取详情。"
+traditional_chinese = "未能載入某些字型。檢查本地控制台以獲取詳情。"
 
 [[message]]
 key = "Sound"
 [message.translations]
+japanese = "サウンド"
+korean = "사운드"
 simplified_chinese = "声音"
+traditional_chinese = "聲音"
 
 [[message]]
 key = "Speed"
 [message.translations]
+japanese = "速度"
+korean = "속도"
 simplified_chinese = "速度"
+traditional_chinese = "速度"
 
 [[message]]
 key = "Switch team"
 [message.translations]
+japanese = "チームを切り替え"
+korean = "팀 전환"
 simplified_chinese = "切换队伍"
+traditional_chinese = "切換隊伍"
 
 [[message]]
 key = "TClient"
 [message.translations]
+japanese = "TClient"
+korean = "TClient"
 simplified_chinese = "TClient"
+traditional_chinese = "TClient"
 
 [[message]]
 key = "Tee"
 [message.translations]
+japanese = "Tee"
+korean = "티"
 simplified_chinese = "Tee"
+traditional_chinese = "Tee"
 
 [[message]]
 key = "Tee 0.7"
 [message.translations]
+japanese = "Tee 0.7"
+korean = "티 0.7"
 simplified_chinese = "Tee 0.7"
+traditional_chinese = "Tee 0.7"
 
 [[message]]
 key = "The server is running a non-standard tuning on a pure game type."
 [message.translations]
+japanese = "サーバーは純正ゲームタイプで非標準のチューニングを実行しています。"
+korean = "서버가 순수 게임 유형에서 비표준 튜닝을 실행 중입니다."
 simplified_chinese = "此服务器运行着经过调整的非标准游戏模式。"
+traditional_chinese = "此伺服器在純淨遊戲類型上使用了非標準調校。"
 
 [[message]]
 key = "Theme"
 [message.translations]
+japanese = "テーマ"
+korean = "테마"
 simplified_chinese = "主题"
+traditional_chinese = "主題"
 
 [[message]]
 key = "There's an unsaved change in the touch controls editor, you might want to save it."
 [message.translations]
+japanese = "タッチコントロールエディターに未保存の変更があります。保存することをお勧めします。"
+korean = "터치 컨트롤 편집기에 저장되지 않은 변경 사항이 있습니다. 저장하는 것이 좋습니다."
 simplified_chinese = "触控控件编辑器中有未保存的更改，建议先保存。"
+traditional_chinese = "觸控控制編輯器中有未儲存的變更，建議先儲存。"
 
 [[message]]
 key = "There's an unsaved map in the editor, you might want to save it."
 [message.translations]
+japanese = "エディターに未保存のマップがあります。保存することをお勧めします。"
+korean = "편집기에 저장되지 않은 맵이 있습니다. 저장하는 것이 좋습니다."
 simplified_chinese = "编辑器中有尚未保存的地图，你或需要保存"
+traditional_chinese = "編輯器中有尚未儲存的地圖，建議先儲存。"
 
 [[message]]
 key = "This name cannot be used for files and folders"
 [message.translations]
+japanese = "この名前はファイルやフォルダに使用できません"
+korean = "이 이름은 파일 및 폴더에 사용할 수 없습니다"
 simplified_chinese = "此名称不能用于文件和文件夹"
+traditional_chinese = "此名稱不能用於檔案和資料夾"
 
 [[message]]
 key = "transmits your player name to info.ddnet.org"
 [message.translations]
+japanese = "プレイヤー名を info.ddnet.org に送信します"
+korean = "플레이어 이름을 info.ddnet.org로 전송합니다"
 simplified_chinese = "将会发送你的玩家昵称到 info.ddnet.org"
+traditional_chinese = "將會發送你的玩家暱稱到 info.ddnet.org"
 
 [[message]]
 key = "Try again"
 [message.translations]
+japanese = "再試行"
+korean = "다시 시도"
 simplified_chinese = "重试"
+traditional_chinese = "重試"
 
 [[message]]
 key = "Trying to determine UDP connectivity…"
 [message.translations]
+japanese = "UDP 接続性を確認中..."
+korean = "UDP 연결 확인 중…"
 simplified_chinese = "正在尝试检测 UDP 连接…"
+traditional_chinese = "正在嘗試偵測 UDP 連線…"
 
 [[message]]
 key = "Tune in zone a variable to value"
 [message.translations]
+japanese = "ゾーン a の変数を値に調整"
+korean = "영역 a의 변수를 값으로 조정"
 simplified_chinese = "将区域 a 的变量调到指定值"
+traditional_chinese = "將區域 a 的變數調到指定值"
 
 [[message]]
 key = "Tune variable to value"
 [message.translations]
+japanese = "変数を値に調整"
+korean = "변수를 값으로 조정"
 simplified_chinese = "将变量调到指定值"
+traditional_chinese = "將變數調到指定值"
 
 [[message]]
 key = "UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators."
 [message.translations]
+japanese = "UDP と TCP の IP アドレスが異なっているようです。VPN、プロキシ、ネットワークアクセラレーターを無効にしてみてください。"
+korean = "UDP와 TCP IP 주소가 다른 것으로 보입니다. VPN, 프록시 또는 네트워크 가속기를 비활성화해 보세요."
 simplified_chinese = "UDP 与 TCP 的 IP 地址并不相同。请尝试屏蔽 VPN 、代理网络以及网络加速器。"
+traditional_chinese = "UDP 與 TCP 的 IP 地址並不相同。請嘗試停用 VPN、代理伺服器或網路加速器。"
 
 [[message]]
 key = "UDP seems to be filtered."
 [message.translations]
+japanese = "UDP がフィルタリングされているようです。"
+korean = "UDP가 필터링된 것으로 보입니다."
 simplified_chinese = "UDP 疑似被过滤"
+traditional_chinese = "UDP 疑似被過濾"
 
 [[message]]
 key = "Unable to rename the demo"
 [message.translations]
+japanese = "デモの名前を変更できません"
+korean = "데모 이름을 바꿀 수 없습니다"
 simplified_chinese = "无法重命名这个回放"
+traditional_chinese = "無法重新命名這個回放"
 
 [[message]]
 key = "Unable to rename the folder"
 [message.translations]
+japanese = "フォルダの名前を変更できません"
+korean = "폴더 이름을 바꿀 수 없습니다"
 simplified_chinese = "无法重命名这个文件夹"
+traditional_chinese = "無法重新命名這個資料夾"
 
 [[message]]
 key = "Unable to rename the screenshot"
 [message.translations]
+japanese = "スクリーンショットの名前を変更できません"
+korean = "스크린샷 이름을 바꿀 수 없습니다"
 simplified_chinese = "无法重命名截图"
+traditional_chinese = "無法重新命名截圖"
 
 [[message]]
 key = "Unable to save the skin"
 [message.translations]
+japanese = "スキンを保存できません"
+korean = "스킨을 저장할 수 없습니다"
 simplified_chinese = "无法保存皮肤"
+traditional_chinese = "無法儲存皮膚"
 
 [[message]]
 key = "Unable to save the skin with a reserved name"
 [message.translations]
+japanese = "予約済みの名前でスキンを保存できません"
+korean = "예약된 이름으로 스킨을 저장할 수 없습니다"
 simplified_chinese = "无法保存使用保留名称的皮肤"
+traditional_chinese = "無法儲存使用保留名稱的皮膚"
 
 [[message]]
 key = "Use k key to kill (restart), q to pause and watch other players. See settings for other key binds."
 [message.translations]
+japanese = "K キーで自殺（再スタート）、Q キーで一時停止して他のプレイヤーを観戦できます。他のキーバインドは設定を参照してください。"
+korean = "K 키로 죽기(재시작), Q 키로 일시정지하여 다른 플레이어 관전. 다른 키 설정은 설정에서 확인하세요."
 simplified_chinese = "使用 K 键 自杀以重新开始，使用 Q 键 可以暂停以旁观他人或查看地图。在设置中可以查看其他按键绑定。"
+traditional_chinese = "使用 K 鍵自殺以重新開始，使用 Q 鍵暫停以旁觀他人。在設定中可以查看其他按鍵綁定。"
 
 [[message]]
 key = "Use sounds"
 [message.translations]
+japanese = "サウンドを使用"
+korean = "소리 사용"
 simplified_chinese = "开启声音"
+traditional_chinese = "開啟聲音"
 
 [[message]]
 key = "Video name:"
 [message.translations]
+japanese = "ビデオ名："
+korean = "비디오 이름:"
 simplified_chinese = "视频名称"
+traditional_chinese = "影片名稱："
 
 [[message]]
 key = "Video was saved to '%s'"
 [message.translations]
+japanese = "ビデオは「%s」に保存されました"
+korean = "비디오가 '%s'에 저장되었습니다"
 simplified_chinese = "视频保存至 \"%s\""
+traditional_chinese = "影片已儲存至 \"%s\""
 
 [[message]]
 key = "Videos directory"
 [message.translations]
+japanese = "ビデオディレクトリ"
+korean = "비디오 디렉터리"
 simplified_chinese = "视频目录"
+traditional_chinese = "影片目錄"
 
 [[message]]
 key = "Warning"
 [message.translations]
+japanese = "警告"
+korean = "경고"
 simplified_chinese = "警告"
+traditional_chinese = "警告"
 
 [[message]]
 key = "Welcome to DDNet"
 [message.translations]
+japanese = "DDNet へようこそ"
+korean = "DDNet에 오신 것을 환영합니다"
 simplified_chinese = "欢迎加入 DDNet"
+traditional_chinese = "歡迎加入 DDNet"
 
 [[message]]
 key = "Why are you slowmo replaying to read this?"
 [message.translations]
+japanese = "なぜスローモーションでこれを読んでいるのですか？"
+korean = "느린 재생으로 이걸 읽고 계신 이유는?"
 simplified_chinese = "所以你为什么要慢速回放来看这个"
+traditional_chinese = "所以你為什麼要慢速回放來看這個？"
 
 [[message]]
 key = "Yes"
 [message.translations]
+japanese = "はい"
+korean = "예"
 simplified_chinese = "是"
+traditional_chinese = "是"
 
 [[message]]
 key = "You will be disconnected from the server."
 [message.translations]
+japanese = "サーバーから切断されます。"
+korean = "서버에서 연결이 끊깁니다."
 simplified_chinese = "你将从当前服务器断开连接。"
+traditional_chinese = "你將從目前伺服器中斷連線。"
 
 [[message]]
 key = "Your nickname '%s' is already used (%d points). Do you still want to use it?"
 [message.translations]
+japanese = "ニックネーム「%s」は既に使用されています（%d ポイント）。それでも使用しますか？"
+korean = "닉네임 '%s'이(가) 이미 사용 중입니다(%d점). 계속 사용하시겠습니까?"
 simplified_chinese = "你使用的昵称 \"%s\" 在 DDNet 中有 %d 分的记录，这可能表示该昵称已经被其他玩家使用过。确认要使用这个名字吗？"
+traditional_chinese = "你使用的暱稱 \"%s\" 已有 %d 分記錄，這可能表示該暱稱已被其他玩家使用過。確認要使用這個名字嗎？"

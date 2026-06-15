@@ -168,9 +168,12 @@ simplified_chinese = "开始游戏"
             {"simplified_chinese": "开始游戏", "korean": "플레이"},
         )
 
-    def test_should_write_draft_only_for_simplified_chinese(self):
+    def test_should_write_draft_by_default_for_all_languages(self):
         self.assertTrue(translate_with_local_http.should_write_draft("simplified_chinese"))
-        self.assertFalse(translate_with_local_http.should_write_draft("korean"))
+        self.assertTrue(translate_with_local_http.should_write_draft("korean"))
+        self.assertFalse(
+            translate_with_local_http.should_write_draft("korean", write_back=True)
+        )
 
     def test_api_key_uses_environment_fallback(self):
         with mock.patch.dict(os.environ, {"QMCLIENT_LOCAL_HTTP_API_KEY": "env-key"}):
@@ -214,7 +217,7 @@ simplified_chinese = "开始游戏"
         self.assertEqual(translations, {})
         self.assertEqual(len(failures), 3)
         self.assertIn("unexpected identity", failures[0])
-        self.assertIn("translation unchanged from source", failures[1])
+        self.assertIn("unchanged source", failures[1])
         self.assertIn("missing translation", failures[2])
 
     def test_load_existing_draft_identities_reads_existing_module_file(self):

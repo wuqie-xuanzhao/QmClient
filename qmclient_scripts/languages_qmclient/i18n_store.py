@@ -153,6 +153,133 @@ def write_language_store(
         path.write_text(dump_module(messages), encoding="utf-8", newline="\n")
 
 
+def _parse_assignment_value(line: str, name: str) -> str | None:
+    stripped = line.strip()
+    prefix = f"{name} = "
+    if not stripped.startswith(prefix):
+        return None
+    try:
+        import tomllib
+
+        data = tomllib.loads(stripped)
+    except tomllib.TOMLDecodeError:
+        return None
+    value = data.get(name)
+    return value if isinstance(value, str) else None
+
+
+def _block_identity(lines: list[str]) -> tuple[str, str] | None:
+    key = ""
+    context = ""
+    for line in lines:
+        if not key:
+            parsed_key = _parse_assignment_value(line, "key")
+            if parsed_key is not None:
+                key = parsed_key
+                continue
+        parsed_context = _parse_assignment_value(line, "context")
+        if parsed_context is not None:
+            context = parsed_context
+    if not key:
+        return None
+    return (key, context)
+
+
+def _patch_message_block(
+    lines: list[str], language: str, translation: str
+) -> list[str]:
+    language_prefix = f"{language} = "
+    translation_line = f"{language} = {toml_quote(translation)}"
+    patched: list[str] = []
+    in_translations = False
+    replaced = False
+    insert_at: int | None = None
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped == "[message.translations]":
+            in_translations = True
+            insert_at = len(patched) + 1
+        elif in_translations and stripped.startswith(language_prefix):
+            patched.append(translation_line)
+            replaced = True
+            continue
+        elif in_translations and " = " in stripped:
+            insert_at = len(patched) + 1
+        patched.append(line)
+
+    if not replaced:
+        if insert_at is None:
+            patched.append("[message.translations]")
+            insert_at = len(patched)
+        patched.insert(insert_at, translation_line)
+    return patched
+
+
+def patch_module_store(
+    module_name: str,
+    entries: dict[tuple[str, str], dict[str, str]],
+) -> None:
+    """Patch one module TOML without rewriting unrelated message blocks."""
+
+    path = TRANSLATIONS_DIR / f"{module_name}.toml"
+    TRANSLATIONS_DIR.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        messages = [
+            (Message(key, context), translations)
+            for (key, context), translations in entries.items()
+        ]
+        path.write_text(dump_module(messages), encoding="utf-8", newline="\n")
+        return
+
+    original = path.read_text(encoding="utf-8")
+    has_trailing_newline = original.endswith(("\n", "\r"))
+    lines = original.splitlines()
+    output: list[str] = []
+    index = 0
+    patched_identities: set[tuple[str, str]] = set()
+
+    while index < len(lines):
+        if lines[index].strip() != "[[message]]":
+            output.append(lines[index])
+            index += 1
+            continue
+
+        start = index
+        index += 1
+        while index < len(lines) and lines[index].strip() != "[[message]]":
+            index += 1
+        block = lines[start:index]
+        identity = _block_identity(block)
+        if identity is None or identity not in entries:
+            output.extend(block)
+            continue
+
+        patched_block = block
+        for language, translation in sorted(entries[identity].items()):
+            if translation:
+                patched_block = _patch_message_block(
+                    patched_block, language, translation
+                )
+        patched_identities.add(identity)
+        output.extend(patched_block)
+
+    missing = [
+        (Message(key, context), translations)
+        for (key, context), translations in entries.items()
+        if (key, context) not in patched_identities
+    ]
+    if missing:
+        if output and output[-1] != "":
+            output.append("")
+        output.extend(dump_module(missing).rstrip("\n").splitlines())
+
+    text = "\n".join(output)
+    if has_trailing_newline or missing:
+        text += "\n"
+    path.write_text(text, encoding="utf-8", newline="\n")
+
+
 def build_module_store_from_records(
     records: list[source_keys.SourceKeyRecord],
     translations_by_identity: dict[tuple[str, str], dict[str, str]],

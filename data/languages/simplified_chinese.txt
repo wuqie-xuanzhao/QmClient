@@ -6842,7 +6842,7 @@ Twinkle strength
 == 闪烁强度
 
 Type
-== 模式
+== 类型
 
 Type switch vote started automatically
 == 已自动发起切换类型投票
@@ -6865,6 +6865,9 @@ UDP socket not open
 UI Color
 == 界面颜色
 
+UI color
+== 用户界面颜色
+
 UI controller sens.
 == 摇杆灵敏度（界面）
 
@@ -6872,7 +6875,7 @@ UI mouse sens.
 == 鼠标灵敏度（界面）
 
 UI opacity
-== 界面不透明度
+== 用户界面不透明度
 
 UI scale
 == UI 大小

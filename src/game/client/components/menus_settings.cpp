@@ -3057,40 +3057,40 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	MainView.HSplitTop(2.0f, nullptr, &MainView);
 	static CButtonContainer s_UiColorResetId;
 	const unsigned OldQmUiColor = g_Config.m_QmUiColor;
-	DoLine_ColorPicker(&s_UiColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("界面颜色"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmUiColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_UiColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmUiColor)), false, nullptr, false);
 	if(OldQmUiColor != g_Config.m_QmUiColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	static CButtonContainer s_MapBrowserColorResetId;
 	const unsigned OldQmMapBrowserColor = g_Config.m_QmMapBrowserColor;
-	DoLine_ColorPicker(&s_MapBrowserColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("地图浏览器颜色"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmMapBrowserColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_MapBrowserColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmMapBrowserColor)), false, nullptr, false);
 	if(OldQmMapBrowserColor != g_Config.m_QmMapBrowserColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	static CButtonContainer s_ScoreboardColorResetId;
 	const unsigned OldQmScoreboardColor = g_Config.m_QmScoreboardColor;
-	DoLine_ColorPicker(&s_ScoreboardColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("计分板颜色"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmScoreboardColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_ScoreboardColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmScoreboardColor)), false, nullptr, false);
 	if(OldQmScoreboardColor != g_Config.m_QmScoreboardColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	MainView.HSplitTop(2.0f, nullptr, &MainView);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	const int OldQmUiOpacity = g_Config.m_QmUiOpacity;
-	DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize("界面透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+	DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize("UI opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
 	if(OldQmUiOpacity != g_Config.m_QmUiOpacity)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	MainView.HSplitTop(2.0f, nullptr, &MainView);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	const int OldQmMapBrowserOpacity = g_Config.m_QmMapBrowserOpacity;
-	DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize("地图浏览器透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+	DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize("Map browser opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
 	if(OldQmMapBrowserOpacity != g_Config.m_QmMapBrowserOpacity)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	MainView.HSplitTop(2.0f, nullptr, &MainView);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	const int OldQmScoreboardOpacity = g_Config.m_QmScoreboardOpacity;
-	DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize("计分板透明度"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+	DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize("Scoreboard opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
 	if(OldQmScoreboardOpacity != g_Config.m_QmScoreboardOpacity)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 

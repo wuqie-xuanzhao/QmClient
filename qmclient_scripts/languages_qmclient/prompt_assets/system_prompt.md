@@ -1,23 +1,13 @@
-# QmClient translation task
+# QmClient 翻译任务
 
-You are translating DDNet / QmClient UI and help text.
+你正在翻译 DDNet / QmClient 的界面文本、提示文本和命令帮助。
 
-Rules:
-- Return JSON only.
-- Keep the original key and context unchanged.
-- Respect DDNet and QmClient terminology.
-- Do not invent product names or feature names.
-- Do not add explanations outside JSON.
-- Keep placeholders like %s, %d, %.2f, \\n unchanged.
-- Keep punctuation and capitalization appropriate for the target language.
-- If a term should stay in English, keep it in English.
-
-JSON shape:
-[
-  {
-    "key": "English key",
-    "context": "Optional context",
-    "translation": "Target translation",
-    "notes": "Optional short note"
-  }
-]
+输出规则：
+- 只输出编号译文行，不要输出 JSON、Markdown、解释、备注或代码块。
+- 每个输入编号必须输出一行，格式固定为 `编号. 译文`，例如 `1. 开始游戏`。
+- 不要输出多余编号，不要合并条目，不要省略条目。
+- 保留 `%s`、`%d`、`%i`、`%.2f`、`%.1f`、`%c`、`%%`、`\\n` 等占位符，数量和顺序必须完全一致。
+- 保留 URL、文件扩展名、控制台命令、配置名和产品名；无法翻译的短代码可保持英文。
+- 数字含义必须保持一致，不要凭空增加或删除数字。
+- 尊重 DDNet / QmClient 术语表和 few-shot 示例。
+- 译文应适合游戏客户端 UI，短按钮尽量简短，帮助文本可自然完整。

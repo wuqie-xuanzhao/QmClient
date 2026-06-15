@@ -1,544 +1,847 @@
 [[message]]
 key = "%d dummies"
 [message.translations]
+japanese = "%d ダミー"
+korean = "%d 개의 더미 데이터"
 simplified_chinese = "%d 个分身"
+traditional_chinese = "%d 個分身"
 
 [[message]]
 key = "%d dummy"
 [message.translations]
+japanese = "%d ダミー"
+korean = "%d 가짜 데이터"
 simplified_chinese = "%d 个分身"
+traditional_chinese = "%d 個分身"
 
 [[message]]
 key = "%d of %d server"
 [message.translations]
+japanese = "%d/%d サーバー"
+korean = "%d 개의 %d 서버 중"
 simplified_chinese = "符合条件 %d / 总共 %d 个服务器"
+traditional_chinese = "符合條件 %d / 總共 %d 個伺服器"
 
 [[message]]
 key = "%d of %d servers"
 [message.translations]
+japanese = "%d/%d サーバー"
+korean = "%d개의 %d개 서버 중"
 simplified_chinese = "符合条件 %d / 总共 %d 个服务器"
+traditional_chinese = "符合條件 %d / 總共 %d 個伺服器"
 
 [[message]]
 key = "%d player"
 [message.translations]
+japanese = "%d プレイヤー"
+korean = "%d명의 플레이어"
 simplified_chinese = "%d 在线玩家"
+traditional_chinese = "%d 位線上玩家"
 
 [[message]]
 key = "%d servers, %d users"
 [message.translations]
+japanese = "%d サーバー、%d ユーザー"
+korean = "%d 대기 서버, %d 사용자"
 simplified_chinese = "%d 个服务器，%d 个用户"
+traditional_chinese = "%d 個伺服器，%d 個用戶"
 
 [[message]]
 key = "%d servers, %d users, %d dummies"
 [message.translations]
+japanese = "%d サーバー、%d ユーザー、%d ダミー"
+korean = "%d 대기 서버, %d 사용자, %d 더미"
 simplified_chinese = "%d 个服务器，%d 个用户，%d 个分身"
+traditional_chinese = "%d 個伺服器，%d 個用戶，%d 個分身"
 
 [[message]]
 key = "%d user"
 [message.translations]
+japanese = "%d ユーザー"
+korean = "%d 명의 사용자"
 simplified_chinese = "%d 个用户"
+traditional_chinese = "%d 個用戶"
 
 [[message]]
 key = "%d users"
 [message.translations]
+japanese = "%d ユーザー"
+korean = "%d 명의 사용자"
 simplified_chinese = "%d 个用户"
+traditional_chinese = "%d 個用戶"
 
 [[message]]
 key = "Add friends by entering their name below or by clicking their name in the player list."
 [message.translations]
+japanese = "フレンドを追加するには、下の名前入力欄に入力するか、プレイヤーリストで名前をクリックしてください。"
+korean = "아래에 이름을 입력하거나 플레이어 목록에서 이름을 클릭하여 친구를 추가할 수 있습니다."
 simplified_chinese = "在下方输入好友名称或点击玩家列表中的好友名称即可添加好友"
+traditional_chinese = "在下方輸入好友名稱或點擊玩家列表中的好友名稱即可新增好友"
 
 [[message]]
 key = "Add to category"
 [message.translations]
+japanese = "カテゴリに追加"
+korean = "카테고리에 추가하기"
 simplified_chinese = "添加到分类"
-
-[[message]]
-key = "Are you sure that you want to disconnect and switch to a different server?"
-[message.translations]
-simplified_chinese = "确定要断开此服务器连接并进入其他服务器吗？"
-
-[[message]]
-key = "Are you sure that you want to remove the clan '%s' from your friends list?"
-[message.translations]
-simplified_chinese = "确定要将战队 \"%s\" 从你的好友列表中删除？"
-
-[[message]]
-key = "Are you sure that you want to remove the player '%s' from your friends list?"
-[message.translations]
-simplified_chinese = "确定要将好友 \"%s\" 从你的好友列表中删除？"
-
-[[message]]
-key = "Brutal"
-[message.translations]
-simplified_chinese = "高阶"
-
-[[message]]
-key = "Category"
-[message.translations]
-simplified_chinese = "分类"
-
-[[message]]
-key = "Clan"
-[message.translations]
-simplified_chinese = "战队"
-
-[[message]]
-key = "Clear note"
-[message.translations]
-simplified_chinese = "移除备注"
-
-[[message]]
-key = "Click to add this community to favorites"
-[message.translations]
-simplified_chinese = "点击将该社区加入收藏"
-
-[[message]]
-key = "Click to copy this clan's name to clipboard"
-[message.translations]
-simplified_chinese = "点击复制该战队名字到剪贴板"
-
-[[message]]
-key = "Click to copy this player's name to clipboard"
-[message.translations]
-simplified_chinese = "点击复制该玩家名字到剪贴板"
-
-[[message]]
-key = "Click to remove this clan from your friends list."
-[message.translations]
-simplified_chinese = "单击从你的好友列表移除此战队"
-
-[[message]]
-key = "Click to remove this community from favorites"
-[message.translations]
-simplified_chinese = "点击将该社区移出收藏"
-
-[[message]]
-key = "Click to remove this player from your friends list."
-[message.translations]
-simplified_chinese = "单击从你的好友列表移除此玩家"
-
-[[message]]
-key = "Click to select server. Double click to join your friend."
-[message.translations]
-simplified_chinese = "单击以选择此服务器。双击加入好友所在服务器。"
-
-[[message]]
-key = "Communities"
-[message.translations]
-simplified_chinese = "社区"
-
-[[message]]
-key = "Copy info"
-[message.translations]
-simplified_chinese = "复制服务器信息"
-
-[[message]]
-key = "Count players only"
-[message.translations]
-simplified_chinese = "屏蔽旁观位"
-
-[[message]]
-key = "Countries"
-[message.translations]
-simplified_chinese = "国家"
-
-[[message]]
-key = "DDmaX"
-[message.translations]
-simplified_chinese = "DDmaX"
-
-[[message]]
-key = "DDmaX Easy"
-[message.translations]
-simplified_chinese = "DDmaX Easy"
-
-[[message]]
-key = "DDmaX Next"
-[message.translations]
-simplified_chinese = "DDmaX Next"
-
-[[message]]
-key = "DDmaX Nut"
-[message.translations]
-simplified_chinese = "DDmaX Nut"
-
-[[message]]
-key = "DDmaX Pro"
-[message.translations]
-simplified_chinese = "DDmaX Pro"
-
-[[message]]
-key = "ddnet-saves.txt is empty"
-[message.translations]
-simplified_chinese = "ddnet-saves.txt 为空"
-
-[[message]]
-key = "ddnet-saves.txt not found"
-[message.translations]
-simplified_chinese = "未找到 ddnet-saves.txt"
-
-[[message]]
-key = "Difficulty stars"
-[message.translations]
-simplified_chinese = "难度星级"
-
-[[message]]
-key = "Disconnect"
-[message.translations]
-simplified_chinese = "断开连接"
-
-[[message]]
-key = "Dummy"
-[message.translations]
-simplified_chinese = "分身"
-
-[[message]]
-key = "Edit note"
-[message.translations]
-simplified_chinese = "编辑备注"
-
-[[message]]
-key = "Error loading communities"
-[message.translations]
-simplified_chinese = "加载社区列表失败"
-
-[[message]]
-key = "Could not get server list from master server"
-[message.translations]
-simplified_chinese = "无法从主服务器获取服务器列表"
-
-[[message]]
-key = "Event"
-[message.translations]
-simplified_chinese = "活动"
-
-[[message]]
-key = "Example of usage"
-[message.translations]
-simplified_chinese = "用途示例"
-
-[[message]]
-key = "Exclude"
-[message.translations]
-simplified_chinese = "排除"
-
-[[message]]
-key = "Favorite"
-[message.translations]
-simplified_chinese = "收藏"
-
-[[message]]
-key = "Filter connecting players"
-[message.translations]
-simplified_chinese = "筛选正在连接的玩家"
-
-[[message]]
-key = "Friend note"
-[message.translations]
-simplified_chinese = "好友备注"
-
-[[message]]
-key = "Friends"
-[message.translations]
-simplified_chinese = "好友"
-
-[[message]]
-key = "Fun"
-[message.translations]
-simplified_chinese = "娱乐"
-
-[[message]]
-key = "Game type"
-[message.translations]
-simplified_chinese = "游戏模式"
-
-[[message]]
-key = "Game types:"
-[message.translations]
-simplified_chinese = "游戏模式："
-
-[[message]]
-key = "Getting server list from master server"
-[message.translations]
-simplified_chinese = "正在从主服务器获取服务器列表"
-
-[[message]]
-key = "Has people playing"
-[message.translations]
-simplified_chinese = "有玩家"
-
-[[message]]
-key = "Has save"
-[message.translations]
-simplified_chinese = "有存档"
-
-[[message]]
-key = "Indicate map finish"
-[message.translations]
-simplified_chinese = "标记已完成的地图"
-
-[[message]]
-key = "Insane"
-[message.translations]
-simplified_chinese = "疯狂"
-
-[[message]]
-key = "Leak IP"
-[message.translations]
-simplified_chinese = "暴露IP"
-
-[[message]]
-key = "Local saves"
-[message.translations]
-simplified_chinese = "本地存档"
-
-[[message]]
-key = "Map"
-[message.translations]
-simplified_chinese = "地图"
-
-[[message]]
-key = "Moderate"
-[message.translations]
-simplified_chinese = "中阶"
-
-[[message]]
-key = "Move to category"
-[message.translations]
-simplified_chinese = "移动到分类"
-
-[[message]]
-key = "No active QmClient reports yet"
-[message.translations]
-simplified_chinese = "暂无活跃的栖梦客户端上报"
-
-[[message]]
-key = "No favorite maps yet"
-[message.translations]
-simplified_chinese = "暂无收藏地图"
-
-[[message]]
-key = "No login required"
-[message.translations]
-simplified_chinese = "无需登录"
-
-[[message]]
-key = "No password"
-[message.translations]
-simplified_chinese = "没有密码"
-
-[[message]]
-key = "No server selected"
-[message.translations]
-simplified_chinese = "未选择服务器"
-
-[[message]]
-key = "None"
-[message.translations]
-simplified_chinese = "无"
-
-[[message]]
-key = "Not in the current browser list"
-[message.translations]
-simplified_chinese = "不在当前浏览器列表中"
-
-[[message]]
-key = "No servers found"
-[message.translations]
-simplified_chinese = "未检测到任何服务器"
-traditional_chinese = "未檢測到任何伺服器"
-korean = "서버를 찾을 수 없음"
-japanese = "サーバーが見つかりません"
-
-[[message]]
-key = "No servers match your filter criteria"
-[message.translations]
-simplified_chinese = "没有服务器满足设置的筛选条件"
-traditional_chinese = "沒有伺服器符合設定的篩選條件"
-korean = "필터에 일치하는 서버가 없음"
-japanese = "フィルタに適合するサーバーが見つかりません"
-
-[[message]]
-key = "Note"
-[message.translations]
-simplified_chinese = "备注"
-
-[[message]]
-key = "Novice"
-[message.translations]
-simplified_chinese = "简单"
-
-[[message]]
-key = "Oldschool"
-[message.translations]
-simplified_chinese = "传统"
-
-[[message]]
-key = "Ping"
-[message.translations]
-simplified_chinese = "延迟"
-
-[[message]]
-key = "Player country:"
-[message.translations]
-simplified_chinese = "玩家国家 / 地区："
-
-[[message]]
-key = "Qm"
-[message.translations]
-simplified_chinese = "栖梦"
-
-[[message]]
-key = "QmClient online distribution"
-[message.translations]
-simplified_chinese = "栖梦客户端在线分布"
-
-[[message]]
-key = "Remove friend"
-[message.translations]
-simplified_chinese = "删除好友"
-
-[[message]]
-key = "Reset filter"
-[message.translations]
-simplified_chinese = "重置筛选"
-
-[[message]]
-key = "Selected server"
-[message.translations]
-simplified_chinese = "已选中服务器"
-
-[[message]]
-key = "Server address:"
-[message.translations]
-simplified_chinese = "服务器地址："
-
-[[message]]
-key = "Server filter"
-[message.translations]
-simplified_chinese = "服务器筛选"
+traditional_chinese = "新增到分類"
 
 [[message]]
 key = "AFR"
 [message.translations]
+japanese = "アフリカ"
+korean = "아프리카"
 simplified_chinese = "非洲"
 traditional_chinese = "非洲"
-korean = "아프리카"
+
+[[message]]
+key = "Are you sure that you want to disconnect and switch to a different server?"
+[message.translations]
+japanese = "切断して別のサーバーに切り替えてもよろしいですか？"
+korean = "정말로 연결을 끊고 다른 서버로 전환하시겠습니까?"
+simplified_chinese = "确定要断开此服务器连接并进入其他服务器吗？"
+traditional_chinese = "確定要中斷此伺服器連線並切換到其他伺服器嗎？"
+
+[[message]]
+key = "Are you sure that you want to remove the clan '%s' from your friends list?"
+[message.translations]
+japanese = "友達リストからクラン '%s' を削除してもよろしいですか？"
+korean = "현재 친구 목록에서 클랜 '%s'를 삭제하시겠습니까?"
+simplified_chinese = "确定要将战队 \"%s\" 从你的好友列表中删除？"
+traditional_chinese = "確定要將戰隊「%s」從你的好友列表中刪除嗎？"
+
+[[message]]
+key = "Are you sure that you want to remove the player '%s' from your friends list?"
+[message.translations]
+japanese = "友達リストからプレイヤー '%s' を削除してもよろしいですか？"
+korean = "친구 목록에서 '%s' 플레이어를 정말로 제거하시겠습니까?"
+simplified_chinese = "确定要将好友 \"%s\" 从你的好友列表中删除？"
+traditional_chinese = "確定要將玩家「%s」從你的好友列表中刪除嗎？"
 
 [[message]]
 key = "ASI"
 [message.translations]
+japanese = "アジア"
+korean = "아시아"
 simplified_chinese = "亚洲"
 traditional_chinese = "亞洲"
-korean = "아시아"
 
 [[message]]
 key = "AUS"
 [message.translations]
+japanese = "オーストラリア"
+korean = "호주"
 simplified_chinese = "澳洲"
 traditional_chinese = "澳洲"
-korean = "호주"
+
+[[message]]
+key = "Brutal"
+[message.translations]
+japanese = "過酷"
+korean = "브루탈"
+simplified_chinese = "高阶"
+traditional_chinese = "高階"
+
+[[message]]
+key = "Category"
+[message.translations]
+japanese = "カテゴリ"
+korean = "카테고리"
+simplified_chinese = "分类"
+traditional_chinese = "分類"
 
 [[message]]
 key = "CHN"
 [message.translations]
+japanese = "中国"
+korean = "중국"
 simplified_chinese = "中国"
 traditional_chinese = "中國"
-korean = "중국"
+
+[[message]]
+key = "Clan"
+[message.translations]
+japanese = "クラン"
+korean = "클랜"
+simplified_chinese = "战队"
+traditional_chinese = "戰隊"
 
 [[message]]
 key = "Clan Members"
 [message.translations]
+japanese = "クランメンバー"
+korean = "클랜 멤버"
 simplified_chinese = "战队成员"
+traditional_chinese = "戰隊成員"
+
+[[message]]
+key = "Clear note"
+[message.translations]
+japanese = "メモをクリア"
+korean = "메모 지우기"
+simplified_chinese = "移除备注"
+traditional_chinese = "移除備註"
+
+[[message]]
+key = "Click to add this community to favorites"
+[message.translations]
+japanese = "このコミュニティをお気に入りに追加するにはクリック"
+korean = "클릭하여 이 커뮤니티를 즐겨찾기에 추가"
+simplified_chinese = "点击将该社区加入收藏"
+traditional_chinese = "點擊將此社群加入收藏"
+
+[[message]]
+key = "Click to copy this clan's name to clipboard"
+[message.translations]
+japanese = "このクラン名をクリップボードにコピーするにはクリック"
+korean = "클릭하여 이 클랜 이름을 클립보드에 복사"
+simplified_chinese = "点击复制该战队名字到剪贴板"
+traditional_chinese = "點擊複製該戰隊名稱到剪貼簿"
+
+[[message]]
+key = "Click to copy this player's name to clipboard"
+[message.translations]
+japanese = "このプレイヤー名をクリップボードにコピーするにはクリック"
+korean = "클릭하여 이 플레이어 이름을 클립보드에 복사"
+simplified_chinese = "点击复制该玩家名字到剪贴板"
+traditional_chinese = "點擊複製該玩家名稱到剪貼簿"
+
+[[message]]
+key = "Click to remove this clan from your friends list."
+[message.translations]
+japanese = "このクランを友達リストから削除するにはクリック"
+korean = "클릭하여 친구 목록에서 이 클랜을 제거"
+simplified_chinese = "单击从你的好友列表移除此战队"
+traditional_chinese = "點擊從你的好友列表中移除此戰隊"
+
+[[message]]
+key = "Click to remove this community from favorites"
+[message.translations]
+japanese = "このコミュニティをお気に入りから削除するにはクリック"
+korean = "클릭하여 즐겨찾기에서 이 커뮤니티 제거"
+simplified_chinese = "点击将该社区移出收藏"
+traditional_chinese = "點擊將此社群移出收藏"
+
+[[message]]
+key = "Click to remove this player from your friends list."
+[message.translations]
+japanese = "このプレイヤーを友達リストから削除するにはクリック"
+korean = "클릭하여 친구 목록에서 이 플레이어를 제거"
+simplified_chinese = "单击从你的好友列表移除此玩家"
+traditional_chinese = "點擊從你的好友列表中移除此玩家"
+
+[[message]]
+key = "Click to select server. Double click to join your friend."
+[message.translations]
+japanese = "クリックでサーバーを選択。ダブルクリックで友達のサーバーに参加。"
+korean = "클릭하여 서버 선택. 더블 클릭하여 친구에게 접속"
+simplified_chinese = "单击以选择此服务器。双击加入好友所在服务器。"
+traditional_chinese = "按一下以選擇此伺服器。按兩下加入好友所在的伺服器。"
+
+[[message]]
+key = "Communities"
+[message.translations]
+japanese = "コミュニティ"
+korean = "커뮤니티"
+simplified_chinese = "社区"
+traditional_chinese = "社群"
+
+[[message]]
+key = "Copy info"
+[message.translations]
+japanese = "情報をコピー"
+korean = "정보 복사"
+simplified_chinese = "复制服务器信息"
+traditional_chinese = "複製資訊"
+
+[[message]]
+key = "Could not get server list from master server"
+[message.translations]
+japanese = "マスターサーバーからサーバーリストを取得できませんでした"
+korean = "마스터 서버에서 서버 목록을 가져올 수 없음"
+simplified_chinese = "无法从主服务器获取服务器列表"
+traditional_chinese = "無法從主伺服器取得伺服器列表"
+
+[[message]]
+key = "Count players only"
+[message.translations]
+japanese = "プレイヤーのみカウント"
+korean = "플레이어 수만 계산"
+simplified_chinese = "屏蔽旁观位"
+traditional_chinese = "僅計算玩家"
+
+[[message]]
+key = "Countries"
+[message.translations]
+japanese = "国"
+korean = "국가"
+simplified_chinese = "国家"
+traditional_chinese = "國家"
+
+[[message]]
+key = "DDmaX"
+[message.translations]
+japanese = "DDmaX"
+korean = "DDmaX"
+simplified_chinese = "DDmaX"
+traditional_chinese = "DDmaX"
+
+[[message]]
+key = "DDmaX Easy"
+[message.translations]
+japanese = "DDmaX Easy"
+korean = "DDmaX Easy"
+simplified_chinese = "DDmaX Easy"
+traditional_chinese = "DDmaX Easy"
+
+[[message]]
+key = "DDmaX Next"
+[message.translations]
+japanese = "DDmaX Next"
+korean = "DDmaX Next"
+simplified_chinese = "DDmaX Next"
+traditional_chinese = "DDmaX Next"
+
+[[message]]
+key = "DDmaX Nut"
+[message.translations]
+japanese = "DDmaX Nut"
+korean = "DDmaX Nut"
+simplified_chinese = "DDmaX Nut"
+traditional_chinese = "DDmaX Nut"
+
+[[message]]
+key = "DDmaX Pro"
+[message.translations]
+japanese = "DDmaX Pro"
+korean = "DDmaX Pro"
+simplified_chinese = "DDmaX Pro"
+traditional_chinese = "DDmaX Pro"
+
+[[message]]
+key = "ddnet-saves.txt is empty"
+[message.translations]
+japanese = "ddnet-saves.txt は空です"
+korean = "ddnet-saves.txt가 비어 있음"
+simplified_chinese = "ddnet-saves.txt 为空"
+traditional_chinese = "ddnet-saves.txt 為空"
+
+[[message]]
+key = "ddnet-saves.txt not found"
+[message.translations]
+japanese = "ddnet-saves.txt が見つかりません"
+korean = "ddnet-saves.txt를 찾을 수 없음"
+simplified_chinese = "未找到 ddnet-saves.txt"
+traditional_chinese = "找不到 ddnet-saves.txt"
+
+[[message]]
+key = "Difficulty stars"
+[message.translations]
+japanese = "難易度の星"
+korean = "난이도 별"
+simplified_chinese = "难度星级"
+traditional_chinese = "難度星級"
+
+[[message]]
+key = "Disconnect"
+[message.translations]
+japanese = "切断"
+korean = "연결 끊기"
+simplified_chinese = "断开连接"
+traditional_chinese = "中斷連線"
+
+[[message]]
+key = "Dummy"
+[message.translations]
+japanese = "ダミー"
+korean = "더미"
+simplified_chinese = "分身"
+traditional_chinese = "分身"
+
+[[message]]
+key = "Edit note"
+[message.translations]
+japanese = "メモを編集"
+korean = "메모 편집"
+simplified_chinese = "编辑备注"
+traditional_chinese = "編輯備註"
+
+[[message]]
+key = "Error loading communities"
+[message.translations]
+japanese = "コミュニティの読み込みエラー"
+korean = "커뮤니티 로딩 오류"
+simplified_chinese = "加载社区列表失败"
+traditional_chinese = "載入社群列表失敗"
 
 [[message]]
 key = "EUR"
 [message.translations]
+japanese = "ヨーロッパ"
+korean = "유럽"
 simplified_chinese = "欧洲"
 traditional_chinese = "歐洲"
-korean = "유럽"
+
+[[message]]
+key = "Event"
+[message.translations]
+japanese = "イベント"
+korean = "이벤트"
+simplified_chinese = "活动"
+traditional_chinese = "活動"
+
+[[message]]
+key = "Example of usage"
+[message.translations]
+japanese = "使用例"
+korean = "사용 예시"
+simplified_chinese = "用途示例"
+traditional_chinese = "使用範例"
+
+[[message]]
+key = "Exclude"
+[message.translations]
+japanese = "除外"
+korean = "제외"
+simplified_chinese = "排除"
+traditional_chinese = "排除"
+
+[[message]]
+key = "Favorite"
+[message.translations]
+japanese = "お気に入り"
+korean = "즐겨찾기"
+simplified_chinese = "收藏"
+traditional_chinese = "收藏"
+
+[[message]]
+key = "Filter connecting players"
+[message.translations]
+japanese = "接続中のプレイヤーをフィルター"
+korean = "연결 중인 플레이어 필터링"
+simplified_chinese = "筛选正在连接的玩家"
+traditional_chinese = "篩選正在連線的玩家"
+
+[[message]]
+key = "Friend note"
+[message.translations]
+japanese = "フレンドメモ"
+korean = "친구 메모"
+simplified_chinese = "好友备注"
+traditional_chinese = "好友備註"
+
+[[message]]
+key = "Friends"
+[message.translations]
+japanese = "フレンド"
+korean = "친구"
+simplified_chinese = "好友"
+traditional_chinese = "好友"
+
+[[message]]
+key = "Fun"
+[message.translations]
+japanese = "Fun"
+korean = "펀"
+simplified_chinese = "娱乐"
+traditional_chinese = "娛樂"
+
+[[message]]
+key = "Game type"
+[message.translations]
+japanese = "ゲームタイプ"
+korean = "게임 유형"
+simplified_chinese = "游戏模式"
+traditional_chinese = "遊戲模式"
+
+[[message]]
+key = "Game types:"
+[message.translations]
+japanese = "ゲームタイプ："
+korean = "게임 유형:"
+simplified_chinese = "游戏模式："
+traditional_chinese = "遊戲模式："
+
+[[message]]
+key = "Getting server list from master server"
+[message.translations]
+japanese = "マスターサーバーからサーバーリストを取得中"
+korean = "마스터 서버에서 서버 목록을 가져오는 중"
+simplified_chinese = "正在从主服务器获取服务器列表"
+traditional_chinese = "正在從主伺服器取得伺服器列表"
+
+[[message]]
+key = "Has people playing"
+[message.translations]
+japanese = "プレイヤーあり"
+korean = "플레이 중인 사람 있음"
+simplified_chinese = "有玩家"
+traditional_chinese = "有玩家"
+
+[[message]]
+key = "Has save"
+[message.translations]
+japanese = "セーブあり"
+korean = "저장 있음"
+simplified_chinese = "有存档"
+traditional_chinese = "有存檔"
+
+[[message]]
+key = "Indicate map finish"
+[message.translations]
+japanese = "マップクリアを表示"
+korean = "완료된 맵 표시"
+simplified_chinese = "标记已完成的地图"
+traditional_chinese = "標記已完成的地圖"
+
+[[message]]
+key = "Insane"
+[message.translations]
+japanese = "Insane"
+korean = "인세인"
+simplified_chinese = "疯狂"
+traditional_chinese = "瘋狂"
+
+[[message]]
+key = "Leak IP"
+[message.translations]
+japanese = "IP漏洩"
+korean = "IP 노출"
+simplified_chinese = "暴露IP"
+traditional_chinese = "暴露 IP"
+
+[[message]]
+key = "Local saves"
+[message.translations]
+japanese = "ローカルセーブ"
+korean = "로컬 저장"
+simplified_chinese = "本地存档"
+traditional_chinese = "本地存檔"
+
+[[message]]
+key = "Map"
+[message.translations]
+japanese = "マップ"
+korean = "맵"
+simplified_chinese = "地图"
+traditional_chinese = "地圖"
+
+[[message]]
+key = "Moderate"
+[message.translations]
+japanese = "Moderate"
+korean = "모더레이트"
+simplified_chinese = "中阶"
+traditional_chinese = "中階"
+
+[[message]]
+key = "Move to category"
+[message.translations]
+japanese = "カテゴリに移動"
+korean = "카테고리로 이동"
+simplified_chinese = "移动到分类"
+traditional_chinese = "移動到分類"
 
 [[message]]
 key = "NA"
 [message.translations]
+japanese = "北米"
+korean = "북미"
 simplified_chinese = "北美"
 traditional_chinese = "北美"
-korean = "북미"
+
+[[message]]
+key = "No active QmClient reports yet"
+[message.translations]
+japanese = "アクティブなQmClient報告はまだありません"
+korean = "아직 활성 QmClient 보고서 없음"
+simplified_chinese = "暂无活跃的栖梦客户端上报"
+traditional_chinese = "暫無活躍的 QmClient 回報"
+
+[[message]]
+key = "No favorite maps yet"
+[message.translations]
+japanese = "お気に入りのマップはまだありません"
+korean = "아직 즐겨찾는 맵 없음"
+simplified_chinese = "暂无收藏地图"
+traditional_chinese = "暫無收藏地圖"
 
 [[message]]
 key = "No local servers found (ports %d-%d)"
 [message.translations]
+japanese = "ローカルサーバーが見つかりません（ポート %d-%d）"
+korean = "로컬 서버를 찾을 수 없음 (포트 %d-%d)"
 simplified_chinese = "未找到本地服务器（端口 %d-%d）"
+traditional_chinese = "找不到本地伺服器（連接埠 %d-%d）"
+
+[[message]]
+key = "No login required"
+[message.translations]
+japanese = "ログイン不要"
+korean = "로그인 필요 없음"
+simplified_chinese = "无需登录"
+traditional_chinese = "無需登入"
+
+[[message]]
+key = "No password"
+[message.translations]
+japanese = "パスワードなし"
+korean = "비밀번호 없음"
+simplified_chinese = "没有密码"
+traditional_chinese = "無密碼"
+
+[[message]]
+key = "No server selected"
+[message.translations]
+japanese = "サーバーが選択されていません"
+korean = "선택된 서버 없음"
+simplified_chinese = "未选择服务器"
+traditional_chinese = "未選取伺服器"
+
+[[message]]
+key = "No servers found"
+[message.translations]
+japanese = "サーバーが見つかりません"
+korean = "서버를 찾을 수 없음"
+simplified_chinese = "未检测到任何服务器"
+traditional_chinese = "未檢測到任何伺服器"
+
+[[message]]
+key = "No servers match your filter criteria"
+[message.translations]
+japanese = "フィルタに適合するサーバーが見つかりません"
+korean = "필터에 일치하는 서버가 없음"
+simplified_chinese = "没有服务器满足设置的筛选条件"
+traditional_chinese = "沒有伺服器符合設定的篩選條件"
+
+[[message]]
+key = "None"
+[message.translations]
+japanese = "なし"
+korean = "없음"
+simplified_chinese = "无"
+traditional_chinese = "無"
+
+[[message]]
+key = "Not in the current browser list"
+[message.translations]
+japanese = "現在のブラウザリストにありません"
+korean = "현재 브라우저 목록에 없음"
+simplified_chinese = "不在当前浏览器列表中"
+traditional_chinese = "不在目前瀏覽器清單中"
+
+[[message]]
+key = "Note"
+[message.translations]
+japanese = "メモ"
+korean = "참고"
+simplified_chinese = "备注"
+traditional_chinese = "備註"
+
+[[message]]
+key = "Novice"
+[message.translations]
+japanese = "Novice"
+korean = "초보자"
+simplified_chinese = "简单"
+traditional_chinese = "簡單"
 
 [[message]]
 key = "Offline"
 [message.translations]
+japanese = "オフライン"
+korean = "오프라인"
 simplified_chinese = "离线"
+traditional_chinese = "離線"
+
+[[message]]
+key = "Oldschool"
+[message.translations]
+japanese = "Oldschool"
+korean = "올드스쿨"
+simplified_chinese = "传统"
+traditional_chinese = "傳統"
+
+[[message]]
+key = "Ping"
+[message.translations]
+japanese = "Ping"
+korean = "핑"
+simplified_chinese = "延迟"
+traditional_chinese = "延遲"
+
+[[message]]
+key = "Player country:"
+[message.translations]
+japanese = "プレイヤーの国："
+korean = "플레이어 국가:"
+simplified_chinese = "玩家国家 / 地区："
+traditional_chinese = "玩家國家 / 地區："
+
+[[message]]
+key = "Qm"
+[message.translations]
+japanese = "Qm"
+korean = "큐엠"
+simplified_chinese = "栖梦"
+traditional_chinese = "棲夢"
+
+[[message]]
+key = "QmClient online distribution"
+[message.translations]
+japanese = "QmClientオンライン分布"
+korean = "QmClient 온라인 분포"
+simplified_chinese = "栖梦客户端在线分布"
+traditional_chinese = "QmClient 線上分佈"
+
+[[message]]
+key = "Remove friend"
+[message.translations]
+japanese = "フレンドを削除"
+korean = "친구 삭제"
+simplified_chinese = "删除好友"
+traditional_chinese = "刪除好友"
 
 [[message]]
 key = "Reset column widths"
 [message.translations]
+japanese = "列幅をリセット"
+korean = "열 너비 초기화"
 simplified_chinese = "重置列宽"
+traditional_chinese = "重設欄寬"
+
+[[message]]
+key = "Reset filter"
+[message.translations]
+japanese = "フィルターをリセット"
+korean = "필터 초기화"
+simplified_chinese = "重置筛选"
+traditional_chinese = "重設篩選"
 
 [[message]]
 key = "SA"
 [message.translations]
+japanese = "南米"
+korean = "남미"
 simplified_chinese = "南美"
 traditional_chinese = "南美"
-korean = "남미"
+
+[[message]]
+key = "Selected server"
+[message.translations]
+japanese = "選択中のサーバー"
+korean = "선택한 서버"
+simplified_chinese = "已选中服务器"
+traditional_chinese = "已選取伺服器"
+
+[[message]]
+key = "Server address:"
+[message.translations]
+japanese = "サーバーアドレス："
+korean = "서버 주소:"
+simplified_chinese = "服务器地址："
+traditional_chinese = "伺服器位址："
+
+[[message]]
+key = "Server filter"
+[message.translations]
+japanese = "サーバーフィルター"
+korean = "서버 필터"
+simplified_chinese = "服务器筛选"
+traditional_chinese = "伺服器篩選"
 
 [[message]]
 key = "Server not full"
 [message.translations]
+japanese = "サーバーが満員ではない"
+korean = "서버가 가득 차지 않음"
 simplified_chinese = "服务器未满"
+traditional_chinese = "伺服器未滿"
 
 [[message]]
 key = "Set a voice server to enable QmClient distribution"
 [message.translations]
+japanese = "QmClient分布を有効にするには、ボイスサーバーを設定してください"
+korean = "QmClient 분포를 활성화하려면 음성 서버를 설정하세요"
 simplified_chinese = "需要先配置语音服务器，才能启用栖梦客户端在线分布"
+traditional_chinese = "設定語音伺服器以啟用 QmClient 線上分佈"
 
 [[message]]
 key = "Show friends only"
 [message.translations]
+japanese = "フレンドのみ表示"
+korean = "친구만 표시"
 simplified_chinese = "只显示好友"
+traditional_chinese = "只顯示好友"
 
 [[message]]
 key = "Solo"
 [message.translations]
+japanese = "ソロ"
+korean = "솔로"
 simplified_chinese = "单人"
-
-[[message]]
-key = "Strict gametype filter"
-[message.translations]
-simplified_chinese = "严格游戏模式筛选"
+traditional_chinese = "單人"
 
 [[message]]
 key = "Start and connect to local server"
 [message.translations]
+japanese = "ローカルサーバーを起動して接続"
+korean = "로컬 서버를 시작하고 연결"
 simplified_chinese = "启动并连接到本地服务器"
+traditional_chinese = "啟動並連線到本地伺服器"
+
+[[message]]
+key = "Strict gametype filter"
+[message.translations]
+japanese = "厳密なゲームタイプフィルター"
+korean = "엄격한 게임 모드 필터"
+simplified_chinese = "严格游戏模式筛选"
+traditional_chinese = "嚴格遊戲模式篩選"
+
+[[message]]
+key = "Type"
+[message.translations]
+japanese = "タイプ"
+korean = "유형"
+simplified_chinese = "类型"
+traditional_chinese = "類型"
 
 [[message]]
 key = "Types"
 [message.translations]
+japanese = "タイプ"
+korean = "유형"
 simplified_chinese = "模式"
+traditional_chinese = "模式"
 
 [[message]]
 key = "Unfinished map"
 [message.translations]
+japanese = "未完了のマップ"
+korean = "미완료 맵"
 simplified_chinese = "未完成的地图"
+traditional_chinese = "未完成的地圖"
 
 [[message]]
 key = "Unknown"
 [message.translations]
+japanese = "不明"
+korean = "알 수 없음"
 simplified_chinese = "未知"
+traditional_chinese = "未知"
 
 [[message]]
 key = "Version"
 [message.translations]
+japanese = "バージョン"
+korean = "버전"
 simplified_chinese = "版本"
+traditional_chinese = "版本"
 
 [[message]]
 key = "Your favorite maps appear here"
 [message.translations]
+japanese = "お気に入りのマップがここに表示されます"
+korean = "즐겨찾는 맵이 여기에 표시됩니다"
 simplified_chinese = "你收藏的地图会显示在这里"
+traditional_chinese = "你收藏的地圖會顯示在這裡"
