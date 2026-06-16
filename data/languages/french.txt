@@ -1186,11 +1186,11 @@ Classic Easy
 Classic easy
 == Classique facile
 
-Classic next
-== Classique suivant
-
 Classic Next
 == Classic Next
+
+Classic next
+== Classique suivant
 
 Classic Nut
 == Classic Nut
@@ -1198,11 +1198,11 @@ Classic Nut
 Classic nut
 == Classique nut
 
-Classic pro
-== Classique pro
-
 Classic Pro
 == Classic Pro
+
+Classic pro
+== Classique pro
 
 Clear
 == Effacer
@@ -1582,11 +1582,11 @@ Current: Score
 Current: Time
 == Actuel : Temps
 
-Custom
-== Personnalisé
-
 custom
 == personnalisé
+
+Custom
+== Personnalisé
 
 Custom API key
 == Clé API personnalisée
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == Latence
 
-Latency Jitter
+Latency jitter
 == Gigue de latence
 
-Latency jitter
+Latency Jitter
 == Gigue de latence
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == Portée de ramassage
 
-Pie Menu
+Pie menu
 == Menu circulaire
 
-Pie menu
+Pie Menu
 == Menu circulaire
 
 Ping
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == Réception
 
-Receive rate
+Receive Rate
 == Débit de réception
 
-Receive Rate
+Receive rate
 == Débit de réception
 
 Receiving
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Sauvetage/Gel : %d/%d
 
-Resend Loss
+Resend loss
 == Perte par renvoi
 
-Resend loss
+Resend Loss
 == Perte par renvoi
 
 Resend signs detected, connection quality is suspicious
@@ -5596,10 +5596,10 @@ Send emoticon in water
 Send probability
 == Probabilité d'envoi
 
-Send rate
+Send Rate
 == Débit d'envoi
 
-Send Rate
+Send rate
 == Débit d'envoi
 
 Send source language
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == Animation de changement d'arme
 
-Weapon trajectory
-== Trajectoire d'arme
-
 Weapon Trajectory
 == Trajectoire des armes
+
+Weapon trajectory
+== Trajectoire d'arme
 
 Weapons
 == Armes

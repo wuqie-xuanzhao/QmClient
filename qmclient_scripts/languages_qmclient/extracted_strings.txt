@@ -396,8 +396,8 @@ Classic Easy
 Classic easy
 Classic Next
 Classic next
-Classic Nut
 Classic nut
+Classic Nut
 Classic pro
 Classic Pro
 Clear
@@ -473,8 +473,8 @@ Connection downstream
 Connection elevated
 Connection normal
 Connection Problems…
-Connection Quality
 Connection quality
+Connection Quality
 Connection severely abnormal
 Connection upstream
 Console
@@ -526,8 +526,8 @@ Current time: %s\n- Uptime and playtime are calculated from official JSON data\n
 Current: Ranks
 Current: Score
 Current: Time
-custom
 Custom
+custom
 Custom API key
 Custom aspect ratio
 Custom colors
@@ -982,14 +982,14 @@ High to low
 Highlight Color
 Highlighted message
 Hitbox mode
-HJ assist
 HJ Assist
+HJ assist
 Hold left click for free camera
 Hook
 Hook collision line
 Hook collision line opacity
-Hook collisions
 Hook Collisions
+Hook collisions
 Hook line tip
 Hook Strength
 Hooking L/R: %.0f%%/%.0f%%
@@ -1114,8 +1114,8 @@ Laser size
 Laser style
 Last page in console
 Latency
-Latency Jitter
 Latency jitter
+Latency Jitter
 Layout
 Leak IP
 Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
@@ -1498,8 +1498,8 @@ Player
 Player already invited
 Player country:
 Player data
-Player Indicator
 Player indicator
+Player Indicator
 Player is on a different team
 Player name:
 Player not found
@@ -1535,8 +1535,8 @@ Predict events (experimental)
 Predicted ghost opacity
 Prediction
 Prediction jitter is obvious, latency changes are large
-Prediction Latency
 Prediction latency
+Prediction Latency
 Prediction latency is elevated, prediction path pressure is high
 Prediction Margin
 Prediction margin
@@ -1623,8 +1623,8 @@ Reason
 Reason:
 Rebinds the client's listening address and port
 Receive
-Receive Rate
 Receive rate
+Receive Rate
 Receiving
 Reconnect in %d sec
 Record demo
@@ -1735,8 +1735,8 @@ Rescue is not enabled on this server and you're not in a team with /practice tur
 Rescue mode switched to %s
 Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
-Resend loss
 Resend Loss
+Resend loss
 Resend signs detected, connection quality is suspicious
 Reset
 Reset a config to its default value

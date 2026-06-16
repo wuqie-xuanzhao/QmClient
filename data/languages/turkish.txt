@@ -1186,11 +1186,11 @@ Classic Easy
 Classic easy
 == Klasik kolay
 
-Classic next
-== Klasik sonraki
-
 Classic Next
 == Klasik Next
+
+Classic next
+== Klasik sonraki
 
 Classic Nut
 == Klasik Nut
@@ -1198,11 +1198,11 @@ Classic Nut
 Classic nut
 == Klasik nut
 
-Classic pro
-== Klasik profesyonel
-
 Classic Pro
 == Klasik Pro
+
+Classic pro
+== Klasik profesyonel
 
 Clear
 == Temizle
@@ -1582,11 +1582,11 @@ Current: Score
 Current: Time
 == Geçerli: Süre
 
-Custom
-== Özel
-
 custom
 == özel
+
+Custom
+== Özel
 
 Custom API key
 == Özel API anahtarı
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == Gecikme
 
-Latency Jitter
+Latency jitter
 == Gecikme dalgalanması
 
-Latency jitter
+Latency Jitter
 == Gecikme dalgalanması
 
 Layout
@@ -4450,11 +4450,11 @@ Pick result: %s
 Pickup range
 == Toplama aralığı
 
-Pie Menu
-== Pasta Menüsü
-
 Pie menu
 == Pasta menüsü
+
+Pie Menu
+== Pasta Menüsü
 
 Ping
 == Ping
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == Alma
 
-Receive rate
+Receive Rate
 == Alma hızı
 
-Receive Rate
+Receive rate
 == Alma hızı
 
 Receiving
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Kurtarma/Donma: %d/%d
 
-Resend Loss
+Resend loss
 == Yeniden gönderim kaybı
 
-Resend loss
+Resend Loss
 == Yeniden gönderim kaybı
 
 Resend signs detected, connection quality is suspicious
@@ -5596,10 +5596,10 @@ Send emoticon in water
 Send probability
 == Gönderme olasılığı
 
-Send rate
+Send Rate
 == Gönderme hızı
 
-Send Rate
+Send rate
 == Gönderme hızı
 
 Send source language
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == Silah değiştirme animasyonu
 
-Weapon trajectory
-== Silah yörüngesi
-
 Weapon Trajectory
 == Silah Yörüngesi
+
+Weapon trajectory
+== Silah yörüngesi
 
 Weapons
 == Silahlar

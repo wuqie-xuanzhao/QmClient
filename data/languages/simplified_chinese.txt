@@ -1186,11 +1186,11 @@ Classic Easy
 Classic easy
 == 古典 easy
 
-Classic next
-== 古典 next
-
 Classic Next
 == 经典 Next
+
+Classic next
+== 古典 next
 
 Classic Nut
 == 经典 Nut
@@ -1198,11 +1198,11 @@ Classic Nut
 Classic nut
 == 古典 nut
 
-Classic pro
-== 古典 pro
-
 Classic Pro
 == 经典 Pro
+
+Classic pro
+== 古典 pro
 
 Clear
 == 清空
@@ -1582,10 +1582,10 @@ Current: Score
 Current: Time
 == 当前：时间
 
-Custom
+custom
 == 自定义
 
-custom
+Custom
 == 自定义
 
 Custom API key
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == 延迟
 
-Latency Jitter
+Latency jitter
 == 延迟抖动
 
-Latency jitter
+Latency Jitter
 == 延迟抖动
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == 拾取物范围
 
-Pie Menu
+Pie menu
 == 饼菜单
 
-Pie menu
+Pie Menu
 == 饼菜单
 
 Ping
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == 接收
 
-Receive rate
+Receive Rate
 == 接收速率
 
-Receive Rate
+Receive rate
 == 接收速率
 
 Receiving
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == 被救/落水：%d/%d
 
-Resend Loss
+Resend loss
 == 重发丢包
 
-Resend loss
+Resend Loss
 == 重发丢包
 
 Resend signs detected, connection quality is suspicious
@@ -5596,10 +5596,10 @@ Send emoticon in water
 Send probability
 == 发送概率
 
-Send rate
+Send Rate
 == 发送速率
 
-Send Rate
+Send rate
 == 发送速率
 
 Send source language
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 武器切换动画
 
-Weapon trajectory
-== 武器弹道辅助线
-
 Weapon Trajectory
 == 武器辅助线
+
+Weapon trajectory
+== 武器弹道辅助线
 
 Weapons
 == 武器

@@ -1186,11 +1186,11 @@ Classic Easy
 Classic easy
 == クラシックイージー
 
-Classic next
-== クラシックネクスト
-
 Classic Next
 == クラシック Next
+
+Classic next
+== クラシックネクスト
 
 Classic Nut
 == クラシック Nut
@@ -1198,11 +1198,11 @@ Classic Nut
 Classic nut
 == クラシックナット
 
-Classic pro
-== クラシックプロ
-
 Classic Pro
 == クラシック Pro
+
+Classic pro
+== クラシックプロ
 
 Clear
 == クリア
@@ -1582,10 +1582,10 @@ Current: Score
 Current: Time
 == 現在: タイム
 
-Custom
+custom
 == カスタム
 
-custom
+Custom
 == カスタム
 
 Custom API key
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == レイテンシ
 
-Latency Jitter
+Latency jitter
 == 遅延ジッター
 
-Latency jitter
+Latency Jitter
 == 遅延ジッター
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == ピックアップ範囲
 
-Pie Menu
+Pie menu
 == パイメニュー
 
-Pie menu
+Pie Menu
 == パイメニュー
 
 Ping
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == 受信
 
-Receive rate
+Receive Rate
 == 受信速度
 
-Receive Rate
+Receive rate
 == 受信速度
 
 Receiving
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == レスキュー/フリーズ: %d/%d
 
-Resend Loss
+Resend loss
 == 再送ロス
 
-Resend loss
+Resend Loss
 == 再送ロス
 
 Resend signs detected, connection quality is suspicious
@@ -5596,10 +5596,10 @@ Send emoticon in water
 Send probability
 == 送信確率
 
-Send rate
+Send Rate
 == 送信速度
 
-Send Rate
+Send rate
 == 送信速度
 
 Send source language
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 武器切り替えアニメーション
 
-Weapon trajectory
-== 武器弾道補助線
-
 Weapon Trajectory
 == 武器軌道
+
+Weapon trajectory
+== 武器弾道補助線
 
 Weapons
 == 武器

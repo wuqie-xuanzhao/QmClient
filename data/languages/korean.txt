@@ -1186,11 +1186,11 @@ Classic Easy
 Classic easy
 == 클래식 easy
 
-Classic next
-== 클래식 next
-
 Classic Next
 == 클래식 Next
+
+Classic next
+== 클래식 next
 
 Classic Nut
 == 클래식 Nut
@@ -1198,11 +1198,11 @@ Classic Nut
 Classic nut
 == 클래식 nut
 
-Classic pro
-== 클래식 pro
-
 Classic Pro
 == 클래식 Pro
+
+Classic pro
+== 클래식 pro
 
 Clear
 == 지우기
@@ -1582,10 +1582,10 @@ Current: Score
 Current: Time
 == 현재: 시간
 
-Custom
+custom
 == 사용자 정의
 
-custom
+Custom
 == 사용자 정의
 
 Custom API key
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == 지연
 
-Latency Jitter
+Latency jitter
 == 지연 지터
 
-Latency jitter
+Latency Jitter
 == 지연 지터
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == 획득 범위
 
-Pie Menu
+Pie menu
 == 파이 메뉴
 
-Pie menu
+Pie Menu
 == 파이 메뉴
 
 Ping
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == 수신
 
-Receive rate
+Receive Rate
 == 수신 속도
 
-Receive Rate
+Receive rate
 == 수신 속도
 
 Receiving
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == 구조/빙결: %d/%d
 
-Resend Loss
+Resend loss
 == 재전송 손실
 
-Resend loss
+Resend Loss
 == 재전송 손실
 
 Resend signs detected, connection quality is suspicious
@@ -5596,10 +5596,10 @@ Send emoticon in water
 Send probability
 == 전송 확률
 
-Send rate
+Send Rate
 == 전송 속도
 
-Send Rate
+Send rate
 == 전송 속도
 
 Send source language
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 무기 전환 애니메이션
 
-Weapon trajectory
-== 무기 궤적 보조선
-
 Weapon Trajectory
 == 무기 궤적
+
+Weapon trajectory
+== 무기 궤적 보조선
 
 Weapons
 == 무기
