@@ -1699,7 +1699,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		str_copy(Data.m_aClan, str_utf8_skip_whitespaces(pClan));
 		str_utf8_trim_right(Data.m_aClan);
 		if(Data.m_aClan[0] == '\0')
-			str_copy(Data.m_aClan, "Clan Name");
+			str_copy(Data.m_aClan, Localize("Clan Name"));
 		Data.m_FontSizeClan = FontSizeClan;
 
 		Data.m_ShowCoordX = g_Config.m_QmNameplateCoordX != 0;

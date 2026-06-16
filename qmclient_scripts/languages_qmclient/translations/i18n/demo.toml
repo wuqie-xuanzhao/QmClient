@@ -129,10 +129,10 @@ polish = "Czy na pewno chcesz usunąć %d wybranych elementów?"
 [[message]]
 key = "Are you sure that you want to delete the demo '%s'?"
 [message.translations]
+simplified_chinese = "确定要删除回放文件 \"%s\"？"
+traditional_chinese = "確定要刪除回放檔案「%s」嗎？"
 japanese = "デモ「%s」を削除してもよろしいですか？"
 korean = "데모 '%s'을(를) 삭제하시겠습니까?"
-simplified_chinese = "确定要删除回放文件 \"%s\" ？"
-traditional_chinese = "確定要刪除回放檔案「%s」嗎？"
 russian = "Вы уверены, что хотите удалить демо «%s»?"
 german = "Sind Sie sicher, dass Sie die Demo '%s' löschen möchten?"
 spanish = "¿Estás seguro de que quieres eliminar la demo '%s'?"
@@ -141,14 +141,13 @@ brazilian_portuguese = "Tem certeza de que deseja excluir a demo '%s'?"
 portuguese = "Tem a certeza de que deseja eliminar a demo '%s'?"
 turkish = "'%s' demosunu silmek istediğinize emin misiniz?"
 polish = "Czy na pewno chcesz usunąć demo „%s”?"
-
 [[message]]
 key = "Are you sure that you want to delete the folder '%s'?"
 [message.translations]
+simplified_chinese = "确定要删除文件夹 \"%s\"？"
+traditional_chinese = "確定要刪除資料夾「%s」嗎？"
 japanese = "フォルダ「%s」を削除してもよろしいですか？"
 korean = "폴더 '%s'을(를) 삭제하시겠습니까?"
-simplified_chinese = "确定要删除文件夹 \"%s\" ？"
-traditional_chinese = "確定要刪除資料夾「%s」嗎？"
 russian = "Вы уверены, что хотите удалить папку «%s»?"
 german = "Sind Sie sicher, dass Sie den Ordner '%s' löschen möchten?"
 spanish = "¿Estás seguro de que quieres eliminar la carpeta '%s'?"
@@ -157,7 +156,6 @@ brazilian_portuguese = "Tem certeza de que deseja excluir a pasta '%s'?"
 portuguese = "Tem a certeza de que deseja eliminar a pasta '%s'?"
 turkish = "'%s' klasörünü silmek istediğinize emin misiniz?"
 polish = "Czy na pewno chcesz usunąć folder „%s”?"
-
 [[message]]
 key = "Are you sure that you want to delete the screenshot '%s'?"
 [message.translations]
@@ -1201,10 +1199,10 @@ polish = "Przełącz automatyczną kamerę"
 [[message]]
 key = "Toggle keyboard shortcuts"
 [message.translations]
-japanese = "キーボードショートカットの切り替え"
-korean = "키보드 단축키 전환"
 simplified_chinese = "启用/禁用键盘快捷键"
 traditional_chinese = "啟用/停用鍵盤快速鍵"
+japanese = "キーボードショートカットの切り替え"
+korean = "키보드 단축키 전환"
 russian = "Включить/отключить горячие клавиши"
 german = "Tastaturkürzel umschalten"
 spanish = "Alternar atajos de teclado"
@@ -1213,7 +1211,6 @@ brazilian_portuguese = "Alternar atalhos de teclado"
 portuguese = "Alternar atalhos de teclado"
 turkish = "Klavye kısayollarını aç/kapat"
 polish = "Przełącz skróty klawiszowe"
-
 [[message]]
 key = "Type"
 [message.translations]
@@ -1257,10 +1254,10 @@ polish = "Nie można usunąć demo „%s”"
 [[message]]
 key = "Unable to delete the folder '%s'. Make sure it's empty first."
 [message.translations]
+simplified_chinese = "无法删除 \"%s\"，请确保你已清空该文件夹"
+traditional_chinese = "無法刪除資料夾「%s」，請確保您已清空該資料夾"
 japanese = "フォルダ「%s」を削除できません。最初にフォルダが空であることを確認してください。"
 korean = "폴더 '%s'을(를) 삭제할 수 없습니다. 먼저 폴더가 비어 있는지 확인하세요."
-simplified_chinese = "无法删除 \"%s\" ，请确保你已清空该文件夹"
-traditional_chinese = "無法刪除資料夾「%s」，請確保您已清空該資料夾"
 russian = "Не удалось удалить папку «%s». Убедитесь, что она пуста."
 german = "Ordner '%s' konnte nicht gelöscht werden. Stellen Sie sicher, dass er zuerst leer ist."
 spanish = "No se pudo eliminar la carpeta '%s'. Asegúrate de que esté vacía primero."
@@ -1269,7 +1266,6 @@ brazilian_portuguese = "Não foi possível excluir a pasta '%s'. Certifique-se d
 portuguese = "Não foi possível eliminar a pasta '%s'. Certifique-se de que está vazia primeiro."
 turkish = "'%s' klasörü silinemiyor. Önce boş olduğundan emin olun."
 polish = "Nie można usunąć folderu „%s”. Upewnij się, że jest pusty."
-
 [[message]]
 key = "Unable to delete the screenshot '%s'"
 [message.translations]

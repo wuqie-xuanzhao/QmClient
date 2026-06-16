@@ -2030,6 +2030,32 @@ private:
 		bool m_Valid = false;
 	};
 
+	struct SSettingsScrollRegionFrame
+	{
+		vec2 m_BeginOffset = vec2(0.0f, 0.0f);
+		float m_PreviousOffsetY = 0.0f;
+		float m_FinalOffsetY = 0.0f;
+	};
+
+	struct SSettingsUiBudgetFrame
+	{
+		double m_LayoutMs = 0.0;
+		double m_TextMs = 0.0;
+		int m_TextNew = 0;
+		int m_TextReused = 0;
+		int m_DrawCalls = 0;
+		int m_Vertices = 0;
+		int m_Indices = 0;
+		int m_HeapAllocs = 0;
+		int m_VisibleWidgets = 0;
+		int m_Tab = -1;
+		int m_Subtab = -1;
+	};
+
+	SSettingsScrollRegionFrame BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY);
+	void FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsScrollRegionFrame &Frame, const CUIRect *pEndRect = nullptr, int Page = -1, bool TrackScrollActive = true);
+	void LogSettingsUiBudget(const char *pPage, const SSettingsUiBudgetFrame &Frame) const;
+
 	SSettingsRuntimeMetadata m_SettingsRuntimeMetadata;
 	SSettingsWarmupFrameBudget m_SettingsFrameBudget;
 	SSettingsAdaptiveBudgetState m_SettingsTextAdaptiveBudgetState;

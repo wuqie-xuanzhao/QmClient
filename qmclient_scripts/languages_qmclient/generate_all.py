@@ -44,13 +44,12 @@ SIMPLIFIED_CHINESE_PASSTHROUGH_KEYS = {
     "DF",
     "Discord",
     "FTAPI",
+    "FPS",
     "Github",
     "HDF",
     "HUD",
     "LLM API",
     "OpenAI",
-    "SecretId",
-    "SecretKey",
     "TClient",
     "Tee",
     "Tee 0.7",
@@ -124,7 +123,9 @@ def generate_language_entries(
         if is_chinese(source.key):
             continue
         identity = source.identity()
-        translation = translations.get(identity, source.key)
+        translation = i18n_store.normalize_translation(
+            language, translations.get(identity, source.key)
+        )
         entries.append((identity, translation))
         if language == "simplified_chinese" and translation == source.key:
             if (

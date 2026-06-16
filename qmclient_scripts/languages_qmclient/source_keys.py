@@ -21,6 +21,17 @@ AUDIT_REPORT_FILE = SCRIPT_DIR / "extracted_audit_report.json"
 CPP_STRING_LITERAL_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 LOCALIZE_CALL_RE = re.compile(r"\b(?:Localize|Localizable)\s*\(")
 REGISTER_CALL_RE = re.compile(r"\bRegister\s*\(")
+CONFIG_OR_COMMAND_TOKEN_RE = re.compile(r"^(?:\+?[a-z][a-z0-9_./:-]*|[A-Z0-9_./:-]+)$")
+PATH_OR_URL_RE = re.compile(
+    r"^(?:https?://|[a-z0-9_./-]+\.(?:cfg|csv|exe|json|png|txt|toml|wav|webp|zip)|"
+    r"(?:data|qmclient|maps|skins|ui|gui|audio|assets)/)",
+    re.IGNORECASE,
+)
+LOG_OR_EVENT_RE = re.compile(
+    r"(?:^event=|(?:^|[ _-])error(?:=|:)|(?:^|[ _-])failed(?:=|:)|"
+    r"(?:^|[ _-])duration_ms=|(?:^|[ _-])operation=|%p|0x%0)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -481,22 +492,61 @@ def extract_known_indirect_records(path: Path, content: str) -> list[SourceKeyRe
                 )
             )
 
+    if normalized.endswith("src/game/client/components/menus.h"):
+        body = extract_function_body(content, "AssetsEditorColorBlendModeName")
+        for value in re.findall(rf"return\s+{string_literal}\s*;", body):
+            match = re.search(re.escape(value), body)
+            records.append(
+                SourceKeyRecord(
+                    decode_language_key(value),
+                    "indirect",
+                    path,
+                    "Assets editor blend mode",
+                    _line_number(
+                        content, content.find(body) + (match.start() if match else 0)
+                    ),
+                )
+            )
+
     if normalized.endswith("src/game/client/components/tclient/statusbar.h"):
-        status_item_pattern = re.compile(
-            rf"CStatusItem\([^;]*,\s*{string_literal}\s*,\s*{string_literal}\s*\)",
-            re.S,
-        )
-        for match in status_item_pattern.finditer(content):
-            for group in match.groups():
-                if not group:
+        for match in re.finditer(r"\bCStatusItem\s*\(", content):
+            open_paren = content.find("(", match.start())
+            close_paren = _find_matching_paren(content, open_paren)
+            if close_paren == -1:
+                continue
+            call_args = content[open_paren + 1 : close_paren]
+            for index, literal_match in enumerate(
+                CPP_STRING_LITERAL_RE.finditer(call_args)
+            ):
+                if index == 0:
+                    continue
+                value = decode_language_key(literal_match.group(1))
+                if not value.strip():
                     continue
                 records.append(
                     SourceKeyRecord(
-                        decode_language_key(group),
+                        value,
                         "indirect",
                         path,
                         "",
-                        _line_number(content, match.start()),
+                        _line_number(content, open_paren + 1 + literal_match.start()),
+                    )
+                )
+
+    if normalized.endswith("src/game/client/components/tclient/menus_tclient.cpp"):
+        for pattern in (
+            rf"\bS\.m_pName\s*=\s*{string_literal}",
+            rf"\bRenderBoxedFullSection\(\s*{string_literal}\s*,",
+            rf"\bConfigureSplitCachedStaticLayer\([^;]*,\s*{string_literal}\s*,",
+        ):
+            for match in re.finditer(pattern, content, re.S):
+                records.append(
+                    SourceKeyRecord(
+                        decode_language_key(match.group(1)),
+                        "indirect",
+                        path,
+                        "",
+                        _line_number(content, match.start(1)),
                     )
                 )
 
@@ -577,6 +627,145 @@ def looks_human_readable(value: str) -> bool:
     if has_cjk(value):
         return True
     return " " in value and any(ch.isalpha() for ch in value)
+
+
+def _looks_like_business_literal(value: str) -> tuple[bool, str]:
+    text = value.strip()
+    if not text:
+        return True, "empty or whitespace literal"
+    if "&&" in text or "||" in text:
+        return True, "source expression string fragment"
+    if re.fullmatch(r"(?:[&|=!<>]=?|&&|\|\|)\s*[A-Za-z_][A-Za-z0-9_]*\s*(?:[=!<>]=?)?", text):
+        return True, "source expression string fragment"
+    if text.startswith(("<", "</", "<!doctype", ".")) or any(
+        token in text for token in ("</", "<div", "<style", "font-family:", "class=")
+    ):
+        return True, "HTML or CSS template fragment"
+    if PATH_OR_URL_RE.search(text):
+        return True, "path, file name, or URL data"
+    if "/" in text and ";" in text:
+        return True, "MIME type or protocol metadata"
+    if LOG_OR_EVENT_RE.search(text):
+        return True, "log or telemetry payload"
+    if (
+        re.search(r"\b(?:invalid|unknown|failed|error)\b", text, re.IGNORECASE)
+        and "%" in text
+    ):
+        return True, "diagnostic or assertion message"
+    if re.search(r"\b[a-z][a-z0-9_]*=%", text) or re.search(
+        r"\b[a-z][a-z0-9_]*=%[0-9.]*[sdifu]", text
+    ):
+        return True, "log or telemetry key/value payload"
+    if (
+        re.fullmatch(r"[a-z][a-z0-9_:-]*(?:\s+(?:%[sdif]|[a-z0-9_:-]+))+", text)
+        and "%" in text
+    ):
+        return True, "console command format template"
+    if CONFIG_OR_COMMAND_TOKEN_RE.match(text) and (
+        "_" in text or "/" in text or "." in text or text.startswith("+")
+    ):
+        return True, "command, config, or machine token"
+    if text.startswith("/") and any(ch in text for ch in ("%d", "%s", " ")):
+        return True, "chat or console command template"
+    if re.fullmatch(
+        r"(?:chai|say|vote|force_vote|remove_vote|add_vote|add_bindwheel|war_[a-z_]+|remove_war_[a-z_]+|bindchat)\b.*",
+        text,
+    ):
+        return True, "chat, vote, or bind command data"
+    if re.search(r"\b(?:bind|exec|toggle|unbind)\b", text) and (
+        "\\" in text or '"' in text or text.startswith(("bind ", "exec "))
+    ):
+        return True, "console command template"
+    if text.endswith((" Bps", " KiB", " MiB")) or re.fullmatch(
+        r"[%0-9. *()+/\-,:↓↑]+[a-zA-Z%]*", text
+    ):
+        return True, "numeric display format template"
+    if "%" in text and re.fullmatch(r"[\s%0-9A-Za-z\[\]().:|+*/,_-]+", text):
+        return True, "display formatting template"
+    if text.startswith(("[", "{")) and any(ch in text for ch in (":", "=")):
+        return True, "structured payload template"
+    if "Localize(" in text or "LoadingDotsCount" in text:
+        return True, "string literal extractor fragment"
+    if text in {
+        "%s: %s",
+        "%s: ",
+        "%s> ",
+        "rcon> ",
+        "> %s",
+        "— %s",
+        "*** %s",
+        "%s | %s",
+        "%s | %s | %s",
+        "%s (%d)",
+        "[%s] %s",
+        "[%s] [%s] %s",
+        "%s = %s",
+        "%s / %s",
+        "%s: %d",
+        "%s（/%s %s）",
+        "%s: %s – %s",
+        "#%d  %s – %s",
+        "0d 00:00:00",
+        "00d 00:00:00",
+        "000d 00:00:00",
+        " KiB",
+        " on ",
+        "rcon> ",
+    }:
+        return True, "display formatting template"
+    return False, ""
+
+
+def _line_looks_like_business_data(line_text: str) -> tuple[bool, str]:
+    stripped = line_text.strip()
+    if "Localize(" in stripped:
+        return True, "localization context metadata"
+    if any(
+        token in stripped
+        for token in (
+            "log_info(",
+            "log_error(",
+            "log_warn(",
+            "log_debug(",
+            "log_trace(",
+            "dbg_msg(",
+            "dbg_assert(",
+            "dbg_assert_failed(",
+            "static_assert(",
+            "QmPerfLogPayload(",
+            "Console()->Register(",
+            "Console()->Chain(",
+            "Console()->ExecuteLine(",
+            "str_find(",
+            "str_find_nocase(",
+            "str_comp(",
+            "str_comp_num(",
+            "str_comp_nocase(",
+            "str_comp_nocase_num(",
+            "str_startswith(",
+            "str_startswith_nocase(",
+            "str_endswith(",
+            "str_endswith_nocase(",
+            "std::string(",
+            "Json[",
+            "Writer.WriteAttribute(",
+            "Storage()->",
+            "FileExists(",
+            "FolderExists(",
+        )
+    ):
+        return True, "machine/log/matcher call argument"
+    if re.search(r"\bstr_format\(\s*a[A-Za-z]*(?:Extra|Payload|Debug|Perf)", stripped):
+        return True, "debug or telemetry format payload"
+    if re.search(
+        r"\bstr_format\(\s*a[A-Za-z]*(?:Buf|Cmd|Command|Error|Payload)", stripped
+    ):
+        return True, "command, diagnostic, or payload format template"
+    if re.search(r"\bstr_format\(\s*a[A-Za-z]*(?:Extra|Focus|Warmup|Gate|Miss|Request)", stripped):
+        return True, "debug or telemetry format payload"
+    if "QmPerfAppendJsonField(" in stripped or "QmPerfAppendPayloadJsonFields(" in stripped:
+        return True, "telemetry JSON field data"
+    return False, ""
 
 
 def summarize_source_key_records(records: list[SourceKeyRecord]) -> SourceKeySummary:
@@ -691,6 +880,25 @@ def _business_data_records_from_path(
     records: list[StringAuditRecord] = []
     lines = strip_cpp_comments(content).splitlines()
 
+    def add_business(text: str, line: int, reason: str) -> None:
+        records.append(StringAuditRecord(path, line, text, "business_data", reason))
+
+    def is_localized_alias(text: str) -> bool:
+        token_pattern = re.compile(
+            r'(?:constexpr\s+)?(?:const\s+)?char\s*\*\s*(?:const\s+)?'
+            r'([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"((?:[^"\\]|\\.)*)"'
+        )
+        aliases = {
+            name
+            for name, encoded in token_pattern.findall("\n".join(lines))
+            if decode_language_key(encoded) == text
+        }
+        return any(f"Localize({name})" in content for name in aliases)
+
+    def appears_as_localize_argument_elsewhere(text: str) -> bool:
+        escaped = re.escape(text.replace("\\", "\\\\").replace('"', '\\"'))
+        return re.search(rf"Localize\(\s*\"{escaped}\"", content) is not None
+
     if normalized.endswith(
         "src/game/client/components/qmclient/hud_notifications/hud_notification_static_rules.h"
     ):
@@ -711,6 +919,29 @@ def _business_data_records_from_path(
             )
         return records
 
+    if normalized.endswith(
+        (
+            "src/game/client/components/qmclient/hud_notifications/hud_notification_static_alias_rules.h",
+            "src/game/client/components/qmclient/hud_notifications/hud_notification_static_upstream_rules.h",
+        )
+    ):
+        static_rule_pattern = re.compile(
+            r'\bX\(\s*"((?:[^"\\]|\\.)*)"\s*,\s*[A-Za-z_][A-Za-z0-9_]*\s*\)'
+        )
+        for match in static_rule_pattern.finditer("\n".join(lines)):
+            text = decode_language_key(match.group(1))
+            line = _line_number("\n".join(lines), match.start())
+            records.append(
+                StringAuditRecord(
+                    path,
+                    line,
+                    text,
+                    "business_data",
+                    "notification static matcher data",
+                )
+            )
+        return records
+
     if normalized.endswith("src/game/client/components/assets_resource_registry.cpp"):
         for text, line in _extract_cpp_string_literal_records(content):
             if looks_human_readable(text):
@@ -726,23 +957,847 @@ def _business_data_records_from_path(
         return records
 
     if normalized.endswith(
-        "src/game/client/components/qmclient/hud_notifications/hud_notification_rules.cpp"
+        (
+            "src/game/client/components/scoreboard.cpp",
+            "src/game/client/components/tclient/bindchat.cpp",
+            "src/game/client/components/tclient/bindwheel.cpp",
+            "src/game/client/components/voting.cpp",
+            "src/game/client/components/qmclient/voice/voice_utils.cpp",
+            "src/game/client/components/qmclient/monitoring/monitoring_device_perf.cpp",
+            "src/game/client/components/tclient/swap_countdown_message.cpp",
+            "src/game/client/race_parse.cpp",
+            "src/game/client/qm_command_router.cpp",
+        )
     ):
         for text, line in _extract_cpp_string_literal_records(content):
-            if not looks_human_readable(text):
-                continue
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
-            if _is_notification_matcher_line(normalized, line_text):
+            if normalized.endswith("src/game/client/components/scoreboard.cpp") and (
+                "SoundCategory" in line_text
+                or "say /spec" in text
+                or has_cjk(text)
+            ):
                 records.append(
                     StringAuditRecord(
                         path,
                         line,
                         text,
                         "business_data",
-                        "notification message matcher",
+                        "scoreboard sound category or command data",
+                    )
+                )
+            elif normalized.endswith("src/game/client/components/tclient/bindchat.cpp"):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "bindchat command preset data",
+                    )
+                )
+            elif normalized.endswith("src/game/client/components/tclient/bindwheel.cpp"):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "bindwheel command serialization data",
+                    )
+                )
+            elif normalized.endswith("src/game/client/components/voting.cpp") and (
+                text.startswith(("force_vote ", "remove_vote ", "add_vote "))
+                or text in {"vote yes", "vote no"}
+                or text in {"%s图", "DDNet Vote", "No reason given"}
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "vote command, matcher, notification title, or preview fixture data",
+                    )
+                )
+            elif normalized.endswith(
+                "src/game/client/components/qmclient/voice/voice_utils.cpp"
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "voice permission matcher data",
+                    )
+                )
+            elif normalized.endswith(
+                "src/game/client/components/qmclient/monitoring/monitoring_device_perf.cpp"
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "platform performance counter path",
+                    )
+                )
+            elif normalized.endswith(
+                "src/game/client/components/tclient/swap_countdown_message.cpp"
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "swap countdown server message matcher data",
+                    )
+                )
+            elif normalized.endswith("src/game/client/race_parse.cpp"):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "race server message parser data",
+                    )
+                )
+            elif normalized.endswith("src/game/client/qm_command_router.cpp") and (
+                line_text.strip().startswith("pConsole->Register(")
+                or "Dummy command ignored" in text
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "console command signature or diagnostic data",
+                    )
+                )
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/menus_ingame.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if (
+                re.fullmatch(r"DDmaX (?:Easy|Next|Pro|Nut)", text)
+                or text == "My IGN: %s\\n"
+                or "apTypeKeys" in line_text
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "server type key or clipboard data template",
+                    )
+                )
+            elif text in {"DDmaX ", "Address: ddnet://%s\\n", "Map: %s\\n"}:
+                add_business(text, line, "clipboard or server type formatting data")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/menus_browser.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if (
+                re.fullmatch(r"DDmaX (?:Easy|Next|Pro|Nut)", text)
+                or text == "%d/5 ★"
+                or text in {"Address: ddnet://%s\\n", "Map: %s\\n"}
+                or "&&" in text
+                or "||" in text
+            ):
+                add_business(text, line, "server browser category, rating, clipboard, or source expression data")
+        if records:
+            return records
+
+    if normalized.endswith(
+        "src/game/client/components/qmclient/hud_notifications/hud_notification_rules.cpp"
+    ):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if not looks_human_readable(text):
+                continue
+            records.append(
+                StringAuditRecord(
+                    path,
+                    line,
+                    text,
+                    "business_data",
+                    "notification message matcher or compatibility fragment",
+                )
+            )
+        return records
+
+    if normalized.endswith(
+        "src/game/client/components/qmclient/translate/translate.cpp"
+    ):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if looks_human_readable(text) or has_cjk(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "translation service prompt or provider data",
                     )
                 )
         return records
+
+    if normalized.endswith(
+        "src/game/client/components/qmclient/translate/translate_parse.cpp"
+    ):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "translation API response parser diagnostic text",
+                    )
+                )
+        return records
+
+    if normalized.endswith("src/game/client/components/qmclient/lyrics_component.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if any(
+                token in line_text
+                for token in (
+                    "m_aLastError",
+                    "pErr",
+                    "str_copy(",
+                    "str_format(",
+                    "json_object_get(",
+                )
+            ) and (looks_human_readable(text) or "%" in text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "lyrics API response parser diagnostic text",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/qmclient/axiom_auto_login.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "QmTextContainsAny(" in line_text:
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "Axiom server login response matcher",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/chat.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if has_cjk(text) or text in {
+                "DDNet Chat",
+                "Welcome to QmClient",
+                "Let's go!",
+                "Team save in progress. You'll be able to load with '/load *** *** ***'",
+                "Team save in progress. You'll be able to load with '/load *** *** ***' if save is successful or with '/load *** *** ***' if it fails",
+                "Team successfully saved by ***. Use '/load *** *** ***' to continue",
+                "expected all or team as mode",
+            } or text == "%s（/%s %s）" or "s_aPreviewLines" in line_text:
+                add_business(text, line, "chat command preview, preview fixture, or streamer mask data")
+        return records
+
+    if normalized.endswith("src/game/client/components/binds.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if any(
+                token in line_text
+                for token in (
+                    "Bind(",
+                    "log_info_color(",
+                    "dbg_assert(",
+                    "ExecuteLine",
+                    "str_comp",
+                    "str_startswith",
+                )
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "bind command, log, or assertion data",
+                    )
+                )
+        return records
+
+    if normalized.endswith("src/game/client/components/debughud.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "debug HUD diagnostic text",
+                    )
+                )
+        return records
+
+    if normalized.endswith("src/game/client/components/console.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if any(
+                token in line_text
+                for token in (
+                    "Html.append(",
+                    "str_append(",
+                    "str_format(",
+                    "ColorCharToTextColor(",
+                )
+            ) and (looks_human_readable(text) or text.strip()):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "console prompt, export, or formatting template",
+                    )
+                )
+            elif text in {"rcon> ", "xxxx-xx-xx xx:xx:xx x chat/client: — ", " on "}:
+                add_business(text, line, "console prompt, export, or formatting template")
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/qmclient/monitoring/monitoring.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in {"avg %.0f ↓%.0f ↑%.0f%s", "avg %.*f ↓%.*f ↑%.*f%s", " KiB"}:
+                add_business(text, line, "monitoring numeric display format template")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/hud.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if (
+                is_localized_alias(text)
+                or text == "3 Tiles Edge Jump:\\nLeft Jump: .34|.31|.16\\nLeft Double Jump: .41|.28|.25|.13\\nRight Jump: .63|.66|.81\\nRight Double Jump: .56|.69|.72|.84"
+                or text in {"%s->%s Swap:%d秒", "%s->%s 可交换!", "开关#%d:%d秒"}
+                or text == "Pure Music"
+            ):
+                add_business(text, line, "HUD config default, localized alias, or dynamic display template")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/menus_settings.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if (
+                text == ",\\nloaded: %"
+                or "SetPreviewLine(" in line_text
+                or text in {"'%s' entered and joined the game", "Hey, how are you %s?"}
+            ):
+                add_business(text, line, "settings debug or chat preview fixture text")
+        # Continue with generic rules for true UI labels.
+
+    if normalized.endswith("src/game/client/components/menus_settings_assets.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if text == "': Result += ":
+                add_business(text, line, "source expression string fragment")
+            elif text in {
+                "Invalid entity bg preview response",
+                "Entity bg preview data is missing",
+                "Entity bg preview base url is empty",
+                "Invalid workshop response",
+                "Workshop api returned error",
+                "Workshop asset list is missing",
+                "Workshop json parse failed",
+                "Workshop request aborted",
+                "Workshop request failed",
+                "Entity bg preview json parse failed",
+                "Entity bg preview request failed",
+            }:
+                add_business(text, line, "assets workshop or preview diagnostic text")
+            elif (
+                "str_copy(aError" in line_text
+                or "str_copy(aPreviewError" in line_text
+                or "str_format(aError" in line_text
+                or "str_format(aPreviewError" in line_text
+                or "dbg_msg(" in line_text
+            ) and looks_human_readable(text):
+                add_business(text, line, "assets workshop or preview diagnostic text")
+            elif appears_as_localize_argument_elsewhere(text):
+                add_business(text, line, "localized toolbar width calculation key")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/hud_editor.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if has_cjk(text) or looks_human_readable(text):
+                add_business(text, line, "HUD editor sample text")
+        return records
+
+    if normalized.endswith("src/game/client/components/voting.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if (
+                text == "%s图"
+                or text == "DDNet Vote"
+                or text == "No reason given"
+            ):
+                add_business(text, line, "vote matcher, notification title, or preview fixture text")
+        if records:
+            return records
+
+    if normalized.endswith(
+        (
+            "src/game/client/components/qmclient/qmclient.cpp",
+            "src/game/client/components/tclient/tclient.cpp",
+            "src/game/client/components/tclient/menus_tclient.cpp",
+        )
+    ):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if (
+                text in {"快醒醒!", "但是", "不过", "然而", "可是", "[rename] ", "[regex] "}
+                or "LogQmClient" in line_text
+                or text in {"auth token updated", "response did not contain auth token", "users payload could not be parsed"}
+                or text in {"Spectate a player", "No reason given", "SollyBunny / bun bun"}
+            ):
+                add_business(text, line, "auto-reply matcher, command metadata, preview fixture, or QmClient telemetry text")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/gameclient.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if (
+                text in {
+                    "nameless tee",
+                    "prediction error",
+                    "Team successfully saved by %s. Use '/load %s' to continue",
+                    "Team successfully saved by %s. Use '/load %s' on %s to continue",
+                }
+                or "Console()->Print(" in line_text
+            ):
+                add_business(text, line, "fallback name, debug log, console diagnostic, or server save message data")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/qmclient/voice/voice_core.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if (
+                "LogDiagnosticErrorOnce(" in line_text
+                or "m_pConsole->Print(" in line_text
+                or text in {
+                    "Failed to open UDP socket",
+                    "No output devices available",
+                    "No capture devices available",
+                    "Input devices:",
+                    "Output devices:",
+                    "Microphone permission denied on Android",
+                }
+            ):
+                add_business(text, line, "voice diagnostic log or console output text")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/skins.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "dbg_assert" in line_text or "m_SkinsUsageList" in text:
+                add_business(text, line, "skin manager assertion diagnostic text")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/skin.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if "valid filenames" in text:
+                add_business(text, line, "skin validation log diagnostic text")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/statboard.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if "flag was captured by" in text:
+                add_business(text, line, "statboard server message parser fragment")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/qm_ime_candidate_popup.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if has_cjk(text) or text == "国g":
+                add_business(text, line, "IME candidate layout sample text")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/qmclient/scripting/impl.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if "Boxed_Value" in text:
+                add_business(text, line, "scripting exception diagnostic text")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/sixup_translate_game.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "0.7 protocol compatibility game message data",
+                    )
+                )
+        return records
+
+    if normalized.endswith(
+        "src/game/client/components/menus_ingame_touch_controls.cpp"
+    ):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "Localize(" in line_text and looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "localization context metadata",
+                    )
+                )
+            elif any(
+                token in line_text
+                for token in ("dbg_assert(", "dbg_assert_failed(", "static_assert(")
+            ) and looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "assertion or compile-time diagnostic text",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/camera.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "Localize(" in line_text and looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "localization context metadata",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/qmclient/menus_qmclient.cpp"):
+        module_search_start = content.find("auto ModuleSearchKeywords =")
+        module_search_end = content.find("auto ApplyModuleSearch", module_search_start)
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            line_index = content.find(line_text)
+            if (
+                has_cjk(text)
+                and module_search_start != -1
+                and line_index != -1
+                and (
+                    module_search_end == -1
+                    or module_search_start <= line_index < module_search_end
+                )
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "settings module search keyword data",
+                    )
+                )
+            elif any(
+                token in line_text
+                for token in (
+                    "str_startswith_nocase(",
+                    "str_find(",
+                    "str_find_nocase(",
+                    "str_comp(",
+                    "str_comp_nocase(",
+                    "str_append(",
+                    "CommandBindCache.",
+                    "m_Binds.Bind(",
+                    "Console()->ExecuteLine(",
+                )
+            ) and (
+                not looks_human_readable(text)
+                or text.startswith("[")
+                or text.startswith("toggle ")
+                or CONFIG_OR_COMMAND_TOKEN_RE.match(text)
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "settings matcher, command, or serialized config token",
+                    )
+                )
+            elif (
+                module_search_start != -1
+                and line_index != -1
+                and (
+                    module_search_end == -1
+                    or module_search_start <= line_index < module_search_end
+                )
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "settings module search keyword data",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/menus_browser.cpp"):
+        game_type_tokens = {
+            "DDmaX",
+            "DDmaX Easy",
+            "DDmaX Next",
+            "DDmaX Pro",
+            "DDmaX Nut",
+            "Oldschool",
+            "Novice",
+            "Moderate",
+            "Brutal",
+            "Insane",
+            "Dummy",
+            "Solo",
+            "Race",
+            "Fun",
+            "Event",
+            "f-ddrace",
+            "freeze",
+            "ddracenet",
+            "ddnet",
+            "0xf",
+            "ddrace",
+            "mkrace",
+            "fastcap",
+        }
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if text in game_type_tokens and any(
+                token in line_text
+                for token in ("str_find_nocase(", "str_comp_nocase(", "return ")
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "server browser game type matcher data",
+                    )
+                )
+            elif text in {'solo; nameless tee; kobra 2"', 'CHN; [A]"'}:
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "server browser search example data",
+                    )
+                )
+            elif text in {"Address: ddnet://%s\\n", "Map: %s\\n", "%d/5 ★"}:
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "server browser copy/detail formatting template",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/menus_settings_controls.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "Localizable(" in line_text and looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "predefined bind command data",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/menus_settings.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "SetPreviewLine(" in line_text:
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "chat settings preview sample data",
+                    )
+                )
+            elif "str_format(" in line_text and "AssetScanStatus" in line_text:
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "asset scan diagnostic summary format",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/menus_settings_assets.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if any(
+                token in line_text
+                for token in (
+                    "str_copy(aError",
+                    "str_copy(pErr",
+                    "str_copy(aPreviewError",
+                    "str_format(aError",
+                    "str_format(aPreviewError",
+                    "dbg_msg(",
+                )
+            ) and looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "asset workshop or preview diagnostic text",
+                    )
+                )
+            elif "ComputeToolbarButtonWidth(" in line_text and looks_human_readable(text):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "localized toolbar layout measurement key",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/tclient/fast_practice.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "EchoPractice(" in line_text:
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "fast practice local command response text",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/tclient/bindchat.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if any(
+                token in line_text
+                for token in (
+                    "Bindchat(",
+                    "Console()->Print",
+                    "str_format(",
+                    "str_startswith(",
+                    "str_copy(",
+                    "str_append(",
+                )
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "bindchat command, config, or console output data",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/voting.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if any(
+                token in line_text
+                for token in (
+                    "Console()->ExecuteLine",
+                    "Console()->Print",
+                    "str_format(",
+                    "str_append(",
+                    "str_copy(",
+                )
+            ):
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "voting command or console output data",
+                    )
+                )
+        # Continue with generic rules for this file.
+
+    if normalized.endswith("src/game/client/components/menus_ingame.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if text in {"Address: ddnet://%s\\n", "Map: %s\\n", "DDmaX "}:
+                records.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        "server detail or game type formatting data",
+                    )
+                )
+        # Continue with generic rules for this file.
 
     return records
 
@@ -802,6 +1857,22 @@ def build_string_audit_report(
         else:
             must_i18n.append(audit_record)
 
+        if record.context:
+            context_record = StringAuditRecord(
+                record.source,
+                record.line,
+                record.context,
+                "business_data",
+                "localization context metadata",
+            )
+            context_key = (
+                _normalized_relpath(context_record.file),
+                context_record.line,
+                context_record.text,
+            )
+            claimed.add(context_key)
+            business_data.append(context_record)
+
     for path in _iter_audit_files(paths):
         if path.suffix == ".py":
             content = path.read_text(encoding="utf-8")
@@ -836,11 +1907,33 @@ def build_string_audit_report(
         if "/src/game/client/" not in f"/{normalized}":
             continue
 
+        stripped_lines = (
+            strip_cpp_comments(content).splitlines() if path.suffix != ".py" else []
+        )
         for text, line in literal_records:
-            if not looks_human_readable(text):
-                continue
             key = (normalized, line, text)
             if key in claimed:
+                continue
+            literal_is_business, literal_reason = _looks_like_business_literal(text)
+            line_text = ""
+            if path.suffix != ".py":
+                line_text = (
+                    stripped_lines[line - 1] if 0 < line <= len(stripped_lines) else ""
+                )
+            line_is_business, line_reason = _line_looks_like_business_data(line_text)
+            if literal_is_business or line_is_business:
+                claimed.add(key)
+                business_data.append(
+                    StringAuditRecord(
+                        path,
+                        line,
+                        text,
+                        "business_data",
+                        literal_reason or line_reason,
+                    )
+                )
+                continue
+            if not looks_human_readable(text):
                 continue
             claimed.add(key)
             needs_review.append(

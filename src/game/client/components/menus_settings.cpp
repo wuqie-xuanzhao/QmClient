@@ -27,6 +27,7 @@
 #include <game/client/components/menu_background.h>
 #include <game/client/components/message_gradient.h>
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
 #include <game/client/skin.h>
@@ -1626,7 +1627,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	if(*pUseCustomColor)
 	{
 		// RandomColorsButton.VSplitLeft(120.0f, &RandomColorsButton, 0);
-		if(DoButton_Menu(&s_RandomizeColors, "Random Colors", 0, &RandomColorsButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f)))
+		if(DoButton_Menu(&s_RandomizeColors, Localize("Random Colors"), 0, &RandomColorsButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f)))
 		{
 			if(m_Dummy)
 			{
@@ -2114,6 +2115,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	int VisibleBackgroundRequestedCount = 0;
 	int VisibleNonTerminalWaitingCount = 0;
 	int TotalSourceSettledCount = 0;
+	SResourcePreviewTelemetry TeePreviewTelemetry;
 	int OldSelected = -1;
 	const auto PrescanStartTime = time_get_nanoseconds();
 	int PrescanItemsScanned = 0;
@@ -2215,6 +2217,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		const bool PreviewCacheReady = pCachedPreview != nullptr;
 		const bool EntryVisualReady = SettingsSkinListEntryVisualReady(SourceReady, TerminalFailure, PreviewCacheReady);
 		const bool EntrySourceSettled = SettingsSkinListEntrySourceSettled(SourceReady, TerminalFailure);
+		SResourcePreviewState TeeResourcePreviewState;
+		TeeResourcePreviewState.m_TextureReady = EntryVisualReady;
+		TeeResourcePreviewState.m_Failed = TerminalFailure;
+		const ESettingsResourcePreviewDrawResult TeePreviewDrawResult = SettingsResourcePreviewDrawResult(TeeResourcePreviewState);
 
 		const CListboxItem Item = s_ListBox.DoNextItem(SkinListEntry.ListItemId(), OldSelected >= 0 && (size_t)OldSelected == i);
 		if(!Item.m_Visible)
@@ -2231,7 +2237,16 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			State == CSkins::CSkinContainer::EState::PENDING ||
 			State == CSkins::CSkinContainer::EState::LOADING;
 		if(EntryVisualReady)
+		{
 			++VisibleVisualReadyCount;
+			++TeePreviewTelemetry.m_ReadyTextureCount;
+		}
+		else
+		{
+			++TeePreviewTelemetry.m_PlaceholderCount;
+			if(TeePreviewDrawResult == ESettingsResourcePreviewDrawResult::PLACEHOLDER)
+				++TeePreviewTelemetry.m_PreviewAdmissions;
+		}
 		if(EntrySourceSettled)
 			++VisibleSourceSettledCount;
 		if(State == CSkins::CSkinContainer::EState::BACKGROUND_REQUESTED)
@@ -2449,6 +2464,12 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				BackgroundScanDurationMs, pBackgroundScanBlockReason);
 			QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
 		}
+		char aPreviewPayload[192];
+		str_format(aPreviewPayload, sizeof(aPreviewPayload),
+			"event=tee_preview_pipeline page=settings:tee tee_preview_admissions=%d tee_ready_textures=%d tee_placeholders=%d visible_ready_ratio=%.3f",
+			TeePreviewTelemetry.m_PreviewAdmissions, TeePreviewTelemetry.m_ReadyTextureCount, TeePreviewTelemetry.m_PlaceholderCount,
+			SettingsResourcePreviewVisibleReadyRatio(TeePreviewTelemetry.m_ReadyTextureCount, (int)vVisibleSkinIndices.size()));
+		QmPerfLogPayload("perf/settings-skin-source", aPreviewPayload, Client(), "settings:tee");
 	}
 	const auto SkinStats = GameClient()->m_Skins.LoadingStats();
 	CSkins::SSettingsTeeVisibleSnapshot VisibleSnapshot;
@@ -4435,9 +4456,8 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 	ScrollParams.m_ScrollUnit = LANGUAGE_ROW_HEIGHT;
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	ScrollParams.m_ScrollbarMargin = 5.0f;
-	gs_LanguageScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
-	m_SettingsScrollActive = m_SettingsScrollActive || absolute(ScrollOffset.y - s_PrevLanguageScrollY) > 0.01f;
-	s_PrevLanguageScrollY = ScrollOffset.y;
+	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(gs_LanguageScrollRegion, &MainView, ScrollParams, s_PrevLanguageScrollY);
+	ScrollOffset = ScrollFrame.m_BeginOffset;
 
 	CUIRect Content = MainView;
 	Content.y += ScrollOffset.y;
@@ -4483,8 +4503,8 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 	ScrollRegion.y = Content.y + CScrollRegion::HEIGHT_MAGIC_FIX;
 	ScrollRegion.w = MainView.w;
 	ScrollRegion.h = 0.0f;
-	gs_LanguageScrollRegion.AddRect(ScrollRegion);
-	gs_LanguageScrollRegion.End();
+	FinishSettingsScrollRegion(gs_LanguageScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_LANGUAGE);
+	s_PrevLanguageScrollY = ScrollFrame.m_FinalOffsetY;
 
 	if(SelectedOld != s_SelectedLanguage)
 	{

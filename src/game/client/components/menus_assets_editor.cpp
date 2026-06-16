@@ -1971,10 +1971,10 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 
 	static CUi::SDropDownState s_BlendModeDropDownState;
 	const char *apBlendModeNames[ASSETS_EDITOR_COLOR_BLEND_COUNT] = {
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_MULTIPLY)),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_NORMAL)),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_SCREEN)),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_OVERLAY)),
+		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_MULTIPLY), "Assets editor blend mode"),
+		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_NORMAL), "Assets editor blend mode"),
+		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_SCREEN), "Assets editor blend mode"),
+		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_OVERLAY), "Assets editor blend mode"),
 	};
 	CUIRect BlendLabel, BlendDropDown;
 	const float BlendLabelW = minimum(92.0f, maximum(64.0f, TextRender()->TextWidth(FontSize, Localize("Blend mode"), -1, -1.0f) + 8.0f));

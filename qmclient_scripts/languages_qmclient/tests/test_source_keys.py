@@ -116,6 +116,266 @@ class SourceKeysTest(unittest.TestCase):
             must_i18n_texts,
         )
 
+    def test_audit_marks_semantic_notification_matchers_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = (
+                root
+                / "src"
+                / "game"
+                / "client"
+                / "components"
+                / "qmclient"
+                / "hud_notifications"
+                / "hud_notification_static_alias_rules.h"
+            )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "#define QM_HUD_NOTIFICATION_STATIC_ALIAS_RULES(X) \\\n"
+                '\tX("你现在会收到私聊消息", WhispersOn)\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        self.assertIn("你现在会收到私聊消息", business_texts)
+
+    def test_audit_marks_assertions_and_command_templates_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = root / "src" / "game" / "client" / "components" / "foo.cpp"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "\n".join(
+                    [
+                        'dbg_assert_failed("Client state %d is invalid for RenderMenubar");',
+                        'static_assert(true, "Metadata table out of sync");',
+                        'str_format(aCmd, sizeof(aCmd), "auth_add %s admin %s", pUser, pPassword);',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        self.assertIn("Client state %d is invalid for RenderMenubar", business_texts)
+        self.assertIn("Metadata table out of sync", business_texts)
+        self.assertIn("auth_add %s admin %s", business_texts)
+
+    def test_audit_marks_external_parser_diagnostics_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = (
+                root
+                / "src"
+                / "game"
+                / "client"
+                / "components"
+                / "qmclient"
+                / "translate"
+                / "translate_parse.cpp"
+            )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                'str_copy(Out.m_aError, "No choices in response", sizeof(Out.m_aError));\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        self.assertIn("No choices in response", business_texts)
+
+    def test_audit_marks_bind_commands_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = (
+                root
+                / "src"
+                / "game"
+                / "client"
+                / "components"
+                / "menus_settings_controls.cpp"
+            )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                '{EBindOptionGroup::MOVEMENT, Localizable("Pause"), "say /pause"},\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        must_i18n_texts = {record.text for record in report.must_i18n}
+        self.assertIn("say /pause", business_texts)
+        self.assertIn("Pause", must_i18n_texts)
+
+    def test_audit_marks_localized_constant_aliases_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = root / "src" / "game" / "client" / "components" / "hud.cpp"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                'constexpr const char *pLine1 = "practice mode";\n'
+                "TextRender()->Text(0.0f, 0.0f, 10.0f, Localize(pLine1), -1.0f);\n",
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        self.assertIn("practice mode", business_texts)
+
+    def test_audit_marks_preview_and_format_templates_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = root / "src" / "game" / "client" / "components" / "chat.cpp"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                'static const SPreviewLine s_aPreviewLines[] = {{"Server", "Welcome to QmClient"}};\n'
+                'str_format(aCount, sizeof(aCount), "%s（/%s %s）", pHelp, pName, pParams);\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        self.assertIn("Welcome to QmClient", business_texts)
+        self.assertIn("%s（/%s %s）", business_texts)
+
+    def test_extracts_statusbar_item_labels_and_descriptions(self):
+        path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "game"
+            / "client"
+            / "components"
+            / "tclient"
+            / "statusbar.h"
+        )
+        content = source_keys.strip_cpp_comments(source_keys.read_source_text(path))
+        records = source_keys.extract_known_indirect_records(path, content)
+        keys = {record.key for record in records}
+
+        self.assertIn("Snapshot Latency", keys)
+        self.assertIn("Displays server snapshot latency", keys)
+        self.assertNotIn("u", keys)
+
+    def test_extracts_tclient_cached_section_titles(self):
+        path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "game"
+            / "client"
+            / "components"
+            / "tclient"
+            / "menus_tclient.cpp"
+        )
+        content = source_keys.strip_cpp_comments(source_keys.read_source_text(path))
+        records = source_keys.extract_known_indirect_records(path, content)
+        keys = {record.key for record in records}
+
+        self.assertIn("Visual: Nameplates", keys)
+        self.assertIn("Tee status bar", keys)
+
+    def test_extracts_asset_editor_blend_modes_with_context(self):
+        path = (
+            source_keys.PROJECT_ROOT / "src" / "game" / "client" / "components" / "menus.h"
+        )
+        content = source_keys.strip_cpp_comments(source_keys.read_source_text(path))
+        records = source_keys.extract_known_indirect_records(path, content)
+        identities = {record.identity() for record in records}
+
+        self.assertIn(("Screen", "Assets editor blend mode"), identities)
+        self.assertIn(("Overlay", "Assets editor blend mode"), identities)
+
+    def test_audit_marks_dynamic_localize_context_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = root / "src" / "game" / "client" / "components" / "menus.cpp"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                'const char *pName = Localize(GetName(), "Dynamic context");\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        review_texts = {record.text for record in report.needs_review}
+        self.assertIn("Dynamic context", business_texts)
+        self.assertNotIn("Dynamic context", review_texts)
+
+    def test_audit_marks_display_format_shells_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = root / "src" / "game" / "client" / "components" / "menus.cpp"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                'str_format(aBuf, sizeof(aBuf), "[%d]  ", Index);\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        review_texts = {record.text for record in report.needs_review}
+        self.assertIn("[%d]  ", business_texts)
+        self.assertNotIn("[%d]  ", review_texts)
+
+    def test_audit_marks_chat_preview_samples_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = (
+                root
+                / "src"
+                / "game"
+                / "client"
+                / "components"
+                / "menus_settings.cpp"
+            )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                'SetPreviewLine(PREVIEW_TEAM, 11, "Your Teammate", "Let\\\'s speedrun this!", FLAG_TEAM, 0);\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        review_texts = {record.text for record in report.needs_review}
+        self.assertIn("Your Teammate", business_texts)
+        self.assertIn("Let's speedrun this!", business_texts)
+        self.assertNotIn("Let's speedrun this!", review_texts)
+
+    def test_audit_marks_localized_layout_measurement_keys_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = (
+                root
+                / "src"
+                / "game"
+                / "client"
+                / "components"
+                / "menus_settings_assets.cpp"
+            )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                'const float Width = ComputeToolbarButtonWidth("Assets directory");\n'
+                'DoButton_Menu(&s_Id, Localize("Assets directory"), 0, &Button);\n',
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        must_i18n_texts = {record.text for record in report.must_i18n}
+        self.assertIn("Assets directory", business_texts)
+        self.assertIn("Assets directory", must_i18n_texts)
+
     def test_audit_marks_test_strings_as_test_only(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -138,6 +398,33 @@ class SourceKeysTest(unittest.TestCase):
             report = source_keys.build_string_audit_report(paths=(root / "src",))
 
         review_texts = {record.text for record in report.needs_review}
+        self.assertIn("Review this user-facing string", review_texts)
+
+    def test_audit_marks_obvious_machine_literals_as_business_data(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            path = root / "src" / "game" / "client" / "components" / "foo.cpp"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                "\n".join(
+                    [
+                        'log_info("qmclient", "event=sample duration_ms=%.3f");',
+                        'Writer.WriteAttribute("version");',
+                        'static constexpr const char *PATH = "qmclient/map_notes.json";',
+                        'const char *pLabel = "Review this user-facing string";',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = source_keys.build_string_audit_report(paths=(root / "src",))
+
+        business_texts = {record.text for record in report.business_data}
+        review_texts = {record.text for record in report.needs_review}
+        self.assertIn("event=sample duration_ms=%.3f", business_texts)
+        self.assertIn("qmclient/map_notes.json", business_texts)
+        self.assertNotIn("version", review_texts)
         self.assertIn("Review this user-facing string", review_texts)
 
     def test_audit_marks_cjk_source_keys_as_violation(self):

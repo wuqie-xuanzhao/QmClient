@@ -397,6 +397,12 @@ Add a voting option
 Add Bind
 == 新增綁定
 
+Add category
+== 新增分類
+
+Add clan
+== 新增戰隊
+
 Add command
 == 添加命令
 
@@ -430,6 +436,9 @@ Add team clan:
 Add team name:
 == 新增友好玩家：
 
+Add to %s
+== 新增到 %s
+
 Add to blocked words
 == 添加到屏蔽詞
 
@@ -450,6 +459,9 @@ Add/remove Client-IDs to spectate them exclusively (-1 to reset)
 
 Added %d missing required slot(s).
 == 已補充 %d 個缺少的必要欄位。
+
+Added %s as friend
+== 已將 %s 新增為好友
 
 Address
 == 地址
@@ -543,6 +555,9 @@ Amount
 
 And pick one randomly
 == 並隨機抽取一張
+
+Angle
+== 角度
 
 Angle:
 == 角度：
@@ -721,10 +736,10 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == 授權玩家強制將當前投票設為 '%s'
 
-Auto
+auto
 == 自動
 
-auto
+Auto
 == 自動
 
 Auto agree vote
@@ -898,6 +913,9 @@ Based on a pile of Windows... stuff
 Basic
 == 基本
 
+Before I die
+== 在我死去之前
+
 Behavior
 == 行為
 
@@ -1030,8 +1048,14 @@ Cancel your swap request
 Candidate files
 == 候選檔案
 
+Cannot swap: the other player is not in your team
+== 無法交換：對方不在你的隊伍中
+
 Category
 == 分類
+
+Category name
+== 分類名稱
 
 Change indicator offset based on distance to other tees
 == 根據與其他 Tee 的距離變更指示器偏移量
@@ -1144,6 +1168,9 @@ Clan color in friends list
 Clan Members
 == 戰隊成員
 
+Clan Name
+== 戰隊名稱
+
 Clan plates size
 == 戰隊名牌大小
 
@@ -1153,17 +1180,17 @@ Clan: %s
 Classic
 == 古典
 
-Classic Easy
-== 經典 Easy
-
 Classic easy
 == 古典 easy
 
-Classic Next
-== 經典 Next
+Classic Easy
+== 經典 Easy
 
 Classic next
 == 古典 next
+
+Classic Next
+== 經典 Next
 
 Classic Nut
 == 經典 Nut
@@ -1171,11 +1198,11 @@ Classic Nut
 Classic nut
 == 古典 nut
 
-Classic Pro
-== 經典 Pro
-
 Classic pro
 == 古典 pro
+
+Classic Pro
+== 經典 Pro
 
 Clear
 == 清空
@@ -1246,6 +1273,9 @@ Client
 Client CPU usage is high
 == 用戶端 CPU 佔用偏高
 
+Client data overview
+== 客戶端資料概覽
+
 Client frame time is abnormal
 == 用戶端幀時間異常
 
@@ -1260,6 +1290,9 @@ Client performance pressure is high
 
 Client prediction time is high
 == 用戶端預測耗時偏高
+
+Client uptime
+== 客戶端啟動時間
 
 Close
 == 關閉
@@ -1336,6 +1369,9 @@ Configure background 3D particle effects
 Configure hammer skin steal and skin transition animations
 == 調整錘中偷皮和換皮動畫
 
+Configure qm_report_app_id and qm_report_secret first
+== 請先設定 qm_report_app_id 和 qm_report_secret
+
 Confirm both are on same server, same room, and support voice
 == 建議確認雙方在同服、同房間，並且對方也支援語音
 
@@ -1347,6 +1383,9 @@ Connect dummy
 
 Connect dummy to enable
 == 連線分身後可啟用
+
+Connect to a server first
+== 需要先連線到伺服器
 
 Connect to server first to establish voice network link
 == 需要先進入伺服器，語音網路鏈路才會建立
@@ -1383,6 +1422,12 @@ Connection normal
 
 Connection Problems…
 == 連線中斷…
+
+Connection quality
+== 連線品質
+
+Connection Quality
+== 連線品質
 
 Connection severely abnormal
 == 連線嚴重異常
@@ -1444,8 +1489,14 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == 無法連線分身
 
+Could not create report scan request
+== 建立檢舉掃描請求失敗
+
 Could not find your Team
 == 找不到你的隊伍
+
+Could not get current server address
+== 無法取得目前伺服器位址
 
 Could not get server list from master server
 == 無法從主伺服器取得伺服器列表
@@ -1518,6 +1569,9 @@ Current rescue mode: %s
 
 Current status
 == 當前狀態
+
+Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
+== 目前時間：%s\n• 啟動時間與遊玩時長根據官方 JSON 資料計算\n• 同上\n• 同上上\n
 
 Current: Ranks
 == 目前：排名
@@ -1603,8 +1657,20 @@ DDmaX Pro
 DDNet
 == DDNet
 
+DDNet / Total CPU
+== DDNet / 總 CPU
+
 DDNet Client needs to be restarted to complete update!
 == DDNet 用戶端需要重新啟動才能完成更新！
+
+DDNet memory
+== DDNet 記憶體
+
+DDNet Memory
+== DDNet 記憶體
+
+DDNet points
+== DDNet 分數
 
 ddnet-saves.txt is empty
 == ddnet-saves.txt 為空
@@ -1660,10 +1726,10 @@ DeepSeek
 DeepSeek API key
 == DeepSeek API 金鑰
 
-Default
+default
 == 預設
 
-default
+Default
 == 預設
 
 Default input open failed
@@ -1686,6 +1752,9 @@ Delete
 
 Delete button
 == 刪除按鍵
+
+Delete category
+== 刪除分類
 
 Delete command
 == 刪除命令
@@ -1809,6 +1878,60 @@ Discord
 
 Display mode
 == 顯示模式
+
+Display your race time
+== 顯示你的比賽時間
+
+Displays client prediction latency
+== 顯示客戶端預測延遲
+
+Displays client receive rate
+== 顯示客戶端接收速率
+
+Displays client send rate
+== 顯示客戶端傳送速率
+
+Displays connection quality grade
+== 顯示連線品質等級
+
+Displays current position
+== 顯示目前位置
+
+Displays current prediction value
+== 顯示目前預測值
+
+Displays current zoom value
+== 顯示目前縮放值
+
+Displays DDNet process CPU usage / total system CPU usage
+== 顯示 DDNet 程序 CPU 使用率 / 系統總 CPU 使用率
+
+Displays DDNet process memory usage
+== 顯示 DDNet 程序記憶體使用量
+
+Displays latency jitter
+== 顯示延遲抖動
+
+Displays resend-based packet loss estimate
+== 顯示基於重送的封包遺失估計
+
+Displays server snapshot latency
+== 顯示伺服器快照延遲
+
+Displays X and Y velocity
+== 顯示 X 與 Y 速度
+
+Displays your current angle in degrees
+== 顯示你目前的角度（度）
+
+Displays your frames per second
+== 顯示你的每秒幀數
+
+Displays your local time
+== 顯示你的本地時間
+
+Displays your ping to the current server
+== 顯示你到目前伺服器的 Ping
 
 Dissolve
 == 消散
@@ -2233,6 +2356,9 @@ Execute hovered bindwheel bind
 Execute on connect
 == 連線時執行
 
+Execute on join
+== 進服時執行
+
 Execute the specified file
 == 執行指定檔案
 
@@ -2353,6 +2479,9 @@ Fat skins (DDFat)
 Favorite
 == 收藏
 
+Favorite friend
+== 最喜歡的好友
+
 Favorite map
 == 收藏地圖
 
@@ -2389,11 +2518,17 @@ Filter connecting players
 Find all ban records for the specified IP address
 == 查詢指定 IP 的全部封禁記錄
 
+Finish data source
+== 完成圖來源
+
 Finish Name
 == 終點前改名
 
 Finish Name:
 == 恰分名稱：
+
+Finished maps
+== 完成地圖次數
 
 Fire
 == 開火
@@ -2442,6 +2577,9 @@ Found %d modules
 
 FPM
 == 擊殺/分
+
+FPS
+== FPS
 
 Frags
 == 擊殺數
@@ -2562,6 +2700,9 @@ Gameplay
 
 Gap aim rescue
 == 瞄縫救人
+
+Gap between statusbar items
+== 狀態列項目之間的間隔
 
 General
 == 常規
@@ -2809,11 +2950,11 @@ Highlighted message
 Hitbox mode
 == 碰撞箱模式
 
-HJ assist
-== HJ 大佬輔助
-
 HJ Assist
 == HJ輔助
+
+HJ assist
+== HJ 大佬輔助
 
 Hold left click for free camera
 == 按住左鍵自由鏡頭
@@ -2827,11 +2968,11 @@ Hook collision line
 Hook collision line opacity
 == 輔助線透明度
 
-Hook Collisions
-== 瞄準輔助
-
 Hook collisions
 == 鉤索碰撞線
+
+Hook Collisions
+== 瞄準輔助
 
 Hook line tip
 == 輔助線提示（實際可鉤中 Tee 的長度）
@@ -2892,6 +3033,12 @@ Idiot word filter
 
 Import from clipboard
 == 從剪貼簿匯入
+
+Improved Anti Ping
+== 改進 Anti Ping
+
+In memory of me
+== 謹以此端，回憶我
 
 Inactive color
 == 按鍵未激活時顏色
@@ -3199,6 +3346,12 @@ Last page in console
 Latency
 == 延遲
 
+Latency Jitter
+== 延遲抖動
+
+Latency jitter
+== 延遲抖動
+
 Layout
 == 佈局
 
@@ -3318,6 +3471,9 @@ Loaded %d items
 
 Loaded %d items (discarded %d items)
 == 已載入 %d 項（丟棄 %d 項）
+
+Loading
+== 載入中
 
 Loading assets...
 == 正在載入資源…
@@ -3754,6 +3910,9 @@ new
 New button
 == 新按鍵
 
+New category name
+== 新分類名稱
+
 New IME
 == 新版IME
 
@@ -3985,6 +4144,9 @@ Not open, check output device
 Note
 == 備註
 
+Note:
+== 備註：
+
 Nothing hookable
 == 未瞄準任何實體
 
@@ -4018,6 +4180,9 @@ o = Send rate
 Off
 == 關
 
+Official
+== 官方
+
 Official community links
 == 官方社群入口
 
@@ -4035,6 +4200,9 @@ Oldschool
 
 On
 == 開
+
+Online friends
+== 線上好友
 
 Online Players
 == 線上玩家
@@ -4330,6 +4498,9 @@ Player country:
 Player data
 == 玩家資料
 
+Player Indicator
+== 玩家指示器
+
 Player indicator
 == 玩家指示器
 
@@ -4402,6 +4573,9 @@ Points
 Popup animation
 == 彈出動畫
 
+Position
+== 位置
+
 Position jump hint
 == 位置跳躍提示
 
@@ -4434,6 +4608,12 @@ Prediction
 
 Prediction jitter is obvious, latency changes are large
 == 預測抖動明顯，延遲變化較大
+
+Prediction latency
+== 預測延遲
+
+Prediction Latency
+== 預測延遲
 
 Prediction latency is elevated, prediction path pressure is high
 == 預測延遲偏高，預測鏈路壓力較高
@@ -4633,6 +4813,9 @@ r = Race time
 Race
 == 競速
 
+Race Time
+== 比賽時間
+
 Rainbow
 == 彩虹
 
@@ -4656,6 +4839,9 @@ Rainbow weapons
 
 Random
 == 隨機
+
+Random Colors
+== 隨機顏色
 
 Random emoticon
 == 隨機表情
@@ -4686,6 +4872,12 @@ Rebinds the client's listening address and port
 
 Receive
 == 接收
+
+Receive Rate
+== 接收速率
+
+Receive rate
+== 接收速率
 
 Receiving
 == 正在接收
@@ -4861,6 +5053,9 @@ Remove War Group
 Remove war name:
 == 刪除敵對玩家：
 
+Removed %s from friends
+== 已將 %s 移出好友
+
 Removes all bindwheel binds
 == 移除全部綁定輪盤綁定
 
@@ -4975,6 +5170,27 @@ Reply
 Reply with dummy
 == 使用分身回覆
 
+Report
+== 檢舉
+
+Report request canceled
+== 檢舉請求已取消
+
+Report request failed due to network error
+== 檢舉請求失敗，網路請求異常
+
+Report request failed with HTTP status: %d
+== 檢舉請求失敗，HTTP 狀態碼：%d
+
+Report request is already in progress
+== 檢舉請求正在處理中
+
+Report scan request submitted
+== 檢舉掃描請求已送出
+
+Reports are not available on Axiom servers
+== Axiom 伺服器內不可使用檢舉功能
+
 Request to swap your tee with another team member
 == 請求與另一名隊友交換 Tee
 
@@ -4992,6 +5208,12 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == 被救/落水：%d/%d
+
+Resend Loss
+== 重送丟包
+
+Resend loss
+== 重送丟包
 
 Resend signs detected, connection quality is suspicious
 == 偵測到重發跡象，連線品質可疑
@@ -5218,6 +5440,12 @@ Say in team chat
 Say in team chat as dummy
 == 讓分身在隊伍聊天中發言
 
+Scanning current server
+== 正在掃描目前伺服器
+
+Scanning current server...
+== 正在掃描目前伺服器……
+
 Score
 == 分數
 
@@ -5246,7 +5474,7 @@ Scores are public on this server
 == 本伺服器的成績是公開的
 
 Screen
-== 濾色
+== 螢幕
 
 Screen center line color
 == 螢幕中心線顏色
@@ -5282,10 +5510,10 @@ Seconds
 == 秒
 
 SecretId
-== SecretId
+== 密鑰 ID
 
 SecretKey
-== SecretKey
+== 密鑰 Key
 
 See how much you act
 == 看看你有多演
@@ -5367,6 +5595,12 @@ Send emoticon in water
 
 Send probability
 == 傳送機率
+
+Send rate
+== 傳送速率
+
+Send Rate
+== 傳送速率
 
 Send source language
 == 傳送源語言
@@ -6040,6 +6274,9 @@ Smooth fade
 SMTC
 == 系統媒體控制
 
+Snapshot Latency
+== 快照延遲
+
 Social
 == 社交功能
 
@@ -6078,6 +6315,9 @@ Source file does not exist.
 
 Source file is empty.
 == 來源檔案為空。
+
+Space
+== 間隔
 
 Speaker
 == 揚聲器
@@ -6177,6 +6417,12 @@ Start recording a video
 
 Statboard
 == 統計板
+
+Stats
+== 統計
+
+Stats notes
+== 統計說明
 
 Status
 == 狀態
@@ -6551,10 +6797,10 @@ Tencent Cloud
 == 騰訊雲
 
 Tencent Cloud SecretId
-== 騰訊雲 SecretId
+== 騰訊雲密鑰 ID
 
 Tencent Cloud SecretKey
-== 騰訊雲 SecretKey
+== 騰訊雲密鑰 Key
 
 Text
 == 文字
@@ -6825,6 +7071,9 @@ Too many translation tasks
 
 Total
 == 總計
+
+Total friends
+== 好友總數
 
 Total: %d save(s)
 == 總計: %d 個存檔
@@ -7219,6 +7468,9 @@ V-Sync
 Vanilla skins only
 == 只顯示原生皮膚
 
+Velocity
+== 速度
+
 Version
 == 版本
 
@@ -7354,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 武器切換動畫
 
-Weapon trajectory
-== 武器彈道輔助線
-
 Weapon Trajectory
 == 武器輔助線
+
+Weapon trajectory
+== 武器彈道輔助線
 
 Weapons
 == 武器
@@ -7762,6 +8014,9 @@ Zhipu AI
 Zhipu API key
 == 智譜 API 金鑰
 
+Zoom
+== 縮放
+
 Zoom decrease
 == 縮小視角
 
@@ -7785,6 +8040,22 @@ Zoom out
 
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 騰訊雲 API 金鑰未設定
+
+[Assets editor blend mode]
+Multiply
+== 正片疊底
+
+[Assets editor blend mode]
+Normal
+== 正常
+
+[Assets editor blend mode]
+Overlay
+== 疊加
+
+[Assets editor blend mode]
+Screen
+== 濾色
 
 [Auto camera]
 Active

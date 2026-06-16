@@ -131,6 +131,8 @@ add a sqlserver
 Add a type to the exclusion filter for a specific community
 Add a voting option
 Add Bind
+Add category
+Add clan
 Add command
 Add current cut to the export list
 Add demo timeline marker
@@ -142,6 +144,7 @@ Add Item
 Add one
 Add team clan:
 Add team name:
+Add to %s
 Add to blocked words
 Add to category
 Add to queue
@@ -149,6 +152,7 @@ Add war clan:
 Add war name:
 Add/remove Client-IDs to spectate them exclusively (-1 to reset)
 Added %d missing required slot(s).
+Added %s as friend
 Address
 Adds a specific war entry
 Adds default chat binds
@@ -180,6 +184,7 @@ Always show own player's hook collision line
 Always translate
 Amount
 And pick one randomly
+Angle
 Angle:
 Animation
 Animation duration
@@ -239,8 +244,8 @@ Authed name color in scoreboard
 Authenticate to rcon
 Authenticate to rcon with a username
 Authorized player forced vote '%s'
-Auto
 auto
+Auto
 Auto agree vote
 Auto chat in water
 Auto chat when dying in water
@@ -298,6 +303,7 @@ Ban player with ip/client id for x minutes for any reason
 Ban range in a region
 Based on a pile of Windows... stuff
 Basic
+Before I die
 Behavior
 Behavior type
 Benchmark frame times for number of seconds to file, then quit
@@ -342,7 +348,9 @@ Can't swap with yourself
 Cancel
 Cancel your swap request
 Candidate files
+Cannot swap: the other player is not in your team
 Category
+Category name
 Change indicator offset based on distance to other tees
 Change map
 Change ready state (0.7 only)
@@ -380,17 +388,18 @@ Choose whether to browse replays or screenshots
 Clan
 Clan color in friends list
 Clan Members
+Clan Name
 Clan plates size
 Clan: %s
 Classic
-Classic easy
 Classic Easy
+Classic easy
 Classic Next
 Classic next
 Classic nut
 Classic Nut
-Classic Pro
 Classic pro
+Classic Pro
 Clear
 Clear all favorite maps
 Clear Changes
@@ -414,11 +423,13 @@ Click to select server. Double click to join your friend.
 Click to set color
 Client
 Client CPU usage is high
+Client data overview
 Client frame time is abnormal
 Client IDs size
 Client message
 Client performance pressure is high
 Client prediction time is high
+Client uptime
 Close
 Close the demo player
 Color
@@ -444,10 +455,12 @@ Config Files
 Configs
 Configure background 3D particle effects
 Configure hammer skin steal and skin transition animations
+Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 Connect address error
 Connect dummy
 Connect dummy to enable
+Connect to a server first
 Connect to server first to establish voice network link
 Connect to the specified host/ip
 Connected
@@ -460,6 +473,8 @@ Connection downstream
 Connection elevated
 Connection normal
 Connection Problems…
+Connection quality
+Connection Quality
 Connection severely abnormal
 Connection upstream
 Console
@@ -480,7 +495,9 @@ Copy name
 Copy skin
 Could not check for existing player with your name. Check your internet connection.
 Could not connect dummy
+Could not create report scan request
 Could not find your Team
+Could not get current server address
 Could not get server list from master server
 Could not load default touch controls from file. See local console for details.
 Could not load sponsor QR code. Check the Base64 data
@@ -505,11 +522,12 @@ Current cut is invalid or already added
 Current file
 Current rescue mode: %s
 Current status
+Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
 Current: Ranks
 Current: Score
 Current: Time
-Custom
 custom
+Custom
 Custom API key
 Custom aspect ratio
 Custom colors
@@ -533,7 +551,11 @@ DDmaX Next
 DDmaX Nut
 DDmaX Pro
 DDNet
+DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
+DDNet memory
+DDNet Memory
+DDNet points
 ddnet-saves.txt is empty
 ddnet-saves.txt not found
 DDNet/total CPU
@@ -561,6 +583,7 @@ Default zoom
 Delay
 Delete
 Delete button
+Delete category
 Delete command
 Delete demo
 Delete folder
@@ -602,6 +625,24 @@ Disconnect from the server
 Disconnected
 Discord
 Display mode
+Display your race time
+Displays client prediction latency
+Displays client receive rate
+Displays client send rate
+Displays connection quality grade
+Displays current position
+Displays current prediction value
+Displays current zoom value
+Displays DDNet process CPU usage / total system CPU usage
+Displays DDNet process memory usage
+Displays latency jitter
+Displays resend-based packet loss estimate
+Displays server snapshot latency
+Displays X and Y velocity
+Displays your current angle in degrees
+Displays your frames per second
+Displays your local time
+Displays your ping to the current server
 Dissolve
 Do not translate server messages
 Donor (drag parts from left)
@@ -743,6 +784,7 @@ Execute before connecting
 Execute files on key press/release
 Execute hovered bindwheel bind
 Execute on connect
+Execute on join
 Execute the specified file
 Existing Player
 Expand module
@@ -783,6 +825,7 @@ Fast input others
 Fast practice
 Fat skins (DDFat)
 Favorite
+Favorite friend
 Favorite map
 Favorite maps
 Favorites
@@ -795,8 +838,10 @@ File '%s' already exists, do you want to overwrite it?
 File already exists, do you want to overwrite it?
 Filter connecting players
 Find all ban records for the specified IP address
+Finish data source
 Finish Name
 Finish Name:
+Finished maps
 Fire
 First page in console
 Flip:
@@ -813,6 +858,7 @@ Force vote
 Forms
 Found %d modules
 FPM
+FPS
 Frags
 Frame rate
 Frame time
@@ -853,6 +899,7 @@ Game types:
 Game/predicted tick
 Gameplay
 Gap aim rescue
+Gap between statusbar items
 General
 Get all map players' skin IDs and auto add to rotate queue
 Getting game info
@@ -941,8 +988,8 @@ Hold left click for free camera
 Hook
 Hook collision line
 Hook collision line opacity
-Hook Collisions
 Hook collisions
+Hook Collisions
 Hook line tip
 Hook Strength
 Hooking L/R: %.0f%%/%.0f%%
@@ -963,6 +1010,8 @@ I am away from the game window
 I muted you
 Idiot word filter
 Import from clipboard
+Improved Anti Ping
+In memory of me
 Inactive color
 Incoming language
 Indicate map finish
@@ -1065,6 +1114,8 @@ Laser size
 Laser style
 Last page in console
 Latency
+Latency Jitter
+Latency jitter
 Layout
 Leak IP
 Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
@@ -1105,6 +1156,7 @@ Load drawings from a given csv file (defaults to map name)
 Load with code r. /load to check your existing saves
 Loaded %d items
 Loaded %d items (discarded %d items)
+Loading
 Loading assets...
 Loading commands…
 Loading DDNet Client
@@ -1250,6 +1302,7 @@ Net
 Netversion
 new
 New button
+New category name
 New IME
 New name:
 New preset name
@@ -1327,6 +1380,7 @@ Not in the current browser list
 Not open, check input device or mic permission
 Not open, check output device
 Note
+Note:
 Nothing hookable
 Notification background
 Notification hold time
@@ -1338,12 +1392,14 @@ Novice
 Numeric-only messages will be skipped
 o = Send rate
 Off
+Official
 Official community links
 Offline
 Ohhhhhhhhhhhhhhhh
 Ok
 Oldschool
 On
+Online friends
 Online Players
 Only .wv files are supported right now.
 Only Apple Can Do
@@ -1443,6 +1499,7 @@ Player already invited
 Player country:
 Player data
 Player indicator
+Player Indicator
 Player is on a different team
 Player name:
 Player not found
@@ -1466,6 +1523,7 @@ Please use a different filename
 Please wait…
 Points
 Popup animation
+Position
 Position jump hint
 Position jump tip
 Position:
@@ -1477,6 +1535,8 @@ Predict events (experimental)
 Predicted ghost opacity
 Prediction
 Prediction jitter is obvious, latency changes are large
+Prediction latency
+Prediction Latency
 Prediction latency is elevated, prediction path pressure is high
 Prediction margin
 Prediction Margin
@@ -1543,6 +1603,7 @@ Quit the client
 Quitting. Please wait…
 r = Race time
 Race
+Race Time
 Rainbow
 Rainbow hook
 Rainbow name
@@ -1551,6 +1612,7 @@ Rainbow speed
 Rainbow Tees
 Rainbow weapons
 Random
+Random Colors
 Random emoticon
 Random map
 Random pick
@@ -1561,6 +1623,8 @@ Reason
 Reason:
 Rebinds the client's listening address and port
 Receive
+Receive rate
+Receive Rate
 Receiving
 Reconnect in %d sec
 Record demo
@@ -1619,6 +1683,7 @@ Remove team name:
 Remove war clan:
 Remove War Group
 Remove war name:
+Removed %s from friends
 Removes all bindwheel binds
 Removes all chat binds
 Removes all weapons from you
@@ -1657,12 +1722,21 @@ Replay
 Replay feature is disabled!
 Reply
 Reply with dummy
+Report
+Report request canceled
+Report request failed due to network error
+Report request failed with HTTP status: %d
+Report request is already in progress
+Report scan request submitted
+Reports are not available on Axiom servers
 Request to swap your tee with another team member
 Requesting to join the game
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 Rescue mode switched to %s
 Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
+Resend Loss
+Resend loss
 Resend signs detected, connection quality is suspicious
 Reset
 Reset a config to its default value
@@ -1738,6 +1812,8 @@ Say in chat
 Say in chat as dummy
 Say in team chat
 Say in team chat as dummy
+Scanning current server
+Scanning current server...
 Score
 Score limit
 Scoreboard
@@ -1788,6 +1864,8 @@ Send a moderator alert message to player
 Send a server alert message to all players
 Send emoticon in water
 Send probability
+Send Rate
+Send rate
 Send source language
 Send specified command to rcon
 Send target language
@@ -2012,6 +2090,7 @@ Smaller tees
 Smooth Dynamic Camera
 Smooth fade
 SMTC
+Snapshot Latency
 Social
 Solid
 Solid tile outline opacity
@@ -2025,6 +2104,7 @@ Sound error
 Sound volume
 Source file does not exist.
 Source file is empty.
+Space
 Speaker
 Specify command accessibility for given access level
 Spectate
@@ -2058,6 +2138,8 @@ Start playback of ghosts
 Start recording a demo
 Start recording a video
 Statboard
+Stats
+Stats notes
 Status
 Status Bar
 Status bar alpha
@@ -2274,6 +2356,7 @@ Toggles spec on the currently voted player
 Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status
 Too many translation tasks
 Total
+Total friends
 Total: %d save(s)
 Traditional
 Trail alpha
@@ -2405,6 +2488,7 @@ Use warlist groups for indicator
 v = Velocity
 V-Sync
 Vanilla skins only
+Velocity
 Version
 Vertical position
 Video Background
@@ -2586,6 +2670,7 @@ Zen Mode
 Zen mode key
 Zhipu AI
 Zhipu API key
+Zoom
 Zoom decrease
 Zoom in
 Zoom increase
@@ -2594,6 +2679,10 @@ Zoom out
 ⚠️ LibreTranslate API Key not set
 ⚠️ LLM API Key not configured
 ⚠️ Tencent Cloud API not configured
+[Assets editor blend mode]	Multiply
+[Assets editor blend mode]	Normal
+[Assets editor blend mode]	Overlay
+[Assets editor blend mode]	Screen
 [Auto camera]	Active
 [Auto camera]	Disabled
 [Auto camera]	Enabled

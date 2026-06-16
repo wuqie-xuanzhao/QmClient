@@ -193,10 +193,10 @@ polish = "'%s' wezwał(a) do głosowania nad wyciszeniem '%s' (powód: %s)"
 [[message]]
 key = "'%s' called vote to %s practice mode for your team. Current votes %s/%s"
 [message.translations]
+simplified_chinese = "'%s' 发起了 %s 队伍练习模式投票。当前票数 %s/%s"
+traditional_chinese = "'%s' 發起了%s隊伍練習模式投票。當前票數 %s/%s"
 japanese = "'%s' があなたのチームの練習モードを %s する投票を呼びかけました。現在の票数 %s/%s"
 korean = "'%s'가 당신 팀의 연습 모드를 %s하는 투표를 요청했습니다. 현재 투표 %s/%s"
-simplified_chinese = "'%s' 发起了%s队伍练习模式投票。当前票数 %s/%s"
-traditional_chinese = "'%s' 發起了%s隊伍練習模式投票。當前票數 %s/%s"
 russian = "'%s' инициировал(а) голосование за %s режим тренировки для вашей команды. Текущие голоса: %s/%s"
 german = "'%s' hat eine Abstimmung zum %s des Übungsmodus für dein Team gestartet. Aktuelle Stimmen %s/%s"
 spanish = "'%s' solicitó votación para %s el modo práctica de tu equipo. Votos actuales: %s/%s"
@@ -205,7 +205,6 @@ brazilian_portuguese = "'%s' convocou votação para %s modo de prática para se
 portuguese = "'%s' iniciou uma votação para %s o modo de prática para a sua equipa. Votos atuais: %s/%s"
 turkish = "'%s', takımın için %s antrenman modu oylaması başlattı. Mevcut oylar %s/%s"
 polish = "'%s' wezwał(a) do głosowania nad %s trybem treningowym dla twojej drużyny. Obecne głosy: %s/%s"
-
 [[message]]
 key = "'%s' called vote to change server option: %s"
 [message.translations]
@@ -465,10 +464,10 @@ polish = "/map jest wyłączone"
 [[message]]
 key = "3D Background"
 [message.translations]
+simplified_chinese = "3D 背景"
+traditional_chinese = "3D背景"
 japanese = "3D背景"
 korean = "3D 배경"
-simplified_chinese = "3D背景"
-traditional_chinese = "3D背景"
 russian = "3D-фон"
 german = "3D-Hintergrund"
 spanish = "Fondo 3D"
@@ -477,7 +476,6 @@ brazilian_portuguese = "Fundo 3D"
 portuguese = "Fundo 3D"
 turkish = "3D Arka Plan"
 polish = "Tło 3D"
-
 [[message]]
 key = "45° Aim"
 [message.translations]
@@ -1249,10 +1247,10 @@ polish = "Kolor tła"
 [[message]]
 key = "Based on a pile of Windows... stuff"
 [message.translations]
+simplified_chinese = "基于 Win 的一坨所拉的一泡"
+traditional_chinese = "基於Win的一坨所拉的一泡"
 japanese = "Windowsの山...みたいなものに基づいています"
 korean = "Windows... 덩어리를 기반으로 함"
-simplified_chinese = "基于Win的一坨所拉的一泡"
-traditional_chinese = "基於Win的一坨所拉的一泡"
 russian = "Основано на куче Windows... штук"
 german = "Basierend auf einem Haufen Windows... Zeug"
 spanish = "Basado en un montón de cosas de Windows..."
@@ -1261,7 +1259,6 @@ brazilian_portuguese = "Baseado em uma pilha de... coisas do Windows"
 portuguese = "Baseado numa pilha de coisas do Windows..."
 turkish = "Bir yığın Windows... şeyine dayanmaktadır"
 polish = "Oparte na stercie Windows... rzeczy"
-
 [[message]]
 key = "Both"
 [message.translations]
@@ -1553,10 +1550,10 @@ polish = "Wiadomość na czacie"
 [[message]]
 key = "Chat Translate Button UI"
 [message.translations]
+simplified_chinese = "聊天翻译按钮 UI"
+traditional_chinese = "聊天翻譯按鈕UI"
 japanese = "チャット翻訳ボタンUI"
 korean = "채팅 번역 버튼 UI"
-simplified_chinese = "聊天翻译按钮UI"
-traditional_chinese = "聊天翻譯按鈕UI"
 russian = "Интерфейс кнопки перевода чата"
 german = "Chat-Übersetzungs-Button-UI"
 spanish = "Interfaz del botón de traducción del chat"
@@ -1565,7 +1562,6 @@ brazilian_portuguese = "UI do botão de tradução do chat"
 portuguese = "Interface do botão de tradução do chat"
 turkish = "Sohbet Çevir Düğmesi Arayüzü"
 polish = "Interfejs przycisku tłumaczenia czatu"
-
 [[message]]
 key = "Chat translation settings"
 [message.translations]
@@ -1745,10 +1741,10 @@ polish = "Klasyczny pro"
 [[message]]
 key = "Click to copy QQ group number"
 [message.translations]
+simplified_chinese = "点击复制 QQ 群号"
+traditional_chinese = "點擊複製QQ群號"
 japanese = "クリックしてQQグループ番号をコピー"
 korean = "클릭하여 QQ 그룹 번호 복사"
-simplified_chinese = "点击复制QQ群号"
-traditional_chinese = "點擊複製QQ群號"
 russian = "Нажмите, чтобы скопировать номер QQ-группы"
 german = "Klicke, um die QQ-Gruppennummer zu kopieren"
 spanish = "Haz clic para copiar el número del grupo QQ"
@@ -1757,7 +1753,6 @@ brazilian_portuguese = "Clique para copiar o número do grupo QQ"
 portuguese = "Clique para copiar o número do grupo QQ"
 turkish = "QQ grup numarasını kopyalamak için tıklayın"
 polish = "Kliknij, aby skopiować numer grupy QQ"
-
 [[message]]
 key = "Click to copy the map name"
 [message.translations]
@@ -1953,10 +1948,10 @@ brazilian_portuguese = "Config"
 [[message]]
 key = "Config file: data/input_overlay.json"
 [message.translations]
+simplified_chinese = "配置文件：data/input_overlay.json"
+traditional_chinese = "設定檔: data/input_overlay.json"
 japanese = "設定ファイル: data/input_overlay.json"
 korean = "설정 파일: data/input_overlay.json"
-simplified_chinese = "配置文件: data/input_overlay.json"
-traditional_chinese = "設定檔: data/input_overlay.json"
 russian = "Файл конфига: data/input_overlay.json"
 german = "Konfigurationsdatei: data/input_overlay.json"
 spanish = "Archivo de configuración: data/input_overlay.json"
@@ -1965,7 +1960,6 @@ brazilian_portuguese = "Arquivo de configuração: data/input_overlay.json"
 portuguese = "Ficheiro de configuração: data/input_overlay.json"
 turkish = "Yapılandırma dosyası: data/input_overlay.json"
 polish = "Plik konfiguracyjny: data/input_overlay.json"
-
 [[message]]
 key = "Configure background 3D particle effects"
 [message.translations]
@@ -2209,10 +2203,10 @@ polish = "Nie można załadować kodu QR sponsora. Sprawdź dane Base64"
 [[message]]
 key = "CP opacity"
 [message.translations]
+simplified_chinese = "CP 点不透明度"
+traditional_chinese = "CP點不透明度"
 japanese = "CPの不透明度"
 korean = "CP 불투명도"
-simplified_chinese = "CP点不透明度"
-traditional_chinese = "CP點不透明度"
 russian = "Непрозрачность CP"
 german = "CP-Deckkraft"
 spanish = "Opacidad del CP"
@@ -2221,7 +2215,6 @@ brazilian_portuguese = "Opacidade do CP"
 portuguese = "Opacidade do CP"
 turkish = "CP opaklığı"
 polish = "Nieprzezroczystość CP"
-
 [[message]]
 key = "Crescent"
 [message.translations]
@@ -2257,10 +2250,10 @@ french = "Cube"
 [[message]]
 key = "Current aspect ratio:"
 [message.translations]
+simplified_chinese = "当前宽高比："
+traditional_chinese = "當前寬高比:"
 japanese = "現在のアスペクト比:"
 korean = "현재 화면비:"
-simplified_chinese = "当前宽高比:"
-traditional_chinese = "當前寬高比:"
 russian = "Текущее соотношение сторон:"
 german = "Aktuelles Seitenverhältnis:"
 spanish = "Relación de aspecto actual:"
@@ -2269,14 +2262,13 @@ brazilian_portuguese = "Proporção atual:"
 portuguese = "Proporção atual:"
 turkish = "Mevcut en boy oranı:"
 polish = "Aktualny współczynnik proporcji:"
-
 [[message]]
 key = "Current aspect ratio: Show default"
 [message.translations]
+simplified_chinese = "当前宽高比：显示默认"
+traditional_chinese = "當前寬高比: 顯示預設"
 japanese = "現在のアスペクト比: デフォルトを表示"
 korean = "현재 화면비: 기본값 표시"
-simplified_chinese = "当前宽高比: 显示默认"
-traditional_chinese = "當前寬高比: 顯示預設"
 russian = "Текущее соотношение сторон: Показать по умолчанию"
 german = "Aktuelles Seitenverhältnis: Standard anzeigen"
 spanish = "Relación de aspecto actual: Mostrar predeterminado"
@@ -2285,7 +2277,6 @@ brazilian_portuguese = "Proporção atual: Mostrar padrão"
 portuguese = "Proporção atual: Mostrar padrão"
 turkish = "Mevcut en boy oranı: Varsayılanı göster"
 polish = "Aktualny współczynnik proporcji: Pokaż domyślny"
-
 [[message]]
 key = "Current rescue mode: %s"
 [message.translations]
@@ -2385,10 +2376,10 @@ polish = "Dostosuj kolory przycisku tłumaczenia i menu"
 [[message]]
 key = "Damn grenadiers, all go to spa!"
 [message.translations]
+simplified_chinese = "他妈的炸弹人全给我去 Spa！"
+traditional_chinese = "他媽的炸彈人全給我去Spa!"
 japanese = "くそったれグレネーダーども、全員スパに行け！"
 korean = "망할 수류탄병들, 전부 스파로 가!"
-simplified_chinese = "他妈的炸弹人全给我去Spa!"
-traditional_chinese = "他媽的炸彈人全給我去Spa!"
 russian = "Чёртовы гренадёры, все в спа!"
 german = "Verdammte Granatwerfer, alle ins Spa!"
 spanish = "¡Malditos granaderos, todos al spa!"
@@ -2397,14 +2388,13 @@ brazilian_portuguese = "Malditos granadeiros, todos para o spa!"
 portuguese = "Malditos granadeiros, vão todos para o spa!"
 turkish = "Lanet olası bombacılar, hepiniz spa'ya gidin!"
 polish = "Cholerni granatnicy, wszyscy do spa!"
-
 [[message]]
 key = "Damn grenadiers, just die!"
 [message.translations]
+simplified_chinese = "他妈的炸弹人都给我死啊！"
+traditional_chinese = "他媽的炸彈人都給我死啊!"
 japanese = "くそったれグレネーダーども、死んでしまえ！"
 korean = "망할 수류탄병들, 그냥 죽어!"
-simplified_chinese = "他妈的炸弹人都给我死啊!"
-traditional_chinese = "他媽的炸彈人都給我死啊!"
 russian = "Чёртовы гренадёры, сдохните!"
 german = "Verdammte Granatwerfer, sterbt einfach!"
 spanish = "¡Malditos granaderos, solo morid!"
@@ -2413,7 +2403,6 @@ brazilian_portuguese = "Malditos granadeiros, apenas morram!"
 portuguese = "Malditos granadeiros, morram!"
 turkish = "Lanet olası bombacılar, ölün artık!"
 polish = "Cholerni granatnicy, po prostu zgińcie!"
-
 [[message]]
 key = "DDNet/total CPU"
 [message.translations]
@@ -3441,10 +3430,10 @@ polish = "Kolory warstw encji"
 [[message]]
 key = "Example: name1|name2|name3"
 [message.translations]
+simplified_chinese = "示例：名字 1|名字 2|名字 3"
+traditional_chinese = "範例: 名字1|名字2|名字3"
 japanese = "例: 名前1|名前2|名前3"
 korean = "예: 이름1|이름2|이름3"
-simplified_chinese = "示例: 名字1|名字2|名字3"
-traditional_chinese = "範例: 名字1|名字2|名字3"
 russian = "Пример: имя1|имя2|имя3"
 german = "Beispiel: name1|name2|name3"
 spanish = "Ejemplo: nombre1|nombre2|nombre3"
@@ -3453,7 +3442,6 @@ brazilian_portuguese = "Exemplo: nome1|nome2|nome3"
 portuguese = "Exemplo: nome1|nome2|nome3"
 turkish = "Örnek: isim1|isim2|isim3"
 polish = "Przykład: nazwa1|nazwa2|nazwa3"
-
 [[message]]
 key = "Expand module"
 [message.translations]
@@ -3777,10 +3765,10 @@ polish = "Margines czasu gry"
 [[message]]
 key = "Game/predicted tick"
 [message.translations]
+simplified_chinese = "游戏/预测 tick"
+traditional_chinese = "遊戲/預測 Tick"
 japanese = "ゲーム/予測ティック"
 korean = "게임/예측 틱"
-simplified_chinese = "游戏/预测 Tick"
-traditional_chinese = "遊戲/預測 Tick"
 russian = "Игровой/предсказанный тик"
 german = "Spiel-/Vorhersage-Tick"
 spanish = "Tick de juego/predicción"
@@ -3789,7 +3777,6 @@ brazilian_portuguese = "Tick do jogo/predição"
 portuguese = "Tick de jogo/previsto"
 turkish = "Oyun/tahmini tick"
 polish = "Tick gry/przewidywania"
-
 [[message]]
 key = "Gap aim rescue"
 [message.translations]
@@ -3873,10 +3860,10 @@ polish = "Przesunięcie poświaty"
 [[message]]
 key = "Gores Actor"
 [message.translations]
+simplified_chinese = "Gores 演员专用"
+traditional_chinese = "Gores演員專用"
 japanese = "Gores俳優専用"
 korean = "Gores 액터"
-simplified_chinese = "Gores演员专用"
-traditional_chinese = "Gores演員專用"
 russian = "Актёр Gores"
 german = "Gores-Schauspieler"
 spanish = "Actor de Gores"
@@ -3885,14 +3872,13 @@ brazilian_portuguese = "Ator Gores"
 portuguese = "Ator Gores"
 turkish = "Gores Aktörü"
 polish = "Aktor Gores"
-
 [[message]]
 key = "Gores auto weapon switch"
 [message.translations]
+simplified_chinese = "Gores 自动武器切换"
+traditional_chinese = "Gores自動武器切換"
 japanese = "Gores自動武器切り替え"
 korean = "Gores 자동 무기 전환"
-simplified_chinese = "Gores自动武器切换"
-traditional_chinese = "Gores自動武器切換"
 russian = "Автосмена оружия Gores"
 german = "Gores automatischer Waffenwechsel"
 spanish = "Cambio de arma automático en Gores"
@@ -3901,7 +3887,6 @@ brazilian_portuguese = "Troca automática de arma Gores"
 portuguese = "Troca automática de arma Gores"
 turkish = "Gores otomatik silah değiştirme"
 polish = "Automatyczne przełączanie broni Gores"
-
 [[message]]
 key = "Gores Mode"
 [message.translations]
@@ -4001,10 +3986,10 @@ polish = "Serce"
 [[message]]
 key = "Hide death/respawn effects"
 [message.translations]
-japanese = "死亡/リスポーン効果を非表示"
-korean = "죽음/부활 효과 숨기기"
 simplified_chinese = "隐藏死亡/重生特效"
 traditional_chinese = "隱藏死亡/重生特效"
+japanese = "死亡/リスポーン効果を非表示"
+korean = "죽음/부활 효과 숨기기"
 russian = "Скрыть эффекты смерти/возрождения"
 german = "Todes-/Wiederbelebungseffekte ausblenden"
 spanish = "Ocultar efectos de muerte/resurrección"
@@ -4013,7 +3998,6 @@ brazilian_portuguese = "Ocultar efeitos de morte/renascimento"
 portuguese = "Ocultar efeitos de morte/renascimento"
 turkish = "Ölüm/yeniden doğma efektlerini gizle"
 polish = "Ukryj efekty śmierci/odrodzenia"
-
 [[message]]
 key = "Hide direction indicators"
 [message.translations]
@@ -4145,10 +4129,10 @@ polish = "Ukryj emotkę wejścia"
 [[message]]
 key = "Hide join/version prompts"
 [message.translations]
-japanese = "参加/バージョンプロンプトを非表示"
-korean = "입장/버전 알림 숨기기"
 simplified_chinese = "隐藏入场/版本提示"
 traditional_chinese = "隱藏入場/版本提示"
+japanese = "参加/バージョンプロンプトを非表示"
+korean = "입장/버전 알림 숨기기"
 russian = "Скрыть подсказки о входе/версии"
 german = "Beitritts-/Versionshinweise ausblenden"
 spanish = "Ocultar avisos de entrada/versión"
@@ -4157,7 +4141,6 @@ brazilian_portuguese = "Ocultar avisos de entrada/versão"
 portuguese = "Ocultar avisos de entrada/versão"
 turkish = "Katılma/sürüm uyarılarını gizle"
 polish = "Ukryj powiadomienia o dołączeniu/wersji"
-
 [[message]]
 key = "Hide jump effects"
 [message.translations]
@@ -4177,10 +4160,10 @@ polish = "Ukryj efekty skoku"
 [[message]]
 key = "Hide kill/finish messages"
 [message.translations]
-japanese = "キル/フィニッシュメッセージを非表示"
-korean = "처치/완료 메시지 숨기기"
 simplified_chinese = "隐藏击杀/完成"
 traditional_chinese = "隱藏擊殺/完成"
+japanese = "キル/フィニッシュメッセージを非表示"
+korean = "처치/완료 메시지 숨기기"
 russian = "Скрыть сообщения об убийстве/финише"
 german = "Todes-/Ziel-Nachrichten ausblenden"
 spanish = "Ocultar mensajes de muerte/finalización"
@@ -4189,7 +4172,6 @@ brazilian_portuguese = "Ocultar mensagens de morte/finalização"
 portuguese = "Ocultar mensagens de morte/finalização"
 turkish = "Öldürme/bitirme mesajlarını gizle"
 polish = "Ukryj wiadomości o zabiciu/ukończeniu"
-
 [[message]]
 key = "Hide map progress"
 [message.translations]
@@ -4259,7 +4241,7 @@ key = "Hide scoreboard"
 [message.translations]
 japanese = "スコアボードを非表示"
 korean = "점수판 숨기기"
-simplified_chinese = "隐藏记分板"
+simplified_chinese = "隐藏计分板"
 traditional_chinese = "隱藏記分板"
 russian = "Скрыть таблицу очков"
 german = "Anzeigetafel ausblenden"
@@ -4305,10 +4287,10 @@ polish = "Ukryj kod QR sponsora"
 [[message]]
 key = "Hide UI for focused gameplay"
 [message.translations]
+simplified_chinese = "隐去 UI 专注游戏"
+traditional_chinese = "隱去UI專注遊戲"
 japanese = "集中プレイのためにUIを非表示"
 korean = "집중 플레이를 위해 UI 숨기기"
-simplified_chinese = "隐去UI专注游戏"
-traditional_chinese = "隱去UI專注遊戲"
 russian = "Скрыть UI для сосредоточенной игры"
 german = "UI für fokussiertes Gameplay ausblenden"
 spanish = "Ocultar la interfaz para una jugabilidad enfocada"
@@ -4317,7 +4299,6 @@ brazilian_portuguese = "Ocultar UI para jogabilidade focada"
 portuguese = "Ocultar IU para jogabilidade focada"
 turkish = "Odaklanmış oyun için arayüzü gizle"
 polish = "Ukryj interfejs dla skupionej rozgrywki"
-
 [[message]]
 key = "Hide weapon muzzle flashes"
 [message.translations]
@@ -4353,10 +4334,10 @@ polish = "Tryb hitboxów"
 [[message]]
 key = "HJ Assist"
 [message.translations]
+simplified_chinese = "HJ 辅助"
+traditional_chinese = "HJ輔助"
 japanese = "HJアシスト"
 korean = "HJ 보조"
-simplified_chinese = "HJ辅助"
-traditional_chinese = "HJ輔助"
 russian = "Помощь HJ"
 german = "HJ-Assist"
 spanish = "Asistencia HJ"
@@ -4365,7 +4346,6 @@ brazilian_portuguese = "Assistente HJ"
 portuguese = "Assistência HJ"
 turkish = "HJ Yardımı"
 polish = "Asysta HJ"
-
 [[message]]
 key = "HJ assist"
 [message.translations]
@@ -4497,10 +4477,10 @@ polish = "Otwarcie urządzenia wejściowego nie powiodło się"
 [[message]]
 key = "Input device open failed, try reconnecting headset/mic or reselecting input device"
 [message.translations]
-japanese = "入力デバイスのオープンに失敗しました。ヘッドセット/マイクを再接続するか、入力デバイスを再選択してください"
-korean = "입력 장치 열기 실패, 헤드셋/마이크를 다시 연결하거나 입력 장치를 다시 선택하세요"
 simplified_chinese = "输入设备打开失败，建议重插耳机/麦克风后刷新，或重新选择输入设备"
 traditional_chinese = "輸入裝置開啟失敗，建議重插耳機/麥克風後重新整理，或重新選擇輸入裝置"
+japanese = "入力デバイスのオープンに失敗しました。ヘッドセット/マイクを再接続するか、入力デバイスを再選択してください"
+korean = "입력 장치 열기 실패, 헤드셋/마이크를 다시 연결하거나 입력 장치를 다시 선택하세요"
 russian = "Ошибка открытия устройства ввода, попробуйте переподключить гарнитуру/микрофон или выбрать другое устройство ввода."
 german = "Eingabegerät öffnen fehlgeschlagen, versuche Kopfhörer/Mikrofon neu anzuschließen oder wähle ein anderes Eingabegerät aus"
 spanish = "Fallo al abrir el dispositivo de entrada, intenta reconectar los auriculares/micrófono o seleccionar otro dispositivo de entrada"
@@ -4509,7 +4489,6 @@ brazilian_portuguese = "Falha ao abrir dispositivo de entrada, tente reconectar 
 portuguese = "Falha na abertura do dispositivo de entrada, tente reconectar os auscultadores/microfone ou reselecionar o dispositivo de entrada"
 turkish = "Giriş cihazı açılamadı, kulaklığı/mikrofonu yeniden takmayı veya giriş cihazını yeniden seçmeyi deneyin"
 polish = "Otwarcie urządzenia wejściowego nie powiodło się, spróbuj ponownie podłączyć słuchawki/mikrofon lub wybrać inne urządzenie wejściowe"
-
 [[message]]
 key = "Input overlay"
 [message.translations]
@@ -4689,10 +4668,10 @@ polish = "Zaproszenia są wyłączone"
 [[message]]
 key = "Is your dummy being bullied while you control the main tee?"
 [message.translations]
+simplified_chinese = "在你操控本体的时候分身有没有被欺负呢？"
+traditional_chinese = "在你操控本体的時候分身有沒有被欺負呢?"
 japanese = "メインTeeを操作中にダミーがいじめられていませんか？"
 korean = "본체를 조종하는 동안 더미가 괴롭힘을 당하고 있나요?"
-simplified_chinese = "在你操控本体的时候分身有没有被欺负呢?"
-traditional_chinese = "在你操控本体的時候分身有沒有被欺負呢?"
 russian = "Обижают ли ваше дамми, пока вы управляете основным ти?"
 german = "Wird dein Dummy gemobbt, während du den Haupt-Tee steuerst?"
 spanish = "¿Está tu dummy siendo acosado mientras controlas al tee principal?"
@@ -4701,7 +4680,6 @@ brazilian_portuguese = "Seu Dummy está sendo intimidado enquanto você controla
 portuguese = "O seu dummy está a ser intimidado enquanto controla o tee principal?"
 turkish = "Ana tee'yi kontrol ederken dummyn zorbalığa uğruyor mu?"
 polish = "Czy twoja kukła jest dręczona, gdy kontrolujesz głównego tee?"
-
 [[message]]
 key = "Jitter"
 [message.translations]
@@ -4753,10 +4731,10 @@ polish = "Dołącz do drużyny, aby użyć funkcji zamiany, co oznacza, że moż
 [[message]]
 key = "Join QQ group"
 [message.translations]
+simplified_chinese = "加入 QQ 群"
+traditional_chinese = "加入QQ群"
 japanese = "QQグループに参加"
 korean = "QQ 그룹 가입"
-simplified_chinese = "加入QQ群"
-traditional_chinese = "加入QQ群"
 russian = "Вступить в QQ-группу"
 german = "QQ-Gruppe beitreten"
 spanish = "Unirse al grupo QQ"
@@ -4765,7 +4743,6 @@ brazilian_portuguese = "Entrar no grupo QQ"
 portuguese = "Entrar no grupo QQ"
 turkish = "QQ grubuna katıl"
 polish = "Dołącz do grupy QQ"
-
 [[message]]
 key = "Key Bindings"
 [message.translations]
@@ -5601,10 +5578,10 @@ polish = "Pokazuj ważne komunikaty serwera i wiadomości Echo jako wyskakujące
 [[message]]
 key = "Mute death/respawn sounds"
 [message.translations]
-japanese = "死亡/リスポーン音をミュート"
-korean = "사망/부활 소리 음소거"
 simplified_chinese = "静音死亡/重生"
 traditional_chinese = "靜音死亡/重生"
+japanese = "死亡/リスポーン音をミュート"
+korean = "사망/부활 소리 음소거"
 russian = "Отключить звуки смерти/возрождения"
 german = "Todes-/Wiederbelebungsgeräusche stummschalten"
 spanish = "Silenciar sonidos de muerte/resurrección"
@@ -5613,7 +5590,6 @@ brazilian_portuguese = "Silenciar sons de morte/renascimento"
 portuguese = "Silenciar sons de morte/renascimento"
 turkish = "Ölüm/yeniden doğma seslerini sessize al"
 polish = "Wycisz dźwięki śmierci/odrodzenia"
-
 [[message]]
 key = "Mute hammer sounds"
 [message.translations]
@@ -5697,10 +5673,10 @@ polish = "Musisz rozpocząć mapę, aby zamienić się miejscami z graczem."
 [[message]]
 key = "New IME"
 [message.translations]
+simplified_chinese = "新版 IME"
+traditional_chinese = "新版IME"
 japanese = "新しいIME"
 korean = "새 IME"
-simplified_chinese = "新版IME"
-traditional_chinese = "新版IME"
 russian = "Новый IME"
 german = "Neue IME"
 spanish = "Nuevo IME"
@@ -5709,14 +5685,13 @@ brazilian_portuguese = "Novo IME"
 portuguese = "Novo IME"
 turkish = "Yeni IME"
 polish = "Nowe IME"
-
 [[message]]
 key = "New UI"
 [message.translations]
+simplified_chinese = "新版 UI"
+traditional_chinese = "新版UI"
 japanese = "新しいUI"
 korean = "새 UI"
-simplified_chinese = "新版UI"
-traditional_chinese = "新版UI"
 russian = "Новый UI"
 german = "Neue UI"
 spanish = "Nueva interfaz"
@@ -5725,7 +5700,6 @@ brazilian_portuguese = "Nova UI"
 portuguese = "Nova IU"
 turkish = "Yeni Arayüz"
 polish = "Nowy interfejs"
-
 [[message]]
 key = "Next"
 [message.translations]
@@ -5841,10 +5815,10 @@ polish = "Nie znaleziono pasujących funkcji. Spróbuj innych słów kluczowych"
 [[message]]
 key = "No more blocking entity layers in the world of TeeWorlds"
 [message.translations]
+simplified_chinese = "Teeworlds 的世界不会再出现挡人的实体层了"
+traditional_chinese = "Teeworlds的世界不會再出現擋人的實體層了"
 japanese = "TeeWorldsの世界にブロッキングエンティティレイヤーはもうありません"
 korean = "TeeWorlds 세계에서 더 이상 차단하는 엔티티 레이어가 없습니다."
-simplified_chinese = "Teeworlds的世界不会再出现挡人的实体层了"
-traditional_chinese = "Teeworlds的世界不會再出現擋人的實體層了"
 russian = "В мире Teeworlds больше не будет блокирующих слоёв объектов."
 german = "Keine blockierenden Ebenen mehr in der Welt von TeeWorlds"
 spanish = "No más capas de entidades bloqueantes en el mundo de TeeWorlds"
@@ -5853,7 +5827,6 @@ brazilian_portuguese = "Não haverá mais camadas de entidades bloqueadoras no m
 portuguese = "Não haverá mais camadas de entidades bloqueadoras no mundo de TeeWorlds"
 turkish = "TeeWorlds dünyasında artık engelleyici varlık katmanı yok"
 polish = "Żadnych więcej blokujących warstw encji w świecie TeeWorlds"
-
 [[message]]
 key = "No noise reduction"
 [message.translations]
@@ -6209,10 +6182,10 @@ polish = "Tylko Apple może to zrobić"
 [[message]]
 key = "Only show when the other Tee is not on screen"
 [message.translations]
+simplified_chinese = "仅当另一个 Tee 不在屏幕上时显示"
+traditional_chinese = "僅當另一個Tee不在螢幕上時顯示"
 japanese = "相手のTeeが画面にいないときのみ表示"
 korean = "다른 Tee가 화면에 없을 때만 표시"
-simplified_chinese = "仅当另一个Tee不在屏幕上时显示"
-traditional_chinese = "僅當另一個Tee不在螢幕上時顯示"
 russian = "Показывать только тогда, когда другой ти не на экране"
 german = "Nur anzeigen, wenn der andere Tee nicht auf dem Bildschirm ist"
 spanish = "Mostrar solo cuando el otro Tee no esté en pantalla"
@@ -6221,14 +6194,13 @@ brazilian_portuguese = "Mostrar apenas quando o outro Tee não estiver na tela"
 portuguese = "Mostrar apenas quando o outro Tee não está no ecrã"
 turkish = "Yalnızca diğer Tee ekranda olmadığında göster"
 polish = "Pokaż tylko wtedy, gdy drugi tee nie jest na ekranie"
-
 [[message]]
 key = "Only what you can't imagine, nothing Dream can't do"
 [message.translations]
+simplified_chinese = "只有你想不到，没有梦做不到"
+traditional_chinese = "只有你想不到,沒有夢做不到"
 japanese = "想像できないことだけ、夢にできないことはない"
 korean = "상상할 수 없는 것만 빼고, Dream이 못하는 건 없어"
-simplified_chinese = "只有你想不到,没有梦做不到"
-traditional_chinese = "只有你想不到,沒有夢做不到"
 russian = "Только то, что вы не можете себе представить, нет ничего, что Dream не может сделать"
 german = "Nur was du dir nicht vorstellen kannst, nichts, was Dream nicht kann"
 spanish = "Solo lo que no puedas imaginar, nada que Dream no pueda hacer"
@@ -6237,7 +6209,6 @@ brazilian_portuguese = "Só o que você não pode imaginar, nada que o Dream nã
 portuguese = "Só o que não consegues imaginar, nada que o Dream não consiga fazer"
 turkish = "Hayal edemediğin şeyler dışında, Dream'in yapamayacağı hiçbir şey yok"
 polish = "Tylko to, czego nie możesz sobie wyobrazić, nic, czego Dream nie może zrobić"
-
 [[message]]
 key = "Only what you can't imagine, nothing Dream can't do!"
 [message.translations]
@@ -6385,10 +6356,10 @@ polish = "Otwarcie urządzenia wyjściowego nie powiodło się"
 [[message]]
 key = "Output device open failed, try reconnecting speakers/headphones or reselecting output device"
 [message.translations]
-japanese = "出力デバイスのオープンに失敗しました。スピーカー/ヘッドホンを再接続するか、出力デバイスを再選択してください"
-korean = "출력 장치 열기 실패, 스피커/헤드폰을 다시 연결하거나 출력 장치를 다시 선택해 보세요."
 simplified_chinese = "输出设备打开失败，建议重插耳机/扬声器后刷新，或重新选择输出设备"
 traditional_chinese = "輸出裝置開啟失敗，建議重插耳機/揚聲器後重新整理，或重新選擇輸出裝置"
+japanese = "出力デバイスのオープンに失敗しました。スピーカー/ヘッドホンを再接続するか、出力デバイスを再選択してください"
+korean = "출력 장치 열기 실패, 스피커/헤드폰을 다시 연결하거나 출력 장치를 다시 선택해 보세요."
 russian = "Ошибка открытия устройства вывода, попробуйте переподключить колонки/наушники или выбрать другое устройство вывода."
 german = "Ausgabegerät öffnen fehlgeschlagen, versuche Lautsprecher/Kopfhörer neu anzuschließen oder wähle ein anderes Ausgabegerät aus"
 spanish = "Fallo al abrir el dispositivo de salida, intenta reconectar los altavoces/auriculares o seleccionar otro dispositivo de salida"
@@ -6397,7 +6368,6 @@ brazilian_portuguese = "Falha ao abrir dispositivo de saída, tente reconectar a
 portuguese = "Falha na abertura do dispositivo de saída, tente reconectar os altifalantes/auscultadores ou reselecionar o dispositivo de saída"
 turkish = "Çıkış cihazı açılamadı, hoparlörleri/kulaklıkları yeniden takmayı veya çıkış cihazını yeniden seçmeyi deneyin"
 polish = "Otwarcie urządzenia wyjściowego nie powiodło się, spróbuj ponownie podłączyć głośniki/słuchawki lub wybrać inne urządzenie wyjściowe"
-
 [[message]]
 key = "Output switch"
 [message.translations]
@@ -6705,10 +6675,10 @@ polish = "Odtwarzaj animację obrotu przy zmianie broni"
 [[message]]
 key = "Play/Pause"
 [message.translations]
-japanese = "再生/一時停止"
-korean = "재생/일시정지"
 simplified_chinese = "播放/暂停"
 traditional_chinese = "播放/暫停"
+japanese = "再生/一時停止"
+korean = "재생/일시정지"
 russian = "Воспроизведение/Пауза"
 german = "Abspielen/Pause"
 spanish = "Reproducir/Pausar"
@@ -6717,7 +6687,6 @@ brazilian_portuguese = "Tocar/Pausar"
 portuguese = "Reproduzir/Pausar"
 turkish = "Oynat/Duraklat"
 polish = "Odtwórz/Wstrzymaj"
-
 [[message]]
 key = "Playback volume"
 [message.translations]
@@ -7361,10 +7330,10 @@ polish = "Przegląd QmClient"
 [[message]]
 key = "QQ group: 1076765929 (click to copy)"
 [message.translations]
+simplified_chinese = "QQ 群：1076765929（点击复制）"
+traditional_chinese = "QQ群: 1076765929（點擊複製）"
 japanese = "QQグループ: 1076765929（クリックしてコピー）"
 korean = "QQ 그룹: 1076765929 (클릭하여 복사)"
-simplified_chinese = "QQ群: 1076765929（点击复制）"
-traditional_chinese = "QQ群: 1076765929（點擊複製）"
 russian = "QQ-группа: 1076765929 (нажмите, чтобы скопировать)"
 german = "QQ-Gruppe: 1076765929 (klicken zum Kopieren)"
 spanish = "Grupo QQ: 1076765929 (haz clic para copiar)"
@@ -7373,7 +7342,6 @@ brazilian_portuguese = "Grupo QQ: 1076765929 (clique para copiar)"
 portuguese = "Grupo QQ: 1076765929 (clique para copiar)"
 turkish = "QQ grubu: 1076765929 (kopyalamak için tıklayın)"
 polish = "Grupa QQ: 1076765929 (kliknij, aby skopiować)"
-
 [[message]]
 key = "Quick action menu for players"
 [message.translations]
@@ -8051,7 +8019,7 @@ key = "Scoreboard point check"
 [message.translations]
 japanese = "スコアボードポイント確認"
 korean = "점수판 점수 확인"
-simplified_chinese = "计分板查分"
+simplified_chinese = "计分板显示积分"
 traditional_chinese = "記分板查分"
 russian = "Очки на этом сервере приватны"
 german = "Anzeigetafel-Punktprüfung"
@@ -8113,34 +8081,34 @@ polish = "Sekundy"
 [[message]]
 key = "SecretId"
 [message.translations]
-japanese = "SecretId"
-korean = "SecretId"
-simplified_chinese = "SecretId"
-traditional_chinese = "SecretId"
-russian = "SecretKey"
-german = "SecretId"
-spanish = "SecretId"
-french = "SecretId"
-brazilian_portuguese = "SecretId"
-portuguese = "SecretId"
-turkish = "SecretId"
-polish = "SecretId"
+japanese = "シークレット ID"
+korean = "시크릿 ID"
+simplified_chinese = "密钥 ID"
+traditional_chinese = "密鑰 ID"
+russian = "Идентификатор секрета"
+german = "Secret-ID"
+spanish = "ID secreto"
+french = "ID secret"
+brazilian_portuguese = "ID secreto"
+portuguese = "ID secreto"
+turkish = "Gizli ID"
+polish = "Identyfikator sekretu"
 
 [[message]]
 key = "SecretKey"
 [message.translations]
-japanese = "SecretKey"
-korean = "SecretKey"
-simplified_chinese = "SecretKey"
-traditional_chinese = "SecretKey"
-russian = "Посмотри, насколько ты актёрствуешь"
-german = "SecretKey"
-spanish = "SecretKey"
-french = "SecretKey"
-brazilian_portuguese = "SecretKey"
-portuguese = "SecretKey"
-turkish = "SecretKey"
-polish = "SecretKey"
+japanese = "シークレットキー"
+korean = "시크릿 키"
+simplified_chinese = "密钥 Key"
+traditional_chinese = "密鑰 Key"
+russian = "Секретный ключ"
+german = "Secret-Key"
+spanish = "Clave secreta"
+french = "Clé secrète"
+brazilian_portuguese = "Chave secreta"
+portuguese = "Chave secreta"
+turkish = "Gizli anahtar"
+polish = "Klucz sekretu"
 
 [[message]]
 key = "See how much you act"
@@ -8417,10 +8385,10 @@ polish = "Serwer nie zezwala na głosowanie w celu przeniesienia graczy do widz�
 [[message]]
 key = "Server IP"
 [message.translations]
+simplified_chinese = "服务器 IP"
+traditional_chinese = "伺服器IP"
 japanese = "サーバーIP"
 korean = "서버 IP"
-simplified_chinese = "服务器IP"
-traditional_chinese = "伺服器IP"
 russian = "IP сервера"
 german = "Server-IP"
 spanish = "IP del servidor"
@@ -8429,14 +8397,13 @@ brazilian_portuguese = "IP do servidor"
 portuguese = "IP do servidor"
 turkish = "Sunucu IP"
 polish = "IP serwera"
-
 [[message]]
 key = "Server kick/spec votes are no longer actively moderated."
 [message.translations]
-japanese = "サーバーのキック/観戦投票はアクティブモデレートされなくなりました。"
-korean = "서버의 추방/관전 투표가 더 이상 적극적으로 관리되지 않음"
 simplified_chinese = "服务器的踢人/旁观投票已不再由主动管理员模式接管"
 traditional_chinese = "伺服器的踢人/旁觀投票已不再由主動管理員模式接管"
+japanese = "サーバーのキック/観戦投票はアクティブモデレートされなくなりました。"
+korean = "서버의 추방/관전 투표가 더 이상 적극적으로 관리되지 않음"
 russian = "Голосования за кик/спек на сервере больше не контролируются активным модератором."
 german = "Kick-/Zuschauer-Abstimmungen des Servers werden nicht mehr aktiv moderiert."
 spanish = "Los votos de expulsión/espectador del servidor ya no son moderados activamente."
@@ -8445,14 +8412,13 @@ brazilian_portuguese = "As votações de kick/spec do servidor não estão mais 
 portuguese = "As votações de expulsão/espetador do servidor já não são moderadas ativamente."
 turkish = "Sunucu atma/seyirci oyları artık aktif olarak yönetilmiyor."
 polish = "Głosowania za wyrzuceniem/przeniesieniem do widzów nie są już aktywnie moderowane."
-
 [[message]]
 key = "Server kick/spec votes will now be actively moderated."
 [message.translations]
-japanese = "サーバーのキック/観戦投票はこれからアクティブモデレートされます。"
-korean = "서버의 추방/관전 투표가 이제 적극적으로 관리됨"
 simplified_chinese = "服务器的踢人/旁观投票现在会被主动管理员模式接管"
 traditional_chinese = "伺服器的踢人/旁觀投票現在會被主動管理員模式接管"
+japanese = "サーバーのキック/観戦投票はこれからアクティブモデレートされます。"
+korean = "서버의 추방/관전 투표가 이제 적극적으로 관리됨"
 russian = "Голосования за кик/спек на сервере теперь будут контролироваться активным модератором."
 german = "Kick-/Zuschauer-Abstimmungen des Servers werden jetzt aktiv moderiert."
 spanish = "Los votos de expulsión/espectador del servidor ahora serán moderados activamente."
@@ -8461,7 +8427,6 @@ brazilian_portuguese = "As votações de kick/spec do servidor agora serão mode
 portuguese = "As votações de expulsão/espetador do servidor serão agora moderadas ativamente."
 turkish = "Sunucu atma/seyirci oyları artık aktif olarak yönetilecek."
 polish = "Głosowania za wyrzuceniem/przeniesieniem do widzów będą teraz aktywnie moderowane."
-
 [[message]]
 key = "Server rollback"
 [message.translations]
@@ -8609,10 +8574,10 @@ polish = "Pokaż dymki czatu nad graczami"
 [[message]]
 key = "Show chat bubbles above Tees"
 [message.translations]
+simplified_chinese = "在 Tee 上方显示对话气泡"
+traditional_chinese = "在Tee上方顯示對話氣泡"
 japanese = "Teeの上にチャットバブルを表示"
 korean = "티 위에 채팅 풍선 표시"
-simplified_chinese = "在Tee上方显示对话气泡"
-traditional_chinese = "在Tee上方顯示對話氣泡"
 russian = "Показывать облака чата над Ти"
 german = "Chat-Blasen über Tees anzeigen"
 spanish = "Mostrar burbujas de chat sobre los Tees"
@@ -8621,7 +8586,6 @@ brazilian_portuguese = "Mostrar balões de chat acima dos Tees"
 portuguese = "Mostrar balões de chat acima dos Tees"
 turkish = "Tee'lerin üzerinde sohbet balonlarını göster"
 polish = "Pokaż dymki czatu nad Tee"
-
 [[message]]
 key = "Show chat messages above players"
 [message.translations]
@@ -8945,10 +8909,10 @@ polish = "Pokaż stan połączenia głosowego"
 [[message]]
 key = "Show wake-up popup on the other tee"
 [message.translations]
+simplified_chinese = "在另一侧 tee 显示唤醒提示"
+traditional_chinese = "在另一側tee顯示喚醒提示"
 japanese = "相手のTeeにウェイクアップポップアップを表示"
 korean = "다른 Tee에 깨우기 팝업 표시"
-simplified_chinese = "在另一侧tee显示唤醒提示"
-traditional_chinese = "在另一側tee顯示喚醒提示"
 russian = "Показывать всплывающее окно пробуждения на другом Ти"
 german = "Aufweck-Popup auf dem anderen Tee anzeigen"
 spanish = "Mostrar aviso de activación en el otro tee"
@@ -8957,14 +8921,13 @@ brazilian_portuguese = "Mostrar pop-up de despertar no outro tee"
 portuguese = "Mostrar pop-up de ativação no outro tee"
 turkish = "Diğer tee'de uyandırma açılır penceresini göster"
 polish = "Pokaż wyskakujące okienko przebudzenia na drugim Tee"
-
 [[message]]
 key = "Show X"
 [message.translations]
+simplified_chinese = "显示 X"
+traditional_chinese = "顯示X"
 japanese = "Xを表示"
 korean = "X 표시"
-simplified_chinese = "显示X"
-traditional_chinese = "顯示X"
 russian = "Показывать X"
 german = "X anzeigen"
 spanish = "Mostrar X"
@@ -8973,14 +8936,13 @@ brazilian_portuguese = "Mostrar X"
 portuguese = "Mostrar X"
 turkish = "X'i göster"
 polish = "Pokaż X"
-
 [[message]]
 key = "Show Y"
 [message.translations]
+simplified_chinese = "显示 Y"
+traditional_chinese = "顯示Y"
 japanese = "Yを表示"
 korean = "Y 표시"
-simplified_chinese = "显示Y"
-traditional_chinese = "顯示Y"
 russian = "Показывать Y"
 german = "Y anzeigen"
 spanish = "Mostrar Y"
@@ -8989,7 +8951,6 @@ brazilian_portuguese = "Mostrar Y"
 portuguese = "Mostrar Y"
 turkish = "Y'yi göster"
 polish = "Pokaż Y"
-
 [[message]]
 key = "Showing players from other teams is disabled"
 [message.translations]
@@ -9425,10 +9386,10 @@ polish = "Wsparcie sponsora"
 [[message]]
 key = "Sponsors:"
 [message.translations]
+simplified_chinese = "赞助者："
+traditional_chinese = "贊助者:"
 japanese = "スポンサー:"
 korean = "스폰서:"
-simplified_chinese = "赞助者:"
-traditional_chinese = "贊助者:"
 russian = "Спонсоры:"
 german = "Sponsoren:"
 spanish = "Patrocinadores:"
@@ -9437,7 +9398,6 @@ brazilian_portuguese = "Patrocinadores:"
 portuguese = "Patrocinadores:"
 turkish = "Sponsorlar:"
 polish = "Sponsorzy:"
-
 [[message]]
 key = "Staging memory"
 [message.translations]
@@ -10177,34 +10137,34 @@ polish = "Nieprzezroczystość teleportu"
 [[message]]
 key = "Tencent Cloud SecretId"
 [message.translations]
-japanese = "テンセントクラウド SecretId"
-korean = "텐센트 클라우드 SecretId"
-simplified_chinese = "腾讯云 SecretId"
-traditional_chinese = "騰訊雲 SecretId"
-russian = "SecretId Тенсент Клауд"
-german = "Tencent Cloud SecretId"
-spanish = "Tencent Cloud SecretId"
-french = "Tencent Cloud SecretId"
-brazilian_portuguese = "Tencent Cloud SecretId"
-portuguese = "Tencent Cloud SecretId"
-turkish = "Tencent Cloud SecretId"
-polish = "Tencent Cloud SecretId"
+japanese = "Tencent Cloud シークレット ID"
+korean = "Tencent Cloud 시크릿 ID"
+simplified_chinese = "腾讯云密钥 ID"
+traditional_chinese = "騰訊雲密鑰 ID"
+russian = "Идентификатор секрета Tencent Cloud"
+german = "Tencent Cloud Secret-ID"
+spanish = "ID secreto de Tencent Cloud"
+french = "ID secret Tencent Cloud"
+brazilian_portuguese = "ID secreto da Tencent Cloud"
+portuguese = "ID secreto da Tencent Cloud"
+turkish = "Tencent Cloud gizli ID"
+polish = "Identyfikator sekretu Tencent Cloud"
 
 [[message]]
 key = "Tencent Cloud SecretKey"
 [message.translations]
-japanese = "テンセントクラウド SecretKey"
-korean = "텐센트 클라우드 SecretKey"
-simplified_chinese = "腾讯云 SecretKey"
-traditional_chinese = "騰訊雲 SecretKey"
-russian = "SecretKey Тенсент Клауд"
-german = "Tencent Cloud SecretKey"
-spanish = "Tencent Cloud SecretKey"
-french = "Tencent Cloud SecretKey"
-brazilian_portuguese = "Tencent Cloud SecretKey"
-portuguese = "Tencent Cloud SecretKey"
-turkish = "Tencent Cloud SecretKey"
-polish = "Tencent Cloud SecretKey"
+japanese = "Tencent Cloud シークレットキー"
+korean = "Tencent Cloud 시크릿 키"
+simplified_chinese = "腾讯云密钥 Key"
+traditional_chinese = "騰訊雲密鑰 Key"
+russian = "Секретный ключ Tencent Cloud"
+german = "Tencent Cloud Secret-Key"
+spanish = "Clave secreta de Tencent Cloud"
+french = "Clé secrète Tencent Cloud"
+brazilian_portuguese = "Chave secreta da Tencent Cloud"
+portuguese = "Chave secreta da Tencent Cloud"
+turkish = "Tencent Cloud gizli anahtar"
+polish = "Klucz sekretu Tencent Cloud"
 
 [[message]]
 key = "Text color"
@@ -10241,10 +10201,10 @@ polish = "Pamięć tekstur"
 [[message]]
 key = "Thank you for your company and trust. This is what gives me the courage to keep going."
 [message.translations]
+simplified_chinese = "感谢您的陪伴与信任。正是如此，才给了我继续前行的勇气"
+traditional_chinese = "感謝您的陪伴與信任.正是如此,才給了我繼續前行的勇氣"
 japanese = "ご愛顧と信頼に感謝します。それが私に前進する勇気を与えてくれます。"
 korean = "함께 해주시고 신뢰해 주셔서 감사합니다. 이것이 제가 계속 나아갈 용기를 줍니다"
-simplified_chinese = "感谢您的陪伴与信任.正是如此,才给了我继续前行的勇气"
-traditional_chinese = "感謝您的陪伴與信任.正是如此,才給了我繼續前行的勇氣"
 russian = "Спасибо за вашу компанию и доверие. Именно это даёт мне смелость продолжать."
 german = "Danke für deine Begleitung und dein Vertrauen. Das gibt mir den Mut, weiterzumachen."
 spanish = "Gracias por su compañía y confianza. Esto es lo que me da el valor para seguir adelante."
@@ -10253,7 +10213,6 @@ brazilian_portuguese = "Obrigado pela sua companhia e confiança. É isso que me
 portuguese = "Obrigado pela sua companhia e confiança. É isto que me dá coragem para continuar."
 turkish = "Arkadaşlığınız ve güveniniz için teşekkür ederim. Devam etme cesaretini bana veren şey budur."
 polish = "Dziękuję za Twoje towarzystwo i zaufanie. To daje mi odwagę, by iść dalej."
-
 [[message]]
 key = "Thanks for supporting QmClient"
 [message.translations]
@@ -10273,10 +10232,10 @@ polish = "Dziękujemy za wsparcie QmClient"
 [[message]]
 key = "The best voice chat, of course!"
 [message.translations]
+simplified_chinese = "当然是最好的语音啦！"
+traditional_chinese = "當然是最好的語音啦!"
 japanese = "もちろん最高のボイスチャットです！"
 korean = "물론 최고의 음성 채팅입니다!"
-simplified_chinese = "当然是最好的语音啦!"
-traditional_chinese = "當然是最好的語音啦!"
 russian = "Лучший голосовой чат, конечно!"
 german = "Der beste Voice-Chat, natürlich!"
 spanish = "¡El mejor chat de voz, por supuesto!"
@@ -10285,7 +10244,6 @@ brazilian_portuguese = "O melhor chat de voz, claro!"
 portuguese = "O melhor chat de voz, claro!"
 turkish = "Tabii ki en iyi sesli sohbet!"
 polish = "Oczywiście najlepszy czat głosowy!"
-
 [[message]]
 key = "The Config tab reuses QmClient's client config browser"
 [message.translations]
@@ -11043,7 +11001,7 @@ key = "Use default flags on scoreboard"
 [message.translations]
 japanese = "スコアボードでデフォルトの旗を使用"
 korean = "스코어보드에 기본 국기 사용"
-simplified_chinese = "在记分板上使用默认旗"
+simplified_chinese = "在计分板上使用默认旗"
 traditional_chinese = "在記分板上使用預設旗"
 russian = "Использовать флаги по умолчанию на табло"
 german = "Standardflaggen auf der Anzeigetafel verwenden"
@@ -11473,10 +11431,10 @@ polish = "Jaki film chcesz nakręcić?"
 [[message]]
 key = "What kind of Gores do you want to run?"
 [message.translations]
+simplified_chinese = "你想跑出怎样的 Gores？"
+traditional_chinese = "你想跑出怎樣的Gores?"
 japanese = "どんなGoresを走りたいですか？"
 korean = "어떤 Gores를 달리고 싶으신가요?"
-simplified_chinese = "你想跑出怎样的Gores?"
-traditional_chinese = "你想跑出怎樣的Gores?"
 russian = "Какой Gores вы хотите пробежать?"
 german = "Welche Gores möchtest du laufen?"
 spanish = "¿Qué tipo de Gores quieres correr?"
@@ -11485,14 +11443,13 @@ brazilian_portuguese = "Que tipo de Gores você quer correr?"
 portuguese = "Que tipo de Gores queres correr?"
 turkish = "Ne tür bir Gores koşmak istiyorsunuz?"
 polish = "Jakie Gores chcesz biegać?"
-
 [[message]]
 key = "What kind of laser do you want?"
 [message.translations]
+simplified_chinese = "你想做出怎样的激光？"
+traditional_chinese = "你想做出怎樣的雷射?"
 japanese = "どんなレーザーが欲しいですか？"
 korean = "어떤 레이저를 원하시나요?"
-simplified_chinese = "你想做出怎样的激光?"
-traditional_chinese = "你想做出怎樣的雷射?"
 russian = "Какой лазер вы хотите?"
 german = "Was für einen Laser möchtest du?"
 spanish = "¿Qué tipo de láser quieres?"
@@ -11501,14 +11458,13 @@ brazilian_portuguese = "Que tipo de laser você quer?"
 portuguese = "Que tipo de laser queres?"
 turkish = "Ne tür bir lazer istiyorsunuz?"
 polish = "Jaki laser chcesz?"
-
 [[message]]
 key = "What kind of life do you want to run?"
 [message.translations]
+simplified_chinese = "你想跑出怎样的人生？"
+traditional_chinese = "你想跑出怎樣的人生?"
 japanese = "どんな人生を走りたいですか？"
 korean = "어떤 인생을 살고 싶으신가요?"
-simplified_chinese = "你想跑出怎样的人生?"
-traditional_chinese = "你想跑出怎樣的人生?"
 russian = "Какую жизнь вы хотите прожить?"
 german = "Was für ein Leben möchtest du führen?"
 spanish = "¿Qué tipo de vida quieres correr?"
@@ -11517,14 +11473,13 @@ brazilian_portuguese = "Que tipo de vida você quer correr?"
 portuguese = "Que tipo de vida queres correr?"
 turkish = "Ne tür bir hayat koşmak istiyorsunuz?"
 polish = "Jakie życie chcesz biegać?"
-
 [[message]]
 key = "What's done is done, no use saying more"
 [message.translations]
+simplified_chinese = "事已至此，多说无益"
+traditional_chinese = "事已至此,多說無益"
 japanese = "済んだことは仕方ない、もう言っても無駄だ"
 korean = "이미 지난 일, 더 말해도 소용없습니다."
-simplified_chinese = "事已至此,多说无益"
-traditional_chinese = "事已至此,多說無益"
 russian = "Что сделано, то сделано, бесполезно говорить больше"
 german = "Was passiert ist, ist passiert, es hat keinen Sinn, mehr zu sagen"
 spanish = "Lo hecho, hecho está, no sirve decir más"
@@ -11533,14 +11488,13 @@ brazilian_portuguese = "O que está feito, está feito, não adianta falar mais"
 portuguese = "O que está feito, está feito, não adianta dizer mais"
 turkish = "Olan oldu, daha fazla söylemenin faydası yok"
 polish = "Co się stało, to się stało, nie ma sensu więcej mówić"
-
 [[message]]
 key = "Who stuffed OBS in here"
 [message.translations]
+simplified_chinese = "谁把 OBS 塞进来了"
+traditional_chinese = "誰把OBS塞進來了"
 japanese = "誰がここにOBSを詰め込んだんだ"
 korean = "누가 여기에 OBS를 넣었나"
-simplified_chinese = "谁把OBS塞进来了"
-traditional_chinese = "誰把OBS塞進來了"
 russian = "Кто засунул сюда OBS"
 german = "Wer hat hier OBS reingesteckt"
 spanish = "Quién metió OBS aquí"
@@ -11549,7 +11503,6 @@ brazilian_portuguese = "Quem colocou OBS aqui"
 portuguese = "Quem enfiou o OBS aqui"
 turkish = "Buraya OBS'yi kim sıkıştırdı"
 polish = "Kto tu wepchnął OBS"
-
 [[message]]
 key = "Word Filter"
 [message.translations]
@@ -13169,10 +13122,10 @@ polish = "=== Wszystkie lokalne save'y ==="
 [[message]]
 key = "[%s] %s (Map: %s, Time: %s)"
 [message.translations]
+simplified_chinese = "[%s] %s（地图：%s，保存时间：%s）"
+traditional_chinese = "[%s] %s（地圖: %s，保存時間: %s）"
 japanese = "[%s] %s（マップ: %s、時間: %s）"
 korean = "[%s] %s (맵: %s, 시간: %s)"
-simplified_chinese = "[%s] %s（地图: %s，保存时间: %s）"
-traditional_chinese = "[%s] %s（地圖: %s，保存時間: %s）"
 russian = "[%s] %s (карта: %s, время: %s)"
 german = "[%s] %s (Map: %s, Zeit: %s)"
 spanish = "[%s] %s (Mapa: %s, hora: %s)"
@@ -13181,14 +13134,13 @@ brazilian_portuguese = "[%s] %s (mapa: %s, hora: %s)"
 portuguese = "[%s] %s (mapa: %s, hora: %s)"
 turkish = "[%s] %s (harita: %s, zaman: %s)"
 polish = "[%s] %s (mapa: %s, czas: %s)"
-
 [[message]]
 key = "Total: %d save(s)"
 [message.translations]
+simplified_chinese = "总计：%d 个存档"
+traditional_chinese = "總計: %d 個存檔"
 japanese = "合計: %d 個のセーブ"
 korean = "총 %d개 저장"
-simplified_chinese = "总计: %d 个存档"
-traditional_chinese = "總計: %d 個存檔"
 russian = "Всего: %d сохранений"
 german = "Gesamt: %d Save(s)"
 spanish = "Total: %d save(s)"
@@ -13197,7 +13149,6 @@ brazilian_portuguese = "Total: %d save(s)"
 portuguese = "Total: %d save(s)"
 turkish = "Toplam: %d save"
 polish = "Razem: %d save'ów"
-
 [[message]]
 key = "feat-003 dogfood: tokens + 12 widgets"
 [message.translations]
@@ -13633,10 +13584,10 @@ polish = "Jitter"
 [[message]]
 key = "Game/predicted tick"
 [message.translations]
-japanese = "ゲーム/予測tick"
-korean = "게임/예측 tick"
 simplified_chinese = "游戏/预测 tick"
 traditional_chinese = "遊戲/預測 tick"
+japanese = "ゲーム/予測tick"
+korean = "게임/예측 tick"
 russian = "Игра/предсказанный tick"
 german = "Spiel/vorhergesagter Tick"
 spanish = "Juego/tick predicho"
@@ -13645,7 +13596,6 @@ brazilian_portuguese = "Jogo/tick previsto"
 portuguese = "Jogo/tick previsto"
 turkish = "Oyun/tahmin tick"
 polish = "Gra/przewidziany tick"
-
 [[message]]
 key = "Prediction time"
 [message.translations]
@@ -13757,3 +13707,51 @@ brazilian_portuguese = "Memória de staging"
 portuguese = "Memória de staging"
 turkish = "Hazırlama belleği"
 polish = "Pamięć staging"
+
+[[message]]
+key = "Added %s as friend"
+[message.translations]
+simplified_chinese = "已将 %s 添加为好友"
+traditional_chinese = "已將 %s 新增為好友"
+japanese = "%s をフレンドに追加しました"
+korean = "%s 님을 친구로 추가했습니다"
+russian = "%s добавлен в друзья"
+german = "%s wurde als Freund hinzugefügt"
+spanish = "%s se añadió como amigo"
+french = "%s a été ajouté aux amis"
+brazilian_portuguese = "%s foi adicionado como amigo"
+portuguese = "%s foi adicionado como amigo"
+turkish = "%s arkadaş olarak eklendi"
+polish = "%s dodano do znajomych"
+
+[[message]]
+key = "Cannot swap: the other player is not in your team"
+[message.translations]
+simplified_chinese = "无法交换：对方不在你的队伍中"
+traditional_chinese = "無法交換：對方不在你的隊伍中"
+japanese = "交換できません：相手はあなたのチームにいません"
+korean = "교환할 수 없음: 상대가 내 팀에 없습니다"
+russian = "Нельзя обменяться: другой игрок не в вашей команде"
+german = "Swap nicht möglich: Der andere Spieler ist nicht in deinem Team"
+spanish = "No se puede intercambiar: el otro jugador no está en tu equipo"
+french = "Swap impossible : l'autre joueur n'est pas dans ton équipe"
+brazilian_portuguese = "Não é possível trocar: o outro jogador não está na sua equipe"
+portuguese = "Não é possível trocar: o outro jogador não está na tua equipa"
+turkish = "Swap yapılamaz: diğer oyuncu takımında değil"
+polish = "Nie można zamienić: drugi gracz nie jest w twojej drużynie"
+
+[[message]]
+key = "Removed %s from friends"
+[message.translations]
+simplified_chinese = "已将 %s 移出好友"
+traditional_chinese = "已將 %s 移出好友"
+japanese = "%s をフレンドから削除しました"
+korean = "%s 님을 친구에서 제거했습니다"
+russian = "%s удален из друзей"
+german = "%s wurde aus den Freunden entfernt"
+spanish = "%s se eliminó de amigos"
+french = "%s a été retiré des amis"
+brazilian_portuguese = "%s foi removido dos amigos"
+portuguese = "%s foi removido dos amigos"
+turkish = "%s arkadaşlardan kaldırıldı"
+polish = "%s usunięto ze znajomych"

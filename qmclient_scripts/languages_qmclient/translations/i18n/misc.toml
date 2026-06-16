@@ -97,10 +97,10 @@ polish = "%s wygrywa!"
 [[message]]
 key = "- Save codes in order:"
 [message.translations]
+simplified_chinese = "- 密码依次为："
+traditional_chinese = "- 密碼依序為:"
 japanese = "- セーブコードを順に:"
 korean = "- 저장 코드 순서:"
-simplified_chinese = "- 密码依次为:"
-traditional_chinese = "- 密碼依序為:"
 russian = "- Коды сохранений по порядку:"
 german = "- Speichercodes in Reihenfolge:"
 spanish = "- Códigos guardados en orden:"
@@ -109,14 +109,13 @@ brazilian_portuguese = "- Códigos salvos em ordem:"
 portuguese = "- Códigos de salvamento por ordem:"
 turkish = "- Kodları sırayla kaydet:"
 polish = "- Kody zapisów w kolejności:"
-
 [[message]]
 key = "- Save owners in order:"
 [message.translations]
+simplified_chinese = "- 保存者按顺序是："
+traditional_chinese = "- 儲存者按順序是:"
 japanese = "- セーブ所有者を順に:"
 korean = "- 저장 소유자 순서:"
-simplified_chinese = "- 保存者按顺序是:"
-traditional_chinese = "- 儲存者按順序是:"
 russian = "- Владельцы сохранений по порядку:"
 german = "- Speicherbesitzer in Reihenfolge:"
 spanish = "- Dueños guardados en orden:"
@@ -125,14 +124,13 @@ brazilian_portuguese = "- Donos dos saves em ordem:"
 portuguese = "- Donos dos salvamentos por ordem:"
 turkish = "- Sahipleri sırayla kaydet:"
 polish = "- Właściciele zapisów w kolejności:"
-
 [[message]]
 key = "- You have %d saves on this map!"
 [message.translations]
+simplified_chinese = "- 您在这张图有 %d 个存档！"
+traditional_chinese = "- 您在這張地圖有 %d 個存檔！"
 japanese = "- このマップに %d 個のセーブがあります！"
 korean = "- 이 맵에 %d개의 저장이 있습니다!"
-simplified_chinese = "- 您在这张图有%d个存档！"
-traditional_chinese = "- 您在這張地圖有 %d 個存檔！"
 russian = "- У вас есть %d сохранений на этой карте!"
 german = "- Du hast %d Speicherungen auf dieser Karte!"
 spanish = "- ¡Tienes %d guardados en este mapa!"
@@ -141,14 +139,13 @@ brazilian_portuguese = "- Você tem %d saves neste mapa!"
 portuguese = "- Tens %d salvamentos neste mapa!"
 turkish = "- Bu haritada %d kaydınız var!"
 polish = "- Masz %d zapisów na tej mapie!"
-
 [[message]]
 key = "/times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)"
 [message.translations]
-japanese = "/times ?s?i は、サーバーの直近 5 回のタイム、または名前が s で始まるプレイヤーのタイムを i 番目から表示します（i は既定で 1、-1 は最初）"
-korean = "/times ?s?i 는 이름 s로 시작하는 서버 또는 플레이어의 최근 5개 기록을 시간 i부터 표시합니다 (i = 기본값 1, -1은 처음)"
 simplified_chinese = "/times ?s?i 显示服务器最近 5 次成绩，或名称以 s 开头玩家从第 i 条开始的成绩（i 默认 1，-1 表示第一条）"
 traditional_chinese = "/times ?s?i 顯示伺服器最近 5 次成績，或名稱以 s 開頭玩家從第 i 條開始的五次成績（i 預設 1，-1 表示第一條）"
+japanese = "/times ?s?i は、サーバーの直近 5 回のタイム、または名前が s で始まるプレイヤーのタイムを i 番目から表示します（i は既定で 1、-1 は最初）"
+korean = "/times ?s?i 는 이름 s로 시작하는 서버 또는 플레이어의 최근 5개 기록을 시간 i부터 표시합니다 (i = 기본값 1, -1은 처음)"
 russian = "/times ?s?i показывает последние 5 результатов сервера или игрока, имя которого начинается с s, начиная с результата i (i = 1 по умолчанию, -1 для первого)"
 german = "/times ?s?i zeigt die letzten 5 Zeiten des Servers oder eines Spielers, dessen Name mit s beginnt, beginnend mit Zeit i (i = 1 standardmäßig, -1 für die erste)"
 spanish = "/times ?s?i muestra los últimos 5 tiempos del servidor o de un jugador cuyo nombre comienza con s empezando desde el tiempo i (i = 1 por defecto, -1 para el primero)"
@@ -157,7 +154,6 @@ brazilian_portuguese = "/times ?s?i mostra os últimos 5 tempos do servidor ou d
 portuguese = "/times ?s?i mostra os últimos 5 tempos do servidor ou de um jogador cujo nome começa com s começando pelo tempo i (i = 1 por defeito, -1 para o primeiro)"
 turkish = "/times ?s?i sunucunun son 5 süresini veya adı s ile başlayan bir oyuncunun i. süreden itibaren sonuçlarını gösterir (i varsayılan 1, -1 ilk sonuç)"
 polish = "/times ?s?i pokazuje ostatnie 5 czasów serwera lub gracza zaczynającego się od nazwy s, zaczynając od czasu i (i = 1 domyślnie, -1 dla pierwszego)"
-
 [[message]]
 key = "1 new mention"
 [message.translations]
@@ -321,10 +317,10 @@ polish = "Dodaj społeczność do filtra wykluczeń"
 [[message]]
 key = "Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)"
 [message.translations]
-japanese = "特定のコミュニティの除外フィルターに国を追加（ISO 3166-1 数値コード）"
-korean = "특정 커뮤니티의 제외 필터에 국가 추가 (ISO 3166-1 숫자 코드)"
 simplified_chinese = "将国家/地区加入指定社区的排除筛选（ISO 3166-1 数字编码）"
 traditional_chinese = "將國家/地區加入指定社群的排除篩選（ISO 3166-1 數字編碼）"
+japanese = "特定のコミュニティの除外フィルターに国を追加（ISO 3166-1 数値コード）"
+korean = "특정 커뮤니티의 제외 필터에 국가 추가 (ISO 3166-1 숫자 코드)"
 russian = "Добавить страну в фильтр исключения для конкретного сообщества (ISO 3166-1 числовой)"
 german = "Füge ein Land zum Ausschlussfilter für eine bestimmte Community hinzu (ISO 3166-1 numerisch)"
 spanish = "Añadir un país al filtro de exclusión para una comunidad específica (ISO 3166-1 numérico)"
@@ -333,7 +329,6 @@ brazilian_portuguese = "Adicionar um país ao filtro de exclusão para uma comun
 portuguese = "Adicionar um país ao filtro de exclusão para uma comunidade específica (ISO 3166-1 numérico)"
 turkish = "Belirli bir topluluk için hariç tutma filtresine bir ülke ekle (ISO 3166-1 sayısal)"
 polish = "Dodaj kraj do filtra wykluczeń dla konkretnej społeczności (ISO 3166-1 numeryczny)"
-
 [[message]]
 key = "Add a dummy queue preset"
 [message.translations]
@@ -625,10 +620,10 @@ polish = "Dodaj znajomego"
 [[message]]
 key = "Add/remove Client-IDs to spectate them exclusively (-1 to reset)"
 [message.translations]
-japanese = "それらを独占的に観戦するためにクライアントIDを追加/削除（-1 でリセット）"
-korean = "독점 관전할 클라이언트 ID 추가/제거 (-1은 초기화)"
 simplified_chinese = "添加/移除要专门旁观的客户端 ID（-1 重置）"
 traditional_chinese = "新增/移除要專門旁觀的客戶端 ID（-1 重置）"
+japanese = "それらを独占的に観戦するためにクライアントIDを追加/削除（-1 でリセット）"
+korean = "독점 관전할 클라이언트 ID 추가/제거 (-1은 초기화)"
 russian = "Добавить/удалить ID клиентов для наблюдения только за ними (-1 для сброса)"
 german = "Client-IDs hinzufügen/entfernen, um sie exklusiv zu beobachten (-1 zum Zurücksetzen)"
 spanish = "Añadir/eliminar IDs de cliente para espiarlos exclusivamente (-1 para reiniciar)"
@@ -637,7 +632,6 @@ brazilian_portuguese = "Adicionar/remover IDs de cliente para espiá-los exclusi
 portuguese = "Adicionar/remover IDs de cliente para os espetar exclusivamente (-1 para redefinir)"
 turkish = "Yalnızca onları izlemek için İstemci Kimlikleri ekle/kaldır (-1 sıfırlar)"
 polish = "Dodaj/usuń ID klientów, aby obserwować ich wyłącznie (-1 aby zresetować)"
-
 [[message]]
 key = "Alive: %.1fs/%.1fs"
 [message.translations]
@@ -769,10 +763,10 @@ polish = "Automatycznie dodaje opcje głosowania dla wszystkich map"
 [[message]]
 key = "Avg %.*f   ↓ %.*f   ↑ %.*f"
 [message.translations]
+simplified_chinese = "平均 %.*f ↓ %.*f ↑ %.*f"
+traditional_chinese = "平均 %.*f   ↓ %.*f   ↑ %.*f"
 japanese = "平均 %.*f   ↓ %.*f   ↑ %.*f"
 korean = "평균 %.*f   ↓ %.*f   ↑ %.*f"
-simplified_chinese = "平均 %.*f   ↓ %.*f   ↑ %.*f"
-traditional_chinese = "平均 %.*f   ↓ %.*f   ↑ %.*f"
 russian = "Средн. %.*f   ↓ %.*f   ↑ %.*f"
 german = "Durchschnitt %.*f   ↓ %.*f   ↑ %.*f"
 spanish = "Promedio %.*f   ↓ %.*f   ↑ %.*f"
@@ -781,7 +775,6 @@ brazilian_portuguese = "Média %.*f   ↓ %.*f   ↑ %.*f"
 portuguese = "Média %.*f   ↓ %.*f   ↑ %.*f"
 turkish = "Ort. %.*f   ↓ %.*f   ↑ %.*f"
 polish = "Średnia %.*f   ↓ %.*f   ↑ %.*f"
-
 [[message]]
 key = "Axiom auto login failed"
 [message.translations]
@@ -1233,10 +1226,10 @@ polish = "Podłącz kukłę, aby włączyć"
 [[message]]
 key = "Connect to the specified host/ip"
 [message.translations]
+simplified_chinese = "连接到指定主机 /IP"
+traditional_chinese = "連線到指定主機/ip"
 japanese = "指定されたホスト/IPに接続"
 korean = "지정된 호스트/IP에 연결"
-simplified_chinese = "连接到指定主机/ip"
-traditional_chinese = "連線到指定主機/ip"
 russian = "Подключиться к указанному хосту/IP"
 german = "Mit dem angegebenen Host/IP verbinden"
 spanish = "Conectarse al host/ip especificado"
@@ -1245,7 +1238,6 @@ brazilian_portuguese = "Conectar ao host/ip especificado"
 portuguese = "Conectar ao host/ip especificado"
 turkish = "Belirtilen ana bilgisayara/IP'ye bağlan"
 polish = "Połącz z określonym hostem/IP"
-
 [[message]]
 key = "Connection Problems…"
 [message.translations]
@@ -1345,10 +1337,10 @@ polish = "Nie można zapisać pobranej mapy. Spróbuj ręcznie usunąć ten plik
 [[message]]
 key = "Current: Ranks"
 [message.translations]
+simplified_chinese = "当前：查分"
+traditional_chinese = "目前：排名"
 japanese = "現在: ランク"
 korean = "현재: 순위"
-simplified_chinese = "当前: 查分"
-traditional_chinese = "目前：排名"
 russian = "Текущее: Ранги"
 german = "Aktuell: Ränge"
 spanish = "Actual: Rankings"
@@ -1357,14 +1349,13 @@ brazilian_portuguese = "Atual: Rankings"
 portuguese = "Atual: Rankings"
 turkish = "Geçerli: Sıralamalar"
 polish = "Obecnie: Rankingi"
-
 [[message]]
 key = "Current: Score"
 [message.translations]
+simplified_chinese = "当前：分数"
+traditional_chinese = "目前：分數"
 japanese = "現在: スコア"
 korean = "현재: 점수"
-simplified_chinese = "当前: 分数"
-traditional_chinese = "目前：分數"
 russian = "Текущее: Очки"
 german = "Aktuell: Punktzahl"
 spanish = "Actual: Puntuación"
@@ -1373,14 +1364,13 @@ brazilian_portuguese = "Atual: Pontuação"
 portuguese = "Atual: Pontuação"
 turkish = "Geçerli: Skor"
 polish = "Obecnie: Wynik"
-
 [[message]]
 key = "Current: Time"
 [message.translations]
+simplified_chinese = "当前：时间"
+traditional_chinese = "目前：時間"
 japanese = "現在: タイム"
 korean = "현재: 시간"
-simplified_chinese = "当前: 时间"
-traditional_chinese = "目前：時間"
 russian = "Текущее: Время"
 german = "Aktuell: Zeit"
 spanish = "Actual: Tiempo"
@@ -1389,7 +1379,6 @@ brazilian_portuguese = "Atual: Tempo"
 portuguese = "Atual: Tempo"
 turkish = "Geçerli: Süre"
 polish = "Obecnie: Czas"
-
 [[message]]
 key = "Custom"
 [message.translations]
@@ -1713,10 +1702,10 @@ polish = "Włącz oszustwa dla bieżącego biegu twojej drużyny, ale nie zdobę
 [[message]]
 key = "Enables/disables active moderator mode for the player"
 [message.translations]
-japanese = "プレイヤーのアクティブモデレーターモードを有効/無効にする"
-korean = "플레이어의 활성 중재자 모드 활성화/비활성화"
 simplified_chinese = "启用/禁用该玩家的活跃管理员模式"
 traditional_chinese = "啟用/停用該玩家的活躍管理員模式"
+japanese = "プレイヤーのアクティブモデレーターモードを有効/無効にする"
+korean = "플레이어의 활성 중재자 모드 활성화/비활성화"
 russian = "Включает/отключает режим активного модератора для игрока"
 german = "Aktiviert/deaktiviert den aktiven Moderator-Modus für den Spieler"
 spanish = "Activa/desactiva el modo moderador activo para el jugador"
@@ -1725,7 +1714,6 @@ brazilian_portuguese = "Ativa/desativa o modo moderador ativo para o jogador"
 portuguese = "Ativa/desativa o modo de moderador ativo para o jogador"
 turkish = "Oyuncu için aktif moderatör modunu etkinleştirir/devre dışı bırakır"
 polish = "Włącza/wyłącza aktywny tryb moderatora dla gracza"
-
 [[message]]
 key = "Enter Password"
 [message.translations]
@@ -1793,10 +1781,10 @@ polish = "Błąd zapisywania ustawień"
 [[message]]
 key = "Execute files on key press/release"
 [message.translations]
-japanese = "キー押下/解放時にファイルを実行"
-korean = "키 누름/뗌 시 파일 실행"
 simplified_chinese = "在按下/释放按键时执行文件"
 traditional_chinese = "在按下/放開按鍵時執行檔案"
+japanese = "キー押下/解放時にファイルを実行"
+korean = "키 누름/뗌 시 파일 실행"
 russian = "Выполнять файлы при нажатии/отпускании клавиши"
 german = "Dateien bei Tastendruck/-freigabe ausführen"
 spanish = "Ejecutar archivos al presionar/soltar tecla"
@@ -1805,7 +1793,6 @@ brazilian_portuguese = "Executar arquivos ao pressionar/soltar tecla"
 portuguese = "Executar ficheiros ao pressionar/soltar tecla"
 turkish = "Tuşa basma/bırakma sırasında dosyaları çalıştır"
 polish = "Wykonaj pliki po naciśnięciu/zwolnieniu klawisza"
-
 [[message]]
 key = "Execute the specified file"
 [message.translations]
@@ -1953,10 +1940,10 @@ polish = "Obserwowany"
 [[message]]
 key = "Force a vote to yes/no"
 [message.translations]
-japanese = "投票を賛成/反対に強制"
-korean = "투표를 찬성/반대로 강제"
 simplified_chinese = "强制投票赞成/反对"
 traditional_chinese = "強制投票贊成/反對"
+japanese = "投票を賛成/反対に強制"
+korean = "투표를 찬성/반대로 강제"
 russian = "Принудительно принять/отклонить голосование"
 german = "Eine Abstimmung zu Ja/Nein erzwingen"
 spanish = "Forzar un voto a sí/no"
@@ -1965,7 +1952,6 @@ brazilian_portuguese = "Forçar um voto para sim/não"
 portuguese = "Forçar um voto para sim/não"
 turkish = "Bir oylamayı evet/hayır olarak zorla"
 polish = "Wymuś głosowanie na tak/nie"
-
 [[message]]
 key = "Force a voting option"
 [message.translations]
@@ -2017,10 +2003,10 @@ polish = "Wymuś pauzę dla i na i sekund"
 [[message]]
 key = "FPM"
 [message.translations]
-japanese = "FPM"
-korean = "분당 킬"
 simplified_chinese = "击杀/分"
 traditional_chinese = "擊殺/分"
+japanese = "FPM"
+korean = "분당 킬"
 russian = "Убийств/мин"
 german = "FPM"
 spanish = "FPM"
@@ -2029,7 +2015,6 @@ brazilian_portuguese = "FPM"
 portuguese = "FPM"
 turkish = "K/D"
 polish = "FPM"
-
 [[message]]
 key = "Frags"
 [message.translations]
@@ -2113,10 +2098,10 @@ polish = "Przywróć prawo do głosowania graczowi z ID klienta"
 [[message]]
 key = "Give back right to vote to player with IP address"
 [message.translations]
+simplified_chinese = "将投票权还给有 IP 地址的玩家"
+traditional_chinese = "將投票權歸還給有 IP 位址的玩家"
 japanese = "IPアドレスのプレイヤーに投票権を戻す"
 korean = "IP 주소를 가진 플레이어에게 투표권 되돌려주기"
-simplified_chinese = "将投票权还给有IP地址的玩家"
-traditional_chinese = "將投票權歸還給有 IP 位址的玩家"
 russian = "Вернуть право голоса игроку с IP-адресом"
 german = "Stimmrecht an Spieler mit IP-Adresse zurückgeben"
 spanish = "Devolver el derecho a voto al jugador con dirección IP"
@@ -2125,7 +2110,6 @@ brazilian_portuguese = "Devolver direito de voto ao jogador com endereço IP"
 portuguese = "Devolver direito de voto ao jogador com endereço IP"
 turkish = "IP adresine sahip oyuncuya oy kullanma hakkını geri ver"
 polish = "Przywróć prawo do głosowania graczowi z adresem IP"
-
 [[message]]
 key = "Give back right to vote to player with list index"
 [message.translations]
@@ -2513,10 +2497,10 @@ polish = "k = Utrata ponownego wysłania"
 [[message]]
 key = "Key Sticking: ?"
 [message.translations]
+simplified_chinese = "卡键：？"
+traditional_chinese = "卡鍵：?"
 japanese = "キースティッキング: ?"
 korean = "키 고정: ?"
-simplified_chinese = "卡键：?"
-traditional_chinese = "卡鍵：?"
 russian = "Залипание клавиш: ?"
 german = "Tastenkleben: ?"
 spanish = "Tecla Pegada: ?"
@@ -2525,7 +2509,6 @@ brazilian_portuguese = "Tecla Pressionada: ?"
 portuguese = "Tecla Pressionada: ?"
 turkish = "Tuş Kilitleme: ?"
 polish = "Przyklejanie klawiszy: ?"
-
 [[message]]
 key = "Key Sticking: Off"
 [message.translations]
@@ -2611,7 +2594,7 @@ key = "Kills a player and announces the kill"
 [message.translations]
 japanese = "プレイヤーをキルしてキルを告知"
 korean = "플레이어를 죽이고 킬을 알림"
-simplified_chinese = "击杀一名玩家并广播击杀信息"
+simplified_chinese = "处死一名玩家并广播处死信息"
 traditional_chinese = "擊殺一名玩家並廣播擊殺資訊"
 russian = "Убивает игрока и объявляет об убийстве"
 german = "Tötet einen Spieler und kündigt den Kill an"
@@ -2627,7 +2610,7 @@ key = "Kills team and disables practice mode"
 [message.translations]
 japanese = "チームをキルしてプラクティスモードを無効にする"
 korean = "팀을 죽이고 연습 모드 비활성화"
-simplified_chinese = "击杀队伍并关闭练习模式"
+simplified_chinese = "处死队伍并关闭练习模式"
 traditional_chinese = "擊殺隊伍並關閉練習模式"
 russian = "Убивает команду и отключает режим практики"
 german = "Tötet Team und deaktiviert den Übungsmodus"
@@ -3347,7 +3330,7 @@ key = "Match %d of %d"
 [message.translations]
 japanese = "一致 %d / %d"
 korean = "결과 %d / 총 %d"
-simplified_chinese = "结果 %d / 总共 %d 则"
+simplified_chinese = "匹配 %d/%d"
 traditional_chinese = "結果 %d / 總共 %d 則"
 russian = "Результат %d из %d"
 german = "Treffer %d von %d"
@@ -3841,10 +3824,10 @@ polish = "p = Opóźnienie ping"
 [[message]]
 key = "Pause/unpause game"
 [message.translations]
-japanese = "ゲームを一時停止/再開"
-korean = "게임 일시정지/재개"
 simplified_chinese = "暂停/恢复游戏"
 traditional_chinese = "暫停/恢復遊戲"
+japanese = "ゲームを一時停止/再開"
+korean = "게임 일시정지/재개"
 russian = "Поставить/снять игру на паузу"
 german = "Spiel pausieren/fortsetzen"
 spanish = "Pausar/reanudar juego"
@@ -3853,7 +3836,6 @@ brazilian_portuguese = "Pausar/despausar jogo"
 portuguese = "Pausar/despausar jogo"
 turkish = "Oyunu duraklat/duraklatmayı kaldır"
 polish = "Wstrzymaj/wznów grę"
-
 [[message]]
 key = "Personal best:"
 [message.translations]
@@ -3873,10 +3855,10 @@ polish = "Rekord osobisty:"
 [[message]]
 key = "Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status"
 [message.translations]
-japanese = "時間表示の個人設定（ブロードキャストまたはゲーム/ラウンドタイマー）、timer s（s = broadcast: ブロードキャスト、gametimer: ゲーム/ラウンドタイマー、cycle: サイクル、both: 両方、none: タイマーなし、空: 現在のステータス表示）"
-korean = "방송 또는 게임/라운드 타이머에 시간을 표시하는 개인 설정, 타이머 s, 여기서 s = broadcast는 방송, gametimer는 게임/라운드 타이머, cycle은 주기, both는 둘 다, none은 타이머 없음, 아무것도 입력하지 않으면 현재 상태 표시"
 simplified_chinese = "在广播或游戏/回合计时器中显示时间的个人设置，计时器 s，其中 s = 广播的广播，游戏/回合计时器的游戏计时器，循环的循环，两者都适用，无计时器且不显示当前状态"
 traditional_chinese = "在廣播或遊戲/回合計時器中顯示時間的個人設定，計時器 s，其中 s = broadcast 為廣播，gametimer 為遊戲/回合計時器，cycle 為循環，both 為兩者，none 為無計時器，空白為顯示目前狀態"
+japanese = "時間表示の個人設定（ブロードキャストまたはゲーム/ラウンドタイマー）、timer s（s = broadcast: ブロードキャスト、gametimer: ゲーム/ラウンドタイマー、cycle: サイクル、both: 両方、none: タイマーなし、空: 現在のステータス表示）"
+korean = "방송 또는 게임/라운드 타이머에 시간을 표시하는 개인 설정, 타이머 s, 여기서 s = broadcast는 방송, gametimer는 게임/라운드 타이머, cycle은 주기, both는 둘 다, none은 타이머 없음, 아무것도 입력하지 않으면 현재 상태 표시"
 russian = "Личная настройка отображения времени в широковещательном или игровом/раундовом таймере, timer s, где s = broadcast для широковещательного, gametimer для игрового/раундового таймера, cycle для цикла, both для обоих, none без таймера и ничего для отображения текущего статуса"
 german = "Persönliche Einstellung zur Anzeige der Zeit entweder im Broadcast oder im Spiel-/Runden-Timer, Timer s, wobei s = broadcast für Broadcast, gametimer für Spiel-/Runden-Timer, cycle für Zyklus, both für beides, none für keinen Timer und nichts, um den aktuellen Status anzuzeigen"
 spanish = "Configuración personal para mostrar el tiempo en la transmisión o el temporizador de juego/ronda, temporizador s, donde s = broadcast para transmisión, gametimer para temporizador de juego/ronda, cycle para ciclo, both para ambos, none para sin temporizador y nada para mostrar el estado actual"
@@ -3885,7 +3867,6 @@ brazilian_portuguese = "Configuração pessoal de exibição de tempo em transmi
 portuguese = "Definição pessoal de mostrar tempo na transmissão ou temporizador de jogo/ronda, temporizador s, onde s = broadcast para transmissão, gametimer para temporizador de jogo/ronda, cycle para ciclo, both para ambos, none para nenhum temporizador e nada para mostrar estado atual"
 turkish = "Süreyi duyuruda veya oyun/tur zamanlayıcısında gösterme kişisel ayarı, zamanlayıcı s, burada s = duyuru için broadcast, oyun/tur zamanlayıcısı için gametimer, döngü için cycle, her ikisi için both, zamanlayıcı yok için none ve geçerli durumu göstermek için hiçbir şey"
 polish = "Osobiste ustawienie wyświetlania czasu w transmisji lub timerze gry/rundy, timer s, gdzie s = broadcast dla transmisji, gametimer dla timera gry/rundy, cycle dla cyklu, both dla obu, none dla braku timera i nic, aby pokazać bieżący status"
-
 [[message]]
 key = "Pet"
 [message.translations]
@@ -3937,10 +3918,10 @@ polish = "Odtwórz demo"
 [[message]]
 key = "Play/pause the current demo"
 [message.translations]
-japanese = "現在のデモを再生/一時停止"
-korean = "현재 데모 재생/일시정지"
 simplified_chinese = "播放/暂停当前回放"
 traditional_chinese = "播放/暫停目前回放"
+japanese = "現在のデモを再生/一時停止"
+korean = "현재 데모 재생/일시정지"
 russian = "Воспроизвести/поставить на паузу текущее демо"
 german = "Aktuelle Demo abspielen/pausieren"
 spanish = "Reproducir/pausar la demo actual"
@@ -3949,7 +3930,6 @@ brazilian_portuguese = "Reproduzir/pausar a demo atual"
 portuguese = "Reproduzir/pausar a demo atual"
 turkish = "Geçerli demoyu oynat/duraklat"
 polish = "Odtwórz/wstrzymaj bieżące demo"
-
 [[message]]
 key = "Please balance teams!"
 [message.translations]
@@ -4561,10 +4541,10 @@ polish = "Usuń społeczność z ulubionych"
 [[message]]
 key = "Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)"
 [message.translations]
-japanese = "特定のコミュニティの除外フィルターから国を削除（ISO 3166-1 数値コード）"
-korean = "특정 커뮤니티의 제외 필터에서 국가 제거 (ISO 3166-1 숫자 코드)"
 simplified_chinese = "将国家/地区从指定社区的排除筛选中移除（ISO 3166-1 数字编码）"
 traditional_chinese = "將國家/地區從指定社群的排除篩選中移除（ISO 3166-1 數字編碼）"
+japanese = "特定のコミュニティの除外フィルターから国を削除（ISO 3166-1 数値コード）"
+korean = "특정 커뮤니티의 제외 필터에서 국가 제거 (ISO 3166-1 숫자 코드)"
 russian = "Удалить страну из фильтра исключения для конкретного сообщества (ISO 3166-1 числовой)"
 german = "Ein Land aus dem Ausschlussfilter für eine bestimmte Community entfernen (ISO 3166-1 numerisch)"
 spanish = "Eliminar un país del filtro de exclusión para una comunidad específica (ISO 3166-1 numérico)"
@@ -4573,7 +4553,6 @@ brazilian_portuguese = "Remover um país do filtro de exclusão para uma comunid
 portuguese = "Remover um país do filtro de exclusão para uma comunidade específica (ISO 3166-1 numérico)"
 turkish = "Belirli bir topluluk için hariç tutma filtresinden bir ülkeyi kaldır (ISO 3166-1 sayısal)"
 polish = "Usuń kraj z filtra wykluczeń dla konkretnej społeczności (ISO 3166-1 numeryczny)"
-
 [[message]]
 key = "Remove a foe"
 [message.translations]
@@ -4721,10 +4700,10 @@ polish = "Usuń prawo do głosowania graczowi z ID klienta"
 [[message]]
 key = "Remove right to vote from player with IP address"
 [message.translations]
+simplified_chinese = "删除具有 IP 地址的玩家的投票权"
+traditional_chinese = "移除具有 IP 位址的玩家的投票權"
 japanese = "IPアドレスのプレイヤーから投票権を削除"
 korean = "IP 주소를 가진 플레이어의 투표권 제거"
-simplified_chinese = "删除具有IP地址的玩家的投票权"
-traditional_chinese = "移除具有 IP 位址的玩家的投票權"
 russian = "Лишить права голоса игрока с IP-адресом"
 german = "Stimmrecht von Spieler mit IP-Adresse entfernen"
 spanish = "Eliminar el derecho a voto del jugador con dirección IP"
@@ -4733,7 +4712,6 @@ brazilian_portuguese = "Remover direito de voto do jogador com endereço IP"
 portuguese = "Remover direito de voto do jogador com endereço IP"
 turkish = "IP adresine sahip oyuncunun oy kullanma hakkını kaldır"
 polish = "Usuń prawo do głosowania graczowi z adresem IP"
-
 [[message]]
 key = "Removes all weapons from you"
 [message.translations]
@@ -4913,10 +4891,10 @@ polish = "Zmień nazwę kategorii znajomych"
 [[message]]
 key = "Rename: %s"
 [message.translations]
+simplified_chinese = "改名：%s"
+traditional_chinese = "重新命名：%s"
 japanese = "名前変更: %s"
 korean = "이름 바꾸기: %s"
-simplified_chinese = "改名: %s"
-traditional_chinese = "重新命名：%s"
 russian = "Переименовать: %s"
 german = "Umbenennen: %s"
 spanish = "Renombrar: %s"
@@ -4925,7 +4903,6 @@ brazilian_portuguese = "Renomear: %s"
 portuguese = "Renomear: %s"
 turkish = "Yeniden adlandır: %s"
 polish = "Zmień nazwę: %s"
-
 [[message]]
 key = "Replay"
 [message.translations]
@@ -4977,10 +4954,10 @@ polish = "Poproś o zamianę swojego tee z innym członkiem drużyny"
 [[message]]
 key = "Rescue/Freeze: %d/%d"
 [message.translations]
-japanese = "レスキュー/フリーズ: %d/%d"
-korean = "구조/빙결: %d/%d"
 simplified_chinese = "被救/落水：%d/%d"
 traditional_chinese = "被救/落水：%d/%d"
+japanese = "レスキュー/フリーズ: %d/%d"
+korean = "구조/빙결: %d/%d"
 russian = "Спасение/Заморозка: %d/%d"
 german = "Rettung/Freeze: %d/%d"
 spanish = "Rescate/Congelación: %d/%d"
@@ -4989,7 +4966,6 @@ brazilian_portuguese = "Resgate/Congelamento: %d/%d"
 portuguese = "Resgate/Congelamento: %d/%d"
 turkish = "Kurtarma/Donma: %d/%d"
 polish = "Ratunek/Zamrożenie: %d/%d"
-
 [[message]]
 key = "Reset"
 [message.translations]
@@ -5539,7 +5515,7 @@ key = "Server best:"
 [message.translations]
 japanese = "サーバーベスト:"
 korean = "서버 최고 기록:"
-simplified_chinese = "服务器最佳"
+simplified_chinese = "服务器最佳："
 traditional_chinese = "伺服器最佳："
 russian = "Лучший на сервере:"
 german = "Server-Bestzeit:"
@@ -5971,7 +5947,7 @@ key = "Show scoreboard"
 [message.translations]
 japanese = "スコアボードを表示"
 korean = "점수판 표시"
-simplified_chinese = "显示记分牌"
+simplified_chinese = "显示计分板"
 traditional_chinese = "顯示計分板"
 russian = "Показать таблицу счёта"
 german = "Anzeigetafel anzeigen"
@@ -6913,10 +6889,10 @@ polish = "Drużyna pomyślnie zapisana przez %s. Połączenie z bazą danych nie
 [[message]]
 key = "Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart"
 [message.translations]
-japanese = "ホバーしたテレポート入口/出口またはチェックポイントテレポートと対応する相手の間で自由観戦カメラをテレポート"
-korean = "마우스 오버된 텔레포트 입/출구 또는 체크포인트 텔레포트와 일치하는 상대 지점 사이로 자유 관전 카메라를 순간이동합니다."
 simplified_chinese = "在悬停的传送入口/出口或检查点传送点与其对应点之间传送自由观战镜头"
 traditional_chinese = "在懸停的傳送入口/出口或檢查點傳送點與其對應點之間傳送自由觀戰鏡頭"
+japanese = "ホバーしたテレポート入口/出口またはチェックポイントテレポートと対応する相手の間で自由観戦カメラをテレポート"
+korean = "마우스 오버된 텔레포트 입/출구 또는 체크포인트 텔레포트와 일치하는 상대 지점 사이로 자유 관전 카메라를 순간이동합니다."
 russian = "Телепортировать свободную камеру наблюдателя между наведённым телепортом входа/выхода или чекпоинтом и соответствующим объектом"
 german = "Teleportiere die freie Zuschauerkamera zwischen einem schwebenden Teleport-Ein/Ausgang oder Checkpoint-Teleport und einem passenden Gegenstück"
 spanish = "Teletransportar la cámara libre del espectador entre el teleport de entrada/salida o el checkpoint tele señalado y una contraparte coincidente"
@@ -6925,7 +6901,6 @@ brazilian_portuguese = "Teleportar câmera de espectador livre entre tele-in/out
 portuguese = "Teletransportar câmara de espetador livre entre tele-in/out pairando ou checkpoint tele e um correspondente correspondente"
 turkish = "Üzerinde durulan ışınlanma giriş/çıkışı veya kontrol noktası ışınlanması ile eşleşen bir karşılığı arasında serbest izleyici kamerasını ışınla"
 polish = "Teleportuj swobodną kamerę obserwatora między wskazanym teleportem wejścia/wyjścia lub teleportem punktu kontrolnego a pasującym odpowiednikiem"
-
 [[message]]
 key = "Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)"
 [message.translations]
@@ -6945,10 +6920,10 @@ polish = "Teleportuj się z zamrożenia, jeśli włączony jest tryb automatyczn
 [[message]]
 key = "Teleport yourself to player or to where you are spectating/or looking if no player name is given"
 [message.translations]
-japanese = "プレイヤー名が指定されていない場合は、観戦中または見ている場所に自分をテレポート"
-korean = "플레이어 이름이 주어지지 않으면 자신을 해당 플레이어 또는 관전/바라보는 위치로 순간이동합니다."
 simplified_chinese = "若未给出玩家名，则将自己传送到目标玩家，或传送到你当前旁观/瞄准的位置"
 traditional_chinese = "若未給出玩家名，則將自己傳送到目標玩家，或傳送到你目前旁觀/瞄準的位置"
+japanese = "プレイヤー名が指定されていない場合は、観戦中または見ている場所に自分をテレポート"
+korean = "플레이어 이름이 주어지지 않으면 자신을 해당 플레이어 또는 관전/바라보는 위치로 순간이동합니다."
 russian = "Телепортироваться к игроку или туда, куда вы смотрите/за кем наблюдаете, если имя игрока не указано"
 german = "Teleportiere dich zu einem Spieler oder dorthin, wo du zuschaust/hinschaust, wenn kein Spielername angegeben ist"
 spanish = "Teletransportarte al jugador o a donde estás espiando/mirando si no se da un nombre de jugador"
@@ -6957,7 +6932,6 @@ brazilian_portuguese = "Teleporte-se para o jogador ou para onde você está esp
 portuguese = "Teletransporta-te para o jogador ou para onde estás a espetar/olhar se nenhum nome de jogador for dado"
 turkish = "Oyuncu adı verilmezse kendini oyuncuya veya izlediğin/baktığın yere ışınla"
 polish = "Teleportuj się do gracza lub do miejsca, które obserwujesz/na które patrzysz, jeśli nie podano nazwy gracza"
-
 [[message]]
 key = "Teleport yourself to the last auto rescue position before you died (use sv_rescue 1 to enable this feature)"
 [message.translations]
@@ -7233,10 +7207,10 @@ polish = "Przełącz lokalną konsolę"
 [[message]]
 key = "Toggle or set the switch on or off for the specified time (or indefinitely by default)"
 [message.translations]
-japanese = "指定された時間（デフォルトは無期限）スイッチをオン/オフに切り替えまたは設定"
-korean = "지정된 시간 동안 스위치를 켜거나 끄도록 전환 또는 설정 (기본값은 무기한)"
 simplified_chinese = "在指定时间内切换或设置开关为开/关（默认无限时）"
 traditional_chinese = "在指定時間內切換或設定開關為開/關（預設無限時）"
+japanese = "指定された時間（デフォルトは無期限）スイッチをオン/オフに切り替えまたは設定"
+korean = "지정된 시간 동안 스위치를 켜거나 끄도록 전환 또는 설정 (기본값은 무기한)"
 russian = "Включить или выключить переключатель на указанное время (или бессрочно по умолчанию)"
 german = "Schalter für die angegebene Zeit ein- oder ausschalten (oder standardmäßig auf unbestimmte Zeit)"
 spanish = "Alternar o establecer el interruptor en encendido o apagado durante el tiempo especificado (o indefinidamente por defecto)"
@@ -7245,7 +7219,6 @@ brazilian_portuguese = "Alternar ou definir o interruptor ligado ou desligado pe
 portuguese = "Alternar ou definir o interruptor para ligado ou desligado pelo tempo especificado (ou indefinidamente por defeito)"
 turkish = "Belirtilen süre için anahtarı açık veya kapalı olarak değiştir veya ayarla (varsayılan olarak süresiz)"
 polish = "Przełącz lub ustaw przełącznik włączony lub wyłączony na określony czas (lub domyślnie na czas nieokreślony)"
-
 [[message]]
 key = "Toggle receiving whispers"
 [message.translations]
@@ -7283,7 +7256,7 @@ key = "Toggle scoreboard cursor"
 [message.translations]
 japanese = "スコアボードカーソルの切り替え"
 korean = "점수판 커서 전환"
-simplified_chinese = "切换记分板光标"
+simplified_chinese = "切换计分板光标"
 traditional_chinese = "切換計分板游標"
 russian = "Переключить курсор таблицы счёта"
 german = "Anzeigetafel-Cursor umschalten"
@@ -7313,10 +7286,10 @@ polish = "Przełącz drużynę między drużyną 0 a trybem drużynowym. Ten try
 [[message]]
 key = "Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock"
 [message.translations]
+simplified_chinese = "切换队伍锁定，这样其他人就无法加入，因此当一名玩家死亡时队伍会重新开始。/lock 0 解锁，/lock 1 锁定"
+traditional_chinese = "切換隊伍鎖定，這樣其他人就無法加入，因此當一名玩家死亡時隊伍會重新開始。/lock 0 解鎖，/lock 1 鎖定"
 japanese = "チームロックを切り替え。他の人が参加できなくなり、プレイヤーが死ぬとチームが再スタートします。/lock 0 でロック解除、/lock 1 でロック"
 korean = "팀 잠금을 전환하여 다른 사람이 참가할 수 없고 플레이어가 죽으면 팀이 다시 시작됩니다. /lock 0은 잠금 해제, /lock 1은 잠금."
-simplified_chinese = "切换队伍锁定，这样其他人就无法加入，因此当一名玩家死亡时队伍会重新开始。 /lock 0 解锁，/lock 1 锁定"
-traditional_chinese = "切換隊伍鎖定，這樣其他人就無法加入，因此當一名玩家死亡時隊伍會重新開始。/lock 0 解鎖，/lock 1 鎖定"
 russian = "Переключить блокировку команды, чтобы никто другой не мог присоединиться, и команда перезапускалась при смерти игрока. /lock 0 для разблокировки, /lock 1 для блокировки"
 german = "Team-Sperre umschalten, sodass niemand anderes beitreten kann und das Team neu startet, wenn ein Spieler stirbt. /lock 0 zum Entsperren, /lock 1 zum Sperren"
 spanish = "Alternar bloqueo del equipo para que nadie más pueda unirse y el equipo se reinicie cuando un jugador muera. /lock 0 para desbloquear, /lock 1 para bloquear"
@@ -7325,7 +7298,6 @@ brazilian_portuguese = "Alternar bloqueio de equipe para que ninguém mais possa
 portuguese = "Alternar bloqueio de equipa para que ninguém mais possa entrar e para que a equipa recomece quando um jogador morre. /lock 0 para desbloquear, /lock 1 para bloquear"
 turkish = "Takım kilidini değiştir, böylece başka hiç kimse katılamaz ve bir oyuncu öldüğünde takım yeniden başlar. Kilidi açmak için /lock 0, kilitlemek için /lock 1"
 polish = "Przełącz blokadę drużyny, aby nikt inny nie mógł dołączyć, a drużyna restartowała się, gdy gracz umrze. /lock 0 aby odblokować, /lock 1 aby zablokować"
-
 [[message]]
 key = "Toggle tune variable"
 [message.translations]
@@ -7473,10 +7445,10 @@ polish = "Przełącz obserwację na aktualnie głosowanym graczu"
 [[message]]
 key = "Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status"
 [message.translations]
-japanese = "標準の目のエモートの使用をオン/オフに切り替え。eyeemote s（s = on: オン、off: オフ、toggle: 切り替え、空: 現在の状態表示）"
-korean = "표준 눈 이모트 사용 켜기/끄기 전환, eyeemote s, 여기서 s = on은 켜기, off는 끄기, toggle은 전환, 아무것도 없으면 현재 상태 표시"
 simplified_chinese = "打开/关闭标准眼睛表情的使用，eyeemote s，其中 s = on 表示打开，off 表示关闭，toggle 表示切换，不显示当前状态"
 traditional_chinese = "開啟/關閉標準眼睛表情的使用，eyeemote s，其中 s = on 表示開啟，off 表示關閉，toggle 表示切換，空白則顯示目前狀態"
+japanese = "標準の目のエモートの使用をオン/オフに切り替え。eyeemote s（s = on: オン、off: オフ、toggle: 切り替え、空: 現在の状態表示）"
+korean = "표준 눈 이모트 사용 켜기/끄기 전환, eyeemote s, 여기서 s = on은 켜기, off는 끄기, toggle은 전환, 아무것도 없으면 현재 상태 표시"
 russian = "Включить/выключить использование стандартных эмоций глаз, eyeemote s, где s = on для вкл, off для выкл, toggle для переключения и ничего для отображения текущего статуса"
 german = "Verwendung von Standard-Augen-Emotes ein-/ausschalten, eyeemote s, wobei s = on für an, off für aus, toggle für umschalten und nichts, um den aktuellen Status anzuzeigen"
 spanish = "Alternar el uso de emotes oculares estándar, eyeemote s, donde s = on para activado, off para desactivado, toggle para alternar y nada para mostrar el estado actual"
@@ -7485,7 +7457,6 @@ brazilian_portuguese = "Alterna o uso de emotes oculares padrão ligado/desligad
 portuguese = "Alternar uso de emotes oculares padrão ligado/desligado, eyeemote s, onde s = on para ligado, off para desligado, toggle para alternar e nada para mostrar estado atual"
 turkish = "Standart göz ifadelerinin kullanımını aç/kapa, eyeemote s, burada s = açık için on, kapalı için off, değiştir için toggle ve geçerli durumu göstermek için hiçbir şey"
 polish = "Przełącz używanie standardowych emotek oczu włączone/wyłączone, eyeemote s, gdzie s = on dla włączone, off dla wyłączone, toggle dla przełączenia i nic, aby pokazać bieżący status"
-
 [[message]]
 key = "Total"
 [message.translations]
@@ -7985,10 +7956,10 @@ polish = "Głosuj na mapę po nazwie"
 [[message]]
 key = "Vote yes/no"
 [message.translations]
-japanese = "賛成/反対の投票"
-korean = "찬성/반대 투표"
 simplified_chinese = "投票赞成/反对"
 traditional_chinese = "投票贊成/反對"
+japanese = "賛成/反対の投票"
+korean = "찬성/반대 투표"
 russian = "Голосовать да/нет"
 german = "Ja/Nein abstimmen"
 spanish = "Votar sí/no"
@@ -7997,7 +7968,6 @@ brazilian_portuguese = "Votar sim/não"
 portuguese = "Votar sim/não"
 turkish = "Evet/hayır oyla"
 polish = "Głosuj tak/nie"
-
 [[message]]
 key = "Waiting for snapshot"
 [message.translations]

@@ -8,12 +8,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
-    from . import source_keys
+    from . import chinese_text_style, source_keys
 except ImportError:  # pragma: no cover - script entrypoint fallback
+    import chinese_text_style
     import source_keys
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 TRANSLATIONS_DIR = SCRIPT_DIR / "translations" / "i18n"
+LANGUAGE_ORDER = (
+    "simplified_chinese",
+    "traditional_chinese",
+    "japanese",
+    "korean",
+    "russian",
+    "german",
+    "spanish",
+    "french",
+    "brazilian_portuguese",
+    "portuguese",
+    "turkish",
+    "polish",
+)
 
 
 @dataclass(frozen=True)
@@ -71,6 +86,33 @@ def sorted_records(
     )
 
 
+def sorted_translation_languages(translations: dict[str, str]) -> list[str]:
+    known = [language for language in LANGUAGE_ORDER if language in translations]
+    extra = sorted(
+        (language for language in translations if language not in LANGUAGE_ORDER),
+        key=str.casefold,
+    )
+    return known + extra
+
+
+def normalize_translation(language: str, translation: str) -> str:
+    if language == "simplified_chinese":
+        return chinese_text_style.normalize_simplified_chinese_text(translation)
+    return translation
+
+
+def dump_message_block(message: Message, translations: dict[str, str]) -> str:
+    lines = ["[[message]]", f"key = {toml_quote(message.key)}"]
+    if message.context:
+        lines.append(f"context = {toml_quote(message.context)}")
+    lines.append("[message.translations]")
+    for language in sorted_translation_languages(translations):
+        translation = normalize_translation(language, translations.get(language, ""))
+        if translation:
+            lines.append(f"{language} = {toml_quote(translation)}")
+    return "\n".join(lines)
+
+
 def load_language_store() -> dict[str, dict[tuple[str, str], dict[str, str]]]:
     store: dict[str, dict[tuple[str, str], dict[str, str]]] = {}
     if not TRANSLATIONS_DIR.exists():
@@ -124,17 +166,13 @@ def missing_translations_for(
 
 
 def dump_module(messages: list[tuple[Message, dict[str, str]]]) -> str:
-    lines: list[str] = []
-    for message, translations in sorted_records(messages):
-        lines.append("[[message]]")
-        lines.append(f"key = {toml_quote(message.key)}")
-        if message.context:
-            lines.append(f"context = {toml_quote(message.context)}")
-        lines.append("[message.translations]")
-        for language in sorted(translations):
-            lines.append(f"{language} = {toml_quote(translations[language])}")
-        lines.append("")
-    return "\n".join(lines).rstrip() + "\n"
+    return (
+        "\n\n".join(
+            dump_message_block(message, translations)
+            for message, translations in sorted_records(messages)
+        ).rstrip()
+        + "\n"
+    )
 
 
 def write_language_store(
@@ -168,6 +206,23 @@ def _parse_assignment_value(line: str, name: str) -> str | None:
     return value if isinstance(value, str) else None
 
 
+def _block_translations(lines: list[str]) -> dict[str, str]:
+    translations: dict[str, str] = {}
+    in_translations = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped == "[message.translations]":
+            in_translations = True
+            continue
+        if not in_translations or " = " not in stripped:
+            continue
+        language = stripped.split(" = ", 1)[0]
+        value = _parse_assignment_value(stripped, language)
+        if value:
+            translations[language] = value
+    return translations
+
+
 def _block_identity(lines: list[str]) -> tuple[str, str] | None:
     key = ""
     context = ""
@@ -185,39 +240,15 @@ def _block_identity(lines: list[str]) -> tuple[str, str] | None:
     return (key, context)
 
 
-def _patch_message_block(
-    lines: list[str], language: str, translation: str
-) -> list[str]:
-    language_prefix = f"{language} = "
-    translation_line = f"{language} = {toml_quote(translation)}"
-    patched: list[str] = []
-    in_translations = False
-    replaced = False
-    insert_at: int | None = None
-
-    for index, line in enumerate(lines):
-        stripped = line.strip()
-        if stripped == "[message.translations]":
-            in_translations = True
-            insert_at = len(patched) + 1
-        elif in_translations and stripped.startswith(language_prefix):
-            patched.append(translation_line)
-            replaced = True
-            continue
-        elif in_translations and " = " in stripped:
-            insert_at = len(patched) + 1
-        elif in_translations and not stripped:
-            remaining = lines[index + 1 :]
-            if any(" = " in item.strip() for item in remaining):
-                continue
-        patched.append(line)
-
-    if not replaced:
-        if insert_at is None:
-            patched.append("[message.translations]")
-            insert_at = len(patched)
-        patched.insert(insert_at, translation_line)
-    return patched
+def _patch_message_block(lines: list[str], entries: dict[str, str]) -> list[str]:
+    identity = _block_identity(lines)
+    if identity is None:
+        return lines
+    translations = _block_translations(lines)
+    for language, translation in entries.items():
+        if translation:
+            translations[language] = translation
+    return dump_message_block(Message(*identity), translations).splitlines()
 
 
 def patch_module_store(
@@ -259,12 +290,7 @@ def patch_module_store(
             output.extend(block)
             continue
 
-        patched_block = block
-        for language, translation in sorted(entries[identity].items()):
-            if translation:
-                patched_block = _patch_message_block(
-                    patched_block, language, translation
-                )
+        patched_block = _patch_message_block(block, entries[identity])
         patched_identities.add(identity)
         output.extend(patched_block)
 

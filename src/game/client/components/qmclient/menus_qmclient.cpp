@@ -527,12 +527,8 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	ScrollParams.m_ScrollUnit = 60.0f * UiScale;
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	ScrollParams.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
-	s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
-	if(!PrewarmOnly && !m_MenuTextPlanCollecting)
-	{
-		GameClient()->m_Menus.m_SettingsScrollActive = GameClient()->m_Menus.m_SettingsScrollActive || absolute(ScrollOffset.y - s_PrevOverviewScrollY) > 0.01f;
-		s_PrevOverviewScrollY = ScrollOffset.y;
-	}
+	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, s_PrevOverviewScrollY);
+	ScrollOffset = ScrollFrame.m_BeginOffset;
 
 	MainView.y += ScrollOffset.y;
 	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
@@ -602,8 +598,9 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	});
 
 	CUIRect EndPad{MainView.x, MainView.y, MainView.w, 5.0f};
-	s_ScrollRegion.AddRect(EndPad);
-	s_ScrollRegion.End();
+	FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad, -1, !PrewarmOnly && !m_MenuTextPlanCollecting);
+	if(!PrewarmOnly && !m_MenuTextPlanCollecting)
+		s_PrevOverviewScrollY = ScrollFrame.m_FinalOffsetY;
 }
 
 void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)
@@ -874,15 +871,15 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
 	static float s_PrevQmScrollY = 0.0f;
+	SSettingsScrollRegionFrame ScrollFrame;
 	if(!PrewarmOnly)
 	{
 		CScrollRegionParams ScrollParams;
 		ScrollParams.m_ScrollUnit = 60.0f * UiScale;
 		ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 		ScrollParams.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
-		s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
-		GameClient()->m_Menus.m_SettingsScrollActive = GameClient()->m_Menus.m_SettingsScrollActive || absolute(ScrollOffset.y - s_PrevQmScrollY) > 0.01f;
-		s_PrevQmScrollY = ScrollOffset.y;
+		ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, s_PrevQmScrollY);
+		ScrollOffset = ScrollFrame.m_BeginOffset;
 	}
 
 	static std::vector<CUIRect> s_GlassCards;
@@ -2007,6 +2004,119 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	auto DoQmSettingsMenuButton = [this](CButtonContainer *pButton, const char *pTextId, const char *pText, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f) {
 		return DoSettingsButton_Menu(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pButton, pTextId, pText, 0, pRect, Flags, Corners, Rounding);
 	};
+	auto RenderHudNotificationsBasicSettings = [&](CUIRect &CardContent) {
+		CUIRect Row;
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsSystem, "Show important server prompts as notifications", Localize("Show important server prompts as notifications"), &g_Config.m_QmHudNotificationsSystem, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsEcho, "Route Echo messages to notifications", Localize("Route Echo messages to notifications"), &g_Config.m_QmHudNotificationsEcho, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-hold-time", &LabelColValue, Localize("Notification hold time"), LgBodySize);
+			static int s_QmHudNotificationHoldInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationHoldInputId, ControlColValue, &g_Config.m_QmHudNotificationsHoldMs, 500, 10000, "ms");
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-text-size", &LabelColValue, Localize("Notification text size"), LgBodySize);
+			static int s_QmHudNotificationTextSizeInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationTextSizeInputId, ControlColValue, &g_Config.m_QmHudNotificationsTextSize, 1, 24);
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowAdvanced, "Advanced options", Localize("Advanced options"), &g_Config.m_QmHudNotificationsShowAdvanced, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+	};
+	auto RenderHudNotificationsAdvancedSettings = [&](CUIRect &CardContent) {
+		CUIRect Row;
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsUseCategoryFilters, "Use notification category filters", Localize("Use notification category filters"), &g_Config.m_QmHudNotificationsUseCategoryFilters, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		if(g_Config.m_QmHudNotificationsUseCategoryFilters)
+		{
+			CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowPrompts, "Show important server prompts", Localize("Show important server prompts"), &g_Config.m_QmHudNotificationsShowPrompts, &Row, LgLineHeight);
+			CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+			CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowUnknown, "Show unknown server messages", Localize("Show unknown server messages"), &g_Config.m_QmHudNotificationsShowUnknown, &Row, LgLineHeight);
+			CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+			CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowBasicInfo, "Show basic server information", Localize("Show basic server information"), &g_Config.m_QmHudNotificationsShowBasicInfo, &Row, LgLineHeight);
+			CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+			CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowHelpInfo, "Show server help and usage messages", Localize("Show server help and usage messages"), &g_Config.m_QmHudNotificationsShowHelpInfo, &Row, LgLineHeight);
+			CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		}
+
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsCompatSolo, "Detect compatible solo prompts from custom servers", Localize("Detect compatible solo prompts from custom servers"), &g_Config.m_QmHudNotificationsCompatSolo, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+		CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
+		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
+		DoQmSettingsLabel("qmclient-notifications-basic-info-note", &Row, Localize("Join, version, rules, and help messages stay in chat instead of popups"), LgBodySize * 0.82f);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+		static CButtonContainer s_QmHudNotificationBgColorId;
+		DoLine_ColorPicker(&s_QmHudNotificationBgColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Notification background"), &g_Config.m_QmHudNotificationsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.6f), false, nullptr, true);
+		static CButtonContainer s_QmHudNotificationTextColorId;
+		DoLine_ColorPicker(&s_QmHudNotificationTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("System prompt text"), &g_Config.m_QmHudNotificationsTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsEchoInheritColor, "Echo follows the original chat color", Localize("Echo follows the original chat color"), &g_Config.m_QmHudNotificationsEchoInheritColor, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		static CButtonContainer s_QmHudNotificationEchoTextColorId;
+		DoLine_ColorPicker(&s_QmHudNotificationEchoTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Echo text color when not inheriting chat color"), &g_Config.m_QmHudNotificationsEchoTextColor, ColorRGBA(0.5f, 0.78f, 1.0f, 1.0f), false, nullptr, true);
+
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-popup-animation", &LabelColValue, Localize("Popup animation"), LgBodySize);
+			const char *apHudNotificationAnimDropDownNames[] = {Localize("Fade and slide"), Localize("Fade only"), Localize("No animation")};
+			static CUi::SDropDownState s_HudNotificationAnimDropDownState;
+			static CScrollRegion s_HudNotificationAnimDropDownScrollRegion;
+			s_HudNotificationAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HudNotificationAnimDropDownScrollRegion;
+			const int AnimSelectedNew = Ui()->DoDropDown(&ControlColValue, g_Config.m_QmHudNotificationsAnimType, apHudNotificationAnimDropDownNames, std::size(apHudNotificationAnimDropDownNames), s_HudNotificationAnimDropDownState);
+			if(g_Config.m_QmHudNotificationsAnimType != AnimSelectedNew)
+				g_Config.m_QmHudNotificationsAnimType = AnimSelectedNew;
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-animation-duration", &LabelColValue, Localize("Animation duration"), LgBodySize);
+			static int s_QmHudNotificationAnimInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationAnimInputId, ControlColValue, &g_Config.m_QmHudNotificationsAnimMs, 0, 2000, "ms");
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-max-visible", &LabelColValue, Localize("Max visible notifications"), LgBodySize);
+			static int s_QmHudNotificationMaxVisibleInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationMaxVisibleInputId, ControlColValue, &g_Config.m_QmHudNotificationsMaxVisible, 1, 8);
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-edge-margin", &LabelColValue, Localize("Edge margin"), LgBodySize);
+			static int s_QmHudNotificationEdgeMarginInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationEdgeMarginInputId, ControlColValue, &g_Config.m_QmHudNotificationsEdgeMargin, 0, 32);
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+	};
 
 	struct SQmModuleDragState
 	{
@@ -2661,7 +2771,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::InputOverlay:
 			return {11, Localize("Show on key"), Localize("Who stuffed OBS in here")};
 		case EQmModuleId::HudNotifications:
-			return {11, Localize("Notifications"), Localize("Move Echo and important system prompts to right-side popups")};
+			return {11, Localize("Notifications"), Localize("Show important server prompts and Echo messages as popups")};
 		case EQmModuleId::Voice:
 			return {12, Localize("Voice"), Localize("The best voice chat, of course!")};
 		case EQmModuleId::DynamicIsland:
@@ -6031,87 +6141,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				RenderQmModuleHeadline(CardContent, 11, Localize("Notifications"), Localize("Move Echo and important system prompts to right-side popups"));
+				RenderQmModuleHeadline(CardContent, 11, Localize("Notifications"), Localize("Show important server prompts and Echo messages as popups"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsSystem, "Route server system prompts to notifications (except blacklist)", Localize("Route server system prompts to notifications (except blacklist)"), &g_Config.m_QmHudNotificationsSystem, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsEcho, "Route Echo messages to notifications", Localize("Route Echo messages to notifications"), &g_Config.m_QmHudNotificationsEcho, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsCompatSolo, "Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)", Localize("Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)"), &g_Config.m_QmHudNotificationsCompatSolo, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				static CButtonContainer s_QmHudNotificationBgColorId;
-				DoLine_ColorPicker(&s_QmHudNotificationBgColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Notification background"), &g_Config.m_QmHudNotificationsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.6f), false, nullptr, true);
-				static CButtonContainer s_QmHudNotificationTextColorId;
-				DoLine_ColorPicker(&s_QmHudNotificationTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("System prompt text"), &g_Config.m_QmHudNotificationsTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsEchoInheritColor, "Echo follows the original chat color", Localize("Echo follows the original chat color"), &g_Config.m_QmHudNotificationsEchoInheritColor, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				static CButtonContainer s_QmHudNotificationEchoTextColorId;
-				DoLine_ColorPicker(&s_QmHudNotificationEchoTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Echo text color when not inheriting chat color"), &g_Config.m_QmHudNotificationsEchoTextColor, ColorRGBA(0.5f, 0.78f, 1.0f, 1.0f), false, nullptr, true);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-notifications-text-size", &LabelColValue, Localize("Notification text size"), LgBodySize);
-					static int s_QmHudNotificationTextSizeInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationTextSizeInputId, ControlColValue, &g_Config.m_QmHudNotificationsTextSize, 1, 24);
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-notifications-hold-time", &LabelColValue, Localize("Notification hold time"), LgBodySize);
-					static int s_QmHudNotificationHoldInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationHoldInputId, ControlColValue, &g_Config.m_QmHudNotificationsHoldMs, 500, 10000, "ms");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-notifications-popup-animation", &LabelColValue, Localize("Popup animation"), LgBodySize);
-					const char *apHudNotificationAnimDropDownNames[] = {Localize("Fade and slide"), Localize("Fade only"), Localize("No animation")};
-					static CUi::SDropDownState s_HudNotificationAnimDropDownState;
-					static CScrollRegion s_HudNotificationAnimDropDownScrollRegion;
-					s_HudNotificationAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HudNotificationAnimDropDownScrollRegion;
-					const int AnimSelectedNew = Ui()->DoDropDown(&ControlColValue, g_Config.m_QmHudNotificationsAnimType, apHudNotificationAnimDropDownNames, std::size(apHudNotificationAnimDropDownNames), s_HudNotificationAnimDropDownState);
-					if(g_Config.m_QmHudNotificationsAnimType != AnimSelectedNew)
-						g_Config.m_QmHudNotificationsAnimType = AnimSelectedNew;
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-notifications-animation-duration", &LabelColValue, Localize("Animation duration"), LgBodySize);
-					static int s_QmHudNotificationAnimInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationAnimInputId, ControlColValue, &g_Config.m_QmHudNotificationsAnimMs, 0, 2000, "ms");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-notifications-max-visible", &LabelColValue, Localize("Max visible notifications"), LgBodySize);
-					static int s_QmHudNotificationMaxVisibleInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationMaxVisibleInputId, ControlColValue, &g_Config.m_QmHudNotificationsMaxVisible, 1, 8);
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-notifications-edge-margin", &LabelColValue, Localize("Edge margin"), LgBodySize);
-					static int s_QmHudNotificationEdgeMarginInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationEdgeMarginInputId, ControlColValue, &g_Config.m_QmHudNotificationsEdgeMargin, 0, 32);
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderHudNotificationsBasicSettings(CardContent);
+				if(g_Config.m_QmHudNotificationsShowAdvanced)
+					RenderHudNotificationsAdvancedSettings(CardContent);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -7300,8 +7334,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		ScrollRegion.y = maximum(LeftView.y, RightView.y) + LgCardSpacing;
 		ScrollRegion.w = MainView.w;
 		ScrollRegion.h = 0.0f;
-		s_ScrollRegion.AddRect(ScrollRegion);
-		s_ScrollRegion.End();
+		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion);
+		s_PrevQmScrollY = ScrollFrame.m_FinalOffsetY;
 	}
 	if(TabTransitionActive && TabTransitionAlpha > 0.0f)
 		TabContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TabTransitionAlpha), IGraphics::CORNER_NONE, 0.0f);

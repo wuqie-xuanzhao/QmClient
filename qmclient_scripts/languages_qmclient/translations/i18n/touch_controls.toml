@@ -849,10 +849,10 @@ polish = "Szerokość"
 [[message]]
 key = "Width and height are required to be within the range from %d to %d."
 [message.translations]
+simplified_chinese = "按键的宽和高需要在 %d 到 %d 内。"
+traditional_chinese = "按鍵的寬和高需要在 %d 到 %d 內。"
 japanese = "幅と高さは%dから%dの範囲内である必要があります。"
 korean = "너비와 높이는 %d에서 %d 사이여야 합니다."
-simplified_chinese = "按键的宽和高需要在%d到%d内。"
-traditional_chinese = "按鍵的寬和高需要在 %d 到 %d 內。"
 russian = "Ширина и высота должны быть в диапазоне от %d до %d."
 german = "Breite und Höhe müssen im Bereich von %d bis %d liegen."
 spanish = "El ancho y el alto deben estar dentro del rango de %d a %d."
@@ -861,7 +861,6 @@ brazilian_portuguese = "Largura e altura devem estar dentro do intervalo de %d a
 portuguese = "A largura e a altura devem estar dentro do intervalo de %d a %d."
 turkish = "Genişlik ve yükseklik %d ile %d aralığında olmalıdır."
 polish = "Szerokość i wysokość muszą mieścić się w zakresie od %d do %d."
-
 [[message]]
 key = "Wrong button settings"
 [message.translations]

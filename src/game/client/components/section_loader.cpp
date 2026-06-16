@@ -88,6 +88,11 @@ void CSectionLoader::SetDeferredFarMeasurementEnabled(bool Enabled)
 	m_DeferredFarMeasurementEnabled = Enabled;
 }
 
+void CSectionLoader::SetMaxSectionsPerFrame(int MaxSectionsPerFrame)
+{
+	m_MaxSectionsPerFrame = maximum(1, MaxSectionsPerFrame);
+}
+
 void CSectionLoader::Begin(CUIRect MainView, float TimeBudgetMs)
 {
 	m_MainView = MainView;
@@ -121,7 +126,7 @@ bool CSectionLoader::Process()
 
 	CPerfTimer FrameTimer;
 	int UnlockedThisFrame = 0;
-	const int MaxUnlockPerFrame = 2;
+	const int MaxUnlockPerFrame = m_MaxSectionsPerFrame;
 	const auto RecordSectionVisibility = [this](float SectionStartY, const SSettingsSection &Section, SSectionLoaderFrameStats &Stats) {
 		const float ActualHeight = maximum(Section.m_CachedHeight, m_RunningColumn.y - SectionStartY);
 		const CUIRect ActualSectionRect{m_MainView.x, SectionStartY, m_MainView.w, ActualHeight};

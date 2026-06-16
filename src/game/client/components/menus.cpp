@@ -2299,8 +2299,8 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	Header.VMargin(14.0f, &Header);
 	CUIRect HeaderTitle, HeaderSubTitle;
 	Header.HSplitTop(24.0f, &HeaderTitle, &HeaderSubTitle);
-	Ui()->DoLabel(&HeaderTitle, "统计", 24.0f, TEXTALIGN_ML);
-	Ui()->DoLabel(&HeaderSubTitle, "客户端数据概览", 12.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&HeaderTitle, Localize("Stats"), 24.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&HeaderSubTitle, Localize("Client data overview"), 12.0f, TEXTALIGN_ML);
 
 	Content.Margin(12.0f, &Content);
 
@@ -2329,14 +2329,14 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	if(FinishedMaps >= 0)
 		str_format(aFinishedMapsText, sizeof(aFinishedMapsText), "%d", FinishedMaps);
 	else
-		str_copy(aFinishedMapsText, "加载中", sizeof(aFinishedMapsText));
+		str_copy(aFinishedMapsText, Localize("Loading"), sizeof(aFinishedMapsText));
 
 	const char *pFavoritePartner = GameClient()->m_QmClient.QmDdnetFavoritePartner();
 	char aFavoriteFriendText[160];
 	if(pFavoritePartner && pFavoritePartner[0] != '\0')
 		str_copy(aFavoriteFriendText, pFavoritePartner, sizeof(aFavoriteFriendText));
 	else
-		str_copy(aFavoriteFriendText, "加载中", sizeof(aFavoriteFriendText));
+		str_copy(aFavoriteFriendText, Localize("Loading"), sizeof(aFavoriteFriendText));
 
 	std::unordered_map<std::string, int> aOnlineFriendCounts;
 	for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumSortedServers(); ++ServerIndex)
@@ -2365,7 +2365,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	if(Client()->Points() >= 0)
 		str_format(aPointsText, sizeof(aPointsText), "%d", Client()->Points());
 	else
-		str_copy(aPointsText, "加载中", sizeof(aPointsText));
+		str_copy(aPointsText, Localize("Loading"), sizeof(aPointsText));
 
 	char aFriendsText[32];
 	str_format(aFriendsText, sizeof(aFriendsText), "%d", TotalFriends);
@@ -2374,7 +2374,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	str_format(aOnlineFriendsText, sizeof(aOnlineFriendsText), "%d", OnlineFriends);
 
 	char aFinishSourceText[32];
-	str_copy(aFinishSourceText, "官方", sizeof(aFinishSourceText));
+	str_copy(aFinishSourceText, Localize("Official"), sizeof(aFinishSourceText));
 
 	auto RenderStatCard = [this](const CUIRect &Rect, const char *pTitle, const char *pValue, const char *pHint) {
 		Rect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.30f), IGraphics::CORNER_ALL, 8.0f);
@@ -2413,9 +2413,9 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	CardRest.VSplitLeft(CardGap, nullptr, &CardRest);
 	CardFriend = CardRest;
 
-	RenderStatCard(CardStart, "客户端启动时间", aUptime, nullptr);
-	RenderStatCard(CardFinished, "完成地图次数", aFinishedMapsText, nullptr);
-	RenderStatCard(CardFriend, "最喜欢的好友", aFavoriteFriendText, nullptr);
+	RenderStatCard(CardStart, Localize("Client uptime"), aUptime, nullptr);
+	RenderStatCard(CardFinished, Localize("Finished maps"), aFinishedMapsText, nullptr);
+	RenderStatCard(CardFriend, Localize("Favorite friend"), aFavoriteFriendText, nullptr);
 
 	Content.HSplitTop(10.0f, nullptr, &Content);
 
@@ -2442,28 +2442,25 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	LeftContent.Margin(10.0f, &LeftContent);
 	CUIRect LeftTitle;
 	LeftContent.HSplitTop(20.0f, &LeftTitle, &LeftContent);
-	Ui()->DoLabel(&LeftTitle, "概览", 14.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&LeftTitle, Localize("Overview"), 14.0f, TEXTALIGN_ML);
 	LeftContent.HSplitTop(6.0f, nullptr, &LeftContent);
-	RenderInfoRow(LeftContent, "DDNet分数", aPointsText);
-	RenderInfoRow(LeftContent, "好友总数", aFriendsText);
-	RenderInfoRow(LeftContent, "在线好友", aOnlineFriendsText);
-	RenderInfoRow(LeftContent, "完成图来源", aFinishSourceText);
+	RenderInfoRow(LeftContent, Localize("DDNet points"), aPointsText);
+	RenderInfoRow(LeftContent, Localize("Total friends"), aFriendsText);
+	RenderInfoRow(LeftContent, Localize("Online friends"), aOnlineFriendsText);
+	RenderInfoRow(LeftContent, Localize("Finish data source"), aFinishSourceText);
 
 	CUIRect RightContent = BottomRight;
 	RightContent.Margin(10.0f, &RightContent);
 	CUIRect RightTitle, RightBody;
 	RightContent.HSplitTop(20.0f, &RightTitle, &RightBody);
-	Ui()->DoLabel(&RightTitle, "统计说明", 14.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&RightTitle, Localize("Stats notes"), 14.0f, TEXTALIGN_ML);
 	RightBody.HSplitTop(6.0f, nullptr, &RightBody);
 
 	char aNowTime[64];
 	str_timestamp_ex((time_t)CurrentTimestamp, aNowTime, sizeof(aNowTime), FORMAT_SPACE);
 	char aInfoText[512];
 	str_format(aInfoText, sizeof(aInfoText),
-		"当前时间: %s\n"
-		"- 启动时间与游玩时长使用官网的Json数据计算而得\n"
-		"- 同上\n"
-		"- 同上上\n",
+		Localize("Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n"),
 		aNowTime);
 
 	SLabelProperties InfoProps;
@@ -4151,6 +4148,33 @@ const char *CMenus::CurrentQmUiPerfOperation() const
 	}
 }
 
+CMenus::SSettingsScrollRegionFrame CMenus::BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY)
+{
+	SSettingsScrollRegionFrame Frame;
+	Frame.m_PreviousOffsetY = PreviousOffsetY;
+	ScrollRegion.Begin(pView, &Frame.m_BeginOffset, &Params);
+	Frame.m_FinalOffsetY = Frame.m_BeginOffset.y;
+	return Frame;
+}
+
+void CMenus::FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsScrollRegionFrame &Frame, const CUIRect *pEndRect, int Page, bool TrackScrollActive)
+{
+	if(pEndRect != nullptr)
+		ScrollRegion.AddRect(*pEndRect);
+	ScrollRegion.End();
+	Frame.m_FinalOffsetY = ScrollRegion.ScrollbarShown() ? ScrollRegion.ContentScrollOffsetY() : 0.0f;
+
+	if(TrackScrollActive)
+		m_SettingsScrollActive = m_SettingsScrollActive || absolute(Frame.m_FinalOffsetY - Frame.m_PreviousOffsetY) > 0.01f;
+
+	if(Page >= 0)
+	{
+		m_SettingsRuntimeMetadata.m_LastScrollPage = Page;
+		m_SettingsRuntimeMetadata.m_LastScrollY = Frame.m_FinalOffsetY;
+		m_SettingsRuntimeMetadata.m_Valid = true;
+	}
+}
+
 void CMenus::StartSettingsPerfFixedWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, int MaxFrames)
 {
 	if(!PerfDebugEnabled())
@@ -4199,7 +4223,7 @@ void CMenus::LogSettingsPerfWindowSummary(const SQmSettingsPerfWindowSummary &Su
 
 	char aPayload[512];
 	str_format(aPayload, sizeof(aPayload),
-		"event=fps_summary operation=%s context=%s page=%s tab=%s sample_frames=%d sample_seconds=%.3f fps_avg=%.3f fps_min=%.3f fps_max=%.3f frame_ms_avg=%.3f frame_ms_p95=%.3f frame_ms_p99=%.3f frame_ms_max=%.3f menu_ms_max=%.3f cap_limited=%d",
+		"event=fps_summary operation=%s context=%s page=%s tab=%s sample_frames=%d sample_seconds=%.3f fps_avg=%.3f fps_min=%.3f fps_1pct_low=%.3f fps_max=%.3f frame_ms_avg=%.3f frame_ms_p95=%.3f frame_ms_p99=%.3f frame_ms_max=%.3f menu_ms_max=%.3f cap_limited=%d",
 		Summary.m_aOperation,
 		Summary.m_aContext,
 		Summary.m_aPage,
@@ -4208,6 +4232,7 @@ void CMenus::LogSettingsPerfWindowSummary(const SQmSettingsPerfWindowSummary &Su
 		Summary.m_SampleSeconds,
 		Summary.m_FpsAvg,
 		Summary.m_FpsMin,
+		Summary.m_FpsOnePctLow,
 		Summary.m_FpsMax,
 		Summary.m_FrameMsAvg,
 		Summary.m_FrameMsP95,
@@ -5177,6 +5202,31 @@ void CMenus::LogSettingsAdaptiveBudget(const char *pSource, const SSettingsAdapt
 		Input.m_ScrollActive ? 1 : 0,
 		Input.m_JumpScrollActive ? 1 : 0);
 	QmPerfLogPayload("perf/settings-resource", aPayload, Client(), CurrentQmUiPerfPage() != nullptr ? CurrentQmUiPerfPage() : "settings");
+}
+
+void CMenus::LogSettingsUiBudget(const char *pPage, const SSettingsUiBudgetFrame &Frame) const
+{
+	if(!PerfDebugEnabled())
+		return;
+	char aPayload[384];
+	// Telemetry contract: event=settings_ui_budget.
+	str_format(aPayload, sizeof(aPayload),
+		"event=settings_ui_budget page=%s operation=%s frame=%" PRIu64 " tab=%d subtab=%d layout_ms=%.3f text_ms=%.3f text_new=%d text_reused=%d draw_calls=%d vertices=%d indices=%d heap_allocs=%d visible_widgets=%d",
+		pPage != nullptr ? pPage : "settings",
+		SettingsPerfActiveOperation(),
+		(uint64_t)Client()->PerfFrame(),
+		Frame.m_Tab,
+		Frame.m_Subtab,
+		Frame.m_LayoutMs,
+		Frame.m_TextMs,
+		Frame.m_TextNew,
+		Frame.m_TextReused,
+		Frame.m_DrawCalls,
+		Frame.m_Vertices,
+		Frame.m_Indices,
+		Frame.m_HeapAllocs,
+		Frame.m_VisibleWidgets);
+	QmPerfLogPayload("perf/ui_budget", aPayload, Client(), pPage != nullptr ? pPage : "settings");
 }
 
 void CMenus::InvalidateSettingsTextPool()

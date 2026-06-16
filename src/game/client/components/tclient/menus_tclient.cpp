@@ -258,7 +258,6 @@ CUIRect TClientSettingsContentView(CUIRect MainView, CUIRect *pTabBar = nullptr)
 void CMenus::BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab)
 {
 	Tab = CanonicalizePersistedTClientTab(Tab);
-
 	const int PreviousTab = m_TClientSettingsTab;
 	const int PreviousSettingsPage = g_Config.m_UiSettingsPage;
 	const bool PreviousCollecting = m_MenuTextPlanCollecting;
@@ -1197,8 +1196,7 @@ float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Re
 	CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
 	if(Render)
 	{
-		CUIElement &AutoReplyTitle = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-auto-reply-title");
-		DoSettingsLabelStreamed(AutoReplyTitle, &Label, Localize("Auto reply"), HeadlineFontSize, TEXTALIGN_ML);
+		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-auto-reply-title", &Label, Localize("Auto reply"), HeadlineFontSize, TEXTALIGN_ML);
 	}
 	CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 
@@ -1501,8 +1499,10 @@ void CMenus::InvalidateTClientSettingsRuntimeCacheSections(ESettingsCacheDirtyRe
 void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 {
 	CPerfTimer RenderTimer;
+	CPerfTimer LayoutBudgetTimer;
 	CUIRect Column, LeftView, RightView, Button, Label;
 	const CUIRect Viewport = MainView;
+	const bool TClientVisibleTargetFrame = !PrewarmOnly;
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
@@ -1510,10 +1510,21 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	ScrollParams.m_ScrollUnit = 60.0f;
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	ScrollParams.m_ScrollbarMargin = 5.0f;
+	SSettingsScrollRegionFrame ScrollFrame;
 	auto LogSettingsStage = [&](const char *pStage, const CPerfTimer &Timer) {
-		char aExtra[96];
-		str_format(aExtra, sizeof(aExtra), "scroll_y=%.1f", ScrollOffset.y);
+		char aExtra[192];
+		str_format(aExtra, sizeof(aExtra), "frame=%" PRIu64 " operation=%s page=settings:tclient tab=%d subtab=%d scroll_y=%.1f",
+			(uint64_t)Client()->PerfFrame(), SettingsPerfActiveOperation(), m_TClientSettingsTab, m_TClientSettingsTab, ScrollOffset.y);
 		LogTClientPerfStage(pStage, Timer.ElapsedMs(), false, aExtra);
+	};
+	auto LogTClientSectionHeightConsistency = [&](const char *pSection, float MeasuredHeight, float RenderedHeight) {
+		const float HeightDelta = RenderedHeight - MeasuredHeight;
+		const bool HeightStable = absolute(HeightDelta) <= 0.01f;
+		char aExtra[256];
+		str_format(aExtra, sizeof(aExtra), "frame=%" PRIu64 " operation=%s page=settings:tclient tab=%d subtab=%d section=%s section_height_measured=%.3f section_height_rendered=%.3f height_delta=%.3f stable=%d",
+			(uint64_t)Client()->PerfFrame(), SettingsPerfActiveOperation(), m_TClientSettingsTab, m_TClientSettingsTab,
+			pSection != nullptr ? pSection : "unknown", MeasuredHeight, RenderedHeight, HeightDelta, HeightStable ? 1 : 0);
+		LogTClientPerfStage("tclient_settings_section_height", 0.0, !HeightStable, aExtra);
 	};
 	{
 		CPerfTimer StageTimer;
@@ -1525,12 +1536,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				s_ScrollRegion.SetScrollOffsetY(m_SettingsRuntimeMetadata.m_LastScrollY);
 				m_SettingsTClientScrollRestorePending = false;
 			}
-			s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
+			ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, PreviousScrollY);
+			ScrollOffset = ScrollFrame.m_BeginOffset;
 			m_SettingsTClientCurrentScrollY = ScrollOffset.y;
-			m_SettingsRuntimeMetadata.m_LastScrollPage = SETTINGS_TCLIENT;
-			m_SettingsRuntimeMetadata.m_LastScrollY = ScrollOffset.y;
-			m_SettingsRuntimeMetadata.m_Valid = true;
-			m_SettingsScrollActive = absolute(ScrollOffset.y - PreviousScrollY) > 0.01f;
 		}
 		else if(m_SettingsRuntimeMetadata.m_Valid)
 		{
@@ -1554,12 +1562,13 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	auto SkipSection = [&](CUIRect &CurrentColumn, float TopPadding, float EstimatedHeight) {
 		CurrentColumn.HSplitTop(TopPadding + EstimatedHeight, nullptr, &CurrentColumn);
 	};
-	auto RenderBoxedFullSection = [&](auto &LayoutSection, CUIRect &Col) -> float {
+	auto RenderBoxedFullSection = [&](const char *pSectionName, auto &LayoutSection, CUIRect &Col) -> float {
 		CUiScopedQuadBatch QuadBatchScope(Ui());
 		const float SavedY = Col.y;
 		CUIRect MeasuredColumn = Col;
 		InsetTClientCacheSectionContent(MeasuredColumn);
 		CUIRect BoxRect = LayoutSection(MeasuredColumn, false);
+		const float MeasuredHeight = MeasuredColumn.y - Col.y;
 		BoxRect.x = Col.x;
 		BoxRect.w = Col.w;
 		DrawTClientCacheSectionBox(BoxRect);
@@ -1567,6 +1576,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		InsetTClientCacheSectionContent(ContentColumn);
 		LayoutSection(ContentColumn, true);
 		Col.y = ContentColumn.y;
+		const float RenderedHeight = Col.y - SavedY;
+		LogTClientSectionHeightConsistency(pSectionName, MeasuredHeight, RenderedHeight);
 		return Col.y - SavedY;
 	};
 	auto FillSplitCachedStaticLayer = [&](SSettingsSection &Section, const char *pTitle, auto &&MeasureSection, auto &&RenderInteractiveSection, float TopMargin) {
@@ -1576,6 +1587,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect MeasuredColumn = Col;
 			InsetTClientCacheSectionContent(MeasuredColumn);
 			const float Height = MeasureSection(MeasuredColumn);
+			const float MeasuredHeight = MeasuredColumn.y - Col.y;
 			CUIRect BoxRect = {Col.x, Col.y + TopMargin, Col.w, Height - TopMargin};
 			DrawTClientCacheSectionBox(BoxRect);
 			CUIRect ContentColumn = Col;
@@ -1586,17 +1598,20 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			ContentColumn.HSplitTop(MarginSmall, nullptr, &ContentColumn);
 			RenderInteractiveSection(ContentColumn);
 			Col.y = ContentColumn.y;
+			const float RenderedHeight = Col.y - SavedY;
+			LogTClientSectionHeightConsistency(pTitle, MeasuredHeight, RenderedHeight);
 			return Col.y - SavedY;
 		};
 		Section.m_RenderFullFn = Section.m_RenderCompactFn;
 	};
 	auto FillCachedStaticLayer = [&](SSettingsSection &Section, auto &LayoutSection) {
-		Section.m_RenderCompactFn = [this, &LayoutSection](CUIRect &Col) -> float {
+		Section.m_RenderCompactFn = [this, &LayoutSection, &LogTClientSectionHeightConsistency, SectionName = Section.m_pName](CUIRect &Col) -> float {
 			CUiScopedQuadBatch QuadBatchScope(Ui());
 			const float SavedY = Col.y;
 			CUIRect MeasuredColumn = Col;
 			InsetTClientCacheSectionContent(MeasuredColumn);
 			CUIRect BoxRect = LayoutSection(MeasuredColumn, false);
+			const float MeasuredHeight = MeasuredColumn.y - Col.y;
 			BoxRect.x = Col.x;
 			BoxRect.w = Col.w;
 			DrawTClientCacheSectionBox(BoxRect);
@@ -1604,6 +1619,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			InsetTClientCacheSectionContent(ContentColumn);
 			LayoutSection(ContentColumn, true);
 			Col.y = ContentColumn.y;
+			const float RenderedHeight = Col.y - SavedY;
+			LogTClientSectionHeightConsistency(SectionName, MeasuredHeight, RenderedHeight);
 			return Col.y - SavedY;
 		};
 		Section.m_RenderFullFn = Section.m_RenderCompactFn;
@@ -1653,7 +1670,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 
 	// Initialize VisualFont section loader for this frame
 	s_VisualFontLoader.SetRuntimeKey(MakeSettingsSectionRuntimeKey(LeftView, Graphics()));
-	s_VisualFontLoader.SetProgressiveEnabled(false);
+	s_VisualFontLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);
+	s_VisualFontLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
 	s_VisualFontLoader.SetDeferredFarMeasurementEnabled(true);
 	s_VisualFontLoader.m_ScrollY = ScrollOffset.y;
 	s_VisualFontLoader.Begin(LeftView, 5.0f);
@@ -2080,7 +2098,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 			CurrentColumn.HSplitTop(LineSize, Render ? &Button : &TmpButton, &CurrentColumn);
 			if(Render)
-				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-prediction-margin", &g_Config.m_ClPredictionMargin, &g_Config.m_ClPredictionMargin, &Button, Localize("Prediction Margin"), 10, 75, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-prediction-margin", &g_Config.m_ClPredictionMargin, &g_Config.m_ClPredictionMargin, &Button, Localize("Prediction Margin"), 10, 75, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
 			if(Render)
 				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRemoveAnti, Localize("Remove prediction & antiping in freeze"), &g_Config.m_TcRemoveAnti, &CurrentColumn, LineSize);
 			else
@@ -2283,8 +2301,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
 			if(Render)
 			{
-				CUIElement &AutoReplyTitle = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-auto-reply-title");
-				DoSettingsLabelStreamed(AutoReplyTitle, &Label, Localize("Auto reply"), HeadlineFontSize, TEXTALIGN_ML);
+				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-auto-reply-title", &Label, Localize("Auto reply"), HeadlineFontSize, TEXTALIGN_ML);
 			}
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 
@@ -2370,8 +2387,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
 			if(Render)
 			{
-				CUIElement &PlayerIndicatorTitle = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-player-indicator-title");
-				DoSettingsLabelStreamed(PlayerIndicatorTitle, &Label, Localize("Player indicator"), HeadlineFontSize, TEXTALIGN_ML);
+				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-player-indicator-title", &Label, Localize("Player indicator"), HeadlineFontSize, TEXTALIGN_ML);
 			}
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 
@@ -2475,10 +2491,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutVisualNameplateSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutVisualNameplateSection, Col);
+				return RenderBoxedFullSection("Visual: Nameplates", LayoutVisualNameplateSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutVisualNameplateSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutVisualNameplateSection, Col);
+				return RenderBoxedFullSection("Visual: Nameplates", LayoutVisualNameplateSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutVisualNameplateSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcNameplatePingCircle, &g_Config.m_TcNameplateCountry, &g_Config.m_TcNameplateSkins, &g_Config.m_TcWhiteFeet};
@@ -2493,10 +2509,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutVisualEffectsSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutVisualEffectsSection, Col);
+				return RenderBoxedFullSection("Visual: Effects", LayoutVisualEffectsSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutVisualEffectsSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutVisualEffectsSection, Col);
+				return RenderBoxedFullSection("Visual: Effects", LayoutVisualEffectsSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutVisualEffectsSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcTinyTees, &g_Config.m_TcTinyTeesOthers, &g_Config.m_QmJellyTee};
@@ -2510,10 +2526,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutInputSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutInputSection, Col);
+				return RenderBoxedFullSection("Input", LayoutInputSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutInputSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutInputSection, Col);
+				return RenderBoxedFullSection("Input", LayoutInputSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutInputSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcFastInput, &g_Config.m_TcFastInputAmount, &g_Config.m_TcFastInputOthers, &g_Config.m_ClSubTickAiming};
@@ -2528,10 +2544,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutAntiLatencyToolsSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutAntiLatencyToolsSection, Col);
+				return RenderBoxedFullSection("Anti Latency Tools", LayoutAntiLatencyToolsSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutAntiLatencyToolsSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutAntiLatencyToolsSection, Col);
+				return RenderBoxedFullSection("Anti Latency Tools", LayoutAntiLatencyToolsSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutAntiLatencyToolsSection);
 			S.m_DependencyConfigInts = {&g_Config.m_ClPredictionMargin, &g_Config.m_TcRemoveAnti, &g_Config.m_TcUnfreezeLagTicks, &g_Config.m_TcUnfreezeLagDelayTicks, &g_Config.m_TcUnpredOthersInFreeze, &g_Config.m_TcPredMarginInFreeze, &g_Config.m_TcPredMarginInFreezeAmount};
@@ -2546,10 +2562,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutAntiPingSmoothingSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutAntiPingSmoothingSection, Col);
+				return RenderBoxedFullSection("Improved Anti Ping", LayoutAntiPingSmoothingSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutAntiPingSmoothingSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutAntiPingSmoothingSection, Col);
+				return RenderBoxedFullSection("Improved Anti Ping", LayoutAntiPingSmoothingSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutAntiPingSmoothingSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcAntiPingImproved, &g_Config.m_TcAntiPingStableDirection, &g_Config.m_TcAntiPingNegativeBuffer, &g_Config.m_TcAntiPingUncertaintyScale};
@@ -2564,10 +2580,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutAutoExecuteSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutAutoExecuteSection, Col);
+				return RenderBoxedFullSection("Execute on join", LayoutAutoExecuteSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutAutoExecuteSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutAutoExecuteSection, Col);
+				return RenderBoxedFullSection("Execute on join", LayoutAutoExecuteSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutAutoExecuteSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcExecuteOnJoinDelay};
@@ -2582,10 +2598,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutVotingSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutVotingSection, Col);
+				return RenderBoxedFullSection("Voting", LayoutVotingSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutVotingSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutVotingSection, Col);
+				return RenderBoxedFullSection("Voting", LayoutVotingSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutVotingSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcAutoVoteWhenFar, &g_Config.m_TcAutoVoteWhenFarTime};
@@ -2603,10 +2619,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutPlayerIndicatorSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutPlayerIndicatorSection, Col);
+				return RenderBoxedFullSection("Player Indicator", LayoutPlayerIndicatorSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutPlayerIndicatorSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutPlayerIndicatorSection, Col);
+				return RenderBoxedFullSection("Player Indicator", LayoutPlayerIndicatorSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutPlayerIndicatorSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcPlayerIndicator, &g_Config.m_TcIndicatorHideVisible, &g_Config.m_TcPlayerIndicatorFreeze, &g_Config.m_TcIndicatorTeamOnly, &g_Config.m_TcIndicatorTees, &g_Config.m_TcWarListIndicator, &g_Config.m_TcIndicatorRadius, &g_Config.m_TcIndicatorOpacity, &g_Config.m_TcIndicatorVariableDistance, &g_Config.m_TcIndicatorOffset, &g_Config.m_TcIndicatorOffsetMax, &g_Config.m_TcIndicatorMaxDistance};
@@ -2622,7 +2638,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			s_VisualFontLoader.Process();
 			Column = s_VisualFontLoader.GetRunningColumn();
 			LeftView = Column;
-			LogSettingsStage("tclient_settings_left_prewarm", VisualSectionsTotalTimer);
+			LogSettingsStage("tclient_settings_left_prewarm_budgeted", VisualSectionsTotalTimer);
 		}
 		else
 		{
@@ -2640,7 +2656,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		CPerfTimer RightColumnTimer;
 		Column = RightView;
 		s_RightSectionLoader.SetRuntimeKey(MakeSettingsSectionRuntimeKey(RightView, Graphics()));
-		s_RightSectionLoader.SetProgressiveEnabled(false);
+		s_RightSectionLoader.SetProgressiveEnabled(TClientVisibleTargetFrame);
+		s_RightSectionLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
 		s_RightSectionLoader.SetDeferredFarMeasurementEnabled(true);
 		s_RightSectionLoader.m_ScrollY = ScrollOffset.y;
 		s_RightSectionLoader.Begin(RightView, 5.0f);
@@ -3196,10 +3213,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutTeeStatusBarSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutTeeStatusBarSection, Col);
+				return RenderBoxedFullSection("Tee status bar", LayoutTeeStatusBarSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutTeeStatusBarSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutTeeStatusBarSection, Col);
+				return RenderBoxedFullSection("Tee status bar", LayoutTeeStatusBarSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutTeeStatusBarSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcShowFrozenHud, &g_Config.m_TcFrozenMaxRows, &g_Config.m_TcShowFrozenHudSkins};
@@ -3214,10 +3231,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutTileOutlinesSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutTileOutlinesSection, Col);
+				return RenderBoxedFullSection("Tile outlines", LayoutTileOutlinesSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutTileOutlinesSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutTileOutlinesSection, Col);
+				return RenderBoxedFullSection("Tile outlines", LayoutTileOutlinesSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutTileOutlinesSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcOutline, &g_Config.m_TcOutlineAlpha, &g_Config.m_TcOutlineEntities, &g_Config.m_TcOutlineSolidAlpha, &g_Config.m_TcOutlineSolid, &g_Config.m_TcOutlineWidthSolid, &g_Config.m_TcOutlineFreeze, &g_Config.m_TcOutlineWidthFreeze, &g_Config.m_TcOutlineUnfreeze, &g_Config.m_TcOutlineWidthUnfreeze, &g_Config.m_TcOutlineKill, &g_Config.m_TcOutlineWidthKill, &g_Config.m_TcOutlineTele, &g_Config.m_TcOutlineWidthTele};
@@ -3233,10 +3250,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutGhostToolsSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutGhostToolsSection, Col);
+				return RenderBoxedFullSection("Ghost tools", LayoutGhostToolsSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutGhostToolsSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutGhostToolsSection, Col);
+				return RenderBoxedFullSection("Ghost tools", LayoutGhostToolsSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutGhostToolsSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcShowOthersGhosts, &g_Config.m_TcSwapGhosts};
@@ -3251,10 +3268,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutRainbowSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutRainbowSection, Col);
+				return RenderBoxedFullSection("Rainbow", LayoutRainbowSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutRainbowSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutRainbowSection, Col);
+				return RenderBoxedFullSection("Rainbow", LayoutRainbowSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutRainbowSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcRainbowTees, &g_Config.m_TcRainbowWeapon, &g_Config.m_TcRainbowHook};
@@ -3269,10 +3286,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutTeeTrailsSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutTeeTrailsSection, Col);
+				return RenderBoxedFullSection("Tee Trails", LayoutTeeTrailsSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutTeeTrailsSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutTeeTrailsSection, Col);
+				return RenderBoxedFullSection("Tee Trails", LayoutTeeTrailsSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutTeeTrailsSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcTeeTrail, &g_Config.m_TcTeeTrailOthers, &g_Config.m_TcTeeTrailWidth, &g_Config.m_TcTeeTrailLength, &g_Config.m_TcTeeTrailAlpha};
@@ -3287,10 +3304,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutBackgroundDrawSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutBackgroundDrawSection, Col);
+				return RenderBoxedFullSection("Background Draw", LayoutBackgroundDrawSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutBackgroundDrawSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutBackgroundDrawSection, Col);
+				return RenderBoxedFullSection("Background Draw", LayoutBackgroundDrawSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutBackgroundDrawSection);
 			S.m_DependencyConfigInts = {&g_Config.m_TcBgDrawWidth, &g_Config.m_TcBgDrawFadeTime};
@@ -3305,10 +3322,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return Col.y - SavedY;
 			};
 			S.m_RenderCompactFn = [&LayoutFinishNameSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutFinishNameSection, Col);
+				return RenderBoxedFullSection("Finish Name", LayoutFinishNameSection, Col);
 			};
 			S.m_RenderFullFn = [&LayoutFinishNameSection, &RenderBoxedFullSection](CUIRect &Col) -> float {
-				return RenderBoxedFullSection(LayoutFinishNameSection, Col);
+				return RenderBoxedFullSection("Finish Name", LayoutFinishNameSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutFinishNameSection);
 			vRightSections.push_back(S);
@@ -3320,7 +3337,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			s_RightSectionLoader.Process();
 			Column = s_RightSectionLoader.GetRunningColumn();
 			RightView = Column;
-			LogSettingsStage("tclient_settings_right_prewarm", RightColumnTimer);
+			LogSettingsStage("tclient_settings_right_prewarm_budgeted", RightColumnTimer);
 		}
 		else
 		{
@@ -3346,8 +3363,24 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	}
 	else
 	{
-		s_ScrollRegion.AddRect(ScrollRegion);
-		s_ScrollRegion.End();
+		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT);
+		m_SettingsTClientCurrentScrollY = ScrollFrame.m_FinalOffsetY;
+	}
+	if(!PrewarmOnly)
+	{
+		SSettingsUiBudgetFrame UiBudget;
+		UiBudget.m_LayoutMs = LayoutBudgetTimer.ElapsedMs();
+		UiBudget.m_TextMs = 0.0;
+		UiBudget.m_TextNew = 0;
+		UiBudget.m_TextReused = 0;
+		UiBudget.m_DrawCalls = 0;
+		UiBudget.m_Vertices = 0;
+		UiBudget.m_Indices = 0;
+		UiBudget.m_HeapAllocs = 0;
+		UiBudget.m_VisibleWidgets = s_VisualFontLoader.LastFrameStats().m_SectionsVisible + s_RightSectionLoader.LastFrameStats().m_SectionsVisible;
+		UiBudget.m_Tab = m_TClientSettingsTab;
+		UiBudget.m_Subtab = m_TClientSettingsTab;
+		LogSettingsUiBudget("settings:tclient", UiBudget);
 	}
 }
 
@@ -3582,12 +3615,12 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)
 	ScrollParams.m_ScrollUnit = 60.0f;
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	ScrollParams.m_ScrollbarMargin = 5.0f;
+	static float s_PrevChatBindsScrollY = 0.0f;
+	SSettingsScrollRegionFrame ScrollFrame;
 	{
 		CPerfTimer LayoutTimer;
-		static float s_PrevChatBindsScrollY = 0.0f;
-		s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
-		m_SettingsScrollActive = m_SettingsScrollActive || absolute(ScrollOffset.y - s_PrevChatBindsScrollY) > 0.01f;
-		s_PrevChatBindsScrollY = ScrollOffset.y;
+		ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, s_PrevChatBindsScrollY);
+		ScrollOffset = ScrollFrame.m_BeginOffset;
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "scroll_y=%.1f", ScrollOffset.y);
 		LogTClientPerfStageEx("tclient_chatbinds", "layout", ETClientSettingsPerfStage::SECTION_LAYOUT, LayoutTimer.ElapsedMs(), false, aExtra);
@@ -3685,10 +3718,10 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)
 		ScrollRegion.y = maximum(LeftView.y, RightView.y) + MarginSmall * 2.0f;
 		ScrollRegion.w = MainView.w;
 		ScrollRegion.h = 0.0f;
-		s_ScrollRegion.AddRect(ScrollRegion);
-		s_ScrollRegion.End();
+		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion);
+		s_PrevChatBindsScrollY = ScrollFrame.m_FinalOffsetY;
 		char aExtra[96];
-		str_format(aExtra, sizeof(aExtra), "scroll_y=%.1f", ScrollOffset.y);
+		str_format(aExtra, sizeof(aExtra), "scroll_y=%.1f", ScrollFrame.m_FinalOffsetY);
 		LogTClientPerfStageEx("tclient_chatbinds", "buttons", ETClientSettingsPerfStage::INTERACTIVE_LAYER, ButtonTimer.ElapsedMs(), false, aExtra);
 	}
 	LogTClientPerfStage("tclient_chatbinds_total", RenderTimer.ElapsedMs(), false);
@@ -5477,9 +5510,8 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	CPerfTimer ListTimer;
 	static float s_PrevConfigsScrollY = 0.0f;
-	s_ScrollRegion.Begin(&ListArea, &ScrollOffset, &ScrollParams);
-	m_SettingsScrollActive = m_SettingsScrollActive || absolute(ScrollOffset.y - s_PrevConfigsScrollY) > 0.01f;
-	s_PrevConfigsScrollY = ScrollOffset.y;
+	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams, s_PrevConfigsScrollY);
+	ScrollOffset = ScrollFrame.m_BeginOffset;
 
 	ListArea.y += ScrollOffset.y;
 	ListArea.VSplitRight(5.0f, &ListArea, nullptr);
@@ -5711,10 +5743,10 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 	}
 
 	CUIRect EndPad{Content.x, Content.y, Content.w, 5.0f};
-	s_ScrollRegion.AddRect(EndPad);
-	s_ScrollRegion.End();
+	FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad);
+	s_PrevConfigsScrollY = ScrollFrame.m_FinalOffsetY;
 	char aExtra[96];
-	str_format(aExtra, sizeof(aExtra), "filtered=%d scroll_y=%.1f", (int)vpFiltered.size(), ScrollOffset.y);
+	str_format(aExtra, sizeof(aExtra), "filtered=%d scroll_y=%.1f", (int)vpFiltered.size(), ScrollFrame.m_FinalOffsetY);
 	LogTClientPerfStageEx("tclient_configs", "list", ETClientSettingsPerfStage::STATIC_LAYER, ListTimer.ElapsedMs(), false, aExtra);
 	LogTClientPerfStage("tclient_configs_total", RenderTimer.ElapsedMs(), false);
 }

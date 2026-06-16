@@ -122,6 +122,8 @@ TEST(QmHudNotifications, ClassifiesServerSystemMessagesForFocusMode)
 {
 	EXPECT_EQ(QmHudNotifications::ServerMessageClass("DDraceNetwork 版本: 18.9", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::BasicInfo);
 	EXPECT_EQ(QmHudNotifications::ServerMessageClass("请访问 DDNet.org，或输入 /info，并确保阅读 /rules", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::BasicInfo);
+	EXPECT_EQ(QmHudNotifications::ServerMessageClass("Available practice commands: /rescue /lasttp /telecursor", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::HelpInfo);
+	EXPECT_EQ(QmHudNotifications::ServerMessageClass("Example: /map adr3 to call vote for Adrenaline 3. This means that the map name must start with 'a' and contain the characters 'd', 'r' and '3' in that order", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::HelpInfo);
 	EXPECT_EQ(QmHudNotifications::ServerMessageClass("'nameless tee' joined the game", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::BasicInfo);
 	EXPECT_EQ(QmHudNotifications::ServerMessageClass("'nameless tee' has left the game", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::BasicInfo);
 	EXPECT_EQ(QmHudNotifications::ServerMessageClass("'nameless tee' has left the game (Disconnected)", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::BasicInfo);
@@ -244,7 +246,7 @@ TEST(QmHudNotificationRules, AnalyzesBasicInfoMessage)
 	EXPECT_EQ(Analysis.m_Class, QmHudNotifications::EServerMessageClass::BasicInfo);
 	EXPECT_EQ(Analysis.m_Domain, QmHudNotifications::EServerMessageDomain::Status);
 	EXPECT_STREQ(Analysis.m_aLocalizedText, "");
-	EXPECT_FALSE(Analysis.m_UseFallbackLocalization);
+	EXPECT_TRUE(Analysis.m_UseFallbackLocalization);
 }
 
 TEST(QmHudNotificationRules, AnalyzesStaticTeamMessage)
@@ -728,6 +730,104 @@ TEST(QmHudNotificationRules, KeepsUnknownFallbackNotificationWhenSystemRouteIsEn
 	EXPECT_TRUE(Decision.m_QueueNotification);
 	EXPECT_FALSE(Decision.m_ClearPendingCompatPrompt);
 	EXPECT_TRUE(Decision.m_UseFallbackNotification);
+}
+
+TEST(QmHudNotificationRules, CategoryFiltersKeepCurrentDefaultBehavior)
+{
+	QmHudNotifications::SServerMessageRouteConfig Config;
+	Config.m_RouteSystemMessages = true;
+
+	auto Analysis = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 18.9", QmHudNotifications::ESoloPrompt::None);
+	auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_EQ(Analysis.m_Class, QmHudNotifications::EServerMessageClass::BasicInfo);
+	EXPECT_FALSE(Decision.m_QueueNotification);
+
+	Analysis = QmHudNotifications::AnalyzeServerMessage("Available practice commands: /rescue /lasttp /telecursor", QmHudNotifications::ESoloPrompt::None);
+	Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_EQ(Analysis.m_Class, QmHudNotifications::EServerMessageClass::HelpInfo);
+	EXPECT_FALSE(Decision.m_QueueNotification);
+
+	Analysis = QmHudNotifications::AnalyzeServerMessage("Team save already in progress", QmHudNotifications::ESoloPrompt::None);
+	Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_EQ(Analysis.m_Class, QmHudNotifications::EServerMessageClass::Prompt);
+	EXPECT_TRUE(Decision.m_QueueNotification);
+
+	Analysis = QmHudNotifications::AnalyzeServerMessage("regular server message", QmHudNotifications::ESoloPrompt::None);
+	Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_EQ(Analysis.m_Domain, QmHudNotifications::EServerMessageDomain::Unknown);
+	EXPECT_TRUE(Decision.m_QueueNotification);
+	EXPECT_TRUE(Decision.m_UseFallbackNotification);
+}
+
+TEST(QmHudNotificationRules, CategoryFiltersCanEnableBasicAndHelpMessages)
+{
+	QmHudNotifications::SServerMessageRouteConfig Config;
+	Config.m_RouteSystemMessages = true;
+	Config.m_ShowBasicInfo = true;
+	Config.m_ShowHelpInfo = true;
+
+	auto Analysis = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 18.9", QmHudNotifications::ESoloPrompt::None);
+	auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_TRUE(Decision.m_QueueNotification);
+	EXPECT_TRUE(Decision.m_UseFallbackNotification);
+
+	Analysis = QmHudNotifications::AnalyzeServerMessage("Available practice commands: /rescue /lasttp /telecursor", QmHudNotifications::ESoloPrompt::None);
+	Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_TRUE(Decision.m_QueueNotification);
+	EXPECT_TRUE(Decision.m_UseFallbackNotification);
+}
+
+TEST(QmHudNotificationRules, CategoryFiltersCanDisablePromptAndUnknownMessages)
+{
+	QmHudNotifications::SServerMessageRouteConfig Config;
+	Config.m_RouteSystemMessages = true;
+	Config.m_ShowPrompts = false;
+	Config.m_ShowUnknown = false;
+
+	auto Analysis = QmHudNotifications::AnalyzeServerMessage("Team save already in progress", QmHudNotifications::ESoloPrompt::None);
+	auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_FALSE(Decision.m_QueueNotification);
+
+	Analysis = QmHudNotifications::AnalyzeServerMessage("regular server message", QmHudNotifications::ESoloPrompt::None);
+	Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_FALSE(Decision.m_QueueNotification);
+}
+
+TEST(QmHudNotificationRules, DisabledCategoryFiltersRouteNonEmptySystemMessages)
+{
+	QmHudNotifications::SServerMessageRouteConfig Config;
+	Config.m_RouteSystemMessages = true;
+	Config.m_UseCategoryFilters = false;
+
+	auto Analysis = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 18.9", QmHudNotifications::ESoloPrompt::None);
+	auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_TRUE(Decision.m_QueueNotification);
+	EXPECT_TRUE(Decision.m_UseFallbackNotification);
+
+	Analysis = QmHudNotifications::AnalyzeServerMessage("Available practice commands: /rescue /lasttp /telecursor", QmHudNotifications::ESoloPrompt::None);
+	Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_TRUE(Decision.m_QueueNotification);
+	EXPECT_TRUE(Decision.m_UseFallbackNotification);
+}
+
+TEST(QmHudNotificationRules, FocusModeHiddenMessagesOverrideCategoryFilters)
+{
+	QmHudNotifications::SServerMessageRouteConfig Config;
+	Config.m_RouteSystemMessages = true;
+	Config.m_ShowBasicInfo = true;
+	Config.m_ShowPrompts = true;
+	Config.m_HideBasicInfo = true;
+	Config.m_HidePrompt = true;
+
+	auto Analysis = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 18.9", QmHudNotifications::ESoloPrompt::None);
+	auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_TRUE(Decision.m_ConsumeHiddenMessage);
+	EXPECT_FALSE(Decision.m_QueueNotification);
+
+	Analysis = QmHudNotifications::AnalyzeServerMessage("Team save already in progress", QmHudNotifications::ESoloPrompt::None);
+	Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
+	EXPECT_TRUE(Decision.m_ConsumeHiddenMessage);
+	EXPECT_FALSE(Decision.m_QueueNotification);
 }
 
 TEST(QmHudNotifications, HandleServerChatUsesFallbackNotificationForUnknownMessage)

@@ -1,7 +1,11 @@
 #define CONF_TEST 1
+#include <engine/client/gpu_upload_limiter.h>
+
 #include <game/client/components/qmclient/monitoring/monitoring.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/settings_perf_windows.h>
+#include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/settings_resource_jobs.h>
 #include <game/client/ui.h>
 
 #include <gtest/gtest.h>
@@ -769,6 +773,7 @@ TEST(QmMonitoringHelpers, SettingsPerfWindowAccumulatesFpsAndFrameStats)
 	EXPECT_NEAR(Summary.m_FpsAvg, 66.666f, 0.01f);
 	EXPECT_NEAR(Summary.m_FpsMin, 50.0f, 0.01f);
 	EXPECT_NEAR(Summary.m_FpsMax, 100.0f, 0.01f);
+	EXPECT_NEAR(Summary.m_FpsOnePctLow, 50.0f, 0.01f);
 	EXPECT_NEAR(Summary.m_FrameMsAvg, 15.0f, 0.01f);
 	EXPECT_NEAR(Summary.m_FrameMsP95, 20.0f, 0.01f);
 	EXPECT_NEAR(Summary.m_FrameMsP99, 20.0f, 0.01f);
@@ -776,6 +781,17 @@ TEST(QmMonitoringHelpers, SettingsPerfWindowAccumulatesFpsAndFrameStats)
 	EXPECT_NEAR(Summary.m_MenuMsMax, 30.0f, 0.01f);
 	EXPECT_FALSE(Summary.m_CapLimited);
 	EXPECT_FALSE(Tracker.HasActiveWindow());
+}
+
+TEST(QmMonitoringHelpers, SettingsPerfWindowLogsOnePercentLowFps)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/qmclient/settings_perf_windows.h");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+
+	EXPECT_NE(Header.find("m_FpsOnePctLow"), std::string::npos);
+	EXPECT_NE(Header.find("m_FpsOnePctLow = m_Summary.m_FrameMsP99 > 0.0f ? 1000.0f / m_Summary.m_FrameMsP99 : 0.0f;"), std::string::npos);
+	EXPECT_NE(Menus.find("fps_1pct_low=%.3f"), std::string::npos);
+	EXPECT_NE(Menus.find("Summary.m_FpsOnePctLow"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsPerfWindowEndsAfterFixedFrameBudget)
@@ -1280,9 +1296,9 @@ TEST(QmMonitoringHelpers, BaseSettingsStableTextCandidateAuditIsEmptyExceptAllow
 		{pFile, 1973, "localized-list-data"},
 		{pFile, 1982, "localized-list-data"},
 		{pFile, 1991, "localized-list-data"},
-		{pFile, 4891, "status-message"},
-		{pFile, 4896, "status-message"},
-		{pFile, 6514, "input-text"},
+		{pFile, 4890, "status-message"},
+		{pFile, 4895, "status-message"},
+		{pFile, 6513, "input-text"},
 	};
 	const std::vector<SStableTextCandidate> vUnexpected = FilterCandidatesNotCoveredByMenuPoolOrAllowlist(pFile, vCandidates, vAllowlist);
 	EXPECT_TRUE(vUnexpected.empty()) << JoinCandidates(vUnexpected);
@@ -1634,8 +1650,8 @@ TEST(QmMonitoringHelpers, SettingsTextPlanPrebuildSeparatesInvisibleWarmupFromVi
 		EXPECT_NE(ScrollRegionHeader.find("void SetContentHeightForNextFrame(float ContentHeight);"), std::string::npos);
 		EXPECT_EQ(TClientSettingsBody.find("LogSettingsStage(\"tclient_settings_right_prewarm\", RightColumnTimer);\n\t\t\treturn;"), std::string::npos);
 		EXPECT_NE(TClientSettingsBody.find("s_ScrollRegion.SetContentHeightForNextFrame("), std::string::npos);
-		EXPECT_TRUE(ContainsAll(TClientSettingsBody, {"s_ScrollRegion.AddRect(ScrollRegion);", "s_ScrollRegion.End();"}));
-		EXPECT_LT(TClientSettingsBody.find("s_ScrollRegion.SetContentHeightForNextFrame("), TClientSettingsBody.find("s_ScrollRegion.AddRect(ScrollRegion);"));
+		EXPECT_NE(TClientSettingsBody.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT);"), std::string::npos);
+		EXPECT_LT(TClientSettingsBody.find("s_ScrollRegion.SetContentHeightForNextFrame("), TClientSettingsBody.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT);"));
 		EXPECT_EQ(Settings.find("DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord"), std::string::npos);
 		EXPECT_EQ(Settings.find("DoButton_CheckBox(&g_Config.m_ClAutoScreenshot"), std::string::npos);
 		EXPECT_EQ(Settings.find("DoButton_CheckBox(&g_Config.m_ClAutoStatboardScreenshot"), std::string::npos);
@@ -1703,7 +1719,7 @@ TEST(QmMonitoringHelpers, SettingsTextPlanCoversHighValueTClientAndQmClientStati
 		EXPECT_EQ(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr"), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-hammer-mode\""), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-cursor-scale\""), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-prediction-margin\""), std::string::npos);
+		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-prediction-margin\""), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-pet-size\""), std::string::npos);
 		const std::string PlanBody = ExtractSourceFunctionBody(Source, "void CMenus::BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab)");
 		ASSERT_FALSE(PlanBody.empty());
@@ -1714,8 +1730,8 @@ TEST(QmMonitoringHelpers, SettingsTextPlanCoversHighValueTClientAndQmClientStati
 		EXPECT_EQ(Source.find("AddItem(\"tclient-indicator-offset\""), std::string::npos);
 		EXPECT_EQ(Source.find("AddItem(\"tclient-outline-width\""), std::string::npos);
 		EXPECT_EQ(Source.find("AddItem(\"tclient-bg-draw-fade-time\""), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-auto-reply-title\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-player-indicator-title\")"), std::string::npos);
+		EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-auto-reply-title\""), std::string::npos);
+		EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-player-indicator-title\""), std::string::npos);
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-tee-status-bar-title\")"), std::string::npos);
 		EXPECT_EQ(Source.find("else if(Tab == TCLIENT_TAB_BINDCHAT)"), std::string::npos);
 		EXPECT_EQ(Source.find("for(const auto &[pTitle, vBindDefaults] : CBindChat::BIND_DEFAULTS)"), std::string::npos);
@@ -2258,6 +2274,713 @@ TEST(QmMonitoringHelpers, AssetsUsesAdaptiveBudgetForPreviewAndThumbWork)
 	EXPECT_EQ(Body.find("constexpr int MaxWorkshopThumbStartsPerFrame = 16;"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AssetsPageSwitchDefersPreviewGpuUploads)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("const bool AssetsPageSwitchActive = m_SettingsPageSwitchActive;"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsUploadBlocked = AssetsPageSwitchActive || AssetsDirectScrollUploadBlocked"), std::string::npos);
+	EXPECT_NE(Body.find("MaxPreviewUploadsPerFrame = AssetsUploadBlocked ? 0 : AdaptiveBudget.m_GpuUploadTokens;"), std::string::npos);
+	EXPECT_NE(Body.find("MaxWorkshopThumbUploadsPerFrame = AssetsUploadBlocked ? 0 : AdaptiveBudget.m_GpuUploadTokens;"), std::string::npos);
+	EXPECT_EQ(Body.find("const int MaxPreviewUploadsPerFrame = maximum(1, AdaptiveBudget.m_GpuUploadTokens);"), std::string::npos);
+	EXPECT_EQ(Body.find("const int MaxWorkshopThumbUploadsPerFrame = maximum(1, AdaptiveBudget.m_GpuUploadTokens);"), std::string::npos);
+	EXPECT_EQ(Body.find("m_SettingsFrameBudget.m_MaxGpuUploads = maximum(m_SettingsFrameBudget.m_MaxGpuUploads, AdaptiveBudget.m_GpuUploadTokens);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsDirectScrollDefersPreviewGpuUploads)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("constexpr int AssetsScrollUploadCooldownFrames = 6;"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsDirectScrollUploadBlocked"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsUploadBlocked = AssetsPageSwitchActive || AssetsDirectScrollUploadBlocked"), std::string::npos);
+	EXPECT_NE(Body.find("MaxPreviewUploadsPerFrame = AssetsUploadBlocked ? 0 : AdaptiveBudget.m_GpuUploadTokens;"), std::string::npos);
+	EXPECT_NE(Body.find("const char *pAssetsUploadBlockFrameContext = AssetsDirectScrollUploadBlocked ? \"scroll_cooldown\""), std::string::npos);
+	EXPECT_NE(Body.find("pAssetsUploadBlockFrameContext"), std::string::npos);
+	EXPECT_NE(Body.find("scroll_upload_cooldown=%d frame_context=%s upload_block=%s"), std::string::npos);
+	EXPECT_NE(Body.find("RefreshAssetsScrollUploadCooldownForOffset"), std::string::npos);
+	EXPECT_NE(Body.find("RefreshAssetsScrollUploadCooldownForOffset(ListScrollActive, s_ListBox.ScrollOffsetY()"), std::string::npos);
+	EXPECT_NE(Body.find("RefreshAssetsScrollUploadCooldownForOffset(WorkshopListScrollActive, s_WorkshopAssetsListBox.ScrollOffsetY()"), std::string::npos);
+	EXPECT_NE(Body.find("RefreshAssetsUploadBudget();"), std::string::npos);
+	EXPECT_EQ(Body.find("const int MaxPreviewUploadsPerFrame = AssetsPageSwitchActive ? 0 : AdaptiveBudget.m_GpuUploadTokens;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsDirectScrollDefersWorkshopFinalize)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("MaxWorkshopThumbDecodeFinalizesThisFrame = AssetsUploadBlocked ? 0 : MaxWorkshopThumbDecodeFinalizesPerFrame;"), std::string::npos);
+	EXPECT_NE(Body.find("MaxWorkshopThumbUploadsPerFrame = AssetsUploadBlocked ? 0 : AdaptiveBudget.m_GpuUploadTokens;"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsResourceFrameStageBudget(FinalizeFrameContext, FinalizePriority, MaxWorkshopThumbDecodeFinalizesThisFrame, 0)"), std::string::npos);
+	EXPECT_NE(Body.find("scroll_upload_cooldown=%d"), std::string::npos);
+	EXPECT_EQ(Body.find("const int MaxWorkshopThumbUploadsPerFrame = AssetsPageSwitchActive ? 0 : AdaptiveBudget.m_GpuUploadTokens;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsUiBudgetTelemetryExists)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string TClient = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Assets = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+
+	EXPECT_NE(Header.find("struct SSettingsUiBudgetFrame"), std::string::npos);
+	EXPECT_NE(Header.find("LogSettingsUiBudget("), std::string::npos);
+	EXPECT_NE(Menus.find("event=settings_ui_budget"), std::string::npos);
+	EXPECT_NE(Menus.find("layout_ms=%.3f text_ms=%.3f text_new=%d text_reused=%d draw_calls=%d vertices=%d indices=%d heap_allocs=%d visible_widgets=%d"), std::string::npos);
+	EXPECT_NE(TClient.find("LogSettingsUiBudget(\"settings:tclient\""), std::string::npos);
+	EXPECT_NE(Assets.find("LogSettingsUiBudget(\"settings:assets\""), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsInternalTabSwitchStartsFpsWindow)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("StartSettingsPerfFixedWindow(\"settings_assets_tab_switch\""), std::string::npos);
+	EXPECT_NE(Body.find("CurrentQmUiPerfPage()"), std::string::npos);
+	EXPECT_NE(Body.find("str_format(aAssetsPerfTab"), std::string::npos);
+	EXPECT_NE(Body.find("s_AssetsTabSwitchFirstFrame = 1;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsPerfStagesUseRealFrameId)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+
+	EXPECT_NE(Source.find("auto LogAssetsFramePerfStage"), std::string::npos);
+	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), pStage, DurationMs, Force, pExtra);"), std::string::npos);
+	EXPECT_NE(Source.find("LogAssetsFramePerfStage(\"assets_preview_draw_workshop_cards\""), std::string::npos);
+	EXPECT_NE(Source.find("LogAssetsFramePerfStage(\"assets_card_geometry\""), std::string::npos);
+	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_window_focus\""), std::string::npos);
+	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_preview_upload_queue_push\""), std::string::npos);
+	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_workshop_thumb_start_local\""), std::string::npos);
+	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_workshop_thumb_start_remote\""), std::string::npos);
+	EXPECT_EQ(Source.find("QmPerfLogStage(\"perf/assets\", pStage, DurationMs, Force, nullptr"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, PerfAnalyzerReportsUiBudgetFields)
+{
+	const std::string Stats = ReadRepoFile("qmclient_scripts/perf/lib/stats.ts");
+	const std::string Quality = ReadRepoFile("qmclient_scripts/perf/lib/quality.ts");
+	const std::string Report = ReadRepoFile("qmclient_scripts/perf/lib/report.ts");
+	const std::string Tests = ReadRepoFile("qmclient_scripts/perf/test.ts");
+
+	EXPECT_NE(Stats.find("export interface SettingsUiBudgetSummary"), std::string::npos);
+	EXPECT_NE(Stats.find("settingsUiBudgetSummary(entries"), std::string::npos);
+	EXPECT_NE(Stats.find("layout_ms"), std::string::npos);
+	EXPECT_NE(Stats.find("text_ms"), std::string::npos);
+	EXPECT_NE(Stats.find("draw_calls"), std::string::npos);
+	EXPECT_NE(Stats.find("heap_allocs"), std::string::npos);
+	EXPECT_NE(Quality.find("settingsUiBudget"), std::string::npos);
+	EXPECT_NE(Report.find("Settings UI Budget"), std::string::npos);
+	EXPECT_NE(Report.find("APPROXIMATE"), std::string::npos);
+	EXPECT_NE(Report.find("Draw Calls Est."), std::string::npos);
+	EXPECT_NE(Report.find("不能当完整 renderer/allocator 计数"), std::string::npos);
+	EXPECT_NE(Tests.find("testSettingsUiBudgetFieldsAppearInSummaryAndReport"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TClientSettingsTab0StableTextKeysMatchPlan)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+
+	EXPECT_NE(Menus.find("BuildTClientSettingsMenuTextPlan(vItems, MainView, m_TClientSettingsTab);"), std::string::npos);
+	EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-prediction-margin\""), std::string::npos);
+	EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-outline-opacity\""), std::string::npos);
+	EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-outline-solid-opacity\""), std::string::npos);
+	EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-outline-width\""), std::string::npos);
+	EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-player-indicator-title\""), std::string::npos);
+
+	EXPECT_EQ(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-prediction-margin\""), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-player-indicator-title\")"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TClientTab0StableTextKeysMatchLatestLogSamples)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+
+	EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-antiping-uncertainty-scale\""), std::string::npos);
+	EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-auto-vote-minimum-time\""), std::string::npos);
+	EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-auto-reply-title\""), std::string::npos);
+	EXPECT_NE(Source.find("\"tclient-antiping-uncertainty-scale\""), std::string::npos);
+	EXPECT_NE(Source.find("\"tclient-auto-vote-minimum-time\""), std::string::npos);
+	EXPECT_NE(Source.find("\"tclient-auto-reply-title\""), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-auto-reply-title\")"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TClientPrewarmDoesNotRunUnboundedInVisibleTargetFrame)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("const bool TClientVisibleTargetFrame = !PrewarmOnly"), std::string::npos);
+	EXPECT_NE(Body.find("SetProgressiveEnabled(TClientVisibleTargetFrame)"), std::string::npos);
+	EXPECT_NE(Body.find("SetMaxSectionsPerFrame(TClientVisibleTargetFrame ?"), std::string::npos);
+	EXPECT_NE(Body.find("tclient_settings_left_prewarm_budgeted"), std::string::npos);
+	EXPECT_NE(Body.find("tclient_settings_right_prewarm_budgeted"), std::string::npos);
+	EXPECT_EQ(Body.find("s_VisualFontLoader.SetProgressiveEnabled(false);"), std::string::npos);
+	EXPECT_EQ(Body.find("s_RightSectionLoader.SetProgressiveEnabled(false);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TClientSectionMeasuredHeightMatchesRenderedHeight)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("LogTClientSectionHeightConsistency"), std::string::npos);
+	EXPECT_NE(Body.find("section_height_measured=%.3f section_height_rendered=%.3f height_delta=%.3f"), std::string::npos);
+	EXPECT_NE(Body.find("MeasuredHeight = "), std::string::npos);
+	EXPECT_NE(Body.find("RenderedHeight = "), std::string::npos);
+	EXPECT_NE(Body.find("absolute(HeightDelta) <= 0.01f"), std::string::npos);
+	EXPECT_NE(Body.find("RenderBoxedFullSection"), std::string::npos);
+	EXPECT_NE(Body.find("FillCachedStaticLayer"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsWorkshopCardDrawHasSubstageTelemetry)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("assets_preview_draw_workshop_cards_layout_text"), std::string::npos);
+	EXPECT_NE(Body.find("assets_preview_draw_workshop_cards_preview_draw"), std::string::npos);
+	EXPECT_NE(Body.find("assets_preview_draw_workshop_cards_thumb_scheduling"), std::string::npos);
+	EXPECT_NE(Body.find("layout_text_ms=%.3f preview_draw_ms=%.3f thumb_scheduling_ms=%.3f"), std::string::npos);
+	EXPECT_NE(Body.find("char aExtra[512];"), std::string::npos);
+	EXPECT_NE(Body.find("CardLayoutTextTimer"), std::string::npos);
+	EXPECT_NE(Body.find("CardPreviewDrawTimer"), std::string::npos);
+	EXPECT_NE(Body.find("ThumbSchedulingTimer"), std::string::npos);
+	EXPECT_NE(Body.find("WorkshopCardLayoutTextMs += CardLayoutTextTimer.ElapsedMs();"), std::string::npos);
+	EXPECT_NE(Body.find("WorkshopCardPreviewDrawMs += CardPreviewDrawTimer.ElapsedMs();"), std::string::npos);
+	EXPECT_NE(Body.find("WorkshopCardThumbSchedulingMs += ThumbSchedulingTimer.ElapsedMs();"), std::string::npos);
+	EXPECT_NE(Body.find("UiBudget.m_LayoutMs = WorkshopCardsTimer.ElapsedMs();"), std::string::npos);
+	EXPECT_NE(Body.find("UiBudget.m_TextReused = 0;"), std::string::npos);
+	EXPECT_EQ(Body.find("WorkshopCardLoopMs * 0.5"), std::string::npos);
+	EXPECT_EQ(Body.find("WorkshopCardLoopMs - WorkshopCardLayoutTextMs"), std::string::npos);
+	EXPECT_EQ(Body.find("UiBudget.m_LayoutMs = AssetsUiBudgetTimer.ElapsedMs();"), std::string::npos);
+	EXPECT_EQ(Body.find("UiBudget.m_TextReused = WorkshopVisibleRange.m_RenderedItems;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsTabSwitchLimitsFirstFrameVisibleThumbStarts)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("constexpr int MaxAssetsTabSwitchVisibleThumbStartsFirstFrame = 2;"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsTabSwitchFirstFrame"), std::string::npos);
+	EXPECT_NE(Body.find("MaxAssetsTabSwitchVisibleThumbStartsFirstFrame"), std::string::npos);
+	EXPECT_NE(Body.find("tab_switch_first_frame=%d"), std::string::npos);
+	EXPECT_NE(Body.find("visible_thumb_start_limit=%d"), std::string::npos);
+	EXPECT_NE(Body.find("CombinedVisibleAdmission.m_VisibleStarts >= VisibleThumbStartLimitThisFrame"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsTabSwitchKeepsVisibleThumbStartsCappedForCooldown)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("constexpr int AssetsTabSwitchCooldownFrames"), std::string::npos);
+	EXPECT_NE(Body.find("s_AssetsTabSwitchCooldownFrames = AssetsTabSwitchCooldownFrames;"), std::string::npos);
+	EXPECT_NE(Body.find("const bool AssetsTabSwitchCooldownActive = s_AssetsTabSwitchCooldownFrames > 0;"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsTabSwitchCooldownActive ? MaxAssetsTabSwitchVisibleThumbStartsPerFrame : MaxWorkshopThumbStartsPerFrameAdaptive"), std::string::npos);
+	EXPECT_NE(Body.find("tab_switch_cooldown_frames=%d"), std::string::npos);
+	EXPECT_NE(Body.find("--s_AssetsTabSwitchCooldownFrames;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsEntityBgInstalledThumbsRespectTabSwitchVisibleCap)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("int &VisibleStartsThisFrame"), std::string::npos);
+	EXPECT_NE(Source.find("int MaxVisibleStartsPerFrame"), std::string::npos);
+	EXPECT_NE(Source.find("if(HighPriority && VisibleStartsThisFrame >= MaxVisibleStartsPerFrame)"), std::string::npos);
+	EXPECT_NE(Source.find("++VisibleStartsThisFrame;"), std::string::npos);
+	EXPECT_NE(Body.find("CombinedVisibleAdmission.m_VisibleStarts"), std::string::npos);
+	EXPECT_NE(Body.find("VisibleThumbStartLimitThisFrame"), std::string::npos);
+	EXPECT_NE(Body.find("CombinedVisibleAdmission.m_VisibleStarts,\n\t\t\t\t\t   VisibleThumbStartLimitThisFrame"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsTabSwitchDoesNotTransformCardGeometry)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("TriggerUiSwitchAnimation(AssetsTabSwitchNode"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsTabSwitchFirstFrame"), std::string::npos);
+	EXPECT_EQ(Body.find("ApplyUiSwitchOffset(MainView, TransitionStrength, s_AssetsTransitionDirection"), std::string::npos);
+	EXPECT_EQ(Body.find("ApplyUiSwitchOffset(MainView"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardShellFirstRenderingExists)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("enum class ESettingsAssetsCardHydrationLayer"), std::string::npos);
+	EXPECT_NE(Source.find("SSettingsAssetsCardShell"), std::string::npos);
+	EXPECT_NE(Source.find("SSettingsAssetsCardMetadataCacheEntry"), std::string::npos);
+	EXPECT_NE(Source.find("SSettingsAssetsCardPreviewState"), std::string::npos);
+	EXPECT_NE(Body.find("RenderAssetsCardShell("), std::string::npos);
+	EXPECT_NE(Body.find("RenderAssetsCardMetadata("), std::string::npos);
+	EXPECT_NE(Body.find("RenderAssetsCardPreview("), std::string::npos);
+	EXPECT_LT(Body.find("RenderAssetsCardShell("), Body.find("RenderAssetsCardMetadata("));
+	EXPECT_LT(Body.find("RenderAssetsCardShell("), Body.find("RenderAssetsCardPreview("));
+}
+
+TEST(QmMonitoringHelpers, AssetsCardMetadataUsesDedicatedCache)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("struct SSettingsAssetsCardCacheKey"), std::string::npos);
+	EXPECT_NE(Source.find("m_AssetId"), std::string::npos);
+	EXPECT_NE(Source.find("m_Tab"), std::string::npos);
+	EXPECT_NE(Source.find("m_LocaleHash"), std::string::npos);
+	EXPECT_NE(Source.find("m_UiScale"), std::string::npos);
+	EXPECT_NE(Source.find("m_CardWidth"), std::string::npos);
+	EXPECT_NE(Source.find("SETTINGS_ASSETS_CARD_METADATA_CACHE_MAX_ENTRIES"), std::string::npos);
+	EXPECT_NE(Source.find("TrimAssetsCardMetadataCacheForInsert("), std::string::npos);
+	EXPECT_NE(Source.find("static std::unordered_map<SSettingsAssetsCardCacheKey, SSettingsAssetsCardMetadataCacheEntry"), std::string::npos);
+	EXPECT_NE(Source.find("BuildAssetsCardCacheKey("), std::string::npos);
+	EXPECT_NE(Source.find("FindAssetsCardMetadata("), std::string::npos);
+	EXPECT_NE(Source.find("HydrateAssetsCardMetadata("), std::string::npos);
+	EXPECT_NE(Source.find("HydrateAssetsCardMetadataTimed("), std::string::npos);
+	EXPECT_NE(Source.find("RefreshAssetsCardMetadata("), std::string::npos);
+	EXPECT_NE(Body.find("SSettingsAssetsCardMetadataCacheEntry *pMetadata = FindAssetsCardMetadata("), std::string::npos);
+	EXPECT_NE(Body.find("pMetadata = HydrateAssetsCardMetadataTimed("), std::string::npos);
+	EXPECT_NE(Body.find("RefreshAssetsCardMetadata(*pMetadata"), std::string::npos);
+	EXPECT_EQ(Source.find("RegisterMenuTextPlanItem(\"assets-card"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardHydrationSchedulerDefersContentAfterTabSwitch)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("struct SSettingsAssetsCardHydrationScheduler"), std::string::npos);
+	EXPECT_NE(Source.find("BeginAssetsCardHydrationFrame("), std::string::npos);
+	EXPECT_NE(Source.find("CanHydrateMetadata("), std::string::npos);
+	EXPECT_NE(Source.find("CanRenderMetadata("), std::string::npos);
+	EXPECT_NE(Source.find("CanHydratePreview("), std::string::npos);
+	EXPECT_NE(Source.find("CanRenderPreview("), std::string::npos);
+	EXPECT_NE(Source.find("m_TabSwitchShellOnlyFrame"), std::string::npos);
+	EXPECT_NE(Body.find("SSettingsAssetsCardHydrationScheduler CardHydrationScheduler = BeginAssetsCardHydrationFrame("), std::string::npos);
+	EXPECT_NE(Body.find("CardHydrationScheduler.CanRenderMetadata("), std::string::npos);
+	EXPECT_NE(Body.find("CardHydrationScheduler.CanRenderPreview("), std::string::npos);
+	EXPECT_EQ(Body.find("RenderAssetsCardPreview(Shell, PreviewState, true, CardHydrationScheduler.CanHydratePreview("), std::string::npos);
+	EXPECT_NE(Body.find("const bool RenderMetadata = CardHydrationScheduler.CanRenderMetadata(CombinedVisible, MetadataCached) &&"), std::string::npos);
+	EXPECT_NE(Body.find("(MetadataCached || PreviewPipelineScheduler.CanHydrateMetadata(ESettingsResourcePreviewPriority::VISIBLE));"), std::string::npos);
+	EXPECT_NE(Body.find("tab_switch_shell_only=%d"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardPreviewDrawDoesNotStarveAfterBudget)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("bool CanRenderPreview(bool Visible, bool HasPreviewContent, bool HeavyPreviewDeferred = false)"), std::string::npos);
+	EXPECT_NE(Source.find("if(!HasPreviewContent)"), std::string::npos);
+	EXPECT_NE(Body.find("CardHydrationScheduler.CanRenderPreview(CombinedVisible, PreviewState.m_Texture.IsValid() || PreviewState.m_DrawEntityTileArtifact, PreviewState.m_EntityBgHeavyPreviewDeferred)"), std::string::npos);
+	EXPECT_NE(Body.find("CardHydrationScheduler.CanRenderPreview(CombinedVisible, PreviewReady)"), std::string::npos);
+	EXPECT_EQ(Body.find("CardHydrationScheduler.CanHydratePreview(CombinedVisible, PreviewState.m_Texture.IsValid() || PreviewState.m_DrawEntityTileArtifact)"), std::string::npos);
+	EXPECT_EQ(Body.find("CardHydrationScheduler.CanHydratePreview(CombinedVisible, PreviewReady)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardPreviewHeavyPathLeavesDrawLoop)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("EnsureAssetsCardPreviewArtifact("), std::string::npos);
+	EXPECT_NE(Source.find("RenderAssetsEntityTilePreviewArtifact("), std::string::npos);
+	EXPECT_NE(Body.find("EnsureAssetsCardPreviewArtifact("), std::string::npos);
+	EXPECT_NE(Body.find("RenderAssetsCardPreview("), std::string::npos);
+	EXPECT_NE(Source.find("auto RenderAssetsCardShell = [&](const SSettingsAssetsCardShell &Shell)"), std::string::npos);
+	EXPECT_NE(Source.find("ShellRect.Draw(ColorRGBA(0.03f, 0.04f, 0.06f, 0.16f), IGraphics::CORNER_ALL, 10.0f);"), std::string::npos);
+	const size_t ShellStart = Source.find("auto RenderAssetsCardShell = [&](const SSettingsAssetsCardShell &Shell)");
+	ASSERT_NE(ShellStart, std::string::npos);
+	const size_t ShellEnd = Source.find("};", ShellStart);
+	ASSERT_NE(ShellEnd, std::string::npos);
+	const std::string ShellBody = Source.substr(ShellStart, ShellEnd - ShellStart);
+	EXPECT_EQ(ShellBody.find("DrawPreviewFrame(Shell.m_TextureRect);"), std::string::npos);
+	EXPECT_EQ(Body.find("static const int COLS = 7, ROWS = 7;"), std::string::npos);
+	EXPECT_EQ(Body.find("for(int r = 0; r < ROWS; r++)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsEntityBgPreviewHeavyPathDeferredDuringTabSwitchCooldown)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("m_EntityBgHeavyPreviewDeferred"), std::string::npos);
+	EXPECT_NE(Body.find("const bool DeferEntityBgHeavyPreview = s_CurCustomTab == ASSETS_TAB_ENTITY_BG && AssetsTabSwitchCooldownActive"), std::string::npos);
+	EXPECT_NE(Body.find("PreviewState.m_EntityBgHeavyPreviewDeferred = DeferEntityBgHeavyPreview"), std::string::npos);
+	EXPECT_NE(Body.find("++EntityBgHeavyPreviewDeferredCount;"), std::string::npos);
+	EXPECT_NE(Body.find("CardHydrationScheduler.CanRenderPreview(CombinedVisible, PreviewState.m_Texture.IsValid() || PreviewState.m_DrawEntityTileArtifact, PreviewState.m_EntityBgHeavyPreviewDeferred)"), std::string::npos);
+	EXPECT_NE(Body.find("entity_bg_preview_deferred=%d"), std::string::npos);
+	EXPECT_NE(Body.find("entity_bg_preview_deferred_count=%d"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsResourcePreviewPipelineExists)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/qmclient/settings_resource_preview.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/settings_resource_preview.cpp");
+	const std::string CMake = ReadRepoFile("CMakeLists.txt");
+
+	EXPECT_NE(Header.find("struct SResourcePreviewKey"), std::string::npos);
+	EXPECT_NE(Header.find("struct SResourcePreviewState"), std::string::npos);
+	EXPECT_NE(Header.find("class CSettingsResourcePreviewCache"), std::string::npos);
+	EXPECT_NE(Header.find("class CSettingsResourcePreviewScheduler"), std::string::npos);
+	EXPECT_NE(Header.find("class CSettingsResourcePreviewJob"), std::string::npos);
+	EXPECT_NE(Header.find("enum class ESettingsResourcePreviewPriority"), std::string::npos);
+	EXPECT_NE(Header.find("VISIBLE"), std::string::npos);
+	EXPECT_NE(Header.find("NEAR_VISIBLE"), std::string::npos);
+	EXPECT_NE(Header.find("BACKGROUND"), std::string::npos);
+	EXPECT_NE(Source.find("CSettingsResourcePreviewScheduler::BeginFrame"), std::string::npos);
+	const std::string BeginFrameBody = ExtractSourceFunctionBody(Source, "void CSettingsResourcePreviewScheduler::BeginFrame(int VisibleBudget, int NearVisibleBudget, int BackgroundBudget, int UploadBudget)");
+	ASSERT_FALSE(BeginFrameBody.empty());
+	EXPECT_EQ(BeginFrameBody.find("CanStartPreviewJob("), std::string::npos);
+	EXPECT_NE(CMake.find("components/qmclient/settings_resource_preview.cpp"), std::string::npos);
+	EXPECT_NE(CMake.find("src/game/client/components/qmclient/settings_resource_preview.cpp"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsResourcePreviewPipelineHasRealArtifactAndUploadScheduler)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/qmclient/settings_resource_preview.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/settings_resource_preview.cpp");
+
+	EXPECT_NE(Header.find("struct SResourcePreviewArtifact"), std::string::npos);
+	EXPECT_NE(Header.find("class CSettingsResourcePreviewUploadScheduler"), std::string::npos);
+	EXPECT_NE(Header.find("EnqueueUpload(const SResourcePreviewKey &Key, CImageInfo &&Image"), std::string::npos);
+	EXPECT_NE(Header.find("Drain(SResourcePreviewUploadBudget &Budget, SResourcePreviewTelemetry &Telemetry"), std::string::npos);
+	EXPECT_NE(Header.find("m_vUploadQueue"), std::string::npos);
+	EXPECT_NE(Header.find("m_ArtifactReady"), std::string::npos);
+	EXPECT_NE(Header.find("m_UploadQueueDepth"), std::string::npos);
+	EXPECT_NE(Header.find("m_UploadBudgetExhausted"), std::string::npos);
+
+	EXPECT_NE(Source.find("BuildPreviewArtifact("), std::string::npos);
+	EXPECT_NE(Source.find("CSettingsResourcePreviewJob::CSettingsResourcePreviewJob(std::string Name, CImageInfo &&Image, int TargetSize)"), std::string::npos);
+	EXPECT_NE(Source.find("Result.m_Artifact = BuildPreviewArtifact(std::move(m_InputImage), m_TargetSize);"), std::string::npos);
+	EXPECT_NE(Source.find("CSettingsResourcePreviewUploadScheduler::Drain"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsResourcePreviewConsumeUploadBudget(Budget"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsResourcePreviewCommitUploadBudget(Budget"), std::string::npos);
+	EXPECT_NE(Source.find("if(pGraphics == nullptr)"), std::string::npos);
+	EXPECT_NE(Source.find("Telemetry.m_UploadQueueDepth = (int)m_vUploadQueue.size();"), std::string::npos);
+	EXPECT_NE(Source.find("if(Texture.IsValid())"), std::string::npos);
+	EXPECT_NE(Source.find("Cache.MarkPreviewJobDone(Item.m_Key, false);"), std::string::npos);
+	EXPECT_EQ(Source.find("Result.m_Image = std::move(m_InputImage);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsResourcePreviewSchedulerZeroBudgetDoesNotAdmitWork)
+{
+	CSettingsResourcePreviewScheduler Scheduler;
+	Scheduler.BeginFrame(0, 0, 0, 0);
+
+	EXPECT_FALSE(Scheduler.CanHydrateMetadata(ESettingsResourcePreviewPriority::VISIBLE));
+	EXPECT_FALSE(Scheduler.CanHydrateMetadata(ESettingsResourcePreviewPriority::NEAR_VISIBLE));
+	EXPECT_FALSE(Scheduler.CanHydrateMetadata(ESettingsResourcePreviewPriority::BACKGROUND));
+	EXPECT_FALSE(Scheduler.CanStartPreviewJob(ESettingsResourcePreviewPriority::VISIBLE));
+	EXPECT_FALSE(Scheduler.CanStartPreviewJob(ESettingsResourcePreviewPriority::NEAR_VISIBLE));
+	EXPECT_FALSE(Scheduler.CanStartPreviewJob(ESettingsResourcePreviewPriority::BACKGROUND));
+	EXPECT_FALSE(Scheduler.CanUploadPreview());
+}
+
+TEST(QmMonitoringHelpers, SettingsResourcePreviewShellOnlyBlocksPreviewJobsAndUploads)
+{
+	CSettingsResourcePreviewScheduler Scheduler;
+	Scheduler.BeginFrame(2, 2, 2, 2);
+	Scheduler.SetShellOnlyFrame(true);
+
+	EXPECT_TRUE(Scheduler.CanHydrateMetadata(ESettingsResourcePreviewPriority::VISIBLE));
+	EXPECT_FALSE(Scheduler.CanHydrateMetadata(ESettingsResourcePreviewPriority::NEAR_VISIBLE));
+	EXPECT_FALSE(Scheduler.CanHydrateMetadata(ESettingsResourcePreviewPriority::BACKGROUND));
+	EXPECT_FALSE(Scheduler.CanStartPreviewJob(ESettingsResourcePreviewPriority::VISIBLE));
+	EXPECT_FALSE(Scheduler.CanStartPreviewJob(ESettingsResourcePreviewPriority::NEAR_VISIBLE));
+	EXPECT_FALSE(Scheduler.CanStartPreviewJob(ESettingsResourcePreviewPriority::BACKGROUND));
+	EXPECT_FALSE(Scheduler.CanUploadPreview());
+}
+
+TEST(QmMonitoringHelpers, SettingsResourcePreviewUploadBudgetUsesSharedLimiterBeforeLocalBudget)
+{
+	CGpuUploadLimiter Limiter;
+	Limiter.OnFrameStart(0);
+	SSettingsResourceMergeBudget MergeBudget;
+	MergeBudget.m_MaxGpuUploads = 1;
+	SResourcePreviewUploadBudget PreviewBudget;
+	PreviewBudget.m_MaxUploads = 1;
+	PreviewBudget.m_pMergeBudget = &MergeBudget;
+	PreviewBudget.m_pGpuUploadLimiter = &Limiter;
+
+	EXPECT_FALSE(SettingsResourcePreviewConsumeUploadBudget(PreviewBudget));
+	EXPECT_EQ(PreviewBudget.m_UploadsUsed, 0);
+	EXPECT_EQ(MergeBudget.m_MaxGpuUploads, 1);
+	EXPECT_EQ(Limiter.UploadsThisFrame(), 0);
+
+	Limiter.OnFrameStart(1);
+	EXPECT_TRUE(SettingsResourcePreviewConsumeUploadBudget(PreviewBudget));
+	EXPECT_EQ(PreviewBudget.m_UploadsUsed, 1);
+	EXPECT_EQ(MergeBudget.m_MaxGpuUploads, 0);
+	SettingsResourcePreviewCommitUploadBudget(PreviewBudget);
+	EXPECT_EQ(Limiter.UploadsThisFrame(), 1);
+}
+
+TEST(QmMonitoringHelpers, SettingsResourcePreviewRejectsInvalidUploadImagesBeforeBudget)
+{
+	uint8_t aPixel[4] = {255, 255, 255, 255};
+
+	CImageInfo MissingData;
+	MissingData.m_Width = 1;
+	MissingData.m_Height = 1;
+	MissingData.m_Format = CImageInfo::FORMAT_RGBA;
+	EXPECT_FALSE(SettingsResourcePreviewImageValidForUpload(MissingData));
+
+	CImageInfo ZeroWidth;
+	ZeroWidth.m_Width = 0;
+	ZeroWidth.m_Height = 1;
+	ZeroWidth.m_Format = CImageInfo::FORMAT_RGBA;
+	ZeroWidth.m_pData = aPixel;
+	EXPECT_FALSE(SettingsResourcePreviewImageValidForUpload(ZeroWidth));
+
+	CImageInfo ZeroHeight;
+	ZeroHeight.m_Width = 1;
+	ZeroHeight.m_Height = 0;
+	ZeroHeight.m_Format = CImageInfo::FORMAT_RGBA;
+	ZeroHeight.m_pData = aPixel;
+	EXPECT_FALSE(SettingsResourcePreviewImageValidForUpload(ZeroHeight));
+
+	CImageInfo ValidImage;
+	ValidImage.m_Width = 1;
+	ValidImage.m_Height = 1;
+	ValidImage.m_Format = CImageInfo::FORMAT_RGBA;
+	ValidImage.m_pData = aPixel;
+	EXPECT_TRUE(SettingsResourcePreviewImageValidForUpload(ValidImage));
+}
+
+TEST(QmMonitoringHelpers, SettingsResourcePreviewDrainRejectsInvalidImagesBeforeConsumingBudget)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/settings_resource_preview.cpp");
+	const std::string DrainBody = ExtractSourceFunctionBody(Source, "int CSettingsResourcePreviewUploadScheduler::Drain(SResourcePreviewUploadBudget &Budget, SResourcePreviewTelemetry &Telemetry, CSettingsResourcePreviewCache &Cache, IGraphics *pGraphics)");
+	ASSERT_FALSE(DrainBody.empty());
+
+	const size_t ValidatePos = DrainBody.find("!SettingsResourcePreviewImageValidForUpload(Item.m_Image)");
+	const size_t ConsumePos = DrainBody.find("SettingsResourcePreviewConsumeUploadBudget(Budget");
+	ASSERT_NE(ValidatePos, std::string::npos);
+	ASSERT_NE(ConsumePos, std::string::npos);
+	EXPECT_LT(ValidatePos, ConsumePos);
+	EXPECT_NE(DrainBody.find("Cache.MarkPreviewJobDone(Item.m_Key, false);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsEntityBgPreviewUsesArtifactJob)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Preview = ReadRepoFile("src/game/client/components/qmclient/settings_resource_preview.h");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/components/qmclient/settings_resource_preview.h>"), std::string::npos);
+	EXPECT_NE(Preview.find("CSettingsResourcePreviewJob"), std::string::npos);
+	EXPECT_NE(Source.find("SResourcePreviewKey"), std::string::npos);
+	EXPECT_NE(Source.find("CSettingsResourcePreviewCache"), std::string::npos);
+	EXPECT_NE(Source.find("CSettingsResourcePreviewScheduler"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsResourcePreviewDrawResult"), std::string::npos);
+	EXPECT_NE(Body.find("ESettingsResourcePreviewDrawResult::PLACEHOLDER"), std::string::npos);
+	EXPECT_NE(Body.find("preview_jobs_started=%d preview_jobs_done=%d preview_uploads=%d preview_admissions=%d preview_artifact_ms=%.3f metadata_hydrate_ms=%.3f placeholder_count=%d ready_texture_count=%d visible_ready_ratio=%.3f"), std::string::npos);
+	EXPECT_NE(Body.find("CanStartPreviewJob(ESettingsResourcePreviewPriority::VISIBLE"), std::string::npos);
+	EXPECT_NE(Source.find("CSettingsResourcePreviewUploadScheduler gs_SettingsAssetsResourcePreviewUploadScheduler"), std::string::npos);
+	EXPECT_NE(Source.find("ProcessAssetsResourcePreviewJobs("), std::string::npos);
+	EXPECT_NE(Source.find("StartAssetsEntityBgPreviewArtifactJob("), std::string::npos);
+	EXPECT_NE(Source.find("m_vEntityBgPreviewJobs"), std::string::npos);
+	EXPECT_NE(Body.find("ProcessAssetsResourcePreviewJobs(Graphics(), ResourcePreviewTelemetry"), std::string::npos);
+	EXPECT_NE(Body.find("StartAssetsEntityBgPreviewArtifactJob(PreviewKey"), std::string::npos);
+	EXPECT_EQ(Body.find("gs_SettingsAssetsResourcePreviewCache.MarkPreviewJobStarted(PreviewKey);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardDrawLoopDoesNotRunHeavyPreview)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t RenderPreviewStart = Source.find("auto RenderAssetsCardPreview = ");
+	ASSERT_NE(RenderPreviewStart, std::string::npos);
+	const size_t RenderPreviewEnd = Source.find("auto RenderAssetsCardLoadingShells", RenderPreviewStart);
+	ASSERT_NE(RenderPreviewEnd, std::string::npos);
+	const std::string RenderPreviewBody = Source.substr(RenderPreviewStart, RenderPreviewEnd - RenderPreviewStart);
+
+	EXPECT_NE(RenderPreviewBody.find("SettingsResourcePreviewDrawResult"), std::string::npos);
+	EXPECT_NE(RenderPreviewBody.find("DrawResourcePreviewPlaceholder"), std::string::npos);
+	EXPECT_EQ(RenderPreviewBody.find("Localize(\"Video Background\")"), std::string::npos);
+	EXPECT_EQ(RenderPreviewBody.find("Localize(\"Map Preview\")"), std::string::npos);
+	EXPECT_EQ(RenderPreviewBody.find("FONT_ICON_PLAY"), std::string::npos);
+	EXPECT_EQ(RenderPreviewBody.find("m_DrawEntityBgVideoFallback"), std::string::npos);
+	EXPECT_EQ(RenderPreviewBody.find("m_DrawEntityBgFallback"), std::string::npos);
+	EXPECT_EQ(Body.find("PreviewState.m_DrawEntityBgVideoFallback ="), std::string::npos);
+	EXPECT_EQ(Body.find("PreviewState.m_DrawEntityBgFallback ="), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsTabSwitchFirstFrameShellOnly)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("m_TabSwitchShellOnlyFrame"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsTabSwitchFirstFrame"), std::string::npos);
+	EXPECT_NE(Body.find("CardHydrationScheduler.m_TabSwitchShellOnlyFrame"), std::string::npos);
+	EXPECT_NE(Body.find("PreviewPipelineScheduler.BeginFrame("), std::string::npos);
+	EXPECT_NE(Body.find("PreviewPipelineScheduler.SetShellOnlyFrame(AssetsTabSwitchFirstFrame)"), std::string::npos);
+	EXPECT_NE(Body.find("PreviewPipelineScheduler.SetShellOnlyFrame(AssetsTabSwitchFirstFrame)"), std::string::npos);
+	EXPECT_NE(Body.find("tab_switch_shell_only=%d"), std::string::npos);
+	EXPECT_EQ(Body.find("if(AssetsTabSwitchFirstFrame)\n\t\t\t\t\t\t++ResourcePreviewTelemetry.m_PlaceholderCount;"), std::string::npos);
+	EXPECT_EQ(Body.find("StartWorkshopThumb(Asset, SettingsWorkshopThumbShouldStartHighPriority"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SkinsUseSharedPreviewUploadBudget)
+{
+	const std::string Skins = ReadRepoFile("src/game/client/components/skins.cpp");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/qmclient/settings_resource_preview.h");
+
+	EXPECT_NE(Header.find("CSettingsResourcePreviewScheduler"), std::string::npos);
+	EXPECT_NE(Header.find("CSettingsResourcePreviewUploadScheduler"), std::string::npos);
+	EXPECT_NE(Skins.find("#include <game/client/components/qmclient/settings_resource_preview.h>"), std::string::npos);
+	EXPECT_NE(Skins.find("SResourcePreviewUploadBudget SkinPreviewUploadBudget"), std::string::npos);
+	EXPECT_NE(Skins.find("SettingsResourcePreviewConsumeUploadBudget(SkinPreviewUploadBudget"), std::string::npos);
+	EXPECT_NE(Skins.find("SettingsResourcePreviewCommitUploadBudget(SkinPreviewUploadBudget"), std::string::npos);
+	EXPECT_NE(Skins.find("preview_uploads"), std::string::npos);
+	EXPECT_LT(Skins.find("SettingsResourcePreviewConsumeUploadBudget(SkinPreviewUploadBudget"), Skins.find("LoadSkinFinish(pSkinContainer"));
+	EXPECT_LT(Skins.find("LoadSkinFinish(pSkinContainer"), Skins.find("SettingsResourcePreviewCommitUploadBudget(SkinPreviewUploadBudget"));
+	EXPECT_NE(Menus.find("SResourcePreviewTelemetry TeePreviewTelemetry"), std::string::npos);
+	EXPECT_NE(Menus.find("SettingsResourcePreviewDrawResult(TeeResourcePreviewState)"), std::string::npos);
+	EXPECT_NE(Menus.find("tee_preview_admissions=%d tee_ready_textures=%d tee_placeholders=%d"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsMetadataHydrationIsBudgetedAndTimed)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("HydrateAssetsCardMetadataTimed("), std::string::npos);
+	EXPECT_NE(Source.find("ResourcePreviewTelemetry.m_MetadataHydrateMs += HydrateTimer.ElapsedMs();"), std::string::npos);
+	EXPECT_NE(Body.find("PreviewPipelineScheduler.CanHydrateMetadata(ESettingsResourcePreviewPriority::VISIBLE)"), std::string::npos);
+	EXPECT_NE(Body.find("HydrateAssetsCardMetadataTimed("), std::string::npos);
+	EXPECT_EQ(Body.find("HydrateAssetsCardMetadata(\n"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TextGlyphContainerTelemetryExists)
+{
+	const std::string Text = ReadRepoFile("src/engine/client/text.cpp");
+	const std::string Stats = ReadRepoFile("qmclient_scripts/perf/lib/stats.ts");
+	const std::string Report = ReadRepoFile("qmclient_scripts/perf/lib/report.ts");
+	const std::string Tests = ReadRepoFile("qmclient_scripts/perf/test.ts");
+
+	EXPECT_NE(Text.find("perf/text"), std::string::npos);
+	EXPECT_NE(Text.find("event=text_runtime_budget"), std::string::npos);
+	EXPECT_NE(Text.find("glyph_new=%d glyph_uploads=%d glyph_upload_ms=%.3f text_container_new=%d text_container_uploads=%d text_container_upload_ms=%.3f"), std::string::npos);
+	EXPECT_NE(Text.find("m_QmPerfGlyphNew"), std::string::npos);
+	EXPECT_NE(Text.find("m_QmPerfTextContainerUploads"), std::string::npos);
+	EXPECT_NE(Stats.find("export interface TextRuntimeBudgetSummary"), std::string::npos);
+	EXPECT_NE(Stats.find("textRuntimeBudgetSummary(entries"), std::string::npos);
+	EXPECT_NE(Report.find("Text Runtime Budget"), std::string::npos);
+	EXPECT_NE(Tests.find("testTextRuntimeBudgetSummary"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, PerfAnalyzerReportsOnePctLowAndPreviewBudget)
+{
+	const std::string Stats = ReadRepoFile("qmclient_scripts/perf/lib/stats.ts");
+	const std::string Report = ReadRepoFile("qmclient_scripts/perf/lib/report.ts");
+	const std::string Quality = ReadRepoFile("qmclient_scripts/perf/lib/quality.ts");
+	const std::string Tests = ReadRepoFile("qmclient_scripts/perf/test.ts");
+
+	EXPECT_NE(Stats.find("export interface PreviewBudgetSummary"), std::string::npos);
+	EXPECT_NE(Stats.find("previewBudgetSummary(entries"), std::string::npos);
+	EXPECT_NE(Stats.find("preview_jobs_started"), std::string::npos);
+	EXPECT_NE(Stats.find("preview_jobs_done"), std::string::npos);
+	EXPECT_NE(Stats.find("preview_uploads"), std::string::npos);
+	EXPECT_NE(Stats.find("preview_admissions"), std::string::npos);
+	EXPECT_NE(Stats.find("visible_ready_ratio"), std::string::npos);
+	EXPECT_NE(Stats.find("fpsOnePctLowAvailable"), std::string::npos);
+	EXPECT_NE(Stats.find("coldTabSwitchFpsSummaries"), std::string::npos);
+	EXPECT_NE(Stats.find("warmTabSwitchFpsSummaries"), std::string::npos);
+	EXPECT_NE(Report.find("Cold/Warm Tab Switch"), std::string::npos);
+	EXPECT_NE(Report.find("Preview Budget"), std::string::npos);
+	EXPECT_NE(Report.find("1% Low Target"), std::string::npos);
+	EXPECT_NE(Quality.find("previewBudget"), std::string::npos);
+	EXPECT_NE(Tests.find("testPreviewBudgetSummaryAndColdWarmTabSwitches"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardShellLayoutAvoidsPerCardTextWidth)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const size_t LayoutStart = Source.find("auto LayoutAssetsCardShell = ");
+	ASSERT_NE(LayoutStart, std::string::npos);
+	const size_t LayoutEnd = Source.find("};", LayoutStart);
+	ASSERT_NE(LayoutEnd, std::string::npos);
+	const std::string LayoutBody = Source.substr(LayoutStart, LayoutEnd - LayoutStart);
+
+	EXPECT_NE(Source.find("const float AssetsCardDownloadedTagWidth = TextRender()->TextWidth"), std::string::npos);
+	EXPECT_NE(Source.find("const float AssetsCardLocalOnlyBadgeWidth = TextRender()->TextWidth"), std::string::npos);
+	EXPECT_EQ(LayoutBody.find("TextRender()->TextWidth"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardMetadataDoesNotHydrateWithoutBudget)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("FindAssetsCardMetadata("), std::string::npos);
+	EXPECT_NE(Source.find("HydrateAssetsCardMetadata("), std::string::npos);
+	EXPECT_NE(Source.find("RefreshAssetsCardMetadata("), std::string::npos);
+	EXPECT_EQ(Body.find("if(pMetadata == nullptr && CardHydrationScheduler.CanHydrateMetadata(CombinedVisible))"), std::string::npos);
+	EXPECT_NE(Body.find("if(pMetadata == nullptr && RenderMetadata)"), std::string::npos);
+	EXPECT_NE(Body.find("if(pMetadata != nullptr && RenderMetadata)"), std::string::npos);
+	EXPECT_EQ(Body.find("GetOrHydrateAssetsCardMetadata("), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoLabel(&ErrorRect, Localize(\"Download failed\"), 9.0f, TEXTALIGN_MC);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardInitialEntryUsesStableShellGeometry)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("AssetsCardShellShowsAuthorRow("), std::string::npos);
+	EXPECT_NE(Source.find("AssetsCardListAreaWithStableScrollbar("), std::string::npos);
+	EXPECT_NE(Source.find("RenderAssetsCardLoadingShells("), std::string::npos);
+	EXPECT_NE(Body.find("const bool ShowAuthorRow = AssetsCardShellShowsAuthorRow(s_CurCustomTab, true"), std::string::npos);
+	EXPECT_NE(Body.find("const bool ShowAuthorRow = AssetsCardShellShowsAuthorRow(s_CurCustomTab, false"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsCardListAreaWithStableScrollbar(WorkshopListArea, s_WorkshopAssetsListBox.ScrollbarWidthMax(), s_WorkshopAssetsListBox.ScrollbarMargin())"), std::string::npos);
+	EXPECT_NE(Body.find("s_WorkshopAssetsListBox.DoStart(WorkshopRowHeight, CombinedCount, Columns, 1, OldCombinedSelected, &WorkshopListArea, false, IGraphics::CORNER_ALL, true);"), std::string::npos);
+	EXPECT_NE(Body.find("RenderAssetsCardLoadingShells("), std::string::npos);
+	EXPECT_NE(Body.find("const bool AssetsInitialEntryLoading = m_aAssetLoadStates[s_CurCustomTab] == ASSET_LOAD_STATE_LOADING || WorkshopState.m_pListTask != nullptr;"), std::string::npos);
+	EXPECT_NE(Body.find("stage=assets_card_geometry"), std::string::npos);
+	EXPECT_NE(Body.find("geometry_changed=%d"), std::string::npos);
+	EXPECT_LT(Body.find("if(AssetsInitialEntryLoading)"), Body.find("Ui()->DoLabel(&WorkshopListArea, Localize(\"No assets\"), 12.0f, TEXTALIGN_MC);"));
+	EXPECT_EQ(Source.find("ShouldShowAssetCardAuthorRow(!Asset.m_Author.empty(), false)"), std::string::npos);
+	EXPECT_EQ(Source.find("ShowAuthorRow = !Asset.m_Author.empty()"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DemoBrowserUsesAdaptiveMetadataBudget)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");
@@ -2324,6 +3047,73 @@ TEST(QmMonitoringHelpers, SettingsStableTextTargetAcceptanceRequiresFullCoverage
 	EXPECT_NE(Report.find("Visible Ready"), std::string::npos);
 	EXPECT_NE(Quality.find("stable text coverage blocked settings acceptance"), std::string::npos);
 	EXPECT_NE(Quality.find("assets visible-ready preflight missing"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string ScrollRegion = ReadRepoFile("src/game/client/ui_scrollregion.cpp");
+
+	EXPECT_NE(Header.find("struct SSettingsScrollRegionFrame"), std::string::npos);
+	EXPECT_NE(Header.find("BeginSettingsScrollRegion(CScrollRegion &ScrollRegion"), std::string::npos);
+	EXPECT_NE(Header.find("FinishSettingsScrollRegion(CScrollRegion &ScrollRegion"), std::string::npos);
+	EXPECT_NE(Header.find("const CUIRect *pEndRect = nullptr"), std::string::npos);
+	EXPECT_NE(Menus.find("CMenus::SSettingsScrollRegionFrame CMenus::BeginSettingsScrollRegion(CScrollRegion &ScrollRegion"), std::string::npos);
+	EXPECT_NE(Menus.find("void CMenus::FinishSettingsScrollRegion(CScrollRegion &ScrollRegion"), std::string::npos);
+	EXPECT_NE(Menus.find("if(pEndRect != nullptr)\n\t\tScrollRegion.AddRect(*pEndRect);"), std::string::npos);
+	EXPECT_NE(Menus.find("Frame.m_FinalOffsetY = ScrollRegion.ScrollbarShown() ? ScrollRegion.ContentScrollOffsetY() : 0.0f;"), std::string::npos);
+	EXPECT_NE(Menus.find("m_SettingsScrollActive = m_SettingsScrollActive ||"), std::string::npos);
+	EXPECT_NE(Menus.find("m_SettingsRuntimeMetadata.m_LastScrollY = Frame.m_FinalOffsetY;"), std::string::npos);
+	EXPECT_NE(ScrollRegion.find("m_ContentScrollOff.y = -m_ScrollY;"), std::string::npos);
+	const std::string ScrollRegionEnd = ExtractSourceFunctionBody(ScrollRegion, "void CScrollRegion::End()");
+	ASSERT_FALSE(ScrollRegionEnd.empty());
+	const size_t NoOverflowPos = ScrollRegionEnd.find("if(m_ContentH <= m_ClipRect.h)");
+	const size_t ScrollWheelPos = ScrollRegionEnd.find("// scroll wheel");
+	ASSERT_NE(NoOverflowPos, std::string::npos);
+	ASSERT_NE(ScrollWheelPos, std::string::npos);
+	const std::string NoOverflowBranch = ScrollRegionEnd.substr(NoOverflowPos, ScrollWheelPos - NoOverflowPos);
+	EXPECT_EQ(NoOverflowBranch.find("m_ScrollY = 0.0f;"), std::string::npos);
+	EXPECT_EQ(NoOverflowBranch.find("m_AnimTargetScrollY = 0.0f;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
+{
+	const std::string TClient = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Controls = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");
+	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+
+	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams"), std::string::npos);
+	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT"), std::string::npos);
+	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams"), std::string::npos);
+	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
+	EXPECT_NE(QmClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams"), std::string::npos);
+	EXPECT_NE(QmClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
+	EXPECT_NE(QmClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion"), std::string::npos);
+	EXPECT_NE(Controls.find("BeginSettingsScrollRegion(m_SettingsScrollRegion, &MainView, ScrollParams"), std::string::npos);
+	EXPECT_NE(Controls.find("FinishSettingsScrollRegion(m_SettingsScrollRegion, ScrollFrame);"), std::string::npos);
+	EXPECT_EQ(Controls.find("FinishSettingsScrollRegion(m_SettingsScrollRegion, ScrollFrame, &"), std::string::npos);
+	EXPECT_NE(Settings.find("BeginSettingsScrollRegion(gs_LanguageScrollRegion, &MainView, ScrollParams"), std::string::npos);
+	EXPECT_NE(Settings.find("FinishSettingsScrollRegion(gs_LanguageScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_LANGUAGE"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TClientSettingsDoesNotWriteScrollMetadataBeforeFinish)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t BeginPos = Body.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams");
+	const size_t FinishPos = Body.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT");
+	ASSERT_NE(BeginPos, std::string::npos);
+	ASSERT_NE(FinishPos, std::string::npos);
+	EXPECT_LT(BeginPos, FinishPos);
+
+	const std::string BeforeFinish = Body.substr(0, FinishPos);
+	EXPECT_EQ(BeforeFinish.find("m_SettingsRuntimeMetadata.m_LastScrollY ="), std::string::npos);
+	EXPECT_EQ(BeforeFinish.find("m_SettingsRuntimeMetadata.m_LastScrollPage ="), std::string::npos);
+	EXPECT_EQ(BeforeFinish.find("m_SettingsRuntimeMetadata.m_Valid = true;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, MenuPerfEventsExposePageAttributionFields)

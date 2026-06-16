@@ -705,7 +705,7 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 			Console()->ExecuteLine(aBuf);
 
 			char aMsg[128];
-			str_format(aMsg, sizeof(aMsg), "已将 %s 移出好友", pPlayerName);
+			str_format(aMsg, sizeof(aMsg), Localize("Removed %s from friends"), pPlayerName);
 			GameClient()->m_Chat.AddLine(-2, 0, aMsg);
 		}
 		else
@@ -714,7 +714,7 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 			Console()->ExecuteLine(aBuf);
 
 			char aMsg[128];
-			str_format(aMsg, sizeof(aMsg), "已将 %s 添加为好友", pPlayerName);
+			str_format(aMsg, sizeof(aMsg), Localize("Added %s as friend"), pPlayerName);
 			GameClient()->m_Chat.AddLine(-2, 0, aMsg);
 		}
 		break;
@@ -798,7 +798,7 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 
 		if(LocalTeam != TargetTeam)
 		{
-			GameClient()->m_Chat.AddLine(-2, 0, "无法交换：对方不在你的队伍");
+			GameClient()->m_Chat.AddLine(-2, 0, Localize("Cannot swap: the other player is not in your team"));
 			break;
 		}
 

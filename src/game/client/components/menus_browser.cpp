@@ -2385,7 +2385,9 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					if(Friend.ServerInfo() && HasNote)
 					{
 						TooltipText = Localize("Click to select server. Double click to join your friend.");
-						TooltipText.append("\n备注: ");
+						TooltipText.append("\n");
+						TooltipText.append(Localize("Note:"));
+						TooltipText.append(" ");
 						TooltipText.append(pNote);
 					}
 					else if(Friend.ServerInfo())
@@ -2394,7 +2396,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					}
 					else
 					{
-						TooltipText = "备注: ";
+						TooltipText = Localize("Note:");
+						TooltipText.append(" ");
 						TooltipText.append(pNote);
 					}
 					GameClient()->m_Tooltips.DoToolTip(pListItemId, &Rect, TooltipText.c_str());
@@ -2734,7 +2737,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 			{
 				m_FriendsMoveCategoryPopupContext.Reset();
 				m_FriendsMoveCategoryPopupContext.m_pScrollRegion = &s_FriendsMoveCategoryPopupScrollRegion;
-				str_copy(m_FriendsMoveCategoryPopupContext.m_aMessage, "移动到分类");
+				str_copy(m_FriendsMoveCategoryPopupContext.m_aMessage, Localize("Move to category"));
 				m_FriendsMoveCategoryPopupContext.m_EntryHeight = 18.0f;
 				m_FriendsMoveCategoryPopupContext.m_EntryPadding = 1.0f;
 				m_FriendsMoveCategoryPopupContext.m_FontSize = (m_FriendsMoveCategoryPopupContext.m_EntryHeight - 2 * m_FriendsMoveCategoryPopupContext.m_EntryPadding) * CUi::ms_FontmodHeight;
@@ -2903,9 +2906,9 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		static CButtonContainer s_AddButton;
 		char aAddButtonLabel[128];
 		if(s_NameInput.IsEmpty() && !s_ClanInput.IsEmpty())
-			str_copy(aAddButtonLabel, "添加战队");
+			str_copy(aAddButtonLabel, Localize("Add clan"));
 		else
-			str_format(aAddButtonLabel, sizeof(aAddButtonLabel), "添加到%s", LocalizeFriendsCategory(GameClient()->Friends()->GetCategory(m_FriendAddCategoryIndex)));
+			str_format(aAddButtonLabel, sizeof(aAddButtonLabel), Localize("Add to %s"), LocalizeFriendsCategory(GameClient()->Friends()->GetCategory(m_FriendAddCategoryIndex)));
 		if(DoButton_Menu(&s_AddButton, aAddButtonLabel, 0, &Button))
 		{
 			const char *pCategory = GameClient()->Friends()->GetCategory(m_FriendAddCategoryIndex);
@@ -2943,7 +2946,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 		View.HSplitTop(3.0f, nullptr, &View);
 		View.HSplitTop(18.0f, &Button, &View);
-		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_AddButton, "新增分类", &Button, FontSize, TEXTALIGN_MC))
+		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_AddButton, Localize("Add category"), &Button, FontSize, TEXTALIGN_MC))
 		{
 			pPopupContext->m_Mode = CFriendsCategoryPopupContext::MODE_ADD;
 			pPopupContext->m_NameInput.Clear();
@@ -2952,7 +2955,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 		View.HSplitTop(3.0f, nullptr, &View);
 		View.HSplitTop(18.0f, &Button, &View);
-		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_RenameButton, "重命名", &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory))
+		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_RenameButton, Localize("Rename"), &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory))
 		{
 			pPopupContext->m_Mode = CFriendsCategoryPopupContext::MODE_RENAME;
 			pPopupContext->m_NameInput.Set(pCategory);
@@ -2962,7 +2965,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 		View.HSplitTop(3.0f, nullptr, &View);
 		View.HSplitTop(18.0f, &Button, &View);
-		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_DeleteButton, "删除分类", &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory))
+		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_DeleteButton, Localize("Delete category"), &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory))
 		{
 			if(pFriends->RemoveCategory(pCategory))
 				pMenus->FriendlistOnUpdate();
@@ -2974,7 +2977,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 	CUIRect Label, Input, Buttons, Cancel, Confirm;
 	View.HSplitTop(12.0f, &Label, &View);
-	pMenus->Ui()->DoLabel(&Label, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? "分类名称" : "新分类名称", FontSize, TEXTALIGN_ML);
+	pMenus->Ui()->DoLabel(&Label, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? Localize("Category name") : Localize("New category name"), FontSize, TEXTALIGN_ML);
 
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Input, &View);
@@ -2984,11 +2987,11 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 	View.HSplitTop(18.0f, &Buttons, &View);
 	Buttons.VSplitMid(&Cancel, &Confirm, 3.0f);
 
-	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, "取消", &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
+	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, Localize("Cancel"), &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
 	if(CancelPressed)
 		return CUi::POPUP_CLOSE_CURRENT;
 
-	const bool ConfirmPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_ConfirmButton, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? "新增" : "重命名", &Confirm, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
+	const bool ConfirmPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_ConfirmButton, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? Localize("Add") : Localize("Rename"), &Confirm, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
 	if(ConfirmPressed)
 	{
 		char aCategory[IFriends::MAX_FRIEND_CATEGORY_LENGTH];
@@ -3040,11 +3043,11 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendNote(void *pContext, CUIRect Vi
 	View.HSplitTop(18.0f, &Buttons, &View);
 	Buttons.VSplitMid(&Cancel, &Confirm, 3.0f);
 
-	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, "取消", &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
+	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, Localize("Cancel"), &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
 	if(CancelPressed)
 		return CUi::POPUP_CLOSE_CURRENT;
 
-	const bool ConfirmPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_ConfirmButton, "保存", &Confirm, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
+	const bool ConfirmPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_ConfirmButton, Localize("Save"), &Confirm, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
 	if(ConfirmPressed)
 	{
 		char aNote[IFriends::MAX_FRIEND_NOTE_LENGTH];

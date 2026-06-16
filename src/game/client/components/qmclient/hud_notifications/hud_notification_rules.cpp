@@ -960,6 +960,89 @@ namespace
 		QmHudNotifications::SServerMessageAnalysis Analysis;
 		return TryAnalyzeRecognizedSemanticMessage(pMessage, Analysis) && SemanticAnalysisExcludedByMetadata(Analysis);
 	}
+
+	bool MessageStartsWithAny(const char *pMessage, const char *const *ppPrefixes, size_t NumPrefixes)
+	{
+		for(size_t i = 0; i < NumPrefixes; ++i)
+		{
+			if(str_startswith(pMessage, ppPrefixes[i]))
+				return true;
+		}
+		return false;
+	}
+
+	bool MessageEqualsAny(const char *pMessage, const char *const *ppMessages, size_t NumMessages)
+	{
+		for(size_t i = 0; i < NumMessages; ++i)
+		{
+			if(str_comp(pMessage, ppMessages[i]) == 0)
+				return true;
+		}
+		return false;
+	}
+
+	bool IsHelpOrExampleServerMessage(const char *pMessage)
+	{
+		static const char *const s_apPrefixes[] = {
+			"Usage:",
+			"用法：",
+			"Example:",
+			"示例：",
+			"Bad:",
+			"错误示例：",
+			"Available practice commands:",
+			"可用练习命令：",
+			"Available rescue modes:",
+			"可用救援模式：",
+			"Emote commands are:",
+			"可用表情命令：",
+		};
+		static const char *const s_apExactMessages[] = {
+			"See /practicecmdlist for a list of all available practice commands. Most commonly used ones are /telecursor, /lasttp and /rescue",
+			"输入 /practicecmdlist 可以查看所有可用的练习命令。最常用的是 /telecursor、/lasttp 和 /rescue",
+			"示例：/map adr3 可以发起 Adrenaline 3 的换图投票。这表示地图名必须以 'a' 开头，并按顺序包含 'd'、'r'、'3'",
+			"Example: /map adr3 to call vote for Adrenaline 3. This means that the map name must start with 'a' and contain the characters 'd', 'r' and '3' in that order",
+		};
+		return MessageStartsWithAny(pMessage, s_apPrefixes, std::size(s_apPrefixes)) ||
+		       MessageEqualsAny(pMessage, s_apExactMessages, std::size(s_apExactMessages));
+	}
+
+	bool IsJoinOrLeaveBroadcast(const char *pMessage)
+	{
+		const char *pLeaveGameMarker = pMessage[0] == '\'' ? str_find(pMessage + 1, "' has left the game") : nullptr;
+		const bool IsLeaveGameBroadcast = pLeaveGameMarker != nullptr &&
+						  (str_comp(pLeaveGameMarker, "' has left the game") == 0 ||
+							  (str_comp_num(pLeaveGameMarker, "' has left the game (", str_length("' has left the game (")) == 0 && str_endswith(pMessage, ")") != nullptr));
+		return str_endswith(pMessage, " entered and joined the game") ||
+		       str_endswith(pMessage, " joined the game") ||
+		       IsLeaveGameBroadcast;
+	}
+
+	bool IsBasicInfoServerMessage(const char *pMessage)
+	{
+		static const char *const s_apPrefixes[] = {
+			"DDraceNetwork 版本:",
+			"DDraceNetwork Version:",
+			"Git 提交哈希:",
+			"Git revision hash:",
+			"官方网站:",
+			"Official site:",
+			"更多命令请查看:",
+			"For more info:",
+			"或访问 DDNet.org",
+			"请访问 DDNet.org",
+			"Please visit DDNet.org",
+		};
+		static const char *const s_apExactMessages[] = {
+			"请友善交流。",
+			"未设置服务器规则，请联系管理员。",
+			"Be nice.",
+			"No Rules Defined, Kill em all!!",
+		};
+		return MessageStartsWithAny(pMessage, s_apPrefixes, std::size(s_apPrefixes)) ||
+		       MessageEqualsAny(pMessage, s_apExactMessages, std::size(s_apExactMessages)) ||
+		       IsJoinOrLeaveBroadcast(pMessage);
+	}
 } // namespace
 
 namespace QmHudNotifications
@@ -987,48 +1070,12 @@ namespace QmHudNotifications
 	{
 		if(pMessage == nullptr || pMessage[0] == '\0')
 			return true;
-		const char *pLeaveGameMarker = pMessage[0] == '\'' ? str_find(pMessage + 1, "' has left the game") : nullptr;
-		const bool IsLeaveGameBroadcast = pLeaveGameMarker != nullptr &&
-						  (str_comp(pLeaveGameMarker, "' has left the game") == 0 ||
-							  (str_comp_num(pLeaveGameMarker, "' has left the game (", str_length("' has left the game (")) == 0 && str_endswith(pMessage, ")") != nullptr));
-		if(str_startswith(pMessage, "Usage:") ||
-			str_startswith(pMessage, "用法：") ||
-			str_startswith(pMessage, "Example:") ||
-			str_startswith(pMessage, "示例：") ||
-			str_startswith(pMessage, "Bad:") ||
-			str_startswith(pMessage, "错误示例：") ||
-			str_startswith(pMessage, "Available practice commands:") ||
-			str_startswith(pMessage, "可用练习命令：") ||
-			str_startswith(pMessage, "Available rescue modes:") ||
-			str_startswith(pMessage, "可用救援模式：") ||
-			str_startswith(pMessage, "Emote commands are:") ||
-			str_comp_num(pMessage, "可用表情命令：", str_length("可用表情命令：")) == 0)
+		if(IsHelpOrExampleServerMessage(pMessage))
 			return true;
 		// Stable semantic notifications use catalog metadata; help/example shaped text stays literal-based until it has a real semantic family.
 		if(RecognizedSemanticMessageExcludedByMetadata(pMessage))
 			return true;
-		if(str_startswith(pMessage, "DDraceNetwork 版本:") ||
-			str_startswith(pMessage, "DDraceNetwork Version:") ||
-			str_startswith(pMessage, "Git 提交哈希:") ||
-			str_startswith(pMessage, "Git revision hash:") ||
-			str_startswith(pMessage, "官方网站:") ||
-			str_startswith(pMessage, "Official site:") ||
-			str_startswith(pMessage, "更多命令请查看:") ||
-			str_startswith(pMessage, "For more info:") ||
-			str_startswith(pMessage, "或访问 DDNet.org") ||
-			str_startswith(pMessage, "请访问 DDNet.org") ||
-			str_startswith(pMessage, "Please visit DDNet.org") ||
-			str_comp(pMessage, "请友善交流。") == 0 ||
-			str_comp(pMessage, "未设置服务器规则，请联系管理员。") == 0 ||
-			str_comp(pMessage, "Be nice.") == 0 ||
-			str_comp(pMessage, "No Rules Defined, Kill em all!!") == 0 ||
-			str_endswith(pMessage, " entered and joined the game") ||
-			str_endswith(pMessage, " joined the game") ||
-			IsLeaveGameBroadcast ||
-			str_comp(pMessage, "See /practicecmdlist for a list of all available practice commands. Most commonly used ones are /telecursor, /lasttp and /rescue") == 0 ||
-			str_comp(pMessage, "输入 /practicecmdlist 可以查看所有可用的练习命令。最常用的是 /telecursor、/lasttp 和 /rescue") == 0 ||
-			str_comp(pMessage, "示例：/map adr3 可以发起 Adrenaline 3 的换图投票。这表示地图名必须以 'a' 开头，并按顺序包含 'd'、'r'、'3'") == 0 ||
-			str_comp(pMessage, "Example: /map adr3 to call vote for Adrenaline 3. This means that the map name must start with 'a' and contain the characters 'd', 'r' and '3' in that order") == 0)
+		if(IsBasicInfoServerMessage(pMessage))
 			return true;
 		return false;
 	}
@@ -1046,6 +1093,14 @@ namespace QmHudNotifications
 			return Analysis;
 		}
 
+		if(IsHelpOrExampleServerMessage(pMessage))
+		{
+			Analysis.m_Class = EServerMessageClass::HelpInfo;
+			Analysis.m_Domain = EServerMessageDomain::Status;
+			Analysis.m_UseFallbackLocalization = true;
+			return Analysis;
+		}
+
 		if(TryAnalyzeRecognizedSemanticMessage(pMessage, Analysis))
 		{
 			if(SemanticAnalysisExcludedByMetadata(Analysis))
@@ -1060,10 +1115,11 @@ namespace QmHudNotifications
 		{
 			Analysis.m_Class = EServerMessageClass::BasicInfo;
 			Analysis.m_Domain = EServerMessageDomain::Status;
+			Analysis.m_UseFallbackLocalization = true;
 			return Analysis;
 		}
 
-		// 单次分析既决定是否进通知栏，也决定如何本地化，避免黑名单和格式化规则继续分叉漂移。
+		// 单次分析既决定是否进通知栏，也决定如何本地化，避免排除规则和格式化规则继续分叉漂移。
 		EServerMessageDomain StaticDomain = EServerMessageDomain::None;
 		ESoloPrompt StaticSoloPrompt = ESoloPrompt::None;
 		EMessageKey StaticMessageKey = EMessageKey::None;
@@ -1090,26 +1146,52 @@ namespace QmHudNotifications
 		return Analysis;
 	}
 
-	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt)
+	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, const SServerMessageRouteConfig &Config)
 	{
 		SServerMessageEntryDecision Decision;
-		if(Analysis.m_Class == EServerMessageClass::BasicInfo && HideBasicInfo)
+		if(Analysis.m_Class == EServerMessageClass::BasicInfo && Config.m_HideBasicInfo)
 		{
 			Decision.m_ConsumeHiddenMessage = true;
 			return Decision;
 		}
-		if(Analysis.m_Class == EServerMessageClass::Prompt && HidePrompt)
+		if(Analysis.m_Class == EServerMessageClass::Prompt && Config.m_HidePrompt)
 		{
 			Decision.m_ConsumeHiddenMessage = true;
 			Decision.m_ClearPendingCompatPrompt = Analysis.m_Route == EServerMessageRoute::Solo;
 			return Decision;
 		}
-		if(!RouteSystemMessages)
+		if(!Config.m_RouteSystemMessages)
 			return Decision;
+		if(!Config.m_UseCategoryFilters)
+		{
+			if(Analysis.m_Class == EServerMessageClass::BasicInfo || Analysis.m_Class == EServerMessageClass::HelpInfo || Analysis.m_Domain == EServerMessageDomain::Unknown)
+			{
+				Decision.m_QueueNotification = true;
+				Decision.m_UseFallbackNotification = true;
+				return Decision;
+			}
+		}
+		else
+		{
+			if(Analysis.m_Class == EServerMessageClass::BasicInfo && !Config.m_ShowBasicInfo)
+				return Decision;
+			if(Analysis.m_Class == EServerMessageClass::HelpInfo && !Config.m_ShowHelpInfo)
+				return Decision;
+			if(Analysis.m_Class == EServerMessageClass::Prompt && Analysis.m_Domain != EServerMessageDomain::Unknown && !Config.m_ShowPrompts)
+				return Decision;
+			if(Analysis.m_Domain == EServerMessageDomain::Unknown && !Config.m_ShowUnknown)
+				return Decision;
+		}
 		if(Analysis.m_Route == EServerMessageRoute::Solo)
 		{
 			Decision.m_QueueNotification = true;
 			Decision.m_ClearPendingCompatPrompt = true;
+			return Decision;
+		}
+		if(Analysis.m_Class == EServerMessageClass::BasicInfo || Analysis.m_Class == EServerMessageClass::HelpInfo)
+		{
+			Decision.m_QueueNotification = true;
+			Decision.m_UseFallbackNotification = true;
 			return Decision;
 		}
 		if(Analysis.m_Route == EServerMessageRoute::System)
@@ -1118,6 +1200,15 @@ namespace QmHudNotifications
 			Decision.m_UseFallbackNotification = Analysis.m_UseFallbackLocalization;
 		}
 		return Decision;
+	}
+
+	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt)
+	{
+		SServerMessageRouteConfig Config;
+		Config.m_RouteSystemMessages = RouteSystemMessages;
+		Config.m_HideBasicInfo = HideBasicInfo;
+		Config.m_HidePrompt = HidePrompt;
+		return DecideServerMessageEntry(Analysis, Config);
 	}
 
 	EServerMessageRoute ServerMessageRoute(const char *pMessage, ESoloPrompt PendingCompatPrompt, bool RouteSystemMessages)

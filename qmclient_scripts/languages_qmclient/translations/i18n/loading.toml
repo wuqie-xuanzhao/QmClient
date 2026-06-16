@@ -1761,10 +1761,10 @@ polish = "Dostrój zmienną do wartości"
 [[message]]
 key = "UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators."
 [message.translations]
+simplified_chinese = "UDP 与 TCP 的 IP 地址并不相同。请尝试屏蔽 VPN、代理网络以及网络加速器。"
+traditional_chinese = "UDP 與 TCP 的 IP 地址並不相同。請嘗試停用 VPN、代理伺服器或網路加速器。"
 japanese = "UDP と TCP の IP アドレスが異なっているようです。VPN、プロキシ、ネットワークアクセラレーターを無効にしてみてください。"
 korean = "UDP와 TCP IP 주소가 다른 것으로 보입니다. VPN, 프록시 또는 네트워크 가속기를 비활성화해 보세요."
-simplified_chinese = "UDP 与 TCP 的 IP 地址并不相同。请尝试屏蔽 VPN 、代理网络以及网络加速器。"
-traditional_chinese = "UDP 與 TCP 的 IP 地址並不相同。請嘗試停用 VPN、代理伺服器或網路加速器。"
 russian = "IP-адреса UDP и TCP различаются. Попробуйте отключить VPN, прокси или сетевые ускорители."
 german = "UDP- und TCP-IP-Adressen scheinen unterschiedlich zu sein. Versuche, VPN, Proxy oder Netzwerkbeschleuniger zu deaktivieren."
 spanish = "Las direcciones IP UDP y TCP parecen ser diferentes. Intenta desactivar VPN, proxy o aceleradores de red."
@@ -1773,7 +1773,6 @@ brazilian_portuguese = "Os endereços IP UDP e TCP parecem ser diferentes. Tente
 portuguese = "Os endereços IP UDP e TCP parecem ser diferentes. Tenta desativar VPN, proxy ou aceleradores de rede."
 turkish = "UDP ve TCP IP adresleri farklı görünüyor. VPN, proxy veya ağ hızlandırıcıları devre dışı bırakmayı deneyin."
 polish = "Adresy IP UDP i TCP wydają się być różne. Spróbuj wyłączyć VPN, proxy lub akceleratory sieciowe."
-
 [[message]]
 key = "UDP seems to be filtered."
 [message.translations]
@@ -2045,3 +2044,211 @@ brazilian_portuguese = "Seu apelido '%s' já está em uso (%d pontos). Você ain
 portuguese = "A tua alcunha '%s' já está a ser usada (%d pontos). Ainda queres usá-la?"
 turkish = "'%s' takma adınız zaten kullanılıyor (%d puan). Yine de kullanmak istiyor musunuz?"
 polish = "Twój pseudonim '%s' jest już używany (%d punktów). Czy nadal chcesz go używać?"
+
+[[message]]
+key = "Client data overview"
+[message.translations]
+simplified_chinese = "客户端数据概览"
+traditional_chinese = "客戶端資料概覽"
+japanese = "クライアントデータ概要"
+korean = "클라이언트 데이터 개요"
+russian = "Обзор данных клиента"
+german = "Client-Datenübersicht"
+spanish = "Resumen de datos del cliente"
+french = "Aperçu des données du client"
+brazilian_portuguese = "Visão geral dos dados do cliente"
+portuguese = "Resumo dos dados do cliente"
+turkish = "İstemci veri özeti"
+polish = "Przegląd danych klienta"
+
+[[message]]
+key = "Client uptime"
+[message.translations]
+simplified_chinese = "客户端启动时间"
+traditional_chinese = "客戶端啟動時間"
+japanese = "クライアント起動時間"
+korean = "클라이언트 실행 시간"
+russian = "Время работы клиента"
+german = "Client-Laufzeit"
+spanish = "Tiempo activo del cliente"
+french = "Temps de fonctionnement du client"
+brazilian_portuguese = "Tempo ativo do cliente"
+portuguese = "Tempo ativo do cliente"
+turkish = "İstemci çalışma süresi"
+polish = "Czas działania klienta"
+
+[[message]]
+key = "Current time: %s\\n- Uptime and playtime are calculated from official JSON data\\n- Same as above\\n- Same as above above\\n"
+[message.translations]
+simplified_chinese = "当前时间：%s\n• 启动时间与游玩时长根据官方 JSON 数据计算\n• 同上\n• 同上上\n"
+traditional_chinese = "目前時間：%s\n• 啟動時間與遊玩時長根據官方 JSON 資料計算\n• 同上\n• 同上上\n"
+japanese = "現在時刻: %s\n- 起動時間とプレイ時間は公式 JSON データから計算されます\n- 上と同じ\n- そのさらに上と同じ\n"
+korean = "현재 시간: %s\n- 실행 시간과 플레이 시간은 공식 JSON 데이터로 계산됩니다\n- 위와 같음\n- 위의 위와 같음\n"
+russian = "Текущее время: %s\n- Время работы и игры рассчитывается по официальным JSON-данным\n- То же, что выше\n- То же, что выше выше\n"
+german = "Aktuelle Zeit: %s\n- Laufzeit und Spielzeit werden aus offiziellen JSON-Daten berechnet\n- Wie oben\n- Wie oben oben\n"
+spanish = "Hora actual: %s\n- El tiempo activo y de juego se calculan con datos JSON oficiales\n- Igual que arriba\n- Igual que más arriba\n"
+french = "Heure actuelle : %s\n- Le temps de fonctionnement et de jeu est calculé depuis les données JSON officielles\n- Comme ci-dessus\n- Comme encore ci-dessus\n"
+brazilian_portuguese = "Hora atual: %s\n- O tempo ativo e de jogo é calculado a partir dos dados JSON oficiais\n- Igual ao acima\n- Igual ao acima acima\n"
+portuguese = "Hora atual: %s\n- O tempo ativo e de jogo é calculado a partir dos dados JSON oficiais\n- Igual ao acima\n- Igual ao acima acima\n"
+turkish = "Geçerli zaman: %s\n- Çalışma ve oynama süresi resmi JSON verilerinden hesaplanır\n- Yukarıdakiyle aynı\n- Yukarıdakinin yukarısıyla aynı\n"
+polish = "Bieżący czas: %s\n- Czas działania i gry jest obliczany z oficjalnych danych JSON\n- Tak samo jak wyżej\n- Tak samo jak jeszcze wyżej\n"
+
+[[message]]
+key = "DDNet points"
+[message.translations]
+simplified_chinese = "DDNet 分数"
+traditional_chinese = "DDNet 分數"
+japanese = "DDNet ポイント"
+korean = "DDNet 점수"
+russian = "Очки DDNet"
+german = "DDNet-Punkte"
+spanish = "Puntos de DDNet"
+french = "Points DDNet"
+brazilian_portuguese = "Pontos DDNet"
+portuguese = "Pontos DDNet"
+turkish = "DDNet puanı"
+polish = "Punkty DDNet"
+
+[[message]]
+key = "Favorite friend"
+[message.translations]
+simplified_chinese = "最喜欢的好友"
+traditional_chinese = "最喜歡的好友"
+japanese = "一番一緒に遊んだフレンド"
+korean = "가장 자주 함께한 친구"
+russian = "Любимый друг"
+german = "Lieblingsfreund"
+spanish = "Amigo favorito"
+french = "Ami favori"
+brazilian_portuguese = "Amigo favorito"
+portuguese = "Amigo favorito"
+turkish = "Favori arkadaş"
+polish = "Ulubiony znajomy"
+
+[[message]]
+key = "Loading"
+[message.translations]
+simplified_chinese = "加载中"
+traditional_chinese = "載入中"
+japanese = "読み込み中"
+korean = "불러오는 중"
+russian = "Загрузка"
+german = "Laden"
+spanish = "Cargando"
+french = "Chargement"
+brazilian_portuguese = "Carregando"
+portuguese = "A carregar"
+turkish = "Yükleniyor"
+polish = "Ładowanie"
+
+[[message]]
+key = "Finish data source"
+[message.translations]
+simplified_chinese = "完成图来源"
+traditional_chinese = "完成圖來源"
+japanese = "クリアデータのソース"
+korean = "완주 데이터 출처"
+russian = "Источник данных финишей"
+german = "Quelle der Finish-Daten"
+spanish = "Fuente de datos de finalización"
+french = "Source des données de finish"
+brazilian_portuguese = "Fonte dos dados de conclusão"
+portuguese = "Fonte dos dados de conclusão"
+turkish = "Bitirme veri kaynağı"
+polish = "Źródło danych ukończeń"
+
+[[message]]
+key = "Finished maps"
+[message.translations]
+simplified_chinese = "完成地图次数"
+traditional_chinese = "完成地圖次數"
+japanese = "完走マップ数"
+korean = "완주한 맵 수"
+russian = "Завершенные карты"
+german = "Abgeschlossene Karten"
+spanish = "Mapas completados"
+french = "Cartes terminées"
+brazilian_portuguese = "Mapas concluídos"
+portuguese = "Mapas concluídos"
+turkish = "Bitirilen haritalar"
+polish = "Ukończone mapy"
+
+[[message]]
+key = "Official"
+[message.translations]
+simplified_chinese = "官方"
+traditional_chinese = "官方"
+japanese = "公式"
+korean = "공식"
+russian = "Официально"
+german = "Offiziell"
+spanish = "Oficial"
+french = "Officiel"
+brazilian_portuguese = "Oficial"
+portuguese = "Oficial"
+turkish = "Resmi"
+polish = "Oficjalne"
+
+[[message]]
+key = "Stats"
+[message.translations]
+simplified_chinese = "统计"
+traditional_chinese = "統計"
+japanese = "統計"
+korean = "통계"
+russian = "Статистика"
+german = "Statistik"
+spanish = "Estadísticas"
+french = "Statistiques"
+brazilian_portuguese = "Estatísticas"
+portuguese = "Estatísticas"
+turkish = "İstatistikler"
+polish = "Statystyki"
+
+[[message]]
+key = "Online friends"
+[message.translations]
+simplified_chinese = "在线好友"
+traditional_chinese = "線上好友"
+japanese = "オンラインのフレンド"
+korean = "온라인 친구"
+russian = "Друзья онлайн"
+german = "Freunde online"
+spanish = "Amigos en línea"
+french = "Amis en ligne"
+brazilian_portuguese = "Amigos online"
+portuguese = "Amigos online"
+turkish = "Çevrimiçi arkadaşlar"
+polish = "Znajomi online"
+
+[[message]]
+key = "Stats notes"
+[message.translations]
+simplified_chinese = "统计说明"
+traditional_chinese = "統計說明"
+japanese = "統計メモ"
+korean = "통계 설명"
+russian = "Примечания к статистике"
+german = "Statistikhinweise"
+spanish = "Notas de estadísticas"
+french = "Notes de statistiques"
+brazilian_portuguese = "Notas de estatísticas"
+portuguese = "Notas de estatísticas"
+turkish = "İstatistik notları"
+polish = "Uwagi do statystyk"
+
+[[message]]
+key = "Total friends"
+[message.translations]
+simplified_chinese = "好友总数"
+traditional_chinese = "好友總數"
+japanese = "フレンド総数"
+korean = "총 친구 수"
+russian = "Всего друзей"
+german = "Freunde insgesamt"
+spanish = "Amigos totales"
+french = "Total des amis"
+brazilian_portuguese = "Total de amigos"
+portuguese = "Total de amigos"
+turkish = "Toplam arkadaş"
+polish = "Łącznie znajomych"

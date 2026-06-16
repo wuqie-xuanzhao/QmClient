@@ -33,10 +33,10 @@ polish = "%s tłumaczy na %s przed wysłaniem"
 [[message]]
 key = "%s translating to %s failed: %s"
 [message.translations]
+simplified_chinese = "%s 翻译为 %s 失败：%s"
+traditional_chinese = "%s 翻譯為 %s 失敗: %s"
 japanese = "%sから%sへの翻訳失敗: %s"
 korean = "%s을(를) %s(으)로 번역 실패: %s"
-simplified_chinese = "%s 翻译为 %s 失败: %s"
-traditional_chinese = "%s 翻譯為 %s 失敗: %s"
 russian = "%s перевод на %s не удался: %s"
 german = "%s übersetzt zu %s fehlgeschlagen: %s"
 spanish = "%s traduciendo a %s falló: %s"
@@ -45,7 +45,6 @@ brazilian_portuguese = "%s traduzindo para %s falhou: %s"
 portuguese = "%s a traduzir para %s falhou: %s"
 turkish = "%s, %s diline çevrilemedi: %s"
 polish = "%s tłumaczenie na %s nieudane: %s"
-
 [[message]]
 key = "Add one"
 [message.translations]
@@ -241,10 +240,10 @@ polish = "Wyświetl tekst w oknie czatu"
 [[message]]
 key = "Enable chat with all/team mode"
 [message.translations]
-japanese = "全員/チームモードのチャットを有効にする"
-korean = "전체/팀 채팅 모드 활성화"
 simplified_chinese = "启用与所有人/队伍聊天模式"
 traditional_chinese = "啟用與所有人/隊伍聊天模式"
+japanese = "全員/チームモードのチャットを有効にする"
+korean = "전체/팀 채팅 모드 활성화"
 russian = "Включить чат со всеми/командой"
 german = "Chat mit Allen/Team-Modus aktivieren"
 spanish = "Activar modo de chat con todos/equipo"
@@ -253,7 +252,6 @@ brazilian_portuguese = "Ativar modo de chat com todos/equipe"
 portuguese = "Ativar modo de chat com todos/equipa"
 turkish = "Herkesle/takımla sohbet modunu etkinleştir"
 polish = "Włącz tryb czatu z wszystkimi/drużyną"
-
 [[message]]
 key = "FTAPI"
 [message.translations]

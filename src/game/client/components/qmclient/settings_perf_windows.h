@@ -17,6 +17,7 @@ struct SQmSettingsPerfWindowSummary
 	float m_SampleSeconds = 0.0f;
 	float m_FpsAvg = 0.0f;
 	float m_FpsMin = 0.0f;
+	float m_FpsOnePctLow = 0.0f;
 	float m_FpsMax = 0.0f;
 	float m_FrameMsAvg = 0.0f;
 	float m_FrameMsP95 = 0.0f;
@@ -147,6 +148,7 @@ private:
 		m_Summary.m_FrameMsAvg = m_Summary.m_SampleSeconds > 0.0f ? (m_Summary.m_SampleSeconds * 1000.0f) / (float)m_Summary.m_SampleFrames : 0.0f;
 		m_Summary.m_FrameMsP95 = Percentile(m_vFrameMs, 95);
 		m_Summary.m_FrameMsP99 = Percentile(m_vFrameMs, 99);
+		m_Summary.m_FpsOnePctLow = m_Summary.m_FrameMsP99 > 0.0f ? 1000.0f / m_Summary.m_FrameMsP99 : 0.0f;
 	}
 
 	void Reset()

@@ -50,10 +50,10 @@ class I18nTomlTest(unittest.TestCase):
         )
         self.assertIn(
             "[message.translations]\n"
-            'japanese = "アンチピングスムージング"\n'
-            'korean = "양"\n'
             'simplified_chinese = "平滑预测"\n'
-            'traditional_chinese = "預測量"',
+            'traditional_chinese = "預測量"\n'
+            'japanese = "アンチピングスムージング"\n'
+            'korean = "양"',
             text,
         )
 
@@ -99,10 +99,47 @@ simplified_chinese = "应用"
             self.assertIn(
                 "[message.translations]\n"
                 'simplified_chinese = "平滑预测"\n'
-                'japanese = "アンチピングスムージング"\n'
                 'traditional_chinese = "預測量"\n'
+                'japanese = "アンチピングスムージング"\n'
                 'korean = "양"\n'
-                "\n[[message]]",
+                "[[message]]",
+                text,
+            )
+            tomllib.loads(text)
+
+    def test_patch_module_store_rewrites_touched_block_with_stable_language_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            translations_dir = Path(tmp)
+            path = translations_dir / "menus.toml"
+            path.write_text(
+                """[[message]]
+key = "Apply"
+[message.translations]
+polish = "Zastosuj"
+simplified_chinese = "应用"
+japanese = "適用"
+""",
+                encoding="utf-8",
+                newline="\n",
+            )
+
+            with mock.patch.object(i18n_store, "TRANSLATIONS_DIR", translations_dir):
+                i18n_store.patch_module_store(
+                    "menus",
+                    {
+                        ("Apply", ""): {
+                            "traditional_chinese": "套用",
+                        },
+                    },
+                )
+
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(
+                "[message.translations]\n"
+                'simplified_chinese = "应用"\n'
+                'traditional_chinese = "套用"\n'
+                'japanese = "適用"\n'
+                'polish = "Zastosuj"',
                 text,
             )
             tomllib.loads(text)

@@ -35,10 +35,10 @@
 == %d 条新被提及消息
 
 %d of %d server
-== 符合条件 %d / 总共 %d 个服务器
+== %d/%d 个服务器
 
 %d of %d servers
-== 符合条件 %d / 总共 %d 个服务器
+== %d/%d 个服务器
 
 %d player
 == %d 在线玩家
@@ -113,7 +113,7 @@
 == %s 正在翻译为 %s 后发送
 
 %s translating to %s failed: %s
-== %s 翻译为 %s 失败: %s
+== %s 翻译为 %s 失败：%s
 
 %s wins!
 == %s 胜利！
@@ -137,7 +137,7 @@
 == '%s' 发起了禁言 '%s' 的投票（原因：%s）
 
 '%s' called vote to %s practice mode for your team. Current votes %s/%s
-== '%s' 发起了%s队伍练习模式投票。当前票数 %s/%s
+== '%s' 发起了 %s 队伍练习模式投票。当前票数 %s/%s
 
 '%s' called vote to change server option: %s
 == '%s' 发起了服务器选项投票：%s
@@ -200,13 +200,13 @@
 == 还有 %d 个代码
 
 - Save codes in order:
-== - 密码依次为:
+== - 密码依次为：
 
 - Save owners in order:
-== - 保存者按顺序是:
+== - 保存者按顺序是：
 
 - You have %d saves on this map!
-== - 您在这张图有%d个存档！
+== - 您在这张图有 %d 个存档！
 
 /map is disabled
 == 本服务器已禁用 /map
@@ -227,7 +227,7 @@
 == 3 星
 
 3D Background
-== 3D背景
+== 3D 背景
 
 4 stars
 == 4 星
@@ -248,7 +248,7 @@
 == === '%s' 的本地存档 ===
 
 [%s] %s (Map: %s, Time: %s)
-== [%s] %s（地图: %s，保存时间: %s）
+== [%s] %s（地图：%s，保存时间：%s）
 
 _ or ' ' = blank spacer
 == _ 或 ' ' = 空白间隔
@@ -397,6 +397,12 @@ Add a voting option
 Add Bind
 == 添加绑定
 
+Add category
+== 新增分类
+
+Add clan
+== 添加战队
+
 Add command
 == 添加命令
 
@@ -425,10 +431,13 @@ Add one
 == 加一
 
 Add team clan:
-== 添加友好战队:
+== 添加友好战队：
 
 Add team name:
-== 添加友好玩家:
+== 添加友好玩家：
+
+Add to %s
+== 添加到 %s
 
 Add to blocked words
 == 添加到屏蔽词
@@ -440,16 +449,19 @@ Add to queue
 == 加入队列
 
 Add war clan:
-== 添加敌对战队:
+== 添加敌对战队：
 
 Add war name:
-== 添加敌对玩家:
+== 添加敌对玩家：
 
 Add/remove Client-IDs to spectate them exclusively (-1 to reset)
 == 添加/移除要专门旁观的客户端 ID（-1 重置）
 
 Added %d missing required slot(s).
 == 已补充 %d 个缺失的必需槽位。
+
+Added %s as friend
+== 已将 %s 添加为好友
 
 Address
 == 地址
@@ -544,6 +556,9 @@ Amount
 And pick one randomly
 == 并随机抽取一张
 
+Angle
+== 角度
+
 Angle:
 == 角度
 
@@ -602,10 +617,10 @@ Are you sure that you want to delete '%s'?
 == 你确定要删除'%s'吗？
 
 Are you sure that you want to delete the demo '%s'?
-== 确定要删除回放文件 "%s" ？
+== 确定要删除回放文件 "%s"？
 
 Are you sure that you want to delete the folder '%s'?
-== 确定要删除文件夹 "%s" ？
+== 确定要删除文件夹 "%s"？
 
 Are you sure that you want to delete the screenshot '%s'?
 == 确定要删除截图“%s”吗？
@@ -721,10 +736,10 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == 授权玩家强制将当前投票设为 '%s'
 
-Auto
+auto
 == 自动
 
-auto
+Auto
 == 自动
 
 Auto agree vote
@@ -842,7 +857,7 @@ Automatically take statboard screenshot
 == 自动对统计板截图
 
 Avg %.*f   ↓ %.*f   ↑ %.*f
-== 平均 %.*f   ↓ %.*f   ↑ %.*f
+== 平均 %.*f ↓ %.*f ↑ %.*f
 
 Axiom auto login failed
 == Axiom 自动登录失败
@@ -893,10 +908,13 @@ Ban range in a region
 == 封禁指定区域内的 IP 段
 
 Based on a pile of Windows... stuff
-== 基于Win的一坨所拉的一泡
+== 基于 Win 的一坨所拉的一泡
 
 Basic
 == 基本
+
+Before I die
+== 在我死去之前
 
 Behavior
 == 行为
@@ -1030,8 +1048,14 @@ Cancel your swap request
 Candidate files
 == 候选文件
 
+Cannot swap: the other player is not in your team
+== 无法交换：对方不在你的队伍中
+
 Category
 == 分类
+
+Category name
+== 分类名称
 
 Change indicator offset based on distance to other tees
 == 根据与其他 Tee 的距离更改指示器偏移量
@@ -1052,7 +1076,7 @@ Change zoom
 == 更改缩放比例
 
 Changes: %d
-== 更改数: %d
+== 更改数：%d
 
 Changing name to %s near finish
 == 接近终点时改名为 %s
@@ -1076,7 +1100,7 @@ Chat command
 == 聊天框指令（/）
 
 Chat command (e.g. showall 1)
-== 聊天指令（例如: showall 1）
+== 聊天指令（例如：showall 1）
 
 Chat export failed
 == 聊天记录导出失败
@@ -1094,7 +1118,7 @@ Chat sound volume
 == 聊天提示音量
 
 Chat Translate Button UI
-== 聊天翻译按钮UI
+== 聊天翻译按钮 UI
 
 Chat translation settings
 == 聊天翻译设置
@@ -1144,6 +1168,9 @@ Clan color in friends list
 Clan Members
 == 战队成员
 
+Clan Name
+== 战队名称
+
 Clan plates size
 == 战队名称大小
 
@@ -1153,17 +1180,17 @@ Clan: %s
 Classic
 == 古典
 
-Classic Easy
-== 经典 Easy
-
 Classic easy
 == 古典 easy
 
-Classic Next
-== 经典 Next
+Classic Easy
+== 经典 Easy
 
 Classic next
 == 古典 next
+
+Classic Next
+== 经典 Next
 
 Classic Nut
 == 经典 Nut
@@ -1171,11 +1198,11 @@ Classic Nut
 Classic nut
 == 古典 nut
 
-Classic Pro
-== 经典 Pro
-
 Classic pro
 == 古典 pro
+
+Classic Pro
+== 经典 Pro
 
 Clear
 == 清空
@@ -1214,7 +1241,7 @@ Click to copy map name
 == 点击复制地图名
 
 Click to copy QQ group number
-== 点击复制QQ群号
+== 点击复制 QQ 群号
 
 Click to copy the map name
 == 点击复制地图名
@@ -1246,6 +1273,9 @@ Client
 Client CPU usage is high
 == 客户端 CPU 占用偏高
 
+Client data overview
+== 客户端数据概览
+
 Client frame time is abnormal
 == 客户端帧时间异常
 
@@ -1260,6 +1290,9 @@ Client performance pressure is high
 
 Client prediction time is high
 == 客户端预测耗时偏高
+
+Client uptime
+== 客户端启动时间
 
 Close
 == 关闭
@@ -1277,7 +1310,7 @@ Colors in chat
 == 在聊天栏中的颜色
 
 Colors in scoreboard
-== 在记分板中的颜色
+== 计分板中的颜色
 
 Colors of the hook collision line, in case of a possible collision with:
 == 辅助线颜色（当瞄准以下实体物时）：
@@ -1292,7 +1325,7 @@ Command is not available on solo servers
 == 这个命令在 solo 服务器上不可用
 
 Command:
-== 指令:
+== 指令：
 
 Commands run in the console
 == 在控制台中执行的命令
@@ -1322,7 +1355,7 @@ Config directory
 == 配置目录（cfg）
 
 Config file: data/input_overlay.json
-== 配置文件: data/input_overlay.json
+== 配置文件：data/input_overlay.json
 
 Config Files
 == 配置文件
@@ -1336,6 +1369,9 @@ Configure background 3D particle effects
 Configure hammer skin steal and skin transition animations
 == 调整锤中偷皮和换皮动画
 
+Configure qm_report_app_id and qm_report_secret first
+== 请先设置 qm_report_app_id 和 qm_report_secret
+
 Confirm both are on same server, same room, and support voice
 == 建议确认双方在同服、同房间，并且对方也支持语音
 
@@ -1348,11 +1384,14 @@ Connect dummy
 Connect dummy to enable
 == 连接分身后可启用
 
+Connect to a server first
+== 需要先连接到服务器
+
 Connect to server first to establish voice network link
 == 需要先进入服务器，语音网络链路才会建立
 
 Connect to the specified host/ip
-== 连接到指定主机/ip
+== 连接到指定主机 /IP
 
 Connected
 == 连接成功
@@ -1383,6 +1422,12 @@ Connection normal
 
 Connection Problems…
 == 连接中断…
+
+Connection quality
+== 连接质量
+
+Connection Quality
+== 连接质量
 
 Connection severely abnormal
 == 连接严重异常
@@ -1444,8 +1489,14 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == 无法连接分身
 
+Could not create report scan request
+== 创建举报扫描请求失败
+
 Could not find your Team
 == 找不到你的队伍
+
+Could not get current server address
+== 无法获取当前服务器地址
 
 Could not get server list from master server
 == 无法从主服务器获取服务器列表
@@ -1481,7 +1532,7 @@ Countries
 == 国家
 
 CP opacity
-== CP点不透明度
+== CP 点不透明度
 
 Create a random skin
 == 随机创造皮肤
@@ -1502,10 +1553,10 @@ Current
 == 当前
 
 Current aspect ratio:
-== 当前宽高比:
+== 当前宽高比：
 
 Current aspect ratio: Show default
-== 当前宽高比: 显示默认
+== 当前宽高比：显示默认
 
 Current cut is invalid or already added
 == 当前裁剪无效或已添加
@@ -1519,14 +1570,17 @@ Current rescue mode: %s
 Current status
 == 当前状态
 
+Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
+== 当前时间：%s\n• 启动时间与游玩时长根据官方 JSON 数据计算\n• 同上\n• 同上上\n
+
 Current: Ranks
-== 当前: 查分
+== 当前：查分
 
 Current: Score
-== 当前: 分数
+== 当前：分数
 
 Current: Time
-== 当前: 时间
+== 当前：时间
 
 Custom
 == 自定义
@@ -1544,7 +1598,7 @@ Custom colors
 == 自定义颜色
 
 Custom Font:
-== 自定义字体:
+== 自定义字体：
 
 Custom prompt template
 == 自定义提示词模板
@@ -1571,10 +1625,10 @@ d = Prediction latency
 == d = 预测延迟
 
 Damn grenadiers, all go to spa!
-== 他妈的炸弹人全给我去Spa!
+== 他妈的炸弹人全给我去 Spa！
 
 Damn grenadiers, just die!
-== 他妈的炸弹人都给我死啊!
+== 他妈的炸弹人都给我死啊！
 
 Data
 == 数据
@@ -1603,8 +1657,20 @@ DDmaX Pro
 DDNet
 == DDNet
 
+DDNet / Total CPU
+== DDNet / 总 CPU
+
 DDNet Client needs to be restarted to complete update!
 == DDNet 客户端需要重新启动才能完成更新！
+
+DDNet memory
+== DDNet 内存
+
+DDNet Memory
+== DDNet 内存
+
+DDNet points
+== DDNet 分数
 
 ddnet-saves.txt is empty
 == ddnet-saves.txt 为空
@@ -1660,10 +1726,10 @@ DeepSeek
 DeepSeek API key
 == DeepSeek API 密钥
 
-Default
+default
 == 默认
 
-default
+Default
 == 默认
 
 Default input open failed
@@ -1686,6 +1752,9 @@ Delete
 
 Delete button
 == 删除按键
+
+Delete category
+== 删除分类
 
 Delete command
 == 删除命令
@@ -1810,6 +1879,60 @@ Discord
 Display mode
 == 显示模式
 
+Display your race time
+== 显示你的比赛时间
+
+Displays client prediction latency
+== 显示客户端预测延迟
+
+Displays client receive rate
+== 显示客户端接收速率
+
+Displays client send rate
+== 显示客户端发送速率
+
+Displays connection quality grade
+== 显示连接质量等级
+
+Displays current position
+== 显示当前位置
+
+Displays current prediction value
+== 显示当前预测值
+
+Displays current zoom value
+== 显示当前缩放值
+
+Displays DDNet process CPU usage / total system CPU usage
+== 显示 DDNet 进程 CPU 使用率/系统总 CPU 使用率
+
+Displays DDNet process memory usage
+== 显示 DDNet 进程内存使用量
+
+Displays latency jitter
+== 显示延迟抖动
+
+Displays resend-based packet loss estimate
+== 显示基于重发的丢包估计
+
+Displays server snapshot latency
+== 显示服务器快照延迟
+
+Displays X and Y velocity
+== 显示 X 和 Y 速度
+
+Displays your current angle in degrees
+== 显示你当前的角度(度)
+
+Displays your frames per second
+== 显示你的每秒帧数
+
+Displays your local time
+== 显示你的本地时间
+
+Displays your ping to the current server
+== 显示你到当前服务器的 Ping
+
 Dissolve
 == 消散
 
@@ -1853,7 +1976,7 @@ Downloading map
 == 正在下载地图
 
 Downloading update...
-== 正在下载更新...
+== 正在下载更新……
 
 Downscaled (0.78)
 == 降采样缩放 (0.78)
@@ -2081,7 +2204,7 @@ Enable map compatibility mode using the specified bug (example: grenade-doubleex
 == 使用指定 bug 启用地图兼容模式（例如：grenade-doubleexplosion@ddnet.tw）
 
 Enable mod weapon on %d: %s
-== 在 %d 上启用模组武器: %s
+== 在 %d 上启用模组武器：%s
 
 Enable pie menu
 == 启用饼菜单
@@ -2216,7 +2339,7 @@ Example of usage
 == 用途示例
 
 Example: name1|name2|name3
-== 示例: 名字1|名字2|名字3
+== 示例：名字 1|名字 2|名字 3
 
 Exclude
 == 排除
@@ -2232,6 +2355,9 @@ Execute hovered bindwheel bind
 
 Execute on connect
 == 连接时执行
+
+Execute on join
+== 进服时执行
 
 Execute the specified file
 == 执行指定文件
@@ -2353,6 +2479,9 @@ Fat skins (DDFat)
 Favorite
 == 收藏
 
+Favorite friend
+== 最喜欢的好友
+
 Favorite map
 == 收藏地图
 
@@ -2389,11 +2518,17 @@ Filter connecting players
 Find all ban records for the specified IP address
 == 查询指定 IP 的全部封禁记录
 
+Finish data source
+== 完成图来源
+
 Finish Name
 == 终点前改名
 
 Finish Name:
-== 恰分名称:
+== 恰分名称：
+
+Finished maps
+== 完成地图次数
 
 Fire
 == 开火
@@ -2442,6 +2577,9 @@ Found %d modules
 
 FPM
 == 击杀/分
+
+FPS
+== FPS
 
 Frags
 == 击杀数
@@ -2563,6 +2701,9 @@ Gameplay
 Gap aim rescue
 == 瞄缝救人
 
+Gap between statusbar items
+== 状态栏项目之间的间隔
+
 General
 == 常规
 
@@ -2591,7 +2732,7 @@ Give back right to vote to player with client ID
 == 将投票权归还给拥有客户端 ID 的玩家
 
 Give back right to vote to player with IP address
-== 将投票权还给有IP地址的玩家
+== 将投票权还给有 IP 地址的玩家
 
 Give back right to vote to player with list index
 == 将投票权归还给列表索引的玩家
@@ -2654,10 +2795,10 @@ Go forward the specified duration
 == 快进指定时长
 
 Gores Actor
-== Gores演员专用
+== Gores 演员专用
 
 Gores auto weapon switch
-== Gores自动武器切换
+== Gores 自动武器切换
 
 Gores Mode
 == Gores 模式
@@ -2690,7 +2831,7 @@ Hammer
 == 锤子
 
 Hammer Mode:
-== 锤子模式:
+== 锤子模式：
 
 Hammer skin steal
 == 锤中偷皮
@@ -2774,7 +2915,7 @@ Hide player messages
 == 隐藏玩家消息
 
 Hide scoreboard
-== 隐藏记分板
+== 隐藏计分板
 
 Hide server prompt notifications
 == 隐藏服务器提示通知
@@ -2789,7 +2930,7 @@ Hide toast
 == 隐藏 toast
 
 Hide UI for focused gameplay
-== 隐去UI专注游戏
+== 隐去 UI 专注游戏
 
 Hide weapon muzzle flashes
 == 隐藏武器火焰
@@ -2809,11 +2950,11 @@ Highlighted message
 Hitbox mode
 == 碰撞箱模式
 
+HJ Assist
+== HJ 辅助
+
 HJ assist
 == HJ 大佬辅助
-
-HJ Assist
-== HJ辅助
 
 Hold left click for free camera
 == 按住左键自由镜头
@@ -2827,11 +2968,11 @@ Hook collision line
 Hook collision line opacity
 == 辅助线不透明度
 
-Hook Collisions
-== 瞄准辅助
-
 Hook collisions
 == 钩索辅助线
+
+Hook Collisions
+== 瞄准辅助
 
 Hook line tip
 == 辅助线提示（实际可钩中 Tee 的长度）
@@ -2892,6 +3033,12 @@ Idiot word filter
 
 Import from clipboard
 == 从剪贴板导入
+
+Improved Anti Ping
+== 改进 Anti Ping
+
+In memory of me
+== 谨以此端，回忆我
 
 Inactive color
 == 按键未激活时颜色
@@ -3029,7 +3176,7 @@ Invites are disabled
 == 本服务器已禁用队伍邀请
 
 Is your dummy being bullied while you control the main tee?
-== 在你操控本体的时候分身有没有被欺负呢?
+== 在你操控本体的时候分身有没有被欺负呢？
 
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == 建议你在进入服务器前检查一下设置并根据你的喜好进行调整。
@@ -3065,7 +3212,7 @@ Join game
 == 加入游戏
 
 Join QQ group
-== 加入QQ群
+== 加入 QQ 群
 
 Join red
 == 加入红队
@@ -3098,7 +3245,7 @@ Key Presses
 == 按键显示
 
 Key Sticking: ?
-== 卡键：?
+== 卡键：？
 
 Key Sticking: Off
 == 卡键：关
@@ -3140,10 +3287,10 @@ killed themselves
 == 自杀
 
 Kills a player and announces the kill
-== 击杀一名玩家并广播击杀信息
+== 处死一名玩家并广播处死信息
 
 Kills team and disables practice mode
-== 击杀队伍并关闭练习模式
+== 处死队伍并关闭练习模式
 
 King of Gores auto weapon switch
 == King of Gores 自动切换枪
@@ -3152,7 +3299,7 @@ l = Local time
 == l = 本地时间
 
 L select  R swap  M select only
-== 左键选择  右键交换  中键仅选择
+== 左键选择 右键交换 中键仅选择
 
 Label
 == 标签
@@ -3199,11 +3346,17 @@ Last page in console
 Latency
 == 延迟
 
+Latency Jitter
+== 延迟抖动
+
+Latency jitter
+== 延迟抖动
+
 Layout
 == 布局
 
 Leak IP
-== 暴露IP
+== 暴露 IP
 
 Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
 == 通过逐个 ping 服务器泄露你的 IP，同时会获取延迟
@@ -3319,8 +3472,11 @@ Loaded %d items
 Loaded %d items (discarded %d items)
 == 已加载 %d 项（丢弃 %d 项）
 
+Loading
+== 加载中
+
 Loading assets...
-== 正在加载资源...
+== 正在加载资源……
 
 Loading commands…
 == 正在加载指令…
@@ -3500,7 +3656,7 @@ Map sound volume
 == 地图音效音量
 
 Map type:
-== 地图类型:
+== 地图类型：
 
 Mark demo
 == 标记回放
@@ -3521,7 +3677,7 @@ Markers
 == 标记
 
 Match %d of %d
-== 结果 %d / 总共 %d 则
+== 匹配 %d/%d
 
 Matched with callable peer
 == 已匹配到可通话对端
@@ -3728,7 +3884,7 @@ Name plates size
 == 昵称大小
 
 Name:
-== 名称:
+== 名称：
 
 Name: %s
 == 名称：%s
@@ -3754,8 +3910,11 @@ new
 New button
 == 新按键
 
+New category name
+== 新分类名称
+
 New IME
-== 新版IME
+== 新版 IME
 
 New name:
 == 新文件名：
@@ -3767,7 +3926,7 @@ New random timeout code
 == 随机生成新的超时代码（Timeout 代码）
 
 New UI
-== 新版UI
+== 新版 UI
 
 News
 == 新闻
@@ -3881,7 +4040,7 @@ No matching features found. Try other keywords
 == 未找到匹配的功能模块。请尝试其他关键词
 
 No more blocking entity layers in the world of TeeWorlds
-== Teeworlds的世界不会再出现挡人的实体层了
+== Teeworlds 的世界不会再出现挡人的实体层了
 
 No noise reduction
 == 不降噪
@@ -3985,6 +4144,9 @@ Not open, check output device
 Note
 == 备注
 
+Note:
+== 备注：
+
 Nothing hookable
 == 未瞄准任何实体物
 
@@ -4004,7 +4166,7 @@ Notify when friends come online
 == 好友上线提醒
 
 Notify when only one tee is still alive:
-== 当只剩一名存活者时提示:
+== 当只剩一名存活者时提示：
 
 Novice
 == 简单
@@ -4017,6 +4179,9 @@ o = Send rate
 
 Off
 == 关
+
+Official
+== 官方
 
 Official community links
 == 官方社区入口
@@ -4035,6 +4200,9 @@ Oldschool
 
 On
 == 开
+
+Online friends
+== 在线好友
 
 Online Players
 == 在线玩家
@@ -4055,10 +4223,10 @@ Only show outlines in the entities layer
 == 仅在实体层中显示轮廓
 
 Only show when the other Tee is not on screen
-== 仅当另一个Tee不在屏幕上时显示
+== 仅当另一个 Tee 不在屏幕上时显示
 
 Only what you can't imagine, nothing Dream can't do
-== 只有你想不到,没有梦做不到
+== 只有你想不到，没有梦做不到
 
 Only what you can't imagine, nothing Dream can't do!
 == 只有你想不到，没有梦做不到！
@@ -4274,10 +4442,10 @@ Pet size
 == 宠物大小
 
 Pet Skin:
-== 宠物皮肤:
+== 宠物皮肤：
 
 Pick result: %s
-== 抽取结果: %s
+== 抽取结果：%s
 
 Pickup range
 == 拾取物范围
@@ -4325,10 +4493,13 @@ Player already invited
 == 该玩家已经被邀请过了
 
 Player country:
-== 玩家国家 / 地区：
+== 玩家国家/地区：
 
 Player data
 == 玩家数据
+
+Player Indicator
+== 玩家指示器
 
 Player indicator
 == 玩家指示器
@@ -4337,7 +4508,7 @@ Player is on a different team
 == 目标玩家不在你的队伍里
 
 Player name:
-== 玩家名:
+== 玩家名：
 
 Player not found
 == 未找到该玩家
@@ -4402,6 +4573,9 @@ Points
 Popup animation
 == 弹出动画
 
+Position
+== 位置
+
 Position jump hint
 == 位置跳跃提示
 
@@ -4434,6 +4608,12 @@ Prediction
 
 Prediction jitter is obvious, latency changes are large
 == 预测抖动明显，延迟变化较大
+
+Prediction latency
+== 预测延迟
+
+Prediction Latency
+== 预测延迟
 
 Prediction latency is elevated, prediction path pressure is high
 == 预测延迟偏高，预测链路压力较高
@@ -4601,7 +4781,7 @@ QmClient Settings
 == QmClient 设置
 
 QQ group: 1076765929 (click to copy)
-== QQ群: 1076765929（点击复制）
+== QQ 群：1076765929（点击复制）
 
 Quads are used for background decoration
 == 显示用作背景装饰的贴图
@@ -4633,6 +4813,9 @@ r = Race time
 Race
 == 竞速
 
+Race Time
+== 比赛时间
+
 Rainbow
 == 彩虹
 
@@ -4656,6 +4839,9 @@ Rainbow weapons
 
 Random
 == 随机
+
+Random Colors
+== 随机颜色
 
 Random emoticon
 == 随机表情
@@ -4686,6 +4872,12 @@ Rebinds the client's listening address and port
 
 Receive
 == 接收
+
+Receive Rate
+== 接收速率
+
+Receive rate
+== 接收速率
 
 Receiving
 == 正在接收
@@ -4844,13 +5036,13 @@ Remove right to vote from player with client ID
 == 删除具有客户端 ID 的玩家的投票权
 
 Remove right to vote from player with IP address
-== 删除具有IP地址的玩家的投票权
+== 删除具有 IP 地址的玩家的投票权
 
 Remove team clan:
-== 删除友好战队:
+== 删除友好战队：
 
 Remove team name:
-== 删除友好玩家:
+== 删除友好玩家：
 
 Remove war clan:
 == 删除敌对战队
@@ -4859,7 +5051,10 @@ Remove War Group
 == 删除敌对群组
 
 Remove war name:
-== 删除敌对玩家:
+== 删除敌对玩家：
+
+Removed %s from friends
+== 已将 %s 移出好友
 
 Removes all bindwheel binds
 == 移除全部绑定轮盘绑定
@@ -4916,7 +5111,7 @@ Rename screenshot
 == 重命名截图
 
 Rename: %s
-== 改名: %s
+== 改名：%s
 
 Render all custom colored feet as white feet skin
 == 将所有自定义脚部颜色渲染为白色
@@ -4975,6 +5170,27 @@ Reply
 Reply with dummy
 == 使用分身回复
 
+Report
+== 举报
+
+Report request canceled
+== 举报请求已取消
+
+Report request failed due to network error
+== 举报请求失败，网络请求异常
+
+Report request failed with HTTP status: %d
+== 举报请求失败，HTTP 状态码：%d
+
+Report request is already in progress
+== 举报请求正在处理中
+
+Report scan request submitted
+== 举报扫描请求已提交
+
+Reports are not available on Axiom servers
+== Axiom 服务器内不可使用举报功能
+
 Request to swap your tee with another team member
 == 请求与另一名队友交换 Tee
 
@@ -4992,6 +5208,12 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == 被救/落水：%d/%d
+
+Resend Loss
+== 重发丢包
+
+Resend loss
+== 重发丢包
 
 Resend signs detected, connection quality is suspicious
 == 检测到重发迹象，连接质量可疑
@@ -5218,6 +5440,12 @@ Say in team chat
 Say in team chat as dummy
 == 让分身在队伍聊天中发言
 
+Scanning current server
+== 正在扫描当前服务器
+
+Scanning current server...
+== 正在扫描当前服务器……
+
 Score
 == 分数
 
@@ -5228,16 +5456,16 @@ Scoreboard
 == 计分板
 
 Scoreboard color
-== 记分板颜色
+== 计分板颜色
 
 Scoreboard cursor
 == 计分板光标
 
 Scoreboard opacity
-== 记分板不透明度
+== 计分板不透明度
 
 Scoreboard point check
-== 计分板查分
+== 计分板显示积分
 
 Scores are private on this server
 == 本服务器的成绩是私密的
@@ -5246,7 +5474,7 @@ Scores are public on this server
 == 本服务器的成绩是公开的
 
 Screen
-== 滤色
+== 屏幕
 
 Screen center line color
 == 屏幕中心线颜色
@@ -5282,10 +5510,10 @@ Seconds
 == 秒
 
 SecretId
-== SecretId
+== 密钥 ID
 
 SecretKey
-== SecretKey
+== 密钥 Key
 
 See how much you act
 == 看看你有多演
@@ -5368,6 +5596,12 @@ Send emoticon in water
 Send probability
 == 发送概率
 
+Send rate
+== 发送速率
+
+Send Rate
+== 发送速率
+
 Send source language
 == 发送源语言
 
@@ -5408,7 +5642,7 @@ Server alert
 == 服务器提醒
 
 Server best:
-== 服务器最佳
+== 服务器最佳：
 
 Server could not be started
 == 无法启动服务器
@@ -5432,7 +5666,7 @@ Server info
 == 服务器信息
 
 Server IP
-== 服务器IP
+== 服务器 IP
 
 Server kick/spec votes are no longer actively moderated.
 == 服务器的踢人/旁观投票已不再由主动管理员模式接管
@@ -5567,7 +5801,7 @@ Show chat bubbles above players
 == 在玩家头顶显示聊天气泡
 
 Show chat bubbles above Tees
-== 在Tee上方显示对话气泡
+== 在 Tee 上方显示对话气泡
 
 Show chat messages above players
 == 在玩家头顶显示聊天消息
@@ -5579,7 +5813,7 @@ Show clan if war
 == 如果有敌对则显示战队
 
 Show client IDs (scoreboard, chat, spectating)
-== 显示客户端 ID（记分板、聊天、观战）
+== 显示客户端 ID（计分板、聊天、观战）
 
 Show client IDs in name plates
 == 显示客户端 ID
@@ -5804,7 +6038,7 @@ Show score
 == 显示分数
 
 Show scoreboard
-== 显示记分牌
+== 显示计分板
 
 Show seconds on clock
 == 在时间处显示秒数
@@ -5879,7 +6113,7 @@ Show votes window after voting
 == 投票后不关闭投票窗口
 
 Show wake-up popup on the other tee
-== 在另一侧tee显示唤醒提示
+== 在另一侧 tee 显示唤醒提示
 
 Show weapon trajectory guide
 == 显示武器弹道辅助线
@@ -5888,10 +6122,10 @@ Show Workshop Assets
 == 显示商店资源
 
 Show X
-== 显示X
+== 显示 X
 
 Show Y
-== 显示Y
+== 显示 Y
 
 Showing players from other teams is disabled
 == 本服务器已禁用显示其他队伍玩家
@@ -6040,6 +6274,9 @@ Smooth fade
 SMTC
 == 系统媒体控制
 
+Snapshot Latency
+== 快照延迟
+
 Social
 == 社交功能
 
@@ -6078,6 +6315,9 @@ Source file does not exist.
 
 Source file is empty.
 == 源文件为空
+
+Space
+== 间隔
 
 Speaker
 == 扬声器
@@ -6146,7 +6386,7 @@ Sponsor support
 == 赞助支持
 
 Sponsors:
-== 赞助者:
+== 赞助者：
 
 Spree
 == 连杀
@@ -6177,6 +6417,12 @@ Start recording a video
 
 Statboard
 == 统计板
+
+Stats
+== 统计
+
+Stats notes
+== 统计说明
 
 Status
 == 状态
@@ -6551,10 +6797,10 @@ Tencent Cloud
 == 腾讯云
 
 Tencent Cloud SecretId
-== 腾讯云 SecretId
+== 腾讯云密钥 ID
 
 Tencent Cloud SecretKey
-== 腾讯云 SecretKey
+== 腾讯云密钥 Key
 
 Text
 == 文字
@@ -6569,7 +6815,7 @@ Texture memory
 == 纹理内存
 
 Thank you for your company and trust. This is what gives me the courage to keep going.
-== 感谢您的陪伴与信任.正是如此,才给了我继续前行的勇气
+== 感谢您的陪伴与信任。正是如此，才给了我继续前行的勇气
 
 Thanks for supporting QmClient
 == 感谢您为 QmClient 做出的贡献
@@ -6578,7 +6824,7 @@ The audio device couldn't be initialised.
 == 初始化音频设备失败。
 
 The best voice chat, of course!
-== 当然是最好的语音啦!
+== 当然是最好的语音啦！
 
 The Config tab reuses QmClient's client config browser
 == 配置页复用栖梦里的客户端配置浏览器
@@ -6782,13 +7028,13 @@ Toggle remote console
 == 切换远程控制台
 
 Toggle scoreboard cursor
-== 切换记分板光标
+== 切换计分板光标
 
 Toggle team between team 0 and team mode. This mode will make your team behave like team 0.
 == 在 team 0 和 team 模式间切换。该模式会让你的队伍按 team 0 规则运行
 
 Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock
-== 切换队伍锁定，这样其他人就无法加入，因此当一名玩家死亡时队伍会重新开始。 /lock 0 解锁，/lock 1 锁定
+== 切换队伍锁定，这样其他人就无法加入，因此当一名玩家死亡时队伍会重新开始。/lock 0 解锁，/lock 1 锁定
 
 Toggle tune variable
 == 切换调整变量
@@ -6826,8 +7072,11 @@ Too many translation tasks
 Total
 == 总计
 
+Total friends
+== 好友总数
+
 Total: %d save(s)
-== 总计: %d 个存档
+== 总计：%d 个存档
 
 Traditional
 == 繁体
@@ -6866,7 +7115,7 @@ Translated text hidden due to streamer mode
 == 由于主播模式，隐藏翻译文本
 
 Translating to %s...
-== 正在翻译为 %s...
+== 正在翻译为 %s……
 
 Translation backend invalid, sending original
 == 翻译后端无效，发送原文
@@ -6932,7 +7181,7 @@ Type
 == 类型
 
 Type something...
-== 输入点什么...
+== 输入点什么……
 
 Type switch vote started automatically
 == 已自动发起切换类型投票
@@ -6944,7 +7193,7 @@ u = Snapshot latency
 == u = 快照延迟
 
 UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
-== UDP 与 TCP 的 IP 地址并不相同。请尝试屏蔽 VPN 、代理网络以及网络加速器。
+== UDP 与 TCP 的 IP 地址并不相同。请尝试屏蔽 VPN、代理网络以及网络加速器。
 
 UDP seems to be filtered.
 == UDP 疑似被过滤
@@ -6977,7 +7226,7 @@ Unable to delete the demo '%s'
 == 无法删除回放文件 "%s"
 
 Unable to delete the folder '%s'. Make sure it's empty first.
-== 无法删除 "%s" ，请确保你已清空该文件夹
+== 无法删除 "%s"，请确保你已清空该文件夹
 
 Unable to delete the screenshot '%s'
 == 无法删除截图“%s”
@@ -7028,7 +7277,7 @@ Unfinished map
 == 未完成的地图
 
 Unfinished map count: %d
-== 未完成图数量: %d
+== 未完成图数量：%d
 
 Unfinished map data is refreshing, please try again later
 == 未完成图数据刷新中，请稍后再试
@@ -7118,7 +7367,7 @@ Update finished. Please restart the client
 == 更新完成，请重启客户端
 
 Update finished. Restarting...
-== 更新完成，正在重启...
+== 更新完成，正在重启……
 
 Update notice
 == 更新提示
@@ -7127,7 +7376,7 @@ Update or add a specific war group
 == 更新或添加指定敌对分组
 
 Updating feature list...
-== 更新功能列表...
+== 更新功能列表……
 
 Uploading map data to GPU
 == 正在将地图数据传输至显卡
@@ -7148,7 +7397,7 @@ Use custom skins instead of the ninja tee
 == 使用自定义皮肤代替忍者 Tee
 
 Use default flags on scoreboard
-== 在记分板上使用默认旗
+== 在计分板上使用默认旗
 
 Use default input
 == 使用默认输入
@@ -7218,6 +7467,9 @@ V-Sync
 
 Vanilla skins only
 == 只显示原生皮肤
+
+Velocity
+== 速度
 
 Version
 == 版本
@@ -7354,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 武器切换动画
 
-Weapon trajectory
-== 武器弹道辅助线
-
 Weapon Trajectory
 == 武器辅助线
+
+Weapon trajectory
+== 武器弹道辅助线
 
 Weapons
 == 武器
@@ -7373,16 +7625,16 @@ What kind of blockbuster do you want to shoot?
 == 你想拍出怎样的大片
 
 What kind of Gores do you want to run?
-== 你想跑出怎样的Gores?
+== 你想跑出怎样的 Gores？
 
 What kind of laser do you want?
-== 你想做出怎样的激光?
+== 你想做出怎样的激光？
 
 What kind of life do you want to run?
-== 你想跑出怎样的人生?
+== 你想跑出怎样的人生？
 
 What's done is done, no use saying more
-== 事已至此,多说无益
+== 事已至此，多说无益
 
 Wheel animate
 == 滚轮动画
@@ -7418,7 +7670,7 @@ Whisper something to someone (private message)
 == 向某人发送私聊消息
 
 Who stuffed OBS in here
-== 谁把OBS塞进来了
+== 谁把 OBS 塞进来了
 
 Why are you slowmo replaying to read this?
 == 所以你为什么要慢速回放来看这个
@@ -7427,7 +7679,7 @@ Width
 == 宽度
 
 Width and height are required to be within the range from %d to %d.
-== 按键的宽和高需要在%d到%d内。
+== 按键的宽和高需要在 %d 到 %d 内。
 
 Width of others' hook collision line
 == 其他玩家的钩索辅助线宽度
@@ -7694,7 +7946,7 @@ You're not in a team with /practice turned on. Note that you can't earn a rank w
 == 你当前不在开启了 /practice 的队伍中。注意：练习模式下无法获得排名
 
 You're the last one!
-== 就你一个啦!
+== 就你一个啦！
 
 Your current race time is %s
 == 你当前的比赛用时是 %s
@@ -7762,6 +8014,9 @@ Zhipu AI
 Zhipu API key
 == 智谱 API 密钥
 
+Zoom
+== 缩放
+
 Zoom decrease
 == 缩小视角
 
@@ -7785,6 +8040,22 @@ Zoom out
 
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 腾讯云 API 密钥未配置
+
+[Assets editor blend mode]
+Multiply
+== 正片叠底
+
+[Assets editor blend mode]
+Normal
+== 正常
+
+[Assets editor blend mode]
+Overlay
+== 叠加
+
+[Assets editor blend mode]
+Screen
+== 滤色
 
 [Auto camera]
 Active
@@ -7812,7 +8083,7 @@ You may have installed only DDNet.exe. Please use the full QmClient folder.
 
 [data_version.h]
 You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.
-== 喜报! 你可能仅下载并替换了 DDNet.exe 文件，没有下载 QmClient.zip\n请仔细阅读群公告的使用说明!!!
+== 喜报！你可能仅下载并替换了 DDNet.exe 文件，没有下载 QmClient.zip\n 请仔细阅读群公告的使用说明！！！
 
 [Demo details]
 map not included

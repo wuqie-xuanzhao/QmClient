@@ -2745,6 +2745,8 @@ if(CLIENT)
     components/qmclient/qmclient.h
     components/qmclient/qmclient_utils.cpp
     components/qmclient/qmclient_utils.h
+    components/qmclient/settings_resource_preview.cpp
+    components/qmclient/settings_resource_preview.h
     components/qmclient/scripting.cpp
     components/qmclient/scripting.h
     components/qmclient/scripting/impl.cpp
@@ -3735,6 +3737,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/live/live_director.cpp
     src/game/client/live/live_replay_buffer.cpp
     src/game/client/components/qmclient/modes.cpp
+    src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/update_version.cpp
     src/game/client/components/qmclient/qmclient_utils.cpp
     src/game/client/components/qmclient/translate/translate_parse.cpp

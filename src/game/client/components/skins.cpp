@@ -21,6 +21,7 @@
 #include <game/client/animstate.h>
 #include <game/client/components/menus.h>
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/components/settings_runtime_cache.h>
 #include <game/client/gameclient.h>
 #include <game/client/render.h>
@@ -1862,15 +1863,21 @@ CSkins::ESkinProcessResult CSkins::ProcessSkinContainer(CSkinContainer *pSkinCon
 			LogSkinSettingsResourcePerf("upload", 0, MaxSkinsPerFrame, Stats.m_NumLoading, SettingsResourceMissReason(UploadBudget.m_StopReason), 0.0);
 			return ESkinProcessResult::BREAK_GPU_LIMIT;
 		}
+		SResourcePreviewUploadBudget SkinPreviewUploadBudget;
+		SkinPreviewUploadBudget.m_MaxUploads = GameClient()->GpuUploadLimiter()->RemainingUploads();
+		SkinPreviewUploadBudget.m_pGpuUploadLimiter = GameClient()->GpuUploadLimiter();
+		if(!SettingsResourcePreviewConsumeUploadBudget(SkinPreviewUploadBudget, SETTINGS_SKIN_SOURCE_TEXTURE_UPLOADS))
+		{
+			LogSettingsSkinSourceStageEvent("preview_uploads", pSkinContainer->Name(), 0, 0, 0, 0.0, 0);
+			return ESkinProcessResult::BREAK_GPU_LIMIT;
+		}
+		LogSettingsSkinSourceStageEvent("preview_uploads", pSkinContainer->Name(), 0, 0, 0, 0.0, SETTINGS_SKIN_SOURCE_TEXTURE_UPLOADS);
 
 		Stats.m_NumLoading--;
 		SkinsProcessedThisFrame++;
 
 		LoadSkinFinish(pSkinContainer, pSkinContainer->m_pLoadJob->m_Data);
-		for(int i = 0; i < SETTINGS_SKIN_SOURCE_TEXTURE_UPLOADS; ++i)
-		{
-			GameClient()->GpuUploadLimiter()->OnUploaded();
-		}
+		SettingsResourcePreviewCommitUploadBudget(SkinPreviewUploadBudget, SETTINGS_SKIN_SOURCE_TEXTURE_UPLOADS);
 		++m_SettingsSourceUploadsCompleted;
 		GameClient()->OnSkinUpdate(pSkinContainer->Name());
 		pSkinContainer->m_pLoadJob = nullptr;

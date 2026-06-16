@@ -397,6 +397,12 @@ Add a voting option
 Add Bind
 == Adicionar Atalho
 
+Add category
+== Adicionar categoria
+
+Add clan
+== Adicionar clã
+
 Add command
 == Adicionar comando
 
@@ -430,6 +436,9 @@ Add team clan:
 Add team name:
 == Adicionar nome amigo:
 
+Add to %s
+== Adicionar a %s
+
 Add to blocked words
 == Adicionar às palavras bloqueadas
 
@@ -450,6 +459,9 @@ Add/remove Client-IDs to spectate them exclusively (-1 to reset)
 
 Added %d missing required slot(s).
 == %d slot(s) obrigatório(s) adicionado(s).
+
+Added %s as friend
+== %s foi adicionado como amigo
 
 Address
 == Endereço
@@ -543,6 +555,9 @@ Amount
 
 And pick one randomly
 == E escolher um aleatoriamente
+
+Angle
+== Ângulo
 
 Angle:
 == Ângulo:
@@ -721,11 +736,11 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == Jogador autorizado forçou a votação '%s'
 
-Auto
-== Automático
-
 auto
 == auto
+
+Auto
+== Automático
 
 Auto agree vote
 == Votar automaticamente a favor
@@ -898,6 +913,9 @@ Based on a pile of Windows... stuff
 Basic
 == Básico
 
+Before I die
+== Antes de eu morrer
+
 Behavior
 == Comportamento
 
@@ -1030,8 +1048,14 @@ Cancel your swap request
 Candidate files
 == Arquivos candidatos
 
+Cannot swap: the other player is not in your team
+== Não é possível trocar: o outro jogador não está na sua equipe
+
 Category
 == Categoria
+
+Category name
+== Nome da categoria
 
 Change indicator offset based on distance to other tees
 == Alterar deslocamento do indicador com base na distância para outros tees
@@ -1144,6 +1168,9 @@ Clan color in friends list
 Clan Members
 == Membros do Clã
 
+Clan Name
+== Nome do clã
+
 Clan plates size
 == Tamanho das placas de clã
 
@@ -1153,17 +1180,17 @@ Clan: %s
 Classic
 == Clássico
 
-Classic Easy
-== Clássico Fácil
-
 Classic easy
 == Clássico fácil
 
-Classic Next
-== Clássico Next
+Classic Easy
+== Clássico Fácil
 
 Classic next
 == Clássico próximo
+
+Classic Next
+== Clássico Next
 
 Classic Nut
 == Clássico Nut
@@ -1171,11 +1198,11 @@ Classic Nut
 Classic nut
 == Clássico nut
 
-Classic Pro
-== Clássico Pro
-
 Classic pro
 == Clássico pro
+
+Classic Pro
+== Clássico Pro
 
 Clear
 == Limpar
@@ -1246,6 +1273,9 @@ Client
 Client CPU usage is high
 == O uso da CPU do cliente está alto
 
+Client data overview
+== Visão geral dos dados do cliente
+
 Client frame time is abnormal
 == O tempo de quadro do cliente está anormal
 
@@ -1260,6 +1290,9 @@ Client performance pressure is high
 
 Client prediction time is high
 == O tempo de predição do cliente está alto
+
+Client uptime
+== Tempo ativo do cliente
 
 Close
 == Fechar
@@ -1336,6 +1369,9 @@ Configure background 3D particle effects
 Configure hammer skin steal and skin transition animations
 == Configurar roubo de skin do martelo e animações de transição de skin
 
+Configure qm_report_app_id and qm_report_secret first
+== Configure qm_report_app_id e qm_report_secret primeiro
+
 Confirm both are on same server, same room, and support voice
 == Confirme que ambos estão no mesmo servidor, mesma sala e suportam voz
 
@@ -1347,6 +1383,9 @@ Connect dummy
 
 Connect dummy to enable
 == Conecte o dummy para ativar
+
+Connect to a server first
+== Conecte-se a um servidor primeiro
 
 Connect to server first to establish voice network link
 == Conecte-se ao servidor primeiro para estabelecer o link de rede de voz
@@ -1383,6 +1422,12 @@ Connection normal
 
 Connection Problems…
 == Problemas de conexão…
+
+Connection quality
+== Qualidade da conexão
+
+Connection Quality
+== Qualidade da conexão
 
 Connection severely abnormal
 == Conexão gravemente anormal
@@ -1444,8 +1489,14 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == Não foi possível conectar o dummy
 
+Could not create report scan request
+== Não foi possível criar a solicitação de varredura da denúncia
+
 Could not find your Team
 == Não foi possível encontrar seu time
+
+Could not get current server address
+== Não foi possível obter o endereço do servidor atual
 
 Could not get server list from master server
 == Não foi possível obter a lista de servidores do servidor mestre
@@ -1518,6 +1569,9 @@ Current rescue mode: %s
 
 Current status
 == Status atual
+
+Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
+== Hora atual: %s\n- O tempo ativo e de jogo é calculado a partir dos dados JSON oficiais\n- Igual ao acima\n- Igual ao acima acima\n
 
 Current: Ranks
 == Atual: Rankings
@@ -1603,8 +1657,20 @@ DDmaX Pro
 DDNet
 == DDNet
 
+DDNet / Total CPU
+== DDNet / CPU total
+
 DDNet Client needs to be restarted to complete update!
 == O Cliente DDNet precisa ser reiniciado para concluir a atualização!
+
+DDNet memory
+== Memória do DDNet
+
+DDNet Memory
+== Memória do DDNet
+
+DDNet points
+== Pontos DDNet
 
 ddnet-saves.txt is empty
 == ddnet-saves.txt está vazio
@@ -1660,11 +1726,11 @@ DeepSeek
 DeepSeek API key
 == Chave da API DeepSeek
 
-Default
-== Padrão
-
 default
 == padrão
+
+Default
+== Padrão
 
 Default input open failed
 == Falha ao abrir entrada padrão
@@ -1686,6 +1752,9 @@ Delete
 
 Delete button
 == Excluir botão
+
+Delete category
+== Excluir categoria
 
 Delete command
 == Excluir comando
@@ -1809,6 +1878,60 @@ Discord
 
 Display mode
 == Modo de exibição
+
+Display your race time
+== Mostra seu tempo de corrida
+
+Displays client prediction latency
+== Mostra a latência de predição do cliente
+
+Displays client receive rate
+== Mostra a taxa de recebimento do cliente
+
+Displays client send rate
+== Mostra a taxa de envio do cliente
+
+Displays connection quality grade
+== Mostra a nota de qualidade da conexão
+
+Displays current position
+== Mostra a posição atual
+
+Displays current prediction value
+== Mostra o valor de predição atual
+
+Displays current zoom value
+== Mostra o valor de zoom atual
+
+Displays DDNet process CPU usage / total system CPU usage
+== Mostra CPU do processo DDNet / CPU total do sistema
+
+Displays DDNet process memory usage
+== Mostra o uso de memória do processo DDNet
+
+Displays latency jitter
+== Mostra a variação de latência
+
+Displays resend-based packet loss estimate
+== Mostra a estimativa de perda de pacotes por reenvio
+
+Displays server snapshot latency
+== Mostra a latência de snapshots do servidor
+
+Displays X and Y velocity
+== Mostra a velocidade X e Y
+
+Displays your current angle in degrees
+== Mostra seu ângulo atual em graus
+
+Displays your frames per second
+== Mostra seus quadros por segundo
+
+Displays your local time
+== Mostra seu horário local
+
+Displays your ping to the current server
+== Mostra seu ping para o servidor atual
 
 Dissolve
 == Dissolver
@@ -2233,6 +2356,9 @@ Execute hovered bindwheel bind
 Execute on connect
 == Executar ao conectar
 
+Execute on join
+== Executar ao entrar
+
 Execute the specified file
 == Executar o arquivo especificado
 
@@ -2353,6 +2479,9 @@ Fat skins (DDFat)
 Favorite
 == Favorito
 
+Favorite friend
+== Amigo favorito
+
 Favorite map
 == Mapa favorito
 
@@ -2389,11 +2518,17 @@ Filter connecting players
 Find all ban records for the specified IP address
 == Encontrar todos os registros de ban para o endereço IP especificado
 
+Finish data source
+== Fonte dos dados de conclusão
+
 Finish Name
 == Nome na Chegada
 
 Finish Name:
 == Nome na Chegada:
+
+Finished maps
+== Mapas concluídos
 
 Fire
 == Atirar
@@ -2442,6 +2577,9 @@ Found %d modules
 
 FPM
 == FPM
+
+FPS
+== FPS
 
 Frags
 == Abates
@@ -2562,6 +2700,9 @@ Gameplay
 
 Gap aim rescue
 == Resgate de mira de lacuna
+
+Gap between statusbar items
+== Espaço entre itens da barra de status
 
 General
 == Geral
@@ -2809,10 +2950,10 @@ Highlighted message
 Hitbox mode
 == Modo hitbox
 
-HJ assist
+HJ Assist
 == Assistente HJ
 
-HJ Assist
+HJ assist
 == Assistente HJ
 
 Hold left click for free camera
@@ -2827,10 +2968,10 @@ Hook collision line
 Hook collision line opacity
 == Opacidade da linha de colisão de gancho
 
-Hook Collisions
+Hook collisions
 == Colisões de gancho
 
-Hook collisions
+Hook Collisions
 == Colisões de gancho
 
 Hook line tip
@@ -2892,6 +3033,12 @@ Idiot word filter
 
 Import from clipboard
 == Importar da área de transferência
+
+Improved Anti Ping
+== Anti Ping melhorado
+
+In memory of me
+== Que este cliente se lembre de mim
 
 Inactive color
 == Cor inativa
@@ -3199,6 +3346,12 @@ Last page in console
 Latency
 == Latência
 
+Latency Jitter
+== Variação de latência
+
+Latency jitter
+== Variação de latência
+
 Layout
 == Layout
 
@@ -3318,6 +3471,9 @@ Loaded %d items
 
 Loaded %d items (discarded %d items)
 == %d itens carregados (%d itens descartados)
+
+Loading
+== Carregando
 
 Loading assets...
 == Carregando assets...
@@ -3754,6 +3910,9 @@ new
 New button
 == Novo botão
 
+New category name
+== Novo nome da categoria
+
 New IME
 == Novo IME
 
@@ -3985,6 +4144,9 @@ Not open, check output device
 Note
 == Nota
 
+Note:
+== Nota:
+
 Nothing hookable
 == Nada engatável
 
@@ -4018,6 +4180,9 @@ o = Send rate
 Off
 == Desligado
 
+Official
+== Oficial
+
 Official community links
 == Links oficiais da comunidade
 
@@ -4035,6 +4200,9 @@ Oldschool
 
 On
 == Ligado
+
+Online friends
+== Amigos online
 
 Online Players
 == Jogadores Online
@@ -4330,6 +4498,9 @@ Player country:
 Player data
 == Dados do jogador
 
+Player Indicator
+== Indicador de jogador
+
 Player indicator
 == Indicador de jogador
 
@@ -4402,6 +4573,9 @@ Points
 Popup animation
 == Animação de pop-up
 
+Position
+== Posição
+
 Position jump hint
 == Dica de pulo de posição
 
@@ -4434,6 +4608,12 @@ Prediction
 
 Prediction jitter is obvious, latency changes are large
 == O jitter de previsão é evidente, a latência varia bastante
+
+Prediction latency
+== Latência de predição
+
+Prediction Latency
+== Latência de predição
 
 Prediction latency is elevated, prediction path pressure is high
 == A latência de previsão está elevada, o caminho de previsão está sob alta pressão
@@ -4633,6 +4813,9 @@ r = Race time
 Race
 == Corrida
 
+Race Time
+== Tempo de corrida
+
 Rainbow
 == Arco-íris
 
@@ -4656,6 +4839,9 @@ Rainbow weapons
 
 Random
 == Aleatório
+
+Random Colors
+== Cores aleatórias
 
 Random emoticon
 == Emoticon aleatório
@@ -4686,6 +4872,12 @@ Rebinds the client's listening address and port
 
 Receive
 == Recebimento
+
+Receive Rate
+== Taxa de recebimento
+
+Receive rate
+== Taxa de recebimento
 
 Receiving
 == Recebendo
@@ -4861,6 +5053,9 @@ Remove War Group
 Remove war name:
 == Remover nome inimigo:
 
+Removed %s from friends
+== %s foi removido dos amigos
+
 Removes all bindwheel binds
 == Remove todos os atalhos da roda de atalhos
 
@@ -4975,6 +5170,27 @@ Reply
 Reply with dummy
 == Responder com Dummy
 
+Report
+== Denunciar
+
+Report request canceled
+== Solicitação de denúncia cancelada
+
+Report request failed due to network error
+== A solicitação de denúncia falhou por erro de rede
+
+Report request failed with HTTP status: %d
+== A solicitação de denúncia falhou com status HTTP: %d
+
+Report request is already in progress
+== A solicitação de denúncia já está em andamento
+
+Report scan request submitted
+== Solicitação de varredura da denúncia enviada
+
+Reports are not available on Axiom servers
+== Denúncias não estão disponíveis em servidores Axiom
+
 Request to swap your tee with another team member
 == Solicitar trocar seu tee com outro membro da equipe
 
@@ -4992,6 +5208,12 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == Resgate/Congelamento: %d/%d
+
+Resend Loss
+== Perda por reenvio
+
+Resend loss
+== Perda por reenvio
 
 Resend signs detected, connection quality is suspicious
 == Sinais de reenvio detectados, a qualidade da conexão é suspeita
@@ -5218,6 +5440,12 @@ Say in team chat
 Say in team chat as dummy
 == Falar no chat da equipe como dummy
 
+Scanning current server
+== Escaneando o servidor atual
+
+Scanning current server...
+== Escaneando o servidor atual...
+
 Score
 == Pontuação
 
@@ -5282,10 +5510,10 @@ Seconds
 == Segundos
 
 SecretId
-== SecretId
+== ID secreto
 
 SecretKey
-== SecretKey
+== Chave secreta
 
 See how much you act
 == Veja o quanto você atua
@@ -5367,6 +5595,12 @@ Send emoticon in water
 
 Send probability
 == Probabilidade de envio
+
+Send rate
+== Taxa de envio
+
+Send Rate
+== Taxa de envio
 
 Send source language
 == Idioma de origem do envio
@@ -6040,6 +6274,9 @@ Smooth fade
 SMTC
 == SMTC
 
+Snapshot Latency
+== Latência de snapshots
+
 Social
 == Social
 
@@ -6078,6 +6315,9 @@ Source file does not exist.
 
 Source file is empty.
 == O arquivo de origem está vazio.
+
+Space
+== Espaço
 
 Speaker
 == Alto-falante
@@ -6177,6 +6417,12 @@ Start recording a video
 
 Statboard
 == Quadro de estatísticas
+
+Stats
+== Estatísticas
+
+Stats notes
+== Notas de estatísticas
 
 Status
 == Status
@@ -6551,10 +6797,10 @@ Tencent Cloud
 == Tencent Cloud
 
 Tencent Cloud SecretId
-== Tencent Cloud SecretId
+== ID secreto da Tencent Cloud
 
 Tencent Cloud SecretKey
-== Tencent Cloud SecretKey
+== Chave secreta da Tencent Cloud
 
 Text
 == Texto
@@ -6825,6 +7071,9 @@ Too many translation tasks
 
 Total
 == Total
+
+Total friends
+== Total de amigos
 
 Total: %d save(s)
 == Total: %d save(s)
@@ -7219,6 +7468,9 @@ V-Sync
 Vanilla skins only
 == Apenas skins vanilla
 
+Velocity
+== Velocidade
+
 Version
 == Versão
 
@@ -7354,10 +7606,10 @@ Weapon range color
 Weapon switch animation
 == Animação de troca de arma
 
-Weapon trajectory
+Weapon Trajectory
 == Trajetória da arma
 
-Weapon Trajectory
+Weapon trajectory
 == Trajetória da arma
 
 Weapons
@@ -7762,6 +8014,9 @@ Zhipu AI
 Zhipu API key
 == Chave da API Zhipu
 
+Zoom
+== Zoom
+
 Zoom decrease
 == Diminuir zoom
 
@@ -7785,6 +8040,22 @@ Zoom out
 
 ⚠️ Tencent Cloud API not configured
 == ⚠️ API Tencent Cloud não configurada
+
+[Assets editor blend mode]
+Multiply
+== Multiplicar
+
+[Assets editor blend mode]
+Normal
+== Normal
+
+[Assets editor blend mode]
+Overlay
+== Sobrepor
+
+[Assets editor blend mode]
+Screen
+== Tela
 
 [Auto camera]
 Active

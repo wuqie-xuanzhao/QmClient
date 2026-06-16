@@ -199,7 +199,7 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 	}
 
 	static CButtonContainer s_StatisticsButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_StatisticsButton, "统计", 0, &StatisticsButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+	if(GameClient()->m_Menus.DoButton_Menu(&s_StatisticsButton, Localize("Stats"), 0, &StatisticsButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 		NewPage = CMenus::PAGE_STATS;
 
 	static CButtonContainer s_NewsButton;
@@ -213,8 +213,8 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 	CUIRect Line1, Line2;
 	QuitNote.HSplitTop(11.0f, &Line1, &QuitNote);
 	QuitNote.HSplitTop(11.0f, &Line2, nullptr);
-	Ui()->DoLabel(&Line1, "在我死去之前", 6.0f, TEXTALIGN_MC);
-	Ui()->DoLabel(&Line2, "    谨以此端,回忆我", 3.0f, TEXTALIGN_MC);
+	Ui()->DoLabel(&Line1, Localize("Before I die"), 6.0f, TEXTALIGN_MC);
+	Ui()->DoLabel(&Line2, Localize("In memory of me"), 3.0f, TEXTALIGN_MC);
 
 	const bool LocalServerRunning = GameClient()->m_LocalServer.IsServerRunning();
 	const bool EditorDirty = GameClient()->Editor()->HasUnsavedData();

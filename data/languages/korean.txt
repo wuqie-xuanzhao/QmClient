@@ -397,6 +397,12 @@ Add a voting option
 Add Bind
 == 바인드 추가
 
+Add category
+== 분류 추가
+
+Add clan
+== 클랜 추가
+
 Add command
 == 추가 명령어 입력
 
@@ -430,6 +436,9 @@ Add team clan:
 Add team name:
 == 팀 이름 추가:
 
+Add to %s
+== %s에 추가
+
 Add to blocked words
 == 차단 단어에 추가
 
@@ -450,6 +459,9 @@ Add/remove Client-IDs to spectate them exclusively (-1 to reset)
 
 Added %d missing required slot(s).
 == 누락된 필수 슬롯 %d개를 추가했습니다.
+
+Added %s as friend
+== %s 님을 친구로 추가했습니다
 
 Address
 == 주소
@@ -543,6 +555,9 @@ Amount
 
 And pick one randomly
 == 무작위로 하나 선택
+
+Angle
+== 각도
 
 Angle:
 == 각도:
@@ -721,10 +736,10 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == 권한이 있는 플레이어가 투표를 '%s'(으)로 강제했습니다
 
-Auto
+auto
 == 자동
 
-auto
+Auto
 == 자동
 
 Auto agree vote
@@ -898,6 +913,9 @@ Based on a pile of Windows... stuff
 Basic
 == 기본
 
+Before I die
+== 내가 죽기 전에
+
 Behavior
 == 동작
 
@@ -1030,8 +1048,14 @@ Cancel your swap request
 Candidate files
 == 후보 파일
 
+Cannot swap: the other player is not in your team
+== 교환할 수 없음: 상대가 내 팀에 없습니다
+
 Category
 == 카테고리
+
+Category name
+== 분류 이름
 
 Change indicator offset based on distance to other tees
 == 다른 티와의 거리에 따라 표시기 오프셋 변경
@@ -1144,6 +1168,9 @@ Clan color in friends list
 Clan Members
 == 클랜 멤버
 
+Clan Name
+== 클랜 이름
+
 Clan plates size
 == 클랜 플레이트 크기
 
@@ -1153,17 +1180,17 @@ Clan: %s
 Classic
 == 클래식
 
-Classic Easy
-== 클래식 Easy
-
 Classic easy
 == 클래식 easy
 
-Classic Next
-== 클래식 Next
+Classic Easy
+== 클래식 Easy
 
 Classic next
 == 클래식 next
+
+Classic Next
+== 클래식 Next
 
 Classic Nut
 == 클래식 Nut
@@ -1171,11 +1198,11 @@ Classic Nut
 Classic nut
 == 클래식 nut
 
-Classic Pro
-== 클래식 Pro
-
 Classic pro
 == 클래식 pro
+
+Classic Pro
+== 클래식 Pro
 
 Clear
 == 지우기
@@ -1246,6 +1273,9 @@ Client
 Client CPU usage is high
 == 클라이언트 CPU 사용량이 높습니다
 
+Client data overview
+== 클라이언트 데이터 개요
+
 Client frame time is abnormal
 == 클라이언트 프레임 시간이 비정상입니다
 
@@ -1260,6 +1290,9 @@ Client performance pressure is high
 
 Client prediction time is high
 == 클라이언트 예측 시간이 높습니다
+
+Client uptime
+== 클라이언트 실행 시간
 
 Close
 == 닫기
@@ -1336,6 +1369,9 @@ Configure background 3D particle effects
 Configure hammer skin steal and skin transition animations
 == 해머 스킨 도용 및 스킨 전환 애니메이션 구성
 
+Configure qm_report_app_id and qm_report_secret first
+== 먼저 qm_report_app_id 및 qm_report_secret을 설정하세요
+
 Confirm both are on same server, same room, and support voice
 == 둘 다 같은 서버, 같은 방에 있고 음성을 지원하는지 확인하세요
 
@@ -1347,6 +1383,9 @@ Connect dummy
 
 Connect dummy to enable
 == 더미 연결 필요
+
+Connect to a server first
+== 먼저 서버에 연결하세요
 
 Connect to server first to establish voice network link
 == 먼저 서버에 연결하여 음성 네트워크 링크를 설정하세요
@@ -1383,6 +1422,12 @@ Connection normal
 
 Connection Problems…
 == 연결 문제…
+
+Connection quality
+== 연결 품질
+
+Connection Quality
+== 연결 품질
 
 Connection severely abnormal
 == 연결이 심각하게 비정상임
@@ -1444,8 +1489,14 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == 더미 연결 실패
 
+Could not create report scan request
+== 신고 스캔 요청을 만들 수 없습니다
+
 Could not find your Team
 == 팀을 찾을 수 없음
+
+Could not get current server address
+== 현재 서버 주소를 가져올 수 없습니다
 
 Could not get server list from master server
 == 마스터 서버에서 서버 목록을 가져올 수 없음
@@ -1518,6 +1569,9 @@ Current rescue mode: %s
 
 Current status
 == 현재 상태
+
+Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
+== 현재 시간: %s\n- 실행 시간과 플레이 시간은 공식 JSON 데이터로 계산됩니다\n- 위와 같음\n- 위의 위와 같음\n
 
 Current: Ranks
 == 현재: 순위
@@ -1603,8 +1657,20 @@ DDmaX Pro
 DDNet
 == DDNet
 
+DDNet / Total CPU
+== DDNet / 전체 CPU
+
 DDNet Client needs to be restarted to complete update!
 == DDNet 클라이언트를 다시 시작해야 업데이트가 완료됩니다!
+
+DDNet memory
+== DDNet 메모리
+
+DDNet Memory
+== DDNet 메모리
+
+DDNet points
+== DDNet 점수
 
 ddnet-saves.txt is empty
 == ddnet-saves.txt가 비어 있음
@@ -1660,10 +1726,10 @@ DeepSeek
 DeepSeek API key
 == DeepSeek API 키
 
-Default
+default
 == 기본값
 
-default
+Default
 == 기본값
 
 Default input open failed
@@ -1686,6 +1752,9 @@ Delete
 
 Delete button
 == 버튼 삭제
+
+Delete category
+== 분류 삭제
 
 Delete command
 == 명령 삭제
@@ -1809,6 +1878,60 @@ Discord
 
 Display mode
 == 표시 모드
+
+Display your race time
+== 내 레이스 시간을 표시
+
+Displays client prediction latency
+== 클라이언트 예측 지연을 표시
+
+Displays client receive rate
+== 클라이언트 수신 속도를 표시
+
+Displays client send rate
+== 클라이언트 전송 속도를 표시
+
+Displays connection quality grade
+== 연결 품질 등급을 표시
+
+Displays current position
+== 현재 위치를 표시
+
+Displays current prediction value
+== 현재 예측 값을 표시
+
+Displays current zoom value
+== 현재 줌 값을 표시
+
+Displays DDNet process CPU usage / total system CPU usage
+== DDNet 프로세스 CPU 사용률 / 전체 시스템 CPU 사용률을 표시
+
+Displays DDNet process memory usage
+== DDNet 프로세스 메모리 사용량을 표시
+
+Displays latency jitter
+== 지연 지터를 표시
+
+Displays resend-based packet loss estimate
+== 재전송 기반 패킷 손실 추정치를 표시
+
+Displays server snapshot latency
+== 서버 스냅샷 지연을 표시
+
+Displays X and Y velocity
+== X 및 Y 속도를 표시
+
+Displays your current angle in degrees
+== 현재 각도를 도 단위로 표시
+
+Displays your frames per second
+== 초당 프레임 수를 표시
+
+Displays your local time
+== 내 로컬 시간을 표시
+
+Displays your ping to the current server
+== 현재 서버까지의 핑을 표시
 
 Dissolve
 == 해산
@@ -2233,6 +2356,9 @@ Execute hovered bindwheel bind
 Execute on connect
 == 연결 시 실행
 
+Execute on join
+== 입장 시 실행
+
 Execute the specified file
 == 지정된 파일 실행
 
@@ -2353,6 +2479,9 @@ Fat skins (DDFat)
 Favorite
 == 즐겨찾기
 
+Favorite friend
+== 가장 자주 함께한 친구
+
 Favorite map
 == 즐겨찾는 맵
 
@@ -2389,11 +2518,17 @@ Filter connecting players
 Find all ban records for the specified IP address
 == 지정된 IP 주소의 모든 차단 기록 찾기
 
+Finish data source
+== 완주 데이터 출처
+
 Finish Name
 == 완료 이름
 
 Finish Name:
 == 완료 이름:
+
+Finished maps
+== 완주한 맵 수
 
 Fire
 == 발사
@@ -2442,6 +2577,9 @@ Found %d modules
 
 FPM
 == 분당 킬
+
+FPS
+== FPS
 
 Frags
 == 킬 수
@@ -2562,6 +2700,9 @@ Gameplay
 
 Gap aim rescue
 == 틈 조준 구출
+
+Gap between statusbar items
+== 상태 표시줄 항목 사이 간격
 
 General
 == 일반
@@ -2809,10 +2950,10 @@ Highlighted message
 Hitbox mode
 == 히트박스 모드
 
-HJ assist
+HJ Assist
 == HJ 보조
 
-HJ Assist
+HJ assist
 == HJ 보조
 
 Hold left click for free camera
@@ -2827,11 +2968,11 @@ Hook collision line
 Hook collision line opacity
 == 충돌선 불투명도
 
-Hook Collisions
-== 갈고리 충돌 보조
-
 Hook collisions
 == 갈고리 충돌선
+
+Hook Collisions
+== 갈고리 충돌 보조
 
 Hook line tip
 == 갈고리선 끝
@@ -2892,6 +3033,12 @@ Idiot word filter
 
 Import from clipboard
 == 클립보드에서 가져오기
+
+Improved Anti Ping
+== 개선된 Anti Ping
+
+In memory of me
+== 이 클라이언트에 나를 기억해 줘
 
 Inactive color
 == 비활성 색상
@@ -3199,6 +3346,12 @@ Last page in console
 Latency
 == 지연
 
+Latency Jitter
+== 지연 지터
+
+Latency jitter
+== 지연 지터
+
 Layout
 == 레이아웃
 
@@ -3318,6 +3471,9 @@ Loaded %d items
 
 Loaded %d items (discarded %d items)
 == %d개 항목 불러옴 (%d개 항목 폐기)
+
+Loading
+== 불러오는 중
 
 Loading assets...
 == 에셋 로딩 중...
@@ -3754,6 +3910,9 @@ new
 New button
 == 새 버튼
 
+New category name
+== 새 분류 이름
+
 New IME
 == 새 IME
 
@@ -3985,6 +4144,9 @@ Not open, check output device
 Note
 == 참고
 
+Note:
+== 메모：
+
 Nothing hookable
 == 걸 수 있는 대상 없음
 
@@ -4018,6 +4180,9 @@ o = Send rate
 Off
 == 끄기
 
+Official
+== 공식
+
 Official community links
 == 공식 커뮤니티 링크
 
@@ -4035,6 +4200,9 @@ Oldschool
 
 On
 == 켜기
+
+Online friends
+== 온라인 친구
 
 Online Players
 == 온라인 플레이어
@@ -4330,6 +4498,9 @@ Player country:
 Player data
 == 플레이어 데이터
 
+Player Indicator
+== 플레이어 표시기
+
 Player indicator
 == 플레이어 표시기
 
@@ -4402,6 +4573,9 @@ Points
 Popup animation
 == 팝업 애니메이션
 
+Position
+== 위치
+
 Position jump hint
 == 위치 점프 힌트
 
@@ -4434,6 +4608,12 @@ Prediction
 
 Prediction jitter is obvious, latency changes are large
 == 예측 지터가 뚜렷하고 지연 변화가 큼
+
+Prediction latency
+== 예측 지연
+
+Prediction Latency
+== 예측 지연
 
 Prediction latency is elevated, prediction path pressure is high
 == 예측 지연이 높고 예측 경로 부하가 큼
@@ -4633,6 +4813,9 @@ r = Race time
 Race
 == 레이스
 
+Race Time
+== 레이스 시간
+
 Rainbow
 == 무지개
 
@@ -4656,6 +4839,9 @@ Rainbow weapons
 
 Random
 == 무작위
+
+Random Colors
+== 무작위 색상
 
 Random emoticon
 == 무작위 이모티콘
@@ -4686,6 +4872,12 @@ Rebinds the client's listening address and port
 
 Receive
 == 수신
+
+Receive Rate
+== 수신 속도
+
+Receive rate
+== 수신 속도
 
 Receiving
 == 수신 중
@@ -4861,6 +5053,9 @@ Remove War Group
 Remove war name:
 == 적대 이름 제거:
 
+Removed %s from friends
+== %s 님을 친구에서 제거했습니다
+
 Removes all bindwheel binds
 == 모든 바인드휠 바인드 제거
 
@@ -4975,6 +5170,27 @@ Reply
 Reply with dummy
 == 더미로 답장
 
+Report
+== 신고
+
+Report request canceled
+== 신고 요청이 취소되었습니다
+
+Report request failed due to network error
+== 네트워크 오류로 신고 요청이 실패했습니다
+
+Report request failed with HTTP status: %d
+== 신고 요청 실패, HTTP 상태 코드: %d
+
+Report request is already in progress
+== 신고 요청을 처리 중입니다
+
+Report scan request submitted
+== 신고 스캔 요청을 제출했습니다
+
+Reports are not available on Axiom servers
+== Axiom 서버에서는 신고 기능을 사용할 수 없습니다
+
 Request to swap your tee with another team member
 == 다른 팀원과 티 교체 요청
 
@@ -4992,6 +5208,12 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == 구조/빙결: %d/%d
+
+Resend Loss
+== 재전송 손실
+
+Resend loss
+== 재전송 손실
 
 Resend signs detected, connection quality is suspicious
 == 재전송 징후가 감지되어 연결 품질이 의심됨
@@ -5218,6 +5440,12 @@ Say in team chat
 Say in team chat as dummy
 == 더미로 팀 채팅 말하기
 
+Scanning current server
+== 현재 서버를 스캔 중
+
+Scanning current server...
+== 현재 서버를 스캔 중……
+
 Score
 == 점수
 
@@ -5282,10 +5510,10 @@ Seconds
 == 초
 
 SecretId
-== SecretId
+== 시크릿 ID
 
 SecretKey
-== SecretKey
+== 시크릿 키
 
 See how much you act
 == 당신이 얼마나 연기하는지 확인
@@ -5367,6 +5595,12 @@ Send emoticon in water
 
 Send probability
 == 전송 확률
+
+Send rate
+== 전송 속도
+
+Send Rate
+== 전송 속도
 
 Send source language
 == 보내는 원본 언어
@@ -6040,6 +6274,9 @@ Smooth fade
 SMTC
 == 시스템 미디어 컨트롤
 
+Snapshot Latency
+== 스냅샷 지연
+
 Social
 == 소셜
 
@@ -6078,6 +6315,9 @@ Source file does not exist.
 
 Source file is empty.
 == 소스 파일이 비어 있습니다.
+
+Space
+== 간격
 
 Speaker
 == 스피커
@@ -6177,6 +6417,12 @@ Start recording a video
 
 Statboard
 == 통계판
+
+Stats
+== 통계
+
+Stats notes
+== 통계 설명
 
 Status
 == 상태
@@ -6551,10 +6797,10 @@ Tencent Cloud
 == 텐센트 클라우드
 
 Tencent Cloud SecretId
-== 텐센트 클라우드 SecretId
+== Tencent Cloud 시크릿 ID
 
 Tencent Cloud SecretKey
-== 텐센트 클라우드 SecretKey
+== Tencent Cloud 시크릿 키
 
 Text
 == 텍스트
@@ -6825,6 +7071,9 @@ Too many translation tasks
 
 Total
 == 합계
+
+Total friends
+== 총 친구 수
 
 Total: %d save(s)
 == 총 %d개 저장
@@ -7219,6 +7468,9 @@ V-Sync
 Vanilla skins only
 == 바닐라 스킨만 표시
 
+Velocity
+== 속도
+
 Version
 == 버전
 
@@ -7354,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 무기 전환 애니메이션
 
-Weapon trajectory
-== 무기 궤적 보조선
-
 Weapon Trajectory
 == 무기 궤적
+
+Weapon trajectory
+== 무기 궤적 보조선
 
 Weapons
 == 무기
@@ -7762,6 +8014,9 @@ Zhipu AI
 Zhipu API key
 == Zhipu API 키
 
+Zoom
+== 줌
+
 Zoom decrease
 == 축소
 
@@ -7785,6 +8040,22 @@ Zoom out
 
 ⚠️ Tencent Cloud API not configured
 == ⚠️ 텐센트 클라우드 API가 구성되지 않음
+
+[Assets editor blend mode]
+Multiply
+== 곱하기
+
+[Assets editor blend mode]
+Normal
+== 일반
+
+[Assets editor blend mode]
+Overlay
+== 오버레이
+
+[Assets editor blend mode]
+Screen
+== 스크린
 
 [Auto camera]
 Active

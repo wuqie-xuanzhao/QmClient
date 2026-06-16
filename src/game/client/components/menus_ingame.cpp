@@ -329,22 +329,22 @@ void CMenus::StartReportScan()
 {
 	if(m_ReportScanState != EReportScanState::IDLE)
 	{
-		GameClient()->Echo("举报请求正在处理中");
+		GameClient()->Echo(Localize("Report request is already in progress"));
 		return;
 	}
 	if(Client()->State() != IClient::STATE_ONLINE)
 	{
-		GameClient()->Echo("需要先连接到服务器");
+		GameClient()->Echo(Localize("Connect to a server first"));
 		return;
 	}
 	if(GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity())
 	{
-		GameClient()->Echo("Axiom 服务器内不可使用举报功能");
+		GameClient()->Echo(Localize("Reports are not available on Axiom servers"));
 		return;
 	}
 	if(g_Config.m_QmReportAppId[0] == '\0' || g_Config.m_QmReportSecret[0] == '\0')
 	{
-		GameClient()->Echo("请先设置 qm_report_app_id 和 qm_report_secret");
+		GameClient()->Echo(Localize("Configure qm_report_app_id and qm_report_secret first"));
 		return;
 	}
 
@@ -353,7 +353,7 @@ void CMenus::StartReportScan()
 		net_addr_str(pServerAddr, m_aReportScanAddress, sizeof(m_aReportScanAddress), true);
 	if(m_aReportScanAddress[0] == '\0')
 	{
-		GameClient()->Echo("无法获取当前服务器地址");
+		GameClient()->Echo(Localize("Could not get current server address"));
 		return;
 	}
 
@@ -367,13 +367,13 @@ void CMenus::StartReportScan()
 	if(!m_pReportScanRequest)
 	{
 		ResetReportScan();
-		GameClient()->Echo("创建举报扫描请求失败");
+		GameClient()->Echo(Localize("Could not create report scan request"));
 		return;
 	}
 
 	m_ReportScanState = EReportScanState::SCANNING;
 	Http()->Run(m_pReportScanRequest);
-	GameClient()->Echo("正在扫描当前服务器...");
+	GameClient()->Echo(Localize("Scanning current server..."));
 }
 
 void CMenus::UpdateReportScan()
@@ -385,7 +385,7 @@ void CMenus::UpdateReportScan()
 	if(RequestState != EHttpState::DONE)
 	{
 		ResetReportScan();
-		GameClient()->Echo(RequestState == EHttpState::ABORTED ? "举报请求已取消" : "举报请求失败，网络请求异常");
+		GameClient()->Echo(RequestState == EHttpState::ABORTED ? Localize("Report request canceled") : Localize("Report request failed due to network error"));
 		return;
 	}
 
@@ -393,14 +393,14 @@ void CMenus::UpdateReportScan()
 	if(StatusCode < 200 || StatusCode >= 300)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "举报请求失败，HTTP 状态码：%d", StatusCode);
+		str_format(aBuf, sizeof(aBuf), Localize("Report request failed with HTTP status: %d"), StatusCode);
 		ResetReportScan();
 		GameClient()->Echo(aBuf);
 		return;
 	}
 
 	ResetReportScan();
-	GameClient()->Echo("举报扫描请求已提交");
+	GameClient()->Echo(Localize("Report scan request submitted"));
 }
 
 void CMenus::RenderGame(CUIRect MainView)
@@ -457,7 +457,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	char aSaveReplayButtonLabel[64];
 	str_format(aSaveReplayButtonLabel, sizeof(aSaveReplayButtonLabel), Localize("Save last %d min"), g_Config.m_ClEscReplayLengthMinutes);
 	const char *pDemoMarkerButtonLabel = Localize("Mark demo");
-	const char *pReportButtonLabel = "举报";
+	const char *pReportButtonLabel = Localize("Report");
 	const char *pSpectateButtonLabel = Localize("Spectate");
 	const char *pJoinRedButtonLabel = Localize("Join red");
 	const char *pJoinBlueButtonLabel = Localize("Join blue");
@@ -720,12 +720,12 @@ void CMenus::RenderGame(CUIRect MainView)
 	if(m_ReportScanState != EReportScanState::IDLE)
 	{
 		DoButton_Menu(&s_ReportButton, pReportButtonLabel, 1, &Button);
-		GameClient()->m_Tooltips.DoToolTip(&s_ReportButton, &Button, "正在扫描当前服务器");
+		GameClient()->m_Tooltips.DoToolTip(&s_ReportButton, &Button, Localize("Scanning current server"));
 	}
 	else if(ReportDisabledOnAxiom)
 	{
 		DoButton_Menu(&s_ReportButton, pReportButtonLabel, 1, &Button);
-		GameClient()->m_Tooltips.DoToolTip(&s_ReportButton, &Button, "Axiom 服务器内不可使用举报功能");
+		GameClient()->m_Tooltips.DoToolTip(&s_ReportButton, &Button, Localize("Reports are not available on Axiom servers"));
 	}
 	else if(DoButton_Menu(&s_ReportButton, pReportButtonLabel, 0, &Button))
 	{
