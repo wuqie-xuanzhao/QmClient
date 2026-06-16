@@ -1180,11 +1180,11 @@ Clan: %s
 Classic
 == 클래식
 
-Classic easy
-== 클래식 easy
-
 Classic Easy
 == 클래식 Easy
+
+Classic easy
+== 클래식 easy
 
 Classic next
 == 클래식 next
@@ -1423,10 +1423,10 @@ Connection normal
 Connection Problems…
 == 연결 문제…
 
-Connection quality
+Connection Quality
 == 연결 품질
 
-Connection Quality
+Connection quality
 == 연결 품질
 
 Connection severely abnormal
@@ -1663,10 +1663,10 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNet 클라이언트를 다시 시작해야 업데이트가 완료됩니다!
 
-DDNet memory
+DDNet Memory
 == DDNet 메모리
 
-DDNet Memory
+DDNet memory
 == DDNet 메모리
 
 DDNet points
@@ -1726,10 +1726,10 @@ DeepSeek
 DeepSeek API key
 == DeepSeek API 키
 
-default
+Default
 == 기본값
 
-Default
+default
 == 기본값
 
 Default input open failed
@@ -2968,11 +2968,11 @@ Hook collision line
 Hook collision line opacity
 == 충돌선 불투명도
 
-Hook collisions
-== 갈고리 충돌선
-
 Hook Collisions
 == 갈고리 충돌 보조
+
+Hook collisions
+== 갈고리 충돌선
 
 Hook line tip
 == 갈고리선 끝
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == 획득 범위
 
-Pie menu
+Pie Menu
 == 파이 메뉴
 
-Pie Menu
+Pie menu
 == 파이 메뉴
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == 플레이어 데이터
 
-Player Indicator
+Player indicator
 == 플레이어 표시기
 
-Player indicator
+Player Indicator
 == 플레이어 표시기
 
 Player is on a different team
@@ -4609,19 +4609,19 @@ Prediction
 Prediction jitter is obvious, latency changes are large
 == 예측 지터가 뚜렷하고 지연 변화가 큼
 
-Prediction latency
+Prediction Latency
 == 예측 지연
 
-Prediction Latency
+Prediction latency
 == 예측 지연
 
 Prediction latency is elevated, prediction path pressure is high
 == 예측 지연이 높고 예측 경로 부하가 큼
 
-Prediction Margin
+Prediction margin
 == 예측 여유
 
-Prediction margin
+Prediction Margin
 == 예측 여유
 
 Prediction time
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == 수신
 
-Receive Rate
+Receive rate
 == 수신 속도
 
-Receive rate
+Receive Rate
 == 수신 속도
 
 Receiving
@@ -6610,8 +6610,8 @@ System media control
 System message
 == 시스템 메시지
 
-System prompt text
-== 시스템 프롬프트 텍스트
+System prompt text color
+== 시스템 프롬프트 텍스트 색상
 
 Tags
 == 태그
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 무기 전환 애니메이션
 
-Weapon Trajectory
-== 무기 궤적
-
 Weapon trajectory
 == 무기 궤적 보조선
+
+Weapon Trajectory
+== 무기 궤적
 
 Weapons
 == 무기

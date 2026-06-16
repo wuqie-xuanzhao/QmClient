@@ -1180,11 +1180,11 @@ Clan: %s
 Classic
 == Klasik
 
-Classic easy
-== Klasik kolay
-
 Classic Easy
 == Klasik Easy
+
+Classic easy
+== Klasik kolay
 
 Classic next
 == Klasik sonraki
@@ -1423,10 +1423,10 @@ Connection normal
 Connection Problems…
 == Bağlantı Sorunları…
 
-Connection quality
+Connection Quality
 == Bağlantı kalitesi
 
-Connection Quality
+Connection quality
 == Bağlantı kalitesi
 
 Connection severely abnormal
@@ -1663,10 +1663,10 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == Güncellemeyi tamamlamak için DDNet istemcisinin yeniden başlatılması gerekiyor!
 
-DDNet memory
+DDNet Memory
 == DDNet belleği
 
-DDNet Memory
+DDNet memory
 == DDNet belleği
 
 DDNet points
@@ -1726,11 +1726,11 @@ DeepSeek
 DeepSeek API key
 == DeepSeek API anahtarı
 
-default
-== varsayılan
-
 Default
 == Varsayılan
+
+default
+== varsayılan
 
 Default input open failed
 == Varsayılan giriş açılamadı
@@ -2968,11 +2968,11 @@ Hook collision line
 Hook collision line opacity
 == Kanca çarpışma çizgisi opaklığı
 
-Hook collisions
-== Kanca çarpışma çizgileri
-
 Hook Collisions
 == Kanca Çarpışmaları
+
+Hook collisions
+== Kanca çarpışma çizgileri
 
 Hook line tip
 == Kanca çizgisi ucu
@@ -4450,11 +4450,11 @@ Pick result: %s
 Pickup range
 == Toplama aralığı
 
-Pie menu
-== Pasta menüsü
-
 Pie Menu
 == Pasta Menüsü
+
+Pie menu
+== Pasta menüsü
 
 Ping
 == Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == Oyuncu verileri
 
-Player Indicator
+Player indicator
 == Oyuncu göstergesi
 
-Player indicator
+Player Indicator
 == Oyuncu göstergesi
 
 Player is on a different team
@@ -4609,20 +4609,20 @@ Prediction
 Prediction jitter is obvious, latency changes are large
 == Tahmin titreşimi belirgin, gecikme değişimleri büyük
 
-Prediction latency
+Prediction Latency
 == Tahmin gecikmesi
 
-Prediction Latency
+Prediction latency
 == Tahmin gecikmesi
 
 Prediction latency is elevated, prediction path pressure is high
 == Tahmin gecikmesi yüksek, tahmin yolu baskısı fazla
 
-Prediction Margin
-== Tahmin Marjı
-
 Prediction margin
 == Tahmin payı
+
+Prediction Margin
+== Tahmin Marjı
 
 Prediction time
 == Tahmin süresi
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == Alma
 
-Receive Rate
+Receive rate
 == Alma hızı
 
-Receive rate
+Receive Rate
 == Alma hızı
 
 Receiving
@@ -6610,8 +6610,8 @@ System media control
 System message
 == Sistem mesajı
 
-System prompt text
-== Sistem istemi metni
+System prompt text color
+== Sistem istemi metin rengi
 
 Tags
 == Etiketler
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == Silah değiştirme animasyonu
 
-Weapon Trajectory
-== Silah Yörüngesi
-
 Weapon trajectory
 == Silah yörüngesi
+
+Weapon Trajectory
+== Silah Yörüngesi
 
 Weapons
 == Silahlar

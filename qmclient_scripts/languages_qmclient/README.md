@@ -42,6 +42,12 @@ python qmclient_scripts/languages_qmclient/translate_with_local_http.py --langua
 python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages simplified_chinese,traditional_chinese,japanese,korean,russian,german,spanish,french,brazilian_portuguese,portuguese,turkish,polish --write-back --resume
 ```
 
+`--write-back` 只会把审核通过的 draft 条目 patch 到对应 `translations/i18n/*.toml`，不应重写整份模块 TOML，也不应重排未触碰的 `[[message]]` block。修改写回逻辑后，先跑：
+
+```bash
+python -m unittest discover qmclient_scripts/languages_qmclient/tests
+```
+
 回填后必须生成运行时语言文件并验证：
 
 ```bash
@@ -59,7 +65,7 @@ python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-gr
 - `validate.py`：校验提取结果新鲜度、全部生成语言文件覆盖、模块化 TOML 可读性、legacy overlay 删除状态和 blocking audit violations。
 - `review_duplicate_entries.py`：只读报告重复、相似、空译文和疑似未使用项，用于人工清理。
 - `audit_translation_drift.py`：把当前 TOML 译文和 Git 历史里的简中译法做只读对比。
-- `translate_with_local_http.py`：生成本地模型翻译草稿；审核通过后，可显式 `--write-back` 回填 `translations/i18n/*.toml`。
+- `translate_with_local_http.py`：生成本地模型翻译草稿；审核通过后，可显式 `--write-back` 按条目 patch 回填 `translations/i18n/*.toml`。
 
 ## 翻译草稿工作流
 
@@ -84,7 +90,7 @@ python qmclient_scripts/languages_qmclient/translate_with_local_http.py --langua
 python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages korean --module server_browser --write-back --resume
 ```
 
-回填后必须重新运行 `generate_all.py`、`validate.py` 和 `review_duplicate_entries.py`。
+回填后必须重新运行 `generate_all.py`、`validate.py` 和 `review_duplicate_entries.py`。如果回填结果出现未触碰条目的排序或空行变化，应先修写回脚本，不要把整模块格式化作为正常回填结果接受。
 
 ## 翻译风格维护
 

@@ -725,7 +725,7 @@ AUS
 == 澳洲
 
 Authed name color in scoreboard
-== 管理权限者名字计分板显示颜色
+== 管理权限者名字在计分板上的颜色
 
 Authenticate to rcon
 == 进行 rcon 认证
@@ -1180,11 +1180,11 @@ Clan: %s
 Classic
 == 古典
 
-Classic easy
-== 古典 easy
-
 Classic Easy
 == 经典 Easy
+
+Classic easy
+== 古典 easy
 
 Classic next
 == 古典 next
@@ -1423,10 +1423,10 @@ Connection normal
 Connection Problems…
 == 连接中断…
 
-Connection quality
+Connection Quality
 == 连接质量
 
-Connection Quality
+Connection quality
 == 连接质量
 
 Connection severely abnormal
@@ -1663,10 +1663,10 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNet 客户端需要重新启动才能完成更新！
 
-DDNet memory
+DDNet Memory
 == DDNet 内存
 
-DDNet Memory
+DDNet memory
 == DDNet 内存
 
 DDNet points
@@ -1726,10 +1726,10 @@ DeepSeek
 DeepSeek API key
 == DeepSeek API 密钥
 
-default
+Default
 == 默认
 
-Default
+default
 == 默认
 
 Default input open failed
@@ -2408,7 +2408,7 @@ Fade in
 == 淡入
 
 Fade only
-== 仅淡入
+== 仅淡入淡出
 
 Fade out
 == 淡出
@@ -2900,7 +2900,7 @@ Hide jump effects
 == 隐藏跳跃特效
 
 Hide kill/finish messages
-== 隐藏击杀/完成
+== 隐藏死亡/完成消息
 
 Hide map progress
 == 隐藏地图进度
@@ -2968,11 +2968,11 @@ Hook collision line
 Hook collision line opacity
 == 辅助线不透明度
 
-Hook collisions
-== 钩索辅助线
-
 Hook Collisions
 == 瞄准辅助
+
+Hook collisions
+== 钩索辅助线
 
 Hook line tip
 == 辅助线提示（实际可钩中 Tee 的长度）
@@ -3224,7 +3224,7 @@ Join Tutorial Server
 == 进入教学服务器
 
 Join, version, rules, and help messages stay in chat instead of popups
-== 入场、版本、规则和帮助消息会留在聊天里，不弹出显示
+== 入服、版本、规则和帮助消息会留在聊天里，不弹出显示
 
 Jump
 == 跳跃
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == 拾取物范围
 
-Pie menu
+Pie Menu
 == 饼菜单
 
-Pie Menu
+Pie menu
 == 饼菜单
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == 玩家数据
 
-Player Indicator
+Player indicator
 == 玩家指示器
 
-Player indicator
+Player Indicator
 == 玩家指示器
 
 Player is on a different team
@@ -4609,20 +4609,20 @@ Prediction
 Prediction jitter is obvious, latency changes are large
 == 预测抖动明显，延迟变化较大
 
-Prediction latency
+Prediction Latency
 == 预测延迟
 
-Prediction Latency
+Prediction latency
 == 预测延迟
 
 Prediction latency is elevated, prediction path pressure is high
 == 预测延迟偏高，预测链路压力较高
 
-Prediction Margin
-== 预测量
-
 Prediction margin
 == 预测边距
+
+Prediction Margin
+== 预测量
 
 Prediction time
 == 预测耗时
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == 接收
 
-Receive Rate
+Receive rate
 == 接收速率
 
-Receive rate
+Receive Rate
 == 接收速率
 
 Receiving
@@ -5345,7 +5345,7 @@ Same as "vote no"
 == 与“投反对票”相同
 
 Same clan color in scoreboard
-== 相同战队计分板显示颜色
+== 相同战队在计分板上的颜色
 
 Sat.
 == 饱和度
@@ -5465,7 +5465,7 @@ Scoreboard opacity
 == 计分板不透明度
 
 Scoreboard point check
-== 计分板显示积分
+== 计分板积分检查
 
 Scores are private on this server
 == 本服务器的成绩是私密的
@@ -5513,7 +5513,7 @@ SecretId
 == 密钥 ID
 
 SecretKey
-== 密钥 Key
+== 密钥
 
 See how much you act
 == 看看你有多演
@@ -6131,10 +6131,10 @@ Showing players from other teams is disabled
 == 本服务器已禁用显示其他队伍玩家
 
 Showing the checkpoint times for '%s' with a race time of %s
-== 正在显示 '%s' 的 checkpoint 时间，当前成绩为 %s
+== 正在显示 '%s' 的检查点用时，当前成绩为 %s
 
 Showing the checkpoint times is not allowed on this server.
-== 本服务器不允许查看 checkpoint 时间
+== 本服务器不允许查看检查点用时
 
 Showing the global points of other players is not allowed on this server.
 == 本服务器不允许查看其他玩家的全局积分
@@ -6610,7 +6610,7 @@ System media control
 System message
 == 系统消息
 
-System prompt text
+System prompt text color
 == 系统提示文字颜色
 
 Tags
@@ -6800,7 +6800,7 @@ Tencent Cloud SecretId
 == 腾讯云密钥 ID
 
 Tencent Cloud SecretKey
-== 腾讯云密钥 Key
+== 腾讯云密钥
 
 Text
 == 文字
@@ -6872,7 +6872,7 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 == 触控控件编辑器中有未保存的更改，建议先保存。
 
 There is no checkpoint teleporter with that index on the map.
-== 这张地图上没有这个编号的 checkpoint 传送器
+== 这张地图上没有这个编号的检查点传送器
 
 There is no teleporter with that index on the map.
 == 这张地图上没有这个编号的传送器
@@ -7397,7 +7397,7 @@ Use custom skins instead of the ninja tee
 == 使用自定义皮肤代替忍者 Tee
 
 Use default flags on scoreboard
-== 在计分板上使用默认旗
+== 在计分板上使用默认旗帜
 
 Use default input
 == 使用默认输入
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 武器切换动画
 
-Weapon Trajectory
-== 武器辅助线
-
 Weapon trajectory
 == 武器弹道辅助线
+
+Weapon Trajectory
+== 武器辅助线
 
 Weapons
 == 武器

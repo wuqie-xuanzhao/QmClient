@@ -1180,11 +1180,11 @@ Clan: %s
 Classic
 == クラシック
 
-Classic easy
-== クラシックイージー
-
 Classic Easy
 == クラシック Easy
+
+Classic easy
+== クラシックイージー
 
 Classic next
 == クラシックネクスト
@@ -1423,10 +1423,10 @@ Connection normal
 Connection Problems…
 == 接続の問題…
 
-Connection quality
+Connection Quality
 == 接続品質
 
-Connection Quality
+Connection quality
 == 接続品質
 
 Connection severely abnormal
@@ -1663,10 +1663,10 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNetクライアントを再起動してアップデートを完了する必要があります！
 
-DDNet memory
+DDNet Memory
 == DDNet メモリ
 
-DDNet Memory
+DDNet memory
 == DDNet メモリ
 
 DDNet points
@@ -1726,10 +1726,10 @@ DeepSeek
 DeepSeek API key
 == DeepSeek APIキー
 
-default
+Default
 == デフォルト
 
-Default
+default
 == デフォルト
 
 Default input open failed
@@ -2968,10 +2968,10 @@ Hook collision line
 Hook collision line opacity
 == フック補助線の不透明度
 
-Hook collisions
+Hook Collisions
 == フック補助線
 
-Hook Collisions
+Hook collisions
 == フック補助線
 
 Hook line tip
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == ピックアップ範囲
 
-Pie menu
+Pie Menu
 == パイメニュー
 
-Pie Menu
+Pie menu
 == パイメニュー
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == プレイヤーデータ
 
-Player Indicator
+Player indicator
 == プレイヤーインジケーター
 
-Player indicator
+Player Indicator
 == プレイヤーインジケーター
 
 Player is on a different team
@@ -4609,19 +4609,19 @@ Prediction
 Prediction jitter is obvious, latency changes are large
 == 予測ジッターが目立ち、レイテンシ変動が大きいです
 
-Prediction latency
+Prediction Latency
 == 予測遅延
 
-Prediction Latency
+Prediction latency
 == 予測遅延
 
 Prediction latency is elevated, prediction path pressure is high
 == 予測レイテンシが高く、予測経路の負荷が高いです
 
-Prediction Margin
+Prediction margin
 == 予測マージン
 
-Prediction margin
+Prediction Margin
 == 予測マージン
 
 Prediction time
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == 受信
 
-Receive Rate
+Receive rate
 == 受信速度
 
-Receive rate
+Receive Rate
 == 受信速度
 
 Receiving
@@ -6610,8 +6610,8 @@ System media control
 System message
 == システムメッセージ
 
-System prompt text
-== システムプロンプトテキスト
+System prompt text color
+== システムプロンプトの文字色
 
 Tags
 == タグ
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 武器切り替えアニメーション
 
-Weapon Trajectory
-== 武器軌道
-
 Weapon trajectory
 == 武器弾道補助線
+
+Weapon Trajectory
+== 武器軌道
 
 Weapons
 == 武器

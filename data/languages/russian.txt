@@ -1180,11 +1180,11 @@ Clan: %s
 Classic
 == Классический
 
-Classic easy
-== Классический easy
-
 Classic Easy
 == Классический Easy
+
+Classic easy
+== Классический easy
 
 Classic next
 == Классический next
@@ -1423,10 +1423,10 @@ Connection normal
 Connection Problems…
 == Проблемы с подключением…
 
-Connection quality
+Connection Quality
 == Качество соединения
 
-Connection Quality
+Connection quality
 == Качество соединения
 
 Connection severely abnormal
@@ -1663,10 +1663,10 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == Для завершения обновления необходимо перезапустить клиент DDNet!
 
-DDNet memory
+DDNet Memory
 == Память DDNet
 
-DDNet Memory
+DDNet memory
 == Память DDNet
 
 DDNet points
@@ -1726,11 +1726,11 @@ DeepSeek
 DeepSeek API key
 == API-ключ DeepSeek
 
-default
-== по умолчанию
-
 Default
 == По умолчанию
+
+default
+== по умолчанию
 
 Default input open failed
 == Ошибка открытия устройства ввода по умолчанию
@@ -2968,10 +2968,10 @@ Hook collision line
 Hook collision line opacity
 == Прозрачность линии столкновения крюка
 
-Hook collisions
+Hook Collisions
 == Столкновения крюка
 
-Hook Collisions
+Hook collisions
 == Столкновения крюка
 
 Hook line tip
@@ -4450,11 +4450,11 @@ Pick result: %s
 Pickup range
 == Диапазон подбора
 
-Pie menu
-== Круговое меню
-
 Pie Menu
 == Пи-меню
+
+Pie menu
+== Круговое меню
 
 Ping
 == Пинг
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == Данные игрока
 
-Player Indicator
+Player indicator
 == Индикатор игрока
 
-Player indicator
+Player Indicator
 == Индикатор игрока
 
 Player is on a different team
@@ -4609,19 +4609,19 @@ Prediction
 Prediction jitter is obvious, latency changes are large
 == Дрожание предсказания заметно, задержка сильно меняется
 
-Prediction latency
+Prediction Latency
 == Задержка предсказания
 
-Prediction Latency
+Prediction latency
 == Задержка предсказания
 
 Prediction latency is elevated, prediction path pressure is high
 == Задержка предсказания повышена, нагрузка на путь предсказания высокая
 
-Prediction Margin
+Prediction margin
 == Запас предсказания
 
-Prediction margin
+Prediction Margin
 == Запас предсказания
 
 Prediction time
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == Получение
 
-Receive Rate
+Receive rate
 == Скорость приёма
 
-Receive rate
+Receive Rate
 == Скорость приёма
 
 Receiving
@@ -5327,7 +5327,7 @@ Rounded caps
 == Направлять сообщения Echo в уведомления
 
 Route Echo messages to notifications
-== Направлять системные подсказки сервера в уведомления (кроме чёрного списка)
+== Направлять сообщения Echo в уведомления
 
 Run chai script
 == Функция сохранения отключена на этом сервере
@@ -5465,13 +5465,13 @@ Scoreboard opacity
 == Прозрачность таблицы лидеров
 
 Scoreboard point check
-== Очки на этом сервере приватны
+== Проверка очков на табло
 
 Scores are private on this server
-== Очки на этом сервере публичны
+== Очки на этом сервере приватны
 
 Scores are public on this server
-== Секунды
+== Очки на этом сервере публичны
 
 Screen
 == Экран
@@ -6610,7 +6610,7 @@ System media control
 System message
 == Системное сообщение
 
-System prompt text
+System prompt text color
 == Цвет текста системных подсказок
 
 Tags
@@ -7606,10 +7606,10 @@ Weapon range color
 Weapon switch animation
 == Анимация смены оружия
 
-Weapon Trajectory
+Weapon trajectory
 == Траектория оружия
 
-Weapon trajectory
+Weapon Trajectory
 == Траектория оружия
 
 Weapons

@@ -173,6 +173,104 @@ simplified_chinese = "开始游戏"
             {"simplified_chinese": "开始游戏", "korean": "플레이"},
         )
 
+    def test_translation_patch_for_language_keeps_only_successful_translations(self):
+        tasks = [
+            translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play"),
+            translate_with_local_http.TranslationTask("menus", ("Quit", ""), "Quit"),
+        ]
+        self.assertEqual(
+            translate_with_local_http.translation_patch_for_language(
+                "korean",
+                tasks,
+                {("Quit", ""): "종료"},
+            ),
+            {("Quit", ""): {"korean": "종료"}},
+        )
+
+    def test_write_back_module_patches_only_translated_identities(self):
+        store = {
+            "menus": {
+                ("Play", ""): {"simplified_chinese": "开始游戏"},
+                ("Quit", ""): {"simplified_chinese": "退出"},
+            }
+        }
+        tasks = [
+            translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play"),
+            translate_with_local_http.TranslationTask("menus", ("Quit", ""), "Quit"),
+        ]
+
+        with mock.patch.object(
+            translate_with_local_http.i18n_store, "patch_module_store"
+        ) as patch_module_store:
+            translate_with_local_http.write_back_module(
+                "korean",
+                "menus",
+                tasks,
+                {("Quit", ""): "종료"},
+                store,
+            )
+
+        self.assertEqual(
+            store["menus"][("Quit", "")],
+            {"simplified_chinese": "退出", "korean": "종료"},
+        )
+        self.assertNotIn("korean", store["menus"][("Play", "")])
+        patch_module_store.assert_called_once_with(
+            "menus", {("Quit", ""): {"korean": "종료"}}
+        )
+
+    def test_write_back_module_does_not_reformat_untouched_toml_blocks(self):
+        store = {
+            "menus": {
+                ("Play", ""): {"simplified_chinese": "开始游戏"},
+                ("Quit", ""): {"simplified_chinese": "退出"},
+            }
+        }
+        tasks = [
+            translate_with_local_http.TranslationTask("menus", ("Quit", ""), "Quit"),
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            translations_dir = Path(tmp)
+            path = translations_dir / "menus.toml"
+            path.write_text(
+                """[[message]]
+key = "Play"
+[message.translations]
+polish = "Graj"
+simplified_chinese = "开始游戏"
+
+[[message]]
+key = "Quit"
+[message.translations]
+simplified_chinese = "退出"
+""",
+                encoding="utf-8",
+                newline="\n",
+            )
+            with mock.patch.object(
+                translate_with_local_http.i18n_store,
+                "TRANSLATIONS_DIR",
+                translations_dir,
+            ):
+                translate_with_local_http.write_back_module(
+                    "korean",
+                    "menus",
+                    tasks,
+                    {("Quit", ""): "종료"},
+                    store,
+                )
+
+            content = path.read_text(encoding="utf-8")
+            self.assertIn(
+                'key = "Play"\n'
+                "[message.translations]\n"
+                'polish = "Graj"\n'
+                'simplified_chinese = "开始游戏"\n',
+                content,
+            )
+            self.assertIn('korean = "종료"', content)
+
     def test_should_write_draft_by_default_for_all_languages(self):
         self.assertTrue(
             translate_with_local_http.should_write_draft("simplified_chinese")

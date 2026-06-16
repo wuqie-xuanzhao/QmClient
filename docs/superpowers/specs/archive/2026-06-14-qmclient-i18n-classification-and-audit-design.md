@@ -1,9 +1,11 @@
 # QmClient i18n 分类规则与审计脚本设计
 
+> 文档已归档：本设计已由 `qmclient_scripts/languages_qmclient/source_keys.py`、`extract_strings.py`、`validate.py` 和 `qmclient_scripts/scripts_overview.md` 落地。当前 i18n 分类审计口径以脚本实现和脚本文档入口为准；本文仅保留为设计历史。
+
 ## 状态
 
 - 日期：2026-06-14
-- 状态：draft
+- 状态：archived
 - 适用范围：`qmclient_scripts/languages_qmclient/`、QmClient 客户端文案分类、通知栏字符串治理
 
 ## 目标

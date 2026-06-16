@@ -753,6 +753,19 @@ def apply_translations_to_store(
     return updated
 
 
+def translation_patch_for_language(
+    language: str,
+    tasks: list[TranslationTask],
+    translations: dict[tuple[str, str], str],
+) -> dict[tuple[str, str], dict[str, str]]:
+    patch: dict[tuple[str, str], dict[str, str]] = {}
+    for task in tasks:
+        translation = translations.get(task.identity, "")
+        if translation:
+            patch[task.identity] = {language: translation}
+    return patch
+
+
 def parse_translation_output(
     text: str, tasks: list[TranslationTask], language: str
 ) -> tuple[dict[tuple[str, str], str], list[str]]:
@@ -929,11 +942,13 @@ def write_back_module(
     translations: dict[tuple[str, str], str],
     store: dict[str, dict[tuple[str, str], dict[str, str]]],
 ) -> None:
+    patch_entries = translation_patch_for_language(language, tasks, translations)
+    if not patch_entries:
+        return
     updated = apply_translations_to_store(store, language, tasks, translations)
-    module_entries = updated.get(module, {})
     store.clear()
     store.update(updated)
-    i18n_store.patch_module_store(module, module_entries)
+    i18n_store.patch_module_store(module, patch_entries)
 
 
 def write_back_draft(

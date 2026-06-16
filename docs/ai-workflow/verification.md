@@ -28,6 +28,7 @@ python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-gr
 - `data/languages/*.txt` 是运行时生成产物，不作为手工维护的长期真相源。
 - `generate_all.py` 会以英文 source key 作为缺省回退，并生成 `generate_all.GENERATED_LANGUAGES` 中登记的运行时语言文件。
 - 新增英文 source key 后，先运行 `extract_strings.py`，再用 `translate_with_local_http.py --languages ...` 为目标语言生成 `translations_draft/<language>/*.toml`；审核通过后再显式 `--write-back` 回填维护源。
+- `translate_with_local_http.py --write-back` 只应把审核通过的 draft 条目 patch 到对应 `translations/i18n/*.toml`，不能重写整份模块 TOML 或重排未触碰的 `[[message]]` block。
 - `review_duplicate_entries.py` 是只读审查脚本；duplicate/similar 报告用于人工收口，unused 口径必须基于最终 active source key 集合。
 - `translate_with_local_http.py` 通过 OpenAI-compatible HTTP 模型生成翻译 draft；所有语言默认只写 `translations_draft/<language>/*.toml`，审核通过后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，不属于运行时生成主链。
 

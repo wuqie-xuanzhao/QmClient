@@ -244,8 +244,8 @@ Authed name color in scoreboard
 Authenticate to rcon
 Authenticate to rcon with a username
 Authorized player forced vote '%s'
-auto
 Auto
+auto
 Auto agree vote
 Auto chat in water
 Auto chat when dying in water
@@ -396,8 +396,8 @@ Classic Easy
 Classic easy
 Classic Next
 Classic next
-Classic nut
 Classic Nut
+Classic nut
 Classic pro
 Classic Pro
 Clear
@@ -473,8 +473,8 @@ Connection downstream
 Connection elevated
 Connection normal
 Connection Problems…
-Connection quality
 Connection Quality
+Connection quality
 Connection severely abnormal
 Connection upstream
 Console
@@ -574,8 +574,8 @@ Deep unfreeze color
 Deep unfreeze opacity
 DeepSeek
 DeepSeek API key
-default
 Default
+default
 Default input open failed
 Default length
 Default output open failed
@@ -1498,8 +1498,8 @@ Player
 Player already invited
 Player country:
 Player data
-Player indicator
 Player Indicator
+Player indicator
 Player is on a different team
 Player name:
 Player not found
@@ -1535,11 +1535,11 @@ Predict events (experimental)
 Predicted ghost opacity
 Prediction
 Prediction jitter is obvious, latency changes are large
-Prediction latency
 Prediction Latency
+Prediction latency
 Prediction latency is elevated, prediction path pressure is high
-Prediction margin
 Prediction Margin
+Prediction margin
 Prediction time
 Preparing demo playback
 Preset bar
@@ -1623,8 +1623,8 @@ Reason
 Reason:
 Rebinds the client's listening address and port
 Receive
-Receive rate
 Receive Rate
+Receive rate
 Receiving
 Reconnect in %d sec
 Record demo
@@ -1735,8 +1735,8 @@ Rescue is not enabled on this server and you're not in a team with /practice tur
 Rescue mode switched to %s
 Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
-Resend Loss
 Resend loss
+Resend Loss
 Resend signs detected, connection quality is suspicious
 Reset
 Reset a config to its default value
@@ -2202,7 +2202,7 @@ System
 System default
 System media control
 System message
-System prompt text
+System prompt text color
 Tags
 Take a screenshot
 Taper trail width
@@ -2534,8 +2534,8 @@ Weapon animation
 Weapon interaction range
 Weapon range color
 Weapon switch animation
-Weapon Trajectory
 Weapon trajectory
+Weapon Trajectory
 Weapons
 Website
 Welcome to DDNet

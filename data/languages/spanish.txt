@@ -1180,11 +1180,11 @@ Clan: %s
 Classic
 == Clásico
 
-Classic easy
-== Clásico fácil
-
 Classic Easy
 == Clásico Easy
+
+Classic easy
+== Clásico fácil
 
 Classic next
 == Clásico siguiente
@@ -1423,10 +1423,10 @@ Connection normal
 Connection Problems…
 == Problemas de conexión…
 
-Connection quality
+Connection Quality
 == Calidad de conexión
 
-Connection Quality
+Connection quality
 == Calidad de conexión
 
 Connection severely abnormal
@@ -1663,10 +1663,10 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == ¡El cliente de DDNet necesita reiniciarse para completar la actualización!
 
-DDNet memory
+DDNet Memory
 == Memoria de DDNet
 
-DDNet Memory
+DDNet memory
 == Memoria de DDNet
 
 DDNet points
@@ -1726,11 +1726,11 @@ DeepSeek
 DeepSeek API key
 == Clave API de DeepSeek
 
-default
-== predeterminado
-
 Default
 == Predeterminado
+
+default
+== predeterminado
 
 Default input open failed
 == Fallo al abrir la entrada predeterminada
@@ -2968,10 +2968,10 @@ Hook collision line
 Hook collision line opacity
 == Opacidad de la línea de colisión de gancho
 
-Hook collisions
+Hook Collisions
 == Colisiones de gancho
 
-Hook Collisions
+Hook collisions
 == Colisiones de gancho
 
 Hook line tip
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == Rango de recogida
 
-Pie menu
+Pie Menu
 == Menú circular
 
-Pie Menu
+Pie menu
 == Menú circular
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == Datos del jugador
 
-Player Indicator
+Player indicator
 == Indicador de jugador
 
-Player indicator
+Player Indicator
 == Indicador de jugador
 
 Player is on a different team
@@ -4609,20 +4609,20 @@ Prediction
 Prediction jitter is obvious, latency changes are large
 == El jitter de predicción es evidente, la latencia cambia mucho
 
-Prediction latency
+Prediction Latency
 == Latencia de predicción
 
-Prediction Latency
+Prediction latency
 == Latencia de predicción
 
 Prediction latency is elevated, prediction path pressure is high
 == La latencia de predicción está elevada, la ruta de predicción tiene mucha presión
 
-Prediction Margin
-== Margen de Predicción
-
 Prediction margin
 == Margen de predicción
+
+Prediction Margin
+== Margen de Predicción
 
 Prediction time
 == Tiempo de predicción
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == Recibir
 
-Receive Rate
+Receive rate
 == Tasa de recepción
 
-Receive rate
+Receive Rate
 == Tasa de recepción
 
 Receiving
@@ -6610,7 +6610,7 @@ System media control
 System message
 == Mensaje del sistema
 
-System prompt text
+System prompt text color
 == Color del texto de aviso del sistema
 
 Tags
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == Animación de cambio de arma
 
-Weapon Trajectory
-== Trayectoria de arma
-
 Weapon trajectory
 == Trayectoria del arma
+
+Weapon Trajectory
+== Trayectoria de arma
 
 Weapons
 == Armas

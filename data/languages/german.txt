@@ -1180,11 +1180,11 @@ Clan: %s
 Classic
 == Klassisch
 
-Classic easy
-== Klassisch einfach
-
 Classic Easy
 == Classic Easy
+
+Classic easy
+== Klassisch einfach
 
 Classic next
 == Klassisch nächste
@@ -1423,10 +1423,10 @@ Connection normal
 Connection Problems…
 == Verbindungsprobleme…
 
-Connection quality
+Connection Quality
 == Verbindungsqualität
 
-Connection Quality
+Connection quality
 == Verbindungsqualität
 
 Connection severely abnormal
@@ -1663,10 +1663,10 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNet Client muss neu gestartet werden, um das Update abzuschließen!
 
-DDNet memory
+DDNet Memory
 == DDNet-Speicher
 
-DDNet Memory
+DDNet memory
 == DDNet-Speicher
 
 DDNet points
@@ -1726,11 +1726,11 @@ DeepSeek
 DeepSeek API key
 == DeepSeek-API-Schlüssel
 
-default
-== standard
-
 Default
 == Standard
+
+default
+== standard
 
 Default input open failed
 == Standardeingabe öffnen fehlgeschlagen
@@ -2968,11 +2968,11 @@ Hook collision line
 Hook collision line opacity
 == Deckkraft der Haken-Kollisionslinie
 
-Hook collisions
-== Haken-Kollisionslinien
-
 Hook Collisions
 == Haken-Kollisionen
+
+Hook collisions
+== Haken-Kollisionslinien
 
 Hook line tip
 == Hakenlinien-Spitze
@@ -4450,11 +4450,11 @@ Pick result: %s
 Pickup range
 == Aufnahmebereich
 
-Pie menu
-== Kreis-Menü
-
 Pie Menu
 == Pie-Menü
+
+Pie menu
+== Kreis-Menü
 
 Ping
 == Ping
@@ -4498,11 +4498,11 @@ Player country:
 Player data
 == Spielerdaten
 
-Player Indicator
-== Spieleranzeige
-
 Player indicator
 == Spieler-Indikator
+
+Player Indicator
+== Spieleranzeige
 
 Player is on a different team
 == Spieler ist in einem anderen Team
@@ -4609,20 +4609,20 @@ Prediction
 Prediction jitter is obvious, latency changes are large
 == Vorhersage-Jitter ist deutlich, Latenz schwankt stark
 
-Prediction latency
+Prediction Latency
 == Vorhersagelatenz
 
-Prediction Latency
+Prediction latency
 == Vorhersagelatenz
 
 Prediction latency is elevated, prediction path pressure is high
 == Vorhersagelatenz ist erhöht, Vorhersagepfad ist stark belastet
 
-Prediction Margin
-== Vorhersage-Spanne
-
 Prediction margin
 == Vorhersagepuffer
+
+Prediction Margin
+== Vorhersage-Spanne
 
 Prediction time
 == Vorhersagezeit
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == Empfangen
 
-Receive Rate
+Receive rate
 == Empfangsrate
 
-Receive rate
+Receive Rate
 == Empfangsrate
 
 Receiving
@@ -6610,7 +6610,7 @@ System media control
 System message
 == Systemnachricht
 
-System prompt text
+System prompt text color
 == Textfarbe des Systemhinweises
 
 Tags
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == Waffenwechselanimation
 
-Weapon Trajectory
-== Waffentrajektorie
-
 Weapon trajectory
 == Waffenflugbahn
+
+Weapon Trajectory
+== Waffentrajektorie
 
 Weapons
 == Waffen

@@ -725,7 +725,7 @@ AUS
 == 澳洲
 
 Authed name color in scoreboard
-== 管理權限者名字在計分板上顯示顏色
+== 管理權限者名字在計分板上的顏色
 
 Authenticate to rcon
 == 進行 rcon 認證
@@ -1180,11 +1180,11 @@ Clan: %s
 Classic
 == 古典
 
-Classic easy
-== 古典 easy
-
 Classic Easy
 == 經典 Easy
+
+Classic easy
+== 古典 easy
 
 Classic next
 == 古典 next
@@ -1310,7 +1310,7 @@ Colors in chat
 == 在聊天欄中的顏色
 
 Colors in scoreboard
-== 在記分板中的顏色
+== 計分板中的顏色
 
 Colors of the hook collision line, in case of a possible collision with:
 == 鉤索碰撞線顏色（當瞄準以下實體時）：
@@ -1423,10 +1423,10 @@ Connection normal
 Connection Problems…
 == 連線中斷…
 
-Connection quality
+Connection Quality
 == 連線品質
 
-Connection Quality
+Connection quality
 == 連線品質
 
 Connection severely abnormal
@@ -1663,10 +1663,10 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNet 用戶端需要重新啟動才能完成更新！
 
-DDNet memory
+DDNet Memory
 == DDNet 記憶體
 
-DDNet Memory
+DDNet memory
 == DDNet 記憶體
 
 DDNet points
@@ -1726,10 +1726,10 @@ DeepSeek
 DeepSeek API key
 == DeepSeek API 金鑰
 
-default
+Default
 == 預設
 
-Default
+default
 == 預設
 
 Default input open failed
@@ -2408,7 +2408,7 @@ Fade in
 == 淡入
 
 Fade only
-== 僅淡入
+== 僅淡入淡出
 
 Fade out
 == 淡出
@@ -2900,7 +2900,7 @@ Hide jump effects
 == 隱藏跳躍特效
 
 Hide kill/finish messages
-== 隱藏擊殺/完成
+== 隱藏死亡/完成訊息
 
 Hide map progress
 == 隱藏地圖進度
@@ -2915,7 +2915,7 @@ Hide player messages
 == 隱藏玩家訊息
 
 Hide scoreboard
-== 隱藏記分板
+== 隱藏計分板
 
 Hide server prompt notifications
 == 隱藏伺服器提示通知
@@ -2968,11 +2968,11 @@ Hook collision line
 Hook collision line opacity
 == 輔助線透明度
 
-Hook collisions
-== 鉤索碰撞線
-
 Hook Collisions
 == 瞄準輔助
+
+Hook collisions
+== 鉤索碰撞線
 
 Hook line tip
 == 輔助線提示（實際可鉤中 Tee 的長度）
@@ -3224,7 +3224,7 @@ Join Tutorial Server
 == 進入教學伺服器
 
 Join, version, rules, and help messages stay in chat instead of popups
-== 入場、版本、規則和說明訊息會留在聊天裡，不彈出顯示
+== 進服、版本、規則和說明訊息會留在聊天裡，不彈出顯示
 
 Jump
 == 跳躍
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == 拾取物範圍
 
-Pie menu
+Pie Menu
 == 餅選單
 
-Pie Menu
+Pie menu
 == 餅選單
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == 玩家資料
 
-Player Indicator
+Player indicator
 == 玩家指示器
 
-Player indicator
+Player Indicator
 == 玩家指示器
 
 Player is on a different team
@@ -4609,20 +4609,20 @@ Prediction
 Prediction jitter is obvious, latency changes are large
 == 預測抖動明顯，延遲變化較大
 
-Prediction latency
+Prediction Latency
 == 預測延遲
 
-Prediction Latency
+Prediction latency
 == 預測延遲
 
 Prediction latency is elevated, prediction path pressure is high
 == 預測延遲偏高，預測鏈路壓力較高
 
-Prediction Margin
-== 預測邊際
-
 Prediction margin
 == 預測邊距
+
+Prediction Margin
+== 預測邊際
 
 Prediction time
 == 預測耗時
@@ -4873,10 +4873,10 @@ Rebinds the client's listening address and port
 Receive
 == 接收
 
-Receive Rate
+Receive rate
 == 接收速率
 
-Receive rate
+Receive Rate
 == 接收速率
 
 Receiving
@@ -5345,7 +5345,7 @@ Same as "vote no"
 == 與「投反對票」相同
 
 Same clan color in scoreboard
-== 相同戰隊在計分板上顯示顏色
+== 相同戰隊在計分板上的顏色
 
 Sat.
 == 飽和度
@@ -5465,7 +5465,7 @@ Scoreboard opacity
 == 計分板不透明度
 
 Scoreboard point check
-== 記分板查分
+== 計分板積分檢查
 
 Scores are private on this server
 == 本伺服器的成績是私密的
@@ -5513,7 +5513,7 @@ SecretId
 == 密鑰 ID
 
 SecretKey
-== 密鑰 Key
+== 密鑰
 
 See how much you act
 == 看看你有多演
@@ -6131,10 +6131,10 @@ Showing players from other teams is disabled
 == 本伺服器已禁用顯示其他隊伍玩家
 
 Showing the checkpoint times for '%s' with a race time of %s
-== 正在顯示 '%s' 的 checkpoint 時間，當前成績為 %s
+== 正在顯示 '%s' 的檢查點用時，當前成績為 %s
 
 Showing the checkpoint times is not allowed on this server.
-== 本伺服器不允許查看 checkpoint 時間
+== 本伺服器不允許查看檢查點用時
 
 Showing the global points of other players is not allowed on this server.
 == 本伺服器不允許查看其他玩家的全域積分
@@ -6610,7 +6610,7 @@ System media control
 System message
 == 系統訊息
 
-System prompt text
+System prompt text color
 == 系統提示文字顏色
 
 Tags
@@ -6800,7 +6800,7 @@ Tencent Cloud SecretId
 == 騰訊雲密鑰 ID
 
 Tencent Cloud SecretKey
-== 騰訊雲密鑰 Key
+== 騰訊雲密鑰
 
 Text
 == 文字
@@ -6872,7 +6872,7 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 == 觸控編輯器中有未儲存的變更，建議先儲存。
 
 There is no checkpoint teleporter with that index on the map.
-== 這張地圖上沒有這個編號的 checkpoint 傳送器
+== 這張地圖上沒有這個編號的檢查點傳送器
 
 There is no teleporter with that index on the map.
 == 這張地圖上沒有這個編號的傳送器
@@ -7397,7 +7397,7 @@ Use custom skins instead of the ninja tee
 == 使用自訂皮膚代替忍者 Tee
 
 Use default flags on scoreboard
-== 在記分板上使用預設旗
+== 在計分板上使用預設旗幟
 
 Use default input
 == 使用預設輸入
@@ -7606,11 +7606,11 @@ Weapon range color
 Weapon switch animation
 == 武器切換動畫
 
-Weapon Trajectory
-== 武器輔助線
-
 Weapon trajectory
 == 武器彈道輔助線
+
+Weapon Trajectory
+== 武器輔助線
 
 Weapons
 == 武器
