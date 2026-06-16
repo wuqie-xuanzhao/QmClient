@@ -736,11 +736,11 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == Авторизованный игрок принудительно установил голосование '%s'
 
-auto
-== авто
-
 Auto
 == Авто
+
+auto
+== авто
 
 Auto agree vote
 == Автосогласие на голосование
@@ -1582,11 +1582,11 @@ Current: Score
 Current: Time
 == Текущее: Время
 
-custom
-== пользовательский
-
 Custom
 == Пользовательский
+
+custom
+== пользовательский
 
 Custom API key
 == Пользовательский API-ключ
@@ -3181,8 +3181,8 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Рекомендуется проверить настройки и подстроить их под себя перед подключением к серверу.
 
-Item %d
-== Элемент %d
+Item
+== Элемент
 
 j = Latency jitter
 == j = Джиттер задержки
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == Задержка
 
-Latency jitter
+Latency Jitter
 == Джиттер задержки
 
-Latency Jitter
+Latency jitter
 == Джиттер задержки
 
 Layout
@@ -4450,11 +4450,11 @@ Pick result: %s
 Pickup range
 == Диапазон подбора
 
-Pie menu
-== Круговое меню
-
 Pie Menu
 == Пи-меню
+
+Pie menu
+== Круговое меню
 
 Ping
 == Пинг
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == Данные игрока
 
-Player indicator
+Player Indicator
 == Индикатор игрока
 
-Player Indicator
+Player indicator
 == Индикатор игрока
 
 Player is on a different team
@@ -4618,10 +4618,10 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 == Задержка предсказания повышена, нагрузка на путь предсказания высокая
 
-Prediction margin
+Prediction Margin
 == Запас предсказания
 
-Prediction Margin
+Prediction margin
 == Запас предсказания
 
 Prediction time
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Спасение/Заморозка: %d/%d
 
-Resend loss
+Resend Loss
 == Потери по повторам
 
-Resend Loss
+Resend loss
 == Потери по повторам
 
 Resend signs detected, connection quality is suspicious

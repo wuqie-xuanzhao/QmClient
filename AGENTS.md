@@ -50,8 +50,10 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 - 影响核心逻辑时，必须派发一个新的只读子代理，按 `docs/ai-workflow/review.md` 做代码审查；审查先列 findings，再给总体结论。
 - 子代理指出的问题修完后，再看这次改动能否最小化提交：只保留和当前任务直接相关的文件与说明。
 
-### 提交 commit / PR 前
+### 提交 commit / PR 前（用户说要提交改动的时候）
 
+- 提交不必在意干净的提交, 用户同时可能进行多个工作, 所以可能会有多种的改动.
+- 必须先读 `docs/ai-workflow/git-workflow.md` , 提交是一次提交, 不优先拆分多个提交, 只有用户明确拆分或者改动可以容易的拆分出区别较大的分类的情况下, 才拆分, 否则根据文档里面的, 多填写 git commit 的信息即可
 - 先跑 `python qmclient_scripts/gate/check_docs.py`。
 - 先确认 review findings 已收口、gate 证据已补齐；不要带着“只跑过 build/test、没跑 gate”的状态进入 commit / PR。
 - 如果仓库开启了受保护分支，而当前操作者不是仓库主或没有直推权限，默认走：本地提交 -> 推到新分支 -> 开 PR -> 合并 PR -> 删分支。只有仓库主或被明确授予直推权限的人，才可以不走这条默认路径。

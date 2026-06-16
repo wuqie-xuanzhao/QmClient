@@ -736,10 +736,10 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == 権限のあるプレイヤーが投票を強制しました：'%s'
 
-auto
+Auto
 == 自動
 
-Auto
+auto
 == 自動
 
 Auto agree vote
@@ -1582,10 +1582,10 @@ Current: Score
 Current: Time
 == 現在: タイム
 
-custom
+Custom
 == カスタム
 
-Custom
+custom
 == カスタム
 
 Custom API key
@@ -3181,8 +3181,8 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == サーバーに参加する前に、設定を確認して自分好みに調整することをお勧めします。
 
-Item %d
-== 項目 %d
+Item
+== 項目
 
 j = Latency jitter
 == j = レイテンシジッター
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == レイテンシ
 
-Latency jitter
+Latency Jitter
 == 遅延ジッター
 
-Latency Jitter
+Latency jitter
 == 遅延ジッター
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == ピックアップ範囲
 
-Pie menu
+Pie Menu
 == パイメニュー
 
-Pie Menu
+Pie menu
 == パイメニュー
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == プレイヤーデータ
 
-Player indicator
+Player Indicator
 == プレイヤーインジケーター
 
-Player Indicator
+Player indicator
 == プレイヤーインジケーター
 
 Player is on a different team
@@ -4618,10 +4618,10 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 == 予測レイテンシが高く、予測経路の負荷が高いです
 
-Prediction margin
+Prediction Margin
 == 予測マージン
 
-Prediction Margin
+Prediction margin
 == 予測マージン
 
 Prediction time
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == レスキュー/フリーズ: %d/%d
 
-Resend loss
+Resend Loss
 == 再送ロス
 
-Resend Loss
+Resend loss
 == 再送ロス
 
 Resend signs detected, connection quality is suspicious

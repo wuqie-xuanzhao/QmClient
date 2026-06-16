@@ -736,10 +736,10 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == 授權玩家強制將當前投票設為 '%s'
 
-auto
+Auto
 == 自動
 
-Auto
+auto
 == 自動
 
 Auto agree vote
@@ -1582,10 +1582,10 @@ Current: Score
 Current: Time
 == 目前：時間
 
-custom
+Custom
 == 自訂
 
-Custom
+custom
 == 自訂
 
 Custom API key
@@ -3181,8 +3181,8 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == 建議你在進入伺服器前檢查一下設定並根據你的喜好進行調整。
 
-Item %d
-== 項目 %d
+Item
+== 項目
 
 j = Latency jitter
 == j = 延遲抖動
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == 延遲
 
-Latency jitter
+Latency Jitter
 == 延遲抖動
 
-Latency Jitter
+Latency jitter
 == 延遲抖動
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == 拾取物範圍
 
-Pie menu
+Pie Menu
 == 餅選單
 
-Pie Menu
+Pie menu
 == 餅選單
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == 玩家資料
 
-Player indicator
+Player Indicator
 == 玩家指示器
 
-Player Indicator
+Player indicator
 == 玩家指示器
 
 Player is on a different team
@@ -4618,11 +4618,11 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 == 預測延遲偏高，預測鏈路壓力較高
 
-Prediction margin
-== 預測邊距
-
 Prediction Margin
 == 預測邊際
+
+Prediction margin
+== 預測邊距
 
 Prediction time
 == 預測耗時
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == 被救/落水：%d/%d
 
-Resend loss
+Resend Loss
 == 重送丟包
 
-Resend Loss
+Resend loss
 == 重送丟包
 
 Resend signs detected, connection quality is suspicious

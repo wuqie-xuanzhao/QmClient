@@ -736,11 +736,11 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == Autoryzowany gracz wymusił głosowanie '%s'
 
-auto
-== automatyczny
-
 Auto
 == Automatyczne
+
+auto
+== automatyczny
 
 Auto agree vote
 == Auto zgadzanie na głosowanie
@@ -1582,11 +1582,11 @@ Current: Score
 Current: Time
 == Obecnie: Czas
 
-custom
-== niestandardowy
-
 Custom
 == Niestandardowy
+
+custom
+== niestandardowy
 
 Custom API key
 == Niestandardowy klucz API
@@ -3181,8 +3181,8 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Zaleca się sprawdzenie ustawień i dostosowanie ich do własnych preferencji przed dołączeniem na serwer.
 
-Item %d
-== Element %d
+Item
+== Element
 
 j = Latency jitter
 == j = Drganie opóźnienia
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == Opóźnienie
 
-Latency jitter
+Latency Jitter
 == Jitter opóźnienia
 
-Latency Jitter
+Latency jitter
 == Jitter opóźnienia
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == Zasięg podnoszenia
 
-Pie menu
+Pie Menu
 == Menu kołowe
 
-Pie Menu
+Pie menu
 == Menu kołowe
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == Dane gracza
 
-Player indicator
+Player Indicator
 == Wskaźnik gracza
 
-Player Indicator
+Player indicator
 == Wskaźnik gracza
 
 Player is on a different team
@@ -4618,11 +4618,11 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 == Opóźnienie predykcji jest podwyższone, ścieżka predykcji jest mocno obciążona
 
-Prediction margin
-== Margines predykcji
-
 Prediction Margin
 == Margines przewidywania
+
+Prediction margin
+== Margines predykcji
 
 Prediction time
 == Czas predykcji
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Ratunek/Zamrożenie: %d/%d
 
-Resend loss
+Resend Loss
 == Straty retransmisji
 
-Resend Loss
+Resend loss
 == Straty retransmisji
 
 Resend signs detected, connection quality is suspicious

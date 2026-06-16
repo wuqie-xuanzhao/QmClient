@@ -736,11 +736,11 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == El jugador autorizado forzó la votación '%s'
 
-auto
-== auto.
-
 Auto
 == Auto
+
+auto
+== auto.
 
 Auto agree vote
 == Votar aceptar automáticamente
@@ -1582,11 +1582,11 @@ Current: Score
 Current: Time
 == Actual: Tiempo
 
-custom
-== personalizado
-
 Custom
 == Personalizado
+
+custom
+== personalizado
 
 Custom API key
 == Clave API personalizada
@@ -3181,8 +3181,8 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Se recomienda que revises la configuración para ajustarla a tu gusto antes de unirte a un servidor.
 
-Item %d
-== Elemento %d
+Item
+== Elemento
 
 j = Latency jitter
 == j = Variación de latencia
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == Latencia
 
-Latency jitter
+Latency Jitter
 == Fluctuación de latencia
 
-Latency Jitter
+Latency jitter
 == Fluctuación de latencia
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == Rango de recogida
 
-Pie menu
+Pie Menu
 == Menú circular
 
-Pie Menu
+Pie menu
 == Menú circular
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == Datos del jugador
 
-Player indicator
+Player Indicator
 == Indicador de jugador
 
-Player Indicator
+Player indicator
 == Indicador de jugador
 
 Player is on a different team
@@ -4618,11 +4618,11 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 == La latencia de predicción está elevada, la ruta de predicción tiene mucha presión
 
-Prediction margin
-== Margen de predicción
-
 Prediction Margin
 == Margen de Predicción
+
+Prediction margin
+== Margen de predicción
 
 Prediction time
 == Tiempo de predicción
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Rescate/Congelación: %d/%d
 
-Resend loss
+Resend Loss
 == Pérdida por reenvío
 
-Resend Loss
+Resend loss
 == Pérdida por reenvío
 
 Resend signs detected, connection quality is suspicious

@@ -396,10 +396,10 @@ Classic Easy
 Classic easy
 Classic Next
 Classic next
-Classic nut
 Classic Nut
-Classic pro
+Classic nut
 Classic Pro
+Classic pro
 Clear
 Clear all favorite maps
 Clear Changes
@@ -473,8 +473,8 @@ Connection downstream
 Connection elevated
 Connection normal
 Connection Problems…
-Connection quality
 Connection Quality
+Connection quality
 Connection severely abnormal
 Connection upstream
 Console
@@ -553,8 +553,8 @@ DDmaX Pro
 DDNet
 DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
-DDNet memory
 DDNet Memory
+DDNet memory
 DDNet points
 ddnet-saves.txt is empty
 ddnet-saves.txt not found
@@ -1059,7 +1059,7 @@ Invite a person to a locked team
 Invites are disabled
 Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
-Item %d
+Item
 j = Latency jitter
 Jelly duration
 Jelly others
@@ -1114,8 +1114,8 @@ Laser size
 Laser style
 Last page in console
 Latency
-Latency jitter
 Latency Jitter
+Latency jitter
 Layout
 Leak IP
 Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
@@ -1498,8 +1498,8 @@ Player
 Player already invited
 Player country:
 Player data
-Player indicator
 Player Indicator
+Player indicator
 Player is on a different team
 Player name:
 Player not found
@@ -1535,8 +1535,8 @@ Predict events (experimental)
 Predicted ghost opacity
 Prediction
 Prediction jitter is obvious, latency changes are large
-Prediction latency
 Prediction Latency
+Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 Prediction Margin
 Prediction margin
@@ -1623,8 +1623,8 @@ Reason
 Reason:
 Rebinds the client's listening address and port
 Receive
-Receive rate
 Receive Rate
+Receive rate
 Receiving
 Reconnect in %d sec
 Record demo
@@ -2534,8 +2534,8 @@ Weapon animation
 Weapon interaction range
 Weapon range color
 Weapon switch animation
-Weapon trajectory
 Weapon Trajectory
+Weapon trajectory
 Weapons
 Website
 Welcome to DDNet

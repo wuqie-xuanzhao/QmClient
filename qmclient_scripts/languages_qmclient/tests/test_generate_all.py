@@ -96,6 +96,38 @@ class GenerateAllTest(unittest.TestCase):
             self.assertIn("Server\n== 服务器", generated)
             self.assertNotIn("Old notification key", generated)
 
+    def test_write_language_file_uses_stable_tiebreaker_for_casefold_equal_keys(self):
+        entries = [
+            (("Classic next", ""), "经典 Next"),
+            (("Classic Next", ""), "经典 next"),
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            out_path = Path(tmp) / "simplified_chinese.txt"
+            generate_all.write_language_file(out_path, entries, "simplified_chinese")
+            generated = out_path.read_text(encoding="utf-8")
+
+        self.assertLess(
+            generated.index("Classic Next\n"),
+            generated.index("Classic next\n"),
+        )
+
+    def test_read_strings_uses_stable_tiebreaker_for_casefold_equal_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            strings_file = Path(tmp) / "extracted_strings.txt"
+            strings_file.write_text(
+                "Classic next\nClassic Next\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+            with mock.patch.object(generate_all, "STRINGS_FILE", strings_file):
+                strings = generate_all.read_strings()
+
+        self.assertEqual(
+            [item.key for item in strings],
+            ["Classic Next", "Classic next"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -88,7 +88,12 @@ def read_strings() -> list[SourceString]:
                 for line in file
                 if line.strip()
             },
-            key=lambda item: (item.context.casefold(), item.key.casefold()),
+            key=lambda item: (
+                item.context.casefold(),
+                item.key.casefold(),
+                item.context,
+                item.key,
+            ),
         )
 
 
@@ -161,10 +166,17 @@ def generate_configured_languages(
 def write_language_file(
     path: Path, entries: list[tuple[tuple[str, str], str]], language: str
 ) -> None:
+    # Runtime language files are regenerated from the TOML store; manual edits in
+    # data/languages/*.txt are intentionally overwritten.
     merged_entries = dict(entries)
     sorted_entries = sorted(
         merged_entries.items(),
-        key=lambda item: (item[0][1].casefold(), item[0][0].casefold()),
+        key=lambda item: (
+            item[0][1].casefold(),
+            item[0][0].casefold(),
+            item[0][1],
+            item[0][0],
+        ),
     )
     path.write_text(
         "\n\n".join(

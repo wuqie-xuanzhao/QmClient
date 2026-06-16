@@ -24,19 +24,13 @@ def format_record(record: source_keys.SourceKeyRecord) -> str:
     return record.key
 
 
-def classify_string(text: str) -> str:
-    if any("\u3400" <= ch <= "\u4dbf" or "\u4e00" <= ch <= "\u9fff" for ch in text):
-        return "needs_review"
-    return "key_or_non_zh"
-
-
 def main() -> None:
     records = source_keys.collect_source_key_records()
     audit_report = source_keys.build_string_audit_report()
     summary = source_keys.summarize_source_key_records(records)
     unique_identities = sorted(
         {(record.key, record.context) for record in records},
-        key=lambda item: (item[1].casefold(), item[0].casefold()),
+        key=lambda item: (item[1].casefold(), item[0].casefold(), item[1], item[0]),
     )
     sorted_strings = [
         format_record(source_keys.SourceKeyRecord(key, "", None, context))

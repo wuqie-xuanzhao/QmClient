@@ -29,6 +29,21 @@ class LocalHttpClientTest(unittest.TestCase):
         )
         self.assertEqual(text, "[]")
 
+    def test_extract_response_text_prefers_content_when_reasoning_is_present(self):
+        text = local_http_client.extract_response_text(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "content": "[]",
+                            "reasoning_content": "thinking trace",
+                        }
+                    }
+                ]
+            }
+        )
+        self.assertEqual(text, "[]")
+
 
 class TranslateWithLocalHttpTest(unittest.TestCase):
     def test_parse_response_requires_json_array(self):
@@ -325,7 +340,7 @@ simplified_chinese = "退出"
         self.assertIn("unchanged source", failures[1])
         self.assertIn("missing translation", failures[2])
 
-    def test_parse_translation_output_rejects_reordered_json_items(self):
+    def test_parse_translation_output_accepts_reordered_json_items(self):
         tasks = [
             translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play"),
             translate_with_local_http.TranslationTask("menus", ("Quit", ""), "Quit"),
@@ -343,8 +358,49 @@ simplified_chinese = "退出"
             "simplified_chinese",
         )
 
+        self.assertEqual(
+            translations,
+            {
+                ("Play", ""): "开始游戏",
+                ("Quit", ""): "退出",
+            },
+        )
+        self.assertEqual(failures, [])
+
+    def test_parse_translation_output_reports_unexpected_json_identity(self):
+        tasks = [
+            translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play"),
+        ]
+
+        translations, failures = translate_with_local_http.parse_translation_output(
+            json.dumps(
+                [{"key": "Quit", "context": "", "translation": "退出"}],
+                ensure_ascii=False,
+            ),
+            tasks,
+            "simplified_chinese",
+        )
+
         self.assertEqual(translations, {})
-        self.assertTrue(any("unexpected identity order" in item for item in failures))
+        self.assertTrue(
+            any("unexpected identity returned" in item for item in failures)
+        )
+
+    def test_placeholder_quality_distinguishes_escaped_percent(self):
+        self.assertEqual(
+            translate_with_local_http.extract_placeholders("Progress: 100%%"),
+            ["%%"],
+        )
+        self.assertEqual(
+            translate_with_local_http.extract_placeholders("Progress: 100%"),
+            [],
+        )
+        self.assertIn(
+            "placeholder mismatch",
+            translate_with_local_http.language_quality_failure(
+                "simplified_chinese", "Progress: 100%%", "进度：100%"
+            ),
+        )
 
     def test_russian_quality_requires_cyrillic_for_translated_text(self):
         self.assertEqual(

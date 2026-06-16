@@ -42,9 +42,6 @@ def normalize_simplified_chinese_text(text: str) -> str:
     normalized = re.sub(rf"(?<=[{CJK_RE}])(?=[{ASCII_WORD_RE}%/])", " ", normalized)
     normalized = re.sub(rf"(?<=[{ASCII_WORD_RE}%])(?=[{CJK_RE}])", " ", normalized)
 
-    # Keep common Chinese community terms readable after the generic spacing pass.
-    normalized = normalized.replace("QQ 群", "QQ 群")
-
     # Normalize accidental runs introduced around existing spaces.
     normalized = re.sub(r"[ \t]{2,}", " ", normalized)
     normalized = re.sub(rf"(?<=[{CJK_RE}])\s*/\s*(?=[{CJK_RE}])", "/", normalized)

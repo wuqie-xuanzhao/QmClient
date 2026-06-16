@@ -736,11 +736,11 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == Le joueur autorisé a forcé le vote '%s'
 
-auto
-== Automatique
-
 Auto
 == Auto
+
+auto
+== Automatique
 
 Auto agree vote
 == Vote d'accord automatique
@@ -1582,11 +1582,11 @@ Current: Score
 Current: Time
 == Actuel : Temps
 
-custom
-== personnalisé
-
 Custom
 == Personnalisé
+
+custom
+== personnalisé
 
 Custom API key
 == Clé API personnalisée
@@ -3181,8 +3181,8 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Il est recommandé de vérifier les paramètres pour les ajuster à votre convenance avant de rejoindre un serveur.
 
-Item %d
-== Élément %d
+Item
+== Élément
 
 j = Latency jitter
 == j = Gigue de latence
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == Latence
 
-Latency jitter
+Latency Jitter
 == Gigue de latence
 
-Latency Jitter
+Latency jitter
 == Gigue de latence
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == Portée de ramassage
 
-Pie menu
+Pie Menu
 == Menu circulaire
 
-Pie Menu
+Pie menu
 == Menu circulaire
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == Données du joueur
 
-Player indicator
+Player Indicator
 == Indicateur de joueur
 
-Player Indicator
+Player indicator
 == Indicateur de joueur
 
 Player is on a different team
@@ -4618,10 +4618,10 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 == La latence de prédiction est élevée, le chemin de prédiction est sous forte pression
 
-Prediction margin
+Prediction Margin
 == Marge de prédiction
 
-Prediction Margin
+Prediction margin
 == Marge de prédiction
 
 Prediction time
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Sauvetage/Gel : %d/%d
 
-Resend loss
+Resend Loss
 == Perte par renvoi
 
-Resend Loss
+Resend loss
 == Perte par renvoi
 
 Resend signs detected, connection quality is suspicious

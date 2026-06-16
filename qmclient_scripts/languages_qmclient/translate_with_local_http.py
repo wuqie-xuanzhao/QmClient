@@ -511,9 +511,16 @@ def render_prompt(
 
 def extract_placeholders(text: str) -> list[str]:
     return re.findall(
-        r"%(?:\d+\$)?[+#0\- ]?(?:\d+|\*)?(?:\.\d+|\.\*)?[hljztL]*[diuoxXfFeEgGaAcspn%]",
+        r"%%|%(?:\d+\$)?[+#0\- ]?(?:\d+|\*)?(?:\.\d+|\.\*)?[hljztL]*[diuoxXfFeEgGaAcspn]",
         text,
     )
+
+
+def digit_sort_key(value: str) -> tuple[int, float | str, str]:
+    try:
+        return (0, float(value), value)
+    except ValueError:
+        return (1, value.casefold(), value)
 
 
 def extract_digits(text: str) -> list[str]:
@@ -523,7 +530,7 @@ def extract_digits(text: str) -> list[str]:
         digit = word_digits.get(word.lower())
         if digit is not None:
             digits.append(digit)
-    return sorted(digits, key=lambda value: (float(value), value))
+    return sorted(digits, key=digit_sort_key)
 
 
 def contains_hangul(text: str) -> bool:
@@ -774,28 +781,6 @@ def parse_translation_output(
     except json.JSONDecodeError:
         payload = None
     if isinstance(payload, list) and all(isinstance(item, dict) for item in payload):
-        if len(payload) == len(tasks) and all(
-            isinstance(item.get("translation"), str) for item in payload
-        ):
-            translated: dict[tuple[str, str], str] = {}
-            failures: list[str] = []
-            for task, item in zip(tasks, payload):
-                if "key" in item or "context" in item:
-                    identity = (item.get("key"), item.get("context", ""))
-                    if identity != task.identity:
-                        failures.append(
-                            f"unexpected identity order: expected {task.identity!r}, got {identity!r}"
-                        )
-                        continue
-                translation = item.get("translation", "")
-                reason = language_quality_failure(
-                    language, task.source_text, translation
-                )
-                if reason:
-                    failures.append(f"{reason}: {task.identity!r}")
-                    continue
-                translated[task.identity] = translation.strip()
-            return translated, failures
         return validate_json_translations(tasks, payload, language)
     lines = parse_indexed_response_lines(text, len(tasks))
     if lines is None:

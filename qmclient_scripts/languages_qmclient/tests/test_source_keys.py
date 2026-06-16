@@ -283,7 +283,12 @@ class SourceKeysTest(unittest.TestCase):
 
     def test_extracts_asset_editor_blend_modes_with_context(self):
         path = (
-            source_keys.PROJECT_ROOT / "src" / "game" / "client" / "components" / "menus.h"
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "game"
+            / "client"
+            / "components"
+            / "menus.h"
         )
         content = source_keys.strip_cpp_comments(source_keys.read_source_text(path))
         records = source_keys.extract_known_indirect_records(path, content)
@@ -330,12 +335,7 @@ class SourceKeysTest(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             path = (
-                root
-                / "src"
-                / "game"
-                / "client"
-                / "components"
-                / "menus_settings.cpp"
+                root / "src" / "game" / "client" / "components" / "menus_settings.cpp"
             )
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(

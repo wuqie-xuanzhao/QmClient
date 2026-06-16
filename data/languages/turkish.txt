@@ -736,11 +736,11 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == Yetkili oyuncu oylamayı '%s' olarak zorladı
 
-auto
-== otomatik
-
 Auto
 == Otomatik
+
+auto
+== otomatik
 
 Auto agree vote
 == Oylamayı otomatik kabul et
@@ -1582,11 +1582,11 @@ Current: Score
 Current: Time
 == Geçerli: Süre
 
-custom
-== özel
-
 Custom
 == Özel
+
+custom
+== özel
 
 Custom API key
 == Özel API anahtarı
@@ -3181,8 +3181,8 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Bir sunucuya katılmadan önce ayarları kontrol edip beğeninize göre ayarlamanız önerilir.
 
-Item %d
-== Öğe %d
+Item
+== Öğe
 
 j = Latency jitter
 == j = Gecikme titreşimi
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == Gecikme
 
-Latency jitter
+Latency Jitter
 == Gecikme dalgalanması
 
-Latency Jitter
+Latency jitter
 == Gecikme dalgalanması
 
 Layout
@@ -4450,11 +4450,11 @@ Pick result: %s
 Pickup range
 == Toplama aralığı
 
-Pie menu
-== Pasta menüsü
-
 Pie Menu
 == Pasta Menüsü
+
+Pie menu
+== Pasta menüsü
 
 Ping
 == Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == Oyuncu verileri
 
-Player indicator
+Player Indicator
 == Oyuncu göstergesi
 
-Player Indicator
+Player indicator
 == Oyuncu göstergesi
 
 Player is on a different team
@@ -4618,11 +4618,11 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 == Tahmin gecikmesi yüksek, tahmin yolu baskısı fazla
 
-Prediction margin
-== Tahmin payı
-
 Prediction Margin
 == Tahmin Marjı
+
+Prediction margin
+== Tahmin payı
 
 Prediction time
 == Tahmin süresi
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Kurtarma/Donma: %d/%d
 
-Resend loss
+Resend Loss
 == Yeniden gönderim kaybı
 
-Resend Loss
+Resend loss
 == Yeniden gönderim kaybı
 
 Resend signs detected, connection quality is suspicious

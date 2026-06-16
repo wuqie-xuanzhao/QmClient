@@ -33,7 +33,12 @@ current_strings = sorted(
         generate_all.SourceString(record.key, record.context)
         for record in source_keys.collect_source_key_records()
     },
-    key=lambda item: (item.context.casefold(), item.key.casefold()),
+    key=lambda item: (
+        item.context.casefold(),
+        item.key.casefold(),
+        item.context,
+        item.key,
+    ),
 )
 current_audit = source_keys.build_string_audit_report()
 if extracted_strings != current_strings:

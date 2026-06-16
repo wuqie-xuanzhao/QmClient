@@ -635,7 +635,9 @@ def _looks_like_business_literal(value: str) -> tuple[bool, str]:
         return True, "empty or whitespace literal"
     if "&&" in text or "||" in text:
         return True, "source expression string fragment"
-    if re.fullmatch(r"(?:[&|=!<>]=?|&&|\|\|)\s*[A-Za-z_][A-Za-z0-9_]*\s*(?:[=!<>]=?)?", text):
+    if re.fullmatch(
+        r"(?:[&|=!<>]=?|&&|\|\|)\s*[A-Za-z_][A-Za-z0-9_]*\s*(?:[=!<>]=?)?", text
+    ):
         return True, "source expression string fragment"
     if text.startswith(("<", "</", "<!doctype", ".")) or any(
         token in text for token in ("</", "<div", "<style", "font-family:", "class=")
@@ -761,9 +763,14 @@ def _line_looks_like_business_data(line_text: str) -> tuple[bool, str]:
         r"\bstr_format\(\s*a[A-Za-z]*(?:Buf|Cmd|Command|Error|Payload)", stripped
     ):
         return True, "command, diagnostic, or payload format template"
-    if re.search(r"\bstr_format\(\s*a[A-Za-z]*(?:Extra|Focus|Warmup|Gate|Miss|Request)", stripped):
+    if re.search(
+        r"\bstr_format\(\s*a[A-Za-z]*(?:Extra|Focus|Warmup|Gate|Miss|Request)", stripped
+    ):
         return True, "debug or telemetry format payload"
-    if "QmPerfAppendJsonField(" in stripped or "QmPerfAppendPayloadJsonFields(" in stripped:
+    if (
+        "QmPerfAppendJsonField(" in stripped
+        or "QmPerfAppendPayloadJsonFields(" in stripped
+    ):
         return True, "telemetry JSON field data"
     return False, ""
 
@@ -885,7 +892,7 @@ def _business_data_records_from_path(
 
     def is_localized_alias(text: str) -> bool:
         token_pattern = re.compile(
-            r'(?:constexpr\s+)?(?:const\s+)?char\s*\*\s*(?:const\s+)?'
+            r"(?:constexpr\s+)?(?:const\s+)?char\s*\*\s*(?:const\s+)?"
             r'([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"((?:[^"\\]|\\.)*)"'
         )
         aliases = {
@@ -972,9 +979,7 @@ def _business_data_records_from_path(
         for text, line in _extract_cpp_string_literal_records(content):
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
             if normalized.endswith("src/game/client/components/scoreboard.cpp") and (
-                "SoundCategory" in line_text
-                or "say /spec" in text
-                or has_cjk(text)
+                "SoundCategory" in line_text or "say /spec" in text or has_cjk(text)
             ):
                 records.append(
                     StringAuditRecord(
@@ -995,7 +1000,9 @@ def _business_data_records_from_path(
                         "bindchat command preset data",
                     )
                 )
-            elif normalized.endswith("src/game/client/components/tclient/bindwheel.cpp"):
+            elif normalized.endswith(
+                "src/game/client/components/tclient/bindwheel.cpp"
+            ):
                 records.append(
                     StringAuditRecord(
                         path,
@@ -1112,7 +1119,11 @@ def _business_data_records_from_path(
                 or "&&" in text
                 or "||" in text
             ):
-                add_business(text, line, "server browser category, rating, clipboard, or source expression data")
+                add_business(
+                    text,
+                    line,
+                    "server browser category, rating, clipboard, or source expression data",
+                )
         if records:
             return records
 
@@ -1207,16 +1218,26 @@ def _business_data_records_from_path(
     if normalized.endswith("src/game/client/components/chat.cpp"):
         for text, line in _extract_cpp_string_literal_records(content):
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
-            if has_cjk(text) or text in {
-                "DDNet Chat",
-                "Welcome to QmClient",
-                "Let's go!",
-                "Team save in progress. You'll be able to load with '/load *** *** ***'",
-                "Team save in progress. You'll be able to load with '/load *** *** ***' if save is successful or with '/load *** *** ***' if it fails",
-                "Team successfully saved by ***. Use '/load *** *** ***' to continue",
-                "expected all or team as mode",
-            } or text == "%s（/%s %s）" or "s_aPreviewLines" in line_text:
-                add_business(text, line, "chat command preview, preview fixture, or streamer mask data")
+            if (
+                has_cjk(text)
+                or text
+                in {
+                    "DDNet Chat",
+                    "Welcome to QmClient",
+                    "Let's go!",
+                    "Team save in progress. You'll be able to load with '/load *** *** ***'",
+                    "Team save in progress. You'll be able to load with '/load *** *** ***' if save is successful or with '/load *** *** ***' if it fails",
+                    "Team successfully saved by ***. Use '/load *** *** ***' to continue",
+                    "expected all or team as mode",
+                }
+                or text == "%s（/%s %s）"
+                or "s_aPreviewLines" in line_text
+            ):
+                add_business(
+                    text,
+                    line,
+                    "chat command preview, preview fixture, or streamer mask data",
+                )
         return records
 
     if normalized.endswith("src/game/client/components/binds.cpp"):
@@ -1280,10 +1301,14 @@ def _business_data_records_from_path(
                     )
                 )
             elif text in {"rcon> ", "xxxx-xx-xx xx:xx:xx x chat/client: — ", " on "}:
-                add_business(text, line, "console prompt, export, or formatting template")
+                add_business(
+                    text, line, "console prompt, export, or formatting template"
+                )
         # Continue with generic rules for this file.
 
-    if normalized.endswith("src/game/client/components/qmclient/monitoring/monitoring.cpp"):
+    if normalized.endswith(
+        "src/game/client/components/qmclient/monitoring/monitoring.cpp"
+    ):
         for text, line in _extract_cpp_string_literal_records(content):
             if text in {"avg %.0f ↓%.0f ↑%.0f%s", "avg %.*f ↓%.*f ↑%.*f%s", " KiB"}:
                 add_business(text, line, "monitoring numeric display format template")
@@ -1294,11 +1319,16 @@ def _business_data_records_from_path(
         for text, line in _extract_cpp_string_literal_records(content):
             if (
                 is_localized_alias(text)
-                or text == "3 Tiles Edge Jump:\\nLeft Jump: .34|.31|.16\\nLeft Double Jump: .41|.28|.25|.13\\nRight Jump: .63|.66|.81\\nRight Double Jump: .56|.69|.72|.84"
+                or text
+                == "3 Tiles Edge Jump:\\nLeft Jump: .34|.31|.16\\nLeft Double Jump: .41|.28|.25|.13\\nRight Jump: .63|.66|.81\\nRight Double Jump: .56|.69|.72|.84"
                 or text in {"%s->%s Swap:%d秒", "%s->%s 可交换!", "开关#%d:%d秒"}
                 or text == "Pure Music"
             ):
-                add_business(text, line, "HUD config default, localized alias, or dynamic display template")
+                add_business(
+                    text,
+                    line,
+                    "HUD config default, localized alias, or dynamic display template",
+                )
         if records:
             return records
 
@@ -1354,12 +1384,12 @@ def _business_data_records_from_path(
     if normalized.endswith("src/game/client/components/voting.cpp"):
         for text, line in _extract_cpp_string_literal_records(content):
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
-            if (
-                text == "%s图"
-                or text == "DDNet Vote"
-                or text == "No reason given"
-            ):
-                add_business(text, line, "vote matcher, notification title, or preview fixture text")
+            if text == "%s图" or text == "DDNet Vote" or text == "No reason given":
+                add_business(
+                    text,
+                    line,
+                    "vote matcher, notification title, or preview fixture text",
+                )
         if records:
             return records
 
@@ -1373,12 +1403,23 @@ def _business_data_records_from_path(
         for text, line in _extract_cpp_string_literal_records(content):
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
             if (
-                text in {"快醒醒!", "但是", "不过", "然而", "可是", "[rename] ", "[regex] "}
+                text
+                in {"快醒醒!", "但是", "不过", "然而", "可是", "[rename] ", "[regex] "}
                 or "LogQmClient" in line_text
-                or text in {"auth token updated", "response did not contain auth token", "users payload could not be parsed"}
-                or text in {"Spectate a player", "No reason given", "SollyBunny / bun bun"}
+                or text
+                in {
+                    "auth token updated",
+                    "response did not contain auth token",
+                    "users payload could not be parsed",
+                }
+                or text
+                in {"Spectate a player", "No reason given", "SollyBunny / bun bun"}
             ):
-                add_business(text, line, "auto-reply matcher, command metadata, preview fixture, or QmClient telemetry text")
+                add_business(
+                    text,
+                    line,
+                    "auto-reply matcher, command metadata, preview fixture, or QmClient telemetry text",
+                )
         if records:
             return records
 
@@ -1386,7 +1427,8 @@ def _business_data_records_from_path(
         for text, line in _extract_cpp_string_literal_records(content):
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
             if (
-                text in {
+                text
+                in {
                     "nameless tee",
                     "prediction error",
                     "Team successfully saved by %s. Use '/load %s' to continue",
@@ -1394,7 +1436,11 @@ def _business_data_records_from_path(
                 }
                 or "Console()->Print(" in line_text
             ):
-                add_business(text, line, "fallback name, debug log, console diagnostic, or server save message data")
+                add_business(
+                    text,
+                    line,
+                    "fallback name, debug log, console diagnostic, or server save message data",
+                )
         if records:
             return records
 
@@ -1404,7 +1450,8 @@ def _business_data_records_from_path(
             if (
                 "LogDiagnosticErrorOnce(" in line_text
                 or "m_pConsole->Print(" in line_text
-                or text in {
+                or text
+                in {
                     "Failed to open UDP socket",
                     "No output devices available",
                     "No capture devices available",
@@ -1709,7 +1756,9 @@ def _business_data_records_from_path(
                         "asset workshop or preview diagnostic text",
                     )
                 )
-            elif "ComputeToolbarButtonWidth(" in line_text and looks_human_readable(text):
+            elif "ComputeToolbarButtonWidth(" in line_text and looks_human_readable(
+                text
+            ):
                 records.append(
                     StringAuditRecord(
                         path,

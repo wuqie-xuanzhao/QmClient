@@ -736,10 +736,10 @@ Authenticate to rcon with a username
 Authorized player forced vote '%s'
 == 권한이 있는 플레이어가 투표를 '%s'(으)로 강제했습니다
 
-auto
+Auto
 == 자동
 
-Auto
+auto
 == 자동
 
 Auto agree vote
@@ -1582,10 +1582,10 @@ Current: Score
 Current: Time
 == 현재: 시간
 
-custom
+Custom
 == 사용자 정의
 
-Custom
+custom
 == 사용자 정의
 
 Custom API key
@@ -3181,8 +3181,8 @@ Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
 == 서버에 접속하기 전에 설정을 확인하여 취향에 맞게 조정하는 것이 좋습니다.
 
-Item %d
-== 항목 %d
+Item
+== 항목
 
 j = Latency jitter
 == j = 지터
@@ -3346,10 +3346,10 @@ Last page in console
 Latency
 == 지연
 
-Latency jitter
+Latency Jitter
 == 지연 지터
 
-Latency Jitter
+Latency jitter
 == 지연 지터
 
 Layout
@@ -4450,10 +4450,10 @@ Pick result: %s
 Pickup range
 == 획득 범위
 
-Pie menu
+Pie Menu
 == 파이 메뉴
 
-Pie Menu
+Pie menu
 == 파이 메뉴
 
 Ping
@@ -4498,10 +4498,10 @@ Player country:
 Player data
 == 플레이어 데이터
 
-Player indicator
+Player Indicator
 == 플레이어 표시기
 
-Player Indicator
+Player indicator
 == 플레이어 표시기
 
 Player is on a different team
@@ -4618,10 +4618,10 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 == 예측 지연이 높고 예측 경로 부하가 큼
 
-Prediction margin
+Prediction Margin
 == 예측 여유
 
-Prediction Margin
+Prediction margin
 == 예측 여유
 
 Prediction time
@@ -5209,10 +5209,10 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == 구조/빙결: %d/%d
 
-Resend loss
+Resend Loss
 == 재전송 손실
 
-Resend Loss
+Resend loss
 == 재전송 손실
 
 Resend signs detected, connection quality is suspicious

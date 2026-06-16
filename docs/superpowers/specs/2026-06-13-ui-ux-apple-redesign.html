@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QmClient UI 重构规格 · iOS 27 Liquid Glass 对标 v4</title>
+<title>QmClient UI 重构规格 · macOS 桌面参考 v4</title>
 <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 <style>
 :root{
@@ -77,13 +77,13 @@ tr:last-child td{border-bottom:none}
 .mock-btn{border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
 .mock-btn-primary{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(0,122,255,.3)}
 .mock-btn-sec{background:var(--surface2);color:var(--accent);border:1px solid var(--sep)}
-.mock-btn-glass{background:rgba(255,255,255,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:var(--accent);border:.5px solid rgba(255,255,255,.3);box-shadow:var(--shadow-sm)}
+.mock-btn-material{background:rgba(255,255,255,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:var(--accent);border:.5px solid rgba(255,255,255,.3);box-shadow:var(--shadow-sm)}
 .mock-btn-icon{background:var(--surface2);color:var(--accent);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;padding:0}
 
-/* Card mockup — Liquid Glass */
-.mock-glass{background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border-radius:12px;padding:16px;border:.5px solid rgba(255,255,255,.5);box-shadow:var(--shadow-md);position:relative}
-.mock-glass::before{content:'';position:absolute;top:0;left:12px;right:12px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);border-radius:1px}
-.mock-glass-dark{background:rgba(28,28,30,.72);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid rgba(255,255,255,.08);color:rgba(255,255,255,.9)}
+/* Card mockup — macOS Material */
+.mock-material{background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border-radius:12px;padding:16px;border:.5px solid rgba(255,255,255,.5);box-shadow:var(--shadow-md);position:relative}
+.mock-material::before{content:'';position:absolute;top:0;left:12px;right:12px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);border-radius:1px}
+.mock-material-dark{background:rgba(28,28,30,.72);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid rgba(255,255,255,.08);color:rgba(255,255,255,.9)}
 
 /* List mockup */
 .mock-list{background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border-radius:10px;overflow:hidden;border:.5px solid rgba(255,255,255,.4)}
@@ -122,13 +122,13 @@ tr:last-child td{border-bottom:none}
 .hero{background:linear-gradient(135deg,rgba(0,122,255,.05),rgba(175,82,222,.05));padding:3.5rem 1.5rem 2rem;text-align:center;border-bottom:1px solid var(--sep)}
 .hero h1{font-size:2.5rem}
 .hero .subtitle{font-size:1.05rem;color:var(--text3);margin-top:.5rem}
-.glass-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:.4rem .9rem;border-radius:20px;border:.5px solid rgba(255,255,255,.5);box-shadow:var(--shadow-sm);font-size:.8rem;font-weight:500;color:var(--text2)}
+.material-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:.4rem .9rem;border-radius:20px;border:.5px solid rgba(255,255,255,.5);box-shadow:var(--shadow-sm);font-size:.8rem;font-weight:500;color:var(--text2)}
 
-/* iOS 27 glass showcase */
-.glass-showcase{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
-.glass-card{padding:1.5rem;border-radius:var(--radius-lg);text-align:center}
-.glass-card h4{margin:0 0 .3rem}
-.glass-card p{font-size:.85rem;margin:0}
+/* macOS material showcase */
+.material-showcase{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
+.material-card{padding:1.5rem;border-radius:var(--radius-lg);text-align:center}
+.material-card h4{margin:0 0 .3rem}
+.material-card p{font-size:.85rem;margin:0}
 
 h2[id],h3[id]{scroll-margin-top:1rem}
 .fref{color:var(--text3);font-family:var(--mono);font-size:.78rem}
@@ -140,11 +140,11 @@ h2[id],h3[id]{scroll-margin-top:1rem}
 <div class="hero">
 <div class="wrap">
 <h1>QmClient UI 重构规格</h1>
-<p class="subtitle">iOS 27 Liquid Glass 对标 · 主题系统 · 逐组件落地</p>
+<p class="subtitle">macOS 桌面参考 · 主题系统 · 逐组件落地</p>
 <p style="margin-top:1.5rem">
-<span class="glass-badge">✨ Design Spec v4</span>
-<span class="glass-badge">2026-06-13</span>
-<span class="glass-badge">iOS 27 Liquid Glass</span>
+<span class="material-badge">✨ Design Spec v4</span>
+<span class="material-badge">2026-06-13</span>
+<span class="material-badge">macOS 桌面参考</span>
 </p>
 </div>
 </div>
@@ -152,28 +152,28 @@ h2[id],h3[id]{scroll-margin-top:1rem}
 <div class="wrap">
 
 <!-- ===================== 0 ===================== -->
-<h2 id="g0">0 · 设计哲学：iOS 27 Liquid Glass</h2>
+<h2 id="g0">0 · 设计哲学：macOS 桌面参考</h2>
 
-<p>iOS 27（WWDC 2026 发布）的 <b>Liquid Glass</b> 设计语言是本规格的视觉权威。它继承了 iOS 7 以来的 Clarity / Deference / Depth 三原则，并在此基础上引入了<strong>系统级透明度可控</strong>、<strong>自适应背景模糊</strong>和<strong>用户可自定义主题色</strong>三大新能力。本规格将这三项能力映射到 QmClient。</p>
+<p>macOS 桌面界面是本规格的视觉参考：窗口层级、侧边栏导航、工具栏操作、source list 列表、popover/sheet 承载临时操作，配合可调 material 透明度和用户主题色。本规格将这些桌面 UI 规律映射到 QmClient 的主菜单、设置页和游戏内 ESC 菜单。</p>
 
-<h3>0.1 iOS 27 Liquid Glass 核心特征</h3>
+<h3>0.1 macOS 桌面参考核心特征</h3>
 <table>
-<tr><th>特征</th><th>iOS 27 规格</th><th>QmClient 映射</th></tr>
-<tr><td><b>透明度可调</b></td><td>系统级 Transparency 滑块，模糊 5-25pt 可调（默认 ~15pt）</td><td><code>QmUiOpacity</code> 已存在（0-100），扩展为驱动 glass alpha</td></tr>
-<tr><td><b>自适应模糊</b></td><td>Gaussian blur + saturation ~0.45，动态分析背景内容</td><td>DDNet 无实时模糊能力 → 用半透明叠加 + 高对比度补偿</td></tr>
-<tr><td><b>主题色自定义</b></td><td>Settings ▸ Appearance ▸ Accent Color，预设色板 + 取色器</td><td><code>QmUiColor</code> 已存在（ColorPicker），<b>需接入 QmUi Token 层</b></td></tr>
-<tr><td><b>圆角层级</b></td><td>Sheet/Modal 12pt · Card/Toolbar 10pt · Popover 8pt</td><td>新增 <code>radius::POPOVER</code>，调整层级映射</td></tr>
-<tr><td><b>Tint 叠加</b></td><td>主题色以 ~30% opacity 叠加到 glass 表面</td><td><code>MenuUiColorSurface</code> 已有此模式，扩展到 QmUi</td></tr>
+<tr><th>特征</th><th>macOS 参考</th><th>QmClient 映射</th></tr>
+<tr><td><b>透明度可调</b></td><td>Reduce Transparency / material 层级，强调可读性优先</td><td><code>QmUiOpacity</code> 已存在（0-100），扩展为驱动 material alpha</td></tr>
+<tr><td><b>自适应模糊</b></td><td>sidebar / toolbar / sheet 使用半透明 material，重要内容保持实体表面</td><td>DDNet 无实时模糊能力 → 用半透明叠加 + 高对比度补偿</td></tr>
+<tr><td><b>主题色自定义</b></td><td>System Settings ▸ Appearance ▸ Accent Color，预设色板 + 取色器</td><td><code>QmUiColor</code> 已存在（ColorPicker），<b>需接入 QmUi Token 层</b></td></tr>
+<tr><td><b>圆角层级</b></td><td>Window 10-12pt · Sidebar/Toolbar 8-10pt · Popover 8pt</td><td>新增 <code>radius::POPOVER</code>，调整层级映射</td></tr>
+<tr><td><b>Tint 叠加</b></td><td>主题色用于 selection、focus ring、primary action，不大面积染色</td><td><code>MenuUiColorSurface</code> 已有此模式，扩展到 QmUi</td></tr>
 </table>
 
-<div class="glass-showcase">
-<div class="glass-card mock-glass">
-<h4 style="color:var(--accent)">Liquid Glass · Light</h4>
-<p style="color:var(--text3)">半透明 · 模糊 · 饱和度增强</p>
+<div class="material-showcase">
+<div class="material-card mock-material">
+<h4 style="color:var(--accent)">macOS Material · Light</h4>
+<p style="color:var(--text3)">侧边栏 material · 清晰文本优先</p>
 </div>
-<div class="glass-card mock-glass mock-glass-dark">
-<h4 style="color:#0a84ff">Liquid Glass · Dark</h4>
-<p style="color:rgba(255,255,255,.6)">同 token 双模式</p>
+<div class="material-card mock-material mock-material-dark">
+<h4 style="color:#0a84ff">macOS Material · Dark</h4>
+<p style="color:rgba(255,255,255,.6)">同 token 支持亮暗模式</p>
 </div>
 </div>
 
@@ -192,7 +192,7 @@ h2[id],h3[id]{scroll-margin-top:1rem}
 <tr><th>UI 面</th><th>代码入口</th><th>现状</th><th>本规格目标</th></tr>
 <tr><td><b>① 主菜单</b><br>（开始菜单）</td><td><code>RenderStartMenuV2()</code><br><code>menus_start.cpp:133</code></td><td>V2 用纯文字按钮（<code>ui_widget::PrimaryButton</code>），<b>丢失了旧 UI 的图片按钮</b></td><td>恢复视觉丰富度——引入图标 + 卡片化</td></tr>
 <tr><td><b>② 设置页</b><br>（所有 settings 子页）</td><td><code>RenderSettings()</code><br><code>menus_settings.cpp:4498</code></td><td>导航栏 + 内容区各自独立矩形，内容用原始 <code>HSplitTop</code> 行布局</td><td>整体卡片化（导航+内容合一面板）+ 模块化卡片内容 + 拖拽重排</td></tr>
-<tr><td><b>③ 游戏内 ESC 菜单</b><br>（暂停菜单）</td><td><code>RenderGame()</code><br><code>menus_ingame.cpp:406</code></td><td>按钮栏用简单填充矩形（<code>Draw + Margin</code>），无卡片化</td><td>卡片化按钮组 + glass 面板</td></tr>
+<tr><td><b>③ 游戏内 ESC 菜单</b><br>（暂停菜单）</td><td><code>RenderGame()</code><br><code>menus_ingame.cpp:406</code></td><td>按钮栏用简单填充矩形（<code>Draw + Margin</code>），无卡片化</td><td>卡片化按钮组 + material 面板</td></tr>
 </table>
 
 <div class="alert danger">
@@ -286,8 +286,8 @@ inline ColorRGBA AccentDim(float AlphaScale = 0.18f)
         std::clamp(AccentPrimary().a * AlphaScale, 0.0f, 1.0f));
 }
 
-// Liquid Glass surface — 主题色 tint 叠加到半透明背景
-inline ColorRGBA GlassSurface(float AlphaScale = 1.0f, float ColorScale = 0.42f)
+// macOS material surface — 主题色 tint 叠加到半透明背景
+inline ColorRGBA MaterialSurface(float AlphaScale = 1.0f, float ColorScale = 0.42f)
 {
     ColorHSLA Hsla(g_Config.m_QmUiColor);
     Hsla = Hsla.UnclampLighting(0.42f);
@@ -309,7 +309,7 @@ inline ColorRGBA GlassSurface(float AlphaScale = 1.0f, float ColorScale = 0.42f)
 <tr><td><code>ACCENT_PRIMARY_HOVER</code></td><td><code>AccentHover()</code></td><td>Button hover, ListItem hover</td></tr>
 <tr><td><code>ACCENT_PRIMARY_PRESS</code></td><td><code>AccentPress()</code></td><td>Button active</td></tr>
 <tr><td><code>ACCENT_PRIMARY_DIM</code></td><td><code>AccentDim()</code></td><td>SecondaryButton hover, ListItem 选中</td></tr>
-<tr><td><code>SURFACE_GLASS</code></td><td><code>GlassSurface()</code></td><td>DrawCard, Modal, List 容器</td></tr>
+<tr><td><code>SURFACE_MATERIAL</code></td><td><code>MaterialSurface()</code></td><td>DrawCard, Modal, List 容器</td></tr>
 </table>
 
 <div class="alert warn">
@@ -341,36 +341,36 @@ inline ColorRGBA GlassSurface(float AlphaScale = 1.0f, float ColorScale = 0.42f)
 <p style="font-size:.8rem;color:var(--text3);margin-top:.5rem">用户在设置页选色后，所有 accent 组件（按钮、开关、滑块、TabBar 下划线）即时切换到对应色调。</p>
 </div>
 
-<h3>1.5 Liquid Glass 透明度控制</h3>
-<p>iOS 27 引入系统级 Transparency 滑块。QmClient 已有 <code>QmUiOpacity</code>（0-100），当前仅影响 DDNet 原生面板。扩展方案：</p>
+<h3>1.5 macOS material 透明度控制</h3>
+<p>macOS 提供 Reduce Transparency 与多层 material 语义。QmClient 已有 <code>QmUiOpacity</code>（0-100），当前仅影响 DDNet 原生面板。扩展方案：</p>
 <table>
 <tr><th>配置项</th><th>当前用途</th><th>扩展用途</th></tr>
-<tr><td><code>QmUiOpacity</code></td><td>DDNet 原生面板 alpha（<code>menus.cpp:128</code>）</td><td>同时驱动 QmUi glass surface 的 alpha（<code>GlassSurface()</code> 内已含 <code>UiAlpha</code>）</td></tr>
+<tr><td><code>QmUiOpacity</code></td><td>DDNet 原生面板 alpha（<code>menus.cpp:128</code>）</td><td>同时驱动 QmUi material surface 的 alpha（<code>MaterialSurface()</code> 内已含 <code>UiAlpha</code>）</td></tr>
 </table>
-<p>用户降低透明度时，glass 表面变得更不透明（更接近 iOS 27 的 "frosted" 高对比模式），提升文字可读性。这是对 iOS 27 Transparency 滑块的等价映射。</p>
+<p>用户降低透明度时，material 表面变得更不透明（更接近 macOS 的 "reduced-transparency" 高对比模式），提升文字可读性。这是对 macOS Reduce Transparency 的等价映射。</p>
 
 <!-- ===================== 2 TOGGLE ===================== -->
-<h2 id="g2">2 · Toggle Switch — iOS 27 风格开关</h2>
+<h2 id="g2">2 · Toggle Switch — macOS 设置开关</h2>
 
 <div class="alert good">
-<b>核心改进</b>：现有 Toggle 的 knob 比例 ≈ <b>0.70</b>（<code>UiForms.cpp:86</code>: <code>Padding = min(Rect.h × 0.15, 3.0)</code>），iOS 27 的 UISwitch knob-to-track 比例是 <b>0.87</b>（51×31pt track，27pt knob）。同时 track 颜色改为接入主题系统。
+<b>核心改进</b>：现有 Toggle 的 knob 比例 ≈ <b>0.70</b>（<code>UiForms.cpp:86</code>: <code>Padding = min(Rect.h × 0.15, 3.0)</code>），macOS 设置开关 knob-to-track 比例是 <b>0.87</b>（51×31pt track，27pt knob）。同时 track 颜色改为接入主题系统。
 </div>
 
-<h3>2.1 iOS 27 Toggle 规格</h3>
+<h3>2.1 macOS Toggle 规格</h3>
 <table>
-<tr><th>参数</th><th>iOS 27 值</th><th>来源</th></tr>
-<tr><td>Track 尺寸</td><td><b>51 × 31 pt</b></td><td>UISwitch 标准尺寸</td></tr>
+<tr><th>参数</th><th>macOS 参考值</th><th>来源</th></tr>
+<tr><td>Track 尺寸</td><td><b>51 × 31 pt</b></td><td>macOS Settings Switch 标准尺寸</td></tr>
 <tr><td>Knob 直径</td><td><b>27 pt</b>（ratio 0.87）</td><td>(31-27)/2 = 2pt padding</td></tr>
 <tr><td>滑动距离</td><td><b>21 pt</b></td><td>51 - 27 - 2×2</td></tr>
 <tr><td>Track 圆角</td><td><b>15.5 pt</b>（pill = h/2）</td><td>31/2</td></tr>
-<tr><td>On 颜色</td><td><b>主题色</b>（iOS 27 默认绿色，但 accent 可配）</td><td><code>qm_theme_runtime::AccentPrimary()</code></td></tr>
-<tr><td>Off 颜色</td><td><b>#E5E5EA</b>（亮灰，iOS 27 light mode）</td><td>新增 <code>SWITCH_OFF_LIGHT</code></td></tr>
+<tr><td>On 颜色</td><td><b>主题色</b>（macOS 中开关可接入 accent 或使用系统绿色）</td><td><code>qm_theme_runtime::AccentPrimary()</code></td></tr>
+<tr><td>Off 颜色</td><td><b>#E5E5EA</b>（亮灰，macOS light mode）</td><td>新增 <code>SWITCH_OFF_LIGHT</code></td></tr>
 <tr><td>Knob</td><td>纯白 + drop shadow（y=3, blur=8, alpha≈0.15）</td><td>物理重量感来源</td></tr>
 <tr><td>动效</td><td>Spring：response ≈ 0.35s，damping ratio ≈ 0.8</td><td>UISpringTimingParameters</td></tr>
 </table>
 
 <div class="demo demo-dark">
-<div class="demo-label">iOS 27 Toggle Mockup (Dark)</div>
+<div class="demo-label">macOS Toggle Mockup (Dark)</div>
 <div class="demo-row">
 <div class="mock-toggle on"><div class="mock-knob"></div></div>
 <span style="font-size:12px;color:#34c759">ON · AccentPrimary() · knob@22px</span>
@@ -382,7 +382,7 @@ inline ColorRGBA GlassSurface(float AlphaScale = 1.0f, float ColorScale = 0.42f)
 </div>
 
 <div class="demo">
-<div class="demo-label">iOS 27 Toggle Mockup (Light)</div>
+<div class="demo-label">macOS Toggle Mockup (Light)</div>
 <div class="demo-row">
 <div class="mock-toggle on"><div class="mock-knob"></div></div>
 <span style="font-size:12px;color:#34c759">ON</span>
@@ -403,26 +403,26 @@ inline ColorRGBA GlassSurface(float AlphaScale = 1.0f, float ColorScale = 0.42f)
 </table>
 
 <div class="alert good">
-<b>弹簧无需新建</b>：<code>ui_spring::SNAPPY</code> = (Stiffness=280, Damping=26)，阻尼比 ζ = 26/(2√280) ≈ <b>0.778</b>，与 iOS 27 toggle 的 ζ ≈ 0.8 偏差仅 2.7%。<b>直接复用 SNAPPY</b>。
+<b>弹簧无需新建</b>：<code>ui_spring::SNAPPY</code> = (Stiffness=280, Damping=26)，阻尼比 ζ = 26/(2√280) ≈ <b>0.778</b>，与 macOS toggle 的 ζ ≈ 0.8 偏差仅 2.7%。<b>直接复用 SNAPPY</b>。
 </div>
 
 <!-- ===================== 3 BUTTONS ===================== -->
-<h2 id="g3">3 · Buttons — iOS 27 按钮三态</h2>
+<h2 id="g3">3 · Buttons — macOS 按钮三态</h2>
 
 <h3>3.1 目标规格</h3>
 <table>
 <tr><th>类型</th><th>背景</th><th>圆角</th><th>按压反馈</th><th>Hover</th></tr>
 <tr><td><b>PrimaryButton</b></td><td><code>AccentPrimary()</code> 实心</td><td><code>radius::BUTTON</code> 7pt</td><td>Scale 0.96（SNAPPY）+ Alpha 0.85</td><td><code>AccentHover()</code></td></tr>
-<tr><td><b>SecondaryButton</b></td><td>Liquid Glass <code>GlassSurface()</code> + 0.5px border</td><td><code>radius::BUTTON</code> 7pt</td><td>Scale 0.96</td><td><code>AccentDim()</code> 背景淡入</td></tr>
-<tr><td><b>IconButton</b></td><td>透明 / Hover 时 <code>GlassSurface()</code></td><td>8pt（方形）</td><td>Scale 0.92</td><td>背景 <code>SURFACE_HIGHLIGHT</code></td></tr>
+<tr><td><b>SecondaryButton</b></td><td>macOS material <code>MaterialSurface()</code> + 0.5px border</td><td><code>radius::BUTTON</code> 7pt</td><td>Scale 0.96</td><td><code>AccentDim()</code> 背景淡入</td></tr>
+<tr><td><b>IconButton</b></td><td>透明 / Hover 时 <code>MaterialSurface()</code></td><td>8pt（方形）</td><td>Scale 0.92</td><td>背景 <code>SURFACE_HIGHLIGHT</code></td></tr>
 </table>
 
 <div class="demo">
-<div class="demo-label">iOS 27 Button Mockup</div>
+<div class="demo-label">macOS Button Mockup</div>
 <div class="demo-row">
 <button class="mock-btn mock-btn-primary">Primary</button>
 <button class="mock-btn mock-btn-sec">Secondary</button>
-<button class="mock-btn mock-btn-glass">Glass</button>
+<button class="mock-btn mock-btn-material">Material</button>
 <div class="mock-btn mock-btn-icon">⚙</div>
 </div>
 </div>
@@ -452,9 +452,9 @@ Scaled.w -= Dw;</code></pre>
 <b>现状</b>：<code>Slider()</code>（<code>UiForms.cpp:120-144</code>）直接调用 <code>Ctx.m_pUi->DoScrollbarH()</code>，这是<strong>纯 DDNet 原生滑块</strong>——12 个组件中唯一零 QmUi 视觉参与的组件。
 </div>
 
-<h3>4.1 iOS 27 Slider 规格</h3>
+<h3>4.1 macOS Slider 规格</h3>
 <table>
-<tr><th>参数</th><th>iOS 27 值</th></tr>
+<tr><th>参数</th><th>macOS 参考值</th></tr>
 <tr><td>Track 高度</td><td><b>4 pt</b></td></tr>
 <tr><td>Track 圆角</td><td><b>2 pt</b>（pill）</td></tr>
 <tr><td>已填充</td><td><code>AccentPrimary()</code></td></tr>
@@ -465,7 +465,7 @@ Scaled.w -= Dw;</code></pre>
 </table>
 
 <div class="demo">
-<div class="demo-label">iOS 27 Slider Mockup</div>
+<div class="demo-label">macOS Slider Mockup</div>
 <div class="demo-row">
 <div class="mock-slider-track">
 <div class="mock-slider-fill"></div>
@@ -508,13 +508,13 @@ Knob.w = Knob.h = KnobR * 2;
 </div>
 
 <!-- ===================== 5 LIST ===================== -->
-<h2 id="g5">5 · List / ListItem — iOS 27 insetGrouped <span class="pill pill-new">重要</span></h2>
+<h2 id="g5">5 · List / ListItem — macOS Source List <span class="pill pill-new">重要</span></h2>
 
-<h3>5.1 iOS 27 insetGrouped 规格</h3>
+<h3>5.1 macOS Source List 规格</h3>
 <table>
-<tr><th>参数</th><th>iOS 27 值</th></tr>
+<tr><th>参数</th><th>macOS 参考值</th></tr>
 <tr><td>容器圆角</td><td><b>10 pt</b></td></tr>
-<tr><td>容器材质</td><td>Liquid Glass <code>GlassSurface()</code></td></tr>
+<tr><td>容器材质</td><td>macOS material <code>MaterialSurface()</code></td></tr>
 <tr><td>行高</td><td><b>44 pt</b></td></tr>
 <tr><td>分割线</td><td><b>0.5 pt</b>，左 inset 16pt，右 flush</td></tr>
 <tr><td>选中态</td><td><code>AccentDim()</code> 背景 + accent 文字</td></tr>
@@ -522,7 +522,7 @@ Knob.w = Knob.h = KnobR * 2;
 </table>
 
 <div class="demo">
-<div class="demo-label">iOS 27 insetGrouped List Mockup</div>
+<div class="demo-label">macOS Source List Mockup</div>
 <div class="mock-list">
 <div class="mock-list-item">General</div>
 <div class="mock-list-item sel">Appearance ←</div>
@@ -534,7 +534,7 @@ Knob.w = Knob.h = KnobR * 2;
 <p>当前 <code>ListItem()</code>（<code>UiNavigation.cpp:72-119</code>）无容器包裹。新增 <code>DrawListSection()</code> 容器：</p>
 <table>
 <tr><th>变更</th><th>说明</th></tr>
-<tr><td>新增 <code>UiContainers.h</code> → <code>DrawListSection()</code></td><td>模板函数，圆角 Liquid Glass 容器 + 0.5pt inset 分割线</td></tr>
+<tr><td>新增 <code>UiContainers.h</code> → <code>DrawListSection()</code></td><td>模板函数，圆角 macOS material 容器 + 0.5pt inset 分割线</td></tr>
 <tr><td><code>ListItem</code> 增加 <code>m_ShowSeparator</code></td><td>末行不画分割线</td></tr>
 <tr><td>分割线方案</td><td>1px rect × <code>BORDER_SUBTLE</code>，DDNet 无 0.5pt，用 alpha 模拟</td></tr>
 </table>
@@ -559,17 +559,17 @@ Knob.w = Knob.h = KnobR * 2;
 </div>
 </div>
 
-<h3>6.2 DrawCard — Liquid Glass <span class="pill pill-go">已较成熟</span></h3>
-<p><code>DrawCard</code>（<code>UiContainers.h:31-78</code>）已有阴影分层 + glass 填充。微调：</p>
+<h3>6.2 DrawCard — macOS material <span class="pill pill-go">已较成熟</span></h3>
+<p><code>DrawCard</code>（<code>UiContainers.h:31-78</code>）已有阴影分层 + material 填充。微调：</p>
 <ul>
-<li>填充色改用 <code>GlassSurface()</code>（接入主题色 tint）</li>
-<li>圆角 <code>CARD=12</code> 对齐 iOS 27 sheet 圆角，<b>保持</b></li>
+<li>填充色改用 <code>MaterialSurface()</code>（接入主题色 tint）</li>
+<li>圆角 <code>CARD=12</code> 对齐 macOS sheet 圆角，<b>保持</b></li>
 <li>可点击卡片增加 Scale 0.98 按压反馈</li>
 </ul>
 
 <h3>6.3 Modal</h3>
 <table>
-<tr><th>参数</th><th>当前</th><th>iOS 27</th><th>改动</th></tr>
+<tr><th>参数</th><th>当前</th><th>macOS</th><th>改动</th></tr>
 <tr><td>入场 Scale</td><td>0.92 → 1.0</td><td>0.85 → 1.0</td><td><span class="pill pill-warn">改</span></td></tr>
 <tr><td>背景遮罩</td><td>alpha 0.40</td><td>alpha 0.5-0.6</td><td><span class="pill pill-warn">改</span></td></tr>
 <tr><td>圆角</td><td>CARD 12pt</td><td>12pt（sheet）</td><td><span class="pill pill-go">一致</span></td></tr>
@@ -580,7 +580,7 @@ Knob.w = Knob.h = KnobR * 2;
 <h3>6.4 Toast</h3>
 <ul>
 <li>圆角 BASE → <b>14pt</b></li>
-<li>背景改用 <code>GlassSurface()</code></li>
+<li>背景改用 <code>MaterialSurface()</code></li>
 <li>左侧 accent icon 提示类型（success/warning/error）——<span class="pill pill-new">可选</span></li>
 </ul>
 
@@ -588,20 +588,20 @@ Knob.w = Knob.h = KnobR * 2;
 <h2 id="g6b">6.5 · 卡片与布局系统 <span class="pill pill-new">重大新增</span></h2>
 
 <div class="alert danger">
-<b>这是当前 spec 最大的缺口</b>。前面 1-6 章全是原子组件（Toggle/Button/Slider），但 iOS 27 的视觉感来自<b>容器级设计</b>——insetGrouped 卡片包裹、模块化分组、呼吸感留白。没有卡片系统，原子组件再好看也只是"散落的零件"。
+<b>这是当前 spec 最大的缺口</b>。前面 1-6 章全是原子组件（Toggle/Button/Slider），但 macOS 桌面 UI 的视觉感来自<b>容器级设计</b>——窗口主面板、侧边栏、工具栏、source list、模块卡片和清晰的分栏密度。没有卡片系统，原子组件再好看也只是"散落的零件"。
 </div>
 
 <h3>6.5.1 三级容器层级</h3>
 <table>
-<tr><th>层级</th><th>iOS 27 对应</th><th>QmUi 实现</th><th>圆角</th><th>阴影</th><th>用途</th></tr>
+<tr><th>层级</th><th>macOS 对应</th><th>QmUi 实现</th><th>圆角</th><th>阴影</th><th>用途</th></tr>
 <tr><td><b>L0 · Root Panel</b><br>统一面板</td><td>Navigation View 背景</td><td><code>DrawRootPanel()</code></td><td><code>CARD</code> 12pt</td><td>无（底层）</td><td>设置页整体面板（含导航栏+内容区合一）</td></tr>
-<tr><td><b>L1 · Section Card</b><br>模块卡片</td><td>insetGrouped section</td><td><code>DrawSection()</code></td><td><code>CARD</code> 12pt</td><td>elevation 1</td><td>设置内容的分组卡片（如"游戏""客户端"各一张卡）</td></tr>
-<tr><td><b>L2 · Inset Group</b><br>内嵌分组</td><td>insetGrouped 内的行组</td><td><code>DrawInsetGroup()</code></td><td><code>BASE</code> 10pt</td><td>无</td><td>卡片内的次级分组（如 toggle 行 + slider 行）</td></tr>
+<tr><td><b>L1 · Section Card</b><br>模块卡片</td><td>source list section</td><td><code>DrawSection()</code></td><td><code>CARD</code> 12pt</td><td>elevation 1</td><td>设置内容的分组卡片（如"游戏""客户端"各一张卡）</td></tr>
+<tr><td><b>L2 · Inset Group</b><br>内嵌分组</td><td>source list 内的行组</td><td><code>DrawInsetGroup()</code></td><td><code>BASE</code> 10pt</td><td>无</td><td>卡片内的次级分组（如 toggle 行 + slider 行）</td></tr>
 </table>
 
 <div class="demo">
 <div class="demo-label">三级容器层级 Mockup</div>
-<div class="mock-glass" style="margin:0;max-width:420px">
+<div class="mock-material" style="margin:0;max-width:420px">
 <div style="font-size:11px;color:var(--text4);font-family:var(--mono);margin-bottom:.8rem">L0 Root Panel（带外边距呼吸感）</div>
 <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px">
 <div style="font-size:11px;color:var(--text4);font-family:var(--mono);margin-bottom:.5rem">L1 Section Card · "游戏"</div>
@@ -634,13 +634,13 @@ Knob.w = Knob.h = KnobR * 2;
 <p><b>一个</b> <code>DrawRootPanel</code> 包裹全部</p>
 <p>外边距 20pt（<code>spacing::LG+4</code>）呼吸感</p>
 <p>内部导航 | 内容 用分隔线分离</p>
-<p style="color:#248a3d">iOS 27 Navigation View 一体感</p>
+<p style="color:#248a3d">macOS Sidebar + Content 一体感</p>
 </div>
 </div>
 <pre><code>// 目标布局（伪代码）
 CUIRect RootPanel = Screen;
 RootPanel.Margin(20.0f, &RootPanel);           // 外呼吸边距
-qm_theme_runtime::DrawRootPanel(RootPanel);    // 统一 glass 面板
+qm_theme_runtime::DrawRootPanel(RootPanel);    // 统一 material 面板
 
 CUIRect Nav, Content;
 RootPanel.VSplitRight(TabBarWidth, &Content, &Nav);
@@ -659,7 +659,7 @@ Nav.Margin(12.0f, &Nav);</code></pre>
 <tr><th>现状</th><th>目标</th></tr>
 <tr><td><code>HSplitTop(30.0f)</code> 画标题文字</td><td><code>DrawSection("游戏")</code> 画卡片 + 标题</td></tr>
 <tr><td><code>HSplitTop(20.0f)</code> 逐行 checkbox</td><td><code>DrawInsetGroup</code> 内放 toggle 行，有 0.5pt 分割线</td></tr>
-<tr><td>无视觉边界，散落透明背景</td><td>圆角 glass 卡片 + 阴影 + 内 padding</td></tr>
+<tr><td>无视觉边界，散落透明背景</td><td>圆角 material 卡片 + 阴影 + 内 padding</td></tr>
 <tr><td>分组间距靠 <code>HSplitTop(10)</code> 硬编码</td><td><code>spacing::MD(12pt)</code> token 驱动</td></tr>
 </table>
 
@@ -675,7 +675,7 @@ struct SSectionProps {
     bool m_Draggable = false;            // 可拖拽重排
 };
 
-// L1 模块卡片：标题 + glass 背景 + 阴影 + 内容回调
+// L1 模块卡片：标题 + material 背景 + 阴影 + 内容回调
 template<typename BodyFn>
 void DrawSection(const IUiContext &Ctx, const CUIRect &Rect,
                  const SSectionProps &Props, BodyFn &&Body);
@@ -698,19 +698,19 @@ inline void DrawRootPanel(const CUIRect &Rect);</code></pre>
 <div class="demo">
 <div class="demo-label">模块化卡片拖拽 Mockup</div>
 <div style="display:flex;flex-direction:column;gap:6px;max-width:420px">
-<div class="mock-glass" style="padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:grab">
+<div class="mock-material" style="padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:grab">
 <span style="color:var(--text4);font-size:16px">⠿</span>
 <strong style="font-size:13px">游戏</strong>
 <span style="font-size:11px;color:var(--text3);margin-left:auto">4 项</span>
 <span style="color:var(--text3)">⌄</span>
 </div>
-<div class="mock-glass" style="padding:10px 14px;display:flex;align-items:center;gap:8px;border:2px solid var(--accent);box-shadow:0 4px 16px rgba(0,122,255,.2);transform:translateY(2px)">
+<div class="mock-material" style="padding:10px 14px;display:flex;align-items:center;gap:8px;border:2px solid var(--accent);box-shadow:0 4px 16px rgba(0,122,255,.2);transform:translateY(2px)">
 <span style="color:var(--accent);font-size:16px">⠿</span>
 <strong style="font-size:13px;color:var(--accent)">画面</strong>
 <span style="font-size:11px;color:var(--accent);margin-left:auto">拖拽中…</span>
 </div>
 <div style="height:2px;background:var(--accent);border-radius:1px;margin:-1px 14px"></div>
-<div class="mock-glass" style="padding:10px 14px;display:flex;align-items:center;gap:8px">
+<div class="mock-material" style="padding:10px 14px;display:flex;align-items:center;gap:8px">
 <span style="color:var(--text4);font-size:16px">⠿</span>
 <strong style="font-size:13px">客户端</strong>
 <span style="font-size:11px;color:var(--text3);margin-left:auto">6 项</span>
@@ -731,7 +731,7 @@ inline void DrawRootPanel(const CUIRect &Rect);</code></pre>
 <tr><td>主按钮</td><td>纯文字 <code>PrimaryButton</code>/<code>SecondaryButton</code></td><td><b>图标 + 文字</b>：Phosphor 图标在左，文字在右（替代旧 TGA 精灵）</td></tr>
 <tr><td>Logo 区域</td><td>banner 图片（保持）</td><td>保持</td></tr>
 <tr><td>侧边按钮</td><td>纯文字（Discord/Learn/...）</td><td>加小图标（Phosphor <code>ph-chat-circle</code> 等）</td></tr>
-<tr><td>背景</td><td>游戏画面模糊截图</td><td>保持 + 可选叠加 glass 面板</td></tr>
+<tr><td>背景</td><td>游戏画面模糊截图</td><td>保持 + 可选叠加 material 面板</td></tr>
 <tr><td>版本信息</td><td>底部小字（保持）</td><td>保持</td></tr>
 </table>
 <pre><code>// 目标：PrimaryButton 扩展支持图标
@@ -749,8 +749,8 @@ ui_widget::SecondaryButton(Ctx, &s_SettingsButton,
 <table>
 <tr><th>元素</th><th>现状</th><th>目标</th></tr>
 <tr><td>整体面板</td><td>导航栏 + 内容区两个独立矩形</td><td><b>L0 Root Panel 统一面板</b>，外围 20pt 呼吸边距</td></tr>
-<tr><td>导航栏</td><td>独立 glass 卡片（<code>:4549</code>）</td><td>Root Panel 内左侧，分隔线分离</td></tr>
-<tr><td>内容区</td><td>独立 glass 卡片（<code>:4550</code>）</td><td>Root Panel 内右侧</td></tr>
+<tr><td>导航栏</td><td>独立 material 卡片（<code>:4549</code>）</td><td>Root Panel 内左侧，分隔线分离</td></tr>
+<tr><td>内容区</td><td>独立 material 卡片（<code>:4550</code>）</td><td>Root Panel 内右侧</td></tr>
 <tr><td>内容布局</td><td>原始 <code>HSplitTop</code> 逐行</td><td><b>L1 Section Cards 模块化</b>（"游戏""客户端"各一张卡）</td></tr>
 <tr><td>卡片内</td><td>checkbox/slider 散落</td><td><b>L2 Inset Group</b> 有分割线的行组</td></tr>
 <tr><td>排布</td><td>固定顺序</td><td><b>可拖拽重排</b> + 可折叠 + 持久化</td></tr>
@@ -759,28 +759,28 @@ ui_widget::SecondaryButton(Ctx, &s_SettingsButton,
 <h3>6.6.3 游戏内 ESC 菜单</h3>
 <table>
 <tr><th>元素</th><th>现状（<code>menus_ingame.cpp:406</code>）</th><th>目标</th></tr>
-<tr><td>按钮栏</td><td><code>Draw(ms_ColorTabbarActive, CORNER_B, 10.0f)</code> 简单填充</td><td><b>L0 Root Panel</b> glass 卡片包裹</td></tr>
+<tr><td>按钮栏</td><td><code>Draw(ms_ColorTabbarActive, CORNER_B, 10.0f)</code> 简单填充</td><td><b>L0 Root Panel</b> material 卡片包裹</td></tr>
 <tr><td>功能按钮</td><td>原始 <code>DoButton_Menu</code> 纯文字</td><td>图标 + 文字（Disconnect → <code>EQmIcon::ARROW_LEFT</code> 等）</td></tr>
 <tr><td>按钮分组</td><td>两行硬编码（工具行 + 主行）</td><td><b>L1 Section Cards</b> 分组（"游戏控制""录屏""社交"）</td></tr>
-<tr><td>内容区</td><td>简单 <code>Draw + Margin</code></td><td>glass 卡片 + 内边距</td></tr>
+<tr><td>内容区</td><td>简单 <code>Draw + Margin</code></td><td>material 卡片 + 内边距</td></tr>
 <tr><td>整体</td><td>紧贴屏幕边缘</td><td>外边距 + 呼吸感</td></tr>
 </table>
 <div class="demo">
 <div class="demo-label">ESC 菜单卡片化 Mockup</div>
 <div style="display:flex;flex-direction:column;gap:8px;max-width:420px">
-<div class="mock-glass" style="padding:12px">
+<div class="mock-material" style="padding:12px">
 <div style="font-size:11px;color:var(--text4);font-family:var(--mono);margin-bottom:6px">L1 · 游戏控制</div>
 <div style="display:flex;gap:6px;flex-wrap:wrap">
-<button class="mock-btn mock-btn-glass"><i class="ph ph-arrow-left" style="margin-right:4px"></i>断开</button>
-<button class="mock-btn mock-btn-glass"><i class="ph ph-eye" style="margin-right:4px"></i>观战</button>
-<button class="mock-btn mock-btn-glass"><i class="ph ph-skull" style="margin-right:4px"></i>自杀</button>
+<button class="mock-btn mock-btn-material"><i class="ph ph-arrow-left" style="margin-right:4px"></i>断开</button>
+<button class="mock-btn mock-btn-material"><i class="ph ph-eye" style="margin-right:4px"></i>观战</button>
+<button class="mock-btn mock-btn-material"><i class="ph ph-skull" style="margin-right:4px"></i>自杀</button>
 </div>
 </div>
-<div class="mock-glass" style="padding:12px">
+<div class="mock-material" style="padding:12px">
 <div style="font-size:11px;color:var(--text4);font-family:var(--mono);margin-bottom:6px">L1 · 录屏</div>
 <div style="display:flex;gap:6px">
-<button class="mock-btn mock-btn-glass"><i class="ph ph-record" style="margin-right:4px"></i>录制</button>
-<button class="mock-btn mock-btn-glass"><i class="ph ph-floppy-disk" style="margin-right:4px"></i>保存回放</button>
+<button class="mock-btn mock-btn-material"><i class="ph ph-record" style="margin-right:4px"></i>录制</button>
+<button class="mock-btn mock-btn-material"><i class="ph ph-floppy-disk" style="margin-right:4px"></i>保存回放</button>
 </div>
 </div>
 </div>
@@ -792,10 +792,10 @@ ui_widget::SecondaryButton(Ctx, &s_SettingsButton,
 <h3>7.1 新增颜色 Token</h3>
 <table>
 <tr><th>Token</th><th>值</th><th>来源</th><th>类型</th></tr>
-<tr><td><code>SWITCH_OFF_LIGHT</code></td><td>{0.9, 0.9, 0.92, 1.0} #E5E5EA</td><td>iOS 27 light</td><td><span class="pill pill-new">constexpr</span></td></tr>
-<tr><td><code>SWITCH_OFF_DARK</code></td><td>{0.227, 0.227, 0.235, 1.0} #3A3A3C</td><td>iOS 27 dark</td><td><span class="pill pill-new">constexpr</span></td></tr>
-<tr><td><code>SURFACE_BASE_LIGHT</code></td><td>{0.96, 0.96, 0.97, 1.0} #F5F5F7</td><td>iOS 27 light bg</td><td><span class="pill pill-new">constexpr</span></td></tr>
-<tr><td><code>SURFACE_BASE_DARK</code></td><td>{0.11, 0.11, 0.12, 1.0} #1C1C1E</td><td>iOS 27 dark bg</td><td><span class="pill pill-new">constexpr</span></td></td></tr>
+<tr><td><code>SWITCH_OFF_LIGHT</code></td><td>{0.9, 0.9, 0.92, 1.0} #E5E5EA</td><td>macOS light</td><td><span class="pill pill-new">constexpr</span></td></tr>
+<tr><td><code>SWITCH_OFF_DARK</code></td><td>{0.227, 0.227, 0.235, 1.0} #3A3A3C</td><td>macOS dark</td><td><span class="pill pill-new">constexpr</span></td></tr>
+<tr><td><code>SURFACE_BASE_LIGHT</code></td><td>{0.96, 0.96, 0.97, 1.0} #F5F5F7</td><td>macOS light bg</td><td><span class="pill pill-new">constexpr</span></td></tr>
+<tr><td><code>SURFACE_BASE_DARK</code></td><td>{0.11, 0.11, 0.12, 1.0} #1C1C1E</td><td>macOS dark bg</td><td><span class="pill pill-new">constexpr</span></td></td></tr>
 </table>
 
 <h3>7.2 主题色运行时派生函数（<code>QmThemeRuntime.h</code>）</h3>
@@ -805,12 +805,12 @@ ui_widget::SecondaryButton(Ctx, &s_SettingsButton,
 <tr><td><code>AccentHover()</code></td><td>Hover 色</td><td><code>ACCENT_PRIMARY_HOVER</code></td></tr>
 <tr><td><code>AccentPress()</code></td><td>按压色</td><td><code>ACCENT_PRIMARY_PRESS</code></td></tr>
 <tr><td><code>AccentDim()</code></td><td>淡色背景</td><td><code>ACCENT_PRIMARY_DIM</code></td></tr>
-<tr><td><code>GlassSurface()</code></td><td>Liquid Glass 面</td><td><code>SURFACE_GLASS</code></td></tr>
+<tr><td><code>MaterialSurface()</code></td><td>macOS material 面</td><td><code>SURFACE_MATERIAL</code></td></tr>
 </table>
 
-<h3>7.3 圆角 Token 层级（iOS 27 对齐）</h3>
+<h3>7.3 圆角 Token 层级（macOS 对齐）</h3>
 <table>
-<tr><th>Token</th><th>现值</th><th>iOS 27 映射</th><th>用途</th></tr>
+<tr><th>Token</th><th>现值</th><th>macOS 映射</th><th>用途</th></tr>
 <tr><td><code>radius::POPOVER</code></td><td><b>新增 8.0</b></td><td>Popover / 小浮动元素</td><td>Tooltip, Toast icon</td></tr>
 <tr><td><code>radius::BUTTON</code></td><td><b>新增 7.0</b></td><td>按钮</td><td>所有按钮</td></tr>
 <tr><td><code>radius::BASE</code></td><td>5.0（保持）</td><td>TextField</td><td>输入框</td></tr>
@@ -822,7 +822,7 @@ ui_widget::SecondaryButton(Ctx, &s_SettingsButton,
 <div class="alert danger">
 <b>显式排除</b>：
 <ul style="margin-top:.5rem">
-<li>❌ <code>spacing</code> 8dp 强改（MD=12 是 iOS 27 section 间距的自然值）</li>
+<li>❌ <code>spacing</code> 8dp 强改（MD=12 是 macOS 分组间距的自然值）</li>
 <li>❌ 删除 <code>UiTokens.h</code> constexpr（作为 fallback 保留）</li>
 <li>❌ backdrop-filter 实时模糊（DDNet 管线不支持）</li>
 </ul>
@@ -833,7 +833,7 @@ ui_widget::SecondaryButton(Ctx, &s_SettingsButton,
 
 <h3>8.1 弹簧对照</h3>
 <table>
-<tr><th>预设</th><th>Stiffness</th><th>Damping</th><th>ζ</th><th>iOS 27 对标</th></tr>
+<tr><th>预设</th><th>Stiffness</th><th>Damping</th><th>ζ</th><th>macOS 对标</th></tr>
 <tr><td><code>SNAPPY</code></td><td>280</td><td>26</td><td><b>0.778</b></td><td>Toggle / 按压（ζ≈0.8）<span class="pill pill-go">已对齐</span></td></tr>
 <tr><td><code>GENTLE</code></td><td>120</td><td>14</td><td>0.639</td><td>HUD 拖拽跟随</td></tr>
 <tr><td><code>WOBBLY</code></td><td>180</td><td>12</td><td>0.447</td><td>果冻弹跳</td></tr>
@@ -841,7 +841,7 @@ ui_widget::SecondaryButton(Ctx, &s_SettingsButton,
 <div class="alert good"><b>不新增弹簧预设</b>，全部复用现有。</div>
 
 <h3>8.2 动效降级（已有，无需改）</h3>
-<p><code>QmMotion.h</code> 三级：L0 归零 / L1 ×0.45 时长 + ×1.35 阻尼 / L2 全量。等价 iOS "Reduce Motion"。<span class="pill pill-go">无需改</span></p>
+<p><code>QmMotion.h</code> 三级：L0 归零 / L1 ×0.45 时长 + ×1.35 阻尼 / L2 全量。等价 macOS "Reduce Motion"。<span class="pill pill-go">无需改</span></p>
 
 <!-- ===================== 9 SDF ===================== -->
 <h2 id="g9">9 · SDF 抗锯齿圆角</h2>
@@ -1114,16 +1114,16 @@ bool RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color,
 <table>
 <tr><th>阶段</th><th>范围</th><th>验收</th></tr>
 <tr><td><b>P0 — 主题系统</b></td><td><code>QmThemeRuntime.h</code> + accent 迁移</td><td>改 <code>QmUiColor</code> 后 accent 组件即时变色</td></tr>
-<tr><td><b>P1 — Toggle 重绘</b></td><td>knob ratio 0.87 + shadow + accent track</td><td>Dogfood Toggle 对齐 iOS 27</td></tr>
-<tr><td><b>P2 — Button 重绘</b></td><td>radius::BUTTON + 按压缩放 + glass</td><td>按压有质量感</td></tr>
+<tr><td><b>P1 — Toggle 重绘</b></td><td>knob ratio 0.87 + shadow + accent track</td><td>Dogfood Toggle 对齐 macOS 设置体验</td></tr>
+<tr><td><b>P2 — Button 重绘</b></td><td>radius::BUTTON + 按压缩放 + material</td><td>按压有质量感</td></tr>
 <tr><td><b>P3 — Slider 重绘</b></td><td>纤细 track + 28pt knob + 拖拽放大</td><td>脱离原生 DDNet 滑块</td></tr>
-<tr><td><b>P4 — List 容器</b></td><td>DrawListSection + insetGrouped</td><td>列表项有 glass 容器</td></tr>
+<tr><td><b>P4 — List 容器</b></td><td>DrawListSection + source list</td><td>列表项有 material 容器</td></tr>
 <tr><td><b>P5 — 卡片布局系统</b></td><td>L0 Root Panel + L1 Section Card + L2 Inset Group + <code>UiLayout.h</code></td><td>设置内容有三级卡片包裹</td></tr>
 <tr><td><b>P5b — 设置页统一面板</b></td><td>导航+内容合一面板 + 20pt 外边距 + 分隔线</td><td>设置页有呼吸感，无边缘紧贴</td></tr>
 <tr><td><b>P5c — 设置内容模块化</b></td><td>各设置子页（General/Graphics/Sound/...）迁移到 Section Card 布局</td><td>设置项有卡片分组 + 0.5pt 分割线</td></tr>
 <tr><td><b>P5d — 拖拽重排</b></td><td>卡片拖拽手柄 + 位移动画 + <code>qm_settings_card_order</code> 持久化</td><td>可拖动卡片重排，重启后保留</td></tr>
 <tr><td><b>P5e — 主菜单恢复</b></td><td>PrimaryButton/SecondaryButton 图标支持 + 替代旧 TGA 精灵</td><td>开始菜单按钮有图标，不再纯文字</td></tr>
-<tr><td><b>P5f — ESC 菜单卡片化</b></td><td>按钮分组卡片化 + glass 面板 + 外边距</td><td>ESC 菜单有卡片分组 + 呼吸感</td></tr>
+<tr><td><b>P5f — ESC 菜单卡片化</b></td><td>按钮分组卡片化 + material 面板 + 外边距</td><td>ESC 菜单有卡片分组 + 呼吸感</td></tr>
 <tr><td><b>P6 — 图标系统</b></td><td>MSDF 烘焙管线 + <code>qm_icon_msdf.frag</code> + 枚举扩充 40+ + 删除旧 1x/2x/4x</td><td><code>cl_ui_scale</code> 0.5~3.0 图标锐利，改色即时</td></tr>
 <tr><td><b>P7 — SDF 圆角</b></td><td>ui_sdf_rect shader + QmRender::DrawRoundRect</td><td>无 MSAA 无锯齿</td></tr>
 <tr><td><b>P8 — Modal/Toast 微调</b></td><td>Scale 0.85 + 遮罩 0.55 + 圆角 14</td><td>视觉对照</td></tr>
@@ -1133,7 +1133,7 @@ bool RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color,
 <table>
 <tr><th>指标</th><th>标准</th><th>测量</th></tr>
 <tr><td>主题色联动</td><td>改 <code>QmUiColor</code> 后 accent 组件即时变色</td><td>设置页改色 + Dogfood 目视</td></tr>
-<tr><td>透明度联动</td><td>改 <code>QmUiOpacity</code> 后 glass 变化</td><td>设置页调透明度</td></tr>
+<tr><td>透明度联动</td><td>改 <code>QmUiOpacity</code> 后 material 变化</td><td>设置页调透明度</td></tr>
 <tr><td>Toggle 比例</td><td>knob/track = 0.87 ± 0.02</td><td>代码量测</td></tr>
 <tr><td>Slider 视觉</td><td>无原生 DDNet 滑块残留</td><td>Dogfood 目视</td></tr>
 <tr><td>按压反馈</td><td>按钮有 0.96 scale 弹簧</td><td>快速连点 10 次</td></tr>
@@ -1165,9 +1165,11 @@ bool RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color,
 
 <div style="padding:2rem 1.5rem 4rem;text-align:center">
 <p class="meta">Design Spec v4 · 2026-06-13 · QmClient UI 重构<br>
-iOS 27 Liquid Glass · 主题系统 · 卡片布局 · 三面覆盖 · 基于 QmUi 全量审计</p>
+macOS 桌面参考 · 主题系统 · 卡片布局 · 三面覆盖 · 基于 QmUi 全量审计</p>
 
 </div>
 
 </body>
 </html>
+
+

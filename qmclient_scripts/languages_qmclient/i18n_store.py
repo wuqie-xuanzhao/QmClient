@@ -82,7 +82,13 @@ def sorted_records(
     records: list[tuple[Message, dict[str, str]]],
 ) -> list[tuple[Message, dict[str, str]]]:
     return sorted(
-        records, key=lambda item: (item[0].context.casefold(), item[0].key.casefold())
+        records,
+        key=lambda item: (
+            item[0].context.casefold(),
+            item[0].key.casefold(),
+            item[0].context,
+            item[0].key,
+        ),
     )
 
 

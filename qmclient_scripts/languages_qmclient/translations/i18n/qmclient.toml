@@ -13326,6 +13326,22 @@ turkish = "Öğe %d"
 polish = "Element %d"
 
 [[message]]
+key = "Item"
+[message.translations]
+japanese = "項目"
+korean = "항목"
+simplified_chinese = "项目"
+traditional_chinese = "項目"
+russian = "Элемент"
+german = "Eintrag"
+spanish = "Elemento"
+french = "Élément"
+brazilian_portuguese = "Item"
+portuguese = "Item"
+turkish = "Öğe"
+polish = "Element"
+
+[[message]]
 key = "new"
 [message.translations]
 japanese = "新規"
