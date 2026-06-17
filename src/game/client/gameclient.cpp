@@ -443,6 +443,31 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("cl_menu_map", ConchainMenuMap, this);
 }
 
+// One-shot migration of legacy tc_jump_hint* settings into qm_jump_hint*.
+// Copied only when the new value is still the built-in default and the legacy
+// value is non-default, mirroring the previous MigrateChatBubbleConfig pattern.
+static void MigrateJumpHintConfig()
+{
+	auto MigrateInt = [](int &NewValue, int LegacyValue, int NewDefault, int LegacyDefault) {
+		if(NewValue == NewDefault && LegacyValue != LegacyDefault)
+			NewValue = LegacyValue;
+	};
+	auto MigrateCol = [](unsigned &NewValue, unsigned LegacyValue, unsigned NewDefault, unsigned LegacyDefault) {
+		if(NewValue == NewDefault && LegacyValue != LegacyDefault)
+			NewValue = LegacyValue;
+	};
+	auto MigrateStr = [](char *pNewValue, size_t NewSize, const char *pLegacyValue, const char *pNewDefault) {
+		if(str_comp(pNewValue, pNewDefault) == 0 && pLegacyValue[0] != '\0' && str_comp(pLegacyValue, pNewDefault) != 0)
+			str_copy(pNewValue, pLegacyValue, NewSize);
+	};
+	MigrateInt(g_Config.m_QmJumpHint, g_Config.m_TcJumpHintLegacy, CConfig::ms_QmJumpHint, CConfig::ms_TcJumpHintLegacy);
+	MigrateStr(g_Config.m_QmJumpHintText, sizeof(g_Config.m_QmJumpHintText), g_Config.m_TcJumpHintTextLegacy, CConfig::ms_pQmJumpHintText);
+	MigrateCol(g_Config.m_QmJumpHintColor, g_Config.m_TcJumpHintColorLegacy, CConfig::ms_QmJumpHintColor, CConfig::ms_TcJumpHintColorLegacy);
+	MigrateInt(g_Config.m_QmJumpHintX, g_Config.m_TcJumpHintXLegacy, CConfig::ms_QmJumpHintX, CConfig::ms_TcJumpHintXLegacy);
+	MigrateInt(g_Config.m_QmJumpHintY, g_Config.m_TcJumpHintYLegacy, CConfig::ms_QmJumpHintY, CConfig::ms_TcJumpHintYLegacy);
+	MigrateInt(g_Config.m_QmJumpHintSize, g_Config.m_TcJumpHintSizeLegacy, CConfig::ms_QmJumpHintSize, CConfig::ms_TcJumpHintSizeLegacy);
+}
+
 static void GenerateTimeoutCode(char *pTimeoutCode)
 {
 	if(pTimeoutCode[0] == '\0' || str_comp(pTimeoutCode, "hGuEYnfxicsXGwFq") == 0)
@@ -474,6 +499,9 @@ void CGameClient::ForceUpdateConsoleRemoteCompletionSuggestions()
 void CGameClient::OnInit()
 {
 	const int64_t OnInitStart = time_get();
+
+	// Migrate legacy tc_jump_hint_text into qm_jump_hint_text before any HUD use.
+	MigrateJumpHintConfig();
 
 	// Initialize config tags system
 	InitConfigTags();

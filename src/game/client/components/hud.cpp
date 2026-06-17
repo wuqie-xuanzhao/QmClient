@@ -5,6 +5,7 @@
 #include "binds.h"
 #include "camera.h"
 #include "controls.h"
+#include "jump_hint_utils.h"
 #include "voting.h"
 
 #include <base/color.h>
@@ -35,9 +36,6 @@
 
 namespace
 {
-	constexpr const char *JUMP_HINT_DEFAULT_TEXT = "3 Tiles Edge Jump:\\nLeft Jump: .34|.31|.16\\nLeft Double Jump: .41|.28|.25|.13\\nRight Jump: .63|.66|.81\\nRight Double Jump: .56|.69|.72|.84";
-	constexpr int JUMP_HINT_DEFAULT_COLOR = 255;
-	constexpr int JUMP_HINT_LEGACY_BLACK_COLOR = 256;
 	constexpr float HUD_CURRENT_WEAPON_SCALE = 1.2f;
 	constexpr float HUD_CURRENT_WEAPON_SWITCH_DURATION = 0.14f;
 	constexpr float HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS = 0.45f;
@@ -56,27 +54,6 @@ namespace
 			return mix(1.0f, HUD_CURRENT_WEAPON_SWITCH_PEAK_SCALE, HudWeaponSwitchEase(Progress / HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS));
 
 		return mix(HUD_CURRENT_WEAPON_SWITCH_PEAK_SCALE, HUD_CURRENT_WEAPON_SCALE, HudWeaponSwitchEase((Progress - HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS) / (1.0f - HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS)));
-	}
-
-	void DecodeEscapedNewlines(const char *pInput, char *pOutput, size_t OutputSize)
-	{
-		if(OutputSize == 0)
-			return;
-
-		size_t OutPos = 0;
-		for(size_t InPos = 0; pInput != nullptr && pInput[InPos] != '\0' && OutPos + 1 < OutputSize; ++InPos)
-		{
-			if(pInput[InPos] == '\\' && pInput[InPos + 1] == 'n')
-			{
-				pOutput[OutPos++] = '\n';
-				++InPos;
-			}
-			else
-			{
-				pOutput[OutPos++] = pInput[InPos];
-			}
-		}
-		pOutput[OutPos] = '\0';
 	}
 
 	bool IsVulkanAmdBackend(IGraphics *pGraphics)
@@ -5094,25 +5071,25 @@ void CHud::RenderMovementInformation()
 
 void CHud::RenderJumpHint()
 {
-	if(!g_Config.m_TcJumpHint)
+	if(!g_Config.m_QmJumpHint)
 		return;
 
-	char aText[sizeof(g_Config.m_TcJumpHintText)];
-	DecodeEscapedNewlines(g_Config.m_TcJumpHintText[0] != '\0' ? g_Config.m_TcJumpHintText : JUMP_HINT_DEFAULT_TEXT, aText, sizeof(aText));
+	char aText[sizeof(g_Config.m_QmJumpHintText)];
+	DecodeEscapedNewlines(g_Config.m_QmJumpHintText[0] != '\0' ? g_Config.m_QmJumpHintText : JUMP_HINT_DEFAULT_TEXT, aText, sizeof(aText));
 	if(aText[0] == '\0')
 		return;
 
 	constexpr float PaddingX = 4.0f;
 	constexpr float PaddingY = 3.0f;
 	constexpr float LineSpacing = 0.0f;
-	const float FontSize = std::clamp((float)g_Config.m_TcJumpHintSize, 1.0f, 50.0f);
+	const float FontSize = std::clamp((float)g_Config.m_QmJumpHintSize, 1.0f, 50.0f);
 	const STextBoundingBox TextBox = TextRender()->TextBoundingBox(FontSize, aText, -1, -1.0f, LineSpacing);
 	const float BoxWidth = maximum(24.0f, TextBox.m_W + PaddingX * 2.0f);
 	const float BoxHeight = maximum(FontSize + PaddingY * 2.0f, TextBox.m_H + PaddingY * 2.0f);
 	const float MaxX = maximum(0.0f, m_Width - BoxWidth);
 	const float MaxY = maximum(0.0f, m_Height - BoxHeight);
-	const float StartX = std::clamp(m_Width * std::clamp(g_Config.m_TcJumpHintX, 0, 100) / 100.0f, 0.0f, MaxX);
-	const float StartY = std::clamp(m_Height * std::clamp(g_Config.m_TcJumpHintY, 0, 100) / 100.0f, 0.0f, MaxY);
+	const float StartX = std::clamp(m_Width * std::clamp(g_Config.m_QmJumpHintX, 0, 100) / 100.0f, 0.0f, MaxX);
+	const float StartY = std::clamp(m_Height * std::clamp(g_Config.m_QmJumpHintY, 0, 100) / 100.0f, 0.0f, MaxY);
 
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::JumpHint, {StartX, StartY, BoxWidth, BoxHeight});
 	Graphics()->DrawRect(StartX, StartY, BoxWidth, BoxHeight, ui_token::color::SURFACE_GLASS, HudEditorScope.m_Corners, ui_token::radius::BASE);
@@ -5121,7 +5098,7 @@ void CHud::RenderJumpHint()
 	Cursor.SetPosition(vec2(StartX + PaddingX, StartY + PaddingY));
 	Cursor.m_FontSize = FontSize;
 	Cursor.m_LineSpacing = LineSpacing;
-	const int TextColorConfig = g_Config.m_TcJumpHintColor == JUMP_HINT_LEGACY_BLACK_COLOR ? JUMP_HINT_DEFAULT_COLOR : g_Config.m_TcJumpHintColor;
+	const int TextColorConfig = g_Config.m_QmJumpHintColor == JUMP_HINT_LEGACY_BLACK_COLOR ? JUMP_HINT_DEFAULT_COLOR : g_Config.m_QmJumpHintColor;
 	TextRender()->TextColor(color_cast<ColorRGBA>(ColorHSLA(TextColorConfig)));
 	TextRender()->TextEx(&Cursor, aText);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());

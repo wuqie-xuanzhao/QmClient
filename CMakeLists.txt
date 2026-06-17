@@ -2668,6 +2668,8 @@ if(CLIENT)
     components/hud.h
     components/hud_editor.cpp
     components/hud_editor.h
+    components/jump_hint_utils.cpp
+    components/jump_hint_utils.h
     components/important_alert.cpp
     components/important_alert.h
     components/infomessages.cpp

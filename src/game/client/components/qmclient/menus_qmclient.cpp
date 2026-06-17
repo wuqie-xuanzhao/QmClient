@@ -675,7 +675,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		Dot.Draw(ColorRGBA(1.0f, 0.12f, 0.16f, 0.95f), IGraphics::CORNER_ALL, DotSize * 0.5f);
 	};
 
-	auto QmNewFeatureLabel = [&](const char *pText, const char *pId, char *pBuf, size_t BufSize) -> const char * {
+	auto BuildQmFeatureLabel = [&](const char *pText, const char *pId, char *pBuf, size_t BufSize) -> const char * {
 		if(!IsQmNewFeatureMarkRead(pId))
 		{
 			str_format(pBuf, BufSize, "%s [new]", pText);
@@ -749,7 +749,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					};
 					if(AnyQmNewFeatureUnread(apVisualFeatureIds, (int)std::size(apVisualFeatureIds)))
 						DrawQmNewFeatureDot(Button);
-					pTabName = QmNewFeatureLabel(pTabName, pNewFeatureId, aVisualTabName, sizeof(aVisualTabName));
+					pTabName = BuildQmFeatureLabel(pTabName, pNewFeatureId, aVisualTabName, sizeof(aVisualTabName));
 				}
 				else if(Tab == QMCLIENT_SETTINGS_TAB_FUNCTION)
 				{
@@ -988,7 +988,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const bool Unread = !IsQmNewFeatureMarkRead(pNewFeatureId);
 		char aTitle[128];
 		TextRender()->TextColor(GetRainbowColor(RainbowIndex));
-		Ui()->DoLabel(&TitleRect, QmNewFeatureLabel(pTitle, pNewFeatureId, aTitle, sizeof(aTitle)), LgHeadlineSizeNew, TEXTALIGN_ML);
+		CUIElement &TitleElement = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle);
+		DoSettingsLabelStreamed(TitleElement, &TitleRect, BuildQmFeatureLabel(pTitle, pNewFeatureId, aTitle, sizeof(aTitle)), LgHeadlineSizeNew, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		if(Unread)
 			DrawQmNewFeatureDot(TitleRect);
@@ -1319,6 +1320,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		FocusMode,
 		KeyBinds,
 		MiniFeatures,
+		JumpHint,
 		SkinTransition,
 		CameraView,
 		DummyMiniView,
@@ -1365,6 +1367,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::FocusMode: return "focus_mode";
 		case EQmModuleId::KeyBinds: return "key_binds";
 		case EQmModuleId::MiniFeatures: return "mini_features";
+		case EQmModuleId::JumpHint: return "jump_hint";
 		case EQmModuleId::SkinTransition: return "skin_transition";
 		case EQmModuleId::CameraView: return "camera_view";
 		case EQmModuleId::DummyMiniView: return "dummy_miniview";
@@ -1416,7 +1419,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 34;
+	constexpr size_t QmModuleCount = 35;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
@@ -1427,15 +1430,16 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		{EQmModuleId::Gores, EQmModuleColumn::Left, 4, "gores"},
 		{EQmModuleId::KeyBinds, EQmModuleColumn::Left, 5, "key_binds"},
 		{EQmModuleId::MiniFeatures, EQmModuleColumn::Left, 6, "mini_features"},
-		{EQmModuleId::WeaponTrajectory, EQmModuleColumn::Left, 7, "weapon_trajectory"},
-		{EQmModuleId::Coords, EQmModuleColumn::Left, 8, "coords"},
-		{EQmModuleId::Streamer, EQmModuleColumn::Left, 9, "streamer"},
-		{EQmModuleId::FriendNotify, EQmModuleColumn::Left, 10, "friend_notify"},
-		{EQmModuleId::BlockWords, EQmModuleColumn::Left, 11, "block_words"},
+		{EQmModuleId::JumpHint, EQmModuleColumn::Left, 7, "jump_hint"},
+		{EQmModuleId::WeaponTrajectory, EQmModuleColumn::Left, 8, "weapon_trajectory"},
+		{EQmModuleId::Coords, EQmModuleColumn::Left, 9, "coords"},
+		{EQmModuleId::Streamer, EQmModuleColumn::Left, 10, "streamer"},
+		{EQmModuleId::FriendNotify, EQmModuleColumn::Left, 11, "friend_notify"},
+		{EQmModuleId::BlockWords, EQmModuleColumn::Left, 12, "block_words"},
 		{EQmModuleId::Translate, EQmModuleColumn::Left, 14, "translate"},
 		{EQmModuleId::TranslateUi, EQmModuleColumn::Left, 15, "translate_ui"},
-		{EQmModuleId::QiaFen, EQmModuleColumn::Left, 12, "qiafen"},
-		{EQmModuleId::PieMenu, EQmModuleColumn::Left, 13, "pie_menu"},
+		{EQmModuleId::QiaFen, EQmModuleColumn::Left, 13, "qiafen"},
+		{EQmModuleId::PieMenu, EQmModuleColumn::Left, 16, "pie_menu"},
 		{EQmModuleId::CameraView, EQmModuleColumn::Right, 0, "camera_view"},
 		{EQmModuleId::WeaponAnimation, EQmModuleColumn::Right, 1, "weapon_animation"},
 		{EQmModuleId::EntityOverlay, EQmModuleColumn::Right, 2, "entity_overlay"},
@@ -1458,9 +1462,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		EQmModuleId::ChatBubble, EQmModuleId::CameraView, EQmModuleId::SkinTransition,
 		EQmModuleId::FocusMode, EQmModuleId::WeaponAnimation, EQmModuleId::Streamer, EQmModuleId::EntityOverlay,
 		EQmModuleId::Laser, EQmModuleId::CollisionHitbox, EQmModuleId::TranslateUi};
-	static constexpr std::array<EQmModuleId, 12> s_aQmFunctionModules = {
+	static constexpr std::array<EQmModuleId, 13> s_aQmFunctionModules = {
 		EQmModuleId::GoresActor, EQmModuleId::Gores, EQmModuleId::KeyBinds,
-		EQmModuleId::MiniFeatures, EQmModuleId::WeaponTrajectory, EQmModuleId::FriendNotify,
+		EQmModuleId::MiniFeatures, EQmModuleId::JumpHint, EQmModuleId::WeaponTrajectory, EQmModuleId::FriendNotify,
 		EQmModuleId::BlockWords, EQmModuleId::Translate, EQmModuleId::QiaFen,
 		EQmModuleId::PieMenu, EQmModuleId::FavoriteMaps, EQmModuleId::HJAssist};
 	static constexpr std::array<EQmModuleId, 11> s_aQmHudModules = {
@@ -2388,7 +2392,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::Gores: return "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用 快速输入 kuaisu shuru fast input 快速输入其他玩家";
 		case EQmModuleId::FocusMode: return "禅模式 zhuanzhi moshi focus mode zen mode 隐藏 yincang hud 名字 mingzi 特效 texiao 计分板 jifenban 沉浸 chenjing 无干扰 wuganrao 聊天 liaotian chat 非必要UI";
 		case EQmModuleId::KeyBinds: return "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding 武器辅助线 fuzhuxian 异常断开 yichang duankai timeout disconnect";
-		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 位置跳跃提示 tiaoyue tishi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
+		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
+		case EQmModuleId::JumpHint: return "位置跳跃提示 tiaoyue tishi jump hint position edge jump color yanse 颜色 horizontal position shuiping weizhi vertical position chuizhi weizhi font size ziti";
 		case EQmModuleId::SkinTransition:
 			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 类型 leixing 时长 shichang 锤中偷皮 chuizhong toupi";
 		case EQmModuleId::WeaponTrajectory: return "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi";
@@ -2607,7 +2612,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			RenderQmModuleHeadline(RightContent, -2, Localize("QmClient"), Localize("Developers and sponsors"));
 			RightContent.HSplitTop(LgLineHeight, &Row, &RightContent);
 			TextRender()->TextColor(GetRainbowColor(-6));
-			Ui()->DoLabel(&Row, "栖梦(璇梦),夏日,DYL", LgBodySize + 2.0f, TEXTALIGN_ML);
+			DoQmSettingsLabel("qmclient-community-developers-names", &Row, "栖梦(璇梦),夏日,DYL", LgBodySize + 2.0f);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 			constexpr float SponsorFontShrink = 4.0f;
 			constexpr float MinSponsorFontSize = 8.0f;
@@ -2718,6 +2723,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return {3, Localize("Key Bindings"), Localize("Common key bindings")};
 		case EQmModuleId::MiniFeatures:
 			return {2, Localize("Dream Features"), Localize("Only what you can't imagine, nothing Dream can't do"), MiniFeaturesNewFeatureId()};
+		case EQmModuleId::JumpHint:
+			return {2, Localize("Position jump hint"), Localize("Jump hint text")};
 		case EQmModuleId::SkinTransition:
 			return {
 				5,
@@ -3776,11 +3783,54 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					DoQmSettingsCheckboxAuto(&g_Config.m_QmRainbowName, "Rainbow name", Localize("Rainbow name"), &g_Config.m_QmRainbowName, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_TcJumpHint, "Position jump hint", Localize("Position jump hint"), &g_Config.m_TcJumpHint, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
+
+				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+				Column.y = CardContent.y;
+				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+				HandleModuleDragState(pModule, s_GlassCards.back());
+			}
+			break;
+			case EQmModuleId::JumpHint:
+			{
+				// ========== 模块: 位置跳跃提示 ==========
+				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
+				CUIRect CardJumpHintStart = Column;
+				s_GlassCards.push_back(CardJumpHintStart);
+
+				Column.HSplitTop(LgCardPadding, nullptr, &Column);
+				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
+				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
+				RenderQmModuleHeadline(CardContent, 2, Localize("Position jump hint"), Localize("Jump hint text"));
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmJumpHint, "Position jump hint", Localize("Position jump hint"), &g_Config.m_QmJumpHint, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				static CButtonContainer s_QmJumpHintColorId;
+				DoLine_ColorPicker(&s_QmJumpHintColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Text color"), &g_Config.m_QmJumpHintColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-jump-hint-horizontal-position", &LabelCol, Localize("Horizontal position"), LgBodySize);
+				static int s_QmJumpHintXInputId;
+				RenderSliderWithValueInput(&s_QmJumpHintXInputId, ControlCol, &g_Config.m_QmJumpHintX, 0, 100, "%");
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-jump-hint-vertical-position", &LabelCol, Localize("Vertical position"), LgBodySize);
+				static int s_QmJumpHintYInputId;
+				RenderSliderWithValueInput(&s_QmJumpHintYInputId, ControlCol, &g_Config.m_QmJumpHintY, 0, 100, "%");
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-jump-hint-font-size", &LabelCol, Localize("Font size"), LgBodySize);
+				static int s_QmJumpHintSizeInputId;
+				RenderSliderWithValueInput(&s_QmJumpHintSizeInputId, ControlCol, &g_Config.m_QmJumpHintSize, 1, 50);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -4805,7 +4855,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					DoQmSettingsCheckboxAuto(&pRuleRow->m_AutoRename, "Rename", Localize("Rename"), &pRuleRow->m_AutoRename, &RenameCol, LgLineHeight);
 					DoQmSettingsCheckboxAuto(&pRuleRow->m_Regex, "Regex", Localize("Regex"), &pRuleRow->m_Regex, &RegexCol, LgLineHeight);
 					Ui()->DoEditBox(&pRuleRow->m_TriggerInput, &TriggerCol, LgBodySize);
-					Ui()->DoLabel(&SendCol, Localize("Send"), LgBodySize, TEXTALIGN_MC);
+					DoQmSettingsLabel("qmclient-keyword-reply-send-label", &SendCol, Localize("Send"), LgBodySize, TEXTALIGN_MC);
 					Ui()->DoEditBox(&pRuleRow->m_ReplyInput, &ReplyCol, LgBodySize);
 					const bool RemoveClicked = DoButton_Menu(&s_vKeywordRemoveRuleButtons[i], "-", 0, &RemoveButtonRect);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -5309,7 +5359,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					const char *pScopeNewFeatureId = "qm_2_62_8_weapon_switch_scope";
 					const bool ScopeFeatureUnread = !IsQmNewFeatureMarkRead(pScopeNewFeatureId);
 					char aScopeLabel[128];
-					Ui()->DoLabel(&LabelCol, QmNewFeatureLabel(Localize("Animation range"), pScopeNewFeatureId, aScopeLabel, sizeof(aScopeLabel)), LgBodySizeNew, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-weapon-switch-animation-range", &LabelCol, BuildQmFeatureLabel(Localize("Animation range"), pScopeNewFeatureId, aScopeLabel, sizeof(aScopeLabel)), LgBodySizeNew);
 					if(ScopeFeatureUnread)
 						DrawQmNewFeatureDot(LabelCol);
 					MarkQmNewFeatureHovered(pScopeNewFeatureId, Row);
@@ -5895,7 +5945,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						if(s_CopiedMapIndex == (int)MapIndex)
 						{
 							TextRender()->TextColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色
-							Ui()->DoLabel(&RowLabel, Localize("Copied"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-favorite-map-copied", &RowLabel, Localize("Copied"), LgBodySize);
 						}
 						else
 						{
