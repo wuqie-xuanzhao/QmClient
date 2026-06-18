@@ -1255,13 +1255,17 @@ void CMenus::EnsureAllDemoDates()
 	m_DemoDateFetchCursor = 0;
 	m_DemoDateFetchComplete = false;
 	SSettingsAdaptiveBudgetInput Input;
+	Input.m_FrameId = Client()->PerfFrame();
+	str_copy(Input.m_aOperation, SettingsPerfActiveOperation(), sizeof(Input.m_aOperation));
+	str_copy(Input.m_aPage, "demo_browser", sizeof(Input.m_aPage));
+	str_copy(Input.m_aTab, "metadata", sizeof(Input.m_aTab));
+	str_copy(Input.m_aContext, SettingsPerfContextName(), sizeof(Input.m_aContext));
 	Input.m_FrameMsAverage = (float)GameClient()->m_QmMonitoring.Snapshot().m_Performance.m_FrameTimeMs;
 	Input.m_FrameMsP95 = Input.m_FrameMsAverage;
 	Input.m_TargetFrameMs = 8.333f;
 	Input.m_BackgroundBacklog = (int)m_vDemos.size();
 	Input.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = SettingsAdaptiveBudgetStep(Input, m_DemoBrowserAdaptiveBudgetState);
-	LogSettingsAdaptiveBudget("demo_browser", Input, AdaptiveBudget);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("demo_browser", Input, m_DemoBrowserAdaptiveBudgetState);
 	AdvanceDemoBrowserMetadata(0, maximum(1, AdaptiveBudget.m_DemoMetadataTokens), "ensure_dates");
 }
 
@@ -2321,6 +2325,11 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 		(abs(FirstVisibleIndex - s_DemoLastFirstVisibleIndex) >= DemoJumpThreshold ||
 			abs((EndVisibleIndex - 1) - (s_DemoLastEndVisibleIndex - 1)) >= DemoJumpThreshold);
 	SSettingsAdaptiveBudgetInput AdaptiveBudgetInput;
+	AdaptiveBudgetInput.m_FrameId = Client()->PerfFrame();
+	str_copy(AdaptiveBudgetInput.m_aOperation, SettingsPerfActiveOperation(), sizeof(AdaptiveBudgetInput.m_aOperation));
+	str_copy(AdaptiveBudgetInput.m_aPage, "demo_browser", sizeof(AdaptiveBudgetInput.m_aPage));
+	str_copy(AdaptiveBudgetInput.m_aTab, "list", sizeof(AdaptiveBudgetInput.m_aTab));
+	str_copy(AdaptiveBudgetInput.m_aContext, SettingsPerfContextName(), sizeof(AdaptiveBudgetInput.m_aContext));
 	AdaptiveBudgetInput.m_FrameMsAverage = (float)GameClient()->m_QmMonitoring.Snapshot().m_Performance.m_FrameTimeMs;
 	AdaptiveBudgetInput.m_FrameMsP95 = AdaptiveBudgetInput.m_FrameMsAverage;
 	AdaptiveBudgetInput.m_TargetFrameMs = 8.333f;
@@ -2331,9 +2340,7 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 		(m_DemoHeaderFetchComplete ? 0 : maximum(0, (int)m_vDemos.size() - (int)m_DemoHeaderFetchCursor)) +
 		(m_DemoDateFetchComplete ? 0 : maximum(0, (int)m_vDemos.size() - (int)m_DemoDateFetchCursor));
 	AdaptiveBudgetInput.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = SettingsAdaptiveBudgetStep(AdaptiveBudgetInput, m_DemoBrowserAdaptiveBudgetState);
-	// Telemetry contract: event=settings_adaptive_budget.
-	LogSettingsAdaptiveBudget("demo_browser", AdaptiveBudgetInput, AdaptiveBudget);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("demo_browser", AdaptiveBudgetInput, m_DemoBrowserAdaptiveBudgetState);
 	const bool MetadataBackgroundAllowed = AdaptiveBudget.m_BackgroundTokens > 0 && !AdaptiveBudgetInput.m_ScrollActive && !AdaptiveBudgetInput.m_JumpScrollActive;
 	const int DemoHeaderBudget = g_Config.m_BrDemoFetchInfo && !BrowsingScreenshots ?
 					     (MetadataBackgroundAllowed ? maximum(1, AdaptiveBudget.m_DemoMetadataTokens / 2) : minimum(AdaptiveBudget.m_DemoMetadataTokens, maximum(0, EndVisibleIndex - FirstVisibleIndex))) :

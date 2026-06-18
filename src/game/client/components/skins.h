@@ -14,6 +14,7 @@
 #include <generated/protocol7.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/components/settings_resource_jobs.h>
 #include <game/client/skin.h>
 
@@ -245,6 +246,9 @@ public:
 		ESettingsResourcePriority m_LoadPriority = ESettingsResourcePriority::BACKGROUND;
 		std::unique_ptr<CSkin> m_pSkin = nullptr;
 		std::shared_ptr<CAbstractSkinLoadJob> m_pLoadJob = nullptr;
+		CSkinLoadData m_SettingsPendingUploadData;
+		size_t m_SettingsPendingUploadSprite = 0;
+		std::chrono::nanoseconds m_SettingsPendingUploadStart{};
 		size_t m_SettingsSourceApproxBytes = 0;
 
 		/**
@@ -742,6 +746,9 @@ private:
 
 	static bool PrepareSkinData(const char *pName, CSkinLoadData &Data);
 	void LoadSkinFinish(CSkinContainer *pSkinContainer, const CSkinLoadData &Data);
+	bool BeginSkinPreviewUpload(CSkinContainer *pSkinContainer, CSkinLoadData &&Data);
+	bool UploadNextSkinPreviewSprite(CSkinContainer *pSkinContainer, SResourcePreviewUploadBudget &Budget);
+	void FinishSkinPreviewUpload(CSkinContainer *pSkinContainer);
 	void LoadSkinDirect(const char *pName);
 	const CSkinContainer *FindContainerImpl(const char *pName);
 	static int SkinScan(const char *pName, int IsDir, int StorageType, void *pUser);
@@ -816,6 +823,7 @@ private:
 	char m_aEventSkinPrefix[MAX_SKIN_LENGTH];
 	uint64_t m_SettingsSourceUploadsCompleted = 0;
 	uint64_t m_SettingsSourceLoadsCompleted = 0;
+	CSettingsResourcePreviewUploadScheduler m_SettingsSkinPreviewUploadScheduler;
 	uint64_t m_SettingsSourceLoadsAtLastStartLoading = 0;
 	uint64_t m_SettingsSourceUploadsAtLastControllerFrame = 0;
 	uint64_t m_SettingsSourceLoadsAtLastControllerFrame = 0;
@@ -841,6 +849,9 @@ private:
 	};
 
 	ESkinProcessResult ProcessSkinContainer(CSkinContainer *pSkinContainer, CSkinLoadingStats &Stats,
+		int &SkinsProcessedThisFrame, std::chrono::nanoseconds StartTime,
+		std::chrono::nanoseconds MaxTime);
+	ESkinProcessResult DrainSettingsSkinPreviewUpload(CSkinContainer *pSkinContainer, CSkinLoadingStats &Stats,
 		int &SkinsProcessedThisFrame, std::chrono::nanoseconds StartTime,
 		std::chrono::nanoseconds MaxTime);
 };

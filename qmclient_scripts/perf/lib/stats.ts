@@ -164,13 +164,33 @@ export interface FpsSummary {
   sampleSeconds: number;
   fpsAvg: number;
   fpsMin: number;
+  fpsOnePctLow: number;
+  fpsOnePctLowAvailable: boolean;
+  fpsOnePctLowSource: string;
   fpsMax: number;
   frameMsAvg: number;
   frameMsP95: number;
   frameMsP99: number;
   frameMsMax: number;
   menuMsMax: number;
+  windowStartFrame: number;
+  windowEndFrame: number;
   capLimited: boolean;
+}
+
+export interface PreviewBudgetSummary {
+  available: boolean;
+  eventCount: number;
+  previewJobsStarted: number;
+  previewJobsDone: number;
+  previewUploads: number;
+  previewAdmissions: number;
+  maxPreviewArtifactMs: number;
+  maxMetadataHydrateMs: number;
+  maxPlaceholderCount: number;
+  maxReadyTextureCount: number;
+  minVisibleReadyRatio: number;
+  samples: string[];
 }
 
 function numberField(e: PerfEntry, name: string, fallback = 0): number {
@@ -182,29 +202,42 @@ function numberField(e: PerfEntry, name: string, fallback = 0): number {
 export function fpsSummaries(entries: PerfEntry[]): FpsSummary[] {
   return entries
     .filter(e => e.system === PERF_SYSTEM.FPS && field(e, 'event') === 'fps_summary')
-    .map(e => ({
-      timestamp: e.timestamp,
-      operation: field(e, 'operation'),
-      context: field(e, 'context'),
-      page: field(e, 'page'),
-      tab: field(e, 'tab', 'none'),
-      sampleFrames: numberField(e, 'sample_frames'),
-      sampleSeconds: numberField(e, 'sample_seconds'),
-      fpsAvg: numberField(e, 'fps_avg'),
-      fpsMin: numberField(e, 'fps_min'),
-      fpsMax: numberField(e, 'fps_max'),
-      frameMsAvg: numberField(e, 'frame_ms_avg'),
-      frameMsP95: numberField(e, 'frame_ms_p95'),
-      frameMsP99: numberField(e, 'frame_ms_p99'),
-      frameMsMax: numberField(e, 'frame_ms_max'),
-      menuMsMax: numberField(e, 'menu_ms_max'),
-      capLimited: numberField(e, 'cap_limited') !== 0,
-    }));
+    .map(e => {
+      const frameMsP99 = numberField(e, 'frame_ms_p99');
+      const fpsOnePctLowSource = field(e, 'fps_1pct_source');
+      const fpsOnePctLowAvailable = fpsOnePctLowSource === 'real_sampled';
+      const fpsOnePctLow = fpsOnePctLowAvailable ? numberField(e, 'fps_1pct_low') : (frameMsP99 > 0 ? 1000 / frameMsP99 : 0);
+      return {
+        timestamp: e.timestamp,
+        operation: field(e, 'operation'),
+        context: field(e, 'context'),
+        page: field(e, 'page'),
+        tab: field(e, 'tab', 'none'),
+        sampleFrames: numberField(e, 'sample_frames'),
+        sampleSeconds: numberField(e, 'sample_seconds'),
+        fpsAvg: numberField(e, 'fps_avg'),
+        fpsMin: numberField(e, 'fps_min'),
+        fpsOnePctLow,
+        fpsOnePctLowAvailable,
+        fpsOnePctLowSource: fpsOnePctLowAvailable ? fpsOnePctLowSource : 'P99-derived',
+        fpsMax: numberField(e, 'fps_max'),
+        frameMsAvg: numberField(e, 'frame_ms_avg'),
+        frameMsP95: numberField(e, 'frame_ms_p95'),
+        frameMsP99: frameMsP99,
+        frameMsMax: numberField(e, 'frame_ms_max'),
+        menuMsMax: numberField(e, 'menu_ms_max'),
+        windowStartFrame: numberField(e, 'window_start_frame'),
+        windowEndFrame: numberField(e, 'window_end_frame'),
+        capLimited: numberField(e, 'cap_limited') !== 0,
+      };
+    });
 }
 
 const TARGET_SETTINGS_FPS_OPERATIONS: ReadonlySet<string> = new Set([
   'settings_open',
   'settings_tab_switch',
+  'settings_assets_tab_switch',
+  'settings_tee_tab_switch',
   'settings_subtab_switch',
   'settings_tee_scroll',
   'ingame_esc_open',
@@ -216,6 +249,24 @@ export function isTargetSettingsFpsSummary(summary: FpsSummary): boolean {
 
 export function hasOnlineTargetSettingsFpsSummary(entries: PerfEntry[]): boolean {
   return fpsSummaries(entries).some(s => isTargetSettingsFpsSummary(s) && s.context === 'online');
+}
+
+function isSettingsTabSwitchFpsSummary(summary: FpsSummary): boolean {
+  return summary.operation === 'settings_tab_switch' ||
+    summary.operation === 'settings_assets_tab_switch' ||
+    summary.operation === 'settings_tee_tab_switch';
+}
+
+export function coldTabSwitchFpsSummaries(entries: PerfEntry[]): FpsSummary[] {
+  return fpsSummaries(entries).filter(summary =>
+    isSettingsTabSwitchFpsSummary(summary) &&
+    summary.context.toLowerCase().includes('cold'));
+}
+
+export function warmTabSwitchFpsSummaries(entries: PerfEntry[]): FpsSummary[] {
+  return fpsSummaries(entries).filter(summary =>
+    isSettingsTabSwitchFpsSummary(summary) &&
+    (summary.context.toLowerCase().includes('warm') || summary.context.toLowerCase().includes('repeat')));
 }
 
 function normalizedPage(e: PerfEntry): string {
@@ -258,6 +309,9 @@ export interface AssetsPreviewAdmissionSummary {
   visibleFirstAvailable: boolean;
   eventCount: number;
   maxDurationMs: number;
+  maxLayoutTextMs: number;
+  maxPreviewDrawMs: number;
+  maxThumbSchedulingMs: number;
   maxRendered: number;
   maxThumbStarts: number;
   visibleStarts: number;
@@ -302,9 +356,98 @@ export interface AdaptiveBudgetSummary {
   maxPrefetchTokens: number;
   maxBackgroundTokens: number;
   maxGpuUploadTokens: number;
+  maxResourceUploadTokens: number;
   maxTextTokens: number;
+  maxTextContainerTokens: number;
+  maxGlyphUploadTokens: number;
+  maxParagraphLayoutTokens: number;
   maxDemoTokens: number;
   samples: string[];
+}
+
+export interface SettingsUiBudgetSummary {
+  available: boolean;
+  eventCount: number;
+  maxLayoutMs: number;
+  maxTextMs: number;
+  maxTextNew: number;
+  maxTextReused: number;
+  maxDrawCalls: number;
+  maxVertices: number;
+  maxIndices: number;
+  maxHeapAllocs: number;
+  maxVisibleWidgets: number;
+  samples: string[];
+}
+
+export interface TextRuntimeBudgetSummary {
+  available: boolean;
+  eventCount: number;
+  glyphNew: number;
+  glyphUploads: number;
+  maxGlyphRasterizeMs: number;
+  maxGlyphUploadMs: number;
+  textContainerNew: number;
+  textContainerUploads: number;
+  maxTextContainerCreateMs: number;
+  maxTextContainerUploadMs: number;
+  maxParagraphLayoutMs: number;
+  paragraphBudgetBlocked: number;
+  paragraphCacheHit: number;
+  paragraphCacheMiss: number;
+  staticStableHitCount: number;
+  staticStableMissCount: number;
+  staticStableHitRate: number;
+  snapshotCacheHit: number;
+  snapshotCacheMiss: number;
+  snapshotCacheHitRate: number;
+  paragraphCacheHitRate: number;
+  samples: string[];
+}
+
+export interface BudgetCorrelationWindow {
+  operation: string;
+  context: string;
+  page: string;
+  tab: string;
+  fpsOnePctLow: number;
+  fpsOnePctLowAvailable: boolean;
+  fpsOnePctLowSource: string;
+  windowStartFrame: number;
+  windowEndFrame: number;
+  frameMsP99: number;
+  resourceUploadTokens: number;
+  maxTextureUploadMs: number;
+  previewUploads: number;
+  maxPreviewArtifactMs: number;
+  maxPreviewDrawMs: number;
+  maxMetadataLayoutMs: number;
+  maxUiLayoutMs: number;
+  maxCardDrawMs: number;
+  maxTelemetryOverheadMs: number;
+  maxTelemetryFlushMs: number;
+  glyphUploads: number;
+  maxGlyphRasterizeMs: number;
+  maxGlyphUploadMs: number;
+  textContainerNew: number;
+  maxTextContainerCreateMs: number;
+  maxParagraphLayoutMs: number;
+  paragraphBudgetBlocked: number;
+  dominantAttribution: string;
+  culpritRank: {
+    kind: string;
+    score: number;
+    details: string;
+  }[];
+  sample: string;
+}
+
+export interface BudgetCorrelationSummary {
+  available: boolean;
+  windowCount: number;
+  failingWindowCount: number;
+  unattributedFailingWindowCount: number;
+  windows: BudgetCorrelationWindow[];
 }
 
 export interface StableTextCoverageSummary {
@@ -324,6 +467,22 @@ export interface StableTextCoverageSummary {
   reuseRate: number;
   textNew: number;
   textReused: number;
+  staticCandidateTotal: number;
+  staticHitCount: number;
+  staticReuseCount: number;
+  staticMissCount: number;
+  staticStaleCount: number;
+  staticHitRate: number;
+  staticReuseRate: number;
+  staticKeyMismatchCount: number;
+  staticUnplannedVisibleCount: number;
+  dynamicCandidateTotal: number;
+  dynamicHitCount: number;
+  dynamicReuseCount: number;
+  dynamicMissCount: number;
+  dynamicStaleCount: number;
+  dynamicHitRate: number;
+  dynamicReuseRate: number;
   prebuildRemainingBeforeTarget: number;
   planCollectionAvailable: boolean;
   planCollectionComplete: boolean;
@@ -413,6 +572,7 @@ interface StableTextEvent {
   reason: string;
   operation: string;
   phase: string;
+  textClass: string;
   remaining: number;
   candidates: number;
   hits: number;
@@ -423,6 +583,7 @@ interface StableTextEvent {
   textReused: number;
   planned: number;
   unplanned: number;
+  planStatus: string;
   unitsDone: number;
   unitsTotal: number;
   budget: number;
@@ -433,6 +594,11 @@ interface StableTextEvent {
 
 interface AdaptiveBudgetEvent {
   timestamp: string;
+  frame: number;
+  operation: string;
+  page: string;
+  tab: string;
+  context: string;
   mode: string;
   reason: string;
   frameMsAvg: number;
@@ -442,7 +608,16 @@ interface AdaptiveBudgetEvent {
   prefetchTokens: number;
   backgroundTokens: number;
   gpuUploadTokens: number;
+  resourceUploadTokens: number;
   textTokens: number;
+  textContainerTokens: number;
+  glyphRasterizeTokens: number;
+  glyphUploadTokens: number;
+  paragraphLayoutTokens: number;
+  metadataLayoutTokens: number;
+  previewArtifactTokens: number;
+  textureUploadTokens: number;
+  cardDrawTokens: number;
   demoTokens: number;
   backlog: number;
   scroll: number;
@@ -472,7 +647,8 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
       const reason = field(e, 'reason');
       const planStatus = field(e, 'plan_status');
       const operation = field(e, 'operation');
-      const phase = field(e, 'phase');
+  const phase = field(e, 'phase');
+      const textClass = field(e, 'text_class');
       const remaining = numberField(e, 'remaining');
       const candidates = numberField(e, 'candidates');
       const hits = numberField(e, 'hits');
@@ -499,6 +675,7 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
         planStatus.length > 0 ? `plan_status=${planStatus}` : '',
         operation.length > 0 ? `operation=${operation}` : '',
         phase.length > 0 ? `phase=${phase}` : '',
+        textClass.length > 0 ? `text_class=${textClass}` : '',
         event === 'settings_text_prebuild' ? `remaining=${remaining}` : '',
         event === 'settings_text_usage' ? `candidates=${candidates}` : '',
         event === 'settings_text_usage' ? `hits=${hits}` : '',
@@ -526,6 +703,7 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
         planStatus,
         operation,
         phase,
+        textClass,
         remaining,
         candidates,
         hits,
@@ -548,6 +726,11 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
 
 export function adaptiveBudgetSummary(entries: PerfEntry[]): AdaptiveBudgetSummary {
   const events: AdaptiveBudgetEvent[] = entries.filter(isAdaptiveBudgetEvent).map(e => {
+    const frame = numberField(e, 'frame');
+    const operation = field(e, 'operation');
+    const page = field(e, 'page');
+    const tab = field(e, 'tab', 'none');
+    const context = field(e, 'context');
     const mode = field(e, 'mode');
     const reason = field(e, 'reason');
     const frameMsAvg = numberField(e, 'frame_ms_avg');
@@ -557,13 +740,27 @@ export function adaptiveBudgetSummary(entries: PerfEntry[]): AdaptiveBudgetSumma
     const prefetchTokens = numberField(e, 'prefetch_tokens');
     const backgroundTokens = numberField(e, 'background_tokens');
     const gpuUploadTokens = numberField(e, 'gpu_upload_tokens');
+    const resourceUploadTokens = numberField(e, 'resource_upload_tokens', gpuUploadTokens);
     const textTokens = numberField(e, 'text_tokens');
+    const textContainerTokens = numberField(e, 'text_container_tokens', textTokens);
+    const glyphRasterizeTokens = numberField(e, 'glyph_rasterize_tokens');
+    const glyphUploadTokens = numberField(e, 'glyph_upload_tokens');
+    const paragraphLayoutTokens = numberField(e, 'paragraph_layout_tokens');
+    const metadataLayoutTokens = numberField(e, 'metadata_layout_tokens');
+    const previewArtifactTokens = numberField(e, 'preview_artifact_tokens');
+    const textureUploadTokens = numberField(e, 'texture_upload_tokens', resourceUploadTokens);
+    const cardDrawTokens = numberField(e, 'card_draw_tokens');
     const demoTokens = numberField(e, 'demo_tokens');
     const backlog = numberField(e, 'backlog');
     const scroll = numberField(e, 'scroll');
     const jumpScroll = numberField(e, 'jump_scroll');
     const sample = summaryKv(
       ['event', 'settings_adaptive_budget'],
+      ['frame', String(frame)],
+      ['operation', operation],
+      ['page', page],
+      ['tab', tab],
+      ['context', context],
       ['mode', mode],
       ['reason', reason],
       ['frame_ms_avg', frameMsAvg.toFixed(3)],
@@ -573,13 +770,22 @@ export function adaptiveBudgetSummary(entries: PerfEntry[]): AdaptiveBudgetSumma
       ['prefetch_tokens', String(prefetchTokens)],
       ['background_tokens', String(backgroundTokens)],
       ['gpu_upload_tokens', String(gpuUploadTokens)],
+      ['resource_upload_tokens', String(resourceUploadTokens)],
       ['text_tokens', String(textTokens)],
+      ['text_container_tokens', String(textContainerTokens)],
+      ['glyph_rasterize_tokens', String(glyphRasterizeTokens)],
+      ['glyph_upload_tokens', String(glyphUploadTokens)],
+      ['paragraph_layout_tokens', String(paragraphLayoutTokens)],
+      ['metadata_layout_tokens', String(metadataLayoutTokens)],
+      ['preview_artifact_tokens', String(previewArtifactTokens)],
+      ['texture_upload_tokens', String(textureUploadTokens)],
+      ['card_draw_tokens', String(cardDrawTokens)],
       ['demo_tokens', String(demoTokens)],
       ['backlog', String(backlog)],
       ['scroll', String(scroll)],
       ['jump_scroll', String(jumpScroll)],
     );
-    return { timestamp: e.timestamp, mode, reason, frameMsAvg, frameMsP95, targetMs, visibleTokens, prefetchTokens, backgroundTokens, gpuUploadTokens, textTokens, demoTokens, backlog, scroll, jumpScroll, sample };
+    return { timestamp: e.timestamp, frame, operation, page, tab, context, mode, reason, frameMsAvg, frameMsP95, targetMs, visibleTokens, prefetchTokens, backgroundTokens, gpuUploadTokens, resourceUploadTokens, textTokens, textContainerTokens, glyphRasterizeTokens, glyphUploadTokens, paragraphLayoutTokens, metadataLayoutTokens, previewArtifactTokens, textureUploadTokens, cardDrawTokens, demoTokens, backlog, scroll, jumpScroll, sample };
   });
   return {
     available: events.length > 0,
@@ -589,7 +795,11 @@ export function adaptiveBudgetSummary(entries: PerfEntry[]): AdaptiveBudgetSumma
     maxPrefetchTokens: events.reduce((max, event) => Math.max(max, event.prefetchTokens), 0),
     maxBackgroundTokens: events.reduce((max, event) => Math.max(max, event.backgroundTokens), 0),
     maxGpuUploadTokens: events.reduce((max, event) => Math.max(max, event.gpuUploadTokens), 0),
+    maxResourceUploadTokens: events.reduce((max, event) => Math.max(max, event.resourceUploadTokens), 0),
     maxTextTokens: events.reduce((max, event) => Math.max(max, event.textTokens), 0),
+    maxTextContainerTokens: events.reduce((max, event) => Math.max(max, event.textContainerTokens), 0),
+    maxGlyphUploadTokens: events.reduce((max, event) => Math.max(max, event.glyphUploadTokens), 0),
+    maxParagraphLayoutTokens: events.reduce((max, event) => Math.max(max, event.paragraphLayoutTokens), 0),
     maxDemoTokens: events.reduce((max, event) => Math.max(max, event.demoTokens), 0),
     samples: events.sort((a, b) => b.frameMsP95 - a.frameMsP95 || b.frameMsAvg - a.frameMsAvg).map(event => event.sample).slice(0, 8),
   };
@@ -598,6 +808,29 @@ export function adaptiveBudgetSummary(entries: PerfEntry[]): AdaptiveBudgetSumma
 function isTargetStableTextEvent(event: StableTextEvent): boolean {
   const scope = event.scope.toLowerCase();
   return scope.includes('target');
+}
+
+function isStaticStableTextClass(textClass: string): boolean {
+  if(textClass.length === 0) {
+    return true;
+  }
+  const normalized = textClass.toLowerCase();
+  return normalized === 'static' ||
+    normalized === 'static_stable' ||
+    normalized === 'stable' ||
+    normalized === 'stable_static';
+}
+
+function isDynamicSnapshotTextClass(textClass: string): boolean {
+  if(textClass.length === 0) {
+    return false;
+  }
+  const normalized = textClass.toLowerCase();
+  return normalized === 'dynamic' ||
+    normalized === 'dynamic_snapshot' ||
+    normalized === 'snapshot' ||
+    normalized === 'paragraph' ||
+    normalized === 'card_metadata';
 }
 
 function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): StableTextCoverageSummary {
@@ -621,6 +854,10 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
   const relevantUsage = events.filter(event =>
     event.event === 'settings_text_usage' &&
     isTargetStableTextEvent(event));
+  const staticRelevantMisses = relevantMisses.filter(event => isStaticStableTextClass(event.textClass));
+  const staticRelevantStales = relevantStales.filter(event => isStaticStableTextClass(event.textClass));
+  const staticRelevantUsage = relevantUsage.filter(event => isStaticStableTextClass(event.textClass));
+  const dynamicRelevantUsage = relevantUsage.filter(event => isDynamicSnapshotTextClass(event.textClass));
   const targetPrebuilds = events
     .filter(event =>
       event.event === 'settings_text_prebuild' &&
@@ -659,21 +896,37 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
   const planCollectionPhase = collectionBeforeTarget?.phase ?? '';
   const planCollectionScope = collectionBeforeTarget?.scope ?? '';
   const planCollectionOperation = collectionBeforeTarget?.operation ?? '';
-  const candidateTotal = relevantUsage.reduce((sum, event) => sum + event.candidates, 0);
-  const hitCount = relevantUsage.reduce((sum, event) => sum + event.hits, 0);
-  const reuseCount = relevantUsage.reduce((sum, event) => sum + event.reused, 0);
-  const usageMissCount = relevantUsage.reduce((sum, event) => sum + event.miss, 0);
-  const usageStaleCount = relevantUsage.reduce((sum, event) => sum + event.stale, 0);
-  const textNew = relevantUsage.reduce((sum, event) => sum + event.textNew, 0);
-  const textReused = relevantUsage.reduce((sum, event) => sum + event.textReused, 0);
-  const planCandidateCount = relevantUsage.reduce((sum, event) => sum + event.planned, 0);
-  const unplannedVisibleCount = relevantUsage.reduce((sum, event) => sum + event.unplanned, 0);
+  const candidateTotal = staticRelevantUsage.reduce((sum, event) => sum + event.candidates, 0);
+  const hitCount = staticRelevantUsage.reduce((sum, event) => sum + event.hits, 0);
+  const reuseCount = staticRelevantUsage.reduce((sum, event) => sum + event.reused, 0);
+  const usageMissCount = staticRelevantUsage.reduce((sum, event) => sum + event.miss, 0);
+  const usageStaleCount = staticRelevantUsage.reduce((sum, event) => sum + event.stale, 0);
+  const textNew = staticRelevantUsage.reduce((sum, event) => sum + event.textNew, 0);
+  const textReused = staticRelevantUsage.reduce((sum, event) => sum + event.textReused, 0);
+  const planCandidateCount = staticRelevantUsage.reduce((sum, event) => sum + event.planned, 0);
+  const unplannedVisibleCount = staticRelevantUsage.reduce((sum, event) => sum + event.unplanned, 0);
   const visibleCandidateCount = candidateTotal;
-  const hasPlanCounters = relevantUsage.some(event => event.planned > 0 || event.unplanned > 0);
+  const hasPlanCounters = staticRelevantUsage.some(event => event.planned > 0 || event.unplanned > 0);
   const planCoverageAvailable = targetFps.length === 0 || hasPlanCounters;
-  const keyMismatchCount = [...relevantMisses, ...relevantStales].filter(event => event.planStatus === 'key_mismatch').length;
-  const missCount = Math.max(relevantMisses.length, usageMissCount);
-  const staleCount = Math.max(relevantStales.length, usageStaleCount);
+  const keyMismatchCount = [...staticRelevantMisses, ...staticRelevantStales].filter(event => event.planStatus === 'key_mismatch').length;
+  const missCount = Math.max(staticRelevantMisses.length, usageMissCount);
+  const staleCount = Math.max(staticRelevantStales.length, usageStaleCount);
+  const staticCandidateTotal = candidateTotal;
+  const staticHitCount = hitCount;
+  const staticReuseCount = reuseCount;
+  const staticMissCount = missCount;
+  const staticStaleCount = staleCount;
+  const staticHitRate = candidateTotal > 0 ? (hitCount / candidateTotal) * 100 : 0;
+  const staticReuseRate = candidateTotal > 0 ? (reuseCount / candidateTotal) * 100 : 0;
+  const staticKeyMismatchCount = keyMismatchCount;
+  const staticUnplannedVisibleCount = unplannedVisibleCount;
+  const dynamicCandidateTotal = dynamicRelevantUsage.reduce((sum, event) => sum + event.candidates, 0);
+  const dynamicHitCount = dynamicRelevantUsage.reduce((sum, event) => sum + event.hits, 0);
+  const dynamicReuseCount = dynamicRelevantUsage.reduce((sum, event) => sum + event.reused, 0);
+  const dynamicMissCount = dynamicRelevantUsage.reduce((sum, event) => sum + event.miss, 0);
+  const dynamicStaleCount = dynamicRelevantUsage.reduce((sum, event) => sum + event.stale, 0);
+  const dynamicHitRate = dynamicCandidateTotal > 0 ? (dynamicHitCount / dynamicCandidateTotal) * 100 : 0;
+  const dynamicReuseRate = dynamicCandidateTotal > 0 ? (dynamicReuseCount / dynamicCandidateTotal) * 100 : 0;
   const utilizationAvailable = targetFps.length === 0 || relevantUsage.length > 0;
   const consistencyWarnings: string[] = [];
   if(targetFps.length > 0 && relevantUsage.length === 0) {
@@ -746,10 +999,26 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
     reuseCount,
     missCount,
     staleCount,
-    hitRate: candidateTotal > 0 ? (hitCount / candidateTotal) * 100 : 0,
-    reuseRate: candidateTotal > 0 ? (reuseCount / candidateTotal) * 100 : 0,
+    hitRate: staticHitRate,
+    reuseRate: staticReuseRate,
     textNew,
     textReused,
+    staticCandidateTotal,
+    staticHitCount,
+    staticReuseCount,
+    staticMissCount,
+    staticStaleCount,
+    staticHitRate,
+    staticReuseRate,
+    staticKeyMismatchCount,
+    staticUnplannedVisibleCount,
+    dynamicCandidateTotal,
+    dynamicHitCount,
+    dynamicReuseCount,
+    dynamicMissCount,
+    dynamicStaleCount,
+    dynamicHitRate,
+    dynamicReuseRate,
     prebuildRemainingBeforeTarget,
     planCollectionAvailable,
     planCollectionComplete,
@@ -913,15 +1182,38 @@ export function targetSettingsSnapshot(entries: PerfEntry[]): TargetSettingsSnap
 }
 
 export function assetsPreviewAdmissionSummary(entries: PerfEntry[]): AssetsPreviewAdmissionSummary {
+  const substageByFrame = new Map<string, { layoutTextMs: number; previewDrawMs: number; thumbSchedulingMs: number }>();
+  for (const entry of entries) {
+    if (entry.system !== 'perf/assets') continue;
+    const stage = field(entry, 'stage');
+    if (
+      stage !== 'assets_preview_draw_workshop_cards_layout_text' &&
+      stage !== 'assets_preview_draw_workshop_cards_preview_draw' &&
+      stage !== 'assets_preview_draw_workshop_cards_thumb_scheduling'
+    ) {
+      continue;
+    }
+    const key = `${field(entry, 'frame')}|${field(entry, 'tab')}`;
+    const current = substageByFrame.get(key) ?? { layoutTextMs: 0, previewDrawMs: 0, thumbSchedulingMs: 0 };
+    const durationMs = entryDurationMs(entry) ?? 0;
+    if (stage === 'assets_preview_draw_workshop_cards_layout_text') current.layoutTextMs = Math.max(current.layoutTextMs, durationMs);
+    if (stage === 'assets_preview_draw_workshop_cards_preview_draw') current.previewDrawMs = Math.max(current.previewDrawMs, durationMs);
+    if (stage === 'assets_preview_draw_workshop_cards_thumb_scheduling') current.thumbSchedulingMs = Math.max(current.thumbSchedulingMs, durationMs);
+    substageByFrame.set(key, current);
+  }
   const events = entries
     .filter(entry => entry.system === 'perf/assets' && field(entry, 'stage') === 'assets_preview_draw_workshop_cards')
     .map(entry => {
+      const substage = substageByFrame.get(`${field(entry, 'frame')}|${field(entry, 'tab')}`);
       const visibleFirst = numberField(entry, 'visible_first');
       const rendered = numberField(entry, 'rendered');
       const thumbStarts = numberField(entry, 'thumb_starts');
       const visibleStarts = numberField(entry, 'visible_starts');
       const prefetchStarts = numberField(entry, 'prefetch_starts');
       const backgroundStarts = numberField(entry, 'background_starts');
+      const layoutTextMs = hasField(entry, 'layout_text_ms') ? numberField(entry, 'layout_text_ms') : (substage?.layoutTextMs ?? 0);
+      const previewDrawMs = hasField(entry, 'preview_draw_ms') ? numberField(entry, 'preview_draw_ms') : (substage?.previewDrawMs ?? 0);
+      const thumbSchedulingMs = hasField(entry, 'thumb_scheduling_ms') ? numberField(entry, 'thumb_scheduling_ms') : (substage?.thumbSchedulingMs ?? 0);
       const durationMs = entryDurationMs(entry) ?? 0;
       const sample = [
         'stage=assets_preview_draw_workshop_cards',
@@ -933,15 +1225,21 @@ export function assetsPreviewAdmissionSummary(entries: PerfEntry[]): AssetsPrevi
         `visible_starts=${visibleStarts}`,
         `prefetch_starts=${prefetchStarts}`,
         `background_starts=${backgroundStarts}`,
+        `layout_text_ms=${layoutTextMs.toFixed(3)}`,
+        `preview_draw_ms=${previewDrawMs.toFixed(3)}`,
+        `thumb_scheduling_ms=${thumbSchedulingMs.toFixed(3)}`,
         `duration_ms=${durationMs.toFixed(3)}`,
       ].join(' ');
-      return { visibleFirst, rendered, thumbStarts, visibleStarts, prefetchStarts, backgroundStarts, durationMs, sample };
+      return { visibleFirst, rendered, thumbStarts, visibleStarts, prefetchStarts, backgroundStarts, layoutTextMs, previewDrawMs, thumbSchedulingMs, durationMs, sample };
     });
   return {
     available: events.length > 0,
     visibleFirstAvailable: events.some(event => event.visibleFirst === 1),
     eventCount: events.length,
     maxDurationMs: events.reduce((max, event) => Math.max(max, event.durationMs), 0),
+    maxLayoutTextMs: events.reduce((max, event) => Math.max(max, event.layoutTextMs), 0),
+    maxPreviewDrawMs: events.reduce((max, event) => Math.max(max, event.previewDrawMs), 0),
+    maxThumbSchedulingMs: events.reduce((max, event) => Math.max(max, event.thumbSchedulingMs), 0),
     maxRendered: events.reduce((max, event) => Math.max(max, event.rendered), 0),
     maxThumbStarts: events.reduce((max, event) => Math.max(max, event.thumbStarts), 0),
     visibleStarts: events.reduce((sum, event) => sum + event.visibleStarts, 0),
@@ -951,6 +1249,382 @@ export function assetsPreviewAdmissionSummary(entries: PerfEntry[]): AssetsPrevi
       .sort((a, b) => b.durationMs - a.durationMs)
       .map(event => event.sample)
       .slice(0, 8),
+  };
+}
+
+export function previewBudgetSummary(entries: PerfEntry[]): PreviewBudgetSummary {
+  const events = entries
+    .filter(entry => entry.system === 'perf/assets' && field(entry, 'stage') === 'assets_preview_draw_workshop_cards')
+    .map(entry => {
+      const previewJobsStarted = numberField(entry, 'preview_jobs_started');
+      const previewJobsDone = numberField(entry, 'preview_jobs_done');
+      const previewUploads = numberField(entry, 'preview_uploads');
+      const previewAdmissions = numberField(entry, 'preview_admissions');
+      const previewArtifactMs = numberField(entry, 'preview_artifact_ms');
+      const metadataHydrateMs = numberField(entry, 'metadata_hydrate_ms');
+      const placeholderCount = numberField(entry, 'placeholder_count');
+      const readyTextureCount = numberField(entry, 'ready_texture_count');
+      const visibleReadyRatio = hasField(entry, 'visible_ready_ratio') ? numberField(entry, 'visible_ready_ratio') : 1;
+      const sample = summaryKv(
+        ['tab', field(entry, 'tab')],
+        ['frame', field(entry, 'frame')],
+        ['preview_jobs_started', String(previewJobsStarted)],
+        ['preview_jobs_done', String(previewJobsDone)],
+        ['preview_uploads', String(previewUploads)],
+        ['preview_admissions', String(previewAdmissions)],
+        ['preview_artifact_ms', previewArtifactMs.toFixed(3)],
+        ['metadata_hydrate_ms', metadataHydrateMs.toFixed(3)],
+        ['placeholder_count', String(placeholderCount)],
+        ['ready_texture_count', String(readyTextureCount)],
+        ['visible_ready_ratio', visibleReadyRatio.toFixed(3)],
+      );
+      return { previewJobsStarted, previewJobsDone, previewUploads, previewAdmissions, previewArtifactMs, metadataHydrateMs, placeholderCount, readyTextureCount, visibleReadyRatio, sample };
+    });
+
+  return {
+    available: events.length > 0,
+    eventCount: events.length,
+    previewJobsStarted: events.reduce((sum, event) => sum + event.previewJobsStarted, 0),
+    previewJobsDone: events.reduce((sum, event) => sum + event.previewJobsDone, 0),
+    previewUploads: events.reduce((sum, event) => sum + event.previewUploads, 0),
+    previewAdmissions: events.reduce((sum, event) => sum + event.previewAdmissions, 0),
+    maxPreviewArtifactMs: events.reduce((max, event) => Math.max(max, event.previewArtifactMs), 0),
+    maxMetadataHydrateMs: events.reduce((max, event) => Math.max(max, event.metadataHydrateMs), 0),
+    maxPlaceholderCount: events.reduce((max, event) => Math.max(max, event.placeholderCount), 0),
+    maxReadyTextureCount: events.reduce((max, event) => Math.max(max, event.readyTextureCount), 0),
+    minVisibleReadyRatio: events.length === 0 ? 1 : events.reduce((min, event) => Math.min(min, event.visibleReadyRatio), 1),
+    samples: events
+      .sort((a, b) => b.previewArtifactMs + b.metadataHydrateMs - (a.previewArtifactMs + a.metadataHydrateMs))
+      .map(event => event.sample)
+      .slice(0, 8),
+  };
+}
+
+export function settingsUiBudgetSummary(entries: PerfEntry[]): SettingsUiBudgetSummary {
+  const events = entries
+    .filter(entry => entry.system === 'perf/ui_budget' && field(entry, 'event') === 'settings_ui_budget')
+    .map(entry => {
+      const layoutMs = numberField(entry, 'layout_ms');
+      const textMs = numberField(entry, 'text_ms');
+      const textNew = numberField(entry, 'text_new');
+      const textReused = numberField(entry, 'text_reused');
+      const drawCalls = numberField(entry, 'draw_calls');
+      const vertices = numberField(entry, 'vertices');
+      const indices = numberField(entry, 'indices');
+      const heapAllocs = numberField(entry, 'heap_allocs');
+      const visibleWidgets = numberField(entry, 'visible_widgets');
+      const sample = summaryKv(
+        ['page', field(entry, 'page')],
+        ['operation', field(entry, 'operation')],
+        ['frame', field(entry, 'frame')],
+        ['layout_ms', layoutMs.toFixed(3)],
+        ['text_ms', textMs.toFixed(3)],
+        ['text_new', String(textNew)],
+        ['text_reused', String(textReused)],
+        ['draw_calls', String(drawCalls)],
+        ['vertices', String(vertices)],
+        ['indices', String(indices)],
+        ['heap_allocs', String(heapAllocs)],
+        ['visible_widgets', String(visibleWidgets)],
+      );
+      return { layoutMs, textMs, textNew, textReused, drawCalls, vertices, indices, heapAllocs, visibleWidgets, sample };
+    });
+  return {
+    available: events.length > 0,
+    eventCount: events.length,
+    maxLayoutMs: events.reduce((max, event) => Math.max(max, event.layoutMs), 0),
+    maxTextMs: events.reduce((max, event) => Math.max(max, event.textMs), 0),
+    maxTextNew: events.reduce((max, event) => Math.max(max, event.textNew), 0),
+    maxTextReused: events.reduce((max, event) => Math.max(max, event.textReused), 0),
+    maxDrawCalls: events.reduce((max, event) => Math.max(max, event.drawCalls), 0),
+    maxVertices: events.reduce((max, event) => Math.max(max, event.vertices), 0),
+    maxIndices: events.reduce((max, event) => Math.max(max, event.indices), 0),
+    maxHeapAllocs: events.reduce((max, event) => Math.max(max, event.heapAllocs), 0),
+    maxVisibleWidgets: events.reduce((max, event) => Math.max(max, event.visibleWidgets), 0),
+    samples: events
+      .sort((a, b) => b.layoutMs + b.textMs - (a.layoutMs + a.textMs))
+      .map(event => event.sample)
+      .slice(0, 8),
+  };
+}
+
+export function textRuntimeBudgetSummary(entries: PerfEntry[]): TextRuntimeBudgetSummary {
+  const events = entries
+    .filter(entry => entry.system === 'perf/text' && field(entry, 'event') === 'text_runtime_budget')
+    .map(entry => {
+      const glyphNew = numberField(entry, 'glyph_new');
+      const glyphUploads = numberField(entry, 'glyph_uploads');
+      const glyphRasterizeMs = numberField(entry, 'glyph_rasterize_ms');
+      const glyphUploadMs = numberField(entry, 'glyph_upload_ms');
+      const textContainerNew = numberField(entry, 'text_container_new');
+      const textContainerUploads = numberField(entry, 'text_container_uploads');
+      const textContainerCreateMs = numberField(entry, 'text_container_create_ms');
+      const textContainerUploadMs = numberField(entry, 'text_container_upload_ms');
+      const paragraphLayoutMs = numberField(entry, 'paragraph_layout_ms');
+      const paragraphBudgetBlocked = numberField(entry, 'paragraph_budget_blocked');
+      const paragraphCacheHit = numberField(entry, 'paragraph_cache_hit');
+      const paragraphCacheMiss = numberField(entry, 'paragraph_cache_miss');
+      const staticStableHitCount = numberField(entry, 'static_stable_hit', numberField(entry, 'static_stable_hits'));
+      const staticStableMissCount = numberField(entry, 'static_stable_miss', numberField(entry, 'static_stable_misses'));
+      const snapshotCacheHit = numberField(entry, 'snapshot_cache_hit', numberField(entry, 'snapshot_cache_hits'));
+      const snapshotCacheMiss = numberField(entry, 'snapshot_cache_miss', numberField(entry, 'snapshot_cache_misses'));
+      const staticStableHitRate = staticStableHitCount + staticStableMissCount > 0 ? (staticStableHitCount / (staticStableHitCount + staticStableMissCount)) * 100 : 0;
+      const snapshotCacheHitRate = snapshotCacheHit + snapshotCacheMiss > 0 ? (snapshotCacheHit / (snapshotCacheHit + snapshotCacheMiss)) * 100 : 0;
+      const paragraphCacheHitRate = paragraphCacheHit + paragraphCacheMiss > 0 ? (paragraphCacheHit / (paragraphCacheHit + paragraphCacheMiss)) * 100 : 0;
+      const sample = summaryKv(
+        ['page', field(entry, 'page')],
+        ['operation', field(entry, 'operation')],
+        ['frame', field(entry, 'frame')],
+        ['glyph_new', String(glyphNew)],
+        ['glyph_uploads', String(glyphUploads)],
+        ['glyph_rasterize_ms', glyphRasterizeMs.toFixed(3)],
+        ['glyph_upload_ms', glyphUploadMs.toFixed(3)],
+        ['text_container_new', String(textContainerNew)],
+        ['text_container_uploads', String(textContainerUploads)],
+        ['text_container_create_ms', textContainerCreateMs.toFixed(3)],
+        ['text_container_upload_ms', textContainerUploadMs.toFixed(3)],
+        ['paragraph_layout_ms', paragraphLayoutMs.toFixed(3)],
+        ['paragraph_budget_blocked', String(paragraphBudgetBlocked)],
+        ['paragraph_cache_hit', String(paragraphCacheHit)],
+        ['paragraph_cache_miss', String(paragraphCacheMiss)],
+        ['static_stable_hit', String(staticStableHitCount)],
+        ['static_stable_miss', String(staticStableMissCount)],
+        ['snapshot_cache_hit', String(snapshotCacheHit)],
+        ['snapshot_cache_miss', String(snapshotCacheMiss)],
+      );
+      return { glyphNew, glyphUploads, glyphRasterizeMs, glyphUploadMs, textContainerNew, textContainerUploads, textContainerCreateMs, textContainerUploadMs, paragraphLayoutMs, paragraphBudgetBlocked, paragraphCacheHit, paragraphCacheMiss, staticStableHitCount, staticStableMissCount, staticStableHitRate, snapshotCacheHit, snapshotCacheMiss, snapshotCacheHitRate, paragraphCacheHitRate, sample };
+    });
+  return {
+    available: events.length > 0,
+    eventCount: events.length,
+    glyphNew: events.reduce((sum, event) => sum + event.glyphNew, 0),
+    glyphUploads: events.reduce((sum, event) => sum + event.glyphUploads, 0),
+    maxGlyphRasterizeMs: events.reduce((max, event) => Math.max(max, event.glyphRasterizeMs), 0),
+    maxGlyphUploadMs: events.reduce((max, event) => Math.max(max, event.glyphUploadMs), 0),
+    textContainerNew: events.reduce((sum, event) => sum + event.textContainerNew, 0),
+    textContainerUploads: events.reduce((sum, event) => sum + event.textContainerUploads, 0),
+    maxTextContainerCreateMs: events.reduce((max, event) => Math.max(max, event.textContainerCreateMs), 0),
+    maxTextContainerUploadMs: events.reduce((max, event) => Math.max(max, event.textContainerUploadMs), 0),
+    maxParagraphLayoutMs: events.reduce((max, event) => Math.max(max, event.paragraphLayoutMs), 0),
+    paragraphBudgetBlocked: events.reduce((sum, event) => sum + event.paragraphBudgetBlocked, 0),
+    paragraphCacheHit: events.reduce((sum, event) => sum + event.paragraphCacheHit, 0),
+    paragraphCacheMiss: events.reduce((sum, event) => sum + event.paragraphCacheMiss, 0),
+    staticStableHitCount: events.reduce((sum, event) => sum + event.staticStableHitCount, 0),
+    staticStableMissCount: events.reduce((sum, event) => sum + event.staticStableMissCount, 0),
+    staticStableHitRate: events.reduce((max, event) => Math.max(max, event.staticStableHitRate), 0),
+    snapshotCacheHit: events.reduce((sum, event) => sum + event.snapshotCacheHit, 0),
+    snapshotCacheMiss: events.reduce((sum, event) => sum + event.snapshotCacheMiss, 0),
+    snapshotCacheHitRate: events.reduce((max, event) => Math.max(max, event.snapshotCacheHitRate), 0),
+    paragraphCacheHitRate: events.reduce((max, event) => Math.max(max, event.paragraphCacheHitRate), 0),
+    samples: events
+      .sort((a, b) => b.glyphRasterizeMs + b.glyphUploadMs + b.textContainerCreateMs + b.textContainerUploadMs + b.paragraphLayoutMs - (a.glyphRasterizeMs + a.glyphUploadMs + a.textContainerCreateMs + a.textContainerUploadMs + a.paragraphLayoutMs))
+      .map(event => event.sample)
+      .slice(0, 8),
+  };
+}
+
+function budgetCorrelationKey(operation: string, page: string, tab: string, context: string): string {
+  return [operation, page, tab || 'none', context].join('\u0001').toLowerCase();
+}
+
+function entryBudgetCorrelationKey(entry: PerfEntry): string {
+  return budgetCorrelationKey(
+    field(entry, 'operation'),
+    field(entry, 'page'),
+    field(entry, 'tab', 'none'),
+    field(entry, 'context'),
+  );
+}
+
+function entryFrame(entry: PerfEntry): number {
+  return numberField(entry, 'frame');
+}
+
+function entryInBudgetWindow(entry: PerfEntry, window: BudgetCorrelationWindow): boolean {
+  const Frame = entryFrame(entry);
+  if(window.windowStartFrame > 0 && window.windowEndFrame >= window.windowStartFrame && Frame > 0) {
+    return Frame >= window.windowStartFrame && Frame <= window.windowEndFrame;
+  }
+  return false;
+}
+
+function rankedBudgetCulprits(values: {
+  previewUploads: number;
+  maxPreviewArtifactMs: number;
+  maxPreviewDrawMs: number;
+  maxMetadataLayoutMs: number;
+  maxUiLayoutMs: number;
+  maxCardDrawMs: number;
+  glyphUploads: number;
+  maxGlyphRasterizeMs: number;
+  maxGlyphUploadMs: number;
+  textContainerNew: number;
+  maxTextContainerCreateMs: number;
+  maxParagraphLayoutMs: number;
+  paragraphBudgetBlocked: number;
+  resourceUploadTokens: number;
+  maxTextureUploadMs: number;
+  maxTelemetryOverheadMs: number;
+  maxTelemetryFlushMs: number;
+}): { kind: string; score: number; details: string }[] {
+  return [
+    { kind: 'text_container_create', score: values.maxTextContainerCreateMs + values.textContainerNew * 0.25, details: summaryKv(['container_create_ms', values.maxTextContainerCreateMs.toFixed(3)], ['container_new', String(values.textContainerNew)]) },
+    { kind: 'glyph_rasterize', score: values.maxGlyphRasterizeMs, details: summaryKv(['glyph_rasterize_ms', values.maxGlyphRasterizeMs.toFixed(3)]) },
+    { kind: 'glyph_upload', score: values.maxGlyphUploadMs + values.glyphUploads * 0.1, details: summaryKv(['glyph_upload_ms', values.maxGlyphUploadMs.toFixed(3)], ['glyph_uploads', String(values.glyphUploads)]) },
+    { kind: 'paragraph_layout', score: values.maxParagraphLayoutMs + values.paragraphBudgetBlocked * 0.5, details: summaryKv(['paragraph_layout_ms', values.maxParagraphLayoutMs.toFixed(3)], ['paragraph_blocked', String(values.paragraphBudgetBlocked)]) },
+    { kind: 'metadata_layout', score: values.maxMetadataLayoutMs, details: summaryKv(['metadata_layout_ms', values.maxMetadataLayoutMs.toFixed(3)]) },
+    { kind: 'preview_artifact', score: values.maxPreviewArtifactMs, details: summaryKv(['preview_artifact_ms', values.maxPreviewArtifactMs.toFixed(3)]) },
+    { kind: 'preview_draw', score: values.maxPreviewDrawMs + values.previewUploads * 0.1, details: summaryKv(['preview_draw_ms', values.maxPreviewDrawMs.toFixed(3)], ['preview_uploads', String(values.previewUploads)]) },
+    { kind: 'texture_upload', score: values.maxTextureUploadMs + values.resourceUploadTokens * 0.25 + values.previewUploads * 0.5, details: summaryKv(['texture_upload_ms', values.maxTextureUploadMs.toFixed(3)], ['resource_upload_tokens', String(values.resourceUploadTokens)], ['preview_uploads', String(values.previewUploads)]) },
+    { kind: 'ui_layout_or_render_total', score: values.maxUiLayoutMs, details: summaryKv(['ui_layout_or_render_total_ms', values.maxUiLayoutMs.toFixed(3)]) },
+    { kind: 'card_draw', score: values.maxCardDrawMs, details: summaryKv(['card_draw_ms', values.maxCardDrawMs.toFixed(3)]) },
+    { kind: 'telemetry_overhead', score: values.maxTelemetryOverheadMs, details: summaryKv(['telemetry_ms', values.maxTelemetryOverheadMs.toFixed(3)]) },
+    { kind: 'telemetry_flush', score: values.maxTelemetryFlushMs, details: summaryKv(['telemetry_flush_ms', values.maxTelemetryFlushMs.toFixed(3)]) },
+  ].sort((a, b) => b.score - a.score);
+}
+
+function dominantBudgetAttribution(values: Parameters<typeof rankedBudgetCulprits>[0]): string {
+  const Culprits = rankedBudgetCulprits(values);
+  if(Culprits.length === 0 || Culprits[0].score <= 0) {
+    return 'none';
+  }
+  return Culprits[0].kind;
+}
+
+export function budgetCorrelationSummary(entries: PerfEntry[]): BudgetCorrelationSummary {
+  const FpsWindows = fpsSummaries(entries);
+  const Windows: BudgetCorrelationWindow[] = FpsWindows.map(Fps => ({
+      operation: Fps.operation,
+      context: Fps.context,
+      page: Fps.page,
+      tab: Fps.tab,
+      fpsOnePctLow: Fps.fpsOnePctLow,
+      fpsOnePctLowAvailable: Fps.fpsOnePctLowAvailable,
+      fpsOnePctLowSource: Fps.fpsOnePctLowSource,
+      windowStartFrame: Fps.windowStartFrame,
+      windowEndFrame: Fps.windowEndFrame,
+      frameMsP99: Fps.frameMsP99,
+      resourceUploadTokens: 0,
+      maxTextureUploadMs: 0,
+      previewUploads: 0,
+      maxPreviewArtifactMs: 0,
+      maxPreviewDrawMs: 0,
+      maxMetadataLayoutMs: 0,
+      maxUiLayoutMs: 0,
+      maxCardDrawMs: 0,
+      maxTelemetryOverheadMs: 0,
+      maxTelemetryFlushMs: 0,
+      glyphUploads: 0,
+      maxGlyphRasterizeMs: 0,
+      maxGlyphUploadMs: 0,
+      textContainerNew: 0,
+      maxTextContainerCreateMs: 0,
+      maxParagraphLayoutMs: 0,
+      paragraphBudgetBlocked: 0,
+      dominantAttribution: 'none',
+      culpritRank: [],
+      sample: '',
+    }));
+
+  for(const Entry of entries) {
+    const MatchedWindows = Windows.filter(Window => entryInBudgetWindow(Entry, Window));
+    for(const Window of MatchedWindows) {
+    if(isAdaptiveBudgetEvent(Entry)) {
+      Window.resourceUploadTokens = Math.max(Window.resourceUploadTokens, numberField(Entry, 'resource_upload_tokens', numberField(Entry, 'gpu_upload_tokens')));
+    }
+    if(Entry.system === 'perf/assets') {
+      Window.previewUploads += numberField(Entry, 'preview_uploads');
+      const Stage = field(Entry, 'stage');
+      if(Stage === 'assets_finalize_load_texture_raw_move' || Stage === 'assets_workshop_thumb_upload_batch' || Stage.includes('upload')) {
+        Window.maxTextureUploadMs = Math.max(Window.maxTextureUploadMs, numberField(Entry, 'texture_upload_ms', entryDurationMs(Entry) ?? Entry.durationMs));
+      }
+      Window.maxPreviewArtifactMs = Math.max(Window.maxPreviewArtifactMs, numberField(Entry, 'preview_artifact_ms'));
+      Window.maxPreviewDrawMs = Math.max(Window.maxPreviewDrawMs, numberField(Entry, 'preview_draw_ms'));
+      Window.maxMetadataLayoutMs = Math.max(Window.maxMetadataLayoutMs, numberField(Entry, 'metadata_hydrate_ms', numberField(Entry, 'metadata_layout_ms', numberField(Entry, 'layout_text_ms'))));
+      if(field(Entry, 'stage') === 'assets_preview_draw_workshop_cards') {
+        Window.maxCardDrawMs = Math.max(Window.maxCardDrawMs, entryDurationMs(Entry) ?? Entry.durationMs);
+      }
+    }
+    if(Entry.system === 'perf/settings-ui' || field(Entry, 'event') === 'settings_ui_budget') {
+      Window.maxUiLayoutMs = Math.max(Window.maxUiLayoutMs, numberField(Entry, 'layout_ms'));
+      Window.maxTelemetryOverheadMs = Math.max(
+        Window.maxTelemetryOverheadMs,
+        numberField(Entry, 'telemetry_ms', numberField(Entry, 'telemetry_format_ms') + numberField(Entry, 'telemetry_write_ms')),
+      );
+    }
+    if(Entry.system === PERF_SYSTEM.MENU || Entry.system === PERF_SYSTEM.GAMECLIENT || Entry.system === 'perf/render' || Entry.system === 'perf/main_thread' || Entry.system === 'perf/qmclient') {
+      const Stage = field(Entry, 'stage');
+      if(Stage === 'frame_render' || Stage === 'loop_total' || Stage === 'client_update' || Stage === 'component_menus' || Stage === 'settings_page_content' || Stage === 'ingame_page_content' || Stage === 'menus_onrender_total' || Stage === 'menus_render_total') {
+        Window.maxUiLayoutMs = Math.max(Window.maxUiLayoutMs, entryDurationMs(Entry) ?? Entry.durationMs);
+      }
+      if(Stage === 'telemetry_flush' || Stage === 'telemetry_write' || Stage === 'telemetry_format') {
+        const DurationMs = entryDurationMs(Entry) ?? Entry.durationMs;
+        Window.maxTelemetryOverheadMs = Math.max(Window.maxTelemetryOverheadMs, DurationMs);
+        if(Stage === 'telemetry_flush') {
+          Window.maxTelemetryFlushMs = Math.max(Window.maxTelemetryFlushMs, DurationMs);
+        }
+      }
+    }
+    if(Entry.system === 'perf/text' && field(Entry, 'event') === 'text_runtime_budget') {
+      Window.glyphUploads += numberField(Entry, 'glyph_uploads');
+      Window.maxGlyphRasterizeMs = Math.max(Window.maxGlyphRasterizeMs, numberField(Entry, 'glyph_rasterize_ms'));
+      Window.maxGlyphUploadMs = Math.max(Window.maxGlyphUploadMs, numberField(Entry, 'glyph_upload_ms'));
+      Window.textContainerNew += numberField(Entry, 'text_container_new');
+      Window.maxTextContainerCreateMs = Math.max(Window.maxTextContainerCreateMs, numberField(Entry, 'text_container_create_ms'));
+      Window.maxParagraphLayoutMs = Math.max(Window.maxParagraphLayoutMs, numberField(Entry, 'paragraph_layout_ms'));
+      Window.paragraphBudgetBlocked += numberField(Entry, 'paragraph_budget_blocked');
+    }
+    }
+  }
+
+  const CorrelatedWindows = Windows.map(Window => {
+    const culpritRank = rankedBudgetCulprits(Window);
+    const dominantAttribution = dominantBudgetAttribution(Window);
+    return {
+      ...Window,
+      dominantAttribution,
+      culpritRank,
+      sample: summaryKv(
+        ['operation', Window.operation],
+        ['page', Window.page],
+        ['tab', Window.tab],
+        ['context', Window.context],
+        ['fps_1pct_low', Window.fpsOnePctLow.toFixed(1)],
+        ['fps_1pct_source', Window.fpsOnePctLowSource],
+        ['window_start_frame', String(Window.windowStartFrame)],
+        ['window_end_frame', String(Window.windowEndFrame)],
+        ['p99_ms', Window.frameMsP99.toFixed(3)],
+        ['resource_upload_tokens', String(Window.resourceUploadTokens)],
+        ['texture_upload_ms', Window.maxTextureUploadMs.toFixed(3)],
+        ['preview_uploads', String(Window.previewUploads)],
+        ['preview_artifact_ms', Window.maxPreviewArtifactMs.toFixed(3)],
+        ['preview_draw_ms', Window.maxPreviewDrawMs.toFixed(3)],
+        ['metadata_layout_ms', Window.maxMetadataLayoutMs.toFixed(3)],
+        ['ui_layout_ms', Window.maxUiLayoutMs.toFixed(3)],
+        ['card_draw_ms', Window.maxCardDrawMs.toFixed(3)],
+        ['telemetry_ms', Window.maxTelemetryOverheadMs.toFixed(3)],
+        ['telemetry_flush_ms', Window.maxTelemetryFlushMs.toFixed(3)],
+        ['glyph_uploads', String(Window.glyphUploads)],
+        ['glyph_rasterize_ms', Window.maxGlyphRasterizeMs.toFixed(3)],
+        ['glyph_upload_ms', Window.maxGlyphUploadMs.toFixed(3)],
+        ['text_container_new', String(Window.textContainerNew)],
+        ['text_container_create_ms', Window.maxTextContainerCreateMs.toFixed(3)],
+        ['paragraph_layout_ms', Window.maxParagraphLayoutMs.toFixed(3)],
+        ['paragraph_budget_blocked', String(Window.paragraphBudgetBlocked)],
+        ['dominantAttribution', dominantAttribution],
+        ['top_culprit', culpritRank[0]?.kind ?? 'none'],
+      ),
+    };
+  }).sort((a, b) => a.fpsOnePctLow - b.fpsOnePctLow);
+  const FailingWindows = CorrelatedWindows.filter(Window => !Window.fpsOnePctLowAvailable || Window.fpsOnePctLow < 240);
+  const UnattributedFailingWindows = FailingWindows.filter(Window => Window.culpritRank.length === 0 || Window.culpritRank[0].score <= 0);
+
+  return {
+    available: CorrelatedWindows.length > 0,
+    windowCount: CorrelatedWindows.length,
+    failingWindowCount: FailingWindows.length,
+    unattributedFailingWindowCount: UnattributedFailingWindows.length,
+    windows: CorrelatedWindows,
   };
 }
 

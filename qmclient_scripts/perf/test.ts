@@ -17,6 +17,9 @@ import {
   compareSessions,
   computeVerdict,
   fpsSummaries,
+  coldTabSwitchFpsSummaries,
+  previewBudgetSummary,
+  warmTabSwitchFpsSummaries,
   isSamplingBiased,
   isFrameTimeEntry,
   isListFrameEvent,
@@ -24,7 +27,11 @@ import {
   isUiRebuildEvent,
   isWorkDrainEvent,
   pagePerformanceAttribution,
+  adaptiveBudgetSummary,
+  budgetCorrelationSummary,
   settingsTextAnalysis,
+  settingsUiBudgetSummary,
+  textRuntimeBudgetSummary,
   snapshot,
 } from './lib/stats.ts';
 
@@ -146,7 +153,7 @@ function testQmUiRuntimeAttributionUsesDedicatedKind() {
 
 function testFpsSummaryTelemetryFeedsReportAndBundleSummary() {
   const entries = parseLog([
-    '2026-06-11 02:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":60.000,"fps_min":45.000,"fps_max":120.000,"frame_ms_avg":16.667,"frame_ms_p95":22.000,"frame_ms_p99":25.000,"frame_ms_max":25.000,"cap_limited":0}',
+    '2026-06-11 02:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":60.000,"fps_min":45.000,"fps_max":120.000,"fps_1pct_low":40.000,"fps_1pct_source":"real_sampled","window_start_frame":100,"window_end_frame":129,"frame_ms_avg":16.667,"frame_ms_p95":22.000,"frame_ms_p99":25.000,"frame_ms_max":25.000,"cap_limited":0}',
     '2026-06-11 02:00:00 I perf/menu: {"system":"perf/menu","frame":10,"stage":"settings_page_content","duration_ms":7.000,"page":"tee"}',
   ].join('\n'));
 
@@ -155,24 +162,425 @@ function testFpsSummaryTelemetryFeedsReportAndBundleSummary() {
   assert.equal(fps[0].operation, 'settings_open');
   assert.equal(fps[0].context, 'online');
   assert.equal(fps[0].fpsMin, 45);
+  assert.equal(fps[0].fpsOnePctLow, 40);
+  assert.equal(fps[0].fpsOnePctLowSource, 'real_sampled');
+  assert.equal(fps[0].windowStartFrame, 100);
+  assert.equal(fps[0].windowEndFrame, 129);
   assert.equal(fps[0].frameMsP99, 25);
 
   const summary = summarizeForBundle(entries, 'qm_perf_fps.log', { invalidLines: 0, totalLines: 2 });
   assert.equal(summary.fps.available, true);
   assert.equal(summary.fps.summaries[0].page, 'settings:tee');
+  assert.equal(summary.fps.summaries[0].fpsOnePctLow, 40);
   assert.equal(summary.quality.warnings.some(w => /ingame\/online/i.test(w)), false);
 
   const html = generateReport(entries, 'qm_perf_fps.log', null);
   assert.match(html, /FPS 摘要/);
   assert.match(html, /FPS Avg/);
   assert.match(html, /FPS Min/);
+  assert.match(html, /1% Low/);
+  assert.match(html, /real_sampled/);
   assert.match(html, /FPS Max/);
   assert.match(html, /Frame Avg/);
   assert.match(html, /Frame Max/);
   assert.match(html, /settings_open/);
   assert.match(html, /60\.0/);
   assert.match(html, /45\.0/);
+  assert.match(html, /40\.0/);
   assert.match(html, /120\.0/);
+}
+
+function testPerfAnalyzerReportsRealSampledOnePctLow() {
+  const entries = parseLog([
+    '2026-06-16 05:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_tab_switch","context":"cold","page":"settings:assets","tab":"none","sample_frames":100,"sample_seconds":0.200,"fps_avg":500.000,"fps_min":10.000,"fps_max":1000.000,"fps_1pct_low":10.000,"fps_1pct_source":"real_sampled","window_start_frame":200,"window_end_frame":299,"frame_ms_avg":2.000,"frame_ms_p95":1.000,"frame_ms_p99":1.000,"frame_ms_max":100.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const fps = fpsSummaries(entries);
+  assert.equal(fps.length, 1);
+  assert.equal(fps[0].fpsOnePctLow, 10);
+  assert.equal(fps[0].fpsOnePctLowAvailable, true);
+  assert.equal(fps[0].fpsOnePctLowSource, 'real_sampled');
+  assert.equal(fps[0].windowStartFrame, 200);
+  assert.equal(fps[0].windowEndFrame, 299);
+
+  const html = generateReport(entries, 'qm_perf_real_sampled_fps.log', null);
+  assert.match(html, /real_sampled/);
+  assert.doesNotMatch(html, /P99-derived/);
+}
+
+function testPreviewBudgetSummaryAndColdWarmTabSwitches() {
+  const entries = parseLog([
+    '2026-06-16 02:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_assets_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","sample_frames":60,"sample_seconds":0.250,"fps_avg":300.000,"fps_min":120.000,"fps_max":900.000,"fps_1pct_low":220.000,"frame_ms_avg":3.333,"frame_ms_p95":4.000,"frame_ms_p99":4.545,"frame_ms_max":8.000,"cap_limited":0}',
+    '2026-06-16 02:00:01 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_assets_tab_switch","context":"warm","page":"settings:assets","tab":"entity_bg","sample_frames":60,"sample_seconds":0.250,"fps_avg":600.000,"fps_min":400.000,"fps_max":1200.000,"fps_1pct_low":320.000,"frame_ms_avg":1.667,"frame_ms_p95":2.500,"frame_ms_p99":3.125,"frame_ms_max":4.000,"cap_limited":0}',
+    '2026-06-16 02:00:02 I perf/assets: stage=assets_preview_draw_workshop_cards duration_ms=3.000 frame=10 tab=8 preview_jobs_started=0 preview_jobs_done=0 preview_uploads=0 preview_admissions=2 preview_artifact_ms=0.750 metadata_hydrate_ms=0.250 placeholder_count=4 ready_texture_count=6 visible_ready_ratio=0.600',
+  ].join('\n'));
+
+  const previewBudget = previewBudgetSummary(entries);
+  assert.equal(previewBudget.available, true);
+  assert.equal(previewBudget.previewJobsStarted, 0);
+  assert.equal(previewBudget.previewJobsDone, 0);
+  assert.equal(previewBudget.previewUploads, 0);
+  assert.equal(previewBudget.previewAdmissions, 2);
+  assert.equal(previewBudget.maxPreviewArtifactMs, 0.75);
+  assert.equal(previewBudget.maxMetadataHydrateMs, 0.25);
+  assert.equal(previewBudget.maxPlaceholderCount, 4);
+  assert.equal(previewBudget.maxReadyTextureCount, 6);
+  assert.equal(previewBudget.minVisibleReadyRatio, 0.6);
+
+  assert.equal(coldTabSwitchFpsSummaries(entries).length, 1);
+  assert.equal(warmTabSwitchFpsSummaries(entries).length, 1);
+
+  const summary = summarizeForBundle(entries, 'qm_perf_preview_budget.log', { invalidLines: 0, totalLines: 3 });
+  assert.equal(summary.previewBudget.available, true);
+  assert.equal(summary.previewBudget.previewUploads, 0);
+  assert.equal(summary.previewBudget.previewAdmissions, 2);
+
+  const html = generateReport(entries, 'qm_perf_preview_budget.log', null);
+  assert.match(html, /Cold\/Warm Tab Switch/);
+  assert.match(html, /Preview Budget/);
+  assert.match(html, /1% Low Target/);
+  assert.match(html, /settings_assets_tab_switch/);
+  assert.match(html, /visible_ready_ratio/);
+}
+
+function testTextRuntimeBudgetSummary() {
+  const entries = parseLog([
+    '2026-06-16 02:00:03 I perf/text: {"system":"perf/text","event":"text_runtime_budget","glyph_new":3,"glyph_uploads":6,"glyph_upload_ms":1.250,"text_container_new":4,"text_container_uploads":4,"text_container_upload_ms":0.750}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_text_runtime.log', { invalidLines: 0, totalLines: 1 });
+  assert.equal(summary.textRuntimeBudget.available, true);
+  assert.equal(summary.textRuntimeBudget.glyphNew, 3);
+  assert.equal(summary.textRuntimeBudget.glyphUploads, 6);
+  assert.equal(summary.textRuntimeBudget.maxGlyphUploadMs, 1.25);
+  assert.equal(summary.textRuntimeBudget.textContainerNew, 4);
+  assert.equal(summary.textRuntimeBudget.textContainerUploads, 4);
+  assert.equal(summary.textRuntimeBudget.maxTextContainerUploadMs, 0.75);
+
+  const html = generateReport(entries, 'qm_perf_text_runtime.log', null);
+  assert.match(html, /Text Pipeline/);
+  assert.match(html, /Glyph New/);
+  assert.match(html, /Container Uploads/);
+}
+
+function testStableTextCoverageExcludesDynamicTextFromStaticHitRate() {
+  const entries = parseLog([
+    '2026-06-16 01:59:59 I perf/settings-text: event=settings_text_plan_collection scope=target_settings operation=settings_open phase=before_target units_done=8 units_total=8 remaining=0 budget=1 complete=1 dirty=0',
+    '2026-06-16 01:59:59 I perf/settings-text: event=settings_text_prebuild scope=target_settings operation=settings_open phase=before_target built=40 reused=12 remaining=0 budget=64',
+    '2026-06-16 02:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:tee tab=appearance subtab=assets operation=settings_open frame=40 text_class=static_stable candidates=10 hits=10 reused=10 miss=0 stale=0 text_new=0 text_reused=10 planned=10 unplanned=0',
+    '2026-06-16 02:00:01 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings:assets tab=1 subtab=preview operation=settings_open frame=41 text_class=dynamic_snapshot candidates=9 hits=2 reused=2 miss=7 stale=0 text_new=0 text_reused=2 planned=0 unplanned=0',
+    '2026-06-16 02:00:02 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"none","sample_frames":30,"sample_seconds":0.500,"fps_avg":500.000,"fps_min":210.000,"fps_max":1000.000,"fps_1pct_low":300.000,"fps_1pct_source":"real_sampled","window_start_frame":40,"window_end_frame":60,"frame_ms_avg":2.000,"frame_ms_p95":3.500,"frame_ms_p99":4.348,"frame_ms_max":8.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_text_classification.log', { invalidLines: 0, totalLines: 3 });
+  const coverage = summary.targetSettings.stableTextCoverage as typeof summary.targetSettings.stableTextCoverage & {
+    staticCandidateTotal: number;
+    staticHitCount: number;
+    staticHitRate: number;
+    staticReuseRate: number;
+    staticKeyMismatchCount: number;
+    staticUnplannedVisibleCount: number;
+    dynamicCandidateTotal: number;
+    dynamicHitCount: number;
+    dynamicHitRate: number;
+    dynamicReuseCount: number;
+    dynamicReuseRate: number;
+  };
+
+  assert.equal(coverage.acceptanceBlocked, false);
+  assert.equal(coverage.candidateTotal, 10);
+  assert.equal(coverage.hitCount, 10);
+  assert.equal(coverage.hitRate, 100);
+  assert.equal(coverage.staticCandidateTotal, 10);
+  assert.equal(coverage.staticHitCount, 10);
+  assert.equal(coverage.staticHitRate, 100);
+  assert.equal(coverage.staticReuseRate, 100);
+  assert.equal(coverage.staticKeyMismatchCount, 0);
+  assert.equal(coverage.staticUnplannedVisibleCount, 0);
+  assert.equal(coverage.dynamicCandidateTotal, 9);
+  assert.equal(coverage.dynamicHitCount, 2);
+  assert.equal(coverage.dynamicHitRate, 22.22222222222222);
+  assert.equal(coverage.dynamicReuseCount, 2);
+  assert.equal(coverage.dynamicReuseRate, 22.22222222222222);
+
+  const html = generateReport(entries, 'qm_perf_text_classification.log', null);
+  assert.match(html, /Static Stable Text Coverage/);
+  assert.match(html, /Dynamic Snapshot Text Coverage/);
+  assert.match(html, /Static Hit Rate/);
+  assert.match(html, /Snapshot Hit Rate/);
+}
+
+function testUnifiedFrameSchedulerAndTextPipelineBudgetSummary() {
+  const entries = parseLog([
+    '2026-06-16 02:00:04 I perf/settings-resource: event=settings_adaptive_budget mode=idle reason=progress frame_ms_avg=2.000 frame_ms_p95=3.000 target_ms=4.167 visible_tokens=4 prefetch_tokens=2 background_tokens=1 gpu_upload_tokens=2 resource_upload_tokens=2 text_tokens=3 text_container_tokens=3 glyph_upload_tokens=2 paragraph_layout_tokens=1 demo_tokens=1 backlog=7 scroll=0 jump_scroll=0',
+    '2026-06-16 02:00:05 I perf/text: {"system":"perf/text","event":"text_runtime_budget","glyph_new":3,"glyph_uploads":6,"glyph_rasterize_ms":0.500,"glyph_upload_ms":1.250,"text_container_new":4,"text_container_uploads":4,"text_container_create_ms":0.625,"text_container_upload_ms":0.750,"paragraph_layout_ms":1.500,"paragraph_cache_hit":2,"paragraph_cache_miss":1,"page":"game","operation":"ingame_server_info","frame":42}',
+    '2026-06-16 02:00:06 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"ingame_server_info","context":"online","page":"game","tab":"server_info","sample_frames":60,"sample_seconds":0.250,"fps_avg":500.000,"fps_min":210.000,"fps_max":1000.000,"fps_1pct_low":230.000,"frame_ms_avg":2.000,"frame_ms_p95":3.500,"frame_ms_p99":4.348,"frame_ms_max":8.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const adaptive = adaptiveBudgetSummary(entries);
+  assert.equal(adaptive.available, true);
+  assert.equal(adaptive.maxResourceUploadTokens, 2);
+  assert.equal(adaptive.maxTextContainerTokens, 3);
+  assert.equal(adaptive.maxGlyphUploadTokens, 2);
+  assert.equal(adaptive.maxParagraphLayoutTokens, 1);
+
+  const textRuntime = textRuntimeBudgetSummary(entries);
+  assert.equal(textRuntime.available, true);
+  assert.equal(textRuntime.maxGlyphRasterizeMs, 0.5);
+  assert.equal(textRuntime.maxTextContainerCreateMs, 0.625);
+  assert.equal(textRuntime.maxParagraphLayoutMs, 1.5);
+  assert.equal(textRuntime.paragraphCacheHit, 2);
+  assert.equal(textRuntime.paragraphCacheMiss, 1);
+
+  const summary = summarizeForBundle(entries, 'qm_perf_unified_ui_budget.log', { invalidLines: 0, totalLines: 3 });
+  assert.equal(summary.adaptiveBudget.maxResourceUploadTokens, 2);
+  assert.equal(summary.textRuntimeBudget.maxParagraphLayoutMs, 1.5);
+
+  const html = generateReport(entries, 'qm_perf_unified_ui_budget.log', null);
+  assert.match(html, /UI Frame Scheduler/);
+  assert.match(html, /Text Pipeline/);
+  assert.match(html, /Paragraph Layout/);
+  assert.match(html, /ingame_server_info/);
+}
+
+function testPerfAnalyzerReportsStaticSnapshotParagraphHitRates() {
+  const entries = parseLog([
+    '2026-06-16 04:00:10 I perf/text: {"system":"perf/text","event":"text_runtime_budget","operation":"settings_open","page":"settings:tee","tab":"appearance","frame":77,"glyph_new":4,"glyph_uploads":2,"glyph_rasterize_ms":0.300,"glyph_upload_ms":0.200,"text_container_new":1,"text_container_uploads":1,"text_container_create_ms":0.400,"text_container_upload_ms":0.250,"paragraph_layout_ms":0.600,"paragraph_budget_blocked":1,"snapshot_cache_hit":18,"snapshot_cache_miss":2,"static_stable_hit":120,"static_stable_miss":0,"paragraph_cache_hit":6,"paragraph_cache_miss":1}',
+    '2026-06-16 04:00:11 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_open","context":"online","page":"settings:tee","tab":"appearance","sample_frames":120,"sample_seconds":0.500,"fps_avg":500.000,"fps_min":210.000,"fps_max":1000.000,"fps_1pct_low":300.000,"fps_1pct_source":"real_sampled","window_start_frame":70,"window_end_frame":90,"frame_ms_avg":2.000,"frame_ms_p95":3.500,"frame_ms_p99":4.348,"frame_ms_max":8.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_text_pipeline_rates.log', { invalidLines: 0, totalLines: 2 });
+  const runtime = summary.textRuntimeBudget as typeof summary.textRuntimeBudget & {
+    staticStableHitRate: number;
+    snapshotCacheHitRate: number;
+    paragraphCacheHitRate: number;
+    staticStableHitCount: number;
+    staticStableMissCount: number;
+    snapshotCacheHit: number;
+    snapshotCacheMiss: number;
+  };
+
+  assert.equal(runtime.available, true);
+  assert.equal(runtime.staticStableHitCount, 120);
+  assert.equal(runtime.staticStableMissCount, 0);
+  assert.equal(runtime.staticStableHitRate, 100);
+  assert.equal(runtime.snapshotCacheHit, 18);
+  assert.equal(runtime.snapshotCacheMiss, 2);
+  assert.equal(runtime.snapshotCacheHitRate, 90);
+  assert.equal(runtime.paragraphCacheHitRate, 85.71428571428571);
+
+  const html = generateReport(entries, 'qm_perf_text_pipeline_rates.log', null);
+  assert.match(html, /Static Stable Text/);
+  assert.match(html, /Snapshot Cache/);
+  assert.match(html, /Paragraph Cache/);
+  assert.match(html, /Static Stable Hit Rate/);
+  assert.match(html, /Snapshot Cache Hit Rate/);
+}
+
+function testPerfAnalyzerCorrelatesOnePctLowWithTextAndResourceBudgets() {
+  const entries = parseLog([
+    '2026-06-16 03:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_assets_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","sample_frames":120,"sample_seconds":0.500,"fps_avg":420.000,"fps_min":120.000,"fps_max":1000.000,"fps_1pct_low":180.000,"fps_1pct_source":"real_sampled","window_start_frame":70,"window_end_frame":90,"frame_ms_avg":2.381,"frame_ms_p95":3.900,"frame_ms_p99":5.556,"frame_ms_max":11.000,"cap_limited":0}',
+    '2026-06-16 03:00:01 I perf/settings-resource: event=settings_adaptive_budget mode=frame_pressure reason=frame_pressure frame_ms_avg=5.556 frame_ms_p95=8.000 target_ms=4.167 visible_tokens=2 prefetch_tokens=0 background_tokens=0 gpu_upload_tokens=1 resource_upload_tokens=1 text_tokens=1 text_container_tokens=1 glyph_upload_tokens=1 paragraph_layout_tokens=0 demo_tokens=1 backlog=16 scroll=0 jump_scroll=0',
+    '2026-06-16 03:00:02 I perf/assets: stage=assets_preview_draw_workshop_cards page=settings:assets operation=settings_assets_tab_switch duration_ms=2.500 frame=77 tab=8 preview_jobs_started=2 preview_jobs_done=1 preview_uploads=1 preview_admissions=3 preview_artifact_ms=2.000 metadata_hydrate_ms=0.500 placeholder_count=6 ready_texture_count=4 visible_ready_ratio=0.500',
+    '2026-06-16 03:00:03 I perf/text: {"system":"perf/text","event":"text_runtime_budget","page":"game","operation":"ingame_server_info","frame":78,"glyph_new":4,"glyph_uploads":2,"glyph_rasterize_ms":0.300,"glyph_upload_ms":0.200,"text_container_new":1,"text_container_uploads":1,"text_container_create_ms":0.400,"text_container_upload_ms":0.250,"paragraph_layout_ms":0.000,"paragraph_budget_blocked":1,"paragraph_cache_hit":0,"paragraph_cache_miss":1}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_budget_correlation.log', { invalidLines: 0, totalLines: 4 });
+  assert.equal(summary.fps.summaries[0].fpsOnePctLow, 180);
+  assert.equal(summary.adaptiveBudget.maxResourceUploadTokens, 1);
+  assert.equal(summary.previewBudget.previewUploads, 1);
+  assert.equal(summary.textRuntimeBudget.paragraphBudgetBlocked, 1);
+
+  const html = generateReport(entries, 'qm_perf_budget_correlation.log', null);
+  assert.match(html, /1% Low Target 240 FPS/);
+  assert.match(html, /UI Frame Scheduler/);
+  assert.match(html, /Preview Budget/);
+  assert.match(html, /Text Pipeline/);
+  assert.match(html, /Paragraph Budget Blocked/);
+  assert.match(html, /180\.0/);
+}
+
+function testReportUsesStatisticalBudgetReportInsteadOfRawBudgetDump() {
+  const entries = parseLog([
+    '2026-06-16 03:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_assets_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","sample_frames":120,"sample_seconds":0.500,"fps_avg":420.000,"fps_min":120.000,"fps_max":1000.000,"fps_1pct_low":180.000,"fps_1pct_source":"real_sampled","window_start_frame":70,"window_end_frame":90,"frame_ms_avg":2.381,"frame_ms_p95":3.900,"frame_ms_p99":5.556,"frame_ms_max":11.000,"cap_limited":0}',
+    '2026-06-16 03:00:01 I perf/settings-resource: event=settings_adaptive_budget operation=settings_assets_tab_switch context=cold page=settings:assets tab=entity_bg frame=71 mode=frame_pressure resource_upload_tokens=1 text_container_tokens=1 glyph_upload_tokens=1 paragraph_layout_tokens=0',
+    '2026-06-16 03:00:02 I perf/assets: stage=assets_preview_draw_workshop_cards page=settings:assets operation=settings_assets_tab_switch context=cold duration_ms=35.600 frame=77 tab=entity_bg preview_jobs_started=2 preview_jobs_done=1 preview_uploads=1 preview_admissions=3 preview_artifact_ms=2.000 metadata_hydrate_ms=0.500 placeholder_count=6 ready_texture_count=4 visible_ready_ratio=0.500 layout_text_ms=1.300 preview_draw_ms=26.100 thumb_scheduling_ms=8.600',
+    '2026-06-16 03:00:03 I perf/text: {"system":"perf/text","event":"text_runtime_budget","page":"settings:assets","operation":"settings_assets_tab_switch","context":"cold","tab":"entity_bg","frame":78,"glyph_new":4,"glyph_uploads":2,"glyph_rasterize_ms":0.300,"glyph_upload_ms":0.200,"text_container_new":1,"text_container_uploads":1,"text_container_create_ms":0.400,"text_container_upload_ms":0.250,"paragraph_layout_ms":0.000,"paragraph_budget_blocked":1}',
+  ].join('\n'));
+
+  const html = generateReport(entries, 'qm_perf_report_layout.log', null);
+
+  // Regression guard for the visual report: budget attribution must read like a
+  // statistical report, not a raw log dump. The broken version rendered wide raw
+  // rows that overlapped columns and wrapped long tokens vertically in browser.
+  assert.match(html, /Budget Window Statistics/);
+  assert.match(html, /Assets Draw Distribution/);
+  assert.match(html, /budget-window-grid/);
+  assert.match(html, /budget-window-card/);
+  assert.match(html, /Top Culprit/);
+  assert.match(html, /p95/);
+  assert.doesNotMatch(html, /<summary>查看 budget correlation 样本<\/summary><pre>/);
+  assert.doesNotMatch(html, /<summary>查看 assets admission 样本<\/summary><pre>/);
+  assert.doesNotMatch(html, /查看 visible-ready 样本/);
+}
+
+function testBudgetCorrelationSummaryByFpsWindow() {
+  const entries = parseLog([
+    '2026-06-16 04:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"ingame_server_info","context":"cold","page":"game","tab":"server_info","sample_frames":120,"sample_seconds":0.500,"fps_avg":360.000,"fps_min":120.000,"fps_max":900.000,"fps_1pct_low":180.000,"fps_1pct_source":"real_sampled","window_start_frame":50,"window_end_frame":170,"frame_ms_avg":2.778,"frame_ms_p95":3.900,"frame_ms_p99":5.556,"frame_ms_max":12.000,"cap_limited":0}',
+    '2026-06-16 04:00:01 I perf/settings-resource: event=settings_adaptive_budget operation=other_window page=other tab=other context=warm frame=49 mode=frame_pressure reason=frame_pressure resource_upload_tokens=99',
+    '2026-06-16 04:00:01 I perf/settings-resource: event=settings_adaptive_budget operation=ingame_server_info page=game tab=server_info context=cold frame=51 mode=frame_pressure reason=frame_pressure frame_ms_avg=5.556 frame_ms_p95=8.000 target_ms=4.167 visible_tokens=1 prefetch_tokens=0 background_tokens=0 gpu_upload_tokens=1 resource_upload_tokens=1 text_tokens=1 text_container_tokens=1 glyph_rasterize_tokens=1 glyph_upload_tokens=1 paragraph_layout_tokens=0 metadata_layout_tokens=0 preview_artifact_tokens=0 texture_upload_tokens=1 card_draw_tokens=1 demo_tokens=0 backlog=8 scroll=0 jump_scroll=0',
+    '2026-06-16 04:00:02 I perf/text: {"system":"perf/text","event":"text_runtime_budget","operation":"ingame_server_info","context":"cold","page":"game","tab":"server_info","frame":51,"glyph_new":9,"glyph_uploads":3,"glyph_rasterize_ms":0.600,"glyph_upload_ms":0.400,"text_container_new":2,"text_container_uploads":2,"text_container_create_ms":1.100,"text_container_upload_ms":0.700,"paragraph_layout_ms":2.400,"paragraph_budget_blocked":1,"paragraph_cache_hit":0,"paragraph_cache_miss":1}',
+    '2026-06-16 04:00:03 I perf/assets: stage=assets_preview_draw_workshop_cards operation=ingame_server_info context=cold page=game tab=server_info duration_ms=1.500 frame=52 preview_jobs_started=1 preview_jobs_done=1 preview_uploads=2 preview_admissions=2 preview_artifact_ms=0.900 metadata_hydrate_ms=0.200 placeholder_count=1 ready_texture_count=2 visible_ready_ratio=0.750',
+    '2026-06-16 04:00:04 I perf/text: {"system":"perf/text","event":"text_runtime_budget","operation":"ingame_server_info","context":"cold","page":"game","tab":"server_info","frame":171,"glyph_new":90,"glyph_uploads":30,"glyph_rasterize_ms":90.000,"glyph_upload_ms":40.000,"text_container_new":20,"text_container_uploads":20,"text_container_create_ms":80.000,"text_container_upload_ms":70.000,"paragraph_layout_ms":60.000,"paragraph_budget_blocked":1,"paragraph_cache_hit":0,"paragraph_cache_miss":1}',
+  ].join('\n'));
+
+  const correlation = budgetCorrelationSummary(entries);
+  assert.equal(correlation.available, true);
+  assert.equal(correlation.windows.length, 1);
+  assert.equal(correlation.windows[0].operation, 'ingame_server_info');
+  assert.equal(correlation.windows[0].fpsOnePctLow, 180);
+  assert.equal(correlation.windows[0].fpsOnePctLowAvailable, true);
+  assert.equal(correlation.windows[0].fpsOnePctLowSource, 'real_sampled');
+  assert.equal(correlation.windows[0].windowStartFrame, 50);
+  assert.equal(correlation.windows[0].windowEndFrame, 170);
+  assert.equal(correlation.windows[0].resourceUploadTokens, 1);
+  assert.equal(correlation.windows[0].previewUploads, 2);
+  assert.equal(correlation.windows[0].paragraphBudgetBlocked, 1);
+  assert.equal(correlation.windows[0].dominantAttribution, 'paragraph_layout');
+  assert.equal(correlation.windows[0].culpritRank[0].kind, 'paragraph_layout');
+
+  const summary = summarizeForBundle(entries, 'qm_perf_budget_correlation_window.log', { invalidLines: 0, totalLines: 4 });
+  assert.equal(summary.budgetCorrelation.available, true);
+  assert.equal(summary.budgetCorrelation.windows[0].dominantAttribution, 'paragraph_layout');
+  assert.equal(summary.budgetCorrelation.windows[0].culpritRank[0].kind, 'paragraph_layout');
+
+  const html = generateReport(entries, 'qm_perf_budget_correlation_window.log', null);
+  assert.match(html, /Budget Attribution by Window/);
+  assert.match(html, /ingame_server_info/);
+  assert.match(html, /text/);
+  assert.match(html, /180\.0/);
+}
+
+function testPerfAnalyzerFailsUnattributedLowFpsWindow() {
+  const entries = parseLog([
+    '2026-06-16 05:10:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_tab_switch","context":"cold","page":"settings:general","tab":"none","sample_frames":30,"sample_seconds":0.250,"fps_avg":120.000,"fps_min":8.000,"fps_max":900.000,"fps_1pct_low":8.000,"fps_1pct_source":"real_sampled","window_start_frame":300,"window_end_frame":329,"frame_ms_avg":8.333,"frame_ms_p95":30.000,"frame_ms_p99":125.000,"frame_ms_max":125.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_unattributed_low.log', { invalidLines: 0, totalLines: 1 });
+  assert.equal(summary.budgetCorrelation.failingWindowCount, 1);
+  assert.equal(summary.budgetCorrelation.unattributedFailingWindowCount, 1);
+  assert.equal(summary.verdict, 'FAIL');
+  assert.equal(summary.quality.failed, true);
+  assert.match(summary.quality.warnings.join('\n'), /unattributed_spike/);
+
+  const html = generateReport(entries, 'qm_perf_unattributed_low.log', null);
+  assert.match(html, /unattributed_spike/);
+  assert.match(html, /FAIL/);
+}
+
+function testBudgetCorrelationAttributesRenderStageWhenBudgetCountersAreMissing() {
+  const entries = parseLog([
+    '2026-06-16 05:15:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_tab_switch","context":"cold","page":"settings:general","tab":"none","sample_frames":30,"sample_seconds":0.250,"fps_avg":120.000,"fps_min":8.000,"fps_max":900.000,"fps_1pct_low":8.000,"fps_1pct_source":"real_sampled","window_start_frame":300,"window_end_frame":329,"frame_ms_avg":8.333,"frame_ms_p95":30.000,"frame_ms_p99":125.000,"frame_ms_max":125.000,"cap_limited":0}',
+    '2026-06-16 05:15:01 I perf/menu: stage=settings_page_content page=settings:general operation=settings_tab_switch context=cold duration_ms=124.000 frame=301',
+  ].join('\n'));
+
+  const summary = summarizeForBundle(entries, 'qm_perf_render_stage_low.log', { invalidLines: 0, totalLines: 2 });
+  assert.equal(summary.budgetCorrelation.failingWindowCount, 1);
+  assert.equal(summary.budgetCorrelation.unattributedFailingWindowCount, 0);
+  assert.equal(summary.budgetCorrelation.windows[0].dominantAttribution, 'ui_layout_or_render_total');
+  assert.equal(summary.budgetCorrelation.windows[0].culpritRank[0].kind, 'ui_layout_or_render_total');
+  assert.equal(summary.budgetCorrelation.windows[0].culpritRank[0].score, 124);
+}
+
+function testBudgetCorrelationDoesNotUseStringFallbackWithoutFrameWindow() {
+  const entries = parseLog([
+    '2026-06-16 05:20:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","sample_frames":30,"sample_seconds":0.250,"fps_avg":120.000,"fps_min":8.000,"fps_max":900.000,"fps_1pct_low":8.000,"frame_ms_avg":8.333,"frame_ms_p95":30.000,"frame_ms_p99":125.000,"frame_ms_max":125.000,"cap_limited":0}',
+    '2026-06-16 05:20:01 I perf/text: {"system":"perf/text","event":"text_runtime_budget","operation":"settings_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","frame":999,"text_container_new":20,"text_container_create_ms":80.000}',
+  ].join('\n'));
+
+  const correlation = budgetCorrelationSummary(entries);
+  assert.equal(correlation.windows.length, 1);
+  assert.equal(correlation.windows[0].fpsOnePctLowAvailable, false);
+  assert.equal(correlation.windows[0].dominantAttribution, 'none');
+  assert.equal(correlation.unattributedFailingWindowCount, 1);
+}
+
+function testBudgetCorrelationUsesMetadataHydrateForMetadataLayoutCulprit() {
+  const entries = parseLog([
+    '2026-06-16 05:30:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_assets_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","sample_frames":60,"sample_seconds":0.250,"fps_avg":180.000,"fps_min":90.000,"fps_max":900.000,"fps_1pct_low":150.000,"fps_1pct_source":"real_sampled","window_start_frame":10,"window_end_frame":69,"frame_ms_avg":5.556,"frame_ms_p95":6.000,"frame_ms_p99":6.667,"frame_ms_max":11.111,"cap_limited":0}',
+    '2026-06-16 05:30:01 I perf/assets: stage=assets_preview_draw_workshop_cards operation=settings_assets_tab_switch context=cold page=settings:assets tab=entity_bg duration_ms=1.000 frame=20 preview_uploads=0 preview_artifact_ms=0.000 metadata_hydrate_ms=12.000 layout_text_ms=0.000 preview_draw_ms=0.000',
+  ].join('\n'));
+
+  const correlation = budgetCorrelationSummary(entries);
+  assert.equal(correlation.windows.length, 1);
+  assert.equal(correlation.windows[0].maxMetadataLayoutMs, 12);
+  assert.equal(correlation.windows[0].dominantAttribution, 'metadata_layout');
+  assert.equal(correlation.windows[0].culpritRank[0].kind, 'metadata_layout');
+}
+
+function testPerfOverheadIsReportedAsCulprit() {
+  const entries = parseLog([
+    '2026-06-16 06:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_tab_switch","context":"cold","page":"settings:general","tab":"none","sample_frames":30,"sample_seconds":0.250,"fps_avg":120.000,"fps_min":8.000,"fps_max":900.000,"fps_1pct_low":8.000,"fps_1pct_source":"real_sampled","window_start_frame":400,"window_end_frame":429,"frame_ms_avg":8.333,"frame_ms_p95":30.000,"frame_ms_p99":125.000,"frame_ms_max":125.000,"cap_limited":0}',
+    '2026-06-16 06:00:01 I perf/menu: stage=frame_render page=settings:general operation=settings_tab_switch context=cold duration_ms=126.000 frame=401',
+    '2026-06-16 06:00:02 I perf/ui_budget: event=settings_ui_budget page=settings:general operation=settings_tab_switch frame=401 tab=general subtab=none layout_ms=4.000 text_ms=2.000 draw_calls=12 vertices=144 indices=216 heap_allocs=18 visible_widgets=31',
+    '2026-06-16 06:00:03 I perf/qmclient: stage=telemetry_flush operation=settings_tab_switch page=settings:general context=cold frame=401 duration_ms=9.000',
+  ].join('\n'));
+
+  const correlation = budgetCorrelationSummary(entries);
+  assert.equal(correlation.windows.length, 1);
+  assert.equal(correlation.windows[0].dominantAttribution, 'ui_layout_or_render_total');
+  assert.equal(correlation.windows[0].culpritRank[0].kind, 'ui_layout_or_render_total');
+  assert.ok(correlation.windows[0].culpritRank.some(culprit => culprit.kind === 'telemetry_overhead'));
+  assert.ok(correlation.windows[0].culpritRank.some(culprit => culprit.kind === 'telemetry_flush'));
+
+  const html = generateReport(entries, 'qm_perf_telemetry_overhead.log', null);
+  assert.match(html, /telemetry_overhead/);
+  assert.match(html, /telemetry_flush/);
+}
+
+function testMainFpsTableDoesNotMarkP99DerivedAsPassing() {
+  const entries = parseLog([
+    '2026-06-16 05:40:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","sample_frames":60,"sample_seconds":0.250,"fps_avg":300.000,"fps_min":120.000,"fps_max":900.000,"fps_1pct_low":250.000,"frame_ms_avg":3.333,"frame_ms_p95":3.800,"frame_ms_p99":4.000,"frame_ms_max":8.333,"cap_limited":0}',
+  ].join('\n'));
+
+  const html = generateReport(entries, 'qm_perf_p99_derived.log', null);
+  assert.match(html, /P99-derived/);
+  assert.doesNotMatch(html, /class="num ok">250\.0 \(P99-derived\)<\/td>/);
+  assert.match(html, /class="num bad">250\.0 \(P99-derived\)<\/td>/);
+}
+
+function testBudgetCorrelationRanksCulprits() {
+  const entries = parseLog([
+    '2026-06-16 04:10:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_assets_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","sample_frames":120,"sample_seconds":0.500,"fps_avg":320.000,"fps_min":110.000,"fps_max":900.000,"fps_1pct_low":170.000,"fps_1pct_source":"real_sampled","window_start_frame":60,"window_end_frame":80,"frame_ms_avg":3.125,"frame_ms_p95":4.200,"frame_ms_p99":5.882,"frame_ms_max":13.000,"cap_limited":0}',
+    '2026-06-16 04:10:01 I perf/settings-resource: event=settings_adaptive_budget operation=settings_assets_tab_switch page=settings:assets tab=entity_bg context=cold frame=61 mode=frame_pressure reason=frame_pressure frame_ms_avg=5.882 frame_ms_p95=8.000 target_ms=4.167 visible_tokens=1 prefetch_tokens=0 background_tokens=0 gpu_upload_tokens=2 resource_upload_tokens=2 text_tokens=1 text_container_tokens=1 glyph_upload_tokens=1 paragraph_layout_tokens=0 demo_tokens=0 backlog=12 scroll=0 jump_scroll=0',
+    '2026-06-16 04:10:02 I perf/assets: stage=assets_preview_draw_workshop_cards operation=settings_assets_tab_switch context=cold page=settings:assets tab=entity_bg duration_ms=4.000 frame=62 preview_jobs_started=3 preview_jobs_done=2 preview_uploads=6 preview_admissions=8 preview_artifact_ms=3.500 metadata_hydrate_ms=0.400 placeholder_count=3 ready_texture_count=4 visible_ready_ratio=0.600',
+    '2026-06-16 04:10:03 I perf/text: {"system":"perf/text","event":"text_runtime_budget","operation":"settings_assets_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","frame":63,"glyph_new":1,"glyph_uploads":1,"glyph_rasterize_ms":0.100,"glyph_upload_ms":0.100,"text_container_new":1,"text_container_uploads":1,"text_container_create_ms":0.100,"text_container_upload_ms":0.100,"paragraph_layout_ms":0.000,"paragraph_budget_blocked":0,"paragraph_cache_hit":1,"paragraph_cache_miss":0}',
+  ].join('\n'));
+
+  const correlation = budgetCorrelationSummary(entries);
+  assert.equal(correlation.windows.length, 1);
+  assert.equal(correlation.windows[0].dominantAttribution, 'card_draw');
+  assert.equal(correlation.windows[0].culpritRank[0].kind, 'card_draw');
+  assert.ok(correlation.windows[0].culpritRank[0].score > correlation.windows[0].culpritRank[1].score);
+
+  const html = generateReport(entries, 'qm_perf_budget_culprit_rank.log', null);
+  assert.match(html, /Top Culprit/);
+  assert.match(html, /card_draw/);
+}
+
+function testMissingOnePctLowIsMarkedP99DerivedAndNotTargetPass() {
+  const entries = parseLog([
+    '2026-06-16 02:00:00 I perf/fps: {"system":"perf/fps","event":"fps_summary","operation":"settings_assets_tab_switch","context":"cold","page":"settings:assets","tab":"entity_bg","sample_frames":60,"sample_seconds":0.250,"fps_avg":500.000,"fps_min":80.000,"fps_max":900.000,"frame_ms_avg":2.000,"frame_ms_p95":3.000,"frame_ms_p99":4.000,"frame_ms_max":12.000,"cap_limited":0}',
+  ].join('\n'));
+
+  const fps = coldTabSwitchFpsSummaries(entries);
+  assert.equal(fps.length, 1);
+  assert.equal(fps[0].fpsOnePctLowAvailable, false);
+  assert.equal(fps[0].fpsOnePctLow, 250);
+
+  const html = generateReport(entries, 'qm_perf_legacy_fps.log', null);
+  assert.match(html, /P99-derived/);
+  assert.doesNotMatch(html, /<span class="badge ok">1% Low Target 240 FPS<\/span>/);
 }
 
 function testMissingFpsSummaryWarnsThatSettingsAcceptanceIsIncomplete() {
@@ -502,8 +910,8 @@ function testReportIncludesTextPoolMissAnalysisCharts() {
 }
 
 function testAdaptiveBudgetEventsAppearInSummaryAndReport() {
-  const entries = parseLog([
-    '2026-06-14 05:00:00 I perf/settings-resource: event=settings_adaptive_budget mode=idle reason=progress frame_ms_avg=5.000 frame_ms_p95=6.000 target_ms=8.333 visible_tokens=8 prefetch_tokens=4 background_tokens=3 gpu_upload_tokens=2 text_tokens=6 demo_tokens=4 backlog=120 scroll=0 jump_scroll=0',
+	const entries = parseLog([
+		'2026-06-14 05:00:00 I perf/settings-resource: event=settings_adaptive_budget mode=idle reason=progress frame_ms_avg=5.000 frame_ms_p95=6.000 target_ms=8.333 visible_tokens=8 prefetch_tokens=4 background_tokens=3 gpu_upload_tokens=2 text_tokens=6 demo_tokens=4 backlog=120 scroll=0 jump_scroll=0',
     '2026-06-14 05:00:01 I perf/settings-resource: event=settings_adaptive_budget mode=frame_pressure reason=frame_pressure frame_ms_avg=14.000 frame_ms_p95=20.000 target_ms=8.333 visible_tokens=2 prefetch_tokens=0 background_tokens=0 gpu_upload_tokens=1 text_tokens=1 demo_tokens=1 backlog=120 scroll=0 jump_scroll=0',
   ].join('\n'));
 
@@ -515,14 +923,64 @@ function testAdaptiveBudgetEventsAppearInSummaryAndReport() {
   assert.equal(summary.adaptiveBudget.maxVisibleTokens, 8);
 
   const html = generateReport(entries, 'qm_perf_adaptive_budget.log');
-  assert.match(html, /Adaptive Budget/);
-  assert.match(html, /frame_pressure/);
-  assert.match(html, /Visible Tokens/);
+  assert.match(html, /UI Frame Scheduler/);
+	assert.match(html, /frame_pressure/);
+	assert.match(html, /Visible Tokens/);
+}
+
+function testSettingsUiBudgetFieldsAppearInSummaryAndReport() {
+	const entries = parseLog([
+		'2026-06-15 21:00:00 I perf/ui_budget: event=settings_ui_budget page=settings:tclient operation=settings_open frame=101 tab=0 subtab=0 layout_ms=1.500 text_ms=2.250 text_new=3 text_reused=47 draw_calls=12 vertices=144 indices=216 heap_allocs=0 visible_widgets=31',
+		'2026-06-15 21:00:01 I perf/ui_budget: event=settings_ui_budget page=settings:assets operation=settings_tab_switch frame=102 tab=1 subtab=0 layout_ms=0.500 text_ms=0.750 text_new=1 text_reused=12 draw_calls=8 vertices=96 indices=144 heap_allocs=0 visible_widgets=18',
+	].join('\n'));
+
+	const budget = settingsUiBudgetSummary(entries);
+	const summary = summarizeForBundle(entries, 'qm_perf_ui_budget.log', { invalidLines: 0, totalLines: 2 });
+	const html = generateReport(entries, 'qm_perf_ui_budget.log', null);
+
+	assert.equal(budget.available, true);
+	assert.equal(budget.eventCount, 2);
+	assert.equal(budget.maxLayoutMs, 1.5);
+	assert.equal(budget.maxTextMs, 2.25);
+	assert.equal(budget.maxTextNew, 3);
+	assert.equal(budget.maxDrawCalls, 12);
+	assert.equal(budget.maxVertices, 144);
+	assert.equal(budget.maxIndices, 216);
+	assert.equal(budget.maxHeapAllocs, 0);
+	assert.equal(budget.maxVisibleWidgets, 31);
+	assert.equal(summary.settingsUiBudget.maxTextReused, 47);
+	assert.match(html, /Settings UI Budget/);
+	assert.match(html, /Draw Calls/);
+	assert.match(html, /Heap Allocs/);
+	assert.doesNotMatch(html, /APPROXIMATE/);
+	assert.doesNotMatch(html, /REPORT ONLY/);
+	assert.doesNotMatch(html, /Draw Calls Est\./);
+	assert.doesNotMatch(html, /不能当完整 renderer\/allocator 计数/);
+}
+
+function testAssetsWorkshopCardSubstagesAppearInSummaryAndReport() {
+	const entries = parseLog([
+		'2026-06-15 21:01:00 I perf/assets: {"system":"perf/assets","frame":110,"page":"assets","stage":"assets_preview_draw_workshop_cards","duration_ms":6.000,"tab":1,"combined":30,"rendered":18,"thumb_starts":2,"visible_first":1,"visible_starts":2,"prefetch_starts":0,"background_starts":0}',
+		'2026-06-15 21:01:00 I perf/assets: {"system":"perf/assets","frame":110,"page":"assets","stage":"assets_preview_draw_workshop_cards_layout_text","duration_ms":1.000,"tab":1,"rendered":18}',
+		'2026-06-15 21:01:00 I perf/assets: {"system":"perf/assets","frame":110,"page":"assets","stage":"assets_preview_draw_workshop_cards_preview_draw","duration_ms":3.000,"tab":1,"rendered":18}',
+		'2026-06-15 21:01:00 I perf/assets: {"system":"perf/assets","frame":110,"page":"assets","stage":"assets_preview_draw_workshop_cards_thumb_scheduling","duration_ms":0.500,"tab":1,"thumb_starts":2}',
+	].join('\n'));
+
+	const summary = summarizeForBundle(entries, 'qm_perf_assets_card_substages.log', { invalidLines: 0, totalLines: 4 });
+	const html = generateReport(entries, 'qm_perf_assets_card_substages.log', null);
+
+	assert.equal(summary.assetsPreviewAdmission.maxLayoutTextMs, 1);
+	assert.equal(summary.assetsPreviewAdmission.maxPreviewDrawMs, 3);
+	assert.equal(summary.assetsPreviewAdmission.maxThumbSchedulingMs, 0.5);
+	assert.match(summary.assetsPreviewAdmission.samples.join('\n'), /layout_text_ms=1\.000/);
+	assert.match(html, /Layout\/Text/);
+	assert.match(html, /Preview Draw/);
+	assert.match(html, /Thumb Scheduling/);
 }
 
 function testAdaptiveBudgetMissingWarnsWhenResourceWindowsExist() {
-  const entries = parseLog([
-    '2026-06-14 05:00:00 I perf/assets: {"system":"perf/assets","stage":"assets_preview_draw_workshop_cards","duration_ms":4.000,"tab":1,"combined":10,"rendered":10,"thumb_starts":1,"visible_first":1,"visible_starts":1,"prefetch_starts":0,"background_starts":0}',
+	const entries = parseLog([
+		'2026-06-14 05:00:00 I perf/assets: {"system":"perf/assets","stage":"assets_preview_draw_workshop_cards","duration_ms":4.000,"tab":1,"combined":10,"rendered":10,"thumb_starts":1,"visible_first":1,"visible_starts":1,"prefetch_starts":0,"background_starts":0}',
     '2026-06-14 05:00:01 I perf/interaction: event=demo_browser_header_fetch page=demo_browser items_total=10 items_scanned=1 items_done=1 remaining=9 budget=1 dur_ms=1.000 trigger=list_frame source=demos sort=3 fetch_info=1',
     '2026-06-14 05:00:02 I perf/settings-text: event=settings_text_prebuild built=1 reused=0 remaining=1 budget=1 phase=before_target scope=target_settings operation=settings_open',
   ].join('\n'));
@@ -810,6 +1268,26 @@ function testReportTooltipsCanFloatOutsideCharts() {
   assert.match(html, /pointer-events:none/);
 }
 
+function testReportSamplesLargeEmbeddedChartData() {
+  const lines: string[] = [];
+  for (let i = 0; i < 1200; i++) {
+    const second = String(i % 60).padStart(2, '0');
+    lines.push(`2026-06-04 12:00:${second} I perf/menu: stage=settings_page_content duration_ms=${(1 + (i % 40) / 10).toFixed(3)} frame=${i} page=settings:tee`);
+    lines.push(`2026-06-04 12:00:${second} I perf/settings-text: event=settings_text_miss scope=target page=settings:general tab=-1 subtab=-1 reason=key_mismatch plan_status=missing operation=settings_open key=very-long-settings-key-${i}`);
+  }
+
+  const html = generateReport(parseLog(lines.join('\n')), 'qm_perf_large_report.log', null);
+  const match = html.match(/const DATA = ([\s\S]*?);\n\n\(function/);
+  assert.ok(match);
+  const data = JSON.parse(match[1]);
+
+  // Regression guard for 2GB logs: the HTML report must contain statistical
+  // samples for charts, not the full raw event stream.
+  assert.ok(data.timeline.times.length <= 600);
+  assert.ok(data.textAnalysis.eventTimeline.length <= 240);
+  assert.match(html, /chart-sampled-note/);
+}
+
 function testSummaryJsonCanBeSerializedForDebugBundle() {
   const entries = parseLog([
     '2026-06-04 12:00:00 I perf/menu: stage=settings_page_content duration_ms=6.000 frame=10 page=settings:tee',
@@ -858,6 +1336,23 @@ testReportAttributesPagePerformanceEvents();
 testServerBrowserListFrameAttributionUsesRowCounts();
 testQmUiRuntimeAttributionUsesDedicatedKind();
 testFpsSummaryTelemetryFeedsReportAndBundleSummary();
+testPerfAnalyzerReportsRealSampledOnePctLow();
+testPreviewBudgetSummaryAndColdWarmTabSwitches();
+testTextRuntimeBudgetSummary();
+testStableTextCoverageExcludesDynamicTextFromStaticHitRate();
+testUnifiedFrameSchedulerAndTextPipelineBudgetSummary();
+testPerfAnalyzerReportsStaticSnapshotParagraphHitRates();
+testPerfAnalyzerCorrelatesOnePctLowWithTextAndResourceBudgets();
+testReportUsesStatisticalBudgetReportInsteadOfRawBudgetDump();
+testBudgetCorrelationSummaryByFpsWindow();
+testBudgetCorrelationAttributesRenderStageWhenBudgetCountersAreMissing();
+testBudgetCorrelationDoesNotUseStringFallbackWithoutFrameWindow();
+testBudgetCorrelationUsesMetadataHydrateForMetadataLayoutCulprit();
+testPerfOverheadIsReportedAsCulprit();
+testMainFpsTableDoesNotMarkP99DerivedAsPassing();
+testBudgetCorrelationRanksCulprits();
+testPerfAnalyzerFailsUnattributedLowFpsWindow();
+testMissingOnePctLowIsMarkedP99DerivedAndNotTargetPass();
 testMissingFpsSummaryWarnsThatSettingsAcceptanceIsIncomplete();
 testTargetSettingsVerdictIgnoresServerBrowserFrames();
 testTargetSettingsVerdictUsesIngameEscFpsSummaryWindow();
@@ -874,6 +1369,8 @@ testDemoBrowserPhasesAppearInSummaryAndReport();
 testSettingsTextAnalysisAggregatesMissesByLocationReasonAndOperation();
 testReportIncludesTextPoolMissAnalysisCharts();
 testAdaptiveBudgetEventsAppearInSummaryAndReport();
+testSettingsUiBudgetFieldsAppearInSummaryAndReport();
+testAssetsWorkshopCardSubstagesAppearInSummaryAndReport();
 testAdaptiveBudgetMissingWarnsWhenResourceWindowsExist();
 testReportPreservesFailVerdictWhenStableTextIsNotBlocking();
 testGenericIngamePageContentDoesNotSatisfyOnlineCoverageWarning();
@@ -893,6 +1390,7 @@ testReportIncludesSectionTop10();
 testReportShowsQualityAndUnavailableData();
 testReportCoreKpisUseFrameTimeSamplesConsistently();
 testReportTooltipsCanFloatOutsideCharts();
+testReportSamplesLargeEmbeddedChartData();
 testSummaryJsonCanBeSerializedForDebugBundle();
 testSummaryJsonMarksUnavailableVerdictForEmptyFrameSamples();
 testAnalyzeWritesBundleAndArchiveSummaryFiles();

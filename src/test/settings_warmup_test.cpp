@@ -953,7 +953,7 @@ TEST(SettingsResourceJobs, AssetsInactiveWindowBehaviorSkipsRecoveryPurgeAndUses
 	EXPECT_NE(Source.find("if(!SettingsAssetWorkAllowedWhileWindowInactive(WindowActive, HighPriority))"), std::string::npos);
 	EXPECT_NE(Source.find("if(!SettingsAssetWorkAllowedWhileWindowInactive(WindowActive, Asset.m_ThumbHighPriority))"), std::string::npos);
 	EXPECT_NE(Source.find("if(!WindowActive)\n\t\t\treturn;"), std::string::npos);
-	EXPECT_NE(Source.find("LogAssetsPerfStage(\"assets_window_focus\""), std::string::npos);
+	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_window_focus\""), std::string::npos);
 }
 
 TEST(SettingsResourceJobs, InactiveWindowBlocksAllNewAssetWorkStarts)
@@ -1025,9 +1025,7 @@ TEST(SettingsResourceJobs, PreviewTierUpgradeReplacesExistingTexturesInsteadOfLe
 	Buffer << File.rdbuf();
 	const std::string Source = Buffer.str();
 
-	EXPECT_NE(Source.find("static void ReplaceCustomItemPreviewTexture"), std::string::npos);
-	EXPECT_NE(Source.find("static void ReplaceWorkshopThumbTexture"), std::string::npos);
-	EXPECT_NE(Source.find("pGraphics->UnloadTexture(&Item.m_RenderTexture);"), std::string::npos);
+	EXPECT_NE(Source.find("UnloadTexture(&pItem->m_RenderTexture);"), std::string::npos);
 	EXPECT_NE(Source.find("pGraphics->UnloadTexture(&Asset.m_ThumbTexture);"), std::string::npos);
 	EXPECT_NE(Source.find("Item.m_PreviewResidentBytes = 0;"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsAssetPreviewResidentTextureSatisfiesRequest(\n\t\t\t\t\t\ttrue,\n\t\t\t\t\t\tpAsset->m_ThumbResidentBytes,\n\t\t\t\t\t\tpAsset->m_ThumbRequestedTextureSize)"), std::string::npos);

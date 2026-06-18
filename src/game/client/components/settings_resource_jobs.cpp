@@ -853,6 +853,7 @@ SSettingsAdaptiveBudgetOutput SettingsAdaptiveBudgetStep(const SSettingsAdaptive
 
 	const float TargetMs = std::max(1.0f, Input.m_TargetFrameMs);
 	const bool FramePressure =
+		Input.m_FramePressure ||
 		Input.m_FrameMsAverage > TargetMs * 1.35f ||
 		Input.m_FrameMsP95 > TargetMs * 1.60f ||
 		Input.m_GpuBudgetExhausted ||
@@ -940,7 +941,16 @@ SSettingsAdaptiveBudgetOutput SettingsAdaptiveBudgetStep(const SSettingsAdaptive
 	Output.m_PrefetchTokens = std::max(0, State.m_PrefetchWindow);
 	Output.m_BackgroundTokens = std::max(0, State.m_BackgroundWindow);
 	Output.m_GpuUploadTokens = std::max(1, State.m_GpuUploadWindow);
+	Output.m_ResourceUploadTokens = Output.m_GpuUploadTokens;
 	Output.m_TextPrebuildTokens = std::max(Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : 1, State.m_TextPrebuildWindow);
+	Output.m_TextContainerTokens = Output.m_TextPrebuildTokens;
+	Output.m_GlyphRasterizeTokens = std::max(Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : 1, minimum(Output.m_TextPrebuildTokens, 2));
+	Output.m_GlyphUploadTokens = std::max(Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : 1, minimum(Output.m_TextPrebuildTokens, 2));
+	Output.m_ParagraphLayoutTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE) ? 0 : std::max(1, minimum(Output.m_TextPrebuildTokens, 2));
+	Output.m_MetadataLayoutTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Input.m_TabSwitchFirstFrame || Input.m_JumpScrollActive) ? 0 : std::max(1, minimum(Output.m_TextPrebuildTokens, 2));
+	Output.m_PreviewArtifactTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Input.m_TabSwitchFirstFrame || Input.m_JumpScrollActive) ? 0 : (Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE ? minimum(Output.m_VisibleTokens, 1) : std::max(1, minimum(Output.m_VisibleTokens, 2)));
+	Output.m_TextureUploadTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Input.m_TabSwitchFirstFrame || Input.m_JumpScrollActive) ? 0 : Output.m_ResourceUploadTokens;
+	Output.m_CardDrawTokens = Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : std::max(1, Output.m_VisibleTokens);
 	Output.m_DemoMetadataTokens = std::max(Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : 1, State.m_DemoMetadataWindow);
 	return Output;
 }

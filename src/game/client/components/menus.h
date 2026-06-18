@@ -131,7 +131,7 @@ private:
 	CUi::SColorPickerPopupContext m_ColorPickerPopupContext;
 	ColorHSLA DoLine_ColorPicker(CButtonContainer *pResetId, float LineSize, float LabelSize, float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, ColorRGBA DefaultColor, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, bool Alpha = false);
 	ColorHSLA DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHslaColor, bool Alpha);
-	bool DoMessageGradientLine(CChat &Chat, CUIRect *pView, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr);
+	bool DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr);
 
 	void DoLaserPreview(const CUIRect *pRect, ColorHSLA OutlineColor, ColorHSLA InnerColor, int LaserType);
 	int DoButton_GridHeader(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Align = TEXTALIGN_ML);
@@ -1425,6 +1425,107 @@ protected:
 
 	// found in menus_ingame.cpp
 	STextContainerIndex m_MotdTextContainerIndex;
+	struct SIngameServerInfoTextSnapshot
+	{
+		unsigned m_ServerNameHash = 0;
+		unsigned m_AddressHash = 0;
+		unsigned m_PingHash = 0;
+		unsigned m_VersionHash = 0;
+		unsigned m_PasswordHash = 0;
+		unsigned m_GameTypeHash = 0;
+		unsigned m_MapHash = 0;
+		unsigned m_ScoreLimitHash = 0;
+		unsigned m_TimeLimitHash = 0;
+		unsigned m_RoundHash = 0;
+		unsigned m_TeamsHash = 0;
+		unsigned m_PlayersHash = 0;
+	};
+	struct SIngameMotdParagraphCache
+	{
+		unsigned m_TextHash = 0;
+		float m_Width = 0.0f;
+		float m_FontSize = 0.0f;
+		float m_Height = 0.0f;
+		int64_t m_UpdateTime = -1;
+		bool m_Valid = false;
+		float m_LastStableHeight = 0.0f;
+		unsigned m_PendingTextHash = 0;
+		CUIRect m_PendingRect;
+		float m_PendingWidth = 0.0f;
+		float m_PendingFontSize = 0.0f;
+		int64_t m_PendingUpdateTime = -1;
+		uint64_t m_PendingFrame = 0;
+		bool m_Pending = false;
+		unsigned m_PreviousTextHash = 0;
+		float m_PreviousWidth = 0.0f;
+		float m_PreviousFontSize = 0.0f;
+		float m_PreviousHeight = 0.0f;
+		int64_t m_PreviousUpdateTime = -1;
+		std::string m_PreviousText;
+		STextContainerIndex m_PreviousTextContainerIndex;
+	};
+	struct SMenuSnapshotTextKey
+	{
+		std::string m_Scope;
+		unsigned m_TextHash = 0;
+		int m_Width = 0;
+		int m_FontSize = 0;
+		int m_Align = 0;
+		uint64_t m_LocaleHash = 0;
+		uint64_t m_UiScaleHash = 0;
+		bool operator==(const SMenuSnapshotTextKey &Other) const
+		{
+			return m_Scope == Other.m_Scope &&
+			       m_TextHash == Other.m_TextHash &&
+			       m_Width == Other.m_Width &&
+			       m_FontSize == Other.m_FontSize &&
+			       m_Align == Other.m_Align &&
+			       m_LocaleHash == Other.m_LocaleHash &&
+			       m_UiScaleHash == Other.m_UiScaleHash;
+		}
+	};
+	struct SMenuSnapshotTextKeyHash
+	{
+		size_t operator()(const SMenuSnapshotTextKey &Key) const
+		{
+			size_t Hash = std::hash<std::string>{}(Key.m_Scope);
+			Hash ^= (size_t)Key.m_TextHash + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_Width + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_FontSize + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_Align + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_LocaleHash + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_UiScaleHash + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			return Hash;
+		}
+	};
+	struct SMenuSnapshotTextEntry
+	{
+		CUIElement m_Element;
+		std::string m_Text;
+		CUIRect m_Rect;
+		float m_Size = 0.0f;
+		int m_Align = 0;
+		SLabelProperties m_LabelProps;
+		bool m_Ready = false;
+		CUIElement *m_pLastReadyElement = nullptr;
+	};
+	std::unordered_map<SMenuSnapshotTextKey, SMenuSnapshotTextEntry, SMenuSnapshotTextKeyHash> m_SnapshotTextCache;
+	std::unordered_map<std::string, CUIElement *> m_SnapshotTextLastReadyByScope;
+	std::vector<SMenuSnapshotTextKey> m_SnapshotTextPending;
+	struct SMenuTextContainerBuildRequest
+	{
+		CUIElement *m_pElement = nullptr;
+		std::string m_Text;
+		CUIRect m_Rect;
+		float m_Size = 0.0f;
+		int m_Align = 0;
+		SLabelProperties m_LabelProps;
+		int m_StrLen = -1;
+		int m_ReadCursorGlyphCount = -1;
+	};
+	std::vector<SMenuTextContainerBuildRequest> m_vMenuTextContainerBuildRequests;
+	SIngameServerInfoTextSnapshot m_IngameServerInfoTextSnapshot;
+	SIngameMotdParagraphCache m_IngameMotdParagraphCache;
 	enum class EReportScanState
 	{
 		IDLE,
@@ -1452,6 +1553,17 @@ protected:
 	void RenderPlayers(CUIRect MainView);
 	void RenderServerInfo(CUIRect MainView);
 	void RenderServerInfoMotd(CUIRect Motd);
+	void PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView = nullptr);
+	void RenderIngameServerInfoValueCached(const char *pTextId, unsigned &TextHash, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {});
+	void RenderSnapshotTextContainer(CUIElement &Element, const CUIRect *pRect);
+	bool RequestSnapshotTextContainer(const char *pScope, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, CUIElement **ppReadyElement = nullptr);
+	void DrainSnapshotTextContainers();
+	bool RequestIngameMotdParagraphCache(CUIRect Motd, float FontSize);
+	bool IngameMotdParagraphCacheMatches(CUIRect Motd, float FontSize) const;
+	void DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool AllowCurrentFrame = false);
+	bool RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea);
+	void DrainIngameUiSnapshotTextRuntime();
+	void DrainIngameUiTextRuntime(bool AllowCurrentFrame = false);
 	void RenderServerControl(CUIRect MainView);
 	void RenderUnfinishedMaps(CUIRect MainView);
 	bool RenderServerControlKick(CUIRect MainView, bool FilterSpectators, bool UpdateScroll);
@@ -1533,7 +1645,6 @@ protected:
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
-	void PrewarmSettingsPages();
 	void RenderSettingsCustom(CUIRect MainView);
 
 	// found in menus_settings_controls.cpp
@@ -1608,6 +1719,7 @@ public:
 	void StartLoading(int Total);
 	void RenderLoading(const char *pCaption, const char *pContent, int IncreaseCounter);
 	void FinishLoading();
+	void PrewarmSettingsPages();
 
 	bool IsInit() const { return m_IsInit; }
 
@@ -1616,6 +1728,7 @@ public:
 	const char *CurrentQmUiPerfPage() const;
 	const char *CurrentQmUiPerfOperation() const;
 	SSettingsResourceFrameContext SettingsResourceFrameContext() const { return {m_SettingsScrollActive, false, m_SettingsPostScrollRecoveryFrames, m_SettingsHighPrioritySettled}; }
+	const SSettingsAdaptiveBudgetOutput &CurrentSettingsUiFrameBudget() const { return m_CurrentSettingsUiFrameBudget; }
 	void SetActive(bool Active);
 
 	void OnInterfacesInit(CGameClient *pClient) override;
@@ -1889,16 +2002,20 @@ public:
 	SMenuTextPlanItem AddStableTextButton(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect &Rect, const char *pSourceTag = nullptr) const;
 	void DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr, bool Render = true);
 	int DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Corners);
+	int DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f);
+	int DoIngameMenuCheckBox(int Page, const char *pTextId, const void *pId, const char *pText, int Checked, const CUIRect *pRect);
 	void DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {});
+	void DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {});
 	CUIElement &SettingsTextElement(int Page, int Tab, const char *pTextId);
 	CUIElement &SettingsTextElement(int Page, int Tab, const char *pTextId, const SMenuTextStyleKey &StyleKey);
 	void DoSettingsLabelStreamed(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr, bool Render = true);
 	void DoSettingsLabel(int Page, int Tab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, bool Render = true);
 	void DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &Props = {}, int MaxWidth = -1);
-	int DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f);
+	int DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, const ColorRGBA &Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), float FontFactor = 0.0f);
 	int DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
 	bool DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr);
 	bool DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr);
+	bool DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value);
 	void BuildBaseSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView);
 	void BuildIngameMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView);
 	void BuildSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems);
@@ -1940,6 +2057,7 @@ public:
 	{
 		const SSettingsResourceFrameContext FrameContext = SettingsResourceFrameContext();
 		m_SettingsFrameBudget = SSettingsWarmupFrameBudget{};
+		m_CurrentSettingsUiFrameBudget = SSettingsAdaptiveBudgetOutput{};
 		SettingsApplyActiveTeeSkinFrameBudget(m_SettingsFrameBudget, TeeSettingsActive);
 		if(TeeSettingsActive)
 			m_SettingsFrameBudget.m_MaxGpuUploads = TeeSkinGpuUploadsPerFrame >= 0 ? TeeSkinGpuUploadsPerFrame : SettingsSkinGpuUploadFrameUnits(FrameContext, TeeSettingsActive);
@@ -2054,11 +2172,22 @@ private:
 
 	SSettingsScrollRegionFrame BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY);
 	void FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsScrollRegionFrame &Frame, const CUIRect *pEndRect = nullptr, int Page = -1, bool TrackScrollActive = true);
+	void PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &Input);
+	SSettingsAdaptiveBudgetOutput ComputeSettingsUiFrameSchedulerBudget(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State);
+	SSettingsAdaptiveBudgetOutput BeginSettingsUiFrameScheduler(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State);
+	bool MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, int StrLen, const CTextCursor *pReadCursor);
+	bool RequestMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, int StrLen, const CTextCursor *pReadCursor);
+	void QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor);
+	void DrainMenuTextContainerBuildRequests();
+	void DrainMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated);
 	void LogSettingsUiBudget(const char *pPage, const SSettingsUiBudgetFrame &Frame) const;
 
 	SSettingsRuntimeMetadata m_SettingsRuntimeMetadata;
 	SSettingsWarmupFrameBudget m_SettingsFrameBudget;
+	SSettingsAdaptiveBudgetOutput m_CurrentSettingsUiFrameBudget;
 	SSettingsAdaptiveBudgetState m_SettingsTextAdaptiveBudgetState;
+	SSettingsAdaptiveBudgetState m_IngameTextAdaptiveBudgetState;
+	SSettingsAdaptiveBudgetOutput m_IngameTextFrameBudget;
 	SSettingsAdaptiveBudgetState m_AssetsAdaptiveBudgetState;
 	float m_SettingsTClientCurrentScrollY = 0.0f;
 	bool m_SettingsTClientScrollRestorePending = false;
@@ -2154,6 +2283,9 @@ private:
 	float RenderTClientPetInteractiveLayer(CUIRect &CurrentColumn);
 	float LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render);
 	float RenderTClientHudInteractiveLayer(CUIRect &CurrentColumn);
+	int DoTClientSettingsButton_CheckBox(const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
+	int DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin);
+	int DoTClientSettingsButton_Menu(CButtonContainer *pButtonContainer, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f);
 	void InvalidateTClientSettingsRuntimeCacheSections(ESettingsCacheDirtyReason Reason = ESettingsCacheDirtyReason::CONFIG);
 	bool PrewarmSettingsPageResources(int Page, int Tab, const CUIRect &ContentView);
 	bool PrewarmSettingsAssetResources();

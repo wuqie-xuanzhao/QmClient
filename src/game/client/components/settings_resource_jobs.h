@@ -186,11 +186,19 @@ enum class ESettingsAdaptiveBudgetReason
 
 struct SSettingsAdaptiveBudgetInput
 {
+	uint64_t m_FrameId = 0;
+	char m_aOperation[64] = "";
+	char m_aPage[64] = "";
+	char m_aTab[32] = "";
+	int m_Subtab = 0;
+	char m_aContext[32] = "";
 	float m_FrameMsAverage = 0.0f;
 	float m_FrameMsP95 = 0.0f;
 	float m_TargetFrameMs = 8.333f;
 	bool m_ScrollActive = false;
 	bool m_JumpScrollActive = false;
+	bool m_TabSwitchFirstFrame = false;
+	bool m_FramePressure = false;
 	int m_PostScrollRecoveryFrames = 0;
 	int m_VisibleWaiting = 0;
 	int m_BackgroundBacklog = 0;
@@ -218,7 +226,16 @@ struct SSettingsAdaptiveBudgetOutput
 	int m_PrefetchTokens = 0;
 	int m_BackgroundTokens = 0;
 	int m_GpuUploadTokens = 0;
+	int m_ResourceUploadTokens = 0;
 	int m_TextPrebuildTokens = 0;
+	int m_TextContainerTokens = 0;
+	int m_GlyphRasterizeTokens = 0;
+	int m_GlyphUploadTokens = 0;
+	int m_ParagraphLayoutTokens = 0;
+	int m_MetadataLayoutTokens = 0;
+	int m_PreviewArtifactTokens = 0;
+	int m_TextureUploadTokens = 0;
+	int m_CardDrawTokens = 0;
 	int m_DemoMetadataTokens = 0;
 	ESettingsAdaptiveBudgetMode m_Mode = ESettingsAdaptiveBudgetMode::IDLE;
 	ESettingsAdaptiveBudgetReason m_Reason = ESettingsAdaptiveBudgetReason::NONE;

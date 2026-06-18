@@ -5,6 +5,7 @@ import { operationSignature, type OperationSignature } from './quality_core.ts';
 import {
   BUDGET,
   adaptiveBudgetSummary,
+  budgetCorrelationSummary,
   assetsPreviewAdmissionSummary,
   assetsVisibleReadySummary,
   calcPercentiles,
@@ -15,7 +16,10 @@ import {
   fpsSummaries,
   hasOnlineTargetSettingsFpsSummary,
   pagePerformanceAttribution,
+  previewBudgetSummary,
   selectFrameTimeEntries,
+  settingsUiBudgetSummary,
+  textRuntimeBudgetSummary,
   targetSettingsSnapshot,
   type AttributionEntry,
   type FpsSummary,
@@ -39,6 +43,7 @@ export interface ReportQuality {
   biased: boolean;
   operation: OperationSignature;
   warnings: string[];
+  failed: boolean;
 }
 
 export interface PerfBundleSummary {
@@ -97,6 +102,9 @@ export interface PerfBundleSummary {
     visibleFirstAvailable: boolean;
     eventCount: number;
     maxDurationMs: number;
+    maxLayoutTextMs: number;
+    maxPreviewDrawMs: number;
+    maxThumbSchedulingMs: number;
     maxRendered: number;
     maxThumbStarts: number;
     visibleStarts: number;
@@ -115,12 +123,30 @@ export interface PerfBundleSummary {
     eventCount: number;
     samples: string[];
   };
+  previewBudget: {
+    available: boolean;
+    eventCount: number;
+    previewJobsStarted: number;
+    previewJobsDone: number;
+    previewUploads: number;
+    previewAdmissions: number;
+    maxPreviewArtifactMs: number;
+    maxMetadataHydrateMs: number;
+    maxPlaceholderCount: number;
+    maxReadyTextureCount: number;
+    minVisibleReadyRatio: number;
+    samples: string[];
+  };
   demoBrowser: {
     available: boolean;
     startupCount: number;
     headerFetchCount: number;
     dateFetchCount: number;
     previewLoadCount: number;
+    visibleScanned: number;
+    visibleDone: number;
+    backgroundScanned: number;
+    backgroundDone: number;
     maxDurationMs: number;
     maxRemaining: number;
     maxMetadataRemaining: number;
@@ -134,9 +160,83 @@ export interface PerfBundleSummary {
     maxPrefetchTokens: number;
     maxBackgroundTokens: number;
     maxGpuUploadTokens: number;
+    maxResourceUploadTokens: number;
     maxTextTokens: number;
+    maxTextContainerTokens: number;
+    maxGlyphUploadTokens: number;
+    maxParagraphLayoutTokens: number;
     maxDemoTokens: number;
     samples: string[];
+  };
+  settingsUiBudget: {
+    available: boolean;
+    eventCount: number;
+    maxLayoutMs: number;
+    maxTextMs: number;
+    maxTextNew: number;
+    maxTextReused: number;
+    maxDrawCalls: number;
+    maxVertices: number;
+    maxIndices: number;
+    maxHeapAllocs: number;
+    maxVisibleWidgets: number;
+    samples: string[];
+  };
+  textRuntimeBudget: {
+    available: boolean;
+    eventCount: number;
+    glyphNew: number;
+    glyphUploads: number;
+    maxGlyphRasterizeMs: number;
+    maxGlyphUploadMs: number;
+    textContainerNew: number;
+    textContainerUploads: number;
+    maxTextContainerCreateMs: number;
+    maxTextContainerUploadMs: number;
+    maxParagraphLayoutMs: number;
+    paragraphBudgetBlocked: number;
+    paragraphCacheHit: number;
+    paragraphCacheMiss: number;
+    samples: string[];
+  };
+  budgetCorrelation: {
+    available: boolean;
+    windowCount: number;
+    failingWindowCount: number;
+    unattributedFailingWindowCount: number;
+    windows: {
+      operation: string;
+      context: string;
+      page: string;
+      tab: string;
+      fpsOnePctLow: number;
+      fpsOnePctLowAvailable: boolean;
+      fpsOnePctLowSource: string;
+      windowStartFrame: number;
+      windowEndFrame: number;
+      frameMsP99: number;
+      resourceUploadTokens: number;
+      previewUploads: number;
+      maxPreviewArtifactMs: number;
+      maxPreviewDrawMs: number;
+      maxMetadataLayoutMs: number;
+      maxUiLayoutMs: number;
+      maxCardDrawMs: number;
+      glyphUploads: number;
+      maxGlyphRasterizeMs: number;
+      maxGlyphUploadMs: number;
+      textContainerNew: number;
+      maxTextContainerCreateMs: number;
+      maxParagraphLayoutMs: number;
+      paragraphBudgetBlocked: number;
+      dominantAttribution: string;
+      culpritRank: {
+        kind: string;
+        score: number;
+        details: string;
+      }[];
+      sample: string;
+    }[];
   };
 }
 
@@ -204,6 +304,19 @@ export function reportQuality(entries: PerfEntry[], diagnostics: ParseDiagnostic
   if (NeedsAdaptiveBudget && !adaptiveBudget.available) {
     warnings.push('adaptive budget telemetry missing for assets/demo/stable text work');
   }
+  const budgetCorrelation = budgetCorrelationSummary(entries);
+  // Contract marker: budgetCorrelation: budgetCorrelationSummary(entries)
+  if (budgetCorrelation.failingWindowCount > 0) {
+    warnings.push(`fps_1pct_low_below_240: ${budgetCorrelation.failingWindowCount} real sampled low-fps window(s) failed the 240Hz target`);
+  }
+  if (budgetCorrelation.unattributedFailingWindowCount > 0) {
+    warnings.push(`unattributed_spike: ${budgetCorrelation.unattributedFailingWindowCount} low-fps window(s) have no text/resource budget culprit`);
+  }
+  const FpsWindowMissingRealOnePctLow = budgetCorrelation.windows.some(window => !window.fpsOnePctLowAvailable || window.fpsOnePctLowSource !== 'real_sampled');
+  if (FpsWindowMissingRealOnePctLow) {
+    warnings.push('fps_1pct_low_missing_real_sampled: fps_summary windows without fps_1pct_source=real_sampled cannot pass the 240Hz gate');
+  }
+  const Failed = budgetCorrelation.failingWindowCount > 0 || FpsWindowMissingRealOnePctLow;
 
   return {
     sampleCount: frameEntries.length,
@@ -214,6 +327,7 @@ export function reportQuality(entries: PerfEntry[], diagnostics: ParseDiagnostic
     biased,
     operation: operationSignature(entries),
     warnings,
+    failed: Failed,
   };
 }
 
@@ -226,16 +340,21 @@ export function summarizeForBundle(entries: PerfEntry[], sourceFile: string, dia
   const targetSettings = targetSettingsSnapshot(entries);
   const assetsPreviewAdmission = assetsPreviewAdmissionSummary(entries);
   const assetsVisibleReady = assetsVisibleReadySummary(entries);
+  const previewBudget = previewBudgetSummary(entries);
   const demoBrowser = demoBrowserPhaseSummary(entries);
   const adaptiveBudget = adaptiveBudgetSummary(entries);
+  const settingsUiBudget = settingsUiBudgetSummary(entries);
+  const textRuntimeBudget = textRuntimeBudgetSummary(entries);
+  const budgetCorrelation = budgetCorrelationSummary(entries);
+  const quality = reportQuality(entries, diagnostics);
   return {
     generatedAt: new Date().toISOString(),
     sourceFile: basename(sourceFile),
     percentiles,
-    verdict: frameEntries.length === 0 ? 'WARN' : computeVerdict(percentiles, spikes.length),
+    verdict: quality.failed ? 'FAIL' : frameEntries.length === 0 ? 'WARN' : computeVerdict(percentiles, spikes.length),
     verdictAvailable: frameEntries.length > 0,
     spikeCount: spikes.length,
-    quality: reportQuality(entries, diagnostics),
+    quality,
     attribution: {
       top: pagePerformanceAttribution(entries).slice(0, 10),
     },
@@ -246,7 +365,11 @@ export function summarizeForBundle(entries: PerfEntry[], sourceFile: string, dia
     targetSettings,
     assetsPreviewAdmission,
     assetsVisibleReady,
+    previewBudget,
     demoBrowser,
     adaptiveBudget,
+    settingsUiBudget,
+    textRuntimeBudget,
+    budgetCorrelation,
   };
 }

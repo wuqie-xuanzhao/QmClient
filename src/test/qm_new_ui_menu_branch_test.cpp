@@ -400,17 +400,18 @@ TEST(QmNewUiMenuBranches, AssetsPreviewUsesInnerFrameRectForPreviewImage)
 	EXPECT_NE(Source.find("PreviewFrame.Margin(3.0f, &PreviewFrame);"), std::string::npos);
 	EXPECT_NE(Source.find("return PreviewFrame;"), std::string::npos);
 	EXPECT_NE(Source.find("auto ComputeAssetPreviewContentSize = [&](bool WorkshopCard)"), std::string::npos);
-	EXPECT_NE(Source.find("const CUIRect PreviewFrameRect = DrawPreviewFrame(HeaderLayout.m_TextureRect);"), std::string::npos);
-	EXPECT_NE(Source.find("const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(false);"), std::string::npos);
+	EXPECT_NE(Source.find("CUIRect PreviewFrameRect = DrawPreviewFrame(Shell.m_TextureRect);"), std::string::npos);
+	EXPECT_NE(Source.find("const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(WorkshopCard);"), std::string::npos);
 	EXPECT_NE(Source.find("const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(true);"), std::string::npos);
 	EXPECT_NE(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(PreviewFrameRect, PreviewContentWidth, PreviewContentHeight);"), std::string::npos);
 	EXPECT_EQ(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(HeaderLayout.m_TextureRect, TextureWidth, TextureHeight);"), std::string::npos);
 	EXPECT_EQ(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(HeaderLayout.m_TextureRect, TextureWidth, TextureWidth);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, SettingsColorLabelsUseChineseText)
+TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string MenusToml = ReadTextFile("qmclient_scripts/languages_qmclient/translations/i18n/menus.toml");
 
 	EXPECT_EQ(Source.find("Localize(\"UI Color\")"), std::string::npos);
 	EXPECT_EQ(Source.find("Localize(\"Menu panel color\")"), std::string::npos);
@@ -428,21 +429,27 @@ TEST(QmNewUiMenuBranches, SettingsColorLabelsUseChineseText)
 	EXPECT_NE(Source.find("g_Config.m_QmUiOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmMapBrowserOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmScoreboardOpacity"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"界面颜色\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"地图浏览器颜色\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"计分板颜色\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"界面透明度\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"地图浏览器透明度\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"计分板透明度\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"UI color\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Map browser color\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Scoreboard color\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"UI opacity\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Map browser opacity\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Scoreboard opacity\")"), std::string::npos);
+	EXPECT_NE(MenusToml.find("key = \"UI opacity\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("simplified_chinese = \"界面不透明度\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("key = \"Map browser opacity\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("simplified_chinese = \"地图浏览器不透明度\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("key = \"Scoreboard opacity\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("simplified_chinese = \"计分板不透明度\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsGraphicsOpacitySlidersExposeIndependentUiDomains)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
 
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize(\"界面透明度\")"), std::string::npos);
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize(\"地图浏览器透明度\")"), std::string::npos);
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize(\"计分板透明度\")"), std::string::npos);
+	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize(\"UI opacity\")"), std::string::npos);
+	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize(\"Map browser opacity\")"), std::string::npos);
+	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize(\"Scoreboard opacity\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NewOpacityControlsDoNotChainLegacyPanelOpacity)

@@ -72,6 +72,12 @@ void CUIElement::SUIElementRect::Reset()
 	m_Corners = -1;
 	m_BackgroundAlphaScale = 1.0f;
 	m_Text.clear();
+	m_FontSize = -1.0f;
+	m_TextAlign = -1;
+	m_LabelMaxWidth = -2.0f;
+	m_LabelFlags = -1;
+	m_LineCount = 0;
+	m_BiggestCharacterHeight = 0.0f;
 	m_Cursor = CTextCursor();
 	m_TextColor = ColorRGBA(-1, -1, -1, -1);
 	m_TextOutlineColor = ColorRGBA(-1, -1, -1, -1);
@@ -988,12 +994,19 @@ void CUi::DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, cons
 	}
 	else
 	{
-		Cursor.SetPosition(CalcAlignedCursorPos(pRect, TextBounds.m_TextSize, Align));
+		const float *pBiggestCharHeight = TextBounds.m_LineCount == 1 ? &TextBounds.m_BiggestCharacterHeight : nullptr;
+		Cursor.SetPosition(CalcAlignedCursorPos(pRect, TextBounds.m_TextSize, Align, pBiggestCharHeight));
 		Cursor.m_FontSize = Size;
 		Cursor.m_Flags |= Flags;
 	}
 	Cursor.m_LineWidth = LabelProps.m_MaxWidth;
 
+	RectEl.m_FontSize = Size;
+	RectEl.m_TextAlign = Align;
+	RectEl.m_LabelMaxWidth = LabelProps.m_MaxWidth;
+	RectEl.m_LabelFlags = Flags;
+	RectEl.m_LineCount = TextBounds.m_LineCount;
+	RectEl.m_BiggestCharacterHeight = TextBounds.m_BiggestCharacterHeight;
 	RectEl.m_TextColor = TextRender()->GetTextColor();
 	RectEl.m_TextOutlineColor = TextRender()->GetTextOutlineColor();
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -1006,10 +1019,12 @@ void CUi::DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, cons
 
 void CUi::DoLabelStreamed(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated) const
 {
+	const int Flags = GetFlagsForLabelProperties(LabelProps, pReadCursor);
 	const int ReadCursorGlyphCount = pReadCursor == nullptr ? -1 : pReadCursor->m_GlyphCount;
 	bool NeedsRecreate = false;
 	bool ColorChanged = RectEl.m_TextColor != TextRender()->GetTextColor() || RectEl.m_TextOutlineColor != TextRender()->GetTextOutlineColor();
-	if((!RectEl.m_UITextContainer.Valid() && pText[0] != '\0' && StrLen != 0) || RectEl.m_Width != pRect->w || RectEl.m_Height != pRect->h || ColorChanged || RectEl.m_ReadCursorGlyphCount != ReadCursorGlyphCount)
+	bool StyleChanged = RectEl.m_FontSize != Size || RectEl.m_TextAlign != Align || RectEl.m_LabelMaxWidth != LabelProps.m_MaxWidth || RectEl.m_LabelFlags != Flags;
+	if((!RectEl.m_UITextContainer.Valid() && pText[0] != '\0' && StrLen != 0) || RectEl.m_Width != pRect->w || RectEl.m_Height != pRect->h || ColorChanged || StyleChanged || RectEl.m_ReadCursorGlyphCount != ReadCursorGlyphCount)
 	{
 		NeedsRecreate = true;
 	}
@@ -1057,7 +1072,8 @@ void CUi::DoLabelStreamed(CUIElement::SUIElementRect &RectEl, const CUIRect *pRe
 
 	if(Render && RectEl.m_UITextContainer.Valid())
 	{
-		const vec2 CursorPos = CalcAlignedCursorPos(pRect, vec2(RectEl.m_Cursor.m_LongestLineWidth, RectEl.m_Cursor.Height()), Align);
+		const float *pBiggestCharHeight = RectEl.m_LineCount == 1 ? &RectEl.m_BiggestCharacterHeight : nullptr;
+		const vec2 CursorPos = CalcAlignedCursorPos(pRect, vec2(RectEl.m_Cursor.m_LongestLineWidth, RectEl.m_Cursor.Height()), Align, pBiggestCharHeight);
 		FlushQuadBatch();
 		TextRender()->RenderTextContainer(RectEl.m_UITextContainer, RectEl.m_TextColor, RectEl.m_TextOutlineColor, CursorPos.x, CursorPos.y);
 	}

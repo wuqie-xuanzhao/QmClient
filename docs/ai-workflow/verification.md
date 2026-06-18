@@ -85,6 +85,15 @@ qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_
 qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests
 ```
 
+过滤测试只用于 TDD 红绿灯、定位和快速复现，例如 `testrunner.exe --gtest_filter=...`。当要做最终汇报、交给用户验收、提交或声称“无回归 / 测试通过”时，必须补跑对应测试入口的全量版本：
+
+- C++ 源码或 C++ 测试改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_tests -j 14`，不能只跑 `--gtest_filter`。
+- Rust 代码改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests`。
+- `qmclient_scripts/perf` 改动：跑 `cd qmclient_scripts/perf && bun test.ts`，并在 TypeScript 代码改动时补 `npx tsc --noEmit`。
+- 只改文档或治理入口：按文档检查要求跑 `python qmclient_scripts/gate/check_docs.py`。
+
+如果环境、时间或用户明确范围导致全量测试不能跑，最终汇报必须把它列为 gap；不能用过滤测试、build 或 quick gate 代替“全量测试通过”。
+
 说明：常规运行/测试目录默认是 `cmake-build-release`；C++ 测试主路径是 `run_cxx_tests`，该目标会构建 `testrunner` 并在 build 目录下执行测试二进制，测试产物会留在 build 目录的 `tmp/tests/` 下。源码结构测试需要通过测试源码根解析 `src/...` / `data/...` 文件，不能依赖当前工作目录。单测过滤或快速复现时，可以从 build 目录运行 `./testrunner.exe --gtest_filter=<suite.test>`，或在其他目录运行 `cmake-build-release/testrunner.exe --gtest_filter=<suite.test>`。`default/full` gate 里的严格构建与静态分析会另外使用 `cmake-build-debug` 和 `cmake-build-analyze`。
 
 重要：同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 不要并行发起。它们会共享生成产物与中间文件，代理或脚本必须串行执行；如果确实要并行，只能拆到不同的 build 目录。
@@ -114,8 +123,8 @@ python qmclient_scripts/gate/check_gate.py --mode full
 
 - 纯文档 / harness 变更：`python qmclient_scripts/gate/check_docs.py`
 - 常规代码改动：至少 `python qmclient_scripts/gate/check_gate.py --mode quick`
-- 提交前日常严格门：优先 `python qmclient_scripts/gate/check_gate.py --mode default`
-- 集中收口 / 准发布：`python qmclient_scripts/gate/check_gate.py --mode full`
+- 提交前日常严格门：优先 `python qmclient_scripts/gate/check_gate.py --mode default`，该模式必须覆盖 C++ 全量测试和 Rust 全量测试。
+- 集中收口 / 准发布：`python qmclient_scripts/gate/check_gate.py --mode full`，该模式是在 default 基础上增加高噪音或更重的附加检查，不作为“全量测试”的默认入口。
 
 版本 / release 相关修改后，至少额外验证：
 

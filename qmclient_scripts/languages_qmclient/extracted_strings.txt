@@ -1211,7 +1211,7 @@ Map
 Map browser color
 Map browser opacity
 Map danger border
-Map Preview
+Map Preview TODO
 Map progress bar
 Map Progress: %.1f%%
 Map Progress: --
@@ -1300,6 +1300,7 @@ Need to have started the map to swap with a player.
 Negative stability buffer (for Gores)
 Net
 Netversion
+Network
 new
 New button
 New category name

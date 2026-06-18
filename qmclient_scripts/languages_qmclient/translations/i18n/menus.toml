@@ -3934,6 +3934,22 @@ turkish = "Harita Önizlemesi"
 polish = "Podgląd mapy"
 
 [[message]]
+key = "Map Preview TODO"
+[message.translations]
+japanese = "マッププレビュー未実装"
+korean = "맵 미리보기 준비 중"
+simplified_chinese = "地图预览待做"
+traditional_chinese = "地圖預覽待做"
+russian = "Предпросмотр карты в работе"
+german = "Kartenvorschau ausstehend"
+spanish = "Vista previa del mapa pendiente"
+french = "Aperçu de la carte à faire"
+brazilian_portuguese = "Prévia do mapa pendente"
+portuguese = "Pré-visualização do mapa pendente"
+turkish = "Harita önizlemesi yapılacak"
+polish = "Podgląd mapy do zrobienia"
+
+[[message]]
 key = "Map sound volume"
 [message.translations]
 japanese = "マップサウンド音量"
@@ -4587,6 +4603,22 @@ brazilian_portuguese = "Não baixado"
 portuguese = "Não descarregado"
 turkish = "İndirilmedi"
 polish = "Nie pobrano"
+
+[[message]]
+key = "Network"
+[message.translations]
+japanese = "ネットワーク"
+korean = "네트워크"
+simplified_chinese = "网络"
+traditional_chinese = "網路"
+russian = "Сеть"
+german = "Netzwerk"
+spanish = "Red"
+french = "Réseau"
+brazilian_portuguese = "Rede"
+portuguese = "Rede"
+turkish = "Ağ"
+polish = "Sieć"
 
 [[message]]
 key = "Nothing hookable"
@@ -7771,7 +7803,7 @@ key = "UI opacity"
 [message.translations]
 japanese = "UI の不透明度"
 korean = "UI 불투명도"
-simplified_chinese = "用户界面不透明度"
+simplified_chinese = "界面不透明度"
 traditional_chinese = "使用者介面不透明度"
 russian = "Прозрачность интерфейса"
 german = "UI-Deckkraft"

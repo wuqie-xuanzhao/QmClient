@@ -110,6 +110,15 @@ namespace
 	constexpr float MENU_TAB_DEFAULT_H_OFFSET = 3.0f;
 	constexpr float MENU_TAB_ANIM_EPSILON = 0.0001f;
 	int s_LastPlanCollectionScreenBucket = -1;
+	CUIRect MenuButtonTextRect(const CUIRect *pRect, float FontFactor, float HoverLift)
+	{
+		CUIRect Text = *pRect;
+		Text.HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f, &Text);
+		Text.HMargin((Text.h * FontFactor) / 2.0f, &Text);
+		Text.y += HoverLift;
+		return Text;
+	}
+
 	bool PerfDebugEnabled()
 	{
 		return QmPerfEnabled();
@@ -328,15 +337,38 @@ namespace
 	{
 		if(!PerfDebugEnabled())
 			return;
+		static uint64_t s_LastFrame = 0;
+		static int s_LastPage = -1000;
+		static int s_LastTab = -1000;
+		static int s_LastSubtab = -1000;
+		static char s_aLastReason[32] = "";
+		static char s_aLastPlanStatus[32] = "";
+		static int s_SamplesThisBucket = 0;
+		const char *pSafeReason = pReason != nullptr ? pReason : "unknown";
+		const char *pSafePlanStatus = pPlanStatus != nullptr ? pPlanStatus : "unknown";
+		if(s_LastFrame != Frame || s_LastPage != Page || s_LastTab != Tab || s_LastSubtab != Subtab || str_comp(s_aLastReason, pSafeReason) != 0 || str_comp(s_aLastPlanStatus, pSafePlanStatus) != 0)
+		{
+			s_LastFrame = Frame;
+			s_LastPage = Page;
+			s_LastTab = Tab;
+			s_LastSubtab = Subtab;
+			str_copy(s_aLastReason, pSafeReason, sizeof(s_aLastReason));
+			str_copy(s_aLastPlanStatus, pSafePlanStatus, sizeof(s_aLastPlanStatus));
+			s_SamplesThisBucket = 0;
+		}
+		constexpr int MaxGapSamplesPerFrameBucket = 4;
+		if(s_SamplesThisBucket >= MaxGapSamplesPerFrameBucket)
+			return;
+		++s_SamplesThisBucket;
 		char aPayload[768];
 		char aPage[32];
 		if(Scope == CMenus::MENU_TEXT_SCOPE_SETTINGS)
 			str_copy(aPage, SettingsPageCacheKey(Page, -1).c_str(), sizeof(aPage));
 		else
 			str_format(aPage, sizeof(aPage), "%d", Page);
-		str_format(aPayload, sizeof(aPayload), "event=%s scope=%s page=%s tab=%d subtab=%d key=%s reason=%s plan_status=%s operation=%s frame=%" PRIu64,
+		str_format(aPayload, sizeof(aPayload), "event=%s scope=%s page=%s tab=%d subtab=%d key=%s reason=%s plan_status=%s operation=%s frame=%" PRIu64 " log_sample=%d log_sample_limit=%d",
 			pEvent != nullptr ? pEvent : "settings_text_miss", pScopeName != nullptr ? pScopeName : MenuTextScopeName(Scope), aPage, Tab, Subtab,
-			pKey != nullptr ? pKey : "", pReason != nullptr ? pReason : "unknown", pPlanStatus != nullptr ? pPlanStatus : "unknown", pOperation != nullptr ? pOperation : "unknown", Frame);
+			pKey != nullptr ? pKey : "", pSafeReason, pSafePlanStatus, pOperation != nullptr ? pOperation : "unknown", Frame, s_SamplesThisBucket, MaxGapSamplesPerFrameBucket);
 		QmPerfLogPayload("perf/settings-text", aPayload, pClient, aPage);
 	}
 
@@ -350,7 +382,7 @@ namespace
 			str_copy(aPage, SettingsPageCacheKey(Page, -1).c_str(), sizeof(aPage));
 		else
 			str_format(aPage, sizeof(aPage), "%d", Page);
-		str_format(aPayload, sizeof(aPayload), "event=settings_text_usage scope=%s page=%s tab=%d subtab=%d operation=%s frame=%" PRIu64 " candidates=%d hits=%d reused=%d miss=%d stale=%d text_new=%d text_reused=%d planned=%d unplanned=%d",
+		str_format(aPayload, sizeof(aPayload), "event=settings_text_usage scope=%s page=%s tab=%d subtab=%d operation=%s frame=%" PRIu64 " text_class=static_stable candidates=%d hits=%d reused=%d miss=%d stale=%d text_new=%d text_reused=%d planned=%d unplanned=%d",
 			pScopeName != nullptr ? pScopeName : MenuTextScopeName(Scope), aPage, Tab, Subtab, pOperation != nullptr ? pOperation : "unknown", Frame,
 			Candidates, Hits, Reused, Misses, Stales, TextNew, TextReused, Planned, Unplanned);
 		QmPerfLogPayload("perf/settings-text", aPayload, pClient, aPage);
@@ -656,13 +688,14 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 		}
 	}
 
-	Text.HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f, &Text);
-	Text.HMargin((Text.h * FontFactor) / 2.0f, &Text);
-	Text.y += HoverLift;
-	if(pTextUiElement != nullptr)
-		DoSettingsLabelStreamed(*pTextUiElement, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
-	else
-		Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+	Text = MenuButtonTextRect(&Text, FontFactor, HoverLift);
+	if(pText != nullptr && pText[0] != '\0')
+	{
+		if(pTextUiElement != nullptr)
+			DoSettingsLabelStreamed(*pTextUiElement, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+		else
+			Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+	}
 
 	return Ui()->DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
 }
@@ -1058,15 +1091,14 @@ void CMenus::DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTex
 	DoSettingsLabelStreamed(Element, pLabelRect, pText, Size, Align, LabelProps, -1, nullptr, true);
 }
 
-int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)
+int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding, const ColorRGBA &Color, float FontFactor)
 {
 	dbg_assert(pBC != nullptr, "settings menu button requires a stable button container");
 	if(pTextId == nullptr)
 	{
 		return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding);
 	}
-	CUIRect Text = *pRect;
-	Text.HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f, &Text);
+	CUIRect Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);
 	SLabelProperties Props;
 	Props.m_MaxWidth = Text.w;
 	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
@@ -1076,7 +1108,7 @@ int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContaine
 		return 0;
 	}
 	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-	return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), &TextElement);
+	return DoButton_Menu(pBC, pText, Checked, pRect, Flags, nullptr, Corners, Rounding, FontFactor, Color, &TextElement);
 }
 
 bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
@@ -1280,6 +1312,40 @@ bool CMenus::DoLine_RadioMenu(CUIRect &View, const char *pLabel, std::vector<CBu
 	return Pressed;
 }
 
+bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value)
+{
+	dbg_assert(vButtonContainers.size() == vValues.size(), "vButtonContainers and vValues must have the same size");
+	dbg_assert(vButtonContainers.size() == vLabels.size(), "vButtonContainers and vLabels must have the same size");
+	dbg_assert(vButtonContainers.size() == vButtonTextIds.size(), "vButtonContainers and vButtonTextIds must have the same size");
+	const int N = vButtonContainers.size();
+	const float Spacing = 2.0f;
+	const float ButtonHeight = 20.0f;
+	CUIRect Label, Buttons;
+	View.HSplitTop(Spacing, nullptr, &View);
+	View.HSplitTop(ButtonHeight, &Buttons, &View);
+	Buttons.VSplitMid(&Label, &Buttons, 10.0f);
+	Buttons.HMargin(2.0f, &Buttons);
+	DoSettingsLabel(Page, Tab, pLabelTextId, &Label, pLabel, 13.0f, TEXTALIGN_ML);
+	const float W = Buttons.w / N;
+	bool Pressed = false;
+	for(int i = 0; i < N; ++i)
+	{
+		CUIRect Button;
+		Buttons.VSplitLeft(W, &Button, &Buttons);
+		int Corner = IGraphics::CORNER_NONE;
+		if(i == 0)
+			Corner = IGraphics::CORNER_L;
+		if(i == N - 1)
+			Corner = IGraphics::CORNER_R;
+		if(DoSettingsButton_Menu(Page, Tab, Subtab, &vButtonContainers[i], vButtonTextIds[i], vLabels[i], vValues[i] == Value, &Button, BUTTONFLAG_LEFT, Corner))
+		{
+			Pressed = true;
+			Value = vValues[i];
+		}
+	}
+	return Pressed;
+}
+
 ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const float LineSize, const float LabelSize, const float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha)
 {
 	CUIRect Section, ColorPickerButton, ResetButton, Label;
@@ -1409,7 +1475,13 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 		pRect->HMargin(2.0f, &Label);
 		const float LabelFontSize = UseNewUi ? minimum(Label.h * CUi::ms_FontmodHeight, 13.0f) : Label.h * CUi::ms_FontmodHeight;
 		if(pTextUiElement != nullptr)
+		{
+			CUIElement::SUIElementRect *pElementRect = pTextUiElement->Rect(0);
+			const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
 			DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, *pTextUiElement, &Label, pText, LabelFontSize, TEXTALIGN_MC);
+			if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid())
+				Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);
+		}
 		else
 			Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);
 	}
@@ -2924,7 +2996,8 @@ void CMenus::Render()
 			}
 
 			std::optional<CScopedMenuTextVisibleGuard> TextVisibleGuard;
-			TextVisibleGuard.emplace(this);
+			if(m_GamePage == PAGE_SETTINGS)
+				TextVisibleGuard.emplace(this);
 
 			CPerfTimer ContentTimer;
 			const bool ScrollInputActive =
@@ -4185,7 +4258,8 @@ void CMenus::StartSettingsPerfFixedWindow(const char *pOperation, const char *pC
 		pPage,
 		pTab,
 		MaxFrames,
-		g_Config.m_GfxVsync != 0 || g_Config.m_GfxRefreshRate > 0);
+		g_Config.m_GfxVsync != 0 || g_Config.m_GfxRefreshRate > 0,
+		Client()->PerfFrame());
 	if(Interrupted.m_ShouldFlush)
 		LogSettingsPerfWindowSummary(Interrupted.m_Summary);
 }
@@ -4202,7 +4276,8 @@ void CMenus::StartSettingsPerfScrollWindow(const char *pContext, const char *pPa
 		pPage,
 		pTab,
 		0.250f,
-		g_Config.m_GfxVsync != 0 || g_Config.m_GfxRefreshRate > 0);
+		g_Config.m_GfxVsync != 0 || g_Config.m_GfxRefreshRate > 0,
+		Client()->PerfFrame());
 	if(Interrupted.m_ShouldFlush)
 		LogSettingsPerfWindowSummary(Interrupted.m_Summary);
 }
@@ -4211,7 +4286,7 @@ void CMenus::RecordSettingsPerfWindowFrame(double MenuDurationMs)
 {
 	if(!PerfDebugEnabled())
 		return;
-	const SQmSettingsPerfWindowFrameResult Result = m_SettingsPerfWindowTracker.RecordFrame(Client()->RenderFrameTime(), MenuDurationMs, m_SettingsScrollActive);
+	const SQmSettingsPerfWindowFrameResult Result = m_SettingsPerfWindowTracker.RecordFrame(Client()->RenderFrameTime(), MenuDurationMs, m_SettingsScrollActive, Client()->PerfFrame());
 	if(Result.m_ShouldFlush)
 		LogSettingsPerfWindowSummary(Result.m_Summary);
 }
@@ -4221,9 +4296,9 @@ void CMenus::LogSettingsPerfWindowSummary(const SQmSettingsPerfWindowSummary &Su
 	if(!PerfDebugEnabled() || Summary.m_SampleFrames <= 0)
 		return;
 
-	char aPayload[512];
+	char aPayload[1024];
 	str_format(aPayload, sizeof(aPayload),
-		"event=fps_summary operation=%s context=%s page=%s tab=%s sample_frames=%d sample_seconds=%.3f fps_avg=%.3f fps_min=%.3f fps_1pct_low=%.3f fps_max=%.3f frame_ms_avg=%.3f frame_ms_p95=%.3f frame_ms_p99=%.3f frame_ms_max=%.3f menu_ms_max=%.3f cap_limited=%d",
+		"event=fps_summary operation=%s context=%s page=%s tab=%s sample_frames=%d sample_seconds=%.3f fps_avg=%.3f fps_min=%.3f fps_1pct_low=%.3f fps_1pct_source=real_sampled fps_max=%.3f frame_ms_avg=%.3f frame_ms_p95=%.3f frame_ms_p99=%.3f frame_ms_max=%.3f menu_ms_max=%.3f window_start_frame=%" PRIu64 " window_end_frame=%" PRIu64 " cap_limited=%d",
 		Summary.m_aOperation,
 		Summary.m_aContext,
 		Summary.m_aPage,
@@ -4239,6 +4314,8 @@ void CMenus::LogSettingsPerfWindowSummary(const SQmSettingsPerfWindowSummary &Su
 		Summary.m_FrameMsP99,
 		Summary.m_FrameMsMax,
 		Summary.m_MenuMsMax,
+		Summary.m_WindowStartFrame,
+		Summary.m_WindowEndFrame,
 		Summary.m_CapLimited ? 1 : 0);
 	QmPerfLogPayload("perf/fps", aPayload, Client());
 }
@@ -4423,6 +4500,62 @@ int CMenus::DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const 
 	return DoButton_MenuTab(pButtonContainer, pText, Checked, pRect, Corners, nullptr, nullptr, nullptr, nullptr, 10.0f, nullptr, &TextElement);
 }
 
+int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)
+{
+	if(pTextId == nullptr)
+		return DoButton_Menu(pButtonContainer, pText, Checked, pRect, Flags, nullptr, Corners, Rounding);
+
+	CUIRect Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);
+	SLabelProperties Props;
+	Props.m_MaxWidth = Text.w;
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
+	if(m_MenuTextPlanCollecting)
+	{
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, pText, &Text, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props, StyleKey);
+		return 0;
+	}
+	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, StyleKey);
+	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
+	const bool Pressed = Ui()->CheckActiveItem(pButtonContainer);
+	const float HoverTarget = Checked || MouseInside || Pressed ? 1.0f : 0.0f;
+	static const uint64_t s_ScopeHash = static_cast<uint64_t>(str_quickhash("menu_button_hover"));
+	const uint64_t NodeKey = BuildUiAnimNodeKey(s_ScopeHash, reinterpret_cast<uint64_t>(pButtonContainer));
+	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
+	const float HoverStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA, HoverTarget, 0.11f, EEasing::EASE_OUT), 0.0f, 1.0f);
+	const float HoverLift = -1.25f * HoverStrength;
+	Text = MenuButtonTextRect(pRect, 0.0f, HoverLift);
+	const int Result = DoButton_Menu(pButtonContainer, "", Checked, pRect, Flags, nullptr, Corners, Rounding);
+	CUIElement::SUIElementRect *pElementRect = TextElement.Rect(0);
+	const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
+	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, TextElement, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
+	if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid())
+		Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
+	return Result;
+}
+
+int CMenus::DoIngameMenuCheckBox(int Page, const char *pTextId, const void *pId, const char *pText, int Checked, const CUIRect *pRect)
+{
+	if(pTextId == nullptr)
+		return DoButton_CheckBox(pId, pText, Checked, pRect);
+
+	CUIRect Box, Label;
+	pRect->VSplitLeft(pRect->h, &Box, &Label);
+	Label.VSplitLeft(5.0f, nullptr, &Label);
+	Box.Margin(2.0f, &Box);
+	SLabelProperties Props;
+	Props.m_MaxWidth = Label.w;
+	Props.m_MinimumFontSize = Box.h * CUi::ms_FontmodHeight * 0.7f;
+	if(m_MenuTextPlanCollecting)
+	{
+		DoIngameMenuLabel(Page, pTextId, &Label, pText, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_ML, Props);
+		return 0;
+	}
+
+	const int Result = DoButton_CheckBox_Common_WithLabelElement(pId, "", Checked ? "X" : "", pRect, BUTTONFLAG_LEFT, nullptr);
+	DoIngameMenuLabel(Page, pTextId, &Label, pText, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_ML, Props);
+	return Result;
+}
+
 void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)
 {
 	if(pTextId == nullptr)
@@ -4437,7 +4570,32 @@ void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRe
 		return;
 	}
 	CUIElement &Element = MenuTextElement(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, StyleKey);
+	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
+	const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, Element, pRect, pText, Size, Align, LabelProps);
+	if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+		Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+}
+
+void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)
+{
+	if(pTextId == nullptr)
+	{
+		Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+		return;
+	}
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(pRect, Size, Align, LabelProps);
+	if(m_MenuTextPlanCollecting)
+	{
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, pText, pRect, Size, Align, LabelProps, StyleKey);
+		return;
+	}
+	CUIElement &Element = MenuTextElement(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, StyleKey);
+	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
+	const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
+	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, Element, pRect, pText, Size, Align, LabelProps);
+	if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+		Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
 }
 
 CUIElement &CMenus::MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const SMenuTextStyleKey &StyleKey)
@@ -4533,6 +4691,103 @@ void CMenus::DoSettingsLabelStreamed(CUIElement &Element, const CUIRect *pRect, 
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_SETTINGS, Element, pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor, Render);
 }
 
+bool CMenus::MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, int StrLen, const CTextCursor *pReadCursor)
+{
+	if(pRect == nullptr || pText == nullptr)
+		return false;
+	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
+	const bool ColorChanged = pElementRect->m_TextColor != TextRender()->GetTextColor() || pElementRect->m_TextOutlineColor != TextRender()->GetTextOutlineColor();
+	const bool TextChanged =
+		(StrLen > 0 && (StrLen != (int)pElementRect->m_Text.size() || str_comp_num(pElementRect->m_Text.c_str(), pText, StrLen) != 0)) ||
+		(StrLen != 0 && StrLen < 0 && str_comp(pElementRect->m_Text.c_str(), pText) != 0);
+	const int ReadCursorGlyphCount = pReadCursor == nullptr ? -1 : pReadCursor->m_GlyphCount;
+	const bool SizeChanged = pElementRect->m_Width != pRect->w || pElementRect->m_Height != pRect->h;
+	const bool NeedsBuild =
+		(!pElementRect->m_UITextContainer.Valid() && pText[0] != '\0' && StrLen != 0) ||
+		ColorChanged ||
+		TextChanged ||
+		SizeChanged ||
+		pElementRect->m_ReadCursorGlyphCount != ReadCursorGlyphCount;
+	return NeedsBuild;
+}
+
+bool CMenus::RequestMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, int StrLen, const CTextCursor *pReadCursor)
+{
+	(void)Size;
+	(void)Align;
+	const bool NeedsBuild = MenuTextContainerNeedsBuild(Element, pRect, pText, StrLen, pReadCursor);
+	if(!NeedsBuild)
+		return true;
+	if(m_pSettingsTextPrebuildBudget != nullptr)
+		return *m_pSettingsTextPrebuildBudget > 0;
+	if(m_CurrentSettingsUiFrameBudget.m_TextContainerTokens <= 0)
+		return false;
+	--m_CurrentSettingsUiFrameBudget.m_TextContainerTokens;
+	return true;
+}
+
+void CMenus::QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor)
+{
+	if(pRect == nullptr || pText == nullptr)
+		return;
+	for(SMenuTextContainerBuildRequest &Request : m_vMenuTextContainerBuildRequests)
+	{
+		if(Request.m_pElement == &Element)
+		{
+			Request.m_Text = pText;
+			Request.m_Rect = *pRect;
+			Request.m_Size = Size;
+			Request.m_Align = Align;
+			Request.m_LabelProps = LabelProps;
+			Request.m_StrLen = StrLen;
+			Request.m_ReadCursorGlyphCount = pReadCursor == nullptr ? -1 : pReadCursor->m_GlyphCount;
+			return;
+		}
+	}
+	SMenuTextContainerBuildRequest Request;
+	Request.m_pElement = &Element;
+	Request.m_Text = pText;
+	Request.m_Rect = *pRect;
+	Request.m_Size = Size;
+	Request.m_Align = Align;
+	Request.m_LabelProps = LabelProps;
+	Request.m_StrLen = StrLen;
+	Request.m_ReadCursorGlyphCount = pReadCursor == nullptr ? -1 : pReadCursor->m_GlyphCount;
+	m_vMenuTextContainerBuildRequests.push_back(std::move(Request));
+}
+
+void CMenus::DrainMenuTextContainerBuildRequests()
+{
+	while(m_CurrentSettingsUiFrameBudget.m_TextContainerTokens > 0 && !m_vMenuTextContainerBuildRequests.empty())
+	{
+		SMenuTextContainerBuildRequest Request = std::move(m_vMenuTextContainerBuildRequests.front());
+		m_vMenuTextContainerBuildRequests.erase(m_vMenuTextContainerBuildRequests.begin());
+		if(Request.m_pElement == nullptr)
+			continue;
+		bool TextContainerRecreated = false;
+		--m_CurrentSettingsUiFrameBudget.m_TextContainerTokens;
+		DrainMenuTextContainerBuild(*Request.m_pElement, &Request.m_Rect, Request.m_Text.c_str(), Request.m_Size, Request.m_Align, Request.m_LabelProps, Request.m_StrLen, nullptr, false, &TextContainerRecreated);
+		if(TextContainerRecreated)
+		{
+			for(auto &[Key, Entry] : m_MenuTextPool)
+			{
+				(void)Key;
+				if(&Entry.m_Element == Request.m_pElement)
+				{
+					Entry.m_Built = true;
+					Entry.m_Generation = m_MenuTextPoolGeneration;
+					break;
+				}
+			}
+		}
+	}
+}
+
+void CMenus::DrainMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated)
+{
+	Ui()->DoLabelStreamed(*Element.Rect(0), pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor, Render, pTextContainerRecreated);
+}
+
 void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render)
 {
 	(void)Scope;
@@ -4563,46 +4818,55 @@ void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, cons
 		return;
 	}
 
+	const bool NeedsBuild = MenuTextContainerNeedsBuild(Element, pRect, pText, StrLen, pReadCursor);
+	if(NeedsBuild && m_pSettingsTextPrebuildBudget == nullptr)
+	{
+		QueueMenuTextContainerBuild(Element, pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor);
+		CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
+		if(Render && pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+			TextRender()->RenderTextContainer(pElementRect->m_UITextContainer, pElementRect->m_TextColor, pElementRect->m_TextOutlineColor, pRect->x, pRect->y);
+		return;
+	}
+
 	if(m_pSettingsTextPrebuildBudget != nullptr)
 	{
-		CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
-		const bool ColorChanged = pElementRect->m_TextColor != TextRender()->GetTextColor() || pElementRect->m_TextOutlineColor != TextRender()->GetTextOutlineColor();
-		const bool TextChanged =
-			(StrLen > 0 && (StrLen != (int)pElementRect->m_Text.size() || str_comp_num(pElementRect->m_Text.c_str(), pText, StrLen) != 0)) ||
-			(StrLen != 0 && StrLen < 0 && str_comp(pElementRect->m_Text.c_str(), pText) != 0);
-		const int ReadCursorGlyphCount = pReadCursor == nullptr ? -1 : pReadCursor->m_GlyphCount;
-		const bool SizeChanged = pElementRect->m_Width != pRect->w || pElementRect->m_Height != pRect->h;
-		const bool NeedsBuild =
-			(!pElementRect->m_UITextContainer.Valid() && pText[0] != '\0' && StrLen != 0) ||
-			ColorChanged ||
-			TextChanged ||
-			SizeChanged ||
-			pElementRect->m_ReadCursorGlyphCount != ReadCursorGlyphCount;
-		if(NeedsBuild)
+		if(MenuTextContainerNeedsBuild(Element, pRect, pText, StrLen, pReadCursor))
 		{
 			SSettingsWarmupFrameBudget Budget{};
 			Budget.m_MaxTextContainers = *m_pSettingsTextPrebuildBudget;
 			if(!SettingsWarmupConsumeBudget(Budget, ESettingsWarmupCost::TEXT_CONTAINER))
 				return;
 			*m_pSettingsTextPrebuildBudget = Budget.m_MaxTextContainers;
+			bool TextContainerRecreated = false;
+			DrainMenuTextContainerBuild(Element, pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor, Render, &TextContainerRecreated);
+			if(TextContainerRecreated)
+			{
+				for(auto &[Key, Entry] : m_MenuTextPool)
+				{
+					(void)Key;
+					if(&Entry.m_Element == &Element)
+					{
+						Entry.m_Built = true;
+						Entry.m_Generation = m_MenuTextPoolGeneration;
+						break;
+					}
+				}
+			}
+			if(m_pActiveSettingsTextPerfStats != nullptr)
+			{
+				if(TextContainerRecreated)
+					++m_pActiveSettingsTextPerfStats->m_New;
+				else
+					++m_pActiveSettingsTextPerfStats->m_Reused;
+			}
+			return;
 		}
 	}
 
 	bool TextContainerRecreated = false;
-	Ui()->DoLabelStreamed(*Element.Rect(0), pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor, Render, &TextContainerRecreated);
-	if(TextContainerRecreated)
-	{
-		for(auto &[Key, Entry] : m_MenuTextPool)
-		{
-			(void)Key;
-			if(&Entry.m_Element == &Element)
-			{
-				Entry.m_Built = true;
-				Entry.m_Generation = m_MenuTextPoolGeneration;
-				break;
-			}
-		}
-	}
+	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
+	if(Render && pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+		TextRender()->RenderTextContainer(pElementRect->m_UITextContainer, pElementRect->m_TextColor, pElementRect->m_TextOutlineColor, pRect->x, pRect->y);
 	if(m_pActiveSettingsTextPerfStats != nullptr)
 	{
 		if(TextContainerRecreated)
@@ -4698,7 +4962,8 @@ bool CMenus::PrebuildSettingsTextPlanItem(const SMenuTextPlanItem &Item, int &Re
 		RemainingBudget = Budget.m_MaxTextContainers;
 	}
 
-	DoMenuLabelStreamed(Item.m_Scope, Element, &Item.m_Rect, Item.m_Text.c_str(), Item.m_FontSize, Item.m_Align, Item.m_LabelProps, -1, nullptr, false);
+	bool TextContainerRecreated = false;
+	DrainMenuTextContainerBuild(Element, &Item.m_Rect, Item.m_Text.c_str(), Item.m_FontSize, Item.m_Align, Item.m_LabelProps, -1, nullptr, false, &TextContainerRecreated);
 	if(pRect->m_UITextContainer.Valid())
 	{
 		for(auto &[Key, Entry] : m_MenuTextPool)
@@ -5105,13 +5370,17 @@ void CMenus::PrebuildIngameEscTextPoolBeforeOpen(int Budget)
 	if(Budget <= 0)
 		return;
 	SSettingsAdaptiveBudgetInput Input;
+	Input.m_FrameId = Client()->PerfFrame();
+	str_copy(Input.m_aOperation, SettingsPerfActiveOperation(), sizeof(Input.m_aOperation));
+	str_copy(Input.m_aPage, "settings", sizeof(Input.m_aPage));
+	str_copy(Input.m_aTab, "ingame_esc", sizeof(Input.m_aTab));
+	str_copy(Input.m_aContext, SettingsPerfContextName(), sizeof(Input.m_aContext));
 	Input.m_FrameMsAverage = (float)GameClient()->m_QmMonitoring.Snapshot().m_Performance.m_FrameTimeMs;
 	Input.m_FrameMsP95 = Input.m_FrameMsAverage;
 	Input.m_TargetFrameMs = 8.333f;
 	Input.m_BackgroundBacklog = maximum(Budget, 0) + CountMissingSettingsMenuTextPlanItems();
 	Input.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = SettingsAdaptiveBudgetStep(Input, m_SettingsTextAdaptiveBudgetState);
-	LogSettingsAdaptiveBudget("stable_text_ingame_esc", Input, AdaptiveBudget);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("stable_text_ingame_esc", Input, m_SettingsTextAdaptiveBudgetState);
 	PrebuildSettingsMenuTextPool(minimum(Budget, maximum(1, AdaptiveBudget.m_TextPrebuildTokens)), "target_settings", "ingame_esc_open");
 }
 
@@ -5123,6 +5392,11 @@ int CMenus::PrebuildSettingsTextPoolForLoading(int Budget, const char *pOperatio
 		return maximum(Budget, 0);
 
 	SSettingsAdaptiveBudgetInput Input;
+	Input.m_FrameId = Client()->PerfFrame();
+	str_copy(Input.m_aOperation, pOperationOverride != nullptr ? pOperationOverride : SettingsPerfActiveOperation(), sizeof(Input.m_aOperation));
+	str_copy(Input.m_aPage, CurrentQmUiPerfPage() != nullptr ? CurrentQmUiPerfPage() : "settings", sizeof(Input.m_aPage));
+	str_copy(Input.m_aTab, "stable_text", sizeof(Input.m_aTab));
+	str_copy(Input.m_aContext, SettingsPerfContextName(), sizeof(Input.m_aContext));
 	Input.m_FrameMsAverage = (float)GameClient()->m_QmMonitoring.Snapshot().m_Performance.m_FrameTimeMs;
 	Input.m_FrameMsP95 = Input.m_FrameMsAverage;
 	Input.m_TargetFrameMs = 8.333f;
@@ -5130,9 +5404,7 @@ int CMenus::PrebuildSettingsTextPoolForLoading(int Budget, const char *pOperatio
 	Input.m_PostScrollRecoveryFrames = m_SettingsPostScrollRecoveryFrames;
 	Input.m_BackgroundBacklog = maximum(Budget, 0) + CountMissingSettingsMenuTextPlanItems() + SettingsTextPlanCollectionRemaining();
 	Input.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = SettingsAdaptiveBudgetStep(Input, m_SettingsTextAdaptiveBudgetState);
-	// Telemetry contract: event=settings_adaptive_budget.
-	LogSettingsAdaptiveBudget("stable_text_prebuild", Input, AdaptiveBudget);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("stable_text_prebuild", Input, m_SettingsTextAdaptiveBudgetState);
 
 	const CUiRenderOnlyScope RenderOnly(Ui());
 	const int PlanCollectionBudget = maximum(1, minimum(Budget, AdaptiveBudget.m_TextPrebuildTokens));
@@ -5183,10 +5455,16 @@ void CMenus::LogSettingsAdaptiveBudget(const char *pSource, const SSettingsAdapt
 {
 	if(!PerfDebugEnabled())
 		return;
-	char aPayload[384];
+	char aPayload[768];
 	str_format(aPayload, sizeof(aPayload),
-		"event=settings_adaptive_budget source=%s mode=%s reason=%s frame_ms_avg=%.3f frame_ms_p95=%.3f target_ms=%.3f visible_tokens=%d prefetch_tokens=%d background_tokens=%d gpu_upload_tokens=%d text_tokens=%d demo_tokens=%d backlog=%d scroll=%d jump_scroll=%d",
+		"event=settings_adaptive_budget source=%s frame=%" PRIu64 " operation=%s page=%s tab=%s subtab=%d context=%s mode=%s reason=%s frame_ms_avg=%.3f frame_ms_p95=%.3f target_ms=%.3f visible_tokens=%d prefetch_tokens=%d background_tokens=%d gpu_upload_tokens=%d resource_upload_tokens=%d text_tokens=%d text_container_tokens=%d glyph_rasterize_tokens=%d glyph_upload_tokens=%d paragraph_layout_tokens=%d metadata_layout_tokens=%d preview_artifact_tokens=%d texture_upload_tokens=%d card_draw_tokens=%d demo_tokens=%d backlog=%d scroll=%d jump_scroll=%d tab_switch_first_frame=%d frame_pressure=%d",
 		pSource != nullptr ? pSource : "unknown",
+		Input.m_FrameId,
+		Input.m_aOperation,
+		Input.m_aPage,
+		Input.m_aTab,
+		Input.m_Subtab,
+		Input.m_aContext,
 		SettingsAdaptiveBudgetModeName(Output.m_Mode),
 		SettingsAdaptiveBudgetReasonName(Output.m_Reason),
 		Input.m_FrameMsAverage,
@@ -5196,12 +5474,49 @@ void CMenus::LogSettingsAdaptiveBudget(const char *pSource, const SSettingsAdapt
 		Output.m_PrefetchTokens,
 		Output.m_BackgroundTokens,
 		Output.m_GpuUploadTokens,
+		Output.m_ResourceUploadTokens,
 		Output.m_TextPrebuildTokens,
+		Output.m_TextContainerTokens,
+		Output.m_GlyphRasterizeTokens,
+		Output.m_GlyphUploadTokens,
+		Output.m_ParagraphLayoutTokens,
+		Output.m_MetadataLayoutTokens,
+		Output.m_PreviewArtifactTokens,
+		Output.m_TextureUploadTokens,
+		Output.m_CardDrawTokens,
 		Output.m_DemoMetadataTokens,
 		Input.m_BackgroundBacklog + Input.m_VisibleWaiting,
 		Input.m_ScrollActive ? 1 : 0,
-		Input.m_JumpScrollActive ? 1 : 0);
+		Input.m_JumpScrollActive ? 1 : 0,
+		Input.m_TabSwitchFirstFrame ? 1 : 0,
+		Input.m_FramePressure ? 1 : 0);
 	QmPerfLogPayload("perf/settings-resource", aPayload, Client(), CurrentQmUiPerfPage() != nullptr ? CurrentQmUiPerfPage() : "settings");
+}
+
+void CMenus::PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &Input)
+{
+	if(Input.m_FrameId == 0)
+		Input.m_FrameId = Client()->PerfFrame();
+	if(Input.m_aOperation[0] == '\0')
+		str_copy(Input.m_aOperation, SettingsPerfActiveOperation(), sizeof(Input.m_aOperation));
+	if(Input.m_aPage[0] == '\0')
+		str_copy(Input.m_aPage, CurrentQmUiPerfPage() != nullptr ? CurrentQmUiPerfPage() : "settings", sizeof(Input.m_aPage));
+	if(Input.m_aContext[0] == '\0')
+		str_copy(Input.m_aContext, SettingsPerfContextName(), sizeof(Input.m_aContext));
+}
+
+SSettingsAdaptiveBudgetOutput CMenus::ComputeSettingsUiFrameSchedulerBudget(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State)
+{
+	PrepareSettingsAdaptiveBudgetInput(Input);
+	const SSettingsAdaptiveBudgetOutput Budget = SettingsAdaptiveBudgetStep(Input, State);
+	LogSettingsAdaptiveBudget(pSource, Input, Budget);
+	return Budget;
+}
+
+SSettingsAdaptiveBudgetOutput CMenus::BeginSettingsUiFrameScheduler(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State)
+{
+	m_CurrentSettingsUiFrameBudget = ComputeSettingsUiFrameSchedulerBudget(pSource, Input, State);
+	return m_CurrentSettingsUiFrameBudget;
 }
 
 void CMenus::LogSettingsUiBudget(const char *pPage, const SSettingsUiBudgetFrame &Frame) const
@@ -5405,7 +5720,23 @@ void CMenus::OnStateChange(int NewState, int OldState)
 	Ui()->SetActiveItem(nullptr);
 
 	if(OldState == IClient::STATE_ONLINE || OldState == IClient::STATE_OFFLINE)
+	{
 		TextRender()->DeleteTextContainer(m_MotdTextContainerIndex);
+		TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex);
+		m_IngameMotdParagraphCache.m_Valid = false;
+		m_IngameMotdParagraphCache.m_Pending = false;
+		m_IngameMotdParagraphCache.m_PreviousTextHash = 0;
+		m_IngameMotdParagraphCache.m_PreviousText.clear();
+		for(auto &[Key, Entry] : m_SnapshotTextCache)
+		{
+			(void)Key;
+			if(Entry.m_Element.IsRegistered())
+				TextRender()->DeleteTextContainer(Entry.m_Element.Rect(0)->m_UITextContainer);
+		}
+		m_SnapshotTextCache.clear();
+		m_SnapshotTextLastReadyByScope.clear();
+		m_SnapshotTextPending.clear();
+	}
 
 	if(NewState == IClient::STATE_OFFLINE)
 	{
@@ -5446,6 +5777,20 @@ void CMenus::OnStateChange(int NewState, int OldState)
 void CMenus::OnWindowResize()
 {
 	TextRender()->DeleteTextContainer(m_MotdTextContainerIndex);
+	TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex);
+	m_IngameMotdParagraphCache.m_Valid = false;
+	m_IngameMotdParagraphCache.m_Pending = false;
+	m_IngameMotdParagraphCache.m_PreviousTextHash = 0;
+	m_IngameMotdParagraphCache.m_PreviousText.clear();
+	for(auto &[Key, Entry] : m_SnapshotTextCache)
+	{
+		(void)Key;
+		if(Entry.m_Element.IsRegistered())
+			TextRender()->DeleteTextContainer(Entry.m_Element.Rect(0)->m_UITextContainer);
+	}
+	m_SnapshotTextCache.clear();
+	m_SnapshotTextLastReadyByScope.clear();
+	m_SnapshotTextPending.clear();
 	InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::WINDOW_OR_SCALE_CHANGED);
 }
 
@@ -5469,6 +5814,8 @@ void CMenus::OnRender()
 		{
 			if(Client()->State() == IClient::STATE_ONLINE)
 			{
+				if(m_GamePage == PAGE_SERVER_INFO)
+					PrepareIngameServerInfoTextRuntime();
 				StartSettingsPerfFixedWindow("ingame_esc_open", "online", GamePageName(m_GamePage), "none", 30);
 			}
 			SetActive(true);
@@ -5495,6 +5842,30 @@ void CMenus::OnRender()
 		LogPerfStage(Client(), "render_body", StageTimer.ElapsedMs());
 	}
 
+	{
+		CPerfTimer StageTimer;
+		DrainMenuTextContainerBuildRequests();
+		LogPerfStage(Client(), "menu_text_runtime_drain", StageTimer.ElapsedMs());
+	}
+
+	{
+		CPerfTimer StageTimer;
+		if(IsActive() && Client()->State() == IClient::STATE_ONLINE)
+		{
+			if(m_GamePage == PAGE_SERVER_INFO)
+				DrainIngameUiTextRuntime(false);
+			else if(GameClient()->m_Motd.ServerMotd()[0])
+				PrepareIngameServerInfoTextRuntime();
+			else
+				DrainIngameUiSnapshotTextRuntime();
+		}
+		else
+		{
+			DrainIngameUiSnapshotTextRuntime();
+		}
+		LogPerfStage(Client(), "ingame_text_runtime_drain", StageTimer.ElapsedMs());
+	}
+
 	if(IsActive())
 	{
 		CPerfTimer StageTimer;
@@ -5515,6 +5886,11 @@ void CMenus::OnRender()
 	char aExtra[96];
 	str_format(aExtra, sizeof(aExtra), "state=%s active=%d", ClientStateName(Client()->State()), IsActive() ? 1 : 0);
 	LogPerfStage(Client(), "menus_onrender_total", FrameTimer.ElapsedMs(), false, aExtra);
+	{
+		CPerfTimer StageTimer;
+		TextRender()->FlushQmTextRuntimeBudgetLog();
+		LogPerfStage(Client(), "telemetry_flush", StageTimer.ElapsedMs());
+	}
 }
 
 void CMenus::UpdateColors()
@@ -5759,6 +6135,11 @@ void CMenus::SetGamePage(int NewPage)
 		m_SettingsPerfLastQmClientTab = -1;
 		const std::string PageName = SettingsPageCacheKey(g_Config.m_UiSettingsPage, -1);
 		StartSettingsPerfFixedWindow("settings_open", "online", PageName.c_str(), "none", 30);
+	}
+	else if(OldPage != NewPage && NewPage == PAGE_SERVER_INFO)
+	{
+		PrepareIngameServerInfoTextRuntime();
+		StartSettingsPerfFixedWindow("ingame_server_info", "online", "game", "server_info", 30);
 	}
 	else if(OldPage == PAGE_SETTINGS && NewPage != PAGE_SETTINGS)
 	{

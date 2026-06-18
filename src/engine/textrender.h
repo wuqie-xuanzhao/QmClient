@@ -331,6 +331,7 @@ public:
 	virtual void DeleteTextContainer(STextContainerIndex &TextContainerIndex) = 0;
 
 	virtual void UploadTextContainer(STextContainerIndex TextContainerIndex) = 0;
+	virtual void FlushQmTextRuntimeBudgetLog() {}
 
 	virtual void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) = 0;
 	virtual void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor, float X, float Y) = 0;

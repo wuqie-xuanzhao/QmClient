@@ -9,8 +9,9 @@ import {
   complianceRate, computeVerdict, generateNarrative, isSamplingBiased, BUDGET,
   kde, qqNorm, pagePerformanceAttribution, selectFrameTimeEntries, entryDurationMs,
   inferSamplingThreshold, sectionPerformanceTop, fpsSummaries, targetSettingsSnapshot, PERF_SYSTEM,
-  settingsTextAnalysis, assetsPreviewAdmissionSummary, assetsVisibleReadySummary, demoBrowserPhaseSummary, adaptiveBudgetSummary,
-  type Percentiles, type SpikeInfo, type PageStats, type ComparisonResult,
+  settingsTextAnalysis, assetsPreviewAdmissionSummary, assetsVisibleReadySummary, demoBrowserPhaseSummary, adaptiveBudgetSummary, settingsUiBudgetSummary,
+  previewBudgetSummary, textRuntimeBudgetSummary, budgetCorrelationSummary, coldTabSwitchFpsSummaries, warmTabSwitchFpsSummaries,
+  type BudgetCorrelationWindow, type Percentiles, type SpikeInfo, type PageStats, type ComparisonResult,
 } from './stats.ts';
 
 function escapeHtml(s: string): string {
@@ -27,6 +28,92 @@ function truncateMiddle(s: string, max = 72): string {
 function sampleField(sample: string, name: string): string {
   const match = sample.match(new RegExp(`(?:^| )${name}=([^ ]+)`));
   return match?.[1] ?? '';
+}
+
+function numericField(entry: PerfEntry, name: string, fallback = 0): number {
+  const value = entry.fields[name];
+  if (value === undefined || value === null || value === '') return fallback;
+  const parsed = typeof value === 'number' ? value : Number.parseFloat(String(value));
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function formatMs(value: number, digits = 3): string {
+  return `${value.toFixed(digits)}ms`;
+}
+
+function formatFps(value: number): string {
+  return `${value.toFixed(1)} FPS`;
+}
+
+function statCell(label: string, value: string, tone = ''): string {
+  return `<div class="stat-cell"><span>${escapeHtml(label)}</span><strong class="${tone}">${escapeHtml(value)}</strong></div>`;
+}
+
+function metricTone(value: number, ok: number, warn: number): string {
+  return value <= ok ? 'ok' : value <= warn ? 'warn' : 'bad';
+}
+
+function statisticalSummary(values: number[]): Percentiles {
+  return calcPercentiles(values);
+}
+
+function sampleArrayEvenly<T>(items: T[], maxItems: number): T[] {
+  if (items.length <= maxItems) return items;
+  if (maxItems <= 0) return [];
+  if (maxItems === 1) return [items[0]];
+  const result: T[] = [];
+  const lastIndex = items.length - 1;
+  for (let i = 0; i < maxItems; i++) {
+    result.push(items[Math.round((i / (maxItems - 1)) * lastIndex)]);
+  }
+  return result;
+}
+
+function renderBudgetWindowCards(windows: BudgetCorrelationWindow[]): string {
+  if (windows.length === 0) {
+    return '<p class="small-note">缺少 fps_summary，无法生成低帧窗口统计。</p>';
+  }
+  return `<div class="budget-window-grid">
+    ${windows.slice(0, 8).map((row, index) => {
+      const culprit = row.culpritRank[0];
+      const topDetails = culprit?.details.replace(/ /g, ' · ') ?? 'none';
+      const culpritList = row.culpritRank
+        .filter(item => item.score > 0)
+        .slice(0, 5)
+        .map(item => `${item.kind}=${item.score.toFixed(2)}`)
+        .join(' · ') || 'none';
+      const fpsTone = row.fpsOnePctLowAvailable && row.fpsOnePctLow >= 240 ? 'ok' : row.fpsOnePctLowAvailable && row.fpsOnePctLow >= 120 ? 'warn' : 'bad';
+      const p99Tone = metricTone(row.frameMsP99, BUDGET.h240, BUDGET.h120);
+      return `<article class="budget-window-card ${fpsTone}">
+        <div class="budget-card-head">
+          <span class="rank">#${index + 1}</span>
+          <div>
+            <h3>${escapeHtml(row.operation || 'unknown')}</h3>
+            <p>${escapeHtml(row.page || 'unknown')} · ${escapeHtml(row.tab || 'none')} · frame ${row.windowStartFrame}-${row.windowEndFrame}</p>
+          </div>
+          <span class="badge ${fpsTone}">${row.fpsOnePctLowAvailable ? escapeHtml(row.fpsOnePctLowSource) : 'P99-derived'}</span>
+        </div>
+        <div class="stat-grid dense">
+          ${statCell('1% Low', formatFps(row.fpsOnePctLow), fpsTone)}
+          ${statCell('p99', formatMs(row.frameMsP99), p99Tone)}
+          ${statCell('Top Culprit', culprit?.kind ?? 'none', culprit && culprit.score > 0 ? 'warn' : '')}
+          ${statCell('Score', culprit ? culprit.score.toFixed(2) : '0.00', culprit && culprit.score > 0 ? 'warn' : '')}
+          ${statCell('Card Draw', formatMs(row.maxCardDrawMs), metricTone(row.maxCardDrawMs, 4, 8))}
+          ${statCell('Preview Draw', formatMs(row.maxPreviewDrawMs), metricTone(row.maxPreviewDrawMs, 1, 4))}
+          ${statCell('Metadata', formatMs(row.maxMetadataLayoutMs), metricTone(row.maxMetadataLayoutMs, 1, 4))}
+          ${statCell('Texture Upload', formatMs(row.maxTextureUploadMs), metricTone(row.maxTextureUploadMs, 1, 4))}
+          ${statCell('Container Create', formatMs(row.maxTextContainerCreateMs), metricTone(row.maxTextContainerCreateMs, 1, 4))}
+          ${statCell('Glyph Rasterize', formatMs(row.maxGlyphRasterizeMs), metricTone(row.maxGlyphRasterizeMs, 1, 4))}
+          ${statCell('Paragraph', formatMs(row.maxParagraphLayoutMs), metricTone(row.maxParagraphLayoutMs, 1, 4))}
+          ${statCell('Paragraph Blocked', String(row.paragraphBudgetBlocked), row.paragraphBudgetBlocked > 0 ? 'warn' : 'ok')}
+          ${statCell('Telemetry', formatMs(row.maxTelemetryOverheadMs), metricTone(row.maxTelemetryOverheadMs, 1, 4))}
+          ${statCell('Telemetry Flush', formatMs(row.maxTelemetryFlushMs), metricTone(row.maxTelemetryFlushMs, 1, 4))}
+        </div>
+        <p class="culprit-note">${escapeHtml(topDetails)}</p>
+        <p class="culprit-note">${escapeHtml(culpritList)}</p>
+      </article>`;
+    }).join('')}
+  </div>`;
 }
 
 function percentilesToChartData(p: Percentiles) {
@@ -57,15 +144,45 @@ export function generateReport(
   const attribution = pagePerformanceAttribution(entries);
   const sectionTop = sectionPerformanceTop(entries, 10);
   const fps = fpsSummaries(entries);
+  const coldTabSwitchFps = coldTabSwitchFpsSummaries(entries);
+  const warmTabSwitchFps = warmTabSwitchFpsSummaries(entries);
   const targetSettings = targetSettingsSnapshot(entries);
   const textAnalysis = settingsTextAnalysis(entries);
   const assetsPreviewAdmission = assetsPreviewAdmissionSummary(entries);
   const assetsVisibleReady = assetsVisibleReadySummary(entries);
+  const previewBudget = previewBudgetSummary(entries);
   const demoBrowser = demoBrowserPhaseSummary(entries);
   const adaptiveBudget = adaptiveBudgetSummary(entries);
+  const settingsUiBudget = settingsUiBudgetSummary(entries);
+  const textRuntimeBudget = textRuntimeBudgetSummary(entries);
+  const budgetCorrelation = budgetCorrelationSummary(entries);
+  const textAnalysisForData = {
+    ...textAnalysis,
+    prebuildSeries: sampleArrayEvenly(textAnalysis.prebuildSeries, 240),
+    eventTimeline: sampleArrayEvenly(textAnalysis.eventTimeline, 240),
+  };
+  const assetsCardDrawEvents = entries.filter(entry => entry.system === 'perf/assets' && entry.fields.stage === 'assets_preview_draw_workshop_cards');
+  const assetsCardDrawStats = statisticalSummary(assetsCardDrawEvents.map(entry => entryDurationMs(entry) ?? entry.durationMs));
+  const assetsLayoutTextStats = statisticalSummary(assetsCardDrawEvents.map(entry => numericField(entry, 'layout_text_ms')));
+  const assetsPreviewDrawStats = statisticalSummary(assetsCardDrawEvents.map(entry => numericField(entry, 'preview_draw_ms')));
+  const assetsThumbSchedulingStats = statisticalSummary(assetsCardDrawEvents.map(entry => numericField(entry, 'thumb_scheduling_ms')));
+  const textContainerCreateStats = statisticalSummary(entries
+    .filter(entry => entry.system === 'perf/text' && entry.fields.event === 'text_runtime_budget')
+    .map(entry => numericField(entry, 'text_container_create_ms')));
+  const glyphRasterizeStats = statisticalSummary(entries
+    .filter(entry => entry.system === 'perf/text' && entry.fields.event === 'text_runtime_budget')
+    .map(entry => numericField(entry, 'glyph_rasterize_ms')));
 
   const p = calcPercentiles(frameDurations);
-  const ts = toTimeSeries(allEntries);
+  const rawTimeSeries = toTimeSeries(allEntries);
+  const sampledTimelinePairs = sampleArrayEvenly(
+    rawTimeSeries.times.map((time, index) => ({ time, duration: rawTimeSeries.durations[index] })),
+    600,
+  );
+  const ts = {
+    times: sampledTimelinePairs.map(point => point.time),
+    durations: sampledTimelinePairs.map(point => point.duration),
+  };
   const spikes = detectSpikes(allEntries, BUDGET.h60);
   const histData = histogram(frameDurations, [0, 2, 4, 8, 16, 33, 100, 500]);
   const pages = pageBreakdown(menuEntries, BUDGET.h60);
@@ -74,17 +191,17 @@ export function generateReport(
   const compliance60 = complianceRate(frameDurations, BUDGET.h60);
   const biased = isSamplingBiased(frameDurations);
   const samplingThresholdMs = inferSamplingThreshold(frameDurations);
-  const verdict = frameTimeEntries.length === 0 ? 'WARN' : computeVerdict(p, spikes.length);
-  const narrative = generateNarrative(p, spikes, compliance240, compliance120, compliance60, biased, samplingThresholdMs);
   const quality = reportQuality(entries, diagnostics);
+  const verdict = quality.failed ? 'FAIL' : frameTimeEntries.length === 0 ? 'WARN' : computeVerdict(p, spikes.length);
+  const narrative = generateNarrative(p, spikes, compliance240, compliance120, compliance60, biased, samplingThresholdMs);
   const targetSettingsAcceptanceBlocked = targetSettings.stableTextCoverage.acceptanceBlocked ||
     !targetSettings.verdictAvailable;
   const targetSettingsVerdictLabel = targetSettingsAcceptanceBlocked ? '不足以验收' : targetSettings.verdict;
   const targetSettingsVerdictClass = targetSettingsAcceptanceBlocked ? 'bad' :
     targetSettings.verdict === 'PASS' ? 'ok' : targetSettings.verdict === 'WARN' ? 'warn' : 'bad';
   const stableTextNarrative = targetSettings.stableTextCoverage.acceptanceBlocked
-    ? `stable text coverage 未达标：visible candidate=${targetSettings.stableTextCoverage.visibleCandidateCount}，planned=${targetSettings.stableTextCoverage.planCandidateCount}，unplanned=${targetSettings.stableTextCoverage.unplannedVisibleCount}，key_mismatch=${targetSettings.stableTextCoverage.keyMismatchCount}，hit=${targetSettings.stableTextCoverage.hitCount}，reuse=${targetSettings.stableTextCoverage.reuseCount}，miss=${targetSettings.stableTextCoverage.missCount}，stale=${targetSettings.stableTextCoverage.staleCount}，hit rate=${targetSettings.stableTextCoverage.hitRate.toFixed(1)}%，reuse rate=${targetSettings.stableTextCoverage.reuseRate.toFixed(1)}%，text_new=${targetSettings.stableTextCoverage.textNew}，text_reused=${targetSettings.stableTextCoverage.textReused}，plan collection remaining=${targetSettings.stableTextCoverage.planCollectionRemainingBeforeTarget}，container prebuild remaining=${targetSettings.stableTextCoverage.prebuildRemainingBeforeTarget}，usage=${targetSettings.stableTextCoverage.utilizationAvailable ? 'available' : 'missing'}，plan coverage=${targetSettings.stableTextCoverage.planCoverageAvailable ? 'available' : 'missing'}，plan collection=${targetSettings.stableTextCoverage.planCollectionAvailable ? (targetSettings.stableTextCoverage.planCollectionComplete ? 'complete' : 'incomplete') : 'missing'}。collection remaining=0 只表示计划收集完成，container remaining=0 只表示已知计划的容器构建完成；最终仍以 visible miss/stale/text_new/unplanned/key_mismatch 为准。`
-    : `stable text coverage 已覆盖 target settings / ingame Esc 验收窗口：visible candidate=${targetSettings.stableTextCoverage.visibleCandidateCount}，planned=${targetSettings.stableTextCoverage.planCandidateCount}，hit rate=${targetSettings.stableTextCoverage.hitRate.toFixed(1)}%，reuse rate=${targetSettings.stableTextCoverage.reuseRate.toFixed(1)}%，text_new=${targetSettings.stableTextCoverage.textNew}，text_reused=${targetSettings.stableTextCoverage.textReused}。`;
+    ? `static stable text coverage 未达标：visible candidate=${targetSettings.stableTextCoverage.visibleCandidateCount}，planned=${targetSettings.stableTextCoverage.planCandidateCount}，unplanned=${targetSettings.stableTextCoverage.unplannedVisibleCount}，key_mismatch=${targetSettings.stableTextCoverage.keyMismatchCount}，hit=${targetSettings.stableTextCoverage.hitCount}，reuse=${targetSettings.stableTextCoverage.reuseCount}，miss=${targetSettings.stableTextCoverage.missCount}，stale=${targetSettings.stableTextCoverage.staleCount}，hit rate=${targetSettings.stableTextCoverage.staticHitRate.toFixed(1)}%，reuse rate=${targetSettings.stableTextCoverage.staticReuseRate.toFixed(1)}%，text_new=${targetSettings.stableTextCoverage.textNew}，text_reused=${targetSettings.stableTextCoverage.textReused}，plan collection remaining=${targetSettings.stableTextCoverage.planCollectionRemainingBeforeTarget}，container prebuild remaining=${targetSettings.stableTextCoverage.prebuildRemainingBeforeTarget}，usage=${targetSettings.stableTextCoverage.utilizationAvailable ? 'available' : 'missing'}，plan coverage=${targetSettings.stableTextCoverage.planCoverageAvailable ? 'available' : 'missing'}，plan collection=${targetSettings.stableTextCoverage.planCollectionAvailable ? (targetSettings.stableTextCoverage.planCollectionComplete ? 'complete' : 'incomplete') : 'missing'}。collection remaining=0 只表示计划收集完成，container remaining=0 只表示已知计划的容器构建完成；最终仍以 visible miss/stale/text_new/unplanned/key_mismatch 为准。`
+    : `static stable text coverage 已覆盖 target settings / ingame Esc 验收窗口：visible candidate=${targetSettings.stableTextCoverage.visibleCandidateCount}，planned=${targetSettings.stableTextCoverage.planCandidateCount}，hit rate=${targetSettings.stableTextCoverage.staticHitRate.toFixed(1)}%，reuse rate=${targetSettings.stableTextCoverage.staticReuseRate.toFixed(1)}%，text_new=${targetSettings.stableTextCoverage.textNew}，text_reused=${targetSettings.stableTextCoverage.textReused}。dynamic snapshot hit rate=${targetSettings.stableTextCoverage.dynamicHitRate.toFixed(1)}%，paragraph cache hit rate=${textRuntimeBudget.paragraphCacheHitRate.toFixed(1)}%。`;
   const hottestLocation = textAnalysis.topByLocation[0];
   const hottestReason = textAnalysis.topByReason[0];
   const hottestOperation = textAnalysis.topByOperation[0];
@@ -97,7 +214,7 @@ export function generateReport(
         : '当前日志未发现 settings text miss/stale 热点。';
   const stableTextSamples = targetSettings.stableTextCoverage.samples.slice(0, 12);
   const stableTextSamplesHtml = stableTextSamples.length === 0 ? '' : `<details class="sample-details">
-    <summary>查看 stable text miss 样本（前 ${stableTextSamples.length} 条）</summary>
+    <summary>查看 static stable text miss 样本（前 ${stableTextSamples.length} 条）</summary>
     <div class="table-scroll">
       <table class="data-table compact">
         <thead><tr><th>Event</th><th>Page</th><th>Tab</th><th>Subtab</th><th>Reason</th><th>Plan Status</th><th>Operation</th><th>Key</th></tr></thead>
@@ -122,11 +239,15 @@ export function generateReport(
   const stableTextCountClass = (value: number) => value === 0 ? 'ok' : 'bad';
   const stableTextCoverageHtml = `<div class="coverage-panel">
     <div class="coverage-title">
-      <span>Stable Text Coverage</span>
+      <span>Static Stable Text Coverage</span>
       <span class="badge ${stableTextCoverage.acceptanceBlocked ? 'bad' : 'ok'}">${stableTextCoverage.acceptanceBlocked ? '不足以验收' : 'OK'}</span>
     </div>
     <div class="coverage-grid">
-      <div class="coverage-card"><div class="coverage-label">Candidates</div><div class="coverage-value">${stableTextCoverage.candidateTotal}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Static Candidates</div><div class="coverage-value">${stableTextCoverage.staticCandidateTotal}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Static Hit Rate</div><div class="coverage-value ${stableTextRateClass(stableTextCoverage.staticHitRate)}">${stableTextCoverage.staticHitRate.toFixed(1)}%</div></div>
+      <div class="coverage-card"><div class="coverage-label">Static Reuse Rate</div><div class="coverage-value ${stableTextRateClass(stableTextCoverage.staticReuseRate)}">${stableTextCoverage.staticReuseRate.toFixed(1)}%</div></div>
+      <div class="coverage-card"><div class="coverage-label">Dynamic Snapshot Text Coverage</div><div class="coverage-value">${stableTextCoverage.dynamicCandidateTotal}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Snapshot Hit Rate</div><div class="coverage-value">${stableTextCoverage.dynamicHitRate.toFixed(1)}%</div></div>
       <div class="coverage-card"><div class="coverage-label">Plan Collection</div><div class="coverage-value ${stableTextCoverage.planCollectionAvailable && stableTextCoverage.planCollectionComplete ? 'ok' : 'bad'}">${stableTextCoverage.planCollectionAvailable ? (stableTextCoverage.planCollectionComplete ? 'Complete' : 'Incomplete') : 'Missing'}</div></div>
       <div class="coverage-card"><div class="coverage-label">Collection Units</div><div class="coverage-value">${stableTextCoverage.planCollectionUnitsDone}/${stableTextCoverage.planCollectionUnitsTotal}</div></div>
       <div class="coverage-card"><div class="coverage-label">Collection Remaining</div><div class="coverage-value ${stableTextCountClass(stableTextCoverage.planCollectionRemainingBeforeTarget)}">${stableTextCoverage.planCollectionRemainingBeforeTarget}</div></div>
@@ -157,6 +278,9 @@ export function generateReport(
     <div class="coverage-grid">
       <div class="coverage-card"><div class="coverage-label">Events</div><div class="coverage-value">${assetsPreviewAdmission.eventCount}</div></div>
       <div class="coverage-card"><div class="coverage-label">Max Draw</div><div class="coverage-value">${assetsPreviewAdmission.maxDurationMs.toFixed(1)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Layout/Text</div><div class="coverage-value">${assetsPreviewAdmission.maxLayoutTextMs.toFixed(1)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Preview Draw</div><div class="coverage-value">${assetsPreviewAdmission.maxPreviewDrawMs.toFixed(1)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Thumb Scheduling</div><div class="coverage-value">${assetsPreviewAdmission.maxThumbSchedulingMs.toFixed(1)}ms</div></div>
       <div class="coverage-card"><div class="coverage-label">Max Rendered</div><div class="coverage-value">${assetsPreviewAdmission.maxRendered}</div></div>
       <div class="coverage-card"><div class="coverage-label">Max Thumb Starts</div><div class="coverage-value">${assetsPreviewAdmission.maxThumbStarts}</div></div>
       <div class="coverage-card"><div class="coverage-label">Visible Starts</div><div class="coverage-value">${assetsPreviewAdmission.visibleStarts}</div></div>
@@ -164,7 +288,53 @@ export function generateReport(
       <div class="coverage-card"><div class="coverage-label">Background Starts</div><div class="coverage-value">${assetsPreviewAdmission.backgroundStarts}</div></div>
     </div>
     <p class="small-note">首屏资源 admission 应优先 combined visible window；remaining thumb/preview 工作只能进入 prefetch/background。</p>
-    ${assetsPreviewAdmission.samples.length === 0 ? '' : `<details class="sample-details"><summary>查看 assets admission 样本</summary><pre>${escapeHtml(assetsPreviewAdmission.samples.join('\n'))}</pre></details>`}
+  </div>`;
+  const settingsUiBudgetHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>Settings UI Budget</span>
+      <span class="badge ${settingsUiBudget.available ? 'ok' : 'bad'}">${settingsUiBudget.available ? 'AVAILABLE' : 'NO DATA'}</span>
+    </div>
+    <div class="coverage-grid">
+      <div class="coverage-card"><div class="coverage-label">Events</div><div class="coverage-value">${settingsUiBudget.eventCount}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Layout/Frame</div><div class="coverage-value">${settingsUiBudget.maxLayoutMs.toFixed(1)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Text</div><div class="coverage-value">${settingsUiBudget.maxTextMs.toFixed(1)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Text New</div><div class="coverage-value">${settingsUiBudget.maxTextNew}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Text Reused</div><div class="coverage-value">${settingsUiBudget.maxTextReused}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Draw Calls</div><div class="coverage-value">${settingsUiBudget.maxDrawCalls}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Vertices</div><div class="coverage-value">${settingsUiBudget.maxVertices}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Indices</div><div class="coverage-value">${settingsUiBudget.maxIndices}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Heap Allocs</div><div class="coverage-value">${settingsUiBudget.maxHeapAllocs}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Visible Widgets</div><div class="coverage-value">${settingsUiBudget.maxVisibleWidgets}</div></div>
+    </div>
+    <p class="small-note">这些字段来自 settings UI frame budget 事件，用于和 fps window、text/runtime、preview/upload 事件一起做窗口归因。</p>
+  </div>`;
+  const textRuntimeBudgetHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>Text Pipeline</span>
+      <span class="badge ${textRuntimeBudget.available ? 'ok' : 'bad'}">${textRuntimeBudget.available ? 'AVAILABLE' : 'NO DATA'}</span>
+    </div>
+    <div class="coverage-grid">
+      <div class="coverage-card"><div class="coverage-label">Events</div><div class="coverage-value">${textRuntimeBudget.eventCount}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Glyph New</div><div class="coverage-value">${textRuntimeBudget.glyphNew}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Glyph Uploads</div><div class="coverage-value">${textRuntimeBudget.glyphUploads}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Glyph Rasterize Max</div><div class="coverage-value">${textRuntimeBudget.maxGlyphRasterizeMs.toFixed(3)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Glyph Upload Max</div><div class="coverage-value">${textRuntimeBudget.maxGlyphUploadMs.toFixed(3)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Container New</div><div class="coverage-value">${textRuntimeBudget.textContainerNew}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Container Uploads</div><div class="coverage-value">${textRuntimeBudget.textContainerUploads}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Container Create Max</div><div class="coverage-value">${textRuntimeBudget.maxTextContainerCreateMs.toFixed(3)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Container Upload Max</div><div class="coverage-value">${textRuntimeBudget.maxTextContainerUploadMs.toFixed(3)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Static Stable Text</div><div class="coverage-value">${textRuntimeBudget.staticStableHitCount}/${textRuntimeBudget.staticStableHitCount + textRuntimeBudget.staticStableMissCount}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Static Stable Hit Rate</div><div class="coverage-value">${textRuntimeBudget.staticStableHitRate.toFixed(1)}%</div></div>
+      <div class="coverage-card"><div class="coverage-label">Snapshot Cache</div><div class="coverage-value">${textRuntimeBudget.snapshotCacheHit}/${textRuntimeBudget.snapshotCacheHit + textRuntimeBudget.snapshotCacheMiss}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Snapshot Cache Hit Rate</div><div class="coverage-value">${textRuntimeBudget.snapshotCacheHitRate.toFixed(1)}%</div></div>
+      <div class="coverage-card"><div class="coverage-label">Paragraph Layout</div><div class="coverage-value">${textRuntimeBudget.maxParagraphLayoutMs.toFixed(3)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Paragraph Budget Blocked</div><div class="coverage-value">${textRuntimeBudget.paragraphBudgetBlocked}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Paragraph Cache</div><div class="coverage-value">${textRuntimeBudget.paragraphCacheHit}/${textRuntimeBudget.paragraphCacheHit + textRuntimeBudget.paragraphCacheMiss}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Paragraph Cache Hit Rate</div><div class="coverage-value">${textRuntimeBudget.paragraphCacheHitRate.toFixed(1)}%</div></div>
+      <div class="coverage-card"><div class="coverage-label">Paragraph Cache Hit</div><div class="coverage-value">${textRuntimeBudget.paragraphCacheHit}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Paragraph Cache Miss</div><div class="coverage-value">${textRuntimeBudget.paragraphCacheMiss}</div></div>
+    </div>
+    <p class="small-note">该面板展示 glyph/container/snapshot/paragraph runtime 成本，并参与低帧窗口归因。</p>
   </div>`;
   const assetsVisibleReadyHtml = `<div class="coverage-panel">
     <div class="coverage-title">
@@ -180,11 +350,60 @@ export function generateReport(
       <div class="coverage-card"><div class="coverage-label">Not Ready</div><div class="coverage-value ${assetsVisibleReady.notReadyCount === 0 ? 'ok' : 'warn'}">${assetsVisibleReady.notReadyCount}</div></div>
     </div>
     <p class="small-note">visible_first 只表示请求优先；visible_ready 才表示首屏可见卡片在展示前已 ready 或使用稳定尺寸 skeleton。</p>
-    ${assetsVisibleReady.samples.length === 0 ? '' : `<details class="sample-details"><summary>查看 visible-ready 样本</summary><pre>${escapeHtml(assetsVisibleReady.samples.join('\n'))}</pre></details>`}
+  </div>`;
+  const tabSwitchFpsRows = [...coldTabSwitchFps.map(summary => ({ kind: 'Cold', summary })), ...warmTabSwitchFps.map(summary => ({ kind: 'Warm', summary }))];
+  const onePctLowTargetFps = 240;
+  const tabSwitchFpsHasRealOnePctLow = tabSwitchFpsRows.length > 0 && tabSwitchFpsRows.every(row => row.summary.fpsOnePctLowAvailable);
+  const tabSwitchFpsHasFallbackOnePctLow = tabSwitchFpsRows.some(row => !row.summary.fpsOnePctLowAvailable);
+  const tabSwitchFpsMeetsTarget = tabSwitchFpsHasRealOnePctLow && tabSwitchFpsRows.every(row => row.summary.fpsOnePctLow >= onePctLowTargetFps);
+  const coldWarmTabSwitchHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>Cold/Warm Tab Switch</span>
+      <span class="badge ${tabSwitchFpsRows.length === 0 ? 'bad' : tabSwitchFpsMeetsTarget ? 'ok' : 'warn'}">1% Low Target ${onePctLowTargetFps} FPS</span>
+    </div>
+    ${tabSwitchFpsRows.length === 0 ? '<p class="small-note">缺少 settings_assets_tab_switch / settings_tee_tab_switch 的 fps_summary。</p>' : `<div class="table-scroll">
+      <table class="data-table compact">
+        <thead><tr><th>Kind</th><th>Operation</th><th>Context</th><th>Page</th><th>Tab</th><th>1% Low</th><th>1% Source</th><th>P99 Frame</th><th>Max Frame</th><th>Frames</th></tr></thead>
+        <tbody>
+          ${tabSwitchFpsRows.map(row => `<tr>
+            <td>${row.kind}</td>
+            <td class="mono">${escapeHtml(row.summary.operation)}</td>
+            <td class="mono">${escapeHtml(row.summary.context)}</td>
+            <td class="mono">${escapeHtml(row.summary.page)}</td>
+            <td class="mono">${escapeHtml(row.summary.tab)}</td>
+            <td class="num ${row.summary.fpsOnePctLowAvailable && row.summary.fpsOnePctLow >= onePctLowTargetFps ? 'ok' : 'bad'}">${row.summary.fpsOnePctLow.toFixed(1)}</td>
+            <td class="mono">${escapeHtml(row.summary.fpsOnePctLowSource)}</td>
+            <td class="num ${row.summary.frameMsP99 <= BUDGET.h240 ? 'ok' : 'bad'}">${row.summary.frameMsP99.toFixed(3)}ms</td>
+            <td class="num">${row.summary.frameMsMax.toFixed(3)}ms</td>
+            <td class="num">${row.summary.sampleFrames}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`}
+    <p class="small-note">1% Low Target 以真实 fps_1pct_low 为准；${tabSwitchFpsHasFallbackOnePctLow ? '旧日志缺字段时只显示 P99-derived 参考值，不计入通过。' : '当前窗口使用 real_sampled。'}P99 frame 应小于 ${BUDGET.h240.toFixed(3)}ms。</p>
+  </div>`;
+  const previewBudgetHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>Preview Budget</span>
+      <span class="badge ${previewBudget.available ? 'ok' : 'bad'}">${previewBudget.available ? 'AVAILABLE' : 'NO DATA'}</span>
+    </div>
+    <div class="coverage-grid">
+      <div class="coverage-card"><div class="coverage-label">Events</div><div class="coverage-value">${previewBudget.eventCount}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Jobs Started</div><div class="coverage-value">${previewBudget.previewJobsStarted}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Jobs Done</div><div class="coverage-value">${previewBudget.previewJobsDone}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Uploads</div><div class="coverage-value">${previewBudget.previewUploads}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Admissions</div><div class="coverage-value">${previewBudget.previewAdmissions}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Artifact Max</div><div class="coverage-value">${previewBudget.maxPreviewArtifactMs.toFixed(3)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Metadata Max</div><div class="coverage-value">${previewBudget.maxMetadataHydrateMs.toFixed(3)}ms</div></div>
+      <div class="coverage-card"><div class="coverage-label">Placeholders</div><div class="coverage-value">${previewBudget.maxPlaceholderCount}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Ready Textures</div><div class="coverage-value">${previewBudget.maxReadyTextureCount}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Visible Ready Ratio</div><div class="coverage-value">${(previewBudget.minVisibleReadyRatio * 100).toFixed(1)}%</div></div>
+    </div>
+    <p class="small-note">Preview pipeline 预算区分真实 jobs/uploads 与 admission。当前 Assets card draw loop 只记录 admission、placeholder 和 ready texture；真实 artifact/upload 应由后台 job 和上传 drain 路径上报。</p>
   </div>`;
   const adaptiveBudgetHtml = `<div class="coverage-panel">
     <div class="coverage-title">
-      <span>Adaptive Budget</span>
+      <span>UI Frame Scheduler</span>
       <span class="badge ${adaptiveBudget.available ? adaptiveBudget.framePressureCount > 0 ? 'warn' : 'ok' : 'bad'}">${adaptiveBudget.available ? 'AVAILABLE' : 'NO DATA'}</span>
     </div>
     <div class="coverage-grid">
@@ -194,11 +413,73 @@ export function generateReport(
       <div class="coverage-card"><div class="coverage-label">Prefetch Tokens</div><div class="coverage-value">${adaptiveBudget.maxPrefetchTokens}</div></div>
       <div class="coverage-card"><div class="coverage-label">Background Tokens</div><div class="coverage-value">${adaptiveBudget.maxBackgroundTokens}</div></div>
       <div class="coverage-card"><div class="coverage-label">GPU Upload Tokens</div><div class="coverage-value">${adaptiveBudget.maxGpuUploadTokens}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Resource Upload Tokens</div><div class="coverage-value">${adaptiveBudget.maxResourceUploadTokens}</div></div>
       <div class="coverage-card"><div class="coverage-label">Text Tokens</div><div class="coverage-value">${adaptiveBudget.maxTextTokens}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Text Container Tokens</div><div class="coverage-value">${adaptiveBudget.maxTextContainerTokens}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Glyph Upload Tokens</div><div class="coverage-value">${adaptiveBudget.maxGlyphUploadTokens}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Paragraph Layout Tokens</div><div class="coverage-value">${adaptiveBudget.maxParagraphLayoutTokens}</div></div>
       <div class="coverage-card"><div class="coverage-label">Demo Tokens</div><div class="coverage-value">${adaptiveBudget.maxDemoTokens}</div></div>
     </div>
     <p class="small-note">预算根据 frame pacing、滚动状态、backlog 和窗口激活状态 AIMD 调整；frame_pressure 会快速削减 background，visible 保留最小 token。</p>
-    ${adaptiveBudget.samples.length === 0 ? '' : `<details class="sample-details"><summary>查看 adaptive budget 样本</summary><pre>${escapeHtml(adaptiveBudget.samples.join('\n'))}</pre></details>`}
+  </div>`;
+  const assetsDrawDistributionHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>Assets Draw Distribution</span>
+      <span class="badge ${assetsCardDrawStats.count === 0 ? 'bad' : assetsCardDrawStats.p99 <= 4 ? 'ok' : assetsCardDrawStats.p99 <= 8 ? 'warn' : 'bad'}">${assetsCardDrawStats.count === 0 ? 'NO DATA' : `${assetsCardDrawStats.count} SAMPLES`}</span>
+    </div>
+    <div class="distribution-grid">
+      <div>
+        <h3 class="mini-heading">Card Draw</h3>
+        <div class="stat-grid dense">
+          ${statCell('p50', formatMs(assetsCardDrawStats.p50), metricTone(assetsCardDrawStats.p50, 4, 8))}
+          ${statCell('p95', formatMs(assetsCardDrawStats.p95), metricTone(assetsCardDrawStats.p95, 4, 8))}
+          ${statCell('p99', formatMs(assetsCardDrawStats.p99), metricTone(assetsCardDrawStats.p99, 4, 8))}
+          ${statCell('max', formatMs(assetsCardDrawStats.max), metricTone(assetsCardDrawStats.max, 4, 8))}
+        </div>
+      </div>
+      <div>
+        <h3 class="mini-heading">Substage p99 / max</h3>
+        <div class="stat-grid dense">
+          ${statCell('Layout p99', formatMs(assetsLayoutTextStats.p99), metricTone(assetsLayoutTextStats.p99, 1, 4))}
+          ${statCell('Layout max', formatMs(assetsLayoutTextStats.max), metricTone(assetsLayoutTextStats.max, 1, 4))}
+          ${statCell('Preview p99', formatMs(assetsPreviewDrawStats.p99), metricTone(assetsPreviewDrawStats.p99, 1, 4))}
+          ${statCell('Preview max', formatMs(assetsPreviewDrawStats.max), metricTone(assetsPreviewDrawStats.max, 1, 4))}
+          ${statCell('Thumb p99', formatMs(assetsThumbSchedulingStats.p99), metricTone(assetsThumbSchedulingStats.p99, 1, 4))}
+          ${statCell('Thumb max', formatMs(assetsThumbSchedulingStats.max), metricTone(assetsThumbSchedulingStats.max, 1, 4))}
+        </div>
+      </div>
+    </div>
+    <p class="small-note">目标口径：Assets card draw p99/max 越接近 4ms 越好；layout_text 和 preview_draw 应接近 1ms 级别。</p>
+  </div>`;
+  const textRuntimeDistributionHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>Text Runtime Distribution</span>
+      <span class="badge ${textContainerCreateStats.count === 0 && glyphRasterizeStats.count === 0 ? 'bad' : textContainerCreateStats.p99 <= 1 && glyphRasterizeStats.p99 <= 1 ? 'ok' : 'warn'}">${textContainerCreateStats.count + glyphRasterizeStats.count === 0 ? 'NO DATA' : 'SAMPLED'}</span>
+    </div>
+    <div class="stat-grid dense">
+      ${statCell('Container Create p95', formatMs(textContainerCreateStats.p95), metricTone(textContainerCreateStats.p95, 1, 4))}
+      ${statCell('Container Create p99', formatMs(textContainerCreateStats.p99), metricTone(textContainerCreateStats.p99, 1, 4))}
+      ${statCell('Container Create max', formatMs(textContainerCreateStats.max), metricTone(textContainerCreateStats.max, 1, 4))}
+      ${statCell('Glyph Rasterize p95', formatMs(glyphRasterizeStats.p95), metricTone(glyphRasterizeStats.p95, 1, 4))}
+      ${statCell('Glyph Rasterize p99', formatMs(glyphRasterizeStats.p99), metricTone(glyphRasterizeStats.p99, 1, 4))}
+      ${statCell('Glyph Rasterize max', formatMs(glyphRasterizeStats.max), metricTone(glyphRasterizeStats.max, 1, 4))}
+    </div>
+    <p class="small-note">这里显示文本 runtime 的尾部成本，避免用 raw text_runtime 行判断是否优化有效。</p>
+  </div>`;
+  const budgetCorrelationHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>Budget Attribution by Window</span>
+      <span class="badge ${budgetCorrelation.available ? budgetCorrelation.unattributedFailingWindowCount > 0 ? 'bad' : budgetCorrelation.failingWindowCount > 0 ? 'warn' : 'ok' : 'bad'}">${budgetCorrelation.available ? `${budgetCorrelation.failingWindowCount} BELOW 240${budgetCorrelation.unattributedFailingWindowCount > 0 ? ` / ${budgetCorrelation.unattributedFailingWindowCount} unattributed_spike` : ''}` : 'NO FPS WINDOWS'}</span>
+    </div>
+    <div class="stat-grid dense">
+      ${statCell('Windows', String(budgetCorrelation.windowCount))}
+      ${statCell('Below 240 FPS', String(budgetCorrelation.failingWindowCount), budgetCorrelation.failingWindowCount > 0 ? 'warn' : 'ok')}
+      ${statCell('Unattributed', String(budgetCorrelation.unattributedFailingWindowCount), budgetCorrelation.unattributedFailingWindowCount > 0 ? 'bad' : 'ok')}
+      ${statCell('Worst 1% Low', budgetCorrelation.windows.length === 0 ? 'N/A' : formatFps(budgetCorrelation.windows[0].fpsOnePctLow), budgetCorrelation.windows[0]?.fpsOnePctLow >= 240 ? 'ok' : 'bad')}
+    </div>
+    <h3 class="mini-heading">Budget Window Statistics</h3>
+    ${renderBudgetWindowCards(budgetCorrelation.windows)}
+    <p class="small-note">窗口归因按 window_start_frame/window_end_frame 关联 fps、resource preview、adaptive budget 和 text runtime。正文只展示统计结论和 top culprit；原始行保留在 summary JSON/日志中。</p>
   </div>`;
 
   const dataJson = JSON.stringify({
@@ -212,11 +493,17 @@ export function generateReport(
     pages: pages.map(pg => ({ page: pg.page, count: pg.count, avg: pg.avg, max: pg.max, p95: pg.p95, boxPlot: pg.boxPlot, outliers: pg.outliers.slice(0, 50) })),
     interactions: interactionEntries.map(e => ({ timestamp: e.timestamp, event: e.fields.event ?? '', page: e.fields.page ?? '', frame: e.fields.frame ?? '', visibleRows: e.fields.visible_rows ?? '', firstVisibleSkin: e.fields.first_visible_skin ?? '' })),
     fpsSummaries: fps,
+    coldTabSwitchFps,
+    warmTabSwitchFps,
     targetSettings,
-    textAnalysis,
+    textAnalysis: textAnalysisForData,
     assetsPreviewAdmission,
     assetsVisibleReady,
+    previewBudget,
     adaptiveBudget,
+    settingsUiBudget,
+    textRuntimeBudget,
+    budgetCorrelation,
     attribution,
     sectionTop,
     skinUx: skinUxEntries.map(e => ({ timestamp: e.timestamp, event: e.fields.event ?? '', durMs: e.fields.dur_ms ?? e.fields.duration_ms ?? '', total: e.fields.total ?? '', visibleRows: e.fields.visible_rows ?? '' })),
@@ -325,7 +612,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
 .data-table tbody td{padding:0.5rem 0.65rem;border-bottom:1px solid var(--hairline);font-variant-numeric:tabular-nums;vertical-align:middle}
 .data-table tbody tr:hover{background:rgba(var(--ink-rgb),0.02)}
 .data-table .mono{font-family:var(--mono);font-size:0.78rem}
-.data-table.compact{font-size:0.78rem;min-width:960px}
+.data-table.compact{font-size:0.78rem;min-width:960px;table-layout:auto}
 .data-table.fps-table{min-width:1080px}
 .data-table .num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .key-cell{max-width:34rem;overflow-wrap:anywhere}
@@ -347,6 +634,25 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
 .badge.ok{background:var(--ok-bg);color:var(--ok)}
 .badge.warn{background:var(--warn-bg);color:var(--warn)}
 .badge.bad{background:var(--bad-bg);color:var(--bad)}
+.mini-heading{font-family:var(--mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(var(--ink-rgb),0.54);margin:0.9rem 0 0.45rem}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.5rem}
+.stat-grid.dense{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
+.stat-cell{border:1px solid var(--hairline);background:rgba(var(--paper-rgb),0.5);padding:0.52rem 0.62rem;min-width:0}
+.stat-cell span{display:block;font-family:var(--mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(var(--ink-rgb),0.42);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-cell strong{display:block;margin-top:0.18rem;font-family:var(--mono);font-size:0.9rem;font-weight:600;line-height:1.25;color:rgba(var(--ink-rgb),0.84);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-cell strong.ok{color:var(--ok)}
+.stat-cell strong.warn{color:var(--warn)}
+.stat-cell strong.bad{color:var(--bad)}
+.budget-window-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:0.8rem;margin-top:0.5rem}
+.budget-window-card{border:1px solid var(--hairline-strong);background:rgba(var(--paper-rgb),0.32);padding:0.85rem;min-width:0}
+.budget-window-card.bad{border-color:rgba(181,87,87,0.35);background:rgba(181,87,87,0.035)}
+.budget-window-card.warn{border-color:rgba(176,124,62,0.35);background:rgba(176,124,62,0.035)}
+.budget-card-head{display:grid;grid-template-columns:auto 1fr auto;gap:0.65rem;align-items:start;margin-bottom:0.65rem}
+.budget-card-head .rank{font-family:var(--mono);font-size:0.7rem;color:rgba(var(--ink-rgb),0.42);padding-top:0.15rem}
+.budget-card-head h3{font-family:var(--mono);font-size:0.85rem;font-weight:600;line-height:1.35;margin:0;overflow-wrap:anywhere}
+.budget-card-head p{font-family:var(--mono);font-size:0.66rem;line-height:1.45;color:rgba(var(--ink-rgb),0.48);margin:0.1rem 0 0;overflow-wrap:anywhere}
+.culprit-note{font-family:var(--mono);font-size:0.66rem;line-height:1.55;color:rgba(var(--ink-rgb),0.55);margin:0.65rem 0 0;overflow-wrap:anywhere}
+.distribution-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 
 /* ── Methodology ── */
 .methodology p{font-size:0.88rem;line-height:1.8;color:rgba(var(--ink-rgb),0.62);margin-bottom:0.8rem}
@@ -376,6 +682,8 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
   .title-page h1{font-size:1.6rem}
   .section{padding:1.5rem 1.2rem}
   .chart-grid{grid-template-columns:1fr}
+  .distribution-grid{grid-template-columns:1fr}
+  .budget-window-grid{grid-template-columns:1fr}
   .kpi-row{grid-template-columns:repeat(2,1fr)}
 }
 </style>
@@ -393,6 +701,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
     <span class="label">Menu Frames</span><span class="value">${menuEntries.length}</span>
     <span class="label">Quality</span><span class="value">${quality.warnings.length === 0 ? 'OK' : `${quality.warnings.length} warning(s)`}</span>
     <span class="label">Spikes</span><span class="value">${spikes.length} (&gt;16.67ms)</span>
+    <span class="label">Chart Data</span><span class="value chart-sampled-note">sampled ${ts.times.length}/${allEntries.length} frames</span>
     <span class="label">Report Generation</span><span class="value">${generationDurationLabel}</span>
   </div>
   ${biased ? `<div style="max-width:var(--max-w);margin:0 auto;padding:1rem 2rem;border-bottom:1px solid var(--hairline);font-family:var(--mono);font-size:0.75rem;color:var(--warn);background:var(--warn-bg)">
@@ -482,7 +791,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
     <h2>FPS 摘要</h2>
   </div>
   ${fps.length === 0 ? '<p class="body-text" style="color:var(--bad)">缺少 fps_summary；目标操作窗口样本不足以验收。请重新采集设置页进入、设置页切 tab、子 tab、Tee 滚动、游戏中 Esc 打开菜单。</p>' : `<div class="table-scroll"><table class="data-table fps-table">
-    <thead><tr><th>Operation</th><th>Context</th><th>Page</th><th>Tab</th><th>Frames</th><th>FPS Avg</th><th>FPS Min</th><th>FPS Max</th><th>Frame Avg</th><th>Frame P95</th><th>Frame P99</th><th>Frame Max</th><th>Menu Max</th><th>Cap</th></tr></thead>
+    <thead><tr><th>Operation</th><th>Context</th><th>Page</th><th>Tab</th><th>Frames</th><th>FPS Avg</th><th>FPS Min</th><th>1% Low</th><th>FPS Max</th><th>Frame Avg</th><th>Frame P95</th><th>Frame P99</th><th>Frame Max</th><th>Menu Max</th><th>Cap</th></tr></thead>
     <tbody>
       ${fps.map(s => `<tr>
         <td class="mono">${escapeHtml(s.operation)}</td>
@@ -492,6 +801,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
         <td class="num">${s.sampleFrames}</td>
         <td class="num">${s.fpsAvg.toFixed(1)}</td>
         <td class="num">${s.fpsMin.toFixed(1)}</td>
+        <td class="num ${s.fpsOnePctLowAvailable && s.fpsOnePctLow >= 240 ? 'ok' : s.fpsOnePctLowAvailable && s.fpsOnePctLow >= 120 ? 'warn' : 'bad'}">${s.fpsOnePctLow.toFixed(1)}${s.fpsOnePctLowSource === 'real_sampled' ? '' : ` (${escapeHtml(s.fpsOnePctLowSource)})`}</td>
         <td class="num">${s.fpsMax.toFixed(1)}</td>
         <td class="num">${s.frameMsAvg.toFixed(1)}ms</td>
         <td class="num">${s.frameMsP95.toFixed(1)}ms</td>
@@ -512,7 +822,14 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
     <span class="section-num">assets</span>
     <h2>资源页首屏 Admission</h2>
   </div>
+  ${budgetCorrelationHtml}
+  ${assetsDrawDistributionHtml}
+  ${textRuntimeDistributionHtml}
+  ${settingsUiBudgetHtml}
+  ${textRuntimeBudgetHtml}
   ${adaptiveBudgetHtml}
+  ${coldWarmTabSwitchHtml}
+  ${previewBudgetHtml}
   ${assetsPreviewAdmissionHtml}
   ${assetsVisibleReadyHtml}
 </section>

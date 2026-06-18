@@ -3,22 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QmClient UI 原型 v3 · 游戏窗口贴合版 · iOS 27 Liquid Glass</title>
+<title>QmClient UI 原型 v4 · 游戏窗口贴合版 · macOS Liquid Glass</title>
 <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 <style>
 :root{
-  --accent:#007aff; --accent-rgb:0,122,255; --accent-hex:#007aff;
-  --accent-hover:#3d9bff; --accent-press:#0058d0; --accent-dim:rgba(0,122,255,.12);
+  /* spec v4 default accent: amber #E4A046 */
+  --accent:#E4A046; --accent-rgb:228,160,70; --accent-hex:#E4A046;
+  --accent-hover:#EDB566; --accent-press:#C48A38; --accent-dim:rgba(228,160,70,.14);
   --glass-bg:rgba(255,255,255,.72); --glass-bg-solid:rgba(242,242,247,.92);
-  --glass-border:rgba(255,255,255,.5); --glass-highlight:rgba(255,255,255,.6);
+  --glass-border:rgba(255,255,255,.55); --glass-highlight:rgba(255,255,255,.65);
+  /* inset surfaces layered on top of glass panels */
+  --inset-surface:rgba(255,255,255,.22); --inset-surface-header:rgba(255,255,255,.25);
+  --inset-surface-content:rgba(255,255,255,.32); --inset-surface-elevated:rgba(255,255,255,.55);
+  /* surface tokens kept for legacy reference; glass/inset surfaces now use rgba(...) */
   --surface:#fff; --surface2:#f2f2f7; --surface3:#e5e5ea; --surface4:#d1d1d6;
   --text:#1d1d1f; --text2:#3c3c43; --text3:#8e8e93; --text4:#aeaeb2;
   --sep:rgba(60,60,67,.12); --sep2:rgba(60,60,67,.06);
   --green:#34c759; --orange:#ff9500; --red:#ff3b30; --purple:#af52de;
   --r-sm:8px; --r-md:10px; --r-lg:12px; --r-xl:14px;
   --shadow-card:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
-  --shadow-elevated:0 4px 12px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.06);
-  --shadow-drag:0 8px 32px rgba(0,0,0,.16),0 2px 8px rgba(0,0,0,.08);
+  --shadow-elevated:0 8px 24px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
+  --shadow-drag:0 12px 40px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
@@ -85,7 +90,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 .view{position:absolute;inset:0;display:none}
 .view.active{display:block}
 .view::-webkit-scrollbar{width:6px}
-.view::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
+.view::-webkit-scrollbar-thumb{background:rgba(60,60,67,.15);border-radius:3px}
 
 /* ====== 玻璃面板 ====== */
 .glass{background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);box-shadow:var(--shadow-card);position:relative}
@@ -93,44 +98,47 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 
 /* ====== Toggle ====== */
 .toggle{width:51px;height:31px;border-radius:15.5px;position:relative;flex-shrink:0;cursor:pointer;transition:background .35s cubic-bezier(.2,0,0,1)}
-.toggle.on{background:var(--green)}
-.toggle.off{background:var(--surface3)}
-.toggle .knob{width:27px;height:27px;background:#fff;border-radius:50%;position:absolute;top:2px;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 2px rgba(0,0,0,.06);transition:left .35s cubic-bezier(.2,0,0,1)}
+.toggle.on{background:var(--accent)}
+.toggle.off{background:rgba(120,120,128,.28)}
+.toggle .knob{width:27px;height:27px;background:#fff;border-radius:50%;position:absolute;top:2px;box-shadow:0 3px 8px rgba(0,0,0,.18),0 1.5px 3px rgba(0,0,0,.08),inset 0 -1px 1px rgba(0,0,0,.04);transition:left .35s cubic-bezier(.2,0,0,1)}
 .toggle.on .knob{left:22px}
 .toggle.off .knob{left:2px}
 
 /* ====== Button ====== */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--r-sm);padding:8px 16px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:transform .15s cubic-bezier(.2,0,0,1),opacity .15s;font-family:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--r-sm);padding:8px 16px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:transform .12s cubic-bezier(.2,0,0,1),background .15s,box-shadow .15s,opacity .15s;font-family:inherit}
 .btn:active{transform:scale(.96)}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(var(--accent-rgb),.3)}
-.btn-secondary{background:var(--surface2);color:var(--accent)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(var(--accent-rgb),.35),inset 0 1px 0 rgba(255,255,255,.2)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:active{background:var(--accent-press)}
+.btn-secondary{background:rgba(60,60,67,.12);color:var(--accent);border:.5px solid var(--sep2)}
+.btn-secondary:hover{background:rgba(60,60,67,.18)}
 .btn-glass{background:var(--glass-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:var(--text);border:.5px solid var(--glass-border)}
+.btn-glass:hover{background:var(--inset-surface-elevated)}
 .btn-danger{background:var(--red);color:#fff}
-.btn-icon{width:34px;height:34px;padding:0;background:var(--surface2);color:var(--accent);justify-content:center}
+.btn-icon{width:34px;height:34px;padding:0;background:rgba(60,60,67,.12);color:var(--accent);justify-content:center;border:.5px solid var(--sep2)}
+.btn-icon:hover{background:rgba(60,60,67,.18)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 
 /* ====== 主菜单图片按钮 ====== */
 .start-btn-img{
-  display:flex;align-items:center;gap:12px;width:340px;height:54px;border-radius:var(--r-lg);
-  background:rgba(0,0,0,.3);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:.5px solid rgba(255,255,255,.12);cursor:pointer;padding:0 16px;
+  display:flex;align-items:center;gap:14px;width:340px;height:54px;border-radius:var(--r-lg);
+  background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);
+  border:.5px solid var(--glass-border);cursor:pointer;padding:0 16px;
   transition:transform .2s cubic-bezier(.2,0,0,1),background .2s,box-shadow .2s;position:relative;overflow:hidden;
+  box-shadow:var(--shadow-card);
 }
-.start-btn-img:hover{background:rgba(0,0,0,.45);transform:translateX(4px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.start-btn-img:hover{background:var(--glass-bg);transform:translateX(4px);box-shadow:0 6px 20px rgba(var(--accent-rgb),.18),var(--shadow-card)}
 .start-btn-img:active{transform:translateX(4px) scale(.98)}
-.start-btn-img .btn-icon-art{width:80px;height:36px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;overflow:hidden}
-.start-btn-img .btn-label{flex:1;font-size:14px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-.start-btn-img .btn-hotkey{font-size:11px;color:rgba(255,255,255,.35);font-weight:500}
-/* DDNet 风格按钮插画（CSS 模拟） */
-.art-play{background:linear-gradient(135deg,#e8b840,#c89820)}
-.art-settings{background:linear-gradient(135deg,#5a8c5a,#3a6c3a)}
-.art-server{background:linear-gradient(135deg,#5a7caa,#3a5c8a)}
-.art-editor{background:linear-gradient(135deg,#7a6c5a,#5a4c3a)}
-.art-demos{background:linear-gradient(135deg,#aa5a5a,#8a3a3a)}
-.art-quit{background:linear-gradient(135deg,#555,#333)}
+.start-btn-img .btn-icon-art{width:44px;height:36px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(228,160,70,.2),rgba(228,160,70,.08));color:var(--accent)}
+.start-btn-img .btn-label{flex:1;font-size:15px;font-weight:600;color:var(--text)}
+.start-btn-img .btn-hotkey{font-size:11px;color:var(--text4);font-weight:500;background:rgba(60,60,67,.1);padding:2px 6px;border-radius:5px;border:.5px solid var(--sep2)}
+/* 仅 Quit 使用低强调变体 */
+.start-btn-img.quit{height:44px;opacity:.85}
+.start-btn-img.quit .btn-icon-art{background:transparent;color:var(--text3)}
+.start-btn-img.quit .btn-label{font-size:14px;font-weight:500;color:var(--text3)}
 
 /* ====== iOS Slider ====== */
-.slider-track{height:4px;background:var(--surface3);border-radius:2px;position:relative;width:100%;cursor:pointer}
+.slider-track{height:4px;background:rgba(60,60,67,.18);border-radius:2px;position:relative;width:100%;cursor:pointer}
 .slider-fill{height:100%;background:var(--accent);border-radius:2px}
 .slider-knob{width:28px;height:28px;background:#fff;border-radius:50%;position:absolute;top:50%;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.15),0 .5px 1px rgba(0,0,0,.06);cursor:grab;transition:transform .15s cubic-bezier(.2,0,0,1);border:.5px solid rgba(0,0,0,.04)}
 .slider-knob:active{cursor:grabbing;transform:translate(-50%,-50%) scale(1.1)}
@@ -140,22 +148,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 .comp-slider-row{display:flex;align-items:center;gap:8px;padding:10px 0;min-height:44px}
 .comp-slider-row .row-label{flex:0 0 auto;min-width:100px;font-size:13px;color:var(--text2);font-weight:500}
 .comp-slider-row .row-slider{flex:1;min-width:60px}
-.comp-slider-row .row-input{flex:0 0 auto;width:54px;background:var(--surface3);border:none;border-radius:6px;padding:4px 6px;font-size:12px;text-align:center;color:var(--text);font-family:inherit;outline:none}
+.comp-slider-row .row-input{flex:0 0 auto;width:54px;background:rgba(60,60,67,.12);border:.5px solid var(--sep2);border-radius:6px;padding:4px 6px;font-size:12px;text-align:center;color:var(--text);font-family:inherit;outline:none}
 .comp-slider-row .row-input:focus{box-shadow:0 0 0 2px var(--accent)}
 .comp-slider-row .row-suffix{flex:0 0 auto;font-size:12px;color:var(--text3);width:24px}
 
 /* ====== 复合组件: Checkbox 行 ====== */
 .comp-checkbox-row{display:flex;align-items:center;gap:10px;padding:10px 0;min-height:44px;border-bottom:.5px solid var(--sep2)}
 .comp-checkbox-row:last-child{border-bottom:none}
-.comp-checkbox-row .cb-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--surface4);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.comp-checkbox-row .cb-check{width:22px;height:22px;border-radius:6px;border:2px solid rgba(60,60,67,.3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .comp-checkbox-row .cb-check.checked{background:var(--accent);border-color:var(--accent)}
-.comp-checkbox-row .cb-check.checked::after{content:'✓';color:#fff;font-size:13px;font-weight:700}
+.comp-checkbox-row .cb-check.checked::after{content:'\ec00';color:#fff;font-size:12px;font-weight:700;font-family:'Phosphor'}
 .comp-checkbox-row .cb-label{flex:1;font-size:14px;color:var(--text)}
 
 /* ====== 复合组件: Dropdown ====== */
 .dropdown{display:flex;align-items:center;gap:8px}
-.dropdown-btn{display:flex;align-items:center;gap:6px;background:var(--surface3);border:.5px solid var(--sep);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--text);min-width:120px;justify-content:space-between}
-.dropdown-btn:hover{background:var(--surface4)}
+.dropdown-btn{display:flex;align-items:center;gap:6px;background:rgba(60,60,67,.12);border:.5px solid var(--sep2);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--text);min-width:120px;justify-content:space-between}
+.dropdown-btn:hover{background:rgba(60,60,67,.18)}
 .dropdown-btn .caret{color:var(--text3);font-size:12px}
 .dropdown-menu{position:absolute;background:var(--glass-bg-solid);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:.5px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-elevated);padding:4px;z-index:200;min-width:140px}
 .dropdown-item{padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text2)}
@@ -163,7 +171,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 .dropdown-item.selected{color:var(--accent);font-weight:600}
 
 /* ====== 复合组件: 搜索框 ====== */
-.search-box{display:flex;align-items:center;gap:8px;background:var(--surface3);border-radius:8px;padding:6px 10px;min-width:180px}
+.search-box{display:flex;align-items:center;gap:8px;background:rgba(60,60,67,.12);border-radius:8px;padding:6px 10px;min-width:180px;border:.5px solid var(--sep2)}
 .search-box i{color:var(--text3);font-size:14px}
 .search-box input{background:none;border:none;outline:none;flex:1;font-size:13px;color:var(--text);font-family:inherit}
 .search-box .clear-btn{color:var(--text4);cursor:pointer;font-size:14px;display:none}
@@ -192,17 +200,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 .server-row .srv-ping.high{color:var(--red)}
 
 /* ====== List (insetGrouped) ====== */
-.list-group{background:var(--surface2);border-radius:var(--r-md);overflow:hidden}
-.list-row{display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:44px;border-bottom:.5px solid var(--sep2);font-size:14px;color:var(--text2)}
+.list-group{background:var(--inset-surface);border-radius:var(--r-md);overflow:hidden;border:.5px solid var(--sep2)}
+.list-row{display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:44px;border-bottom:.5px solid var(--sep2);font-size:14px;color:var(--text2);transition:background .15s}
 .list-row:last-child{border-bottom:none}
 .list-row .row-icon{color:var(--accent);font-size:18px;width:22px;text-align:center}
 .list-row.selected{background:var(--accent-dim)}
 .list-row.selected .row-label{color:var(--accent);font-weight:600}
-.list-row:hover:not(.selected){background:rgba(60,60,67,.04)}
+.list-row:hover:not(.selected){background:rgba(60,60,67,.05)}
 
 /* ====== TabBar ====== */
 .tabbar{display:flex;gap:0;border-bottom:.5px solid var(--sep)}
-.tabbar .tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--text3);position:relative;cursor:pointer}
+.tabbar .tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--text3);position:relative;cursor:pointer;transition:color .15s}
+.tabbar .tab:hover{color:var(--text2)}
 .tabbar .tab.active{color:var(--accent);font-weight:600}
 .tabbar .tab.active::after{content:'';position:absolute;bottom:-.5px;left:16px;right:16px;height:2.5px;background:var(--accent);border-radius:2px}
 
@@ -224,38 +233,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 /* ====== 主菜单 ====== */
 #view-start{overflow-y:auto;display:flex;flex-direction:column;align-items:center}
 #view-start.active{display:flex}
-.start-logo{margin:40px 0 20px;text-align:center}
-.start-logo h1{font-size:36px;font-weight:800;color:#fff;letter-spacing:-.03em;text-shadow:0 2px 20px rgba(0,0,0,.4)}
-.start-logo p{font-size:13px;color:rgba(255,255,255,.4);margin-top:4px}
+.start-logo{margin:44px 0 24px;text-align:center}
+.start-logo h1{font-size:40px;font-weight:800;color:#fff;letter-spacing:-.03em;text-shadow:0 4px 24px rgba(0,0,0,.35)}
+.start-logo p{font-size:13px;color:rgba(255,255,255,.45);margin-top:6px}
 .start-buttons-wrap{display:flex;gap:40px;align-items:flex-start}
-.start-main-buttons{display:flex;flex-direction:column;gap:6px}
-.start-side-buttons{display:flex;flex-direction:column;gap:4px}
-.start-side-buttons .btn-glass{justify-content:flex-start;width:130px;padding:6px 10px;font-size:12px;font-weight:500}
-.start-bottom{position:absolute;bottom:10px;left:0;right:0;text-align:center;pointer-events:none;display:flex;justify-content:center;gap:14px}
-.start-bottom span{font-size:10px;color:rgba(255,255,255,.25);font-variant-numeric:tabular-nums}
-.start-bottom .st-sep{color:rgba(255,255,255,.1)}
-.start-bottom .st-online{color:rgba(52,199,89,.6)}
+.start-main-buttons{display:flex;flex-direction:column;gap:8px}
+.start-side-buttons{display:flex;flex-direction:column;gap:6px}
+.start-side-buttons .btn-glass{justify-content:flex-start;width:140px;padding:7px 12px;font-size:12px;font-weight:500}
+.start-bottom{position:absolute;bottom:12px;left:0;right:0;text-align:center;pointer-events:none;display:flex;justify-content:center;gap:14px}
+.start-bottom span{font-size:10px;color:rgba(255,255,255,.3);font-variant-numeric:tabular-nums}
+.start-bottom .st-sep{color:rgba(255,255,255,.12)}
+.start-bottom .st-online{color:rgba(52,199,89,.7)}
 
 /* ====== 主菜单 motd 公告条 (DDNet 启动真实有) ====== */
-.start-motd{margin:14px auto 0;max-width:540px;padding:8px 14px;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:8px;border:.5px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.7)}
-.start-motd i{color:var(--orange);font-size:16px;flex-shrink:0}
+.start-motd{margin:14px auto 0;max-width:540px;padding:8px 14px;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-md);display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);box-shadow:var(--shadow-card)}
+.start-motd i{color:var(--accent);font-size:16px;flex-shrink:0}
 .start-motd .motd-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.start-motd .motd-close{color:rgba(255,255,255,.3);cursor:pointer;font-size:12px;pointer-events:auto;padding:2px}
+.start-motd .motd-close{color:var(--text3);cursor:pointer;font-size:12px;pointer-events:auto;padding:2px}
+.start-motd .motd-close:hover{color:var(--text)}
 
 /* ====== 设置页 ====== */
-.settings-root{display:flex;position:absolute;inset:8px;overflow:hidden}
+.settings-root{display:flex;position:absolute;inset:18px;overflow:hidden;background:var(--glass-bg);backdrop-filter:blur(24px) saturate(1.8);-webkit-backdrop-filter:blur(24px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-xl);box-shadow:var(--shadow-elevated)}
 .settings-root.nav-right{flex-direction:row-reverse}
-.settings-nav{width:180px;flex-shrink:0;background:var(--glass-bg-solid);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-right:.5px solid var(--sep);padding:14px 0}
+.settings-nav{width:180px;flex-shrink:0;background:transparent;border-right:.5px solid var(--sep);padding:16px 0;display:flex;flex-direction:column}
 .settings-root.nav-right .settings-nav{border-right:none;border-left:.5px solid var(--sep)}
-.settings-nav-title{padding:0 16px 12px;font-size:20px;font-weight:700;color:var(--text)}
-.settings-nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:var(--text3);cursor:pointer;transition:all .15s;position:relative}
-.settings-nav-item:hover{background:rgba(60,60,67,.04);color:var(--text2)}
-.settings-nav-item.active{color:var(--accent);font-weight:600}
+.settings-nav-title{padding:0 16px 14px;font-size:20px;font-weight:700;color:var(--text)}
+.settings-nav-item{display:flex;align-items:center;gap:8px;padding:9px 16px;font-size:13px;color:var(--text3);cursor:pointer;transition:all .15s;position:relative}
+.settings-nav-item:hover{background:rgba(60,60,67,.05);color:var(--text2)}
+.settings-nav-item.active{color:var(--accent);font-weight:600;background:var(--accent-dim)}
 .settings-nav-item.active::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:2.5px;background:var(--accent);border-radius:0 2px 2px 0}
 .settings-nav-item i{font-size:16px;width:20px}
 .settings-nav-footer{padding:8px 16px;margin-top:auto}
-.settings-content{flex:1;overflow-y:auto;padding:14px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;align-content:start}
-.settings-content .section-card{margin-bottom:0}
+.settings-content{flex:1;overflow-y:auto;padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;align-content:start;background:var(--inset-surface-content)}
+.settings-content .section-card{margin-bottom:0;background:var(--inset-surface-elevated);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .settings-content .settings-section-title{grid-column:1 / -1}
 .settings-content::-webkit-scrollbar{width:6px}
 .settings-content::-webkit-scrollbar-thumb{background:rgba(60,60,67,.15);border-radius:3px}
@@ -269,33 +279,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 #view-esc.active{display:flex}
 #view-esc .game-viewport{position:absolute;inset:0;z-index:0;display:flex;align-items:center;justify-content:center}
 #view-esc .game-viewport .tee-large{width:64px;height:64px;border-radius:50%;position:absolute}
-#view-esc .esc-overlay{position:relative;z-index:1;background:rgba(0,0,0,.45);width:100%;height:100%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-.esc-container{width:580px;max-width:90vw;max-height:80vh;overflow-y:auto}
+#view-esc .esc-overlay{position:relative;z-index:1;background:rgba(0,0,0,.55);width:100%;height:100%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.esc-container{width:580px;max-width:90vw;max-height:80vh;overflow-y:auto;padding:18px;background:var(--glass-bg);backdrop-filter:blur(24px) saturate(1.8);-webkit-backdrop-filter:blur(24px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-xl);box-shadow:var(--shadow-elevated)}
 .esc-container::-webkit-scrollbar{width:4px}
-.esc-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
-.esc-title{text-align:center;margin-bottom:14px}
-.esc-title h2{font-size:18px;font-weight:600;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.4)}
-.esc-title p{font-size:11px;color:rgba(255,255,255,.4)}
-.esc-action-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.esc-server-info{display:flex;align-items:center;gap:10px;padding:8px 14px;background:rgba(255,255,255,.06);border-radius:8px;margin-bottom:12px}
-.esc-server-info .srv-name{color:#fff;font-weight:600;font-size:14px}
-.esc-server-info .srv-meta{color:rgba(255,255,255,.5);font-size:12px}
+.esc-container::-webkit-scrollbar-thumb{background:rgba(60,60,67,.2);border-radius:2px}
+.esc-title{text-align:center;margin-bottom:16px}
+.esc-title h2{font-size:20px;font-weight:700;color:var(--text)}
+.esc-title p{font-size:12px;color:var(--text3);margin-top:2px}
+.esc-action-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.esc-server-info{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--inset-surface);border:.5px solid var(--sep2);border-radius:var(--r-md);margin-bottom:14px}
+.esc-server-info .srv-name{color:var(--text);font-weight:600;font-size:14px}
+.esc-server-info .srv-meta{color:var(--text3);font-size:12px}
 
 /* ====== 服务器列表 (Server Browser, 对标 menus_browser.cpp) ====== */
 #view-serverbrowser{display:none}
 #view-serverbrowser.active{display:block}
-.sb-root{position:absolute;inset:8px;display:flex;flex-direction:column;gap:8px}
+.sb-root{position:absolute;inset:18px;display:flex;flex-direction:column;gap:10px}
 
 /* 顶部工具栏: TabBar + 搜索 */
-.sb-toolbar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:8px 12px;flex-wrap:wrap}
+.sb-toolbar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);box-shadow:var(--shadow-card);flex-wrap:wrap}
 .sb-toolbar .tabbar{border-bottom:none}
 .sb-toolbar .tab{padding:6px 12px}
 .sb-search{flex:1;min-width:140px;max-width:260px}
 
 /* 主体: 列表 + Toolbox */
-.sb-main{flex:1;display:flex;gap:8px;overflow:hidden;min-height:0}
+.sb-main{flex:1;display:flex;gap:10px;overflow:hidden;min-height:0}
 .sb-list-panel{flex:1;display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-card);min-width:0}
-.sb-list-header{display:flex;align-items:center;gap:6px;padding:8px 12px;height:30px;border-bottom:.5px solid var(--sep);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;background:rgba(255,255,255,.3);flex-shrink:0}
+.sb-list-header{display:flex;align-items:center;gap:6px;padding:8px 12px;height:30px;border-bottom:.5px solid var(--sep);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;background:var(--inset-surface-header);flex-shrink:0}
 .sb-list-header .h-lock{width:14px}.sb-list-header .h-fav{width:14px}.sb-list-header .h-comm{width:36px}
 .sb-list-header .h-name{flex:1}.sb-list-header .h-type{width:54px}
 .sb-list-header .h-map{width:110px}.sb-list-header .h-players{width:56px;text-align:center}.sb-list-header .h-ping{width:40px;text-align:right}
@@ -316,24 +326,37 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 .tb-panel::-webkit-scrollbar{width:5px}
 .tb-panel::-webkit-scrollbar-thumb{background:rgba(60,60,67,.15);border-radius:3px}
 
-/* Filters 面板 (13 项, 对标 RenderServerbrowserFilters) */
+/* Communities filter (Toolbox 顶部) */
+.sb-comm-filter{flex-shrink:0;border-bottom:.5px solid var(--sep);background:var(--inset-surface-header)}
+.sb-comm-title{padding:8px 12px 4px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.sb-comm-list{padding:4px 8px 8px;display:flex;flex-direction:column;gap:1px}
+.sb-comm-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:12px;color:var(--text2);cursor:pointer;transition:background .15s}
+.sb-comm-row:hover{background:rgba(60,60,67,.06)}
+.sb-comm-row.active{background:var(--accent-dim);color:var(--accent)}
+.sb-comm-row .sb-comm-icon{font-size:14px;width:18px;text-align:center;color:var(--text3)}
+.sb-comm-row.active .sb-comm-icon{color:var(--accent)}
+.sb-comm-row .sb-comm-name{flex:1}
+
+/* Info placeholder */
+.sb-info-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:40px 20px;color:var(--text3);font-size:12px;text-align:center;height:100%}
+.sb-info-placeholder i{font-size:32px;opacity:.5}
 .sb-filter-list{padding:10px 12px;flex:1}
 .sb-filter-row{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:12px;color:var(--text2);cursor:pointer;min-height:26px}
 .sb-filter-row:hover{color:var(--text)}
-.sb-filter-row .cb-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--surface4);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.sb-filter-row .cb-check{width:16px;height:16px;border-radius:4px;border:1.5px solid rgba(60,60,67,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .sb-filter-row .cb-check.checked{background:var(--accent);border-color:var(--accent)}
-.sb-filter-row .cb-check.checked::after{content:'✓';color:#fff;font-size:10px;font-weight:700;line-height:1}
+.sb-filter-row .cb-check.checked::after{content:'\ec00';color:#fff;font-size:10px;font-weight:700;line-height:1;font-family:'Phosphor'}
 .sb-input-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px}
 .sb-input-row .sb-input-label{flex:0 0 92px;color:var(--text3);font-size:11px}
-.sb-input-row .sb-input{flex:1;background:var(--surface3);border:.5px solid var(--sep);border-radius:5px;padding:4px 7px;font-size:11px;color:var(--text);font-family:inherit;outline:none;min-width:0}
-.sb-input-row .sb-input:focus{box-shadow:0 0 0 1.5px var(--accent)}
+.sb-input-row .sb-input{flex:1;background:rgba(60,60,67,.08);border:.5px solid var(--sep2);border-radius:5px;padding:4px 7px;font-size:11px;color:var(--text);font-family:inherit;outline:none;min-width:0}
+.sb-input-row .sb-input:focus{box-shadow:0 0 0 1.5px var(--accent);background:rgba(60,60,67,.12)}
 .sb-filter-row .sb-country-flag{width:26px;height:15px;border-radius:2px;background:linear-gradient(135deg,#de2910,#de2910);display:flex;align-items:center;justify-content:center;font-size:11px;color:#ffde00;font-weight:700;margin-left:auto}
 .sb-filter-section{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 4px;padding-top:8px;border-top:.5px solid var(--sep2)}
 .sb-subtab{display:flex;gap:0;margin:4px 0;border:.5px solid var(--sep);border-radius:5px;overflow:hidden}
-.sb-subtab .st-btn{flex:1;padding:5px;font-size:10px;font-weight:600;color:var(--text3);text-align:center;cursor:pointer;background:rgba(255,255,255,.3)}
+.sb-subtab .st-btn{flex:1;padding:5px;font-size:10px;font-weight:600;color:var(--text3);text-align:center;cursor:pointer;background:rgba(60,60,67,.08)}
 .sb-subtab .st-btn.active{background:var(--accent-dim);color:var(--accent)}
 .sb-subtab-content{display:flex;flex-wrap:wrap;gap:4px;padding:6px 0}
-.sb-subtab-content .stc-chip{padding:2px 7px;background:rgba(255,255,255,.4);border:.5px solid var(--sep);border-radius:10px;font-size:10px;color:var(--text3);cursor:pointer}
+.sb-subtab-content .stc-chip{padding:2px 7px;background:rgba(60,60,67,.08);border:.5px solid var(--sep2);border-radius:10px;font-size:10px;color:var(--text3);cursor:pointer}
 .sb-subtab-content .stc-chip.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
 .sb-reset-btn{margin:8px 12px;padding:7px;font-size:12px}
 
@@ -355,10 +378,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 /* Friends 面板 (好友分类列表, 对标 RenderServerbrowserFriends) */
 #tb-friends{padding:0}
 .sb-friend-add{padding:10px 12px;border-bottom:.5px solid var(--sep2);flex-shrink:0;display:flex;gap:6px}
-.sb-friend-add input{flex:1;background:var(--surface3);border:.5px solid var(--sep);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit;outline:none;min-width:0}
-.sb-friend-add input:focus{box-shadow:0 0 0 1.5px var(--accent)}
-.sb-friend-category{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none;background:rgba(255,255,255,.2)}
-.sb-friend-category:hover{background:rgba(255,255,255,.35)}
+.sb-friend-add input{flex:1;background:rgba(60,60,67,.08);border:.5px solid var(--sep2);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit;outline:none;min-width:0}
+.sb-friend-add input:focus{box-shadow:0 0 0 1.5px var(--accent);background:rgba(60,60,67,.12)}
+.sb-friend-category{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;user-select:none;background:rgba(60,60,67,.06)}
+.sb-friend-category:hover{background:rgba(60,60,67,.1)}
 .sb-friend-category i{font-size:11px;transition:transform .2s;color:var(--text3)}
 .sb-friend-category.collapsed i{transform:rotate(-90deg)}
 .sb-friend-category .cat-count{margin-left:auto;font-size:10px;color:var(--text3);font-weight:500}
@@ -367,30 +390,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 .sb-friend-row{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px}
 .sb-friend-row:hover{background:rgba(60,60,67,.04)}
 .sb-friend-row .fr-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;position:relative}
-.sb-friend-row.online .fr-dot::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--green);border:1.5px solid var(--surface)}
+.sb-friend-row.online .fr-dot::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--green);border:1.5px solid #fff}
 .sb-friend-row.offline{opacity:.5}
-.sb-friend-row.offline .fr-dot::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--text4);border:1.5px solid var(--surface)}
+.sb-friend-row.offline .fr-dot::after{content:'';position:absolute;bottom:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--text4);border:1.5px solid #fff}
 .sb-friend-row .fr-name{flex:0 0 auto;color:var(--text);font-weight:500;white-space:nowrap}
 .sb-friend-row .fr-server{flex:1;color:var(--text3);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:6px}
-.sb-friend-row .fr-join{width:24px;height:24px;border-radius:5px;border:none;background:var(--surface3);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.sb-friend-row .fr-join{width:24px;height:24px;border-radius:5px;border:none;background:rgba(60,60,67,.12);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 .sb-friend-row .fr-join:hover{background:var(--accent-dim)}
 .sb-friend-row.offline .fr-join{display:none}
 
 /* QM 面板 (QmClient 浏览器特有, 对标 RenderServerbrowserQm) */
 #tb-qm{padding:14px}
-.qm-feature{padding:10px;background:var(--surface2);border-radius:var(--r-md);margin-bottom:8px}
+.qm-feature{padding:10px;background:var(--inset-surface);border:.5px solid var(--sep2);border-radius:var(--r-md);margin-bottom:8px}
 .qm-feature h4{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px}
 .qm-feature h4 i{color:var(--accent)}
 .qm-feature p{font-size:11px;color:var(--text3);line-height:1.4}
 
-/* 底部 StatusBox (connect to address, 对标 RenderServerbrowserStatusBox) */
-.sb-statusbox{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:8px 12px;flex-wrap:wrap}
-.sb-status-info{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
-.sb-status-info b{color:var(--text2);font-variant-numeric:tabular-nums}
-.sb-connect{display:flex;align-items:center;gap:6px;margin-left:auto}
-.sb-connect label{font-size:11px;color:var(--text3);white-space:nowrap}
-.sb-connect input{width:200px;background:var(--surface3);border:.5px solid var(--sep);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);font-family:inherit;outline:none}
-.sb-connect input:focus{box-shadow:0 0 0 1.5px var(--accent)}
+/* 底部 StatusBox (服务器详情 + 连接按钮, 对标 RenderServerbrowserStatusBox) */
+.sb-statusbox{flex-shrink:0;display:flex;align-items:center;padding:10px 14px;gap:12px;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);box-shadow:var(--shadow-card)}
+.sb-status-main{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%}
+.sb-status-meta{display:flex;flex-direction:column;gap:4px;flex:1}
+.sb-status-row{display:flex;align-items:center;gap:4px;font-size:12px}
+.sb-status-label{color:var(--text3);font-size:11px;white-space:nowrap}
+.sb-status-value{color:var(--text);font-weight:500}
+.sb-status-finish{color:var(--green);margin-left:4px;font-size:13px}
+.sb-status-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
 /* ====== 控制台 Console (~ 唤出, 对标 CConsole) ====== */
 .console-overlay{position:absolute;bottom:0;left:0;right:0;height:240px;background:rgba(8,12,20,.93);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.08);display:none;flex-direction:column;z-index:300;box-shadow:0 -8px 32px rgba(0,0,0,.4)}
@@ -412,12 +436,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 /* ====== Demo 浏览器 (对标 RenderDemoList) ====== */
 #view-demos{display:none}
 #view-demos.active{display:block}
-.demo-root{position:absolute;inset:8px;display:flex;flex-direction:column;gap:8px}
-.demo-toolbar{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:8px 12px;flex-wrap:wrap}
-.demo-toolbar .demo-title{font-size:14px;font-weight:700;color:var(--text)}
-.demo-main{flex:1;display:flex;gap:8px;overflow:hidden;min-height:0}
+.demo-root{position:absolute;inset:18px;display:flex;flex-direction:column;gap:10px}
+.demo-toolbar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);box-shadow:var(--shadow-card);flex-wrap:wrap}
+.demo-toolbar .demo-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.demo-main{flex:1;display:flex;gap:10px;overflow:hidden;min-height:0}
 .demo-list-panel{flex:1;display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-card);min-width:0}
-.demo-list-header{display:flex;align-items:center;gap:6px;padding:8px 12px;height:30px;border-bottom:.5px solid var(--sep);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;background:rgba(255,255,255,.3);flex-shrink:0}
+.demo-list-header{display:flex;align-items:center;gap:6px;padding:8px 12px;height:30px;border-bottom:.5px solid var(--sep);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;background:var(--inset-surface-header);flex-shrink:0}
 .demo-list-header .dh-name{flex:1}.demo-list-header .dh-map{width:110px}.demo-list-header .dh-time{width:70px;text-align:right}.demo-list-header .dh-date{width:80px;text-align:right}
 .demo-list-body{flex:1;overflow-y:auto}
 .demo-list-body::-webkit-scrollbar{width:6px}
@@ -430,27 +454,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 .demo-row .dr-map{width:110px;color:var(--text3);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .demo-row .dr-time{width:70px;text-align:right;color:var(--text3);font-variant-numeric:tabular-nums}
 .demo-row .dr-date{width:80px;text-align:right;color:var(--text4);font-size:10px}
-.demo-detail-panel{flex:0 0 240px;display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);overflow-y:auto;box-shadow:var(--shadow-card);padding:14px}
-.demo-detail-panel .play-controls{display:flex;gap:6px;margin-bottom:10px}
+.demo-detail-panel{flex:0 0 260px;display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-card);padding:16px}
+.demo-detail-panel .play-controls{display:flex;gap:8px;margin-bottom:12px}
 .demo-detail-panel .play-controls .btn{flex:1;padding:8px;font-size:12px}
 .demo-marker{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:11px;color:var(--text3)}
 .demo-marker .mk-time{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;width:50px}
-.demo-footer{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:11px;color:var(--text3)}
+.demo-footer{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;font-size:11px;color:var(--text3);background:var(--glass-bg);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-lg);box-shadow:var(--shadow-card)}
 /* Demo 播放器 (进度条 + marker + 控制条) */
-.demo-player{margin-bottom:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--r-md)}
+.demo-player{margin-bottom:12px;padding:10px;background:var(--inset-surface);border-radius:var(--r-md)}
 .dp-time-row{display:flex;justify-content:space-between;font-size:11px;font-variant-numeric:tabular-nums;margin-bottom:6px}
 .dp-time-row .dp-cur{color:var(--accent);font-weight:600}
 .dp-time-row .dp-total{color:var(--text4)}
 .dp-progress{position:relative;height:20px;cursor:pointer}
-.dp-track{position:absolute;top:50%;left:0;right:0;height:4px;transform:translateY(-50%);background:var(--surface4);border-radius:2px}
+.dp-track{position:absolute;top:50%;left:0;right:0;height:4px;transform:translateY(-50%);background:rgba(60,60,67,.22);border-radius:2px}
 .dp-fill{height:100%;background:var(--accent);border-radius:2px}
 .dp-knob{position:absolute;top:50%;width:12px;height:12px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:grab;pointer-events:none}
 .dp-marker{position:absolute;top:50%;width:2px;height:12px;background:var(--orange);border-radius:1px;transform:translate(-50%,-50%);pointer-events:none}
-.dp-controls{display:flex;align-items:center;gap:3px;margin-top:8px;justify-content:center}
-.dp-controls .btn-icon{width:26px;height:26px;background:rgba(255,255,255,.55)}
-.dp-controls .dp-play{width:34px;height:34px}
-.dp-speed{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;padding:3px 9px;background:var(--surface3);border-radius:10px;cursor:pointer}
-.dp-speed:hover{background:var(--surface4)}
+.dp-controls{display:flex;align-items:center;gap:4px;margin-top:8px;justify-content:center}
+.dp-controls .btn-icon{width:28px;height:28px;background:var(--inset-surface-elevated)}
+.dp-controls .dp-play{width:36px;height:36px}
+.dp-speed{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;padding:3px 9px;background:rgba(60,60,67,.12);border-radius:10px;cursor:pointer}
+.dp-speed:hover{background:rgba(60,60,67,.18)}
 
 /* ====== 游戏内 HUD (gameplay overlay) ====== */
 #view-game{display:none}
@@ -494,63 +518,95 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 /* ====== ingame 设置 (ESC 打开, 底下有游戏画面, 对标 gsGameState 下渲染设置) ====== */
 #view-ingame-settings{display:none}
 #view-ingame-settings.active{display:block}
-.ingame-dim{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:1}
-.ingame-settings-panel{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(30px) saturate(1.8);-webkit-backdrop-filter:blur(30px) saturate(1.8)}
-.ingame-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:.5px solid var(--sep);flex-shrink:0;flex-wrap:wrap}
+.ingame-dim{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:1}
+.ingame-settings-panel{position:absolute;inset:18px;z-index:2;display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(30px) saturate(1.8);-webkit-backdrop-filter:blur(30px) saturate(1.8);border:.5px solid var(--glass-border);border-radius:var(--r-xl);box-shadow:var(--shadow-elevated);overflow:hidden}
+.ingame-header{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:.5px solid var(--sep);flex-shrink:0;flex-wrap:wrap;background:var(--inset-surface-header)}
 .ingame-header .ingame-title{font-size:18px;font-weight:700;color:var(--text)}
 .ingame-header .ingame-sub{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;margin-left:auto}
 .ingame-body{flex:1;display:flex;overflow:hidden;min-height:0}
-.ingame-body .settings-nav{width:160px}
-.ingame-body .settings-content{flex:1;border-left:.5px solid var(--sep)}
+.ingame-body .settings-nav{width:160px;background:transparent;border-right:.5px solid var(--sep)}
+.ingame-body .settings-content{flex:1;border-left:none;background:var(--inset-surface-content);padding:18px 22px}
 
 /* ====== 编辑器 Editor (对标 CEditor) ====== */
 #view-editor{display:none}
 #view-editor.active{display:block}
-.editor-root{position:absolute;inset:0;display:flex;flex-direction:column;background:#2a2a3a}
-.editor-toolbar{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:6px 10px;background:rgba(20,20,30,.95);border-bottom:1px solid rgba(255,255,255,.06);flex-wrap:wrap}
-.editor-toolbar .et-group{display:flex;gap:2px;padding:0 6px;border-right:.5px solid rgba(255,255,255,.08)}
-.editor-toolbar .et-group:last-child{border-right:none}
-.et-btn{width:30px;height:30px;border-radius:6px;border:none;background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
-.et-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+/* ====== 编辑器 (IDE 布局, 对标 CEditor::Render) ====== */
+.editor-root{position:absolute;inset:0;display:flex;flex-direction:column;background:#16161e}
+/* MenuBar (16px) */
+.editor-menubar{flex-shrink:0;height:28px;display:flex;align-items:center;gap:2px;padding:0 8px;background:rgba(26,26,34,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:.5px solid rgba(255,255,255,.08);font-size:12px}
+.em-item{padding:4px 10px;border-radius:6px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .12s}
+.em-item:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9)}
+.em-spacer{flex:1}
+.em-exit{color:var(--red);font-weight:500}
+/* ToolBar (53px) */
+.editor-toolbar{flex-shrink:0;height:44px;display:flex;align-items:center;gap:4px;padding:0 10px;background:rgba(30,30,40,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:.5px solid rgba(255,255,255,.08);overflow:hidden}
+.editor-toolbar .et-group{display:flex;gap:2px;align-items:center}
+.et-sep{width:1px;height:20px;background:rgba(255,255,255,.08);margin:0 4px}
+.et-btn{width:30px;height:30px;border-radius:6px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
+.et-btn:hover{background:rgba(255,255,255,.12);color:#fff}
 .et-btn.active{background:var(--accent);color:#fff}
-.et-mode{padding:0 10px;height:30px;border-radius:6px;border:none;background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.et-mode{padding:0 10px;height:30px;border-radius:6px;border:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+.et-mode:hover{background:rgba(255,255,255,.12);color:#fff}
 .et-mode.active{background:var(--accent-dim);color:var(--accent)}
 .et-spacer{flex:1}
-.editor-main{flex:1;display:flex;overflow:hidden}
-.ed-layers{flex:0 0 170px;background:rgba(22,22,32,.9);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;overflow:hidden}
-.ed-panel-header{padding:8px 12px;font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;border-bottom:.5px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:6px}
-.ed-layer-list{flex:1;overflow-y:auto;padding:4px}
-.ed-layer-list::-webkit-scrollbar{width:5px}
-.ed-layer-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
-.ed-layer{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;font-size:12px;color:rgba(255,255,255,.7);cursor:pointer}
-.ed-layer:hover{background:rgba(255,255,255,.05)}
-.ed-layer.active{background:var(--accent-dim);color:var(--accent)}
-.ed-layer .el-vis{width:14px;color:rgba(255,255,255,.4);font-size:12px}
-.ed-layer .el-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ed-canvas{flex:1;position:relative;overflow:hidden;background:#1a1a24;display:flex;align-items:center;justify-content:center}
-.ed-canvas-grid{width:90%;height:85%;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:24px 24px;position:relative;border:1px solid rgba(255,255,255,.08)}
-.ed-tileset{flex:0 0 130px;background:rgba(22,22,32,.9);border-left:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;overflow:hidden}
-.ed-tileset-grid{flex:1;overflow-y:auto;padding:6px;display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
-.ed-tileset-grid::-webkit-scrollbar{width:5px}
-.ed-tile{aspect-ratio:1;border-radius:3px;background:linear-gradient(135deg,#5a5a6a,#3a3a4a);cursor:pointer;border:1.5px solid transparent}
-.ed-tile:hover{border-color:rgba(255,255,255,.3)}
-.ed-tile.active{border-color:var(--accent)}
-.ed-tile.grass{background:linear-gradient(135deg,#5a9c4a,#3a6c2a)}
-.ed-tile.dirt{background:linear-gradient(135deg,#8a6a4a,#5a3a1a)}
-.ed-tile.stone{background:linear-gradient(135deg,#7a7a8a,#4a4a5a)}
-.ed-tile.spike{background:linear-gradient(135deg,#aa3a3a,#6a1a1a)}
-.ed-tile.gold{background:linear-gradient(135deg,#e8b840,#c89820)}
-.ed-tile.ice{background:linear-gradient(135deg,#80c0ff,#4080c0)}
-.ed-tile.finish{background:linear-gradient(135deg,#e0e0e0,#a0a0a0)}
-.ed-props{flex:0 0 190px;background:rgba(22,22,32,.9);border-left:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;overflow:hidden}
-.ed-prop-list{flex:1;overflow-y:auto;padding:8px 12px}
-.ed-prop-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:11px}
-.ed-prop-row .pr-label{color:rgba(255,255,255,.5)}
-.ed-prop-row .pr-val{color:rgba(255,255,255,.85);font-weight:500;font-variant-numeric:tabular-nums}
-.ed-prop-row input{width:80px;background:rgba(255,255,255,.06);border:.5px solid rgba(255,255,255,.1);border-radius:4px;padding:3px 6px;color:#fff;font-size:11px;font-family:inherit;outline:none}
-.ed-prop-row input:focus{box-shadow:0 0 0 1px var(--accent)}
-.ed-statusbar{flex-shrink:0;display:flex;align-items:center;gap:14px;padding:4px 12px;background:rgba(15,15,22,.95);border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:rgba(255,255,255,.4);flex-wrap:wrap}
-.ed-statusbar .es-item{display:flex;align-items:center;gap:5px}
+/* Body: ToolBox + Canvas */
+.editor-body{flex:1;display:flex;overflow:hidden;min-height:0}
+/* ToolBox (左侧, 可拖拽宽度示意) */
+.editor-toolbox{flex:0 0 200px;background:rgba(28,28,38,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-right:.5px solid rgba(255,255,255,.08);display:flex;flex-direction:column;overflow:hidden}
+.etb-header{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:.5px solid rgba(255,255,255,.08)}
+.etb-title{flex:1;font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em}
+.etb-btn{width:22px;height:22px;border-radius:5px;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .12s}
+.etb-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+.etb-content{flex:1;overflow-y:auto;padding:6px}
+.etb-content::-webkit-scrollbar{width:5px}
+.etb-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+.etb-group{margin-bottom:4px}
+.etb-group-hdr{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:5px;font-size:11px;font-weight:600;color:rgba(255,255,255,.6);cursor:pointer;transition:background .12s}
+.etb-group-hdr:hover{background:rgba(255,255,255,.06)}
+.etb-group-hdr i{font-size:10px}
+.etb-group-ops{margin-left:auto;color:rgba(255,255,255,.35);font-size:11px}
+.etb-layer{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 18px;border-radius:5px;font-size:11px;color:rgba(255,255,255,.65);cursor:pointer;transition:all .12s}
+.etb-layer:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.etb-layer.active{background:var(--accent-dim);color:var(--accent)}
+.etb-layer .el-vis{width:14px;color:rgba(255,255,255,.35);font-size:11px}
+.etb-layer .el-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.etb-layer .el-type{margin-left:auto;font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase}
+/* Canvas (棋盘格背景) */
+.editor-canvas{flex:1;position:relative;overflow:hidden;background:repeating-conic-gradient(#22222e 0% 25%, #262632 0% 50%) 0 0 / 32px 32px}
+.editor-canvas-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:24px 24px}
+/* ExtraEditor (底部) */
+.editor-extra{flex-shrink:0;height:160px;display:none;flex-direction:column;background:rgba(28,28,38,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid rgba(255,255,255,.08)}
+.editor-extra.open{display:flex}
+.extra-tabs{flex-shrink:0;display:flex;align-items:center;gap:2px;padding:4px 8px;border-bottom:.5px solid rgba(255,255,255,.08)}
+.extra-tab{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);cursor:pointer;transition:all .12s}
+.extra-tab:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
+.extra-tab.active{background:var(--accent-dim);color:var(--accent)}
+.extra-close{margin-left:auto;width:20px;height:20px;border-radius:5px;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px}
+.extra-close:hover{background:rgba(255,255,255,.14);color:#fff}
+.extra-body{flex:1;overflow-y:auto;padding:8px 12px}
+.extra-panel{display:none}
+.extra-panel.active{display:block}
+.etb-layer.vis-hidden{opacity:.35;text-decoration:line-through}
+.env-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;color:rgba(255,255,255,.4);font-size:12px;text-align:center}
+.env-placeholder i{font-size:28px;opacity:.5}
+.server-settings-list{display:flex;flex-direction:column;gap:2px}
+.ss-row{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:4px;font-size:12px;color:rgba(255,255,255,.7)}
+.ss-row:nth-child(odd){background:rgba(255,255,255,.03)}
+.ss-key{flex:1;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;color:rgba(255,255,255,.5)}
+.ss-val{width:60px;text-align:right;font-variant-numeric:tabular-nums}
+.hist-list{display:flex;flex-direction:column;gap:2px}
+.hist-item{display:flex;align-items:center;gap:10px;padding:4px 8px;border-radius:4px;font-size:12px;color:rgba(255,255,255,.6)}
+.hist-item:nth-child(odd){background:rgba(255,255,255,.03)}
+.hist-time{width:70px;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.35);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+.hist-action{flex:1}
+/* StatusBar (16px) */
+.editor-statusbar{flex-shrink:0;height:22px;display:flex;align-items:center;gap:10px;padding:0 12px;background:rgba(26,26,34,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid rgba(255,255,255,.08);font-size:11px;color:rgba(255,255,255,.4);overflow:hidden}
+.editor-statusbar .es-item{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.editor-statusbar .es-sep{color:rgba(255,255,255,.15)}
+.es-spacer{flex:1}
+/* 旧编辑器组件兼容 */
+.ed-tile-on-map{position:absolute;border-radius:2px;box-shadow:0 2px 6px rgba(0,0,0,.3);cursor:pointer;transition:transform .1s}
+.ed-tile-on-map:hover{transform:scale(1.15);z-index:10}
 
 /* ====== 组件库 ====== */
 #view-components{padding:20px;overflow-y:auto}
@@ -564,8 +620,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 /* ====== TextField ====== */
-.text-field{background:var(--surface3);border:none;border-radius:var(--r-md);padding:10px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;width:100%;transition:box-shadow .2s}
-.text-field:focus{box-shadow:0 0 0 2px var(--accent)}
+.text-field{background:rgba(60,60,67,.12);border:.5px solid var(--sep2);border-radius:var(--r-md);padding:10px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;width:100%;transition:box-shadow .2s,background .2s}
+.text-field:focus{box-shadow:0 0 0 2px var(--accent);background:rgba(60,60,67,.16)}
 .text-field::placeholder{color:var(--text4)}
 
 /* ====== 复合组件: Keybind 按键绑定行 (Controls 特有, 对标 BINDS 按) ====== */
@@ -573,8 +629,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 .comp-keybind-row:last-child{border-bottom:none}
 .comp-keybind-row .kb-label{flex:1;font-size:14px;color:var(--text)}
 .comp-keybind-row .kb-keys{display:flex;gap:4px;align-items:center}
-.comp-keybind-row .kb-key{min-width:34px;height:28px;padding:0 9px;background:var(--surface3);border:.5px solid var(--sep);border-radius:6px;font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;justify-content:center;font-family:inherit;cursor:pointer;transition:all .15s}
-.comp-keybind-row .kb-key:hover{background:var(--surface4)}
+.comp-keybind-row .kb-key{min-width:34px;height:28px;padding:0 9px;background:rgba(60,60,67,.12);border:.5px solid var(--sep2);border-radius:6px;font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;justify-content:center;font-family:inherit;cursor:pointer;transition:all .15s}
+.comp-keybind-row .kb-key:hover{background:rgba(60,60,67,.18)}
 .comp-keybind-row .kb-key.binding{background:var(--accent-dim);color:var(--accent);border-color:var(--accent);animation:kb-pulse 1s ease-in-out infinite}
 .comp-keybind-row .kb-key.none{color:var(--text4);font-weight:400;min-width:28px}
 @keyframes kb-pulse{0%,100%{opacity:1}50%{opacity:.55}}
@@ -612,12 +668,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
   </div>
   <div class="topbar-group">
     <span class="topbar-label">主题色</span>
-    <div class="swatch-btn active" style="background:#007AFF" data-r="0" data-g="122" data-b="255" data-hex="#007AFF"></div>
+    <div class="swatch-btn active" style="background:#E4A046" data-r="228" data-g="160" data-b="70" data-hex="#E4A046"></div>
+    <div class="swatch-btn" style="background:#007AFF" data-r="0" data-g="122" data-b="255" data-hex="#007AFF"></div>
     <div class="swatch-btn" style="background:#34C759" data-r="52" data-g="199" data-b="89" data-hex="#34C759"></div>
     <div class="swatch-btn" style="background:#FF3B30" data-r="255" data-g="59" data-b="48" data-hex="#FF3B30"></div>
     <div class="swatch-btn" style="background:#FF9500" data-r="255" data-g="149" data-b="0" data-hex="#FF9500"></div>
     <div class="swatch-btn" style="background:#AF52DE" data-r="175" data-g="82" data-b="222" data-hex="#AF52DE"></div>
-    <div class="swatch-btn" style="background:#E4A046" data-r="228" data-g="160" data-b="70" data-hex="#E4A046"></div>
   </div>
   <div class="topbar-group">
     <span class="topbar-label">透明度</span>
@@ -664,53 +720,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
   </div>
   <div class="start-logo">
     <h1>QmClient</h1>
-    <p>iOS 27 Liquid Glass · 对标旧 UI 图片按钮风格</p>
+    <p>v2.71.0 · DDNet 18.7</p>
   </div>
   <div class="start-buttons-wrap">
     <div class="start-main-buttons">
-      <!-- 图片按钮 — 对标旧 UI ClShowStartMenuImages 风格 -->
       <div class="start-btn-img" onclick="alert('Play')">
-        <div class="btn-icon-art art-play">
-          <!-- CSS tee 模拟 play_game.png 场景 -->
-          <div style="position:absolute;left:6px;bottom:2px;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe080,#e8b820)"></div>
-          <div style="position:absolute;right:8px;top:4px;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffb0d0,#e070a0)"></div>
-        </div>
+        <div class="btn-icon-art"><i class="ph-fill ph-play"></i></div>
         <span class="btn-label">Play</span>
         <span class="btn-hotkey">P</span>
       </div>
       <div class="start-btn-img" onclick="alert('Settings')">
-        <div class="btn-icon-art art-settings">
-          <i class="ph-bold ph-gear" style="color:rgba(255,255,255,.8);font-size:20px"></i>
-        </div>
+        <div class="btn-icon-art"><i class="ph-fill ph-gear"></i></div>
         <span class="btn-label">Settings</span>
         <span class="btn-hotkey">S</span>
       </div>
       <div class="start-btn-img" onclick="alert('Server')">
-        <div class="btn-icon-art art-server">
-          <i class="ph-bold ph-monitor-play" style="color:rgba(255,255,255,.8);font-size:18px"></i>
-        </div>
+        <div class="btn-icon-art"><i class="ph-fill ph-monitor-play"></i></div>
         <span class="btn-label">Run Server</span>
         <span class="btn-hotkey">R</span>
       </div>
       <div class="start-btn-img" onclick="alert('Editor')">
-        <div class="btn-icon-art art-editor">
-          <i class="ph-bold ph-pencil-ruler" style="color:rgba(255,255,255,.8);font-size:18px"></i>
-        </div>
+        <div class="btn-icon-art"><i class="ph-fill ph-pencil-ruler"></i></div>
         <span class="btn-label">Editor</span>
         <span class="btn-hotkey">E</span>
       </div>
       <div class="start-btn-img" onclick="alert('Demos')">
-        <div class="btn-icon-art art-demos">
-          <i class="ph-bold ph-film-strip" style="color:rgba(255,255,255,.8);font-size:18px"></i>
-        </div>
+        <div class="btn-icon-art"><i class="ph-fill ph-film-strip"></i></div>
         <span class="btn-label">Demos</span>
         <span class="btn-hotkey">D</span>
       </div>
-      <div class="start-btn-img" onclick="alert('Quit')" style="height:44px">
-        <div class="btn-icon-art art-quit" style="height:28px">
-          <i class="ph-bold ph-sign-out" style="color:rgba(255,255,255,.6);font-size:16px"></i>
-        </div>
-        <span class="btn-label" style="font-size:13px;font-weight:500;opacity:.7">Quit</span>
+      <div class="start-btn-img quit" onclick="alert('Quit')">
+        <div class="btn-icon-art"><i class="ph-bold ph-sign-out"></i></div>
+        <span class="btn-label">Quit</span>
         <span class="btn-hotkey">Esc</span>
       </div>
     </div>
@@ -738,7 +779,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
 
 <!-- ==================== 设置页 ==================== -->
 <div class="view" id="view-settings">
-  <div class="settings-root glass" id="settings-root">
+  <div class="settings-root" id="settings-root">
     <div class="settings-nav" id="settings-nav">
       <div class="settings-nav-title">Settings</div>
       <div class="settings-nav-item active" data-tab="general"><i class="ph ph-gear-six"></i> General</div>
@@ -785,8 +826,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
         </div>
         <div class="sb-list-body" id="sb-list-body"></div>
       </div>
-      <!-- Toolbox: Filters / Info / Friends / QM (对标 m_UiToolboxPage) -->
+      <!-- Toolbox: Communities filter + TabBar + ToolBox (对标 DDNet 右侧布局) -->
       <div class="sb-toolbox">
+        <!-- Communities 筛选列表 (对标 RenderServerbrowserCommunitiesFilter) -->
+        <div class="sb-comm-filter">
+          <div class="sb-comm-title">Communities</div>
+          <div class="sb-comm-list">
+            <div class="sb-comm-row active" onclick="this.parentElement.querySelectorAll('.sb-comm-row').forEach(r=>r.classList.remove('active'));this.classList.add('active')">
+              <span class="sb-comm-icon"><i class="ph-fill ph-globe"></i></span>
+              <span class="sb-comm-name">DDNet</span>
+            </div>
+            <div class="sb-comm-row" onclick="this.parentElement.querySelectorAll('.sb-comm-row').forEach(r=>r.classList.remove('active'));this.classList.add('active')">
+              <span class="sb-comm-icon"><i class="ph-fill ph-users"></i></span>
+              <span class="sb-comm-name">KoG</span>
+            </div>
+            <div class="sb-comm-row" onclick="this.parentElement.querySelectorAll('.sb-comm-row').forEach(r=>r.classList.remove('active'));this.classList.add('active')">
+              <span class="sb-comm-icon"><i class="ph-fill ph-star"></i></span>
+              <span class="sb-comm-name">Z-Network</span>
+            </div>
+            <div class="sb-comm-row" onclick="this.parentElement.querySelectorAll('.sb-comm-row').forEach(r=>r.classList.remove('active'));this.classList.add('active')">
+              <span class="sb-comm-icon"><i class="ph-fill ph-shield"></i></span>
+              <span class="sb-comm-name">TeeLands</span>
+            </div>
+            <div class="sb-comm-row" onclick="this.parentElement.querySelectorAll('.sb-comm-row').forEach(r=>r.classList.remove('active'));this.classList.add('active')">
+              <span class="sb-comm-icon"><i class="ph-fill ph-game-controller"></i></span>
+              <span class="sb-comm-name">My-Community</span>
+            </div>
+          </div>
+        </div>
+        <!-- TabBar (对标 m_UiToolboxPage: 过滤/详情/好友/QM) -->
         <div class="sb-toolbox-tabs">
           <div class="tb-tab active" data-toolbox="filters" onclick="switchToolbox('filters')">过滤</div>
           <div class="tb-tab" data-toolbox="info" onclick="switchToolbox('info')">详情</div>
@@ -794,39 +862,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
           <div class="tb-tab" data-toolbox="qm" onclick="switchToolbox('qm')">QM</div>
         </div>
         <div class="sb-toolbox-body">
-          <!-- Filters 面板 (13 项, 对标 m_BrFilter*) -->
+          <!-- Filters 面板 -->
           <div class="tb-panel active" id="tb-filters">
             <div class="sb-filter-list">
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check checked"></div><span>有人在玩 (Has people playing)</span></div>
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>仅统计玩家 (Count players only)</span></div>
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check checked"></div><span>服务器未满 (Server not full)</span></div>
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>仅显示好友 (Show friends only)</span></div>
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check checked"></div><span>无密码 (No password)</span></div>
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>无需登录 (No login required)</span></div>
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>严格游戏类型 (Strict gametype)</span></div>
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check checked"></div><span>过滤连接中玩家 (Filter connecting)</span></div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check checked"></div><span>有人在玩</span></div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>仅统计玩家</span></div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check checked"></div><span>服务器未满</span></div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>仅显示好友</span></div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check checked"></div><span>无密码</span></div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>无需登录</span></div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>严格游戏类型</span></div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check checked"></div><span>过滤连接中玩家</span></div>
               <div class="sb-input-row"><span class="sb-input-label">Game types:</span><input type="text" class="sb-input" placeholder="novice,brutal"></div>
               <div class="sb-input-row"><span class="sb-input-label">Server address:</span><input type="text" class="sb-input" placeholder="tw-xxx.ddnet.org:8303"></div>
-              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>玩家国家 (Player country):</span><span class="sb-country-flag">★</span></div>
-              <div class="sb-filter-section">国家 / 类型过滤</div>
-              <div class="sb-subtab">
-                <div class="st-btn active" onclick="this.parentElement.querySelectorAll('.st-btn').forEach(s=>s.classList.remove('active'));this.classList.add('active')">Countries</div>
-                <div class="st-btn" onclick="this.parentElement.querySelectorAll('.st-btn').forEach(s=>s.classList.remove('active'));this.classList.add('active')">Types</div>
-              </div>
-              <div class="sb-subtab-content">
-                <div class="stc-chip active" onclick="this.classList.toggle('active')">FIN</div>
-                <div class="stc-chip active" onclick="this.classList.toggle('active')">GER</div>
-                <div class="stc-chip" onclick="this.classList.toggle('active')">USA</div>
-                <div class="stc-chip active" onclick="this.classList.toggle('active')">CHN</div>
-                <div class="stc-chip" onclick="this.classList.toggle('active')">JPN</div>
-                <div class="stc-chip" onclick="this.classList.toggle('active')">BRA</div>
-              </div>
+              <div class="sb-filter-row" onclick="toggleSbFilter(this)"><div class="cb-check"></div><span>玩家国家</span><span class="sb-country-flag">★</span></div>
             </div>
             <button class="btn btn-secondary sb-reset-btn" onclick="document.querySelectorAll('#tb-filters .sb-filter-row .cb-check.checked').forEach(c=>c.classList.remove('checked'))"><i class="ph ph-arrow-counter-clockwise"></i> 重置过滤</button>
           </div>
-          <!-- Info 面板 (选中服务器详情, 由 selectServer 渲染) -->
-          <div class="tb-panel" id="tb-info"></div>
-          <!-- Friends 面板 (好友分类列表, 对标 RenderServerbrowserFriends) -->
+          <!-- Info 面板 (选中服务器详情) -->
+          <div class="tb-panel" id="tb-info">
+            <div class="sb-info-placeholder">
+              <i class="ph ph-info"></i>
+              <p>在左侧列表选择服务器查看详情</p>
+            </div>
+          </div>
+          <!-- Friends 面板 -->
           <div class="tb-panel" id="tb-friends">
             <div class="sb-friend-add">
               <input type="text" placeholder="添加好友名称…" id="friend-add-input">
@@ -834,38 +894,48 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
             </div>
             <div id="friend-list-container"></div>
           </div>
-          <!-- QM 面板 (QmClient 浏览器特有) -->
+          <!-- QM 面板 -->
           <div class="tb-panel" id="tb-qm">
             <div class="qm-feature">
               <h4><i class="ph-fill ph-sparkle"></i> 快速连接</h4>
-              <p>底部 StatusBox 可直接输入服务器地址连接, 支持域名:端口格式。</p>
+              <p>底部 StatusBox 可直接输入服务器地址连接。</p>
             </div>
             <div class="qm-feature">
               <h4><i class="ph-fill ph-star"></i> 智能收藏</h4>
-              <p>右键服务器行加入收藏, 收藏服务器在 TabBar「收藏」页聚合显示。</p>
-            </div>
-            <div class="qm-feature">
-              <h4><i class="ph-fill ph-users"></i> 好友追踪</h4>
-              <p>好友上线自动通知, 「好友」tab 可直接加入好友所在服务器。</p>
-            </div>
-            <div class="qm-feature">
-              <h4><i class="ph-fill ph-map-pin"></i> 地图完成度</h4>
-              <p>勾选「Indicate map finish」可在列表显示你是否完成过该地图。</p>
+              <p>右键服务器行加入收藏。</p>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <!-- 底部 StatusBox: 统计 + Connect to address + 刷新 (对标 RenderServerbrowserStatusBox) -->
+    <!-- 底部 StatusBox: 服务器详情 + 连接按钮 (对标 RenderServerbrowserStatusBox) -->
     <div class="sb-statusbox glass">
-      <span class="sb-status-info"><i class="ph ph-database"></i> <b id="sb-count">8</b> / 247 台</span>
-      <span class="sb-status-info"><i class="ph ph-wifi-high" style="color:var(--green)"></i> 已连接 master · 1,247 在线</span>
-      <div class="sb-connect">
-        <label>连接地址:</label>
-        <input type="text" placeholder="tw-xxx.ddnet.org:8303" id="connect-addr">
-        <button class="btn btn-primary" onclick="alert('连接到: '+(document.getElementById('connect-addr').value||'(空)'))"><i class="ph ph-sign-in"></i> 连接</button>
+      <div class="sb-status-main">
+        <div class="sb-status-meta">
+          <div class="sb-status-row">
+            <span class="sb-status-label">地图:</span>
+            <span class="sb-status-value" id="sb-status-map">Grandma</span>
+            <span class="sb-status-finish" id="sb-status-finish" title="你已完成此地图"><i class="ph-fill ph-check-circle"></i></span>
+          </div>
+          <div class="sb-status-row">
+            <span class="sb-status-label">模式:</span>
+            <span class="sb-status-value" id="sb-status-gametype">DDRace</span>
+            <span class="sb-status-label" style="margin-left:16px">玩家:</span>
+            <span class="sb-status-value" id="sb-status-players">14 / 64</span>
+            <span class="sb-status-label" style="margin-left:16px">Ping:</span>
+            <span class="sb-status-value" id="sb-status-ping" style="color:var(--green)">42 ms</span>
+          </div>
+          <div class="sb-status-row">
+            <span class="sb-status-label">地址:</span>
+            <span class="sb-status-value" id="sb-status-addr">tw-ger2.ddnet.org:8303</span>
+          </div>
+        </div>
+        <div class="sb-status-actions">
+          <button class="btn btn-primary" id="sb-btn-connect" onclick="alert('连接服务器')"><i class="ph ph-sign-in"></i> 连接</button>
+          <button class="btn btn-secondary" id="sb-btn-fav" onclick="alert('加入收藏')"><i class="ph ph-star"></i> 收藏</button>
+          <button class="btn btn-secondary" id="sb-btn-refresh" onclick="alert('刷新服务器列表')"><i class="ph ph-arrows-clockwise"></i> 刷新</button>
+        </div>
       </div>
-      <button class="btn btn-secondary" onclick="alert('刷新服务器列表')"><i class="ph ph-arrows-clockwise"></i> 刷新</button>
+    </div>
     </div>
   </div>
 </div>
@@ -978,49 +1048,114 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
   </div>
 </div>
 
-<!-- ==================== 编辑器 Editor (对标 CEditor) ==================== -->
+<!-- ==================== 编辑器 (对标 CEditor::Render IDE 布局) ==================== -->
 <div class="view" id="view-editor">
   <div class="editor-root">
+    <!-- MenuBar (16px, 对标 RenderMenubar) -->
+    <div class="editor-menubar">
+      <div class="em-item" onclick="alert('File')">File</div>
+      <div class="em-item" onclick="alert('Edit')">Edit</div>
+      <div class="em-item" onclick="alert('View')">View</div>
+      <div class="em-item" onclick="alert('Layers')">Layers</div>
+      <div class="em-item" onclick="alert('Images')">Images</div>
+      <div class="em-item" onclick="alert('Sounds')">Sounds</div>
+      <div class="em-item" onclick="alert('Tools')">Tools</div>
+      <div class="em-item" onclick="alert('Settings')">Settings</div>
+      <div class="em-item" onclick="alert('Help')">Help</div>
+      <div class="em-spacer"></div>
+      <div class="em-item em-exit" onclick="showView('start')" title="返回主菜单 (Esc)"><i class="ph ph-arrow-left"></i> Exit</div>
+    </div>
+    <!-- ToolBar (53px, 对标 DoToolbarLayers / DoToolbarImages / DoToolbarSounds) -->
     <div class="editor-toolbar">
       <div class="et-group">
-        <button class="et-btn" title="返回主菜单" onclick="showView('start')"><i class="ph ph-arrow-left"></i></button>
-        <span style="color:rgba(255,255,255,.5);font-size:12px;font-weight:600;padding:0 6px">Editor</span>
+        <button class="et-btn" title="新建 (Ctrl+N)" onclick="alert('新建地图')"><i class="ph ph-file-plus"></i></button>
+        <button class="et-btn" title="打开 (Ctrl+O)" onclick="alert('打开地图')"><i class="ph ph-folder-open"></i></button>
+        <button class="et-btn" title="保存 (Ctrl+S)" onclick="alert('保存地图')"><i class="ph ph-floppy-disk"></i></button>
       </div>
+      <div class="et-sep"></div>
       <div class="et-group">
-        <button class="et-mode active"><i class="ph ph-cursor"></i> 选择</button>
-        <button class="et-mode"><i class="ph ph-paint-brush"></i> 绘制</button>
+        <button class="et-btn" title="撤销 (Ctrl+Z)" onclick="alert('撤销')"><i class="ph ph-arrow-counter-clockwise"></i></button>
+        <button class="et-btn" title="重做 (Ctrl+Y)" onclick="alert('重做')"><i class="ph ph-arrow-clockwise"></i></button>
       </div>
+      <div class="et-sep"></div>
       <div class="et-group">
-        <button class="et-btn active" title="Tile 层"><i class="ph-fill ph-square"></i></button>
-        <button class="et-btn" title="Quad 层"><i class="ph ph-shapes"></i></button>
-        <button class="et-btn" title="声音层"><i class="ph ph-speaker-high"></i></button>
+        <button class="et-mode active" onclick="setEditorMode('layers',this)"><i class="ph ph-stack"></i> Layers</button>
+        <button class="et-mode" onclick="setEditorMode('images',this)"><i class="ph ph-image"></i> Images</button>
+        <button class="et-mode" onclick="setEditorMode('sounds',this)"><i class="ph ph-speaker-high"></i> Sounds</button>
       </div>
+      <div class="et-sep"></div>
       <div class="et-group">
-        <button class="et-btn" title="撤销"><i class="ph ph-arrow-counter-clockwise"></i></button>
-        <button class="et-btn" title="重做"><i class="ph ph-arrow-clockwise"></i></button>
+        <button class="et-btn active" title="选择 (S)" onclick="setEditorTool('select',this)"><i class="ph ph-cursor"></i></button>
+        <button class="et-btn" title="绘制 (D)" onclick="setEditorTool('draw',this)"><i class="ph ph-paint-brush"></i></button>
+        <button class="et-btn" title="填充 (F)" onclick="setEditorTool('fill',this)"><i class="ph ph-fill"></i></button>
+        <button class="et-btn" title="方框选择" onclick="setEditorTool('box',this)"><i class="ph ph-selection"></i></button>
+      </div>
+      <div class="et-sep"></div>
+      <div class="et-group">
+        <button class="et-btn" title="放大 (+)" onclick="setEditorZoom(25)"><i class="ph ph-magnifying-glass-plus"></i></button>
+        <button class="et-btn" title="缩小 (-)" onclick="setEditorZoom(-25)"><i class="ph ph-magnifying-glass-minus"></i></button>
+        <button class="et-btn" title="100%" onclick="editorZoom=100;setEditorZoom(0)"><i class="ph ph-magnifying-glass"></i></button>
+      </div>
+      <div class="et-sep"></div>
+      <div class="et-group">
+	        <button class="et-btn" title="网格" onclick="this.classList.toggle('active');document.getElementById('editor-canvas-grid').style.display=this.classList.contains('active')?'none':'block'"><i class="ph ph-grid-four"></i></button>
+        <button class="et-btn" title="Hue+" onclick="alert('Hue +')"><i class="ph ph-palette"></i></button>
+        <button class="et-btn" title="Hue-" onclick="alert('Hue -')"><i class="ph ph-paint-bucket"></i></button>
       </div>
       <div class="et-spacer"></div>
       <div class="et-group">
-        <button class="et-btn" title="播放测试"><i class="ph-fill ph-play"></i></button>
-        <button class="et-btn" title="保存"><i class="ph ph-floppy-disk"></i></button>
-        <button class="et-btn" title="设置"><i class="ph ph-gear"></i></button>
+        <button class="et-btn" title="播放测试" onclick="alert('Play test')"><i class="ph-fill ph-play"></i></button>
+        <button class="et-btn" title="服务器设置" onclick="toggleExtraEditor('server')" id="btn-extra-server"><i class="ph ph-gear"></i></button>
+        <button class="et-btn" title="Envelopes" onclick="toggleExtraEditor('envelopes')" id="btn-extra-env"><i class="ph ph-wave-sine"></i></button>
+        <button class="et-btn" title="History" onclick="toggleExtraEditor('history')" id="btn-extra-hist"><i class="ph ph-clock-counter-clockwise"></i></button>
       </div>
     </div>
-    <div class="editor-main">
-      <div class="ed-layers">
-        <div class="ed-panel-header"><i class="ph ph-stack"></i> 图层</div>
-        <div class="ed-layer-list">
-          <div class="ed-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Game</span></div>
-          <div class="ed-layer active"><i class="ph ph-eye el-vis"></i><span class="el-name">Front</span></div>
-          <div class="ed-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Tele</span></div>
-          <div class="ed-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Switch</span></div>
-          <div class="ed-layer"><i class="ph ph-eye-slash el-vis"></i><span class="el-name">Speedup</span></div>
-          <div class="ed-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Tune</span></div>
-          <div class="ed-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Background</span></div>
+    <!-- 主体: ToolBox + Canvas + (ExtraEditor) -->
+    <div class="editor-body">
+      <!-- ToolBox (左侧, 对标 RenderLayers / RenderImagesList / RenderSounds) -->
+      <div class="editor-toolbox" id="editor-toolbox">
+        <div class="etb-header">
+          <span class="etb-title" id="toolbox-title">Layers</span>
+          <button class="etb-btn" title="新建 Group" onclick="alert('New Group')"><i class="ph ph-plus"></i></button>
+          <button class="etb-btn" title="删除" onclick="alert('Delete')"><i class="ph ph-trash"></i></button>
+        </div>
+        <div class="etb-content" id="toolbox-content">
+          <!-- Layers 模式内容 -->
+          <div class="etb-group">
+            <div class="etb-group-hdr">
+              <i class="ph ph-caret-down"></i>
+              <span>Game</span>
+              <span class="etb-group-ops"><i class="ph ph-eye"></i></span>
+            </div>
+            <div class="etb-layer active"><i class="ph ph-eye el-vis"></i><span class="el-name">Game</span><span class="el-type">Tiles</span></div>
+            <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Front</span><span class="el-type">Tiles</span></div>
+            <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Tele</span><span class="el-type">Tiles</span></div>
+            <div class="etb-layer"><i class="ph ph-eye-slash el-vis"></i><span class="el-name">Speedup</span><span class="el-type">Tiles</span></div>
+            <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Switch</span><span class="el-type">Tiles</span></div>
+            <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Tune</span><span class="el-type">Tiles</span></div>
+          </div>
+          <div class="etb-group">
+            <div class="etb-group-hdr">
+              <i class="ph ph-caret-down"></i>
+              <span>Front</span>
+              <span class="etb-group-ops"><i class="ph ph-eye"></i></span>
+            </div>
+            <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Front</span><span class="el-type">Tiles</span></div>
+          </div>
+          <div class="etb-group">
+            <div class="etb-group-hdr">
+              <i class="ph ph-caret-down"></i>
+              <span>Background</span>
+              <span class="etb-group-ops"><i class="ph ph-eye"></i></span>
+            </div>
+            <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">BG1</span><span class="el-type">Quads</span></div>
+            <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">BG2</span><span class="el-type">Quads</span></div>
+          </div>
         </div>
       </div>
-      <div class="ed-canvas">
-        <div class="ed-canvas-grid" id="ed-canvas-grid" onclick="placeEditorTile(event)">
+      <!-- Canvas (棋盘格背景, 对标 DoMapEditor / RenderBackground checker) -->
+      <div class="editor-canvas">
+        <div class="editor-canvas-grid" id="editor-canvas-grid" onclick="placeEditorTile(event)">
           <div class="ed-tile-on-map" style="left:20%;top:60%;width:24px;height:24px;background:linear-gradient(135deg,#5a9c4a,#3a6c2a)"></div>
           <div class="ed-tile-on-map" style="left:24%;top:60%;width:24px;height:24px;background:linear-gradient(135deg,#5a9c4a,#3a6c2a)"></div>
           <div class="ed-tile-on-map" style="left:40%;top:45%;width:24px;height:24px;background:linear-gradient(135deg,#8a6a4a,#5a3a1a)"></div>
@@ -1028,40 +1163,59 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
           <div class="ed-tile-on-map" style="left:70%;top:30%;width:24px;height:24px;background:linear-gradient(135deg,#e8b840,#c89820)"></div>
         </div>
       </div>
-      <div class="ed-tileset">
-        <div class="ed-panel-header"><i class="ph ph-grid-four"></i> Tiles</div>
-        <div class="ed-tileset-grid">
-          <div class="ed-tile grass active" onclick="selectEditorTile(this)"></div>
-          <div class="ed-tile dirt" onclick="selectEditorTile(this)"></div>
-          <div class="ed-tile stone" onclick="selectEditorTile(this)"></div>
-          <div class="ed-tile spike" onclick="selectEditorTile(this)"></div>
-          <div class="ed-tile gold" onclick="selectEditorTile(this)"></div>
-          <div class="ed-tile ice" onclick="selectEditorTile(this)"></div>
-          <div class="ed-tile finish" onclick="selectEditorTile(this)"></div>
-          <div class="ed-tile" onclick="selectEditorTile(this)"></div>
-          <div class="ed-tile" onclick="selectEditorTile(this)"></div>
-        </div>
+    </div>
+    <!-- ExtraEditor (底部, 对标 RenderEnvelopeEditor / RenderServerSettingsEditor / RenderEditorHistory) -->
+    <div class="editor-extra" id="editor-extra">
+      <div class="extra-tabs">
+        <div class="extra-tab active" data-extra="envelopes" onclick="switchExtraTab('envelopes',this)">Envelopes</div>
+        <div class="extra-tab" data-extra="server" onclick="switchExtraTab('server',this)">Server Settings</div>
+        <div class="extra-tab" data-extra="history" onclick="switchExtraTab('history',this)">History</div>
+        <button class="extra-close" onclick="closeExtraEditor()" title="关闭"><i class="ph ph-x"></i></button>
       </div>
-      <div class="ed-props">
-        <div class="ed-panel-header"><i class="ph ph-sliders"></i> 属性</div>
-        <div class="ed-prop-list">
-          <div class="ed-prop-row"><span class="pr-label">名称</span><input type="text" value="Front"></div>
-          <div class="ed-prop-row"><span class="pr-label">宽度</span><span class="pr-val">200</span></div>
-          <div class="ed-prop-row"><span class="pr-label">高度</span><span class="pr-val">200</span></div>
-          <div class="ed-prop-row"><span class="pr-label">颜色</span><input type="text" value="255,255,255,1.0"></div>
-          <div class="ed-prop-row"><span class="pr-label">当前 Tile</span><span class="pr-val" id="ed-current-tile">grass</span></div>
+      <div class="extra-body">
+        <div class="extra-panel active" id="extra-envelopes">
+	          <div class="env-placeholder" onclick="addEnvelopePoint()">
+	            <i class="ph ph-wave-sine"></i>
+	            <p>点击此处添加 Envelope 关键帧示意</p>
+	          </div>
+        </div>
+        <div class="extra-panel" id="extra-server">
+          <div class="server-settings-list">
+            <div class="ss-row"><span class="ss-key">sv_infinite_ammo</span><span class="ss-val">0</span></div>
+            <div class="ss-row"><span class="ss-key">sv_vote_kick</span><span class="ss-val">1</span></div>
+            <div class="ss-row"><span class="ss-key">sv_spectator_slots</span><span class="ss-val">2</span></div>
+            <div class="ss-row"><span class="ss-key">sv_teambalance_time</span><span class="ss-val">1</span></div>
+            <div class="ss-row"><span class="ss-key">sv_maprotation</span><span class="ss-val"></span></div>
+          </div>
+        </div>
+        <div class="extra-panel" id="extra-history">
+          <div class="hist-list">
+            <div class="hist-item"><span class="hist-time">14:32:05</span><span class="hist-action">Add Layer "Front"</span></div>
+            <div class="hist-item"><span class="hist-time">14:31:48</span><span class="hist-action">Delete Quad</span></div>
+            <div class="hist-item"><span class="hist-time">14:30:12</span><span class="hist-action">Brush Paint (24 tiles)</span></div>
+            <div class="hist-item"><span class="hist-time">14:28:55</span><span class="hist-action">Move Group "Game"</span></div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="ed-statusbar">
+    <!-- StatusBar (16px, 对标 RenderStatusbar) -->
+    <div class="editor-statusbar">
       <span class="es-item"><i class="ph ph-map"></i> Kobra4_edit.map</span>
+      <span class="es-sep">|</span>
       <span class="es-item"><i class="ph ph-cursor"></i> X:124 Y:88</span>
+      <span class="es-sep">|</span>
       <span class="es-item"><i class="ph ph-magnifying-glass"></i> Zoom 100%</span>
-      <span class="es-item"><i class="ph ph-layers"></i> 层: Front</span>
+      <span class="es-sep">|</span>
+      <span class="es-item"><i class="ph ph-layers"></i> Layer: Front</span>
+      <span class="es-sep">|</span>
+      <span class="es-item"><i class="ph ph-grid-four"></i> Grid: 1</span>
+      <span class="es-sep">|</span>
+      <span class="es-item"><i class="ph ph-hard-drives"></i> 200 x 200</span>
+      <div class="es-spacer"></div>
+      <span class="es-item" id="es-tooltip"><i class="ph ph-info"></i> 使用鼠标左键绘制，右键擦除</span>
     </div>
   </div>
 </div>
-
 <!-- ==================== ESC 菜单 ==================== -->
 <div class="view" id="view-esc">
   <div class="game-viewport">
@@ -1080,16 +1234,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
       </div>
       <!-- 服务器信息条 (地图/模式/在线时长) -->
       <div class="esc-server-info">
-        <div style="width:28px;height:16px;border-radius:4px;background:linear-gradient(135deg,#e8b840,#c89820);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff">DDN</div>
+        <div style="width:32px;height:18px;border-radius:5px;background:linear-gradient(135deg,#e8b840,#c89820);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff">DDN</div>
         <div style="flex:1">
           <div class="srv-name">DDNet Asia #5 | Novice</div>
           <div class="srv-meta">Kobra 4 · Novice · 在线 23:14</div>
         </div>
-        <div style="text-align:center;line-height:1.1"><div style="color:#fff;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">12/64</div><div style="color:rgba(255,255,255,.4);font-size:10px">玩家</div></div>
+        <div style="text-align:center;line-height:1.1"><div style="color:var(--text);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">12/64</div><div style="color:var(--text3);font-size:10px">玩家</div></div>
         <span style="color:var(--green);font-size:12px;font-weight:600">32ms</span>
       </div>
 
-      <div class="section-card glass" style="background:rgba(255,255,255,.85)">
+      <div class="section-card">
         <div class="card-header">
           <i class="ph ph-game-controller card-icon"></i>
           <span class="card-title">游戏控制</span>
@@ -1106,7 +1260,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
         </div>
       </div>
 
-      <div class="section-card glass" style="background:rgba(255,255,255,.85)">
+      <div class="section-card">
         <div class="card-header">
           <i class="ph ph-video-camera card-icon"></i>
           <span class="card-title">录屏 & 回放</span>
@@ -1121,7 +1275,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
         </div>
       </div>
 
-      <div class="section-card glass" style="background:rgba(255,255,255,.85)">
+      <div class="section-card">
         <div class="card-header">
           <i class="ph ph-users card-icon"></i>
           <span class="card-title">社交 & 投票</span>
@@ -1135,25 +1289,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text"
         </div>
       </div>
 
-      <div class="section-card glass" style="background:rgba(255,255,255,.85)">
+      <div class="section-card">
         <div class="card-header">
           <i class="ph ph-users card-icon"></i>
           <span class="card-title">在线玩家</span>
           <span class="card-count">12 / 64</span>
         </div>
         <div class="card-body" style="padding-top:0">
-          <div style="display:flex;flex-direction:column;gap:1px;font-size:12px">
-            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--accent-dim);border-radius:6px"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe080,#e8b820)"></span><span style="flex:1;font-weight:600;color:var(--accent)">你 (QmClient)</span><span style="color:var(--green);font-size:11px">进行中</span></div>
-            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#80d0ff,#4090e0)"></span><span style="flex:1;color:var(--text2)">BlueRunner</span><span style="color:var(--text3);font-size:11px">完成 3:42</span></div>
-            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a0f0a0,#50c050)"></span><span style="flex:1;color:var(--text2)">GrassHopper</span><span style="color:var(--text3);font-size:11px">完成 4:18</span></div>
-            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffa0a0,#e04040)"></span><span style="flex:1;color:var(--text2)">RedDevil</span><span style="color:var(--orange);font-size:11px">观战中</span></div>
-            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffb0d0,#e070a0)"></span><span style="flex:1;color:var(--text2)">Pinkie</span><span style="color:var(--text3);font-size:11px">完成 5:02</span></div>
-            <div style="text-align:center;color:var(--text4);font-size:11px;padding:4px">… 还有 7 名玩家</div>
+          <div class="list-group">
+            <div class="list-row" style="padding:6px 10px;background:var(--accent-dim);border-radius:6px;border-bottom:none"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe080,#e8b820)"></span><span style="flex:1;font-weight:600;color:var(--accent)">你 (QmClient)</span><span style="color:var(--green);font-size:11px">进行中</span></div>
+            <div class="list-row" style="padding:6px 10px;border-bottom:.5px solid var(--sep2)"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#80d0ff,#4090e0)"></span><span style="flex:1;color:var(--text2)">BlueRunner</span><span style="color:var(--text3);font-size:11px">完成 3:42</span></div>
+            <div class="list-row" style="padding:6px 10px;border-bottom:.5px solid var(--sep2)"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a0f0a0,#50c050)"></span><span style="flex:1;color:var(--text2)">GrassHopper</span><span style="color:var(--text3);font-size:11px">完成 4:18</span></div>
+            <div class="list-row" style="padding:6px 10px;border-bottom:.5px solid var(--sep2)"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffa0a0,#e04040)"></span><span style="flex:1;color:var(--text2)">RedDevil</span><span style="color:var(--orange);font-size:11px">观战中</span></div>
+            <div class="list-row" style="padding:6px 10px;border-bottom:none"><span style="width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffb0d0,#e070a0)"></span><span style="flex:1;color:var(--text2)">Pinkie</span><span style="color:var(--text3);font-size:11px">完成 5:02</span></div>
+            <div style="text-align:center;color:var(--text4);font-size:11px;padding:6px">… 还有 7 名玩家</div>
           </div>
         </div>
       </div>
 
-      <div style="text-align:center;margin-top:12px">
+      <div style="text-align:center;margin-top:16px">
         <button class="btn btn-primary" style="padding:10px 40px" onclick="document.querySelector('#view-switcher button[data-view=start]').click()"><i class="ph ph-x"></i> 回到游戏</button>
       </div>
     </div>
@@ -1488,8 +1642,13 @@ function updateOpacity(e) {
   opacitySlider.querySelector('.mini-slider-knob').style.left = pct + '%';
   const val = pct / 100;
   const root = document.documentElement;
-  root.style.setProperty('--glass-bg', `rgba(255,255,255,${val * 0.72})`);
-  root.style.setProperty('--glass-bg-solid', `rgba(242,242,247,${val * 0.92})`);
+  root.style.setProperty('--glass-bg', `rgba(255,255,255,${0.55 + val * 0.35})`);
+  root.style.setProperty('--glass-bg-solid', `rgba(242,242,247,${0.75 + val * 0.22})`);
+  root.style.setProperty('--glass-border', `rgba(255,255,255,${0.35 + val * 0.35})`);
+  root.style.setProperty('--inset-surface', `rgba(255,255,255,${0.12 + val * 0.18})`);
+  root.style.setProperty('--inset-surface-header', `rgba(255,255,255,${0.16 + val * 0.18})`);
+  root.style.setProperty('--inset-surface-content', `rgba(255,255,255,${0.18 + val * 0.24})`);
+  root.style.setProperty('--inset-surface-elevated', `rgba(255,255,255,${0.40 + val * 0.22})`);
 }
 opacitySlider.addEventListener('mousedown', e => { opacityDragging = true; updateOpacity(e); });
 document.addEventListener('mousemove', e => { if(opacityDragging) updateOpacity(e); });
@@ -1533,9 +1692,9 @@ document.querySelectorAll('[data-slider]').forEach(setupSlider);
 
 // ====== 设置页卡片数据 (按 tab 分组, 基于 DDNet 真实设置项) ======
 const ACCENT_COLORS = [
-  {hex:'#007AFF', rgb:'0,122,255'}, {hex:'#34C759', rgb:'52,199,89'},
-  {hex:'#FF9500', rgb:'255,149,0'}, {hex:'#AF52DE', rgb:'175,82,222'},
-  {hex:'#FF3B30', rgb:'255,59,48'}, {hex:'#E4A046', rgb:'228,160,70'},
+  {hex:'#E4A046', rgb:'228,160,70'}, {hex:'#007AFF', rgb:'0,122,255'},
+  {hex:'#34C759', rgb:'52,199,89'}, {hex:'#FF9500', rgb:'255,149,0'},
+  {hex:'#AF52DE', rgb:'175,82,222'}, {hex:'#FF3B30', rgb:'255,59,48'},
 ];
 const settingsData = {
   general: [
@@ -1994,17 +2153,11 @@ document.addEventListener('mouseup', () => { dpDragging = false; });
 
 // ====== 编辑器 tile 选择 ======
 function selectEditorTile(tile) {
-  document.querySelectorAll('.ed-tileset-grid .ed-tile').forEach(t => t.classList.remove('active'));
-  tile.classList.add('active');
-  const cur = document.getElementById('ed-current-tile');
-  if(cur) {
-    const cls = [...tile.classList].find(c => c !== 'ed-tile' && c !== 'active');
-    cur.textContent = cls || 'default';
-  }
+  // 兼容: 旧 tileset 面板已移除, 此函数保留为空操作
 }
-// 编辑器画布: 点击放置当前选中 tile (对标 CEditor OnClick → m_pTileData)
+// 编辑器画布: 点击放置示意 tile (对标 CEditor OnClick)
 function placeEditorTile(e) {
-  const grid = document.getElementById('ed-canvas-grid');
+  const grid = document.getElementById('editor-canvas-grid');
   if(!grid) return;
   const rect = grid.getBoundingClientRect();
   const tx = Math.floor((e.clientX - rect.left) / 24) * 24;
@@ -2014,16 +2167,289 @@ function placeEditorTile(e) {
   grid.querySelectorAll('.ed-tile-on-map.px').forEach(t => {
     if(parseInt(t.style.left) === tx && parseInt(t.style.top) === ty) t.remove();
   });
-  const activeTile = document.querySelector('.ed-tileset-grid .ed-tile.active');
-  if(!activeTile) return;
-  const bg = getComputedStyle(activeTile).backgroundImage;
   const tile = document.createElement('div');
   tile.className = 'ed-tile-on-map px';
-  tile.style.cssText = `left:${tx}px;top:${ty}px;width:24px;height:24px;background-image:${bg}`;
+  tile.style.cssText = 'left:' + tx + 'px;top:' + ty + 'px;width:24px;height:24px;background:linear-gradient(135deg,#5a9c4a,#3a6c2a)';
   grid.appendChild(tile);
   // 更新状态栏坐标
-  const coord = document.querySelector('.ed-statusbar .es-item:nth-child(2)');
-  if(coord) coord.innerHTML = `<i class="ph ph-cursor"></i> X:${tx} Y:${ty}`;
+  const coord = document.querySelector('.editor-statusbar .es-item:nth-child(3)');
+  if(coord) coord.innerHTML = '<i class="ph ph-cursor"></i> X:' + tx + ' Y:' + ty;
+}
+
+// ====== 编辑器 IDE 交互 (对标 CEditor m_Mode / m_ActiveExtraEditor) ======
+// ToolBar 模式切换: Layers / Images / Sounds (对标 m_Mode)
+function setEditorMode(mode, el) {
+  el.parentElement.querySelectorAll('.et-mode').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const titleMap = { layers: 'Layers', images: 'Images', sounds: 'Sounds' };
+  const title = document.getElementById('toolbox-title');
+  if(title) title.textContent = titleMap[mode] || mode;
+}
+
+// 画布工具切换: select / draw / fill / box
+function setEditorTool(tool, el) {
+  el.parentElement.querySelectorAll('.et-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// 打开底部 ExtraEditor 并切换到对应 tab
+function toggleExtraEditor(type) {
+  const panel = document.getElementById('editor-extra');
+  if(!panel) return;
+  if(panel.classList.contains('open')) {
+    // 已打开且当前就是这个 tab, 则关闭
+    const curTab = panel.querySelector('.extra-tab.active');
+    if(curTab && curTab.dataset.extra === type) {
+      panel.classList.remove('open');
+      return;
+    }
+  }
+  panel.classList.add('open');
+  const tab = panel.querySelector('.extra-tab[data-extra="' + type + '"]');
+  if(tab) switchExtraTab(type, tab);
+}
+
+// 切换 ExtraEditor 内 tab 面板
+function switchExtraTab(type, el) {
+  const panel = document.getElementById('editor-extra');
+  if(!panel) return;
+  panel.querySelectorAll('.extra-tab').forEach(t => t.classList.remove('active'));
+  panel.querySelectorAll('.extra-panel').forEach(p => p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const target = document.getElementById('extra-' + type);
+  if(target) target.classList.add('active');
+}
+
+// 关闭 ExtraEditor
+function closeExtraEditor() {
+  const panel = document.getElementById('editor-extra');
+  if(panel) panel.classList.remove('open');
+}
+
+// ====== 编辑器 ToolBox 层交互 (对标 CLayerGroup / CLayer 渲染) ======
+// 展开/折叠 group
+document.querySelectorAll('.etb-group-hdr').forEach(hdr => {
+  hdr.addEventListener('click', () => {
+    hdr.classList.toggle('collapsed');
+    const icon = hdr.querySelector('i');
+    if(icon) icon.classList.toggle('ph-caret-down');
+    if(icon) icon.classList.toggle('ph-caret-right');
+    const group = hdr.parentElement;
+    group.querySelectorAll('.etb-layer').forEach(l => {
+      l.style.display = hdr.classList.contains('collapsed') ? 'none' : 'flex';
+    });
+  });
+});
+
+// 选中图层 (对标 m_SelectedLayer)
+document.querySelectorAll('.etb-layer').forEach(layer => {
+  layer.addEventListener('click', (e) => {
+    // 如果点击的是可见性图标, 不切换选中
+    if(e.target.classList.contains('el-vis')) return;
+    document.querySelectorAll('.etb-layer').forEach(l => l.classList.remove('active'));
+    layer.classList.add('active');
+    // 更新状态栏
+    const nameEl = layer.querySelector('.el-name');
+    const statusBar = document.querySelector('.editor-statusbar');
+    if(nameEl && statusBar) {
+      const layerItem = statusBar.querySelector('.es-item:nth-child(7)');
+      if(layerItem) layerItem.innerHTML = '<i class="ph ph-layers"></i> Layer: ' + nameEl.textContent;
+    }
+  });
+});
+
+// 图层可见性切换 (对标 CLayer::m_Visible)
+document.querySelectorAll('.el-vis').forEach(vis => {
+  vis.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = vis.classList.contains('ph-eye-slash');
+    vis.classList.toggle('ph-eye', isHidden);
+    vis.classList.toggle('ph-eye-slash', !isHidden);
+    vis.parentElement.classList.toggle('vis-hidden', !isHidden);
+  });
+});
+
+// Group 整体可见性切换 (对标 m_Hidden)
+document.querySelectorAll('.etb-group-ops').forEach(ops => {
+  ops.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const icon = ops.querySelector('i');
+    const group = ops.closest('.etb-group');
+    const layers = group.querySelectorAll('.etb-layer');
+    // 如果有隐藏层, 全部显示; 否则全部隐藏
+    const anyHidden = [...layers].some(l => l.classList.contains('vis-hidden'));
+    layers.forEach(l => {
+      const vis = l.querySelector('.el-vis');
+      if(anyHidden) {
+        l.classList.remove('vis-hidden');
+        vis.classList.remove('ph-eye-slash');
+        vis.classList.add('ph-eye');
+      } else {
+        l.classList.add('vis-hidden');
+        vis.classList.remove('ph-eye');
+        vis.classList.add('ph-eye-slash');
+      }
+    });
+    if(icon) {
+      icon.classList.toggle('ph-eye', anyHidden);
+      icon.classList.toggle('ph-eye-slash', !anyHidden);
+    }
+  });
+});
+
+// ====== 编辑器画布鼠标跟踪 (对标 m_Mouse) ======
+const editorCanvas = document.querySelector('.editor-canvas');
+if(editorCanvas) {
+  editorCanvas.addEventListener('mousemove', (e) => {
+    const grid = document.getElementById('editor-canvas-grid');
+    if(!grid) return;
+    const rect = grid.getBoundingClientRect();
+    const tx = Math.floor((e.clientX - rect.left) / 24);
+    const ty = Math.floor((e.clientY - rect.top) / 24);
+    const coord = document.querySelector('.editor-statusbar .es-item:nth-child(3)');
+    if(coord) coord.innerHTML = '<i class="ph ph-cursor"></i> X:' + tx + ' Y:' + ty;
+    // 更新 tooltip
+    const tooltip = document.getElementById('es-tooltip');
+    if(tooltip) {
+      const activeTool = document.querySelector('.editor-toolbar .et-btn.active');
+      if(activeTool) {
+        const toolTips = { select: '点击选中 tile · 拖拽移动', draw: '左键绘制 · 右键擦除', fill: '点击填充区域', box: '拖拽框选区域' };
+        const toolName = activeTool.title.split(' ')[0];
+        tooltip.innerHTML = '<i class="ph ph-info"></i> ' + (toolTips[toolName] || activeTool.title);
+      }
+    }
+  });
+}
+
+// ====== 编辑器 Images/Sounds ToolBox 内容切换 (对标 m_Mode) ======
+const toolboxContents = {
+  layers: `
+    <div class="etb-group">
+      <div class="etb-group-hdr"><i class="ph ph-caret-down"></i><span>Game</span><span class="etb-group-ops"><i class="ph ph-eye"></i></span></div>
+      <div class="etb-layer active"><i class="ph ph-eye el-vis"></i><span class="el-name">Game</span><span class="el-type">Tiles</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Front</span><span class="el-type">Tiles</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Tele</span><span class="el-type">Tiles</span></div>
+      <div class="etb-layer"><i class="ph ph-eye-slash el-vis"></i><span class="el-name">Speedup</span><span class="el-type">Tiles</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Switch</span><span class="el-type">Tiles</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Tune</span><span class="el-type">Tiles</span></div>
+    </div>
+    <div class="etb-group">
+      <div class="etb-group-hdr"><i class="ph ph-caret-down"></i><span>Front</span><span class="etb-group-ops"><i class="ph ph-eye"></i></span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">Front</span><span class="el-type">Tiles</span></div>
+    </div>
+    <div class="etb-group">
+      <div class="etb-group-hdr"><i class="ph ph-caret-down"></i><span>Background</span><span class="etb-group-ops"><i class="ph ph-eye"></i></span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">BG1</span><span class="el-type">Quads</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">BG2</span><span class="el-type">Quads</span></div>
+    </div>`,
+  images: `
+    <div class="etb-group">
+      <div class="etb-group-hdr"><i class="ph ph-caret-down"></i><span>已加载图片</span><span class="etb-group-ops"><i class="ph ph-eye"></i></span></div>
+      <div class="etb-layer active"><i class="ph ph-eye el-vis"></i><span class="el-name">grass_main</span><span class="el-type">PNG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">desert_bg</span><span class="el-type">PNG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">winter_tiles</span><span class="el-type">PNG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">entities</span><span class="el-type">PNG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye-slash el-vis"></i><span class="el-name">particles</span><span class="el-type">PNG</span></div>
+    </div>`,
+  sounds: `
+    <div class="etb-group">
+      <div class="etb-group-hdr"><i class="ph ph-caret-down"></i><span>音效</span><span class="etb-group-ops"><i class="ph ph-eye"></i></span></div>
+      <div class="etb-layer active"><i class="ph ph-eye el-vis"></i><span class="el-name">gun_fire</span><span class="el-type">OGG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">hammer_hit</span><span class="el-type">OGG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">ninja</span><span class="el-type">OGG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">pickup</span><span class="el-type">OGG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">explosion</span><span class="el-type">OGG</span></div>
+    </div>
+    <div class="etb-group">
+      <div class="etb-group-hdr"><i class="ph ph-caret-down"></i><span>背景音乐</span><span class="etb-group-ops"><i class="ph ph-eye"></i></span></div>
+      <div class="etb-layer"><i class="ph ph-eye el-vis"></i><span class="el-name">menu_bgm</span><span class="el-type">OGG</span></div>
+      <div class="etb-layer"><i class="ph ph-eye-slash el-vis"></i><span class="el-name">game_bgm</span><span class="el-type">OGG</span></div>
+    </div>`
+};
+
+// 增强 setEditorMode: 同时更新 ToolBox 内容
+const _origSetEditorMode = setEditorMode;
+setEditorMode = function(mode, el) {
+  _origSetEditorMode(mode, el);
+  const content = document.getElementById('toolbox-content');
+  if(content && toolboxContents[mode]) {
+    content.innerHTML = toolboxContents[mode];
+    // 重新绑定交互事件
+    content.querySelectorAll('.etb-group-hdr').forEach(hdr => {
+      hdr.addEventListener('click', () => {
+        hdr.classList.toggle('collapsed');
+        const icon = hdr.querySelector('i');
+        if(icon) { icon.classList.toggle('ph-caret-down'); icon.classList.toggle('ph-caret-right'); }
+        const group = hdr.parentElement;
+        group.querySelectorAll('.etb-layer').forEach(l => { l.style.display = hdr.classList.contains('collapsed') ? 'none' : 'flex'; });
+      });
+    });
+    content.querySelectorAll('.etb-layer').forEach(layer => {
+      layer.addEventListener('click', (e) => {
+        if(e.target.classList.contains('el-vis')) return;
+        content.querySelectorAll('.etb-layer').forEach(l => l.classList.remove('active'));
+        layer.classList.add('active');
+        const nameEl = layer.querySelector('.el-name');
+        const statusBar = document.querySelector('.editor-statusbar');
+        if(nameEl && statusBar) {
+          const layerItem = statusBar.querySelector('.es-item:nth-child(7)');
+          if(layerItem) layerItem.innerHTML = '<i class="ph ph-layers"></i> Layer: ' + nameEl.textContent;
+        }
+      });
+    });
+    content.querySelectorAll('.el-vis').forEach(vis => {
+      vis.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = vis.classList.contains('ph-eye-slash');
+        vis.classList.toggle('ph-eye', isHidden);
+        vis.classList.toggle('ph-eye-slash', !isHidden);
+        vis.parentElement.classList.toggle('vis-hidden', !isHidden);
+      });
+    });
+  }
+};
+
+// ====== ExtraEditor Envelope 简易交互 (对标 CEnvelope) ======
+function addEnvelopePoint() {
+  const envPanel = document.getElementById('extra-envelopes');
+  if(!envPanel) return;
+  const list = envPanel.querySelector('.env-placeholder');
+  if(list) list.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:4px;padding:8px 0;width:100%">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.7)">
+        <span style="flex:0 0 60px;font-variant-numeric:tabular-nums">0.0s</span>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,.1);border-radius:4px;position:relative"><div style="left:0%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--accent);position:absolute;transform:translate(-50%,-50%)"></div></div>
+        <span style="font-variant-numeric:tabular-nums">0</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.7)">
+        <span style="flex:0 0 60px;font-variant-numeric:tabular-nums">1.0s</span>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,.1);border-radius:4px;position:relative"><div style="left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--accent);position:absolute;transform:translate(-50%,-50%)"></div></div>
+        <span style="font-variant-numeric:tabular-nums">128</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.7)">
+        <span style="flex:0 0 60px;font-variant-numeric:tabular-nums">2.0s</span>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,.1);border-radius:4px;position:relative"><div style="left:100%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--accent);position:absolute;transform:translate(-50%,-50%)"></div></div>
+        <span style="font-variant-numeric:tabular-nums">255</span>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,.35)">Envelope "Color" · 3 个关键帧 · 类型: Color</div>`;
+}
+
+// ====== 编辑器 zoom 交互 (简易) ======
+let editorZoom = 100;
+function setEditorZoom(delta) {
+  editorZoom = Math.max(25, Math.min(400, editorZoom + delta));
+  const zoomItem = document.querySelector('.editor-statusbar .es-item:nth-child(5)');
+  if(zoomItem) zoomItem.innerHTML = '<i class="ph ph-magnifying-glass"></i> Zoom ' + editorZoom + '%';
+  const grid = document.getElementById('editor-canvas-grid');
+  if(grid) {
+    const size = Math.max(8, Math.round(24 * editorZoom / 100));
+    grid.style.backgroundSize = size + 'px ' + size + 'px';
+    grid.querySelectorAll('.ed-tile-on-map.px').forEach(t => {
+      t.style.width = size + 'px';
+      t.style.height = size + 'px';
+    });
+  }
 }
 
 // ====== 初始化 ======

@@ -658,6 +658,9 @@ void CMenuBackground::OnRender()
 
 bool CMenuBackground::Render()
 {
+	if(!InterfacesInitialized())
+		return false;
+
 	if(!m_Loaded)
 		return false;
 

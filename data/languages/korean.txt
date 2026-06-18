@@ -3637,8 +3637,8 @@ Map browser opacity
 Map danger border
 == 맵 위험 경계
 
-Map Preview
-== 맵 미리보기
+Map Preview TODO
+== 맵 미리보기 준비 중
 
 Map progress bar
 == 맵 진행 바
@@ -3903,6 +3903,9 @@ Net
 
 Netversion
 == 네트워크 버전
+
+Network
+== 네트워크
 
 new
 == 신규

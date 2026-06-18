@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <vector>
 
 struct SQmSettingsPerfWindowSummary
@@ -24,6 +25,8 @@ struct SQmSettingsPerfWindowSummary
 	float m_FrameMsP99 = 0.0f;
 	float m_FrameMsMax = 0.0f;
 	float m_MenuMsMax = 0.0f;
+	uint64_t m_WindowStartFrame = 0;
+	uint64_t m_WindowEndFrame = 0;
 	bool m_CapLimited = false;
 };
 
@@ -36,13 +39,15 @@ struct SQmSettingsPerfWindowFrameResult
 class CQmSettingsPerfWindowTracker
 {
 public:
-	SQmSettingsPerfWindowFrameResult StartFixedFrameWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, int MaxFrames, bool CapLimited)
+	SQmSettingsPerfWindowFrameResult StartFixedFrameWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, int MaxFrames, bool CapLimited, uint64_t WindowStartFrame = 0)
 	{
 		const SQmSettingsPerfWindowFrameResult Interrupted = FlushInterruptedWindow();
 		Reset();
 		m_Active = true;
 		m_ScrollWindow = false;
 		m_MaxFrames = maximum(1, MaxFrames);
+		m_Summary.m_WindowStartFrame = WindowStartFrame;
+		m_Summary.m_WindowEndFrame = WindowStartFrame;
 		m_Summary.m_CapLimited = CapLimited;
 		str_copy(m_Summary.m_aOperation, pOperation != nullptr ? pOperation : "", sizeof(m_Summary.m_aOperation));
 		str_copy(m_Summary.m_aContext, pContext != nullptr ? pContext : "", sizeof(m_Summary.m_aContext));
@@ -51,13 +56,15 @@ public:
 		return Interrupted;
 	}
 
-	SQmSettingsPerfWindowFrameResult StartScrollWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, float IdleTimeoutSeconds, bool CapLimited)
+	SQmSettingsPerfWindowFrameResult StartScrollWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, float IdleTimeoutSeconds, bool CapLimited, uint64_t WindowStartFrame = 0)
 	{
 		const SQmSettingsPerfWindowFrameResult Interrupted = FlushInterruptedWindow();
 		Reset();
 		m_Active = true;
 		m_ScrollWindow = true;
 		m_IdleTimeoutSeconds = maximum(0.0f, IdleTimeoutSeconds);
+		m_Summary.m_WindowStartFrame = WindowStartFrame;
+		m_Summary.m_WindowEndFrame = WindowStartFrame;
 		m_Summary.m_CapLimited = CapLimited;
 		str_copy(m_Summary.m_aOperation, pOperation != nullptr ? pOperation : "", sizeof(m_Summary.m_aOperation));
 		str_copy(m_Summary.m_aContext, pContext != nullptr ? pContext : "", sizeof(m_Summary.m_aContext));
@@ -70,7 +77,7 @@ public:
 	const char *ActiveOperation() const { return m_Active ? m_Summary.m_aOperation : "none"; }
 	const char *ActivePage() const { return m_Active ? m_Summary.m_aPage : ""; }
 
-	SQmSettingsPerfWindowFrameResult RecordFrame(float RenderFrameTimeSeconds, double MenuDurationMs, bool ScrollInputActive)
+	SQmSettingsPerfWindowFrameResult RecordFrame(float RenderFrameTimeSeconds, double MenuDurationMs, bool ScrollInputActive, uint64_t FrameId = 0)
 	{
 		SQmSettingsPerfWindowFrameResult Result;
 		if(!m_Active)
@@ -83,6 +90,9 @@ public:
 			const float Fps = 1.0f / RenderFrameTimeSeconds;
 			m_Summary.m_SampleFrames++;
 			m_Summary.m_SampleSeconds += RenderFrameTimeSeconds;
+			if(m_Summary.m_WindowStartFrame == 0)
+				m_Summary.m_WindowStartFrame = FrameId;
+			m_Summary.m_WindowEndFrame = FrameId != 0 ? FrameId : m_Summary.m_WindowEndFrame;
 			m_vFrameMs.push_back(FrameMs);
 			m_Summary.m_FrameMsMax = maximum(m_Summary.m_FrameMsMax, FrameMs);
 			m_Summary.m_MenuMsMax = maximum(m_Summary.m_MenuMsMax, (float)MenuDurationMs);
@@ -140,6 +150,19 @@ private:
 		return Values[Index];
 	}
 
+	static float OnePercentLowFpsFromFrameMs(std::vector<float> Values)
+	{
+		if(Values.empty())
+			return 0.0f;
+		std::sort(Values.begin(), Values.end(), std::greater<float>());
+		const int SlowFrameCount = minimum((int)Values.size(), maximum(1, (int)std::ceil((float)Values.size() * 0.01f)));
+		float SlowFrameMsTotal = 0.0f;
+		for(int i = 0; i < SlowFrameCount; ++i)
+			SlowFrameMsTotal += Values[i];
+		const float SlowFrameMsAvg = SlowFrameMsTotal / (float)SlowFrameCount;
+		return SlowFrameMsAvg > 0.0f ? 1000.0f / SlowFrameMsAvg : 0.0f;
+	}
+
 	void FinalizeSummary()
 	{
 		if(m_Summary.m_SampleFrames <= 0)
@@ -148,7 +171,7 @@ private:
 		m_Summary.m_FrameMsAvg = m_Summary.m_SampleSeconds > 0.0f ? (m_Summary.m_SampleSeconds * 1000.0f) / (float)m_Summary.m_SampleFrames : 0.0f;
 		m_Summary.m_FrameMsP95 = Percentile(m_vFrameMs, 95);
 		m_Summary.m_FrameMsP99 = Percentile(m_vFrameMs, 99);
-		m_Summary.m_FpsOnePctLow = m_Summary.m_FrameMsP99 > 0.0f ? 1000.0f / m_Summary.m_FrameMsP99 : 0.0f;
+		m_Summary.m_FpsOnePctLow = OnePercentLowFpsFromFrameMs(m_vFrameMs);
 	}
 
 	void Reset()

@@ -66,7 +66,7 @@ _MODE_SPECS: dict[str, dict] = {
     },
     "default": {
         "target": "日常提交前严格门",
-        "expectation": "需要真实构建、严格静态分析和 C++ 测试。",
+        "expectation": "需要真实构建、严格静态分析、C++ 全量测试和 Rust 全量测试。",
         "blocking_rule": "构建、静态分析、测试任一失败都应阻断。",
         "checks": [
             "env",
@@ -79,7 +79,7 @@ _MODE_SPECS: dict[str, dict] = {
             "strict_build",
             "dilate",
         ],
-        "tests": {"cxx": True, "rust": False, "all": False},
+        "tests": {"cxx": True, "rust": True, "all": False},
         "extras": {
             "identifiers": False,
             "clang_format": False,
@@ -88,7 +88,7 @@ _MODE_SPECS: dict[str, dict] = {
     },
     "full": {
         "target": "集中收口 / 准发布门",
-        "expectation": "在 default 基础上增加更重的附加检查与 Rust 测试。",
+        "expectation": "在 default 基础上增加更重的附加检查。",
         "blocking_rule": "默认阻断 default 层和 full 的硬失败项；高噪音附加检查先以 WARN 方式试跑。",
         "checks": [
             "env",

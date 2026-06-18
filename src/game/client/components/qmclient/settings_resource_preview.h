@@ -7,12 +7,14 @@
 #include <engine/graphics.h>
 #include <engine/image.h>
 #include <engine/shared/jobs.h>
+#include <engine/storage.h>
 
 #include <game/client/components/settings_resource_jobs.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -100,7 +102,9 @@ public:
 	void MarkMetadataReady(const SResourcePreviewKey &Key);
 	void MarkPreviewJobStarted(const SResourcePreviewKey &Key);
 	void MarkPreviewJobDone(const SResourcePreviewKey &Key, bool Success);
+	void MarkArtifactReady(const SResourcePreviewKey &Key);
 	void MarkTextureReady(const SResourcePreviewKey &Key, IGraphics::CTextureHandle Texture = IGraphics::CTextureHandle(), IGraphics *pGraphics = nullptr);
+	void MarkUploadFailed(const SResourcePreviewKey &Key);
 	void Clear(IGraphics *pGraphics = nullptr);
 	size_t Size() const { return m_vStates.size(); }
 
@@ -131,7 +135,11 @@ private:
 class CSettingsResourcePreviewUploadScheduler
 {
 public:
+	using TUploadFinalize = std::function<void(bool TextureValid, IGraphics::CTextureHandle Texture)>;
+
 	void EnqueueUpload(const SResourcePreviewKey &Key, CImageInfo &&Image, const char *pDebugName);
+	void EnqueueUploadToTarget(const SResourcePreviewKey &Key, CImageInfo &&Image, TUploadFinalize &&Finalize, const char *pDebugName);
+	bool DrainOne(SResourcePreviewUploadBudget &Budget, SResourcePreviewTelemetry &Telemetry, CSettingsResourcePreviewCache &Cache, IGraphics *pGraphics);
 	int Drain(SResourcePreviewUploadBudget &Budget, SResourcePreviewTelemetry &Telemetry, CSettingsResourcePreviewCache &Cache, IGraphics *pGraphics);
 	size_t QueueDepth() const { return m_vUploadQueue.size(); }
 	void Clear();
@@ -142,6 +150,7 @@ private:
 		SResourcePreviewKey m_Key;
 		CImageInfo m_Image;
 		std::string m_DebugName;
+		TUploadFinalize m_Finalize;
 	};
 
 	std::deque<SUploadItem> m_vUploadQueue;
@@ -156,6 +165,7 @@ public:
 	};
 
 	CSettingsResourcePreviewJob(std::string Name, CImageInfo &&Image, int TargetSize);
+	static std::shared_ptr<CSettingsResourcePreviewJob> FromPath(std::string Name, std::string Path, IStorage *pStorage, int StorageType, int TargetSize);
 
 	bool Completed() const;
 	SResult TakeResult();
@@ -165,6 +175,9 @@ protected:
 
 private:
 	std::string m_Name;
+	std::string m_Path;
+	IStorage *m_pStorage = nullptr;
+	int m_StorageType = IStorage::TYPE_ALL;
 	CImageInfo m_InputImage;
 	int m_TargetSize = 0;
 	mutable CLock m_Lock;
@@ -173,6 +186,7 @@ private:
 };
 
 SResourcePreviewArtifact BuildPreviewArtifact(CImageInfo &&Image, int TargetSize);
+SResourcePreviewArtifact BuildPreviewArtifactFromPath(const char *pPath, IStorage *pStorage, int StorageType, const char *pContextName, int TargetSize);
 bool SettingsResourcePreviewImageValidForUpload(const CImageInfo &Image);
 bool SettingsResourcePreviewConsumeUploadBudget(SResourcePreviewUploadBudget &Budget, int Count = 1);
 void SettingsResourcePreviewCommitUploadBudget(SResourcePreviewUploadBudget &Budget, int Count = 1);

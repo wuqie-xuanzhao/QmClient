@@ -3637,8 +3637,8 @@ Map browser opacity
 Map danger border
 == 地图危险边界
 
-Map Preview
-== 地图预览
+Map Preview TODO
+== 地图预览待做
 
 Map progress bar
 == 地图进度条
@@ -3903,6 +3903,9 @@ Net
 
 Netversion
 == 网络版本
+
+Network
+== 网络
 
 new
 == 新增
@@ -7211,7 +7214,7 @@ UI mouse sens.
 == 鼠标灵敏度（界面）
 
 UI opacity
-== 用户界面不透明度
+== 界面不透明度
 
 UI scale
 == UI 大小

@@ -228,6 +228,12 @@ public:
 
 		std::string m_Text;
 		int m_ReadCursorGlyphCount;
+		float m_FontSize;
+		int m_TextAlign;
+		float m_LabelMaxWidth;
+		int m_LabelFlags;
+		int m_LineCount;
+		float m_BiggestCharacterHeight;
 
 		CTextCursor m_Cursor;
 

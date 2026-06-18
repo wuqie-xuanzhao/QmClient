@@ -18,6 +18,8 @@ public:
 	virtual ~CComponentInterfaces() = default;
 
 protected:
+	bool InterfacesInitialized() const { return m_pClient != nullptr; }
+
 	/**
 	 * Get a pointer to the game client.
 	 */

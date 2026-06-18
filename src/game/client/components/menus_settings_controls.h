@@ -77,9 +77,9 @@ private:
 	void UpdateSearchMatches();
 
 	void RenderSettingsBlock(float Height, CUIRect *pParentRect, const char *pTitle,
-		bool *pExpanded, CButtonContainer *pExpandButton, const std::function<void(CUIRect Rect)> &RenderContentFunction);
+		const char *pTitleId, bool *pExpanded, CButtonContainer *pExpandButton, const std::function<void(CUIRect Rect)> &RenderContentFunction);
 
-	void RenderSettingsBindsBlock(EBindOptionGroup Group, CUIRect *pParentRect, const char *pTitle);
+	void RenderSettingsBindsBlock(EBindOptionGroup Group, CUIRect *pParentRect, const char *pTitleId, const char *pTitle);
 	float MeasureSettingsBindsHeight(EBindOptionGroup Group) const;
 	void RenderSettingsBinds(EBindOptionGroup Group, CUIRect View);
 
@@ -96,6 +96,11 @@ private:
 	void RenderSettingsJoystick(CUIRect View);
 	void RenderJoystickAxisPicker(CUIRect View);
 	void RenderJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
+
+	void DoSettingsControlsLabel(const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}) const;
+	void DoSettingsControlsMenuLabel(const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &Props = {}, int MaxWidth = -1) const;
+	int DoSettingsControlsCheckBox(const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect) const;
+	bool DoSettingsControlsScrollbarOption(const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr) const;
 };
 
 #endif

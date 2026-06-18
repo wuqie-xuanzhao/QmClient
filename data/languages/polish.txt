@@ -3637,8 +3637,8 @@ Map browser opacity
 Map danger border
 == Niebezpieczna granica mapy
 
-Map Preview
-== Podgląd mapy
+Map Preview TODO
+== Podgląd mapy do zrobienia
 
 Map progress bar
 == Pasek postępu mapy
@@ -3903,6 +3903,9 @@ Net
 
 Netversion
 == Wersja sieciowa
+
+Network
+== Sieć
 
 new
 == nowe

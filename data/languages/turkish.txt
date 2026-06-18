@@ -3637,8 +3637,8 @@ Map browser opacity
 Map danger border
 == Harita tehlike sınırı
 
-Map Preview
-== Harita Önizlemesi
+Map Preview TODO
+== Harita önizlemesi yapılacak
 
 Map progress bar
 == Harita ilerleme çubuğu
@@ -3903,6 +3903,9 @@ Net
 
 Netversion
 == Ağ sürümü
+
+Network
+== Ağ
 
 new
 == yeni

@@ -45,7 +45,8 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 
 - 先按 `docs/ai-workflow/verification.md` 跑对应验证，至少覆盖当前改动的 build/test/gate。
 - 除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate；代码改动完成后，至少补一条与范围匹配的 `python qmclient_scripts/gate/check_gate.py --mode ...` 验证。
-- 默认口径：纯文档 / harness 改动至少跑 `python qmclient_scripts/gate/check_docs.py`；常规代码改动至少跑 `python qmclient_scripts/gate/check_gate.py --mode quick`；提交前如环境允许优先补到 `--mode default`；集中收口或准发布改动再用 `--mode full`。
+- 默认口径：纯文档 / harness 改动至少跑 `python qmclient_scripts/gate/check_docs.py`；常规代码改动至少跑 `python qmclient_scripts/gate/check_gate.py --mode quick`；提交前如环境允许优先补到 `--mode default`，该模式覆盖 C++ 全量测试和 Rust 全量测试；集中收口或准发布改动再用 `--mode full`，full 只是在 default 基础上增加高噪音/更重附加检查，不作为“全量测试”的默认入口。
+- 过滤测试只用于 TDD 红绿灯、定位和快速复现；最终汇报、交给用户验收或提交前，必须按 `docs/ai-workflow/verification.md` 跑对应测试入口的全量版本。没跑全量测试就必须写成 gap，不能说“无回归”或“测试通过”。
 - 同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 必须串行执行，不要并行；要并行只能拆到不同 build 目录。
 - 影响核心逻辑时，必须派发一个新的只读子代理，按 `docs/ai-workflow/review.md` 做代码审查；审查先列 findings，再给总体结论。
 - 子代理指出的问题修完后，再看这次改动能否最小化提交：只保留和当前任务直接相关的文件与说明。

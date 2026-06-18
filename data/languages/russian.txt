@@ -3637,8 +3637,8 @@ Map browser opacity
 Map danger border
 == Опасная граница карты
 
-Map Preview
-== Предпросмотр карты
+Map Preview TODO
+== Предпросмотр карты в работе
 
 Map progress bar
 == Индикатор прогресса карты
@@ -3903,6 +3903,9 @@ Net
 
 Netversion
 == Версия сети
+
+Network
+== Сеть
 
 new
 == новое

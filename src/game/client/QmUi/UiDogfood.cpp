@@ -52,6 +52,9 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 	Rect.HSplitTop(36.0f, &Header, &Body);
 	Ctx.m_pUi->DoLabel(&Header, Localize("feat-003 dogfood: tokens + 12 widgets"), ui_token::font::HEADLINE_LG, TEXTALIGN_ML);
 
+	const char *apTabLabels[] = {Localize("Overview"), Localize("Forms"), Localize("Data")};
+	const char *pItemLabel = Localize("Item");
+
 	// Two columns: 1x and 0.78x to verify UiScale-style downscale
 	CUIRect ColLeft, ColRight;
 	Body.VSplitMid(&ColLeft, &ColRight);
@@ -118,7 +121,6 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 
 			// Row 6: TabBar
 			Content.HSplitTop(RowH, &Row, &Content);
-			const char *apTabLabels[] = {Localize("Overview"), Localize("Forms"), Localize("Data")};
 			ui_widget::TabBar(Ctx, apTabLabels, std::size(apTabLabels), &s_aTabActive[Column], Row);
 			Content.HSplitTop(Gap, nullptr, &Content);
 
@@ -127,7 +129,7 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 			{
 				Content.HSplitTop(RowH, &Row, &Content);
 				char aLabel[32];
-				str_format(aLabel, sizeof(aLabel), Localize("Item %d"), i + 1);
+				str_format(aLabel, sizeof(aLabel), "%s %d", pItemLabel, i + 1);
 				ui_widget::SListItemProps ItemProps;
 				ItemProps.m_Selected = (s_aListSelected[Column] == i);
 				ItemProps.m_pTrailingText = (i == 1) ? Localize("new") : nullptr;
