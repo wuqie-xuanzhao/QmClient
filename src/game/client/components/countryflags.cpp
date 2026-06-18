@@ -51,6 +51,48 @@ CCountryFlags::CCountryFlagLoadJob::~CCountryFlagLoadJob()
 	m_Result.m_Image.Free();
 }
 
+bool CCountryFlags::ValidateCountryCodeString(const char *pString)
+{
+	const size_t Length = str_length(pString);
+	if(Length == 0 || Length >= sizeof(CCountryFlag{}.m_aCountryCodeString))
+	{
+		log_error("countryflags", "Country name '%s' is invalid or too long", pString);
+		return false;
+	}
+
+	for(size_t Index = 0; Index < Length; ++Index)
+	{
+		const char Character = pString[Index];
+		if(Character != '-' &&
+			!(Character >= 'a' && Character <= 'z') &&
+			!(Character >= 'A' && Character <= 'Z'))
+		{
+			log_error("countryflags", "Country name '%s' must only contain letters and dash characters", pString);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool CCountryFlags::ValidateCountryCodeIntegerString(const char *pString)
+{
+	if(pString[0] == '\0')
+		return false;
+
+	size_t Index = pString[0] == '-' ? 1 : 0;
+	if(pString[Index] == '\0')
+		return false;
+
+	for(; pString[Index] != '\0'; ++Index)
+	{
+		if(pString[Index] < '0' || pString[Index] > '9')
+			return false;
+	}
+
+	return true;
+}
+
 void CCountryFlags::CCountryFlagLoadJob::Run()
 {
 	void *pFileData = nullptr;
@@ -84,46 +126,74 @@ void CCountryFlags::CCountryFlagLoadJob::Run()
 
 void CCountryFlags::LoadCountryflagsIndexfile()
 {
+	m_vCountryFlags.clear();
+	m_vLoadTriggered.clear();
+
 	const char *pFilename = "countryflags/index.txt";
 	CLineReader LineReader;
 	if(!LineReader.OpenFile(Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL)))
 	{
 		log_error("countryflags", "couldn't open index file '%s'", pFilename);
-		return;
+	}
+	else
+	{
+		while(const char *pLine = LineReader.Get())
+		{
+			if(pLine[0] == '\0' || pLine[0] == '#')
+				continue;
+
+			if(!ValidateCountryCodeString(pLine))
+				continue;
+
+			CCountryFlag CountryFlag;
+			str_copy(CountryFlag.m_aCountryCodeString, pLine);
+			const char *pReplacement = LineReader.Get();
+			if(!pReplacement)
+			{
+				log_error("countryflags", "unexpected end of index file after country '%s'", CountryFlag.m_aCountryCodeString);
+				break;
+			}
+
+			if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
+			{
+				log_error("countryflags", "malformed replacement for index '%s'", CountryFlag.m_aCountryCodeString);
+				continue;
+			}
+
+			const char *pCountryCode = pReplacement + 3;
+			if(!ValidateCountryCodeIntegerString(pCountryCode))
+			{
+				log_error("countryflags", "country code '%s' for country '%s' is not a number", pCountryCode, CountryFlag.m_aCountryCodeString);
+				continue;
+			}
+
+			CountryFlag.m_CountryCode = str_toint(pCountryCode);
+			if(CountryFlag.m_CountryCode < CODE_LB || CountryFlag.m_CountryCode > CODE_UB)
+			{
+				log_error("countryflags", "country code '%i' not within valid code range [%i..%i]", CountryFlag.m_CountryCode, CODE_LB, CODE_UB);
+				continue;
+			}
+			if(CountryFlag.m_CountryCode == -1 && str_comp(CountryFlag.m_aCountryCodeString, "default") != 0)
+			{
+				log_error("countryflags", "country code '-1' is only allowed for the default country");
+				continue;
+			}
+
+			CountryFlag.m_Loaded = false;
+			m_vCountryFlags.push_back(CountryFlag);
+		}
 	}
 
-	char aOrigin[128];
-	while(const char *pLine = LineReader.Get())
+	auto ExistingDefaultFlag = std::find_if(m_vCountryFlags.begin(), m_vCountryFlags.end(), [](const CCountryFlag &Flag) {
+		return Flag.m_CountryCode == -1;
+	});
+	if(ExistingDefaultFlag == m_vCountryFlags.end())
 	{
-		if(!str_length(pLine) || pLine[0] == '#')
-			continue;
-
-		str_copy(aOrigin, pLine);
-		const char *pReplacement = LineReader.Get();
-		if(!pReplacement)
-		{
-			log_error("countryflags", "unexpected end of index file");
-			break;
-		}
-
-		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
-		{
-			log_error("countryflags", "malformed replacement for index '%s'", aOrigin);
-			continue;
-		}
-
-		int CountryCode = str_toint(pReplacement + 3);
-		if(CountryCode < CODE_LB || CountryCode > CODE_UB)
-		{
-			log_error("countryflags", "country code '%i' not within valid code range [%i..%i]", CountryCode, CODE_LB, CODE_UB);
-			continue;
-		}
-
-		CCountryFlag CountryFlag;
-		CountryFlag.m_CountryCode = CountryCode;
-		str_copy(CountryFlag.m_aCountryCodeString, aOrigin);
-		CountryFlag.m_Loaded = false;
-		m_vCountryFlags.push_back(CountryFlag);
+		CCountryFlag DefaultFlag;
+		DefaultFlag.m_CountryCode = -1;
+		str_copy(DefaultFlag.m_aCountryCodeString, "default");
+		DefaultFlag.m_Loaded = false;
+		m_vCountryFlags.push_back(DefaultFlag);
 	}
 
 	std::sort(m_vCountryFlags.begin(), m_vCountryFlags.end());
@@ -141,6 +211,8 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 	std::fill(std::begin(m_aCodeIndexLUT), std::end(m_aCodeIndexLUT), DefaultIndex);
 	for(size_t i = 0; i < m_vCountryFlags.size(); ++i)
 		m_aCodeIndexLUT[maximum(0, (m_vCountryFlags[i].m_CountryCode - CODE_LB) % CODE_RANGE)] = i;
+
+	log_debug("countryflags", "Loaded %" PRIzu " country flags", m_vCountryFlags.size());
 }
 
 void CCountryFlags::StartFlagLoadJob(int Index)
@@ -209,18 +281,7 @@ void CCountryFlags::ProcessCompletedJobs()
 
 void CCountryFlags::OnInit()
 {
-	m_vCountryFlags.clear();
 	LoadCountryflagsIndexfile();
-	if(m_vCountryFlags.empty())
-	{
-		log_error("countryflags", "failed to load country flags. folder='countryflags/'");
-		CCountryFlag DummyEntry;
-		DummyEntry.m_CountryCode = -1;
-		DummyEntry.m_aCountryCodeString[0] = '\0';
-		DummyEntry.m_Loaded = false;
-		m_vCountryFlags.push_back(DummyEntry);
-		m_vLoadTriggered.push_back(false);
-	}
 
 	m_FlagsQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -241,6 +302,7 @@ size_t CCountryFlags::Num() const
 
 const CCountryFlags::CCountryFlag &CCountryFlags::GetByCountryCode(int CountryCode) const
 {
+	dbg_assert(CountryCode >= CODE_LB && CountryCode <= CODE_UB, "Invalid CountryCode: %d", CountryCode);
 	size_t Index = m_aCodeIndexLUT[maximum(0, (CountryCode - CODE_LB) % CODE_RANGE)];
 	const_cast<CCountryFlags *>(this)->StartFlagLoadJob(Index);
 	return m_vCountryFlags[Index];
@@ -248,8 +310,9 @@ const CCountryFlags::CCountryFlag &CCountryFlags::GetByCountryCode(int CountryCo
 
 const CCountryFlags::CCountryFlag &CCountryFlags::GetByIndex(size_t Index) const
 {
+	dbg_assert(Index < m_vCountryFlags.size(), "Invalid Index: %" PRIzu, Index);
 	const_cast<CCountryFlags *>(this)->StartFlagLoadJob(Index);
-	return m_vCountryFlags[Index % m_vCountryFlags.size()];
+	return m_vCountryFlags[Index];
 }
 
 void CCountryFlags::PrewarmByCountryCodes(const std::vector<int> &vCountryCodes)
