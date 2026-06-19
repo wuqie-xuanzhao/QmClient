@@ -1,8 +1,77 @@
+ min
+== 분
+
+ seconds
+== 초
+
+ seconds (never)
+== 초 (절대로)
+
+"%s" is not compatible with pnglite and cannot be loaded by old DDNet versions:
+== "%s"는 pnglite와 호환되지 않으며 이전 버전의 DDNet에서는 로드할 수 없습니다.
+
+%.2f KiB
+== %.2f KiB
+
+%.2f MiB
+== %.2f MiB
+
+%c Team %d
+== %c 팀 %d
+
+%d dummies
+== %d 개의 더미 데이터
+
+%d dummy
+== %d 가짜 데이터
+
+%d items selected
+== %d개 항목 선택됨
+
+%d more cut segments
+== 추가로 %d개의 잘라낸 구간
+
+%d new mentions
+== %d 개의 새로운 언급
+
+%d of %d server
+== %d 개의 %d 서버 중
+
+%d of %d servers
+== %d개의 %d개 서버 중
+
+%d player
+== %d명의 플레이어
+
+%d players
+== %d명의 플레이어
+
+%d selected items were deleted, but %d items could not be deleted. The first failing item was '%s'.
+== %d개의 선택된 항목이 삭제되었지만, %d개 항목은 삭제할 수 없습니다. 첫 번째 실패 항목은 '%s'입니다.
+
+%d servers, %d users
+== %d 대기 서버, %d 사용자
+
+%d servers, %d users, %d dummies
+== %d 대기 서버, %d 사용자, %d 더미
+
+%d teams
+== %d개 팀
+
+%d user
+== %d 명의 사용자
+
+%d users
+== %d 명의 사용자
+
+%d/%d KiB (%.1f KiB/s)
+== %d/%d KiB (%.1f KiB/s)
+
 %ds left
-== %d 초 남음
+== %d초 남음
 
 %i minute left
-== %i 분 남음
+== %i분 남음
 
 %i minutes left
 == %i 분 남음
@@ -13,134 +82,2609 @@
 %i seconds left
 == %i 초 남음
 
+%s and %s have swapped
+== %s와 %s가 교환했습니다
+
+%s canceled the swap with %s
+== %s가 %s와의 교환을 취소했습니다
+
+%s canceled the swap with you
+== %s가 당신과의 교환을 취소했습니다
+
+%s current race time is %s
+== %s의 현재 레이스 시간은 %s입니다
+
+%s from %s
+== %s (출처: %s)
+
+%s has requested to swap with %s
+== %s가 %s에게 교환을 요청했습니다
+
+%s has requested to swap with you. To complete the swap process please wait %s seconds and then type /swap %s.
+== %s가 당신에게 교환을 요청했습니다. 교환을 완료하려면 %s초 기다린 후 /swap %s를 입력하세요.
+
+%s not found
+== %s를 찾을 수 없습니다.
+
+%s translating to %s
+== %s이(가) %s(으)로 번역 중
+
+%s translating to %s before send
+== %s이(가) %s(으)로 번역 후 전송
+
+%s translating to %s failed: %s
+== %s을(를) %s(으)로 번역 실패: %s
+
 %s wins!
-== %s 승리!
+== %s가 승리했습니다!
+
+'%s' called for vote to force-pause '%s' for %s seconds (reason: %s)
+== '%s'가 '%s'를 %s초 동안 강제 일시정지하는 투표를 요청했습니다 (사유: %s)
+
+'%s' called for vote to kick '%s' (reason: %s)
+== '%s'가 '%s'를 추방하는 투표를 요청했습니다 (사유: %s)
+
+'%s' called for vote to kick you
+== '%s'가 당신을 추방하는 투표를 요청했습니다
+
+'%s' called for vote to move '%s' to spectators (reason: %s)
+== '%s'가 '%s'를 관전자로 이동하는 투표를 요청했습니다 (사유: %s)
+
+'%s' called for vote to move you to spectators
+== '%s'가 당신을 관전자로 이동하는 투표를 요청했습니다
+
+'%s' called for vote to mute '%s' (reason: %s)
+== '%s'가 '%s'를 음소거하는 투표를 요청했습니다 (사유: %s)
+
+'%s' called vote to %s practice mode for your team. Current votes %s/%s
+== '%s'가 당신 팀의 연습 모드를 %s하는 투표를 요청했습니다. 현재 투표 %s/%s
+
+'%s' called vote to change server option: %s
+== '%s'가 서버 옵션 변경 투표를 요청했습니다: %s
+
+'%s' called vote to change server option: %s (reason: %s)
+== '%s'가 서버 옵션 변경 투표를 요청했습니다: %s (사유: %s)
+
+'%s' disabled practice mode for your team
+== '%s'가 당신 팀의 연습 모드를 비활성화했습니다
+
+'%s' disabled team 0 mode.
+== '%s'가 team 0 모드를 비활성화했습니다.
+
+'%s' enabled team 0 mode. This will make your team behave like team 0.
+== '%s'가 team 0 모드를 활성화했습니다. 이제 당신 팀이 team 0처럼 작동합니다.
+
+'%s' invited '%s' to your team.
+== '%s'가 '%s'를 당신 팀에 초대했습니다.
+
+'%s' invited you to team %s. Use /team %s to join
+== '%s'가 당신을 %s팀에 초대했습니다. /team %s를 입력하여 참여하세요
+
+'%s' is not a valid option on this server
+== '%s'는 이 서버에서 유효한 옵션이 아닙니다
+
+'%s' joined team %s
+== '%s'가 %s팀에 참여했습니다
+
+'%s' joined team 0
+== '%s'가 0팀에 참여했습니다
+
+'%s' locked your team.
+== '%s'가 당신 팀을 잠갔습니다.
+
+'%s' locked your team. After the race starts, killing will kill everyone in your team.
+== '%s'가 당신 팀을 잠갔습니다. 레이스가 시작된 후 죽으면 팀 전체가 죽습니다.
+
+'%s' unlocked your team.
+== '%s'가 당신 팀을 잠금 해제했습니다.
+
+'%s' was force-paused for %s seconds
+== '%s'가 %s초 동안 강제 일시정지되었습니다
+
+'%s' would have timed out, but can use timeout protection now
+== '%s'는 타임아웃될 뻔했지만, 지금 타임아웃 보호를 사용할 수 있습니다
+
+(Fetching Update Info)
+== (데이터 업데이트 정보를 가져오고 있습니다.)
+
+(On Latest)
+== (최신 상태)
+
+(paused)
+== (일시 중지됨)
+
+(Update required)
+== (업데이트가 필요합니다.)
+
++%d more codes
+== +%d 개의 코드 더 있음
+
+- Save codes in order:
+== - 저장 코드 순서:
+
+- Save owners in order:
+== - 저장 소유자 순서:
+
+- You have %d saves on this map!
+== - 이 맵에 %d개의 저장이 있습니다!
+
+/map is disabled
+== /map이 비활성화되었습니다
+
+/times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
+== /times ?s?i 는 이름 s로 시작하는 서버 또는 플레이어의 최근 5개 기록을 시간 i부터 표시합니다 (i = 기본값 1, -1은 처음)
+
+1 new mention
+== 1개의 새 멘션
+
+1 star
+== 1성
+
+2 stars
+== 2성
+
+3 stars
+== 3성
+
+3D Background
+== 3D 배경
+
+4 stars
+== 4성
+
+45° Aim
+== 45° 조준
+
+5 stars
+== 5성
+
+9+ new mentions
+== 9개 이상의 새 멘션
+
+=== All Local Saves ===
+== === 모든 로컬 저장 ===
+
+=== Saves for '%s' ===
+== === '%s'의 저장 ===
+
+[%s] %s (Map: %s, Time: %s)
+== [%s] %s (맵: %s, 시간: %s)
+
+_ or ' ' = blank spacer
+== _ 또는 ' ' = 빈 공백
+
+a = View angle
+== a = 시야 각도
+
+A demo with this name already exists
+== 이 이름의 데모가 이미 존재합니다.
+
+A folder with this name already exists
+== 이 이름을 가진 폴더가 이미 존재합니다
+
+A screenshot with this name already exists
+== 스크린샷 이름이 이미 존재합니다.
+
+A Tee
+== 다른 티
 
 Abort
-== 취소
+== 중단
+
+Activate
+== 활성화
+
+Activate all
+== 모두 활성화
+
+Active color
+== 활성 색상
+
+Active disconnect
+== 능동적 연결 해제
+
+Active moderator mode disabled because you are afk.
+== 자리 비움 상태이므로 능동적 관리자 모드가 비활성화되었습니다.
+
+Active moderator mode disabled for you.
+== 당신에 대해 능동적 관리자 모드가 비활성화되었습니다.
+
+Active moderator mode enabled for you.
+== 당신에 대해 능동적 관리자 모드가 활성화되었습니다.
+
+Active: Fire
+== 활성 상태: 발사
+
+Active: Hook
+== 활성 상태: 훅
 
 Add
 == 추가
 
-Add Friend
+Add [group] [clan] [reason]:
+== 추가 [그룹] [클랜] [사유]:
+
+Add [group] [name] [reason]:
+== 추가 [그룹] [이름] [사유]:
+
+Add a bind to the bindwheel
+== 바인드 휠에 바인드 추가
+
+Add a chat bind
+== 채팅 바인드 추가
+
+Add a clan war entry
+== 클랜 워 항목 추가
+
+Add a colored skin to a dummy queue preset
+== 더미 큐 프리셋에 컬러 스킨 추가
+
+Add a colored skin to a queue preset
+== 큐 프리셋에 컬러 스킨 추가
+
+Add a colored skin to the dummy queue
+== 더미 큐에 컬러 스킨 추가
+
+Add a colored skin to the queue
+== 큐에 컬러 스킨 추가
+
+Add a community as a favorite
+== 커뮤니티를 즐겨찾기에 추가
+
+Add a community to the exclusion filter
+== 커뮤니티를 제외 필터에 추가
+
+Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
+== 특정 커뮤니티의 제외 필터에 국가 추가 (ISO 3166-1 숫자 코드)
+
+Add a dummy queue preset
+== 더미 큐 프리셋 추가
+
+Add a foe
+== 적 추가
+
+Add a friend
 == 친구 추가
+
+Add a friend category
+== 친구 카테고리 추가
+
+Add a map to favorites
+== 맵을 즐겨찾기에 추가
+
+Add a name war entry
+== 이름 워 항목 추가
+
+Add a prehashed rcon key
+== 사전 해시된 rcon 키 추가
+
+Add a profile
+== 프로필 추가
+
+Add a queue preset
+== 큐 프리셋 추가
+
+Add a rcon key
+== rcon 키 추가
+
+Add a server as a favorite
+== 서버를 즐겨찾기에 추가
+
+Add a skin as a favorite
+== 스킨을 즐겨찾기에 추가
+
+Add a skin to a dummy queue preset
+== 더미 큐 프리셋에 스킨 추가
+
+Add a skin to a queue preset
+== 큐 프리셋에 스킨 추가
+
+Add a skin to the dummy queue
+== 더미 큐에 스킨 추가
+
+Add a skin to the queue
+== 큐에 스킨 추가
+
+add a sqlserver
+== SQL 서버 추가
+
+Add a type to the exclusion filter for a specific community
+== 특정 커뮤니티의 제외 필터에 유형 추가
+
+Add a voting option
+== 투표 옵션 추가
+
+Add Bind
+== 바인드 추가
+
+Add category
+== 분류 추가
+
+Add clan
+== 클랜 추가
+
+Add command
+== 추가 명령어 입력
+
+Add current cut to the export list
+== 현재 잘라낸 구간을 내보내기 목록에 추가
+
+Add demo timeline marker
+== 데모 타임라인 마커 추가
+
+Add Entry
+== 항목 추가
+
+Add friend
+== 친구 추가
+
+Add friends by entering their name below or by clicking their name in the player list.
+== 아래에 이름을 입력하거나 플레이어 목록에서 이름을 클릭하여 친구를 추가할 수 있습니다.
+
+Add Group
+== 그룹 추가
+
+Add Item
+== 아이템 추가
+
+Add one
+== 하나 추가
+
+Add team clan:
+== 팀 클랜 추가:
+
+Add team name:
+== 팀 이름 추가:
+
+Add to %s
+== %s에 추가
+
+Add to blocked words
+== 차단 단어에 추가
+
+Add to category
+== 카테고리에 추가하기
+
+Add to queue
+== 대기열에 추가
+
+Add war clan:
+== 워 클랜 추가:
+
+Add war name:
+== 워 이름 추가:
+
+Add/remove Client-IDs to spectate them exclusively (-1 to reset)
+== 독점 관전할 클라이언트 ID 추가/제거 (-1은 초기화)
+
+Added %d missing required slot(s).
+== 누락된 필수 슬롯 %d개를 추가했습니다.
+
+Added %s as friend
+== %s 님을 친구로 추가했습니다
 
 Address
 == 주소
 
+Adds a specific war entry
+== 특정 워 항목 추가
+
+Adds default chat binds
+== 기본 채팅 바인드 추가
+
+Adjust game camera and FOV settings
+== 게임 카메라 및 FOV 설정 조정
+
+Adjust opacity of entity layers
+== 엔티티 레이어 불투명도 조정
+
+Adjust the opacity of entities belonging to other teams, such as tees and name plates
+== 다른 팀의 엔티티(티, 이름표 등) 불투명도 조정
+
+Adjust your prediction margin while frozen
+== 얼었을 때 예측 여백 조정
+
+Advanced
+== 고급
+
+Advanced options
+== 고급 옵션
+
+AFR
+== 아프리카
+
+After Load
+== 로드 후
+
+Afterimage pop
+== 잔상 팝
+
+Agree
+== 동의
+
+Aim
+== 조준
+
+Aim bind
+== 조준 키 바인딩
+
+Alive: %.1fs/%.1fs
+== 생존: %.1fs/%.1fs
+
 All
-== 모두
+== 전체
+
+All combined
+== 모든 파일
+
+All players
+== 모든 플레이어
+
+All stars
+== 모든 별점
+
+Allow Duplicate Entries
+== 중복 항목 허용
+
+Allow mic permission in system settings, then reopen voice
+== 시스템 설정에서 마이크 권한을 허용한 후 음성을 다시 열어주세요
+
+Allows maps to render with more detail
+== 맵을 더 자세히 렌더링하도록 허용
+
+Alpha
+== 알파
+
+Always show
+== 항상 표시
+
+Always show chat
+== 채팅 항상 표시
+
+Always show other players' hook collision lines
+== 다른 플레이어의 갈고리 충돌선 항상 표시
+
+Always show own player's hook collision line
+== 자신의 갈고리 충돌선 항상 표시
+
+Always translate
+== 항상 번역
+
+Amount
+== 양
+
+And pick one randomly
+== 무작위로 하나 선택
+
+Angle
+== 각도
+
+Angle:
+== 각도:
+
+Animation
+== 애니메이션
+
+Animation duration
+== 애니메이션 지속 시간
+
+Animation range
+== 애니메이션 범위
+
+Anti Latency Tools
+== 지연 보정 도구
+
+Anti Ping Smoothing
+== 핑 스무딩
+
+AntiPing (latency compensation)
+== 안티핑(지연 보정)
+
+AntiPing: predict grenade path
+== 안티핑: 유탄 경로 예측
+
+AntiPing: predict other players
+== 안티핑: 다른 플레이어 예측
+
+AntiPing: predict weapons
+== 안티핑: 무기 예측
+
+API key
+== API 키
+
+Appearance
+== 외형
+
+Applied to %d same-family part(s).
+== 같은 계열 부품 %d개에 적용됨.
+
+Apply
+== 적용
+
+Apply a saved profile by 1-based index to the current tee
+== 1부터 시작하는 인덱스로 저장된 프로필을 현재 티에 적용
+
+Apply Changes
+== 변경 사항 적용
+
+Apply this preset to the current queue
+== 이 프리셋을 현재 대기열에 적용
+
+Are you sure that you want to delete %d selected items?
+== 선택한 %d개 항목을 삭제하시겠습니까?
+
+Are you sure that you want to delete '%s'?
+== '%s'을(를) 삭제하시겠습니까?
+
+Are you sure that you want to delete the demo '%s'?
+== 데모 '%s'을(를) 삭제하시겠습니까?
+
+Are you sure that you want to delete the folder '%s'?
+== 폴더 '%s'을(를) 삭제하시겠습니까?
+
+Are you sure that you want to delete the screenshot '%s'?
+== 스크린샷 '%s'을(를) 삭제하시겠습니까?
+
+Are you sure that you want to delete this button?
+== 이 버튼을 삭제하시겠습니까?
+
+Are you sure that you want to discard the current changes to the touch controls?
+== 터치 컨트롤의 현재 변경 사항을 취소하시겠습니까?
+
+Are you sure that you want to disconnect and play this demo?
+== 연결을 끊고 이 데모를 재생하시겠습니까?
+
+Are you sure that you want to disconnect and switch to a different server?
+== 정말로 연결을 끊고 다른 서버로 전환하시겠습니까?
+
+Are you sure that you want to disconnect your dummy?
+== 더미 연결을 해제하시겠습니까?
+
+Are you sure that you want to disconnect?
+== 연결을 해제하시겠습니까?
+
+Are you sure that you want to import the touch controls from the clipboard? This will overwrite your current touch controls.
+== 클립보드에서 터치 컨트롤을 가져오시겠습니까? 현재 터치 컨트롤이 덮어쓰여집니다.
 
 Are you sure that you want to quit?
-== 종료하시겠습니까?
+== 정말 종료하시겠습니까?
+
+Are you sure that you want to remove '%s' from your war groups?
+== '%s'을(를) 워 그룹에서 제거하시겠습니까?
+
+Are you sure that you want to remove the clan '%s' from your friends list?
+== 현재 친구 목록에서 클랜 '%s'를 삭제하시겠습니까?
+
+Are you sure that you want to remove the player '%s' from your friends list?
+== 친구 목록에서 '%s' 플레이어를 정말로 제거하시겠습니까?
+
+Are you sure that you want to reset the controls to their defaults?
+== 컨트롤을 기본값으로 초기화하시겠습니까?
+
+Are you sure that you want to reset the touch controls to default?
+== 터치 컨트롤을 기본값으로 초기화하시겠습니까?
+
+Are you sure that you want to restart?
+== 정말 다시 시작하시겠습니까?
+
+Are you sure you want to delete this asset?
+== 이 에셋을 삭제하시겠습니까?
+
+Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
+== 스킨을 저장하시겠습니까? 같은 이름의 스킨이 이미 존재하면 교체됩니다.
+
+ASI
+== 아시아
+
+Aspect ratio preset
+== 화면비 프리셋
+
+Asset with this name already exists.
+== 같은 이름의 에셋이 이미 존재합니다.
+
+Assets
+== 에셋
+
+Assets directory
+== 에셋 디렉터리
+
+Assets editor
+== 에셋 편집기
+
+Attempt to change your name when near finish
+== 결승선 근처에서 이름 변경 시도
+
+Audio
+== 오디오
+
+Audio backend init failed
+== 오디오 백엔드 초기화 실패
+
+Audio backend init failed, try switching devices and check details
+== 오디오 백엔드 초기화 실패, 장치를 전환하고 세부 정보를 확인하세요
+
+Audio file was exported, but reload failed. Restart sound to apply it.
+== 오디오 파일이 내보내졌으나 다시 로드에 실패했습니다. 사운드를 다시 시작하여 적용하세요.
+
+Audio init failed, check details below and logs
+== 오디오 초기화 실패, 아래 세부 정보와 로그를 확인하세요
+
+Audio issue
+== 오디오 문제
+
+Audio pack exported.
+== 오디오 팩이 내보내졌습니다.
+
+Audio packs
+== 오디오 팩
+
+Audio slots
+== 오디오 슬롯
+
+AUS
+== 호주
+
+Authed name color in scoreboard
+== 점수판에서 인증된 이름 색상
+
+Authenticate to rcon
+== rcon 인증
+
+Authenticate to rcon with a username
+== 사용자 이름으로 rcon 인증
+
+Authorized player forced vote '%s'
+== 권한이 있는 플레이어가 투표를 '%s'(으)로 강제했습니다
+
+Auto
+== 자동
+
+auto
+== 자동
+
+Auto agree vote
+== 자동 투표 동의
+
+Auto chat in water
+== 물 속에서 자동 채팅
+
+Auto chat when dying in water
+== 물 속에서 죽을 때 자동 채팅
+
+Auto concurrency: %d (smart default)
+== 자동 동시성: %d (스마트 기본값)
+
+Auto disable when time expires
+== 시간 만료 시 자동 비활성화
+
+Auto enable in Gores mode
+== Gores 모드에서 자동 활성화
+
+Auto execute
+== 자동 실행
+
+Auto gain control for mic (AGC, experimental)
+== 마이크 자동 게인 제어 (AGC, 실험적)
+
+Auto greet friends entering map
+== 맵에 들어오는 친구 자동 인사
+
+Auto hot-reload after external saves
+== 외부 저장 후 자동 핫 리로드
+
+Auto login Axiom server
+== Axiom 서버 자동 로그인
+
+Auto map vote
+== 자동 맵 투표
+
+Auto refresh server list
+== 서버 목록 자동 새로고침
+
+Auto reject vote
+== 자동 투표 거부
+
+Auto reply
+== 자동 응답
+
+Auto reply cooldown
+== 자동 응답 쿨다운
+
+Auto save chat log
+== 채팅 로그 자동 저장
+
+Auto start vote
+== 투표 자동 시작
+
+Auto switch to the tee that got unfrozen
+== 얼음이 풀린 티로 자동 전환
+
+Auto team lock
+== 자동 팀 잠금
+
+Auto translate received messages
+== 받은 메시지 자동 번역
+
+Auto translate sent messages
+== 보낸 메시지 자동 번역
+
+Auto unmute when speaking
+== 말할 때 자동 음소거 해제
+
+Auto unspec on unfreeze
+== 얼음 해제 시 자동 관전 해제
+
+Auto-sync player camera
+== 플레이어 카메라 자동 동기화
+
+Auto-toggle fast input
+== 빠른 입력 자동 전환
+
+Auto-toggle fast input others
+== 다른 플레이어 빠른 입력 자동 전환
+
+Auto-translate incoming messages
+== 수신 메시지 자동 번역
+
+Auto-translate outgoing messages
+== 발신 메시지 자동 번역
+
+Automatic updates are only supported on Windows
+== 자동 업데이트는 Windows에서만 지원됩니다
+
+Automatically adds voting options for all maps
+== 모든 맵에 투표 옵션 자동 추가
+
+Automatically close the current chat after waking from freeze
+== 얼음에서 깨어난 후 현재 채팅 자동 닫기
+
+Automatically create statboard csv
+== 통계판 CSV 자동 생성
 
 Automatically record demos
-== 자동으로 데모 녹화
+== 데모 자동 녹화
+
+Automatically reply to muted players
+== 음소거된 플레이어에게 자동 응답
+
+Automatically reply while the window is unfocused
+== 창이 비활성화된 상태에서 자동 응답
 
 Automatically take game over screenshot
-== 자동으로 게임 종료 스크린샷 저장
+== 게임 오버 스크린샷 자동 촬영
+
+Automatically take statboard screenshot
+== 통계판 스크린샷 자동 촬영
+
+Avg %.*f   ↓ %.*f   ↑ %.*f
+== 평균 %.*f   ↓ %.*f   ↑ %.*f
+
+Axiom auto login failed
+== Axiom 자동 로그인 실패
+
+Axiom auto login failed, retrying
+== Axiom 자동 로그인 실패, 재시도 중
+
+Axiom auto login succeeded
+== Axiom 자동 로그인 성공
+
+Axiom dummy password
+== Axiom 더미 비밀번호
+
+Axiom main account password
+== Axiom 메인 계정 비밀번호
+
+Axis
+== 축
+
+Background
+== 배경
+
+Background color
+== 배경색
+
+Background Draw
+== 배경 그리기
+
+Background music volume
+== 배경 음악 볼륨
+
+Background opacity
+== Background opacity
+
+Ban a certain nickname
+== 특정 닉네임 차단
+
+Ban ip for x minutes for any reason
+== 모든 사유로 IP를 x분 동안 차단
+
+Ban ip range for x minutes for any reason
+== 모든 사유로 IP 범위를 x분 동안 차단
+
+Ban player in a region
+== 지역 내 플레이어 차단
+
+Ban player with ip/client id for x minutes for any reason
+== 모든 사유로 플레이어(IP/클라이언트 ID)를 x분 동안 차단
+
+Ban range in a region
+== 지역 내 IP 범위 차단
+
+Based on a pile of Windows... stuff
+== Windows... 덩어리를 기반으로 함
+
+Basic
+== 기본
+
+Before I die
+== 내가 죽기 전에
+
+Behavior
+== 동작
+
+Behavior type
+== 동작 유형
+
+Benchmark frame times for number of seconds to file, then quit
+== 지정된 초 동안 프레임 시간을 파일에 벤치마크한 후 종료
+
+Best
+== 최고
+
+Bind key to execute a command or view keybindings
+== 키를 바인딩하여 명령 실행 또는 키바인딩 보기
+
+Bind Wheel
+== 바인드 휠
+
+Bind Wheel Key
+== 바인드 휠 키
+
+Black
+== 검정
+
+Blend mode
+== 혼합 모드
+
+Blue
+== 파랑
 
 Blue team
-== 블루팀
+== 블루 팀
 
 Blue team wins!
-== 블루팀 승리!
+== 블루 팀 승리!
 
 Body
-== 몸
+== 몸통
+
+Both
+== 둘 다
+
+Both sides of keyword rules must be filled
+== 키워드 규칙의 양쪽을 모두 입력해야 합니다
+
+Bounce
+== 바운스
+
+Brightness shift
+== 밝기 전환
+
+Broadcast message
+== 방송 메시지
+
+Browser
+== 브라우저
+
+Brutal
+== 브루탈
+
+Bubble opacity
+== 버블 불투명도
+
+Buffer memory
+== 버퍼 메모리
+
+Built-in
+== 내장
+
+Button - Disabled
+== 버튼 - 비활성화
+
+Button - Enabled
+== 버튼 - 활성화
+
+Button position is outside of the screen.
+== 버튼 위치가 화면 밖에 있습니다.
+
+Buttons
+== 버튼
+
+c = Player position
+== c = 플레이어 위치
+
+Calculate unfinished maps for player in certain mode
+== 특정 모드에서 플레이어의 미완료 맵 계산
 
 Call vote
-== 투표
+== 투표 요청
+
+Camera
+== 카메라
+
+Camera & FOV
+== 카메라 및 FOV
+
+Can only drop onto same-size parts.
+== 같은 크기의 부품에만 드롭할 수 있습니다.
+
+Can't /spec that quickly.
+== 그렇게 빨리 /spec할 수 없습니다.
+
+Can't disable team 0 mode. This team exceeds the maximum allowed size of %s players for regular team
+== team 0 모드를 비활성화할 수 없습니다. 이 팀은 일반 팀의 최대 허용 인원 %s명을 초과합니다
+
+Can't enable team 0 mode with practice mode on.
+== 연습 모드가 켜져 있을 때는 team 0 모드를 활성화할 수 없습니다.
+
+Can't find a Tutorial server
+== 튜토리얼 서버를 찾을 수 없습니다.
+
+Can't invite players to this team
+== 이 팀에 플레이어를 초대할 수 없습니다
+
+Can't invite this quickly
+== 너무 빨리 초대할 수 없습니다
+
+Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.
+== 지정된 인수를 인식할 수 없습니다. 사용법: /tpxy x y, 예: /tpxy 9 3.
+
+Can't swap with yourself
+== 자신과 교환할 수 없습니다
+
+Cancel
+== 취소
+
+Cancel your swap request
+== 교환 요청 취소
+
+Candidate files
+== 후보 파일
+
+Cannot swap: the other player is not in your team
+== 교환할 수 없음: 상대가 내 팀에 없습니다
+
+Category
+== 카테고리
+
+Category name
+== 분류 이름
+
+Change indicator offset based on distance to other tees
+== 다른 티와의 거리에 따라 표시기 오프셋 변경
+
+Change map
+== 맵 변경
+
+Change ready state (0.7 only)
+== 준비 상태 변경 (0.7 전용)
 
 Change settings
 == 설정 변경
 
+Change the skip duration
+== 건너뛰기 시간 변경
+
+Change zoom
+== 줌 변경
+
+Changes: %d
+== 변경 사항: %d
+
+Changing name to %s near finish
+== 결승선 근처에서 이름을 %s(으)로 변경
+
 Chat
 == 채팅
+
+Chat background color
+== 채팅 배경색
+
+Chat Binds
+== 채팅 바인드
+
+Chat box button appearance settings
+== 채팅창 버튼 모양 설정
+
+Chat Bubble
+== 채팅 버블
+
+Chat command
+== 채팅 명령어
+
+Chat command (e.g. showall 1)
+== 채팅 명령어 (예: showall 1)
+
+Chat export failed
+== 채팅 내보내기 실패
+
+Chat font size
+== 채팅 글꼴 크기
+
+Chat log retention days
+== 채팅 기록 보관 일수
+
+Chat message
+== 채팅 메시지
+
+Chat sound volume
+== 채팅 알림 음량
+
+Chat Translate Button UI
+== 채팅 번역 버튼 UI
+
+Chat translation settings
+== 채팅 번역 설정
+
+Chat width
+== 채팅 너비
+
+Chat word filtering
+== 채팅 단어 필터링
+
+Check if voice server address is reachable
+== 음성 서버 주소에 연결할 수 있는지 확인하세요
+
+Check if your dummy is being bullied while you control the main tee
+== 메인 티를 조종하는 동안 더미가 괴롭힘을 당하는지 확인
+
+Check input device, system default mic, and mic permission first
+== 먼저 입력 장치, 시스템 기본 마이크 및 마이크 권한을 확인하세요
+
+Check output device, confirm headphones/speakers are still online
+== 출력 장치를 확인하고 헤드폰/스피커가 여전히 온라인 상태인지 확인하세요
+
+Checking for existing player with your name
+== 당신의 이름을 가진 기존 플레이어 확인 중
+
+CHN
+== 중국
+
+Choose country flag
+== 국기 선택
+
+Choose default eyes when joining a server
+== 서버 접속 시 기본 눈 모양 선택
+
+Choose export name first.
+== 내보내기 이름을 먼저 선택하세요.
+
+Choose whether to browse replays or screenshots
+== 데모 또는 스크린샷을 탐색할지 선택
 
 Clan
 == 클랜
 
+Clan color in friends list
+== 친구 목록에서 클랜 색상
+
+Clan Members
+== 클랜 멤버
+
+Clan Name
+== 클랜 이름
+
+Clan plates size
+== 클랜 플레이트 크기
+
+Clan: %s
+== 클랜: %s
+
+Classic
+== 클래식
+
+Classic Easy
+== 클래식 Easy
+
+Classic easy
+== 클래식 easy
+
+Classic Next
+== 클래식 Next
+
+Classic next
+== 클래식 next
+
+Classic Nut
+== 클래식 Nut
+
+Classic nut
+== 클래식 nut
+
+Classic Pro
+== 클래식 Pro
+
+Classic pro
+== 클래식 pro
+
+Clear
+== 지우기
+
+Clear all favorite maps
+== 모든 즐겨찾기 맵 지우기
+
+Clear Changes
+== 변경 사항 지우기
+
+Clear chat messages
+== 채팅 메시지 지우기
+
+Clear current cut (right click to clear all cuts)
+== 현재 잘라낸 구간 지우기 (우클릭으로 모든 구간 지우기)
+
+Clear friend note
+== 친구 메모 지우기
+
+Clear local console
+== 로컬 콘솔 지우기
+
+Clear note
+== 메모 지우기
+
+Clear remote console
+== 원격 콘솔 지우기
+
+Clears the voting options
+== 투표 옵션 지우기
+
+Click to add this community to favorites
+== 클릭하여 이 커뮤니티를 즐겨찾기에 추가
+
+Click to copy map name
+== 클릭하여 맵 이름 복사
+
+Click to copy QQ group number
+== 클릭하여 QQ 그룹 번호 복사
+
+Click to copy the map name
+== 클릭하여 맵 이름 복사
+
+Click to copy this clan's name to clipboard
+== 클릭하여 이 클랜 이름을 클립보드에 복사
+
+Click to copy this player's name to clipboard
+== 클릭하여 이 플레이어 이름을 클립보드에 복사
+
+Click to remove this clan from your friends list.
+== 클릭하여 친구 목록에서 이 클랜을 제거
+
+Click to remove this community from favorites
+== 클릭하여 즐겨찾기에서 이 커뮤니티 제거
+
+Click to remove this player from your friends list.
+== 클릭하여 친구 목록에서 이 플레이어를 제거
+
+Click to select server. Double click to join your friend.
+== 클릭하여 서버 선택. 더블 클릭하여 친구에게 접속
+
+Click to set color
+== 클릭하여 색상 설정
+
 Client
 == 클라이언트
+
+Client CPU usage is high
+== 클라이언트 CPU 사용량이 높습니다
+
+Client data overview
+== 클라이언트 데이터 개요
+
+Client frame time is abnormal
+== 클라이언트 프레임 시간이 비정상입니다
+
+Client IDs size
+== 클라이언트 ID 크기
+
+Client message
+== 클라이언트 메시지
+
+Client performance pressure is high
+== 클라이언트 성능 부담이 높습니다
+
+Client prediction time is high
+== 클라이언트 예측 시간이 높습니다
+
+Client uptime
+== 클라이언트 실행 시간
+
+Close
+== 닫기
+
+Close the demo player
+== 데모 플레이어 닫기
+
+Color
+== 색상
+
+Colors
+== 색상
+
+Colors in chat
+== 채팅에서의 색상
+
+Colors in scoreboard
+== 점수판에서의 색상
+
+Colors of the hook collision line, in case of a possible collision with:
+== 후크 충돌선 색상 (다음과 충돌 가능할 때):
+
+Combo
+== 콤보
+
+Command
+== 명령
+
+Command is not available on solo servers
+== 이 명령은 솔로 서버에서 사용할 수 없습니다
+
+Command:
+== 명령어:
+
+Commands run in the console
+== 콘솔에서 실행되는 명령어
+
+Common key bindings
+== 일반 키 바인딩
+
+Communities
+== 커뮤니티
+
+Community
+== 커뮤니티
+
+Community links, updates, and sponsors moved to the Contributors tab
+== 커뮤니티 링크, 업데이트 및 후원자가 기여자 탭으로 이동했습니다
+
+Compact
+== 간결
+
+Concurrency (0 = auto)
+== 동시성 (0 = 자동)
+
+Config
+== 설정
+
+Config directory
+== 설정 디렉터리
+
+Config file: data/input_overlay.json
+== 설정 파일: data/input_overlay.json
+
+Config Files
+== 설정 파일
+
+Configs
+== 설정 파일
+
+Configure background 3D particle effects
+== 배경 3D 입자 효과 구성
+
+Configure hammer skin steal and skin transition animations
+== 해머 스킨 도용 및 스킨 전환 애니메이션 구성
+
+Configure qm_report_app_id and qm_report_secret first
+== 먼저 qm_report_app_id 및 qm_report_secret을 설정하세요
+
+Confirm both are on same server, same room, and support voice
+== 둘 다 같은 서버, 같은 방에 있고 음성을 지원하는지 확인하세요
+
+Connect address error
+== 연결 주소 오류
+
+Connect dummy
+== 더미 연결
+
+Connect dummy to enable
+== 더미 연결 필요
+
+Connect to a server first
+== 먼저 서버에 연결하세요
+
+Connect to server first to establish voice network link
+== 먼저 서버에 연결하여 음성 네트워크 링크를 설정하세요
+
+Connect to the specified host/ip
+== 지정된 호스트/IP에 연결
+
+Connected
+== 연결됨
+
+Connected, no one is speaking
+== 연결됨, 아무도 말하고 있지 않음
+
+Connected, waiting for first ping
+== 연결됨, 첫 번째 핑 대기 중
+
+Connecting dummy
+== 더미 연결 중
 
 Connecting to
 == 연결 중
 
+Connection disconnected
+== 연결 끊김
+
+Connection downstream
+== 연결 수신
+
+Connection elevated
+== 연결이 다소 불안정함
+
+Connection normal
+== 연결 정상
+
 Connection Problems…
-== 연결 문제 발생…
+== 연결 문제…
+
+Connection Quality
+== 연결 품질
+
+Connection quality
+== 연결 품질
+
+Connection severely abnormal
+== 연결이 심각하게 비정상임
+
+Connection upstream
+== 연결 송신
 
 Console
 == 콘솔
 
+Console color
+== 콘솔 색상
+
+Continue anyway?
+== 그래도 계속하시겠습니까?
+
+Contributors
+== 기여자
+
+Control dummy
+== 더미 제어
+
+Controller
+== 컨트롤러
+
+Controller jitter tolerance
+== 컨트롤러 지터 허용 범위
+
 Controls
 == 조작
 
+Converse
+== 계속 귓속말
+
+Converse with the last person you whispered to (private message)
+== 마지막 귓속말 대상과 대화 (귓속말)
+
+Coords size
+== 좌표 크기
+
+Copied
+== 복사됨
+
+Copy
+== 복사
+
+Copy info
+== 정보 복사
+
+Copy name
+== 이름 복사
+
+Copy skin
+== 스킨 복사
+
+Could not check for existing player with your name. Check your internet connection.
+== 당신의 이름을 가진 기존 플레이어를 확인할 수 없습니다. 인터넷 연결을 확인하세요.
+
+Could not connect dummy
+== 더미 연결 실패
+
+Could not create report scan request
+== 신고 스캔 요청을 만들 수 없습니다
+
+Could not find your Team
+== 팀을 찾을 수 없음
+
+Could not get current server address
+== 현재 서버 주소를 가져올 수 없습니다
+
+Could not get server list from master server
+== 마스터 서버에서 서버 목록을 가져올 수 없음
+
+Could not load default touch controls from file. See local console for details.
+== 파일에서 기본 터치 컨트롤을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
+Could not load sponsor QR code. Check the Base64 data
+== 스폰서 QR 코드를 불러올 수 없음. Base64 데이터를 확인하세요
+
+Could not load touch controls from clipboard. See local console for details.
+== 클립보드에서 터치 컨트롤을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
+Could not load touch controls from file. See local console for details.
+== 파일에서 터치 컨트롤을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
+Could not preview this image
+== 이 이미지를 미리 볼 수 없습니다
+
+Could not resolve connect address '%s'. See local console for details.
+== 연결 주소 '%s'를 확인할 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
+Could not save downloaded map. Try manually deleting this file: %s
+== 다운로드한 맵을 저장할 수 없습니다. 다음 파일을 수동으로 삭제해 보세요: %s
+
+Could not save touch controls to file. See local console for details.
+== 터치 컨트롤을 파일에 저장할 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
 Count players only
-== 플레이어만 세기
+== 플레이어 수만 계산
+
+Countries
+== 국가
+
+CP opacity
+== CP 불투명도
+
+Create a random skin
+== 무작위 스킨 생성
+
+Created
+== 생성 날짜
+
+Credits
+== 크레딧
+
+Crescent
+== 초승달
+
+Cube
+== 큐브
 
 Current
 == 현재
 
+Current aspect ratio:
+== 현재 화면비:
+
+Current aspect ratio: Show default
+== 현재 화면비: 기본값 표시
+
+Current cut is invalid or already added
+== 현재 잘라낸 구간이 유효하지 않거나 이미 추가됨
+
+Current file
+== 현재 파일
+
+Current line color
+== Current line color
+
+Current queue: %s
+== 현재 대기열: %s
+
+Current rescue mode: %s
+== 현재 구조 모드: %s
+
+Current status
+== 현재 상태
+
+Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
+== 현재 시간: %s\n- 실행 시간과 플레이 시간은 공식 JSON 데이터로 계산됩니다\n- 위와 같음\n- 위의 위와 같음\n
+
+Current: Ranks
+== 현재: 순위
+
+Current: Score
+== 현재: 점수
+
+Current: Time
+== 현재: 시간
+
+Custom
+== 사용자 정의
+
+custom
+== 사용자 정의
+
+Custom API key
+== 사용자 정의 API 키
+
+Custom aspect ratio
+== 사용자 정의 화면비
+
 Custom colors
 == 사용자 정의 색상
+
+Custom Font:
+== 사용자 정의 글꼴:
+
+Custom prompt template
+== 사용자 정의 프롬프트 템플릿
+
+Customize translate button and menu colors
+== 번역 버튼 및 메뉴 색상 사용자 정의
+
+Cut interval
+== 잘라내기 구간
+
+Cut length
+== 잘라낸 길이
+
+Cut segments
+== 잘라낸 구간
+
+Cute:
+== 귀여움:
+
+Cycle through emotes
+== 이모트 순환
+
+d = Prediction latency
+== d = 예측 지연 시간
+
+Damn grenadiers, all go to spa!
+== 망할 수류탄병들, 전부 스파로 가!
+
+Damn grenadiers, just die!
+== 망할 수류탄병들, 그냥 죽어!
+
+Data
+== 데이터
+
+Date
+== 날짜
+
+Days
+== 일
+
+DDmaX
+== DDmaX
+
+DDmaX Easy
+== DDmaX Easy
+
+DDmaX Next
+== DDmaX Next
+
+DDmaX Nut
+== DDmaX Nut
+
+DDmaX Pro
+== DDmaX Pro
+
+DDNet
+== DDNet
+
+DDNet / Total CPU
+== DDNet / 전체 CPU
+
+DDNet Client needs to be restarted to complete update!
+== DDNet 클라이언트를 다시 시작해야 업데이트가 완료됩니다!
+
+DDNet Memory
+== DDNet 메모리
+
+DDNet memory
+== DDNet 메모리
+
+DDNet points
+== DDNet 점수
+
+ddnet-saves.txt is empty
+== ddnet-saves.txt가 비어 있음
+
+ddnet-saves.txt not found
+== ddnet-saves.txt를 찾을 수 없음
+
+DDNet/total CPU
+== DDNet/전체 CPU
+
+DDRace HUD
+== DDRace HUD
+
+DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
+== DDraceNetwork는 협동 온라인 게임으로, 당신과 당신의 티 그룹이 맵의 결승선에 도달하는 것이 목표입니다. 초보자는 가장 쉬운 맵이 있는 Novice 서버에서 시작해야 합니다. 핑을 고려하여 가까운 서버를 선택하세요.
+
+Deactivate
+== 비활성화
+
+Deactivate all
+== 모두 비활성화
+
+Death opacity
+== 사망 불투명도
+
+Deaths
+== 사망 수
+
+Debug graph
+== 디버그 그래프
+
+Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
+== 디버그 모드 활성화됨. Ctrl+Shift+D를 눌러 디버그 모드를 비활성화하세요.
+
+Debug performance graph panel
+== 디버그 성능 그래프 패널
+
+Deep freeze color
+== 깊은 얼음 색상
+
+Deep freeze opacity
+== 깊은 얼음 불투명도
+
+Deep unfreeze color
+== 깊은 해동 색상
+
+Deep unfreeze opacity
+== 깊은 해동 불투명도
+
+DeepSeek
+== DeepSeek
+
+DeepSeek API key
+== DeepSeek API 키
+
+Default
+== 기본값
+
+default
+== 기본값
+
+Default input open failed
+== 기본 입력 열기 실패
+
+Default length
+== 기본 길이
+
+Default output open failed
+== 기본 출력 열기 실패
+
+Default zoom
+== 기본 줌
+
+Delay
+== 지연
 
 Delete
 == 삭제
 
+Delete button
+== 버튼 삭제
+
+Delete category
+== 분류 삭제
+
+Delete command
+== 명령 삭제
+
 Delete demo
 == 데모 삭제
+
+Delete folder
+== 폴더 삭제
+
+Delete screenshot
+== 스크린샷 삭제
+
+Delete selected items
+== 선택한 항목 삭제
+
+Delete skin
+== 스킨 삭제
+
+Delete this preset
+== 이 프리셋 삭제
+
+Demo
+== 데모
+
+Demo marker added
+== 데모 마커 추가됨
+
+Demofile: %s
+== 데모 파일: %s
 
 Demos
 == 데모
 
+Demos directory
+== 데모 디렉터리
+
+Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
+== 인수 개수에 따라 자신을 (0) 관전 중이거나 조준 중인 위치로, (1) 지정된 플레이어 이름으로 순간이동
+
+Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
+== 사용 중단됨. 'muteid <client_id> <초> <이유>' 또는 'muteip <ip> <초> <이유>'를 사용하세요.
+
+Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_muteip <ip> <seconds> <reason>'
+== 사용 중단됨. 'vote_muteid <client_id> <초> <이유>' 또는 'vote_muteip <ip> <초> <이유>'를 사용하세요.
+
+Deselect
+== 선택 해제
+
+Desktop fullscreen
+== 데스크탑 전체화면
+
+Detailed reason
+== 상세 이유
+
+Detect compatible solo prompts from custom servers
+== 커스텀 서버의 호환 솔로 알림 감지
+
+Detection distance
+== 감지 거리
+
+Detection time
+== 판정 시간
+
+Developers and sponsors
+== 개발자 및 스폰서
+
+DF
+== DF
+
+Diamond
+== 다이아몬드
+
+died
+== 사망
+
+Difficulty stars
+== 난이도 별
+
+Direct touch input while ingame
+== 게임 중 직접 터치 입력
+
+Direct touch input while spectating
+== 관전 중 직접 터치 입력
+
+Direction Keys
+== 방향 키
+
+disable
+== 비활성화
+
+Disable after picking up other weapons
+== 다른 무기를 집으면 비활성화
+
+Disabled
+== 비활성화
+
+Disagree
+== 반대
+
+Discard
+== 취소
+
+Discard changes
+== 변경 사항 취소
+
 Disconnect
-== 연결 해제
+== 연결 끊기
+
+Disconnect dummy
+== 더미 연결 해제
+
+Disconnect from the server
+== 서버 연결 끊기
 
 Disconnected
-== 연결 해제됨
+== 끊김
+
+Discord
+== Discord
+
+Display mode
+== 표시 모드
+
+Display your race time
+== 내 레이스 시간을 표시
+
+Displays client prediction latency
+== 클라이언트 예측 지연을 표시
+
+Displays client receive rate
+== 클라이언트 수신 속도를 표시
+
+Displays client send rate
+== 클라이언트 전송 속도를 표시
+
+Displays connection quality grade
+== 연결 품질 등급을 표시
+
+Displays current position
+== 현재 위치를 표시
+
+Displays current prediction value
+== 현재 예측 값을 표시
+
+Displays current zoom value
+== 현재 줌 값을 표시
+
+Displays DDNet process CPU usage / total system CPU usage
+== DDNet 프로세스 CPU 사용률 / 전체 시스템 CPU 사용률을 표시
+
+Displays DDNet process memory usage
+== DDNet 프로세스 메모리 사용량을 표시
+
+Displays latency jitter
+== 지연 지터를 표시
+
+Displays resend-based packet loss estimate
+== 재전송 기반 패킷 손실 추정치를 표시
+
+Displays server snapshot latency
+== 서버 스냅샷 지연을 표시
+
+Displays X and Y velocity
+== X 및 Y 속도를 표시
+
+Displays your current angle in degrees
+== 현재 각도를 도 단위로 표시
+
+Displays your frames per second
+== 초당 프레임 수를 표시
+
+Displays your local time
+== 내 로컬 시간을 표시
+
+Displays your ping to the current server
+== 현재 서버까지의 핑을 표시
+
+Dissolve
+== 해산
+
+Do not translate server messages
+== 서버 메시지 번역 안 함
+
+Donor (drag parts from left)
+== 기증자 (왼쪽에서 부품 드래그)
+
+Donor Asset
+== 기증자 에셋
+
+Dont predict other players if you are frozen
+== 얼어 있을 때 다른 플레이어 예측 안 함
+
+DONT USE THIS! USE add_bindwheel INSTEAD!
+== 사용하지 마세요! 대신 add_bindwheel을 사용하세요!
+
+Door Laser Inner Color
+== 문 레이저 내부 색상
+
+Door Laser Outline Color
+== 문 레이저 외곽선 색상
+
+Download community skins
+== 커뮤니티 스킨 다운로드
+
+Download failed
+== 다운로드 실패
+
+Download skins
+== 스킨 다운로드
+
+Download this asset?
+== 이 에셋을 다운로드하시겠습니까?
+
+Downloaded
+== 다운로드됨
 
 Downloading map
 == 맵 다운로드 중
 
+Downloading update...
+== 업데이트 다운로드 중...
+
+Downscaled (0.78)
+== 축소 배율 (0.78)
+
+Drag HUD modules with the left mouse button
+== 마우스 왼쪽 버튼으로 HUD 모듈 드래그
+
+Dragger Inner Color
+== 드래거 내부 색상
+
+Dragger Outline Color
+== 드래거 외곽선 색상
+
+Dragging, collapsing, search, and usage history are preserved per category
+== 드래그, 접기, 검색 및 사용 기록은 각 카테고리별로 유지됨
+
+Draw on the in game background
+== 게임 배경에 그리기
+
+Draw where mouse is
+== 마우스 위치에 그리기
+
 Draw!
 == 무승부!
 
+Drawing a big pie in the sky
+== 하늘에 큰 파이 그리기
+
+Dream Features
+== 꿈의 작은 기능
+
+Drift direction
+== 드리프트 방향
+
+Drift intensity
+== 드리프트 강도
+
+Drift smoothness
+== 드리프트 부드러움
+
+Drop on right canvas to replace one part.
+== 오른쪽 캔버스에 드롭하여 부품을 교체하세요.
+
+Dummies are not allowed on this server
+== 이 서버에서는 더미가 허용되지 않습니다
+
+Dummy
+== 더미
+
+Dummy Control: %s
+== 더미 제어: %s
+
+Dummy copy
+== 더미 복사
+
+Dummy fire
+== 더미 발사
+
+Dummy hammer fly
+== 더미 해머 플라이
+
+Dummy hook
+== 더미 후크
+
+Dummy jump
+== 더미 점프
+
+Dummy mini view
+== 더미 미니 뷰
+
+Dummy sync: %s
+== 더미 동기화: %s
+
+Dummy Window
+== 더미 창
+
+Dummy window size
+== 더미 창 크기
+
+Dummy window zoom
+== 더미 창 줌
+
+Dump the current savestring
+== 현재 저장 문자열 내보내기
+
+Dump zone tuning in zone x
+== 영역 x의 튜닝 내보내기
+
+dumps all sqlservers readservers = r, writeservers = w
+== 모든 SQL 서버 내보내기 (readservers = r, writeservers = w)
+
+Dumps the antibot status
+== 안티봇 상태 내보내기
+
+Duplicate
+== 복제
+
+Duration
+== 지속 시간
+
 Dynamic Camera
-== 다이나믹 카메라
+== 동적 카메라
+
+Dynamic FOV intensity
+== 동적 FOV 강도
+
+Dynamic FOV smoothness
+== 동적 FOV 부드러움
+
+Dynamic Island
+== 다이나믹 아일랜드
+
+Each tab has a clear purpose
+== 각 탭은 명확한 목적이 있음
+
+Echo follows the original chat color
+== Echo는 채팅의 실제 색상을 따름
+
+Echo text color when not inheriting chat color
+== 채팅 색상을 따르지 않을 때의 Echo 텍스트 색상
+
+Echo the text
+== 텍스트 에코
+
+Echo the text in chat window
+== 채팅창에 텍스트 출력
+
+Edge margin
+== 가장자리 여백
+
+Edit
+== 편집
+
+Edit audio pack
+== 오디오 팩 편집
+
+Edit current queue
+== 현재 대기열 편집
+
+Edit Entry
+== 항목 편집
+
+Edit HUD
+== HUD 편집
+
+Edit note
+== 메모 편집
+
+Edit skin texture
+== 스킨 텍스처 편집
+
+Edit touch controls
+== 터치 컨트롤 편집
+
+Editor
+== 편집기
+
+Elevated
+== 주의
+
+Emotes are disabled.
+== 이모티콘이 비활성화되었습니다.
 
 Emoticon
 == 이모티콘
 
+Emoticon ID
+== 이모티콘 ID
+
+Emoticons
+== 이모티콘
+
+enable
+== 활성화
+
+Enable 3D background particles
+== 3D 배경 입자 활성화
+
+Enable camera drift
+== 카메라 드리프트 활성화
+
+Enable chat with all/team mode
+== 전체/팀 채팅 모드 활성화
+
+Enable cheats for your current team's run, but you can't earn a rank
+== 현재 팀 실행에 치트 활성화, 단 순위 획득 불가
+
+Enable controller
+== 컨트롤러 사용
+
+Enable Deleting
+== 삭제 활성화
+
+Enable dummy window
+== 더미 창 활성화
+
+Enable dynamic FOV
+== 동적 FOV 활성화
+
+Enable FTAPI auto-translate (may overload the service)
+== FTAPI 자동 번역 활성화 (서비스 과부하 가능)
+
+Enable game sounds
+== 게임 사운드 활성화
+
+Enable ghost
+== 고스트 활성화
+
+Enable Gores mode
+== Gores 모드 활성화
+
+Enable gun sound
+== 총 사운드 활성화
+
+Enable highlighted chat sound
+== 강조 표시된 채팅 사운드 활성화
+
+Enable Jelly Tee
+== 젤리 티 활성화
+
+Enable keyword reply
+== 키워드 응답 활성화
+
+Enable long pain sound (used when shooting in freeze)
+== 긴 고통 사운드 활성화 (프리즈에서 발사 시 사용)
+
+Enable lyrics
+== Enable lyrics
+
+Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
+== 지정된 버그를 사용하여 맵 호환 모드 활성화 (예: grenade-doubleexplosion@ddnet.tw)
+
+Enable mod weapon on %d: %s
+== %d에서 모드 무기 활성화: %s
+
+Enable pie menu
+== 파이 메뉴 활성화
+
+Enable regular chat sound
+== 일반 채팅 사운드 활성화
+
+Enable repeat
+== 반복 활성화
+
+Enable replays
+== 리플레이 활성화
+
+Enable server message sound
+== 서버 메시지 사운드 활성화
+
+Enable speedrun timer
+== 스피드런 타이머 활성화
+
+Enable stereo positioning
+== 스테레오 위치 활성화
+
+Enable system media control
+== 시스템 미디어 제어 활성화
+
+Enable team chat sound
+== 팀 채팅 사운드 활성화
+
+Enable tee trails
+== 티 꼬리 활성화
+
+Enable thinking mode (slower)
+== 생각 모드 활성화 (느림)
+
+Enable voice
+== 음성 활성화
+
+Enable warlist
+== 적대 목록 활성화
+
+Enable word filter list
+== 단어 필터 목록 활성화
+
+Enable Zen mode
+== Zen 모드 활성화
+
+Enables/disables active moderator mode for the player
+== 플레이어의 활성 중재자 모드 활성화/비활성화
+
+Endless hook has been activated
+== 무한 후크가 활성화되었습니다
+
+Endless hook has been deactivated
+== 무한 후크가 비활성화되었습니다
+
+Endpoint
+== 엔드포인트
+
+Endpoint (optional)
+== 엔드포인트 (선택 사항)
+
+Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
+== /practice 모드를 입력하거나 다시 시작하세요. 그렇지 않으면 60초 후에 전체 팀이 처형됩니다
+
+Enter Password
+== 비밀번호 입력
+
+Enter Username
+== 사용자 이름 입력
+
+Entities
+== 엔티티
+
+Entities background color
+== 엔티티 배경색
+
+Entity Background Image
+== 엔티티 배경 이미지
+
+Entity Layer Colors
+== 엔티티 레이어 색상
+
+Entity Preview
+== 엔티티 미리보기
+
+entity_bg (Workshop)
+== entity_bg (워크샵)
+
+Erase items on the in game background
+== 게임 배경의 항목 지우기
+
 Error
 == 오류
+
+Error checking player name
+== 플레이어 이름 확인 오류
+
+Error loading communities
+== 커뮤니티 로딩 오류
 
 Error loading demo
 == 데모 로딩 오류
 
+Error loading touch controls
+== 터치 컨트롤 로딩 오류
+
+Error opening screenshot
+== 스크린샷 열기 오류
+
+Error playing demo
+== 데모 재생 오류
+
+Error saving settings
+== 설정 저장 오류
+
+Error saving touch controls
+== 터치 컨트롤 저장 오류
+
+ESC replay minutes
+== ESC 리플레이 저장 시간(분)
+
+EUR
+== 유럽
+
+Evaluate an expression
+== 표현식 평가
+
+Event
+== 이벤트
+
+Example of usage
+== 사용 예시
+
+Example: name1|name2|name3
+== 예: 이름1|이름2|이름3
+
+Exclude
+== 제외
+
+Execute before connecting
+== 연결 전 실행
+
+Execute files on key press/release
+== 키 누름/뗌 시 파일 실행
+
+Execute hovered bindwheel bind
+== 가리킨 바인드휠 바인드 실행
+
+Execute on connect
+== 연결 시 실행
+
+Execute on join
+== 입장 시 실행
+
+Execute the specified file
+== 지정된 파일 실행
+
+Existing Player
+== 기존 플레이어
+
+Expand module
+== 모듈 확장
+
+Export
+== 내보내기
+
+Export cut as a separate demo
+== 잘라낸 구간을 별도 데모로 내보내기
+
+Export demo cut
+== 데모 잘라낸 부분 내보내기
+
+Export name contains invalid characters.
+== 내보내기 이름에 유효하지 않은 문자가 포함되어 있습니다.
+
+Export selected
+== 선택 항목 내보내기
+
+Export selected file
+== 선택한 파일 내보내기
+
+Export to clipboard
+== 클립보드로 내보내기
+
+Exported %d chat messages
+== %d개의 채팅 메시지 내보냄
+
+Exported to %s
+== %s(으)로 내보냈습니다
+
+Extras
+== 기타
+
+f = Frame rate
+== f = 프레임 속도
+
+Fade and slide
+== 페이드 및 슬라이드
+
+Fade duration
+== Fade duration
+
+Fade in
+== 페이드 인
+
+Fade only
+== 페이드 인만
+
+Fade out
+== 페이드 아웃
+
+Fade trail alpha
+== 꼬리 알파 페이드
+
+Failed saving the replay!
+== 리플레이 저장 실패!
+
+Failed to check for updates
+== 업데이트 확인 실패
+
+Failed to copy main asset image.
+== 주요 에셋 이미지 복사 실패.
+
+Failed to create bgdraw folder
+== bgdraw 폴더 생성 실패
+
+Failed to export audio pack file.
+== 오디오 팩 파일 내보내기 실패.
+
+Failed to export demo cut
+== 데모 잘라낸 부분 내보내기 실패
+
+Failed to export skin files.
+== 스킨 파일 내보내기 실패.
+
+Failed to load
+== 로드 실패
+
+Failed to load main asset: %s
+== 주요 에셋 로드 실패: %s
+
+Failed to prepare main asset image.
+== 주요 에셋 이미지 준비 실패.
+
+Failed to preview candidate file.
+== 후보 파일 미리보기 실패.
+
+Failed to preview import file.
+== 가져오기 파일 미리보기 실패.
+
+Failed to read saves file
+== 저장 파일 읽기 실패
+
+Failed to write PNG export.
+== PNG 내보내기 파일 쓰기 실패.
+
+Fake CTF flags
+== 가짜 CTF 깃발
+
+Fallback simple noise reduction strength
+== 대체 단순 잡음 감소 강도
+
+Fast input (reduce visual latency)
+== 빠른 입력 (시각적 지연 감소)
+
+Fast input others
+== 다른 플레이어 빠른 입력
+
+Fast practice
+== 빠른 연습
+
+Fat skins (DDFat)
+== 뚱뚱한 스킨 (DDFat)
+
 Favorite
 == 즐겨찾기
+
+Favorite friend
+== 가장 자주 함께한 친구
+
+Favorite map
+== 즐겨찾는 맵
+
+Favorite maps
+== 즐겨찾는 맵
 
 Favorites
 == 즐겨찾기
 
+feat-003 dogfood: tokens + 12 widgets
+== feat-003 dogfood: 토큰 + 위젯 12개
+
+Feature Search
+== 기능 검색
+
 Feet
 == 발
+
+Fetch Info
+== 정보 가져오기
+
+File
+== 파일
+
+File '%s' already exists, do you want to overwrite it?
+== 파일 '%s'이(가) 이미 존재합니다. 덮어쓰시겠습니까?
+
+File already exists, do you want to overwrite it?
+== 파일이 이미 존재합니다. 덮어쓰시겠습니까?
+
+Filter connecting players
+== 연결 중인 플레이어 필터링
+
+Find all ban records for the specified IP address
+== 지정된 IP 주소의 모든 차단 기록 찾기
+
+Finish data source
+== 완주 데이터 출처
+
+Finish Name
+== 완료 이름
+
+Finish Name:
+== 완료 이름:
+
+Finished maps
+== 완주한 맵 수
 
 Fire
 == 발사
 
+First page in console
+== 콘솔 첫 페이지
+
+Flip:
+== 뒤집기:
+
 Folder
 == 폴더
+
+Folder Link
+== 폴더 링크
+
+Follow
+== 팔로우
+
+Following
+== 현재
+
+Font size
+== 글꼴 크기
+
+Force a vote to yes/no
+== 투표를 찬성/반대로 강제
+
+Force a voting option
+== 투표 옵션 강제
+
+Force high bandwidth mode when spectating (1 = on, 0 = off)
+== 관전 시 고대역폭 모드 강제 (1 = 켜기, 0 = 끄기)
+
+Force i to pause for i seconds
+== i를 i초 동안 일시정지 강제
 
 Force vote
 == 강제 투표
 
+Forms
+== 폼
+
+Found %d modules
+== %d개의 모듈을 찾음
+
+FPM
+== 분당 킬
+
+FPS
+== FPS
+
+Frags
+== 킬 수
+
+Frame rate
+== 프레임 속도
+
+Frame time
+== 프레임 시간
+
+Frankenstein (drop parts on right)
+== 프랑켄슈타인 (부품을 오른쪽에 드롭)
+
+Free move
+== 자유 이동
+
 Free-View
 == 자유 시점
 
+Freeview cursor opacity
+== 자유 시점 커서 불투명도
+
+Freeze
+== 얼림
+
+Freeze border color
+== Freeze 테두리 색상
+
+Freeze Laser Inner Color
+== 얼음 레이저 내부 색상
+
+Freeze Laser Outline Color
+== 얼음 레이저 외곽선 색상
+
+Freeze opacity
+== Freeze 불투명도
+
+Freeze stars
+== 얼림 별
+
+Friend
+== 친구
+
+Friend color in friends list
+== 친구 목록에서 친구 색상
+
+Friend heart
+== 친구 하트
+
+Friend message
+== 친구 메시지
+
+Friend note
+== 친구 메모
+
+Friend Notifications
+== 친구 알림
+
+Friend online and join notifications
+== 친구 접속 및 참가 알림
+
+Friends
+== 친구
+
+Frozen Margin
+== 얼림 여유
+
+FSAA samples
+== FSAA 샘플 수
+
+FTAPI
+== FTAPI
+
+FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
+== 과부하 방지를 위해 FTAPI 자동 번역이 비활성화되었습니다. 필요 시 설정에서 활성화하세요.
+
+Full map listen in same room
+== 같은 방에서 전체 맵 듣기
+
 Fullscreen
-== 전체화면
+== 전체 화면
+
+Fun
+== 펀
+
+Functions
+== 기능
 
 Game
 == 게임
@@ -149,76 +2693,1282 @@ Game info
 == 게임 정보
 
 Game over
-== 게임 종료
+== 게임 오버
+
+Game paused
+== 게임 일시정지됨
+
+Game sound volume
+== 게임 사운드 볼륨
+
+Game time margin
+== 게임 시간 여백
 
 Game type
-== 게임 종류
+== 게임 유형
 
 Game types:
-== 게임 종류:
+== 게임 유형:
+
+Game/predicted tick
+== 게임/예측 tick
+
+Gameplay
+== 게임플레이
+
+Gap aim rescue
+== 틈 조준 구출
+
+Gap between statusbar items
+== 상태 표시줄 항목 사이 간격
 
 General
 == 일반
 
+Get all map players' skin IDs and auto add to rotate queue
+== 모든 맵 플레이어의 스킨 ID를 가져와 자동으로 순환 대기열에 추가
+
+Getting game info
+== 게임 정보를 가져오는 중
+
+Getting server list from master server
+== 마스터 서버에서 서버 목록을 가져오는 중
+
+Ghost
+== 고스트
+
+Ghost tools
+== 유령 도구
+
+Ghosts directory
+== 고스트 디렉터리
+
+Github
+== Github
+
+Give back right to vote to player with client ID
+== 클라이언트 ID를 가진 플레이어에게 투표권 되돌려주기
+
+Give back right to vote to player with IP address
+== IP 주소를 가진 플레이어에게 투표권 되돌려주기
+
+Give back right to vote to player with list index
+== 목록 인덱스를 가진 플레이어에게 투표권 되돌려주기
+
+Gives a grenade launcher to you
+== 유탄 발사기를 지급합니다
+
+Gives a laser to you
+== 레이저를 지급합니다
+
+Gives a shotgun to you
+== 샷건을 지급합니다
+
+Gives all weapons to you
+== 모든 무기를 지급합니다
+
+Gives jetpack to you
+== 제트팩을 지급합니다
+
+Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
+== ID i의 무기를 지급합니다 (전체 = -1, 망치 = 0, 총 = 1, 샷건 = 2, 유탄 = 3, 레이저 = 4, 닌자 = 5)
+
+Gives you as many jumps as you specify
+== 지정한 만큼 점프를 지급합니다
+
+Gives you endless hook
+== 무한 갈고리를 지급합니다
+
+Gives you infinite jump
+== 무한 점프를 지급합니다
+
+Global toggle key
+== 전역 전환 키
+
+Glow alpha
+== 광선 알파
+
+Glow intensity
+== 광선 강도
+
+Glow offset
+== 광선 오프셋
+
+Go back one marker
+== 이전 마커로 이동
+
+Go back one tick
+== 한 틱 뒤로 이동
+
+Go back the specified duration
+== 지정된 시간만큼 뒤로 이동
+
+Go forward one marker
+== 다음 마커로 이동
+
+Go forward one tick
+== 한 틱 앞으로 이동
+
+Go forward the specified duration
+== 지정된 시간만큼 앞으로 이동
+
+Gores Actor
+== Gores 액터
+
+Gores auto weapon switch
+== Gores 자동 무기 전환
+
+Gores Mode
+== Gores 모드
+
+Gores mode key
+== Gores 모드 키
+
+Grabs
+== 깃발 획득
+
 Graphics
 == 그래픽
 
+Graphics card
+== 그래픽 카드
+
+Greeting text
+== 인사말 텍스트
+
 Grenade
-== 유탄 발사기
+== 유탄
+
+Group name
+== 그룹 이름
+
+Guide line color
+== 가이드선 색상
 
 Hammer
 == 망치
 
+Hammer Mode:
+== 망치 모드:
+
+Hammer skin steal
+== 해머 스킨 도둑
+
+Hammer: %s
+== 망치: %s
+
 Has people playing
-== 플레이어가 있는 서버
+== 플레이 중인 사람 있음
+
+Has save
+== 저장 있음
+
+HDF
+== HDF
+
+Heart
+== 하트
+
+Height
+== 높이
+
+Hello from ui_widget::Modal
+== ui_widget::Modal에서 인사
+
+Help: %s
+== 도움말: %s
+
+Hide death/respawn effects
+== 죽음/부활 효과 숨기기
+
+Hide direction indicators
+== 방향 표시기 숨기기
+
+Hide Echo messages
+== Echo 메시지 숨기기
+
+Hide explosion effects
+== 폭발 효과 숨기기
+
+Hide freeze effects
+== Freeze 효과 숨기기
+
+Hide ghosts of frozen players
+== 얼린 플레이어의 유령 숨기기
+
+Hide guide lines
+== 가이드선 숨기기
+
+Hide hammer effects
+== 해머 효과 숨기기
+
+Hide HUD
+== HUD 숨기기
+
+Hide indicator for tees on your screen
+== 화면 내 티 표시기 숨기기
+
+Hide input emoticon
+== 입력 이모티콘 숨기기
+
+Hide join/version prompts
+== 입장/버전 알림 숨기기
+
+Hide jump effects
+== 점프 효과 숨기기
+
+Hide kill/finish messages
+== 처치/완료 메시지 숨기기
+
+Hide map progress
+== 맵 진행률 숨기기
+
+Hide nameplates
+== 이름표 숨기기
+
+Hide names
+== 이름 숨기기
+
+Hide player messages
+== 플레이어 메시지 숨기기
+
+Hide scoreboard
+== 점수판 숨기기
+
+Hide server prompt notifications
+== 서버 알림 숨기기
+
+Hide Settings Tabs
+== 설정 탭 숨기기
+
+Hide sponsor QR code
+== 스폰서 QR 코드 숨기기
+
+Hide toast
+== 토스트 숨기기
+
+Hide UI for focused gameplay
+== 집중 플레이를 위해 UI 숨기기
+
+Hide weapon muzzle flashes
+== 무기 총구 섬광 숨기기
+
+Hide without media state
+== Hide without media state
 
 High Detail
-== 맵 세부사항 표시
+== 높은 디테일
+
+High to low
+== 높음에서 낮음으로
+
+Highlight Color
+== 강조 색상
+
+Highlighted message
+== 강조 메시지
+
+Hitbox mode
+== 히트박스 모드
+
+HJ Assist
+== HJ 보조
+
+HJ assist
+== HJ 보조
+
+Hold left click for free camera
+== 왼쪽 클릭을 누르면 자유 카메라
 
 Hook
 == 갈고리
 
+Hook collision line
+== 갈고리 충돌선
+
+Hook collision line opacity
+== 충돌선 불투명도
+
+Hook Collisions
+== 갈고리 충돌 보조
+
+Hook collisions
+== 갈고리 충돌선
+
+Hook line tip
+== 갈고리선 끝
+
+Hook Strength
+== 갈고리 강도
+
+Hooking L/R: %.0f%%/%.0f%%
+== 갈고리 L/R: %.0f%%/%.0f%%
+
+Horizontal position
+== 수평 위치
+
+Hours
+== 시간
+
+Hover for tooltip
+== 마우스를 올려 툴팁 보기
+
+https://ddnet.org/discord
+== https://ddnet.org/discord
+
+https://wiki.ddnet.org/
+== https://wiki.ddnet.org/
+
+https://wiki.ddnet.org/wiki/Mapping
+== https://wiki.ddnet.org/wiki/Mapping
+
+https://wiki.ddnet.org/wiki/Touch_controls
+== https://wiki.ddnet.org/wiki/Touch_controls
+
+HUD
+== HUD
+
+HUD editor preview
+== HUD 편집기 미리보기
+
+HUD rainbow colors
+== HUD 무지개 색상
+
+Hue
+== 색조
+
+i = Receive rate
+== i = 수신 속도
+
+I am a robot
+== 나는 로봇입니다
+
+I am away from the game window
+== 게임 창에서 자리 비움
+
+I muted you
+== 당신을 음소거했습니다
+
+Idiot word filter
+== 바보 단어 필터
+
+Import from clipboard
+== 클립보드에서 가져오기
+
+Improved Anti Ping
+== 개선된 Anti Ping
+
+In memory of me
+== 이 클라이언트에 나를 기억해 줘
+
+Inactive color
+== 비활성 색상
+
+Incoming language
+== 수신 언어
+
+Indicate map finish
+== 완료된 맵 표시
+
+Indicator alive color
+== 표시기 생존 색상
+
+Indicator in freeze color
+== 표시기 얼음 색상
+
+Indicator max distance
+== 표시기 최대 거리
+
+Indicator max offset
+== 표시기 최대 오프셋
+
+Indicator min offset
+== 표시기 최소 오프셋
+
+Indicator offset
+== 표시기 오프셋
+
+Indicator opacity
+== 표시기 불투명도
+
+Indicator safe color
+== 표시기 안전 색상
+
+Indicator size
+== 표시기 크기
+
+Info
+== 정보
+
+Info Messages
+== 정보 메시지
+
+Ingame controller mode
+== 게임 내 컨트롤러 모드
+
+Ingame controller sens.
+== 게임 내 컨트롤러 감도
+
+Ingame cursor scale
+== 게임 내 커서 배율
+
+Ingame mouse sens.
+== 게임 내 마우스 감도
+
+Initializing assets
+== 에셋 초기화 중
+
+Initializing components
+== 게임 엔진 초기화 중
+
+Initializing map logic
+== 맵 로직 초기화 중
+
+Input
+== 입력
+
+Input device
+== 입력 장치
+
+Input device not found
+== 입력 장치를 찾을 수 없음
+
+Input device open failed
+== 입력 장치 열기 실패
+
+Input device open failed, try reconnecting headset/mic or reselecting input device
+== 입력 장치 열기 실패, 헤드셋/마이크를 다시 연결하거나 입력 장치를 다시 선택하세요
+
+Input overlay
+== 입력 오버레이
+
+Input overlay display
+== 입력 오버레이 표시
+
+Input switch
+== 입력 전환
+
+Insane
+== 인세인
+
+Interface
+== 인터페이스
+
+Intermediate
+== 중급
+
+Internet
+== 인터넷
+
+Internet (From online source)
+== 인터넷 (온라인 소스)
+
+Invalid client id to kick
+== 추방할 클라이언트 ID가 잘못됨
+
+Invalid client id to move to spectators
+== 관전자로 이동할 클라이언트 ID가 잘못됨
+
 Invalid Demo
-== 잘못된 데모
+== 유효하지 않은 데모
+
+Invalid ID
+== 잘못된 ID
+
+Invalid option
+== 잘못된 투표 옵션
+
+Invalid spectator id used
+== 잘못된 관전자 ID
+
+Invalid translation backend
+== 잘못된 번역 백엔드
+
+Invalid X coordinate.
+== 잘못된 X 좌표
+
+Invalid Y coordinate.
+== 잘못된 Y 좌표
+
+Invite a person to a locked team
+== 잠긴 팀에 사람 초대
+
+Invites are disabled
+== 초대가 비활성화되었습니다
+
+Is your dummy being bullied while you control the main tee?
+== 본체를 조종하는 동안 더미가 괴롭힘을 당하고 있나요?
+
+It's recommended that you check the settings to adjust them to your liking before joining a server.
+== 서버에 접속하기 전에 설정을 확인하여 취향에 맞게 조정하는 것이 좋습니다.
+
+Item
+== 항목
+
+j = Latency jitter
+== j = 지터
+
+Jelly duration
+== 젤리 지속 시간
+
+Jelly others
+== 다른 플레이어도 젤리 티
+
+Jelly strength
+== 젤리 강도
+
+Jitter
+== 지터
+
+Join a team to enable practice mode, which means you can use /r, but can't earn a rank.
+== 연습 모드를 사용하려면 팀에 가입하세요. /r을 사용할 수 있지만 순위를 얻을 수 없습니다.
+
+Join a team to use swap feature, which means you can swap positions with each other.
+== 교체 기능을 사용하려면 팀에 가입하세요. 서로 위치를 바꿀 수 있습니다.
 
 Join blue
 == 블루팀 참가
 
+Join game
+== 게임 참가
+
+Join QQ group
+== QQ 그룹 가입
+
 Join red
 == 레드팀 참가
+
+Join the team of the specified player
+== 지정된 플레이어의 팀에 합류
+
+Join Tutorial Server
+== 튜토리얼 서버 참가
+
+Join, version, rules, and help messages stay in chat instead of popups
+== 입장, 버전, 규칙, 도움말 메시지는 팝업 대신 채팅에 유지됩니다
 
 Jump
 == 점프
 
+Jump hint text
+== 점프 힌트 텍스트
+
+k = Resend loss
+== k = 재전송 손실
+
+Kaomoji
+== 카오모지
+
+Key Bindings
+== 키 바인딩
+
+Key Presses
+== 키 입력
+
+Key Sticking: ?
+== 키 고정: ?
+
+Key Sticking: Off
+== 키 고정: 끄기
+
+Key Sticking: On
+== 키 고정: 켜기
+
+Key Sticking: Reset Self
+== 키 고정: 본체 초기화
+
+Keyword Reply
+== 키워드 응답
+
+Keyword rules
+== 키워드 규칙
+
 Kick player
 == 플레이어 추방
+
+Kick player with specified id for any reason
+== 지정된 ID의 플레이어를 아무 이유로 추방
+
+Kick voting requires %s players
+== 추방 투표에는 %s명의 플레이어가 필요합니다
+
+Kill
+== 자살
+
+Kill Protection enabled. If you really want to join the spectators, first type /kill
+== 사망 보호가 활성화되었습니다. 정말 관전자로 전환하려면 먼저 /kill을 입력하세요
+
+Kill yourself to restart
+== 자살하여 다시 시작
+
+Kill yourself when kill-protected during a long game (use f1, kill for regular kill)
+== 긴 게임 중 킬 보호 상태에서 자살 (일반 자살은 f1, kill 사용)
+
+killed themselves
+== 자살함
+
+Kills a player and announces the kill
+== 플레이어를 죽이고 킬을 알림
+
+Kills team and disables practice mode
+== 팀을 죽이고 연습 모드 비활성화
+
+King of Gores auto weapon switch
+== King of Gores 자동 무기 전환
+
+l = Local time
+== l = 로컬 시간
+
+L select  R swap  M select only
+== L 선택  R 교체  M만 선택
+
+Label
+== 레이블
+
+Label type
+== 레이블 유형
+
+LAN
+== LAN
 
 Language
 == 언어
 
-MOTD
-== 설명
+Large text announcement for friend joining
+== 친구 접속 시 큰 글자 알림
+
+Large text content
+== 큰 글자 내용
+
+Laser
+== 레이저
+
+Laser effect enhancement
+== 레이저 효과 향상
+
+Laser Enhancement
+== 레이저 향상
+
+Laser preview
+== 레이저 미리보기
+
+Laser settings
+== 레이저 설정
+
+Laser size
+== 레이저 크기
+
+Laser style
+== 레이저 스타일
+
+Last page in console
+== 콘솔 마지막 페이지
+
+Latency
+== 지연
+
+Latency Jitter
+== 지연 지터
+
+Latency jitter
+== 지연 지터
+
+Layout
+== 레이아웃
+
+Leak IP
+== IP 노출
+
+Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
+== 모든 서버에 핑을 보내 IP 주소를 노출하며, 동시에 지연 시간을 획득
+
+Learn
+== 배우기
+
+Leave empty to disable
+== 비우면 비활성화
+
+Leave empty to join public room
+== 비우면 공개 방 입장
+
+Leave empty to use default prompt
+== 비우면 기본 프롬프트 사용
+
+Left jump
+== 왼쪽 점프
+
+Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets.
+== 왼쪽 클릭으로 프랑켄슈타인 부위 색상을 변경하세요. 드래그로 부위를 교체하고, 오른쪽 클릭으로 초기화합니다.
+
+Left/right channel width
+== 좌/우 채널 폭
+
+Length
+== 길이
+
+Lenny:
+== 레니 ͡° ͜ʖ ͡°:
+
+Lets you join team i (shows your team if left blank)
+== 팀 i에 합류 (비워두면 현재 팀 표시)
+
+Lht.
+== 밝기
+
+LibreTranslate
+== LibreTranslate
+
+Line width
+== 선 두께
+
+Lines
+== Lines
+
+Lines %d - %d (%s)
+== 줄 %d - %d (%s)
+
+List all commands that are available in practice mode
+== 연습 모드에서 사용 가능한 모든 명령 나열
+
+List all commands which are accessible for given access level
+== 지정된 접근 수준에서 사용 가능한 모든 명령 나열
+
+List all commands which are accessible for users
+== 일반 플레이어가 사용할 수 있는 모든 명령 나열
+
+List all name bans
+== 모든 이름 차단 나열
+
+List all rcon keys
+== 모든 rcon 키 나열
+
+List all saves on the current map
+== 현재 맵의 모든 저장 나열
+
+List all tuning variables and their values
+== 모든 튜닝 변수와 값 나열
+
+List available voice devices
+== 사용 가능한 음성 장치 나열
+
+List connected players with optional case-insensitive substring matching filter
+== 연결된 플레이어 나열 (선택적 대소문자 구분 없는 부분 문자열 필터)
+
+List foes
+== 적 목록
+
+List friends
+== 친구 목록
+
+List KCP/legacy transport status and weak-network simulation metrics
+== KCP/레거시 전송 상태 및 약한 네트워크 시뮬레이션 지표 나열
+
+List local saves for current map (or specified map)
+== 현재 맵(또는 지정된 맵)의 로컬 저장 목록
+
+List players containing name or all players
+== 이름이 포함된 플레이어 또는 모든 플레이어 나열
+
+Literal
+== 문자 그대로
+
+Live director
+== 라이브 디렉터
+
+LLM API
+== LLM API
+
+LLM provider
+== LLM 제공자
+
+Load
+== 불러오기
+
+Load drawings from a given csv file (defaults to map name)
+== 지정된 CSV 파일에서 그림 불러오기 (기본값: 맵 이름)
+
+Load with code r. /load to check your existing saves
+== 코드 r로 불러오기. /load로 기존 저장 확인
+
+Loaded %d items
+== %d개 항목 불러옴
+
+Loaded %d items (discarded %d items)
+== %d개 항목 불러옴 (%d개 항목 폐기)
+
+Loading
+== 불러오는 중
+
+Loading assets...
+== 에셋 로딩 중...
+
+Loading commands…
+== 명령 로딩 중…
+
+Loading DDNet Client
+== DDNet 클라이언트 로딩 중
+
+Loading Demo
+== 데모 로딩 중
+
+Loading demo file from storage
+== 저장소에서 데모 파일 로딩 중
+
+Loading demo files
+== 데모 파일 로딩 중
+
+Loading demo info
+== 데모 정보 로딩 중
+
+Loading ghost files
+== 고스트 파일 로딩 중
+
+Loading map
+== 맵 로딩 중
+
+Loading map file from storage
+== 저장소에서 맵 파일 로딩 중
+
+Loading maps…
+== 맵 로딩 중…
+
+Loading menu images
+== 메뉴 이미지 로딩 중
+
+Loading race demo files
+== 리플레이 파일 로딩 중
+
+Loading screenshot files
+== 스크린샷 파일 로딩 중
+
+Loading skin files
+== 스킨 파일 로딩 중
+
+Loading sound files
+== 사운드 파일 로딩 중
+
+Loading…
+== 로딩 중…
+
+Local
+== 로컬
+
+Local + Dummy
+== 로컬 + 더미
+
+Local only
+== 로컬만
+
+Local particle effects
+== 로컬 입자 효과
+
+Local saves
+== 로컬 저장
+
+Local test mode
+== 로컬 테스트 모드
+
+Local test mode, no server needed
+== 로컬 테스트 모드, 서버 불필요
+
+Local Time
+== 현지 시간
+
+Local-only
+== 로컬 전용
+
+Lock delay
+== 팀 잠금 지연
+
+Lock team
+== 팀 잠금
+
+Locked
+== 잠김
+
+Log the network
+== 네트워크 로그 기록
+
+Logout of econ
+== econ 로그아웃
+
+Logout of rcon
+== rcon 로그아웃
+
+Long press on a touch button to select it.
+== 터치 버튼을 길게 눌러 선택하세요.
+
+Low to high
+== 낮음에서 높음
+
+Lyrics
+== Lyrics
+
+Main Asset
+== 메인 에셋
+
+Main menu
+== 메인 메뉴
+
+Make inactive tee fire
+== Make inactive tee fire
+
+Make inactive tee hook
+== Make inactive tee hook
+
+Make inactive tee jump
+== Make inactive tee jump
+
+Make sure the backend supports OpenAI-compatible thinking parameters
+== 백엔드가 OpenAI 호환 사고 매개변수를 지원하는지 확인하세요
+
+Makes you a ninja
+== 닌자로 만듭니다
+
+Makes you live frozen
+== 라이브 프리즈 상태로 만듭니다
+
+Makes you move 1 tile down
+== 1타일 아래로 이동
+
+Makes you move 1 tile left
+== 1타일 왼쪽으로 이동
+
+Makes you move 1 tile right
+== 1타일 오른쪽으로 이동
+
+Makes you move 1 tile up
+== 1타일 위로 이동
+
+Makes you super
+== 슈퍼로 만듭니다
+
+Manual
+== 수동
+
+Manual concurrency: %d
+== 수동 동시 실행 수: %d
+
+Manual source file
+== 수동 소스 파일
 
 Map
 == 맵
+
+Map browser color
+== 맵 브라우저 색상
+
+Map browser opacity
+== 맵 브라우저 불투명도
+
+Map danger border
+== 맵 위험 경계
+
+Map Preview TODO
+== 맵 미리보기 준비 중
+
+Map progress bar
+== 맵 진행 바
+
+Map Progress: %.1f%%
+== 맵 진행: %.1f%%
+
+Map Progress: --
+== 맵 진행: --
+
+Map size
+== 맵 크기
+
+Map sound volume
+== 맵 사운드 볼륨
+
+Map type:
+== 맵 유형:
+
+Mark demo
+== 데모 표시
+
+Mark the beginning of a cut (right click to reset)
+== 잘라내기 시작 지점 표시 (우클릭으로 초기화)
+
+Mark the beginning of a demo cut
+== 데모 컷 시작 표시
+
+Mark the end of a cut (right click to reset)
+== 잘라내기 끝 지점 표시 (우클릭으로 초기화)
+
+Mark the end of a demo cut
+== 데모 컷 끝 표시
+
+Markers
+== 마커
+
+Match %d of %d
+== 결과 %d / 총 %d
+
+Matched with callable peer
+== 통화 가능 상대와 매칭됨
+
+Max CSVs
+== 최대 CSV 수
+
+Max demos
+== 최대 데모 수
+
+Max Screenshots
+== 최대 스크린샷 수
+
+Max size
+== 최대 크기
+
+Max visible notifications
+== 최대 표시 알림 수
+
+Maximum rows
+== 최대 행 수
+
+may cause delay
+== 지연이 발생할 수 있음
+
+Memory
+== 메모리
+
+Mention
+== 멘션
+
+Menu background
+== 메뉴 배경
+
+Menu opened. Press Esc key again to close menu.
+== 메뉴가 열렸습니다. Esc 키를 다시 누르면 메뉴가 닫힙니다.
+
+Menu option - normal
+== 메뉴 옵션 - 일반
+
+Menu option - selected
+== 메뉴 옵션 - 선택됨
+
+Message to send in chat:
+== 채팅으로 보낼 메시지:
+
+Messages
+== 메시지
+
+Messages that already look like the target language will skip auto-translate
+== 이미 대상 언어처럼 보이는 메시지는 자동 번역을 건너뜁니다
+
+Microphone
+== 마이크
+
+Microphone permission denied by system
+== 시스템에서 마이크 권한 거부됨
+
+Microphone volume
+== 마이크 볼륨
+
+Milliseconds
+== 밀리초
+
+Min size
+== 최소 크기
+
+Minimize module
+== 모듈 최소화
+
+Minimize the client
+== 클라이언트 최소화
+
+Minimum match chars
+== 최소 일치 문자 수
+
+Minimum time
+== 최소 시간
+
+Minutes
+== 분
+
+Misc
+== 기타
+
+Miscellaneous
+== 기타
+
+Mixed
+== 혼합
+
+Mode
+== 모드
+
+Model
+== 모델
+
+Moderate
+== 모더레이트
+
+Moderator alert
+== 중재자 알림
+
+Modified
+== 수정됨
+
+Modules snap to screen edges, center lines and other HUD modules while dragging
+== 드래그 시 모듈이 화면 가장자리, 중앙선 및 다른 HUD 모듈에 스냅
+
+MOTD
+== 공지
+
+Mouse
+== 마우스
+
+Move inactive tee left
+== Move inactive tee left
+
+Move inactive tee right
+== Move inactive tee right
 
 Move left
 == 왼쪽으로 이동
 
 Move player to spectators
-== 관전자로 플레이어 이동
+== 플레이어를 관전자로 이동
 
 Move right
 == 오른쪽으로 이동
 
+Move to category
+== 카테고리로 이동
+
+Moved ingame
+== 게임 내에서 이동됨
+
 Movement
 == 이동
 
+Moves to the point with x/y-coordinates ii
+== x/y 좌표 ii의 지점으로 이동
+
+Moves to the tile with x/y-number ii
+== x/y 번호 ii의 타일로 이동
+
+Multi-View
+== 멀티뷰
+
+Mute
+== 음소거
+
+Mute death/respawn sounds
+== 사망/부활 소리 음소거
+
+Mute emoticons
+== 이모티콘 음소거
+
+Mute hammer sounds
+== 망치 소리 음소거
+
+Mute jump sounds
+== 점프 소리 음소거
+
+Mute microphone
+== 마이크 음소거
+
+Mute player
+== 플레이어 음소거
+
+Mute player with client ID
+== 클라이언트 ID로 플레이어 음소거
+
+Mute player with IP address
+== IP 주소로 플레이어 음소거
+
 Mute when not active
-== 창 비활성화 시 음소거
+== 비활성화 시 음소거
+
+Mute:
+== 음소거:
+
+Muted
+== 음소거됨
+
+my_%s
+== 내_%s
+
+n = Prediction latency
+== n = 예측 지연
+
+NA
+== 북미
 
 Name
 == 이름
+
+Name Plate
+== 이름표
+
+Name plates offset
+== 이름표 오프셋
+
+Name plates size
+== 이름표 크기
+
+Name:
+== 이름:
+
+Name: %s
+== 이름: %s
+
+Native scale (1.0)
+== 기본 배율 (1.0)
+
+Need to have started the map to swap with a player.
+== 플레이어와 교체하려면 맵을 시작해야 합니다.
+
+Negative stability buffer (for Gores)
+== 음수 안정성 버퍼 (Gores용)
+
+Net
+== 순 킬
+
+Netversion
+== 네트워크 버전
+
+Network
+== 네트워크
+
+new
+== 신규
+
+New button
+== 새 버튼
+
+New category name
+== 새 분류 이름
+
+New IME
+== 새 IME
+
+New name:
+== 새 파일 이름:
+
+New preset name
+== 새 프리셋 이름
+
+New random timeout code
+== 새 무작위 타임아웃 코드
+
+New UI
+== 새 UI
+
+News
+== 뉴스
+
+Next
+== 다음
+
+Next line color
+== Next line color
+
+Next page in console
+== 콘솔 다음 페이지
 
 Next weapon
 == 다음 무기
@@ -229,8 +3979,143 @@ Nickname
 No
 == 아니오
 
+No active QmClient reports yet
+== 아직 활성 QmClient 보고서 없음
+
+No animation
+== 애니메이션 없음
+
+No answer from server yet.
+== 서버에서 아직 응답이 없습니다.
+
+No assets
+== 자산 없음
+
+No assets available for composition.
+== 합성에 사용할 수 있는 자산이 없습니다.
+
+No assets found.
+== 자산을 찾을 수 없습니다.
+
+No audio issues detected
+== 오디오 문제 없음
+
+No audio slots found.
+== 오디오 슬롯을 찾을 수 없습니다.
+
+No buttons match your filter criteria
+== 필터 조건에 맞는 버튼이 없습니다
+
+No callable peer found
+== 통화 가능한 상대 없음
+
+No candidate file selected.
+== 후보 파일이 선택되지 않았습니다.
+
+No changes since last save
+== 마지막 저장 이후 변경 사항 없음
+
+No chat log selected
+== 선택된 채팅 기록 없음
+
+No chat message available to repeat
+== 반복할 채팅 메시지가 없음
+
+No chat message to translate
+== 번역할 채팅 메시지 없음
+
+No code
+== 코드 없음
+
+No controller found. Plug in a controller.
+== 컨트롤러를 찾을 수 없습니다. 컨트롤러를 연결하세요.
+
+No corresponding vote option found
+== 해당 투표 옵션을 찾을 수 없음
+
+No demo is being recorded
+== 녹화 중인 데모가 없음
+
+No demo selected
+== 선택된 데모 없음
+
+No demo with this filename exists
+== 이 파일명의 데모가 존재하지 않음
+
+No director players available
+== 사용 가능한 디렉터 플레이어 없음
+
+No empty team left.
+== 빈 팀이 더 이상 없습니다.
+
+No favorite maps yet
+== 아직 즐겨찾는 맵 없음
+
+No input device available
+== 사용 가능한 입력 장치 없음
+
+No items to write
+== 쓸 항목이 없음
+
+No local saves file found (ddnet-saves.txt)
+== 로컬 저장 파일을 찾을 수 없음 (ddnet-saves.txt)
+
+No local servers found (ports %d-%d)
+== 로컬 서버를 찾을 수 없음 (포트 %d-%d)
+
+No login required
+== 로그인 필요 없음
+
+No matching assets.
+== 일치하는 자산이 없습니다.
+
+No matching features found. Try other keywords
+== 일치하는 기능을 찾을 수 없습니다. 다른 키워드를 시도해 보세요.
+
+No more blocking entity layers in the world of TeeWorlds
+== TeeWorlds 세계에서 더 이상 차단하는 엔티티 레이어가 없습니다.
+
+No noise reduction
+== 노이즈 감소 없음
+
+No obvious anomaly
+== 뚜렷한 이상 없음
+
+No output device available
+== 사용 가능한 출력 장치 없음
+
 No password
-== 암호가 없는 서버
+== 비밀번호 없음
+
+No peer
+== 상대 없음
+
+No player nearby
+== 근처에 플레이어 없음
+
+No player with this name found.
+== 이 이름의 플레이어를 찾을 수 없습니다.
+
+No presets yet
+== 아직 프리셋이 없음
+
+No preview
+== 미리보기 없음
+
+No results
+== 결과 없음
+
+No safe position found
+== 안전한 위치를 찾을 수 없음
+
+No saved profiles available yet. Save one first.
+== 저장된 프로필이 없습니다. 먼저 저장하세요.
+
+No screenshot selected
+== 선택된 스크린샷 없음
+
+No server selected
+== 선택된 서버 없음
 
 No servers found
 == 서버를 찾을 수 없음
@@ -238,62 +4123,1364 @@ No servers found
 No servers match your filter criteria
 == 필터에 일치하는 서버가 없음
 
+No skins match your filter criteria
+== 필터 조건에 맞는 스킨이 없음
+
+No space for button
+== 버튼 공간 부족
+
+No status bar items
+== 상태 표시줄 항목 없음
+
+No unfinished maps available
+== 완료되지 않은 맵 없음
+
+Noise reduction mode
+== 노이즈 감소 모드
+
+None
+== 없음
+
+Normal
+== 보통
+
+Normal Color
+== 일반 색상
+
+Normal message
+== 일반 메시지
+
+NOT CONNECTED
+== 연결되지 않음
+
+Not connected to a game server
+== 게임 서버에 연결되지 않음
+
+Not connected to server
+== 서버에 연결되지 않음
+
+Not downloaded
+== 다운로드되지 않음
+
+Not enabled
+== 활성화되지 않음
+
+Not in the current browser list
+== 현재 브라우저 목록에 없음
+
+Not open, check input device or mic permission
+== 열리지 않음, 입력 장치 또는 마이크 권한 확인
+
+Not open, check output device
+== 열리지 않음, 출력 장치 확인
+
+Note
+== 참고
+
+Note:
+== 메모：
+
+Nothing hookable
+== 걸 수 있는 대상 없음
+
+Notification background
+== 알림 배경
+
+Notification hold time
+== 알림 유지 시간
+
+Notification text size
+== 알림 텍스트 크기
+
+Notifications
+== 알림
+
+Notify when friends come online
+== 친구 접속 시 알림
+
+Notify when only one tee is still alive:
+== 한 명의 티만 살아있을 때 알림:
+
+Novice
+== 초보자
+
+Numeric-only messages will be skipped
+== 숫자만 있는 메시지는 건너뜁니다.
+
+o = Send rate
+== o = 전송 속도
+
+Off
+== 끄기
+
+Official
+== 공식
+
+Official community links
+== 공식 커뮤니티 링크
+
+Offline
+== 오프라인
+
+Ohhhhhhhhhhhhhhhh
+== 오오오오오오오오오오오오오오오오
+
 Ok
 == 확인
+
+Oldschool
+== 올드스쿨
+
+On
+== 켜기
+
+Online friends
+== 온라인 친구
+
+Online Players
+== 온라인 플레이어
+
+Only .wv files are supported right now.
+== 현재 .wv 파일만 지원됩니다.
+
+Only Apple Can Do
+== 오직 Apple만 할 수 있는
+
+Only save improvements
+== 향상된 기록만 저장
+
+Only show after joining a team
+== 팀에 참가한 후에만 표시
+
+Only show outlines in the entities layer
+== 엔티티 레이어에서만 윤곽선 표시
+
+Only show when the other Tee is not on screen
+== 다른 Tee가 화면에 없을 때만 표시
+
+Only what you can't imagine, nothing Dream can't do
+== 상상할 수 없는 것만 빼고, Dream이 못하는 건 없어
+
+Only what you can't imagine, nothing Dream can't do!
+== 상상할 수 없는 것만 빼고, Dream이 못하는 건 없어!
+
+Opacity
+== 불투명도
+
+Opacity of freeze bars inside freeze
+== 프리즈 내 프리즈 바 불투명도
+
+Open bindwheel selector
+== 바인드휠 선택기 열기
+
+Open color picker
+== 색상 선택기 열기
+
+Open emote selector
+== 이모트 선택기 열기
+
+Open modal
+== 모달 열기
+
+Open pie menu
+== 파이 메뉴 열기
+
+Open rename dialog
+== 이름 변경 대화상자 열기
+
+Open spectator mode selector
+== 관전 모드 선택기 열기
+
+Open the directory that contains the configuration and user files
+== 설정 및 사용자 파일이 있는 디렉토리 열기
+
+Open the directory to add custom assets
+== 사용자 정의 에셋을 추가할 디렉토리 열기
+
+Open the directory to add custom skins
+== 사용자 정의 스킨을 추가할 디렉토리 열기
+
+Open the directory to add custom themes
+== 사용자 정의 테마를 추가할 디렉토리 열기
+
+Open the folder containing demo files
+== 데모 파일이 있는 폴더 열기
+
+Open the folder containing screenshots
+== 스크린샷이 있는 폴더 열기
+
+Open the saves file
+== 저장 파일 열기
+
+Open the settings file
+== 설정 파일 열기
+
+OpenAI
+== OpenAI
+
+OpenAI API key
+== OpenAI API 키
+
+Opened
+== 열림
+
+Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
+== 관전자 수에서 제외되고 인증되지 않은 플레이어에게 인증 상태 숨기기 (1 = 숨김, 0 = 표시)
+
+Optimistic prediction along stable direction
+== 안정적인 방향으로 낙관적 예측
+
+Option color
+== 옵션 색상
+
+Other
+== 기타
+
+Outgoing language
+== 발신 언어
+
+Outline color
+== Outline color
+
+Outline opacity
+== 윤곽선 불투명도
+
+Output device
+== 출력 장치
+
+Output device not found
+== 출력 장치를 찾을 수 없음
+
+Output device open failed
+== 출력 장치 열기 실패
+
+Output device open failed, try reconnecting speakers/headphones or reselecting output device
+== 출력 장치 열기 실패, 스피커/헤드폰을 다시 연결하거나 출력 장치를 다시 선택해 보세요.
+
+Output switch
+== 출력 전환
+
+Overlay entities
+== 엔티티 오버레이
+
+Override
+== 재정의
+
+Override Entry
+== 항목 재정의
+
+Override Group
+== 그룹 재정의
+
+Override Selected
+== 선택 항목 재정의
+
+Overview
+== 개요
+
+Overview cards show a lightweight guide to the client and page structure
+== 개요 카드는 클라이언트와 페이지 구조에 대한 간단한 안내를 보여줍니다.
+
+Overwrite clan even if empty
+== 비어 있어도 클랜 덮어쓰기
+
+p = Ping latency
+== p = 핑 지연 시간
+
+Pack name
+== 팩 이름
+
+Page guide
+== 페이지 안내
+
+Panel opacity
+== 패널 불투명도
 
 Parent Folder
 == 상위 폴더
 
+Parsing voice server address
+== 음성 서버 주소 분석 중
+
+Part color updated.
+== 부위 색상이 업데이트되었습니다.
+
+Part reset to default asset.
+== 부위가 기본 에셋으로 재설정되었습니다.
+
+Part updated.
+== 부위가 업데이트되었습니다.
+
+Particle alpha
+== 입자 투명도
+
+Particle collision
+== 입자 충돌
+
+Particle color
+== 입자 색상
+
+Particle count
+== 입자 개수
+
+Particle depth
+== 입자 깊이
+
+Particle glow
+== 입자 광채
+
+Particle pulse
+== 입자 맥동
+
+Particle speed
+== 입자 속도
+
+Particle trail
+== 입자 꼬리
+
+Particle twinkle
+== 입자 반짝임
+
+Particle type
+== 입자 유형
+
+Particles
+== 파티클
+
 Password
-== 암호
+== 비밀번호
 
 Password incorrect
-== 잘못된 암호
+== 비밀번호가 올바르지 않음
+
+Pause
+== 일시정지
+
+Pause the current demo
+== 현재 데모 일시 정지
+
+Pause/unpause game
+== 게임 일시정지/재개
+
+Personal best:
+== 개인 최고 기록:
+
+Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status
+== 방송 또는 게임/라운드 타이머에 시간을 표시하는 개인 설정, 타이머 s, 여기서 s = broadcast는 방송, gametimer는 게임/라운드 타이머, cycle은 주기, both는 둘 다, none은 타이머 없음, 아무것도 입력하지 않으면 현재 상태 표시
+
+Pet
+== 펫
+
+Pet alpha
+== 펫 투명도
+
+Pet size
+== 펫 크기
+
+Pet Skin:
+== 펫 스킨:
+
+Pick result: %s
+== 선택 결과: %s
+
+Pickup range
+== 획득 범위
+
+Pie Menu
+== 파이 메뉴
+
+Pie menu
+== 파이 메뉴
 
 Ping
 == 핑
 
+Ping the current server
+== 현재 서버에 핑 보내기
+
 Pistol
 == 권총
+
+Play a slide-in rotation animation when switching weapons
+== 무기 전환 시 슬라이드 회전 애니메이션 재생
+
+Play back a demo
+== 데모 재생
+
+Play background music
+== 배경 음악 재생
+
+Play the current demo
+== 현재 데모 재생
+
+Play/Pause
+== 재생/일시정지
+
+Play/pause the current demo
+== 현재 데모 재생/일시정지
+
+Playback volume
+== 재생 볼륨
 
 Player
 == 플레이어
 
+Player already invited
+== 이미 초대된 플레이어입니다
+
+Player country:
+== 플레이어 국가:
+
+Player data
+== 플레이어 데이터
+
+Player Indicator
+== 플레이어 표시기
+
+Player indicator
+== 플레이어 표시기
+
+Player is on a different team
+== 대상 플레이어가 다른 팀에 있습니다
+
+Player name:
+== 플레이어 이름:
+
+Player not found
+== 플레이어를 찾을 수 없습니다
+
+Player range
+== 플레이어 범위
+
+Player Stats
+== 플레이어 통계
+
+Player stats and info display
+== 플레이어 통계 및 정보 표시
+
 Players
 == 플레이어
 
+Players are not allowed to chat from VPNs at this time
+== 현재 VPN 사용자는 채팅이 허용되지 않습니다
+
+Players can collide on this server
+== 이 서버에서는 플레이어 충돌이 가능합니다
+
+Players can hook each other on this server
+== 이 서버에서는 플레이어 간 후킹이 가능합니다
+
+Players can't collide on this server
+== 이 서버에서는 플레이어 충돌이 불가능합니다
+
+Players can't hook each other on this server
+== 이 서버에서는 플레이어 간 후킹이 불가능합니다
+
+Please add a valid cut first
+== 유효한 잘라내기 구간을 먼저 추가하세요
+
 Please balance teams!
-== 팀원수가 불균형함!
+== 팀 균형을 맞춰주세요!
+
+Please enable finished indicator first
+== 먼저 완료 표시를 활성화하세요
+
+Please enable voice first
+== 먼저 음성을 활성화해 주세요
+
+Please enter your nickname below.
+== 아래에 닉네임을 입력하세요.
+
+Please save your changes before duplicating a button.
+== 버튼을 복제하기 전에 변경 사항을 저장하세요.
+
+Please use %s as friend name
+== %s을(를) 친구 이름으로 사용해 주세요
+
+Please use a different filename
+== 다른 파일 이름을 사용하세요
+
+Please wait…
+== 잠시 기다려 주세요…
+
+Points
+== 포인트
+
+Popup animation
+== 팝업 애니메이션
+
+Position
+== 위치
+
+Position jump hint
+== 위치 점프 힌트
+
+Position jump tip
+== 위치 점프 팁
+
+Position:
+== 위치:
+
+Practice mode can't be enabled in team 0 mode.
+== 팀 0 모드에서는 연습 모드를 활성화할 수 없습니다
+
+Practice mode can't be enabled while team save or load is in progress
+== 팀 저장 또는 로드 중에는 연습 모드를 활성화할 수 없습니다
+
+Practice mode enabled for your team, happy practicing!
+== 팀에 연습 모드가 활성화되었습니다, 즐거운 연습 되세요!
+
+Practice mode is disabled
+== 연습 모드가 비활성화되었습니다
+
+Predict events (experimental)
+== 이벤트 예측 (실험적)
+
+Predicted ghost opacity
+== 예측 고스트 불투명도
+
+Prediction
+== 예측
+
+Prediction jitter is obvious, latency changes are large
+== 예측 지터가 뚜렷하고 지연 변화가 큼
+
+Prediction Latency
+== 예측 지연
+
+Prediction latency
+== 예측 지연
+
+Prediction latency is elevated, prediction path pressure is high
+== 예측 지연이 높고 예측 경로 부하가 큼
+
+Prediction Margin
+== 예측 여유
+
+Prediction margin
+== 예측 여유
+
+Prediction time
+== 예측 시간
+
+Preparing demo playback
+== 데모 재생 준비 중
+
+Preset %d
+== 프리셋 %d
+
+Preset bar
+== 프리셋 바
+
+Press a key…
+== 키를 누르세요…
+
+Press ESC to close. Watch the scale-in spring on open.
+== ESC를 눌러 닫습니다. 열릴 때 스케일 인 스프링을 확인하세요.
+
+Press Esc to exit the HUD editor
+== Esc를 눌러 HUD 편집기 종료
 
 Prev. weapon
 == 이전 무기
 
+Preview
+== 미리보기
+
+Preview 'Hook collisions' being pressed
+== '훅 충돌' 눌림 미리보기
+
+Preview built with %d skipped slot(s).
+== %d개의 건너뛴 슬롯으로 미리보기가 생성되었습니다.
+
+Preview button visibility while the editor is active.
+== 편집기 활성화 시 버튼 가시성 미리보기
+
+Preview dummy nameplate
+== 더미 이름표 미리보기
+
+Preview import file
+== 가져온 파일 미리 듣기
+
+Preview player nameplate
+== 플레이어 이름표 미리보기
+
+Preview selected file
+== 선택한 파일 미리 듣기
+
+Previous
+== 이전
+
+Previous page in console
+== 콘솔에서 이전 페이지
+
+Primary
+== 주요
+
+Print command executed by this keybinding or all binds
+== 이 키 바인딩 또는 모든 바인딩이 실행한 명령 출력
+
+Print command executed by this name or all chat binds
+== 이 이름 또는 모든 채팅 바인드로 실행된 명령 출력
+
+Privately messages someone's current time in this current running race (your time by default)
+== 현재 진행 중인 레이스에서 특정인의 현재 시간을 개인 메시지로 보냄 (기본값은 당신의 시간)
+
+Privately shows you your current time in this current running race in the broadcast message
+== 방송 메시지에 현재 진행 중인 레이스의 당신 시간을 개인적으로 표시
+
+Profiles
+== 프로필
+
+Profiles file
+== 프로필 파일
+
+Progress bar color
+== 진행 표시줄 색상
+
+Progress bar height
+== 진행 표시줄 높이
+
+Progress bar width
+== 진행 표시줄 너비
+
+Publicly messages everyone your current time in this current running race
+== 현재 진행 중인 레이스의 당신 시간을 모든 사람에게 공개 메시지로 보냄
+
+Pulse
+== 펄스
+
+Pulse amplitude
+== 펄스 진폭
+
+Pulse speed
+== 펄스 속도
+
+Pulse strength
+== 펄스 강도
+
+Push radius
+== 밀기 반경
+
+Push strength
+== 밀기 강도
+
+Push-to-talk for voice chat
+== 음성 채팅 푸시투토크
+
+Puts you into deep freeze
+== 깊은 빙결 상태로 만듦
+
+Puts you into freeze
+== 빙결 상태로 만듦
+
+Puts you into solo part
+== 솔로 파트로 만듦
+
+Puts you out of deep freeze
+== 깊은 빙결 상태에서 해제
+
+Puts you out of freeze
+== 빙결 상태에서 해제
+
+Puts you out of live freeze
+== 라이브 빙결 상태에서 해제
+
+Puts you out of solo part
+== 솔로 파트에서 해제
+
+Pyramid
+== 피라미드
+
+q = Connection quality
+== q = 연결 품질
+
+Qm
+== 큐엠
+
+qm_profile_queue: index must be between 1 and %d
+== qm_profile_queue: 인덱스는 1에서 %d 사이여야 합니다
+
+QmClient
+== QmClient
+
+QmClient chat log
+== QmClient 채팅 로그
+
+QmClient Community
+== QmClient 커뮤니티
+
+QmClient online distribution
+== QmClient 온라인 분포
+
+QmClient overview
+== QmClient 개요
+
+QmClient Settings
+== QmClient 설정
+
+QQ group: 1076765929 (click to copy)
+== QQ 그룹: 1076765929 (클릭하여 복사)
+
+Quads are used for background decoration
+== 배경 장식에 사용되는 쿼드 표시
+
+Queue is empty
+== 대기열이 비어 있음
+
+Quick action menu for players
+== 플레이어 빠른 작업 메뉴
+
+Quickly locate feature modules
+== 기능 모듈 빠르게 찾기
+
 Quit
 == 종료
 
+Quit the client
+== 클라이언트 종료
+
+Quitting. Please wait…
+== 종료 중입니다. 잠시 기다려 주세요…
+
+r = Race time
+== r = 레이스 시간
+
+Race
+== 레이스
+
+Race Time
+== 레이스 시간
+
+Rainbow
+== 무지개
+
+Rainbow hook
+== 무지개 갈고리
+
+Rainbow name
+== 무지개 이름
+
+Rainbow others
+== 모두에게 무지개 적용
+
+Rainbow speed
+== 색상 변화 속도
+
+Rainbow Tees
+== 무지개 티
+
+Rainbow weapons
+== 무지개 무기
+
+Random
+== 무작위
+
+Random Colors
+== 무작위 색상
+
+Random emoticon
+== 무작위 이모티콘
+
+Random map
+== 무작위 맵
+
+Random pick
+== 무작위 선택
+
+Random unfinished map
+== 무작위 미완료 맵
+
+Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
+== 플레이어 색상 무작위화 (0 = 전체, 1 = 몸, 2 = 발, 3 = 스킨, 4 = 깃발) 예: 0011 = 스킨과 깃발 무작위화 [숫자는 위치]
+
+Ratio
+== 비율
+
+Reason
+== 이유
+
 Reason:
-== 이유:
+== 사유:
+
+Rebinds the client's listening address and port
+== 클라이언트의 수신 주소와 포트를 다시 바인딩
+
+Receive
+== 수신
+
+Receive Rate
+== 수신 속도
+
+Receive rate
+== 수신 속도
+
+Receiving
+== 수신 중
+
+Reconnect in %d sec
+== %d초 후 재연결
+
+Record demo
+== 데모 녹화
+
+Record to a file
+== 파일에 기록
+
+Red
+== 빨간색
 
 Red team
-== 레드팀
+== 레드 팀
 
 Red team wins!
-== 레드팀 승리!
+== 레드 팀 승리!
+
+Refresh
+== 새로고침
+
+Refresh interval
+== 새로고침 간격
+
+Refresh Rate
+== 재생률
+
+Regex
+== 정규식
+
+Region
+== 지역
+
+Regular background color
+== 일반 배경색
+
+Regular expression
+== 정규 표현식
+
+Relative path
+== 상대 경로
+
+Reload
+== 다시 불러오기
+
+Reload the announcements
+== 공지사항 다시 불러오기
+
+Reload the censorlist
+== 검열 목록 다시 불러오기
+
+Reload the map
+== 맵 다시 불러오기
+
+Reload the map while preserving the state of tees and teams
+== 티와 팀 상태를 유지하면서 맵 다시 불러오기
+
+Reload the maplist
+== 맵 목록 다시 불러오기
+
+Reloaded images.
+== 이미지를 다시 불러왔습니다.
+
+Reloaded images. %d slot(s) fell back to main asset.
+== 이미지를 다시 불러왔습니다. %d개 슬롯이 기본 에셋으로 대체되었습니다.
 
 Remote console
 == 원격 콘솔
 
+Remote particle effects
+== 원격 파티클 효과
+
 Remove
 == 제거
 
+Remove [group] [clan]:
+== 제거 [그룹] [클랜]:
+
+Remove [group] [name]:
+== 제거 [그룹] [이름]:
+
+Remove a bind from the bindwheel
+== 바인드휠에서 바인드 제거
+
+Remove a chat bind
+== 채팅 바인드 제거
+
+Remove a clan war entry
+== 클랜 적대 항목 제거
+
+Remove a community from the exclusion filter
+== 제외 필터에서 커뮤니티 제거
+
+Remove a community from the favorites
+== 즐겨찾기에서 커뮤니티 제거
+
+Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
+== 특정 커뮤니티의 제외 필터에서 국가 제거 (ISO 3166-1 숫자 코드)
+
+Remove a foe
+== 적 제거
+
+Remove a friend
+== 친구 삭제
+
+Remove a friend category
+== 친구 카테고리 삭제
+
+Remove a map from favorites
+== 즐겨찾기에서 맵 제거
+
+Remove a name war entry
+== 이름 적대 항목 제거
+
+Remove a rcon key
+== rcon 키 삭제
+
+Remove a server from favorites
+== 즐겨찾기에서 서버 제거
+
+Remove a skin from the favorites
+== 즐겨찾기에서 스킨 제거
+
+Remove a type from the exclusion filter for a specific community
+== 특정 커뮤니티의 제외 필터에서 유형 제거
+
+remove a voting option
+== 투표 옵션 제거
+
+Remove Bind
+== 바인드 제거
+
+Remove chat
+== 채팅 제거
+
 Remove friend
-== 친구 제거
+== 친구 삭제
+
+Remove from favorites
+== 즐겨찾기에서 제거
+
+Remove from queue
+== 대기열에서 제거
+
+Remove Item
+== 항목 제거
+
+Remove prediction & antiping in freeze
+== 얼음 상태에서 예측 및 안티핑 제거
+
+Remove right to vote from player with client ID
+== 클라이언트 ID를 가진 플레이어의 투표권 제거
+
+Remove right to vote from player with IP address
+== IP 주소를 가진 플레이어의 투표권 제거
+
+Remove team clan:
+== 팀 클랜 제거:
+
+Remove team name:
+== 팀 이름 제거:
+
+Remove war clan:
+== 적대 클랜 제거:
+
+Remove War Group
+== 적대 그룹 제거
+
+Remove war name:
+== 적대 이름 제거:
+
+Removed %s from friends
+== %s 님을 친구에서 제거했습니다
+
+Removes all bindwheel binds
+== 모든 바인드휠 바인드 제거
+
+Removes all chat binds
+== 모든 채팅 바인드 제거
+
+Removes all weapons from you
+== 모든 무기 제거
+
+Removes endless hook from you
+== 무한 후크 제거
+
+Removes infinite jump from you
+== 무한 점프 제거
+
+Removes ninja from you
+== 닌자 제거
+
+Removes super from you
+== 슈퍼 상태 제거
+
+Removes the grenade launcher from you
+== 유탄 발사기 제거
+
+Removes the jetpack from you
+== 제트팩 제거
+
+Removes the laser from you
+== 레이저 제거
+
+Removes the shotgun from you
+== 샷건 제거
+
+removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
+== ID i의 무기 제거 (전체 = -1, 망치 = 0, 총 = 1, 샷건 = 2, 유탄 = 3, 레이저 = 4, 닌자 = 5)
+
+Rename
+== 이름 바꾸기
+
+Rename a friend category
+== 친구 카테고리 이름 바꾸기
 
 Rename demo
-== 데모 이름 변경
+== 데모 이름 바꾸기
+
+Rename folder
+== 폴더 이름 바꾸기
+
+Rename queue
+== 이름 변경 대기열
+
+Rename screenshot
+== 스크린샷 이름 바꾸기
+
+Rename: %s
+== 이름 바꾸기: %s
+
+Render all custom colored feet as white feet skin
+== 모든 사용자 지정 발 색상을 흰색 발 스킨으로 렌더링
+
+Render complete
+== 렌더링 완료
+
+Render cut to video
+== 잘라낸 구간을 비디오로 렌더링
+
+Render demo
+== 데모 렌더링
+
+Render ghosts as circles
+== 고스트를 원으로 렌더링
+
+Render tiny tees instead of circles
+== 원 대신 작은 티로 렌더링
+
+Renderer
+== 렌더러
+
+Renders your frame rate in the top right
+== 오른쪽 상단에 프레임 속도 표시
+
+Repeat message
+== 메시지 반복
+
+Repeat the latest chat message
+== 최신 채팅 메시지 반복
+
+Replace mode
+== 교체 모드
+
+Replace non-friend names with ID
+== 친구가 아닌 이름을 ID로 교체
+
+Replace non-friend skins with default
+== 친구가 아닌 스킨을 기본 스킨으로 교체
+
+Replace video
+== 비디오 교체
+
+Replacement chars
+== 교체 문자
+
+Replay
+== 리플레이
+
+Replay feature is disabled!
+== 리플레이 기능이 비활성화되었습니다!
+
+Reply
+== 답장
+
+Reply with dummy
+== 더미로 답장
+
+Report
+== 신고
+
+Report request canceled
+== 신고 요청이 취소되었습니다
+
+Report request failed due to network error
+== 네트워크 오류로 신고 요청이 실패했습니다
+
+Report request failed with HTTP status: %d
+== 신고 요청 실패, HTTP 상태 코드: %d
+
+Report request is already in progress
+== 신고 요청을 처리 중입니다
+
+Report scan request submitted
+== 신고 스캔 요청을 제출했습니다
+
+Reports are not available on Axiom servers
+== Axiom 서버에서는 신고 기능을 사용할 수 없습니다
+
+Request to swap your tee with another team member
+== 다른 팀원과 티 교체 요청
+
+Requesting to join the game
+== 게임 참가 요청 중
+
+Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
+== 이 서버에서는 rescue가 활성화되지 않았으며, /practice가 켜진 팀에 속해 있지 않습니다. 연습 모드에서는 랭크를 획득할 수 없습니다.
+
+Rescue mode switched to %s
+== 구출 모드가 %s(으)로 전환됨
+
+Rescue to a nearby air tile
+== 근처 공기 타일로 구조
+
+Rescue/Freeze: %d/%d
+== 구조/빙결: %d/%d
+
+Resend Loss
+== 재전송 손실
+
+Resend loss
+== 재전송 손실
+
+Resend signs detected, connection quality is suspicious
+== 재전송 징후가 감지되어 연결 품질이 의심됨
+
+Reset
+== 초기화
+
+Reset a config to its default value
+== 설정을 기본값으로 초기화
+
+Reset All
+== 모두 초기화
+
+Reset all drawings on the background
+== 배경의 모든 그림 초기화
+
+Reset all or one tuning variable to default
+== 모든 또는 하나의 튜닝 변수를 기본값으로 초기화
+
+Reset column widths
+== 열 너비 초기화
+
+Reset controls
+== 컨트롤 초기화
+
+Reset default
+== 기본값으로 초기화
+
+Reset dummy
+== 더미 초기화
 
 Reset filter
 == 필터 초기화
+
+Reset layout
+== 레이아웃 초기화
+
+Reset position of mouse when opening bindwheel
+== 바인드휠 열 때 마우스 위치 초기화
+
+Reset stats when joining a server
+== 서버 접속 시 통계 초기화
+
+Reset to defaults
+== 기본값으로 재설정
+
+Reset zone tuning in zone x or in all zones
+== 영역 x 또는 모든 영역의 영역 튜닝 초기화
+
+Restart
+== 다시 시작
+
+Restart in x seconds (0 = abort)
+== x초 후 재시작 (0 = 중단)
+
+Restart the client
+== 클라이언트 재시작
+
+Restarting. Please wait…
+== 다시 시작 중입니다. 잠시 기다려 주세요…
+
+Rifle Laser Inner Color
+== 라이플 레이저 내부 색상
+
+Rifle Laser Outline Color
+== 라이플 레이저 외곽선 색상
+
+Right jump
+== 오른쪽 점프
+
+Right-click to disable auto-translate
+== 우클릭하여 자동 번역 비활성화
+
+Right-click to enable auto-translate
+== 우클릭하여 자동 번역 활성화
+
+Ring
+== 링
+
+RNNoise noise reduction
+== RNNoise 노이즈 감소
+
+RNNoise noise reduction (unavailable in this build)
+== RNNoise 노이즈 감소 (이 빌드에서는 사용 불가)
+
+RNNoise noise reduction strength
+== RNNoise 노이즈 감소 강도
+
+RNNoise not integrated in current build, will fallback to simple noise reduction
+== 현재 빌드에 RNNoise가 통합되지 않음, 단순 노이즈 감소로 대체됨
+
+Rollback rate
+== 롤백 비율
+
+Room
+== 방
+
+Room password
+== 방 비밀번호
+
+Rotate all server player skins
+== 서버의 모든 플레이어 스킨 순환
+
+Round
+== 라운드
+
+Round %d/%d
+== 라운드 %d/%d
+
+Rounded caps
+== 둥근 끝
+
+Route Echo messages to notifications
+== Echo 메시지를 알림으로 전달
+
+Run chai script
+== chai 스크립트 실행
+
+Run on join
+== 접속 시 실행
+
+Run server
+== 서버 실행
+
+SA
+== 남미
+
+Same as "vote no"
+== "반대 투표"와 동일
+
+Same clan color in scoreboard
+== 점수판에서 같은 클랜 색상
+
+Sat.
+== 채도
+
+Save
+== 저장
+
+Save a replay of the last defined amount of seconds
+== 마지막으로 지정된 초의 리플레이 저장
+
+Save all changes before switching selected button?
+== 선택한 버튼을 전환하기 전에 모든 변경사항을 저장하시겠습니까?
+
+Save all changes before turning off the editor?
+== 편집기를 닫기 전에 모든 변경 사항을 저장하시겠습니까?
+
+Save asset before closing?
+== 닫기 전에 에셋을 저장하시겠습니까?
+
+Save banlist in a file
+== 차단 목록을 파일에 저장
+
+Save changes
+== 변경사항 저장
+
+Save current
+== 현재 저장
+
+Save current queue as a new preset
+== 현재 대기열을 새 프리셋으로 저장
+
+Save drawings to a given csv file (defaults to map name)
+== 그림을 지정된 CSV 파일에 저장 (기본값: 맵 이름)
+
+Save failed!
+== 저장 실패!
+
+Save ghost
+== 고스트 저장
+
+Save last %d min
+== 마지막 %d분 저장
+
+Save power by lowering refresh rate (higher input latency)
+== 재생률을 낮춰 전력 절약 (입력 지연 증가)
+
+Save skin
+== 스킨 저장
+
+Save team with code r.
+== 코드 r로 팀 저장
+
+Save the best demo of each race
+== 각 레이스의 최고 데모 저장
+
+Save unsent chat draft
+== 전송되지 않은 채팅 초안 저장
+
+Save-function is disabled on this server
+== 이 서버에서는 저장 기능이 비활성화됨
+
+Save/Load Clan
+== 클랜 저장/불러오기
+
+Save/Load Colors
+== 색상 저장/불러오기
+
+Save/Load Emote
+== 이모트 저장/불러오기
+
+Save/Load Flag
+== 국기 저장/불러오기
+
+Save/Load Name
+== 이름 저장/불러오기
+
+Save/Load Skin
+== 스킨 저장/불러오기
+
+Saves file
+== 파일 저장
+
+Say in chat
+== 채팅으로 말하기
+
+Say in chat as inactive tee
+== Say in chat as inactive tee
+
+Say in team chat
+== 팀 채팅으로 말하기
+
+Say in team chat as inactive tee
+== Say in team chat as inactive tee
+
+Scanning current server
+== 현재 서버를 스캔 중
+
+Scanning current server...
+== 현재 서버를 스캔 중……
 
 Score
 == 점수
@@ -304,95 +5491,2108 @@ Score limit
 Scoreboard
 == 점수판
 
+Scoreboard color
+== 점수판 색상
+
+Scoreboard cursor
+== 점수판 커서
+
+Scoreboard opacity
+== 점수판 불투명도
+
+Scoreboard point check
+== 점수판 점수 확인
+
+Scores are private on this server
+== 이 서버에서는 점수가 비공개임
+
+Scores are public on this server
+== 이 서버에서는 점수가 공개됨
+
+Screen
+== 화면
+
+Screen center line color
+== 화면 중심선 색상
+
+Screen center line width
+== 화면 중심선 두께
+
 Screenshot
 == 스크린샷
+
+Screenshots
+== 스크린샷
+
+Screenshots directory
+== 스크린샷 디렉터리
+
+Scroll long lines
+== Scroll long lines
+
+Scroll speed
+== Scroll speed
+
+Search
+== 검색
+
+Search donor asset
+== 기증자 에셋 검색
+
+Search main asset
+== 메인 에셋 검색
+
+Searching
+== 검색 중
+
+Secondary
+== 보조
+
+Seconds
+== 초
+
+SecretId
+== 시크릿 ID
+
+SecretKey
+== 시크릿 키
+
+See how much you act
+== 당신이 얼마나 연기하는지 확인
+
+Select a preset first
+== 먼저 프리셋 선택
+
+Select all chat
+== 모든 채팅 선택
+
+Select button by touch
+== 터치로 버튼 선택
+
+Select export
+== 내보내기 선택
+
+Select this preset to edit it
+== 이 프리셋을 선택해 편집
+
+Selected %d
+== %d개 선택됨
+
+Selected button not visible
+== 선택한 버튼이 보이지 않음
+
+Selected candidate
+== 선택된 후보
+
+Selected candidate %d/%d under cursor.
+== 커서 아래 선택된 후보 %d/%d.
+
+Selected pack
+== 선택된 팩
+
+Selected server
+== 선택한 서버
+
+Selected timertype is not supported by your client
+== 선택한 타이머 유형이 클라이언트에서 지원되지 않음
+
+Selection
+== 선택 항목
+
+Self
+== 자신
+
+Self only
+== 자신만
+
+Send
+== 송신
+
+Send & Receive
+== 보내기 및 받기
+
+Send /load as inactive tee
+== Send /load as inactive tee
+
+Send /lock as inactive tee
+== Send /lock as inactive tee
+
+Send /pause as inactive tee
+== Send /pause as inactive tee
+
+Send /rescue as inactive tee
+== Send /rescue as inactive tee
+
+Send /save as inactive tee
+== Send /save as inactive tee
+
+Send /spec as inactive tee
+== Send /spec as inactive tee
+
+Send /team as inactive tee
+== Send /team as inactive tee
+
+Send a moderator alert message to player
+== 플레이어에게 중재자 경고 메시지 보내기
+
+Send a server alert message to all players
+== 모든 플레이어에게 서버 경고 메시지 보내기
+
+Send emoticon in water
+== 물 속에서 이모티콘 보내기
+
+Send probability
+== 전송 확률
+
+Send Rate
+== 전송 속도
+
+Send rate
+== 전송 속도
+
+Send source language
+== 보내는 원본 언어
+
+Send specified command to rcon
+== 지정된 명령을 rcon으로 보내기
+
+Send target language
+== 보내는 대상 언어
+
+Send translation method
+== 번역 방식 보내기
+
+Sending and receiving
+== 보내고 받는 중
+
+Sending initial client info
+== 초기 클라이언트 정보 전송 중
+
+Sending locally, suggest the other party unmute or confirm they can receive
+== 로컬에서 전송 중, 상대방이 음소거 해제하거나 수신 가능한지 확인 요청
+
+Sending, waiting for peer echo
+== 전송 중, 피어 에코 대기 중
+
+Sends a command to the antibot
+== 안티봇에 명령 보내기
+
+Separate with commas
+== 쉼표로 구분
+
+Server
+== 서버
 
 Server address:
 == 서버 주소:
 
+Server alert
+== 서버 알림
+
+Server best:
+== 서버 최고 기록:
+
+Server could not be started
+== 서버를 시작할 수 없습니다
+
+Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
+== 서버를 시작할 수 없습니다. 서버가 백그라운드에서 실행될 수 있도록 앱 설정에서 알림 권한을 부여했는지 확인하세요.
+
+Server does not allow voting to kick players
+== 서버에서 플레이어 추방 투표를 허용하지 않음
+
+Server does not allow voting to move players to spectators
+== 서버에서 플레이어를 관전자로 이동 투표를 허용하지 않음
+
+Server executable not found, can't run server
+== 서버 실행 파일을 찾을 수 없어 서버를 실행할 수 없습니다
+
+Server filter
+== 서버 필터
+
 Server info
 == 서버 정보
 
+Server IP
+== 서버 IP
+
+Server kick/spec votes are no longer actively moderated.
+== 서버의 추방/관전 투표가 더 이상 적극적으로 관리되지 않음
+
+Server kick/spec votes will now be actively moderated.
+== 서버의 추방/관전 투표가 이제 적극적으로 관리됨
+
 Server not full
-== 빈 자리가 있는 서버
+== 서버가 가득 차지 않음
+
+Server rollback
+== 서버 롤백
+
+Server RTT is elevated, response path is unstable
+== 서버 RTT가 높고 응답 경로가 불안정함
+
+Set a voice server to enable QmClient distribution
+== QmClient 분포를 활성화하려면 음성 서버를 설정하세요
+
+Set all to Rifle
+== 모두 라이플로 설정
+
+Set camera position relative to current view in the map
+== 맵의 현재 보기를 기준으로 카메라 위치 설정
+
+Set camera position to x and y in the map
+== 맵에서 카메라 위치를 x와 y로 설정
+
+Set color
+== 색상 설정
+
+Set current demo speed
+== 현재 데모 속도 설정
+
+Set ddrace team for a player
+== 플레이어의 DDRace 팀 설정
+
+Set force-pause timer of i to 0.
+== i의 강제 일시정지 타이머를 0으로 설정
+
+Set friend category
+== 친구 카테고리 설정
+
+Set friend note
+== 친구 메모 설정
+
+Set microphone mute state (0=on, 1=mute)
+== 마이크 음소거 상태 설정 (0=켜짐, 1=음소거)
+
+Set team for a player (spectators = -1, game = 0)
+== 플레이어 팀 설정 (관전 = -1, 게임 = 0)
+
+Set team for all players (spectators = -1, game = 0)
+== 모든 플레이어 팀 설정 (관전 = -1, 게임 = 0)
+
+Set timeout protection code s
+== 타임아웃 보호 코드 s 설정
+
+Set voice input device
+== 음성 입력 장치 설정
+
+Set voice output device
+== 음성 출력 장치 설정
+
+Set your checkpoints based on another player
+== 다른 플레이어를 기준으로 체크포인트 설정
+
+Sets one of the two rescue modes (auto or manual). Prints current mode if no arguments provided
+== 두 가지 구조 모드(자동 또는 수동) 중 하나를 설정합니다. 인수가 제공되지 않으면 현재 모드를 출력합니다.
+
+Sets your tee's eye emote
+== 티의 눈 이모트를 설정합니다.
+
+Settings
+== 설정
+
+Settings file
+== 설정 파일
+
+Severe
+== 심각
+
+Shape
+== 모양
 
 Shotgun
-== 산탄총
+== 샷건
+
+Shotgun Laser Inner Color
+== 샷건 레이저 내부 색상
+
+Shotgun Laser Outline Color
+== 샷건 레이저 외곽선 색상
+
+Show %s group
+== %s 그룹 표시
+
+Show all
+== 모두 표시
+
+Show all buttons
+== 모든 버튼 표시
+
+Show all enabled outlines
+== 활성화된 모든 윤곽선 표시
+
+Show all votes (page 0 by default, 20 entries per page)
+== 모든 투표 표시 (기본 0페이지, 페이지당 20개 항목)
+
+Show all warlist groups
+== 모든 적대 목록 그룹 표시
+
+Show any enabled Indicators
+== 활성화된 표시기 표시
+
+Show background quads
+== 배경 쿼드 표시
+
+Show banlist (page 1 by default, 20 entries per page)
+== 차단 목록 표시 (기본 1페이지, 페이지당 20개 항목)
+
+Show basic server information
+== 기본 서버 정보 표시
+
+Show blocked words in console
+== 차단된 단어를 콘솔에 표시
 
 Show chat
 == 채팅 표시
 
+Show chat bubbles above players
+== 플레이어 위에 채팅 풍선 표시
+
+Show chat bubbles above Tees
+== 티 위에 채팅 풍선 표시
+
+Show chat messages above players
+== 플레이어 위에 채팅 메시지 표시
+
+Show clan above name plates
+== 이름표 위에 클랜 표시
+
+Show clan if war
+== 적대 관계 시 클랜 표시
+
+Show client IDs (scoreboard, chat, spectating)
+== 클라이언트 ID 표시 (점수판, 채팅, 관전)
+
+Show client IDs in name plates
+== 이름표에 클라이언트 ID 표시
+
+Show client IDs on a separate line
+== 클라이언트 ID를 별도 줄에 표시
+
+Show collision and weapon interaction
+== 충돌 및 무기 상호작용 표시
+
+Show colors in spectator selection
+== 관전 선택에서 색상 표시
+
+Show compact vote HUD
+== 소형 투표 HUD 표시
+
+Show Coordinates
+== 좌표 표시
+
+Show coordinates above players
+== 플레이어 위에 좌표 표시
+
+Show coordinates of yourself and others
+== 자신과 다른 사람의 좌표 표시
+
+Show country flags in nameplates
+== 이름표에 국가 국기 표시
+
+Show current and next lyric lines on HUD
+== Show current and next lyric lines on HUD
+
+Show DDNet map finishes in server browser
+== 서버 브라우저에서 DDNet 맵 완료 표시
+
+Show DDRace HUD
+== DDRace HUD 표시
+
+Show Directory
+== 디렉터리 표시
+
+Show dotted map route debug
+== 점선 맵 경로 디버그 표시
+
+Show dummy actions
+== 더미 동작 표시
+
+Show dummy control status
+== 더미 제어 상태 표시
+
+Show dummy sync status
+== 더미 동기화 상태 표시
+
+Show entities
+== 엔티티 표시
+
+Show finish messages
+== 완료 메시지 표시
+
+Show FPS
+== FPS 표시
+
+Show freeze bars
+== 얼음 해제 진행바 표시
+
+Show friend icon in name plates
+== 이름표에 친구 아이콘 표시
+
 Show friends only
-== 친구가 있는 서버
+== 친구만 표시
+
+Show ghost
+== 고스트 표시
+
+Show grenade and laser trajectory preview
+== 수류탄 및 레이저 궤적 미리보기 표시
+
+Show Grid
+== 그리드 표시
+
+Show hammer status
+== 해머 상태 표시
+
+Show health, shields and ammo
+== 체력, 방어력, 탄약 표시
+
+Show hitbox mode
+== 히트박스 모드 표시
+
+Show Hook Collision
+== 훅 충돌 표시
+
+Show hook strength icon indicator
+== 갈고리 강도 아이콘 표시
+
+Show hook strength number indicator
+== 갈고리 강도 숫자 표시
+
+Show HUD
+== HUD 표시
+
+Show important server prompts
+== 중요한 서버 알림 표시
+
+Show important server prompts and Echo messages as popups
+== 중요한 서버 알림과 Echo 메시지를 팝업으로 표시
+
+Show important server prompts as notifications
+== 중요한 서버 알림을 알림으로 표시
+
+Show info about the map with name r gives (current map by default)
+== 이름이 r인 맵에 대한 정보 표시 (기본값은 현재 맵)
+
+Show information about this server
+== 이 서버에 대한 정보 표시
 
 Show ingame HUD
-== 게임 내 HUD 표시
+== 인게임 HUD 표시
+
+Show inputs
+== 입력 표시
+
+Show IP addresses in rcon commands (1 = on, 0 = off)
+== rcon 명령에 IP 주소 표시 (1 = 켜기, 0 = 끄기)
+
+Show jumps indicator
+== 점프 횟수 표시
+
+Show katan on frozen players
+== 얼린 플레이어에 카타나 표시
+
+Show key stuck status
+== 키 고정 상태 표시
+
+Show kill messages
+== 처치 메시지 표시
+
+Show labels on status bar items
+== 상태 표시줄 항목에 레이블 표시
+
+Show list of mutes (page 1 by default, 20 entries per page)
+== 음소거 목록 표시 (기본 1페이지, 페이지당 20개 항목)
+
+Show list of vote mutes (page 1 by default, 20 entries per page)
+== 투표 음소거 목록 표시 (기본 1페이지, 페이지당 20개 항목)
+
+Show local time always
+== 항상 로컬 시간 표시
+
+Show logs of the last i seconds
+== 마지막 i초의 로그 표시
+
+Show moving tiles in entities
+== 엔티티에 움직이는 타일 표시
 
 Show name plates
-== 이름 표시
+== 이름표 표시
+
+Show names in chat in team colors
+== 채팅에서 팀 색상으로 이름 표시
+
+Show number of spectators
+== 관전자 수 표시
+
+Show on key
+== 키에 표시
+
+Show only chat messages from friends
+== 친구 채팅 메시지만 표시
+
+Show only chat messages from team members
+== 팀 채팅 메시지만 표시
+
+Show only freeze Players
+== 얼린 플레이어만 표시
+
+Show other players' coordinates
+== 다른 플레이어의 좌표 표시
+
+Show other players' hook collision lines
+== 다른 플레이어의 갈고리 충돌선 표시
+
+Show other tees' trails
+== 다른 티의 궤적 표시
+
+Show others
+== 다른 플레이어 표시
+
+Show others (own team only)
+== 다른 플레이어 표시 (자신 팀만)
+
+Show outdated version warning
+== 오래된 버전 경고 표시
+
+Show own coordinates
+== 자신의 좌표 표시
+
+Show own player's hook collision line
+== 자신의 갈고리 충돌선 표시
+
+Show ping colored circle in nameplates
+== 이름표에 핑 색상 원 표시
+
+Show player position
+== 플레이어 위치 표시
+
+Show player speed
+== 플레이어 속도 표시
+
+Show player stats HUD
+== 플레이어 통계 HUD 표시
+
+Show player target angle
+== 플레이어 조준 각도 표시
+
+Show players' key presses
+== 플레이어 키 입력 표시
+
+Show position and angle (mini debug)
+== 위치와 각도 표시 (미니 디버그)
+
+Show Qm badge
+== Qm 배지 표시
+
+Show score
+== 점수 표시
+
+Show scoreboard
+== 점수판 표시
+
+Show seconds on clock
+== 시계에 초 표시
+
+Show server help and usage messages
+== 서버 도움말 및 사용법 메시지 표시
+
+Show skin names in nameplate
+== 이름표에 스킨 이름 표시
+
+Show song info in top-left corner
+== 왼쪽 상단에 노래 정보 표시
+
+Show spectator cursor
+== 관전자 커서 표시
+
+Show sponsor QR code
+== 스폰서 QR 코드 표시
+
+Show stats
+== 통계 표시
+
+Show status bar
+== 상태 표시줄 표시
+
+Show team
+== 팀 표시
+
+Show tee status bar
+== 티 상태 표시줄 표시
+
+Show Tee, map, and weapon interaction hitboxes
+== Tee, 맵, 무기 상호작용 히트박스 표시
+
+Show text entities
+== 텍스트 엔티티 표시
+
+Show the cursor while free spectating
+== 자유 관전 중 커서 표시
+
+Show the number of frozen tees
+== 얼린 티 수 표시
+
+Show the number of tees still alive
+== 살아있는 티 수 표시
+
+Show the pet
+== 펫 표시
+
+Show the screen center line
+== 화면 중심선 표시
+
+Show the server rules
+== 서버 규칙 표시
+
+Show tiles layers from BG map
+== BG 맵의 타일 레이어 표시
+
+Show toast
+== 토스트 표시
+
+Show unknown server messages
+== 알 수 없는 서버 메시지 표시
+
+Show unpredicted ghosts for other players
+== 다른 플레이어의 예측되지 않은 고스트 표시
+
+Show voice connection status
+== 음성 연결 상태 표시
+
+Show votes window after voting
+== 투표 후 투표 창 표시
+
+Show wake-up popup on the other tee
+== 다른 Tee에 깨우기 팝업 표시
+
+Show weapon trajectory guide
+== 무기 궤적 가이드 표시
+
+Show Workshop Assets
+== 워크샵 에셋 표시
+
+Show X
+== X 표시
+
+Show Y
+== Y 표시
+
+Showing players from other teams is disabled
+== 다른 팀 플레이어 표시가 비활성화되었습니다
+
+Showing the checkpoint times for '%s' with a race time of %s
+== '%s'의 체크포인트 시간을 표시 중, 현재 기록 %s
+
+Showing the checkpoint times is not allowed on this server.
+== 이 서버에서는 체크포인트 시간을 볼 수 없습니다.
+
+Showing the global points of other players is not allowed on this server.
+== 이 서버에서는 다른 플레이어의 글로벌 포인트를 볼 수 없습니다.
+
+Showing the global top points is not allowed on this server.
+== 이 서버에서는 글로벌 포인트 순위를 볼 수 없습니다.
+
+Showing the rank of other players is not allowed on this server.
+== 이 서버에서는 다른 플레이어의 순위를 볼 수 없습니다.
+
+Showing the team rank of other players is not allowed on this server.
+== 이 서버에서는 다른 플레이어의 팀 순위를 볼 수 없습니다.
+
+Showing the team top 5 is not allowed on this server.
+== 이 서버에서는 팀 상위 5위를 볼 수 없습니다.
+
+Showing the times of others is not allowed on this server.
+== 이 서버에서는 다른 플레이어의 기록을 볼 수 없습니다.
+
+Showing the top is not allowed on this server.
+== 이 서버에서는 순위표를 볼 수 없습니다.
+
+Shows five points of the global point ladder beginning with rank i (1 by default)
+== 랭크 i부터 전역 포인트 순위 5개를 표시합니다 (기본값 1)
+
+Shows five team ranks of the ladder or of a player beginning with rank i (1 by default, -1 for worst)
+== 랭크 i부터 순위표 또는 플레이어의 팀 순위 5개를 표시합니다 (기본값 1, 최하위는 -1)
+
+Shows gameplay information for this server
+== 이 서버의 게임플레이 정보 표시
+
+Shows help to command r, general help if left blank
+== 명령어 r에 대한 도움말 표시, 비워두면 일반 도움말 표시
+
+Shows the credits of the DDNet mod
+== DDNet 모드의 크레딧 표시
+
+Shows the global points of a player beginning with name r (your rank by default)
+== 이름이 r로 시작하는 플레이어의 글로벌 포인트 표시 (기본값은 당신의 순위)
+
+Shows the rank of player with name r (your rank by default)
+== 이름이 r인 플레이어의 순위 표시 (기본값은 당신의 순위)
+
+Shows the team rank of player with name r (your team rank by default)
+== 이름이 r인 플레이어의 팀 순위 표시 (기본값은 당신의 팀 순위)
+
+Shows the top ranks of the global and regional ladder beginning with rank i (1 by default, -1 for worst)
+== 순위 i부터 시작하는 글로벌 및 지역 래더의 상위 순위 표시 (기본값 1, -1은 최하위)
+
+Shrink
+== 축소
+
+Shrug:
+== 어깨 으쓱:
+
+Shut down
+== 종료
+
+Silently disconnect from the current server while keeping Tee timeout protection
+== Tee 타임아웃 보호를 유지하면서 현재 서버에서 자동 연결 해제
+
+Simple
+== 간단
+
+Simple noise reduction
+== 간단한 노이즈 감소
+
+Simple noise reduction strength
+== 간단한 노이즈 감소 강도
+
+Size
+== 크기
+
+Size of hook strength icon and number indicator
+== 갈고리 강도 아이콘 및 숫자 표시 크기
+
+Size of key press icons
+== 키 입력 아이콘 크기
+
+Skin
+== 스킨
+
+Skin could not be found.
+== 스킨을 찾을 수 없습니다.
+
+Skin could not be loaded due to an error. Check the local console for details.
+== 오류로 인해 스킨을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
+Skin Database
+== 스킨 데이터베이스
+
+Skin is loading.
+== 스킨을 불러오는 중입니다.
+
+Skin prefix
+== 스킨 접두사
+
+Skin queue
+== 스킨 대기열
+
+Skin transition
+== 스킨 전환
+
+Skin transition duration
+== 스킨 전환 지속 시간
+
+Skin transition type
+== 스킨 전환 유형
+
+Skin: %s
+== 스킨: %s
+
+Skins directory
+== 스킨 디렉터리
+
+Skip the main menu
+== 메인 메뉴 건너뛰기
+
+Skip Tutorial
+== 튜토리얼 건너뛰기
+
+Slide left
+== 왼쪽으로 슬라이드
+
+Slow down the demo
+== 데모 속도 느리게
+
+Smaller tees
+== 작은 티
+
+Smooth Dynamic Camera
+== 부드러운 동적 카메라
+
+Smooth fade
+== 부드러운 페이드
+
+SMTC
+== 시스템 미디어 컨트롤
+
+Snap threshold
+== Snap threshold
+
+Snapshot Latency
+== 스냅샷 지연
+
+Social
+== 소셜
+
+Solid
+== 단색
+
+Solid tile outline opacity
+== 고체 타일 윤곽선 불투명도
+
+Solo
+== 솔로
+
+Some fonts could not be loaded. Check the local console for details.
+== 일부 글꼴을 로드할 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
+Some map images could not be loaded. Check the local console for details.
+== 일부 맵 이미지를 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
+Some map sounds could not be loaded. Check the local console for details.
+== 일부 맵 사운드를 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
+
+Something hookable
+== 갈고리 가능 블록
 
 Sound
-== 소리
+== 사운드
 
 Sound error
-== 소리 오류
+== 사운드 오류
+
+Sound volume
+== 사운드 볼륨
+
+Source file does not exist.
+== 소스 파일이 존재하지 않습니다.
+
+Source file is empty.
+== 소스 파일이 비어 있습니다.
+
+Space
+== 간격
+
+Speaker
+== 스피커
+
+Specify command accessibility for given access level
+== 지정된 접근 수준에 대한 명령어 접근성 지정
 
 Spectate
 == 관전
 
-Spectator mode
-== 관전자 모드
+Spectate a player by Id
+== ID로 플레이어 관전
+
+Spectate mode
+== 관전 모드
+
+Spectate next
+== 다음 관전
+
+Spectate previous
+== 이전 관전
+
+Spectate teleport
+== 관전 순간이동
+
+Spectate the closest player
+== 가장 가까운 플레이어 관전
+
+Spectate the next player
+== 다음 플레이어 관전
+
+Spectate the previous player
+== 이전 플레이어 관전
 
 Spectators
 == 관전자
 
+Speech trigger threshold
+== 음성 트리거 임계값
+
+Speed
+== 속도
+
+Speed up the demo
+== 데모 속도 빠르게
+
+Speed:
+== 속도:
+
+Speedrun countdown timer
+== 스피드런 카운트다운 타이머
+
+Speedrun Timer
+== 스피드런 타이머
+
+Sphere
+== 구체
+
+Spin pop
+== 회전 팝
+
+Sponsor QR code Base64 data is not configured
+== 스폰서 QR 코드 Base64 데이터가 설정되지 않았습니다
+
+Sponsor support
+== 스폰서 지원
+
+Sponsors:
+== 스폰서:
+
+Spree
+== 연속 처치
+
+Staging memory
+== 스테이징 메모리
+
+Star
+== 별 모양
+
+Start and connect to local server
+== 로컬 서버를 시작하고 연결
+
+Start here to quickly diagnose if the issue is with device, server, or room
+== 여기서 시작하여 문제가 장치, 서버 또는 방에 있는지 빠르게 진단하세요
+
+Start holding the hook before loading the savegame to keep the hook
+== 세이브를 불러오기 전에 훅을 누르고 있으면 훅 상태를 유지합니다
+
+Start playback of ghosts
+== 고스트 재생 시작
+
+Start recording a demo
+== 데모 녹화 시작
+
+Start recording a video
+== 비디오 녹화 시작
+
+Statboard
+== 통계판
+
+Stats
+== 통계
+
+Stats notes
+== 통계 설명
+
+Status
+== 상태
+
+Status Bar
+== 상태 표시줄
+
+Status bar alpha
+== 상태 표시줄 투명도
+
+Status Bar Codes:
+== 상태 표시줄 코드:
+
+Status bar color
+== 상태 표시줄 색상
+
+Status bar height
+== 상태 표시줄 높이
+
+Status normal, check details below if still experiencing issues
+== 상태 정상, 여전히 문제가 있으면 아래 세부 원인을 확인하세요
+
+Status Scheme:
+== 상태 구성:
+
+Stop practice
+== 연습 중지
+
 Stop record
 == 녹화 중지
 
+Stop recording
+== 녹음 중지
+
+Stop recording a demo
+== 데모 녹화 중지
+
+Stop recording a video
+== 비디오 녹화 중지
+
+Stop server
+== 서버 중지
+
+Stop the current demo
+== 현재 데모 중지
+
+Streamed memory
+== 스트리밍 메모리
+
+Streamer Mode
+== 스트리머 모드
+
 Strict gametype filter
-== 게임 종류 완전일치
+== 엄격한 게임 모드 필터
+
+Strict mode
+== 엄격 모드
+
+Stroke fade time
+== 획 사라짐 시간
+
+Strong Weak Hook
+== 강약 갈고리
+
+Sub-Tick aiming
+== 서브틱 조준
+
+Successfully saved the replay!
+== 리플레이를 성공적으로 저장했습니다!
 
 Sudden Death
-== 단판 승부
+== 서든 데스
+
+Suicides
+== 자살
+
+Super
+== 슈퍼
+
+Support ♥
+== 후원 ♥
+
+Swap
+== 교체
+
+Swap ghosts with regular players
+== 유령과 일반 플레이어 교체
+
+Swap is disabled on this server.
+== 이 서버에서는 교체가 비활성화되었습니다
+
+Swap is not available on forced solo servers.
+== 강제 솔로 서버에서는 교체를 사용할 수 없습니다
+
+Switch
+== 전환
+
+Switch failed
+== 전환 실패
+
+Switch inactive tee to grenade
+== Switch inactive tee to grenade
+
+Switch inactive tee to gun
+== Switch inactive tee to gun
+
+Switch inactive tee to hammer
+== Switch inactive tee to hammer
+
+Switch inactive tee to laser
+== Switch inactive tee to laser
+
+Switch inactive tee to next weapon
+== Switch inactive tee to next weapon
+
+Switch inactive tee to previous weapon
+== Switch inactive tee to previous weapon
+
+Switch inactive tee to shotgun
+== Switch inactive tee to shotgun
+
+Switch interval
+== 전환 간격
+
+Switch opacity
+== 스위치 불투명도
+
+Switch spectator mode
+== 관전 모드 전환
+
+Switch team
+== 팀 전환
+
+Switch to grenade
+== 수류탄으로 전환
+
+Switch to gun
+== 총으로 전환
+
+Switch to hammer
+== 망치로 전환
+
+Switch to laser
+== 레이저로 전환
+
+Switch to next weapon
+== 다음 무기로 전환
+
+Switch to previous weapon
+== 이전 무기로 전환
+
+Switch to shotgun
+== 샷건으로 전환
 
 Switch weapon on pickup
-== 획득한 무기로 즉시 전환
+== 획득 시 무기 자동 장착
+
+Switch weapon when out of ammo
+== 탄약 소진 시 무기 자동 전환
+
+Switched to
+== 전환됨
+
+Switching
+== 전환 중
+
+Switching back to default input
+== 기본 입력으로 되돌아가는 중
+
+Switching back to default output
+== 기본 출력으로 되돌아가는 중
+
+Sync Workshop Assets
+== 워크샵 자산 동기화
+
+System
+== 시스템
+
+System default
+== 시스템 기본값
+
+System media control
+== 시스템 미디어 제어
+
+System message
+== 시스템 메시지
+
+System prompt text color
+== 시스템 프롬프트 텍스트 색상
+
+Tags
+== 태그
+
+Take a screenshot
+== 스크린샷 찍기
+
+Taper trail width
+== 테이퍼 트레일 너비
+
+Target language
+== 대상 언어
+
+Target language ratio
+== 대상 언어 비율
+
+TClient
+== TClient
+
+TClient Developers
+== TClient 개발자
+
+TClient Links
+== TClient 링크
 
 Team
 == 팀
 
+Team %d
+== 팀 %d
+
+Team %d (%d/%d)
+== 팀 %d (%d/%d)
+
+Team can't be loaded while in team 0 mode
+== 팀 0 모드에서는 팀을 불러올 수 없습니다
+
+Team can't be loaded while practice is enabled
+== 연습 모드가 활성화된 상태에서는 팀을 불러올 수 없습니다
+
+Team can't be loaded while racing
+== 레이스 중에는 팀을 불러올 수 없습니다
+
+Team can't be saved while a dragger is active
+== 드래거가 활성화된 상태에서는 팀을 저장할 수 없습니다
+
+Team can't be saved while in team 0 mode
+== 팀 0 모드에서는 팀을 저장할 수 없습니다
+
 Team chat
 == 팀 채팅
 
+Team is already in practice mode
+== 팀이 이미 연습 모드입니다
+
+Team load already in progress
+== 팀 불러오기가 이미 진행 중입니다
+
+Team message
+== 팀 메시지
+
+Team mode can't be changed while racing
+== 레이스 중에는 팀 모드를 변경할 수 없습니다
+
+Team mode change disabled
+== 팀 모드 변경이 비활성화되었습니다
+
+Team mode change is disabled on this server.
+== 이 서버에서는 팀 모드 변경이 비활성화되었습니다
+
+Team save already in progress
+== 팀 저장이 이미 진행 중입니다
+
+Team save disabled for teams in practice mode
+== 연습 모드 팀은 팀 저장이 비활성화되었습니다
+
+Team save in progress. You'll be able to load with '/load %s'
+== 팀 저장 진행 중입니다. '/load %s'로 불러올 수 있습니다.
+
+Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails
+== 팀 저장 진행 중입니다. 저장 성공 시 '/load %s'로, 실패 시 '/load %s'로 불러올 수 있습니다.
+
+Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue
+== %s 님이 팀을 성공적으로 저장했습니다. 데이터베이스 연결에 실패하여 충돌을 피하기 위해 생성된 저장 코드를 사용합니다. %s에서 '/load %s'를 사용하여 계속하세요.
+
+Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue
+== %s 님이 팀을 성공적으로 저장했습니다. 데이터베이스 연결에 실패하여 충돌을 피하기 위해 생성된 저장 코드를 사용합니다. '/load %s'를 사용하여 계속하세요.
+
+Teams
+== 팀
+
+Teams are available on this server; if the team is locked, any team member dying will kill the whole team
+== 이 서버에서 팀을 사용할 수 있습니다; 팀이 잠겨 있으면 팀원이 죽으면 전체 팀이 죽습니다
+
+Teams are disabled
+== 팀 기능이 비활성화되었습니다
+
+Teams are not available on this server; if the team is locked, any team member dying will kill the whole team
+== 이 서버에서는 팀을 사용할 수 없습니다; 팀이 잠겨 있으면 팀원이 죽으면 전체 팀이 죽습니다
+
+Tee
+== 티
+
+Tee 0.7
+== 티 0.7
+
+Tee hitbox
+== 티 히트박스
+
+Tee hitbox color
+== 티 히트박스 색상
+
+Tee size
+== 티 크기
+
+Tee status bar
+== 티 상태 표시줄
+
+Tee trail color
+== 티 트레일 색상
+
+Tee Trails
+== 티 트레일
+
+Tele
+== 텔레
+
+Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart
+== 마우스 오버된 텔레포트 입/출구 또는 체크포인트 텔레포트와 일치하는 상대 지점 사이로 자유 관전 카메라를 순간이동합니다.
+
+Teleport grenade disabled
+== 텔레포트 수류탄 비활성화됨
+
+Teleport grenade enabled
+== 텔레포트 수류탄 활성화됨
+
+Teleport gun disabled
+== 텔레포트 건 비활성화됨
+
+Teleport gun enabled
+== 텔레포트 건 활성화됨
+
+Teleport laser disabled
+== 텔레포트 레이저 비활성화됨
+
+Teleport laser enabled
+== 텔레포트 레이저 활성화됨
+
+Teleport opacity
+== 텔레포트 불투명도
+
+Teleport yourself out of freeze if auto rescue mode is enabled, otherwise it will set position for rescuing if grounded and teleport you out of freeze if not (use sv_rescue 1 to enable this feature)
+== 자동 구조 모드가 활성화된 경우 동결 상태에서 순간이동합니다. 그렇지 않으면 착지 시 구조 위치를 설정하고, 착지하지 않은 경우 동결 상태에서 순간이동합니다 (sv_rescue 1을 사용하여 이 기능을 활성화).
+
+Teleport yourself to player or to where you are spectating/or looking if no player name is given
+== 플레이어 이름이 주어지지 않으면 자신을 해당 플레이어 또는 관전/바라보는 위치로 순간이동합니다.
+
+Teleport yourself to the last auto rescue position before you died (use sv_rescue 1 to enable this feature)
+== 죽기 전 마지막 자동 구조 위치로 순간이동합니다 (sv_rescue 1을 사용하여 이 기능을 활성화).
+
+Teleport yourself to the last location you teleported to
+== 마지막으로 순간이동한 위치로 순간이동합니다.
+
+Teleport yourself to the specified coordinates. A tilde (~) can be used to denote your current position, e.g. '/tpxy ~1 ~' to teleport one tile to the right
+== 지정된 좌표로 순간이동합니다. 물결표(~)는 현재 위치를 나타내는 데 사용할 수 있습니다. 예: '/tpxy ~1 ~'는 오른쪽으로 한 타일 순간이동합니다.
+
+Teleports player i (or you) to player i (or you to where you look at)
+== 플레이어 i(또는 당신)를 플레이어 i(또는 당신이 바라보는 곳)로 순간이동합니다.
+
+Teleports you to checkpoint teleporter i
+== 체크포인트 텔레포터 i로 순간이동합니다.
+
+Teleports you to teleporter i
+== 텔레포터 i로 순간이동합니다.
+
+Temporarily set a config value while pressed
+== 누르는 동안 임시로 설정값 설정
+
+Temporary free camera
+== 임시 자유 카메라
+
+Tencent Cloud
+== 텐센트 클라우드
+
+Tencent Cloud SecretId
+== Tencent Cloud 시크릿 ID
+
+Tencent Cloud SecretKey
+== Tencent Cloud 시크릿 키
+
+Text
+== 텍스트
+
+Text alpha
+== 텍스트 투명도
+
+Text color
+== 텍스트 색상
+
+Texture memory
+== 텍스처 메모리
+
+Thank you for your company and trust. This is what gives me the courage to keep going.
+== 함께 해주시고 신뢰해 주셔서 감사합니다. 이것이 제가 계속 나아갈 용기를 줍니다
+
+Thanks for supporting QmClient
+== QmClient를 지원해 주셔서 감사합니다
+
 The audio device couldn't be initialised.
-== 오디오 장치를 초기화하지 못했습니다.
+== 오디오 장치를 초기화할 수 없습니다.
+
+The best voice chat, of course!
+== 물론 최고의 음성 채팅입니다!
+
+The Config tab reuses QmClient's client config browser
+== 설정 탭은 QmClient의 클라이언트 설정 브라우저를 재사용합니다
+
+The force pause timer is now over, you can exit with /spec
+== 강제 일시 정지 타이머가 종료되었습니다. /spec으로 나갈 수 있습니다
+
+The format of texture %s is not RGBA which will cause visual bugs.
+== 텍스처 %s의 형식이 RGBA가 아니므로 시각적 버그가 발생할 수 있습니다.
+
+The Functions tab contains tools, automation, and gameplay helpers
+== 기능 탭에는 도구, 자동화 및 게임플레이 도우미가 포함되어 있습니다
+
+The HUD tab collects overlays, counters, voice display, and top components
+== HUD 탭은 오버레이, 카운터, 음성 표시 및 상단 구성 요소를 수집합니다.
+
+The name "default" is reserved.
+== "default" 이름은 예약되어 있습니다.
+
+The selected button is not visible. Do you want to deselect it or edit its visibility?
+== 선택한 버튼이 현재 보이지 않습니다. 선택을 해제하거나 가시성을 편집하시겠습니까?
+
+The selected button is overlapping with other buttons.
+== 선택한 버튼이 다른 버튼과 겹칩니다.
+
+The selected part stays highlighted while you adjust its color.
+== 선택한 부품은 색상을 조정하는 동안 계속 강조 표시됩니다.
 
 The server is running a non-standard tuning on a pure game type.
-== 이 서버는 조정된 비표준 게임 모드를 실행하고 있습니다.
+== 서버가 순수 게임 유형에서 비표준 튜닝을 실행 중입니다.
+
+The Visuals tab contains appearance and rendering options
+== 비주얼 탭에는 외형 및 렌더링 옵션이 포함되어 있습니다.
+
+The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
+== 텍스처 %s의 너비가 %d로 나누어 떨어지지 않거나 높이가 %d로 나누어 떨어지지 않아 시각적 버그가 발생할 수 있습니다.
+
+Theme
+== 테마
+
+Themes directory
+== 테마 디렉터리
+
+There are unsaved changes in the touch controls editor. Saving first is recommended.
+== 터치 컨트롤 편집기에 저장되지 않은 변경 사항이 있습니다. 먼저 저장하는 것이 좋습니다.
+
+There is no checkpoint teleporter with that index on the map.
+== 해당 인덱스의 체크포인트 텔레포터가 맵에 없습니다.
+
+There is no teleporter with that index on the map.
+== 해당 인덱스의 텔레포터가 맵에 없습니다.
+
+There is not enough space available for the button. Check its visibilities and size.
+== 버튼을 배치할 공간이 충분하지 않습니다. 가시성과 크기를 확인하세요.
+
+There is not enough space available to place another button.
+== 다른 버튼을 배치할 공간이 충분하지 않습니다.
+
+There is nowhere to go back to.
+== 돌아갈 곳이 없습니다.
+
+There's a %s second delay between map-votes, please wait %s seconds.
+== 맵 투표 사이에 %s초의 지연이 있습니다. %s초를 기다려 주세요.
+
+There's a %s second wait time between kick votes for each player please wait %s second(s)
+== 각 플레이어에 대한 강퇴 투표 사이에 %s초의 대기 시간이 있습니다. %s초를 기다려 주세요.
+
+There's an unsaved change in the touch controls editor, you might want to save it.
+== 터치 컨트롤 편집기에 저장되지 않은 변경 사항이 있습니다. 저장하는 것이 좋습니다.
+
+There's an unsaved map in the editor, you might want to save it.
+== 편집기에 저장되지 않은 맵이 있습니다. 저장하는 것이 좋습니다.
+
+Thinking mode requires a reasoning model
+== 생각 모드를 사용하려면 추론 모델이 필요합니다.
+
+This ID is not connected
+== 이 ID는 연결되지 않음
+
+This name cannot be used for files and folders
+== 이 이름은 파일 및 폴더에 사용할 수 없습니다
+
+This server has an initial chat delay, you will be able to talk in %s seconds.
+== 이 서버에는 초기 채팅 지연이 있습니다. %s초 후에 말할 수 있습니다.
+
+This skin name cannot be used.
+== 이 스킨 이름은 사용할 수 없습니다.
+
+This team already has the maximum allowed size of %s players
+== 이 팀은 이미 최대 허용 인원 %s명에 도달했습니다.
+
+This team can't be locked
+== 이 팀은 잠글 수 없습니다.
+
+This team can't have the mode changed
+== 이 팀은 모드를 변경할 수 없습니다.
+
+This team cannot finish anymore because '%s' left the team before hitting the start
+== '%s'님이 시작 지점을 밟기 전에 팀을 떠났기 때문에 이 팀은 더 이상 완주할 수 없습니다.
+
+This team is currently saving
+== 이 팀이 현재 저장 중입니다.
+
+This team is locked using /lock. Only members of the team can invite you or unlock it using /lock.
+== 이 팀은 /lock으로 잠겨 있습니다. 팀 멤버만 당신을 초대하거나 /lock으로 잠금을 해제할 수 있습니다.
+
+This team is locked using /lock. Only members of the team can unlock it using /lock.
+== 이 팀은 /lock으로 잠겨 있습니다. 팀 멤버만 /lock으로 잠금을 해제할 수 있습니다.
+
+This team started already
+== 이 팀은 이미 시작했습니다.
+
+This team was disbanded because there are more players than allowed in the team.
+== 팀 허용 인원을 초과하는 플레이어가 있어 팀이 해체되었습니다.
+
+This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
+== 이 툴팁은 ui_widget::Tooltip에서 제공하며 CTooltips 위의 얇은 래퍼입니다.
+
+tile
+== 타일
+
+Tile outlines
+== 타일 외곽선
+
+Time
+== 시간
+
+TIME EXPIRED!
+== 시간 초과!
+
+Time limit
+== 시간 제한
 
 Time limit: %d min
-== 시간 제한: %d 분
+== 시간 제한: %d분
+
+Time offset
+== Time offset
+
+Time to wait before changing team: %s
+== 팀 변경 전 대기 시간: %s
+
+Timer is displayed in %s
+== 타이머가 %s에 표시됩니다.
+
+Timer isn't displayed.
+== 타이머가 표시되지 않습니다.
+
+Tiny Tee Size
+== 미니 티 크기
+
+To save all players in your team have to be alive and not in '/spec'
+== 모든 플레이어를 저장하려면 팀의 모든 플레이어가 살아 있고 '/spec' 상태가 아니어야 합니다.
+
+Toast uses UiTokens + QmMotion slide
+== Toast는 UiTokens + QmMotion 슬라이드를 사용
+
+Toggle auto camera
+== 자동 카메라 전환
+
+Toggle between game scene preview and raw texture
+== 게임 장면 미리보기와 원본 텍스처 간 전환
+
+Toggle config value
+== 설정값 전환
+
+Toggle config value via keypress
+== 키 입력으로 설정값 전환
+
+Toggle Do Not Disturb (no chat and server messages)
+== 방해 금지 전환 (채팅 및 서버 메시지 없음)
+
+Toggle dummy
+== 더미 전환
+
+Toggle dyncam
+== 동적 카메라 전환
+
+Toggle fast practice mode
+== 빠른 연습 모드 전환
+
+Toggle ghost
+== 고스트 전환
+
+Toggle ghost key
+== 고스트 키 전환
+
+Toggle keyboard shortcuts
+== 키보드 단축키 전환
+
+Toggle local console
+== 로컬 콘솔 전환
+
+Toggle microphone mute
+== 마이크 음소거 전환
+
+Toggle or set the switch on or off for the specified time (or indefinitely by default)
+== 지정된 시간 동안 스위치를 켜거나 끄도록 전환 또는 설정 (기본값은 무기한)
+
+Toggle receiving whispers
+== 귓속말 수신 전환
+
+Toggle remote console
+== 원격 콘솔 전환
+
+Toggle scoreboard cursor
+== 점수판 커서 전환
+
+Toggle team between team 0 and team mode. This mode will make your team behave like team 0.
+== 팀 0과 팀 모드 사이를 전환합니다. 이 모드는 팀이 팀 0처럼 작동하게 합니다.
+
+Toggle team lock so no one else can join and so the team restarts when a player dies. /lock 0 to unlock, /lock 1 to lock
+== 팀 잠금을 전환하여 다른 사람이 참가할 수 없고 플레이어가 죽으면 팀이 다시 시작됩니다. /lock 0은 잠금 해제, /lock 1은 잠금.
+
+Toggle tune variable
+== 튠 변수 전환
+
+Toggles collision
+== 충돌 전환
+
+Toggles hit others
+== 다른 사람 때리기 전환
+
+Toggles hook collision
+== 훅 충돌 전환
+
+Toggles invincible mode
+== 무적 모드 전환
+
+Toggles pause
+== 일시 정지 전환
+
+Toggles pause on the currently voted player
+== 현재 투표된 플레이어의 일시 정지 전환
+
+Toggles spec (if not available behaves as /pause)
+== 관전 전환 (사용 불가능 시 /pause처럼 작동)
+
+Toggles spec on the currently voted player
+== 현재 투표된 플레이어의 관전 전환
+
+Toggles use of standard eye-emotes on/off, eyeemote s, where s = on for on, off for off, toggle for toggle and nothing to show current status
+== 표준 눈 이모트 사용 켜기/끄기 전환, eyeemote s, 여기서 s = on은 켜기, off는 끄기, toggle은 전환, 아무것도 없으면 현재 상태 표시
+
+Too many translation tasks
+== 번역 작업이 너무 많음
+
+Total
+== 합계
+
+Total friends
+== 총 친구 수
+
+Total: %d save(s)
+== 총 %d개 저장
+
+Traditional
+== 번체
+
+Trail alpha
+== 궤적 투명도
+
+Trail length
+== 궤적 길이
+
+Trail width
+== 트레일 너비
+
+Translate
+== 번역
+
+Translate button
+== 번역 버튼
+
+Translate ID:
+== 번역 ID:
+
+Translate last message (of a given name)
+== 마지막 메시지 번역 (지정된 이름)
+
+Translate last message of the person with this id
+== 이 ID를 가진 사람의 마지막 메시지 번역
+
+Translate only when needed
+== 필요할 때만 번역
+
+Translate:
+== 번역:
+
+Translated text hidden due to streamer mode
+== 스트리머 모드로 인해 번역 텍스트 숨김
+
+Translating to %s...
+== %s(으)로 번역 중...
+
+Translation backend invalid, sending original
+== 번역 백엔드가 유효하지 않아 원문 전송
+
+Translation queue full, sending original
+== 번역 큐가 가득 차서 원문 전송
+
+Translation service
+== 번역 서비스
+
+Translation Settings
+== 번역 설정
+
+transmits your player name to info.ddnet.org
+== 플레이어 이름을 info.ddnet.org로 전송합니다
+
+Troubleshooting suggestions
+== 문제 해결 제안
 
 Try again
-== 재시도
+== 다시 시도
+
+Try reselecting input device, confirm default mic or headset mic is online
+== 입력 장치를 다시 선택하고 기본 마이크 또는 헤드셋 마이크가 켜져 있는지 확인하세요.
+
+Try reselecting output device, confirm headphones/speakers are online
+== 출력 장치를 다시 선택하고 헤드폰/스피커가 켜져 있는지 확인하세요.
+
+Try to predict other entities to reduce lag feeling at high latency
+== 높은 지연 시간에서 느낌을 줄이기 위해 다른 개체 예측 시도
+
+Try toggling voice or reconnecting to server
+== 음성을 전환하거나 서버에 다시 연결해 보세요.
+
+Trying Axiom auto login
+== Axiom 자동 로그인 시도 중
+
+Trying Axiom dummy auto login
+== Axiom 더미 자동 로그인 시도 중
+
+Trying to determine UDP connectivity…
+== UDP 연결 확인 중…
+
+Tune in zone a variable to value
+== 영역 a의 변수를 값으로 조정
+
+Tune layer opacity
+== 튠 레이어 불투명도
+
+Tune variable to value
+== 변수를 값으로 조정
+
+Tune variable to value or show current value
+== 변수를 값으로 조정하거나 현재 값 표시
+
+Tutorial
+== 튜토리얼
+
+Twinkle strength
+== 반짝임 강도
 
 Type
-== 종류
+== 유형
+
+Type something...
+== 무언가 입력...
+
+Type switch vote started automatically
+== 유형 전환 투표가 자동으로 시작되었습니다
+
+Types
+== 유형
+
+u = Snapshot latency
+== u = 스냅샷 지연 시간
+
+UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
+== UDP와 TCP IP 주소가 다른 것으로 보입니다. VPN, 프록시 또는 네트워크 가속기를 비활성화해 보세요.
+
+UDP seems to be filtered.
+== UDP가 필터링된 것으로 보입니다.
+
+UDP socket not open
+== UDP 소켓이 열려 있지 않음
+
+UI color
+== UI 색상
+
+UI controller sens.
+== UI 컨트롤러 감도
+
+UI mouse sens.
+== UI 마우스 감도
+
+UI opacity
+== UI 불투명도
+
+UI scale
+== UI 크기
+
+Unable to delete %d selected items. The first failing item was '%s'.
+== %d개의 선택된 항목을 삭제할 수 없습니다. 첫 번째 실패 항목은 '%s'입니다.
+
+Unable to delete skin
+== 스킨을 삭제할 수 없습니다
+
+Unable to delete the demo '%s'
+== 데모 '%s'을(를) 삭제할 수 없습니다
+
+Unable to delete the folder '%s'. Make sure it's empty first.
+== 폴더 '%s'을(를) 삭제할 수 없습니다. 먼저 폴더가 비어 있는지 확인하세요.
+
+Unable to delete the screenshot '%s'
+== 스크린샷 '%s'을(를) 삭제할 수 없습니다
+
+Unable to open the screenshot file
+== 스크린샷 파일을 열 수 없습니다
 
 Unable to rename the demo
-== 데모의 이름을 변경할 수 없음
+== 데모 이름을 바꿀 수 없습니다
+
+Unable to rename the folder
+== 폴더 이름을 바꿀 수 없습니다
+
+Unable to rename the screenshot
+== 스크린샷 이름을 바꿀 수 없습니다
+
+Unable to save the skin
+== 스킨을 저장할 수 없습니다
+
+Unable to save the skin with a reserved name
+== 예약된 이름으로 스킨을 저장할 수 없습니다
+
+Unban a certain nickname
+== 특정 닉네임 차단 해제
+
+Unban all entries
+== 모든 항목 차단 해제
+
+Unban ip range
+== IP 범위 차단 해제
+
+Unban ip/banlist entry
+== IP/차단 목록 항목 차단 해제
+
+Unbind all keys
+== 모든 키 바인딩 해제
+
+Unbind key
+== 키 바인딩 해제
+
+Uncertainty duration
+== 불확실성 지속 시간
+
+Unclassified audio issue
+== 분류되지 않은 오디오 문제
+
+Unfinished map
+== 미완료 맵
+
+Unfinished map count: %d
+== 미완료 맵 수: %d
+
+Unfinished map data is refreshing, please try again later
+== 미완료 맵 데이터가 새로고침 중입니다. 나중에 다시 시도해 주세요
+
+Unfinished map data not fetched
+== 미완료 맵 데이터를 가져오지 못했습니다
+
+Unfinished map data refreshing
+== 미완료 맵 데이터 새로고침 중
+
+Unfinished maps
+== 미완료 맵
+
+Unflip:
+== 뒤집기 취소:
+
+Unfreeze
+== 해동
+
+Unfreeze automation helpers
+== 언프리즈 자동화 도우미
+
+Unfreeze opacity
+== 언프리즈 불투명도
+
+Uninvite player from team
+== 팀에서 플레이어 초대 취소
+
+Unknown
+== 알 수 없음
+
+Unknown argument. Check '/rescuemode list'
+== 알 수 없는 인수입니다. '/rescuemode list' 확인
+
+Unknown emote... Say /emote
+== 알 수 없는 이모트... /emote 입력
+
+Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
+== 알 수 없는 매개변수입니다. 허용 값: default, gametimer, broadcast, both, none
+
+Unknown status
+== 알 수 없는 상태
+
+Unlock a team
+== 팀 잠금 해제
+
+Unmute
+== 음소거 해제
+
+Unmute emoticons
+== 이모티콘 음소거 해제
+
+Unmute player with client ID
+== 클라이언트 ID로 플레이어 음소거 해제
+
+Unmute player with IP address
+== IP 주소로 플레이어 음소거 해제
+
+Unmute player with list index
+== 목록 인덱스로 플레이어 음소거 해제
+
+Unmute:
+== 음소거 해제:
+
+Unpredicted ghost opacity
+== 예측되지 않은 고스트 불투명도
+
+Unregister protocol and file extensions
+== 프로토콜 및 파일 확장자 등록 해제
+
+Unsaved changes
+== 저장되지 않은 변경 사항
+
+Update
+== 업데이트
+
+Update a rcon key
+== rcon 키 업데이트
+
+Update a rcon key with prehashed data
+== 사전 해시된 데이터로 rcon 키 업데이트
+
+Update failed. Please try again
+== 업데이트 실패. 다시 시도하세요
+
+Update finished. Please restart the client
+== 업데이트 완료. 클라이언트를 다시 시작하세요
+
+Update finished. Restarting...
+== 업데이트 완료. 다시 시작 중...
+
+Update notice
+== 공지 업데이트
+
+Update or add a specific war group
+== 특정 전쟁 그룹 업데이트 또는 추가
+
+Updating feature list...
+== 기능 목록 업데이트 중...
+
+Uploading map data to GPU
+== 맵 데이터를 GPU에 업로드 중
+
+Usage: %s %s
+== 사용법: %s %s
+
+Use 12 hour clock
+== 12시간제 사용
+
+Use colored skins for frozen tees
+== 얼린 티에 컬러 스킨 사용
+
+Use current map as background
+== 현재 맵을 배경으로 사용
+
+Use custom skins instead of the ninja tee
+== 닌자 티 대신 사용자 정의 스킨 사용
+
+Use default flags on scoreboard
+== 스코어보드에 기본 국기 사용
+
+Use default input
+== 기본 입력 사용
+
+Use default output
+== 기본 출력 사용
+
+Use default voice input device
+== 기본 음성 입력 장치 사용
+
+Use default voice output device
+== 기본 음성 출력 장치 사용
+
+Use embedded HUD progress bar
+== HUD 내장 진행 표시줄 사용
+
+Use emote
+== 이모트 사용
+
+Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
+== K 키로 죽기(재시작), Q 키로 일시정지하여 다른 플레이어 관전. 다른 키 설정은 설정에서 확인하세요.
+
+Use multi-char replacement based on word length
+== 단어 길이에 따라 다중 문자 대체 사용
+
+Use new smoothing algorithm
+== 새 평활화 알고리즘 사용
+
+Use notification category filters
+== 알림 카테고리 필터 사용
+
+Use old chat style
+== 이전 채팅 스타일 사용
+
+Use original style
+== 원본 스타일 사용
 
 Use sounds
 == 소리 사용
 
 Use team colors for name plates
-== 이름에 팀 색상 사용
+== 이름표에 팀 색상 사용
+
+Use the mouse wheel on a hovered module to scale it by 5%
+== 마우스를 올린 모듈에서 휠을 사용하여 5%씩 크기 조정
+
+Use the top tabs to browse QmClient features by category
+== 상단 탭을 사용하여 QmClient 기능을 카테고리별로 탐색
+
+Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
+== `add_favorite` 후에 사용하여 즐겨찾기를 그룹화합니다. `begin_favorite_group`으로 시작
+
+Use this before `add_favorite` to group favorites. End with `end_favorite_group`
+== `add_favorite` 전에 사용하여 즐겨찾기를 그룹화합니다. `end_favorite_group`으로 종료
+
+Use warlist colors instead of regular colors
+== 일반 색상 대신 전쟁 목록 색상 사용
+
+Use warlist groups for indicator
+== 표시기에 전쟁 목록 그룹 사용
+
+v = Velocity
+== v = 속도
 
 V-Sync
 == V-Sync
 
+Vanilla skins only
+== 바닐라 스킨만 표시
+
+Velocity
+== 속도
+
 Version
 == 버전
+
+Vertical position
+== 수직 위치
+
+Video Background
+== 비디오 배경
+
+Video name:
+== 비디오 이름:
+
+Video was saved to '%s'
+== 비디오가 '%s'에 저장되었습니다
+
+Videos directory
+== 비디오 디렉터리
+
+View latest updates
+== 최신 업데이트 보기
+
+View margin
+== 시야 여백
+
+View switch found (at offset) with given number
+== 주어진 번호로 찾은 스위치 보기 (오프셋 위치)
+
+View tele found (at offset) with given number
+== 주어진 번호로 찾은 텔레포트 보기 (오프셋 위치)
+
+Visibility
+== 가시성
+
+Visual
+== 시각
+
+Visual: Effects
+== 시각: 효과
+
+Visual: Font & Cursor
+== 시각: 글꼴 및 커서
+
+Visual: Nameplates
+== 시각: 이름표
+
+Visuals
+== 시각
+
+Voice
+== 음성
+
+Voice activation release delay
+== 음성 활성화 해제 지연
+
+Voice bitrate
+== 음성 비트레이트
+
+Voice chat
+== 음성 채팅
+
+Voice distance radius (tiles)
+== 음성 거리 반경 (타일)
+
+Vote a map by name
+== 이름으로 맵 투표
 
 Vote command:
 == 투표 명령:
@@ -403,1612 +7603,576 @@ Vote description:
 Vote no
 == 반대
 
+Vote started automatically
+== 자동으로 투표가 시작됨
+
 Vote yes
 == 찬성
+
+Vote yes/no
+== 찬성/반대 투표
 
 Voting
 == 투표
 
+Wait for current vote to end before calling a new one.
+== 새 투표를 요청하기 전에 현재 투표가 끝날 때까지 기다리세요.
+
+Waiting for snapshot
+== 스냅샷 대기 중
+
+Waiting to open
+== 열기 대기 중
+
+Waiting to open input device
+== 입력 장치 열기 대기 중
+
+Waiting to open output device
+== 출력 장치 열기 대기 중
+
+War Entries
+== 적대 항목
+
+War Groups
+== 적대 그룹
+
+War List
+== 전쟁 목록
+
+Warlist
+== 적대 목록
+
 Warmup
-== 준비
+== 워밍업
+
+Warning
+== 경고
 
 Weapon
 == 무기
 
-Yes
-== 예
+Weapon animation
+== 무기 애니메이션
 
-You must restart the game for all settings to take effect.
-== 설정을 적용하기 위해 게임을 재시작해야 합니다.
+Weapon interaction range
+== 무기 상호작용 범위
 
-Game paused
-== 게임 일시정지됨
+Weapon range color
+== 무기 범위 색상
 
-Play background music
-== 배경 음악 재생
+Weapon switch animation
+== 무기 전환 애니메이션
 
-Player country:
-== 플레이어 국가:
+Weapon Trajectory
+== 무기 궤적
 
-Show only chat messages from friends
-== 친구가 보낸 메시지만 표시
+Weapon trajectory
+== 무기 궤적 보조선
 
-Spectate next
-== 다음 플레이어 관전
+Weapons
+== 무기
 
-Spectate previous
-== 이전 플레이어 관전
-
-New name:
-== 새 이름:
-
-Max demos
-== 최대 데모 수
-
-Internet
-== 인터넷
-
-News
-== 뉴스
-
-Join game
-== 게임 참가
-
-FSAA samples
-== FSAA 샘플
-
-Sat.
-== 채도
-
-LAN
-== 랜
-
-Sound volume
-== 음량
-
-Record demo
-== 데모 녹화
-
-Miscellaneous
-== 기타
-
-UI Color
-== UI 색상
-
-Your skin
-== 내 스킨
-
-Max Screenshots
-== 최대 스크린샷 수
-
-Hue
-== 색조
-
-Reset to defaults
-== 설정 초기화
-
-Laser
-== 레이저
-
-Lht.
-== 명도
-
-Alpha
-== 투명도
-
-Name plates size
-== 이름 표시 크기
-
-Successfully saved the replay!
-== 리플레이 저장에 성공했습니다!
-
-Replay feature is disabled!
-== 리플레이 기능이 비활성화됐습니다!
-
-Warning
-== 주의
-
-Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
-== 디버그 모드를 활성화했습니다. Ctrl+Shift+D를 눌러 비활성화할 수 있습니다.
-
-Server best:
-== 서버 최고 기록:
-
-Personal best:
-== 개인 최고 기록:
-
-Reset
-== 초기화
-
-Browser
-== 브라우저
-
-Ghost
-== 고스트
-
-Loading DDNet Client
-== DDNet 클라이언트 로딩 중
-
-Reconnect in %d sec
-== %d 초 후 재접속
-
-Render demo
-== 데모 렌더링
-
-Replace video
-== 동영상 변경
-
-File already exists, do you want to overwrite it?
-== 파일이 이미 존재합니다. 덮어쓰기하시겠습니까?
-
-Are you sure that you want to disconnect?
-== 연결을 해제하시겠습니까?
-
-Disconnect Dummy
-== 더미 연결 해제
-
-Are you sure that you want to disconnect your dummy?
-== 더미 연결을 해제하시겠습니까?
+Website
+== 웹사이트
 
 Welcome to DDNet
-== DDNet에 오신 것을 환영합니다.
+== DDNet에 오신 것을 환영합니다
 
-DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
-== DDraceNetwork는 온라인 협동 게임으로, 당신과 당신의 Tee 동료들이 맵의 결승선에 도달하는 것이 목표입니다. 당신이 초보자라면 가장 난이도가 낮은 맵들로 구성된 Novice 서버에서 시작할 것을 권장합니다. 핑을 고려해 당신의 근처에 있는 서버를 선택하십시오.
+What kind of blockbuster do you want to shoot?
+== 어떤 블록버스터를 찍고 싶으신가요?
 
-Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
-== 죽기(재시작) 위해서는 K 키를 눌러야 합니다. Q 키를 눌러 일시정지하면 다른 플레이어를 관전할 수 있습니다. 다른 키 바인드는 설정 창을 참고하십시오.
+What kind of Gores do you want to run?
+== 어떤 Gores를 달리고 싶으신가요?
 
-It's recommended that you check the settings to adjust them to your liking before joining a server.
-== 서버 입장 전에 설정을 확인하고 여러분의 편의에 따라 조정할 것을 권장합니다.
+What kind of laser do you want?
+== 어떤 레이저를 원하시나요?
 
-Please enter your nickname below.
-== 아래에 닉네임을 입력해 주십시오.
+What kind of life do you want to run?
+== 어떤 인생을 살고 싶으신가요?
 
-Existing Player
-== 기존 플레이어
+What's done is done, no use saying more
+== 이미 지난 일, 더 말해도 소용없습니다.
 
-Your nickname '%s' is already used (%d points). Do you still want to use it?
-== 닉네임 '%s'은(는) 이미 사용 중입니다 (%d 포인트). 그래도 사용하시겠습니까?
+Wheel animate
+== 휠 애니메이션
 
-Checking for existing player with your name
-== 기존 플레이어 목록에서 닉네임 검색 중
+When you cross the start line, show a ghost tee replicating the movements of your best time
+== 시작선을 넘으면 최고 기록의 움직임을 재현하는 고스트 티를 표시
 
-Are you sure that you want to disconnect and switch to a different server?
-== 연결을 해제하고 다른 서버에 접속하시겠습니까?
+Whether a switch is deactivated by default (otherwise activated)
+== 스위치가 기본적으로 비활성화되어 있는지 여부 (그렇지 않으면 활성화)
 
-Speed
-== 속도
+Whether to show players at any distance (off by default), optional i = 0 for off else for on
+== 모든 거리에서 플레이어를 표시할지 여부 (기본값 꺼짐), 선택적 i = 0은 꺼짐, 그 외는 켜짐
 
-Video name:
-== 동영상 이름:
+Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only
+== 다른 팀의 플레이어를 표시할지 여부 (기본값 꺼짐), 선택적 i = 0은 꺼짐, i = 1은 켜짐, i = 2는 자신의 팀만
 
-Show DDNet map finishes in server browser
-== DDNet 맵 완주를 서버 브라우저에 표시
+Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on
+== 관전 시 다른 팀의 플레이어를 표시할지 여부 (기본값 켜짐), 선택적 i = 0은 꺼짐, 그 외는 켜짐
 
-transmits your player name to info.ddnet.org
-== info.ddnet.org에 당신의 닉네임을 전송함
+Whether to use ninja jetpack or not. Makes jetpack look more awesome
+== 닌자 제트팩 사용 여부. 제트팩을 더 멋지게 보이게 함
 
-Theme
-== 테마
+Which message to display on zone enter; use 0 for normal area
+== 구역 진입 시 표시할 메시지; 0은 일반 구역
 
-Getting server list from master server
-== 마스터 서버에서 서버 목록을 불러오는 중
+Which message to display on zone leave; use 0 for normal area
+== 구역 이탈 시 표시할 메시지; 0은 일반 구역
 
-Search
-== 검색
+Whisper
+== 귓속말
 
-Exclude
-== 제외
+Whisper something to someone (private message)
+== 누군가에게 귓속말 보내기 (개인 메시지)
 
-%d of %d servers
-== %d / %d 서버
+Who stuffed OBS in here
+== 누가 여기에 OBS를 넣었나
 
-%d of %d server
-== %d / %d 서버
+Why are you slowmo replaying to read this?
+== 느린 재생으로 이걸 읽고 계신 이유는?
 
-%d players
-== %d 플레이어
+Width
+== 너비
 
-%d player
-== %d 플레이어
+Width and height are required to be within the range from %d to %d.
+== 너비와 높이는 %d에서 %d 사이여야 합니다.
 
-Filter connecting players
-== 접속 중인 플레이어 제외
+Width of others' hook collision line
+== 다른 플레이어의 갈고리 충돌선 너비
 
-Indicate map finish
-== 완주한 맵 표시
-
-Unfinished map
-== 미완주 맵
-
-Countries
-== 국가
-
-Types
-== 종류
-
-Leak IP
-== IP 노출하기
-
-Remove chat
-== 채팅 제거
-
-Demofile: %s
-== 데모 파일: %s
-
-Demo
-== 데모
-
-Markers
-== 마커
-
-Length
-== 길이
-
-Date
-== 날짜
-
-Fetch Info
-== 정보 불러오기
-
-Demos directory
-== 데모 폴더
-
-Connect Dummy
-== 더미 연결
-
-Connecting dummy
-== 더미 연결 중
-
-Kill
-== 죽기
-
-Pause
-== 일시정지
-
-Time
-== 시간
-
-Deactivate
-== 비활성화
-
-Activate
-== 활성화
-
-Save
-== 저장
-
-Smooth Dynamic Camera
-== 부드러운 다이나믹 카메라
-
-Switch weapon when out of ammo
-== 탄약 고갈 시 무기 전환
-
-Show clan above name plates
-== 이름 위에 클랜 표시
-
-Clan plates size
-== 클랜 표시 크기
-
-Skip the main menu
-== 메인 메뉴 건너뛰기
-
-Refresh Rate
-== 화면 주사율
-
-Settings file
-== 설정 파일
-
-Config directory
-== 구성 폴더
-
-Themes directory
-== 테마 폴더
-
-Automatically take statboard screenshot
-== 자동으로 통계표 스크린샷 저장
-
-Automatically create statboard csv
-== 자동으로 통계표 csv 파일 생성
-
-Max CSVs
-== 최대 CSV 파일 수
-
-Download skins
-== 스킨 다운로드
-
-Vanilla skins only
-== 원판 스킨만 표시
-
-Fat skins (DDFat)
-== 살찐 스킨 (DDFat)
-
-Skin prefix
-== 스킨 접두사
-
-Skin Database
-== 스킨 데이터베이스
-
-Skins directory
-== 스킨 폴더
-
-Hook collisions
-== 갈고리 보조선
-
-Zoom in
-== 시야 축소
-
-Zoom out
-== 시야 확장
-
-Default zoom
-== 기본 시야
-
-Show others
-== 다른 플레이어 표시
-
-Show all
-== 모든 플레이어 표시
-
-Toggle dyncam
-== 다이나믹캠 전환
-
-Toggle dummy
-== 더미 전환
-
-Toggle ghost
-== 고스트 표시
-
-Dummy copy
-== 더미 동시동작
-
-Hammerfly dummy
-== 더미 해머플라이 실행
-
-Converse
-== 비밀대화 지속
-
-Statboard
-== 통계표
-
-Lock team
-== 팀 잠금
-
-Show entities
-== 엔티티 표시
-
-Show HUD
-== HUD 표시
-
-Chat command
-== 채팅 명령어
-
-Dummy
-== 더미
+Width of your own hook collision line
+== 자신의 갈고리 충돌선 너비
 
 Windowed
 == 창 모드
 
 Windowed borderless
-== 창 모드 테두리 없음
+== 테두리 없는 창
 
 Windowed fullscreen
-== 창 모드 전체화면
+== 창 전체화면
 
-Desktop fullscreen
-== 데스크탑 전체화면
+Word Filter
+== 단어 필터
 
-may cause delay
-== 지연 현상 유발 가능
+Write local console contents to a text file
+== 로컬 콘솔 내용을 텍스트 파일에 쓰기
 
-Screen
-== 화면
+Write remote console contents to a text file
+== 원격 콘솔 내용을 텍스트 파일에 쓰기
 
-Enable game sounds
-== 게임 소리 활성화
+Writing item %d failed
+== %d번 항목 쓰기 실패
 
-Enable gun sound
-== 권총 소리 활성화
+Written %d items
+== %d개 항목 작성됨
 
-Enable long pain sound (used when shooting in freeze)
-== 동결 상태 시 비명 활성화
+Wrong button settings
+== 잘못된 버튼 설정
 
-Enable server message sound
-== 서버 메시지 소리 활성화
+x = DDNet CPU% / total CPU%
+== x = DDNet CPU% / 전체 CPU%
 
-Enable regular chat sound
-== 일반 채팅 소리 활성화
+X alignment color
+== X 정렬 색상
 
-Enable team chat sound
-== 팀 채팅 소리 활성화
+X alignment hint with me
+== 나와 X 정렬 힌트
 
-Enable highlighted chat sound
-== 강조 채팅 소리 활성화
+y = DDNet memory usage
+== y = DDNet 메모리 사용량
 
-Game sound volume
-== 게임 음량
+Yes
+== 예
 
-Chat sound volume
-== 채팅 음량
+You and other player need to have started the map
+== 당신과 상대방 모두 맵을 시작해야 합니다.
 
-Map sound volume
-== 맵 음량
+You and the other player must not be paused.
+== 당신과 상대방 모두 일시 정지 상태가 아니어야 합니다.
 
-Background music volume
-== 배경 음악 음량
+You are already on the latest version
+== 이미 최신 버전입니다
 
-HUD
-== HUD
+You are force-paused for %s seconds.
+== %s초 동안 강제 일시 정지되었습니다.
 
-DDNet
-== DDNet
+You are in team %s having %s players
+== 당신은 %s명의 플레이어가 있는 %s팀에 있습니다.
 
-Assets
-== 에셋
+You are in this team already
+== 당신은 이미 이 팀에 있습니다.
 
-DDNet Client needs to be restarted to complete update!
-== 업데이트 완료를 위해 DDNet 클라이언트 재시작이 필요합니다!
+You are not allowed to vote because we're currently checking for VPNs. Try again in ~30 seconds.
+== 현재 VPN을 확인 중이므로 투표할 수 없습니다. 약 30초 후에 다시 시도하세요.
 
-Show score
-== 점수 표시
+You are not allowed to vote because you appear to be using a VPN. Try connecting without a VPN or contacting an admin if you think this is a mistake.
+== VPN을 사용 중인 것으로 보여 투표할 수 없습니다. VPN 없이 연결하거나, 오류라고 생각되면 관리자에게 문의하세요.
 
-Show names in chat in team colors
-== 이름을 팀 색상으로 표시
+You are not in practice
+== 연습 모드가 아닙니다
 
-Show votes window after voting
-== 투표 후에도 투표창 표시
+You are not permitted to talk for the next %s seconds.
+== 다음 %s초 동안 말할 수 없습니다.
 
-Show kill messages
-== 처치/사망 메시지 표시
+You are not permitted to vote for the next %s seconds.
+== 다음 %s초 동안 투표할 수 없습니다.
 
-Use old chat style
-== 구식 채팅 방식 사용
+You are now in a solo part
+== 이제 솔로 구역에 있습니다.
 
-Messages
-== 메시지
+You are now out of the solo part
+== 이제 솔로 구역에서 벗어났습니다.
 
-System message
-== 시스템 메시지
+You are running a vote, please try again after the vote is done!
+== 투표를 진행 중입니다. 투표가 끝난 후 다시 시도하세요!
 
-Highlighted message
-== 강조 메시지
+You can collide with others
+== 이제 다른 플레이어와 충돌할 수 있습니다.
 
-Team message
-== 팀 메시지
+You can hammer hit others
+== 이제 다른 플레이어를 망치로 칠 수 있습니다.
 
-Friend message
-== 친구가 보낸 메시지
+You can hit others
+== 이제 다른 플레이어를 공격할 수 있습니다.
 
-Normal message
-== 일반 메시지
+You can hook others
+== 이제 다른 플레이어를 갈고리로 걸 수 있습니다.
 
-Client message
-== 클라이언트 메시지
+You can kick only your team member
+== 자신의 팀 멤버만 강퇴할 수 있습니다.
 
-Preview
-== 미리보기
+You can now jump %s times
+== 이제 %s번 점프할 수 있습니다
 
-Save the best demo of each race
-== 레이스 최고 기록의 데모를 저장
+You can now use the preset eye emotes.
+== 이제 미리 설정된 눈동자 이모트를 사용할 수 있습니다
 
-Default length
-== 기본 길이
+You can only move your team member to spectators
+== 팀원만 관전자로 이동시킬 수 있습니다
 
-Enable replays
-== 리플레이 활성화
+You can only vote after logging in.
+== 로그인 후에만 투표를 시작할 수 있습니다
 
-Show ghost
-== 고스트 표시
+You can see other players. To disable this use DDNet client and type /showothers
+== 다른 플레이어를 볼 수 있습니다. 비활성화하려면 DDNet 클라이언트에서 /showothers를 입력하세요
 
-Save ghost
-== 고스트 저장
+You can shoot others with grenade
+== 수류탄으로 다른 플레이어를 공격할 수 있습니다
 
-Gameplay
-== 게임 플레이
+You can shoot others with laser
+== 레이저로 다른 플레이어를 공격할 수 있습니다
 
-Overlay entities
-== 엔티티 중첩 표시
+You can shoot others with shotgun
+== 샷건으로 다른 플레이어를 공격할 수 있습니다
 
-Size
-== 크기
+You can't change teams that fast!
+== 너무 빨리 팀을 변경할 수 없습니다
 
-Show text entities
-== 문자 엔티티 표시
+You can't change teams while you are dead/a spectator.
+== 죽었거나 관전 중일 때는 팀을 변경할 수 없습니다
 
-Show others (own team only)
-== 팀 내의 다른 플레이어 표시
+You can't check your team while you are dead/a spectator.
+== 죽었거나 관전 중일 때는 팀을 확인할 수 없습니다
 
-Show quads
-== 배경 표시
+You can't collide with others
+== 다른 플레이어와 충돌할 수 없습니다
 
-AntiPing
-== 안티 핑
+You can't hammer hit others
+== 망치로 다른 플레이어를 공격할 수 없습니다
 
-AntiPing: predict other players
-== 안티 핑: 다른 플레이어 예측
+You can't hit others
+== 다른 플레이어를 공격할 수 없습니다
 
-AntiPing: predict weapons
-== 안티 핑: 무기 예측
+You can't hook others
+== 다른 플레이어를 갈고리로 걸 수 없습니다
 
-AntiPing: predict grenade paths
-== 안티 핑: 유탄 궤적 예측
+You can't join super team if you don't have super rights
+== 슈퍼 권한이 없으면 슈퍼 팀에 가입할 수 없습니다
 
-Show other players' hook collision lines
-== 다른 플레이어의 갈고리 보조선 표시
+You can't kick authorized players
+== 권한이 있는 플레이어를 추방할 수 없습니다
 
-Background
-== 배경
+You can't kick yourself
+== 자신을 추방할 수 없습니다
 
-Use current map as background
-== 현재 맵을 배경으로 사용
+You can't move authorized players to spectators
+== 권한이 있는 플레이어를 관전자로 이동시킬 수 없습니다
 
-Show tiles layers from BG map
-== 배경 맵의 타일 레이어 표시
+You can't move yourself to spectators
+== 자신을 관전자로 이동시킬 수 없습니다
 
-New random timeout code
-== 새로운 무작위 타임아웃 코드 생성
+You can't shoot others with grenade
+== 수류탄으로 다른 플레이어를 공격할 수 없습니다
 
-Run on join
-== 입장 시 실행
+You can't shoot others with laser
+== 레이저로 다른 플레이어를 공격할 수 없습니다
 
-Chat command (e.g. showall 1)
-== 채팅 명령어 (예시: showall 1)
+You can't shoot others with shotgun
+== 샷건으로 다른 플레이어를 공격할 수 없습니다
 
-DDNet %s is available:
-== DDNet %s 사용 가능:
+You canceled the swap with %s
+== %s와의 교환을 취소했습니다
 
-Update now
-== 지금 업데이트
+You died, but will stay in practice until you use kill.
+== 죽었지만 kill을 입력할 때까지 연습 모드에 남아 있습니다
 
-Updating…
-== 업데이트 중…
+You do not have a pending swap request.
+== 대기 중인 교환 요청이 없습니다
 
-DDNet Client updated!
-== DDNet 클라이언트가 업데이트됐습니다!
+You don't have any eye emotes, remember to bind some.
+== 눈동자 이모트가 없습니다. 일부를 바인딩하세요
 
-No updates available
-== 현재 업데이트 사항 없음
+You don't have unlimited air jumps
+== 무한 공중 점프가 없습니다
 
-Check now
-== 지금 확인
+You have a jetpack gun
+== 제트팩 총을 가지고 있습니다
 
-Entities
-== 엔티티
+You have already requested to swap with %s.
+== 이미 %s와 교환을 요청했습니다
 
-Emoticons
-== 이모티콘
+You have requested to swap with %s. Use /cancelswap to cancel the request.
+== %s와 교환을 요청했습니다. 취소하려면 /cancelswap을 입력하세요
 
-Particles
-== 파티클
+You have started racing already
+== 이미 경주를 시작했습니다
 
-Assets directory
-== 에셋 폴더
+You have to be in a team (from 1-63)
+== 팀(1-63)에 속해 있어야 합니다
 
-Discord
-== 디스코드
+You have to be in a team to play on this server and all of your team will die if the team is locked
+== 이 서버에서 플레이하려면 팀에 속해야 하며, 팀이 잠기면 모든 팀원이 죽습니다
 
-https://ddnet.org/discord
-== https://ddnet.org/discord
+You have to wait %s seconds until you can swap
+== 교환하려면 %s초를 기다려야 합니다
 
-Learn
-== 학습터
+You have unlimited air jumps
+== 무한 공중 점프가 있습니다
 
-https://wiki.ddnet.org/
-== https://wiki.ddnet.org/wiki/Main_Page/ko
+You have unsaved changes.
+== 저장되지 않은 변경 사항이 있습니다.
 
-Website
-== 웹사이트
+You have used practice mode already
+== 이미 연습 모드를 사용했습니다
 
-Settings
-== 설정
+You haven't previously teleported. Use /tp before using this command.
+== 이전에 텔레포트하지 않았습니다. 이 명령을 사용하기 전에 /tp를 사용하세요
 
-Stop server
-== 서버 닫기
+You lost your jetpack gun
+== 제트팩 총을 잃었습니다
 
-Run server
-== 서버 열기
+You must join a team and play with somebody or else you can't play
+== 팀에 가입하여 다른 사람과 플레이해야 합니다. 그렇지 않으면 플레이할 수 없습니다
 
-Server executable not found, can't run server
-== 서버 실행 파일이 발견되지 않아 서버를 구동할 수 없습니다.
+You must restart the game for all settings to take effect.
+== 모든 설정을 적용하려면 게임을 다시 시작해야 합니다.
 
-Editor
-== 맵 편집기
+You must wait %s seconds before making another vote.
+== 다른 투표를 시작하려면 %s초를 기다려야 합니다
 
-[Start menu]
-Play
-== 플레이
+You must wait %s seconds before making your first vote.
+== 첫 투표를 시작하려면 %s초를 기다려야 합니다
 
-DDNet %s is out!
-== DDNet %s 이(가) 공개됐습니다!
+You will be disconnected from the server.
+== 서버에서 연결이 끊깁니다.
 
-Downloading %s:
-== %s 다운로드 중:
+You will no longer see all tees on this server
+== 이 서버에서 모든 티를 더 이상 볼 수 없습니다
 
-Update failed! Check log…
-== 업데이트에 실패했습니다! 로그를 확인해 주십시오…
+You will not receive any further global chat and server messages
+== 더 이상 글로벌 채팅 및 서버 메시지를 받지 않습니다
 
-Restart
-== 재시작
+You will not receive any further whispers
+== 더 이상 귓속말을 받지 않습니다
 
-Manual
-== 수동
+You will now see all tees on this server, no matter the distance
+== 이제 이 서버의 모든 티를 거리에 관계없이 볼 수 있습니다
 
-Race
-== 레이스
+You will receive global chat and server messages
+== 글로벌 채팅 및 서버 메시지를 받습니다
 
-Auto
-== 자동
+You will receive whispers
+== 귓속말을 받습니다
 
-Replay
-== 리플레이
+You'll lose unsaved changes after deselecting.
+== 선택을 해제하면 저장되지 않은 변경사항이 손실됩니다.
 
-Follow
-== 팔로우
+You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
+== /practice가 켜진 팀에 속해 있지 않습니다. 연습 모드에서는 순위를 얻을 수 없습니다
 
-Frags
-== 처치
+You're the last one!
+== 당신이 마지막이에요!
 
-Deaths
-== 사망
+Your current race time is %s
+== 현재 경주 시간은 %s입니다
 
-Suicides
-== 자살
+Your current version is outdated. Please update from the QQ group.
+== 현재 버전이 오래되었습니다. QQ 그룹에서 업데이트하세요.
 
-Ratio
-== 처치율
+Your favorite map manager
+== 당신이 가장 좋아하는 맵 관리자
 
-Net
-== 순처치
+Your favorite maps appear here
+== 즐겨찾는 맵이 여기에 표시됩니다
 
-FPM
-== 처치/분
+Your friend %s is online and currently on map %s!
+== 친구 %s님이 온라인이며 현재 맵 %s에 있습니다!
 
-Spree
-== 연속처치
-
-Best
-== 최고
-
-Grabs
-== 획득
-
-1 new mention
-== 1 건의 새 언급
-
-%d new mentions
-== %d 건의 새 언급
-
-9+ new mentions
-== 9+ 건의 새 언급
-
-The format of texture %s is not RGBA which will cause visual bugs.
-== 텍스처 %s 의 형식이 RGBA가 아닙니다. 이는 시각적 오류를 발생시킬 수 있습니다.
-
-Join Tutorial Server
-== 튜토리얼 서버 입장
-
-Skip Tutorial
-== 튜토리얼 건너뛰기
-
-AFR
-== 아프리카
-
-ASI
-== 아시아
-
-AUS
-== 호주
-
-EUR
-== 유럽
-
-NA
-== 북미
-
-SA
-== 남미
-
-CHN
-== 중국
-
-%.2f MiB
-== %.2f MiB
-
-%.2f KiB
-== %.2f KiB
-
-Renderer
-== 렌더러
-
-default
-== 기본
-
-custom
-== 사용자 정의
-
-auto
-== 자동
-
-Tutorial
-== 튜토리얼
-
-Can't find a Tutorial server
-== 튜토리얼 서버를 찾을 수 없음
-
-Choose default eyes when joining a server
-== 서버 입장 시의 기본 눈을 선택합니다.
-
-Allows maps to render with more detail
-== 맵의 세부사항을 렌더링합니다.
-
-When you cross the start line, show a ghost tee replicating the movements of your best time
-== 출발선을 넘으면 당신의 최고 기록을 재현하는 고스트 Tee가 표시됩니다.
-
-Opacity
-== 불투명도
-
-Adjust the opacity of entities belonging to other teams, such as tees and name plates
-== 다른 팀의 Tee와 이름 표시 등 엔티티의 불투명도를 조정합니다.
-
-Quads are used for background decoration
-== 맵 배경을 표시합니다.
-
-Tries to predict other entities to give a feel of low latency
-== 다른 엔티티를 예측해 지연 시간을 줄입니다.
-
-Super
-== 무적
-
-Team %d
-== 팀 %d
-
-Position:
-== 위치
-
-Speed:
-== 속도
-
-Angle:
-== 각도
-
-Trying to determine UDP connectivity…
-== UDP 연결 확인 시도 중…
-
-UDP seems to be filtered.
-== UDP가 필터링된 것으로 보입니다.
-
-UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
-== UDP와 TCP의 IP 주소가 다른 것으로 보입니다. VPN, 프록시 또는 네트워크 가속기를 비활성화하십시오.
-
-No answer from server yet.
-== 서버로부터 응답이 아직 없습니다.
-
-Download community skins
-== 커뮤니티 스킨 다운로드
-
-Enable controller
-== 컨트롤러 활성화
-
-[Ingame controller mode]
-Relative
-== 상대적
-
-[Ingame controller mode]
-Absolute
-== 절대적
-
-Ingame controller mode
-== 게임 내 컨트롤러 모드
-
-Ingame controller sens.
-== 게임 내 컨트롤러 감도
-
-UI controller sens.
-== UI 컨트롤러 감도
-
-Controller jitter tolerance
-== 컨트롤러 신호 오차 허용 범위
-
-Status
-== 상태
-
-Aim bind
-== 조준 바인드
-
-Mouse
-== 마우스
-
-Ingame mouse sens.
-== 게임 내 마우스 감도
-
-UI mouse sens.
-== UI 마우스 감도
-
-Controller
-== 컨트롤러
-
-Show dummy actions
-== 더미 동작 표시
-
-Show freeze bars
-== 동결 상태줄 표시
-
-Show player position
-== 플레이어 위치 표시
-
-Show player speed
-== 플레이어 속도 표시
-
-Show player target angle
-== 플레이어 조준 각도 표시
-
-Opacity of freeze bars inside freeze
-== 동결 타일 내에서의 동결 상태줄 불투명도
-
-Normal Color
-== 일반 메시지 색상
-
-Highlight Color
-== 강조 메시지 색상
-
-Extras
-== 기타
-
-Preparing demo playback
-== 데모 재생 준비 중
-
-Connected
-== 연결됨
-
-Loading map file from storage
-== 저장공간에서 맵 파일 로딩 중
-
-Why are you slowmo replaying to read this?
-== 왜 이것을 슬로우 모션으로 보려고 하십니까?
-
-Initializing components
-== 구성요소 초기화 중
-
-Initializing assets
-== 에셋 초기화 중
-
-Initializing map logic
-== 맵 로직 초기화 중
-
-Sending initial client info
-== 초기 클라이언트 정보 전송 중
-
-Uploading map data to GPU
-== 맵 데이터를 GPU에 업로드 중
-
-Getting game info
-== 게임 정보 가져오는 중
-
-Requesting to join the game
-== 게임 참가 요청 중
-
-Loading menu images
-== 메뉴 이미지 로딩 중
-
-Loading demo files
-== 데모 파일 로딩 중
-
-Loading ghost files
-== 고스트 파일 로딩 중
-
-Loading skin files
-== 스킨 파일 로딩 중
-
-Appearance
-== 표시
-
-Name Plate
-== 이름 표시
-
-Hook Collisions
-== 갈고리 보조선
-
-Show health, shields and ammo
-== 체력, 방어구, 탄약 표시
-
-DDRace HUD
-== DDRace HUD
-
-Show DDRace HUD
-== DDRace HUD 표시
-
-Show jumps indicator
-== 점프 상태 표시
-
-Hook collision line
-== 갈고리 보조선
-
-Hook collision line opacity
-== 갈고리 보조선 불투명도
-
-Colors of the hook collision line, in case of a possible collision with:
-== 갈고리 보조선 색상:
+Your locked team was killed because '%s' %s
+== '%s' %s 때문에 잠긴 팀이 죽었습니다
 
 Your movements are not taken into account when calculating the line colors
-== 당신의 움직임은 색상 계산에 고려되지 않습니다.
+== 선 색상 계산 시 이동으로 인한 조준 오프셋은 고려되지 않음
 
-Nothing hookable
-== 갈고리 불가
+Your nickname '%s' is already used (%d points). Do you still want to use it?
+== 닉네임 '%s'이(가) 이미 사용 중입니다(%d점). 계속 사용하시겠습니까?
 
-Something hookable
-== 갈고리 가능
+Your profile
+== 내 프로필
 
-A Tee
-== Tee 대상
+Your skin
+== 내 스킨
 
-Loading assets
-== 에셋 로딩 중
+Your swap request timed out %s seconds ago, use /swap again to request
+== 교환 요청이 %s초 전에 만료되었습니다. 다시 요청하려면 /swap을 사용하세요
 
-Loading race demo files
-== 레이스 데모 파일 로딩 중
+Your team has been killed because it contains an invalid tee state
+== 팀에 유효하지 않은 티 상태가 포함되어 있어 팀이 죽었습니다
 
-Loading sound files
-== 소리 파일 로딩 중
+Your team has not started yet
+== 팀이 아직 시작하지 않았습니다
 
-Play the current demo
-== 재생
+Your team is currently saving
+== 팀이 현재 저장 중입니다
 
-Pause the current demo
-== 일시정지
+Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
+== 더 이상 완주할 수 없고 /practice 모드를 입력하지 않아 팀이 죽었습니다
 
-Stop the current demo
-== 정지
+Your team was unlocked by an unlock team tile
+== 팀 잠금 해제 타일로 팀이 잠금 해제되었습니다
 
-Slow down the demo
-== 속도 낮추기
+Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
+== 타임아웃 코드가 설정되었습니다. 0.7 클라이언트는 타임아웃 시 티를 되찾을 수 없지만, 0.6 클라이언트는 당신의 티를 요구할 수 있습니다
 
-Speed up the demo
-== 속도 높이기
+z = Zoom
+== z = 확대/축소
 
-Export cut as a separate demo
-== 자른 부분을 다른 이름으로 저장
+Zen Mode
+== 선 모드
 
-Toggle keyboard shortcuts
-== 키보드 단축키 사용
+Zen mode key
+== 선 모드 키
 
-Weapons
-== 무기
+Zhipu AI
+== Zhipu AI
 
-Rifle Laser Outline Color
-== 소총 레이저 테두리 색상
+Zhipu API key
+== Zhipu API 키
 
-Rifle Laser Inner Color
-== 소총 레이저 광선 색상
+Zoom
+== 줌
 
-Shotgun Laser Outline Color
-== 산탄총 레이저 테두리 색상
+Zoom decrease
+== 축소
 
-Shotgun Laser Inner Color
-== 산탄총 레이저 광선 색상
+Zoom in
+== 확대
 
-Door Laser Outline Color
-== 문 레이저 테두리 색상
+Zoom increase
+== 확대
 
-Door Laser Inner Color
-== 문 레이저 광선 색상
+Zoom out
+== 축소
 
-Freeze Laser Outline Color
-== 동결 레이저 테두리 색상
+⚠️ FTAPI is a free service. Excessive use may cause service suspension.
+== ⚠️ FTAPI는 무료 서비스입니다. 과도한 사용은 서비스 중단을 초래할 수 있습니다
 
-Freeze Laser Inner Color
-== 동결 레이저 광선 색상
+⚠️ LibreTranslate API Key not set
+== ⚠️ LibreTranslate API 키가 설정되지 않음
 
-Menu opened. Press Esc key again to close menu.
-== 메뉴가 열려 있습니다. Esc 키를 눌러 닫을 수 있습니다.
+⚠️ LLM API Key not configured
+== ⚠️ LLM API 키가 구성되지 않음
 
-Set all to Rifle
-== 소총 색상으로 통일
+⚠️ Tencent Cloud API not configured
+== ⚠️ 텐센트 클라우드 API가 구성되지 않음
 
-[Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 초기화에 실패했습니다. 구성 폴더의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경 후 재시도하십시오.
+[Assets editor blend mode]
+Multiply
+== 곱하기
 
-[Graphics error]
-An error during command recording occurred. Try to update your GPU drivers.
-== 명령 기록 중 오류가 발생했습니다. GPU 드라이버를 업데이트해 보십시오.
+[Assets editor blend mode]
+Normal
+== 일반
 
-[Graphics error]
-A render command failed. Try to update your GPU drivers.
-== 렌더링 명령에 실패했습니다. GPU 드라이버를 업데이트해 보십시오.
+[Assets editor blend mode]
+Overlay
+== 오버레이
 
-[Graphics error]
-Submitting the render commands failed. Try to update your GPU drivers.
-== 렌더링 명령 제출에 실패했습니다. GPU 드라이버를 업데이트해 보십시오.
-
-[Graphics error]
-Failed to swap framebuffers. Try to update your GPU drivers.
-== 프레임버퍼 교환에 실패했습니다. GPU 드라이버를 업데이트해 보십시오.
-
-[Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 알 수 없는 오류가 발생했습니다. 구성 폴더의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경 후 재시도하십시오.
-
-[Graphics error]
-Could not initialize the given graphics backend, reverting to the default backend now.
-== 지정된 그래픽 백엔드를 초기화하지 못했습니다. 기본 백엔드로 되돌립니다.
-
-Cancel
-== 취소
-
-File '%s' already exists, do you want to overwrite it?
-== 파일 '%s'이(가) 이미 존재합니다. 덮어쓰기하시겠습니까?
-
-Are you sure that you want to remove the player '%s' from your friends list?
-== '%s' 님을 친구 목록에서 제거하시겠습니까?
-
-Are you sure that you want to remove the clan '%s' from your friends list?
-== '%s' 클랜을 친구 목록에서 제거하시겠습니까?
-
-Go back one tick
-== 1 틱 앞으로 이동
-
-Go forward one tick
-== 1 틱 뒤로 이동
-
-Go back one marker
-== 이전 마커로 이동
-
-Go forward one marker
-== 다음 마커로 이동
-
-Open the directory that contains the demo files
-== 데모 파일이 있는 폴더를 엽니다.
-
-Are you sure that you want to delete the demo '%s'?
-== 데모 '%s'을(를) 삭제하시겠습니까?
-
-Unable to delete the demo '%s'
-== 데모 '%s'을(를) 삭제할 수 없음
-
-Save power by lowering refresh rate (higher input latency)
-== 화면 주사율을 낮춰 전력 절약 (입력 지연 증가)
-
-Open the settings file
-== 설정 파일을 엽니다.
-
-Open the directory that contains the configuration and user files
-== 구성 파일과 사용자 파일이 있는 폴더를 엽니다.
-
-Open the directory to add custom themes
-== 사용자 정의 테마를 추가할 폴더를 엽니다.
-
-Open the directory to add custom skins
-== 사용자 정의 스킨을 추가할 폴더를 엽니다.
-
-No controller found. Plug in a controller.
-== 컨트롤러가 발견되지 않았습니다. 컨트롤러를 연결해 주십시오.
-
-Reset controls
-== 조작 설정 초기화
-
-Are you sure that you want to reset the controls to their defaults?
-== 조작 설정을 초기화하시겠습니까?
-
-Unregister protocol and file extensions
-== 프로토콜과 파일 확장자 등록 해제
-
-Open the directory to add custom assets
-== 사용자 정의 에셋을 추가할 폴더를 엽니다.
-
-[Graphics error]
-Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
-== 지정된 그래픽 백엔드를 초기화하지 못했습니다. 통합 그래픽 카드 드라이버가 설치되지 않은 것이 원인일 수 있습니다.
-
-Could not save downloaded map. Try manually deleting this file: %s
-== 다운로드한 맵을 저장하지 못했습니다. 다음 파일을 삭제해 보십시오: %s
-
-Copy info
-== 정보 복사
-
-Create a random skin
-== 무작위 스킨 생성
-
-Quitting. Please wait…
-== 종료 중입니다. 잠시만 기다려 주십시오…
-
-Restarting. Please wait…
-== 재시작 중입니다. 잠시만 기다려 주십시오…
-
-Searching
-== 검색
-
-Enter Username
-== 이름 입력
-
-Enter Password
-== 암호 입력
-
-NOT CONNECTED
-== 연결되지 않음
-
-Press a key…
-== 아무 키나 누르십시오…
-
-Save skin
-== 스킨 저장
-
-%d/%d KiB (%.1f KiB/s)
-== %d/%d KiB (%.1f KiB/s)
-
-No local servers found (ports %d-%d)
-== 로컬 서버를 찾을 수 없음 (포트 %d-%d)
-
-Example of usage
-== 예시
-
-No login required
-== 로그인 불필요 서버
-
-Communities
-== 커뮤니티
-
-No server selected
-== 서버가 선택되지 않음
-
-Online friends (%d)
-== 온라인 친구 (%d)
-
-Online clanmates (%d)
-== 온라인 클랜원 (%d)
-
-[friends (server browser)]
-Offline (%d)
-== 오프라인 (%d)
-
-Click to select server. Double click to join your friend.
-== 클릭해 서버를 선택합니다. 더블클릭해 친구가 있는 서버에 입장합니다.
-
-Click to remove this player from your friends list.
-== 클릭해 해당 플레이어를 친구 목록에서 제거합니다.
-
-Click to remove this clan from your friends list.
-== 클릭해 해당 클랜을 친구 목록에서 제거합니다.
-
-Add friends by entering their name below or by clicking their name in the player list.
-== 아래에 이름을 입력하거나 플레이어 목록에서 이름을 클릭해 친구를 추가합니다.
-
-Add clanmates by entering their clan below and leaving the name blank.
-== 아래에 이름을 빈칸으로 두고 클랜명만 입력해 클랜원을 추가합니다.
-
-Add Clan
-== 클랜 추가
-
-Server filter
-== 서버 필터
-
-Friends
-== 친구
-
-[Demo player duration]
-%s min.
-== %s 분
-
-[Demo player duration]
-%s sec.
-== %s 초
-
-Folder Link
-== 폴더 주소
-
-Delete folder
-== 폴더 삭제
-
-Please wait…
-== 잠시만 기다려 주십시오…
-
-Close
-== 닫기
-
-Save changes
-== 변경사항 저장
-
-Unsaved changes
-== 변경사항이 저장되지 않음
-
-Discard changes
-== 변경사항 버리기
-
-Loading…
-== 로딩 중…
-
-Ghosts directory
-== 고스트 폴더
-
-[Hertz]
-Hz
-== Hz
-
-Graphics card
-== 그래픽 카드
-
-Tee
-== Tee
-
-Info Messages
-== 정보 메시지
-
-Show local time always
-== 항상 현지 시각 표시
-
-Authed name color in scoreboard
-== 점수판에 인증된 이름 색상 표시
-
-Same clan color in scoreboard
-== 점수판에 클랜 색상 표시
-
-Show client IDs (scoreboard, chat, spectator)
-== 점수판, 채팅창, 관전창 등에 클라이언트 ID 표시
-
-Always show chat
-== 항상 채팅 표시
-
-Show only chat messages from team members
-== 팀원이 보낸 메시지만 표시
-
-Chat font size
-== 채팅 글꼴 크기
-
-Chat width
-== 채팅 너비
-
-Show client IDs in name plates
-== 이름에 클라이언트 ID 표시
-
-Hook Strength
-== 갈고리 세기
-
-Show hook strength icon indicator
-== 갈고리 세기 아이콘 표시
-
-Show hook strength number indicator
-== 갈고리 세기 정도 표시
-
-Size of hook strength icon and number indicator
-== 갈고리 세기 아이콘 및 정도 크기
-
-Key Presses
-== 키 입력
-
-Size of key press icons
-== 키 입력 아이콘 크기
-
-Show own player's hook collision line
-== 내 갈고리 보조선 표시
-
-Always show own player's hook collision line
-== 항상 내 갈고리 보조선 표시
-
-Always show other players' hook collision lines
-== 항상 다른 플레이어의 갈고리 보조선 표시
-
-Width of your own hook collision line
-== 내 갈고리 보조선 너비
-
-Width of others' hook collision line
-== 다른 플레이어의 갈고리 보조선 너비
-
-Preview 'Hook collisions' being pressed
-== '갈고리 보조선' 키 입력 미리보기
-
-Show finish messages
-== 완주 메시지 표시
-
-Enable ghost
-== 고스트 활성화
-
-Only save improvements
-== 향상된 기록만 저장
-
-Regular background color
-== 일반 배경 색상
-
-Entities background color
-== 엔티티 배경 색상
-
-Are you sure that you want to delete '%s'?
-== '%s'을(를) 삭제하시겠습니까?
-
-Delete skin
-== 스킨 삭제
-
-Unable to delete skin
-== 스킨을 삭제할 수 없음
-
-Round %d/%d
-== 라운드 %d/%d
-
-[Team and size]
-%d\n(%d/%d)
-== %d\n(%d/%d)
-
-Team %d (%d/%d)
-== 팀 %d (%d/%d)
-
-[skins]
-Body
-== 몸
-
-[skins]
-Decoration
-== 장식
-
-[skins]
-Hands
-== 손 
-
-[skins]
-Feet
-== 발
-
-[skins]
-Eyes
-== 눈
-
-Aim
-== 조준
-
-Active: Fire
-== 발사 활성화
-
-Active: Hook
-== 갈고리 활성화
-
-Moved ingame
-== 게임 내에서 이동됨
-
-https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping/ko
-
-Could not resolve connect address '%s'. See local console for details.
-== 연결 주소 '%s'을(를) 확인할 수 없습니다. 세부사항은 로컬 콘솔을 확인하십시오.
-
-Connect address error
-== 주소 연결 오류
-
-Could not connect dummy
-== 더미 연결 불가능
-
-Error playing demo
-== 데모 재생 오류
-
-Failed saving the replay!
-== 리플레이 저장에 실패했습니다!
-
-Saving settings to '%s' failed
-== '%s' 설정 저장 실패
-
-Error saving settings
-== 설정 저장 오류
-
-The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
-== 텍스처 %s 의 너비를 %d (으)로 나눌 수 없거나 높이를 %d (으)로 나눌 수 없습니다. 이는 시각적 오류를 발생시킬 수 있습니다.
-
-"%s" is not compatible with pnglite and cannot be loaded by old DDNet versions:
-== "%s"은(는) pnglite와 호환되지 않으므로 DDNet의 이전 버전에서는 로딩할 수 없습니다.
-
-Loading demo file from storage
-== 저장공간에서 데모 파일 로딩 중
-
-Some fonts could not be loaded. Check the local console for details.
-== 글꼴이 완전히 로딩되지 않았습니다. 세부사항은 로컬 콘솔을 확인하십시오.
-
-Auto-sync player camera
-== 플레이어 카메라 자동 연동
-
-[Auto camera]
-Disabled
-== 사용 안 함
-
-[Auto camera]
-Enabled
-== 사용
-
-[Auto camera]
-Unavailable for this player
-== 해당 플레이어 상대로 사용 불가
-
-[Auto camera]
-Inactive
-== 비활성화
+[Assets editor blend mode]
+Screen
+== 스크린
 
 [Auto camera]
 Active
-== 활성화
+== 활성
 
-Match %d of %d
-== 경기 %d / %d
+[Auto camera]
+Disabled
+== 비활성화됨
 
-No results
-== 결과 없음
+[Auto camera]
+Enabled
+== 활성화됨
 
-Lines %d - %d (%s)
-== 줄 %d - %d (%s)
+[Auto camera]
+Inactive
+== 비활성
 
-Locked
-== 고정
+[Auto camera]
+Unavailable for this player
+== 이 플레이어에게 사용 불가
 
-Following
-== 갱신
+[data_version.h]
+You may have installed only DDNet.exe. Please use the full QmClient folder.
+== DDNet.exe만 설치했을 수 있습니다. 전체 QmClient 폴더를 사용하세요.
 
-Loading commands…
-== 명령 로딩 중…
-
-Loading maps…
-== 맵 로딩 중…
-
-Multi-View
-== 다중 시점
-
-[Spectating]
-Following %s
-== %s 관전 중
-
-[Spectating Camera Mode Icon]
-AUTO
-== 자동
-
-Some map images could not be loaded. Check the local console for details.
-== 맵 이미지가 완전히 로딩되지 않았습니다. 세부사항은 로컬 콘솔을 확인하십시오.
-
-Some map sounds could not be loaded. Check the local console for details.
-== 맵 음원이 완전히 로딩되지 않았습니다. 세부사항은 로컬 콘솔을 확인하십시오.
-
-Loading menu themes
-== 메뉴 테마 로딩 중
-
-Main menu
-== 메인 메뉴
-
-Rename folder
-== 폴더 이름 변경
-
-Render complete
-== 렌더링 완료
-
-Are you sure that you want to restart?
-== 재시작하시겠습니까?
-
-Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.
-== 당신의 스킨을 저장하시겠습니까? 만약 같은 이름의 스킨이 있을 경우, 덮어쓰기됩니다.
-
-There's an unsaved map in the editor, you might want to save it.
-== 편집기에 저장되지 않은 맵이 있습니다. 돌아가 해당 맵을 저장하실 수 있습니다.
-
-Continue anyway?
-== 그래도 계속하시겠습니까?
-
-A demo with this name already exists
-== 같은 이름의 데모가 이미 있습니다.
-
-A folder with this name already exists
-== 같은 이름의 폴더가 이미 있습니다.
-
-Unable to rename the folder
-== 폴더 이름을 변경할 수 없습니다.
-
-(paused)
-== (일시정지됨)
-
-Videos directory
-== 동영상 폴더
-
-Video was saved to '%s'
-== 동영상이 '%s'에 저장됐습니다.
-
-Unable to save the skin
-== 스킨 저장 불가능
-
-Unable to save the skin with a reserved name
-== 지정된 이름으로 스킨 저장 불가능
-
-Go back the specified duration
-== 이전으로 건너뛰기
-
-Change the skip duration
-== 건너뛰기 시간 조정
-
-Go forward the specified duration
-== 다음으로 건너뛰기
-
-Mark the beginning of a cut (right click to reset)
-== 자를 부분의 시작점 생성 (우클릭으로 초기화)
-
-Mark the end of a cut (right click to reset)
-== 자를 부분의 종료점 생성 (우클릭으로 초기화)
-
-Close the demo player
-== 데모 재생기 종료
-
-Toggle auto camera
-== 자동 카메라 사용
-
-Export demo cut
-== 데모 잘라서 저장
-
-Cut interval
-== 자른 부분 시간대
-
-Cut length
-== 자른 부분 길이
-
-Render cut to video
-== 자른 부분을 동영상으로 렌더링
-
-Please use a different filename
-== 다른 파일명을 사용해 주십시오.
-
-All combined
-== 모두 병합됨
-
-No demo selected
-== 데모가 선택되지 않음
-
-Created
-== 생성됨
-
-Netversion
-== 네트워크 버전
+[data_version.h]
+You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.
+== DDNet.exe만 교체하고 QmClient.zip을 건너뛰었을 수 있습니다.\n전체 QmClient 패키지를 설치하세요.
 
 [Demo details]
 map not included
 == 맵이 포함되지 않음
 
-Are you sure that you want to delete the folder '%s'?
-== 폴더 '%s'을(를) 삭제하시겠습니까?
+[Demo playback]
+Go to Live
+== 실시간으로 이동
 
-Unable to delete the folder '%s'. Make sure it's empty first.
-== 폴더 '%s'을(를) 삭제할 수 없습니다. 해당 폴더가 비어있는지 확인하십시오.
+[Demo playback]
+Live
+== 실시간
 
-Dummy is not allowed on this server
-== 이 서버에서는 더미를 사용할 수 없습니다.
+[Demo player duration]
+%s min.
+== %s분
 
-Edit touch controls
-== 터치 조작 설정 편집
-
-https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls/ko
-
-Error saving touch controls
-== 터치 조작 설정 저장 오류
-
-Could not save touch controls to file. See local console for details.
-== 터치 조작 설정을 파일에 저장할 수 없습니다. 세부사항은 로컬 콘솔을 확인하십시오.
-
-Are you sure that you want to discard the current changes to the touch controls?
-== 터치 조작 설정의 변경사항을 버리시겠습니까?
-
-Are you sure that you want to reset the touch controls to default?
-== 터치 조작 설정을 초기화하시겠습니까?
-
-Import from clipboard
-== 클립보드에서 가져오기
-
-Are you sure that you want to import the touch controls from the clipboard? This will overwrite your current touch controls.
-== 클립보드에서 터치 조작 설정을 가져오시겠습니까? 현재 터치 조작 설정은 덮어쓰기됩니다.
-
-Export to clipboard
-== 클립보드로 내보내기
-
-Direct touch input while ingame
-== 게임 내 직접 터치 입력
-
-[Direct touch input]
-Disabled
-== 비활성화
+[Demo player duration]
+%s sec.
+== %s초
 
 [Direct touch input]
 Active action
-== 동작 활성화
+== 활성 작업
 
 [Direct touch input]
 Aim
 == 조준
+
+[Direct touch input]
+Disabled
+== 비활성화
 
 [Direct touch input]
 Fire
@@ -2018,432 +8182,85 @@ Fire
 Hook
 == 갈고리
 
-Direct touch input while spectating
-== 관전 중 직접 터치 입력
+[Graphics error]
+A render command failed. Try to update your GPU drivers.
+== 렌더 명령이 실패했습니다. GPU 드라이버를 업데이트해 보세요.
 
-Error loading touch controls
-== 터치 조작 로딩 오류
+[Graphics error]
+An error during command recording occurred. Try to update your GPU drivers.
+== 명령 기록 중 오류가 발생했습니다. GPU 드라이버를 업데이트해 보세요.
 
-Could not load touch controls from file. See local console for details.
-== 파일로부터 터치 조작을 로딩할 수 없습니다. 세부사항은 로컬 콘솔을 확인하십시오.
+[Graphics error]
+Could not initialize the given graphics backend, reverting to the default backend now.
+== 지정된 그래픽 백엔드를 초기화할 수 없어 기본 백엔드로 되돌립니다.
 
-Could not load default touch controls from file. See local console for details.
-== 파일로부터 기본 터치 조작을 로딩할 수 없습니다. 세부사항은 로컬 콘솔을 확인하십시오.
+[Graphics error]
+Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
+== 지정된 그래픽 백엔드를 초기화할 수 없습니다. 내장 그래픽 드라이버가 설치되지 않았을 수 있습니다.
 
-Could not load touch controls from clipboard. See local console for details.
-== 클립보드로부터 터치 조작을 로딩할 수 없습니다. 세부사항은 로컬 콘솔을 확인하십시오.
+[Graphics error]
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== 초기화 중 실패했습니다. 설정 디렉토리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경한 후 다시 시도하세요.
 
-Community
-== 커뮤니티
-
-[Team status]
-forbidden
-== 금지됨
-
-[Team status]
-solo
-== 솔로
-
-[Team status]
-allowed
-== 허용됨
-
-[Team status]
-required
-== 요구됨
-
-Teams
-== 팀
-
-[Team size]
-minimum
-== 최소
-
-[Team size]
-maximum
-== 최대
-
-Activate all
-== 모두 활성화
-
-Deactivate all
-== 모두 비활성화
-
-Saves file
-== 저장 파일
-
-Open the saves file
-== 저장 파일을 엽니다.
-
-Player info change cooldown
-== 플레이어 정보 변경 쿨타임
-
-Axis
-== 축(Axis)
-
-Show FPS
-== 초당 프레임 수(FPS) 표시
-
-Renders your frame rate in the top right
-== 우측 상단에 프레임 수 렌더링
-
-[Translation credits: Add your own name here when you update translations]
-English translation by the DDNet Team
-== 한국어 번역: ksgcln72, Pathos, CHaBek, 언더
-
-Show spectator cursor
-== 관전자 커서 표시
-
-Basic
-== 기본
-
-Custom
-== 사용자 정의
-
-Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
-== 서버를 열 수 없습니다. 백그라운드에서 서버를 구동하기 위해 앱 설정에서 알림 권한을 허용하십시오.
-
-[Spectators]
-%d others…
-== 이외 %d 명…
-
-[skins]
-Marking
-== 마킹
-
-Show number of spectators
-== 관전자 수 표시
-
-Press Ctrl+Shift+G to disable debug graphs.
-== Ctrl+Shift+G를 눌러 디버그 그래프를 비활성화할 수 있습니다.
-
-[Spectating]
-Following %d: %s
-== %d: %s 관전 중
-
-Server could not be started
-== 서버를 열 수 없습니다.
-
-Loading map
-== 맵 로딩 중
-
-This name cannot be used for files and folders
-== 이 이름은 파일 및 폴더에 사용할 수 없습니다.
-
-Error checking player name
-== 플레이어 이름 검색 오류
-
-Could not get server list from master server
-== 마스터 서버에서 서버 목록을 불러올 수 없습니다.
-
-Map size
-== 맵 크기
-
-Chat background color
-== 채팅 배경 색상
-
-[Show name plates]
-None
-== 끔
-
-[Show name plates]
-Own
-== 나만
-
-[Show name plates]
-Others
-== 타인만
-
-[Show name plates]
-All
-== 모두
-
-Name plates offset
-== 이름 표시 간격
-
-Show friend icon in name plates
-== 이름에 친구 아이콘 표시
-
-Show client IDs on a separate line
-== 클라이언트 ID를 별도의 줄에 표시
-
-Client IDs size
-== 클라이언트 ID 크기
-
-Show players' key presses
-== 플레이어 키 입력 표시
-
-[Show players' key presses]
-None
-== 끔
-
-[Show players' key presses]
-Own
-== 나만
-
-[Show players' key presses]
-Others
-== 타인만
-
-[Show players' key presses]
-All
-== 모두
-
-Preview player's name plate
-== 플레이어 이름 표시 미리보기
-
-Preview dummy's name plate
-== 더미 이름 표시 미리보기
+[Graphics error]
+Failed to swap framebuffers. Try to update your GPU drivers.
+== 프레임버퍼 교체 실패. GPU 드라이버를 업데이트해 보세요.
 
 [Graphics error]
 Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
-== VRAM 용량이 부족합니다. 'cl_skins_loaded_max'를 더 낮은 값으로 설정하거나 고해상도의 사용자 정의 에셋(스킨 및 엔티티 등)을 삭제해 보십시오.
+== VRAM 부족. 'cl_skins_loaded_max' 값을 낮추거나 사용자 정의 에셋(스킨, 엔티티 등), 특히 고해상도 에셋을 제거해 보세요.
 
-No demo with this filename exists
-== 해당 이름의 데모가 존재하지 않음
+[Graphics error]
+Submitting the render commands failed. Try to update your GPU drivers.
+== 렌더 명령 제출에 실패했습니다. GPU 드라이버를 업데이트해 보세요.
 
-Could not check for existing player with your name. Check your internet connection.
-== 당신의 이름을 기존 플레이어 목록에서 검색할 수 없습니다. 인터넷 연결 상태를 확인하십시오.
+[Graphics error]
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== 알 수 없는 오류입니다. 설정 디렉터리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요.
 
-[Demo playback]
-Live
-== 실시간
+[Hammer Mode]
+Normal
+== 일반 (회전 안 함)
 
-[Demo playback]
-Go to Live
-== 실시간으로 재생
+[Hammer Mode]
+Rotate with cursor
+== 커서와 함께 회전 (수직)
 
-Save all changes before turning off the editor?
-== 편집기를 종료하기 전에 모든 변경사항을 저장하시겠습니까?
+[Hammer Mode]
+Rotate with cursor like gun
+== 총처럼 커서와 함께 회전 (수평)
 
-Layout
-== 레이아웃
+[Hertz]
+Hz
+== Hz
 
-Visibility
-== 표시
+[Important alert message]
+Press Esc or Tab to dismiss…
+== Esc 또는 Tab을 눌러 닫기…
 
-Behavior
-== 행위
+[Ingame controller mode]
+Absolute
+== 절대값
 
-Delete button
-== 버튼 삭제
+[Ingame controller mode]
+Relative
+== 상대적
 
-Are you sure that you want to delete this button?
-== 이 버튼을 삭제하시겠습니까?
-
-Duplicate
-== 복제
-
-New button already created
-== 이미 생성된 새 버튼
-
-A new button has already been created, please save or delete it before creating another one.
-== 새 버튼이 이미 생성됐습니다. 다른 버튼을 생성하기 전에 저장하거나 삭제하십시오.
-
-Please save your changes before duplicating a button.
-== 버튼을 복제하기 전에 변경사항을 저장하십시오.
-
-No space for button
-== 버튼 공간 없음
-
-There is not enough space available to place another button.
-== 다른 버튼을 배치할 공간이 부족합니다.
-
-There is not enough space available to place another button with this size. The button has been resized.
-== 이 크기의 다른 버튼을 배치할 공간이 부족합니다. 버튼의 크기가 재조절됐습니다.
-
-Deselect
-== 선택 해제
-
-You'll lose unsaved changes after deselecting.
-== 선택 해제 시 저장되지 않은 변경사항은 버려집니다.
-
+[Outlines]
 Width
 == 너비
-
-Height
-== 높이
-
-Shape
-== 형태
-
-[Touch button shape]
-Rectangle
-== 직사각형
-
-[Touch button shape]
-Circle
-== 원형
-
-[Touch button label type]
-Plain
-== 그대로
-
-[Touch button label type]
-Localized
-== 번역하기
-
-[Touch button label type]
-Icon
-== 아이콘
-
-Behavior type
-== 행위 종류
-
-[Touch button behavior]
-Bind
-== 바인드
-
-[Touch button behavior]
-Bind Toggle
-== 토글 바인드
-
-[Touch button behavior]
-Predefined
-== 지정 행위
-
-Command
-== 명령어
-
-Label
-== 문구
-
-Label type
-== 문구 종류
-
-Add command
-== 명령어 추가
-
-Delete command
-== 명령어 삭제
-
-[Touch button visibility preview]
-Included
-== 포함
-
-[Touch button visibility preview]
-Excluded
-== 제외
-
-[Touch button visibility preview]
-Ignore
-== 무시
-
-Long press on a touch button to select it.
-== 버튼을 길게 눌러 선택하십시오.
-
-New button
-== 새 버튼
-
-Select button by touch
-== 터치해 버튼 선택
-
-No buttons match your filter criteria
-== 필터에 일치하는 버튼이 없음
-
-File
-== 파일
-
-Buttons
-== 버튼
-
-Active color
-== 활성화 시 색상
-
-Inactive color
-== 비활성화 시 색상
-
-Preview button visibility while the editor is active.
-== 편집기가 활성화 상태일 때 버튼 표시 상태를 미리보기합니다.
-
-Show all buttons
-== 모든 버튼 표시
-
-Save all changes before switching selected button?
-== 다른 버튼을 선택하기 전에 모든 변경사항을 저장하시겠습니까?
-
-Discard
-== 버리기
-
-There is not enough space available for the button. Check its visibilities and size.
-== 버튼에 사용 가능한 공간이 부족합니다. 표시 조건과 크기를 확인하십시오.
-
-Selected button not visible
-== 선택한 버튼이 보이지 않음
-
-The selected button is not visible. Do you want to deselect it or edit its visibility?
-== 선택한 버튼이 보이지 않습니다. 선택을 해제하거나 표시 조건을 수정하시겠습니까? 
-
-Edit
-== 수정
-
-Width and height are required to be within the range from %d to %d.
-== 너비와 높이의 허용 범위는 %d 에서 %d 까지입니다.
-
-Button position is outside of the screen.
-== 버튼 위치가 화면 밖에 있습니다.
-
-The selected button is overlapping with other buttons.
-== 선택한 버튼이 다른 버튼과 겹쳐 있습니다.
-
-Wrong button settings
-== 잘못된 버튼 설정
-
-[Touch button visibilities]
-Ingame
-== 인게임
-
-[Touch button visibilities]
-Zoom Allowed
-== 시야 조절 허용됨
-
-[Touch button visibilities]
-Vote Active
-== 투표 활성화
-
-[Touch button visibilities]
-Dummy Allowed
-== 더미 허용됨
-
-[Touch button visibilities]
-Dummy Connected
-== 더미 연결됨
-
-[Touch button visibilities]
-Rcon Authed
-== 원격 콘솔 인증됨
-
-[Touch button visibilities]
-Demo Player
-== 데모 재생기
-
-[Touch button visibilities]
-Extra Menu
-== 기타 메뉴
-
-[Predefined touch button behaviors]
-Ingame Menu
-== 인게임 메뉴
-
-[Predefined touch button behaviors]
-Extra Menu
-== 기타 메뉴
 
 [Predefined touch button behaviors]
 Emoticon
 == 이모티콘
 
 [Predefined touch button behaviors]
-Spectate
-== 관전
+Extra Menu
+== 추가 메뉴 전환
 
 [Predefined touch button behaviors]
-Swap Action
-== 동작 전환
-
-[Predefined touch button behaviors]
-Use Action
-== 동작 실행
+Ingame Menu
+== 게임 내 메뉴
 
 [Predefined touch button behaviors]
 Joystick Action
@@ -2461,945 +8278,198 @@ Joystick Fire
 Joystick Hook
 == 조이스틱 갈고리
 
-This skin name cannot be used.
-== 이 스킨 이름은 사용할 수 없습니다.
-
-Skin could not be loaded due to an error. Check the local console for details.
-== 오류로 인해 스킨을 불러올 수 없습니다. 세부사항은 로컬 콘솔을 확인하십시오.
-
-Skin could not be found.
-== 스킨을 찾지 못했습니다.
-
-No skins match your filter criteria
-== 필터에 일치하는 스킨이 없음
-
-Censor profanity
-== 비속어 검열
-
-Dragger Outline Color
-== 드래거 테두리 색상
-
-Dragger Inner Color
-== 드래거 광선 색상
-
-AntiPing: prediction margin
-== 안티 핑: 예측 허용 범위
-
-Download
-== 다운로드
-
-Team save in progress. You'll be able to load with '/load %s'
-== 
-
-Team save in progress. You'll be able to load with '/load %s' if save is successful or with '/load %s' if it fails
-== 
-
-Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue
-== 
-
-Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' on %s to continue
-== 
-
-Save failed!
-== 
-
-[Important alert message]
-Press Esc or Tab to dismiss…
-== 
-
-Server alert
-== 
-
-Moderator alert
-== 
-
-You will be disconnected from the server.
-== 
-
-Are you sure that you want to disconnect and play this demo?
-== 
-
-
-Translated text hidden due to streamer mode
-== 
-
-TClient
-== 
-
-(On Latest)
-== 
-
-(Fetching Update Info)
-== 
-
-[bgdraw]
-Failed to create bgdraw folder
-== 
-
-[bgdraw]
-No items to write
-== 
-
-[bgdraw]
-No changes since last save
-== 
-
-[bgdraw]
-Writing item %d failed
-== 
-
-[bgdraw]
-Written %d items
-== 
-
-[bgdraw]
-Loaded %d items
-== 
-
-[bgdraw]
-Loaded %d items (discarded %d items)
-== 
-
-Kaomoji
-== 
-
-Shrug:
-== 
-
-Flip:
-== 
-
-Unflip:
-== 
-
-Cute:
-== 
-
-Lenny:
-== 
-
-Warlist
-== 
-
-Add war name:
-== 
-
-Add war clan:
-== 
-
-Add team name:
-== 
-
-Add team clan:
-== 
-
-Remove war name:
-== 
-
-Remove war clan:
-== 
-
-Remove team name:
-== 
-
-Remove team clan:
-== 
-
-Add [group] [name] [reason]:
-== 
-
-Add [group] [clan] [reason]:
-== 
-
-Remove [group] [name]:
-== 
-
-Remove [group] [clan]:
-== 
-
-Other
-== 
-
-Translate:
-== 
-
-Translate ID:
-== 
-
-Mute:
-== 
-
-Unmute:
-== 
-
-Settings
-== 
-
-Bind Wheel
-== 
-
-War List
-== 
-
-Chat Binds
-== 
-
-Status Bar
-== 
-
-Info
-== 
-
-Visual
-== 
-
-Custom Font: 
-== 
-
-[Hammer Mode]
-Normal
-== 
-
-[Hammer Mode]
-Rotate with cursor
-== 
-
-[Hammer Mode]
-Rotate with cursor like gun
-== 
-
-Hammer Mode: 
-== 
-
-Ingame cursor scale
-== 
-
-Wheel animate
-== 
-
-Show ping colored circle in nameplates
-== 
-
-Show country flags in nameplates
-== 
-
-Hide nameplates in spec
-== 
-
-Show skin names in nameplate
-== 
-
-Freeze stars
-== 
-
-Color frozen tee skins
-== 
-
-Show katan on frozen players
-== 
-
-Render all custom colored feet as white feet skin
-== 
-
-Tiny Tees
-== 
-
-Tiny Tee Size
-== 
-
-Fake CTF flags
-== 
-
-Input
-== 
-
-Fast Inputs (-20ms visual delay)
-== 
-
-Extra tick other tees (increases other tees latency, \nmakes dragging slightly easier when using fast input)
-== 
-
-Anti Latency Tools
-== 
-
-Prediction Margin
-== 
-
-Remove prediction & antiping in freeze
-== 
-
-Amount
-== 
-
-Delay
-== 
-
-Dont predict other players if you are frozen
-== 
-
-Adjust your prediction margin while frozen
-== 
-
-Frozen Margin
-== 
-
-Anti Ping Smoothing
-== 
-
-Use new smoothing algorithm
-== 
-
-Optimistic prediction along stable direction
-== 
-
-Negative stability buffer (for Gores)
-== 
-
-Uncertainty duration
-== 
-
-Auto execute
-== 
-
-Voting
-== 
-
-Auto vote no to map changes when far
-== 
-
-Minimum Time
-== 
-
-Message to send in chat:
-== 
-
-Leave empty to disable
-== 
-
-Auto Reply
-== 
-
-Auto reply to muted players
-== 
-
-Auto reply when tabbed out
-== 
-
-Player Indicator
-== 
-
-Show any enabled Indicators
-== 
-
-Hide indicator for tees on your screen
-== 
-
-Show only freeze Players
-== 
-
-Only show after joining a team
-== 
-
-Render tiny tees instead of circles
-== 
-
-Use warlist groups for indicator
-== 
-
-Indicator size
-== 
-
-Indicator opacity
-== 
-
-Change indicator offset based on distance to other tees
-== 
-
-Indicator min offset
-== 
-
-Indicator max offset
-== 
-
-Indicator max distance
-== 
-
-Indicator offset
-== 
-
-Use warlist colors instead of regular colors
-== 
-
-Show all warlist groups
-== 
-
-Indicator alive color
-== 
-
-Indicator in freeze color
-== 
-
-Indicator safe color
-== 
-
-Pet
-== 
-
-Show the pet
-== 
-
-Pet size
-== 
-
-Pet alpha
-== 
-
-Pet Skin:
-== 
-
-HUD
-== 
-
-Show mini vote HUD
-== 
-
-Show position and angle (mini debug)
-== 
-
-Show your cursor when in free spectate
-== 
-
-Spectate cursor alpha
-== 
-
-Show when you are the last alive
-== 
-
-Last!
-== 
-
-Horizontal Position
-== 
-
-Vertical Position
-== 
-
-Font Size
-== 
-
-Show screen center lines
-== 
-
-Screen center line color
-== 
-
-Screen center line width
-== 
-
-Frozen Tee Display
-== 
-
-Show frozen tee display
-== 
-
-Use skins instead of ninja tees
-== 
-
-Max Rows
-== 
-
-Tee Size
-== 
-
-Tees left alive text
-== 
-
-Count frozen tees
-== 
-
-Tile Outlines
-== 
-
-Show any enabled outlines
-== 
-
-Only show outlines in entities
-== 
-
-[Outlines]
-Width
-== 
-
-Unhook & hook
-== 
-
-Freeze & deep
-== 
-
-Unfreeze & undeep
-== 
-
-Kill
-== 
-
-Tele
-== 
-
-Outline freeze & deep
-== 
-
-Outline walls
-== 
-
-Outline teleporter
-== 
-
-Outline unfreeze & undeep
-== 
-
-Outline kill
-== 
-
-Outline width
-== 
-
-Outline alpha
-== 
-
-Outline Alpha (walls)
-== 
-
-Freeze outline color
-== 
-
-Walls outline color
-== 
-
-Teleporter outline color
-== 
-
-Unfreeze outline color
-== 
-
-Kill outline color
-== 
-
-Ghost Tools
-== 
-
-Show unpredicted ghosts for other players
-== 
-
-Swap ghosts and normal players
-== 
-
-Predicted alpha
-== 
-
-Unpredicted alpha
-== 
-
-Hide ghosts of frozen players
-== 
-
-Render ghosts as circles
-== 
-
-Toggle ghosts key
-== 
-
-Rainbow
-== 
-
-Rainbow Tees
-== 
-
-Rainbow weapons
-== 
-
-Rainbow hook
-== 
-
-Rainbow others
-== 
-
-Pulse
-== 
-
-Black
-== 
-
-Random
-== 
-
-Rainbow speed
-== 
-
-Tee Trails
-== 
-
-Enable tee trails
-== 
-
-Show other tees' trails
-== 
-
-Fade trail alpha
-== 
-
-Taper trail width
-== 
-
-Solid
-== 
-
-Tee
-== 
-
-Speed
-== 
-
-Tee trail color
-== 
-
-Trail width
-== 
-
-Trail length
-== 
-
-Trail alpha
-== 
-
-Background Draw
-== 
-
-Color
-== 
-
-Time until strokes disappear
-== 
-
- seconds (never)
-== 
-
- seconds
-== 
-
-Width
-== 
-
-Draw where mouse is
-== 
-
-Finish Name
-== 
-
-Attempt to change your name when near finish
-== 
-
-Finish Name:
-== 
-
-Name:
-== 
-
-Name
-== 
-
-Command:
-== 
-
-Command
-== 
-
-Override Selected
-== 
-
-Add Bind
-== 
-
-Remove Bind
-== 
-
-The command is ran in console not chat
-== 
-
-Use left mouse to select
-== 
-
-Use right mouse to swap with selected
-== 
-
-Use middle mouse select without copy
-== 
-
-Bind Wheel Key
-== 
-
-Reset position of mouse when opening bindwheel
-== 
-
-War Entries
-== 
-
-Edit Entry
-== 
-
-Clan
-== 
-
-Reason
-== 
-
-Override Entry
-== 
-
-Add Entry
-== 
-
-Allow Duplicate Entries
-== 
-
-Enable warlist
-== 
-
-Colors in chat
-== 
-
-Colors in scoreboard
-== 
-
-Colors in spectate select
-== 
-
-Show clan if war
-== 
-
-War Groups
-== 
-
-Are you sure that you want to remove '%s' from your war groups?
-== 
-
-Remove War Group
-== 
-
-Yes
-== 
-
-No
-== 
-
-Override Group
-== 
-
-Add Group
-== 
-
-Online Players
-== 
-
-Show status bar
-== 
-
-Show labels on status bar items
-== 
-
-Status bar height
-== 
-
-Local Time
-== 
-
-Use 12 hour clock
-== 
-
-Show seconds on clock
-== 
-
-Colors
-== 
-
-Status bar color
-== 
-
-Text color
-== 
-
-Status bar alpha
-== 
-
-Text alpha
-== 
-
-Status Bar Codes:
-== 
-
-a = Angle
-== 
-
-p = Ping
-== 
-
-d = Prediction
-== 
-
-c = Position
-== 
-
-l = Local Time
-== 
-
-r = Race Time
-== 
-
-f = FPS
-== 
-
-v = Velocity
-== 
-
-z = Zoom
-== 
-
-_ or ' ' = Space
-== 
-
-Apply
-== 
-
-Status Scheme:
-== 
-
-Add Item
-== 
-
-Remove Item
-== 
-
-TClient Links
-== 
-
-Discord
-== 
-
-Website
-== 
-
-Github
-== 
-
-Support ♥
-== 
-
-Config Files
-== 
-
-TClient Settings
-== 
-
-Profiles
-== 
-
-TClient Developers
-== 
-
-Hide Settings Tabs
-== 
-
-Integration
-== 
-
-Enable Discord Integration
-== 
-
-Name: %s
-== 
-
-Clan: %s
-== 
-
-Skin: %s
-== 
-
-Your profile
-== 
-
-After Load
-== 
-
-Save/Load Skin
-== 
-
-Save/Load Colors
-== 
-
-Save/Load Emote
-== 
-
-Save/Load Name
-== 
-
-Save/Load Clan
-== 
-
-Save/Load Flag
-== 
-
-Load
-== 
-
-Save
-== 
-
-Delete
-== 
-
-Override
-== 
-
-Dummy
-== 
-
-Custom colors
-== 
-
-Overwrite clan even if empty
-== 
-
-Profiles file
-== 
-
-Activating mod weapon on %d: %s\n
-== 
-
-[data_version.h]
-You have probably only installed the TClient DDNet.exe which is not supported, please use the entire TClient folder
-== 
-
-Changing name to %s near finish
-== 
-
-[translate]
-%s translating to %s
-== 
-
-[translate]
-%s to %s failed: %s
-== 
-
-Minimum Target Language Characters
-== 대상 언어 최소 문자 수
-
-Target Language Ratio
-== 대상 언어 비율
-
-Auto-translate skips text that already looks like the target language.
-== 이미 대상 언어처럼 보이는 텍스트는 자동 번역을 건너뜁니다.
-
-Numeric-only messages are skipped locally.
-== 숫자만 있는 메시지는 로컬에서 건너뜁니다.
-
-Concurrency (1 = automatic)
-== 동시 실행 수(1 = 자동)
+[Predefined touch button behaviors]
+Spectate
+== 관전자 메뉴
+
+[Predefined touch button behaviors]
+Swap Action
+== 동작 전환
+
+[Predefined touch button behaviors]
+Use Action
+== 동작 사용
+
+[Show name plates]
+All
+== 모두
+
+[Show name plates]
+None
+== 없음
+
+[Show name plates]
+Others
+== 타인
+
+[Show name plates]
+Own
+== 자신
+
+[Show players' key presses]
+All
+== 모두
+
+[Show players' key presses]
+None
+== 비활성화
+
+[Show players' key presses]
+Others
+== 타인
+
+[Show players' key presses]
+Own
+== 자신
+
+[skins]
+Body
+== 몸통
+
+[skins]
+Decoration
+== 장식
+
+[skins]
+Eyes
+== 눈
+
+[skins]
+Feet
+== 발
+
+[skins]
+Hands
+== 손
+
+[skins]
+Marking
+== 표시
+
+[Spectating]
+Following %d: %s
+== 관전 중 %d: %s
+
+[Spectating]
+Following %s
+== 관전 중 %s
+
+[Spectating Camera Mode Icon]
+AUTO
+== 자동
+
+[Spectators]
+%d others…
+== %d 명 더…
+
+[Start menu]
+Play
+== 플레이
+
+[Team and size]
+%d\n(%d/%d)
+== %d\n(%d/%d)
+
+[Team size]
+maximum
+== 최대
+
+[Team size]
+minimum
+== 최소 인원
+
+[Team status]
+allowed
+== 허용
+
+[Team status]
+forbidden
+== 금지
+
+[Team status]
+required
+== 필수
+
+[Team status]
+solo
+== 솔로
+
+[Touch button behavior]
+Bind
+== 바인드
+
+[Touch button behavior]
+Bind Toggle
+== 바인드 토글
+
+[Touch button behavior]
+Predefined
+== 미리 정의됨
+
+[Touch button label type]
+Icon
+== 아이콘
+
+[Touch button label type]
+Localized
+== 자동 번역
+
+[Touch button label type]
+Plain
+== 일반
+
+[Touch button shape]
+Circle
+== 원형
+
+[Touch button shape]
+Rectangle
+== 사각형
+
+[Touch button visibilities]
+Allow dummy
+== 더미 허용
+
+[Touch button visibilities]
+Demo Player
+== 데모 플레이어
+
+[Touch button visibilities]
+Dummy connected
+== 더미 연결됨
+
+[Touch button visibilities]
+Extra Menu
+== 추가 메뉴
+
+[Touch button visibilities]
+Ingame
+== 게임 중
+
+[Touch button visibilities]
+Rcon Authed
+== Rcon 인증됨
+
+[Touch button visibilities]
+Vote Active
+== 투표 활성
+
+[Touch button visibilities]
+Zoom Allowed
+== 확대/축소 허용 시
+
+[Touch button visibility preview]
+Excluded
+== 제외됨
+
+[Touch button visibility preview]
+Ignore
+== 무시
+
+[Touch button visibility preview]
+Included
+== 포함됨
+
+[Translation credits: Add your own name here when you update translations]
+English translation by the DDNet Team
+== 한국어 번역: DDNet 팀

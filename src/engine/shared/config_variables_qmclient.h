@@ -154,7 +154,13 @@ MACRO_CONFIG_INT(QmInputOverlayPosY, qm_input_overlay_pos_y, 80, 0, 100, CFGFLAG
 // Notification Bar / 通知栏
 MACRO_CONFIG_INT(QmHudNotificationsSystem, qm_hud_notifications_system, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏接管服务器系统提示（入场版本信息除外）")
 MACRO_CONFIG_INT(QmHudNotificationsEcho, qm_hud_notifications_echo, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏接管 echo 消息")
-MACRO_CONFIG_INT(QmHudNotificationsCompatSolo, qm_hud_notifications_compat_solo, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "兼容其他服务器的类似提示接管（例如自定义单人区域提示，按黑名单排除）")
+MACRO_CONFIG_INT(QmHudNotificationsShowAdvanced, qm_hud_notifications_show_advanced, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示通知栏高级设置")
+MACRO_CONFIG_INT(QmHudNotificationsUseCategoryFilters, qm_hud_notifications_use_category_filters, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "使用通知栏分类过滤")
+MACRO_CONFIG_INT(QmHudNotificationsShowBasicInfo, qm_hud_notifications_show_basic_info, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示基础服务器信息")
+MACRO_CONFIG_INT(QmHudNotificationsShowHelpInfo, qm_hud_notifications_show_help_info, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示服务器帮助说明")
+MACRO_CONFIG_INT(QmHudNotificationsShowPrompts, qm_hud_notifications_show_prompts, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示重要服务器提示")
+MACRO_CONFIG_INT(QmHudNotificationsShowUnknown, qm_hud_notifications_show_unknown, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示未知服务器消息")
+MACRO_CONFIG_INT(QmHudNotificationsCompatSolo, qm_hud_notifications_compat_solo, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "兼容其他服务器的类似单人区域提示")
 MACRO_CONFIG_COL(QmHudNotificationsBgColor, qm_hud_notifications_bg_color, 0x99000000, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "通知栏背景颜色")
 MACRO_CONFIG_COL(QmHudNotificationsTextColor, qm_hud_notifications_text_color, 0xFFFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "通知栏系统提示文字颜色")
 MACRO_CONFIG_INT(QmHudNotificationsEchoInheritColor, qm_hud_notifications_echo_inherit_color, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏 echo 继承聊天 echo 颜色")
@@ -482,3 +488,11 @@ MACRO_CONFIG_COL(QmTranslateBtnColorEnabled, qm_translate_btn_color_enabled, 0xE
 MACRO_CONFIG_COL(QmTranslateMenuBgColor, qm_translate_menu_bg_color, 0xF200001F, CFGFLAG_CLIENT | CFGFLAG_SAVE, "翻译菜单背景颜色")
 MACRO_CONFIG_COL(QmTranslateMenuOptionSelected, qm_translate_menu_option_selected, 0xE69E5E86, CFGFLAG_CLIENT | CFGFLAG_SAVE, "翻译菜单选中时颜色")
 MACRO_CONFIG_COL(QmTranslateMenuOptionNormal, qm_translate_menu_option_normal, 0xE6000033, CFGFLAG_CLIENT | CFGFLAG_SAVE, "翻译菜单正常颜色")
+
+// Jump Hint / 跳跃提示 - 根据位置小数部分显示跳跃速查表（由 tc_jump_hint 迁移而来）
+MACRO_CONFIG_INT(QmJumpHint, qm_jump_hint, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "根据位置小数部分显示跳跃提示")
+MACRO_CONFIG_STR(QmJumpHintText, qm_jump_hint_text, 512, "3 Tiles Edge Jump:\\nLeft Jump: .34|.31|.16\\nLeft Double Jump: .41|.28|.25|.13\\nRight Jump: .63|.66|.81\\nRight Double Jump: .56|.69|.72|.84", CFGFLAG_CLIENT | CFGFLAG_SAVE, "跳跃提示文本（使用\\n换行）")
+MACRO_CONFIG_COL(QmJumpHintColor, qm_jump_hint_color, 255, CFGFLAG_CLIENT | CFGFLAG_SAVE, "跳跃提示颜色")
+MACRO_CONFIG_INT(QmJumpHintX, qm_jump_hint_x, 20, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "跳跃提示水平位置（占屏幕宽度百分比）")
+MACRO_CONFIG_INT(QmJumpHintY, qm_jump_hint_y, 5, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "跳跃提示垂直位置（占屏幕高度百分比）")
+MACRO_CONFIG_INT(QmJumpHintSize, qm_jump_hint_size, 10, 0, 50, CFGFLAG_CLIENT | CFGFLAG_SAVE, "跳跃提示字体大小")

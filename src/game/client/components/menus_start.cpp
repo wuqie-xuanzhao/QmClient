@@ -11,21 +11,21 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <vector>
-
 #include <generated/client_data.h>
 
-#include <game/client/gameclient.h>
-#include <game/client/ui.h>
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/QmUi/QmLegacy.h>
 #include <game/client/QmUi/UiButtons.h>
 #include <game/client/QmUi/UiContext.h>
+#include <game/client/gameclient.h>
+#include <game/client/ui.h>
 #include <game/localization.h>
 #include <game/version.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <vector>
 
 #if defined(CONF_PLATFORM_ANDROID)
 #include <android/android_main.h>
@@ -35,93 +35,93 @@ using namespace FontIcons;
 
 namespace
 {
-void ComputeExternalButtons(const CUIRect &MainView, bool UseV2Layout, CUIRect &DiscordButton, CUIRect &LearnButton, CUIRect &TutorialButton, CUIRect &WebsiteButton, CUIRect &StatisticsButton, CUIRect &NewsButton)
-{
-	CUIRect ExtMenu;
-	MainView.VSplitLeft(30.0f, nullptr, &ExtMenu);
-	ExtMenu.VSplitLeft(100.0f, &ExtMenu, nullptr);
-
-	if(!UseV2Layout)
+	void ComputeExternalButtons(const CUIRect &MainView, bool UseV2Layout, CUIRect &DiscordButton, CUIRect &LearnButton, CUIRect &TutorialButton, CUIRect &WebsiteButton, CUIRect &StatisticsButton, CUIRect &NewsButton)
 	{
-		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &DiscordButton);
-		ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
-		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &LearnButton);
-		ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
-		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &TutorialButton);
-		ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
-		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &WebsiteButton);
-		ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
-		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &NewsButton);
-		ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
-		ExtMenu.HSplitBottom(20.0f, &ExtMenu, &StatisticsButton);
-		return;
+		CUIRect ExtMenu;
+		MainView.VSplitLeft(30.0f, nullptr, &ExtMenu);
+		ExtMenu.VSplitLeft(100.0f, &ExtMenu, nullptr);
+
+		if(!UseV2Layout)
+		{
+			ExtMenu.HSplitBottom(20.0f, &ExtMenu, &DiscordButton);
+			ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
+			ExtMenu.HSplitBottom(20.0f, &ExtMenu, &LearnButton);
+			ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
+			ExtMenu.HSplitBottom(20.0f, &ExtMenu, &TutorialButton);
+			ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
+			ExtMenu.HSplitBottom(20.0f, &ExtMenu, &WebsiteButton);
+			ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
+			ExtMenu.HSplitBottom(20.0f, &ExtMenu, &NewsButton);
+			ExtMenu.HSplitBottom(5.0f, &ExtMenu, nullptr);
+			ExtMenu.HSplitBottom(20.0f, &ExtMenu, &StatisticsButton);
+			return;
+		}
+
+		CUiV2LayoutEngine LayoutEngine;
+		SUiStyle ContainerStyle;
+		ContainerStyle.m_Axis = EUiAxis::COLUMN;
+		ContainerStyle.m_Gap = 5.0f;
+		ContainerStyle.m_AlignItems = EUiAlign::STRETCH;
+		ContainerStyle.m_JustifyContent = EUiAlign::END;
+
+		std::vector<SUiLayoutChild> vChildren(6);
+		for(SUiLayoutChild &Child : vChildren)
+		{
+			Child.m_Style.m_Height = SUiLength::Px(20.0f);
+		}
+
+		LayoutEngine.ComputeChildren(ContainerStyle, CUiV2LegacyAdapter::FromCUIRect(ExtMenu), vChildren);
+		StatisticsButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[0].m_Box);
+		NewsButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[1].m_Box);
+		WebsiteButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[2].m_Box);
+		TutorialButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[3].m_Box);
+		LearnButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[4].m_Box);
+		DiscordButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[5].m_Box);
 	}
 
-	CUiV2LayoutEngine LayoutEngine;
-	SUiStyle ContainerStyle;
-	ContainerStyle.m_Axis = EUiAxis::COLUMN;
-	ContainerStyle.m_Gap = 5.0f;
-	ContainerStyle.m_AlignItems = EUiAlign::STRETCH;
-	ContainerStyle.m_JustifyContent = EUiAlign::END;
-
-	std::vector<SUiLayoutChild> vChildren(6);
-	for(SUiLayoutChild &Child : vChildren)
+	void ComputeMainButtons(const CUIRect &MenuArea, bool UseV2Layout, CUIRect aMenuButtons[6])
 	{
-		Child.m_Style.m_Height = SUiLength::Px(20.0f);
+		if(!UseV2Layout)
+		{
+			CUIRect Cursor = MenuArea;
+			Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[0]);
+			Cursor.HSplitBottom(100.0f, &Cursor, nullptr);
+			Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[1]);
+			Cursor.HSplitBottom(5.0f, &Cursor, nullptr);
+			Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[2]);
+			Cursor.HSplitBottom(5.0f, &Cursor, nullptr);
+			Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[3]);
+			Cursor.HSplitBottom(5.0f, &Cursor, nullptr);
+			Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[4]);
+			Cursor.HSplitBottom(5.0f, &Cursor, nullptr);
+			Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[5]);
+			return;
+		}
+
+		CUIRect TopArea = MenuArea;
+		TopArea.HSplitBottom(40.0f, &TopArea, &aMenuButtons[0]);
+		TopArea.HSplitBottom(100.0f, &TopArea, nullptr);
+
+		CUiV2LayoutEngine LayoutEngine;
+		SUiStyle ContainerStyle;
+		ContainerStyle.m_Axis = EUiAxis::COLUMN;
+		ContainerStyle.m_Gap = 5.0f;
+		ContainerStyle.m_AlignItems = EUiAlign::STRETCH;
+		ContainerStyle.m_JustifyContent = EUiAlign::END;
+
+		std::vector<SUiLayoutChild> vChildren(5);
+		for(SUiLayoutChild &Child : vChildren)
+		{
+			Child.m_Style.m_Height = SUiLength::Px(40.0f);
+		}
+
+		LayoutEngine.ComputeChildren(ContainerStyle, CUiV2LegacyAdapter::FromCUIRect(TopArea), vChildren);
+		aMenuButtons[5] = CUiV2LegacyAdapter::ToCUIRect(vChildren[0].m_Box);
+		aMenuButtons[4] = CUiV2LegacyAdapter::ToCUIRect(vChildren[1].m_Box);
+		aMenuButtons[3] = CUiV2LegacyAdapter::ToCUIRect(vChildren[2].m_Box);
+		aMenuButtons[2] = CUiV2LegacyAdapter::ToCUIRect(vChildren[3].m_Box);
+		aMenuButtons[1] = CUiV2LegacyAdapter::ToCUIRect(vChildren[4].m_Box);
 	}
-
-	LayoutEngine.ComputeChildren(ContainerStyle, CUiV2LegacyAdapter::FromCUIRect(ExtMenu), vChildren);
-	StatisticsButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[0].m_Box);
-	NewsButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[1].m_Box);
-	WebsiteButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[2].m_Box);
-	TutorialButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[3].m_Box);
-	LearnButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[4].m_Box);
-	DiscordButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[5].m_Box);
-}
-
-void ComputeMainButtons(const CUIRect &MenuArea, bool UseV2Layout, CUIRect aMenuButtons[6])
-{
-	if(!UseV2Layout)
-	{
-		CUIRect Cursor = MenuArea;
-		Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[0]);
-		Cursor.HSplitBottom(100.0f, &Cursor, nullptr);
-		Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[1]);
-		Cursor.HSplitBottom(5.0f, &Cursor, nullptr);
-		Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[2]);
-		Cursor.HSplitBottom(5.0f, &Cursor, nullptr);
-		Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[3]);
-		Cursor.HSplitBottom(5.0f, &Cursor, nullptr);
-		Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[4]);
-		Cursor.HSplitBottom(5.0f, &Cursor, nullptr);
-		Cursor.HSplitBottom(40.0f, &Cursor, &aMenuButtons[5]);
-		return;
-	}
-
-	CUIRect TopArea = MenuArea;
-	TopArea.HSplitBottom(40.0f, &TopArea, &aMenuButtons[0]);
-	TopArea.HSplitBottom(100.0f, &TopArea, nullptr);
-
-	CUiV2LayoutEngine LayoutEngine;
-	SUiStyle ContainerStyle;
-	ContainerStyle.m_Axis = EUiAxis::COLUMN;
-	ContainerStyle.m_Gap = 5.0f;
-	ContainerStyle.m_AlignItems = EUiAlign::STRETCH;
-	ContainerStyle.m_JustifyContent = EUiAlign::END;
-
-	std::vector<SUiLayoutChild> vChildren(5);
-	for(SUiLayoutChild &Child : vChildren)
-	{
-		Child.m_Style.m_Height = SUiLength::Px(40.0f);
-	}
-
-	LayoutEngine.ComputeChildren(ContainerStyle, CUiV2LegacyAdapter::FromCUIRect(TopArea), vChildren);
-	aMenuButtons[5] = CUiV2LegacyAdapter::ToCUIRect(vChildren[0].m_Box);
-	aMenuButtons[4] = CUiV2LegacyAdapter::ToCUIRect(vChildren[1].m_Box);
-	aMenuButtons[3] = CUiV2LegacyAdapter::ToCUIRect(vChildren[2].m_Box);
-	aMenuButtons[2] = CUiV2LegacyAdapter::ToCUIRect(vChildren[3].m_Box);
-	aMenuButtons[1] = CUiV2LegacyAdapter::ToCUIRect(vChildren[4].m_Box);
-}
 
 }
 
@@ -199,7 +199,7 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 	}
 
 	static CButtonContainer s_StatisticsButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_StatisticsButton, "统计", 0, &StatisticsButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+	if(GameClient()->m_Menus.DoButton_Menu(&s_StatisticsButton, Localize("Stats"), 0, &StatisticsButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 		NewPage = CMenus::PAGE_STATS;
 
 	static CButtonContainer s_NewsButton;
@@ -213,8 +213,8 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 	CUIRect Line1, Line2;
 	QuitNote.HSplitTop(11.0f, &Line1, &QuitNote);
 	QuitNote.HSplitTop(11.0f, &Line2, nullptr);
-	Ui()->DoLabel(&Line1, "在我死去之前", 6.0f, TEXTALIGN_MC);
-	Ui()->DoLabel(&Line2, "    谨以此端,回忆我", 3.0f, TEXTALIGN_MC);
+	Ui()->DoLabel(&Line1, Localize("Before I die"), 6.0f, TEXTALIGN_MC);
+	Ui()->DoLabel(&Line2, Localize("In memory of me"), 3.0f, TEXTALIGN_MC);
 
 	const bool LocalServerRunning = GameClient()->m_LocalServer.IsServerRunning();
 	const bool EditorDirty = GameClient()->Editor()->HasUnsavedData();
@@ -431,7 +431,7 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 	}
 	else if(GameClient()->m_TClient.NeedQmClientUpdate())
 	{
-		Ui()->DoLabel(&UpdateToDateText, Localize("(需要更新)"), 14.0f, TEXTALIGN_MR);
+		Ui()->DoLabel(&UpdateToDateText, Localize("(Update required)"), 14.0f, TEXTALIGN_MR);
 	}
 	else
 	{

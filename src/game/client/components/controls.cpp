@@ -143,7 +143,7 @@ void CControls::OnConsoleInit()
 	}
 	{
 		static CInputState s_State = {this, {&m_aShowWeaponTrajectory[0], &m_aShowWeaponTrajectory[1]}};
-		Console()->Register("+showweapontrajectory", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "显示武器弹道辅助线");
+		Console()->Register("+showweapontrajectory", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Show weapon trajectory guide");
 	}
 
 	{

@@ -17,6 +17,7 @@
 #include <engine/storage.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <iterator> // std::size
 #include <new>
 
@@ -35,10 +36,24 @@ CConsole::CResult::CResult(const CResult &Other) :
 	IResult(Other)
 {
 	mem_copy(m_aStringStorage, Other.m_aStringStorage, sizeof(m_aStringStorage));
-	m_pArgsStart = m_aStringStorage + (Other.m_pArgsStart - Other.m_aStringStorage);
-	m_pCommand = m_aStringStorage + (Other.m_pCommand - Other.m_aStringStorage);
+	m_pArgsStart = const_cast<char *>(CopyArgumentPointer(Other.m_pArgsStart, Other));
+	m_pCommand = CopyArgumentPointer(Other.m_pCommand, Other);
 	for(unsigned i = 0; i < Other.m_NumArgs; ++i)
-		m_apArgs[i] = m_aStringStorage + (Other.m_apArgs[i] - Other.m_aStringStorage);
+		m_apArgs[i] = CopyArgumentPointer(Other.m_apArgs[i], Other);
+	for(unsigned i = Other.m_NumArgs; i < std::size(m_apArgs); ++i)
+		m_apArgs[i] = nullptr;
+}
+
+const char *CConsole::CResult::CopyArgumentPointer(const char *pPointer, const CResult &Other) const
+{
+	if(pPointer == nullptr)
+		return nullptr;
+	const auto PointerAddress = reinterpret_cast<std::uintptr_t>(pPointer);
+	const auto StorageBegin = reinterpret_cast<std::uintptr_t>(Other.m_aStringStorage);
+	const auto StorageEnd = StorageBegin + std::size(Other.m_aStringStorage);
+	if(PointerAddress >= StorageBegin && PointerAddress < StorageEnd)
+		return m_aStringStorage + (pPointer - Other.m_aStringStorage);
+	return pPointer;
 }
 
 void CConsole::CResult::AddArgument(const char *pArg)
@@ -911,7 +926,7 @@ CConsole::CConsole(int FlagMask)
 
 	Register("access_level", "s[command] ?s['admin'|'moderator'|'helper'|'all']", CFGFLAG_SERVER, ConCommandAccess, this, "Specify command accessibility for given access level");
 	Register("access_status", "s['admin'|'moderator'|'helper'|'all']", CFGFLAG_SERVER, ConCommandStatus, this, "List all commands which are accessible for given access level");
-	Register("cmdlist", "", CFGFLAG_SERVER | CFGFLAG_CHAT, ConUserCommandStatus, this, "列出普通玩家可用的所有命令");
+	Register("cmdlist", "", CFGFLAG_SERVER | CFGFLAG_CHAT, ConUserCommandStatus, this, "List all commands which are accessible for users");
 	//List all commands which are accessible for users
 
 	// DDRace

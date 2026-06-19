@@ -443,6 +443,31 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("cl_menu_map", ConchainMenuMap, this);
 }
 
+// One-shot migration of legacy tc_jump_hint* settings into qm_jump_hint*.
+// Copied only when the new value is still the built-in default and the legacy
+// value is non-default, mirroring the previous MigrateChatBubbleConfig pattern.
+static void MigrateJumpHintConfig()
+{
+	auto MigrateInt = [](int &NewValue, int LegacyValue, int NewDefault, int LegacyDefault) {
+		if(NewValue == NewDefault && LegacyValue != LegacyDefault)
+			NewValue = LegacyValue;
+	};
+	auto MigrateCol = [](unsigned &NewValue, unsigned LegacyValue, unsigned NewDefault, unsigned LegacyDefault) {
+		if(NewValue == NewDefault && LegacyValue != LegacyDefault)
+			NewValue = LegacyValue;
+	};
+	auto MigrateStr = [](char *pNewValue, size_t NewSize, const char *pLegacyValue, const char *pNewDefault) {
+		if(str_comp(pNewValue, pNewDefault) == 0 && pLegacyValue[0] != '\0' && str_comp(pLegacyValue, pNewDefault) != 0)
+			str_copy(pNewValue, pLegacyValue, NewSize);
+	};
+	MigrateInt(g_Config.m_QmJumpHint, g_Config.m_TcJumpHintLegacy, CConfig::ms_QmJumpHint, CConfig::ms_TcJumpHintLegacy);
+	MigrateStr(g_Config.m_QmJumpHintText, sizeof(g_Config.m_QmJumpHintText), g_Config.m_TcJumpHintTextLegacy, CConfig::ms_pQmJumpHintText);
+	MigrateCol(g_Config.m_QmJumpHintColor, g_Config.m_TcJumpHintColorLegacy, CConfig::ms_QmJumpHintColor, CConfig::ms_TcJumpHintColorLegacy);
+	MigrateInt(g_Config.m_QmJumpHintX, g_Config.m_TcJumpHintXLegacy, CConfig::ms_QmJumpHintX, CConfig::ms_TcJumpHintXLegacy);
+	MigrateInt(g_Config.m_QmJumpHintY, g_Config.m_TcJumpHintYLegacy, CConfig::ms_QmJumpHintY, CConfig::ms_TcJumpHintYLegacy);
+	MigrateInt(g_Config.m_QmJumpHintSize, g_Config.m_TcJumpHintSizeLegacy, CConfig::ms_QmJumpHintSize, CConfig::ms_TcJumpHintSizeLegacy);
+}
+
 static void GenerateTimeoutCode(char *pTimeoutCode)
 {
 	if(pTimeoutCode[0] == '\0' || str_comp(pTimeoutCode, "hGuEYnfxicsXGwFq") == 0)
@@ -457,16 +482,6 @@ static void GenerateTimeoutCode(char *pTimeoutCode)
 	}
 }
 
-static void LoadQmClientLanguageOverlay(CLocalizationDatabase &Localization, const char *pLanguageFile, IStorage *pStorage, IConsole *pConsole)
-{
-	const char *pQmLanguageFile = pLanguageFile[0] != '\0' ? pLanguageFile : "languages/english.txt";
-	if(str_comp(pLanguageFile, "languages/simplified_chinese.txt") == 0)
-		pQmLanguageFile = "languages/simplified_chinese.txt";
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "qmclient/%s", pQmLanguageFile);
-	Localization.Load(aBuf, pStorage, pConsole, false);
-}
-
 void CGameClient::InitializeLanguage()
 {
 	// set the language
@@ -474,7 +489,6 @@ void CGameClient::InitializeLanguage()
 	if(g_Config.m_ClShowWelcome)
 		g_Localization.SelectDefaultLanguage(Console(), g_Config.m_ClLanguagefile, sizeof(g_Config.m_ClLanguagefile));
 	g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());
-	LoadQmClientLanguageOverlay(g_Localization, g_Config.m_ClLanguagefile, Storage(), Console());
 }
 
 void CGameClient::ForceUpdateConsoleRemoteCompletionSuggestions()
@@ -485,6 +499,9 @@ void CGameClient::ForceUpdateConsoleRemoteCompletionSuggestions()
 void CGameClient::OnInit()
 {
 	const int64_t OnInitStart = time_get();
+
+	// Migrate legacy tc_jump_hint_text into qm_jump_hint_text before any HUD use.
+	MigrateJumpHintConfig();
 
 	// Initialize config tags system
 	InitConfigTags();
@@ -651,22 +668,45 @@ void CGameClient::OnInit()
 
 void CGameClient::PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoadingCaption, const char *pLoadingMessage)
 {
-	(void)pLoadingCaption;
-	(void)pLoadingMessage;
+	m_Menus.PrewarmSettingsPages();
 
-	// Do not pump settings resources synchronously during startup. Runtime menu
-	// prewarm still runs with per-frame budgets once the menu is interactive.
-	return;
+	constexpr int TEXT_PREWARM_BUDGET_PER_STEP = 8;
+	// loading 是可阻塞阶段（有 loading 画面），循环 prebuild 直到 plan collection complete
+	// + prebuild remaining=0。原实现只调一次 budget=8，导致运行时 (ESC 打开/切 tab) 首帧
+	// 仍要现场创建文本容器 (text_new 爆发，实测 settings_page_content 单次 355ms)。
+	// 用 WarmupReady (plan items + units 都 <= 0) 或连续无进展检测退出，避免死循环。
+	constexpr int MAX_TEXT_PREWARM_STEPS = 96;
+	constexpr int MAX_NO_PROGRESS_STEPS = 6;
+
+	SSettingsLoadingPrewarmState State;
+	State.m_LastBuiltTextContainers = m_Menus.SettingsTextContainerCount();
+	State.m_LastMissingTextPlanItems = m_Menus.SettingsTextPrebuildRemaining();
+	State.m_LastMissingTextPlanCollectionUnits = m_Menus.SettingsTextPlanCollectionRemaining();
+	LogSettingsLoadingPrewarmEvent(Client(), "startup_text_prewarm_begin", State.m_CompletedSteps, 1, 0, State.m_ConsecutiveNoProgressSteps, 0, 0);
+
+	for(int Step = 0; Step < MAX_TEXT_PREWARM_STEPS; ++Step)
+	{
+		m_Menus.RenderLoading(pLoadingCaption, pLoadingMessage, 0);
+		m_Menus.PrewarmSettingsTextPoolForLoading(TEXT_PREWARM_BUDGET_PER_STEP);
+		SettingsLoadingPrewarmAdvance(State, m_Menus.SettingsTextContainerCount(), m_Menus.SettingsTextPrebuildRemaining(), m_Menus.SettingsTextPlanCollectionRemaining());
+		if(State.m_WarmupReady)
+			break;
+		if(State.m_ConsecutiveNoProgressSteps >= MAX_NO_PROGRESS_STEPS)
+			break;
+	}
+
+	LogSettingsLoadingPrewarmEvent(Client(), "startup_text_prewarm_end", State.m_CompletedSteps, 1, 0, State.m_ConsecutiveNoProgressSteps, 0, 0);
 }
 
 void CGameClient::OnUpdate()
 {
 	const bool TeeSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_TEE;
+	const bool AssetsSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_ASSETS;
 	m_Skins.PrepareSettingsThroughputForFrame();
-	const int FrameGpuUploadLimit = TeeSettingsActive ? m_Skins.SettingsGpuUploadLimiterUnitsForFrame() : CGpuUploadLimiter::DefaultMaxUploadsPerFrame();
+	const int FrameGpuUploadLimit = m_Menus.SettingsGpuUploadLimitForFrame(TeeSettingsActive, AssetsSettingsActive, m_Skins.SettingsGpuUploadLimiterUnitsForFrame());
 	const int FrameSkinUploadBudget = TeeSettingsActive ? m_Skins.SettingsGpuUploadFrameBudgetForFrame() : -1;
 	m_GpuUploadLimiter.OnFrameStart(FrameGpuUploadLimit);
-	m_Menus.ResetSettingsFrameBudgetForFrame(TeeSettingsActive, FrameSkinUploadBudget);
+	m_Menus.ResetSettingsFrameBudgetForFrame(TeeSettingsActive, AssetsSettingsActive, FrameSkinUploadBudget);
 
 	HandleLanguageChanged();
 
@@ -877,7 +917,6 @@ void CGameClient::OnDummySwap()
 	const int PrevDummyFire = m_DummyInput.m_Fire;
 	m_DummyInput = m_Controls.m_aInputData[!g_Config.m_ClDummy];
 	m_Controls.m_aInputData[g_Config.m_ClDummy].m_Fire = PrevDummyFire;
-	m_QmCommandRouter.OnDummySwap();
 	m_IsDummySwapping = 1;
 }
 
@@ -2909,7 +2948,6 @@ void CGameClient::HandleLanguageChanged()
 	m_LanguageChanged = false;
 
 	g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());
-	LoadQmClientLanguageOverlay(g_Localization, g_Config.m_ClLanguagefile, Storage(), Console());
 
 	TextRender()->SetFontLanguageVariant(g_Config.m_ClLanguagefile);
 	m_Menus.InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::LANGUAGE_CHANGED);

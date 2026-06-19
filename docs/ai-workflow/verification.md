@@ -10,6 +10,42 @@ python qmclient_scripts/gate/check_docs.py
 
 当你改了 `AGENTS.md`、`CLAUDE.md`、`docs/ai-workflow/`、`docs/superpowers/plans/`、`docs/superpowers/specs/`、governance workflow 文件或 gate 脚本后，都要跑这一项。
 
+## i18n 脚本工作流
+
+当改动 `qmclient_scripts/languages_qmclient/`、`data/languages/*.txt`、`translations/i18n/*.toml`，或任何会新增/删除 `Localize`、`Localizable`、`Register` help 文本的源码时，默认按这条顺序验证：
+
+```bash
+python qmclient_scripts/languages_qmclient/extract_strings.py
+python qmclient_scripts/languages_qmclient/generate_all.py
+python qmclient_scripts/languages_qmclient/validate.py
+python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0
+```
+
+说明：
+
+- `extract_strings.py` 负责从全 `src/` 提取 active source keys，并输出分类统计。
+- `translations/i18n/*.toml` 是按代码模块拆分的翻译维护源；单条记录可同时维护多语言翻译，不要求全语言补齐。
+- `data/languages/*.txt` 是运行时生成产物，不作为手工维护的长期真相源。
+- `generate_all.py` 会以英文 source key 作为缺省回退，并生成 `generate_all.GENERATED_LANGUAGES` 中登记的运行时语言文件。
+- 新增英文 source key 后，先运行 `extract_strings.py`，再用 `translate_with_local_http.py --languages ...` 为目标语言生成 `translations_draft/<language>/*.toml`；审核通过后再显式 `--write-back` 回填维护源。
+- `translate_with_local_http.py --write-back` 只应把审核通过的 draft 条目 patch 到对应 `translations/i18n/*.toml`，不能重写整份模块 TOML 或重排未触碰的 `[[message]]` block。
+- `review_duplicate_entries.py` 是只读审查脚本；duplicate/similar 报告用于人工收口，unused 口径必须基于最终 active source key 集合。
+- `translate_with_local_http.py` 通过 OpenAI-compatible HTTP 模型生成翻译 draft；所有语言默认只写 `translations_draft/<language>/*.toml`，审核通过后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，不属于运行时生成主链。
+
+### 历史译法审计
+
+当需要核对当前 `translations/i18n/*.toml` 是否偏离项目既有简中口径时，补跑历史译法审计：
+
+```bash
+python qmclient_scripts/languages_qmclient/audit_translation_drift.py --git-ref HEAD
+```
+
+说明：
+
+- 这是只读审计，不参与运行时生成链。
+- 结果只用于人工判断历史译法是否需要回退或统一风格。
+- 它不替代 `extract_strings.py` / `generate_all.py` / `validate.py`，也不阻断 `validate.py`。
+
 ## 构建
 
 Windows 推荐：
@@ -49,6 +85,15 @@ qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_
 qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests
 ```
 
+过滤测试只用于 TDD 红绿灯、定位和快速复现，例如 `testrunner.exe --gtest_filter=...`。当要做最终汇报、交给用户验收、提交或声称“无回归 / 测试通过”时，必须补跑对应测试入口的全量版本：
+
+- C++ 源码或 C++ 测试改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_tests -j 14`，不能只跑 `--gtest_filter`。
+- Rust 代码改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests`。
+- `qmclient_scripts/perf` 改动：跑 `cd qmclient_scripts/perf && bun test.ts`，并在 TypeScript 代码改动时补 `npx tsc --noEmit`。
+- 只改文档或治理入口：按文档检查要求跑 `python qmclient_scripts/gate/check_docs.py`。
+
+如果环境、时间或用户明确范围导致全量测试不能跑，最终汇报必须把它列为 gap；不能用过滤测试、build 或 quick gate 代替“全量测试通过”。
+
 说明：常规运行/测试目录默认是 `cmake-build-release`；C++ 测试主路径是 `run_cxx_tests`，该目标会构建 `testrunner` 并在 build 目录下执行测试二进制，测试产物会留在 build 目录的 `tmp/tests/` 下。源码结构测试需要通过测试源码根解析 `src/...` / `data/...` 文件，不能依赖当前工作目录。单测过滤或快速复现时，可以从 build 目录运行 `./testrunner.exe --gtest_filter=<suite.test>`，或在其他目录运行 `cmake-build-release/testrunner.exe --gtest_filter=<suite.test>`。`default/full` gate 里的严格构建与静态分析会另外使用 `cmake-build-debug` 和 `cmake-build-analyze`。
 
 重要：同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 不要并行发起。它们会共享生成产物与中间文件，代理或脚本必须串行执行；如果确实要并行，只能拆到不同的 build 目录。
@@ -78,8 +123,8 @@ python qmclient_scripts/gate/check_gate.py --mode full
 
 - 纯文档 / harness 变更：`python qmclient_scripts/gate/check_docs.py`
 - 常规代码改动：至少 `python qmclient_scripts/gate/check_gate.py --mode quick`
-- 提交前日常严格门：优先 `python qmclient_scripts/gate/check_gate.py --mode default`
-- 集中收口 / 准发布：`python qmclient_scripts/gate/check_gate.py --mode full`
+- 提交前日常严格门：优先 `python qmclient_scripts/gate/check_gate.py --mode default`，该模式必须覆盖 C++ 全量测试和 Rust 全量测试。
+- 集中收口 / 准发布：`python qmclient_scripts/gate/check_gate.py --mode full`，该模式是在 default 基础上增加高噪音或更重的附加检查，不作为“全量测试”的默认入口。
 
 版本 / release 相关修改后，至少额外验证：
 

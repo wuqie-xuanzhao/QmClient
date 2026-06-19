@@ -13,6 +13,7 @@
 #include <game/client/QmUi/QmAnim.h>
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/QmUi/QmLegacy.h>
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/motd.h>
@@ -20,7 +21,6 @@
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/statboard.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
 
@@ -89,55 +89,55 @@ namespace
 		{&CConfig::m_ClSndMuteMapSound, FontIcons::FONT_ICON_MAP, "地图音效", "屏蔽地图环境与脚本触发音效。"},
 	};
 	static_assert((sizeof(gs_aSoundMuteButtonDefs) / sizeof(gs_aSoundMuteButtonDefs[0])) == 9, "Sound mute button count mismatch");
-constexpr float CLIENT_BRAND_LABEL_GAP = 3.0f;
+	constexpr float CLIENT_BRAND_LABEL_GAP = 3.0f;
 
-ColorRGBA ClientBrandScoreboardColor(EClientBrand Brand, float Alpha)
-{
-	switch(Brand)
+	ColorRGBA ClientBrandScoreboardColor(EClientBrand Brand, float Alpha)
 	{
-	case EClientBrand::QM:
-		return ColorRGBA(0.38f, 0.89f, 1.0f, Alpha);
-	case EClientBrand::ARG:
-		return ColorRGBA(1.0f, 0.66f, 0.28f, Alpha);
-	case EClientBrand::NONE:
+		switch(Brand)
+		{
+		case EClientBrand::QM:
+			return ColorRGBA(0.38f, 0.89f, 1.0f, Alpha);
+		case EClientBrand::ARG:
+			return ColorRGBA(1.0f, 0.66f, 0.28f, Alpha);
+		case EClientBrand::NONE:
+			return ColorRGBA(1.0f, 1.0f, 1.0f, Alpha);
+		}
 		return ColorRGBA(1.0f, 1.0f, 1.0f, Alpha);
 	}
-	return ColorRGBA(1.0f, 1.0f, 1.0f, Alpha);
-}
 
-ColorRGBA ScoreboardUiColor()
-{
-	return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmScoreboardColor)).WithAlpha(1.0f);
-}
+	ColorRGBA ScoreboardUiColor()
+	{
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmScoreboardColor)).WithAlpha(1.0f);
+	}
 
-float ScoreboardUiAlpha(float AlphaScale)
-{
-	return ui_token::color::UiColorAccent(ScoreboardUiColor(), AlphaScale * (g_Config.m_QmScoreboardOpacity / 100.0f)).a;
-}
+	float ScoreboardUiAlpha(float AlphaScale)
+	{
+		return ui_token::color::UiColorAccent(ScoreboardUiColor(), AlphaScale * (g_Config.m_QmScoreboardOpacity / 100.0f)).a;
+	}
 
-ColorRGBA ScoreboardUiColorSurface(float AlphaScale, float ColorScale = 0.16f)
-{
-	ColorRGBA Color = ui_token::color::UiColorSurface(ScoreboardUiColor(), 1.0f, ColorScale);
-	Color.a = ScoreboardUiAlpha(AlphaScale);
-	return Color;
-}
+	ColorRGBA ScoreboardUiColorSurface(float AlphaScale, float ColorScale = 0.16f)
+	{
+		ColorRGBA Color = ui_token::color::UiColorSurface(ScoreboardUiColor(), 1.0f, ColorScale);
+		Color.a = ScoreboardUiAlpha(AlphaScale);
+		return Color;
+	}
 
-ColorRGBA ScoreboardWithUiAlpha(ColorRGBA Color, float AlphaScale)
-{
-	Color.a = ScoreboardUiAlpha(AlphaScale);
-	return Color;
-}
+	ColorRGBA ScoreboardWithUiAlpha(ColorRGBA Color, float AlphaScale)
+	{
+		Color.a = ScoreboardUiAlpha(AlphaScale);
+		return Color;
+	}
 
-ColorRGBA ScoreboardDecorationColor(ColorRGBA Color, float AlphaScale = 1.0f)
-{
-	Color.a = std::clamp(Color.a * AlphaScale * (g_Config.m_QmScoreboardOpacity / 100.0f), 0.0f, 1.0f);
-	return Color;
-}
+	ColorRGBA ScoreboardDecorationColor(ColorRGBA Color, float AlphaScale = 1.0f)
+	{
+		Color.a = std::clamp(Color.a * AlphaScale * (g_Config.m_QmScoreboardOpacity / 100.0f), 0.0f, 1.0f);
+		return Color;
+	}
 
-ColorRGBA ScoreboardGlassSurface(float AlphaScale)
-{
-	return ScoreboardUiColorSurface(AlphaScale);
-}
+	ColorRGBA ScoreboardGlassSurface(float AlphaScale)
+	{
+		return ScoreboardUiColorSurface(AlphaScale);
+	}
 }
 
 CScoreboard::CScoreboard()
@@ -449,7 +449,7 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 		++RemainingSpectators;
 	}
 
-	TextRender()->TextEx(&Cursor, Localize("旁观者"));
+	TextRender()->TextEx(&Cursor, Localize("Spectators"));
 
 	if(RemainingSpectators > 0)
 	{
@@ -1958,7 +1958,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 	bool IsSpectating = pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_Active && pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == pPopupContext->m_ClientId;
 	ColorRGBA SpectateButtonColor = ColorRGBA(1.0f, 1.0f, 1.0f, (IsSpectating ? 0.25f : 0.5f) * pUi->ButtonColorMul(&pPopupContext->m_SpectateButton));
-	if(pUi->DoButton_PopupMenu(&pPopupContext->m_SpectateButton, Localize("旁观"), &Container, FontSize, TEXTALIGN_MC, 0.0f, false, true, SpectateButtonColor))
+	if(pUi->DoButton_PopupMenu(&pPopupContext->m_SpectateButton, Localize("Spectate"), &Container, FontSize, TEXTALIGN_MC, 0.0f, false, true, SpectateButtonColor))
 	{
 		if(IsSpectating)
 		{

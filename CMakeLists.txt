@@ -1598,47 +1598,6 @@ set(EXPECTED_DATA
   qmclient/icons/qm_icons_4x.json
   qmclient/icons/qm_icons_4x.png
   qmclient/icons/README.md
-  qmclient/languages/index.txt
-  qmclient/languages/arabic.txt
-  qmclient/languages/azerbaijani.txt
-  qmclient/languages/belarusian.txt
-  qmclient/languages/bosnian.txt
-  qmclient/languages/brazilian_portuguese.txt
-  qmclient/languages/bulgarian.txt
-  qmclient/languages/catalan.txt
-  qmclient/languages/chuvash.txt
-  qmclient/languages/czech.txt
-  qmclient/languages/danish.txt
-  qmclient/languages/dutch.txt
-  qmclient/languages/english.txt
-  qmclient/languages/esperanto.txt
-  qmclient/languages/estonian.txt
-  qmclient/languages/finnish.txt
-  qmclient/languages/french.txt
-  qmclient/languages/galician.txt
-  qmclient/languages/german.txt
-  qmclient/languages/greek.txt
-  qmclient/languages/hungarian.txt
-  qmclient/languages/italian.txt
-  qmclient/languages/japanese.txt
-  qmclient/languages/korean.txt
-  qmclient/languages/kyrgyz.txt
-  qmclient/languages/norwegian.txt
-  qmclient/languages/persian.txt
-  qmclient/languages/polish.txt
-  qmclient/languages/portuguese.txt
-  qmclient/languages/README.txt
-  qmclient/languages/romanian.txt
-  qmclient/languages/russian.txt
-  qmclient/languages/serbian.txt
-  qmclient/languages/serbian_cyrillic.txt
-  qmclient/languages/simplified_chinese.txt
-  qmclient/languages/slovak.txt
-  qmclient/languages/spanish.txt
-  qmclient/languages/swedish.txt
-  qmclient/languages/traditional_chinese.txt
-  qmclient/languages/turkish.txt
-  qmclient/languages/ukrainian.txt
   mapres/basic_freeze.png
   mapres/bg_cloud1.png
   mapres/bg_cloud2.png
@@ -2709,6 +2668,8 @@ if(CLIENT)
     components/hud.h
     components/hud_editor.cpp
     components/hud_editor.h
+    components/jump_hint_utils.cpp
+    components/jump_hint_utils.h
     components/important_alert.cpp
     components/important_alert.h
     components/infomessages.cpp
@@ -2789,6 +2750,8 @@ if(CLIENT)
     components/qmclient/qmclient.h
     components/qmclient/qmclient_utils.cpp
     components/qmclient/qmclient_utils.h
+    components/qmclient/settings_resource_preview.cpp
+    components/qmclient/settings_resource_preview.h
     components/qmclient/scripting.cpp
     components/qmclient/scripting.h
     components/qmclient/scripting/impl.cpp
@@ -3781,6 +3744,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/live/live_director.cpp
     src/game/client/live/live_replay_buffer.cpp
     src/game/client/components/qmclient/modes.cpp
+    src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/update_version.cpp
     src/game/client/components/qmclient/qmclient_utils.cpp
     src/game/client/components/qmclient/translate/translate_parse.cpp
@@ -4413,11 +4377,16 @@ foreach(target ${TARGETS})
     # Enable Edit & Continue (Hot Reload) support
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.25)
       if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>")
+        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,Release,RelWithDebInfo>:ProgramDatabase>")
       else()
-        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug>:EditAndContinue>$<$<CONFIG:RelWithDebInfo>:ProgramDatabase>")
+        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug>:EditAndContinue>$<$<CONFIG:Release,RelWithDebInfo>:ProgramDatabase>")
       endif()
       target_link_options(${target} PRIVATE $<$<CONFIG:Debug>:/INCREMENTAL>)
+      target_link_options(${target} PRIVATE
+        $<$<CONFIG:Release,RelWithDebInfo>:/DEBUG>
+        $<$<CONFIG:Release,RelWithDebInfo>:/OPT:REF>
+        $<$<CONFIG:Release,RelWithDebInfo>:/OPT:ICF>
+      )
     endif()
     # QmClient strict build options
     if(QM_MSVC_ANALYZE)

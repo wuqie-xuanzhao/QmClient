@@ -6914,6 +6914,9 @@ public:
 		if(!CreateStandardGraphicsPipeline("shader/vulkan/prim.vert.spv", "shader/vulkan/prim.frag.spv", false, true))
 			return -1;
 
+		if(!CreateStandardGraphicsPipeline("shader/vulkan/prim_textured.vert.spv", "shader/vulkan/prim_textured.frag.spv", true, true))
+			return -1;
+
 		if(!CreateStandard3DGraphicsPipeline("shader/vulkan/prim3d.vert.spv", "shader/vulkan/prim3d.frag.spv", false))
 			return -1;
 

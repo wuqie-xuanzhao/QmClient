@@ -61,9 +61,19 @@ SSettingsSkinListVisibleRange SettingsSkinListVisibleRangeForScroll(float Scroll
 	return Range;
 }
 
-bool SettingsSkinListEntryReady(bool SourceReady, bool TerminalFailure, bool PreviewCacheReady)
+bool SettingsSkinListEntryVisualReady(bool SourceReady, bool TerminalFailure, bool PreviewCacheReady)
 {
 	return SourceReady || TerminalFailure || PreviewCacheReady;
+}
+
+bool SettingsSkinListEntrySourceSettled(bool SourceReady, bool TerminalFailure)
+{
+	return SourceReady || TerminalFailure;
+}
+
+bool SettingsSkinListEntryReady(bool SourceReady, bool TerminalFailure, bool PreviewCacheReady)
+{
+	return SettingsSkinListEntryVisualReady(SourceReady, TerminalFailure, PreviewCacheReady);
 }
 
 SSettingsSkinListPlan BuildSettingsSkinListPlan(std::vector<SSettingsSkinListEntry> vEntries)
@@ -259,6 +269,48 @@ bool SettingsLoadingPrewarmShouldKeepPumping(bool WarmupReady, int CompletedStep
 	if(CompletedSteps < MaxAttempts)
 		return true;
 	return ConsecutiveNoProgressSteps < 8;
+}
+
+bool SettingsLoadingPrewarmMadeProgress(int PreviousTextPoolEntries, int NewTextPoolEntries)
+{
+	return NewTextPoolEntries > PreviousTextPoolEntries;
+}
+
+bool SettingsLoadingPrewarmMadeProgress(int PreviousTextPoolEntries, int NewTextPoolEntries, int PreviousMissingTextPlanItems, int NewMissingTextPlanItems)
+{
+	return SettingsLoadingPrewarmMadeProgress(PreviousTextPoolEntries, NewTextPoolEntries) ||
+	       (NewMissingTextPlanItems >= 0 && (PreviousMissingTextPlanItems < 0 || NewMissingTextPlanItems < PreviousMissingTextPlanItems));
+}
+
+bool SettingsLoadingPrewarmMadeProgress(int PreviousTextPoolEntries, int NewTextPoolEntries, int PreviousMissingTextPlanItems, int NewMissingTextPlanItems, int PreviousMissingTextPlanCollectionUnits, int NewMissingTextPlanCollectionUnits)
+{
+	return SettingsLoadingPrewarmMadeProgress(PreviousTextPoolEntries, NewTextPoolEntries, PreviousMissingTextPlanItems, NewMissingTextPlanItems) ||
+	       (NewMissingTextPlanCollectionUnits >= 0 && (PreviousMissingTextPlanCollectionUnits < 0 || NewMissingTextPlanCollectionUnits < PreviousMissingTextPlanCollectionUnits));
+}
+
+void SettingsLoadingPrewarmAdvance(SSettingsLoadingPrewarmState &State, int NewTextPoolEntries, int MissingTextPlanItems, int MissingTextPlanCollectionUnits)
+{
+	const bool MadeProgress = SettingsLoadingPrewarmMadeProgress(State.m_LastBuiltTextContainers, NewTextPoolEntries, State.m_LastMissingTextPlanItems, MissingTextPlanItems, State.m_LastMissingTextPlanCollectionUnits, MissingTextPlanCollectionUnits);
+	if(MissingTextPlanItems <= 0 && MissingTextPlanCollectionUnits <= 0)
+	{
+		State.m_ConsecutiveNoProgressSteps = 0;
+		State.m_WarmupReady = true;
+	}
+	else if(MadeProgress)
+	{
+		State.m_ConsecutiveNoProgressSteps = 0;
+		State.m_WarmupReady = false;
+	}
+	else
+	{
+		++State.m_ConsecutiveNoProgressSteps;
+		State.m_WarmupReady = false;
+	}
+
+	State.m_LastBuiltTextContainers = NewTextPoolEntries;
+	State.m_LastMissingTextPlanItems = MissingTextPlanItems;
+	State.m_LastMissingTextPlanCollectionUnits = MissingTextPlanCollectionUnits;
+	++State.m_CompletedSteps;
 }
 
 int SettingsSkinListPrefetchCount(int FirstVisibleIndex, int LastVisibleIndex, int ItemsPerRow, int PrefetchRows, int TotalEntries)
@@ -784,6 +836,141 @@ SSettingsSkinThroughputControllerOutput SettingsSkinThroughputControllerStep(con
 	return Output;
 }
 
+SSettingsAdaptiveBudgetOutput SettingsAdaptiveBudgetStep(const SSettingsAdaptiveBudgetInput &Input, SSettingsAdaptiveBudgetState &State)
+{
+	SSettingsAdaptiveBudgetOutput Output;
+	if(!State.m_Initialized)
+	{
+		State.m_Initialized = true;
+		State.m_HealthyFrames = 0;
+		State.m_BackgroundWindow = 1;
+		State.m_PrefetchWindow = 1;
+		State.m_VisibleWindow = 2;
+		State.m_GpuUploadWindow = 1;
+		State.m_TextPrebuildWindow = 1;
+		State.m_DemoMetadataWindow = 1;
+	}
+
+	const float TargetMs = std::max(1.0f, Input.m_TargetFrameMs);
+	const bool FramePressure =
+		Input.m_FramePressure ||
+		Input.m_FrameMsAverage > TargetMs * 1.35f ||
+		Input.m_FrameMsP95 > TargetMs * 1.60f ||
+		Input.m_TextContainerCreateMsEwma > TargetMs * 0.25f ||
+		Input.m_TextContainerUploadMsEwma > TargetMs * 0.20f ||
+		Input.m_GlyphRasterizeMsEwma > TargetMs * 0.20f ||
+		Input.m_GlyphUploadMsEwma > TargetMs * 0.20f ||
+		Input.m_GpuBudgetExhausted ||
+		Input.m_FinalizeBudgetExhausted ||
+		Input.m_UploadBudgetExhausted;
+	const bool ScrollActive = Input.m_ScrollActive || Input.m_JumpScrollActive;
+	const bool HasBacklog = Input.m_BackgroundBacklog > 0 || Input.m_VisibleWaiting > 0;
+	const bool StableFrame = Input.m_FrameMsAverage > 0.0f &&
+				 Input.m_FrameMsAverage <= TargetMs * 0.75f &&
+				 Input.m_FrameMsP95 <= TargetMs * 0.95f &&
+				 !FramePressure;
+
+	if(!Input.m_WindowActive)
+	{
+		State.m_HealthyFrames = 0;
+		State.m_BackgroundWindow = 0;
+		State.m_PrefetchWindow = 0;
+		State.m_VisibleWindow = 1;
+		State.m_GpuUploadWindow = 1;
+		State.m_TextPrebuildWindow = 0;
+		State.m_DemoMetadataWindow = 0;
+		Output.m_Mode = ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE;
+		Output.m_Reason = ESettingsAdaptiveBudgetReason::WINDOW_INACTIVE;
+	}
+	else if(FramePressure)
+	{
+		State.m_HealthyFrames = 0;
+		State.m_BackgroundWindow = 0;
+		State.m_PrefetchWindow = std::max(0, State.m_PrefetchWindow / 2);
+		State.m_VisibleWindow = std::max(1, State.m_VisibleWindow / 2);
+		State.m_GpuUploadWindow = std::max(1, State.m_GpuUploadWindow / 2);
+		State.m_TextPrebuildWindow = std::max(1, State.m_TextPrebuildWindow / 2);
+		State.m_DemoMetadataWindow = std::max(1, State.m_DemoMetadataWindow / 2);
+		Output.m_Mode = ESettingsAdaptiveBudgetMode::FRAME_PRESSURE;
+		Output.m_Reason = ESettingsAdaptiveBudgetReason::FRAME_PRESSURE;
+	}
+	else if(ScrollActive)
+	{
+		State.m_HealthyFrames = 0;
+		State.m_BackgroundWindow = 0;
+		State.m_PrefetchWindow = 0;
+		State.m_VisibleWindow = Input.m_JumpScrollActive ? 2 : std::max(2, State.m_VisibleWindow);
+		State.m_GpuUploadWindow = std::max(1, State.m_GpuUploadWindow);
+		State.m_TextPrebuildWindow = 1;
+		State.m_DemoMetadataWindow = 1;
+		Output.m_Mode = ESettingsAdaptiveBudgetMode::SCROLL_ACTIVE;
+		Output.m_Reason = ESettingsAdaptiveBudgetReason::SCROLL;
+	}
+	else if(Input.m_PostScrollRecoveryFrames > 0)
+	{
+		State.m_HealthyFrames = 0;
+		State.m_BackgroundWindow = std::min(State.m_BackgroundWindow, 1);
+		State.m_PrefetchWindow = std::max(1, State.m_PrefetchWindow);
+		State.m_VisibleWindow = std::max(2, State.m_VisibleWindow);
+		State.m_GpuUploadWindow = std::max(1, State.m_GpuUploadWindow);
+		State.m_TextPrebuildWindow = std::max(1, State.m_TextPrebuildWindow);
+		State.m_DemoMetadataWindow = std::max(1, State.m_DemoMetadataWindow);
+		Output.m_Mode = ESettingsAdaptiveBudgetMode::POST_SCROLL_RECOVERY;
+		Output.m_Reason = ESettingsAdaptiveBudgetReason::SCROLL;
+	}
+	else if(StableFrame && HasBacklog)
+	{
+		++State.m_HealthyFrames;
+		if(State.m_HealthyFrames >= 2)
+		{
+			State.m_BackgroundWindow = std::min(16, State.m_BackgroundWindow + 1);
+			State.m_PrefetchWindow = std::min(8, State.m_PrefetchWindow + 1);
+			State.m_VisibleWindow = std::min(16, State.m_VisibleWindow + 1);
+			State.m_GpuUploadWindow = std::min(8, State.m_GpuUploadWindow + 1);
+			State.m_TextPrebuildWindow = std::min(maximum(1, Input.m_TextIdleHardCap), State.m_TextPrebuildWindow + 1);
+			State.m_DemoMetadataWindow = std::min(12, State.m_DemoMetadataWindow + 1);
+			State.m_HealthyFrames = 0;
+			Output.m_Reason = ESettingsAdaptiveBudgetReason::PROGRESS;
+		}
+		Output.m_Mode = ESettingsAdaptiveBudgetMode::IDLE;
+	}
+	else
+	{
+		State.m_HealthyFrames = 0;
+		Output.m_Mode = ESettingsAdaptiveBudgetMode::IDLE;
+		Output.m_Reason = HasBacklog ? ESettingsAdaptiveBudgetReason::NONE : ESettingsAdaptiveBudgetReason::BACKLOG_EMPTY;
+	}
+
+	Output.m_VisibleTokens = std::max(1, State.m_VisibleWindow);
+	Output.m_PrefetchTokens = std::max(0, State.m_PrefetchWindow);
+	Output.m_BackgroundTokens = std::max(0, State.m_BackgroundWindow);
+	Output.m_GpuUploadTokens = std::max(1, State.m_GpuUploadWindow);
+	Output.m_ResourceUploadTokens = Output.m_GpuUploadTokens;
+	const int TextHardCap =
+		Output.m_Mode == ESettingsAdaptiveBudgetMode::SCROLL_ACTIVE  ? Input.m_TextScrollHardCap :
+		Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE ? Input.m_TextPressureHardCap :
+									       Input.m_TextIdleHardCap;
+	const int GlyphHardCap =
+		Output.m_Mode == ESettingsAdaptiveBudgetMode::SCROLL_ACTIVE  ? Input.m_GlyphScrollHardCap :
+		Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE ? Input.m_GlyphPressureHardCap :
+									       Input.m_GlyphIdleHardCap;
+	const int TextMax = maximum(0, TextHardCap);
+	const int GlyphMax = maximum(0, GlyphHardCap);
+	const int TextMin = Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || TextMax == 0 ? 0 : 1;
+	const int GlyphMin = Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || GlyphMax == 0 ? 0 : 1;
+	Output.m_TextPrebuildTokens = std::clamp(State.m_TextPrebuildWindow, TextMin, TextMax);
+	Output.m_TextContainerTokens = Output.m_TextPrebuildTokens;
+	Output.m_GlyphRasterizeTokens = std::clamp(minimum(Output.m_TextPrebuildTokens, 2), GlyphMin, GlyphMax);
+	Output.m_GlyphUploadTokens = std::clamp(minimum(Output.m_TextPrebuildTokens, 2), GlyphMin, GlyphMax);
+	Output.m_ParagraphLayoutTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE) ? 0 : std::max(1, minimum(Output.m_TextPrebuildTokens, 2));
+	Output.m_MetadataLayoutTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Input.m_TabSwitchFirstFrame || Input.m_JumpScrollActive) ? 0 : std::max(1, minimum(Output.m_TextPrebuildTokens, 2));
+	Output.m_PreviewArtifactTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Input.m_TabSwitchFirstFrame || Input.m_JumpScrollActive) ? 0 : (Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE ? minimum(Output.m_VisibleTokens, 1) : std::max(1, minimum(Output.m_VisibleTokens, 2)));
+	Output.m_TextureUploadTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Input.m_TabSwitchFirstFrame || Input.m_JumpScrollActive) ? 0 : Output.m_ResourceUploadTokens;
+	Output.m_CardDrawTokens = Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : std::max(1, Output.m_VisibleTokens);
+	Output.m_DemoMetadataTokens = std::max(Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : 1, State.m_DemoMetadataWindow);
+	return Output;
+}
+
 SSettingsSkinBackgroundWindowOutput SettingsSkinBackgroundWindowUpdate(const SSettingsSkinBackgroundWindowInput &Input)
 {
 	SSettingsSkinBackgroundWindowOutput Output;
@@ -888,6 +1075,33 @@ const char *SettingsSkinThroughputControllerReasonName(ESettingsSkinThroughputCo
 	case ESettingsSkinThroughputControllerReason::ADMISSION: return "admission";
 	case ESettingsSkinThroughputControllerReason::FRAME_PRESSURE: return "frame_pressure";
 	case ESettingsSkinThroughputControllerReason::PROGRESS: return "progress";
+	}
+	return "none";
+}
+
+const char *SettingsAdaptiveBudgetModeName(ESettingsAdaptiveBudgetMode Mode)
+{
+	switch(Mode)
+	{
+	case ESettingsAdaptiveBudgetMode::IDLE: return "idle";
+	case ESettingsAdaptiveBudgetMode::SCROLL_ACTIVE: return "scroll_active";
+	case ESettingsAdaptiveBudgetMode::POST_SCROLL_RECOVERY: return "post_scroll_recovery";
+	case ESettingsAdaptiveBudgetMode::FRAME_PRESSURE: return "frame_pressure";
+	case ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE: return "window_inactive";
+	}
+	return "idle";
+}
+
+const char *SettingsAdaptiveBudgetReasonName(ESettingsAdaptiveBudgetReason Reason)
+{
+	switch(Reason)
+	{
+	case ESettingsAdaptiveBudgetReason::NONE: return "none";
+	case ESettingsAdaptiveBudgetReason::PROGRESS: return "progress";
+	case ESettingsAdaptiveBudgetReason::FRAME_PRESSURE: return "frame_pressure";
+	case ESettingsAdaptiveBudgetReason::SCROLL: return "scroll";
+	case ESettingsAdaptiveBudgetReason::WINDOW_INACTIVE: return "window_inactive";
+	case ESettingsAdaptiveBudgetReason::BACKLOG_EMPTY: return "backlog_empty";
 	}
 	return "none";
 }

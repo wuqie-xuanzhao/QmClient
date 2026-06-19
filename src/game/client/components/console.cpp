@@ -545,17 +545,17 @@ static bool SaveChatExportHtml(IStorage *pStorage, const char *pFilename, const 
 	std::string Html;
 	Html.reserve(vLines.size() * 256 + 2048);
 	Html.append("<!doctype html><html><head><meta charset=\"utf-8\"><title>");
-	AppendHtmlEscaped(Html, Localize("QmClient 聊天记录"));
+	AppendHtmlEscaped(Html, Localize("QmClient chat log"));
 	Html.append("</title>");
 	Html.append("<style>body{margin:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:#202124}.wrap{max-width:920px;margin:0 auto;padding:28px}.title{font-size:26px;font-weight:700;margin-bottom:6px}.sub{color:#68707a;margin-bottom:24px}.msg{display:flex;margin:12px 0}.msg.local{justify-content:flex-end}.bubble{max-width:72%;border-radius:16px;padding:10px 14px;background:#fff;box-shadow:0 1px 3px #0002;white-space:pre-wrap;word-break:break-word}.local .bubble{background:#3d7eff;color:#fff}.time{font-size:12px;opacity:.68;margin-top:6px}</style>");
 	Html.append("</head><body><div class=\"wrap\"><div class=\"title\">");
-	AppendHtmlEscaped(Html, Localize("QmClient 聊天记录"));
+	AppendHtmlEscaped(Html, Localize("QmClient chat log"));
 	Html.append("</div><div class=\"sub\">");
-	AppendHtmlEscaped(Html, Localize("共"));
+	AppendHtmlEscaped(Html, Localize("Total"));
 	Html.append(" ");
 	Html.append(std::to_string(vLines.size()));
 	Html.append(" ");
-	AppendHtmlEscaped(Html, Localize("条消息"));
+	AppendHtmlEscaped(Html, Localize("Messages"));
 	Html.append("</div>");
 	for(const SChatExportLine &Line : vLines)
 	{
@@ -1952,18 +1952,18 @@ bool CGameConsole::CInstance::ExportSelectedChat()
 
 	if(vLines.empty())
 	{
-		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("未选择聊天记录"));
+		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("No chat log selected"));
 		return false;
 	}
 
 	if(!m_pGameConsole->Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE) && !m_pGameConsole->Storage()->FolderExists("qmclient", IStorage::TYPE_SAVE))
 	{
-		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("聊天记录导出失败"));
+		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export failed"));
 		return false;
 	}
 	if(!m_pGameConsole->Storage()->CreateFolder("qmclient/chat_log", IStorage::TYPE_SAVE) && !m_pGameConsole->Storage()->FolderExists("qmclient/chat_log", IStorage::TYPE_SAVE))
 	{
-		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("聊天记录导出失败"));
+		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export failed"));
 		return false;
 	}
 
@@ -1985,13 +1985,13 @@ bool CGameConsole::CInstance::ExportSelectedChat()
 	if(Success)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), Localize("已导出 %d 条聊天记录"), (int)vLines.size());
+		str_format(aBuf, sizeof(aBuf), Localize("Exported %d chat messages"), (int)vLines.size());
 		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
 		SetChatExportMode(false);
 	}
 	else
 	{
-		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("聊天记录导出失败"));
+		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export failed"));
 	}
 	return Success;
 }
@@ -2863,7 +2863,7 @@ void CGameConsole::OnRender()
 		if(pConsole->m_ChatExportMode)
 		{
 			char aSelectedBuf[64];
-			str_format(aSelectedBuf, sizeof(aSelectedBuf), Localize("已选 %d 条"), pConsole->SelectedChatExportCount());
+			str_format(aSelectedBuf, sizeof(aSelectedBuf), Localize("Selected %d"), pConsole->SelectedChatExportCount());
 			TextRender()->Text(LinesTextX + LinesWidth + 10.0f, LinesTextY, FONT_SIZE, aSelectedBuf);
 
 			enum class EExportAction
@@ -2880,10 +2880,10 @@ void CGameConsole::OnRender()
 				EExportAction m_Action;
 			};
 			SExportButton aButtons[] = {
-				{&m_ChatExportCancelButton, Localize("取消"), EExportAction::CANCEL},
-				{&m_ChatExportSaveButton, Localize("导出所选"), EExportAction::SAVE},
-				{&m_ChatExportClearButton, Localize("清空"), EExportAction::CLEAR},
-				{&m_ChatExportSelectAllButton, Localize("全选聊天"), EExportAction::SELECT_ALL},
+				{&m_ChatExportCancelButton, Localize("Cancel"), EExportAction::CANCEL},
+				{&m_ChatExportSaveButton, Localize("Export selected"), EExportAction::SAVE},
+				{&m_ChatExportClearButton, Localize("Clear"), EExportAction::CLEAR},
+				{&m_ChatExportSelectAllButton, Localize("Select all chat"), EExportAction::SELECT_ALL},
 			};
 			float ButtonRight = Screen.w - TopbarRightMargin;
 			for(const SExportButton &ExportButton : aButtons)
@@ -2914,7 +2914,7 @@ void CGameConsole::OnRender()
 			const char *apFilterLabels[] = {Localize("All"), Localize("Players"), Localize("System")};
 			const CInstance::ELogFilter aFilters[] = {CInstance::ELogFilter::ALL, CInstance::ELogFilter::PLAYER, CInstance::ELogFilter::SYSTEM};
 			const bool ShowExportButton = m_ConsoleType == CONSOLETYPE_LOCAL;
-			const char *pExportLabel = Localize("选择导出");
+			const char *pExportLabel = Localize("Select export");
 			const float ExportButtonWidth = ShowExportButton ? TextRender()->TextWidth(FilterFontSize, pExportLabel) + FilterPadding * 2.0f : 0.0f;
 			const float VersionRight = ShowExportButton ? Screen.w - TopbarRightMargin - ExportButtonWidth - FilterSpacing : Screen.w - TopbarRightMargin;
 			float aFilterWidths[3];

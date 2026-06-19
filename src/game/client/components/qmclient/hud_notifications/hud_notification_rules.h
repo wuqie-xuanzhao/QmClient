@@ -55,6 +55,7 @@ namespace QmHudNotifications
 	{
 		None,
 		BasicInfo,
+		HelpInfo,
 		Prompt,
 	};
 
@@ -89,10 +90,23 @@ namespace QmHudNotifications
 		bool m_UseFallbackNotification = false;
 	};
 
+	struct SServerMessageRouteConfig
+	{
+		bool m_RouteSystemMessages = false;
+		bool m_UseCategoryFilters = true;
+		bool m_ShowBasicInfo = false;
+		bool m_ShowHelpInfo = false;
+		bool m_ShowPrompts = true;
+		bool m_ShowUnknown = true;
+		bool m_HideBasicInfo = false;
+		bool m_HidePrompt = false;
+	};
+
 	ESoloPrompt MatchKnownSoloPrompt(const char *pMessage);
 	bool ShouldSuppressSoloChatMessage(const char *pMessage, ESoloPrompt PendingCompatPrompt);
 	bool ShouldExcludeSystemNotification(const char *pMessage);
 	SServerMessageAnalysis AnalyzeServerMessage(const char *pMessage, ESoloPrompt PendingCompatPrompt);
+	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, const SServerMessageRouteConfig &Config);
 	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt);
 	EServerMessageRoute ServerMessageRoute(const char *pMessage, ESoloPrompt PendingCompatPrompt, bool RouteSystemMessages);
 	EServerMessageClass ServerMessageClass(const char *pMessage, ESoloPrompt PendingCompatPrompt);

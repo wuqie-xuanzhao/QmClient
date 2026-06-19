@@ -88,6 +88,11 @@ void CSectionLoader::SetDeferredFarMeasurementEnabled(bool Enabled)
 	m_DeferredFarMeasurementEnabled = Enabled;
 }
 
+void CSectionLoader::SetMaxSectionsPerFrame(int MaxSectionsPerFrame)
+{
+	m_MaxSectionsPerFrame = maximum(1, MaxSectionsPerFrame);
+}
+
 void CSectionLoader::Begin(CUIRect MainView, float TimeBudgetMs)
 {
 	m_MainView = MainView;
@@ -121,7 +126,7 @@ bool CSectionLoader::Process()
 
 	CPerfTimer FrameTimer;
 	int UnlockedThisFrame = 0;
-	const int MaxUnlockPerFrame = 2;
+	const int MaxUnlockPerFrame = m_MaxSectionsPerFrame;
 	const auto RecordSectionVisibility = [this](float SectionStartY, const SSettingsSection &Section, SSectionLoaderFrameStats &Stats) {
 		const float ActualHeight = maximum(Section.m_CachedHeight, m_RunningColumn.y - SectionStartY);
 		const CUIRect ActualSectionRect{m_MainView.x, SectionStartY, m_MainView.w, ActualHeight};
@@ -203,7 +208,10 @@ bool CSectionLoader::Process()
 			{
 				Section.m_State = ESettingsSectionState::COMPACT;
 				if(Section.m_RenderCompactFn)
-					Section.m_RenderCompactFn(m_RunningColumn);
+				{
+					Section.m_CachedHeight = Section.m_RenderCompactFn(m_RunningColumn);
+					Section.m_HasCachedHeight = true;
+				}
 				else
 					m_RunningColumn.y += Section.m_CachedHeight;
 			}
@@ -241,7 +249,10 @@ bool CSectionLoader::Process()
 				break;
 			}
 			if(Section.m_RenderCompactFn)
-				Section.m_RenderCompactFn(m_RunningColumn);
+			{
+				Section.m_CachedHeight = Section.m_RenderCompactFn(m_RunningColumn);
+				Section.m_HasCachedHeight = true;
+			}
 			else
 				m_RunningColumn.y += Section.m_CachedHeight;
 			++m_CurrentIndex;
@@ -389,7 +400,10 @@ bool CSectionLoader::Warmup(const SSessionUiCache *pCache, float TimeBudgetMs)
 		// In or near viewport: render the registered real warmup path to populate glyphs/cache.
 		const CPerfTimer SectTimer;
 		if(Section.m_RenderCompactFn)
-			Section.m_RenderCompactFn(m_MainView);
+		{
+			Section.m_CachedHeight = Section.m_RenderCompactFn(m_MainView);
+			Section.m_HasCachedHeight = true;
+		}
 		Section.m_State = ESettingsSectionState::COMPACT;
 
 		const double Elapsed = SectTimer.ElapsedMs();

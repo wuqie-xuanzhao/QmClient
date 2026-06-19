@@ -72,6 +72,12 @@ void CUIElement::SUIElementRect::Reset()
 	m_Corners = -1;
 	m_BackgroundAlphaScale = 1.0f;
 	m_Text.clear();
+	m_FontSize = -1.0f;
+	m_TextAlign = -1;
+	m_LabelMaxWidth = -2.0f;
+	m_LabelFlags = -1;
+	m_LineCount = 0;
+	m_BiggestCharacterHeight = 0.0f;
 	m_Cursor = CTextCursor();
 	m_TextColor = ColorRGBA(-1, -1, -1, -1);
 	m_TextOutlineColor = ColorRGBA(-1, -1, -1, -1);
@@ -631,7 +637,8 @@ void CUi::FlushQuadBatch() const
 
 	Graphics()->TextureClear();
 	Graphics()->SetColor(m_QuadBatchColor);
-	Graphics()->RenderQuadContainerAsSpriteMultiple(m_QuadBatchContainerIndex, 0, (int)m_vQuadBatchSprites.size(), m_vQuadBatchSprites.data());
+	for(const IGraphics::SRenderSpriteInfo &Info : m_vQuadBatchSprites)
+		Graphics()->RenderQuadContainerEx(m_QuadBatchContainerIndex, 0, -1, Info.m_Pos.x, Info.m_Pos.y);
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 	m_vQuadBatchSprites.clear();
 	m_QuadBatchContainerIndex = -1;
@@ -926,6 +933,7 @@ static int GetFlagsForLabelProperties(const SLabelProperties &LabelProps, const 
 		return pReadCursor->m_Flags & ~TEXTFLAG_RENDER;
 
 	int Flags = 0;
+	Flags |= LabelProps.m_DisallowNewline ? TEXTFLAG_DISALLOW_NEWLINE : 0;
 	Flags |= LabelProps.m_StopAtEnd ? TEXTFLAG_STOP_AT_END : 0;
 	Flags |= LabelProps.m_EllipsisAtEnd ? TEXTFLAG_ELLIPSIS_AT_END : 0;
 	return Flags;
@@ -987,12 +995,19 @@ void CUi::DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, cons
 	}
 	else
 	{
-		Cursor.SetPosition(CalcAlignedCursorPos(pRect, TextBounds.m_TextSize, Align));
+		const float *pBiggestCharHeight = TextBounds.m_LineCount == 1 ? &TextBounds.m_BiggestCharacterHeight : nullptr;
+		Cursor.SetPosition(CalcAlignedCursorPos(pRect, TextBounds.m_TextSize, Align, pBiggestCharHeight));
 		Cursor.m_FontSize = Size;
 		Cursor.m_Flags |= Flags;
 	}
 	Cursor.m_LineWidth = LabelProps.m_MaxWidth;
 
+	RectEl.m_FontSize = Size;
+	RectEl.m_TextAlign = Align;
+	RectEl.m_LabelMaxWidth = LabelProps.m_MaxWidth;
+	RectEl.m_LabelFlags = Flags;
+	RectEl.m_LineCount = TextBounds.m_LineCount;
+	RectEl.m_BiggestCharacterHeight = TextBounds.m_BiggestCharacterHeight;
 	RectEl.m_TextColor = TextRender()->GetTextColor();
 	RectEl.m_TextOutlineColor = TextRender()->GetTextOutlineColor();
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -1003,12 +1018,25 @@ void CUi::DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, cons
 	RectEl.m_Cursor = Cursor;
 }
 
+void CUi::RenderLabelTextContainerAligned(const CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, int Align) const
+{
+	if(pRect == nullptr || !RectEl.m_UITextContainer.Valid())
+		return;
+
+	const float *pBiggestCharHeight = RectEl.m_LineCount == 1 ? &RectEl.m_BiggestCharacterHeight : nullptr;
+	const vec2 CursorPos = CalcAlignedCursorPos(pRect, vec2(RectEl.m_Cursor.m_LongestLineWidth, RectEl.m_Cursor.Height()), Align, pBiggestCharHeight);
+	FlushQuadBatch();
+	TextRender()->RenderTextContainer(RectEl.m_UITextContainer, RectEl.m_TextColor, RectEl.m_TextOutlineColor, CursorPos.x, CursorPos.y);
+}
+
 void CUi::DoLabelStreamed(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated) const
 {
+	const int Flags = GetFlagsForLabelProperties(LabelProps, pReadCursor);
 	const int ReadCursorGlyphCount = pReadCursor == nullptr ? -1 : pReadCursor->m_GlyphCount;
 	bool NeedsRecreate = false;
 	bool ColorChanged = RectEl.m_TextColor != TextRender()->GetTextColor() || RectEl.m_TextOutlineColor != TextRender()->GetTextOutlineColor();
-	if((!RectEl.m_UITextContainer.Valid() && pText[0] != '\0' && StrLen != 0) || RectEl.m_Width != pRect->w || RectEl.m_Height != pRect->h || ColorChanged || RectEl.m_ReadCursorGlyphCount != ReadCursorGlyphCount)
+	bool StyleChanged = RectEl.m_FontSize != Size || RectEl.m_TextAlign != Align || RectEl.m_LabelMaxWidth != LabelProps.m_MaxWidth || RectEl.m_LabelFlags != Flags;
+	if((!RectEl.m_UITextContainer.Valid() && pText[0] != '\0' && StrLen != 0) || RectEl.m_Width != pRect->w || RectEl.m_Height != pRect->h || ColorChanged || StyleChanged || RectEl.m_ReadCursorGlyphCount != ReadCursorGlyphCount)
 	{
 		NeedsRecreate = true;
 	}
@@ -1056,9 +1084,7 @@ void CUi::DoLabelStreamed(CUIElement::SUIElementRect &RectEl, const CUIRect *pRe
 
 	if(Render && RectEl.m_UITextContainer.Valid())
 	{
-		const vec2 CursorPos = CalcAlignedCursorPos(pRect, vec2(RectEl.m_Cursor.m_LongestLineWidth, RectEl.m_Cursor.Height()), Align);
-		FlushQuadBatch();
-		TextRender()->RenderTextContainer(RectEl.m_UITextContainer, RectEl.m_TextColor, RectEl.m_TextOutlineColor, CursorPos.x, CursorPos.y);
+		RenderLabelTextContainerAligned(RectEl, pRect, Align);
 	}
 }
 
@@ -1403,6 +1429,33 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 	// logic
 	const bool Inside = MouseInside(pRect);
 	const int Base = Props.m_IsHex ? 16 : 10;
+	auto RenderValueSelectorDisplay = [&]() {
+		char aBuf[128];
+		if(pLabel[0] != '\0')
+		{
+			if(Props.m_IsHex)
+				str_format(aBuf, sizeof(aBuf), "%s #%0*" PRIX64, pLabel, Props.m_HexPrefix, Current);
+			else
+				str_format(aBuf, sizeof(aBuf), "%s %" PRId64, pLabel, Current);
+		}
+		else
+		{
+			if(Props.m_IsHex)
+				str_format(aBuf, sizeof(aBuf), "#%0*" PRIX64, Props.m_HexPrefix, Current);
+			else
+				str_format(aBuf, sizeof(aBuf), "%" PRId64, Current);
+		}
+		const bool Active = CheckActiveItem(pId) || m_ActiveValueSelectorState.m_pLastTextId == pId;
+		const bool Hovered = HotItem() == pId;
+		pRect->Draw(ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, Hovered)), IGraphics::CORNER_ALL, 5.0f);
+		SLabelProperties ValueLabelProps;
+		ValueLabelProps.m_MaxWidth = pRect->w;
+		ValueLabelProps.m_DisallowNewline = true;
+		ValueLabelProps.m_StopAtEnd = true;
+		ValueLabelProps.m_MinimumFontSize = 6.0f;
+		const char *pDisplayText = m_ActiveValueSelectorState.m_pLastTextId == pId ? m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString() : aBuf;
+		DoLabel(pRect, pDisplayText, 10.0f, TEXTALIGN_MC, ValueLabelProps);
+	};
 
 	if(CheckActiveItem(pId))
 	{
@@ -1436,7 +1489,10 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 	if(m_ActiveValueSelectorState.m_pLastTextId == pId)
 	{
 		SetActiveItem(&m_ActiveValueSelectorState.m_NumberInput);
-		DoEditBox(&m_ActiveValueSelectorState.m_NumberInput, pRect, 10.0f, IGraphics::CORNER_ALL, {}, Props.m_TextAlign);
+		m_ActiveValueSelectorState.m_NumberInput.Activate(EInputPriority::UI);
+		TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));
+		m_ActiveValueSelectorState.m_NumberInput.Render(pRect, 10.0f, Props.m_TextAlign, false, -1.0f, 0.0f, {});
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 		if(Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER) || ConsumeHotkey(HOTKEY_ENTER) || ((MouseButtonClicked(1) || MouseButtonClicked(0)) && !Inside))
 		{
@@ -1495,28 +1551,9 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 				SetActiveItem(pId);
 			}
 		}
-
-		// render
-		char aBuf[128];
-		if(pLabel[0] != '\0')
-		{
-			if(Props.m_IsHex)
-				str_format(aBuf, sizeof(aBuf), "%s #%0*" PRIX64, pLabel, Props.m_HexPrefix, Current);
-			else
-				str_format(aBuf, sizeof(aBuf), "%s %" PRId64, pLabel, Current);
-		}
-		else
-		{
-			if(Props.m_IsHex)
-				str_format(aBuf, sizeof(aBuf), "#%0*" PRIX64, Props.m_HexPrefix, Current);
-			else
-				str_format(aBuf, sizeof(aBuf), "%" PRId64, Current);
-		}
-		const bool Active = CheckActiveItem(pId);
-		const bool Hovered = HotItem() == pId;
-		pRect->Draw(ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, Hovered)), IGraphics::CORNER_ALL, 5.0f);
-		DoLabel(pRect, aBuf, 10.0f, TEXTALIGN_MC);
 	}
+
+	RenderValueSelectorDisplay();
 
 	if(Inside && !MouseButton(0) && !MouseButton(1))
 		SetHotItem(pId);

@@ -265,6 +265,11 @@ void CScrollRegion::SetScrollOffsetY(float OffsetY)
 	m_ContentScrollOff.y = -m_ScrollY;
 }
 
+void CScrollRegion::SetContentHeightForNextFrame(float ContentHeight)
+{
+	m_ContentH = maximum(0.0f, ContentHeight);
+}
+
 void CScrollRegion::DoEdgeScrolling()
 {
 	if(!ScrollbarShown())

@@ -301,6 +301,19 @@ struct STextSizeProperties
 	int *m_pLineCount = nullptr;
 };
 
+struct SQmTextRuntimeBudgetSnapshot
+{
+	int m_GlyphNew = 0;
+	int m_GlyphUploads = 0;
+	double m_GlyphRasterizeMs = 0.0;
+	double m_GlyphUploadMs = 0.0;
+	int m_TextContainerNew = 0;
+	int m_TextContainerUploads = 0;
+	double m_TextContainerCreateMs = 0.0;
+	double m_TextContainerUploadMs = 0.0;
+	uint64_t m_Frame = 0;
+};
+
 class ITextRender : public IInterface
 {
 	MACRO_INTERFACE("textrender")
@@ -331,6 +344,8 @@ public:
 	virtual void DeleteTextContainer(STextContainerIndex &TextContainerIndex) = 0;
 
 	virtual void UploadTextContainer(STextContainerIndex TextContainerIndex) = 0;
+	virtual void FlushQmTextRuntimeBudgetLog() {}
+	virtual SQmTextRuntimeBudgetSnapshot QmTextRuntimeBudgetSnapshot() const { return {}; }
 
 	virtual void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) = 0;
 	virtual void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor, float X, float Y) = 0;

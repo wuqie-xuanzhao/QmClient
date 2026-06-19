@@ -1252,14 +1252,178 @@ bool CMenus::EnsureDemoSize(CDemoItem &Item)
 
 void CMenus::EnsureAllDemoDates()
 {
-	for(auto &Item : m_vDemos)
+	m_DemoDateFetchCursor = 0;
+	m_DemoDateFetchComplete = false;
+	SSettingsAdaptiveBudgetInput Input;
+	Input.m_FrameId = Client()->PerfFrame();
+	str_copy(Input.m_aOperation, SettingsPerfActiveOperation(), sizeof(Input.m_aOperation));
+	str_copy(Input.m_aPage, "demo_browser", sizeof(Input.m_aPage));
+	str_copy(Input.m_aTab, "metadata", sizeof(Input.m_aTab));
+	str_copy(Input.m_aContext, SettingsPerfContextName(), sizeof(Input.m_aContext));
+	Input.m_FrameMsAverage = (float)GameClient()->m_QmMonitoring.Snapshot().m_Performance.m_FrameTimeMs;
+	Input.m_FrameMsP95 = Input.m_FrameMsAverage;
+	Input.m_TargetFrameMs = 8.333f;
+	Input.m_BackgroundBacklog = (int)m_vDemos.size();
+	Input.m_WindowActive = true;
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("demo_browser", Input, m_DemoBrowserAdaptiveBudgetState);
+	AdvanceDemoBrowserMetadata(0, maximum(1, AdaptiveBudget.m_DemoMetadataTokens), "ensure_dates");
+}
+
+void CMenus::ResetDemoBrowserMetadataProgress()
+{
+	m_DemoHeaderFetchCursor = 0;
+	m_DemoDateFetchCursor = 0;
+	m_DemoHeaderFetchComplete = DemoBrowserBrowsingScreenshots() || !g_Config.m_BrDemoFetchInfo;
+	m_DemoDateFetchComplete = g_Config.m_BrDemoSort != SORT_DATE;
+}
+
+void CMenus::AdvanceDemoBrowserMetadata(int HeaderBudget, int DateBudget, const char *pTrigger, int VisibleFirst, int VisibleEnd)
+{
+	const char *pSource = DemoBrowserBrowsingScreenshots() ? "screenshots" : "demos";
+	const auto ClampVisibleWindow = [&](int &First, int &End) {
+		if(First < 0 || End <= First || m_vpFilteredDemos.empty())
+		{
+			First = -1;
+			End = -1;
+			return;
+		}
+		First = minimum(maximum(First, 0), (int)m_vpFilteredDemos.size());
+		End = minimum(maximum(End, First), (int)m_vpFilteredDemos.size());
+	};
+	ClampVisibleWindow(VisibleFirst, VisibleEnd);
+	const bool HasVisibleWindow = VisibleFirst >= 0 && VisibleEnd > VisibleFirst;
+	if(!m_DemoHeaderFetchComplete && HeaderBudget > 0)
 	{
-		EnsureDemoDate(Item);
+		CPerfTimer Timer;
+		int Scanned = 0;
+		int Done = 0;
+		int VisibleScanned = 0;
+		int VisibleDone = 0;
+		int BackgroundScanned = 0;
+		int BackgroundDone = 0;
+		int RemainingBudget = HeaderBudget;
+		if(HasVisibleWindow)
+		{
+			for(int i = VisibleFirst; i < VisibleEnd && RemainingBudget > 0; ++i)
+			{
+				CDemoItem &Item = *m_vpFilteredDemos[i];
+				if(!Item.IsDemoFile())
+					continue;
+				++Scanned;
+				++VisibleScanned;
+				if(!Item.m_InfosLoaded)
+				{
+					FetchHeader(Item);
+					--RemainingBudget;
+				}
+				if(Item.m_InfosLoaded)
+				{
+					++Done;
+					++VisibleDone;
+				}
+			}
+		}
+		while(m_DemoBrowserMetadataBackgroundAllowed && m_DemoHeaderFetchCursor < m_vDemos.size() && RemainingBudget > 0)
+		{
+			CDemoItem &Item = m_vDemos[m_DemoHeaderFetchCursor++];
+			if(!Item.IsDemoFile())
+				continue;
+			++Scanned;
+			++BackgroundScanned;
+			if(!Item.m_InfosLoaded)
+			{
+				FetchHeader(Item);
+				--RemainingBudget;
+			}
+			if(Item.m_InfosLoaded)
+			{
+				++Done;
+				++BackgroundDone;
+			}
+		}
+		m_DemoHeaderFetchComplete = m_DemoHeaderFetchCursor >= m_vDemos.size();
+		if(m_DemoHeaderFetchComplete)
+		{
+			std::stable_sort(m_vDemos.begin(), m_vDemos.end());
+			DemolistOnUpdate(false);
+		}
+		if(QmPerfEnabled())
+		{
+			char aPayload[384];
+			str_format(aPayload, sizeof(aPayload), "event=demo_browser_header_fetch items_total=%d items_scanned=%d items_done=%d visible_first=%d visible_end=%d visible_scanned=%d visible_done=%d background_scanned=%d background_done=%d remaining=%d budget=%d dur_ms=%.3f trigger=%s source=%s sort=%d fetch_info=%d",
+				(int)m_vDemos.size(), Scanned, Done, VisibleFirst, VisibleEnd, VisibleScanned, VisibleDone, BackgroundScanned, BackgroundDone, maximum(0, (int)m_vDemos.size() - (int)m_DemoHeaderFetchCursor), HeaderBudget, Timer.ElapsedMs(), pTrigger, pSource, g_Config.m_BrDemoSort, g_Config.m_BrDemoFetchInfo);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "demo_browser");
+		}
+	}
+
+	if(!m_DemoDateFetchComplete && DateBudget > 0)
+	{
+		CPerfTimer Timer;
+		int Scanned = 0;
+		int Done = 0;
+		int VisibleScanned = 0;
+		int VisibleDone = 0;
+		int BackgroundScanned = 0;
+		int BackgroundDone = 0;
+		int RemainingBudget = DateBudget;
+		if(HasVisibleWindow)
+		{
+			for(int i = VisibleFirst; i < VisibleEnd && RemainingBudget > 0; ++i)
+			{
+				CDemoItem &Item = *m_vpFilteredDemos[i];
+				if(Item.m_IsDir)
+					continue;
+				++Scanned;
+				++VisibleScanned;
+				if(!Item.m_DateLoaded)
+				{
+					EnsureDemoDate(Item);
+					--RemainingBudget;
+				}
+				if(Item.m_DateLoaded)
+				{
+					++Done;
+					++VisibleDone;
+				}
+			}
+		}
+		while(m_DemoBrowserMetadataBackgroundAllowed && m_DemoDateFetchCursor < m_vDemos.size() && RemainingBudget > 0)
+		{
+			CDemoItem &Item = m_vDemos[m_DemoDateFetchCursor++];
+			if(Item.m_IsDir)
+				continue;
+			++Scanned;
+			++BackgroundScanned;
+			if(!Item.m_DateLoaded)
+			{
+				EnsureDemoDate(Item);
+				--RemainingBudget;
+			}
+			if(Item.m_DateLoaded)
+			{
+				++Done;
+				++BackgroundDone;
+			}
+		}
+		m_DemoDateFetchComplete = m_DemoDateFetchCursor >= m_vDemos.size();
+		if(m_DemoDateFetchComplete)
+		{
+			std::stable_sort(m_vDemos.begin(), m_vDemos.end());
+			DemolistOnUpdate(false);
+		}
+		if(QmPerfEnabled())
+		{
+			char aPayload[384];
+			str_format(aPayload, sizeof(aPayload), "event=demo_browser_date_fetch items_total=%d items_scanned=%d items_done=%d visible_first=%d visible_end=%d visible_scanned=%d visible_done=%d background_scanned=%d background_done=%d remaining=%d budget=%d dur_ms=%.3f trigger=%s source=%s sort=%d fetch_info=%d",
+				(int)m_vDemos.size(), Scanned, Done, VisibleFirst, VisibleEnd, VisibleScanned, VisibleDone, BackgroundScanned, BackgroundDone, maximum(0, (int)m_vDemos.size() - (int)m_DemoDateFetchCursor), DateBudget, Timer.ElapsedMs(), pTrigger, pSource, g_Config.m_BrDemoSort, g_Config.m_BrDemoFetchInfo);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "demo_browser");
+		}
 	}
 }
 
 void CMenus::DemolistPopulate()
 {
+	CPerfTimer StartupTimer;
 	m_vDemos.clear();
 
 	int NumStoragesWithDemos = 0;
@@ -1319,19 +1483,18 @@ void CMenus::DemolistPopulate()
 		m_DemoPopulateStartTime = time_get_nanoseconds();
 		Storage()->ListDirectory(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
 
-		if(g_Config.m_BrDemoFetchInfo)
-		{
-			if(!DemoBrowserBrowsingScreenshots())
-				FetchAllHeaders();
-		}
-		else if(g_Config.m_BrDemoSort == SORT_DATE)
-		{
-			EnsureAllDemoDates();
-		}
-
 		std::stable_sort(m_vDemos.begin(), m_vDemos.end());
 	}
+	ResetDemoBrowserMetadataProgress();
 	RefreshFilteredDemos();
+	if(QmPerfEnabled())
+	{
+		char aPayload[256];
+		const int MetadataRemaining = (m_DemoHeaderFetchComplete ? 0 : (int)m_vDemos.size()) + (m_DemoDateFetchComplete ? 0 : (int)m_vDemos.size());
+		str_format(aPayload, sizeof(aPayload), "event=demo_browser_startup items_total=%d items_scanned=%d items_done=%d remaining=%d metadata_remaining=%d budget=%d dur_ms=%.3f trigger=populate source=%s sort=%d fetch_info=%d",
+			(int)m_vDemos.size(), (int)m_vDemos.size(), (int)m_vDemos.size(), 0, MetadataRemaining, 0, StartupTimer.ElapsedMs(), DemoBrowserBrowsingScreenshots() ? "screenshots" : "demos", g_Config.m_BrDemoSort, g_Config.m_BrDemoFetchInfo);
+		QmPerfLogPayload("perf/interaction", aPayload, Client(), "demo_browser");
+	}
 }
 
 void CMenus::RefreshFilteredDemos()
@@ -1628,6 +1791,7 @@ bool CMenus::LoadDemoScreenshotPreviewTexture(const CDemoItem &Item)
 	if(m_DemoScreenshotPreviewLoadFailed)
 		return false;
 
+	CPerfTimer Timer;
 	char aPath[IO_MAX_PATH_LENGTH];
 	str_format(aPath, sizeof(aPath), "%s/%s", m_aCurrentDemoFolder, Item.m_aFilename);
 
@@ -1646,6 +1810,13 @@ bool CMenus::LoadDemoScreenshotPreviewTexture(const CDemoItem &Item)
 	if(!Loaded)
 	{
 		m_DemoScreenshotPreviewLoadFailed = true;
+		if(QmPerfEnabled())
+		{
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=demo_browser_preview_load items_total=1 items_scanned=1 items_done=0 remaining=0 budget=1 dur_ms=%.3f trigger=preview source=%s sort=%d fetch_info=%d",
+				Timer.ElapsedMs(), DemoBrowserBrowsingScreenshots() ? "screenshots" : "demos", g_Config.m_BrDemoSort, g_Config.m_BrDemoFetchInfo);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "demo_browser");
+		}
 		return false;
 	}
 
@@ -1657,7 +1828,21 @@ bool CMenus::LoadDemoScreenshotPreviewTexture(const CDemoItem &Item)
 		m_DemoScreenshotPreviewLoadFailed = true;
 		m_DemoScreenshotPreviewWidth = 0;
 		m_DemoScreenshotPreviewHeight = 0;
+		if(QmPerfEnabled())
+		{
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=demo_browser_preview_load items_total=1 items_scanned=1 items_done=0 remaining=0 budget=1 dur_ms=%.3f trigger=preview source=%s sort=%d fetch_info=%d",
+				Timer.ElapsedMs(), DemoBrowserBrowsingScreenshots() ? "screenshots" : "demos", g_Config.m_BrDemoSort, g_Config.m_BrDemoFetchInfo);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "demo_browser");
+		}
 		return false;
+	}
+	if(QmPerfEnabled())
+	{
+		char aPayload[256];
+		str_format(aPayload, sizeof(aPayload), "event=demo_browser_preview_load items_total=1 items_scanned=1 items_done=1 remaining=0 budget=1 dur_ms=%.3f trigger=preview source=%s sort=%d fetch_info=%d",
+			Timer.ElapsedMs(), DemoBrowserBrowsingScreenshots() ? "screenshots" : "demos", g_Config.m_BrDemoSort, g_Config.m_BrDemoFetchInfo);
+		QmPerfLogPayload("perf/interaction", aPayload, Client(), "demo_browser");
 	}
 	return true;
 }
@@ -1670,7 +1855,7 @@ void CMenus::RenderDemoScreenshotPreview(CUIRect PreviewRect, const CDemoItem &I
 
 	if(!LoadDemoScreenshotPreviewTexture(Item) || m_DemoScreenshotPreviewWidth <= 0 || m_DemoScreenshotPreviewHeight <= 0)
 	{
-		Ui()->DoLabel(&PreviewRect, Localize("无法预览此图片"), 12.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&PreviewRect, Localize("Could not preview this image"), 12.0f, TEXTALIGN_MC);
 		return;
 	}
 
@@ -1758,14 +1943,14 @@ bool CMenus::FetchHeader(CDemoItem &Item)
 
 void CMenus::FetchAllHeaders()
 {
-	for(auto &Item : m_vDemos)
-	{
-		if(Item.IsDemoFile())
-			FetchHeader(Item);
-	}
+	m_DemoHeaderFetchCursor = 0;
+	m_DemoHeaderFetchComplete = DemoBrowserBrowsingScreenshots();
 	if(g_Config.m_BrDemoSort == SORT_DATE)
-		EnsureAllDemoDates();
-	std::stable_sort(m_vDemos.begin(), m_vDemos.end());
+	{
+		m_DemoDateFetchCursor = 0;
+		m_DemoDateFetchComplete = false;
+	}
+	AdvanceDemoBrowserMetadata(2, g_Config.m_BrDemoSort == SORT_DATE ? 4 : 0, "fetch_info");
 }
 
 void CMenus::RenderDemoBrowser(CUIRect MainView)
@@ -1976,7 +2161,10 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 				g_Config.m_BrDemoSort = Col.m_Sort;
 				// Don't rescan in order to keep fetched headers, just resort
 				if(g_Config.m_BrDemoSort == SORT_DATE)
-					EnsureAllDemoDates();
+				{
+					m_DemoDateFetchCursor = 0;
+					m_DemoDateFetchComplete = false;
+				}
 				std::stable_sort(m_vDemos.begin(), m_vDemos.end());
 				DemolistOnUpdate(false);
 			}
@@ -1995,6 +2183,8 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 	char aBuf[64];
 	int ItemIndex = -1;
 	int VisibleRows = 0;
+	int FirstVisibleIndex = -1;
+	int EndVisibleIndex = -1;
 	CPerfTimer ListFrameTimer;
 	for(auto &pItem : m_vpFilteredDemos)
 	{
@@ -2007,6 +2197,9 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 		if(ListItem.m_Visible)
 		{
 			VisibleRows++;
+			if(FirstVisibleIndex < 0)
+				FirstVisibleIndex = ItemIndex;
+			EndVisibleIndex = ItemIndex + 1;
 			if(Selected && !Focused)
 				ListItem.m_Rect.Draw(ui_token::color::ACCENT_PRIMARY_DIM.WithMultipliedAlpha(1.35f), IGraphics::CORNER_ALL, ui_token::radius::BASE);
 
@@ -2073,7 +2266,7 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 				}
 				else if(Col.m_Id == COL_DATE && !pItem->m_IsDir)
 				{
-					if(EnsureDemoDate(*pItem))
+					if(pItem->m_DateLoaded && pItem->m_DateValid)
 						str_timestamp_ex(pItem->m_Date, aBuf, sizeof(aBuf), FORMAT_SPACE);
 					else
 						str_copy(aBuf, "-");
@@ -2122,6 +2315,49 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 	}
 
 	WasListboxItemActivated = s_ListBox.WasItemActivated() && NumSelectedDemos() == 1;
+	static int s_DemoLastFirstVisibleIndex = -1;
+	static int s_DemoLastEndVisibleIndex = -1;
+	const bool DemoListScrollActive = s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating();
+	const int DemoJumpThreshold = maximum(1, VisibleRows * 2);
+	const bool DemoListJumpScrollActive =
+		FirstVisibleIndex >= 0 && EndVisibleIndex > FirstVisibleIndex &&
+		s_DemoLastFirstVisibleIndex >= 0 &&
+		(abs(FirstVisibleIndex - s_DemoLastFirstVisibleIndex) >= DemoJumpThreshold ||
+			abs((EndVisibleIndex - 1) - (s_DemoLastEndVisibleIndex - 1)) >= DemoJumpThreshold);
+	SSettingsAdaptiveBudgetInput AdaptiveBudgetInput;
+	AdaptiveBudgetInput.m_FrameId = Client()->PerfFrame();
+	str_copy(AdaptiveBudgetInput.m_aOperation, SettingsPerfActiveOperation(), sizeof(AdaptiveBudgetInput.m_aOperation));
+	str_copy(AdaptiveBudgetInput.m_aPage, "demo_browser", sizeof(AdaptiveBudgetInput.m_aPage));
+	str_copy(AdaptiveBudgetInput.m_aTab, "list", sizeof(AdaptiveBudgetInput.m_aTab));
+	str_copy(AdaptiveBudgetInput.m_aContext, SettingsPerfContextName(), sizeof(AdaptiveBudgetInput.m_aContext));
+	AdaptiveBudgetInput.m_FrameMsAverage = (float)GameClient()->m_QmMonitoring.Snapshot().m_Performance.m_FrameTimeMs;
+	AdaptiveBudgetInput.m_FrameMsP95 = AdaptiveBudgetInput.m_FrameMsAverage;
+	AdaptiveBudgetInput.m_TargetFrameMs = 8.333f;
+	AdaptiveBudgetInput.m_ScrollActive = DemoListScrollActive;
+	AdaptiveBudgetInput.m_JumpScrollActive = DemoListJumpScrollActive;
+	AdaptiveBudgetInput.m_VisibleWaiting = maximum(0, VisibleRows);
+	AdaptiveBudgetInput.m_BackgroundBacklog =
+		(m_DemoHeaderFetchComplete ? 0 : maximum(0, (int)m_vDemos.size() - (int)m_DemoHeaderFetchCursor)) +
+		(m_DemoDateFetchComplete ? 0 : maximum(0, (int)m_vDemos.size() - (int)m_DemoDateFetchCursor));
+	AdaptiveBudgetInput.m_WindowActive = true;
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("demo_browser", AdaptiveBudgetInput, m_DemoBrowserAdaptiveBudgetState);
+	const bool MetadataBackgroundAllowed = AdaptiveBudget.m_BackgroundTokens > 0 && !AdaptiveBudgetInput.m_ScrollActive && !AdaptiveBudgetInput.m_JumpScrollActive;
+	const int DemoHeaderBudget = g_Config.m_BrDemoFetchInfo && !BrowsingScreenshots ?
+					     (MetadataBackgroundAllowed ? maximum(1, AdaptiveBudget.m_DemoMetadataTokens / 2) : minimum(AdaptiveBudget.m_DemoMetadataTokens, maximum(0, EndVisibleIndex - FirstVisibleIndex))) :
+					     0;
+	const int DemoDateBudget = g_Config.m_BrDemoSort == SORT_DATE ?
+					   (MetadataBackgroundAllowed ? maximum(1, AdaptiveBudget.m_DemoMetadataTokens) : minimum(AdaptiveBudget.m_DemoMetadataTokens, maximum(0, EndVisibleIndex - FirstVisibleIndex))) :
+					   0;
+	m_DemoBrowserMetadataBackgroundAllowed = MetadataBackgroundAllowed;
+	AdvanceDemoBrowserMetadata(
+		DemoHeaderBudget,
+		DemoDateBudget,
+		"list_frame",
+		FirstVisibleIndex,
+		EndVisibleIndex);
+	m_DemoBrowserMetadataBackgroundAllowed = true;
+	s_DemoLastFirstVisibleIndex = FirstVisibleIndex;
+	s_DemoLastEndVisibleIndex = EndVisibleIndex;
 	const double ListFrameDurationMs = ListFrameTimer.ElapsedMs();
 	if(QmPerfEnabled() && ListFrameDurationMs >= QmPerfThresholdMs())
 	{
@@ -2176,7 +2412,9 @@ void CMenus::RenderDemoBrowserDetails(CUIRect DetailsView)
 		pHeaderLabel = Localize("Folder Link");
 	else if(pItem->m_IsDir)
 		pHeaderLabel = Localize("Folder");
-	else if(pItem->IsDemoFile() && !FetchHeader(*pItem))
+	else if(pItem->IsDemoFile() && !pItem->m_InfosLoaded)
+		pHeaderLabel = Localize("Loading Demo");
+	else if(pItem->IsDemoFile() && !pItem->m_Valid)
 		pHeaderLabel = Localize("Invalid Demo");
 	else if(DemoBrowserBrowsingScreenshots())
 		pHeaderLabel = Localize("Screenshot");
@@ -2202,14 +2440,14 @@ void CMenus::RenderDemoBrowserDetails(CUIRect DetailsView)
 	Left.VSplitLeft(Contents.w / 2.f + 30.f, &Left, &Right);
 	Ui()->DoLabel(&Left, Localize("Created"), FontSize, TEXTALIGN_ML);
 	Ui()->DoLabel(&Right, Localize("Size"), FontSize, TEXTALIGN_ML);
-	if(EnsureDemoDate(*pItem))
+	if(pItem->m_DateLoaded && pItem->m_DateValid)
 		str_timestamp_ex(pItem->m_Date, aBuf, sizeof(aBuf), FORMAT_SPACE);
 	else
 		str_copy(aBuf, "-");
 	Contents.HSplitTop(18.0f, &Left, &Contents);
 	Left.VSplitLeft(Contents.w / 2.f + 30.f, &Left, &Right);
 	Ui()->DoLabel(&Left, aBuf, FontSize - 1.0f, TEXTALIGN_ML);
-	if(EnsureDemoSize(*pItem))
+	if(pItem->m_SizeLoaded)
 		FormatBrowserFileSize(pItem->m_Size, aBuf, sizeof(aBuf));
 	else
 		str_copy(aBuf, "-");
@@ -2218,6 +2456,15 @@ void CMenus::RenderDemoBrowserDetails(CUIRect DetailsView)
 
 	if(!pItem->IsDemoFile())
 		return;
+
+	if(!pItem->m_InfosLoaded)
+	{
+		Contents.HSplitTop(18.0f, &Left, &Contents);
+		Left.VSplitLeft(Contents.w / 2.f + 30.f, &Left, &Right);
+		Ui()->DoLabel(&Left, Localize("Loading demo info"), FontSize, TEXTALIGN_ML);
+		Ui()->DoLabel(&Right, "-", FontSize, TEXTALIGN_ML);
+		return;
+	}
 
 	if(!pItem->m_Valid)
 		return;
@@ -2409,8 +2656,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			if(DoButton_CheckBox(&g_Config.m_BrDemoFetchInfo, Localize("Fetch Info"), g_Config.m_BrDemoFetchInfo, &FetchInfo))
 			{
 				g_Config.m_BrDemoFetchInfo ^= 1;
-				if(g_Config.m_BrDemoFetchInfo)
-					FetchAllHeaders();
+				m_DemoHeaderFetchCursor = 0;
+				m_DemoHeaderFetchComplete = DemoBrowserBrowsingScreenshots() || !g_Config.m_BrDemoFetchInfo;
 			}
 		}
 
@@ -2421,13 +2668,13 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			const float DirectoryWidth = minimum(maximum(LeftGroup.w, 120.0f), 188.0f);
 			LeftGroup.VSplitLeft(minimum(DirectoryWidth, LeftGroup.w), &DemosDirectoryButton, &LeftGroup);
 			static CButtonContainer s_DemosDirectoryButton;
-			if(DoButton_Menu(&s_DemosDirectoryButton, BrowsingScreenshots ? Localize("截图目录") : Localize("Demos directory"), 0, &DemosDirectoryButton))
+			if(DoButton_Menu(&s_DemosDirectoryButton, BrowsingScreenshots ? Localize("Screenshots directory") : Localize("Demos directory"), 0, &DemosDirectoryButton))
 			{
 				char aBuf[IO_MAX_PATH_LENGTH];
 				Storage()->GetCompletePath(pSelectedItem->m_StorageType, m_aCurrentDemoFolder[0] == '\0' ? pBaseFolder : m_aCurrentDemoFolder, aBuf, sizeof(aBuf));
 				Client()->ViewFile(aBuf);
 			}
-			GameClient()->m_Tooltips.DoToolTip(&s_DemosDirectoryButton, &DemosDirectoryButton, BrowsingScreenshots ? Localize("打开包含截图文件的目录") : Localize("打开包含Demo文件的目录"));
+			GameClient()->m_Tooltips.DoToolTip(&s_DemosDirectoryButton, &DemosDirectoryButton, BrowsingScreenshots ? Localize("Open the folder containing screenshots") : Localize("Open the folder containing demo files"));
 		}
 
 		// play/open button
@@ -2647,8 +2894,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		if(DoButton_CheckBox(&g_Config.m_BrDemoFetchInfo, Localize("Fetch Info"), g_Config.m_BrDemoFetchInfo, &FetchInfo))
 		{
 			g_Config.m_BrDemoFetchInfo ^= 1;
-			if(g_Config.m_BrDemoFetchInfo)
-				FetchAllHeaders();
+			m_DemoHeaderFetchCursor = 0;
+			m_DemoHeaderFetchComplete = DemoBrowserBrowsingScreenshots() || !g_Config.m_BrDemoFetchInfo;
 		}
 	}
 
@@ -2659,13 +2906,13 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		ButtonBarBottom.VSplitLeft(ButtonBarBottom.h * 10.0f, &DemosDirectoryButton, &ButtonBarBottom);
 		ButtonBarBottom.VSplitLeft(ButtonBarBottom.h / 2.0f, nullptr, &ButtonBarBottom);
 		static CButtonContainer s_DemosDirectoryButton;
-		if(DoButton_Menu(&s_DemosDirectoryButton, BrowsingScreenshots ? Localize("截图目录") : Localize("Demos directory"), 0, &DemosDirectoryButton))
+		if(DoButton_Menu(&s_DemosDirectoryButton, BrowsingScreenshots ? Localize("Screenshots directory") : Localize("Demos directory"), 0, &DemosDirectoryButton))
 		{
 			char aBuf[IO_MAX_PATH_LENGTH];
 			Storage()->GetCompletePath(pSelectedItem->m_StorageType, m_aCurrentDemoFolder[0] == '\0' ? pBaseFolder : m_aCurrentDemoFolder, aBuf, sizeof(aBuf));
 			Client()->ViewFile(aBuf);
 		}
-		GameClient()->m_Tooltips.DoToolTip(&s_DemosDirectoryButton, &DemosDirectoryButton, BrowsingScreenshots ? Localize("打开包含截图文件的目录") : Localize("打开包含Demo文件的目录"));
+		GameClient()->m_Tooltips.DoToolTip(&s_DemosDirectoryButton, &DemosDirectoryButton, BrowsingScreenshots ? Localize("Open the folder containing screenshots") : Localize("Open the folder containing demo files"));
 	}
 
 	// play/open button

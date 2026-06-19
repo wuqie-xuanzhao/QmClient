@@ -5,12 +5,11 @@
   "description": "QmClient 设置页性能日志分析工具",
   "type": "module",
   "scripts": {
-    "analyze": "npx tsx analyze.ts",
-    "test": "npx tsx test.ts"
+    "analyze": "bun analyze.ts",
+    "test": "bun test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }
 }

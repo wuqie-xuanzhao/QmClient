@@ -107,38 +107,38 @@ static const char *FavoriteMapCategoryKeyFromText(const char *pText)
 static const char *FavoriteMapCategoryDisplayName(const char *pType)
 {
 	if(!pType || pType[0] == '\0')
-		return Localize("未知");
+		return Localize("Unknown");
 	if(str_comp_nocase(pType, "DDmaX Easy") == 0)
-		return Localize("古典.easy");
+		return Localize("DDmaX Easy");
 	if(str_comp_nocase(pType, "DDmaX Next") == 0)
-		return Localize("古典.next");
+		return Localize("DDmaX Next");
 	if(str_comp_nocase(pType, "DDmaX Pro") == 0)
-		return Localize("古典.pro");
+		return Localize("DDmaX Pro");
 	if(str_comp_nocase(pType, "DDmaX Nut") == 0)
-		return Localize("古典.nut");
+		return Localize("DDmaX Nut");
 	if(str_comp_nocase(pType, "DDmaX") == 0)
-		return Localize("古典");
+		return Localize("DDmaX");
 	if(str_comp_nocase(pType, "Novice") == 0)
-		return Localize("简单");
+		return Localize("Novice");
 	if(str_comp_nocase(pType, "Moderate") == 0)
-		return Localize("中阶");
+		return Localize("Moderate");
 	if(str_comp_nocase(pType, "Brutal") == 0)
-		return Localize("高阶");
+		return Localize("Brutal");
 	if(str_comp_nocase(pType, "Insane") == 0)
-		return Localize("疯狂");
+		return Localize("Insane");
 	if(str_comp_nocase(pType, "Dummy") == 0)
-		return Localize("分身");
+		return Localize("Dummy");
 	if(str_comp_nocase(pType, "Solo") == 0)
-		return Localize("单人");
+		return Localize("Solo");
 	if(str_comp_nocase(pType, "Oldschool") == 0)
-		return Localize("传统");
+		return Localize("Oldschool");
 	if(str_comp_nocase(pType, "Race") == 0)
-		return Localize("竞速");
+		return Localize("Race");
 	if(str_comp_nocase(pType, "Fun") == 0)
-		return Localize("娱乐");
+		return Localize("Fun");
 	if(str_comp_nocase(pType, "Event") == 0)
 		return Localize("Event");
-	return Localize("未知");
+	return Localize("Unknown");
 }
 
 static bool TryParseVoteMapDifficulty(const char *pDescription, const char *pMapName, char *pOut, int OutSize)
@@ -996,7 +996,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				if(pMapNote && pMapNote[0] != '\0' && Ui()->MouseHovered(&Button))
 				{
 					static char s_aMapNoteTooltip[512];
-					str_format(s_aMapNoteTooltip, sizeof(s_aMapNoteTooltip), "%s: %s", Localize("备注"), pMapNote);
+					str_format(s_aMapNoteTooltip, sizeof(s_aMapNoteTooltip), "%s: %s", Localize("Note"), pMapNote);
 					Ui()->DoButtonLogic(&pItem->m_aMap, 0, &Button, BUTTONFLAG_NONE);
 					GameClient()->m_Tooltips.DoToolTip(&pItem->m_aMap, &Button, s_aMapNoteTooltip, 320.0f);
 				}
@@ -2385,7 +2385,9 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					if(Friend.ServerInfo() && HasNote)
 					{
 						TooltipText = Localize("Click to select server. Double click to join your friend.");
-						TooltipText.append("\n备注: ");
+						TooltipText.append("\n");
+						TooltipText.append(Localize("Note:"));
+						TooltipText.append(" ");
 						TooltipText.append(pNote);
 					}
 					else if(Friend.ServerInfo())
@@ -2394,7 +2396,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					}
 					else
 					{
-						TooltipText = "备注: ";
+						TooltipText = Localize("Note:");
+						TooltipText.append(" ");
 						TooltipText.append(pNote);
 					}
 					GameClient()->m_Tooltips.DoToolTip(pListItemId, &Rect, TooltipText.c_str());
@@ -2734,7 +2737,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 			{
 				m_FriendsMoveCategoryPopupContext.Reset();
 				m_FriendsMoveCategoryPopupContext.m_pScrollRegion = &s_FriendsMoveCategoryPopupScrollRegion;
-				str_copy(m_FriendsMoveCategoryPopupContext.m_aMessage, "移动到分类");
+				str_copy(m_FriendsMoveCategoryPopupContext.m_aMessage, Localize("Move to category"));
 				m_FriendsMoveCategoryPopupContext.m_EntryHeight = 18.0f;
 				m_FriendsMoveCategoryPopupContext.m_EntryPadding = 1.0f;
 				m_FriendsMoveCategoryPopupContext.m_FontSize = (m_FriendsMoveCategoryPopupContext.m_EntryHeight - 2 * m_FriendsMoveCategoryPopupContext.m_EntryPadding) * CUi::ms_FontmodHeight;
@@ -2903,9 +2906,9 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		static CButtonContainer s_AddButton;
 		char aAddButtonLabel[128];
 		if(s_NameInput.IsEmpty() && !s_ClanInput.IsEmpty())
-			str_copy(aAddButtonLabel, "添加战队");
+			str_copy(aAddButtonLabel, Localize("Add clan"));
 		else
-			str_format(aAddButtonLabel, sizeof(aAddButtonLabel), "添加到%s", LocalizeFriendsCategory(GameClient()->Friends()->GetCategory(m_FriendAddCategoryIndex)));
+			str_format(aAddButtonLabel, sizeof(aAddButtonLabel), Localize("Add to %s"), LocalizeFriendsCategory(GameClient()->Friends()->GetCategory(m_FriendAddCategoryIndex)));
 		if(DoButton_Menu(&s_AddButton, aAddButtonLabel, 0, &Button))
 		{
 			const char *pCategory = GameClient()->Friends()->GetCategory(m_FriendAddCategoryIndex);
@@ -2943,7 +2946,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 		View.HSplitTop(3.0f, nullptr, &View);
 		View.HSplitTop(18.0f, &Button, &View);
-		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_AddButton, "新增分类", &Button, FontSize, TEXTALIGN_MC))
+		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_AddButton, Localize("Add category"), &Button, FontSize, TEXTALIGN_MC))
 		{
 			pPopupContext->m_Mode = CFriendsCategoryPopupContext::MODE_ADD;
 			pPopupContext->m_NameInput.Clear();
@@ -2952,7 +2955,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 		View.HSplitTop(3.0f, nullptr, &View);
 		View.HSplitTop(18.0f, &Button, &View);
-		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_RenameButton, "重命名", &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory))
+		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_RenameButton, Localize("Rename"), &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory))
 		{
 			pPopupContext->m_Mode = CFriendsCategoryPopupContext::MODE_RENAME;
 			pPopupContext->m_NameInput.Set(pCategory);
@@ -2962,7 +2965,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 		View.HSplitTop(3.0f, nullptr, &View);
 		View.HSplitTop(18.0f, &Button, &View);
-		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_DeleteButton, "删除分类", &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory))
+		if(pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_DeleteButton, Localize("Delete category"), &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory))
 		{
 			if(pFriends->RemoveCategory(pCategory))
 				pMenus->FriendlistOnUpdate();
@@ -2974,7 +2977,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 	CUIRect Label, Input, Buttons, Cancel, Confirm;
 	View.HSplitTop(12.0f, &Label, &View);
-	pMenus->Ui()->DoLabel(&Label, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? "分类名称" : "新分类名称", FontSize, TEXTALIGN_ML);
+	pMenus->Ui()->DoLabel(&Label, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? Localize("Category name") : Localize("New category name"), FontSize, TEXTALIGN_ML);
 
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Input, &View);
@@ -2984,11 +2987,11 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 	View.HSplitTop(18.0f, &Buttons, &View);
 	Buttons.VSplitMid(&Cancel, &Confirm, 3.0f);
 
-	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, "取消", &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
+	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, Localize("Cancel"), &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
 	if(CancelPressed)
 		return CUi::POPUP_CLOSE_CURRENT;
 
-	const bool ConfirmPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_ConfirmButton, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? "新增" : "重命名", &Confirm, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
+	const bool ConfirmPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_ConfirmButton, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? Localize("Add") : Localize("Rename"), &Confirm, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
 	if(ConfirmPressed)
 	{
 		char aCategory[IFriends::MAX_FRIEND_CATEGORY_LENGTH];
@@ -3040,11 +3043,11 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendNote(void *pContext, CUIRect Vi
 	View.HSplitTop(18.0f, &Buttons, &View);
 	Buttons.VSplitMid(&Cancel, &Confirm, 3.0f);
 
-	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, "取消", &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
+	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, Localize("Cancel"), &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
 	if(CancelPressed)
 		return CUi::POPUP_CLOSE_CURRENT;
 
-	const bool ConfirmPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_ConfirmButton, "保存", &Confirm, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
+	const bool ConfirmPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_ConfirmButton, Localize("Save"), &Confirm, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
 	if(ConfirmPressed)
 	{
 		char aNote[IFriends::MAX_FRIEND_NOTE_LENGTH];
@@ -3388,8 +3391,8 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 	char aSavesPath[IO_MAX_PATH_LENGTH];
 	Storage()->GetCompletePath(IStorage::TYPE_SAVE, SAVES_FILE, aSavesPath, sizeof(aSavesPath));
 
-	RenderPanelHeader(FavoritePanel, Localize("收藏地图"), Localize("玩家收藏的地图会显示在这里"), s_FavoriteMapsExpanded, s_FavoriteMapsHeaderButton);
-	RenderPanelHeader(SavesPanel, Localize("本地存档"), aSavesPath, s_LocalSavesExpanded, s_LocalSavesHeaderButton);
+	RenderPanelHeader(FavoritePanel, Localize("Favorite map"), Localize("Your favorite maps appear here"), s_FavoriteMapsExpanded, s_FavoriteMapsHeaderButton);
+	RenderPanelHeader(SavesPanel, Localize("Local saves"), aSavesPath, s_LocalSavesExpanded, s_LocalSavesHeaderButton);
 
 	static std::vector<SLocalSaveDisplayEntry> s_vSaveEntries;
 	static int64_t s_LastSaveReloadTick = 0;
@@ -3451,14 +3454,14 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 
 	auto GetFavoriteMapCategory = [&](const char *pMapName) -> const char * {
 		if(!pMapName || pMapName[0] == '\0')
-			return Localize("未知");
+			return Localize("Unknown");
 		const auto It = s_MapCategories.find(pMapName);
 		if(It != s_MapCategories.end() && !It->second.empty())
 			return FavoriteMapCategoryDisplayName(It->second.c_str());
 		const char *pCachedCategory = GameClient()->m_TClient.GetCachedMapCategoryKey(pMapName);
 		if(pCachedCategory)
 			return FavoriteMapCategoryDisplayName(pCachedCategory);
-		return Localize("未知");
+		return Localize("Unknown");
 	};
 
 	auto GetFavoriteMapDifficulty = [&](const char *pMapName, char *pOut, int OutSize) {
@@ -3467,7 +3470,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			if(TryParseVoteMapDifficulty(pOption->m_aDescription, pMapName, pOut, OutSize))
 				return;
 		}
-		str_copy(pOut, Localize("未知"), OutSize);
+		str_copy(pOut, Localize("Unknown"), OutSize);
 	};
 
 	auto HasLocalSaveForMap = [&](const char *pMapName) {
@@ -3505,7 +3508,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		const std::set<std::string> &FavoriteMaps = GameClient()->m_TClient.GetFavoriteMaps();
 		if(FavoriteMaps.empty())
 		{
-			Ui()->DoLabel(&FavoritePanel, Localize("暂无收藏地图"), 13.0f, TEXTALIGN_MC);
+			Ui()->DoLabel(&FavoritePanel, Localize("No favorite maps yet"), 13.0f, TEXTALIGN_MC);
 		}
 		else
 		{
@@ -3515,11 +3518,11 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			CUIRect HeaderMap, HeaderCategory, HeaderDifficulty, HeaderNote, HeaderSaved;
 			SplitFavoriteMapColumns(HeaderRow, &HeaderMap, &HeaderCategory, &HeaderDifficulty, &HeaderNote, &HeaderSaved);
 			TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1.0f);
-			DoFavoriteMapColumnLabel(HeaderMap, Localize("地图"), 10.0f);
-			DoFavoriteMapColumnLabel(HeaderCategory, Localize("分类"), 10.0f);
-			DoFavoriteMapColumnLabel(HeaderDifficulty, Localize("难度星级"), 10.0f);
-			DoFavoriteMapColumnLabel(HeaderNote, Localize("备注"), 10.0f);
-			DoFavoriteMapColumnLabel(HeaderSaved, Localize("是否存档"), 10.0f, TEXTALIGN_MR);
+			DoFavoriteMapColumnLabel(HeaderMap, Localize("Map"), 10.0f);
+			DoFavoriteMapColumnLabel(HeaderCategory, Localize("Category"), 10.0f);
+			DoFavoriteMapColumnLabel(HeaderDifficulty, Localize("Difficulty stars"), 10.0f);
+			DoFavoriteMapColumnLabel(HeaderNote, Localize("Note"), 10.0f);
+			DoFavoriteMapColumnLabel(HeaderSaved, Localize("Has save"), 10.0f, TEXTALIGN_MR);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 			static CListBox s_FavoriteMapsListBox;
@@ -3543,14 +3546,14 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 					char aDifficulty[32];
 					GetFavoriteMapDifficulty(MapName.c_str(), aDifficulty, sizeof(aDifficulty));
 					const char *pNote = GameClient()->m_TClient.GetMapNote(MapName.c_str());
-					const char *pSaved = HasLocalSaveForMap(MapName.c_str()) ? Localize("是") : Localize("否");
+					const char *pSaved = HasLocalSaveForMap(MapName.c_str()) ? Localize("Yes") : Localize("No");
 
 					TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f);
 					DoFavoriteMapColumnLabel(MapColumn, MapName.c_str(), 12.0f);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					DoFavoriteMapColumnLabel(CategoryColumn, GetFavoriteMapCategory(MapName.c_str()), 11.0f);
 					DoFavoriteMapColumnLabel(DifficultyColumn, aDifficulty, 11.0f);
-					DoFavoriteMapColumnLabel(NoteColumn, pNote && pNote[0] != '\0' ? pNote : Localize("无"), 11.0f);
+					DoFavoriteMapColumnLabel(NoteColumn, pNote && pNote[0] != '\0' ? pNote : Localize("None"), 11.0f);
 					DoFavoriteMapColumnLabel(SavedColumn, pSaved, 11.0f, TEXTALIGN_MR);
 				}
 				++FavoriteMapIndex;
@@ -3564,12 +3567,12 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 
 	if(!s_SaveFileExists)
 	{
-		Ui()->DoLabel(&SavesPanel, Localize("未找到 ddnet-saves.txt"), 13.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&SavesPanel, Localize("ddnet-saves.txt not found"), 13.0f, TEXTALIGN_MC);
 		return;
 	}
 	if(s_vSaveEntries.empty())
 	{
-		Ui()->DoLabel(&SavesPanel, Localize("ddnet-saves.txt 暂无内容"), 13.0f, TEXTALIGN_MC);
+		Ui()->DoLabel(&SavesPanel, Localize("ddnet-saves.txt is empty"), 13.0f, TEXTALIGN_MC);
 		return;
 	}
 

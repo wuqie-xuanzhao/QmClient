@@ -179,13 +179,13 @@ public:
 	void OnNewSnapshot() override;
 	void OnRender() override;
 
-	static bool HandleServerChatCoreForTests(QmHudNotifications::ESoloPrompt &PendingCompatPrompt, int64_t &PendingCompatUntil, bool CompatSoloEnabled, const char *pMessage, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt, QmHudNotifications::SServerMessageAnalysis *pAnalysisResult = nullptr, QmHudNotifications::SServerMessageEntryDecision *pDecisionResult = nullptr)
+	static bool HandleServerChatCoreForTests(QmHudNotifications::ESoloPrompt &PendingCompatPrompt, int64_t &PendingCompatUntil, bool CompatSoloEnabled, const char *pMessage, const QmHudNotifications::SServerMessageRouteConfig &RouteConfig, QmHudNotifications::SServerMessageAnalysis *pAnalysisResult = nullptr, QmHudNotifications::SServerMessageEntryDecision *pDecisionResult = nullptr)
 	{
 		if(CompatSoloEnabled && PendingCompatPrompt != QmHudNotifications::ESoloPrompt::None && time_get() > PendingCompatUntil)
 			PendingCompatPrompt = QmHudNotifications::ESoloPrompt::None;
 
 		const QmHudNotifications::SServerMessageAnalysis Analysis = QmHudNotifications::AnalyzeServerMessage(pMessage, PendingCompatPrompt);
-		const QmHudNotifications::SServerMessageEntryDecision Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, RouteSystemMessages, HideBasicInfo, HidePrompt);
+		const QmHudNotifications::SServerMessageEntryDecision Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, RouteConfig);
 		if(Decision.m_ClearPendingCompatPrompt)
 			PendingCompatPrompt = QmHudNotifications::ESoloPrompt::None;
 		if(pAnalysisResult != nullptr)
@@ -196,11 +196,11 @@ public:
 	}
 
 	bool QueueEcho(const char *pMessage, unsigned EchoColor);
-	bool HandleServerChat(const char *pMessage, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt, QmHudNotifications::SServerMessageAnalysis *pAnalysisResult = nullptr)
+	bool HandleServerChat(const char *pMessage, const QmHudNotifications::SServerMessageRouteConfig &RouteConfig, QmHudNotifications::SServerMessageAnalysis *pAnalysisResult = nullptr)
 	{
 		QmHudNotifications::SServerMessageAnalysis Analysis;
 		QmHudNotifications::SServerMessageEntryDecision Decision;
-		if(!HandleServerChatCoreForTests(m_PendingCompatPrompt, m_PendingCompatUntil, g_Config.m_QmHudNotificationsCompatSolo != 0, pMessage, RouteSystemMessages, HideBasicInfo, HidePrompt, &Analysis, &Decision))
+		if(!HandleServerChatCoreForTests(m_PendingCompatPrompt, m_PendingCompatUntil, g_Config.m_QmHudNotificationsCompatSolo != 0, pMessage, RouteConfig, &Analysis, &Decision))
 		{
 			if(pAnalysisResult != nullptr)
 				*pAnalysisResult = Analysis;
@@ -226,6 +226,14 @@ public:
 			return true;
 		}
 		return false;
+	}
+	bool HandleServerChat(const char *pMessage, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt, QmHudNotifications::SServerMessageAnalysis *pAnalysisResult = nullptr)
+	{
+		QmHudNotifications::SServerMessageRouteConfig RouteConfig;
+		RouteConfig.m_RouteSystemMessages = RouteSystemMessages;
+		RouteConfig.m_HideBasicInfo = HideBasicInfo;
+		RouteConfig.m_HidePrompt = HidePrompt;
+		return HandleServerChat(pMessage, RouteConfig, pAnalysisResult);
 	}
 	// 这些测试接口只暴露入口级副作用，避免测试重新退回 helper 层，确保能直接验证 HandleServerChat 的真实行为。
 	int NotificationCountForTests() const
@@ -280,6 +288,20 @@ private:
 	bool m_LastSolo = false;
 	QmHudNotifications::ESoloPrompt m_PendingCompatPrompt = QmHudNotifications::ESoloPrompt::None;
 	int64_t m_PendingCompatUntil = 0;
+
+	static QmHudNotifications::SServerMessageRouteConfig CurrentRouteConfig(bool HideBasicInfo, bool HidePrompt)
+	{
+		QmHudNotifications::SServerMessageRouteConfig Config;
+		Config.m_RouteSystemMessages = g_Config.m_QmHudNotificationsSystem != 0;
+		Config.m_UseCategoryFilters = g_Config.m_QmHudNotificationsUseCategoryFilters != 0;
+		Config.m_ShowBasicInfo = g_Config.m_QmHudNotificationsShowBasicInfo != 0;
+		Config.m_ShowHelpInfo = g_Config.m_QmHudNotificationsShowHelpInfo != 0;
+		Config.m_ShowPrompts = g_Config.m_QmHudNotificationsShowPrompts != 0;
+		Config.m_ShowUnknown = g_Config.m_QmHudNotificationsShowUnknown != 0;
+		Config.m_HideBasicInfo = HideBasicInfo;
+		Config.m_HidePrompt = HidePrompt;
+		return Config;
+	}
 
 	int BuildVisibleNotificationList(bool EditorPreview, const SNotification *(&apVisible)[8], SNotification &PreviewNotification);
 	CUIRect MeasureVisibleRect(const CUIRect &BaseRect, bool EditorPreview, QmHudNotifications::EHorizontalFlow Flow, bool StableEditorGeometry);

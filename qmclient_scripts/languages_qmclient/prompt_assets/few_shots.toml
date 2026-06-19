@@ -1,0 +1,23 @@
+[[example]]
+key = "Clan Members"
+context = ""
+simplified_chinese = "战队成员"
+traditional_chinese = "戰隊成員"
+korean = "클랜 멤버"
+japanese = "クランメンバー"
+
+[[example]]
+key = "Start and connect to local server"
+context = ""
+simplified_chinese = "启动并连接到本地服务器"
+traditional_chinese = "啟動並連線到本地伺服器"
+korean = "로컬 서버를 시작하고 연결"
+japanese = "ローカルサーバーを起動して接続"
+
+[[example]]
+key = "List all commands which are accessible for users"
+context = ""
+simplified_chinese = "列出普通玩家可用的所有命令"
+traditional_chinese = "列出一般玩家可用的所有命令"
+korean = "일반 플레이어가 사용할 수 있는 모든 명령을 나열"
+japanese = "一般プレイヤーが使用できるすべてのコマンドを一覧表示"

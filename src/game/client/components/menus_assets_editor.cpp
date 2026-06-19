@@ -3,9 +3,9 @@
 #include <base/system.h>
 #include <base/types.h>
 
-#include <engine/graphics.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
+#include <engine/graphics.h>
 #include <engine/shared/config.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
@@ -31,516 +31,516 @@ bool SaveSkinfileFromParts(IStorage *pStorage, const char *pName, const char *pB
 
 namespace
 {
-constexpr float FontSize = 14.0f;
-constexpr float EditBoxFontSize = 12.0f;
-constexpr float LineSize = 20.0f;
-constexpr float MarginSmall = 5.0f;
-constexpr float MarginExtraSmall = 2.5f;
-constexpr float TargetSlotClickDragDistance = 6.0f;
-constexpr double TargetSlotClickHoldSeconds = 0.20;
+	constexpr float FontSize = 14.0f;
+	constexpr float EditBoxFontSize = 12.0f;
+	constexpr float LineSize = 20.0f;
+	constexpr float MarginSmall = 5.0f;
+	constexpr float MarginExtraSmall = 2.5f;
+	constexpr float TargetSlotClickDragDistance = 6.0f;
+	constexpr double TargetSlotClickHoldSeconds = 0.20;
 
-struct SScopedClip
-{
-	CUi *m_pUi;
-	~SScopedClip() { m_pUi->ClipDisable(); }
-};
-
-struct SAssetsEditorPartDef
-{
-	int m_SpriteId;
-	int m_Group;
-};
-
-struct SAssetsEditorScanContext
-{
-	std::vector<CMenus::SAssetsEditorAssetEntry> *m_pAssets;
-	IStorage *m_pStorage;
-	const char *m_pAssetType;
-	int m_Type;
-};
-
-struct SAssetsEditorImageCacheEntry
-{
-	int m_Type = CMenus::ASSETS_EDITOR_TYPE_GAME;
-	char m_aName[64] = {0};
-	CImageInfo m_Image;
-};
-
-static std::vector<SAssetsEditorImageCacheEntry> gs_vAssetsEditorImageCache;
-
-static bool AssetsEditorIsSingleImageType(int Type)
-{
-	return Type == CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR ||
-		Type == CMenus::ASSETS_EDITOR_TYPE_ARROW ||
-		Type == CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK;
-}
-
-static const char *AssetsEditorDefaultSingleImageBuiltinPath(int Type)
-{
-	const char *pCategoryId = nullptr;
-	switch(Type)
+	struct SScopedClip
 	{
-	case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR: pCategoryId = "gui_cursor"; break;
-	case CMenus::ASSETS_EDITOR_TYPE_ARROW: pCategoryId = "arrow"; break;
-	case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: pCategoryId = "strong_weak"; break;
-	default: break;
+		CUi *m_pUi;
+		~SScopedClip() { m_pUi->ClipDisable(); }
+	};
+
+	struct SAssetsEditorPartDef
+	{
+		int m_SpriteId;
+		int m_Group;
+	};
+
+	struct SAssetsEditorScanContext
+	{
+		std::vector<CMenus::SAssetsEditorAssetEntry> *m_pAssets;
+		IStorage *m_pStorage;
+		const char *m_pAssetType;
+		int m_Type;
+	};
+
+	struct SAssetsEditorImageCacheEntry
+	{
+		int m_Type = CMenus::ASSETS_EDITOR_TYPE_GAME;
+		char m_aName[64] = {0};
+		CImageInfo m_Image;
+	};
+
+	static std::vector<SAssetsEditorImageCacheEntry> gs_vAssetsEditorImageCache;
+
+	static bool AssetsEditorIsSingleImageType(int Type)
+	{
+		return Type == CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR ||
+		       Type == CMenus::ASSETS_EDITOR_TYPE_ARROW ||
+		       Type == CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK;
 	}
 
-	if(pCategoryId == nullptr)
-		return nullptr;
+	static const char *AssetsEditorDefaultSingleImageBuiltinPath(int Type)
+	{
+		const char *pCategoryId = nullptr;
+		switch(Type)
+		{
+		case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR: pCategoryId = "gui_cursor"; break;
+		case CMenus::ASSETS_EDITOR_TYPE_ARROW: pCategoryId = "arrow"; break;
+		case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: pCategoryId = "strong_weak"; break;
+		default: break;
+		}
 
-	const SAssetResourceCategory *pCategory = FindAssetResourceCategory(pCategoryId);
-	if(pCategory == nullptr)
-		return nullptr;
+		if(pCategoryId == nullptr)
+			return nullptr;
 
-	return BuiltinSingleFileAssetFilename(*pCategory);
-}
+		const SAssetResourceCategory *pCategory = FindAssetResourceCategory(pCategoryId);
+		if(pCategory == nullptr)
+			return nullptr;
 
-static int AssetsEditorFindSpriteIdByName(const char *pName, int ImageId)
-{
-	if(pName == nullptr || pName[0] == '\0')
+		return BuiltinSingleFileAssetFilename(*pCategory);
+	}
+
+	static int AssetsEditorFindSpriteIdByName(const char *pName, int ImageId)
+	{
+		if(pName == nullptr || pName[0] == '\0')
+			return -1;
+
+		const CDataImage *pImage = ImageId >= 0 ? &g_pData->m_aImages[ImageId] : nullptr;
+		for(int SpriteId = 0; SpriteId < NUM_SPRITES; ++SpriteId)
+		{
+			const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
+			if(Sprite.m_pName == nullptr || str_comp(Sprite.m_pName, pName) != 0)
+				continue;
+			if(Sprite.m_W <= 0 || Sprite.m_H <= 0 || Sprite.m_pSet == nullptr)
+				continue;
+			if(pImage != nullptr && Sprite.m_pSet->m_pImage != pImage)
+				continue;
+			return SpriteId;
+		}
 		return -1;
-
-	const CDataImage *pImage = ImageId >= 0 ? &g_pData->m_aImages[ImageId] : nullptr;
-	for(int SpriteId = 0; SpriteId < NUM_SPRITES; ++SpriteId)
-	{
-		const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
-		if(Sprite.m_pName == nullptr || str_comp(Sprite.m_pName, pName) != 0)
-			continue;
-		if(Sprite.m_W <= 0 || Sprite.m_H <= 0 || Sprite.m_pSet == nullptr)
-			continue;
-		if(pImage != nullptr && Sprite.m_pSet->m_pImage != pImage)
-			continue;
-		return SpriteId;
 	}
-	return -1;
-}
 
-static bool AssetsEditorHasAssetName(const std::vector<CMenus::SAssetsEditorAssetEntry> &vAssets, const char *pName)
-{
-	for(const auto &Asset : vAssets)
+	static bool AssetsEditorHasAssetName(const std::vector<CMenus::SAssetsEditorAssetEntry> &vAssets, const char *pName)
 	{
-		if(str_comp(Asset.m_aName, pName) == 0)
-			return true;
-	}
-	return false;
-}
-
-static bool AssetsEditorSlotSameNormalizedSize(const CMenus::SAssetsEditorPartSlot &Left, const CMenus::SAssetsEditorPartSlot &Right)
-{
-	return Left.m_DstW == Right.m_DstW && Left.m_DstH == Right.m_DstH;
-}
-
-static void AssetsEditorStripTrailingDigits(const char *pIn, char *pOut, int OutSize)
-{
-	str_copy(pOut, pIn, OutSize);
-	int Len = str_length(pOut);
-	while(Len > 0 && isdigit((unsigned char)pOut[Len - 1]))
-		pOut[--Len] = '\0';
-}
-
-static int AssetsEditorScanCallback(const char *pName, int IsDir, int DirType, void *pUser)
-{
-	(void)DirType;
-	SAssetsEditorScanContext *pContext = static_cast<SAssetsEditorScanContext *>(pUser);
-	if(pName[0] == '.')
-		return 0;
-
-	CMenus::SAssetsEditorAssetEntry Entry;
-	Entry.m_IsDefault = false;
-
-	if(IsDir)
-	{
-		if(pContext->m_Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
-			return 0;
-		if(str_comp(pName, "default") == 0)
-			return 0;
-
-		str_copy(Entry.m_aName, pName);
-		if(pContext->m_Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES)
+		for(const auto &Asset : vAssets)
 		{
-			str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/entities/%s/ddnet.png", pName);
-			if(!pContext->m_pStorage->FileExists(Entry.m_aPath, IStorage::TYPE_ALL))
-			{
-				str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/entities/%s.png", pName);
-				if(!pContext->m_pStorage->FileExists(Entry.m_aPath, IStorage::TYPE_ALL))
-					return 0;
-			}
-		}
-		else
-		{
-			str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/%s/%s/%s.png", pContext->m_pAssetType, pName, pContext->m_pAssetType);
-			if(!pContext->m_pStorage->FileExists(Entry.m_aPath, IStorage::TYPE_ALL))
-			{
-				str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/%s/%s.png", pContext->m_pAssetType, pName);
-				if(!pContext->m_pStorage->FileExists(Entry.m_aPath, IStorage::TYPE_ALL))
-					return 0;
-			}
-		}
-	}
-	else
-	{
-		if(!str_endswith(pName, ".png"))
-			return 0;
-
-		char aName[IO_MAX_PATH_LENGTH];
-		str_truncate(aName, sizeof(aName), pName, str_length(pName) - 4);
-		if(str_comp(aName, "default") == 0)
-			return 0;
-		str_copy(Entry.m_aName, aName);
-		if(pContext->m_Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES)
-			str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/entities/%s.png", aName);
-		else if(pContext->m_Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
-			str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "skins/%s.png", aName);
-		else
-			str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/%s/%s.png", pContext->m_pAssetType, aName);
-	}
-
-	if(AssetsEditorHasAssetName(*pContext->m_pAssets, Entry.m_aName))
-		return 0;
-
-	pContext->m_pAssets->push_back(Entry);
-	return 0;
-}
-
-static const char *AssetsEditorTypeName(int Type)
-{
-	switch(Type)
-	{
-	case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return "emoticons";
-	case CMenus::ASSETS_EDITOR_TYPE_ENTITIES: return "entities";
-	case CMenus::ASSETS_EDITOR_TYPE_SKIN: return "skin";
-	case CMenus::ASSETS_EDITOR_TYPE_HUD: return "hud";
-	case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return "particles";
-	case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR: return "gui_cursor";
-	case CMenus::ASSETS_EDITOR_TYPE_ARROW: return "arrow";
-	case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: return "strong_weak";
-	case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return "extras";
-	default: return "game";
-	}
-}
-
-static const char *AssetsEditorTypeDisplayName(int Type)
-{
-	switch(Type)
-	{
-	case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return Localize("Emoticons");
-	case CMenus::ASSETS_EDITOR_TYPE_ENTITIES: return Localize("Entities");
-	case CMenus::ASSETS_EDITOR_TYPE_SKIN: return Localize("Skin");
-	case CMenus::ASSETS_EDITOR_TYPE_HUD: return Localize("HUD");
-	case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return Localize("Particles");
-	case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR: return Localize("Mouse");
-	case CMenus::ASSETS_EDITOR_TYPE_ARROW: return Localize("Direction Keys");
-	case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: return Localize("Strong Weak Hook");
-	case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return Localize("Extras");
-	default: return Localize("Game");
-	}
-}
-
-static int AssetsEditorTypeImageId(int Type)
-{
-	switch(Type)
-	{
-	case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return IMAGE_EMOTICONS;
-	case CMenus::ASSETS_EDITOR_TYPE_HUD: return IMAGE_HUD;
-	case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return IMAGE_PARTICLES;
-	case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return IMAGE_EXTRAS;
-	case CMenus::ASSETS_EDITOR_TYPE_SKIN:
-	case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR:
-	case CMenus::ASSETS_EDITOR_TYPE_ARROW:
-	case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK:
-	case CMenus::ASSETS_EDITOR_TYPE_ENTITIES: return -1;
-	default: return IMAGE_GAME;
-	}
-}
-
-static int AssetsEditorGridSpriteId(int Type)
-{
-	switch(Type)
-	{
-	case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return SPRITE_OOP;
-	case CMenus::ASSETS_EDITOR_TYPE_HUD: return SPRITE_HUD_AIRJUMP;
-	case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return SPRITE_PART_SLICE;
-	case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return SPRITE_PART_SNOWFLAKE;
-	case CMenus::ASSETS_EDITOR_TYPE_SKIN:
-	case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR:
-	case CMenus::ASSETS_EDITOR_TYPE_ARROW:
-	case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: return -1;
-	default: return SPRITE_HEALTH_FULL;
-	}
-}
-
-static int AssetsEditorGridX(int Type)
-{
-	if(Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES)
-		return 16;
-	if(Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
-		return 256;
-	if(Type == CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK)
-	{
-		int GridX = 0;
-		int GridY = 0;
-		CMenus::GetStrongWeakEditorGridSize(GridX, GridY);
-		return GridX;
-	}
-	if(AssetsEditorIsSingleImageType(Type))
-		return 1;
-
-	const int SpriteId = AssetsEditorGridSpriteId(Type);
-	if(SpriteId < 0)
-		return 1;
-	const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
-	if(Sprite.m_pSet == nullptr || Sprite.m_pSet->m_Gridx <= 0)
-		return 1;
-	return Sprite.m_pSet->m_Gridx;
-}
-
-static int AssetsEditorGridY(int Type)
-{
-	if(Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES)
-		return 16;
-	if(Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
-		return 128;
-	if(Type == CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK)
-	{
-		int GridX = 0;
-		int GridY = 0;
-		CMenus::GetStrongWeakEditorGridSize(GridX, GridY);
-		return GridY;
-	}
-	if(AssetsEditorIsSingleImageType(Type))
-		return 1;
-
-	const int SpriteId = AssetsEditorGridSpriteId(Type);
-	if(SpriteId < 0)
-		return 1;
-	const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
-	if(Sprite.m_pSet == nullptr || Sprite.m_pSet->m_Gridy <= 0)
-		return 1;
-	return Sprite.m_pSet->m_Gridy;
-}
-
-static void AssetsEditorCollectPartDefs(int Type, std::vector<SAssetsEditorPartDef> &vPartDefs)
-{
-	vPartDefs.clear();
-	if(Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES || Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
-		return;
-	if(AssetsEditorIsSingleImageType(Type))
-		return;
-
-	const int ImageId = AssetsEditorTypeImageId(Type);
-	if(ImageId < 0)
-		return;
-
-	const CDataImage *pImage = &g_pData->m_aImages[ImageId];
-	const bool DeduplicateByGeometry = Type == CMenus::ASSETS_EDITOR_TYPE_GAME || Type == CMenus::ASSETS_EDITOR_TYPE_PARTICLES;
-	auto HasMatchingGeometry = [&vPartDefs](const CDataSprite &Candidate) {
-		for(const auto &PartDef : vPartDefs)
-		{
-			const CDataSprite &Existing = g_pData->m_aSprites[PartDef.m_SpriteId];
-			if(Existing.m_X == Candidate.m_X && Existing.m_Y == Candidate.m_Y &&
-				Existing.m_W == Candidate.m_W && Existing.m_H == Candidate.m_H)
+			if(str_comp(Asset.m_aName, pName) == 0)
 				return true;
 		}
 		return false;
-	};
-	for(int SpriteId = 0; SpriteId < NUM_SPRITES; ++SpriteId)
-	{
-		const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
-		if(Sprite.m_pSet == nullptr || Sprite.m_pSet->m_pImage != pImage || Sprite.m_W <= 0 || Sprite.m_H <= 0)
-			continue;
-		if(DeduplicateByGeometry && HasMatchingGeometry(Sprite))
-			continue;
-		vPartDefs.push_back({SpriteId, 0});
 	}
-}
 
-static const CMenus::SAssetsEditorAssetEntry *AssetsEditorFindAssetByName(const std::vector<CMenus::SAssetsEditorAssetEntry> &vAssets, const char *pName)
-{
-	for(const auto &Asset : vAssets)
+	static bool AssetsEditorSlotSameNormalizedSize(const CMenus::SAssetsEditorPartSlot &Left, const CMenus::SAssetsEditorPartSlot &Right)
 	{
-		if(str_comp(Asset.m_aName, pName) == 0)
-			return &Asset;
+		return Left.m_DstW == Right.m_DstW && Left.m_DstH == Right.m_DstH;
 	}
-	return nullptr;
-}
 
-static int AssetsEditorFindAssetIndexByName(const std::vector<CMenus::SAssetsEditorAssetEntry> &vAssets, const char *pName)
-{
-	for(size_t i = 0; i < vAssets.size(); ++i)
+	static void AssetsEditorStripTrailingDigits(const char *pIn, char *pOut, int OutSize)
 	{
-		if(str_comp(vAssets[i].m_aName, pName) == 0)
-			return (int)i;
+		str_copy(pOut, pIn, OutSize);
+		int Len = str_length(pOut);
+		while(Len > 0 && isdigit((unsigned char)pOut[Len - 1]))
+			pOut[--Len] = '\0';
 	}
-	return -1;
-}
 
-static void AssetsEditorClearImageCache()
-{
-	for(auto &Entry : gs_vAssetsEditorImageCache)
+	static int AssetsEditorScanCallback(const char *pName, int IsDir, int DirType, void *pUser)
 	{
-		Entry.m_Image.Free();
-	}
-	gs_vAssetsEditorImageCache.clear();
-}
+		(void)DirType;
+		SAssetsEditorScanContext *pContext = static_cast<SAssetsEditorScanContext *>(pUser);
+		if(pName[0] == '.')
+			return 0;
 
-static void AssetsEditorClearImageCacheForType(int Type)
-{
-	for(size_t Index = 0; Index < gs_vAssetsEditorImageCache.size();)
-	{
-		if(gs_vAssetsEditorImageCache[Index].m_Type != Type)
+		CMenus::SAssetsEditorAssetEntry Entry;
+		Entry.m_IsDefault = false;
+
+		if(IsDir)
 		{
-			++Index;
-			continue;
+			if(pContext->m_Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
+				return 0;
+			if(str_comp(pName, "default") == 0)
+				return 0;
+
+			str_copy(Entry.m_aName, pName);
+			if(pContext->m_Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES)
+			{
+				str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/entities/%s/ddnet.png", pName);
+				if(!pContext->m_pStorage->FileExists(Entry.m_aPath, IStorage::TYPE_ALL))
+				{
+					str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/entities/%s.png", pName);
+					if(!pContext->m_pStorage->FileExists(Entry.m_aPath, IStorage::TYPE_ALL))
+						return 0;
+				}
+			}
+			else
+			{
+				str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/%s/%s/%s.png", pContext->m_pAssetType, pName, pContext->m_pAssetType);
+				if(!pContext->m_pStorage->FileExists(Entry.m_aPath, IStorage::TYPE_ALL))
+				{
+					str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/%s/%s.png", pContext->m_pAssetType, pName);
+					if(!pContext->m_pStorage->FileExists(Entry.m_aPath, IStorage::TYPE_ALL))
+						return 0;
+				}
+			}
+		}
+		else
+		{
+			if(!str_endswith(pName, ".png"))
+				return 0;
+
+			char aName[IO_MAX_PATH_LENGTH];
+			str_truncate(aName, sizeof(aName), pName, str_length(pName) - 4);
+			if(str_comp(aName, "default") == 0)
+				return 0;
+			str_copy(Entry.m_aName, aName);
+			if(pContext->m_Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES)
+				str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/entities/%s.png", aName);
+			else if(pContext->m_Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
+				str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "skins/%s.png", aName);
+			else
+				str_format(Entry.m_aPath, sizeof(Entry.m_aPath), "assets/%s/%s.png", pContext->m_pAssetType, aName);
 		}
 
-		gs_vAssetsEditorImageCache[Index].m_Image.Free();
-		gs_vAssetsEditorImageCache.erase(gs_vAssetsEditorImageCache.begin() + Index);
+		if(AssetsEditorHasAssetName(*pContext->m_pAssets, Entry.m_aName))
+			return 0;
+
+		pContext->m_pAssets->push_back(Entry);
+		return 0;
 	}
-}
 
-static bool AssetsEditorCalcFittedRect(const CUIRect &Rect, int SourceWidth, int SourceHeight, CUIRect &OutRect)
-{
-	if(SourceWidth <= 0 || SourceHeight <= 0 || Rect.w <= 0.0f || Rect.h <= 0.0f)
-		return false;
-
-	float DrawW = Rect.w;
-	float DrawH = DrawW * ((float)SourceHeight / (float)SourceWidth);
-	if(DrawH > Rect.h)
+	static const char *AssetsEditorTypeName(int Type)
 	{
-		DrawH = Rect.h;
-		DrawW = DrawH * ((float)SourceWidth / (float)SourceHeight);
+		switch(Type)
+		{
+		case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return "emoticons";
+		case CMenus::ASSETS_EDITOR_TYPE_ENTITIES: return "entities";
+		case CMenus::ASSETS_EDITOR_TYPE_SKIN: return "skin";
+		case CMenus::ASSETS_EDITOR_TYPE_HUD: return "hud";
+		case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return "particles";
+		case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR: return "gui_cursor";
+		case CMenus::ASSETS_EDITOR_TYPE_ARROW: return "arrow";
+		case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: return "strong_weak";
+		case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return "extras";
+		default: return "game";
+		}
 	}
 
-	OutRect.x = Rect.x + (Rect.w - DrawW) / 2.0f;
-	OutRect.y = Rect.y + (Rect.h - DrawH) / 2.0f;
-	OutRect.w = DrawW;
-	OutRect.h = DrawH;
-	return true;
-}
-
-static bool AssetsEditorGetSlotRectInFitted(const CUIRect &FittedRect, int Type, const CMenus::SAssetsEditorPartSlot &Slot, CUIRect &OutRect)
-{
-	const int GridX = maximum(1, AssetsEditorGridX(Type));
-	const int GridY = maximum(1, AssetsEditorGridY(Type));
-	if(Slot.m_DstW <= 0 || Slot.m_DstH <= 0)
-		return false;
-
-	const float X = (float)Slot.m_DstX / GridX;
-	const float Y = (float)Slot.m_DstY / GridY;
-	const float W = (float)Slot.m_DstW / GridX;
-	const float H = (float)Slot.m_DstH / GridY;
-
-	OutRect.x = FittedRect.x + X * FittedRect.w;
-	OutRect.y = FittedRect.y + Y * FittedRect.h;
-	OutRect.w = W * FittedRect.w;
-	OutRect.h = H * FittedRect.h;
-	return true;
-}
-
-static bool AssetsEditorDrawTextureFitted(const CUIRect &Rect, IGraphics::CTextureHandle Texture, int SourceWidth, int SourceHeight, IGraphics *pGraphics, CUIRect *pOutFittedRect = nullptr)
-{
-	if(!Texture.IsValid())
-		return false;
-
-	CUIRect FittedRect;
-	if(!AssetsEditorCalcFittedRect(Rect, SourceWidth, SourceHeight, FittedRect))
-		return false;
-
-	if(pOutFittedRect != nullptr)
-		*pOutFittedRect = FittedRect;
-
-	pGraphics->WrapClamp();
-	pGraphics->TextureSet(Texture);
-	pGraphics->QuadsBegin();
-	pGraphics->SetColor(1, 1, 1, 1);
-	const IGraphics::CQuadItem Quad(FittedRect.x, FittedRect.y, FittedRect.w, FittedRect.h);
-	pGraphics->QuadsDrawTL(&Quad, 1);
-	pGraphics->QuadsEnd();
-	pGraphics->WrapNormal();
-	return true;
-}
-
-static void AssetsEditorDrawSlotFromTexture(const CUIRect &Rect, IGraphics::CTextureHandle Texture, const CMenus::SAssetsEditorPartSlot &Slot, int Type, float Alpha, IGraphics *pGraphics, const ColorRGBA *pColorOverride = nullptr)
-{
-	if(!Texture.IsValid() || Slot.m_SrcW <= 0 || Slot.m_SrcH <= 0)
-		return;
-
-	const int GridX = maximum(1, AssetsEditorGridX(Type));
-	const int GridY = maximum(1, AssetsEditorGridY(Type));
-	const float U0 = (float)Slot.m_SrcX / GridX;
-	const float V0 = (float)Slot.m_SrcY / GridY;
-	const float U1 = (float)(Slot.m_SrcX + Slot.m_SrcW) / GridX;
-	const float V1 = (float)(Slot.m_SrcY + Slot.m_SrcH) / GridY;
-
-	pGraphics->WrapClamp();
-	pGraphics->TextureSet(Texture);
-	pGraphics->QuadsBegin();
-	ColorRGBA DrawColor(1.0f, 1.0f, 1.0f, Alpha);
-	if(pColorOverride != nullptr)
+	static const char *AssetsEditorTypeDisplayName(int Type)
 	{
-		DrawColor = *pColorOverride;
-		DrawColor.a *= Alpha;
+		switch(Type)
+		{
+		case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return Localize("Emoticons");
+		case CMenus::ASSETS_EDITOR_TYPE_ENTITIES: return Localize("Entities");
+		case CMenus::ASSETS_EDITOR_TYPE_SKIN: return Localize("Skin");
+		case CMenus::ASSETS_EDITOR_TYPE_HUD: return Localize("HUD");
+		case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return Localize("Particles");
+		case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR: return Localize("Mouse");
+		case CMenus::ASSETS_EDITOR_TYPE_ARROW: return Localize("Direction Keys");
+		case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: return Localize("Strong Weak Hook");
+		case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return Localize("Extras");
+		default: return Localize("Game");
+		}
 	}
-	pGraphics->SetColor(DrawColor.r, DrawColor.g, DrawColor.b, DrawColor.a);
-	pGraphics->QuadsSetSubset(U0, V0, U1, V1);
-	const IGraphics::CQuadItem Quad(Rect.x, Rect.y, Rect.w, Rect.h);
-	pGraphics->QuadsDrawTL(&Quad, 1);
-	pGraphics->QuadsSetSubset(0, 0, 1, 1);
-	pGraphics->QuadsEnd();
-	pGraphics->TextureClear();
-	pGraphics->WrapNormal();
-}
 
-static const CImageInfo *AssetsEditorGetCachedImage(int Type, const char *pAssetName, const std::vector<CMenus::SAssetsEditorAssetEntry> &vAssets, IGraphics *pGraphics)
-{
-	for(const auto &Entry : gs_vAssetsEditorImageCache)
+	static int AssetsEditorTypeImageId(int Type)
 	{
-		if(Entry.m_Type == Type && str_comp(Entry.m_aName, pAssetName) == 0)
-			return &Entry.m_Image;
+		switch(Type)
+		{
+		case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return IMAGE_EMOTICONS;
+		case CMenus::ASSETS_EDITOR_TYPE_HUD: return IMAGE_HUD;
+		case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return IMAGE_PARTICLES;
+		case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return IMAGE_EXTRAS;
+		case CMenus::ASSETS_EDITOR_TYPE_SKIN:
+		case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR:
+		case CMenus::ASSETS_EDITOR_TYPE_ARROW:
+		case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK:
+		case CMenus::ASSETS_EDITOR_TYPE_ENTITIES: return -1;
+		default: return IMAGE_GAME;
+		}
 	}
 
-	const CMenus::SAssetsEditorAssetEntry *pAsset = AssetsEditorFindAssetByName(vAssets, pAssetName);
-	if(pAsset == nullptr)
+	static int AssetsEditorGridSpriteId(int Type)
+	{
+		switch(Type)
+		{
+		case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return SPRITE_OOP;
+		case CMenus::ASSETS_EDITOR_TYPE_HUD: return SPRITE_HUD_AIRJUMP;
+		case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return SPRITE_PART_SLICE;
+		case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return SPRITE_PART_SNOWFLAKE;
+		case CMenus::ASSETS_EDITOR_TYPE_SKIN:
+		case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR:
+		case CMenus::ASSETS_EDITOR_TYPE_ARROW:
+		case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: return -1;
+		default: return SPRITE_HEALTH_FULL;
+		}
+	}
+
+	static int AssetsEditorGridX(int Type)
+	{
+		if(Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES)
+			return 16;
+		if(Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
+			return 256;
+		if(Type == CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK)
+		{
+			int GridX = 0;
+			int GridY = 0;
+			CMenus::GetStrongWeakEditorGridSize(GridX, GridY);
+			return GridX;
+		}
+		if(AssetsEditorIsSingleImageType(Type))
+			return 1;
+
+		const int SpriteId = AssetsEditorGridSpriteId(Type);
+		if(SpriteId < 0)
+			return 1;
+		const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
+		if(Sprite.m_pSet == nullptr || Sprite.m_pSet->m_Gridx <= 0)
+			return 1;
+		return Sprite.m_pSet->m_Gridx;
+	}
+
+	static int AssetsEditorGridY(int Type)
+	{
+		if(Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES)
+			return 16;
+		if(Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
+			return 128;
+		if(Type == CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK)
+		{
+			int GridX = 0;
+			int GridY = 0;
+			CMenus::GetStrongWeakEditorGridSize(GridX, GridY);
+			return GridY;
+		}
+		if(AssetsEditorIsSingleImageType(Type))
+			return 1;
+
+		const int SpriteId = AssetsEditorGridSpriteId(Type);
+		if(SpriteId < 0)
+			return 1;
+		const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
+		if(Sprite.m_pSet == nullptr || Sprite.m_pSet->m_Gridy <= 0)
+			return 1;
+		return Sprite.m_pSet->m_Gridy;
+	}
+
+	static void AssetsEditorCollectPartDefs(int Type, std::vector<SAssetsEditorPartDef> &vPartDefs)
+	{
+		vPartDefs.clear();
+		if(Type == CMenus::ASSETS_EDITOR_TYPE_ENTITIES || Type == CMenus::ASSETS_EDITOR_TYPE_SKIN)
+			return;
+		if(AssetsEditorIsSingleImageType(Type))
+			return;
+
+		const int ImageId = AssetsEditorTypeImageId(Type);
+		if(ImageId < 0)
+			return;
+
+		const CDataImage *pImage = &g_pData->m_aImages[ImageId];
+		const bool DeduplicateByGeometry = Type == CMenus::ASSETS_EDITOR_TYPE_GAME || Type == CMenus::ASSETS_EDITOR_TYPE_PARTICLES;
+		auto HasMatchingGeometry = [&vPartDefs](const CDataSprite &Candidate) {
+			for(const auto &PartDef : vPartDefs)
+			{
+				const CDataSprite &Existing = g_pData->m_aSprites[PartDef.m_SpriteId];
+				if(Existing.m_X == Candidate.m_X && Existing.m_Y == Candidate.m_Y &&
+					Existing.m_W == Candidate.m_W && Existing.m_H == Candidate.m_H)
+					return true;
+			}
+			return false;
+		};
+		for(int SpriteId = 0; SpriteId < NUM_SPRITES; ++SpriteId)
+		{
+			const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
+			if(Sprite.m_pSet == nullptr || Sprite.m_pSet->m_pImage != pImage || Sprite.m_W <= 0 || Sprite.m_H <= 0)
+				continue;
+			if(DeduplicateByGeometry && HasMatchingGeometry(Sprite))
+				continue;
+			vPartDefs.push_back({SpriteId, 0});
+		}
+	}
+
+	static const CMenus::SAssetsEditorAssetEntry *AssetsEditorFindAssetByName(const std::vector<CMenus::SAssetsEditorAssetEntry> &vAssets, const char *pName)
+	{
+		for(const auto &Asset : vAssets)
+		{
+			if(str_comp(Asset.m_aName, pName) == 0)
+				return &Asset;
+		}
 		return nullptr;
-
-	CImageInfo Loaded;
-	if(!pGraphics->LoadPng(Loaded, pAsset->m_aPath, IStorage::TYPE_ALL))
-		return nullptr;
-
-	if(!pGraphics->CheckImageDivisibility(pAsset->m_aPath, Loaded, AssetsEditorGridX(Type), AssetsEditorGridY(Type), true))
-	{
-		Loaded.Free();
-		return nullptr;
 	}
 
-	ConvertToRgba(Loaded);
-	if(Loaded.m_pData == nullptr || Loaded.m_Format != CImageInfo::FORMAT_RGBA)
-		return nullptr;
-
-	SAssetsEditorImageCacheEntry &NewEntry = gs_vAssetsEditorImageCache.emplace_back();
-	NewEntry.m_Type = Type;
-	str_copy(NewEntry.m_aName, pAssetName);
-	NewEntry.m_Image = std::move(Loaded);
-	return &NewEntry.m_Image;
-}
-
-static int AssetsEditorTypeToCustomTab(int Type)
-{
-	switch(Type)
+	static int AssetsEditorFindAssetIndexByName(const std::vector<CMenus::SAssetsEditorAssetEntry> &vAssets, const char *pName)
 	{
-	case CMenus::ASSETS_EDITOR_TYPE_GAME: return 1;
-	case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return 2;
-	case CMenus::ASSETS_EDITOR_TYPE_ENTITIES: return 0;
-	case CMenus::ASSETS_EDITOR_TYPE_HUD: return 4;
-	case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return 3;
-	case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR: return ASSETS_TAB_GUI_CURSOR;
-	case CMenus::ASSETS_EDITOR_TYPE_ARROW: return ASSETS_TAB_ARROW;
-	case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: return ASSETS_TAB_STRONG_WEAK;
-	case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return 5;
-	default: return -1;
+		for(size_t i = 0; i < vAssets.size(); ++i)
+		{
+			if(str_comp(vAssets[i].m_aName, pName) == 0)
+				return (int)i;
+		}
+		return -1;
 	}
-}
+
+	static void AssetsEditorClearImageCache()
+	{
+		for(auto &Entry : gs_vAssetsEditorImageCache)
+		{
+			Entry.m_Image.Free();
+		}
+		gs_vAssetsEditorImageCache.clear();
+	}
+
+	static void AssetsEditorClearImageCacheForType(int Type)
+	{
+		for(size_t Index = 0; Index < gs_vAssetsEditorImageCache.size();)
+		{
+			if(gs_vAssetsEditorImageCache[Index].m_Type != Type)
+			{
+				++Index;
+				continue;
+			}
+
+			gs_vAssetsEditorImageCache[Index].m_Image.Free();
+			gs_vAssetsEditorImageCache.erase(gs_vAssetsEditorImageCache.begin() + Index);
+		}
+	}
+
+	static bool AssetsEditorCalcFittedRect(const CUIRect &Rect, int SourceWidth, int SourceHeight, CUIRect &OutRect)
+	{
+		if(SourceWidth <= 0 || SourceHeight <= 0 || Rect.w <= 0.0f || Rect.h <= 0.0f)
+			return false;
+
+		float DrawW = Rect.w;
+		float DrawH = DrawW * ((float)SourceHeight / (float)SourceWidth);
+		if(DrawH > Rect.h)
+		{
+			DrawH = Rect.h;
+			DrawW = DrawH * ((float)SourceWidth / (float)SourceHeight);
+		}
+
+		OutRect.x = Rect.x + (Rect.w - DrawW) / 2.0f;
+		OutRect.y = Rect.y + (Rect.h - DrawH) / 2.0f;
+		OutRect.w = DrawW;
+		OutRect.h = DrawH;
+		return true;
+	}
+
+	static bool AssetsEditorGetSlotRectInFitted(const CUIRect &FittedRect, int Type, const CMenus::SAssetsEditorPartSlot &Slot, CUIRect &OutRect)
+	{
+		const int GridX = maximum(1, AssetsEditorGridX(Type));
+		const int GridY = maximum(1, AssetsEditorGridY(Type));
+		if(Slot.m_DstW <= 0 || Slot.m_DstH <= 0)
+			return false;
+
+		const float X = (float)Slot.m_DstX / GridX;
+		const float Y = (float)Slot.m_DstY / GridY;
+		const float W = (float)Slot.m_DstW / GridX;
+		const float H = (float)Slot.m_DstH / GridY;
+
+		OutRect.x = FittedRect.x + X * FittedRect.w;
+		OutRect.y = FittedRect.y + Y * FittedRect.h;
+		OutRect.w = W * FittedRect.w;
+		OutRect.h = H * FittedRect.h;
+		return true;
+	}
+
+	static bool AssetsEditorDrawTextureFitted(const CUIRect &Rect, IGraphics::CTextureHandle Texture, int SourceWidth, int SourceHeight, IGraphics *pGraphics, CUIRect *pOutFittedRect = nullptr)
+	{
+		if(!Texture.IsValid())
+			return false;
+
+		CUIRect FittedRect;
+		if(!AssetsEditorCalcFittedRect(Rect, SourceWidth, SourceHeight, FittedRect))
+			return false;
+
+		if(pOutFittedRect != nullptr)
+			*pOutFittedRect = FittedRect;
+
+		pGraphics->WrapClamp();
+		pGraphics->TextureSet(Texture);
+		pGraphics->QuadsBegin();
+		pGraphics->SetColor(1, 1, 1, 1);
+		const IGraphics::CQuadItem Quad(FittedRect.x, FittedRect.y, FittedRect.w, FittedRect.h);
+		pGraphics->QuadsDrawTL(&Quad, 1);
+		pGraphics->QuadsEnd();
+		pGraphics->WrapNormal();
+		return true;
+	}
+
+	static void AssetsEditorDrawSlotFromTexture(const CUIRect &Rect, IGraphics::CTextureHandle Texture, const CMenus::SAssetsEditorPartSlot &Slot, int Type, float Alpha, IGraphics *pGraphics, const ColorRGBA *pColorOverride = nullptr)
+	{
+		if(!Texture.IsValid() || Slot.m_SrcW <= 0 || Slot.m_SrcH <= 0)
+			return;
+
+		const int GridX = maximum(1, AssetsEditorGridX(Type));
+		const int GridY = maximum(1, AssetsEditorGridY(Type));
+		const float U0 = (float)Slot.m_SrcX / GridX;
+		const float V0 = (float)Slot.m_SrcY / GridY;
+		const float U1 = (float)(Slot.m_SrcX + Slot.m_SrcW) / GridX;
+		const float V1 = (float)(Slot.m_SrcY + Slot.m_SrcH) / GridY;
+
+		pGraphics->WrapClamp();
+		pGraphics->TextureSet(Texture);
+		pGraphics->QuadsBegin();
+		ColorRGBA DrawColor(1.0f, 1.0f, 1.0f, Alpha);
+		if(pColorOverride != nullptr)
+		{
+			DrawColor = *pColorOverride;
+			DrawColor.a *= Alpha;
+		}
+		pGraphics->SetColor(DrawColor.r, DrawColor.g, DrawColor.b, DrawColor.a);
+		pGraphics->QuadsSetSubset(U0, V0, U1, V1);
+		const IGraphics::CQuadItem Quad(Rect.x, Rect.y, Rect.w, Rect.h);
+		pGraphics->QuadsDrawTL(&Quad, 1);
+		pGraphics->QuadsSetSubset(0, 0, 1, 1);
+		pGraphics->QuadsEnd();
+		pGraphics->TextureClear();
+		pGraphics->WrapNormal();
+	}
+
+	static const CImageInfo *AssetsEditorGetCachedImage(int Type, const char *pAssetName, const std::vector<CMenus::SAssetsEditorAssetEntry> &vAssets, IGraphics *pGraphics)
+	{
+		for(const auto &Entry : gs_vAssetsEditorImageCache)
+		{
+			if(Entry.m_Type == Type && str_comp(Entry.m_aName, pAssetName) == 0)
+				return &Entry.m_Image;
+		}
+
+		const CMenus::SAssetsEditorAssetEntry *pAsset = AssetsEditorFindAssetByName(vAssets, pAssetName);
+		if(pAsset == nullptr)
+			return nullptr;
+
+		CImageInfo Loaded;
+		if(!pGraphics->LoadPng(Loaded, pAsset->m_aPath, IStorage::TYPE_ALL))
+			return nullptr;
+
+		if(!pGraphics->CheckImageDivisibility(pAsset->m_aPath, Loaded, AssetsEditorGridX(Type), AssetsEditorGridY(Type), true))
+		{
+			Loaded.Free();
+			return nullptr;
+		}
+
+		ConvertToRgba(Loaded);
+		if(Loaded.m_pData == nullptr || Loaded.m_Format != CImageInfo::FORMAT_RGBA)
+			return nullptr;
+
+		SAssetsEditorImageCacheEntry &NewEntry = gs_vAssetsEditorImageCache.emplace_back();
+		NewEntry.m_Type = Type;
+		str_copy(NewEntry.m_aName, pAssetName);
+		NewEntry.m_Image = std::move(Loaded);
+		return &NewEntry.m_Image;
+	}
+
+	static int AssetsEditorTypeToCustomTab(int Type)
+	{
+		switch(Type)
+		{
+		case CMenus::ASSETS_EDITOR_TYPE_GAME: return 1;
+		case CMenus::ASSETS_EDITOR_TYPE_EMOTICONS: return 2;
+		case CMenus::ASSETS_EDITOR_TYPE_ENTITIES: return 0;
+		case CMenus::ASSETS_EDITOR_TYPE_HUD: return 4;
+		case CMenus::ASSETS_EDITOR_TYPE_PARTICLES: return 3;
+		case CMenus::ASSETS_EDITOR_TYPE_GUI_CURSOR: return ASSETS_TAB_GUI_CURSOR;
+		case CMenus::ASSETS_EDITOR_TYPE_ARROW: return ASSETS_TAB_ARROW;
+		case CMenus::ASSETS_EDITOR_TYPE_STRONG_WEAK: return ASSETS_TAB_STRONG_WEAK;
+		case CMenus::ASSETS_EDITOR_TYPE_EXTRAS: return 5;
+		default: return -1;
+		}
+	}
 }
 
 void CMenus::AssetsEditorOpen(int Type)
@@ -1242,8 +1242,8 @@ bool CMenus::AssetsEditorComposeImage(CImageInfo &OutputImage)
 		const ColorRGBA SlotTint = AssetsEditorSlotColorToRgba(Slot.m_Color);
 		const bool HasColorOverride = AssetsEditorHasColorOverride(SlotTint);
 		const bool NeedsSourceCopy = str_comp(Slot.m_aSourceAsset, MainAsset.m_aName) != 0 ||
-			Slot.m_SrcX != Slot.m_DstX || Slot.m_SrcY != Slot.m_DstY ||
-			Slot.m_SrcW != Slot.m_DstW || Slot.m_SrcH != Slot.m_DstH;
+					     Slot.m_SrcX != Slot.m_DstX || Slot.m_SrcY != Slot.m_DstY ||
+					     Slot.m_SrcW != Slot.m_DstW || Slot.m_SrcH != Slot.m_DstH;
 		if(!AssetsEditorSlotNeedsProcessing(Slot, MainAsset.m_aName))
 			continue;
 
@@ -1616,7 +1616,7 @@ int CMenus::AssetsEditorResolveHoveredSlotWithCycle(const CUIRect &Rect, int Typ
 	const int MousePosY = (int)(Mouse.y * 10.0f);
 	const bool SamePosition = m_AssetsEditorState.m_HoverCyclePositionX == MousePosX && m_AssetsEditorState.m_HoverCyclePositionY == MousePosY;
 	const bool SameCandidates = m_AssetsEditorState.m_vHoverCycleCandidates.size() == vCandidates.size() &&
-		std::equal(m_AssetsEditorState.m_vHoverCycleCandidates.begin(), m_AssetsEditorState.m_vHoverCycleCandidates.end(), vCandidates.begin());
+				    std::equal(m_AssetsEditorState.m_vHoverCycleCandidates.begin(), m_AssetsEditorState.m_vHoverCycleCandidates.end(), vCandidates.begin());
 	if(!SamePosition || !SameCandidates)
 	{
 		m_AssetsEditorState.m_HoverCyclePositionX = MousePosX;
@@ -1971,10 +1971,10 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 
 	static CUi::SDropDownState s_BlendModeDropDownState;
 	const char *apBlendModeNames[ASSETS_EDITOR_COLOR_BLEND_COUNT] = {
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_MULTIPLY)),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_NORMAL)),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_SCREEN)),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_OVERLAY)),
+		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_MULTIPLY), "Assets editor blend mode"),
+		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_NORMAL), "Assets editor blend mode"),
+		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_SCREEN), "Assets editor blend mode"),
+		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_OVERLAY), "Assets editor blend mode"),
 	};
 	CUIRect BlendLabel, BlendDropDown;
 	const float BlendLabelW = minimum(92.0f, maximum(64.0f, TextRender()->TextWidth(FontSize, Localize("Blend mode"), -1, -1.0f) + 8.0f));
@@ -2254,7 +2254,7 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 		const SAssetsEditorPartSlot &DraggedSlot = m_AssetsEditorState.m_vPartSlots[m_AssetsEditorState.m_ActiveDraggedSlotIndex];
 		const int SpriteId = DraggedSlot.m_SpriteId;
 		const char *pSpriteName = SpriteId >= 0 ? g_pData->m_aSprites[SpriteId].m_pName :
-												(DraggedSlot.m_aFamilyKey[0] != '\0' ? DraggedSlot.m_aFamilyKey : Localize("tile"));
+							  (DraggedSlot.m_aFamilyKey[0] != '\0' ? DraggedSlot.m_aFamilyKey : Localize("tile"));
 		CUIRect DragSprite;
 		DragSprite.x = Ui()->MouseX() + 12.0f;
 		DragSprite.y = Ui()->MouseY() + 12.0f;
@@ -2398,7 +2398,7 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 		Ui()->DoLabel(&BottomMainDropDown, Localize("No matching assets."), FontSize * 0.9f, TEXTALIGN_MC);
 	}
 	const char *pHintMessage = m_AssetsEditorState.m_DragActive ? Localize("Drop on right canvas to replace one part.") :
-		(ColorPickerOpen ? Localize("The selected part stays highlighted while you adjust its color.") : Localize("Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets."));
+								      (ColorPickerOpen ? Localize("The selected part stays highlighted while you adjust its color.") : Localize("Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets."));
 	static CButtonContainer s_ResetAllPartsButton;
 	if(DoButton_Menu(&s_ResetAllPartsButton, Localize("Reset All"), 0, &ResetAllButton))
 	{

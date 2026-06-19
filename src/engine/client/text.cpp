@@ -10,6 +10,8 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+#include <game/client/components/qmclient/perf_logging.h>
+
 // ft2 texture
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -297,9 +299,16 @@ public:
 private:
 	/**
 	 * The initial dimension of the atlas textures.
-	 * Results in 1 MB of memory being used per texture.
+	 *
+	 * QmClient: 提高到 2048 (4 MB per texture; NUM_FONT_TEXTURES=2 → 8 MB total).
+	 * 原因：中文界面字形密度远高于英文 (GBK 常用 3500+ 字)，1024 (1 MB) 几乎必然
+	 * 在首帧渲染设置页时填满，触发 IncreaseGlyphMapSize → UnloadTextures + 翻倍
+	 * 重分配 + UploadTextures 全量重传，造成 ESC 打开 / 切 tab 首帧的 GPU 上传尖峰
+	 * (实测 settings_page_content 单次 355ms 的一部分来自此)。2048 容纳约 4000
+	 * 字形，足以覆盖中文常用字集，从源头消除运行时扩容。
+	 * 代价：启动多占 6 MB 显存，对所有桌面 GPU 可接受。
 	 */
-	static constexpr int INITIAL_ATLAS_DIMENSION = 1024;
+	static constexpr int INITIAL_ATLAS_DIMENSION = 2048;
 
 	/**
 	 * The maximum dimension of the atlas textures.
@@ -341,6 +350,10 @@ private:
 	FT_Face m_SelectedFace = nullptr;
 	std::vector<FT_Face> m_vFallbackFaces;
 	std::vector<FT_Face> m_vFtFaces;
+	int m_QmPerfGlyphNew = 0;
+	int m_QmPerfGlyphUploads = 0;
+	double m_QmPerfGlyphRasterizeMs = 0.0;
+	double m_QmPerfGlyphUploadMs = 0.0;
 
 	FT_Face GetFaceByName(const char *pFamilyName)
 	{
@@ -515,11 +528,14 @@ private:
 
 	void UploadGlyph(int TextureIndex, int PosX, int PosY, size_t Width, size_t Height, uint8_t *pData)
 	{
+		const auto UploadStart = time_get_nanoseconds();
 		for(size_t y = 0; y < Height; ++y)
 		{
 			mem_copy(&m_apTextureData[TextureIndex][PosX + ((y + PosY) * m_TextureDimension)], &pData[y * Width], Width);
 		}
 		Graphics()->UpdateTextTexture(m_aTextures[TextureIndex], PosX, PosY, Width, Height, pData, true);
+		++m_QmPerfGlyphUploads;
+		m_QmPerfGlyphUploadMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - UploadStart).count();
 	}
 
 	bool FitGlyph(size_t Width, size_t Height, int &PosX, int &PosY)
@@ -529,6 +545,7 @@ private:
 
 	bool RenderGlyph(SGlyph &Glyph)
 	{
+		const auto RasterizeStart = time_get_nanoseconds();
 		FT_Set_Pixel_Sizes(Glyph.m_Face, 0, Glyph.m_FontSize);
 
 		if(FT_Load_Glyph(Glyph.m_Face, Glyph.m_GlyphIndex, FT_LOAD_RENDER | FT_LOAD_NO_BITMAP))
@@ -598,6 +615,8 @@ private:
 			UploadGlyph(FONT_TEXTURE_FILL, X, Y, Width, Height, pGlyphDataFill);
 			UploadGlyph(FONT_TEXTURE_OUTLINE, X, Y, Width, Height, pGlyphDataOutline);
 		}
+		++m_QmPerfGlyphNew;
+		m_QmPerfGlyphRasterizeMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - RasterizeStart).count();
 
 		// set glyph info
 		{
@@ -870,6 +889,18 @@ public:
 	{
 		return m_aTextures[TextureIndex];
 	}
+
+	void ConsumeQmPerfGlyphStats(int &GlyphNew, int &GlyphUploads, double &GlyphRasterizeMs, double &GlyphUploadMs)
+	{
+		GlyphNew = m_QmPerfGlyphNew;
+		GlyphUploads = m_QmPerfGlyphUploads;
+		GlyphRasterizeMs = m_QmPerfGlyphRasterizeMs;
+		GlyphUploadMs = m_QmPerfGlyphUploadMs;
+		m_QmPerfGlyphNew = 0;
+		m_QmPerfGlyphUploads = 0;
+		m_QmPerfGlyphRasterizeMs = 0.0;
+		m_QmPerfGlyphUploadMs = 0.0;
+	}
 };
 
 typedef vector4_base<unsigned char> STextCharQuadVertexColor;
@@ -1016,10 +1047,91 @@ class CTextRender : public IEngineTextRender
 	SBufferContainerInfo m_DefaultTextContainerInfo;
 
 	std::chrono::nanoseconds m_CursorRenderTime;
+	int m_QmPerfTextContainerNew = 0;
+	int m_QmPerfTextContainerUploads = 0;
+	double m_QmPerfTextContainerCreateMs = 0.0;
+	double m_QmPerfTextContainerUploadMs = 0.0;
+	SQmTextRuntimeBudgetSnapshot m_QmLastTextRuntimeBudgetSnapshot;
 
 	// TClient
 	std::vector<std::string> m_CustomFontFaces;
 	std::vector<std::string> m_DefaultFontFaces;
+
+	void ResetQmTextRuntimeBudgetCounters(bool ConsumeGlyphStats)
+	{
+		if(ConsumeGlyphStats && m_pGlyphMap != nullptr)
+		{
+			int GlyphNew = 0;
+			int GlyphUploads = 0;
+			double GlyphRasterizeMs = 0.0;
+			double GlyphUploadMs = 0.0;
+			m_pGlyphMap->ConsumeQmPerfGlyphStats(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs);
+		}
+		m_QmPerfTextContainerNew = 0;
+		m_QmPerfTextContainerUploads = 0;
+		m_QmPerfTextContainerCreateMs = 0.0;
+		m_QmPerfTextContainerUploadMs = 0.0;
+	}
+
+	bool ShouldLogTextRuntimeBudget(int GlyphNew, int GlyphUploads, double GlyphRasterizeMs, double GlyphUploadMs) const
+	{
+		const int TextContainerWork = m_QmPerfTextContainerNew + m_QmPerfTextContainerUploads;
+		if(GlyphNew > 0 || GlyphUploads > 0 || m_QmPerfTextContainerUploads > 0)
+			return true;
+		if(GlyphRasterizeMs >= QmPerfThresholdMs() || GlyphUploadMs >= QmPerfThresholdMs() ||
+			m_QmPerfTextContainerCreateMs >= QmPerfThresholdMs() || m_QmPerfTextContainerUploadMs >= QmPerfThresholdMs())
+			return true;
+		return TextContainerWork >= 8;
+	}
+
+	void UpdateQmTextRuntimeBudgetSnapshot(int GlyphNew, int GlyphUploads, double GlyphRasterizeMs, double GlyphUploadMs)
+	{
+		m_QmLastTextRuntimeBudgetSnapshot.m_GlyphNew = GlyphNew;
+		m_QmLastTextRuntimeBudgetSnapshot.m_GlyphUploads = GlyphUploads;
+		m_QmLastTextRuntimeBudgetSnapshot.m_GlyphRasterizeMs = GlyphRasterizeMs;
+		m_QmLastTextRuntimeBudgetSnapshot.m_GlyphUploadMs = GlyphUploadMs;
+		m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerNew = m_QmPerfTextContainerNew;
+		m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerUploads = m_QmPerfTextContainerUploads;
+		m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerCreateMs = m_QmPerfTextContainerCreateMs;
+		m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerUploadMs = m_QmPerfTextContainerUploadMs;
+		++m_QmLastTextRuntimeBudgetSnapshot.m_Frame;
+	}
+
+	void FlushQmTextRuntimeBudgetLog() override
+	{
+		if(m_pGlyphMap == nullptr)
+		{
+			ResetQmTextRuntimeBudgetCounters(false);
+			return;
+		}
+		int GlyphNew = 0;
+		int GlyphUploads = 0;
+		double GlyphRasterizeMs = 0.0;
+		double GlyphUploadMs = 0.0;
+		m_pGlyphMap->ConsumeQmPerfGlyphStats(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs);
+		UpdateQmTextRuntimeBudgetSnapshot(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs);
+		if(!QmPerfEnabled())
+		{
+			ResetQmTextRuntimeBudgetCounters(false);
+			return;
+		}
+		if(!ShouldLogTextRuntimeBudget(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs))
+		{
+			ResetQmTextRuntimeBudgetCounters(false);
+			return;
+		}
+		char aPayload[384];
+		str_format(aPayload, sizeof(aPayload),
+			"event=text_runtime_budget glyph_new=%d glyph_uploads=%d glyph_rasterize_ms=%.3f glyph_upload_ms=%.3f text_container_new=%d text_container_uploads=%d text_container_create_ms=%.3f text_container_upload_ms=%.3f",
+			GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs, m_QmPerfTextContainerNew, m_QmPerfTextContainerUploads, m_QmPerfTextContainerCreateMs, m_QmPerfTextContainerUploadMs);
+		QmPerfLogPayload("perf/text", aPayload);
+		ResetQmTextRuntimeBudgetCounters(false);
+	}
+
+	SQmTextRuntimeBudgetSnapshot QmTextRuntimeBudgetSnapshot() const override
+	{
+		return m_QmLastTextRuntimeBudgetSnapshot;
+	}
 
 	int GetFreeTextContainerIndex()
 	{
@@ -1592,6 +1704,8 @@ public:
 	bool CreateTextContainer(STextContainerIndex &TextContainerIndex, CTextCursor *pCursor, const char *pText, int Length = -1) override
 	{
 		dbg_assert(!TextContainerIndex.Valid(), "Text container index was not cleared.");
+		const auto CreateStart = time_get_nanoseconds();
+		++m_QmPerfTextContainerNew;
 
 		TextContainerIndex.Reset();
 		TextContainerIndex.m_Index = GetFreeTextContainerIndex();
@@ -1619,11 +1733,13 @@ public:
 
 		if(TextContainer.m_StringInfo.m_vCharacterQuads.empty() && TextContainer.m_StringInfo.m_SelectionQuadContainerIndex == -1 && IsRendered)
 		{
+			m_QmPerfTextContainerCreateMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - CreateStart).count();
 			FreeTextContainer(TextContainerIndex);
 			return false;
 		}
 		else
 		{
+			m_QmPerfTextContainerCreateMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - CreateStart).count();
 			if(Graphics()->IsTextBufferingEnabled() && IsRendered && !TextContainer.m_StringInfo.m_vCharacterQuads.empty())
 			{
 				if((TextContainer.m_RenderFlags & TEXT_RENDER_FLAG_NO_AUTOMATIC_QUAD_UPLOAD) == 0)
@@ -2288,6 +2404,7 @@ public:
 	{
 		if(Graphics()->IsTextBufferingEnabled())
 		{
+			const auto UploadStart = time_get_nanoseconds();
 			STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
 			size_t DataSize = TextContainer.m_StringInfo.m_vCharacterQuads.size() * sizeof(STextCharQuad);
 			void *pUploadData = TextContainer.m_StringInfo.m_vCharacterQuads.data();
@@ -2297,6 +2414,8 @@ public:
 
 			TextContainer.m_StringInfo.m_QuadBufferContainerIndex = Graphics()->CreateBufferContainer(&m_DefaultTextContainerInfo);
 			Graphics()->IndicesNumRequiredNotify(TextContainer.m_StringInfo.m_vCharacterQuads.size() * 6);
+			++m_QmPerfTextContainerUploads;
+			m_QmPerfTextContainerUploadMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - UploadStart).count();
 		}
 	}
 

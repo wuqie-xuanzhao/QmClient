@@ -1,6 +1,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "hud_editor.h"
 
+#include "jump_hint_utils.h"
+
 #include <base/math.h>
 #include <base/system.h>
 
@@ -17,60 +19,14 @@
 
 namespace
 {
-constexpr float EPSILON = QmHudEditor::EPSILON;
-constexpr float HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::EPSILON;
-constexpr const char *JUMP_HINT_DEFAULT_TEXT = "这是示例文本";
+	constexpr float EPSILON = QmHudEditor::EPSILON;
+	constexpr float HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::EPSILON;
 
-float Clamp01(float Value)
-{
-	return std::clamp(Value, 0.0f, 1.0f);
-}
-
-void DecodeEscapedNewlines(const char *pInput, char *pOutput, size_t OutputSize)
-{
-	if(OutputSize == 0)
-		return;
-
-	size_t OutPos = 0;
-	for(size_t InPos = 0; pInput != nullptr && pInput[InPos] != '\0' && OutPos + 1 < OutputSize; ++InPos)
+	float Clamp01(float Value)
 	{
-		if(pInput[InPos] == '\\' && pInput[InPos + 1] == 'n')
-		{
-			pOutput[OutPos++] = '\n';
-			++InPos;
-		}
-		else
-		{
-			pOutput[OutPos++] = pInput[InPos];
-		}
+		return std::clamp(Value, 0.0f, 1.0f);
 	}
-	pOutput[OutPos] = '\0';
-}
 
-void EncodeEscapedNewlines(const char *pInput, char *pOutput, size_t OutputSize)
-{
-	if(OutputSize == 0)
-		return;
-
-	size_t OutPos = 0;
-	for(size_t InPos = 0; pInput != nullptr && pInput[InPos] != '\0' && OutPos + 1 < OutputSize; ++InPos)
-	{
-		if(pInput[InPos] == '\r')
-			continue;
-		if(pInput[InPos] == '\n')
-		{
-			if(OutPos + 2 >= OutputSize)
-				break;
-			pOutput[OutPos++] = '\\';
-			pOutput[OutPos++] = 'n';
-		}
-		else
-		{
-			pOutput[OutPos++] = pInput[InPos];
-		}
-	}
-	pOutput[OutPos] = '\0';
-}
 }
 
 CHudEditor::CHudEditor()
@@ -556,8 +512,8 @@ void CHudEditor::UpdateInteractionUi()
 
 void CHudEditor::OpenJumpHintTextEditor()
 {
-	char aDecoded[sizeof(g_Config.m_TcJumpHintText)];
-	DecodeEscapedNewlines(g_Config.m_TcJumpHintText[0] != '\0' ? g_Config.m_TcJumpHintText : JUMP_HINT_DEFAULT_TEXT, aDecoded, sizeof(aDecoded));
+	char aDecoded[sizeof(g_Config.m_QmJumpHintText)];
+	DecodeEscapedNewlines(g_Config.m_QmJumpHintText[0] != '\0' ? g_Config.m_QmJumpHintText : JUMP_HINT_DEFAULT_TEXT, aDecoded, sizeof(aDecoded));
 	m_JumpHintTextInput.Set(aDecoded);
 	m_JumpHintTextInput.SetEmptyText(Localize("Jump hint text"));
 	m_JumpHintTextEditorActive = true;
@@ -568,11 +524,11 @@ void CHudEditor::OpenJumpHintTextEditor()
 
 void CHudEditor::SaveJumpHintTextEditor()
 {
-	char aEncoded[sizeof(g_Config.m_TcJumpHintText)];
+	char aEncoded[sizeof(g_Config.m_QmJumpHintText)];
 	EncodeEscapedNewlines(m_JumpHintTextInput.GetString(), aEncoded, sizeof(aEncoded));
 	if(aEncoded[0] == '\0')
 		str_copy(aEncoded, JUMP_HINT_DEFAULT_TEXT, sizeof(aEncoded));
-	str_copy(g_Config.m_TcJumpHintText, aEncoded, sizeof(g_Config.m_TcJumpHintText));
+	str_copy(g_Config.m_QmJumpHintText, aEncoded, sizeof(g_Config.m_QmJumpHintText));
 	ConfigManager()->Save();
 	CloseJumpHintTextEditor();
 }
@@ -701,7 +657,7 @@ void CHudEditor::RenderJumpHintTextEditor(const CUIRect &Screen)
 
 	CUIRect Title;
 	Content.HSplitTop(18.0f, &Title, &Content);
-	Ui()->DoLabel(&Title, Localize("位置跳跃提示"), 10.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Title, Localize("Position jump tip"), 10.0f, TEXTALIGN_ML);
 	Content.HSplitTop(5.0f, nullptr, &Content);
 
 	CUIRect EditBox;
@@ -734,7 +690,7 @@ void CHudEditor::RenderJumpHintTextEditor(const CUIRect &Screen)
 
 	if(Ui()->DoButtonLogic(&s_ResetButton, 0, &ResetButton, BUTTONFLAG_LEFT) != 0)
 	{
-		char aDecoded[sizeof(g_Config.m_TcJumpHintText)];
+		char aDecoded[sizeof(g_Config.m_QmJumpHintText)];
 		DecodeEscapedNewlines(JUMP_HINT_DEFAULT_TEXT, aDecoded, sizeof(aDecoded));
 		m_JumpHintTextInput.Set(aDecoded);
 		Ui()->SetActiveItem(&m_JumpHintTextInput);

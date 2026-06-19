@@ -1524,6 +1524,8 @@ bool CBackground::UpdateVideoBackground()
 
 bool CBackground::RenderBackgroundTexture()
 {
+	if(!InterfacesInitialized())
+		return false;
 	if(!m_ImageBackground && !m_VideoBackground)
 		return false;
 	if(m_VideoBackground)

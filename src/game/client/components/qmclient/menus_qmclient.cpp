@@ -89,11 +89,11 @@ namespace
 		return g_Config.m_QmPerfDebug != 0;
 	}
 
-	void LogQmPerfStage(const char *pStage, double DurationMs, bool Force = false, const char *pExtra = nullptr)
+	void LogQmPerfStage(IClient *pClient, const char *pStage, double DurationMs, bool Force = false, const char *pExtra = nullptr)
 	{
 		if(!PerfDebugEnabled())
 			return;
-		QmPerfLogStage("perf/qmclient", pStage, DurationMs, Force, nullptr, nullptr, nullptr, pExtra);
+		QmPerfLogStage("perf/qmclient", pStage, DurationMs, Force, pClient, nullptr, nullptr, pExtra);
 	}
 
 	[[maybe_unused]] void LogTClientPerfStage(const char *pStage, double DurationMs, bool Force = false, const char *pExtra = nullptr)
@@ -476,7 +476,34 @@ static bool DoEditBoxMultiLine(CUi *pUi, CLineInput *pLineInput, const CUIRect *
 	return (Flags & (1 << n)) != 0;
 }
 
-void CMenus::RenderSettingsQmClientOverview(CUIRect MainView)
+void CMenus::BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab)
+{
+	Tab = std::clamp(Tab, 0, NUMBER_OF_QMCLIENT_SETTINGS_TABS - 1);
+
+	const int PreviousTab = m_QmClientSettingsTab;
+	const int PreviousSettingsPage = g_Config.m_UiSettingsPage;
+	const bool PreviousCollecting = m_MenuTextPlanCollecting;
+	std::vector<SMenuTextPlanItem> *pPreviousCollection = m_pMenuTextPlanCollection;
+	const bool PreviousPendingActive = m_MenuTextPlanPendingActive;
+	const SMenuTextPlanItem PreviousPendingItem = m_MenuTextPlanPendingItem;
+
+	g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
+	m_QmClientSettingsTab = Tab;
+	m_MenuTextPlanCollecting = true;
+	m_pMenuTextPlanCollection = &vItems;
+	m_MenuTextPlanPendingActive = false;
+	Ui()->BeginRenderOnly();
+	RenderSettings(MainView);
+	Ui()->EndRenderOnly();
+	m_MenuTextPlanPendingActive = PreviousPendingActive;
+	m_MenuTextPlanPendingItem = PreviousPendingItem;
+	m_pMenuTextPlanCollection = pPreviousCollection;
+	m_MenuTextPlanCollecting = PreviousCollecting;
+	m_QmClientSettingsTab = PreviousTab;
+	g_Config.m_UiSettingsPage = PreviousSettingsPage;
+}
+
+void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 {
 	const float ViewWidth = MainView.w;
 	const bool CompactLayout = ViewWidth < 680.0f;
@@ -500,9 +527,8 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView)
 	ScrollParams.m_ScrollUnit = 60.0f * UiScale;
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	ScrollParams.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
-	s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
-	GameClient()->m_Menus.m_SettingsScrollActive = GameClient()->m_Menus.m_SettingsScrollActive || absolute(ScrollOffset.y - s_PrevOverviewScrollY) > 0.01f;
-	s_PrevOverviewScrollY = ScrollOffset.y;
+	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, s_PrevOverviewScrollY);
+	ScrollOffset = ScrollFrame.m_BeginOffset;
 
 	MainView.y += ScrollOffset.y;
 	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
@@ -572,8 +598,9 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView)
 	});
 
 	CUIRect EndPad{MainView.x, MainView.y, MainView.w, 5.0f};
-	s_ScrollRegion.AddRect(EndPad);
-	s_ScrollRegion.End();
+	FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad, -1, !PrewarmOnly && !m_MenuTextPlanCollecting);
+	if(!PrewarmOnly && !m_MenuTextPlanCollecting)
+		s_PrevOverviewScrollY = ScrollFrame.m_FinalOffsetY;
 }
 
 void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)
@@ -648,7 +675,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		Dot.Draw(ColorRGBA(1.0f, 0.12f, 0.16f, 0.95f), IGraphics::CORNER_ALL, DotSize * 0.5f);
 	};
 
-	auto QmNewFeatureLabel = [&](const char *pText, const char *pId, char *pBuf, size_t BufSize) -> const char * {
+	auto BuildQmFeatureLabel = [&](const char *pText, const char *pId, char *pBuf, size_t BufSize) -> const char * {
 		if(!IsQmNewFeatureMarkRead(pId))
 		{
 			str_format(pBuf, BufSize, "%s [new]", pText);
@@ -724,7 +751,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					};
 					if(AnyQmNewFeatureUnread(apVisualFeatureIds, (int)std::size(apVisualFeatureIds)))
 						DrawQmNewFeatureDot(Button);
-					pTabName = QmNewFeatureLabel(pTabName, pNewFeatureId, aVisualTabName, sizeof(aVisualTabName));
+					pTabName = BuildQmFeatureLabel(pTabName, pNewFeatureId, aVisualTabName, sizeof(aVisualTabName));
 				}
 				else if(Tab == QMCLIENT_SETTINGS_TAB_FUNCTION)
 				{
@@ -754,7 +781,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 			char aTabExtra[96];
 			str_format(aTabExtra, sizeof(aTabExtra), "tab=%s contributors=%d", QmSettingsTabName(m_QmClientSettingsTab), ContributorsPage ? 1 : 0);
-			LogQmPerfStage("tabbar", StageTimer.ElapsedMs(), false, aTabExtra);
+			LogQmPerfStage(Client(), "tabbar", StageTimer.ElapsedMs(), false, aTabExtra);
 		}
 
 		if(UseNewUi)
@@ -771,7 +798,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			{
 				char aPayload[128];
 				str_format(aPayload, sizeof(aPayload), "event=tab_switch from=%s to=%s", QmSettingsTabName(s_PrevQmTab), QmSettingsTabName(m_QmClientSettingsTab));
-				QmPerfLogPayload("perf/qmclient", aPayload);
+				QmPerfLogPayload("perf/qmclient", aPayload, Client(), CurrentQmUiPerfPage());
 			}
 			s_QmTabTransitionDirection = m_QmClientSettingsTab > s_PrevQmTab ? 1.0f : -1.0f;
 			TriggerUiSwitchAnimation(QmClientTabSwitchNode, 0.18f);
@@ -798,12 +825,12 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				RenderSettingsTClientConfigs(ContentView);
 			char aConfigExtra[96];
 			str_format(aConfigExtra, sizeof(aConfigExtra), "tab=%s transition=%d", QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0);
-			LogQmPerfStage("config_tab_total", StageTimer.ElapsedMs(), TabTransitionActive, aConfigExtra);
+			LogQmPerfStage(Client(), "config_tab_total", StageTimer.ElapsedMs(), TabTransitionActive, aConfigExtra);
 			if(TabTransitionActive && TabTransitionAlpha > 0.0f)
 				TabContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TabTransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
 			if(TabTransitionActive)
 				Ui()->ClipDisable();
-			LogQmPerfStage("render_total", RenderTimer.ElapsedMs(), false, aConfigExtra);
+			LogQmPerfStage(Client(), "render_total", RenderTimer.ElapsedMs(), false, aConfigExtra);
 			return;
 		}
 
@@ -855,15 +882,15 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
 	static float s_PrevQmScrollY = 0.0f;
+	SSettingsScrollRegionFrame ScrollFrame;
 	if(!PrewarmOnly)
 	{
 		CScrollRegionParams ScrollParams;
 		ScrollParams.m_ScrollUnit = 60.0f * UiScale;
 		ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 		ScrollParams.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
-		s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
-		GameClient()->m_Menus.m_SettingsScrollActive = GameClient()->m_Menus.m_SettingsScrollActive || absolute(ScrollOffset.y - s_PrevQmScrollY) > 0.01f;
-		s_PrevQmScrollY = ScrollOffset.y;
+		ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, s_PrevQmScrollY);
+		ScrollOffset = ScrollFrame.m_BeginOffset;
 	}
 
 	static std::vector<CUIRect> s_GlassCards;
@@ -887,9 +914,19 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	// === 绘制 Liquid Glass 卡片背景 ===
 	{
 		CPerfTimer StageTimer;
+		int VisibleCardCount = 0;
 		for(CUIRect &Card : s_GlassCards)
 		{
 			Card.y -= s_PrevScrollOffset.y - ScrollOffset.y;
+
+			// 视口裁剪：跳过完全在可见区外的卡片背景。module 内容渲染已用
+			// IsSectionVisible 裁剪 (见 RegisterModuleCard / config tab)，这里补上
+			// 背景层裁剪，避免对视口外卡片绘制 3 层矩形 (阴影/玻璃/高光) 的 DrawCall。
+			// 滚动时视口外卡片可能很多 (功能/配置 tab 数十 module)，不裁剪会贡献
+			// function_tab_total / config_tab_total 的尾部尖峰 (实测 152ms / 149ms)。
+			if(!IsSectionVisible(Card, ModuleCullContext))
+				continue;
+			++VisibleCardCount;
 
 			// 阴影层
 			CUIRect Shadow = Card;
@@ -908,8 +945,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			TopHighlight.Draw(LgHighlightColor, IGraphics::CORNER_NONE, 0.0f);
 		}
 		char aGlassExtra[96];
-		str_format(aGlassExtra, sizeof(aGlassExtra), "tab=%s cards=%d", QmSettingsTabName(m_QmClientSettingsTab), (int)s_GlassCards.size());
-		LogQmPerfStage("glass_cards_draw", StageTimer.ElapsedMs(), false, aGlassExtra);
+		str_format(aGlassExtra, sizeof(aGlassExtra), "tab=%s cards=%d/%d", QmSettingsTabName(m_QmClientSettingsTab), VisibleCardCount, (int)s_GlassCards.size());
+		LogQmPerfStage(Client(), "glass_cards_draw", StageTimer.ElapsedMs(), false, aGlassExtra);
 	}
 	if(!PrewarmOnly)
 		s_PrevScrollOffset = ScrollOffset;
@@ -941,7 +978,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		return s_CachedRainbowColors[Index];
 	};
 
-	auto DoModuleHeadline = [&](CUIRect &Content, int RainbowIndex, const char *pTitle, const char *pTip) {
+	auto RenderQmModuleHeadline = [&](CUIRect &Content, int RainbowIndex, const char *pTitle, const char *pTip) {
 		CUIRect TitleRect, TipRect;
 		Content.HSplitTop(LgHeadlineSize, &TitleRect, &Content);
 		TextRender()->TextColor(GetRainbowColor(RainbowIndex));
@@ -956,13 +993,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		}
 	};
-	auto DoModuleHeadlineNew = [&](CUIRect &Content, int RainbowIndex, const char *pTitle, const char *pTip, const char *pNewFeatureId) {
+	auto RenderQmModuleHeadlineNew = [&](CUIRect &Content, int RainbowIndex, const char *pTitle, const char *pTip, const char *pNewFeatureId) {
 		CUIRect TitleRect, TipRect;
 		Content.HSplitTop(LgHeadlineSizeNew, &TitleRect, &Content);
 		const bool Unread = !IsQmNewFeatureMarkRead(pNewFeatureId);
 		char aTitle[128];
 		TextRender()->TextColor(GetRainbowColor(RainbowIndex));
-		Ui()->DoLabel(&TitleRect, QmNewFeatureLabel(pTitle, pNewFeatureId, aTitle, sizeof(aTitle)), LgHeadlineSizeNew, TEXTALIGN_ML);
+		CUIElement &TitleElement = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle);
+		DoSettingsLabelStreamed(TitleElement, &TitleRect, BuildQmFeatureLabel(pTitle, pNewFeatureId, aTitle, sizeof(aTitle)), LgHeadlineSizeNew, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		if(Unread)
 			DrawQmNewFeatureDot(TitleRect);
@@ -1025,7 +1063,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		}
 		char aBindExtra[96];
 		str_format(aBindExtra, sizeof(aBindExtra), "tab=%s rebuilt=%d size=%d", QmSettingsTabName(m_QmClientSettingsTab), BuildBindCache ? 1 : 0, (int)g_CommandBindCache.size());
-		LogQmPerfStage("bind_cache", StageTimer.ElapsedMs(), BuildBindCache, aBindExtra);
+		LogQmPerfStage(Client(), "bind_cache", StageTimer.ElapsedMs(), BuildBindCache, aBindExtra);
 	}
 	std::unordered_map<std::string, CBindSlot> &CommandBindCache = g_CommandBindCache;
 
@@ -1293,6 +1331,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		FocusMode,
 		KeyBinds,
 		MiniFeatures,
+		JumpHint,
 		SkinTransition,
 		CameraView,
 		DummyMiniView,
@@ -1340,6 +1379,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::FocusMode: return "focus_mode";
 		case EQmModuleId::KeyBinds: return "key_binds";
 		case EQmModuleId::MiniFeatures: return "mini_features";
+		case EQmModuleId::JumpHint: return "jump_hint";
 		case EQmModuleId::SkinTransition: return "skin_transition";
 		case EQmModuleId::CameraView: return "camera_view";
 		case EQmModuleId::DummyMiniView: return "dummy_miniview";
@@ -1403,15 +1443,16 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		{EQmModuleId::Gores, EQmModuleColumn::Left, 4, "gores"},
 		{EQmModuleId::KeyBinds, EQmModuleColumn::Left, 5, "key_binds"},
 		{EQmModuleId::MiniFeatures, EQmModuleColumn::Left, 6, "mini_features"},
-		{EQmModuleId::WeaponTrajectory, EQmModuleColumn::Left, 7, "weapon_trajectory"},
-		{EQmModuleId::Coords, EQmModuleColumn::Left, 8, "coords"},
-		{EQmModuleId::Streamer, EQmModuleColumn::Left, 9, "streamer"},
-		{EQmModuleId::FriendNotify, EQmModuleColumn::Left, 10, "friend_notify"},
-		{EQmModuleId::BlockWords, EQmModuleColumn::Left, 11, "block_words"},
+		{EQmModuleId::JumpHint, EQmModuleColumn::Left, 7, "jump_hint"},
+		{EQmModuleId::WeaponTrajectory, EQmModuleColumn::Left, 8, "weapon_trajectory"},
+		{EQmModuleId::Coords, EQmModuleColumn::Left, 9, "coords"},
+		{EQmModuleId::Streamer, EQmModuleColumn::Left, 10, "streamer"},
+		{EQmModuleId::FriendNotify, EQmModuleColumn::Left, 11, "friend_notify"},
+		{EQmModuleId::BlockWords, EQmModuleColumn::Left, 12, "block_words"},
 		{EQmModuleId::Translate, EQmModuleColumn::Left, 14, "translate"},
 		{EQmModuleId::TranslateUi, EQmModuleColumn::Left, 15, "translate_ui"},
-		{EQmModuleId::QiaFen, EQmModuleColumn::Left, 12, "qiafen"},
-		{EQmModuleId::PieMenu, EQmModuleColumn::Left, 13, "pie_menu"},
+		{EQmModuleId::QiaFen, EQmModuleColumn::Left, 13, "qiafen"},
+		{EQmModuleId::PieMenu, EQmModuleColumn::Left, 16, "pie_menu"},
 		{EQmModuleId::CameraView, EQmModuleColumn::Right, 0, "camera_view"},
 		{EQmModuleId::WeaponAnimation, EQmModuleColumn::Right, 1, "weapon_animation"},
 		{EQmModuleId::EntityOverlay, EQmModuleColumn::Right, 2, "entity_overlay"},
@@ -1435,9 +1476,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		EQmModuleId::ChatBubble, EQmModuleId::CameraView, EQmModuleId::SkinTransition,
 		EQmModuleId::FocusMode, EQmModuleId::WeaponAnimation, EQmModuleId::Streamer, EQmModuleId::EntityOverlay,
 		EQmModuleId::Laser, EQmModuleId::CollisionHitbox, EQmModuleId::TranslateUi};
-	static constexpr std::array<EQmModuleId, 12> s_aQmFunctionModules = {
+	static constexpr std::array<EQmModuleId, 13> s_aQmFunctionModules = {
 		EQmModuleId::GoresActor, EQmModuleId::Gores, EQmModuleId::KeyBinds,
-		EQmModuleId::MiniFeatures, EQmModuleId::WeaponTrajectory, EQmModuleId::FriendNotify,
+		EQmModuleId::MiniFeatures, EQmModuleId::JumpHint, EQmModuleId::WeaponTrajectory, EQmModuleId::FriendNotify,
 		EQmModuleId::BlockWords, EQmModuleId::Translate, EQmModuleId::QiaFen,
 		EQmModuleId::PieMenu, EQmModuleId::FavoriteMaps, EQmModuleId::HJAssist};
 	static constexpr std::array<EQmModuleId, 12> s_aQmHudModules = {
@@ -1687,7 +1728,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		PersistQmModuleCollapsed();
 		char aCollapsedExtra[96];
 		str_format(aCollapsedExtra, sizeof(aCollapsedExtra), "tab=%s changed=%d", QmSettingsTabName(m_QmClientSettingsTab), ConfigChanged ? 1 : 0);
-		LogQmPerfStage("collapsed_sync", StageTimer.ElapsedMs(), ConfigChanged, aCollapsedExtra);
+		LogQmPerfStage(Client(), "collapsed_sync", StageTimer.ElapsedMs(), ConfigChanged, aCollapsedExtra);
 	};
 
 	auto ParseQmModuleUsage = [&](const char *pConfig) -> bool {
@@ -1766,7 +1807,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		PersistQmModuleUsage();
 		char aUsageExtra[96];
 		str_format(aUsageExtra, sizeof(aUsageExtra), "tab=%s changed=%d", QmSettingsTabName(m_QmClientSettingsTab), ConfigChanged ? 1 : 0);
-		LogQmPerfStage("usage_sync", StageTimer.ElapsedMs(), ConfigChanged, aUsageExtra);
+		LogQmPerfStage(Client(), "usage_sync", StageTimer.ElapsedMs(), ConfigChanged, aUsageExtra);
 	};
 
 	auto IsQmModuleCollapsed = [&](EQmModuleId Id) -> bool {
@@ -1910,19 +1951,20 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		str_copy(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder, sizeof(s_aQmModuleLayoutConfigCache));
 		char aLayoutExtra[96];
 		str_format(aLayoutExtra, sizeof(aLayoutExtra), "tab=%s changed=%d", QmSettingsTabName(m_QmClientSettingsTab), ConfigChanged ? 1 : 0);
-		LogQmPerfStage("layout_sync", StageTimer.ElapsedMs(), ConfigChanged, aLayoutExtra);
+		LogQmPerfStage(Client(), "layout_sync", StageTimer.ElapsedMs(), ConfigChanged, aLayoutExtra);
 	};
 
 	SyncQmModuleLayout();
 	SyncQmModuleCollapsed();
 	SyncQmModuleUsage();
 
-	auto RenderSliderWithValueInput = [this, UiScale](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+	auto RenderSliderWithValueInput = [this, UiScale, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		const int OriginalValue = *pValue;
 		CUIRect SliderRect, InputRect, SuffixRect;
-		const float InputWidth = std::clamp(58.0f * UiScale, 44.0f, 58.0f);
+		const float InputWidth = std::clamp(72.0f * UiScale, 56.0f, 72.0f);
 		const float GapWidth = std::clamp(6.0f * UiScale, 3.0f, 6.0f);
-		const float SuffixWidth = pSuffix[0] != '\0' ? std::clamp(18.0f * UiScale, 14.0f, 20.0f) : 0.0f;
-		const float MinSliderWidth = std::clamp(46.0f * UiScale, 36.0f, 46.0f);
+		const float SuffixWidth = pSuffix[0] != '\0' ? std::clamp(22.0f * UiScale, 18.0f, 24.0f) : 0.0f;
+		const float MinSliderWidth = std::clamp(54.0f * UiScale, 42.0f, 54.0f);
 		bool HasSuffixRect = false;
 		if(ControlColumn.w > InputWidth + GapWidth + SuffixWidth + MinSliderWidth)
 		{
@@ -1941,7 +1983,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			SliderRect.VMargin(1.0f, &SliderRect);
 
 			const float Relative = CUi::ms_LinearScrollbarScale.ToRelative(*pValue, MinValue, MaxValue);
-			*pValue = CUi::ms_LinearScrollbarScale.ToAbsolute(Ui()->DoScrollbarH(pValue, &SliderRect, Relative), MinValue, MaxValue);
+			const int SliderValue = CUi::ms_LinearScrollbarScale.ToAbsolute(Ui()->DoScrollbarH(pValue, &SliderRect, Relative), MinValue, MaxValue);
+			if(!PrewarmOnly && !Ui()->RenderOnly())
+				*pValue = SliderValue;
 		}
 		else
 		{
@@ -1954,9 +1998,142 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		Props.m_TextAlign = TEXTALIGN_MC;
 		Props.m_SelectAllOnActivate = false;
 		const auto Result = Ui()->DoValueSelectorWithState(pId, &InputRect, "", *pValue, MinValue, MaxValue, Props);
-		*pValue = (int)Result.m_Value;
+		if(PrewarmOnly || Ui()->RenderOnly())
+			*pValue = OriginalValue;
+		else
+			*pValue = (int)Result.m_Value;
 		if(HasSuffixRect)
 			Ui()->DoLabel(&SuffixRect, pSuffix, SuffixRect.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
+	};
+	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_ML, const SLabelProperties &Props = {}) {
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pTextId, pRect, pText, FontSize, Align, Props, (int)pRect->w);
+	};
+	auto DoQmSettingsCheckbox = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin) {
+		CUIRect CheckBoxRect;
+		pRect->HSplitTop(VMargin, &CheckBoxRect, pRect);
+		const int Logic = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pId, pTextId, pText, *pValue, &CheckBoxRect);
+		if(Logic)
+			*pValue ^= 1;
+		return Logic;
+	};
+	auto DoQmSettingsCheckboxAuto = [&](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin) {
+		return DoQmSettingsCheckbox(pId, pTextId, pText, pValue, pRect, VMargin);
+	};
+	auto DoQmSettingsMenuButton = [this](CButtonContainer *pButton, const char *pTextId, const char *pText, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f) {
+		return DoSettingsButton_Menu(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pButton, pTextId, pText, 0, pRect, Flags, Corners, Rounding);
+	};
+	auto RenderHudNotificationsBasicSettings = [&](CUIRect &CardContent) {
+		CUIRect Row;
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsSystem, "Show important server prompts as notifications", Localize("Show important server prompts as notifications"), &g_Config.m_QmHudNotificationsSystem, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsEcho, "Route Echo messages to notifications", Localize("Route Echo messages to notifications"), &g_Config.m_QmHudNotificationsEcho, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-hold-time", &LabelColValue, Localize("Notification hold time"), LgBodySize);
+			static int s_QmHudNotificationHoldInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationHoldInputId, ControlColValue, &g_Config.m_QmHudNotificationsHoldMs, 500, 10000, "ms");
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-text-size", &LabelColValue, Localize("Notification text size"), LgBodySize);
+			static int s_QmHudNotificationTextSizeInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationTextSizeInputId, ControlColValue, &g_Config.m_QmHudNotificationsTextSize, 1, 24);
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowAdvanced, "Advanced options", Localize("Advanced options"), &g_Config.m_QmHudNotificationsShowAdvanced, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+	};
+	auto RenderHudNotificationsAdvancedSettings = [&](CUIRect &CardContent) {
+		CUIRect Row;
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsUseCategoryFilters, "Use notification category filters", Localize("Use notification category filters"), &g_Config.m_QmHudNotificationsUseCategoryFilters, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		if(g_Config.m_QmHudNotificationsUseCategoryFilters)
+		{
+			CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowPrompts, "Show important server prompts", Localize("Show important server prompts"), &g_Config.m_QmHudNotificationsShowPrompts, &Row, LgLineHeight);
+			CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+			CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowUnknown, "Show unknown server messages", Localize("Show unknown server messages"), &g_Config.m_QmHudNotificationsShowUnknown, &Row, LgLineHeight);
+			CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+			CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowBasicInfo, "Show basic server information", Localize("Show basic server information"), &g_Config.m_QmHudNotificationsShowBasicInfo, &Row, LgLineHeight);
+			CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+			CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsShowHelpInfo, "Show server help and usage messages", Localize("Show server help and usage messages"), &g_Config.m_QmHudNotificationsShowHelpInfo, &Row, LgLineHeight);
+			CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		}
+
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsCompatSolo, "Detect compatible solo prompts from custom servers", Localize("Detect compatible solo prompts from custom servers"), &g_Config.m_QmHudNotificationsCompatSolo, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+		CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
+		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
+		DoQmSettingsLabel("qmclient-notifications-basic-info-note", &Row, Localize("Join, version, rules, and help messages stay in chat instead of popups"), LgBodySize * 0.82f);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+		static CButtonContainer s_QmHudNotificationBgColorId;
+		DoLine_ColorPicker(&s_QmHudNotificationBgColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Notification background"), &g_Config.m_QmHudNotificationsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.6f), false, nullptr, true);
+		static CButtonContainer s_QmHudNotificationTextColorId;
+		DoLine_ColorPicker(&s_QmHudNotificationTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("System prompt text color"), &g_Config.m_QmHudNotificationsTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmHudNotificationsEchoInheritColor, "Echo follows the original chat color", Localize("Echo follows the original chat color"), &g_Config.m_QmHudNotificationsEchoInheritColor, &Row, LgLineHeight);
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		static CButtonContainer s_QmHudNotificationEchoTextColorId;
+		DoLine_ColorPicker(&s_QmHudNotificationEchoTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Echo text color when not inheriting chat color"), &g_Config.m_QmHudNotificationsEchoTextColor, ColorRGBA(0.5f, 0.78f, 1.0f, 1.0f), false, nullptr, true);
+
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-popup-animation", &LabelColValue, Localize("Popup animation"), LgBodySize);
+			const char *apHudNotificationAnimDropDownNames[] = {Localize("Fade and slide"), Localize("Fade only"), Localize("No animation")};
+			static CUi::SDropDownState s_HudNotificationAnimDropDownState;
+			static CScrollRegion s_HudNotificationAnimDropDownScrollRegion;
+			s_HudNotificationAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HudNotificationAnimDropDownScrollRegion;
+			const int AnimSelectedNew = Ui()->DoDropDown(&ControlColValue, g_Config.m_QmHudNotificationsAnimType, apHudNotificationAnimDropDownNames, std::size(apHudNotificationAnimDropDownNames), s_HudNotificationAnimDropDownState);
+			if(g_Config.m_QmHudNotificationsAnimType != AnimSelectedNew)
+				g_Config.m_QmHudNotificationsAnimType = AnimSelectedNew;
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-animation-duration", &LabelColValue, Localize("Animation duration"), LgBodySize);
+			static int s_QmHudNotificationAnimInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationAnimInputId, ControlColValue, &g_Config.m_QmHudNotificationsAnimMs, 0, 2000, "ms");
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-max-visible", &LabelColValue, Localize("Max visible notifications"), LgBodySize);
+			static int s_QmHudNotificationMaxVisibleInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationMaxVisibleInputId, ControlColValue, &g_Config.m_QmHudNotificationsMaxVisible, 1, 8);
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+		CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-notifications-edge-margin", &LabelColValue, Localize("Edge margin"), LgBodySize);
+			static int s_QmHudNotificationEdgeMarginInputId;
+			RenderSliderWithValueInput(&s_QmHudNotificationEdgeMarginInputId, ControlColValue, &g_Config.m_QmHudNotificationsEdgeMargin, 0, 32);
+		}
+		CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 	};
 
 	struct SQmModuleDragState
@@ -2207,7 +2384,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		str_format(aColumnCacheExtra, sizeof(aColumnCacheExtra), "tab=%s rebuilt=%d full=%d left=%d right=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), RebuildColumnCacheDirty ? 1 : 0,
 			(int)s_vCachedFullModules.size(), (int)s_vCachedLeftModules.size(), (int)s_vCachedRightModules.size());
-		LogQmPerfStage("column_cache_rebuild", StageTimer.ElapsedMs(), RebuildColumnCacheDirty, aColumnCacheExtra);
+		LogQmPerfStage(Client(), "column_cache_rebuild", StageTimer.ElapsedMs(), RebuildColumnCacheDirty, aColumnCacheExtra);
 	}
 
 	const std::vector<const SQmModuleEntry *> &FullModules = s_vCachedFullModules;
@@ -2229,7 +2406,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::Gores: return "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用 快速输入 kuaisu shuru fast input 快速输入其他玩家";
 		case EQmModuleId::FocusMode: return "禅模式 zhuanzhi moshi focus mode zen mode 隐藏 yincang hud 名字 mingzi 特效 texiao 计分板 jifenban 沉浸 chenjing 无干扰 wuganrao 聊天 liaotian chat 非必要UI";
 		case EQmModuleId::KeyBinds: return "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding 武器辅助线 fuzhuxian 异常断开 yichang duankai timeout disconnect";
-		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 位置跳跃提示 tiaoyue tishi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
+		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
+		case EQmModuleId::JumpHint: return "位置跳跃提示 tiaoyue tishi jump hint position edge jump color yanse 颜色 horizontal position shuiping weizhi vertical position chuizhi weizhi font size ziti";
 		case EQmModuleId::SkinTransition:
 			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 类型 leixing 时长 shichang 锤中偷皮 chuizhong toupi";
 		case EQmModuleId::WeaponTrajectory: return "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi";
@@ -2319,7 +2497,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			}
 			const float LeftStartY = LeftPart.y;
 			CUIRect LeftContent = LeftPart;
-			DoModuleHeadline(LeftContent, -1, Localize("QmClient Community"), Localize("Official community links"));
+			RenderQmModuleHeadline(LeftContent, -1, Localize("QmClient Community"), Localize("Official community links"));
 			LeftContent.HSplitTop(LgLineHeight, &Row, &LeftContent);
 			{
 				static int s_QQGroupButtonId;
@@ -2339,12 +2517,12 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				if(s_QQCopied)
 				{
 					TextRender()->TextColor(0.0f, 1.0f, 0.0f, 1.0f);
-					Ui()->DoLabel(&Row, Localize("Copied"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-community-qq-copied", &Row, Localize("Copied"), LgBodySize);
 				}
 				else
 				{
 					TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f);
-					Ui()->DoLabel(&Row, Localize("QQ group: 1076765929 (click to copy)"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-community-qq-group-copy", &Row, Localize("QQ group: 1076765929 (click to copy)"), LgBodySize);
 				}
 				TextRender()->TextColor(TextRender()->DefaultTextColor());
 				if(Ui()->HotItem() == &s_QQGroupButtonId)
@@ -2355,11 +2533,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				CUIRect JoinQqGroupButton;
 				static CButtonContainer s_JoinQqGroupButton;
 				Row.VSplitLeft(LeftContent.w, &JoinQqGroupButton, nullptr);
-				if(DoButton_Menu(&s_JoinQqGroupButton, Localize("Join QQ group"), 0, &JoinQqGroupButton))
+				if(DoQmSettingsMenuButton(&s_JoinQqGroupButton, "qmclient-community-join-qq-group", Localize("Join QQ group"), &JoinQqGroupButton))
 					Client()->ViewLink(pQmClientQqGroupLink);
 			}
 			LeftContent.HSplitTop(LgLineSpacing * 2, nullptr, &LeftContent);
-			DoModuleHeadline(LeftContent, -3, Localize("Sponsor support"), Localize("Thanks for supporting QmClient"));
+			RenderQmModuleHeadline(LeftContent, -3, Localize("Sponsor support"), Localize("Thanks for supporting QmClient"));
 			if(const CMenuImage *pSponsorImage = FindMenuImage("sponsor"))
 			{
 				const float SponsorImageHeight = std::clamp(LeftContent.w * 0.30f, LgLineHeight * 2.2f, LgLineHeight * 4.2f);
@@ -2411,9 +2589,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					LeftContent.HSplitTop(LgLineHeight * 1.4f, &Row, &LeftContent);
 					TextRender()->TextColor(ColorRGBA(1.0f, 0.75f, 0.3f, 1.0f));
 					if(s_SponsorQrDecodeFailed)
-						Ui()->DoLabel(&Row, Localize("Could not load sponsor QR code. Check the Base64 data"), LgBodySize * 0.92f, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-community-sponsor-qr-decode-failed", &Row, Localize("Could not load sponsor QR code. Check the Base64 data"), LgBodySize * 0.92f);
 					else
-						Ui()->DoLabel(&Row, Localize("Sponsor QR code Base64 data is not configured"), LgBodySize * 0.92f, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-community-sponsor-qr-missing", &Row, Localize("Sponsor QR code Base64 data is not configured"), LgBodySize * 0.92f);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 				}
 			}
@@ -2423,7 +2601,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				CUIRect RecentUpdateButton;
 				static CButtonContainer s_RecentUpdateButton;
 				Row.VSplitLeft(SponsorButtonWidth, &RecentUpdateButton, nullptr);
-				if(DoButton_Menu(&s_RecentUpdateButton, Localize("View latest updates"), 0, &RecentUpdateButton))
+				if(DoQmSettingsMenuButton(&s_RecentUpdateButton, "qmclient-community-view-latest-updates", Localize("View latest updates"), &RecentUpdateButton))
 				{
 					Client()->ViewLink("https://qmclient.icu");
 				}
@@ -2446,17 +2624,17 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			CUIRect RightContent = TextRect;
 			RightContent.x -= RightContentShift;
 			RightContent.w += RightContentShift;
-			DoModuleHeadline(RightContent, -2, Localize("QmClient"), Localize("Developers and sponsors"));
+			RenderQmModuleHeadline(RightContent, -2, Localize("QmClient"), Localize("Developers and sponsors"));
 			RightContent.HSplitTop(LgLineHeight, &Row, &RightContent);
 			TextRender()->TextColor(GetRainbowColor(-6));
-			Ui()->DoLabel(&Row, "栖梦(璇梦),夏日,DYL", LgBodySize + 2.0f, TEXTALIGN_ML);
+			DoQmSettingsLabel("qmclient-community-developers-names", &Row, "栖梦(璇梦),夏日,DYL", LgBodySize + 2.0f);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 			constexpr float SponsorFontShrink = 4.0f;
 			constexpr float MinSponsorFontSize = 8.0f;
 			RightContent.HSplitTop(LgLineSpacing * 1.75f, nullptr, &RightContent);
 			RightContent.HSplitTop(LgLineHeight * 0.92f, &Row, &RightContent);
 			TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.82f));
-			Ui()->DoLabel(&Row, Localize("Sponsors:"), maximum(LgBodySize * 0.95f - SponsorFontShrink, MinSponsorFontSize), TEXTALIGN_ML);
+			DoQmSettingsLabel("qmclient-community-sponsors-label", &Row, Localize("Sponsors:"), maximum(LgBodySize * 0.95f - SponsorFontShrink, MinSponsorFontSize));
 			RightContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &RightContent);
 			CUIRect Divider;
 			RightContent.HSplitTop(1.0f, &Divider, &RightContent);
@@ -2518,7 +2696,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 			RightContent.HSplitTop(LgLineSpacing * 0.55f, nullptr, &RightContent);
 			RightContent.HSplitTop(LgLineHeight * 0.9f, &Row, &RightContent);
-			Ui()->DoLabel(&Row, Localize("Thank you for your company and trust. This is what gives me the courage to keep going."), LgBodySize * 0.93f, TEXTALIGN_ML);
+			DoQmSettingsLabel("qmclient-community-thanks", &Row, Localize("Thank you for your company and trust. This is what gives me the courage to keep going."), LgBodySize * 0.93f);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 			const float RightUsedHeight = RightContent.y - RightStartY;
@@ -2560,6 +2738,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return {3, Localize("Key Bindings"), Localize("Common key bindings")};
 		case EQmModuleId::MiniFeatures:
 			return {2, Localize("Dream Features"), Localize("Only what you can't imagine, nothing Dream can't do"), MiniFeaturesNewFeatureId()};
+		case EQmModuleId::JumpHint:
+			return {2, Localize("Position jump hint"), Localize("Jump hint text")};
 		case EQmModuleId::SkinTransition:
 			return {
 				5,
@@ -2613,7 +2793,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::InputOverlay:
 			return {11, Localize("Show on key"), Localize("Who stuffed OBS in here")};
 		case EQmModuleId::HudNotifications:
-			return {11, Localize("Notifications"), Localize("Move Echo and important system prompts to right-side popups")};
+			return {11, Localize("Notifications"), Localize("Show important server prompts and Echo messages as popups")};
 		case EQmModuleId::Voice:
 			return {12, Localize("Voice"), Localize("The best voice chat, of course!")};
 		case EQmModuleId::DynamicIsland:
@@ -2977,7 +3157,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			(!FunctionSnapshotPending) ? 1 : 0,
 			HasModuleSearch ? 1 : 0,
 			CompactLayout ? 1 : 0);
-		LogQmPerfStage("function_snapshot_state", 0.0, FunctionSnapshotPending || HasModuleSearch, aAsyncExtra);
+		LogQmPerfStage(Client(), "function_snapshot_state", 0.0, FunctionSnapshotPending || HasModuleSearch, aAsyncExtra);
 	}
 	else
 	{
@@ -3052,7 +3232,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		str_format(aFilterExtra, sizeof(aFilterExtra), "tab=%s search=%d search_text_len=%d compact=%d left=%d right=%d full=%d search_matches=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), HasModuleSearch ? 1 : 0, (int)str_length(pModuleSearch), CompactLayout ? 1 : 0,
 			(int)VisibleLeftModules.size(), (int)VisibleRightModules.size(), (int)VisibleFullModules.size(), (int)SearchVisibleModules.size());
-		LogQmPerfStage("模块筛选排序", StageTimer.ElapsedMs(), HasModuleSearch, aFilterExtra);
+		LogQmPerfStage(Client(), "模块筛选排序", StageTimer.ElapsedMs(), HasModuleSearch, aFilterExtra);
 	}
 	const int VisibleFullModuleCount = static_cast<int>(VisibleFullModules.size());
 	const int VisibleModuleCount = HasModuleSearch ?
@@ -3060,12 +3240,31 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					       static_cast<int>(VisibleLeftModules.size() + VisibleRightModules.size()) + VisibleFullModuleCount;
 	if(HasModuleSearch)
 		ResetModuleDragState();
+
+	static int s_LastRenderedQmClientTabForLightPath = -1;
+	static uint64_t s_QmFunctionFirstFrameLightFrame = 0;
+	if(!PrewarmOnly && !m_MenuTextPlanCollecting)
+	{
+		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_FUNCTION && s_LastRenderedQmClientTabForLightPath != QMCLIENT_SETTINGS_TAB_FUNCTION)
+			s_QmFunctionFirstFrameLightFrame = Client()->PerfFrame();
+		s_LastRenderedQmClientTabForLightPath = m_QmClientSettingsTab;
+	}
+	const bool FunctionFirstFrameLightPath = !PrewarmOnly && !m_MenuTextPlanCollecting &&
+						 m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_FUNCTION &&
+						 Client()->PerfFrame() == s_QmFunctionFirstFrameLightFrame;
+	auto QmFunctionModuleUsesLightFirstFramePath = [](EQmModuleId Id) {
+		return Id == EQmModuleId::PieMenu || Id == EQmModuleId::BlockWords || Id == EQmModuleId::Gores;
+	};
+	if(FunctionFirstFrameLightPath)
+	{
+		LogQmPerfStage(Client(), "function_first_frame_light_path", 0.0, true, "tab=function modules=pie_menu,block_words,gores");
+	}
 	{
 		char aVisibleExtra[128];
 		str_format(aVisibleExtra, sizeof(aVisibleExtra), "tab=%s visible=%d search=%d left=%d right=%d full=%d pending=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), VisibleModuleCount, HasModuleSearch ? 1 : 0,
 			(int)VisibleLeftModules.size(), (int)VisibleRightModules.size(), VisibleFullModuleCount, FunctionSnapshotPending ? 1 : 0);
-		LogQmPerfStage("可见模块", 0.0, HasModuleSearch || FunctionSnapshotPending || TabTransitionActive, aVisibleExtra);
+		LogQmPerfStage(Client(), "可见模块", 0.0, HasModuleSearch || FunctionSnapshotPending || TabTransitionActive, aVisibleExtra);
 	}
 
 	if(ShowSearchModuleControls)
@@ -3077,7 +3276,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		SearchContent.VSplitLeft(LgCardPadding, nullptr, &SearchContent);
 		SearchContent.VSplitRight(LgCardPadding, &SearchContent, nullptr);
 		SearchContent.HSplitTop(LgCardPadding, nullptr, &SearchContent);
-		DoModuleHeadline(SearchContent, -4, Localize("Feature Search"), Localize("Quickly locate feature modules"));
+		RenderQmModuleHeadline(SearchContent, -4, Localize("Feature Search"), Localize("Quickly locate feature modules"));
 		SearchContent.HSplitTop(LgLineHeight, &Row, &SearchContent);
 		Ui()->DoEditBox_Search(&ModuleSearchInput, &Row, LgBodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 		SearchContent.HSplitTop(LgLineSpacing * 0.65f, nullptr, &SearchContent);
@@ -3087,9 +3286,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		SearchContent.HSplitTop(LgLineHeight * 0.85f, &Row, &SearchContent);
 		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.82f));
 		if(FunctionSnapshotPending)
-			Ui()->DoLabel(&Row, Localize("Updating feature list..."), LgBodySize * 0.92f, TEXTALIGN_ML);
+			DoQmSettingsLabel("qmclient-search-updating-feature-list", &Row, Localize("Updating feature list..."), LgBodySize * 0.92f);
 		else if(HasModuleSearch && VisibleModuleCount == 0)
-			Ui()->DoLabel(&Row, Localize("No matching features found. Try other keywords"), LgBodySize * 0.92f, TEXTALIGN_ML);
+			DoQmSettingsLabel("qmclient-search-no-matching-features", &Row, Localize("No matching features found. Try other keywords"), LgBodySize * 0.92f);
 		else
 			Ui()->DoLabel(&Row, aSearchHint, LgBodySize * 0.92f, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -3109,7 +3308,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		MainView.HSplitTop(LgCardSpacing, nullptr, &MainView);
 		char aSearchExtra[128];
 		str_format(aSearchExtra, sizeof(aSearchExtra), "tab=%s search=%d matched=%d", QmSettingsTabName(m_QmClientSettingsTab), HasModuleSearch ? 1 : 0, VisibleModuleCount);
-		LogQmPerfStage("搜索卡片布局", StageTimer.ElapsedMs(), HasModuleSearch, aSearchExtra);
+		LogQmPerfStage(Client(), "搜索卡片布局", StageTimer.ElapsedMs(), HasModuleSearch, aSearchExtra);
 	}
 	//这是用来测试LXGW字体的汉字
 	{
@@ -3118,7 +3317,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			RenderContributorsModule(pModule);
 		char aContributorsExtra[128];
 		str_format(aContributorsExtra, sizeof(aContributorsExtra), "tab=%s count=%d", QmSettingsTabName(m_QmClientSettingsTab), (int)VisibleFullModules.size());
-		LogQmPerfStage("贡献者模块总计", StageTimer.ElapsedMs(), m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, aContributorsExtra);
+		LogQmPerfStage(Client(), "贡献者模块总计", StageTimer.ElapsedMs(), m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, aContributorsExtra);
 	}
 
 	auto RenderColumnModules = [&](const std::vector<const SQmModuleEntry *> &Modules, EQmModuleColumn ColumnId) {
@@ -3150,9 +3349,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				if(HeadlineInfo.m_pNewFeatureId != nullptr)
-					DoModuleHeadlineNew(CardContent, HeadlineInfo.m_RainbowIndex, HeadlineInfo.m_pTitle, HeadlineInfo.m_pTip, HeadlineInfo.m_pNewFeatureId);
+					RenderQmModuleHeadlineNew(CardContent, HeadlineInfo.m_RainbowIndex, HeadlineInfo.m_pTitle, HeadlineInfo.m_pTip, HeadlineInfo.m_pNewFeatureId);
 				else
-					DoModuleHeadline(CardContent, HeadlineInfo.m_RainbowIndex, HeadlineInfo.m_pTitle, HeadlineInfo.m_pTip);
+					RenderQmModuleHeadline(CardContent, HeadlineInfo.m_RainbowIndex, HeadlineInfo.m_pTitle, HeadlineInfo.m_pTip);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -3163,7 +3362,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				char aModuleExtra[160];
 				str_format(aModuleExtra, sizeof(aModuleExtra), "tab=%s module=%s column=%s collapsed=1 search=%d",
 					QmSettingsTabName(m_QmClientSettingsTab), QmModuleIdName(pModule->m_Id), QmModuleColumnToString(ColumnId), HasModuleSearch ? 1 : 0);
-				LogQmPerfStage("模块总计", ModuleTimer.ElapsedMs(), false, aModuleExtra);
+				LogQmPerfStage(Client(), "模块总计", ModuleTimer.ElapsedMs(), false, aModuleExtra);
 				continue;
 			}
 			switch(pModule->m_Id)
@@ -3177,30 +3376,32 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 0, Localize("Chat Bubble"), Localize("Show chat messages above players"));
+				RenderQmModuleHeadline(CardContent, 0, Localize("Chat Bubble"), Localize("Show chat messages above players"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmChatBubble, Localize("Show chat bubbles above players"), &g_Config.m_QmChatBubble, &Row, LgLineHeight);
+				DoQmSettingsCheckbox(&g_Config.m_QmChatBubble, "qmclient-chat-bubble-enable", Localize("Show chat bubbles above players"), &g_Config.m_QmChatBubble, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmChatBubble)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Duration"), LgBodySize, TEXTALIGN_ML);
+					CUIElement &DurationLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-chat-bubble-duration");
+					DoSettingsLabelStreamed(DurationLabel, &LabelCol, Localize("Duration"), LgBodySize, TEXTALIGN_ML);
 					static int s_QmChatBubbleDurationInputId;
 					RenderSliderWithValueInput(&s_QmChatBubbleDurationInputId, ControlCol, &g_Config.m_QmChatBubbleDuration, 1, 30, "s");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Bubble opacity"), LgBodySize, TEXTALIGN_ML);
+					CUIElement &BubbleOpacityLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-chat-bubble-opacity");
+					DoSettingsLabelStreamed(BubbleOpacityLabel, &LabelCol, Localize("Bubble opacity"), LgBodySize, TEXTALIGN_ML);
 					static int s_QmChatBubbleAlphaInputId;
 					RenderSliderWithValueInput(&s_QmChatBubbleAlphaInputId, ControlCol, &g_Config.m_QmChatBubbleAlpha, 0, 100, "%");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Font size"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-chat-bubble-font-size", &LabelCol, Localize("Font size"), LgBodySize);
 					static int s_QmChatBubbleFontSizeInputId;
 					RenderSliderWithValueInput(&s_QmChatBubbleFontSizeInputId, ControlCol, &g_Config.m_QmChatBubbleFontSize, 8, 32);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -3211,7 +3412,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					static CScrollRegion s_ChatBubbleAnimDropDownScrollRegion;
 					s_ChatBubbleAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_ChatBubbleAnimDropDownScrollRegion;
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Animation"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-chat-bubble-animation", &LabelCol, Localize("Animation"), LgBodySize);
 					const int AnimSelectedNew = Ui()->DoDropDown(&ControlCol, g_Config.m_QmChatBubbleAnimation, s_ChatBubbleAnimDropDownNames.data(), s_ChatBubbleAnimDropDownNames.size(), s_ChatBubbleAnimDropDownState);
 					if(g_Config.m_QmChatBubbleAnimation != AnimSelectedNew)
 						g_Config.m_QmChatBubbleAnimation = AnimSelectedNew;
@@ -3240,35 +3441,35 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 1, Localize("Gores Actor"), Localize("Auto chat in water"));
+				RenderQmModuleHeadline(CardContent, 1, Localize("Gores Actor"), Localize("Auto chat in water"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFreezeChatEnabled, Localize("Auto chat in water"), &g_Config.m_TcFreezeChatEnabled, &Row, LgLineHeight);
+				DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEnabled, "qmclient-gores-actor-enable", Localize("Auto chat in water"), &g_Config.m_TcFreezeChatEnabled, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_TcFreezeChatEnabled)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFreezeChatEmoticon, Localize("Send emoticon in water"), &g_Config.m_TcFreezeChatEmoticon, &Row, LgLineHeight);
+					DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEmoticon, "qmclient-gores-actor-emoticon", Localize("Send emoticon in water"), &g_Config.m_TcFreezeChatEmoticon, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					if(g_Config.m_TcFreezeChatEmoticon)
 					{
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						Ui()->DoScrollbarOption(&g_Config.m_TcFreezeChatEmoticonId, &g_Config.m_TcFreezeChatEmoticonId, &Row, Localize("Emoticon ID"), 0, 15);
+						DoSettingsScrollbarOption(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, "qmclient-gores-actor-emoticon-id", &g_Config.m_TcFreezeChatEmoticonId, &g_Config.m_TcFreezeChatEmoticonId, &Row, Localize("Emoticon ID"), 0, 15);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					}
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Chat message"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-gores-actor-chat-message", &LabelCol, Localize("Chat message"), LgBodySize);
 					static CLineInput s_FreezeChatMessageQmClient(g_Config.m_TcFreezeChatMessage, sizeof(g_Config.m_TcFreezeChatMessage));
 					s_FreezeChatMessageQmClient.SetEmptyText(Localize("Leave empty to disable"));
 					Ui()->DoEditBox(&s_FreezeChatMessageQmClient, &ControlCol, LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Ui()->DoScrollbarOption(&g_Config.m_TcFreezeChatChance, &g_Config.m_TcFreezeChatChance, &Row, Localize("Send probability"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+					DoSettingsScrollbarOption(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, "qmclient-gores-actor-send-probability", &g_Config.m_TcFreezeChatChance, &g_Config.m_TcFreezeChatChance, &Row, Localize("Send probability"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -3281,6 +3482,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			break;
 			case EQmModuleId::Gores:
 			{
+				const bool LightFirstFrame = FunctionFirstFrameLightPath && QmFunctionModuleUsesLightFirstFramePath(pModule->m_Id);
+				CPerfTimer LayoutTimer;
 				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
 				CUIRect CardGoresStart = Column;
 				s_GlassCards.push_back(CardGoresStart);
@@ -3288,7 +3491,22 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 2, Localize("Gores Mode"), Localize("King of Gores auto weapon switch"));
+				RenderQmModuleHeadline(CardContent, 2, Localize("Gores Mode"), Localize("King of Gores auto weapon switch"));
+				char aGoresLayoutExtra[96];
+				str_format(aGoresLayoutExtra, sizeof(aGoresLayoutExtra), "tab=%s module=gores light=%d", QmSettingsTabName(m_QmClientSettingsTab), LightFirstFrame ? 1 : 0);
+				LogQmPerfStage(Client(), "gores_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aGoresLayoutExtra);
+				CPerfTimer ControlsTimer;
+				if(LightFirstFrame)
+				{
+					CardContent.HSplitTop(LgLineHeight, nullptr, &CardContent);
+					CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+					Column.y = CardContent.y;
+					s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+					RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+					HandleModuleDragState(pModule, s_GlassCards.back());
+					LogQmPerfStage(Client(), "gores_controls", ControlsTimer.ElapsedMs(), true, "tab=function module=gores light=1");
+					break;
+				}
 
 				static CButtonContainer s_ReaderButtonGoresToggle, s_ClearButtonGoresToggle;
 				static CButtonContainer s_AxiomPasswordToggleButton, s_AxiomDummyPasswordToggleButton;
@@ -3296,11 +3514,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				static bool s_ShowAxiomDummyPassword = false;
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGores, Localize("Enable Gores mode"), &g_Config.m_QmGores, &Row, LgLineHeight);
+				DoQmSettingsCheckbox(&g_Config.m_QmGores, "qmclient-gores-enable", Localize("Enable Gores mode"), &g_Config.m_QmGores, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAxiomAutoLogin, Localize("Auto login Axiom server"), &g_Config.m_QmAxiomAutoLogin, &Row, LgLineHeight);
+				DoQmSettingsCheckbox(&g_Config.m_QmAxiomAutoLogin, "qmclient-gores-axiom-auto-login", Localize("Auto login Axiom server"), &g_Config.m_QmAxiomAutoLogin, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
 
 				if(g_Config.m_QmAxiomAutoLogin)
@@ -3325,7 +3543,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					};
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Axiom main account password"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-gores-axiom-main-password", &LabelCol, Localize("Axiom main account password"), LgBodySize);
 					CUIRect PasswordEditRect, PasswordToggleRect;
 					ControlCol.VSplitRight(ControlCol.h, &PasswordEditRect, &PasswordToggleRect);
 					static CLineInput s_AxiomLoginPassword(g_Config.m_QmAxiomLoginPassword, sizeof(g_Config.m_QmAxiomLoginPassword));
@@ -3337,7 +3555,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Axiom dummy password"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-gores-axiom-dummy-password", &LabelCol, Localize("Axiom dummy password"), LgBodySize);
 					CUIRect DummyPasswordEditRect, DummyPasswordToggleRect;
 					ControlCol.VSplitRight(ControlCol.h, &DummyPasswordEditRect, &DummyPasswordToggleRect);
 					static CLineInput s_AxiomDummyLoginPassword(g_Config.m_QmAxiomDummyLoginPassword, sizeof(g_Config.m_QmAxiomDummyLoginPassword));
@@ -3349,25 +3567,25 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				}
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGoresAutoEnable, Localize("Auto enable in Gores mode"), &g_Config.m_QmGoresAutoEnable, &Row, LgLineHeight);
+				DoQmSettingsCheckbox(&g_Config.m_QmGoresAutoEnable, "qmclient-gores-auto-enable", Localize("Auto enable in Gores mode"), &g_Config.m_QmGoresAutoEnable, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
 
 				if(g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGoresFastInput, Localize("Auto-toggle fast input"), &g_Config.m_QmGoresFastInput, &Row, LgLineHeight);
+					DoQmSettingsCheckbox(&g_Config.m_QmGoresFastInput, "qmclient-gores-fast-input", Localize("Auto-toggle fast input"), &g_Config.m_QmGoresFastInput, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGoresFastInputOthers, Localize("Auto-toggle fast input others"), &g_Config.m_QmGoresFastInputOthers, &Row, LgLineHeight);
+					DoQmSettingsCheckbox(&g_Config.m_QmGoresFastInputOthers, "qmclient-gores-fast-input-others", Localize("Auto-toggle fast input others"), &g_Config.m_QmGoresFastInputOthers, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGoresDisableIfWeapons, Localize("Disable after picking up other weapons"), &g_Config.m_QmGoresDisableIfWeapons, &Row, LgLineHeight);
+					DoQmSettingsCheckbox(&g_Config.m_QmGoresDisableIfWeapons, "qmclient-gores-disable-if-weapons", Localize("Disable after picking up other weapons"), &g_Config.m_QmGoresDisableIfWeapons, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmGoresHideGuides, Localize("Hide guide lines"), &g_Config.m_QmGoresHideGuides, &Row, LgLineHeight);
+					DoQmSettingsCheckbox(&g_Config.m_QmGoresHideGuides, "qmclient-gores-hide-guides", Localize("Hide guide lines"), &g_Config.m_QmGoresHideGuides, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
 				}
 
@@ -3375,12 +3593,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CUIRect BindLabel, BindKey;
 					Row.VSplitLeft(LgLabelWidth, &BindLabel, &BindKey);
-					Ui()->DoLabel(&BindLabel, Localize("Gores mode key"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-gores-mode-key", &BindLabel, Localize("Gores mode key"), LgBodySize);
 					CBindSlot GoresBind(KEY_UNKNOWN, KeyModifier::NONE);
 					{
+						CPerfTimer BindLookupTimer;
 						const auto GoresIt = CommandBindCache.find("toggle qm_gores 0 1");
 						if(GoresIt != CommandBindCache.end())
 							GoresBind = GoresIt->second;
+						LogQmPerfStage(Client(), "gores_bind_lookup", BindLookupTimer.ElapsedMs(), false, "tab=function module=gores");
 					}
 					const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&s_ReaderButtonGoresToggle, &s_ClearButtonGoresToggle, &BindKey, GoresBind, false);
 					if(Result.m_Bind != GoresBind)
@@ -3404,6 +3624,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
 				HandleModuleDragState(pModule, s_GlassCards.back());
+				LogQmPerfStage(Client(), "gores_controls", ControlsTimer.ElapsedMs(), false, "tab=function module=gores light=0");
 			}
 			break;
 			case EQmModuleId::FocusMode:
@@ -3415,60 +3636,60 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 2, Localize("Zen Mode"), Localize("What kind of life do you want to run?"));
+				RenderQmModuleHeadline(CardContent, 2, Localize("Zen Mode"), Localize("What kind of life do you want to run?"));
 
 				static CButtonContainer s_ReaderButtonFocusToggle, s_ClearButtonFocusToggle;
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmFocusMode, Localize("Enable Zen mode"), &g_Config.m_QmFocusMode, &Row, LgLineHeight);
+				DoQmSettingsCheckbox(&g_Config.m_QmFocusMode, "qmclient-focus-mode-enable", Localize("Enable Zen mode"), &g_Config.m_QmFocusMode, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CUIRect LeftColumn, RightColumn;
 				CardContent.VSplitMid(&LeftColumn, &RightColumn, LgCardPadding);
 
-				auto DoFocusSectionLabel = [&](CUIRect &Target, const char *pLabel) {
+				auto DoFocusSectionLabel = [&](CUIRect &Target, const char *pTextId, const char *pLabel) {
 					Target.HSplitTop(LgLineHeight * 0.72f, &Row, &Target);
 					TextRender()->TextColor(ColorRGBA(0.72f, 0.72f, 0.78f, 0.86f));
-					Ui()->DoLabel(&Row, Localize(pLabel), LgBodySize * 0.82f, TEXTALIGN_ML);
+					DoQmSettingsLabel(pTextId, &Row, Localize(pLabel), LgBodySize * 0.82f);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					Target.HSplitTop(LgLineSpacing * 0.45f, nullptr, &Target);
 				};
-				auto DoFocusCheckbox = [&](CUIRect &Target, int *pConfig, const char *pLabel) {
+				auto DoFocusCheckbox = [&](CUIRect &Target, int *pConfig, const char *pTextId, const char *pLabel) {
 					Target.HSplitTop(LgLineHeight, &Row, &Target);
-					DoButton_CheckBoxAutoVMarginAndSet(pConfig, Localize(pLabel), pConfig, &Row, LgLineHeight);
+					DoQmSettingsCheckbox(pConfig, pTextId, Localize(pLabel), pConfig, &Row, LgLineHeight);
 					Target.HSplitTop(LgLineSpacing, nullptr, &Target);
 				};
 
-				DoFocusSectionLabel(LeftColumn, "Interface");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideHud, "Hide HUD");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideMapProgress, "Hide map progress");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideInfoMessages, "Hide kill/finish messages");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideScoreboard, "Hide scoreboard");
+				DoFocusSectionLabel(LeftColumn, "qmclient-focus-section-interface", "Interface");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideHud, "qmclient-focus-hide-hud", "Hide HUD");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideMapProgress, "qmclient-focus-hide-map-progress", "Hide map progress");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideInfoMessages, "qmclient-focus-hide-info-messages", "Hide kill/finish messages");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideScoreboard, "qmclient-focus-hide-scoreboard", "Hide scoreboard");
 
-				DoFocusSectionLabel(LeftColumn, "Players");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideNames, "Hide names");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideNameplates, "Hide nameplates");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideDirectionIndicators, "Hide direction indicators");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideGuideLines, "Hide guide lines");
+				DoFocusSectionLabel(LeftColumn, "qmclient-focus-section-players", "Players");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideNames, "qmclient-focus-hide-names", "Hide names");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideNameplates, "qmclient-focus-hide-nameplates", "Hide nameplates");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideDirectionIndicators, "qmclient-focus-hide-direction-indicators", "Hide direction indicators");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideGuideLines, "qmclient-focus-hide-guide-lines", "Hide guide lines");
 
-				DoFocusSectionLabel(LeftColumn, "Visuals");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideJumpEffects, "Hide jump effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideKillEffects, "Hide death/respawn effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideExplosionEffects, "Hide explosion effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideFreezeEffects, "Hide freeze effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideHammerEffects, "Hide hammer effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideMuzzleEffects, "Hide weapon muzzle flashes");
+				DoFocusSectionLabel(LeftColumn, "qmclient-focus-section-visuals", "Visuals");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideJumpEffects, "qmclient-focus-hide-jump-effects", "Hide jump effects");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideKillEffects, "qmclient-focus-hide-kill-effects", "Hide death/respawn effects");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideExplosionEffects, "qmclient-focus-hide-explosion-effects", "Hide explosion effects");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideFreezeEffects, "qmclient-focus-hide-freeze-effects", "Hide freeze effects");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideHammerEffects, "qmclient-focus-hide-hammer-effects", "Hide hammer effects");
+				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideMuzzleEffects, "qmclient-focus-hide-muzzle-effects", "Hide weapon muzzle flashes");
 
-				DoFocusSectionLabel(RightColumn, "Audio");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteJumpSounds, "Mute jump sounds");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteDeathSounds, "Mute death/respawn sounds");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteHammerSounds, "Mute hammer sounds");
+				DoFocusSectionLabel(RightColumn, "qmclient-focus-section-audio", "Audio");
+				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteJumpSounds, "qmclient-focus-mute-jump-sounds", "Mute jump sounds");
+				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteDeathSounds, "qmclient-focus-mute-death-sounds", "Mute death/respawn sounds");
+				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteHammerSounds, "qmclient-focus-mute-hammer-sounds", "Mute hammer sounds");
 
-				DoFocusSectionLabel(RightColumn, "Chat");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideChat, "Hide player messages");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemInfoMessages, "Hide join/version prompts");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemMessages, "Hide server prompt notifications");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideEcho, "Hide Echo messages");
+				DoFocusSectionLabel(RightColumn, "qmclient-focus-section-chat", "Chat");
+				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideChat, "qmclient-focus-hide-chat", "Hide player messages");
+				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemInfoMessages, "qmclient-focus-hide-system-info-messages", "Hide join/version prompts");
+				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemMessages, "qmclient-focus-hide-system-messages", "Hide server prompt notifications");
+				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideEcho, "qmclient-focus-hide-echo", "Hide Echo messages");
 				CardContent.y = std::max(LeftColumn.y, RightColumn.y);
 				CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
 
@@ -3476,7 +3697,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CUIRect BindLabel, BindKey;
 					Row.VSplitLeft(LgLabelWidth, &BindLabel, &BindKey);
-					Ui()->DoLabel(&BindLabel, Localize("Zen mode key"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-focus-mode-key", &BindLabel, Localize("Zen mode key"), LgBodySize);
 					CBindSlot FocusBind(KEY_UNKNOWN, KeyModifier::NONE);
 					{
 						const auto FocusIt = CommandBindCache.find("toggle qm_focus_mode 0 1");
@@ -3517,7 +3738,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 3, Localize("Key Bindings"), Localize("Common key bindings"));
+				RenderQmModuleHeadline(CardContent, 3, Localize("Key Bindings"), Localize("Common key bindings"));
 
 				static CButtonContainer s_ReaderButtonDummyPseudo, s_ClearButtonDummyPseudo,
 					s_ReaderButtonDeepfly, s_ClearButtonDeepfly,
@@ -3564,65 +3785,108 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				const char *pMiniFeaturesNewFeatureId = MiniFeaturesNewFeatureId();
-				DoModuleHeadlineNew(CardContent, 2, Localize("Dream Features"), Localize("Only what you can't imagine, nothing Dream can't do!"), pMiniFeaturesNewFeatureId);
+				RenderQmModuleHeadlineNew(CardContent, 2, Localize("Dream Features"), Localize("Only what you can't imagine, nothing Dream can't do!"), pMiniFeaturesNewFeatureId);
 
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmFootParticles, Localize("Local particle effects"), &g_Config.m_QmFootParticles, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmFootParticles, "Local particle effects", Localize("Local particle effects"), &g_Config.m_QmFootParticles, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmClientMarkTrail, Localize("Remote particle effects"), &g_Config.m_QmClientMarkTrail, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmClientMarkTrail, "Remote particle effects", Localize("Remote particle effects"), &g_Config.m_QmClientMarkTrail, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmClientShowBadge, Localize("Show Qm badge"), &g_Config.m_QmClientShowBadge, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmClientShowBadge, "Show Qm badge", Localize("Show Qm badge"), &g_Config.m_QmClientShowBadge, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmShowOutdatedVersionWarning, Localize("Show outdated version warning"), &g_Config.m_QmShowOutdatedVersionWarning, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmShowOutdatedVersionWarning, "Show outdated version warning", Localize("Show outdated version warning"), &g_Config.m_QmShowOutdatedVersionWarning, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmScoreboardPoints, Localize("Scoreboard point check"), &g_Config.m_QmScoreboardPoints, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmScoreboardPoints, "Scoreboard point check", Localize("Scoreboard point check"), &g_Config.m_QmScoreboardPoints, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNewUi, Localize("New UI"), &g_Config.m_QmNewUi, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmNewUi, "New UI", Localize("New UI"), &g_Config.m_QmNewUi, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					const CUIRect NewImeRow = Row;
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNewIme, Localize("New IME"), &g_Config.m_QmNewIme, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmNewIme, "New IME", Localize("New IME"), &g_Config.m_QmNewIme, &Row, LgLineHeight);
 					if(!IsQmNewFeatureMarkRead("qm_2_63_0_new_ime"))
 						DrawQmNewFeatureDot(NewImeRow);
 					MarkQmNewFeatureHovered("qm_2_63_0_new_ime", NewImeRow);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRepeatEnabled, Localize("Enable repeat"), &g_Config.m_QmRepeatEnabled, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmRepeatEnabled, "Enable repeat", Localize("Enable repeat"), &g_Config.m_QmRepeatEnabled, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRandomEmoteOnHit, Localize("Random emoticon"), &g_Config.m_QmRandomEmoteOnHit, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmRandomEmoteOnHit, "Random emoticon", Localize("Random emoticon"), &g_Config.m_QmRandomEmoteOnHit, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmComboPopup, Localize("Combo"), &g_Config.m_QmComboPopup, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmComboPopup, "Combo", Localize("Combo"), &g_Config.m_QmComboPopup, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSayNoPop, Localize("Hide input emoticon"), &g_Config.m_QmSayNoPop, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmSayNoPop, "Hide input emoticon", Localize("Hide input emoticon"), &g_Config.m_QmSayNoPop, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmRainbowName, Localize("Rainbow name"), &g_Config.m_QmRainbowName, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcJumpHint, Localize("Position jump hint"), &g_Config.m_TcJumpHint, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmRainbowName, "Rainbow name", Localize("Rainbow name"), &g_Config.m_QmRainbowName, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
+
+				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+				Column.y = CardContent.y;
+				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+				HandleModuleDragState(pModule, s_GlassCards.back());
+			}
+			break;
+			case EQmModuleId::JumpHint:
+			{
+				// ========== 模块: 位置跳跃提示 ==========
+				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
+				CUIRect CardJumpHintStart = Column;
+				s_GlassCards.push_back(CardJumpHintStart);
+
+				Column.HSplitTop(LgCardPadding, nullptr, &Column);
+				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
+				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
+				RenderQmModuleHeadline(CardContent, 2, Localize("Position jump hint"), Localize("Jump hint text"));
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmJumpHint, "Position jump hint", Localize("Position jump hint"), &g_Config.m_QmJumpHint, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				static CButtonContainer s_QmJumpHintColorId;
+				DoLine_ColorPicker(&s_QmJumpHintColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Text color"), &g_Config.m_QmJumpHintColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-jump-hint-horizontal-position", &LabelCol, Localize("Horizontal position"), LgBodySize);
+				static int s_QmJumpHintXInputId;
+				RenderSliderWithValueInput(&s_QmJumpHintXInputId, ControlCol, &g_Config.m_QmJumpHintX, 0, 100, "%");
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-jump-hint-vertical-position", &LabelCol, Localize("Vertical position"), LgBodySize);
+				static int s_QmJumpHintYInputId;
+				RenderSliderWithValueInput(&s_QmJumpHintYInputId, ControlCol, &g_Config.m_QmJumpHintY, 0, 100, "%");
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-jump-hint-font-size", &LabelCol, Localize("Font size"), LgBodySize);
+				static int s_QmJumpHintSizeInputId;
+				RenderSliderWithValueInput(&s_QmJumpHintSizeInputId, ControlCol, &g_Config.m_QmJumpHintSize, 1, 50);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -3641,11 +3905,12 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 2, Localize("Weapon Trajectory"), Localize("Show grenade and laser trajectory preview"));
+				RenderQmModuleHeadline(CardContent, 2, Localize("Weapon Trajectory"), Localize("Show grenade and laser trajectory preview"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Display mode"), LgBodySize, TEXTALIGN_ML);
+				CUIElement &DisplayModeLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-display-mode");
+				DoSettingsLabelStreamed(DisplayModeLabel, &LabelCol, Localize("Display mode"), LgBodySize, TEXTALIGN_ML);
 				static std::vector<const char *> s_WeaponTrajectoryModeNames;
 				s_WeaponTrajectoryModeNames = {Localize("Off"), Localize("Show on key"), Localize("Always show")};
 				static CUi::SDropDownState s_WeaponTrajectoryModeDropDownState;
@@ -3663,14 +3928,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Line width"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-weapon-trajectory-line-width", &LabelCol, Localize("Line width"), LgBodySize);
 					static int s_QmWeaponTrajectoryWidthInputId;
 					RenderSliderWithValueInput(&s_QmWeaponTrajectoryWidthInputId, ControlCol, &g_Config.m_QmWeaponTrajectoryWidth, 1, 10);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Opacity"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-weapon-trajectory-opacity", &LabelCol, Localize("Opacity"), LgBodySize);
 					static int s_QmWeaponTrajectoryAlphaInputId;
 					RenderSliderWithValueInput(&s_QmWeaponTrajectoryAlphaInputId, ControlCol, &g_Config.m_QmWeaponTrajectoryAlpha, 0, 100, "%");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -3693,17 +3958,17 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 5, Localize("Skin transition"), Localize("Configure hammer skin steal and skin transition animations"));
+				RenderQmModuleHeadline(CardContent, 5, Localize("Skin transition"), Localize("Configure hammer skin steal and skin transition animations"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHammerSwapSkin, Localize("Hammer skin steal"), &g_Config.m_QmHammerSwapSkin, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmHammerSwapSkin, "Hammer skin steal", Localize("Hammer skin steal"), &g_Config.m_QmHammerSwapSkin, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				{
 					CUIRect LabelColValue, ControlColValue;
 					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Skin transition type"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-skin-transition-type", &LabelColValue, Localize("Skin transition type"), LgBodySize);
 					const char *apSkinTransitionDropDownNames[] = {
 						Localize("Afterimage pop"),
 						Localize("Smooth fade"),
@@ -3722,7 +3987,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Skin transition duration"), LgBodySize, TEXTALIGN_ML);
+				SLabelProperties SkinTransitionDurationLabelProps;
+				SkinTransitionDurationLabelProps.m_DisallowNewline = true;
+				SkinTransitionDurationLabelProps.m_StopAtEnd = true;
+				SkinTransitionDurationLabelProps.m_MinimumFontSize = 6.0f;
+				DoQmSettingsLabel("qmclient-skin-transition-duration", &LabelCol, Localize("Skin transition duration"), LgBodySize, TEXTALIGN_ML, SkinTransitionDurationLabelProps);
 				static int s_QmSkinChangeTransitionMsInputId;
 				RenderSliderWithValueInput(&s_QmSkinChangeTransitionMsInputId, ControlCol, &g_Config.m_QmSkinChangeTransitionMs, 0, 2000, "ms");
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -3744,35 +4013,35 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 4, Localize("Show Coordinates"), Localize("Show coordinates above players"));
+				RenderQmModuleHeadline(CardContent, 4, Localize("Show Coordinates"), Localize("Show coordinates above players"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateCoordsOwn, Localize("Show own coordinates"), &g_Config.m_QmNameplateCoordsOwn, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordsOwn, "Show own coordinates", Localize("Show own coordinates"), &g_Config.m_QmNameplateCoordsOwn, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateCoords, Localize("Show other players' coordinates"), &g_Config.m_QmNameplateCoords, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoords, "Show other players' coordinates", Localize("Show other players' coordinates"), &g_Config.m_QmNameplateCoords, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateCoordX, Localize("Show X"), &g_Config.m_QmNameplateCoordX, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordX, "Show X", Localize("Show X"), &g_Config.m_QmNameplateCoordX, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateCoordY, Localize("Show Y"), &g_Config.m_QmNameplateCoordY, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordY, "Show Y", Localize("Show Y"), &g_Config.m_QmNameplateCoordY, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateCoordXAlignHint, Localize("X alignment hint with me"), &g_Config.m_QmNameplateCoordXAlignHint, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordXAlignHint, "X alignment hint with me", Localize("X alignment hint with me"), &g_Config.m_QmNameplateCoordXAlignHint, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateCoordXAlignHintStrict, Localize("Strict mode"), &g_Config.m_QmNameplateCoordXAlignHintStrict, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordXAlignHintStrict, "Strict mode", Localize("Strict mode"), &g_Config.m_QmNameplateCoordXAlignHintStrict, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Detection time"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-show-coordinates-detection-time", &LabelCol, Localize("Detection time"), LgBodySize);
 				static int s_CoordXAlignHintWindowSliderId;
 				CUIRect WindowSliderRect, WindowValueRect;
 				ControlCol.VSplitRight(maximum(46.0f, 46.0f * UiScale), &WindowSliderRect, &WindowValueRect);
@@ -3807,18 +4076,18 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 5, Localize("Streamer Mode"), Localize("Damn grenadiers, all go to spa!"));
+				RenderQmModuleHeadline(CardContent, 5, Localize("Streamer Mode"), Localize("Damn grenadiers, all go to spa!"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmStreamerHideNames, Localize("Replace non-friend names with ID"), &g_Config.m_QmStreamerHideNames, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmStreamerHideNames, "Replace non-friend names with ID", Localize("Replace non-friend names with ID"), &g_Config.m_QmStreamerHideNames, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmStreamerHideSkins, Localize("Replace non-friend skins with default"), &g_Config.m_QmStreamerHideSkins, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmStreamerHideSkins, "Replace non-friend skins with default", Localize("Replace non-friend skins with default"), &g_Config.m_QmStreamerHideSkins, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmStreamerScoreboardDefaultFlags, Localize("Use default flags on scoreboard"), &g_Config.m_QmStreamerScoreboardDefaultFlags, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmStreamerScoreboardDefaultFlags, "Use default flags on scoreboard", Localize("Use default flags on scoreboard"), &g_Config.m_QmStreamerScoreboardDefaultFlags, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
@@ -3838,39 +4107,39 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 6, Localize("Friend Notifications"), Localize("Friend online and join notifications"));
+				RenderQmModuleHeadline(CardContent, 6, Localize("Friend Notifications"), Localize("Friend online and join notifications"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmFriendOnlineNotify, Localize("Notify when friends come online"), &g_Config.m_QmFriendOnlineNotify, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendOnlineNotify, "Notify when friends come online", Localize("Notify when friends come online"), &g_Config.m_QmFriendOnlineNotify, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmFriendOnlineAutoRefresh, Localize("Auto refresh server list"), &g_Config.m_QmFriendOnlineAutoRefresh, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendOnlineAutoRefresh, "Auto refresh server list", Localize("Auto refresh server list"), &g_Config.m_QmFriendOnlineAutoRefresh, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmFriendOnlineAutoRefresh)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Refresh interval"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-friend-notifications-refresh-interval", &LabelCol, Localize("Refresh interval"), LgBodySize);
 					static int s_QmFriendOnlineRefreshSecondsInputId;
 					RenderSliderWithValueInput(&s_QmFriendOnlineRefreshSecondsInputId, ControlCol, &g_Config.m_QmFriendOnlineRefreshSeconds, 5, 300, "s");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmFriendEnterAutoGreet, Localize("Auto greet friends entering map"), &g_Config.m_QmFriendEnterAutoGreet, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendEnterAutoGreet, "Auto greet friends entering map", Localize("Auto greet friends entering map"), &g_Config.m_QmFriendEnterAutoGreet, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmFriendEnterBroadcast, Localize("Large text announcement for friend joining"), &g_Config.m_QmFriendEnterBroadcast, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendEnterBroadcast, "Large text announcement for friend joining", Localize("Large text announcement for friend joining"), &g_Config.m_QmFriendEnterBroadcast, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmFriendEnterBroadcast)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Large text content"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-friend-notifications-large-text-content", &LabelCol, Localize("Large text content"), LgBodySize);
 					static CLineInput s_FriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, sizeof(g_Config.m_QmFriendEnterBroadcastText));
 					s_FriendEnterBroadcastText.SetEmptyText(Localize("Please use %s as friend name"));
 					Ui()->DoEditBox(&s_FriendEnterBroadcastText, &ControlCol, LgBodySize);
@@ -3881,7 +4150,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Greeting text"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-friend-notifications-greeting-text", &LabelCol, Localize("Greeting text"), LgBodySize);
 					static CLineInput s_FriendEnterGreetText(g_Config.m_QmFriendEnterGreetText, sizeof(g_Config.m_QmFriendEnterGreetText));
 					s_FriendEnterGreetText.SetEmptyText(Localize("Leave empty to disable"));
 					Ui()->DoEditBox(&s_FriendEnterGreetText, &ControlCol, LgBodySize);
@@ -3897,6 +4166,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			break;
 			case EQmModuleId::BlockWords:
 			{
+				const bool LightFirstFrame = FunctionFirstFrameLightPath && QmFunctionModuleUsesLightFirstFramePath(pModule->m_Id);
+				CPerfTimer LayoutTimer;
 				// ========== 模块: 屏蔽词 ==========
 				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
 				CUIRect CardBlockWordsStart = Column;
@@ -3905,21 +4176,38 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 7, Localize("Word Filter"), Localize("Idiot word filter"));
+				RenderQmModuleHeadline(CardContent, 7, Localize("Word Filter"), Localize("Idiot word filter"));
+				char aBlockWordsLayoutExtra[96];
+				str_format(aBlockWordsLayoutExtra, sizeof(aBlockWordsLayoutExtra), "tab=%s module=block_words light=%d", QmSettingsTabName(m_QmClientSettingsTab), LightFirstFrame ? 1 : 0);
+				LogQmPerfStage(Client(), "block_words_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aBlockWordsLayoutExtra);
+				CPerfTimer ControlsTimer;
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmBlockWordsShowConsole, Localize("Show blocked words in console"), &g_Config.m_QmBlockWordsShowConsole, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmBlockWordsShowConsole, "Show blocked words in console", Localize("Show blocked words in console"), &g_Config.m_QmBlockWordsShowConsole, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				if(LightFirstFrame)
+				{
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmBlockWordsEnabled, "Enable word filter list", Localize("Enable word filter list"), &g_Config.m_QmBlockWordsEnabled, &Row, LgLineHeight);
+					CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+					Column.y = CardContent.y;
+					s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+					RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+					HandleModuleDragState(pModule, s_GlassCards.back());
+					LogQmPerfStage(Client(), "block_words_controls", ControlsTimer.ElapsedMs(), true, "tab=function module=block_words light=1");
+					break;
+				}
 
 				static CButtonContainer s_BlockWordsConsoleColorId;
 				DoLine_ColorPicker(&s_BlockWordsConsoleColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Console color"), &g_Config.m_QmBlockWordsConsoleColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmBlockWordsEnabled, Localize("Enable word filter list"), &g_Config.m_QmBlockWordsEnabled, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmBlockWordsEnabled, "Enable word filter list", Localize("Enable word filter list"), &g_Config.m_QmBlockWordsEnabled, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmBlockWordsMultiReplace, Localize("Use multi-char replacement based on word length"), &g_Config.m_QmBlockWordsMultiReplace, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmBlockWordsMultiReplace, "Use multi-char replacement based on word length", Localize("Use multi-char replacement based on word length"), &g_Config.m_QmBlockWordsMultiReplace, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				static CLineInputBuffered<8> s_BlockWordsReplaceInput;
@@ -3937,7 +4225,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Replacement chars"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-word-filter-replacement-chars", &LabelCol, Localize("Replacement chars"), LgBodySize);
 				if(Ui()->DoEditBox(&s_BlockWordsReplaceInput, &ControlCol, LgBodySize))
 				{
 					char aReplacement[8];
@@ -3950,7 +4238,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Replace mode"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-word-filter-replace-mode", &LabelCol, Localize("Replace mode"), LgBodySize);
 				CUIRect ModeRow = ControlCol;
 				CUIRect ModeButton;
 				static CButtonContainer s_BlockWordsModeRegex, s_BlockWordsModeFull, s_BlockWordsModeBoth;
@@ -3983,7 +4271,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				const float BlockInputHeight = CalcQiaFenInputHeight(TextRender(), s_BlockWordsInput.GetString(), BlockInputWidth, LgBodySize, BlockInputLineSpacing, LgLineHeight);
 				CardContent.HSplitTop(BlockInputHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Word Filter"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-word-filter-label", &LabelCol, Localize("Word Filter"), LgBodySize);
 				if(DoEditBoxMultiLine(Ui(), &s_BlockWordsInput, &ControlCol, LgBodySize, BlockInputLineSpacing))
 					str_copy(g_Config.m_QmBlockWordsList, s_BlockWordsInput.GetString(), sizeof(g_Config.m_QmBlockWordsList));
 
@@ -3992,6 +4280,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
 				HandleModuleDragState(pModule, s_GlassCards.back());
+				LogQmPerfStage(Client(), "block_words_controls", ControlsTimer.ElapsedMs(), false, "tab=function module=block_words light=0");
 			}
 			break;
 			case EQmModuleId::Translate:
@@ -4004,14 +4293,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 8, Localize("Translate"), Localize("Chat translation settings"));
+				RenderQmModuleHeadline(CardContent, 8, Localize("Translate"), Localize("Chat translation settings"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmTranslateAuto, Localize("Auto translate received messages"), &g_Config.m_QmTranslateAuto, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateAuto, "Auto translate received messages", Localize("Auto translate received messages"), &g_Config.m_QmTranslateAuto, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmTranslateAutoOutgoing, Localize("Auto translate sent messages"), &g_Config.m_QmTranslateAutoOutgoing, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateAutoOutgoing, "Auto translate sent messages", Localize("Auto translate sent messages"), &g_Config.m_QmTranslateAutoOutgoing, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				static std::vector<const char *> s_TranslateBackendDropDownNames;
@@ -4030,7 +4319,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Translation service"), LgBodySize, TEXTALIGN_ML);
+				CUIElement &TranslationServiceLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-translation-service");
+				DoSettingsLabelStreamed(TranslationServiceLabel, &LabelCol, Localize("Translation service"), LgBodySize, TEXTALIGN_ML);
 				const int BackendSelectedNew = Ui()->DoDropDown(&ControlCol, BackendSelectedOld, s_TranslateBackendDropDownNames.data(), s_TranslateBackendDropDownNames.size(), s_TranslateBackendDropDownState);
 				if(BackendSelectedNew != BackendSelectedOld)
 				{
@@ -4067,13 +4357,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				if(IsFtapiBackend)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmTranslateFtapiAutoEnable, Localize("Enable FTAPI auto-translate (may overload the service)"), &g_Config.m_QmTranslateFtapiAutoEnable, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateFtapiAutoEnable, "Enable FTAPI auto-translate (may overload the service)", Localize("Enable FTAPI auto-translate (may overload the service)"), &g_Config.m_QmTranslateFtapiAutoEnable, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					// FTAPI 警告提示
 					CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
 					Row.VMargin(LgLabelWidth, &Row);
-					Ui()->DoLabel(&Row, Localize("⚠️ FTAPI is a free service. Excessive use may cause service suspension."), LgBodySize * 0.8f, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-ftapi-warning", &Row, Localize("⚠️ FTAPI is a free service. Excessive use may cause service suspension."), LgBodySize * 0.8f);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -4116,7 +4406,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Target language"), LgBodySize, TEXTALIGN_ML);
+				CUIElement &TargetLanguageLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-target-language");
+				DoSettingsLabelStreamed(TargetLanguageLabel, &LabelCol, Localize("Target language"), LgBodySize, TEXTALIGN_ML);
 
 				// 下拉框 + 输入框组合
 				{
@@ -4131,7 +4422,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Minimum match chars"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-translate-minimum-match-chars", &LabelCol, Localize("Minimum match chars"), LgBodySize);
 				{
 					static int s_LocalDetectMinCharsSelectorId;
 					RenderSliderWithNumberInput(&s_LocalDetectMinCharsSelectorId, ControlCol, &g_Config.m_QmTranslateLocalDetectMinChars, 1, 12);
@@ -4140,7 +4431,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Target language ratio"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-translate-target-language-ratio", &LabelCol, Localize("Target language ratio"), LgBodySize);
 				{
 					static int s_LocalDetectRatioSelectorId;
 					RenderSliderWithNumberInput(&s_LocalDetectRatioSelectorId, ControlCol, &g_Config.m_QmTranslateLocalDetectRatio, 50, 100);
@@ -4149,18 +4440,18 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
 				Row.VMargin(LgLabelWidth, &Row);
-				Ui()->DoLabel(&Row, Localize("Messages that already look like the target language will skip auto-translate"), LgBodySize * 0.8f, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-translate-skip-target-language-note", &Row, Localize("Messages that already look like the target language will skip auto-translate"), LgBodySize * 0.8f);
 				CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
 				CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
 				Row.VMargin(LgLabelWidth, &Row);
-				Ui()->DoLabel(&Row, Localize("Numeric-only messages will be skipped"), LgBodySize * 0.8f, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-translate-skip-numeric-note", &Row, Localize("Numeric-only messages will be skipped"), LgBodySize * 0.8f);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				// Endpoint 配置 - 根据后端类型显示不同的端点输入
 				if(IsTencentCloudBackend)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Endpoint"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-tencent-endpoint", &LabelCol, Localize("Endpoint"), LgBodySize);
 					static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateTcEndpoint, sizeof(g_Config.m_QmTranslateTcEndpoint));
 					s_TranslateEndpoint.SetEmptyText("https://tmt.tencentcloudapi.com/");
 					Ui()->DoEditBox(&s_TranslateEndpoint, &ControlCol, LgBodySize);
@@ -4170,7 +4461,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Endpoint"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-aliyun-endpoint", &LabelCol, Localize("Endpoint"), LgBodySize);
 					static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateLibreEndpoint, sizeof(g_Config.m_QmTranslateLibreEndpoint));
 					s_TranslateEndpoint.SetEmptyText("http://localhost:5000");
 					Ui()->DoEditBox(&s_TranslateEndpoint, &ControlCol, LgBodySize);
@@ -4182,7 +4473,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Region"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-region", &LabelCol, Localize("Region"), LgBodySize);
 					static CLineInput s_TranslateRegion(g_Config.m_QmTranslateTcRegion, sizeof(g_Config.m_QmTranslateTcRegion));
 					s_TranslateRegion.SetEmptyText("ap-guangzhou");
 					Ui()->DoEditBox(&s_TranslateRegion, &ControlCol, LgBodySize);
@@ -4190,7 +4481,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("SecretId"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-secret-id", &LabelCol, Localize("SecretId"), LgBodySize);
 					static CLineInput s_TranslateSecretId(g_Config.m_QmTranslateTcSecretId, sizeof(g_Config.m_QmTranslateTcSecretId));
 					s_TranslateSecretId.SetEmptyText(Localize("Tencent Cloud SecretId"));
 					Ui()->DoEditBox(&s_TranslateSecretId, &ControlCol, LgBodySize);
@@ -4198,7 +4489,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("SecretKey"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-secret-key", &LabelCol, Localize("SecretKey"), LgBodySize);
 					static CLineInput s_TranslateSecretKey(g_Config.m_QmTranslateTcSecretKey, sizeof(g_Config.m_QmTranslateTcSecretKey));
 					s_TranslateSecretKey.SetEmptyText(Localize("Tencent Cloud SecretKey"));
 					s_TranslateSecretKey.SetHidden(true);
@@ -4209,7 +4500,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("API key"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-api-key", &LabelCol, Localize("API key"), LgBodySize);
 					static CLineInput s_TranslateKey(g_Config.m_QmTranslateLibreKey, sizeof(g_Config.m_QmTranslateLibreKey));
 					s_TranslateKey.SetHidden(true);
 					Ui()->DoEditBox(&s_TranslateKey, &ControlCol, LgBodySize);
@@ -4230,7 +4521,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("LLM provider"), LgBodySize, TEXTALIGN_ML);
+					CUIElement &LlmProviderLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-llm-provider");
+					DoSettingsLabelStreamed(LlmProviderLabel, &LabelCol, Localize("LLM provider"), LgBodySize, TEXTALIGN_ML);
 					const int NewProvider = Ui()->DoDropDown(&ControlCol, g_Config.m_QmTranslateLlmProvider, s_LlmProviderDropDownNames.data(), s_LlmProviderDropDownNames.size(), s_LlmProviderDropDownState);
 					if(NewProvider != g_Config.m_QmTranslateLlmProvider)
 					{
@@ -4287,7 +4579,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					// 各 Provider 的端点配置（允许覆盖默认）
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Endpoint (optional)"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-llm-endpoint-optional", &LabelCol, Localize("Endpoint (optional)"), LgBodySize);
 
 					static CLineInput s_LlmEndpointZhipu(g_Config.m_QmTranslateLlmEndpointZhipu, sizeof(g_Config.m_QmTranslateLlmEndpointZhipu));
 					static CLineInput s_LlmEndpointDeepseek(g_Config.m_QmTranslateLlmEndpointDeepseek, sizeof(g_Config.m_QmTranslateLlmEndpointDeepseek));
@@ -4322,7 +4614,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					// 各 Provider 的模型配置
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Model"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-llm-model", &LabelCol, Localize("Model"), LgBodySize);
 
 					static CLineInput s_LlmModelZhipu(g_Config.m_QmTranslateLlmModelZhipu, sizeof(g_Config.m_QmTranslateLlmModelZhipu));
 					static CLineInput s_LlmModelDeepseek(g_Config.m_QmTranslateLlmModelDeepseek, sizeof(g_Config.m_QmTranslateLlmModelDeepseek));
@@ -4361,7 +4653,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					// LLM 并发数配置
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Concurrency (0 = auto)"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-llm-concurrency", &LabelCol, Localize("Concurrency (0 = auto)"), LgBodySize);
 					static int s_LlmConcurrencySelectorId;
 					RenderSliderWithNumberInput(&s_LlmConcurrencySelectorId, ControlCol, &g_Config.m_QmTranslateLlmConcurrency, 0, 20);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -4412,7 +4704,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					// 思考模式开关
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmTranslateLlmEnableThinking, Localize("Enable thinking mode (slower)"), &g_Config.m_QmTranslateLlmEnableThinking, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateLlmEnableThinking, "Enable thinking mode (slower)", Localize("Enable thinking mode (slower)"), &g_Config.m_QmTranslateLlmEnableThinking, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					// 思考模式提示
@@ -4440,7 +4732,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					// 自定义提示词配置
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Custom prompt template"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-translate-custom-prompt-template", &LabelCol, Localize("Custom prompt template"), LgBodySize);
 					static CLineInput s_CustomPrompt(g_Config.m_QmTranslateSystemPrompt, sizeof(g_Config.m_QmTranslateSystemPrompt));
 					s_CustomPrompt.SetEmptyText(Localize("Leave empty to use default prompt"));
 					Ui()->DoEditBox(&s_CustomPrompt, &ControlCol, LgBodySize);
@@ -4450,11 +4742,23 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				// 入站语言和出站语言配置
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Send source language"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-translate-send-source-language", &LabelCol, Localize("Send source language"), LgBodySize);
 
 				// 下拉框 + 输入框组合
 				{
-					static const char *s_apSourceNames[] = {Localize("Auto"), "中文", "English", "日本語", "한국어", "繁體中文", "Русский", "Deutsch", "Français", "Español", "Português"};
+					static const char *s_apSourceNames[] = {
+						Localize("Auto"),
+						"中文",
+						"English",
+						"日本語",
+						"한국어",
+						"繁體中文",
+						"Русский",
+						"Deutsch",
+						"Français",
+						"Español",
+						"Português",
+					};
 					static const char *s_apSourceCodes[] = {"auto", "zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
 					static CUi::SDropDownState s_SourceLangDropDown;
 
@@ -4465,7 +4769,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Send target language"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-translate-send-target-language", &LabelCol, Localize("Send target language"), LgBodySize);
 
 				// 下拉框 + 输入框组合
 				{
@@ -4480,7 +4784,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Send translation method"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-translate-send-method", &LabelCol, Localize("Send translation method"), LgBodySize);
 				{
 					static const char *s_apOutgoingModeNames[] = {
 						Localize("Translate only when needed"),
@@ -4519,7 +4823,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 9, Localize("Translate button"), Localize("Customize translate button and menu colors"));
+				RenderQmModuleHeadline(CardContent, 9, Localize("Translate button"), Localize("Customize translate button and menu colors"));
 				NTranslateUiSettings::RenderTranslateUiModule(this, CardContent, LgLineHeight, LgBodySize, LgLineSpacing);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
@@ -4539,11 +4843,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 8, Localize("Keyword Reply"), Localize("I am a robot"));
+				RenderQmModuleHeadline(CardContent, 8, Localize("Keyword Reply"), Localize("I am a robot"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Auto reply cooldown"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-keyword-reply-auto-reply-cooldown", &LabelCol, Localize("Auto reply cooldown"), LgBodySize);
 				static int s_QmAutoReplyCooldownInputId;
 				RenderSliderWithValueInput(&s_QmAutoReplyCooldownInputId, ControlCol, &g_Config.m_QmAutoReplyCooldown, 0, 30, "s");
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -4580,10 +4884,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				};
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmKeywordReplyEnabled, Localize("Enable keyword reply"), &g_Config.m_QmKeywordReplyEnabled, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmKeywordReplyEnabled, "Enable keyword reply", Localize("Enable keyword reply"), &g_Config.m_QmKeywordReplyEnabled, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmKeywordReplyUseDummy, Localize("Reply with dummy"), &g_Config.m_QmKeywordReplyUseDummy, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmKeywordReplyUseDummy, "Reply with dummy", Localize("Reply with dummy"), &g_Config.m_QmKeywordReplyUseDummy, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				static std::vector<std::unique_ptr<SAutoReplyRuleInputRow>> s_vKeywordRuleRows;
@@ -4597,12 +4901,12 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					SyncRuleRowsFromConfig(s_vKeywordRuleRows, s_KeywordRuleRowsInited, aDecodedKeywordRules);
 					char aRuleExtra[96];
 					str_format(aRuleExtra, sizeof(aRuleExtra), "rows=%d active=%d", (int)s_vKeywordRuleRows.size(), g_Config.m_QmKeywordReplyEnabled);
-					LogQmPerfStage("关键词规则同步", StageTimer.ElapsedMs(), false, aRuleExtra);
+					LogQmPerfStage(Client(), "关键词规则同步", StageTimer.ElapsedMs(), false, aRuleExtra);
 				}
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				Ui()->DoLabel(&LabelCol, Localize("Keyword rules"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-keyword-reply-rules", &LabelCol, Localize("Keyword rules"), LgBodySize);
 				CUIRect AddRuleButtonRect;
 				ControlCol.VSplitRight(maximum(LgLineHeight, 24.0f * UiScale), &ControlCol, &AddRuleButtonRect);
 				if(DoButton_Menu(&s_KeywordAddRuleButton, "+", 0, &AddRuleButtonRect))
@@ -4628,10 +4932,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					ControlCol.VSplitLeft(maximum(40.0f, 40.0f * UiScale), &SendCol, &ReplyCol);
 					OptionsCol.VSplitLeft(maximum(54.0f, 54.0f * UiScale), &RenameCol, &OptionsCol);
 					OptionsCol.VSplitLeft(maximum(54.0f, 54.0f * UiScale), &RegexCol, &OptionsCol);
-					DoButton_CheckBoxAutoVMarginAndSet(&pRuleRow->m_AutoRename, Localize("Rename"), &pRuleRow->m_AutoRename, &RenameCol, LgLineHeight);
-					DoButton_CheckBoxAutoVMarginAndSet(&pRuleRow->m_Regex, Localize("Regex"), &pRuleRow->m_Regex, &RegexCol, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&pRuleRow->m_AutoRename, "Rename", Localize("Rename"), &pRuleRow->m_AutoRename, &RenameCol, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&pRuleRow->m_Regex, "Regex", Localize("Regex"), &pRuleRow->m_Regex, &RegexCol, LgLineHeight);
 					Ui()->DoEditBox(&pRuleRow->m_TriggerInput, &TriggerCol, LgBodySize);
-					Ui()->DoLabel(&SendCol, Localize("Send"), LgBodySize, TEXTALIGN_MC);
+					DoQmSettingsLabel("qmclient-keyword-reply-send-label", &SendCol, Localize("Send"), LgBodySize, TEXTALIGN_MC);
 					Ui()->DoEditBox(&pRuleRow->m_ReplyInput, &ReplyCol, LgBodySize);
 					const bool RemoveClicked = DoButton_Menu(&s_vKeywordRemoveRuleButtons[i], "-", 0, &RemoveButtonRect);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -4662,7 +4966,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
 					TextRender()->TextColor(1.0f, 0.2f, 0.2f, 1.0f);
-					Ui()->DoLabel(&Row, Localize("Both sides of keyword rules must be filled"), LgBodySize * 0.7f, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-keyword-reply-rule-validation", &Row, Localize("Both sides of keyword rules must be filled"), LgBodySize * 0.7f);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
@@ -4676,6 +4980,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			break;
 			case EQmModuleId::PieMenu:
 			{
+				const bool LightFirstFrame = FunctionFirstFrameLightPath && QmFunctionModuleUsesLightFirstFramePath(pModule->m_Id);
+				CPerfTimer LayoutTimer;
 				// ========== 模块: 饼菜单 ==========
 				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
 				CUIRect Card36Start = Column;
@@ -4684,36 +4990,50 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 9, Localize("Pie Menu"), Localize("Drawing a big pie in the sky"));
+				RenderQmModuleHeadline(CardContent, 9, Localize("Pie Menu"), Localize("Drawing a big pie in the sky"));
+				char aPieMenuLayoutExtra[96];
+				str_format(aPieMenuLayoutExtra, sizeof(aPieMenuLayoutExtra), "tab=%s module=pie_menu light=%d", QmSettingsTabName(m_QmClientSettingsTab), LightFirstFrame ? 1 : 0);
+				LogQmPerfStage(Client(), "pie_menu_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aPieMenuLayoutExtra);
+				CPerfTimer ControlsTimer;
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPieMenuEnabled, Localize("Enable pie menu"), &g_Config.m_QmPieMenuEnabled, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmPieMenuEnabled, "Enable pie menu", Localize("Enable pie menu"), &g_Config.m_QmPieMenuEnabled, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				bool BlockPieMenuCardDrag = Ui()->IsPopupOpen(&m_ColorPickerPopupContext) || Ui()->IsPopupHovered();
+				if(LightFirstFrame)
+				{
+					CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+					Column.y = CardContent.y;
+					s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+					RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+					HandleModuleDragState(pModule, s_GlassCards.back(), BlockPieMenuCardDrag);
+					LogQmPerfStage(Client(), "pie_menu_controls", ControlsTimer.ElapsedMs(), true, "tab=function module=pie_menu light=1");
+					break;
+				}
 				if(g_Config.m_QmPieMenuEnabled)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("UI scale"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-pie-menu-ui-scale", &LabelCol, Localize("UI scale"), LgBodySize);
 					static int s_QmPieMenuScaleInputId;
 					RenderSliderWithValueInput(&s_QmPieMenuScaleInputId, ControlCol, &g_Config.m_QmPieMenuScale, 50, 200, "%");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Opacity"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-pie-menu-opacity", &LabelCol, Localize("Opacity"), LgBodySize);
 					static int s_QmPieMenuOpacityInputId;
 					RenderSliderWithValueInput(&s_QmPieMenuOpacityInputId, ControlCol, &g_Config.m_QmPieMenuOpacity, 0, 100, "%");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Detection distance"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-pie-menu-detection-distance", &LabelCol, Localize("Detection distance"), LgBodySize);
 					static int s_QmPieMenuMaxDistanceInputId;
 					RenderSliderWithValueInput(&s_QmPieMenuMaxDistanceInputId, ControlCol, &g_Config.m_QmPieMenuMaxDistance, 100, 2000);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Rename queue"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-pie-menu-rename-queue", &LabelCol, Localize("Rename queue"), LgBodySize);
 					static CLineInput s_PieMenuRenameQueue(g_Config.m_QmPieMenuRenameQueue, sizeof(g_Config.m_QmPieMenuRenameQueue));
 					s_PieMenuRenameQueue.SetEmptyText(Localize("Example: name1|name2|name3"));
 					Ui()->DoEditBox(&s_PieMenuRenameQueue, &ControlCol, LgBodySize);
@@ -4722,7 +5042,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
 					TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-					Ui()->DoLabel(&Row, Localize("Option color"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-pie-menu-option-color", &Row, Localize("Option color"), LgBodySize);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
@@ -4923,7 +5243,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					static CButtonContainer s_PieMenuColorResetAllButton;
 					CUIRect PieMenuColorResetButton;
 					PieMenuColorResetRow.VSplitRight(maximum(88.0f, 88.0f * UiScale), nullptr, &PieMenuColorResetButton);
-					if(DoButton_Menu(&s_PieMenuColorResetAllButton, Localize("Reset"), 0, &PieMenuColorResetButton))
+					if(DoQmSettingsMenuButton(&s_PieMenuColorResetAllButton, "qmclient-pie-menu-reset-colors", Localize("Reset"), &PieMenuColorResetButton))
 					{
 						for(const auto &Entry : aPieMenuColorEntries)
 							*Entry.m_pColorValue = color_cast<ColorHSLA>(Entry.m_DefaultColor).Pack(false);
@@ -4936,6 +5256,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
 				HandleModuleDragState(pModule, s_GlassCards.back(), BlockPieMenuCardDrag);
+				LogQmPerfStage(Client(), "pie_menu_controls", ControlsTimer.ElapsedMs(), false, "tab=function module=pie_menu light=0");
 			}
 			break;
 			case EQmModuleId::CameraView:
@@ -4947,34 +5268,34 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 10, Localize("Camera & FOV"), Localize("What kind of blockbuster do you want to shoot?"));
+				RenderQmModuleHeadline(CardContent, 10, Localize("Camera & FOV"), Localize("What kind of blockbuster do you want to shoot?"));
 				{
 					const float DriftSectionHeight = LgLineHeight + LgLineSpacing +
 									 (g_Config.m_QmCameraDrift ? (LgLineHeight + LgLineSpacing) * 3.0f : 0.0f);
 					if(IsModuleContentBlockVisible(CardContent, DriftSectionHeight))
 					{
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmCameraDrift, Localize("Enable camera drift"), &g_Config.m_QmCameraDrift, &Row, LgLineHeight);
+						DoQmSettingsCheckboxAuto(&g_Config.m_QmCameraDrift, "Enable camera drift", Localize("Enable camera drift"), &g_Config.m_QmCameraDrift, &Row, LgLineHeight);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 						if(g_Config.m_QmCameraDrift)
 						{
 							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Drift intensity"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-camera-drift-intensity", &LabelColValue, Localize("Drift intensity"), LgBodySize);
 							static int s_QmCameraDriftAmountInputId;
 							RenderSliderWithValueInput(&s_QmCameraDriftAmountInputId, ControlColValue, &g_Config.m_QmCameraDriftAmount, 0, 200);
 							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Drift smoothness"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-camera-drift-smoothness", &LabelColValue, Localize("Drift smoothness"), LgBodySize);
 							static int s_QmCameraDriftSmoothnessInputId;
 							RenderSliderWithValueInput(&s_QmCameraDriftSmoothnessInputId, ControlColValue, &g_Config.m_QmCameraDriftSmoothness, 0, 100, "%");
 							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmCameraDriftReverse, Localize("Drift direction"), &g_Config.m_QmCameraDriftReverse, &Row, LgLineHeight);
+							DoQmSettingsCheckboxAuto(&g_Config.m_QmCameraDriftReverse, "Drift direction", Localize("Drift direction"), &g_Config.m_QmCameraDriftReverse, &Row, LgLineHeight);
 							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 						}
 					}
@@ -4988,21 +5309,21 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					if(IsModuleContentBlockVisible(CardContent, DynamicFovSectionHeight))
 					{
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmDynamicFov, Localize("Enable dynamic FOV"), &g_Config.m_QmDynamicFov, &Row, LgLineHeight);
+						DoQmSettingsCheckboxAuto(&g_Config.m_QmDynamicFov, "Enable dynamic FOV", Localize("Enable dynamic FOV"), &g_Config.m_QmDynamicFov, &Row, LgLineHeight);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 						if(g_Config.m_QmDynamicFov)
 						{
 							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Dynamic FOV intensity"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-camera-dynamic-fov-intensity", &LabelColValue, Localize("Dynamic FOV intensity"), LgBodySize);
 							static int s_QmDynamicFovAmountInputId;
 							RenderSliderWithValueInput(&s_QmDynamicFovAmountInputId, ControlColValue, &g_Config.m_QmDynamicFovAmount, 0, 200);
 							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Dynamic FOV smoothness"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-camera-dynamic-fov-smoothness", &LabelColValue, Localize("Dynamic FOV smoothness"), LgBodySize);
 							static int s_QmDynamicFovSmoothnessInputId;
 							RenderSliderWithValueInput(&s_QmDynamicFovSmoothnessInputId, ControlColValue, &g_Config.m_QmDynamicFovSmoothness, 0, 100, "%");
 							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -5034,7 +5355,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 						Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-						Ui()->DoLabel(&LabelCol, Localize("Aspect ratio preset"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-camera-aspect-ratio-preset", &LabelCol, Localize("Aspect ratio preset"), LgBodySize);
 						const int NewPreset = Ui()->DoDropDown(&ControlCol, CurrentPreset, apAspectPresetNames, static_cast<int>(std::size(apAspectPresetNames)), s_AspectPresetDropDownState);
 						if(NewPreset != CurrentPreset)
 						{
@@ -5061,7 +5382,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Custom aspect ratio"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-camera-custom-aspect-ratio", &LabelColValue, Localize("Custom aspect ratio"), LgBodySize);
 							static int s_QmAspectRatioInputId;
 							const int OldAspectRatio = g_Config.m_QmAspectRatio;
 							RenderSliderWithValueInput(&s_QmAspectRatioInputId, ControlColValue, &g_Config.m_QmAspectRatio, 100, 300);
@@ -5116,10 +5437,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadlineNew(CardContent, 2, Localize("Weapon animation"), Localize("Play a slide-in rotation animation when switching weapons"), "qm_2_62_8_weapon_animation");
+				RenderQmModuleHeadlineNew(CardContent, 2, Localize("Weapon animation"), Localize("Play a slide-in rotation animation when switching weapons"), "qm_2_62_8_weapon_animation");
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmWeaponSwitchAnim, Localize("Weapon switch animation"), &g_Config.m_QmWeaponSwitchAnim, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmWeaponSwitchAnim, "Weapon switch animation", Localize("Weapon switch animation"), &g_Config.m_QmWeaponSwitchAnim, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
@@ -5135,7 +5456,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					const char *pScopeNewFeatureId = "qm_2_62_8_weapon_switch_scope";
 					const bool ScopeFeatureUnread = !IsQmNewFeatureMarkRead(pScopeNewFeatureId);
 					char aScopeLabel[128];
-					Ui()->DoLabel(&LabelCol, QmNewFeatureLabel(Localize("Animation range"), pScopeNewFeatureId, aScopeLabel, sizeof(aScopeLabel)), LgBodySizeNew, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-weapon-switch-animation-range", &LabelCol, BuildQmFeatureLabel(Localize("Animation range"), pScopeNewFeatureId, aScopeLabel, sizeof(aScopeLabel)), LgBodySizeNew);
 					if(ScopeFeatureUnread)
 						DrawQmNewFeatureDot(LabelCol);
 					MarkQmNewFeatureHovered(pScopeNewFeatureId, Row);
@@ -5162,7 +5483,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 6, Localize("Entity Layer Colors"), Localize("No more blocking entity layers in the world of TeeWorlds"));
+				RenderQmModuleHeadline(CardContent, 6, Localize("Entity Layer Colors"), Localize("No more blocking entity layers in the world of TeeWorlds"));
 
 				{
 					auto RenderOverlaySlider = [&](const void *pInputId, int *pValue, const char *pTitle) {
@@ -5219,15 +5540,15 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 5, Localize("Laser settings"), Localize("Laser style"));
+				RenderQmModuleHeadline(CardContent, 5, Localize("Laser settings"), Localize("Laser style"));
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmLaserEnhanced, Localize("Laser effect enhancement"), &g_Config.m_QmLaserEnhanced, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLaserEnhanced, "Laser effect enhancement", Localize("Laser effect enhancement"), &g_Config.m_QmLaserEnhanced, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				{
 					CUIRect LabelColValue, ControlColValue;
 					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Glow intensity"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-laser-glow-intensity", &LabelColValue, Localize("Glow intensity"), LgBodySize);
 					static int s_QmLaserGlowIntensityInputId;
 					RenderSliderWithValueInput(&s_QmLaserGlowIntensityInputId, ControlColValue, &g_Config.m_QmLaserGlowIntensity, 0, 100, "%");
 				}
@@ -5236,7 +5557,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CUIRect LabelColValue, ControlColValue;
 					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Laser size"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-laser-size", &LabelColValue, Localize("Laser size"), LgBodySize);
 					static int s_QmLaserSizeInputId;
 					RenderSliderWithValueInput(&s_QmLaserSizeInputId, ControlColValue, &g_Config.m_QmLaserSize, 50, 200, "%");
 				}
@@ -5245,13 +5566,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CUIRect LabelColValue, ControlColValue;
 					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Opacity"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-laser-opacity", &LabelColValue, Localize("Opacity"), LgBodySize);
 					static int s_QmLaserAlphaInputId;
 					RenderSliderWithValueInput(&s_QmLaserAlphaInputId, ControlColValue, &g_Config.m_QmLaserAlpha, 0, 100, "%");
 				}
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmLaserRoundCaps, Localize("Rounded caps"), &g_Config.m_QmLaserRoundCaps, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLaserRoundCaps, "Rounded caps", Localize("Rounded caps"), &g_Config.m_QmLaserRoundCaps, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmLaserEnhanced)
@@ -5260,7 +5581,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Pulse speed"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-laser-pulse-speed", &LabelColValue, Localize("Pulse speed"), LgBodySize);
 						static int s_QmLaserPulseSpeedInputId;
 						RenderSliderWithValueInput(&s_QmLaserPulseSpeedInputId, ControlColValue, &g_Config.m_QmLaserPulseSpeed, 10, 500);
 					}
@@ -5270,7 +5591,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Pulse amplitude"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-laser-pulse-amplitude", &LabelColValue, Localize("Pulse amplitude"), LgBodySize);
 						static int s_QmLaserPulseAmplitudeInputId;
 						RenderSliderWithValueInput(&s_QmLaserPulseAmplitudeInputId, ControlColValue, &g_Config.m_QmLaserPulseAmplitude, 0, 100, "%");
 					}
@@ -5280,7 +5601,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				// 激光预览区域
 				CardContent.HSplitTop(LgLineSpacing * 2, nullptr, &CardContent);
 				CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
-				Ui()->DoLabel(&Row, Localize("Laser preview"), LgBodySize, TEXTALIGN_ML);
+				DoQmSettingsLabel("qmclient-laser-preview", &Row, Localize("Laser preview"), LgBodySize);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				const float LaserPreviewHeightQM = std::clamp(56.0f * UiScale, 40.0f, 56.0f);
@@ -5319,21 +5640,21 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 6, Localize("Player data"), Localize("Player stats and info display"));
+				RenderQmModuleHeadline(CardContent, 6, Localize("Player data"), Localize("Player stats and info display"));
 
 				// 显示统计HUD
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsHud, Localize("Show player stats HUD"), &g_Config.m_QmPlayerStatsHud, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsHud, "Show player stats HUD", Localize("Show player stats HUD"), &g_Config.m_QmPlayerStatsHud, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsMapProgress, Localize("Map progress bar"), &g_Config.m_QmPlayerStatsMapProgress, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsMapProgress, "Map progress bar", Localize("Map progress bar"), &g_Config.m_QmPlayerStatsMapProgress, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmPlayerStatsMapProgress)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsMapProgressStyle, Localize("Use embedded HUD progress bar"), &g_Config.m_QmPlayerStatsMapProgressStyle, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsMapProgressStyle, "Use embedded HUD progress bar", Localize("Use embedded HUD progress bar"), &g_Config.m_QmPlayerStatsMapProgressStyle, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					if(g_Config.m_QmPlayerStatsMapProgressStyle == 0)
@@ -5346,7 +5667,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						{
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Progress bar width"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-player-data-progress-bar-width", &LabelColValue, Localize("Progress bar width"), LgBodySize);
 							static int s_QmPlayerStatsMapProgressWidthInputId;
 							RenderSliderWithValueInput(&s_QmPlayerStatsMapProgressWidthInputId, ControlColValue, &g_Config.m_QmPlayerStatsMapProgressWidth, 10, 80);
 						}
@@ -5356,7 +5677,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						{
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Progress bar height"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-player-data-progress-bar-height", &LabelColValue, Localize("Progress bar height"), LgBodySize);
 							static int s_QmPlayerStatsMapProgressHeightInputId;
 							RenderSliderWithValueInput(&s_QmPlayerStatsMapProgressHeightInputId, ControlColValue, &g_Config.m_QmPlayerStatsMapProgressHeight, 6, 30);
 						}
@@ -5366,7 +5687,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						{
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Horizontal position"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-player-data-horizontal-position", &LabelColValue, Localize("Horizontal position"), LgBodySize);
 							static int s_QmPlayerStatsMapProgressPosXInputId;
 							RenderSliderWithValueInput(&s_QmPlayerStatsMapProgressPosXInputId, ControlColValue, &g_Config.m_QmPlayerStatsMapProgressPosX, 0, 100, "%");
 						}
@@ -5376,7 +5697,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						{
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Vertical position"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-player-data-vertical-position", &LabelColValue, Localize("Vertical position"), LgBodySize);
 							static int s_QmPlayerStatsMapProgressPosYInputId;
 							RenderSliderWithValueInput(&s_QmPlayerStatsMapProgressPosYInputId, ControlColValue, &g_Config.m_QmPlayerStatsMapProgressPosY, 0, 100, "%");
 						}
@@ -5384,13 +5705,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					}
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsMapProgressDbgRoute, Localize("Show dotted map route debug"), &g_Config.m_QmPlayerStatsMapProgressDbgRoute, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsMapProgressDbgRoute, "Show dotted map route debug", Localize("Show dotted map route debug"), &g_Config.m_QmPlayerStatsMapProgressDbgRoute, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
 				// 进入服务器时重置统计
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmPlayerStatsResetOnJoin, Localize("Reset stats when joining a server"), &g_Config.m_QmPlayerStatsResetOnJoin, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsResetOnJoin, "Reset stats when joining a server", Localize("Reset stats when joining a server"), &g_Config.m_QmPlayerStatsResetOnJoin, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
@@ -5410,11 +5731,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 7, Localize("Hitbox mode"), Localize("Show Tee, map, and weapon interaction hitboxes"));
+				RenderQmModuleHeadline(CardContent, 7, Localize("Hitbox mode"), Localize("Show Tee, map, and weapon interaction hitboxes"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				int HitboxModeEnabled = g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox;
-				if(DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHitboxMode, Localize("Show hitbox mode"), &HitboxModeEnabled, &Row, LgLineHeight))
+				if(DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxMode, "Show hitbox mode", Localize("Show hitbox mode"), &HitboxModeEnabled, &Row, LgLineHeight))
 				{
 					g_Config.m_QmHitboxMode = HitboxModeEnabled;
 					g_Config.m_QmShowCollisionHitbox = 0;
@@ -5424,19 +5745,19 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				if(HitboxModeEnabled)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHitboxShowMap, Localize("Map danger border"), &g_Config.m_QmHitboxShowMap, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxShowMap, "Map danger border", Localize("Map danger border"), &g_Config.m_QmHitboxShowMap, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHitboxShowTees, Localize("Tee hitbox"), &g_Config.m_QmHitboxShowTees, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxShowTees, "Tee hitbox", Localize("Tee hitbox"), &g_Config.m_QmHitboxShowTees, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHitboxShowPickups, Localize("Pickup range"), &g_Config.m_QmHitboxShowPickups, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxShowPickups, "Pickup range", Localize("Pickup range"), &g_Config.m_QmHitboxShowPickups, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHitboxShowWeapons, Localize("Weapon interaction range"), &g_Config.m_QmHitboxShowWeapons, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmHitboxShowWeapons, "Weapon interaction range", Localize("Weapon interaction range"), &g_Config.m_QmHitboxShowWeapons, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -5446,7 +5767,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					static CScrollRegion s_HitboxScopeDropDownScrollRegion;
 					s_HitboxScopeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HitboxScopeDropDownScrollRegion;
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Player range"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-hitbox-player-range", &LabelCol, Localize("Player range"), LgBodySize);
 					const int HitboxScope = std::clamp(g_Config.m_QmHitboxPlayerScope, 0, 2);
 					const int HitboxScopeNew = Ui()->DoDropDown(&ControlCol, HitboxScope, s_HitboxScopeDropDownNames.data(), s_HitboxScopeDropDownNames.size(), s_HitboxScopeDropDownState);
 					if(g_Config.m_QmHitboxPlayerScope != HitboxScopeNew)
@@ -5464,7 +5785,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Opacity"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-hitbox-opacity", &LabelCol, Localize("Opacity"), LgBodySize);
 					static int s_QmHitboxAlphaInputId;
 					RenderSliderWithValueInput(&s_QmHitboxAlphaInputId, ControlCol, &g_Config.m_QmHitboxAlpha, 0, 100, "%");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -5487,7 +5808,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 7, Localize("Favorite maps"), Localize("Your favorite map manager"));
+				RenderQmModuleHeadline(CardContent, 7, Localize("Favorite maps"), Localize("Your favorite map manager"));
 
 				// 收藏地图列表
 				const auto &FavMaps = GameClient()->TClientComponent().GetFavoriteMaps();
@@ -5679,7 +6000,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				if(FavMaps.empty())
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Ui()->DoLabel(&Row, Localize("No favorite maps yet"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-favorite-maps-empty", &Row, Localize("No favorite maps yet"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 				else
@@ -5721,7 +6042,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						if(s_CopiedMapIndex == (int)MapIndex)
 						{
 							TextRender()->TextColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色
-							Ui()->DoLabel(&RowLabel, Localize("Copied"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-favorite-map-copied", &RowLabel, Localize("Copied"), LgBodySize);
 						}
 						else
 						{
@@ -5762,29 +6083,29 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 11, Localize("HJ assist"), Localize("Unfreeze automation helpers"));
+				RenderQmModuleHeadline(CardContent, 11, Localize("HJ assist"), Localize("Unfreeze automation helpers"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoUnspecOnUnfreeze, Localize("Auto unspec on unfreeze"), &g_Config.m_QmAutoUnspecOnUnfreeze, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoUnspecOnUnfreeze, "Auto unspec on unfreeze", Localize("Auto unspec on unfreeze"), &g_Config.m_QmAutoUnspecOnUnfreeze, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoSwitchOnUnfreeze, Localize("Auto switch to the tee that got unfrozen"), &g_Config.m_QmAutoSwitchOnUnfreeze, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoSwitchOnUnfreeze, "Auto switch to the tee that got unfrozen", Localize("Auto switch to the tee that got unfrozen"), &g_Config.m_QmAutoSwitchOnUnfreeze, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoCloseChatOnUnfreeze, Localize("Automatically close the current chat after waking from freeze"), &g_Config.m_QmAutoCloseChatOnUnfreeze, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoCloseChatOnUnfreeze, "Automatically close the current chat after waking from freeze", Localize("Automatically close the current chat after waking from freeze"), &g_Config.m_QmAutoCloseChatOnUnfreeze, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmFreezeWakeupPopup, Localize("Show wake-up popup on the other tee"), &g_Config.m_QmFreezeWakeupPopup, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmFreezeWakeupPopup, "Show wake-up popup on the other tee", Localize("Show wake-up popup on the other tee"), &g_Config.m_QmFreezeWakeupPopup, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoTeamLock, Localize("Auto team lock"), &g_Config.m_QmAutoTeamLock, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoTeamLock, "Auto team lock", Localize("Auto team lock"), &g_Config.m_QmAutoTeamLock, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				if(g_Config.m_QmAutoTeamLock)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Lock delay"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-hj-assist-lock-delay", &LabelCol, Localize("Lock delay"), LgBodySize);
 					static int s_QmAutoTeamLockDelayInputId;
 					RenderSliderWithValueInput(&s_QmAutoTeamLockDelayInputId, ControlCol, &g_Config.m_QmAutoTeamLockDelay, 0, 30, "s");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -5806,40 +6127,40 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 11, Localize("Speedrun Timer"), Localize("Speedrun countdown timer"));
+				RenderQmModuleHeadline(CardContent, 11, Localize("Speedrun Timer"), Localize("Speedrun countdown timer"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSpeedrunTimer, Localize("Enable speedrun timer"), &g_Config.m_QmSpeedrunTimer, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmSpeedrunTimer, "Enable speedrun timer", Localize("Enable speedrun timer"), &g_Config.m_QmSpeedrunTimer, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmSpeedrunTimer)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Hours"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-speedrun-timer-hours", &LabelCol, Localize("Hours"), LgBodySize);
 					static int s_QmSpeedrunTimerHoursInputId;
 					RenderSliderWithValueInput(&s_QmSpeedrunTimerHoursInputId, ControlCol, &g_Config.m_QmSpeedrunTimerHours, 0, 99);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Minutes"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-speedrun-timer-minutes", &LabelCol, Localize("Minutes"), LgBodySize);
 					static int s_QmSpeedrunTimerMinutesInputId;
 					RenderSliderWithValueInput(&s_QmSpeedrunTimerMinutesInputId, ControlCol, &g_Config.m_QmSpeedrunTimerMinutes, 0, 59);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Seconds"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-speedrun-timer-seconds", &LabelCol, Localize("Seconds"), LgBodySize);
 					static int s_QmSpeedrunTimerSecondsInputId;
 					RenderSliderWithValueInput(&s_QmSpeedrunTimerSecondsInputId, ControlCol, &g_Config.m_QmSpeedrunTimerSeconds, 0, 59);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Milliseconds"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-speedrun-timer-milliseconds", &LabelCol, Localize("Milliseconds"), LgBodySize);
 					static int s_QmSpeedrunTimerMillisecondsInputId;
 					RenderSliderWithValueInput(&s_QmSpeedrunTimerMillisecondsInputId, ControlCol, &g_Config.m_QmSpeedrunTimerMilliseconds, 0, 999);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSpeedrunTimerAutoDisable, Localize("Auto disable when time expires"), &g_Config.m_QmSpeedrunTimerAutoDisable, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmSpeedrunTimerAutoDisable, "Auto disable when time expires", Localize("Auto disable when time expires"), &g_Config.m_QmSpeedrunTimerAutoDisable, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -5859,7 +6180,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 11, Localize("Debug graph"), Localize("Debug performance graph panel"));
+				RenderQmModuleHeadline(CardContent, 11, Localize("Debug graph"), Localize("Debug performance graph panel"));
 
 				static CButtonContainer s_ReaderButtonDebugGraphToggle, s_ClearButtonDebugGraphToggle;
 				DoKeyBindRow(CardContent, s_ReaderButtonDebugGraphToggle, s_ClearButtonDebugGraphToggle,
@@ -5869,7 +6190,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					CUIRect LabelColValue, ControlColValue;
 					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Panel opacity"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-debug-graph-panel-opacity", &LabelColValue, Localize("Panel opacity"), LgBodySize);
 					static int s_QmMonitoringHudOpacityInputId;
 					RenderSliderWithValueInput(&s_QmMonitoringHudOpacityInputId, ControlColValue, &g_Config.m_QmMonitoringHudOpacity, 0, 100, "%");
 				}
@@ -5893,10 +6214,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 11, Localize("Input overlay"), Localize("Input overlay display"));
+				RenderQmModuleHeadline(CardContent, 11, Localize("Input overlay"), Localize("Input overlay display"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmInputOverlay, Localize("Show inputs"), &g_Config.m_QmInputOverlay, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmInputOverlay, "Show inputs", Localize("Show inputs"), &g_Config.m_QmInputOverlay, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmInputOverlay)
@@ -5905,7 +6226,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Size"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-input-overlay-size", &LabelColValue, Localize("Size"), LgBodySize);
 						static int s_QmInputOverlayScaleInputId;
 						RenderSliderWithValueInput(&s_QmInputOverlayScaleInputId, ControlColValue, &g_Config.m_QmInputOverlayScale, 1, 200, "%");
 					}
@@ -5914,7 +6235,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Opacity"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-input-overlay-opacity", &LabelColValue, Localize("Opacity"), LgBodySize);
 						static int s_QmInputOverlayOpacityInputId;
 						RenderSliderWithValueInput(&s_QmInputOverlayOpacityInputId, ControlColValue, &g_Config.m_QmInputOverlayOpacity, 0, 100, "%");
 					}
@@ -5923,7 +6244,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Horizontal position"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-input-overlay-horizontal-position", &LabelColValue, Localize("Horizontal position"), LgBodySize);
 						static int s_QmInputOverlayPosXInputId;
 						RenderSliderWithValueInput(&s_QmInputOverlayPosXInputId, ControlColValue, &g_Config.m_QmInputOverlayPosX, 0, 100, "%");
 					}
@@ -5932,7 +6253,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Vertical position"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-input-overlay-vertical-position", &LabelColValue, Localize("Vertical position"), LgBodySize);
 						static int s_QmInputOverlayPosYInputId;
 						RenderSliderWithValueInput(&s_QmInputOverlayPosYInputId, ControlColValue, &g_Config.m_QmInputOverlayPosY, 0, 100, "%");
 					}
@@ -5940,13 +6261,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
 					TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-					Ui()->DoLabel(&Row, Localize("Config file: data/input_overlay.json"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-input-overlay-config-file", &Row, Localize("Config file: data/input_overlay.json"), LgBodySize);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
 					TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-					Ui()->DoLabel(&Row, Localize("Auto hot-reload after external saves"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-input-overlay-auto-hot-reload", &Row, Localize("Auto hot-reload after external saves"), LgBodySize);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
@@ -5967,87 +6288,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 11, Localize("Notifications"), Localize("Move Echo and important system prompts to right-side popups"));
+				RenderQmModuleHeadline(CardContent, 11, Localize("Notifications"), Localize("Show important server prompts and Echo messages as popups"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHudNotificationsSystem, Localize("Route server system prompts to notifications (except blacklist)"), &g_Config.m_QmHudNotificationsSystem, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHudNotificationsEcho, Localize("Route Echo messages to notifications"), &g_Config.m_QmHudNotificationsEcho, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHudNotificationsCompatSolo, Localize("Also route similar prompts from other servers to notifications (for example custom solo prompts; blacklist still applies)"), &g_Config.m_QmHudNotificationsCompatSolo, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				static CButtonContainer s_QmHudNotificationBgColorId;
-				DoLine_ColorPicker(&s_QmHudNotificationBgColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Notification background"), &g_Config.m_QmHudNotificationsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.6f), false, nullptr, true);
-				static CButtonContainer s_QmHudNotificationTextColorId;
-				DoLine_ColorPicker(&s_QmHudNotificationTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("System prompt text"), &g_Config.m_QmHudNotificationsTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHudNotificationsEchoInheritColor, Localize("Echo follows the original chat color"), &g_Config.m_QmHudNotificationsEchoInheritColor, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				static CButtonContainer s_QmHudNotificationEchoTextColorId;
-				DoLine_ColorPicker(&s_QmHudNotificationEchoTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Echo text color when not inheriting chat color"), &g_Config.m_QmHudNotificationsEchoTextColor, ColorRGBA(0.5f, 0.78f, 1.0f, 1.0f), false, nullptr, true);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Notification text size"), LgBodySize, TEXTALIGN_ML);
-					static int s_QmHudNotificationTextSizeInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationTextSizeInputId, ControlColValue, &g_Config.m_QmHudNotificationsTextSize, 1, 24);
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Notification hold time"), LgBodySize, TEXTALIGN_ML);
-					static int s_QmHudNotificationHoldInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationHoldInputId, ControlColValue, &g_Config.m_QmHudNotificationsHoldMs, 500, 10000, "ms");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Popup animation"), LgBodySize, TEXTALIGN_ML);
-					const char *apHudNotificationAnimDropDownNames[] = {Localize("Fade and slide"), Localize("Fade only"), Localize("No animation")};
-					static CUi::SDropDownState s_HudNotificationAnimDropDownState;
-					static CScrollRegion s_HudNotificationAnimDropDownScrollRegion;
-					s_HudNotificationAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HudNotificationAnimDropDownScrollRegion;
-					const int AnimSelectedNew = Ui()->DoDropDown(&ControlColValue, g_Config.m_QmHudNotificationsAnimType, apHudNotificationAnimDropDownNames, std::size(apHudNotificationAnimDropDownNames), s_HudNotificationAnimDropDownState);
-					if(g_Config.m_QmHudNotificationsAnimType != AnimSelectedNew)
-						g_Config.m_QmHudNotificationsAnimType = AnimSelectedNew;
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Animation duration"), LgBodySize, TEXTALIGN_ML);
-					static int s_QmHudNotificationAnimInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationAnimInputId, ControlColValue, &g_Config.m_QmHudNotificationsAnimMs, 0, 2000, "ms");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Max visible notifications"), LgBodySize, TEXTALIGN_ML);
-					static int s_QmHudNotificationMaxVisibleInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationMaxVisibleInputId, ControlColValue, &g_Config.m_QmHudNotificationsMaxVisible, 1, 8);
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, Localize("Edge margin"), LgBodySize, TEXTALIGN_ML);
-					static int s_QmHudNotificationEdgeMarginInputId;
-					RenderSliderWithValueInput(&s_QmHudNotificationEdgeMarginInputId, ControlColValue, &g_Config.m_QmHudNotificationsEdgeMargin, 0, 32);
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderHudNotificationsBasicSettings(CardContent);
+				if(g_Config.m_QmHudNotificationsShowAdvanced)
+					RenderHudNotificationsAdvancedSettings(CardContent);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -6066,10 +6311,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 12, Localize("Voice"), Localize("Ohhhhhhhhhhhhhhhh"));
+				RenderQmModuleHeadline(CardContent, 12, Localize("Voice"), Localize("Ohhhhhhhhhhhhhhhh"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmVoiceEnable, Localize("Enable voice"), &g_Config.m_QmVoiceEnable, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceEnable, "Enable voice", Localize("Enable voice"), &g_Config.m_QmVoiceEnable, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmVoiceEnable)
@@ -6288,38 +6533,38 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Room password"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-voice-room-password", &LabelCol, Localize("Room password"), LgBodySize);
 					static CLineInput s_VoiceToken(g_Config.m_QmVoiceToken, sizeof(g_Config.m_QmVoiceToken));
 					s_VoiceToken.SetEmptyText(Localize("Leave empty to join public room"));
 					Ui()->DoEditBox(&s_VoiceToken, &ControlCol, LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmVoiceMicMute, Localize("Mute microphone"), &g_Config.m_QmVoiceMicMute, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceMicMute, "Mute microphone", Localize("Mute microphone"), &g_Config.m_QmVoiceMicMute, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Microphone volume"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-voice-microphone-volume", &LabelColValue, Localize("Microphone volume"), LgBodySize);
 						static int s_QmVoiceMicVolumeInputId;
 						RenderSliderWithValueInput(&s_QmVoiceMicVolumeInputId, ControlColValue, &g_Config.m_QmVoiceMicVolume, 0, 300, "%");
 					}
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmVoiceVadEnable, Localize("Auto unmute when speaking"), &g_Config.m_QmVoiceVadEnable, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceVadEnable, "Auto unmute when speaking", Localize("Auto unmute when speaking"), &g_Config.m_QmVoiceVadEnable, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmVoiceShowAdvanced, Localize("Advanced options"), &g_Config.m_QmVoiceShowAdvanced, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceShowAdvanced, "Advanced options", Localize("Advanced options"), &g_Config.m_QmVoiceShowAdvanced, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					if(g_Config.m_QmVoiceShowAdvanced)
 					{
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmVoiceShowConnectionStatus, Localize("Show voice connection status"), &g_Config.m_QmVoiceShowConnectionStatus, &Row, LgLineHeight);
+						DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceShowConnectionStatus, "Show voice connection status", Localize("Show voice connection status"), &g_Config.m_QmVoiceShowConnectionStatus, &Row, LgLineHeight);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 						if(g_Config.m_QmVoiceShowConnectionStatus)
@@ -6341,7 +6586,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 						Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-						Ui()->DoLabel(&LabelCol, Localize("Server IP"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-voice-server-ip", &LabelCol, Localize("Server IP"), LgBodySize);
 						static CLineInput s_VoiceServer(g_Config.m_QmVoiceServer, sizeof(g_Config.m_QmVoiceServer));
 						s_VoiceServer.SetEmptyText("42.194.185.210:9987");
 						Ui()->DoEditBox(&s_VoiceServer, &ControlCol, LgBodySize);
@@ -6349,7 +6594,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 						Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-						Ui()->DoLabel(&LabelCol, Localize("Input device"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-voice-input-device", &LabelCol, Localize("Input device"), LgBodySize);
 						static std::vector<std::string> s_VoiceInputDeviceDisplayNames;
 						static std::vector<std::string> s_VoiceInputDeviceConfigValues;
 						static std::vector<const char *> s_VoiceInputDeviceDropDownNames;
@@ -6392,7 +6637,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 							char aVoiceExtra[96];
 							str_format(aVoiceExtra, sizeof(aVoiceExtra), "devices=%d", (int)s_VoiceInputDeviceDisplayNames.size());
-							LogQmPerfStage("voice_device_enum", StageTimer.ElapsedMs(), false, aVoiceExtra);
+							LogQmPerfStage(Client(), "voice_device_enum", StageTimer.ElapsedMs(), false, aVoiceExtra);
 						};
 						if(!s_VoiceInputDevicesInitialized)
 						{
@@ -6411,13 +6656,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							str_copy(g_Config.m_QmVoiceInputDevice, s_VoiceInputDeviceConfigValues[VoiceInputSelectedNew].c_str(), sizeof(g_Config.m_QmVoiceInputDevice));
 
 						static CButtonContainer s_VoiceInputRefreshButton;
-						if(DoButton_Menu(&s_VoiceInputRefreshButton, Localize("Refresh"), 0, &VoiceInputRefreshButton))
+						if(DoQmSettingsMenuButton(&s_VoiceInputRefreshButton, "qmclient-voice-input-refresh", Localize("Refresh"), &VoiceInputRefreshButton))
 							RefreshVoiceInputDeviceList();
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 						Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-						Ui()->DoLabel(&LabelCol, Localize("Output device"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-voice-output-device", &LabelCol, Localize("Output device"), LgBodySize);
 						static std::vector<std::string> s_VoiceOutputDeviceDisplayNames;
 						static std::vector<std::string> s_VoiceOutputDeviceConfigValues;
 						static std::vector<const char *> s_VoiceOutputDeviceDropDownNames;
@@ -6460,7 +6705,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 							char aVoiceExtra[96];
 							str_format(aVoiceExtra, sizeof(aVoiceExtra), "devices=%d", (int)s_VoiceOutputDeviceDisplayNames.size());
-							LogQmPerfStage("voice_output_device_enum", StageTimer.ElapsedMs(), false, aVoiceExtra);
+							LogQmPerfStage(Client(), "voice_output_device_enum", StageTimer.ElapsedMs(), false, aVoiceExtra);
 						};
 						if(!s_VoiceOutputDevicesInitialized)
 						{
@@ -6479,7 +6724,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							str_copy(g_Config.m_QmVoiceOutputDevice, s_VoiceOutputDeviceConfigValues[VoiceOutputSelectedNew].c_str(), sizeof(g_Config.m_QmVoiceOutputDevice));
 
 						static CButtonContainer s_VoiceOutputRefreshButton;
-						if(DoButton_Menu(&s_VoiceOutputRefreshButton, Localize("Refresh"), 0, &VoiceOutputRefreshButton))
+						if(DoQmSettingsMenuButton(&s_VoiceOutputRefreshButton, "qmclient-voice-output-refresh", Localize("Refresh"), &VoiceOutputRefreshButton))
 							RefreshVoiceOutputDeviceList();
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
@@ -6498,7 +6743,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							s_VoiceBitrateProfileDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceBitrateProfileDropDownScrollRegion;
 
 							Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-							Ui()->DoLabel(&LabelCol, Localize("Voice bitrate"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-voice-bitrate", &LabelCol, Localize("Voice bitrate"), LgBodySize);
 							const int CurrentBitrateProfile = std::clamp(g_Config.m_QmVoiceBitrateProfile, 0, 4);
 							const int NewBitrateProfile = Ui()->DoDropDown(&ControlCol, CurrentBitrateProfile, s_VoiceBitrateProfileDropDownNames.data(), s_VoiceBitrateProfileDropDownNames.size(), s_VoiceBitrateProfileDropDownState);
 							if(CurrentBitrateProfile != NewBitrateProfile)
@@ -6523,7 +6768,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							s_VoiceNoiseSuppressModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceNoiseSuppressModeDropDownScrollRegion;
 
 							Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-							Ui()->DoLabel(&LabelCol, Localize("Noise reduction mode"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-voice-noise-reduction-mode", &LabelCol, Localize("Noise reduction mode"), LgBodySize);
 							const int CurrentNoiseSuppressMode = std::clamp(g_Config.m_QmVoiceNoiseSuppressEnable, 0, 2);
 							const int NewNoiseSuppressMode = Ui()->DoDropDown(&ControlCol, CurrentNoiseSuppressMode, s_VoiceNoiseSuppressModeDropDownNames.data(), s_VoiceNoiseSuppressModeDropDownNames.size(), s_VoiceNoiseSuppressModeDropDownState);
 							if(CurrentNoiseSuppressMode != NewNoiseSuppressMode)
@@ -6537,7 +6782,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							if(g_Config.m_QmVoiceNoiseSuppressEnable == 2)
 							{
 								CardContent.HSplitTop(LgLineHeight * 0.78f, &Row, &CardContent);
-								Ui()->DoLabel(&Row, Localize("RNNoise not integrated in current build, will fallback to simple noise reduction"), LgBodySize * 0.72f, TEXTALIGN_ML);
+								DoQmSettingsLabel("qmclient-voice-rnnoise-fallback-warning", &Row, Localize("RNNoise not integrated in current build, will fallback to simple noise reduction"), LgBodySize * 0.72f);
 								CardContent.HSplitTop(LgLineSpacing * 0.75f, nullptr, &CardContent);
 							}
 #endif
@@ -6563,7 +6808,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						}
 
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmVoiceAgcEnable, Localize("Auto gain control for mic (AGC, experimental)"), &g_Config.m_QmVoiceAgcEnable, &Row, LgLineHeight);
+						DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceAgcEnable, "Auto gain control for mic (AGC, experimental)", Localize("Auto gain control for mic (AGC, experimental)"), &g_Config.m_QmVoiceAgcEnable, &Row, LgLineHeight);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 						if(g_Config.m_QmVoiceVadEnable)
@@ -6572,7 +6817,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							{
 								CUIRect LabelColValue, ControlColValue;
 								Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-								Ui()->DoLabel(&LabelColValue, Localize("Speech trigger threshold"), LgBodySize, TEXTALIGN_ML);
+								DoQmSettingsLabel("qmclient-voice-speech-trigger-threshold", &LabelColValue, Localize("Speech trigger threshold"), LgBodySize);
 								static int s_QmVoiceVadThresholdInputId;
 								RenderSliderWithValueInput(&s_QmVoiceVadThresholdInputId, ControlColValue, &g_Config.m_QmVoiceVadThreshold, 0, 100, "%");
 							}
@@ -6582,7 +6827,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							{
 								CUIRect LabelColValue, ControlColValue;
 								Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-								Ui()->DoLabel(&LabelColValue, Localize("Voice activation release delay"), LgBodySize, TEXTALIGN_ML);
+								DoQmSettingsLabel("qmclient-voice-activation-release-delay", &LabelColValue, Localize("Voice activation release delay"), LgBodySize);
 								static int s_QmVoiceVadReleaseDelayMsInputId;
 								RenderSliderWithValueInput(&s_QmVoiceVadReleaseDelayMsInputId, ControlColValue, &g_Config.m_QmVoiceVadReleaseDelayMs, 0, 1000, "ms");
 							}
@@ -6595,14 +6840,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						{
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Playback volume"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-voice-playback-volume", &LabelColValue, Localize("Playback volume"), LgBodySize);
 							static int s_QmVoiceVolumeInputId;
 							RenderSliderWithValueInput(&s_QmVoiceVolumeInputId, ControlColValue, &g_Config.m_QmVoiceVolume, 0, 400, "%");
 						}
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmVoiceStereo, Localize("Enable stereo positioning"), &g_Config.m_QmVoiceStereo, &Row, LgLineHeight);
+						DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceStereo, "Enable stereo positioning", Localize("Enable stereo positioning"), &g_Config.m_QmVoiceStereo, &Row, LgLineHeight);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 						if(g_Config.m_QmVoiceStereo)
@@ -6611,7 +6856,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							{
 								CUIRect LabelColValue, ControlColValue;
 								Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-								Ui()->DoLabel(&LabelColValue, Localize("Left/right channel width"), LgBodySize, TEXTALIGN_ML);
+								DoQmSettingsLabel("qmclient-voice-left-right-channel-width", &LabelColValue, Localize("Left/right channel width"), LgBodySize);
 								static int s_QmVoiceStereoWidthInputId;
 								RenderSliderWithValueInput(&s_QmVoiceStereoWidthInputId, ControlColValue, &g_Config.m_QmVoiceStereoWidth, 0, 200, "%");
 							}
@@ -6622,14 +6867,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						{
 							CUIRect LabelColValue, ControlColValue;
 							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							Ui()->DoLabel(&LabelColValue, Localize("Voice distance radius (tiles)"), LgBodySize, TEXTALIGN_ML);
+							DoQmSettingsLabel("qmclient-voice-distance-radius-tiles", &LabelColValue, Localize("Voice distance radius (tiles)"), LgBodySize);
 							static int s_QmVoiceRadiusInputId;
 							RenderSliderWithValueInput(&s_QmVoiceRadiusInputId, ControlColValue, &g_Config.m_QmVoiceRadius, 1, 400);
 						}
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmVoiceGroupGlobal, Localize("Full map listen in same room"), &g_Config.m_QmVoiceGroupGlobal, &Row, LgLineHeight);
+						DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceGroupGlobal, "Full map listen in same room", Localize("Full map listen in same room"), &g_Config.m_QmVoiceGroupGlobal, &Row, LgLineHeight);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					}
 				}
@@ -6651,10 +6896,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 12, Localize("Dummy Window"), Localize("Is your dummy being bullied while you control the main tee?"));
+				RenderQmModuleHeadline(CardContent, 12, Localize("Dummy Window"), Localize("Is your dummy being bullied while you control the main tee?"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmDummyMiniView, Localize("Enable dummy window"), &g_Config.m_QmDummyMiniView, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmDummyMiniView, "Enable dummy window", Localize("Enable dummy window"), &g_Config.m_QmDummyMiniView, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -6662,14 +6907,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				if(g_Config.m_QmDummyMiniView)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmDummyMiniViewAuto, Localize("Only show when the other Tee is not on screen"), &g_Config.m_QmDummyMiniViewAuto, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmDummyMiniViewAuto, "Only show when the other Tee is not on screen", Localize("Only show when the other Tee is not on screen"), &g_Config.m_QmDummyMiniViewAuto, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Dummy window size"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-dummy-window-size", &LabelColValue, Localize("Dummy window size"), LgBodySize);
 						static int s_QmDummyMiniViewSizeInputId;
 						RenderSliderWithValueInput(&s_QmDummyMiniViewSizeInputId, ControlColValue, &g_Config.m_QmDummyMiniViewSize, 50, 200, "%");
 					}
@@ -6679,7 +6924,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Dummy window zoom"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-dummy-window-zoom", &LabelColValue, Localize("Dummy window zoom"), LgBodySize);
 						static int s_QmDummyMiniViewZoomInputId;
 						RenderSliderWithValueInput(&s_QmDummyMiniViewZoomInputId, ControlColValue, &g_Config.m_QmDummyMiniViewZoom, 10, 300, "%");
 					}
@@ -6702,7 +6947,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 15, Localize("3D Background"), Localize("Configure background 3D particle effects"));
+				RenderQmModuleHeadline(CardContent, 15, Localize("3D Background"), Localize("Configure background 3D particle effects"));
 
 				auto RenderIntOption = [&](const void *pId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -6713,14 +6958,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				};
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_Qm3DParticles, Localize("Enable 3D background particles"), &g_Config.m_Qm3DParticles, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticles, "Enable 3D background particles", Localize("Enable 3D background particles"), &g_Config.m_Qm3DParticles, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_Qm3DParticles)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, Localize("Particle type"), LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel("qmclient-3d-background-particle-type", &LabelCol, Localize("Particle type"), LgBodySize);
 					std::array<const char *, 9> apQm3DParticleTypeNames = {
 						Localize("Cube"),
 						Localize("Heart"),
@@ -6772,7 +7017,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					RenderIntOption(&s_Qm3DParticleFadeOutInputId, Localize("Fade out"), &g_Config.m_Qm3DParticlesFadeOutMs, 1, 5000, "ms");
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_Qm3DParticlesCollide, Localize("Particle collision"), &g_Config.m_Qm3DParticlesCollide, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesCollide, "Particle collision", Localize("Particle collision"), &g_Config.m_Qm3DParticlesCollide, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					static int s_Qm3DParticlePushRadiusInputId;
@@ -6782,7 +7027,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					static std::vector<CButtonContainer> s_vQm3DParticleColorModeButtons = {{}, {}};
 					int ColorMode = g_Config.m_Qm3DParticlesColorMode;
-					if(DoLine_RadioMenu(CardContent, Localize("Particle color"), s_vQm3DParticleColorModeButtons, {Localize("Custom"), Localize("Random")}, {1, 2}, ColorMode))
+					if(DoSettingsLine_RadioMenu(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, CardContent, "qmclient-3d-particle-color-mode-label", Localize("Particle color"), s_vQm3DParticleColorModeButtons, {"qmclient-3d-particle-color-custom", "qmclient-3d-particle-color-random"}, {Localize("Custom"), Localize("Random")}, {1, 2}, ColorMode))
 						g_Config.m_Qm3DParticlesColorMode = ColorMode;
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
@@ -6793,7 +7038,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					}
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_Qm3DParticlesGlow, Localize("Particle glow"), &g_Config.m_Qm3DParticlesGlow, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesGlow, "Particle glow", Localize("Particle glow"), &g_Config.m_Qm3DParticlesGlow, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					if(g_Config.m_Qm3DParticlesGlow)
@@ -6805,7 +7050,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					}
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_Qm3DParticlesTrail, Localize("Particle trail"), &g_Config.m_Qm3DParticlesTrail, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesTrail, "Particle trail", Localize("Particle trail"), &g_Config.m_Qm3DParticlesTrail, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					if(g_Config.m_Qm3DParticlesTrail)
@@ -6817,7 +7062,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					}
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_Qm3DParticlesPulse, Localize("Particle pulse"), &g_Config.m_Qm3DParticlesPulse, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesPulse, "Particle pulse", Localize("Particle pulse"), &g_Config.m_Qm3DParticlesPulse, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					if(g_Config.m_Qm3DParticlesPulse)
@@ -6829,7 +7074,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					}
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_Qm3DParticlesTwinkle, Localize("Particle twinkle"), &g_Config.m_Qm3DParticlesTwinkle, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesTwinkle, "Particle twinkle", Localize("Particle twinkle"), &g_Config.m_Qm3DParticlesTwinkle, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					if(g_Config.m_Qm3DParticlesTwinkle)
@@ -6856,14 +7101,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 14, Localize("Dynamic Island"), Localize("Only Apple Can Do"));
+				RenderQmModuleHeadline(CardContent, 14, Localize("Dynamic Island"), Localize("Only Apple Can Do"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHudIslandUseOriginalStyle, Localize("Use original style"), &g_Config.m_QmHudIslandUseOriginalStyle, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudIslandUseOriginalStyle, "Use original style", Localize("Use original style"), &g_Config.m_QmHudIslandUseOriginalStyle, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmHudIslandShowTeam, Localize("Show team"), &g_Config.m_QmHudIslandShowTeam, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudIslandShowTeam, "Show team", Localize("Show team"), &g_Config.m_QmHudIslandShowTeam, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmHudIslandUseOriginalStyle)
@@ -6875,7 +7120,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					{
 						CUIRect LabelColValue, ControlColValue;
 						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						Ui()->DoLabel(&LabelColValue, Localize("Opacity"), LgBodySize, TEXTALIGN_ML);
+						DoQmSettingsLabel("qmclient-dynamic-island-opacity", &LabelColValue, Localize("Opacity"), LgBodySize);
 						static int s_QmHudIslandBgOpacityInputId;
 						RenderSliderWithValueInput(&s_QmHudIslandBgOpacityInputId, ControlColValue, &g_Config.m_QmHudIslandBgOpacity, 0, 100, "%");
 					}
@@ -6902,16 +7147,16 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadline(CardContent, 13, Localize("SMTC"), Localize("System media control"));
+				RenderQmModuleHeadline(CardContent, 13, Localize("SMTC"), Localize("System media control"));
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSmtcEnable, Localize("Enable system media control"), &g_Config.m_QmSmtcEnable, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmSmtcEnable, "Enable system media control", Localize("Enable system media control"), &g_Config.m_QmSmtcEnable, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmSmtcEnable)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSmtcShowHud, Localize("Show song info in top-left corner"), &g_Config.m_QmSmtcShowHud, &Row, LgLineHeight);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmSmtcShowHud, "Show song info in top-left corner", Localize("Show song info in top-left corner"), &g_Config.m_QmSmtcShowHud, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CUIRect MediaButtons, PrevButton, PlayButton, NextButton;
@@ -6923,15 +7168,15 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					NextButton = MediaButtons;
 
 					static CButtonContainer s_SmtcPrev;
-					if(DoButton_Menu(&s_SmtcPrev, Localize("Previous"), 0, &PrevButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f))
+					if(DoQmSettingsMenuButton(&s_SmtcPrev, "qmclient-smtc-previous", Localize("Previous"), &PrevButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
 						GameClient()->m_SystemMediaControls.Previous();
 
 					static CButtonContainer s_SmtcPlayPause;
-					if(DoButton_Menu(&s_SmtcPlayPause, Localize("Play/Pause"), 0, &PlayButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f))
+					if(DoQmSettingsMenuButton(&s_SmtcPlayPause, "qmclient-smtc-play-pause", Localize("Play/Pause"), &PlayButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
 						GameClient()->m_SystemMediaControls.PlayPause();
 
 					static CButtonContainer s_SmtcNext;
-					if(DoButton_Menu(&s_SmtcNext, Localize("Next"), 0, &NextButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f))
+					if(DoQmSettingsMenuButton(&s_SmtcNext, "qmclient-smtc-next", Localize("Next"), &NextButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
 						GameClient()->m_SystemMediaControls.Next();
 
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -6959,42 +7204,42 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					MarkQmNewFeatureRead("qm_lyrics_phase1");
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSmtcLyricsEnable, Localize("Enable lyrics"), &g_Config.m_QmSmtcLyricsEnable, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmSmtcLyricsEnable, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmSmtcLyricsEnable, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmLyricsMarquee, Localize("Scroll long lines"), &g_Config.m_QmLyricsMarquee, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsMarquee, "Scroll long lines", Localize("Scroll long lines"), &g_Config.m_QmLyricsMarquee, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmLyricsAutoHideNoSmtc, Localize("Hide without media state"), &g_Config.m_QmLyricsAutoHideNoSmtc, &Row, LgLineHeight);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoHideNoSmtc, "Hide without media state", Localize("Hide without media state"), &g_Config.m_QmLyricsAutoHideNoSmtc, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
-				auto RenderLyricsSlider = [&](const void *pId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+				auto RenderLyricsSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					CUIRect LabelColValue, ControlColValue;
 					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					Ui()->DoLabel(&LabelColValue, pLabel, LgBodySize, TEXTALIGN_ML);
+					DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, LgBodySize);
 					RenderSliderWithValueInput(pId, ControlColValue, pValue, MinValue, MaxValue, pSuffix);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				};
 
 				static int s_QmSmtcLyricsOffsetInputId;
-				RenderLyricsSlider(&s_QmSmtcLyricsOffsetInputId, Localize("Time offset"), &g_Config.m_QmSmtcLyricsOffsetMs, -10000, 10000, "ms");
+				RenderLyricsSlider(&s_QmSmtcLyricsOffsetInputId, "qmclient-lyrics-time-offset", Localize("Time offset"), &g_Config.m_QmSmtcLyricsOffsetMs, -10000, 10000, "ms");
 				static int s_QmSmtcLyricsLinesInputId;
-				RenderLyricsSlider(&s_QmSmtcLyricsLinesInputId, Localize("Lines"), &g_Config.m_QmSmtcLyricsLines, 1, 2);
+				RenderLyricsSlider(&s_QmSmtcLyricsLinesInputId, "qmclient-lyrics-lines", Localize("Lines"), &g_Config.m_QmSmtcLyricsLines, 1, 2);
 				static int s_QmSmtcLyricsFontSizeInputId;
-				RenderLyricsSlider(&s_QmSmtcLyricsFontSizeInputId, Localize("Font size"), &g_Config.m_QmSmtcLyricsFontSize, 4, 16);
+				RenderLyricsSlider(&s_QmSmtcLyricsFontSizeInputId, "qmclient-lyrics-font-size", Localize("Font size"), &g_Config.m_QmSmtcLyricsFontSize, 4, 16);
 				static int s_QmLyricsBgOpacityInputId;
-				RenderLyricsSlider(&s_QmLyricsBgOpacityInputId, Localize("Background opacity"), &g_Config.m_QmLyricsBgOpacity, 0, 100, "%");
+				RenderLyricsSlider(&s_QmLyricsBgOpacityInputId, "qmclient-lyrics-background-opacity", Localize("Background opacity"), &g_Config.m_QmLyricsBgOpacity, 0, 100, "%");
 				static int s_QmLyricsOutlineOpacityInputId;
-				RenderLyricsSlider(&s_QmLyricsOutlineOpacityInputId, Localize("Outline opacity"), &g_Config.m_QmLyricsOutlineOpacity, 0, 100, "%");
+				RenderLyricsSlider(&s_QmLyricsOutlineOpacityInputId, "qmclient-lyrics-outline-opacity", Localize("Outline opacity"), &g_Config.m_QmLyricsOutlineOpacity, 0, 100, "%");
 				static int s_QmLyricsFadeDurationInputId;
-				RenderLyricsSlider(&s_QmLyricsFadeDurationInputId, Localize("Fade duration"), &g_Config.m_QmLyricsFadeDurationMs, 0, 2000, "ms");
+				RenderLyricsSlider(&s_QmLyricsFadeDurationInputId, "qmclient-lyrics-fade-duration", Localize("Fade duration"), &g_Config.m_QmLyricsFadeDurationMs, 0, 2000, "ms");
 				static int s_QmLyricsMarqueeSpeedInputId;
-				RenderLyricsSlider(&s_QmLyricsMarqueeSpeedInputId, Localize("Scroll speed"), &g_Config.m_QmLyricsMarqueeSpeed, 1, 24);
+				RenderLyricsSlider(&s_QmLyricsMarqueeSpeedInputId, "qmclient-lyrics-scroll-speed", Localize("Scroll speed"), &g_Config.m_QmLyricsMarqueeSpeed, 1, 24);
 				static int s_QmLyricsSnapThresholdInputId;
-				RenderLyricsSlider(&s_QmLyricsSnapThresholdInputId, Localize("Snap threshold"), &g_Config.m_QmLyricsSnapThreshold, 0, 40);
+				RenderLyricsSlider(&s_QmLyricsSnapThresholdInputId, "qmclient-lyrics-snap-threshold", Localize("Snap threshold"), &g_Config.m_QmLyricsSnapThreshold, 0, 40);
 
 				static CButtonContainer s_LyricsCurrentColorId;
 				DoLine_ColorPicker(&s_LyricsCurrentColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Current line color"), &g_Config.m_QmLyricsColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
@@ -7044,7 +7289,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			char aModuleExtra[160];
 			str_format(aModuleExtra, sizeof(aModuleExtra), "tab=%s module=%s column=%s collapsed=0 search=%d",
 				QmSettingsTabName(m_QmClientSettingsTab), QmModuleIdName(pModule->m_Id), QmModuleColumnToString(ColumnId), HasModuleSearch ? 1 : 0);
-			LogQmPerfStage("模块总计", ModuleTimer.ElapsedMs(), false, aModuleExtra);
+			LogQmPerfStage(Client(), "模块总计", ModuleTimer.ElapsedMs(), false, aModuleExtra);
 		}
 	};
 
@@ -7297,8 +7542,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		str_format(aRenderExtra, sizeof(aRenderExtra), "tab=%s transition=%d search=%d left=%d right=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0, HasModuleSearch ? 1 : 0,
 			(int)RenderedLeftModules.size(), SearchSingleColumnMode ? 0 : (int)RenderedRightModules.size());
-		LogQmPerfStage("active_tab_total", StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
-		LogQmPerfStage(QmActiveTabStageName(), StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
+		LogQmPerfStage(Client(), "active_tab_total", StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
+		LogQmPerfStage(Client(), QmActiveTabStageName(), StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
 	}
 	if(HasModuleSearch)
 	{
@@ -7329,8 +7574,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		ScrollRegion.y = maximum(LeftView.y, RightView.y) + LgCardSpacing;
 		ScrollRegion.w = MainView.w;
 		ScrollRegion.h = 0.0f;
-		s_ScrollRegion.AddRect(ScrollRegion);
-		s_ScrollRegion.End();
+		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion);
+		s_PrevQmScrollY = ScrollFrame.m_FinalOffsetY;
 	}
 	if(TabTransitionActive && TabTransitionAlpha > 0.0f)
 		TabContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TabTransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
@@ -7339,9 +7584,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	{
 		char aTotalExtra[96];
 		str_format(aTotalExtra, sizeof(aTotalExtra), "tab=%s transition=%d", QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0);
-		LogQmPerfStage("render_total", RenderTimer.ElapsedMs(), false, aTotalExtra);
+		LogQmPerfStage(Client(), "render_total", RenderTimer.ElapsedMs(), false, aTotalExtra);
 	}
-	LogQmPerfStage("settings_total", RenderTimer.ElapsedMs(), false, "tab=settings");
+	LogQmPerfStage(Client(), "settings_total", RenderTimer.ElapsedMs(), false, "tab=settings");
 }
 
 std::unordered_map<std::string, CBindSlot> g_CommandBindCache;

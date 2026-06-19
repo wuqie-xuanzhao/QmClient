@@ -1,9 +1,3 @@
-import functools
-import os
-import re
-from collections import OrderedDict
-
-
 class LanguageDecodeError(Exception):
     def __init__(self, message, filename, line):
         error = f'File "{filename}", line {line + 1}: {message}'
@@ -67,40 +61,11 @@ def decode(fileobj, elements_per_key):
     return new_data
 
 
-def check_file(path):
-    with open(path, encoding="utf-8") as fileobj:
-        matches = re.findall(
-            r"(?:Localize|Localizable|TCLocalize|TCLocalizable)\s*\(\s*\"((?:(?:\\\")|[^\"])+)\"(?:\s*,\s*\"((?:(?:\\\")|[^\"])+)\")?\s*\)",
-            fileobj.read(),
-        )
-    normalized = []
-    for sentence in matches:
-        if len(sentence) == 2:
-            normalized.append((sentence[0], sentence[1]))
-        else:
-            normalized.append((sentence[1], sentence[2]))
-    return normalized
-
-
-@functools.lru_cache(None)
-def check_folder(path):
-    englishlist = OrderedDict()
-    for path2, dirs, files in os.walk(path):
-        dirs.sort()
-        for f in sorted(files):
-            if not any(f.endswith(x) for x in [".cpp", ".c", ".h"]):
-                continue
-            for sentence in check_file(os.path.join(path2, f)):
-                key = (sentence[0].replace('\\"', '"'), sentence[1].replace('\\"', '"'))
-                englishlist[key] = None
-    return englishlist
-
-
 def languages():
-    with open("data/qmclient/languages/index.txt", encoding="utf-8") as f:
+    with open("data/languages/index.txt", encoding="utf-8") as f:
         index = decode(f, 3)
     langs = {
-        "data/qmclient/languages/" + key[0] + ".txt": [key[0]] + elements
+        "data/languages/" + key[0] + ".txt": [key[0]] + elements
         for key, elements in index.items()
     }
     return langs
@@ -112,6 +77,6 @@ def translations(filename):
 
 
 def localizes():
-    import extract_strings
+    import source_keys
 
-    return [(key, "") for key in extract_strings.collect_strings()]
+    return sorted(source_keys.collect_source_key_identities())

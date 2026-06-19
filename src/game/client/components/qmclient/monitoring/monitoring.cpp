@@ -80,48 +80,48 @@ namespace
 	{
 		switch(Grade)
 		{
-		case EQmConnectionGrade::NORMAL: return "Connection normal";
-		case EQmConnectionGrade::ELEVATED: return "Connection elevated";
-		case EQmConnectionGrade::SEVERE: return "Connection severely abnormal";
-		case EQmConnectionGrade::DISCONNECTED: return "Connection disconnected";
+		case EQmConnectionGrade::NORMAL: return Localize("Connection normal");
+		case EQmConnectionGrade::ELEVATED: return Localize("Connection elevated");
+		case EQmConnectionGrade::SEVERE: return Localize("Connection severely abnormal");
+		case EQmConnectionGrade::DISCONNECTED: return Localize("Connection disconnected");
 		}
-		return "Connection disconnected";
+		return Localize("Connection disconnected");
 	}
 
 	static const char *LocalizeCauseDetail(EQmDiagnosticCause Cause, EQmConnectionGrade Grade, const SQmNetworkMetrics &Net, const SQmPerformanceMetrics &Perf)
 	{
 		if(Grade == EQmConnectionGrade::DISCONNECTED)
-			return "Not connected to a game server";
+			return Localize("Not connected to a game server");
 
 		switch(Cause)
 		{
-		case EQmDiagnosticCause::DOWNSTREAM: return "Server RTT is elevated, response path is unstable";
-		case EQmDiagnosticCause::UPSTREAM: return "Prediction latency is elevated, prediction path pressure is high";
-		case EQmDiagnosticCause::JITTER: return "Prediction jitter is obvious, latency changes are large";
-		case EQmDiagnosticCause::PACKET_LOSS: return "Resend signs detected, connection quality is suspicious";
+		case EQmDiagnosticCause::DOWNSTREAM: return Localize("Server RTT is elevated, response path is unstable");
+		case EQmDiagnosticCause::UPSTREAM: return Localize("Prediction latency is elevated, prediction path pressure is high");
+		case EQmDiagnosticCause::JITTER: return Localize("Prediction jitter is obvious, latency changes are large");
+		case EQmDiagnosticCause::PACKET_LOSS: return Localize("Resend signs detected, connection quality is suspicious");
 		case EQmDiagnosticCause::CLIENT_PERFORMANCE:
 			if(Perf.m_FrameTimeMs > 16.7f)
-				return "Client frame time is abnormal";
+				return Localize("Client frame time is abnormal");
 			if(Perf.m_CpuUsagePct >= 75.0f)
-				return "Client CPU usage is high";
+				return Localize("Client CPU usage is high");
 			if(Perf.m_PredictionTimeMs >= Net.m_SnapshotLatencyMs + 12.0f || Perf.m_PredictionStress >= 12.0f)
-				return "Client prediction time is high";
-			return "Client performance pressure is high";
-		case EQmDiagnosticCause::NONE: return "No obvious anomaly";
+				return Localize("Client prediction time is high");
+			return Localize("Client performance pressure is high");
+		case EQmDiagnosticCause::NONE: return Localize("No obvious anomaly");
 		}
-		return "No obvious anomaly";
+		return Localize("No obvious anomaly");
 	}
 
 	static const char *GradeBadgeText(EQmConnectionGrade Grade)
 	{
 		switch(Grade)
 		{
-		case EQmConnectionGrade::NORMAL: return "Normal";
-		case EQmConnectionGrade::ELEVATED: return "Elevated";
-		case EQmConnectionGrade::SEVERE: return "Severe";
-		case EQmConnectionGrade::DISCONNECTED: return "Disconnected";
+		case EQmConnectionGrade::NORMAL: return Localize("Normal");
+		case EQmConnectionGrade::ELEVATED: return Localize("Elevated");
+		case EQmConnectionGrade::SEVERE: return Localize("Severe");
+		case EQmConnectionGrade::DISCONNECTED: return Localize("Disconnected");
 		}
-		return "Disconnected";
+		return Localize("Disconnected");
 	}
 
 	static ColorRGBA GradeBadgeColor(EQmConnectionGrade Grade)
@@ -842,10 +842,10 @@ void CQmMonitoring::RenderMainGraph(CUIRect Rect) const
 		ColorRGBA m_Color;
 		SQmHistoryStats m_Stats;
 	} aLegend[] = {
-		{"Latency", m_Snapshot.m_Network.m_SnapshotLatencyMs, PING_COLOR, QmComputeHistoryStats(m_aPingHistory, m_HistoryHead, m_HistoryCount)},
-		{"Prediction", m_Snapshot.m_Network.m_PredictionLatencyMs, PRED_COLOR, QmComputeHistoryStats(m_aPredHistory, m_HistoryHead, m_HistoryCount)},
-		{"Prediction margin", m_Snapshot.m_Network.m_PredictionMarginMs, PRED_MARGIN_COLOR, QmComputeHistoryStats(m_aPredictionMarginHistory, m_HistoryHead, m_HistoryCount)},
-		{"Jitter", m_Snapshot.m_Network.m_JitterMs, JITTER_COLOR, QmComputeHistoryStats(m_aJitterHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("Latency"), m_Snapshot.m_Network.m_SnapshotLatencyMs, PING_COLOR, QmComputeHistoryStats(m_aPingHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("Prediction"), m_Snapshot.m_Network.m_PredictionLatencyMs, PRED_COLOR, QmComputeHistoryStats(m_aPredHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("Prediction margin"), m_Snapshot.m_Network.m_PredictionMarginMs, PRED_MARGIN_COLOR, QmComputeHistoryStats(m_aPredictionMarginHistory, m_HistoryHead, m_HistoryCount)},
+		{Localize("Jitter"), m_Snapshot.m_Network.m_JitterMs, JITTER_COLOR, QmComputeHistoryStats(m_aJitterHistory, m_HistoryHead, m_HistoryCount)},
 	};
 
 	CUIRect TopRow, BottomRow;
@@ -873,7 +873,7 @@ void CQmMonitoring::RenderMainGraph(CUIRect Rect) const
 
 		char aValueBuf[32];
 		FormatMetricValue(aValueBuf, sizeof(aValueBuf), "ms", aLegend[i].m_Value, 0);
-		Ui()->DoLabel(&LabelRect, Localize(aLegend[i].m_pLabel), HeaderFontSize, TEXTALIGN_ML);
+		Ui()->DoLabel(&LabelRect, aLegend[i].m_pLabel, HeaderFontSize, TEXTALIGN_ML);
 		Ui()->DoLabel(&ValueRect, aValueBuf, HeaderValueFontSize, TEXTALIGN_MR);
 
 		char aStatsBuf[64];
@@ -1007,14 +1007,14 @@ void CQmMonitoring::RenderPrimaryCards(CUIRect Rect) const
 		bool m_IsPercent = false;
 		bool m_IsCpu = false;
 	} aCards[] = {
-		{"Frame rate", m_Snapshot.m_Performance.m_Fps, "", 0, FPS_COLOR},
-		{"Frame time", m_Snapshot.m_Performance.m_FrameTimeUs, "us", 0, FPS_COLOR},
-		{"DDNet/total CPU", m_Snapshot.m_Performance.m_CpuUsagePct, "", 0, GAME_MARGIN_COLOR, false, false, true},
-		{"Memory", m_Snapshot.m_Performance.m_MemoryUsageMb, "MB", 0, GAME_MARGIN_COLOR},
-		{"Connection downstream", m_Snapshot.m_Network.m_DownBytesPerSec, "", 0, PING_COLOR, true},
-		{"Connection upstream", m_Snapshot.m_Network.m_UpBytesPerSec, "", 0, PRED_COLOR, true},
-		{"Server rollback", m_Snapshot.m_Network.m_ServerRollbackMs, "ms", 0, GAME_MARGIN_COLOR},
-		{"Rollback rate", m_Snapshot.m_Network.m_ServerRollbackRatePct, "", 0, JITTER_COLOR, false, true},
+		{Localize("Frame rate"), m_Snapshot.m_Performance.m_Fps, "", 0, FPS_COLOR},
+		{Localize("Frame time"), m_Snapshot.m_Performance.m_FrameTimeUs, "us", 0, FPS_COLOR},
+		{Localize("DDNet/total CPU"), m_Snapshot.m_Performance.m_CpuUsagePct, "", 0, GAME_MARGIN_COLOR, false, false, true},
+		{Localize("Memory"), m_Snapshot.m_Performance.m_MemoryUsageMb, "MB", 0, GAME_MARGIN_COLOR},
+		{Localize("Connection downstream"), m_Snapshot.m_Network.m_DownBytesPerSec, "", 0, PING_COLOR, true},
+		{Localize("Connection upstream"), m_Snapshot.m_Network.m_UpBytesPerSec, "", 0, PRED_COLOR, true},
+		{Localize("Server rollback"), m_Snapshot.m_Network.m_ServerRollbackMs, "ms", 0, GAME_MARGIN_COLOR},
+		{Localize("Rollback rate"), m_Snapshot.m_Network.m_ServerRollbackRatePct, "", 0, JITTER_COLOR, false, true},
 	};
 
 	const int CardCount = std::size(aCards);
@@ -1056,7 +1056,7 @@ void CQmMonitoring::RenderPrimaryCards(CUIRect Rect) const
 			FormatPercentValue(aBuf, sizeof(aBuf), aCards[i].m_Value);
 		else
 			FormatMetricValue(aBuf, sizeof(aBuf), aCards[i].m_pUnit, aCards[i].m_Value, aCards[i].m_Precision);
-		Ui()->DoLabel(&LabelRect, Localize(aCards[i].m_pLabel), LabelFontSize, TEXTALIGN_ML);
+		Ui()->DoLabel(&LabelRect, aCards[i].m_pLabel, LabelFontSize, TEXTALIGN_ML);
 		Ui()->DoLabel(&ValueRect, aBuf, ValueFontSize, TEXTALIGN_MR);
 		AccentRect.Draw(aCards[i].m_Color, IGraphics::CORNER_ALL, AccentWidth / 2.0f);
 	}
@@ -1104,16 +1104,16 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 	FormatMemoryKiBValue(aStagingBuf, sizeof(aStagingBuf), m_Snapshot.m_Performance.m_GraphicsMemory.m_StagingKiB);
 
 	const SDetailRow aLeftRows[] = {
-		{"Game/predicted tick", aTickBuf},
-		{"Prediction time", aPredictionBuf},
-		{"Send", aSendBuf},
-		{"Receive", aRecvBuf},
+		{Localize("Game/predicted tick"), aTickBuf},
+		{Localize("Prediction time"), aPredictionBuf},
+		{Localize("Send"), aSendBuf},
+		{Localize("Receive"), aRecvBuf},
 	};
 	const SDetailRow aRightRows[] = {
-		{"Texture memory", aTextureBuf},
-		{"Buffer memory", aBufferBuf},
-		{"Streamed memory", aStreamedBuf},
-		{"Staging memory", aStagingBuf},
+		{Localize("Texture memory"), aTextureBuf},
+		{Localize("Buffer memory"), aBufferBuf},
+		{Localize("Streamed memory"), aStreamedBuf},
+		{Localize("Staging memory"), aStagingBuf},
 	};
 
 	const auto RenderColumn = [&](CUIRect ColumnRect, const SDetailRow *pRows, int RowCount) {
@@ -1122,7 +1122,7 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 			CUIRect RowRect, LabelRect, ValueRect;
 			ColumnRect.HSplitTop(RowHeight, &RowRect, &ColumnRect);
 			RowRect.VSplitLeft(RowRect.w * 0.31f, &LabelRect, &ValueRect);
-			Ui()->DoLabel(&LabelRect, Localize(pRows[i].m_pLabel), LabelFontSize, TEXTALIGN_ML);
+			Ui()->DoLabel(&LabelRect, pRows[i].m_pLabel, LabelFontSize, TEXTALIGN_ML);
 			Ui()->DoLabel(&ValueRect, pRows[i].m_pValue, ValueFontSize, TEXTALIGN_MR);
 			if(i + 1 < RowCount)
 				ColumnRect.HSplitTop(RowGap, nullptr, &ColumnRect);

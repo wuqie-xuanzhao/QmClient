@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="dcterms.date" content="2026-06-14" />
+  <meta name="status" content="active" />
+  <meta name="supersedes" content="2026-06-10-设置页性能优化总纲.html; 2026-06-11-设置页性能优化总纲-重组版.html; 2026-06-14-设置页性能优化总纲-统一工作流版.html" />
+  <title>设置页性能优化总纲（全局调度版）</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --paper: #fffdfa;
+      --paper-2: #f7f2ea;
+      --ink: #2d2924;
+      --muted: #6f675f;
+      --line: #ded4c6;
+      --accent: #4f6f73;
+      --accent-2: #b8795b;
+      --ok: #5f7f55;
+      --warn: #a57536;
+      --bad: #a94d45;
+      --shadow: 0 18px 45px rgba(62, 50, 39, 0.12);
+      --code-bg: #ede6dc;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(184, 121, 91, 0.16), transparent 30rem),
+        radial-gradient(circle at 88% 8%, rgba(79, 111, 115, 0.14), transparent 28rem),
+        linear-gradient(180deg, #f7f3ec 0%, var(--bg) 100%);
+      font-family: "Noto Sans SC", "Segoe UI", "Microsoft YaHei", sans-serif;
+      line-height: 1.72;
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 28px 20px 56px; }
+    .hero, .card {
+      background: var(--paper);
+      border: 1px solid rgba(222, 212, 198, 0.95);
+      box-shadow: var(--shadow);
+      border-radius: 22px;
+    }
+    .hero { padding: 28px 28px 24px; margin-bottom: 18px; }
+    .card { padding: 22px 24px; margin-top: 18px; }
+    h1, h2, h3 { margin: 0 0 12px; line-height: 1.2; }
+    h1 { font-size: 28px; letter-spacing: -0.02em; }
+    h2 { font-size: 22px; }
+    h3 { font-size: 17px; margin-top: 18px; }
+    h4 { font-size: 15px; margin: 14px 0 6px; color: #4a4038; }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 10px 0 0 22px; padding: 0; }
+    li { margin: 4px 0; }
+    code {
+      padding: 0.12em 0.36em;
+      border-radius: 6px;
+      background: var(--code-bg);
+      color: #613c2e;
+      font-size: 0.94em;
+    }
+    pre {
+      margin: 12px 0;
+      padding: 14px 16px;
+      background: #29251f;
+      color: #f7efe2;
+      border-radius: 14px;
+      overflow-x: auto;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    pre code { padding: 0; background: transparent; color: inherit; font-size: inherit; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+      display: block;
+      overflow-x: auto;
+    }
+    th, td {
+      border-top: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: #faf5ed; color: #4f463d; font-weight: 700; white-space: nowrap; }
+    tr:hover td { background: rgba(184, 121, 91, 0.03); }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(79, 111, 115, 0.10); color: var(--accent);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+    }
+    .pill.secondary { background: rgba(184, 121, 91, 0.10); color: var(--accent-2); }
+    .pill.warn { background: rgba(165, 117, 54, 0.12); color: var(--warn); }
+    .pill.bad { background: rgba(169, 77, 69, 0.12); color: var(--bad); }
+    .pill.ok { background: rgba(95, 127, 85, 0.12); color: var(--ok); }
+    .muted { color: var(--muted); }
+    .note {
+      border-left: 4px solid var(--accent);
+      padding: 10px 12px;
+      background: rgba(79, 111, 115, 0.06);
+      border-radius: 0 10px 10px 0;
+      color: #4c4238;
+    }
+    .note.warn { border-left-color: var(--warn); background: rgba(165, 117, 54, 0.08); }
+    .note.bad { border-left-color: var(--bad); background: rgba(169, 77, 69, 0.08); }
+    .toc { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 14px; }
+    .toc a {
+      display: block; padding: 10px 12px;
+      border: 1px solid var(--line); border-radius: 12px;
+      color: var(--ink); text-decoration: none;
+      background: rgba(255,255,255,0.72);
+    }
+    .toc a:hover { border-color: rgba(184, 121, 91, 0.45); }
+    .workflow {
+      margin-top: 10px; padding: 14px 16px;
+      border: 1px solid var(--line); border-radius: 14px;
+      background: var(--paper-2); overflow-x: auto;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 13px; white-space: pre;
+    }
+    .badge {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap;
+    }
+    .badge.ok { background: rgba(95, 127, 85, 0.12); color: var(--ok); }
+    .badge.warn { background: rgba(165, 117, 54, 0.12); color: var(--warn); }
+    .badge.bad { background: rgba(169, 77, 69, 0.12); color: var(--bad); }
+    .small { font-size: 13px; color: var(--muted); }
+    details {
+      margin-top: 10px; border: 1px solid var(--line);
+      border-radius: 12px; background: rgba(255,255,255,0.65); padding: 10px 12px;
+    }
+    summary { cursor: pointer; font-weight: 700; color: #423b33; }
+    .footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 920px) {
+      .hero, .card { padding-left: 18px; padding-right: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="meta">
+        <span class="pill ok">active</span>
+        <span class="pill secondary">2026-06-14</span>
+        <span class="pill warn">取代三份旧总纲</span>
+      </div>
+      <h1>设置页性能优化总纲（全局调度版）</h1>
+      <p class="muted">这份文档从<strong>第一性原理</strong>出发，把设置页性能优化统一成一套<strong>可验证的多阶段全局调度系统</strong>。它不再按"局部补丁 P0/P1/P2"组织，而是按<strong>一条贯穿 loading → 计划 → 预构建 → 可见 → 后台 → 报告的工作流</strong>组织：当前已有的、还差哪些、后续计划、为什么这样设计。所有代码事实按 2026-06-14 分支 <code>codex/axiom-script-governance</code> 的真实状态核对，已落地的标注 <span class="badge ok">已落地</span>，部分落地的标注 <span class="badge warn">部分</span>，未落地的标注 <span class="badge bad">gap</span>。</p>
+      <div class="toc">
+        <a href="#principles">① 第一性原理</a>
+        <a href="#architecture">② 架构与全局调度工作流</a>
+        <a href="#truth">③ 当前代码真实现状</a>
+        <a href="#bottlenecks">④ 瓶颈归因（B1–B12）</a>
+        <a href="#strategies">⑤ 优化策略（A–F）</a>
+        <a href="#metrics">⑥ 量化模型与 baseline</a>
+        <a href="#roadmap">⑦ 后续计划</a>
+        <a href="#gaps">⑧ 真实 gap 清单</a>
+        <a href="#refs">⑨ 外部资料参考</a>
+      </div>
+    </header>
+
+    <!-- ============= ① 第一性原理 ============= -->
+    <section class="card">
+      <h2 id="principles">① 第一性原理：UI 性能优化的本质</h2>
+      <p class="muted">这一章解释<strong>为什么</strong>要这样优化。原理不变，代码会变。</p>
+
+      <h3>1.1 一帧里到底发生了什么</h3>
+      <p>DDNet 每一帧要做两件事：游戏渲染（世界、实体、特效、HUD）和菜单渲染（设置页、服务器列表等）。这两件事跑在<strong>同一个线程</strong>里，共享同一帧的时间预算。</p>
+      <pre><code>Frame Time = CPU 提交 + GPU 绘制 + 同步等待
+           = (布局计算 + 文本创建 + 输入检测 + 状态更新 + Draw Call 提交)
+           + (顶点处理 + 光栅化 + 像素着色 + 混合)
+           + (SwapBuffers / v-sync + 驱动同步)
+
+一帧 16.67ms (60Hz)
+├── 游戏渲染：8-12ms
+├── 菜单渲染：2-4ms（正常稳态）
+└── 剩余：给下一帧
+
+当菜单渲染突然从 2ms 涨到 200ms，这一帧就"爆了"——游戏画面停顿，
+玩家感受到卡顿。优化目标不是让菜单"更快"，而是让它<strong>不要突然变慢</strong>：
+消灭尖峰帧，保持帧时间稳定。</code></pre>
+      <p>这是理解整个系统的<strong>第一性原理</strong>：优化的对象不是"平均 FPS"，而是<strong>帧时间的尾部稳定性</strong>。一次 50ms 的卡顿远比 10 次 5ms 的微波动更影响体验。</p>
+
+      <h3>1.2 immediate-mode 与 retained-mode 的根本取舍</h3>
+      <p>UI 渲染架构在两种模式间选择。理解这个取舍是判断"哪些优化适用"的前提：</p>
+      <table>
+        <thead><tr><th>维度</th><th>immediate-mode（CUI / Dear ImGui 系）</th><th>retained-mode（React / Qt 等通用对照）</th></tr></thead>
+        <tbody>
+          <tr><td>状态归属</td><td>调用方持有，UI 系统每帧从头重建绘制描述</td><td>UI 系统持有节点树、布局、动画状态</td></tr>
+          <tr><td>每帧成本</td><td>O(all visible) —— 即使 90% 不可见也会跑 widget 逻辑</td><td>O(changed) —— 只在 model change 时重算位置</td></tr>
+          <tr><td>优势</td><td>无需预先规划、无状态同步问题、无 invalidation bug</td><td>可做跨帧缓存、动画运行时、render bridge 批处理</td></tr>
+          <tr><td>劣势</td><td>必须靠<strong>外部</strong>手段（视口裁剪、虚拟化、文本池、脏检测）把成本降到 O(visible)</td><td>状态一致性维护成本高，retained 树本身也是每帧 CPU 成本</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note warn">
+        <strong>重要澄清（2026-06-14 代码核对）</strong>：QmUI（<code>CUiRuntimeV2</code>）<strong>不是 retained-mode</strong>。代码证据：<code>UiButtons.cpp</code> 注释直接写 <code>Wraps CMenus::DoButton_Menu</code>，内部全部调 <code>Ctx.m_pUi-&gt;DoLabel()</code> / <code>Ctx.m_pMenus-&gt;DoButton_Menu()</code> / <code>Ctx.m_pUi-&gt;DoButtonLogic()</code>（CUI 底层 API）；<code>CUiV2RenderBridge</code>（<code>QmRender.cpp</code>）只做 <code>BeginFrame</code> / <code>RecordDrawCall</code> / <code>RecordClipPush</code> / <code>LastFrameStats</code>——<strong>只计数，不绘制</strong>；<code>m_Tree</code> 每帧 <code>BeginFrame/EndFrame</code>（immediate）。<strong>QmUI 实际是</strong>：CUI 底层 immediate-mode 封装层 + 动画运行时（<code>CUiV2AnimationRuntime</code>，唯一跨帧状态，缓存动画值）+ token 设计系统（<code>ui_token::color/radius/font</code>）+ 帧级 render bridge 计数。底层<strong>都走 CUI 的 <code>DoLabel</code>/<code>DoButtonLogic</code></strong>，不存在 retained 树维护成本。
+      </div>
+      <p><strong>对 QmClient 的含义</strong>：设置页跑在 CUI（immediate）和 QmUI（CUI 封装 + 动画运行时）两套调用风格上，但底层都走 CUI。<code>perf/ui_runtime</code> 能拆出 <code>tree_begin/end</code>、<code>anim_advance</code>、<code>render_bridge</code>、<code>ui_runtime_total</code> 四段，可观测 QmUI 的动画与 render bridge 额外开销。归因时按"纯 CUI 路径"和"QmUI 封装路径"分流即可。</p>
+
+      <h3>1.3 DDNet/QmClient 的架构约束</h3>
+      <p>DDNet 是 2D 俯视角 sprite 游戏，决定了哪些"通用优化"不适用：</p>
+      <ul>
+        <li>所有渲染通过 quad + sprite + texture 完成，没有后处理链（bloom / motion blur / SSAO）。</li>
+        <li>UI 和游戏渲染共享同一个 GL/Vulkan context，共享帧预算。</li>
+        <li>菜单渲染不是独立线程，发生在 <code>CMenus::OnRender()</code> 中。</li>
+        <li>FBO / recorded render target 在设置页侧已清理完毕，本轮不再回到纹理录制式页面缓存（2D UI 的 FBO 创建+录制+blit 成本 1-3ms 常高于实时渲染 0.3-0.5ms）。</li>
+        <li>文本渲染走字形图集（<code>CTextRender</code> + atlas），首次出现新字形会触发 atlas 扩容 + 全量纹理重传——这是中文界面首帧卡顿的根因之一。</li>
+      </ul>
+
+      <h3>1.4 六个优化维度（按影响力排序）</h3>
+      <p>这是所有具体策略的归类框架。后续策略 A–F 都能映射到某个维度：</p>
+      <table>
+        <thead><tr><th>维度</th><th>原则</th><th>DDNet/QmClient 现状</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1. 少做</strong>（最高）</td><td>不可见 UI 不应消耗 CPU/GPU</td><td>CSectionLoader 已有视口三级优先级（in/near/far，far 只 measure）；Tee/Assets 列表已部分可见区化</td></tr>
+          <tr><td><strong>2. 少提交</strong></td><td>合并 Draw Call 与状态切换</td><td>CUI widget 各自提交，无统一批处理层；render_bridge 已有 draw_calls/clip_pushes 计数但未汇入 telemetry</td></tr>
+          <tr><td><strong>3. 少画</strong></td><td>减少 overdraw 与像素填充</td><td>2D 桌面场景 GPU fill-rate 充足，overdraw 是次级 GPU 成本</td></tr>
+          <tr><td><strong>4. 少重建</strong></td><td>缓存静态内容</td><td><code>m_MenuTextPool</code> + plan collection + prebuild 双游标已落地；覆盖率仍在扩展</td></tr>
+          <tr><td><strong>5. 少等待</strong></td><td>异步化重活</td><td>资源 Jobs 有 VISIBLE/PREFETCH/BACKGROUND + GPU upload + adaptive budget 六类 token；backlog 健康仍需收敛</td></tr>
+          <tr><td><strong>6. 少分配</strong></td><td>避免每帧内存分配</td><td>Tee preview key 仍为 <code>std::string</code>（每帧堆分配）；残余分配在消灭更大瓶颈后再处理</td></tr>
+        </tbody>
+      </table>
+
+      <h3>1.5 优化决策树</h3>
+      <p>面对任何 UI 性能问题，按投入产出比顺序判断：</p>
+      <pre><code>1. 能不做吗？   → 裁剪、虚拟化、跳过不可见区域（收益最大，维度 1）
+2. 能少做吗？   → 脏检测、缓存、只更新变化部分（维度 4）
+3. 能做更快吗？ → 批处理、减少状态切换（维度 2）
+4. 能异步做吗？ → 后台线程/Jobs 池、延迟提交（维度 5）
+5. 能不分配吗？ → 对象池、预分配、零分配热路径（维度 6）</code></pre>
+
+      <h3>1.6 immediate-mode 的缓存悖论与解法</h3>
+      <div class="note">
+        <strong>核心洞察</strong>：immediate-mode GUI 天生<strong>没有缓存</strong>——每帧从头重建。但它仍然需要一个<strong>轻量的 retained 缓存</strong>来避免每帧 heap churn 和重复的文本布局计算。Dear ImGui 内部就为每个 widget 维护一个稳定的 ID 字符串，渲染好的文本布局（glyph 位置、断行、font metrics）存在一个短生命周期的容器里。当 widget 的 ID 或文本内容变化时缓存失效，否则复用。<br><br>
+        <strong>这正是 <code>m_MenuTextPool</code> 的设计依据</strong>：它是一个"immediate-mode 之上的显式 retained 缓存层"，用六元组 key（scope/page/tab/subtab/text-id/style fingerprint）标识每个稳定文本，跨帧复用 <code>CUIElement</code> 文本容器。这是在 DDNet CUI immediate-mode 架构约束下，把"少重建"（维度 4）落地的标准做法。
+      </div>
+    </section>
+
+    <!-- ============= ② 架构与全局调度工作流 ============= -->
+    <section class="card">
+      <h2 id="architecture">② 架构与全局调度工作流</h2>
+      <p>当前主线不是单点优化，而是一套<strong>分层调度系统</strong>。这条链路是当前架构的主流程；所有页面级优化都必须能落到这条链路的某一层，而不是单独写一个局部补丁。</p>
+      <div class="workflow">loading/prewarm (budget-bounded, recoverable)
+  -> plan collection cursor        (collect descriptor only: scope/page/tab/subtab/key/style)
+  -> prebuild cursor               (build real CUIElement by token, skip m_Built)
+  -> visible guard                 (reuse only; record miss/stale, no first-build)
+  -> visible-ready presentation    (assets: ready-then-show or stable skeleton)
+  -> background jobs               (demo meta / skin / decode / upload / preload: leftover tokens only)
+  -> telemetry emit                (text_prebuild / text_usage / adaptive_budget / visible_preflight)
+  -> report + quality gate         (targetSettings verdict, not mixed verdict)
+  -> acceptance decision</div>
+      <p class="muted">一句话：<strong>loading 阶段允许预热但必须可预算、可恢复、可观测；可见阶段只复用、不首建；后台工作只能吃剩余预算；报告只认目标窗口，不认"看起来不卡"</strong>。</p>
+
+      <h3>2.1 全局不变量（跨层约束）</h3>
+      <ol>
+        <li><code>remaining=0</code> 只表示某一层计划完成，不表示整个页面已通过验收。</li>
+        <li><code>targetSettings</code> 仍然是稳定文本的唯一验收源；顶层混合 verdict 不替代它。</li>
+        <li>可见阶段只复用稳定文本容器，<strong>不允许首建，也不允许 stale entry 现场重建</strong>。</li>
+        <li>资源预热与 UI cache 预热是两条不同的链路：资源走 VISIBLE/PREFETCH/BACKGROUND + GPU upload 预算；UI cache 走 plan collection + prebuild 游标。</li>
+        <li>后台工作（demo metadata / skin loading / resource decode / upload / preload）只能吃 adaptive budget 的剩余 token，不能抢占 visible。</li>
+      </ol>
+
+      <h3>2.2 八层合同</h3>
+      <table>
+        <thead>
+          <tr><th>层</th><th>职责</th><th>禁止事项</th><th>关键 telemetry</th><th>真实代码锚点</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Loading prewarm</td>
+            <td>加载屏内做预算内预热，允许分帧推进资源、文本 metadata 和容器构建</td>
+            <td>不能把全量扫描挤进首帧；不能在可见阶段临时补齐整个计划</td>
+            <td><code>settings_text_prebuild</code></td>
+            <td><code>CGameClient::PrewarmSettingsRuntimeCachesDuringLoading</code>（<code>gameclient.cpp:622,641,647-651</code>）→ <code>CMenus::PrewarmSettingsTextPoolForLoading</code>（<code>menus.h:1917</code>，转发到 <code>PrebuildSettingsMenuTextPool</code>）。当前 loading 阶段已循环 prebuild 直到 <code>WarmupReady</code>，上限 96 步 + 6 步无进展退出</td>
+          </tr>
+          <tr>
+            <td>Plan collection cursor</td>
+            <td>只收集 descriptor / key / coverage 元数据，保留 cursor、generation、dirty、complete</td>
+            <td>不能和容器构建混在一起；不能一次 render-only 扫完整计划</td>
+            <td><code>settings_text_plan_collection</code></td>
+            <td><code>m_MenuTextPlanCollecting</code> 标志 + <code>m_pMenuTextPlanCollection</code> 向量 + <code>CollectMenuTextPlanItem</code>（<code>menus.cpp:4277</code>）；所有稳定文本 helper 在 collecting 态只 push descriptor</td>
+          </tr>
+          <tr>
+            <td>Prebuild cursor</td>
+            <td>按 token 预算构建真正的 <code>CUIElement</code>，继续上次 cursor，跳过 <code>m_Built</code> 项</td>
+            <td>不能在 visible guard 内首建稳定容器；不能忽略 stale 失效</td>
+            <td><code>settings_text_prebuild built/reused/remaining/budget</code></td>
+            <td><code>PrebuildSettingsMenuTextPool(Budget,...)</code>（<code>menus.cpp:5009</code>，<code>menus.h:1913</code>）；<code>MenuTextElement</code> 用 <code>m_Generation</code>/<code>m_Built</code> 判复用（<code>menus.cpp:4469</code>）。idle prewarm 接力推进至 <code>complete + remaining=0</code>（<code>menus.cpp:5303-5307</code>）</td>
+          </tr>
+          <tr>
+            <td>Visible guard</td>
+            <td>可见路径只复用池内容器，必要时记录 miss / stale，但不允许首建</td>
+            <td>不能靠现场补建掩盖 registry 缺口</td>
+            <td><code>settings_text_usage</code>、<code>settings_text_miss</code>、<code>settings_text_stale</code></td>
+            <td><code>DoMenuLabelStreamed</code>（<code>menus.cpp:4510,4569</code>）+ <code>LogSettingsTextPoolCoverageGap</code>（<code>menus.cpp:326</code>）+ <code>LogSettingsTextPoolUsage</code>（<code>menus.cpp:352</code>）</td>
+          </tr>
+          <tr>
+            <td>Visible-ready presentation</td>
+            <td>资源页和列表页在展示前先保证可见范围卡片、preview、thumb、占位 geometry 已稳定</td>
+            <td>不能只做 visible-first request；不能让卡片尺寸在首屏缩放或重排</td>
+            <td><code>assets_visible_preflight</code>、<code>assets_card_geometry</code>、<code>visible_ready</code>、<code>geometry_stable</code>、<code>thumb_starts_during_draw</code></td>
+            <td><code>menus_settings_assets.cpp:6143,6148</code>；report 检查在 <code>quality.ts:170-186</code></td>
+          </tr>
+          <tr>
+            <td>Background jobs</td>
+            <td>demo metadata、skin loading、resource decode、upload、preload 等，只能吃剩余 token</td>
+            <td>不能抢占 visible 工作；不能每帧从头全表扫</td>
+            <td><code>settings_adaptive_budget</code>、<code>tee_skin_background_scan</code></td>
+            <td><code>settings_adaptive_budget</code> 统一六类 token（<code>menus.cpp:5148-5149</code>）；<code>tee_skin_background_scan</code>（<code>menus_settings.cpp</code>）。资源 Jobs 吞吐控制器四模式 <code>SCROLL_ACTIVE/POST_SCROLL_RECOVERY/IDLE_VISIBLE/IDLE_DRAIN</code>（<code>settings_resource_jobs.cpp:712-716</code>），<code>IDLE_DRAIN</code> 后台预算 8</td>
+          </tr>
+          <tr>
+            <td>Scroll recovery 控制</td>
+            <td>滚动停止后的恢复期，按帧数计数，逐步放开后台预算</td>
+            <td>恢复期内后台预算仍受限；不能立即全量恢复</td>
+            <td><code>PostScrollRecoveryFrames</code>（作为帧计数器，非耗时指标）</td>
+            <td><code>m_SettingsPostScrollRecoveryFrames</code>（<code>menus.h:2042</code>）贯穿 skins/assets/settings 三条资源链路；<code>SettingsScrollInteractionRecovery</code> 生成恢复帧计数（<code>menus_settings.cpp:2360-2362</code>、<code>menus_settings_assets.cpp:4238-4239</code>）</td>
+          </tr>
+          <tr>
+            <td>Report / quality gate</td>
+            <td>把可见阶段、计划层、预构建层、利用率、资源预飞行和 tail 指标统一写入报告</td>
+            <td>不能用"看起来不卡"替代 target window 验收</td>
+            <td><code>targetSettings</code>、<code>fps_summary</code>、<code>quality</code></td>
+            <td><code>qmclient_scripts/perf/lib/quality.ts</code>、<code>report.ts</code>；C++ 侧 <code>fps_summary</code>（<code>menus.cpp:4200-4201</code>）</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============= ③ 当前代码真实现状 ============= -->
+    <section class="card">
+      <h2 id="truth">③ 当前代码真实现状</h2>
+      <p class="muted">本章按 2026-06-14 分支 <code>codex/axiom-script-governance</code> 的代码核对，所有符号、telemetry 字段、文件行号均经过 <code>git grep</code> 验证。不是设计意图，是实际状态。</p>
+
+      <h3>3.1 稳定文本池（Stable text）—— 维度 4 的核心载体</h3>
+      <table>
+        <thead><tr><th>项</th><th>真实状态</th><th>锚点</th></tr></thead>
+        <tbody>
+          <tr><td>池容器</td><td><span class="badge ok">已落地</span> <code>m_MenuTextPool</code>（<code>std::unordered_map</code>），按六元组 key 索引；旧的 <code>m_SettingsTextPool</code> 已不在主代码路径</td><td><code>menus.cpp:4452,4482,4569,4602</code>、<code>menus.h</code></td></tr>
+          <tr><td>Key 构成</td><td><span class="badge ok">已落地</span> scope / page / tab / subtab / text-id / style fingerprint 六元组：<code>MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const SMenuTextStyleKey &amp;StyleKey)</code></td><td><code>menus.h:1882</code>、<code>menus.cpp:4417</code></td></tr>
+          <tr><td>候选 helper</td><td><span class="badge ok">已落地</span> <code>AddStableTextDefault/Label/Checkbox/Scrollbar/Button</code>、<code>DoSettingsMenuLabel</code>、<code>DoSettingsButton_Menu/CheckBox</code>、<code>DoSettingsScrollbarOption</code>（均带 Subtab 参数）</td><td><code>menus.h:1886-1902</code></td></tr>
+          <tr><td>失效模型（已收紧）</td><td><span class="badge ok">已落地</span> <code>SettingsInvalidationClearsTextPool</code> 收紧为<strong>只有 LANGUAGE/FONT/BACKEND 才全池失效</strong>；WINDOW_OR_SCALE/DPI/UI_SCALE/CONFIG_HASH/SECTION_SIZE/RESOURCE_DIRECTORY 变化不再全池失效，由 <code>DoMenuLabelStreamed</code> 的单 entry SizeChanged/TextChanged/ColorChanged 检测兜底</td><td><code>settings_warmup_test.cpp:468-481</code>、<code>settings_runtime_cache.cpp:223-227</code></td></tr>
+          <tr><td>stale reason 粒度</td><td><span class="badge warn">部分</span> <code>InvalidateMenuTextPool(const char *pReason)</code> + <code>m_MenuTextPoolGeneration</code>；stale 日志理想上应区分 <code>language/font/window/dpi/layout_width/compact_mode/ui_scale/theme/config/backend/style</code>，当前调用点只有 <code>language/font/style</code> 三种字符串</td><td><code>menus.h:1922</code>、<code>menus.cpp:4428,5170,5228</code></td></tr>
+          <tr><td>覆盖范围</td><td><span class="badge warn">部分</span> 基础页静态 checkbox label、tab/section/module 标题已接入；slider label、动态数值、TClient/QmClient 重页仍未全覆盖。状态化 <code>[new]</code> 文案、彩虹/动画颜色标题必须显式进 allowlist 不进池</td><td><code>tclient/menus_tclient.cpp</code>、<code>qmclient/menus_qmclient.cpp</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.2 Plan collection + Prebuild 双游标</h3>
+      <table>
+        <thead><tr><th>项</th><th>真实状态</th><th>锚点 / telemetry</th></tr></thead>
+        <tbody>
+          <tr><td>收集态分流</td><td><span class="badge ok">已落地</span> <code>m_MenuTextPlanCollecting</code> 标志 + <code>m_pMenuTextPlanCollection</code> 向量；所有稳定文本 helper 入口在 collecting 态只 push <code>SMenuTextPlanItem</code> descriptor，不真正构建容器</td><td><code>menus.cpp:999,1028,1051,1072,1101,1157,4389,4408,4434,4516,4706-4731</code></td></tr>
+          <tr><td>收集 telemetry</td><td><span class="badge ok">已落地</span> <code>event=settings_text_plan_collection units_done units_total remaining budget complete dirty phase scope operation</code></td><td><code>menus.cpp:5029</code></td></tr>
+          <tr><td>预构建游标</td><td><span class="badge ok">已落地</span> <code>PrebuildSettingsMenuTextPool(int Budget, const char *pScopeOverride, const char *pOperationOverride)</code>；按 token 推进，跳过 <code>m_Built</code>，生成 <code>m_MenuTextPoolGeneration</code></td><td><code>menus.cpp:5009</code>、<code>menus.h:1913</code></td></tr>
+          <tr><td>预构建 telemetry</td><td><span class="badge ok">已落地</span> <code>event=settings_text_prebuild built reused remaining budget phase scope operation</code></td><td><code>menus.cpp:5026</code></td></tr>
+          <tr><td>loading 阶段预热（已强化）</td><td><span class="badge ok">已落地</span> <code>PrewarmSettingsTextPoolForLoading(Budget)</code> 转发到 prebuild；<code>PrewarmSettingsRuntimeCachesDuringLoading</code> 已改为<strong>循环 prebuild 直到 <code>WarmupReady</code></strong>（上限 96 步 + 6 步无进展退出），原实现只调一次 budget=8</td><td><code>menus.h:1917</code>、<code>gameclient.cpp:622,641,647-651</code></td></tr>
+          <tr><td>idle prewarm 接力</td><td><span class="badge ok">已落地</span> 设置页空闲时持续推进 plan collection + prebuild 至 <code>complete + remaining=0</code>，避免切 tab/进设置首帧 text_new 爆发</td><td><code>menus.cpp:5303-5307</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.3 字形图集预扩容（维度 6 — 中文首帧卡顿根因之一）</h3>
+      <div class="note">
+        <strong>背景</strong>：中文界面有大量字形，默认 atlas 维度不足以容纳。首次出现新字形时，<code>CTextRender</code> 会扩容 atlas 并<strong>全量重传所有纹理</strong>（<code>UploadTextures</code>），这是设置页首帧 <code>text_new</code> 之外的另一个 spike 源。
+      </div>
+      <table>
+        <thead><tr><th>项</th><th>真实状态</th><th>锚点</th></tr></thead>
+        <tbody>
+          <tr><td>初始 atlas 维度</td><td><span class="badge ok">已落地</span> <code>INITIAL_ATLAS_DIMENSION</code> 已从 <code>1024</code> 提升到 <code>2048</code>，消除中文界面运行时 atlas 扩容 + 全量重传</td><td><code>text.cpp:309</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.4 视口裁剪与 section 调度（维度 1）</h3>
+      <table>
+        <thead><tr><th>项</th><th>真实状态</th><th>锚点</th></tr></thead>
+        <tbody>
+          <tr><td>Section 三级视口优先级</td><td><span class="badge ok">已落地</span> <code>CSectionLoader</code> 按 section rect 与 viewport 关系分三级：<code>0=in viewport</code>（full render）、<code>1=near viewport</code>（prefetch margin，渲染 compact）、<code>2=far from viewport</code>（measure only，不渲染）</td><td><code>section_loader.cpp:610-614</code></td></tr>
+          <tr><td>section telemetry</td><td><span class="badge ok">已落地</span> <code>event=section_loader sections_total sections_visible sections_skipped layout_dirty dirty_reason budget_ms actual_ms complete</code></td><td><code>section_loader.cpp:313-314</code></td></tr>
+          <tr><td>QmClient glass cards 视口裁剪</td><td><span class="badge ok">已落地</span> <code>glass_cards_draw</code> 加 <code>IsSectionVisible</code>，跳过视口外卡片 3 层背景 DrawCall</td><td><code>menus_qmclient.cpp:919</code></td></tr>
+          <tr><td>失效原因</td><td><span class="badge warn">部分</span> 视口外 section 仍会被 measure（计算高度）；full widget 调用已跳过，但 measure 仍是每多一个 section ~0.5ms 的固定成本</td><td><code>section_loader.cpp:380-383</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.5 资源 Jobs 与自适应预算（维度 5）</h3>
+      <table>
+        <thead><tr><th>项</th><th>真实状态</th><th>锚点 / telemetry</th></tr></thead>
+        <tbody>
+          <tr><td>吞吐控制器四模式</td><td><span class="badge ok">已落地</span> <code>SCROLL_ACTIVE</code>（后台预算 0）/ <code>POST_SCROLL_RECOVERY</code>（0）/ <code>IDLE_VISIBLE</code>（可变）/ <code>IDLE_DRAIN</code>（8）</td><td><code>settings_resource_jobs.cpp:712-716</code>、<code>settings_resource_jobs.cpp:1033-1037</code></td></tr>
+          <tr><td>统一六类 token</td><td><span class="badge ok">已落地</span> <code>settings_adaptive_budget</code>：visible / prefetch / background / gpu_upload / text / demo，按 frame pressure / scroll / backlog / window active / GPU 上传余量升降</td><td><code>menus.cpp:5148-5149</code></td></tr>
+          <tr><td>跨子系统调度</td><td><span class="badge ok">已落地</span> 资产/demo/stable text/skins 共享同一套 token 语义</td><td><code>menus.cpp</code>、<code>menus_settings_assets.cpp</code>、<code>menus_demo.cpp</code></td></tr>
+          <tr><td>report 缺失检查</td><td><span class="badge ok">已落地</span> <code>adaptive budget telemetry missing</code> warning</td><td><code>quality.ts:204-205</code></td></tr>
+          <tr><td>backlog 硬上限</td><td><span class="badge warn">部分</span> <code>IDLE_DRAIN</code> 预算已收紧到 8，但 backlog 仍缺硬上限；"健康进展"时仍可能继续扩大积压</td><td><code>settings_resource_jobs.cpp</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.6 Assets 资源页 visible-ready</h3>
+      <table>
+        <thead><tr><th>项</th><th>真实状态</th><th>锚点 / telemetry</th></tr></thead>
+        <tbody>
+          <tr><td>visible-first 请求</td><td><span class="badge ok">已落地</span> <code>visible_first</code> 标记</td><td><code>menus_settings_assets.cpp</code>、<code>menus_demo.cpp</code></td></tr>
+          <tr><td>visible-ready 预飞行</td><td><span class="badge ok">已落地</span> <code>assets_visible_preflight</code>；report 检查 <code>visible_ready=1</code>、<code>not_ready_count=0</code></td><td><code>quality.ts:170-179</code>、<code>menus_settings_assets.cpp:6143,6148</code></td></tr>
+          <tr><td>geometry 稳定</td><td><span class="badge ok">已落地</span> <code>assets_card_geometry</code>、<code>geometry_stable</code></td><td><code>quality.ts:184-185</code></td></tr>
+          <tr><td>thumb 时序</td><td><span class="badge ok">已落地</span> <code>thumb_starts_during_draw</code></td><td><code>quality.ts:181-182</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.7 Report / quality / targetSettings</h3>
+      <table>
+        <thead><tr><th>项</th><th>真实状态</th><th>锚点</th></tr></thead>
+        <tbody>
+          <tr><td>fps_summary 字段</td><td><span class="badge ok">已落地</span> <code>operation context page tab sample_frames sample_seconds fps_avg fps_min fps_max frame_ms_avg frame_ms_p95 frame_ms_p99 frame_ms_max menu_ms_max cap_limited</code></td><td><code>menus.cpp:4200-4201</code></td></tr>
+          <tr><td>操作窗口</td><td><span class="badge ok">已落地</span> 覆盖 <code>settings_open / settings_tab_switch / settings_subtab_switch / settings_tee_scroll / ingame_esc_open</code>（前四个 30 帧 fixed window；tee_scroll 为 scroll window）</td><td><code>menus.cpp</code></td></tr>
+          <tr><td>targetSettings verdict</td><td><span class="badge ok">已落地</span> report 读 <code>targetSettings.verdict</code> + <code>verdictAvailable</code>；<code>acceptanceBlocked</code> 时显示"不足以验收"</td><td><code>report.ts:60-126</code></td></tr>
+          <tr><td>stableTextCoverage 阻断</td><td><span class="badge ok">已落地</span> visible miss/stale/unplanned/key_mismatch 存在时阻断 <code>targetSettings</code></td><td><code>report.ts:80-87,167</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.8 旧基础设施（保留但非主入口）</h3>
+      <table>
+        <thead><tr><th>项</th><th>真实状态</th><th>锚点</th></tr></thead>
+        <tbody>
+          <tr><td><code>CSectionLoader</code> 四状态机</td><td><span class="badge warn">保留</span> <code>UNINITIALIZED → MEASURING → COMPACT → FULL</code> 仍在；当前 settings live path 仍 <code>SetProgressiveEnabled(false)</code>，行为更接近"测量 + 按视口/预算决定是否 full render"</td><td><code>section_loader.cpp</code></td></tr>
+          <tr><td><code>PrewarmVisibleSettingsResources</code></td><td><span class="badge warn">保留</span> 在 settings idle 时调用 <code>PrewarmSettingsPageResources</code> 并对 TClient/QmClient 走 <code>PrewarmOnly</code> 渲染路径；资源预热与 UI cache 预热<strong>仍未分离</strong>（gap）</td><td><code>menus.cpp:5278</code></td></tr>
+          <tr><td>QmUI render bridge 计数</td><td><span class="badge warn">部分</span> <code>RecordDrawCall</code>/<code>RecordClipPush</code> 已有内部计数（<code>m_LastFrameStats.m_DrawCalls/m_ClipPushes</code>），但<strong>未汇入 telemetry emit</strong>，无法在 report 中按帧对齐</td><td><code>QmRender.cpp:10-17</code></td></tr>
+          <tr><td>QmUI runtime telemetry</td><td><span class="badge warn">部分</span> <code>perf/ui_runtime</code> 有 tree/anim/render_bridge/total 摘要；缺 <code>subtab/module/widget_scope</code>、<code>layout_ms</code>，且 draw_calls/clip_pushes 未 emit</td><td><code>QmUi/QmRt.cpp</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============= ④ 瓶颈归因 ============= -->
+    <section class="card">
+      <h2 id="bottlenecks">④ 瓶颈归因（B1–B12）</h2>
+      <p class="muted">这些是已确认存在、且会影响 settings 首帧/切 tab/滚动的同步成本。每项标注当前代码状态：✅ 已落地 / ⚠️ 部分 / ❌ 未落地。</p>
+      <table>
+        <thead><tr><th>#</th><th>瓶颈</th><th>体感影响</th><th>当前代码状态</th></tr></thead>
+        <tbody>
+          <tr><td><strong>B1</strong></td><td>FBO / recorded render target 残留</td><td>—</td><td>✅ 已清理，不再依赖任何 FBO 路径</td></tr>
+          <tr><td><strong>B2</strong></td><td>Language cache 首帧全量构建</td><td>settings_open 首帧 100ms+</td><td>⚠️ standalone Language 页强制、General 内嵌区域预算分帧；收益仍需新日志验收</td></tr>
+          <tr><td><strong>B3</strong></td><td>checkbox/slider label 未进文本池</td><td>每帧走通用 <code>DoLabel</code></td><td>⚠️ 基础页静态 checkbox 已接入；slider label、动态值、TClient/QmClient 重页仍待覆盖</td></tr>
+          <tr><td><strong>B4</strong></td><td>文本池覆盖不足与首帧冷创建</td><td>首帧集中 100ms+</td><td>⚠️ <code>m_MenuTextPool</code> + 双游标 + loading 循环 prebuild 已落地；重页覆盖 + <code>text_new</code> 全页面验收仍需补齐</td></tr>
+          <tr><td><strong>B5</strong></td><td>TClient / QmClient 重 tab 同步内容重建</td><td>子 tab 切换 100-260ms</td><td>⚠️ 有 tab/module/config stage 日志，但 <code>perf/qmclient</code> frame 仍为 0（gap）；仍需缓存、虚拟化和可见区裁剪</td></tr>
+          <tr><td><strong>B6</strong></td><td>Tee 皮肤列表全量 key 构建和遍历</td><td>切 Tee / 首帧堆分配尖峰</td><td>⚠️ 可见区资源加载已优化；preview key 仍为 <code>std::string</code>（<code>menus_settings.cpp:197,2211</code>），未零堆分配化</td></tr>
+          <tr><td><strong>B7</strong></td><td>Section 全量测量</td><td>每多一个 section ~0.5ms</td><td>⚠️ 三级视口优先级已落地（far 只 measure）；首次和 dirty 时仍测量</td></tr>
+          <tr><td><strong>B8</strong></td><td>视口外 section 仍执行 widget</td><td>浪费 CPU</td><td>✅ far section 只 measure 不 full render；CPU 端裁剪已落地（<code>glass_cards_draw</code> 也有 <code>IsSectionVisible</code>）</td></tr>
+          <tr><td><strong>B9</strong></td><td>预热路径非纯资源加载</td><td>idle 帧被预热 UI 子树拖慢</td><td>❌ <code>PrewarmVisibleSettingsResources</code> 资源预热与 UI cache 预热仍未分离（gap）；缺统一 CPU budget 和收益 A/B telemetry</td></tr>
+          <tr><td><strong>B10</strong></td><td>后台资源 drain / session 积压</td><td>后台吞吐健康风险；不单独证明卡顿</td><td>⚠️ <code>IDLE_DRAIN</code> 预算已收紧到 8；backlog 仍缺硬上限</td></tr>
+          <tr><td><strong>B11</strong></td><td>Draw call 碎片化</td><td>每 50 widgets ~0.5-2ms</td><td>❌ 无批处理层；render bridge 已有 draw_calls 计数但未 emit（gap）</td></tr>
+          <tr><td><strong>B12</strong></td><td>QmUI / QmClient runtime 深度归因待补</td><td>缺逐帧对齐和 layout/draw-call 级拆分</td><td>⚠️ <code>perf/ui_runtime</code> 已有摘要；缺 <code>subtab/module/widget_scope</code>、<code>layout_ms</code>，draw_calls/clip_pushes 未 emit</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        <strong>哪些是根因，哪些是表象</strong>：<br>
+        <strong>根因</strong>（优化这些能从根本上减少工作）：B2/B3/B4（维度 4：首帧同步 CPU 工作）、B5/B8（维度 1：可见帧做了不该做的事）、B9（预热副作用）、B12（归因不足导致无法定位）。<br>
+        <strong>表象</strong>（优化这些只能掩盖问题）：p99 高（真正的问题是尖峰帧从哪来）、<code>work_drain</code> 超大耗时（后台 drain/session 归因热点，没有同帧 FPS/window 证据时不得写成卡顿根因）。
+      </div>
+    </section>
+
+    <!-- ============= ⑤ 优化策略 ============= -->
+    <section class="card">
+      <h2 id="strategies">⑤ 优化策略（A–F）</h2>
+      <p class="muted">每个策略包含：对应维度、现状、改法、量化字段、预期收益。A/B2/B3/B4/D2/F 已有部分落地；C/D/E 都有前置实现。</p>
+
+      <h3>策略 A：稳定文本池覆盖与首帧摊销（维度 4）<span class="badge ok">部分落地</span></h3>
+      <p><strong>现状</strong>：<code>m_MenuTextPool</code> + 双游标 + loading 循环 prebuild 已落地。缺口是覆盖率（slider label、TClient/QmClient 重页）和首帧冷创建摊销的全页面验收。</p>
+      <p><strong>改法</strong>：</p>
+      <ol>
+        <li>继续把静态 label、section 标题、稳定说明文字迁移到 <code>SettingsTextElement()</code> + <code>DoSettingsLabelStreamed()</code>。</li>
+        <li>把 <code>CScopedSettingsTextPerfStats</code> 扩展到主要 settings 页面/section，使 <code>text_new</code>/<code>text_reused</code> 能用于全页面验收。</li>
+        <li>非稳定候选（<code>[new]</code> 文案、彩虹/动画颜色标题）显式进 allowlist，不被扫描器静默忽略。</li>
+      </ol>
+      <p><strong>量化字段</strong>：<code>text_new</code>、<code>text_reused</code>、<code>settings_text_usage</code>（16 字段，已落地）</p>
+      <p><strong>验收口径</strong>：稳定帧已接入页面 <code>text_new=0</code>；首帧 <code>settings_open</code>/<code>settings_tab_switch</code> 不应因 <code>text_new</code> 集中创建出现 &gt;33ms 长帧。</p>
+
+      <h3>策略 B：视口外 section 跳过 widget（维度 1）<span class="badge ok">部分落地</span></h3>
+      <p><strong>现状</strong>：<code>CSectionLoader</code> 已有三级视口优先级（in/near/far），far section 只 measure 不 full render。<code>glass_cards_draw</code> 也有 <code>IsSectionVisible</code> 裁剪。</p>
+      <p><strong>改法</strong>：far section 的 measure 仍是固定成本（每 section ~0.5ms）；后续考虑在已有稳定高度占位时延迟 measure。</p>
+      <p><strong>量化字段</strong>：<code>sections_total</code>、<code>sections_visible</code>、<code>sections_skipped</code>（已落地）</p>
+
+      <h3>策略 C：列表虚拟化 + key 零分配（维度 1/6）<span class="badge warn">部分</span></h3>
+      <p><strong>现状</strong>：Tee 皮肤列表已有可见范围渲染，但 preview key 仍为 <code>std::string</code>（<code>menus_settings.cpp:197,2211</code>），每帧堆分配。</p>
+      <p><strong>改法</strong>：</p>
+      <ol>
+        <li>把 ready/preview 状态统计改为基于可见范围 + 小 overscan，非可见总量只在 dirty 时更新 summary。</li>
+        <li>将 preview cache key 改成零堆分配或预计算结构：fixed buffer lookup、stable hash key，或把 key 缓存在 skin list entry。</li>
+      </ol>
+      <p><strong>量化字段</strong>：<code>rows_total</code>、<code>rows_visible</code>、<code>rows_rendered</code>、<code>rows_skipped</code></p>
+
+      <h3>策略 D：后台资源 drain 积压限制（维度 5）<span class="badge warn">部分</span></h3>
+      <p><strong>现状</strong>：<code>IDLE_DRAIN</code> 后台预算已收紧到 8，但 backlog 仍缺硬上限。</p>
+      <p><strong>改法</strong>：在 <code>SettingsSkinBackgroundRequestBudgetDecision</code> 中增加硬 backlog 上限；收紧"健康进展"判断条件。</p>
+      <p><strong>验收口径</strong>：必须额外确认目标操作窗口的 <code>fps_summary</code>/frame-time 是否改善；<code>work_drain</code> 极端值本身不单独证明卡顿。</p>
+
+      <h3>策略 D2：预热系统收敛为可证明收益的 idle work（维度 4/5）<span class="badge bad">gap</span></h3>
+      <p><strong>现状</strong>：<code>PrewarmVisibleSettingsResources()</code> 同时做资源请求和 UI <code>PrewarmOnly</code> 渲染，资源预热与 UI cache 预热<strong>仍未分离</strong>。</p>
+      <p><strong>改法</strong>：</p>
+      <ol>
+        <li>预热分成两类：资源 job 预热走现有 VISIBLE/PREFETCH/BACKGROUND；UI cache 预热只走 plan collection + prebuild 游标，单独有 CPU budget。</li>
+        <li>UI 预热只允许写明确 cache，禁止写交互状态、用户配置、展开/拖拽状态。</li>
+        <li>新增 telemetry 记录 <code>prewarm_cost_ms</code>、<code>first_use_hit</code>、<code>first_use_saved_ms</code>。没有同路径 A/B <code>fps_summary</code> 改善的预热不作为性能优化保留理由。</li>
+      </ol>
+
+      <h3>策略 E：Section 内 Quad 批处理（维度 2）<span class="badge bad">gap</span></h3>
+      <p><strong>现状</strong>：<code>DoButton_Menu()</code> 每次 2 draw calls（背景 + 文字）。render bridge 已有 <code>draw_calls</code> 计数但未 emit。</p>
+      <p><strong>改法</strong>：收集 section 内可安全合并的 quad 到批处理容器，但<strong>不能改变 immediate-mode 语义</strong>（不改变提交顺序、不跨 clip/scissor 重排、不跨 text/quad 层级重排）。</p>
+      <p><strong>前置</strong>：先把 render bridge 的 <code>draw_calls</code>/<code>clip_pushes</code> emit 到 telemetry，用数据证明批处理收益。</p>
+
+      <h3>策略 F：布局脏检测（维度 4）<span class="badge warn">部分</span></h3>
+      <p><strong>现状</strong>：section 高度、列宽、可见范围每帧重算。<code>CSectionLoader</code> 已有 runtime key（含 viewport_width/height/ui_scale）和 cached height，但首次和 dirty 时仍测量。</p>
+      <p><strong>改法</strong>：缓存 section 高度、列表行高、列宽、可见范围和静态文本测量结果。dirty key 至少包含：viewport 宽高、UI scale、语言/文本、字体大小、配置展开状态。</p>
+    </section>
+
+    <!-- ============= ⑥ 量化模型与 baseline ============= -->
+    <section class="card">
+      <h2 id="metrics">⑥ 量化模型与 baseline</h2>
+
+      <h3>6.1 分层帧时间目标</h3>
+      <p>DDNet 是快节奏平台游戏，流畅性要求高于一般应用。<strong>p99 比平均值重要得多</strong>：一次 50ms 的卡顿远比 10 次 5ms 的微波动更影响体验。优化应优先消灭"尖峰帧"。</p>
+      <table>
+        <thead><tr><th>指标</th><th>目标值</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td>UI 帧时间均值</td><td>≤ 4ms</td><td>为游戏渲染留足 12ms+ 预算（60fps）</td></tr>
+          <tr><td>交互帧（切 tab / 滚动）</td><td>≤ 8ms</td><td>不超过 120Hz 刷新周期</td></tr>
+          <tr><td>最差帧 p99</td><td>≤ 16ms</td><td>不超过 60Hz 周期；超出即用户可感知卡顿</td></tr>
+          <tr><td>首帧（冷启动进入设置页）</td><td>≤ 33ms</td><td>允许一次较长帧，但不能连续两帧超标</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6.2 尾部指标论证</h3>
+      <p>量化系统必须同时描述<strong>平均吞吐</strong>和<strong>尾部体验</strong>。对滚动列表和首屏切 tab 场景，尾部比均值更重要。</p>
+      <table>
+        <thead><tr><th>指标</th><th>用途</th><th>状态 / 解释</th></tr></thead>
+        <tbody>
+          <tr><td><code>fps_avg</code></td><td>整体吞吐</td><td><span class="badge ok">已采集</span> 只能看大致是否偏慢</td></tr>
+          <tr><td><code>fps_min</code> / <code>frame_ms_max</code></td><td>绝对最差点</td><td><span class="badge ok">已采集</span> 帮助发现首帧或极端阻塞，但会被单个离群值放大</td></tr>
+          <tr><td><code>frame_ms_p95</code> / <code>p99</code></td><td>尾部分布</td><td><span class="badge ok">已采集</span> 当前 report 主线</td></tr>
+          <tr><td><code>1% low</code></td><td>尾部体验</td><td><span class="badge bad">gap</span> 以最慢 1% 帧的平均值反推 FPS，直接反映滚动/翻页/打开面板的"掉帧感"。皮肤列表滚动必须纳入</td></tr>
+          <tr><td><code>scroll recovery</code></td><td>交互恢复</td><td><span class="badge warn">部分</span> <code>PostScrollRecoveryFrames</code> 帧计数器已广泛落地用于预算控制；但<strong>恢复耗时（ms）未采集到 report</strong>，无法量化"滚动停止后多久恢复稳定帧"</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        <strong>外部依据</strong>：1% 和 0.1% low 量化卡顿，比 avg FPS 更重要——avg FPS 是 deeply flawed metric，constant smooth 120 avg FPS 优于波动的 60 avg（SuperTuxKart 开发博客论证）。本项目应把 <code>1% low</code> 提升为一等指标。落地口径：<code>fps_summary</code> 继续保留 avg/min/max/p95/p99，同时增加 <code>frame_ms_1pct_low</code>；scroll window 增 <code>scroll_recovery_ms</code>。
+      </div>
+
+      <h3>6.3 当前 baseline（2026-06-10，post-FBO-cleanup，1ms 采样阈值）</h3>
+      <pre><code>采样阈值：~1ms（实际 p5 = 0.466ms）
+样本帧数：64,141    总日志行：339,649    无效行：0
+偏差：无（p5 &lt; 4.17ms，数据完整）
+
+verdict: FAIL
+p50: 1.326ms  p90: 2.014ms  p95: 2.420ms  p99: 12.906ms
+max: 342.777ms  spike: 464 个  avg: 2.050ms</code></pre>
+      <p>这是 FBO 删除后唯一基线。p99 已从历史 25.547ms 降到 12.906ms，尾部整体改善；但 spike 仍有 464 个。</p>
+      <p>Top 归因（注意强口径）：</p>
+      <table>
+        <thead><tr><th>排名</th><th>类型</th><th>页面</th><th>耗时</th><th>详情</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Work Drain / Session Summary</td><td>settings:tee</td><td><strong>6839.642ms</strong></td><td>merge 272 jobs；后台 drain/session 归因，<strong>不单独等价于主线程 frame-time</strong></td></tr>
+          <tr><td>2</td><td>Work Drain / Session Summary</td><td>settings:tee</td><td>3901.435ms</td><td>merge 495 jobs；同上</td></tr>
+          <tr><td>3</td><td>Work Drain / Session Summary</td><td>settings:tee</td><td>528.220ms</td><td>同上</td></tr>
+          <tr><td>4</td><td>List Interaction</td><td>server_browser</td><td>68.325ms</td><td>1276 items, 24 visible（不在本轮范围）</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6.4 P2 后固定窗口样本（2026-06-11）</h3>
+      <p><code>qm_perf_2026-06-11_02-38-33</code> 已能按目标操作窗口验收，<code>quality.warnings=[]</code>，但 <code>targetSettings.verdict=FAIL</code>，<code>targetSettings.p99=335.999ms</code>。最差窗口：</p>
+      <table>
+        <thead><tr><th>operation</th><th>context</th><th>page</th><th>frame max</th><th>menu max</th></tr></thead>
+        <tbody>
+          <tr><td><code>settings_open</code></td><td>offline</td><td><code>settings:general</code></td><td>335.999ms</td><td>334.128ms</td></tr>
+          <tr><td><code>ingame_esc_open</code></td><td>online</td><td><code>game</code></td><td>292.308ms</td><td>291.645ms</td></tr>
+          <tr><td><code>settings_subtab_switch</code></td><td>offline</td><td><code>settings:tclient</code></td><td>263.451ms</td><td>263.300ms</td></tr>
+          <tr><td><code>settings_subtab_switch</code></td><td>offline</td><td><code>settings:qmclient</code></td><td>174.283ms</td><td>168.214ms</td></tr>
+        </tbody>
+      </table>
+      <p>关键归因：General 首开同帧 <code>text_new=9 text_reused=0</code>，后续帧降到 <code>text_new=0 text_reused=10</code>。这说明文本池已生效，但<strong>首帧冷创建仍需要预热或分帧摊销</strong>。Tee 滚动窗口 <code>frame_ms_max=8.909ms</code>、<code>frame_ms_p99=4.317ms</code>，<strong>不是当前 settings-only FAIL 主因</strong>。</p>
+    </section>
+
+    <!-- ============= ⑦ 后续计划 ============= -->
+    <section class="card">
+      <h2 id="roadmap">⑦ 后续计划</h2>
+      <p>路线图按全局调度工作流的层组织，每一项明确它落在哪一层、解决哪个瓶颈、用什么 telemetry 验收。</p>
+
+      <h3>7.1 P0（最高优先）</h3>
+      <table>
+        <thead><tr><th>工作流层</th><th>目标</th><th>解决瓶颈</th><th>验收信号</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Visible guard + Prebuild</td>
+            <td>把 stable text coverage 从"部分完成"推到 settings 全 scope：TClient/QmClient 重 tab 的 slider label、checkbox label、按钮标题、tab/section/module 标题、列表静态标题、固定说明文案全部入池</td>
+            <td>B3/B4</td>
+            <td><code>settings_subtab_switch</code>/<code>ingame_esc_open</code> 里 <code>text_new</code> → 0；<code>stableTextCoverage.acceptanceBlocked=false</code></td>
+          </tr>
+          <tr>
+            <td>Report / quality</td>
+            <td>把 <code>1% low</code> 与 <code>scroll_recovery_ms</code> 从"建议口径"落地为真实字段：C++ 侧 fps_summary 增 <code>frame_ms_1pct_low</code>；scroll window 增 <code>scroll_recovery_ms</code>（基于已有的 <code>PostScrollRecoveryFrames</code> 机制补耗时统计）；TS report 一等指标</td>
+            <td>量化缺口</td>
+            <td>皮肤列表滚动窗口能输出 <code>1% low</code> 与 <code>scroll recovery</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>7.2 P1（高优先）</h3>
+      <table>
+        <thead><tr><th>工作流层</th><th>目标</th><th>解决瓶颈</th><th>验收信号</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Loading prewarm（分离）</td>
+            <td>把 <code>PrewarmVisibleSettingsResources</code> 拆成两条链路：资源预热走 VISIBLE/PREFETCH/BACKGROUND + GPU upload；UI cache 预热只走 plan collection + prebuild 游标</td>
+            <td>B9</td>
+            <td><code>prewarm_cost_ms</code> + <code>first_use_hit</code>；无收益项被削减</td>
+          </tr>
+          <tr>
+            <td>Background jobs</td>
+            <td>adaptive budget 已统一六类 token，继续收敛 <code>IDLE_DRAIN</code> backlog 硬上限；Tee preview key 全量化为可见区 + dirty 缓存（零堆分配）</td>
+            <td>B6/B10</td>
+            <td><code>work_drain</code> 极端归因值收敛；目标窗口 frame_ms 不再因后台积压恶化</td>
+          </tr>
+          <tr>
+            <td>Visible-ready（assets）</td>
+            <td>资源页/demo/Tee 在 visible-first 基础上补 visible-ready：先 ready 再 show，或用稳定 skeleton；卡片尺寸不在首屏缩放重排</td>
+            <td>—</td>
+            <td><code>geometry_stable=1</code>、<code>visible_ready=1</code></td>
+          </tr>
+          <tr>
+            <td>Background jobs + Report</td>
+            <td>stale reason 粒度补全 <code>language/font/window/dpi/layout_width/compact_mode/ui_scale/theme/config/backend/style</code> 全集；<code>InvalidateMenuTextPool</code> 调用点补齐对应 reason 字符串</td>
+            <td>B4</td>
+            <td>stale 日志能定位每个失效的确切原因</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>7.3 P2（中优先）</h3>
+      <table>
+        <thead><tr><th>工作流层</th><th>目标</th><th>解决瓶颈</th><th>验收信号</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Report（render bridge emit）</td>
+            <td>把 <code>CUiV2RenderBridge</code> 的 <code>m_LastFrameStats.m_DrawCalls/m_ClipPushes</code> emit 到 telemetry；补 <code>perf/qmclient</code> frame 对齐（修 <code>IClient *</code> 传递，当前 frame=0）</td>
+            <td>B11/B12</td>
+            <td>同一长帧能按 runtime + stage + draw_calls 对齐到 frame</td>
+          </tr>
+          <tr>
+            <td>条件性 render backend</td>
+            <td>只有当 <code>render_bridge</code>/<code>draw_calls</code>/<code>flush</code> 或 pipeline 切换明确成为长帧主因时才进入 Vulkan/OpenGL 提交路径优化</td>
+            <td>B11</td>
+            <td>telemetry 证明 render backend 是主因</td>
+          </tr>
+          <tr>
+            <td>Section 内 Quad 批处理</td>
+            <td>收集 section 内可安全合并的 quad；保持 immediate-mode 语义不变</td>
+            <td>B11</td>
+            <td>每 section draw_calls 下降</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>7.4 明确不做</h3>
+      <ul>
+        <li>❌ <strong>FBO / recorded render target / 纹理录制式页面缓存</strong>：设置页侧已清理，2D UI 不走此路。</li>
+        <li>❌ <strong>引入 retained-mode 全局 UI 框架</strong>：与 DDNet CUI 架构冲突；QmUI 本身是 CUI 封装 + 动画运行时（非 retained），不外扩成独立框架。</li>
+        <li>❌ <strong>全局 Draw List 批处理</strong>：与 CUI 架构冲突，改动量巨大；section 内批处理已够用。</li>
+        <li>❌ <strong>Server Browser / Demo Browser 作为 settings-only 主证据</strong>：不同根因，不混入 settings verdict。</li>
+        <li>❌ <strong>全局 scheduler 大重构</strong>：不改 DDNet upstream 架构。</li>
+      </ul>
+    </section>
+
+    <!-- ============= ⑧ 真实 gap 清单 ============= -->
+    <section class="card">
+      <h2 id="gaps">⑧ 真实 gap 清单（文档必须诚实标注的未完成项）</h2>
+      <div class="note bad">
+        <strong>经 <code>git grep</code> 验证，以下项尚未落地或未完整覆盖</strong>：
+        <ol style="margin: 6px 0 0 18px;">
+          <li><code>1% low</code>（<code>frame_ms_1pct_low</code>）在 <code>fps_summary</code>（<code>menus.cpp:4200-4201</code>）和 TS report 侧<strong>完全不存在</strong>（0 文件命中）。当前 fps_summary 只有 <code>fps_avg/min/max + frame_ms_avg/p95/p99/max</code>。</li>
+          <li><code>scroll_recovery_ms</code>（恢复<strong>耗时</strong>）未采集到 report。注意：<code>PostScrollRecoveryFrames</code> 帧计数器已广泛落地用于预算控制，但耗时指标未采集。</li>
+          <li>资源预热（<code>PrewarmSettingsPageResources</code>）与 UI cache 预热（<code>PrebuildSettingsMenuTextPool</code>）共用 <code>PrewarmVisibleSettingsResources</code> 入口，仍未分离成两条独立可观测链路。</li>
+          <li>stale 失效 reason 粒度尚未完整覆盖 <code>language/font/window/dpi/layout_width/compact_mode/ui_scale/theme/config/backend/style</code> 全集；当前 <code>InvalidateMenuTextPool</code> 调用点只有 <code>language/font/style</code> 三种字符串。</li>
+          <li><code>perf/qmclient</code> frame 对齐未修复（frame=0，阻塞 QmClient stage 与 fps_summary/ ui_runtime 的逐帧关联）。</li>
+          <li>render bridge 的 <code>draw_calls</code>/<code>clip_pushes</code> 计数已存在（<code>QmRender.cpp:10-17</code>）但<strong>未 emit 到 telemetry</strong>，无法在 report 中按帧对齐。</li>
+          <li>Tee preview key 仍为 <code>std::string</code>（<code>menus_settings.cpp:197,2211</code>），未零堆分配化。</li>
+          <li><code>IDLE_DRAIN</code> backlog 仍缺硬上限。</li>
+          <li>CI 集成与自动化回归防护仍未落地。</li>
+        </ol>
+      </div>
+
+      <h3>8.1 代码审查发现（2026-06-14，只读审查 + 人工核实）</h3>
+      <p class="muted">本轮审查发现 10 项，已修复 7 项（P0 启动崩溃、P1×2 验收 gate 逻辑、P2×2 热路径/内存、P3 friend、P2 皮肤 fallback sweep 恢复）。以下 4 项标注为后续处理：</p>
+      <table>
+        <thead><tr><th>严重度</th><th>文件</th><th>问题</th><th>判断</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge warn">P3</span></td><td><code>menus.cpp:4540</code></td><td><code>m_pSettingsTextPrebuildBudget</code> 从不赋值（声明 <code>nullptr</code>），整个 visible-path budget 块是 dead code</td><td>既有的未完成 hook，非本次引入。后续应删除或接入真实 frame-scoped budget</td></tr>
+          <tr><td><span class="badge warn">P3</span></td><td><code>menus.cpp:5176</code></td><td><code>InvalidateMenuTextPool</code> 不再立即释放 GPU 文本容器（lazy release，generation-based 复用）</td><td>设计意图（lazy rebuild 是文本池核心机制）。后续应在 <code>OnShutdown</code> 显式 <code>ResetUIElements</code>，或文档化 lazy reclaim 语义</td></tr>
+          <tr><td><span class="badge warn">P3</span></td><td><code>menus.cpp:4569</code></td><td>O(n) <code>m_MenuTextPool</code> 指针扫描（<code>DoMenuLabelStreamed</code> + loading 循环 <code>SettingsTextContainerCount</code>）</td><td>性能优化建议非 bug。pool 大小数百 entry 可接受。后续可加 <code>unordered_map&lt;CUIElement*, key&gt;</code> 反查表</td></tr>
+          <tr><td><span class="badge warn">P2</span></td><td><code>menus_settings.cpp:2456</code></td><td><code>visible_ready</code> telemetry 语义从"视觉就绪（VisualReady，含 preview cache）"改为"source settled（SourceReady || TerminalFailure）"，但字段名未同步</td><td>[INFERENCE] 架构层面的有意改动（先 source settled 再 background prefill preview）。后续应统一字段名或确认 TS 侧消费方对齐到 source-settled 语义</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        <strong>已修复项摘要</strong>（2026-06-14）：<code>gameclient.cpp</code> RenderLoading counter overflow（P0 启动崩溃）；<code>stats.ts</code> firstTargetSummaryTime 空时间戳过滤 + assetsVisibleReady 全局 reduce 改最后快照（P1 验收 gate）；<code>menus.cpp</code> EnsureSettingsMenuTextPlanReadyForVisible rebuild 前 clear（P2 内存增长）；<code>menus_settings.cpp</code> background scan complete 条件（P2 热路径）；<code>menus.h</code> 删除 unused friend（P3）；<code>skins.cpp</code> 恢复 fallback sweep（P2 皮肤列表不加载）。
+      </div>
+    </section>
+
+    <!-- ============= ⑨ 外部资料参考 ============= -->
+    <section class="card">
+      <h2 id="refs">⑨ 外部资料参考</h2>
+      <table>
+        <thead><tr><th>#</th><th>结论</th><th>外部依据</th><th>对本仓库的含义</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>UI 优化核心是少提交、少切换、少重建；FBO 是高级技巧不是基本策略</td>
+            <td>Dear ImGui 文档强调批处理、零分配、clipper 虚拟化</td>
+            <td>先做源头降温（维度 1/4/5），再考虑缓存</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>immediate-mode UI 性能关键在于每帧只做 O(visible) 工作</td>
+            <td>ImGui ListClipper（处理 586k 项只渲染可见行 + 小 overscan 的标准实践）；Wikipedia「Immediate mode (computer graphics)」——immediate-mode 中"屏幕整体每次都从头渲染"</td>
+            <td>列表虚拟化 + visible guard 优先于任何缓存（维度 1）</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>immediate-mode 内部仍需轻量 retained 缓存避免 heap churn；widget 用稳定 ID 字符串标识，渲染好的文本布局存在短生命周期容器，glyph 数据在持久纹理 atlas</td>
+            <td>「Immediate Mode GUI Is A Mirage」（geoffprewett）；Hacker News immediate-mode 讨论；Reddit r/cpp「Proving Immediate Mode GUI's are Performant」</td>
+            <td>这正是 <code>m_MenuTextPool</code> 的设计依据：immediate-mode 之上的显式 retained 缓存层，用六元组 key 跨帧复用文本容器</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>retained-mode 只在 model change 时重算，但状态一致性维护成本高</td>
+            <td>Hacker News / StackOverflow immediate vs retained 讨论</td>
+            <td>通用原理；QmUI <strong>不是</strong> retained，是 CUI 封装 + 动画运行时</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>1% low / 0.1% low / p99 比 avg FPS 更能反映流畅度。avg FPS 是 deeply flawed metric——constant smooth 120 avg FPS 优于波动的 60 avg</td>
+            <td>SuperTuxKart 开发博客「Why average FPS and 1% low FPS are misleading」；ASUS ROG「What are 1% Lows?」；Android Game developer docs 把 P99 FPS（1% percentile）定义为 stutter indicator；HowToGeek「Why 1% Lows Matter」</td>
+            <td>把 <code>1% low</code> 提升为一等指标（P0 落地）</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>60fps = 16.67ms/帧，120fps = 8.33ms/帧。p99 比平均帧时间更能反映流畅度</td>
+            <td>Wikipedia Frame Rate；游戏行业标准</td>
+            <td>p99 ≤ 16ms 为目标</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>FBO readback 是同步阻塞点，强制 GPU pipeline flush</td>
+            <td>Khronos OpenGL Wiki</td>
+            <td>已删除 FBO 的另一个原因，不回退</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>DDNet 2D 特性对优化方向的影响</h3>
+      <table>
+        <thead><tr><th>通用优化手段</th><th>DDNet 中适用性</th><th>原因</th></tr></thead>
+        <tbody>
+          <tr><td>FBO 渲染到纹理</td><td>❌ 已删除</td><td>2D 游戏无后处理/3D 需求，FBO 创建+录制+blit 成本常高于实时渲染</td></tr>
+          <tr><td>全局 Draw List 批处理</td><td>❌ 不做</td><td>与 upstream CUI 架构冲突，改动量巨大；section 内批处理已够用</td></tr>
+          <tr><td>Overdraw 优化</td><td>⚠️ 低优先级</td><td>桌面 GPU fill-rate 充足，2D UI overdraw 通常非主瓶颈</td></tr>
+          <tr><td>纹理图集</td><td>✅ 已采用</td><td>字形 atlas（<code>INITIAL_ATLAS_DIMENSION=2048</code>）；UI 图标可进一步合并</td></tr>
+          <tr><td>渲染后端提交路径（Vulkan / OpenGL）</td><td>⚠️ 有条件</td><td>只在 <code>render_bridge</code>/<code>draw_calls</code>/<code>flush</code> 成为主因时进入</td></tr>
+          <tr><td>异步 I/O</td><td>✅ 已有基础</td><td>资源 Jobs 框架 + adaptive budget 六类 token</td></tr>
+          <tr><td>对象池 / 稳定缓存</td><td>✅ 已采用</td><td><code>m_MenuTextPool</code> 复用文本容器；Tee preview cache 仍待零分配化</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2 id="appendix">⑩ 附录</h2>
+
+      <h3>附录 A：三份旧文档的关系</h3>
+      <table>
+        <thead><tr><th>文件</th><th>定位</th><th>现在如何看</th></tr></thead>
+        <tbody>
+          <tr><td><code>2026-06-10-设置页性能优化总纲.html</code></td><td>原始总纲：第一性原理、12 个瓶颈、策略 A–F、量化系统设计</td><td><span class="badge warn">superseded</span> 结论被新架构和新 telemetry 收口；第一性原理与策略详述已并入本文件</td></tr>
+          <tr><td><code>2026-06-11-设置页性能优化总纲-重组版.html</code></td><td>现状映射 + 路线图中间版</td><td><span class="badge warn">superseded</span> P0/P1/P2.5 大部分已落地</td></tr>
+          <tr><td><code>2026-06-14-设置页性能优化总纲-统一工作流版.html</code></td><td>原统一工作流版</td><td><span class="badge warn">superseded</span> 被本文件取代</td></tr>
+          <tr><td><strong>本文件</strong></td><td>当前唯一 active spec</td><td><span class="badge ok">权威入口</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>附录 B：验收口径与门禁</h3>
+      <ol>
+        <li><code>settings:tclient</code>、<code>settings:qmclient</code>、<code>ingame_esc_open</code> 继续作为 stable text 主验收窗口。</li>
+        <li><code>settings:assets</code> 进入时必须先满足 visible-ready，再允许展示真实卡片。</li>
+        <li>皮肤列表滚动必须把 <code>1% low</code> 纳入验收（此项依赖 P0 telemetry 落地）；落地前验收仍以 <code>frame_ms_p95/p99</code> + spike 为主，但 report 必须显式标注 <code>1% low missing</code>。</li>
+        <li>任何 target window 缺少 <code>targetSettings</code>、<code>fps_summary</code>、<code>settings_text_usage</code>、<code>settings_adaptive_budget</code> 或 visible-ready 证据时，都不能标记为通过。</li>
+        <li><code>settings_text_miss</code>、<code>settings_text_stale</code> 或目标窗口前 plan collection/prebuild 仍有 <code>remaining</code> 时，report 必须把 <code>targetSettings</code> 标为"不足以验收"。</li>
+        <li>判断顺序固定：先看 settings/ingame Esc 目标窗口 → 再看 Tee/work_drain 背景热点 → 最后才考虑 backend 提交路径。</li>
+        <li>Gate 命令：纯文档改动至少 <code>python qmclient_scripts/gate/check_docs.py</code>；常规代码改动至少 <code>python qmclient_scripts/gate/check_gate.py --mode quick</code>。</li>
+      </ol>
+
+      <h3>附录 C：修订历史</h3>
+      <table>
+        <thead><tr><th>日期</th><th>变更</th></tr></thead>
+        <tbody>
+          <tr><td>2026-06-10</td><td>原始总纲：整合第一性原理分析与量化系统设计，FBO 删除进展，12 个瓶颈点 B1–B12</td></tr>
+          <tr><td>2026-06-11</td><td>重组版：现状映射 + 路线图；P0 文本冷启动优化先行落地；P2 量化补全（fps_summary、settings-only verdict、quality warning）</td></tr>
+          <tr><td>2026-06-14</td><td>统一工作流版：分层调度合同、尾部指标、子系统合同</td></tr>
+          <tr><td>2026-06-14</td><td>三合一整合版：恢复第一性原理章节；按 git grep 核对真实代码</td></tr>
+          <tr><td>2026-06-14</td><td><strong>本文件（全局调度版）</strong>：基于第一性原理 + 当前代码现状重写。完整恢复 12 瓶颈归因 + 策略 A–F 详述 + baseline Top 归因表；按真实代码核对修正所有锚点（<code>PrebuildSettingsMenuTextPool</code> 实际在 <code>menus.cpp:5009</code> 而非旧文档误写的 4194）；新增字形图集预扩容、scroll recovery 帧计数器现状、render bridge 计数现状等真实事实；整合 apple-redesign 文本渲染优化项（atlas 预扩容已落地、文本宽度缓存未落地）。将三份旧总纲标记为 superseded</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="footer">
+      说明：本文件基于 2026-06-14 分支 <code>codex/axiom-script-governance</code> 的真实代码核对重写。后续新增实现计划时，应以本文件为唯一规格入口。
+    </div>
+  </div>
+</body>
+</html>

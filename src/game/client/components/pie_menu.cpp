@@ -63,7 +63,7 @@ void CPieMenu::OnRelease()
 void CPieMenu::ConKeyPieMenu(IConsole::IResult *pResult, void *pUserData)
 {
 	CPieMenu *pSelf = (CPieMenu *)pUserData;
-	
+
 	if(pResult->GetInteger(0) != 0)
 	{
 		// Key pressed - open menu
@@ -95,15 +95,15 @@ int CPieMenu::FindNearestPlayer()
 		return -1;
 
 	const bool Spectating = GameClient()->m_Snap.m_SpecInfo.m_Active ||
-		(GameClient()->m_Snap.m_pLocalInfo && GameClient()->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS);
+				(GameClient()->m_Snap.m_pLocalInfo && GameClient()->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS);
 
 	// Use crosshair target when playing, screen center when spectating.
 	vec2 ReferencePos = Spectating ? GameClient()->m_Camera.m_Center : GameClient()->m_CursorInfo.WorldTarget();
-	
+
 	int NearestClientId = -1;
 	float NearestDistanceSq = Spectating ? std::numeric_limits<float>::max() :
-		(float)g_Config.m_QmPieMenuMaxDistance * g_Config.m_QmPieMenuMaxDistance;
-	
+					       (float)g_Config.m_QmPieMenuMaxDistance * g_Config.m_QmPieMenuMaxDistance;
+
 	const int LocalClientId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
 
 	// Iterate through all players
@@ -112,21 +112,20 @@ int CPieMenu::FindNearestPlayer()
 		// Skip invalid players
 		if(!GameClient()->m_Snap.m_aCharacters[i].m_Active)
 			continue;
-		
+
 		// Skip local player
 		if(i == LocalClientId)
 			continue;
 
 		// Skip spectators
-		if(GameClient()->m_Snap.m_apPlayerInfos[i] && 
-		   GameClient()->m_Snap.m_apPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
+		if(GameClient()->m_Snap.m_apPlayerInfos[i] &&
+			GameClient()->m_Snap.m_apPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 			continue;
 
 		// Get player position
 		vec2 PlayerPos = vec2(
 			GameClient()->m_aClients[i].m_RenderPos.x,
-			GameClient()->m_aClients[i].m_RenderPos.y
-		);
+			GameClient()->m_aClients[i].m_RenderPos.y);
 
 		// Calculate squared distance (avoid sqrt for performance)
 		float DistanceSq = length_squared(ReferencePos - PlayerPos);
@@ -312,7 +311,7 @@ void CPieMenu::OnRender()
 
 	const vec2 ScreenCenter = m_MenuCenter;
 	float Scale = mix(MIN_SCALE, MAX_SCALE, m_AnimationProgress);
-	float ConfigScale = g_Config.m_QmPieMenuScale / 100.0f;  // User scale from config
+	float ConfigScale = g_Config.m_QmPieMenuScale / 100.0f; // User scale from config
 	float Alpha = m_AnimationProgress * (g_Config.m_QmPieMenuOpacity / 100.0f);
 	float InnerRadius = INNER_RADIUS * Scale * ConfigScale;
 	float OuterRadius = OUTER_RADIUS * Scale * ConfigScale;
@@ -343,14 +342,14 @@ void CPieMenu::OnRender()
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.15f, 0.15f, 0.2f, 0.9f * Alpha);
-	Graphics()->DrawCircle(ScreenCenter.x, ScreenCenter.y, InnerRadius - 9.0f, 48);  // 5 * 1.8
+	Graphics()->DrawCircle(ScreenCenter.x, ScreenCenter.y, InnerRadius - 9.0f, 48); // 5 * 1.8
 	Graphics()->QuadsEnd();
 
 	// Render center info (player name)
 	RenderCenterInfo();
-	
+
 	// Render cursor
-	RenderTools()->RenderCursor(ScreenCenter + m_SelectorMouse, 43.0f, Alpha);  // 24 * 1.8
+	RenderTools()->RenderCursor(ScreenCenter + m_SelectorMouse, 43.0f, Alpha); // 24 * 1.8
 }
 
 void CPieMenu::RenderOverlay()
@@ -397,8 +396,7 @@ void CPieMenu::RenderSector(int Index, float InnerRadius, float OuterRadius, boo
 			Inner1.x, Inner1.y,
 			Outer1.x, Outer1.y,
 			Inner2.x, Inner2.y,
-			Outer2.x, Outer2.y
-		);
+			Outer2.x, Outer2.y);
 		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 	}
 	Graphics()->QuadsEnd();
@@ -410,17 +408,17 @@ void CPieMenu::RenderSector(int Index, float InnerRadius, float OuterRadius, boo
 
 	// Draw icon
 	const char *pIcon = GetOptionIcon((EMenuOption)Index);
-	float IconSize = Highlighted ? 58.0f : 47.0f;  // 32/26 * 1.8
-	
+	float IconSize = Highlighted ? 58.0f : 47.0f; // 32/26 * 1.8
+
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
 	float IconWidth = TextRender()->TextWidth(IconSize, pIcon);
-	TextRender()->Text(ItemPos.x - IconWidth / 2.0f, ItemPos.y - IconSize / 2.0f - 18.0f, IconSize, pIcon);  // 10 * 1.8
+	TextRender()->Text(ItemPos.x - IconWidth / 2.0f, ItemPos.y - IconSize / 2.0f - 18.0f, IconSize, pIcon); // 10 * 1.8
 
 	// Draw label below icon
 	const char *pName = GetOptionName((EMenuOption)Index);
-	float TextSize = Highlighted ? 29.0f : 23.0f;  // 16/13 * 1.8
+	float TextSize = Highlighted ? 29.0f : 23.0f; // 16/13 * 1.8
 	float TextWidth = TextRender()->TextWidth(TextSize, pName);
-	TextRender()->Text(ItemPos.x - TextWidth / 2.0f, ItemPos.y + 14.0f, TextSize, pName);  // 8 * 1.8
+	TextRender()->Text(ItemPos.x - TextWidth / 2.0f, ItemPos.y + 14.0f, TextSize, pName); // 8 * 1.8
 }
 
 void CPieMenu::RenderRenameSector(int Index, int SectorCount, float InnerRadius, float OuterRadius, bool Highlighted, float Alpha)
@@ -463,8 +461,7 @@ void CPieMenu::RenderRenameSector(int Index, int SectorCount, float InnerRadius,
 			Inner1.x, Inner1.y,
 			Outer1.x, Outer1.y,
 			Inner2.x, Inner2.y,
-			Outer2.x, Outer2.y
-		);
+			Outer2.x, Outer2.y);
 		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 	}
 	Graphics()->QuadsEnd();
@@ -495,8 +492,8 @@ void CPieMenu::RenderCenterInfo()
 	GameClient()->FormatStreamerName(m_TargetClientId, aNameBuf, sizeof(aNameBuf));
 	const char *pName = aNameBuf;
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	
-	float FontSize = 32.0f;  // 18 * 1.8
+
+	float FontSize = 32.0f; // 18 * 1.8
 	float TextWidth = TextRender()->TextWidth(FontSize, pName);
 	TextRender()->Text(m_MenuCenter.x - TextWidth / 2.0f, m_MenuCenter.y - FontSize / 2.0f, FontSize, pName);
 
@@ -534,7 +531,7 @@ const char *CPieMenu::GetOptionName(EMenuOption Option) const
 	case EMenuOption::MENTION: return Localize("Mention");
 	case EMenuOption::COPY_SKIN: return Localize("Copy skin");
 	case EMenuOption::SWAP: return Localize("Swap");
-	case EMenuOption::SPECTATE: return Localize("旁观");
+	case EMenuOption::SPECTATE: return Localize("Spectate");
 	default: return "";
 	}
 }
@@ -557,7 +554,7 @@ ColorRGBA CPieMenu::GetOptionColor(EMenuOption Option, bool Highlighted) const
 {
 	// Get colors from config (HSLA format)
 	unsigned int ConfigColor = 0;
-	
+
 	switch(Option)
 	{
 	case EMenuOption::FRIEND:
@@ -608,7 +605,7 @@ bool CPieMenu::IsMouseInCenter() const
 int CPieMenu::GetHoveredOption() const
 {
 	float MouseAngle = atan2(m_SelectorMouse.y, m_SelectorMouse.x) * 180.0f / pi;
-	
+
 	// Normalize angle to 0-360 range
 	while(MouseAngle < 0)
 		MouseAngle += 360.0f;
@@ -617,7 +614,7 @@ int CPieMenu::GetHoveredOption() const
 
 	// Adjust for start angle
 	float AdjustedAngle = MouseAngle - START_ANGLE;
-	
+
 	// Normalize adjusted angle to 0-360 range
 	while(AdjustedAngle < 0)
 		AdjustedAngle += 360.0f;
@@ -706,18 +703,18 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 		{
 			str_format(aBuf, sizeof(aBuf), "remove_friend \"%s\" \"%s\"", pPlayerName, pPlayerClan);
 			Console()->ExecuteLine(aBuf);
-			
+
 			char aMsg[128];
-			str_format(aMsg, sizeof(aMsg), "已将 %s 移出好友", pPlayerName);
+			str_format(aMsg, sizeof(aMsg), Localize("Removed %s from friends"), pPlayerName);
 			GameClient()->m_Chat.AddLine(-2, 0, aMsg);
 		}
 		else
 		{
 			str_format(aBuf, sizeof(aBuf), "add_friend \"%s\" \"%s\"", pPlayerName, pPlayerClan);
 			Console()->ExecuteLine(aBuf);
-			
+
 			char aMsg[128];
-			str_format(aMsg, sizeof(aMsg), "已将 %s 添加为好友", pPlayerName);
+			str_format(aMsg, sizeof(aMsg), Localize("Added %s as friend"), pPlayerName);
 			GameClient()->m_Chat.AddLine(-2, 0, aMsg);
 		}
 		break;
@@ -745,12 +742,12 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 		// Copy player skin to local config (supports both main player and dummy)
 		const auto &TargetClient = GameClient()->m_aClients[m_TargetClientId];
 		const bool IsDummy = g_Config.m_ClDummy != 0;
-		
+
 		// Copy skin name to appropriate config
 		if(IsDummy)
 		{
 			str_copy(g_Config.m_ClDummySkin, TargetClient.m_aSkinName, sizeof(g_Config.m_ClDummySkin));
-			
+
 			// Copy custom colors if used
 			if(TargetClient.m_UseCustomColor)
 			{
@@ -766,7 +763,7 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 		else
 		{
 			str_copy(g_Config.m_ClPlayerSkin, TargetClient.m_aSkinName, sizeof(g_Config.m_ClPlayerSkin));
-			
+
 			// Copy custom colors if used
 			if(TargetClient.m_UseCustomColor)
 			{
@@ -779,13 +776,13 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 				g_Config.m_ClPlayerUseCustomColor = 0;
 			}
 		}
-		
+
 		// Send skin change to server
 		if(IsDummy)
 			GameClient()->SendDummyInfo(false);
 		else
 			GameClient()->SendInfo(false);
-		
+
 		// Show notification
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "已复制 %s 的皮肤%s", pPlayerName, IsDummy ? " (分身)" : "");
@@ -798,13 +795,13 @@ void CPieMenu::ExecuteOption(EMenuOption Option)
 		const int LocalClientId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
 		int LocalTeam = GameClient()->m_Teams.Team(LocalClientId);
 		int TargetTeam = GameClient()->m_Teams.Team(m_TargetClientId);
-		
+
 		if(LocalTeam != TargetTeam)
 		{
-			GameClient()->m_Chat.AddLine(-2, 0, "无法交换：对方不在你的队伍");
+			GameClient()->m_Chat.AddLine(-2, 0, Localize("Cannot swap: the other player is not in your team"));
 			break;
 		}
-		
+
 		// Execute swap command with player name
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "/swap \"%s\"", pPlayerName);

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <test/test.h>
 
+#include <algorithm>
 #include <string>
 
 namespace
@@ -8,7 +9,11 @@ namespace
 
 	std::string ReadTextFile(const char *pPath)
 	{
-		return ReadTestSourceFile(pPath);
+		std::string Content = ReadTestSourceFile(pPath);
+		// menus_settings.cpp ships with CRLF line terminators; normalize so the
+		// multi-line BlockBodyAfter anchors below match regardless of source EOL.
+		Content.erase(std::remove(Content.begin(), Content.end(), '\r'), Content.end());
+		return Content;
 	}
 
 	std::string FunctionBody(const std::string &Source, const std::string &Signature)
@@ -265,17 +270,17 @@ TEST(QmNewUiMenuBranches, BrowserFavoriteMapsEarlyReturnAvoidsLegacyDoubleInset)
 
 TEST(QmNewUiMenuBranches, QmLocalizationEnglishOverlayUsesExplicitEnglishFile)
 {
-	GTEST_SKIP() << "QmClient i18n still uses English source keys plus overlay files; keep as warning until Chinese source-key strategy is finished.";
 	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
 
 	EXPECT_EQ(Source.find("str_format(aBuf, sizeof(aBuf), \"qmclient/%s\", g_Config.m_ClLanguagefile);"), std::string::npos);
-	EXPECT_NE(Source.find("static void LoadQmClientLanguageOverlay("), std::string::npos);
+	EXPECT_EQ(Source.find("static void LoadQmClientLanguageOverlay("), std::string::npos);
 	EXPECT_EQ(Source.find("const char *pQmLanguageFile = g_Config.m_ClLanguagefile[0] != '\\0' ? g_Config.m_ClLanguagefile : \"english.txt\";"), std::string::npos);
 	EXPECT_EQ(Source.find("const char *pQmLanguageFile = pLanguageFile[0] != '\\0' ? pLanguageFile : \"english.txt\";"), std::string::npos);
-	EXPECT_NE(Source.find("if(str_comp(pLanguageFile, \"languages/simplified_chinese.txt\") == 0)"), std::string::npos);
-	EXPECT_NE(Source.find("const char *pQmLanguageFile = pLanguageFile[0] != '\\0' ? pLanguageFile : \"languages/english.txt\";"), std::string::npos);
-	EXPECT_NE(Source.find("str_format(aBuf, sizeof(aBuf), \"qmclient/%s\", pQmLanguageFile);"), std::string::npos);
-	EXPECT_NE(Source.find("LoadQmClientLanguageOverlay(g_Localization, g_Config.m_ClLanguagefile, Storage(), Console());"), std::string::npos);
+	EXPECT_EQ(Source.find("if(str_comp(pLanguageFile, \"languages/simplified_chinese.txt\") == 0)"), std::string::npos);
+	EXPECT_EQ(Source.find("const char *pQmLanguageFile = pLanguageFile[0] != '\\0' ? pLanguageFile : \"languages/english.txt\";"), std::string::npos);
+	EXPECT_EQ(Source.find("str_format(aBuf, sizeof(aBuf), \"qmclient/%s\", pQmLanguageFile);"), std::string::npos);
+	EXPECT_EQ(Source.find("LoadQmClientLanguageOverlay(g_Localization, g_Config.m_ClLanguagefile, Storage(), Console());"), std::string::npos);
+	EXPECT_NE(Source.find("g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, QmClientUpdateFlowUsesQmClientNamingAndComparisonHelper)
@@ -404,23 +409,23 @@ TEST(QmNewUiMenuBranches, AssetsPreviewUsesInnerFrameRectForPreviewImage)
 	EXPECT_NE(Source.find("PreviewFrame.Margin(3.0f, &PreviewFrame);"), std::string::npos);
 	EXPECT_NE(Source.find("return PreviewFrame;"), std::string::npos);
 	EXPECT_NE(Source.find("auto ComputeAssetPreviewContentSize = [&](bool WorkshopCard)"), std::string::npos);
-	EXPECT_NE(Source.find("const CUIRect PreviewFrameRect = DrawPreviewFrame(HeaderLayout.m_TextureRect);"), std::string::npos);
-	EXPECT_NE(Source.find("const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(false);"), std::string::npos);
+	EXPECT_NE(Source.find("CUIRect PreviewFrameRect = DrawPreviewFrame(Shell.m_TextureRect);"), std::string::npos);
+	EXPECT_NE(Source.find("const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(WorkshopCard);"), std::string::npos);
 	EXPECT_NE(Source.find("const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(true);"), std::string::npos);
 	EXPECT_NE(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(PreviewFrameRect, PreviewContentWidth, PreviewContentHeight);"), std::string::npos);
 	EXPECT_EQ(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(HeaderLayout.m_TextureRect, TextureWidth, TextureHeight);"), std::string::npos);
 	EXPECT_EQ(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(HeaderLayout.m_TextureRect, TextureWidth, TextureWidth);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, SettingsColorLabelsUseChineseText)
+TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string MenusToml = ReadTextFile("qmclient_scripts/languages_qmclient/translations/i18n/menus.toml");
 
 	EXPECT_EQ(Source.find("Localize(\"UI Color\")"), std::string::npos);
 	EXPECT_EQ(Source.find("Localize(\"Menu panel color\")"), std::string::npos);
 	EXPECT_EQ(Source.find("Localize(\"Menu panel opacity\")"), std::string::npos);
 	EXPECT_EQ(Source.find("Localize(\"Menu panel elevated opacity\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"菜单面板颜色\")"), std::string::npos);
 	EXPECT_EQ(Source.find("s_MenuPanelColorResetId"), std::string::npos);
 	EXPECT_EQ(Source.find("g_Config.m_ClMenuPanelColor"), std::string::npos);
 	EXPECT_EQ(Source.find("g_Config.m_UiColor"), std::string::npos);
@@ -433,21 +438,27 @@ TEST(QmNewUiMenuBranches, SettingsColorLabelsUseChineseText)
 	EXPECT_NE(Source.find("g_Config.m_QmUiOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmMapBrowserOpacity"), std::string::npos);
 	EXPECT_NE(Source.find("g_Config.m_QmScoreboardOpacity"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"界面颜色\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"地图浏览器颜色\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"计分板颜色\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"界面透明度\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"地图浏览器透明度\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"计分板透明度\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"UI color\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Map browser color\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Scoreboard color\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"UI opacity\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Map browser opacity\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Scoreboard opacity\")"), std::string::npos);
+	EXPECT_NE(MenusToml.find("key = \"UI opacity\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("simplified_chinese = \"界面不透明度\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("key = \"Map browser opacity\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("simplified_chinese = \"地图浏览器不透明度\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("key = \"Scoreboard opacity\""), std::string::npos);
+	EXPECT_NE(MenusToml.find("simplified_chinese = \"计分板不透明度\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsGraphicsOpacitySlidersExposeIndependentUiDomains)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
 
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize(\"界面透明度\")"), std::string::npos);
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize(\"地图浏览器透明度\")"), std::string::npos);
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize(\"计分板透明度\")"), std::string::npos);
+	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize(\"UI opacity\")"), std::string::npos);
+	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize(\"Map browser opacity\")"), std::string::npos);
+	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize(\"Scoreboard opacity\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NewOpacityControlsDoNotChainLegacyPanelOpacity)
@@ -490,39 +501,134 @@ TEST(QmNewUiMenuBranches, ScoreboardBackgroundsUseScoreboardOpacity)
 	EXPECT_NE(Source.find("Row.Draw(ScoreboardDecorationColor(ColorRGBA(0.7f, 0.7f, 0.7f, 0.7f * ItemAlpha))"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, IngameMenuPrimaryActionLabelsUseChineseText)
+TEST(QmNewUiMenuBranches, IngameMenuPrimaryActionLabelsUseEnglishKeys)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_ingame.cpp");
 
-	EXPECT_EQ(Source.find("Localize(\"Disconnect\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Edit HUD\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Stop record\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Record demo\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Save last %d min\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Mark demo\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Join red\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Join blue\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Join game\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Kill\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Pause\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Stop practice\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Fast practice\")"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Please wait…\")"), std::string::npos);
+	EXPECT_NE(Source.find("pDisconnectButtonLabel = Localize(\"Disconnect\")"), std::string::npos);
+	EXPECT_NE(Source.find("pDummyButtonLabel = Localize(\"Connect dummy\")"), std::string::npos);
+	EXPECT_NE(Source.find("pDummyButtonLabel = Localize(\"Connecting dummy\")"), std::string::npos);
+	EXPECT_NE(Source.find("pDummyButtonLabel = Localize(\"Disconnect dummy\")"), std::string::npos);
+	EXPECT_NE(Source.find("pEditHudButtonLabel = Localize(\"Edit HUD\")"), std::string::npos);
+	EXPECT_NE(Source.find("pDemoButtonLabel = Recording ? Localize(\"Stop record\") : Localize(\"Record demo\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Save last %d min\")"), std::string::npos);
+	EXPECT_NE(Source.find("pDemoMarkerButtonLabel = Localize(\"Mark demo\")"), std::string::npos);
+	EXPECT_NE(Source.find("pJoinRedButtonLabel = Localize(\"Join red\")"), std::string::npos);
+	EXPECT_NE(Source.find("pJoinBlueButtonLabel = Localize(\"Join blue\")"), std::string::npos);
+	EXPECT_NE(Source.find("pJoinGameButtonLabel = Localize(\"Join game\")"), std::string::npos);
+	EXPECT_NE(Source.find("pKillButtonLabel = Localize(\"Kill\")"), std::string::npos);
+	EXPECT_NE(Source.find("pPauseButtonLabel = (!Paused && !Spec) ? Localize(\"Pause\") : Localize(\"Join game\")"), std::string::npos);
+	EXPECT_NE(Source.find("pFastPracticeLabel = FastPracticeEnabled ? Localize(\"Stop practice\") : Localize(\"Fast practice\")"), std::string::npos);
+	EXPECT_NE(Source.find("DoToolTip(&s_DummyButton, &Button, Localize(\"Please wait…\"))"), std::string::npos);
+}
 
-	EXPECT_NE(Source.find("Localize(\"断开连接\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"编辑 HUD\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"停止录制\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"录制 Demo\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"保存最近 %d 分钟\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"标记 Demo\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"加入红队\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"加入蓝队\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"加入游戏\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"自杀\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"暂停\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"结束练习\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"快速练习\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"请稍候…\")"), std::string::npos);
+TEST(QmNewUiMenuBranches, DummyAndSpectateBindLabelsUseEnglishKeys)
+{
+	const std::string ControlsSource = ReadTextFile("src/game/client/components/menus_settings_controls.cpp");
+	const std::string TouchSource = ReadTextFile("src/game/client/components/touch_controls.cpp");
+
+	EXPECT_NE(ControlsSource.find("Localizable(\"Toggle dummy\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Dummy jump\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Dummy fire\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Dummy hook\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Dummy copy\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Dummy hammer fly\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Control dummy\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Spectate mode\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Spectate teleport\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Spectate next\")"), std::string::npos);
+	EXPECT_NE(ControlsSource.find("Localizable(\"Spectate previous\")"), std::string::npos);
+	EXPECT_NE(TouchSource.find("Localizable(\"Toggle dummy\")"), std::string::npos);
+	EXPECT_NE(TouchSource.find("Localizable(\"Spectate mode\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ConsoleChatExportLabelsUseEnglishKeys)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/console.cpp");
+
+	EXPECT_NE(Source.find("Localize(\"QmClient chat log\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Total\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Messages\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"No chat log selected\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Chat export failed\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Exported %d chat messages\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Selected %d\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Cancel\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Export selected\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Clear\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Select all chat\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Select export\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, HudDummyStatusLabelsUseEnglishKeys)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/hud.cpp");
+
+	EXPECT_NE(Source.find("Localize(\"Dummy mini view\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Connect dummy to enable\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Key Sticking: ?\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Key Sticking: On\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Key Sticking: Off\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Key Sticking: Reset Self\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Hammer: %s\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Dummy Control: %s\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Dummy sync: %s\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, TranslationAndDemoUiLabelsUseEnglishKeys)
+{
+	const std::string ChatSource = ReadTextFile("src/game/client/components/chat.cpp");
+	const std::string DemoSource = ReadTextFile("src/game/client/components/menus_demo.cpp");
+	const std::string BrowserSource = ReadTextFile("src/game/client/components/menus_browser.cpp");
+
+	EXPECT_NE(ChatSource.find("Localize(\"Translation Settings\")"), std::string::npos);
+	EXPECT_NE(ChatSource.find("Localize(\"Auto-translate incoming messages\")"), std::string::npos);
+	EXPECT_NE(ChatSource.find("Localize(\"Auto-translate outgoing messages\")"), std::string::npos);
+	EXPECT_NE(ChatSource.find("Localize(\"Incoming language\")"), std::string::npos);
+	EXPECT_NE(ChatSource.find("Localize(\"Outgoing language\")"), std::string::npos);
+	EXPECT_NE(ChatSource.find("Localize(\"Translation service\")"), std::string::npos);
+	EXPECT_NE(DemoSource.find("Localize(\"Could not preview this image\")"), std::string::npos);
+	EXPECT_NE(DemoSource.find("BrowsingScreenshots ? Localize(\"Open the folder containing screenshots\") : Localize(\"Open the folder containing demo files\")"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("Localize(\"Map\")"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("Localize(\"Category\")"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("Localize(\"Difficulty stars\")"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("Localize(\"Note\")"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("Localize(\"Has save\")"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("Localize(\"None\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ClientSourceDoesNotUseChineseLocalizeKeys)
+{
+	const std::string HudEditorSource = ReadTextFile("src/game/client/components/hud_editor.cpp");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string BrowserSource = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const std::string DemoSource = ReadTextFile("src/game/client/components/menus_demo.cpp");
+	const std::string IngameTouchSource = ReadTextFile("src/game/client/components/menus_ingame_touch_controls.cpp");
+	const std::string IngameSource = ReadTextFile("src/game/client/components/menus_ingame.cpp");
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string SettingsControlsSource = ReadTextFile("src/game/client/components/menus_settings_controls.cpp");
+	const std::string Settings7Source = ReadTextFile("src/game/client/components/menus_settings7.cpp");
+	const std::string StartSource = ReadTextFile("src/game/client/components/menus_start.cpp");
+	const std::string PieMenuSource = ReadTextFile("src/game/client/components/pie_menu.cpp");
+	const std::string ScoreboardSource = ReadTextFile("src/game/client/components/scoreboard.cpp");
+
+	EXPECT_NE(HudEditorSource.find("Localize(\"Position jump tip\")"), std::string::npos);
+	EXPECT_NE(MenusSource.find("m_apSettingsTabs[SETTINGS_SOUND] = Localize(\"Sound\")"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("Localize(\"DDmaX Easy\")"), std::string::npos);
+	EXPECT_NE(BrowserSource.find("Localize(\"Favorite map\")"), std::string::npos);
+	EXPECT_NE(DemoSource.find("Localize(\"Screenshots directory\")"), std::string::npos);
+	EXPECT_NE(IngameTouchSource.find("Localize(\"Allow dummy\", \"Touch button visibilities\")"), std::string::npos);
+	EXPECT_NE(IngameTouchSource.find("Localize(\"Dummy connected\", \"Touch button visibilities\")"), std::string::npos);
+	EXPECT_NE(IngameTouchSource.find("Localize(\"Spectate\", \"Predefined touch button behaviors\")"), std::string::npos);
+	EXPECT_NE(IngameSource.find("Localize(\"Spectate\")"), std::string::npos);
+	EXPECT_NE(IngameSource.find("Localize(\"Dummies are not allowed on this server\")"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Localize(\"Show spectator cursor\")"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Localize(\"Auto save chat log\")"), std::string::npos);
+	EXPECT_NE(SettingsControlsSource.find("Localize(\"Dummy\")"), std::string::npos);
+	EXPECT_NE(Settings7Source.find("Localize(\"Dummy\")"), std::string::npos);
+	EXPECT_NE(StartSource.find("Localize(\"(Update required)\")"), std::string::npos);
+	EXPECT_NE(PieMenuSource.find("Localize(\"Spectate\")"), std::string::npos);
+	EXPECT_NE(ScoreboardSource.find("Localize(\"Spectators\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, QmClientAxiomAutoLoginLivesInQmClientComponent)
@@ -561,18 +667,11 @@ TEST(QmNewUiMenuBranches, QmClientAxiomAutoLoginLivesInQmClientComponent)
 	EXPECT_EQ(TClientHeader.find("HandleAxiomAutoLoginMessage"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("TrySendAxiomLogin"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("HandleAxiomAutoLoginMessage"), std::string::npos);
-	EXPECT_EQ(Source.find("Localize(\"Axiom 分身自动登录成功\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, QmClientLanguageReadmeDescribesChineseSourceKeys)
 {
-	GTEST_SKIP() << "QmClient i18n still documents English source keys; keep Chinese source-key documentation expectation as warning.";
-	const std::string Readme = ReadTextFile("data/qmclient/languages/README.txt");
-
-	EXPECT_EQ(Readme.find("English keys preserved"), std::string::npos);
-	EXPECT_NE(Readme.find("中文 key"), std::string::npos);
-	EXPECT_NE(Readme.find("简体中文环境"), std::string::npos);
-	EXPECT_NE(Readme.find("直接使用源码中的中文 key"), std::string::npos);
+	EXPECT_FALSE(fs_is_dir(TestSourcePath("data/qmclient/languages").c_str()));
 }
 
 TEST(QmNewUiMenuBranches, KcpLogUsesBoundedFormatting)

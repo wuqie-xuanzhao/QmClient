@@ -152,6 +152,7 @@ public:
 	void SetRuntimeKey(const SSettingsSectionCacheRuntimeKey &RuntimeKey);
 	void SetProgressiveEnabled(bool Enabled);
 	void SetDeferredFarMeasurementEnabled(bool Enabled);
+	void SetMaxSectionsPerFrame(int MaxSectionsPerFrame);
 
 	// -- State exposed for the rendering loop (updated externally) --
 
@@ -175,6 +176,7 @@ private:
 	bool m_Complete = false;
 	bool m_ProgressiveEnabled = false;
 	bool m_DeferredFarMeasurementEnabled = false;
+	int m_MaxSectionsPerFrame = 2;
 	SSettingsSectionCacheRuntimeKey m_RuntimeKey;
 
 	// Warmup state

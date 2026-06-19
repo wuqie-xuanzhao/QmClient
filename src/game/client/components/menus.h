@@ -7,6 +7,7 @@
 #include <base/types.h>
 #include <base/vmath.h>
 
+#include <engine/client/gpu_upload_limiter.h>
 #include <engine/console.h>
 #include <engine/demo.h>
 #include <engine/friends.h>
@@ -90,11 +91,11 @@ class CMenus : public CComponent
 
 public:
 	int DoButton_Toggle(const void *pId, int Checked, const CUIRect *pRect, bool Active, unsigned Flags = BUTTONFLAG_LEFT);
-	int DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, unsigned Flags = BUTTONFLAG_LEFT, const char *pImageName = nullptr, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, ColorRGBA Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f));
+	int DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, unsigned Flags = BUTTONFLAG_LEFT, const char *pImageName = nullptr, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, ColorRGBA Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), CUIElement *pTextUiElement = nullptr);
 	int DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator = nullptr, const ColorRGBA *pDefaultColor = nullptr, const ColorRGBA *pActiveColor = nullptr, const ColorRGBA *pHoverColor = nullptr, float EdgeRounding = 10.0f, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr);
 	// feat-004: modern menu tab. No lift / height-grow; default hover/active
 	// states are tinted by ui_color via the v2 anim runtime.
-	int DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners = IGraphics::CORNER_T, const ColorRGBA *pCustomDefault = nullptr, const ColorRGBA *pCustomActive = nullptr, const ColorRGBA *pCustomHover = nullptr, const CCommunityIcon *pCommunityIcon = nullptr);
+	int DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners = IGraphics::CORNER_T, const ColorRGBA *pCustomDefault = nullptr, const ColorRGBA *pCustomActive = nullptr, const ColorRGBA *pCustomHover = nullptr, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr);
 	ColorRGBA MenuPanelColor(float AlphaScale = 1.0f) const;
 	ColorRGBA MenuPanelElevatedColor(float AlphaScale = 1.0f) const;
 	ColorRGBA BrowserPanelColor(float AlphaScale = 1.0f) const;
@@ -121,12 +122,16 @@ private:
 	void InitSettingsTabLabelCache();
 	void UpdateSettingsTabLabels();
 	void PrepareSettingsTabLabelCache(float MainViewWidth);
-	void PrepareLanguagePageCache(float MainViewWidth);
+	void PrepareLanguagePageCache(float MainViewWidth, bool ForceComplete);
+	void SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const;
+	int DoButton_CheckBox_Common_WithLabelElement(const void *pId, const char *pText, const char *pBoxText, const CUIRect *pRect, unsigned Flags, CUIElement *pLabelElement);
+	int DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
+	int DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin);
 
 	CUi::SColorPickerPopupContext m_ColorPickerPopupContext;
 	ColorHSLA DoLine_ColorPicker(CButtonContainer *pResetId, float LineSize, float LabelSize, float BottomMargin, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, ColorRGBA DefaultColor, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr, bool Alpha = false);
 	ColorHSLA DoButton_ColorPicker(const CUIRect *pRect, unsigned int *pHslaColor, bool Alpha);
-	bool DoMessageGradientLine(CChat &Chat, CUIRect *pView, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr);
+	bool DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const char *pLabelTextId, const char *pLabel, unsigned *pBaseColor, char *pGradient, int GradientSize, ColorRGBA DefaultColor, CButtonContainer *pResetButton, CButtonContainer *pAddButton, CButtonContainer *pRemoveButton, unsigned *pColorValues, bool CheckBoxSpacing = true, int *pCheckBoxValue = nullptr);
 
 	void DoLaserPreview(const CUIRect *pRect, ColorHSLA OutlineColor, ColorHSLA InnerColor, int LaserType);
 	int DoButton_GridHeader(const void *pId, const char *pText, int Checked, const CUIRect *pRect, int Align = TEXTALIGN_ML);
@@ -1187,6 +1192,12 @@ protected:
 	IGraphics::CTextureHandle m_DemoScreenshotPreviewTexture;
 	int m_DemoScreenshotPreviewWidth = 0;
 	int m_DemoScreenshotPreviewHeight = 0;
+	size_t m_DemoHeaderFetchCursor = 0;
+	size_t m_DemoDateFetchCursor = 0;
+	bool m_DemoHeaderFetchComplete = true;
+	bool m_DemoDateFetchComplete = true;
+	bool m_DemoBrowserMetadataBackgroundAllowed = true;
+	SSettingsAdaptiveBudgetState m_DemoBrowserAdaptiveBudgetState;
 	int m_Speed = 4;
 	bool m_StartPaused = false;
 
@@ -1216,6 +1227,8 @@ protected:
 	bool EnsureDemoDate(CDemoItem &Item);
 	bool EnsureDemoSize(CDemoItem &Item);
 	void EnsureAllDemoDates();
+	void ResetDemoBrowserMetadataProgress();
+	void AdvanceDemoBrowserMetadata(int HeaderBudget, int DateBudget, const char *pTrigger, int VisibleFirst = -1, int VisibleEnd = -1);
 	const char *DemoBrowserBaseFolder() const;
 	bool DemoBrowserBrowsingScreenshots() const;
 	bool DemoBrowserSupportedFile(const char *pName) const;
@@ -1412,6 +1425,112 @@ protected:
 
 	// found in menus_ingame.cpp
 	STextContainerIndex m_MotdTextContainerIndex;
+	struct SIngameServerInfoTextSnapshot
+	{
+		unsigned m_ServerNameHash = 0;
+		unsigned m_AddressHash = 0;
+		unsigned m_PingHash = 0;
+		unsigned m_VersionHash = 0;
+		unsigned m_PasswordHash = 0;
+		unsigned m_GameTypeHash = 0;
+		unsigned m_MapHash = 0;
+		unsigned m_ScoreLimitHash = 0;
+		unsigned m_TimeLimitHash = 0;
+		unsigned m_RoundHash = 0;
+		unsigned m_TeamsHash = 0;
+		unsigned m_PlayersHash = 0;
+	};
+	struct SIngameMotdParagraphCache
+	{
+		static constexpr int INGAME_MOTD_PARAGRAPH_CHUNK_BYTES = 24;
+		unsigned m_TextHash = 0;
+		float m_Width = 0.0f;
+		float m_FontSize = 0.0f;
+		float m_Height = 0.0f;
+		int64_t m_UpdateTime = -1;
+		bool m_Valid = false;
+		float m_LastStableHeight = 0.0f;
+		unsigned m_PendingTextHash = 0;
+		CUIRect m_PendingRect;
+		float m_PendingWidth = 0.0f;
+		float m_PendingFontSize = 0.0f;
+		int64_t m_PendingUpdateTime = -1;
+		uint64_t m_PendingFrame = 0;
+		bool m_Pending = false;
+		STextContainerIndex m_BuildTextContainerIndex;
+		CTextCursor m_BuildCursor;
+		int m_BuildByteOffset = 0;
+		float m_BuildHeight = 0.0f;
+		unsigned m_PreviousTextHash = 0;
+		float m_PreviousWidth = 0.0f;
+		float m_PreviousFontSize = 0.0f;
+		float m_PreviousHeight = 0.0f;
+		int64_t m_PreviousUpdateTime = -1;
+		std::string m_PreviousText;
+		STextContainerIndex m_PreviousTextContainerIndex;
+	};
+	struct SMenuSnapshotTextKey
+	{
+		std::string m_Scope;
+		unsigned m_TextHash = 0;
+		int m_Width = 0;
+		int m_FontSize = 0;
+		int m_Align = 0;
+		uint64_t m_LocaleHash = 0;
+		uint64_t m_UiScaleHash = 0;
+		bool operator==(const SMenuSnapshotTextKey &Other) const
+		{
+			return m_Scope == Other.m_Scope &&
+			       m_TextHash == Other.m_TextHash &&
+			       m_Width == Other.m_Width &&
+			       m_FontSize == Other.m_FontSize &&
+			       m_Align == Other.m_Align &&
+			       m_LocaleHash == Other.m_LocaleHash &&
+			       m_UiScaleHash == Other.m_UiScaleHash;
+		}
+	};
+	struct SMenuSnapshotTextKeyHash
+	{
+		size_t operator()(const SMenuSnapshotTextKey &Key) const
+		{
+			size_t Hash = std::hash<std::string>{}(Key.m_Scope);
+			Hash ^= (size_t)Key.m_TextHash + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_Width + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_FontSize + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_Align + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_LocaleHash + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			Hash ^= (size_t)Key.m_UiScaleHash + 0x9e3779b9 + (Hash << 6) + (Hash >> 2);
+			return Hash;
+		}
+	};
+	struct SMenuSnapshotTextEntry
+	{
+		CUIElement m_Element;
+		std::string m_Text;
+		CUIRect m_Rect;
+		float m_Size = 0.0f;
+		int m_Align = 0;
+		SLabelProperties m_LabelProps;
+		bool m_Ready = false;
+		CUIElement *m_pLastReadyElement = nullptr;
+	};
+	std::unordered_map<SMenuSnapshotTextKey, SMenuSnapshotTextEntry, SMenuSnapshotTextKeyHash> m_SnapshotTextCache;
+	std::unordered_map<std::string, CUIElement *> m_SnapshotTextLastReadyByScope;
+	std::vector<SMenuSnapshotTextKey> m_SnapshotTextPending;
+	struct SMenuTextContainerBuildRequest
+	{
+		CUIElement *m_pElement = nullptr;
+		std::string m_Text;
+		CUIRect m_Rect;
+		float m_Size = 0.0f;
+		int m_Align = 0;
+		SLabelProperties m_LabelProps;
+		int m_StrLen = -1;
+		int m_ReadCursorGlyphCount = -1;
+	};
+	std::vector<SMenuTextContainerBuildRequest> m_vMenuTextContainerBuildRequests;
+	SIngameServerInfoTextSnapshot m_IngameServerInfoTextSnapshot;
+	SIngameMotdParagraphCache m_IngameMotdParagraphCache;
 	enum class EReportScanState
 	{
 		IDLE,
@@ -1439,6 +1558,18 @@ protected:
 	void RenderPlayers(CUIRect MainView);
 	void RenderServerInfo(CUIRect MainView);
 	void RenderServerInfoMotd(CUIRect Motd);
+	void PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView = nullptr);
+	void RenderIngameServerInfoValueCached(const char *pTextId, unsigned &TextHash, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {});
+	void RenderSnapshotTextContainer(CUIElement &Element, const CUIRect *pRect);
+	bool RequestSnapshotTextContainer(const char *pScope, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, CUIElement **ppReadyElement = nullptr);
+	void DrainSnapshotTextContainers();
+	bool RequestIngameMotdParagraphCache(CUIRect Motd, float FontSize);
+	bool IngameMotdParagraphCacheMatches(CUIRect Motd, float FontSize) const;
+	void DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool AllowCurrentFrame = false);
+	bool RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea);
+	void RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize);
+	void DrainIngameUiSnapshotTextRuntime();
+	void DrainIngameUiTextRuntime(bool AllowCurrentFrame = false);
 	void RenderServerControl(CUIRect MainView);
 	void RenderUnfinishedMaps(CUIRect MainView);
 	bool RenderServerControlKick(CUIRect MainView, bool FilterSpectators, bool UpdateScroll);
@@ -1520,7 +1651,6 @@ protected:
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
-	void PrewarmSettingsPages();
 	void RenderSettingsCustom(CUIRect MainView);
 
 	// found in menus_settings_controls.cpp
@@ -1595,6 +1725,7 @@ public:
 	void StartLoading(int Total);
 	void RenderLoading(const char *pCaption, const char *pContent, int IncreaseCounter);
 	void FinishLoading();
+	void PrewarmSettingsPages();
 
 	bool IsInit() const { return m_IsInit; }
 
@@ -1603,6 +1734,7 @@ public:
 	const char *CurrentQmUiPerfPage() const;
 	const char *CurrentQmUiPerfOperation() const;
 	SSettingsResourceFrameContext SettingsResourceFrameContext() const { return {m_SettingsScrollActive, false, m_SettingsPostScrollRecoveryFrames, m_SettingsHighPrioritySettled}; }
+	const SSettingsAdaptiveBudgetOutput &CurrentSettingsUiFrameBudget() const { return m_CurrentSettingsUiFrameBudget; }
 	void SetActive(bool Active);
 
 	void OnInterfacesInit(CGameClient *pClient) override;
@@ -1812,9 +1944,108 @@ public:
 	void LoadSettingsRuntimeCacheMetadata();
 	void SaveSettingsRuntimeCacheMetadata();
 	void PrewarmVisibleSettingsResources(CUIRect MainView);
+	enum EMenuTextScope
+	{
+		MENU_TEXT_SCOPE_SETTINGS = 0,
+		MENU_TEXT_SCOPE_INGAME,
+	};
+	enum EMenuTextStyleMode
+	{
+		MENU_TEXT_STYLE_DEFAULT = 0,
+		MENU_TEXT_STYLE_RECT,
+		MENU_TEXT_STYLE_EXACT,
+		MENU_TEXT_STYLE_ALLOWLIST_DYNAMIC,
+	};
+	struct SMenuTextStyleKey
+	{
+		float m_FontSize = 0.0f;
+		int m_Align = TEXTALIGN_ML;
+		int m_MaxWidthBucket = -1;
+		int m_UiScaleBucket = 0;
+		int m_HiDpiScaleBucket = 0;
+		int m_TextColorHash = 0;
+		int m_OutlineColorHash = 0;
+		int m_CompactMode = 0;
+	};
+	struct SMenuTextPlanItem
+	{
+		EMenuTextScope m_Scope = MENU_TEXT_SCOPE_SETTINGS;
+		int m_Page = -1;
+		int m_Tab = -1;
+		int m_Subtab = -1;
+		std::string m_TextId;
+		std::string m_Text;
+		SMenuTextStyleKey m_StyleKey{};
+		EMenuTextStyleMode m_StyleMode = MENU_TEXT_STYLE_RECT;
+		std::string m_AllowlistReason;
+		std::string m_SourceTag;
+		CUIRect m_Rect{};
+		SLabelProperties m_LabelProps{};
+		float m_FontSize = 0.0f;
+		int m_Align = TEXTALIGN_ML;
+		float m_MaxWidth = -1.0f;
+	};
+	enum ESettingsMenuTextPlanCollectionUnitKind
+	{
+		MENU_TEXT_PLAN_UNIT_VISIBLE_SETTINGS = 0,
+		MENU_TEXT_PLAN_UNIT_TCLIENT_TAB,
+		MENU_TEXT_PLAN_UNIT_QMCLIENT_TAB,
+		MENU_TEXT_PLAN_UNIT_BASE_PAGE,
+		MENU_TEXT_PLAN_UNIT_INGAME_ESC,
+	};
+	struct SSettingsMenuTextPlanCollectionUnit
+	{
+		ESettingsMenuTextPlanCollectionUnitKind m_Kind = MENU_TEXT_PLAN_UNIT_VISIBLE_SETTINGS;
+		int m_Page = -1;
+		int m_Tab = -1;
+	};
+	CUIElement &MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const SMenuTextStyleKey &StyleKey);
+	void CollectMenuTextPlanItem(EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect *pRect, float FontSize, int Align, const SLabelProperties &LabelProps, const SMenuTextStyleKey &StyleKey);
+	SMenuTextStyleKey BuildMenuTextStyleKey(const CUIRect *pRect, float FontSize, int Align, const SLabelProperties &LabelProps) const;
+	SMenuTextStyleKey SettingsMenuTextPlanStyleKey(const SMenuTextPlanItem &Item) const;
+	SMenuTextStyleKey BuildSettingsScrollbarTextStyle(const CUIRect &Rect, unsigned Flags, CUIRect *pOutLabel = nullptr) const;
+	SMenuTextStyleKey BuildSettingsShellTitleTextStyle(const CUIRect &Rect, CUIRect *pOutLabel = nullptr) const;
+	SMenuTextPlanItem AddStableTextDefault(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, float Width, float Height, float FontSize, int Align = TEXTALIGN_ML, const char *pSourceTag = nullptr) const;
+	SMenuTextPlanItem AddStableTextLabel(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect &Rect, float FontSize, int Align = TEXTALIGN_ML, const SLabelProperties &LabelProps = {}, const char *pSourceTag = nullptr) const;
+	SMenuTextPlanItem AddStableTextCheckbox(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect &Rect, const char *pSourceTag = nullptr) const;
+	SMenuTextPlanItem AddStableTextScrollbar(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect &Rect, unsigned Flags = 0u, const char *pSourceTag = nullptr) const;
+	SMenuTextPlanItem AddStableTextButton(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect &Rect, const char *pSourceTag = nullptr) const;
+	void DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr, bool Render = true);
+	int DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Corners);
+	int DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f);
+	int DoIngameMenuCheckBox(int Page, const char *pTextId, const void *pId, const char *pText, int Checked, const CUIRect *pRect);
+	void DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {});
+	void DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {});
 	CUIElement &SettingsTextElement(int Page, int Tab, const char *pTextId);
+	CUIElement &SettingsTextElement(int Page, int Tab, const char *pTextId, const SMenuTextStyleKey &StyleKey);
 	void DoSettingsLabelStreamed(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr, bool Render = true);
+	void DoSettingsLabel(int Page, int Tab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, bool Render = true);
+	void DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &Props = {}, int MaxWidth = -1);
+	int DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, const ColorRGBA &Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), float FontFactor = 0.0f);
+	int DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
+	bool DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr);
+	bool DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr);
+	bool DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value);
+	void BuildBaseSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView);
+	void BuildIngameMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView);
+	void BuildSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems);
+	void BuildSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView);
+	void BuildVisibleSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView);
+	void PrepareSettingsMenuTextPlanCollectionUnits(const char *pOperationOverride);
+	void CollectSettingsMenuTextPlanUnit(const SSettingsMenuTextPlanCollectionUnit &Unit, CUIRect Screen, CUIRect SettingsMainView);
+	bool AdvanceSettingsMenuTextPlanCollection(int Budget, const char *pOperationOverride);
+	bool PrebuildSettingsTextPlanItem(const SMenuTextPlanItem &Item, int &RemainingBudget);
+	int CountMissingSettingsMenuTextPlanItems() const;
+	void PrebuildSettingsMenuTextPool(int Budget, const char *pScopeOverride = nullptr, const char *pOperationOverride = nullptr);
+	int PrebuildSettingsTextPoolForLoading(int Budget, const char *pOperationOverride = nullptr);
+	void PrebuildIngameEscTextPoolBeforeOpen(int Budget);
+	void LogSettingsAdaptiveBudget(const char *pSource, const SSettingsAdaptiveBudgetInput &Input, const SSettingsAdaptiveBudgetOutput &Output) const;
+	void PrewarmSettingsTextPoolForLoading(int Budget) { PrebuildSettingsMenuTextPool(Budget, "target_settings", "settings_open"); }
+	int SettingsTextPrebuildRemaining() const { return m_SettingsMenuTextLastPrebuildStats.m_Remaining; }
+	int SettingsTextPlanCollectionRemaining() const { return m_SettingsMenuTextLastCollectionStats.m_Remaining; }
+	void EnsureSettingsMenuTextPlanReadyForVisible();
 	void InvalidateSettingsTextPool();
+	void InvalidateMenuTextPool(const char *pReason);
 	void InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason Reason);
 	void FinalizeTeeListDrainPerfSession();
 	void StartSettingsPerfFixedWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, int MaxFrames);
@@ -1823,20 +2054,37 @@ public:
 	void LogSettingsPerfWindowSummary(const SQmSettingsPerfWindowSummary &Summary);
 	const char *SettingsPerfContextName() const;
 	const char *SettingsPerfActiveOperation() const;
-	void ResetSettingsFrameBudgetForFrame(bool TeeSettingsActive, int TeeSkinGpuUploadsPerFrame = -1)
+	const char *SettingsPerfStableTextScope(int Page) const;
+	int SettingsGpuUploadLimitForFrame(bool TeeSettingsActive, bool AssetsSettingsActive, int TeeSkinGpuUploadLimiterUnits) const
+	{
+		if(TeeSettingsActive)
+			return TeeSkinGpuUploadLimiterUnits;
+		if(AssetsSettingsActive)
+			return 8;
+		return CGpuUploadLimiter::DefaultMaxUploadsPerFrame();
+	}
+	void ResetSettingsFrameBudgetForFrame(bool TeeSettingsActive, bool AssetsSettingsActive, int TeeSkinGpuUploadsPerFrame = -1)
 	{
 		const SSettingsResourceFrameContext FrameContext = SettingsResourceFrameContext();
 		m_SettingsFrameBudget = SSettingsWarmupFrameBudget{};
+		m_CurrentSettingsUiFrameBudget = SSettingsAdaptiveBudgetOutput{};
 		SettingsApplyActiveTeeSkinFrameBudget(m_SettingsFrameBudget, TeeSettingsActive);
 		if(TeeSettingsActive)
 			m_SettingsFrameBudget.m_MaxGpuUploads = TeeSkinGpuUploadsPerFrame >= 0 ? TeeSkinGpuUploadsPerFrame : SettingsSkinGpuUploadFrameUnits(FrameContext, TeeSettingsActive);
+		else if(AssetsSettingsActive)
+			m_SettingsFrameBudget.m_MaxGpuUploads = 8;
 	}
 	SSettingsWarmupFrameBudget *SettingsFrameBudget() { return &m_SettingsFrameBudget; }
+	int SettingsTextContainerCount();
+	int MenuTextPoolSizeForTesting() const;
 
 private:
-	struct SSettingsTextPoolEntry
+	struct SMenuTextPoolEntry
 	{
 		CUIElement m_Element;
+		SMenuTextStyleKey m_StyleKey{};
+		uint64_t m_Generation = 0;
+		bool m_Built = false;
 	};
 
 	struct SSettingsTextPerfStats
@@ -1845,10 +2093,29 @@ private:
 		int m_Reused = 0;
 	};
 
+	struct SSettingsMenuTextPrebuildStats
+	{
+		int m_Built = 0;
+		int m_Reused = 0;
+		int m_Remaining = 0;
+		int m_Budget = 0;
+	};
+	struct SSettingsMenuTextPlanCollectionStats
+	{
+		int m_UnitsDone = 0;
+		int m_UnitsTotal = 0;
+		int m_Remaining = 0;
+		int m_Budget = 0;
+		bool m_Complete = false;
+		bool m_Dirty = true;
+	};
+
 	CQmSettingsPerfWindowTracker m_SettingsPerfWindowTracker;
 	int m_SettingsPerfLastPage = -1;
 	int m_SettingsPerfLastTClientTab = -1;
 	int m_SettingsPerfLastQmClientTab = -1;
+	uint64_t m_IngameEscOpenFrame = 0;
+	bool m_IngameServerInfoBackgroundPrepareRequested = false;
 
 	class CScopedSettingsTextPerfStats
 	{
@@ -1872,6 +2139,16 @@ private:
 		const SSettingsTextPerfStats &Stats() const { return m_Stats; }
 	};
 
+	class CScopedMenuTextVisibleGuard
+	{
+		CMenus *m_pMenus = nullptr;
+		bool m_Previous = false;
+
+	public:
+		explicit CScopedMenuTextVisibleGuard(CMenus *pMenus);
+		~CScopedMenuTextVisibleGuard();
+	};
+
 	struct SSettingsRuntimeMetadata
 	{
 		int m_LastPage = -1;
@@ -1883,18 +2160,107 @@ private:
 		bool m_Valid = false;
 	};
 
+	struct SSettingsScrollRegionFrame
+	{
+		vec2 m_BeginOffset = vec2(0.0f, 0.0f);
+		float m_PreviousOffsetY = 0.0f;
+		float m_FinalOffsetY = 0.0f;
+	};
+
+	struct SSettingsUiBudgetFrame
+	{
+		double m_LayoutMs = 0.0;
+		double m_TextMs = 0.0;
+		int m_TextNew = 0;
+		int m_TextReused = 0;
+		int m_DrawCalls = 0;
+		int m_Vertices = 0;
+		int m_Indices = 0;
+		int m_HeapAllocs = 0;
+		int m_VisibleWidgets = 0;
+		int m_Tab = -1;
+		int m_Subtab = -1;
+	};
+
+	SSettingsScrollRegionFrame BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY);
+	void FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsScrollRegionFrame &Frame, const CUIRect *pEndRect = nullptr, int Page = -1, bool TrackScrollActive = true);
+	void PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &Input);
+	SSettingsAdaptiveBudgetOutput ComputeSettingsUiFrameSchedulerBudget(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State);
+	SSettingsAdaptiveBudgetOutput BeginSettingsUiFrameScheduler(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State);
+	bool MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, int StrLen, const CTextCursor *pReadCursor);
+	bool RequestMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, int StrLen, const CTextCursor *pReadCursor);
+	void QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor);
+	void DrainMenuTextContainerBuildRequests();
+	void DrainMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated);
+	void LogSettingsUiBudget(const char *pPage, const SSettingsUiBudgetFrame &Frame) const;
+
 	SSettingsRuntimeMetadata m_SettingsRuntimeMetadata;
 	SSettingsWarmupFrameBudget m_SettingsFrameBudget;
+	SSettingsAdaptiveBudgetOutput m_CurrentSettingsUiFrameBudget;
+	SSettingsAdaptiveBudgetState m_SettingsTextAdaptiveBudgetState;
+	SSettingsAdaptiveBudgetState m_IngameTextAdaptiveBudgetState;
+	SSettingsAdaptiveBudgetOutput m_IngameTextFrameBudget;
+	SSettingsAdaptiveBudgetState m_AssetsAdaptiveBudgetState;
+	float m_TextContainerCreateMsEwma = 0.0f;
+	float m_TextContainerUploadMsEwma = 0.0f;
+	float m_GlyphRasterizeMsEwma = 0.0f;
+	float m_GlyphUploadMsEwma = 0.0f;
 	float m_SettingsTClientCurrentScrollY = 0.0f;
 	bool m_SettingsTClientScrollRestorePending = false;
 	bool m_SettingsPageSwitchActive = false;
 	bool m_SettingsScrollActive = false;
 	int m_SettingsPostScrollRecoveryFrames = 0;
 	bool m_SettingsHighPrioritySettled = false;
-	std::unordered_map<std::string, SSettingsTextPoolEntry> m_SettingsTextPool;
-	uint64_t m_SettingsTextPoolLanguageHash = 0;
-	uint64_t m_SettingsTextPoolFontHash = 0;
+	int m_SettingsTextContextPage = -1;
+	int m_SettingsTextContextTab = -1;
+	int m_SettingsTextContextSubtab = -1;
+	int *m_pSettingsTextPrebuildBudget = nullptr;
+	std::unordered_map<std::string, SMenuTextPoolEntry> m_MenuTextPool;
+	CUIElement m_MenuTextFallbackElement;
+	uint64_t m_MenuTextPoolGeneration = 1;
+	uint64_t m_MenuTextPoolLanguageHash = 0;
+	uint64_t m_MenuTextPoolFontHash = 0;
+	uint64_t m_MenuTextPoolLayoutHash = 0;
+	uint64_t m_MenuTextPoolThemeHash = 0;
+	std::string m_MenuTextPoolLastStaleReason;
+	bool m_MenuTextPlanCollecting = false;
+	std::vector<SMenuTextPlanItem> *m_pMenuTextPlanCollection = nullptr;
+	bool m_MenuTextPlanPendingActive = false;
+	SMenuTextPlanItem m_MenuTextPlanPendingItem;
+	uint64_t m_MenuTextCoverageFrame = 0;
+	bool m_MenuTextPoolVisibleGuard = false;
+	int m_MenuTextStableCandidatesThisFrame = 0;
+	int m_MenuTextStableHitsThisFrame = 0;
+	int m_MenuTextStablePoolHitsThisFrame = 0;
+	int m_MenuTextStableRenderReadyHitsThisFrame = 0;
+	int m_MenuTextStableBuildQueuedThisFrame = 0;
+	int m_MenuTextStableFallbackImmediateThisFrame = 0;
+	int m_MenuTextStableReusedThisFrame = 0;
+	int m_MenuTextStableTextNewThisFrame = 0;
+	int m_MenuTextStableTextReusedThisFrame = 0;
+	EMenuTextScope m_MenuTextStableScopeThisFrame = MENU_TEXT_SCOPE_SETTINGS;
+	int m_MenuTextStablePageThisFrame = -1;
+	int m_MenuTextStableTabThisFrame = -1;
+	int m_MenuTextStableSubtabThisFrame = -1;
+	int m_MenuTextStableMissesThisFrame = 0;
+	int m_MenuTextStableStalesThisFrame = 0;
+	int m_MenuTextStablePlannedThisFrame = 0;
+	int m_MenuTextStableUnplannedThisFrame = 0;
 	SSettingsTextPerfStats *m_pActiveSettingsTextPerfStats = nullptr;
+	std::vector<SMenuTextPlanItem> m_vSettingsMenuTextPrebuildPlan;
+	std::vector<SSettingsMenuTextPlanCollectionUnit> m_vSettingsMenuTextPlanCollectionUnits;
+	std::unordered_set<std::string> m_SettingsMenuTextPlannedDescriptors;
+	std::unordered_set<std::string> m_SettingsMenuTextPlannedKeys;
+	size_t m_SettingsMenuTextPlanCursor = 0;
+	size_t m_SettingsMenuTextPlanCollectionCursor = 0;
+	uint64_t m_SettingsMenuTextPlanGeneration = 0;
+	uint64_t m_SettingsMenuTextPlanCollectionGeneration = 0;
+	std::string m_SettingsMenuTextPlanCollectionOperation;
+	bool m_SettingsMenuTextPlanMetadataDirty = true;
+	bool m_SettingsMenuTextPlanCollectionDirty = true;
+	bool m_SettingsMenuTextPlanCollectionComplete = false;
+	SSettingsMenuTextPrebuildStats m_SettingsMenuTextLastPrebuildStats;
+	SSettingsMenuTextPlanCollectionStats m_SettingsMenuTextLastCollectionStats;
 
 	CCommunityIcons m_CommunityIcons;
 	CMenusIngameTouchControls m_MenusIngameTouchControls;
@@ -1922,9 +2288,13 @@ private:
 	SSettingsSection BuildTClientHudCacheSection();
 	std::vector<SSettingsSection> BuildTClientLeftCacheSections();
 	std::vector<SSettingsSection> BuildTClientRightCacheSections();
+	CUIRect TClientCacheSectionBoxRect(CUIRect BoxRect) const;
+	void InsetTClientCacheSectionContent(CUIRect &ContentRect) const;
 	void DrawTClientCacheSectionBox(CUIRect BoxRect);
 	float RenderTClientCacheSectionFallback(CUIRect &CurrentColumn, float TopMargin, float (CMenus::*pLayoutSection)(CUIRect &, bool));
 	void ConfigureSplitCachedStaticLayer(SSettingsSection &Section, const char *pTitle, std::function<float(CUIRect &)> MeasureSection, std::function<float(CUIRect &)> RenderInteractiveSection, float TopMargin);
+	void BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);
+	void BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);
 	float LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render);
 	float RenderTClientThemeInteractiveLayer(CUIRect &CurrentColumn);
 	float LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Render);
@@ -1933,6 +2303,9 @@ private:
 	float RenderTClientPetInteractiveLayer(CUIRect &CurrentColumn);
 	float LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render);
 	float RenderTClientHudInteractiveLayer(CUIRect &CurrentColumn);
+	int DoTClientSettingsButton_CheckBox(const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
+	int DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin);
+	int DoTClientSettingsButton_Menu(CButtonContainer *pButtonContainer, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f);
 	void InvalidateTClientSettingsRuntimeCacheSections(ESettingsCacheDirtyReason Reason = ESettingsCacheDirtyReason::CONFIG);
 	bool PrewarmSettingsPageResources(int Page, int Tab, const CUIRect &ContentView);
 	bool PrewarmSettingsAssetResources();
@@ -1945,7 +2318,7 @@ private:
 	void RenderSettingsTClientConfigs(CUIRect MainView);
 	void RenderSettingsTClientSidebar(CUIRect MainView);
 	void RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage = false, bool PrewarmOnly = false);
-	void RenderSettingsQmClientOverview(CUIRect MainView);
+	void RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderTeeCute(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, bool CuteEyes, float Alpha = 1.0f);
 
 	const CWarType *m_pRemoveWarType = nullptr;

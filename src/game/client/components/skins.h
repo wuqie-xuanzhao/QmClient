@@ -14,6 +14,7 @@
 #include <generated/protocol7.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/components/settings_resource_jobs.h>
 #include <game/client/skin.h>
 
@@ -245,6 +246,9 @@ public:
 		ESettingsResourcePriority m_LoadPriority = ESettingsResourcePriority::BACKGROUND;
 		std::unique_ptr<CSkin> m_pSkin = nullptr;
 		std::shared_ptr<CAbstractSkinLoadJob> m_pLoadJob = nullptr;
+		CSkinLoadData m_SettingsPendingUploadData;
+		size_t m_SettingsPendingUploadSprite = 0;
+		std::chrono::nanoseconds m_SettingsPendingUploadStart{};
 		size_t m_SettingsSourceApproxBytes = 0;
 
 		/**
@@ -377,6 +381,8 @@ public:
 		int m_VisibleBackgroundRequested = 0;
 		int m_VisibleNonterminalWaiting = 0;
 		int m_UnderfedStreak = 0;
+		int m_FallbackSweepScanned = 0;
+		int m_FallbackSweepStarted = 0;
 		float m_FrameTimeAverageMs = 0.0f;
 		float m_RenderFrameTimeMs = 0.0f;
 		bool m_AdmissionInvariantViolated = false;
@@ -529,18 +535,30 @@ public:
 	};
 
 	const std::vector<CSkinQueueEntry> &SkinQueue(int Dummy) const { return m_aSkinQueue[Dummy]; }
-	const std::vector<CSkinQueuePreset> &SkinQueuePresets(int Dummy) const { return m_aSkinQueuePresets[Dummy]; }
+	const std::vector<CSkinQueuePreset> &SkinQueuePresets(int Dummy) const { return m_vSkinQueuePresets; }
+	int ActiveSkinQueuePresetIndex(int Dummy) const { return m_aActiveSkinQueuePresetIndex[Dummy]; }
+	int AppliedSkinQueuePresetIndex(int Dummy) const { return m_aAppliedSkinQueuePresetIndex[Dummy]; }
+	const std::vector<CSkinQueueEntry> &ActiveSkinQueue(int Dummy) const;
 	bool IsInSkinQueue(const char *pName, int Dummy) const;
 	bool IsInSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const;
+	bool IsInActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const;
 	bool AddSkinQueue(const char *pName, int Dummy);
 	bool AddSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
+	bool AddActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool RemoveSkinQueue(const char *pName, int Dummy);
 	bool RemoveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool RemoveSkinQueue(const CSkinQueueEntry &Entry, int Dummy);
+	bool RemoveActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
+	bool RemoveActiveSkinQueue(const CSkinQueueEntry &Entry, int Dummy);
 	void MoveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy);
+	void MoveActiveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy);
+	bool ApplySkinQueueIndex(size_t QueueIndex, int Dummy);
 	void TrimSkinQueueToLimit(int Dummy);
+	void TrimActiveSkinQueueToLimit(int Dummy);
 	bool AddSkinQueuePresetFromCurrent(int Dummy);
 	bool RenameSkinQueuePreset(size_t PresetIndex, const char *pName, int Dummy);
+	bool SelectSkinQueuePreset(size_t PresetIndex, int Dummy);
+	void ClearSkinQueuePresetSelection(int Dummy);
 	bool ApplySkinQueuePreset(size_t PresetIndex, int Dummy);
 	bool RemoveSkinQueuePreset(size_t PresetIndex, int Dummy);
 
@@ -740,6 +758,9 @@ private:
 
 	static bool PrepareSkinData(const char *pName, CSkinLoadData &Data);
 	void LoadSkinFinish(CSkinContainer *pSkinContainer, const CSkinLoadData &Data);
+	bool BeginSkinPreviewUpload(CSkinContainer *pSkinContainer, CSkinLoadData &&Data);
+	bool UploadNextSkinPreviewSprite(CSkinContainer *pSkinContainer, SResourcePreviewUploadBudget &Budget);
+	void FinishSkinPreviewUpload(CSkinContainer *pSkinContainer);
 	void LoadSkinDirect(const char *pName);
 	const CSkinContainer *FindContainerImpl(const char *pName);
 	static int SkinScan(const char *pName, int IsDir, int StorageType, void *pUser);
@@ -781,6 +802,7 @@ private:
 	bool AddSkinQueuePresetItem(int PresetIndex, const char *pSkinName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool AddSkinQueueImpl(const CSkinQueueEntry &Entry, int Dummy);
 	bool RemoveSkinQueueImpl(const CSkinQueueEntry &Entry, int Dummy);
+	std::vector<CSkinQueueEntry> &ActiveSkinQueueMutable(int Dummy);
 
 	friend class CSkinProfiles;
 
@@ -806,7 +828,9 @@ private:
 	size_t m_SkinDirectoryMergeCursor = 0;
 	std::set<std::string> m_Favorites;
 	std::array<std::vector<CSkinQueueEntry>, NUM_DUMMIES> m_aSkinQueue;
-	std::array<std::vector<CSkinQueuePreset>, NUM_DUMMIES> m_aSkinQueuePresets;
+	std::vector<CSkinQueuePreset> m_vSkinQueuePresets;
+	std::array<int, NUM_DUMMIES> m_aActiveSkinQueuePresetIndex = {};
+	std::array<int, NUM_DUMMIES> m_aAppliedSkinQueuePresetIndex = {};
 	std::array<std::chrono::nanoseconds, NUM_DUMMIES> m_aSkinQueueElapsed = {};
 	std::array<std::optional<std::chrono::nanoseconds>, NUM_DUMMIES> m_aSkinQueueLastUpdate = {};
 
@@ -814,6 +838,7 @@ private:
 	char m_aEventSkinPrefix[MAX_SKIN_LENGTH];
 	uint64_t m_SettingsSourceUploadsCompleted = 0;
 	uint64_t m_SettingsSourceLoadsCompleted = 0;
+	CSettingsResourcePreviewUploadScheduler m_SettingsSkinPreviewUploadScheduler;
 	uint64_t m_SettingsSourceLoadsAtLastStartLoading = 0;
 	uint64_t m_SettingsSourceUploadsAtLastControllerFrame = 0;
 	uint64_t m_SettingsSourceLoadsAtLastControllerFrame = 0;
@@ -839,6 +864,9 @@ private:
 	};
 
 	ESkinProcessResult ProcessSkinContainer(CSkinContainer *pSkinContainer, CSkinLoadingStats &Stats,
+		int &SkinsProcessedThisFrame, std::chrono::nanoseconds StartTime,
+		std::chrono::nanoseconds MaxTime);
+	ESkinProcessResult DrainSettingsSkinPreviewUpload(CSkinContainer *pSkinContainer, CSkinLoadingStats &Stats,
 		int &SkinsProcessedThisFrame, std::chrono::nanoseconds StartTime,
 		std::chrono::nanoseconds MaxTime);
 };

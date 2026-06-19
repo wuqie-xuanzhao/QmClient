@@ -16,6 +16,7 @@
 #include <generated/protocol.h>
 #include <generated/protocol7.h>
 
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/censor.h>
 #include <game/client/components/message_gradient.h>
@@ -25,7 +26,6 @@
 #include <game/client/components/skins.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/localization.h>
 
 #include <algorithm>
@@ -116,61 +116,61 @@ namespace
 		std::vector<Regex> m_Regexes;
 	};
 
-static constexpr const char *QM_CHAT_LOG_DIR = "qmclient/chat_log";
-static constexpr const char *QM_CHAT_LOG_PREFIX = "auto_chat_";
-static constexpr const char *QM_CHAT_LOG_EXTENSION = ".txt";
+	static constexpr const char *QM_CHAT_LOG_DIR = "qmclient/chat_log";
+	static constexpr const char *QM_CHAT_LOG_PREFIX = "auto_chat_";
+	static constexpr const char *QM_CHAT_LOG_EXTENSION = ".txt";
 
-struct SChatLogCleanupData
-{
-	IStorage *m_pStorage = nullptr;
-	time_t m_CutoffDate = 0;
-};
+	struct SChatLogCleanupData
+	{
+		IStorage *m_pStorage = nullptr;
+		time_t m_CutoffDate = 0;
+	};
 
-static bool ExtractChatLogDate(const char *pFilename, time_t *pTimestamp)
-{
-	const char *pDate = str_startswith(pFilename, QM_CHAT_LOG_PREFIX);
-	if(pDate == nullptr || !str_endswith(pFilename, QM_CHAT_LOG_EXTENSION))
-		return false;
+	static bool ExtractChatLogDate(const char *pFilename, time_t *pTimestamp)
+	{
+		const char *pDate = str_startswith(pFilename, QM_CHAT_LOG_PREFIX);
+		if(pDate == nullptr || !str_endswith(pFilename, QM_CHAT_LOG_EXTENSION))
+			return false;
 
-	if(str_length(pFilename) != str_length(QM_CHAT_LOG_PREFIX) + 10 + str_length(QM_CHAT_LOG_EXTENSION))
-		return false;
+		if(str_length(pFilename) != str_length(QM_CHAT_LOG_PREFIX) + 10 + str_length(QM_CHAT_LOG_EXTENSION))
+			return false;
 
-	char aDate[11];
-	str_truncate(aDate, sizeof(aDate), pDate, 10);
-	return timestamp_from_str(aDate, "%Y-%m-%d", pTimestamp);
-}
+		char aDate[11];
+		str_truncate(aDate, sizeof(aDate), pDate, 10);
+		return timestamp_from_str(aDate, "%Y-%m-%d", pTimestamp);
+	}
 
-static int ChatLogCleanupCallback(const char *pName, int IsDir, int DirType, void *pUser)
-{
-	if(IsDir)
+	static int ChatLogCleanupCallback(const char *pName, int IsDir, int DirType, void *pUser)
+	{
+		if(IsDir)
+			return 0;
+
+		SChatLogCleanupData *pData = (SChatLogCleanupData *)pUser;
+		time_t FileDate = 0;
+		if(!ExtractChatLogDate(pName, &FileDate) || FileDate >= pData->m_CutoffDate)
+			return 0;
+
+		char aFilename[IO_MAX_PATH_LENGTH];
+		str_format(aFilename, sizeof(aFilename), "%s/%s", QM_CHAT_LOG_DIR, pName);
+		if(!pData->m_pStorage->RemoveFile(aFilename, DirType))
+			log_error("chat", "Failed to remove old chat log '%s'", aFilename);
 		return 0;
+	}
 
-	SChatLogCleanupData *pData = (SChatLogCleanupData *)pUser;
-	time_t FileDate = 0;
-	if(!ExtractChatLogDate(pName, &FileDate) || FileDate >= pData->m_CutoffDate)
-		return 0;
-
-	char aFilename[IO_MAX_PATH_LENGTH];
-	str_format(aFilename, sizeof(aFilename), "%s/%s", QM_CHAT_LOG_DIR, pName);
-	if(!pData->m_pStorage->RemoveFile(aFilename, DirType))
-		log_error("chat", "Failed to remove old chat log '%s'", aFilename);
-	return 0;
-}
-
-static const char *ChatLogKind(int ClientId, int Team)
-{
-	if(ClientId == -1)
-		return "system";
-	if(ClientId == -2)
-		return "client";
-	if(Team == TEAM_WHISPER_SEND)
-		return "whisper-send";
-	if(Team == TEAM_WHISPER_RECV)
-		return "whisper-recv";
-	if(Team == 1)
-		return "team";
-	return "public";
-}
+	static const char *ChatLogKind(int ClientId, int Team)
+	{
+		if(ClientId == -1)
+			return "system";
+		if(ClientId == -2)
+			return "client";
+		if(Team == TEAM_WHISPER_SEND)
+			return "whisper-send";
+		if(Team == TEAM_WHISPER_RECV)
+			return "whisper-recv";
+		if(Team == 1)
+			return "team";
+		return "public";
+	}
 } // namespace
 
 static void UpdateBlockWordsCache(CBlockWordsCache &Cache)
@@ -3375,7 +3375,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 	// 标题
 	CUIRect TitleRect;
 	View.HSplitTop(TitleHeight, &TitleRect, &View);
-	DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_TITLE], TitleRect, Localize("翻译设置"), FontSize, TEXTALIGN_MC);
+	DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_TITLE], TitleRect, Localize("Translation Settings"), FontSize, TEXTALIGN_MC);
 	View.HSplitTop(SectionSpacing, nullptr, &View);
 
 	// 自动入站翻译开关
@@ -3395,7 +3395,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 		}
 
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("自动翻译收到的消息"), InboundEnabled ? Localize("开") : Localize("关"));
+		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Auto-translate incoming messages"), InboundEnabled ? Localize("On") : Localize("Off"));
 		DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_INBOUND_TOGGLE], ToggleRect, aBuf, FontSize, TEXTALIGN_MC);
 	}
 	View.HSplitTop(SectionSpacing, nullptr, &View);
@@ -3417,7 +3417,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 		}
 
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("自动翻译发送的消息"), OutboundEnabled ? Localize("开") : Localize("关"));
+		str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Auto-translate outgoing messages"), OutboundEnabled ? Localize("On") : Localize("Off"));
 		DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_OUTBOUND_TOGGLE], ToggleRect, aBuf, FontSize, TEXTALIGN_MC);
 	}
 	View.HSplitTop(SectionSpacing, nullptr, &View);
@@ -3439,7 +3439,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 	{
 		CUIRect LabelRect, DropdownRect;
 		View.HSplitTop(DropdownLabelHeight, &LabelRect, &View);
-		DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_INBOUND_LANG], LabelRect, Localize("接收语言"), FontSize, TEXTALIGN_ML);
+		DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_INBOUND_LANG], LabelRect, Localize("Incoming language"), FontSize, TEXTALIGN_ML);
 		View.HSplitTop(DropdownHeight, &DropdownRect, &View);
 
 		const int OldSel = FindIndex(g_Config.m_QmTranslateTarget, s_apLangCodes, std::size(s_apLangCodes));
@@ -3453,7 +3453,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 	{
 		CUIRect LabelRect, DropdownRect;
 		View.HSplitTop(DropdownLabelHeight, &LabelRect, &View);
-		DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_OUTBOUND_LANG], LabelRect, Localize("发送语言"), FontSize, TEXTALIGN_ML);
+		DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_OUTBOUND_LANG], LabelRect, Localize("Outgoing language"), FontSize, TEXTALIGN_ML);
 		View.HSplitTop(DropdownHeight, &DropdownRect, &View);
 
 		const int OldSel = FindIndex(g_Config.m_QmTranslateOutgoingTarget, s_apLangCodes, std::size(s_apLangCodes));
@@ -3467,7 +3467,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 	{
 		CUIRect LabelRect, DropdownRect;
 		View.HSplitTop(DropdownLabelHeight, &LabelRect, &View);
-		DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_BACKEND], LabelRect, Localize("翻译服务"), FontSize, TEXTALIGN_ML);
+		DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_BACKEND], LabelRect, Localize("Translation service"), FontSize, TEXTALIGN_ML);
 		View.HSplitTop(DropdownHeight, &DropdownRect, &View);
 
 		const int OldSel = FindIndex(g_Config.m_QmTranslateBackend, s_apBackendCodes, std::size(s_apBackendCodes));

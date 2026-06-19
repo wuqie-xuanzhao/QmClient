@@ -161,6 +161,8 @@ const char *SettingsInvalidationReasonName(ESettingsInvalidationReason Reason)
 	case ESettingsInvalidationReason::FONT_CHANGED: return "font_changed";
 	case ESettingsInvalidationReason::BACKEND_CHANGED: return "backend_changed";
 	case ESettingsInvalidationReason::WINDOW_OR_SCALE_CHANGED: return "window_or_scale_changed";
+	case ESettingsInvalidationReason::DPI_CHANGED: return "dpi_changed";
+	case ESettingsInvalidationReason::UI_SCALE_CHANGED: return "ui_scale_changed";
 	case ESettingsInvalidationReason::CONFIG_HASH_CHANGED: return "config_hash_changed";
 	case ESettingsInvalidationReason::SECTION_SIZE_CHANGED: return "section_size_changed";
 	case ESettingsInvalidationReason::RESOURCE_DIRECTORY_CHANGED: return "resource_directory_changed";
@@ -206,12 +208,24 @@ bool SettingsInvalidationClearsTextPool(ESettingsInvalidationReason Reason)
 {
 	switch(Reason)
 	{
+	// 只有真正改变 label 文字内容、字形或渲染后端的 reason 才需要全池失效。
+	// 这些场景不频繁（语言/字体/后端切换），全池重建成本可接受，且避免
+	// 单 entry 容器有效性检测的潜在漏洞（后端切换后旧 TextContainerIndex 失效）。
 	case ESettingsInvalidationReason::LANGUAGE_CHANGED:
 	case ESettingsInvalidationReason::FONT_CHANGED:
 	case ESettingsInvalidationReason::BACKEND_CHANGED:
-	case ESettingsInvalidationReason::WINDOW_OR_SCALE_CHANGED:
-	case ESettingsInvalidationReason::CONFIG_HASH_CHANGED:
 		return true;
+	// 以下 reason 只影响布局尺寸或控件配置状态，不影响 label 的文字内容或字形。
+	// DoMenuLabelStreamed 已在每个 entry 级别检测 SizeChanged / TextChanged /
+	// ColorChanged 并按需重建（见 menus.cpp DoMenuLabelStreamed 的 NeedsBuild），
+	// 因此不需要全池失效。全池失效会让 rect 未变的 entry 也强制重建，是 ingame ESC
+	// 打开设置时“闪 + 卡 + 重加载文本池”的直接根因：
+	//   OnReset -> CONFIG_HASH_CHANGED -> 旧逻辑 ClearsText=true -> 全池 m_Generation=0
+	//   -> ESC 回菜单首帧全 text_new。
+	case ESettingsInvalidationReason::WINDOW_OR_SCALE_CHANGED:
+	case ESettingsInvalidationReason::DPI_CHANGED:
+	case ESettingsInvalidationReason::UI_SCALE_CHANGED:
+	case ESettingsInvalidationReason::CONFIG_HASH_CHANGED:
 	case ESettingsInvalidationReason::SECTION_SIZE_CHANGED:
 	case ESettingsInvalidationReason::RESOURCE_DIRECTORY_CHANGED:
 		return false;

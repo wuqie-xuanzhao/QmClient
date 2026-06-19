@@ -104,6 +104,7 @@ class CConsole : public IConsole
 
 		CResult(int ClientId);
 		CResult(const CResult &Other);
+		const char *CopyArgumentPointer(const char *pPointer, const CResult &Other) const;
 
 		void AddArgument(const char *pArg);
 		void RemoveArgument(unsigned Index) override;

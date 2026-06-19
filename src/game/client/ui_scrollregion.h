@@ -137,6 +137,7 @@ public:
 	void ScrollRelative(EScrollRelative Direction, float SpeedMultiplier = 1.0f);
 	void ScrollRelativeDirect(float ScrollAmount);
 	void SetScrollOffsetY(float OffsetY);
+	void SetContentHeightForNextFrame(float ContentHeight);
 	const CUIRect *ClipRect() const { return &m_ClipRect; }
 	float ContentScrollOffsetY() const { return m_ContentScrollOff.y; }
 	void DoEdgeScrolling();
