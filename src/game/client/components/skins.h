@@ -535,18 +535,30 @@ public:
 	};
 
 	const std::vector<CSkinQueueEntry> &SkinQueue(int Dummy) const { return m_aSkinQueue[Dummy]; }
-	const std::vector<CSkinQueuePreset> &SkinQueuePresets(int Dummy) const { return m_aSkinQueuePresets[Dummy]; }
+	const std::vector<CSkinQueuePreset> &SkinQueuePresets(int Dummy) const { return m_vSkinQueuePresets; }
+	int ActiveSkinQueuePresetIndex(int Dummy) const { return m_aActiveSkinQueuePresetIndex[Dummy]; }
+	int AppliedSkinQueuePresetIndex(int Dummy) const { return m_aAppliedSkinQueuePresetIndex[Dummy]; }
+	const std::vector<CSkinQueueEntry> &ActiveSkinQueue(int Dummy) const;
 	bool IsInSkinQueue(const char *pName, int Dummy) const;
 	bool IsInSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const;
+	bool IsInActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const;
 	bool AddSkinQueue(const char *pName, int Dummy);
 	bool AddSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
+	bool AddActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool RemoveSkinQueue(const char *pName, int Dummy);
 	bool RemoveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool RemoveSkinQueue(const CSkinQueueEntry &Entry, int Dummy);
+	bool RemoveActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
+	bool RemoveActiveSkinQueue(const CSkinQueueEntry &Entry, int Dummy);
 	void MoveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy);
+	void MoveActiveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy);
+	bool ApplySkinQueueIndex(size_t QueueIndex, int Dummy);
 	void TrimSkinQueueToLimit(int Dummy);
+	void TrimActiveSkinQueueToLimit(int Dummy);
 	bool AddSkinQueuePresetFromCurrent(int Dummy);
 	bool RenameSkinQueuePreset(size_t PresetIndex, const char *pName, int Dummy);
+	bool SelectSkinQueuePreset(size_t PresetIndex, int Dummy);
+	void ClearSkinQueuePresetSelection(int Dummy);
 	bool ApplySkinQueuePreset(size_t PresetIndex, int Dummy);
 	bool RemoveSkinQueuePreset(size_t PresetIndex, int Dummy);
 
@@ -790,6 +802,7 @@ private:
 	bool AddSkinQueuePresetItem(int PresetIndex, const char *pSkinName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool AddSkinQueueImpl(const CSkinQueueEntry &Entry, int Dummy);
 	bool RemoveSkinQueueImpl(const CSkinQueueEntry &Entry, int Dummy);
+	std::vector<CSkinQueueEntry> &ActiveSkinQueueMutable(int Dummy);
 
 	friend class CSkinProfiles;
 
@@ -815,7 +828,9 @@ private:
 	size_t m_SkinDirectoryMergeCursor = 0;
 	std::set<std::string> m_Favorites;
 	std::array<std::vector<CSkinQueueEntry>, NUM_DUMMIES> m_aSkinQueue;
-	std::array<std::vector<CSkinQueuePreset>, NUM_DUMMIES> m_aSkinQueuePresets;
+	std::vector<CSkinQueuePreset> m_vSkinQueuePresets;
+	std::array<int, NUM_DUMMIES> m_aActiveSkinQueuePresetIndex = {};
+	std::array<int, NUM_DUMMIES> m_aAppliedSkinQueuePresetIndex = {};
 	std::array<std::chrono::nanoseconds, NUM_DUMMIES> m_aSkinQueueElapsed = {};
 	std::array<std::optional<std::chrono::nanoseconds>, NUM_DUMMIES> m_aSkinQueueLastUpdate = {};
 

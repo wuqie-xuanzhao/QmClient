@@ -1947,10 +1947,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	auto RenderSliderWithValueInput = [this, UiScale, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		const int OriginalValue = *pValue;
 		CUIRect SliderRect, InputRect, SuffixRect;
-		const float InputWidth = std::clamp(58.0f * UiScale, 44.0f, 58.0f);
+		const float InputWidth = std::clamp(72.0f * UiScale, 56.0f, 72.0f);
 		const float GapWidth = std::clamp(6.0f * UiScale, 3.0f, 6.0f);
-		const float SuffixWidth = pSuffix[0] != '\0' ? std::clamp(18.0f * UiScale, 14.0f, 20.0f) : 0.0f;
-		const float MinSliderWidth = std::clamp(46.0f * UiScale, 36.0f, 46.0f);
+		const float SuffixWidth = pSuffix[0] != '\0' ? std::clamp(22.0f * UiScale, 18.0f, 24.0f) : 0.0f;
+		const float MinSliderWidth = std::clamp(54.0f * UiScale, 42.0f, 54.0f);
 		bool HasSuffixRect = false;
 		if(ControlColumn.w > InputWidth + GapWidth + SuffixWidth + MinSliderWidth)
 		{
@@ -1991,8 +1991,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		if(HasSuffixRect)
 			Ui()->DoLabel(&SuffixRect, pSuffix, SuffixRect.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
 	};
-	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_ML) {
-		DoSettingsMenuLabel(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pTextId, pRect, pText, FontSize, Align, {}, (int)pRect->w);
+	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_ML, const SLabelProperties &Props = {}) {
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pTextId, pRect, pText, FontSize, Align, Props, (int)pRect->w);
 	};
 	auto DoQmSettingsCheckbox = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin) {
 		CUIRect CheckBoxRect;
@@ -3223,6 +3223,25 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					       static_cast<int>(VisibleLeftModules.size() + VisibleRightModules.size()) + VisibleFullModuleCount;
 	if(HasModuleSearch)
 		ResetModuleDragState();
+
+	static int s_LastRenderedQmClientTabForLightPath = -1;
+	static uint64_t s_QmFunctionFirstFrameLightFrame = 0;
+	if(!PrewarmOnly && !m_MenuTextPlanCollecting)
+	{
+		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_FUNCTION && s_LastRenderedQmClientTabForLightPath != QMCLIENT_SETTINGS_TAB_FUNCTION)
+			s_QmFunctionFirstFrameLightFrame = Client()->PerfFrame();
+		s_LastRenderedQmClientTabForLightPath = m_QmClientSettingsTab;
+	}
+	const bool FunctionFirstFrameLightPath = !PrewarmOnly && !m_MenuTextPlanCollecting &&
+						 m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_FUNCTION &&
+						 Client()->PerfFrame() == s_QmFunctionFirstFrameLightFrame;
+	auto QmFunctionModuleUsesLightFirstFramePath = [](EQmModuleId Id) {
+		return Id == EQmModuleId::PieMenu || Id == EQmModuleId::BlockWords || Id == EQmModuleId::Gores;
+	};
+	if(FunctionFirstFrameLightPath)
+	{
+		LogQmPerfStage(Client(), "function_first_frame_light_path", 0.0, true, "tab=function modules=pie_menu,block_words,gores");
+	}
 	{
 		char aVisibleExtra[128];
 		str_format(aVisibleExtra, sizeof(aVisibleExtra), "tab=%s visible=%d search=%d left=%d right=%d full=%d pending=%d",
@@ -3446,6 +3465,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			break;
 			case EQmModuleId::Gores:
 			{
+				const bool LightFirstFrame = FunctionFirstFrameLightPath && QmFunctionModuleUsesLightFirstFramePath(pModule->m_Id);
+				CPerfTimer LayoutTimer;
 				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
 				CUIRect CardGoresStart = Column;
 				s_GlassCards.push_back(CardGoresStart);
@@ -3454,6 +3475,21 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 2, Localize("Gores Mode"), Localize("King of Gores auto weapon switch"));
+				char aGoresLayoutExtra[96];
+				str_format(aGoresLayoutExtra, sizeof(aGoresLayoutExtra), "tab=%s module=gores light=%d", QmSettingsTabName(m_QmClientSettingsTab), LightFirstFrame ? 1 : 0);
+				LogQmPerfStage(Client(), "gores_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aGoresLayoutExtra);
+				CPerfTimer ControlsTimer;
+				if(LightFirstFrame)
+				{
+					CardContent.HSplitTop(LgLineHeight, nullptr, &CardContent);
+					CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+					Column.y = CardContent.y;
+					s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+					RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+					HandleModuleDragState(pModule, s_GlassCards.back());
+					LogQmPerfStage(Client(), "gores_controls", ControlsTimer.ElapsedMs(), true, "tab=function module=gores light=1");
+					break;
+				}
 
 				static CButtonContainer s_ReaderButtonGoresToggle, s_ClearButtonGoresToggle;
 				static CButtonContainer s_AxiomPasswordToggleButton, s_AxiomDummyPasswordToggleButton;
@@ -3543,9 +3579,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					DoQmSettingsLabel("qmclient-gores-mode-key", &BindLabel, Localize("Gores mode key"), LgBodySize);
 					CBindSlot GoresBind(KEY_UNKNOWN, KeyModifier::NONE);
 					{
+						CPerfTimer BindLookupTimer;
 						const auto GoresIt = CommandBindCache.find("toggle qm_gores 0 1");
 						if(GoresIt != CommandBindCache.end())
 							GoresBind = GoresIt->second;
+						LogQmPerfStage(Client(), "gores_bind_lookup", BindLookupTimer.ElapsedMs(), false, "tab=function module=gores");
 					}
 					const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&s_ReaderButtonGoresToggle, &s_ClearButtonGoresToggle, &BindKey, GoresBind, false);
 					if(Result.m_Bind != GoresBind)
@@ -3569,6 +3607,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
 				HandleModuleDragState(pModule, s_GlassCards.back());
+				LogQmPerfStage(Client(), "gores_controls", ControlsTimer.ElapsedMs(), false, "tab=function module=gores light=0");
 			}
 			break;
 			case EQmModuleId::FocusMode:
@@ -3931,7 +3970,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-skin-transition-duration", &LabelCol, Localize("Skin transition duration"), LgBodySize);
+				SLabelProperties SkinTransitionDurationLabelProps;
+				SkinTransitionDurationLabelProps.m_DisallowNewline = true;
+				SkinTransitionDurationLabelProps.m_StopAtEnd = true;
+				SkinTransitionDurationLabelProps.m_MinimumFontSize = 6.0f;
+				DoQmSettingsLabel("qmclient-skin-transition-duration", &LabelCol, Localize("Skin transition duration"), LgBodySize, TEXTALIGN_ML, SkinTransitionDurationLabelProps);
 				static int s_QmSkinChangeTransitionMsInputId;
 				RenderSliderWithValueInput(&s_QmSkinChangeTransitionMsInputId, ControlCol, &g_Config.m_QmSkinChangeTransitionMs, 0, 2000, "ms");
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -4106,6 +4149,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			break;
 			case EQmModuleId::BlockWords:
 			{
+				const bool LightFirstFrame = FunctionFirstFrameLightPath && QmFunctionModuleUsesLightFirstFramePath(pModule->m_Id);
+				CPerfTimer LayoutTimer;
 				// ========== 模块: 屏蔽词 ==========
 				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
 				CUIRect CardBlockWordsStart = Column;
@@ -4115,10 +4160,27 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 7, Localize("Word Filter"), Localize("Idiot word filter"));
+				char aBlockWordsLayoutExtra[96];
+				str_format(aBlockWordsLayoutExtra, sizeof(aBlockWordsLayoutExtra), "tab=%s module=block_words light=%d", QmSettingsTabName(m_QmClientSettingsTab), LightFirstFrame ? 1 : 0);
+				LogQmPerfStage(Client(), "block_words_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aBlockWordsLayoutExtra);
+				CPerfTimer ControlsTimer;
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmBlockWordsShowConsole, "Show blocked words in console", Localize("Show blocked words in console"), &g_Config.m_QmBlockWordsShowConsole, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				if(LightFirstFrame)
+				{
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmBlockWordsEnabled, "Enable word filter list", Localize("Enable word filter list"), &g_Config.m_QmBlockWordsEnabled, &Row, LgLineHeight);
+					CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+					Column.y = CardContent.y;
+					s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+					RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+					HandleModuleDragState(pModule, s_GlassCards.back());
+					LogQmPerfStage(Client(), "block_words_controls", ControlsTimer.ElapsedMs(), true, "tab=function module=block_words light=1");
+					break;
+				}
 
 				static CButtonContainer s_BlockWordsConsoleColorId;
 				DoLine_ColorPicker(&s_BlockWordsConsoleColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Console color"), &g_Config.m_QmBlockWordsConsoleColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
@@ -4201,6 +4263,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
 				HandleModuleDragState(pModule, s_GlassCards.back());
+				LogQmPerfStage(Client(), "block_words_controls", ControlsTimer.ElapsedMs(), false, "tab=function module=block_words light=0");
 			}
 			break;
 			case EQmModuleId::Translate:
@@ -4900,6 +4963,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			break;
 			case EQmModuleId::PieMenu:
 			{
+				const bool LightFirstFrame = FunctionFirstFrameLightPath && QmFunctionModuleUsesLightFirstFramePath(pModule->m_Id);
+				CPerfTimer LayoutTimer;
 				// ========== 模块: 饼菜单 ==========
 				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
 				CUIRect Card36Start = Column;
@@ -4909,11 +4974,25 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 9, Localize("Pie Menu"), Localize("Drawing a big pie in the sky"));
+				char aPieMenuLayoutExtra[96];
+				str_format(aPieMenuLayoutExtra, sizeof(aPieMenuLayoutExtra), "tab=%s module=pie_menu light=%d", QmSettingsTabName(m_QmClientSettingsTab), LightFirstFrame ? 1 : 0);
+				LogQmPerfStage(Client(), "pie_menu_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aPieMenuLayoutExtra);
+				CPerfTimer ControlsTimer;
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmPieMenuEnabled, "Enable pie menu", Localize("Enable pie menu"), &g_Config.m_QmPieMenuEnabled, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				bool BlockPieMenuCardDrag = Ui()->IsPopupOpen(&m_ColorPickerPopupContext) || Ui()->IsPopupHovered();
+				if(LightFirstFrame)
+				{
+					CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+					Column.y = CardContent.y;
+					s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+					RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+					HandleModuleDragState(pModule, s_GlassCards.back(), BlockPieMenuCardDrag);
+					LogQmPerfStage(Client(), "pie_menu_controls", ControlsTimer.ElapsedMs(), true, "tab=function module=pie_menu light=1");
+					break;
+				}
 				if(g_Config.m_QmPieMenuEnabled)
 				{
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -5160,6 +5239,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
 				HandleModuleDragState(pModule, s_GlassCards.back(), BlockPieMenuCardDrag);
+				LogQmPerfStage(Client(), "pie_menu_controls", ControlsTimer.ElapsedMs(), false, "tab=function module=pie_menu light=0");
 			}
 			break;
 			case EQmModuleId::CameraView:

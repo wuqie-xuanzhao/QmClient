@@ -259,10 +259,11 @@ namespace
 	std::string MenuTextCacheKey(CMenus::EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const CMenus::SMenuTextStyleKey &StyleKey)
 	{
 		char aKey[512];
-		str_format(aKey, sizeof(aKey), "%s:%d:%d:%d:%s:fs%d:al%d:mw%d:us%d:cm%d:ch%d",
+		str_format(aKey, sizeof(aKey), "%s:%d:%d:%d:%s:fs%d:al%d:mw%d:us%d:hd%d:tc%d:oc%d:cm%d",
 			MenuTextScopeName(Scope), Page, Tab, Subtab, pTextId != nullptr ? pTextId : "",
 			MenuTextBucket(StyleKey.m_FontSize), StyleKey.m_Align, StyleKey.m_MaxWidthBucket,
-			StyleKey.m_UiScaleBucket, StyleKey.m_CompactMode, StyleKey.m_ColorHash);
+			StyleKey.m_UiScaleBucket, StyleKey.m_HiDpiScaleBucket, StyleKey.m_TextColorHash,
+			StyleKey.m_OutlineColorHash, StyleKey.m_CompactMode);
 		return aKey;
 	}
 
@@ -274,36 +275,64 @@ namespace
 		return aKey;
 	}
 
-	CMenus::SMenuTextStyleKey BuildMenuTextStyleKey(const CUIRect *pRect, float FontSize, int Align, const SLabelProperties &LabelProps)
+	int MenuTextColorBucket(float Value)
 	{
-		CMenus::SMenuTextStyleKey StyleKey;
-		StyleKey.m_FontSize = FontSize;
-		StyleKey.m_Align = Align;
-		const float MaxWidth = LabelProps.m_MaxWidth >= 0.0f ? LabelProps.m_MaxWidth : (pRect != nullptr ? pRect->w : -1.0f);
-		StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f ? MenuTextBucket(MaxWidth) : -1;
-		StyleKey.m_UiScaleBucket = 100;
-		StyleKey.m_CompactMode = g_Config.m_QmNewUi ? 1 : 0;
-		StyleKey.m_ColorHash = (int)(str_quickhash("default-text-style") & 0x7fffffff);
-		return StyleKey;
+		return std::clamp(round_to_int(Value * 255.0f), 0, 255);
 	}
 
-	CMenus::SMenuTextStyleKey SettingsMenuTextPlanStyleKey(const CMenus::SMenuTextPlanItem &Item)
+	int MenuTextColorHash(const ColorRGBA &Color)
 	{
-		switch(Item.m_StyleMode)
-		{
-		case CMenus::MENU_TEXT_STYLE_DEFAULT:
-			return Item.m_StyleKey;
-		case CMenus::MENU_TEXT_STYLE_EXACT:
-			return Item.m_StyleKey;
-		case CMenus::MENU_TEXT_STYLE_ALLOWLIST_DYNAMIC:
-			return Item.m_StyleKey;
-		case CMenus::MENU_TEXT_STYLE_RECT:
-		default:
-			break;
-		}
-		return BuildMenuTextStyleKey(&Item.m_Rect, Item.m_FontSize, Item.m_Align, Item.m_LabelProps);
+		const int R = MenuTextColorBucket(Color.r);
+		const int G = MenuTextColorBucket(Color.g);
+		const int B = MenuTextColorBucket(Color.b);
+		const int A = MenuTextColorBucket(Color.a);
+		return (R << 24) ^ (G << 16) ^ (B << 8) ^ A;
 	}
 
+	float QmPerfEwma(float Previous, float Sample, float Alpha)
+	{
+		if(Sample <= 0.0f)
+			return Previous * (1.0f - Alpha);
+		if(Previous <= 0.0f)
+			return Sample;
+		return Previous * (1.0f - Alpha) + Sample * Alpha;
+	}
+}
+
+CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey(const CUIRect *pRect, float FontSize, int Align, const SLabelProperties &LabelProps) const
+{
+	SMenuTextStyleKey StyleKey;
+	StyleKey.m_FontSize = FontSize;
+	StyleKey.m_Align = Align;
+	const float MaxWidth = LabelProps.m_MaxWidth >= 0.0f ? LabelProps.m_MaxWidth : (pRect != nullptr ? pRect->w : -1.0f);
+	StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f ? MenuTextBucket(MaxWidth) : -1;
+	StyleKey.m_UiScaleBucket = MenuTextBucket(CUi::ms_FontmodHeight);
+	StyleKey.m_HiDpiScaleBucket = Graphics() != nullptr ? round_to_int(Graphics()->ScreenHiDPIScale() * 100.0f) : 100;
+	StyleKey.m_TextColorHash = MenuTextColorHash(TextRender()->GetTextColor());
+	StyleKey.m_OutlineColorHash = MenuTextColorHash(TextRender()->GetTextOutlineColor());
+	StyleKey.m_CompactMode = g_Config.m_QmNewUi ? 1 : 0;
+	return StyleKey;
+}
+
+CMenus::SMenuTextStyleKey CMenus::SettingsMenuTextPlanStyleKey(const SMenuTextPlanItem &Item) const
+{
+	switch(Item.m_StyleMode)
+	{
+	case MENU_TEXT_STYLE_DEFAULT:
+		return Item.m_StyleKey;
+	case MENU_TEXT_STYLE_EXACT:
+		return Item.m_StyleKey;
+	case MENU_TEXT_STYLE_ALLOWLIST_DYNAMIC:
+		return Item.m_StyleKey;
+	case MENU_TEXT_STYLE_RECT:
+	default:
+		break;
+	}
+	return BuildMenuTextStyleKey(&Item.m_Rect, Item.m_FontSize, Item.m_Align, Item.m_LabelProps);
+}
+
+namespace
+{
 	CUIRect MenuTextSettingsContentView(CUIRect Screen)
 	{
 		CUIRect TabBar, MainView;
@@ -372,7 +401,7 @@ namespace
 		QmPerfLogPayload("perf/settings-text", aPayload, pClient, aPage);
 	}
 
-	void LogSettingsTextPoolUsage(IClient *pClient, CMenus::EMenuTextScope Scope, const char *pScopeName, int Page, int Tab, int Subtab, const char *pOperation, uint64_t Frame, int Candidates, int Hits, int Reused, int Misses, int Stales, int TextNew, int TextReused, int Planned, int Unplanned)
+	void LogSettingsTextPoolUsage(IClient *pClient, CMenus::EMenuTextScope Scope, const char *pScopeName, int Page, int Tab, int Subtab, const char *pOperation, uint64_t Frame, int Candidates, int Hits, int Reused, int Misses, int Stales, int TextNew, int TextReused, int Planned, int Unplanned, int PoolHits, int RenderReadyHits, int BuildQueued, int FallbackImmediate)
 	{
 		if(!PerfDebugEnabled() || Candidates <= 0)
 			return;
@@ -382,9 +411,9 @@ namespace
 			str_copy(aPage, SettingsPageCacheKey(Page, -1).c_str(), sizeof(aPage));
 		else
 			str_format(aPage, sizeof(aPage), "%d", Page);
-		str_format(aPayload, sizeof(aPayload), "event=settings_text_usage scope=%s page=%s tab=%d subtab=%d operation=%s frame=%" PRIu64 " text_class=static_stable candidates=%d hits=%d reused=%d miss=%d stale=%d text_new=%d text_reused=%d planned=%d unplanned=%d",
+		str_format(aPayload, sizeof(aPayload), "event=settings_text_usage scope=%s page=%s tab=%d subtab=%d operation=%s frame=%" PRIu64 " text_class=static_stable candidates=%d hits=%d reused=%d miss=%d stale=%d text_new=%d text_reused=%d planned=%d unplanned=%d pool_hit=%d render_ready_hit=%d build_queued=%d fallback_immediate=%d",
 			pScopeName != nullptr ? pScopeName : MenuTextScopeName(Scope), aPage, Tab, Subtab, pOperation != nullptr ? pOperation : "unknown", Frame,
-			Candidates, Hits, Reused, Misses, Stales, TextNew, TextReused, Planned, Unplanned);
+			Candidates, Hits, Reused, Misses, Stales, TextNew, TextReused, Planned, Unplanned, PoolHits, RenderReadyHits, BuildQueued, FallbackImmediate);
 		QmPerfLogPayload("perf/settings-text", aPayload, pClient, aPage);
 	}
 
@@ -2873,6 +2902,7 @@ void CMenus::Render()
 		}
 		else
 		{
+			CPerfTimer ShellTimer;
 			CUIRect TabBar, MainView;
 			const bool UseNewUi = g_Config.m_QmNewUi != 0;
 			const float MenubarHeight = UseNewUi ? 24.0f : 34.0f;
@@ -2976,6 +3006,7 @@ void CMenus::Render()
 		}
 		else
 		{
+			CPerfTimer ShellTimer;
 			CUIRect TabBar, MainView;
 			const bool UseNewUi = g_Config.m_QmNewUi != 0;
 			const float MenubarHeight = UseNewUi ? 24.0f : 34.0f;
@@ -2987,6 +3018,11 @@ void CMenus::Render()
 			const bool TransitionActive = TransitionStrength > 0.0f && m_GamePageTransitionDirection != 0.0f;
 			float TransitionAlpha = UiSwitchAnimationAlpha(TransitionStrength);
 			const char *pPageName = GamePageName(m_GamePage);
+			const char *pOperationName = SettingsPerfActiveOperation();
+			if(pOperationName == nullptr || pOperationName[0] == '\0' || str_comp(pOperationName, "none") == 0)
+				pOperationName = "ingame_esc_open";
+			char aEscPerfExtra[160];
+			str_format(aEscPerfExtra, sizeof(aEscPerfExtra), "operation=%s context=online page=%s tab=none frame=%" PRIu64, pOperationName, pPageName, Client()->PerfFrame());
 			if(m_GamePage != PAGE_SETTINGS)
 				PrepareSettingsTabLabelCache(MainView.w);
 			if(TransitionActive)
@@ -2998,6 +3034,7 @@ void CMenus::Render()
 			std::optional<CScopedMenuTextVisibleGuard> TextVisibleGuard;
 			if(m_GamePage == PAGE_SETTINGS)
 				TextVisibleGuard.emplace(this);
+			LogPerfStage(Client(), "ingame_esc_menu_shell", ShellTimer.ElapsedMs(), false, aEscPerfExtra);
 
 			CPerfTimer ContentTimer;
 			const bool ScrollInputActive =
@@ -3017,40 +3054,60 @@ void CMenus::Render()
 				PrewarmVisibleSettingsResources(MainView);
 			if(m_GamePage == PAGE_GAME)
 			{
+				CPerfTimer StageTimer;
 				RenderGame(MainView);
 				RenderIngameHint();
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_PLAYERS)
 			{
+				CPerfTimer StageTimer;
 				RenderPlayers(MainView);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_SERVER_INFO)
 			{
+				CPerfTimer StageTimer;
 				RenderServerInfo(MainView);
+				const double StageDurationMs = StageTimer.ElapsedMs();
+				LogPerfStage(Client(), "ingame_server_info_layout", StageDurationMs, TransitionActive, aEscPerfExtra);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageDurationMs, TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_NETWORK)
 			{
+				CPerfTimer StageTimer;
 				RenderInGameNetwork(MainView);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_GHOST)
 			{
+				CPerfTimer StageTimer;
 				RenderGhost(MainView);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_UNFINISHED_MAPS)
 			{
+				CPerfTimer StageTimer;
 				RenderUnfinishedMaps(MainView);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_CALLVOTE)
 			{
+				CPerfTimer StageTimer;
 				RenderServerControl(MainView);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_DEMOS)
 			{
+				CPerfTimer StageTimer;
 				RenderDemoBrowser(MainView);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_SETTINGS)
 			{
+				CPerfTimer StageTimer;
 				RenderSettings(MainView);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else
 			{
@@ -3080,9 +3137,10 @@ void CMenus::Render()
 			{
 				CPerfTimer StageTimer;
 				RenderMenubar(TabBar, ClientState);
+				const double StageDurationMs = StageTimer.ElapsedMs();
 				char aMenubarExtra[128];
 				str_format(aMenubarExtra, sizeof(aMenubarExtra), "page=%s state=%s", pPageName, ClientStateName(ClientState));
-				LogPerfStage(Client(), "menu_menubar", StageTimer.ElapsedMs(), TransitionActive, aMenubarExtra);
+				LogPerfStage(Client(), "menu_menubar", StageDurationMs, TransitionActive, aMenubarExtra);
 			}
 		}
 		break;
@@ -4515,15 +4573,7 @@ int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *
 		return 0;
 	}
 	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, StyleKey);
-	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
-	const bool Pressed = Ui()->CheckActiveItem(pButtonContainer);
-	const float HoverTarget = Checked || MouseInside || Pressed ? 1.0f : 0.0f;
-	static const uint64_t s_ScopeHash = static_cast<uint64_t>(str_quickhash("menu_button_hover"));
-	const uint64_t NodeKey = BuildUiAnimNodeKey(s_ScopeHash, reinterpret_cast<uint64_t>(pButtonContainer));
-	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
-	const float HoverStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA, HoverTarget, 0.11f, EEasing::EASE_OUT), 0.0f, 1.0f);
-	const float HoverLift = -1.25f * HoverStrength;
-	Text = MenuButtonTextRect(pRect, 0.0f, HoverLift);
+	Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);
 	const int Result = DoButton_Menu(pButtonContainer, "", Checked, pRect, Flags, nullptr, Corners, Rounding);
 	CUIElement::SUIElementRect *pElementRect = TextElement.Rect(0);
 	const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
@@ -4650,8 +4700,12 @@ CUIElement &CMenus::MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int
 			++m_MenuTextStablePlannedThisFrame;
 		else
 			++m_MenuTextStableUnplannedThisFrame;
-		if(It != m_MenuTextPool.end() && It->second.m_Generation == m_MenuTextPoolGeneration && It->second.m_Built)
-			++m_MenuTextStableHitsThisFrame;
+		if(It != m_MenuTextPool.end() && It->second.m_Generation == m_MenuTextPoolGeneration)
+		{
+			++m_MenuTextStablePoolHitsThisFrame;
+			if(It->second.m_Built)
+				++m_MenuTextStableHitsThisFrame;
+		}
 	}
 	if(It == m_MenuTextPool.end())
 	{
@@ -4813,6 +4867,8 @@ void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, cons
 
 	if(&Element == &m_MenuTextFallbackElement)
 	{
+		if(Render && m_MenuTextPoolVisibleGuard)
+			++m_MenuTextStableFallbackImmediateThisFrame;
 		if(Render)
 			Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
 		return;
@@ -4821,10 +4877,14 @@ void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, cons
 	const bool NeedsBuild = MenuTextContainerNeedsBuild(Element, pRect, pText, StrLen, pReadCursor);
 	if(NeedsBuild && m_pSettingsTextPrebuildBudget == nullptr)
 	{
+		if(m_MenuTextPoolVisibleGuard)
+			++m_MenuTextStableBuildQueuedThisFrame;
 		QueueMenuTextContainerBuild(Element, pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor);
 		CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
 		if(Render && pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
-			TextRender()->RenderTextContainer(pElementRect->m_UITextContainer, pElementRect->m_TextColor, pElementRect->m_TextOutlineColor, pRect->x, pRect->y);
+		{
+			Ui()->RenderLabelTextContainerAligned(*pElementRect, pRect, Align);
+		}
 		return;
 	}
 
@@ -4866,7 +4926,11 @@ void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, cons
 	bool TextContainerRecreated = false;
 	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
 	if(Render && pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
-		TextRender()->RenderTextContainer(pElementRect->m_UITextContainer, pElementRect->m_TextColor, pElementRect->m_TextOutlineColor, pRect->x, pRect->y);
+	{
+		if(m_MenuTextPoolVisibleGuard)
+			++m_MenuTextStableRenderReadyHitsThisFrame;
+		Ui()->RenderLabelTextContainerAligned(*pElementRect, pRect, Align);
+	}
 	if(m_pActiveSettingsTextPerfStats != nullptr)
 	{
 		if(TextContainerRecreated)
@@ -4913,6 +4977,10 @@ CMenus::CScopedMenuTextVisibleGuard::CScopedMenuTextVisibleGuard(CMenus *pMenus)
 	++m_pMenus->m_MenuTextCoverageFrame;
 	m_pMenus->m_MenuTextStableCandidatesThisFrame = 0;
 	m_pMenus->m_MenuTextStableHitsThisFrame = 0;
+	m_pMenus->m_MenuTextStablePoolHitsThisFrame = 0;
+	m_pMenus->m_MenuTextStableRenderReadyHitsThisFrame = 0;
+	m_pMenus->m_MenuTextStableBuildQueuedThisFrame = 0;
+	m_pMenus->m_MenuTextStableFallbackImmediateThisFrame = 0;
 	m_pMenus->m_MenuTextStableReusedThisFrame = 0;
 	m_pMenus->m_MenuTextStableTextNewThisFrame = 0;
 	m_pMenus->m_MenuTextStableTextReusedThisFrame = 0;
@@ -4935,7 +5003,8 @@ CMenus::CScopedMenuTextVisibleGuard::~CScopedMenuTextVisibleGuard()
 		LogSettingsTextPoolUsage(m_pMenus->Client(), Scope, m_pMenus->SettingsPerfStableTextScope(Page), Page, m_pMenus->m_MenuTextStableTabThisFrame, m_pMenus->m_MenuTextStableSubtabThisFrame, m_pMenus->SettingsPerfActiveOperation(), m_pMenus->m_MenuTextCoverageFrame,
 			m_pMenus->m_MenuTextStableCandidatesThisFrame, m_pMenus->m_MenuTextStableHitsThisFrame, m_pMenus->m_MenuTextStableReusedThisFrame,
 			m_pMenus->m_MenuTextStableMissesThisFrame, m_pMenus->m_MenuTextStableStalesThisFrame, m_pMenus->m_MenuTextStableTextNewThisFrame, m_pMenus->m_MenuTextStableTextReusedThisFrame,
-			m_pMenus->m_MenuTextStablePlannedThisFrame, m_pMenus->m_MenuTextStableUnplannedThisFrame);
+			m_pMenus->m_MenuTextStablePlannedThisFrame, m_pMenus->m_MenuTextStableUnplannedThisFrame, m_pMenus->m_MenuTextStablePoolHitsThisFrame, m_pMenus->m_MenuTextStableRenderReadyHitsThisFrame,
+			m_pMenus->m_MenuTextStableBuildQueuedThisFrame, m_pMenus->m_MenuTextStableFallbackImmediateThisFrame);
 	}
 	m_pMenus->m_MenuTextPoolVisibleGuard = m_Previous;
 }
@@ -5457,7 +5526,7 @@ void CMenus::LogSettingsAdaptiveBudget(const char *pSource, const SSettingsAdapt
 		return;
 	char aPayload[768];
 	str_format(aPayload, sizeof(aPayload),
-		"event=settings_adaptive_budget source=%s frame=%" PRIu64 " operation=%s page=%s tab=%s subtab=%d context=%s mode=%s reason=%s frame_ms_avg=%.3f frame_ms_p95=%.3f target_ms=%.3f visible_tokens=%d prefetch_tokens=%d background_tokens=%d gpu_upload_tokens=%d resource_upload_tokens=%d text_tokens=%d text_container_tokens=%d glyph_rasterize_tokens=%d glyph_upload_tokens=%d paragraph_layout_tokens=%d metadata_layout_tokens=%d preview_artifact_tokens=%d texture_upload_tokens=%d card_draw_tokens=%d demo_tokens=%d backlog=%d scroll=%d jump_scroll=%d tab_switch_first_frame=%d frame_pressure=%d",
+		"event=settings_adaptive_budget source=%s frame=%" PRIu64 " operation=%s page=%s tab=%s subtab=%d context=%s mode=%s reason=%s frame_ms_avg=%.3f frame_ms_p95=%.3f target_ms=%.3f visible_tokens=%d prefetch_tokens=%d background_tokens=%d gpu_upload_tokens=%d resource_upload_tokens=%d text_tokens=%d text_container_tokens=%d glyph_rasterize_tokens=%d glyph_upload_tokens=%d paragraph_layout_tokens=%d metadata_layout_tokens=%d preview_artifact_tokens=%d texture_upload_tokens=%d card_draw_tokens=%d demo_tokens=%d backlog=%d scroll=%d jump_scroll=%d tab_switch_first_frame=%d frame_pressure=%d text_create_ewma_ms=%.3f text_upload_ewma_ms=%.3f glyph_raster_ewma_ms=%.3f glyph_upload_ewma_ms=%.3f text_scroll_cap=%d text_idle_cap=%d",
 		pSource != nullptr ? pSource : "unknown",
 		Input.m_FrameId,
 		Input.m_aOperation,
@@ -5489,7 +5558,13 @@ void CMenus::LogSettingsAdaptiveBudget(const char *pSource, const SSettingsAdapt
 		Input.m_ScrollActive ? 1 : 0,
 		Input.m_JumpScrollActive ? 1 : 0,
 		Input.m_TabSwitchFirstFrame ? 1 : 0,
-		Input.m_FramePressure ? 1 : 0);
+		Input.m_FramePressure ? 1 : 0,
+		Input.m_TextContainerCreateMsEwma,
+		Input.m_TextContainerUploadMsEwma,
+		Input.m_GlyphRasterizeMsEwma,
+		Input.m_GlyphUploadMsEwma,
+		Input.m_TextScrollHardCap,
+		Input.m_TextIdleHardCap);
 	QmPerfLogPayload("perf/settings-resource", aPayload, Client(), CurrentQmUiPerfPage() != nullptr ? CurrentQmUiPerfPage() : "settings");
 }
 
@@ -5503,6 +5578,21 @@ void CMenus::PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &In
 		str_copy(Input.m_aPage, CurrentQmUiPerfPage() != nullptr ? CurrentQmUiPerfPage() : "settings", sizeof(Input.m_aPage));
 	if(Input.m_aContext[0] == '\0')
 		str_copy(Input.m_aContext, SettingsPerfContextName(), sizeof(Input.m_aContext));
+	const SQmTextRuntimeBudgetSnapshot TextSnapshot = TextRender()->QmTextRuntimeBudgetSnapshot();
+	m_TextContainerCreateMsEwma = QmPerfEwma(m_TextContainerCreateMsEwma, (float)TextSnapshot.m_TextContainerCreateMs, 0.20f);
+	m_TextContainerUploadMsEwma = QmPerfEwma(m_TextContainerUploadMsEwma, (float)TextSnapshot.m_TextContainerUploadMs, 0.20f);
+	m_GlyphRasterizeMsEwma = QmPerfEwma(m_GlyphRasterizeMsEwma, (float)TextSnapshot.m_GlyphRasterizeMs, 0.20f);
+	m_GlyphUploadMsEwma = QmPerfEwma(m_GlyphUploadMsEwma, (float)TextSnapshot.m_GlyphUploadMs, 0.20f);
+	Input.m_TextContainerCreateMsEwma = m_TextContainerCreateMsEwma;
+	Input.m_TextContainerUploadMsEwma = m_TextContainerUploadMsEwma;
+	Input.m_GlyphRasterizeMsEwma = m_GlyphRasterizeMsEwma;
+	Input.m_GlyphUploadMsEwma = m_GlyphUploadMsEwma;
+	Input.m_TextScrollHardCap = 2;
+	Input.m_TextPressureHardCap = 2;
+	Input.m_TextIdleHardCap = 64;
+	Input.m_GlyphScrollHardCap = 1;
+	Input.m_GlyphPressureHardCap = 1;
+	Input.m_GlyphIdleHardCap = 8;
 }
 
 SSettingsAdaptiveBudgetOutput CMenus::ComputeSettingsUiFrameSchedulerBudget(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State)
@@ -5814,9 +5904,9 @@ void CMenus::OnRender()
 		{
 			if(Client()->State() == IClient::STATE_ONLINE)
 			{
-				if(m_GamePage == PAGE_SERVER_INFO)
-					PrepareIngameServerInfoTextRuntime();
 				StartSettingsPerfFixedWindow("ingame_esc_open", "online", GamePageName(m_GamePage), "none", 30);
+				m_IngameEscOpenFrame = Client()->PerfFrame();
+				m_IngameServerInfoBackgroundPrepareRequested = true;
 			}
 			SetActive(true);
 		}
@@ -5853,9 +5943,16 @@ void CMenus::OnRender()
 		if(IsActive() && Client()->State() == IClient::STATE_ONLINE)
 		{
 			if(m_GamePage == PAGE_SERVER_INFO)
-				DrainIngameUiTextRuntime(false);
-			else if(GameClient()->m_Motd.ServerMotd()[0])
+				DrainIngameUiSnapshotTextRuntime();
+			else if(m_IngameServerInfoBackgroundPrepareRequested && Client()->PerfFrame() > m_IngameEscOpenFrame)
+			{
 				PrepareIngameServerInfoTextRuntime();
+				if(!m_SnapshotTextPending.empty())
+					DrainIngameUiSnapshotTextRuntime();
+				else
+					DrainIngameUiTextRuntime(false);
+				m_IngameServerInfoBackgroundPrepareRequested = !m_SnapshotTextPending.empty() || m_IngameMotdParagraphCache.m_Pending;
+			}
 			else
 				DrainIngameUiSnapshotTextRuntime();
 		}
@@ -6138,7 +6235,7 @@ void CMenus::SetGamePage(int NewPage)
 	}
 	else if(OldPage != NewPage && NewPage == PAGE_SERVER_INFO)
 	{
-		PrepareIngameServerInfoTextRuntime();
+		m_IngameServerInfoBackgroundPrepareRequested = false;
 		StartSettingsPerfFixedWindow("ingame_server_info", "online", "game", "server_info", 30);
 	}
 	else if(OldPage == PAGE_SETTINGS && NewPage != PAGE_SETTINGS)

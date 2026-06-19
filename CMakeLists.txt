@@ -4372,11 +4372,16 @@ foreach(target ${TARGETS})
     # Enable Edit & Continue (Hot Reload) support
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.25)
       if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>")
+        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,Release,RelWithDebInfo>:ProgramDatabase>")
       else()
-        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug>:EditAndContinue>$<$<CONFIG:RelWithDebInfo>:ProgramDatabase>")
+        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug>:EditAndContinue>$<$<CONFIG:Release,RelWithDebInfo>:ProgramDatabase>")
       endif()
       target_link_options(${target} PRIVATE $<$<CONFIG:Debug>:/INCREMENTAL>)
+      target_link_options(${target} PRIVATE
+        $<$<CONFIG:Release,RelWithDebInfo>:/DEBUG>
+        $<$<CONFIG:Release,RelWithDebInfo>:/OPT:REF>
+        $<$<CONFIG:Release,RelWithDebInfo>:/OPT:ICF>
+      )
     endif()
     # QmClient strict build options
     if(QM_MSVC_ANALYZE)

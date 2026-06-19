@@ -433,6 +433,10 @@ export interface BudgetCorrelationWindow {
   maxTextContainerCreateMs: number;
   maxParagraphLayoutMs: number;
   paragraphBudgetBlocked: number;
+  topUiSectionStage: string;
+  topUiSectionPage: string;
+  topUiSectionFrame: number;
+  topUiSectionMs: number;
   dominantAttribution: string;
   culpritRank: {
     kind: string;
@@ -460,6 +464,10 @@ export interface StableTextCoverageSummary {
   keyMismatchCount: number;
   candidateTotal: number;
   hitCount: number;
+  poolHitCount: number;
+  renderReadyHitCount: number;
+  buildQueued: number;
+  fallbackImmediate: number;
   reuseCount: number;
   missCount: number;
   staleCount: number;
@@ -469,6 +477,7 @@ export interface StableTextCoverageSummary {
   textReused: number;
   staticCandidateTotal: number;
   staticHitCount: number;
+  staticPoolHitCount: number;
   staticReuseCount: number;
   staticMissCount: number;
   staticStaleCount: number;
@@ -583,6 +592,10 @@ interface StableTextEvent {
   textReused: number;
   planned: number;
   unplanned: number;
+  poolHit: number;
+  renderReadyHit: number;
+  buildQueued: number;
+  fallbackImmediate: number;
   planStatus: string;
   unitsDone: number;
   unitsTotal: number;
@@ -659,6 +672,10 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
       const textReused = numberField(e, 'text_reused');
       const planned = numberField(e, 'planned');
       const unplanned = numberField(e, 'unplanned');
+      const poolHit = numberField(e, 'pool_hit', hits);
+      const renderReadyHit = numberField(e, 'render_ready_hit', hits);
+      const buildQueued = numberField(e, 'build_queued');
+      const fallbackImmediate = numberField(e, 'fallback_immediate');
       const unitsDone = numberField(e, 'units_done');
       const unitsTotal = numberField(e, 'units_total');
       const budget = numberField(e, 'budget');
@@ -684,6 +701,10 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
         event === 'settings_text_usage' ? `stale=${stale}` : '',
         event === 'settings_text_usage' ? `planned=${planned}` : '',
         event === 'settings_text_usage' ? `unplanned=${unplanned}` : '',
+        event === 'settings_text_usage' ? `pool_hit=${poolHit}` : '',
+        event === 'settings_text_usage' ? `render_ready_hit=${renderReadyHit}` : '',
+        event === 'settings_text_usage' ? `build_queued=${buildQueued}` : '',
+        event === 'settings_text_usage' ? `fallback_immediate=${fallbackImmediate}` : '',
         event === 'settings_text_plan_collection' ? `units_done=${unitsDone}` : '',
         event === 'settings_text_plan_collection' ? `units_total=${unitsTotal}` : '',
         event === 'settings_text_plan_collection' ? `remaining=${remaining}` : '',
@@ -714,6 +735,10 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
         textReused,
         planned,
         unplanned,
+        poolHit,
+        renderReadyHit,
+        buildQueued,
+        fallbackImmediate,
         unitsDone,
         unitsTotal,
         budget,
@@ -898,6 +923,10 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
   const planCollectionOperation = collectionBeforeTarget?.operation ?? '';
   const candidateTotal = staticRelevantUsage.reduce((sum, event) => sum + event.candidates, 0);
   const hitCount = staticRelevantUsage.reduce((sum, event) => sum + event.hits, 0);
+  const poolHitCount = staticRelevantUsage.reduce((sum, event) => sum + event.poolHit, 0);
+  const renderReadyHitCount = staticRelevantUsage.reduce((sum, event) => sum + event.renderReadyHit, 0);
+  const buildQueued = staticRelevantUsage.reduce((sum, event) => sum + event.buildQueued, 0);
+  const fallbackImmediate = staticRelevantUsage.reduce((sum, event) => sum + event.fallbackImmediate, 0);
   const reuseCount = staticRelevantUsage.reduce((sum, event) => sum + event.reused, 0);
   const usageMissCount = staticRelevantUsage.reduce((sum, event) => sum + event.miss, 0);
   const usageStaleCount = staticRelevantUsage.reduce((sum, event) => sum + event.stale, 0);
@@ -912,11 +941,11 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
   const missCount = Math.max(staticRelevantMisses.length, usageMissCount);
   const staleCount = Math.max(staticRelevantStales.length, usageStaleCount);
   const staticCandidateTotal = candidateTotal;
-  const staticHitCount = hitCount;
+  const staticHitCount = renderReadyHitCount;
   const staticReuseCount = reuseCount;
   const staticMissCount = missCount;
   const staticStaleCount = staleCount;
-  const staticHitRate = candidateTotal > 0 ? (hitCount / candidateTotal) * 100 : 0;
+  const staticHitRate = candidateTotal > 0 ? (renderReadyHitCount / candidateTotal) * 100 : 0;
   const staticReuseRate = candidateTotal > 0 ? (reuseCount / candidateTotal) * 100 : 0;
   const staticKeyMismatchCount = keyMismatchCount;
   const staticUnplannedVisibleCount = unplannedVisibleCount;
@@ -953,6 +982,12 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
   if(textNew > 0) {
     consistencyWarnings.push(`target stable text created ${textNew} text containers during visible usage`);
   }
+  if(buildQueued > 0) {
+    consistencyWarnings.push(`target stable text queued ${buildQueued} visible builds during target window`);
+  }
+  if(fallbackImmediate > 0) {
+    consistencyWarnings.push(`target stable text used immediate fallback ${fallbackImmediate} times during target window`);
+  }
   const samples = [...relevantMisses, ...relevantStales, ...(prebuildRemainingBeforeTarget > 0 && prebuildBeforeTarget ? [prebuildBeforeTarget] : []), ...(planCollectionRemainingBeforeTarget > 0 && collectionBeforeTarget ? [collectionBeforeTarget] : []), ...consistencyWarnings.map(warning => ({
     timestamp: firstTargetSummaryTime || '',
     event: 'settings_text_usage' as const,
@@ -975,6 +1010,10 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
     textReused: 0,
     planned: 0,
     unplanned: 0,
+    poolHit: 0,
+    renderReadyHit: 0,
+    buildQueued: 0,
+    fallbackImmediate: 0,
     unitsDone: 0,
     unitsTotal: 0,
     budget: 0,
@@ -987,7 +1026,7 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
     .slice(0, 8);
 
   return {
-    acceptanceBlocked: missCount > 0 || staleCount > 0 || prebuildRemainingBeforeTarget > 0 || !planCollectionAvailable || !planCollectionComplete || !utilizationAvailable || !planCoverageAvailable || unplannedVisibleCount > 0 || keyMismatchCount > 0 || textNew > 0,
+    acceptanceBlocked: missCount > 0 || staleCount > 0 || prebuildRemainingBeforeTarget > 0 || !planCollectionAvailable || !planCollectionComplete || !utilizationAvailable || !planCoverageAvailable || unplannedVisibleCount > 0 || keyMismatchCount > 0 || textNew > 0 || buildQueued > 0 || fallbackImmediate > 0,
     utilizationAvailable,
     planCoverageAvailable,
     planCandidateCount,
@@ -995,7 +1034,11 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
     unplannedVisibleCount,
     keyMismatchCount,
     candidateTotal,
-    hitCount,
+    hitCount: renderReadyHitCount,
+    poolHitCount,
+    renderReadyHitCount,
+    buildQueued,
+    fallbackImmediate,
     reuseCount,
     missCount,
     staleCount,
@@ -1005,6 +1048,7 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
     textReused,
     staticCandidateTotal,
     staticHitCount,
+    staticPoolHitCount: poolHitCount,
     staticReuseCount,
     staticMissCount,
     staticStaleCount,
@@ -1440,12 +1484,71 @@ function entryFrame(entry: PerfEntry): number {
   return numberField(entry, 'frame');
 }
 
+function budgetScopeValue(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isUnknownBudgetScopeValue(value: string): boolean {
+  const Value = budgetScopeValue(value);
+  return Value.length === 0 || Value === 'unknown';
+}
+
+function budgetScopeMatches(entry: PerfEntry, windowValue: string, fieldName: string): boolean {
+  if(!hasField(entry, fieldName) || isUnknownBudgetScopeValue(windowValue)) {
+    return true;
+  }
+  const EntryValue = field(entry, fieldName);
+  if(isUnknownBudgetScopeValue(EntryValue)) {
+    return true;
+  }
+  return budgetScopeValue(EntryValue) === budgetScopeValue(windowValue);
+}
+
 function entryInBudgetWindow(entry: PerfEntry, window: BudgetCorrelationWindow): boolean {
   const Frame = entryFrame(entry);
   if(window.windowStartFrame > 0 && window.windowEndFrame >= window.windowStartFrame && Frame > 0) {
-    return Frame >= window.windowStartFrame && Frame <= window.windowEndFrame;
+    return Frame >= window.windowStartFrame &&
+      Frame <= window.windowEndFrame &&
+      budgetScopeMatches(entry, window.operation, 'operation') &&
+      budgetScopeMatches(entry, window.page, 'page') &&
+      budgetScopeMatches(entry, window.tab, 'tab') &&
+      budgetScopeMatches(entry, window.context, 'context');
   }
   return false;
+}
+
+const CONCRETE_UI_SECTION_SYSTEMS: ReadonlySet<string> = new Set([
+  PERF_SYSTEM.MENU,
+  PERF_SYSTEM.SECTION,
+  'perf/assets',
+  'perf/ui_budget',
+  'perf/settings-ui',
+]);
+
+const AGGREGATE_UI_SECTION_STAGES: ReadonlySet<string> = new Set([
+  'component_menus',
+  'frame_render',
+  'ingame_page_content',
+  'loop_total',
+  'menus_onrender_total',
+  'menus_render_total',
+  'settings_page_content',
+]);
+
+function concreteUiSectionStage(entry: PerfEntry): string {
+  if(!CONCRETE_UI_SECTION_SYSTEMS.has(entry.system)) {
+    return '';
+  }
+  const Stage = field(entry, 'stage', field(entry, 'section'));
+  if(Stage.length === 0 || AGGREGATE_UI_SECTION_STAGES.has(Stage)) {
+    return '';
+  }
+  return Stage;
+}
+
+function concreteUiSectionDurationMs(entry: PerfEntry): number {
+  return entryDurationMs(entry) ??
+    numberField(entry, 'layout_ms', numberField(entry, 'duration_ms', entry.durationMs));
 }
 
 function rankedBudgetCulprits(values: {
@@ -1466,8 +1569,12 @@ function rankedBudgetCulprits(values: {
   maxTextureUploadMs: number;
   maxTelemetryOverheadMs: number;
   maxTelemetryFlushMs: number;
+  topUiSectionStage: string;
+  topUiSectionPage: string;
+  topUiSectionFrame: number;
+  topUiSectionMs: number;
 }): { kind: string; score: number; details: string }[] {
-  return [
+  const Culprits: { kind: string; score: number; details: string }[] = [
     { kind: 'text_container_create', score: values.maxTextContainerCreateMs + values.textContainerNew * 0.25, details: summaryKv(['container_create_ms', values.maxTextContainerCreateMs.toFixed(3)], ['container_new', String(values.textContainerNew)]) },
     { kind: 'glyph_rasterize', score: values.maxGlyphRasterizeMs, details: summaryKv(['glyph_rasterize_ms', values.maxGlyphRasterizeMs.toFixed(3)]) },
     { kind: 'glyph_upload', score: values.maxGlyphUploadMs + values.glyphUploads * 0.1, details: summaryKv(['glyph_upload_ms', values.maxGlyphUploadMs.toFixed(3)], ['glyph_uploads', String(values.glyphUploads)]) },
@@ -1480,7 +1587,28 @@ function rankedBudgetCulprits(values: {
     { kind: 'card_draw', score: values.maxCardDrawMs, details: summaryKv(['card_draw_ms', values.maxCardDrawMs.toFixed(3)]) },
     { kind: 'telemetry_overhead', score: values.maxTelemetryOverheadMs, details: summaryKv(['telemetry_ms', values.maxTelemetryOverheadMs.toFixed(3)]) },
     { kind: 'telemetry_flush', score: values.maxTelemetryFlushMs, details: summaryKv(['telemetry_flush_ms', values.maxTelemetryFlushMs.toFixed(3)]) },
-  ].sort((a, b) => b.score - a.score);
+  ];
+  if(values.topUiSectionStage.length > 0 && values.topUiSectionMs > 0) {
+    Culprits.push({
+      kind: `ui_section:${values.topUiSectionStage}`,
+      score: values.topUiSectionMs,
+      details: summaryKv(
+        ['ui_section', values.topUiSectionStage],
+        ['page', values.topUiSectionPage],
+        ['frame', String(values.topUiSectionFrame)],
+        ['section_ms', values.topUiSectionMs.toFixed(3)],
+      ),
+    });
+  }
+  const HasConcreteUiSection = values.topUiSectionStage.length > 0 && values.topUiSectionMs > 0;
+  return Culprits.sort((a, b) => {
+    const AIsAggregate = a.kind === 'ui_layout_or_render_total';
+    const BIsAggregate = b.kind === 'ui_layout_or_render_total';
+    if(HasConcreteUiSection && AIsAggregate !== BIsAggregate) {
+      return AIsAggregate ? 1 : -1;
+    }
+    return b.score - a.score;
+  });
 }
 
 function dominantBudgetAttribution(values: Parameters<typeof rankedBudgetCulprits>[0]): string {
@@ -1521,6 +1649,10 @@ export function budgetCorrelationSummary(entries: PerfEntry[]): BudgetCorrelatio
       maxTextContainerCreateMs: 0,
       maxParagraphLayoutMs: 0,
       paragraphBudgetBlocked: 0,
+      topUiSectionStage: '',
+      topUiSectionPage: '',
+      topUiSectionFrame: 0,
+      topUiSectionMs: 0,
       dominantAttribution: 'none',
       culpritRank: [],
       sample: '',
@@ -1529,6 +1661,16 @@ export function budgetCorrelationSummary(entries: PerfEntry[]): BudgetCorrelatio
   for(const Entry of entries) {
     const MatchedWindows = Windows.filter(Window => entryInBudgetWindow(Entry, Window));
     for(const Window of MatchedWindows) {
+    const UiSectionStage = concreteUiSectionStage(Entry);
+    if(UiSectionStage.length > 0) {
+      const DurationMs = concreteUiSectionDurationMs(Entry);
+      if(DurationMs > Window.topUiSectionMs) {
+        Window.topUiSectionStage = UiSectionStage;
+        Window.topUiSectionPage = field(Entry, 'page', Window.page);
+        Window.topUiSectionFrame = entryFrame(Entry);
+        Window.topUiSectionMs = DurationMs;
+      }
+    }
     if(isAdaptiveBudgetEvent(Entry)) {
       Window.resourceUploadTokens = Math.max(Window.resourceUploadTokens, numberField(Entry, 'resource_upload_tokens', numberField(Entry, 'gpu_upload_tokens')));
     }
@@ -1611,6 +1753,10 @@ export function budgetCorrelationSummary(entries: PerfEntry[]): BudgetCorrelatio
         ['text_container_create_ms', Window.maxTextContainerCreateMs.toFixed(3)],
         ['paragraph_layout_ms', Window.maxParagraphLayoutMs.toFixed(3)],
         ['paragraph_budget_blocked', String(Window.paragraphBudgetBlocked)],
+        ['ui_section', Window.topUiSectionStage],
+        ['ui_section_page', Window.topUiSectionPage],
+        ['ui_section_frame', Window.topUiSectionFrame > 0 ? String(Window.topUiSectionFrame) : ''],
+        ['ui_section_ms', Window.topUiSectionMs > 0 ? Window.topUiSectionMs.toFixed(3) : ''],
         ['dominantAttribution', dominantAttribution],
         ['top_culprit', culpritRank[0]?.kind ?? 'none'],
       ),

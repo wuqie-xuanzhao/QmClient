@@ -856,6 +856,10 @@ SSettingsAdaptiveBudgetOutput SettingsAdaptiveBudgetStep(const SSettingsAdaptive
 		Input.m_FramePressure ||
 		Input.m_FrameMsAverage > TargetMs * 1.35f ||
 		Input.m_FrameMsP95 > TargetMs * 1.60f ||
+		Input.m_TextContainerCreateMsEwma > TargetMs * 0.25f ||
+		Input.m_TextContainerUploadMsEwma > TargetMs * 0.20f ||
+		Input.m_GlyphRasterizeMsEwma > TargetMs * 0.20f ||
+		Input.m_GlyphUploadMsEwma > TargetMs * 0.20f ||
 		Input.m_GpuBudgetExhausted ||
 		Input.m_FinalizeBudgetExhausted ||
 		Input.m_UploadBudgetExhausted;
@@ -923,7 +927,7 @@ SSettingsAdaptiveBudgetOutput SettingsAdaptiveBudgetStep(const SSettingsAdaptive
 			State.m_PrefetchWindow = std::min(8, State.m_PrefetchWindow + 1);
 			State.m_VisibleWindow = std::min(16, State.m_VisibleWindow + 1);
 			State.m_GpuUploadWindow = std::min(8, State.m_GpuUploadWindow + 1);
-			State.m_TextPrebuildWindow = std::min(16, State.m_TextPrebuildWindow + 1);
+			State.m_TextPrebuildWindow = std::min(maximum(1, Input.m_TextIdleHardCap), State.m_TextPrebuildWindow + 1);
 			State.m_DemoMetadataWindow = std::min(12, State.m_DemoMetadataWindow + 1);
 			State.m_HealthyFrames = 0;
 			Output.m_Reason = ESettingsAdaptiveBudgetReason::PROGRESS;
@@ -942,10 +946,22 @@ SSettingsAdaptiveBudgetOutput SettingsAdaptiveBudgetStep(const SSettingsAdaptive
 	Output.m_BackgroundTokens = std::max(0, State.m_BackgroundWindow);
 	Output.m_GpuUploadTokens = std::max(1, State.m_GpuUploadWindow);
 	Output.m_ResourceUploadTokens = Output.m_GpuUploadTokens;
-	Output.m_TextPrebuildTokens = std::max(Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : 1, State.m_TextPrebuildWindow);
+	const int TextHardCap =
+		Output.m_Mode == ESettingsAdaptiveBudgetMode::SCROLL_ACTIVE  ? Input.m_TextScrollHardCap :
+		Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE ? Input.m_TextPressureHardCap :
+									       Input.m_TextIdleHardCap;
+	const int GlyphHardCap =
+		Output.m_Mode == ESettingsAdaptiveBudgetMode::SCROLL_ACTIVE  ? Input.m_GlyphScrollHardCap :
+		Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE ? Input.m_GlyphPressureHardCap :
+									       Input.m_GlyphIdleHardCap;
+	const int TextMax = maximum(0, TextHardCap);
+	const int GlyphMax = maximum(0, GlyphHardCap);
+	const int TextMin = Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || TextMax == 0 ? 0 : 1;
+	const int GlyphMin = Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || GlyphMax == 0 ? 0 : 1;
+	Output.m_TextPrebuildTokens = std::clamp(State.m_TextPrebuildWindow, TextMin, TextMax);
 	Output.m_TextContainerTokens = Output.m_TextPrebuildTokens;
-	Output.m_GlyphRasterizeTokens = std::max(Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : 1, minimum(Output.m_TextPrebuildTokens, 2));
-	Output.m_GlyphUploadTokens = std::max(Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE ? 0 : 1, minimum(Output.m_TextPrebuildTokens, 2));
+	Output.m_GlyphRasterizeTokens = std::clamp(minimum(Output.m_TextPrebuildTokens, 2), GlyphMin, GlyphMax);
+	Output.m_GlyphUploadTokens = std::clamp(minimum(Output.m_TextPrebuildTokens, 2), GlyphMin, GlyphMax);
 	Output.m_ParagraphLayoutTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE) ? 0 : std::max(1, minimum(Output.m_TextPrebuildTokens, 2));
 	Output.m_MetadataLayoutTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Input.m_TabSwitchFirstFrame || Input.m_JumpScrollActive) ? 0 : std::max(1, minimum(Output.m_TextPrebuildTokens, 2));
 	Output.m_PreviewArtifactTokens = (Output.m_Mode == ESettingsAdaptiveBudgetMode::WINDOW_INACTIVE || Input.m_TabSwitchFirstFrame || Input.m_JumpScrollActive) ? 0 : (Output.m_Mode == ESettingsAdaptiveBudgetMode::FRAME_PRESSURE ? minimum(Output.m_VisibleTokens, 1) : std::max(1, minimum(Output.m_VisibleTokens, 2)));

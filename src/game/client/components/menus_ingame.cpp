@@ -8,6 +8,7 @@
 #include <base/color.h>
 #include <base/hash_ctxt.h>
 #include <base/math.h>
+#include <base/perf_timer.h>
 #include <base/system.h>
 
 #include <engine/demo.h>
@@ -49,6 +50,11 @@ namespace
 {
 	constexpr const char *REPORT_SCAN_PATH = "/v1/scan";
 	constexpr const char *REPORT_CONTENT_TYPE = "application/json; charset=utf-8";
+
+	void LogIngamePerfStage(IClient *pClient, const char *pStage, const double DurationMs, const bool Force = false, const char *pExtra = nullptr)
+	{
+		QmPerfLogStage("perf/menu", pStage, DurationMs, Force, pClient, nullptr, nullptr, pExtra);
+	}
 
 	void HmacSha256Hex(const char *pSecret, const char *pMessage, char *pBuffer, int BufferSize)
 	{
@@ -603,6 +609,17 @@ void CMenus::RenderGame(CUIRect MainView)
 		ButtonBars.HSplitTop(MenuButtonHeight, &ButtonBar2, &ButtonBars);
 	}
 
+	CPerfTimer ButtonColumnTimer;
+	char aButtonColumnPerfExtra[160];
+	str_format(aButtonColumnPerfExtra, sizeof(aButtonColumnPerfExtra), "operation=ingame_esc_open context=online page=game tab=none frame=%" PRIu64, Client()->PerfFrame());
+	bool ButtonColumnPerfLogged = false;
+	auto LogButtonColumnPerf = [&]() {
+		if(ButtonColumnPerfLogged)
+			return;
+		LogIngamePerfStage(Client(), "ingame_esc_button_column", ButtonColumnTimer.ElapsedMs(), false, aButtonColumnPerfExtra);
+		ButtonColumnPerfLogged = true;
+	};
+
 	CUIRect UtilityButtonBar = UseSecondaryUtilityButtonBar ? ButtonBar2 : ButtonBar;
 	const float UtilityButtonSpacing = UseCompactUtilityButtons ? UtilityButtonSpacingCompact : UtilityButtonSpacingNormal;
 	const float DisconnectButtonWidth = UseCompactUtilityButtons ? DisconnectButtonWidthCompact : DisconnectButtonWidthNormal;
@@ -641,6 +658,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		{
 			Client()->Disconnect();
 			RefreshBrowserTab(true);
+			LogButtonColumnPerf();
 			return;
 		}
 	}
@@ -857,6 +875,7 @@ void CMenus::RenderGame(CUIRect MainView)
 				{
 					SetActive(false);
 					GameClient()->m_FastPractice.Toggle(true);
+					LogButtonColumnPerf();
 					return;
 				}
 			}
@@ -935,74 +954,75 @@ void CMenus::RenderGame(CUIRect MainView)
 		// Quit preview all buttons automatically.
 		if(!GameClient()->m_TouchControls.IsEditingActive() || m_MenusIngameTouchControls.m_CurrentMenu != CMenusIngameTouchControls::EMenuType::MENU_PREVIEW)
 			GameClient()->m_TouchControls.SetPreviewAllButtons(false);
-		if(GameClient()->m_TouchControls.IsEditingActive())
+	}
+	LogButtonColumnPerf();
+	if(GameClient()->m_TouchControls.IsEditingActive())
+	{
+		// Resolve issues if needed before rendering, so the elements could have a correct value on this frame.
+		// Issues need to be resolved before popup. So CheckCachedSettings could not be bad.
+		m_MenusIngameTouchControls.ResolveIssues();
+		// Do Popups if needed.
+		CTouchControls::CPopupParam PopupParam = GameClient()->m_TouchControls.RequiredPopup();
+		if(PopupParam.m_PopupType != CTouchControls::EPopupType::NUM_POPUPS)
 		{
-			// Resolve issues if needed before rendering, so the elements could have a correct value on this frame.
-			// Issues need to be resolved before popup. So CheckCachedSettings could not be bad.
-			m_MenusIngameTouchControls.ResolveIssues();
-			// Do Popups if needed.
-			CTouchControls::CPopupParam PopupParam = GameClient()->m_TouchControls.RequiredPopup();
-			if(PopupParam.m_PopupType != CTouchControls::EPopupType::NUM_POPUPS)
-			{
-				m_MenusIngameTouchControls.DoPopupType(PopupParam);
-				return;
-			}
-			if(m_MenusIngameTouchControls.m_FirstEnter)
-			{
-				m_MenusIngameTouchControls.m_aCachedVisibilities[(int)CTouchControls::EButtonVisibility::DEMO_PLAYER] = CMenusIngameTouchControls::EVisibilityType::EXCLUDE;
-				m_MenusIngameTouchControls.m_ColorActive = color_cast<ColorHSLA>(GameClient()->m_TouchControls.BackgroundColorActive()).Pack(true);
-				m_MenusIngameTouchControls.m_ColorInactive = color_cast<ColorHSLA>(GameClient()->m_TouchControls.BackgroundColorInactive()).Pack(true);
-				m_MenusIngameTouchControls.m_FirstEnter = false;
-			}
-			// Their width is all 505.0f, height is adjustable, you can directly change its h value, so no need for changing where tab is.
-			CUIRect SelectingTab;
-			MainView.HSplitTop(40.0f, nullptr, &MainView);
-			MainView.VMargin((MainView.w - CMenusIngameTouchControls::BUTTON_EDITOR_WIDTH) / 2.0f, &MainView);
-			MainView.HSplitTop(25.0f, &SelectingTab, &MainView);
+			m_MenusIngameTouchControls.DoPopupType(PopupParam);
+			return;
+		}
+		if(m_MenusIngameTouchControls.m_FirstEnter)
+		{
+			m_MenusIngameTouchControls.m_aCachedVisibilities[(int)CTouchControls::EButtonVisibility::DEMO_PLAYER] = CMenusIngameTouchControls::EVisibilityType::EXCLUDE;
+			m_MenusIngameTouchControls.m_ColorActive = color_cast<ColorHSLA>(GameClient()->m_TouchControls.BackgroundColorActive()).Pack(true);
+			m_MenusIngameTouchControls.m_ColorInactive = color_cast<ColorHSLA>(GameClient()->m_TouchControls.BackgroundColorInactive()).Pack(true);
+			m_MenusIngameTouchControls.m_FirstEnter = false;
+		}
+		// Their width is all 505.0f, height is adjustable, you can directly change its h value, so no need for changing where tab is.
+		CUIRect SelectingTab;
+		MainView.HSplitTop(40.0f, nullptr, &MainView);
+		MainView.VMargin((MainView.w - CMenusIngameTouchControls::BUTTON_EDITOR_WIDTH) / 2.0f, &MainView);
+		MainView.HSplitTop(25.0f, &SelectingTab, &MainView);
 
-			static bool s_TouchMenuTransitionInitialized = false;
-			static CMenusIngameTouchControls::EMenuType s_PrevTouchMenu = CMenusIngameTouchControls::EMenuType::MENU_FILE;
-			static float s_TouchMenuTransitionDirection = 0.0f;
-			const uint64_t TouchMenuSwitchNode = UiAnimNodeKey("ingame_touch_menu_switch");
+		static bool s_TouchMenuTransitionInitialized = false;
+		static CMenusIngameTouchControls::EMenuType s_PrevTouchMenu = CMenusIngameTouchControls::EMenuType::MENU_FILE;
+		static float s_TouchMenuTransitionDirection = 0.0f;
+		const uint64_t TouchMenuSwitchNode = UiAnimNodeKey("ingame_touch_menu_switch");
 
-			m_MenusIngameTouchControls.RenderSelectingTab(SelectingTab);
-			if(!s_TouchMenuTransitionInitialized)
-			{
-				s_PrevTouchMenu = m_MenusIngameTouchControls.m_CurrentMenu;
-				s_TouchMenuTransitionInitialized = true;
-			}
-			else if(m_MenusIngameTouchControls.m_CurrentMenu != s_PrevTouchMenu)
-			{
-				s_TouchMenuTransitionDirection = static_cast<int>(m_MenusIngameTouchControls.m_CurrentMenu) > static_cast<int>(s_PrevTouchMenu) ? 1.0f : -1.0f;
-				TriggerUiSwitchAnimation(TouchMenuSwitchNode, 0.18f);
-				s_PrevTouchMenu = m_MenusIngameTouchControls.m_CurrentMenu;
-			}
+		m_MenusIngameTouchControls.RenderSelectingTab(SelectingTab);
+		if(!s_TouchMenuTransitionInitialized)
+		{
+			s_PrevTouchMenu = m_MenusIngameTouchControls.m_CurrentMenu;
+			s_TouchMenuTransitionInitialized = true;
+		}
+		else if(m_MenusIngameTouchControls.m_CurrentMenu != s_PrevTouchMenu)
+		{
+			s_TouchMenuTransitionDirection = static_cast<int>(m_MenusIngameTouchControls.m_CurrentMenu) > static_cast<int>(s_PrevTouchMenu) ? 1.0f : -1.0f;
+			TriggerUiSwitchAnimation(TouchMenuSwitchNode, 0.18f);
+			s_PrevTouchMenu = m_MenusIngameTouchControls.m_CurrentMenu;
+		}
 
-			const float TransitionStrength = ReadUiSwitchAnimation(TouchMenuSwitchNode);
-			const bool TransitionActive = TransitionStrength > 0.0f && s_TouchMenuTransitionDirection != 0.0f;
-			const float TransitionAlpha = UiSwitchAnimationAlpha(TransitionStrength);
-			CUIRect MenuContent = MainView;
-			const CUIRect MenuContentClip = MainView;
-			if(TransitionActive)
-			{
-				Ui()->ClipEnable(&MenuContentClip);
-				ApplyUiSwitchOffset(MenuContent, TransitionStrength, s_TouchMenuTransitionDirection, false, 0.08f, 24.0f, 120.0f);
-			}
+		const float TransitionStrength = ReadUiSwitchAnimation(TouchMenuSwitchNode);
+		const bool TransitionActive = TransitionStrength > 0.0f && s_TouchMenuTransitionDirection != 0.0f;
+		const float TransitionAlpha = UiSwitchAnimationAlpha(TransitionStrength);
+		CUIRect MenuContent = MainView;
+		const CUIRect MenuContentClip = MainView;
+		if(TransitionActive)
+		{
+			Ui()->ClipEnable(&MenuContentClip);
+			ApplyUiSwitchOffset(MenuContent, TransitionStrength, s_TouchMenuTransitionDirection, false, 0.08f, 24.0f, 120.0f);
+		}
 
-			switch(m_MenusIngameTouchControls.m_CurrentMenu)
-			{
-			case CMenusIngameTouchControls::EMenuType::MENU_FILE: m_MenusIngameTouchControls.RenderTouchControlsEditor(MenuContent); break;
-			case CMenusIngameTouchControls::EMenuType::MENU_BUTTONS: m_MenusIngameTouchControls.RenderTouchButtonEditor(MenuContent); break;
-			case CMenusIngameTouchControls::EMenuType::MENU_SETTINGS: m_MenusIngameTouchControls.RenderConfigSettings(MenuContent); break;
-			case CMenusIngameTouchControls::EMenuType::MENU_PREVIEW: m_MenusIngameTouchControls.RenderPreviewSettings(MenuContent); break;
-			default: dbg_assert_failed("Unknown selected tab value = %d.", (int)m_MenusIngameTouchControls.m_CurrentMenu);
-			}
-			if(TransitionActive)
-			{
-				if(TransitionAlpha > 0.0f)
-					MenuContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
-				Ui()->ClipDisable();
-			}
+		switch(m_MenusIngameTouchControls.m_CurrentMenu)
+		{
+		case CMenusIngameTouchControls::EMenuType::MENU_FILE: m_MenusIngameTouchControls.RenderTouchControlsEditor(MenuContent); break;
+		case CMenusIngameTouchControls::EMenuType::MENU_BUTTONS: m_MenusIngameTouchControls.RenderTouchButtonEditor(MenuContent); break;
+		case CMenusIngameTouchControls::EMenuType::MENU_SETTINGS: m_MenusIngameTouchControls.RenderConfigSettings(MenuContent); break;
+		case CMenusIngameTouchControls::EMenuType::MENU_PREVIEW: m_MenusIngameTouchControls.RenderPreviewSettings(MenuContent); break;
+		default: dbg_assert_failed("Unknown selected tab value = %d.", (int)m_MenusIngameTouchControls.m_CurrentMenu);
+		}
+		if(TransitionActive)
+		{
+			if(TransitionAlpha > 0.0f)
+				MenuContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+			Ui()->ClipDisable();
 		}
 	}
 }
@@ -1294,14 +1314,7 @@ void CMenus::RenderIngameServerInfoValueCached(const char *pTextId, unsigned &Te
 	const char *pSafeText = pText != nullptr ? pText : "";
 	if(m_MenuTextPlanCollecting)
 	{
-		SMenuTextStyleKey StyleKey;
-		StyleKey.m_FontSize = Size;
-		StyleKey.m_Align = Align;
-		const float MaxWidth = LabelProps.m_MaxWidth >= 0.0f ? LabelProps.m_MaxWidth : (pRect != nullptr ? pRect->w : -1.0f);
-		StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f ? round_to_int(MaxWidth * 10.0f) : -1;
-		StyleKey.m_UiScaleBucket = 100;
-		StyleKey.m_CompactMode = g_Config.m_QmNewUi ? 1 : 0;
-		StyleKey.m_ColorHash = (int)(str_quickhash("default-text-style") & 0x7fffffff);
+		const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(pRect, Size, Align, LabelProps);
 		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_INGAME, PAGE_SERVER_INFO, -1, -1, pTextId, pSafeText, pRect, Size, Align, LabelProps, StyleKey);
 		return;
 	}
@@ -1434,7 +1447,6 @@ void CMenus::PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView)
 	TextBudgetInput.m_VisibleWaiting = 1;
 	m_IngameTextFrameBudget = ComputeSettingsUiFrameSchedulerBudget("ingame_server_info_snapshot_text", TextBudgetInput, m_IngameTextAdaptiveBudgetState);
 	m_IngameTextFrameBudget.m_TextContainerTokens = maximum(1, m_IngameTextFrameBudget.m_TextContainerTokens);
-	m_IngameTextFrameBudget.m_ParagraphLayoutTokens = maximum(1, m_IngameTextFrameBudget.m_ParagraphLayoutTokens);
 
 	CServerInfo CurrentServerInfo;
 	Client()->GetServerInfo(&CurrentServerInfo);
@@ -1529,7 +1541,6 @@ void CMenus::PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView)
 	Motd.HSplitTop(5.0f, nullptr, &Motd);
 	if(GameClient()->m_Motd.ServerMotd()[0])
 		RequestIngameMotdParagraphCache(Motd, MotdFontSize);
-	DrainIngameUiTextRuntime(true);
 
 	if(QmPerfEnabled())
 	{
@@ -1553,6 +1564,10 @@ bool CMenus::RequestIngameMotdParagraphCache(CUIRect Motd, float FontSize)
 		absolute(m_IngameMotdParagraphCache.m_PendingWidth - Motd.w) >= 0.01f ||
 		absolute(m_IngameMotdParagraphCache.m_PendingFontSize - FontSize) >= 0.01f)
 	{
+		TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex);
+		m_IngameMotdParagraphCache.m_BuildCursor = CTextCursor();
+		m_IngameMotdParagraphCache.m_BuildByteOffset = 0;
+		m_IngameMotdParagraphCache.m_BuildHeight = 0.0f;
 		m_IngameMotdParagraphCache.m_PendingTextHash = TextHash;
 		m_IngameMotdParagraphCache.m_PendingUpdateTime = UpdateTime;
 		m_IngameMotdParagraphCache.m_PendingRect = Motd;
@@ -1596,6 +1611,10 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 			absolute(m_IngameMotdParagraphCache.m_PendingFontSize - FontSize) < 0.01f;
 		if(!PendingMatches)
 		{
+			TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex);
+			m_IngameMotdParagraphCache.m_BuildCursor = CTextCursor();
+			m_IngameMotdParagraphCache.m_BuildByteOffset = 0;
+			m_IngameMotdParagraphCache.m_BuildHeight = 0.0f;
 			m_IngameMotdParagraphCache.m_PendingTextHash = TextHash;
 			m_IngameMotdParagraphCache.m_PendingUpdateTime = UpdateTime;
 			m_IngameMotdParagraphCache.m_PendingRect = Motd;
@@ -1614,29 +1633,54 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 			if(m_IngameTextFrameBudget.m_ParagraphLayoutTokens > 0)
 				--m_IngameTextFrameBudget.m_ParagraphLayoutTokens;
 			const auto LayoutStart = time_get_nanoseconds();
-			CTextCursor Cursor;
-			Cursor.m_FontSize = FontSize;
-			Cursor.m_LineWidth = Motd.w;
-			TextRender()->RecreateTextContainer(m_MotdTextContainerIndex, &Cursor, pMotd);
+			if(m_IngameMotdParagraphCache.m_BuildByteOffset == 0 && !m_IngameMotdParagraphCache.m_BuildTextContainerIndex.Valid())
+			{
+				m_IngameMotdParagraphCache.m_BuildCursor = CTextCursor();
+				m_IngameMotdParagraphCache.m_BuildCursor.m_FontSize = FontSize;
+				m_IngameMotdParagraphCache.m_BuildCursor.m_LineWidth = Motd.w;
+			}
+
+			const int TextLength = str_length(pMotd);
+			int ChunkLength = minimum(SIngameMotdParagraphCache::INGAME_MOTD_PARAGRAPH_CHUNK_BYTES, TextLength - m_IngameMotdParagraphCache.m_BuildByteOffset);
+			if(m_IngameMotdParagraphCache.m_BuildByteOffset + ChunkLength < TextLength)
+			{
+				while(ChunkLength > 0 && !str_utf8_isstart(pMotd[m_IngameMotdParagraphCache.m_BuildByteOffset + ChunkLength]))
+					--ChunkLength;
+				if(ChunkLength <= 0)
+					ChunkLength = str_utf8_forward(pMotd, m_IngameMotdParagraphCache.m_BuildByteOffset) - m_IngameMotdParagraphCache.m_BuildByteOffset;
+			}
+			std::string ChunkText(pMotd + m_IngameMotdParagraphCache.m_BuildByteOffset, ChunkLength);
+			TextRender()->CreateOrAppendTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex, &m_IngameMotdParagraphCache.m_BuildCursor, ChunkText.c_str(), ChunkLength);
+			m_IngameMotdParagraphCache.m_BuildByteOffset += ChunkLength;
 			ParagraphLayoutMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - LayoutStart).count();
-			CTextCursor PreviousCursor;
-			PreviousCursor.m_FontSize = FontSize;
-			PreviousCursor.m_LineWidth = Motd.w;
-			TextRender()->RecreateTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex, &PreviousCursor, pMotd);
-			m_IngameMotdParagraphCache.m_TextHash = TextHash;
-			m_IngameMotdParagraphCache.m_UpdateTime = UpdateTime;
-			m_IngameMotdParagraphCache.m_Width = Motd.w;
-			m_IngameMotdParagraphCache.m_FontSize = FontSize;
-			m_IngameMotdParagraphCache.m_Height = Cursor.Height();
-			m_IngameMotdParagraphCache.m_LastStableHeight = m_IngameMotdParagraphCache.m_Height;
-			m_IngameMotdParagraphCache.m_Valid = true;
-			m_IngameMotdParagraphCache.m_Pending = false;
-			m_IngameMotdParagraphCache.m_PreviousTextHash = TextHash;
-			m_IngameMotdParagraphCache.m_PreviousUpdateTime = UpdateTime;
-			m_IngameMotdParagraphCache.m_PreviousWidth = Motd.w;
-			m_IngameMotdParagraphCache.m_PreviousFontSize = FontSize;
-			m_IngameMotdParagraphCache.m_PreviousHeight = PreviousCursor.Height();
-			m_IngameMotdParagraphCache.m_PreviousText = pMotd;
+			m_IngameMotdParagraphCache.m_BuildHeight = m_IngameMotdParagraphCache.m_BuildCursor.Height();
+
+			if(m_IngameMotdParagraphCache.m_BuildByteOffset >= TextLength)
+			{
+				TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex);
+				if(m_IngameMotdParagraphCache.m_Valid && m_MotdTextContainerIndex.Valid())
+				{
+					m_IngameMotdParagraphCache.m_PreviousTextHash = m_IngameMotdParagraphCache.m_TextHash;
+					m_IngameMotdParagraphCache.m_PreviousUpdateTime = m_IngameMotdParagraphCache.m_UpdateTime;
+					m_IngameMotdParagraphCache.m_PreviousWidth = m_IngameMotdParagraphCache.m_Width;
+					m_IngameMotdParagraphCache.m_PreviousFontSize = m_IngameMotdParagraphCache.m_FontSize;
+					m_IngameMotdParagraphCache.m_PreviousHeight = m_IngameMotdParagraphCache.m_Height;
+					m_IngameMotdParagraphCache.m_PreviousTextContainerIndex = m_MotdTextContainerIndex;
+				}
+				m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex;
+				m_IngameMotdParagraphCache.m_BuildTextContainerIndex.Reset();
+				m_IngameMotdParagraphCache.m_BuildCursor = CTextCursor();
+				m_IngameMotdParagraphCache.m_BuildByteOffset = 0;
+				m_IngameMotdParagraphCache.m_TextHash = TextHash;
+				m_IngameMotdParagraphCache.m_UpdateTime = UpdateTime;
+				m_IngameMotdParagraphCache.m_Width = Motd.w;
+				m_IngameMotdParagraphCache.m_FontSize = FontSize;
+				m_IngameMotdParagraphCache.m_Height = m_IngameMotdParagraphCache.m_BuildHeight;
+				m_IngameMotdParagraphCache.m_LastStableHeight = m_IngameMotdParagraphCache.m_Height;
+				m_IngameMotdParagraphCache.m_Valid = true;
+				m_IngameMotdParagraphCache.m_Pending = false;
+				m_IngameMotdParagraphCache.m_PreviousText = pMotd;
+			}
 		}
 	}
 	if(QmPerfEnabled())
@@ -1654,6 +1698,13 @@ void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool Al
 
 bool CMenus::RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea)
 {
+	if(m_IngameMotdParagraphCache.m_Valid && m_MotdTextContainerIndex.Valid() &&
+		absolute(m_IngameMotdParagraphCache.m_Width - Motd.w) < 0.01f &&
+		absolute(m_IngameMotdParagraphCache.m_FontSize - FontSize) < 0.01f)
+	{
+		TextRender()->RenderTextContainer(m_MotdTextContainerIndex, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), MotdTextArea.x, MotdTextArea.y);
+		return true;
+	}
 	if(!m_IngameMotdParagraphCache.m_PreviousTextContainerIndex.Valid())
 		return false;
 	if(absolute(m_IngameMotdParagraphCache.m_PreviousWidth - Motd.w) >= 0.01f ||
@@ -1661,6 +1712,15 @@ bool CMenus::RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize
 		return false;
 	TextRender()->RenderTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), MotdTextArea.x, MotdTextArea.y);
 	return true;
+}
+
+void CMenus::RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize)
+{
+	CTextCursor Cursor;
+	Cursor.SetPosition(vec2(MotdTextArea.x, MotdTextArea.y));
+	Cursor.m_FontSize = FontSize;
+	Cursor.m_LineWidth = MotdTextArea.w;
+	TextRender()->TextEx(&Cursor, GameClient()->m_Motd.ServerMotd(), -1);
 }
 
 void CMenus::DrainIngameUiSnapshotTextRuntime()
@@ -1698,7 +1758,6 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextBudgetInput.m_VisibleWaiting = m_IngameMotdParagraphCache.m_Pending ? 2 : 1;
 	m_IngameTextFrameBudget = ComputeSettingsUiFrameSchedulerBudget("ingame_server_info_snapshot_text", TextBudgetInput, m_IngameTextAdaptiveBudgetState);
 	m_IngameTextFrameBudget.m_TextContainerTokens = maximum(1, m_IngameTextFrameBudget.m_TextContainerTokens);
-	m_IngameTextFrameBudget.m_ParagraphLayoutTokens = maximum(1, m_IngameTextFrameBudget.m_ParagraphLayoutTokens);
 
 	CUIRect ServerInfo, GameInfo, Motd;
 	MainView.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
@@ -1963,6 +2022,8 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 	else
 	{
 		const bool RenderedPrevious = RenderIngameMotdPreviousParagraphCache(Motd, MotdFontSize, MotdTextArea);
+		if(!RenderedPrevious)
+			RenderIngameMotdFallbackText(MotdTextArea, MotdFontSize);
 		if(!RenderedPrevious && QmPerfEnabled())
 		{
 			char aPayload[160];

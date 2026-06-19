@@ -195,6 +195,10 @@ struct SSettingsAdaptiveBudgetInput
 	float m_FrameMsAverage = 0.0f;
 	float m_FrameMsP95 = 0.0f;
 	float m_TargetFrameMs = 8.333f;
+	float m_TextContainerCreateMsEwma = 0.0f;
+	float m_TextContainerUploadMsEwma = 0.0f;
+	float m_GlyphRasterizeMsEwma = 0.0f;
+	float m_GlyphUploadMsEwma = 0.0f;
 	bool m_ScrollActive = false;
 	bool m_JumpScrollActive = false;
 	bool m_TabSwitchFirstFrame = false;
@@ -206,6 +210,12 @@ struct SSettingsAdaptiveBudgetInput
 	bool m_FinalizeBudgetExhausted = false;
 	bool m_UploadBudgetExhausted = false;
 	bool m_WindowActive = true;
+	int m_TextScrollHardCap = 2;
+	int m_TextPressureHardCap = 2;
+	int m_TextIdleHardCap = 64;
+	int m_GlyphScrollHardCap = 1;
+	int m_GlyphPressureHardCap = 1;
+	int m_GlyphIdleHardCap = 8;
 };
 
 struct SSettingsAdaptiveBudgetState

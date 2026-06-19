@@ -1790,6 +1790,64 @@ TEST(SettingsResourceJobs, AdaptiveBudgetKeepsVisibleTokensDuringScroll)
 	EXPECT_GE(Output.m_GpuUploadTokens, 1);
 }
 
+TEST(SettingsResourceJobs, AdaptiveTextBudgetKeepsLowHardCapWhileScrolling)
+{
+	SSettingsAdaptiveBudgetState State;
+	SSettingsAdaptiveBudgetInput Input;
+	Input.m_WindowActive = true;
+	Input.m_ScrollActive = true;
+	Input.m_TargetFrameMs = 8.333f;
+	Input.m_FrameMsAverage = 4.0f;
+	Input.m_FrameMsP95 = 5.0f;
+	Input.m_BackgroundBacklog = 100;
+	Input.m_TextScrollHardCap = 2;
+	Input.m_TextIdleHardCap = 64;
+
+	const SSettingsAdaptiveBudgetOutput Output = SettingsAdaptiveBudgetStep(Input, State);
+	EXPECT_EQ(Output.m_Mode, ESettingsAdaptiveBudgetMode::SCROLL_ACTIVE);
+	EXPECT_LE(Output.m_TextContainerTokens, 2);
+	EXPECT_LE(Output.m_GlyphRasterizeTokens, 1);
+	EXPECT_LE(Output.m_GlyphUploadTokens, 1);
+}
+
+TEST(SettingsResourceJobs, AdaptiveTextBudgetCanGrowBeyondSixteenOnStableHighHeadroomFrames)
+{
+	SSettingsAdaptiveBudgetState State;
+	SSettingsAdaptiveBudgetInput Input;
+	Input.m_WindowActive = true;
+	Input.m_TargetFrameMs = 8.333f;
+	Input.m_FrameMsAverage = 3.0f;
+	Input.m_FrameMsP95 = 4.0f;
+	Input.m_BackgroundBacklog = 100;
+	Input.m_TextIdleHardCap = 64;
+	Input.m_TextScrollHardCap = 2;
+
+	SSettingsAdaptiveBudgetOutput Output;
+	for(int i = 0; i < 40; ++i)
+		Output = SettingsAdaptiveBudgetStep(Input, State);
+
+	EXPECT_GT(Output.m_TextContainerTokens, 16);
+	EXPECT_LE(Output.m_TextContainerTokens, 64);
+}
+
+TEST(SettingsResourceJobs, AdaptiveTextBudgetShrinksWhenRecentTextWorkIsExpensive)
+{
+	SSettingsAdaptiveBudgetState State;
+	SSettingsAdaptiveBudgetInput Input;
+	Input.m_WindowActive = true;
+	Input.m_TargetFrameMs = 8.333f;
+	Input.m_FrameMsAverage = 4.0f;
+	Input.m_FrameMsP95 = 5.0f;
+	Input.m_BackgroundBacklog = 100;
+	Input.m_TextIdleHardCap = 64;
+	Input.m_TextContainerCreateMsEwma = 3.0f;
+	Input.m_GlyphUploadMsEwma = 2.0f;
+
+	const SSettingsAdaptiveBudgetOutput Output = SettingsAdaptiveBudgetStep(Input, State);
+	EXPECT_EQ(Output.m_Reason, ESettingsAdaptiveBudgetReason::FRAME_PRESSURE);
+	EXPECT_LE(Output.m_TextContainerTokens, 2);
+}
+
 TEST(SettingsResourceJobs, TeeSkinBackgroundRequestBudgetOnlyRunsOnIdleFrames)
 {
 	const SSettingsResourceFrameContext Idle = {false, false, 0};

@@ -739,7 +739,8 @@ TEST(QmMonitoringHelpers, SectionQuadBatchingDoesNotCrossTextOrClipBoundaries)
 		EXPECT_NE(Source.find("void CUi::FlushQuadBatch() const"), std::string::npos);
 		EXPECT_EQ(Source.find("RenderQuadContainerAsSpriteMultiple(m_QuadBatchContainerIndex"), std::string::npos);
 		EXPECT_NE(Source.find("TextRender()->RenderTextContainer"), std::string::npos);
-		EXPECT_NE(Source.find("FlushQuadBatch();\n\t\tTextRender()->RenderTextContainer"), std::string::npos);
+		EXPECT_NE(Source.find("void CUi::RenderLabelTextContainerAligned"), std::string::npos);
+		EXPECT_NE(Source.find("FlushQuadBatch();\n\tTextRender()->RenderTextContainer"), std::string::npos);
 		EXPECT_NE(Source.find("void CUi::ClipEnable(const CUIRect *pRect)\n{\n\tFlushQuadBatch();"), std::string::npos);
 		EXPECT_NE(Source.find("void CUi::ClipDisable()\n{\n\tFlushQuadBatch();"), std::string::npos);
 	}
@@ -1223,9 +1224,12 @@ TEST(QmMonitoringHelpers, SettingsStableTextMissAndStaleBlockVisibleBuild)
 	EXPECT_EQ(Source.find("context-checkbox-common-"), std::string::npos);
 	EXPECT_TRUE(ContainsAll(Source, {
 						"scope=%s page=%s tab=%d subtab=%d key=%s reason=%s plan_status=%s operation=%s frame=%",
-						"%s:%d:%d:%d:%s:fs%d:al%d:mw%d:us%d:cm%d:ch%d",
+						"%s:%d:%d:%d:%s:fs%d:al%d:mw%d:us%d:hd%d:tc%d:oc%d:cm%d",
 						"StyleKey.m_Align",
 						"StyleKey.m_MaxWidthBucket",
+						"StyleKey.m_HiDpiScaleBucket",
+						"StyleKey.m_TextColorHash",
+						"StyleKey.m_OutlineColorHash",
 					}));
 	EXPECT_TRUE(ContainsAll(Source, {
 						"const char *CMenus::SettingsPerfStableTextScope(int Page) const",
@@ -1917,7 +1921,7 @@ TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
 	EXPECT_EQ(TClient.find("auto AddItem = [&]"), std::string::npos);
 	EXPECT_EQ(QmClient.find("auto AddItem = [&]"), std::string::npos);
 	EXPECT_EQ(Menus.find("Item.m_UseExplicitStyleKey"), std::string::npos);
-	EXPECT_NE(Menus.find("SettingsMenuTextPlanStyleKey(const CMenus::SMenuTextPlanItem &Item)"), std::string::npos);
+	EXPECT_NE(Menus.find("CMenus::SMenuTextStyleKey CMenus::SettingsMenuTextPlanStyleKey(const SMenuTextPlanItem &Item) const"), std::string::npos);
 	EXPECT_NE(Menus.find("switch(Item.m_StyleMode)"), std::string::npos);
 
 	const std::vector<std::string> vRequiredBaseIds = {
@@ -2168,6 +2172,37 @@ TEST(QmMonitoringHelpers, LoadingAndEscPrebuildDoNotSynchronouslyBuildFullSettin
 	EXPECT_EQ(EnsureBody.find("BuildSettingsMenuTextPlan(m_vSettingsMenuTextPrebuildPlan);"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, IngameEscPrewarmsStableTextBeforeVisibleFrame)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string OnRenderBody = ExtractSourceFunctionBody(Menus, "void CMenus::OnRender()");
+	const std::string CollectionBody = ExtractSourceFunctionBody(Menus, "void CMenus::PrepareSettingsMenuTextPlanCollectionUnits(const char *pOperationOverride)");
+	const std::string CollectBody = ExtractSourceFunctionBody(Menus, "void CMenus::CollectSettingsMenuTextPlanUnit(const SSettingsMenuTextPlanCollectionUnit &Unit, CUIRect Screen, CUIRect SettingsMainView)");
+	ASSERT_FALSE(OnRenderBody.empty());
+	ASSERT_FALSE(CollectionBody.empty());
+	ASSERT_FALSE(CollectBody.empty());
+
+	const size_t StartWindowPos = OnRenderBody.find("StartSettingsPerfFixedWindow(\"ingame_esc_open\"");
+	const size_t SetActivePos = OnRenderBody.find("SetActive(true);", StartWindowPos);
+	const size_t RenderPos = OnRenderBody.find("Render();");
+	ASSERT_NE(StartWindowPos, std::string::npos);
+	ASSERT_NE(SetActivePos, std::string::npos);
+	ASSERT_NE(RenderPos, std::string::npos);
+	EXPECT_LT(StartWindowPos, SetActivePos);
+	EXPECT_LT(SetActivePos, RenderPos);
+
+	EXPECT_NE(Header.find("uint64_t m_IngameEscOpenFrame"), std::string::npos);
+	EXPECT_NE(Header.find("bool m_IngameServerInfoBackgroundPrepareRequested"), std::string::npos);
+	EXPECT_EQ(OnRenderBody.find("PrebuildIngameEscTextPoolBeforeOpen("), std::string::npos);
+	EXPECT_EQ(OnRenderBody.find("PrebuildSettingsMenuTextPool("), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("Client()->PerfFrame() > m_IngameEscOpenFrame"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("PrepareIngameServerInfoTextRuntime();"), std::string::npos);
+	EXPECT_NE(CollectionBody.find("m_vSettingsMenuTextPlanCollectionUnits.push_back({MENU_TEXT_PLAN_UNIT_INGAME_ESC, -1, -1});"), std::string::npos);
+	EXPECT_NE(CollectBody.find("case MENU_TEXT_PLAN_UNIT_INGAME_ESC:"), std::string::npos);
+	EXPECT_NE(CollectBody.find("BuildIngameMenuTextPlan(m_vSettingsMenuTextPrebuildPlan, Screen);"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, SettingsMenuTextPlanCollectionUsesIncrementalCursor)
 {
 	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
@@ -2201,7 +2236,7 @@ TEST(QmMonitoringHelpers, SettingsMenuTextPlanCollectionUsesIncrementalCursor)
 	EXPECT_EQ(PrebuildBody.find("for(int Tab = 0; Tab < NumTClientTextPlanTabs; ++Tab)"), std::string::npos);
 	EXPECT_EQ(PrebuildBody.find("for(int Tab = 0; Tab < NUMBER_OF_QMCLIENT_SETTINGS_TABS; ++Tab)"), std::string::npos);
 
-	EXPECT_NE(EscBody.find("PrebuildSettingsMenuTextPool(minimum(Budget, maximum(1, AdaptiveBudget.m_TextPrebuildTokens)), \"target_settings\", \"ingame_esc_open\");"), std::string::npos);
+	EXPECT_EQ(EscBody.find("BuildSettingsMenuTextPlan("), std::string::npos);
 	EXPECT_EQ(EscBody.find("BuildSettingsMenuTextPlan("), std::string::npos);
 }
 
@@ -2223,8 +2258,9 @@ TEST(QmMonitoringHelpers, SettingsPlanCollectionDoesNotSynchronouslyPumpStartupO
 
 	EXPECT_EQ(RenderBody.find("PrebuildIngameEscTextPoolBeforeOpen(96);"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("PrebuildIngameEscTextPoolBeforeOpen(4);"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("PrebuildIngameEscTextPoolBeforeOpen(3);"), std::string::npos);
 	EXPECT_NE(RenderBody.find("StartSettingsPerfFixedWindow(\"ingame_esc_open\""), std::string::npos);
-	EXPECT_NE(EscBody.find("PrebuildSettingsMenuTextPool(minimum(Budget, maximum(1, AdaptiveBudget.m_TextPrebuildTokens)), \"target_settings\", \"ingame_esc_open\");"), std::string::npos);
+	EXPECT_EQ(EscBody.find("BuildSettingsMenuTextPlan("), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsPlanCollectionDoesNotEnterVisibleGuard)
@@ -3304,6 +3340,22 @@ TEST(QmMonitoringHelpers, SettingsFrameSchedulerExposesResourceAndTextBudgets)
 	EXPECT_LE(PressureOutput.m_PreviewArtifactTokens, 1);
 }
 
+TEST(QmMonitoringHelpers, SettingsSchedulerFeedsTextRuntimeCostIntoAdaptiveBudget)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string PrepareBody = ExtractSourceFunctionBody(Source, "void CMenus::PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &Input)");
+	const std::string LogBody = ExtractSourceFunctionBody(Source, "void CMenus::LogSettingsAdaptiveBudget(const char *pSource, const SSettingsAdaptiveBudgetInput &Input, const SSettingsAdaptiveBudgetOutput &Output) const");
+	ASSERT_FALSE(PrepareBody.empty());
+	ASSERT_FALSE(LogBody.empty());
+
+	EXPECT_NE(Header.find("m_TextContainerCreateMsEwma"), std::string::npos);
+	EXPECT_NE(PrepareBody.find("TextRender()->QmTextRuntimeBudgetSnapshot()"), std::string::npos);
+	EXPECT_NE(PrepareBody.find("Input.m_TextContainerCreateMsEwma"), std::string::npos);
+	EXPECT_NE(LogBody.find("text_create_ewma_ms=%.3f"), std::string::npos);
+	EXPECT_NE(LogBody.find("text_scroll_cap=%d"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, UiFrameSchedulerOwnsTextAndResourceBudgets)
 {
 	const std::string Assets = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
@@ -3399,25 +3451,114 @@ TEST(QmMonitoringHelpers, IngameServerInfoUsesStableTextAndSnapshotCache)
 	EXPECT_EQ(SnapshotDrainBody.find("m_CurrentSettingsUiFrameBudget.m_TextContainerTokens"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, ServerInfoTextPreparedBeforeFirstVisibleFrame)
+TEST(QmMonitoringHelpers, IngameEscOpenHasConcreteSectionTelemetry)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Ingame = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string RenderBody = ExtractSourceFunctionBody(Menus, "void CMenus::Render()");
+	const std::string GameBody = ExtractSourceFunctionBody(Ingame, "void CMenus::RenderGame(CUIRect MainView)");
+	ASSERT_FALSE(RenderBody.empty());
+	ASSERT_FALSE(GameBody.empty());
+
+	EXPECT_EQ(Menus.find("ingame_esc_button_column"), std::string::npos);
+	EXPECT_NE(GameBody.find("ingame_esc_button_column"), std::string::npos);
+	EXPECT_NE(GameBody.find("MainView.HSplitTop(45.0f + (HasSecondaryButtonBar ? 35.0f : 0.0f), &ButtonBars, &MainView);"), std::string::npos);
+	EXPECT_LT(GameBody.find("MainView.HSplitTop(45.0f + (HasSecondaryButtonBar ? 35.0f : 0.0f), &ButtonBars, &MainView);"), GameBody.find("ingame_esc_button_column"));
+	const std::string ButtonColumnLog = "LogIngamePerfStage(Client(), \"ingame_esc_button_column\", ButtonColumnTimer.ElapsedMs(), false, aButtonColumnPerfExtra);";
+	const size_t ButtonColumnTimerPos = GameBody.find("CPerfTimer ButtonColumnTimer;");
+	const size_t ButtonColumnLogPos = GameBody.find(ButtonColumnLog);
+	const size_t LastButtonControlPos = GameBody.find("Console()->ExecuteLine(\"toggle_local_console\");");
+	const size_t TouchEditingBranchPos = GameBody.find("if(GameClient()->m_TouchControls.IsEditingActive())", LastButtonControlPos);
+	const size_t NormalButtonColumnFlushPos = GameBody.find("\n\tLogButtonColumnPerf();", LastButtonControlPos);
+	ASSERT_NE(ButtonColumnTimerPos, std::string::npos);
+	ASSERT_NE(ButtonColumnLogPos, std::string::npos);
+	ASSERT_NE(LastButtonControlPos, std::string::npos);
+	ASSERT_NE(TouchEditingBranchPos, std::string::npos);
+	ASSERT_NE(NormalButtonColumnFlushPos, std::string::npos);
+	EXPECT_EQ(CountSubstring(GameBody, ButtonColumnLog), 1u);
+	EXPECT_LT(ButtonColumnTimerPos, ButtonColumnLogPos);
+	EXPECT_LT(LastButtonControlPos, NormalButtonColumnFlushPos);
+	EXPECT_LT(NormalButtonColumnFlushPos, TouchEditingBranchPos);
+	EXPECT_LT(NormalButtonColumnFlushPos, GameBody.find("RenderTouchControlsEditor"));
+	EXPECT_LT(NormalButtonColumnFlushPos, GameBody.find("RenderTouchButtonEditor"));
+	EXPECT_LT(NormalButtonColumnFlushPos, GameBody.find("RenderConfigSettings"));
+	EXPECT_LT(NormalButtonColumnFlushPos, GameBody.find("RenderPreviewSettings"));
+
+	const std::string ButtonColumnRegion = GameBody.substr(ButtonColumnTimerPos, TouchEditingBranchPos - ButtonColumnTimerPos);
+	std::istringstream RegionStream(ButtonColumnRegion);
+	std::string Line;
+	std::string PreviousNonEmptyLine;
+	while(std::getline(RegionStream, Line))
+	{
+		const std::string TrimmedLine = Trim(Line);
+		if(TrimmedLine.empty())
+			continue;
+		if(TrimmedLine.find("return;") != std::string::npos)
+		{
+			if(PreviousNonEmptyLine != "if(ButtonColumnPerfLogged)")
+				EXPECT_EQ(PreviousNonEmptyLine, "LogButtonColumnPerf();");
+		}
+		PreviousNonEmptyLine = TrimmedLine;
+	}
+
+	EXPECT_NE(RenderBody.find("ingame_esc_menu_shell"), std::string::npos);
+	EXPECT_NE(RenderBody.find("ingame_esc_tab_content"), std::string::npos);
+	EXPECT_NE(RenderBody.find("ingame_server_info_layout"), std::string::npos);
+	EXPECT_NE(RenderBody.find("const char *pOperationName = SettingsPerfActiveOperation();"), std::string::npos);
+	EXPECT_NE(RenderBody.find("operation=%s context=online page=%s tab=none frame=%"), std::string::npos);
+	EXPECT_NE(RenderBody.find("context=online"), std::string::npos);
+	EXPECT_NE(RenderBody.find("tab=none"), std::string::npos);
+	EXPECT_NE(RenderBody.find("frame=%\" PRIu64"), std::string::npos);
+	EXPECT_NE(RenderBody.find("LogPerfStage(Client(), \"ingame_esc_menu_shell\", ShellTimer.ElapsedMs(), false, aEscPerfExtra);"), std::string::npos);
+	EXPECT_NE(RenderBody.find("LogPerfStage(Client(), \"ingame_esc_tab_content\", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);"), std::string::npos);
+	EXPECT_NE(RenderBody.find("LogPerfStage(Client(), \"ingame_server_info_layout\", StageDurationMs, TransitionActive, aEscPerfExtra);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ServerInfoTextPreparedOnlyWhenOpeningServerInfoPage)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string Ingame = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string OnRenderBody = ExtractSourceFunctionBody(Menus, "void CMenus::OnRender()");
 	const std::string SetGamePageBody = ExtractSourceFunctionBody(Menus, "void CMenus::SetGamePage(int NewPage)");
 	const std::string RenderBody = ExtractSourceFunctionBody(Ingame, "void CMenus::RenderServerInfo(CUIRect MainView)");
+	ASSERT_FALSE(OnRenderBody.empty());
 	ASSERT_FALSE(SetGamePageBody.empty());
 	ASSERT_FALSE(RenderBody.empty());
 
-	// Cold-opening server info must submit snapshot/MOTD work before the page
-	// becomes visible. Otherwise the first visible frame still pays request
-	// overhead or shows empty dynamic text while the drain catches up.
+	// Esc-opening PAGE_GAME and switching to PAGE_SERVER_INFO must not do the
+	// dynamic server-info snapshot/MOTD prepare synchronously in the input path.
+	// The prepare is allowed only from the OnRender frame-end background path.
 	EXPECT_NE(Header.find("void PrepareIngameServerInfoTextRuntime("), std::string::npos);
 	EXPECT_NE(Ingame.find("void CMenus::PrepareIngameServerInfoTextRuntime("), std::string::npos);
-	EXPECT_NE(SetGamePageBody.find("PrepareIngameServerInfoTextRuntime("), std::string::npos);
-	EXPECT_LT(SetGamePageBody.find("PrepareIngameServerInfoTextRuntime("), SetGamePageBody.find("StartSettingsPerfFixedWindow(\"ingame_server_info\""));
+	EXPECT_NE(OnRenderBody.find("PrepareIngameServerInfoTextRuntime("), std::string::npos);
+	EXPECT_EQ(SetGamePageBody.find("PrepareIngameServerInfoTextRuntime("), std::string::npos);
+	EXPECT_NE(SetGamePageBody.find("NewPage == PAGE_SERVER_INFO"), std::string::npos);
+	EXPECT_NE(SetGamePageBody.find("m_IngameServerInfoBackgroundPrepareRequested = false;"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("PrepareIngameServerInfoTextRuntime("), std::string::npos);
 	EXPECT_NE(Ingame.find("event=server_info_text_prepare"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, IngameServerInfoBackgroundPrepareDoesNotDrainMotdParagraph)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Ingame = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string OnRenderBody = ExtractSourceFunctionBody(Menus, "void CMenus::OnRender()");
+	const std::string PrepareBody = ExtractSourceFunctionBody(Ingame, "void CMenus::PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView)");
+	ASSERT_FALSE(OnRenderBody.empty());
+	ASSERT_FALSE(PrepareBody.empty());
+
+	// Esc-open background prewarm may prepare the small server-info value
+	// snapshots and enqueue the MOTD paragraph, but it must not synchronously
+	// drain the paragraph. Visible server-info frames must not run paragraph
+	// drain either; that work is only allowed through the non-visible background
+	// scheduler path.
+	EXPECT_NE(OnRenderBody.find("PrepareIngameServerInfoTextRuntime();"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("DrainIngameUiSnapshotTextRuntime();"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("m_IngameServerInfoBackgroundPrepareRequested = !m_SnapshotTextPending.empty() || m_IngameMotdParagraphCache.m_Pending;"), std::string::npos);
+	EXPECT_NE(PrepareBody.find("RequestIngameMotdParagraphCache("), std::string::npos);
+	EXPECT_EQ(PrepareBody.find("DrainIngameUiTextRuntime("), std::string::npos);
+	EXPECT_NE(PrepareBody.find("RequestSnapshotTextContainer("), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ServerInfoDoesNotShowVisiblePlaceholderOnCacheMiss)
@@ -3482,20 +3623,43 @@ TEST(QmMonitoringHelpers, MotdParagraphHydratesOnlyThroughBudgetDrain)
 	EXPECT_NE(Source.find("paragraph_budget_blocked"), std::string::npos);
 	EXPECT_NE(Source.find("paragraph_cache_hit"), std::string::npos);
 	EXPECT_NE(Source.find("paragraph_layout_ms"), std::string::npos);
-	EXPECT_NE(DrainBody.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
+	EXPECT_NE(DrainBody.find("TextRender()->CreateOrAppendTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
+	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
 	EXPECT_NE(DrainBody.find("m_IngameMotdParagraphCache.m_PendingFrame"), std::string::npos);
 	EXPECT_NE(Body.find("RequestIngameMotdParagraphCache(Motd"), std::string::npos);
 	EXPECT_EQ(Body.find("DrainIngameMotdParagraphCache(Motd"), std::string::npos);
 	EXPECT_NE(Source.find("void CMenus::DrainIngameUiTextRuntime(bool AllowCurrentFrame)"), std::string::npos);
 	EXPECT_NE(Header.find("m_PendingRect"), std::string::npos);
+	EXPECT_NE(Header.find("m_BuildByteOffset"), std::string::npos);
+	EXPECT_NE(Header.find("m_BuildTextContainerIndex"), std::string::npos);
 	EXPECT_NE(Header.find("SSettingsAdaptiveBudgetState m_IngameTextAdaptiveBudgetState"), std::string::npos);
 	EXPECT_NE(Header.find("SSettingsAdaptiveBudgetOutput m_IngameTextFrameBudget"), std::string::npos);
 	EXPECT_NE(Source.find("DrainIngameMotdParagraphCache(m_IngameMotdParagraphCache.m_PendingRect, m_IngameMotdParagraphCache.m_PendingFontSize, AllowCurrentFrame);"), std::string::npos);
 	EXPECT_NE(Source.find("m_IngameTextAdaptiveBudgetState"), std::string::npos);
-	EXPECT_NE(Source.find("m_IngameTextFrameBudget.m_ParagraphLayoutTokens = maximum(1, m_IngameTextFrameBudget.m_ParagraphLayoutTokens)"), std::string::npos);
+	EXPECT_EQ(Source.find("m_IngameTextFrameBudget.m_ParagraphLayoutTokens = maximum(1, m_IngameTextFrameBudget.m_ParagraphLayoutTokens)"), std::string::npos);
 	EXPECT_EQ(Source.find("m_CurrentSettingsUiFrameBudget.m_ParagraphLayoutTokens"), std::string::npos);
 	EXPECT_NE(DrainBody.find("m_IngameTextFrameBudget.m_ParagraphLayoutTokens"), std::string::npos);
 	EXPECT_EQ(Body.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MotdParagraphDrainBuildsInChunks)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string DrainBody = ExtractSourceFunctionBody(Source, "void CMenus::DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool AllowCurrentFrame)");
+	ASSERT_FALSE(DrainBody.empty());
+
+	EXPECT_NE(Header.find("static constexpr int INGAME_MOTD_PARAGRAPH_CHUNK_BYTES"), std::string::npos);
+	EXPECT_NE(Header.find("INGAME_MOTD_PARAGRAPH_CHUNK_BYTES = 24"), std::string::npos);
+	EXPECT_NE(Header.find("CTextCursor m_BuildCursor"), std::string::npos);
+	EXPECT_NE(Header.find("int m_BuildByteOffset"), std::string::npos);
+	EXPECT_NE(DrainBody.find("INGAME_MOTD_PARAGRAPH_CHUNK_BYTES"), std::string::npos);
+	EXPECT_NE(DrainBody.find("str_utf8_isstart"), std::string::npos);
+	EXPECT_NE(DrainBody.find("TextRender()->CreateOrAppendTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
+	EXPECT_NE(DrainBody.find("m_IngameMotdParagraphCache.m_BuildByteOffset += ChunkLength"), std::string::npos);
+	EXPECT_NE(DrainBody.find("m_MotdTextContainerIndex = m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
+	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_IngameMotdParagraphCache.m_PreviousTextContainerIndex"), std::string::npos);
+	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, MotdUsesReadyOrPreviousParagraphOnly)
@@ -3513,8 +3677,112 @@ TEST(QmMonitoringHelpers, MotdUsesReadyOrPreviousParagraphOnly)
 	EXPECT_NE(Source.find("RenderIngameMotdPreviousParagraphCache("), std::string::npos);
 	EXPECT_NE(Body.find("const bool RenderedMotdParagraph ="), std::string::npos);
 	EXPECT_NE(Body.find("RenderIngameMotdPreviousParagraphCache("), std::string::npos);
+	EXPECT_NE(Body.find("RenderIngameMotdFallbackText("), std::string::npos);
 	EXPECT_NE(Body.find("server_info_not_ready=1"), std::string::npos);
 	EXPECT_EQ(Body.find("Localize(\"Loading"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ValueSelectorDisplayUsesSingleLineShrink)
+{
+	const std::string Header = ReadRepoFile("src/game/client/ui.h");
+	const std::string Source = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRect *pRect, const char *pLabel, int64_t Current, int64_t Min, int64_t Max, const SValueSelectorProperties &Props)");
+	const std::string FlagsBody = ExtractSourceFunctionBody(Source, "static int GetFlagsForLabelProperties(const SLabelProperties &LabelProps, const CTextCursor *pReadCursor)");
+	ASSERT_FALSE(Body.empty());
+	ASSERT_FALSE(FlagsBody.empty());
+
+	EXPECT_NE(Header.find("struct SLabelProperties"), std::string::npos);
+	EXPECT_NE(Header.find("bool m_DisallowNewline"), std::string::npos);
+	EXPECT_NE(FlagsBody.find("LabelProps.m_DisallowNewline ? TEXTFLAG_DISALLOW_NEWLINE : 0"), std::string::npos);
+	EXPECT_NE(Body.find("SLabelProperties ValueLabelProps"), std::string::npos);
+	EXPECT_NE(Body.find("ValueLabelProps.m_MaxWidth = pRect->w"), std::string::npos);
+	EXPECT_NE(Body.find("ValueLabelProps.m_DisallowNewline = true"), std::string::npos);
+	EXPECT_NE(Body.find("ValueLabelProps.m_StopAtEnd = true"), std::string::npos);
+	EXPECT_NE(Body.find("ValueLabelProps.m_MinimumFontSize"), std::string::npos);
+	EXPECT_NE(Body.find("const char *pDisplayText = m_ActiveValueSelectorState.m_pLastTextId == pId ? m_ActiveValueSelectorState.m_NumberInput.GetDisplayedString() : aBuf;"), std::string::npos);
+	EXPECT_NE(Body.find("DoLabel(pRect, pDisplayText, 10.0f, TEXTALIGN_MC, ValueLabelProps);"), std::string::npos);
+	EXPECT_NE(Body.find("auto RenderValueSelectorDisplay = [&]()"), std::string::npos);
+	EXPECT_NE(Body.find("RenderValueSelectorDisplay();"), std::string::npos);
+	EXPECT_LT(Body.find("RenderValueSelectorDisplay();"), Body.find("if(Inside && !MouseButton(0) && !MouseButton(1))"));
+	EXPECT_EQ(Body.find("DoEditBox(&m_ActiveValueSelectorState.m_NumberInput"), std::string::npos);
+	EXPECT_EQ(Body.find("DoLabel(pRect, aBuf, 10.0f, TEXTALIGN_MC);\n"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("auto RenderSliderWithValueInput = "), std::string::npos);
+	EXPECT_NE(Body.find("const float InputWidth = std::clamp(72.0f * UiScale, 56.0f, 72.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("const float SuffixWidth = pSuffix[0] != '\\0' ? std::clamp(22.0f * UiScale, 18.0f, 24.0f) : 0.0f;"), std::string::npos);
+	EXPECT_NE(Body.find("const float MinSliderWidth = std::clamp(54.0f * UiScale, 42.0f, 54.0f);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SkinTransitionDurationLabelUsesSingleLineShrink)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_ML, const SLabelProperties &Props = {})"), std::string::npos);
+	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pTextId, pRect, pText, FontSize, Align, Props, (int)pRect->w);"), std::string::npos);
+	EXPECT_NE(Body.find("SLabelProperties SkinTransitionDurationLabelProps"), std::string::npos);
+	EXPECT_NE(Body.find("SkinTransitionDurationLabelProps.m_DisallowNewline = true"), std::string::npos);
+	EXPECT_NE(Body.find("SkinTransitionDurationLabelProps.m_StopAtEnd = true"), std::string::npos);
+	EXPECT_NE(Body.find("SkinTransitionDurationLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
+	EXPECT_NE(Body.find("DoQmSettingsLabel(\"qmclient-skin-transition-duration\", &LabelCol, Localize(\"Skin transition duration\"), LgBodySize, TEXTALIGN_ML, SkinTransitionDurationLabelProps);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesReadableIntervalInput)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_EQ(Body.find("const bool CompactQueueCapacityControls"), std::string::npos);
+	EXPECT_NE(Body.find("QueueSection.HSplitTop(20.0f, &QueueControls, &QueueSection);"), std::string::npos);
+	EXPECT_NE(Body.find("QueueControls.VSplitLeft(QueueIntervalLabelWidth, &IntervalLabel, &IntervalControls);"), std::string::npos);
+	EXPECT_NE(Body.find("IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);"), std::string::npos);
+	EXPECT_NE(Body.find("IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);"), std::string::npos);
+	EXPECT_NE(Body.find("const float QueueValueInputWidth = 58.0f"), std::string::npos);
+	EXPECT_NE(Body.find("const float QueueValueUnitWidth = 18.0f"), std::string::npos);
+	EXPECT_NE(Body.find("const float QueueIntervalLabelWidth = 82.0f"), std::string::npos);
+	EXPECT_NE(Body.find("SLabelProperties QueueControlLabelProps;"), std::string::npos);
+	EXPECT_NE(Body.find("QueueControlLabelProps.m_DisallowNewline = true"), std::string::npos);
+	EXPECT_NE(Body.find("QueueControlLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
+	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee-skin-queue-switch-interval\", &IntervalLabel, Localize(\"Switch interval\"), IntervalLabel.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);"), std::string::npos);
+	EXPECT_NE(Body.find("static CLineInputNumber s_aQueueIntervalInputs[NUM_DUMMIES];"), std::string::npos);
+	EXPECT_NE(Body.find("CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];"), std::string::npos);
+	EXPECT_NE(Body.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput, 10.0f, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC)"), std::string::npos);
+	EXPECT_NE(Body.find("Ui()->DoLabel(&IntervalUnit, \"ms\""), std::string::npos);
+	EXPECT_EQ(Body.find("DoValueSelectorWithState(&s_aQueueIntervalInputIds[QueueDummy]"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoScrollbarH(&QueueInterval"), std::string::npos);
+	EXPECT_EQ(Body.find("IntervalScrollbar"), std::string::npos);
+	EXPECT_EQ(Body.find("Localize(\"Queue capacity\")"), std::string::npos);
+	EXPECT_EQ(Body.find("static char s_aQueueLengthInputIds[NUM_DUMMIES];"), std::string::npos);
+	EXPECT_EQ(Body.find("Localize(\"Length\")"), std::string::npos);
+	EXPECT_EQ(Body.find("Localize(\"Queue limit\")"), std::string::npos);
+	EXPECT_EQ(Body.find("DoSettingsScrollbarOption(SETTINGS_TEE, -1, -1, \"tee-skin-queue-length\""), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TeeSkinQueueDragShowsDropLineAndGhostRow)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("static vec2 s_QueueDragGrabOffset = vec2(0.0f, 0.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("static CUIRect s_QueueDraggedRect;"), std::string::npos);
+	EXPECT_NE(Body.find("CUIRect QueueDropLine;"), std::string::npos);
+	EXPECT_NE(Body.find("HasQueueDropLine = true;"), std::string::npos);
+	EXPECT_NE(Body.find("QueueDropLine.Draw(ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), IGraphics::CORNER_ALL, 1.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("CUIRect QueueDragGhost = s_QueueDraggedRect;"), std::string::npos);
+	EXPECT_NE(Body.find("QueueDragGhost.x = Ui()->MouseX() - s_QueueDragGrabOffset.x;"), std::string::npos);
+	EXPECT_NE(Body.find("QueueDragGhost.Draw(ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), IGraphics::CORNER_ALL, 4.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("QueueDragGhostLabel"), std::string::npos);
+	EXPECT_NE(Body.find("s_QueueDragGrabOffset = Ui()->MousePos() - vec2(Item.m_Rect.x, Item.m_Rect.y);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, IngameTextRuntimeSkipsIdleLogLines)
@@ -3648,12 +3916,50 @@ TEST(QmMonitoringHelpers, IngameMenuButtonKeepsNativeCenteredButtonTextLayout)
 	// native centered labels and made Chinese button text appear off-center.
 	EXPECT_NE(Source.find("CUIRect MenuButtonTextRect("), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);"), std::string::npos);
-	EXPECT_NE(Body.find("Text = MenuButtonTextRect(pRect, 0.0f, HoverLift);"), std::string::npos);
 	EXPECT_NE(Body.find("DoButton_Menu(pButtonContainer, \"\", Checked"), std::string::npos);
 	EXPECT_NE(Body.find("DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, TextElement"), std::string::npos);
 	EXPECT_NE(Body.find("Ui()->DoLabel(&Text, pText"), std::string::npos);
 	EXPECT_EQ(Body.find("CUIRect Text = *pRect;"), std::string::npos);
 	EXPECT_EQ(Body.find("Text.HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("HoverLift"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, IngameMenuButtonDoesNotDependOnUiRuntimeAnimation)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)");
+	ASSERT_FALSE(Body.empty());
+
+	// Regression guard for Esc-open crashes: ingame buttons can render before
+	// the QmUi animation runtime is in a stable menu-frame context. Their
+	// cached text path should use the native static button text rect and avoid
+	// per-button animation runtime lookups.
+	EXPECT_EQ(Body.find("GameClient()->UiRuntimeV2()->AnimRuntime()"), std::string::npos);
+	EXPECT_EQ(Body.find("ResolveUiAnimValue("), std::string::npos);
+	EXPECT_EQ(Body.find("HoverLift"), std::string::npos);
+	EXPECT_NE(Body.find("CUIRect Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("DoButton_Menu(pButtonContainer, \"\", Checked"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AssetsCardRightControlsStayCompact)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	// Screenshot regression: resource cards need the title/description to keep
+	// priority. The right-side status pill and action icon are secondary
+	// controls, so their reserved widths should stay compact.
+	EXPECT_NE(Source.find("constexpr float AssetsCardStatusTagFontSize = 6.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float AssetsCardStatusTagMinWidth = 24.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float AssetsCardStatusTagMaxWidth = 36.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float AssetsCardStatusTagHorizontalPadding = 2.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float AssetCardHeaderControlHeight = 18.0f;"), std::string::npos);
+	EXPECT_NE(Body.find("TitleRect.VSplitRight(16.0f, &TitleRect, &Shell.m_ActionButtonRect);"), std::string::npos);
+	EXPECT_EQ(Source.find("constexpr float AssetsCardStatusTagMaxWidth = 52.0f;"), std::string::npos);
+	EXPECT_EQ(Source.find("constexpr float AssetsCardStatusTagMaxWidth = 46.0f;"), std::string::npos);
+	EXPECT_EQ(Body.find("TitleRect.VSplitRight(24.0f, &TitleRect, &Shell.m_ActionButtonRect);"), std::string::npos);
+	EXPECT_EQ(Body.find("TitleRect.VSplitRight(20.0f, &TitleRect, &Shell.m_ActionButtonRect);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, StreamedLabelCachesSingleLineMiddleAlignMetrics)
@@ -3662,8 +3968,10 @@ TEST(QmMonitoringHelpers, StreamedLabelCachesSingleLineMiddleAlignMetrics)
 	const std::string Source = ReadRepoFile("src/game/client/ui.cpp");
 	const std::string CachedBody = ExtractSourceFunctionBody(Source, "void CUi::DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor) const");
 	const std::string StreamedBody = ExtractSourceFunctionBody(Source, "void CUi::DoLabelStreamed(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated) const");
+	const std::string HelperBody = ExtractSourceFunctionBody(Source, "void CUi::RenderLabelTextContainerAligned(const CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, int Align) const");
 	ASSERT_FALSE(CachedBody.empty());
 	ASSERT_FALSE(StreamedBody.empty());
+	ASSERT_FALSE(HelperBody.empty());
 
 	// Streamed single-line labels still need the same vertical centering metrics
 	// as the immediate DoLabel path. Otherwise centered settings buttons and
@@ -3673,12 +3981,84 @@ TEST(QmMonitoringHelpers, StreamedLabelCachesSingleLineMiddleAlignMetrics)
 	EXPECT_NE(CachedBody.find("TextBounds.m_LineCount == 1 ? &TextBounds.m_BiggestCharacterHeight : nullptr"), std::string::npos);
 	EXPECT_NE(CachedBody.find("RectEl.m_BiggestCharacterHeight = TextBounds.m_BiggestCharacterHeight;"), std::string::npos);
 	EXPECT_NE(CachedBody.find("RectEl.m_LineCount = TextBounds.m_LineCount;"), std::string::npos);
-	EXPECT_NE(StreamedBody.find("RectEl.m_LineCount == 1 ? &RectEl.m_BiggestCharacterHeight : nullptr"), std::string::npos);
+	EXPECT_NE(HelperBody.find("RectEl.m_LineCount == 1 ? &RectEl.m_BiggestCharacterHeight : nullptr"), std::string::npos);
 	EXPECT_NE(StreamedBody.find("RectEl.m_FontSize != Size"), std::string::npos);
 	EXPECT_NE(StreamedBody.find("RectEl.m_TextAlign != Align"), std::string::npos);
 	EXPECT_NE(StreamedBody.find("RectEl.m_LabelMaxWidth != LabelProps.m_MaxWidth"), std::string::npos);
 	EXPECT_NE(StreamedBody.find("RectEl.m_LabelFlags != Flags"), std::string::npos);
 	EXPECT_EQ(StreamedBody.find("CalcAlignedCursorPos(pRect, vec2(RectEl.m_Cursor.m_LongestLineWidth, RectEl.m_Cursor.Height()), Align);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, StreamedLabelRenderUsesCanonicalAlignmentHelper)
+{
+	const std::string Source = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/ui.h");
+	const std::string StreamedBody = ExtractSourceFunctionBody(Source, "void CUi::DoLabelStreamed(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated) const");
+	ASSERT_FALSE(StreamedBody.empty());
+
+	EXPECT_NE(Header.find("RenderLabelTextContainerAligned"), std::string::npos);
+	EXPECT_NE(Source.find("void CUi::RenderLabelTextContainerAligned"), std::string::npos);
+	EXPECT_NE(StreamedBody.find("RenderLabelTextContainerAligned(RectEl, pRect, Align)"), std::string::npos);
+	EXPECT_EQ(StreamedBody.find("TextRender()->RenderTextContainer(RectEl.m_UITextContainer"), std::string::npos);
+	EXPECT_EQ(StreamedBody.find("pRect->x, pRect->y"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MenuLabelStreamedDoesNotBypassCachedLabelAlignment)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Menus, "void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("Ui()->RenderLabelTextContainerAligned(*pElementRect, pRect, Align);"), std::string::npos);
+	EXPECT_EQ(Body.find("TextRender()->RenderTextContainer(pElementRect->m_UITextContainer"), std::string::npos);
+	EXPECT_EQ(Body.find("pRect->x, pRect->y"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MenuTextStyleKeyIncludesRealScaleAndColorState)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string BuildBody = ExtractSourceFunctionBody(Source, "CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey(const CUIRect *pRect, float FontSize, int Align, const SLabelProperties &LabelProps) const");
+
+	EXPECT_NE(Header.find("int m_HiDpiScaleBucket"), std::string::npos);
+	EXPECT_NE(Header.find("int m_TextColorHash"), std::string::npos);
+	EXPECT_NE(Header.find("int m_OutlineColorHash"), std::string::npos);
+	EXPECT_NE(Header.find("SMenuTextStyleKey BuildMenuTextStyleKey"), std::string::npos);
+	EXPECT_FALSE(BuildBody.empty());
+	EXPECT_NE(BuildBody.find("Graphics()->ScreenHiDPIScale()"), std::string::npos);
+	EXPECT_NE(BuildBody.find("TextRender()->GetTextColor()"), std::string::npos);
+	EXPECT_NE(BuildBody.find("TextRender()->GetTextOutlineColor()"), std::string::npos);
+	EXPECT_EQ(Source.find("StyleKey.m_UiScaleBucket = 100"), std::string::npos);
+	EXPECT_EQ(Source.find("str_quickhash(\"default-text-style\")"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsTextUsageSeparatesPoolHitFromRenderReadyHit)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string MenuTextElementBody = ExtractSourceFunctionBody(Source, "CUIElement &CMenus::MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const SMenuTextStyleKey &StyleKey)");
+	const std::string StreamedBody = ExtractSourceFunctionBody(Source, "void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render)");
+	ASSERT_FALSE(MenuTextElementBody.empty());
+	ASSERT_FALSE(StreamedBody.empty());
+
+	EXPECT_NE(Header.find("m_MenuTextStablePoolHitsThisFrame"), std::string::npos);
+	EXPECT_NE(Header.find("m_MenuTextStableRenderReadyHitsThisFrame"), std::string::npos);
+	EXPECT_NE(Header.find("m_MenuTextStableBuildQueuedThisFrame"), std::string::npos);
+	EXPECT_NE(Header.find("m_MenuTextStableFallbackImmediateThisFrame"), std::string::npos);
+	EXPECT_NE(Source.find("pool_hit=%d render_ready_hit=%d"), std::string::npos);
+	EXPECT_NE(Source.find("build_queued=%d fallback_immediate=%d"), std::string::npos);
+	EXPECT_NE(MenuTextElementBody.find("++m_MenuTextStablePoolHitsThisFrame"), std::string::npos);
+	EXPECT_NE(StreamedBody.find("++m_MenuTextStableRenderReadyHitsThisFrame"), std::string::npos);
+	EXPECT_NE(StreamedBody.find("++m_MenuTextStableBuildQueuedThisFrame"), std::string::npos);
+	EXPECT_NE(StreamedBody.find("++m_MenuTextStableFallbackImmediateThisFrame"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TextRenderingStabilizationHasVisualChecklist)
+{
+	const std::string Checklist = ReadRepoFile("docs/superpowers/plans/2026-06-18-text-rendering-stabilization-observability-visual-checklist.md");
+	EXPECT_NE(Checklist.find("Button text is centered"), std::string::npos);
+	EXPECT_NE(Checklist.find("render-ready hit coverage"), std::string::npos);
+	EXPECT_NE(Checklist.find("Small-card right tags/buttons keep fixed priority"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, IngameFixedChromeUsesBudgetedTextPipeline)
@@ -3771,7 +4151,7 @@ TEST(QmMonitoringHelpers, IngameCriticalTextFallbacksAreLimited)
 TEST(QmMonitoringHelpers, StableTextUsageTelemetryIsClassifiedAsStaticStable)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void LogSettingsTextPoolUsage(IClient *pClient, CMenus::EMenuTextScope Scope, const char *pScopeName, int Page, int Tab, int Subtab, const char *pOperation, uint64_t Frame, int Candidates, int Hits, int Reused, int Misses, int Stales, int TextNew, int TextReused, int Planned, int Unplanned)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void LogSettingsTextPoolUsage(IClient *pClient, CMenus::EMenuTextScope Scope, const char *pScopeName, int Page, int Tab, int Subtab, const char *pOperation, uint64_t Frame, int Candidates, int Hits, int Reused, int Misses, int Stales, int TextNew, int TextReused, int Planned, int Unplanned, int PoolHits, int RenderReadyHits, int BuildQueued, int FallbackImmediate)");
 	ASSERT_FALSE(Body.empty());
 
 	// Static stable text is the only class allowed in the stable-text
@@ -3817,6 +4197,35 @@ TEST(QmMonitoringHelpers, IngameTextRuntimeDrainsOutsideRenderFunctions)
 	EXPECT_NE(SnapshotDrainBody.find("DrainSnapshotTextContainers()"), std::string::npos);
 	EXPECT_NE(DrainBody.find("DrainIngameUiSnapshotTextRuntime()"), std::string::npos);
 	EXPECT_NE(DrainBody.find("DrainIngameMotdParagraphCache("), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, IngameEscOpenDefersServerInfoRuntimeDrain)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string OnRenderBody = ExtractSourceFunctionBody(Menus, "void CMenus::OnRender()");
+	ASSERT_FALSE(OnRenderBody.empty());
+
+	EXPECT_NE(OnRenderBody.find("StartSettingsPerfFixedWindow(\"ingame_esc_open\""), std::string::npos);
+	EXPECT_EQ(OnRenderBody.find("PrebuildIngameEscTextPoolBeforeOpen("), std::string::npos);
+	EXPECT_EQ(OnRenderBody.find("PrebuildSettingsMenuTextPool("), std::string::npos);
+	EXPECT_NE(Header.find("uint64_t m_IngameEscOpenFrame"), std::string::npos);
+	EXPECT_NE(Header.find("bool m_IngameServerInfoBackgroundPrepareRequested"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("m_IngameEscOpenFrame = Client()->PerfFrame();"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("m_IngameServerInfoBackgroundPrepareRequested = true;"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("Client()->PerfFrame() > m_IngameEscOpenFrame"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("PrepareIngameServerInfoTextRuntime();"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("if(m_GamePage == PAGE_SERVER_INFO)"), std::string::npos);
+	const size_t VisibleServerInfoBranch = OnRenderBody.find("if(m_GamePage == PAGE_SERVER_INFO)");
+	const size_t BackgroundPrepareBranch = OnRenderBody.find("else if(m_IngameServerInfoBackgroundPrepareRequested", VisibleServerInfoBranch);
+	ASSERT_NE(VisibleServerInfoBranch, std::string::npos);
+	ASSERT_NE(BackgroundPrepareBranch, std::string::npos);
+	const std::string VisibleBranch = OnRenderBody.substr(VisibleServerInfoBranch, BackgroundPrepareBranch - VisibleServerInfoBranch);
+	EXPECT_NE(VisibleBranch.find("DrainIngameUiSnapshotTextRuntime();"), std::string::npos);
+	EXPECT_EQ(VisibleBranch.find("DrainIngameUiTextRuntime(false);"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("DrainIngameUiTextRuntime(false);"), std::string::npos);
+	EXPECT_EQ(OnRenderBody.find("else if(GameClient()->m_Motd.ServerMotd()[0])"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("DrainIngameUiSnapshotTextRuntime();"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ServerInfoLayoutAvoidsTextWidthInRenderPath)
@@ -3884,7 +4293,8 @@ TEST(QmMonitoringHelpers, MotdParagraphUsesBudgetedDrain)
 	EXPECT_NE(DrainBody.find("m_ParagraphLayoutTokens"), std::string::npos);
 	EXPECT_NE(DrainBody.find("--m_IngameTextFrameBudget.m_ParagraphLayoutTokens"), std::string::npos);
 	EXPECT_EQ(DrainBody.find("m_CurrentSettingsUiFrameBudget.m_ParagraphLayoutTokens"), std::string::npos);
-	EXPECT_NE(DrainBody.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
+	EXPECT_NE(DrainBody.find("TextRender()->CreateOrAppendTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex"), std::string::npos);
+	EXPECT_EQ(DrainBody.find("TextRender()->RecreateTextContainer(m_MotdTextContainerIndex"), std::string::npos);
 	EXPECT_NE(DrainBody.find("paragraph_cache_hit=%d"), std::string::npos);
 	EXPECT_NE(DrainBody.find("paragraph_cache_miss=%d"), std::string::npos);
 	EXPECT_EQ(DrainBody.find("static_stable_hit="), std::string::npos);
@@ -3900,12 +4310,13 @@ TEST(QmMonitoringHelpers, VisibleIngameRenderDrainsParagraphOnlyAfterPendingFram
 	ASSERT_FALSE(OnRenderBody.empty());
 	ASSERT_FALSE(PrepareBody.empty());
 
-	// Long MOTD paragraph layout can continue after a visible request, but the
-	// visible frame must not use the same-frame force path. Same-frame hydrate
-	// is reserved for pre-visible/background prepare.
+	// Long MOTD paragraph layout can be enqueued by prepare, but the visible
+	// frame must not use the same-frame force path or drain paragraph work.
 	EXPECT_NE(OnRenderBody.find("DrainIngameUiTextRuntime(false);"), std::string::npos);
 	EXPECT_EQ(OnRenderBody.find("DrainIngameUiTextRuntime(true);"), std::string::npos);
-	EXPECT_NE(PrepareBody.find("DrainIngameUiTextRuntime(true);"), std::string::npos);
+	EXPECT_EQ(PrepareBody.find("DrainIngameUiTextRuntime(true);"), std::string::npos);
+	EXPECT_EQ(PrepareBody.find("DrainIngameUiTextRuntime(false);"), std::string::npos);
+	EXPECT_NE(PrepareBody.find("RequestIngameMotdParagraphCache("), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, MotdPrepareHydratesParagraphWithoutSameFrameStarvation)
@@ -3919,13 +4330,14 @@ TEST(QmMonitoringHelpers, MotdPrepareHydratesParagraphWithoutSameFrameStarvation
 	ASSERT_FALSE(DrainBody.empty());
 	ASSERT_FALSE(RuntimeDrainBody.empty());
 
-	// Regression guard for blank MOTD: prepare requests the paragraph and then
-	// drains it in the same frame before the user sees the server-info page.
-	// Without the AllowCurrentFrame path, PendingFrame == current frame blocks
-	// the rebuild and the visible render has no ready/previous paragraph.
+	// Server-info preparation may enqueue work, but it must respect the normal
+	// budgeted drain path. Same-frame force would move long paragraph layout
+	// back into the page-open frame.
 	EXPECT_NE(Header.find("void DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool AllowCurrentFrame = false);"), std::string::npos);
 	EXPECT_NE(Header.find("void DrainIngameUiTextRuntime(bool AllowCurrentFrame = false);"), std::string::npos);
-	EXPECT_NE(PrepareBody.find("DrainIngameUiTextRuntime(true);"), std::string::npos);
+	EXPECT_EQ(PrepareBody.find("DrainIngameUiTextRuntime(true);"), std::string::npos);
+	EXPECT_EQ(PrepareBody.find("DrainIngameUiTextRuntime(false);"), std::string::npos);
+	EXPECT_NE(PrepareBody.find("RequestIngameMotdParagraphCache("), std::string::npos);
 	EXPECT_NE(DrainBody.find("!AllowCurrentFrame && Frame <= m_IngameMotdParagraphCache.m_PendingFrame"), std::string::npos);
 	EXPECT_NE(RuntimeDrainBody.find("DrainIngameMotdParagraphCache(m_IngameMotdParagraphCache.m_PendingRect, m_IngameMotdParagraphCache.m_PendingFontSize, AllowCurrentFrame);"), std::string::npos);
 }
@@ -3943,7 +4355,8 @@ TEST(QmMonitoringHelpers, MotdParagraphPendingDrainsAfterVisibleRequest)
 	EXPECT_NE(OnRenderBody.find("if(IsActive() && Client()->State() == IClient::STATE_ONLINE)"), std::string::npos);
 	EXPECT_NE(OnRenderBody.find("if(m_GamePage == PAGE_SERVER_INFO)"), std::string::npos);
 	EXPECT_NE(OnRenderBody.find("DrainIngameUiTextRuntime(false);"), std::string::npos);
-	EXPECT_NE(OnRenderBody.find("else if(GameClient()->m_Motd.ServerMotd()[0])"), std::string::npos);
+	EXPECT_EQ(OnRenderBody.find("else if(GameClient()->m_Motd.ServerMotd()[0])"), std::string::npos);
+	EXPECT_NE(OnRenderBody.find("Client()->PerfFrame() > m_IngameEscOpenFrame"), std::string::npos);
 	EXPECT_NE(OnRenderBody.find("PrepareIngameServerInfoTextRuntime();"), std::string::npos);
 }
 
@@ -4053,9 +4466,23 @@ TEST(QmMonitoringHelpers, TextRuntimeCountersDoNotAccumulateWhilePerfDisabled)
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Text.find("void ResetQmTextRuntimeBudgetCounters(bool ConsumeGlyphStats)"), std::string::npos);
-	EXPECT_NE(Body.find("ResetQmTextRuntimeBudgetCounters(true);"), std::string::npos);
-	EXPECT_LT(Body.find("if(!QmPerfEnabled()"), Body.find("ResetQmTextRuntimeBudgetCounters(true);"));
 	EXPECT_NE(Body.find("m_pGlyphMap->ConsumeQmPerfGlyphStats"), std::string::npos);
+	EXPECT_NE(Body.find("if(!QmPerfEnabled()"), std::string::npos);
+	EXPECT_LT(Body.find("m_pGlyphMap->ConsumeQmPerfGlyphStats"), Body.find("if(!QmPerfEnabled()"));
+	EXPECT_GT(Body.find("ResetQmTextRuntimeBudgetCounters(false);", Body.find("if(!QmPerfEnabled()")), Body.find("if(!QmPerfEnabled()"));
+}
+
+TEST(QmMonitoringHelpers, TextRuntimeSnapshotUpdatesBeforePerfLoggingGate)
+{
+	const std::string Text = ReadRepoFile("src/engine/client/text.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Text, "void FlushQmTextRuntimeBudgetLog() override");
+	ASSERT_FALSE(Body.empty());
+
+	// The adaptive settings scheduler consumes this snapshot during normal
+	// gameplay, so it must not depend on the perf log/debug switch being on.
+	EXPECT_NE(Body.find("UpdateQmTextRuntimeBudgetSnapshot(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs);"), std::string::npos);
+	EXPECT_NE(Body.find("if(!QmPerfEnabled()"), std::string::npos);
+	EXPECT_LT(Body.find("UpdateQmTextRuntimeBudgetSnapshot(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs);"), Body.find("if(!QmPerfEnabled()"));
 }
 
 TEST(QmMonitoringHelpers, TextRuntimeTelemetrySkipsLowCostSingleContainerNoise)
@@ -4091,6 +4518,17 @@ TEST(QmMonitoringHelpers, TextRuntimeTelemetryFlushesOncePerUiFrame)
 	EXPECT_EQ(CreateBody.find("LogQmTextRuntimeBudget("), std::string::npos);
 	EXPECT_EQ(UploadBody.find("LogQmTextRuntimeBudget("), std::string::npos);
 	EXPECT_NE(OnRenderBody.find("TextRender()->FlushQmTextRuntimeBudgetLog()"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TextRenderExposesRuntimeBudgetSnapshotForScheduler)
+{
+	const std::string Header = ReadRepoFile("src/engine/textrender.h");
+	const std::string Text = ReadRepoFile("src/engine/client/text.cpp");
+
+	EXPECT_NE(Header.find("struct SQmTextRuntimeBudgetSnapshot"), std::string::npos);
+	EXPECT_NE(Header.find("virtual SQmTextRuntimeBudgetSnapshot QmTextRuntimeBudgetSnapshot() const"), std::string::npos);
+	EXPECT_NE(Text.find("SQmTextRuntimeBudgetSnapshot m_QmLastTextRuntimeBudgetSnapshot"), std::string::npos);
+	EXPECT_NE(Text.find("m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerCreateMs"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, HudSettingsTextHydratesUnderBudget)
@@ -4487,6 +4925,27 @@ TEST(QmMonitoringHelpers, AssetsTabSwitchFirstFrameShellOnly)
 	EXPECT_EQ(Body.find("StartWorkshopThumb(Asset, SettingsWorkshopThumbShouldStartHighPriority"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AssetsTabSwitchUsesShellFirstFrame)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string BeginFrameBody = ExtractSourceFunctionBody(Source, "static SSettingsAssetsCardHydrationScheduler BeginAssetsCardHydrationFrame");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(BeginFrameBody.empty());
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("constexpr int AssetsTabSwitchCooldownFrames = 8;"), std::string::npos);
+	EXPECT_NE(BeginFrameBody.find("Scheduler.m_TabSwitchShellOnlyFrame = AssetsTabSwitchFirstFrame;"), std::string::npos);
+	EXPECT_NE(BeginFrameBody.find("if(AssetsTabSwitchFirstFrame)"), std::string::npos);
+	EXPECT_NE(BeginFrameBody.find("Scheduler.m_MetadataBudget = maximum(1, minimum(VisibleCardCount, MetadataLayoutTokens));"), std::string::npos);
+	EXPECT_NE(BeginFrameBody.find("Scheduler.m_PreviewBudget = 0;"), std::string::npos);
+	EXPECT_NE(BeginFrameBody.find("return Scheduler;"), std::string::npos);
+	EXPECT_NE(BeginFrameBody.find("Scheduler.m_PreviewBudget = AssetsTabSwitchCooldownActive ? 0"), std::string::npos);
+	EXPECT_NE(Body.find("LogAssetsFramePerfStage(\"assets_tab_switch_shell_first\""), std::string::npos);
+	EXPECT_NE(Body.find("operation=settings_assets_tab_switch"), std::string::npos);
+	EXPECT_NE(Body.find("tab_switch_shell_only=1"), std::string::npos);
+	EXPECT_NE(Body.find("CardHydrationScheduler.m_TabSwitchShellOnlyFrame ? 1 : 0"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, SkinsUseSharedPreviewUploadBudget)
 {
 	const std::string Skins = ReadRepoFile("src/game/client/components/skins.cpp");
@@ -4641,14 +5100,14 @@ TEST(QmMonitoringHelpers, AssetsCardShellUsesCompactCurrentLabelBadges)
 	// widths. The left title/id lane keeps the remaining width.
 	EXPECT_NE(Source.find("AssetsCardStatusTagHorizontalPadding"), std::string::npos);
 	EXPECT_NE(Source.find("AssetsCardStatusTagMaxWidth"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float AssetCardHeaderMargin = 4.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float AssetCardHeaderControlMargin = 2.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float AssetCardHeaderMargin = 3.0f;"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float AssetCardHeaderControlMargin = 1.0f;"), std::string::npos);
 	EXPECT_EQ(Source.find("auto LayoutAssetCardHeader = "), std::string::npos);
 	EXPECT_EQ(Source.find("const float AssetsCardDownloadedTagWidth = TextRender()->TextWidth"), std::string::npos);
 	EXPECT_EQ(Source.find("const float AssetsCardLocalOnlyBadgeWidth = TextRender()->TextWidth"), std::string::npos);
 	EXPECT_NE(LayoutBody.find("auto ComputeBadgeWidth = [&](const char *pLabel)"), std::string::npos);
 	EXPECT_NE(LayoutBody.find("TextRender()->TextWidth(AssetsCardStatusTagFontSize, pLabel"), std::string::npos);
-	EXPECT_NE(LayoutBody.find("const float TitleMinWidth = 18.0f;"), std::string::npos);
+	EXPECT_NE(LayoutBody.find("const float TitleMinWidth = 12.0f;"), std::string::npos);
 	EXPECT_NE(LayoutBody.find("ReserveTrailingRect(TitleRect, ComputeBadgeWidth(pStatusLabel)"), std::string::npos);
 	EXPECT_NE(LayoutBody.find("ReserveTrailingRect(TitleRect, ComputeBadgeWidth(Localize(\"Local-only\"))"), std::string::npos);
 }
@@ -4748,7 +5207,8 @@ TEST(QmMonitoringHelpers, AssetsFirstVisibleFrameHasMetadataWarmupBudget)
 	// First visible frame should have ready metadata for the first screen, not a
 	// long shell-only phase. Preview/upload can stay blocked; metadata gets a
 	// small first-frame budget.
-	EXPECT_NE(BeginFrameBody.find("AssetsTabSwitchFirstFrame ? maximum(1"), std::string::npos);
+	EXPECT_NE(BeginFrameBody.find("if(AssetsTabSwitchFirstFrame)"), std::string::npos);
+	EXPECT_NE(BeginFrameBody.find("Scheduler.m_MetadataBudget = maximum(1, minimum(VisibleCardCount, MetadataLayoutTokens));"), std::string::npos);
 	EXPECT_NE(Body.find("const int AssetsMetadataLayoutTokensThisFrame = AssetsShellOnlyFrame ? AssetsInitialMetadataLayoutTokens"), std::string::npos);
 	EXPECT_NE(Body.find("DrainAssetsCardMetadataHydrationRequests(AssetsMetadataLayoutTokensThisFrame"), std::string::npos);
 }
@@ -5055,6 +5515,56 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(Settings.find("FinishSettingsScrollRegion(gs_LanguageScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_LANGUAGE"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("function_first_frame_light_path"), std::string::npos);
+	EXPECT_NE(Body.find("const bool FunctionFirstFrameLightPath"), std::string::npos);
+	EXPECT_NE(Body.find("QmFunctionModuleUsesLightFirstFramePath("), std::string::npos);
+	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"pie_menu_layout\""), std::string::npos);
+	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"pie_menu_controls\""), std::string::npos);
+	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"block_words_layout\""), std::string::npos);
+	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"block_words_controls\""), std::string::npos);
+	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_layout\""), std::string::npos);
+	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_controls\""), std::string::npos);
+	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_bind_lookup\""), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SettingsPagesExposeSectionLevelPerfStages)
+{
+	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Controls = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");
+	const std::string TClient = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+
+	EXPECT_NE(Settings.find("ddnet_tab_shell"), std::string::npos);
+	EXPECT_NE(Settings.find("ddnet_demo_section"), std::string::npos);
+	EXPECT_NE(Settings.find("ddnet_gameplay_section"), std::string::npos);
+	EXPECT_NE(Settings.find("ddnet_controls_section"), std::string::npos);
+	EXPECT_NE(Controls.find("controls_tab_shell"), std::string::npos);
+	EXPECT_NE(Controls.find("controls_bind_list"), std::string::npos);
+	EXPECT_NE(Controls.find("controls_interactive_layer"), std::string::npos);
+	EXPECT_NE(Controls.find("controls_text_cache"), std::string::npos);
+	EXPECT_NE(TClient.find("tclient_tab_3_shell"), std::string::npos);
+	EXPECT_NE(TClient.find("tclient_tab_4_shell"), std::string::npos);
+	EXPECT_NE(TClient.find("tclient_tab_5_shell"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, HudAppearanceTabExposesSectionLevelPerfStages)
+{
+	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Settings, "void CMenus::RenderSettingsAppearance(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("appearance_hud_tab_shell"), std::string::npos);
+	EXPECT_NE(Body.find("appearance_hud_core_section"), std::string::npos);
+	EXPECT_NE(Body.find("appearance_hud_ddrace_section"), std::string::npos);
+	EXPECT_NE(Body.find("appearance_hud_freeze_bars_section"), std::string::npos);
+	EXPECT_NE(Body.find("appearance_hud_text_cache"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, TClientSettingsDoesNotWriteScrollMetadataBeforeFinish)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
@@ -5188,4 +5698,14 @@ TEST(QmMonitoringHelpers, VulkanStandardLinePipelineCreatesTexturedVariant)
 	EXPECT_NE(Source.find("GetStandardPipeLayout(IsLineGeometry, IsTextured, BlendModeIndex, DynamicIndex)"), std::string::npos);
 	EXPECT_NE(Source.find("if(!CreateStandardGraphicsPipeline(\"shader/vulkan/prim.vert.spv\", \"shader/vulkan/prim.frag.spv\", false, true))"), std::string::npos);
 	EXPECT_NE(Source.find("if(!CreateStandardGraphicsPipeline(\"shader/vulkan/prim_textured.vert.spv\", \"shader/vulkan/prim_textured.frag.spv\", true, true))"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, WindowsReleaseBuildProducesPdbSymbols)
+{
+	const std::string Source = ReadRepoFile("CMakeLists.txt");
+
+	EXPECT_NE(Source.find("$<$<CONFIG:Release,RelWithDebInfo>:ProgramDatabase>"), std::string::npos);
+	EXPECT_NE(Source.find("$<$<CONFIG:Release,RelWithDebInfo>:/DEBUG>"), std::string::npos);
+	EXPECT_NE(Source.find("$<$<CONFIG:Release,RelWithDebInfo>:/OPT:REF>"), std::string::npos);
+	EXPECT_NE(Source.find("$<$<CONFIG:Release,RelWithDebInfo>:/OPT:ICF>"), std::string::npos);
 }

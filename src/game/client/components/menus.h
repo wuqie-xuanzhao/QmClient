@@ -1442,6 +1442,7 @@ protected:
 	};
 	struct SIngameMotdParagraphCache
 	{
+		static constexpr int INGAME_MOTD_PARAGRAPH_CHUNK_BYTES = 24;
 		unsigned m_TextHash = 0;
 		float m_Width = 0.0f;
 		float m_FontSize = 0.0f;
@@ -1456,6 +1457,10 @@ protected:
 		int64_t m_PendingUpdateTime = -1;
 		uint64_t m_PendingFrame = 0;
 		bool m_Pending = false;
+		STextContainerIndex m_BuildTextContainerIndex;
+		CTextCursor m_BuildCursor;
+		int m_BuildByteOffset = 0;
+		float m_BuildHeight = 0.0f;
 		unsigned m_PreviousTextHash = 0;
 		float m_PreviousWidth = 0.0f;
 		float m_PreviousFontSize = 0.0f;
@@ -1562,6 +1567,7 @@ protected:
 	bool IngameMotdParagraphCacheMatches(CUIRect Motd, float FontSize) const;
 	void DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool AllowCurrentFrame = false);
 	bool RenderIngameMotdPreviousParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea);
+	void RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize);
 	void DrainIngameUiSnapshotTextRuntime();
 	void DrainIngameUiTextRuntime(bool AllowCurrentFrame = false);
 	void RenderServerControl(CUIRect MainView);
@@ -1956,7 +1962,9 @@ public:
 		int m_Align = TEXTALIGN_ML;
 		int m_MaxWidthBucket = -1;
 		int m_UiScaleBucket = 0;
-		int m_ColorHash = 0;
+		int m_HiDpiScaleBucket = 0;
+		int m_TextColorHash = 0;
+		int m_OutlineColorHash = 0;
 		int m_CompactMode = 0;
 	};
 	struct SMenuTextPlanItem
@@ -1993,6 +2001,8 @@ public:
 	};
 	CUIElement &MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const SMenuTextStyleKey &StyleKey);
 	void CollectMenuTextPlanItem(EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect *pRect, float FontSize, int Align, const SLabelProperties &LabelProps, const SMenuTextStyleKey &StyleKey);
+	SMenuTextStyleKey BuildMenuTextStyleKey(const CUIRect *pRect, float FontSize, int Align, const SLabelProperties &LabelProps) const;
+	SMenuTextStyleKey SettingsMenuTextPlanStyleKey(const SMenuTextPlanItem &Item) const;
 	SMenuTextStyleKey BuildSettingsScrollbarTextStyle(const CUIRect &Rect, unsigned Flags, CUIRect *pOutLabel = nullptr) const;
 	SMenuTextStyleKey BuildSettingsShellTitleTextStyle(const CUIRect &Rect, CUIRect *pOutLabel = nullptr) const;
 	SMenuTextPlanItem AddStableTextDefault(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, float Width, float Height, float FontSize, int Align = TEXTALIGN_ML, const char *pSourceTag = nullptr) const;
@@ -2104,6 +2114,8 @@ private:
 	int m_SettingsPerfLastPage = -1;
 	int m_SettingsPerfLastTClientTab = -1;
 	int m_SettingsPerfLastQmClientTab = -1;
+	uint64_t m_IngameEscOpenFrame = 0;
+	bool m_IngameServerInfoBackgroundPrepareRequested = false;
 
 	class CScopedSettingsTextPerfStats
 	{
@@ -2189,6 +2201,10 @@ private:
 	SSettingsAdaptiveBudgetState m_IngameTextAdaptiveBudgetState;
 	SSettingsAdaptiveBudgetOutput m_IngameTextFrameBudget;
 	SSettingsAdaptiveBudgetState m_AssetsAdaptiveBudgetState;
+	float m_TextContainerCreateMsEwma = 0.0f;
+	float m_TextContainerUploadMsEwma = 0.0f;
+	float m_GlyphRasterizeMsEwma = 0.0f;
+	float m_GlyphUploadMsEwma = 0.0f;
 	float m_SettingsTClientCurrentScrollY = 0.0f;
 	bool m_SettingsTClientScrollRestorePending = false;
 	bool m_SettingsPageSwitchActive = false;
@@ -2215,6 +2231,10 @@ private:
 	bool m_MenuTextPoolVisibleGuard = false;
 	int m_MenuTextStableCandidatesThisFrame = 0;
 	int m_MenuTextStableHitsThisFrame = 0;
+	int m_MenuTextStablePoolHitsThisFrame = 0;
+	int m_MenuTextStableRenderReadyHitsThisFrame = 0;
+	int m_MenuTextStableBuildQueuedThisFrame = 0;
+	int m_MenuTextStableFallbackImmediateThisFrame = 0;
 	int m_MenuTextStableReusedThisFrame = 0;
 	int m_MenuTextStableTextNewThisFrame = 0;
 	int m_MenuTextStableTextReusedThisFrame = 0;

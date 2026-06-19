@@ -1564,6 +1564,9 @@ Current cut is invalid or already added
 Current file
 == 現在のファイル
 
+Current queue: %s
+== 現在のキュー：%s
+
 Current rescue mode: %s
 == 現在のレスキューモード: %s
 
@@ -2112,6 +2115,9 @@ Edit
 
 Edit audio pack
 == オーディオパックを編集
+
+Edit current queue
+== 現在のキューを編集
 
 Edit Entry
 == エントリーを編集
@@ -4633,6 +4639,9 @@ Prediction time
 Preparing demo playback
 == デモ再生を準備中
 
+Preset %d
+== プリセット %d
+
 Preset bar
 == プリセットバー
 
@@ -4791,9 +4800,6 @@ Quads are used for background decoration
 
 Queue is empty
 == キューは空です
-
-Queue is full
-== キューがいっぱいです
 
 Quick action menu for players
 == プレイヤー向けクイックアクションメニュー
@@ -5317,8 +5323,8 @@ Room
 Room password
 == ルームパスワード
 
-Rotate all maps
-== 全マップをローテーション
+Rotate all server player skins
+== サーバーの全プレイヤーのスキンをローテーション
 
 Round
 == ラウンド
@@ -5521,6 +5527,9 @@ SecretKey
 See how much you act
 == どれだけ演技しているかを見る
 
+Select a preset first
+== 先にプリセットを選択
+
 Select all chat
 == チャットをすべて選択
 
@@ -5529,6 +5538,9 @@ Select button by touch
 
 Select export
 == エクスポートを選択
+
+Select this preset to edit it
+== このプリセットを選択して編集
 
 Selected %d
 == 選択中 %d

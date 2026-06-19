@@ -1662,6 +1662,54 @@ turkish = "Geçerli dosya"
 polish = "Bieżący plik"
 
 [[message]]
+key = "Edit current queue"
+[message.translations]
+japanese = "現在のキューを編集"
+korean = "현재 대기열 편집"
+simplified_chinese = "编辑当前队列"
+traditional_chinese = "編輯目前佇列"
+russian = "Редактировать текущую очередь"
+german = "Aktuelle Warteschlange bearbeiten"
+spanish = "Editar cola actual"
+french = "Modifier la file actuelle"
+brazilian_portuguese = "Editar fila atual"
+portuguese = "Editar fila atual"
+turkish = "Geçerli sırayı düzenle"
+polish = "Edytuj bieżącą kolejkę"
+
+[[message]]
+key = "Editing: %s"
+[message.translations]
+japanese = "編集中: %s"
+korean = "편집 중: %s"
+simplified_chinese = "正在编辑：%s"
+traditional_chinese = "正在編輯：%s"
+russian = "Редактируется: %s"
+german = "Bearbeiten: %s"
+spanish = "Editando: %s"
+french = "Modification : %s"
+brazilian_portuguese = "Editando: %s"
+portuguese = "A editar: %s"
+turkish = "Düzenleniyor: %s"
+polish = "Edytowanie: %s"
+
+[[message]]
+key = "Editing: current queue"
+[message.translations]
+japanese = "編集中: 現在のキュー"
+korean = "편집 중: 현재 대기열"
+simplified_chinese = "正在编辑：当前队列"
+traditional_chinese = "正在編輯：目前佇列"
+russian = "Редактируется: текущая очередь"
+german = "Bearbeiten: aktuelle Warteschlange"
+spanish = "Editando: cola actual"
+french = "Modification : file actuelle"
+brazilian_portuguese = "Editando: fila atual"
+portuguese = "A editar: fila atual"
+turkish = "Düzenleniyor: geçerli sıra"
+polish = "Edytowanie: bieżąca kolejka"
+
+[[message]]
 key = "custom"
 [message.translations]
 japanese = "カスタム"
@@ -5243,6 +5291,22 @@ turkish = "Sıra dolu"
 polish = "Kolejka jest pełna"
 
 [[message]]
+key = "Queue capacity"
+[message.translations]
+japanese = "キュー容量"
+korean = "대기열 용량"
+simplified_chinese = "队列容量"
+traditional_chinese = "佇列容量"
+russian = "Вместимость очереди"
+german = "Warteschlangenkapazität"
+spanish = "Capacidad de la cola"
+french = "Capacité de la file"
+brazilian_portuguese = "Capacidade da fila"
+portuguese = "Capacidade da fila"
+turkish = "Sıra kapasitesi"
+polish = "Pojemność kolejki"
+
+[[message]]
 key = "Random pick"
 [message.translations]
 japanese = "ランダム抽選"
@@ -6061,6 +6125,38 @@ brazilian_portuguese = "Candidato selecionado"
 portuguese = "Candidato selecionado"
 turkish = "Seçilen aday"
 polish = "Wybrany kandydat"
+
+[[message]]
+key = "Select a preset first"
+[message.translations]
+japanese = "先にプリセットを選択"
+korean = "먼저 프리셋 선택"
+simplified_chinese = "先选择一个预设"
+traditional_chinese = "請先選擇預設"
+russian = "Сначала выберите пресет"
+german = "Zuerst ein Preset wählen"
+spanish = "Selecciona primero un preajuste"
+french = "Sélectionnez d'abord un préréglage"
+brazilian_portuguese = "Selecione uma predefinição primeiro"
+portuguese = "Selecione primeiro uma predefinição"
+turkish = "Önce bir ön ayar seç"
+polish = "Najpierw wybierz preset"
+
+[[message]]
+key = "Select this preset to edit it"
+[message.translations]
+japanese = "このプリセットを選択して編集"
+korean = "이 프리셋을 선택해 편집"
+simplified_chinese = "选择此预设进行编辑"
+traditional_chinese = "選擇此預設進行編輯"
+russian = "Выбрать этот пресет для редактирования"
+german = "Dieses Preset zum Bearbeiten wählen"
+spanish = "Seleccionar este preajuste para editarlo"
+french = "Sélectionner ce préréglage pour le modifier"
+brazilian_portuguese = "Selecionar esta predefinição para editar"
+portuguese = "Selecionar esta predefinição para editar"
+turkish = "Düzenlemek için bu ön ayarı seç"
+polish = "Wybierz ten preset do edycji"
 
 [[message]]
 key = "Selected candidate %d/%d under cursor."
@@ -8999,3 +9095,51 @@ brazilian_portuguese = "Cores aleatórias"
 portuguese = "Cores aleatórias"
 turkish = "Rastgele renkler"
 polish = "Losowe kolory"
+
+[[message]]
+key = "Current queue: %s"
+[message.translations]
+simplified_chinese = "当前队列：%s"
+traditional_chinese = "目前隊列：%s"
+japanese = "現在のキュー：%s"
+korean = "현재 대기열: %s"
+russian = "Текущая очередь: %s"
+german = "Aktuelle Warteschlange: %s"
+spanish = "Cola actual: %s"
+french = "File actuelle : %s"
+brazilian_portuguese = "Fila atual: %s"
+portuguese = "Fila atual: %s"
+turkish = "Geçerli sıra: %s"
+polish = "Bieżąca kolejka: %s"
+
+[[message]]
+key = "Preset %d"
+[message.translations]
+simplified_chinese = "预设 %d"
+traditional_chinese = "預設 %d"
+japanese = "プリセット %d"
+korean = "프리셋 %d"
+russian = "Пресет %d"
+german = "Preset %d"
+spanish = "Preajuste %d"
+french = "Préréglage %d"
+brazilian_portuguese = "Predefinição %d"
+portuguese = "Predefinição %d"
+turkish = "Ön ayar %d"
+polish = "Preset %d"
+
+[[message]]
+key = "Rotate all server player skins"
+[message.translations]
+simplified_chinese = "轮换服务器所有人皮肤"
+traditional_chinese = "輪換伺服器所有人皮膚"
+japanese = "サーバーの全プレイヤーのスキンをローテーション"
+korean = "서버의 모든 플레이어 스킨 순환"
+russian = "Чередовать скины всех игроков сервера"
+german = "Skins aller Serverspieler rotieren"
+spanish = "Rotar skins de todos los jugadores del servidor"
+french = "Faire tourner les skins de tous les joueurs du serveur"
+brazilian_portuguese = "Alternar skins de todos os jogadores do servidor"
+portuguese = "Alternar skins de todos os jogadores do servidor"
+turkish = "Sunucudaki tüm oyuncu skinlerini döndür"
+polish = "Rotuj skiny wszystkich graczy na serwerze"

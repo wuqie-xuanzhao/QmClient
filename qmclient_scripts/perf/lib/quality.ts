@@ -24,6 +24,7 @@ import {
   type AttributionEntry,
   type FpsSummary,
   type Percentiles,
+  type TargetSettingsSnapshot,
   type Verdict,
   computeVerdict,
   entryDurationMs,
@@ -46,6 +47,40 @@ export interface ReportQuality {
   failed: boolean;
 }
 
+export const FPS_BASELINES = {
+  ingame_esc_open: { p99: 16.7, max: 33.4, menuMax: 12.0, onePctLow: 60 },
+  settings_assets_tab_switch: { p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
+  settings_tab_switch: { p99: 16.7, max: 33.4, menuMax: 8.0, onePctLow: 60 },
+} as const;
+
+export type FpsBaselineOperation = keyof typeof FPS_BASELINES;
+
+export function fpsBaselineVerdict(summary: FpsSummary): { operation: FpsBaselineOperation; passed: boolean; reason: string } | null {
+  if (!(summary.operation in FPS_BASELINES)) return null;
+  const operation = summary.operation as FpsBaselineOperation;
+  const baseline = FPS_BASELINES[operation];
+  const failures: string[] = [];
+  if (!summary.fpsOnePctLowAvailable) {
+    failures.push(`1pct_source=${summary.fpsOnePctLowSource}`);
+  } else if (summary.fpsOnePctLow < baseline.onePctLow) {
+    failures.push(`1pct_low=${summary.fpsOnePctLow.toFixed(1)}<${baseline.onePctLow}`);
+  }
+  if (summary.frameMsP99 > baseline.p99) {
+    failures.push(`p99=${summary.frameMsP99.toFixed(3)}>${baseline.p99}`);
+  }
+  if (summary.frameMsMax > baseline.max) {
+    failures.push(`max=${summary.frameMsMax.toFixed(3)}>${baseline.max}`);
+  }
+  if (summary.menuMsMax > baseline.menuMax) {
+    failures.push(`menu_max=${summary.menuMsMax.toFixed(3)}>${baseline.menuMax}`);
+  }
+  return {
+    operation,
+    passed: failures.length === 0,
+    reason: failures.join(' '),
+  };
+}
+
 export interface PerfBundleSummary {
   generatedAt: string;
   sourceFile: string;
@@ -61,42 +96,7 @@ export interface PerfBundleSummary {
     available: boolean;
     summaries: FpsSummary[];
   };
-  targetSettings: {
-    verdict: Verdict;
-    verdictAvailable: boolean;
-    spikeCount: number;
-    percentiles: Percentiles;
-    stableTextCoverage: {
-      acceptanceBlocked: boolean;
-      utilizationAvailable: boolean;
-      planCoverageAvailable: boolean;
-      planCandidateCount: number;
-      visibleCandidateCount: number;
-      unplannedVisibleCount: number;
-      keyMismatchCount: number;
-      candidateTotal: number;
-      hitCount: number;
-      reuseCount: number;
-      missCount: number;
-      staleCount: number;
-      hitRate: number;
-      reuseRate: number;
-      textNew: number;
-      textReused: number;
-      prebuildRemainingBeforeTarget: number;
-      planCollectionAvailable: boolean;
-      planCollectionComplete: boolean;
-      planCollectionUnitsTotal: number;
-      planCollectionUnitsDone: number;
-      planCollectionRemainingBeforeTarget: number;
-      planCollectionBudget: number;
-      planCollectionPhase: string;
-      planCollectionScope: string;
-      planCollectionOperation: string;
-      consistencyWarnings: string[];
-      samples: string[];
-    };
-  };
+  targetSettings: TargetSettingsSnapshot;
   assetsPreviewAdmission: {
     available: boolean;
     visibleFirstAvailable: boolean;
@@ -216,6 +216,7 @@ export interface PerfBundleSummary {
       windowEndFrame: number;
       frameMsP99: number;
       resourceUploadTokens: number;
+      maxTextureUploadMs: number;
       previewUploads: number;
       maxPreviewArtifactMs: number;
       maxPreviewDrawMs: number;
@@ -229,6 +230,10 @@ export interface PerfBundleSummary {
       maxTextContainerCreateMs: number;
       maxParagraphLayoutMs: number;
       paragraphBudgetBlocked: number;
+      topUiSectionStage: string;
+      topUiSectionPage: string;
+      topUiSectionFrame: number;
+      topUiSectionMs: number;
       dominantAttribution: string;
       culpritRank: {
         kind: string;
@@ -260,12 +265,24 @@ export function reportQuality(entries: PerfEntry[], diagnostics: ParseDiagnostic
   if (fps.length === 0) {
     warnings.push('missing fps_summary; settings acceptance is incomplete');
   }
+  const FpsBaselineFailures = fps
+    .map(summary => ({ summary, verdict: fpsBaselineVerdict(summary) }))
+    .filter((row): row is { summary: FpsSummary; verdict: NonNullable<ReturnType<typeof fpsBaselineVerdict>> } => row.verdict !== null && !row.verdict.passed);
+  for (const row of FpsBaselineFailures) {
+    warnings.push(`fps_baseline_failed: ${row.summary.operation} context=${row.summary.context || 'unknown'} page=${row.summary.page || 'unknown'} tab=${row.summary.tab || 'none'} ${row.verdict.reason}`);
+  }
   if (!hasOnlineTargetSettingsFpsSummary(entries)) {
     warnings.push('missing ingame/online operation window; settings acceptance is incomplete');
   }
   const targetSettings = targetSettingsSnapshot(entries);
   if (targetSettings.stableTextCoverage.acceptanceBlocked) {
     warnings.push('stable text coverage blocked settings acceptance');
+  }
+  if (targetSettings.stableTextCoverage.buildQueued > 0) {
+    warnings.push('stable text queued visible builds during target window');
+  }
+  if (targetSettings.stableTextCoverage.fallbackImmediate > 0) {
+    warnings.push('stable text used immediate fallback during target window');
   }
   const assetsVisibleReady = assetsVisibleReadySummary(entries);
   if (!assetsVisibleReady.available) {
@@ -312,11 +329,19 @@ export function reportQuality(entries: PerfEntry[], diagnostics: ParseDiagnostic
   if (budgetCorrelation.unattributedFailingWindowCount > 0) {
     warnings.push(`unattributed_spike: ${budgetCorrelation.unattributedFailingWindowCount} low-fps window(s) have no text/resource budget culprit`);
   }
+  const AggregateOnlyTargetFpsFailures = budgetCorrelation.windows.filter(window =>
+    (!window.fpsOnePctLowAvailable || window.fpsOnePctLow < 240) &&
+    window.culpritRank.length > 0 &&
+    !window.culpritRank.some(culprit => culprit.kind.startsWith('ui_section:')) &&
+    window.culpritRank.some(culprit => culprit.kind === 'ui_layout_or_render_total' && culprit.score > 0));
+  if (AggregateOnlyTargetFpsFailures.length > 0) {
+    warnings.push('target fps failure has only aggregate ui attribution');
+  }
   const FpsWindowMissingRealOnePctLow = budgetCorrelation.windows.some(window => !window.fpsOnePctLowAvailable || window.fpsOnePctLowSource !== 'real_sampled');
   if (FpsWindowMissingRealOnePctLow) {
     warnings.push('fps_1pct_low_missing_real_sampled: fps_summary windows without fps_1pct_source=real_sampled cannot pass the 240Hz gate');
   }
-  const Failed = budgetCorrelation.failingWindowCount > 0 || FpsWindowMissingRealOnePctLow;
+  const Failed = budgetCorrelation.failingWindowCount > 0 || FpsWindowMissingRealOnePctLow || AggregateOnlyTargetFpsFailures.length > 0 || FpsBaselineFailures.length > 0;
 
   return {
     sampleCount: frameEntries.length,

@@ -1564,6 +1564,9 @@ Current cut is invalid or already added
 Current file
 == Текущий файл
 
+Current queue: %s
+== Текущая очередь: %s
+
 Current rescue mode: %s
 == Текущий режим спасения: %s
 
@@ -2112,6 +2115,9 @@ Edit
 
 Edit audio pack
 == Редактировать аудиопакет
+
+Edit current queue
+== Редактировать текущую очередь
 
 Edit Entry
 == Редактировать запись
@@ -4633,6 +4639,9 @@ Prediction time
 Preparing demo playback
 == Подготовка воспроизведения демо
 
+Preset %d
+== Пресет %d
+
 Preset bar
 == Панель пресетов
 
@@ -4791,9 +4800,6 @@ Quads are used for background decoration
 
 Queue is empty
 == Очередь пуста
-
-Queue is full
-== Очередь заполнена
 
 Quick action menu for players
 == Меню быстрых действий для игроков
@@ -5317,8 +5323,8 @@ Room
 Room password
 == Закруглённые концы
 
-Rotate all maps
-== Сменить все карты
+Rotate all server player skins
+== Чередовать скины всех игроков сервера
 
 Round
 == Раунд
@@ -5521,6 +5527,9 @@ SecretKey
 See how much you act
 == Выбранный тип таймера не поддерживается вашим клиентом
 
+Select a preset first
+== Сначала выберите пресет
+
 Select all chat
 == Выбрать весь чат
 
@@ -5529,6 +5538,9 @@ Select button by touch
 
 Select export
 == Выбрать экспорт
+
+Select this preset to edit it
+== Выбрать этот пресет для редактирования
 
 Selected %d
 == Выбрано %d

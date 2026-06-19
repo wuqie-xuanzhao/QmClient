@@ -280,6 +280,7 @@ public:
 struct SLabelProperties
 {
 	float m_MaxWidth = -1;
+	bool m_DisallowNewline = false;
 	bool m_StopAtEnd = false;
 	bool m_EllipsisAtEnd = false;
 	bool m_EnableWidthCheck = true;
@@ -720,6 +721,7 @@ public:
 	CLabelResult DoLabel_AutoLineSize(const char *pText, float FontSize, int Align, CUIRect *pRect, float LineSize, const SLabelProperties &LabelProps = {}) const;
 
 	void DoLabel(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr) const;
+	void RenderLabelTextContainerAligned(const CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, int Align) const;
 	void DoLabelStreamed(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr, bool Render = true, bool *pTextContainerRecreated = nullptr) const;
 
 	/**

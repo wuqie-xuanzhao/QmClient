@@ -1564,6 +1564,9 @@ Current cut is invalid or already added
 Current file
 == 当前文件
 
+Current queue: %s
+== 当前队列：%s
+
 Current rescue mode: %s
 == 当前救援模式：%s
 
@@ -2112,6 +2115,9 @@ Edit
 
 Edit audio pack
 == 编辑音频包
+
+Edit current queue
+== 编辑当前队列
 
 Edit Entry
 == 编辑条目
@@ -4633,6 +4639,9 @@ Prediction time
 Preparing demo playback
 == 正在准备回放
 
+Preset %d
+== 预设 %d
+
 Preset bar
 == 预设栏
 
@@ -4791,9 +4800,6 @@ Quads are used for background decoration
 
 Queue is empty
 == 队列为空
-
-Queue is full
-== 队列已满
 
 Quick action menu for players
 == 对玩家快捷操作菜单
@@ -5317,8 +5323,8 @@ Room
 Room password
 == 房间密码
 
-Rotate all maps
-== 轮换全图
+Rotate all server player skins
+== 轮换服务器所有人皮肤
 
 Round
 == 回合数
@@ -5521,6 +5527,9 @@ SecretKey
 See how much you act
 == 看看你有多演
 
+Select a preset first
+== 先选择一个预设
+
 Select all chat
 == 全选聊天记录
 
@@ -5529,6 +5538,9 @@ Select button by touch
 
 Select export
 == 选择导出内容
+
+Select this preset to edit it
+== 选择此预设进行编辑
 
 Selected %d
 == 已选择 %d 项

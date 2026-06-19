@@ -1,3 +1,7 @@
+# 文档已归档
+
+> **文档已归档** — 本计划已收口为文本渲染语义稳定化与可观测性基础；runtime 性能验收未通过，后续性能优化以 [2026-06-18-ui-frame-pacing-full-performance-plan.md](../2026-06-18-ui-frame-pacing-full-performance-plan.md) 为准。
+
 # Text Rendering Stabilization and Observability Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -20,6 +24,25 @@
   - `CMenus::MenuTextElement` / `DoMenuLabelStreamed` 位于 `src/game/client/components/menus.cpp`，实现了 menu text pool、visible guard、prebuild plan 和 budget queue。
   - `CTextRender::FlushQmTextRuntimeBudgetLog` 位于 `src/engine/client/text.cpp`，记录 glyph/container 创建和上传成本。
   - `qmclient_scripts/perf/lib/stats.ts` 和 `report.ts` 已解析 `settings_text_*` 与 `perf/text`，但命中率仍可能把 pool-level hit 误当作 render-ready no-work hit。
+
+## Current Execution Status
+
+- 更新日期：2026-06-18
+- 实现状态：Task 1-10 的核心代码、测试和视觉清单已落地；Task 11 仍未完成验收。
+- 新构建运行证据：
+  - `cmake-build-release/DDNet.exe` 在 2026-06-18 20:43 之后的新构建中验证过 ingame Esc 打开不再崩溃。
+  - 新日志：`C:/Users/11054/AppData/Roaming/DDNet/dumps/QmClient_Perf/qm_perf_2026-06-18_20-43-39.log`。
+  - 新 report：`C:/Users/11054/AppData/Roaming/DDNet/dumps/QmClient_Perf/Perf_Report/qm_perf_2026-06-18_20-43-39_report.html`。
+- 当前 runtime 结论：
+  - 崩溃已收口，但性能验收未通过。
+  - `qm_perf_2026-06-18_20-43-39_summary.json` verdict 为 `FAIL`。
+  - `ingame_esc_open` 窗口出现 `frameMsMax=481.193ms`、`menuMsMax=324.659ms`。
+  - 多个 `settings_assets_tab_switch` 窗口仍有约 `25-28ms` 的 p99/max 峰值。
+  - warnings 包括 `stable text coverage blocked settings acceptance`、`stable text queued visible builds during target window`、`stable text used immediate fallback during target window`。
+- 当前架构判断：
+  - `CUi` canonical cached label 渲染、`CMenus` stable text pool、runtime text snapshot 和 perf report 口径的分层方向是合理的。
+  - 仍不完善的是首帧/切 tab 的工作调度边界：report 指向 `ui_layout_or_render_total`，说明剩余卡顿主要在 UI/layout/render 总工作，而不是单纯 text container create 或 glyph upload。
+  - 下一轮应把 assets tab switch / ingame Esc 首帧的非文本 UI work 进一步拆分归因，并让 target-window 的 visible build/fallback 在进入可见帧前完成或显式降级。
 
 ## Problem Statement
 
@@ -1132,7 +1155,7 @@ Run:
 
 ```pwsh
 cd qmclient_scripts/perf
-bun analyze.ts --latest
+bun analyze.ts
 ```
 
 Expected: report is generated and target stable text section shows `Render-Ready Hit Rate`, pool hit, queued builds, and immediate fallback separately. If no log exists, run the client with perf debug enabled first and repeat; do not mark runtime acceptance complete without a real log.
@@ -1280,7 +1303,7 @@ Then run:
 
 ```pwsh
 cd qmclient_scripts/perf
-bun analyze.ts --latest
+bun analyze.ts
 ```
 
 Expected:
@@ -1310,7 +1333,7 @@ Result: pass/fail with key output
 Scope: perf parser/report/quality tests
 Gaps: none or exact skipped checks
 
-Command: cd qmclient_scripts/perf && bun analyze.ts --latest
+Command: cd qmclient_scripts/perf && bun analyze.ts
 Result: pass/fail with report path
 Scope: runtime telemetry acceptance
 Gaps: if no real log was available, state that runtime acceptance is incomplete

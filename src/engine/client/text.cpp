@@ -1051,6 +1051,7 @@ class CTextRender : public IEngineTextRender
 	int m_QmPerfTextContainerUploads = 0;
 	double m_QmPerfTextContainerCreateMs = 0.0;
 	double m_QmPerfTextContainerUploadMs = 0.0;
+	SQmTextRuntimeBudgetSnapshot m_QmLastTextRuntimeBudgetSnapshot;
 
 	// TClient
 	std::vector<std::string> m_CustomFontFaces;
@@ -1083,11 +1084,24 @@ class CTextRender : public IEngineTextRender
 		return TextContainerWork >= 8;
 	}
 
+	void UpdateQmTextRuntimeBudgetSnapshot(int GlyphNew, int GlyphUploads, double GlyphRasterizeMs, double GlyphUploadMs)
+	{
+		m_QmLastTextRuntimeBudgetSnapshot.m_GlyphNew = GlyphNew;
+		m_QmLastTextRuntimeBudgetSnapshot.m_GlyphUploads = GlyphUploads;
+		m_QmLastTextRuntimeBudgetSnapshot.m_GlyphRasterizeMs = GlyphRasterizeMs;
+		m_QmLastTextRuntimeBudgetSnapshot.m_GlyphUploadMs = GlyphUploadMs;
+		m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerNew = m_QmPerfTextContainerNew;
+		m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerUploads = m_QmPerfTextContainerUploads;
+		m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerCreateMs = m_QmPerfTextContainerCreateMs;
+		m_QmLastTextRuntimeBudgetSnapshot.m_TextContainerUploadMs = m_QmPerfTextContainerUploadMs;
+		++m_QmLastTextRuntimeBudgetSnapshot.m_Frame;
+	}
+
 	void FlushQmTextRuntimeBudgetLog() override
 	{
-		if(!QmPerfEnabled() || m_pGlyphMap == nullptr)
+		if(m_pGlyphMap == nullptr)
 		{
-			ResetQmTextRuntimeBudgetCounters(true);
+			ResetQmTextRuntimeBudgetCounters(false);
 			return;
 		}
 		int GlyphNew = 0;
@@ -1095,6 +1109,12 @@ class CTextRender : public IEngineTextRender
 		double GlyphRasterizeMs = 0.0;
 		double GlyphUploadMs = 0.0;
 		m_pGlyphMap->ConsumeQmPerfGlyphStats(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs);
+		UpdateQmTextRuntimeBudgetSnapshot(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs);
+		if(!QmPerfEnabled())
+		{
+			ResetQmTextRuntimeBudgetCounters(false);
+			return;
+		}
 		if(!ShouldLogTextRuntimeBudget(GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs))
 		{
 			ResetQmTextRuntimeBudgetCounters(false);
@@ -1106,6 +1126,11 @@ class CTextRender : public IEngineTextRender
 			GlyphNew, GlyphUploads, GlyphRasterizeMs, GlyphUploadMs, m_QmPerfTextContainerNew, m_QmPerfTextContainerUploads, m_QmPerfTextContainerCreateMs, m_QmPerfTextContainerUploadMs);
 		QmPerfLogPayload("perf/text", aPayload);
 		ResetQmTextRuntimeBudgetCounters(false);
+	}
+
+	SQmTextRuntimeBudgetSnapshot QmTextRuntimeBudgetSnapshot() const override
+	{
+		return m_QmLastTextRuntimeBudgetSnapshot;
 	}
 
 	int GetFreeTextContainerIndex()

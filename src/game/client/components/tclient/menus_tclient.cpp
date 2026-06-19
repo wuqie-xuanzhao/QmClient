@@ -945,6 +945,16 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "tab=%d transition=%d", m_TClientSettingsTab, TransitionActive ? 1 : 0);
 		LogTClientPerfStageEx("tclient_tab", nullptr, ETClientSettingsPerfStage::TAB_SHELL, StageTimer.ElapsedMs(), TransitionActive, aExtra);
+		const char *pTabShellStage = nullptr;
+		switch(m_TClientSettingsTab)
+		{
+		case TCLIENT_TAB_BINDCHAT: pTabShellStage = "tclient_tab_3_shell"; break;
+		case TCLIENT_TAB_STATUSBAR: pTabShellStage = "tclient_tab_4_shell"; break;
+		case TCLIENT_TAB_INFO: pTabShellStage = "tclient_tab_5_shell"; break;
+		default: break;
+		}
+		if(pTabShellStage != nullptr)
+			LogTClientPerfStage(pTabShellStage, StageTimer.ElapsedMs(), TransitionActive, aExtra);
 		LogTClientPerfStage("tclient_tab_content", StageTimer.ElapsedMs(), TransitionActive, aExtra);
 	}
 

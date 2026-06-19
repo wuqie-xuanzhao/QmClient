@@ -1564,6 +1564,9 @@ Current cut is invalid or already added
 Current file
 == Ficheiro atual
 
+Current queue: %s
+== Fila atual: %s
+
 Current rescue mode: %s
 == Modo de resgate atual: %s
 
@@ -2112,6 +2115,9 @@ Edit
 
 Edit audio pack
 == Editar pacote de áudio
+
+Edit current queue
+== Editar fila atual
 
 Edit Entry
 == Editar Entrada
@@ -4633,6 +4639,9 @@ Prediction time
 Preparing demo playback
 == A preparar reprodução da demo
 
+Preset %d
+== Predefinição %d
+
 Preset bar
 == Barra de predefinições
 
@@ -4791,9 +4800,6 @@ Quads are used for background decoration
 
 Queue is empty
 == Fila vazia
-
-Queue is full
-== Fila cheia
 
 Quick action menu for players
 == Menu de ação rápida para jogadores
@@ -5317,8 +5323,8 @@ Room
 Room password
 == Palavra-passe da sala
 
-Rotate all maps
-== Rodar todos os mapas
+Rotate all server player skins
+== Alternar skins de todos os jogadores do servidor
 
 Round
 == Ronda
@@ -5521,6 +5527,9 @@ SecretKey
 See how much you act
 == Veja o quanto você representa
 
+Select a preset first
+== Selecione primeiro uma predefinição
+
 Select all chat
 == Selecionar todo o chat
 
@@ -5529,6 +5538,9 @@ Select button by touch
 
 Select export
 == Selecionar exportação
+
+Select this preset to edit it
+== Selecionar esta predefinição para editar
 
 Selected %d
 == Selecionados %d

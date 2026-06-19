@@ -317,7 +317,7 @@ TEST(AssetsPreviewScale, AssetCardHeaderPrioritizesRightSideControls)
 
 	EXPECT_NE(Source.find("constexpr float AssetCardHeaderMargin = 3.0f;"), std::string::npos);
 	EXPECT_NE(Source.find("constexpr float AssetCardHeaderControlMargin = 1.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("TitleRect.VSplitRight(24.0f, &TitleRect, &Shell.m_ActionButtonRect);"), std::string::npos);
+	EXPECT_NE(Source.find("TitleRect.VSplitRight(16.0f, &TitleRect, &Shell.m_ActionButtonRect);"), std::string::npos);
 	EXPECT_NE(Source.find("const float BadgeGap = 2.0f;"), std::string::npos);
 	EXPECT_NE(Source.find("const float TitleMinWidth = 12.0f;"), std::string::npos);
 	EXPECT_NE(Source.find("return pWorkshopAsset != nullptr ? Localize(\"Downloaded\") : Localize(\"Local\");"), std::string::npos);

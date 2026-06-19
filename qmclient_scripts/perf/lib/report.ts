@@ -3,7 +3,7 @@
 import { basename } from 'node:path';
 
 import type { PerfEntry } from './parse.ts';
-import { reportQuality, type ParseDiagnostics } from './quality.ts';
+import { FPS_BASELINES, fpsBaselineVerdict, reportQuality, type ParseDiagnostics } from './quality.ts';
 import {
   calcPercentiles, toTimeSeries, detectSpikes, histogram, pageBreakdown,
   complianceRate, computeVerdict, generateNarrative, isSamplingBiased, BUDGET,
@@ -98,6 +98,8 @@ function renderBudgetWindowCards(windows: BudgetCorrelationWindow[]): string {
           ${statCell('p99', formatMs(row.frameMsP99), p99Tone)}
           ${statCell('Top Culprit', culprit?.kind ?? 'none', culprit && culprit.score > 0 ? 'warn' : '')}
           ${statCell('Score', culprit ? culprit.score.toFixed(2) : '0.00', culprit && culprit.score > 0 ? 'warn' : '')}
+          ${statCell('Top UI Section', row.topUiSectionStage || 'none', row.topUiSectionMs > 0 ? 'warn' : '')}
+          ${statCell('Section Time', formatMs(row.topUiSectionMs), metricTone(row.topUiSectionMs, 4, 8))}
           ${statCell('Card Draw', formatMs(row.maxCardDrawMs), metricTone(row.maxCardDrawMs, 4, 8))}
           ${statCell('Preview Draw', formatMs(row.maxPreviewDrawMs), metricTone(row.maxPreviewDrawMs, 1, 4))}
           ${statCell('Metadata', formatMs(row.maxMetadataLayoutMs), metricTone(row.maxMetadataLayoutMs, 1, 4))}
@@ -109,6 +111,7 @@ function renderBudgetWindowCards(windows: BudgetCorrelationWindow[]): string {
           ${statCell('Telemetry', formatMs(row.maxTelemetryOverheadMs), metricTone(row.maxTelemetryOverheadMs, 1, 4))}
           ${statCell('Telemetry Flush', formatMs(row.maxTelemetryFlushMs), metricTone(row.maxTelemetryFlushMs, 1, 4))}
         </div>
+        <p class="culprit-note">${escapeHtml(row.topUiSectionStage ? `ui_section:${row.topUiSectionStage} section_ms=${row.topUiSectionMs.toFixed(3)} page=${row.topUiSectionPage} frame=${row.topUiSectionFrame}` : 'ui_section:none')}</p>
         <p class="culprit-note">${escapeHtml(topDetails)}</p>
         <p class="culprit-note">${escapeHtml(culpritList)}</p>
       </article>`;
@@ -200,8 +203,8 @@ export function generateReport(
   const targetSettingsVerdictClass = targetSettingsAcceptanceBlocked ? 'bad' :
     targetSettings.verdict === 'PASS' ? 'ok' : targetSettings.verdict === 'WARN' ? 'warn' : 'bad';
   const stableTextNarrative = targetSettings.stableTextCoverage.acceptanceBlocked
-    ? `static stable text coverage 未达标：visible candidate=${targetSettings.stableTextCoverage.visibleCandidateCount}，planned=${targetSettings.stableTextCoverage.planCandidateCount}，unplanned=${targetSettings.stableTextCoverage.unplannedVisibleCount}，key_mismatch=${targetSettings.stableTextCoverage.keyMismatchCount}，hit=${targetSettings.stableTextCoverage.hitCount}，reuse=${targetSettings.stableTextCoverage.reuseCount}，miss=${targetSettings.stableTextCoverage.missCount}，stale=${targetSettings.stableTextCoverage.staleCount}，hit rate=${targetSettings.stableTextCoverage.staticHitRate.toFixed(1)}%，reuse rate=${targetSettings.stableTextCoverage.staticReuseRate.toFixed(1)}%，text_new=${targetSettings.stableTextCoverage.textNew}，text_reused=${targetSettings.stableTextCoverage.textReused}，plan collection remaining=${targetSettings.stableTextCoverage.planCollectionRemainingBeforeTarget}，container prebuild remaining=${targetSettings.stableTextCoverage.prebuildRemainingBeforeTarget}，usage=${targetSettings.stableTextCoverage.utilizationAvailable ? 'available' : 'missing'}，plan coverage=${targetSettings.stableTextCoverage.planCoverageAvailable ? 'available' : 'missing'}，plan collection=${targetSettings.stableTextCoverage.planCollectionAvailable ? (targetSettings.stableTextCoverage.planCollectionComplete ? 'complete' : 'incomplete') : 'missing'}。collection remaining=0 只表示计划收集完成，container remaining=0 只表示已知计划的容器构建完成；最终仍以 visible miss/stale/text_new/unplanned/key_mismatch 为准。`
-    : `static stable text coverage 已覆盖 target settings / ingame Esc 验收窗口：visible candidate=${targetSettings.stableTextCoverage.visibleCandidateCount}，planned=${targetSettings.stableTextCoverage.planCandidateCount}，hit rate=${targetSettings.stableTextCoverage.staticHitRate.toFixed(1)}%，reuse rate=${targetSettings.stableTextCoverage.staticReuseRate.toFixed(1)}%，text_new=${targetSettings.stableTextCoverage.textNew}，text_reused=${targetSettings.stableTextCoverage.textReused}。dynamic snapshot hit rate=${targetSettings.stableTextCoverage.dynamicHitRate.toFixed(1)}%，paragraph cache hit rate=${textRuntimeBudget.paragraphCacheHitRate.toFixed(1)}%。`;
+    ? `static stable text coverage 未达标：visible candidate=${targetSettings.stableTextCoverage.visibleCandidateCount}，planned=${targetSettings.stableTextCoverage.planCandidateCount}，unplanned=${targetSettings.stableTextCoverage.unplannedVisibleCount}，key_mismatch=${targetSettings.stableTextCoverage.keyMismatchCount}，pool hit=${targetSettings.stableTextCoverage.poolHitCount}，render-ready hit=${targetSettings.stableTextCoverage.renderReadyHitCount}，build queued=${targetSettings.stableTextCoverage.buildQueued}，fallback immediate=${targetSettings.stableTextCoverage.fallbackImmediate}，reuse=${targetSettings.stableTextCoverage.reuseCount}，miss=${targetSettings.stableTextCoverage.missCount}，stale=${targetSettings.stableTextCoverage.staleCount}，render-ready hit rate=${targetSettings.stableTextCoverage.staticHitRate.toFixed(1)}%，reuse rate=${targetSettings.stableTextCoverage.staticReuseRate.toFixed(1)}%，text_new=${targetSettings.stableTextCoverage.textNew}，text_reused=${targetSettings.stableTextCoverage.textReused}，plan collection remaining=${targetSettings.stableTextCoverage.planCollectionRemainingBeforeTarget}，container prebuild remaining=${targetSettings.stableTextCoverage.prebuildRemainingBeforeTarget}，usage=${targetSettings.stableTextCoverage.utilizationAvailable ? 'available' : 'missing'}，plan coverage=${targetSettings.stableTextCoverage.planCoverageAvailable ? 'available' : 'missing'}，plan collection=${targetSettings.stableTextCoverage.planCollectionAvailable ? (targetSettings.stableTextCoverage.planCollectionComplete ? 'complete' : 'incomplete') : 'missing'}。pool hit 只说明 key 命中，render-ready hit 才说明本帧无需构建且可直接绘制；collection remaining=0 只表示计划收集完成，container remaining=0 只表示已知计划的容器构建完成。`
+    : `static stable text coverage 已覆盖 target settings / ingame Esc 验收窗口：visible candidate=${targetSettings.stableTextCoverage.visibleCandidateCount}，planned=${targetSettings.stableTextCoverage.planCandidateCount}，pool hit=${targetSettings.stableTextCoverage.poolHitCount}，render-ready hit=${targetSettings.stableTextCoverage.renderReadyHitCount}，build queued=${targetSettings.stableTextCoverage.buildQueued}，fallback immediate=${targetSettings.stableTextCoverage.fallbackImmediate}，render-ready hit rate=${targetSettings.stableTextCoverage.staticHitRate.toFixed(1)}%，reuse rate=${targetSettings.stableTextCoverage.staticReuseRate.toFixed(1)}%，text_new=${targetSettings.stableTextCoverage.textNew}，text_reused=${targetSettings.stableTextCoverage.textReused}。dynamic snapshot hit rate=${targetSettings.stableTextCoverage.dynamicHitRate.toFixed(1)}%，paragraph cache hit rate=${textRuntimeBudget.paragraphCacheHitRate.toFixed(1)}%。`;
   const hottestLocation = textAnalysis.topByLocation[0];
   const hottestReason = textAnalysis.topByReason[0];
   const hottestOperation = textAnalysis.topByOperation[0];
@@ -244,7 +247,7 @@ export function generateReport(
     </div>
     <div class="coverage-grid">
       <div class="coverage-card"><div class="coverage-label">Static Candidates</div><div class="coverage-value">${stableTextCoverage.staticCandidateTotal}</div></div>
-      <div class="coverage-card"><div class="coverage-label">Static Hit Rate</div><div class="coverage-value ${stableTextRateClass(stableTextCoverage.staticHitRate)}">${stableTextCoverage.staticHitRate.toFixed(1)}%</div></div>
+      <div class="coverage-card"><div class="coverage-label">Render-Ready Hit Rate</div><div class="coverage-value ${stableTextRateClass(stableTextCoverage.staticHitRate)}">${stableTextCoverage.staticHitRate.toFixed(1)}%</div></div>
       <div class="coverage-card"><div class="coverage-label">Static Reuse Rate</div><div class="coverage-value ${stableTextRateClass(stableTextCoverage.staticReuseRate)}">${stableTextCoverage.staticReuseRate.toFixed(1)}%</div></div>
       <div class="coverage-card"><div class="coverage-label">Dynamic Snapshot Text Coverage</div><div class="coverage-value">${stableTextCoverage.dynamicCandidateTotal}</div></div>
       <div class="coverage-card"><div class="coverage-label">Snapshot Hit Rate</div><div class="coverage-value">${stableTextCoverage.dynamicHitRate.toFixed(1)}%</div></div>
@@ -257,9 +260,12 @@ export function generateReport(
       <div class="coverage-card"><div class="coverage-label">Visible</div><div class="coverage-value">${stableTextCoverage.visibleCandidateCount}</div></div>
       <div class="coverage-card"><div class="coverage-label">Unplanned</div><div class="coverage-value ${stableTextCountClass(stableTextCoverage.unplannedVisibleCount)}">${stableTextCoverage.unplannedVisibleCount}</div></div>
       <div class="coverage-card"><div class="coverage-label">Key Mismatch</div><div class="coverage-value ${stableTextCountClass(stableTextCoverage.keyMismatchCount)}">${stableTextCoverage.keyMismatchCount}</div></div>
-      <div class="coverage-card"><div class="coverage-label">Hit Rate</div><div class="coverage-value ${stableTextRateClass(stableTextCoverage.hitRate)}">${stableTextCoverage.hitRate.toFixed(1)}%</div></div>
+      <div class="coverage-card"><div class="coverage-label">Pool Hit</div><div class="coverage-value">${stableTextCoverage.poolHitCount}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Queued Builds</div><div class="coverage-value ${stableTextCountClass(stableTextCoverage.buildQueued)}">${stableTextCoverage.buildQueued}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Immediate Fallback</div><div class="coverage-value ${stableTextCountClass(stableTextCoverage.fallbackImmediate)}">${stableTextCoverage.fallbackImmediate}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Render-Ready Hit Rate</div><div class="coverage-value ${stableTextRateClass(stableTextCoverage.hitRate)}">${stableTextCoverage.hitRate.toFixed(1)}%</div></div>
       <div class="coverage-card"><div class="coverage-label">Reuse Rate</div><div class="coverage-value ${stableTextRateClass(stableTextCoverage.reuseRate)}">${stableTextCoverage.reuseRate.toFixed(1)}%</div></div>
-      <div class="coverage-card"><div class="coverage-label">Hits</div><div class="coverage-value">${stableTextCoverage.hitCount}</div></div>
+      <div class="coverage-card"><div class="coverage-label">Render-Ready Hits</div><div class="coverage-value">${stableTextCoverage.renderReadyHitCount}</div></div>
       <div class="coverage-card"><div class="coverage-label">Reused</div><div class="coverage-value">${stableTextCoverage.reuseCount}</div></div>
       <div class="coverage-card"><div class="coverage-label">Miss</div><div class="coverage-value ${stableTextCountClass(stableTextCoverage.missCount)}">${stableTextCoverage.missCount}</div></div>
       <div class="coverage-card"><div class="coverage-label">Stale</div><div class="coverage-value ${stableTextCountClass(stableTextCoverage.staleCount)}">${stableTextCoverage.staleCount}</div></div>
@@ -352,6 +358,9 @@ export function generateReport(
     <p class="small-note">visible_first 只表示请求优先；visible_ready 才表示首屏可见卡片在展示前已 ready 或使用稳定尺寸 skeleton。</p>
   </div>`;
   const tabSwitchFpsRows = [...coldTabSwitchFps.map(summary => ({ kind: 'Cold', summary })), ...warmTabSwitchFps.map(summary => ({ kind: 'Warm', summary }))];
+  const fpsBaselineRows = fps
+    .map(summary => ({ summary, verdict: fpsBaselineVerdict(summary) }))
+    .filter((row): row is { summary: typeof row.summary; verdict: NonNullable<ReturnType<typeof fpsBaselineVerdict>> } => row.verdict !== null);
   const onePctLowTargetFps = 240;
   const tabSwitchFpsHasRealOnePctLow = tabSwitchFpsRows.length > 0 && tabSwitchFpsRows.every(row => row.summary.fpsOnePctLowAvailable);
   const tabSwitchFpsHasFallbackOnePctLow = tabSwitchFpsRows.some(row => !row.summary.fpsOnePctLowAvailable);
@@ -381,6 +390,36 @@ export function generateReport(
       </table>
     </div>`}
     <p class="small-note">1% Low Target 以真实 fps_1pct_low 为准；${tabSwitchFpsHasFallbackOnePctLow ? '旧日志缺字段时只显示 P99-derived 参考值，不计入通过。' : '当前窗口使用 real_sampled。'}P99 frame 应小于 ${BUDGET.h240.toFixed(3)}ms。</p>
+  </div>`;
+  const fpsBaselineHtml = `<div class="coverage-panel">
+    <div class="coverage-title">
+      <span>FPS Baseline Targets</span>
+      <span class="badge ${fpsBaselineRows.length === 0 ? 'warn' : fpsBaselineRows.every(row => row.verdict.passed) ? 'ok' : 'bad'}">${fpsBaselineRows.length === 0 ? 'NO TARGET WINDOWS' : fpsBaselineRows.every(row => row.verdict.passed) ? 'PASS' : 'FAIL'}</span>
+    </div>
+    ${fpsBaselineRows.length === 0 ? '<p class="small-note">缺少 ingame_esc_open / settings_assets_tab_switch / settings_tab_switch 的 fps_summary，无法做窗口级 FPS baseline 判定。</p>' : `<div class="table-scroll">
+      <table class="data-table compact">
+        <thead><tr><th>Operation</th><th>Context</th><th>Page</th><th>Tab</th><th>p99 Target</th><th>max Target</th><th>menu Target</th><th>1% Low Target</th><th>Current</th><th>Verdict</th></tr></thead>
+        <tbody>
+          ${fpsBaselineRows.map(row => {
+            const baseline = FPS_BASELINES[row.verdict.operation];
+            const current = `p99=${row.summary.frameMsP99.toFixed(3)}ms max=${row.summary.frameMsMax.toFixed(3)}ms menu=${row.summary.menuMsMax.toFixed(3)}ms 1pct=${row.summary.fpsOnePctLow.toFixed(1)} ${row.summary.fpsOnePctLowSource}`;
+            return `<tr>
+              <td class="mono">${escapeHtml(row.summary.operation)}</td>
+              <td class="mono">${escapeHtml(row.summary.context)}</td>
+              <td class="mono">${escapeHtml(row.summary.page)}</td>
+              <td class="mono">${escapeHtml(row.summary.tab)}</td>
+              <td class="num">${baseline.p99.toFixed(1)}ms</td>
+              <td class="num">${baseline.max.toFixed(1)}ms</td>
+              <td class="num">${baseline.menuMax.toFixed(1)}ms</td>
+              <td class="num">${baseline.onePctLow.toFixed(1)} FPS</td>
+              <td class="mono">${escapeHtml(current)}</td>
+              <td><span class="badge ${row.verdict.passed ? 'ok' : 'bad'}">${row.verdict.passed ? 'PASS' : escapeHtml(row.verdict.reason)}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`}
+    <p class="small-note">这些 baseline 是目标窗口验收阈值；240Hz 低帧 gate 仍单独保留，不会被此表放宽。</p>
   </div>`;
   const previewBudgetHtml = `<div class="coverage-panel">
     <div class="coverage-title">
@@ -479,6 +518,7 @@ export function generateReport(
     </div>
     <h3 class="mini-heading">Budget Window Statistics</h3>
     ${renderBudgetWindowCards(budgetCorrelation.windows)}
+    <p class="small-note">Graphics backend optimization is not implicated unless backend upload/render buckets dominate the target window. This report keeps backend, glyph/text, and UI/layout buckets separate.</p>
     <p class="small-note">窗口归因按 window_start_frame/window_end_frame 关联 fps、resource preview、adaptive budget 和 text runtime。正文只展示统计结论和 top culprit；原始行保留在 summary JSON/日志中。</p>
   </div>`;
 
@@ -790,6 +830,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
     <span class="section-num">fps</span>
     <h2>FPS 摘要</h2>
   </div>
+  ${fpsBaselineHtml}
   ${fps.length === 0 ? '<p class="body-text" style="color:var(--bad)">缺少 fps_summary；目标操作窗口样本不足以验收。请重新采集设置页进入、设置页切 tab、子 tab、Tee 滚动、游戏中 Esc 打开菜单。</p>' : `<div class="table-scroll"><table class="data-table fps-table">
     <thead><tr><th>Operation</th><th>Context</th><th>Page</th><th>Tab</th><th>Frames</th><th>FPS Avg</th><th>FPS Min</th><th>1% Low</th><th>FPS Max</th><th>Frame Avg</th><th>Frame P95</th><th>Frame P99</th><th>Frame Max</th><th>Menu Max</th><th>Cap</th></tr></thead>
     <tbody>

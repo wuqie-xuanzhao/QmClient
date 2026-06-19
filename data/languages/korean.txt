@@ -1564,6 +1564,9 @@ Current cut is invalid or already added
 Current file
 == 현재 파일
 
+Current queue: %s
+== 현재 대기열: %s
+
 Current rescue mode: %s
 == 현재 구조 모드: %s
 
@@ -2112,6 +2115,9 @@ Edit
 
 Edit audio pack
 == 오디오 팩 편집
+
+Edit current queue
+== 현재 대기열 편집
 
 Edit Entry
 == 항목 편집
@@ -4633,6 +4639,9 @@ Prediction time
 Preparing demo playback
 == 데모 재생 준비 중
 
+Preset %d
+== 프리셋 %d
+
 Preset bar
 == 프리셋 바
 
@@ -4791,9 +4800,6 @@ Quads are used for background decoration
 
 Queue is empty
 == 대기열이 비어 있음
-
-Queue is full
-== 대기열이 가득 참
 
 Quick action menu for players
 == 플레이어 빠른 작업 메뉴
@@ -5317,8 +5323,8 @@ Room
 Room password
 == 방 비밀번호
 
-Rotate all maps
-== 모든 맵 순환
+Rotate all server player skins
+== 서버의 모든 플레이어 스킨 순환
 
 Round
 == 라운드
@@ -5521,6 +5527,9 @@ SecretKey
 See how much you act
 == 당신이 얼마나 연기하는지 확인
 
+Select a preset first
+== 먼저 프리셋 선택
+
 Select all chat
 == 모든 채팅 선택
 
@@ -5529,6 +5538,9 @@ Select button by touch
 
 Select export
 == 내보내기 선택
+
+Select this preset to edit it
+== 이 프리셋을 선택해 편집
 
 Selected %d
 == %d개 선택됨

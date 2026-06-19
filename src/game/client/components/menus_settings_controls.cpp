@@ -3,6 +3,7 @@
 #include "menus_settings_controls.h"
 
 #include <base/math.h>
+#include <base/perf_timer.h>
 #include <base/system.h>
 
 #include <engine/graphics.h>
@@ -14,6 +15,7 @@
 #include <game/client/components/binds.h>
 #include <game/client/components/key_binder.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/ui_scrollregion.h>
@@ -31,6 +33,14 @@ inline constexpr float MARGIN = 10.0f;
 inline constexpr float BUTTON_HEIGHT = 20.0f;
 inline constexpr float BUTTON_SPACING = 2.0f;
 inline constexpr float BIND_OPTION_SPACING = 4.0f;
+
+namespace
+{
+	void LogControlsPerfStage(IClient *pClient, const char *pStage, double DurationMs, bool Force = false, const char *pExtra = nullptr)
+	{
+		QmPerfLogStage("perf/menu", pStage, DurationMs, Force, pClient, nullptr, nullptr, pExtra);
+	}
+}
 
 bool CBindSlotUiElement::operator<(const CBindSlotUiElement &Other) const
 {
@@ -150,12 +160,15 @@ bool CMenusSettingsControls::DoSettingsControlsScrollbarOption(const char *pText
 
 void CMenusSettingsControls::Render(CUIRect MainView)
 {
+	CPerfTimer ShellTimer;
 	if(m_BindOptionsDirty || GameClient()->m_KeyBinder.IsActive())
 	{
 		UpdateBindOptions();
 		m_BindOptionsDirty = false;
 	}
+	LogControlsPerfStage(GameClient()->Client(), "controls_tab_shell", ShellTimer.ElapsedMs(), false, "page=controls");
 
+	CPerfTimer InteractiveTimer;
 	CUIRect QuickSearch, SearchMatches, ResetToDefault;
 	MainView.HSplitBottom(BUTTON_HEIGHT, &MainView, &QuickSearch);
 	QuickSearch.VSplitRight(200.0f, &QuickSearch, &ResetToDefault);
@@ -206,6 +219,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 		GameClient()->m_Menus.PopupConfirm(Localize("Reset controls"), Localize("Are you sure that you want to reset the controls to their defaults?"),
 			Localize("Reset"), Localize("Cancel"), &CMenus::ResetSettingsControls);
 	}
+	LogControlsPerfStage(GameClient()->Client(), "controls_interactive_layer", InteractiveTimer.ElapsedMs(), false, "page=controls section=interactive");
 
 	vec2 ScrollOffset(0.0f, 0.0f);
 	static float s_PrevSettingsScrollY = 0.0f;
@@ -218,8 +232,10 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 
 	CUIRect LeftColumn, RightColumn;
 	MainView.VSplitMid(&LeftColumn, &RightColumn, MARGIN);
+	LogControlsPerfStage(GameClient()->Client(), "controls_text_cache", ShellTimer.ElapsedMs(), false, "page=controls section=text_cache");
 
 	// Left column
+	CPerfTimer BindListTimer;
 	RenderSettingsBlock(MeasureSettingsMouseHeight(), &LeftColumn,
 		Localize("Mouse"), "controls-mouse-title", nullptr, nullptr, std::bind_front(&CMenusSettingsControls::RenderSettingsMouse, this));
 	RenderSettingsBlock(MeasureSettingsJoystickHeight(), &LeftColumn,
@@ -236,6 +252,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	{
 		RenderSettingsBindsBlock(EBindOptionGroup::CUSTOM, &RightColumn, "controls-custom-title", Localize("Custom"));
 	}
+	LogControlsPerfStage(GameClient()->Client(), "controls_bind_list", BindListTimer.ElapsedMs(), false, "page=controls section=bind_list");
 
 	GameClient()->m_Menus.FinishSettingsScrollRegion(m_SettingsScrollRegion, ScrollFrame);
 	s_PrevSettingsScrollY = ScrollFrame.m_FinalOffsetY;

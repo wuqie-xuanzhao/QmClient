@@ -520,6 +520,7 @@ Current aspect ratio:
 Current aspect ratio: Show default
 Current cut is invalid or already added
 Current file
+Current queue: %s
 Current rescue mode: %s
 Current status
 Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
@@ -703,6 +704,7 @@ Echo the text in chat window
 Edge margin
 Edit
 Edit audio pack
+Edit current queue
 Edit Entry
 Edit HUD
 Edit note
@@ -1543,6 +1545,7 @@ Prediction Margin
 Prediction margin
 Prediction time
 Preparing demo playback
+Preset %d
 Preset bar
 Press a key…
 Press ESC to close. Watch the scale-in spring on open.
@@ -1596,7 +1599,6 @@ QmClient Settings
 QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 Queue is empty
-Queue is full
 Quick action menu for players
 Quickly locate feature modules
 Quit
@@ -1771,7 +1773,7 @@ RNNoise not integrated in current build, will fallback to simple noise reduction
 Rollback rate
 Room
 Room password
-Rotate all maps
+Rotate all server player skins
 Round
 Round %d/%d
 Rounded caps
@@ -1839,9 +1841,11 @@ Seconds
 SecretId
 SecretKey
 See how much you act
+Select a preset first
 Select all chat
 Select button by touch
 Select export
+Select this preset to edit it
 Selected %d
 Selected button not visible
 Selected candidate

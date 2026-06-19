@@ -191,7 +191,7 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 
 ### 默认构建口径
 
-- 运行/测试目录默认是 `cmake-build-release`
+- 运行/测试目录默认是 `cmake-build-release`，Windows MSVC Release 构建默认生成 PDB 符号文件用于崩溃符号化
 - 严格调试检查目录默认是 `cmake-build-debug` / `cmake-build-analyze`
 - Windows 默认通过 `qmclient_scripts/cmake-windows.cmd` 进入 CMake
 - 在 Windows 宿主上验证 Linux 构建时，推荐通过 WSL Ubuntu + GCC/G++ + CMake + Ninja 走原生 Linux 口径，并使用独立目录（例如 `cmake-build-linux-release`），不要复用 Windows 的 `cmake-build-release`

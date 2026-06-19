@@ -1564,6 +1564,9 @@ Current cut is invalid or already added
 Current file
 == Geçerli dosya
 
+Current queue: %s
+== Geçerli sıra: %s
+
 Current rescue mode: %s
 == Mevcut kurtarma modu: %s
 
@@ -2112,6 +2115,9 @@ Edit
 
 Edit audio pack
 == Ses paketini düzenle
+
+Edit current queue
+== Geçerli sırayı düzenle
 
 Edit Entry
 == Girişi Düzenle
@@ -4633,6 +4639,9 @@ Prediction time
 Preparing demo playback
 == Demo oynatımı hazırlanıyor
 
+Preset %d
+== Ön ayar %d
+
 Preset bar
 == Ön ayar çubuğu
 
@@ -4791,9 +4800,6 @@ Quads are used for background decoration
 
 Queue is empty
 == Sıra boş
-
-Queue is full
-== Sıra dolu
 
 Quick action menu for players
 == Oyuncular için hızlı işlem menüsü
@@ -5317,8 +5323,8 @@ Room
 Room password
 == Oda şifresi
 
-Rotate all maps
-== Tüm haritaları döndür
+Rotate all server player skins
+== Sunucudaki tüm oyuncu skinlerini döndür
 
 Round
 == Tur
@@ -5521,6 +5527,9 @@ SecretKey
 See how much you act
 == Ne kadar oynadığını gör
 
+Select a preset first
+== Önce bir ön ayar seç
+
 Select all chat
 == Tüm sohbeti seç
 
@@ -5529,6 +5538,9 @@ Select button by touch
 
 Select export
 == Dışa aktarımı seç
+
+Select this preset to edit it
+== Düzenlemek için bu ön ayarı seç
 
 Selected %d
 == %d seçildi

@@ -430,10 +430,10 @@ namespace
 
 	constexpr float AssetsCardTitleFontSize = 9.0f;
 	constexpr float AssetsCardAuthorFontSize = 7.0f;
-	constexpr float AssetsCardStatusTagFontSize = 7.5f;
-	constexpr float AssetsCardStatusTagMinWidth = 34.0f;
-	constexpr float AssetsCardStatusTagMaxWidth = 52.0f;
-	constexpr float AssetsCardStatusTagHorizontalPadding = 4.0f;
+	constexpr float AssetsCardStatusTagFontSize = 6.0f;
+	constexpr float AssetsCardStatusTagMinWidth = 24.0f;
+	constexpr float AssetsCardStatusTagMaxWidth = 36.0f;
+	constexpr float AssetsCardStatusTagHorizontalPadding = 2.0f;
 	constexpr ColorRGBA AssetsCardStatusReadyColor = ColorRGBA(0.18f, 0.62f, 0.32f, 0.88f);
 	constexpr ColorRGBA AssetsCardStatusNetworkColor = ColorRGBA(0.35f, 0.45f, 0.56f, 0.86f);
 
@@ -473,7 +473,13 @@ namespace
 	{
 		SSettingsAssetsCardHydrationScheduler Scheduler;
 		Scheduler.m_TabSwitchShellOnlyFrame = AssetsTabSwitchFirstFrame;
-		Scheduler.m_MetadataBudget = AssetsTabSwitchFirstFrame ? maximum(1, minimum(VisibleCardCount, MetadataLayoutTokens)) : maximum(0, minimum(VisibleCardCount, MetadataLayoutTokens));
+		if(AssetsTabSwitchFirstFrame)
+		{
+			Scheduler.m_MetadataBudget = maximum(1, minimum(VisibleCardCount, MetadataLayoutTokens));
+			Scheduler.m_PreviewBudget = 0;
+			return Scheduler;
+		}
+		Scheduler.m_MetadataBudget = maximum(0, minimum(VisibleCardCount, MetadataLayoutTokens));
 		Scheduler.m_PreviewBudget = AssetsTabSwitchCooldownActive ? 0 : maximum(0, minimum(VisibleCardCount, PreviewArtifactTokens));
 		return Scheduler;
 	}
@@ -4689,6 +4695,12 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	const bool AssetsTabSwitchFirstFrame = s_AssetsTabSwitchFirstFrame > 0;
 	const bool AssetsTabSwitchCooldownActive = s_AssetsTabSwitchCooldownFrames > 0;
 	const bool AssetsShellOnlyFrame = AssetsTabSwitchFirstFrame || AssetsPageSwitchActive;
+	if(AssetsTabSwitchFirstFrame)
+	{
+		char aShellFirstExtra[160];
+		str_format(aShellFirstExtra, sizeof(aShellFirstExtra), "operation=settings_assets_tab_switch page=settings:assets tab=%s frame=%" PRIu64 " tab_switch_shell_only=1", AssetsSettingsTabName(s_CurCustomTab), Client()->PerfFrame());
+		LogAssetsFramePerfStage("assets_tab_switch_shell_first", 0.0, true, aShellFirstExtra);
+	}
 	SSettingsAdaptiveBudgetInput AdaptiveBudgetInput;
 	AdaptiveBudgetInput.m_FrameId = Client()->PerfFrame();
 	str_copy(AdaptiveBudgetInput.m_aOperation, SettingsPerfActiveOperation(), sizeof(AdaptiveBudgetInput.m_aOperation));
@@ -5133,7 +5145,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	constexpr float AssetCardHeaderHeightWithAuthor = 40.0f;
 	constexpr float AssetCardHeaderMargin = 3.0f;
 	constexpr float AssetCardHeaderControlMargin = 1.0f;
-	constexpr float AssetCardHeaderControlHeight = AssetCardHeaderHeightSingleLine - AssetCardHeaderMargin * 2.0f - AssetCardHeaderControlMargin * 2.0f;
+	constexpr float AssetCardHeaderControlHeight = 18.0f;
 	constexpr float AssetCardTextReserveSingleLine = 26.0f;
 	constexpr float AssetCardTextReserveWithAuthor = 40.0f;
 	auto LayoutAssetsCardShell = [&](const CUIRect &CardRect, bool HasActionButton, const char *pStatusLabel, bool ShowLocalOnlyBadge, bool ShowAuthorRow) {
@@ -5149,7 +5161,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		if(HasActionButton)
 		{
 			Shell.m_HasActionButton = true;
-			TitleRect.VSplitRight(24.0f, &TitleRect, &Shell.m_ActionButtonRect);
+			TitleRect.VSplitRight(16.0f, &TitleRect, &Shell.m_ActionButtonRect);
 			TitleRect.VSplitRight(minimum(3.0f, TitleRect.w), &TitleRect, nullptr);
 			Shell.m_ActionButtonRect.Margin(AssetCardHeaderControlMargin, &Shell.m_ActionButtonRect);
 			const float ControlHeight = minimum(AssetCardHeaderControlHeight, Shell.m_ActionButtonRect.h);
