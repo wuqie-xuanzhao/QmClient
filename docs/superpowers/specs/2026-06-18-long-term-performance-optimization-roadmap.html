@@ -160,10 +160,11 @@
         <a href="#ingame-rendering">⑤ 第三支柱：游戏内 FPS 与图形后端 PRD/spec</a>
         <a href="#text">⑥ 第四支柱：文本渲染优化</a>
         <a href="#first-frame">⑦ UI 首帧专项指南</a>
-        <a href="#phases">⑧ 分阶段推进</a>
-        <a href="#contracts">⑨ 遥测与测试合同</a>
-        <a href="#risks">⑩ 风险与边界</a>
-        <a href="#refs">⑪ 引用文档</a>
+        <a href="#latest-log">⑧ 最新实跑日志结论</a>
+        <a href="#phases">⑨ 分阶段推进</a>
+        <a href="#contracts">⑩ 遥测与测试合同</a>
+        <a href="#risks">⑪ 风险与边界</a>
+        <a href="#refs">⑫ 引用文档</a>
       </div>
     </header>
 
@@ -796,7 +797,122 @@ system=perf/optimizer
     </section>
 
     <section class="card">
-      <h2 id="phases">⑧ 分阶段推进</h2>
+      <h2 id="latest-log">⑧ 最新实跑日志结论与下一步计划（2026-06-19）</h2>
+      <p class="muted">本节基于 <code>qm_perf_2026-06-19_21-51-10.log</code> 生成的 report / summary。报告路径：<code>%APPDATA%/DDNet/dumps/QmClient_Perf/Perf_Report/qm_perf_2026-06-19_21-51-10_report.html</code>。结论只针对这份日志，不替代后续 A/B 复测。</p>
+
+      <h3>7.1 当前结论：调度器在运行，但没有覆盖最重同步 UI</h3>
+      <div class="note warn">
+        <strong>关键判断：</strong>现有 adaptive scheduler 并未失效。日志中 <code>adaptiveBudget.available=true</code>、<code>eventCount=2478</code>、<code>framePressureCount=110</code>，说明它确实在压缩资源、上传、文本预构建和 server-info snapshot text 等 token 化工作。低帧仍然发生，是因为最重成本落在 immediate-mode <code>Render()</code> 的同步 UI 绘制路径，而这些路径没有消费 scheduler token。
+      </div>
+      <table>
+        <thead><tr><th>对象</th><th>当前受调度器控制</th><th>当前未被调度器控制</th><th>影响</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>assets</code> / resource preview</td>
+            <td>metadata、preview artifact、texture upload、decode start、visible/prefetch/background token</td>
+            <td>少量 shell / visible card draw 仍需要局部检查</td>
+            <td>本轮不是主要瓶颈；<code>settings:assets</code> 仍有首帧可见纹理未 ready 风险。</td>
+          </tr>
+          <tr>
+            <td>stable text prebuild</td>
+            <td>plan collection、text container prebuild、glyph/paragraph token</td>
+            <td>visible render 遇到未 ready 文本时的 immediate fallback</td>
+            <td><code>fallbackImmediate=36903</code>，是验收 blocker，但不是本轮 300ms 级尖峰主因。</td>
+          </tr>
+          <tr>
+            <td>ingame server info text</td>
+            <td>snapshot text budget、frame pressure token</td>
+            <td>页面布局和首帧 tab/button chrome</td>
+            <td>ESC 后续帧仍有 <code>ingame_text_runtime_drain</code>，但最大尖峰来自按钮列同步绘制。</td>
+          </tr>
+          <tr>
+            <td>settings / QmClient / TClient immediate UI</td>
+            <td>基本未接入，只能被外层 report 观察</td>
+            <td><code>general_page_total</code>、<code>function_tab_total</code>、<code>visual_tab_total</code>、<code>ingame_esc_button_column</code></td>
+            <td>本轮 1% low 低于 120Hz 的主因。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>7.2 低帧窗口复盘</h3>
+      <p>本轮 report 判定为 <span class="badge bad">FAIL</span>：总样本 <code>49505</code> 帧，<code>323</code> 个 &gt;16.67ms spike，<code>36</code> 个 FPS window 中 <code>20</code> 个低于 240Hz，其中 <code>19</code> 个窗口低于 120Hz。所有低于 120Hz 的窗口都被归到 <code>ui_section:render_body</code>，进一步看同帧事件后，真实热点如下。</p>
+      <table>
+        <thead><tr><th>窗口</th><th>1% low / p99</th><th>窗口内最大子阶段</th><th>判断</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>ingame_esc_open</code></td>
+            <td><span class="badge bad">3.3 FPS</span> / <code>299.4ms</code></td>
+            <td><code>ingame_esc_button_column=149.6ms</code>，后续 <code>ingame_text_runtime_drain=26.7ms</code></td>
+            <td>ESC 首帧按钮列仍是同步 UI；server-info text budget 有作用，但不能限制按钮列。</td>
+          </tr>
+          <tr>
+            <td><code>settings:general</code></td>
+            <td><span class="badge bad">6.3 FPS</span> / <code>158.2ms</code></td>
+            <td><code>general_page_total=156.2ms</code>，已拆出的子阶段只有 <code>general_auto_record_core=3.2ms</code>、<code>general_auto_record_extended=2.4ms</code></td>
+            <td>General 页缺更细粒度 stage；直接优化总桶风险高。</td>
+          </tr>
+          <tr>
+            <td><code>settings:qmclient</code> functions</td>
+            <td><span class="badge bad">7.7 FPS</span> / <code>130.3ms</code></td>
+            <td><code>function_tab_total=128.6ms</code>，其中 <code>translate=50.7ms</code>、<code>pie_menu_controls=39.9ms</code>、<code>block_words_controls=14.1ms</code></td>
+            <td>已有 <code>function_first_frame_light_path</code>，但覆盖范围和触发时机不足。</td>
+          </tr>
+          <tr>
+            <td><code>settings:qmclient</code> visuals</td>
+            <td><span class="badge bad">9.0 FPS</span> / <code>111.5ms</code></td>
+            <td><code>visual_tab_total=97.4ms</code>，其中 <code>focus_mode=32.7ms</code>、<code>laser=24.2ms</code></td>
+            <td>视觉模块需要和 functions 一样引入首帧轻量路径。</td>
+          </tr>
+          <tr>
+            <td><code>settings:tclient</code></td>
+            <td><span class="badge bad">8.0-42.2 FPS</span> / <code>23.7-125.5ms</code></td>
+            <td>可见细分中 <code>tclient_settings_left_visual_total=38.5ms</code>、<code>tclient_settings_right_column=20.6ms</code>；部分 tab 缺细分 stage</td>
+            <td>先补 telemetry，再做左右列分帧展开。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>7.3 报表与 telemetry 下一步</h3>
+      <p>当前 report 能把 FPS window 归到 <code>render_body</code>，但还没有明确告诉读者“这个成本是否受 scheduler 控制”。下一步应把调度器覆盖率变成一等信号。</p>
+      <table>
+        <thead><tr><th>新增口径</th><th>目的</th><th>示例字段</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>scheduler_coverage</code></td>
+            <td>区分窗口内成本是否进入 adaptive token 管理。</td>
+            <td><code>covered</code> / <code>partial</code> / <code>uncovered</code></td>
+          </tr>
+          <tr>
+            <td><code>budgeted_work_ms</code></td>
+            <td>汇总 assets、text prebuild、glyph/upload、demo metadata 等可预算工作。</td>
+            <td><code>text_ms</code>、<code>resource_upload_ms</code>、<code>metadata_layout_ms</code></td>
+          </tr>
+          <tr>
+            <td><code>immediate_render_ms</code></td>
+            <td>汇总 <code>general_page_total</code>、<code>function_tab_total</code>、<code>ingame_esc_button_column</code> 等未预算同步 UI。</td>
+            <td><code>top_immediate_stage</code>、<code>top_immediate_ms</code></td>
+          </tr>
+          <tr>
+            <td><code>first_frame_policy</code></td>
+            <td>标记首帧是否执行 shell-only / light path。</td>
+            <td><code>shell_only=1</code>、<code>light_path=1</code>、<code>deferred_modules=N</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>7.4 下一步计划：从资源调度升级到 UI 首帧调度</h3>
+      <ol>
+        <li><strong>第一刀：report 诊断口径</strong>。扩展 <code>qmclient_scripts/perf</code>，让低帧窗口显示 <code>budgeted_work</code>、<code>immediate_render</code> 和 <code>scheduler_coverage</code>。验收：同一份日志能直接指出 <code>ingame_esc_button_column</code>、<code>general_page_total</code> 等属于 <code>uncovered immediate_render</code>。</li>
+        <li><strong>第二刀：ESC 首帧 shell-only</strong>。打开 ESC 的第 1 帧只画 tab、标题、核心按钮和已 ready 文本；secondary utility、tooltip、复杂状态检查、server-info 延后到后续帧。验收：<code>ingame_esc_open</code> 1% low 高于 120Hz，p99 低于 16.7ms，<code>ingame_esc_button_column</code> 不再出现百毫秒级耗时。</li>
+        <li><strong>第三刀：General 页先拆桶</strong>。给 language、client、theme、file buttons、auto-record、misc section 分别加 stage；只有拆出真实热点后再做首帧轻量路径。验收：<code>general_page_total</code> 不再是唯一可见热点。</li>
+        <li><strong>第四刀：QmClient functions / visuals 模块化 light path</strong>。把 <code>translate</code>、<code>pie_menu</code>、<code>block_words</code>、<code>focus_mode</code>、<code>laser</code> 接入模块级首帧策略；首帧只画 card shell、标题和核心开关，预览、长列表、复杂输入后移。验收：<code>function_tab_total</code>、<code>visual_tab_total</code> 首帧低于 8ms。</li>
+        <li><strong>第五刀：TClient / DDNet / Controls 补齐 coverage</strong>。未拆桶的低帧窗口先补 stage，再决定是否分帧展开。验收：report 不再只显示 <code>render_body</code> 或 <code>settings_page_content</code>。</li>
+        <li><strong>第六刀：stable text 单独收口</strong>。修 <code>key_mismatch</code> 与 <code>unplannedVisibleCount</code>，减少 <code>fallbackImmediate</code>。验收：<code>renderReadyHitRate</code> 上升，<code>fallbackImmediate</code> 明显下降；不得把文本池 blocker 和 UI 首帧降温混在同一补丁。</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2 id="phases">⑨ 分阶段推进</h2>
       <p class="muted">长期不等于无序。按"先度量、再缓存、再批处理、最后 backend"的顺序推进。</p>
 
       <h3>Phase A：量化系统升级（0–2 个月）</h3>
@@ -847,7 +963,7 @@ system=perf/optimizer
     </section>
 
     <section class="card">
-      <h2 id="contracts">⑨ 遥测与测试合同</h2>
+      <h2 id="contracts">⑩ 遥测与测试合同</h2>
       <p class="muted">每个优化方向必须有可验证的遥测名称和测试守护。</p>
 
       <h3>9.1 新增/扩展的 C++ telemetry</h3>
@@ -901,7 +1017,7 @@ system=perf/optimizer
     </section>
 
     <section class="card">
-      <h2 id="risks">⑩ 风险与边界</h2>
+      <h2 id="risks">⑪ 风险与边界</h2>
       <ul>
         <li><strong>QmUI 不要变成 retained-mode 大框架</strong>：保留 immediate-mode 的灵活性，只在必要处叠加缓存；node 生命周期必须可预测，避免 dangling 状态。</li>
         <li><strong>CUI 基础路径谨慎改动</strong>：涉及 <code>DoLabel</code>、<code>DoButtonLogic</code>、<code>CScrollRegion</code> 等高频上游 API 时，默认走外围适配，确需改动时要有更小补丁、更强测试和 rollback 方案。</li>
@@ -912,7 +1028,7 @@ system=perf/optimizer
     </section>
 
     <section class="card">
-      <h2 id="refs">⑪ 引用文档</h2>
+      <h2 id="refs">⑫ 引用文档</h2>
       <ul>
         <li>短期收口计划：<code>docs/superpowers/plans/2026-06-18-ui-frame-pacing-full-performance-plan.md</code></li>
         <li>页面性能框架：<code>docs/superpowers/specs/archive/2026-06-08-页面性能优化框架设计.md</code></li>

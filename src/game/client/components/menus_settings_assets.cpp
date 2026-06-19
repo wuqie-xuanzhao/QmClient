@@ -4716,7 +4716,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	AdaptiveBudgetInput.m_PostScrollRecoveryFrames = ResourceFrameContext.m_PostScrollRecoveryFrames;
 	AdaptiveBudgetInput.m_BackgroundBacklog = (int)vDecodeQueue.size() + (int)vReadyQueue.size();
 	AdaptiveBudgetInput.m_WindowActive = WindowActive;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("assets", AdaptiveBudgetInput, m_AssetsAdaptiveBudgetState);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::Assets, "assets", AdaptiveBudgetInput);
 	(void)CurrentSettingsUiFrameBudget();
 	const bool AssetsScrollPressure = ResourceFrameContext.m_ScrollActive || ResourceFrameContext.m_JumpScrollActive;
 	const bool AssetsContentWarmupBlocked = AssetsShellOnlyFrame || AssetsScrollPressure;

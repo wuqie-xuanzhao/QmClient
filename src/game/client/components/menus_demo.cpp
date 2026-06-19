@@ -1265,7 +1265,7 @@ void CMenus::EnsureAllDemoDates()
 	Input.m_TargetFrameMs = 8.333f;
 	Input.m_BackgroundBacklog = (int)m_vDemos.size();
 	Input.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("demo_browser", Input, m_DemoBrowserAdaptiveBudgetState);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::DemoBrowser, "demo_browser", Input);
 	AdvanceDemoBrowserMetadata(0, maximum(1, AdaptiveBudget.m_DemoMetadataTokens), "ensure_dates");
 }
 
@@ -2340,7 +2340,7 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 		(m_DemoHeaderFetchComplete ? 0 : maximum(0, (int)m_vDemos.size() - (int)m_DemoHeaderFetchCursor)) +
 		(m_DemoDateFetchComplete ? 0 : maximum(0, (int)m_vDemos.size() - (int)m_DemoDateFetchCursor));
 	AdaptiveBudgetInput.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("demo_browser", AdaptiveBudgetInput, m_DemoBrowserAdaptiveBudgetState);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::DemoBrowser, "demo_browser", AdaptiveBudgetInput);
 	const bool MetadataBackgroundAllowed = AdaptiveBudget.m_BackgroundTokens > 0 && !AdaptiveBudgetInput.m_ScrollActive && !AdaptiveBudgetInput.m_JumpScrollActive;
 	const int DemoHeaderBudget = g_Config.m_BrDemoFetchInfo && !BrowsingScreenshots ?
 					     (MetadataBackgroundAllowed ? maximum(1, AdaptiveBudget.m_DemoMetadataTokens / 2) : minimum(AdaptiveBudget.m_DemoMetadataTokens, maximum(0, EndVisibleIndex - FirstVisibleIndex))) :

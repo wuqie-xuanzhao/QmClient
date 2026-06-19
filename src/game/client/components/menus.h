@@ -32,6 +32,7 @@
 #include <game/client/components/settings_resource_jobs.h>
 #include <game/client/components/skins7.h>
 #include <game/client/components/tclient/warlist.h>
+#include <game/client/frame_scheduler.h>
 #include <game/client/lineinput.h>
 #include <game/client/ui.h>
 #include <game/voting.h>
@@ -1197,7 +1198,6 @@ protected:
 	bool m_DemoHeaderFetchComplete = true;
 	bool m_DemoDateFetchComplete = true;
 	bool m_DemoBrowserMetadataBackgroundAllowed = true;
-	SSettingsAdaptiveBudgetState m_DemoBrowserAdaptiveBudgetState;
 	int m_Speed = 4;
 	bool m_StartPaused = false;
 
@@ -2183,8 +2183,7 @@ private:
 	SSettingsScrollRegionFrame BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY);
 	void FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsScrollRegionFrame &Frame, const CUIRect *pEndRect = nullptr, int Page = -1, bool TrackScrollActive = true);
 	void PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &Input);
-	SSettingsAdaptiveBudgetOutput ComputeSettingsUiFrameSchedulerBudget(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State);
-	SSettingsAdaptiveBudgetOutput BeginSettingsUiFrameScheduler(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State);
+	SSettingsAdaptiveBudgetOutput BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer Consumer, const char *pSource, SSettingsAdaptiveBudgetInput Input);
 	bool MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, int StrLen, const CTextCursor *pReadCursor);
 	bool RequestMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, int StrLen, const CTextCursor *pReadCursor);
 	void QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor);
@@ -2195,10 +2194,7 @@ private:
 	SSettingsRuntimeMetadata m_SettingsRuntimeMetadata;
 	SSettingsWarmupFrameBudget m_SettingsFrameBudget;
 	SSettingsAdaptiveBudgetOutput m_CurrentSettingsUiFrameBudget;
-	SSettingsAdaptiveBudgetState m_SettingsTextAdaptiveBudgetState;
-	SSettingsAdaptiveBudgetState m_IngameTextAdaptiveBudgetState;
 	SSettingsAdaptiveBudgetOutput m_IngameTextFrameBudget;
-	SSettingsAdaptiveBudgetState m_AssetsAdaptiveBudgetState;
 	float m_TextContainerCreateMsEwma = 0.0f;
 	float m_TextContainerUploadMsEwma = 0.0f;
 	float m_GlyphRasterizeMsEwma = 0.0f;

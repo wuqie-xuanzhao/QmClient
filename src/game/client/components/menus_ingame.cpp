@@ -32,6 +32,7 @@
 #include <game/client/components/countryflags.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/touch_controls.h>
+#include <game/client/frame_scheduler.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
@@ -1445,7 +1446,9 @@ void CMenus::PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView)
 	TextBudgetInput.m_TargetFrameMs = 8.333f;
 	TextBudgetInput.m_BackgroundBacklog = maximum(1, (int)m_SnapshotTextPending.size() + 1);
 	TextBudgetInput.m_VisibleWaiting = 1;
-	m_IngameTextFrameBudget = ComputeSettingsUiFrameSchedulerBudget("ingame_server_info_snapshot_text", TextBudgetInput, m_IngameTextAdaptiveBudgetState);
+	PrepareSettingsAdaptiveBudgetInput(TextBudgetInput);
+	m_IngameTextFrameBudget = GameClient()->FrameScheduler()->ComputeBudget(EFrameSchedulerConsumer::IngameServerInfo, TextBudgetInput);
+	LogSettingsAdaptiveBudget("ingame_server_info_snapshot_text", TextBudgetInput, m_IngameTextFrameBudget);
 	m_IngameTextFrameBudget.m_TextContainerTokens = maximum(1, m_IngameTextFrameBudget.m_TextContainerTokens);
 
 	CServerInfo CurrentServerInfo;
@@ -1756,7 +1759,9 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextBudgetInput.m_TargetFrameMs = 8.333f;
 	TextBudgetInput.m_BackgroundBacklog = maximum(1, (int)m_SnapshotTextPending.size() + (m_IngameMotdParagraphCache.m_Pending ? 1 : 0));
 	TextBudgetInput.m_VisibleWaiting = m_IngameMotdParagraphCache.m_Pending ? 2 : 1;
-	m_IngameTextFrameBudget = ComputeSettingsUiFrameSchedulerBudget("ingame_server_info_snapshot_text", TextBudgetInput, m_IngameTextAdaptiveBudgetState);
+	PrepareSettingsAdaptiveBudgetInput(TextBudgetInput);
+	m_IngameTextFrameBudget = GameClient()->FrameScheduler()->ComputeBudget(EFrameSchedulerConsumer::IngameServerInfo, TextBudgetInput);
+	LogSettingsAdaptiveBudget("ingame_server_info_snapshot_text", TextBudgetInput, m_IngameTextFrameBudget);
 	m_IngameTextFrameBudget.m_TextContainerTokens = maximum(1, m_IngameTextFrameBudget.m_TextContainerTokens);
 
 	CUIRect ServerInfo, GameInfo, Motd;

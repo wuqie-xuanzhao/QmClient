@@ -115,6 +115,7 @@ namespace
 #include <generated/protocolglue.h>
 
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/frame_scheduler.h>
 #include <game/client/projectile_data.h>
 #include <game/localization.h>
 #include <game/mapitems.h>
@@ -236,6 +237,7 @@ void CGameClient::OnConsoleInit()
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
 	m_pFoes = Client()->Foes();
 	m_pDiscord = Kernel()->RequestInterface<IDiscord>();
+	m_pFrameScheduler = Kernel()->RequestInterface<IFrameScheduler>();
 #if defined(CONF_AUTOUPDATE)
 	m_pUpdater = Kernel()->RequestInterface<IUpdater>();
 #endif
@@ -2023,6 +2025,8 @@ void CGameClient::OnRender()
 {
 	CPerfTimer FrameTimer;
 
+	m_pFrameScheduler->BeginFrame(Client()->PerfFrame());
+
 	const ColorRGBA ClearColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClOverlayEntities ? g_Config.m_ClBackgroundEntitiesColor : g_Config.m_ClBackgroundColor));
 	Graphics()->Clear(ClearColor.r, ClearColor.g, ClearColor.b);
 
@@ -2130,6 +2134,8 @@ void CGameClient::OnRender()
 		g_Config.m_ClDummy = 0;
 
 	LogPerfStage(this, "gameclient_onrender_total", FrameTimer.ElapsedMs());
+
+	m_pFrameScheduler->EndFrame();
 
 	// resend player and dummy info if it was filtered by server
 	if(m_aLocalIds[0] >= 0 && Client()->State() == IClient::STATE_ONLINE && !m_Menus.IsActive() && WasNewTick)

@@ -6,6 +6,7 @@
 #include <game/client/components/qmclient/settings_perf_windows.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/components/settings_resource_jobs.h>
+#include <game/client/frame_scheduler.h>
 #include <game/client/ui.h>
 
 #include <gtest/gtest.h>
@@ -16,6 +17,7 @@
 #include <chrono>
 #include <fstream>
 #include <initializer_list>
+#include <memory>
 #include <sstream>
 #include <thread>
 #include <vector>
@@ -887,6 +889,52 @@ TEST(QmMonitoringHelpers, SettingsPerfWindowLogsOnePercentLowFps)
 	EXPECT_NE(Menus.find("window_start_frame=%"), std::string::npos);
 	EXPECT_NE(Menus.find("window_end_frame=%"), std::string::npos);
 	EXPECT_NE(Menus.find("Summary.m_FpsOnePctLow"), std::string::npos);
+}
+
+// Intent: catch regression of the stable-text key mismatch root cause.
+// Bug: plan-collection replay uses MenuTextSettingsContentView(Screen), visible render uses real MainView;
+// sub-pixel Rect.w differences × 0.1-pixel bucket granularity (round_to_int(width * 10)) produced 8424
+// key mismatches in the 2026-06-19 fresh log (qm_perf_2026-06-19_21-51-10_summary.json).
+// Fix: MaxWidthBucket uses 4-pixel granularity (round_to_int(width / 4.0f) * 4) to tolerate sub-pixel drift;
+// FontSize and UiScaleBucket keep 0.1 granularity (those values are stable across plan vs visible paths).
+TEST(QmMonitoringHelpers, SettingsTextStyleKeyUsesFourPixelMaxWidthBucket)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+
+	const size_t AssignPos = Menus.find("m_MaxWidthBucket =");
+	ASSERT_NE(AssignPos, std::string::npos) << "BuildMenuTextStyleKey must assign m_MaxWidthBucket";
+	const std::string Tail = Menus.substr(AssignPos, 200);
+
+	EXPECT_NE(Tail.find("round_to_int(MaxWidth / 4.0f) * 4"), std::string::npos)
+		<< "MaxWidthBucket must use 4-pixel granularity";
+	EXPECT_EQ(Tail.find("MenuTextBucket(MaxWidth)"), std::string::npos)
+		<< "MaxWidthBucket must not use 0.1-pixel MenuTextBucket anymore";
+}
+
+// Intent: catch regression of the stable-text double-bookkeeping bug.
+// Bug: CScopedMenuTextVisibleGuard constructor unconditionally cleared per-frame counters; outer shell guard
+// (menus.cpp RenderMenuShell) and inner content guard (menus_settings.cpp RenderSettings) each constructed
+// one. Inner constructor wiped outer's accumulation; both destructors logged when candidates > 0, producing
+// 2x duplicate settings_text_usage payloads (6/18 hit-rate audit found 2:269 duplication histogram).
+// Fix: guard uses stack semantics — only stack bottom (m_Previous == false) clears counters on construct
+// and flushes log on destruct; nested guards inherit parent's counters and add their own on top.
+TEST(QmMonitoringHelpers, SettingsTextVisibleGuardUsesStackSemantics)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+
+	const size_t CtorPos = Menus.find("CScopedMenuTextVisibleGuard::CScopedMenuTextVisibleGuard");
+	ASSERT_NE(CtorPos, std::string::npos);
+	const std::string CtorTail = Menus.substr(CtorPos, 1500);
+
+	EXPECT_NE(CtorTail.find("if(!m_Previous)"), std::string::npos)
+		<< "Constructor must gate counter reset on stack-bottom (m_Previous == false)";
+
+	const size_t DtorPos = Menus.find("CScopedMenuTextVisibleGuard::~CScopedMenuTextVisibleGuard");
+	ASSERT_NE(DtorPos, std::string::npos);
+	const std::string DtorTail = Menus.substr(DtorPos, 800);
+
+	EXPECT_NE(DtorTail.find("if(!m_Previous && m_pMenus->m_MenuTextStableCandidatesThisFrame > 0)"), std::string::npos)
+		<< "Destructor must gate log on stack-bottom (m_Previous == false)";
 }
 
 TEST(QmMonitoringHelpers, RealOnePctLowUsesFrameSamples)
@@ -3399,7 +3447,7 @@ TEST(QmMonitoringHelpers, UiFrameSchedulerOwnsTextAndResourceBudgets)
 	EXPECT_NE(Assets.find("AdaptiveBudget.m_MetadataLayoutTokens"), std::string::npos);
 	EXPECT_NE(Assets.find("AdaptiveBudget.m_PreviewArtifactTokens"), std::string::npos);
 	EXPECT_NE(Assets.find("AdaptiveBudget.m_TextureUploadTokens"), std::string::npos);
-	EXPECT_NE(Ingame.find("ComputeSettingsUiFrameSchedulerBudget(\"ingame_server_info_snapshot_text\""), std::string::npos);
+	EXPECT_NE(Ingame.find("GameClient()->FrameScheduler()->ComputeBudget(EFrameSchedulerConsumer::IngameServerInfo, TextBudgetInput)"), std::string::npos);
 	EXPECT_NE(Ingame.find("m_IngameTextFrameBudget.m_TextContainerTokens"), std::string::npos);
 	EXPECT_NE(Ingame.find("m_IngameTextFrameBudget.m_ParagraphLayoutTokens"), std::string::npos);
 	EXPECT_NE(Skins.find("SettingsGpuUploadFrameBudgetForFrame()"), std::string::npos);
@@ -3645,7 +3693,7 @@ TEST(QmMonitoringHelpers, MotdParagraphHydratesOnlyThroughBudgetDrain)
 
 	EXPECT_NE(Header.find("m_Pending"), std::string::npos);
 	EXPECT_NE(Header.find("m_PendingFrame"), std::string::npos);
-	EXPECT_NE(Source.find("ComputeSettingsUiFrameSchedulerBudget(\"ingame_server_info_snapshot_text\""), std::string::npos);
+	EXPECT_NE(Source.find("GameClient()->FrameScheduler()->ComputeBudget(EFrameSchedulerConsumer::IngameServerInfo, TextBudgetInput)"), std::string::npos);
 	EXPECT_EQ(Source.find("BeginSettingsUiFrameScheduler(\"ingame_server_info_snapshot_text\""), std::string::npos);
 	EXPECT_EQ(DrainBody.find("BeginSettingsUiFrameScheduler("), std::string::npos);
 	EXPECT_NE(DrainBody.find("ParagraphLayoutTokens <= 0"), std::string::npos);
@@ -3662,10 +3710,10 @@ TEST(QmMonitoringHelpers, MotdParagraphHydratesOnlyThroughBudgetDrain)
 	EXPECT_NE(Header.find("m_PendingRect"), std::string::npos);
 	EXPECT_NE(Header.find("m_BuildByteOffset"), std::string::npos);
 	EXPECT_NE(Header.find("m_BuildTextContainerIndex"), std::string::npos);
-	EXPECT_NE(Header.find("SSettingsAdaptiveBudgetState m_IngameTextAdaptiveBudgetState"), std::string::npos);
+	EXPECT_EQ(Header.find("m_IngameTextAdaptiveBudgetState"), std::string::npos);
 	EXPECT_NE(Header.find("SSettingsAdaptiveBudgetOutput m_IngameTextFrameBudget"), std::string::npos);
 	EXPECT_NE(Source.find("DrainIngameMotdParagraphCache(m_IngameMotdParagraphCache.m_PendingRect, m_IngameMotdParagraphCache.m_PendingFontSize, AllowCurrentFrame);"), std::string::npos);
-	EXPECT_NE(Source.find("m_IngameTextAdaptiveBudgetState"), std::string::npos);
+	EXPECT_EQ(Source.find("m_IngameTextAdaptiveBudgetState"), std::string::npos);
 	EXPECT_EQ(Source.find("m_IngameTextFrameBudget.m_ParagraphLayoutTokens = maximum(1, m_IngameTextFrameBudget.m_ParagraphLayoutTokens)"), std::string::npos);
 	EXPECT_EQ(Source.find("m_CurrentSettingsUiFrameBudget.m_ParagraphLayoutTokens"), std::string::npos);
 	EXPECT_NE(DrainBody.find("m_IngameTextFrameBudget.m_ParagraphLayoutTokens"), std::string::npos);
@@ -4903,7 +4951,7 @@ TEST(QmMonitoringHelpers, SkinsAndTeeDoNotExposePartialPreviewUploads)
 	EXPECT_EQ(DrainBody.find("FinishSkinPreviewUpload(pSkinContainer)"), std::string::npos);
 	EXPECT_NE(DrainBody.find("SettingsResourcePreviewConsumeUploadBudget(SkinPreviewUploadBudget, SETTINGS_SKIN_SOURCE_TEXTURE_UPLOADS)"), std::string::npos);
 	EXPECT_NE(Settings.find("tee_preview_pipeline"), std::string::npos);
-	EXPECT_NE(Settings.find("BeginSettingsUiFrameScheduler(\"tee\""), std::string::npos);
+	EXPECT_NE(Settings.find("BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, \"tee\""), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SkinsTeeUploadBudgetRequeuesInsteadOfFailing)
@@ -5416,8 +5464,8 @@ TEST(QmMonitoringHelpers, DemoBrowserUsesAdaptiveMetadataBudget)
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivated)");
 	ASSERT_FALSE(Body.empty());
 
-	EXPECT_NE(Header.find("SSettingsAdaptiveBudgetState m_DemoBrowserAdaptiveBudgetState"), std::string::npos);
-	EXPECT_NE(Body.find("BeginSettingsUiFrameScheduler("), std::string::npos);
+	EXPECT_EQ(Header.find("SSettingsAdaptiveBudgetState m_DemoBrowserAdaptiveBudgetState"), std::string::npos);
+	EXPECT_NE(Body.find("BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::DemoBrowser, \"demo_browser\""), std::string::npos);
 	EXPECT_NE(Body.find("AdaptiveBudget.m_DemoMetadataTokens"), std::string::npos);
 	EXPECT_NE(ReadRepoFile("src/game/client/components/menus.cpp").find("event=settings_adaptive_budget"), std::string::npos);
 	EXPECT_EQ(Body.find("AdvanceDemoBrowserMetadata(g_Config.m_BrDemoFetchInfo && !BrowsingScreenshots ? 2 : 0, g_Config.m_BrDemoSort == SORT_DATE ? 4 : 0"), std::string::npos);
@@ -5432,11 +5480,11 @@ TEST(QmMonitoringHelpers, SettingsTextPrebuildUsesAdaptiveBudget)
 	ASSERT_FALSE(PrebuildBody.empty());
 	ASSERT_FALSE(EscBody.empty());
 
-	EXPECT_NE(Header.find("SSettingsAdaptiveBudgetState m_SettingsTextAdaptiveBudgetState"), std::string::npos);
-	EXPECT_NE(PrebuildBody.find("BeginSettingsUiFrameScheduler("), std::string::npos);
+	EXPECT_EQ(Header.find("SSettingsAdaptiveBudgetState m_SettingsTextAdaptiveBudgetState"), std::string::npos);
+	EXPECT_NE(PrebuildBody.find("BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, \"stable_text_prebuild\""), std::string::npos);
 	EXPECT_NE(PrebuildBody.find("AdaptiveBudget.m_TextPrebuildTokens"), std::string::npos);
 	EXPECT_NE(Menus.find("event=settings_adaptive_budget"), std::string::npos);
-	EXPECT_NE(EscBody.find("BeginSettingsUiFrameScheduler("), std::string::npos);
+	EXPECT_NE(EscBody.find("BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, \"stable_text_ingame_esc\""), std::string::npos);
 	EXPECT_EQ(EscBody.find("PrebuildSettingsMenuTextPool(minimum(Budget, 4), \"target_settings\", \"ingame_esc_open\");"), std::string::npos);
 }
 
@@ -5755,4 +5803,96 @@ TEST(QmMonitoringHelpers, WindowsReleaseBuildProducesPdbSymbols)
 	EXPECT_NE(Source.find("$<$<CONFIG:Release,RelWithDebInfo>:/DEBUG>"), std::string::npos);
 	EXPECT_NE(Source.find("$<$<CONFIG:Release,RelWithDebInfo>:/OPT:REF>"), std::string::npos);
 	EXPECT_NE(Source.find("$<$<CONFIG:Release,RelWithDebInfo>:/OPT:ICF>"), std::string::npos);
+}
+
+// Phase A 阶段 1: IFrameScheduler service 抽出。独立 service 持有 per-consumer state，
+// 让 scheduler 从 menus-private 升级为全局 service。本测试锁定 service 接口契约。
+TEST(QmMonitoringHelpers, FrameSchedulerServiceExposesConsumerScopedInterface)
+{
+	const std::string Header = ReadRepoFile("src/game/client/frame_scheduler.h");
+	const std::string Source = ReadRepoFile("src/game/client/frame_scheduler.cpp");
+	const std::string Client = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string Cmake = ReadRepoFile("CMakeLists.txt");
+
+	ASSERT_FALSE(Header.empty());
+	ASSERT_FALSE(Source.empty());
+
+	EXPECT_NE(Header.find("class IFrameScheduler : public IInterface"), std::string::npos);
+	EXPECT_NE(Header.find("MACRO_INTERFACE(\"frame_scheduler\")"), std::string::npos);
+	EXPECT_NE(Header.find("enum class EFrameSchedulerConsumer"), std::string::npos);
+	EXPECT_NE(Header.find("SettingsText"), std::string::npos);
+	EXPECT_NE(Header.find("IngameText"), std::string::npos);
+	EXPECT_NE(Header.find("Assets"), std::string::npos);
+	EXPECT_NE(Header.find("DemoBrowser"), std::string::npos);
+	EXPECT_NE(Header.find("IngameServerInfo"), std::string::npos);
+	EXPECT_NE(Header.find("Count"), std::string::npos);
+	EXPECT_NE(Header.find("ComputeBudget"), std::string::npos);
+	EXPECT_NE(Header.find("BeginFrame"), std::string::npos);
+	EXPECT_NE(Header.find("EndFrame"), std::string::npos);
+	EXPECT_NE(Header.find("CreateFrameScheduler"), std::string::npos);
+
+	EXPECT_NE(Source.find("SettingsAdaptiveBudgetStep(Input, m_aState"), std::string::npos);
+	EXPECT_NE(Source.find("IFrameScheduler *CreateFrameScheduler()"), std::string::npos);
+
+	EXPECT_NE(Client.find("#include <game/client/frame_scheduler.h>"), std::string::npos);
+	EXPECT_NE(Client.find("IFrameScheduler *pFrameScheduler = CreateFrameScheduler();"), std::string::npos);
+	EXPECT_NE(Client.find("pKernel->RegisterInterface(pFrameScheduler)"), std::string::npos);
+
+	// CMakeLists.txt 必须显式列出 frame_scheduler.cpp 才会被纳入 GAME_CLIENT 目标；
+	// set_src(GAME_CLIENT GLOB_RECURSE ...) 仅用 GLOB 校验与磁盘文件对齐，
+	// 真正参与编译的是 ${ARGN} 显式列表（见 CMakeLists.txt set_glob 函数）。
+	EXPECT_NE(Cmake.find("frame_scheduler.cpp"), std::string::npos);
+
+	EXPECT_NE(Header.find("#include <game/client/components/settings_resource_jobs.h>"), std::string::npos);
+}
+
+// Phase A 阶段 2: CGameClient::OnRender 在帧入口/出口调用 IFrameScheduler 的 BeginFrame/EndFrame。
+// 这是阶段 3 同步渲染路径消费 token 的前置：所有同步 UI 都在 frame scope 内执行。
+TEST(QmMonitoringHelpers, OnRenderHooksFrameSchedulerBeginAndEndFrame)
+{
+	const std::string GameClientHeader = ReadRepoFile("src/game/client/gameclient.h");
+	const std::string GameClientSource = ReadRepoFile("src/game/client/gameclient.cpp");
+
+	ASSERT_FALSE(GameClientHeader.empty());
+	ASSERT_FALSE(GameClientSource.empty());
+
+	EXPECT_NE(GameClientHeader.find("class IFrameScheduler *m_pFrameScheduler;"), std::string::npos);
+
+	EXPECT_NE(GameClientSource.find("#include <game/client/frame_scheduler.h>"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("m_pFrameScheduler = Kernel()->RequestInterface<IFrameScheduler>();"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("m_pFrameScheduler->BeginFrame(Client()->PerfFrame());"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("m_pFrameScheduler->EndFrame();"), std::string::npos);
+}
+
+// Phase A 阶段 3 前置：把文档测试改成运行时行为测试。
+// service 真正被调用并产出非平凡 token；per-consumer state 互相独立；
+// LastOutput 反映最近一次 ComputeBudget 的结果。
+TEST(QmMonitoringHelpers, FrameSchedulerServiceProducesRealTokensAndIsolatesConsumers)
+{
+	std::unique_ptr<IFrameScheduler, void (*)(IFrameScheduler *)> Scheduler(CreateFrameScheduler(), [](IFrameScheduler *p) { delete p; });
+	ASSERT_NE(Scheduler, nullptr);
+
+	SSettingsAdaptiveBudgetInput Input;
+	Input.m_WindowActive = true;
+	Input.m_TargetFrameMs = 8.333f;
+	Input.m_FrameMsAverage = 5.0f;
+	Input.m_FrameMsP95 = 6.0f;
+
+	const SSettingsAdaptiveBudgetOutput IngameOutput = Scheduler->ComputeBudget(EFrameSchedulerConsumer::IngameServerInfo, Input);
+	EXPECT_GE(IngameOutput.m_VisibleTokens, 1);
+	EXPECT_GE(IngameOutput.m_TextContainerTokens, 1);
+	EXPECT_EQ(IngameOutput.m_Mode, ESettingsAdaptiveBudgetMode::IDLE);
+
+	const SSettingsAdaptiveBudgetOutput &IngameLast = Scheduler->LastOutput(EFrameSchedulerConsumer::IngameServerInfo);
+	EXPECT_EQ(IngameLast.m_VisibleTokens, IngameOutput.m_VisibleTokens);
+	EXPECT_EQ(IngameLast.m_TextContainerTokens, IngameOutput.m_TextContainerTokens);
+
+	const SSettingsAdaptiveBudgetOutput SettingsLast = Scheduler->LastOutput(EFrameSchedulerConsumer::SettingsText);
+	EXPECT_EQ(SettingsLast.m_VisibleTokens, 0);
+	EXPECT_EQ(SettingsLast.m_TextContainerTokens, 0);
+
+	Input.m_FrameMsAverage = 30.0f;
+	Input.m_FrameMsP95 = 40.0f;
+	const SSettingsAdaptiveBudgetOutput PressuredOutput = Scheduler->ComputeBudget(EFrameSchedulerConsumer::IngameServerInfo, Input);
+	EXPECT_EQ(PressuredOutput.m_Mode, ESettingsAdaptiveBudgetMode::FRAME_PRESSURE);
 }

@@ -2846,6 +2846,8 @@ if(CLIENT)
     components/ui_effects.h
     components/voting.cpp
     components/voting.h
+    frame_scheduler.cpp
+    frame_scheduler.h
     gameclient.cpp
     gameclient.h
     laser_data.cpp
@@ -3750,6 +3752,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/translate/translate_parse.cpp
     src/game/client/components/qmclient/voice/voice_capture_pipeline.cpp
     src/game/client/components/qmclient/voice/voice_utils.cpp
+    src/game/client/frame_scheduler.cpp
     src/engine/client/blocklist_driver.cpp
     src/engine/client/blocklist_driver.h
     src/engine/client/serverbrowser.cpp

@@ -1532,6 +1532,7 @@ const AGGREGATE_UI_SECTION_STAGES: ReadonlySet<string> = new Set([
   'loop_total',
   'menus_onrender_total',
   'menus_render_total',
+  'render_body',
   'settings_page_content',
 ]);
 

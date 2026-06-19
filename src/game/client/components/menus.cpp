@@ -290,7 +290,7 @@ CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey(const CUIRect *pRect, fl
 	StyleKey.m_FontSize = FontSize;
 	StyleKey.m_Align = Align;
 	const float MaxWidth = LabelProps.m_MaxWidth >= 0.0f ? LabelProps.m_MaxWidth : (pRect != nullptr ? pRect->w : -1.0f);
-	StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f ? MenuTextBucket(MaxWidth) : -1;
+	StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f ? (round_to_int(MaxWidth / 4.0f) * 4) : -1;
 	StyleKey.m_UiScaleBucket = MenuTextBucket(CUi::ms_FontmodHeight);
 	StyleKey.m_HiDpiScaleBucket = Graphics() != nullptr ? round_to_int(Graphics()->ScreenHiDPIScale() * 100.0f) : 100;
 	StyleKey.m_CompactMode = g_Config.m_QmNewUi ? 1 : 0;
@@ -4956,29 +4956,37 @@ CMenus::CScopedMenuTextVisibleGuard::CScopedMenuTextVisibleGuard(CMenus *pMenus)
 {
 	m_pMenus->EnsureSettingsMenuTextPlanReadyForVisible();
 	m_pMenus->m_MenuTextPoolVisibleGuard = true;
-	++m_pMenus->m_MenuTextCoverageFrame;
-	m_pMenus->m_MenuTextStableCandidatesThisFrame = 0;
-	m_pMenus->m_MenuTextStableHitsThisFrame = 0;
-	m_pMenus->m_MenuTextStablePoolHitsThisFrame = 0;
-	m_pMenus->m_MenuTextStableRenderReadyHitsThisFrame = 0;
-	m_pMenus->m_MenuTextStableBuildQueuedThisFrame = 0;
-	m_pMenus->m_MenuTextStableFallbackImmediateThisFrame = 0;
-	m_pMenus->m_MenuTextStableReusedThisFrame = 0;
-	m_pMenus->m_MenuTextStableTextNewThisFrame = 0;
-	m_pMenus->m_MenuTextStableTextReusedThisFrame = 0;
-	m_pMenus->m_MenuTextStableScopeThisFrame = CMenus::MENU_TEXT_SCOPE_SETTINGS;
-	m_pMenus->m_MenuTextStablePageThisFrame = -1;
-	m_pMenus->m_MenuTextStableTabThisFrame = -1;
-	m_pMenus->m_MenuTextStableSubtabThisFrame = -1;
-	m_pMenus->m_MenuTextStableMissesThisFrame = 0;
-	m_pMenus->m_MenuTextStableStalesThisFrame = 0;
-	m_pMenus->m_MenuTextStablePlannedThisFrame = 0;
-	m_pMenus->m_MenuTextStableUnplannedThisFrame = 0;
+	if(!m_Previous)
+	{
+		// Stack bottom: clear per-frame counters (defense against cross-frame accumulation).
+		// Nested guards inherit the parent's accumulated counters and add their own on top,
+		// so only the outermost guard flushes the log on destruct (see v2 roadmap §4.2.2
+		// double-bookkeeping fix). Without this gate, inner guard wipes outer's accumulation
+		// and both destructors log — producing 2x duplicate settings_text_usage payloads.
+		++m_pMenus->m_MenuTextCoverageFrame;
+		m_pMenus->m_MenuTextStableCandidatesThisFrame = 0;
+		m_pMenus->m_MenuTextStableHitsThisFrame = 0;
+		m_pMenus->m_MenuTextStablePoolHitsThisFrame = 0;
+		m_pMenus->m_MenuTextStableRenderReadyHitsThisFrame = 0;
+		m_pMenus->m_MenuTextStableBuildQueuedThisFrame = 0;
+		m_pMenus->m_MenuTextStableFallbackImmediateThisFrame = 0;
+		m_pMenus->m_MenuTextStableReusedThisFrame = 0;
+		m_pMenus->m_MenuTextStableTextNewThisFrame = 0;
+		m_pMenus->m_MenuTextStableTextReusedThisFrame = 0;
+		m_pMenus->m_MenuTextStableScopeThisFrame = CMenus::MENU_TEXT_SCOPE_SETTINGS;
+		m_pMenus->m_MenuTextStablePageThisFrame = -1;
+		m_pMenus->m_MenuTextStableTabThisFrame = -1;
+		m_pMenus->m_MenuTextStableSubtabThisFrame = -1;
+		m_pMenus->m_MenuTextStableMissesThisFrame = 0;
+		m_pMenus->m_MenuTextStableStalesThisFrame = 0;
+		m_pMenus->m_MenuTextStablePlannedThisFrame = 0;
+		m_pMenus->m_MenuTextStableUnplannedThisFrame = 0;
+	}
 }
 
 CMenus::CScopedMenuTextVisibleGuard::~CScopedMenuTextVisibleGuard()
 {
-	if(m_pMenus->m_MenuTextStableCandidatesThisFrame > 0)
+	if(!m_Previous && m_pMenus->m_MenuTextStableCandidatesThisFrame > 0)
 	{
 		const int Page = m_pMenus->m_MenuTextStablePageThisFrame;
 		const CMenus::EMenuTextScope Scope = m_pMenus->m_MenuTextStableScopeThisFrame;
@@ -5431,7 +5439,7 @@ void CMenus::PrebuildIngameEscTextPoolBeforeOpen(int Budget)
 	Input.m_TargetFrameMs = 8.333f;
 	Input.m_BackgroundBacklog = maximum(Budget, 0) + CountMissingSettingsMenuTextPlanItems();
 	Input.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("stable_text_ingame_esc", Input, m_SettingsTextAdaptiveBudgetState);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, "stable_text_ingame_esc", Input);
 	PrebuildSettingsMenuTextPool(minimum(Budget, maximum(1, AdaptiveBudget.m_TextPrebuildTokens)), "target_settings", "ingame_esc_open");
 }
 
@@ -5455,7 +5463,7 @@ int CMenus::PrebuildSettingsTextPoolForLoading(int Budget, const char *pOperatio
 	Input.m_PostScrollRecoveryFrames = m_SettingsPostScrollRecoveryFrames;
 	Input.m_BackgroundBacklog = maximum(Budget, 0) + CountMissingSettingsMenuTextPlanItems() + SettingsTextPlanCollectionRemaining();
 	Input.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler("stable_text_prebuild", Input, m_SettingsTextAdaptiveBudgetState);
+	const SSettingsAdaptiveBudgetOutput AdaptiveBudget = BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, "stable_text_prebuild", Input);
 
 	const CUiRenderOnlyScope RenderOnly(Ui());
 	const int PlanCollectionBudget = maximum(1, minimum(Budget, AdaptiveBudget.m_TextPrebuildTokens));
@@ -5577,17 +5585,11 @@ void CMenus::PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &In
 	Input.m_GlyphIdleHardCap = 8;
 }
 
-SSettingsAdaptiveBudgetOutput CMenus::ComputeSettingsUiFrameSchedulerBudget(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State)
+SSettingsAdaptiveBudgetOutput CMenus::BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer Consumer, const char *pSource, SSettingsAdaptiveBudgetInput Input)
 {
 	PrepareSettingsAdaptiveBudgetInput(Input);
-	const SSettingsAdaptiveBudgetOutput Budget = SettingsAdaptiveBudgetStep(Input, State);
-	LogSettingsAdaptiveBudget(pSource, Input, Budget);
-	return Budget;
-}
-
-SSettingsAdaptiveBudgetOutput CMenus::BeginSettingsUiFrameScheduler(const char *pSource, SSettingsAdaptiveBudgetInput Input, SSettingsAdaptiveBudgetState &State)
-{
-	m_CurrentSettingsUiFrameBudget = ComputeSettingsUiFrameSchedulerBudget(pSource, Input, State);
+	m_CurrentSettingsUiFrameBudget = GameClient()->FrameScheduler()->ComputeBudget(Consumer, Input);
+	LogSettingsAdaptiveBudget(pSource, Input, m_CurrentSettingsUiFrameBudget);
 	return m_CurrentSettingsUiFrameBudget;
 }
 

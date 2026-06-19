@@ -2247,7 +2247,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	TeeBudgetInput.m_PostScrollRecoveryFrames = s_SkinListPostScrollRecoveryFrames;
 	TeeBudgetInput.m_BackgroundBacklog = (int)vSkinList.size();
 	TeeBudgetInput.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput TeeSettingsFrameBudget = BeginSettingsUiFrameScheduler("tee", TeeBudgetInput, m_SettingsTextAdaptiveBudgetState);
+	const SSettingsAdaptiveBudgetOutput TeeSettingsFrameBudget = BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, "tee", TeeBudgetInput);
 	int VisibleVisualReadyCount = 0;
 	int VisibleSourceSettledCount = 0;
 	int VisibleBackgroundRequestedCount = 0;

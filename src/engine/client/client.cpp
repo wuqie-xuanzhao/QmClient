@@ -57,6 +57,7 @@
 #include <generated/protocolglue.h>
 
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/frame_scheduler.h>
 #include <game/localization.h>
 #include <game/version.h>
 
@@ -5777,6 +5778,9 @@ int main(int argc, const char **argv)
 	IEngineTextRender *pEngineTextRender = CreateEngineTextRender();
 	pKernel->RegisterInterface(pEngineTextRender); // IEngineTextRender
 	pKernel->RegisterInterface(static_cast<ITextRender *>(pEngineTextRender), false);
+
+	IFrameScheduler *pFrameScheduler = CreateFrameScheduler();
+	pKernel->RegisterInterface(pFrameScheduler);
 
 	IEngineMap *pEngineMap = CreateEngineMap();
 	pKernel->RegisterInterface(pEngineMap); // IEngineMap

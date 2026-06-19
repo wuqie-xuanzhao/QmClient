@@ -331,6 +331,7 @@ private:
 	class IFriends *m_pFriends;
 	class IFriends *m_pFoes;
 	class IDiscord *m_pDiscord;
+	class IFrameScheduler *m_pFrameScheduler;
 #if defined(CONF_AUTOUPDATE)
 	class IUpdater *m_pUpdater;
 #endif
@@ -440,6 +441,7 @@ public:
 	// NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
 	IKernel *Kernel() { return IInterface::Kernel(); }
 	IEngine *Engine() const { return m_pEngine; }
+	class IFrameScheduler *FrameScheduler() const { return m_pFrameScheduler; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class IClient *Client() const { return m_pClient; }
 	class CUi *Ui() { return &m_UI; }
