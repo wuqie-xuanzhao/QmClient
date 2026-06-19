@@ -735,9 +735,12 @@ def _line_looks_like_business_data(line_text: str) -> tuple[bool, str]:
             "dbg_assert_failed(",
             "static_assert(",
             "QmPerfLogPayload(",
+            "LogPerfStage(",
+            "LogControlsPerfStage(",
             "Console()->Register(",
             "Console()->Chain(",
             "Console()->ExecuteLine(",
+            "SetError(",
             "str_find(",
             "str_find_nocase(",
             "str_comp(",
@@ -1322,12 +1325,17 @@ def _business_data_records_from_path(
                 or text
                 == "3 Tiles Edge Jump:\\nLeft Jump: .34|.31|.16\\nLeft Double Jump: .41|.28|.25|.13\\nRight Jump: .63|.66|.81\\nRight Double Jump: .56|.69|.72|.84"
                 or text in {"%s->%s Swap:%d秒", "%s->%s 可交换!", "开关#%d:%d秒"}
-                or text == "Pure Music"
+                or text
+                in {
+                    "Pure Music",
+                    "Counting stars under the island",
+                    "Dreaming about the things that we could be",
+                }
             ):
                 add_business(
                     text,
                     line,
-                    "HUD config default, localized alias, or dynamic display template",
+                    "HUD config default, preview sample, localized alias, or dynamic display template",
                 )
         if records:
             return records
@@ -1380,6 +1388,15 @@ def _business_data_records_from_path(
             if has_cjk(text) or looks_human_readable(text):
                 add_business(text, line, "HUD editor sample text")
         return records
+
+    if normalized.endswith("src/game/client/components/jump_hint_utils.h"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            if "JUMP_HINT_DEFAULT_TEXT" in (
+                lines[line - 1] if 0 < line <= len(lines) else ""
+            ):
+                add_business(text, line, "jump hint default config text")
+        if records:
+            return records
 
     if normalized.endswith("src/game/client/components/voting.cpp"):
         for text, line in _extract_cpp_string_literal_records(content):
