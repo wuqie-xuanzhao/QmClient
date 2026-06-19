@@ -5439,15 +5439,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	if(s_CurTab == APPEARANCE_TAB_HUD)
 	{
 		CPerfTimer HudShellTimer;
-		static CUIElement s_HudTitleText;
-		static CUIElement s_ScoreboardTitleText;
-		static CUIElement s_DDRaceHudTitleText;
-		if(!s_HudTitleText.IsRegistered())
-			s_HudTitleText.Init(Ui(), 1);
-		if(!s_ScoreboardTitleText.IsRegistered())
-			s_ScoreboardTitleText.Init(Ui(), 1);
-		if(!s_DDRaceHudTitleText.IsRegistered())
-			s_DDRaceHudTitleText.Init(Ui(), 1);
 		LogPerfStage(Client(), "appearance_hud_text_cache", HudShellTimer.ElapsedMs(), false, "page=appearance tab=hud section=text_cache");
 		ContentView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
 		LogPerfStage(Client(), "appearance_hud_tab_shell", HudShellTimer.ElapsedMs(), false, "page=appearance tab=hud");
@@ -5456,7 +5447,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		CPerfTimer HudCoreTimer;
 		CUIRect HudTitle;
 		LeftView.HSplitTop(HeadlineHeight, &HudTitle, &LeftView);
-		DoSettingsLabelStreamed(s_HudTitleText, &HudTitle, Localize("HUD"), HeadlineFontSize, TEXTALIGN_ML);
+		CUIElement &HudTitleText = SettingsTextElement(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, "appearance-hud-title");
+		DoSettingsLabelStreamed(HudTitleText, &HudTitle, Localize("HUD"), HeadlineFontSize, TEXTALIGN_ML);
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 
 		// Switch of the entire HUD
@@ -5475,7 +5467,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		LeftView.HSplitTop(MarginBetweenViews, nullptr, &LeftView);
 		CUIRect ScoreboardTitle;
 		LeftView.HSplitTop(HeadlineHeight, &ScoreboardTitle, &LeftView);
-		DoSettingsLabelStreamed(s_ScoreboardTitleText, &ScoreboardTitle, Localize("Scoreboard"), HeadlineFontSize, TEXTALIGN_ML);
+		CUIElement &ScoreboardTitleText = SettingsTextElement(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, "appearance-scoreboard-title");
+		DoSettingsLabelStreamed(ScoreboardTitleText, &ScoreboardTitle, Localize("Scoreboard"), HeadlineFontSize, TEXTALIGN_ML);
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 
 		ColorRGBA GreenDefault(0.78f, 1.0f, 0.8f, 1.0f);
@@ -5490,7 +5483,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		CPerfTimer HudDdraceTimer;
 		CUIRect DDRaceHudTitle;
 		RightView.HSplitTop(HeadlineHeight, &DDRaceHudTitle, &RightView);
-		DoSettingsLabelStreamed(s_DDRaceHudTitleText, &DDRaceHudTitle, Localize("DDRace HUD"), HeadlineFontSize, TEXTALIGN_ML);
+		CUIElement &DDRaceHudTitleText = SettingsTextElement(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, "appearance-ddrace-hud-title");
+		DoSettingsLabelStreamed(DDRaceHudTitleText, &DDRaceHudTitle, Localize("DDRace HUD"), HeadlineFontSize, TEXTALIGN_ML);
 		RightView.HSplitTop(MarginSmall, nullptr, &RightView);
 
 		// Switches of various DDRace HUD elements

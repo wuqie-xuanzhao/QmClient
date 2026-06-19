@@ -1251,12 +1251,11 @@ TEST(QmMonitoringHelpers, SettingsStableTextMissAndStaleBlockVisibleBuild)
 	EXPECT_EQ(Source.find("context-checkbox-common-"), std::string::npos);
 	EXPECT_TRUE(ContainsAll(Source, {
 						"scope=%s page=%s tab=%d subtab=%d key=%s reason=%s plan_status=%s operation=%s frame=%",
-						"%s:%d:%d:%d:%s:fs%d:al%d:mw%d:us%d:hd%d:tc%d:oc%d:cm%d",
+						"%s:%d:%d:%d:%s:fs%d:al%d:mw%d:us%d:hd%d:cm%d",
 						"StyleKey.m_Align",
 						"StyleKey.m_MaxWidthBucket",
 						"StyleKey.m_HiDpiScaleBucket",
-						"StyleKey.m_TextColorHash",
-						"StyleKey.m_OutlineColorHash",
+						"StyleKey.m_CompactMode",
 					}));
 	EXPECT_TRUE(ContainsAll(Source, {
 						"const char *CMenus::SettingsPerfStableTextScope(int Page) const",
@@ -4045,20 +4044,37 @@ TEST(QmMonitoringHelpers, MenuLabelStreamedDoesNotBypassCachedLabelAlignment)
 	EXPECT_EQ(Body.find("pRect->x, pRect->y"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, MenuTextStyleKeyIncludesRealScaleAndColorState)
+TEST(QmMonitoringHelpers, MenuTextStyleKeyIncludesScaleButIgnoresAnimatedColorState)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string BuildBody = ExtractSourceFunctionBody(Source, "CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey(const CUIRect *pRect, float FontSize, int Align, const SLabelProperties &LabelProps) const");
+	const std::string CacheKeyBody = ExtractSourceFunctionBody(Source, "std::string MenuTextCacheKey(CMenus::EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const CMenus::SMenuTextStyleKey &StyleKey)");
+	const std::string MenuNeedsBuildBody = ExtractSourceFunctionBody(Source, "bool CMenus::MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, int StrLen, const CTextCursor *pReadCursor)");
+	const std::string MenuStreamedBody = ExtractSourceFunctionBody(Source, "void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render)");
+	const std::string UiSource = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string StreamedBody = ExtractSourceFunctionBody(UiSource, "void CUi::DoLabelStreamed(CUIElement::SUIElementRect &RectEl, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated) const");
 
 	EXPECT_NE(Header.find("int m_HiDpiScaleBucket"), std::string::npos);
-	EXPECT_NE(Header.find("int m_TextColorHash"), std::string::npos);
-	EXPECT_NE(Header.find("int m_OutlineColorHash"), std::string::npos);
+	EXPECT_EQ(Header.find("int m_TextColorHash"), std::string::npos);
+	EXPECT_EQ(Header.find("int m_OutlineColorHash"), std::string::npos);
 	EXPECT_NE(Header.find("SMenuTextStyleKey BuildMenuTextStyleKey"), std::string::npos);
 	EXPECT_FALSE(BuildBody.empty());
+	EXPECT_FALSE(CacheKeyBody.empty());
+	EXPECT_FALSE(MenuNeedsBuildBody.empty());
+	EXPECT_FALSE(MenuStreamedBody.empty());
+	EXPECT_FALSE(StreamedBody.empty());
 	EXPECT_NE(BuildBody.find("Graphics()->ScreenHiDPIScale()"), std::string::npos);
-	EXPECT_NE(BuildBody.find("TextRender()->GetTextColor()"), std::string::npos);
-	EXPECT_NE(BuildBody.find("TextRender()->GetTextOutlineColor()"), std::string::npos);
+	EXPECT_EQ(BuildBody.find("TextRender()->GetTextColor()"), std::string::npos);
+	EXPECT_EQ(BuildBody.find("TextRender()->GetTextOutlineColor()"), std::string::npos);
+	EXPECT_EQ(CacheKeyBody.find(":tc"), std::string::npos);
+	EXPECT_EQ(CacheKeyBody.find(":oc"), std::string::npos);
+	EXPECT_EQ(MenuNeedsBuildBody.find("ColorChanged"), std::string::npos);
+	EXPECT_NE(MenuStreamedBody.find("pElementRect->m_TextColor = TextRender()->GetTextColor();"), std::string::npos);
+	EXPECT_NE(MenuStreamedBody.find("pElementRect->m_TextOutlineColor = TextRender()->GetTextOutlineColor();"), std::string::npos);
+	EXPECT_NE(StreamedBody.find("if(ColorChanged)"), std::string::npos);
+	EXPECT_NE(StreamedBody.find("RectEl.m_TextColor = TextRender()->GetTextColor();"), std::string::npos);
+	EXPECT_EQ(StreamedBody.find("|| ColorChanged ||"), std::string::npos);
 	EXPECT_EQ(Source.find("StyleKey.m_UiScaleBucket = 100"), std::string::npos);
 	EXPECT_EQ(Source.find("str_quickhash(\"default-text-style\")"), std::string::npos);
 }

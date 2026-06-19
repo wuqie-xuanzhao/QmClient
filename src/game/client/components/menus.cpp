@@ -259,11 +259,10 @@ namespace
 	std::string MenuTextCacheKey(CMenus::EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const CMenus::SMenuTextStyleKey &StyleKey)
 	{
 		char aKey[512];
-		str_format(aKey, sizeof(aKey), "%s:%d:%d:%d:%s:fs%d:al%d:mw%d:us%d:hd%d:tc%d:oc%d:cm%d",
+		str_format(aKey, sizeof(aKey), "%s:%d:%d:%d:%s:fs%d:al%d:mw%d:us%d:hd%d:cm%d",
 			MenuTextScopeName(Scope), Page, Tab, Subtab, pTextId != nullptr ? pTextId : "",
 			MenuTextBucket(StyleKey.m_FontSize), StyleKey.m_Align, StyleKey.m_MaxWidthBucket,
-			StyleKey.m_UiScaleBucket, StyleKey.m_HiDpiScaleBucket, StyleKey.m_TextColorHash,
-			StyleKey.m_OutlineColorHash, StyleKey.m_CompactMode);
+			StyleKey.m_UiScaleBucket, StyleKey.m_HiDpiScaleBucket, StyleKey.m_CompactMode);
 		return aKey;
 	}
 
@@ -273,20 +272,6 @@ namespace
 		str_format(aKey, sizeof(aKey), "%s:%d:%d:%d:%s",
 			MenuTextScopeName(Scope), Page, Tab, Subtab, pTextId != nullptr ? pTextId : "");
 		return aKey;
-	}
-
-	int MenuTextColorBucket(float Value)
-	{
-		return std::clamp(round_to_int(Value * 255.0f), 0, 255);
-	}
-
-	int MenuTextColorHash(const ColorRGBA &Color)
-	{
-		const int R = MenuTextColorBucket(Color.r);
-		const int G = MenuTextColorBucket(Color.g);
-		const int B = MenuTextColorBucket(Color.b);
-		const int A = MenuTextColorBucket(Color.a);
-		return (R << 24) ^ (G << 16) ^ (B << 8) ^ A;
 	}
 
 	float QmPerfEwma(float Previous, float Sample, float Alpha)
@@ -308,8 +293,6 @@ CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey(const CUIRect *pRect, fl
 	StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f ? MenuTextBucket(MaxWidth) : -1;
 	StyleKey.m_UiScaleBucket = MenuTextBucket(CUi::ms_FontmodHeight);
 	StyleKey.m_HiDpiScaleBucket = Graphics() != nullptr ? round_to_int(Graphics()->ScreenHiDPIScale() * 100.0f) : 100;
-	StyleKey.m_TextColorHash = MenuTextColorHash(TextRender()->GetTextColor());
-	StyleKey.m_OutlineColorHash = MenuTextColorHash(TextRender()->GetTextOutlineColor());
 	StyleKey.m_CompactMode = g_Config.m_QmNewUi ? 1 : 0;
 	return StyleKey;
 }
@@ -4746,7 +4729,6 @@ bool CMenus::MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRe
 	if(pRect == nullptr || pText == nullptr)
 		return false;
 	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
-	const bool ColorChanged = pElementRect->m_TextColor != TextRender()->GetTextColor() || pElementRect->m_TextOutlineColor != TextRender()->GetTextOutlineColor();
 	const bool TextChanged =
 		(StrLen > 0 && (StrLen != (int)pElementRect->m_Text.size() || str_comp_num(pElementRect->m_Text.c_str(), pText, StrLen) != 0)) ||
 		(StrLen != 0 && StrLen < 0 && str_comp(pElementRect->m_Text.c_str(), pText) != 0);
@@ -4754,7 +4736,6 @@ bool CMenus::MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRe
 	const bool SizeChanged = pElementRect->m_Width != pRect->w || pElementRect->m_Height != pRect->h;
 	const bool NeedsBuild =
 		(!pElementRect->m_UITextContainer.Valid() && pText[0] != '\0' && StrLen != 0) ||
-		ColorChanged ||
 		TextChanged ||
 		SizeChanged ||
 		pElementRect->m_ReadCursorGlyphCount != ReadCursorGlyphCount;
@@ -4870,13 +4851,19 @@ void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, cons
 		return;
 	}
 
+	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
+	if(pElementRect->m_TextColor != TextRender()->GetTextColor() || pElementRect->m_TextOutlineColor != TextRender()->GetTextOutlineColor())
+	{
+		pElementRect->m_TextColor = TextRender()->GetTextColor();
+		pElementRect->m_TextOutlineColor = TextRender()->GetTextOutlineColor();
+	}
+
 	const bool NeedsBuild = MenuTextContainerNeedsBuild(Element, pRect, pText, StrLen, pReadCursor);
 	if(NeedsBuild && m_pSettingsTextPrebuildBudget == nullptr)
 	{
 		if(m_MenuTextPoolVisibleGuard)
 			++m_MenuTextStableBuildQueuedThisFrame;
 		QueueMenuTextContainerBuild(Element, pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor);
-		CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
 		if(Render && pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
 		{
 			Ui()->RenderLabelTextContainerAligned(*pElementRect, pRect, Align);
@@ -4920,7 +4907,6 @@ void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, cons
 	}
 
 	bool TextContainerRecreated = false;
-	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
 	if(Render && pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
 	{
 		if(m_MenuTextPoolVisibleGuard)

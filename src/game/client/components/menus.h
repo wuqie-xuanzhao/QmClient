@@ -1963,8 +1963,6 @@ public:
 		int m_MaxWidthBucket = -1;
 		int m_UiScaleBucket = 0;
 		int m_HiDpiScaleBucket = 0;
-		int m_TextColorHash = 0;
-		int m_OutlineColorHash = 0;
 		int m_CompactMode = 0;
 	};
 	struct SMenuTextPlanItem

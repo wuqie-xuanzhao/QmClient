@@ -1432,7 +1432,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 35;
+	constexpr size_t QmModuleCount = 36;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
@@ -7199,7 +7199,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
-				DoModuleHeadlineNew(CardContent, 13, Localize("Lyrics"), Localize("Show current and next lyric lines on HUD"), "qm_lyrics_phase1");
+				RenderQmModuleHeadlineNew(CardContent, 13, Localize("Lyrics"), Localize("Show current and next lyric lines on HUD"), "qm_lyrics_phase1");
 				if(!PrewarmOnly)
 					MarkQmNewFeatureRead("qm_lyrics_phase1");
 
