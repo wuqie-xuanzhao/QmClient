@@ -55,6 +55,7 @@ jobs:
       run: |
         set -o pipefail
         rm -f clang-sanitizer-sanitizer.log
+        rm -f clang-sanitizer-client-server.status clang-sanitizer-tests.status
         mkdir clang-sanitizer
         cd clang-sanitizer
         export CC=clang
@@ -66,9 +67,11 @@ jobs:
         cmake --build . --config Debug --target everything 2>&1 | tee ../clang-sanitizer-build.log
 
     - name: Run server and headless client with ASan and UBSan
+      continue-on-error: true
       run: |
         set -o pipefail
         cd clang-sanitizer
+        rm -f SAN.*
         set +e
         ./DDNet "cl_download_skins 0;quit" 2>&1 | tee ../clang-sanitizer-client.log
         client_result=$?
@@ -94,13 +97,17 @@ jobs:
           failed=true
         fi
         if [ "$failed" = true ]; then
+          echo "failed" > ../clang-sanitizer-client-server.status
           exit 1
         fi
+        echo "passed" > ../clang-sanitizer-client-server.status
 
     - name: Run unit tests with ASan and UBSan
+      continue-on-error: true
       run: |
         set -o pipefail
         cd clang-sanitizer
+        rm -f SAN.*
         set +e
         # Rust tests work locally, but still not in CI, even with the same directory
         cmake --build . --config Debug --target run_cxx_tests 2>&1 | tee ../clang-sanitizer-tests.log
@@ -121,6 +128,27 @@ jobs:
           done <<< "$san_files"
           failed=true
         fi
+        if [ "$failed" = true ]; then
+          echo "failed" > ../clang-sanitizer-tests.status
+          exit 1
+        fi
+        echo "passed" > ../clang-sanitizer-tests.status
+
+    - name: Fail if ASan or UBSan checks failed
+      run: |
+        failed=false
+        for status_file in clang-sanitizer-client-server.status clang-sanitizer-tests.status; do
+          if [ ! -f "$status_file" ]; then
+            echo -e "\033[31mFAILED: Missing sanitizer status file $status_file\033[m"
+            failed=true
+            continue
+          fi
+          status=$(cat "$status_file")
+          echo "$status_file: $status"
+          if [ "$status" != "passed" ]; then
+            failed=true
+          fi
+        done
         if [ "$failed" = true ]; then
           exit 1
         fi
