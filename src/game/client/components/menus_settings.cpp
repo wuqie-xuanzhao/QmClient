@@ -5374,8 +5374,10 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	static CButtonContainer s_aPageTabs[NUMBER_OF_APPEARANCE_TABS] = {};
 	static const char *s_apAppearanceTabNames[NUMBER_OF_APPEARANCE_TABS] = {};
 	static char s_aAppearanceLanguageFile[IO_MAX_PATH_LENGTH] = {};
-	if(str_comp(s_aAppearanceLanguageFile, g_Config.m_ClLanguagefile) != 0)
+	static bool s_AppearanceTabNamesInitialized = false;
+	if(!s_AppearanceTabNamesInitialized || str_comp(s_aAppearanceLanguageFile, g_Config.m_ClLanguagefile) != 0)
 	{
+		s_AppearanceTabNamesInitialized = true;
 		str_copy(s_aAppearanceLanguageFile, g_Config.m_ClLanguagefile, sizeof(s_aAppearanceLanguageFile));
 		s_apAppearanceTabNames[APPEARANCE_TAB_HUD] = Localize("HUD");
 		s_apAppearanceTabNames[APPEARANCE_TAB_CHAT] = Localize("Chat");

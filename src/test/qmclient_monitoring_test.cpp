@@ -5756,6 +5756,33 @@ TEST(QmMonitoringHelpers, MenuTextStyleKeyRejectsNonFiniteMaxWidth)
 	EXPECT_NE(Body.find("MaxWidth >= 0.0f && std::isfinite(MaxWidth)"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, MenuTextStyleKeyRejectsNonFiniteHiDpiScale)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("const float HiDpiScale ="), std::string::npos);
+	EXPECT_NE(Body.find("std::isfinite(HiDpiScale)"), std::string::npos);
+	EXPECT_NE(Body.find("HiDpiScale >= 0.0f && std::isfinite(HiDpiScale)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AppearanceTabNamesInitializeBeforeLanguageChange)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsAppearance(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t TabNamesPos = Body.find("static const char *s_apAppearanceTabNames[NUMBER_OF_APPEARANCE_TABS] = {};");
+	ASSERT_NE(TabNamesPos, std::string::npos);
+	const size_t FirstTabDrawPos = Body.find("DoButton_MenuTab(&s_aPageTabs[Tab], s_apAppearanceTabNames[Tab]", TabNamesPos);
+	ASSERT_NE(FirstTabDrawPos, std::string::npos);
+	const std::string TabNamesBody = Body.substr(TabNamesPos, FirstTabDrawPos - TabNamesPos);
+
+	EXPECT_NE(TabNamesBody.find("s_AppearanceTabNamesInitialized"), std::string::npos);
+	EXPECT_NE(TabNamesBody.find("!s_AppearanceTabNamesInitialized || str_comp"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, MenuPerfEventsExposePageAttributionFields)
 {
 	{
