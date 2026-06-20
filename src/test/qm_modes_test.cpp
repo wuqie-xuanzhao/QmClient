@@ -66,6 +66,32 @@ TEST(QmGoresMode, ActiveGoresClearsDummyHammerState)
 	EXPECT_FALSE(Changed);
 }
 
+TEST(QmGoresMode, BudgetedWorkConsumesAtMostBudget)
+{
+	int Cursor = 0;
+	EXPECT_TRUE(ConsumeQmBudgetedWork(Cursor, 10, 3));
+	EXPECT_EQ(Cursor, 3);
+
+	EXPECT_TRUE(ConsumeQmBudgetedWork(Cursor, 10, 4));
+	EXPECT_EQ(Cursor, 7);
+
+	EXPECT_FALSE(ConsumeQmBudgetedWork(Cursor, 10, 8));
+	EXPECT_EQ(Cursor, 10);
+}
+
+TEST(QmGoresMode, BudgetedWorkDoesNotAdvanceWithoutPositiveBudget)
+{
+	int Cursor = 2;
+	EXPECT_TRUE(ConsumeQmBudgetedWork(Cursor, 5, 0));
+	EXPECT_EQ(Cursor, 2);
+
+	EXPECT_TRUE(ConsumeQmBudgetedWork(Cursor, 5, -4));
+	EXPECT_EQ(Cursor, 2);
+
+	EXPECT_FALSE(ConsumeQmBudgetedWork(Cursor, 2, 10));
+	EXPECT_EQ(Cursor, 2);
+}
+
 TEST(QmFocusMode, ConfigOverrideRestoresOnlyAutoHiddenValues)
 {
 	SQmFocusConfigOverrideState State;

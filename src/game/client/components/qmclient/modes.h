@@ -75,6 +75,7 @@ int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Chan
 
 bool ShouldHideGoresGuide(bool GoresEnabled, bool HideGuidesEnabled, bool ManualGuideVisible);
 bool ShouldRenderGoresDebugRoute(bool Online, bool DebugRouteEnabled, bool GoresMapProgressEnabled);
+bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget);
 
 bool ShouldHideFocusHud(bool FocusActive, bool HideHud);
 bool ShouldRenderFocusSpectatorHud(bool SpectatorActive, bool SpectatorHudEnabled, bool MainHudVisible, bool FocusActive, bool HideHud);

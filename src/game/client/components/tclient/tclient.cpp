@@ -68,6 +68,11 @@ static constexpr const char *MAP_NOTES_FILE = "qmclient/map_notes.json";
 static constexpr int64_t MAP_NOTES_SAVE_DELAY_SEC = 5;
 static constexpr const char *QMCLIENT_FREEZE_WAKEUP_TEXT = "快醒醒!";
 static constexpr int LOCAL_SAVE_JOIN_HINT_MAX_ITEMS = 12;
+static constexpr int GORES_DISTANCE_FIELD_TILE_SCAN_BUDGET = 4096;
+static constexpr int GORES_DISTANCE_FIELD_VISUAL_TILE_BUDGET = 4096;
+static constexpr int GORES_DISTANCE_FIELD_QUEUE_INIT_BUDGET = 4096;
+static constexpr int GORES_DISTANCE_FIELD_DIJKSTRA_BUDGET = 2048;
+static constexpr int GORES_DISTANCE_FIELD_REACHABLE_SCAN_BUDGET = 4096;
 
 static constexpr float QMCLIENT_FREEZE_WAKEUP_POPUP_DURATION = 2.0f;
 static constexpr float QMCLIENT_TEXT_POPUP_FONT_SIZE = 30.0f;
@@ -3428,6 +3433,7 @@ void CTClient::InvalidateGoresDistanceField()
 	m_vGoresCMap.clear();
 	m_vvGoresDirectTeleOuts.clear();
 	m_vGoresDistanceToFinish.clear();
+	ResetGoresDistanceFieldBuild();
 	for(int i = 0; i < NUM_DUMMIES; ++i)
 	{
 		m_aGoresWasOnStartLastTick[i] = false;
@@ -3455,16 +3461,63 @@ void CTClient::EnsureGoresDistanceField()
 		return;
 
 	const int64_t Now = time_get();
-	if(m_GoresDistanceFieldAttempted && Now < m_GoresDistanceFieldNextBuildTryTick)
+	if(m_GoresDistanceFieldBuildStage == EGoresDistanceFieldBuildStage::IDLE && m_GoresDistanceFieldAttempted && Now < m_GoresDistanceFieldNextBuildTryTick)
 		return;
 
-	m_GoresDistanceFieldAttempted = true;
-	BuildGoresDistanceField();
-	m_GoresDistanceFieldNextBuildTryTick = m_GoresDistanceFieldValid ? 0 : (Now + time_freq());
+	if(m_GoresDistanceFieldBuildStage == EGoresDistanceFieldBuildStage::IDLE)
+	{
+		m_GoresDistanceFieldAttempted = true;
+		StartGoresDistanceFieldBuild();
+	}
+	ContinueGoresDistanceFieldBuild();
+	if(m_GoresDistanceFieldValid || m_GoresDistanceFieldBuildStage != EGoresDistanceFieldBuildStage::IDLE)
+		m_GoresDistanceFieldNextBuildTryTick = 0;
+	else
+		m_GoresDistanceFieldNextBuildTryTick = Now + time_freq();
 }
 
-void CTClient::BuildGoresDistanceField()
+void CTClient::ResetGoresDistanceFieldBuild()
 {
+	ReleaseGoresDistanceFieldVisualLayerData();
+	m_GoresDistanceFieldBuildStage = EGoresDistanceFieldBuildStage::IDLE;
+	m_GoresDistanceFieldBuildMapSize = 0;
+	m_GoresDistanceFieldBuildCursor = 0;
+	m_GoresDistanceFieldBuildGroup = 0;
+	m_GoresDistanceFieldBuildLayer = 0;
+	m_GoresDistanceFieldBuildLoadedVisualLayerData = -1;
+	m_GoresDistanceFieldBuildHadStart = false;
+	m_pGoresDistanceFieldBuildMap = nullptr;
+	m_pGoresDistanceFieldBuildGameLayer = nullptr;
+	m_pGoresDistanceFieldBuildFrontLayer = nullptr;
+	m_pGoresDistanceFieldBuildTeleLayer = nullptr;
+	m_GoresDistanceFieldBuildPendingTeleNumber = 0;
+	m_GoresDistanceFieldBuildPendingTeleCursor = 0;
+	m_GoresDistanceFieldBuildPendingTeleDistance = 0;
+	m_vGoresDistanceFieldBuildPassable.clear();
+	m_vGoresDistanceFieldBuildImageSemantics.clear();
+	m_vGoresDistanceFieldBuildFinishIndices.clear();
+	m_vvGoresDistanceFieldBuildDirectTeleInputs.clear();
+	m_GoresDistanceFieldBuildQueue = {};
+}
+
+void CTClient::ReleaseGoresDistanceFieldVisualLayerData()
+{
+	if(m_GoresDistanceFieldBuildLoadedVisualLayerData < 0)
+		return;
+	if(const CLayers *pLayers = Layers())
+	{
+		if(IMap *pMap = pLayers->Map())
+		{
+			if(pMap == m_pGoresDistanceFieldBuildMap)
+				pMap->UnloadData(m_GoresDistanceFieldBuildLoadedVisualLayerData);
+		}
+	}
+	m_GoresDistanceFieldBuildLoadedVisualLayerData = -1;
+}
+
+void CTClient::StartGoresDistanceFieldBuild()
+{
+	ResetGoresDistanceFieldBuild();
 	m_GoresDistanceFieldValid = false;
 	m_GoresDistanceFieldWidth = 0;
 	m_GoresDistanceFieldHeight = 0;
@@ -3492,15 +3545,106 @@ void CTClient::BuildGoresDistanceField()
 		return;
 	const int MapSize = (int)MapSize64;
 
-	std::vector<int> vFinishIndices;
-	std::vector<unsigned char> vPassable(MapSize, 0);
+	m_pGoresDistanceFieldBuildMap = Layers() ? Layers()->Map() : nullptr;
+	m_pGoresDistanceFieldBuildGameLayer = pGame;
+	m_pGoresDistanceFieldBuildFrontLayer = pFront;
+	m_pGoresDistanceFieldBuildTeleLayer = pTele;
 	m_vGoresCMap.assign((size_t)MapSize, GORES_CMAP_NORMAL);
-	vFinishIndices.reserve(16);
-	std::vector<std::vector<int>> vvDirectTeleInputs;
 	m_vvGoresDirectTeleOuts.clear();
-	bool HasStart = false;
+	m_vGoresDistanceFieldBuildPassable.assign((size_t)MapSize, 0);
+	m_vGoresDistanceFieldBuildFinishIndices.reserve(16);
+	m_GoresDistanceFieldBuildMapSize = MapSize;
+	m_GoresDistanceFieldWidth = Width;
+	m_GoresDistanceFieldHeight = Height;
+	m_GoresDistanceFieldBuildStage = EGoresDistanceFieldBuildStage::SCAN_TILES;
+}
 
-	for(int Index = 0; Index < MapSize; ++Index)
+void CTClient::ContinueGoresDistanceFieldBuild()
+{
+	if(!IsGoresDistanceFieldBuildContextCurrent())
+	{
+		FailGoresDistanceFieldBuild();
+		return;
+	}
+
+	switch(m_GoresDistanceFieldBuildStage)
+	{
+	case EGoresDistanceFieldBuildStage::IDLE:
+		return;
+	case EGoresDistanceFieldBuildStage::SCAN_TILES:
+		StepGoresDistanceFieldTileScan(GORES_DISTANCE_FIELD_TILE_SCAN_BUDGET);
+		break;
+	case EGoresDistanceFieldBuildStage::SCAN_VISUAL_LAYERS:
+		StepGoresDistanceFieldVisualLayers(GORES_DISTANCE_FIELD_VISUAL_TILE_BUDGET);
+		break;
+	case EGoresDistanceFieldBuildStage::INIT_QUEUE:
+		StepGoresDistanceFieldQueueInit(GORES_DISTANCE_FIELD_QUEUE_INIT_BUDGET);
+		break;
+	case EGoresDistanceFieldBuildStage::DIJKSTRA:
+		StepGoresDistanceFieldDijkstra(GORES_DISTANCE_FIELD_DIJKSTRA_BUDGET);
+		break;
+	case EGoresDistanceFieldBuildStage::CHECK_REACHABLE_START:
+		StepGoresDistanceFieldReachableStartCheck(GORES_DISTANCE_FIELD_REACHABLE_SCAN_BUDGET);
+		break;
+	}
+}
+
+bool CTClient::IsGoresDistanceFieldBuildContextCurrent() const
+{
+	if(m_GoresDistanceFieldBuildStage == EGoresDistanceFieldBuildStage::IDLE)
+		return true;
+	const CCollision *pCollision = Collision();
+	if(!pCollision)
+		return false;
+	if(pCollision->GetWidth() != m_GoresDistanceFieldWidth ||
+		pCollision->GetHeight() != m_GoresDistanceFieldHeight)
+		return false;
+	if(pCollision->GameLayer() != m_pGoresDistanceFieldBuildGameLayer ||
+		pCollision->FrontLayer() != m_pGoresDistanceFieldBuildFrontLayer ||
+		pCollision->TeleLayer() != m_pGoresDistanceFieldBuildTeleLayer)
+		return false;
+	const CLayers *pLayers = Layers();
+	return (pLayers ? pLayers->Map() : nullptr) == m_pGoresDistanceFieldBuildMap;
+}
+
+void CTClient::FailGoresDistanceFieldBuild()
+{
+	m_GoresDistanceFieldValid = false;
+	m_GoresDistanceFieldWidth = 0;
+	m_GoresDistanceFieldHeight = 0;
+	m_vGoresCMap.clear();
+	m_vvGoresDirectTeleOuts.clear();
+	m_vGoresDistanceToFinish.clear();
+	ResetGoresDistanceFieldBuild();
+}
+
+void CTClient::CompleteGoresDistanceFieldBuild()
+{
+	m_GoresDistanceFieldValid = true;
+	ResetGoresDistanceFieldBuild();
+}
+
+void CTClient::StepGoresDistanceFieldTileScan(int Budget)
+{
+	const CCollision *pCollision = Collision();
+	if(!pCollision || m_GoresDistanceFieldBuildMapSize <= 0)
+	{
+		FailGoresDistanceFieldBuild();
+		return;
+	}
+
+	const CTile *pGame = pCollision->GameLayer();
+	if(!pGame)
+	{
+		FailGoresDistanceFieldBuild();
+		return;
+	}
+	const CTile *pFront = pCollision->FrontLayer();
+	const CTeleTile *pTele = pCollision->TeleLayer();
+	const int MapSize = m_GoresDistanceFieldBuildMapSize;
+	const int Start = m_GoresDistanceFieldBuildCursor;
+	ConsumeQmBudgetedWork(m_GoresDistanceFieldBuildCursor, MapSize, Budget);
+	for(int Index = Start; Index < m_GoresDistanceFieldBuildCursor; ++Index)
 	{
 		const int Tile = pGame[Index].m_Index;
 		const int FrontTile = pFront ? pFront[Index].m_Index : TILE_AIR;
@@ -3512,12 +3656,11 @@ void CTClient::BuildGoresDistanceField()
 		const bool IsBlocked = !IsStart && !IsFinish &&
 				       (IsHardBlockedForGoresDistanceField(Tile) || IsHardBlockedForGoresDistanceField(FrontTile));
 		if(IsStart)
-			HasStart = true;
+			m_GoresDistanceFieldBuildHadStart = true;
 		if(IsFinish)
-			vFinishIndices.push_back(Index);
+			m_vGoresDistanceFieldBuildFinishIndices.push_back(Index);
 
-		// Keep route generation forgiving: start/finish tiles are always traversable.
-		vPassable[Index] = (!IsBlocked || IsStart || IsFinish) ? 1 : 0;
+		m_vGoresDistanceFieldBuildPassable[(size_t)Index] = (!IsBlocked || IsStart || IsFinish) ? 1 : 0;
 		if(IsBlocked)
 			m_vGoresCMap[(size_t)Index] = GORES_CMAP_BLOCKED;
 		else if(HasPenalty)
@@ -3533,9 +3676,9 @@ void CTClient::BuildGoresDistanceField()
 			const int TeleNumber = pTele[Index].m_Number;
 			if(IsDirectTeleportInputTileForGoresDistanceField(TeleType) && TeleNumber > 0)
 			{
-				if((int)vvDirectTeleInputs.size() < TeleNumber)
-					vvDirectTeleInputs.resize(TeleNumber);
-				vvDirectTeleInputs[(size_t)TeleNumber - 1].push_back(Index);
+				if((int)m_vvGoresDistanceFieldBuildDirectTeleInputs.size() < TeleNumber)
+					m_vvGoresDistanceFieldBuildDirectTeleInputs.resize(TeleNumber);
+				m_vvGoresDistanceFieldBuildDirectTeleInputs[(size_t)TeleNumber - 1].push_back(Index);
 			}
 			else if(TeleType == TILE_TELEOUT && TeleNumber > 0)
 			{
@@ -3546,10 +3689,26 @@ void CTClient::BuildGoresDistanceField()
 		}
 	}
 
-	if(!HasStart || vFinishIndices.empty())
+	if(m_GoresDistanceFieldBuildCursor < MapSize)
+		return;
+
+	if(!m_GoresDistanceFieldBuildHadStart || m_vGoresDistanceFieldBuildFinishIndices.empty())
 	{
-		m_vGoresCMap.clear();
-		m_vvGoresDirectTeleOuts.clear();
+		FailGoresDistanceFieldBuild();
+		return;
+	}
+
+	m_GoresDistanceFieldBuildCursor = 0;
+	m_GoresDistanceFieldBuildGroup = 0;
+	m_GoresDistanceFieldBuildLayer = 0;
+	m_GoresDistanceFieldBuildStage = EGoresDistanceFieldBuildStage::SCAN_VISUAL_LAYERS;
+}
+
+void CTClient::StepGoresDistanceFieldVisualLayers(int Budget)
+{
+	if(m_GoresDistanceFieldBuildMapSize <= 0)
+	{
+		FailGoresDistanceFieldBuild();
 		return;
 	}
 
@@ -3557,53 +3716,66 @@ void CTClient::BuildGoresDistanceField()
 	{
 		if(IMap *pMap = pLayers->Map())
 		{
-			int ImageStart = 0;
-			int ImageCount = 0;
-			pMap->GetType(MAPITEMTYPE_IMAGE, &ImageStart, &ImageCount);
-			std::vector<unsigned char> vImageSemantics((size_t)maximum(ImageCount, 0), GORES_CMAP_NORMAL);
-			for(int ImageIndex = 0; ImageIndex < ImageCount; ++ImageIndex)
+			if(m_vGoresDistanceFieldBuildImageSemantics.empty())
 			{
-				const auto *pImage = static_cast<const CMapItemImage_v2 *>(pMap->GetItem(ImageStart + ImageIndex));
-				if(!pImage)
-					continue;
+				int ImageStart = 0;
+				int ImageCount = 0;
+				pMap->GetType(MAPITEMTYPE_IMAGE, &ImageStart, &ImageCount);
+				m_vGoresDistanceFieldBuildImageSemantics.assign((size_t)maximum(ImageCount, 0), GORES_CMAP_NORMAL);
+				for(int ImageIndex = 0; ImageIndex < ImageCount; ++ImageIndex)
+				{
+					const auto *pImage = static_cast<const CMapItemImage_v2 *>(pMap->GetItem(ImageStart + ImageIndex));
+					if(!pImage)
+						continue;
 
-				const char *pImageName = pMap->GetDataString(pImage->m_ImageName);
-				vImageSemantics[(size_t)ImageIndex] = GoresSemanticImageToCMapValue(pImageName);
-				pMap->UnloadData(pImage->m_ImageName);
+					const char *pImageName = pMap->GetDataString(pImage->m_ImageName);
+					m_vGoresDistanceFieldBuildImageSemantics[(size_t)ImageIndex] = GoresSemanticImageToCMapValue(pImageName);
+					pMap->UnloadData(pImage->m_ImageName);
+				}
 			}
 
-			for(int GroupIndex = 0; GroupIndex < pLayers->NumGroups(); ++GroupIndex)
+			int WorkLeft = maximum(0, Budget);
+			for(; m_GoresDistanceFieldBuildGroup < pLayers->NumGroups(); ++m_GoresDistanceFieldBuildGroup)
 			{
-				const CMapItemGroup *pGroup = pLayers->GetGroup(GroupIndex);
+				const CMapItemGroup *pGroup = pLayers->GetGroup(m_GoresDistanceFieldBuildGroup);
 				if(!pGroup)
 					continue;
 
-				for(int LayerOffset = 0; LayerOffset < pGroup->m_NumLayers; ++LayerOffset)
+				for(; m_GoresDistanceFieldBuildLayer < pGroup->m_NumLayers; ++m_GoresDistanceFieldBuildLayer)
 				{
-					const CMapItemLayer *pLayer = pLayers->GetLayer(pGroup->m_StartLayer + LayerOffset);
+					const CMapItemLayer *pLayer = pLayers->GetLayer(pGroup->m_StartLayer + m_GoresDistanceFieldBuildLayer);
 					if(!pLayer || pLayer->m_Type != LAYERTYPE_TILES)
 						continue;
 
 					const auto *pTilemap = reinterpret_cast<const CMapItemLayerTilemap *>(pLayer);
 					if(pTilemap->m_Flags != 0 ||
-						pTilemap->m_Width != Width ||
-						pTilemap->m_Height != Height ||
+						pTilemap->m_Width != m_GoresDistanceFieldWidth ||
+						pTilemap->m_Height != m_GoresDistanceFieldHeight ||
 						pTilemap->m_Image < 0 ||
-						pTilemap->m_Image >= ImageCount)
+						pTilemap->m_Image >= (int)m_vGoresDistanceFieldBuildImageSemantics.size())
 						continue;
 
-					const unsigned char SemanticValue = vImageSemantics[(size_t)pTilemap->m_Image];
+					const unsigned char SemanticValue = m_vGoresDistanceFieldBuildImageSemantics[(size_t)pTilemap->m_Image];
 					if(SemanticValue != GORES_CMAP_PENALTY && SemanticValue != GORES_CMAP_REWARD)
 						continue;
 
-					if(pMap->GetDataSize(pTilemap->m_Data) < MapSize * (int)sizeof(CTile))
+					if(pMap->GetDataSize(pTilemap->m_Data) < m_GoresDistanceFieldBuildMapSize * (int)sizeof(CTile))
 						continue;
 
+					if(m_GoresDistanceFieldBuildLoadedVisualLayerData != pTilemap->m_Data)
+					{
+						ReleaseGoresDistanceFieldVisualLayerData();
+						m_GoresDistanceFieldBuildLoadedVisualLayerData = pTilemap->m_Data;
+					}
 					const CTile *pLayerTiles = static_cast<const CTile *>(pMap->GetData(pTilemap->m_Data));
 					if(!pLayerTiles)
+					{
+						ReleaseGoresDistanceFieldVisualLayerData();
 						continue;
+					}
 
-					for(int Index = 0; Index < MapSize; ++Index)
+					const int End = std::min(m_GoresDistanceFieldBuildMapSize, m_GoresDistanceFieldBuildCursor + WorkLeft);
+					for(int Index = m_GoresDistanceFieldBuildCursor; Index < End; ++Index)
 					{
 						if(pLayerTiles[Index].m_Index == TILE_AIR)
 							continue;
@@ -3618,113 +3790,192 @@ void CTClient::BuildGoresDistanceField()
 							CellValue = GORES_CMAP_REWARD;
 					}
 
-					pMap->UnloadData(pTilemap->m_Data);
+					WorkLeft -= End - m_GoresDistanceFieldBuildCursor;
+					m_GoresDistanceFieldBuildCursor = End;
+					if(m_GoresDistanceFieldBuildCursor < m_GoresDistanceFieldBuildMapSize)
+						return;
+					ReleaseGoresDistanceFieldVisualLayerData();
+					m_GoresDistanceFieldBuildCursor = 0;
+					if(WorkLeft <= 0)
+					{
+						++m_GoresDistanceFieldBuildLayer;
+						return;
+					}
 				}
+				m_GoresDistanceFieldBuildLayer = 0;
 			}
 		}
 	}
 
 	static constexpr int DISTANCE_INF = std::numeric_limits<int>::max();
-	m_vGoresDistanceToFinish.assign((size_t)MapSize, DISTANCE_INF);
+	m_vGoresDistanceToFinish.assign((size_t)m_GoresDistanceFieldBuildMapSize, DISTANCE_INF);
+	m_GoresDistanceFieldBuildCursor = 0;
+	m_GoresDistanceFieldBuildStage = EGoresDistanceFieldBuildStage::INIT_QUEUE;
+}
 
-	using TDistanceNode = std::pair<int, int>;
-	std::priority_queue<TDistanceNode, std::vector<TDistanceNode>, std::greater<TDistanceNode>> Queue;
-	for(const int FinishIndex : vFinishIndices)
+void CTClient::StepGoresDistanceFieldQueueInit(int Budget)
+{
+	static constexpr int DISTANCE_INF = std::numeric_limits<int>::max();
+	const int Total = (int)m_vGoresDistanceFieldBuildFinishIndices.size();
+	const int End = std::min(Total, m_GoresDistanceFieldBuildCursor + maximum(0, Budget));
+	for(int Cursor = m_GoresDistanceFieldBuildCursor; Cursor < End; ++Cursor)
 	{
-		if(FinishIndex < 0 || FinishIndex >= MapSize || !vPassable[FinishIndex] ||
+		const int FinishIndex = m_vGoresDistanceFieldBuildFinishIndices[(size_t)Cursor];
+		if(FinishIndex < 0 || FinishIndex >= m_GoresDistanceFieldBuildMapSize || !m_vGoresDistanceFieldBuildPassable[(size_t)FinishIndex] ||
 			m_vGoresDistanceToFinish[(size_t)FinishIndex] != DISTANCE_INF)
 			continue;
 		m_vGoresDistanceToFinish[(size_t)FinishIndex] = 0;
-		Queue.emplace(0, FinishIndex);
+		m_GoresDistanceFieldBuildQueue.emplace(0, FinishIndex);
 	}
+	m_GoresDistanceFieldBuildCursor = End;
+	if(m_GoresDistanceFieldBuildCursor < Total)
+		return;
 
-	if(Queue.empty())
+	if(m_GoresDistanceFieldBuildQueue.empty())
 	{
-		m_vGoresCMap.clear();
-		m_vvGoresDirectTeleOuts.clear();
-		m_vGoresDistanceToFinish.clear();
+		FailGoresDistanceFieldBuild();
 		return;
 	}
+	m_GoresDistanceFieldBuildStage = EGoresDistanceFieldBuildStage::DIJKSTRA;
+}
+
+void CTClient::StepGoresDistanceFieldDijkstra(int Budget)
+{
+	const CCollision *pCollision = Collision();
+	if(!pCollision || !pCollision->GameLayer() || m_GoresDistanceFieldWidth <= 0)
+	{
+		FailGoresDistanceFieldBuild();
+		return;
+	}
+	const CTile *pGame = pCollision->GameLayer();
+	const CTile *pFront = pCollision->FrontLayer();
+	const CTeleTile *pTele = pCollision->TeleLayer();
+	const int Width = m_GoresDistanceFieldWidth;
+	const int Height = m_GoresDistanceFieldHeight;
+	static constexpr int DISTANCE_INF = std::numeric_limits<int>::max();
 
 	const auto TryRelax = [&](int Index, int NewDistance) {
 		if(NewDistance < m_vGoresDistanceToFinish[(size_t)Index])
 		{
 			m_vGoresDistanceToFinish[(size_t)Index] = NewDistance;
-			Queue.emplace(NewDistance, Index);
+			m_GoresDistanceFieldBuildQueue.emplace(NewDistance, Index);
 		}
 	};
 
-	while(!Queue.empty())
+	int WorkLeft = maximum(0, Budget);
+	while(WorkLeft > 0)
 	{
-		const int CurDistance = Queue.top().first;
-		const int Cur = Queue.top().second;
-		Queue.pop();
-		if(CurDistance != m_vGoresDistanceToFinish[(size_t)Cur])
-			continue;
-
-		const int X = Cur % Width;
-		const int Y = Cur / Width;
-		const int CurGameTile = pGame[Cur].m_Index;
-		const int CurFrontTile = pFront ? pFront[Cur].m_Index : TILE_AIR;
-		const bool CurIsStart = CurGameTile == TILE_START || CurFrontTile == TILE_START;
-		const bool CurIsFinish = CurGameTile == TILE_FINISH || CurFrontTile == TILE_FINISH;
-		const int CurEnterCost = GoresDistanceFieldTraversalCost(m_vGoresCMap[(size_t)Cur], CurIsStart, CurIsFinish);
-		const int aDx[4] = {1, -1, 0, 0};
-		const int aDy[4] = {0, 0, 1, -1};
-
-		for(int Dir = 0; Dir < 4; ++Dir)
+		if(m_GoresDistanceFieldBuildPendingTeleNumber > 0)
 		{
-			const int PredX = X + aDx[Dir];
-			const int PredY = Y + aDy[Dir];
-			if(PredX < 0 || PredY < 0 || PredX >= Width || PredY >= Height)
+			const int TeleIndex = m_GoresDistanceFieldBuildPendingTeleNumber - 1;
+			if(TeleIndex < 0 || TeleIndex >= (int)m_vvGoresDistanceFieldBuildDirectTeleInputs.size())
+			{
+				m_GoresDistanceFieldBuildPendingTeleNumber = 0;
+				m_GoresDistanceFieldBuildPendingTeleCursor = 0;
 				continue;
-
-			const int PredIndex = PredY * Width + PredX;
-			if(!vPassable[(size_t)PredIndex])
-				continue;
-
-			const int PredTeleType = pTele ? pTele[PredIndex].m_Type : 0;
-			if(IsPlayerTeleportInputTileForGoresDistanceField(PredTeleType))
-				continue;
-			if(CurDistance <= DISTANCE_INF - CurEnterCost)
-				TryRelax(PredIndex, CurDistance + CurEnterCost);
+			}
+			const auto &vInputs = m_vvGoresDistanceFieldBuildDirectTeleInputs[(size_t)TeleIndex];
+			while(WorkLeft > 0 && m_GoresDistanceFieldBuildPendingTeleCursor < (int)vInputs.size())
+			{
+				--WorkLeft;
+				TryRelax(vInputs[(size_t)m_GoresDistanceFieldBuildPendingTeleCursor], m_GoresDistanceFieldBuildPendingTeleDistance);
+				++m_GoresDistanceFieldBuildPendingTeleCursor;
+			}
+			if(m_GoresDistanceFieldBuildPendingTeleCursor < (int)vInputs.size())
+				return;
+			m_GoresDistanceFieldBuildPendingTeleNumber = 0;
+			m_GoresDistanceFieldBuildPendingTeleCursor = 0;
+			m_GoresDistanceFieldBuildPendingTeleDistance = 0;
+			continue;
 		}
 
-		if(pTele && pTele[Cur].m_Type == TILE_TELEOUT)
+		if(m_GoresDistanceFieldBuildQueue.empty())
+			break;
+
 		{
-			const int TeleNumber = pTele[Cur].m_Number;
-			if(TeleNumber > 0 && (int)vvDirectTeleInputs.size() >= TeleNumber)
+			--WorkLeft;
+			const int CurDistance = m_GoresDistanceFieldBuildQueue.top().first;
+			const int Cur = m_GoresDistanceFieldBuildQueue.top().second;
+			m_GoresDistanceFieldBuildQueue.pop();
+			if(CurDistance != m_vGoresDistanceToFinish[(size_t)Cur])
+				continue;
+
+			const int X = Cur % Width;
+			const int Y = Cur / Width;
+			const int CurGameTile = pGame[Cur].m_Index;
+			const int CurFrontTile = pFront ? pFront[Cur].m_Index : TILE_AIR;
+			const bool CurIsStart = CurGameTile == TILE_START || CurFrontTile == TILE_START;
+			const bool CurIsFinish = CurGameTile == TILE_FINISH || CurFrontTile == TILE_FINISH;
+			const int CurEnterCost = GoresDistanceFieldTraversalCost(m_vGoresCMap[(size_t)Cur], CurIsStart, CurIsFinish);
+			const int aDx[4] = {1, -1, 0, 0};
+			const int aDy[4] = {0, 0, 1, -1};
+
+			for(int Dir = 0; Dir < 4; ++Dir)
 			{
-				for(const int PredIndex : vvDirectTeleInputs[(size_t)TeleNumber - 1])
-					TryRelax(PredIndex, CurDistance);
+				const int PredX = X + aDx[Dir];
+				const int PredY = Y + aDy[Dir];
+				if(PredX < 0 || PredY < 0 || PredX >= Width || PredY >= Height)
+					continue;
+
+				const int PredIndex = PredY * Width + PredX;
+				if(!m_vGoresDistanceFieldBuildPassable[(size_t)PredIndex])
+					continue;
+
+				const int PredTeleType = pTele ? pTele[PredIndex].m_Type : 0;
+				if(IsPlayerTeleportInputTileForGoresDistanceField(PredTeleType))
+					continue;
+				if(CurDistance <= DISTANCE_INF - CurEnterCost)
+					TryRelax(PredIndex, CurDistance + CurEnterCost);
+			}
+
+			if(pTele && pTele[Cur].m_Type == TILE_TELEOUT)
+			{
+				const int TeleNumber = pTele[Cur].m_Number;
+				if(TeleNumber > 0 && (int)m_vvGoresDistanceFieldBuildDirectTeleInputs.size() >= TeleNumber)
+				{
+					m_GoresDistanceFieldBuildPendingTeleNumber = TeleNumber;
+					m_GoresDistanceFieldBuildPendingTeleCursor = 0;
+					m_GoresDistanceFieldBuildPendingTeleDistance = CurDistance;
+				}
 			}
 		}
 	}
 
-	bool HasReachableStart = false;
-	for(int Index = 0; Index < MapSize; ++Index)
+	if(!m_GoresDistanceFieldBuildQueue.empty() || m_GoresDistanceFieldBuildPendingTeleNumber > 0)
+		return;
+	m_GoresDistanceFieldBuildCursor = 0;
+	m_GoresDistanceFieldBuildStage = EGoresDistanceFieldBuildStage::CHECK_REACHABLE_START;
+}
+
+void CTClient::StepGoresDistanceFieldReachableStartCheck(int Budget)
+{
+	const CCollision *pCollision = Collision();
+	if(!pCollision || !pCollision->GameLayer())
+	{
+		FailGoresDistanceFieldBuild();
+		return;
+	}
+	const CTile *pGame = pCollision->GameLayer();
+	const CTile *pFront = pCollision->FrontLayer();
+	static constexpr int DISTANCE_INF = std::numeric_limits<int>::max();
+	const int End = std::min(m_GoresDistanceFieldBuildMapSize, m_GoresDistanceFieldBuildCursor + maximum(0, Budget));
+	for(int Index = m_GoresDistanceFieldBuildCursor; Index < End; ++Index)
 	{
 		const int Tile = pGame[Index].m_Index;
 		const int FrontTile = pFront ? pFront[Index].m_Index : TILE_AIR;
 		const bool IsStart = Tile == TILE_START || FrontTile == TILE_START;
 		if(IsStart && m_vGoresDistanceToFinish[(size_t)Index] != DISTANCE_INF)
 		{
-			HasReachableStart = true;
-			break;
+			CompleteGoresDistanceFieldBuild();
+			return;
 		}
 	}
 
-	if(!HasReachableStart)
-	{
-		m_vGoresCMap.clear();
-		m_vvGoresDirectTeleOuts.clear();
-		m_vGoresDistanceToFinish.clear();
+	m_GoresDistanceFieldBuildCursor = End;
+	if(m_GoresDistanceFieldBuildCursor < m_GoresDistanceFieldBuildMapSize)
 		return;
-	}
 
-	m_GoresDistanceFieldWidth = Width;
-	m_GoresDistanceFieldHeight = Height;
-	m_GoresDistanceFieldValid = true;
+	FailGoresDistanceFieldBuild();
 }
 
 void CTClient::ApplyFocusModeEffects()

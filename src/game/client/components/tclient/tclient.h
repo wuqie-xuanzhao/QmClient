@@ -17,10 +17,12 @@
 #include <game/client/components/qmclient/modes.h>
 
 #include <deque>
+#include <queue>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 class IJob;
@@ -199,6 +201,15 @@ class CTClient : public CComponent
 	void TrackHookDirection(int Dummy);
 
 	// Gores 地图进度（全图距离场估算）
+	enum class EGoresDistanceFieldBuildStage
+	{
+		IDLE,
+		SCAN_TILES,
+		SCAN_VISUAL_LAYERS,
+		INIT_QUEUE,
+		DIJKSTRA,
+		CHECK_REACHABLE_START,
+	};
 	bool m_GoresDistanceFieldValid = false;
 	bool m_GoresDistanceFieldAttempted = false;
 	int64_t m_GoresDistanceFieldNextBuildTryTick = 0;
@@ -208,6 +219,26 @@ class CTClient : public CComponent
 	std::vector<unsigned char> m_vGoresCMap; // 0=normal 1=blocked 2=tele 3=penalty 4=reward
 	std::vector<std::vector<int>> m_vvGoresDirectTeleOuts;
 	std::vector<int> m_vGoresDistanceToFinish;
+	EGoresDistanceFieldBuildStage m_GoresDistanceFieldBuildStage = EGoresDistanceFieldBuildStage::IDLE;
+	int m_GoresDistanceFieldBuildMapSize = 0;
+	int m_GoresDistanceFieldBuildCursor = 0;
+	int m_GoresDistanceFieldBuildGroup = 0;
+	int m_GoresDistanceFieldBuildLayer = 0;
+	int m_GoresDistanceFieldBuildLoadedVisualLayerData = -1;
+	bool m_GoresDistanceFieldBuildHadStart = false;
+	const void *m_pGoresDistanceFieldBuildMap = nullptr;
+	const void *m_pGoresDistanceFieldBuildGameLayer = nullptr;
+	const void *m_pGoresDistanceFieldBuildFrontLayer = nullptr;
+	const void *m_pGoresDistanceFieldBuildTeleLayer = nullptr;
+	int m_GoresDistanceFieldBuildPendingTeleNumber = 0;
+	int m_GoresDistanceFieldBuildPendingTeleCursor = 0;
+	int m_GoresDistanceFieldBuildPendingTeleDistance = 0;
+	std::vector<unsigned char> m_vGoresDistanceFieldBuildPassable;
+	std::vector<unsigned char> m_vGoresDistanceFieldBuildImageSemantics;
+	std::vector<int> m_vGoresDistanceFieldBuildFinishIndices;
+	std::vector<std::vector<int>> m_vvGoresDistanceFieldBuildDirectTeleInputs;
+	using TGoresDistanceNode = std::pair<int, int>;
+	std::priority_queue<TGoresDistanceNode, std::vector<TGoresDistanceNode>, std::greater<TGoresDistanceNode>> m_GoresDistanceFieldBuildQueue;
 	bool m_aGoresWasOnStartLastTick[NUM_DUMMIES] = {false, false};
 	bool m_aGoresRunStarted[NUM_DUMMIES] = {false, false};
 	int m_aGoresRunStartDistanceToFinish[NUM_DUMMIES] = {0, 0};
@@ -220,7 +251,18 @@ class CTClient : public CComponent
 	void UpdateGoresWeaponCycle();
 	void InvalidateGoresDistanceField();
 	void EnsureGoresDistanceField();
-	void BuildGoresDistanceField();
+	void ResetGoresDistanceFieldBuild();
+	void ReleaseGoresDistanceFieldVisualLayerData();
+	void StartGoresDistanceFieldBuild();
+	void ContinueGoresDistanceFieldBuild();
+	bool IsGoresDistanceFieldBuildContextCurrent() const;
+	void FailGoresDistanceFieldBuild();
+	void CompleteGoresDistanceFieldBuild();
+	void StepGoresDistanceFieldTileScan(int Budget);
+	void StepGoresDistanceFieldVisualLayers(int Budget);
+	void StepGoresDistanceFieldQueueInit(int Budget);
+	void StepGoresDistanceFieldDijkstra(int Budget);
+	void StepGoresDistanceFieldReachableStartCheck(int Budget);
 	void UpdateGoresMapProgress();
 	bool IsGoresMapProgressDebugRouteEnabled() const;
 	bool BuildGoresDebugRoute(std::vector<vec2> &vRoutePoints, int Dummy) const;
