@@ -5783,6 +5783,22 @@ TEST(QmMonitoringHelpers, AppearanceTabNamesInitializeBeforeLanguageChange)
 	EXPECT_NE(TabNamesBody.find("!s_AppearanceTabNamesInitialized || str_comp"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AssetsTabNamesInitializeBeforeLanguageChange)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t TabNamesPos = Body.find("static const char *s_apAssetsTabNames[NUMBER_OF_ASSETS_TABS] = {};");
+	ASSERT_NE(TabNamesPos, std::string::npos);
+	const size_t FirstTabDrawPos = Body.find("DoButton_MenuTab(&s_aPageTabs[Tab], s_apAssetsTabNames[Tab]", TabNamesPos);
+	ASSERT_NE(FirstTabDrawPos, std::string::npos);
+	const std::string TabNamesBody = Body.substr(TabNamesPos, FirstTabDrawPos - TabNamesPos);
+
+	EXPECT_NE(TabNamesBody.find("s_AssetsTabNamesInitialized"), std::string::npos);
+	EXPECT_NE(TabNamesBody.find("!s_AssetsTabNamesInitialized || str_comp"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, MenuPerfEventsExposePageAttributionFields)
 {
 	{

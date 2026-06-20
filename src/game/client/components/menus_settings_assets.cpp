@@ -4201,8 +4201,10 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	static CButtonContainer s_aPageTabs[NUMBER_OF_ASSETS_TABS] = {};
 	static const char *s_apAssetsTabNames[NUMBER_OF_ASSETS_TABS] = {};
 	static char s_aAssetsLanguageFile[IO_MAX_PATH_LENGTH] = {};
-	if(str_comp(s_aAssetsLanguageFile, g_Config.m_ClLanguagefile) != 0)
+	static bool s_AssetsTabNamesInitialized = false;
+	if(!s_AssetsTabNamesInitialized || str_comp(s_aAssetsLanguageFile, g_Config.m_ClLanguagefile) != 0)
 	{
+		s_AssetsTabNamesInitialized = true;
 		str_copy(s_aAssetsLanguageFile, g_Config.m_ClLanguagefile, sizeof(s_aAssetsLanguageFile));
 		s_apAssetsTabNames[ASSETS_TAB_ENTITIES] = Localize("Entities");
 		s_apAssetsTabNames[ASSETS_TAB_GAME] = Localize("Game");
