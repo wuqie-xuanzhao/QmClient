@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <vector>
 
 class CTranslateResponse
@@ -415,6 +416,20 @@ public:
 	void OpenLanguageMenu();
 	void CloseLanguageMenu();
 	bool IsLanguageMenuOpen() const { return m_LanguageMenuOpen; }
+	bool TranslateVisibleChatLines();
+	static bool IsManualVisibleTranslateCandidate(int ClientId, bool HasText, bool HasTranslateResponse, const int *pLocalIds, size_t NumLocalIds)
+	{
+		if(!HasText || HasTranslateResponse)
+			return false;
+		if(ClientId < 0)
+			return false;
+		for(size_t i = 0; i < NumLocalIds; ++i)
+		{
+			if(pLocalIds[i] >= 0 && ClientId == pLocalIds[i])
+				return false;
+		}
+		return true;
+	}
 	static CUi::EPopupMenuFunctionResult PopupLanguageMenu(void *pContext, CUIRect View, bool Active);
 	void OpenChatLineMenu(const CLine &Line, vec2 ChatMousePos);
 	void CloseChatLineMenu();

@@ -2,8 +2,10 @@
 #ifndef GAME_CLIENT_COMPONENTS_TCLIENT_FAST_PRACTICE_H
 #define GAME_CLIENT_COMPONENTS_TCLIENT_FAST_PRACTICE_H
 
-#include <engine/console.h>
+#include <base/math.h>
+
 #include <engine/client/enums.h>
+#include <engine/console.h>
 
 #include <generated/protocol.h>
 
@@ -42,6 +44,17 @@ public:
 	int CurrentPracticeDummyId() const;
 	bool IsPracticeDummy(int ClientId) const;
 	int PracticeDummyId() const;
+	static vec2 PracticeTeleCursorTarget(vec2 CharacterPos, vec2 Target, float Zoom, int Deadzone, int FollowFactor)
+	{
+		vec2 TargetCameraOffset(0.0f, 0.0f);
+		const float TargetLength = length(Target);
+		if(TargetLength > 0.0001f)
+		{
+			const float OffsetAmount = maximum(TargetLength - (float)Deadzone, 0.0f) * ((float)FollowFactor / 100.0f);
+			TargetCameraOffset = normalize_pre_length(Target, TargetLength) * OffsetAmount;
+		}
+		return CharacterPos + (Target - TargetCameraOffset) * Zoom + TargetCameraOffset;
+	}
 
 	void OnReset() override;
 	void OnMapLoad() override;

@@ -1024,12 +1024,14 @@ bool CFastPractice::ConsumeSpectatorCommand()
 	int DummyClientId = -1;
 	if(!ResolvePracticeRoles(LocalClientId, DummyClientId))
 	{
-		Disable();
+		m_PracticeWorldInitialized = false;
+		GameClient()->m_PredictedDummyId = -1;
 		return true;
 	}
 	if(!m_PracticeWorldInitialized && !InitPracticeWorld())
 	{
-		Disable();
+		m_PracticeWorldInitialized = false;
+		GameClient()->m_PredictedDummyId = -1;
 		return true;
 	}
 
@@ -1319,11 +1321,15 @@ bool CFastPractice::AdvanceBaseWorldToTick(int TargetTick, int LocalClientId, in
 		if(pDummyInputData && !DummyFirst)
 			pDummyChar->OnDirectInput(pDummyInputData);
 
+		GameClient()->ApplyPreInputs(Tick, true, m_PracticeBaseWorld);
+
 		m_PracticeBaseWorld.m_GameTick = Tick;
 		if(pInputData)
 			pLocalChar->OnPredictedInput(pInputData);
 		if(pDummyInputData)
 			pDummyChar->OnPredictedInput(pDummyInputData);
+
+		GameClient()->ApplyPreInputs(Tick, false, m_PracticeBaseWorld);
 
 		m_PracticeBaseWorld.Tick();
 
@@ -1522,7 +1528,7 @@ bool CFastPractice::OverridePredict()
 
 		const bool DummyFirst = pInputData && pDummyInputData && pDummyChar->GetCid() < pLocalChar->GetCid();
 
-		pLocalChar->m_CanMoveInFreeze = false;
+		pLocalChar->m_CanMoveInFreeze = g_Config.m_ClPredictFreeze == 2 && PredTick - 1 - PredTick % 2 <= Tick;
 		if(pDummyChar)
 			pDummyChar->m_CanMoveInFreeze = false;
 
@@ -1533,11 +1539,16 @@ bool CFastPractice::OverridePredict()
 		if(pDummyInputData && !DummyFirst)
 			pDummyChar->OnDirectInput(pDummyInputData);
 
+		GameClient()->ApplyPreInputs(Tick, true, GameClient()->m_PredictedWorld);
+
 		GameClient()->m_PredictedWorld.m_GameTick = Tick;
 		if(pInputData)
 			pLocalChar->OnPredictedInput(pInputData);
 		if(pDummyInputData)
 			pDummyChar->OnPredictedInput(pDummyInputData);
+
+		GameClient()->ApplyPreInputs(Tick, false, GameClient()->m_PredictedWorld);
+
 		CollectTrackedProjectiles(GameClient()->m_PredictedWorld, LocalClientId, DummyClientId, vTrackedProjectilesBefore);
 		GameClient()->m_PredictedWorld.Tick();
 
@@ -1752,9 +1763,12 @@ int CFastPractice::ApplyVisualFastInputPrediction(int FinalTickRegular, int Loca
 			if(pDummyInputData->m_TargetX == 0 && pDummyInputData->m_TargetY == 0)
 				pDummyInputData->m_TargetY = -1;
 		}
-		pLocalChar->m_CanMoveInFreeze = false;
+		pLocalChar->m_CanMoveInFreeze = g_Config.m_ClPredictFreeze == 2 && FinalTickRegular - 1 - FinalTickRegular % 2 <= Tick;
 		if(pDummyChar)
 			pDummyChar->m_CanMoveInFreeze = false;
+
+		const bool TempPredEventState = VisualWorld.m_WorldConfig.m_PredictEvents;
+		VisualWorld.m_WorldConfig.m_PredictEvents = false;
 
 		if(DummyFirst)
 			pDummyChar->OnDirectInput(pDummyInputData);
@@ -1763,11 +1777,17 @@ int CFastPractice::ApplyVisualFastInputPrediction(int FinalTickRegular, int Loca
 		if(pDummyInputData && !DummyFirst)
 			pDummyChar->OnDirectInput(pDummyInputData);
 
+		GameClient()->ApplyPreInputs(Tick, true, VisualWorld);
+
 		VisualWorld.m_GameTick = Tick;
 		pLocalChar->OnPredictedInput(pInputData);
 		if(pDummyInputData)
 			pDummyChar->OnPredictedInput(pDummyInputData);
+
+		GameClient()->ApplyPreInputs(Tick, false, VisualWorld);
+
 		VisualWorld.Tick();
+		VisualWorld.m_WorldConfig.m_PredictEvents = TempPredEventState;
 
 		if(Tick == FinalTickSelf)
 		{
@@ -2460,7 +2480,12 @@ bool CFastPractice::ExecutePracticeCommand(int Team, int LocalClientId, CCharact
 		vec2 Target = GameClient()->m_Controls.m_aTargetPos[g_Config.m_ClDummy];
 		if(Cmd == "tc" || Cmd == "telecursor")
 		{
-			Target = (Target - GameClient()->m_Camera.m_Center) * GameClient()->m_Camera.m_Zoom + GameClient()->m_Camera.m_Center;
+			Target = PracticeTeleCursorTarget(
+				pChar->Core()->m_Pos,
+				vec2(pChar->Core()->m_Input.m_TargetX, pChar->Core()->m_Input.m_TargetY),
+				GameClient()->m_Camera.m_Zoom,
+				GameClient()->m_Camera.Deadzone(),
+				GameClient()->m_Camera.FollowFactor());
 		}
 		if(vArgs.size() > 1)
 		{

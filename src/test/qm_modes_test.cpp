@@ -53,6 +53,19 @@ TEST(QmGoresMode, UnlinkedFastInputConfigIsNotChanged)
 	EXPECT_FALSE(Changed);
 }
 
+TEST(QmGoresMode, ActiveGoresClearsDummyHammerState)
+{
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(true, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
+
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(true, 0, Changed), 0);
+	EXPECT_FALSE(Changed);
+
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(false, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+}
+
 TEST(QmFocusMode, ConfigOverrideRestoresOnlyAutoHiddenValues)
 {
 	SQmFocusConfigOverrideState State;

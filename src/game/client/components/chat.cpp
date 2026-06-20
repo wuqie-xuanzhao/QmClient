@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 #include <limits>
 #include <string>
 
@@ -1044,7 +1045,7 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 			MousePos.y >= m_TranslateButton.m_Y &&
 			MousePos.y <= m_TranslateButton.m_Y + m_TranslateButton.m_H;
 
-		// 左键处理：打开语言菜单
+		// 左键处理：翻译可见聊天；没有可翻译行时打开语言菜单
 		if(Event.m_Key == KEY_MOUSE_1)
 		{
 			if(Event.m_Flags & IInput::FLAG_PRESS)
@@ -1069,7 +1070,8 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 				m_TranslateButton.m_IsPressed = false;
 				if(Activate)
 				{
-					OpenLanguageMenu();
+					if(!TranslateVisibleChatLines())
+						OpenLanguageMenu();
 					return true;
 				}
 			}
@@ -3069,6 +3071,46 @@ void CChat::RenderTranslateButton(const CUIRect &ButtonRect)
 		const char *pTooltip = IsEnabled ? Localize("Right-click to disable auto-translate") : Localize("Right-click to enable auto-translate");
 		GameClient()->m_Tooltips.DoToolTip(&m_TranslateButton, &ButtonRect, pTooltip);
 	}
+}
+
+bool CChat::TranslateVisibleChatLines()
+{
+	const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
+	const bool FocusHideChat = FocusModeActive && g_Config.m_QmFocusModeHideChat;
+	const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
+	const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
+	const bool FocusHideEcho = FocusModeActive && g_Config.m_QmFocusModeHideEcho;
+	const bool IsScoreBoardOpen = GameClient()->m_Scoreboard.IsActive();
+	const bool ShowLargeArea = m_Show || (m_Mode != MODE_NONE && g_Config.m_ClShowChat == 1) || g_Config.m_ClShowChat == 2;
+	const int OffsetType = IsScoreBoardOpen ? 1 : 0;
+	const int64_t Now = time();
+	const int64_t VisibleTimeNoFocusTicks = static_cast<int64_t>(CHAT_VISIBLE_SECONDS_NO_FOCUS * time_freq());
+
+	int aLineIndices[MAX_LINES];
+	int NumLineIndices = 0;
+	for(int i = m_BacklogCurLine; i < MAX_LINES; i++)
+	{
+		const int LineIndex = ((m_CurrentLine - i) + MAX_LINES) % MAX_LINES;
+		CLine &Line = m_aLines[LineIndex];
+		if(!Line.m_Initialized)
+			break;
+		const bool ServerMessageIsBasicInfo = Line.m_ServerMessageClass == QmHudNotifications::EServerMessageClass::BasicInfo;
+		if(!ShouldRenderFocusFilteredChatLine(FocusHideChat, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, FocusHideEcho, Line.m_ClientId, Line.m_ForceVisible, ServerMessageIsBasicInfo))
+			continue;
+		if(Now > Line.m_Time + VisibleTimeNoFocusTicks && !ShowLargeArea)
+			break;
+		if(Line.m_aYOffset[OffsetType] < 0.0f)
+			continue;
+		if(Line.m_CutOffProgress >= 1.0f)
+			break;
+		if(!IsManualVisibleTranslateCandidate(Line.m_ClientId, Line.m_aText[0] != '\0', Line.m_pTranslateResponse != nullptr, GameClient()->m_aLocalIds, std::size(GameClient()->m_aLocalIds)))
+			continue;
+
+		aLineIndices[NumLineIndices++] = LineIndex;
+	}
+	for(int i = 0; i < NumLineIndices; i++)
+		GameClient()->m_Translate.Translate(m_aLines[aLineIndices[i]]);
+	return NumLineIndices > 0;
 }
 
 void CChat::ToggleAutoTranslate()

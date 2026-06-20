@@ -3812,6 +3812,10 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 		g_Config.m_TcFastInput = TcFastInput ? 1 : 0;
 	if(TcFastInputOthersChanged)
 		g_Config.m_TcFastInputOthers = TcFastInputOthers ? 1 : 0;
+	bool DummyHammerChanged = false;
+	const int DummyHammer = ApplyQmGoresDummyHammerConfig(GoresActive, g_Config.m_ClDummyHammer, DummyHammerChanged);
+	if(DummyHammerChanged)
+		g_Config.m_ClDummyHammer = DummyHammer;
 	if(!StateWasKnown)
 		m_PrevGoresModeActive = GoresActive;
 	if(StateWasKnown && GoresActive != m_PrevGoresModeActive)
@@ -3824,7 +3828,7 @@ void CTClient::ApplyGoresFastInputLink(bool AutoMapCheck)
 		GameClient()->Echo(aGoresMsg, true);
 	}
 
-	FastInputConfigChanged = TcFastInputChanged || TcFastInputOthersChanged;
+	FastInputConfigChanged = TcFastInputChanged || TcFastInputOthersChanged || DummyHammerChanged;
 
 	m_PrevGoresModeActive = GoresActive;
 

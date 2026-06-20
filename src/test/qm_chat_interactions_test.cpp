@@ -1,9 +1,36 @@
 #include <game/client/components/chat.h>
+#include <game/client/components/tclient/fast_practice.h>
 
 #include <gtest/gtest.h>
 #include <test/test.h>
 
+#include <iterator>
 #include <string>
+
+namespace
+{
+	std::string SourceFunctionBody(const std::string &Source, const std::string &Signature)
+	{
+		const size_t FunctionStart = Source.find(Signature);
+		EXPECT_NE(FunctionStart, std::string::npos) << Signature;
+		const size_t BodyStart = Source.find("{", FunctionStart);
+		EXPECT_NE(BodyStart, std::string::npos) << Signature;
+		int Depth = 0;
+		for(size_t Index = BodyStart; Index < Source.size(); ++Index)
+		{
+			if(Source[Index] == '{')
+				++Depth;
+			else if(Source[Index] == '}')
+			{
+				--Depth;
+				if(Depth == 0)
+					return Source.substr(BodyStart, Index - BodyStart);
+			}
+		}
+		ADD_FAILURE() << Signature;
+		return {};
+	}
+}
 
 TEST(QmChatInteractions, ClampBacklogLine)
 {
@@ -27,6 +54,53 @@ TEST(QmChatInteractions, BacklogLineToScrollbarValue)
 	EXPECT_FLOAT_EQ(CChat::BacklogLineToScrollbarValue(12, 12), 0.0f);
 	EXPECT_FLOAT_EQ(CChat::BacklogLineToScrollbarValue(6, 12), 0.5f);
 	EXPECT_FLOAT_EQ(CChat::BacklogLineToScrollbarValue(20, 12), 0.0f);
+}
+
+TEST(QmFastPracticeCommands, TeleCursorTargetMatchesPracticeCursorWorldConversion)
+{
+	const vec2 CharacterPos(100.0f, 200.0f);
+	const vec2 Target(400.0f, 0.0f);
+	const vec2 Result = CFastPractice::PracticeTeleCursorTarget(CharacterPos, Target, 2.0f, 100, 50);
+
+	EXPECT_FLOAT_EQ(Result.x, 750.0f);
+	EXPECT_FLOAT_EQ(Result.y, 200.0f);
+}
+
+TEST(QmFastPracticeCommands, TeleportDefaultsToAimingOrSpectatingPosition)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
+	const size_t CommandBlock = Source.find("if(Cmd == \"tp\" || Cmd == \"teleport\" || Cmd == \"tc\" || Cmd == \"telecursor\")");
+	ASSERT_NE(CommandBlock, std::string::npos);
+	const size_t TelecursorBranch = Source.find("if(Cmd == \"tc\" || Cmd == \"telecursor\")", CommandBlock);
+	ASSERT_NE(TelecursorBranch, std::string::npos);
+	const std::string DefaultTargetBlock = Source.substr(CommandBlock, TelecursorBranch - CommandBlock);
+
+	EXPECT_NE(DefaultTargetBlock.find("vec2 Target = GameClient()->m_Controls.m_aTargetPos[g_Config.m_ClDummy];"), std::string::npos);
+	EXPECT_EQ(DefaultTargetBlock.find("PracticeTeleCursorTarget"), std::string::npos);
+}
+
+TEST(QmFastPracticeCommands, SpectatorCommandKeepsPracticeStateOnSnapshotMiss)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
+	const std::string Body = SourceFunctionBody(Source, "bool CFastPractice::ConsumeSpectatorCommand()");
+
+	EXPECT_EQ(Body.find("Disable();"), std::string::npos);
+	EXPECT_NE(Body.find("m_PracticeWorldInitialized = false;"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->m_PredictedDummyId = -1;"), std::string::npos);
+}
+
+TEST(QmFastPracticeCommands, PredictionLoopsReuseNormalPreInputAndFreezeSemantics)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
+	const std::string OverrideBody = SourceFunctionBody(Source, "bool CFastPractice::OverridePredict()");
+	const std::string VisualBody = SourceFunctionBody(Source, "int CFastPractice::ApplyVisualFastInputPrediction(");
+
+	EXPECT_NE(OverrideBody.find("GameClient()->ApplyPreInputs(Tick, true, GameClient()->m_PredictedWorld);"), std::string::npos);
+	EXPECT_NE(OverrideBody.find("GameClient()->ApplyPreInputs(Tick, false, GameClient()->m_PredictedWorld);"), std::string::npos);
+	EXPECT_NE(OverrideBody.find("g_Config.m_ClPredictFreeze == 2"), std::string::npos);
+	EXPECT_NE(VisualBody.find("GameClient()->ApplyPreInputs(Tick, true, VisualWorld);"), std::string::npos);
+	EXPECT_NE(VisualBody.find("GameClient()->ApplyPreInputs(Tick, false, VisualWorld);"), std::string::npos);
+	EXPECT_NE(VisualBody.find("VisualWorld.m_WorldConfig.m_PredictEvents = false;"), std::string::npos);
 }
 
 TEST(QmChatInteractions, ClickDragThreshold)
@@ -101,4 +175,29 @@ TEST(QmChatInteractions, IgnoresKnownServerClassForNonServerMessages)
 {
 	const auto Class = CChat::ResolveLineServerMessageClass(3, "DDraceNetwork Version: 18.9", QmHudNotifications::EServerMessageClass::Prompt);
 	EXPECT_EQ(Class, QmHudNotifications::EServerMessageClass::None);
+}
+
+TEST(QmChatInteractions, ManualVisibleTranslationCandidatesAreOnlyUntranslatedRemotePlayerLines)
+{
+	int aLocalIds[] = {2, 7};
+	EXPECT_TRUE(CChat::IsManualVisibleTranslateCandidate(3, true, false, aLocalIds, std::size(aLocalIds)));
+	EXPECT_FALSE(CChat::IsManualVisibleTranslateCandidate(-1, true, false, aLocalIds, std::size(aLocalIds)));
+	EXPECT_FALSE(CChat::IsManualVisibleTranslateCandidate(-2, true, false, aLocalIds, std::size(aLocalIds)));
+	EXPECT_FALSE(CChat::IsManualVisibleTranslateCandidate(2, true, false, aLocalIds, std::size(aLocalIds)));
+	EXPECT_FALSE(CChat::IsManualVisibleTranslateCandidate(3, false, false, aLocalIds, std::size(aLocalIds)));
+	EXPECT_FALSE(CChat::IsManualVisibleTranslateCandidate(3, true, true, aLocalIds, std::size(aLocalIds)));
+}
+
+TEST(QmChatInteractions, VisibleTranslationCollectsCandidatesBeforeStartingJobs)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string Body = SourceFunctionBody(Source, "bool CChat::TranslateVisibleChatLines()");
+	const size_t ScanLoop = Body.find("for(int i = m_BacklogCurLine; i < MAX_LINES; i++)");
+	ASSERT_NE(ScanLoop, std::string::npos);
+	const size_t CollectIndex = Body.find("aLineIndices[NumLineIndices++] = LineIndex;", ScanLoop);
+	ASSERT_NE(CollectIndex, std::string::npos);
+	const size_t TranslateLoop = Body.find("for(int i = 0; i < NumLineIndices; i++)", CollectIndex);
+	ASSERT_NE(TranslateLoop, std::string::npos);
+
+	EXPECT_EQ(Body.find("GameClient()->m_Translate.Translate", ScanLoop), TranslateLoop + Body.substr(TranslateLoop).find("GameClient()->m_Translate.Translate"));
 }

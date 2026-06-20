@@ -46,6 +46,15 @@ bool ApplyQmGoresLinkedConfig(bool GoresActive, bool AutoToggle, bool CurrentVal
 	return GoresActive;
 }
 
+int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Changed)
+{
+	Changed = false;
+	if(!GoresActive || CurrentValue == 0)
+		return CurrentValue;
+	Changed = true;
+	return 0;
+}
+
 bool ShouldHideGoresGuide(bool GoresEnabled, bool HideGuidesEnabled, bool ManualGuideVisible)
 {
 	return GoresEnabled && HideGuidesEnabled && !ManualGuideVisible;
