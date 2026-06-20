@@ -1439,6 +1439,22 @@ turkish = "Sohbeti göster"
 polish = "Pokaż czat"
 
 [[message]]
+key = "Hide Chat"
+[message.translations]
+japanese = "チャットを隠す"
+korean = "채팅 숨기기"
+simplified_chinese = "隐藏聊天框"
+traditional_chinese = "隱藏聊天框"
+russian = "Скрыть чат"
+german = "Chat ausblenden"
+spanish = "Ocultar chat"
+french = "Masquer le chat"
+brazilian_portuguese = "Ocultar chat"
+portuguese = "Ocultar chat"
+turkish = "Sohbeti gizle"
+polish = "Ukryj czat"
+
+[[message]]
 key = "Show DDNet map finishes in server browser"
 [message.translations]
 japanese = "サーバーブラウザに DDNet マップのクリア状況を表示"

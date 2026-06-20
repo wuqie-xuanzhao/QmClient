@@ -461,6 +461,83 @@ TEST(QmNewUiMenuBranches, SettingsGraphicsOpacitySlidersExposeIndependentUiDomai
 	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize(\"Scoreboard opacity\")"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, DefaultUiSurfacesUseBlackThirtyPercent)
+{
+	const std::string QmConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables.h");
+
+	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_COL(QmUiColor, qm_ui_color, 0x000000"), std::string::npos);
+	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_COL(QmMapBrowserColor, qm_map_browser_color, 0x000000"), std::string::npos);
+	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_COL(QmScoreboardColor, qm_scoreboard_color, 0x000000"), std::string::npos);
+	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_INT(QmUiOpacity, qm_ui_opacity, 30"), std::string::npos);
+	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_INT(QmMapBrowserOpacity, qm_map_browser_opacity, 30"), std::string::npos);
+	EXPECT_NE(QmConfigSource.find("MACRO_CONFIG_INT(QmScoreboardOpacity, qm_scoreboard_opacity, 30"), std::string::npos);
+
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_COL(UiColor, ui_color, 0x4D000000"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_COL(ClMenuPanelColor, cl_menu_panel_color, 0x000000"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(ClMenuPanelOpacity, cl_menu_panel_opacity, 30"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(ClMenuPanelElevatedOpacity, cl_menu_panel_elevated_opacity, 30"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(ClSettingsTabbarOpacity, cl_settings_tabbar_opacity, 30"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
+{
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string GameClientSource = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string LanguageSource = ReadTextFile("data/languages/simplified_chinese.txt");
+
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransition, qm_skin_change_transition, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId = \"qm_2_72_0_skin_transition_animation_toggle\""), std::string::npos);
+	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId,\n\t\t\t\t\t\t\"qm_2_62_8_weapon_animation\""), std::string::npos);
+	EXPECT_NE(MenusSource.find("return \"皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 锤中偷皮 chuizhong toupi\";"), std::string::npos);
+
+	const size_t Toggle = MenusSource.find("DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSkinChangeTransition");
+	ASSERT_NE(Toggle, std::string::npos);
+	const size_t AdvancedIf = MenusSource.find("if(g_Config.m_QmSkinChangeTransition)", Toggle);
+	const size_t TypeLabel = MenusSource.find("Localize(\"Skin transition type\")", Toggle);
+	const size_t DurationLabel = MenusSource.find("Localize(\"Skin transition duration\")", Toggle);
+	ASSERT_NE(AdvancedIf, std::string::npos);
+	ASSERT_NE(TypeLabel, std::string::npos);
+	ASSERT_NE(DurationLabel, std::string::npos);
+	EXPECT_LT(Toggle, AdvancedIf);
+	EXPECT_LT(AdvancedIf, TypeLabel);
+	EXPECT_LT(TypeLabel, DurationLabel);
+
+	EXPECT_NE(GameClientSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_SkinTransitionStart.has_value()"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_StartTime.has_value()"), std::string::npos);
+	EXPECT_NE(LanguageSource.find("Skin transition animation\n== 皮肤切换动画"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, NameplateOthersModeSuppressesLocalIdentityRows)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/nameplates.cpp");
+	const std::string UpdateCoordXAlignFrameState = FunctionBody(Source, "void CNamePlates::UpdateCoordXAlignFrameState");
+	const std::string RenderNamePlateGame = FunctionBody(Source, "void CNamePlates::RenderNamePlateGame");
+
+	EXPECT_EQ(UpdateCoordXAlignFrameState.find("FrameState.m_LocalRoundedX = RoundCoordToCentitiles(GameClient()->m_LocalCharacterPos.x / 32.0f);\n\tFrameState.m_LocalAligned = true;"), std::string::npos);
+	EXPECT_NE(UpdateCoordXAlignFrameState.find("if(CoordXAlignState.m_Aligned)\n\t\t\tFrameState.m_LocalAligned = true;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("const bool IsAnyLocalClient = GameClient()->IsLocalClientId(ClientId);"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("ClientId == m_pData->m_CoordXAlignFrame.m_LocalClientId &&"), std::string::npos);
+	EXPECT_EQ(RenderNamePlateGame.find("IsLocalClient &&\n\t\tm_pData->m_CoordXAlignFrame.m_LocalAligned"), std::string::npos);
+	EXPECT_EQ(RenderNamePlateGame.find("const bool OwnNameplateScopeVisible"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowName = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClan = Data.m_ShowName && g_Config.m_ClNamePlatesClan && !HideIdentity;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("const bool NameplateScopeAllowsCoords = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("const bool CoordModuleAllowsCoords = pPlayerInfo->m_Local ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("const bool ShowLocalAlignedCoordX = NameplateScopeAllowsCoords && CoordXAlignHintEnabled && LocalCoordXAligned;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowCoordX = (NameplateScopeAllowsCoords && CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordX != 0) || ShowLocalAlignedCoordX;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowCoordY = NameplateScopeAllowsCoords && CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordY != 0;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowCoords = (NameplateScopeAllowsCoords && CoordModuleAllowsCoords) || ShowLocalAlignedCoordX;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("!IsAnyLocalClient &&\n\t\tGameClient()->m_Snap.m_LocalClientId >= 0"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("if(Data.m_ShowName && !HideIdentity && g_Config.m_TcWarList && g_Config.m_TcWarListShowClan"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_Local = pPlayerInfo->m_Local;"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, NewOpacityControlsDoNotChainLegacyPanelOpacity)
 {
 	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
@@ -751,6 +828,57 @@ TEST(QmNewUiMenuBranches, DisplayChangedDoesNotUseDisplayUnionData)
 	EXPECT_EQ(Body.find("Event.display.data1"), std::string::npos);
 	EXPECT_NE(Body.find("Event.window.data1"), std::string::npos);
 	EXPECT_NE(Body.find("Graphics()->SwitchWindowScreen(DisplayIndex, false);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
+{
+	const std::string Source = ReadTextFile("src/engine/client/client.cpp");
+	const std::string Detector = FunctionBody(Source, "static bool QmCrashTextHasGraphicsDriverFault");
+	const std::string Recovery = FunctionBody(Source, "static bool ApplyQmSafeGraphicsRecovery");
+	const std::string StartupHook = FunctionBody(Source, "static void RecoverQmGraphicsSettingsAfterDriverCrash");
+
+	EXPECT_NE(Detector.find("Exception module: nvoglv64.dll"), std::string::npos);
+	EXPECT_NE(Detector.find(" in module nvoglv64.dll"), std::string::npos);
+	EXPECT_NE(Detector.find("Exception module: vulkan-1.dll"), std::string::npos);
+	EXPECT_NE(Detector.find("Exception module: D3D12Core.dll"), std::string::npos);
+	EXPECT_NE(Detector.find(" in module D3D12Core.dll"), std::string::npos);
+	EXPECT_NE(Detector.find("Exception module: d3d12.dll"), std::string::npos);
+	EXPECT_NE(Detector.find("Exception module: dxgi.dll"), std::string::npos);
+	EXPECT_NE(Detector.find(" in module opengl32.dll"), std::string::npos);
+
+	EXPECT_NE(StartupHook.find("gs_pQmLifecycleMarkerFile"), std::string::npos);
+	EXPECT_NE(StartupHook.find("ListDirectoryInfo"), std::string::npos);
+	EXPECT_NE(StartupHook.find("ReadFileStr"), std::string::npos);
+
+	EXPECT_NE(Recovery.find("str_copy(g_Config.m_GfxBackend, \"OpenGL\");"), std::string::npos);
+	EXPECT_NE(Recovery.find("g_Config.m_GfxGLMajor = 3;"), std::string::npos);
+	EXPECT_NE(Recovery.find("g_Config.m_GfxGLMinor = 0;"), std::string::npos);
+	EXPECT_NE(Recovery.find("g_Config.m_GfxFsaaSamples = 0;"), std::string::npos);
+	EXPECT_NE(Recovery.find("g_Config.m_GfxFullscreen = 0;"), std::string::npos);
+
+	const size_t HookCall = Source.find("RecoverQmGraphicsSettingsAfterDriverCrash(pStorage);");
+	const size_t CommandLineParse = Source.find("pConsole->ParseArguments(argc - 1, &argv[1]);");
+	ASSERT_NE(HookCall, std::string::npos);
+	ASSERT_NE(CommandLineParse, std::string::npos);
+	EXPECT_LT(HookCall, CommandLineParse);
+}
+
+TEST(QmNewUiMenuBranches, LiveDirectorChatToggleIsHandledByOverlayInput)
+{
+	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string Contains = FunctionBody(Source, "bool CGameClient::LiveObserverOverlayContains");
+	const std::string Input = FunctionBody(Source, "bool CGameClient::HandleLiveObserverInput");
+	const std::string Render = FunctionBody(Source, "void CGameClient::RenderLiveObserverOverlay");
+
+	EXPECT_NE(Source.find("constexpr float LIVE_OBSERVER_CHAT_TOGGLE_W"), std::string::npos);
+	EXPECT_NE(Source.find("constexpr float LIVE_OBSERVER_CHAT_TOGGLE_H"), std::string::npos);
+	EXPECT_NE(Source.find("CUIRect LiveObserverChatToggleRect(float Height)"), std::string::npos);
+	EXPECT_NE(Contains.find("LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos)"), std::string::npos);
+	EXPECT_NE(Input.find("g_Config.m_ClShowChat = g_Config.m_ClShowChat == 0 ? 1 : 0;"), std::string::npos);
+	EXPECT_NE(Input.find("Input()->MouseModeAbsolute();"), std::string::npos);
+	EXPECT_LT(Input.find("LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos)"), Input.find("if(Panel.Inside(MousePos))"));
+	EXPECT_NE(Render.find("const CUIRect ChatToggle = LiveObserverChatToggleRect(Height);"), std::string::npos);
+	EXPECT_NE(Render.find("ChatVisible ? Localize(\"Hide Chat\") : Localize(\"Show chat\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)

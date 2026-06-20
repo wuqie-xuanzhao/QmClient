@@ -2878,6 +2878,9 @@ Hello from ui_widget::Modal
 Help: %s
 == Aide : %s
 
+Hide Chat
+== Masquer le chat
+
 Hide death/respawn effects
 == Cacher les effets de mort/résurrection
 
@@ -6288,6 +6291,9 @@ Skin queue
 
 Skin transition
 == Transition de skin
+
+Skin transition animation
+== Animation de transition de skin
 
 Skin transition duration
 == Durée de la transition de skin

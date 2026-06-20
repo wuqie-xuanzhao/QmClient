@@ -9176,6 +9176,22 @@ turkish = "Görünüm geçişi"
 polish = "Przejście skórki"
 
 [[message]]
+key = "Skin transition animation"
+[message.translations]
+japanese = "スキン遷移アニメーション"
+korean = "스킨 전환 애니메이션"
+simplified_chinese = "皮肤切换动画"
+traditional_chinese = "皮膚切換動畫"
+russian = "Анимация смены скина"
+german = "Skin-Übergangsanimation"
+spanish = "Animación de transición de skin"
+french = "Animation de transition de skin"
+brazilian_portuguese = "Animação de transição de skin"
+portuguese = "Animação de transição de skin"
+turkish = "Görünüm geçiş animasyonu"
+polish = "Animacja przejścia skórki"
+
+[[message]]
 key = "Skin transition duration"
 [message.translations]
 japanese = "スキン遷移時間"

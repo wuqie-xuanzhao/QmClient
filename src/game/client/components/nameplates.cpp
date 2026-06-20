@@ -1490,6 +1490,7 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 
 	const auto &ClientData = GameClient()->m_aClients[ClientId];
 	const bool OtherTeam = GameClient()->IsOtherTeam(ClientId);
+	const bool IsAnyLocalClient = GameClient()->IsLocalClientId(ClientId);
 
 	Data.m_InGame = true;
 
@@ -1498,14 +1499,14 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	Data.m_ShowName = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;
 	GameClient()->FormatStreamerName(ClientId, Data.m_aName, sizeof(Data.m_aName));
 	Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark && GameClient()->m_aClients[ClientId].m_Friend;
-	Data.m_ShowClientId = (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;
+	Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;
 	Data.m_FontSize = 18.0f + 20.0f * g_Config.m_ClNamePlatesSize / 100.0f;
 
 	Data.m_ClientId = ClientId;
 	Data.m_ClientIdSeparateLine = g_Config.m_ClNamePlatesIdsSeparateLine;
 	Data.m_FontSizeClientId = Data.m_ClientIdSeparateLine ? (18.0f + 20.0f * g_Config.m_ClNamePlatesIdsSize / 100.0f) : Data.m_FontSize;
 
-	Data.m_ShowClan = g_Config.m_ClNamePlatesClan && !HideIdentity;
+	Data.m_ShowClan = Data.m_ShowName && g_Config.m_ClNamePlatesClan && !HideIdentity;
 	GameClient()->FormatStreamerClan(ClientId, Data.m_aClan, sizeof(Data.m_aClan));
 	Data.m_FontSizeClan = 18.0f + 20.0f * g_Config.m_ClNamePlatesClanSize / 100.0f;
 
@@ -1518,18 +1519,20 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 		(Data.m_CoordXAlignHint || Data.m_CoordXAlignHintStrict);
 	const bool LocalCoordXAligned =
 		TrackCoordXAlign &&
-		pPlayerInfo->m_Local &&
+		ClientId == m_pData->m_CoordXAlignFrame.m_LocalClientId &&
 		m_pData->m_CoordXAlignFrame.m_LocalAligned;
-	const bool ShowLocalAlignedCoordX = CoordXAlignHintEnabled && LocalCoordXAligned;
-	Data.m_ShowCoordX = g_Config.m_QmNameplateCoordX != 0 || ShowLocalAlignedCoordX;
-	Data.m_ShowCoordY = g_Config.m_QmNameplateCoordY != 0;
-	Data.m_ShowCoords = (pPlayerInfo->m_Local ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords) || ShowLocalAlignedCoordX;
+	const bool NameplateScopeAllowsCoords = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;
+	const bool CoordModuleAllowsCoords = pPlayerInfo->m_Local ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
+	const bool ShowLocalAlignedCoordX = NameplateScopeAllowsCoords && CoordXAlignHintEnabled && LocalCoordXAligned;
+	Data.m_ShowCoordX = (NameplateScopeAllowsCoords && CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordX != 0) || ShowLocalAlignedCoordX;
+	Data.m_ShowCoordY = NameplateScopeAllowsCoords && CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordY != 0;
+	Data.m_ShowCoords = (NameplateScopeAllowsCoords && CoordModuleAllowsCoords) || ShowLocalAlignedCoordX;
 	Data.m_Coords = Position / 32.0f;
 	Data.m_FontSizeCoords = 18.0f + 20.0f * g_Config.m_ClNamePlatesCoordsSize / 100.0f;
 
 	const bool ShouldTrackCoordXAlign =
 		TrackCoordXAlign &&
-		!pPlayerInfo->m_Local &&
+		!IsAnyLocalClient &&
 		GameClient()->m_Snap.m_LocalClientId >= 0 &&
 		!OtherTeam &&
 		CoordXAlignHintEnabled;
@@ -1656,7 +1659,7 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	}
 
 	// TClient
-	if(!HideIdentity && g_Config.m_TcWarList && g_Config.m_TcWarListShowClan && GameClient()->m_WarList.GetWarData(ClientId).m_WarClan)
+	if(Data.m_ShowName && !HideIdentity && g_Config.m_TcWarList && g_Config.m_TcWarListShowClan && GameClient()->m_WarList.GetWarData(ClientId).m_WarClan)
 		Data.m_ShowClan = true;
 	Data.m_Local = pPlayerInfo->m_Local;
 

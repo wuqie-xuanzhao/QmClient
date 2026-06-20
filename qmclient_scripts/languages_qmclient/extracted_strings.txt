@@ -958,6 +958,7 @@ Heart
 Height
 Hello from ui_widget::Modal
 Help: %s
+Hide Chat
 Hide death/respawn effects
 Hide direction indicators
 Hide Echo messages
@@ -2095,6 +2096,7 @@ Skin is loading.
 Skin prefix
 Skin queue
 Skin transition
+Skin transition animation
 Skin transition duration
 Skin transition type
 Skin: %s

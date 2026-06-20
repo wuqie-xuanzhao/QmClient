@@ -2878,6 +2878,9 @@ Hello from ui_widget::Modal
 Help: %s
 == 도움말: %s
 
+Hide Chat
+== 채팅 숨기기
+
 Hide death/respawn effects
 == 죽음/부활 효과 숨기기
 
@@ -6288,6 +6291,9 @@ Skin queue
 
 Skin transition
 == 스킨 전환
+
+Skin transition animation
+== 스킨 전환 애니메이션
 
 Skin transition duration
 == 스킨 전환 지속 시간

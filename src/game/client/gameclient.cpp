@@ -135,7 +135,18 @@ namespace
 	constexpr float LIVE_OBSERVER_PANEL_HEADER_H = 72.0f;
 	constexpr float LIVE_OBSERVER_FREEVIEW_W = 150.0f;
 	constexpr float LIVE_OBSERVER_FREEVIEW_H = 42.0f;
+	constexpr float LIVE_OBSERVER_CHAT_TOGGLE_W = 122.0f;
+	constexpr float LIVE_OBSERVER_CHAT_TOGGLE_H = 34.0f;
 	constexpr float LIVE_OBSERVER_DIM_ALPHA = 0.10f;
+
+	CUIRect LiveObserverChatToggleRect(float Height)
+	{
+		return {
+			LIVE_OBSERVER_PANEL_MARGIN,
+			Height - LIVE_OBSERVER_PANEL_MARGIN - LIVE_OBSERVER_CHAT_TOGGLE_H,
+			LIVE_OBSERVER_CHAT_TOGGLE_W,
+			LIVE_OBSERVER_CHAT_TOGGLE_H};
+	}
 #endif
 
 	void LogPerfStage(const CGameClient *pGameClient, const char *pStage, const double DurationMs, const bool Force = false, const char *pExtra = nullptr)
@@ -1709,6 +1720,8 @@ bool CGameClient::LiveObserverOverlayContains(vec2 MousePos) const
 	const CUIRect Freeview = {LIVE_OBSERVER_PANEL_MARGIN, LIVE_OBSERVER_PANEL_MARGIN, LIVE_OBSERVER_FREEVIEW_W, LIVE_OBSERVER_FREEVIEW_H};
 	if(Freeview.Inside(MousePos))
 		return true;
+	if(LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos))
+		return true;
 
 	return LiveObserverTeamPanelContains(MousePos);
 }
@@ -1761,6 +1774,14 @@ bool CGameClient::HandleLiveObserverInput(const IInput::CEvent &Event)
 
 	if((Event.m_Flags & IInput::FLAG_PRESS) == 0 || (Event.m_Flags & IInput::FLAG_REPEAT) != 0)
 		return false;
+
+	if(LiveObserverChatToggleRect(LIVE_OBSERVER_UI_HEIGHT).Inside(MousePos))
+	{
+		g_Config.m_ClShowChat = g_Config.m_ClShowChat == 0 ? 1 : 0;
+		Input()->MouseModeAbsolute();
+		m_LiveObserverMouseAbsolute = true;
+		return true;
+	}
 
 	if(Panel.Inside(MousePos))
 	{
@@ -1847,6 +1868,16 @@ void CGameClient::RenderLiveObserverOverlay()
 	Freeview.Draw(FreeviewColor, IGraphics::CORNER_ALL, 8.0f);
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, m_LiveObserverFreeview ? 1.0f : 0.72f);
 	TextRender()->Text(Freeview.x + 14.0f, Freeview.y + 11.0f, 16.0f, m_LiveObserverHoldFreeview ? Localize("Temporary free camera") : Localize("Hold left click for free camera"), -1.0f);
+
+	const CUIRect ChatToggle = LiveObserverChatToggleRect(Height);
+	const bool ChatVisible = g_Config.m_ClShowChat != 0;
+	const bool ChatToggleHovered = ChatToggle.Inside(MousePos);
+	const ColorRGBA ChatToggleColor = ChatVisible ?
+						  (ChatToggleHovered ? ColorRGBA(0.12f, 0.38f, 0.34f, 0.86f) : ColorRGBA(0.10f, 0.30f, 0.28f, 0.76f)) :
+						  (ChatToggleHovered ? ColorRGBA(0.18f, 0.18f, 0.20f, 0.72f) : ColorRGBA(0.05f, 0.05f, 0.055f, 0.58f));
+	ChatToggle.Draw(ChatToggleColor, IGraphics::CORNER_ALL, 8.0f);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, ChatVisible ? 0.92f : 0.70f);
+	TextRender()->Text(ChatToggle.x + 14.0f, ChatToggle.y + 9.0f, 15.0f, ChatVisible ? Localize("Hide Chat") : Localize("Show chat"), -1.0f);
 
 	const float PanelX = Width - LIVE_OBSERVER_PANEL_MARGIN - LIVE_OBSERVER_PANEL_WIDTH;
 	const float PanelY = LIVE_OBSERVER_PANEL_MARGIN;
@@ -5426,7 +5457,7 @@ void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &
 		return;
 	}
 
-	if(g_Config.m_QmSkinChangeTransitionMs <= 0)
+	if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)
 	{
 		m_LastSkinTransitionKey = Key;
 		m_HasSkinTransitionKey = true;
@@ -5457,12 +5488,16 @@ float CGameClient::CClientData::SkinChangeTransitionProgress(std::chrono::nanose
 	}
 
 	const float ElapsedSeconds = std::chrono::duration<float>(Now - m_SkinTransitionStart.value()).count();
+	if(!g_Config.m_QmSkinChangeTransition)
+	{
+		return 1.0f;
+	}
 	return ResolveSkinChangeTransitionProgress(ElapsedSeconds, g_Config.m_QmSkinChangeTransitionMs);
 }
 
 const CTeeRenderInfo *CGameClient::CClientData::SkinChangePreviousRenderInfo(std::chrono::nanoseconds Now) const
 {
-	if(g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_SkinTransitionStart.has_value() || SkinChangeTransitionProgress(Now) >= 1.0f || !m_SkinTransitionPreviousRenderInfo.Valid())
+	if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_SkinTransitionStart.has_value() || SkinChangeTransitionProgress(Now) >= 1.0f || !m_SkinTransitionPreviousRenderInfo.Valid())
 	{
 		return nullptr;
 	}

@@ -692,6 +692,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return "qm_2_66_0_editor_collab_4p";
 		return "qm_2_63_0_new_ime";
 	};
+	const char *pSkinTransitionAnimationFeatureId = "qm_2_72_0_skin_transition_animation_toggle";
 
 	{
 		if(m_QmClientSettingsTab < 0 || m_QmClientSettingsTab >= NUMBER_OF_QMCLIENT_SETTINGS_TABS)
@@ -746,6 +747,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					const char *pNewFeatureId = "qm_2_62_8_visual_tab";
 					const char *apVisualFeatureIds[] = {
 						pNewFeatureId,
+						pSkinTransitionAnimationFeatureId,
 						"qm_2_62_8_weapon_animation",
 						"qm_2_62_8_weapon_switch_scope",
 					};
@@ -2409,7 +2411,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
 		case EQmModuleId::JumpHint: return "位置跳跃提示 tiaoyue tishi jump hint position edge jump color yanse 颜色 horizontal position shuiping weizhi vertical position chuizhi weizhi font size ziti";
 		case EQmModuleId::SkinTransition:
-			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 类型 leixing 时长 shichang 锤中偷皮 chuizhong toupi";
+			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 锤中偷皮 chuizhong toupi";
 		case EQmModuleId::WeaponTrajectory: return "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi";
 		case EQmModuleId::WeaponAnimation: return "武器动画 wuqi donghua weapon animation 切换武器动画 qiehuan wuqi donghua weapon switch animation 滑入 huaru 旋转 xuanzhuan";
 		case EQmModuleId::CameraView: return "镜头 jingtou camera drift 漂移 piaoyi dynamic fov 动态视野 dongtai shiye 纵横比 zonghengbi aspect ratio preset 预设 yushe 自定义 zidinyi 视野视角 shijiao";
@@ -2745,6 +2747,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				5,
 				Localize("Skin transition"),
 				Localize("Configure hammer skin steal and skin transition animations"),
+				pSkinTransitionAnimationFeatureId,
 			};
 		case EQmModuleId::WeaponTrajectory:
 			return {2, Localize("Weapon Trajectory"), Localize("Show grenade and laser trajectory preview")};
@@ -3965,36 +3968,47 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-skin-transition-type", &LabelColValue, Localize("Skin transition type"), LgBodySize);
-					const char *apSkinTransitionDropDownNames[] = {
-						Localize("Afterimage pop"),
-						Localize("Smooth fade"),
-						Localize("Slide left"),
-						Localize("Spin pop"),
-						Localize("Brightness shift"),
-					};
-					static CUi::SDropDownState s_SkinTransitionDropDownState;
-					static CScrollRegion s_SkinTransitionDropDownScrollRegion;
-					s_SkinTransitionDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_SkinTransitionDropDownScrollRegion;
-					const int TransitionTypeSelectedNew = Ui()->DoDropDown(&ControlColValue, g_Config.m_QmSkinChangeTransitionType, apSkinTransitionDropDownNames, std::size(apSkinTransitionDropDownNames), s_SkinTransitionDropDownState);
-					if(g_Config.m_QmSkinChangeTransitionType != TransitionTypeSelectedNew)
-						g_Config.m_QmSkinChangeTransitionType = TransitionTypeSelectedNew;
-				}
+				CUIRect AnimationToggleRow = Row;
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmSkinChangeTransition, "Skin transition animation", Localize("Skin transition animation"), &g_Config.m_QmSkinChangeTransition, &Row, LgLineHeight);
+				if(!IsQmNewFeatureMarkRead(pSkinTransitionAnimationFeatureId))
+					DrawQmNewFeatureDot(AnimationToggleRow);
+				MarkQmNewFeatureHovered(pSkinTransitionAnimationFeatureId, AnimationToggleRow);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				SLabelProperties SkinTransitionDurationLabelProps;
-				SkinTransitionDurationLabelProps.m_DisallowNewline = true;
-				SkinTransitionDurationLabelProps.m_StopAtEnd = true;
-				SkinTransitionDurationLabelProps.m_MinimumFontSize = 6.0f;
-				DoQmSettingsLabel("qmclient-skin-transition-duration", &LabelCol, Localize("Skin transition duration"), LgBodySize, TEXTALIGN_ML, SkinTransitionDurationLabelProps);
-				static int s_QmSkinChangeTransitionMsInputId;
-				RenderSliderWithValueInput(&s_QmSkinChangeTransitionMsInputId, ControlCol, &g_Config.m_QmSkinChangeTransitionMs, 0, 2000, "ms");
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				if(g_Config.m_QmSkinChangeTransition)
+				{
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					{
+						CUIRect LabelColValue, ControlColValue;
+						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+						DoQmSettingsLabel("qmclient-skin-transition-type", &LabelColValue, Localize("Skin transition type"), LgBodySize);
+						const char *apSkinTransitionDropDownNames[] = {
+							Localize("Afterimage pop"),
+							Localize("Smooth fade"),
+							Localize("Slide left"),
+							Localize("Spin pop"),
+							Localize("Brightness shift"),
+						};
+						static CUi::SDropDownState s_SkinTransitionDropDownState;
+						static CScrollRegion s_SkinTransitionDropDownScrollRegion;
+						s_SkinTransitionDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_SkinTransitionDropDownScrollRegion;
+						const int TransitionTypeSelectedNew = Ui()->DoDropDown(&ControlColValue, g_Config.m_QmSkinChangeTransitionType, apSkinTransitionDropDownNames, std::size(apSkinTransitionDropDownNames), s_SkinTransitionDropDownState);
+						if(g_Config.m_QmSkinChangeTransitionType != TransitionTypeSelectedNew)
+							g_Config.m_QmSkinChangeTransitionType = TransitionTypeSelectedNew;
+					}
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+					SLabelProperties SkinTransitionDurationLabelProps;
+					SkinTransitionDurationLabelProps.m_DisallowNewline = true;
+					SkinTransitionDurationLabelProps.m_StopAtEnd = true;
+					SkinTransitionDurationLabelProps.m_MinimumFontSize = 6.0f;
+					DoQmSettingsLabel("qmclient-skin-transition-duration", &LabelCol, Localize("Skin transition duration"), LgBodySize, TEXTALIGN_ML, SkinTransitionDurationLabelProps);
+					static int s_QmSkinChangeTransitionMsInputId;
+					RenderSliderWithValueInput(&s_QmSkinChangeTransitionMsInputId, ControlCol, &g_Config.m_QmSkinChangeTransitionMs, 0, 2000, "ms");
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				}
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -7251,7 +7265,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				DoLine_ColorPicker(&s_LyricsOutlineColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Outline color"), &g_Config.m_QmLyricsOutlineColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
 
 				CUIRect Preview;
-				CardContent.HSplitTop(42.0f, &Preview, &CardContent);
+				const float PreviewFont = (float)g_Config.m_QmSmtcLyricsFontSize;
+				const float PreviewPaddingX = 10.0f;
+				const float PreviewPaddingY = 7.0f;
+				const float PreviewLineGap = 5.0f;
+				const float PreviewLineStep = PreviewFont + PreviewLineGap;
+				const int PreviewLineCount = std::clamp(g_Config.m_QmSmtcLyricsLines, 1, 2);
+				const float PreviewHeight = std::max(42.0f, PreviewPaddingY * 2.0f + PreviewFont * PreviewLineCount + PreviewLineGap * (PreviewLineCount - 1));
+				CardContent.HSplitTop(PreviewHeight, &Preview, &CardContent);
 				ColorRGBA PreviewBg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsBgColor, true));
 				PreviewBg.a = std::clamp(g_Config.m_QmLyricsBgOpacity / 100.0f, 0.0f, 1.0f);
 				Preview.Draw(PreviewBg, IGraphics::CORNER_ALL, 5.0f);
@@ -7262,14 +7283,73 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				ColorRGBA PreviewOutline = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsOutlineColor, true));
 				PreviewOutline.a = std::clamp(g_Config.m_QmLyricsOutlineOpacity / 100.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(PreviewOutline);
-				const float PreviewFont = 9.0f;
-				const float PreviewX = Preview.x + 10.0f;
-				const float PreviewY = Preview.y + 7.0f;
-				TextRender()->TextColor(color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColor, true)));
-				const char *pPreviewCurrent = "Stop and stare";
-				TextRender()->Text(PreviewX, PreviewY, PreviewFont, pPreviewCurrent, -1.0f);
-				TextRender()->TextColor(color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsNextColor, true)));
-				TextRender()->Text(PreviewX, PreviewY + PreviewFont + 5.0f, PreviewFont, "I think I'm moving but I go nowhere", -1.0f);
+
+				static constexpr std::array<const char *, 3> s_apLyricsPreviewLines = {
+					"Stop and stare",
+					"I think I'm moving but I go nowhere",
+					"Yeah I know that everyone gets scared"};
+				static constexpr int64_t s_LyricsPreviewLineDurationMs = 2400;
+				static constexpr int64_t s_LyricsPreviewDurationMs = s_LyricsPreviewLineDurationMs * (int64_t)s_apLyricsPreviewLines.size();
+				const int64_t NowTick = time_get();
+				const int64_t NowMs = (NowTick / time_freq()) * 1000 + (NowTick % time_freq()) * 1000 / time_freq();
+				int64_t PreviewPositionMs = (NowMs + g_Config.m_QmSmtcLyricsOffsetMs) % s_LyricsPreviewDurationMs;
+				if(PreviewPositionMs < 0)
+					PreviewPositionMs += s_LyricsPreviewDurationMs;
+				const int PreviewCurrentLine = (int)(PreviewPositionMs / s_LyricsPreviewLineDurationMs);
+				const int64_t PreviewLineElapsedMs = PreviewPositionMs % s_LyricsPreviewLineDurationMs;
+				const int64_t PreviewTransitionMs = std::clamp<int64_t>(g_Config.m_QmLyricsFadeDurationMs, 0, s_LyricsPreviewLineDurationMs - 1);
+				float PreviewScroll = 0.0f;
+				if(PreviewTransitionMs > 0 && PreviewLineElapsedMs >= s_LyricsPreviewLineDurationMs - PreviewTransitionMs)
+				{
+					const float Progress = (float)(PreviewLineElapsedMs - (s_LyricsPreviewLineDurationMs - PreviewTransitionMs)) / (float)PreviewTransitionMs;
+					const float SmoothProgress = Progress * Progress * (3.0f - 2.0f * Progress);
+					PreviewScroll = PreviewLineStep * SmoothProgress;
+				}
+
+				CUIRect PreviewClip = Preview;
+				PreviewClip.Margin(1.0f, &PreviewClip);
+				Ui()->ClipEnable(&PreviewClip);
+
+				const float PreviewX = Preview.x + PreviewPaddingX;
+				const float PreviewY = Preview.y + PreviewPaddingY - PreviewScroll;
+				const float PreviewTextWidth = std::max(1.0f, Preview.w - PreviewPaddingX * 2.0f);
+				const int RenderLineCount = std::min<int>(PreviewLineCount + 1, (int)s_apLyricsPreviewLines.size());
+				const int PreviewScrollSeed = g_Config.m_QmLyricsMarqueeSpeed > 0 ? (int)(PreviewPositionMs / maximum(1, 1000 / g_Config.m_QmLyricsMarqueeSpeed)) : 0;
+				auto RenderPreviewLine = [&](const char *pText, float Y, const ColorRGBA &Color) {
+					const char *pRenderText = pText;
+					char aMarqueeText[256];
+					if(g_Config.m_QmLyricsMarquee && pText[0] != '\0' && TextRender()->TextWidth(PreviewFont, pText) > PreviewTextWidth)
+					{
+						const int TextLen = str_length(pText);
+						size_t TextBytes = 0;
+						size_t TextCount = 0;
+						str_utf8_stats(pText, (size_t)TextLen + 1, (size_t)TextLen + 1, &TextBytes, &TextCount);
+						(void)TextBytes;
+						const int OffsetChars = TextCount > 0 ? PreviewScrollSeed % (int)TextCount : 0;
+						int Offset = 0;
+						for(int i = 0; i < OffsetChars; ++i)
+							Offset = str_utf8_forward(pText, Offset);
+						str_format(aMarqueeText, sizeof(aMarqueeText), "%s   %s", pText + Offset, pText);
+						pRenderText = aMarqueeText;
+					}
+					TextRender()->TextColor(Color);
+					CTextCursor Cursor;
+					Cursor.m_FontSize = PreviewFont;
+					Cursor.m_LineWidth = PreviewTextWidth;
+					Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
+					Cursor.SetPosition(vec2(PreviewX, Y));
+					TextRender()->TextEx(&Cursor, pRenderText);
+				};
+
+				ColorRGBA PreviewCurrentColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColor, true));
+				ColorRGBA PreviewNextColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsNextColor, true));
+				for(int i = 0; i < RenderLineCount; ++i)
+				{
+					const int LineIndex = (PreviewCurrentLine + i) % (int)s_apLyricsPreviewLines.size();
+					RenderPreviewLine(s_apLyricsPreviewLines[LineIndex], PreviewY + PreviewLineStep * i, i == 0 ? PreviewCurrentColor : PreviewNextColor);
+				}
+
+				Ui()->ClipDisable();
 				TextRender()->TextColor(PrevTextColor);
 				TextRender()->TextOutlineColor(PrevOutlineColor);
 				TextRender()->SetRenderFlags(PrevFlags);

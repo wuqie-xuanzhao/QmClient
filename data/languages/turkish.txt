@@ -2878,6 +2878,9 @@ Hello from ui_widget::Modal
 Help: %s
 == Yardım: %s
 
+Hide Chat
+== Sohbeti gizle
+
 Hide death/respawn effects
 == Ölüm/yeniden doğma efektlerini gizle
 
@@ -6288,6 +6291,9 @@ Skin queue
 
 Skin transition
 == Görünüm geçişi
+
+Skin transition animation
+== Görünüm geçiş animasyonu
 
 Skin transition duration
 == Görünüm geçiş süresi

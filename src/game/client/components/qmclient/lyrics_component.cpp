@@ -14,8 +14,8 @@
 #include <game/client/gameclient.h>
 
 #include <algorithm>
-#include <cinttypes>
 #include <cctype>
+#include <cinttypes>
 #include <cstring>
 #include <ctime>
 #include <iterator>
@@ -25,259 +25,259 @@
 namespace
 {
 
-static void TrimString(std::string &Str)
-{
-	while(!Str.empty() && isspace((unsigned char)Str.back()))
-		Str.pop_back();
-	size_t Start = 0;
-	while(Start < Str.size() && isspace((unsigned char)Str[Start]))
-		Start++;
-	if(Start > 0)
-		Str.erase(0, Start);
-}
-
-static bool JsonIsString(const json_value *pValue)
-{
-	return pValue != nullptr && pValue != &json_value_none && pValue->type == json_string;
-}
-
-static bool JsonIsObject(const json_value *pValue)
-{
-	return pValue != nullptr && pValue != &json_value_none && pValue->type == json_object;
-}
-
-static bool JsonIsArray(const json_value *pValue)
-{
-	return pValue != nullptr && pValue != &json_value_none && pValue->type == json_array;
-}
-
-static bool JsonIsInteger(const json_value *pValue)
-{
-	return pValue != nullptr && pValue != &json_value_none && pValue->type == json_integer;
-}
-
-static const char *JsonStringOrEmpty(const json_value *pObj, const char *pName)
-{
-	const json_value *pValue = json_object_get(pObj, pName);
-	return JsonIsString(pValue) ? json_string_get(pValue) : "";
-}
-
-static int JsonIntOrDefault(const json_value *pObj, const char *pName, int Default)
-{
-	const json_value *pValue = json_object_get(pObj, pName);
-	return JsonIsInteger(pValue) ? json_int_get(pValue) : Default;
-}
-
-static const json_value *JsonGetPath(const json_value *pObj, const char *pA, const char *pB = nullptr, const char *pC = nullptr, const char *pD = nullptr)
-{
-	const json_value *pValue = pObj;
-	const char *apPath[] = {pA, pB, pC, pD};
-	for(const char *pKey : apPath)
+	static void TrimString(std::string &Str)
 	{
-		if(pKey == nullptr)
-			break;
-		if(!JsonIsObject(pValue))
-			return &json_value_none;
-		pValue = json_object_get(pValue, pKey);
+		while(!Str.empty() && isspace((unsigned char)Str.back()))
+			Str.pop_back();
+		size_t Start = 0;
+		while(Start < Str.size() && isspace((unsigned char)Str[Start]))
+			Start++;
+		if(Start > 0)
+			Str.erase(0, Start);
 	}
-	return pValue;
-}
 
-static std::string ResponseText(CHttpRequest *pRequest)
-{
-	unsigned char *pResult = nullptr;
-	size_t ResultLength = 0;
-	pRequest->Result(&pResult, &ResultLength);
-	if(pResult == nullptr || ResultLength == 0)
-		return {};
-	return std::string(reinterpret_cast<const char *>(pResult), ResultLength);
-}
-
-static std::string ExtractJsonObjectText(const std::string &Text)
-{
-	const size_t Start = Text.find('{');
-	const size_t End = Text.rfind('}');
-	if(Start == std::string::npos || End == std::string::npos || End < Start)
-		return {};
-	return Text.substr(Start, End - Start + 1);
-}
-
-static std::string ExtractXmlElementText(const std::string &Text, const char *pName)
-{
-	std::string StartTag = "<";
-	StartTag += pName;
-	std::string EndTag = "</";
-	EndTag += pName;
-	EndTag += ">";
-	size_t Start = Text.find(StartTag);
-	while(Start != std::string::npos)
+	static bool JsonIsString(const json_value *pValue)
 	{
-		const size_t NameEnd = Start + StartTag.size();
-		if(NameEnd < Text.size() && (Text[NameEnd] == '>' || isspace((unsigned char)Text[NameEnd])))
-			break;
-		Start = Text.find(StartTag, NameEnd);
+		return pValue != nullptr && pValue != &json_value_none && pValue->type == json_string;
 	}
-	if(Start == std::string::npos)
-		return {};
-	const size_t TagEnd = Text.find('>', Start);
-	if(TagEnd == std::string::npos)
-		return {};
-	Start = TagEnd + 1;
-	const size_t End = Text.find(EndTag, Start);
-	if(End == std::string::npos)
-		return {};
-	std::string Value = Text.substr(Start, End - Start);
-	static constexpr const char *pCdataStart = "<![CDATA[";
-	static constexpr const char *pCdataEnd = "]]>";
-	if(Value.rfind(pCdataStart, 0) == 0 && Value.size() >= str_length(pCdataStart) + str_length(pCdataEnd) &&
-		Value.compare(Value.size() - str_length(pCdataEnd), str_length(pCdataEnd), pCdataEnd) == 0)
-	{
-		Value = Value.substr(str_length(pCdataStart), Value.size() - str_length(pCdataStart) - str_length(pCdataEnd));
-	}
-	return Value;
-}
 
-static std::string ExtractXmlAttributeValue(const std::string &Text, const char *pElementName, const char *pAttributeName)
-{
-	std::string ElementNeedle = "<";
-	ElementNeedle += pElementName;
-	size_t Element = Text.find(ElementNeedle);
-	while(Element != std::string::npos)
+	static bool JsonIsObject(const json_value *pValue)
 	{
-		const size_t TagEnd = Text.find('>', Element);
+		return pValue != nullptr && pValue != &json_value_none && pValue->type == json_object;
+	}
+
+	static bool JsonIsArray(const json_value *pValue)
+	{
+		return pValue != nullptr && pValue != &json_value_none && pValue->type == json_array;
+	}
+
+	static bool JsonIsInteger(const json_value *pValue)
+	{
+		return pValue != nullptr && pValue != &json_value_none && pValue->type == json_integer;
+	}
+
+	static const char *JsonStringOrEmpty(const json_value *pObj, const char *pName)
+	{
+		const json_value *pValue = json_object_get(pObj, pName);
+		return JsonIsString(pValue) ? json_string_get(pValue) : "";
+	}
+
+	static int JsonIntOrDefault(const json_value *pObj, const char *pName, int Default)
+	{
+		const json_value *pValue = json_object_get(pObj, pName);
+		return JsonIsInteger(pValue) ? json_int_get(pValue) : Default;
+	}
+
+	static const json_value *JsonGetPath(const json_value *pObj, const char *pA, const char *pB = nullptr, const char *pC = nullptr, const char *pD = nullptr)
+	{
+		const json_value *pValue = pObj;
+		const char *apPath[] = {pA, pB, pC, pD};
+		for(const char *pKey : apPath)
+		{
+			if(pKey == nullptr)
+				break;
+			if(!JsonIsObject(pValue))
+				return &json_value_none;
+			pValue = json_object_get(pValue, pKey);
+		}
+		return pValue;
+	}
+
+	static std::string ResponseText(CHttpRequest *pRequest)
+	{
+		unsigned char *pResult = nullptr;
+		size_t ResultLength = 0;
+		pRequest->Result(&pResult, &ResultLength);
+		if(pResult == nullptr || ResultLength == 0)
+			return {};
+		return std::string(reinterpret_cast<const char *>(pResult), ResultLength);
+	}
+
+	static std::string ExtractJsonObjectText(const std::string &Text)
+	{
+		const size_t Start = Text.find('{');
+		const size_t End = Text.rfind('}');
+		if(Start == std::string::npos || End == std::string::npos || End < Start)
+			return {};
+		return Text.substr(Start, End - Start + 1);
+	}
+
+	static std::string ExtractXmlElementText(const std::string &Text, const char *pName)
+	{
+		std::string StartTag = "<";
+		StartTag += pName;
+		std::string EndTag = "</";
+		EndTag += pName;
+		EndTag += ">";
+		size_t Start = Text.find(StartTag);
+		while(Start != std::string::npos)
+		{
+			const size_t NameEnd = Start + StartTag.size();
+			if(NameEnd < Text.size() && (Text[NameEnd] == '>' || isspace((unsigned char)Text[NameEnd])))
+				break;
+			Start = Text.find(StartTag, NameEnd);
+		}
+		if(Start == std::string::npos)
+			return {};
+		const size_t TagEnd = Text.find('>', Start);
 		if(TagEnd == std::string::npos)
 			return {};
-		std::string AttrNeedle = pAttributeName;
-		AttrNeedle += "=\"";
-		size_t Attr = Text.find(AttrNeedle, Element);
-		if(Attr != std::string::npos && Attr < TagEnd)
+		Start = TagEnd + 1;
+		const size_t End = Text.find(EndTag, Start);
+		if(End == std::string::npos)
+			return {};
+		std::string Value = Text.substr(Start, End - Start);
+		static constexpr const char *pCdataStart = "<![CDATA[";
+		static constexpr const char *pCdataEnd = "]]>";
+		if(Value.rfind(pCdataStart, 0) == 0 && Value.size() >= str_length(pCdataStart) + str_length(pCdataEnd) &&
+			Value.compare(Value.size() - str_length(pCdataEnd), str_length(pCdataEnd), pCdataEnd) == 0)
 		{
-			Attr += AttrNeedle.size();
-			const size_t End = Text.find('"', Attr);
-			if(End != std::string::npos && End <= TagEnd)
-				return Text.substr(Attr, End - Attr);
+			Value = Value.substr(str_length(pCdataStart), Value.size() - str_length(pCdataStart) - str_length(pCdataEnd));
 		}
-		Element = Text.find(ElementNeedle, TagEnd);
+		return Value;
 	}
-	return {};
-}
 
-static void AppendJsonField(char *pBuf, size_t BufSize, const char *pKey, const char *pValue)
-{
-	char aValue[512];
-	EscapeJson(aValue, sizeof(aValue), pValue ? pValue : "");
-	if(pBuf[0] != '\0')
-		str_append(pBuf, ",", BufSize);
-	str_append(pBuf, "\"", BufSize);
-	str_append(pBuf, pKey, BufSize);
-	str_append(pBuf, "\":\"", BufSize);
-	str_append(pBuf, aValue, BufSize);
-	str_append(pBuf, "\"", BufSize);
-}
-
-static void BuildNeteaseHeaderJson(char *pBuf, size_t BufSize)
-{
-	char aFields[1024];
-	aFields[0] = '\0';
-	char aBuildVer[32];
-	char aRequestId[64];
-	const int64_t NowSeconds = time_timestamp();
-	const int64_t NowMs = NowSeconds * 1000 + (time_get() % time_freq()) * 1000 / time_freq();
-	str_format(aBuildVer, sizeof(aBuildVer), "%" PRId64, NowSeconds);
-	str_format(aRequestId, sizeof(aRequestId), "%" PRId64 "_%04d", NowMs, (int)(NowMs % 1000));
-	AppendJsonField(aFields, sizeof(aFields), "__csrf", "");
-	AppendJsonField(aFields, sizeof(aFields), "appver", "8.0.0");
-	AppendJsonField(aFields, sizeof(aFields), "buildver", aBuildVer);
-	AppendJsonField(aFields, sizeof(aFields), "channel", "");
-	AppendJsonField(aFields, sizeof(aFields), "deviceId", "");
-	AppendJsonField(aFields, sizeof(aFields), "mobilename", "");
-	AppendJsonField(aFields, sizeof(aFields), "resolution", "1920x1080");
-	AppendJsonField(aFields, sizeof(aFields), "os", "android");
-	AppendJsonField(aFields, sizeof(aFields), "osver", "");
-	AppendJsonField(aFields, sizeof(aFields), "requestId", aRequestId);
-	AppendJsonField(aFields, sizeof(aFields), "versioncode", "140");
-	AppendJsonField(aFields, sizeof(aFields), "MUSIC_U", "");
-	str_format(pBuf, BufSize, "{%s}", aFields);
-}
-
-static void BuildNeteaseCookie(char *pBuf, size_t BufSize)
-{
-	char aBuildVer[32];
-	char aRequestId[64];
-	const int64_t NowSeconds = time_timestamp();
-	const int64_t NowMs = NowSeconds * 1000 + (time_get() % time_freq()) * 1000 / time_freq();
-	str_format(aBuildVer, sizeof(aBuildVer), "%" PRId64, NowSeconds);
-	str_format(aRequestId, sizeof(aRequestId), "%" PRId64 "_%04d", NowMs, (int)(NowMs % 1000));
-	str_format(pBuf, BufSize,
-		"__csrf=; appver=8.0.0; buildver=%s; channel=; deviceId=; mobilename=; resolution=1920x1080; os=android; osver=; requestId=%s; versioncode=140; MUSIC_U=",
-		aBuildVer, aRequestId);
-}
-
-static std::string BuildKeyword(const char *pTitle, const char *pArtist)
-{
-	std::string Keyword = pTitle ? pTitle : "";
-	if(pArtist != nullptr && pArtist[0] != '\0')
+	static std::string ExtractXmlAttributeValue(const std::string &Text, const char *pElementName, const char *pAttributeName)
 	{
-		Keyword.push_back(' ');
-		Keyword.append(pArtist);
+		std::string ElementNeedle = "<";
+		ElementNeedle += pElementName;
+		size_t Element = Text.find(ElementNeedle);
+		while(Element != std::string::npos)
+		{
+			const size_t TagEnd = Text.find('>', Element);
+			if(TagEnd == std::string::npos)
+				return {};
+			std::string AttrNeedle = pAttributeName;
+			AttrNeedle += "=\"";
+			size_t Attr = Text.find(AttrNeedle, Element);
+			if(Attr != std::string::npos && Attr < TagEnd)
+			{
+				Attr += AttrNeedle.size();
+				const size_t End = Text.find('"', Attr);
+				if(End != std::string::npos && End <= TagEnd)
+					return Text.substr(Attr, End - Attr);
+			}
+			Element = Text.find(ElementNeedle, TagEnd);
+		}
+		return {};
 	}
-	return Keyword;
-}
 
-static int CandidateScore(const char *pTitle, const char *pArtist, const char *pAlbum, int DurationMs, const char *pWantedTitle, const char *pWantedArtist, const char *pWantedAlbum, int WantedDurationSec)
-{
-	int Score = 0;
-	if(pTitle != nullptr && pTitle[0] != '\0' && pWantedTitle != nullptr && str_comp_nocase(pTitle, pWantedTitle) == 0)
-		Score += 1000;
-	if(pArtist != nullptr && pArtist[0] != '\0' && pWantedArtist != nullptr && str_utf8_find_nocase(pArtist, pWantedArtist) != nullptr)
-		Score += 700;
-	if(pWantedAlbum != nullptr && pWantedAlbum[0] != '\0' && pAlbum != nullptr && pAlbum[0] != '\0' && str_comp_nocase(pAlbum, pWantedAlbum) == 0)
-		Score += 200;
-	if(DurationMs > 0 && WantedDurationSec > 0)
+	static void AppendJsonField(char *pBuf, size_t BufSize, const char *pKey, const char *pValue)
 	{
-		const int DiffMs = std::abs(DurationMs - WantedDurationSec * 1000);
-		if(DiffMs <= 3000)
-			Score += 300;
-		else if(DiffMs <= 8000)
-			Score += 100;
+		char aValue[512];
+		EscapeJson(aValue, sizeof(aValue), pValue ? pValue : "");
+		if(pBuf[0] != '\0')
+			str_append(pBuf, ",", BufSize);
+		str_append(pBuf, "\"", BufSize);
+		str_append(pBuf, pKey, BufSize);
+		str_append(pBuf, "\":\"", BufSize);
+		str_append(pBuf, aValue, BufSize);
+		str_append(pBuf, "\"", BufSize);
 	}
-	return Score;
-}
 
-static void AppendUrlEncoded(char *pBuf, size_t BufSize, const char *pKey, const char *pValue)
-{
-	char aEscaped[512];
-	EscapeUrl(aEscaped, sizeof(aEscaped), pValue);
-	if(pBuf[0] != '\0')
-		str_append(pBuf, "&", BufSize);
-	str_append(pBuf, pKey, BufSize);
-	str_append(pBuf, "=", BufSize);
-	str_append(pBuf, aEscaped, BufSize);
-}
-
-static bool SourceAppContains(const char *pSourceAppId, const char *pNeedle)
-{
-	return pSourceAppId != nullptr && pSourceAppId[0] != '\0' && str_find_nocase(pSourceAppId, pNeedle) != nullptr;
-}
-
-static void FillLineState(CLyrics::SLineState &State, const CLyricLine &Line, int LineIndex, int64_t PositionMs, bool Current)
-{
-	State = CLyrics::SLineState{};
-	if(Line.m_Text.empty())
-		return;
-
-	str_copy(State.m_aText, Line.m_Text.c_str(), sizeof(State.m_aText));
-	State.m_LineIndex = LineIndex;
-	State.m_HasTimedReveal = Current && !Line.m_vSyllables.empty();
-	if(State.m_HasTimedReveal)
+	static void BuildNeteaseHeaderJson(char *pBuf, size_t BufSize)
 	{
-		QmLyrics::BuildVisibleLineText(Line, PositionMs, State.m_aVisibleText, sizeof(State.m_aVisibleText));
+		char aFields[1024];
+		aFields[0] = '\0';
+		char aBuildVer[32];
+		char aRequestId[64];
+		const int64_t NowSeconds = time_timestamp();
+		const int64_t NowMs = NowSeconds * 1000 + (time_get() % time_freq()) * 1000 / time_freq();
+		str_format(aBuildVer, sizeof(aBuildVer), "%" PRId64, NowSeconds);
+		str_format(aRequestId, sizeof(aRequestId), "%" PRId64 "_%04d", NowMs, (int)(NowMs % 1000));
+		AppendJsonField(aFields, sizeof(aFields), "__csrf", "");
+		AppendJsonField(aFields, sizeof(aFields), "appver", "8.0.0");
+		AppendJsonField(aFields, sizeof(aFields), "buildver", aBuildVer);
+		AppendJsonField(aFields, sizeof(aFields), "channel", "");
+		AppendJsonField(aFields, sizeof(aFields), "deviceId", "");
+		AppendJsonField(aFields, sizeof(aFields), "mobilename", "");
+		AppendJsonField(aFields, sizeof(aFields), "resolution", "1920x1080");
+		AppendJsonField(aFields, sizeof(aFields), "os", "android");
+		AppendJsonField(aFields, sizeof(aFields), "osver", "");
+		AppendJsonField(aFields, sizeof(aFields), "requestId", aRequestId);
+		AppendJsonField(aFields, sizeof(aFields), "versioncode", "140");
+		AppendJsonField(aFields, sizeof(aFields), "MUSIC_U", "");
+		str_format(pBuf, BufSize, "{%s}", aFields);
 	}
-	else
+
+	static void BuildNeteaseCookie(char *pBuf, size_t BufSize)
 	{
-		str_copy(State.m_aVisibleText, State.m_aText, sizeof(State.m_aVisibleText));
+		char aBuildVer[32];
+		char aRequestId[64];
+		const int64_t NowSeconds = time_timestamp();
+		const int64_t NowMs = NowSeconds * 1000 + (time_get() % time_freq()) * 1000 / time_freq();
+		str_format(aBuildVer, sizeof(aBuildVer), "%" PRId64, NowSeconds);
+		str_format(aRequestId, sizeof(aRequestId), "%" PRId64 "_%04d", NowMs, (int)(NowMs % 1000));
+		str_format(pBuf, BufSize,
+			"__csrf=; appver=8.0.0; buildver=%s; channel=; deviceId=; mobilename=; resolution=1920x1080; os=android; osver=; requestId=%s; versioncode=140; MUSIC_U=",
+			aBuildVer, aRequestId);
 	}
-}
+
+	static std::string BuildKeyword(const char *pTitle, const char *pArtist)
+	{
+		std::string Keyword = pTitle ? pTitle : "";
+		if(pArtist != nullptr && pArtist[0] != '\0')
+		{
+			Keyword.push_back(' ');
+			Keyword.append(pArtist);
+		}
+		return Keyword;
+	}
+
+	static int CandidateScore(const char *pTitle, const char *pArtist, const char *pAlbum, int DurationMs, const char *pWantedTitle, const char *pWantedArtist, const char *pWantedAlbum, int WantedDurationSec)
+	{
+		int Score = 0;
+		if(pTitle != nullptr && pTitle[0] != '\0' && pWantedTitle != nullptr && str_comp_nocase(pTitle, pWantedTitle) == 0)
+			Score += 1000;
+		if(pArtist != nullptr && pArtist[0] != '\0' && pWantedArtist != nullptr && str_utf8_find_nocase(pArtist, pWantedArtist) != nullptr)
+			Score += 700;
+		if(pWantedAlbum != nullptr && pWantedAlbum[0] != '\0' && pAlbum != nullptr && pAlbum[0] != '\0' && str_comp_nocase(pAlbum, pWantedAlbum) == 0)
+			Score += 200;
+		if(DurationMs > 0 && WantedDurationSec > 0)
+		{
+			const int DiffMs = std::abs(DurationMs - WantedDurationSec * 1000);
+			if(DiffMs <= 3000)
+				Score += 300;
+			else if(DiffMs <= 8000)
+				Score += 100;
+		}
+		return Score;
+	}
+
+	static void AppendUrlEncoded(char *pBuf, size_t BufSize, const char *pKey, const char *pValue)
+	{
+		char aEscaped[512];
+		EscapeUrl(aEscaped, sizeof(aEscaped), pValue);
+		if(pBuf[0] != '\0')
+			str_append(pBuf, "&", BufSize);
+		str_append(pBuf, pKey, BufSize);
+		str_append(pBuf, "=", BufSize);
+		str_append(pBuf, aEscaped, BufSize);
+	}
+
+	static bool SourceAppContains(const char *pSourceAppId, const char *pNeedle)
+	{
+		return pSourceAppId != nullptr && pSourceAppId[0] != '\0' && str_find_nocase(pSourceAppId, pNeedle) != nullptr;
+	}
+
+	static void FillLineState(CLyrics::SLineState &State, const CLyricLine &Line, int LineIndex, int64_t PositionMs, bool Current)
+	{
+		State = CLyrics::SLineState{};
+		if(Line.m_Text.empty())
+			return;
+
+		str_copy(State.m_aText, Line.m_Text.c_str(), sizeof(State.m_aText));
+		State.m_LineIndex = LineIndex;
+		State.m_HasTimedReveal = Current && !Line.m_vSyllables.empty();
+		if(State.m_HasTimedReveal)
+		{
+			QmLyrics::BuildVisibleLineText(Line, PositionMs, State.m_aVisibleText, sizeof(State.m_aVisibleText));
+		}
+		else
+		{
+			str_copy(State.m_aVisibleText, State.m_aText, sizeof(State.m_aVisibleText));
+		}
+	}
 
 } // namespace
 
@@ -394,10 +394,12 @@ std::string CLyrics::BuildSignature(const STrackInfo &Info) const
 	return Key;
 }
 
-int64_t CLyrics::GetDisplayPositionMs(int64_t /*PositionMs*/) const
+int64_t CLyrics::GetDisplayPositionMs(int64_t PositionMs) const
 {
+	if(PositionMs > 100 && m_TimelineMode != ETimelineMode::INTERNAL_TIMER)
+		return PositionMs;
 	if(m_AnchorTick <= 0)
-		return 0;
+		return std::max<int64_t>(0, PositionMs);
 	if(!m_AnchorRunning)
 		return std::max<int64_t>(0, m_AnchorPositionMs);
 	const int64_t ElapsedMs = (time_get() - m_AnchorTick) * 1000 / time_freq();
@@ -1225,11 +1227,11 @@ bool CLyrics::IsInternalTimerSource(const char *pSourceAppId) const
 {
 	// Players that don't expose SMTC timeline data — must rely on local clock estimation.
 	return SourceAppContains(pSourceAppId, "cloudmusic") ||
-		SourceAppContains(pSourceAppId, "netease") ||
-		SourceAppContains(pSourceAppId, "163music") ||
-		SourceAppContains(pSourceAppId, "music.163") ||
-		SourceAppContains(pSourceAppId, "foobar2000") ||
-		SourceAppContains(pSourceAppId, "kugou");
+	       SourceAppContains(pSourceAppId, "netease") ||
+	       SourceAppContains(pSourceAppId, "163music") ||
+	       SourceAppContains(pSourceAppId, "music.163") ||
+	       SourceAppContains(pSourceAppId, "foobar2000") ||
+	       SourceAppContains(pSourceAppId, "kugou");
 }
 
 void CLyrics::UpdateTimeline(bool MediaPlaying, int64_t SmtcPositionMs, const char *pSourceAppId)

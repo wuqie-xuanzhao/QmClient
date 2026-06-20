@@ -83,6 +83,7 @@ namespace
 #include <chrono>
 #include <limits>
 #include <stack>
+#include <string>
 #include <thread>
 #include <tuple>
 
@@ -101,6 +102,157 @@ static constexpr ColorRGBA gs_ClientNetworkPrintColor{0.7f, 1, 0.7f, 1.0f};
 static constexpr ColorRGBA gs_ClientNetworkErrPrintColor{1.0f, 0.25f, 0.25f, 1.0f};
 static constexpr int64_t gs_HangTimeoutSeconds = 10;
 static constexpr const char *gs_pQmCrashDumpDir = "dumps/QmClient_Crash";
+static constexpr const char *gs_pQmLifecycleMarkerFile = "qmclient/lifecycle_pending.marker";
+
+struct SQmLatestCrashReport
+{
+	char m_aPath[IO_MAX_PATH_LENGTH] = "";
+	time_t m_TimeModified = 0;
+	int m_Rank = 0;
+};
+
+static int QmCrashReportRank(const char *pName)
+{
+	if(str_endswith_nocase(pName, "_fatal_report.txt") != nullptr)
+		return 2;
+	if(str_endswith_nocase(pName, ".RTP") != nullptr)
+		return 1;
+	return 0;
+}
+
+static int FindLatestQmCrashReportCallback(const CFsFileInfo *pInfo, int IsDir, int Type, void *pUser)
+{
+	(void)Type;
+	if(IsDir || pInfo == nullptr || pInfo->m_pName == nullptr)
+		return 0;
+
+	SQmLatestCrashReport *pLatest = static_cast<SQmLatestCrashReport *>(pUser);
+	const int Rank = QmCrashReportRank(pInfo->m_pName);
+	if(Rank == 0)
+		return 0;
+	if(pLatest->m_aPath[0] != '\0' &&
+		(pInfo->m_TimeModified < pLatest->m_TimeModified ||
+			(pInfo->m_TimeModified == pLatest->m_TimeModified && Rank <= pLatest->m_Rank)))
+	{
+		return 0;
+	}
+
+	str_format(pLatest->m_aPath, sizeof(pLatest->m_aPath), "%s/%s", gs_pQmCrashDumpDir, pInfo->m_pName);
+	pLatest->m_TimeModified = pInfo->m_TimeModified;
+	pLatest->m_Rank = Rank;
+	return 0;
+}
+
+static bool QmCrashTextHasGraphicsDriverFault(const char *pText)
+{
+	if(pText == nullptr || pText[0] == '\0')
+		return false;
+
+	static constexpr const char *s_apGraphicsDriverFaults[] = {
+		"Exception module: nvoglv64.dll",
+		" in module nvoglv64.dll",
+		"Exception module: nvd3dumx.dll",
+		" in module nvd3dumx.dll",
+		"Exception module: nvwgf2umx.dll",
+		" in module nvwgf2umx.dll",
+		"Exception module: amdvlk64.dll",
+		" in module amdvlk64.dll",
+		"Exception module: atio6axx.dll",
+		" in module atio6axx.dll",
+		"Exception module: ig9icd64.dll",
+		" in module ig9icd64.dll",
+		"Exception module: igvk64.dll",
+		" in module igvk64.dll",
+		"Exception module: opengl32.dll",
+		" in module opengl32.dll",
+		"Exception module: vulkan-1.dll",
+		" in module vulkan-1.dll",
+		"Exception module: D3D12Core.dll",
+		" in module D3D12Core.dll",
+		"Exception module: d3d12.dll",
+		" in module d3d12.dll",
+		"Exception module: dxgi.dll",
+		" in module dxgi.dll",
+	};
+	for(const char *pNeedle : s_apGraphicsDriverFaults)
+	{
+		if(str_find_nocase(pText, pNeedle) != nullptr)
+			return true;
+	}
+	return false;
+}
+
+static bool ApplyQmSafeGraphicsRecovery()
+{
+	bool Changed = false;
+	if(str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") != 0)
+	{
+		str_copy(g_Config.m_GfxBackend, "OpenGL");
+		Changed = true;
+	}
+	if(g_Config.m_GfxGLMajor != 3 || g_Config.m_GfxGLMinor != 0 || g_Config.m_GfxGLPatch != 0)
+	{
+		g_Config.m_GfxGLMajor = 3;
+		g_Config.m_GfxGLMinor = 0;
+		g_Config.m_GfxGLPatch = 0;
+		Changed = true;
+	}
+	if(g_Config.m_GfxFsaaSamples != 0)
+	{
+		g_Config.m_GfxFsaaSamples = 0;
+		Changed = true;
+	}
+	if(g_Config.m_GfxFullscreen != 0)
+	{
+		g_Config.m_GfxFullscreen = 0;
+		Changed = true;
+	}
+	if(g_Config.m_GfxBorderless != 0)
+	{
+		g_Config.m_GfxBorderless = 0;
+		Changed = true;
+	}
+	if(g_Config.m_Gfx3DTextureAnalysisRan != 0)
+	{
+		g_Config.m_Gfx3DTextureAnalysisRan = 0;
+		Changed = true;
+	}
+	if(g_Config.m_GfxDriverIsBlocked != 0)
+	{
+		g_Config.m_GfxDriverIsBlocked = 0;
+		Changed = true;
+	}
+	return Changed;
+}
+
+static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
+{
+	if(pStorage == nullptr || !pStorage->FileExists(gs_pQmLifecycleMarkerFile, IStorage::TYPE_SAVE))
+		return;
+
+	SQmLatestCrashReport Latest;
+	pStorage->ListDirectoryInfo(IStorage::TYPE_SAVE, gs_pQmCrashDumpDir, FindLatestQmCrashReportCallback, &Latest);
+	if(Latest.m_aPath[0] == '\0')
+		return;
+
+	char *pCrashReport = pStorage->ReadFileStr(Latest.m_aPath, IStorage::TYPE_SAVE);
+	if(pCrashReport == nullptr)
+		return;
+
+	const bool HasGraphicsDriverFault = QmCrashTextHasGraphicsDriverFault(pCrashReport);
+	free(pCrashReport);
+	if(!HasGraphicsDriverFault)
+		return;
+
+	if(ApplyQmSafeGraphicsRecovery())
+	{
+		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to OpenGL 3.0 windowed mode without FSAA", Latest.m_aPath);
+	}
+	else
+	{
+		log_info("client", "previous crash report '%s' points to the graphics driver; safe graphics settings are already active", Latest.m_aPath);
+	}
+}
 
 static const char *ClientStateToString(int State)
 {
@@ -5870,6 +6022,8 @@ int main(int argc, const char **argv)
 		g_Config.m_QmShowCollisionHitbox = 0;
 	}
 	g_Config.m_ClConfigVersion = 3;
+
+	RecoverQmGraphicsSettingsAfterDriverCrash(pStorage);
 
 	// parse the command line arguments
 	pConsole->SetUnknownCommandCallback(UnknownArgumentCallback, pClient);

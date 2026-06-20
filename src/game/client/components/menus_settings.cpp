@@ -147,10 +147,14 @@ namespace
 
 		void Update(const SSettingsPreviewSkinKey &Key, const CTeeRenderInfo &Info, std::chrono::nanoseconds Now)
 		{
-			if(g_Config.m_QmSkinChangeTransitionMs <= 0)
+			if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)
 			{
 				m_PreviousInfo.Reset();
 				m_StartTime.reset();
+				m_Key = Key;
+				m_HasKey = true;
+				m_LastInfo = Info;
+				return;
 			}
 
 			if(m_HasKey && !(m_Key == Key) && m_LastInfo.Valid() && Info.Valid())
@@ -172,12 +176,16 @@ namespace
 			}
 
 			const float ElapsedSeconds = std::chrono::duration<float>(Now - m_StartTime.value()).count();
+			if(!g_Config.m_QmSkinChangeTransition)
+			{
+				return 1.0f;
+			}
 			return ResolveSkinChangeTransitionProgress(ElapsedSeconds, g_Config.m_QmSkinChangeTransitionMs);
 		}
 
 		const CTeeRenderInfo *PreviousInfo(std::chrono::nanoseconds Now) const
 		{
-			if(g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_StartTime.has_value() || Progress(Now) >= 1.0f || !m_PreviousInfo.Valid())
+			if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_StartTime.has_value() || Progress(Now) >= 1.0f || !m_PreviousInfo.Valid())
 			{
 				return nullptr;
 			}

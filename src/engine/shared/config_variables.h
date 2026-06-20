@@ -235,11 +235,11 @@ MACRO_CONFIG_INT(UiMousesens, ui_mousesens, 200, 1, 100000, CFGFLAG_SAVE | CFGFL
 MACRO_CONFIG_INT(UiControllerSens, ui_controller_sens, 100, 1, 100000, CFGFLAG_SAVE | CFGFLAG_CLIENT, "菜单/编辑器中的手柄灵敏度")
 MACRO_CONFIG_INT(UiSmoothScrollTime, ui_smooth_scroll_time, 500, 0, 5000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "菜单/编辑器中平滑滚动动画的时间（单位：毫秒，0 为关闭）")
 
-MACRO_CONFIG_COL(UiColor, ui_color, 0xE4A046AF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "界面颜色") // 160 70 175 228 hasalpha
-MACRO_CONFIG_COL(ClMenuPanelColor, cl_menu_panel_color, 0x242D1F, CFGFLAG_CLIENT | CFGFLAG_SAVE, "菜单主面板底色")
-MACRO_CONFIG_INT(ClMenuPanelOpacity, cl_menu_panel_opacity, 72, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "菜单主面板透明度")
-MACRO_CONFIG_INT(ClMenuPanelElevatedOpacity, cl_menu_panel_elevated_opacity, 84, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "菜单强调面板透明度")
-MACRO_CONFIG_INT(ClSettingsTabbarOpacity, cl_settings_tabbar_opacity, 84, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "设置页右侧设置栏透明度")
+MACRO_CONFIG_COL(UiColor, ui_color, 0x4D000000, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "界面颜色")
+MACRO_CONFIG_COL(ClMenuPanelColor, cl_menu_panel_color, 0x000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "菜单主面板底色")
+MACRO_CONFIG_INT(ClMenuPanelOpacity, cl_menu_panel_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "菜单主面板透明度")
+MACRO_CONFIG_INT(ClMenuPanelElevatedOpacity, cl_menu_panel_elevated_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "菜单强调面板透明度")
+MACRO_CONFIG_INT(ClSettingsTabbarOpacity, cl_settings_tabbar_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "设置页右侧设置栏透明度")
 
 MACRO_CONFIG_INT(UiColorizePing, ui_colorize_ping, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "高亮显示 ping 值")
 MACRO_CONFIG_INT(UiColorizeGametype, ui_colorize_gametype, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "高亮显示游戏类型")

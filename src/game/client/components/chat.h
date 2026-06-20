@@ -323,6 +323,18 @@ public:
 	{
 		return length(Release - Press) <= 5.0f;
 	}
+	static bool ShouldBlockLiveDirectorChatCommand(const char *pLine)
+	{
+		if(pLine == nullptr)
+			return false;
+
+		const char *pCommand = str_utf8_skip_whitespaces(pLine);
+		const char *pRest = str_startswith_nocase(pCommand, "/pause");
+		if(pRest == nullptr)
+			return false;
+
+		return pRest[0] == '\0' || str_utf8_skip_whitespaces(pRest) != pRest;
+	}
 	static bool AppendBlockWordToList(char *pList, size_t ListSize, const char *pWord)
 	{
 		if(pList == nullptr || pWord == nullptr || pWord[0] == '\0' || ListSize == 0)

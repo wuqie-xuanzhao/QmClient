@@ -2823,17 +2823,6 @@ void CMenus::Render()
 		{
 			RenderBackground();
 		}
-		// feat-004: deep glass overlay on the menu background so feat-003 cards
-		// and the modern nav widgets read with adequate contrast. Fades in
-		// over 0.4s on first entry so the transition out of the loading screen
-		// is not abrupt.
-		{
-			const uint64_t OverlayKey = BuildUiAnimNodeKey(MakeUiScopeHash("menu_bg_overlay"), 0);
-			const float FadeIn = ResolveUiAnimValue(GameClient()->UiRuntimeV2()->AnimRuntime(), OverlayKey, EUiAnimProperty::ALPHA, 1.0f, ui_curve::DECELERATE.m_DurationSec + 0.1f, ui_curve::DECELERATE.m_Easing);
-			const ColorRGBA Overlay(0.02f, 0.04f, 0.07f, 0.40f * FadeIn);
-			const CUIRect FullScreen = *Ui()->Screen();
-			FullScreen.Draw(Overlay, IGraphics::CORNER_NONE, 0.0f);
-		}
 		ms_ColorTabbarInactive = ms_ColorTabbarInactiveOutgame;
 		ms_ColorTabbarActive = ms_ColorTabbarActiveOutgame;
 		ms_ColorTabbarHover = ms_ColorTabbarHoverOutgame;
