@@ -290,7 +290,7 @@ CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey(const CUIRect *pRect, fl
 	StyleKey.m_FontSize = FontSize;
 	StyleKey.m_Align = Align;
 	const float MaxWidth = LabelProps.m_MaxWidth >= 0.0f ? LabelProps.m_MaxWidth : (pRect != nullptr ? pRect->w : -1.0f);
-	StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f ? (round_to_int(MaxWidth / 4.0f) * 4) : -1;
+	StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f && std::isfinite(MaxWidth) ? (round_to_int(MaxWidth / 4.0f) * 4) : -1;
 	StyleKey.m_UiScaleBucket = MenuTextBucket(CUi::ms_FontmodHeight);
 	StyleKey.m_HiDpiScaleBucket = Graphics() != nullptr ? round_to_int(Graphics()->ScreenHiDPIScale() * 100.0f) : 100;
 	StyleKey.m_CompactMode = g_Config.m_QmNewUi ? 1 : 0;

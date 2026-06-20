@@ -883,8 +883,10 @@ void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)
 	static CButtonContainer s_aPageTabs[NUMBER_OF_TCLIENT_TABS] = {};
 	static const char *s_apTClientTabNames[NUMBER_OF_TCLIENT_TABS] = {};
 	static char s_aTClientLanguageFile[IO_MAX_PATH_LENGTH] = {};
-	if(str_comp(s_aTClientLanguageFile, g_Config.m_ClLanguagefile) != 0)
+	static bool s_TClientTabNamesInitialized = false;
+	if(!s_TClientTabNamesInitialized || str_comp(s_aTClientLanguageFile, g_Config.m_ClLanguagefile) != 0)
 	{
+		s_TClientTabNamesInitialized = true;
 		str_copy(s_aTClientLanguageFile, g_Config.m_ClLanguagefile, sizeof(s_aTClientLanguageFile));
 		s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::LANGUAGE);
 		s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::LANGUAGE);

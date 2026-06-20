@@ -5733,6 +5733,29 @@ TEST(QmMonitoringHelpers, TClientSettingsDoesNotWriteScrollMetadataBeforeFinish)
 	EXPECT_EQ(BeforeFinish.find("m_SettingsRuntimeMetadata.m_Valid = true;"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientTabNamesInitializeBeforeLanguageChange)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const size_t TabNamesPos = Source.find("static const char *s_apTClientTabNames[NUMBER_OF_TCLIENT_TABS] = {};");
+	ASSERT_NE(TabNamesPos, std::string::npos);
+	const size_t FirstTabDrawPos = Source.find("DoButton_MenuTab(&s_aPageTabs[Tab], s_apTClientTabNames[Tab]", TabNamesPos);
+	ASSERT_NE(FirstTabDrawPos, std::string::npos);
+	const std::string TabNamesBody = Source.substr(TabNamesPos, FirstTabDrawPos - TabNamesPos);
+
+	EXPECT_NE(TabNamesBody.find("s_TClientTabNamesInitialized"), std::string::npos);
+	EXPECT_NE(TabNamesBody.find("!s_TClientTabNamesInitialized || str_comp"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MenuTextStyleKeyRejectsNonFiniteMaxWidth)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("std::isfinite(MaxWidth)"), std::string::npos);
+	EXPECT_NE(Body.find("MaxWidth >= 0.0f && std::isfinite(MaxWidth)"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, MenuPerfEventsExposePageAttributionFields)
 {
 	{
