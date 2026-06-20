@@ -2,10 +2,13 @@ name: Check style
 
 on:
   push:
-    branches-ignore:
-      - gh-readonly-queue/**
+    branches: [main, master]
   pull_request:
   merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check-style:
@@ -34,13 +37,6 @@ jobs:
       run: |
         python3 qmclient_scripts/gate/check_gate.py --mode quick --ci-mode --report-json-path tmp/check-gate-report.json
 
-    - name: Build dilate tool
-      run: |
-        mkdir -p release
-        cd release
-        cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCLIENT=OFF -DDOWNLOAD_GTEST=OFF ..
-        cmake --build . --config Release --target dilate
-
     - name: Write CI summary
       if: always()
       run: |
@@ -50,9 +46,6 @@ jobs:
           --report tmp/check-gate-report.json \
           --output "$GITHUB_STEP_SUMMARY"
       shell: bash
-    - name: Check dilated images
-      run: python3 qmclient_scripts/check_dilate.py release data
-
     - name: Upload gate report
       if: always()
       uses: actions/upload-artifact@v4

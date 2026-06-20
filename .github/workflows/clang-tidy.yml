@@ -2,13 +2,33 @@ name: Check clang-tidy
 
 on:
   push:
-    branches-ignore:
-      - gh-readonly-queue/**
+    branches: [main, master]
   pull_request:
   merge_group:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    name: Classify Changes
+    runs-on: ubuntu-latest
+    outputs:
+      heavy_changed: ${{ steps.changed.outputs.heavy_changed }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Classify changed paths
+      id: changed
+      run: python3 qmclient_scripts/gate/tools/ci_changed_paths.py
+
   check-clang-tidy:
+    needs: changes
+    if: needs.changes.outputs.heavy_changed == 'true'
     runs-on: ubuntu-latest
     env:
       CARGO_HTTP_MULTIPLEXING: false

@@ -18,9 +18,30 @@ permissions:
   contents: read
   security-events: write  # Required to upload CodeQL results to code scanning
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    name: Classify Changes
+    runs-on: ubuntu-latest
+    outputs:
+      heavy_changed: ${{ steps.changed.outputs.heavy_changed }}
+      python_changed: ${{ steps.changed.outputs.python_changed }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Classify changed paths
+      id: changed
+      run: python3 qmclient_scripts/gate/tools/ci_changed_paths.py
+
   analyze:
     name: Analyze
+    needs: changes
     runs-on: ubuntu-latest
     env:
       CARGO_HTTP_MULTIPLEXING: false
@@ -37,18 +58,20 @@ jobs:
 
     steps:
     - name: Checkout repository
+      if: github.event_name == 'schedule' || matrix.language == 'cpp' && needs.changes.outputs.heavy_changed == 'true' || matrix.language == 'python' && needs.changes.outputs.python_changed == 'true'
       uses: actions/checkout@v5
       with:
         submodules: recursive
 
     - name: Prepare Linux
-      if: matrix.language == 'cpp'
+      if: (github.event_name == 'schedule' || needs.changes.outputs.heavy_changed == 'true') && matrix.language == 'cpp'
       run: |
        sudo apt-get update -y
        sudo apt-get install pkg-config cmake ninja-build python3-pil libfreetype6-dev libnotify-dev libsdl2-dev libsqlite3-dev libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libx264-dev libmariadb-dev libwebsockets-dev libvulkan-dev glslang-tools spirv-tools libglew-dev -y
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
+      if: github.event_name == 'schedule' || matrix.language == 'cpp' && needs.changes.outputs.heavy_changed == 'true' || matrix.language == 'python' && needs.changes.outputs.python_changed == 'true'
       uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
@@ -62,11 +85,11 @@ jobs:
         # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
     - name: Setup Rust
-      if: matrix.language == 'cpp'
+      if: (github.event_name == 'schedule' || needs.changes.outputs.heavy_changed == 'true') && matrix.language == 'cpp'
       uses: dtolnay/rust-toolchain@stable
 
     - name: Build in release mode
-      if: matrix.language == 'cpp'
+      if: (github.event_name == 'schedule' || needs.changes.outputs.heavy_changed == 'true') && matrix.language == 'cpp'
       run: |
        mkdir release
        cd release
@@ -74,4 +97,9 @@ jobs:
        cmake --build . --config RelWithDebInfo --target everything
 
     - name: Perform CodeQL Analysis
+      if: github.event_name == 'schedule' || matrix.language == 'cpp' && needs.changes.outputs.heavy_changed == 'true' || matrix.language == 'python' && needs.changes.outputs.python_changed == 'true'
       uses: github/codeql-action/analyze@v4
+
+    - name: Skip CodeQL for irrelevant paths
+      if: github.event_name != 'schedule' && matrix.language == 'cpp' && needs.changes.outputs.heavy_changed != 'true' || github.event_name != 'schedule' && matrix.language == 'python' && needs.changes.outputs.python_changed != 'true'
+      run: echo "No paths relevant to ${{ matrix.language }} CodeQL changed."
