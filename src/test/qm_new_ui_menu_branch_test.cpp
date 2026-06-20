@@ -669,6 +669,63 @@ TEST(QmNewUiMenuBranches, QmClientAxiomAutoLoginLivesInQmClientComponent)
 	EXPECT_EQ(TClientSource.find("HandleAxiomAutoLoginMessage"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, TClientSettingsTabsPreserveHiddenStateAndVisibleCorners)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string RenderSettingsTClient = FunctionBody(Source, "void CMenus::RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly)");
+	const std::string RenderSettingsTClientInfo = FunctionBody(Source, "void CMenus::RenderSettingsTClientInfo(CUIRect MainView)");
+
+	EXPECT_NE(RenderSettingsTClient.find("if(TabCount <= 0)"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClient.find("FirstVisibleTab"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClient.find("VisibleTabIndex"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClient.find("VisibleTabIndex == 0"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClient.find("VisibleTabIndex == TabCount - 1"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientInfo.find("s_aShowTabs[i] = IsFlagSet(g_Config.m_TcTClientSettingsTabs, i);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, TClientWarListDefersDeletesAndValidatesSelections)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string RenderSettingsTClientWarList = FunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView)");
+
+	EXPECT_NE(RenderSettingsTClientWarList.find("static CWarType *s_pSelectedType = nullptr;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientWarList.find("WarTypeExists"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientWarList.find("WarEntryExists"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientWarList.find("CWarEntry *pEntryToRemove = nullptr;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientWarList.find("RemoveWarEntry(pEntryToRemove);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientWarList.find("s_pSelectedEntry = nullptr;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientWarList.find("NewSelectedEntry < (int)s_vFilteredEntries.size()"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientWarList.find("NewSelectedType < (int)GameClient()->m_WarList.m_WarTypes.size()"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, TClientProfilesAndStatusBarClampUiIndices)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string RenderSettingsTClientProfiles = FunctionBody(Source, "void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)");
+	const std::string RenderSettingsTClientStatusBar = FunctionBody(Source, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)");
+
+	EXPECT_NE(RenderSettingsTClientProfiles.find("Profile.m_FeetColor >= 0"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientProfiles.find("ProfilesPerRow = maximum(1"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("StatusItemTypeCount"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("s_TypeSelectedOld < StatusItemTypeCount"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("s_SelectedItem < (int)GameClient()->m_StatusBar.m_StatusBarItems.size()"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SettingsListSelectionsClampBeforeIndexing)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string RenderSettingsPlayer = FunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
+	const std::string RenderSettingsGraphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	const std::string PopupMapPicker = FunctionBody(Source, "CUi::EPopupMenuFunctionResult CMenus::PopupMapPicker(void *pContext, CUIRect View, bool Active)");
+
+	EXPECT_NE(RenderSettingsPlayer.find("NewSelected >= 0 && NewSelected < (int)vpFilteredFlags.size()"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("NewSelected >= 0 && NewSelected < s_NumNodes"), std::string::npos);
+	EXPECT_NE(PopupMapPicker.find("const int ItemIndex = MapIndex++;"), std::string::npos);
+	EXPECT_NE(PopupMapPicker.find("ItemIndex == pPopupContext->m_Selection"), std::string::npos);
+	EXPECT_NE(PopupMapPicker.find("NewSelected >= 0 && NewSelected < (int)pPopupContext->m_vMaps.size()"), std::string::npos);
+	EXPECT_NE(PopupMapPicker.find("pPopupContext->m_Selection >= 0"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, QmClientLanguageReadmeDescribesChineseSourceKeys)
 {
 	EXPECT_FALSE(fs_is_dir(TestSourcePath("data/qmclient/languages").c_str()));

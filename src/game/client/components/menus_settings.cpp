@@ -1257,7 +1257,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	}
 
 	const int NewSelected = s_ListBox.DoEnd();
-	if(SelectedOld != NewSelected)
+	if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < (int)vpFilteredFlags.size())
 	{
 		*pCountry = vpFilteredFlags[NewSelected]->m_CountryCode;
 		SetNeedSendInfo();
@@ -3086,7 +3086,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		}
 
 		const int NewSelected = s_ListBox.DoEnd();
-		if(SelectedOld != NewSelected)
+		if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < s_NumNodes)
 		{
 			const int Depth = s_aModes[NewSelected].m_Red + s_aModes[NewSelected].m_Green + s_aModes[NewSelected].m_Blue > 16 ? 24 : 16;
 			g_Config.m_GfxColorDepth = Depth;
@@ -6723,8 +6723,8 @@ CUi::EPopupMenuFunctionResult CMenus::PopupMapPicker(void *pContext, CUIRect Vie
 	int MapIndex = 0;
 	for(auto &Map : pPopupContext->m_vMaps)
 	{
-		MapIndex++;
-		const CListboxItem Item = s_ListBox.DoNextItem(&Map, MapIndex == pPopupContext->m_Selection);
+		const int ItemIndex = MapIndex++;
+		const CListboxItem Item = s_ListBox.DoNextItem(&Map, ItemIndex == pPopupContext->m_Selection);
 		if(!Item.m_Visible)
 			continue;
 
@@ -6762,8 +6762,8 @@ CUi::EPopupMenuFunctionResult CMenus::PopupMapPicker(void *pContext, CUIRect Vie
 	}
 
 	const int NewSelected = s_ListBox.DoEnd();
-	pPopupContext->m_Selection = NewSelected >= 0 ? NewSelected : -1;
-	if(s_ListBox.WasItemSelected() || s_ListBox.WasItemActivated())
+	pPopupContext->m_Selection = NewSelected >= 0 && NewSelected < (int)pPopupContext->m_vMaps.size() ? NewSelected : -1;
+	if((s_ListBox.WasItemSelected() || s_ListBox.WasItemActivated()) && pPopupContext->m_Selection >= 0)
 	{
 		const CMapListItem &SelectedItem = pPopupContext->m_vMaps[pPopupContext->m_Selection];
 
