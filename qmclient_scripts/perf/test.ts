@@ -787,14 +787,15 @@ function testStableTextHitRateUsesRenderReadyHitInsteadOfPoolHit() {
 function testStableTextFallbackImmediateBlocksAcceptanceEvenWhenPoolHitIsPerfect() {
 	const entries = parseLog([
 		'2026-06-18 10:00:00 I perf/settings-text: event=settings_text_plan_collection units_done=1 units_total=1 remaining=0 budget=1 complete=1 dirty=0 phase=before_target scope=target_settings operation=settings_open',
-		'2026-06-18 10:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings tab=0 subtab=-1 operation=settings_open frame=10 text_class=static_stable candidates=3 hits=3 reused=3 miss=0 stale=0 text_new=0 text_reused=3 planned=3 unplanned=0 pool_hit=3 render_ready_hit=3 build_queued=0 fallback_immediate=1',
+		'2026-06-18 10:00:00 I perf/settings-text: event=settings_text_usage scope=target_settings page=settings tab=0 subtab=-1 operation=settings_open frame=10 text_class=static_stable scheduler_coverage=uncovered candidates=3 hits=3 reused=3 miss=0 stale=0 text_new=0 text_reused=3 planned=3 unplanned=0 pool_hit=3 render_ready_hit=3 build_queued=0 fallback_immediate=1',
 		'2026-06-18 10:00:00 I perf/fps: event=fps_summary operation=settings_open context=online page=settings tab=none sample_frames=30 sample_seconds=0.125 fps_avg=240 fps_min=240 fps_1pct_low=240 fps_1pct_source=real_sampled fps_max=240 frame_ms_avg=4.1 frame_ms_p95=4.2 frame_ms_p99=4.3 frame_ms_max=4.4 menu_ms_max=1.0 window_start_frame=1 window_end_frame=30 cap_limited=0',
 	].join('\n'));
 
 	const summary = summarizeForBundle(entries, 'qm_perf_immediate_fallback.log', { invalidLines: 0, totalLines: 2 });
 	assert.equal(summary.targetSettings.stableTextCoverage.fallbackImmediate, 1);
+	assert.equal(summary.targetSettings.stableTextCoverage.schedulerCoverage, 'uncovered');
 	assert.equal(summary.targetSettings.stableTextCoverage.acceptanceBlocked, true);
-	assert.match(summary.quality.warnings.join('\n'), /immediate fallback/);
+	assert.match(summary.quality.warnings.join('\n'), /scheduler coverage uncovered immediate fallback/);
 }
 
 function testReportDistinguishesPoolHitRateFromRenderReadyHitRate() {

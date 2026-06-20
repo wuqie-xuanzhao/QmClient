@@ -502,6 +502,7 @@ export interface StableTextCoverageSummary {
   planCollectionPhase: string;
   planCollectionScope: string;
   planCollectionOperation: string;
+  schedulerCoverage: string;
   consistencyWarnings: string[];
   samples: string[];
 }
@@ -582,6 +583,7 @@ interface StableTextEvent {
   operation: string;
   phase: string;
   textClass: string;
+  schedulerCoverage: string;
   remaining: number;
   candidates: number;
   hits: number;
@@ -662,6 +664,7 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
       const operation = field(e, 'operation');
   const phase = field(e, 'phase');
       const textClass = field(e, 'text_class');
+      const schedulerCoverage = field(e, 'scheduler_coverage');
       const remaining = numberField(e, 'remaining');
       const candidates = numberField(e, 'candidates');
       const hits = numberField(e, 'hits');
@@ -693,6 +696,7 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
         operation.length > 0 ? `operation=${operation}` : '',
         phase.length > 0 ? `phase=${phase}` : '',
         textClass.length > 0 ? `text_class=${textClass}` : '',
+        schedulerCoverage.length > 0 ? `scheduler_coverage=${schedulerCoverage}` : '',
         event === 'settings_text_prebuild' ? `remaining=${remaining}` : '',
         event === 'settings_text_usage' ? `candidates=${candidates}` : '',
         event === 'settings_text_usage' ? `hits=${hits}` : '',
@@ -725,6 +729,7 @@ function stableTextEvents(entries: PerfEntry[]): StableTextEvent[] {
         operation,
         phase,
         textClass,
+        schedulerCoverage,
         remaining,
         candidates,
         hits,
@@ -927,6 +932,7 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
   const renderReadyHitCount = staticRelevantUsage.reduce((sum, event) => sum + event.renderReadyHit, 0);
   const buildQueued = staticRelevantUsage.reduce((sum, event) => sum + event.buildQueued, 0);
   const fallbackImmediate = staticRelevantUsage.reduce((sum, event) => sum + event.fallbackImmediate, 0);
+  const schedulerCoverage = staticRelevantUsage.some(event => event.schedulerCoverage === 'uncovered') || fallbackImmediate > 0 ? 'uncovered' : 'budgeted';
   const reuseCount = staticRelevantUsage.reduce((sum, event) => sum + event.reused, 0);
   const usageMissCount = staticRelevantUsage.reduce((sum, event) => sum + event.miss, 0);
   const usageStaleCount = staticRelevantUsage.reduce((sum, event) => sum + event.stale, 0);
@@ -988,6 +994,9 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
   if(fallbackImmediate > 0) {
     consistencyWarnings.push(`target stable text used immediate fallback ${fallbackImmediate} times during target window`);
   }
+  if(schedulerCoverage === 'uncovered' && fallbackImmediate > 0) {
+    consistencyWarnings.push(`scheduler coverage uncovered immediate fallback: ${fallbackImmediate}`);
+  }
   const samples = [...relevantMisses, ...relevantStales, ...(prebuildRemainingBeforeTarget > 0 && prebuildBeforeTarget ? [prebuildBeforeTarget] : []), ...(planCollectionRemainingBeforeTarget > 0 && collectionBeforeTarget ? [collectionBeforeTarget] : []), ...consistencyWarnings.map(warning => ({
     timestamp: firstTargetSummaryTime || '',
     event: 'settings_text_usage' as const,
@@ -1000,6 +1009,8 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
     planStatus: '',
     operation: '',
     phase: '',
+    textClass: '',
+    schedulerCoverage: '',
     remaining: 0,
     candidates: 0,
     hits: 0,
@@ -1073,6 +1084,7 @@ function stableTextCoverage(entries: PerfEntry[], targetFps: FpsSummary[]): Stab
     planCollectionPhase,
     planCollectionScope,
     planCollectionOperation,
+    schedulerCoverage,
     consistencyWarnings,
     samples,
   };

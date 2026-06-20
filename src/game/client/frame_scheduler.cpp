@@ -30,6 +30,13 @@ public:
 		return Output;
 	}
 
+	void Reset() override
+	{
+		m_aState = {};
+		m_aLastOutput = {};
+		m_CurrentFrameId = 0;
+	}
+
 	const SSettingsAdaptiveBudgetState &State(EFrameSchedulerConsumer Consumer) const override
 	{
 		return m_aState[ConsumerIndex(Consumer)];

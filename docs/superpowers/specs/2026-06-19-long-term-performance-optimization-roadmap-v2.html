@@ -151,11 +151,12 @@
       <div class="meta">
         <span class="pill ok">active</span>
         <span class="pill secondary">2026-06-19</span>
+        <span class="pill secondary">2026-06-20 状态同步</span>
         <span class="pill warn">路线图 v2（基于四份调研修正）</span>
         <span class="pill">修正 v1 而非替代</span>
       </div>
       <h1>QmClient 长期性能优化路线图 v2</h1>
-      <p class="muted">本 spec 基于 2026-06-19 的四项深度调研（ImGui 优化经验、文本渲染业界方案、scheduler/text pool 架构重审、图形后端提前可行性）对 v1 路线图做修正。<strong>v1 仍然有效，v2 是其修正/补充。</strong>两者关系：v1 给出大方向，v2 基于"实际代码现状"修正了五个关键判断，并重新排序 Phase 优先级。</p>
+      <p class="muted">本 spec 基于 2026-06-19 的四项深度调研（ImGui 优化经验、文本渲染业界方案、scheduler/text pool 架构重审、图形后端提前可行性）对 v1 路线图做修正。2026-06-20 已按当前 HEAD 重新核对 scheduler、text pool、CUI/QmUI、粒子、图形后端和验证边界。<strong>v1 仍然有效，v2 是其修正/补充。</strong>两者关系：v1 给出大方向，v2 基于"实际代码现状"修正关键判断，并重新排序 Phase 优先级。</p>
 
       <h3 style="margin-top: 18px;">v2 与 v1 的五个重大判断修正</h3>
       <table>
@@ -163,18 +164,18 @@
         <tbody>
           <tr>
             <td>QmUI 是裸 immediate-mode，需要 retained node</td>
-            <td><strong>CUI 已实现 ImGui 60-70% 优化</strong>（QuadBatch、QuadContainer 缓存、变高行 clipper）；QmUI 短板是 frame-local arena 缺失和 DrawCmd header 不统一，不需要 retained</td>
+            <td><strong>CUI 已具备部分 ImGui 同类优化</strong>（QuadBatch、QuadContainer 缓存、变高行 clipper）；QmUI 短板是 hot buffer 分配、DrawCmd header 不统一和动态文本路径，不需要 retained node 重写</td>
             <td>ImGui 调研 + <code>ui.cpp:578-626</code></td>
           </tr>
           <tr>
             <td>纯英文卡顿主因是中文图集扩容</td>
-            <td><strong>纯英文卡顿真因是 CPU 侧每帧重建 text container + layout 重算</strong>，与字符集无关；6/19 log 显示 backend/upload/glyph 全为 0</td>
+            <td><strong>首要假设是 CPU 侧每帧重建 text container + layout 重算</strong>，与字符集弱相关；6/19 log 显示 backend/upload/glyph 全为 0，但仍需 fresh profile 证明最终归因</td>
             <td>文本渲染调研 + 6/19 log</td>
           </tr>
           <tr>
             <td>scheduler 在工作但覆盖率不足</td>
-            <td><strong>scheduler 是 menus-private 不是 service</strong>；<code>gameclient.cpp</code> 完全不接入；token 算了但同步渲染路径不消费</td>
-            <td>scheduler 调研（重磅）</td>
+            <td><strong>原始调研时 scheduler 不是 service；当前已 service 化</strong>，并接入 <code>CGameClient::OnRender</code>；同步 <code>DoIngameMenuLabel</code> 系列保留首帧 fallback，但已显式计入 <code>scheduler_coverage=uncovered</code> 并进入 perf gate</td>
+            <td>scheduler 调研 + 2026-06-20 codegraph 复核</td>
           </tr>
           <tr>
             <td>图形后端还没优化，是 Phase F 条件触发</td>
@@ -183,8 +184,8 @@
           </tr>
           <tr>
             <td>粒子 budget 需要完整优先级系统</td>
-            <td><strong>DDNet 粒子是纯视觉无物理检测</strong>；简化为 spawn budget + viewport culling + group render budget 三层</td>
-            <td>用户反馈</td>
+            <td><strong>DDNet 粒子以视觉效果为主</strong>，不做玩法级优先级系统；但 <code>m_Collides</code> 粒子会调用 collision update，budget 必须包含 update/collision telemetry</td>
+            <td>用户反馈 + <code>particles.cpp</code> 复核</td>
           </tr>
         </tbody>
       </table>
@@ -207,7 +208,7 @@
       <h2 id="corrections">① 五大判断修正详解</h2>
       <p class="muted">v1 路线图基于"印象中的代码现状"做判断；v2 基于 SubAgent 实际读代码后的发现做修正。每个修正都有具体代码指针支撑。</p>
 
-      <h3>修正 1：CUI 已实现 ImGui 60-70% 优化，不需要 retained node</h3>
+      <h3>修正 1：CUI 已具备部分 ImGui 同类优化，不需要 retained node</h3>
       <p>v1 4.1.4 计划把 <code>CUiV2Tree</code> 扩展为可持久化 node 表（retained-mode）。但实际读代码发现：</p>
       <ul>
         <li><code>CUi::RenderQuadContainerBatchable</code>（<code>ui.cpp:599-626</code>）已实现 draw call 合并</li>
@@ -216,10 +217,10 @@
         <li><code>CListBox</code> + <code>CScrollRegion::RectClipped()</code>（<code>ui_listbox.cpp:116-136</code>）已实现 list virtualization，<strong>且比 ImGui 原生 clipper 更强（支持变高行）</strong></li>
       </ul>
       <div class="note ok">
-        <strong>修正后方向</strong>：删除 v1 的 retained node 计划。QmUI 真正的三大短板是：(1) <strong>frame-local arena 缺失</strong>（QmLayout.h:100 用 std::vector 每帧分配）；(2) <strong>DrawCmd header 不统一</strong>（没把 ClipRect 纳入 memcmp，跨 clip 不能合并）；(3) <strong>动态文本走"重建容器"</strong>（聊天、计时这种每帧变化的文本应该走 ImGui 风格 inline reserve/unreserve）。
+        <strong>修正后方向</strong>：删除 v1 的 retained node 计划。QmUI 真正的三大短板是：(1) <strong>hot layout buffer 需要 arena/复用</strong>（<code>ComputeChildren</code> 的入参 vector 可由调用点复用，函数内部临时数组仍需 PoC）；(2) <strong>DrawCmd header 不统一</strong>（没把 ClipRect 纳入 memcmp，跨 clip 不能合并）；(3) <strong>动态文本走"重建容器"</strong>（聊天、计时这种每帧变化的文本应该先做局部 PoC，再决定是否扩展到 <code>ITextRender</code> 公共契约）。
       </div>
 
-      <h3>修正 2：纯英文卡顿真因不在字符集</h3>
+      <h3>修正 2：纯英文卡顿首要嫌疑不在字符集</h3>
       <p>v1 把文本渲染卡顿主因归咎于"中文图集扩容"，建议"sparse atlas 化"。但 6/19 fresh log 显示 <code>frameMsP99=299ms</code> 时 backend/upload/glyph 各项<strong>全为 0</strong>，且<strong>纯英文 UI 也会卡顿</strong>。SubAgent 基于业界经验（ImGui FONTS.md、Hypersect 博客、Unreal Slate、Qt QTextLayout）锁定真因：</p>
       <ul>
         <li><span class="badge bad">最高嫌疑</span> 每帧重建 text container / quad buffer（CPU 侧 alloc + memcpy）</li>
@@ -228,20 +229,20 @@
         <li><span class="badge ok">排除</span> GPU upload 同步阻塞（log 中 upload=0）；字形 atlas 全量重传（这是中文次因，不是英文主因）</li>
       </ul>
       <div class="note ok">
-        <strong>修正后方向</strong>：放弃"sparse atlas 是答案"的预设。Phase C 文本优化按 ImGui 持久 buffer + Unreal dirty-cache 路线：(1) text container 加 dirty 标记 + (string,font,size,wrap) 缓存；(2) 持久 arena 分配器消除每帧 malloc/free；(3) 验证每帧 per-label TextWidth 调用是否累积。CJK 走 ImGui 1.92 动态字体系统的"按需增量扩展 atlas + 仅对新增 glyph 上传"路线。
+        <strong>修正后方向</strong>：放弃"sparse atlas 是答案"的预设。Phase C/E 文本优化先按 ImGui 持久 buffer + Unreal dirty-cache 路线做 profiling/PoC：(1) text container 加 dirty 标记 + (string,font,size,wrap) 缓存；(2) 持久 arena 分配器消除每帧 malloc/free；(3) 验证每帧 per-label TextWidth 调用是否累积。CJK 可借鉴 ImGui 1.92 动态字体系统的"按需增量扩展 atlas + 仅对新增 glyph 上传"机制，但必须先解决旧 text container UV 失效、跨 backend texture update 和 frame 内上传预算。
       </div>
 
-      <h3>修正 3：scheduler 是 menus-private 不是 service</h3>
-      <p>v1 ⑧.7.3 提出 <code>scheduler_coverage</code> 口径，暗示"调度器在工作但没覆盖最重同步 UI"。实际读代码发现<strong>架构层面根本没接通</strong>：</p>
+      <h3>修正 3：scheduler 已 service 化，但同步渲染路径覆盖仍不足</h3>
+      <p>v1 ⑧.7.3 提出 <code>scheduler_coverage</code> 口径，暗示"调度器在工作但没覆盖最重同步 UI"。2026-06-19 调研时，代码确实没有全局 service；2026-06-20 复核当前 HEAD 后，Phase A 的 service 化子项已经落地：</p>
       <ul>
-        <li>grep <code>gameclient.cpp</code> 找 <code>AdaptiveBudget</code> / <code>PrebuildSettingsMenuTextPool</code> / <code>DrainIngameUiTextRuntime</code> —— <strong>零结果</strong></li>
-        <li>所有调度逻辑封死在 <code>CMenus</code> 类内部（<code>settings_resource_jobs.cpp:839</code> 的 <code>SettingsAdaptiveBudgetStep</code>）</li>
-        <li>4 份独立 state 字段（<code>menus.h:2197-2201</code>），命名硬绑场景：<code>m_SettingsTextAdaptiveBudgetState</code> / <code>m_IngameTextAdaptiveBudgetState</code> / <code>m_AssetsAdaptiveBudgetState</code> / <code>m_DemoBrowserAdaptiveBudgetState</code></li>
-        <li>每加一个新场景就要新加一个 state 成员</li>
+        <li><code>IFrameScheduler</code> 已是 kernel service，<code>src/engine/client/client.cpp</code> 注册，<code>CGameClient</code> 通过 <code>FrameScheduler()</code> 暴露。</li>
+        <li><code>CGameClient::OnRender</code> 已在帧入口/出口调用 <code>BeginFrame</code> / <code>EndFrame</code>。</li>
+        <li>旧 <code>CMenus</code> 独立 state 字段已合并到 service 内部 per-consumer state。</li>
+        <li><code>SettingsText</code>、<code>DemoBrowser</code>、<code>Assets</code>、<code>IngameServerInfo</code> 等 consumer 已有生产调用。</li>
       </ul>
-      <p><strong>更重磅</strong>：<code>RenderServerInfo</code>（<code>menus_ingame.cpp:1748-1759</code>）每帧手工调用 <code>ComputeSettingsUiFrameSchedulerBudget</code>，但 token 唯一用途是 snapshot text 队列。<strong>同步渲染路径 <code>DoIngameMenuLabel</code> 系列本身不消费 token</strong>——即使 scheduler 拒绝发 token，可见 UI 那帧依然会执行实时 container build。</p>
-      <div class="note bad">
-        <strong>这就是 6/19 log 里"scheduler 在跑（eventCount=2478）但 frameMsP99=299ms"的根本原因</strong>——scheduler 在跑，但架构上根本管不到 immediate-mode 渲染路径。这不是"覆盖率不足"，是"架构没接通"。
+      <p><strong>当前核心边界</strong>：<code>RenderServerInfo</code> / ingame runtime 已部分消费 scheduler token（包括 snapshot text 与 MOTD paragraph cache drain）。同步渲染路径 <code>DoIngameMenuLabel</code> 系列保留首帧可见 fallback，但当 stable container 未命中且执行实时 <code>Ui()->DoLabel</code> 时，已显式计入 <code>fallback_immediate</code> 和 <code>scheduler_coverage=uncovered</code>。</p>
+      <div class="note ok">
+        <strong>当前结论</strong>：Phase A 可按当前口径收口。service 化、frame scope、per-consumer state、Reset 生命周期、guard 栈式语义、4px bucket、同步 fallback telemetry 和 perf gate 结构测试已落地；后续进入 Phase B，聚焦更细的 <code>budgeted_work_ms</code>、<code>immediate_render_ms</code>、scenario 和阈值。
       </div>
 
       <h3>修正 4：图形后端优化方向是 Vulkan 主战场（OpenGL 暂缓）</h3>
@@ -287,9 +288,9 @@
       </div>
 
       <h3>修正 5：粒子 budget 简化，不做完整优先级系统</h3>
-      <p>v1 FR-3 列了 4 层 budget（spawn/update/render/碰撞）。用户反馈："DDNet 粒子和拖尾，实际游戏中就是一个视觉的效果，所以一般而言不会引入物理检测"。</p>
+      <p>v1 FR-3 列了 4 层 budget（spawn/update/render/碰撞）。用户反馈："DDNet 粒子和拖尾，实际游戏中就是一个视觉的效果，所以一般而言不会引入物理检测"。代码复核补充：粒子语义仍以视觉为主，但 <code>m_Collides</code> 粒子会调用 <code>Collision()->MovePoint</code>，因此不能把 update/collision 成本从观测口径中删除。</p>
       <div class="note ok">
-        <strong>修正后方向</strong>：移除"碰撞预算"，简化为 spawn budget + viewport culling + group render budget 三层。工程量从"几乎重写粒子系统"降到 2-3 周。
+        <strong>修正后方向</strong>：不做完整 per-particle priority / 玩法级碰撞预算系统，简化为 spawn budget + viewport culling + group render budget；但 Phase F 必须增加 update/collision telemetry，确认 <code>m_Collides</code> 粒子占比和 <code>MovePoint</code> 时间后再决定是否需要更细 budget。
       </div>
     </section>
     <section class="card">
@@ -304,16 +305,16 @@
       </ul>
       <h4>真问题</h4>
       <ol>
-        <li><strong>QmUi 无 frame-local arena</strong>：<code>QmLayout.h:100</code> 用 <code>std::vector&lt;SUiLayoutChild&gt;</code>，每次 <code>ComputeChildren</code> 都分配</li>
+        <li><strong>QmUi hot layout buffer 需要 arena/复用策略</strong>：<code>ComputeChildren</code> 入参 <code>std::vector&lt;SUiLayoutChild&gt;</code> 可由调用点复用，但函数内部仍有临时 <code>std::vector&lt;float&gt;</code>，应先在高频页面 PoC。</li>
         <li><strong>DrawCmd header 不统一</strong>：<code>UiPlanQuadBatchSubmission</code> 基于 color/containerIndex 判断，没把 ClipRect 纳入 memcmp，跨 clip 不能合并</li>
         <li><strong>动态文本走"重建容器"</strong>：聊天、滚动数字、计时器每帧变化的文本走 <code>CreateTextContainer</code> 全量重建，应该走 ImGui 风格 inline reserve/unreserve</li>
         <li><strong>潜在退化点</strong>：<code>CUi::m_vQuadBatchSprites.clear()</code>（<code>ui.cpp:643</code>）需确认是否释放 capacity</li>
       </ol>
       <h4>优化方向</h4>
       <ul>
-        <li><span class="badge ok">P0</span> 引入 <code>CQmFrameArena</code>（bump allocator）+ <code>std::pmr::vector</code>，替代 QmUi 的 <code>std::vector</code></li>
+        <li><span class="badge ok">P0</span> 在 QmUi layout 临时 buffer / 高频页面 PoC <code>CQmFrameArena</code>（bump allocator）+ <code>std::pmr::vector</code>，只替换已 profile 证明的热路径。</li>
         <li><span class="badge ok">P0</span> 引入 <code>SDrawCmdHeader</code> POD，把 (ClipRect, TextureHandle, QuadContainerIndex, Color) 塞成连续 32 字节做 memcmp</li>
-        <li><span class="badge warn">P1</span> 给 <code>ITextRender</code> 加 <code>RenderTextInline</code> 路径，绕过 container 缓存给动态文本用</li>
+        <li><span class="badge warn">P1</span> 先在菜单/HUD 适配层 PoC 动态文本 inline 路径；只有 PoC 证明收益和旧 container 失效模型清晰后，才考虑扩展 <code>ITextRender</code> 公共接口。</li>
         <li><span class="badge warn">P1</span> <code>CQmUiStorage</code>（有序 vector + 二分）替代散落的 <code>std::unordered_map</code></li>
       </ul>
       <h4>明确不做</h4>
@@ -328,9 +329,9 @@
       <h4>现状</h4>
       <ul>
         <li><code>CParticles::RenderGroup()</code> 已有 <code>ParticleIsVisibleOnScreen</code> 和 <code>RenderQuadContainerAsSpriteMultiple</code></li>
-        <li>DDNet 粒子是纯视觉，无物理检测（用户反馈确认）</li>
+        <li>DDNet 粒子以视觉效果为主；部分 <code>m_Collides</code> 粒子 update 会调用 collision 查询，不能从 telemetry 中忽略。</li>
       </ul>
-      <h4>优化方向（三层 budget，无碰撞预算）</h4>
+      <h4>优化方向（三层 budget + update/collision telemetry）</h4>
       <ul>
         <li><span class="badge ok">P0</span> <strong>spawn budget</strong>：按 group 限流，同一帧同一组最多新增 N 个</li>
         <li><span class="badge ok">P0</span> <strong>viewport culling</strong>：扩展现有 <code>ParticleIsVisibleOnScreen</code>，远端粒子降低更新频率（2-4 帧更新一次）</li>
@@ -338,7 +339,7 @@
       </ul>
       <h4>明确不做</h4>
       <ul>
-        <li>❌ 碰撞预算（用户确认无物理检测需求）</li>
+        <li>❌ 玩法级碰撞预算系统（但必须保留 <code>MovePoint</code> 成本观测）</li>
         <li>❌ 优先级丢弃系统（DDNet 粒子无 per-particle priority 概念，强加等于重写）</li>
       </ul>
 
@@ -349,8 +350,8 @@
         <li><code>SQmTextRuntimeBudgetSnapshot</code> 监控 glyph/container 新建、上传、耗时</li>
         <li><strong>关键反常</strong>：6/19 log 显示纯英文场景也卡顿，frameMsP99=299ms 但 backend/upload/glyph 全为 0</li>
       </ul>
-      <h4>真因（基于业界调研）</h4>
-      <p>纯英文卡顿真因在 <strong>CPU 侧、draw 提交之前</strong>，与字符集无关：</p>
+      <h4>首要假设（基于业界调研 + 6/19 log）</h4>
+      <p>纯英文卡顿首要嫌疑在 <strong>CPU 侧、draw 提交之前</strong>，与字符集弱相关；最终归因必须由 fresh profile 证明：</p>
       <ol>
         <li>每帧重建 text container / quad buffer（immediate-mode 经典问题）</li>
         <li>Paragraph layout / wrap / word-break 每帧重算</li>
@@ -360,7 +361,7 @@
       <table>
         <thead><tr><th>优先级</th><th>措施</th><th>借鉴来源</th><th>预期收益</th></tr></thead>
         <tbody>
-          <tr><td><span class="badge ok">P0</span></td><td>text container vertex buffer 加 dirty 标记 + (string,font,size,wrap) 缓存</td><td>Unreal FCachedGeometry、Qt QTextLayout</td><td>直接消除纯英文卡顿主因</td></tr>
+          <tr><td><span class="badge ok">P0</span></td><td>text container vertex buffer 加 dirty 标记 + (string,font,size,wrap) 缓存</td><td>Unreal FCachedGeometry、Qt QTextLayout</td><td>验证并压低纯英文卡顿首要嫌疑</td></tr>
           <tr><td><span class="badge ok">P0</span></td><td>text container 改用持久 arena/线性分配器</td><td>ImGui ImDrawList</td><td>纯英文+中文通吃</td></tr>
           <tr><td><span class="badge warn">P1</span></td><td>验证并消除每帧 per-label TextWidth 调用（缓存 advance 之和）</td><td>通用</td><td>中-高</td></tr>
           <tr><td><span class="badge warn">P1</span></td><td>CJK 走"按需栅格化 + 增量 patch 纹理子区域"</td><td>ImGui 1.92 动态字体系统、Hypersect</td><td>解决中文卡顿</td></tr>
@@ -509,14 +510,14 @@
       <p class="muted">v1 按量化→QmUI→CUI→游戏内→文本→图形后端顺序。v2 把 scheduler 架构重审提到最前（因为它是最大问题），其他 Phase 按依赖重排。</p>
 
       <h3>Phase A：scheduler/text pool 架构重审（0-1 个月，最高优先级）</h3>
+      <p class="muted">2026-06-20 状态：service 化、OnRender frame scope、per-consumer state、Reset 生命周期、guard 栈式语义、4px bucket、同步 fallback telemetry 和 perf gate 结构测试已在当前 HEAD 落地；Phase A 可按当前 uncovered fallback 口径收口。</p>
       <p><strong>退出条件</strong>：</p>
       <ul>
-        <li>scheduler 抽成全局 service，<code>gameclient.cpp::OnRender</code> 有 <code>m_FrameBudget.BeginFrame()</code> / <code>EndFrame()</code> 调用</li>
-        <li>4 份独立 state 字段合并成 service 内部的 per-subsystem 状态</li>
-        <li>5-8 个固定 consumer 注册（不动态注册，避免过度抽象）</li>
-        <li>同步渲染路径 <code>DoIngameMenuLabel</code> 系列开始消费 token</li>
-        <li>双记账 bug 修复，guard 改为真正栈式</li>
-        <li>MaxWidthBucket 改为 4 像素粒度，key mismatch 接近 0</li>
+        <li>锁定现有 <code>IFrameScheduler</code> service 契约：Reset / BeginFrame / EndFrame / per-consumer state 的行为测试覆盖。</li>
+        <li>明确 5-8 个固定 consumer 的语义和 owner；避免完全动态注册，但要记录每个 consumer 的覆盖范围。</li>
+        <li>同步渲染路径 <code>DoIngameMenuLabel</code> 系列保留首帧 fallback，并已显式标记为 uncovered immediate fallback 进入 perf gate。</li>
+        <li>scheduler coverage telemetry 已能区分 budgeted stable text work 与 immediate fallback；snapshot/paragraph drain 的更细耗时拆分进入 Phase B。</li>
+        <li>更新 text pool/key mismatch 文档和测试，避免把已修复的 guard / bucket 问题当作待办。</li>
       </ul>
 
       <h3>Phase B：量化口径扩展 + scheduler_coverage 硬规则（1-2 个月）</h3>
@@ -532,9 +533,9 @@
       <p>对应 Pillar 1。</p>
       <p><strong>退出条件</strong>：</p>
       <ul>
-        <li>QmUi 引入 <code>CQmFrameArena</code>，所有 <code>std::vector</code> 替换为 <code>std::pmr::vector</code></li>
-        <li>CUi 引入 <code>SDrawCmdHeader</code>，ClipRect 纳入 memcmp</li>
-        <li><code>ITextRender::RenderTextInline</code> 路径落地，聊天/计时器走 inline 而非"重建容器"</li>
+        <li>QmUi 在已 profile 证明的 layout hot path 引入 <code>CQmFrameArena</code> / buffer 复用；不做全局 <code>std::vector</code> 大替换。</li>
+        <li>CUi <code>SDrawCmdHeader</code> / ClipRect memcmp 先做影响面评估和局部 PoC，再决定是否进入公共 UI 路径。</li>
+        <li>菜单/HUD 适配层的动态文本 inline PoC 落地；改 <code>ITextRender</code> 公共接口必须另立设计和兼容性验证。</li>
         <li>fresh log 显示 QmUi 渲染开销下降 ≥30%</li>
       </ul>
 
@@ -544,7 +545,7 @@
       <ul>
         <li><strong>暴露 Vulkan <code>m_FrameProfileStats</code> 全部字段到 perf report</strong>（所有后续优化的前置基线）</li>
         <li><strong>UI 渲染路径 telemetry</strong>（QuadsBegin/End vs RenderQuadContainer 调用频次和耗时）落地，能判断"UI QuadContainer 推广"的真实收益</li>
-        <li>基于 profile 数据完成至少 2 项 Vulkan 优化（候选：Descriptor cache、scissor batching、glyph atlas memcpy 优化、QuadContainer 推广）</li>
+        <li>基于 profile 数据完成 GPU/CPU-bound 判定；具体 Vulkan 优化只在数据证明后作为候选项进入独立计划。</li>
       </ul>
       <p><strong>不做</strong>：Vulkan backend 推倒重写、OpenGL backend 补 staging/PBO、AMD 多线程 fallback（无 AMD 测试环境）、多 backend 统一抽象、render graph、3D 引擎优化。</p>
 
@@ -554,15 +555,16 @@
       <ul>
         <li>text container vertex buffer 加 dirty 标记 + (string,font,size,wrap) 缓存</li>
         <li>纯英文场景 fresh log 显示 <code>text_container_create_ms</code> 接近 0</li>
-        <li>CJK 走 ImGui 1.92 风格"按需栅格化 + 增量 patch 纹理子区域"</li>
+        <li>CJK 动态 glyph atlas PoC 完成：覆盖 atlas 增长、旧 text container UV 失效、跨 backend texture update、frame 内上传预算。</li>
         <li>真实 UI 字频采集落地（反 v1 "通用语料 1500/3500 字"路线）</li>
       </ul>
 
       <h3>Phase F：粒子简化 budget + 游戏内 FPS（8-10 个月）</h3>
-      <p>对应 Pillar 2 + v1 原计划的游戏内 FPS 部分。<strong>粒子是三层 budget，无碰撞预算</strong>。</p>
+      <p>对应 Pillar 2 + v1 原计划的游戏内 FPS 部分。<strong>粒子是三层视觉 budget，但必须观测 update/collision 成本</strong>。</p>
       <p><strong>退出条件</strong>：</p>
       <ul>
         <li>spawn budget + viewport culling + group render budget 三层全部落地</li>
+        <li><code>m_Collides</code> 粒子占比和 <code>Collision()->MovePoint</code> 耗时可观测；profile 证明不需要更细 collision budget。</li>
         <li>HUD/statusbar 稳定文本走 text container 缓存</li>
         <li>fresh log 显示粒子尖峰可解释、可观测</li>
       </ul>
@@ -573,20 +575,20 @@
 
     <section class="card">
       <h2 id="scheduler">④ scheduler/text pool 架构深读（v2 核心修正）</h2>
-      <p class="muted">这是 v2 最重要的修正。SubAgent 实际读代码后证实：用户说"不通用"是<strong>完全准确的</strong>，代码证据明确。</p>
+      <p class="muted">这是 v2 最重要的修正。2026-06-19 的原始调研指出 scheduler 不通用；2026-06-20 复核当前 HEAD 后，service 化已落地，同步 fallback 已按 uncovered telemetry 进入 gate；text pool 双路径和更细耗时归因仍是后续风险。</p>
 
       <h3>4.1 Scheduler 架构问题</h3>
 
       <h4>4.1.1 当前工作模型：纯 opt-in，不是自动发现</h4>
-      <p>整个调度器是 <code>CMenus</code> 类的私有实现，没有以 service 形式暴露给 gameclient/components。<code>gameclient.cpp</code> 中 grep 不到任何 <code>AdaptiveBudget</code> / <code>PrebuildSettingsMenuTextPool</code> / <code>DrainIngameUiTextRuntime</code> 调用——所有调度都嵌在 menus 帧循环里。</p>
+      <p>当前调度器已经是 <code>IFrameScheduler</code> kernel service，<code>CGameClient::OnRender</code> 已调用 <code>BeginFrame</code> / <code>EndFrame</code>，不再是 <code>CMenus</code> 私有 state。但 consumer 仍是显式 opt-in：只有调用 <code>GameClient()->FrameScheduler()->ComputeBudget(...)</code> 的路径才受控，未接入的 immediate-mode fallback 不会自动限流。</p>
 
       <h4>4.1.2 不通用的具体表现（代码事实）</h4>
       <ol>
-        <li><strong>命名硬绑 settings/ingame</strong>：<code>menus.h:2197-2201</code> 有 4 个独立 state 字段，每加一个新场景就要新加一个 <code>m_XxxAdaptiveBudgetState</code> 成员</li>
-        <li><strong>没有公共注册接口</strong>：例如 demos 页（<code>PAGE_DEMOS</code>）完全没接入 text pool</li>
-        <li><strong>token 消费点硬编码</strong>：<code>RenderServerInfo</code>（<code>menus_ingame.cpp:1748-1759</code>）token 唯一用途是 snapshot text 队列，<strong>同步渲染路径 <code>DoIngameMenuLabel</code> 系列本身不消费 token</strong></li>
-        <li><strong>跨帧状态多份但无统一管理</strong>：4 个独立 state 互不感知，UI 在 settings 和 ingame 之间切换时各自 reset/recover，token 摆动剧烈</li>
-        <li><strong>fallback 是"那一帧不做"</strong>：<code>RequestMenuTextContainerBuild</code>（<code>menus.cpp:4754</code>）当 token ≤ 0 直接返回 false，drain 队列堆积，文本持续打不中，用户实际看到的还是同步 fallback</li>
+        <li><strong>consumer 仍需手动接入</strong>：service 已统一 state，但没有自动发现机制；新路径必须明确选择 <code>EFrameSchedulerConsumer</code> 并调用 <code>ComputeBudget</code>。</li>
+        <li><strong>覆盖语义仍需继续细化</strong>：demos/assets/settings/ingame server info 已有部分 consumer；但这不等于所有 text/layout work 都被 budget 约束。</li>
+        <li><strong>同步 fallback 已显式归类</strong>：<code>DoIngameMenuLabel</code> 系列保留首帧可见 fallback，但已通过 <code>fallback_immediate</code> / <code>scheduler_coverage=uncovered</code> 进入 perf gate。</li>
+        <li><strong>跨场景继承策略未定义</strong>：service 内部已有 per-consumer state，但 settings / ingame / assets / demo 的 HealthyFrames/Window 是否应该继承或隔离仍需 profile 决定。</li>
+        <li><strong>fallback 语义已可观测但仍需压低</strong>：<code>RequestMenuTextContainerBuild</code> 当 token ≤ 0 直接返回 false，drain 队列可能堆积；当前先把用户实际看到的同步 fallback 计入 uncovered，Phase B 再按场景量化阈值和耗时。</li>
       </ol>
 
       <h4>4.1.3 与业界对比</h4>
@@ -603,25 +605,25 @@
 
       <h3>4.2 Stable Text Pool 架构问题</h3>
 
-      <h4>4.2.1 key mismatch 8424 的根因（设计层面，不是 bug）</h4>
-      <p>mismatch 的判定是 <code>HasDescriptor && !KeyPlanned</code>。直接来源是 plan 收集时算的 Rect 用 <code>MenuTextSettingsContentView(Screen)</code>（重放路径），visible 渲染时算的 Rect 用真实 <code>MainView</code>，两者亚像素差异 × <code>MaxWidthBucket = round_to_int(width * 10)</code>（0.1 像素粒度）抖动。</p>
+      <h4>4.2.1 key mismatch 的剩余风险（设计层面，不只是 bucket bug）</h4>
+      <p>mismatch 的判定是 <code>HasDescriptor && !KeyPlanned</code>。历史根因之一是 plan 收集时算的 Rect 用 <code>MenuTextSettingsContentView(Screen)</code>（重放路径），visible 渲染时算的 Rect 用真实 <code>MainView</code>，两者亚像素差异再被过细 MaxWidthBucket 放大。当前 <code>BuildMenuTextStyleKey</code> 已改为 4px bucket，亚像素抖动已缓解；剩余风险是 plan collection 重放路径本身仍可能和 visible 路径分歧。</p>
       <div class="note bad">
         <strong>这是设计层面问题</strong>：plan collection 试图"重放渲染"但重放路径不可能和真实路径完全一致（UI 状态、time-based 动画、scroll position、tab 切换瞬间都不一样）。
       </div>
 
       <h4>4.2.2 双重记账根因（设计 bug + 实现 bug 组合）</h4>
       <ul>
-        <li><strong>设计 bug</strong>：guard 的构造函数无脑清零所有 <code>m_MenuTextStable*ThisFrame</code> 计数器（<code>menus.cpp:4960-4976</code>），假设全帧只有一次 guard，违反 RAII 的可组合性</li>
-        <li><strong>实现 bug</strong>：<code>RenderSettings</code> 不应该再建 guard，因为 caller (<code>RenderMenuShell</code>) 已经包过了；这是耦合泄漏</li>
-        <li><strong>位置</strong>：外层 shell guard（<code>menus.cpp:2904-2906</code>、<code>3013-3015</code>）+ 内层 content guard（<code>menus_settings.cpp:4875-4877</code>）</li>
+        <li><strong>历史问题</strong>：guard 曾假设全帧只有一次 guard，违反 RAII 可组合性。</li>
+        <li><strong>当前状态</strong>：guard 已保存 previous 状态，最外层负责清零/输出，析构恢复 previous，具备栈式语义。</li>
+        <li><strong>剩余风险</strong>：后续新增 guard 时必须保持同样的栈式契约，并用行为测试锁住 nested guard 语义。</li>
       </ul>
 
       <h3>4.3 三个改造方向</h3>
 
-      <h4>方向 A（推荐中期）：scheduler 抽成全局 service</h4>
+      <h4>方向 A（当前短期）：收口已 service 化 scheduler 的覆盖语义</h4>
       <ul>
-        <li><strong>工程量</strong>：中（核心算法已独立，主要是接入点重写）</li>
-        <li><strong>收益</strong>：scheduler 真正通用，5-8 个固定 consumer 注册即可获得预算分配；覆盖率从 4 个硬编码点扩展到全 gameclient</li>
+        <li><strong>工程量</strong>：小-中（service 已存在，主要是补覆盖、telemetry 和测试）</li>
+        <li><strong>收益</strong>：让 5-8 个固定 consumer 的覆盖范围可解释，避免"token 算了但同步 fallback 照跑"。</li>
         <li><strong>风险</strong>：当前魔法数（threshold 1.35x、HealthyFrames=2 等）需重新调参</li>
         <li><strong>关键边界</strong>：5-8 个固定 consumer，service 内部硬编码 list，<strong>不要完全动态注册</strong>（避免 microservice 反模式）</li>
       </ul>
@@ -636,10 +638,10 @@
 
       <h4>方向 C（短期止痛）：局部修复</h4>
       <ul>
-        <li><strong>MaxWidthBucket</strong>：<code>round_to_int(width * 10)</code> 改为 <code>round_to_int(width / 4.0) * 4</code>（4 像素粒度而非 0.1 像素），消除亚像素抖动</li>
-        <li><strong>guard 栈式语义</strong>：构造 push 而非清零，析构 pop 时检查栈深度决定是否 flush</li>
+        <li><strong>MaxWidthBucket</strong>：已改为 4 像素粒度；后续只需继续观测 key mismatch 是否接近 0。</li>
+        <li><strong>guard 栈式语义</strong>：已具备 previous/restore 语义；后续用测试防止退化。</li>
         <li><strong>工程量</strong>：小（1-2 天）</li>
-        <li><strong>风险</strong>：治标不治本，复杂度仍在</li>
+        <li><strong>风险</strong>：这些局部修复治标不治本，plan collection 双路径复杂度仍在</li>
       </ul>
 
       <h3>4.4 综合建议</h3>
@@ -715,9 +717,9 @@
         <tbody>
           <tr><td><code>SettingsAdaptiveBudgetStep</code></td><td><code>src/game/client/components/settings_resource_jobs.cpp:839</code></td><td>scheduler 算法核心（状态机：WINDOW_INACTIVE → FRAME_PRESSURE → SCROLL_ACTIVE → POST_SCROLL_RECOVERY → IDLE）</td></tr>
           <tr><td><code>SSettingsAdaptiveBudgetInput/State/Output</code></td><td><code>src/game/client/components/settings_resource_jobs.h:187-219</code></td><td>状态/输入/输出结构</td></tr>
-          <tr><td><code>ComputeSettingsUiFrameSchedulerBudget</code> / <code>BeginSettingsUiFrameScheduler</code></td><td><code>src/game/client/components/menus.cpp:5580-5592</code></td><td>scheduler 调用入口（CMenus 成员函数）</td></tr>
-          <tr><td>4 个独立 state 字段</td><td><code>src/game/client/components/menus.h:2197-2201</code></td><td>m_SettingsTextAdaptiveBudgetState / m_IngameTextAdaptiveBudgetState / m_AssetsAdaptiveBudgetState / m_DemoBrowserAdaptiveBudgetState</td></tr>
-          <tr><td>token 算了但同步路径不消费的证据</td><td><code>src/game/client/components/menus_ingame.cpp:1740-1805</code></td><td>RenderServerInfo 调用 scheduler 但 DoIngameMenuLabel 走同步 fallback</td></tr>
+          <tr><td><code>IFrameScheduler</code> / <code>CFrameScheduler</code></td><td><code>src/game/client/frame_scheduler.h</code> / <code>src/game/client/frame_scheduler.cpp</code></td><td>全局 scheduler service、per-consumer state、Reset/BeginFrame/EndFrame 契约</td></tr>
+          <tr><td><code>BeginSettingsUiFrameScheduler</code></td><td><code>src/game/client/components/menus.cpp:5588</code></td><td>menus 侧 scheduler 调用入口，转发到 <code>GameClient()->FrameScheduler()</code></td></tr>
+          <tr><td>同步 fallback 覆盖口径</td><td><code>src/game/client/components/menus.cpp</code> / <code>qmclient_scripts/perf/lib/stats.ts</code></td><td><code>DoIngameMenuLabel</code> 系列的同步 <code>Ui()->DoLabel</code> fallback 已计入 <code>scheduler_coverage=uncovered</code></td></tr>
         </tbody>
       </table>
 
@@ -726,11 +728,10 @@
         <thead><tr><th>符号 / 文件</th><th>位置</th><th>用途</th></tr></thead>
         <tbody>
           <tr><td><code>MenuTextCacheKey</code></td><td><code>src/game/client/components/menus.cpp:259-275</code></td><td>cache key 算法（格式 <code>scope:page:tab:subtab:textId:fs%d:al%d:mw%d:us%d:hd%d:cm%d</code>）</td></tr>
-          <tr><td><code>BuildMenuTextStyleKey</code> / <code>SettingsMenuTextPlanStyleKey</code></td><td><code>src/game/client/components/menus.cpp:287-315</code></td><td>style key 计算（MaxWidthBucket 抖动根源）</td></tr>
+          <tr><td><code>BuildMenuTextStyleKey</code> / <code>SettingsMenuTextPlanStyleKey</code></td><td><code>src/game/client/components/menus.cpp:287-315</code></td><td>style key 计算；MaxWidthBucket 已改为 4px 粒度，剩余风险是 plan/visible 双路径分歧</td></tr>
           <tr><td><code>MenuTextElement</code></td><td><code>src/game/client/components/menus.cpp:4664-4719</code></td><td>visible 路径查询与 keyMismatch/unplannedVisible 计数</td></tr>
-          <tr><td><code>CScopedMenuTextVisibleGuard</code> 实现</td><td><code>src/game/client/components/menus.cpp:4953-4990</code></td><td>双记账 bug 现场（构造函数无脑清零）</td></tr>
-          <tr><td>外层 shell guard</td><td><code>src/game/client/components/menus.cpp:2904-2906</code>（offline）/ <code>3013-3015</code>（online）</td><td>双触发点之一</td></tr>
-          <tr><td>内层 content guard</td><td><code>src/game/client/components/menus_settings.cpp:4875-4877</code></td><td>双触发点之二（耦合泄漏）</td></tr>
+          <tr><td><code>CScopedMenuTextVisibleGuard</code> 实现</td><td><code>src/game/client/components/menus.cpp:4953-5001</code></td><td>当前已具备 previous/restore 栈式语义；后续需测试防退化</td></tr>
+          <tr><td>outer/content guard 调用点</td><td><code>src/game/client/components/menus.cpp</code> / <code>src/game/client/components/menus_settings.cpp</code></td><td>保留为 nested guard 语义的回归观察点</td></tr>
           <tr><td><code>BuildSettingsMenuTextPlan</code></td><td><code>src/game/client/components/menus.cpp:5129-5154</code></td><td>plan collection 主入口（opt-in 接入现场）</td></tr>
           <tr><td><code>BuildVisibleSettingsMenuTextPlan</code></td><td><code>src/game/client/components/menus.cpp:5318-5349</code></td><td>visible 重放（plan-vs-visible 分裂源头）</td></tr>
           <tr><td>ingame plan collect 分支</td><td><code>src/game/client/components/menus_ingame.cpp:1312-1333</code></td><td>RenderIngameServerInfoValueCached（plan collect vs 同步渲染）</td></tr>
@@ -793,24 +794,27 @@
 
       <h3>8.2 图形后端改造边界</h3>
       <ul>
-        <li><strong>Vulkan 不要大改</strong>：已做对 80%，只新增 telemetry 暴露和小修小补。</li>
-        <li><strong>OpenGL staging buffer 兼容性</strong>：staging buffer / PBO 是 OpenGL 3.0+ 标准，兼容性好；persistent mapped 需要 4.4+，需检查 QmClient 最低 OpenGL 版本要求。</li>
+        <li><strong>Vulkan 不要大改</strong>：已有 staging、stream buffer、frame profiler 等基础设施；先暴露 telemetry 和判断 GPU/CPU-bound，再决定是否做 descriptor/scissor/glyph memcpy 等小修。</li>
+        <li><strong>OpenGL PBO/staging 不是低风险通用升级</strong>：PBO 对上传收益依赖驱动和 workload，persistent mapped 需要 OpenGL 4.4+/扩展；必须绑定最低 GL 版本、驱动矩阵和 OpenGL 用户占比。</li>
         <li><strong>图形后端提前可能与 CPU 侧优化竞争资源</strong>：6/19 log 显示当前卡顿是 CPU 侧，图形后端优化短期内不解决眼前问题，是长期方向。</li>
       </ul>
 
       <h3>8.3 文本渲染边界</h3>
       <ul>
         <li><strong>不预设答案</strong>：纯英文卡顿真因必须先 profile 验证（per-label TextWidth 调用次数、text container 每帧 alloc/free、layout/wrap 重算次数）。</li>
-        <li><strong>ImGui 1.92 动态字体系统是 CJK 长期方案</strong>，但工程量大，需要 PoC。</li>
+        <li><strong>ImGui 1.92 动态字体系统是 CJK 长期可借鉴方案</strong>，但不是可直接搬运的实现；需要 PoC 证明 atlas 增长、旧 container UV、backend texture update、上传预算都可控。</li>
+        <li><strong><code>ITextRender</code> 是 engine-wide API</strong>：直接新增公共接口会影响 chat、HUD、demo browser、menus、QmUI、map render、editor。优先在菜单/HUD 适配层验证。</li>
         <li><strong>不要 SDF/MSDF 或 GPU-resident text</strong>：当前问题在 CPU 同步路径，不解决。</li>
       </ul>
 
       <h3>8.4 上游 cherry-pick 边界（替代 v1 的 rebase 风险）</h3>
       <p>用户已确认 QmClient 已偏离 DDNet 上游太远，现在是 cherry-pick 模式（一个提交一个提交地看改动）。因此：</p>
       <ul>
-        <li>✅ 不需要考虑上游兼容性</li>
-        <li>✅ 改动可以隔离在 <code>qmclient/</code> 目录</li>
-        <li>⚠️ 但反过来更要严格隔离 QmClient 私有改动，方便识别"哪些是 QmClient 私有"vs"哪些值得贡献回上游"</li>
+        <li>✅ 不需要追求整仓 rebase 友好；不以"是否方便回上游"作为性能路线的主要约束。</li>
+        <li>✅ 不需要为了保持官方 DDNet 源码结构而把 QmClient 私有实现强行压回上游形态；上游同步以 cherry-pick 为主。</li>
+        <li>⚠️ 这里的"不考虑上游兼容性"只指源码同步/贡献回官方层面，不等于可以无审批改变用户可见运行时契约。</li>
+        <li>⚠️ 若某项优化会触碰协议、demo/skin/map/config 格式、物理、预测、snapshot、输入、时序或回放语义，需要单独批准和专门验证。</li>
+        <li>⚠️ 碰 <code>ITextRender</code> / graphics backend / CUI 公共接口时，不需要为上游贡献让路，但仍需要 feature flag、跨 backend/平台验证和回退路径。</li>
       </ul>
 
       <h3>8.5 测试深化边界</h3>
@@ -843,8 +847,9 @@
       <ul>
         <li><strong>plan collection 的实际收益未量化</strong>：临时把 <code>BuildVisibleSettingsMenuTextPlan</code> / <code>PrebuildSettingsMenuTextPool</code> 短路（return immediately），跑 perf benchmark 对比 settings 页滚动 FPS。如果差异 &lt;5%，方向 B 可直接执行。</li>
         <li><strong>scheduler token 在 FRAME_PRESSURE 下过度砍半是否合理</strong>：<code>settings_resource_jobs.cpp:888-892</code> 把所有 window 砍半，需要 profiling：FRAME_PRESSURE 模式下 visible 路径 fallback 到同步构建的占比是多少。</li>
-        <li><strong><code>m_AssetsAdaptiveBudgetState</code>、<code>m_DemoBrowserAdaptiveBudgetState</code> 是否在用</strong>：grep 仅看到声明，没看到消费点。如果是死代码，方向 A 时可直接删除。</li>
-        <li><strong>跨场景状态继承</strong>：从 settings 切到 ingame 时，旧 state 的 HealthyFrames/Window 是否应该迁移到新场景？</li>
+        <li><strong>Assets / DemoBrowser consumer 已在用</strong>：后续问题不是删死字段，而是确认这些 consumer 的 coverage telemetry 是否能解释实际 work。</li>
+        <li><strong>跨场景状态继承</strong>：从 settings 切到 ingame 时，service 内 per-consumer state 的 HealthyFrames/Window 是否应该迁移到新场景？</li>
+        <li><strong><code>DoIngameMenuLabel</code> 同步 fallback 阈值</strong>：当前已作为 uncovered immediate fallback 进入 gate；Phase B 需要用 fresh log 确定不同场景的阈值和是否进一步限流。</li>
       </ul>
 
       <h3>9.2 文本渲染相关</h3>
@@ -857,8 +862,8 @@
       <h3>9.3 图形后端相关</h3>
       <ul>
         <li><strong>OpenGL 用户的实际占比和卡顿数据</strong>：DDNet 默认 OpenGL 还是 Vulkan？QmClient 是否改了默认？如果 OpenGL 用户占比小，OpenGL 后端优化收益有限。</li>
-        <li><strong>Vulkan StreamBuffer 是否是 ring buffer</strong>：<code>backend_vulkan.cpp:7196</code> 需要单独看 <code>StreamBuffer</code> 实现确认。</li>
-        <li><strong><code>m_FrameProfileStats</code> 当前是否输出到 perf log</strong>：grep 显示有字段，但没看到输出代码——需要确认是否已埋点但未消费。</li>
+        <li><strong>Vulkan StreamBuffer / staging 行为已基本确认</strong>：后续重点是把 frame profiler 暴露到 QmClient perf report，而不是重查是否存在。</li>
+        <li><strong><code>m_FrameProfileStats</code> 输出路径</strong>：当前主要是 backend verbose/profile 信息，仍需接入 QmClient perf report 和 gate scenario。</li>
       </ul>
 
       <h3>9.4 CUI 相关</h3>
@@ -905,8 +910,8 @@
     </section>
 
     <div class="footer">
-      <p>文档状态：active · 编写日期：2026-06-19 · 基于：四份 SubAgent 调研（ImGui 优化经验、文本渲染业界方案、scheduler/text pool 架构重审、图形后端提前可行性）+ 6/19 fresh log 分析 · 编写约定：路径使用前斜杠，阈值按 60Hz（16.67ms）/ 120Hz（8.33ms）语义。</p>
-      <p>与 v1 的关系：v1（<code>2026-06-18-long-term-performance-optimization-roadmap.html</code>）仍然有效，v2 是其修正/补充。两者冲突时以 v2 为准（v2 基于实际代码现状，v1 基于印象）。</p>
+      <p>文档状态：active · 编写日期：2026-06-19 · 状态同步：2026-06-20 · 基于：四份 SubAgent 调研（ImGui 优化经验、文本渲染业界方案、scheduler/text pool 架构重审、图形后端提前可行性）+ 6/19 fresh log 分析 + 6/20 codegraph/web 复核 · 编写约定：路径使用前斜杠，阈值按 60Hz（16.67ms）/ 120Hz（8.33ms）语义。</p>
+      <p>与 v1 的关系：v1（<code>2026-06-18-long-term-performance-optimization-roadmap.html</code>）仍然有效，v2 是其修正/补充。两者冲突时以已同步状态的 v2 为准；若本文件后续与当前代码冲突，应先重新做 codegraph 复核再执行。</p>
     </div>
   </div>
 </body>

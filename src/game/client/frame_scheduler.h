@@ -30,9 +30,10 @@ public:
 	virtual SSettingsAdaptiveBudgetOutput ComputeBudget(
 		EFrameSchedulerConsumer Consumer,
 		const SSettingsAdaptiveBudgetInput &Input) = 0;
+	virtual void Reset() = 0;
 	virtual const SSettingsAdaptiveBudgetState &State(EFrameSchedulerConsumer Consumer) const = 0;
 	virtual const SSettingsAdaptiveBudgetOutput &LastOutput(EFrameSchedulerConsumer Consumer) const = 0;
-	// Phase A 阶段 4 才会接入 OnRender 调用，目前为占位。
+	// CGameClient::OnRender 调用帧入口/出口；EndFrame 当前不需要清理。
 	virtual void BeginFrame(int FrameId) = 0;
 	virtual void EndFrame() = 0;
 	virtual int CurrentFrameId() const = 0;

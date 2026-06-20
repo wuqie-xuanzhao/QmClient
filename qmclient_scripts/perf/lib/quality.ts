@@ -281,6 +281,9 @@ export function reportQuality(entries: PerfEntry[], diagnostics: ParseDiagnostic
   if (targetSettings.stableTextCoverage.fallbackImmediate > 0) {
     warnings.push('stable text used immediate fallback during target window');
   }
+  if (targetSettings.stableTextCoverage.schedulerCoverage === 'uncovered' && targetSettings.stableTextCoverage.fallbackImmediate > 0) {
+    warnings.push('scheduler coverage uncovered immediate fallback during target window');
+  }
   const assetsVisibleReady = assetsVisibleReadySummary(entries);
   if (!assetsVisibleReady.available) {
     warnings.push('assets visible-ready preflight missing');

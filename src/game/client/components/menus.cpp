@@ -394,8 +394,9 @@ namespace
 			str_copy(aPage, SettingsPageCacheKey(Page, -1).c_str(), sizeof(aPage));
 		else
 			str_format(aPage, sizeof(aPage), "%d", Page);
-		str_format(aPayload, sizeof(aPayload), "event=settings_text_usage scope=%s page=%s tab=%d subtab=%d operation=%s frame=%" PRIu64 " text_class=static_stable candidates=%d hits=%d reused=%d miss=%d stale=%d text_new=%d text_reused=%d planned=%d unplanned=%d pool_hit=%d render_ready_hit=%d build_queued=%d fallback_immediate=%d",
+		str_format(aPayload, sizeof(aPayload), "event=settings_text_usage scope=%s page=%s tab=%d subtab=%d operation=%s frame=%" PRIu64 " text_class=static_stable scheduler_coverage=%s candidates=%d hits=%d reused=%d miss=%d stale=%d text_new=%d text_reused=%d planned=%d unplanned=%d pool_hit=%d render_ready_hit=%d build_queued=%d fallback_immediate=%d",
 			pScopeName != nullptr ? pScopeName : MenuTextScopeName(Scope), aPage, Tab, Subtab, pOperation != nullptr ? pOperation : "unknown", Frame,
+			FallbackImmediate > 0 ? "uncovered" : "budgeted",
 			Candidates, Hits, Reused, Misses, Stales, TextNew, TextReused, Planned, Unplanned, PoolHits, RenderReadyHits, BuildQueued, FallbackImmediate);
 		QmPerfLogPayload("perf/settings-text", aPayload, pClient, aPage);
 	}
@@ -1491,8 +1492,11 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 			CUIElement::SUIElementRect *pElementRect = pTextUiElement->Rect(0);
 			const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
 			DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, *pTextUiElement, &Label, pText, LabelFontSize, TEXTALIGN_MC);
-			if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid())
+			if(pTextUiElement != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid())
+			{
+				CountMenuTextImmediateFallback();
 				Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);
+			}
 		}
 		else
 			Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);
@@ -2563,6 +2567,8 @@ void CMenus::OnInterfacesInit(CGameClient *pClient)
 
 void CMenus::OnInit()
 {
+	GameClient()->FrameScheduler()->Reset();
+
 	if(g_Config.m_ClShowWelcome)
 	{
 		m_Popup = POPUP_LANGUAGE;
@@ -4557,8 +4563,11 @@ int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *
 	CUIElement::SUIElementRect *pElementRect = TextElement.Rect(0);
 	const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, TextElement, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
-	if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid())
+	if(&TextElement != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid())
+	{
+		CountMenuTextImmediateFallback();
 		Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
+	}
 	return Result;
 }
 
@@ -4602,8 +4611,11 @@ void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRe
 	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
 	const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, Element, pRect, pText, Size, Align, LabelProps);
-	if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+	if(&Element != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+	{
+		CountMenuTextImmediateFallback();
 		Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+	}
 }
 
 void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)
@@ -4623,8 +4635,11 @@ void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect
 	CUIElement::SUIElementRect *pElementRect = Element.Rect(0);
 	const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, Element, pRect, pText, Size, Align, LabelProps);
-	if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+	if(&Element != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+	{
+		CountMenuTextImmediateFallback();
 		Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+	}
 }
 
 CUIElement &CMenus::MenuTextElement(EMenuTextScope Scope, int Page, int Tab, int Subtab, const char *pTextId, const SMenuTextStyleKey &StyleKey)
@@ -4817,6 +4832,12 @@ void CMenus::DrainMenuTextContainerBuildRequests()
 void CMenus::DrainMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated)
 {
 	Ui()->DoLabelStreamed(*Element.Rect(0), pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor, Render, pTextContainerRecreated);
+}
+
+void CMenus::CountMenuTextImmediateFallback()
+{
+	if(m_MenuTextPoolVisibleGuard)
+		++m_MenuTextStableFallbackImmediateThisFrame;
 }
 
 void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render)

@@ -2189,6 +2189,7 @@ private:
 	void QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor);
 	void DrainMenuTextContainerBuildRequests();
 	void DrainMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render, bool *pTextContainerRecreated);
+	void CountMenuTextImmediateFallback();
 	void LogSettingsUiBudget(const char *pPage, const SSettingsUiBudgetFrame &Frame) const;
 
 	SSettingsRuntimeMetadata m_SettingsRuntimeMetadata;

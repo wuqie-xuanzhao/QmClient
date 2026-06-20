@@ -3943,7 +3943,7 @@ TEST(QmMonitoringHelpers, IngameMenuTabsHaveImmediateTextFallback)
 	EXPECT_NE(Body.find("CUIElement::SUIElementRect *pElementRect = pTextUiElement->Rect(0);"), std::string::npos);
 	EXPECT_NE(Body.find("const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();"), std::string::npos);
 	EXPECT_NE(Body.find("DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, *pTextUiElement, &Label, pText, LabelFontSize, TEXTALIGN_MC);"), std::string::npos);
-	EXPECT_NE(Body.find("if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid())"), std::string::npos);
+	EXPECT_NE(Body.find("if(pTextUiElement != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid())"), std::string::npos);
 	EXPECT_NE(Body.find("Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);"), std::string::npos);
 }
 
@@ -3961,7 +3961,7 @@ TEST(QmMonitoringHelpers, IngameStableLabelsHaveImmediateTextFallback)
 	EXPECT_NE(Body.find("CUIElement::SUIElementRect *pElementRect = Element.Rect(0);"), std::string::npos);
 	EXPECT_NE(Body.find("const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();"), std::string::npos);
 	EXPECT_NE(Body.find("DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, Element, pRect, pText, Size, Align, LabelProps);"), std::string::npos);
-	EXPECT_NE(Body.find("if(!HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)"), std::string::npos);
+	EXPECT_NE(Body.find("if(&Element != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)"), std::string::npos);
 	EXPECT_NE(Body.find("Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);"), std::string::npos);
 }
 
@@ -4146,6 +4146,29 @@ TEST(QmMonitoringHelpers, SettingsTextUsageSeparatesPoolHitFromRenderReadyHit)
 	EXPECT_NE(StreamedBody.find("++m_MenuTextStableRenderReadyHitsThisFrame"), std::string::npos);
 	EXPECT_NE(StreamedBody.find("++m_MenuTextStableBuildQueuedThisFrame"), std::string::npos);
 	EXPECT_NE(StreamedBody.find("++m_MenuTextStableFallbackImmediateThisFrame"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, IngameImmediateTextFallbackIsCountedForSchedulerCoverage)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
+	const std::string ButtonBody = ExtractSourceFunctionBody(Source, "int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)");
+	const std::string LabelBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
+	const std::string TitleBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
+	ASSERT_FALSE(TabBody.empty());
+	ASSERT_FALSE(ButtonBody.empty());
+	ASSERT_FALSE(LabelBody.empty());
+	ASSERT_FALSE(TitleBody.empty());
+
+	EXPECT_NE(Header.find("CountMenuTextImmediateFallback()"), std::string::npos);
+	EXPECT_NE(Source.find("void CMenus::CountMenuTextImmediateFallback()"), std::string::npos);
+	EXPECT_NE(Source.find("scheduler_coverage=%s"), std::string::npos);
+	EXPECT_NE(Source.find("FallbackImmediate > 0 ? \"uncovered\" : \"budgeted\""), std::string::npos);
+	EXPECT_NE(TabBody.find("if(pTextUiElement != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid())"), std::string::npos);
+	EXPECT_NE(ButtonBody.find("if(&TextElement != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid())"), std::string::npos);
+	EXPECT_NE(LabelBody.find("if(&Element != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)"), std::string::npos);
+	EXPECT_NE(TitleBody.find("if(&Element != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, TextRenderingStabilizationHasVisualChecklist)
@@ -5555,10 +5578,42 @@ TEST(QmMonitoringHelpers, DefaultGateRunsFullAutomatedTests)
 	// automated test set. Full mode is reserved for extra heavyweight/noisy
 	// checks, not for merely getting Rust tests.
 	EXPECT_NE(DefaultSpec.find("\"tests\": {\"cxx\": True, \"rust\": True, \"all\": False}"), std::string::npos);
+	EXPECT_EQ(DefaultSpec.find("\"strict_build\""), std::string::npos);
+	EXPECT_EQ(DefaultSpec.find("\"dilate\""), std::string::npos);
 	EXPECT_NE(DefaultSpec.find("C++ 全量测试和 Rust 全量测试"), std::string::npos);
+	EXPECT_NE(Gate.substr(FullMode).find("\"strict_build\""), std::string::npos);
+	EXPECT_NE(Gate.substr(FullMode).find("\"dilate\""), std::string::npos);
 	EXPECT_NE(Verification.find("C++ 全量测试和 Rust 全量测试"), std::string::npos);
+	EXPECT_NE(Verification.find("严格构建与静态分析只属于 full gate"), std::string::npos);
 	EXPECT_NE(ScriptsOverview.find("C++ 全量测试和 Rust 全量测试"), std::string::npos);
+	EXPECT_NE(ScriptsOverview.find("严格构建与静态分析只属于 full gate"), std::string::npos);
 	EXPECT_NE(ScriptsOverview.find("不作为“全量测试”的默认入口"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, NightlyWorkflowPublishesPdbFreePrerelease)
+{
+	const std::string Nightly = ReadRepoFile(".github/workflows/nightly.yml");
+	ASSERT_FALSE(Nightly.empty());
+
+	EXPECT_NE(Nightly.find("workflow_dispatch:"), std::string::npos);
+	EXPECT_NE(Nightly.find("schedule:"), std::string::npos);
+	EXPECT_NE(Nightly.find("Check Nightly Changes"), std::string::npos);
+	EXPECT_NE(Nightly.find("git ls-remote --tags origin refs/tags/nightly"), std::string::npos);
+	EXPECT_NE(Nightly.find("should_build=false"), std::string::npos);
+	EXPECT_NE(Nightly.find("github.event_name"), std::string::npos);
+	EXPECT_NE(Nightly.find("needs.changes.outputs.should_build == 'true'"), std::string::npos);
+	EXPECT_NE(Nightly.find("cmake --build build --target package_default --parallel"), std::string::npos);
+	EXPECT_NE(Nightly.find("QmClient-windows.zip"), std::string::npos);
+	EXPECT_NE(Nightly.find("QmClient-windows.7z"), std::string::npos);
+	EXPECT_NE(Nightly.find("QmClient-ubuntu.tar.xz"), std::string::npos);
+	EXPECT_NE(Nightly.find("QmClient-macOS.dmg"), std::string::npos);
+	EXPECT_NE(Nightly.find("PDB files must not be published"), std::string::npos);
+	EXPECT_NE(Nightly.find("\\.pdb$"), std::string::npos);
+	EXPECT_NE(Nightly.find("gh release delete nightly --cleanup-tag --yes || true"), std::string::npos);
+	EXPECT_NE(Nightly.find("gh release create nightly"), std::string::npos);
+	EXPECT_NE(Nightly.find("--prerelease"), std::string::npos);
+	EXPECT_NE(Nightly.find("contents: write"), std::string::npos);
+	EXPECT_EQ(Nightly.find("startsWith(github.ref, 'refs/tags/')"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
@@ -5827,6 +5882,7 @@ TEST(QmMonitoringHelpers, FrameSchedulerServiceExposesConsumerScopedInterface)
 	EXPECT_NE(Header.find("IngameServerInfo"), std::string::npos);
 	EXPECT_NE(Header.find("Count"), std::string::npos);
 	EXPECT_NE(Header.find("ComputeBudget"), std::string::npos);
+	EXPECT_NE(Header.find("Reset()"), std::string::npos);
 	EXPECT_NE(Header.find("BeginFrame"), std::string::npos);
 	EXPECT_NE(Header.find("EndFrame"), std::string::npos);
 	EXPECT_NE(Header.find("CreateFrameScheduler"), std::string::npos);
@@ -5895,4 +5951,36 @@ TEST(QmMonitoringHelpers, FrameSchedulerServiceProducesRealTokensAndIsolatesCons
 	Input.m_FrameMsP95 = 40.0f;
 	const SSettingsAdaptiveBudgetOutput PressuredOutput = Scheduler->ComputeBudget(EFrameSchedulerConsumer::IngameServerInfo, Input);
 	EXPECT_EQ(PressuredOutput.m_Mode, ESettingsAdaptiveBudgetMode::FRAME_PRESSURE);
+}
+
+TEST(QmMonitoringHelpers, FrameSchedulerResetClearsConsumerStateAndFrameScope)
+{
+	std::unique_ptr<IFrameScheduler, void (*)(IFrameScheduler *)> Scheduler(CreateFrameScheduler(), [](IFrameScheduler *p) { delete p; });
+	ASSERT_NE(Scheduler, nullptr);
+
+	Scheduler->BeginFrame(42);
+
+	SSettingsAdaptiveBudgetInput Input;
+	Input.m_WindowActive = true;
+	Input.m_TargetFrameMs = 8.333f;
+	Input.m_FrameMsAverage = 5.0f;
+	Input.m_FrameMsP95 = 6.0f;
+
+	const SSettingsAdaptiveBudgetOutput Output = Scheduler->ComputeBudget(EFrameSchedulerConsumer::IngameServerInfo, Input);
+	ASSERT_GT(Output.m_TextContainerTokens, 0);
+	ASSERT_GT(Scheduler->LastOutput(EFrameSchedulerConsumer::IngameServerInfo).m_TextContainerTokens, 0);
+	ASSERT_EQ(Scheduler->CurrentFrameId(), 42);
+
+	Scheduler->Reset();
+
+	EXPECT_EQ(Scheduler->CurrentFrameId(), 0);
+	for(size_t i = 0; i < FRAME_SCHEDULER_CONSUMER_COUNT; ++i)
+	{
+		const EFrameSchedulerConsumer Consumer = static_cast<EFrameSchedulerConsumer>(i);
+		EXPECT_FALSE(Scheduler->State(Consumer).m_Initialized);
+		EXPECT_EQ(Scheduler->State(Consumer).m_HealthyFrames, 0);
+		EXPECT_EQ(Scheduler->State(Consumer).m_BackgroundWindow, 1);
+		EXPECT_EQ(Scheduler->LastOutput(Consumer).m_VisibleTokens, 0);
+		EXPECT_EQ(Scheduler->LastOutput(Consumer).m_TextContainerTokens, 0);
+	}
 }

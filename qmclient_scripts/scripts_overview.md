@@ -169,12 +169,11 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 #### `default`
 
 - 日常提交前严格门
-- 跑真实构建、严格静态分析、C++ 全量测试和 Rust 全量测试
+- 跑 quick 层源码卫生检查、C++ 全量测试和 Rust 全量测试
 
 默认内容：
 
 - `quick` 全部
-- `checks/strict_build`
 - `run_cxx_tests`（会构建 `testrunner`，并在 build 目录下执行测试二进制；源码结构测试通过测试源码根读取 `src/...` / `data/...`）
 - `run_rust_tests`
 
@@ -186,6 +185,8 @@ python qmclient_scripts/gate/tools/refresh_allowlist.py --report tmp/check-gate-
 默认内容：
 
 - `default` 全部
+- `checks/strict_build`（严格构建与静态分析只属于 full gate）
+- `checks/dilate`
 - 标识符命名检查
 - clang-tidy warn 等附加检查（按当前 gate 开关和 mode 配置）
 

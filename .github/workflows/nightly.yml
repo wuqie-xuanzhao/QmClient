@@ -1,0 +1,353 @@
+name: Nightly Release
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 18 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Check Nightly Changes
+    runs-on: ubuntu-24.04
+    outputs:
+      should_build: ${{ steps.nightly.outputs.should_build }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Check nightly tag
+        id: nightly
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "Manual nightly run; publishing is allowed."
+            exit 0
+          fi
+
+          current="${GITHUB_SHA}"
+          previous="$(git ls-remote --tags origin refs/tags/nightly | awk '{print $1}')"
+          if [ -n "$previous" ] && [ "$previous" = "$current" ]; then
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "Scheduled nightly skipped: refs/tags/nightly already points at ${current}."
+          else
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "Scheduled nightly will publish: previous=${previous:-<none>} current=${current}."
+          fi
+
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    needs:
+      - changes
+    if: needs.changes.outputs.should_build == 'true'
+    timeout-minutes: 120
+    env:
+      BUILD_TYPE: Release
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      SCCACHE_GHA_ENABLED: "true"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-24.04
+            package_ext: tar.xz
+            output_name: QmClient-ubuntu.tar.xz
+            artifact_name: nightly-linux
+          - name: Windows
+            os: windows-2022
+            package_ext: zip
+            output_name: QmClient-windows.zip
+            artifact_name: nightly-windows
+          - name: macOS
+            os: macos-26
+            package_ext: dmg
+            output_name: QmClient-macOS.dmg
+            artifact_name: nightly-macos
+
+    steps:
+      - name: Free disk space (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          df -h
+
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Cache CMake build
+        uses: actions/cache@v5
+        with:
+          path: |
+            build/_deps
+          key: nightly-cmake-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-${{ hashFiles('CMakeLists.txt', 'cmake/**/*.cmake') }}
+          restore-keys: nightly-cmake-${{ runner.os }}-${{ runner.arch }}-${{ env.BUILD_TYPE }}-
+
+      - name: Cache Homebrew packages
+        if: runner.os == 'macOS'
+        uses: actions/cache@v5
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: nightly-homebrew-${{ runner.os }}-${{ hashFiles('.github/workflows/nightly.yml') }}
+          restore-keys: nightly-homebrew-${{ runner.os }}-
+
+      - name: Reinstall ccache (macOS)
+        if: runner.os == 'macOS'
+        run: brew reinstall ccache
+
+      - name: Setup ccache (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: hendrikmuhs/ccache-action@v1.2.22
+        with:
+          key: nightly-${{ runner.os }}-${{ runner.arch }}
+          max-size: 500M
+
+      - name: Setup sccache (Windows)
+        if: runner.os == 'Windows'
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Ninja (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ninja -y
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake ninja-build pkg-config python3 python3-pip python3-pil \
+            libfreetype6-dev libnotify-dev libsdl2-dev libsqlite3-dev \
+            libgl1-mesa-dev \
+            libvulkan-dev glslang-tools spirv-tools \
+            libavcodec-dev libavformat-dev libavutil-dev \
+            libswresample-dev libswscale-dev libx264-dev \
+            libpng-dev libwebp-dev libcurl4-openssl-dev libssl-dev \
+            libogg-dev libopus-dev libopusfile-dev libwavpack-dev
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          for pkg in cmake ninja pkg-config python freetype sdl2 libpng webp libogg opus opusfile sqlite wavpack ffmpeg molten-vk vulkan-loader glslang; do
+            if brew list --formula "$pkg" &>/dev/null; then
+              brew link --overwrite "$pkg" 2>/dev/null || true
+            else
+              brew install "$pkg"
+            fi
+          done
+          python3 -m venv .venv-dmgbuild
+          . .venv-dmgbuild/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dmgbuild Pillow
+          echo "${PWD}/.venv-dmgbuild/bin" >> "$GITHUB_PATH"
+
+      - name: Install Python build dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: python -m pip install Pillow
+
+      - name: Configure
+        shell: bash
+        run: |
+          ARGS=(-G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DDOWNLOAD_GTEST=ON)
+          case "$RUNNER_OS" in
+            Linux)
+              ARGS+=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
+              ;;
+            macOS)
+              SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+              ARGS+=(
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+                -DPREFER_BUNDLED_LIBS=ON -DVULKAN=ON
+                -DCMAKE_OSX_SYSROOT="${SDKROOT}" -DIPO=OFF
+              )
+              ;;
+            Windows)
+              ARGS+=(
+                -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+                -DPREFER_BUNDLED_LIBS=ON -DCMAKE_OBJECT_PATH_MAX=1024
+              )
+              ;;
+          esac
+          cmake -S . -B build "${ARGS[@]}"
+
+      - name: Build client
+        shell: bash
+        run: cmake --build build --target game-client --parallel
+
+      - name: Run tests
+        shell: bash
+        run: cmake --build build --target run_tests --parallel
+
+      - name: Package
+        shell: bash
+        run: cmake --build build --target package_default --parallel
+
+      - name: Collect package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            found=false
+            for ext in zip 7z; do
+              pkg="$(find build -type f -name "QmClient*.$ext" ! -name "*-src*" 2>/dev/null | head -n 1)"
+              [ -z "$pkg" ] && pkg="$(find build -type f -name "*.$ext" ! -name "*-src*" 2>/dev/null | head -n 1)"
+              if [ -n "$pkg" ]; then
+                cp "$pkg" "dist/QmClient-windows.$ext"
+                echo "Found: $pkg -> dist/QmClient-windows.$ext"
+                found=true
+              fi
+            done
+            if [ "$found" = "false" ]; then
+              echo "No zip or 7z package found under build/"
+              exit 1
+            fi
+          else
+            PKG="$(find build -type f -name "*.${{ matrix.package_ext }}" ! -name "*-src*" | head -n 1)"
+            if [ -z "$PKG" ]; then
+              echo "No package with extension .${{ matrix.package_ext }} found under build/"
+              exit 1
+            fi
+            cp "$PKG" "dist/${{ matrix.output_name }}"
+          fi
+          ls -lah dist
+
+      - name: Reject PDB files in packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in dist/*; do
+            case "$file" in
+              *.zip)
+                if unzip -Z1 "$file" | grep -E '\.pdb$'; then
+                  echo "PDB files must not be published: $file"
+                  exit 1
+                fi
+                ;;
+              *.7z)
+                if 7z l "$file" | grep -E '\.pdb$'; then
+                  echo "PDB files must not be published: $file"
+                  exit 1
+                fi
+                ;;
+              *.tar.xz)
+                if tar -tf "$file" | grep -E '\.pdb$'; then
+                  echo "PDB files must not be published: $file"
+                  exit 1
+                fi
+                ;;
+              *.dmg)
+                echo "Skipping archive listing for DMG: $file"
+                ;;
+            esac
+          done
+
+      - name: Verify build artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for file in dist/*; do
+            if [ "$RUNNER_OS" = "macOS" ]; then
+              size=$(stat -f%z "$file")
+            else
+              size=$(stat -c%s "$file")
+            fi
+            if [ "$size" -lt 1000000 ]; then
+              echo "Artifact too small: $file ($size bytes)"
+              exit 1
+            fi
+            echo "Verified: $file ($size bytes)"
+          done
+
+      - name: Upload packaged artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish Nightly Prerelease
+    runs-on: ubuntu-24.04
+    needs:
+      - changes
+      - build
+    if: needs.changes.outputs.should_build == 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: nightly-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: List release assets
+        run: ls -lah release-assets
+
+      - name: Write nightly notes
+        shell: bash
+        run: |
+          {
+            echo "# QmClient Nightly"
+            echo
+            echo "- Commit: ${GITHUB_SHA}"
+            echo "- Source branch: ${GITHUB_REF_NAME}"
+            echo "- Built at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            echo "- This is an internal testing build and may be replaced by the next nightly run."
+          } > release-assets/nightly-notes.md
+
+      - name: Replace nightly prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release delete nightly --cleanup-tag --yes || true
+          git tag -f nightly "${GITHUB_SHA}"
+          git push origin refs/tags/nightly --force
+          gh release create nightly \
+            release-assets/QmClient-windows.zip \
+            release-assets/QmClient-windows.7z \
+            release-assets/QmClient-ubuntu.tar.xz \
+            release-assets/QmClient-macOS.dmg \
+            --title "QmClient Nightly" \
+            --notes-file release-assets/nightly-notes.md \
+            --target "${GITHUB_SHA}" \
+            --prerelease \
+            --latest=false

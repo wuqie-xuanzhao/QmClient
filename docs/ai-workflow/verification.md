@@ -94,7 +94,7 @@ qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust
 
 如果环境、时间或用户明确范围导致全量测试不能跑，最终汇报必须把它列为 gap；不能用过滤测试、build 或 quick gate 代替“全量测试通过”。
 
-说明：常规运行/测试目录默认是 `cmake-build-release`；C++ 测试主路径是 `run_cxx_tests`，该目标会构建 `testrunner` 并在 build 目录下执行测试二进制，测试产物会留在 build 目录的 `tmp/tests/` 下。源码结构测试需要通过测试源码根解析 `src/...` / `data/...` 文件，不能依赖当前工作目录。单测过滤或快速复现时，可以从 build 目录运行 `./testrunner.exe --gtest_filter=<suite.test>`，或在其他目录运行 `cmake-build-release/testrunner.exe --gtest_filter=<suite.test>`。`default/full` gate 里的严格构建与静态分析会另外使用 `cmake-build-debug` 和 `cmake-build-analyze`。
+说明：常规运行/测试目录默认是 `cmake-build-release`；C++ 测试主路径是 `run_cxx_tests`，该目标会构建 `testrunner` 并在 build 目录下执行测试二进制，测试产物会留在 build 目录的 `tmp/tests/` 下。源码结构测试需要通过测试源码根解析 `src/...` / `data/...` 文件，不能依赖当前工作目录。单测过滤或快速复现时，可以从 build 目录运行 `./testrunner.exe --gtest_filter=<suite.test>`，或在其他目录运行 `cmake-build-release/testrunner.exe --gtest_filter=<suite.test>`。严格构建与静态分析只属于 full gate，会另外使用 `cmake-build-debug` 和 `cmake-build-analyze`。
 
 重要：同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 不要并行发起。它们会共享生成产物与中间文件，代理或脚本必须串行执行；如果确实要并行，只能拆到不同的 build 目录。
 
