@@ -507,8 +507,6 @@ bool CSectionLoader::LoadSessionCache(SSessionUiCache &Cache, const char *pFilen
 		const char *pValEnd = pVal;
 		while(*pValEnd && *pValEnd != '\r' && *pValEnd != '\n')
 			++pValEnd;
-		const int ValLen = (int)(pValEnd - pVal);
-
 		if(KeyLen == 13 && strncmp(p, "settings_page", 13) == 0)
 			Cache.m_LastSettingsPage = atoi(pVal);
 		else if(KeyLen == 11 && strncmp(p, "tab_tclient", 11) == 0)

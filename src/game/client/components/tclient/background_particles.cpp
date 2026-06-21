@@ -334,8 +334,6 @@ int CBackgroundParticles::ParticleType() const
 void CBackgroundParticles::SpawnParticle(SParticle &Particle, bool Initial, float Left, float Top, float Right, float Bottom)
 {
 	const float Margin = (float)std::clamp(g_Config.m_Qm3DParticlesViewMargin, 0, 1000);
-	const float Width = Right - Left;
-	const float Height = Bottom - Top;
 	const float DepthRange = (float)std::clamp(g_Config.m_Qm3DParticlesDepth, 10, 1000);
 	const float SizeMin = ClampedSizeMin();
 	const float SizeMax = ClampedSizeMax();

@@ -42,7 +42,7 @@ static const char *NextInt(const char *pCursor, int &Value)
 	return pNext;
 }
 
-static const char *NextFloat(const char *pCursor, float &Value)
+[[maybe_unused]] static const char *NextFloat(const char *pCursor, float &Value)
 {
 	char aBuf[128] = "";
 	const char *pNext = NextWord(pCursor, aBuf, sizeof(aBuf));

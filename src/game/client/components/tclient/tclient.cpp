@@ -845,7 +845,7 @@ static void ParseExplicitAutoReplyRegexPattern(std::string_view PatternText, std
 	OutPattern.assign(PatternText.begin(), PatternText.end());
 }
 
-static bool AppendAutoReplyRuleBlock(char *pOutRules, size_t OutRulesSize, const char *pRules)
+[[maybe_unused]] static bool AppendAutoReplyRuleBlock(char *pOutRules, size_t OutRulesSize, const char *pRules)
 {
 	if(!pOutRules || OutRulesSize == 0 || !pRules || pRules[0] == '\0')
 		return false;

@@ -1027,13 +1027,13 @@ float CMenus::RenderTClientCacheSectionFallback(CUIRect &CurrentColumn, float To
 
 void CMenus::ConfigureSplitCachedStaticLayer(SSettingsSection &Section, const char *pTitle, std::function<float(CUIRect &)> MeasureSection, std::function<float(CUIRect &)> RenderInteractiveSection, float TopMargin)
 {
-	Section.m_RenderCompactFn = [this, pTitle, MeasureSection = std::move(MeasureSection), RenderInteractiveSection, TopMargin](CUIRect &Col) -> float {
+	Section.m_RenderCompactFn = [this, pTitle, MeasureFn = std::move(MeasureSection), RenderInteractiveSection, TopMargin](CUIRect &Col) -> float {
 		CUiScopedQuadBatch QuadBatchScope(Ui());
 		CUIRect Label;
 		const float SavedY = Col.y;
 		CUIRect MeasuredColumn = Col;
 		InsetTClientCacheSectionContent(MeasuredColumn);
-		const float Height = MeasureSection(MeasuredColumn);
+		const float Height = MeasureFn(MeasuredColumn);
 		DrawTClientCacheSectionBox({Col.x, Col.y + TopMargin, Col.w, Height - TopMargin});
 		CUIRect ContentColumn = Col;
 		InsetTClientCacheSectionContent(ContentColumn);
@@ -1621,7 +1621,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		LogTClientSectionHeightConsistency(pSectionName, MeasuredHeight, RenderedHeight);
 		return Col.y - SavedY;
 	};
-	auto FillSplitCachedStaticLayer = [&](SSettingsSection &Section, const char *pTitle, auto &&MeasureSection, auto &&RenderInteractiveSection, float TopMargin) {
+	[[maybe_unused]] auto FillSplitCachedStaticLayer = [&](SSettingsSection &Section, const char *pTitle, auto &&MeasureSection, auto &&RenderInteractiveSection, float TopMargin) {
 		Section.m_RenderCompactFn = [&, pTitle, TopMargin](CUIRect &Col) -> float {
 			CUiScopedQuadBatch QuadBatchScope(Ui());
 			const float SavedY = Col.y;
@@ -1852,13 +1852,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
 		};
-		auto MeasureVisualFontSection = [&](CUIRect &CurrentColumn) -> float {
+		[[maybe_unused]] auto MeasureVisualFontSection = [&](CUIRect &CurrentColumn) -> float {
 			const float SavedY = CurrentColumn.y;
 			LayoutVisualFontSection(CurrentColumn, false);
 			return CurrentColumn.y - SavedY;
 		};
-		auto RenderVisualFontInteractiveSection = [&](CUIRect &CurrentColumn) {
-			CUIRect TmpRect;
+		[[maybe_unused]] auto RenderVisualFontInteractiveSection = [&](CUIRect &CurrentColumn) {
 			const bool RenderFontDropdown = ShouldRenderSection(CurrentColumn, 0.0f, LineSize);
 			if(RenderFontDropdown)
 			{
@@ -2314,13 +2313,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
 		};
-		auto MeasurePetSection = [&](CUIRect &CurrentColumn) -> float {
+		[[maybe_unused]] auto MeasurePetSection = [&](CUIRect &CurrentColumn) -> float {
 			const float SavedY = CurrentColumn.y;
 			LayoutPetSection(CurrentColumn, false);
 			return CurrentColumn.y - SavedY;
 		};
-		auto RenderPetInteractiveSection = [&](CUIRect &CurrentColumn) {
-			CUIRect TmpRect;
+		[[maybe_unused]] auto RenderPetInteractiveSection = [&](CUIRect &CurrentColumn) {
 			CUIRect PetSkinBox;
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcPetShow, "tclient-show-pet", Localize("Show the pet"), &g_Config.m_TcPetShow, &CurrentColumn, LineSize);
 			CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
@@ -2391,12 +2389,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
 		};
-		auto MeasureAutoReplySection = [&](CUIRect &CurrentColumn) -> float {
+		[[maybe_unused]] auto MeasureAutoReplySection = [&](CUIRect &CurrentColumn) -> float {
 			const float SavedY = CurrentColumn.y;
 			LayoutAutoReplySection(CurrentColumn, false);
 			return CurrentColumn.y - SavedY;
 		};
-		auto RenderAutoReplyInteractiveSection = [&](CUIRect &CurrentColumn) {
+		[[maybe_unused]] auto RenderAutoReplyInteractiveSection = [&](CUIRect &CurrentColumn) {
 			CUIRect ReplyRect;
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAutoReplyMuted, "tclient-auto-reply-muted", Localize("Automatically reply to muted players"), &g_Config.m_TcAutoReplyMuted, &CurrentColumn, LineSize);
 			CurrentColumn.HSplitTop(LineSize + MarginExtraSmall, &ReplyRect, &CurrentColumn);
@@ -2801,13 +2799,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
 		};
-		auto MeasureHudSection = [&](CUIRect &CurrentColumn) -> float {
+		[[maybe_unused]] auto MeasureHudSection = [&](CUIRect &CurrentColumn) -> float {
 			const float SavedY = CurrentColumn.y;
 			LayoutHudSection(CurrentColumn, false);
 			return CurrentColumn.y - SavedY;
 		};
-		auto RenderHudInteractiveSection = [&](CUIRect &CurrentColumn) {
-			CUIRect TmpRect;
+		[[maybe_unused]] auto RenderHudInteractiveSection = [&](CUIRect &CurrentColumn) {
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniVoteHud, "tclient-mini-vote-hud", Localize("Show compact vote HUD"), &g_Config.m_TcMiniVoteHud, &CurrentColumn, LineSize);
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniDebug, "tclient-mini-debug", Localize("Show position and angle (mini debug)"), &g_Config.m_TcMiniDebug, &CurrentColumn, LineSize);
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRenderCursorSpec, "tclient-render-cursor-spec", Localize("Show the cursor while free spectating"), &g_Config.m_TcRenderCursorSpec, &CurrentColumn, LineSize);

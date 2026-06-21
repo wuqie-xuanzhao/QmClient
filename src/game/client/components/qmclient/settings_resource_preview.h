@@ -167,11 +167,11 @@ public:
 	CSettingsResourcePreviewJob(std::string Name, CImageInfo &&Image, int TargetSize);
 	static std::shared_ptr<CSettingsResourcePreviewJob> FromPath(std::string Name, std::string Path, IStorage *pStorage, int StorageType, int TargetSize);
 
-	bool Completed() const;
-	SResult TakeResult();
+	bool Completed() const REQUIRES(!m_Lock);
+	SResult TakeResult() REQUIRES(!m_Lock);
 
 protected:
-	void Run() override;
+	void Run() override REQUIRES(!m_Lock);
 
 private:
 	std::string m_Name;

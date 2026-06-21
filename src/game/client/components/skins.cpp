@@ -273,7 +273,7 @@ static int SettingsSkinMaxPerFrame(const CGameClient *pGameClient)
 	return SettingsSkinFinalizeFrameBudget(SettingsFrameContextOrDefault(pGameClient), false);
 }
 
-static int SettingsSkinGpuUploadUnits(const CGameClient *pGameClient)
+[[maybe_unused]] static int SettingsSkinGpuUploadUnits(const CGameClient *pGameClient)
 {
 	if(ActiveSettingsTeePage(pGameClient))
 		return pGameClient->m_Skins.SettingsGpuUploadFrameBudgetForFrame();
@@ -2045,7 +2045,6 @@ CSkins::ESkinProcessResult CSkins::ProcessSkinContainer(CSkinContainer *pSkinCon
 		return ESkinProcessResult::CONTINUE;
 	}
 
-	const int MaxSkinsPerFrame = SettingsSkinMaxPerFrame(GameClient());
 	if(pSkinContainer->m_pLoadJob->State() == IJob::STATE_DONE && pSkinContainer->m_pLoadJob->m_Data.m_Info.m_pData)
 		return DrainSettingsSkinPreviewUpload(pSkinContainer, Stats, SkinsProcessedThisFrame, StartTime, MaxTime);
 	else
@@ -3202,23 +3201,23 @@ bool CSkins::RemoveSkinQueuePreset(size_t PresetIndex, int Dummy)
 		return false;
 	}
 	Presets.erase(Presets.begin() + PresetIndex);
-	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	for(int PresetDummy = 0; PresetDummy < NUM_DUMMIES; ++PresetDummy)
 	{
-		if(m_aActiveSkinQueuePresetIndex[Dummy] == (int)PresetIndex)
+		if(m_aActiveSkinQueuePresetIndex[PresetDummy] == (int)PresetIndex)
 		{
-			m_aActiveSkinQueuePresetIndex[Dummy] = -1;
+			m_aActiveSkinQueuePresetIndex[PresetDummy] = -1;
 		}
-		else if(m_aActiveSkinQueuePresetIndex[Dummy] > (int)PresetIndex)
+		else if(m_aActiveSkinQueuePresetIndex[PresetDummy] > (int)PresetIndex)
 		{
-			m_aActiveSkinQueuePresetIndex[Dummy]--;
+			m_aActiveSkinQueuePresetIndex[PresetDummy]--;
 		}
-		if(m_aAppliedSkinQueuePresetIndex[Dummy] == (int)PresetIndex)
+		if(m_aAppliedSkinQueuePresetIndex[PresetDummy] == (int)PresetIndex)
 		{
-			m_aAppliedSkinQueuePresetIndex[Dummy] = -1;
+			m_aAppliedSkinQueuePresetIndex[PresetDummy] = -1;
 		}
-		else if(m_aAppliedSkinQueuePresetIndex[Dummy] > (int)PresetIndex)
+		else if(m_aAppliedSkinQueuePresetIndex[PresetDummy] > (int)PresetIndex)
 		{
-			m_aAppliedSkinQueuePresetIndex[Dummy]--;
+			m_aAppliedSkinQueuePresetIndex[PresetDummy]--;
 		}
 	}
 	return true;

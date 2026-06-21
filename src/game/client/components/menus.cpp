@@ -124,11 +124,6 @@ namespace
 		return QmPerfEnabled();
 	}
 
-	double PerfDebugThresholdMs()
-	{
-		return g_Config.m_QmPerfDebugThresholdMs > 0 ? g_Config.m_QmPerfDebugThresholdMs : 1.0;
-	}
-
 	ColorRGBA MenuUiColorSurface(float AlphaScale, float ColorScale)
 	{
 		ColorHSLA UiHsla(g_Config.m_QmUiColor);
@@ -192,43 +187,9 @@ namespace
 		return ColorRGBA(1.0f, 0.15f, 0.15f, 0.52f);
 	}
 
-	int64_t PerfDebugStartTime()
-	{
-		return PerfDebugEnabled() ? time_get() : 0;
-	}
-
-	double PerfDebugElapsedMs(int64_t StartTime)
-	{
-		if(StartTime == 0)
-			return 0.0;
-		return (time_get() - StartTime) * 1000.0 / time_freq();
-	}
-
 	void LogPerfStage(IClient *pClient, const char *pStage, const double DurationMs, const bool Force = false, const char *pExtra = nullptr)
 	{
 		QmPerfLogStage("perf/menu", pStage, DurationMs, Force, pClient, nullptr, nullptr, pExtra);
-	}
-
-	void LogSettingsWarmupPerf(int Page, int Tab, const char *pPageFbo, const char *pSectionFbo, ESettingsWarmupMissReason Reason, double DurationMs)
-	{
-		if(!PerfDebugEnabled())
-			return;
-		const std::string PageName = SettingsPageCacheKey(Page, -1);
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "page=%s tab=%d page_fbo=%s section_fbo=%s reason=%s cost_ms=%.3f",
-			PageName.c_str(), Tab, pPageFbo, pSectionFbo, SettingsWarmupMissReasonName(Reason), DurationMs);
-		QmPerfLogPayload("perf/settings-warmup", aPayload);
-	}
-
-	void LogSettingsWarmupPerfName(int Page, int Tab, const char *pPageFbo, const char *pSectionFbo, const char *pReason, double DurationMs)
-	{
-		if(!PerfDebugEnabled())
-			return;
-		const std::string PageName = SettingsPageCacheKey(Page, -1);
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "page=%s tab=%d page_fbo=%s section_fbo=%s reason=%s cost_ms=%.3f",
-			PageName.c_str(), Tab, pPageFbo, pSectionFbo, pReason, DurationMs);
-		QmPerfLogPayload("perf/settings-warmup", aPayload);
 	}
 
 	void LogSettingsInvalidatePerf(ESettingsInvalidationReason Reason, bool ClearsText, bool ClearsSection, bool ClearsPage, bool ClearsResource)
@@ -402,12 +363,12 @@ namespace
 		QmPerfLogPayload("perf/settings-text", aPayload, pClient, aPage);
 	}
 
-	const char *StableTextMiss()
+	[[maybe_unused]] const char *StableTextMiss()
 	{
 		return "event=settings_text_miss";
 	}
 
-	const char *StableTextStale()
+	[[maybe_unused]] const char *StableTextStale()
 	{
 		return "event=settings_text_stale";
 	}

@@ -1009,12 +1009,12 @@ static void DisplayToVideoMode(CVideoMode *pVMode, SDL_DisplayMode *pMode, float
 	pVMode->m_Format = pMode->format;
 }
 
-static bool IsPlausibleRefreshRate(int RefreshRate)
+[[maybe_unused]] static bool IsPlausibleRefreshRate(int RefreshRate)
 {
 	return RefreshRate >= 0 && RefreshRate <= 1000;
 }
 
-static bool IsPlausibleWindowSize(int Width, int Height)
+[[maybe_unused]] static bool IsPlausibleWindowSize(int Width, int Height)
 {
 	return Width >= 320 && Height >= 240 && Width <= 16384 && Height <= 16384;
 }

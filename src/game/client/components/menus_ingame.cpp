@@ -2019,17 +2019,16 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 	Motd.HSplitTop(MotdTextHeight, &MotdTextArea, &Motd);
 	s_ScrollRegion.AddRect(MotdTextArea);
 
-	const bool RenderedMotdParagraph = CacheReady && m_MotdTextContainerIndex.Valid();
 	if(CacheReady && m_MotdTextContainerIndex.Valid())
 	{
 		TextRender()->RenderTextContainer(m_MotdTextContainerIndex, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), MotdTextArea.x, MotdTextArea.y);
 	}
 	else
 	{
-		const bool RenderedPrevious = RenderIngameMotdPreviousParagraphCache(Motd, MotdFontSize, MotdTextArea);
-		if(!RenderedPrevious)
+		const bool RenderedMotdParagraph = RenderIngameMotdPreviousParagraphCache(Motd, MotdFontSize, MotdTextArea);
+		if(!RenderedMotdParagraph)
 			RenderIngameMotdFallbackText(MotdTextArea, MotdFontSize);
-		if(!RenderedPrevious && QmPerfEnabled())
+		if(!RenderedMotdParagraph && QmPerfEnabled())
 		{
 			char aPayload[160];
 			str_format(aPayload, sizeof(aPayload), "event=text_runtime_budget page=game operation=ingame_server_info frame=%" PRIu64 " server_info_not_ready=1", (uint64_t)Client()->PerfFrame());

@@ -99,11 +99,6 @@ namespace
 		return QmPerfEnabled();
 	}
 
-	double PerfDebugThresholdMs()
-	{
-		return g_Config.m_QmPerfDebugThresholdMs > 0 ? g_Config.m_QmPerfDebugThresholdMs : 1.0;
-	}
-
 	int64_t PerfDebugStartTime()
 	{
 		return PerfDebugEnabled() ? time_get() : 0;
@@ -454,12 +449,6 @@ namespace
 	void ResetTeeSettingsPageState()
 	{
 		gs_TeeSettingsPageState = {};
-	}
-
-	ColorRGBA SettingsUiColorSurface(float AlphaScale, float ColorScale)
-	{
-		const ColorRGBA UiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiColor));
-		return ui_token::color::UiColorSurface(UiColor, AlphaScale, ColorScale);
 	}
 
 }
@@ -2214,20 +2203,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	int &s_SkinListScrollCooldownFrames = gs_TeeSettingsPageState.m_SkinListScrollCooldownFrames;
 	int &s_SkinListPostScrollRecoveryFrames = gs_TeeSettingsPageState.m_SkinListPostScrollRecoveryFrames;
 	size_t &s_BackgroundRequestCursor = gs_TeeSettingsPageState.m_BackgroundRequestCursor;
-	int &s_LastLoggedVisibleCount = gs_TeeSettingsPageState.m_LastLoggedVisibleCount;
-	int &s_LastLoggedVisibleReadyCount = gs_TeeSettingsPageState.m_LastLoggedVisibleReadyCount;
-	int &s_LastLoggedRecoveryFrames = gs_TeeSettingsPageState.m_LastLoggedRecoveryFrames;
-	bool &s_LastLoggedScrollActive = gs_TeeSettingsPageState.m_LastLoggedScrollActive;
-	char *s_aLastLoggedFirstVisibleSkin = gs_TeeSettingsPageState.m_aLastLoggedFirstVisibleSkin;
-	bool &s_TeePageActiveLastFrame = gs_TeeSettingsPageState.m_TeePageActiveLastFrame;
-	bool &s_TeeClickActiveLastFrame = gs_TeeSettingsPageState.m_TeeClickActiveLastFrame;
-	bool &s_TeeScrollInteractionLastFrame = gs_TeeSettingsPageState.m_TeeScrollInteractionLastFrame;
-	bool &s_TeeFirstVisibleReadyLogged = gs_TeeSettingsPageState.m_TeeFirstVisibleReadyLogged;
-	bool &s_TeeAllVisibleReadyLogged = gs_TeeSettingsPageState.m_TeeAllVisibleReadyLogged;
-	bool &s_TeeFullListReadyLogged = gs_TeeSettingsPageState.m_TeeFullListReadyLogged;
-	bool &s_TeeRefreshInProgress = gs_TeeSettingsPageState.m_TeeRefreshInProgress;
-	int64_t &s_TeeEnterStartNs = gs_TeeSettingsPageState.m_TeeEnterStartNs;
-	int64_t &s_TeeRefreshStartNs = gs_TeeSettingsPageState.m_TeeRefreshStartNs;
 	if(m_SettingsRuntimeMetadata.m_LastPage != SETTINGS_TEE)
 	{
 		gs_TeeListDrainPerfSession.m_Active = false;
@@ -2525,7 +2500,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	m_SettingsPostScrollRecoveryFrames = s_SkinListPostScrollRecoveryFrames;
 	const bool RequestWindowScrollBlocked = SkinListScrollInteraction || s_SkinListScrollCooldownFrames > 0;
 	SSettingsResourceFrameContext FrameContext = SettingsBuildFrameContext(RequestWindowScrollBlocked, false, s_SkinListPostScrollRecoveryFrames);
-	const bool VisibleSettled = VisibleVisualReadyCount == (int)vVisibleSkinIndices.size();
 	const bool VisibleSourceSettled = VisibleSourceSettledCount == (int)vVisibleSkinIndices.size();
 	m_SettingsHighPrioritySettled = VisibleSourceSettled;
 	FrameContext.m_HighPrioritySettled = VisibleSourceSettled;
@@ -2746,7 +2720,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		const char *pEffectiveFrameContext = SettingsSkinThroughputControllerModeName(Throughput.m_Mode);
 		char aPayload[768];
 		str_format(aPayload, sizeof(aPayload),
-			"event=request_window visible=%d visible_ready=%d visible_waiting=%d visible_background_requested=%d visible_nonterminal_waiting=%d background_budget=%d background_issued=%d requested=%d idle=%d scroll=%d recovery=%d pending=%d loading=%d loaded=%d total=%d first_visible_index=%d first_visible_skin=%s count_fuse_limit=%d real_inflight=%d visible_reserve=%d request_budget_default=%d request_budget_actual=%d request_budget_block_reason=%s gpu_upload_limit_units=%d gpu_upload_remaining_units=%d finalize_budget_limit=%d effective_frame_context=%s controller_reason=%s frame_time_avg_ms=%.3f render_frame_time_ms=%.3f admission_underfed=%d underfed_streak=%d",
+			"event=request_window visible=%d visible_ready=%d visible_waiting=%d visible_background_requested=%d visible_nonterminal_waiting=%d background_budget=%d background_issued=%d requested=%d idle=%d scroll=%d recovery=%d pending=%zu loading=%zu loaded=%zu total=%d first_visible_index=%d first_visible_skin=%s count_fuse_limit=%d real_inflight=%d visible_reserve=%d request_budget_default=%d request_budget_actual=%d request_budget_block_reason=%s gpu_upload_limit_units=%d gpu_upload_remaining_units=%d finalize_budget_limit=%d effective_frame_context=%s controller_reason=%s frame_time_avg_ms=%.3f render_frame_time_ms=%.3f admission_underfed=%d underfed_streak=%d",
 			(int)vVisibleSkinIndices.size(), VisibleSourceSettledCount, maximum(0, (int)vVisibleSkinIndices.size() - VisibleSourceSettledCount), VisibleBackgroundRequestedCount, VisibleNonTerminalWaitingCount, DefaultBackgroundRequestBudget, BackgroundRequestsIssued,
 			(int)SkinStats.m_NumBackgroundRequested,
 			!FrameContext.m_ScrollActive && FrameContext.m_PostScrollRecoveryFrames == 0 ? 1 : 0,

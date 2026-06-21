@@ -299,7 +299,6 @@ void CQmHudNotifications::RenderNotifications(const CUIRect &BaseRect, const CUI
 
 	ColorRGBA BgColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmHudNotificationsBgColor, true));
 	float Y = BaseRect.y;
-	float UsedHeight = 0.0f;
 
 	for(int i = 0; i < NumVisible; ++i)
 	{
@@ -333,7 +332,6 @@ void CQmHudNotifications::RenderNotifications(const CUIRect &BaseRect, const CUI
 		TextRender()->Text(Box.x + PaddingX, Box.y + PaddingY, FontSize, Notification.m_aText, TextMaxWidth);
 
 		Y += BoxH + Gap;
-		UsedHeight += BoxH + (i + 1 < NumVisible ? Gap : 0.0f);
 	}
 
 	TextRender()->TextColor(TextRender()->DefaultTextColor());

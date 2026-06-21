@@ -115,7 +115,7 @@ namespace
 		return {};
 	}
 
-	std::vector<std::string> CollectStableTextCandidates(const std::string &Source)
+	[[maybe_unused]] std::vector<std::string> CollectStableTextCandidates(const std::string &Source)
 	{
 		const std::vector<std::string> vLines = SplitLines(Source);
 		std::vector<std::string> vCandidates;
@@ -3808,8 +3808,8 @@ TEST(QmMonitoringHelpers, SkinTransitionDurationLabelUsesSingleLineShrink)
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
-	EXPECT_NE(Body.find("auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_ML, const SLabelProperties &Props = {})"), std::string::npos);
-	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pTextId, pRect, pText, FontSize, Align, Props, (int)pRect->w);"), std::string::npos);
+	EXPECT_NE(Body.find("auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int TextAlign = TEXTALIGN_ML, const SLabelProperties &LabelProps = {})"), std::string::npos);
+	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pTextId, pRect, pText, FontSize, TextAlign, LabelProps, (int)pRect->w);"), std::string::npos);
 	EXPECT_NE(Body.find("SLabelProperties SkinTransitionDurationLabelProps"), std::string::npos);
 	EXPECT_NE(Body.find("SkinTransitionDurationLabelProps.m_DisallowNewline = true"), std::string::npos);
 	EXPECT_NE(Body.find("SkinTransitionDurationLabelProps.m_StopAtEnd = true"), std::string::npos);

@@ -5652,7 +5652,6 @@ void CHud::RenderLyricHud()
 		BoxWidth = m_MediaIslandLastVisibleRect.w;
 	const int LineCount = SnapToIsland ? 1 : (HasNext && g_Config.m_QmSmtcLyricsLines > 1 ? 2 : 1);
 	const float BoxHeight = PaddingY * 2.0f + FontSize * LineCount + (LineCount > 1 ? LineGap : 0.0f);
-	const float LineWidth = BoxWidth - PaddingX * 2.0f;
 	const char *pCurrentText = CurrentLyricState.m_HasTimedReveal ? CurrentLyricState.m_aVisibleText : CurrentLyricState.m_aText;
 	const CUIRect DefaultRect = {
 		SnapToIsland ? m_MediaIslandLastVisibleRect.x : ProbeDefaultRect.x,

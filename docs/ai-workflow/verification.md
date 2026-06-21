@@ -82,13 +82,13 @@ Windows:
 
 ```pwsh
 qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_tests -j 14
-qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests
+qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests -j 14
 ```
 
 过滤测试只用于 TDD 红绿灯、定位和快速复现，例如 `testrunner.exe --gtest_filter=...`。当要做最终汇报、交给用户验收、提交或声称“无回归 / 测试通过”时，必须补跑对应测试入口的全量版本：
 
 - C++ 源码或 C++ 测试改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_tests -j 14`，不能只跑 `--gtest_filter`。
-- Rust 代码改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests`。
+- Rust 代码改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests -j 14`。
 - `qmclient_scripts/perf` 改动：跑 `cd qmclient_scripts/perf && bun test.ts`，并在 TypeScript 代码改动时补 `npx tsc --noEmit`。
 - 只改文档或治理入口：按文档检查要求跑 `python qmclient_scripts/gate/check_docs.py`。
 
@@ -101,8 +101,8 @@ qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust
 Linux/macOS:
 
 ```sh
-cmake --build cmake-build-release --target run_cxx_tests
-cmake --build cmake-build-release --target run_rust_tests
+cmake --build cmake-build-release --target run_cxx_tests -j 14
+cmake --build cmake-build-release --target run_rust_tests -j 14
 ```
 
 如果走 Windows 宿主下的 WSL Linux 验证，对应地把目录替换成独立的 Linux build 目录，例如：

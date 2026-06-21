@@ -351,7 +351,7 @@ public:
 
 		const size_t WordStart = str_length(pList);
 		str_append(pList, pWord, ListSize);
-		return str_length(pList) > WordStart;
+		return (size_t)str_length(pList) > WordStart;
 	}
 	static bool BuildWhisperCommand(char *pBuf, size_t BufSize, const char *pName, const char *pMessage)
 	{

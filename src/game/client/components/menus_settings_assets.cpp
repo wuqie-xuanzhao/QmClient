@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <functional>
 #include <string>
 #include <unordered_map>
@@ -328,8 +329,8 @@ namespace
 		Key.m_AssetId = pAssetId != nullptr ? pAssetId : "";
 		Key.m_Tab = Tab;
 		Key.m_LocaleHash = AssetsCardLocaleHash();
-		Key.m_UiScale = round_to_int(UiScale * 1000.0f);
-		Key.m_CardWidth = round_to_int(CardWidth);
+		Key.m_UiScale = round_to_int((std::isfinite(UiScale) && UiScale > 0.0f ? UiScale : 1.0f) * 1000.0f);
+		Key.m_CardWidth = round_to_int(std::isfinite(CardWidth) && CardWidth > 0.0f ? CardWidth : 1.0f);
 		Key.m_StatusHash = str_quickhash(pStatusLabel != nullptr ? pStatusLabel : "");
 		Key.m_Installed = Installed;
 		Key.m_DownloadFailed = DownloadFailed;
@@ -1869,13 +1870,6 @@ namespace
 		return nullptr;
 	}
 
-	static const char *FindWorkshopAuthorByLocalName(const SWorkshopHudState *pState, const char *pLocalName)
-	{
-		if(const SWorkshopHudAsset *pAsset = FindWorkshopAssetByLocalName(pState, pLocalName))
-			return pAsset->m_Author.c_str();
-		return nullptr;
-	}
-
 	static int PersistedLocalAssetAuthorTabByCategoryId(const char *pCategoryId)
 	{
 		for(int Tab = ASSETS_TAB_ENTITIES; Tab < NUMBER_OF_ASSETS_TABS; ++Tab)
@@ -2170,12 +2164,6 @@ namespace
 		const unsigned BytesRead = io_read(File, aHeader, sizeof(aHeader));
 		io_close(File);
 		return DetectCorruptEntityBgInstallHeader(aHeader, BytesRead);
-	}
-
-	static bool WorkshopAssetHasUsableDownloadMetadata(const SWorkshopHudAsset &Asset)
-	{
-		const SAssetResourceCategory *pCategory = AssetResourceCategoryByTab(s_CurCustomTab);
-		return WorkshopAssetHasRequiredDownloadUrl(pCategory != nullptr ? pCategory->m_pId : nullptr, !Asset.m_DownloadUrl.empty());
 	}
 
 	static bool WorkshopAssetCanDecodePreviewFromInstall(const SWorkshopHudAsset &Asset, int Tab)
@@ -4247,8 +4235,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		StartSettingsPerfFixedWindow("settings_assets_tab_switch", SettingsPerfContextName(), CurrentQmUiPerfPage(), aAssetsPerfTab, 30);
 	}
 
-	const float TransitionStrength = ReadUiSwitchAnimation(AssetsTabSwitchNode);
-	const bool TransitionActive = TransitionStrength > 0.0f && s_AssetsTransitionDirection != 0.0f;
+	ReadUiSwitchAnimation(AssetsTabSwitchNode);
 
 	// ============================================================================
 	// ASYNC ASSET LIST LOADING
@@ -5499,8 +5486,6 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	}
 
 	const float AssetCardTextReserve = s_CurCustomTab == ASSETS_TAB_ENTITY_BG ? AssetCardTextReserveSingleLine : AssetCardTextReserveWithAuthor;
-	const bool CombinedAssetList = UsesCombinedAssetList(pCurrentCategory);
-
 	auto FinalizeReadyPreviewDecodes = [&](const SSettingsResourceFrameContext &FinalizeFrameContext) {
 		if(!WindowActive)
 			return;
@@ -6822,7 +6807,6 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			bool WorkshopActionTriggered = false;
 			CPerfTimer WorkshopCardsTimer;
 			int FirstVisibleLocalIndex = -1;
-			int LastVisibleLocalIndex = -1;
 			int FirstVisibleDownloadableIndex = -1;
 			int LastVisibleDownloadableIndex = -1;
 			const SSettingsSkinListVisibleRange WorkshopVisibleRange = SettingsSkinListVisibleRangeForScroll(
@@ -6955,7 +6939,6 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 								++VisiblePreflight.m_NotReadyCount;
 							if(pLocalItem != nullptr)
 							{
-								const bool IsEntityBgDirectory = s_CurCustomTab == ASSETS_TAB_ENTITY_BG && static_cast<const SCustomEntityBg *>(pLocalItem)->m_IsDirectory;
 								const bool ShowLocalOnlyBadge = pCategory->m_LocalOnlyBadge && !pCategory->m_WorkshopEnabled;
 								const char *pLocalStatusLabel = ResolveLocalAssetStatusLabel(pLocalItem, ShowLocalOnlyBadge);
 								const SSettingsAssetsCardCacheKey CardCacheKey = BuildAssetsCardCacheKey(pLocalItem->m_aName, s_CurCustomTab, Graphics()->ScreenHiDPIScale(), WorkshopCardWidth, pLocalStatusLabel, true, false, ShowLocalOnlyBadge);
@@ -7073,8 +7056,6 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 						continue;
 					if(FirstVisibleLocalIndex < 0)
 						FirstVisibleLocalIndex = (int)LocalIndex;
-					LastVisibleLocalIndex = (int)LocalIndex;
-
 					CPerfTimer CardLayoutTextTimer;
 					const CUIRect CardRect = ItemRect;
 					const bool IsEntityBgDirectory = s_CurCustomTab == ASSETS_TAB_ENTITY_BG && static_cast<const SCustomEntityBg *>(pItem)->m_IsDirectory;
@@ -7298,8 +7279,6 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 			const int NewCombinedSelected = s_WorkshopAssetsListBox.DoEnd();
 			const bool WorkshopListScrollActive = s_WorkshopAssetsListBox.ScrollbarActive() || s_WorkshopAssetsListBox.ScrollbarAnimating();
-			const int PreviousFirstVisibleDownloadableIndex = s_AssetsLastFirstVisibleDownloadableIndex[s_CurCustomTab];
-			const int PreviousLastVisibleDownloadableIndex = s_AssetsLastLastVisibleDownloadableIndex[s_CurCustomTab];
 			RefreshAssetsScrollUploadCooldownForOffset(WorkshopListScrollActive, s_WorkshopAssetsListBox.ScrollOffsetY(), s_aAssetsLastWorkshopScrollOffsetY[s_CurCustomTab], WorkshopRowHeight, WorkshopListJumpScrollActive);
 			RefreshWorkshopAssetsUploadBudget();
 			s_AssetsLastFirstVisibleCombinedIndex[s_CurCustomTab] = WorkshopVisibleRange.m_FirstItem < WorkshopVisibleRange.m_EndItem ? WorkshopVisibleRange.m_FirstItem : -1;

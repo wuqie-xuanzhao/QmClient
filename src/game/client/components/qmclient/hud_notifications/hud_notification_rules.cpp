@@ -63,12 +63,14 @@ namespace
 		switch(Semantic.m_Key)
 		{
 		case QmHudNotifications::EDynamicMessageKey::TeamJoined:
-			str_format(pBuf, BufSize, Localize(QmHudNotifications::FindMessageMetadata(QmHudNotifications::EDynamicMessageKey::TeamJoined)->m_pCanonicalText), Semantic.m_aParamA, Semantic.m_aParamB);
+			str_format(pBuf, BufSize, Localize("'%s' joined team %s"), Semantic.m_aParamA, Semantic.m_aParamB);
 			break;
 		case QmHudNotifications::EDynamicMessageKey::SwapRequestSent:
-			str_format(pBuf, BufSize, Localize(QmHudNotifications::FindMessageMetadata(QmHudNotifications::EDynamicMessageKey::SwapRequestSent)->m_pCanonicalText), Semantic.m_aParamA);
+			str_format(pBuf, BufSize, Localize("You have requested to swap with %s. Use /cancelswap to cancel the request."), Semantic.m_aParamA);
 			break;
 		case QmHudNotifications::EDynamicMessageKey::None:
+			break;
+		case QmHudNotifications::EDynamicMessageKey::Count:
 			break;
 		}
 	}

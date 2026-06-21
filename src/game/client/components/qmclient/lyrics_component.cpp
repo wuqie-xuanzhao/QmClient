@@ -129,10 +129,12 @@ namespace
 		std::string Value = Text.substr(Start, End - Start);
 		static constexpr const char *pCdataStart = "<![CDATA[";
 		static constexpr const char *pCdataEnd = "]]>";
-		if(Value.rfind(pCdataStart, 0) == 0 && Value.size() >= str_length(pCdataStart) + str_length(pCdataEnd) &&
-			Value.compare(Value.size() - str_length(pCdataEnd), str_length(pCdataEnd), pCdataEnd) == 0)
+		const size_t CdataStartLength = str_length(pCdataStart);
+		const size_t CdataEndLength = str_length(pCdataEnd);
+		if(Value.rfind(pCdataStart, 0) == 0 && Value.size() >= CdataStartLength + CdataEndLength &&
+			Value.compare(Value.size() - CdataEndLength, CdataEndLength, pCdataEnd) == 0)
 		{
-			Value = Value.substr(str_length(pCdataStart), Value.size() - str_length(pCdataStart) - str_length(pCdataEnd));
+			Value = Value.substr(CdataStartLength, Value.size() - CdataStartLength - CdataEndLength);
 		}
 		return Value;
 	}
