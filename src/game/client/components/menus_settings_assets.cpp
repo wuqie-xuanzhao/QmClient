@@ -323,14 +323,24 @@ namespace
 		return Hash;
 	}
 
+	static int AssetsUiScaleBucket(float UiScale)
+	{
+		return round_to_int((std::isfinite(UiScale) && UiScale > 0.0f ? UiScale : 1.0f) * 1000.0f);
+	}
+
+	static int AssetsCardWidthBucket(float CardWidth)
+	{
+		return round_to_int(std::isfinite(CardWidth) && CardWidth > 0.0f ? CardWidth : 1.0f);
+	}
+
 	static SSettingsAssetsCardCacheKey BuildAssetsCardCacheKey(const char *pAssetId, int Tab, float UiScale, float CardWidth, const char *pStatusLabel, bool Installed, bool DownloadFailed, bool LocalOnly)
 	{
 		SSettingsAssetsCardCacheKey Key;
 		Key.m_AssetId = pAssetId != nullptr ? pAssetId : "";
 		Key.m_Tab = Tab;
 		Key.m_LocaleHash = AssetsCardLocaleHash();
-		Key.m_UiScale = round_to_int((std::isfinite(UiScale) && UiScale > 0.0f ? UiScale : 1.0f) * 1000.0f);
-		Key.m_CardWidth = round_to_int(std::isfinite(CardWidth) && CardWidth > 0.0f ? CardWidth : 1.0f);
+		Key.m_UiScale = AssetsUiScaleBucket(UiScale);
+		Key.m_CardWidth = AssetsCardWidthBucket(CardWidth);
 		Key.m_StatusHash = str_quickhash(pStatusLabel != nullptr ? pStatusLabel : "");
 		Key.m_Installed = Installed;
 		Key.m_DownloadFailed = DownloadFailed;
@@ -508,8 +518,8 @@ namespace
 		Key.m_Id = pAssetId != nullptr ? pAssetId : "";
 		Key.m_Workshop = Workshop;
 		Key.m_LocaleHash = AssetsCardLocaleHash();
-		Key.m_UiScale = round_to_int(UiScale * 1000.0f);
-		Key.m_CardWidth = round_to_int(CardWidth);
+		Key.m_UiScale = AssetsUiScaleBucket(UiScale);
+		Key.m_CardWidth = AssetsCardWidthBucket(CardWidth);
 		Key.m_Type += ":";
 		Key.m_Type += AssetsSettingsTabName(Tab);
 		return Key;
