@@ -493,7 +493,7 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId,\n\t\t\t\t\t\t\"qm_2_62_8_weapon_animation\""), std::string::npos);
 	EXPECT_NE(MenusSource.find("return \"皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 锤中偷皮 chuizhong toupi\";"), std::string::npos);
 
-	const size_t Toggle = MenusSource.find("DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSkinChangeTransition");
+	const size_t Toggle = MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmSkinChangeTransition");
 	ASSERT_NE(Toggle, std::string::npos);
 	const size_t AdvancedIf = MenusSource.find("if(g_Config.m_QmSkinChangeTransition)", Toggle);
 	const size_t TypeLabel = MenusSource.find("Localize(\"Skin transition type\")", Toggle);
