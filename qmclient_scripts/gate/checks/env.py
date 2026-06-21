@@ -19,6 +19,12 @@ def run(results: ResultCollector, included: list[str], dry_run: bool = False) ->
         REPO_ROOT / "scripts" / "check_header_guards.py",
         REPO_ROOT / "scripts" / "check_standard_headers.py",
         REPO_ROOT / "scripts" / "fix_style.py",
+        REPO_ROOT / "qmclient_scripts" / "check_config_variables.py",
+        REPO_ROOT / "qmclient_scripts" / "check_unused_header_files.py",
+        REPO_ROOT / "qmclient_scripts" / "extract_identifiers.py",
+        REPO_ROOT / "scripts" / "check_identifiers.py",
+        REPO_ROOT / "qmclient_scripts" / "gate" / "check_gate.py",
+        REPO_ROOT / "qmclient_scripts" / "gate" / "check_docs.py",
     ]
     ok = True
     for p in required:

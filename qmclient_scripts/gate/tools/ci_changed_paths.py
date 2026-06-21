@@ -97,9 +97,18 @@ def changed_paths() -> tuple[list[str], str]:
                 f"{before}..{after}"
             )
 
-    # Merge queue refs are synthetic and intentionally conservative.
+    # Merge queue: 用 payload 里的 base_sha..head_sha 做精确 diff，
+    # 避免每次 merge_group 都触发全部重量级 CI。
     if event_name == "merge_group":
-        return ["<merge_group>"], "merge_group"
+        mg = payload.get("merge_group", {})
+        base_sha = mg.get("base_sha")
+        head_sha = mg.get("head_sha") or os.environ.get("GITHUB_SHA", "HEAD")
+        if base_sha and head_sha:
+            return unique_paths(
+                git("diff", "--name-only", f"{base_sha}..{head_sha}")
+            ), (f"{base_sha}..{head_sha}")
+        # payload 缺字段时回退到 HEAD^..HEAD
+        return unique_paths(git("diff", "--name-only", "HEAD^..HEAD")), "HEAD^..HEAD"
 
     return unique_paths(git("diff", "--name-only", "HEAD^..HEAD")), "HEAD^..HEAD"
 

@@ -44,7 +44,7 @@ def run(results: ResultCollector, included: list[str], dry_run: bool = False) ->
             "--target",
             "dilate",
             "-j",
-            "14",
+            runner.resolve_parallel_jobs(),
         ]
     else:
         configure_cmd = [
@@ -68,7 +68,7 @@ def run(results: ResultCollector, included: list[str], dry_run: bool = False) ->
             "--target",
             "dilate",
             "-j",
-            "14",
+            runner.resolve_parallel_jobs(),
         ]
     code, out = runner.run(
         configure_cmd,

@@ -11,6 +11,7 @@ on:
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [main, master]
+  merge_group:
   schedule:
     - cron: '0 13 * * 0'
 
@@ -31,7 +32,7 @@ jobs:
       python_changed: ${{ steps.changed.outputs.python_changed }}
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -57,21 +58,39 @@ jobs:
         # https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#overriding-automatic-language-detection
 
     steps:
+    - name: Classify whether to run
+      id: classify
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "schedule" ]; then
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          echo "should_run_cpp=$( [ '${{ matrix.language }}' = 'cpp' ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+        elif [ "${{ matrix.language }}" = "cpp" ] && [ "${{ needs.changes.outputs.heavy_changed }}" = "true" ]; then
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          echo "should_run_cpp=true" >> "$GITHUB_OUTPUT"
+        elif [ "${{ matrix.language }}" = "python" ] && [ "${{ needs.changes.outputs.python_changed }}" = "true" ]; then
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          echo "should_run_cpp=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+          echo "should_run_cpp=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Checkout repository
-      if: github.event_name == 'schedule' || matrix.language == 'cpp' && needs.changes.outputs.heavy_changed == 'true' || matrix.language == 'python' && needs.changes.outputs.python_changed == 'true'
-      uses: actions/checkout@v5
+      if: steps.classify.outputs.should_run == 'true'
+      uses: actions/checkout@v6
       with:
         submodules: recursive
 
     - name: Prepare Linux
-      if: (github.event_name == 'schedule' || needs.changes.outputs.heavy_changed == 'true') && matrix.language == 'cpp'
+      if: steps.classify.outputs.should_run_cpp == 'true'
       run: |
        sudo apt-get update -y
        sudo apt-get install pkg-config cmake ninja-build python3-pil libfreetype6-dev libnotify-dev libsdl2-dev libsqlite3-dev libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libx264-dev libmariadb-dev libwebsockets-dev libvulkan-dev glslang-tools spirv-tools libglew-dev -y
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      if: github.event_name == 'schedule' || matrix.language == 'cpp' && needs.changes.outputs.heavy_changed == 'true' || matrix.language == 'python' && needs.changes.outputs.python_changed == 'true'
+      if: steps.classify.outputs.should_run == 'true'
       uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
@@ -85,11 +104,11 @@ jobs:
         # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
     - name: Setup Rust
-      if: (github.event_name == 'schedule' || needs.changes.outputs.heavy_changed == 'true') && matrix.language == 'cpp'
-      uses: dtolnay/rust-toolchain@stable
+      if: steps.classify.outputs.should_run_cpp == 'true'
+      uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # stable
 
     - name: Build in release mode
-      if: (github.event_name == 'schedule' || needs.changes.outputs.heavy_changed == 'true') && matrix.language == 'cpp'
+      if: steps.classify.outputs.should_run_cpp == 'true'
       run: |
        mkdir release
        cd release
@@ -97,9 +116,9 @@ jobs:
        cmake --build . --config RelWithDebInfo --target everything
 
     - name: Perform CodeQL Analysis
-      if: github.event_name == 'schedule' || matrix.language == 'cpp' && needs.changes.outputs.heavy_changed == 'true' || matrix.language == 'python' && needs.changes.outputs.python_changed == 'true'
+      if: steps.classify.outputs.should_run == 'true'
       uses: github/codeql-action/analyze@v4
 
     - name: Skip CodeQL for irrelevant paths
-      if: github.event_name != 'schedule' && matrix.language == 'cpp' && needs.changes.outputs.heavy_changed != 'true' || github.event_name != 'schedule' && matrix.language == 'python' && needs.changes.outputs.python_changed != 'true'
+      if: steps.classify.outputs.should_run == 'false'
       run: echo "No paths relevant to ${{ matrix.language }} CodeQL changed."

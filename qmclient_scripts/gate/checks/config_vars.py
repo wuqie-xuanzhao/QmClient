@@ -22,6 +22,10 @@ def run(results: ResultCollector, included: list[str], dry_run: bool = False) ->
         check=False,
     )
     if code != 0:
-        results.add("WARN", "配置变量使用检查（Qm/Tc/栖梦）", out)
+        results.add(
+            "WARN",
+            "配置变量使用检查（Qm/Tc/栖梦）",
+            f"命令: check_config_variables.py --qm\n{out}",
+        )
     else:
         results.add("PASS", "配置变量使用检查（Qm/Tc/栖梦）", "执行通过")

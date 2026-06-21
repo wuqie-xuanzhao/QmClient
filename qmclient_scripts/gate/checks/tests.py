@@ -9,7 +9,6 @@ from lib import runner
 from lib.report import ResultCollector
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-CMAKE_TEST_JOBS = "14"
 CXX_TEST_SKIPPED_MARKER = "[  SKIPPED ]"
 
 
@@ -34,7 +33,7 @@ def _run_cmake_target(
             "--target",
             target,
             "-j",
-            CMAKE_TEST_JOBS,
+            runner.resolve_parallel_jobs(),
         ]
     else:
         cmd = [
@@ -44,7 +43,7 @@ def _run_cmake_target(
             "--target",
             target,
             "-j",
-            CMAKE_TEST_JOBS,
+            runner.resolve_parallel_jobs(),
         ]
     return runner.run(cmd, title=title, check=False)
 

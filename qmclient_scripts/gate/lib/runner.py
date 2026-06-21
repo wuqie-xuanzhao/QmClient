@@ -16,6 +16,15 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 _CONSOLE_OUTPUT_LIMIT = 12000
 
 
+def resolve_parallel_jobs() -> str:
+    """自适应并行度：CI 环境用全部核心，本地限制在合理上限。"""
+    cpu = os.cpu_count() or 4
+    # CI runner 通常核心少（2-4），直接用全部；本地高性能机器限制上限避免 OOM
+    if os.environ.get("CI"):
+        return str(cpu)
+    return str(min(cpu, 14))
+
+
 def is_windows_env() -> bool:
     return (
         platform.system().startswith("MINGW")

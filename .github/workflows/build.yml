@@ -80,7 +80,7 @@ jobs:
           df -h
 
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 1
@@ -96,13 +96,13 @@ jobs:
           cat docs/info.json
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # stable
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc  # v2.9.1
 
       - name: Cache CMake build
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             build/_deps
@@ -111,7 +111,7 @@ jobs:
 
       - name: Cache Homebrew packages
         if: runner.os == 'macOS'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ hashFiles('.github/workflows/build.yml') }}
@@ -123,22 +123,18 @@ jobs:
 
       - name: Setup ccache (Linux/macOS)
         if: runner.os != 'Windows'
-        uses: hendrikmuhs/ccache-action@v1.2.22
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03  # v1.2.23
         with:
           key: ${{ runner.os }}-${{ runner.arch }}
           max-size: 500M
 
       - name: Setup sccache (Windows)
         if: runner.os == 'Windows'
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@1583d6b38d7be47f593cb472781bbb21cab4321e  # v0.0.10
 
       - name: Setup MSVC (Windows)
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Install Ninja (Windows)
-        if: runner.os == 'Windows'
-        run: choco install ninja -y
+        uses: ilammy/msvc-dev-cmd@a102174a2b586eec2ea151a69e6fd14404a8ce7c  # v1.13.0
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -205,7 +201,7 @@ jobs:
         run: cmake --build build --target game-client --parallel
 
       - name: Run tests
-        if: github.event.inputs.skip_tests != 'true'
+        if: !(github.event_name == 'workflow_dispatch' && inputs.skip_tests == 'true')
         shell: bash
         run: cmake --build build --target run_tests --parallel
 
@@ -327,7 +323,7 @@ jobs:
           df -h
 
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 1
@@ -350,25 +346,25 @@ jobs:
           cache: gradle
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # stable
 
       - name: Setup ccache (Android)
-        uses: hendrikmuhs/ccache-action@v1.2.22
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03  # v1.2.23
         with:
           key: android-${{ runner.os }}
           max-size: 500M
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc  # v2.9.1
 
       - name: Cache cargo-ndk
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/bin/cargo-ndk
           key: cargo-ndk-${{ runner.os }}
 
       - name: Cache Android NDK
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.android/sdk/ndk
@@ -377,7 +373,7 @@ jobs:
           key: android-sdk-ndk-${{ env.ANDROID_NDK_VERSION }}
 
       - name: Cache Rust Android targets
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.rustup/toolchains
@@ -401,7 +397,7 @@ jobs:
           rustup target add x86_64-linux-android
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699  # v4.0.1
 
       - name: Install Android SDK components
         run: |
@@ -414,7 +410,7 @@ jobs:
 
       - name: Cache WebP for Android
         id: cache-webp
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ddnet-libs/webp/android
           key: webp-android-v1.6.0-${{ hashFiles('.github/workflows/build.yml', 'ddnet-libs/webp/**') }}
@@ -569,17 +565,17 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && github.repository == 'wxj881027/QmClient'
     permissions:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Download packaged artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: packaged-*
           path: release-assets
@@ -600,7 +596,7 @@ jobs:
         run: cat release-assets/release-notes.md
 
       - name: Create release and upload desktop assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@2bb465e97f322d3cb2a965294d483e0d26a67aa9  # v3.0.1
         with:
           generate_release_notes: false
           body_path: release-assets/release-notes.md
@@ -615,12 +611,12 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build_android
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && github.repository == 'wxj881027/QmClient'
     permissions:
       contents: write
     steps:
       - name: Download Android artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: packaged-android
           path: release-assets
@@ -629,7 +625,7 @@ jobs:
         run: ls -lah release-assets
 
       - name: Upload Android assets to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@2bb465e97f322d3cb2a965294d483e0d26a67aa9  # v3.0.1
         with:
           generate_release_notes: false
           files: |

@@ -20,7 +20,7 @@ jobs:
       should_build: ${{ steps.nightly.outputs.should_build }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
@@ -87,19 +87,19 @@ jobs:
           df -h
 
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 1
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # stable
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc  # v2.9.1
 
       - name: Cache CMake build
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             build/_deps
@@ -108,7 +108,7 @@ jobs:
 
       - name: Cache Homebrew packages
         if: runner.os == 'macOS'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/Library/Caches/Homebrew
           key: nightly-homebrew-${{ runner.os }}-${{ hashFiles('.github/workflows/nightly.yml') }}
@@ -120,22 +120,18 @@ jobs:
 
       - name: Setup ccache (Linux/macOS)
         if: runner.os != 'Windows'
-        uses: hendrikmuhs/ccache-action@v1.2.22
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03  # v1.2.23
         with:
           key: nightly-${{ runner.os }}-${{ runner.arch }}
           max-size: 500M
 
       - name: Setup sccache (Windows)
         if: runner.os == 'Windows'
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@1583d6b38d7be47f593cb472781bbb21cab4321e  # v0.0.10
 
       - name: Setup MSVC (Windows)
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Install Ninja (Windows)
-        if: runner.os == 'Windows'
-        run: choco install ninja -y
+        uses: ilammy/msvc-dev-cmd@a102174a2b586eec2ea151a69e6fd14404a8ce7c  # v1.13.0
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -301,17 +297,17 @@ jobs:
     needs:
       - changes
       - build
-    if: needs.changes.outputs.should_build == 'true'
+    if: needs.changes.outputs.should_build == 'true' && github.repository == 'wxj881027/QmClient'
     permissions:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Download packaged artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: nightly-*
           path: release-assets

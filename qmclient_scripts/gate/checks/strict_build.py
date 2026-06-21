@@ -161,7 +161,7 @@ def _configure_and_build(
             "--target",
             "game-client",
             "-j",
-            "14",
+            runner.resolve_parallel_jobs(),
         ]
     else:
         build_cmd = [
@@ -171,7 +171,7 @@ def _configure_and_build(
             "--target",
             "game-client",
             "-j",
-            "14",
+            runner.resolve_parallel_jobs(),
         ]
     _repo_command(
         results,

@@ -26,12 +26,22 @@ def run(results: ResultCollector, included: list[str], dry_run: bool = False) ->
             "WARN", "全量 .clang-tidy 附加检查", "PATH 中未找到 clang-tidy，已跳过"
         )
         return
-    cc = REPO_ROOT / "cmake-build-debug" / "compile_commands.json"
-    if not cc.exists():
+    # 自动探测含 compile_commands.json 的构建目录（debug 优先，其次 release-pdb/release）
+    candidate_dirs = ["cmake-build-debug", "cmake-build-release-pdb", "cmake-build-release"]
+    build_dir = None
+    cc = None
+    for d in candidate_dirs:
+        candidate = REPO_ROOT / d / "compile_commands.json"
+        if candidate.exists():
+            build_dir = d
+            cc = candidate
+            break
+    if cc is None:
         results.add(
             "WARN",
             "全量 .clang-tidy 附加检查",
-            "缺少 cmake-build-debug/compile_commands.json，请先跑 strict-debug-check 或 default/full 构建层",
+            "缺少 compile_commands.json，请先跑 strict-debug-check 或 default/full 构建层"
+            "（探测目录：cmake-build-debug、cmake-build-release-pdb、cmake-build-release）",
         )
         return
     skipped = [
@@ -57,7 +67,7 @@ def run(results: ResultCollector, included: list[str], dry_run: bool = False) ->
             [
                 "clang-tidy",
                 file,
-                "-p=cmake-build-debug",
+                f"-p={build_dir}",
                 f"--config-file={REPO_ROOT / '.clang-tidy'}",
                 "--extra-arg=-Qunused-arguments",
                 "--header-filter=^$",

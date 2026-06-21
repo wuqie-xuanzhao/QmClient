@@ -1,10 +1,10 @@
-<!-- 提示：PR 标题请遵循 Conventional Commits 规范，例如：
-  feat: 添加新功能
-  fix: 修复 bug
-  refactor: 重构代码
-  perf: 性能优化
-  docs: 文档更新
-  build: 构建系统或依赖变更
+<!-- 提示：PR 标题请遵循 Conventional Commits + scope 规范：<type>(<scope>): <中文简述>
+  feat(client): 添加新功能
+  fix(gate): 修复门禁检查
+  refactor(qmclient): 重构马甲组件
+  perf(render): 性能优化
+  docs(workflow): 文档更新
+  build(ci): 构建系统或依赖变更
 -->
 
 ## 变更说明
