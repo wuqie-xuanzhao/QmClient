@@ -27,7 +27,11 @@ def run(results: ResultCollector, included: list[str], dry_run: bool = False) ->
         )
         return
     # 自动探测含 compile_commands.json 的构建目录（debug 优先，其次 release-pdb/release）
-    candidate_dirs = ["cmake-build-debug", "cmake-build-release-pdb", "cmake-build-release"]
+    candidate_dirs = [
+        "cmake-build-debug",
+        "cmake-build-release-pdb",
+        "cmake-build-release",
+    ]
     build_dir = None
     cc = None
     for d in candidate_dirs:
