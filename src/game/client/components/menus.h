@@ -780,6 +780,211 @@ public:
 		}
 	}
 
+	static void SplitFriendsCategoryHeaderRects(const CUIRect &Header, CUIRect *pHeaderAction, CUIRect *pManageButton)
+	{
+		CUIRect HeaderAction = Header;
+		CUIRect ManageButton = Header;
+		HeaderAction.w = maximum(HeaderAction.w - HeaderAction.h, 0.0f);
+		ManageButton.x = HeaderAction.x + HeaderAction.w;
+		ManageButton.w = Header.w - HeaderAction.w;
+		ManageButton.x += 2.0f;
+		ManageButton.y += 2.0f;
+		ManageButton.w = maximum(ManageButton.w - 4.0f, 0.0f);
+		ManageButton.h = maximum(ManageButton.h - 4.0f, 0.0f);
+		if(pHeaderAction != nullptr)
+			*pHeaderAction = HeaderAction;
+		if(pManageButton != nullptr)
+			*pManageButton = ManageButton;
+	}
+	struct SFriendAutoFollowState
+	{
+		bool m_Active = false;
+		char m_aName[MAX_NAME_LENGTH] = {0};
+		char m_aClan[MAX_CLAN_LENGTH] = {0};
+		char m_aLastAddress[NETADDR_MAXSTRSIZE] = {0};
+		char m_aPendingAddress[NETADDR_MAXSTRSIZE] = {0};
+		float m_PendingConnectTime = 0.0f;
+		int m_JumpCount = 0;
+		bool m_HasPendingAddress = false;
+	};
+	static void StartFriendAutoFollow(SFriendAutoFollowState &State, const char *pName, const char *pClan, const char *pAddress)
+	{
+		State = SFriendAutoFollowState();
+		State.m_Active = true;
+		str_copy(State.m_aName, pName);
+		str_copy(State.m_aClan, pClan);
+		str_copy(State.m_aLastAddress, pAddress);
+	}
+	static void StopFriendAutoFollow(SFriendAutoFollowState &State)
+	{
+		State = SFriendAutoFollowState();
+	}
+	static bool FriendAutoFollowStep(SFriendAutoFollowState &State, bool TargetOnline, const char *pAddress, float Now, int DelaySeconds, int MaxJumps, char *pConnectAddress, int ConnectAddressSize)
+	{
+		if(pConnectAddress != nullptr && ConnectAddressSize > 0)
+			pConnectAddress[0] = '\0';
+		if(!State.m_Active)
+			return false;
+		if(!TargetOnline || pAddress == nullptr || pAddress[0] == '\0')
+		{
+			StopFriendAutoFollow(State);
+			return false;
+		}
+		if(State.m_aLastAddress[0] == '\0')
+			str_copy(State.m_aLastAddress, pAddress);
+		if(str_comp(State.m_aLastAddress, pAddress) != 0 && (!State.m_HasPendingAddress || str_comp(State.m_aPendingAddress, pAddress) != 0))
+		{
+			str_copy(State.m_aPendingAddress, pAddress);
+			State.m_PendingConnectTime = Now + maximum(0, DelaySeconds);
+			State.m_HasPendingAddress = true;
+		}
+		if(!State.m_HasPendingAddress || Now < State.m_PendingConnectTime)
+			return false;
+		if(State.m_JumpCount >= maximum(0, MaxJumps))
+		{
+			StopFriendAutoFollow(State);
+			return false;
+		}
+		str_copy(State.m_aLastAddress, State.m_aPendingAddress);
+		if(pConnectAddress != nullptr && ConnectAddressSize > 0)
+			str_copy(pConnectAddress, State.m_aPendingAddress, ConnectAddressSize);
+		State.m_HasPendingAddress = false;
+		State.m_aPendingAddress[0] = '\0';
+		++State.m_JumpCount;
+		if(State.m_JumpCount >= maximum(0, MaxJumps))
+			State.m_Active = false;
+		return true;
+	}
+	static const char *GetServerbrowserDisplayName(const CServerInfo *pInfo, char *pBuffer, size_t BufferSize)
+	{
+		if(pInfo == nullptr || pBuffer == nullptr || BufferSize == 0)
+			return "";
+
+		pBuffer[0] = '\0';
+		const char *pName = pInfo->m_aName;
+		if(pName[0] == '\0')
+			return pName;
+
+		const auto IsAsciiWordChar = [](char c) {
+			return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+		};
+		const auto IsKogSeparator = [](char c) {
+			return c == ' ' || c == '|' || c == '*' || c == '-' || c == ':' || c == '[' || c == ']';
+		};
+		const auto DifficultyKeyFromText = [](const char *pText) -> const char * {
+			if(!pText || pText[0] == '\0')
+				return nullptr;
+			if(str_find_nocase(pText, "Novice") || str_find(pText, "普通"))
+				return "Novice";
+			if(str_find_nocase(pText, "Moderate") || str_find(pText, "中阶"))
+				return "Moderate";
+			if(str_find_nocase(pText, "Brutal") || str_find(pText, "高阶"))
+				return "Brutal";
+			if(str_find_nocase(pText, "Insane") || str_find(pText, "疯狂"))
+				return "Insane";
+			return nullptr;
+		};
+
+		if(str_find_nocase(pInfo->m_aGameType, "gores") && str_find_nocase(pName, "kog"))
+		{
+			const char *pShortName = pName;
+			const char *pScan = pName;
+			while(const char *pMatch = str_find_nocase(pScan, "kog"))
+			{
+				const char Prev = pMatch > pName ? pMatch[-1] : '\0';
+				const char Next = pMatch[3];
+				if(!IsAsciiWordChar(Prev) && !IsAsciiWordChar(Next))
+				{
+					pShortName = pMatch + 3;
+					while(*pShortName != '\0' && IsKogSeparator(*pShortName))
+						++pShortName;
+					break;
+				}
+				pScan = pMatch + 1;
+			}
+
+			str_copy(pBuffer, str_skip_whitespaces_const(pShortName), BufferSize);
+			if(const char *pSuffix = str_endswith_nocase(pBuffer, "[kog.tw]"))
+			{
+				char *pSuffixStart = const_cast<char *>(pSuffix);
+				while(pSuffixStart > pBuffer && pSuffixStart[-1] == ' ')
+					--pSuffixStart;
+				*pSuffixStart = '\0';
+			}
+
+			char *pHashToken = const_cast<char *>(str_find(pBuffer, " #"));
+			if(pHashToken != nullptr)
+			{
+				char *pDigits = pHashToken + 2;
+				if('0' <= *pDigits && *pDigits <= '9')
+				{
+					while('0' <= *pDigits && *pDigits <= '9')
+						++pDigits;
+					if(str_startswith(pDigits, " - "))
+					{
+						const char *pMapName = str_skip_whitespaces_const(pDigits + 3);
+						char *pRegionEnd = pHashToken;
+						while(pRegionEnd > pBuffer && pRegionEnd[-1] == ' ')
+							--pRegionEnd;
+						*pRegionEnd = '\0';
+						if(pBuffer[0] != '\0' && pMapName[0] != '\0')
+						{
+							char aRegion[64];
+							char aMapName[64];
+							str_copy(aRegion, pBuffer, sizeof(aRegion));
+							str_copy(aMapName, pMapName, sizeof(aMapName));
+							str_format(pBuffer, BufferSize, "%s - %s", aRegion, aMapName);
+						}
+						else if(pMapName[0] != '\0')
+							str_copy(pBuffer, pMapName, BufferSize);
+					}
+				}
+			}
+			return pBuffer[0] != '\0' ? pBuffer : pName;
+		}
+
+		const char *pDifficulty = DifficultyKeyFromText(pName);
+		if(pDifficulty == nullptr)
+			return pName;
+
+		if(str_find_nocase(pName, "Axiom"))
+		{
+			const char *pDash = str_find(pName, " - ");
+			const char *pMapName = pDash != nullptr ? str_skip_whitespaces_const(pDash + 3) : nullptr;
+			if(pMapName != nullptr && pMapName[0] != '\0')
+			{
+				str_format(pBuffer, BufferSize, "%s - %s", pDifficulty, pMapName);
+				return pBuffer;
+			}
+		}
+
+		if(str_find_nocase(pName, "DDNet CHN") || str_find_nocase(pName, "CHN DDR"))
+		{
+			char aRegion[64];
+			str_copy(aRegion, pName, sizeof(aRegion));
+			const char *pRegion = aRegion;
+			if(const char *pAfterPrefix = str_startswith_nocase(pRegion, "DDNet "))
+				pRegion = str_skip_whitespaces_const(pAfterPrefix);
+			else if(const char *pAfterPrefix = str_startswith_nocase(pRegion, "CHN DDR "))
+				pRegion = str_skip_whitespaces_const(pAfterPrefix);
+			if(char *pDash = const_cast<char *>(str_find(aRegion, " - ")))
+				*pDash = '\0';
+			if(char *pDifficultyStart = const_cast<char *>(str_find_nocase(pRegion, pDifficulty)))
+			{
+				while(pDifficultyStart > pRegion && pDifficultyStart[-1] == ' ')
+					--pDifficultyStart;
+				*pDifficultyStart = '\0';
+			}
+			if(pRegion[0] != '\0')
+			{
+				str_format(pBuffer, BufferSize, "%s - %s", pDifficulty, pRegion);
+				return pBuffer;
+			}
+		}
+
+		return pName;
+	}
+
 protected:
 	std::vector<SCustomEntities> m_vEntitiesList;
 	std::vector<SCustomGame> m_vGameList;
@@ -1327,11 +1532,13 @@ protected:
 
 	std::vector<unsigned char> m_vFriendsCategoryExpanded;
 	std::vector<std::string> m_vFriendsCategoryNames;
+	std::vector<CButtonContainer> m_vFriendsCategoryManageButtons;
 	std::string m_FriendsCategoryExpandedStateCache;
 	bool m_FriendsCategoryExpandedLoaded = false;
 	std::vector<std::string> m_vFriendTooltipText;
 	int m_FriendAddCategoryIndex = 0;
 	CUi::SDropDownState m_FriendsAddCategoryDropDownState;
+	CButtonContainer m_FriendsAddCategoryCreateButton;
 	class CFriendsCategoryPopupContext : public SPopupMenuId
 	{
 	public:
@@ -1361,6 +1568,8 @@ protected:
 		FRIEND_ACTION_MOVE_CATEGORY = 0,
 		FRIEND_ACTION_EDIT_NOTE,
 		FRIEND_ACTION_CLEAR_NOTE,
+		FRIEND_ACTION_FOLLOW,
+		FRIEND_ACTION_STOP_FOLLOW,
 		FRIEND_ACTION_REMOVE,
 	};
 	CUi::SSelectionPopupContext m_FriendsActionPopupContext;
@@ -1368,6 +1577,7 @@ protected:
 	bool m_HasFriendAction = false;
 	char m_aFriendActionName[MAX_NAME_LENGTH] = {0};
 	char m_aFriendActionClan[MAX_CLAN_LENGTH] = {0};
+	char m_aFriendActionAddress[NETADDR_MAXSTRSIZE] = {0};
 	int m_FriendActionState = IFriends::FRIEND_NO;
 	class CFriendNotePopupContext : public SPopupMenuId
 	{
@@ -1383,6 +1593,7 @@ protected:
 	char m_aRemoveFriendName[MAX_NAME_LENGTH] = {0};
 	char m_aRemoveFriendClan[MAX_CLAN_LENGTH] = {0};
 	int m_RemoveFriendState = IFriends::FRIEND_NO;
+	SFriendAutoFollowState m_FriendAutoFollowState;
 
 	// found in menus.cpp
 	void Render();
@@ -1582,7 +1793,12 @@ protected:
 	std::vector<CUIElement *> m_avpServerBrowserUiElements[IServerBrowser::NUM_TYPES];
 	void RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemActivated);
 	void RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItemActivated);
-	void Connect(const char *pAddress);
+	enum class EConnectIntent
+	{
+		Manual,
+		AutoFollow,
+	};
+	void Connect(const char *pAddress, EConnectIntent Intent = EConnectIntent::Manual);
 	void PopupConfirmSwitchServer();
 	void RenderServerbrowserFilters(CUIRect View);
 	void ResetServerbrowserFilters();

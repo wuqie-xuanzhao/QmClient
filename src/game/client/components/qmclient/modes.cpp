@@ -84,7 +84,7 @@ bool ShouldHideFocusHud(bool FocusActive, bool HideHud)
 
 bool ShouldRenderFocusSpectatorHud(bool SpectatorActive, bool SpectatorHudEnabled, bool MainHudVisible, bool FocusActive, bool HideHud)
 {
-	return SpectatorActive && SpectatorHudEnabled && !MainHudVisible && ShouldHideFocusHud(FocusActive, HideHud);
+	return SpectatorActive && SpectatorHudEnabled && ShouldHideFocusHud(FocusActive, HideHud);
 }
 
 bool ShouldHideFocusScoreboard(bool FocusActive, bool HideScoreboard)

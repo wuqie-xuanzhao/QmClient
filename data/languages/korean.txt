@@ -1540,6 +1540,9 @@ CP opacity
 Create a random skin
 == 무작위 스킨 생성
 
+Create category
+== Create category
+
 Created
 == 생성 날짜
 
@@ -2154,6 +2157,9 @@ Emoticon
 
 Emoticon ID
 == 이모티콘 ID
+
+Emoticon shadow
+== Emoticon shadow
 
 Emoticons
 == 이모티콘
@@ -3645,6 +3651,9 @@ Makes you move 1 tile up
 
 Makes you super
 == 슈퍼로 만듭니다
+
+Manage categories
+== Manage categories
 
 Manual
 == 수동
@@ -5323,6 +5332,9 @@ Rifle Laser Outline Color
 Right jump
 == 오른쪽 점프
 
+Right-click or use the gear to manage categories
+== Right-click or use the gear to manage categories
+
 Right-click to disable auto-translate
 == 우클릭하여 자동 번역 비활성화
 
@@ -5802,6 +5814,9 @@ Severe
 
 Shape
 == 모양
+
+Short server names
+== Short server names
 
 Shotgun
 == 샷건
@@ -7375,8 +7390,8 @@ Unknown
 Unknown argument. Check '/rescuemode list'
 == 알 수 없는 인수입니다. '/rescuemode list' 확인
 
-Unknown emote... Say /emote
-== 알 수 없는 이모트... /emote 입력
+Unknown emote. Use /emote to see available emotes.
+== 알 수 없는 이모트입니다. 사용 가능한 이모트를 보려면 /emote를 사용하세요.
 
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 == 알 수 없는 매개변수입니다. 허용 값: default, gametimer, broadcast, both, none
@@ -8187,6 +8202,26 @@ Fire
 [Direct touch input]
 Hook
 == 갈고리
+
+[Friend auto follow]
+Follow this friend across servers
+== Follow this friend across servers
+
+[Friend auto follow]
+Following %s
+== Following %s
+
+[Friend auto follow]
+Following %s: switching in %.0fs
+== Following %s: switching in %.0fs
+
+[Friend auto follow]
+Stop
+== Stop
+
+[Friend auto follow]
+Stop following this friend
+== Stop following this friend
 
 [Graphics error]
 A render command failed. Try to update your GPU drivers.

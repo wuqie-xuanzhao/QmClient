@@ -1540,6 +1540,9 @@ CP opacity
 Create a random skin
 == 隨機創造皮膚
 
+Create category
+== 建立分類
+
 Created
 == 建立日期
 
@@ -2154,6 +2157,9 @@ Emoticon
 
 Emoticon ID
 == 表情 ID
+
+Emoticon shadow
+== 表情陰影
 
 Emoticons
 == 表情
@@ -3645,6 +3651,9 @@ Makes you move 1 tile up
 
 Makes you super
 == 讓你超級
+
+Manage categories
+== 管理分類
 
 Manual
 == 手動
@@ -5323,6 +5332,9 @@ Rifle Laser Outline Color
 Right jump
 == 右跳
 
+Right-click or use the gear to manage categories
+== 右鍵或使用齒輪管理分類
+
 Right-click to disable auto-translate
 == 右鍵關閉自動翻譯
 
@@ -5802,6 +5814,9 @@ Severe
 
 Shape
 == 形狀
+
+Short server names
+== 簡短伺服器名稱
 
 Shotgun
 == 霰彈槍
@@ -7375,8 +7390,8 @@ Unknown
 Unknown argument. Check '/rescuemode list'
 == 未知 rescue 模式參數
 
-Unknown emote... Say /emote
-== 未知表情命令
+Unknown emote. Use /emote to see available emotes.
+== 未知表情。輸入 /emote 查看可用表情。
 
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 == 未知參數。可用值：default、gametimer、broadcast、both、none
@@ -8187,6 +8202,26 @@ Fire
 [Direct touch input]
 Hook
 == 鉤索
+
+[Friend auto follow]
+Follow this friend across servers
+== 跟隨好友換服
+
+[Friend auto follow]
+Following %s
+== 正在跟隨 %s
+
+[Friend auto follow]
+Following %s: switching in %.0fs
+== 正在跟隨 %s：%.0f 秒後換服
+
+[Friend auto follow]
+Stop
+== 停止
+
+[Friend auto follow]
+Stop following this friend
+== 停止跟隨此好友
 
 [Graphics error]
 A render command failed. Try to update your GPU drivers.

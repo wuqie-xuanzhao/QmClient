@@ -145,9 +145,9 @@ TEST(QmFocusMode, HudScoreboardNamesAndNameplatesRequireFocusModeAndTheirOwnTogg
 TEST(QmFocusMode, SpectatorHudStaysVisibleWhenFocusModeAutoHidesMainHud)
 {
 	EXPECT_TRUE(ShouldRenderFocusSpectatorHud(true, true, false, true, true));
+	EXPECT_TRUE(ShouldRenderFocusSpectatorHud(true, true, true, true, true));
 	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(false, true, false, true, true));
 	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, false, false, true, true));
-	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, true, true, true, true));
 	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, true, false, false, true));
 	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, true, false, true, false));
 }

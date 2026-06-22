@@ -19,6 +19,7 @@
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/censor.h>
+#include <game/client/components/hud_editor.h>
 #include <game/client/components/message_gradient.h>
 #include <game/client/components/qmclient/colored_parts.h>
 #include <game/client/components/qmclient/modes.h>
@@ -1013,7 +1014,9 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 	{
 		const float Height = 300.0f;
 		const float Width = Height * Graphics()->ScreenAspect();
-		const CUIRect ChatRect = {0.0f, 50.0f, std::min(Width, std::max(190.0f, g_Config.m_ClChatWidth + 32.0f)), 250.0f};
+		const CUIRect DefaultChatRect = QmHudEditor::ChatEdgeBaseRect(Width, (float)g_Config.m_ClChatWidth, 0.0f, false);
+		const auto PreviewScope = GameClient()->m_HudEditor.PreviewTransform(EHudEditorElement::Chat, DefaultChatRect);
+		const CUIRect ChatRect = QmHudEditor::ChatEdgeBaseRect(Width, (float)g_Config.m_ClChatWidth, (float)g_Config.m_QmChatEdgeMargin, PreviewScope.m_AnchoredRight);
 		float HistoryBottom = Height - (20.0f * FontSize() / 6.0f + (g_Config.m_TcStatusBar ? g_Config.m_TcStatusBarHeight : 0.0f));
 		HistoryBottom -= FontSize() * (8.0f / 6.0f);
 		const float HeightLimit = GameClient()->m_Scoreboard.IsActive() ? 180.0f : (m_PrevShowChat ? 50.0f : 200.0f);
@@ -1440,7 +1443,7 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 				if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 					StoreSave(pMsg->m_pMessage);
 				char aBuf[1024];
-				str_format(aBuf, sizeof(aBuf), "*** %s", pMsg->m_pMessage);
+				str_copy(aBuf, pMsg->m_pMessage, sizeof(aBuf));
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat/server", aBuf, color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor)));
 			};
 			const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
@@ -1840,11 +1843,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 	if(CurrentLine.m_ClientId == SERVER_MSG)
 	{
-		str_copy(CurrentLine.m_aName, "*** ");
+		str_copy(CurrentLine.m_aName, MessageNamePrefixForClientId(CurrentLine.m_ClientId));
 	}
 	else if(CurrentLine.m_ClientId == CLIENT_MSG)
 	{
-		str_copy(CurrentLine.m_aName, "— ");
+		str_copy(CurrentLine.m_aName, MessageNamePrefixForClientId(CurrentLine.m_ClientId));
 	}
 	else
 	{
@@ -2385,7 +2388,10 @@ void CChat::OnRender()
 	const float Height = 300.0f;
 	const float Width = Height * Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
-	const CUIRect ChatRect = {0.0f, 50.0f, std::min(Width, std::max(190.0f, g_Config.m_ClChatWidth + 32.0f)), 250.0f};
+	const CUIRect DefaultChatRect = QmHudEditor::ChatEdgeBaseRect(Width, (float)g_Config.m_ClChatWidth, 0.0f, false);
+	const auto PreviewScope = GameClient()->m_HudEditor.PreviewTransform(EHudEditorElement::Chat, DefaultChatRect);
+	const bool ChatAnchoredRight = PreviewScope.m_AnchoredRight;
+	const CUIRect ChatRect = QmHudEditor::ChatEdgeBaseRect(Width, (float)g_Config.m_ClChatWidth, (float)g_Config.m_QmChatEdgeMargin, ChatAnchoredRight);
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::Chat, ChatRect);
 
 	float x = 5.0f;

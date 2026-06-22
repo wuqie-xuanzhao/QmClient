@@ -150,16 +150,6 @@ namespace QmHudNotifications
 		return {X, AnchorRect.y, Width, AnchorRect.h};
 	}
 
-	inline CUIRect InsetAnchoredRect(const CUIRect &Rect, float Margin, bool AnchoredLeft, bool AnchoredRight, bool AnchoredTop, bool AnchoredBottom)
-	{
-		const float SafeMargin = maximum(0.0f, Margin);
-		return {
-			Rect.x + (AnchoredLeft ? SafeMargin : (AnchoredRight ? -SafeMargin : 0.0f)),
-			Rect.y + (AnchoredTop ? SafeMargin : (AnchoredBottom ? -SafeMargin : 0.0f)),
-			Rect.w,
-			Rect.h};
-	}
-
 	inline STextColorConfig TextColorConfig(ETextSource Source, int EchoInheritChatColor, unsigned SystemColor, unsigned EchoOverrideColor, unsigned ChatEchoColor)
 	{
 		if(Source == ETextSource::Echo && EchoInheritChatColor)

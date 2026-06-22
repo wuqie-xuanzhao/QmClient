@@ -1540,6 +1540,9 @@ CP opacity
 Create a random skin
 == Criar uma skin aleatória
 
+Create category
+== Create category
+
 Created
 == Criado
 
@@ -2154,6 +2157,9 @@ Emoticon
 
 Emoticon ID
 == ID do emoticon
+
+Emoticon shadow
+== Emoticon shadow
 
 Emoticons
 == Emoticons
@@ -3645,6 +3651,9 @@ Makes you move 1 tile up
 
 Makes you super
 == Torna você super
+
+Manage categories
+== Manage categories
 
 Manual
 == Manual
@@ -5323,6 +5332,9 @@ Rifle Laser Outline Color
 Right jump
 == Pulo direito
 
+Right-click or use the gear to manage categories
+== Right-click or use the gear to manage categories
+
 Right-click to disable auto-translate
 == Clique direito para desativar a tradução automática
 
@@ -5802,6 +5814,9 @@ Severe
 
 Shape
 == Forma
+
+Short server names
+== Short server names
 
 Shotgun
 == Escopeta
@@ -7375,8 +7390,8 @@ Unknown
 Unknown argument. Check '/rescuemode list'
 == Argumento desconhecido. Verifique '/rescuemode list'
 
-Unknown emote... Say /emote
-== Emote desconhecido... Diga /emote
+Unknown emote. Use /emote to see available emotes.
+== Emote desconhecido. Use /emote para ver os emotes disponíveis.
 
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 == Parâmetro desconhecido. Valores aceitos: default, gametimer, broadcast, both, none
@@ -8187,6 +8202,26 @@ Fire
 [Direct touch input]
 Hook
 == Gancho
+
+[Friend auto follow]
+Follow this friend across servers
+== Follow this friend across servers
+
+[Friend auto follow]
+Following %s
+== Following %s
+
+[Friend auto follow]
+Following %s: switching in %.0fs
+== Following %s: switching in %.0fs
+
+[Friend auto follow]
+Stop
+== Stop
+
+[Friend auto follow]
+Stop following this friend
+== Stop following this friend
 
 [Graphics error]
 A render command failed. Try to update your GPU drivers.

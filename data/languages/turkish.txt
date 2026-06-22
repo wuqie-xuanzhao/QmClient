@@ -1540,6 +1540,9 @@ CP opacity
 Create a random skin
 == Rastgele bir skin oluştur
 
+Create category
+== Create category
+
 Created
 == Oluşturulma
 
@@ -2154,6 +2157,9 @@ Emoticon
 
 Emoticon ID
 == İfade Kimliği
+
+Emoticon shadow
+== Emoticon shadow
 
 Emoticons
 == İfadeler
@@ -3645,6 +3651,9 @@ Makes you move 1 tile up
 
 Makes you super
 == Seni süper yapar
+
+Manage categories
+== Manage categories
 
 Manual
 == Manuel
@@ -5323,6 +5332,9 @@ Rifle Laser Outline Color
 Right jump
 == Sağ zıplama
 
+Right-click or use the gear to manage categories
+== Right-click or use the gear to manage categories
+
 Right-click to disable auto-translate
 == Otomatik çeviriyi devre dışı bırakmak için sağ tıklayın
 
@@ -5802,6 +5814,9 @@ Severe
 
 Shape
 == Şekil
+
+Short server names
+== Short server names
 
 Shotgun
 == Pompalı tüfek
@@ -7375,8 +7390,8 @@ Unknown
 Unknown argument. Check '/rescuemode list'
 == Bilinmeyen argüman. '/rescuemode list' kontrol edin
 
-Unknown emote... Say /emote
-== Bilinmeyen ifade... /emote yazın
+Unknown emote. Use /emote to see available emotes.
+== Bilinmeyen ifade. Kullanılabilir ifadeleri görmek için /emote kullanın.
 
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 == Bilinmeyen parametre. Kabul edilen değerler: default, gametimer, broadcast, both, none
@@ -8187,6 +8202,26 @@ Fire
 [Direct touch input]
 Hook
 == Kanca
+
+[Friend auto follow]
+Follow this friend across servers
+== Follow this friend across servers
+
+[Friend auto follow]
+Following %s
+== Following %s
+
+[Friend auto follow]
+Following %s: switching in %.0fs
+== Following %s: switching in %.0fs
+
+[Friend auto follow]
+Stop
+== Stop
+
+[Friend auto follow]
+Stop following this friend
+== Stop following this friend
 
 [Graphics error]
 A render command failed. Try to update your GPU drivers.

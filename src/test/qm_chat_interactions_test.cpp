@@ -163,6 +163,23 @@ TEST(QmChatInteractions, BuildsEscapedSpectateCommand)
 	EXPECT_STREQ(aCommand, "say /spec \"Name \\\"A\\\"\"");
 }
 
+TEST(QmChatInteractions, ServerSystemMessagesDoNotUseVisibleStarPrefix)
+{
+	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-1), "");
+	EXPECT_STREQ(CChat::MessageNamePrefixForClientId(-2), "— ");
+}
+
+TEST(QmChatInteractions, ServerSystemMessagePathsDoNotReintroduceStarPrefix)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string OnMessage = SourceFunctionBody(Source, "void CChat::OnMessage(int MsgType, void *pRawMsg)");
+	const std::string AddLine = SourceFunctionBody(Source, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass)");
+
+	EXPECT_EQ(OnMessage.find("*** %s"), std::string::npos);
+	EXPECT_EQ(AddLine.find("\"*** \""), std::string::npos);
+	EXPECT_NE(AddLine.find("MessageNamePrefixForClientId(CurrentLine.m_ClientId)"), std::string::npos);
+}
+
 TEST(QmChatInteractions, ChatLineMenuKeepsSpectateAction)
 {
 	const std::string Header = ReadTestSourceFile("src/game/client/components/chat.h");

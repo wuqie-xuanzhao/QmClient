@@ -3060,6 +3060,22 @@ turkish = "İfade Kimliği"
 polish = "ID emotki"
 
 [[message]]
+key = "Emoticon shadow"
+[message.translations]
+simplified_chinese = "表情阴影"
+traditional_chinese = "表情陰影"
+japanese = "Emoticon shadow"
+korean = "Emoticon shadow"
+russian = "Emoticon shadow"
+german = "Emoticon shadow"
+spanish = "Emoticon shadow"
+french = "Emoticon shadow"
+brazilian_portuguese = "Emoticon shadow"
+portuguese = "Emoticon shadow"
+turkish = "Emoticon shadow"
+polish = "Emoticon shadow"
+
+[[message]]
 key = "enable"
 [message.translations]
 japanese = "有効"
@@ -5700,6 +5716,23 @@ brazilian_portuguese = "Nova UI"
 portuguese = "Nova IU"
 turkish = "Yeni Arayüz"
 polish = "Nowy interfejs"
+
+[[message]]
+key = "Short server names"
+[message.translations]
+simplified_chinese = "简短服务器名"
+traditional_chinese = "簡短伺服器名稱"
+japanese = "Short server names"
+korean = "Short server names"
+russian = "Short server names"
+german = "Short server names"
+spanish = "Short server names"
+french = "Short server names"
+brazilian_portuguese = "Short server names"
+portuguese = "Short server names"
+turkish = "Short server names"
+polish = "Short server names"
+
 [[message]]
 key = "Next"
 [message.translations]
@@ -10949,20 +10982,20 @@ turkish = "Bilinmeyen argüman. '/rescuemode list' kontrol edin"
 polish = "Nieznany argument. Sprawdź '/rescuemode list'"
 
 [[message]]
-key = "Unknown emote... Say /emote"
+key = "Unknown emote. Use /emote to see available emotes."
 [message.translations]
-japanese = "不明なエモートです... /emote と言ってください"
-korean = "알 수 없는 이모트... /emote 입력"
-simplified_chinese = "未知表情命令"
-traditional_chinese = "未知表情命令"
-russian = "Неизвестная эмоция... Скажите /emote"
-german = "Unbekannter Emote... Sage /emote"
-spanish = "Emote desconocido... Di /emote"
-french = "Émoticône inconnue... Dites /emote"
-brazilian_portuguese = "Emote desconhecido... Diga /emote"
-portuguese = "Emote desconhecido... Diga /emote"
-turkish = "Bilinmeyen ifade... /emote yazın"
-polish = "Nieznana emotka... Powiedz /emote"
+japanese = "不明なエモートです。使用可能なエモートを確認するには /emote を使ってください。"
+korean = "알 수 없는 이모트입니다. 사용 가능한 이모트를 보려면 /emote를 사용하세요."
+simplified_chinese = "未知表情。输入 /emote 查看可用表情。"
+traditional_chinese = "未知表情。輸入 /emote 查看可用表情。"
+russian = "Неизвестная эмоция. Используйте /emote, чтобы увидеть доступные эмоции."
+german = "Unbekannter Emote. Nutze /emote, um verfügbare Emotes anzuzeigen."
+spanish = "Emote desconocido. Usa /emote para ver los emotes disponibles."
+french = "Émoticône inconnue. Utilisez /emote pour voir les émoticônes disponibles."
+brazilian_portuguese = "Emote desconhecido. Use /emote para ver os emotes disponíveis."
+portuguese = "Emote desconhecido. Use /emote para ver os emotes disponíveis."
+turkish = "Bilinmeyen ifade. Kullanılabilir ifadeleri görmek için /emote kullanın."
+polish = "Nieznana emotka. Użyj /emote, aby zobaczyć dostępne emotki."
 
 [[message]]
 key = "Unknown parameter. Accepted values: default, gametimer, broadcast, both, none"

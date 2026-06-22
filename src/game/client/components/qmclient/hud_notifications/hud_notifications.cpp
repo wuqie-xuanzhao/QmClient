@@ -6,6 +6,7 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
+#include <game/client/components/hud_editor.h>
 #include <game/client/gameclient.h>
 #include <game/localization.h>
 
@@ -197,7 +198,7 @@ void CQmHudNotifications::OnRender()
 		PreviewScope.m_AnchoredRight,
 		PreviewScope.m_VisibleRect.x + PreviewScope.m_VisibleRect.w * 0.5f,
 		Width * 0.5f);
-	CUIRect RenderAnchorRect = QmHudNotifications::InsetAnchoredRect(
+	CUIRect RenderAnchorRect = QmHudEditor::InsetAnchoredRect(
 		AnchorRect,
 		(float)std::clamp(g_Config.m_QmHudNotificationsEdgeMargin, 0, 32),
 		PreviewScope.m_AnchoredLeft,
@@ -215,7 +216,7 @@ void CQmHudNotifications::OnRender()
 		VisiblePreviewScope.m_VisibleRect.x + VisiblePreviewScope.m_VisibleRect.w * 0.5f,
 		Width * 0.5f);
 	Flow = VisibleFlow;
-	RenderAnchorRect = QmHudNotifications::InsetAnchoredRect(
+	RenderAnchorRect = QmHudEditor::InsetAnchoredRect(
 		AnchorRect,
 		(float)std::clamp(g_Config.m_QmHudNotificationsEdgeMargin, 0, 32),
 		VisiblePreviewScope.m_AnchoredLeft,
@@ -225,8 +226,8 @@ void CQmHudNotifications::OnRender()
 	RenderBaseRect = QmHudNotifications::EditorPreviewRenderBaseRect(RenderAnchorRect, DefaultRect.w, Flow);
 	ReportedVisibleRect = MeasureVisibleRect(RenderBaseRect, PreviewContent, Flow, HudEditorPreview);
 	if(ReportedVisibleRect.w <= 0.0f || ReportedVisibleRect.h <= 0.0f)
-		ReportedVisibleRect = AnchorRect;
-	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::HudNotifications, AnchorRect, ReportedVisibleRect);
+		ReportedVisibleRect = RenderAnchorRect;
+	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::HudNotifications, RenderAnchorRect, ReportedVisibleRect);
 	RenderNotifications(RenderBaseRect, ReportedVisibleRect, PreviewContent, HudEditorPreview, Flow);
 	GameClient()->m_HudEditor.EndTransform(HudEditorScope);
 	Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);

@@ -78,6 +78,38 @@ TEST(QmHudNotifications, MatchesKnownSoloPrompts)
 	EXPECT_EQ(QmHudNotifications::MatchKnownSoloPrompt("regular server message"), QmHudNotifications::ESoloPrompt::None);
 }
 
+TEST(QmHudNotifications, HudEdgeMarginHelperOffsetsAnchoredRects)
+{
+	const CUIRect Rect{10.0f, 20.0f, 100.0f, 40.0f};
+
+	const CUIRect LeftTop = QmHudEditor::InsetAnchoredRect(Rect, 8.0f, true, false, true, false);
+	EXPECT_FLOAT_EQ(LeftTop.x, 18.0f);
+	EXPECT_FLOAT_EQ(LeftTop.y, 28.0f);
+	EXPECT_FLOAT_EQ(LeftTop.w, Rect.w);
+	EXPECT_FLOAT_EQ(LeftTop.h, Rect.h);
+
+	const CUIRect RightBottom = QmHudEditor::InsetAnchoredRect(Rect, 8.0f, false, true, false, true);
+	EXPECT_FLOAT_EQ(RightBottom.x, 2.0f);
+	EXPECT_FLOAT_EQ(RightBottom.y, 12.0f);
+	EXPECT_FLOAT_EQ(RightBottom.w, Rect.w);
+	EXPECT_FLOAT_EQ(RightBottom.h, Rect.h);
+}
+
+TEST(QmHudNotifications, ChatEdgeBaseRectPreservesLegacyDefaultAndSupportsRightEdge)
+{
+	const CUIRect Legacy = QmHudEditor::ChatEdgeBaseRect(600.0f, 200.0f, 0.0f, false);
+	EXPECT_FLOAT_EQ(Legacy.x, 0.0f);
+	EXPECT_FLOAT_EQ(Legacy.y, 50.0f);
+	EXPECT_FLOAT_EQ(Legacy.w, 232.0f);
+	EXPECT_FLOAT_EQ(Legacy.h, 250.0f);
+
+	const CUIRect Right = QmHudEditor::ChatEdgeBaseRect(600.0f, 200.0f, 8.0f, true);
+	EXPECT_FLOAT_EQ(Right.x, 600.0f - 232.0f - 8.0f);
+	EXPECT_FLOAT_EQ(Right.y, 50.0f);
+	EXPECT_FLOAT_EQ(Right.w, 232.0f);
+	EXPECT_FLOAT_EQ(Right.h, 250.0f);
+}
+
 TEST(QmHudNotifications, CatalogProvidesCanonicalTextAndMetadata)
 {
 	using namespace QmHudNotifications;
@@ -195,7 +227,7 @@ TEST(QmHudNotifications, FormatsKnownSystemNotifications)
 	EXPECT_STREQ(aBuf, "Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
 
 	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedNotificationMessage("未知表情。输入 /emote 查看帮助", aBuf, sizeof(aBuf)));
-	EXPECT_STREQ(aBuf, "Unknown emote... Say /emote");
+	EXPECT_STREQ(aBuf, "Unknown emote. Use /emote to see available emotes.");
 
 	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedNotificationMessage("本服务器允许组队；队伍上锁后，队内任意玩家死亡都会导致全队死亡", aBuf, sizeof(aBuf)));
 	EXPECT_STREQ(aBuf, "Teams are available on this server; if the team is locked, any team member dying will kill the whole team");
@@ -599,7 +631,7 @@ TEST(QmHudNotificationRules, AnalyzesUnknownEmoteMessageInChinese)
 	EXPECT_EQ(Analysis.m_Route, QmHudNotifications::EServerMessageRoute::System);
 	EXPECT_EQ(Analysis.m_Class, QmHudNotifications::EServerMessageClass::Prompt);
 	EXPECT_EQ(Analysis.m_Domain, QmHudNotifications::EServerMessageDomain::Status);
-	EXPECT_STREQ(Analysis.m_aLocalizedText, "Unknown emote... Say /emote");
+	EXPECT_STREQ(Analysis.m_aLocalizedText, "Unknown emote. Use /emote to see available emotes.");
 	EXPECT_FALSE(Analysis.m_UseFallbackLocalization);
 }
 
@@ -1066,9 +1098,9 @@ TEST(QmHudNotificationsGeometry, EdgeMarginInsetsOnlyAnchoredPreviewEdges)
 	const CUIRect AnchorRect = {0.0f, 0.0f, 128.0f, 92.0f};
 	const CUIRect FreeRect = {100.0f, 40.0f, 128.0f, 92.0f};
 
-	const CUIRect LeftInset = QmHudNotifications::InsetAnchoredRect(AnchorRect, 8.0f, true, false, true, false);
-	const CUIRect RightInset = QmHudNotifications::InsetAnchoredRect(AnchorRect, 8.0f, false, true, false, true);
-	const CUIRect FreeInset = QmHudNotifications::InsetAnchoredRect(FreeRect, 8.0f, false, false, false, false);
+	const CUIRect LeftInset = QmHudEditor::InsetAnchoredRect(AnchorRect, 8.0f, true, false, true, false);
+	const CUIRect RightInset = QmHudEditor::InsetAnchoredRect(AnchorRect, 8.0f, false, true, false, true);
+	const CUIRect FreeInset = QmHudEditor::InsetAnchoredRect(FreeRect, 8.0f, false, false, false, false);
 
 	EXPECT_FLOAT_EQ(LeftInset.x, 8.0f);
 	EXPECT_FLOAT_EQ(LeftInset.y, 8.0f);

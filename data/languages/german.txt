@@ -1540,6 +1540,9 @@ CP opacity
 Create a random skin
 == Zufälliges Skin erstellen
 
+Create category
+== Create category
+
 Created
 == Erstellt
 
@@ -2154,6 +2157,9 @@ Emoticon
 
 Emoticon ID
 == Emoticon-ID
+
+Emoticon shadow
+== Emoticon shadow
 
 Emoticons
 == Emoticons
@@ -3645,6 +3651,9 @@ Makes you move 1 tile up
 
 Makes you super
 == Macht dich super
+
+Manage categories
+== Manage categories
 
 Manual
 == Manuell
@@ -5323,6 +5332,9 @@ Rifle Laser Outline Color
 Right jump
 == Rechts springen
 
+Right-click or use the gear to manage categories
+== Right-click or use the gear to manage categories
+
 Right-click to disable auto-translate
 == Rechtsklick zum Deaktivieren der Automatikübersetzung
 
@@ -5802,6 +5814,9 @@ Severe
 
 Shape
 == Form
+
+Short server names
+== Short server names
 
 Shotgun
 == Schrotflinte
@@ -7375,8 +7390,8 @@ Unknown
 Unknown argument. Check '/rescuemode list'
 == Unbekanntes Argument. Überprüfe '/rescuemode list'
 
-Unknown emote... Say /emote
-== Unbekannter Emote... Sage /emote
+Unknown emote. Use /emote to see available emotes.
+== Unbekannter Emote. Nutze /emote, um verfügbare Emotes anzuzeigen.
 
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 == Unbekannter Parameter. Akzeptierte Werte: default, gametimer, broadcast, both, none
@@ -8187,6 +8202,26 @@ Fire
 [Direct touch input]
 Hook
 == Haken
+
+[Friend auto follow]
+Follow this friend across servers
+== Follow this friend across servers
+
+[Friend auto follow]
+Following %s
+== Following %s
+
+[Friend auto follow]
+Following %s: switching in %.0fs
+== Following %s: switching in %.0fs
+
+[Friend auto follow]
+Stop
+== Stop
+
+[Friend auto follow]
+Stop following this friend
+== Stop following this friend
 
 [Graphics error]
 A render command failed. Try to update your GPU drivers.

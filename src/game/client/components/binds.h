@@ -84,11 +84,12 @@ public:
 	static bool AllowsUnmodifiedFallback(int Key, int ModifierMask)
 	{
 		if(ModifierMask == ((1 << KeyModifier::CTRL) | (1 << KeyModifier::SHIFT)) ||
+			ModifierMask == ((1 << KeyModifier::ALT) | (1 << KeyModifier::SHIFT)) ||
 			ModifierMask == ((1 << KeyModifier::GUI) | (1 << KeyModifier::SHIFT)))
 			return false;
 
 		if((Key == KEY_LSHIFT || Key == KEY_RSHIFT) &&
-			(ModifierMask & ((1 << KeyModifier::CTRL) | (1 << KeyModifier::GUI))) != 0)
+			(ModifierMask & ((1 << KeyModifier::CTRL) | (1 << KeyModifier::ALT) | (1 << KeyModifier::GUI))) != 0)
 			return false;
 
 		return true;
@@ -97,7 +98,9 @@ public:
 	{
 		return ActiveBind.m_ModifierMask == KeyModifier::NONE &&
 		       (ActiveBind.m_Key == KEY_LSHIFT || ActiveBind.m_Key == KEY_RSHIFT) &&
-		       (PressedKeyModifierMask == (1 << KeyModifier::CTRL) || PressedKeyModifierMask == (1 << KeyModifier::GUI));
+		       (PressedKeyModifierMask == (1 << KeyModifier::CTRL) ||
+			       PressedKeyModifierMask == (1 << KeyModifier::ALT) ||
+			       PressedKeyModifierMask == (1 << KeyModifier::GUI));
 	}
 	static const char *GetModifierName(int Modifier);
 	void GetKeyBindName(int Key, int ModifierMask, char *pBuf, size_t BufSize) const;

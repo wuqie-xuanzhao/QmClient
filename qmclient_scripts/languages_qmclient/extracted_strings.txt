@@ -512,6 +512,7 @@ Count players only
 Countries
 CP opacity
 Create a random skin
+Create category
 Created
 Credits
 Crescent
@@ -717,6 +718,7 @@ Elevated
 Emotes are disabled.
 Emoticon
 Emoticon ID
+Emoticon shadow
 Emoticons
 enable
 Enable 3D background particles
@@ -1214,6 +1216,7 @@ Makes you move 1 tile left
 Makes you move 1 tile right
 Makes you move 1 tile up
 Makes you super
+Manage categories
 Manual
 Manual concurrency: %d
 Manual source file
@@ -1773,6 +1776,7 @@ Restarting. Please wait…
 Rifle Laser Inner Color
 Rifle Laser Outline Color
 Right jump
+Right-click or use the gear to manage categories
 Right-click to disable auto-translate
 Right-click to enable auto-translate
 Ring
@@ -1933,6 +1937,7 @@ Settings
 Settings file
 Severe
 Shape
+Short server names
 Shotgun
 Shotgun Laser Inner Color
 Shotgun Laser Outline Color
@@ -2457,7 +2462,7 @@ Unfreeze opacity
 Uninvite player from team
 Unknown
 Unknown argument. Check '/rescuemode list'
-Unknown emote... Say /emote
+Unknown emote. Use /emote to see available emotes.
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 Unlock a team
@@ -2721,6 +2726,11 @@ Zoom out
 [Direct touch input]	Disabled
 [Direct touch input]	Fire
 [Direct touch input]	Hook
+[Friend auto follow]	Follow this friend across servers
+[Friend auto follow]	Following %s
+[Friend auto follow]	Following %s: switching in %.0fs
+[Friend auto follow]	Stop
+[Friend auto follow]	Stop following this friend
 [Graphics error]	A render command failed. Try to update your GPU drivers.
 [Graphics error]	An error during command recording occurred. Try to update your GPU drivers.
 [Graphics error]	Could not initialize the given graphics backend, reverting to the default backend now.

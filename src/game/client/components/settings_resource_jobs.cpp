@@ -413,6 +413,16 @@ int SettingsSkinGpuUploadUnits(bool TeeSettingsActive)
 	return TeeSettingsActive ? 8 : 1;
 }
 
+static int SettingsRecoveryBudget(const SSettingsResourceFrameContext &Context, int ScrollBudget, int IdleBudget)
+{
+	const int RemainingFrames = maximum(Context.m_PostScrollRecoveryFrames, 0);
+	if(RemainingFrames <= 0)
+		return IdleBudget;
+	const int RecoveryFrames = maximum(2, RemainingFrames);
+	const int CompletedFrames = std::clamp(RecoveryFrames - RemainingFrames + 1, 1, RecoveryFrames);
+	return ScrollBudget + (IdleBudget - ScrollBudget) * CompletedFrames / (RecoveryFrames + 1);
+}
+
 int SettingsSkinFinalizeFrameBudget(const SSettingsResourceFrameContext &Context, bool TeeSettingsActive)
 {
 	if(!TeeSettingsActive)
@@ -420,7 +430,7 @@ int SettingsSkinFinalizeFrameBudget(const SSettingsResourceFrameContext &Context
 	if(Context.m_ScrollActive)
 		return 16;
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return 48;
+		return SettingsRecoveryBudget(Context, 16, SettingsSkinFinalizeMaxPerFrame(true));
 	return SettingsSkinFinalizeMaxPerFrame(true);
 }
 
@@ -431,7 +441,7 @@ int SettingsSkinGpuUploadFrameUnits(const SSettingsResourceFrameContext &Context
 	if(Context.m_ScrollActive)
 		return 4;
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return 8;
+		return SettingsRecoveryBudget(Context, 4, SettingsSkinGpuUploadUnits(true));
 	if(SettingsSkinBackgroundDrainActive(Context, TeeSettingsActive))
 		return 12;
 	return SettingsSkinGpuUploadUnits(true);
@@ -444,7 +454,7 @@ int SettingsSkinGpuUploadLimiterUnits(const SSettingsResourceFrameContext &Conte
 	if(Context.m_ScrollActive)
 		return 96;
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return 192;
+		return SettingsRecoveryBudget(Context, 96, 192);
 	if(SettingsSkinBackgroundDrainActive(Context, TeeSettingsActive))
 		return 288;
 	return 192;
@@ -553,7 +563,7 @@ int SettingsSkinSourceLoadNormalWindow(const SSettingsResourceFrameContext &Cont
 	if(Context.m_ScrollActive)
 		return SettingsSkinSourceLoadWindowClamp(48, LoadedMax);
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return SettingsSkinSourceLoadWindowClamp(128, LoadedMax);
+		return SettingsSkinSourceLoadWindowClamp(SettingsRecoveryBudget(Context, 48, 256), LoadedMax);
 	if(SettingsSkinBackgroundDrainActive(Context, TeeSettingsActive))
 		return 256;
 	return SettingsSkinSourceLoadWindowClamp(256, LoadedMax);
@@ -566,7 +576,7 @@ int SettingsSkinSourceLoadVisibleWindow(const SSettingsResourceFrameContext &Con
 	if(Context.m_ScrollActive)
 		return SettingsSkinSourceLoadWindowClamp(128, LoadedMax);
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return SettingsSkinSourceLoadWindowClamp(192, LoadedMax);
+		return SettingsSkinSourceLoadWindowClamp(SettingsRecoveryBudget(Context, 128, 256), LoadedMax);
 	if(SettingsSkinBackgroundDrainActive(Context, TeeSettingsActive))
 		return 256;
 	return SettingsSkinSourceLoadWindowClamp(256, LoadedMax);
@@ -1261,7 +1271,12 @@ int SettingsResourceSharedHeavyBudget(const SSettingsResourceFrameContext &Conte
 	if(Context.m_ScrollActive || Context.m_JumpScrollActive)
 		return 0;
 	if(Context.m_PostScrollRecoveryFrames > 0)
-		return std::max(0, RecoveryBudget);
+	{
+		const int ClampedRecoveryBudget = std::max(0, RecoveryBudget);
+		if(ClampedRecoveryBudget <= 0)
+			return 0;
+		return std::min(ClampedRecoveryBudget, std::max(1, SettingsRecoveryBudget(Context, 0, ClampedRecoveryBudget)));
+	}
 	return std::max(0, NormalBudget);
 }
 

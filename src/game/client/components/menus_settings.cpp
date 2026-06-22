@@ -2276,7 +2276,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	}
 	s_vQueueButtonIds.resize(vSkinList.size());
 	const auto ListFrameStartTime = time_get_nanoseconds();
-	s_ListBox.DoStart(50.0f, vSkinList.size(), 4, 2, OldSelected, &MainView);
+	s_ListBox.DoStart(50.0f, vSkinList.size(), 3, 2, OldSelected, &MainView);
 	if(m_SkinListScrollToSelected && OldSelected >= 0)
 	{
 		s_ListBox.ScrollToSelected();

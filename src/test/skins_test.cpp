@@ -261,7 +261,7 @@ TEST(Skins, TeeSkinListVirtualizationKeepsTotalListLength)
 	const size_t RenderTeeEnd = Source.find("void CMenus::RenderSettings", RenderTeePos + 1);
 	const std::string RenderTeeBody = Source.substr(RenderTeePos, RenderTeeEnd - RenderTeePos);
 
-	EXPECT_NE(RenderTeeBody.find("s_ListBox.DoStart(50.0f, vSkinList.size(), 4, 2, OldSelected, &MainView);"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("s_ListBox.DoStart(50.0f, vSkinList.size(), 3, 2, OldSelected, &MainView);"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("SettingsSkinListVisibleRangeForScroll("), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("s_ListBox.SkipItems("), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("int RowsRendered = 0;"), std::string::npos);
@@ -269,6 +269,30 @@ TEST(Skins, TeeSkinListVirtualizationKeepsTotalListLength)
 	EXPECT_EQ(RenderTeeBody.find("const int RowsRendered = RowsIterated;"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("event=list_frame page=settings:tee"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("rows_total=%d rows_visible=%d rows_rendered=%d rows_iterated=%d rows_skipped=%d"), std::string::npos);
+}
+
+TEST(Skins, TeeSkinListSortsByModifiedTimeAfterFavorites)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/skins.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const size_t ComparePos = Source.find("bool CSkins::CSkinListEntry::operator<");
+	const size_t ScanJobPos = Source.find("int CSkins::CSkinDirectoryScanJob::ScanCallback");
+	ASSERT_NE(ComparePos, std::string::npos);
+	ASSERT_NE(ScanJobPos, std::string::npos);
+	const std::string CompareBody = Source.substr(ComparePos, 1200);
+	const std::string ScanJobBody = Source.substr(ScanJobPos, 900);
+
+	EXPECT_NE(Header.find("time_t m_LastModified"), std::string::npos);
+	EXPECT_NE(Header.find("time_t LastModified() const"), std::string::npos);
+	EXPECT_NE(Source.find("ListDirectoryInfo(IStorage::TYPE_ALL, \"skins\""), std::string::npos);
+	EXPECT_NE(ScanJobBody.find("pInfo->m_TimeModified"), std::string::npos);
+	EXPECT_NE(CompareBody.find("LastModified()"), std::string::npos);
+	EXPECT_NE(CompareBody.find("LastModified() > Other.m_pSkinContainer->LastModified()"), std::string::npos);
+	const size_t FavoritePos = CompareBody.find("m_Favorite");
+	const size_t ModifiedPos = CompareBody.find("LastModified()");
+	ASSERT_NE(FavoritePos, std::string::npos);
+	ASSERT_NE(ModifiedPos, std::string::npos);
+	EXPECT_LT(FavoritePos, ModifiedPos);
 }
 
 TEST(Skins, TeeSkinListStableIdleAvoidsFullBackgroundScan)
@@ -899,7 +923,8 @@ TEST(Skins, DirectoryScanPromotesDownloadContainersToLocal)
 
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->Type() == CSkinContainer::EType::DOWNLOAD"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_Type = CSkinContainer::EType::LOCAL;"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_StorageType = StorageType;"), std::string::npos);
+	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_StorageType = Entry.m_StorageType;"), std::string::npos);
+	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->SetLastModified(Entry.m_LastModified);"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_pLoadJob->Abort();"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("if(OldState == CSkinContainer::EState::LOADED && pSkinContainer->m_pSkin)"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_pSkin->m_OriginalSkin.Unload(Graphics());"), std::string::npos);

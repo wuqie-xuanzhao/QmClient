@@ -1,3 +1,5 @@
+#include <game/client/components/menus.h>
+
 #include <gtest/gtest.h>
 #include <test/test.h>
 
@@ -512,6 +514,36 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	EXPECT_NE(LanguageSource.find("Skin transition animation\n== 皮肤切换动画"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
+{
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string PlayersSource = ReadTextFile("src/game/client/components/players.cpp");
+	const std::string RenderPlayerBody = FunctionBody(PlayersSource, "void CPlayers::RenderPlayer(");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const auto CountOccurrences = [](const std::string &Text, const char *pNeedle) {
+		int Count = 0;
+		size_t Pos = 0;
+		while((Pos = Text.find(pNeedle, Pos)) != std::string::npos)
+		{
+			++Count;
+			Pos += str_length(pNeedle);
+		}
+		return Count;
+	};
+
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmEmoticonShadow, qm_emoticon_shadow, 0, 0, 1"), std::string::npos);
+	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOpacity"), std::string::npos);
+	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetX"), std::string::npos);
+	EXPECT_EQ(CountOccurrences(RenderPlayerBody, "if(g_Config.m_QmEmoticonShadow)"), 3);
+	EXPECT_EQ(CountOccurrences(RenderPlayerBody, "Graphics()->SetColor(0.0f, 0.0f, 0.0f"), 3);
+	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetX * h"), std::string::npos);
+	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetY * h, h, h"), std::string::npos);
+	EXPECT_NE(RenderPlayerBody.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);\n\t\tGraphics()->RenderQuadContainerAsSprite"), std::string::npos);
+	EXPECT_NE(RenderPlayerBody.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, a * Alpha);\n\t\t\tGraphics()->RenderQuadContainerAsSprite"), std::string::npos);
+	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmEmoticonShadow"), std::string::npos);
+	EXPECT_NE(MenusSource.find("Localize(\"Emoticon shadow\")"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, NameplateOthersModeSuppressesLocalIdentityRows)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/nameplates.cpp");
@@ -672,6 +704,145 @@ TEST(QmNewUiMenuBranches, TranslationAndDemoUiLabelsUseEnglishKeys)
 	EXPECT_NE(BrowserSource.find("Localize(\"Note\")"), std::string::npos);
 	EXPECT_NE(BrowserSource.find("Localize(\"Has save\")"), std::string::npos);
 	EXPECT_NE(BrowserSource.find("Localize(\"None\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, FriendCategoryHeadersExposeManagement)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+
+	EXPECT_NE(Source.find("FONT_ICON_GEAR"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Manage categories\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Right-click or use the gear to manage categories\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, FriendAddPopupExposesCreateCategoryAction)
+{
+	const std::string Header = ReadTextFile("src/game/client/components/menus.h");
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+
+	EXPECT_NE(Header.find("m_FriendsAddCategoryCreateButton"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Create category\")"), std::string::npos);
+	EXPECT_NE(Source.find("m_FriendsCategoryPopupContext.m_Mode = CFriendsCategoryPopupContext::MODE_ADD"), std::string::npos);
+	EXPECT_NE(Source.find("Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, FriendCategoryHeaderActionExcludesManageButton)
+{
+	const CUIRect Header{10.0f, 20.0f, 180.0f, 24.0f};
+	CUIRect HeaderAction;
+	CUIRect ManageButton;
+
+	CMenus::SplitFriendsCategoryHeaderRects(Header, &HeaderAction, &ManageButton);
+
+	EXPECT_FLOAT_EQ(HeaderAction.x, Header.x);
+	EXPECT_FLOAT_EQ(HeaderAction.y, Header.y);
+	EXPECT_FLOAT_EQ(HeaderAction.w, Header.w - Header.h);
+	EXPECT_FLOAT_EQ(HeaderAction.h, Header.h);
+	EXPECT_FLOAT_EQ(ManageButton.x, Header.x + Header.w - Header.h + 2.0f);
+	EXPECT_FLOAT_EQ(ManageButton.y, Header.y + 2.0f);
+	EXPECT_FLOAT_EQ(ManageButton.w, Header.h - 4.0f);
+	EXPECT_FLOAT_EQ(ManageButton.h, Header.h - 4.0f);
+	EXPECT_LE(HeaderAction.x + HeaderAction.w, ManageButton.x);
+}
+
+TEST(QmNewUiMenuBranches, FriendAutoFollowDelaysAndStopsAfterTwoJumps)
+{
+	CMenus::SFriendAutoFollowState State;
+	char aConnect[NETADDR_MAXSTRSIZE] = "";
+
+	CMenus::StartFriendAutoFollow(State, "Alice", "Clan", "127.0.0.1:8303");
+	EXPECT_TRUE(State.m_Active);
+	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8303", 10.0f, 3, 2, aConnect, sizeof(aConnect)));
+
+	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8304", 11.0f, 3, 2, aConnect, sizeof(aConnect)));
+	EXPECT_TRUE(State.m_HasPendingAddress);
+	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8304", 13.9f, 3, 2, aConnect, sizeof(aConnect)));
+	EXPECT_TRUE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8304", 14.0f, 3, 2, aConnect, sizeof(aConnect)));
+	EXPECT_STREQ(aConnect, "127.0.0.1:8304");
+	EXPECT_TRUE(State.m_Active);
+	EXPECT_EQ(State.m_JumpCount, 1);
+
+	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8305", 20.0f, 3, 2, aConnect, sizeof(aConnect)));
+	EXPECT_TRUE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8305", 23.0f, 3, 2, aConnect, sizeof(aConnect)));
+	EXPECT_STREQ(aConnect, "127.0.0.1:8305");
+	EXPECT_FALSE(State.m_Active);
+	EXPECT_EQ(State.m_JumpCount, 2);
+}
+
+TEST(QmNewUiMenuBranches, FriendAutoFollowCancelsWhenTargetGoesOffline)
+{
+	CMenus::SFriendAutoFollowState State;
+	char aConnect[NETADDR_MAXSTRSIZE] = "";
+
+	CMenus::StartFriendAutoFollow(State, "Alice", "Clan", "127.0.0.1:8303");
+	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8304", 11.0f, 3, 2, aConnect, sizeof(aConnect)));
+	EXPECT_TRUE(State.m_HasPendingAddress);
+	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, false, "", 12.0f, 3, 2, aConnect, sizeof(aConnect)));
+	EXPECT_FALSE(State.m_Active);
+	EXPECT_FALSE(State.m_HasPendingAddress);
+}
+
+TEST(QmNewUiMenuBranches, FriendAutoFollowDistinguishesManualAndAutomaticConnects)
+{
+	const std::string Header = ReadTextFile("src/game/client/components/menus.h");
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+
+	EXPECT_NE(Header.find("enum class EConnectIntent"), std::string::npos);
+	EXPECT_NE(Header.find("void Connect(const char *pAddress, EConnectIntent Intent = EConnectIntent::Manual)"), std::string::npos);
+	EXPECT_NE(Source.find("if(Intent == EConnectIntent::Manual)"), std::string::npos);
+	EXPECT_NE(Source.find("StopFriendAutoFollow(m_FriendAutoFollowState);"), std::string::npos);
+	EXPECT_NE(Source.find("Connect(g_Config.m_UiServerAddress, EConnectIntent::AutoFollow)"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ShortServerNamesCoverKnownFamilies)
+{
+	CServerInfo Info{};
+	char aBuf[sizeof(Info.m_aName)];
+
+	str_copy(Info.m_aName, "KoG | China #12 - HappyHook [kog.tw]");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "China - HappyHook");
+
+	str_copy(Info.m_aName, "Axiom 北京 普通 - CHN1O 钩累死");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "Novice - CHN1O 钩累死");
+
+	str_copy(Info.m_aName, "DDNet CHN7 西安 - Moderate 中阶");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "Moderate - CHN7 西安");
+
+	str_copy(Info.m_aName, "DDNet CHN2 上海 - Brutal 高阶");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "Brutal - CHN2 上海");
+
+	str_copy(Info.m_aName, "Plain Server Name");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "Plain Server Name");
+}
+
+TEST(QmNewUiMenuBranches, ShortServerNamesKeepDisplayNameHighlightPath)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+
+	EXPECT_NE(Source.find("g_Config.m_QmShortServerNames || (pItem->m_QuickSearchHit & IServerBrowser::QUICK_SERVERNAME)"), std::string::npos);
+	EXPECT_NE(Source.find("PrintHighlighted(pDisplayServerName"), std::string::npos);
+	EXPECT_EQ(Source.find("!g_Config.m_QmShortServerNames && g_Config.m_BrFilterString"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, CallVoteMapListShowsFinishedIcon)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_ingame.cpp");
+	const size_t RenderPos = Source.find("bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)");
+	ASSERT_NE(RenderPos, std::string::npos);
+	const size_t EndPos = Source.find("bool CMenus::RenderServerControlKick(CUIRect MainView", RenderPos);
+	ASSERT_NE(EndPos, std::string::npos);
+	const std::string Body = Source.substr(RenderPos, EndPos - RenderPos);
+
+	EXPECT_NE(Body.find("ExtractMapName(pOption->m_aDescription"), std::string::npos);
+	EXPECT_NE(Body.find("g_Config.m_BrIndicateFinished"), std::string::npos);
+	EXPECT_NE(Body.find("pCurrentCommunity->HasRank(aMapName) == CServerInfo::RANK_RANKED"), std::string::npos);
+	EXPECT_NE(Body.find("RenderFontIcon(Icon, FONT_ICON_FLAG_CHECKERED"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->m_TClient.IsFavoriteMap(aMapName)"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ClientSourceDoesNotUseChineseLocalizeKeys)

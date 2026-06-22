@@ -2,11 +2,11 @@
 #ifndef GAME_CLIENT_COMPONENTS_HUD_EDITOR_H
 #define GAME_CLIENT_COMPONENTS_HUD_EDITOR_H
 
+#include <engine/graphics.h>
+
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
 #include <game/client/ui_rect.h>
-
-#include <engine/graphics.h>
 
 #include <algorithm>
 #include <array>
@@ -85,6 +85,24 @@ namespace QmHudEditor
 	inline float SnapAxisToScreenGuides(float Position, float Size, float ScreenStart, float ScreenSize)
 	{
 		return SnapAxisToGuides(Position, Size, ScreenStart, ScreenSize, nullptr, 0);
+	}
+
+	inline CUIRect InsetAnchoredRect(const CUIRect &Rect, float Margin, bool AnchoredLeft, bool AnchoredRight, bool AnchoredTop, bool AnchoredBottom)
+	{
+		const float SafeMargin = std::max(0.0f, Margin);
+		return {
+			Rect.x + (AnchoredLeft ? SafeMargin : (AnchoredRight ? -SafeMargin : 0.0f)),
+			Rect.y + (AnchoredTop ? SafeMargin : (AnchoredBottom ? -SafeMargin : 0.0f)),
+			Rect.w,
+			Rect.h};
+	}
+
+	inline CUIRect ChatEdgeBaseRect(float ScreenWidth, float ChatWidth, float EdgeMargin, bool AnchoredRight)
+	{
+		const float Width = std::min(ScreenWidth, std::max(190.0f, ChatWidth + 32.0f));
+		const float SafeMargin = std::max(0.0f, EdgeMargin);
+		const float X = AnchoredRight ? std::max(0.0f, ScreenWidth - Width - SafeMargin) : SafeMargin;
+		return {X, 50.0f, Width, 250.0f};
 	}
 } // namespace QmHudEditor
 

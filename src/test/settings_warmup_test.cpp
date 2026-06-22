@@ -1384,12 +1384,17 @@ TEST(SettingsResourceJobs, SkinListBackgroundWarmupWaitsForIdleVisibleBacklog)
 TEST(SettingsResourceJobs, TeeSkinSourceLoadWindowCapsActiveDecodeConcurrency)
 {
 	const SSettingsResourceFrameContext Idle = SettingsBuildFrameContext(false, false, 0);
-	const SSettingsResourceFrameContext Recovery = SettingsBuildFrameContext(false, false, 2);
+	const SSettingsResourceFrameContext RecoveryStart = SettingsBuildFrameContext(false, false, 2);
+	const SSettingsResourceFrameContext RecoveryEnd = SettingsBuildFrameContext(false, false, 1);
 	const SSettingsResourceFrameContext Scroll = SettingsBuildFrameContext(true, false, 0);
 	EXPECT_EQ(SettingsSkinSourceLoadNormalWindow(Idle, true, 1600), 256);
 	EXPECT_EQ(SettingsSkinSourceLoadVisibleWindow(Idle, true, 1600), 256);
-	EXPECT_EQ(SettingsSkinSourceLoadNormalWindow(Recovery, true, 1600), 128);
-	EXPECT_EQ(SettingsSkinSourceLoadVisibleWindow(Recovery, true, 1600), 192);
+	EXPECT_LT(SettingsSkinSourceLoadNormalWindow(Scroll, true, 1600), SettingsSkinSourceLoadNormalWindow(RecoveryStart, true, 1600));
+	EXPECT_LT(SettingsSkinSourceLoadNormalWindow(RecoveryStart, true, 1600), SettingsSkinSourceLoadNormalWindow(RecoveryEnd, true, 1600));
+	EXPECT_LT(SettingsSkinSourceLoadNormalWindow(RecoveryEnd, true, 1600), SettingsSkinSourceLoadNormalWindow(Idle, true, 1600));
+	EXPECT_LT(SettingsSkinSourceLoadVisibleWindow(Scroll, true, 1600), SettingsSkinSourceLoadVisibleWindow(RecoveryStart, true, 1600));
+	EXPECT_LT(SettingsSkinSourceLoadVisibleWindow(RecoveryStart, true, 1600), SettingsSkinSourceLoadVisibleWindow(RecoveryEnd, true, 1600));
+	EXPECT_LT(SettingsSkinSourceLoadVisibleWindow(RecoveryEnd, true, 1600), SettingsSkinSourceLoadVisibleWindow(Idle, true, 1600));
 	EXPECT_EQ(SettingsSkinSourceLoadNormalWindow(Scroll, true, 1600), 48);
 	EXPECT_EQ(SettingsSkinSourceLoadVisibleWindow(Scroll, true, 1600), 128);
 	EXPECT_EQ(SettingsSkinSourceLoadVisibleWindow(Idle, true, 32), 32);
@@ -1413,7 +1418,8 @@ TEST(SettingsResourceJobs, TeeSkinFinalizeBudgetDefersDuringScrollAndRecovery)
 {
 	const SSettingsResourceFrameContext Idle = {false, false, 0};
 	const SSettingsResourceFrameContext Scrolling = {true, false, 0};
-	const SSettingsResourceFrameContext Recovering = {false, false, 2};
+	const SSettingsResourceFrameContext RecoveringStart = SettingsBuildFrameContext(false, false, 2);
+	const SSettingsResourceFrameContext RecoveringEnd = SettingsBuildFrameContext(false, false, 1);
 
 	EXPECT_EQ(SettingsSkinFinalizeMaxPerFrame(true), 64);
 	EXPECT_EQ(SettingsSkinGpuUploadUnits(true), 8);
@@ -1421,8 +1427,12 @@ TEST(SettingsResourceJobs, TeeSkinFinalizeBudgetDefersDuringScrollAndRecovery)
 	EXPECT_EQ(SettingsSkinGpuUploadFrameUnits(Idle, true), SettingsSkinGpuUploadUnits(true));
 	EXPECT_EQ(SettingsSkinFinalizeFrameBudget(Scrolling, true), 16);
 	EXPECT_EQ(SettingsSkinGpuUploadFrameUnits(Scrolling, true), 4);
-	EXPECT_EQ(SettingsSkinFinalizeFrameBudget(Recovering, true), 48);
-	EXPECT_EQ(SettingsSkinGpuUploadFrameUnits(Recovering, true), 8);
+	EXPECT_LT(SettingsSkinFinalizeFrameBudget(Scrolling, true), SettingsSkinFinalizeFrameBudget(RecoveringStart, true));
+	EXPECT_LT(SettingsSkinFinalizeFrameBudget(RecoveringStart, true), SettingsSkinFinalizeFrameBudget(RecoveringEnd, true));
+	EXPECT_LT(SettingsSkinFinalizeFrameBudget(RecoveringEnd, true), SettingsSkinFinalizeFrameBudget(Idle, true));
+	EXPECT_LT(SettingsSkinGpuUploadFrameUnits(Scrolling, true), SettingsSkinGpuUploadFrameUnits(RecoveringStart, true));
+	EXPECT_LT(SettingsSkinGpuUploadFrameUnits(RecoveringStart, true), SettingsSkinGpuUploadFrameUnits(RecoveringEnd, true));
+	EXPECT_LT(SettingsSkinGpuUploadFrameUnits(RecoveringEnd, true), SettingsSkinGpuUploadFrameUnits(Idle, true));
 }
 
 TEST(SettingsResourceJobs, TeeSkinFinalizeIdleDrainUsesBoundedMergeBudget)
@@ -1461,8 +1471,10 @@ TEST(SettingsResourceJobs, TeeSkinFinalizeIdleDrainUsesBoundedMergeBudget)
 
 	const SSettingsResourceFrameContext Scrolling = SettingsBuildFrameContext(true, false, 0);
 	EXPECT_EQ(SettingsSkinFinalizeFrameBudget(Scrolling, true), 16);
-	const SSettingsResourceFrameContext Recovering = SettingsBuildFrameContext(false, false, 2);
-	EXPECT_EQ(SettingsSkinFinalizeFrameBudget(Recovering, true), 48);
+	const SSettingsResourceFrameContext RecoveringStart = SettingsBuildFrameContext(false, false, 2);
+	const SSettingsResourceFrameContext RecoveringEnd = SettingsBuildFrameContext(false, false, 1);
+	EXPECT_LT(SettingsSkinFinalizeFrameBudget(Scrolling, true), SettingsSkinFinalizeFrameBudget(RecoveringStart, true));
+	EXPECT_LT(SettingsSkinFinalizeFrameBudget(RecoveringStart, true), SettingsSkinFinalizeFrameBudget(RecoveringEnd, true));
 }
 
 TEST(SettingsResourceJobs, ActiveTeeSkinFrameBudgetAllowsEightSourceUploadsPerFrame)
@@ -1487,15 +1499,32 @@ TEST(SettingsResourceJobs, ActiveTeeSkinFrameBudgetAllowsEightSourceUploadsPerFr
 TEST(SettingsResourceJobs, TeeSkinGpuUploadLimiterBudgetTracksFrameContext)
 {
 	const SSettingsResourceFrameContext IdleVisible = SettingsBuildFrameContext(false, false, 0);
-	const SSettingsResourceFrameContext Recovery = SettingsBuildFrameContext(false, false, 2);
+	const SSettingsResourceFrameContext RecoveryStart = SettingsBuildFrameContext(false, false, 2);
+	const SSettingsResourceFrameContext RecoveryEnd = SettingsBuildFrameContext(false, false, 1);
 	const SSettingsResourceFrameContext Scroll = SettingsBuildFrameContext(true, false, 0);
 	SSettingsResourceFrameContext IdleDrain = SettingsBuildFrameContext(false, false, 0);
 	IdleDrain.m_HighPrioritySettled = true;
 
 	EXPECT_EQ(SettingsSkinGpuUploadLimiterUnits(IdleVisible, true), 192);
-	EXPECT_EQ(SettingsSkinGpuUploadLimiterUnits(Recovery, true), 192);
 	EXPECT_EQ(SettingsSkinGpuUploadLimiterUnits(Scroll, true), 96);
+	EXPECT_LT(SettingsSkinGpuUploadLimiterUnits(Scroll, true), SettingsSkinGpuUploadLimiterUnits(RecoveryStart, true));
+	EXPECT_LT(SettingsSkinGpuUploadLimiterUnits(RecoveryStart, true), SettingsSkinGpuUploadLimiterUnits(RecoveryEnd, true));
+	EXPECT_LT(SettingsSkinGpuUploadLimiterUnits(RecoveryEnd, true), SettingsSkinGpuUploadLimiterUnits(IdleVisible, true));
 	EXPECT_EQ(SettingsSkinGpuUploadLimiterUnits(IdleDrain, true), 288);
+}
+
+TEST(SettingsResourceJobs, SharedHeavyBudgetTransitionsContinuouslyAfterScroll)
+{
+	const SSettingsResourceFrameContext Scroll = SettingsBuildFrameContext(true, false, 0);
+	const SSettingsResourceFrameContext RecoveryStart = SettingsBuildFrameContext(false, false, 2);
+	const SSettingsResourceFrameContext RecoveryEnd = SettingsBuildFrameContext(false, false, 1);
+	const SSettingsResourceFrameContext Idle = SettingsBuildFrameContext(false, false, 0);
+
+	EXPECT_EQ(SettingsResourceSharedHeavyBudget(Scroll, 4, 1), 0);
+	EXPECT_LT(SettingsResourceSharedHeavyBudget(Scroll, 4, 1), SettingsResourceSharedHeavyBudget(RecoveryStart, 4, 1));
+	EXPECT_LE(SettingsResourceSharedHeavyBudget(RecoveryStart, 4, 1), SettingsResourceSharedHeavyBudget(RecoveryEnd, 4, 1));
+	EXPECT_EQ(SettingsResourceSharedHeavyBudget(RecoveryEnd, 4, 1), 1);
+	EXPECT_LT(SettingsResourceSharedHeavyBudget(RecoveryEnd, 4, 1), SettingsResourceSharedHeavyBudget(Idle, 4, 1));
 }
 
 TEST(SettingsResourceJobs, ThroughputControllerKeepsVisibleBacklogOutOfIdleDrain)

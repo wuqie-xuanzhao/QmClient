@@ -933,17 +933,19 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				Props.m_MaxWidth = Button.w;
 				Props.m_StopAtEnd = true;
 				Props.m_EnableWidthCheck = false;
+				char aDisplayServerName[sizeof(pItem->m_aName)];
+				const char *pDisplayServerName = g_Config.m_QmShortServerNames ? CMenus::GetServerbrowserDisplayName(pItem, aDisplayServerName, sizeof(aDisplayServerName)) : pItem->m_aName;
 				bool Printed = false;
-				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit & IServerBrowser::QUICK_SERVERNAME))
-					Printed = PrintHighlighted(pItem->m_aName, [&](const char *pFilteredStr, const int FilterLen) {
-						Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_NAME_1), &Button, pItem->m_aName, FontSize, TEXTALIGN_ML, Props, (int)(pFilteredStr - pItem->m_aName));
+				if(g_Config.m_BrFilterString[0] && (g_Config.m_QmShortServerNames || (pItem->m_QuickSearchHit & IServerBrowser::QUICK_SERVERNAME)))
+					Printed = PrintHighlighted(pDisplayServerName, [&](const char *pFilteredStr, const int FilterLen) {
+						Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_NAME_1), &Button, pDisplayServerName, FontSize, TEXTALIGN_ML, Props, (int)(pFilteredStr - pDisplayServerName));
 						TextRender()->TextColor(gs_HighlightedTextColor);
 						Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_NAME_2), &Button, pFilteredStr, FontSize, TEXTALIGN_ML, Props, FilterLen, &pUiElement->Rect(UI_ELEM_NAME_1)->m_Cursor);
 						TextRender()->TextColor(TextRender()->DefaultTextColor());
 						Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_NAME_3), &Button, pFilteredStr + FilterLen, FontSize, TEXTALIGN_ML, Props, -1, &pUiElement->Rect(UI_ELEM_NAME_2)->m_Cursor);
 					});
 				if(!Printed)
-					Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_NAME_1), &Button, pItem->m_aName, FontSize, TEXTALIGN_ML, Props);
+					Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_NAME_1), &Button, pDisplayServerName, FontSize, TEXTALIGN_ML, Props);
 			}
 			else if(Id == COL_GAMETYPE)
 			{
@@ -1290,8 +1292,10 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 	}
 }
 
-void CMenus::Connect(const char *pAddress)
+void CMenus::Connect(const char *pAddress, EConnectIntent Intent)
 {
+	if(Intent == EConnectIntent::Manual)
+		StopFriendAutoFollow(m_FriendAutoFollowState);
 	if(Client()->State() == IClient::STATE_ONLINE && GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmDisconnectTime && g_Config.m_ClConfirmDisconnectTime >= 0)
 	{
 		str_copy(m_aNextServer, pAddress);
@@ -2160,6 +2164,31 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		});
 	}
 
+	bool FollowTargetOnline = false;
+	const char *pFollowTargetAddress = "";
+	for(const auto &vFriends : vvFriends)
+	{
+		for(const CFriendItem &Friend : vFriends)
+		{
+			if(Friend.ServerInfo() == nullptr)
+				continue;
+			if(str_comp(Friend.Name(), m_FriendAutoFollowState.m_aName) == 0 && str_comp(Friend.Clan(), m_FriendAutoFollowState.m_aClan) == 0)
+			{
+				FollowTargetOnline = true;
+				pFollowTargetAddress = Friend.ServerInfo()->m_aAddress;
+				break;
+			}
+		}
+		if(FollowTargetOnline)
+			break;
+	}
+	char aFollowConnectAddress[NETADDR_MAXSTRSIZE];
+	if(FriendAutoFollowStep(m_FriendAutoFollowState, FollowTargetOnline, pFollowTargetAddress, Client()->GlobalTime(), g_Config.m_QmFriendAutoFollowDelay, 2, aFollowConnectAddress, sizeof(aFollowConnectAddress)))
+	{
+		str_copy(g_Config.m_UiServerAddress, aFollowConnectAddress);
+		Connect(g_Config.m_UiServerAddress, EConnectIntent::AutoFollow);
+	}
+
 	int TotalFriendItems = 0;
 	for(const auto &vFriends : vvFriends)
 		TotalFriendItems += (int)vFriends.size();
@@ -2260,18 +2289,21 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 
 	std::vector<SFriendsCategoryHeaderInfo> vCategoryHeaders;
 	vCategoryHeaders.reserve(NumCategories);
+	m_vFriendsCategoryManageButtons.resize(NumCategories);
 
 	char aBuf[256];
 	int FriendTooltipIndex = 0;
 	for(int CategoryIndex = 0; CategoryIndex < NumCategories; ++CategoryIndex)
 	{
 		// header
-		CUIRect Header, GroupIcon, GroupLabel;
+		CUIRect Header, GroupIcon, GroupLabel, ManageButton;
 		List.HSplitTop(ms_ListheaderHeight, &Header, &List);
 		s_ScrollRegion.AddRect(Header);
 		vCategoryHeaders.push_back({CategoryIndex, Header});
 		const char *pCategoryName = GameClient()->Friends()->GetCategory(CategoryIndex);
-		const bool HeaderInside = Ui()->MouseHovered(&Header);
+		CUIRect HeaderAction;
+		SplitFriendsCategoryHeaderRects(Header, &HeaderAction, nullptr);
+		const bool HeaderInside = Ui()->MouseHovered(&HeaderAction);
 		if(Ui()->MouseButtonClicked(0) && HeaderInside && Ui()->ActiveItem() == nullptr)
 		{
 			s_CategoryDragState.m_PressedIndex = CategoryIndex;
@@ -2321,19 +2353,31 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		Ui()->DoLabel(&GroupIcon, m_vFriendsCategoryExpanded[CategoryIndex] ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, GroupIcon.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		SplitFriendsCategoryHeaderRects(Header, nullptr, &ManageButton);
+		GroupLabel.w = maximum(ManageButton.x - GroupLabel.x, 0.0f);
 		str_format(aBuf, sizeof(aBuf), "%s (%d)", LocalizeFriendsCategory(pCategoryName), (int)vvFriends[CategoryIndex].size());
 		Ui()->DoLabel(&GroupLabel, aBuf, FontSize, TEXTALIGN_ML);
 		if(DraggingThisHeader)
 			DrawCategoryDragOutline(Header);
 
-		const int HeaderResult = Ui()->DoButtonLogic(&m_vFriendsCategoryExpanded[CategoryIndex], 0, &Header, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
-		if(!DraggingAnyHeader && HeaderResult == 2)
-		{
+		auto OpenCategoryManagePopup = [&]() {
 			m_FriendsCategoryPopupContext.m_pMenus = this;
 			m_FriendsCategoryPopupContext.m_CategoryIndex = CategoryIndex;
 			m_FriendsCategoryPopupContext.m_Mode = CFriendsCategoryPopupContext::MODE_ACTIONS;
 			m_FriendsCategoryPopupContext.m_NameInput.Clear();
 			Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Ui()->MouseX(), Ui()->MouseY(), 250.0f, 110.0f, &m_FriendsCategoryPopupContext, PopupFriendsCategory);
+		};
+		if(Ui()->DoButton_FontIcon(&m_vFriendsCategoryManageButtons[CategoryIndex], FONT_ICON_GEAR, 0, &ManageButton, BUTTONFLAG_LEFT))
+		{
+			OpenCategoryManagePopup();
+		}
+		GameClient()->m_Tooltips.DoToolTip(&m_vFriendsCategoryManageButtons[CategoryIndex], &ManageButton, Localize("Manage categories"));
+		GameClient()->m_Tooltips.DoToolTip(&m_vFriendsCategoryExpanded[CategoryIndex], &HeaderAction, Localize("Right-click or use the gear to manage categories"));
+
+		const int HeaderResult = Ui()->DoButtonLogic(&m_vFriendsCategoryExpanded[CategoryIndex], 0, &HeaderAction, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
+		if(!DraggingAnyHeader && HeaderResult == 2)
+		{
+			OpenCategoryManagePopup();
 		}
 		else if(!DraggingAnyHeader && HeaderResult == 1)
 		{
@@ -2368,6 +2412,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 				const void *pListItemId = reinterpret_cast<const void *>(FriendUiIdBase | 0x1);
 				const void *pRemoveButtonId = reinterpret_cast<const void *>(FriendUiIdBase | 0x3);
 				const void *pCopyButtonId = reinterpret_cast<const void *>(FriendUiIdBase | 0x9);
+				const void *pFollowButtonId = reinterpret_cast<const void *>(FriendUiIdBase | 0xb);
 				const void *pCommunityTooltipId = reinterpret_cast<const void *>(FriendUiIdBase | 0x5);
 				const void *pSkinTooltipId = reinterpret_cast<const void *>(FriendUiIdBase | 0x7);
 				List.HSplitTop(11.0f + 10.0f + 2 * 2.0f + 1.0f + (Friend.ServerInfo() == nullptr ? 0.0f : 10.0f), &Rect, &List);
@@ -2408,11 +2453,14 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 				Rect.Draw(Color, IGraphics::CORNER_ALL, 5.0f);
 				Rect.Margin(2.0f, &Rect);
 
-				CUIRect ButtonsRow, CopyButton, RemoveButton, NameLabel, ClanLabel, InfoLabel;
+				CUIRect ButtonsRow, FollowButton, CopyButton, RemoveButton, NameLabel, ClanLabel, InfoLabel;
 				Rect.HSplitTop(16.0f, &ButtonsRow, nullptr);
 				ButtonsRow.VSplitRight(13.0f, nullptr, &RemoveButton);
 				ButtonsRow.VSplitRight(15.0f, nullptr, &CopyButton);
+				ButtonsRow.VSplitRight(15.0f, nullptr, &FollowButton);
+				FollowButton.VSplitLeft(2.0f, nullptr, &FollowButton);
 				CopyButton.VSplitLeft(2.0f, nullptr, &CopyButton);
+				FollowButton.HMargin((FollowButton.h - FollowButton.w) / 2.0f, &FollowButton);
 				CopyButton.HMargin((CopyButton.h - CopyButton.w) / 2.0f, &CopyButton);
 				RemoveButton.HMargin((RemoveButton.h - RemoveButton.w) / 2.0f, &RemoveButton);
 				Rect.VSplitLeft(2.0f, nullptr, &Rect);
@@ -2494,6 +2542,12 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					const ColorRGBA InactiveIconColor = ColorRGBA(0.4f, 0.4f, 0.4f, 1.0f);
 					TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 					TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+					const bool FollowingThisFriend = m_FriendAutoFollowState.m_Active && str_comp(m_FriendAutoFollowState.m_aName, Friend.Name()) == 0 && str_comp(m_FriendAutoFollowState.m_aClan, Friend.Clan()) == 0;
+					if(Friend.ServerInfo())
+					{
+						TextRender()->TextColor(FollowingThisFriend || Ui()->HotItem() == pFollowButtonId ? TextRender()->DefaultTextColor() : InactiveIconColor);
+						Ui()->DoLabel(&FollowButton, FollowingThisFriend ? FONT_ICON_CIRCLE_STOP : FONT_ICON_PERSON_RUNNING, FollowButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+					}
 					TextRender()->TextColor(Ui()->HotItem() == pCopyButtonId ? TextRender()->DefaultTextColor() : InactiveIconColor);
 					Ui()->DoLabel(&CopyButton, FONT_ICON_COPY, CopyButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 					TextRender()->TextColor(Ui()->HotItem() == pRemoveButtonId ? TextRender()->DefaultTextColor() : InactiveIconColor);
@@ -2507,6 +2561,16 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 						ButtonResult = 0;
 					}
 					GameClient()->m_Tooltips.DoToolTip(pCopyButtonId, &CopyButton, Friend.FriendState() == IFriends::FRIEND_PLAYER ? Localize("Click to copy this player's name to clipboard") : Localize("Click to copy this clan's name to clipboard"));
+					if(Friend.ServerInfo() && Ui()->DoButtonLogic(pFollowButtonId, 0, &FollowButton, BUTTONFLAG_LEFT))
+					{
+						if(FollowingThisFriend)
+							StopFriendAutoFollow(m_FriendAutoFollowState);
+						else
+							StartFriendAutoFollow(m_FriendAutoFollowState, Friend.Name(), Friend.Clan(), Friend.ServerInfo()->m_aAddress);
+						ButtonResult = 0;
+					}
+					if(Friend.ServerInfo())
+						GameClient()->m_Tooltips.DoToolTip(pFollowButtonId, &FollowButton, FollowingThisFriend ? Localize("Stop following this friend", "Friend auto follow") : Localize("Follow this friend across servers", "Friend auto follow"));
 					if(Ui()->DoButtonLogic(pRemoveButtonId, 0, &RemoveButton, BUTTONFLAG_LEFT))
 					{
 						str_copy(m_aRemoveFriendName, Friend.Name(), sizeof(m_aRemoveFriendName));
@@ -2549,6 +2613,13 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 						}
 					}
 
+					if(Friend.ServerInfo())
+					{
+						const bool FollowingThisFriend = m_FriendAutoFollowState.m_Active && str_comp(m_FriendAutoFollowState.m_aName, Friend.Name()) == 0 && str_comp(m_FriendAutoFollowState.m_aClan, Friend.Clan()) == 0;
+						m_FriendsActionPopupContext.m_vEntries.emplace_back(FollowingThisFriend ? Localize("Stop following this friend", "Friend auto follow") : Localize("Follow this friend across servers", "Friend auto follow"));
+						m_vFriendsActionEntries.push_back(FollowingThisFriend ? FRIEND_ACTION_STOP_FOLLOW : FRIEND_ACTION_FOLLOW);
+					}
+
 					m_FriendsActionPopupContext.m_vEntries.emplace_back(Localize("Remove friend"));
 					m_vFriendsActionEntries.push_back(FRIEND_ACTION_REMOVE);
 
@@ -2556,6 +2627,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					{
 						str_copy(m_aFriendActionName, Friend.Name(), sizeof(m_aFriendActionName));
 						str_copy(m_aFriendActionClan, Friend.Clan(), sizeof(m_aFriendActionClan));
+						str_copy(m_aFriendActionAddress, Friend.ServerInfo() != nullptr ? Friend.ServerInfo()->m_aAddress : "", sizeof(m_aFriendActionAddress));
 						m_FriendActionState = Friend.FriendState();
 						m_HasFriendAction = true;
 						Ui()->ShowPopupSelection(Ui()->MouseX(), Ui()->MouseY(), &m_FriendsActionPopupContext);
@@ -2771,6 +2843,14 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 			{
 				GameClient()->Friends()->ClearFriendNote(m_aFriendActionName, m_aFriendActionClan);
 			}
+			else if(Action == FRIEND_ACTION_FOLLOW)
+			{
+				StartFriendAutoFollow(m_FriendAutoFollowState, m_aFriendActionName, m_aFriendActionClan, m_aFriendActionAddress);
+			}
+			else if(Action == FRIEND_ACTION_STOP_FOLLOW)
+			{
+				StopFriendAutoFollow(m_FriendAutoFollowState);
+			}
 			else if(Action == FRIEND_ACTION_REMOVE)
 			{
 				str_copy(m_aRemoveFriendName, m_aFriendActionName, sizeof(m_aRemoveFriendName));
@@ -2786,6 +2866,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		m_HasFriendAction = false;
 		m_aFriendActionName[0] = '\0';
 		m_aFriendActionClan[0] = '\0';
+		m_aFriendActionAddress[0] = '\0';
 		m_FriendActionState = IFriends::FRIEND_NO;
 	}
 	else if(m_HasFriendAction && !Ui()->IsPopupOpen(&m_FriendsActionPopupContext))
@@ -2795,6 +2876,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		m_HasFriendAction = false;
 		m_aFriendActionName[0] = '\0';
 		m_aFriendActionClan[0] = '\0';
+		m_aFriendActionAddress[0] = '\0';
 		m_FriendActionState = IFriends::FRIEND_NO;
 	}
 
@@ -2835,6 +2917,23 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	{
 		CUIRect Button;
 		ServerFriends.Margin(5.0f, &ServerFriends);
+
+		if(m_FriendAutoFollowState.m_Active)
+		{
+			CUIRect Status, StopButton;
+			ServerFriends.HSplitTop(18.0f, &Status, &ServerFriends);
+			Status.VSplitRight(64.0f, &Status, &StopButton);
+			char aStatus[128];
+			if(m_FriendAutoFollowState.m_HasPendingAddress)
+				str_format(aStatus, sizeof(aStatus), Localize("Following %s: switching in %.0fs", "Friend auto follow"), m_FriendAutoFollowState.m_aName, maximum(0.0f, m_FriendAutoFollowState.m_PendingConnectTime - Client()->GlobalTime()));
+			else
+				str_format(aStatus, sizeof(aStatus), Localize("Following %s", "Friend auto follow"), m_FriendAutoFollowState.m_aName);
+			Ui()->DoLabel(&Status, aStatus, FontSize, TEXTALIGN_ML);
+			static CButtonContainer s_StopFollowButton;
+			if(DoButton_Menu(&s_StopFollowButton, Localize("Stop", "Friend auto follow"), 0, &StopButton))
+				StopFriendAutoFollow(m_FriendAutoFollowState);
+			ServerFriends.HSplitTop(3.0f, nullptr, &ServerFriends);
+		}
 
 		ServerFriends.HSplitTop(18.0f, &Button, &ServerFriends);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
@@ -2896,9 +2995,21 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		{
 			static CScrollRegion s_FriendsCategoryDropDownScrollRegion;
 			m_FriendsAddCategoryDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_FriendsCategoryDropDownScrollRegion;
-			DropDownSelection = Ui()->DoDropDown(&Button, DropDownSelection, vpCategories.data(), (int)vpCategories.size(), m_FriendsAddCategoryDropDownState);
+			CUIRect CategoryDropDown, CreateCategoryButton;
+			Button.VSplitRight(Button.h, &CategoryDropDown, &CreateCategoryButton);
+			CategoryDropDown.VSplitRight(3.0f, &CategoryDropDown, nullptr);
+			DropDownSelection = Ui()->DoDropDown(&CategoryDropDown, DropDownSelection, vpCategories.data(), (int)vpCategories.size(), m_FriendsAddCategoryDropDownState);
 			if(DropDownSelection >= 0 && DropDownSelection < (int)vCategoryIndices.size())
 				m_FriendAddCategoryIndex = vCategoryIndices[DropDownSelection];
+			if(Ui()->DoButton_FontIcon(&m_FriendsAddCategoryCreateButton, FONT_ICON_PLUS, 0, &CreateCategoryButton, BUTTONFLAG_LEFT))
+			{
+				m_FriendsCategoryPopupContext.m_pMenus = this;
+				m_FriendsCategoryPopupContext.m_CategoryIndex = m_FriendAddCategoryIndex;
+				m_FriendsCategoryPopupContext.m_Mode = CFriendsCategoryPopupContext::MODE_ADD;
+				m_FriendsCategoryPopupContext.m_NameInput.Clear();
+				Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Ui()->MouseX(), Ui()->MouseY(), 250.0f, 62.0f, &m_FriendsCategoryPopupContext, PopupFriendsCategory);
+			}
+			GameClient()->m_Tooltips.DoToolTip(&m_FriendsAddCategoryCreateButton, &CreateCategoryButton, Localize("Create category"));
 		}
 
 		ServerFriends.HSplitTop(3.0f, nullptr, &ServerFriends);

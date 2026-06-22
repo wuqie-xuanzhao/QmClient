@@ -1,27 +1,36 @@
 ---
 title: QmClient 待办整合规格（半 plan 式）
 date: 2026-06-20
+updated: 2026-06-21
 status: draft
-source: 用户 backlog（#8 ~ #20，共 13 个主任务）
-scope: 只调研、只落文档，不动代码
+source: 用户 backlog（#8 ~ #20）+ 第二批补充 TODO（B1 ~ B9）+ codegraph/BestClient 核验
+scope: 单文档 PRD + 详细规格 + 代码证据 + 后续 TODO；本文件不直接实现代码
 ---
 
 ## 背景
 
-本规格整合 2026-06-20 用户提交的 13 个主任务（编号沿用用户原始编号 #8 ~ #20），
-覆盖 BUG 修复、UI/UX 增强、动画改进、平台系统能力和 BestClient 功能移植。
+本规格整合 2026-06-20 用户提交的主任务（编号沿用用户原始编号 #8 ~ #20）
+和第二批补充 TODO（B1 ~ B9），覆盖 BUG 修复、UI/UX 增强、动画改进、
+平台系统能力和 BestClient 功能移植。
 
-本次产出**仅为调研 + 规格文档**，不改任何代码。每个任务给出：
-现状（引用具体文件:行号）、根因/缺口、设计方向、影响范围、风险与依赖、验收标准。
+本次产出是**单文档 PRD + 详细规格 + 代码证据 + 后续 TODO**，不改任何代码。
+每个任务给出：现状（引用具体文件:行号）、根因/缺口、设计方向、影响范围、
+风险与依赖、验收标准。
 
-所有引用的文件:行号均来自本轮 `read`/`search` 实际看到的内容，未定位的会标注「未定位」。
+所有引用的文件:行号均来自本轮 `codegraph` / `read` / `search` 实际看到的内容，
+未定位的会标注「未定位」。本轮 codegraph 核验基线：
+- `codegraph status .`：索引 up to date，3173 files / 128274 nodes / 217146 edges。
+- QmClient 当前核验提交：`312383072`。
+- BestClient 公共仓库 HEAD：`d8f4700434550884690a5779dc3814a7a5a05800`。
+- 本地 BestClient 参考源码：`docs/dyl/BestClient/`。
 
 ## 目标
 
-1. 为 13 个任务建立可执行的规格基线，后续每个任务可独立拆出小 plan/spec 实现。
+1. 为 #8 ~ #20 和 B1 ~ B9 建立可执行的规格基线，后续每个任务可独立拆出小 plan/spec 实现。
 2. 明确任务间的耦合（尤其 #10 通知栏贴边 与 #14.2 聊天框贴边的共用 Helpers）。
 3. 给出优先级分组和执行顺序建议，遵循「一次一个功能」原则。
 4. 为 #20 BestClient 移植提供分步实现计划（4 个子功能顺序）。
+5. 收口第二轮调研修正，避免同一任务前后出现两个互相冲突的实现口径。
 
 ## 非目标
 
@@ -29,6 +38,70 @@ scope: 只调研、只落文档，不动代码
 2. 不修改协议、物理、预测、demo 格式等上游保护区域（除非任务明确要求且获批准）。
 3. 不逐条修改通知文案（#17 只定方向，具体文案改动留给后续小规格）。
 4. 不做 PS blend mode 的完整数学推导（#11 只列推荐实现项和接入点）。
+
+---
+
+## PRD 总览（权威口径）
+
+这一节是本文件的入口。后文保留每个任务的详细调研、设计方向和验收标准；如后文历史描述与本节冲突，以本节和各任务内的“当前权威口径”段落为准。
+
+### 范围与分层
+
+- **直接实现候选**：#19、#15、#14.4、B7、#20.2。它们改动局部，依赖较少，但开始实现前仍要用 codegraph 查当前符号和直接调用点。
+- **先写小 spec**：#8、#9、#10 + #14.2、#12 + #13、#14.1/#14.3/#14.5、#20.1、B5、B6、B8、B9。
+- **先调研或审批**：#11、#16、#18、#20.3、B1、B2 Flexbox、B3 涉及命中判定部分。
+- **不得直接按旧口径实现**：#8 不再停留在“确认根因”；#20.1 不再阻塞于“等更多样本”；B7 不再写“已完整实现”；#20.4 不再直接新增 BestClient `C3DParticles` 组件；B6 类型 A 不可在服务端未就绪时宣称完整验收。
+
+### 关键修正
+
+| 项目 | 旧口径问题 | 当前权威口径 | 代码证据 |
+|------|------------|--------------|----------|
+| #8 滚动抖动 | 前文写“top-2 假设/先确认根因”，后文又确认预算阶梯 | 当前已确认滚动/恢复/正常预算是离散阶梯；下一步写连续预算过渡小 spec | `settings_resource_jobs.cpp:416`、`:427`、`:440` |
+| #20.1 短服务器名 | 主体写 Axiom/CHN DDR 需更多样本，后文写不再需要 | 用户样例足够启动规则 spec；需补中文难度别名和测试样例，不再等样本 | `menus_browser.cpp:86`、`axiom_auto_login.cpp:66`、BC `menus_browser.cpp:142` |
+| B6 马甲注册 | 类型 A 服务端依赖和客户端实现混在一个验收里 | 拆为类型 A（中心服务端契约 + 客户端降级）和类型 B（纯客户端私人标注） | `qmclient.cpp:64`、`qmclient_utils.cpp:126`、`gameclient.cpp:8178` |
+| B7 好友分类 | 写“已完整实现”，但用户痛点是入口不可发现 | 后端已具备；PRD 聚焦可见管理入口、tooltip、添加好友分类选择增强 | `friends.cpp:145`、`menus_browser.cpp:2329`、`:2924` |
+| #20.4 3D particles | 写“新增 QmClient C3DParticles” | QmClient 已有 `CBackgroundParticles`，不直接重复移植；只做差异审计和补强 | `background_particles.h:12`、`config_variables_qmclient.h:336` |
+
+### 代码证据索引
+
+本节列出本轮已核验的关键入口，后续实现或小 spec 应优先从这些位置继续展开：
+
+- #8：`src/game/client/components/settings_resource_jobs.cpp:392`、`:416`、`:427`、`:440`；调用点 `menus_settings.cpp:2495`、`menus_settings_assets.cpp:4684`；测试入口 `src/test/settings_warmup_test.cpp`。
+- #20.1：QmClient 无 `GetServerbrowserDisplayName`；英文难度词识别在 `menus_browser.cpp:86` 和 `menus_qmclient.cpp:5847`；Axiom 识别在 `axiom_auto_login.cpp:66`；BC KoG 参考在 `docs/dyl/BestClient/src/game/client/components/menus_browser.cpp:142`。
+- B5：好友服务器数据源 `CFriendItem::ServerInfo()` 在 `menus.h:1302`；双击连接在 `menus_browser.cpp:2568`。
+- B6：Qm 中心服务路径在 `qmclient.cpp:64`；machine hash 在 `qmclient.cpp:1401`；token/qid 响应在 `qmclient.cpp:1587`；users.json mark 解析在 `qmclient_utils.cpp:126`；qid 绑定/反查在 `gameclient.cpp:8178` / `:8203`。
+- B7：分类命令在 `friends.cpp:145`；分类增删改在 `friends.cpp:282` / `:322` / `:355` / `:379`；右键分类标题入口在 `menus_browser.cpp:2329`；分类弹窗在 `menus_browser.cpp:2924`；添加好友分类下拉在 `menus_browser.cpp:2897`。
+- #20.2：BC 表情阴影配置在 `config_variables_bestclient.h:71`；阴影参数在 BC `players.cpp:1111`；QmClient 当前表情渲染在 `players.cpp:1165` 附近。
+- #20.3：BC cinematic camera 在 `camera.cpp:456`；QmClient 自由观战 clamp/smoothing 相关路径需单独核验，不能直接照搬。
+- #20.4：BC `C3DParticles` 在 `docs/dyl/BestClient/src/game/client/components/bestclient/3d_particles.h:12`；QmClient 已有 `CBackgroundParticles` 在 `src/game/client/components/tclient/background_particles.h:12`。
+
+### 实现 TODO（简要目标）
+
+**本轮已实现**
+
+- [x] #19：表情按键处理路径增加修饰键防误触。
+- [x] #15：修复禅模式 + 旁观组合下旁观者 ID 卡片消失。
+- [x] #14.4：聊天/控制台系统消息去掉用户可见 `***` 前缀。
+- [x] B7：好友分类标题增加可见管理入口/tooltip，添加好友弹窗强化分类选择。
+- [x] #20.2：增加 QmClient 表情阴影配置和渲染 pass，默认关闭。
+- [x] #8：滚动预算连续过渡实现，更新 warmup 测试；视觉验证仍需人工补充。
+- [x] #20.1：短服务器名规则覆盖 KoG/Axiom/CHN DDR、中文难度别名、搜索高亮一致性。
+- [x] B5：自动跟随好友状态机实现，覆盖延迟、最多跳转 2 次、取消条件和 UI 文案。
+- [x] #10 + #14.2：共享 HUD edge semantics helper，通知栏和聊天框共用贴边逻辑。
+- [x] #9：皮肤列表按更新时间排序并压缩按钮布局。
+- [x] B9：投票换图已完成地图图标补回归验证。
+
+**下一批：先写小 spec**
+
+- [ ] #12 + #13：游戏内动画配置 spec，控制配置数量，默认行为必须完全兼容。
+- [ ] B6：拆成“公告马甲服务端契约/客户端降级”和“私人标注客户端功能”两个 spec。
+
+**第三批：先调研或审批**
+
+- [ ] #20.3：相机核心改动审批；补 demo、观战、freeview clamp、existing smoothing 回归清单。
+- [ ] #16：进程优先级平台能力矩阵（Windows/Linux/macOS/Android）。
+- [ ] #11：PS blend mode 公式、边界值测试和渲染性能 spike。
+- [ ] B8：持久统计存储格式、清理策略和隐私边界。
 
 ---
 
@@ -70,7 +143,7 @@ scope: 只调研、只落文档，不动代码
 | 任务 | 类型 | 说明 |
 |------|------|------|
 | #11 | 增强 | 资源编辑器 PS blend modes（先调研再实现） |
-| #8 | BUG 修复 | 滚动抖动根治（先定位根因） |
+| #8 | BUG 修复 | 滚动抖动根治（预算阶梯已确认，先写连续过渡小 spec） |
 | #20 | 移植 | BestClient 4 子功能（先写分步 spec） |
 
 ### 第五批 — 需要批准/平台能力调研
@@ -96,26 +169,31 @@ QmClient 设置页（`src/game/client/components/qmclient/menus_qmclient.cpp`）
   管理「滚动冷却帧」和「滚动后恢复帧」。
 - 皮肤列表在 `menus_settings.cpp:2514-2517` 调用这两个函数，恢复帧数 = 2。
 
-### 根因 / 缺口（top-2 假设）
+### 根因 / 缺口（当前权威口径）
 
-**假设 A（最可能）：资源加载预算阶梯跳变**
+**已确认主因：资源加载预算阶梯跳变**
 滚动期间资源加载预算被压到最低（`settings_resource_jobs.cpp:421-448`，
 finalize 16 / gpu upload 4），滚动结束后的 2 帧恢复期跳到 48/192，再跳回正常。
 这种**预算阶梯式跳变**导致每帧加载/上传的资源数突变 → 可见项目逐批出现 → 视觉抖动。
 
-**假设 B：布局重算与滚动不同步**
+codegraph / 源码窗口核验（2026-06-21）确认当前代码确实存在三段离散预算：
+- `SettingsSkinFinalizeFrameBudget`：滚动 16 → 恢复 48 → 正常 64（`settings_resource_jobs.cpp:416-425`）。
+- `SettingsSkinGpuUploadFrameUnits`：滚动 4 → 恢复 8 → 背景 drain 12（`:427-438`）。
+- `SettingsSkinGpuUploadLimiterUnits`：滚动 96 → 恢复 192 → 背景 drain 288（`:440-451`）。
+
+**次要风险：布局重算与滚动不同步**
 `m_PostScrollRecoveryFrames > 0` 期间，`SettingsResourceSharedHeavyBudget`（:1262-1264）
 返回 RecoveryBudget 而非 NormalBudget，导致恢复期有额外重算，可能引起可见项高度
 （`Line.m_aYOffset[OffsetType]`，chat.cpp 同类机制）重新测量造成的位移。
 
-> **验证方法**：开 perf debug（`gs_TeeListDrainPerfSession`），观察抖动帧的
-> `finalize_count` / `gpu_upload` 是否突变；或临时把 `RecoveryFrames` 设为 0 看抖动是否消失。
+> **边界**：本轮未运行 perf 或视觉复现，所以不能宣称预算阶梯是唯一根因；但它已经足够作为 #8 小 spec 的主要工程切入点。
 
 ### 设计方向
 
-1. 平滑预算过渡：滚动结束时不阶梯跳变，改为线性/缓动插值到正常预算。
-2. 或：增加恢复帧数（2 → N），让跳变更平缓。
-3. 需要先确认是假设 A 还是 B（只读 perf 日志定位），再决定改预算曲线还是改布局时机。
+1. 写小 spec：定义滚动结束后的连续预算过渡，不再使用 16→48→64 这类突然跳变。
+2. 优先方案：在 `m_PostScrollRecoveryFrames` 倒数期间按进度插值滚动预算到正常预算。
+3. 备选方案：增加恢复帧数只能作为视觉缓冲，不作为根治方案。
+4. 小 spec 必须列出 warmup 测试更新点和视觉/perf 验证方法。
 
 ### 影响范围
 
@@ -126,7 +204,7 @@ finalize 16 / gpu upload 4），滚动结束后的 2 帧恢复期跳到 48/192�
 
 - 滚动性能优化框架是已存在的复杂系统（见归档 spec
   `2026-06-08-页面性能优化框架设计.md`），改动预算曲线可能影响整体性能。
-- 必须先定位根因，不能盲目调参。
+- 不再停留在“先定位根因”；下一步是把连续预算方案写清楚，避免盲目调参。
 
 ### 验收标准
 
@@ -971,15 +1049,19 @@ BC 配置变量：`docs/dyl/BestClient/src/shared/config_variables_bestclient.h`
 - 规则：找 ` - ` 分隔符，取右侧；再剥掉难度 token（`Moderate`/`Novice`/`Brutal` 等英文难度词），保留地图名。
 - 识别方式：名字前缀含 `DDNet CHN`（或注册了对应 community ID，需确认）。
 
-> **样本已补充**（2026-06-20）：上述规律基于用户提供的实际服务器名。实现时需多采样几个确认模式稳定性，特别是难度词枚举（`普通`/`Moderate`/`Novice`/`Brutal`/`中阶` 等中英混杂）。
+> **当前权威口径（2026-06-21 codegraph 核验）**：QmClient 当前没有 BestClient 的
+> `GetServerbrowserDisplayName`；已有英文难度词识别（`menus_browser.cpp:86-93`、
+> `menus_qmclient.cpp:5847-5854`）和 Axiom community 识别
+>（`axiom_auto_login.cpp:66-80`）。Axiom / CHN DDR 不再以“等待更多样本”为前置阻塞；
+> 用户提供的两个样本已经足够启动规则 spec，但实现必须补测试样例和中文难度别名。
 
 #### 设计方向
 
 统一抽象为「服务器显示名简短化」框架，支持多个服务器族（KoG / Axiom / CHN DDR）：
 
 1. 移植 BC 的 `GetServerbrowserDisplayName` 作为 KoG 规则。
-2. 新增 Axiom 规则：匹配 community ID 含 "axiom" 的服务器，按其命名规律简短化（规则待样本确认）。
-3. 新增 CHN DDR 规则：匹配 CHN DDR 服（识别方式待定），按其命名规律简短化。
+2. 新增 Axiom 规则：优先匹配 community ID / community name 含 "axiom" 的服务器，按 `Axiom <城市> <难度> - <服务器ID> <地图名>` 简短化。
+3. 新增 CHN DDR 规则：匹配名字前缀 `DDNet CHN`，按 `DDNet CHN<数字> <城市> - <难度> <地图名>` 简短化。
 4. 配置项（放 Gores 模块设置页，用户要求）：
 - `qm_short_kog_server_name`（对应 BC，含 KoG gores）
 - `qm_short_axiom_server_name`（Axiom 国服）
@@ -995,7 +1077,7 @@ BC 配置变量：`docs/dyl/BestClient/src/shared/config_variables_bestclient.h`
 
 #### 风险
 - 低风险，纯显示名处理，不影响服务器通信或玩法。
-- Axiom / CHN DDR 的命名规律需用户提供样本才能设计准确匹配。
+- Axiom / CHN DDR 规则不能只靠字符串截断手写后不测；小 spec 必须列出用户样例、英文难度词和中文别名样例。
 - 不同族的识别方式不同（KoG 靠名字+GameType，Axiom 靠 community ID），框架要能容纳多种识别策略。
 ---
 
@@ -1074,7 +1156,7 @@ zoom、smoothing），**没有 cinematic camera**。
 
 #### 现状（NotifAndBC agent，关键澄清）
 
-**BC 的 3D Particles 和 QmClient 已有的背景 3D 粒子完全不同，可共存：**
+**BC 的 3D Particles 和 QmClient 已有的背景 3D 粒子实现不同，但本轮不再默认新增第二套组件：**
 
 | | BC `C3DParticles` | QmClient `CBackgroundParticles` |
 |---|---|---|
@@ -1086,28 +1168,30 @@ zoom、smoothing），**没有 cinematic camera**。
 
 BC 的 `C3DParticles` 头文件：`3d_particles.h`，`SParticle`（vec3 pos/vel/rot）+ `RenderParticles`。
 
-#### 设计方向
+#### 设计方向（当前权威口径）
 
-把 BC 的 `C3DParticles` 作为**新组件**移植到 QmClient（不替换现有背景粒子）：
-1. 复制 `3d_particles.cpp` / `.h` 到 `src/game/client/components/qmclient/`。
-2. 配置变量从 `bc_3d_particles*` 改名 `qm_weapon_3d_particles*`（区分背景粒子）。
-3. 注册新组件，在武器/钩子粒子效果处调用。
-4. 设置页新增配置区（区分于现有 3D 背景粒子）。
+QmClient 已有 `CBackgroundParticles` 和 `qm_3d_particles*` 配置，且类型比 BC 更丰富。
+因此 #20.4 不应直接复制 `C3DParticles` / 新增 `qm_weapon_3d_particles*`，避免重复组件和重复 UI。
+
+下一步应做**差异审计小 spec**：
+1. 对照 BC `C3DParticles` 的 focus/optimizer guard、淡入淡出、push/collide、glow 参数。
+2. 判断这些能力是否应补到 QmClient 现有 `CBackgroundParticles`。
+3. 只有用户明确要求“武器/钩子世界空间线框粒子”时，才单独讨论新组件。
 
 #### 影响范围
-- 新增 `src/game/client/components/qmclient/3d_particles.cpp` / `.h`
-- 组件注册（`gameclient.cpp`）
-- 配置变量
-- 设置页 UI
+- `src/game/client/components/tclient/background_particles.cpp` / `.h`
+- `src/engine/shared/config_variables_qmclient.h`
+- `src/game/client/components/qmclient/menus_qmclient.cpp`
+- BestClient 对照：`docs/dyl/BestClient/src/game/client/components/bestclient/3d_particles.cpp` / `.h`
 
 #### 风险
-- 中风险，新组件不破坏现有，但要与背景粒子明确区分避免混淆。
-- 透视投影数学要验证正确。
+- 重复新增新组件会增加配置、UI 和渲染路径维护成本。
+- 若后续确实新增世界空间线框粒子，透视投影数学要单独测试。
 
 #### 验收标准
-1. 武器/钩子粒子有线框 3D 效果 + 透视投影。
-2. 不影响现有背景 3D 粒子。
-3. 可独立开关。
+1. 不新增与 `Qm3DParticles` 语义重叠的配置。
+2. 若只补强现有背景粒子，已有 `Qm3DParticles` UI 和默认效果不回归。
+3. 若后续新建世界空间粒子组件，必须有独立小 spec 和性能/视觉验证。
 
 ---
 
@@ -1377,6 +1461,11 @@ if(ButtonResult == 1 && Friend.ServerInfo())
 
 **需求重述**（用户三轮澄清后定稿）：马甲分两种类型，UI 和数据流完全不同。类型 A 保持完整功能（不退化），客户端代码先行，服务端接口由远程仓库主（中心服务 `42.194.185.210` 维护者）实现。
 
+> **当前权威口径（2026-06-21 codegraph 核验）**：B6 必须拆成两个任务验收。
+> 类型 A 是“中心服务端契约 + 客户端预埋/降级”，服务端未就绪时不能宣称端到端完成；
+> 类型 B 是纯客户端私人标注，可独立推进。当前代码已有 qid 身份链，但没有
+> `alt_of` / `alt_name` 字段解析或上报。
+
 #### 识别体系（已存在，复用，无需新建）
 
 中心服务已有完整的稳定身份识别链：
@@ -1420,7 +1509,7 @@ if(ButtonResult == 1 && Friend.ServerInfo())
 - `GET /qm/alt/list?auth_token=...` → 查询某用户的马甲列表（主号侧只读展示用）
 - `/qm/users.json` 扩展：每个用户条目可选带 `alt_of`（主号 qid）和 `alt_name`
 
-> **明确标注：以上 4 个服务端改动由远程仓库主实现，不在本 spec 的客户端实现范围内。客户端代码先按此契约写好调用，服务端未就绪时功能静默不可用（注册按钮提示「服务暂不可用」），不报错、不影响其他功能。**
+> **明确标注：以上 4 个服务端改动由远程仓库主实现，不在本 spec 的客户端实现范围内。服务端未就绪时，客户端只验收降级路径（注册按钮提示「服务暂不可用」、不报错、不影响其他功能），不能验收“所有 QmClient 用户可见”和“改名稳定”等端到端能力。**
 
 **客户端实现范围（本开发者做）**：
 1. 「马甲管理」设置区 UI（`menus_qmclient.cpp`，极简两输入框）
@@ -1448,11 +1537,11 @@ if(ButtonResult == 1 && Friend.ServerInfo())
 **UI**：右键玩家名（复用好友右键弹窗模式 `menus_browser.cpp:2924`）添加「标注为 XXX 的马甲」。
 
 #### 验收标准
-1. **类型 A（服务端就绪后）**：马甲填主号名 + 马甲名 → 注册成功 → 所有 QmClient 用户在名字板/计分板看到「[主号名]的马甲」
-2. **类型 A（服务端未就绪）**：注册按钮提示「服务暂不可用」，不报错，不影响其他功能，UI 正常显示
-3. **类型 A 改名稳定性**：主号或马甲改名后，因绑定基于 qid 而非名字，关系不丢失
-4. **类型 B**：能给任意玩家打私人标签、仅自己可见、名字板/计分板显示
-5. 两类标注可共存（同一玩家可能既有公告马甲标注又有私人标注）
+1. **类型 A（客户端预埋，服务端未就绪）**：注册按钮提示「服务暂不可用」，不报错，不影响其他功能，UI 正常显示；HTTP 404/超时路径有明确降级。
+2. **类型 A（服务端契约就绪后）**：马甲填主号名 + 马甲名 → 注册成功 → 所有 QmClient 用户在名字板/计分板看到「[主号名]的马甲」。
+3. **类型 A 改名稳定性（服务端就绪后验收）**：主号或马甲改名后，因绑定基于 qid 而非名字，关系不丢失。
+4. **类型 B（客户端独立验收）**：能给任意玩家打私人标签、仅自己可见、名字板/计分板显示。
+5. 两类标注可共存（同一玩家可能既有公告马甲标注又有私人标注）。
 
 #### 影响范围
 - 客户端（本开发者）：`menus_qmclient.cpp`（马甲管理 UI）、`qmclient.cpp`（注册调用 + report 字段）、`qmclient_utils.cpp`（users.json 解析扩展）、`nameplates.cpp`/`scoreboard.cpp`（渲染）、`config_variables_qmclient.h`（配置）
@@ -1465,16 +1554,22 @@ if(ButtonResult == 1 && Friend.ServerInfo())
 - 私人标注用名字匹配，改名会失效（类型 A 用 qid 不受影响）
 - 任何人都能声明是某人的马甲（无主号审批）——用户明确接受此设计，简化优先于防冒认。如后续需要防冒认，再加服务端白名单
 
-### B7. 好友分类（大部分已实现，仅需增强 UI）
+### B7. 好友分类（后端已具备，入口隐蔽，需增强 UI）
 
-**现状**：**已完整实现！** `CFriends` 有分类增删改查全套（`friends.cpp:81-398`）：
-- 控制台命令：`friend_category_add`/`rename`/`remove`/`set_friend_category`
-- 浏览器页面有分类弹窗（`m_FriendsCategoryPopupContext`）、拖拽排序（`s_CategoryDragState`）
-- 分类数据结构 `m_aCategory[64]`（friends.h:14）
+**当前权威口径（2026-06-21 codegraph 核验）**：不能再写“已完整实现”。
+后端能力基本完整，但用户痛点是分类管理入口不可发现，添加好友时分类选择不够显眼。
+
+**现状**：
+- 后端分类命令已注册：`friend_category_add`、`friend_category_rename`、`friend_category_remove`、`set_friend_category`（`friends.cpp:145-148`）。
+- 后端增删改查已存在：`AddCategory` / `RenameCategory` / `RemoveCategory` / `SetFriendCategory`（`friends.cpp:282`、`:322`、`:355`、`:379`）。
+- 浏览器页面分类弹窗已存在：`PopupFriendsCategory`（`menus_browser.cpp:2924-3022`）。
+- 当前唯一显式管理入口是右键分类标题：`HeaderResult == 2`（`menus_browser.cpp:2329-2336`）。
+- 添加好友时已有分类下拉：`DoDropDown`（`menus_browser.cpp:2897-2901`），但不够显眼。
 
 **剩余缺口**（用户 TODO 中的「改善」）：
-1. 浏览器页面分类管理更方便（当前可能有但交互不够顺）
-2. 添加好友时分类选择更显眼
+1. 分类标题需要可见的管理入口（齿轮/三点按钮）或 tooltip 提示，不能只靠用户发现右键。
+2. 添加好友弹窗里的分类选择要更显眼，并考虑「+ 新建分类」入口。
+3. 空分类状态应给出创建/管理引导。
 
 **影响范围**：`menus_browser.cpp`（分类 UI）。相关现状页：`docs/dyl/QmClient_docs/规划/服务器收藏状态.html`、`收藏浏览状态.html`
 

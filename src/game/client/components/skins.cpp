@@ -457,12 +457,13 @@ CSkins::CSkinDirectoryScanJob::CSkinDirectoryScanJob(IStorage *pStorage) :
 {
 }
 
-int CSkins::CSkinDirectoryScanJob::ScanCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+int CSkins::CSkinDirectoryScanJob::ScanCallback(const CFsFileInfo *pInfo, int IsDir, int StorageType, void *pUser)
 {
 	auto *pSelf = static_cast<CSkinDirectoryScanJob *>(pUser);
 	if(IsDir)
 		return 0;
 
+	const char *pName = pInfo->m_pName;
 	const char *pSuffix = str_endswith(pName, ".png");
 	if(pSuffix == nullptr)
 		return 0;
@@ -472,13 +473,13 @@ int CSkins::CSkinDirectoryScanJob::ScanCallback(const char *pName, int IsDir, in
 	if(!CSkin::IsValidName(aSkinName))
 		return 0;
 
-	pSelf->m_Result.m_vEntries.emplace_back(aSkinName, StorageType);
+	pSelf->m_Result.m_vEntries.push_back({aSkinName, StorageType, pInfo->m_TimeModified});
 	return 0;
 }
 
 void CSkins::CSkinDirectoryScanJob::Run()
 {
-	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "skins", ScanCallback, this);
+	m_pStorage->ListDirectoryInfo(IStorage::TYPE_ALL, "skins", ScanCallback, this);
 }
 
 void CSkins::CSkinListPlanJob::Run()
@@ -741,6 +742,10 @@ bool CSkins::CSkinListEntry::operator<(const CSkins::CSkinListEntry &Other) cons
 	{
 		return false;
 	}
+	if(m_pSkinContainer->LastModified() != Other.m_pSkinContainer->LastModified())
+	{
+		return m_pSkinContainer->LastModified() > Other.m_pSkinContainer->LastModified();
+	}
 	const int NameCompare = str_comp(m_pSkinContainer->Name(), Other.m_pSkinContainer->Name());
 	if(NameCompare != 0)
 	{
@@ -840,6 +845,12 @@ int CSkins::SkinScan(const char *pName, int IsDir, int StorageType, void *pUser)
 
 	CSkinContainer SkinContainer(pSelf, aSkinName, CSkinContainer::EType::LOCAL, StorageType);
 	auto &&pSkinContainer = std::make_unique<CSkinContainer>(std::move(SkinContainer));
+	char aPath[IO_MAX_PATH_LENGTH];
+	str_format(aPath, sizeof(aPath), "skins/%s", pName);
+	time_t Created = 0;
+	time_t Modified = 0;
+	if(pSelf->Storage()->RetrieveTimes(aPath, StorageType, &Created, &Modified))
+		pSkinContainer->SetLastModified(Modified);
 	pSkinContainer->SetState(pSkinContainer->DetermineInitialState());
 	pSelf->m_Skins.insert({pSkinContainer->Name(), std::move(pSkinContainer)});
 	pUserReal->m_SkinLoadedCallback();
@@ -2605,11 +2616,16 @@ void CSkins::ProcessSkinDirectoryScanJob()
 	MergeBudget.m_MaxListEntries = 64;
 	while(m_SkinDirectoryMergeCursor < m_vPendingSkinDirectoryEntries.size() && SettingsResourceConsumeMergeEntry(MergeBudget, SettingsFrameBudgetOrNull(GameClient())))
 	{
-		const auto &[Name, StorageType] = m_vPendingSkinDirectoryEntries[m_SkinDirectoryMergeCursor++];
-		auto ExistingSkin = m_Skins.find(Name);
+		const auto &Entry = m_vPendingSkinDirectoryEntries[m_SkinDirectoryMergeCursor++];
+		auto ExistingSkin = m_Skins.find(Entry.m_Name);
 		if(ExistingSkin != m_Skins.end())
 		{
 			CSkinContainer *pSkinContainer = ExistingSkin->second.get();
+			if(pSkinContainer->LastModified() != Entry.m_LastModified)
+			{
+				pSkinContainer->SetLastModified(Entry.m_LastModified);
+				DirectoryScanDirty = true;
+			}
 			if(pSkinContainer->Type() == CSkinContainer::EType::DOWNLOAD)
 			{
 				const CSkinContainer::EState OldState = pSkinContainer->m_State;
@@ -2624,7 +2640,7 @@ void CSkins::ProcessSkinDirectoryScanJob()
 					pSkinContainer->m_pLoadJob = nullptr;
 				}
 				pSkinContainer->m_Type = CSkinContainer::EType::LOCAL;
-				pSkinContainer->m_StorageType = StorageType;
+				pSkinContainer->m_StorageType = Entry.m_StorageType;
 				if(OldState == CSkinContainer::EState::LOADED && pSkinContainer->m_pSkin)
 				{
 					pSkinContainer->m_pSkin->m_OriginalSkin.Unload(Graphics());
@@ -2645,8 +2661,9 @@ void CSkins::ProcessSkinDirectoryScanJob()
 			continue;
 		}
 
-		CSkinContainer SkinContainer(this, Name.c_str(), CSkinContainer::EType::LOCAL, StorageType);
+		CSkinContainer SkinContainer(this, Entry.m_Name.c_str(), CSkinContainer::EType::LOCAL, Entry.m_StorageType);
 		auto &&pSkinContainer = std::make_unique<CSkinContainer>(std::move(SkinContainer));
+		pSkinContainer->SetLastModified(Entry.m_LastModified);
 		pSkinContainer->SetState(pSkinContainer->DetermineInitialState());
 		m_Skins.insert({pSkinContainer->Name(), std::move(pSkinContainer)});
 		DirectoryScanDirty = true;

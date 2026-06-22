@@ -1540,6 +1540,9 @@ CP opacity
 Create a random skin
 == Создать случайный скин
 
+Create category
+== Create category
+
 Created
 == Создано
 
@@ -2154,6 +2157,9 @@ Emoticon
 
 Emoticon ID
 == ID эмоции
+
+Emoticon shadow
+== Emoticon shadow
 
 Emoticons
 == Эмотиконы
@@ -3645,6 +3651,9 @@ Makes you move 1 tile up
 
 Makes you super
 == Делает вас супером
+
+Manage categories
+== Manage categories
 
 Manual
 == Вручную
@@ -5323,6 +5332,9 @@ Rifle Laser Outline Color
 Right jump
 == Кольцо
 
+Right-click or use the gear to manage categories
+== Right-click or use the gear to manage categories
+
 Right-click to disable auto-translate
 == Правый клик для отключения автоперевода
 
@@ -5802,6 +5814,9 @@ Severe
 
 Shape
 == Форма
+
+Short server names
+== Short server names
 
 Shotgun
 == Дробовик
@@ -7375,8 +7390,8 @@ Unknown
 Unknown argument. Check '/rescuemode list'
 == Неизвестный аргумент. Проверьте '/rescuemode list'
 
-Unknown emote... Say /emote
-== Неизвестная эмоция... Скажите /emote
+Unknown emote. Use /emote to see available emotes.
+== Неизвестная эмоция. Используйте /emote, чтобы увидеть доступные эмоции.
 
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 == Неизвестный параметр. Допустимые значения: default, gametimer, broadcast, both, none
@@ -8187,6 +8202,26 @@ Fire
 [Direct touch input]
 Hook
 == Крюк
+
+[Friend auto follow]
+Follow this friend across servers
+== Follow this friend across servers
+
+[Friend auto follow]
+Following %s
+== Following %s
+
+[Friend auto follow]
+Following %s: switching in %.0fs
+== Following %s: switching in %.0fs
+
+[Friend auto follow]
+Stop
+== Stop
+
+[Friend auto follow]
+Stop following this friend
+== Stop following this friend
 
 [Graphics error]
 A render command failed. Try to update your GPU drivers.

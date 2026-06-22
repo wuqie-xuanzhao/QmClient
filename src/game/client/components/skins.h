@@ -164,6 +164,8 @@ public:
 		const char *Name() const { return m_aName; }
 		EType Type() const { return m_Type; }
 		int StorageType() const { return m_StorageType; }
+		time_t LastModified() const { return m_LastModified; }
+		void SetLastModified(time_t LastModified) { m_LastModified = LastModified; }
 		bool IsVanilla() const { return m_Vanilla; }
 		bool IsSpecial() const { return m_Special; }
 		bool IsAlwaysLoaded() const { return m_AlwaysLoaded; }
@@ -238,6 +240,7 @@ public:
 		char m_aName[MAX_SKIN_LENGTH];
 		EType m_Type;
 		int m_StorageType;
+		time_t m_LastModified = 0;
 		bool m_Vanilla;
 		bool m_Special;
 		bool m_AlwaysLoaded;
@@ -741,7 +744,13 @@ private:
 
 		struct SResult
 		{
-			std::vector<std::pair<std::string, int>> m_vEntries;
+			struct SEntry
+			{
+				std::string m_Name;
+				int m_StorageType = IStorage::TYPE_ALL;
+				time_t m_LastModified = 0;
+			};
+			std::vector<SEntry> m_vEntries;
 		};
 
 		SResult TakeResult() { return std::move(m_Result); }
@@ -750,7 +759,7 @@ private:
 		void Run() override;
 
 	private:
-		static int ScanCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+		static int ScanCallback(const CFsFileInfo *pInfo, int IsDir, int StorageType, void *pUser);
 
 		IStorage *m_pStorage;
 		SResult m_Result;
@@ -824,7 +833,7 @@ private:
 	int m_PendingSkinListUnfilteredCount = 0;
 	bool m_HasPendingSkinListMergePlan = false;
 	int m_SkinListPlanGeneration = 0;
-	std::vector<std::pair<std::string, int>> m_vPendingSkinDirectoryEntries;
+	std::vector<CSkinDirectoryScanJob::SResult::SEntry> m_vPendingSkinDirectoryEntries;
 	size_t m_SkinDirectoryMergeCursor = 0;
 	std::set<std::string> m_Favorites;
 	std::array<std::vector<CSkinQueueEntry>, NUM_DUMMIES> m_aSkinQueue;

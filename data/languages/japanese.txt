@@ -1540,6 +1540,9 @@ CP opacity
 Create a random skin
 == ランダムスキンを作成
 
+Create category
+== Create category
+
 Created
 == 作成日
 
@@ -2154,6 +2157,9 @@ Emoticon
 
 Emoticon ID
 == 絵文字ID
+
+Emoticon shadow
+== Emoticon shadow
 
 Emoticons
 == 絵文字
@@ -3645,6 +3651,9 @@ Makes you move 1 tile up
 
 Makes you super
 == あなたをスーパーにする
+
+Manage categories
+== Manage categories
 
 Manual
 == 手動
@@ -5323,6 +5332,9 @@ Rifle Laser Outline Color
 Right jump
 == 右ジャンプ
 
+Right-click or use the gear to manage categories
+== Right-click or use the gear to manage categories
+
 Right-click to disable auto-translate
 == 右クリックで自動翻訳を無効化
 
@@ -5802,6 +5814,9 @@ Severe
 
 Shape
 == 形状
+
+Short server names
+== Short server names
 
 Shotgun
 == ショットガン
@@ -7375,8 +7390,8 @@ Unknown
 Unknown argument. Check '/rescuemode list'
 == 不明な引数です。'/rescuemode list' を確認してください
 
-Unknown emote... Say /emote
-== 不明なエモートです... /emote と言ってください
+Unknown emote. Use /emote to see available emotes.
+== 不明なエモートです。使用可能なエモートを確認するには /emote を使ってください。
 
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 == 不明なパラメーターです。使用可能な値: default, gametimer, broadcast, both, none
@@ -8187,6 +8202,26 @@ Fire
 [Direct touch input]
 Hook
 == フック
+
+[Friend auto follow]
+Follow this friend across servers
+== Follow this friend across servers
+
+[Friend auto follow]
+Following %s
+== Following %s
+
+[Friend auto follow]
+Following %s: switching in %.0fs
+== Following %s: switching in %.0fs
+
+[Friend auto follow]
+Stop
+== Stop
+
+[Friend auto follow]
+Stop following this friend
+== Stop following this friend
 
 [Graphics error]
 A render command failed. Try to update your GPU drivers.

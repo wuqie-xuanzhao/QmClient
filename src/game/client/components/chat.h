@@ -376,6 +376,12 @@ public:
 		str_append(pBuf, "\"", BufSize);
 		return true;
 	}
+	static const char *MessageNamePrefixForClientId(int ClientId)
+	{
+		if(ClientId == CLIENT_MSG)
+			return "— ";
+		return "";
+	}
 	static QmHudNotifications::EServerMessageClass ResolveLineServerMessageClass(int ClientId, const char *pLine, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass = std::nullopt)
 	{
 		if(ClientId != SERVER_MSG)
