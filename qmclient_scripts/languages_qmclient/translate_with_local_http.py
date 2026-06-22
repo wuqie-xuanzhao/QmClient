@@ -620,6 +620,8 @@ def may_keep_source_text(source: str) -> bool:
 
 
 def may_keep_source_text_for_language(language: str, source: str) -> bool:
+    if language == "simplified_chinese" and contains_cjk(source):
+        return True
     return source in SAME_SOURCE_ALLOWED_BY_LANGUAGE.get(
         language, set()
     ) or may_keep_source_text(source)

@@ -491,27 +491,91 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	const std::string LanguageSource = ReadTextFile("data/languages/simplified_chinese.txt");
 
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransition, qm_skin_change_transition, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionEasing, qm_skin_change_transition_easing"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionIntensity, qm_skin_change_transition_intensity"), std::string::npos);
 	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId = \"qm_2_72_0_skin_transition_animation_toggle\""), std::string::npos);
 	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId,\n\t\t\t\t\t\t\"qm_2_62_8_weapon_animation\""), std::string::npos);
-	EXPECT_NE(MenusSource.find("return \"皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 锤中偷皮 chuizhong toupi\";"), std::string::npos);
+	EXPECT_NE(MenusSource.find("return \"皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 强度 qiangdu easing 缓动 huandong 锤中偷皮 chuizhong toupi\";"), std::string::npos);
 
 	const size_t Toggle = MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmSkinChangeTransition");
 	ASSERT_NE(Toggle, std::string::npos);
 	const size_t AdvancedIf = MenusSource.find("if(g_Config.m_QmSkinChangeTransition)", Toggle);
 	const size_t TypeLabel = MenusSource.find("Localize(\"Skin transition type\")", Toggle);
 	const size_t DurationLabel = MenusSource.find("Localize(\"Skin transition duration\")", Toggle);
+	const size_t EasingLabel = MenusSource.find("Localize(\"Skin transition easing\")", Toggle);
+	const size_t IntensityLabel = MenusSource.find("Localize(\"Skin transition intensity\")", Toggle);
 	ASSERT_NE(AdvancedIf, std::string::npos);
 	ASSERT_NE(TypeLabel, std::string::npos);
 	ASSERT_NE(DurationLabel, std::string::npos);
+	ASSERT_NE(EasingLabel, std::string::npos);
+	ASSERT_NE(IntensityLabel, std::string::npos);
 	EXPECT_LT(Toggle, AdvancedIf);
 	EXPECT_LT(AdvancedIf, TypeLabel);
 	EXPECT_LT(TypeLabel, DurationLabel);
+	EXPECT_LT(DurationLabel, EasingLabel);
+	EXPECT_LT(EasingLabel, IntensityLabel);
 
 	EXPECT_NE(GameClientSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)"), std::string::npos);
 	EXPECT_NE(GameClientSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_SkinTransitionStart.has_value()"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_StartTime.has_value()"), std::string::npos);
 	EXPECT_NE(LanguageSource.find("Skin transition animation\n== 皮肤切换动画"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, WeaponAnimationAdvancedControlsAreConfigurable)
+{
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string PlayersSource = ReadTextFile("src/game/client/components/players.cpp");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponSwitchAnimDurationMs, qm_weapon_switch_anim_duration_ms, 300"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponSwitchAnimDistance, qm_weapon_switch_anim_distance, 40"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponSwitchAnimRotation, qm_weapon_switch_anim_rotation, 360"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponSwitchAnimEasing, qm_weapon_switch_anim_easing"), std::string::npos);
+
+	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimDurationMs"), std::string::npos);
+	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimDistance"), std::string::npos);
+	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimRotation"), std::string::npos);
+	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimEasing"), std::string::npos);
+
+	const size_t Toggle = MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmWeaponSwitchAnim");
+	ASSERT_NE(Toggle, std::string::npos);
+	EXPECT_NE(MenusSource.find("Localize(\"Weapon switch duration\")", Toggle), std::string::npos);
+	EXPECT_NE(MenusSource.find("Localize(\"Weapon switch distance\")", Toggle), std::string::npos);
+	EXPECT_NE(MenusSource.find("Localize(\"Weapon switch rotation\")", Toggle), std::string::npos);
+	EXPECT_NE(MenusSource.find("Localize(\"Weapon switch easing\")", Toggle), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ProcessPriorityAndImeHaveVisibleSettings)
+{
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string ClientSource = ReadTextFile("src/engine/client/client.cpp");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmProcessHighPriority, qm_process_high_priority, 0, 0, 1"), std::string::npos);
+	EXPECT_NE(ClientSource.find("ApplyProcessPriorityConfig();"), std::string::npos);
+	EXPECT_NE(ClientSource.find("m_pConsole->Chain(\"qm_process_high_priority\", ConchainProcessHighPriority, this);"), std::string::npos);
+	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmProcessHighPriority"), std::string::npos);
+	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmImeAutoManage"), std::string::npos);
+	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmNewIme"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ConfigPageLocalizesVariableHelpText)
+{
+	const std::string ConfigHeader = ReadTextFile("src/engine/shared/config.h");
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config.cpp");
+	const std::string TClientMenusSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+
+	EXPECT_NE(ConfigHeader.find("const char *m_pHelpLocalizeKey;"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_INT, Flags, pHelp, Desc"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_COLOR, Flags, pHelp, Desc"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_STRING, Flags, pHelp, Desc"), std::string::npos);
+	EXPECT_NE(TClientMenusSource.find("BuildLocalizedConfigHelpText"), std::string::npos);
+	EXPECT_NE(TClientMenusSource.find("pVar->m_pHelpLocalizeKey ? pVar->m_pHelpLocalizeKey"), std::string::npos);
+	EXPECT_NE(TClientMenusSource.find("Localize(pHelpKey)"), std::string::npos);
+	EXPECT_NE(TClientMenusSource.find("s_CachedConfigLanguageHash"), std::string::npos);
+	EXPECT_NE(TClientMenusSource.find("str_quickhash(g_Config.m_ClLanguagefile)"), std::string::npos);
+	EXPECT_EQ(TClientMenusSource.find("Ui()->DoLabel(&Help, pVar->m_pHelp ? pVar->m_pHelp : \"\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
@@ -743,6 +807,16 @@ TEST(QmNewUiMenuBranches, FriendCategoryHeaderActionExcludesManageButton)
 	EXPECT_FLOAT_EQ(ManageButton.w, Header.h - 4.0f);
 	EXPECT_FLOAT_EQ(ManageButton.h, Header.h - 4.0f);
 	EXPECT_LE(HeaderAction.x + HeaderAction.w, ManageButton.x);
+}
+
+TEST(QmNewUiMenuBranches, FriendCategoryEditPopupHasRoomForInputAndActions)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	constexpr float RequiredHeight = 5.0f * 2.0f + 12.0f + 3.0f + 18.0f + 6.0f + 20.0f;
+
+	EXPECT_FLOAT_EQ(CMenus::FriendsCategoryEditPopupHeight(), RequiredHeight);
+	EXPECT_NE(Source.find("CMenus::FriendsCategoryEditPopupHeight()"), std::string::npos);
+	EXPECT_EQ(Source.find("250.0f, 62.0f"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, FriendAutoFollowDelaysAndStopsAfterTwoJumps)

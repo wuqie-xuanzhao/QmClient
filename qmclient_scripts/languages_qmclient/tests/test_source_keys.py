@@ -281,6 +281,22 @@ class SourceKeysTest(unittest.TestCase):
         self.assertIn("Visual: Nameplates", keys)
         self.assertIn("Tee status bar", keys)
 
+    def test_extracts_qmclient_config_descriptions(self):
+        path = (
+            source_keys.PROJECT_ROOT
+            / "src"
+            / "engine"
+            / "shared"
+            / "config_variables_qmclient.h"
+        )
+        content = source_keys.strip_cpp_comments(source_keys.read_source_text(path))
+        records = source_keys.extract_known_indirect_records(path, content)
+        keys = {record.key for record in records}
+
+        self.assertIn("计分板查分", keys)
+        self.assertIn("通知栏接管服务器系统提示（入场版本信息除外）", keys)
+        self.assertNotIn("qm_scoreboard_points", keys)
+
     def test_extracts_asset_editor_blend_modes_with_context(self):
         path = (
             source_keys.PROJECT_ROOT
@@ -438,6 +454,22 @@ class SourceKeysTest(unittest.TestCase):
 
         violation_texts = {record.text for record in report.violation}
         self.assertIn("中文提示", violation_texts)
+
+    def test_audit_accepts_qmclient_config_descriptions_as_indirect_i18n(self):
+        report = source_keys.build_string_audit_report(
+            paths=(
+                source_keys.PROJECT_ROOT
+                / "src"
+                / "engine"
+                / "shared"
+                / "config_variables_qmclient.h",
+            )
+        )
+
+        must_i18n_texts = {record.text for record in report.must_i18n}
+        violation_texts = {record.text for record in report.violation}
+        self.assertIn("计分板查分", must_i18n_texts)
+        self.assertNotIn("计分板查分", violation_texts)
 
     def test_audit_report_round_trips_through_json_file(self):
         report = source_keys.StringAuditReport(

@@ -154,6 +154,46 @@ namespace
 		pGameClient->m_Particles.Add(CParticles::GROUP_EXPLOSIONS, &Particle);
 	}
 
+	bool IsDeathTileAt(CCollision *pCollision, const vec2 &Pos)
+	{
+		if(!pCollision)
+			return false;
+
+		const int X = round_to_int(Pos.x);
+		const int Y = round_to_int(Pos.y);
+		return pCollision->GetCollisionAt(X, Y) == TILE_DEATH ||
+		       pCollision->GetFrontCollisionAt(X, Y) == TILE_DEATH;
+	}
+
+	bool IsCharacterTouchingDeathTile(CCollision *pCollision, const vec2 &Pos, float ProximityRadius)
+	{
+		const float Offset = ProximityRadius / 3.0f;
+		return IsDeathTileAt(pCollision, Pos) ||
+		       IsDeathTileAt(pCollision, Pos + vec2(Offset, -Offset)) ||
+		       IsDeathTileAt(pCollision, Pos + vec2(Offset, Offset)) ||
+		       IsDeathTileAt(pCollision, Pos + vec2(-Offset, -Offset)) ||
+		       IsDeathTileAt(pCollision, Pos + vec2(-Offset, Offset));
+	}
+
+	bool PracticePathContainsTeleport(CCollision *pCollision, const vec2 &From, const vec2 &To)
+	{
+		if(!pCollision)
+			return false;
+
+		const std::vector<int> vIndices = pCollision->GetMapIndices(From, To);
+		for(int Index : vIndices)
+		{
+			if(pCollision->IsTeleport(Index) > 0 ||
+				pCollision->IsEvilTeleport(Index) > 0 ||
+				pCollision->IsCheckTeleport(Index) ||
+				pCollision->IsCheckEvilTeleport(Index))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void CollectTrackedProjectiles(CGameWorld &World, int LocalClientId, int DummyClientId, std::vector<STrackedProjectile> &vOut)
 	{
 		vOut.clear();
@@ -1244,6 +1284,34 @@ void CFastPractice::MaybePlayHammerHitEffect(CCharacter *pChar)
 	}
 }
 
+void CFastPractice::TrackPracticeTileFeedback(int ClientId, CCharacter *pChar, const vec2 &BeforePos)
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !pChar)
+		return;
+
+	const vec2 BeforeTickPos = BeforePos;
+	const vec2 AfterPos = pChar->Core()->m_Pos;
+	const bool PathContainsTeleport = PracticePathContainsTeleport(Collision(), BeforePos, AfterPos);
+	const bool WasInDeath = IsCharacterTouchingDeathTile(Collision(), BeforeTickPos, pChar->GetProximityRadius());
+	const bool IsInDeath = IsCharacterTouchingDeathTile(Collision(), AfterPos, pChar->GetProximityRadius());
+	const SPracticeTileFeedbackDecision FeedbackDecision = EvaluatePracticeTileFeedback(PathContainsTeleport, WasInDeath, IsInDeath, distance(BeforePos, AfterPos));
+	if(FeedbackDecision.m_RecordTeleport)
+	{
+		StoreLastDeathPosition(ClientId, BeforePos);
+		StoreLastTeleport(ClientId, AfterPos);
+	}
+
+	if(!FeedbackDecision.m_RecordDeath)
+		return;
+
+	StoreLastDeathPosition(ClientId, AfterPos);
+	if(FeedbackDecision.m_PlayDeathFeedback && !GameClient()->m_SuppressEvents)
+		GameClient()->m_Effects.PlayerDeath(AfterPos, ClientId, 1.0f);
+	if(FeedbackDecision.m_PlayDeathFeedback && g_Config.m_SndGame && !GameClient()->m_SuppressEvents)
+		if(ShouldPlayFocusDeathOrSpawnSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteDeathSounds != 0, g_Config.m_SndGame))
+			GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_DIE, 1.0f, AfterPos);
+}
+
 bool CFastPractice::AdvanceBaseWorldToTick(int TargetTick, int LocalClientId, int DummyClientId)
 {
 	if(!m_PracticeWorldInitialized)
@@ -1321,6 +1389,9 @@ bool CFastPractice::AdvanceBaseWorldToTick(int TargetTick, int LocalClientId, in
 		if(pDummyInputData && !DummyFirst)
 			pDummyChar->OnDirectInput(pDummyInputData);
 
+		const vec2 LocalPosBeforeTick = pLocalChar->Core()->m_Pos;
+		const vec2 DummyPosBeforeTick = pDummyChar ? pDummyChar->Core()->m_Pos : vec2(0.0f, 0.0f);
+
 		GameClient()->ApplyPreInputs(Tick, true, m_PracticeBaseWorld);
 
 		m_PracticeBaseWorld.m_GameTick = Tick;
@@ -1332,6 +1403,10 @@ bool CFastPractice::AdvanceBaseWorldToTick(int TargetTick, int LocalClientId, in
 		GameClient()->ApplyPreInputs(Tick, false, m_PracticeBaseWorld);
 
 		m_PracticeBaseWorld.Tick();
+
+		TrackPracticeTileFeedback(LocalClientId, pLocalChar, LocalPosBeforeTick);
+		if(pDummyChar)
+			TrackPracticeTileFeedback(DummyClientId, pDummyChar, DummyPosBeforeTick);
 
 		TrackSafeRescuePosition(LocalClientId, pLocalChar);
 		if(pDummyChar)

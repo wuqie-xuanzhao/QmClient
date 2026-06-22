@@ -12,6 +12,10 @@
 
 #include <gtest/gtest.h>
 
+#include <fstream>
+#include <sstream>
+#include <string>
+
 void CComponentInterfaces::OnInterfacesInit(CGameClient *pClient)
 {
 }
@@ -66,6 +70,15 @@ namespace
 				return true;
 		}
 		return false;
+	}
+
+	std::string ReadHudNotificationTestFile(const char *pPath)
+	{
+		std::ifstream File(std::string(DDNET_TEST_SOURCE_DIR) + "/" + pPath, std::ios::binary);
+		EXPECT_TRUE(File.good()) << pPath;
+		std::ostringstream Buffer;
+		Buffer << File.rdbuf();
+		return Buffer.str();
 	}
 } // namespace
 
@@ -695,6 +708,19 @@ TEST(QmHudNotificationRules, AnalyzesStaticStatusMessage)
 	EXPECT_FALSE(Analysis.m_UseFallbackLocalization);
 }
 
+TEST(QmHudNotificationRules, SimplifiedChineseTranslationsUsePlainPromptText)
+{
+	const std::string Translations = ReadHudNotificationTestFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
+
+	EXPECT_NE(Translations.find("key = \"Scoreboard point check\"\n[message.translations]\n"), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"计分板查分\""), std::string::npos);
+	EXPECT_NE(Translations.find("key = \"Team can't be saved while a dragger is active\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"拖拽器正在作用，暂时不能保存队伍\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"此服务器关闭了队伍前 5 查询\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"已允许锤击其他玩家\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"已禁止锤击其他玩家\""), std::string::npos);
+}
+
 TEST(QmHudNotificationRules, AnalyzesStaticVoteModerationMessage)
 {
 	const auto Analysis = QmHudNotifications::AnalyzeServerMessage("You are running a vote, please try again after the vote is done!", QmHudNotifications::ESoloPrompt::None);
@@ -870,6 +896,19 @@ TEST(QmHudNotifications, HandleServerChatUsesFallbackNotificationForUnknownMessa
 	EXPECT_TRUE(Analysis.m_UseFallbackLocalization);
 	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
 	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "regular server message");
+}
+
+TEST(QmHudNotifications, ConsecutiveIdenticalSystemNotificationsCollapseIntoRepeatCount)
+{
+	CTestHudNotifications Notifications;
+	QmHudNotifications::SServerMessageAnalysis Analysis;
+
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
+
+	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
+	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "Team save already in progress x3");
 }
 
 TEST(QmHudNotifications, HandleServerChatRespectsDisabledSystemRoute)

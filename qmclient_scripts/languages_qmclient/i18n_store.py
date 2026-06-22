@@ -56,6 +56,8 @@ def module_name_for_source(source: Path | None) -> str:
         return "misc"
 
     normalized = source.as_posix()
+    if normalized.endswith("src/engine/shared/config_variables_qmclient.h"):
+        return "qmclient"
     if "/menus_browser." in normalized:
         return "server_browser"
     if "/menus_demo." in normalized:
@@ -168,6 +170,12 @@ def missing_translations_for(
     language: str,
 ) -> list[tuple[str, str]]:
     flattened = language_map_for(store, language)
+    if language == "simplified_chinese":
+        return [
+            identity
+            for identity in identities
+            if not flattened.get(identity, "") and not source_keys.has_cjk(identity[0])
+        ]
     return [identity for identity in identities if not flattened.get(identity, "")]
 
 

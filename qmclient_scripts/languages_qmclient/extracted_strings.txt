@@ -26,6 +26,7 @@
 %i minutes left
 %i second left
 %i seconds left
+%s (/%s %s)
 %s and %s have swapped
 %s canceled the swap with %s
 %s canceled the swap with you
@@ -73,6 +74,7 @@
 1 new mention
 1 star
 2 stars
+2 秒内连续钩中或锤中玩家时显示连击提示
 3 stars
 3D Background
 4 stars
@@ -257,6 +259,7 @@ Auto gain control for mic (AGC, experimental)
 Auto greet friends entering map
 Auto hot-reload after external saves
 Auto login Axiom server
+Auto manage IME while typing
 Auto map vote
 Auto refresh server list
 Auto reject vote
@@ -290,6 +293,8 @@ Axiom auto login failed, retrying
 Axiom auto login succeeded
 Axiom dummy password
 Axiom main account password
+Axiom 主号自动登录密码
+Axiom 分身自动登录密码
 Axis
 Background
 Background color
@@ -481,6 +486,7 @@ Connection upstream
 Console
 Console color
 Continue anyway?
+Continue whispering to the last whisper target
 Contributors
 Control dummy
 Controller
@@ -511,6 +517,7 @@ Could not save touch controls to file. See local console for details.
 Count players only
 Countries
 CP opacity
+CP点边界的覆盖实体 alpha (0-100)
 Create a random skin
 Create category
 Created
@@ -576,8 +583,12 @@ Deep freeze color
 Deep freeze opacity
 Deep unfreeze color
 Deep unfreeze opacity
+Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 DeepSeek
+DeepSeek API Key
 DeepSeek API key
+DeepSeek 模型名称
+DeepSeek 端点（留空使用默认）
 Default
 default
 Default input open failed
@@ -700,6 +711,8 @@ Dynamic FOV intensity
 Dynamic FOV smoothness
 Dynamic Island
 Each tab has a clear purpose
+Ease in out quad
+Ease out cubic
 Echo follows the original chat color
 Echo text color when not inheriting chat color
 Echo the text
@@ -714,6 +727,7 @@ Edit note
 Edit skin texture
 Edit touch controls
 Editor
+Elastic back
 Elevated
 Emotes are disabled.
 Emoticon
@@ -880,6 +894,7 @@ Freeze Laser Inner Color
 Freeze Laser Outline Color
 Freeze opacity
 Freeze stars
+Freeze碰撞边框颜色
 Friend
 Friend color in friends list
 Friend heart
@@ -942,6 +957,9 @@ Gores Actor
 Gores auto weapon switch
 Gores Mode
 Gores mode key
+Gores 模式下启用快速输入
+Gores 模式下对其他玩家也启用快速输入
+Gores 模式下隐藏辅助线
 Grabs
 Graphics
 Graphics card
@@ -988,6 +1006,7 @@ Hide UI for focused gameplay
 Hide weapon muzzle flashes
 Hide without media state
 High Detail
+High process priority
 High to low
 Highlight Color
 Highlighted message
@@ -1013,6 +1032,8 @@ https://wiki.ddnet.org/wiki/Touch_controls
 HUD
 HUD editor preview
 HUD rainbow colors
+HUD 灵动岛显示队伍
+HUD 编辑器布局
 Hue
 i = Receive rate
 I am a robot
@@ -1065,7 +1086,9 @@ Invalid spectator id used
 Invalid translation backend
 Invalid X coordinate.
 Invalid Y coordinate.
+Invite %s to the locked team
 Invite a person to a locked team
+Invite a player to the locked team
 Invites are disabled
 Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
@@ -1081,6 +1104,7 @@ Join blue
 Join game
 Join QQ group
 Join red
+Join team %s
 Join the team of the specified player
 Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
@@ -1141,7 +1165,10 @@ Lenny:
 Lets you join team i (shows your team if left blank)
 Lht.
 LibreTranslate
+LibreTranslate API Key
+LibreTranslate 端点
 Line width
+Linear
 Lines
 Lines %d - %d (%s)
 List all commands that are available in practice mode
@@ -1162,8 +1189,12 @@ Literal
 Live director
 LLM API
 LLM provider
+LLM Provider (0=ZhipuAI, 1=DeepSeek, 2=OpenAI, 3=Custom)
+LLM 翻译并发数（0=自动）
+LLM 翻译默认并发数（智能调整）
 Load
 Load drawings from a given csv file (defaults to map name)
+Load save %s
 Load with code r. /load to check your existing saves
 Loaded %d items
 Loaded %d items (discarded %d items)
@@ -1196,6 +1227,7 @@ Local Time
 Local-only
 Lock delay
 Lock team
+Lock the team so other players cannot join directly
 Locked
 Log the network
 Logout of econ
@@ -1244,6 +1276,7 @@ Max demos
 Max Screenshots
 Max size
 Max visible notifications
+maximum
 Maximum rows
 may cause delay
 Memory
@@ -1262,6 +1295,7 @@ Milliseconds
 Min size
 Minimize module
 Minimize the client
+minimum
 Minimum match chars
 Minimum time
 Minutes
@@ -1442,7 +1476,10 @@ Open the folder containing screenshots
 Open the saves file
 Open the settings file
 OpenAI
+OpenAI API Key
 OpenAI API key
+OpenAI 模型名称
+OpenAI 端点（留空使用默认）
 Opened
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 Optimistic prediction along stable direction
@@ -1584,6 +1621,7 @@ Profiles file
 Progress bar color
 Progress bar height
 Progress bar width
+PTT 释放延迟（毫秒）
 Publicly messages everyone your current time in this current running race
 Pulse
 Pulse amplitude
@@ -1601,6 +1639,8 @@ Puts you out of live freeze
 Puts you out of solo part
 Pyramid
 q = Connection quality
+Q 弹 Tee 形变强度
+Q 弹 Tee 形变持续时间
 Qm
 qm_profile_queue: index must be between 1 and %d
 QmClient
@@ -1609,8 +1649,18 @@ QmClient Community
 QmClient online distribution
 QmClient overview
 QmClient Settings
+QmUi 动效强度：0=关闭 1=降低 2=完整
 QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
+Query information for map %s
+Query information for the current map
+Query points for %s
+Query rank for %s
+Query server setting: %s
+Query team rank for %s
+Query your own points
+Query your own rank
+Query your own team rank
 Queue is empty
 Quick action menu for players
 Quickly locate feature modules
@@ -1737,6 +1787,7 @@ Replacement chars
 Replay
 Replay feature is disabled!
 Reply
+Reply to the last whisper target: %s
 Reply with dummy
 Report
 Report request canceled
@@ -1745,12 +1796,15 @@ Report request failed with HTTP status: %d
 Report request is already in progress
 Report scan request submitted
 Reports are not available on Axiom servers
+Request a position swap
+Request to swap positions with %s
 Request to swap your tee with another team member
 Requesting to join the game
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 Rescue mode switched to %s
 Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
 Resend Loss
 Resend loss
 Resend signs detected, connection quality is suspicious
@@ -1816,6 +1870,8 @@ Save power by lowering refresh rate (higher input latency)
 Save skin
 Save team with code r.
 Save the best demo of each race
+Save the current team
+Save the team as %s
 Save unsent chat draft
 Save-function is disabled on this server
 Save/Load Clan
@@ -1883,6 +1939,7 @@ Send /spec as inactive tee
 Send /team as inactive tee
 Send a moderator alert message to player
 Send a server alert message to all players
+Send a whisper: /w player message
 Send emoticon in water
 Send probability
 Send Rate
@@ -1963,6 +2020,7 @@ Show client IDs in name plates
 Show client IDs on a separate line
 Show collision and weapon interaction
 Show colors in spectator selection
+Show command help
 Show compact vote HUD
 Show Coordinates
 Show coordinates above players
@@ -1977,6 +2035,7 @@ Show dummy actions
 Show dummy control status
 Show dummy sync status
 Show entities
+Show existing saves
 Show finish messages
 Show FPS
 Show freeze bars
@@ -1987,6 +2046,7 @@ Show grenade and laser trajectory preview
 Show Grid
 Show hammer status
 Show health, shields and ammo
+Show help for /%s
 Show hitbox mode
 Show Hook Collision
 Show hook strength icon indicator
@@ -2053,6 +2113,7 @@ Show the number of tees still alive
 Show the pet
 Show the screen center line
 Show the server rules
+Show the server settings list
 Show tiles layers from BG map
 Show toast
 Show unknown server messages
@@ -2064,6 +2125,7 @@ Show weapon trajectory guide
 Show Workshop Assets
 Show X
 Show Y
+Show your current team
 Showing players from other teams is disabled
 Showing the checkpoint times for '%s' with a race time of %s
 Showing the checkpoint times is not allowed on this server.
@@ -2103,6 +2165,8 @@ Skin queue
 Skin transition
 Skin transition animation
 Skin transition duration
+Skin transition easing
+Skin transition intensity
 Skin transition type
 Skin: %s
 Skins directory
@@ -2286,6 +2350,7 @@ Teleport yourself to the specified coordinates. A tilde (~) can be used to denot
 Teleports player i (or you) to player i (or you to where you look at)
 Teleports you to checkpoint teleporter i
 Teleports you to teleporter i
+Teletile 的覆盖实体 alpha (0-100)
 Temporarily set a config value while pressed
 Temporary free camera
 Tencent Cloud
@@ -2430,6 +2495,7 @@ UI controller sens.
 UI mouse sens.
 UI opacity
 UI scale
+UI大小百分比 (UI scale percentage)
 Unable to delete %d selected items. The first failing item was '%s'.
 Unable to delete skin
 Unable to delete the demo '%s'
@@ -2466,6 +2532,7 @@ Unknown emote. Use /emote to see available emotes.
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 Unlock a team
+Unlock the team
 Unmute
 Unmute emoticons
 Unmute player with client ID
@@ -2486,6 +2553,7 @@ Update or add a specific war group
 Updating feature list...
 Uploading map data to GPU
 Usage: %s %s
+Usage: /%s %s
 Use 12 hour clock
 Use colored skins for frozen tees
 Use current map as background
@@ -2513,6 +2581,9 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 v = Velocity
 V-Sync
+VAD 允许名单（逗号分隔）
+VAD 释放延迟（毫秒）
+VAD 阈值（百分比）
 Vanilla skins only
 Velocity
 Version
@@ -2560,6 +2631,10 @@ Weapon animation
 Weapon interaction range
 Weapon range color
 Weapon switch animation
+Weapon switch distance
+Weapon switch duration
+Weapon switch easing
+Weapon switch rotation
 Weapon Trajectory
 Weapon trajectory
 Weapons
@@ -2581,6 +2656,8 @@ Which message to display on zone enter; use 0 for normal area
 Which message to display on zone leave; use 0 for normal area
 Whisper
 Whisper something to someone (private message)
+Whisper to %s
+Whisper to %s: %s
 Who stuffed OBS in here
 Why are you slowmo replaying to read this?
 Width
@@ -2705,6 +2782,383 @@ Zoom out
 ⚠️ LibreTranslate API Key not set
 ⚠️ LLM API Key not configured
 ⚠️ Tencent Cloud API not configured
+举报服务 App ID
+举报服务地址
+举报服务签名密钥
+交换选项颜色
+仅在另一只 tee 离开当前视角时显示分身迷你视图
+使用通知栏分类过滤
+允许 FTAPI 自动翻译（可能导致过载）
+关键词回复使用Dummy
+关键词回复规则（每行: [rename] [regex] 关键词=>回复）
+关闭聊天时保留未发送内容
+兼容其他服务器的类似单人区域提示
+出站翻译目标语言代码
+分身皮肤队列切换间隔（0.1 秒）
+分身皮肤队列当前位置
+分身皮肤队列最大长度
+分身迷你视图大小（百分比）
+分身迷你视图缩放（百分比）
+切换武器时播放滑入旋转动画
+加入可锁定队伍后自动锁定
+动态视野平滑度（0=瞬时，100=最平滑）
+动态视野强度（0-200）
+压缩器攻击时间（毫秒）
+压缩器比率（x10）
+压缩器补偿增益（百分比）
+压缩器释放时间（毫秒）
+压缩器阈值（百分比）
+反转相机漂移方向
+可见性过滤模式
+同组全图收听
+名单过滤模式
+名字板元素允许 X 轴自由移动
+名字板元素允许 Y 轴自由移动
+名字板元素允许在框内自由移动
+名字板坐标行 X 偏移
+名字板坐标行 Y 偏移
+名字板强弱行 X 偏移
+名字板强弱行 Y 偏移
+名字板战队行 X 偏移
+名字板战队行 Y 偏移
+名字板按键行 X 偏移
+名字板按键行 Y 偏移
+名字板昵称行 X 偏移
+名字板昵称行 Y 偏移
+名字牌X对齐提示严格模式
+名字牌X对齐提示持续判定窗口（毫秒）
+名字牌X对齐提示高亮颜色
+名字牌显示与本地玩家X对齐的提示
+名字牌显示他人坐标
+名字牌显示坐标X
+名字牌显示坐标Y
+名字牌显示自己坐标
+启动和菜单空闲时预热设置页
+启用 Gores 锤枪自动切换
+启用 LLM 思考模式（可能增加响应时间）
+启用 Q 弹 Tee 形变
+启用 QmClient 风格背景 3D 粒子
+启用 UI 运行时 v2 调试日志
+启用主线程与渲染阶段性能调试日志
+启用关键词回复
+启用动态视野，移动越快视野越宽
+启用增强激光特效（辉光+脉冲动画）
+启用复读功能
+启用屏蔽词列表
+启用新版 IME 候选栏
+启用新版设置页面 UI
+启用玩家统计面板
+启用皮肤切换动画
+启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
+启用禅模式（Zen Mode）
+启用系统媒体传输控制集成
+启用系统媒体歌词
+启用背景 3D 粒子拖尾
+启用背景 3D 粒子脉冲缩放
+启用背景 3D 粒子辉光
+启用背景 3D 粒子闪烁
+启用自己名字的彩虹色渲染
+启用语音滤波（高通/压缩/限幅）
+启用语音激活（VAD）
+启用语音聊天
+启用饼菜单
+噪声抑制强度（百分比）
+噪声抑制模式（0=关闭 1=简单 2=RNNoise）
+在 Gores 游戏模式中自动启用 Gores 自动切换
+在 HUD 上显示系统媒体信息
+在 Windows 上切换客户端进程的普通/高优先级
+在服务器浏览器中显示简短服务器名
+在玩家头顶显示聊天气泡
+在表情后绘制阴影
+在记分牌中显示默认国旗
+地图浏览器透明度
+地图浏览器颜色
+地图进度条垂直位置（顶边，占屏幕高度百分比）
+地图进度条宽度（占屏幕宽度百分比）
+地图进度条样式（0=底部横条，1=HUD 内嵌）
+地图进度条水平位置（中心点，占屏幕宽度百分比）
+地图进度条颜色
+地图进度条高度
+复制皮肤选项颜色
+大字显示好友进服
+好友上线提醒
+好友提醒刷新间隔(秒)
+好友提醒自动刷新服务器列表
+好友消息文字渐变颜色
+好友进图自动打招呼
+好友进图自动打招呼文本
+好友进服大字提示文本（使用%s表示好友名）
+好友选项颜色
+客户端消息文字渐变颜色
+将 Q 弹 Tee 形变应用到其他玩家
+将性能调试日志写入专用文件
+屏蔽词列表（用,分隔）
+屏蔽词替换字符
+展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
+已读的设置界面新功能标识
+开关图块的覆盖实体 alpha (0-100)
+忽略语音距离衰减
+性能调试日志阈值（毫秒）
+拿到额外武器时停用 Gores 自动切换
+按名字单独音量（name=percent）
+按屏蔽词长度多字符替换
+接收 VAD 讲话者
+接收旁观/非活跃玩家语音
+控制台显示被屏蔽词
+提及选项颜色
+旁观时按镜头中心收听
+无系统媒体状态时隐藏歌词
+时间耗尽后自动禁用速通计时器
+显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户
+显示分身迷你视图窗口
+显示地图进度条（内测中）
+显示地图进度调试点路线
+显示歌词当前行指示器
+显示版本过旧提示
+显示碰撞体积边框
+显示语音连接状态
+显示语音高级选项
+显示输入覆盖
+显示通知栏高级设置
+普通消息文字渐变颜色
+智谱AI API Key
+智谱AI 模型名称
+智谱AI 端点（留空使用默认）
+替换方式 0=Regex 1=Full 2=Both
+本体和分身都被冻结时，自动切换到先解冻的那个
+本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示
+本地目标语言识别占比阈值
+本地目标语言识别最小字符数
+本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）
+栖梦侧栏模块使用频率
+栖梦侧栏模块折叠状态
+栖梦侧栏模块排序
+根据位置小数部分显示跳跃提示
+根据文本输入焦点自动启用或关闭 IME
+歌词下一行颜色
+歌词吸附灵动岛阈值
+歌词当前行颜色
+歌词指示器颜色
+歌词描边透明度
+歌词描边颜色
+歌词淡入淡出时间
+歌词背景透明度
+歌词背景颜色
+歌词超长时跑马灯
+歌词跑马灯速度
+歌词首字放大
+歌词首字缩放百分比
+歌词首字颜色
+武器切换动画持续时间（毫秒）
+武器切换动画旋转角度
+武器切换动画滑入距离
+武器切换动画缓动模式
+武器切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+武器弹道辅助线宽度
+武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）
+武器弹道辅助线透明度
+武器弹道辅助线颜色
+死亡后显示记分牌
+深度冻结图块的叠加实体 alpha (0-100)
+深度解冻图块的叠加实体 alpha (0-100)
+激光半透明度 (0=完全透明, 100=不透明)
+激光圆角端点 (0=方角, 1=圆角)
+激光大小/粗细 (百分比, 100=默认)
+激光辉光强度 (0-100)
+灵动岛使用原版样式
+灵动岛背景透明度
+灵动岛背景颜色
+玩家推动背景 3D 粒子的半径
+玩家推动背景 3D 粒子的强度
+玩家检测最大距离
+画面纵横比预设（0=关闭，1=5:4，2=4:3，3=3:2，4=16:9，5=21:9，6=自定义）
+界面颜色
+皮肤切换动画强度百分比
+皮肤切换动画持续时间（毫秒，0=无动画）
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
+皮肤切换动画缓动模式
+皮肤队列切换间隔（0.1 秒）
+皮肤队列当前位置
+皮肤队列最大长度
+相机漂移平滑度（0=瞬时，100=最平滑）
+相机漂移强度（0-200）
+碰撞体积线条透明度
+碰撞箱模式Freeze边界颜色
+碰撞箱模式Tee碰撞体颜色
+碰撞箱模式全局透明度
+碰撞箱模式总开关 (Hitbox mode)
+碰撞箱模式显示Tee碰撞体
+碰撞箱模式显示地图危险边界
+碰撞箱模式显示拾取物范围
+碰撞箱模式显示武器交互
+碰撞箱模式武器交互颜色
+碰撞箱模式玩家范围: 0=本地 1=本地+分身 2=所有玩家
+禅模式下隐藏 Echo 消息
+禅模式下隐藏 HUD
+禅模式下隐藏入场、版本和规则等基础系统信息
+禅模式下隐藏冻结特效
+禅模式下隐藏击杀和完成消息
+禅模式下隐藏地图进度条
+禅模式下隐藏方向
+禅模式下隐藏服务器提示通知（包括通知栏）
+禅模式下隐藏武器火焰特效
+禅模式下隐藏死亡/重生特效
+禅模式下隐藏炮击特效
+禅模式下隐藏玩家名字
+禅模式下隐藏玩家名字板
+禅模式下隐藏玩家消息
+禅模式下隐藏计分板
+禅模式下隐藏跳跃特效
+禅模式下隐藏辅助线
+禅模式下隐藏锤击特效
+禅模式下静音死亡/重生音效
+禅模式下静音跳跃音效
+禅模式下静音锤击音效
+私聊选项颜色
+突出显示消息文字渐变颜色
+窗口失焦时暂停语音
+系统媒体歌词字体大小
+系统媒体歌词时间偏移（毫秒）
+系统媒体歌词显示行数
+系统消息文字渐变颜色
+翻译后端（llm/tencentcloud/libretranslate/ftapi）
+翻译按钮取消时的颜色
+翻译按钮开启时的颜色
+翻译源语言代码（auto=自动检测）
+翻译目标语言代码（如 zh、en、ja、zh-TW）
+翻译菜单正常颜色
+翻译菜单背景颜色
+翻译菜单选中时颜色
+聊天框贴边留白
+聊天气泡字体大小
+聊天气泡文字颜色
+聊天气泡显示时长（秒）
+聊天气泡消失动画（0=淡出，1=缩小，2=上滑）
+聊天气泡背景颜色
+聊天气泡透明度（0-100）
+聊天消息淡出平滑时间（毫秒）
+聊天消息淡出时启用左滑偏移
+聊天消息淡出缓动模式
+聊天记录保留天数
+背景 3D 粒子之间碰撞
+背景 3D 粒子基础速度
+背景 3D 粒子拖尾透明度
+背景 3D 粒子拖尾长度
+背景 3D 粒子数量
+背景 3D 粒子最大尺寸
+背景 3D 粒子最小尺寸
+背景 3D 粒子淡入时间
+背景 3D 粒子淡出时间
+背景 3D 粒子深度范围
+背景 3D 粒子类型：1=方块，2=爱心，3=混合，4=球体，5=金字塔，6=钻石，7=圆环，8=星形，9=月牙
+背景 3D 粒子脉冲强度
+背景 3D 粒子脉冲速度
+背景 3D 粒子自定义颜色
+背景 3D 粒子视野外保留边距
+背景 3D 粒子辉光偏移
+背景 3D 粒子辉光透明度
+背景 3D 粒子透明度
+背景 3D 粒子闪烁强度
+背景 3D 粒子颜色模式：1=自定义，2=随机
+脉冲动画速度 ( 百分比, 100=正常)
+脉冲振幅 (0-100)
+腾讯云翻译 SecretId
+腾讯云翻译 SecretKey
+腾讯云翻译地域
+腾讯云翻译端点
+自动保存聊天记录
+自动回复冷却时间（秒）
+自动增益控制（0=关闭 1=开启）
+自动翻译入站消息
+自动翻译发送的消息
+自动翻译模式 (0=仅常见源语言输入时触发, 1=始终翻译)
+自动获取全图玩家皮肤并作为分身轮换队列
+自动获取全图玩家皮肤并作为轮换队列
+自动跟随好友换服延迟（秒）
+自动锁定延迟（秒）
+自定义 Provider API Key
+自定义 Provider 模型名称
+自定义 Provider 端点
+自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）
+自定义翻译提示词（覆盖内置提示词）
+菜单不透明度 (Menu opacity 0-100)
+被屏蔽词控制台颜色
+被解冻时自动取消旁观
+被锤/榴弹击中时随机表情
+覆盖冻结图块的实体 alpha (0-100)
+覆盖实体 alpha 以解冻图块 (0-100)
+覆盖死亡图块的实体 alpha (0-100)
+观战选项颜色
+解冻后自动关闭聊天
+计分板查分
+计分板透明度
+计分板颜色
+记分牌排序模式（0=分数，1=分）
+语音分组模式
+语音协议版本
+语音房间 Token（可选）
+语音播放音量（百分比）
+语音服务器地址 host:port
+语音测试模式（0=关 1=本地 2=服务器回环）
+语音白名单（逗号分隔）
+语音码率档位（0=自动 1=24kbps 2=32kbps 3=48kbps 4=64kbps）
+语音立体声宽度（百分比）
+语音立体声输出
+语音距离半径（Tiles）
+语音输入设备（空为默认）
+语音输出设备（空为默认）
+语音静音名单（逗号分隔）
+语音音频后端（SDL 驱动名，空为自动）
+语音黑名单（逗号分隔）
+调试图表面板不透明度（百分比）
+资源预览显存预算百分比（基于设备本地显存预算）
+资源预览显存预算覆盖（MB，0=自动）
+跳跃提示垂直位置（占屏幕高度百分比）
+跳跃提示字体大小
+跳跃提示文本（使用\n换行）
+跳跃提示水平位置（占屏幕宽度百分比）
+跳跃提示颜色
+输入叠加 X 位置（百分比）
+输入叠加 Y 位置（百分比）
+输入叠加不透明度（百分比）
+输入叠加比例（百分比）
+输入时不显示打字表情
+输出语音调试日志
+进入 Axiom 社区服务器后自动登录
+进入服务器时重置统计（0=累计统计，1=每次进服重置）
+远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
+通用界面透明度
+通知栏 echo 继承聊天 echo 颜色
+通知栏 echo 覆盖文字颜色
+通知栏停留时间（毫秒）
+通知栏动画时间（毫秒）
+通知栏动画类型（0=淡入滑入 1=仅淡入 2=无动画）
+通知栏接管 echo 消息
+通知栏接管服务器系统提示（入场版本信息除外）
+通知栏文字大小
+通知栏显示基础服务器信息
+通知栏显示服务器帮助说明
+通知栏显示未知服务器消息
+通知栏显示重要服务器提示
+通知栏最大显示数量
+通知栏系统提示文字颜色
+通知栏背景颜色
+通知栏贴边时预留边距
+速通倒计时器
+速通计时器分钟
+速通计时器小时
+速通计时器时间（MMSS 格式，兼容旧版）
+速通计时器毫秒
+速通计时器秒
+锤人换皮肤
+队伍消息文字渐变颜色
+限幅器阈值（百分比）
+隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）
+隐藏非好友姓名/部落并显示客户端 ID
+静音麦克风
+非好友使用默认皮肤
+饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
+麦克风音量（百分比）
 [Assets editor blend mode]	Multiply
 [Assets editor blend mode]	Normal
 [Assets editor blend mode]	Overlay

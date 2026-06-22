@@ -98,6 +98,26 @@ namespace
 
 using namespace std::chrono_literals;
 
+static void ApplyProcessPriorityConfig()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	const DWORD PriorityClass = g_Config.m_QmProcessHighPriority ? HIGH_PRIORITY_CLASS : NORMAL_PRIORITY_CLASS;
+	if(SetPriorityClass(GetCurrentProcess(), PriorityClass))
+	{
+		log_info("client", "applied Windows %s priority class", g_Config.m_QmProcessHighPriority ? "high" : "normal");
+	}
+	else
+	{
+		log_error("client", "failed to apply Windows process priority class (error=%lu)", GetLastError());
+	}
+#else
+	if(g_Config.m_QmProcessHighPriority)
+	{
+		log_info("client", "high process priority is not supported on this platform");
+	}
+#endif
+}
+
 static constexpr ColorRGBA gs_ClientNetworkPrintColor{0.7f, 1, 0.7f, 1.0f};
 static constexpr ColorRGBA gs_ClientNetworkErrPrintColor{1.0f, 0.25f, 0.25f, 1.0f};
 static constexpr int64_t gs_HangTimeoutSeconds = 10;
@@ -5454,6 +5474,16 @@ void CClient::ConchainStdoutOutputLevel(IConsole::IResult *pResult, void *pUserD
 	}
 }
 
+void CClient::ConchainProcessHighPriority(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	(void)pUserData;
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments())
+	{
+		ApplyProcessPriorityConfig();
+	}
+}
+
 void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -5539,6 +5569,7 @@ void CClient::RegisterCommands()
 
 	m_pConsole->Chain("loglevel", ConchainLoglevel, this);
 	m_pConsole->Chain("stdout_output_level", ConchainStdoutOutputLevel, this);
+	m_pConsole->Chain("qm_process_high_priority", ConchainProcessHighPriority, this);
 }
 
 static CClient *CreateClient()
@@ -6082,15 +6113,7 @@ int main(int argc, const char **argv)
 		pFuturePerfFileLogger->Set(log_logger_noop());
 	}
 
-#if defined(CONF_FAMILY_WINDOWS)
-	if(g_Config.m_QmProcessHighPriority)
-	{
-		if(SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS))
-			log_info("client", "applied Windows high priority class");
-		else
-			log_error("client", "failed to apply Windows high priority class (error=%lu)", GetLastError());
-	}
-#endif
+	ApplyProcessPriorityConfig();
 
 	// Register protocol and file extensions
 #if defined(CONF_FAMILY_WINDOWS)

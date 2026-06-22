@@ -21,6 +21,7 @@ AUDIT_REPORT_FILE = SCRIPT_DIR / "extracted_audit_report.json"
 CPP_STRING_LITERAL_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 LOCALIZE_CALL_RE = re.compile(r"\b(?:Localize|Localizable)\s*\(")
 REGISTER_CALL_RE = re.compile(r"\bRegister\s*\(")
+CONFIG_MACRO_CALL_RE = re.compile(r"\bMACRO_CONFIG_(?:INT|COL|STR)\s*\(")
 CONFIG_OR_COMMAND_TOKEN_RE = re.compile(r"^(?:\+?[a-z][a-z0-9_./:-]*|[A-Z0-9_./:-]+)$")
 PATH_OR_URL_RE = re.compile(
     r"^(?:https?://|[a-z0-9_./-]+\.(?:cfg|csv|exe|json|png|txt|toml|wav|webp|zip)|"
@@ -469,6 +470,28 @@ def extract_known_indirect_records(path: Path, content: str) -> list[SourceKeyRe
             records.append(
                 SourceKeyRecord(
                     decode_language_key(match.group(1)),
+                    "indirect",
+                    path,
+                    "",
+                    _line_number(content, match.start()),
+                )
+            )
+
+    if normalized.endswith("src/engine/shared/config_variables_qmclient.h"):
+        for match in CONFIG_MACRO_CALL_RE.finditer(content):
+            open_paren = content.find("(", match.start())
+            close_paren = _find_matching_paren(content, open_paren)
+            if close_paren == -1:
+                continue
+            args = _split_top_level_args(content[open_paren + 1 : close_paren])
+            if not args:
+                continue
+            description = _decode_string_argument(args[-1])
+            if not description:
+                continue
+            records.append(
+                SourceKeyRecord(
+                    description,
                     "indirect",
                     path,
                     "",
@@ -1908,13 +1931,14 @@ def build_string_audit_report(
     for record in source_key_records:
         if record.source is None:
             continue
+        cjk_source_key_violation = has_cjk(record.key) and record.category != "indirect"
         audit_record = StringAuditRecord(
             record.source,
             record.line,
             record.key,
-            "violation" if has_cjk(record.key) else "must_i18n",
+            "violation" if cjk_source_key_violation else "must_i18n",
             "source key contains CJK"
-            if has_cjk(record.key)
+            if cjk_source_key_violation
             else f"active source key ({record.category})",
         )
         claimed.add((_normalized_relpath(record.source), record.line, record.key))

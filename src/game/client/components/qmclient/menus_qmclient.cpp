@@ -2408,10 +2408,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::Gores: return "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用 快速输入 kuaisu shuru fast input 快速输入其他玩家";
 		case EQmModuleId::FocusMode: return "禅模式 zhuanzhi moshi focus mode zen mode 隐藏 yincang hud 名字 mingzi 特效 texiao 计分板 jifenban 沉浸 chenjing 无干扰 wuganrao 聊天 liaotian chat 非必要UI";
 		case EQmModuleId::KeyBinds: return "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding 武器辅助线 fuzhuxian 异常断开 yichang duankai timeout disconnect";
-		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
+		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 自动管理 zidong guanli 进程优先级 jincheng youxianji 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
 		case EQmModuleId::JumpHint: return "位置跳跃提示 tiaoyue tishi jump hint position edge jump color yanse 颜色 horizontal position shuiping weizhi vertical position chuizhi weizhi font size ziti";
 		case EQmModuleId::SkinTransition:
-			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 锤中偷皮 chuizhong toupi";
+			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 强度 qiangdu easing 缓动 huandong 锤中偷皮 chuizhong toupi";
 		case EQmModuleId::WeaponTrajectory: return "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi";
 		case EQmModuleId::WeaponAnimation: return "武器动画 wuqi donghua weapon animation 切换武器动画 qiehuan wuqi donghua weapon switch animation 滑入 huaru 旋转 xuanzhuan";
 		case EQmModuleId::CameraView: return "镜头 jingtou camera drift 漂移 piaoyi dynamic fov 动态视野 dongtai shiye 纵横比 zonghengbi aspect ratio preset 预设 yushe 自定义 zidinyi 视野视角 shijiao";
@@ -3820,11 +3820,19 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmImeAutoManage, "Auto manage IME while typing", Localize("Auto manage IME while typing"), &g_Config.m_QmImeAutoManage, &Row, LgLineHeight);
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					const CUIRect NewImeRow = Row;
 					DoQmSettingsCheckboxAuto(&g_Config.m_QmNewIme, "New IME", Localize("New IME"), &g_Config.m_QmNewIme, &Row, LgLineHeight);
 					if(!IsQmNewFeatureMarkRead("qm_2_63_0_new_ime"))
 						DrawQmNewFeatureDot(NewImeRow);
 					MarkQmNewFeatureHovered("qm_2_63_0_new_ime", NewImeRow);
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmProcessHighPriority, "High process priority", Localize("High process priority"), &g_Config.m_QmProcessHighPriority, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -4015,6 +4023,33 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					DoQmSettingsLabel("qmclient-skin-transition-duration", &LabelCol, Localize("Skin transition duration"), LgBodySize, TEXTALIGN_ML, SkinTransitionDurationLabelProps);
 					static int s_QmSkinChangeTransitionMsInputId;
 					RenderSliderWithValueInput(&s_QmSkinChangeTransitionMsInputId, ControlCol, &g_Config.m_QmSkinChangeTransitionMs, 0, 2000, "ms");
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					{
+						CUIRect LabelColValue, ControlColValue;
+						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+						DoQmSettingsLabel("qmclient-skin-transition-easing", &LabelColValue, Localize("Skin transition easing"), LgBodySize);
+						const char *apSkinTransitionEasingNames[] = {
+							Localize("Ease out cubic"),
+							Localize("Elastic back"),
+							Localize("Linear"),
+							Localize("Ease in out quad"),
+						};
+						static CUi::SDropDownState s_SkinTransitionEasingDropDownState;
+						static CScrollRegion s_SkinTransitionEasingDropDownScrollRegion;
+						s_SkinTransitionEasingDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_SkinTransitionEasingDropDownScrollRegion;
+						const int EasingSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmSkinChangeTransitionEasing, 0, 3), apSkinTransitionEasingNames, std::size(apSkinTransitionEasingNames), s_SkinTransitionEasingDropDownState);
+						if(g_Config.m_QmSkinChangeTransitionEasing != EasingSelectedNew)
+							g_Config.m_QmSkinChangeTransitionEasing = EasingSelectedNew;
+					}
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+					DoQmSettingsLabel("qmclient-skin-transition-intensity", &LabelCol, Localize("Skin transition intensity"), LgBodySize);
+					static int s_QmSkinChangeTransitionIntensityInputId;
+					RenderSliderWithValueInput(&s_QmSkinChangeTransitionIntensityInputId, ControlCol, &g_Config.m_QmSkinChangeTransitionIntensity, 0, 300, "%");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -5486,6 +5521,41 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					const int WeaponSwitchAnimScopeNew = Ui()->DoDropDown(&ControlCol, WeaponSwitchAnimScope, s_WeaponSwitchAnimScopeDropDownNames.data(), s_WeaponSwitchAnimScopeDropDownNames.size(), s_WeaponSwitchAnimScopeDropDownState);
 					if(g_Config.m_QmWeaponSwitchAnimScope != WeaponSwitchAnimScopeNew)
 						g_Config.m_QmWeaponSwitchAnimScope = WeaponSwitchAnimScopeNew;
+					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
+					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
+					DoQmSettingsLabel("qmclient-weapon-switch-duration", &LabelCol, Localize("Weapon switch duration"), LgBodySizeNew);
+					static int s_QmWeaponSwitchAnimDurationInputId;
+					RenderSliderWithValueInput(&s_QmWeaponSwitchAnimDurationInputId, ControlCol, &g_Config.m_QmWeaponSwitchAnimDurationMs, 50, 2000, "ms");
+					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
+					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
+					DoQmSettingsLabel("qmclient-weapon-switch-distance", &LabelCol, Localize("Weapon switch distance"), LgBodySizeNew);
+					static int s_QmWeaponSwitchAnimDistanceInputId;
+					RenderSliderWithValueInput(&s_QmWeaponSwitchAnimDistanceInputId, ControlCol, &g_Config.m_QmWeaponSwitchAnimDistance, 0, 100);
+					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
+					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
+					DoQmSettingsLabel("qmclient-weapon-switch-rotation", &LabelCol, Localize("Weapon switch rotation"), LgBodySizeNew);
+					static int s_QmWeaponSwitchAnimRotationInputId;
+					RenderSliderWithValueInput(&s_QmWeaponSwitchAnimRotationInputId, ControlCol, &g_Config.m_QmWeaponSwitchAnimRotation, 0, 1440, "deg");
+					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
+					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
+					DoQmSettingsLabel("qmclient-weapon-switch-easing", &LabelCol, Localize("Weapon switch easing"), LgBodySizeNew);
+					static std::vector<const char *> s_WeaponSwitchAnimEasingDropDownNames;
+					s_WeaponSwitchAnimEasingDropDownNames = {Localize("Ease out cubic"), Localize("Elastic back"), Localize("Linear"), Localize("Ease in out quad")};
+					static CUi::SDropDownState s_WeaponSwitchAnimEasingDropDownState;
+					static CScrollRegion s_WeaponSwitchAnimEasingDropDownScrollRegion;
+					s_WeaponSwitchAnimEasingDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponSwitchAnimEasingDropDownScrollRegion;
+					const int WeaponSwitchAnimEasing = std::clamp(g_Config.m_QmWeaponSwitchAnimEasing, 0, 3);
+					const int WeaponSwitchAnimEasingNew = Ui()->DoDropDown(&ControlCol, WeaponSwitchAnimEasing, s_WeaponSwitchAnimEasingDropDownNames.data(), s_WeaponSwitchAnimEasingDropDownNames.size(), s_WeaponSwitchAnimEasingDropDownState);
+					if(g_Config.m_QmWeaponSwitchAnimEasing != WeaponSwitchAnimEasingNew)
+						g_Config.m_QmWeaponSwitchAnimEasing = WeaponSwitchAnimEasingNew;
 					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
 				}
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);

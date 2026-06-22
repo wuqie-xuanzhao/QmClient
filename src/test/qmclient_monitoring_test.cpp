@@ -1204,7 +1204,9 @@ TEST(QmMonitoringHelpers, WindowsStartupPriorityHookIsOptionalAndGuarded)
 
 	EXPECT_NE(Source.find("#if defined(CONF_FAMILY_WINDOWS)"), std::string::npos);
 	EXPECT_NE(Source.find("if(g_Config.m_QmProcessHighPriority)"), std::string::npos);
-	EXPECT_NE(Source.find("SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS)"), std::string::npos);
+	EXPECT_NE(Source.find("g_Config.m_QmProcessHighPriority ? HIGH_PRIORITY_CLASS : NORMAL_PRIORITY_CLASS"), std::string::npos);
+	EXPECT_NE(Source.find("SetPriorityClass(GetCurrentProcess(), PriorityClass)"), std::string::npos);
+	EXPECT_NE(Source.find("m_pConsole->Chain(\"qm_process_high_priority\", ConchainProcessHighPriority, this);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, PerfLoggingAlwaysEmitsJsonPayload)

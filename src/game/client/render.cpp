@@ -274,7 +274,7 @@ void CRenderTools::RenderTeeWithSkinChangeTransition(const CAnimState *pAnim, co
 		return;
 	}
 
-	const SSkinChangeTransitionBlend Blend = ComputeSkinChangeTransitionBlend(Progress, BodyScale, FeetScale, g_Config.m_QmSkinChangeTransitionType);
+	const SSkinChangeTransitionBlend Blend = ComputeSkinChangeTransitionBlend(Progress, BodyScale, FeetScale, g_Config.m_QmSkinChangeTransitionType, g_Config.m_QmSkinChangeTransitionEasing, g_Config.m_QmSkinChangeTransitionIntensity);
 	if(Blend.m_PreviousAlpha > 0.0f)
 	{
 		RenderTee(pAnim, pPreviousInfo, Emote, Dir, Pos + Blend.m_PreviousPosOffset, Alpha * Blend.m_PreviousAlpha, Blend.m_PreviousBodyScale, Blend.m_PreviousFeetScale, BodyAngle + Blend.m_PreviousAngleOffset, FeetAngle + Blend.m_PreviousAngleOffset);

@@ -82,6 +82,9 @@
 %i seconds left
 == %i Sekunden übrig
 
+%s (/%s %s)
+== %s (/%s %s)
+
 %s and %s have swapped
 == %s und %s haben getauscht
 
@@ -222,6 +225,9 @@
 
 2 stars
 == 2 Sterne
+
+2 秒内连续钩中或锤中玩家时显示连击提示
+== Combo-Anzeige bei wiederholtem Haken oder Hämmern innerhalb von 2 Sekunden
 
 3 stars
 == 3 Sterne
@@ -775,6 +781,9 @@ Auto hot-reload after external saves
 Auto login Axiom server
 == Automatischer Login auf Axiom-Server
 
+Auto manage IME while typing
+== IME beim Tippen automatisch verwalten
+
 Auto map vote
 == Automatische Kartenabstimmung
 
@@ -873,6 +882,12 @@ Axiom dummy password
 
 Axiom main account password
 == Axiom-Hauptaccount-Passwort
+
+Axiom 主号自动登录密码
+== Axiom-Hauptaccount Auto-Login-Passwort
+
+Axiom 分身自动登录密码
+== Axiom-Dummy Auto-Login-Passwort
 
 Axis
 == Achse
@@ -1447,6 +1462,9 @@ Console color
 Continue anyway?
 == Trotzdem fortfahren?
 
+Continue whispering to the last whisper target
+== Weiter an das letzte Flüsterziel schreiben
+
 Contributors
 == Mitwirkende
 
@@ -1536,6 +1554,9 @@ Countries
 
 CP opacity
 == CP-Deckkraft
+
+CP点边界的覆盖实体 alpha (0-100)
+== Deck-Entity-Alpha für CP-Punkte (0-100)
 
 Create a random skin
 == Zufälliges Skin erstellen
@@ -1732,11 +1753,23 @@ Deep unfreeze color
 Deep unfreeze opacity
 == Tiefauftau-Deckkraft
 
+Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
+== Deepfly-Modus (0=Normal, 1=DF, 2=HDF, 3=Benutzerdefiniert)
+
 DeepSeek
 == DeepSeek
 
+DeepSeek API Key
+== DeepSeek API-Key
+
 DeepSeek API key
 == DeepSeek-API-Schlüssel
+
+DeepSeek 模型名称
+== DeepSeek Modellname
+
+DeepSeek 端点（留空使用默认）
+== DeepSeek Endpunkt (leer lassen für Standard)
 
 Default
 == Standard
@@ -2104,6 +2137,12 @@ Dynamic Island
 Each tab has a clear purpose
 == Jeder Tab hat einen klaren Zweck
 
+Ease in out quad
+== Quadratisch ein- und ausblenden
+
+Ease out cubic
+== Kubisch ausblenden
+
 Echo follows the original chat color
 == Echo folgt der ursprünglichen Chatfarbe
 
@@ -2145,6 +2184,9 @@ Edit touch controls
 
 Editor
 == Editor
+
+Elastic back
+== Federnder Rücklauf
 
 Elevated
 == Erhöht
@@ -2644,6 +2686,9 @@ Freeze opacity
 Freeze stars
 == Froststerne
 
+Freeze碰撞边框颜色
+== Freeze-Kollisionsrahmenfarbe
+
 Friend
 == Freund
 
@@ -2830,6 +2875,15 @@ Gores Mode
 Gores mode key
 == Gores-Modus-Taste
 
+Gores 模式下启用快速输入
+== Schnelleingabe im Gores-Modus aktivieren
+
+Gores 模式下对其他玩家也启用快速输入
+== Schnelleingabe auch für andere Spieler im Gores-Modus aktivieren
+
+Gores 模式下隐藏辅助线
+== Hilfslinien im Gores-Modus ausblenden
+
 Grabs
 == Eroberungen
 
@@ -2968,6 +3022,9 @@ Hide without media state
 High Detail
 == Hohe Details
 
+High process priority
+== Hohe Prozesspriorität
+
 High to low
 == Hoch zu niedrig
 
@@ -3042,6 +3099,12 @@ HUD editor preview
 
 HUD rainbow colors
 == HUD-Regenbogenfarben
+
+HUD 灵动岛显示队伍
+== HUD Dynamic Island Team anzeigen
+
+HUD 编辑器布局
+== HUD Editor-Layout
 
 Hue
 == Farbton
@@ -3199,8 +3262,14 @@ Invalid X coordinate.
 Invalid Y coordinate.
 == Ungültige Y-Koordinate.
 
+Invite %s to the locked team
+== %s in das gesperrte Team einladen
+
 Invite a person to a locked team
 == Eine Person zu einem gesperrten Team einladen
+
+Invite a player to the locked team
+== Einen Spieler in das gesperrte Team einladen
 
 Invites are disabled
 == Einladungen sind deaktiviert
@@ -3246,6 +3315,9 @@ Join QQ group
 
 Join red
 == Rot beitreten
+
+Join team %s
+== Team %s beitreten
 
 Join the team of the specified player
 == Dem Team des angegebenen Spielers beitreten
@@ -3427,8 +3499,17 @@ Lht.
 LibreTranslate
 == LibreTranslate
 
+LibreTranslate API Key
+== LibreTranslate API-Key
+
+LibreTranslate 端点
+== LibreTranslate Endpunkt
+
 Line width
 == Linienbreite
+
+Linear
+== Linear
 
 Lines
 == Lines
@@ -3490,11 +3571,23 @@ LLM API
 LLM provider
 == LLM-Anbieter
 
+LLM Provider (0=ZhipuAI, 1=DeepSeek, 2=OpenAI, 3=Custom)
+== LLM-Anbieter (0=ZhipuAI, 1=DeepSeek, 2=OpenAI, 3=Benutzerdefiniert)
+
+LLM 翻译并发数（0=自动）
+== LLM-Übersetzung Parallelität (0=Automatisch)
+
+LLM 翻译默认并发数（智能调整）
+== LLM-Übersetzung Standard-Parallelität (Intelligent angepasst)
+
 Load
 == Laden
 
 Load drawings from a given csv file (defaults to map name)
 == Zeichnungen aus einer bestimmten CSV-Datei laden (Standard: Kartenname)
+
+Load save %s
+== Save %s laden
 
 Load with code r. /load to check your existing saves
 == Mit Code r laden. /load, um deine vorhandenen Speicherungen zu überprüfen
@@ -3591,6 +3684,9 @@ Lock delay
 
 Lock team
 == Team sperren
+
+Lock the team so other players cannot join directly
+== Team sperren, damit andere Spieler nicht direkt beitreten können
 
 Locked
 == Gesperrt
@@ -3736,6 +3832,9 @@ Max size
 Max visible notifications
 == Maximal sichtbare Benachrichtigungen
 
+maximum
+== Maximum
+
 Maximum rows
 == Maximale Zeilen
 
@@ -3789,6 +3888,9 @@ Minimize module
 
 Minimize the client
 == Client minimieren
+
+minimum
+== Minimum
 
 Minimum match chars
 == Minimale Übereinstimmungszeichen
@@ -4330,8 +4432,17 @@ Open the settings file
 OpenAI
 == OpenAI
 
+OpenAI API Key
+== OpenAI API-Key
+
 OpenAI API key
 == OpenAI-API-Schlüssel
+
+OpenAI 模型名称
+== OpenAI Modellname
+
+OpenAI 端点（留空使用默认）
+== OpenAI Endpunkt (leer lassen für Standard)
 
 Opened
 == Geöffnet
@@ -4756,6 +4867,9 @@ Progress bar height
 Progress bar width
 == Fortschrittsbalkenbreite
 
+PTT 释放延迟（毫秒）
+== PTT-Freigabeverzögerung (Millisekunden)
+
 Publicly messages everyone your current time in this current running race
 == Sendet öffentlich deine aktuelle Zeit in diesem laufenden Rennen an alle
 
@@ -4807,6 +4921,12 @@ Pyramid
 q = Connection quality
 == q = Verbindungsqualität
 
+Q 弹 Tee 形变强度
+== Wackel-Tee Verformungsstärke
+
+Q 弹 Tee 形变持续时间
+== Wackel-Tee Verformungsdauer
+
 Qm
 == Qm
 
@@ -4831,11 +4951,41 @@ QmClient overview
 QmClient Settings
 == QmClient-Einstellungen
 
+QmUi 动效强度：0=关闭 1=降低 2=完整
+== QmUi-Animationseffektstärke: 0=Aus 1=Reduziert 2=Voll
+
 QQ group: 1076765929 (click to copy)
 == QQ-Gruppe: 1076765929 (klicken zum Kopieren)
 
 Quads are used for background decoration
 == Quads werden für Hintergrunddekoration verwendet
+
+Query information for map %s
+== Informationen zur Karte %s abfragen
+
+Query information for the current map
+== Informationen zur aktuellen Karte abfragen
+
+Query points for %s
+== Punkte für %s abfragen
+
+Query rank for %s
+== Rang für %s abfragen
+
+Query server setting: %s
+== Servereinstellung abfragen: %s
+
+Query team rank for %s
+== Teamrang für %s abfragen
+
+Query your own points
+== Eigene Punkte abfragen
+
+Query your own rank
+== Eigenen Rang abfragen
+
+Query your own team rank
+== Rang des eigenen Teams abfragen
 
 Queue is empty
 == Warteschlange ist leer
@@ -5215,6 +5365,9 @@ Replay feature is disabled!
 Reply
 == Antworten
 
+Reply to the last whisper target: %s
+== Dem letzten Flüsterziel antworten: %s
+
 Reply with dummy
 == Mit Dummy antworten
 
@@ -5239,6 +5392,12 @@ Report scan request submitted
 Reports are not available on Axiom servers
 == Meldungen sind auf Axiom-Servern nicht verfügbar
 
+Request a position swap
+== Positionswechsel anfordern
+
+Request to swap positions with %s
+== Positionswechsel mit %s anfordern
+
 Request to swap your tee with another team member
 == Fordere an, deinen Tee mit einem anderen Teammitglied zu tauschen
 
@@ -5256,6 +5415,9 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == Rettung/Freeze: %d/%d
+
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
+== Rettung: Automodus teleportiert aus Freeze heraus; manueller Modus speichert beim Landen einen Rettungspunkt und teleportiert im Freeze dorthin
 
 Resend Loss
 == Resend-Verlust
@@ -5451,6 +5613,12 @@ Save team with code r.
 
 Save the best demo of each race
 == Die beste Demo jedes Rennens speichern
+
+Save the current team
+== Aktuelles Team speichern
+
+Save the team as %s
+== Team als %s speichern
 
 Save unsent chat draft
 == Ungesendeten Chat-Entwurf speichern
@@ -5652,6 +5820,9 @@ Send a moderator alert message to player
 
 Send a server alert message to all players
 == Eine Server-Warnmeldung an alle Spieler senden
+
+Send a whisper: /w player message
+== Flüstern senden: /w Spieler Nachricht
 
 Send emoticon in water
 == Emoticon im Wasser senden
@@ -5893,6 +6064,9 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Farben in der Zuschauerauswahl anzeigen
 
+Show command help
+== Befehlshilfe anzeigen
+
 Show compact vote HUD
 == Kompaktes Abstimmungs-HUD anzeigen
 
@@ -5935,6 +6109,9 @@ Show dummy sync status
 Show entities
 == Entitäten anzeigen
 
+Show existing saves
+== Vorhandene Saves anzeigen
+
 Show finish messages
 == Fertig-Nachrichten anzeigen
 
@@ -5964,6 +6141,9 @@ Show hammer status
 
 Show health, shields and ammo
 == Leben, Schilde und Munition anzeigen
+
+Show help for /%s
+== Hilfe für /%s anzeigen
 
 Show hitbox mode
 == Hitbox-Modus anzeigen
@@ -6163,6 +6343,9 @@ Show the screen center line
 Show the server rules
 == Die Serverregeln anzeigen
 
+Show the server settings list
+== Liste der Servereinstellungen anzeigen
+
 Show tiles layers from BG map
 == Kachelebenen aus der Hintergrundkarte anzeigen
 
@@ -6195,6 +6378,9 @@ Show X
 
 Show Y
 == Y anzeigen
+
+Show your current team
+== Eigenes aktuelles Team anzeigen
 
 Showing players from other teams is disabled
 == Anzeige von Spielern aus anderen Teams ist deaktiviert
@@ -6312,6 +6498,12 @@ Skin transition animation
 
 Skin transition duration
 == Dauer des Skin-Übergangs
+
+Skin transition easing
+== Skin-Übergangs-Easing
+
+Skin transition intensity
+== Skin-Übergangsintensität
 
 Skin transition type
 == Art des Skin-Übergangs
@@ -6862,6 +7054,9 @@ Teleports you to checkpoint teleporter i
 Teleports you to teleporter i
 == Teleportiert dich zu Teleporter i
 
+Teletile 的覆盖实体 alpha (0-100)
+== Deck-Entity-Alpha für Teletiles (0-100)
+
 Temporarily set a config value while pressed
 == Temporär einen Konfigurationswert setzen, während die Taste gedrückt wird
 
@@ -7294,6 +7489,9 @@ UI opacity
 UI scale
 == UI-Skalierung
 
+UI大小百分比 (UI scale percentage)
+== UI-Größenprozentsatz (UI scale percentage)
+
 Unable to delete %d selected items. The first failing item was '%s'.
 == %d ausgewählte Elemente konnten nicht gelöscht werden. Das erste fehlgeschlagene Element war '%s'.
 
@@ -7402,6 +7600,9 @@ Unknown status
 Unlock a team
 == Ein Team entsperren
 
+Unlock the team
+== Team entsperren
+
 Unmute
 == Stummschaltung aufheben
 
@@ -7461,6 +7662,9 @@ Uploading map data to GPU
 
 Usage: %s %s
 == Verwendung: %s %s
+
+Usage: /%s %s
+== Verwendung: /%s %s
 
 Use 12 hour clock
 == 12-Stunden-Format verwenden
@@ -7542,6 +7746,15 @@ v = Velocity
 
 V-Sync
 == V-Sync
+
+VAD 允许名单（逗号分隔）
+== VAD-Erlaubnisliste (durch Komma getrennt)
+
+VAD 释放延迟（毫秒）
+== VAD-Freigabeverzögerung (Millisekunden)
+
+VAD 阈值（百分比）
+== VAD-Schwellenwert (Prozentsatz)
 
 Vanilla skins only
 == Nur Vanilla-Skins
@@ -7684,6 +7897,18 @@ Weapon range color
 Weapon switch animation
 == Waffenwechselanimation
 
+Weapon switch distance
+== Waffenwechsel-Distanz
+
+Weapon switch duration
+== Waffenwechsel-Dauer
+
+Weapon switch easing
+== Waffenwechsel-Easing
+
+Weapon switch rotation
+== Waffenwechsel-Rotation
+
 Weapon Trajectory
 == Waffentrajektorie
 
@@ -7746,6 +7971,12 @@ Whisper
 
 Whisper something to someone (private message)
 == Jemandem etwas zuflüstern (private Nachricht)
+
+Whisper to %s
+== %s anflüstern
+
+Whisper to %s: %s
+== %s anflüstern: %s
 
 Who stuffed OBS in here
 == Wer hat hier OBS reingesteckt
@@ -8118,6 +8349,1137 @@ Zoom out
 
 ⚠️ Tencent Cloud API not configured
 == ⚠️ Tencent Cloud API nicht konfiguriert
+
+举报服务 App ID
+== Meldedienst App-ID
+
+举报服务地址
+== Meldedienst-Adresse
+
+举报服务签名密钥
+== Meldedienst Signaturschlüssel
+
+交换选项颜色
+== Tauschoptionsfarbe
+
+仅在另一只 tee 离开当前视角时显示分身迷你视图
+== Dummy-Miniview nur anzeigen, wenn der andere Tee den aktuellen Bildschirm verlässt
+
+使用通知栏分类过滤
+== Benachrichtigungsleisten-Kategoriefilter verwenden
+
+允许 FTAPI 自动翻译（可能导致过载）
+== FTAPI-Autoübersetzung erlauben (kann zu Überlastung führen)
+
+关键词回复使用Dummy
+== Schlüsselwort-Antwort mit Dummy
+
+关键词回复规则（每行: [rename] [regex] 关键词=>回复）
+== Schlüsselwort-Antwortregeln (pro Zeile: [rename] [regex] Schlüsselwort=>Antwort)
+
+关闭聊天时保留未发送内容
+== Ungesendeten Inhalt beim Schließen des Chats behalten
+
+兼容其他服务器的类似单人区域提示
+== Kompatibilitätshinweis für ähnliche Solo-Zonen auf anderen Servern
+
+出站翻译目标语言代码
+== Zielsprachcode für ausgehende Übersetzung
+
+分身皮肤队列切换间隔（0.1 秒）
+== Wechselintervall der Dummy-Skin-Warteschlange (0.1 Sekunden)
+
+分身皮肤队列当前位置
+== Dummy-Skin-Queue Aktuelle Position
+
+分身皮肤队列最大长度
+== Dummy-Skin-Queue Maximale Länge
+
+分身迷你视图大小（百分比）
+== Dummy-Miniview Größe (Prozentsatz)
+
+分身迷你视图缩放（百分比）
+== Dummy-Miniview Zoom (Prozentsatz)
+
+切换武器时播放滑入旋转动画
+== Waffenwechsel-Rotationsanimation beim Auswählen abspielen
+
+加入可锁定队伍后自动锁定
+== Automatisches Sperren nach Beitritt zu einem sperrbaren Team
+
+动态视野平滑度（0=瞬时，100=最平滑）
+== Dynamische Kameraglätte (0=Sofort, 100=Am glattesten)
+
+动态视野强度（0-200）
+== Dynamische Kameraintensität (0-200)
+
+压缩器攻击时间（毫秒）
+== Kompressor-Angriffszeit (Millisekunden)
+
+压缩器比率（x10）
+== Kompressor-Verhältnis (x10)
+
+压缩器补偿增益（百分比）
+== Kompressor-Makeup-Gain (Prozentsatz)
+
+压缩器释放时间（毫秒）
+== Kompressor-Freigabezeit (Millisekunden)
+
+压缩器阈值（百分比）
+== Kompressor-Schwellenwert (Prozentsatz)
+
+反转相机漂移方向
+== Kamera-Drift-Richtung umkehren
+
+可见性过滤模式
+== Sichtbarkeitsfiltermodus
+
+同组全图收听
+== Vollkartenhören in derselben Gruppe
+
+名单过滤模式
+== Listenfiltermodus
+
+名字板元素允许 X 轴自由移动
+== Namensschild-Elemente erlauben X-Achsen-freie Bewegung
+
+名字板元素允许 Y 轴自由移动
+== Namensschild-Elemente erlauben Y-Achsen-freie Bewegung
+
+名字板元素允许在框内自由移动
+== Nameplate-Element erlaubt freie Bewegung innerhalb des Rahmens
+
+名字板坐标行 X 偏移
+== Nameplate-Koordinatenzeile X-Versatz
+
+名字板坐标行 Y 偏移
+== Nameplate-Koordinatenzeile Y-Versatz
+
+名字板强弱行 X 偏移
+== Nameplate-Stärkezeile X-Versatz
+
+名字板强弱行 Y 偏移
+== Nameplate-Stärkezeile Y-Versatz
+
+名字板战队行 X 偏移
+== Nameplate-Clanzeile X-Versatz
+
+名字板战队行 Y 偏移
+== Nameplate-Clanzeile Y-Versatz
+
+名字板按键行 X 偏移
+== Nameplate-Tastenzeile X-Versatz
+
+名字板按键行 Y 偏移
+== Nameplate-Tastenzeile Y-Versatz
+
+名字板昵称行 X 偏移
+== Nameplate-Nickzeile X-Versatz
+
+名字板昵称行 Y 偏移
+== Nameplate-Nickzeile Y-Versatz
+
+名字牌X对齐提示严格模式
+== Nameplate-X-Ausrichtungshinweis strikter Modus
+
+名字牌X对齐提示持续判定窗口（毫秒）
+== Nameplate-X-Ausrichtungshinweis Dauer des Entscheidungsfensters (ms)
+
+名字牌X对齐提示高亮颜色
+== Nameplate-X-Ausrichtungshinweis Hervorhebungsfarbe
+
+名字牌显示与本地玩家X对齐的提示
+== Nameplate zeigt X-Ausrichtungshinweis mit lokalem Spieler an
+
+名字牌显示他人坐标
+== Nameplate zeigt Koordinaten anderer an
+
+名字牌显示坐标X
+== Nameplate zeigt Koordinate X an
+
+名字牌显示坐标Y
+== Nameplate zeigt Koordinate Y an
+
+名字牌显示自己坐标
+== Nameplate zeigt eigene Koordinaten an
+
+启动和菜单空闲时预热设置页
+== Einstellungsseite beim Start und im Leerlauf des Menüs vorwärmen
+
+启用 Gores 锤枪自动切换
+== Gores-Hammer-Gun-Autowechsel aktivieren
+
+启用 LLM 思考模式（可能增加响应时间）
+== LLM-Denkmodus aktivieren (kann Antwortzeit erhöhen)
+
+启用 Q 弹 Tee 形变
+== Q-Tee-Verformung aktivieren
+
+启用 QmClient 风格背景 3D 粒子
+== QmClient-Stil 3D-Hintergrundpartikel aktivieren
+
+启用 UI 运行时 v2 调试日志
+== UI-Laufzeit-v2-Debug-Logging aktivieren
+
+启用主线程与渲染阶段性能调试日志
+== Debug-Logging für Hauptthread und Renderphase aktivieren
+
+启用关键词回复
+== Schlüsselwort-Antworten aktivieren
+
+启用动态视野，移动越快视野越宽
+== Dynamisches Sichtfeld aktivieren, je schneller die Bewegung, desto breiter das Sichtfeld
+
+启用增强激光特效（辉光+脉冲动画）
+== Verbesserte Lasereffekte aktivieren (Glühen + Pulsanimation)
+
+启用复读功能
+== Wiederholungsfunktion aktivieren
+
+启用屏蔽词列表
+== Blockwortliste aktivieren
+
+启用新版 IME 候选栏
+== Neue IME-Kandidatenleiste aktivieren
+
+启用新版设置页面 UI
+== Neue Einstellungsseiten-UI aktivieren
+
+启用玩家统计面板
+== Spielerstatistik-Panel aktivieren
+
+启用皮肤切换动画
+== Skin-Wechsel-Animation aktivieren
+
+启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
+== Kamera-Drift-Effekt aktivieren, der die Kamera leicht nachzieht
+
+启用禅模式（Zen Mode）
+== Zen-Modus aktivieren
+
+启用系统媒体传输控制集成
+== System-Media-Transportsteuerung integrieren
+
+启用系统媒体歌词
+== System-Media-Liedtexte aktivieren
+
+启用背景 3D 粒子拖尾
+== 3D-Hintergrundpartikel-Schweif aktivieren
+
+启用背景 3D 粒子脉冲缩放
+== 3D-Hintergrundpartikel-Pulsskalierung aktivieren
+
+启用背景 3D 粒子辉光
+== 3D-Hintergrundpartikel-Glühen aktivieren
+
+启用背景 3D 粒子闪烁
+== 3D-Hintergrundpartikel-Flimmern aktivieren
+
+启用自己名字的彩虹色渲染
+== Regenbogenfarben-Rendering für eigenen Namen aktivieren
+
+启用语音滤波（高通/压缩/限幅）
+== Sprachfilterung aktivieren (Hochpass/Kompressor/Begrenzer)
+
+启用语音激活（VAD）
+== Sprachaktivierung (VAD) aktivieren
+
+启用语音聊天
+== Sprachchat aktivieren
+
+启用饼菜单
+== Pie-Menü aktivieren
+
+噪声抑制强度（百分比）
+== Rauschunterdrückungsstärke (Prozent)
+
+噪声抑制模式（0=关闭 1=简单 2=RNNoise）
+== Rauschunterdrückungsmodus (0=Aus 1=Einfach 2=RNNoise)
+
+在 Gores 游戏模式中自动启用 Gores 自动切换
+== Gores-Autowechsel im Gores-Spielmodus automatisch aktivieren
+
+在 HUD 上显示系统媒体信息
+== System-Media-Informationen im HUD anzeigen
+
+在 Windows 上切换客户端进程的普通/高优先级
+== Prozesspriorität des Clients unter Windows auf Normal/Hoch umschalten
+
+在服务器浏览器中显示简短服务器名
+== Kurzen Servernamen im Serverbrowser anzeigen
+
+在玩家头顶显示聊天气泡
+== Chat-Blase über Spielerköpfen anzeigen
+
+在表情后绘制阴影
+== Schatten hinter Emoticons zeichnen
+
+在记分牌中显示默认国旗
+== Standard-Flagge in der Anzeigetafel anzeigen
+
+地图浏览器透明度
+== Kartenbrowser-Transparenz
+
+地图浏览器颜色
+== Kartenbrowser-Farbe
+
+地图进度条垂直位置（顶边，占屏幕高度百分比）
+== Vertikale Position des Kartenfortschrittsbalkens (oberer Rand, Anteil der Bildschirmhöhe)
+
+地图进度条宽度（占屏幕宽度百分比）
+== Breite des Kartenfortschrittsbalkens (Anteil der Bildschirmbreite)
+
+地图进度条样式（0=底部横条，1=HUD 内嵌）
+== Stil des Kartenfortschrittsbalkens (0=unterer Balken, 1=im HUD eingebettet)
+
+地图进度条水平位置（中心点，占屏幕宽度百分比）
+== Horizontale Position des Kartenfortschrittsbalkens (Mittelpunkt, Anteil der Bildschirmbreite)
+
+地图进度条颜色
+== Farbe des Kartenfortschrittsbalkens
+
+地图进度条高度
+== Kartenfortschrittsbalkenhöhe
+
+复制皮肤选项颜色
+== Hautoptionsfarbe kopieren
+
+大字显示好友进服
+== Freundesbeitritt in großer Schrift anzeigen
+
+好友上线提醒
+== Benachrichtigung bei Freundes-Online-Status
+
+好友提醒刷新间隔(秒)
+== Aktualisierungsintervall für Freundesbenachrichtigungen (Sekunden)
+
+好友提醒自动刷新服务器列表
+== Serverliste automatisch für Freundesbenachrichtigungen aktualisieren
+
+好友消息文字渐变颜色
+== Textverlaufsfarbe für Freundesnachrichten
+
+好友进图自动打招呼
+== Automatisch grüßen, wenn ein Freund die Karte betritt
+
+好友进图自动打招呼文本
+== Text für automatischen Gruß bei Freundesbeitritt
+
+好友进服大字提示文本（使用%s表示好友名）
+== Großer Anzeigetext bei Freundesbeitritt (verwende %s für den Freundesnamen)
+
+好友选项颜色
+== Freundesoptionsfarbe
+
+客户端消息文字渐变颜色
+== Textverlaufsfarbe für Client-Nachrichten
+
+将 Q 弹 Tee 形变应用到其他玩家
+== Q-Tee-Verformung auf andere Spieler anwenden
+
+将性能调试日志写入专用文件
+== Leistungsdebug-Logs in eine dedizierte Datei schreiben
+
+屏蔽词列表（用,分隔）
+== Liste der blockierten Wörter (durch Komma getrennt)
+
+屏蔽词替换字符
+== Ersatzzeichen für blockierte Wörter
+
+展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
+== Zeige die feat-003 Shared-UI-Primitives-Dogfood-Seite (übernimmt QmClient-Einstellungsseite, zur visuellen Überprüfung von 11 Primitiven + Spring/Easing-Animationen)
+
+已读的设置界面新功能标识
+== Gelesene neue Funktionsmarkierungen im Einstellungsbildschirm
+
+开关图块的覆盖实体 alpha (0-100)
+== Deckkraft von Overlay-Entitäten für Schalter-Kacheln (0-100)
+
+忽略语音距离衰减
+== Sprachdistanzdämpfung ignorieren
+
+性能调试日志阈值（毫秒）
+== Schwellenwert für Leistungsdebug-Logs (Millisekunden)
+
+拿到额外武器时停用 Gores 自动切换
+== Gores-Autowechsel deaktivieren, wenn zusätzliche Waffen erhalten werden
+
+按名字单独音量（name=percent）
+== Individuelle Lautstärke nach Name (name=Prozent)
+
+按屏蔽词长度多字符替换
+== Mehrzeichen-Ersetzung basierend auf Länge des blockierten Wortes
+
+接收 VAD 讲话者
+== VAD-Sprecher empfangen
+
+接收旁观/非活跃玩家语音
+== Sprache von Zuschauern/inaktiven Spielern empfangen
+
+控制台显示被屏蔽词
+== Blockierte Wörter in der Konsole anzeigen
+
+提及选项颜色
+== Erwähnungsoptionsfarbe
+
+旁观时按镜头中心收听
+== Beim Zuschauen nach Kameramitte hören
+
+无系统媒体状态时隐藏歌词
+== Liedtexte ausblenden, wenn kein System-Medienstatus vorhanden ist
+
+时间耗尽后自动禁用速通计时器
+== Speedrun-Timer nach Zeitablauf automatisch deaktivieren
+
+显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户
+== Qm-Abzeichen anzeigen: Identifiziere über den Zentralserver und markiere QmClient-Benutzer im Namensschild/Scoreboard
+
+显示分身迷你视图窗口
+== Dummy-Miniansichtsfenster anzeigen
+
+显示地图进度条（内测中）
+== Kartenfortschrittsbalken anzeigen (im Beta-Test)
+
+显示地图进度调试点路线
+== Kartenfortschritts-Checkpoint-Route anzeigen
+
+显示歌词当前行指示器
+== Aktuelle Zeilenanzeige für Liedtexte anzeigen
+
+显示版本过旧提示
+== Hinweis bei veralteter Version anzeigen
+
+显示碰撞体积边框
+== Kollisionsvolumen-Rahmen anzeigen
+
+显示语音连接状态
+== Sprachverbindungsstatus anzeigen
+
+显示语音高级选项
+== Erweiterte Sprachoptionen anzeigen
+
+显示输入覆盖
+== Eingabe-Overlay anzeigen
+
+显示通知栏高级设置
+== Erweiterte Einstellungen für Benachrichtigungsleiste anzeigen
+
+普通消息文字渐变颜色
+== Textverlaufsfarbe für normale Nachrichten
+
+智谱AI API Key
+== ZhipuAI API-Schlüssel
+
+智谱AI 模型名称
+== ZhipuAI Modellname
+
+智谱AI 端点（留空使用默认）
+== ZhipuAI Endpunkt (leer lassen für Standard)
+
+替换方式 0=Regex 1=Full 2=Both
+== Ersetzungsmodus 0=Regex 1=Voll 2=Beide
+
+本体和分身都被冻结时，自动切换到先解冻的那个
+== Wenn sowohl der Hauptcharakter als auch der Dummy eingefroren sind, automatisch zu dem wechseln, der zuerst auftaut
+
+本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示
+== Wenn der Hauptcharakter oder Dummy aufgeweckt wird, zeige einen Hinweis in der oberen linken oder rechten Ecke des entsprechenden Spielers
+
+本地目标语言识别占比阈值
+== Schwellenwert für lokale Zielsprachenerkennungsrate
+
+本地目标语言识别最小字符数
+== Minimale Zeichenanzahl für lokale Zielsprachenerkennung
+
+本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）
+== Lokale Partikel: Zeige Partikel, die hinter dem eigenen Tee fallen (z.B. Frostschnee)
+
+栖梦侧栏模块使用频率
+== Nutzungshäufigkeit der Qimeng-Seitenleistenmodule
+
+栖梦侧栏模块折叠状态
+== Einklappstatus der Qimeng-Seitenleistenmodule
+
+栖梦侧栏模块排序
+== Sortierung der Qimeng-Seitenleistenmodule
+
+根据位置小数部分显示跳跃提示
+== Sprunghinweis basierend auf dem Nachkommateil der Position anzeigen
+
+根据文本输入焦点自动启用或关闭 IME
+== IME basierend auf dem Texteingabefokus automatisch aktivieren oder deaktivieren
+
+歌词下一行颜色
+== Farbe der nächsten Liedtextzeile
+
+歌词吸附灵动岛阈值
+== Schwellenwert für Liedtext-Ansaugen an die Dynamic Island
+
+歌词当前行颜色
+== Farbe der aktuellen Liedtextzeile
+
+歌词指示器颜色
+== Farbe des Liedtext-Indikators
+
+歌词描边透明度
+== Deckkraft der Liedtext-Kontur
+
+歌词描边颜色
+== Farbe der Liedtext-Kontur
+
+歌词淡入淡出时间
+== Ein- und Ausblendezeit für Liedtexte
+
+歌词背景透明度
+== Transparenz des Liedtext-Hintergrunds
+
+歌词背景颜色
+== Farbe des Liedtext-Hintergrunds
+
+歌词超长时跑马灯
+== Laufschrift bei langen Liedtexten
+
+歌词跑马灯速度
+== Geschwindigkeit der Laufschrift bei Liedtexten
+
+歌词首字放大
+== Vergrößerung des ersten Zeichens im Liedtext
+
+歌词首字缩放百分比
+== Skalierungsprozentsatz des ersten Zeichens im Liedtext
+
+歌词首字颜色
+== Farbe des ersten Zeichens im Liedtext
+
+武器切换动画持续时间（毫秒）
+== Dauer der Waffenwechsel-Animation (Millisekunden)
+
+武器切换动画旋转角度
+== Rotationswinkel der Waffenwechsel-Animation
+
+武器切换动画滑入距离
+== Einschubdistanz der Waffenwechsel-Animation
+
+武器切换动画缓动模式
+== Easing-Modus der Waffenwechsel-Animation
+
+武器切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+== Bereich der Waffenwechsel-Animation: 0=Nur selbst 1=Lokal+Dummy 2=Alle Spieler
+
+武器弹道辅助线宽度
+== Breite der Waffenprojektions-Hilfslinien
+
+武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）
+== Anzeigemodus der Waffenprojektions-Hilfslinien (0=Aus, 1=Bei Tastendruck, 2=Immer an)
+
+武器弹道辅助线透明度
+== Transparenz der Waffenprojektions-Hilfslinien
+
+武器弹道辅助线颜色
+== Farbe der Waffenprojektions-Hilfslinien
+
+死亡后显示记分牌
+== Anzeige der Anzeigetafel nach dem Tod
+
+深度冻结图块的叠加实体 alpha (0-100)
+== Alpha der Overlay-Entitäten für Deep-Freeze-Kacheln (0-100)
+
+深度解冻图块的叠加实体 alpha (0-100)
+== Alpha der Overlay-Entitäten für Deep-Unfreeze-Kacheln (0-100)
+
+激光半透明度 (0=完全透明, 100=不透明)
+== Lasertransparenz (0=völlig transparent, 100=undurchsichtig)
+
+激光圆角端点 (0=方角, 1=圆角)
+== Abgerundete Laserenden (0=eckig, 1=abgerundet)
+
+激光大小/粗细 (百分比, 100=默认)
+== Lasergröße/-dicke (Prozent, 100=Standard)
+
+激光辉光强度 (0-100)
+== Laser-Leuchtstärke (0-100)
+
+灵动岛使用原版样式
+== Dynamic Island im Original-Stil verwenden
+
+灵动岛背景透明度
+== Transparenz des Dynamic Island-Hintergrunds
+
+灵动岛背景颜色
+== Farbe des Dynamic Island-Hintergrunds
+
+玩家推动背景 3D 粒子的半径
+== Radius der 3D-Hintergrundpartikel, die von Spielern bewegt werden
+
+玩家推动背景 3D 粒子的强度
+== Stärke der 3D-Hintergrundpartikel, die von Spielern bewegt werden
+
+玩家检测最大距离
+== Maximale Spielererkennungsdistanz
+
+画面纵横比预设（0=关闭，1=5:4，2=4:3，3=3:2，4=16:9，5=21:9，6=自定义）
+== Bildseitenverhältnis-Voreinstellung (0=Aus, 1=5:4, 2=4:3, 3=3:2, 4=16:9, 5=21:9, 6=Benutzerdefiniert)
+
+界面颜色
+== UI-Farbe
+
+皮肤切换动画强度百分比
+== Intensität der Skin-Wechsel-Animation in Prozent
+
+皮肤切换动画持续时间（毫秒，0=无动画）
+== Dauer der Skin-Wechsel-Animation (Millisekunden, 0=Keine Animation)
+
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
+== Typ der Skin-Wechsel-Animation (0=Nachbild-Popout 1=Sanfter Übergang 2=Links-Slide 3=Rotations-Popout 4=Helligkeitswechsel)
+
+皮肤切换动画缓动模式
+== Easing-Modus der Skin-Wechsel-Animation
+
+皮肤队列切换间隔（0.1 秒）
+== Wechselintervall der Skin-Warteschlange (0.1 Sekunden)
+
+皮肤队列当前位置
+== Aktuelle Position in der Skin-Warteschlange
+
+皮肤队列最大长度
+== Maximale Länge der Skin-Warteschlange
+
+相机漂移平滑度（0=瞬时，100=最平滑）
+== Kameradrift-Glättung (0=sofort, 100=am glattesten)
+
+相机漂移强度（0-200）
+== Kameradrift-Intensität (0-200)
+
+碰撞体积线条透明度
+== Transparenz der Kollisionsvolumen-Linien
+
+碰撞箱模式Freeze边界颜色
+== Farbe der Freeze-Grenze im Hitbox-Modus
+
+碰撞箱模式Tee碰撞体颜色
+== Farbe der Tee-Kollision im Hitbox-Modus
+
+碰撞箱模式全局透明度
+== Globale Transparenz im Hitbox-Modus
+
+碰撞箱模式总开关 (Hitbox mode)
+== Hauptschalter für den Hitbox-Modus
+
+碰撞箱模式显示Tee碰撞体
+== Tee-Kollision im Hitbox-Modus anzeigen
+
+碰撞箱模式显示地图危险边界
+== Gefährliche Kartenränder im Hitbox-Modus anzeigen
+
+碰撞箱模式显示拾取物范围
+== Aufsammelbereich im Hitbox-Modus anzeigen
+
+碰撞箱模式显示武器交互
+== Waffeninteraktion im Hitbox-Modus anzeigen
+
+碰撞箱模式武器交互颜色
+== Farbe der Waffeninteraktion im Hitbox-Modus
+
+碰撞箱模式玩家范围: 0=本地 1=本地+分身 2=所有玩家
+== Spielerbereich im Hitbox-Modus: 0=Lokal 1=Lokal+Dummy 2=Alle Spieler
+
+禅模式下隐藏 Echo 消息
+== Echo-Nachrichten im Zen-Modus ausblenden
+
+禅模式下隐藏 HUD
+== HUD im Zen-Modus ausblenden
+
+禅模式下隐藏入场、版本和规则等基础系统信息
+== Basis-Systeminformationen (Eingang, Version, Regeln usw.) im Zen-Modus ausblenden
+
+禅模式下隐藏冻结特效
+== Freeze-Effekte im Zen-Modus ausblenden
+
+禅模式下隐藏击杀和完成消息
+== Kill- und Abschlussnachrichten im Zen-Modus ausblenden
+
+禅模式下隐藏地图进度条
+== Kartenfortschrittsbalken im Zen-Modus ausblenden
+
+禅模式下隐藏方向
+== Richtungsanzeige im Zen-Modus ausblenden
+
+禅模式下隐藏服务器提示通知（包括通知栏）
+== Server-Hinweisbenachrichtigungen (inkl. Benachrichtigungsleiste) im Zen-Modus ausblenden
+
+禅模式下隐藏武器火焰特效
+== Waffenflammeneffekte im Zen-Modus ausblenden
+
+禅模式下隐藏死亡/重生特效
+== Todes-/Wiederbelebungseffekte im Zen-Modus ausblenden
+
+禅模式下隐藏炮击特效
+== Geschosseffekte im Zen-Modus ausblenden
+
+禅模式下隐藏玩家名字
+== Spielernamen im Zen-Modus ausblenden
+
+禅模式下隐藏玩家名字板
+== Spieler-Namensschild im Zen-Modus ausblenden
+
+禅模式下隐藏玩家消息
+== Spielernachrichten im Zen-Modus ausblenden
+
+禅模式下隐藏计分板
+== Bestenliste im Zen-Modus ausblenden
+
+禅模式下隐藏跳跃特效
+== Sprung-Effekte im Zen-Modus ausblenden
+
+禅模式下隐藏辅助线
+== Hilfslinien im Zen-Modus ausblenden
+
+禅模式下隐藏锤击特效
+== Hammer-Effekte im Zen-Modus ausblenden
+
+禅模式下静音死亡/重生音效
+== Tod-/Wiederbelebungs-Sounds im Zen-Modus stummschalten
+
+禅模式下静音跳跃音效
+== Sprung-Sounds im Zen-Modus stummschalten
+
+禅模式下静音锤击音效
+== Hammer-Sounds im Zen-Modus stummschalten
+
+私聊选项颜色
+== Farbe der Privatnachrichten-Optionen
+
+突出显示消息文字渐变颜色
+== Textverlaufsfarbe für hervorgehobene Nachrichten
+
+窗口失焦时暂停语音
+== Sprachausgabe pausieren, wenn Fenster den Fokus verliert
+
+系统媒体歌词字体大小
+== Schriftgröße der System-Medien-Liedtexte
+
+系统媒体歌词时间偏移（毫秒）
+== Zeitversatz der System-Medien-Liedtexte (Millisekunden)
+
+系统媒体歌词显示行数
+== Anzahl der anzuzeigenden System-Medien-Liedtextzeilen
+
+系统消息文字渐变颜色
+== Textverlaufsfarbe für Systemnachrichten
+
+翻译后端（llm/tencentcloud/libretranslate/ftapi）
+== Übersetzungs-Backend (llm/tencentcloud/libretranslate/ftapi)
+
+翻译按钮取消时的颜色
+== Farbe der Übersetzungsschaltfläche im deaktivierten Zustand
+
+翻译按钮开启时的颜色
+== Farbe der Übersetzungsschaltfläche im aktivierten Zustand
+
+翻译源语言代码（auto=自动检测）
+== Quellsprachencode für Übersetzung (auto = automatische Erkennung)
+
+翻译目标语言代码（如 zh、en、ja、zh-TW）
+== Zielsprachencode für Übersetzung (z. B. zh, en, ja, zh-TW)
+
+翻译菜单正常颜色
+== Normale Farbe des Übersetzungsmenüs
+
+翻译菜单背景颜色
+== Hintergrundfarbe des Übersetzungsmenüs
+
+翻译菜单选中时颜色
+== Farbe des Übersetzungsmenüs bei Auswahl
+
+聊天框贴边留白
+== Randabstand des Chatfelds
+
+聊天气泡字体大小
+== Schriftgröße der Chat-Blase
+
+聊天气泡文字颜色
+== Textfarbe der Chat-Blase
+
+聊天气泡显示时长（秒）
+== Anzeigedauer der Chat-Blase (Sekunden)
+
+聊天气泡消失动画（0=淡出，1=缩小，2=上滑）
+== Verschwinde-Animation der Chat-Blase (0 = Ausblenden, 1 = Verkleinern, 2 = Nach oben schieben)
+
+聊天气泡背景颜色
+== Hintergrundfarbe der Chat-Blase
+
+聊天气泡透明度（0-100）
+== Transparenz der Chat-Blase (0-100)
+
+聊天消息淡出平滑时间（毫秒）
+== Glättungszeit für das Ausblenden von Chat-Nachrichten (Millisekunden)
+
+聊天消息淡出时启用左滑偏移
+== Linksverschiebung beim Ausblenden von Chat-Nachrichten aktivieren
+
+聊天消息淡出缓动模式
+== Beschleunigungsmodus für das Ausblenden von Chat-Nachrichten
+
+聊天记录保留天数
+== Anzahl der Tage zum Aufbewahren des Chat-Verlaufs
+
+背景 3D 粒子之间碰撞
+== Kollision zwischen 3D-Hintergrundpartikeln
+
+背景 3D 粒子基础速度
+== Basisgeschwindigkeit der 3D-Hintergrundpartikel
+
+背景 3D 粒子拖尾透明度
+== Transparenz des Schweifs der 3D-Hintergrundpartikel
+
+背景 3D 粒子拖尾长度
+== Länge des Schweifs der 3D-Hintergrundpartikel
+
+背景 3D 粒子数量
+== Anzahl der 3D-Hintergrundpartikel
+
+背景 3D 粒子最大尺寸
+== Maximale Größe der 3D-Hintergrundpartikel
+
+背景 3D 粒子最小尺寸
+== Minimale Größe der 3D-Hintergrundpartikel
+
+背景 3D 粒子淡入时间
+== Einblendzeit der 3D-Hintergrundpartikel
+
+背景 3D 粒子淡出时间
+== Ausblendzeit der 3D-Hintergrundpartikel
+
+背景 3D 粒子深度范围
+== Tiefenbereich der 3D-Hintergrundpartikel
+
+背景 3D 粒子类型：1=方块，2=爱心，3=混合，4=球体，5=金字塔，6=钻石，7=圆环，8=星形，9=月牙
+== Typ der 3D-Hintergrundpartikel: 1 = Würfel, 2 = Herz, 3 = Gemischt, 4 = Kugel, 5 = Pyramide, 6 = Diamant, 7 = Ring, 8 = Stern, 9 = Mondsichel
+
+背景 3D 粒子脉冲强度
+== Pulsationsstärke der 3D-Hintergrundpartikel
+
+背景 3D 粒子脉冲速度
+== Pulsationsgeschwindigkeit der 3D-Hintergrundpartikel
+
+背景 3D 粒子自定义颜色
+== Benutzerdefinierte Farbe der 3D-Hintergrundpartikel
+
+背景 3D 粒子视野外保留边距
+== Randabstand außerhalb des Sichtfelds für 3D-Hintergrundpartikel
+
+背景 3D 粒子辉光偏移
+== Glow-Versatz der 3D-Hintergrundpartikel
+
+背景 3D 粒子辉光透明度
+== Glow-Transparenz der 3D-Hintergrundpartikel
+
+背景 3D 粒子透明度
+== Transparenz der 3D-Hintergrundpartikel
+
+背景 3D 粒子闪烁强度
+== Blinkstärke der 3D-Hintergrundpartikel
+
+背景 3D 粒子颜色模式：1=自定义，2=随机
+== Farbmodus der 3D-Hintergrundpartikel: 1 = Benutzerdefiniert, 2 = Zufällig
+
+脉冲动画速度 ( 百分比, 100=正常)
+== Geschwindigkeit der Pulsationsanimation (Prozent, 100 = Normal)
+
+脉冲振幅 (0-100)
+== Amplitude der Pulsation (0-100)
+
+腾讯云翻译 SecretId
+== Tencent Cloud SecretId für Übersetzung
+
+腾讯云翻译 SecretKey
+== Tencent Cloud SecretKey für Übersetzung
+
+腾讯云翻译地域
+== Tencent Cloud Region für Übersetzung
+
+腾讯云翻译端点
+== Tencent Cloud Endpunkt für Übersetzung
+
+自动保存聊天记录
+== Chat-Verlauf automatisch speichern
+
+自动回复冷却时间（秒）
+== Abkühlzeit für automatische Antworten (Sekunden)
+
+自动增益控制（0=关闭 1=开启）
+== Automatische Verstärkungsregelung (0 = Aus, 1 = Ein)
+
+自动翻译入站消息
+== Eingehende Nachrichten automatisch übersetzen
+
+自动翻译发送的消息
+== Automatisch gesendete Nachrichten übersetzen
+
+自动翻译模式 (0=仅常见源语言输入时触发, 1=始终翻译)
+== Automatischer Übersetzungsmodus (0=nur bei häufigen Quellsprachen, 1=immer übersetzen)
+
+自动获取全图玩家皮肤并作为分身轮换队列
+== Automatisch Spieler-Skins von der gesamten Karte abrufen und als Dummy-Rotationswarteschlange verwenden
+
+自动获取全图玩家皮肤并作为轮换队列
+== Automatisch Spieler-Skins von der gesamten Karte abrufen und als Rotationswarteschlange verwenden
+
+自动跟随好友换服延迟（秒）
+== Verzögerung beim automatischen Folgen von Freunden beim Serverwechsel (Sekunden)
+
+自动锁定延迟（秒）
+== Automatische Sperrverzögerung (Sekunden)
+
+自定义 Provider API Key
+== Benutzerdefinierter Provider API Key
+
+自定义 Provider 模型名称
+== Benutzerdefinierter Provider Modellname
+
+自定义 Provider 端点
+== Benutzerdefinierter Provider Endpunkt
+
+自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）
+== Benutzerdefiniertes Seitenverhältnis, gespeichert als x100 (z.B. 178=16:9, 233=21:9)
+
+自定义翻译提示词（覆盖内置提示词）
+== Benutzerdefinierter Übersetzungs-Prompt (überschreibt den eingebauten Prompt)
+
+菜单不透明度 (Menu opacity 0-100)
+== Menü-Transparenz (Menü-Transparenz 0-100)
+
+被屏蔽词控制台颜色
+== Konsolenfarbe für blockierte Wörter
+
+被解冻时自动取消旁观
+== Automatisch Zuschauen beenden beim Auftauen
+
+被锤/榴弹击中时随机表情
+== Zufälliger Emote bei Treffer durch Hammer/Granate
+
+覆盖冻结图块的实体 alpha (0-100)
+== Entity-Alpha für gefrorene Kacheln überschreiben (0-100)
+
+覆盖实体 alpha 以解冻图块 (0-100)
+== Entity-Alpha für aufgetaute Kacheln überschreiben (0-100)
+
+覆盖死亡图块的实体 alpha (0-100)
+== Entity-Alpha für Todeskacheln überschreiben (0-100)
+
+观战选项颜色
+== Farbe der Zuschaueroptionen
+
+解冻后自动关闭聊天
+== Chat nach dem Auftauen automatisch schließen
+
+计分板查分
+== Punktestand im Scoreboard anzeigen
+
+计分板透明度
+== Scoreboard-Transparenz
+
+计分板颜色
+== Scoreboard-Farbe
+
+记分牌排序模式（0=分数，1=分）
+== Scoreboard-Sortiermodus (0=Punkte, 1=Score)
+
+语音分组模式
+== Sprachgruppenmodus
+
+语音协议版本
+== Sprachprotokollversion
+
+语音房间 Token（可选）
+== Sprachraum-Token (optional)
+
+语音播放音量（百分比）
+== Sprachwiedergabelautstärke (Prozent)
+
+语音服务器地址 host:port
+== Sprachserver-Adresse host:port
+
+语音测试模式（0=关 1=本地 2=服务器回环）
+== Sprachtestmodus (0=Aus 1=Lokal 2=Server-Rückkopplung)
+
+语音白名单（逗号分隔）
+== Sprach-Weißliste (kommagetrennt)
+
+语音码率档位（0=自动 1=24kbps 2=32kbps 3=48kbps 4=64kbps）
+== Sprach-Bitratenstufe (0=Auto 1=24kbps 2=32kbps 3=48kbps 4=64kbps)
+
+语音立体声宽度（百分比）
+== Sprach-Stereobreite (Prozent)
+
+语音立体声输出
+== Sprach-Stereoausgabe
+
+语音距离半径（Tiles）
+== Sprach-Distanzradius (Tiles)
+
+语音输入设备（空为默认）
+== Spracheingabegerät (leer für Standard)
+
+语音输出设备（空为默认）
+== Sprachausgabegerät (leer für Standard)
+
+语音静音名单（逗号分隔）
+== Sprach-Stummliste (kommagetrennt)
+
+语音音频后端（SDL 驱动名，空为自动）
+== Sprach-Audio-Backend (SDL-Treibername, leer für Auto)
+
+语音黑名单（逗号分隔）
+== Sprach-Schwarze Liste (kommagetrennt)
+
+调试图表面板不透明度（百分比）
+== Transparenz des Debug-Grafikbereichs (Prozent)
+
+资源预览显存预算百分比（基于设备本地显存预算）
+== Speicherbudget-Prozentsatz für die Ressourcenvorschau (basierend auf dem lokalen Gerätespeicherbudget)
+
+资源预览显存预算覆盖（MB，0=自动）
+== Speicherbudget-Überschreibung für die Ressourcenvorschau (MB, 0=Auto)
+
+跳跃提示垂直位置（占屏幕高度百分比）
+== Vertikale Position des Sprungtipps (Prozent der Bildschirmhöhe)
+
+跳跃提示字体大小
+== Schriftgröße des Sprungtipps
+
+跳跃提示文本（使用\n换行）
+== Text des Sprungtipps (verwende \n für Zeilenumbruch)
+
+跳跃提示水平位置（占屏幕宽度百分比）
+== Horizontale Position des Sprungtipps (Prozent der Bildschirmbreite)
+
+跳跃提示颜色
+== Farbe des Sprungtipps
+
+输入叠加 X 位置（百分比）
+== X-Position des Eingabe-Overlays (Prozent)
+
+输入叠加 Y 位置（百分比）
+== Y-Position des Eingabe-Overlays (Prozent)
+
+输入叠加不透明度（百分比）
+== Transparenz des Eingabe-Overlays (Prozent)
+
+输入叠加比例（百分比）
+== Skalierung des Eingabe-Overlays (Prozent)
+
+输入时不显示打字表情
+== Tipp-Emotes während der Eingabe nicht anzeigen
+
+输出语音调试日志
+== Sprach-Debug-Logs ausgeben
+
+进入 Axiom 社区服务器后自动登录
+== Automatische Anmeldung beim Betreten des Axiom Community Servers
+
+进入服务器时重置统计（0=累计统计，1=每次进服重置）
+== Statistiken beim Betreten des Servers zurücksetzen (0=kumulierte Statistiken, 1=zurücksetzen bei jedem Betreten)
+
+远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
+== Remote-Partikel: Über den Zentralserver synchronisieren und andere Spieler rendern (erfordert, dass der andere lokal+remote aktiviert hat)
+
+通用界面透明度
+== Allgemeine UI-Transparenz
+
+通知栏 echo 继承聊天 echo 颜色
+== Benachrichtigungsleiste echo erbt Chat echo Farbe
+
+通知栏 echo 覆盖文字颜色
+== Benachrichtigungsleiste echo überschreibt Textfarbe
+
+通知栏停留时间（毫秒）
+== Verweildauer der Benachrichtigungsleiste (Millisekunden)
+
+通知栏动画时间（毫秒）
+== Animationsdauer der Benachrichtigungsleiste (Millisekunden)
+
+通知栏动画类型（0=淡入滑入 1=仅淡入 2=无动画）
+== Animationstyp der Benachrichtigungsleiste (0=Einblenden und Einschieben 1=Nur Einblenden 2=Keine Animation)
+
+通知栏接管 echo 消息
+== Benachrichtigungsleiste übernimmt echo-Nachrichten
+
+通知栏接管服务器系统提示（入场版本信息除外）
+== Benachrichtigungsleiste übernimmt Server-Systemhinweise (außer Versionsinfo beim Beitritt)
+
+通知栏文字大小
+== Schriftgröße der Benachrichtigungsleiste
+
+通知栏显示基础服务器信息
+== Benachrichtigungsleiste zeigt grundlegende Serverinformationen
+
+通知栏显示服务器帮助说明
+== Benachrichtigungsleiste zeigt Serverhilfehinweise
+
+通知栏显示未知服务器消息
+== Benachrichtigungsleiste zeigt unbekannte Server-Nachrichten
+
+通知栏显示重要服务器提示
+== Benachrichtigungsleiste zeigt wichtige Server-Hinweise
+
+通知栏最大显示数量
+== Maximale Anzahl angezeigter Benachrichtigungen
+
+通知栏系统提示文字颜色
+== Textfarbe der Systemhinweise in der Benachrichtigungsleiste
+
+通知栏背景颜色
+== Hintergrundfarbe der Benachrichtigungsleiste
+
+通知栏贴边时预留边距
+== Randabstand bei angedockter Benachrichtigungsleiste
+
+速通倒计时器
+== Speedrun-Countdown-Timer
+
+速通计时器分钟
+== Speedrun-Timer Minuten
+
+速通计时器小时
+== Speedrun-Timer Stunden
+
+速通计时器时间（MMSS 格式，兼容旧版）
+== Speedrun-Timer-Zeit (MMSS-Format, kompatibel mit alter Version)
+
+速通计时器毫秒
+== Speedrun-Timer Millisekunden
+
+速通计时器秒
+== Speedrun-Timer Sekunden
+
+锤人换皮肤
+== Skin-Wechsel bei Hammer-Treffer
+
+队伍消息文字渐变颜色
+== Textverlaufsfarbe für Team-Nachrichten
+
+限幅器阈值（百分比）
+== Begrenzer-Schwellwert (Prozent)
+
+隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）
+== Eigenen Chat-Ballon ausblenden (nur wirksam bei authentifizierter Remote-Konsole)
+
+隐藏非好友姓名/部落并显示客户端 ID
+== Nicht-Freunde-Namen/Clan ausblenden und Client-ID anzeigen
+
+静音麦克风
+== Mikrofon stummschalten
+
+非好友使用默认皮肤
+== Standard-Skin für Nicht-Freunde verwenden
+
+饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
+== Umbenennungsliste für Pie-Menü (mit | trennen, z.B. Xuanmeng1|Xuanmeng2)
+
+麦克风音量（百分比）
+== Mikrofonlautstärke (Prozent)
 
 [Assets editor blend mode]
 Multiply

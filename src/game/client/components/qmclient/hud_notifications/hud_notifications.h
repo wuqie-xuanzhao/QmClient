@@ -259,9 +259,11 @@ private:
 	{
 		EKind m_Kind = EKind::Echo;
 		char m_aText[256] = {};
+		char m_aCollapseText[256] = {};
 		int64_t m_StartTime = 0;
 		unsigned m_EchoColor = 0;
 		bool m_HasEchoColor = false;
+		int m_RepeatCount = 1;
 	};
 
 	struct SEditorPreviewMetrics
@@ -304,9 +306,25 @@ private:
 		if(pText == nullptr || pText[0] == '\0')
 			return;
 
+		if(!m_vNotifications.empty())
+		{
+			SNotification &Last = m_vNotifications.back();
+			if(Last.m_Kind == Kind &&
+				Last.m_HasEchoColor == HasEchoColor &&
+				Last.m_EchoColor == EchoColor &&
+				str_comp(Last.m_aCollapseText, pText) == 0)
+			{
+				Last.m_RepeatCount += 1;
+				Last.m_StartTime = time_get();
+				str_format(Last.m_aText, sizeof(Last.m_aText), "%s x%d", Last.m_aCollapseText, Last.m_RepeatCount);
+				return;
+			}
+		}
+
 		SNotification Notification;
 		Notification.m_Kind = Kind;
 		str_copy(Notification.m_aText, pText);
+		str_copy(Notification.m_aCollapseText, pText);
 		Notification.m_StartTime = time_get();
 		Notification.m_EchoColor = EchoColor;
 		Notification.m_HasEchoColor = HasEchoColor;

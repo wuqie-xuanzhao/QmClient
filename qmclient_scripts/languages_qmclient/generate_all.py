@@ -125,14 +125,14 @@ def generate_language_entries(
     missing: list[tuple[str, str]] = []
 
     for source in strings:
-        if is_chinese(source.key):
-            continue
         identity = source.identity()
         translation = i18n_store.normalize_translation(
             language, translations.get(identity, source.key)
         )
         entries.append((identity, translation))
         if language == "simplified_chinese" and translation == source.key:
+            if is_chinese(source.key):
+                continue
             if (
                 source.key in SIMPLIFIED_CHINESE_PASSTHROUGH_KEYS
                 or identity in SIMPLIFIED_CHINESE_PASSTHROUGH_IDENTITIES

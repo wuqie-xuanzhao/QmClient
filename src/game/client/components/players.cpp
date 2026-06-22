@@ -904,15 +904,15 @@ void CPlayers::RenderPlayer(
 
 				if(WeaponSwitchAnimEnabled)
 				{
-					constexpr float SwitchAnimDuration = 0.3f;
+					const float SwitchAnimDuration = maximum(g_Config.m_QmWeaponSwitchAnimDurationMs, 1) / 1000.0f;
 					const float TimeSinceSwitch = (float)(Client()->LocalTime() - m_aWeaponSwitchStartTimes[ClientId]);
 					if(TimeSinceSwitch >= 0.0f && TimeSinceSwitch < SwitchAnimDuration)
 					{
 						const float Progress = TimeSinceSwitch / SwitchAnimDuration;
-						const float InvProgress = 1.0f - Progress;
-						const float Ease = 1.0f - InvProgress * InvProgress * InvProgress;
-						WeaponSwitchOffset += mix(Direction * 40.0f, vec2(0.0f, 0.0f), Ease);
-						WeaponSwitchAngle += (1.0f - Ease) * pi * 2.0f;
+						const float Ease = QmEvaluateVisualEasing(Progress, g_Config.m_QmWeaponSwitchAnimEasing);
+						const float RotationRadians = (g_Config.m_QmWeaponSwitchAnimRotation / 180.0f) * pi;
+						WeaponSwitchOffset += mix(Direction * (float)g_Config.m_QmWeaponSwitchAnimDistance, vec2(0.0f, 0.0f), Ease);
+						WeaponSwitchAngle += (1.0f - Ease) * RotationRadians;
 					}
 				}
 			}

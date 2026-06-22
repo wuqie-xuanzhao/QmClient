@@ -47,17 +47,18 @@
 
 namespace
 {
-	constexpr ColorRGBA PANEL_BG(0.04f, 0.09f, 0.16f, 0.88f);
-	constexpr ColorRGBA SURFACE_BG(0.08f, 0.13f, 0.21f, 0.74f);
-	constexpr ColorRGBA CARD_BG(0.12f, 0.17f, 0.25f, 0.68f);
-	constexpr ColorRGBA GRID_COLOR(1.0f, 1.0f, 1.0f, 0.11f);
-	constexpr ColorRGBA DIVIDER_COLOR(1.0f, 1.0f, 1.0f, 0.16f);
-	constexpr ColorRGBA PING_COLOR(0.31f, 0.63f, 1.0f, 0.95f);
-	constexpr ColorRGBA PRED_COLOR(0.96f, 0.64f, 0.23f, 0.95f);
-	constexpr ColorRGBA PRED_MARGIN_COLOR(0.78f, 0.56f, 0.97f, 0.95f);
-	constexpr ColorRGBA JITTER_COLOR(0.95f, 0.86f, 0.33f, 0.95f);
-	constexpr ColorRGBA FPS_COLOR(0.45f, 0.88f, 0.66f, 0.95f);
-	constexpr ColorRGBA GAME_MARGIN_COLOR(0.29f, 0.84f, 0.48f, 0.95f);
+	constexpr ColorRGBA PANEL_BG(0.05f, 0.07f, 0.12f, 0.90f);
+	constexpr ColorRGBA SURFACE_BG(0.09f, 0.12f, 0.18f, 0.76f);
+	constexpr ColorRGBA CARD_BG(0.13f, 0.16f, 0.22f, 0.70f);
+	constexpr ColorRGBA GRID_COLOR(1.0f, 1.0f, 1.0f, 0.08f);
+	constexpr ColorRGBA GRID_MAJOR_COLOR(1.0f, 1.0f, 1.0f, 0.14f);
+	constexpr ColorRGBA DIVIDER_COLOR(1.0f, 1.0f, 1.0f, 0.18f);
+	constexpr ColorRGBA PING_COLOR(0.40f, 0.66f, 1.0f, 0.95f);
+	constexpr ColorRGBA PRED_COLOR(1.0f, 0.70f, 0.30f, 0.95f);
+	constexpr ColorRGBA PRED_MARGIN_COLOR(0.82f, 0.60f, 1.0f, 0.95f);
+	constexpr ColorRGBA JITTER_COLOR(1.0f, 0.86f, 0.40f, 0.95f);
+	constexpr ColorRGBA FPS_COLOR(0.50f, 0.90f, 0.70f, 0.95f);
+	constexpr ColorRGBA GAME_MARGIN_COLOR(0.34f, 0.85f, 0.55f, 0.95f);
 
 	static float BytesPerSecondDelta(int64_t CurrentBytes, int64_t PrevBytes, float DeltaSeconds)
 	{
@@ -172,6 +173,17 @@ namespace
 		pGraphics->SetColor(GRID_COLOR);
 		pGraphics->LinesDraw(aLines.data(), NumLines);
 		pGraphics->LinesEnd();
+
+		const int MidSegment = HorizontalSegments / 2;
+		if(MidSegment > 0 && MidSegment < HorizontalSegments)
+		{
+			const float MidY = Rect.y + Rect.h * (float)MidSegment / (float)HorizontalSegments;
+			const IGraphics::CLineItem MajorLine(Rect.x, MidY, Rect.x + Rect.w, MidY);
+			pGraphics->LinesBegin();
+			pGraphics->SetColor(GRID_MAJOR_COLOR);
+			pGraphics->LinesDraw(&MajorLine, 1);
+			pGraphics->LinesEnd();
+		}
 	}
 
 	static void DrawZeroAxis(IGraphics *pGraphics, CUIRect Rect)
@@ -822,6 +834,15 @@ void CQmMonitoring::RenderMainGraph(CUIRect Rect) const
 		if(NumLines > 0)
 			Graphics()->LinesDraw(aLines.data(), NumLines);
 		Graphics()->LinesEnd();
+
+		if(m_HistoryCount >= 2)
+		{
+			const float LastX = PlotRect.x + PlotRect.w;
+			const float LastY = PlotRect.y + PlotRect.h - (PlotRect.h * std::clamp(SampleAt(aHistory, m_HistoryCount - 1) / MaxValue, 0.0f, 1.0f));
+			const float DotR = 3.5f;
+			CUIRect Dot(LastX - DotR, LastY - DotR, DotR * 2.0f, DotR * 2.0f);
+			Dot.Draw(Color, IGraphics::CORNER_ALL, DotR);
+		}
 	};
 
 	DrawSeries(m_aPingHistory, PING_COLOR);
@@ -939,6 +960,13 @@ void CQmMonitoring::RenderFpsGraph(CUIRect Rect) const
 	if(NumFpsLines > 0)
 		Graphics()->LinesDraw(aFpsLines.data(), NumFpsLines);
 	Graphics()->LinesEnd();
+	if(m_HistoryCount >= 2)
+	{
+		const float LastY = FpsRect.y + FpsRect.h - (FpsRect.h * std::clamp(SampleAt(m_aFpsHistory, m_HistoryCount - 1) / MaxFpsValue, 0.0f, 1.0f));
+		const float DotR = 3.5f;
+		CUIRect Dot(FpsRect.x + FpsRect.w - DotR, LastY - DotR, DotR * 2.0f, DotR * 2.0f);
+		Dot.Draw(FPS_COLOR, IGraphics::CORNER_ALL, DotR);
+	}
 	std::array<CUIRect, 8> aPeakRects = {};
 	int PeakRectCount = 0;
 	DrawPeakLabel(Graphics(), TextRender(), m_aFpsHistory, m_HistoryHead, m_HistoryCount, FpsRect, MaxFpsValue, FPS_COLOR, PeakFontSize, "", -8.0f * UiScale, aPeakRects, PeakRectCount);
@@ -962,6 +990,13 @@ void CQmMonitoring::RenderFpsGraph(CUIRect Rect) const
 	if(NumGameMarginLines > 0)
 		Graphics()->LinesDraw(aGameMarginLines.data(), NumGameMarginLines);
 	Graphics()->LinesEnd();
+	if(m_HistoryCount >= 2)
+	{
+		const float LastY = GameMarginRect.y + GameMarginRect.h * 0.5f - (GameMarginRect.h * 0.5f * std::clamp(SampleAt(m_aGameTimeMarginHistory, m_HistoryCount - 1) / MaxGameMarginAbs, -1.0f, 1.0f));
+		const float DotR = 3.5f;
+		CUIRect Dot(GameMarginRect.x + GameMarginRect.w - DotR, LastY - DotR, DotR * 2.0f, DotR * 2.0f);
+		Dot.Draw(GAME_MARGIN_COLOR, IGraphics::CORNER_ALL, DotR);
+	}
 	DrawSignedPeakLabel(Graphics(), TextRender(), m_aGameTimeMarginHistory, m_HistoryHead, m_HistoryCount, GameMarginRect, MaxGameMarginAbs, GAME_MARGIN_COLOR, PeakFontSize, "ms", aPeakRects, PeakRectCount);
 
 	const SQmHistoryStats FpsStats = QmComputeHistoryStats(m_aFpsHistory, m_HistoryHead, m_HistoryCount);

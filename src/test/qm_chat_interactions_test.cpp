@@ -103,6 +103,62 @@ TEST(QmFastPracticeCommands, PredictionLoopsReuseNormalPreInputAndFreezeSemantic
 	EXPECT_NE(VisualBody.find("VisualWorld.m_WorldConfig.m_PredictEvents = false;"), std::string::npos);
 }
 
+TEST(QmFastPracticeCommands, PracticeWorldKeepsDDRaceTeleportPredictionEnabled)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
+	const std::string Body = SourceFunctionBody(Source, "void CFastPractice::SyncPracticeWorldConfig()");
+
+	EXPECT_NE(Body.find("m_PracticeBaseWorld.m_WorldConfig.m_PredictDDRace = true;"), std::string::npos);
+	EXPECT_NE(Body.find("m_PracticeBaseWorld.m_WorldConfig.m_PredictTeleport = true;"), std::string::npos);
+}
+
+TEST(QmFastPracticeCommands, BaseWorldTickTracksTileFeedbackForMainAndDummy)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
+	const std::string Body = SourceFunctionBody(Source, "bool CFastPractice::AdvanceBaseWorldToTick(");
+
+	EXPECT_NE(Source.find("void CFastPractice::TrackPracticeTileFeedback(int ClientId, CCharacter *pChar, const vec2 &BeforePos)"), std::string::npos);
+	EXPECT_NE(Body.find("const vec2 LocalPosBeforeTick = pLocalChar->Core()->m_Pos;"), std::string::npos);
+	EXPECT_NE(Body.find("const vec2 DummyPosBeforeTick = pDummyChar ? pDummyChar->Core()->m_Pos : vec2(0.0f, 0.0f);"), std::string::npos);
+	EXPECT_EQ(Body.find("LocalPrevPosBeforeTick"), std::string::npos);
+	EXPECT_EQ(Body.find("DummyPrevPosBeforeTick"), std::string::npos);
+	EXPECT_NE(Body.find("TrackPracticeTileFeedback(LocalClientId, pLocalChar, LocalPosBeforeTick);"), std::string::npos);
+	EXPECT_NE(Body.find("TrackPracticeTileFeedback(DummyClientId, pDummyChar, DummyPosBeforeTick);"), std::string::npos);
+}
+
+TEST(QmFastPracticeCommands, TileFeedbackRecordsTeleportsAndOnlyNewDeathTileEntries)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
+	const std::string Body = SourceFunctionBody(Source, "void CFastPractice::TrackPracticeTileFeedback(");
+
+	EXPECT_NE(Body.find("PracticePathContainsTeleport(Collision(), BeforePos, AfterPos)"), std::string::npos);
+	EXPECT_NE(Body.find("EvaluatePracticeTileFeedback("), std::string::npos);
+	EXPECT_NE(Body.find("StoreLastTeleport(ClientId, AfterPos);"), std::string::npos);
+	EXPECT_NE(Body.find("const bool WasInDeath = IsCharacterTouchingDeathTile(Collision(), BeforeTickPos, pChar->GetProximityRadius());"), std::string::npos);
+	EXPECT_NE(Body.find("const bool IsInDeath = IsCharacterTouchingDeathTile(Collision(), AfterPos, pChar->GetProximityRadius());"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->m_Effects.PlayerDeath(AfterPos, ClientId, 1.0f);"), std::string::npos);
+}
+
+TEST(QmFastPracticeCommands, TileFeedbackDecisionMatchesGameplayEvents)
+{
+	const auto TeleportDecision = CFastPractice::EvaluatePracticeTileFeedback(true, false, false, 12.0f);
+	EXPECT_TRUE(TeleportDecision.m_RecordTeleport);
+	EXPECT_FALSE(TeleportDecision.m_RecordDeath);
+	EXPECT_FALSE(TeleportDecision.m_PlayDeathFeedback);
+
+	const auto StationaryTeleportDecision = CFastPractice::EvaluatePracticeTileFeedback(true, false, false, 0.0f);
+	EXPECT_FALSE(StationaryTeleportDecision.m_RecordTeleport);
+
+	const auto EnterDeathDecision = CFastPractice::EvaluatePracticeTileFeedback(false, false, true, 12.0f);
+	EXPECT_FALSE(EnterDeathDecision.m_RecordTeleport);
+	EXPECT_TRUE(EnterDeathDecision.m_RecordDeath);
+	EXPECT_TRUE(EnterDeathDecision.m_PlayDeathFeedback);
+
+	const auto StayInDeathDecision = CFastPractice::EvaluatePracticeTileFeedback(false, true, true, 12.0f);
+	EXPECT_FALSE(StayInDeathDecision.m_RecordDeath);
+	EXPECT_FALSE(StayInDeathDecision.m_PlayDeathFeedback);
+}
+
 TEST(QmChatInteractions, ClickDragThreshold)
 {
 	EXPECT_TRUE(CChat::IsCopyClickDrag(vec2(10.0f, 10.0f), vec2(12.0f, 12.0f)));
@@ -180,6 +236,30 @@ TEST(QmChatInteractions, ServerSystemMessagePathsDoNotReintroduceStarPrefix)
 	EXPECT_NE(AddLine.find("MessageNamePrefixForClientId(CurrentLine.m_ClientId)"), std::string::npos);
 }
 
+TEST(QmChatInteractions, TranslateButtonSitsBeforeInputAndPopupCanCloseItself)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string RenderBody = SourceFunctionBody(Source, "void CChat::OnRender()");
+	const std::string PopupBody = SourceFunctionBody(Source, "CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(");
+
+	EXPECT_NE(RenderBody.find("CUIRect TranslateButtonRect = {x"), std::string::npos);
+	EXPECT_NE(RenderBody.find("InputCursor.SetPosition(vec2(x + TranslateButtonSize + TranslateButtonGap, y));"), std::string::npos);
+	EXPECT_NE(PopupBody.find("FONT_ICON_XMARK"), std::string::npos);
+	EXPECT_NE(PopupBody.find("return CUi::POPUP_CLOSE_CURRENT;"), std::string::npos);
+}
+
+TEST(QmChatInteractions, ScrollbarFollowsChatEdgeAndCutoffAnimationIsConfigurable)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string RenderBody = SourceFunctionBody(Source, "void CChat::OnRender()");
+	const std::string OffsetBody = SourceFunctionBody(Source, "float CChat::CalculateCutOffOffsetX(");
+
+	EXPECT_NE(RenderBody.find("const bool ChatScrollbarOnRight = ChatAnchoredRight;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("ChatScrollbarOnRight ? ChatRect.w - CHAT_SCROLLBAR_WIDTH - CHAT_SCROLLBAR_MARGIN : CHAT_SCROLLBAR_MARGIN"), std::string::npos);
+	EXPECT_NE(Source.find("g_Config.m_QmChatAnimFadeDurationMs"), std::string::npos);
+	EXPECT_NE(OffsetBody.find("g_Config.m_QmChatAnimSlideOut"), std::string::npos);
+}
+
 TEST(QmChatInteractions, ChatLineMenuKeepsSpectateAction)
 {
 	const std::string Header = ReadTestSourceFile("src/game/client/components/chat.h");
@@ -190,6 +270,24 @@ TEST(QmChatInteractions, ChatLineMenuKeepsSpectateAction)
 	EXPECT_NE(Source.find("DoEntry(&pPopupContext->m_SpectateButton, FontIcons::FONT_ICON_EYE, Localize(\"Spectate\")"), std::string::npos);
 	EXPECT_NE(Source.find("GameClient()->m_Spectator.Spectate(Context.m_ClientId);"), std::string::npos);
 	EXPECT_NE(Source.find("Console()->ExecuteLine(aCommand);"), std::string::npos);
+}
+
+TEST(QmChatInteractions, CommandUsagePreviewUsesLocalizableSourceText)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string Body = SourceFunctionBody(Source, "bool CChat::BuildCommandUsagePreview(");
+	const std::string LocalizeCommandPreviewBody = SourceFunctionBody(Source, "const char *CChat::LocalizeCommandPreviewText(");
+
+	EXPECT_NE(Body.find("Localize(\"Query points for %s\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Invite %s to the locked team\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"Usage: /%s %s\")"), std::string::npos);
+	EXPECT_NE(Body.find("Localize(\"%s (/%s %s)\")"), std::string::npos);
+	EXPECT_EQ(Body.find("%s（/%s %s）"), std::string::npos);
+	EXPECT_EQ(LocalizeCommandPreviewBody.find("languages/simplified_chinese.txt"), std::string::npos);
+	EXPECT_EQ(Body.find("查询"), std::string::npos);
+	EXPECT_EQ(Body.find("邀请"), std::string::npos);
+	EXPECT_EQ(Body.find("悄悄话"), std::string::npos);
+	EXPECT_EQ(Body.find("用法"), std::string::npos);
 }
 
 TEST(QmChatInteractions, ReusesKnownServerMessageClassWithoutReanalysis)

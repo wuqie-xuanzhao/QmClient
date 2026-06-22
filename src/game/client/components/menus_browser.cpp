@@ -2546,7 +2546,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					if(Friend.ServerInfo())
 					{
 						TextRender()->TextColor(FollowingThisFriend || Ui()->HotItem() == pFollowButtonId ? TextRender()->DefaultTextColor() : InactiveIconColor);
-						Ui()->DoLabel(&FollowButton, FollowingThisFriend ? FONT_ICON_CIRCLE_STOP : FONT_ICON_PERSON_RUNNING, FollowButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+						Ui()->DoLabel(&FollowButton, FollowingThisFriend ? FONT_ICON_STOP : FONT_ICON_PLAY, FollowButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 					}
 					TextRender()->TextColor(Ui()->HotItem() == pCopyButtonId ? TextRender()->DefaultTextColor() : InactiveIconColor);
 					Ui()->DoLabel(&CopyButton, FONT_ICON_COPY, CopyButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
@@ -3007,7 +3007,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 				m_FriendsCategoryPopupContext.m_CategoryIndex = m_FriendAddCategoryIndex;
 				m_FriendsCategoryPopupContext.m_Mode = CFriendsCategoryPopupContext::MODE_ADD;
 				m_FriendsCategoryPopupContext.m_NameInput.Clear();
-				Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Ui()->MouseX(), Ui()->MouseY(), 250.0f, 62.0f, &m_FriendsCategoryPopupContext, PopupFriendsCategory);
+				Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Ui()->MouseX(), Ui()->MouseY(), 280.0f, CMenus::FriendsCategoryEditPopupHeight(), &m_FriendsCategoryPopupContext, PopupFriendsCategory);
 			}
 			GameClient()->m_Tooltips.DoToolTip(&m_FriendsAddCategoryCreateButton, &CreateCategoryButton, Localize("Create category"));
 		}
@@ -3094,9 +3094,9 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 	View.HSplitTop(18.0f, &Input, &View);
 	pMenus->Ui()->DoEditBox(&pPopupContext->m_NameInput, &Input, FontSize + 1.0f);
 
-	View.HSplitTop(4.0f, nullptr, &View);
-	View.HSplitTop(18.0f, &Buttons, &View);
-	Buttons.VSplitMid(&Cancel, &Confirm, 3.0f);
+	View.HSplitTop(6.0f, nullptr, &View);
+	View.HSplitTop(20.0f, &Buttons, &View);
+	Buttons.VSplitMid(&Cancel, &Confirm, 5.0f);
 
 	const bool CancelPressed = pMenus->Ui()->DoButton_PopupMenu(&pPopupContext->m_CancelButton, Localize("Cancel"), &Cancel, FontSize, TEXTALIGN_MC) || (Active && pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE));
 	if(CancelPressed)

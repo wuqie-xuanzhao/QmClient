@@ -65,11 +65,7 @@ else:
     count += 1
     print("  OK: extracted_audit_report.json is readable")
 
-active_source_keys = sorted(
-    (item.key, item.context)
-    for item in extracted_strings
-    if not generate_all.is_chinese(item.key)
-)
+active_source_keys = sorted((item.key, item.context) for item in extracted_strings)
 
 for language in generate_all.GENERATED_LANGUAGES:
     path = generate_all.runtime_language_path(language)

@@ -100,16 +100,18 @@ struct SConfigVariable
 	EVariableType m_Type;
 	int m_Flags;
 	const char *m_pHelp;
+	const char *m_pHelpLocalizeKey;
 	// Note that this only applies to the console command and the SetValue function,
 	// but the underlying config variable can still be modified programmatically.
 	bool m_ReadOnly = false;
 
-	SConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp) :
+	SConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, const char *pHelpLocalizeKey) :
 		m_pConsole(pConsole),
 		m_pScriptName(pScriptName),
 		m_Type(Type),
 		m_Flags(Flags),
-		m_pHelp(pHelp)
+		m_pHelp(pHelp),
+		m_pHelpLocalizeKey(pHelpLocalizeKey)
 	{
 	}
 
@@ -134,8 +136,8 @@ struct SIntConfigVariable : public SConfigVariable
 	int m_Max;
 	int m_OldValue;
 
-	SIntConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, int *pVariable, int Default, int Min, int Max) :
-		SConfigVariable(pConsole, pScriptName, Type, Flags, pHelp),
+	SIntConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, const char *pHelpLocalizeKey, int *pVariable, int Default, int Min, int Max) :
+		SConfigVariable(pConsole, pScriptName, Type, Flags, pHelp, pHelpLocalizeKey),
 		m_pVariable(pVariable),
 		m_Default(Default),
 		m_Min(Min),
@@ -165,8 +167,8 @@ struct SColorConfigVariable : public SConfigVariable
 	bool m_Alpha;
 	unsigned m_OldValue;
 
-	SColorConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, unsigned *pVariable, unsigned Default) :
-		SConfigVariable(pConsole, pScriptName, Type, Flags, pHelp),
+	SColorConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, const char *pHelpLocalizeKey, unsigned *pVariable, unsigned Default) :
+		SConfigVariable(pConsole, pScriptName, Type, Flags, pHelp, pHelpLocalizeKey),
 		m_pVariable(pVariable),
 		m_Default(Default),
 		m_Alpha(Flags & CFGFLAG_COLALPHA),
@@ -206,7 +208,7 @@ struct SStringConfigVariable : public SConfigVariable
 	size_t m_MaxSize;
 	char *m_pOldValue;
 
-	SStringConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, char *pStr, const char *pDefault, size_t MaxSize, char *pOldValue);
+	SStringConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, const char *pHelpLocalizeKey, char *pStr, const char *pDefault, size_t MaxSize, char *pOldValue);
 	~SStringConfigVariable() override = default;
 
 	static void CommandCallback(IConsole::IResult *pResult, void *pUserData);

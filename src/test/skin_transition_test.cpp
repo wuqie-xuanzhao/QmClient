@@ -107,3 +107,36 @@ TEST(SkinTransition, ThemeSwitchTypeUsesVerticalMotion)
 	EXPECT_FLOAT_EQ(Blend.m_PreviousPosOffset.x, 0.0f);
 	EXPECT_FLOAT_EQ(Blend.m_CurrentPosOffset.x, 0.0f);
 }
+
+TEST(SkinTransition, CustomIntensityScalesVisualParameters)
+{
+	const SSkinChangeTransitionBlend Normal = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_SLIDE_LEFT, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+	const SSkinChangeTransitionBlend Strong = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_SLIDE_LEFT, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 200);
+
+	EXPECT_LT(Strong.m_PreviousPosOffset.x, Normal.m_PreviousPosOffset.x);
+	EXPECT_GT(Strong.m_CurrentPosOffset.x, Normal.m_CurrentPosOffset.x);
+}
+
+TEST(SkinTransition, EasingChangesIntermediateBlendButKeepsEndpoints)
+{
+	const SSkinChangeTransitionBlend CubicStart = ComputeSkinChangeTransitionBlend(0.0f, SKIN_CHANGE_TRANSITION_GHOST_POP, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+	const SSkinChangeTransitionBlend BackStart = ComputeSkinChangeTransitionBlend(0.0f, SKIN_CHANGE_TRANSITION_GHOST_POP, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK, 100);
+	const SSkinChangeTransitionBlend CubicMid = ComputeSkinChangeTransitionBlend(0.5f, SKIN_CHANGE_TRANSITION_FADE_SCALE, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+	const SSkinChangeTransitionBlend BackMid = ComputeSkinChangeTransitionBlend(0.5f, SKIN_CHANGE_TRANSITION_FADE_SCALE, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK, 100);
+	const SSkinChangeTransitionBlend CubicEnd = ComputeSkinChangeTransitionBlend(1.0f, SKIN_CHANGE_TRANSITION_GHOST_POP, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+	const SSkinChangeTransitionBlend BackEnd = ComputeSkinChangeTransitionBlend(1.0f, SKIN_CHANGE_TRANSITION_GHOST_POP, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK, 100);
+
+	EXPECT_FLOAT_EQ(CubicStart.m_CurrentAlpha, BackStart.m_CurrentAlpha);
+	EXPECT_NE(CubicMid.m_CurrentAlpha, BackMid.m_CurrentAlpha);
+	EXPECT_FLOAT_EQ(CubicEnd.m_CurrentAlpha, BackEnd.m_CurrentAlpha);
+}
+
+TEST(SkinTransition, ElasticBackKeepsAlphaInDrawableRange)
+{
+	const SSkinChangeTransitionBlend SkinBlend = ComputeSkinChangeTransitionBlend(0.5f, SKIN_CHANGE_TRANSITION_FADE_SCALE, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK, 100);
+
+	EXPECT_GE(SkinBlend.m_PreviousAlpha, 0.0f);
+	EXPECT_LE(SkinBlend.m_PreviousAlpha, 1.0f);
+	EXPECT_GE(SkinBlend.m_CurrentAlpha, 0.0f);
+	EXPECT_LE(SkinBlend.m_CurrentAlpha, 1.0f);
+}

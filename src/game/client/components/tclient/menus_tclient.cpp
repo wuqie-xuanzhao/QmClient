@@ -5517,6 +5517,35 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		return true;
 	};
 
+	auto BuildLocalizedConfigHelpText = [](const SConfigVariable *pVar) {
+		const char *pHelpKey = pVar->m_pHelpLocalizeKey ? pVar->m_pHelpLocalizeKey : (pVar->m_pHelp ? pVar->m_pHelp : "");
+		const char *pHelpText = pHelpKey[0] != '\0' ? Localize(pHelpKey) : "";
+		char aHelp[512];
+		if(pVar->m_Type == SConfigVariable::VAR_INT)
+		{
+			const SIntConfigVariable *pInt = static_cast<const SIntConfigVariable *>(pVar);
+			if(pInt->m_Min == pInt->m_Max)
+				str_format(aHelp, sizeof(aHelp), "%s (%s: %d)", pHelpText, Localize("default"), pInt->m_Default);
+			else if(pInt->m_Max == 0)
+				str_format(aHelp, sizeof(aHelp), "%s (%s: %d, %s: %d)", pHelpText, Localize("default"), pInt->m_Default, Localize("minimum"), pInt->m_Min);
+			else
+				str_format(aHelp, sizeof(aHelp), "%s (%s: %d, %s: %d, %s: %d)", pHelpText, Localize("default"), pInt->m_Default, Localize("minimum"), pInt->m_Min, Localize("maximum"), pInt->m_Max);
+		}
+		else if(pVar->m_Type == SConfigVariable::VAR_COLOR)
+		{
+			const SColorConfigVariable *pColor = static_cast<const SColorConfigVariable *>(pVar);
+			str_format(aHelp, sizeof(aHelp), "%s (%s: $%0*X)", pHelpText, Localize("default"), pColor->m_Alpha ? 8 : 6, color_cast<ColorRGBA>(ColorHSLA(pColor->m_Default, pColor->m_Alpha)).Pack(pColor->m_Alpha));
+		}
+		else if(pVar->m_Type == SConfigVariable::VAR_STRING)
+		{
+			const SStringConfigVariable *pString = static_cast<const SStringConfigVariable *>(pVar);
+			str_format(aHelp, sizeof(aHelp), "%s (%s: \"%s\", %s: %d)", pHelpText, Localize("default"), pString->m_pDefault, Localize("maximum"), (int)pString->m_MaxSize - 1);
+		}
+		else
+			str_copy(aHelp, pHelpText);
+		return std::string(aHelp);
+	};
+
 	unsigned int SelectedTagMask = 0;
 	for(int Tag = 1; Tag < static_cast<int>(EConfigTag::NUM_TAGS); ++Tag)
 	{
@@ -5535,12 +5564,15 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 	static int s_CachedConfigOnlyModified = -1;
 	static unsigned int s_CachedConfigTagMask = 0;
 	static size_t s_CachedConfigVarCount = 0;
+	static uint64_t s_CachedConfigLanguageHash = 0;
+	const uint64_t ConfigLanguageHash = str_quickhash(g_Config.m_ClLanguagefile);
 	if(s_CachedConfigSearch != (pSearch ? pSearch : "") ||
 		s_CachedConfigDomainMask != DomainMask ||
 		s_CachedConfigChangesCount != ChangesCount ||
 		s_CachedConfigOnlyModified != g_Config.m_TcUiOnlyModified ||
 		s_CachedConfigTagMask != SelectedTagMask ||
-		s_CachedConfigVarCount != s_vAllClientVars.size())
+		s_CachedConfigVarCount != s_vAllClientVars.size() ||
+		s_CachedConfigLanguageHash != ConfigLanguageHash)
 	{
 		s_vFilteredConfigs.clear();
 		s_vFilteredConfigs.reserve(s_vAllClientVars.size());
@@ -5555,7 +5587,8 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 			{
 				const char *pName = pVar->m_pScriptName ? pVar->m_pScriptName : "";
 				const char *pHelp = pVar->m_pHelp ? pVar->m_pHelp : "";
-				if(!str_find_nocase(pName, pSearch) && !str_find_nocase(pHelp, pSearch))
+				std::string LocalizedHelp = BuildLocalizedConfigHelpText(pVar);
+				if(!str_find_nocase(pName, pSearch) && !str_find_nocase(pHelp, pSearch) && !str_find_nocase(LocalizedHelp.c_str(), pSearch))
 					continue;
 			}
 			if(AnyTagEnabled)
@@ -5572,6 +5605,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		s_CachedConfigOnlyModified = g_Config.m_TcUiOnlyModified;
 		s_CachedConfigTagMask = SelectedTagMask;
 		s_CachedConfigVarCount = s_vAllClientVars.size();
+		s_CachedConfigLanguageHash = ConfigLanguageHash;
 	}
 	const std::vector<const SConfigVariable *> &vpFiltered = s_vFilteredConfigs;
 
@@ -5664,7 +5698,8 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 			Below.HSplitTop(2.0f, nullptr, &Below);
 			Help = Below;
 			Help.VSplitLeft(10.0f, nullptr, &Help);
-			Ui()->DoLabel(&Help, pVar->m_pHelp ? pVar->m_pHelp : "", 11.0f, TEXTALIGN_ML);
+			const std::string LocalizedHelp = BuildLocalizedConfigHelpText(pVar);
+			Ui()->DoLabel(&Help, LocalizedHelp.c_str(), 11.0f, TEXTALIGN_ML);
 		}
 
 		static std::unordered_map<const SConfigVariable *, CButtonContainer> s_ResetBtns;

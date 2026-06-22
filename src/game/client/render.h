@@ -193,6 +193,15 @@ enum
 	SKIN_CHANGE_TRANSITION_TYPE_COUNT,
 };
 
+enum
+{
+	SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC = 0,
+	SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK,
+	SKIN_CHANGE_TRANSITION_EASING_LINEAR,
+	SKIN_CHANGE_TRANSITION_EASING_EASE_IN_OUT_QUAD,
+	SKIN_CHANGE_TRANSITION_EASING_COUNT,
+};
+
 struct SSkinChangeTransitionBlend
 {
 	float m_PreviousAlpha = 0.0f;
@@ -217,6 +226,37 @@ inline int ClampSkinChangeTransitionType(int TransitionType)
 	return std::clamp(TransitionType, 0, SKIN_CHANGE_TRANSITION_TYPE_COUNT - 1);
 }
 
+inline int ClampSkinChangeTransitionEasing(int Easing)
+{
+	return std::clamp(Easing, 0, SKIN_CHANGE_TRANSITION_EASING_COUNT - 1);
+}
+
+inline float SkinChangeTransitionIntensityScale(int Intensity)
+{
+	return std::clamp(Intensity, 0, 300) / 100.0f;
+}
+
+inline float QmEvaluateVisualEasing(float Progress, int Easing)
+{
+	Progress = ClampSkinChangeTransitionProgress(Progress);
+	switch(ClampSkinChangeTransitionEasing(Easing))
+	{
+	case SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_BACK:
+	{
+		constexpr float Overshoot = 1.70158f;
+		const float T = Progress - 1.0f;
+		return 1.0f + (Overshoot + 1.0f) * T * T * T + Overshoot * T * T;
+	}
+	case SKIN_CHANGE_TRANSITION_EASING_LINEAR:
+		return Progress;
+	case SKIN_CHANGE_TRANSITION_EASING_EASE_IN_OUT_QUAD:
+		return Progress < 0.5f ? 2.0f * Progress * Progress : 1.0f - std::pow(-2.0f * Progress + 2.0f, 2.0f) * 0.5f;
+	case SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC:
+	default:
+		return 1.0f - std::pow(1.0f - Progress, 3.0f);
+	}
+}
+
 inline float SkinChangeTransitionDurationSeconds(int DurationMs)
 {
 	return std::max(DurationMs, 0) / 1000.0f;
@@ -238,24 +278,26 @@ inline float ResolveSkinChangeTransitionProgress(float ElapsedSeconds, int Durat
 	return ClampSkinChangeTransitionProgress(ElapsedSeconds / DurationSeconds);
 }
 
-inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, vec2 BodyScale, vec2 FeetScale, int TransitionType)
+inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, vec2 BodyScale, vec2 FeetScale, int TransitionType, int Easing, int Intensity)
 {
 	Progress = ClampSkinChangeTransitionProgress(Progress);
 	TransitionType = ClampSkinChangeTransitionType(TransitionType);
 
-	const float EaseOut = 1.0f - std::pow(1.0f - Progress, 3.0f);
+	const float EaseOut = QmEvaluateVisualEasing(Progress, Easing);
+	const float AlphaProgress = std::clamp(EaseOut, 0.0f, 1.0f);
 	const float Enter = 1.0f - EaseOut;
-	const float Pop = std::sin(Progress * pi);
+	const float IntensityScale = SkinChangeTransitionIntensityScale(Intensity);
+	const float Pop = std::sin(Progress * pi) * IntensityScale;
 	SSkinChangeTransitionBlend Blend;
 
 	switch(TransitionType)
 	{
 	case SKIN_CHANGE_TRANSITION_FADE_SCALE:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.06f * EaseOut;
-		const float CurrentScaleFactor = 0.88f + 0.12f * EaseOut;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.06f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.12f * IntensityScale + 0.12f * IntensityScale * EaseOut;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
@@ -264,53 +306,53 @@ inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progres
 	}
 	case SKIN_CHANGE_TRANSITION_SLIDE_LEFT:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.03f * EaseOut;
-		const float CurrentScaleFactor = 0.97f + 0.03f * EaseOut;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.03f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.03f * IntensityScale + 0.03f * IntensityScale * EaseOut;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
 		Blend.m_CurrentFeetScale = FeetScale * CurrentScaleFactor;
-		Blend.m_PreviousPosOffset = vec2(-14.0f * EaseOut, 0.0f);
-		Blend.m_CurrentPosOffset = vec2(18.0f * Enter, 0.0f);
+		Blend.m_PreviousPosOffset = vec2(-14.0f * IntensityScale * EaseOut, 0.0f);
+		Blend.m_CurrentPosOffset = vec2(18.0f * IntensityScale * Enter, 0.0f);
 		break;
 	}
 	case SKIN_CHANGE_TRANSITION_SPIN_POP:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.04f * EaseOut;
-		const float CurrentScaleFactor = 0.92f + 0.08f * EaseOut + 0.03f * Pop;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.04f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.08f * IntensityScale + 0.08f * IntensityScale * EaseOut + 0.03f * Pop;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
 		Blend.m_CurrentFeetScale = FeetScale * CurrentScaleFactor;
-		Blend.m_PreviousAngleOffset = -0.18f * (1.0f - Progress);
-		Blend.m_CurrentAngleOffset = 0.20f * Enter;
+		Blend.m_PreviousAngleOffset = -0.18f * IntensityScale * (1.0f - Progress);
+		Blend.m_CurrentAngleOffset = 0.20f * IntensityScale * Enter;
 		break;
 	}
 	case SKIN_CHANGE_TRANSITION_THEME_SWITCH:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.02f * EaseOut;
-		const float CurrentScaleFactor = 0.96f + 0.04f * EaseOut;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.02f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.04f * IntensityScale + 0.04f * IntensityScale * EaseOut;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
 		Blend.m_CurrentFeetScale = FeetScale * CurrentScaleFactor;
-		Blend.m_PreviousPosOffset = vec2(0.0f, -8.0f * EaseOut);
-		Blend.m_CurrentPosOffset = vec2(0.0f, 8.0f * Enter);
+		Blend.m_PreviousPosOffset = vec2(0.0f, -8.0f * IntensityScale * EaseOut);
+		Blend.m_CurrentPosOffset = vec2(0.0f, 8.0f * IntensityScale * Enter);
 		break;
 	}
 	case SKIN_CHANGE_TRANSITION_GHOST_POP:
 	default:
 	{
-		const float PreviousScaleFactor = 1.0f - 0.06f * EaseOut;
-		const float CurrentScaleFactor = 0.94f + 0.06f * EaseOut + 0.05f * Pop;
-		Blend.m_PreviousAlpha = 1.0f - EaseOut;
-		Blend.m_CurrentAlpha = 0.18f + 0.82f * EaseOut;
+		const float PreviousScaleFactor = 1.0f - 0.06f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.06f * IntensityScale + 0.06f * IntensityScale * EaseOut + 0.05f * Pop;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = 0.18f + 0.82f * AlphaProgress;
 		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
 		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
 		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
@@ -320,6 +362,16 @@ inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progres
 	}
 
 	return Blend;
+}
+
+inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, vec2 BodyScale, vec2 FeetScale, int TransitionType)
+{
+	return ComputeSkinChangeTransitionBlend(Progress, BodyScale, FeetScale, TransitionType, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 100);
+}
+
+inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, int TransitionType, int Easing, int Intensity)
+{
+	return ComputeSkinChangeTransitionBlend(Progress, vec2(1.0f, 1.0f), vec2(1.0f, 1.0f), TransitionType, Easing, Intensity);
 }
 
 inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, int TransitionType)

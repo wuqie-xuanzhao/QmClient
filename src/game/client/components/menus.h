@@ -796,6 +796,10 @@ public:
 		if(pManageButton != nullptr)
 			*pManageButton = ManageButton;
 	}
+	static float FriendsCategoryEditPopupHeight()
+	{
+		return 5.0f * 2.0f + 12.0f + 3.0f + 18.0f + 6.0f + 20.0f;
+	}
 	struct SFriendAutoFollowState
 	{
 		bool m_Active = false;
