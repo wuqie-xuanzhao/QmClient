@@ -823,6 +823,12 @@ Auto unmute when speaking
 Auto unspec on unfreeze
 == Автовыход из зрителей при разморозке
 
+Auto weapon switch
+== Автосмена оружия
+
+Auto-follow delay
+== Задержка автоследования
+
 Auto-sync player camera
 == Автосинхронизация камеры игрока
 
@@ -972,6 +978,15 @@ Blue team wins!
 
 Body
 == Тело
+
+Border
+== Border
+
+Border color
+== Border color
+
+Border range
+== Border range
 
 Both
 == Оба
@@ -1636,6 +1651,9 @@ Custom Font:
 Custom prompt template
 == Пользовательский шаблон промпта
 
+Customize name and clan text effects
+== Customize name and clan text effects
+
 Customize translate button and menu colors
 == Настройка цветов кнопки перевода и меню
 
@@ -1825,8 +1843,14 @@ Delete this preset
 Demo
 == Демо
 
+Demo effects
+== Demo effects
+
 Demo marker added
 == Маркер демки добавлен
+
+Demo target
+== Demo target
 
 Demofile: %s
 == Файл демо: %s
@@ -2185,6 +2209,9 @@ Edit touch controls
 Editor
 == Редактор
 
+Elastic
+== Эластичный
+
 Elastic back
 == Пружинный откат
 
@@ -2284,6 +2311,9 @@ Enable replays
 Enable server message sound
 == Включить звук сообщения сервера
 
+Enable skin queue rotation
+== Включить ротацию очереди скинов
+
 Enable speedrun timer
 == Включить таймер спидран
 
@@ -2313,6 +2343,9 @@ Enable word filter list
 
 Enable Zen mode
 == Включить Zen-режим
+
+Enabled
+== Включено
 
 Enables/disables active moderator mode for the player
 == Включает/отключает режим активного модератора для игрока
@@ -2713,6 +2746,9 @@ Friend online and join notifications
 Friends
 == Друзья
 
+Friends only
+== Friends only
+
 Frozen Margin
 == Запас при заморозке
 
@@ -2833,17 +2869,29 @@ Gives you endless hook
 Gives you infinite jump
 == Даёт вам бесконечный прыжок
 
+Glitch
+== Глюк
+
 Global toggle key
 == Глобальная клавиша переключения
 
+Glow
+== Glow
+
 Glow alpha
 == Альфа свечения
+
+Glow color
+== Glow color
 
 Glow intensity
 == Интенсивность свечения
 
 Glow offset
 == Смещение свечения
+
+Glow range
+== Glow range
 
 Go back one marker
 == Назад на одну метку
@@ -2881,11 +2929,20 @@ Gores 模式下启用快速输入
 Gores 模式下对其他玩家也启用快速输入
 == Включить быстрый ввод для других игроков в режиме Gores
 
+Gores 模式下自动锤枪切换
+== Авто-переключение молота/пушки в режиме Gores
+
 Gores 模式下隐藏辅助线
 == Скрыть вспомогательные линии в режиме Gores
 
 Grabs
 == Захваты
+
+Gradient
+== Gradient
+
+Gradient color
+== Gradient color
 
 Graphics
 == Графика
@@ -3066,6 +3123,9 @@ Hook line tip
 
 Hook Strength
 == Сила крюка
+
+Hook strength scope
+== Hook strength scope
 
 Hooking L/R: %.0f%%/%.0f%%
 == Зацеп крюком В/П: %.0f%%/%.0f%%
@@ -3757,8 +3817,14 @@ Manual
 Manual concurrency: %d
 == Ручная конкурентность: %d
 
+Manual scope
+== Manual scope
+
 Manual source file
 == Ручной исходный файл
+
+Manual target
+== Manual target
 
 Map
 == Карта
@@ -4029,6 +4095,9 @@ Name:
 
 Name: %s
 == Имя: %s
+
+Nameplate text
+== Nameplate text
 
 Native scale (1.0)
 == Нативный масштаб (1.0)
@@ -4459,6 +4528,12 @@ Option color
 Other
 == Другое
 
+Others
+== Others
+
+Others only
+== Others only
+
 Outgoing language
 == Исходящий язык
 
@@ -4698,6 +4773,9 @@ Players can't collide on this server
 
 Players can't hook each other on this server
 == На этом сервере игроки не могут цепляться друг за друга
+
+Playing effects
+== Playing effects
 
 Please add a valid cut first
 == Сначала добавьте действительный отрезок обрезки
@@ -5019,9 +5097,6 @@ Rainbow
 
 Rainbow hook
 == Радужный крюк
-
-Rainbow name
-== Радужное имя
 
 Rainbow others
 == Радуга для всех!
@@ -5785,6 +5860,9 @@ Selection
 Self
 == Себя
 
+Self and friends
+== Self and friends
+
 Self only
 == Отправить
 
@@ -6529,6 +6607,9 @@ Slow down the demo
 Smaller tees
 == Маленькие ти
 
+Smart
+== Smart
+
 Smooth Dynamic Camera
 == Плавная динамическая камера
 
@@ -6598,6 +6679,9 @@ Spectate
 Spectate a player by Id
 == Наблюдать за игроком по ID
 
+Spectate effects
+== Spectate effects
+
 Spectate mode
 == Режим наблюдения
 
@@ -6618,6 +6702,12 @@ Spectate the next player
 
 Spectate the previous player
 == Наблюдать за предыдущим игроком
+
+Spectated player
+== Spectated player
+
+Spectated player and friends
+== Spectated player and friends
 
 Spectators
 == Наблюдатели
@@ -6750,6 +6840,12 @@ Strict mode
 
 Stroke fade time
 == Время затухания штриха
+
+Strong hook
+== Strong hook
+
+Strong hook color
+== Strong hook color
 
 Strong Weak Hook
 == Сильный/Слабый крюк
@@ -7882,6 +7978,12 @@ Warmup
 Warning
 == Предупреждение
 
+Weak hook
+== Weak hook
+
+Weak hook color
+== Weak hook color
+
 Weapon
 == Оружие
 
@@ -8386,8 +8488,8 @@ Zoom out
 出站翻译目标语言代码
 == Код целевого языка для исходящего перевода
 
-分身皮肤队列切换间隔（0.1 秒）
-== Интервал переключения очереди скинов дамми (0.1 сек)
+分身皮肤队列切换间隔（毫秒）
+== Интервал переключения очереди скинов дамми (мс)
 
 分身皮肤队列当前位置
 == Текущая позиция в очереди скинов дамми
@@ -8455,11 +8557,20 @@ Zoom out
 名字板坐标行 Y 偏移
 == Смещение Y строки координат на табличке с именем
 
+名字板弱钩图标颜色
+== 名字板弱钩图标颜色
+
 名字板强弱行 X 偏移
 == Смещение X строки силы на табличке с именем
 
 名字板强弱行 Y 偏移
 == Смещение Y строки силы на табличке с именем
+
+名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+
+名字板强钩图标颜色
+== 名字板强钩图标颜色
 
 名字板战队行 X 偏移
 == Смещение X строки клана на табличке с именем
@@ -8472,6 +8583,36 @@ Zoom out
 
 名字板按键行 Y 偏移
 == Смещение Y строки клавиш на табличке с именем
+
+名字板文本光晕范围
+== 名字板文本光晕范围
+
+名字板文本光晕颜色
+== 名字板文本光晕颜色
+
+名字板文本效果 Demo 手动目标 Client ID（-1=无）
+== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
+
+名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+
+名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+
+名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+
+名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+
+名字板文本渐变颜色
+== 名字板文本渐变颜色
+
+名字板文本边框范围
+== 名字板文本边框范围
+
+名字板文本边框颜色
+== 名字板文本边框颜色
 
 名字板昵称行 X 偏移
 == Смещение X строки ника на табличке с именем
@@ -8506,7 +8647,7 @@ Zoom out
 启动和菜单空闲时预热设置页
 == Предварительный прогрев страниц настроек при запуске и в простое меню
 
-启用 Gores 锤枪自动切换
+启用 Gores 模式（King of Gores 辅助工具集合）
 == Включить авто-переключение Gores-молота и Gores-пушки
 
 启用 LLM 思考模式（可能增加响应时间）
@@ -8526,6 +8667,9 @@ Zoom out
 
 启用关键词回复
 == Включить ответы по ключевым словам
+
+启用分身皮肤队列轮换
+== Включить ротацию очереди скинов дамми
 
 启用动态视野，移动越快视野越宽
 == Включить динамическое поле зрения: чем быстрее движение, тем шире обзор
@@ -8551,6 +8695,9 @@ Zoom out
 启用皮肤切换动画
 == Включить анимацию смены скина
 
+启用皮肤队列轮换
+== Включить ротацию очереди скинов
+
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 == Включить эффект дрейфа камеры, создающий лёгкое запаздывание в зависимости от скорости движения
 
@@ -8574,9 +8721,6 @@ Zoom out
 
 启用背景 3D 粒子闪烁
 == Включить мерцание 3D-частиц фона
-
-启用自己名字的彩虹色渲染
-== Включить радужную раскраску своего ника
 
 启用语音滤波（高通/压缩/限幅）
 == Включить фильтрацию голоса (ФВЧ/компрессор/лимитер)
@@ -8929,14 +9073,17 @@ Zoom out
 皮肤切换动画持续时间（毫秒，0=无动画）
 == Длительность анимации смены скина (мс, 0=без анимации)
 
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
-== Тип анимации смены скина (0=вылет с остатком, 1=мягкое затухание, 2=скольжение влево, 3=вращательный вылет, 4=смена яркости)
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
+== Тип анимации смены скина (0=вылет с остатком, 1=мягкое затухание, 2=скольжение влево, 3=вращательный вылет, 4=смена яркости, 5=глюк, 6=эластичный)
 
 皮肤切换动画缓动模式
 == Режим сглаживания анимации смены скина
 
-皮肤队列切换间隔（0.1 秒）
-== Интервал переключения очереди скинов (0.1 сек)
+皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+== Область анимации смены скина: 0=только я, 1=локальный+дамми, 2=все игроки
+
+皮肤队列切换间隔（毫秒）
+== Интервал переключения очереди скинов (мс)
 
 皮肤队列当前位置
 == Текущая позиция в очереди скинов

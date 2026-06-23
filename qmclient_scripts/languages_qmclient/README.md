@@ -21,6 +21,14 @@ python qmclient_scripts/languages_qmclient/validate.py
 python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0
 ```
 
+`extract_strings.py` 默认使用 Git diff 与 `extracted_records_cache.json` 增量更新，但输出的 `extracted_strings.txt` 仍是完整 active key 集。需要重建缓存时使用：
+
+```bash
+python qmclient_scripts/languages_qmclient/extract_strings.py --full
+```
+
+`validate.py` 默认重扫源码做严格核对；本地快速校验可显式使用 `--incremental`。
+
 语言脚本单测入口：
 
 ```bash
@@ -60,10 +68,10 @@ python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-gr
 
 ## 主要脚本
 
-- `extract_strings.py`：从 `src/` 提取 active 英文 source keys，写出 `extracted_strings.txt` 和 `extracted_audit_report.json`。
+- `extract_strings.py`：默认按 Git diff 增量提取 active 英文 source keys，写出完整 `extracted_strings.txt`、`extracted_records_cache.json` 和 `extracted_audit_report.json`；`--full` 会重扫源码并重建缓存。
 - `generate_all.py`：根据 active keys 和 `translations/i18n/*.toml` 生成 `GENERATED_LANGUAGES` 中登记的运行时语言文件。
-- `validate.py`：校验提取结果新鲜度、全部生成语言文件覆盖、模块化 TOML 可读性、legacy overlay 删除状态和 blocking audit violations。
-- `review_duplicate_entries.py`：只读报告重复、相似、空译文和疑似未使用项，用于人工清理。
+- `validate.py`：默认重扫源码校验提取结果新鲜度、全部生成语言文件覆盖、模块化 TOML 可读性、legacy overlay 删除状态和 blocking audit violations；`--incremental` 会使用增量缓存做本地快速校验。
+- `review_duplicate_entries.py`：只读报告重复、相似、空译文和疑似未使用项；unused 默认读取 `extracted_strings.txt`，避免重复全量扫描。
 - `audit_translation_drift.py`：把当前 TOML 译文和 Git 历史里的简中译法做只读对比。
 - `translate_with_local_http.py`：生成本地模型翻译草稿；审核通过后，可显式 `--write-back` 按条目 patch 回填 `translations/i18n/*.toml`。
 

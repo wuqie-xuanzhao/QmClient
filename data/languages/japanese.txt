@@ -823,6 +823,12 @@ Auto unmute when speaking
 Auto unspec on unfreeze
 == フリーズ解除時に自動観戦解除
 
+Auto weapon switch
+== 自動武器切替
+
+Auto-follow delay
+== 自動フォロー遅延
+
 Auto-sync player camera
 == プレイヤーカメラを自動同期
 
@@ -972,6 +978,15 @@ Blue team wins!
 
 Body
 == 胴体
+
+Border
+== Border
+
+Border color
+== Border color
+
+Border range
+== Border range
 
 Both
 == 両方
@@ -1636,6 +1651,9 @@ Custom Font:
 Custom prompt template
 == カスタムプロンプトテンプレート
 
+Customize name and clan text effects
+== Customize name and clan text effects
+
 Customize translate button and menu colors
 == 翻訳ボタンとメニューの色をカスタマイズ
 
@@ -1825,8 +1843,14 @@ Delete this preset
 Demo
 == デモ
 
+Demo effects
+== Demo effects
+
 Demo marker added
 == デモマーカーを追加しました
+
+Demo target
+== Demo target
 
 Demofile: %s
 == デモファイル: %s
@@ -2185,6 +2209,9 @@ Edit touch controls
 Editor
 == エディター
 
+Elastic
+== エラスティック
+
 Elastic back
 == 戻り付きイーズアウト
 
@@ -2284,6 +2311,9 @@ Enable replays
 Enable server message sound
 == サーバーメッセージサウンドを有効
 
+Enable skin queue rotation
+== スキンキューのローテーションを有効化
+
 Enable speedrun timer
 == スピードラインタイマーを有効化
 
@@ -2313,6 +2343,9 @@ Enable word filter list
 
 Enable Zen mode
 == Zenモードを有効化
+
+Enabled
+== 有効
 
 Enables/disables active moderator mode for the player
 == プレイヤーのアクティブモデレーターモードを有効/無効にする
@@ -2713,6 +2746,9 @@ Friend online and join notifications
 Friends
 == フレンド
 
+Friends only
+== Friends only
+
 Frozen Margin
 == 凍結マージン
 
@@ -2833,17 +2869,29 @@ Gives you endless hook
 Gives you infinite jump
 == 無限ジャンプを与える
 
+Glitch
+== グリッチ
+
 Global toggle key
 == グローバルトグルキー
 
+Glow
+== Glow
+
 Glow alpha
 == グローアルファ
+
+Glow color
+== Glow color
 
 Glow intensity
 == グロー強度
 
 Glow offset
 == グローオフセット
+
+Glow range
+== Glow range
 
 Go back one marker
 == 前のマーカーに戻る
@@ -2881,11 +2929,20 @@ Gores 模式下启用快速输入
 Gores 模式下对其他玩家也启用快速输入
 == Gores モードで他のプレイヤーにもクイック入力を有効化
 
+Gores 模式下自动锤枪切换
+== Gores モードで自動ハンマー/ガン切り替え
+
 Gores 模式下隐藏辅助线
 == Gores モードで補助線を非表示
 
 Grabs
 == グラブ数
+
+Gradient
+== Gradient
+
+Gradient color
+== Gradient color
 
 Graphics
 == グラフィックス
@@ -3066,6 +3123,9 @@ Hook line tip
 
 Hook Strength
 == フック強度
+
+Hook strength scope
+== Hook strength scope
 
 Hooking L/R: %.0f%%/%.0f%%
 == フック L/R: %.0f%%/%.0f%%
@@ -3757,8 +3817,14 @@ Manual
 Manual concurrency: %d
 == 手動並行性: %d
 
+Manual scope
+== Manual scope
+
 Manual source file
 == 手動ソースファイル
+
+Manual target
+== Manual target
 
 Map
 == マップ
@@ -4029,6 +4095,9 @@ Name:
 
 Name: %s
 == 名前: %s
+
+Nameplate text
+== Nameplate text
 
 Native scale (1.0)
 == ネイティブスケール (1.0)
@@ -4459,6 +4528,12 @@ Option color
 Other
 == その他
 
+Others
+== Others
+
+Others only
+== Others only
+
 Outgoing language
 == 送信言語
 
@@ -4698,6 +4773,9 @@ Players can't collide on this server
 
 Players can't hook each other on this server
 == このサーバーではプレイヤー同士はフックできません
+
+Playing effects
+== Playing effects
 
 Please add a valid cut first
 == まず有効なカットを追加してください
@@ -5019,9 +5097,6 @@ Rainbow
 
 Rainbow hook
 == 虹色フック
-
-Rainbow name
-== 虹色の名前
 
 Rainbow others
 == 他のプレイヤーも虹色に
@@ -5785,6 +5860,9 @@ Selection
 Self
 == 自身
 
+Self and friends
+== Self and friends
+
 Self only
 == 自分のみ
 
@@ -6529,6 +6607,9 @@ Slow down the demo
 Smaller tees
 == 小さいTee
 
+Smart
+== Smart
+
 Smooth Dynamic Camera
 == スムーズ動的カメラ
 
@@ -6598,6 +6679,9 @@ Spectate
 Spectate a player by Id
 == IDでプレイヤーを観戦
 
+Spectate effects
+== Spectate effects
+
 Spectate mode
 == 観戦モード
 
@@ -6618,6 +6702,12 @@ Spectate the next player
 
 Spectate the previous player
 == 前のプレイヤーを観戦
+
+Spectated player
+== Spectated player
+
+Spectated player and friends
+== Spectated player and friends
 
 Spectators
 == 観戦者
@@ -6750,6 +6840,12 @@ Strict mode
 
 Stroke fade time
 == ストロークフェード時間
+
+Strong hook
+== Strong hook
+
+Strong hook color
+== Strong hook color
 
 Strong Weak Hook
 == 強弱フック
@@ -7882,6 +7978,12 @@ Warmup
 Warning
 == 警告
 
+Weak hook
+== Weak hook
+
+Weak hook color
+== Weak hook color
+
 Weapon
 == 武器
 
@@ -8386,8 +8488,8 @@ Zoom out
 出站翻译目标语言代码
 == 送信翻訳のターゲット言語コード
 
-分身皮肤队列切换间隔（0.1 秒）
-== ダミースキンキュー切り替え間隔（0.1 秒）
+分身皮肤队列切换间隔（毫秒）
+== ダミースキンキュー切り替え間隔（ミリ秒）
 
 分身皮肤队列当前位置
 == ダミースキンキューの現在位置
@@ -8455,11 +8557,20 @@ Zoom out
 名字板坐标行 Y 偏移
 == ネームプレート座標行 Y オフセット
 
+名字板弱钩图标颜色
+== 名字板弱钩图标颜色
+
 名字板强弱行 X 偏移
 == ネームプレート強弱行 X オフセット
 
 名字板强弱行 Y 偏移
 == ネームプレート強弱行 Y オフセット
+
+名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+
+名字板强钩图标颜色
+== 名字板强钩图标颜色
 
 名字板战队行 X 偏移
 == ネームプレートクラン行 X オフセット
@@ -8472,6 +8583,36 @@ Zoom out
 
 名字板按键行 Y 偏移
 == ネームプレートキー行 Y オフセット
+
+名字板文本光晕范围
+== 名字板文本光晕范围
+
+名字板文本光晕颜色
+== 名字板文本光晕颜色
+
+名字板文本效果 Demo 手动目标 Client ID（-1=无）
+== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
+
+名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+
+名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+
+名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+
+名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+
+名字板文本渐变颜色
+== 名字板文本渐变颜色
+
+名字板文本边框范围
+== 名字板文本边框范围
+
+名字板文本边框颜色
+== 名字板文本边框颜色
 
 名字板昵称行 X 偏移
 == ネームプレートネーム行 X オフセット
@@ -8506,7 +8647,7 @@ Zoom out
 启动和菜单空闲时预热设置页
 == 起動時とメニューアイドル時に設定ページをプリロード
 
-启用 Gores 锤枪自动切换
+启用 Gores 模式（King of Gores 辅助工具集合）
 == Gores ハンマーガン自動切り替えを有効化
 
 启用 LLM 思考模式（可能增加响应时间）
@@ -8526,6 +8667,9 @@ Zoom out
 
 启用关键词回复
 == キーワード返信を有効化
+
+启用分身皮肤队列轮换
+== ダミースキンキューのローテーションを有効化
 
 启用动态视野，移动越快视野越宽
 == 動的視野を有効化、移動が速いほど視野が広くなる
@@ -8551,6 +8695,9 @@ Zoom out
 启用皮肤切换动画
 == スキン切り替えアニメーションを有効化
 
+启用皮肤队列轮换
+== スキンキューのローテーションを有効化
+
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 == カメラドリフト効果を有効化、移動速度に応じてカメラが軽く引きずられる
 
@@ -8574,9 +8721,6 @@ Zoom out
 
 启用背景 3D 粒子闪烁
 == 背景 3D パーティクル点滅を有効化
-
-启用自己名字的彩虹色渲染
-== 自分の名前の虹色レンダリングを有効化
 
 启用语音滤波（高通/压缩/限幅）
 == 音声フィルタリングを有効化（ハイパス/コンプレッサー/リミッター）
@@ -8929,14 +9073,17 @@ Zoom out
 皮肤切换动画持续时间（毫秒，0=无动画）
 == スキン切り替えアニメーションの持続時間（ミリ秒、0=アニメーションなし）
 
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
-== スキン切り替えアニメーションのタイプ（0=残像ポップ 1=ソフトフェード 2=左スライド 3=回転ポップ 4=明暗切り替え）
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
+== スキン切り替えアニメーションのタイプ（0=残像ポップ 1=ソフトフェード 2=左スライド 3=回転ポップ 4=明暗切り替え 5=グリッチ 6=エラスティック）
 
 皮肤切换动画缓动模式
 == スキン切り替えアニメーションのイージングモード
 
-皮肤队列切换间隔（0.1 秒）
-== スキンキューの切り替え間隔（0.1 秒）
+皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+== スキン切り替えアニメーションの範囲：0=自分のみ 1=ローカル+ダミー 2=全プレイヤー
+
+皮肤队列切换间隔（毫秒）
+== スキンキューの切り替え間隔（ミリ秒）
 
 皮肤队列当前位置
 == スキンキューの現在位置

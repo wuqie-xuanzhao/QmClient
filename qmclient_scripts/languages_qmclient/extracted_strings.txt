@@ -273,6 +273,8 @@ Auto translate received messages
 Auto translate sent messages
 Auto unmute when speaking
 Auto unspec on unfreeze
+Auto weapon switch
+Auto-follow delay
 Auto-sync player camera
 Auto-toggle fast input
 Auto-toggle fast input others
@@ -323,6 +325,9 @@ Blue
 Blue team
 Blue team wins!
 Body
+Border
+Border color
+Border range
 Both
 Both sides of keyword rules must be filled
 Bounce
@@ -544,6 +549,7 @@ Custom aspect ratio
 Custom colors
 Custom Font:
 Custom prompt template
+Customize name and clan text effects
 Customize translate button and menu colors
 Cut interval
 Cut length
@@ -607,7 +613,9 @@ Delete selected items
 Delete skin
 Delete this preset
 Demo
+Demo effects
 Demo marker added
+Demo target
 Demofile: %s
 Demos
 Demos directory
@@ -727,6 +735,7 @@ Edit note
 Edit skin texture
 Edit touch controls
 Editor
+Elastic
 Elastic back
 Elevated
 Emotes are disabled.
@@ -760,6 +769,7 @@ Enable regular chat sound
 Enable repeat
 Enable replays
 Enable server message sound
+Enable skin queue rotation
 Enable speedrun timer
 Enable stereo positioning
 Enable system media control
@@ -770,6 +780,7 @@ Enable voice
 Enable warlist
 Enable word filter list
 Enable Zen mode
+Enabled
 Enables/disables active moderator mode for the player
 Endless hook has been activated
 Endless hook has been deactivated
@@ -903,6 +914,7 @@ Friend note
 Friend Notifications
 Friend online and join notifications
 Friends
+Friends only
 Frozen Margin
 FSAA samples
 FTAPI
@@ -943,10 +955,14 @@ Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grena
 Gives you as many jumps as you specify
 Gives you endless hook
 Gives you infinite jump
+Glitch
 Global toggle key
+Glow
 Glow alpha
+Glow color
 Glow intensity
 Glow offset
+Glow range
 Go back one marker
 Go back one tick
 Go back the specified duration
@@ -959,8 +975,11 @@ Gores Mode
 Gores mode key
 Gores 模式下启用快速输入
 Gores 模式下对其他玩家也启用快速输入
+Gores 模式下自动锤枪切换
 Gores 模式下隐藏辅助线
 Grabs
+Gradient
+Gradient color
 Graphics
 Graphics card
 Greeting text
@@ -1021,6 +1040,7 @@ Hook Collisions
 Hook collisions
 Hook line tip
 Hook Strength
+Hook strength scope
 Hooking L/R: %.0f%%/%.0f%%
 Horizontal position
 Hours
@@ -1251,7 +1271,9 @@ Makes you super
 Manage categories
 Manual
 Manual concurrency: %d
+Manual scope
 Manual source file
+Manual target
 Map
 Map browser color
 Map browser opacity
@@ -1342,6 +1364,7 @@ Name plates offset
 Name plates size
 Name:
 Name: %s
+Nameplate text
 Native scale (1.0)
 Need to have started the map to swap with a player.
 Negative stability buffer (for Gores)
@@ -1485,6 +1508,8 @@ Opt out of spectator count and hide auth status to non-authed players (1 = hidde
 Optimistic prediction along stable direction
 Option color
 Other
+Others
+Others only
 Outgoing language
 Outline color
 Outline opacity
@@ -1565,6 +1590,7 @@ Players can collide on this server
 Players can hook each other on this server
 Players can't collide on this server
 Players can't hook each other on this server
+Playing effects
 Please add a valid cut first
 Please balance teams!
 Please enable finished indicator first
@@ -1672,7 +1698,6 @@ Race
 Race Time
 Rainbow
 Rainbow hook
-Rainbow name
 Rainbow others
 Rainbow speed
 Rainbow Tees
@@ -1927,6 +1952,7 @@ Selected server
 Selected timertype is not supported by your client
 Selection
 Self
+Self and friends
 Self only
 Send
 Send & Receive
@@ -2175,6 +2201,7 @@ Skip Tutorial
 Slide left
 Slow down the demo
 Smaller tees
+Smart
 Smooth Dynamic Camera
 Smooth fade
 SMTC
@@ -2198,6 +2225,7 @@ Speaker
 Specify command accessibility for given access level
 Spectate
 Spectate a player by Id
+Spectate effects
 Spectate mode
 Spectate next
 Spectate previous
@@ -2205,6 +2233,8 @@ Spectate teleport
 Spectate the closest player
 Spectate the next player
 Spectate the previous player
+Spectated player
+Spectated player and friends
 Spectators
 Speech trigger threshold
 Speed
@@ -2249,6 +2279,8 @@ Streamer Mode
 Strict gametype filter
 Strict mode
 Stroke fade time
+Strong hook
+Strong hook color
 Strong Weak Hook
 Sub-Tick aiming
 Successfully saved the replay!
@@ -2626,6 +2658,8 @@ War List
 Warlist
 Warmup
 Warning
+Weak hook
+Weak hook color
 Weapon
 Weapon animation
 Weapon interaction range
@@ -2794,7 +2828,7 @@ Zoom out
 关闭聊天时保留未发送内容
 兼容其他服务器的类似单人区域提示
 出站翻译目标语言代码
-分身皮肤队列切换间隔（0.1 秒）
+分身皮肤队列切换间隔（毫秒）
 分身皮肤队列当前位置
 分身皮肤队列最大长度
 分身迷你视图大小（百分比）
@@ -2817,12 +2851,25 @@ Zoom out
 名字板元素允许在框内自由移动
 名字板坐标行 X 偏移
 名字板坐标行 Y 偏移
+名字板弱钩图标颜色
 名字板强弱行 X 偏移
 名字板强弱行 Y 偏移
+名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+名字板强钩图标颜色
 名字板战队行 X 偏移
 名字板战队行 Y 偏移
 名字板按键行 X 偏移
 名字板按键行 Y 偏移
+名字板文本光晕范围
+名字板文本光晕颜色
+名字板文本效果 Demo 手动目标 Client ID（-1=无）
+名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+名字板文本渐变颜色
+名字板文本边框范围
+名字板文本边框颜色
 名字板昵称行 X 偏移
 名字板昵称行 Y 偏移
 名字牌X对齐提示严格模式
@@ -2834,13 +2881,14 @@ Zoom out
 名字牌显示坐标Y
 名字牌显示自己坐标
 启动和菜单空闲时预热设置页
-启用 Gores 锤枪自动切换
+启用 Gores 模式（King of Gores 辅助工具集合）
 启用 LLM 思考模式（可能增加响应时间）
 启用 Q 弹 Tee 形变
 启用 QmClient 风格背景 3D 粒子
 启用 UI 运行时 v2 调试日志
 启用主线程与渲染阶段性能调试日志
 启用关键词回复
+启用分身皮肤队列轮换
 启用动态视野，移动越快视野越宽
 启用增强激光特效（辉光+脉冲动画）
 启用复读功能
@@ -2849,6 +2897,7 @@ Zoom out
 启用新版设置页面 UI
 启用玩家统计面板
 启用皮肤切换动画
+启用皮肤队列轮换
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 启用禅模式（Zen Mode）
 启用系统媒体传输控制集成
@@ -2857,7 +2906,6 @@ Zoom out
 启用背景 3D 粒子脉冲缩放
 启用背景 3D 粒子辉光
 启用背景 3D 粒子闪烁
-启用自己名字的彩虹色渲染
 启用语音滤波（高通/压缩/限幅）
 启用语音激活（VAD）
 启用语音聊天
@@ -2975,9 +3023,10 @@ Zoom out
 界面颜色
 皮肤切换动画强度百分比
 皮肤切换动画持续时间（毫秒，0=无动画）
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
 皮肤切换动画缓动模式
-皮肤队列切换间隔（0.1 秒）
+皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+皮肤队列切换间隔（毫秒）
 皮肤队列当前位置
 皮肤队列最大长度
 相机漂移平滑度（0=瞬时，100=最平滑）

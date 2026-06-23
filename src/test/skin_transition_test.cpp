@@ -140,3 +140,40 @@ TEST(SkinTransition, ElasticBackKeepsAlphaInDrawableRange)
 	EXPECT_GE(SkinBlend.m_CurrentAlpha, 0.0f);
 	EXPECT_LE(SkinBlend.m_CurrentAlpha, 1.0f);
 }
+
+TEST(SkinTransition, GlitchTypeAppliesJitterAndStaysDrawable)
+{
+	const SSkinChangeTransitionBlend Blend = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_GLITCH);
+	EXPECT_GT(Blend.m_PreviousAlpha, 0.0f);
+	EXPECT_LT(Blend.m_PreviousAlpha, 1.0f);
+	EXPECT_GT(Blend.m_CurrentAlpha, 0.0f);
+	EXPECT_LT(Blend.m_CurrentAlpha, 1.0f);
+	// Glitch always produces horizontal motion (jitter + drift); vertical stays zero.
+	EXPECT_NE(Blend.m_PreviousPosOffset.x, 0.0f);
+	EXPECT_NE(Blend.m_CurrentPosOffset.x, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_PreviousPosOffset.y, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_CurrentPosOffset.y, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_PreviousAngleOffset, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_CurrentAngleOffset, 0.0f);
+	// Higher intensity widens the drift component of the previous offset.
+	const SSkinChangeTransitionBlend Strong = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_GLITCH, SKIN_CHANGE_TRANSITION_EASING_EASE_OUT_CUBIC, 200);
+	EXPECT_LT(Strong.m_PreviousPosOffset.x, Blend.m_PreviousPosOffset.x);
+}
+
+TEST(SkinTransition, ElasticTypeSquashesVerticallyAndStaysDrawable)
+{
+	const SSkinChangeTransitionBlend Blend = ComputeSkinChangeTransitionBlend(0.25f, SKIN_CHANGE_TRANSITION_ELASTIC);
+	EXPECT_GT(Blend.m_PreviousAlpha, 0.0f);
+	EXPECT_LT(Blend.m_PreviousAlpha, 1.0f);
+	EXPECT_GT(Blend.m_CurrentAlpha, 0.0f);
+	EXPECT_LT(Blend.m_CurrentAlpha, 1.0f);
+	// Elastic uses vertical motion, no horizontal drift, no rotation.
+	EXPECT_GT(Blend.m_PreviousPosOffset.y, 0.0f);
+	EXPECT_LT(Blend.m_CurrentPosOffset.y, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_PreviousPosOffset.x, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_CurrentPosOffset.x, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_PreviousAngleOffset, 0.0f);
+	EXPECT_FLOAT_EQ(Blend.m_CurrentAngleOffset, 0.0f);
+	// Previous skin squashes (Y scale shrinks) while current is larger than 1 at the pop.
+	EXPECT_LT(Blend.m_PreviousBodyScale.y, 1.0f);
+}

@@ -80,6 +80,18 @@ bool CQmAxiomAutoLogin::IsAxiomCommunity() const
 	return pCommunity && pCommunity->Name() && str_find_nocase(pCommunity->Name(), "axiom");
 }
 
+void CQmAxiomAutoLogin::EnableDummyReconnectForServer()
+{
+	m_DummyLoginAllowedThisServer = true;
+}
+
+void CQmAxiomAutoLogin::DisableDummyReconnectForServer()
+{
+	m_DummyLoginAllowedThisServer = false;
+	m_DummyAutoLoginSent = false;
+	m_aDummyAutoLoginServer[0] = '\0';
+}
+
 void CQmAxiomAutoLogin::ResetState()
 {
 	m_AutoLoginAnnounced = false;
@@ -92,6 +104,7 @@ void CQmAxiomAutoLogin::ResetState()
 	m_aAutoLoginServer[0] = '\0';
 	m_DummyAutoLoginSent = false;
 	m_DummyWasConnected = false;
+	m_DummyLoginAllowedThisServer = false;
 	m_aDummyAutoLoginServer[0] = '\0';
 }
 
@@ -149,6 +162,8 @@ void CQmAxiomAutoLogin::TrySendDummyLogin()
 	if(g_Config.m_QmAxiomAutoLogin == 0 || g_Config.m_QmAxiomDummyLoginPassword[0] == '\0')
 		return;
 	if(Client()->State() != IClient::STATE_ONLINE || !Client()->DummyConnected() || !IsAxiomCommunity())
+		return;
+	if(!m_DummyLoginAllowedThisServer)
 		return;
 	if(m_DummyAutoLoginSent)
 		return;
@@ -234,6 +249,28 @@ void CQmAxiomAutoLogin::OnUpdate()
 	if(m_aAutoLoginServer[0] != '\0' && aServerAddress[0] != '\0' && str_comp(m_aAutoLoginServer, aServerAddress) != 0)
 		ResetState();
 
+	const bool DummyConnected = Client()->DummyConnected();
+	if(!DummyConnected || g_Config.m_QmAxiomDummyLoginPassword[0] == '\0')
+	{
+		m_DummyAutoLoginSent = false;
+		m_aDummyAutoLoginServer[0] = '\0';
+		if(!DummyConnected && m_DummyLoginAllowedThisServer && g_Config.m_QmAxiomDummyLoginPassword[0] != '\0' && !Client()->DummyConnecting() && !Client()->DummyConnectingDelayed() && Client()->DummyAllowed())
+			Client()->DummyConnect();
+	}
+	else
+	{
+		if(m_aDummyAutoLoginServer[0] != '\0' && aServerAddress[0] != '\0' && str_comp(m_aDummyAutoLoginServer, aServerAddress) != 0)
+		{
+			m_DummyAutoLoginSent = false;
+			m_DummyLoginAllowedThisServer = false;
+			m_aDummyAutoLoginServer[0] = '\0';
+		}
+
+		if(!m_DummyAutoLoginSent)
+			TrySendDummyLogin();
+	}
+	m_DummyWasConnected = DummyConnected;
+
 	if(g_Config.m_QmAxiomLoginPassword[0] == '\0')
 	{
 		m_AutoLoginAnnounced = false;
@@ -262,25 +299,6 @@ void CQmAxiomAutoLogin::OnUpdate()
 			ScheduleSoftRetry();
 		}
 	}
-
-	const bool DummyConnected = Client()->DummyConnected();
-	if(!DummyConnected || g_Config.m_QmAxiomDummyLoginPassword[0] == '\0')
-	{
-		m_DummyAutoLoginSent = false;
-		m_aDummyAutoLoginServer[0] = '\0';
-	}
-	else
-	{
-		if(m_aDummyAutoLoginServer[0] != '\0' && aServerAddress[0] != '\0' && str_comp(m_aDummyAutoLoginServer, aServerAddress) != 0)
-		{
-			m_DummyAutoLoginSent = false;
-			m_aDummyAutoLoginServer[0] = '\0';
-		}
-
-		if(!m_DummyWasConnected || !m_DummyAutoLoginSent)
-			TrySendDummyLogin();
-	}
-	m_DummyWasConnected = DummyConnected;
 }
 
 void CQmAxiomAutoLogin::OnStateChange(int NewState, int OldState)

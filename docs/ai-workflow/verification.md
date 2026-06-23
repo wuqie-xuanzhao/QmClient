@@ -23,13 +23,14 @@ python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-gr
 
 说明：
 
-- `extract_strings.py` 负责从全 `src/` 提取 active source keys，并输出分类统计。
+- `extract_strings.py` 默认使用 Git diff 和 `extracted_records_cache.json` 做增量提取，并保持 `extracted_strings.txt` 为完整 active source key 集；需要重建缓存或做严格核对时使用 `--full`。
 - `translations/i18n/*.toml` 是按代码模块拆分的翻译维护源；单条记录可同时维护多语言翻译，不要求全语言补齐。
 - `data/languages/*.txt` 是运行时生成产物，不作为手工维护的长期真相源。
 - `generate_all.py` 会以英文 source key 作为缺省回退，并生成 `generate_all.GENERATED_LANGUAGES` 中登记的运行时语言文件。
 - 新增英文 source key 后，先运行 `extract_strings.py`，再用 `translate_with_local_http.py --languages ...` 为目标语言生成 `translations_draft/<language>/*.toml`；审核通过后再显式 `--write-back` 回填维护源。
 - `translate_with_local_http.py --write-back` 只应把审核通过的 draft 条目 patch 到对应 `translations/i18n/*.toml`，不能重写整份模块 TOML 或重排未触碰的 `[[message]]` block。
-- `review_duplicate_entries.py` 是只读审查脚本；duplicate/similar 报告用于人工收口，unused 口径必须基于最终 active source key 集合。
+- `validate.py` 默认重扫源码做严格新鲜度校验；本地快速校验可显式使用 `--incremental`。
+- `review_duplicate_entries.py` 是只读审查脚本；duplicate/similar 报告用于人工收口，unused 默认基于 `extracted_strings.txt` 的最终 active source key 集合，避免重复全量扫描。
 - `translate_with_local_http.py` 通过 OpenAI-compatible HTTP 模型生成翻译 draft；所有语言默认只写 `translations_draft/<language>/*.toml`，审核通过后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，不属于运行时生成主链。
 
 ### 历史译法审计

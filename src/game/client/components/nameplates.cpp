@@ -11,6 +11,7 @@
 
 #include <game/client/QmUi/QmAnim.h>
 #include <game/client/animstate.h>
+#include <game/client/components/qmclient/modes.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
 
@@ -142,6 +143,37 @@ static bool NameplateFreeMoveEnabled()
 	return g_Config.m_QmNameplateFreeMove != 0 || g_Config.m_QmNameplateFreeMoveX != 0 || g_Config.m_QmNameplateFreeMoveY != 0;
 }
 
+static constexpr ColorRGBA s_OutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f);
+
+static ColorRGBA HookStrongWeakColor(EHookStrongWeakState State, float Alpha)
+{
+	switch(State)
+	{
+	case EHookStrongWeakState::STRONG:
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateStrongHookColor)).WithAlpha(Alpha);
+	case EHookStrongWeakState::WEAK:
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateWeakHookColor)).WithAlpha(Alpha);
+	case EHookStrongWeakState::NEUTRAL:
+		return ColorRGBA(1.0f, 1.0f, 1.0f, Alpha);
+	}
+	return ColorRGBA(1.0f, 1.0f, 1.0f, Alpha);
+}
+
+static SQmTextEffectRenderStyle BuildQmNameplateTextStyle(CGameClient &This, ColorRGBA TextColor, bool UseEffects)
+{
+	SQmTextEffectRenderStyle Style;
+	Style.m_Effects = UseEffects ? g_Config.m_QmNameplateTextEffects : 0;
+	Style.m_TextColor = TextColor;
+	Style.m_OutlineColor = s_OutlineColor.WithMultipliedAlpha(TextColor.a);
+	Style.m_BorderColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextBorderColor, true)).WithMultipliedAlpha(TextColor.a);
+	Style.m_BorderRange = (float)std::clamp(g_Config.m_QmNameplateTextBorderRange, 1, 4);
+	Style.m_GradientColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGradientColor, true)).WithAlpha(TextColor.a);
+	Style.m_GlowColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGlowColor, true)).WithMultipliedAlpha(TextColor.a);
+	Style.m_GlowRange = (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 0, 12);
+	Style.m_Time = This.Client()->GlobalTime();
+	return Style;
+}
+
 static bool NameplatePointInFrame(vec2 Position, vec2 FrameMin, vec2 FrameMax)
 {
 	return Position.x >= FrameMin.x &&
@@ -241,6 +273,7 @@ public:
 	bool m_InGame;
 	ColorRGBA m_Color;
 	bool m_ShowName;
+	bool m_UseTextEffects;
 	char m_aName[std::max<size_t>(MAX_NAME_LENGTH, protocol7::MAX_NAME_ARRAY_SIZE)];
 	bool m_ShowFriendMark;
 	bool m_ShowClientId;
@@ -300,8 +333,6 @@ public:
 };
 
 using PartsVector = std::vector<std::unique_ptr<CNamePlatePart>>;
-
-static constexpr ColorRGBA s_OutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f);
 
 class CNamePlatePartText : public CNamePlatePart
 {
@@ -363,12 +394,7 @@ public:
 		if(!m_TextContainerIndex.Valid())
 			return;
 
-		ColorRGBA OutlineColor, Color;
-		Color = m_Color;
-		OutlineColor = s_OutlineColor.WithMultipliedAlpha(m_Color.a);
-		This.TextRender()->RenderTextContainer(m_TextContainerIndex,
-			Color, OutlineColor,
-			Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
+		This.RenderTools()->RenderTextContainerWithEffects(m_TextContainerIndex, BuildQmNameplateTextStyle(This, m_Color, false), Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
 	}
 };
 
@@ -569,6 +595,7 @@ private:
 	float m_FontSize = -INFINITY;
 	bool m_IsLocal = false;
 	float m_Alpha = 1.0f;
+	bool m_UseTextEffects = false;
 
 protected:
 	bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) override
@@ -578,6 +605,7 @@ protected:
 			return false;
 		m_Color = Data.m_Color;
 		m_IsLocal = Data.m_Local;
+		m_UseTextEffects = Data.m_UseTextEffects;
 		if(!m_IsLocal)
 		{
 			if(Data.m_InGame)
@@ -621,22 +649,7 @@ protected:
 		if(!m_TextContainerIndex.Valid())
 			return;
 
-		ColorRGBA OutlineColor, Color;
-		Color = m_Color;
-
-		// Rainbow name for local player (same style as QmClient sidebar)
-		if(m_IsLocal && g_Config.m_QmRainbowName)
-		{
-			const float Time = This.Client()->GlobalTime();
-			const float Hue = std::fmod(Time * 0.15f, 1.0f);
-			ColorHSLA Hsla(Hue, 0.7f, 0.65f, m_Alpha);
-			Color = color_cast<ColorRGBA>(Hsla);
-		}
-
-		OutlineColor = s_OutlineColor.WithMultipliedAlpha(Color.a);
-		This.TextRender()->RenderTextContainer(m_TextContainerIndex,
-			Color, OutlineColor,
-			Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
+		This.RenderTools()->RenderTextContainerWithEffects(m_TextContainerIndex, BuildQmNameplateTextStyle(This, m_Color, m_UseTextEffects), Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
 	}
 
 public:
@@ -690,18 +703,15 @@ protected:
 		{
 		case EHookStrongWeakState::STRONG:
 			m_Sprite = SPRITE_HOOK_STRONG;
-			m_Color = color_cast<ColorRGBA>(ColorHSLA(6401973));
 			break;
 		case EHookStrongWeakState::NEUTRAL:
 			m_Sprite = SPRITE_HOOK_ICON;
-			m_Color = ColorRGBA(1.0f, 1.0f, 1.0f);
 			break;
 		case EHookStrongWeakState::WEAK:
 			m_Sprite = SPRITE_HOOK_WEAK;
-			m_Color = color_cast<ColorRGBA>(ColorHSLA(41131));
 			break;
 		}
-		m_Color.a = Data.m_Color.a;
+		m_Color = HookStrongWeakColor(Data.m_HookStrongWeakState, Data.m_Color.a);
 	}
 
 public:
@@ -727,19 +737,7 @@ protected:
 		m_Visible = Data.m_ShowHookStrongWeakId;
 		if(!m_Visible)
 			return false;
-		switch(Data.m_HookStrongWeakState)
-		{
-		case EHookStrongWeakState::STRONG:
-			m_Color = color_cast<ColorRGBA>(ColorHSLA(6401973));
-			break;
-		case EHookStrongWeakState::NEUTRAL:
-			m_Color = ColorRGBA(1.0f, 1.0f, 1.0f);
-			break;
-		case EHookStrongWeakState::WEAK:
-			m_Color = color_cast<ColorRGBA>(ColorHSLA(41131));
-			break;
-		}
-		m_Color.a = Data.m_Color.a;
+		m_Color = HookStrongWeakColor(Data.m_HookStrongWeakState, Data.m_Color.a);
 		return m_FontSize != Data.m_FontSizeHookStrongWeak || m_StrongWeakId != Data.m_HookStrongWeakId;
 	}
 	void UpdateText(CGameClient &This, const CNamePlateData &Data) override
@@ -1498,6 +1496,20 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 
 	Data.m_ShowName = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;
 	GameClient()->FormatStreamerName(ClientId, Data.m_aName, sizeof(Data.m_aName));
+	const bool DemoPlayback = Client()->State() == IClient::STATE_DEMOPLAYBACK;
+	const bool Spectating = !DemoPlayback && GameClient()->m_Snap.m_SpecInfo.m_Active;
+	const bool SpectateTarget = GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == ClientId;
+	Data.m_UseTextEffects = ShouldUseQmNameplateTextEffects(
+		g_Config.m_QmNameplateTextPlayingScope,
+		g_Config.m_QmNameplateTextSpectateScope,
+		g_Config.m_QmNameplateTextDemoMode,
+		g_Config.m_QmNameplateTextDemoTarget,
+		DemoPlayback,
+		Spectating,
+		IsAnyLocalClient,
+		GameClient()->m_aClients[ClientId].m_Friend,
+		SpectateTarget,
+		ClientId);
 	Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark && GameClient()->m_aClients[ClientId].m_Friend;
 	Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;
 	Data.m_FontSize = 18.0f + 20.0f * g_Config.m_ClNamePlatesSize / 100.0f;
@@ -1648,11 +1660,13 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 				Data.m_HookStrongWeakId = Other.m_ExtendedData.m_StrongWeakId;
 				Data.m_ShowHookStrongWeakId = g_Config.m_Debug || g_Config.m_ClNamePlatesStrong == 2;
 				if(SelectedId == ClientId)
-					Data.m_ShowHookStrongWeak = Data.m_ShowHookStrongWeakId;
+					Data.m_ShowHookStrongWeak = Data.m_ShowHookStrongWeakId || (g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, true, false, false));
 				else
 				{
 					Data.m_HookStrongWeakState = SelectedStrongWeakId > Other.m_ExtendedData.m_StrongWeakId ? EHookStrongWeakState::STRONG : EHookStrongWeakState::WEAK;
-					Data.m_ShowHookStrongWeak = g_Config.m_Debug || g_Config.m_ClNamePlatesStrong > 0;
+					const bool Strong = Data.m_HookStrongWeakState == EHookStrongWeakState::STRONG;
+					const bool Weak = Data.m_HookStrongWeakState == EHookStrongWeakState::WEAK;
+					Data.m_ShowHookStrongWeak = g_Config.m_Debug || (g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, false, Strong, Weak));
 				}
 			}
 		}
@@ -1685,6 +1699,17 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		Data.m_Color.a = 1.0f;
 
 		Data.m_ShowName = g_Config.m_ClNamePlates || g_Config.m_ClNamePlatesOwn;
+		Data.m_UseTextEffects = ShouldUseQmNameplateTextEffects(
+			g_Config.m_QmNameplateTextPlayingScope,
+			g_Config.m_QmNameplateTextSpectateScope,
+			g_Config.m_QmNameplateTextDemoMode,
+			g_Config.m_QmNameplateTextDemoTarget,
+			false,
+			false,
+			DummyIdx == g_Config.m_ClDummy,
+			false,
+			false,
+			DummyIdx);
 		const char *pName = DummyIdx == 0 ? Client()->PlayerName() : Client()->DummyName();
 		str_copy(Data.m_aName, str_utf8_skip_whitespaces(pName));
 		str_utf8_trim_right(Data.m_aName);
@@ -1725,12 +1750,14 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		if(DummyIdx == g_Config.m_ClDummy)
 		{
 			Data.m_HookStrongWeakState = EHookStrongWeakState::NEUTRAL;
-			Data.m_ShowHookStrongWeak = Data.m_ShowHookStrongWeakId;
+			Data.m_ShowHookStrongWeak = Data.m_ShowHookStrongWeakId || (g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, true, false, false));
 		}
 		else
 		{
 			Data.m_HookStrongWeakState = Data.m_HookStrongWeakId == 2 ? EHookStrongWeakState::STRONG : EHookStrongWeakState::WEAK;
-			Data.m_ShowHookStrongWeak = g_Config.m_ClNamePlatesStrong > 0;
+			const bool Strong = Data.m_HookStrongWeakState == EHookStrongWeakState::STRONG;
+			const bool Weak = Data.m_HookStrongWeakState == EHookStrongWeakState::WEAK;
+			Data.m_ShowHookStrongWeak = g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, false, Strong, Weak);
 		}
 
 		// TClient

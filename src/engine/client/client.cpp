@@ -4348,6 +4348,7 @@ void CClient::Con_DummyConnect(IConsole::IResult *pResult, void *pUserData)
 void CClient::Con_DummyDisconnect(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
+	pSelf->GameClient()->OnDummyManualDisconnect();
 	pSelf->DummyDisconnect(nullptr);
 }
 
@@ -6036,13 +6037,6 @@ int main(int argc, const char **argv)
 			g_Config.m_ClAntiPingGrenade = 1;
 			g_Config.m_ClAntiPingWeapons = 1;
 		}
-	}
-	if(g_Config.m_ClConfigVersion < 2)
-	{
-		if(g_Config.m_QmSkinQueueInterval <= 120)
-			g_Config.m_QmSkinQueueInterval *= 10;
-		if(g_Config.m_QmDummySkinQueueInterval <= 120)
-			g_Config.m_QmDummySkinQueueInterval *= 10;
 	}
 	if(g_Config.m_ClConfigVersion < 3)
 	{

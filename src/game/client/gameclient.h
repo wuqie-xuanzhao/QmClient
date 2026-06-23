@@ -842,6 +842,7 @@ public:
 	void OnUpdate() override;
 	void OnScreenshotTaken(class CImageInfo &&Image) override;
 	void OnDummyDisconnect() override;
+	void OnDummyManualDisconnect() override;
 	virtual void OnRelease();
 	void OnInit() override;
 	void OnConsoleInit() override;
@@ -965,6 +966,7 @@ public:
 	ColorRGBA GetDDTeamColor(int DDTeam, float Lightness = 0.5f) const;
 	void FormatClientId(int ClientId, char (&aClientId)[16], EClientIdFormat Format) const;
 	bool IsLocalClientId(int ClientId) const;
+	bool ShouldRunSkinChangeTransition(int ClientId) const;
 	bool ShouldHideStreamerIdentity(int ClientId) const;
 	bool ShouldHideStreamerSkin(int ClientId) const;
 	void FormatStreamerName(int ClientId, char *pBuf, int BufSize) const;

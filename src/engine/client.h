@@ -430,6 +430,7 @@ public:
 	virtual const char *DDNetVersionStr() const = 0;
 
 	virtual void OnDummyDisconnect() = 0;
+	virtual void OnDummyManualDisconnect() = 0;
 	virtual void DummyResetInput() = 0;
 	virtual void Echo(const char *pString) = 0;
 

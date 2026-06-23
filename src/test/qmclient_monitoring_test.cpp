@@ -1538,7 +1538,7 @@ TEST(QmMonitoringHelpers, SettingsStaticLabelsUseTextElementCache)
 		Buffer << File.rdbuf();
 		const std::string Source = Buffer.str();
 
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, pTitle)"), std::string::npos);
+		EXPECT_NE(Source.find("ConfigureSettingsCardSection(S, \"Visual: Font & Cursor\""), std::string::npos);
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-visual-font-cursor-title\")"), std::string::npos);
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-custom-font-label\")"), std::string::npos);
 	}
@@ -1558,34 +1558,56 @@ TEST(QmMonitoringHelpers, SettingsStaticLabelsUseTextElementCache)
 TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_EQ(Body.find("auto DrawSectionBox = "), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->RenderBatchableRect(&Section, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 10.0f);"), std::string::npos);
 	EXPECT_NE(Body.find("DrawTClientCacheSectionBox(BoxRect);"), std::string::npos);
-	EXPECT_NE(Body.find("CUIRect BoxRect = {Col.x, Col.y + TopMargin, Col.w, Height - TopMargin};"), std::string::npos);
-	EXPECT_EQ(Body.find("CUIRect MeasuredColumn = Col;\n\t\tconst float Height = MeasureSection(MeasuredColumn);"), std::string::npos);
-	EXPECT_EQ(Body.find("CUIRect MeasuredColumn = Col;\n\t\t\tconst float Height = MeasureSection(MeasuredColumn);"), std::string::npos);
 	EXPECT_NE(Body.find("InsetTClientCacheSectionContent(MeasuredColumn);"), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect BoxRect = LayoutSection(MeasuredColumn, false);"), std::string::npos);
 	EXPECT_NE(Body.find("BoxRect.x = Col.x;"), std::string::npos);
 	EXPECT_NE(Body.find("BoxRect.w = Col.w;"), std::string::npos);
 	EXPECT_NE(Body.find("InsetTClientCacheSectionContent(ContentColumn);"), std::string::npos);
 	EXPECT_NE(Body.find("Col.y = ContentColumn.y;"), std::string::npos);
+	EXPECT_EQ(Source.find("ConfigureSplitCachedStaticLayer"), std::string::npos);
+	EXPECT_NE(Source.find("RenderSettingsCardSection"), std::string::npos);
+	EXPECT_NE(Source.find("ConfigureSettingsCardSection"), std::string::npos);
+	EXPECT_NE(Source.find("Section.m_pStableCardId = pStableCardId;"), std::string::npos);
+	EXPECT_NE(Header.find("void ConfigureSettingsCardSection(SSettingsSection &Section, const char *pTitle, const char *pStableCardId"), std::string::npos);
 
 	const size_t ThemeSection = Source.find("SSettingsSection CMenus::BuildTClientThemeCacheSection()");
 	ASSERT_NE(ThemeSection, std::string::npos);
 	const size_t ThemeSectionEnd = Source.find("SSettingsSection CMenus::BuildTClientAutoReplyCacheSection()", ThemeSection);
 	ASSERT_NE(ThemeSectionEnd, std::string::npos);
 	const std::string ThemeBody = Source.substr(ThemeSection, ThemeSectionEnd - ThemeSection);
-	EXPECT_NE(ThemeBody.find("ConfigureSplitCachedStaticLayer(S, \"Visual: Font & Cursor\""), std::string::npos);
-	EXPECT_NE(ThemeBody.find("RenderTClientThemeInteractiveLayer(Col); }, Margin);"), std::string::npos);
-	EXPECT_EQ(ThemeBody.find("RenderTClientThemeInteractiveLayer(Col); }, MarginBetweenSections);"), std::string::npos);
+	EXPECT_NE(ThemeBody.find("ConfigureSettingsCardSection(S, \"Visual: Font & Cursor\", \"tclient:visual-font-cursor\", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);"), std::string::npos);
+
+	const size_t AutoReplySection = Source.find("SSettingsSection CMenus::BuildTClientAutoReplyCacheSection()");
+	ASSERT_NE(AutoReplySection, std::string::npos);
+	const size_t AutoReplySectionEnd = Source.find("SSettingsSection CMenus::BuildTClientPetCacheSection()", AutoReplySection);
+	ASSERT_NE(AutoReplySectionEnd, std::string::npos);
+	const std::string AutoReplyBody = Source.substr(AutoReplySection, AutoReplySectionEnd - AutoReplySection);
+	EXPECT_NE(AutoReplyBody.find("ConfigureSettingsCardSection(S, \"Auto reply\", \"tclient:auto-reply\", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientAutoReplyCacheSection(Col, Render); }, MarginBetweenSections);"), std::string::npos);
+
+	const size_t PetSection = Source.find("SSettingsSection CMenus::BuildTClientPetCacheSection()");
+	ASSERT_NE(PetSection, std::string::npos);
+	const size_t PetSectionEnd = Source.find("SSettingsSection CMenus::BuildTClientHudCacheSection()", PetSection);
+	ASSERT_NE(PetSectionEnd, std::string::npos);
+	const std::string PetBody = Source.substr(PetSection, PetSectionEnd - PetSection);
+	EXPECT_NE(PetBody.find("ConfigureSettingsCardSection(S, \"Pet\", \"tclient:pet\", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientPetCacheSection(Col, Render); }, MarginBetweenSections);"), std::string::npos);
+
+	const size_t HudSection = Source.find("SSettingsSection CMenus::BuildTClientHudCacheSection()");
+	ASSERT_NE(HudSection, std::string::npos);
+	const size_t HudSectionEnd = Source.find("void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)", HudSection);
+	ASSERT_NE(HudSectionEnd, std::string::npos);
+	const std::string HudBody = Source.substr(HudSection, HudSectionEnd - HudSection);
+	EXPECT_NE(HudBody.find("ConfigureSettingsCardSection(S, \"HUD\", \"tclient:hud\", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientHudCacheSection(Col, Render); }, Margin);"), std::string::npos);
 
 	const size_t ThemeLayout = Source.find("float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render)");
 	ASSERT_NE(ThemeLayout, std::string::npos);
-	const size_t ThemeLayoutEnd = Source.find("float CMenus::RenderTClientThemeInteractiveLayer", ThemeLayout);
+	const size_t ThemeLayoutEnd = Source.find("float CMenus::LayoutTClientAutoReplyCacheSection", ThemeLayout);
 	ASSERT_NE(ThemeLayoutEnd, std::string::npos);
 	const std::string ThemeLayoutBody = Source.substr(ThemeLayout, ThemeLayoutEnd - ThemeLayout);
 	EXPECT_NE(ThemeLayoutBody.find("CurrentColumn.HSplitTop(Margin, nullptr, &CurrentColumn);"), std::string::npos);
@@ -1593,7 +1615,7 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 
 	const size_t AutoReplyLayout = Source.find("float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Render)");
 	ASSERT_NE(AutoReplyLayout, std::string::npos);
-	const size_t AutoReplyLayoutEnd = Source.find("float CMenus::RenderTClientAutoReplyInteractiveLayer", AutoReplyLayout);
+	const size_t AutoReplyLayoutEnd = Source.find("float CMenus::LayoutTClientPetCacheSection", AutoReplyLayout);
 	ASSERT_NE(AutoReplyLayoutEnd, std::string::npos);
 	const std::string AutoReplyLayoutBody = Source.substr(AutoReplyLayout, AutoReplyLayoutEnd - AutoReplyLayout);
 	EXPECT_NE(AutoReplyLayoutBody.find("const float SavedY = CurrentColumn.y;"), std::string::npos);
@@ -1602,7 +1624,7 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 
 	const size_t PetLayout = Source.find("float CMenus::LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render)");
 	ASSERT_NE(PetLayout, std::string::npos);
-	const size_t PetLayoutEnd = Source.find("float CMenus::RenderTClientPetInteractiveLayer", PetLayout);
+	const size_t PetLayoutEnd = Source.find("float CMenus::LayoutTClientHudCacheSection", PetLayout);
 	ASSERT_NE(PetLayoutEnd, std::string::npos);
 	const std::string PetLayoutBody = Source.substr(PetLayout, PetLayoutEnd - PetLayout);
 	EXPECT_NE(PetLayoutBody.find("const float SavedY = CurrentColumn.y;"), std::string::npos);
@@ -1611,7 +1633,7 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 
 	const size_t HudLayout = Source.find("float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)");
 	ASSERT_NE(HudLayout, std::string::npos);
-	const size_t HudLayoutEnd = Source.find("float CMenus::RenderTClientHudInteractiveLayer", HudLayout);
+	const size_t HudLayoutEnd = Source.find("SSettingsSection CMenus::BuildTClientThemeCacheSection", HudLayout);
 	ASSERT_NE(HudLayoutEnd, std::string::npos);
 	const std::string HudLayoutBody = Source.substr(HudLayout, HudLayoutEnd - HudLayout);
 	EXPECT_NE(HudLayoutBody.find("const float SavedY = CurrentColumn.y;"), std::string::npos);
@@ -1630,7 +1652,7 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 
 	const size_t DrawBox = Source.find("void CMenus::DrawTClientCacheSectionBox(CUIRect BoxRect)");
 	ASSERT_NE(DrawBox, std::string::npos);
-	const size_t DrawBoxEnd = Source.find("float CMenus::RenderTClientCacheSectionFallback", DrawBox);
+	const size_t DrawBoxEnd = Source.find("float CMenus::RenderSettingsCardSection", DrawBox);
 	ASSERT_NE(DrawBoxEnd, std::string::npos);
 	const std::string DrawBoxBody = Source.substr(DrawBox, DrawBoxEnd - DrawBox);
 	EXPECT_EQ(DrawBoxBody.find("CUi::ms_DarkButtonColorFunction.GetColor(false, false)"), std::string::npos);
@@ -1658,6 +1680,75 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 	EXPECT_NE(BindChatBody.find("DrawTClientCacheSectionBox(Section);"), std::string::npos);
 	EXPECT_NE(BindChatBody.find("s_ScrollRegion.AddRect(TClientCacheSectionBoxRect(Section))"), std::string::npos);
 	EXPECT_NE(BindChatBody.find("InsetTClientCacheSectionContent(ContentColumn);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TClientSettingsCardDeckDragRuntimeUsesCtrlHeaderGate)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+
+	EXPECT_NE(Header.find("std::vector<std::string> m_vTClientLeftCardOrder;"), std::string::npos);
+	EXPECT_NE(Header.find("std::vector<std::string> m_vTClientRightCardOrder;"), std::string::npos);
+	EXPECT_NE(Header.find("SSettingsCardDeckDragState m_TClientSettingsCardDragState;"), std::string::npos);
+	EXPECT_NE(Source.find("RegisterSettingsCardDeckItem(Item);"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckCanStartDrag({&Item, Input()->ModifierIsPressed(), HitRegion})"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckBeginPress(DragState, Item);"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckTryPromotePress(DragState);"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckClearPress(DragState);"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckMoveWithinColumn(*pOrder, DragState.m_Item.m_pStableId, DropIndex)"), std::string::npos);
+	EXPECT_NE(Source.find("CommitSettingsCardDeckDragDrop(pOrder, DropIndex);"), std::string::npos);
+	EXPECT_NE(Header.find("bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, int DropIndex);"), std::string::npos);
+	EXPECT_NE(Source.find("m_TClientSettingsCardDeckOrderDirty = true;"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckApplyOrder(vSections, vOrder);"), std::string::npos);
+	EXPECT_NE(Source.find("WrapSettingsCardDeckSections(vLeftSections, ESettingsCardDeckColumn::LEFT, m_vTClientLeftCardOrder);"), std::string::npos);
+	EXPECT_NE(Source.find("WrapSettingsCardDeckSections(vRightSections, ESettingsCardDeckColumn::RIGHT, m_vTClientRightCardOrder);"), std::string::npos);
+	EXPECT_NE(Source.find("const bool TClientSettingsCardDeckOrderDirtyAtFrameStart = !PrewarmOnly && m_TClientSettingsCardDeckOrderDirty;"), std::string::npos);
+	EXPECT_NE(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\tm_TClientSettingsCardDeckOrderDirty = false;"), std::string::npos);
+	EXPECT_NE(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\ts_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);"), std::string::npos);
+	EXPECT_NE(Source.find("if(TClientSettingsCardDeckOrderDirtyAtFrameStart)\n\t\t\ts_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);"), std::string::npos);
+	EXPECT_EQ(Source.find("if(!PrewarmOnly && m_TClientSettingsCardDeckOrderDirty)\n\t\tm_TClientSettingsCardDeckOrderDirty = false;"), std::string::npos);
+	EXPECT_NE(Source.find("s_VisualFontLoader.Register(std::move(vLeftSections));"), std::string::npos);
+	EXPECT_NE(Source.find("s_RightSectionLoader.Register(std::move(vRightSections));"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckIsDraggingItem(m_TClientSettingsCardDragState, Item)"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckDropIndexForColumnItems("), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckProxyRect(m_TClientSettingsCardDragState.m_Item, Ui()->MouseX(), Ui()->MouseY())"), std::string::npos);
+	EXPECT_NE(Source.find("if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))"), std::string::npos);
+	EXPECT_NE(Source.find("std::vector<std::string> *pOrder = m_TClientSettingsCardDragState.m_Item.m_Column == ESettingsCardDeckColumn::LEFT ? &m_vTClientLeftCardOrder : &m_vTClientRightCardOrder;"), std::string::npos);
+	EXPECT_NE(Source.find("if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckAutoScrollDelta(Ui()->MouseY(), Viewport.y, Viewport.y + Viewport.h"), std::string::npos);
+	EXPECT_EQ(Source.find("SettingsCardDeckCanStartDrag({&Item, true"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, TClientSettingsCardDeckCoversEveryBoxedSection)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::vector<const char *> vStableIds = {
+		"tclient:visual-font-cursor",
+		"tclient:visual-nameplates",
+		"tclient:visual-effects",
+		"tclient:input",
+		"tclient:anti-latency-tools",
+		"tclient:improved-anti-ping",
+		"tclient:execute-on-join",
+		"tclient:voting",
+		"tclient:auto-reply",
+		"tclient:player-indicator",
+		"tclient:pet",
+		"tclient:hud",
+		"tclient:tee-status-bar",
+		"tclient:tile-outlines",
+		"tclient:ghost-tools",
+		"tclient:rainbow",
+		"tclient:tee-trails",
+		"tclient:background-draw",
+		"tclient:finish-name",
+	};
+	for(const char *pStableId : vStableIds)
+	{
+		EXPECT_NE(Source.find(pStableId), std::string::npos) << pStableId;
+	}
+	EXPECT_EQ(Source.find("if(SectionMeta.m_pStableCardId == nullptr || SectionMeta.m_pStableCardId[0] == '\\0')\n\t\t\t\tcontinue;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientFocusModeSectionLabelsUseDisplayTextNotTranslationKeys)
@@ -1924,8 +2015,8 @@ TEST(QmMonitoringHelpers, SettingsTextPlanCoversHighValueTClientAndQmClientStati
 		const std::string Source = Buffer.str();
 
 		EXPECT_EQ(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr"), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-hammer-mode\""), std::string::npos);
-		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-cursor-scale\""), std::string::npos);
+		EXPECT_NE(Source.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-hammer-mode\""), std::string::npos);
+		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-cursor-scale\""), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-prediction-margin\""), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-pet-size\""), std::string::npos);
 		const std::string PlanBody = ExtractSourceFunctionBody(Source, "void CMenus::BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab)");
@@ -3826,17 +3917,21 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesReadableIntervalInput)
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_EQ(Body.find("const bool CompactQueueCapacityControls"), std::string::npos);
-	EXPECT_NE(Body.find("QueueSection.HSplitTop(20.0f, &QueueControls, &QueueSection);"), std::string::npos);
-	EXPECT_NE(Body.find("QueueControls.VSplitLeft(QueueIntervalLabelWidth, &IntervalLabel, &IntervalControls);"), std::string::npos);
+	EXPECT_NE(Body.find("CUIRect QueueRotationPanel;"), std::string::npos);
+	EXPECT_NE(Body.find("QueueSection.HSplitTop(46.0f, &QueueRotationPanel, &QueueSection);"), std::string::npos);
+	EXPECT_NE(Body.find("QueueRotationPanel.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f), IGraphics::CORNER_ALL, 4.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("QueueRotationHeader.VSplitLeft(QueueEnabledColumnWidth, &QueueEnabledHeading, &QueueIntervalHeading);"), std::string::npos);
+	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee-skin-queue-enabled-heading\", &QueueEnabledHeading, Localize(\"Enabled\"), 9.0f, TEXTALIGN_MC, QueueControlLabelProps, (int)QueueEnabledHeading.w);"), std::string::npos);
+	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee-skin-queue-switch-interval\", &QueueIntervalHeading, Localize(\"Switch interval\"), 9.0f, TEXTALIGN_MC, QueueControlLabelProps, (int)QueueIntervalHeading.w);"), std::string::npos);
+	EXPECT_NE(Body.find("QueueRotationControls.VSplitLeft(QueueEnabledColumnWidth, &QueueEnabledButtonColumn, &IntervalControls);"), std::string::npos);
+	EXPECT_NE(Body.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, nullptr, \"\", QueueEnabled, &QueueEnabledButton)"), std::string::npos);
 	EXPECT_NE(Body.find("IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);"), std::string::npos);
 	EXPECT_NE(Body.find("IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);"), std::string::npos);
 	EXPECT_NE(Body.find("const float QueueValueInputWidth = 58.0f"), std::string::npos);
 	EXPECT_NE(Body.find("const float QueueValueUnitWidth = 18.0f"), std::string::npos);
-	EXPECT_NE(Body.find("const float QueueIntervalLabelWidth = 82.0f"), std::string::npos);
 	EXPECT_NE(Body.find("SLabelProperties QueueControlLabelProps;"), std::string::npos);
 	EXPECT_NE(Body.find("QueueControlLabelProps.m_DisallowNewline = true"), std::string::npos);
 	EXPECT_NE(Body.find("QueueControlLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
-	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee-skin-queue-switch-interval\", &IntervalLabel, Localize(\"Switch interval\"), IntervalLabel.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);"), std::string::npos);
 	EXPECT_NE(Body.find("static CLineInputNumber s_aQueueIntervalInputs[NUM_DUMMIES];"), std::string::npos);
 	EXPECT_NE(Body.find("CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];"), std::string::npos);
 	EXPECT_NE(Body.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput, 10.0f, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC)"), std::string::npos);
@@ -4782,11 +4877,8 @@ TEST(QmMonitoringHelpers, TClientVisibleCheckboxesUseBudgetedTextPipeline)
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::vector<std::string> vFunctionBodies = {
 		ExtractSourceFunctionBody(TClient, "float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Render)"),
-		ExtractSourceFunctionBody(TClient, "float CMenus::RenderTClientAutoReplyInteractiveLayer(CUIRect &CurrentColumn)"),
 		ExtractSourceFunctionBody(TClient, "float CMenus::LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render)"),
-		ExtractSourceFunctionBody(TClient, "float CMenus::RenderTClientPetInteractiveLayer(CUIRect &CurrentColumn)"),
-		ExtractSourceFunctionBody(TClient, "float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)"),
-		ExtractSourceFunctionBody(TClient, "float CMenus::RenderTClientHudInteractiveLayer(CUIRect &CurrentColumn)")};
+		ExtractSourceFunctionBody(TClient, "float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)")};
 	const std::vector<std::string> vRenderBlocks = {
 		ExtractSourceBlock(TClient, "auto LayoutVisualNameplateSection", "auto LayoutVisualEffectsSection"),
 		ExtractSourceBlock(TClient, "auto LayoutVisualEffectsSection", "auto LayoutInputSection"),
@@ -5687,6 +5779,19 @@ TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)
 	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_layout\""), std::string::npos);
 	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_controls\""), std::string::npos);
 	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_bind_lookup\""), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmClientSearchSnapshotSignatureIgnoresVolatileMeasuredHeights)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string SignatureBody = ExtractSourceBlock(Source, "auto BuildQmFunctionSnapshotSignature = [&]()", "auto BuildQmFunctionSnapshotEntries = [&]()");
+	const std::string EntriesBody = ExtractSourceBlock(Source, "auto BuildQmFunctionSnapshotEntries = [&]()", "const uint64_t FunctionSnapshotSignature");
+	ASSERT_FALSE(SignatureBody.empty());
+	ASSERT_FALSE(EntriesBody.empty());
+
+	EXPECT_EQ(SignatureBody.find("GetQmModuleEstimatedHeight"), std::string::npos);
+	EXPECT_EQ(SignatureBody.find("EstimatedHeight"), std::string::npos);
+	EXPECT_NE(EntriesBody.find("SnapshotEntry.m_EstimatedHeight = GetQmModuleEstimatedHeight(&Entry);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsPagesExposeSectionLevelPerfStages)

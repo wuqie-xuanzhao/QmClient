@@ -823,6 +823,12 @@ Auto unmute when speaking
 Auto unspec on unfreeze
 == 解冻自动取消旁观
 
+Auto weapon switch
+== 自动切锤
+
+Auto-follow delay
+== 自动跟随延迟
+
 Auto-sync player camera
 == 自动同步玩家视角
 
@@ -972,6 +978,15 @@ Blue team wins!
 
 Body
 == 身体
+
+Border
+== 边框
+
+Border color
+== 边框颜色
+
+Border range
+== 边框范围
 
 Both
 == 两者
@@ -1636,6 +1651,9 @@ Custom Font:
 Custom prompt template
 == 自定义提示词模板
 
+Customize name and clan text effects
+== 自定义名字和战队文本效果
+
 Customize translate button and menu colors
 == 自定义翻译按钮和菜单颜色
 
@@ -1825,8 +1843,14 @@ Delete this preset
 Demo
 == 回放
 
+Demo effects
+== Demo 效果
+
 Demo marker added
 == 已添加回放标记
+
+Demo target
+== Demo 目标
 
 Demofile: %s
 == 回放文件：%s
@@ -2185,6 +2209,9 @@ Edit touch controls
 Editor
 == 编辑器
 
+Elastic
+== 弹性缩放
+
 Elastic back
 == 回弹缓出
 
@@ -2284,6 +2311,9 @@ Enable replays
 Enable server message sound
 == 启用服务器消息提示音
 
+Enable skin queue rotation
+== 启用皮肤队列轮换
+
 Enable speedrun timer
 == 启用速通计时器
 
@@ -2314,6 +2344,9 @@ Enable word filter list
 Enable Zen mode
 == 启用禅模式
 
+Enabled
+== 启用
+
 Enables/disables active moderator mode for the player
 == 启用/禁用该玩家的活跃管理员模式
 
@@ -2330,7 +2363,7 @@ Endpoint (optional)
 == 端点 (可选)
 
 Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
-== 请输入 /practice 或重新开始，否则整队将在 60 秒后被处死
+== 请输入 /practice 或重新开始，否则 60 秒后整队会被强制死亡
 
 Enter Password
 == 输入密码
@@ -2713,6 +2746,9 @@ Friend online and join notifications
 Friends
 == 好友
 
+Friends only
+== 仅好友
+
 Frozen Margin
 == 冻结预测值
 
@@ -2833,17 +2869,29 @@ Gives you endless hook
 Gives you infinite jump
 == 给你无限跳跃
 
+Glitch
+== 故障抖动
+
 Global toggle key
 == 全局开关键
 
+Glow
+== 光晕
+
 Glow alpha
 == 辉光透明度
+
+Glow color
+== 光晕颜色
 
 Glow intensity
 == 辉光强度
 
 Glow offset
 == 辉光偏移
+
+Glow range
+== 光晕范围
 
 Go back one marker
 == 返回上一个标记
@@ -2881,11 +2929,20 @@ Gores 模式下启用快速输入
 Gores 模式下对其他玩家也启用快速输入
 == Gores 模式下对其他玩家也启用快速输入
 
+Gores 模式下自动锤枪切换
+== Gores 模式下自动锤枪切换
+
 Gores 模式下隐藏辅助线
 == Gores 模式下隐藏辅助线
 
 Grabs
 == 得旗数
+
+Gradient
+== 渐变
+
+Gradient color
+== 渐变颜色
 
 Graphics
 == 图像
@@ -3066,6 +3123,9 @@ Hook line tip
 
 Hook Strength
 == 钩索强度
+
+Hook strength scope
+== 强弱钩范围
 
 Hooking L/R: %.0f%%/%.0f%%
 == 出钩 L/R：%.0f%%/%.0f%%
@@ -3757,8 +3817,14 @@ Manual
 Manual concurrency: %d
 == 手动并发数：%d
 
+Manual scope
+== 手动范围
+
 Manual source file
 == 手动源文件
+
+Manual target
+== 手动目标
 
 Map
 == 地图
@@ -4029,6 +4095,9 @@ Name:
 
 Name: %s
 == 名称：%s
+
+Nameplate text
+== 名字板文本
 
 Native scale (1.0)
 == 原生缩放 (1.0)
@@ -4459,6 +4528,12 @@ Option color
 Other
 == 其他
 
+Others
+== 他人
+
+Others only
+== 仅他人
+
 Outgoing language
 == 发送语言
 
@@ -4698,6 +4773,9 @@ Players can't collide on this server
 
 Players can't hook each other on this server
 == 本服务器不允许玩家互钩
+
+Playing effects
+== 游玩效果
 
 Please add a valid cut first
 == 请先添加有效裁剪片段
@@ -5019,9 +5097,6 @@ Rainbow
 
 Rainbow hook
 == 彩虹色钩索
-
-Rainbow name
-== 彩虹名字
 
 Rainbow others
 == 将彩虹带给每个人！
@@ -5785,6 +5860,9 @@ Selection
 Self
 == 自身
 
+Self and friends
+== 自己和好友
+
 Self only
 == 仅自己
 
@@ -6529,6 +6607,9 @@ Slow down the demo
 Smaller tees
 == 小尺寸 Tee
 
+Smart
+== 智能
+
 Smooth Dynamic Camera
 == 平滑动态视野
 
@@ -6598,6 +6679,9 @@ Spectate
 Spectate a player by Id
 == 按 ID 旁观玩家
 
+Spectate effects
+== 观战效果
+
 Spectate mode
 == 观战模式
 
@@ -6618,6 +6702,12 @@ Spectate the next player
 
 Spectate the previous player
 == 旁观上一名玩家
+
+Spectated player
+== 被观战者
+
+Spectated player and friends
+== 被观战者和好友
 
 Spectators
 == 旁观者
@@ -6750,6 +6840,12 @@ Strict mode
 
 Stroke fade time
 == 笔画消失时间
+
+Strong hook
+== 强钩
+
+Strong hook color
+== 强钩颜色
 
 Strong Weak Hook
 == 强弱钩
@@ -7586,7 +7682,7 @@ Unknown
 == 未知
 
 Unknown argument. Check '/rescuemode list'
-== 未知 rescue 模式参数
+== 未知参数，输入 /rescuemode list 查看帮助
 
 Unknown emote. Use /emote to see available emotes.
 == 未知表情。输入 /emote 查看可用表情。
@@ -7882,6 +7978,12 @@ Warmup
 Warning
 == 警告
 
+Weak hook
+== 弱钩
+
+Weak hook color
+== 弱钩颜色
+
 Weapon
 == 武器
 
@@ -8108,7 +8210,7 @@ You can only vote after logging in.
 == 登录后才可以发起投票
 
 You can see other players. To disable this use DDNet client and type /showothers
-== 你当前可以看到其他玩家
+== 你现在能看到其他玩家。想关掉的话，在 DDNet 客户端里输入 /showothers
 
 You can shoot others with grenade
 == 你现在可以用手雷攻击其他玩家
@@ -8273,7 +8375,7 @@ Your friend %s is online and currently on map %s!
 == 你的好友 %s 在线，当前在地图 %s！
 
 Your locked team was killed because '%s' %s
-== 你的锁队全员被处死，因为 '%s' %s 了
+== 你的锁队全员被强制死亡，因为 '%s' %s 了
 
 Your movements are not taken into account when calculating the line colors
 == 移动所造成的瞄准偏移将不计入考量
@@ -8291,7 +8393,7 @@ Your swap request timed out %s seconds ago, use /swap again to request
 == 你的交换请求已在 %s 秒前超时，请重新输入 /swap 发起
 
 Your team has been killed because it contains an invalid tee state
-== 你的队伍因包含无效 tee 状态而被处死
+== 队伍中检测到不合法的 tee 状态，已被强制死亡
 
 Your team has not started yet
 == 你的队伍还没有开始
@@ -8300,10 +8402,10 @@ Your team is currently saving
 == 你的队伍当前正在保存
 
 Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
-== 你的队伍因已无法完赛且未进入 /practice 模式而被处死
+== 队伍已无法完赛，又没开 /practice，已被强制死亡
 
 Your team was unlocked by an unlock team tile
-== 你的队伍已被解锁队伍图块解除锁定
+== 你的队伍已被地图上的解锁图块解开锁定
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == 你的 timeout code 已设置。0.7 客户端超时后无法取回自己的 tee，但 0.6 客户端可以接管你的 tee
@@ -8386,8 +8488,8 @@ Zoom out
 出站翻译目标语言代码
 == 出站翻译目标语言代码
 
-分身皮肤队列切换间隔（0.1 秒）
-== 分身皮肤队列切换间隔（0.1 秒）
+分身皮肤队列切换间隔（毫秒）
+== 分身皮肤队列切换间隔（毫秒）
 
 分身皮肤队列当前位置
 == 分身皮肤队列当前位置
@@ -8455,11 +8557,20 @@ Zoom out
 名字板坐标行 Y 偏移
 == 名字板坐标行 Y 偏移
 
+名字板弱钩图标颜色
+== 名字板弱钩图标颜色
+
 名字板强弱行 X 偏移
 == 名字板强弱行 X 偏移
 
 名字板强弱行 Y 偏移
 == 名字板强弱行 Y 偏移
+
+名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+
+名字板强钩图标颜色
+== 名字板强钩图标颜色
 
 名字板战队行 X 偏移
 == 名字板战队行 X 偏移
@@ -8472,6 +8583,36 @@ Zoom out
 
 名字板按键行 Y 偏移
 == 名字板按键行 Y 偏移
+
+名字板文本光晕范围
+== 名字板文本光晕范围
+
+名字板文本光晕颜色
+== 名字板文本光晕颜色
+
+名字板文本效果 Demo 手动目标 Client ID（-1=无）
+== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
+
+名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+
+名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+
+名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+
+名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+
+名字板文本渐变颜色
+== 名字板文本渐变颜色
+
+名字板文本边框范围
+== 名字板文本边框范围
+
+名字板文本边框颜色
+== 名字板文本边框颜色
 
 名字板昵称行 X 偏移
 == 名字板昵称行 X 偏移
@@ -8506,8 +8647,8 @@ Zoom out
 启动和菜单空闲时预热设置页
 == 启动和菜单空闲时预热设置页
 
-启用 Gores 锤枪自动切换
-== 启用 Gores 锤枪自动切换
+启用 Gores 模式（King of Gores 辅助工具集合）
+== 启用 Gores 模式（King of Gores 辅助工具集合）
 
 启用 LLM 思考模式（可能增加响应时间）
 == 启用 LLM 思考模式（可能增加响应时间）
@@ -8526,6 +8667,9 @@ Zoom out
 
 启用关键词回复
 == 启用关键词回复
+
+启用分身皮肤队列轮换
+== 启用分身皮肤队列轮换
 
 启用动态视野，移动越快视野越宽
 == 启用动态视野，移动越快视野越宽
@@ -8551,6 +8695,9 @@ Zoom out
 启用皮肤切换动画
 == 启用皮肤切换动画
 
+启用皮肤队列轮换
+== 启用皮肤队列轮换
+
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 == 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 
@@ -8574,9 +8721,6 @@ Zoom out
 
 启用背景 3D 粒子闪烁
 == 启用背景 3D 粒子闪烁
-
-启用自己名字的彩虹色渲染
-== 启用自己名字的彩虹色渲染
 
 启用语音滤波（高通/压缩/限幅）
 == 启用语音滤波（高通/压缩/限幅）
@@ -8929,14 +9073,17 @@ Zoom out
 皮肤切换动画持续时间（毫秒，0=无动画）
 == 皮肤切换动画持续时间（毫秒，0=无动画）
 
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
-== 皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
+== 皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
 
 皮肤切换动画缓动模式
 == 皮肤切换动画缓动模式
 
-皮肤队列切换间隔（0.1 秒）
-== 皮肤队列切换间隔（0.1 秒）
+皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+== 皮肤切换动画范围：0=仅自己 1=本地+分身 2=所有玩家
+
+皮肤队列切换间隔（毫秒）
+== 皮肤队列切换间隔（毫秒）
 
 皮肤队列当前位置
 == 皮肤队列当前位置

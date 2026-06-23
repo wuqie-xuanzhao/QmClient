@@ -2208,7 +2208,6 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 
 	const CUIRect ListViewport = *s_ScrollRegion.ClipRect();
 	const float UiScale = 1.0f;
-	const float CategoryDragHoldSeconds = 0.5f;
 	const float CategoryDropPreviewThickness = std::clamp(3.0f * UiScale, 2.0f, 4.0f);
 	const float CategoryDragOutlineThickness = std::clamp(2.0f * UiScale, 1.0f, 2.0f);
 	const ColorRGBA CategoryDropPreviewColor(0.2f, 0.9f, 0.4f, 0.9f);
@@ -2219,7 +2218,6 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	{
 		int m_PressedIndex = -1;
 		int m_DraggingIndex = -1;
-		float m_PressStartTime = 0.0f;
 		vec2 m_GrabOffset = vec2(0.0f, 0.0f);
 		float m_DraggedWidth = 0.0f;
 		float m_DraggedHeight = 0.0f;
@@ -2304,16 +2302,15 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		CUIRect HeaderAction;
 		SplitFriendsCategoryHeaderRects(Header, &HeaderAction, nullptr);
 		const bool HeaderInside = Ui()->MouseHovered(&HeaderAction);
-		if(Ui()->MouseButtonClicked(0) && HeaderInside && Ui()->ActiveItem() == nullptr)
+		if(Input()->ModifierIsPressed() && Ui()->MouseButtonClicked(0) && HeaderInside && Ui()->ActiveItem() == nullptr)
 		{
 			s_CategoryDragState.m_PressedIndex = CategoryIndex;
 			s_CategoryDragState.m_DraggingIndex = -1;
-			s_CategoryDragState.m_PressStartTime = Client()->GlobalTime();
 		}
 
-		if(s_CategoryDragState.m_PressedIndex == CategoryIndex && Ui()->MouseButton(0) && s_CategoryDragState.m_DraggingIndex < 0)
+		if(s_CategoryDragState.m_PressedIndex == CategoryIndex && Ui()->MouseButton(0) && Input()->ModifierIsPressed() && s_CategoryDragState.m_DraggingIndex < 0)
 		{
-			if(HeaderInside && Client()->GlobalTime() - s_CategoryDragState.m_PressStartTime >= CategoryDragHoldSeconds)
+			if(HeaderInside)
 			{
 				s_CategoryDragState.m_DraggingIndex = CategoryIndex;
 				s_CategoryDragState.m_GrabOffset = vec2(Ui()->MouseX() - Header.x, Ui()->MouseY() - Header.y);
@@ -2333,6 +2330,10 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 				if(ExpandedChanged)
 					SaveFriendsCategoryExpandedState();
 			}
+		}
+		else if(s_CategoryDragState.m_PressedIndex == CategoryIndex && !Input()->ModifierIsPressed() && s_CategoryDragState.m_DraggingIndex < 0)
+		{
+			ResetCategoryDragState();
 		}
 
 		const bool DraggingThisHeader = s_CategoryDragState.m_DraggingIndex == CategoryIndex;
@@ -2365,7 +2366,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 			m_FriendsCategoryPopupContext.m_CategoryIndex = CategoryIndex;
 			m_FriendsCategoryPopupContext.m_Mode = CFriendsCategoryPopupContext::MODE_ACTIONS;
 			m_FriendsCategoryPopupContext.m_NameInput.Clear();
-			Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Ui()->MouseX(), Ui()->MouseY(), 250.0f, 110.0f, &m_FriendsCategoryPopupContext, PopupFriendsCategory);
+			const CUIRect Panel = CMenus::SecondaryPanelRect(Ui()->MouseX(), Ui()->MouseY(), 300.0f, CMenus::FriendsCategoryActionsPopupHeight(), *Ui()->Screen());
+			Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Panel.x, Panel.y, Panel.w, Panel.h, &m_FriendsCategoryPopupContext, PopupFriendsCategory);
 		};
 		if(Ui()->DoButton_FontIcon(&m_vFriendsCategoryManageButtons[CategoryIndex], FONT_ICON_GEAR, 0, &ManageButton, BUTTONFLAG_LEFT))
 		{
@@ -3007,7 +3009,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 				m_FriendsCategoryPopupContext.m_CategoryIndex = m_FriendAddCategoryIndex;
 				m_FriendsCategoryPopupContext.m_Mode = CFriendsCategoryPopupContext::MODE_ADD;
 				m_FriendsCategoryPopupContext.m_NameInput.Clear();
-				Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Ui()->MouseX(), Ui()->MouseY(), 280.0f, CMenus::FriendsCategoryEditPopupHeight(), &m_FriendsCategoryPopupContext, PopupFriendsCategory);
+				const CUIRect Panel = CMenus::SecondaryPanelRect(Ui()->MouseX(), Ui()->MouseY(), 300.0f, CMenus::FriendsCategoryEditPopupHeight(), *Ui()->Screen());
+				Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Panel.x, Panel.y, Panel.w, Panel.h, &m_FriendsCategoryPopupContext, PopupFriendsCategory);
 			}
 			GameClient()->m_Tooltips.DoToolTip(&m_FriendsAddCategoryCreateButton, &CreateCategoryButton, Localize("Create category"));
 		}

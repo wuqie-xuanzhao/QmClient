@@ -800,6 +800,64 @@ public:
 	{
 		return 5.0f * 2.0f + 12.0f + 3.0f + 18.0f + 6.0f + 20.0f;
 	}
+	static float FriendsCategoryActionsPopupHeight()
+	{
+		return 5.0f * 2.0f + 12.0f + 3.0f + 18.0f + 3.0f + 18.0f + 3.0f + 18.0f;
+	}
+	static CUIRect SecondaryPanelRect(float AnchorX, float AnchorY, float PreferredWidth, float PreferredHeight, const CUIRect &Screen, float MinWidth = 220.0f, float MinHeight = 48.0f, float MaxWidth = 420.0f, float MaxHeight = 260.0f)
+	{
+		SSecondaryPanelSpec Spec;
+		Spec.m_AnchorX = AnchorX;
+		Spec.m_AnchorY = AnchorY;
+		Spec.m_PreferredWidth = PreferredWidth;
+		Spec.m_PreferredHeight = PreferredHeight;
+		Spec.m_MinWidth = MinWidth;
+		Spec.m_MinHeight = MinHeight;
+		Spec.m_MaxWidth = MaxWidth;
+		Spec.m_MaxHeight = MaxHeight;
+		Spec.m_ScreenWidth = Screen.w;
+		Spec.m_ScreenHeight = Screen.h;
+		Spec.m_Margin = 8.0f;
+		return SettingsSecondaryPanelRect(Spec);
+	}
+	static const char *ServerbrowserShortTypeDisplayName(const char *pType)
+	{
+		if(pType == nullptr || pType[0] == '\0')
+			return nullptr;
+		if(str_comp_nocase(pType, "DDmaX Easy") == 0)
+			return "DDmaX.Easy 古典";
+		if(str_comp_nocase(pType, "DDmaX.Easy") == 0)
+			return "DDmaX.Easy 古典";
+		if(str_comp_nocase(pType, "DDmaX Next") == 0)
+			return "DDmaX.Next 古典";
+		if(str_comp_nocase(pType, "DDmaX.Next") == 0)
+			return "DDmaX.Next 古典";
+		if(str_comp_nocase(pType, "DDmaX Pro") == 0)
+			return "DDmaX.Pro 古典";
+		if(str_comp_nocase(pType, "DDmaX.Pro") == 0)
+			return "DDmaX.Pro 古典";
+		if(str_comp_nocase(pType, "DDmaX Nut") == 0)
+			return "DDmaX.Nut 古典";
+		if(str_comp_nocase(pType, "DDmaX.Nut") == 0)
+			return "DDmaX.Nut 古典";
+		if(str_comp_nocase(pType, "DDmaX") == 0)
+			return "DDmaX 古典";
+		if(str_comp_nocase(pType, "Oldschool") == 0)
+			return "古典图";
+		if(str_comp_nocase(pType, "Novice") == 0)
+			return "简单图";
+		if(str_comp_nocase(pType, "Moderate") == 0)
+			return "中阶图";
+		if(str_comp_nocase(pType, "Brutal") == 0)
+			return "高阶";
+		if(str_comp_nocase(pType, "Insane") == 0)
+			return "疯狂";
+		if(str_comp_nocase(pType, "Dummy") == 0)
+			return "分身";
+		if(str_comp_nocase(pType, "Solo") == 0)
+			return "单人";
+		return pType;
+	}
 	struct SFriendAutoFollowState
 	{
 		bool m_Active = false;
@@ -878,14 +936,32 @@ public:
 		const auto DifficultyKeyFromText = [](const char *pText) -> const char * {
 			if(!pText || pText[0] == '\0')
 				return nullptr;
-			if(str_find_nocase(pText, "Novice") || str_find(pText, "普通"))
+			if(str_find_nocase(pText, "DDmaX"))
+			{
+				if(str_find_nocase(pText, "Easy"))
+					return "DDmaX Easy";
+				if(str_find_nocase(pText, "Next"))
+					return "DDmaX Next";
+				if(str_find_nocase(pText, "Pro"))
+					return "DDmaX Pro";
+				if(str_find_nocase(pText, "Nut"))
+					return "DDmaX Nut";
+				return "DDmaX";
+			}
+			if(str_find_nocase(pText, "Oldschool") || str_find(pText, "古典") || str_find(pText, "传统"))
+				return "Oldschool";
+			if(str_find_nocase(pText, "Novice") || str_find(pText, "普通") || str_find(pText, "简单"))
 				return "Novice";
 			if(str_find_nocase(pText, "Moderate") || str_find(pText, "中阶"))
 				return "Moderate";
-			if(str_find_nocase(pText, "Brutal") || str_find(pText, "高阶"))
+			if(str_find_nocase(pText, "Brutal") || str_find(pText, "高阶") || str_find(pText, "困难"))
 				return "Brutal";
 			if(str_find_nocase(pText, "Insane") || str_find(pText, "疯狂"))
 				return "Insane";
+			if(str_find_nocase(pText, "Dummy") || str_find(pText, "分身"))
+				return "Dummy";
+			if(str_find_nocase(pText, "Solo") || str_find(pText, "单人"))
+				return "Solo";
 			return nullptr;
 		};
 
@@ -957,12 +1033,12 @@ public:
 			const char *pMapName = pDash != nullptr ? str_skip_whitespaces_const(pDash + 3) : nullptr;
 			if(pMapName != nullptr && pMapName[0] != '\0')
 			{
-				str_format(pBuffer, BufferSize, "%s - %s", pDifficulty, pMapName);
+				str_format(pBuffer, BufferSize, "%s - %s", ServerbrowserShortTypeDisplayName(pDifficulty), pMapName);
 				return pBuffer;
 			}
 		}
 
-		if(str_find_nocase(pName, "DDNet CHN") || str_find_nocase(pName, "CHN DDR"))
+		if(str_find_nocase(pName, "DDNet CHN") || str_find_nocase(pName, "CHN DDR") || str_find_nocase(pName, "DDNet Taiwan") || str_find_nocase(pName, "CHN"))
 		{
 			char aRegion[64];
 			str_copy(aRegion, pName, sizeof(aRegion));
@@ -971,7 +1047,8 @@ public:
 				pRegion = str_skip_whitespaces_const(pAfterPrefix);
 			else if(const char *pAfterPrefix = str_startswith_nocase(pRegion, "CHN DDR "))
 				pRegion = str_skip_whitespaces_const(pAfterPrefix);
-			if(char *pDash = const_cast<char *>(str_find(aRegion, " - ")))
+			const char *pDashText = str_find(aRegion, " - ");
+			if(char *pDash = const_cast<char *>(pDashText))
 				*pDash = '\0';
 			if(char *pDifficultyStart = const_cast<char *>(str_find_nocase(pRegion, pDifficulty)))
 			{
@@ -979,10 +1056,36 @@ public:
 					--pDifficultyStart;
 				*pDifficultyStart = '\0';
 			}
+			if(pDifficulty != nullptr && str_startswith_nocase(pDifficulty, "DDmaX") && pDashText != nullptr)
+			{
+				const char *pSuffix = str_skip_whitespaces_const(pDashText + 3);
+				if(pSuffix[0] != '\0')
+				{
+					char aSuffix[64];
+					str_copy(aSuffix, pSuffix, sizeof(aSuffix));
+					if(char *pClassic = const_cast<char *>(str_find(aSuffix, "古典")))
+					{
+						while(pClassic > aSuffix && pClassic[-1] == ' ')
+							--pClassic;
+						*pClassic = '\0';
+					}
+					str_format(pBuffer, BufferSize, "%s - %s", ServerbrowserShortTypeDisplayName(aSuffix[0] != '\0' ? aSuffix : pDifficulty), pRegion);
+					return pBuffer;
+				}
+			}
 			if(pRegion[0] != '\0')
 			{
-				str_format(pBuffer, BufferSize, "%s - %s", pDifficulty, pRegion);
+				str_format(pBuffer, BufferSize, "%s - %s", ServerbrowserShortTypeDisplayName(pDifficulty), pRegion);
 				return pBuffer;
+			}
+			if(pDashText != nullptr)
+			{
+				const char *pSuffix = str_skip_whitespaces_const(pDashText + 3);
+				if(pSuffix[0] != '\0')
+				{
+					str_format(pBuffer, BufferSize, "%s - %s", ServerbrowserShortTypeDisplayName(pDifficulty), pSuffix);
+					return pBuffer;
+				}
 			}
 		}
 
@@ -1879,6 +1982,7 @@ protected:
 	void ResetSettingsControls();
 
 	std::vector<CButtonContainer> m_vButtonContainersNamePlateShow = {{}, {}, {}, {}};
+	std::vector<CButtonContainer> m_vButtonContainersNamePlateHookStrongWeakScope = {{}, {}, {}, {}, {}};
 	std::vector<CButtonContainer> m_vButtonContainersNamePlateKeyPresses = {{}, {}, {}, {}};
 	class CSkinQueuePresetRenamePopupContext : public SPopupMenuId
 	{
@@ -2476,6 +2580,11 @@ private:
 	bool m_SettingsMenuTextPlanCollectionComplete = false;
 	SSettingsMenuTextPrebuildStats m_SettingsMenuTextLastPrebuildStats;
 	SSettingsMenuTextPlanCollectionStats m_SettingsMenuTextLastCollectionStats;
+	std::vector<std::string> m_vTClientLeftCardOrder;
+	std::vector<std::string> m_vTClientRightCardOrder;
+	std::vector<SSettingsCardDeckItem> m_vTClientSettingsCardDeckItems;
+	SSettingsCardDeckDragState m_TClientSettingsCardDragState;
+	bool m_TClientSettingsCardDeckOrderDirty = false;
 
 	CCommunityIcons m_CommunityIcons;
 	CMenusIngameTouchControls m_MenusIngameTouchControls;
@@ -2506,18 +2615,18 @@ private:
 	CUIRect TClientCacheSectionBoxRect(CUIRect BoxRect) const;
 	void InsetTClientCacheSectionContent(CUIRect &ContentRect) const;
 	void DrawTClientCacheSectionBox(CUIRect BoxRect);
-	float RenderTClientCacheSectionFallback(CUIRect &CurrentColumn, float TopMargin, float (CMenus::*pLayoutSection)(CUIRect &, bool));
-	void ConfigureSplitCachedStaticLayer(SSettingsSection &Section, const char *pTitle, std::function<float(CUIRect &)> MeasureSection, std::function<float(CUIRect &)> RenderInteractiveSection, float TopMargin);
+	float RenderSettingsCardSection(const char *pSectionName, CUIRect &CurrentColumn, const std::function<float(CUIRect &, bool)> &LayoutSection, float TopMargin);
+	void ConfigureSettingsCardSection(SSettingsSection &Section, const char *pTitle, const char *pStableCardId, std::function<float(CUIRect &, bool)> LayoutSection, float TopMargin);
+	SSettingsCardDeckItem SettingsCardDeckItemFromSection(const SSettingsSection &Section, ESettingsCardDeckColumn Column, int Order, const CUIRect &Rect, const CUIRect &HeaderRect) const;
+	void RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item);
+	void HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder);
+	bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, int DropIndex);
 	void BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);
 	void BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);
 	float LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render);
-	float RenderTClientThemeInteractiveLayer(CUIRect &CurrentColumn);
 	float LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Render);
-	float RenderTClientAutoReplyInteractiveLayer(CUIRect &CurrentColumn);
 	float LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render);
-	float RenderTClientPetInteractiveLayer(CUIRect &CurrentColumn);
 	float LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render);
-	float RenderTClientHudInteractiveLayer(CUIRect &CurrentColumn);
 	int DoTClientSettingsButton_CheckBox(const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
 	int DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin);
 	int DoTClientSettingsButton_Menu(CButtonContainer *pButtonContainer, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f);

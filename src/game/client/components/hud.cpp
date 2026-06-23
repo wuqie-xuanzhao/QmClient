@@ -3888,6 +3888,7 @@ void CHud::RenderMediaIsland()
 void CHud::RenderPlayerState(const int ClientId)
 {
 	Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
+	const bool FastPracticeParticipant = GameClient()->m_FastPractice.IsPracticeParticipant(ClientId);
 
 	// pCharacter contains the predicted character for local players or the last snap for players who are spectated
 	CCharacterCore *pCharacter = &GameClient()->m_aClients[ClientId].m_Predicted;
@@ -4169,7 +4170,7 @@ void CHud::RenderPlayerState(const int ClientId)
 		Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_LockModeOffset, x, y);
 		x += 12;
 	}
-	if(GameClient()->m_Snap.m_aCharacters[ClientId].m_HasExtendedDisplayInfo && GameClient()->m_Snap.m_aCharacters[ClientId].m_ExtendedData.m_Flags & CHARACTERFLAG_PRACTICE_MODE)
+	if((GameClient()->m_Snap.m_aCharacters[ClientId].m_HasExtendedDisplayInfo && GameClient()->m_Snap.m_aCharacters[ClientId].m_ExtendedData.m_Flags & CHARACTERFLAG_PRACTICE_MODE) || FastPracticeParticipant)
 	{
 		Graphics()->TextureSet(GameClient()->m_HudSkin.m_SpriteHudPracticeMode);
 		Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_PracticeModeOffset, x, y);
@@ -4795,9 +4796,10 @@ void CHud::RenderMovementInformation()
 	m_MovementInfoBoxValid = false;
 
 	const int ClientId = GameClient()->m_Snap.m_SpecInfo.m_Active ? GameClient()->m_Snap.m_SpecInfo.m_SpectatorId : GameClient()->m_Snap.m_LocalClientId;
+	const bool FastPracticeParticipant = GameClient()->m_FastPractice.IsPracticeParticipant(ClientId);
 	const bool PosOnly = ClientId == SPEC_FREEVIEW || (GameClient()->m_aClients[ClientId].m_SpecCharPresent);
 	const bool ShowPosition = g_Config.m_ClShowhudPlayerPosition;
-	const bool ShowSpeed = !PosOnly && g_Config.m_ClShowhudPlayerSpeed;
+	const bool ShowSpeed = !PosOnly && (g_Config.m_ClShowhudPlayerSpeed || FastPracticeParticipant);
 	const bool ShowAngle = !PosOnly && g_Config.m_ClShowhudPlayerAngle;
 	const bool ShowStats = !PosOnly && g_Config.m_QmPlayerStatsHud;
 	const bool ShowMovementInfo = ShowPosition || ShowSpeed || ShowAngle || ShowStats;

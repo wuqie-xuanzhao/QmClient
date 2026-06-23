@@ -1,5 +1,7 @@
 #include "modes.h"
 
+#include <generated/protocol.h>
+
 #include <algorithm>
 
 int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActive, int CurrentValue, int HiddenValue, bool &Changed)
@@ -55,6 +57,115 @@ int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Chan
 		return CurrentValue;
 	Changed = true;
 	return 0;
+}
+
+bool ShouldKeepQmGoresHammerInFreeze(bool GoresCycleActive, bool InFreeze, bool HammerRequested)
+{
+	return GoresCycleActive && InFreeze && HammerRequested;
+}
+
+bool ShouldTriggerQmGoresHammerWakeup(bool GoresCycleActive, bool HammerRequested, bool ExternalHammerWakeup)
+{
+	return GoresCycleActive && HammerRequested && ExternalHammerWakeup;
+}
+
+int QmGoresHammerWakeupFireState(int CurrentFire)
+{
+	return ((CurrentFire + 1) | 1) & INPUT_STATE_MASK;
+}
+
+bool ShouldReleaseQmGoresHammerWakeupFire(bool PendingRelease, int CurrentFire)
+{
+	return PendingRelease && (CurrentFire & 1) != 0;
+}
+
+int QmGoresHammerWakeupReleaseFireState(int CurrentFire)
+{
+	return ((CurrentFire + 1) & ~1) & INPUT_STATE_MASK;
+}
+
+bool ShouldShowQmHookStrongWeakScope(int Scope, bool Self, bool Strong, bool Weak)
+{
+	switch(Scope)
+	{
+	case QM_HOOK_STRONG_WEAK_SCOPE_SELF:
+		return Self;
+	case QM_HOOK_STRONG_WEAK_SCOPE_OTHERS:
+		return !Self;
+	case QM_HOOK_STRONG_WEAK_SCOPE_STRONG:
+		return Strong;
+	case QM_HOOK_STRONG_WEAK_SCOPE_WEAK:
+		return Weak;
+	case QM_HOOK_STRONG_WEAK_SCOPE_ALL:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static bool ShouldUseQmNameplateTextPlayingScope(int Scope, bool Self, bool Friend)
+{
+	switch(Scope)
+	{
+	case QM_NAMEPLATE_TEXT_PLAYING_SCOPE_OFF:
+		return false;
+	case QM_NAMEPLATE_TEXT_PLAYING_SCOPE_SELF:
+		return Self;
+	case QM_NAMEPLATE_TEXT_PLAYING_SCOPE_OTHERS:
+		return !Self;
+	case QM_NAMEPLATE_TEXT_PLAYING_SCOPE_FRIENDS:
+		return Friend;
+	case QM_NAMEPLATE_TEXT_PLAYING_SCOPE_SELF_FRIENDS:
+		return Self || Friend;
+	case QM_NAMEPLATE_TEXT_PLAYING_SCOPE_ALL:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static bool ShouldUseQmNameplateTextSpectateScope(int Scope, bool Friend, bool SpectateTarget)
+{
+	switch(Scope)
+	{
+	case QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_OFF:
+		return false;
+	case QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_TARGET:
+		return SpectateTarget;
+	case QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_OTHERS:
+		return !SpectateTarget;
+	case QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_FRIENDS:
+		return Friend;
+	case QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_TARGET_FRIENDS:
+		return SpectateTarget || Friend;
+	case QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_ALL:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool ShouldUseQmNameplateTextEffects(int PlayingScope, int SpectateScope, int DemoMode, int DemoTarget, bool DemoPlayback, bool Spectating, bool Self, bool Friend, bool SpectateTarget, int ClientId)
+{
+	if(DemoPlayback)
+	{
+		switch(DemoMode)
+		{
+		case QM_NAMEPLATE_TEXT_DEMO_MODE_OFF:
+			return false;
+		case QM_NAMEPLATE_TEXT_DEMO_MODE_SMART:
+			return SpectateTarget;
+		case QM_NAMEPLATE_TEXT_DEMO_MODE_MANUAL_TARGET:
+			return DemoTarget >= 0 && ClientId == DemoTarget;
+		case QM_NAMEPLATE_TEXT_DEMO_MODE_MANUAL_SCOPE:
+			return ShouldUseQmNameplateTextPlayingScope(PlayingScope, Self, Friend);
+		default:
+			return false;
+		}
+	}
+	if(Spectating)
+		return ShouldUseQmNameplateTextSpectateScope(SpectateScope, Friend, SpectateTarget);
+	return ShouldUseQmNameplateTextPlayingScope(PlayingScope, Self, Friend);
 }
 
 bool ShouldHideGoresGuide(bool GoresEnabled, bool HideGuidesEnabled, bool ManualGuideVisible)

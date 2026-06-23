@@ -123,6 +123,14 @@ TEST(QmHudNotifications, ChatEdgeBaseRectPreservesLegacyDefaultAndSupportsRightE
 	EXPECT_FLOAT_EQ(Right.h, 250.0f);
 }
 
+TEST(QmHudNotifications, HudEditorEdgeAnchoringUsesDragSnapDistance)
+{
+	const std::string Source = ReadHudNotificationTestFile("src/game/client/components/hud_editor.cpp");
+
+	EXPECT_NE(Source.find("HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::SNAP_DISTANCE"), std::string::npos);
+	EXPECT_EQ(Source.find("HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::EPSILON"), std::string::npos);
+}
+
 TEST(QmHudNotifications, CatalogProvidesCanonicalTextAndMetadata)
 {
 	using namespace QmHudNotifications;

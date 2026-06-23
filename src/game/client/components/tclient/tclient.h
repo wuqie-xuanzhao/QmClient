@@ -189,6 +189,8 @@ class CTClient : public CComponent
 	// Auto Switch on Unfreeze (HJ大佬辅助)
 	bool m_aWasInFreezeForSwitch[NUM_DUMMIES] = {false, false};
 	void CheckAutoSwitchOnUnfreeze();
+	bool m_aWasInFreezeForGoresHammer[NUM_DUMMIES] = {false, false};
+	bool m_aGoresHammerWakeupFirePendingRelease[NUM_DUMMIES] = {false, false};
 
 	// Auto Close Chat on Unfreeze (HJ大佬辅助)
 	bool m_aWasInFreezeForChatClose[NUM_DUMMIES] = {false, false};

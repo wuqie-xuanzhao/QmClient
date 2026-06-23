@@ -155,6 +155,68 @@ void CRenderTools::RenderIcon(int ImageId, int SpriteId, const CUIRect *pRect, c
 	Graphics()->QuadsEnd();
 }
 
+void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContainerIndex, const SQmTextEffectRenderStyle &Style, float X, float Y) const
+{
+	if(!TextContainerIndex.Valid())
+		return;
+
+	const float Alpha = std::clamp(Style.m_TextColor.a, 0.0f, 1.0f);
+	if(Alpha <= 0.0f)
+		return;
+
+	const ColorRGBA EmptyOutline(0.0f, 0.0f, 0.0f, 0.0f);
+	const bool BorderEnabled = (Style.m_Effects & QM_TEXT_EFFECT_BORDER) != 0 && Style.m_BorderColor.a > 0.0f && Style.m_BorderRange > 0.0f;
+	const bool GlowEnabled = (Style.m_Effects & QM_TEXT_EFFECT_GLOW) != 0 && Style.m_GlowColor.a > 0.0f && Style.m_GlowRange > 0.0f;
+	const bool GradientEnabled = (Style.m_Effects & QM_TEXT_EFFECT_GRADIENT) != 0;
+	const bool RainbowEnabled = (Style.m_Effects & QM_TEXT_EFFECT_RAINBOW) != 0;
+
+	if(GlowEnabled)
+	{
+		const int GlowPasses = std::clamp(round_to_int(Style.m_GlowRange), 1, 6);
+		for(int Pass = 0; Pass < GlowPasses; ++Pass)
+		{
+			const float Radius = Style.m_GlowRange * (float)(Pass + 1) / (float)GlowPasses;
+			const float PassAlpha = Style.m_GlowColor.a * Alpha * (1.0f - (float)Pass / (float)(GlowPasses + 1));
+			const ColorRGBA Glow = Style.m_GlowColor.WithAlpha(PassAlpha);
+			TextRender()->RenderTextContainer(TextContainerIndex, Glow, EmptyOutline, X - Radius, Y);
+			TextRender()->RenderTextContainer(TextContainerIndex, Glow, EmptyOutline, X + Radius, Y);
+			TextRender()->RenderTextContainer(TextContainerIndex, Glow, EmptyOutline, X, Y - Radius);
+			TextRender()->RenderTextContainer(TextContainerIndex, Glow, EmptyOutline, X, Y + Radius);
+		}
+	}
+
+	ColorRGBA OutlineColor = Style.m_OutlineColor.WithMultipliedAlpha(Alpha);
+	if(BorderEnabled)
+		OutlineColor = Style.m_BorderColor.WithMultipliedAlpha(Alpha);
+	if(BorderEnabled && Style.m_BorderRange > 1.0f)
+	{
+		const float Radius = std::clamp(Style.m_BorderRange, 1.0f, 4.0f);
+		TextRender()->RenderTextContainer(TextContainerIndex, OutlineColor, EmptyOutline, X - Radius, Y);
+		TextRender()->RenderTextContainer(TextContainerIndex, OutlineColor, EmptyOutline, X + Radius, Y);
+		TextRender()->RenderTextContainer(TextContainerIndex, OutlineColor, EmptyOutline, X, Y - Radius);
+		TextRender()->RenderTextContainer(TextContainerIndex, OutlineColor, EmptyOutline, X, Y + Radius);
+	}
+
+	ColorRGBA TextColor = Style.m_TextColor;
+	if(RainbowEnabled)
+	{
+		const float Hue = std::fmod(Style.m_Time * 0.15f, 1.0f);
+		TextColor = color_cast<ColorRGBA>(ColorHSLA(Hue, 0.7f, 0.65f, Alpha));
+	}
+	else if(GradientEnabled)
+	{
+		const float Mix = 0.5f + 0.5f * std::sin(Style.m_Time * 1.8f);
+		const ColorRGBA GradientColor = Style.m_GradientColor.WithAlpha(Style.m_TextColor.a);
+		TextColor = ColorRGBA(
+			Style.m_TextColor.r + (GradientColor.r - Style.m_TextColor.r) * Mix,
+			Style.m_TextColor.g + (GradientColor.g - Style.m_TextColor.g) * Mix,
+			Style.m_TextColor.b + (GradientColor.b - Style.m_TextColor.b) * Mix,
+			Style.m_TextColor.a);
+	}
+
+	TextRender()->RenderTextContainer(TextContainerIndex, TextColor, OutlineColor, X, Y);
+}
+
 void CRenderTools::GetRenderTeeAnimScaleAndBaseSize(const CTeeRenderInfo *pInfo, float &AnimScale, float &BaseSize)
 {
 	AnimScale = pInfo->m_Size * 1.0f / 64.0f;

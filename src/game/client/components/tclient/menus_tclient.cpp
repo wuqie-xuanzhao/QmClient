@@ -1012,39 +1012,110 @@ void CMenus::DrawTClientCacheSectionBox(CUIRect BoxRect)
 	BoxRect.Draw(Ui()->ScaleBackgroundAlpha(MenuPanelColor(0.92f)), IGraphics::CORNER_ALL, 10.0f);
 }
 
-float CMenus::RenderTClientCacheSectionFallback(CUIRect &CurrentColumn, float TopMargin, float (CMenus::*pLayoutSection)(CUIRect &, bool))
+float CMenus::RenderSettingsCardSection(const char *pSectionName, CUIRect &CurrentColumn, const std::function<float(CUIRect &, bool)> &LayoutSection, float TopMargin)
 {
+	CUiScopedQuadBatch QuadBatchScope(Ui());
 	const float SavedY = CurrentColumn.y;
 	CUIRect MeasuredColumn = CurrentColumn;
-	const float Height = (this->*pLayoutSection)(MeasuredColumn, false);
-	DrawTClientCacheSectionBox({CurrentColumn.x, CurrentColumn.y + TopMargin, CurrentColumn.w, Height - TopMargin});
+	InsetTClientCacheSectionContent(MeasuredColumn);
+	LayoutSection(MeasuredColumn, false);
+	const float MeasuredHeight = MeasuredColumn.y - CurrentColumn.y;
+	CUIRect BoxRect = {CurrentColumn.x, CurrentColumn.y + TopMargin, CurrentColumn.w, MeasuredHeight - TopMargin};
+	DrawTClientCacheSectionBox(BoxRect);
 	CUIRect ContentColumn = CurrentColumn;
 	InsetTClientCacheSectionContent(ContentColumn);
-	(this->*pLayoutSection)(ContentColumn, true);
+	LayoutSection(ContentColumn, true);
 	CurrentColumn.y = ContentColumn.y;
+	const float RenderedHeight = CurrentColumn.y - SavedY;
+	const float HeightDelta = RenderedHeight - MeasuredHeight;
+	const bool HeightStable = absolute(HeightDelta) <= 0.01f;
+	char aExtra[256];
+	str_format(aExtra, sizeof(aExtra), "frame=%" PRIu64 " operation=%s page=settings:tclient tab=%d subtab=%d section=%s section_height_measured=%.3f section_height_rendered=%.3f height_delta=%.3f stable=%d",
+		(uint64_t)Client()->PerfFrame(), SettingsPerfActiveOperation(), m_TClientSettingsTab, m_TClientSettingsTab,
+		pSectionName != nullptr ? pSectionName : "unknown", MeasuredHeight, RenderedHeight, HeightDelta, HeightStable ? 1 : 0);
+	LogTClientPerfStage("tclient_settings_section_height", 0.0, !HeightStable, aExtra);
 	return CurrentColumn.y - SavedY;
 }
 
-void CMenus::ConfigureSplitCachedStaticLayer(SSettingsSection &Section, const char *pTitle, std::function<float(CUIRect &)> MeasureSection, std::function<float(CUIRect &)> RenderInteractiveSection, float TopMargin)
+SSettingsCardDeckItem CMenus::SettingsCardDeckItemFromSection(const SSettingsSection &Section, ESettingsCardDeckColumn Column, int Order, const CUIRect &Rect, const CUIRect &HeaderRect) const
 {
-	Section.m_RenderCompactFn = [this, pTitle, MeasureFn = std::move(MeasureSection), RenderInteractiveSection, TopMargin](CUIRect &Col) -> float {
-		CUiScopedQuadBatch QuadBatchScope(Ui());
-		CUIRect Label;
+	SSettingsCardDeckItem Item;
+	Item.m_pStableId = Section.m_pStableCardId;
+	Item.m_pSectionName = Section.m_pName;
+	Item.m_Column = Column;
+	Item.m_Order = Order;
+	Item.m_CachedHeight = Rect.h;
+	Item.m_Rect = Rect;
+	Item.m_HeaderRect = HeaderRect;
+	return Item;
+}
+
+void CMenus::RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item)
+{
+	if(Item.m_pStableId == nullptr || Item.m_pStableId[0] == '\0')
+		return;
+	m_vTClientSettingsCardDeckItems.push_back(Item);
+}
+
+void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder)
+{
+	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
+	if(DragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))
+		DragState = {};
+	if(DragState.m_PressPending && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))
+		SettingsCardDeckClearPress(DragState);
+
+	const ESettingsCardDragHitRegion HitRegion = Ui()->MouseHovered(&Item.m_HeaderRect) ? ESettingsCardDragHitRegion::CHROME : Ui()->MouseHovered(&Item.m_Rect) ? ESettingsCardDragHitRegion::CONTENT :
+																				      ESettingsCardDragHitRegion::NONE;
+	if(!DragState.m_Active && !DragState.m_PressPending && Ui()->MouseButtonClicked(0) && SettingsCardDeckCanStartDrag({&Item, Input()->ModifierIsPressed(), HitRegion}))
+	{
+		SettingsCardDeckBeginPress(DragState, Item);
+	}
+	else if(!DragState.m_Active && DragState.m_PressPending && Ui()->MouseButton(0) && Input()->ModifierIsPressed())
+	{
+		SettingsCardDeckTryPromotePress(DragState);
+	}
+	else if(DragState.m_Active && DragState.m_Item.m_Column == Column && HitRegion != ESettingsCardDragHitRegion::NONE && Ui()->MouseButton(0))
+	{
+		DragState.m_DropIndex = SettingsCardDeckDropIndexForHoveredItem(Item, Ui()->MouseY());
+	}
+	else if(DragState.m_Active && DragState.m_Item.m_Column == Column && HitRegion != ESettingsCardDragHitRegion::NONE && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))
+	{
+		const int DropIndex = SettingsCardDeckDropIndexForHoveredItem(Item, Ui()->MouseY());
+		CommitSettingsCardDeckDragDrop(pOrder, DropIndex);
+	}
+}
+
+bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, int DropIndex)
+{
+	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
+	if(!DragState.m_Active)
+		return false;
+	if(DropIndex < 0)
+		DropIndex = DragState.m_DropIndex;
+	bool Moved = false;
+	if(pOrder != nullptr && SettingsCardDeckMoveWithinColumn(*pOrder, DragState.m_Item.m_pStableId, DropIndex))
+	{
+		m_TClientSettingsCardDeckOrderDirty = true;
+		Moved = true;
+	}
+	DragState = {};
+	return Moved;
+}
+
+void CMenus::ConfigureSettingsCardSection(SSettingsSection &Section, const char *pTitle, const char *pStableCardId, std::function<float(CUIRect &, bool)> LayoutSection, float TopMargin)
+{
+	Section.m_pStableCardId = pStableCardId;
+	Section.m_MeasureFn = [this, LayoutSection](CUIRect &Col) -> float {
 		const float SavedY = Col.y;
 		CUIRect MeasuredColumn = Col;
 		InsetTClientCacheSectionContent(MeasuredColumn);
-		const float Height = MeasureFn(MeasuredColumn);
-		DrawTClientCacheSectionBox({Col.x, Col.y + TopMargin, Col.w, Height - TopMargin});
-		CUIRect ContentColumn = Col;
-		InsetTClientCacheSectionContent(ContentColumn);
-		ContentColumn.HSplitTop(TopMargin, nullptr, &ContentColumn);
-		ContentColumn.HSplitTop(HeadlineHeight, &Label, &ContentColumn);
-		CUIElement &TitleElement = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, pTitle);
-		DoSettingsLabelStreamed(TitleElement, &Label, Localize(pTitle), HeadlineFontSize, TEXTALIGN_ML);
-		ContentColumn.HSplitTop(MarginSmall, nullptr, &ContentColumn);
-		RenderInteractiveSection(ContentColumn);
-		Col.y = ContentColumn.y;
+		LayoutSection(MeasuredColumn, false);
+		Col.y = MeasuredColumn.y;
 		return Col.y - SavedY;
+	};
+	Section.m_RenderCompactFn = [this, pTitle, LayoutSection, TopMargin](CUIRect &Col) -> float {
+		return RenderSettingsCardSection(pTitle, Col, LayoutSection, TopMargin);
 	};
 	Section.m_RenderFullFn = Section.m_RenderCompactFn;
 }
@@ -1150,83 +1221,6 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 	return CurrentColumn.y - SavedY;
 }
 
-float CMenus::RenderTClientThemeInteractiveLayer(CUIRect &CurrentColumn)
-{
-	const float SavedY = CurrentColumn.y;
-	CUIRect Label, Button;
-	CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-	Button.VSplitLeft(100.0f, &Label, &Button);
-	DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Custom Font:"), FontSize, TEXTALIGN_ML);
-	static std::vector<std::string> s_FontDropDownNamesOwned;
-	static std::vector<const char *> s_FontDropDownNames;
-	static CUi::SDropDownState s_FontDropDownState;
-	static CScrollRegion s_FontDropDownScrollRegion;
-	s_FontDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_FontDropDownScrollRegion;
-	s_FontDropDownState.m_SelectionPopupContext.m_SpecialFontRenderMode = true;
-	const auto &CustomFaces = *TextRender()->GetCustomFaces();
-	if(s_FontDropDownNamesOwned != CustomFaces)
-	{
-		s_FontDropDownNamesOwned = CustomFaces;
-		s_FontDropDownNames.clear();
-		s_FontDropDownNames.reserve(s_FontDropDownNamesOwned.size());
-		for(const auto &FaceName : s_FontDropDownNamesOwned)
-			s_FontDropDownNames.push_back(FaceName.c_str());
-	}
-	int FontSelectedOld = -1;
-	for(size_t i = 0; i < CustomFaces.size(); ++i)
-	{
-		if(str_find_nocase(g_Config.m_TcCustomFont, CustomFaces[i].c_str()))
-			FontSelectedOld = (int)i;
-	}
-	CUIRect FontDirectory;
-	Button.VSplitRight(20.0f, &Button, &FontDirectory);
-	Button.VSplitRight(MarginSmall, &Button, nullptr);
-	const int FontSelectedNew = Ui()->DoDropDown(&Button, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
-	if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
-	{
-		str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
-		s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
-		s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
-		TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
-		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::FONT_CHANGED);
-		TextRender()->OnPreWindowResize();
-		GameClient()->OnWindowResize();
-		GameClient()->Editor()->OnWindowResize();
-		TextRender()->OnWindowResize();
-		GameClient()->m_MapImages.SetTextureScale(101);
-		GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
-	}
-	static CButtonContainer s_FontDirectoryId;
-	if(Ui()->DoButton_FontIcon(&s_FontDirectoryId, FONT_ICON_FOLDER, 0, &FontDirectory, IGraphics::CORNER_ALL))
-	{
-		Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE);
-		Storage()->CreateFolder("qmclient/fonts", IStorage::TYPE_SAVE);
-		char aBuf[IO_MAX_PATH_LENGTH];
-		Storage()->GetCompletePath(IStorage::TYPE_SAVE, "qmclient/fonts", aBuf, sizeof(aBuf));
-		Client()->ViewFile(aBuf);
-	}
-	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
-	CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-	Button.VSplitLeft(120.0f, &Label, &Button);
-	DoSettingsLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-hammer-mode", &Label, Localize("Hammer Mode:"), FontSize, TEXTALIGN_ML);
-	static std::vector<const char *> s_DropDownNames;
-	s_DropDownNames = {Localize("Normal", "Hammer Mode"), Localize("Rotate with cursor", "Hammer Mode"), Localize("Rotate with cursor like gun", "Hammer Mode")};
-	static CUi::SDropDownState s_HammerDropDownState;
-	static CScrollRegion s_HammerDropDownScrollRegion;
-	s_HammerDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_HammerDropDownScrollRegion;
-	g_Config.m_TcHammerRotatesWithCursor = Ui()->DoDropDown(&Button, g_Config.m_TcHammerRotatesWithCursor, s_DropDownNames.data(), s_DropDownNames.size(), s_HammerDropDownState);
-	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
-	CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-	DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-cursor-scale", &g_Config.m_TcCursorScale, &g_Config.m_TcCursorScale, &Button, Localize("Ingame cursor scale"), 0, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
-	CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-	if(g_Config.m_TcAnimateWheelTime > 0)
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-wheel-animate-ms", &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcAnimateWheelTime, &Button, Localize("Wheel animate"), 0, 1000, &CUi::ms_LinearScrollbarScale, 0, "ms");
-	else
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-wheel-animate-ms", &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcAnimateWheelTime, &Button, Localize("Wheel animate"), 0, 1000, &CUi::ms_LinearScrollbarScale, 0, "ms (off)");
-	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
-	return CurrentColumn.y - SavedY;
-}
-
 float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Render)
 {
 	CUIRect Label, ReplyRect, TmpRect;
@@ -1270,33 +1264,6 @@ float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Re
 	return CurrentColumn.y - SavedY;
 }
 
-float CMenus::RenderTClientAutoReplyInteractiveLayer(CUIRect &CurrentColumn)
-{
-	const float SavedY = CurrentColumn.y;
-	CUIRect ReplyRect;
-	DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAutoReplyMuted, "tclient-auto-reply-muted", Localize("Automatically reply to muted players"), &g_Config.m_TcAutoReplyMuted, &CurrentColumn, LineSize);
-	CurrentColumn.HSplitTop(LineSize + MarginExtraSmall, &ReplyRect, &CurrentColumn);
-	if(g_Config.m_TcAutoReplyMuted)
-	{
-		ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
-		static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
-		s_MutedReply.SetEmptyText(Localize("I muted you"));
-		Ui()->DoEditBox(&s_MutedReply, &ReplyRect, EditBoxFontSize);
-	}
-	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
-	DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAutoReplyMinimized, "tclient-auto-reply-minimized", Localize("Automatically reply while the window is unfocused"), &g_Config.m_TcAutoReplyMinimized, &CurrentColumn, LineSize);
-	CurrentColumn.HSplitTop(LineSize + MarginExtraSmall, &ReplyRect, &CurrentColumn);
-	if(g_Config.m_TcAutoReplyMinimized)
-	{
-		ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
-		static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
-		s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
-		Ui()->DoEditBox(&s_MinimizedReply, &ReplyRect, EditBoxFontSize);
-	}
-	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
-	return CurrentColumn.y - SavedY;
-}
-
 float CMenus::LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render)
 {
 	CUIRect Label, Button, TmpRect, PetSkinBox;
@@ -1326,23 +1293,6 @@ float CMenus::LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render)
 		static CLineInput s_PetSkin(g_Config.m_TcPetSkin, sizeof(g_Config.m_TcPetSkin));
 		Ui()->DoEditBox(&s_PetSkin, &Button, EditBoxFontSize);
 	}
-	return CurrentColumn.y - SavedY;
-}
-
-float CMenus::RenderTClientPetInteractiveLayer(CUIRect &CurrentColumn)
-{
-	const float SavedY = CurrentColumn.y;
-	CUIRect Button, Label, PetSkinBox;
-	DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcPetShow, "tclient-show-pet", Localize("Show the pet"), &g_Config.m_TcPetShow, &CurrentColumn, LineSize);
-	CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-	DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-pet-size", &g_Config.m_TcPetSize, &g_Config.m_TcPetSize, &Button, Localize("Pet size"), 10, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
-	CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-	DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-pet-alpha", &g_Config.m_TcPetAlpha, &g_Config.m_TcPetAlpha, &Button, Localize("Pet alpha"), 10, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
-	CurrentColumn.HSplitTop(LineSize + MarginExtraSmall, &PetSkinBox, &CurrentColumn);
-	PetSkinBox.VSplitMid(&Label, &Button);
-	DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Pet Skin:"), FontSize, TEXTALIGN_ML);
-	static CLineInput s_PetSkin(g_Config.m_TcPetSkin, sizeof(g_Config.m_TcPetSkin));
-	Ui()->DoEditBox(&s_PetSkin, &Button, EditBoxFontSize);
 	return CurrentColumn.y - SavedY;
 }
 
@@ -1415,61 +1365,11 @@ float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)
 	return CurrentColumn.y - SavedY;
 }
 
-float CMenus::RenderTClientHudInteractiveLayer(CUIRect &CurrentColumn)
-{
-	const float SavedY = CurrentColumn.y;
-	CUIRect Button, NotificationConfig;
-	DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniVoteHud, "tclient-mini-vote-hud", Localize("Show compact vote HUD"), &g_Config.m_TcMiniVoteHud, &CurrentColumn, LineSize);
-	DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniDebug, "tclient-mini-debug", Localize("Show position and angle (mini debug)"), &g_Config.m_TcMiniDebug, &CurrentColumn, LineSize);
-	DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRenderCursorSpec, "tclient-render-cursor-spec", Localize("Show the cursor while free spectating"), &g_Config.m_TcRenderCursorSpec, &CurrentColumn, LineSize);
-	CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-	if(g_Config.m_TcRenderCursorSpec)
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-freeview-cursor-opacity", &g_Config.m_TcRenderCursorSpecAlpha, &g_Config.m_TcRenderCursorSpecAlpha, &Button, Localize("Freeview cursor opacity"), 0, 100);
-	DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcNotifyWhenLast, "tclient-notify-when-last", Localize("Notify when only one tee is still alive:"), &g_Config.m_TcNotifyWhenLast, &CurrentColumn, LineSize);
-	CurrentColumn.HSplitTop(LineSize + MarginSmall, &NotificationConfig, &CurrentColumn);
-	if(g_Config.m_TcNotifyWhenLast)
-	{
-		NotificationConfig.VSplitMid(&Button, &NotificationConfig);
-		static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
-		s_LastInput.SetEmptyText(Localize("You're the last one!"));
-		Button.HSplitTop(MarginSmall, nullptr, &Button);
-		Ui()->DoEditBox(&s_LastInput, &Button, EditBoxFontSize);
-		static CButtonContainer s_ClientNotifyWhenLastColor;
-		DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
-		CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-x", &g_Config.m_TcNotifyWhenLastX, &g_Config.m_TcNotifyWhenLastX, &Button, Localize("Horizontal position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
-		CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-y", &g_Config.m_TcNotifyWhenLastY, &g_Config.m_TcNotifyWhenLastY, &Button, Localize("Vertical position"), 1, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
-		CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-notify-last-size", &g_Config.m_TcNotifyWhenLastSize, &g_Config.m_TcNotifyWhenLastSize, &Button, Localize("Font size"), 1, 50);
-	}
-	else
-	{
-		CurrentColumn.HSplitTop(LineSize * 3.0f, nullptr, &CurrentColumn);
-	}
-	DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcShowCenter, "tclient-show-center-line", Localize("Show the screen center line"), &g_Config.m_TcShowCenter, &CurrentColumn, LineSize);
-	CurrentColumn.HSplitTop(LineSize + MarginSmall, &Button, &CurrentColumn);
-	if(g_Config.m_TcShowCenter)
-	{
-		static CButtonContainer s_ShowCenterLineColor;
-		DoLine_ColorPicker(&s_ShowCenterLineColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Button, Localize("Screen center line color"), &g_Config.m_TcShowCenterColor, CConfig::ms_TcShowCenterColor, false, nullptr, true);
-		CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-center-line-width", &g_Config.m_TcShowCenterWidth, &g_Config.m_TcShowCenterWidth, &Button, Localize("Screen center line width"), 0, 20);
-	}
-	else
-	{
-		CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
-	}
-	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
-	return CurrentColumn.y - SavedY;
-}
-
 SSettingsSection CMenus::BuildTClientThemeCacheSection()
 {
 	SSettingsSection S;
 	S.m_pName = "Visual: Font & Cursor";
-	S.m_MeasureFn = [this](CUIRect &Col) -> float { return LayoutTClientThemeCacheSection(Col, false); };
-	ConfigureSplitCachedStaticLayer(S, "Visual: Font & Cursor", [this](CUIRect &Col) -> float { return LayoutTClientThemeCacheSection(Col, false); }, [this](CUIRect &Col) -> float { return RenderTClientThemeInteractiveLayer(Col); }, Margin);
+	ConfigureSettingsCardSection(S, "Visual: Font & Cursor", "tclient:visual-font-cursor", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);
 	S.m_DependencyConfigInts = {&g_Config.m_TcCursorScale, &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcHammerRotatesWithCursor};
 	return S;
 }
@@ -1478,8 +1378,7 @@ SSettingsSection CMenus::BuildTClientAutoReplyCacheSection()
 {
 	SSettingsSection S;
 	S.m_pName = "Auto reply";
-	S.m_MeasureFn = [this](CUIRect &Col) -> float { return LayoutTClientAutoReplyCacheSection(Col, false); };
-	ConfigureSplitCachedStaticLayer(S, "Auto reply", [this](CUIRect &Col) -> float { return LayoutTClientAutoReplyCacheSection(Col, false); }, [this](CUIRect &Col) -> float { return RenderTClientAutoReplyInteractiveLayer(Col); }, MarginBetweenSections);
+	ConfigureSettingsCardSection(S, "Auto reply", "tclient:auto-reply", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientAutoReplyCacheSection(Col, Render); }, MarginBetweenSections);
 	S.m_DependencyConfigInts = {&g_Config.m_TcAutoReplyMuted, &g_Config.m_TcAutoReplyMinimized};
 	return S;
 }
@@ -1488,8 +1387,7 @@ SSettingsSection CMenus::BuildTClientPetCacheSection()
 {
 	SSettingsSection S;
 	S.m_pName = "Pet";
-	S.m_MeasureFn = [this](CUIRect &Col) -> float { return LayoutTClientPetCacheSection(Col, false); };
-	ConfigureSplitCachedStaticLayer(S, "Pet", [this](CUIRect &Col) -> float { return LayoutTClientPetCacheSection(Col, false); }, [this](CUIRect &Col) -> float { return RenderTClientPetInteractiveLayer(Col); }, MarginBetweenSections);
+	ConfigureSettingsCardSection(S, "Pet", "tclient:pet", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientPetCacheSection(Col, Render); }, MarginBetweenSections);
 	S.m_DependencyConfigInts = {&g_Config.m_TcPetShow, &g_Config.m_TcPetSize, &g_Config.m_TcPetAlpha};
 	return S;
 }
@@ -1498,8 +1396,7 @@ SSettingsSection CMenus::BuildTClientHudCacheSection()
 {
 	SSettingsSection S;
 	S.m_pName = "HUD";
-	S.m_MeasureFn = [this](CUIRect &Col) -> float { return LayoutTClientHudCacheSection(Col, false); };
-	ConfigureSplitCachedStaticLayer(S, "HUD", [this](CUIRect &Col) -> float { return LayoutTClientHudCacheSection(Col, false); }, [this](CUIRect &Col) -> float { return RenderTClientHudInteractiveLayer(Col); }, Margin);
+	ConfigureSettingsCardSection(S, "HUD", "tclient:hud", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientHudCacheSection(Col, Render); }, Margin);
 	S.m_DependencyConfigInts = {
 		&g_Config.m_TcMiniVoteHud,
 		&g_Config.m_TcMiniDebug,
@@ -1621,30 +1518,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		LogTClientSectionHeightConsistency(pSectionName, MeasuredHeight, RenderedHeight);
 		return Col.y - SavedY;
 	};
-	[[maybe_unused]] auto FillSplitCachedStaticLayer = [&](SSettingsSection &Section, const char *pTitle, auto &&MeasureSection, auto &&RenderInteractiveSection, float TopMargin) {
-		Section.m_RenderCompactFn = [&, pTitle, TopMargin](CUIRect &Col) -> float {
-			CUiScopedQuadBatch QuadBatchScope(Ui());
-			const float SavedY = Col.y;
-			CUIRect MeasuredColumn = Col;
-			InsetTClientCacheSectionContent(MeasuredColumn);
-			const float Height = MeasureSection(MeasuredColumn);
-			const float MeasuredHeight = MeasuredColumn.y - Col.y;
-			CUIRect BoxRect = {Col.x, Col.y + TopMargin, Col.w, Height - TopMargin};
-			DrawTClientCacheSectionBox(BoxRect);
-			CUIRect ContentColumn = Col;
-			InsetTClientCacheSectionContent(ContentColumn);
-			ContentColumn.HSplitTop(TopMargin, nullptr, &ContentColumn);
-			ContentColumn.HSplitTop(HeadlineHeight, &Label, &ContentColumn);
-			DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize(pTitle), HeadlineFontSize, TEXTALIGN_ML);
-			ContentColumn.HSplitTop(MarginSmall, nullptr, &ContentColumn);
-			RenderInteractiveSection(ContentColumn);
-			Col.y = ContentColumn.y;
-			const float RenderedHeight = Col.y - SavedY;
-			LogTClientSectionHeightConsistency(pTitle, MeasuredHeight, RenderedHeight);
-			return Col.y - SavedY;
-		};
-		Section.m_RenderFullFn = Section.m_RenderCompactFn;
-	};
 	auto FillCachedStaticLayer = [&](SSettingsSection &Section, auto &LayoutSection) {
 		Section.m_RenderCompactFn = [this, &LayoutSection, &LogTClientSectionHeightConsistency, SectionName = Section.m_pName](CUIRect &Col) -> float {
 			CUiScopedQuadBatch QuadBatchScope(Ui());
@@ -1700,6 +1573,59 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	[[maybe_unused]] static float s_BackgroundDrawSectionCachedHeight = 0.0f;
 	[[maybe_unused]] static float s_FinishNameSectionCachedHeight = 0.0f;
 
+	if(!PrewarmOnly)
+		m_vTClientSettingsCardDeckItems.clear();
+	const bool TClientSettingsCardDeckOrderDirtyAtFrameStart = !PrewarmOnly && m_TClientSettingsCardDeckOrderDirty;
+	if(TClientSettingsCardDeckOrderDirtyAtFrameStart)
+		m_TClientSettingsCardDeckOrderDirty = false;
+
+	auto EnsureSettingsCardDeckOrder = [](std::vector<std::string> &vOrder, const std::vector<SSettingsSection> &vSections) {
+		for(const SSettingsSection &Section : vSections)
+		{
+			if(Section.m_pStableCardId == nullptr || Section.m_pStableCardId[0] == '\0')
+				continue;
+			if(std::find(vOrder.begin(), vOrder.end(), Section.m_pStableCardId) == vOrder.end())
+				vOrder.emplace_back(Section.m_pStableCardId);
+		}
+	};
+	auto WrapSettingsCardDeckSections = [&](std::vector<SSettingsSection> &vSections, ESettingsCardDeckColumn ColumnId, std::vector<std::string> &vOrder) {
+		EnsureSettingsCardDeckOrder(vOrder, vSections);
+		SettingsCardDeckApplyOrder(vSections, vOrder);
+		for(size_t i = 0; i < vSections.size(); ++i)
+		{
+			SSettingsSection SectionMeta = vSections[i];
+			dbg_assert(SectionMeta.m_pStableCardId != nullptr && SectionMeta.m_pStableCardId[0] != '\0', "TClient settings deck card requires a stable id");
+			if(SectionMeta.m_pStableCardId == nullptr)
+				continue;
+			auto WrapRenderFn = [this, SectionMeta, ColumnId, &vOrder, i](std::function<float(CUIRect &)> RenderFn) {
+				return [this, SectionMeta, ColumnId, &vOrder, i, RenderFn](CUIRect &Col) -> float {
+					const CUIRect StartRect = Col;
+					const float Height = RenderFn ? RenderFn(Col) : 0.0f;
+					CUIRect CardRect = {StartRect.x, StartRect.y, StartRect.w, Col.y - StartRect.y};
+					CUIRect HeaderRect = CardRect;
+					HeaderRect.HSplitTop(Margin + HeadlineHeight + MarginSmall, &HeaderRect, nullptr);
+					const SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HeaderRect);
+					RegisterSettingsCardDeckItem(Item);
+					HandleSettingsCardDeckDrag(Item, ColumnId, &vOrder);
+					if(SettingsCardDeckIsDraggingItem(m_TClientSettingsCardDragState, Item))
+					{
+						CardRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, 10.0f);
+					}
+					else if(m_TClientSettingsCardDragState.m_Active &&
+						m_TClientSettingsCardDragState.m_Item.m_Column == ColumnId &&
+						Ui()->MouseHovered(&Item.m_Rect))
+					{
+						CUIRect DropIndicator = SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex, 4.0f);
+						DropIndicator.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f), IGraphics::CORNER_ALL, 2.0f);
+					}
+					return Height;
+				};
+			};
+			vSections[i].m_RenderCompactFn = WrapRenderFn(vSections[i].m_RenderCompactFn);
+			vSections[i].m_RenderFullFn = WrapRenderFn(vSections[i].m_RenderFullFn);
+		}
+	};
+
 	MainView.y += ScrollOffset.y;
 
 	MainView.VSplitRight(5.0f, &MainView, nullptr); // Padding for scrollbar
@@ -1715,6 +1641,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	s_VisualFontLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
 	s_VisualFontLoader.SetDeferredFarMeasurementEnabled(true);
 	s_VisualFontLoader.m_ScrollY = ScrollOffset.y;
+	if(TClientSettingsCardDeckOrderDirtyAtFrameStart)
+		s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);
 	s_VisualFontLoader.Begin(LeftView, 5.0f);
 
 	// ***** LeftView ***** //
@@ -2524,6 +2452,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Visual: Nameplates --
 			S = SSettingsSection{};
 			S.m_pName = "Visual: Nameplates";
+			S.m_pStableCardId = "tclient:visual-nameplates";
 			S.m_MeasureFn = [&LayoutVisualNameplateSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutVisualNameplateSection(Col, false);
@@ -2542,6 +2471,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Visual: Effects --
 			S = SSettingsSection{};
 			S.m_pName = "Visual: Effects";
+			S.m_pStableCardId = "tclient:visual-effects";
 			S.m_MeasureFn = [&LayoutVisualEffectsSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutVisualEffectsSection(Col, false);
@@ -2559,6 +2489,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Input --
 			S = SSettingsSection{};
 			S.m_pName = "Input";
+			S.m_pStableCardId = "tclient:input";
 			S.m_MeasureFn = [&LayoutInputSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutInputSection(Col, false);
@@ -2577,6 +2508,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Anti Latency Tools --
 			S = SSettingsSection{};
 			S.m_pName = "Anti Latency Tools";
+			S.m_pStableCardId = "tclient:anti-latency-tools";
 			S.m_MeasureFn = [&LayoutAntiLatencyToolsSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutAntiLatencyToolsSection(Col, false);
@@ -2595,6 +2527,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Improved Anti Ping --
 			S = SSettingsSection{};
 			S.m_pName = "Improved Anti Ping";
+			S.m_pStableCardId = "tclient:improved-anti-ping";
 			S.m_MeasureFn = [&LayoutAntiPingSmoothingSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutAntiPingSmoothingSection(Col, false);
@@ -2613,6 +2546,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Execute on join --
 			S = SSettingsSection{};
 			S.m_pName = "Execute on join";
+			S.m_pStableCardId = "tclient:execute-on-join";
 			S.m_MeasureFn = [&LayoutAutoExecuteSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutAutoExecuteSection(Col, false);
@@ -2631,6 +2565,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Voting --
 			S = SSettingsSection{};
 			S.m_pName = "Voting";
+			S.m_pStableCardId = "tclient:voting";
 			S.m_MeasureFn = [&LayoutVotingSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutVotingSection(Col, false);
@@ -2652,6 +2587,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Player Indicator --
 			S = SSettingsSection{};
 			S.m_pName = "Player Indicator";
+			S.m_pStableCardId = "tclient:player-indicator";
 			S.m_MeasureFn = [&LayoutPlayerIndicatorSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutPlayerIndicatorSection(Col, false);
@@ -2669,6 +2605,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 
 			// -- 宠物 --
 			vLeftSections.push_back(BuildTClientPetCacheSection());
+			WrapSettingsCardDeckSections(vLeftSections, ESettingsCardDeckColumn::LEFT, m_vTClientLeftCardOrder);
 			s_VisualFontLoader.Register(std::move(vLeftSections));
 		}
 
@@ -2699,6 +2636,8 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		s_RightSectionLoader.SetMaxSectionsPerFrame(TClientVisibleTargetFrame ? 1 : 2);
 		s_RightSectionLoader.SetDeferredFarMeasurementEnabled(true);
 		s_RightSectionLoader.m_ScrollY = ScrollOffset.y;
+		if(TClientSettingsCardDeckOrderDirtyAtFrameStart)
+			s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::CONFIG);
 		s_RightSectionLoader.Begin(RightView, 5.0f);
 
 		auto LayoutHudSection = [&](CUIRect &CurrentColumn, bool Render) {
@@ -3245,6 +3184,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Tee status bar --
 			S = SSettingsSection{};
 			S.m_pName = "Tee status bar";
+			S.m_pStableCardId = "tclient:tee-status-bar";
 			S.m_MeasureFn = [&LayoutTeeStatusBarSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutTeeStatusBarSection(Col, false);
@@ -3263,6 +3203,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Tile outlines --
 			S = SSettingsSection{};
 			S.m_pName = "Tile outlines";
+			S.m_pStableCardId = "tclient:tile-outlines";
 			S.m_MeasureFn = [&LayoutTileOutlinesSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutTileOutlinesSection(Col, false);
@@ -3282,6 +3223,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Ghost tools --
 			S = SSettingsSection{};
 			S.m_pName = "Ghost tools";
+			S.m_pStableCardId = "tclient:ghost-tools";
 			S.m_MeasureFn = [&LayoutGhostToolsSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutGhostToolsSection(Col, false);
@@ -3300,6 +3242,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Rainbow --
 			S = SSettingsSection{};
 			S.m_pName = "Rainbow";
+			S.m_pStableCardId = "tclient:rainbow";
 			S.m_MeasureFn = [&LayoutRainbowSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutRainbowSection(Col, false);
@@ -3318,6 +3261,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Tee Trails --
 			S = SSettingsSection{};
 			S.m_pName = "Tee Trails";
+			S.m_pStableCardId = "tclient:tee-trails";
 			S.m_MeasureFn = [&LayoutTeeTrailsSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutTeeTrailsSection(Col, false);
@@ -3336,6 +3280,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Background Draw --
 			S = SSettingsSection{};
 			S.m_pName = "Background Draw";
+			S.m_pStableCardId = "tclient:background-draw";
 			S.m_MeasureFn = [&LayoutBackgroundDrawSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutBackgroundDrawSection(Col, false);
@@ -3354,6 +3299,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			// -- Finish Name --
 			S = SSettingsSection{};
 			S.m_pName = "Finish Name";
+			S.m_pStableCardId = "tclient:finish-name";
 			S.m_MeasureFn = [&LayoutFinishNameSection](CUIRect &Col) -> float {
 				float SavedY = Col.y;
 				LayoutFinishNameSection(Col, false);
@@ -3367,6 +3313,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			};
 			FillCachedStaticLayer(S, LayoutFinishNameSection);
 			vRightSections.push_back(S);
+			WrapSettingsCardDeckSections(vRightSections, ESettingsCardDeckColumn::RIGHT, m_vTClientRightCardOrder);
 			s_RightSectionLoader.Register(std::move(vRightSections));
 		}
 
@@ -3387,7 +3334,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			LogSettingsStage("tclient_settings_right_column", RightColumnTimer);
 		}
 	}
-
 	// Scroll
 	CUIRect ScrollRegion;
 	ScrollRegion.x = MainView.x;
@@ -3401,6 +3347,34 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	}
 	else
 	{
+		if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))
+			m_TClientSettingsCardDragState = {};
+		if(m_TClientSettingsCardDragState.m_Active && Ui()->MouseButton(0))
+		{
+			m_TClientSettingsCardDragState.m_DropIndex = SettingsCardDeckDropIndexForColumnItems(
+				m_vTClientSettingsCardDeckItems,
+				m_TClientSettingsCardDragState.m_Item.m_Column,
+				Ui()->MouseX(),
+				Ui()->MouseY(),
+				m_TClientSettingsCardDragState.m_DropIndex);
+			const float AutoScrollDelta = SettingsCardDeckAutoScrollDelta(Ui()->MouseY(), Viewport.y, Viewport.y + Viewport.h, 32.0f, ScrollParams.m_ScrollUnit);
+			if(AutoScrollDelta != 0.0f)
+				s_ScrollRegion.ScrollRelativeDirect(AutoScrollDelta);
+			CUIRect DragProxy = SettingsCardDeckProxyRect(m_TClientSettingsCardDragState.m_Item, Ui()->MouseX(), Ui()->MouseY());
+			DrawTClientCacheSectionBox(DragProxy);
+			DragProxy.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 10.0f);
+		}
+		if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))
+		{
+			std::vector<std::string> *pOrder = m_TClientSettingsCardDragState.m_Item.m_Column == ESettingsCardDeckColumn::LEFT ? &m_vTClientLeftCardOrder : &m_vTClientRightCardOrder;
+			const int DropIndex = SettingsCardDeckDropIndexForColumnItems(
+				m_vTClientSettingsCardDeckItems,
+				m_TClientSettingsCardDragState.m_Item.m_Column,
+				Ui()->MouseX(),
+				Ui()->MouseY(),
+				m_TClientSettingsCardDragState.m_DropIndex);
+			CommitSettingsCardDeckDragDrop(pOrder, DropIndex);
+		}
 		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT);
 		m_SettingsTClientCurrentScrollY = ScrollFrame.m_FinalOffsetY;
 	}

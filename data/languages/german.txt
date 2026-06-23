@@ -823,6 +823,12 @@ Auto unmute when speaking
 Auto unspec on unfreeze
 == Automatisch Zuschauer beenden beim Auftauen
 
+Auto weapon switch
+== Automatischer Waffenwechsel
+
+Auto-follow delay
+== Auto-Folgen-Verzögerung
+
 Auto-sync player camera
 == Spielerkamera automatisch synchronisieren
 
@@ -972,6 +978,15 @@ Blue team wins!
 
 Body
 == Körper
+
+Border
+== Border
+
+Border color
+== Border color
+
+Border range
+== Border range
 
 Both
 == Beide
@@ -1636,6 +1651,9 @@ Custom Font:
 Custom prompt template
 == Benutzerdefinierte Prompt-Vorlage
 
+Customize name and clan text effects
+== Customize name and clan text effects
+
 Customize translate button and menu colors
 == Übersetzungs-Button- und Menüfarben anpassen
 
@@ -1825,8 +1843,14 @@ Delete this preset
 Demo
 == Demo
 
+Demo effects
+== Demo effects
+
 Demo marker added
 == Demo-Marker hinzugefügt
+
+Demo target
+== Demo target
 
 Demofile: %s
 == Demodatei: %s
@@ -2185,6 +2209,9 @@ Edit touch controls
 Editor
 == Editor
 
+Elastic
+== Elastisch
+
 Elastic back
 == Federnder Rücklauf
 
@@ -2284,6 +2311,9 @@ Enable replays
 Enable server message sound
 == Server-Nachrichten-Sound aktivieren
 
+Enable skin queue rotation
+== Skin-Warteschlangenrotation aktivieren
+
 Enable speedrun timer
 == Speedrun-Timer aktivieren
 
@@ -2313,6 +2343,9 @@ Enable word filter list
 
 Enable Zen mode
 == Zen-Modus aktivieren
+
+Enabled
+== Aktiviert
 
 Enables/disables active moderator mode for the player
 == Aktiviert/deaktiviert den aktiven Moderator-Modus für den Spieler
@@ -2713,6 +2746,9 @@ Friend online and join notifications
 Friends
 == Freunde
 
+Friends only
+== Friends only
+
 Frozen Margin
 == Gefrorener Rand
 
@@ -2833,17 +2869,29 @@ Gives you endless hook
 Gives you infinite jump
 == Gibt dir unendliche Sprünge
 
+Glitch
+== Glitch
+
 Global toggle key
 == Globaler Umschaltknopf
 
+Glow
+== Glow
+
 Glow alpha
 == Leuchtkraft-Alpha
+
+Glow color
+== Glow color
 
 Glow intensity
 == Leuchtkraft-Intensität
 
 Glow offset
 == Leuchtkraft-Offset
+
+Glow range
+== Glow range
 
 Go back one marker
 == Ein Markierung zurück
@@ -2881,11 +2929,20 @@ Gores 模式下启用快速输入
 Gores 模式下对其他玩家也启用快速输入
 == Schnelleingabe auch für andere Spieler im Gores-Modus aktivieren
 
+Gores 模式下自动锤枪切换
+== Automatischer Hammer-Gun-Wechsel im Gores-Modus
+
 Gores 模式下隐藏辅助线
 == Hilfslinien im Gores-Modus ausblenden
 
 Grabs
 == Eroberungen
+
+Gradient
+== Gradient
+
+Gradient color
+== Gradient color
 
 Graphics
 == Grafik
@@ -3066,6 +3123,9 @@ Hook line tip
 
 Hook Strength
 == Hakenstärke
+
+Hook strength scope
+== Hook strength scope
 
 Hooking L/R: %.0f%%/%.0f%%
 == Haken L/R: %.0f%%/%.0f%%
@@ -3757,8 +3817,14 @@ Manual
 Manual concurrency: %d
 == Manuelle Parallelität: %d
 
+Manual scope
+== Manual scope
+
 Manual source file
 == Manuelle Quelldatei
+
+Manual target
+== Manual target
 
 Map
 == Karte
@@ -4029,6 +4095,9 @@ Name:
 
 Name: %s
 == Name: %s
+
+Nameplate text
+== Nameplate text
 
 Native scale (1.0)
 == Native Skalierung (1.0)
@@ -4459,6 +4528,12 @@ Option color
 Other
 == Andere
 
+Others
+== Others
+
+Others only
+== Others only
+
 Outgoing language
 == Sendesprache
 
@@ -4698,6 +4773,9 @@ Players can't collide on this server
 
 Players can't hook each other on this server
 == Spieler können sich auf diesem Server nicht gegenseitig hooken
+
+Playing effects
+== Playing effects
 
 Please add a valid cut first
 == Bitte fügen Sie zuerst einen gültigen Schnitt hinzu
@@ -5019,9 +5097,6 @@ Rainbow
 
 Rainbow hook
 == Regenbogen-Haken
-
-Rainbow name
-== Regenbogenname
 
 Rainbow others
 == Regenbogen für alle!
@@ -5785,6 +5860,9 @@ Selection
 Self
 == Selbst
 
+Self and friends
+== Self and friends
+
 Self only
 == Nur selbst
 
@@ -6529,6 +6607,9 @@ Slow down the demo
 Smaller tees
 == Kleinere Tees
 
+Smart
+== Smart
+
 Smooth Dynamic Camera
 == Sanfte dynamische Kamera
 
@@ -6598,6 +6679,9 @@ Spectate
 Spectate a player by Id
 == Einen Spieler nach ID beobachten
 
+Spectate effects
+== Spectate effects
+
 Spectate mode
 == Zuschauermodus
 
@@ -6618,6 +6702,12 @@ Spectate the next player
 
 Spectate the previous player
 == Den vorherigen Spieler beobachten
+
+Spectated player
+== Spectated player
+
+Spectated player and friends
+== Spectated player and friends
 
 Spectators
 == Zuschauer
@@ -6750,6 +6840,12 @@ Strict mode
 
 Stroke fade time
 == Strich-Ausblendzeit
+
+Strong hook
+== Strong hook
+
+Strong hook color
+== Strong hook color
 
 Strong Weak Hook
 == Starker Schwacher Haken
@@ -7882,6 +7978,12 @@ Warmup
 Warning
 == Warnung
 
+Weak hook
+== Weak hook
+
+Weak hook color
+== Weak hook color
+
 Weapon
 == Waffe
 
@@ -8386,8 +8488,8 @@ Zoom out
 出站翻译目标语言代码
 == Zielsprachcode für ausgehende Übersetzung
 
-分身皮肤队列切换间隔（0.1 秒）
-== Wechselintervall der Dummy-Skin-Warteschlange (0.1 Sekunden)
+分身皮肤队列切换间隔（毫秒）
+== Wechselintervall der Dummy-Skin-Warteschlange (ms)
 
 分身皮肤队列当前位置
 == Dummy-Skin-Queue Aktuelle Position
@@ -8455,11 +8557,20 @@ Zoom out
 名字板坐标行 Y 偏移
 == Nameplate-Koordinatenzeile Y-Versatz
 
+名字板弱钩图标颜色
+== 名字板弱钩图标颜色
+
 名字板强弱行 X 偏移
 == Nameplate-Stärkezeile X-Versatz
 
 名字板强弱行 Y 偏移
 == Nameplate-Stärkezeile Y-Versatz
+
+名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+
+名字板强钩图标颜色
+== 名字板强钩图标颜色
 
 名字板战队行 X 偏移
 == Nameplate-Clanzeile X-Versatz
@@ -8472,6 +8583,36 @@ Zoom out
 
 名字板按键行 Y 偏移
 == Nameplate-Tastenzeile Y-Versatz
+
+名字板文本光晕范围
+== 名字板文本光晕范围
+
+名字板文本光晕颜色
+== 名字板文本光晕颜色
+
+名字板文本效果 Demo 手动目标 Client ID（-1=无）
+== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
+
+名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+
+名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+
+名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+
+名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+
+名字板文本渐变颜色
+== 名字板文本渐变颜色
+
+名字板文本边框范围
+== 名字板文本边框范围
+
+名字板文本边框颜色
+== 名字板文本边框颜色
 
 名字板昵称行 X 偏移
 == Nameplate-Nickzeile X-Versatz
@@ -8506,7 +8647,7 @@ Zoom out
 启动和菜单空闲时预热设置页
 == Einstellungsseite beim Start und im Leerlauf des Menüs vorwärmen
 
-启用 Gores 锤枪自动切换
+启用 Gores 模式（King of Gores 辅助工具集合）
 == Gores-Hammer-Gun-Autowechsel aktivieren
 
 启用 LLM 思考模式（可能增加响应时间）
@@ -8526,6 +8667,9 @@ Zoom out
 
 启用关键词回复
 == Schlüsselwort-Antworten aktivieren
+
+启用分身皮肤队列轮换
+== Dummy-Skin-Warteschlangenrotation aktivieren
 
 启用动态视野，移动越快视野越宽
 == Dynamisches Sichtfeld aktivieren, je schneller die Bewegung, desto breiter das Sichtfeld
@@ -8551,6 +8695,9 @@ Zoom out
 启用皮肤切换动画
 == Skin-Wechsel-Animation aktivieren
 
+启用皮肤队列轮换
+== Skin-Warteschlangenrotation aktivieren
+
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 == Kamera-Drift-Effekt aktivieren, der die Kamera leicht nachzieht
 
@@ -8574,9 +8721,6 @@ Zoom out
 
 启用背景 3D 粒子闪烁
 == 3D-Hintergrundpartikel-Flimmern aktivieren
-
-启用自己名字的彩虹色渲染
-== Regenbogenfarben-Rendering für eigenen Namen aktivieren
 
 启用语音滤波（高通/压缩/限幅）
 == Sprachfilterung aktivieren (Hochpass/Kompressor/Begrenzer)
@@ -8929,14 +9073,17 @@ Zoom out
 皮肤切换动画持续时间（毫秒，0=无动画）
 == Dauer der Skin-Wechsel-Animation (Millisekunden, 0=Keine Animation)
 
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
-== Typ der Skin-Wechsel-Animation (0=Nachbild-Popout 1=Sanfter Übergang 2=Links-Slide 3=Rotations-Popout 4=Helligkeitswechsel)
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
+== Typ der Skin-Wechsel-Animation (0=Nachbild-Popout 1=Sanfter Übergang 2=Links-Slide 3=Rotations-Popout 4=Helligkeitswechsel 5=Glitch 6=Elastisch)
 
 皮肤切换动画缓动模式
 == Easing-Modus der Skin-Wechsel-Animation
 
-皮肤队列切换间隔（0.1 秒）
-== Wechselintervall der Skin-Warteschlange (0.1 Sekunden)
+皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+== Bereich der Skinwechsel-Animation: 0=Nur selbst 1=Lokal+Dummy 2=Alle Spieler
+
+皮肤队列切换间隔（毫秒）
+== Wechselintervall der Skin-Warteschlange (ms)
 
 皮肤队列当前位置
 == Aktuelle Position in der Skin-Warteschlange

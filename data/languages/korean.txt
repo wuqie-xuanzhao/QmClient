@@ -823,6 +823,12 @@ Auto unmute when speaking
 Auto unspec on unfreeze
 == 얼음 해제 시 자동 관전 해제
 
+Auto weapon switch
+== 자동 무기 전환
+
+Auto-follow delay
+== 자동 따라가기 지연
+
 Auto-sync player camera
 == 플레이어 카메라 자동 동기화
 
@@ -972,6 +978,15 @@ Blue team wins!
 
 Body
 == 몸통
+
+Border
+== Border
+
+Border color
+== Border color
+
+Border range
+== Border range
 
 Both
 == 둘 다
@@ -1636,6 +1651,9 @@ Custom Font:
 Custom prompt template
 == 사용자 정의 프롬프트 템플릿
 
+Customize name and clan text effects
+== Customize name and clan text effects
+
 Customize translate button and menu colors
 == 번역 버튼 및 메뉴 색상 사용자 정의
 
@@ -1825,8 +1843,14 @@ Delete this preset
 Demo
 == 데모
 
+Demo effects
+== Demo effects
+
 Demo marker added
 == 데모 마커 추가됨
+
+Demo target
+== Demo target
 
 Demofile: %s
 == 데모 파일: %s
@@ -2185,6 +2209,9 @@ Edit touch controls
 Editor
 == 편집기
 
+Elastic
+== 탄성
+
 Elastic back
 == 탄성 되돌림
 
@@ -2284,6 +2311,9 @@ Enable replays
 Enable server message sound
 == 서버 메시지 사운드 활성화
 
+Enable skin queue rotation
+== 스킨 큐 로테이션 활성화
+
 Enable speedrun timer
 == 스피드런 타이머 활성화
 
@@ -2313,6 +2343,9 @@ Enable word filter list
 
 Enable Zen mode
 == Zen 모드 활성화
+
+Enabled
+== 활성화됨
 
 Enables/disables active moderator mode for the player
 == 플레이어의 활성 중재자 모드 활성화/비활성화
@@ -2713,6 +2746,9 @@ Friend online and join notifications
 Friends
 == 친구
 
+Friends only
+== Friends only
+
 Frozen Margin
 == 얼림 여유
 
@@ -2833,17 +2869,29 @@ Gives you endless hook
 Gives you infinite jump
 == 무한 점프를 지급합니다
 
+Glitch
+== 글리치
+
 Global toggle key
 == 전역 전환 키
 
+Glow
+== Glow
+
 Glow alpha
 == 광선 알파
+
+Glow color
+== Glow color
 
 Glow intensity
 == 광선 강도
 
 Glow offset
 == 광선 오프셋
+
+Glow range
+== Glow range
 
 Go back one marker
 == 이전 마커로 이동
@@ -2881,11 +2929,20 @@ Gores 模式下启用快速输入
 Gores 模式下对其他玩家也启用快速输入
 == Gores 모드에서 다른 플레이어에게도 빠른 입력 활성화
 
+Gores 模式下自动锤枪切换
+== Gores 모드에서 자동 해머/건 전환
+
 Gores 模式下隐藏辅助线
 == Gores 모드에서 보조선 숨기기
 
 Grabs
 == 깃발 획득
+
+Gradient
+== Gradient
+
+Gradient color
+== Gradient color
 
 Graphics
 == 그래픽
@@ -3066,6 +3123,9 @@ Hook line tip
 
 Hook Strength
 == 갈고리 강도
+
+Hook strength scope
+== Hook strength scope
 
 Hooking L/R: %.0f%%/%.0f%%
 == 갈고리 L/R: %.0f%%/%.0f%%
@@ -3757,8 +3817,14 @@ Manual
 Manual concurrency: %d
 == 수동 동시 실행 수: %d
 
+Manual scope
+== Manual scope
+
 Manual source file
 == 수동 소스 파일
+
+Manual target
+== Manual target
 
 Map
 == 맵
@@ -4029,6 +4095,9 @@ Name:
 
 Name: %s
 == 이름: %s
+
+Nameplate text
+== Nameplate text
 
 Native scale (1.0)
 == 기본 배율 (1.0)
@@ -4459,6 +4528,12 @@ Option color
 Other
 == 기타
 
+Others
+== Others
+
+Others only
+== Others only
+
 Outgoing language
 == 발신 언어
 
@@ -4698,6 +4773,9 @@ Players can't collide on this server
 
 Players can't hook each other on this server
 == 이 서버에서는 플레이어 간 후킹이 불가능합니다
+
+Playing effects
+== Playing effects
 
 Please add a valid cut first
 == 유효한 잘라내기 구간을 먼저 추가하세요
@@ -5019,9 +5097,6 @@ Rainbow
 
 Rainbow hook
 == 무지개 갈고리
-
-Rainbow name
-== 무지개 이름
 
 Rainbow others
 == 모두에게 무지개 적용
@@ -5785,6 +5860,9 @@ Selection
 Self
 == 자신
 
+Self and friends
+== Self and friends
+
 Self only
 == 자신만
 
@@ -6529,6 +6607,9 @@ Slow down the demo
 Smaller tees
 == 작은 티
 
+Smart
+== Smart
+
 Smooth Dynamic Camera
 == 부드러운 동적 카메라
 
@@ -6598,6 +6679,9 @@ Spectate
 Spectate a player by Id
 == ID로 플레이어 관전
 
+Spectate effects
+== Spectate effects
+
 Spectate mode
 == 관전 모드
 
@@ -6618,6 +6702,12 @@ Spectate the next player
 
 Spectate the previous player
 == 이전 플레이어 관전
+
+Spectated player
+== Spectated player
+
+Spectated player and friends
+== Spectated player and friends
 
 Spectators
 == 관전자
@@ -6750,6 +6840,12 @@ Strict mode
 
 Stroke fade time
 == 획 사라짐 시간
+
+Strong hook
+== Strong hook
+
+Strong hook color
+== Strong hook color
 
 Strong Weak Hook
 == 강약 갈고리
@@ -7882,6 +7978,12 @@ Warmup
 Warning
 == 경고
 
+Weak hook
+== Weak hook
+
+Weak hook color
+== Weak hook color
+
 Weapon
 == 무기
 
@@ -8386,8 +8488,8 @@ Zoom out
 出站翻译目标语言代码
 == 발신 번역 대상 언어 코드
 
-分身皮肤队列切换间隔（0.1 秒）
-== 더미 스킨 큐 전환 간격 (0.1초)
+分身皮肤队列切换间隔（毫秒）
+== 더미 스킨 큐 전환 간격 (밀리초)
 
 分身皮肤队列当前位置
 == 더미 스킨 큐 현재 위치
@@ -8455,11 +8557,20 @@ Zoom out
 名字板坐标行 Y 偏移
 == 이름표 좌표 행 Y 오프셋
 
+名字板弱钩图标颜色
+== 名字板弱钩图标颜色
+
 名字板强弱行 X 偏移
 == 이름표 강약 행 X 오프셋
 
 名字板强弱行 Y 偏移
 == 이름표 강약 행 Y 오프셋
+
+名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+
+名字板强钩图标颜色
+== 名字板强钩图标颜色
 
 名字板战队行 X 偏移
 == 이름표 클랜 행 X 오프셋
@@ -8472,6 +8583,36 @@ Zoom out
 
 名字板按键行 Y 偏移
 == 이름표 키 행 Y 오프셋
+
+名字板文本光晕范围
+== 名字板文本光晕范围
+
+名字板文本光晕颜色
+== 名字板文本光晕颜色
+
+名字板文本效果 Demo 手动目标 Client ID（-1=无）
+== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
+
+名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+
+名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+
+名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+
+名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+
+名字板文本渐变颜色
+== 名字板文本渐变颜色
+
+名字板文本边框范围
+== 名字板文本边框范围
+
+名字板文本边框颜色
+== 名字板文本边框颜色
 
 名字板昵称行 X 偏移
 == 이름표 닉네임 행 X 오프셋
@@ -8506,7 +8647,7 @@ Zoom out
 启动和菜单空闲时预热设置页
 == 시작 및 메뉴 유휴 시 설정 페이지 워밍업
 
-启用 Gores 锤枪自动切换
+启用 Gores 模式（King of Gores 辅助工具集合）
 == Gores 해머/건 자동 전환 활성화
 
 启用 LLM 思考模式（可能增加响应时间）
@@ -8526,6 +8667,9 @@ Zoom out
 
 启用关键词回复
 == 키워드 응답 활성화
+
+启用分身皮肤队列轮换
+== 더미 스킨 큐 로테이션 활성화
 
 启用动态视野，移动越快视野越宽
 == 동적 시야 활성화, 빠르게 움직일수록 시야가 넓어짐
@@ -8551,6 +8695,9 @@ Zoom out
 启用皮肤切换动画
 == 스킨 전환 애니메이션 활성화
 
+启用皮肤队列轮换
+== 스킨 큐 로테이션 활성화
+
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 == 카메라 드리프트 효과 활성화, 이동 속도에 따라 카메라가 약간 끌림
 
@@ -8574,9 +8721,6 @@ Zoom out
 
 启用背景 3D 粒子闪烁
 == 배경 3D 입자 깜빡임 활성화
-
-启用自己名字的彩虹色渲染
-== 자신의 이름 무지개색 렌더링 활성화
 
 启用语音滤波（高通/压缩/限幅）
 == 음성 필터 활성화 (하이패스/압축/리미터)
@@ -8929,14 +9073,17 @@ Zoom out
 皮肤切换动画持续时间（毫秒，0=无动画）
 == 스킨 전환 애니메이션 지속 시간 (밀리초, 0=애니메이션 없음)
 
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
-== 스킨 전환 애니메이션 유형 (0=잔상 팝업 1=부드러운 페이드 2=왼쪽 슬라이드 3=회전 팝업 4=명암 전환)
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
+== 스킨 전환 애니메이션 유형 (0=잔상 팝업 1=부드러운 페이드 2=왼쪽 슬라이드 3=회전 팝업 4=명암 전환 5=글리치 6=탄성)
 
 皮肤切换动画缓动模式
 == 스킨 전환 애니메이션 이징 모드
 
-皮肤队列切换间隔（0.1 秒）
-== 스킨 큐 전환 간격 (0.1초)
+皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+== 스킨 전환 애니메이션 범위: 0=자신만 1=자신+더미 2=모든 플레이어
+
+皮肤队列切换间隔（毫秒）
+== 스킨 큐 전환 간격 (밀리초)
 
 皮肤队列当前位置
 == 스킨 큐 현재 위치

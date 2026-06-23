@@ -7,6 +7,7 @@ import ast
 import json
 import os
 import re
+import subprocess
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,6 +18,10 @@ SOURCE_EXTENSIONS = {".c", ".cpp", ".h", ".hpp"}
 SOURCE_PATHS = (PROJECT_ROOT / "src",)
 AUDIT_PATHS = (PROJECT_ROOT / "src", SCRIPT_DIR)
 AUDIT_REPORT_FILE = SCRIPT_DIR / "extracted_audit_report.json"
+SOURCE_RECORD_CACHE_FILE = SCRIPT_DIR / "extracted_records_cache.json"
+EXTRACTOR_LOGIC_FILES = {
+    "qmclient_scripts/languages_qmclient/source_keys.py",
+}
 
 CPP_STRING_LITERAL_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 LOCALIZE_CALL_RE = re.compile(r"\b(?:Localize|Localizable)\s*\(")
@@ -108,7 +113,6 @@ EXTRA_LOCALIZE_STRINGS = {
     "Team successfully saved by %s. The database connection failed, using generated save code instead to avoid collisions. Use '/load %s' to continue",
     "Temporary free camera",
     "Trying Axiom auto login",
-    "Trying Axiom dummy auto login",
     "Update notice",
     "You are already on the latest version",
     "Your current version is outdated. Please update from the QQ group.",
@@ -638,6 +642,182 @@ def collect_source_key_records(
             record.line,
         ),
     )
+
+
+def _source_record_sort_key(record: SourceKeyRecord) -> tuple[str, str, str, int, str]:
+    return (
+        record.key.casefold(),
+        record.category,
+        record.source.as_posix() if record.source else "",
+        record.line,
+        record.context,
+    )
+
+
+def _extra_source_key_records(
+    extra_strings: set[str] | None = None,
+) -> list[SourceKeyRecord]:
+    return [
+        SourceKeyRecord(key, "extra", None)
+        for key in sorted(
+            EXTRA_LOCALIZE_STRINGS if extra_strings is None else extra_strings
+        )
+    ]
+
+
+def collect_file_source_key_records(path: Path) -> list[SourceKeyRecord]:
+    if not path.exists() or path.suffix not in SOURCE_EXTENSIONS:
+        return []
+    content = strip_cpp_comments(read_source_text(path))
+    records: list[SourceKeyRecord] = []
+    records.extend(
+        SourceKeyRecord(record.key, record.category, path, record.context, record.line)
+        for record in extract_localize_key_records(content)
+    )
+    records.extend(
+        SourceKeyRecord(record.key, record.category, path, record.context, record.line)
+        for record in extract_register_help_records(content)
+    )
+    records.extend(extract_known_indirect_records(path, content))
+    return sorted(records, key=_source_record_sort_key)
+
+
+def write_source_record_cache(path: Path, records: list[SourceKeyRecord]) -> None:
+    data = [
+        {
+            "key": record.key,
+            "category": record.category,
+            "source": _normalized_relpath(record.source) if record.source else None,
+            "context": record.context,
+            "line": record.line,
+        }
+        for record in sorted(records, key=_source_record_sort_key)
+    ]
+    path.write_text(
+        json.dumps({"records": data}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def read_source_record_cache(path: Path) -> list[SourceKeyRecord]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    records: list[SourceKeyRecord] = []
+    for item in data.get("records", []):
+        source = item.get("source")
+        records.append(
+            SourceKeyRecord(
+                item["key"],
+                item.get("category", "localize_or_localizable"),
+                None
+                if source is None
+                else (
+                    PROJECT_ROOT / source
+                    if not Path(source).is_absolute()
+                    else Path(source)
+                ),
+                item.get("context", ""),
+                int(item.get("line", 0)),
+            )
+        )
+    return sorted(records, key=_source_record_sort_key)
+
+
+def _changed_file_key(path: Path) -> str:
+    return _normalized_relpath(path)
+
+
+def merge_source_key_records_for_changed_files(
+    cached_records: list[SourceKeyRecord],
+    changed_files: tuple[Path, ...],
+    extra_strings: set[str] | None = None,
+) -> list[SourceKeyRecord]:
+    changed_keys = {_changed_file_key(path) for path in changed_files}
+    merged = [
+        record
+        for record in cached_records
+        if record.source is None or _changed_file_key(record.source) not in changed_keys
+    ]
+    for path in changed_files:
+        merged.extend(collect_file_source_key_records(path))
+    merged = [record for record in merged if record.category != "extra"]
+    merged.extend(_extra_source_key_records(extra_strings))
+    return sorted(merged, key=_source_record_sort_key)
+
+
+def _git_changed_paths() -> list[str]:
+    commands = (
+        ("git", "diff", "--name-only"),
+        ("git", "diff", "--cached", "--name-only"),
+        ("git", "ls-files", "--others", "--exclude-standard"),
+    )
+    names: set[str] = set()
+    for command in commands:
+        result = subprocess.run(
+            command,
+            cwd=PROJECT_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        names.update(
+            line.strip() for line in result.stdout.splitlines() if line.strip()
+        )
+    return sorted(names)
+
+
+def git_changed_language_source_files() -> tuple[Path, ...]:
+    paths: list[Path] = []
+    for name in _git_changed_paths():
+        path = PROJECT_ROOT / name
+        if path.suffix in SOURCE_EXTENSIONS or (
+            path.suffix == ".py"
+            and _normalized_relpath(path).startswith(
+                "qmclient_scripts/languages_qmclient/"
+            )
+        ):
+            paths.append(path)
+    return tuple(sorted(paths))
+
+
+def extractor_logic_changed(changed_files: tuple[Path, ...]) -> bool:
+    return any(
+        _normalized_relpath(path) in EXTRACTOR_LOGIC_FILES for path in changed_files
+    )
+
+
+def collect_incremental_source_key_records(
+    cache_path: Path = SOURCE_RECORD_CACHE_FILE,
+    changed_files: tuple[Path, ...] | None = None,
+    extra_strings: set[str] | None = None,
+) -> tuple[list[SourceKeyRecord], tuple[Path, ...], bool]:
+    if changed_files is None:
+        try:
+            changed_files = git_changed_language_source_files()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            changed_files = ()
+            cached_records = []
+        else:
+            cached_records = (
+                read_source_record_cache(cache_path) if cache_path.exists() else []
+            )
+    else:
+        cached_records = (
+            read_source_record_cache(cache_path) if cache_path.exists() else []
+        )
+
+    if not cached_records:
+        records = collect_source_key_records(extra_strings=extra_strings)
+        return records, changed_files, True
+
+    if extractor_logic_changed(changed_files):
+        records = collect_source_key_records(extra_strings=extra_strings)
+        return records, changed_files, True
+
+    records = merge_source_key_records_for_changed_files(
+        cached_records, changed_files, extra_strings=extra_strings
+    )
+    return records, changed_files, False
 
 
 def has_cjk(value: str) -> bool:
@@ -2042,6 +2222,65 @@ def build_string_audit_report(
         _dedupe_audit_records(test_only),
         _dedupe_audit_records(needs_review),
         _dedupe_audit_records(violation),
+    )
+
+
+def _audit_record_file_key(record: StringAuditRecord) -> str:
+    return _normalized_relpath(record.file)
+
+
+def merge_string_audit_report_for_changed_files(
+    cached_report: StringAuditReport,
+    changed_files: tuple[Path, ...],
+) -> StringAuditReport:
+    changed_keys = {_normalized_relpath(path) for path in changed_files}
+    current_report = build_string_audit_report(paths=changed_files)
+
+    def merge_records(
+        old_records: list[StringAuditRecord],
+        new_records: list[StringAuditRecord],
+    ) -> list[StringAuditRecord]:
+        kept = [
+            record
+            for record in old_records
+            if _audit_record_file_key(record) not in changed_keys
+        ]
+        kept.extend(new_records)
+        return _dedupe_audit_records(kept)
+
+    return StringAuditReport(
+        merge_records(cached_report.must_i18n, current_report.must_i18n),
+        merge_records(cached_report.business_data, current_report.business_data),
+        merge_records(cached_report.test_only, current_report.test_only),
+        merge_records(cached_report.needs_review, current_report.needs_review),
+        merge_records(cached_report.violation, current_report.violation),
+    )
+
+
+def collect_incremental_string_audit_report(
+    audit_path: Path = AUDIT_REPORT_FILE,
+    changed_files: tuple[Path, ...] | None = None,
+) -> tuple[StringAuditReport, tuple[Path, ...], bool]:
+    if changed_files is None:
+        try:
+            changed_files = git_changed_language_source_files()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            changed_files = ()
+
+    if not audit_path.exists():
+        return build_string_audit_report(), changed_files, True
+
+    cached_report = read_string_audit_report(audit_path)
+    if not changed_files:
+        return cached_report, changed_files, False
+
+    if extractor_logic_changed(changed_files):
+        return build_string_audit_report(), changed_files, True
+
+    return (
+        merge_string_audit_report_for_changed_files(cached_report, changed_files),
+        changed_files,
+        False,
     )
 
 

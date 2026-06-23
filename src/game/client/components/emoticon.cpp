@@ -9,9 +9,9 @@
 
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/client/ui.h>
 
 CEmoticon::CEmoticon()
@@ -176,6 +176,9 @@ void CEmoticon::OnRender()
 	Graphics()->QuadsEnd();
 
 	Graphics()->WrapClamp();
+	constexpr float EmoticonSelectorShadowOpacity = 0.65f;
+	constexpr float EmoticonSelectorShadowOffsetX = 2.0f;
+	constexpr float EmoticonSelectorShadowOffsetY = 2.0f;
 	for(int Emote = 0; Emote < NUM_EMOTICONS; Emote++)
 	{
 		float Angle = 2.0f * pi * Emote / NUM_EMOTICONS;
@@ -188,6 +191,12 @@ void CEmoticon::OnRender()
 		const vec2 Nudge = direction(Angle) * s_OuterItemRadius;
 		const float HoverPhase = Emote == m_SelectedEmote ? 1.0f : 0.0f;
 		const float Size = 50.0f + HoverPhase * 30.0f;
+		if(g_Config.m_QmEmoticonShadow)
+		{
+			Graphics()->SetColor(0.0f, 0.0f, 0.0f, EmoticonSelectorShadowOpacity);
+			IGraphics::CQuadItem ShadowQuadItem(ScreenCenter.x + Nudge.x + EmoticonSelectorShadowOffsetX, ScreenCenter.y + Nudge.y + EmoticonSelectorShadowOffsetY, Size, Size);
+			Graphics()->QuadsDraw(&ShadowQuadItem, 1);
+		}
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		IGraphics::CQuadItem QuadItem(ScreenCenter.x + Nudge.x, ScreenCenter.y + Nudge.y, Size, Size);
 		Graphics()->QuadsDraw(&QuadItem, 1);

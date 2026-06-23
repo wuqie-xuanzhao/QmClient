@@ -36,10 +36,15 @@
 
 using namespace std::chrono_literals;
 
-static constexpr int SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND = 10;
+static constexpr int SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND = 1000;
 #if defined(CONF_QM_LIVE_CLIENT)
 static constexpr size_t LIVE_OBSERVER_SKINS_LOADED_MAX = 96;
 #endif
+
+static int &SkinQueueEnabledVar(int Dummy)
+{
+	return Dummy ? g_Config.m_QmDummySkinQueueEnabled : g_Config.m_QmSkinQueueEnabled;
+}
 
 static int SettingsSkinDecodeJobWorkerBudget()
 {
@@ -1486,9 +1491,9 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 {
 	SyncSkinQueueFromMapPlayers(Dummy);
 	auto &Queue = m_aSkinQueue[Dummy];
-	const int QueueInterval = SkinQueueIntervalVar(Dummy);
+	const int QueueInterval = maximum(1, SkinQueueIntervalVar(Dummy));
 	const int QueueActiveCount = (int)Queue.size();
-	if(Queue.empty() || QueueActiveCount <= 0 || QueueInterval <= 0)
+	if(!SkinQueueEnabledVar(Dummy) || Queue.empty() || QueueActiveCount <= 0)
 	{
 		m_aSkinQueueLastUpdate[Dummy].reset();
 		m_aSkinQueueElapsed[Dummy] = 0ns;
@@ -1512,7 +1517,7 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 	m_aSkinQueueElapsed[Dummy] += Now - m_aSkinQueueLastUpdate[Dummy].value();
 	m_aSkinQueueLastUpdate[Dummy] = Now;
 
-	const auto Interval = std::chrono::milliseconds(QueueInterval * 1000 / SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND);
+	const auto Interval = std::chrono::milliseconds(QueueInterval);
 	if(Interval <= 0ns)
 	{
 		return;
@@ -1523,12 +1528,14 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 	{
 		QueueIndex = 0;
 	}
-	while(m_aSkinQueueElapsed[Dummy] >= Interval)
+	const int64_t StepsElapsed = m_aSkinQueueElapsed[Dummy] / Interval;
+	if(StepsElapsed <= 0)
 	{
-		m_aSkinQueueElapsed[Dummy] -= Interval;
-		QueueIndex = (QueueIndex + 1) % QueueActiveCount;
-		ApplySkinQueueCurrent(Dummy);
+		return;
 	}
+	m_aSkinQueueElapsed[Dummy] -= Interval * StepsElapsed;
+	QueueIndex = (QueueIndex + (int)(StepsElapsed % QueueActiveCount)) % QueueActiveCount;
+	ApplySkinQueueCurrent(Dummy);
 }
 
 void CSkins::SyncSkinQueueFromMapPlayers(int Dummy)
@@ -1603,7 +1610,10 @@ void CSkins::SyncSkinQueueFromMapPlayers(int Dummy)
 
 	m_aSkinQueueElapsed[Dummy] = 0ns;
 	m_aSkinQueueLastUpdate[Dummy].reset();
-	ApplySkinQueueCurrent(Dummy);
+	if(SkinQueueEnabledVar(Dummy))
+	{
+		ApplySkinQueueCurrent(Dummy);
+	}
 }
 
 void CSkins::UpdateUnloadSkins(CSkinLoadingStats &Stats)

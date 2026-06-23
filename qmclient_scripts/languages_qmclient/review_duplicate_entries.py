@@ -20,6 +20,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[1]
 DEFAULT_LANGUAGE_FILE = PROJECT_ROOT / "data" / "languages" / "simplified_chinese.txt"
 LANGUAGE_DIR = PROJECT_ROOT / "data" / "languages"
+STRINGS_FILE = SCRIPT_DIR / "extracted_strings.txt"
 SIMILAR_TEXT_RE = re.compile(r"[\W_]+", re.UNICODE)
 UI_PUNCTUATION_ONLY_RE = re.compile(r"[:：()\[\]{}]")
 
@@ -189,8 +190,22 @@ def find_similar_translations(entries: list[LanguageEntry]) -> list[EntryGroup]:
     ]
 
 
+def parse_extracted_string_identity(line: str) -> tuple[str, str]:
+    if line.startswith("[") and "]\t" in line:
+        context, key = line.split("]\t", 1)
+        return key, context[1:]
+    return line, ""
+
+
 def collect_used_keys() -> set[tuple[str, str]]:
-    return source_keys.collect_source_key_identities()
+    if not STRINGS_FILE.exists():
+        return source_keys.collect_source_key_identities()
+    with STRINGS_FILE.open("r", encoding="utf-8") as file:
+        return {
+            parse_extracted_string_identity(line.rstrip("\n"))
+            for line in file
+            if line.strip()
+        }
 
 
 def find_unused(

@@ -491,32 +491,62 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	const std::string LanguageSource = ReadTextFile("data/languages/simplified_chinese.txt");
 
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransition, qm_skin_change_transition, 1, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionScope, qm_skin_change_transition_scope, 1, 0, 2"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionEasing, qm_skin_change_transition_easing"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionIntensity, qm_skin_change_transition_intensity"), std::string::npos);
 	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId = \"qm_2_72_0_skin_transition_animation_toggle\""), std::string::npos);
 	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId,\n\t\t\t\t\t\t\"qm_2_62_8_weapon_animation\""), std::string::npos);
-	EXPECT_NE(MenusSource.find("return \"皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 强度 qiangdu easing 缓动 huandong 锤中偷皮 chuizhong toupi\";"), std::string::npos);
+	EXPECT_NE(MenusSource.find("return \"皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 强度 qiangdu easing 缓动 huandong 锤中偷皮 chuizhong toupi 故障 guzhang glitch 抖动 doudong 弹性 tanxing elastic\";"), std::string::npos);
+
+	const size_t SkinTransitionHeadline = MenusSource.find("RenderQmModuleHeadline(CardContent, 5, Localize(\"Skin transition\")");
+	ASSERT_NE(SkinTransitionHeadline, std::string::npos);
+	const size_t SkinTransitionCase = MenusSource.rfind("case EQmModuleId::SkinTransition:", SkinTransitionHeadline);
+	ASSERT_NE(SkinTransitionCase, std::string::npos);
+	const size_t SkinTransitionCaseEnd = MenusSource.find("case EQmModuleId::Coords:", SkinTransitionCase);
+	ASSERT_NE(SkinTransitionCaseEnd, std::string::npos);
+	const std::string SkinTransitionCard = MenusSource.substr(SkinTransitionCase, SkinTransitionCaseEnd - SkinTransitionCase);
+	EXPECT_NE(SkinTransitionCard.find("auto RenderSkinQueueRotationRow = [&](CUIRect &PanelContent, const char *pLabel, const char *pTextIdPrefix, int *pEnabled, int *pInterval, int InputIndex)"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("SkinQueuePanel.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, LgCornerRadius * 0.8f);"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("DoQmSettingsLabel(\"qmclient-skin-queue-panel-title\", &PanelTitle, Localize(\"Skin queue\"), LgBodySize);"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("DoQmSettingsLabel(\"qmclient-skin-queue-enabled-heading\", &EnabledHeading, Localize(\"Enabled\"), LgBodySize * 0.86f, TEXTALIGN_MC, SkinQueueColumnLabelProps);"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("DoQmSettingsLabel(\"qmclient-skin-queue-interval-heading\", &IntervalHeading, Localize(\"Switch interval\"), LgBodySize * 0.86f, TEXTALIGN_MC, SkinQueueColumnLabelProps);"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("RenderSkinQueueRotationRow(SkinQueuePanelContent, Localize(\"Player\"), \"qmclient-skin-queue-player\", &g_Config.m_QmSkinQueueEnabled, &g_Config.m_QmSkinQueueInterval, 0);"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("RenderSkinQueueRotationRow(SkinQueuePanelContent, Localize(\"Dummy\"), \"qmclient-skin-queue-dummy\", &g_Config.m_QmDummySkinQueueEnabled, &g_Config.m_QmDummySkinQueueInterval, 1);"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pEnabled, nullptr, \"\", *pEnabled, &EnabledCheckBox)"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("EnabledCheckBox.VMargin(maximum(0.0f, (EnabledCheckBox.w - EnabledCheckBox.h) * 0.5f), &EnabledCheckBox);"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("DoQmSettingsCheckboxAuto(pEnabled, pTextIdPrefix, \"\", pEnabled"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("static CLineInputNumber s_aQmSkinQueueIntervalInputs[NUM_DUMMIES];"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("*pInterval = maximum(QueueIntervalInput.GetInteger(), 1);"), std::string::npos);
 
 	const size_t Toggle = MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmSkinChangeTransition");
 	ASSERT_NE(Toggle, std::string::npos);
 	const size_t AdvancedIf = MenusSource.find("if(g_Config.m_QmSkinChangeTransition)", Toggle);
 	const size_t TypeLabel = MenusSource.find("Localize(\"Skin transition type\")", Toggle);
+	const size_t ScopeLabel = MenusSource.find("Localize(\"Animation range\")", Toggle);
 	const size_t DurationLabel = MenusSource.find("Localize(\"Skin transition duration\")", Toggle);
 	const size_t EasingLabel = MenusSource.find("Localize(\"Skin transition easing\")", Toggle);
 	const size_t IntensityLabel = MenusSource.find("Localize(\"Skin transition intensity\")", Toggle);
 	ASSERT_NE(AdvancedIf, std::string::npos);
 	ASSERT_NE(TypeLabel, std::string::npos);
+	ASSERT_NE(ScopeLabel, std::string::npos);
 	ASSERT_NE(DurationLabel, std::string::npos);
 	ASSERT_NE(EasingLabel, std::string::npos);
 	ASSERT_NE(IntensityLabel, std::string::npos);
 	EXPECT_LT(Toggle, AdvancedIf);
 	EXPECT_LT(AdvancedIf, TypeLabel);
-	EXPECT_LT(TypeLabel, DurationLabel);
+	EXPECT_LT(TypeLabel, ScopeLabel);
+	EXPECT_LT(ScopeLabel, DurationLabel);
 	EXPECT_LT(DurationLabel, EasingLabel);
 	EXPECT_LT(EasingLabel, IntensityLabel);
+	EXPECT_NE(SkinTransitionCard.find("s_SkinTransitionScopeDropDownNames = {Localize(\"Self only\"), Localize(\"Local\"), Localize(\"All players\")};"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("std::clamp(g_Config.m_QmSkinChangeTransitionScope, 0, 2)"), std::string::npos);
+	EXPECT_NE(SkinTransitionCard.find("g_Config.m_QmSkinChangeTransitionScope = SkinTransitionScopeNew;"), std::string::npos);
 
+	EXPECT_NE(GameClientSource.find("QM_SKIN_CHANGE_TRANSITION_SCOPE_OWN"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("bool CGameClient::ShouldRunSkinChangeTransition(int ClientId) const"), std::string::npos);
 	EXPECT_NE(GameClientSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)"), std::string::npos);
 	EXPECT_NE(GameClientSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_SkinTransitionStart.has_value()"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("m_pGameClient->ShouldRunSkinChangeTransition(m_ClientId)"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_StartTime.has_value()"), std::string::npos);
 	EXPECT_NE(LanguageSource.find("Skin transition animation\n== 皮肤切换动画"), std::string::npos);
@@ -582,7 +612,9 @@ TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
 {
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	const std::string PlayersSource = ReadTextFile("src/game/client/components/players.cpp");
+	const std::string EmoticonSource = ReadTextFile("src/game/client/components/emoticon.cpp");
 	const std::string RenderPlayerBody = FunctionBody(PlayersSource, "void CPlayers::RenderPlayer(");
+	const std::string EmoticonRenderBody = FunctionBody(EmoticonSource, "void CEmoticon::OnRender()");
 	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const auto CountOccurrences = [](const std::string &Text, const char *pNeedle) {
 		int Count = 0;
@@ -604,6 +636,10 @@ TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
 	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetY * h, h, h"), std::string::npos);
 	EXPECT_NE(RenderPlayerBody.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);\n\t\tGraphics()->RenderQuadContainerAsSprite"), std::string::npos);
 	EXPECT_NE(RenderPlayerBody.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, a * Alpha);\n\t\t\tGraphics()->RenderQuadContainerAsSprite"), std::string::npos);
+	EXPECT_NE(EmoticonRenderBody.find("EmoticonSelectorShadowOpacity"), std::string::npos);
+	EXPECT_NE(EmoticonRenderBody.find("if(g_Config.m_QmEmoticonShadow)"), std::string::npos);
+	EXPECT_NE(EmoticonRenderBody.find("Graphics()->SetColor(0.0f, 0.0f, 0.0f, EmoticonSelectorShadowOpacity);"), std::string::npos);
+	EXPECT_NE(EmoticonRenderBody.find("ScreenCenter.x + Nudge.x + EmoticonSelectorShadowOffsetX"), std::string::npos);
 	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmEmoticonShadow"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Localize(\"Emoticon shadow\")"), std::string::npos);
 }
@@ -779,6 +815,39 @@ TEST(QmNewUiMenuBranches, FriendCategoryHeadersExposeManagement)
 	EXPECT_NE(Source.find("Localize(\"Right-click or use the gear to manage categories\")"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, FriendCategorySortingRequiresCtrlDrag)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const size_t DragState = Source.find("s_CategoryDragState.m_PressedIndex = CategoryIndex;");
+	ASSERT_NE(DragState, std::string::npos);
+	const size_t PressGate = Source.rfind("Input()->ModifierIsPressed() && Ui()->MouseButtonClicked(0)", DragState);
+	ASSERT_NE(PressGate, std::string::npos);
+	EXPECT_NE(Source.find("Ui()->MouseButton(0) && Input()->ModifierIsPressed() && s_CategoryDragState.m_DraggingIndex < 0", DragState), std::string::npos);
+	EXPECT_NE(Source.find("!Input()->ModifierIsPressed() && s_CategoryDragState.m_DraggingIndex < 0", DragState), std::string::npos);
+	EXPECT_EQ(Source.find("CategoryDragHoldSeconds"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ProtectedFriendCategoriesCannotBeRenamedOrDeleted)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const size_t ProtectedFn = Source.find("static bool IsProtectedFriendsCategory");
+	ASSERT_NE(ProtectedFn, std::string::npos);
+	const size_t ProtectedFnEnd = Source.find("static const char *LocalizeFriendsCategory", ProtectedFn);
+	ASSERT_NE(ProtectedFnEnd, std::string::npos);
+	const std::string ProtectedBody = Source.substr(ProtectedFn, ProtectedFnEnd - ProtectedFn);
+
+	EXPECT_NE(ProtectedBody.find("IFriends::DEFAULT_CATEGORY"), std::string::npos);
+	EXPECT_NE(ProtectedBody.find("IsClanMembersCategory(pCategory)"), std::string::npos);
+	EXPECT_NE(ProtectedBody.find("IsOfflineFriendsCategory(pCategory)"), std::string::npos);
+
+	const size_t Popup = Source.find("CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory");
+	ASSERT_NE(Popup, std::string::npos);
+	const std::string PopupBody = Source.substr(Popup);
+	EXPECT_NE(PopupBody.find("const bool IsProtectedCategory = IsProtectedFriendsCategory(pCategory);"), std::string::npos);
+	EXPECT_NE(PopupBody.find("Localize(\"Rename\"), &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory"), std::string::npos);
+	EXPECT_NE(PopupBody.find("Localize(\"Delete category\"), &Button, FontSize, TEXTALIGN_MC, 0.0f, false, !IsProtectedCategory"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, FriendAddPopupExposesCreateCategoryAction)
 {
 	const std::string Header = ReadTextFile("src/game/client/components/menus.h");
@@ -815,8 +884,25 @@ TEST(QmNewUiMenuBranches, FriendCategoryEditPopupHasRoomForInputAndActions)
 	constexpr float RequiredHeight = 5.0f * 2.0f + 12.0f + 3.0f + 18.0f + 6.0f + 20.0f;
 
 	EXPECT_FLOAT_EQ(CMenus::FriendsCategoryEditPopupHeight(), RequiredHeight);
+	EXPECT_GT(CMenus::FriendsCategoryActionsPopupHeight(), 60.0f);
 	EXPECT_NE(Source.find("CMenus::FriendsCategoryEditPopupHeight()"), std::string::npos);
+	EXPECT_NE(Source.find("CMenus::SecondaryPanelRect("), std::string::npos);
 	EXPECT_EQ(Source.find("250.0f, 62.0f"), std::string::npos);
+	EXPECT_EQ(Source.find("250.0f, 110.0f"), std::string::npos);
+	EXPECT_EQ(Source.find("280.0f, CMenus::FriendsCategoryEditPopupHeight()"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SecondaryPanelRectClampsNearScreenEdges)
+{
+	const CUIRect Screen{0.0f, 0.0f, 800.0f, 600.0f};
+	const CUIRect Panel = CMenus::SecondaryPanelRect(780.0f, 590.0f, 300.0f, 140.0f, Screen);
+
+	EXPECT_FLOAT_EQ(Panel.w, 300.0f);
+	EXPECT_FLOAT_EQ(Panel.h, 140.0f);
+	EXPECT_LE(Panel.x + Panel.w, 792.0f);
+	EXPECT_LE(Panel.y + Panel.h, 592.0f);
+	EXPECT_GE(Panel.x, 8.0f);
+	EXPECT_GE(Panel.y, 8.0f);
 }
 
 TEST(QmNewUiMenuBranches, FriendAutoFollowDelaysAndStopsAfterTwoJumps)
@@ -860,12 +946,15 @@ TEST(QmNewUiMenuBranches, FriendAutoFollowDistinguishesManualAndAutomaticConnect
 {
 	const std::string Header = ReadTextFile("src/game/client/components/menus.h");
 	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const std::string QmMenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 
 	EXPECT_NE(Header.find("enum class EConnectIntent"), std::string::npos);
 	EXPECT_NE(Header.find("void Connect(const char *pAddress, EConnectIntent Intent = EConnectIntent::Manual)"), std::string::npos);
 	EXPECT_NE(Source.find("if(Intent == EConnectIntent::Manual)"), std::string::npos);
 	EXPECT_NE(Source.find("StopFriendAutoFollow(m_FriendAutoFollowState);"), std::string::npos);
 	EXPECT_NE(Source.find("Connect(g_Config.m_UiServerAddress, EConnectIntent::AutoFollow)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Localize(\"Auto-follow delay\")"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("&g_Config.m_QmFriendAutoFollowDelay, 0, 30, \"s\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ShortServerNamesCoverKnownFamilies)
@@ -879,15 +968,71 @@ TEST(QmNewUiMenuBranches, ShortServerNamesCoverKnownFamilies)
 
 	str_copy(Info.m_aName, "Axiom 北京 普通 - CHN1O 钩累死");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "Novice - CHN1O 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "简单图 - CHN1O 钩累死");
 
 	str_copy(Info.m_aName, "DDNet CHN7 西安 - Moderate 中阶");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "Moderate - CHN7 西安");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "中阶图 - CHN7 西安");
 
 	str_copy(Info.m_aName, "DDNet CHN2 上海 - Brutal 高阶");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "Brutal - CHN2 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN2 上海");
+
+	str_copy(Info.m_aName, "Axiom Novice - CHN12 钩累死");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "简单图 - CHN12 钩累死");
+
+	str_copy(Info.m_aName, "Axiom Insane - CHN7 钩累死");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "疯狂 - CHN7 钩累死");
+
+	str_copy(Info.m_aName, "Axiom Axiom ◇ 广州 ✦ 困难 - CHN9 钩累死");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN9 钩累死");
+
+	str_copy(Info.m_aName, "Axiom Axiom ◇ 北京 ✦ 困难 - CHN10 钩累死");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN10 钩累死");
+
+	str_copy(Info.m_aName, "DDNet Moderate - CHN7 西安");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "中阶图 - CHN7 西安");
+
+	str_copy(Info.m_aName, "DDNet CHN2 上海 - DDmaX.Easy 古典");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Easy 古典 - CHN2 上海");
+
+	str_copy(Info.m_aName, "DDNet CHN7 西安 - DDmaX.Next");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Next 古典 - CHN7 西安");
+
+	str_copy(Info.m_aName, "DDNet CHN3 宁波 - DDmaX.Pro 古典");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Pro 古典 - CHN3 宁波");
+
+	str_copy(Info.m_aName, "DDNet CHN6 上海 - Oldschool 传统");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典图 - CHN6 上海");
+
+	str_copy(Info.m_aName, "DDNet CHN6 上海 - Solo 单人");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "单人 - CHN6 上海");
+
+	str_copy(Info.m_aName, "DDNet CHN5 上海 - Dummy 分身");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "分身 - CHN5 上海");
+
+	str_copy(Info.m_aName, "DDNet Taiwan - Moderate");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "中阶图 - Taiwan");
+
+	str_copy(Info.m_aName, "DDNet Taiwan - Brutal");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - Taiwan");
+
+	str_copy(Info.m_aName, "Brutal - CHN5 上海");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN5 上海");
 
 	str_copy(Info.m_aName, "Plain Server Name");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
@@ -960,11 +1105,39 @@ TEST(QmNewUiMenuBranches, QmClientAxiomAutoLoginLivesInQmClientComponent)
 	const std::string TClientHeader = ReadTextFile("src/game/client/components/tclient/tclient.h");
 	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
 	const std::string GameClientHeader = ReadTextFile("src/game/client/gameclient.h");
+	const std::string QmConfigHeader = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string QmMenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string IngameMenusSource = ReadTextFile("src/game/client/components/menus_ingame.cpp");
 
 	EXPECT_NE(Header.find("class CQmAxiomAutoLogin : public CComponent"), std::string::npos);
 	EXPECT_NE(GameClientHeader.find("CQmAxiomAutoLogin m_QmAxiomAutoLogin;"), std::string::npos);
 	EXPECT_NE(Source.find("void CQmAxiomAutoLogin::TrySendLogin()"), std::string::npos);
 	EXPECT_NE(Source.find("void CQmAxiomAutoLogin::TrySendDummyLogin()"), std::string::npos);
+	EXPECT_NE(Source.find("SendChatOnConn(IClient::CONN_DUMMY"), std::string::npos);
+	EXPECT_NE(Header.find("TrySendDummyLogin"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmAxiomDummyLoginPassword"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("qm_axiom_dummy_login_password"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Axiom dummy password"), std::string::npos);
+	EXPECT_NE(Source.find("m_DummyLoginAllowedThisServer"), std::string::npos);
+	EXPECT_NE(Source.find("m_DummyWasConnected"), std::string::npos);
+	EXPECT_EQ(Source.find("if(DummyConnected && !m_DummyWasConnected)"), std::string::npos);
+	EXPECT_NE(Source.find("m_DummyLoginAllowedThisServer = true;"), std::string::npos);
+	EXPECT_NE(Source.find("if(!m_DummyLoginAllowedThisServer)"), std::string::npos);
+	EXPECT_NE(Header.find("EnableDummyReconnectForServer"), std::string::npos);
+	EXPECT_NE(Header.find("DisableDummyReconnectForServer"), std::string::npos);
+	EXPECT_NE(Source.find("Client()->DummyConnect();"), std::string::npos);
+	EXPECT_NE(IngameMenusSource.find("GameClient()->m_QmAxiomAutoLogin.EnableDummyReconnectForServer();"), std::string::npos);
+	EXPECT_NE(IngameMenusSource.find("GameClient()->OnDummyManualDisconnect();"), std::string::npos);
+	EXPECT_NE(GameClientHeader.find("void OnDummyManualDisconnect() override;"), std::string::npos);
+	const std::string GameClientSource = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string ManualDisconnectBody = FunctionBody(GameClientSource, "void CGameClient::OnDummyManualDisconnect()");
+	ASSERT_FALSE(ManualDisconnectBody.empty());
+	EXPECT_NE(ManualDisconnectBody.find("m_QmAxiomAutoLogin.DisableDummyReconnectForServer();"), std::string::npos);
+	const std::string ClientSource = ReadTextFile("src/engine/client/client.cpp");
+	const std::string DummyDisconnectBody = FunctionBody(ClientSource, "void CClient::Con_DummyDisconnect(");
+	ASSERT_FALSE(DummyDisconnectBody.empty());
+	EXPECT_NE(DummyDisconnectBody.find("GameClient()->OnDummyManualDisconnect();"), std::string::npos);
+	EXPECT_NE(DummyDisconnectBody.find("DummyDisconnect(nullptr);"), std::string::npos);
 	EXPECT_NE(Source.find("bool CQmAxiomAutoLogin::IsAxiomCommunity() const"), std::string::npos);
 	EXPECT_NE(Source.find("QMCLIENT_AXIOM_AUTO_LOGIN_SLOW_RETRY_SECONDS"), std::string::npos);
 	EXPECT_NE(Source.find("m_AutoLoginSlowRetryMode"), std::string::npos);
@@ -979,6 +1152,7 @@ TEST(QmNewUiMenuBranches, QmClientAxiomAutoLoginLivesInQmClientComponent)
 	EXPECT_NE(LoginMessageFilter, std::string::npos);
 	EXPECT_LT(HardFailureCheck, LoginMessageFilter);
 	EXPECT_NE(Source.find("Localize(\"Trying Axiom auto login\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Trying Axiom dummy auto login\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Axiom auto login succeeded\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Axiom auto login failed, retrying\")"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Axiom auto login failed\")"), std::string::npos);
@@ -989,6 +1163,91 @@ TEST(QmNewUiMenuBranches, QmClientAxiomAutoLoginLivesInQmClientComponent)
 	EXPECT_EQ(TClientHeader.find("HandleAxiomAutoLoginMessage"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("TrySendAxiomLogin"), std::string::npos);
 	EXPECT_EQ(TClientSource.find("HandleAxiomAutoLoginMessage"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, FastPracticeSurfacesPracticeStateInHud)
+{
+	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
+	const std::string HudHeader = ReadTextFile("src/game/client/components/hud.h");
+
+	const std::string PlayerStateBody = FunctionBody(HudSource, "void CHud::RenderPlayerState(");
+	ASSERT_FALSE(PlayerStateBody.empty());
+	EXPECT_NE(PlayerStateBody.find("const bool FastPracticeParticipant = GameClient()->m_FastPractice.IsPracticeParticipant(ClientId);"), std::string::npos);
+	EXPECT_NE(PlayerStateBody.find("|| FastPracticeParticipant"), std::string::npos);
+	EXPECT_EQ(PlayerStateBody.find("m_FastPractice.Enabled()"), std::string::npos);
+	EXPECT_NE(PlayerStateBody.find("m_PracticeModeOffset"), std::string::npos);
+
+	const std::string MovementBody = FunctionBody(HudSource, "void CHud::RenderMovementInformation()");
+	ASSERT_FALSE(MovementBody.empty());
+	EXPECT_NE(MovementBody.find("const bool FastPracticeParticipant = GameClient()->m_FastPractice.IsPracticeParticipant(ClientId);"), std::string::npos);
+	EXPECT_NE(MovementBody.find("const bool ShowSpeed = !PosOnly && (g_Config.m_ClShowhudPlayerSpeed || FastPracticeParticipant);"), std::string::npos);
+	EXPECT_EQ(MovementBody.find("m_FastPractice.Enabled()"), std::string::npos);
+	EXPECT_NE(HudHeader.find("void RenderMovementInformation();"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
+{
+	const std::string RenderHeader = ReadTextFile("src/game/client/render.h");
+	const std::string RenderSource = ReadTextFile("src/game/client/render.cpp");
+	const std::string NameplatesSource = ReadTextFile("src/game/client/components/nameplates.cpp");
+	const std::string ModesHeader = ReadTextFile("src/game/client/components/qmclient/modes.h");
+	const std::string ModesSource = ReadTextFile("src/game/client/components/qmclient/modes.cpp");
+	const std::string QmConfigHeader = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string QmMenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	EXPECT_NE(RenderHeader.find("struct SQmTextEffectRenderStyle"), std::string::npos);
+	EXPECT_NE(RenderHeader.find("m_OutlineColor"), std::string::npos);
+	EXPECT_NE(RenderHeader.find("RenderTextContainerWithEffects"), std::string::npos);
+	EXPECT_NE(RenderSource.find("void CRenderTools::RenderTextContainerWithEffects"), std::string::npos);
+	EXPECT_NE(RenderSource.find("ColorRGBA OutlineColor = Style.m_OutlineColor.WithMultipliedAlpha(Alpha);"), std::string::npos);
+	EXPECT_NE(RenderSource.find("if(BorderEnabled)\n\t\tOutlineColor = Style.m_BorderColor.WithMultipliedAlpha(Alpha);"), std::string::npos);
+	EXPECT_NE(RenderSource.find("QM_TEXT_EFFECT_RAINBOW"), std::string::npos);
+	EXPECT_NE(RenderSource.find("QM_TEXT_EFFECT_GLOW"), std::string::npos);
+	EXPECT_NE(RenderSource.find("for(int Pass = 0; Pass < GlowPasses; ++Pass)"), std::string::npos);
+
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextEffects"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextBorderColor"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextGradientColor"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextGlowColor"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextGlowRange"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextPlayingScope"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextSpectateScope"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextDemoMode"), std::string::npos);
+	EXPECT_NE(QmConfigHeader.find("QmNameplateTextDemoTarget"), std::string::npos);
+
+	EXPECT_NE(ModesHeader.find("enum EQmNameplateTextPlayingScope"), std::string::npos);
+	EXPECT_NE(ModesHeader.find("enum EQmNameplateTextSpectateScope"), std::string::npos);
+	EXPECT_NE(ModesHeader.find("enum EQmNameplateTextDemoMode"), std::string::npos);
+	EXPECT_NE(ModesHeader.find("bool ShouldUseQmNameplateTextEffects("), std::string::npos);
+	EXPECT_NE(ModesSource.find("bool ShouldUseQmNameplateTextEffects("), std::string::npos);
+	EXPECT_NE(ModesSource.find("case QM_NAMEPLATE_TEXT_PLAYING_SCOPE_FRIENDS:"), std::string::npos);
+	EXPECT_NE(ModesSource.find("case QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_TARGET:"), std::string::npos);
+	EXPECT_NE(ModesSource.find("case QM_NAMEPLATE_TEXT_DEMO_MODE_MANUAL_TARGET:"), std::string::npos);
+
+	EXPECT_NE(NameplatesSource.find("BuildQmNameplateTextStyle("), std::string::npos);
+	EXPECT_NE(NameplatesSource.find("bool UseEffects"), std::string::npos);
+	EXPECT_NE(NameplatesSource.find("Style.m_Effects = UseEffects ? g_Config.m_QmNameplateTextEffects : 0;"), std::string::npos);
+	EXPECT_EQ(NameplatesSource.find("QmRainbowName"), std::string::npos);
+	EXPECT_NE(NameplatesSource.find("Data.m_UseTextEffects = ShouldUseQmNameplateTextEffects("), std::string::npos);
+	EXPECT_NE(NameplatesSource.find("Style.m_OutlineColor = s_OutlineColor.WithMultipliedAlpha(TextColor.a);"), std::string::npos);
+	EXPECT_NE(NameplatesSource.find("RenderTools()->RenderTextContainerWithEffects"), std::string::npos);
+	EXPECT_EQ(NameplatesSource.find("Rainbow name for local player"), std::string::npos);
+
+	EXPECT_NE(QmMenusSource.find("EQmModuleId::NameplateText"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("nameplate_text"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Nameplate text"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("QmNameplateTextEffects"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("QmNameplateTextGlowRange"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("DoLine_ColorPicker(&s_NameplateTextBorderColorId"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Playing effects"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Spectate effects"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Demo effects"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Demo target"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("s_NameplateTextDemoTargetDropDownNames"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("bool DemoTargetListed = g_Config.m_QmNameplateTextDemoTarget < 0;"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("if(!DemoTargetListed)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("g_Config.m_QmNameplateTextDemoTarget = DemoTargetNew - 1;"), std::string::npos);
+	EXPECT_EQ(QmMenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmRainbowName"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, TClientSettingsTabsPreserveHiddenStateAndVisibleCorners)

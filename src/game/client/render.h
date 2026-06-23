@@ -7,6 +7,7 @@
 #include <base/vmath.h>
 
 #include <engine/client/enums.h>
+#include <engine/textrender.h>
 
 #include <generated/protocol.h>
 #include <generated/protocol7.h>
@@ -120,6 +121,22 @@ public:
 		}
 	}
 
+	bool Valid() const
+	{
+		if((m_CustomColoredSkin ? m_ColorableRenderSkin.m_Body : m_OriginalRenderSkin.m_Body).IsValid())
+		{
+			return true;
+		}
+		for(const auto &Sixup : m_aSixup)
+		{
+			if(Sixup.PartTexture(protocol7::SKINPART_BODY).IsValid())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	CSkin::CSkinTextures m_OriginalRenderSkin;
 	CSkin::CSkinTextures m_ColorableRenderSkin;
 
@@ -134,11 +151,6 @@ public:
 	bool m_GotAirJump;
 	int m_TeeRenderFlags;
 	bool m_FeetFlipped;
-
-	bool Valid() const
-	{
-		return m_CustomColoredSkin ? m_ColorableRenderSkin.m_Body.IsValid() : m_OriginalRenderSkin.m_Body.IsValid();
-	}
 
 	class CSixup
 	{
@@ -190,6 +202,8 @@ enum
 	SKIN_CHANGE_TRANSITION_SLIDE_LEFT,
 	SKIN_CHANGE_TRANSITION_SPIN_POP,
 	SKIN_CHANGE_TRANSITION_THEME_SWITCH,
+	SKIN_CHANGE_TRANSITION_GLITCH,
+	SKIN_CHANGE_TRANSITION_ELASTIC,
 	SKIN_CHANGE_TRANSITION_TYPE_COUNT,
 };
 
@@ -346,6 +360,42 @@ inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progres
 		Blend.m_CurrentPosOffset = vec2(0.0f, 8.0f * IntensityScale * Enter);
 		break;
 	}
+	case SKIN_CHANGE_TRANSITION_GLITCH:
+	{
+		// Faulty/jitter transition: high-frequency horizontal jitter on both skins.
+		// Previous skin jitters leftwards while fading out; current jitters in from the right.
+		const float JitterFreq = 7.0f;
+		const float JitterAmp = 6.0f * IntensityScale;
+		const float PreviousJitter = std::sin(Progress * JitterFreq * pi) * JitterAmp;
+		const float CurrentJitter = std::sin((1.0f - Progress) * JitterFreq * pi) * JitterAmp;
+		const float PreviousScaleFactor = 1.0f - 0.04f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.04f * IntensityScale + 0.04f * IntensityScale * EaseOut;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
+		Blend.m_PreviousBodyScale = BodyScale * PreviousScaleFactor;
+		Blend.m_PreviousFeetScale = FeetScale * PreviousScaleFactor;
+		Blend.m_CurrentBodyScale = BodyScale * CurrentScaleFactor;
+		Blend.m_CurrentFeetScale = FeetScale * CurrentScaleFactor;
+		Blend.m_PreviousPosOffset = vec2(-10.0f * IntensityScale * EaseOut + PreviousJitter, 0.0f);
+		Blend.m_CurrentPosOffset = vec2(10.0f * IntensityScale * Enter + CurrentJitter, 0.0f);
+		break;
+	}
+	case SKIN_CHANGE_TRANSITION_ELASTIC:
+	{
+		// Elastic squash-and-stretch: previous skin squashes vertically and fades;
+		// current skin bounces in with an overshoot pop. No rotation.
+		const float PreviousScaleFactor = 1.0f - 0.10f * IntensityScale * EaseOut;
+		const float CurrentScaleFactor = 1.0f - 0.08f * IntensityScale + 0.08f * IntensityScale * EaseOut + 0.06f * Pop;
+		Blend.m_PreviousAlpha = 1.0f - AlphaProgress;
+		Blend.m_CurrentAlpha = AlphaProgress;
+		Blend.m_PreviousBodyScale = vec2(BodyScale.x * (1.0f + 0.06f * IntensityScale * EaseOut), BodyScale.y * PreviousScaleFactor);
+		Blend.m_PreviousFeetScale = vec2(FeetScale.x * (1.0f + 0.06f * IntensityScale * EaseOut), FeetScale.y * PreviousScaleFactor);
+		Blend.m_CurrentBodyScale = vec2(BodyScale.x * CurrentScaleFactor, BodyScale.y * CurrentScaleFactor);
+		Blend.m_CurrentFeetScale = vec2(FeetScale.x * CurrentScaleFactor, FeetScale.y * CurrentScaleFactor);
+		Blend.m_PreviousPosOffset = vec2(0.0f, 6.0f * IntensityScale * EaseOut);
+		Blend.m_CurrentPosOffset = vec2(0.0f, -6.0f * IntensityScale * Enter);
+		break;
+	}
 	case SKIN_CHANGE_TRANSITION_GHOST_POP:
 	default:
 	{
@@ -389,6 +439,7 @@ class CManagedTeeRenderInfo
 	friend class CGameClient;
 	CTeeRenderInfo m_TeeRenderInfo;
 	CSkinDescriptor m_SkinDescriptor;
+	bool m_DescriptorRenderInfoReady = false;
 	std::function<void()> m_RefreshCallback = nullptr;
 
 public:
@@ -401,6 +452,8 @@ public:
 	CTeeRenderInfo &TeeRenderInfo() { return m_TeeRenderInfo; }
 	const CTeeRenderInfo &TeeRenderInfo() const { return m_TeeRenderInfo; }
 	const CSkinDescriptor &SkinDescriptor() const { return m_SkinDescriptor; }
+	bool DescriptorRenderInfoReady() const { return m_DescriptorRenderInfoReady; }
+	void SetDescriptorRenderInfoReady(bool Ready) { m_DescriptorRenderInfoReady = Ready; }
 	void SetRefreshCallback(const std::function<void()> &RefreshCallback) { m_RefreshCallback = RefreshCallback; }
 };
 
@@ -433,6 +486,27 @@ inline bool HasTeePreviewLayer(int TeeRenderFlags, int PreviewLayer)
 	return (ResolveTeePreviewLayers(TeeRenderFlags) & PreviewLayer) != 0;
 }
 
+enum
+{
+	QM_TEXT_EFFECT_BORDER = 1 << 0,
+	QM_TEXT_EFFECT_GRADIENT = 1 << 1,
+	QM_TEXT_EFFECT_RAINBOW = 1 << 2,
+	QM_TEXT_EFFECT_GLOW = 1 << 3,
+};
+
+struct SQmTextEffectRenderStyle
+{
+	int m_Effects = 0;
+	ColorRGBA m_TextColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	ColorRGBA m_OutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.3f);
+	ColorRGBA m_BorderColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f);
+	ColorRGBA m_GradientColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	ColorRGBA m_GlowColor = ColorRGBA(0.35f, 0.75f, 1.0f, 0.35f);
+	float m_BorderRange = 1.0f;
+	float m_GlowRange = 0.0f;
+	float m_Time = 0.0f;
+};
+
 class CRenderTools
 {
 	class IGraphics *m_pGraphics;
@@ -460,6 +534,7 @@ public:
 
 	void RenderCursor(vec2 Center, float Size, float Alpha = 1.0f) const;
 	void RenderIcon(int ImageId, int SpriteId, const CUIRect *pRect, const ColorRGBA *pColor = nullptr) const;
+	void RenderTextContainerWithEffects(STextContainerIndex TextContainerIndex, const SQmTextEffectRenderStyle &Style, float X, float Y) const;
 
 	// larger rendering methods
 	static void GetRenderTeeBodySize(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, vec2 &BodyOffset, float &Width, float &Height);

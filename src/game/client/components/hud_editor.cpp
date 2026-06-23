@@ -20,7 +20,7 @@
 namespace
 {
 	constexpr float EPSILON = QmHudEditor::EPSILON;
-	constexpr float HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::EPSILON;
+	constexpr float HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::SNAP_DISTANCE;
 
 	float Clamp01(float Value)
 	{

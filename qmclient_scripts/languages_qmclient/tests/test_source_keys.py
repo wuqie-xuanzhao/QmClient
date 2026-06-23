@@ -497,6 +497,99 @@ class SourceKeysTest(unittest.TestCase):
         self.assertEqual(loaded.must_i18n[0].text, "Play game")
         self.assertEqual(loaded.summary()["must_i18n"], 1)
 
+    def test_source_record_cache_replaces_only_changed_files(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            unchanged = root / "src" / "game" / "client" / "unchanged.cpp"
+            changed = root / "src" / "game" / "client" / "changed.cpp"
+            deleted = root / "src" / "game" / "client" / "deleted.cpp"
+            changed.parent.mkdir(parents=True, exist_ok=True)
+            unchanged.write_text('Localize("Keep me");\n', encoding="utf-8")
+            changed.write_text('Localize("New key");\n', encoding="utf-8")
+
+            old_records = [
+                source_keys.SourceKeyRecord(
+                    "Keep me", "localize_or_localizable", unchanged, "", 1
+                ),
+                source_keys.SourceKeyRecord(
+                    "Old key", "localize_or_localizable", changed, "", 1
+                ),
+                source_keys.SourceKeyRecord(
+                    "Deleted key", "localize_or_localizable", deleted, "", 1
+                ),
+                source_keys.SourceKeyRecord("Extra test key", "extra", None, "", 0),
+            ]
+
+            merged = source_keys.merge_source_key_records_for_changed_files(
+                old_records,
+                changed_files=(changed, deleted),
+                extra_strings={"Extra test key"},
+            )
+
+        identities = {record.identity() for record in merged}
+        self.assertIn(("Keep me", ""), identities)
+        self.assertIn(("New key", ""), identities)
+        self.assertIn(("Extra test key", ""), identities)
+        self.assertNotIn(("Old key", ""), identities)
+        self.assertNotIn(("Deleted key", ""), identities)
+
+    def test_source_record_cache_round_trips_json_file(self):
+        with TemporaryDirectory() as tmpdir:
+            cache_path = Path(tmpdir) / "records.json"
+            source = Path(tmpdir) / "src" / "game" / "client" / "foo.cpp"
+            records = [
+                source_keys.SourceKeyRecord(
+                    "Play", "localize_or_localizable", source, "Menu", 12
+                ),
+                source_keys.SourceKeyRecord("Extra", "extra", None, "", 0),
+            ]
+
+            source_keys.write_source_record_cache(cache_path, records)
+            loaded = source_keys.read_source_record_cache(cache_path)
+
+        self.assertEqual(set(records), set(loaded))
+
+    def test_audit_report_replaces_only_changed_files(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            changed = root / "src" / "game" / "client" / "changed.cpp"
+            kept = root / "src" / "game" / "client" / "kept.cpp"
+
+            cached = source_keys.StringAuditReport(
+                must_i18n=[
+                    source_keys.StringAuditRecord(
+                        kept,
+                        1,
+                        "Keep",
+                        "must_i18n",
+                        "active source key (localize_or_localizable)",
+                    ),
+                    source_keys.StringAuditRecord(
+                        changed,
+                        1,
+                        "Old",
+                        "must_i18n",
+                        "active source key (localize_or_localizable)",
+                    ),
+                ],
+                business_data=[],
+                test_only=[],
+                needs_review=[],
+                violation=[],
+            )
+
+            changed.parent.mkdir(parents=True, exist_ok=True)
+            changed.write_text('Localize("New");\n', encoding="utf-8")
+
+            merged = source_keys.merge_string_audit_report_for_changed_files(
+                cached, (changed,)
+            )
+
+        texts = {record.text for record in merged.must_i18n}
+        self.assertIn("Keep", texts)
+        self.assertIn("New", texts)
+        self.assertNotIn("Old", texts)
+
     def test_extracts_browser_localize_keys_for_offline_and_local_server_ui(self):
         path = Path("src/game/client/components/menus_browser.cpp")
         content = source_keys.strip_cpp_comments(source_keys.read_source_text(path))

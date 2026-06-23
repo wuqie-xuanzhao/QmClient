@@ -823,6 +823,12 @@ Auto unmute when speaking
 Auto unspec on unfreeze
 == Çözülmede otomatik izleyiciden çık
 
+Auto weapon switch
+== Otomatik silah değiştirme
+
+Auto-follow delay
+== Otomatik takip gecikmesi
+
 Auto-sync player camera
 == Oyuncu kamerasını otomatik senkronize et
 
@@ -972,6 +978,15 @@ Blue team wins!
 
 Body
 == Vücut
+
+Border
+== Border
+
+Border color
+== Border color
+
+Border range
+== Border range
 
 Both
 == Her ikisi
@@ -1636,6 +1651,9 @@ Custom Font:
 Custom prompt template
 == Özel istem şablonu
 
+Customize name and clan text effects
+== Customize name and clan text effects
+
 Customize translate button and menu colors
 == Çevir düğmesi ve menü renklerini özelleştir
 
@@ -1825,8 +1843,14 @@ Delete this preset
 Demo
 == Demo
 
+Demo effects
+== Demo effects
+
 Demo marker added
 == Demo işareti eklendi
+
+Demo target
+== Demo target
 
 Demofile: %s
 == Demo dosyası: %s
@@ -2185,6 +2209,9 @@ Edit touch controls
 Editor
 == Düzenleyici
 
+Elastic
+== Esnek
+
 Elastic back
 == Esnek geri dönüş
 
@@ -2284,6 +2311,9 @@ Enable replays
 Enable server message sound
 == Sunucu mesajı sesini etkinleştir
 
+Enable skin queue rotation
+== Cilt kuyruğu dönüşünü etkinleştir
+
 Enable speedrun timer
 == Hızlı koşu zamanlayıcısını etkinleştir
 
@@ -2313,6 +2343,9 @@ Enable word filter list
 
 Enable Zen mode
 == Zen modunu etkinleştir
+
+Enabled
+== Etkin
 
 Enables/disables active moderator mode for the player
 == Oyuncu için aktif moderatör modunu etkinleştirir/devre dışı bırakır
@@ -2713,6 +2746,9 @@ Friend online and join notifications
 Friends
 == Arkadaşlar
 
+Friends only
+== Friends only
+
 Frozen Margin
 == Donma Marjı
 
@@ -2833,17 +2869,29 @@ Gives you endless hook
 Gives you infinite jump
 == Sana sonsuz zıplama verir
 
+Glitch
+== Glitch
+
 Global toggle key
 == Genel açma/kapama tuşu
 
+Glow
+== Glow
+
 Glow alpha
 == Parlama alfası
+
+Glow color
+== Glow color
 
 Glow intensity
 == Parlama yoğunluğu
 
 Glow offset
 == Parlama ofseti
+
+Glow range
+== Glow range
 
 Go back one marker
 == Bir işaretçi geri git
@@ -2881,11 +2929,20 @@ Gores 模式下启用快速输入
 Gores 模式下对其他玩家也启用快速输入
 == Gores modunda diğer oyuncular için de hızlı girişi etkinleştir
 
+Gores 模式下自动锤枪切换
+== Gores modunda otomatik güdük-tabanca değiştirme
+
 Gores 模式下隐藏辅助线
 == Gores modunda yardımcı çizgileri gizle
 
 Grabs
 == Bayraklar
+
+Gradient
+== Gradient
+
+Gradient color
+== Gradient color
 
 Graphics
 == Grafikler
@@ -3066,6 +3123,9 @@ Hook line tip
 
 Hook Strength
 == Kanca Gücü
+
+Hook strength scope
+== Hook strength scope
 
 Hooking L/R: %.0f%%/%.0f%%
 == Kanca S/S: %.0f%%/%.0f%%
@@ -3757,8 +3817,14 @@ Manual
 Manual concurrency: %d
 == Manuel eşzamanlılık: %d
 
+Manual scope
+== Manual scope
+
 Manual source file
 == Manuel kaynak dosyası
+
+Manual target
+== Manual target
 
 Map
 == Harita
@@ -4029,6 +4095,9 @@ Name:
 
 Name: %s
 == İsim: %s
+
+Nameplate text
+== Nameplate text
 
 Native scale (1.0)
 == Yerel ölçek (1.0)
@@ -4459,6 +4528,12 @@ Option color
 Other
 == Diğer
 
+Others
+== Others
+
+Others only
+== Others only
+
 Outgoing language
 == Giden dil
 
@@ -4698,6 +4773,9 @@ Players can't collide on this server
 
 Players can't hook each other on this server
 == Bu sunucuda oyuncular birbirini kancalayamaz
+
+Playing effects
+== Playing effects
 
 Please add a valid cut first
 == Lütfen önce geçerli bir kesim ekleyin
@@ -5019,9 +5097,6 @@ Rainbow
 
 Rainbow hook
 == Gökkuşağı kancası
-
-Rainbow name
-== Gökkuşağı ismi
 
 Rainbow others
 == Gökkuşağını herkese göster!
@@ -5785,6 +5860,9 @@ Selection
 Self
 == Kendi
 
+Self and friends
+== Self and friends
+
 Self only
 == Yalnızca kendim
 
@@ -6529,6 +6607,9 @@ Slow down the demo
 Smaller tees
 == Daha küçük teeler
 
+Smart
+== Smart
+
 Smooth Dynamic Camera
 == Yumuşak Dinamik Kamera
 
@@ -6598,6 +6679,9 @@ Spectate
 Spectate a player by Id
 == ID'ye göre bir oyuncuyu izle
 
+Spectate effects
+== Spectate effects
+
 Spectate mode
 == İzleme modu
 
@@ -6618,6 +6702,12 @@ Spectate the next player
 
 Spectate the previous player
 == Önceki oyuncuyu izle
+
+Spectated player
+== Spectated player
+
+Spectated player and friends
+== Spectated player and friends
 
 Spectators
 == İzleyiciler
@@ -6750,6 +6840,12 @@ Strict mode
 
 Stroke fade time
 == Vuruş solma süresi
+
+Strong hook
+== Strong hook
+
+Strong hook color
+== Strong hook color
 
 Strong Weak Hook
 == Güçlü Zayıf Kanca
@@ -7882,6 +7978,12 @@ Warmup
 Warning
 == Uyarı
 
+Weak hook
+== Weak hook
+
+Weak hook color
+== Weak hook color
+
 Weapon
 == Silah
 
@@ -8386,8 +8488,8 @@ Zoom out
 出站翻译目标语言代码
 == Giden çeviri hedef dil kodu
 
-分身皮肤队列切换间隔（0.1 秒）
-== Dummy cilt kuyruğu değiştirme aralığı (0.1 saniye)
+分身皮肤队列切换间隔（毫秒）
+== Dummy cilt kuyruğu değiştirme aralığı (ms)
 
 分身皮肤队列当前位置
 == Dummy cilt kuyruğu mevcut konum
@@ -8455,11 +8557,20 @@ Zoom out
 名字板坐标行 Y 偏移
 == İsimlik Koordinat Satırı Y Kayması
 
+名字板弱钩图标颜色
+== 名字板弱钩图标颜色
+
 名字板强弱行 X 偏移
 == İsimlik Güç Satırı X Kayması
 
 名字板强弱行 Y 偏移
 == İsimlik Güç Satırı Y Kayması
+
+名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+
+名字板强钩图标颜色
+== 名字板强钩图标颜色
 
 名字板战队行 X 偏移
 == İsimlik Klan Satırı X Kayması
@@ -8472,6 +8583,36 @@ Zoom out
 
 名字板按键行 Y 偏移
 == İsimlik Tuş Satırı Y Kayması
+
+名字板文本光晕范围
+== 名字板文本光晕范围
+
+名字板文本光晕颜色
+== 名字板文本光晕颜色
+
+名字板文本效果 Demo 手动目标 Client ID（-1=无）
+== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
+
+名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+
+名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+
+名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+
+名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+
+名字板文本渐变颜色
+== 名字板文本渐变颜色
+
+名字板文本边框范围
+== 名字板文本边框范围
+
+名字板文本边框颜色
+== 名字板文本边框颜色
 
 名字板昵称行 X 偏移
 == İsimlik Takma Ad Satırı X Kayması
@@ -8506,7 +8647,7 @@ Zoom out
 启动和菜单空闲时预热设置页
 == Başlangıçta ve Menü Boştayken Ayarlar Sayfasını Önceden Yükle
 
-启用 Gores 锤枪自动切换
+启用 Gores 模式（King of Gores 辅助工具集合）
 == Gores Güdük-Tabanca Otomatik Değiştirmeyi Etkinleştir
 
 启用 LLM 思考模式（可能增加响应时间）
@@ -8526,6 +8667,9 @@ Zoom out
 
 启用关键词回复
 == Anahtar Kelime Yanıtlarını Etkinleştir
+
+启用分身皮肤队列轮换
+== Dummy cilt kuyruğu dönüşünü etkinleştir
 
 启用动态视野，移动越快视野越宽
 == Dinamik Görüş Alanını Etkinleştir, ne kadar hızlı hareket edersen görüş alanın o kadar geniş olur
@@ -8551,6 +8695,9 @@ Zoom out
 启用皮肤切换动画
 == Skin Değiştirme Animasyonunu Etkinleştir
 
+启用皮肤队列轮换
+== Cilt kuyruğu dönüşünü etkinleştir
+
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 == Kamera Sürüklenme Efektini Etkinleştir, kameranın hareket hızına göre hafifçe sürüklenmesini sağlar
 
@@ -8574,9 +8721,6 @@ Zoom out
 
 启用背景 3D 粒子闪烁
 == Arka Plan 3D Parçacık Titremesini Etkinleştir
-
-启用自己名字的彩虹色渲染
-== Kendi Adının Gökkuşağı Rengine Boyanmasını Etkinleştir
 
 启用语音滤波（高通/压缩/限幅）
 == Ses Filtrelemeyi Etkinleştir (yüksek geçiş/sıkıştırma/sınırlama)
@@ -8929,14 +9073,17 @@ Zoom out
 皮肤切换动画持续时间（毫秒，0=无动画）
 == Skin değiştirme animasyonu süresi (milisaniye, 0=Animasyon yok)
 
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
-== Skin değiştirme animasyonu türü (0=Gölge patlaması 1=Yumuşak geçiş 2=Sola kaydırma 3=Dönerek çıkma 4=Aydınlık-karanlık geçiş)
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
+== Skin değiştirme animasyonu türü (0=Gölge patlaması 1=Yumuşak geçiş 2=Sola kaydırma 3=Dönerek çıkma 4=Aydınlık-karanlık geçiş 5=Glitch 6=Esnek)
 
 皮肤切换动画缓动模式
 == Skin değiştirme animasyonu yumuşatma modu
 
-皮肤队列切换间隔（0.1 秒）
-== Skin sırası değiştirme aralığı (0.1 saniye)
+皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+== Skin değiştirme animasyonu kapsamı: 0=Sadece kendim 1=Yerel+Dummy 2=Tüm oyuncular
+
+皮肤队列切换间隔（毫秒）
+== Skin sırası değiştirme aralığı (ms)
 
 皮肤队列当前位置
 == Skin sırası mevcut konum

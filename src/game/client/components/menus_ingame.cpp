@@ -688,6 +688,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		{
 			if(!Client()->DummyConnected())
 			{
+				GameClient()->m_QmAxiomAutoLogin.EnableDummyReconnectForServer();
 				Client()->DummyConnect();
 			}
 			else
@@ -698,6 +699,7 @@ void CMenus::RenderGame(CUIRect MainView)
 				}
 				else
 				{
+					GameClient()->OnDummyManualDisconnect();
 					Client()->DummyDisconnect(nullptr);
 					SetActive(false);
 				}
@@ -1037,6 +1039,7 @@ void CMenus::PopupConfirmDisconnect()
 
 void CMenus::PopupConfirmDisconnectDummy()
 {
+	GameClient()->OnDummyManualDisconnect();
 	Client()->DummyDisconnect(nullptr);
 	SetActive(false);
 }

@@ -8324,6 +8324,22 @@ polish = "Wyłączone"
 
 [[message]]
 key = "Enabled"
+[message.translations]
+japanese = "有効"
+korean = "활성화됨"
+simplified_chinese = "启用"
+traditional_chinese = "啟用"
+russian = "Включено"
+german = "Aktiviert"
+spanish = "Habilitado"
+french = "Activé"
+brazilian_portuguese = "Ativado"
+portuguese = "Ativado"
+turkish = "Etkin"
+polish = "Włączone"
+
+[[message]]
+key = "Enabled"
 context = "Auto camera"
 [message.translations]
 japanese = "有効"

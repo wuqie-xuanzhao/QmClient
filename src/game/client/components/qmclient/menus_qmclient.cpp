@@ -1349,6 +1349,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		Laser,
 		PlayerStats,
 		CollisionHitbox,
+		NameplateText,
 		FavoriteMaps,
 		HJAssist,
 		SpeedrunTimer,
@@ -1397,6 +1398,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::Laser: return "laser";
 		case EQmModuleId::PlayerStats: return "player_stats";
 		case EQmModuleId::CollisionHitbox: return "collision_hitbox";
+		case EQmModuleId::NameplateText: return "nameplate_text";
 		case EQmModuleId::FavoriteMaps: return "favorite_maps";
 		case EQmModuleId::HJAssist: return "hj_assist";
 		case EQmModuleId::SpeedrunTimer: return "speedrun_timer";
@@ -1434,7 +1436,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 36;
+	constexpr size_t QmModuleCount = 37;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
@@ -1459,25 +1461,26 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		{EQmModuleId::WeaponAnimation, EQmModuleColumn::Right, 1, "weapon_animation"},
 		{EQmModuleId::EntityOverlay, EQmModuleColumn::Right, 2, "entity_overlay"},
 		{EQmModuleId::Laser, EQmModuleColumn::Right, 3, "laser"},
-		{EQmModuleId::PlayerStats, EQmModuleColumn::Right, 4, "player_stats"},
-		{EQmModuleId::CollisionHitbox, EQmModuleColumn::Right, 5, "collision_hitbox"},
-		{EQmModuleId::FavoriteMaps, EQmModuleColumn::Right, 6, "favorite_maps"},
-		{EQmModuleId::HJAssist, EQmModuleColumn::Right, 7, "hj_assist"},
-		{EQmModuleId::SpeedrunTimer, EQmModuleColumn::Right, 8, "speedrun_timer"},
-		{EQmModuleId::DebugGraph, EQmModuleColumn::Right, 9, "debug_graph"},
-		{EQmModuleId::InputOverlay, EQmModuleColumn::Right, 10, "input_overlay"},
-		{EQmModuleId::HudNotifications, EQmModuleColumn::Right, 11, "hud_notifications"},
-		{EQmModuleId::Voice, EQmModuleColumn::Right, 12, "voice"},
-		{EQmModuleId::DummyMiniView, EQmModuleColumn::Right, 13, "dummy_miniview"},
-		{EQmModuleId::DynamicIsland, EQmModuleColumn::Right, 14, "dynamic_island"},
-		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 15, "system_media_controls"},
-		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 16, "lyrics"},
-		{EQmModuleId::Background3D, EQmModuleColumn::Right, 17, "background_3d"}}};
+		{EQmModuleId::NameplateText, EQmModuleColumn::Right, 4, "nameplate_text"},
+		{EQmModuleId::PlayerStats, EQmModuleColumn::Right, 5, "player_stats"},
+		{EQmModuleId::CollisionHitbox, EQmModuleColumn::Right, 6, "collision_hitbox"},
+		{EQmModuleId::FavoriteMaps, EQmModuleColumn::Right, 7, "favorite_maps"},
+		{EQmModuleId::HJAssist, EQmModuleColumn::Right, 8, "hj_assist"},
+		{EQmModuleId::SpeedrunTimer, EQmModuleColumn::Right, 9, "speedrun_timer"},
+		{EQmModuleId::DebugGraph, EQmModuleColumn::Right, 10, "debug_graph"},
+		{EQmModuleId::InputOverlay, EQmModuleColumn::Right, 11, "input_overlay"},
+		{EQmModuleId::HudNotifications, EQmModuleColumn::Right, 12, "hud_notifications"},
+		{EQmModuleId::Voice, EQmModuleColumn::Right, 13, "voice"},
+		{EQmModuleId::DummyMiniView, EQmModuleColumn::Right, 14, "dummy_miniview"},
+		{EQmModuleId::DynamicIsland, EQmModuleColumn::Right, 15, "dynamic_island"},
+		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 16, "system_media_controls"},
+		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 17, "lyrics"},
+		{EQmModuleId::Background3D, EQmModuleColumn::Right, 18, "background_3d"}}};
 
-	static constexpr std::array<EQmModuleId, 10> s_aQmVisualModules = {
+	static constexpr std::array<EQmModuleId, 11> s_aQmVisualModules = {
 		EQmModuleId::ChatBubble, EQmModuleId::CameraView, EQmModuleId::SkinTransition,
 		EQmModuleId::FocusMode, EQmModuleId::WeaponAnimation, EQmModuleId::Streamer, EQmModuleId::EntityOverlay,
-		EQmModuleId::Laser, EQmModuleId::CollisionHitbox, EQmModuleId::TranslateUi};
+		EQmModuleId::Laser, EQmModuleId::CollisionHitbox, EQmModuleId::NameplateText, EQmModuleId::TranslateUi};
 	static constexpr std::array<EQmModuleId, 13> s_aQmFunctionModules = {
 		EQmModuleId::GoresActor, EQmModuleId::Gores, EQmModuleId::KeyBinds,
 		EQmModuleId::MiniFeatures, EQmModuleId::JumpHint, EQmModuleId::WeaponTrajectory, EQmModuleId::FriendNotify,
@@ -2405,13 +2408,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		{
 		case EQmModuleId::ChatBubble: return "消息气泡 liaotian qipao chat bubble typing 预览 yulan 镜头缩放 suofang 持续时间 chixu 透明度 touming 字体大小 ziti 最大宽度 kuandu 垂直偏移 pianyi 圆角 yuanjiao";
 		case EQmModuleId::GoresActor: return "gores 演员 actor 掉水 diaoshui 自动发言 zidong fayan 表情 biaoqing 表情id emoticon 发送概率 gaolv";
-		case EQmModuleId::Gores: return "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用 快速输入 kuaisu shuru fast input 快速输入其他玩家";
+		case EQmModuleId::Gores: return "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang 自动切锤 zidong qiechui gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用 快速输入 kuaisu shuru fast input 快速输入其他玩家";
 		case EQmModuleId::FocusMode: return "禅模式 zhuanzhi moshi focus mode zen mode 隐藏 yincang hud 名字 mingzi 特效 texiao 计分板 jifenban 沉浸 chenjing 无干扰 wuganrao 聊天 liaotian chat 非必要UI";
 		case EQmModuleId::KeyBinds: return "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding 武器辅助线 fuzhuxian 异常断开 yichang duankai timeout disconnect";
 		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 自动管理 zidong guanli 进程优先级 jincheng youxianji 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
 		case EQmModuleId::JumpHint: return "位置跳跃提示 tiaoyue tishi jump hint position edge jump color yanse 颜色 horizontal position shuiping weizhi vertical position chuizhi weizhi font size ziti";
 		case EQmModuleId::SkinTransition:
-			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 强度 qiangdu easing 缓动 huandong 锤中偷皮 chuizhong toupi";
+			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 强度 qiangdu easing 缓动 huandong 锤中偷皮 chuizhong toupi 故障 guzhang glitch 抖动 doudong 弹性 tanxing elastic";
 		case EQmModuleId::WeaponTrajectory: return "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi";
 		case EQmModuleId::WeaponAnimation: return "武器动画 wuqi donghua weapon animation 切换武器动画 qiehuan wuqi donghua weapon switch animation 滑入 huaru 旋转 xuanzhuan";
 		case EQmModuleId::CameraView: return "镜头 jingtou camera drift 漂移 piaoyi dynamic fov 动态视野 dongtai shiye 纵横比 zonghengbi aspect ratio preset 预设 yushe 自定义 zidinyi 视野视角 shijiao";
@@ -3062,11 +3065,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				Hash = HashStringFnv1a64(Hash, Entry.m_pKey);
 				Hash = HashValueFnv1a64(Hash, IsQmModuleCollapsed(Entry.m_Id));
 				Hash = HashValueFnv1a64(Hash, GetQmModuleUsage(Entry.m_Id));
-				if(HasModuleSearch && !CompactLayout)
-				{
-					const float EstimatedHeight = GetQmModuleEstimatedHeight(&Entry);
-					Hash = HashValueFnv1a64(Hash, EstimatedHeight);
-				}
 			}
 			return Hash;
 		};
@@ -3559,12 +3557,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
 					DoQmSettingsLabel("qmclient-gores-axiom-dummy-password", &LabelCol, Localize("Axiom dummy password"), LgBodySize);
-					CUIRect DummyPasswordEditRect, DummyPasswordToggleRect;
-					ControlCol.VSplitRight(ControlCol.h, &DummyPasswordEditRect, &DummyPasswordToggleRect);
+					ControlCol.VSplitRight(ControlCol.h, &PasswordEditRect, &PasswordToggleRect);
 					static CLineInput s_AxiomDummyLoginPassword(g_Config.m_QmAxiomDummyLoginPassword, sizeof(g_Config.m_QmAxiomDummyLoginPassword));
 					s_AxiomDummyLoginPassword.SetHidden(!s_ShowAxiomDummyPassword);
-					Ui()->DoEditBox(&s_AxiomDummyLoginPassword, &DummyPasswordEditRect, LgBodySize);
-					if(DoPasswordToggleButton(&s_AxiomDummyPasswordToggleButton, s_ShowAxiomDummyPassword, DummyPasswordToggleRect))
+					Ui()->DoEditBox(&s_AxiomDummyLoginPassword, &PasswordEditRect, LgBodySize);
+					if(DoPasswordToggleButton(&s_AxiomDummyPasswordToggleButton, s_ShowAxiomDummyPassword, PasswordToggleRect))
 						s_ShowAxiomDummyPassword = !s_ShowAxiomDummyPassword;
 					CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
 				}
@@ -3575,6 +3572,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				if(g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable)
 				{
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					DoQmSettingsCheckbox(&g_Config.m_QmGoresAutoWeaponSwitch, "qmclient-gores-auto-weapon-switch", Localize("Auto weapon switch"), &g_Config.m_QmGoresAutoWeaponSwitch, &Row, LgLineHeight);
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					DoQmSettingsCheckbox(&g_Config.m_QmGoresFastInput, "qmclient-gores-fast-input", Localize("Auto-toggle fast input"), &g_Config.m_QmGoresFastInput, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -3850,10 +3850,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					DoQmSettingsCheckboxAuto(&g_Config.m_QmSayNoPop, "Hide input emoticon", Localize("Hide input emoticon"), &g_Config.m_QmSayNoPop, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmRainbowName, "Rainbow name", Localize("Rainbow name"), &g_Config.m_QmRainbowName, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
@@ -3979,6 +3975,71 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmHammerSwapSkin, "Hammer skin steal", Localize("Hammer skin steal"), &g_Config.m_QmHammerSwapSkin, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
+				auto RenderSkinQueueRotationRow = [&](CUIRect &PanelContent, const char *pLabel, const char *pTextIdPrefix, int *pEnabled, int *pInterval, int InputIndex) {
+					CUIRect QueueRow, LabelColValue, EnabledCol, IntervalCol, IntervalInput, IntervalUnit;
+					PanelContent.HSplitTop(LgLineHeight, &QueueRow, &PanelContent);
+					QueueRow.VSplitLeft(std::clamp(58.0f * UiScale, 48.0f, 68.0f), &LabelColValue, &QueueRow);
+					QueueRow.VSplitLeft(std::clamp(82.0f * UiScale, 68.0f, 92.0f), &EnabledCol, &IntervalCol);
+					DoQmSettingsLabel(pTextIdPrefix, &LabelColValue, pLabel, LgBodySize);
+					CUIRect EnabledCheckBox = EnabledCol;
+					EnabledCheckBox.HMargin(std::clamp(1.0f * UiScale, 0.0f, 2.0f), &EnabledCheckBox);
+					EnabledCheckBox.VMargin(maximum(0.0f, (EnabledCheckBox.w - EnabledCheckBox.h) * 0.5f), &EnabledCheckBox);
+					if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pEnabled, nullptr, "", *pEnabled, &EnabledCheckBox))
+					{
+						*pEnabled ^= 1;
+					}
+					IntervalCol.VSplitRight(std::clamp(20.0f * UiScale, 18.0f, 24.0f), &IntervalInput, &IntervalUnit);
+					IntervalInput.VMargin(1.0f, &IntervalInput);
+					static CLineInputNumber s_aQmSkinQueueIntervalInputs[NUM_DUMMIES];
+					CLineInputNumber &QueueIntervalInput = s_aQmSkinQueueIntervalInputs[InputIndex];
+					const int PrevInterval = *pInterval;
+					if(!QueueIntervalInput.IsActive() && str_comp(QueueIntervalInput.GetString(), std::to_string(*pInterval).c_str()) != 0)
+					{
+						QueueIntervalInput.SetInteger(*pInterval);
+						QueueIntervalInput.SelectAll();
+					}
+					const bool QueueIntervalEdited = Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput, LgBodySize, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC);
+					if(QueueIntervalInput.IsActive())
+					{
+						(void)QueueIntervalEdited;
+					}
+					else
+					{
+						if(QueueIntervalInput.GetLength() > 0 && (QueueIntervalEdited || PrevInterval != *pInterval || QueueIntervalInput.GetInteger() != *pInterval))
+						{
+							*pInterval = maximum(QueueIntervalInput.GetInteger(), 1);
+						}
+						QueueIntervalInput.SetInteger(*pInterval);
+						QueueIntervalInput.SelectAll();
+					}
+					Ui()->DoLabel(&IntervalUnit, "ms", LgBodySize * 0.88f, TEXTALIGN_MC);
+				};
+
+				const float SkinQueuePanelHeight = LgLineHeight * 3.0f + LgLineSpacing * 2.0f + LgCardPadding * 1.15f;
+				CUIRect SkinQueuePanel;
+				CardContent.HSplitTop(SkinQueuePanelHeight, &SkinQueuePanel, &CardContent);
+				SkinQueuePanel.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, LgCornerRadius * 0.8f);
+				CUIRect SkinQueuePanelContent = SkinQueuePanel;
+				SkinQueuePanelContent.Margin(std::clamp(7.0f * UiScale, 5.0f, 8.0f), &SkinQueuePanelContent);
+				CUIRect SkinQueuePanelHeader, PanelTitle, EnabledHeading, IntervalHeading;
+				SkinQueuePanelContent.HSplitTop(LgLineHeight, &SkinQueuePanelHeader, &SkinQueuePanelContent);
+				SkinQueuePanelHeader.VSplitLeft(std::clamp(58.0f * UiScale, 48.0f, 68.0f), &PanelTitle, &SkinQueuePanelHeader);
+				SkinQueuePanelHeader.VSplitLeft(std::clamp(82.0f * UiScale, 68.0f, 92.0f), &EnabledHeading, &IntervalHeading);
+				SLabelProperties SkinQueueColumnLabelProps;
+				SkinQueueColumnLabelProps.m_MaxWidth = EnabledHeading.w;
+				SkinQueueColumnLabelProps.m_DisallowNewline = true;
+				SkinQueueColumnLabelProps.m_StopAtEnd = true;
+				SkinQueueColumnLabelProps.m_MinimumFontSize = 6.0f;
+				DoQmSettingsLabel("qmclient-skin-queue-panel-title", &PanelTitle, Localize("Skin queue"), LgBodySize);
+				DoQmSettingsLabel("qmclient-skin-queue-enabled-heading", &EnabledHeading, Localize("Enabled"), LgBodySize * 0.86f, TEXTALIGN_MC, SkinQueueColumnLabelProps);
+				SkinQueueColumnLabelProps.m_MaxWidth = IntervalHeading.w;
+				DoQmSettingsLabel("qmclient-skin-queue-interval-heading", &IntervalHeading, Localize("Switch interval"), LgBodySize * 0.86f, TEXTALIGN_MC, SkinQueueColumnLabelProps);
+				SkinQueuePanelContent.HSplitTop(LgLineSpacing, nullptr, &SkinQueuePanelContent);
+				RenderSkinQueueRotationRow(SkinQueuePanelContent, Localize("Player"), "qmclient-skin-queue-player", &g_Config.m_QmSkinQueueEnabled, &g_Config.m_QmSkinQueueInterval, 0);
+				SkinQueuePanelContent.HSplitTop(LgLineSpacing, nullptr, &SkinQueuePanelContent);
+				RenderSkinQueueRotationRow(SkinQueuePanelContent, Localize("Dummy"), "qmclient-skin-queue-dummy", &g_Config.m_QmDummySkinQueueEnabled, &g_Config.m_QmDummySkinQueueInterval, 1);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmEmoticonShadow, "Emoticon shadow", Localize("Emoticon shadow"), &g_Config.m_QmEmoticonShadow, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -4004,6 +4065,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 							Localize("Slide left"),
 							Localize("Spin pop"),
 							Localize("Brightness shift"),
+							Localize("Glitch"),
+							Localize("Elastic"),
 						};
 						static CUi::SDropDownState s_SkinTransitionDropDownState;
 						static CScrollRegion s_SkinTransitionDropDownScrollRegion;
@@ -4011,6 +4074,23 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						const int TransitionTypeSelectedNew = Ui()->DoDropDown(&ControlColValue, g_Config.m_QmSkinChangeTransitionType, apSkinTransitionDropDownNames, std::size(apSkinTransitionDropDownNames), s_SkinTransitionDropDownState);
 						if(g_Config.m_QmSkinChangeTransitionType != TransitionTypeSelectedNew)
 							g_Config.m_QmSkinChangeTransitionType = TransitionTypeSelectedNew;
+					}
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					{
+						CUIRect LabelColValue, ControlColValue;
+						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+						DoQmSettingsLabel("qmclient-skin-transition-range", &LabelColValue, Localize("Animation range"), LgBodySize);
+						static std::vector<const char *> s_SkinTransitionScopeDropDownNames;
+						s_SkinTransitionScopeDropDownNames = {Localize("Self only"), Localize("Local"), Localize("All players")};
+						static CUi::SDropDownState s_SkinTransitionScopeDropDownState;
+						static CScrollRegion s_SkinTransitionScopeDropDownScrollRegion;
+						s_SkinTransitionScopeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_SkinTransitionScopeDropDownScrollRegion;
+						const int SkinTransitionScope = std::clamp(g_Config.m_QmSkinChangeTransitionScope, 0, 2);
+						const int SkinTransitionScopeNew = Ui()->DoDropDown(&ControlColValue, SkinTransitionScope, s_SkinTransitionScopeDropDownNames.data(), s_SkinTransitionScopeDropDownNames.size(), s_SkinTransitionScopeDropDownState);
+						if(g_Config.m_QmSkinChangeTransitionScope != SkinTransitionScopeNew)
+							g_Config.m_QmSkinChangeTransitionScope = SkinTransitionScopeNew;
 					}
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
@@ -4172,6 +4252,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendOnlineAutoRefresh, "Auto refresh server list", Localize("Auto refresh server list"), &g_Config.m_QmFriendOnlineAutoRefresh, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-friend-auto-follow-delay", &LabelCol, Localize("Auto-follow delay"), LgBodySize);
+				static int s_QmFriendAutoFollowDelayInputId;
+				RenderSliderWithValueInput(&s_QmFriendAutoFollowDelayInputId, ControlCol, &g_Config.m_QmFriendAutoFollowDelay, 0, 30, "s");
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				if(g_Config.m_QmFriendOnlineAutoRefresh)
@@ -5882,6 +5969,140 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					RenderSliderWithValueInput(&s_QmHitboxAlphaInputId, ControlCol, &g_Config.m_QmHitboxAlpha, 0, 100, "%");
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
+
+				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+				Column.y = CardContent.y;
+				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+				HandleModuleDragState(pModule, s_GlassCards.back());
+			}
+			break;
+			case EQmModuleId::NameplateText:
+			{
+				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
+				CUIRect CardNameplateText = Column;
+				s_GlassCards.push_back(CardNameplateText);
+
+				Column.HSplitTop(LgCardPadding, nullptr, &Column);
+				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
+				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
+				RenderQmModuleHeadline(CardContent, 8, Localize("Nameplate text"), Localize("Customize name and clan text effects"));
+
+				auto RenderTextEffectToggle = [&](int Effect, const char *pTextId, const char *pText) {
+					int Enabled = (g_Config.m_QmNameplateTextEffects & Effect) != 0 ? 1 : 0;
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					if(DoQmSettingsCheckboxAuto(pTextId, pTextId, pText, &Enabled, &Row, LgLineHeight))
+					{
+						if(Enabled != 0)
+							g_Config.m_QmNameplateTextEffects |= Effect;
+						else
+							g_Config.m_QmNameplateTextEffects &= ~Effect;
+					}
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				};
+
+				RenderTextEffectToggle(QM_TEXT_EFFECT_BORDER, "Nameplate text border", Localize("Border"));
+				RenderTextEffectToggle(QM_TEXT_EFFECT_GRADIENT, "Nameplate text gradient", Localize("Gradient"));
+				RenderTextEffectToggle(QM_TEXT_EFFECT_RAINBOW, "Nameplate text rainbow", Localize("Rainbow"));
+				RenderTextEffectToggle(QM_TEXT_EFFECT_GLOW, "Nameplate text glow", Localize("Glow"));
+
+				auto RenderNameplateTextDropDown = [&](const char *pTextId, const char *pLabel, int *pValue, int Min, int Max, std::vector<const char *> &vNames, CUi::SDropDownState &State, CScrollRegion &ScrollRegion) {
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+					DoQmSettingsLabel(pTextId, &LabelCol, pLabel, LgBodySize);
+					State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;
+					const int Current = std::clamp(*pValue, Min, Max);
+					const int SelectedNew = Ui()->DoDropDown(&ControlCol, Current - Min, vNames.data(), (int)vNames.size(), State) + Min;
+					if(*pValue != SelectedNew)
+						*pValue = SelectedNew;
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				};
+
+				static std::vector<const char *> s_NameplateTextPlayingDropDownNames;
+				s_NameplateTextPlayingDropDownNames = {Localize("Off"), Localize("Self only"), Localize("Others only"), Localize("Friends only"), Localize("Self and friends"), Localize("All players")};
+				static CUi::SDropDownState s_NameplateTextPlayingDropDownState;
+				static CScrollRegion s_NameplateTextPlayingDropDownScrollRegion;
+				RenderNameplateTextDropDown("qmclient-nameplate-text-playing-effects", Localize("Playing effects"), &g_Config.m_QmNameplateTextPlayingScope, 0, 5, s_NameplateTextPlayingDropDownNames, s_NameplateTextPlayingDropDownState, s_NameplateTextPlayingDropDownScrollRegion);
+
+				static std::vector<const char *> s_NameplateTextSpectateDropDownNames;
+				s_NameplateTextSpectateDropDownNames = {Localize("Off"), Localize("Spectated player"), Localize("Others only"), Localize("Friends only"), Localize("Spectated player and friends"), Localize("All players")};
+				static CUi::SDropDownState s_NameplateTextSpectateDropDownState;
+				static CScrollRegion s_NameplateTextSpectateDropDownScrollRegion;
+				RenderNameplateTextDropDown("qmclient-nameplate-text-spectate-effects", Localize("Spectate effects"), &g_Config.m_QmNameplateTextSpectateScope, 0, 5, s_NameplateTextSpectateDropDownNames, s_NameplateTextSpectateDropDownState, s_NameplateTextSpectateDropDownScrollRegion);
+
+				static std::vector<const char *> s_NameplateTextDemoDropDownNames;
+				s_NameplateTextDemoDropDownNames = {Localize("Off"), Localize("Smart"), Localize("Manual target"), Localize("Manual scope")};
+				static CUi::SDropDownState s_NameplateTextDemoDropDownState;
+				static CScrollRegion s_NameplateTextDemoDropDownScrollRegion;
+				RenderNameplateTextDropDown("qmclient-nameplate-text-demo-effects", Localize("Demo effects"), &g_Config.m_QmNameplateTextDemoMode, 0, 3, s_NameplateTextDemoDropDownNames, s_NameplateTextDemoDropDownState, s_NameplateTextDemoDropDownScrollRegion);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-nameplate-text-demo-target", &LabelCol, Localize("Demo target"), LgBodySize);
+				static std::vector<std::string> s_NameplateTextDemoTargetDropDownStorage;
+				static std::vector<const char *> s_NameplateTextDemoTargetDropDownNames;
+				s_NameplateTextDemoTargetDropDownStorage.clear();
+				s_NameplateTextDemoTargetDropDownNames.clear();
+				s_NameplateTextDemoTargetDropDownStorage.emplace_back(Localize("None"));
+				bool DemoTargetListed = g_Config.m_QmNameplateTextDemoTarget < 0;
+				for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+				{
+					if(!GameClient()->m_Snap.m_apPlayerInfos[ClientId])
+						continue;
+					char aBuf[128];
+					str_format(aBuf, sizeof(aBuf), "%d: %s", ClientId, GameClient()->m_aClients[ClientId].m_aName);
+					s_NameplateTextDemoTargetDropDownStorage.emplace_back(aBuf);
+					if(ClientId == g_Config.m_QmNameplateTextDemoTarget)
+						DemoTargetListed = true;
+				}
+				if(!DemoTargetListed)
+				{
+					char aBuf[128];
+					str_format(aBuf, sizeof(aBuf), "%d: -", g_Config.m_QmNameplateTextDemoTarget);
+					s_NameplateTextDemoTargetDropDownStorage.emplace_back(aBuf);
+				}
+				for(const std::string &Name : s_NameplateTextDemoTargetDropDownStorage)
+					s_NameplateTextDemoTargetDropDownNames.push_back(Name.c_str());
+				static CUi::SDropDownState s_NameplateTextDemoTargetDropDownState;
+				static CScrollRegion s_NameplateTextDemoTargetDropDownScrollRegion;
+				s_NameplateTextDemoTargetDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_NameplateTextDemoTargetDropDownScrollRegion;
+				int DemoTargetSelection = 0;
+				for(size_t i = 1; i < s_NameplateTextDemoTargetDropDownStorage.size(); ++i)
+				{
+					int ClientId = -1;
+					if(sscanf(s_NameplateTextDemoTargetDropDownStorage[i].c_str(), "%d:", &ClientId) == 1 && ClientId == g_Config.m_QmNameplateTextDemoTarget)
+					{
+						DemoTargetSelection = (int)i;
+						break;
+					}
+				}
+				const int DemoTargetNew = Ui()->DoDropDown(&ControlCol, DemoTargetSelection, s_NameplateTextDemoTargetDropDownNames.data(), (int)s_NameplateTextDemoTargetDropDownNames.size(), s_NameplateTextDemoTargetDropDownState);
+				if(DemoTargetNew == 0)
+					g_Config.m_QmNameplateTextDemoTarget = DemoTargetNew - 1;
+				else
+					sscanf(s_NameplateTextDemoTargetDropDownStorage[DemoTargetNew].c_str(), "%d:", &g_Config.m_QmNameplateTextDemoTarget);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-nameplate-text-border-range", &LabelCol, Localize("Border range"), LgBodySize);
+				static int s_NameplateTextBorderRangeInputId;
+				RenderSliderWithValueInput(&s_NameplateTextBorderRangeInputId, ControlCol, &g_Config.m_QmNameplateTextBorderRange, 1, 4);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-nameplate-text-glow-range", &LabelCol, Localize("Glow range"), LgBodySize);
+				static int s_NameplateTextGlowRangeInputId;
+				RenderSliderWithValueInput(&s_NameplateTextGlowRangeInputId, ControlCol, &g_Config.m_QmNameplateTextGlowRange, 0, 12);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				static CButtonContainer s_NameplateTextBorderColorId;
+				DoLine_ColorPicker(&s_NameplateTextBorderColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Border color"), &g_Config.m_QmNameplateTextBorderColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), false, nullptr, true);
+				static CButtonContainer s_NameplateTextGradientColorId;
+				DoLine_ColorPicker(&s_NameplateTextGradientColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Gradient color"), &g_Config.m_QmNameplateTextGradientColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+				static CButtonContainer s_NameplateTextGlowColorId;
+				DoLine_ColorPicker(&s_NameplateTextGlowColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Glow color"), &g_Config.m_QmNameplateTextGlowColor, ColorRGBA(0.30f, 0.78f, 1.0f, 0.40f), false, nullptr, true);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;

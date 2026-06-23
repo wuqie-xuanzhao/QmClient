@@ -823,6 +823,12 @@ Auto unmute when speaking
 Auto unspec on unfreeze
 == Quitter automatiquement les spectateurs lors du dégel
 
+Auto weapon switch
+== Changement d'arme automatique
+
+Auto-follow delay
+== Délai de suivi automatique
+
 Auto-sync player camera
 == Synchronisation automatique de la caméra du joueur
 
@@ -972,6 +978,15 @@ Blue team wins!
 
 Body
 == Corps
+
+Border
+== Border
+
+Border color
+== Border color
+
+Border range
+== Border range
 
 Both
 == Les deux
@@ -1636,6 +1651,9 @@ Custom Font:
 Custom prompt template
 == Modèle d'invite personnalisé
 
+Customize name and clan text effects
+== Customize name and clan text effects
+
 Customize translate button and menu colors
 == Personnaliser les couleurs du bouton de traduction et du menu
 
@@ -1825,8 +1843,14 @@ Delete this preset
 Demo
 == Démo
 
+Demo effects
+== Demo effects
+
 Demo marker added
 == Marqueur de démo ajouté
+
+Demo target
+== Demo target
 
 Demofile: %s
 == Fichier démo : %s
@@ -2185,6 +2209,9 @@ Edit touch controls
 Editor
 == Éditeur
 
+Elastic
+== Élastique
+
 Elastic back
 == Rebond élastique
 
@@ -2284,6 +2311,9 @@ Enable replays
 Enable server message sound
 == Activer le son des messages du serveur
 
+Enable skin queue rotation
+== Activer la rotation de la file d'attente des skins
+
 Enable speedrun timer
 == Activer le chronomètre de speedrun
 
@@ -2313,6 +2343,9 @@ Enable word filter list
 
 Enable Zen mode
 == Activer le mode Zen
+
+Enabled
+== Activé
 
 Enables/disables active moderator mode for the player
 == Active/désactive le mode modérateur actif pour le joueur
@@ -2713,6 +2746,9 @@ Friend online and join notifications
 Friends
 == Amis
 
+Friends only
+== Friends only
+
 Frozen Margin
 == Marge de gel
 
@@ -2833,17 +2869,29 @@ Gives you endless hook
 Gives you infinite jump
 == Vous donne un saut infini
 
+Glitch
+== Glitch
+
 Global toggle key
 == Touche de bascule globale
 
+Glow
+== Glow
+
 Glow alpha
 == Alpha de la lueur
+
+Glow color
+== Glow color
 
 Glow intensity
 == Intensité de la lueur
 
 Glow offset
 == Décalage de la lueur
+
+Glow range
+== Glow range
 
 Go back one marker
 == Reculer d'un marqueur
@@ -2881,11 +2929,20 @@ Gores 模式下启用快速输入
 Gores 模式下对其他玩家也启用快速输入
 == Activer la saisie rapide pour les autres joueurs en mode Gores
 
+Gores 模式下自动锤枪切换
+== Changement automatique marteau/fusil en mode Gores
+
 Gores 模式下隐藏辅助线
 == Masquer les lignes d'aide en mode Gores
 
 Grabs
 == Prises
+
+Gradient
+== Gradient
+
+Gradient color
+== Gradient color
 
 Graphics
 == Graphismes
@@ -3066,6 +3123,9 @@ Hook line tip
 
 Hook Strength
 == Force du crochet
+
+Hook strength scope
+== Hook strength scope
 
 Hooking L/R: %.0f%%/%.0f%%
 == Accrochage G/D : %.0f%%/%.0f%%
@@ -3757,8 +3817,14 @@ Manual
 Manual concurrency: %d
 == Concurrence manuelle : %d
 
+Manual scope
+== Manual scope
+
 Manual source file
 == Fichier source manuel
+
+Manual target
+== Manual target
 
 Map
 == Carte
@@ -4029,6 +4095,9 @@ Name:
 
 Name: %s
 == Nom : %s
+
+Nameplate text
+== Nameplate text
 
 Native scale (1.0)
 == Échelle native (1.0)
@@ -4459,6 +4528,12 @@ Option color
 Other
 == Autre
 
+Others
+== Others
+
+Others only
+== Others only
+
 Outgoing language
 == Langue sortante
 
@@ -4698,6 +4773,9 @@ Players can't collide on this server
 
 Players can't hook each other on this server
 == Les joueurs ne peuvent pas se grappiner mutuellement sur ce serveur
+
+Playing effects
+== Playing effects
 
 Please add a valid cut first
 == Veuillez d'abord ajouter une coupe valide
@@ -5019,9 +5097,6 @@ Rainbow
 
 Rainbow hook
 == Crochet arc-en-ciel
-
-Rainbow name
-== Nom arc-en-ciel
 
 Rainbow others
 == Arc-en-ciel pour tout le monde !
@@ -5785,6 +5860,9 @@ Selection
 Self
 == Soi
 
+Self and friends
+== Self and friends
+
 Self only
 == Soi-même uniquement
 
@@ -6529,6 +6607,9 @@ Slow down the demo
 Smaller tees
 == Tees plus petits
 
+Smart
+== Smart
+
 Smooth Dynamic Camera
 == Caméra dynamique lisse
 
@@ -6598,6 +6679,9 @@ Spectate
 Spectate a player by Id
 == Regarder un joueur par son ID
 
+Spectate effects
+== Spectate effects
+
 Spectate mode
 == Mode spectateur
 
@@ -6618,6 +6702,12 @@ Spectate the next player
 
 Spectate the previous player
 == Regarder le joueur précédent
+
+Spectated player
+== Spectated player
+
+Spectated player and friends
+== Spectated player and friends
 
 Spectators
 == Spectateurs
@@ -6750,6 +6840,12 @@ Strict mode
 
 Stroke fade time
 == Temps de fondu du trait
+
+Strong hook
+== Strong hook
+
+Strong hook color
+== Strong hook color
 
 Strong Weak Hook
 == Crochet fort/faible
@@ -7882,6 +7978,12 @@ Warmup
 Warning
 == Avertissement
 
+Weak hook
+== Weak hook
+
+Weak hook color
+== Weak hook color
+
 Weapon
 == Arme
 
@@ -8386,8 +8488,8 @@ Zoom out
 出站翻译目标语言代码
 == Code de la langue cible pour la traduction sortante
 
-分身皮肤队列切换间隔（0.1 秒）
-== Intervalle de changement de la file d'attente des skins du Dummy (0.1 seconde)
+分身皮肤队列切换间隔（毫秒）
+== Intervalle de changement de la file d'attente des skins du Dummy (ms)
 
 分身皮肤队列当前位置
 == Position actuelle dans la file d'attente des skins du Dummy
@@ -8455,11 +8557,20 @@ Zoom out
 名字板坐标行 Y 偏移
 == Décalage Y de la ligne de coordonnées du nametag
 
+名字板弱钩图标颜色
+== 名字板弱钩图标颜色
+
 名字板强弱行 X 偏移
 == Décalage X de la ligne de force du nametag
 
 名字板强弱行 Y 偏移
 == Décalage Y de la ligne de force du nametag
+
+名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
+
+名字板强钩图标颜色
+== 名字板强钩图标颜色
 
 名字板战队行 X 偏移
 == Décalage X de la ligne de clan du nametag
@@ -8472,6 +8583,36 @@ Zoom out
 
 名字板按键行 Y 偏移
 == Décalage Y de la ligne de touches du nametag
+
+名字板文本光晕范围
+== 名字板文本光晕范围
+
+名字板文本光晕颜色
+== 名字板文本光晕颜色
+
+名字板文本效果 Demo 手动目标 Client ID（-1=无）
+== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
+
+名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+
+名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
+
+名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
+
+名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
+
+名字板文本渐变颜色
+== 名字板文本渐变颜色
+
+名字板文本边框范围
+== 名字板文本边框范围
+
+名字板文本边框颜色
+== 名字板文本边框颜色
 
 名字板昵称行 X 偏移
 == Décalage X de la ligne de pseudo du nametag
@@ -8506,7 +8647,7 @@ Zoom out
 启动和菜单空闲时预热设置页
 == Précharger la page des paramètres au démarrage et lorsque le menu est inactif
 
-启用 Gores 锤枪自动切换
+启用 Gores 模式（King of Gores 辅助工具集合）
 == Activer le changement automatique Gores marteau/fusil
 
 启用 LLM 思考模式（可能增加响应时间）
@@ -8526,6 +8667,9 @@ Zoom out
 
 启用关键词回复
 == Activer les réponses par mots-clés
+
+启用分身皮肤队列轮换
+== Activer la rotation de la file d'attente des skins du Dummy
 
 启用动态视野，移动越快视野越宽
 == Activer le champ de vision dynamique, plus la vitesse est élevée, plus le champ est large
@@ -8551,6 +8695,9 @@ Zoom out
 启用皮肤切换动画
 == Activer l'animation de changement de skin
 
+启用皮肤队列轮换
+== Activer la rotation de la file d'attente des skins
+
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
 == Activer l'effet de dérive de la caméra, créant un léger traînage selon la vitesse de déplacement
 
@@ -8574,9 +8721,6 @@ Zoom out
 
 启用背景 3D 粒子闪烁
 == Activer le scintillement des particules 3D d'arrière-plan
-
-启用自己名字的彩虹色渲染
-== Activer le rendu arc-en-ciel de son propre nom
 
 启用语音滤波（高通/压缩/限幅）
 == Activer le filtrage vocal (passe-haut/compression/limiteur)
@@ -8929,14 +9073,17 @@ Zoom out
 皮肤切换动画持续时间（毫秒，0=无动画）
 == Durée de l'animation de changement de skin (ms, 0=Pas d'animation)
 
-皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换）
-== Type d'animation de changement de skin (0=Apparition avec traînée 1=Fondu doux 2=Glissement vers la gauche 3=Rotation avec apparition 4=Alternance clair/foncé)
+皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
+== Type d'animation de changement de skin (0=Apparition avec traînée 1=Fondu doux 2=Glissement vers la gauche 3=Rotation avec apparition 4=Alternance clair/foncé 5=Glitch 6=Élastique)
 
 皮肤切换动画缓动模式
 == Mode d'assouplissement de l'animation de changement de skin
 
-皮肤队列切换间隔（0.1 秒）
-== Intervalle de changement dans la file d'attente des skins (0.1 s)
+皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+== Portée de l'animation de changement de skin : 0=Soi-même 1=Local+Dummy 2=Tous les joueurs
+
+皮肤队列切换间隔（毫秒）
+== Intervalle de changement dans la file d'attente des skins (ms)
 
 皮肤队列当前位置
 == Position actuelle dans la file d'attente des skins

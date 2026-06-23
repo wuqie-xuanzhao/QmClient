@@ -1,11 +1,16 @@
 #ifndef GAME_CLIENT_COMPONENTS_SECTION_LOADER_H
 #define GAME_CLIENT_COMPONENTS_SECTION_LOADER_H
 
+#include <base/math.h>
+
 #include <game/client/components/settings_runtime_cache.h>
 #include <game/client/ui_rect.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <string>
+#include <utility>
 #include <vector>
 
 enum class ESettingsSectionState : uint8_t
@@ -15,6 +20,206 @@ enum class ESettingsSectionState : uint8_t
 	COMPACT,
 	FULL,
 };
+
+enum class ESettingsCardDeckColumn : uint8_t
+{
+	LEFT,
+	RIGHT,
+};
+
+enum class ESettingsCardDragHitRegion : uint8_t
+{
+	NONE,
+	CHROME,
+	CONTENT,
+};
+
+struct SSettingsCardDeckItem
+{
+	const char *m_pStableId = nullptr;
+	const char *m_pSectionName = nullptr;
+	ESettingsCardDeckColumn m_Column = ESettingsCardDeckColumn::LEFT;
+	int m_Order = -1;
+	float m_CachedHeight = 0.0f;
+	CUIRect m_Rect;
+	CUIRect m_HeaderRect;
+};
+
+struct SSettingsCardDeckDragState
+{
+	bool m_Active = false;
+	bool m_PressPending = false;
+	SSettingsCardDeckItem m_Item;
+	SSettingsCardDeckItem m_PressedItem;
+	float m_PlaceholderHeight = 0.0f;
+	int m_DropIndex = -1;
+};
+
+struct SSettingsCardDeckDragStartInput
+{
+	const SSettingsCardDeckItem *m_pItem = nullptr;
+	bool m_CtrlPressed = false;
+	ESettingsCardDragHitRegion m_HitRegion = ESettingsCardDragHitRegion::NONE;
+};
+
+inline bool SettingsCardDeckCanStartDrag(const SSettingsCardDeckDragStartInput &Input)
+{
+	return Input.m_CtrlPressed &&
+	       Input.m_HitRegion == ESettingsCardDragHitRegion::CHROME &&
+	       Input.m_pItem != nullptr &&
+	       Input.m_pItem->m_pStableId != nullptr &&
+	       Input.m_pItem->m_pStableId[0] != '\0';
+}
+
+inline bool SettingsCardDeckSameStableId(const SSettingsCardDeckItem &A, const SSettingsCardDeckItem &B)
+{
+	return A.m_pStableId != nullptr &&
+	       B.m_pStableId != nullptr &&
+	       A.m_pStableId == std::string(B.m_pStableId);
+}
+
+inline void SettingsCardDeckBeginPress(SSettingsCardDeckDragState &DragState, const SSettingsCardDeckItem &Item)
+{
+	DragState.m_PressPending = true;
+	DragState.m_PressedItem = Item;
+}
+
+inline bool SettingsCardDeckTryPromotePress(SSettingsCardDeckDragState &DragState)
+{
+	if(!DragState.m_PressPending || DragState.m_Active)
+		return false;
+	DragState.m_Active = true;
+	DragState.m_Item = DragState.m_PressedItem;
+	DragState.m_PlaceholderHeight = DragState.m_PressedItem.m_CachedHeight;
+	DragState.m_DropIndex = DragState.m_PressedItem.m_Order;
+	DragState.m_PressPending = false;
+	DragState.m_PressedItem = {};
+	return true;
+}
+
+inline void SettingsCardDeckClearPress(SSettingsCardDeckDragState &DragState)
+{
+	DragState.m_PressPending = false;
+	DragState.m_PressedItem = {};
+}
+
+inline bool SettingsCardDeckMoveWithinColumn(std::vector<std::string> &vOrder, const char *pStableId, int DropIndex)
+{
+	if(pStableId == nullptr || pStableId[0] == '\0')
+		return false;
+
+	auto It = std::find(vOrder.begin(), vOrder.end(), pStableId);
+	if(It == vOrder.end())
+		return false;
+
+	const std::string StableId = *It;
+	const int OldIndex = (int)std::distance(vOrder.begin(), It);
+	vOrder.erase(It);
+	if(DropIndex > OldIndex)
+		--DropIndex;
+	if(DropIndex < 0)
+		DropIndex = 0;
+	if(DropIndex > (int)vOrder.size())
+		DropIndex = (int)vOrder.size();
+	vOrder.insert(vOrder.begin() + DropIndex, StableId);
+	return true;
+}
+
+inline int SettingsCardDeckDropIndexForHoveredItem(const SSettingsCardDeckItem &Item, float MouseY)
+{
+	const float MidY = Item.m_Rect.y + Item.m_Rect.h * 0.5f;
+	return MouseY > MidY ? Item.m_Order + 1 : Item.m_Order;
+}
+
+inline int SettingsCardDeckDropIndexForColumnItems(const std::vector<SSettingsCardDeckItem> &vItems, ESettingsCardDeckColumn Column, float MouseX, float MouseY, int FallbackDropIndex)
+{
+	std::vector<SSettingsCardDeckItem> vColumnItems;
+	for(const SSettingsCardDeckItem &Item : vItems)
+	{
+		if(Item.m_Column == Column)
+			vColumnItems.push_back(Item);
+	}
+	if(vColumnItems.empty())
+		return FallbackDropIndex;
+
+	float ColumnLeft = vColumnItems.front().m_Rect.x;
+	float ColumnRight = vColumnItems.front().m_Rect.x + vColumnItems.front().m_Rect.w;
+	for(const SSettingsCardDeckItem &Item : vColumnItems)
+	{
+		ColumnLeft = minimum(ColumnLeft, Item.m_Rect.x);
+		ColumnRight = maximum(ColumnRight, Item.m_Rect.x + Item.m_Rect.w);
+	}
+	if(MouseX < ColumnLeft || MouseX > ColumnRight)
+		return FallbackDropIndex;
+
+	std::sort(vColumnItems.begin(), vColumnItems.end(), [](const SSettingsCardDeckItem &A, const SSettingsCardDeckItem &B) {
+		return A.m_Rect.y < B.m_Rect.y;
+	});
+	for(const SSettingsCardDeckItem &Item : vColumnItems)
+	{
+		const float MidY = Item.m_Rect.y + Item.m_Rect.h * 0.5f;
+		if(MouseY <= MidY)
+			return Item.m_Order;
+		if(MouseY <= Item.m_Rect.y + Item.m_Rect.h)
+			return Item.m_Order + 1;
+	}
+	return vColumnItems.back().m_Order + 1;
+}
+
+inline bool SettingsCardDeckIsDraggingItem(const SSettingsCardDeckDragState &DragState, const SSettingsCardDeckItem &Item)
+{
+	return DragState.m_Active && SettingsCardDeckSameStableId(DragState.m_Item, Item);
+}
+
+inline CUIRect SettingsCardDeckDropIndicatorRect(const SSettingsCardDeckItem &Item, int DropIndex, float Thickness)
+{
+	const float IndicatorY = DropIndex <= Item.m_Order ? Item.m_Rect.y : Item.m_Rect.y + Item.m_Rect.h;
+	return {Item.m_Rect.x, IndicatorY - Thickness * 0.5f, Item.m_Rect.w, Thickness};
+}
+
+inline CUIRect SettingsCardDeckProxyRect(const SSettingsCardDeckItem &Item, float MouseX, float MouseY)
+{
+	return {MouseX - Item.m_Rect.w * 0.5f, MouseY - Item.m_Rect.h * 0.5f, Item.m_Rect.w, Item.m_Rect.h};
+}
+
+inline float SettingsCardDeckAutoScrollDelta(float MouseY, float ViewTop, float ViewBottom, float EdgeBand, float MaxDelta)
+{
+	if(EdgeBand <= 0.0f || MaxDelta <= 0.0f || ViewBottom <= ViewTop)
+		return 0.0f;
+	if(MouseY < ViewTop + EdgeBand)
+		return -MaxDelta * ((ViewTop + EdgeBand - MouseY) / EdgeBand);
+	if(MouseY > ViewBottom - EdgeBand)
+		return MaxDelta * ((MouseY - (ViewBottom - EdgeBand)) / EdgeBand);
+	return 0.0f;
+}
+
+struct SSecondaryPanelSpec
+{
+	float m_AnchorX = 0.0f;
+	float m_AnchorY = 0.0f;
+	float m_PreferredWidth = 0.0f;
+	float m_PreferredHeight = 0.0f;
+	float m_MinWidth = 0.0f;
+	float m_MinHeight = 0.0f;
+	float m_MaxWidth = 0.0f;
+	float m_MaxHeight = 0.0f;
+	float m_ScreenWidth = 0.0f;
+	float m_ScreenHeight = 0.0f;
+	float m_Margin = 0.0f;
+};
+
+inline CUIRect SettingsSecondaryPanelRect(const SSecondaryPanelSpec &Spec)
+{
+	const float AvailableWidth = maximum(0.0f, Spec.m_ScreenWidth - Spec.m_Margin * 2.0f);
+	const float AvailableHeight = maximum(0.0f, Spec.m_ScreenHeight - Spec.m_Margin * 2.0f);
+	const float MaxWidth = Spec.m_MaxWidth > 0.0f ? minimum(Spec.m_MaxWidth, AvailableWidth) : AvailableWidth;
+	const float MaxHeight = Spec.m_MaxHeight > 0.0f ? minimum(Spec.m_MaxHeight, AvailableHeight) : AvailableHeight;
+	const float Width = std::clamp(Spec.m_PreferredWidth, minimum(Spec.m_MinWidth, MaxWidth), MaxWidth);
+	const float Height = std::clamp(Spec.m_PreferredHeight, minimum(Spec.m_MinHeight, MaxHeight), MaxHeight);
+	const float X = std::clamp(Spec.m_AnchorX, Spec.m_Margin, maximum(Spec.m_Margin, Spec.m_ScreenWidth - Spec.m_Margin - Width));
+	const float Y = std::clamp(Spec.m_AnchorY, Spec.m_Margin, maximum(Spec.m_Margin, Spec.m_ScreenHeight - Spec.m_Margin - Height));
+	return {X, Y, Width, Height};
+}
 
 /**
  * A single section of a settings page.
@@ -34,6 +239,7 @@ enum class ESettingsSectionState : uint8_t
 struct SSettingsSection
 {
 	const char *m_pName;
+	const char *m_pStableCardId = nullptr;
 	ESettingsSectionState m_State = ESettingsSectionState::UNINITIALIZED;
 	float m_CachedHeight = 0.0f;
 	bool m_HasCachedHeight = false;
@@ -47,6 +253,43 @@ struct SSettingsSection
 	uint64_t m_LastConfigHash = 0;
 	bool m_Dirty = true; // force render on first frame
 };
+
+inline void SettingsCardDeckApplyOrder(std::vector<SSettingsSection> &vSections, const std::vector<std::string> &vOrder)
+{
+	std::vector<SSettingsSection> vCards;
+	vCards.reserve(vSections.size());
+
+	for(const std::string &StableId : vOrder)
+	{
+		for(const SSettingsSection &Section : vSections)
+		{
+			if(Section.m_pStableCardId == nullptr || StableId != Section.m_pStableCardId)
+				continue;
+			vCards.push_back(Section);
+			break;
+		}
+	}
+
+	for(const SSettingsSection &Section : vSections)
+	{
+		if(Section.m_pStableCardId == nullptr)
+			continue;
+		const auto It = std::find_if(vCards.begin(), vCards.end(), [pStableId = Section.m_pStableCardId](const SSettingsSection &Card) {
+			return Card.m_pStableCardId != nullptr && Card.m_pStableCardId == std::string(pStableId);
+		});
+		if(It == vCards.end())
+			vCards.push_back(Section);
+	}
+
+	size_t CardIndex = 0;
+	for(SSettingsSection &Section : vSections)
+	{
+		if(Section.m_pStableCardId == nullptr)
+			continue;
+		if(CardIndex < vCards.size())
+			Section = std::move(vCards[CardIndex++]);
+	}
+}
 
 /**
  * Session UI cache saved to disk across sessions.

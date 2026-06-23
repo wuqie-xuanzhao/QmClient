@@ -10,6 +10,7 @@ This script is read-only. It validates:
 
 import os
 import sys
+import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.dirname(__file__))
@@ -18,6 +19,14 @@ import generate_all
 import i18n_store
 import source_keys
 import twlang_qmclient as twlang
+
+parser = argparse.ArgumentParser(description="Validate QmClient language sync.")
+parser.add_argument(
+    "--incremental",
+    action="store_true",
+    help="use the incremental source-key cache instead of rescanning all source files",
+)
+args = parser.parse_args()
 
 errors = []
 count = 0
@@ -28,10 +37,29 @@ legacy_overlay_dir = os.path.join(
 audit_report_path = source_keys.AUDIT_REPORT_FILE
 
 extracted_strings = generate_all.read_strings()
+if not args.incremental:
+    current_records = source_keys.collect_source_key_records()
+    current_audit = source_keys.build_string_audit_report()
+    scan_mode = "full"
+else:
+    current_records, changed_files, records_full_scan = (
+        source_keys.collect_incremental_source_key_records()
+    )
+    if records_full_scan:
+        current_audit = source_keys.build_string_audit_report()
+        audit_full_scan = True
+    else:
+        current_audit, _audit_changed_files, audit_full_scan = (
+            source_keys.collect_incremental_string_audit_report(
+                changed_files=changed_files
+            )
+        )
+    scan_mode = "full" if records_full_scan or audit_full_scan else "incremental"
+
 current_strings = sorted(
     {
         generate_all.SourceString(record.key, record.context)
-        for record in source_keys.collect_source_key_records()
+        for record in current_records
     },
     key=lambda item: (
         item.context.casefold(),
@@ -40,7 +68,7 @@ current_strings = sorted(
         item.key,
     ),
 )
-current_audit = source_keys.build_string_audit_report()
+print(f"  OK: source scan mode: {scan_mode}")
 if extracted_strings != current_strings:
     errors.append(
         "extracted_strings.txt is out of date. Run "

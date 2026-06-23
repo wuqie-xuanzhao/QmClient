@@ -26,6 +26,7 @@
 #include <game/client/components/chat.h>
 #include <game/client/components/menu_background.h>
 #include <game/client/components/message_gradient.h>
+#include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/components/sounds.h>
@@ -1503,6 +1504,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	const int QueueDummy = m_Dummy;
 	CSkins::CSkinList &SkinList = GameClient()->m_Skins.SkinList(QueueDummy);
+	int &QueueEnabled = m_Dummy ? g_Config.m_QmDummySkinQueueEnabled : g_Config.m_QmSkinQueueEnabled;
 	int &QueueInterval = m_Dummy ? g_Config.m_QmDummySkinQueueInterval : g_Config.m_QmSkinQueueInterval;
 	int &QueueIndex = m_Dummy ? g_Config.m_QmDummySkinQueueIndex : g_Config.m_QmSkinQueueIndex;
 	int &QueueRotateMap = m_Dummy ? g_Config.m_QmDummySkinQueueRotateMap : g_Config.m_QmSkinQueueRotateMap;
@@ -1724,7 +1726,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	{
 		CUIRect QueueSection = QueuePanel;
-		CUIRect QueueHeader, QueueControls, QueueList, QueuePresets;
+		CUIRect QueueHeader, QueueList, QueuePresets;
 		QueueSection.HSplitTop(22.0f, &QueueHeader, &QueueSection);
 		CUIRect QueueTitleRect, CurrentQueueRect;
 		QueueHeader.VSplitLeft(QueueHeader.w * 0.48f, &QueueTitleRect, &CurrentQueueRect);
@@ -1753,6 +1755,39 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
 		Ui()->DoLabel(&CurrentQueueRect, aCurrentQueueLabel, 9.0f, TEXTALIGN_MR, CurrentQueueLabelProps);
 
+		CUIRect QueueRotationPanel;
+		QueueSection.HSplitTop(46.0f, &QueueRotationPanel, &QueueSection);
+		QueueRotationPanel.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f), IGraphics::CORNER_ALL, 4.0f);
+		CUIRect QueueRotationContent = QueueRotationPanel;
+		QueueRotationContent.Margin(5.0f, &QueueRotationContent);
+		CUIRect QueueRotationHeader, QueueRotationControls;
+		QueueRotationContent.HSplitTop(14.0f, &QueueRotationHeader, &QueueRotationContent);
+		QueueRotationContent.HSplitTop(2.0f, nullptr, &QueueRotationContent);
+		QueueRotationContent.HSplitTop(20.0f, &QueueRotationControls, &QueueRotationContent);
+
+		const float QueueEnabledColumnWidth = std::clamp(QueueRotationPanel.w * 0.32f, 46.0f, 62.0f);
+		CUIRect QueueEnabledHeading, QueueIntervalHeading;
+		QueueRotationHeader.VSplitLeft(QueueEnabledColumnWidth, &QueueEnabledHeading, &QueueIntervalHeading);
+		SLabelProperties QueueControlLabelProps;
+		QueueControlLabelProps.m_DisallowNewline = true;
+		QueueControlLabelProps.m_StopAtEnd = true;
+		QueueControlLabelProps.m_MinimumFontSize = 6.0f;
+		QueueControlLabelProps.m_MaxWidth = QueueEnabledHeading.w;
+		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-enabled-heading", &QueueEnabledHeading, Localize("Enabled"), 9.0f, TEXTALIGN_MC, QueueControlLabelProps, (int)QueueEnabledHeading.w);
+		QueueControlLabelProps.m_MaxWidth = QueueIntervalHeading.w;
+		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &QueueIntervalHeading, Localize("Switch interval"), 9.0f, TEXTALIGN_MC, QueueControlLabelProps, (int)QueueIntervalHeading.w);
+
+		CUIRect QueueEnabledButtonColumn, IntervalControls, IntervalInputGroup, IntervalInput, IntervalUnit;
+		QueueRotationControls.VSplitLeft(QueueEnabledColumnWidth, &QueueEnabledButtonColumn, &IntervalControls);
+		CUIRect QueueEnabledButton = QueueEnabledButtonColumn;
+		QueueEnabledButton.HMargin(1.0f, &QueueEnabledButton);
+		QueueEnabledButton.VMargin(maximum(0.0f, (QueueEnabledButton.w - QueueEnabledButton.h) * 0.5f), &QueueEnabledButton);
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, nullptr, "", QueueEnabled, &QueueEnabledButton))
+		{
+			QueueEnabled ^= 1;
+		}
+		GameClient()->m_Tooltips.DoToolTip(&QueueEnabled, &QueueRotationPanel, Localize("Enable skin queue rotation"));
+
 		CUIRect RotateMapRect;
 		QueueSection.HSplitTop(20.0f, &RotateMapRect, &QueueSection);
 		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueRotateMap, QueueDummy ? "tee-dummy-queue-rotate-all-maps" : "tee-player-queue-rotate-all-maps", Localize("Rotate all server player skins"), QueueRotateMap, &RotateMapRect))
@@ -1761,21 +1796,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 		GameClient()->m_Tooltips.DoToolTip(&QueueRotateMap, &RotateMapRect, Localize("Get all map players' skin IDs and auto add to rotate queue"));
 
-		QueueSection.HSplitTop(20.0f, &QueueControls, &QueueSection);
-		CUIRect IntervalLabel, IntervalControls, IntervalInputGroup, IntervalInput, IntervalUnit;
-		const float QueueIntervalLabelWidth = 82.0f;
 		const float QueueValueInputWidth = 58.0f;
 		const float QueueValueUnitWidth = 18.0f;
-		QueueControls.VSplitLeft(QueueIntervalLabelWidth, &IntervalLabel, &IntervalControls);
 		IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);
 		IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);
 		IntervalInput.VMargin(1.0f, &IntervalInput);
-		SLabelProperties QueueControlLabelProps;
-		QueueControlLabelProps.m_MaxWidth = IntervalLabel.w;
-		QueueControlLabelProps.m_DisallowNewline = true;
-		QueueControlLabelProps.m_StopAtEnd = true;
-		QueueControlLabelProps.m_MinimumFontSize = 6.0f;
-		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &IntervalLabel, Localize("Switch interval"), IntervalLabel.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);
 		static CLineInputNumber s_aQueueIntervalInputs[NUM_DUMMIES];
 		CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];
 		const int PrevQueueInterval = QueueInterval;
@@ -1793,7 +1818,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		{
 			if(QueueIntervalInput.GetLength() > 0 && (QueueIntervalEdited || PrevQueueInterval != QueueInterval || QueueIntervalInput.GetInteger() != QueueInterval))
 			{
-				QueueInterval = std::clamp(QueueIntervalInput.GetInteger(), 5, 1200);
+				QueueInterval = maximum(QueueIntervalInput.GetInteger(), 1);
 			}
 			QueueIntervalInput.SetInteger(QueueInterval);
 			QueueIntervalInput.SelectAll();
@@ -2276,7 +2301,9 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	}
 	s_vQueueButtonIds.resize(vSkinList.size());
 	const auto ListFrameStartTime = time_get_nanoseconds();
-	s_ListBox.DoStart(50.0f, vSkinList.size(), 3, 2, OldSelected, &MainView);
+	constexpr float TeeSkinListRowHeight = 50.0f;
+	constexpr int TeeSkinListItemsPerRow = 4;
+	s_ListBox.DoStart(TeeSkinListRowHeight, vSkinList.size(), TeeSkinListItemsPerRow, 2, OldSelected, &MainView);
 	if(m_SkinListScrollToSelected && OldSelected >= 0)
 	{
 		s_ListBox.ScrollToSelected();
@@ -2285,8 +2312,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	const SSettingsSkinListVisibleRange VisibleRange = SettingsSkinListVisibleRangeForScroll(
 		s_ListBox.ScrollOffsetY(),
 		s_ListBox.ViewHeight(),
-		50.0f,
-		4,
+		TeeSkinListRowHeight,
+		TeeSkinListItemsPerRow,
 		(int)vSkinList.size(),
 		1);
 	int RowsIterated = 0;
@@ -5986,6 +6013,26 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			static int s_NamePlatesStrong = 0;
 			if(DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, &s_NamePlatesStrong, "appearance-show-hook-strength-number", Localize("Show hook strength number indicator"), g_Config.m_ClNamePlatesStrong == 2, &Button))
 				g_Config.m_ClNamePlatesStrong = g_Config.m_ClNamePlatesStrong != 2 ? 2 : 1;
+		}
+
+		if(g_Config.m_ClNamePlatesStrong)
+		{
+			DoSettingsLine_RadioMenu(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, APPEARANCE_TAB_NAME_PLATE, LeftView, "appearance-hook-strength-scope-label", Localize("Hook strength scope"),
+				m_vButtonContainersNamePlateHookStrongWeakScope,
+				{"appearance-hook-strength-scope-self", "appearance-hook-strength-scope-others", "appearance-hook-strength-scope-strong", "appearance-hook-strength-scope-weak", "appearance-hook-strength-scope-all"},
+				{Localize("Self"), Localize("Others"), Localize("Strong hook"), Localize("Weak hook"), Localize("All")},
+				{QM_HOOK_STRONG_WEAK_SCOPE_SELF, QM_HOOK_STRONG_WEAK_SCOPE_OTHERS, QM_HOOK_STRONG_WEAK_SCOPE_STRONG, QM_HOOK_STRONG_WEAK_SCOPE_WEAK, QM_HOOK_STRONG_WEAK_SCOPE_ALL},
+				g_Config.m_QmNameplateHookStrongWeakScope);
+		}
+		else
+			LeftView.HSplitTop(LineSize, nullptr, &LeftView);
+
+		if(g_Config.m_ClNamePlatesStrong)
+		{
+			static CButtonContainer s_StrongHookColorResetId;
+			static CButtonContainer s_WeakHookColorResetId;
+			DoLine_ColorPicker(&s_StrongHookColorResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Strong hook color"), &g_Config.m_QmNameplateStrongHookColor, color_cast<ColorRGBA>(ColorHSLA(6401973)), false);
+			DoLine_ColorPicker(&s_WeakHookColorResetId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Weak hook color"), &g_Config.m_QmNameplateWeakHookColor, color_cast<ColorRGBA>(ColorHSLA(41131)), false);
 		}
 
 		LeftView.HSplitTop(LineSize * 2.0f, &Button, &LeftView);

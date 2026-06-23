@@ -197,6 +197,10 @@ namespace
 
 using namespace std::chrono_literals;
 
+constexpr int QM_SKIN_CHANGE_TRANSITION_SCOPE_OWN = 0;
+constexpr int QM_SKIN_CHANGE_TRANSITION_SCOPE_LOCAL = 1;
+constexpr int QM_SKIN_CHANGE_TRANSITION_SCOPE_ALL = 2;
+
 namespace
 {
 	float EffectiveFastInputOffsetTicks(const CGameClient *pGameClient)
@@ -2251,6 +2255,11 @@ void CGameClient::OnDummyDisconnect()
 	m_QmCommandRouter.ResetDummyInputState();
 }
 
+void CGameClient::OnDummyManualDisconnect()
+{
+	m_QmAxiomAutoLogin.DisableDummyReconnectForServer();
+}
+
 int CGameClient::LastRaceTick() const
 {
 	return m_LastRaceTick;
@@ -2325,6 +2334,24 @@ void CGameClient::FormatClientId(int ClientId, char (&aClientId)[16], EClientIdF
 bool CGameClient::IsLocalClientId(int ClientId) const
 {
 	return ClientId >= 0 && (ClientId == m_aLocalIds[0] || ClientId == m_aLocalIds[1]);
+}
+
+bool CGameClient::ShouldRunSkinChangeTransition(int ClientId) const
+{
+	if(ClientId < 0)
+		return false;
+
+	switch(std::clamp(g_Config.m_QmSkinChangeTransitionScope, QM_SKIN_CHANGE_TRANSITION_SCOPE_OWN, QM_SKIN_CHANGE_TRANSITION_SCOPE_ALL))
+	{
+	case QM_SKIN_CHANGE_TRANSITION_SCOPE_OWN:
+		return ClientId == m_Snap.m_LocalClientId;
+	case QM_SKIN_CHANGE_TRANSITION_SCOPE_LOCAL:
+		return IsLocalClientId(ClientId);
+	case QM_SKIN_CHANGE_TRANSITION_SCOPE_ALL:
+		return true;
+	default:
+		return false;
+	}
 }
 
 bool CGameClient::ShouldHideStreamerIdentity(int ClientId) const
@@ -5337,12 +5364,42 @@ namespace
 			Info.m_aSixup[Dummy].m_BotTexture.Invalidate();
 		}
 	}
+
+	void CopySkinColorsOnly(CTeeRenderInfo &Target, const CTeeRenderInfo &Source)
+	{
+		Target.m_CustomColoredSkin = Source.m_CustomColoredSkin;
+		Target.m_ColorBody = Source.m_ColorBody;
+		Target.m_ColorFeet = Source.m_ColorFeet;
+		for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+		{
+			for(int Part = 0; Part < protocol7::NUM_SKINPARTS; ++Part)
+			{
+				Target.m_aSixup[Dummy].m_aUseCustomColors[Part] = Source.m_aSixup[Dummy].m_aUseCustomColors[Part];
+				Target.m_aSixup[Dummy].m_aColors[Part] = Source.m_aSixup[Dummy].m_aColors[Part];
+			}
+		}
+	}
 }
 
 void CGameClient::CClientData::UpdateRenderInfo()
 {
 	const CSkinDescriptor SkinDescriptor = ToSkinDescriptor();
+	CSkinDescriptor RenderSkinDescriptor = SkinDescriptor;
 	CTeeRenderInfo NewRenderInfo = m_pSkinInfo->TeeRenderInfo();
+	const bool DescriptorRenderInfoReady = m_pSkinInfo->DescriptorRenderInfoReady();
+	if(!DescriptorRenderInfoReady && m_RenderInfo.Valid())
+	{
+		const CTeeRenderInfo SkinProperties = NewRenderInfo;
+		NewRenderInfo = m_RenderInfo;
+		CopySkinColorsOnly(NewRenderInfo, SkinProperties);
+	}
+	else if(!DescriptorRenderInfoReady)
+	{
+		const float OriginalSize = NewRenderInfo.m_Size;
+		BuildDefaultSkinDescriptor(RenderSkinDescriptor);
+		ApplyDefaultSkin(m_pGameClient, NewRenderInfo);
+		NewRenderInfo.m_Size = OriginalSize;
+	}
 
 	// force team colors
 	if(m_pGameClient->IsTeamPlay())
@@ -5418,7 +5475,7 @@ void CGameClient::CClientData::UpdateRenderInfo()
 		}
 	}
 
-	UpdateSkinChangeTransition(NewRenderInfo, SkinDescriptor);
+	UpdateSkinChangeTransition(NewRenderInfo, RenderSkinDescriptor);
 	m_RenderInfo = NewRenderInfo;
 }
 
@@ -5447,7 +5504,7 @@ void CGameClient::CClientData::UpdateSkinChangeTransition(const CTeeRenderInfo &
 		}
 	}
 
-	const bool IsTransitionClient = m_pGameClient != nullptr && m_pGameClient->IsLocalClientId(m_ClientId);
+	const bool IsTransitionClient = m_pGameClient != nullptr && m_pGameClient->ShouldRunSkinChangeTransition(m_ClientId);
 	if(!IsTransitionClient)
 	{
 		m_LastSkinTransitionKey = Key;
@@ -7317,10 +7374,18 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 {
 	CTeeRenderInfo &TeeInfo = pManagedTeeRenderInfo->TeeRenderInfo();
 	const CSkinDescriptor &SkinDescriptor = pManagedTeeRenderInfo->SkinDescriptor();
+	pManagedTeeRenderInfo->SetDescriptorRenderInfoReady(false);
+	bool SixReady = false;
+	bool SevenReady = false;
 
 	if(SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SIX)
 	{
-		TeeInfo.Apply(m_Skins.Find(CSkin::IsValidName(SkinDescriptor.m_aSkinName) ? SkinDescriptor.m_aSkinName : "default"));
+		const CSkin *pSkin = m_Skins.FindOrNullptr(CSkin::IsValidName(SkinDescriptor.m_aSkinName) ? SkinDescriptor.m_aSkinName : "default");
+		if(pSkin != nullptr)
+		{
+			TeeInfo.Apply(pSkin);
+			SixReady = true;
+		}
 	}
 
 	if(SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SEVEN)
@@ -7350,7 +7415,18 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 				}
 			}
 		}
+		SevenReady = false;
+		for(const auto &Sixup : TeeInfo.m_aSixup)
+		{
+			if(Sixup.PartTexture(protocol7::SKINPART_BODY).IsValid())
+			{
+				SevenReady = true;
+				break;
+			}
+		}
 	}
+	bool DescriptorRenderInfoReady = SixReady || SevenReady;
+	pManagedTeeRenderInfo->SetDescriptorRenderInfoReady(DescriptorRenderInfoReady);
 
 	if(SkinDescriptor.m_Flags != 0 && pManagedTeeRenderInfo->m_RefreshCallback)
 	{
