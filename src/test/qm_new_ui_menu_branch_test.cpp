@@ -505,18 +505,14 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	const size_t SkinTransitionCaseEnd = MenusSource.find("case EQmModuleId::Coords:", SkinTransitionCase);
 	ASSERT_NE(SkinTransitionCaseEnd, std::string::npos);
 	const std::string SkinTransitionCard = MenusSource.substr(SkinTransitionCase, SkinTransitionCaseEnd - SkinTransitionCase);
-	EXPECT_NE(SkinTransitionCard.find("auto RenderSkinQueueRotationRow = [&](CUIRect &PanelContent, const char *pLabel, const char *pTextIdPrefix, int *pEnabled, int *pInterval, int InputIndex)"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("SkinQueuePanel.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, LgCornerRadius * 0.8f);"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("DoQmSettingsLabel(\"qmclient-skin-queue-panel-title\", &PanelTitle, Localize(\"Skin queue\"), LgBodySize);"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("DoQmSettingsLabel(\"qmclient-skin-queue-enabled-heading\", &EnabledHeading, Localize(\"Enabled\"), LgBodySize * 0.86f, TEXTALIGN_MC, SkinQueueColumnLabelProps);"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("DoQmSettingsLabel(\"qmclient-skin-queue-interval-heading\", &IntervalHeading, Localize(\"Switch interval\"), LgBodySize * 0.86f, TEXTALIGN_MC, SkinQueueColumnLabelProps);"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("RenderSkinQueueRotationRow(SkinQueuePanelContent, Localize(\"Player\"), \"qmclient-skin-queue-player\", &g_Config.m_QmSkinQueueEnabled, &g_Config.m_QmSkinQueueInterval, 0);"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("RenderSkinQueueRotationRow(SkinQueuePanelContent, Localize(\"Dummy\"), \"qmclient-skin-queue-dummy\", &g_Config.m_QmDummySkinQueueEnabled, &g_Config.m_QmDummySkinQueueInterval, 1);"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pEnabled, nullptr, \"\", *pEnabled, &EnabledCheckBox)"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("EnabledCheckBox.VMargin(maximum(0.0f, (EnabledCheckBox.w - EnabledCheckBox.h) * 0.5f), &EnabledCheckBox);"), std::string::npos);
-	EXPECT_EQ(SkinTransitionCard.find("DoQmSettingsCheckboxAuto(pEnabled, pTextIdPrefix, \"\", pEnabled"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("static CLineInputNumber s_aQmSkinQueueIntervalInputs[NUM_DUMMIES];"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("*pInterval = maximum(QueueIntervalInput.GetInteger(), 1);"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("RenderSkinQueueRotationRow"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("qmclient-skin-queue-panel-title"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("qmclient-skin-queue-enabled-heading"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("qmclient-skin-queue-interval-heading"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("QmSkinQueueEnabled"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("QmDummySkinQueueEnabled"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("QmSkinQueueInterval"), std::string::npos);
+	EXPECT_EQ(SkinTransitionCard.find("QmDummySkinQueueInterval"), std::string::npos);
 
 	const size_t Toggle = MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmSkinChangeTransition");
 	ASSERT_NE(Toggle, std::string::npos);
@@ -1243,6 +1239,11 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_NE(QmMenusSource.find("Spectate effects"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("Demo effects"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("Demo target"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("auto RenderNameplateTextControlRow = [&](const char *pTextId, const char *pLabel, const auto &RenderControl)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-border-range\", Localize(\"Border range\"), [&](CUIRect &ControlCol)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-glow-range\", Localize(\"Glow range\"), [&](CUIRect &ControlCol)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("NameplateTextLabelProps.m_DisallowNewline = true"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("NameplateTextLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("s_NameplateTextDemoTargetDropDownNames"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("bool DemoTargetListed = g_Config.m_QmNameplateTextDemoTarget < 0;"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("if(!DemoTargetListed)"), std::string::npos);

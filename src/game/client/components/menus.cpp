@@ -914,21 +914,26 @@ int CMenus::DoButton_CheckBox_Common(const void *pId, const char *pText, const c
 void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const
 {
 	const bool MultiLine = Flags & CUi::SCROLLBAR_OPTION_MULTILINE;
-	CUIRect Label, ScrollBar;
+	CUIRect Label, ValueText, ScrollBar;
 	if(MultiLine)
-		Rect.HSplitMid(&Label, &ScrollBar);
-	else
-		Rect.VSplitMid(&Label, &ScrollBar, minimum(10.0f, Rect.w * 0.05f));
-
-	CUIRect LabelText = Label;
-	CUIRect ValueText = Label;
-	if(pValueRect != nullptr || pLabelRect != nullptr)
 	{
-		Label.VSplitLeft(Label.w * 0.68f, &LabelText, &ValueText);
+		Rect.HSplitMid(&Label, &ScrollBar);
+		ValueText = Label;
+		if(pValueRect != nullptr || pLabelRect != nullptr)
+			Label.VSplitLeft(Label.w * 0.68f, &Label, &ValueText);
+	}
+	else
+	{
+		const float ValueWidth = std::clamp(Rect.w * 0.12f, 42.0f, 68.0f);
+		const float LabelWidth = std::clamp(Rect.w * 0.25f, 108.0f, 180.0f);
+		CUIRect Controls;
+		Rect.VSplitLeft(LabelWidth, &Label, &Controls);
+		Controls.VSplitRight(ValueWidth, &ScrollBar, &ValueText);
+		ScrollBar.VMargin(minimum(10.0f, Rect.w * 0.025f), &ScrollBar);
 	}
 
 	if(pLabelRect != nullptr)
-		*pLabelRect = LabelText;
+		*pLabelRect = Label;
 	if(pValueRect != nullptr)
 		*pValueRect = ValueText;
 	if(pScrollBarRect != nullptr)

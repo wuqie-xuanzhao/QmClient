@@ -1770,12 +1770,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 		GameClient()->m_Tooltips.DoToolTip(&QueueEnabled, &QueueEnabledRect, Localize("Enable skin queue rotation"));
 
-		QueueSection.HSplitTop(20.0f, &QueueControls, &QueueSection);
-		CUIRect IntervalLabel, IntervalControls, IntervalInputGroup, IntervalInput, IntervalUnit;
-		const float QueueIntervalLabelWidth = 82.0f;
+		CUIRect IntervalRow, IntervalLabel, IntervalControls;
+		QueueSection.HSplitTop(20.0f, &IntervalRow, &QueueSection);
+		CUIRect IntervalInputGroup, IntervalInput, IntervalUnit;
+		const float QueueControlLabelWidth = 82.0f;
 		const float QueueValueInputWidth = 58.0f;
 		const float QueueValueUnitWidth = 18.0f;
-		QueueControls.VSplitLeft(QueueIntervalLabelWidth, &IntervalLabel, &IntervalControls);
+		IntervalRow.VSplitLeft(QueueControlLabelWidth, &IntervalLabel, &IntervalControls);
 		IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);
 		IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);
 		IntervalInput.VMargin(1.0f, &IntervalInput);

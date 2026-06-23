@@ -2828,6 +2828,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return s_aQmModuleLastHeights[Index] + LgCardSpacing;
 		if(pModule->m_Id == EQmModuleId::Coords)
 			return LgCardPadding * 2.0f + LgHeadlineSize + LgTipHeight + LgLineHeight * 8.0f + LgLineSpacing * 7.0f + LgCardSpacing;
+		if(pModule->m_Id == EQmModuleId::SkinTransition)
+		{
+			float RowCount = 3.0f;
+			if(g_Config.m_QmSkinChangeTransition)
+				RowCount += 5.0f;
+			return LgCardPadding * 2.0f + LgHeadlineSize + LgTipHeight + LgLineHeight * RowCount + LgLineSpacing * maximum(0.0f, RowCount - 1.0f) + LgCardSpacing;
+		}
 		if(pModule->m_Id == EQmModuleId::Background3D)
 		{
 			float RowCount = 1.0f;
@@ -3973,71 +3980,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmHammerSwapSkin, "Hammer skin steal", Localize("Hammer skin steal"), &g_Config.m_QmHammerSwapSkin, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				auto RenderSkinQueueRotationRow = [&](CUIRect &PanelContent, const char *pLabel, const char *pTextIdPrefix, int *pEnabled, int *pInterval, int InputIndex) {
-					CUIRect QueueRow, LabelColValue, EnabledCol, IntervalCol, IntervalInput, IntervalUnit;
-					PanelContent.HSplitTop(LgLineHeight, &QueueRow, &PanelContent);
-					QueueRow.VSplitLeft(std::clamp(58.0f * UiScale, 48.0f, 68.0f), &LabelColValue, &QueueRow);
-					QueueRow.VSplitLeft(std::clamp(82.0f * UiScale, 68.0f, 92.0f), &EnabledCol, &IntervalCol);
-					DoQmSettingsLabel(pTextIdPrefix, &LabelColValue, pLabel, LgBodySize);
-					CUIRect EnabledCheckBox = EnabledCol;
-					EnabledCheckBox.HMargin(std::clamp(1.0f * UiScale, 0.0f, 2.0f), &EnabledCheckBox);
-					EnabledCheckBox.VMargin(maximum(0.0f, (EnabledCheckBox.w - EnabledCheckBox.h) * 0.5f), &EnabledCheckBox);
-					if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pEnabled, nullptr, "", *pEnabled, &EnabledCheckBox))
-					{
-						*pEnabled ^= 1;
-					}
-					IntervalCol.VSplitRight(std::clamp(20.0f * UiScale, 18.0f, 24.0f), &IntervalInput, &IntervalUnit);
-					IntervalInput.VMargin(1.0f, &IntervalInput);
-					static CLineInputNumber s_aQmSkinQueueIntervalInputs[NUM_DUMMIES];
-					CLineInputNumber &QueueIntervalInput = s_aQmSkinQueueIntervalInputs[InputIndex];
-					const int PrevInterval = *pInterval;
-					if(!QueueIntervalInput.IsActive() && str_comp(QueueIntervalInput.GetString(), std::to_string(*pInterval).c_str()) != 0)
-					{
-						QueueIntervalInput.SetInteger(*pInterval);
-						QueueIntervalInput.SelectAll();
-					}
-					const bool QueueIntervalEdited = Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput, LgBodySize, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC);
-					if(QueueIntervalInput.IsActive())
-					{
-						(void)QueueIntervalEdited;
-					}
-					else
-					{
-						if(QueueIntervalInput.GetLength() > 0 && (QueueIntervalEdited || PrevInterval != *pInterval || QueueIntervalInput.GetInteger() != *pInterval))
-						{
-							*pInterval = maximum(QueueIntervalInput.GetInteger(), 1);
-						}
-						QueueIntervalInput.SetInteger(*pInterval);
-						QueueIntervalInput.SelectAll();
-					}
-					Ui()->DoLabel(&IntervalUnit, "ms", LgBodySize * 0.88f, TEXTALIGN_MC);
-				};
-
-				const float SkinQueuePanelHeight = LgLineHeight * 3.0f + LgLineSpacing * 2.0f + LgCardPadding * 1.15f;
-				CUIRect SkinQueuePanel;
-				CardContent.HSplitTop(SkinQueuePanelHeight, &SkinQueuePanel, &CardContent);
-				SkinQueuePanel.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, LgCornerRadius * 0.8f);
-				CUIRect SkinQueuePanelContent = SkinQueuePanel;
-				SkinQueuePanelContent.Margin(std::clamp(7.0f * UiScale, 5.0f, 8.0f), &SkinQueuePanelContent);
-				CUIRect SkinQueuePanelHeader, PanelTitle, EnabledHeading, IntervalHeading;
-				SkinQueuePanelContent.HSplitTop(LgLineHeight, &SkinQueuePanelHeader, &SkinQueuePanelContent);
-				SkinQueuePanelHeader.VSplitLeft(std::clamp(58.0f * UiScale, 48.0f, 68.0f), &PanelTitle, &SkinQueuePanelHeader);
-				SkinQueuePanelHeader.VSplitLeft(std::clamp(82.0f * UiScale, 68.0f, 92.0f), &EnabledHeading, &IntervalHeading);
-				SLabelProperties SkinQueueColumnLabelProps;
-				SkinQueueColumnLabelProps.m_MaxWidth = EnabledHeading.w;
-				SkinQueueColumnLabelProps.m_DisallowNewline = true;
-				SkinQueueColumnLabelProps.m_StopAtEnd = true;
-				SkinQueueColumnLabelProps.m_MinimumFontSize = 6.0f;
-				DoQmSettingsLabel("qmclient-skin-queue-panel-title", &PanelTitle, Localize("Skin queue"), LgBodySize);
-				DoQmSettingsLabel("qmclient-skin-queue-enabled-heading", &EnabledHeading, Localize("Enabled"), LgBodySize * 0.86f, TEXTALIGN_MC, SkinQueueColumnLabelProps);
-				SkinQueueColumnLabelProps.m_MaxWidth = IntervalHeading.w;
-				DoQmSettingsLabel("qmclient-skin-queue-interval-heading", &IntervalHeading, Localize("Switch interval"), LgBodySize * 0.86f, TEXTALIGN_MC, SkinQueueColumnLabelProps);
-				SkinQueuePanelContent.HSplitTop(LgLineSpacing, nullptr, &SkinQueuePanelContent);
-				RenderSkinQueueRotationRow(SkinQueuePanelContent, Localize("Player"), "qmclient-skin-queue-player", &g_Config.m_QmSkinQueueEnabled, &g_Config.m_QmSkinQueueInterval, 0);
-				SkinQueuePanelContent.HSplitTop(LgLineSpacing, nullptr, &SkinQueuePanelContent);
-				RenderSkinQueueRotationRow(SkinQueuePanelContent, Localize("Dummy"), "qmclient-skin-queue-dummy", &g_Config.m_QmDummySkinQueueEnabled, &g_Config.m_QmDummySkinQueueInterval, 1);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -6006,16 +5948,27 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				RenderTextEffectToggle(QM_TEXT_EFFECT_RAINBOW, "Nameplate text rainbow", Localize("Rainbow"));
 				RenderTextEffectToggle(QM_TEXT_EFFECT_GLOW, "Nameplate text glow", Localize("Glow"));
 
-				auto RenderNameplateTextDropDown = [&](const char *pTextId, const char *pLabel, int *pValue, int Min, int Max, std::vector<const char *> &vNames, CUi::SDropDownState &State, CScrollRegion &ScrollRegion) {
+				SLabelProperties NameplateTextLabelProps;
+				NameplateTextLabelProps.m_DisallowNewline = true;
+				NameplateTextLabelProps.m_StopAtEnd = true;
+				NameplateTextLabelProps.m_MinimumFontSize = 6.0f;
+				auto RenderNameplateTextControlRow = [&](const char *pTextId, const char *pLabel, const auto &RenderControl) {
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel(pTextId, &LabelCol, pLabel, LgBodySize);
-					State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;
-					const int Current = std::clamp(*pValue, Min, Max);
-					const int SelectedNew = Ui()->DoDropDown(&ControlCol, Current - Min, vNames.data(), (int)vNames.size(), State) + Min;
-					if(*pValue != SelectedNew)
-						*pValue = SelectedNew;
+					NameplateTextLabelProps.m_MaxWidth = LabelCol.w;
+					DoQmSettingsLabel(pTextId, &LabelCol, pLabel, LgBodySize, TEXTALIGN_ML, NameplateTextLabelProps);
+					RenderControl(ControlCol);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				};
+
+				auto RenderNameplateTextDropDown = [&](const char *pTextId, const char *pLabel, int *pValue, int Min, int Max, std::vector<const char *> &vNames, CUi::SDropDownState &State, CScrollRegion &ScrollRegion) {
+					RenderNameplateTextControlRow(pTextId, pLabel, [&](CUIRect &ControlCol) {
+						State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;
+						const int Current = std::clamp(*pValue, Min, Max);
+						const int SelectedNew = Ui()->DoDropDown(&ControlCol, Current - Min, vNames.data(), (int)vNames.size(), State) + Min;
+						if(*pValue != SelectedNew)
+							*pValue = SelectedNew;
+					});
 				};
 
 				static std::vector<const char *> s_NameplateTextPlayingDropDownNames;
@@ -6036,9 +5989,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				static CScrollRegion s_NameplateTextDemoDropDownScrollRegion;
 				RenderNameplateTextDropDown("qmclient-nameplate-text-demo-effects", Localize("Demo effects"), &g_Config.m_QmNameplateTextDemoMode, 0, 3, s_NameplateTextDemoDropDownNames, s_NameplateTextDemoDropDownState, s_NameplateTextDemoDropDownScrollRegion);
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-nameplate-text-demo-target", &LabelCol, Localize("Demo target"), LgBodySize);
 				static std::vector<std::string> s_NameplateTextDemoTargetDropDownStorage;
 				static std::vector<const char *> s_NameplateTextDemoTargetDropDownNames;
 				s_NameplateTextDemoTargetDropDownStorage.clear();
@@ -6076,26 +6026,23 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						break;
 					}
 				}
-				const int DemoTargetNew = Ui()->DoDropDown(&ControlCol, DemoTargetSelection, s_NameplateTextDemoTargetDropDownNames.data(), (int)s_NameplateTextDemoTargetDropDownNames.size(), s_NameplateTextDemoTargetDropDownState);
-				if(DemoTargetNew == 0)
-					g_Config.m_QmNameplateTextDemoTarget = DemoTargetNew - 1;
-				else
-					sscanf(s_NameplateTextDemoTargetDropDownStorage[DemoTargetNew].c_str(), "%d:", &g_Config.m_QmNameplateTextDemoTarget);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderNameplateTextControlRow("qmclient-nameplate-text-demo-target", Localize("Demo target"), [&](CUIRect &ControlCol) {
+					const int DemoTargetNew = Ui()->DoDropDown(&ControlCol, DemoTargetSelection, s_NameplateTextDemoTargetDropDownNames.data(), (int)s_NameplateTextDemoTargetDropDownNames.size(), s_NameplateTextDemoTargetDropDownState);
+					if(DemoTargetNew == 0)
+						g_Config.m_QmNameplateTextDemoTarget = DemoTargetNew - 1;
+					else
+						sscanf(s_NameplateTextDemoTargetDropDownStorage[DemoTargetNew].c_str(), "%d:", &g_Config.m_QmNameplateTextDemoTarget);
+				});
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-nameplate-text-border-range", &LabelCol, Localize("Border range"), LgBodySize);
 				static int s_NameplateTextBorderRangeInputId;
-				RenderSliderWithValueInput(&s_NameplateTextBorderRangeInputId, ControlCol, &g_Config.m_QmNameplateTextBorderRange, 1, 4);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderNameplateTextControlRow("qmclient-nameplate-text-border-range", Localize("Border range"), [&](CUIRect &ControlCol) {
+					RenderSliderWithValueInput(&s_NameplateTextBorderRangeInputId, ControlCol, &g_Config.m_QmNameplateTextBorderRange, 1, 4);
+				});
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-nameplate-text-glow-range", &LabelCol, Localize("Glow range"), LgBodySize);
 				static int s_NameplateTextGlowRangeInputId;
-				RenderSliderWithValueInput(&s_NameplateTextGlowRangeInputId, ControlCol, &g_Config.m_QmNameplateTextGlowRange, 0, 12);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderNameplateTextControlRow("qmclient-nameplate-text-glow-range", Localize("Glow range"), [&](CUIRect &ControlCol) {
+					RenderSliderWithValueInput(&s_NameplateTextGlowRangeInputId, ControlCol, &g_Config.m_QmNameplateTextGlowRange, 0, 12);
+				});
 
 				static CButtonContainer s_NameplateTextBorderColorId;
 				DoLine_ColorPicker(&s_NameplateTextBorderColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Border color"), &g_Config.m_QmNameplateTextBorderColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), false, nullptr, true);

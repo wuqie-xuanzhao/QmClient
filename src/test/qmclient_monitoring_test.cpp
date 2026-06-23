@@ -2248,6 +2248,12 @@ TEST(QmMonitoringHelpers, SettingsStableTextPlanKeysMatchVisibleWrappers)
 	ASSERT_FALSE(ScrollbarOptionBody.empty());
 	EXPECT_NE(ScrollbarOptionBody.find("BuildSettingsScrollbarTextStyle("), std::string::npos);
 	EXPECT_EQ(ScrollbarOptionBody.find("DoSettingsMenuLabel(Page, Tab, Subtab, pTextId, &Label, pStr, FontSize, TEXTALIGN_ML, {}, (int)Label.w);"), std::string::npos);
+	const std::string SplitScrollbarBody = ExtractSourceFunctionBody(Menus, "void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const");
+	ASSERT_FALSE(SplitScrollbarBody.empty());
+	EXPECT_NE(SplitScrollbarBody.find("const float ValueWidth = std::clamp(Rect.w * 0.12f, 42.0f, 68.0f);"), std::string::npos);
+	EXPECT_NE(SplitScrollbarBody.find("const float LabelWidth = std::clamp(Rect.w * 0.25f, 108.0f, 180.0f);"), std::string::npos);
+	EXPECT_NE(SplitScrollbarBody.find("Controls.VSplitRight(ValueWidth, &ScrollBar, &ValueText);"), std::string::npos);
+	EXPECT_NE(SplitScrollbarBody.find("ScrollBar.VMargin(minimum(10.0f, Rect.w * 0.025f), &ScrollBar);"), std::string::npos);
 
 	EXPECT_NE(Header.find("SMenuTextStyleKey BuildSettingsScrollbarTextStyle(const CUIRect &Rect, unsigned Flags, CUIRect *pOutLabel = nullptr) const;"), std::string::npos);
 	EXPECT_NE(Settings.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, \"appearance-freeze-bars-alpha-inside-freeze\""), std::string::npos);
@@ -3920,6 +3926,9 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesReadableIntervalInput)
 	EXPECT_NE(Body.find("CUIRect QueueEnabledRect;"), std::string::npos);
 	EXPECT_NE(Body.find("QueueSection.HSplitTop(20.0f, &QueueEnabledRect, &QueueSection);"), std::string::npos);
 	EXPECT_NE(Body.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", Localize(\"Enable skin queue\"), QueueEnabled, &QueueEnabledRect)"), std::string::npos);
+	EXPECT_NE(Body.find("CUIRect IntervalRow, IntervalLabel, IntervalControls;"), std::string::npos);
+	EXPECT_NE(Body.find("QueueSection.HSplitTop(20.0f, &IntervalRow, &QueueSection);"), std::string::npos);
+	EXPECT_NE(Body.find("IntervalRow.VSplitLeft(QueueControlLabelWidth, &IntervalLabel, &IntervalControls);"), std::string::npos);
 	EXPECT_EQ(Body.find("Localize(\"Enabled\")"), std::string::npos);
 	EXPECT_EQ(Body.find("tee-skin-queue-enabled-heading"), std::string::npos);
 	EXPECT_NE(Body.find("IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);"), std::string::npos);
