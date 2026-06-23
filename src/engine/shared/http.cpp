@@ -338,13 +338,18 @@ bool CHttpRequest::ConfigureHandle(void *pHandle)
 		curl_easy_setopt(pH, CURLOPT_NOBODY, 1L);
 		break;
 	case REQUEST::POST:
+	case REQUEST::POST_FORM:
 	case REQUEST::POST_JSON:
 		if(m_pBody == nullptr)
 		{
 			log_error("http", "failed to allocate request body for: %s", m_aUrl);
 			return false;
 		}
-		if(m_Type == REQUEST::POST_JSON)
+		if(m_Type == REQUEST::POST_FORM)
+		{
+			Header("Content-Type: application/x-www-form-urlencoded");
+		}
+		else if(m_Type == REQUEST::POST_JSON)
 		{
 			Header("Content-Type: application/json");
 		}

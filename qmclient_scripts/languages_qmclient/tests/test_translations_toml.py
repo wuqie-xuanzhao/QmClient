@@ -102,10 +102,69 @@ simplified_chinese = "应用"
                 'traditional_chinese = "預測量"\n'
                 'japanese = "アンチピングスムージング"\n'
                 'korean = "양"\n'
+                "\n"
                 "[[message]]",
                 text,
             )
             tomllib.loads(text)
+
+    def test_patch_module_store_keeps_blank_line_between_message_blocks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            translations_dir = Path(tmp)
+            path = translations_dir / "menus.toml"
+            path.write_text(
+                """[[message]]
+key = "Apply"
+[message.translations]
+simplified_chinese = "应用"
+
+[[message]]
+key = "Cancel"
+[message.translations]
+simplified_chinese = "取消"
+""",
+                encoding="utf-8",
+                newline="\n",
+            )
+
+            with mock.patch.object(i18n_store, "TRANSLATIONS_DIR", translations_dir):
+                i18n_store.patch_module_store(
+                    "menus",
+                    {
+                        ("Apply", ""): {
+                            "traditional_chinese": "套用",
+                        },
+                    },
+                )
+
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(
+                'traditional_chinese = "套用"\n\n[[message]]\nkey = "Cancel"',
+                text,
+            )
+            self.assertEqual(i18n_store.toml_format_errors(path), [])
+
+    def test_toml_format_errors_rejects_adjacent_message_blocks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "menus.toml"
+            path.write_text(
+                """[[message]]
+key = "Apply"
+[message.translations]
+simplified_chinese = "应用"
+[[message]]
+key = "Cancel"
+[message.translations]
+simplified_chinese = "取消"
+""",
+                encoding="utf-8",
+                newline="\n",
+            )
+
+            errors = i18n_store.toml_format_errors(path)
+
+        self.assertEqual(len(errors), 1)
+        self.assertIn("missing blank line before [[message]]", errors[0])
 
     def test_patch_module_store_rewrites_touched_block_with_stable_language_order(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -191,6 +250,115 @@ japanese = "適用"
             ),
             [("Quit", ""), ("Open", "")],
         )
+
+    def test_missing_translations_for_skips_source_like_tokens(self):
+        self.assertEqual(
+            i18n_store.missing_translations_for(
+                {},
+                [
+                    ("DeepSeek API Key", ""),
+                    ("OpenAI API Key", ""),
+                    ("https://ddnet.org/discord", ""),
+                    ("Active line font size", ""),
+                ],
+                "spanish",
+            ),
+            [("Active line font size", "")],
+        )
+
+    def test_translation_quality_rejects_cjk_source_fallback_for_non_chinese(self):
+        store = {
+            "qmclient": {
+                ("DeepSeek 模型名称", ""): {
+                    "spanish": "DeepSeek 模型名称",
+                    "simplified_chinese": "DeepSeek模型名称",
+                }
+            }
+        }
+
+        errors = i18n_store.translation_quality_errors(store)
+
+        self.assertTrue(
+            any("spanish repeats CJK source key" in item for item in errors)
+        )
+        self.assertTrue(any("simplified_chinese typography" in item for item in errors))
+
+    def test_translation_quality_rejects_english_source_fallback_for_non_chinese(self):
+        store = {
+            "qmclient": {
+                ("Enable lyrics HUD overlay", ""): {
+                    "spanish": "Enable lyrics HUD overlay",
+                    "simplified_chinese": "启用歌词 HUD 叠加层",
+                }
+            }
+        }
+
+        errors = i18n_store.translation_quality_errors(store)
+
+        self.assertTrue(
+            any("spanish repeats English source key" in item for item in errors)
+        )
+
+    def test_translation_quality_can_be_limited_to_active_identities(self):
+        store = {
+            "qmclient": {
+                ("Old key", ""): {
+                    "spanish": "Old key",
+                },
+                ("Active key with words", ""): {
+                    "spanish": "Active key with words",
+                },
+            }
+        }
+
+        errors = i18n_store.translation_quality_errors(
+            store, active_identities={("Active key with words", "")}
+        )
+
+        self.assertEqual(len(errors), 1)
+        self.assertIn("Active key with words", errors[0])
+
+    def test_translation_quality_allows_source_like_tokens(self):
+        store = {
+            "menus": {
+                ("auto", ""): {"spanish": "auto"},
+                ("entity_bg (Workshop)", ""): {
+                    "spanish": "entity_bg (Workshop)",
+                    "japanese": "entity_bg (Workshop)",
+                },
+                ("https://ddnet.org/discord", ""): {
+                    "spanish": "https://ddnet.org/discord"
+                },
+            }
+        }
+
+        self.assertEqual(i18n_store.translation_quality_errors(store), [])
+
+    def test_translation_quality_allows_japanese_and_korean_cjk_text(self):
+        store = {
+            "menus": {
+                ("Play", ""): {
+                    "japanese": "プレイ",
+                    "korean": "플레이",
+                    "spanish": "Jugar",
+                    "simplified_chinese": "开始游戏",
+                }
+            }
+        }
+
+        self.assertEqual(i18n_store.translation_quality_errors(store), [])
+
+    def test_translation_quality_allows_cjk_names_inside_foreign_sentences(self):
+        store = {
+            "qmclient": {
+                ("Example", ""): {
+                    "turkish": "Pasta menüsü yeniden adlandırma listesi, örn: 璇梦1|璇梦2",
+                    "simplified_chinese": "示例",
+                }
+            }
+        }
+
+        self.assertEqual(i18n_store.translation_quality_errors(store), [])
 
 
 if __name__ == "__main__":

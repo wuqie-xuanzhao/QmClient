@@ -22,10 +22,12 @@ except ImportError:  # pragma: no cover - script entrypoint fallback
     from local_http_client import ChatMessage, LocalHttpClient
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parents[1]
 TRANSLATIONS_DRAFT_DIR = SCRIPT_DIR / "translations_draft"
 PROMPT_ASSETS_DIR = SCRIPT_DIR / "prompt_assets"
 INDEXED_LINE_RE = re.compile(r"^\s*(\d+)[\.)]\s*(.*)\s*$")
-MAX_PARALLEL_REQUESTS = 10
+MAX_PARALLEL_REQUESTS = 32
+MAX_PARALLEL_LANGUAGES = 12
 SAME_SOURCE_ALLOWED_BY_LANGUAGE = {
     "german": {
         "%c Team %d",
@@ -348,8 +350,40 @@ def should_write_draft(language: str, write_back: bool = False) -> bool:
     return not write_back
 
 
-def resolve_api_key(cli_value: str) -> str:
-    return cli_value or os.environ.get("QMCLIENT_LOCAL_HTTP_API_KEY", "")
+def load_dotenv(path: Path | None = None) -> dict[str, str]:
+    env_path = path or (PROJECT_ROOT / ".env")
+    if not env_path.exists():
+        return {}
+
+    values: dict[str, str] = {}
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        values[key] = value
+    return values
+
+
+def resolve_api_key(
+    cli_value: str, base_url: str = "", env_file: Path | None = None
+) -> str:
+    if cli_value:
+        return cli_value
+
+    dotenv = load_dotenv(env_file)
+    env = {**dotenv, **os.environ}
+    if "deepseek" in base_url.lower():
+        return env.get("DEEPSEEK_API_KEY", "") or env.get(
+            "QMCLIENT_LOCAL_HTTP_API_KEY", ""
+        )
+    return env.get("QMCLIENT_LOCAL_HTTP_API_KEY", "")
 
 
 def parse_chat_extra_json(value: str) -> dict:
@@ -581,11 +615,18 @@ def may_keep_source_text(source: str) -> bool:
         "Demo",
         "DDmaX",
         "DeepSeek",
+        "DeepSeek API Key",
         "Discord",
+        "Glitch",
+        "Gradient",
         "Github",
+        "Linear",
         "LibreTranslate",
+        "LibreTranslate API Key",
+        "OpenAI API Key",
         "SecretId",
         "SecretKey",
+        "Zhipu AI API Key",
         "Tee",
         "Tee 0.7",
         "Qm",
@@ -602,12 +643,16 @@ def may_keep_source_text(source: str) -> bool:
         "DDmaX Next",
         "DDmaX Nut",
         "DDmaX Pro",
+        "Ease in out quad",
+        "Ease out cubic",
         "Brutal",
         "Fun",
         "Insane",
+        " min",
         "Moderate",
         "Novice",
         "Oldschool",
+        "z = Zoom",
     }:
         return True
     if re.fullmatch(r"%[^\n]*\s(?:KiB|MiB)(?:/[a-zA-Z]+|\s*\([^)]*\))?", source):
@@ -889,22 +934,25 @@ def write_draft_module(
     translations: dict[tuple[str, str], str],
     *,
     source_texts: dict[tuple[str, str], str] | None = None,
+    merge_existing: bool = True,
 ) -> Path:
     draft_dir = TRANSLATIONS_DRAFT_DIR / language
     draft_dir.mkdir(parents=True, exist_ok=True)
     out_path = draft_dir / f"{module}.toml"
     source_texts = source_texts or {}
-    merged = {
-        identity: translation_map
-        for identity, translation_map in load_existing_draft_module(
-            language, module
-        ).items()
-        if not language_quality_failure(
-            language,
-            source_texts.get(identity, identity[0]),
-            translation_map.get(language, ""),
-        )
-    }
+    merged = {}
+    if merge_existing:
+        merged = {
+            identity: translation_map
+            for identity, translation_map in load_existing_draft_module(
+                language, module
+            ).items()
+            if not language_quality_failure(
+                language,
+                source_texts.get(identity, identity[0]),
+                translation_map.get(language, ""),
+            )
+        }
     for task in tasks:
         translation = translations.get(task.identity, "")
         if not translation:
@@ -936,6 +984,36 @@ def write_back_module(
     store.clear()
     store.update(updated)
     i18n_store.patch_module_store(module, patch_entries)
+
+
+def prune_written_draft_module(
+    language: str,
+    module: str,
+    written_identities: set[tuple[str, str]],
+    source_texts: dict[tuple[str, str], str],
+) -> None:
+    draft_path = TRANSLATIONS_DRAFT_DIR / language / f"{module}.toml"
+    if not draft_path.exists():
+        return
+    remaining = {}
+    for identity, translations in load_existing_draft_module(language, module).items():
+        translation = translations.get(language, "")
+        if identity in written_identities:
+            continue
+        if translation and not language_quality_failure(
+            language, source_texts.get(identity, identity[0]), translation
+        ):
+            remaining[identity] = translations
+    if not remaining:
+        draft_path.unlink()
+        return
+    messages = [
+        (i18n_store.Message(key, context), translations)
+        for (key, context), translations in remaining.items()
+    ]
+    draft_path.write_text(
+        i18n_store.dump_module(messages), encoding="utf-8", newline="\n"
+    )
 
 
 def write_back_draft(
@@ -977,6 +1055,12 @@ def write_back_draft(
             task.identity: draft_by_module[module][task.identity] for task in tasks
         }
         write_back_module(language, module, tasks, translations, store)
+        prune_written_draft_module(
+            language,
+            module,
+            set(translations),
+            source_texts,
+        )
         written += len(translations)
         print(
             f"{language}: wrote back translations/i18n/{module}.toml "
@@ -1079,6 +1163,86 @@ def translate_task_batches(
     return translated_by_module, failures_by_module
 
 
+def translate_language_to_drafts(
+    *,
+    args: argparse.Namespace,
+    language: str,
+    modules: set[str],
+    source_records,
+    source_texts: dict[tuple[str, str], str],
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+    prompt_assets: tuple[str, str, str],
+    client: LocalHttpClient,
+) -> None:
+    existing_draft = (
+        load_existing_valid_draft_identities(language, source_texts)
+        if args.resume and should_write_draft(language, args.write_back)
+        else set()
+    )
+    tasks = collect_tasks(
+        language,
+        modules=modules or None,
+        limit=args.limit,
+        existing_draft_identities=existing_draft,
+        rewrite_existing=args.rewrite,
+        records=source_records,
+        store=store,
+    )
+    if not tasks:
+        print(f"{language}: nothing to translate")
+        return
+    grouped: dict[str, list[TranslationTask]] = {}
+    for task in tasks:
+        grouped.setdefault(task.module, []).append(task)
+    if args.dry_run:
+        for module, module_tasks in sorted(grouped.items()):
+            for index in range(0, len(module_tasks), args.batch_size):
+                print(
+                    render_prompt(
+                        language,
+                        module,
+                        module_tasks[index : index + args.batch_size],
+                        prompt_assets=prompt_assets,
+                        store=store,
+                    )
+                )
+        return
+    translated_by_module, failures_by_module = translate_task_batches(
+        client=client,
+        language=language,
+        tasks_by_module=grouped,
+        batch_size=args.batch_size,
+        prompt_assets=prompt_assets,
+        store=store,
+        parallel_requests=args.parallel_requests,
+        progress=lambda module, batch_number, translated_count, failure_count: print(
+            f"{language}: completed {module} batch {batch_number} "
+            f"({translated_count} translated, {failure_count} failed)",
+            flush=True,
+        ),
+    )
+    for module, module_tasks in sorted(grouped.items()):
+        translated = translated_by_module.get(module, {})
+        failures = failures_by_module.get(module, [])
+        if should_write_draft(language, args.write_back):
+            out_path = write_draft_module(
+                language,
+                module,
+                module_tasks,
+                translated,
+                source_texts=source_texts,
+                merge_existing=not args.rewrite,
+            )
+            print(
+                f"{language}: wrote draft {out_path} "
+                f"({len(translated)}/{len(module_tasks)} translated, {len(failures)} failed)"
+            )
+        if args.write_back:
+            write_back_module(language, module, module_tasks, translated, store)
+        for failure in failures:
+            print(f"  - {failure}")
+
+
 def selected_modules(args: argparse.Namespace) -> set[str]:
     values = parse_csv_values(args.modules)
     if args.module:
@@ -1097,6 +1261,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--parallel-requests", type=int, default=1)
+    parser.add_argument("--parallel-languages", type=int, default=1)
     parser.add_argument("--max-tokens", type=int)
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument("--chat-extra-json", default="")
@@ -1105,6 +1270,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--rewrite", action="store_true")
     parser.add_argument("--write-back", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--full-scan",
+        action="store_true",
+        help="rescan all source files instead of using the incremental source-key cache",
+    )
     return parser
 
 
@@ -1112,7 +1282,12 @@ def main() -> None:
     args = build_parser().parse_args()
     modules = selected_modules(args)
     languages = parse_csv_values(args.languages)
-    source_records = source_keys.collect_source_key_records()
+    if args.full_scan:
+        source_records = source_keys.collect_source_key_records()
+    else:
+        source_records, _changed_files, _full_scan = (
+            source_keys.collect_incremental_source_key_records()
+        )
     source_texts = collect_source_text_by_identity(source_records)
     store = i18n_store.load_language_store()
     prompt_assets = load_prompt_assets()
@@ -1125,15 +1300,15 @@ def main() -> None:
         client = LocalHttpClient(
             base_url=args.base_url,
             model=args.model,
-            api_key=resolve_api_key(args.api_key),
+            api_key=resolve_api_key(args.api_key, args.base_url),
             timeout_seconds=args.timeout,
             max_tokens=args.max_tokens,
             chat_extra_body=build_chat_extra_body(
                 args.chat_extra_json, args.reasoning_effort
             ),
         )
-    for language in languages:
-        if args.write_back:
+    if args.write_back:
+        for language in languages:
             written, failures = write_back_draft(
                 language,
                 modules=modules or None,
@@ -1146,79 +1321,43 @@ def main() -> None:
                 print(f"{language}: no draft translations written back")
             for failure in failures:
                 print(f"  - {failure}")
-            continue
-        existing_draft = (
-            load_existing_valid_draft_identities(language, source_texts)
-            if args.resume and should_write_draft(language, args.write_back)
-            else set()
-        )
-        tasks = collect_tasks(
-            language,
-            modules=modules or None,
-            limit=args.limit,
-            existing_draft_identities=existing_draft,
-            rewrite_existing=args.rewrite,
-            records=source_records,
-            store=store,
-        )
-        if not tasks:
-            print(f"{language}: nothing to translate")
-            continue
-        grouped: dict[str, list[TranslationTask]] = {}
-        for task in tasks:
-            grouped.setdefault(task.module, []).append(task)
-        if args.dry_run:
-            for module, module_tasks in sorted(grouped.items()):
-                for index in range(0, len(module_tasks), args.batch_size):
-                    print(
-                        render_prompt(
-                            language,
-                            module,
-                            module_tasks[index : index + args.batch_size],
-                            prompt_assets=prompt_assets,
-                            store=store,
-                        )
-                    )
-            continue
-        translated_by_module, failures_by_module = translate_task_batches(
-            client=client,
-            language=language,
-            tasks_by_module=grouped,
-            batch_size=args.batch_size,
-            prompt_assets=prompt_assets,
-            store=store,
-            parallel_requests=args.parallel_requests,
-            progress=lambda module, batch_number, translated_count, failure_count: (
-                print(
-                    f"{language}: completed {module} batch {batch_number} "
-                    f"({translated_count} translated, {failure_count} failed)",
-                    flush=True,
-                )
-            ),
-        )
-        for module, module_tasks in sorted(grouped.items()):
-            translated = translated_by_module.get(module, {})
-            failures = failures_by_module.get(module, [])
-            if should_write_draft(language, args.write_back):
-                out_path = write_draft_module(
-                    language,
-                    module,
-                    module_tasks,
-                    translated,
+        return
+
+    assert client is not None
+    parallel_languages = max(1, min(args.parallel_languages, MAX_PARALLEL_LANGUAGES))
+    if parallel_languages > 1 and len(languages) > 1 and not args.dry_run:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=parallel_languages
+        ) as executor:
+            futures = [
+                executor.submit(
+                    translate_language_to_drafts,
+                    args=args,
+                    language=language,
+                    modules=modules,
+                    source_records=source_records,
                     source_texts=source_texts,
+                    store=store,
+                    prompt_assets=prompt_assets,
+                    client=client,
                 )
-                print(
-                    f"{language}: wrote draft {out_path} "
-                    f"({len(translated)}/{len(module_tasks)} translated, {len(failures)} failed)"
-                )
-            else:
-                write_back_module(language, module, module_tasks, translated, store)
-                print(
-                    f"{language}: updated translations/i18n/{module}.toml "
-                    f"({len(translated)}/{len(module_tasks)} translated, {len(failures)} failed)"
-                )
-            for failure in failures:
-                print(f"  - {failure}")
+                for language in languages
+            ]
+            for future in concurrent.futures.as_completed(futures):
+                future.result()
+        return
+
+    for language in languages:
+        translate_language_to_drafts(
+            args=args,
+            language=language,
+            modules=modules,
+            source_records=source_records,
+            source_texts=source_texts,
+            store=store,
+            prompt_assets=prompt_assets,
+            client=client,
+        )
 
 
 if __name__ == "__main__":

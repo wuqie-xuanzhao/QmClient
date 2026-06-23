@@ -3917,14 +3917,11 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesReadableIntervalInput)
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_EQ(Body.find("const bool CompactQueueCapacityControls"), std::string::npos);
-	EXPECT_NE(Body.find("CUIRect QueueRotationPanel;"), std::string::npos);
-	EXPECT_NE(Body.find("QueueSection.HSplitTop(46.0f, &QueueRotationPanel, &QueueSection);"), std::string::npos);
-	EXPECT_NE(Body.find("QueueRotationPanel.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f), IGraphics::CORNER_ALL, 4.0f);"), std::string::npos);
-	EXPECT_NE(Body.find("QueueRotationHeader.VSplitLeft(QueueEnabledColumnWidth, &QueueEnabledHeading, &QueueIntervalHeading);"), std::string::npos);
-	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee-skin-queue-enabled-heading\", &QueueEnabledHeading, Localize(\"Enabled\"), 9.0f, TEXTALIGN_MC, QueueControlLabelProps, (int)QueueEnabledHeading.w);"), std::string::npos);
-	EXPECT_NE(Body.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee-skin-queue-switch-interval\", &QueueIntervalHeading, Localize(\"Switch interval\"), 9.0f, TEXTALIGN_MC, QueueControlLabelProps, (int)QueueIntervalHeading.w);"), std::string::npos);
-	EXPECT_NE(Body.find("QueueRotationControls.VSplitLeft(QueueEnabledColumnWidth, &QueueEnabledButtonColumn, &IntervalControls);"), std::string::npos);
-	EXPECT_NE(Body.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, nullptr, \"\", QueueEnabled, &QueueEnabledButton)"), std::string::npos);
+	EXPECT_NE(Body.find("CUIRect QueueEnabledRect;"), std::string::npos);
+	EXPECT_NE(Body.find("QueueSection.HSplitTop(20.0f, &QueueEnabledRect, &QueueSection);"), std::string::npos);
+	EXPECT_NE(Body.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", Localize(\"Enable skin queue\"), QueueEnabled, &QueueEnabledRect)"), std::string::npos);
+	EXPECT_EQ(Body.find("Localize(\"Enabled\")"), std::string::npos);
+	EXPECT_EQ(Body.find("tee-skin-queue-enabled-heading"), std::string::npos);
 	EXPECT_NE(Body.find("IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);"), std::string::npos);
 	EXPECT_NE(Body.find("IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);"), std::string::npos);
 	EXPECT_NE(Body.find("const float QueueValueInputWidth = 58.0f"), std::string::npos);

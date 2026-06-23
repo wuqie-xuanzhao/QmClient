@@ -160,6 +160,37 @@ for language in generate_all.GENERATED_LANGUAGES:
         for key, context in missing_toml[:10]:
             print(f"    - [{context}] {key}" if context else f"    - {key}")
 
+translation_quality_errors = i18n_store.translation_quality_errors(
+    loaded_i18n_store,
+    active_module_identities={
+        (
+            i18n_store.module_name_for_source(record.source),
+            record.key,
+            record.context,
+        )
+        for record in current_records
+    },
+    limit=20,
+)
+if translation_quality_errors:
+    errors.append(f"TOML translation quality errors: {len(translation_quality_errors)}")
+    print(f"  FAIL: TOML translation quality errors: {len(translation_quality_errors)}")
+    for error in translation_quality_errors[:10]:
+        print(f"    - {error}")
+else:
+    print("  OK: TOML translation quality checks")
+
+toml_format_errors = []
+for path in sorted(i18n_store.TRANSLATIONS_DIR.glob("*.toml")):
+    toml_format_errors.extend(i18n_store.toml_format_errors(path))
+if toml_format_errors:
+    errors.append(f"TOML format errors: {len(toml_format_errors)}")
+    print(f"  FAIL: TOML format errors: {len(toml_format_errors)}")
+    for error in toml_format_errors[:10]:
+        print(f"    - {error}")
+else:
+    print("  OK: TOML format checks")
+
 if os.path.isdir(legacy_overlay_dir):
     errors.append("legacy overlay directory still exists: data/qmclient/languages")
     print("  FAIL: legacy overlay directory still exists: data/qmclient/languages")

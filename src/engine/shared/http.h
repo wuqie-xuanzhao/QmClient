@@ -59,6 +59,7 @@ class CHttpRequest : public IHttpRequest
 		GET = 0,
 		HEAD,
 		POST,
+		POST_FORM,
 		POST_JSON,
 	};
 
@@ -71,6 +72,7 @@ class CHttpRequest : public IHttpRequest
 		case REQUEST::HEAD:
 			return "HEAD";
 		case REQUEST::POST:
+		case REQUEST::POST_FORM:
 		case REQUEST::POST_JSON:
 			return "POST";
 		}
@@ -185,6 +187,15 @@ public:
 	void Post(const unsigned char *pData, size_t DataLength)
 	{
 		m_Type = REQUEST::POST;
+		m_BodyLength = DataLength;
+		free(m_pBody);
+		m_pBody = (unsigned char *)malloc(std::max((size_t)1, DataLength));
+		if(m_pBody != nullptr && DataLength > 0)
+			mem_copy(m_pBody, pData, DataLength);
+	}
+	void PostForm(const unsigned char *pData, size_t DataLength)
+	{
+		m_Type = REQUEST::POST_FORM;
 		m_BodyLength = DataLength;
 		free(m_pBody);
 		m_pBody = (unsigned char *)malloc(std::max((size_t)1, DataLength));

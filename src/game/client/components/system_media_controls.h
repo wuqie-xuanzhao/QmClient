@@ -1,9 +1,9 @@
 #ifndef GAME_CLIENT_COMPONENTS_SYSTEM_MEDIA_CONTROLS_H
 #define GAME_CLIENT_COMPONENTS_SYSTEM_MEDIA_CONTROLS_H
 
-#include <game/client/component.h>
-
 #include <engine/graphics.h>
+
+#include <game/client/component.h>
 
 #include <atomic>
 #include <cstdint>
@@ -24,8 +24,13 @@ public:
 		char m_aTitle[128] = {};
 		char m_aArtist[128] = {};
 		char m_aAlbum[128] = {};
+		char m_aNeteaseSongId[128] = {};
+		char m_aQqMusicSongId[128] = {};
+		char m_aLinkedFileName[128] = {};
 		int64_t m_PositionMs = 0;
 		int64_t m_DurationMs = 0;
+		int64_t m_PositionUpdatedTick = 0;
+		double m_PlaybackRate = 1.0;
 		IGraphics::CTextureHandle m_AlbumArt;
 		int m_AlbumArtWidth = 0;
 		int m_AlbumArtHeight = 0;
@@ -57,7 +62,6 @@ private:
 
 	void ThreadMain();
 #endif
-
 };
 
 #endif

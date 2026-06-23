@@ -1726,7 +1726,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	{
 		CUIRect QueueSection = QueuePanel;
-		CUIRect QueueHeader, QueueList, QueuePresets;
+		CUIRect QueueHeader, QueueControls, QueueList, QueuePresets;
 		QueueSection.HSplitTop(22.0f, &QueueHeader, &QueueSection);
 		CUIRect QueueTitleRect, CurrentQueueRect;
 		QueueHeader.VSplitLeft(QueueHeader.w * 0.48f, &QueueTitleRect, &CurrentQueueRect);
@@ -1754,40 +1754,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		CurrentQueueLabelProps.m_StopAtEnd = true;
 		CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
 		Ui()->DoLabel(&CurrentQueueRect, aCurrentQueueLabel, 9.0f, TEXTALIGN_MR, CurrentQueueLabelProps);
-
-		CUIRect QueueRotationPanel;
-		QueueSection.HSplitTop(46.0f, &QueueRotationPanel, &QueueSection);
-		QueueRotationPanel.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f), IGraphics::CORNER_ALL, 4.0f);
-		CUIRect QueueRotationContent = QueueRotationPanel;
-		QueueRotationContent.Margin(5.0f, &QueueRotationContent);
-		CUIRect QueueRotationHeader, QueueRotationControls;
-		QueueRotationContent.HSplitTop(14.0f, &QueueRotationHeader, &QueueRotationContent);
-		QueueRotationContent.HSplitTop(2.0f, nullptr, &QueueRotationContent);
-		QueueRotationContent.HSplitTop(20.0f, &QueueRotationControls, &QueueRotationContent);
-
-		const float QueueEnabledColumnWidth = std::clamp(QueueRotationPanel.w * 0.32f, 46.0f, 62.0f);
-		CUIRect QueueEnabledHeading, QueueIntervalHeading;
-		QueueRotationHeader.VSplitLeft(QueueEnabledColumnWidth, &QueueEnabledHeading, &QueueIntervalHeading);
-		SLabelProperties QueueControlLabelProps;
-		QueueControlLabelProps.m_DisallowNewline = true;
-		QueueControlLabelProps.m_StopAtEnd = true;
-		QueueControlLabelProps.m_MinimumFontSize = 6.0f;
-		QueueControlLabelProps.m_MaxWidth = QueueEnabledHeading.w;
-		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-enabled-heading", &QueueEnabledHeading, Localize("Enabled"), 9.0f, TEXTALIGN_MC, QueueControlLabelProps, (int)QueueEnabledHeading.w);
-		QueueControlLabelProps.m_MaxWidth = QueueIntervalHeading.w;
-		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &QueueIntervalHeading, Localize("Switch interval"), 9.0f, TEXTALIGN_MC, QueueControlLabelProps, (int)QueueIntervalHeading.w);
-
-		CUIRect QueueEnabledButtonColumn, IntervalControls, IntervalInputGroup, IntervalInput, IntervalUnit;
-		QueueRotationControls.VSplitLeft(QueueEnabledColumnWidth, &QueueEnabledButtonColumn, &IntervalControls);
-		CUIRect QueueEnabledButton = QueueEnabledButtonColumn;
-		QueueEnabledButton.HMargin(1.0f, &QueueEnabledButton);
-		QueueEnabledButton.VMargin(maximum(0.0f, (QueueEnabledButton.w - QueueEnabledButton.h) * 0.5f), &QueueEnabledButton);
-		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, nullptr, "", QueueEnabled, &QueueEnabledButton))
-		{
-			QueueEnabled ^= 1;
-		}
-		GameClient()->m_Tooltips.DoToolTip(&QueueEnabled, &QueueRotationPanel, Localize("Enable skin queue rotation"));
-
 		CUIRect RotateMapRect;
 		QueueSection.HSplitTop(20.0f, &RotateMapRect, &QueueSection);
 		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueRotateMap, QueueDummy ? "tee-dummy-queue-rotate-all-maps" : "tee-player-queue-rotate-all-maps", Localize("Rotate all server player skins"), QueueRotateMap, &RotateMapRect))
@@ -1796,11 +1762,29 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 		GameClient()->m_Tooltips.DoToolTip(&QueueRotateMap, &RotateMapRect, Localize("Get all map players' skin IDs and auto add to rotate queue"));
 
+		CUIRect QueueEnabledRect;
+		QueueSection.HSplitTop(20.0f, &QueueEnabledRect, &QueueSection);
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, QueueDummy ? "tee-dummy-skin-queue-enabled" : "tee-player-skin-queue-enabled", Localize("Enable skin queue"), QueueEnabled, &QueueEnabledRect))
+		{
+			QueueEnabled ^= 1;
+		}
+		GameClient()->m_Tooltips.DoToolTip(&QueueEnabled, &QueueEnabledRect, Localize("Enable skin queue rotation"));
+
+		QueueSection.HSplitTop(20.0f, &QueueControls, &QueueSection);
+		CUIRect IntervalLabel, IntervalControls, IntervalInputGroup, IntervalInput, IntervalUnit;
+		const float QueueIntervalLabelWidth = 82.0f;
 		const float QueueValueInputWidth = 58.0f;
 		const float QueueValueUnitWidth = 18.0f;
+		QueueControls.VSplitLeft(QueueIntervalLabelWidth, &IntervalLabel, &IntervalControls);
 		IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);
 		IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);
 		IntervalInput.VMargin(1.0f, &IntervalInput);
+		SLabelProperties QueueControlLabelProps;
+		QueueControlLabelProps.m_MaxWidth = IntervalLabel.w;
+		QueueControlLabelProps.m_DisallowNewline = true;
+		QueueControlLabelProps.m_StopAtEnd = true;
+		QueueControlLabelProps.m_MinimumFontSize = 6.0f;
+		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &IntervalLabel, Localize("Switch interval"), IntervalLabel.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);
 		static CLineInputNumber s_aQueueIntervalInputs[NUM_DUMMIES];
 		CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];
 		const int PrevQueueInterval = QueueInterval;

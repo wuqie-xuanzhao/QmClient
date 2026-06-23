@@ -227,7 +227,7 @@
 == 2 yıldız
 
 2 秒内连续钩中或锤中玩家时显示连击提示
-== 2 saniye içinde bir oyuncuyu kancalayıp veya çekiçle vurduğunda combo bildirimi göster
+== 2 saniye içinde bir oyuncuyu art arda kancaladığında veya çekiçlediğinde combo ipucu göster
 
 3 stars
 == 3 yıldız
@@ -288,6 +288,12 @@ Active color
 
 Active disconnect
 == Aktif bağlantı kesme
+
+Active lyrics line font size in px
+== Aktif şarkı sözü satırı yazı tipi boyutu (px)
+
+Active lyrics line scale percent
+== Aktif şarkı sözü satırı ölçek yüzdesi
 
 Active moderator mode disabled because you are afk.
 == AFK olduğun için aktif moderatör modu devre dışı bırakıldı.
@@ -556,6 +562,9 @@ Always show own player's hook collision line
 Always translate
 == Her zaman çevir
 
+AMLL TTML DB API base URL (can be changed to a mirror)
+== AMLL TTML DB API temel URL'si (bir yansıtıcı ile değiştirilebilir)
+
 Amount
 == Miktar
 
@@ -600,6 +609,9 @@ API key
 
 Appearance
 == Görünüm
+
+Apple Music media-user-token
+== Apple Media kullanıcı-medya-belirteci
 
 Applied to %d same-family part(s).
 == %d adet aynı aile parçasına uygulandı.
@@ -769,6 +781,9 @@ Auto enable in Gores mode
 Auto execute
 == Otomatik çalıştır
 
+Auto fetch lyrics online when a new song is detected
+== Yeni bir şarkı algılandığında çevrimiçi şarkı sözlerini otomatik getir
+
 Auto gain control for mic (AGC, experimental)
 == Mikrofon için otomatik kazanç kontrolü (AGC, deneysel)
 
@@ -782,7 +797,7 @@ Auto login Axiom server
 == Axiom sunucusuna otomatik giriş
 
 Auto manage IME while typing
-== Yazarken IME otomatik yönetilsin
+== Yazarken IME'yi otomatik yönet
 
 Auto map vote
 == Otomatik harita oylaması
@@ -911,7 +926,7 @@ Background music volume
 == Arka plan müziği sesi
 
 Background opacity
-== Background opacity
+== Arka plan opaklığı
 
 Ban a certain nickname
 == Belirli bir takma adı yasakla
@@ -980,13 +995,13 @@ Body
 == Vücut
 
 Border
-== Border
+== Kenarlık
 
 Border color
-== Border color
+== Kenarlık rengi
 
 Border range
-== Border range
+== Kenarlık aralığı
 
 Both
 == Her ikisi
@@ -1571,13 +1586,13 @@ CP opacity
 == CP opaklığı
 
 CP点边界的覆盖实体 alpha (0-100)
-== CP noktası kenarlık kaplama alfa (0-100)
+== CP noktası sınırının kaplama varlık alfası (0-100)
 
 Create a random skin
 == Rastgele bir skin oluştur
 
 Create category
-== Create category
+== Kategori oluştur
 
 Created
 == Oluşturulma
@@ -1607,7 +1622,7 @@ Current file
 == Geçerli dosya
 
 Current line color
-== Current line color
+== Geçerli satır rengi
 
 Current queue: %s
 == Geçerli sıra: %s
@@ -1652,7 +1667,7 @@ Custom prompt template
 == Özel istem şablonu
 
 Customize name and clan text effects
-== Customize name and clan text effects
+== İsim ve klan metin efektlerini özelleştir
 
 Customize translate button and menu colors
 == Çevir düğmesi ve menü renklerini özelleştir
@@ -1772,7 +1787,7 @@ Deep unfreeze opacity
 == Derin çözülme opaklığı
 
 Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
-== Deepfly modu (0=Normal, 1=DF, 2=HDF, 3=Özel)
+== Deepfly modu (0=normal, 1=DF, 2=HDF, 3=özel)
 
 DeepSeek
 == DeepSeek
@@ -1787,7 +1802,7 @@ DeepSeek 模型名称
 == DeepSeek model adı
 
 DeepSeek 端点（留空使用默认）
-== DeepSeek uç noktası (boş bırakılırsa varsayılan kullanılır)
+== DeepSeek uç noktası (varsayılan için boş bırakın)
 
 Default
 == Varsayılan
@@ -1844,13 +1859,13 @@ Demo
 == Demo
 
 Demo effects
-== Demo effects
+== Demo efektleri
 
 Demo marker added
 == Demo işareti eklendi
 
 Demo target
-== Demo target
+== Demo hedefi
 
 Demofile: %s
 == Demo dosyası: %s
@@ -2162,10 +2177,10 @@ Each tab has a clear purpose
 == Her sekmenin net bir amacı vardır
 
 Ease in out quad
-== Karesel yavaş giriş ve çıkış
+== Yavaş giriş yavaş çıkış ikinci derece
 
 Ease out cubic
-== Kübik yavaş çıkış
+== Yavaş çıkış üçüncü derece
 
 Echo follows the original chat color
 == Echo, orijinal sohbet rengini takip eder
@@ -2210,10 +2225,10 @@ Editor
 == Düzenleyici
 
 Elastic
-== Esnek
+== Elastik
 
 Elastic back
-== Esnek geri dönüş
+== Elastik geri tepme
 
 Elevated
 == Yüksek
@@ -2228,7 +2243,7 @@ Emoticon ID
 == İfade Kimliği
 
 Emoticon shadow
-== Emoticon shadow
+== İfade gölgesi
 
 Emoticons
 == İfadeler
@@ -2281,14 +2296,23 @@ Enable highlighted chat sound
 Enable Jelly Tee
 == Jelly Tee'yi Etkinleştir
 
+Enable karaoke word highlighting
+== Karaoke kelime vurgulamayı etkinleştir
+
 Enable keyword reply
 == Anahtar kelime yanıtını etkinleştir
+
+Enable local lyrics cache
+== Yerel şarkı sözü önbelleğini etkinleştir
 
 Enable long pain sound (used when shooting in freeze)
 == Uzun acı sesini etkinleştir (dondurucuda ateş ederken kullanılır)
 
 Enable lyrics
-== Enable lyrics
+== Şarkı sözlerini etkinleştir
+
+Enable lyrics HUD overlay
+== Şarkı sözü HUD kaplamasını etkinleştir
 
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 == Belirtilen hatayı kullanarak harita uyumluluk modunu etkinleştir (örnek: grenade-doubleexplosion@ddnet.tw)
@@ -2311,8 +2335,11 @@ Enable replays
 Enable server message sound
 == Sunucu mesajı sesini etkinleştir
 
+Enable skin queue
+== Deri kuyruğunu etkinleştir
+
 Enable skin queue rotation
-== Cilt kuyruğu dönüşünü etkinleştir
+== Deri kuyruğu dönüşünü etkinleştir
 
 Enable speedrun timer
 == Hızlı koşu zamanlayıcısını etkinleştir
@@ -2501,7 +2528,7 @@ Fade and slide
 == Soldur ve kaydır
 
 Fade duration
-== Fade duration
+== Solma süresi
 
 Fade in
 == Soldurarak aç
@@ -2747,7 +2774,7 @@ Friends
 == Arkadaşlar
 
 Friends only
-== Friends only
+== Yalnızca arkadaşlar
 
 Frozen Margin
 == Donma Marjı
@@ -2870,19 +2897,19 @@ Gives you infinite jump
 == Sana sonsuz zıplama verir
 
 Glitch
-== Glitch
+== Hata
 
 Global toggle key
 == Genel açma/kapama tuşu
 
 Glow
-== Glow
+== Parlama
 
 Glow alpha
 == Parlama alfası
 
 Glow color
-== Glow color
+== Parlama rengi
 
 Glow intensity
 == Parlama yoğunluğu
@@ -2891,7 +2918,7 @@ Glow offset
 == Parlama ofseti
 
 Glow range
-== Glow range
+== Parlama aralığı
 
 Go back one marker
 == Bir işaretçi geri git
@@ -2930,7 +2957,7 @@ Gores 模式下对其他玩家也启用快速输入
 == Gores modunda diğer oyuncular için de hızlı girişi etkinleştir
 
 Gores 模式下自动锤枪切换
-== Gores modunda otomatik güdük-tabanca değiştirme
+== Gores modunda otomatik çekiç/silah değiştirme
 
 Gores 模式下隐藏辅助线
 == Gores modunda yardımcı çizgileri gizle
@@ -2939,10 +2966,10 @@ Grabs
 == Bayraklar
 
 Gradient
-== Gradient
+== Gradyan
 
 Gradient color
-== Gradient color
+== Gradyan rengi
 
 Graphics
 == Grafikler
@@ -3040,6 +3067,12 @@ Hide jump effects
 Hide kill/finish messages
 == Öldürme/bitirme mesajlarını gizle
 
+Hide lyrics when no lyrics are found instead of showing a hint
+== Şarkı sözü bulunamadığında ipucu göstermek yerine gizle
+
+Hide lyrics while media is paused
+== Medya duraklatıldığında şarkı sözlerini gizle
+
 Hide map progress
 == Harita ilerlemesini gizle
 
@@ -3074,7 +3107,7 @@ Hide weapon muzzle flashes
 == Silah namlu flaşlarını gizle
 
 Hide without media state
-== Hide without media state
+== Medya durumu olmadığında gizle
 
 High Detail
 == Yüksek Detay
@@ -3125,7 +3158,7 @@ Hook Strength
 == Kanca Gücü
 
 Hook strength scope
-== Hook strength scope
+== Kanca gücü kapsamı
 
 Hooking L/R: %.0f%%/%.0f%%
 == Kanca S/S: %.0f%%/%.0f%%
@@ -3161,7 +3194,7 @@ HUD rainbow colors
 == HUD gökkuşağı renkleri
 
 HUD 灵动岛显示队伍
-== HUD Dinamik Ada takım gösterimi
+== HUD Dynamic Island'da takımı göster
 
 HUD 编辑器布局
 == HUD düzenleyici düzeni
@@ -3195,6 +3228,12 @@ In memory of me
 
 Inactive color
 == Etkin olmayan renk
+
+Inactive lyrics line font size in px
+== Pasif şarkı sözü satırı yazı tipi boyutu (px)
+
+Inactive lyrics line minimum opacity percent
+== Pasif şarkı sözü satırı minimum opaklık yüzdesi
 
 Incoming language
 == Gelen dil
@@ -3400,6 +3439,9 @@ k = Resend loss
 Kaomoji
 == Kaomoji
 
+Karaoke highlight soft edge width in px
+== Karaoke vurgu yumuşak kenar genişliği (px)
+
 Key Bindings
 == Tuş Bağlamaları
 
@@ -3572,7 +3614,7 @@ Linear
 == Doğrusal
 
 Lines
-== Lines
+== Satırlar
 
 Lines %d - %d (%s)
 == Satırlar %d - %d (%s)
@@ -3632,10 +3674,10 @@ LLM provider
 == LLM sağlayıcısı
 
 LLM Provider (0=ZhipuAI, 1=DeepSeek, 2=OpenAI, 3=Custom)
-== LLM Sağlayıcı (0=ZhipuAI, 1=DeepSeek, 2=OpenAI, 3=Özel)
+== LLM Sağlayıcısı (0=ZhipuAI, 1=DeepSeek, 2=OpenAI, 3=Özel)
 
 LLM 翻译并发数（0=自动）
-== LLM çeviri eşzamanlılık sayısı (0=Otomatik)
+== LLM çeviri eşzamanlılık sayısı (0=otomatik)
 
 LLM 翻译默认并发数（智能调整）
 == LLM çeviri varsayılan eşzamanlılık sayısı (akıllı ayarlama)
@@ -3766,8 +3808,86 @@ Long press on a touch button to select it.
 Low to high
 == Düşükten yükseğe
 
+LRCLIB API base URL (can be changed to a mirror)
+== LRCLIB API temel URL'si (bir aynaya değiştirilebilir)
+
 Lyrics
-== Lyrics
+== Şarkı sözleri
+
+Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
+== Şarkı sözü otomatik arama kaynak sırası ve etkinleştirme listesi (boş=varsayılan; ayırıcı olarak | kullanın, örn. QQ|Kugou|Netease|LrcLib)
+
+Lyrics cache expiry days (0=never expire)
+== Şarkı sözü önbellek son kullanma günü (0=hiç sona ermez)
+
+Lyrics clock drift hard snap threshold in ms
+== Şarkı sözü saat kayması sert yakalama eşiği (ms)
+
+Lyrics fuzzy match score threshold
+== Şarkı sözleri bulanık eşleşme puan eşiği
+
+Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
+== Şarkı sözleri HTTP proxy (ör. http://127.0.0.1:7890)
+
+Lyrics HTTP request timeout in ms
+== Şarkı sözleri HTTP istek zaman aşımı (ms)
+
+Lyrics HUD edge margin in px
+== Şarkı sözleri HUD kenar boşluğu (px)
+
+Lyrics line spacing in px
+== Şarkı sözleri satır aralığı (px)
+
+Lyrics line switch scroll duration in ms
+== Şarkı sözleri satır geçiş kaydırma süresi (ms)
+
+Lyrics lines shown above active line
+== Şarkı sözleri aktif satırın üstünde gösterilen satır sayısı
+
+Lyrics lines shown below active line
+== Şarkı sözleri aktif satırın altında gösterilen satır sayısı
+
+Lyrics local media library folders (use | as separator)
+== Şarkı sözleri yerel medya kütüphanesi klasörleri (ayraç olarak | kullanın)
+
+Lyrics manual timeline offset in ms (runtime step 500ms)
+== Şarkı sözleri manuel zaman çizelgesi ofseti (ms, çalışma zamanında adım 500ms)
+
+Lyrics opacity fade percent per distance line
+== Şarkı sözleri mesafe satırı başına opaklık solma yüzdesi
+
+Lyrics overall opacity percent
+== Şarkı sözleri genel opaklık yüzdesi
+
+Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
+== Şarkı sözleri kaynak başına eşleşme eşikleri (boş=genel eşik; örn. QQ=60|LrcLib=70)
+
+Lyrics scale shrink percent per distance line
+== Şarkı sözleri mesafe satırı başına ölçek küçültme yüzdesi
+
+Lyrics search strategy (0=source order, 1=parallel best match)
+== Şarkı sözleri arama stratejisi (0=kaynak sırası, 1=paralel en iyi eşleşme)
+
+Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
+== Şarkı sözleri kaynağı (0=Otomatik en iyi eşleşme, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Yerel Müzik Dosyası, 8=Yerel LRC, 9=Yerel ESLRC, 10=Yerel TTML)
+
+Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
+== Şarkı sözleri arama sırasında önbelleği yok sayan kaynaklar (ayraç olarak | kullanın, örn. QQ|Kugou)
+
+Lyrics translation and transliteration color
+== Şarkı sözleri çeviri ve harf çevirisi rengi
+
+Lyrics: empty track
+== Şarkı sözleri: boş parça
+
+Lyrics: no lyrics found
+== Şarkı sözleri: şarkı sözü bulunamadı
+
+Lyrics: no media playing
+== Şarkı sözleri: oynatılan medya yok
+
+Lyrics: searching...
+== Şarkı sözleri: aranıyor...
 
 Main Asset
 == Ana Varlık
@@ -3809,7 +3929,7 @@ Makes you super
 == Seni süper yapar
 
 Manage categories
-== Manage categories
+== Kategorileri yönet
 
 Manual
 == Manuel
@@ -3818,13 +3938,13 @@ Manual concurrency: %d
 == Manuel eşzamanlılık: %d
 
 Manual scope
-== Manual scope
+== Manuel kapsam
 
 Manual source file
 == Manuel kaynak dosyası
 
 Manual target
-== Manual target
+== Manuel hedef
 
 Map
 == Harita
@@ -4096,8 +4216,47 @@ Name:
 Name: %s
 == İsim: %s
 
+Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)
+== İsim levhası kanca gücü simge kapsamı (0=Kendi 1=Diğerleri 2=Güçlü kanca 3=Zayıf kanca 4=Tüm oyuncular)
+
+Nameplate strong hook icon color
+== İsim levhası güçlü kanca simge rengi
+
 Nameplate text
-== Nameplate text
+== İsim levhası metni
+
+Nameplate text border color
+== İsim levhası metin kenarlık rengi
+
+Nameplate text border range
+== İsim levhası metin kenarlık aralığı
+
+Nameplate text effects (1=Border 2=Gradient 4=Rainbow 8=Glow)
+== İsim levhası metin efektleri (1=Kenarlık 2=Gradyan 4=Gökkuşağı 8=Parlama)
+
+Nameplate text effects demo manual target client ID (-1=None)
+== İsim levhası metin efektleri demo manuel hedef istemci ID'si (-1=Yok)
+
+Nameplate text effects demo mode (0=Off 1=Smart 2=Manual target 3=Manual scope)
+== İsim levhası metin efektleri demo modu (0=Kapalı 1=Akıllı 2=Manuel hedef 3=Manuel kapsam)
+
+Nameplate text effects playing scope (0=Off 1=Own 2=Others 3=Friends 4=Own and friends 5=All players)
+== İsim levhası metin efektleri oynatma kapsamı (0=Kapalı 1=Kendim 2=Diğerleri 3=Arkadaşlar 4=Kendim ve arkadaşlar 5=Tüm oyuncular)
+
+Nameplate text effects spectate scope (0=Off 1=Spectated player 2=Others 3=Friends 4=Spectated player and friends 5=All players)
+== İsim levhası metin efektleri izleme kapsamı (0=Kapalı 1=İzlenen oyuncu 2=Diğerleri 3=Arkadaşlar 4=İzlenen oyuncu ve arkadaşlar 5=Tüm oyuncular)
+
+Nameplate text glow color
+== İsim levhası metin parıltı rengi
+
+Nameplate text glow range
+== İsim levhası metin parıltı aralığı
+
+Nameplate text gradient color
+== İsim levhası metin gradyan rengi
+
+Nameplate weak hook icon color
+== İsim levhası zayıf kanca simgesi rengi
 
 Native scale (1.0)
 == Yerel ölçek (1.0)
@@ -4148,7 +4307,7 @@ Next
 == Sonraki
 
 Next line color
-== Next line color
+== Sonraki satır rengi
 
 Next page in console
 == Konsolda sonraki sayfa
@@ -4511,7 +4670,7 @@ OpenAI 模型名称
 == OpenAI model adı
 
 OpenAI 端点（留空使用默认）
-== OpenAI uç noktası (boş bırakılırsa varsayılan kullanılır)
+== OpenAI uç noktası (varsayılan için boş bırakın)
 
 Opened
 == Açıldı
@@ -4529,16 +4688,16 @@ Other
 == Diğer
 
 Others
-== Others
+== Diğerleri
 
 Others only
-== Others only
+== Yalnızca diğerleri
 
 Outgoing language
 == Giden dil
 
 Outline color
-== Outline color
+== Anahat rengi
 
 Outline opacity
 == Anahat opaklığı
@@ -4720,6 +4879,9 @@ Play/pause the current demo
 Playback volume
 == Oynatma sesi
 
+Played lyrics word color
+== Oynatılan şarkı sözü kelime rengi
+
 Player
 == Oyuncu
 
@@ -4775,7 +4937,7 @@ Players can't hook each other on this server
 == Bu sunucuda oyuncular birbirini kancalayamaz
 
 Playing effects
-== Playing effects
+== Oynatma efektleri
 
 Please add a valid cut first
 == Lütfen önce geçerli bir kesim ekleyin
@@ -4946,7 +5108,7 @@ Progress bar width
 == İlerleme çubuğu genişliği
 
 PTT 释放延迟（毫秒）
-== PTT bırakma gecikmesi (milisaniye)
+== PTT bırakma gecikmesi (ms)
 
 Publicly messages everyone your current time in this current running race
 == Bu devam eden yarıştaki geçerli süreni herkese açık olarak mesajla
@@ -5000,10 +5162,10 @@ q = Connection quality
 == q = Bağlantı kalitesi
 
 Q 弹 Tee 形变强度
-== Sıçrayan Tee deformasyon gücü
+== Zıpzıp Tee deformasyon şiddeti
 
 Q 弹 Tee 形变持续时间
-== Sıçrayan Tee deformasyon süresi
+== Zıpzıp Tee deformasyon süresi
 
 Qm
 == Qm
@@ -5030,7 +5192,7 @@ QmClient Settings
 == QmClient Ayarları
 
 QmUi 动效强度：0=关闭 1=降低 2=完整
-== QmUi animasyon gücü: 0=Kapalı 1=Azaltılmış 2=Tam
+== QmUi animasyon şiddeti: 0=Kapalı 1=Azaltılmış 2=Tam
 
 QQ group: 1076765929 (click to copy)
 == QQ grubu: 1076765929 (kopyalamak için tıklayın)
@@ -5570,7 +5732,7 @@ Right jump
 == Sağ zıplama
 
 Right-click or use the gear to manage categories
-== Right-click or use the gear to manage categories
+== Kategorileri yönetmek için sağ tıklayın veya dişli simgesini kullanın
 
 Right-click to disable auto-translate
 == Otomatik çeviriyi devre dışı bırakmak için sağ tıklayın
@@ -5786,10 +5948,10 @@ Screenshots directory
 == Ekran görüntüleri dizini
 
 Scroll long lines
-== Scroll long lines
+== Uzun satırları kaydır
 
 Scroll speed
-== Scroll speed
+== Kaydırma hızı
 
 Search
 == Ara
@@ -5861,7 +6023,7 @@ Self
 == Kendi
 
 Self and friends
-== Self and friends
+== Kendim ve arkadaşlar
 
 Self only
 == Yalnızca kendim
@@ -6065,7 +6227,7 @@ Shape
 == Şekil
 
 Short server names
-== Short server names
+== Kısa sunucu adları
 
 Shotgun
 == Pompalı tüfek
@@ -6161,7 +6323,7 @@ Show country flags in nameplates
 == İsim levhalarında ülke bayraklarını göster
 
 Show current and next lyric lines on HUD
-== Show current and next lyric lines on HUD
+== HUD'da mevcut ve sonraki şarkı sözü satırlarını göster
 
 Show DDNet map finishes in server browser
 == Sunucu tarayıcısında tamamlanan DDNet haritalarını göster
@@ -6288,6 +6450,12 @@ Show local time always
 
 Show logs of the last i seconds
 == Son i saniyenin günlüklerini göster
+
+Show lyrics translation when available
+== Varsa şarkı sözü çevirisini göster
+
+Show lyrics transliteration when available
+== Varsa şarkı sözü harf çevirisini göster
 
 Show moving tiles in entities
 == Varlıklarda hareketli karoları göster
@@ -6578,10 +6746,10 @@ Skin transition duration
 == Görünüm geçiş süresi
 
 Skin transition easing
-== Görünüm geçiş yumuşatması
+== Deri geçiş yumuşatması
 
 Skin transition intensity
-== Görünüm geçiş yoğunluğu
+== Deri geçiş şiddeti
 
 Skin transition type
 == Görünüm geçiş türü
@@ -6608,7 +6776,7 @@ Smaller tees
 == Daha küçük teeler
 
 Smart
-== Smart
+== Akıllı
 
 Smooth Dynamic Camera
 == Yumuşak Dinamik Kamera
@@ -6620,7 +6788,7 @@ SMTC
 == SMTC
 
 Snap threshold
-== Snap threshold
+== Yakalama eşiği
 
 Snapshot Latency
 == Snapshot gecikmesi
@@ -6680,7 +6848,7 @@ Spectate a player by Id
 == ID'ye göre bir oyuncuyu izle
 
 Spectate effects
-== Spectate effects
+== İzleme efektleri
 
 Spectate mode
 == İzleme modu
@@ -6704,10 +6872,10 @@ Spectate the previous player
 == Önceki oyuncuyu izle
 
 Spectated player
-== Spectated player
+== İzlenen oyuncu
 
 Spectated player and friends
-== Spectated player and friends
+== İzlenen oyuncu ve arkadaşlar
 
 Spectators
 == İzleyiciler
@@ -6842,10 +7010,10 @@ Stroke fade time
 == Vuruş solma süresi
 
 Strong hook
-== Strong hook
+== Güçlü kanca
 
 Strong hook color
-== Strong hook color
+== Güçlü kanca rengi
 
 Strong Weak Hook
 == Güçlü Zayıf Kanca
@@ -7151,7 +7319,7 @@ Teleports you to teleporter i
 == Seni ışınlayıcı i'ye ışınlar
 
 Teletile 的覆盖实体 alpha (0-100)
-== Teletile kaplama alfa (0-100)
+== Teletile kaplama varlık alfası (0-100)
 
 Temporarily set a config value while pressed
 == Basılıyken geçici olarak bir yapılandırma değeri ayarla
@@ -7328,7 +7496,7 @@ Time limit: %d min
 == Süre sınırı: %d dk
 
 Time offset
-== Time offset
+== Zaman kayması
 
 Time to wait before changing team: %s
 == Takım değiştirmeden önce beklenecek süre: %s
@@ -7586,7 +7754,7 @@ UI scale
 == UI ölçeği
 
 UI大小百分比 (UI scale percentage)
-== UI boyut yüzdesi (UI scale percentage)
+== UI boyut yüzdesi
 
 Unable to delete %d selected items. The first failing item was '%s'.
 == %d seçili öğe silinemiyor. İlk başarısız öğe '%s'.
@@ -7716,6 +7884,9 @@ Unmute player with list index
 
 Unmute:
 == Sessizi Kaldır:
+
+Unplayed lyrics word color
+== Çalınmayan şarkı sözü kelime rengi
 
 Unpredicted ghost opacity
 == Tahmin edilmemiş hayalet opaklığı
@@ -7847,7 +8018,7 @@ VAD 允许名单（逗号分隔）
 == VAD izin listesi (virgülle ayrılmış)
 
 VAD 释放延迟（毫秒）
-== VAD bırakma gecikmesi (milisaniye)
+== VAD serbest bırakma gecikmesi (ms)
 
 VAD 阈值（百分比）
 == VAD eşiği (yüzde)
@@ -7979,10 +8150,10 @@ Warning
 == Uyarı
 
 Weak hook
-== Weak hook
+== Zayıf kanca
 
 Weak hook color
-== Weak hook color
+== Zayıf kanca rengi
 
 Weapon
 == Silah
@@ -8462,13 +8633,13 @@ Zoom out
 == Rapor hizmeti imza anahtarı
 
 交换选项颜色
-== Takas seçenek rengi
+== Değiştirme seçenek rengi
 
 仅在另一只 tee 离开当前视角时显示分身迷你视图
-== Sadece diğer tee mevcut görüş alanından ayrıldığında Dummy mini görünümünü göster
+== Dummy mini görünümünü yalnızca diğer tee mevcut görüş alanından ayrıldığında göster
 
 使用通知栏分类过滤
-== Bildirim çubuğu kategorisi filtrelemesini kullan
+== Bildirim çubuğu kategorisi filtresini kullan
 
 允许 FTAPI 自动翻译（可能导致过载）
 == FTAPI otomatik çevirisine izin ver (aşırı yüklenmeye neden olabilir)
@@ -8477,25 +8648,25 @@ Zoom out
 == Anahtar kelime yanıtı için Dummy kullan
 
 关键词回复规则（每行: [rename] [regex] 关键词=>回复）
-== Anahtar kelime yanıt kuralları (her satır: [rename] [regex] anahtar_kelime=>yanıt)
+== Anahtar kelime yanıt kuralları (her satır: [rename] [regex] anahtarkelime=>yanıt)
 
 关闭聊天时保留未发送内容
-== Sohbet kapatıldığında gönderilmemiş içeriği sakla
+== Sohbet kapatılırken gönderilmemiş içeriği sakla
 
 兼容其他服务器的类似单人区域提示
-== Diğer sunuculardaki benzer tek kişilik alan bildirimleriyle uyumlu
+== Diğer sunucuların benzer tek kişilik alan ipuçlarıyla uyumlu
 
 出站翻译目标语言代码
 == Giden çeviri hedef dil kodu
 
 分身皮肤队列切换间隔（毫秒）
-== Dummy cilt kuyruğu değiştirme aralığı (ms)
+== Dummy skin sırası değiştirme aralığı (ms)
 
 分身皮肤队列当前位置
-== Dummy cilt kuyruğu mevcut konum
+== Dummy skin sırası geçerli konumu
 
 分身皮肤队列最大长度
-== Dummy cilt kuyruğu maksimum uzunluk
+== Dummy skin sırası maksimum uzunluğu
 
 分身迷你视图大小（百分比）
 == Dummy mini görünüm boyutu (yüzde)
@@ -8504,292 +8675,253 @@ Zoom out
 == Dummy mini görünüm yakınlaştırması (yüzde)
 
 切换武器时播放滑入旋转动画
-== Silah değiştirirken kayarak dönen animasyon oynat
+== Silah değiştirirken kayarak dönme animasyonu oynat
 
 加入可锁定队伍后自动锁定
-== Kilitlenebilir takıma katıldıktan sonra otomatik kilitle
+== Kilitlenebilir bir takıma katıldıktan sonra otomatik kilitle
 
 动态视野平滑度（0=瞬时，100=最平滑）
-== Dinamik görüş alanı yumuşaklığı (0=Anlık, 100=En yumuşak)
+== Dinamik görüş alanı düzgünlüğü (0=anlık, 100=en düzgün)
 
 动态视野强度（0-200）
-== Dinamik görüş alanı gücü (0-200)
+== Dinamik Görüş Alanı Gücü (0-200)
 
 压缩器攻击时间（毫秒）
-== Sıkıştırıcı atak süresi (milisaniye)
+== Kompresör Saldırı Süresi (ms)
 
 压缩器比率（x10）
-== Sıkıştırıcı oranı (x10)
+== Kompresör Oranı (x10)
 
 压缩器补偿增益（百分比）
-== Sıkıştırıcı telafi kazancı (yüzde)
+== Kompresör Telafi Kazancı (%)
 
 压缩器释放时间（毫秒）
-== Sıkıştırıcı bırakma süresi (milisaniye)
+== Kompresör Serbest Bırakma Süresi (ms)
 
 压缩器阈值（百分比）
-== Sıkıştırıcı eşiği (yüzde)
+== Kompresör Eşiği (%)
 
 反转相机漂移方向
-== Kamera kayma yönünü ters çevir
+== Kamera Sürüklenme Yönünü Ters Çevir
 
 可见性过滤模式
-== Görünürlük filtreleme modu
+== Görünürlük Filtreleme Modu
 
 同组全图收听
-== Aynı grupta harita genelinde dinle
+== Aynı Gruptaki Herkesi Haritada Duy
 
 名单过滤模式
-== Liste filtreleme modu
+== Liste Filtreleme Modu
 
 名字板元素允许 X 轴自由移动
-== İsim levhası öğelerinin X ekseninde serbestçe hareket etmesine izin ver
+== İsim Plakası Öğesinin X Ekseninde Serbestçe Hareket Etmesine İzin Ver
 
 名字板元素允许 Y 轴自由移动
-== İsim levhası öğelerinin Y ekseninde serbestçe hareket etmesine izin ver
+== İsim Plakası Öğesinin Y Ekseninde Serbestçe Hareket Etmesine İzin Ver
 
 名字板元素允许在框内自由移动
-== İsim levhası öğelerinin kutu içinde serbestçe hareket etmesine izin ver
+== İsim Plakası Öğesinin Kutu İçinde Serbestçe Hareket Etmesine İzin Ver
 
 名字板坐标行 X 偏移
-== İsimlik Koordinat Satırı X Kayması
+== İsim Plakası Koordinat Satırı X Kayması
 
 名字板坐标行 Y 偏移
-== İsimlik Koordinat Satırı Y Kayması
-
-名字板弱钩图标颜色
-== 名字板弱钩图标颜色
+== İsim Plakası Koordinat Satırı Y Kayması
 
 名字板强弱行 X 偏移
-== İsimlik Güç Satırı X Kayması
+== İsim Plakası Güç/Zayıflık Satırı X Kayması
 
 名字板强弱行 Y 偏移
-== İsimlik Güç Satırı Y Kayması
-
-名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
-== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
-
-名字板强钩图标颜色
-== 名字板强钩图标颜色
+== İsim Plakası Güç/Zayıflık Satırı Y Kayması
 
 名字板战队行 X 偏移
-== İsimlik Klan Satırı X Kayması
+== İsim Plakası Klan Satırı X Kayması
 
 名字板战队行 Y 偏移
-== İsimlik Klan Satırı Y Kayması
+== İsim Plakası Klan Satırı Y Kayması
 
 名字板按键行 X 偏移
-== İsimlik Tuş Satırı X Kayması
+== İsim Plakası Tuş Satırı X Kayması
 
 名字板按键行 Y 偏移
-== İsimlik Tuş Satırı Y Kayması
-
-名字板文本光晕范围
-== 名字板文本光晕范围
-
-名字板文本光晕颜色
-== 名字板文本光晕颜色
-
-名字板文本效果 Demo 手动目标 Client ID（-1=无）
-== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
-
-名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
-== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
-
-名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
-== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
-
-名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
-== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
-
-名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
-== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
-
-名字板文本渐变颜色
-== 名字板文本渐变颜色
-
-名字板文本边框范围
-== 名字板文本边框范围
-
-名字板文本边框颜色
-== 名字板文本边框颜色
+== İsim Plakası Tuş Satırı Y Kayması
 
 名字板昵称行 X 偏移
-== İsimlik Takma Ad Satırı X Kayması
+== İsim Plakası İsim Satırı X Kayması
 
 名字板昵称行 Y 偏移
-== İsimlik Takma Ad Satırı Y Kayması
+== İsim Plakası İsim Satırı Y Kayması
 
 名字牌X对齐提示严格模式
-== İsimlik X Hizalaması İpucu Katı Modu
+== İsim Plakası X Hizalama İpucu Katı Modu
 
 名字牌X对齐提示持续判定窗口（毫秒）
-== İsimlik X Hizalaması İpucu Sürekli Algılama Penceresi (ms)
+== İsim Plakası X Hizalama İpucu Sürekli Karar Penceresi (ms)
 
 名字牌X对齐提示高亮颜色
-== İsimlik X Hizalaması İpucu Vurgu Rengi
+== İsim Plakası X Hizalama İpucu Vurgu Rengi
 
 名字牌显示与本地玩家X对齐的提示
-== İsimlikte Yerel Oyuncuyla X Hizalamasını Göster
+== İsim Plakasında Yerel Oyuncuyla X Hizalamasını Göster
 
 名字牌显示他人坐标
-== İsimlikte Başkalarının Koordinatlarını Göster
+== İsim Plakasında Başkalarının Koordinatlarını Göster
 
 名字牌显示坐标X
-== İsimlikte Koordinat X'i Göster
+== İsim Plakasında Koordinat X'i Göster
 
 名字牌显示坐标Y
-== İsimlikte Koordinat Y'yi Göster
+== İsim Plakasında Koordinat Y'yi Göster
 
 名字牌显示自己坐标
-== İsimlikte Kendi Koordinatını Göster
+== İsim Plakasında Kendi Koordinatlarını Göster
 
 启动和菜单空闲时预热设置页
 == Başlangıçta ve Menü Boştayken Ayarlar Sayfasını Önceden Yükle
 
 启用 Gores 模式（King of Gores 辅助工具集合）
-== Gores Güdük-Tabanca Otomatik Değiştirmeyi Etkinleştir
+== Gores Modu’nu etkinleştir (King of Gores yardımcı araç seti)
 
 启用 LLM 思考模式（可能增加响应时间）
-== LLM Düşünme Modunu Etkinleştir (yanıt süresini artırabilir)
+== LLM Düşünme Modu’nu etkinleştir (yanıt süresini artırabilir)
 
 启用 Q 弹 Tee 形变
-== Q Yaylı Tee Deformasyonunu Etkinleştir
+== Q Esnek Tee Deformasyonu’nu etkinleştir
 
 启用 QmClient 风格背景 3D 粒子
-== QmClient Tarzı Arka Plan 3D Parçacıklarını Etkinleştir
+== QmClient tarzı arka plan 3D parçacıklarını etkinleştir
 
 启用 UI 运行时 v2 调试日志
-== UI Çalışma Zamanı v2 Hata Ayıklama Günlüğünü Etkinleştir
+== UI Runtime v2 hata ayıklama günlüklerini etkinleştir
 
 启用主线程与渲染阶段性能调试日志
-== Ana İş Parçacığı ve İşleme Aşaması Performans Hata Ayıklama Günlüğünü Etkinleştir
+== Ana iş parçacığı ve işleme aşaması performans hata ayıklama günlüklerini etkinleştir
 
 启用关键词回复
-== Anahtar Kelime Yanıtlarını Etkinleştir
+== Anahtar kelime yanıtlarını etkinleştir
 
 启用分身皮肤队列轮换
-== Dummy cilt kuyruğu dönüşünü etkinleştir
+== Dummy cilt sırası döngüsünü etkinleştir
 
 启用动态视野，移动越快视野越宽
-== Dinamik Görüş Alanını Etkinleştir, ne kadar hızlı hareket edersen görüş alanın o kadar geniş olur
+== Dinamik görüş alanını etkinleştir, ne kadar hızlı hareket edersen görüş alanın o kadar geniş olur
 
 启用增强激光特效（辉光+脉冲动画）
-== Gelişmiş Lazer Efektlerini Etkinleştir (parlama + darbe animasyonu)
+== Gelişmiş lazer efektlerini etkinleştir (parlama + darbe animasyonu)
 
 启用复读功能
-== Tekrarlama Özelliğini Etkinleştir
+== Tekrarlama özelliğini etkinleştir
 
 启用屏蔽词列表
-== Engellenen Kelime Listesini Etkinleştir
+== Engellenen kelime listesini etkinleştir
 
 启用新版 IME 候选栏
-== Yeni IME Aday Çubuğunu Etkinleştir
+== Yeni IME aday çubuğunu etkinleştir
 
 启用新版设置页面 UI
-== Yeni Ayarlar Sayfası UI'sını Etkinleştir
+== Yeni ayarlar sayfası UI’ını etkinleştir
 
 启用玩家统计面板
-== Oyuncu İstatistik Panosunu Etkinleştir
+== Oyuncu istatistik panelini etkinleştir
 
 启用皮肤切换动画
-== Skin Değiştirme Animasyonunu Etkinleştir
+== Cilt değiştirme animasyonunu etkinleştir
 
 启用皮肤队列轮换
-== Cilt kuyruğu dönüşünü etkinleştir
+== Cilt sırası döngüsünü etkinleştir
 
 启用相机漂移效果，让镜头根据移动速度产生轻微拖拽
-== Kamera Sürüklenme Efektini Etkinleştir, kameranın hareket hızına göre hafifçe sürüklenmesini sağlar
+== Kamera kayma efektini etkinleştir, kameranın hareket hızına göre hafifçe sürüklenmesini sağlar
 
 启用禅模式（Zen Mode）
-== Zen Modu'nu Etkinleştir
+== Zen Modu’nu etkinleştir
 
 启用系统媒体传输控制集成
-== Sistem Medya Aktarım Kontrolü Entegrasyonunu Etkinleştir
+== Sistem medya iletim kontrol entegrasyonunu etkinleştir
 
 启用系统媒体歌词
-== Sistem Medya Şarkı Sözlerini Etkinleştir
+== Sistem medya şarkı sözlerini etkinleştir
 
 启用背景 3D 粒子拖尾
-== Arka Plan 3D Parçacık İzini Etkinleştir
+== Arka plan 3D parçacık izlerini etkinleştir
 
 启用背景 3D 粒子脉冲缩放
-== Arka Plan 3D Parçacık Darbe Ölçeklendirmesini Etkinleştir
+== Arka plan 3D parçacık darbe ölçeklendirmesini etkinleştir
 
 启用背景 3D 粒子辉光
-== Arka Plan 3D Parçacık Parlamasını Etkinleştir
+== Arka plan 3D parçacık parlamasını etkinleştir
 
 启用背景 3D 粒子闪烁
-== Arka Plan 3D Parçacık Titremesini Etkinleştir
+== Arka plan 3D parçacık titremesini etkinleştir
 
 启用语音滤波（高通/压缩/限幅）
-== Ses Filtrelemeyi Etkinleştir (yüksek geçiş/sıkıştırma/sınırlama)
+== Ses filtrelemeyi etkinleştir (yüksek geçiş/sıkıştırma/sınırlama)
 
 启用语音激活（VAD）
-== Ses Etkinleştirmeyi (VAD) Etkinleştir
+== Ses Aktivasyonu’nu (VAD) etkinleştir
 
 启用语音聊天
-== Sesli Sohbeti Etkinleştir
+== Sesli sohbeti etkinleştir
 
 启用饼菜单
-== Pasta Menüsünü Etkinleştir
+== Pasta menüsünü etkinleştir
 
 噪声抑制强度（百分比）
-== Gürültü Bastırma Gücü (yüzde)
+== Gürültü bastırma gücü (yüzde)
 
 噪声抑制模式（0=关闭 1=简单 2=RNNoise）
-== Gürültü Bastırma Modu (0=Kapalı 1=Basit 2=RNNoise)
+== Gürültü bastırma modu (0=kapalı 1=basit 2=RNNoise)
 
 在 Gores 游戏模式中自动启用 Gores 自动切换
-== Gores Oyun Modunda Gores Otomatik Değiştirmeyi Otomatik Olarak Etkinleştir
+== Gores oyun modunda Gores otomatik geçişini otomatik olarak etkinleştir
 
 在 HUD 上显示系统媒体信息
-== HUD'da Sistem Medya Bilgilerini Göster
+== HUD üzerinde sistem medya bilgilerini göster
 
 在 Windows 上切换客户端进程的普通/高优先级
-== Windows'ta İstemci İşleminin Normal/Yüksek Önceliğini Değiştir
+== Windows'ta istemci işleminin normal/yüksek önceliğini değiştir
 
 在服务器浏览器中显示简短服务器名
-== Sunucu Tarayıcısında Kısa Sunucu Adını Göster
+== Sunucu tarayıcısında kısa sunucu adını göster
 
 在玩家头顶显示聊天气泡
-== Oyuncuların Üzerinde Sohbet Balonlarını Göster
+== Oyuncuların üzerinde sohbet balonlarını göster
 
 在表情后绘制阴影
-== İfadelerin Arkasına Gölge Çiz
+== İfadelerin arkasına gölge çiz
 
 在记分牌中显示默认国旗
-== Skor Tablosunda Varsayılan Bayrağı Göster
+== Skor tablosunda varsayılan bayrağı göster
 
 地图浏览器透明度
-== Harita Tarayıcı Şeffaflığı
+== Harita tarayıcısı şeffaflığı
 
 地图浏览器颜色
-== Harita Tarayıcı Rengi
+== Harita tarayıcısı rengi
 
 地图进度条垂直位置（顶边，占屏幕高度百分比）
-== Harita İlerleme Çubuğu Dikey Konumu (üst kenar, ekran yüksekliğinin yüzdesi)
+== Harita ilerleme çubuğu dikey konumu (üst kenar, ekran yüksekliğinin yüzdesi)
 
 地图进度条宽度（占屏幕宽度百分比）
-== Harita İlerleme Çubuğu Genişliği (ekran genişliğinin yüzdesi)
+== Harita ilerleme çubuğu genişliği (ekran genişliğinin yüzdesi)
 
 地图进度条样式（0=底部横条，1=HUD 内嵌）
-== Harita İlerleme Çubuğu Stili (0=Alt çubuk, 1=HUD içine gömülü)
+== Harita ilerleme çubuğu stili (0=alt çubuk, 1=HUD içine gömülü)
 
 地图进度条水平位置（中心点，占屏幕宽度百分比）
-== Harita İlerleme Çubuğu Yatay Konumu (merkez noktası, ekran genişliğinin yüzdesi)
+== Harita ilerleme çubuğu yatay konumu (merkez, ekran genişliğinin yüzdesi)
 
 地图进度条颜色
-== Harita İlerleme Çubuğu Rengi
+== Harita ilerleme çubuğu rengi
 
 地图进度条高度
-== Harita İlerleme Çubuğu Yüksekliği
+== Harita ilerleme çubuğu yüksekliği
 
 复制皮肤选项颜色
-== Kopya cilt seçeneği rengi
+== Kopyala cilt seçeneği rengi
 
 大字显示好友进服
-== Arkadaşın sunucuya girdiğini büyük yazıyla göster
+== Arkadaş girişini büyük yazıyla göster
 
 好友上线提醒
 == Arkadaş çevrimiçi bildirimi
@@ -8807,10 +8939,10 @@ Zoom out
 == Arkadaş haritaya girdiğinde otomatik selamla
 
 好友进图自动打招呼文本
-== Arkadaş haritaya girdiğinde otomatik selamlama metni
+== Arkadaş haritaya girdiğinde otomatik selam metni
 
 好友进服大字提示文本（使用%s表示好友名）
-== Arkadaş sunucuya girdiğinde büyük yazı ipucu metni (arkadaş adı için %s kullanın)
+== Arkadaş girişi büyük yazı bildirim metni (arkadaş adı için %s kullanın)
 
 好友选项颜色
 == Arkadaş seçeneği rengi
@@ -8819,7 +8951,7 @@ Zoom out
 == İstemci mesajı metin gradyan rengi
 
 将 Q 弹 Tee 形变应用到其他玩家
-== Q弹 Tee şekil değişimini diğer oyunculara uygula
+== Q弹 Tee deformasyonunu diğer oyunculara uygula
 
 将性能调试日志写入专用文件
 == Performans hata ayıklama günlüklerini özel bir dosyaya yaz
@@ -8831,25 +8963,25 @@ Zoom out
 == Engellenen kelime değiştirme karakteri
 
 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
-== feat-003 paylaşılan UI ilkel dogfood sayfasını göster (QmClient ayarlar sayfasını devralır, 11 ilkel + spring/easing animasyonlarını görsel olarak doğrulamak için)
+== feat-003 paylaşımlı UI ilkel dogfood sayfasını göster (QmClient ayarlar sayfasını devralır, 11 ilkel + spring/easing animasyonlarının görsel doğrulaması için)
 
 已读的设置界面新功能标识
 == Okunan ayarlar arayüzü yeni özellik göstergeleri
 
 开关图块的覆盖实体 alpha (0-100)
-== Geçiş döşemelerinin kaplama varlık alfası (0-100)
+== Anahtar döşemelerin kaplama varlık alfası (0-100)
 
 忽略语音距离衰减
 == Ses mesafesi zayıflamasını yoksay
 
 性能调试日志阈值（毫秒）
-== Performans hata ayıklama günlüğü eşiği (milisaniye)
+== Performans hata ayıklama günlüğü eşiği (ms)
 
 拿到额外武器时停用 Gores 自动切换
 == Ekstra silah alındığında Gores otomatik değiştirmeyi devre dışı bırak
 
 按名字单独音量（name=percent）
-== Ada göre bireysel ses seviyesi (ad=yüzde)
+== İsme göre bireysel ses seviyesi (isim=yüzde)
 
 按屏蔽词长度多字符替换
 == Engellenen kelime uzunluğuna göre çok karakterli değiştirme
@@ -8858,13 +8990,13 @@ Zoom out
 == VAD konuşmacılarını al
 
 接收旁观/非活跃玩家语音
-== İzleyici/pasif oyuncu sesini al
+== İzleyici/etkin olmayan oyuncuların sesini al
 
 控制台显示被屏蔽词
 == Konsolda engellenen kelimeleri göster
 
 提及选项颜色
-== Bahsetme seçeneği rengi
+== Bahsetme seçenekleri rengi
 
 旁观时按镜头中心收听
 == İzlerken kamera merkezine göre dinle
@@ -8873,10 +9005,10 @@ Zoom out
 == Sistem medya durumu yokken şarkı sözlerini gizle
 
 时间耗尽后自动禁用速通计时器
-== Süre dolduktan sonra hız koşusu zamanlayıcısını otomatik devre dışı bırak
+== Süre dolduğunda hızlı geçiş zamanlayıcısını otomatik devre dışı bırak
 
 显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户
-== Qm rozetini göster: merkez sunucu aracılığıyla tanımla ve isim levhası/skor tablosunda QmClient kullanıcılarını işaretle
+== Qm rozetini göster: Merkez sunucu aracılığıyla tanımla ve isim tabelasında/skor tablosunda QmClient kullanıcılarını işaretle
 
 显示分身迷你视图窗口
 == Dummy mini görünüm penceresini göster
@@ -8887,11 +9019,8 @@ Zoom out
 显示地图进度调试点路线
 == Harita ilerleme kontrol noktası rotasını göster
 
-显示歌词当前行指示器
-== Şarkı sözü geçerli satır göstergesini göster
-
 显示版本过旧提示
-== Sürümün çok eski olduğuna dair uyarıyı göster
+== Sürüm çok eski uyarısını göster
 
 显示碰撞体积边框
 == Çarpışma hacmi kenarlığını göster
@@ -8909,25 +9038,25 @@ Zoom out
 == Bildirim çubuğu gelişmiş ayarlarını göster
 
 普通消息文字渐变颜色
-== Normal mesaj metin gradyan rengi
+== Normal mesaj metni gradyan rengi
 
 智谱AI API Key
-== ZhiPuAI API Anahtarı
+== Zhipu AI API Key
 
 智谱AI 模型名称
-== ZhiPuAI Model Adı
+== Zhipu AI model adı
 
 智谱AI 端点（留空使用默认）
-== ZhiPuAI Uç Noktası (varsayılanı kullanmak için boş bırakın)
+== Zhipu AI uç noktası (varsayılan için boş bırak)
 
 替换方式 0=Regex 1=Full 2=Both
-== Değiştirme yöntemi 0=Regex 1=Tam 2=Her ikisi
+== Değiştirme yöntemi 0=Regex 1=Tam 2=Her İkisi
 
 本体和分身都被冻结时，自动切换到先解冻的那个
-== Ana karakter ve Dummy donduğunda, otomatik olarak önce çözülen karaktere geç
+== Ana karakter ve Dummy donduğunda, önce çözülenine otomatik geç
 
 本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示
-== Ana karakter veya Dummy çekiçle uyandırıldığında, ilgili oyuncunun rastgele sol üst veya sağ üst köşesinde bir ipucu göster
+== Ana karakter veya Dummy çekiçle uyandırıldığında, ilgili oyuncunun rastgele sol üst veya sağ üst köşesinde ipucu göster
 
 本地目标语言识别占比阈值
 == Yerel hedef dil tanıma oranı eşiği
@@ -8936,43 +9065,40 @@ Zoom out
 == Yerel hedef dil tanıma minimum karakter sayısı
 
 本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）
-== Yerel parçacıklar: Tee'nizin arkasından düşen parçacıkları göster (donma kar taneleri gibi)
+== Yerel parçacıklar: Kendi Tee'nizin arkasına düşen parçacıkları göster (donma kar taneleri gibi)
 
 栖梦侧栏模块使用频率
-== Qimeng yan çubuğu modül kullanım sıklığı
+== Qimeng kenar çubuğu modülü kullanım sıklığı
 
 栖梦侧栏模块折叠状态
-== Qimeng yan çubuğu modül katlanma durumu
+== Qimeng kenar çubuğu modülü daraltma durumu
 
 栖梦侧栏模块排序
-== Qimeng yan çubuğu modül sıralaması
+== Qimeng kenar çubuğu modülü sıralaması
 
 根据位置小数部分显示跳跃提示
-== Konumun ondalık kısmına göre zıplama ipucu göster
+== Konumun ondalık kısmına göre zıplama ipucunu göster
 
 根据文本输入焦点自动启用或关闭 IME
-== Metin giriş odağına göre IME'yi otomatik etkinleştir veya devre dışı bırak
+== Metin girişi odağına göre IME’yi otomatik aç veya kapat
 
 歌词下一行颜色
-== Şarkı sözü sonraki satır rengi
+== Sonraki şarkı sözü satırı rengi
 
 歌词吸附灵动岛阈值
-== Şarkı sözü yapışkan dinamik ada eşiği
+== Şarkı sözlerini dinamik adaya yapıştırma eşiği
 
 歌词当前行颜色
-== Şarkı sözü geçerli satır rengi
-
-歌词指示器颜色
-== Şarkı sözü göstergesi rengi
+== Geçerli şarkı sözü satırı rengi
 
 歌词描边透明度
-== Şarkı sözü anahattı şeffaflığı
+== Şarkı sözü kontur şeffaflığı
 
 歌词描边颜色
-== Şarkı sözü anahattı rengi
+== Şarkı sözü kontur rengi
 
 歌词淡入淡出时间
-== Şarkı sözü solma süresi
+== Şarkı sözü belirme ve kaybolma süresi
 
 歌词背景透明度
 == Şarkı sözü arka plan şeffaflığı
@@ -8981,25 +9107,16 @@ Zoom out
 == Şarkı sözü arka plan rengi
 
 歌词超长时跑马灯
-== Uzun şarkı sözlerinde kayan yazı
+== Şarkı sözü çok uzunsa kayan yazı kullan
 
 歌词跑马灯速度
-== Şarkı sözü kayma hızı
-
-歌词首字放大
-== Şarkı sözü ilk harf büyütme
-
-歌词首字缩放百分比
-== Şarkı sözü ilk harf büyütme yüzdesi
-
-歌词首字颜色
-== Şarkı sözü ilk harf rengi
+== Şarkı sözü kayan yazı hızı
 
 武器切换动画持续时间（毫秒）
-== Silah değiştirme animasyon süresi (milisaniye)
+== Silah değiştirme animasyonu süresi (ms)
 
 武器切换动画旋转角度
-== Silah değiştirme animasyon dönüş açısı
+== Silah değiştirme animasyonu dönüş açısı
 
 武器切换动画滑入距离
 == Silah değiştirme animasyonu kayma mesafesi
@@ -9011,124 +9128,124 @@ Zoom out
 == Silah değiştirme animasyonu kapsamı: 0=Sadece kendim 1=Yerel+Dummy 2=Tüm oyuncular
 
 武器弹道辅助线宽度
-== Silah mermisi yardımcı çizgi kalınlığı
+== Silah mermi yolu yardımcı çizgi genişliği
 
 武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）
-== Silah mermisi yardımcı çizgi görüntüleme modu (0=Kapalı, 1=Tuşa basınca göster, 2=Her zaman göster)
+== Silah mermi yolu yardımcı çizgi görüntüleme modu (0=Kapalı, 1=Tuşa basınca göster, 2=Her zaman göster)
 
 武器弹道辅助线透明度
-== Silah mermisi yardımcı çizgi saydamlığı
+== Silah mermi yolu yardımcı çizgi şeffaflığı
 
 武器弹道辅助线颜色
-== Silah mermisi yardımcı çizgi rengi
+== Silah mermi yolu yardımcı çizgi rengi
 
 死亡后显示记分牌
 == Ölümden sonra skor tablosunu göster
 
 深度冻结图块的叠加实体 alpha (0-100)
-== Derin dondurma bloklarının üst üste binen varlık alfası (0-100)
+== Derin donmuş blokların üst üste binen varlık alfası (0-100)
 
 深度解冻图块的叠加实体 alpha (0-100)
-== Derin çözme bloklarının üst üste binen varlık alfası (0-100)
+== Derin çözülmüş blokların üst üste binen varlık alfası (0-100)
 
 激光半透明度 (0=完全透明, 100=不透明)
-== Lazer yarı saydamlığı (0=Tamamen saydam, 100=Opak)
+== Lazer yarı saydamlığı (0=tamamen şeffaf, 100=opak)
 
 激光圆角端点 (0=方角, 1=圆角)
-== Lazer yuvarlak uçlar (0=Köşeli, 1=Yuvarlak)
+== Lazer yuvarlak uçları (0=köşeli, 1=yuvarlak)
 
 激光大小/粗细 (百分比, 100=默认)
-== Lazer boyutu/kalınlığı (yüzde, 100=Varsayılan)
+== Lazer boyutu/kalınlığı (yüzde, 100=varsayılan)
 
 激光辉光强度 (0-100)
-== Lazer parlama yoğunluğu (0-100)
+== Lazer parıltı yoğunluğu (0-100)
 
 灵动岛使用原版样式
-== Dinamik Ada orijinal stili kullansın
+== Dinamik Ada orijinal stili kullan
 
 灵动岛背景透明度
-== Dinamik Ada arka plan saydamlığı
+== Dinamik Ada arka plan şeffaflığı
 
 灵动岛背景颜色
 == Dinamik Ada arka plan rengi
 
 玩家推动背景 3D 粒子的半径
-== Oyuncunun arka plan 3D parçacıklarını itme yarıçapı
+== Oyuncu itme arka plan 3D parçacık yarıçapı
 
 玩家推动背景 3D 粒子的强度
-== Oyuncunun arka plan 3D parçacıklarını itme gücü
+== Oyuncu itme arka plan 3D parçacık yoğunluğu
 
 玩家检测最大距离
 == Oyuncu algılama maksimum mesafesi
 
 画面纵横比预设（0=关闭，1=5:4，2=4:3，3=3:2，4=16:9，5=21:9，6=自定义）
-== Ekran en boy oranı ön ayarı (0=Kapalı, 1=5:4, 2=4:3, 3=3:2, 4=16:9, 5=21:9, 6=Özel)
+== Görüntü en-boy oranı ön ayarı (0=Kapalı, 1=5:4, 2=4:3, 3=3:2, 4=16:9, 5=21:9, 6=Özel)
 
 界面颜色
 == Arayüz rengi
 
 皮肤切换动画强度百分比
-== Skin değiştirme animasyonu güç yüzdesi
+== Skin geçiş animasyonu yoğunluk yüzdesi
 
 皮肤切换动画持续时间（毫秒，0=无动画）
-== Skin değiştirme animasyonu süresi (milisaniye, 0=Animasyon yok)
+== Skin geçiş animasyonu süresi (ms, 0=Animasyon yok)
 
 皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
-== Skin değiştirme animasyonu türü (0=Gölge patlaması 1=Yumuşak geçiş 2=Sola kaydırma 3=Dönerek çıkma 4=Aydınlık-karanlık geçiş 5=Glitch 6=Esnek)
+== Skin geçiş animasyonu türü (0=Gölge patlaması 1=Yumuşak geçiş 2=Sola kaydırma 3=Döndürme patlaması 4=Aydınlık-karanlık geçişi 5=Hata titremesi 6=Esnek ölçekleme)
 
 皮肤切换动画缓动模式
-== Skin değiştirme animasyonu yumuşatma modu
+== Skin geçiş animasyonu yumuşatma modu
 
 皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
-== Skin değiştirme animasyonu kapsamı: 0=Sadece kendim 1=Yerel+Dummy 2=Tüm oyuncular
+== Skin geçiş animasyonu kapsamı: 0=Sadece kendim 1=Yerel+Dummy 2=Tüm oyuncular
 
 皮肤队列切换间隔（毫秒）
-== Skin sırası değiştirme aralığı (ms)
+== Skin kuyruğu geçiş aralığı (ms)
 
 皮肤队列当前位置
-== Skin sırası mevcut konum
+== Skin kuyruğu mevcut konum
 
 皮肤队列最大长度
-== Skin sırası maksimum uzunluk
+== Skin kuyruğu maksimum uzunluk
 
 相机漂移平滑度（0=瞬时，100=最平滑）
 == Kamera kayması yumuşaklığı (0=Anlık, 100=En yumuşak)
 
 相机漂移强度（0-200）
-== Kamera kayması gücü (0-200)
+== Kamera kayması yoğunluğu (0-200)
 
 碰撞体积线条透明度
-== Çarpışma hacmi çizgi saydamlığı
+== Çarpışma hacmi çizgi şeffaflığı
 
 碰撞箱模式Freeze边界颜色
-== Çarpışma kutusu modu Freeze sınır rengi
+== Hitbox modu Freeze sınır rengi
 
 碰撞箱模式Tee碰撞体颜色
-== Çarpışma kutusu modu Tee çarpışma rengi
+== Hitbox modu Tee çarpışma kutusu rengi
 
 碰撞箱模式全局透明度
-== Çarpışma kutusu modu genel saydamlık
+== Hitbox modu genel şeffaflık
 
 碰撞箱模式总开关 (Hitbox mode)
-== Çarpışma kutusu modu ana anahtarı (Hitbox modu)
+== Hitbox modu ana anahtarı
 
 碰撞箱模式显示Tee碰撞体
-== Çarpışma kutusu modu Tee çarpışmasını göster
+== Hitbox modu Tee çarpışma kutusunu göster
 
 碰撞箱模式显示地图危险边界
-== Çarpışma kutusu modu harita tehlikeli sınırlarını göster
+== Hitbox modu harita tehlike sınırlarını göster
 
 碰撞箱模式显示拾取物范围
-== Çarpışma kutusu modu toplama nesnelerinin alanını göster
+== Hitbox modu toplama nesnesi alanlarını göster
 
 碰撞箱模式显示武器交互
-== Çarpışma kutusu modu silah etkileşimini göster
+== Hitbox modu silah etkileşimini göster
 
 碰撞箱模式武器交互颜色
-== Çarpışma kutusu modu silah etkileşim rengi
+== Hitbox modu silah etkileşim rengi
 
 碰撞箱模式玩家范围: 0=本地 1=本地+分身 2=所有玩家
-== Çarpışma kutusu modu oyuncu kapsamı: 0=Yerel 1=Yerel+Dummy 2=Tüm oyuncular
+== Hitbox modu oyuncu kapsamı: 0=Yerel 1=Yerel+Dummy 2=Tüm oyuncular
 
 禅模式下隐藏 Echo 消息
 == Zen modunda Echo mesajlarını gizle
@@ -9137,13 +9254,13 @@ Zoom out
 == Zen modunda HUD'u gizle
 
 禅模式下隐藏入场、版本和规则等基础系统信息
-== Zen modunda giriş, sürüm ve kurallar gibi temel sistem bilgilerini gizle
+== Zen modunda giriş, sürüm ve kurallar gibi temel sistem mesajlarını gizle
 
 禅模式下隐藏冻结特效
 == Zen modunda donma efektlerini gizle
 
 禅模式下隐藏击杀和完成消息
-== Zen modunda öldürme ve tamamlama mesajlarını gizle
+== Zen modunda öldürme ve bitirme mesajlarını gizle
 
 禅模式下隐藏地图进度条
 == Zen modunda harita ilerleme çubuğunu gizle
@@ -9158,7 +9275,7 @@ Zoom out
 == Zen modunda silah alev efektlerini gizle
 
 禅模式下隐藏死亡/重生特效
-== Zen modunda ölüm/yeniden doğma efektlerini gizle
+== Zen modunda ölüm/doğma efektlerini gizle
 
 禅模式下隐藏炮击特效
 == Zen modunda topçu efektlerini gizle
@@ -9167,7 +9284,7 @@ Zoom out
 == Zen modunda oyuncu isimlerini gizle
 
 禅模式下隐藏玩家名字板
-== Zen modunda oyuncu isim levhalarını gizle
+== Zen modunda oyuncu isim tabelalarını gizle
 
 禅模式下隐藏玩家消息
 == Zen modunda oyuncu mesajlarını gizle
@@ -9185,7 +9302,7 @@ Zoom out
 == Zen modunda çekiç efektlerini gizle
 
 禅模式下静音死亡/重生音效
-== Zen modunda ölüm/doğum seslerini sustur
+== Zen modunda ölüm/doğma seslerini sustur
 
 禅模式下静音跳跃音效
 == Zen modunda zıplama seslerini sustur
@@ -9194,7 +9311,7 @@ Zoom out
 == Zen modunda çekiç seslerini sustur
 
 私聊选项颜色
-== Özel mesaj rengi
+== Özel mesaj seçenek rengi
 
 突出显示消息文字渐变颜色
 == Vurgulanan mesaj metni gradyan rengi
@@ -9206,7 +9323,7 @@ Zoom out
 == Sistem medya şarkı sözü yazı tipi boyutu
 
 系统媒体歌词时间偏移（毫秒）
-== Sistem medya şarkı sözü zaman kayması (milisaniye)
+== Sistem medya şarkı sözü zaman kayması (ms)
 
 系统媒体歌词显示行数
 == Sistem medya şarkı sözü görüntüleme satır sayısı
@@ -9242,7 +9359,7 @@ Zoom out
 == Sohbet kutusu kenar boşluğu
 
 聊天气泡字体大小
-== Sohbet balonu yazı tipi boyutu
+== Sohbet balonu yazı boyutu
 
 聊天气泡文字颜色
 == Sohbet balonu metin rengi
@@ -9251,34 +9368,34 @@ Zoom out
 == Sohbet balonu görüntüleme süresi (saniye)
 
 聊天气泡消失动画（0=淡出，1=缩小，2=上滑）
-== Sohbet balonu kaybolma animasyonu (0=solma, 1=küçülme, 2=yukarı kayma)
+== Sohbet balonu kaybolma animasyonu (0=Soldur, 1=Küçült, 2=Yukarı kaydır)
 
 聊天气泡背景颜色
 == Sohbet balonu arka plan rengi
 
 聊天气泡透明度（0-100）
-== Sohbet balonu opaklığı (0-100)
+== Sohbet balonu şeffaflığı (0-100)
 
 聊天消息淡出平滑时间（毫秒）
-== Sohbet mesajı solma düzgünleştirme süresi (milisaniye)
+== Sohbet mesajı soldurma düzgünleştirme süresi (ms)
 
 聊天消息淡出时启用左滑偏移
-== Sohbet mesajı solarken sola kaydırmayı etkinleştir
+== Sohbet mesajı soldurulurken sola kaydırmayı etkinleştir
 
 聊天消息淡出缓动模式
-== Sohbet mesajı solma eğri modu
+== Sohbet mesajı soldurma yumuşatma modu
 
 聊天记录保留天数
 == Sohbet geçmişi saklama gün sayısı
 
 背景 3D 粒子之间碰撞
-== Arka plan 3D parçacıkları arasında çarpışma
+== Arka plan 3D parçacıkları arası çarpışma
 
 背景 3D 粒子基础速度
 == Arka plan 3D parçacık taban hızı
 
 背景 3D 粒子拖尾透明度
-== Arka plan 3D parçacık izi opaklığı
+== Arka plan 3D parçacık izi şeffaflığı
 
 背景 3D 粒子拖尾长度
 == Arka plan 3D parçacık izi uzunluğu
@@ -9302,7 +9419,7 @@ Zoom out
 == Arka plan 3D parçacık derinlik aralığı
 
 背景 3D 粒子类型：1=方块，2=爱心，3=混合，4=球体，5=金字塔，6=钻石，7=圆环，8=星形，9=月牙
-== Arka plan 3D parçacık türü: 1=küp, 2=kalp, 3=karışık, 4=küre, 5=piramit, 6=elmas, 7=halka, 8=yıldız, 9=hilal
+== Arka plan 3D parçacık türü: 1=Küp, 2=Kalp, 3=Karışık, 4=Küre, 5=Piramit, 6=Elmas, 7=Halka, 8=Yıldız, 9=Hilal
 
 背景 3D 粒子脉冲强度
 == Arka plan 3D parçacık nabız şiddeti
@@ -9314,70 +9431,70 @@ Zoom out
 == Arka plan 3D parçacık özel rengi
 
 背景 3D 粒子视野外保留边距
-== Arka plan 3D parçacık görüş alanı dışında kenar boşluğu
+== Arka plan 3D parçacık görüş alanı dışı kenar boşluğu
 
 背景 3D 粒子辉光偏移
 == Arka plan 3D parçacık parlama kayması
 
 背景 3D 粒子辉光透明度
-== Arka plan 3D parçacık parlama opaklığı
+== Arka plan 3D parçacık parlama şeffaflığı
 
 背景 3D 粒子透明度
-== Arka plan 3D parçacık opaklığı
+== Arka plan 3D parçacık şeffaflığı
 
 背景 3D 粒子闪烁强度
-== Arka plan 3D parçacık titreme şiddeti
+== Arka plan 3D parçacık titreşim şiddeti
 
 背景 3D 粒子颜色模式：1=自定义，2=随机
-== Arka plan 3D parçacık renk modu: 1=özel, 2=rastgele
+== Arka plan 3D parçacık renk modu: 1=Özel, 2=Rastgele
 
 脉冲动画速度 ( 百分比, 100=正常)
 == Nabız animasyon hızı (yüzde, 100=normal)
 
 脉冲振幅 (0-100)
-== Nabız genliği (0-100)
+== Darbe Genliği (0-100)
 
 腾讯云翻译 SecretId
-== Tencent Cloud çeviri SecretId
+== Tencent Cloud Çeviri SecretId
 
 腾讯云翻译 SecretKey
-== Tencent Cloud çeviri SecretKey
+== Tencent Cloud Çeviri SecretKey
 
 腾讯云翻译地域
-== Tencent Cloud çeviri bölgesi
+== Tencent Cloud Çeviri Bölgesi
 
 腾讯云翻译端点
-== Tencent Cloud çeviri uç noktası
+== Tencent Cloud Çeviri Uç Noktası
 
 自动保存聊天记录
-== Sohbet geçmişini otomatik kaydet
+== Sohbet Geçmişini Otomatik Kaydet
 
 自动回复冷却时间（秒）
-== Otomatik yanıt bekleme süresi (saniye)
+== Otomatik Yanıt Bekleme Süresi (saniye)
 
 自动增益控制（0=关闭 1=开启）
-== Otomatik kazanç kontrolü (0=kapalı 1=açık)
+== Otomatik Kazanç Kontrolü (0=Kapalı 1=Açık)
 
 自动翻译入站消息
-== Gelen mesajları otomatik çevir
+== Gelen Mesajları Otomatik Çevir
 
 自动翻译发送的消息
-== Gönderilen mesajları otomatik çevir
+== Gönderilen Mesajları Otomatik Çevir
 
 自动翻译模式 (0=仅常见源语言输入时触发, 1=始终翻译)
-== Otomatik çeviri modu (0=Yalnızca yaygın kaynak dillerde giriş yapıldığında tetiklenir, 1=Her zaman çevir)
+== Otomatik Çeviri Modu (0=Yalnızca yaygın kaynak dil girdisinde tetikle, 1=Her zaman çevir)
 
 自动获取全图玩家皮肤并作为分身轮换队列
-== Tüm haritadaki oyuncuların skinlerini otomatik al ve Dummy dönüşüm sırası olarak kullan
+== Haritadaki Tüm Oyuncuların Skinlerini Otomatik Al ve Dummy Döngü Kuyruğu Olarak Kullan
 
 自动获取全图玩家皮肤并作为轮换队列
-== Tüm haritadaki oyuncuların skinlerini otomatik al ve dönüşüm sırası olarak kullan
+== Haritadaki Tüm Oyuncuların Skinlerini Otomatik Al ve Döngü Kuyruğu Olarak Kullan
 
 自动跟随好友换服延迟（秒）
-== Arkadaşları otomatik takip ederek sunucu değiştirme gecikmesi (saniye)
+== Arkadaşı Otomatik Takip Etme Sunucu Değiştirme Gecikmesi (saniye)
 
 自动锁定延迟（秒）
-== Otomatik kilit gecikmesi (saniye)
+== Otomatik Kilitleme Gecikmesi (saniye)
 
 自定义 Provider API Key
 == Özel Sağlayıcı API Anahtarı
@@ -9389,232 +9506,232 @@ Zoom out
 == Özel Sağlayıcı Uç Noktası
 
 自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）
-== Özel en boy oranı, x100 olarak saklanır (örneğin 178=16:9, 233=21:9)
+== Özel En Boy Oranı, x100 ile Saklanır (örn. 178=16:9, 233=21:9)
 
 自定义翻译提示词（覆盖内置提示词）
-== Özel çeviri istemi (yerleşik istemi geçersiz kılar)
+== Özel Çeviri İstemi (Yerleşik İstemi Geçersiz Kılar)
 
 菜单不透明度 (Menu opacity 0-100)
-== Menü opaklığı (Menu opacity 0-100)
+== Menü Opaklığı (0-100)
 
 被屏蔽词控制台颜色
-== Engellenen kelime konsol rengi
+== Engellenen Kelime Konsol Rengi
 
 被解冻时自动取消旁观
-== Çözülünce otomatik olarak seyirci modundan çık
+== Çözülünce Otomatik Seyirci Modundan Çık
 
 被锤/榴弹击中时随机表情
-== Çekiç/roket vuruşunda rastgele ifade
+== Çekiç/Granata Vuruşunda Rastgele İfade
 
 覆盖冻结图块的实体 alpha (0-100)
-== Donmuş döşemelerin varlık alfasını geçersiz kıl (0-100)
+== Donma Bloklarının Varlık Alfa Değerini Geçersiz Kıl (0-100)
 
 覆盖实体 alpha 以解冻图块 (0-100)
-== Çözülmüş döşemelerin varlık alfasını geçersiz kıl (0-100)
+== Çözülme Bloklarının Varlık Alfa Değerini Geçersiz Kıl (0-100)
 
 覆盖死亡图块的实体 alpha (0-100)
-== Ölüm döşemelerinin varlık alfasını geçersiz kıl (0-100)
+== Ölüm Bloklarının Varlık Alfa Değerini Geçersiz Kıl (0-100)
 
 观战选项颜色
-== Seyirci seçenekleri rengi
+== Seyirci Seçenekleri Rengi
 
 解冻后自动关闭聊天
-== Çözülünce sohbeti otomatik kapat
+== Çözülünce Sohbeti Otomatik Kapat
 
 计分板查分
-== Skor tablosu puan sorgulama
+== Skor Tablosu Puan Sorgulama
 
 计分板透明度
-== Skor tablosu şeffaflığı
+== Skor Tablosu Şeffaflığı
 
 计分板颜色
-== Skor tablosu rengi
+== Skor Tablosu Rengi
 
 记分牌排序模式（0=分数，1=分）
-== Skor tablosu sıralama modu (0=Puan, 1=Skor)
+== Skor Tablosu Sıralama Modu (0=Puan, 1=Skor)
 
 语音分组模式
-== Sesli grup modu
+== Ses Gruplama Modu
 
 语音协议版本
-== Sesli protokol sürümü
+== Ses Protokolü Sürümü
 
 语音房间 Token（可选）
-== Sesli oda Token'ı (isteğe bağlı)
+== Ses Odası Token’ı (İsteğe Bağlı)
 
 语音播放音量（百分比）
-== Sesli oynatma ses seviyesi (yüzde)
+== Ses Oynatma Ses Seviyesi (Yüzde)
 
 语音服务器地址 host:port
-== Sesli sunucu adresi host:port
+== Ses Sunucu Adresi host:port
 
 语音测试模式（0=关 1=本地 2=服务器回环）
-== Sesli test modu (0=Kapalı 1=Yerel 2=Sunucu döngüsü)
+== Ses Test Modu (0=Kapalı 1=Yerel 2=Sunucu Geri Döngüsü)
 
 语音白名单（逗号分隔）
-== Sesli beyaz liste (virgülle ayrılmış)
+== Ses Beyaz Listesi (Virgülle Ayrılmış)
 
 语音码率档位（0=自动 1=24kbps 2=32kbps 3=48kbps 4=64kbps）
-== Sesli bit hızı seviyesi (0=Otomatik 1=24kbps 2=32kbps 3=48kbps 4=64kbps)
+== Ses Bit Hızı Seviyesi (0=Otomatik 1=24kbps 2=32kbps 3=48kbps 4=64kbps)
 
 语音立体声宽度（百分比）
-== Sesli stereo genişliği (yüzde)
+== Ses Stereo Genişliği (Yüzde)
 
 语音立体声输出
-== Sesli stereo çıkış
+== Ses Stereo Çıkışı
 
 语音距离半径（Tiles）
-== Sesli mesafe yarıçapı (Tile)
+== Ses Mesafe Yarıçapı (Tile)
 
 语音输入设备（空为默认）
-== Sesli giriş cihazı (boş=varsayılan)
+== Ses Giriş Cihazı (Boş bırakılırsa varsayılan)
 
 语音输出设备（空为默认）
-== Sesli çıkış cihazı (boş=varsayılan)
+== Ses Çıkış Cihazı (Boş bırakılırsa varsayılan)
 
 语音静音名单（逗号分隔）
-== Sesli sessiz listesi (virgülle ayrılmış)
+== Ses Sessize Alma Listesi (Virgülle Ayrılmış)
 
 语音音频后端（SDL 驱动名，空为自动）
-== Sesli ses arka ucu (SDL sürücü adı, boş=otomatik)
+== Ses Ses Arka Ucu (SDL Sürücü Adı, boş bırakılırsa otomatik)
 
 语音黑名单（逗号分隔）
-== Sesli kara liste (virgülle ayrılmış)
+== Ses Kara Listesi (Virgülle Ayrılmış)
 
 调试图表面板不透明度（百分比）
-== Hata ayıklama grafik paneli opaklığı (yüzde)
+== Hata Ayıklama Grafiği Paneli Opaklığı (Yüzde)
 
 资源预览显存预算百分比（基于设备本地显存预算）
-== Kaynak önizleme VRAM bütçe yüzdesi (cihaz yerel VRAM bütçesine göre)
+== Kaynak Önizleme VRAM Bütçe Yüzdesi (Cihazın Yerel VRAM Bütçesine Göre)
 
 资源预览显存预算覆盖（MB，0=自动）
-== Kaynak önizleme VRAM bütçe geçersiz kılma (MB, 0=Otomatik)
+== Kaynak Önizleme VRAM Bütçe Geçersiz Kılma (MB, 0=Otomatik)
 
 跳跃提示垂直位置（占屏幕高度百分比）
-== Zıplama ipucu dikey konumu (ekran yüksekliğinin yüzdesi)
+== Zıplama İpucu Dikey Konumu (Ekran Yüksekliğinin Yüzdesi)
 
 跳跃提示字体大小
-== Zıplama ipucu yazı tipi boyutu
+== Zıplama İpucu Yazı Boyutu
 
 跳跃提示文本（使用\n换行）
-== Zıplama ipucu metni (satır sonu için \n kullanın)
+== Zıplama İpucu Metni (Satır sonu için \n kullanın)
 
 跳跃提示水平位置（占屏幕宽度百分比）
-== Zıplama ipucu yatay konumu (ekran genişliğinin yüzdesi)
+== Zıplama İpucu Yatay Konumu (Ekran Genişliğinin Yüzdesi)
 
 跳跃提示颜色
-== Zıplama ipucu rengi
+== Zıplama İpucu Rengi
 
 输入叠加 X 位置（百分比）
-== Giriş katmanı X konumu (yüzde)
+== Giriş Katmanı X Konumu (Yüzde)
 
 输入叠加 Y 位置（百分比）
-== Giriş katmanı Y konumu (yüzde)
+== Giriş Katmanı Y Konumu (Yüzde)
 
 输入叠加不透明度（百分比）
-== Giriş katmanı opaklığı (yüzde)
+== Giriş Katmanı Opaklığı (Yüzde)
 
 输入叠加比例（百分比）
-== Giriş katmanı ölçeği (yüzde)
+== Giriş Katmanı Ölçeği (Yüzde)
 
 输入时不显示打字表情
-== Yazarken yazma ifadelerini gösterme
+== Yazarken Yazma İfadesini Gösterme
 
 输出语音调试日志
-== Sesli hata ayıklama günlüklerini çıktıla
+== Ses Hata Ayıklama Günlüğünü Çıktıla
 
 进入 Axiom 社区服务器后自动登录
-== Axiom topluluk sunucusuna girdikten sonra otomatik giriş yap
+== Axiom Topluluk Sunucusuna Katıldığında Otomatik Olarak Giriş Yap
 
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == Sunucuya girerken istatistikleri sıfırla (0=Kümülatif istatistikler, 1=Her girişte sıfırla)
 
 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
-== Uzaktan parçacıklar: Merkez sunucu üzerinden diğer oyuncuları senkronize et ve renderla (karşı tarafın yerel+uzak açık olması gerekir)
+== Uzaktaki parçacıklar: Merkez sunucu aracılığıyla diğer oyuncuları senkronize et ve işle (karşı tarafın yerel+uzak seçeneğini açması gerekir)
 
 通用界面透明度
 == Genel arayüz şeffaflığı
 
 通知栏 echo 继承聊天 echo 颜色
-== Bildirim çubuğu echo'su, sohbet echo rengini devralır
+== Bildirim çubuğu echo'su sohbet echo rengini miras alsın
 
 通知栏 echo 覆盖文字颜色
 == Bildirim çubuğu echo metin rengini geçersiz kıl
 
 通知栏停留时间（毫秒）
-== Bildirim çubuğu kalma süresi (milisaniye)
+== Bildirim çubuğu kalma süresi (ms)
 
 通知栏动画时间（毫秒）
-== Bildirim çubuğu animasyon süresi (milisaniye)
+== Bildirim çubuğu animasyon süresi (ms)
 
 通知栏动画类型（0=淡入滑入 1=仅淡入 2=无动画）
-== Bildirim çubuğu animasyon türü (0=Soldur ve kaydır 1=Yalnızca soldur 2=Animasyon yok)
+== Bildirim çubuğu animasyon türü (0=Soldur ve kaydır, 1=Sadece soldur, 2=Animasyon yok)
 
 通知栏接管 echo 消息
-== Bildirim çubuğu echo mesajlarını devralır
+== Bildirim çubuğu echo mesajlarını devralsın
 
 通知栏接管服务器系统提示（入场版本信息除外）
-== Bildirim çubuğu sunucu sistem bildirimlerini devralır (giriş sürüm bilgisi hariç)
+== Bildirim çubuğu sunucu sistem mesajlarını devralsın (giriş sürüm bilgisi hariç)
 
 通知栏文字大小
 == Bildirim çubuğu metin boyutu
 
 通知栏显示基础服务器信息
-== Bildirim çubuğu temel sunucu bilgilerini göster
+== Bildirim çubuğu temel sunucu bilgilerini göstersin
 
 通知栏显示服务器帮助说明
-== Bildirim çubuğu sunucu yardım açıklamalarını göster
+== Bildirim çubuğu sunucu yardım açıklamalarını göstersin
 
 通知栏显示未知服务器消息
-== Bildirim çubuğu bilinmeyen sunucu mesajlarını göster
+== Bildirim çubuğu bilinmeyen sunucu mesajlarını göstersin
 
 通知栏显示重要服务器提示
-== Bildirim çubuğu önemli sunucu ipuçlarını göster
+== Bildirim çubuğu önemli sunucu uyarılarını göstersin
 
 通知栏最大显示数量
 == Bildirim çubuğu maksimum görüntüleme sayısı
 
 通知栏系统提示文字颜色
-== Bildirim çubuğu sistem ipucu metin rengi
+== Bildirim çubuğu sistem uyarı metin rengi
 
 通知栏背景颜色
 == Bildirim çubuğu arka plan rengi
 
 通知栏贴边时预留边距
-== Bildirim çubuğu kenara yaslandığında bırakılan kenar boşluğu
+== Bildirim çubuğu kenara yaslandığında kenar boşluğu bırak
 
 速通倒计时器
-== Hızlı bitiriş geri sayım sayacı
+== Hızlı geçiş geri sayım sayacı
 
 速通计时器分钟
-== Hızlı bitiriş sayacı dakika
+== Hızlı geçiş sayacı dakika
 
 速通计时器小时
-== Hızlı bitiriş sayacı saat
+== Hızlı geçiş sayacı saat
 
 速通计时器时间（MMSS 格式，兼容旧版）
-== Hızlı bitiriş sayacı süresi (MMSS formatı, eski sürümlerle uyumlu)
+== Hızlı geçiş sayacı süresi (MMSS formatı, eski sürümle uyumlu)
 
 速通计时器毫秒
-== Hızlı bitiriş sayacı milisaniye
+== Hızlı geçiş sayacı milisaniye
 
 速通计时器秒
-== Hızlı bitiriş sayacı saniye
+== Hızlı geçiş sayacı saniye
 
 锤人换皮肤
-== Çekiçleme ile skin değiştir
+== Çekiçle vurulunca skin değiştir
 
 队伍消息文字渐变颜色
-== Takım mesajı metin renk geçişi
+== Takım mesajı metin gradyan rengi
 
 限幅器阈值（百分比）
 == Sınırlayıcı eşiği (yüzde)
 
 隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）
-== Kendi sohbet balonunu gizle (yalnızca uzak konsol kimlik doğrulaması yapıldığında geçerlidir)
+== Kendi sohbet balonunu gizle (yalnızca uzak konsol kimlik doğrulandığında geçerlidir)
 
 隐藏非好友姓名/部落并显示客户端 ID
-== Arkadaş olmayanların adını/kabilesini gizle ve istemci ID'sini göster
+== Arkadaş olmayanların adını/klanını gizle ve istemci ID'sini göster
 
 静音麦克风
 == Mikrofonu sessize al
@@ -9623,7 +9740,7 @@ Zoom out
 == Arkadaş olmayanlar varsayılan skin kullansın
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
-== Pasta menüsü yeniden adlandırma listesi (| ile ayırın, örn: 璇梦1|璇梦2)
+== Pasta menüsü yeniden adlandırma listesi (| ile ayırın, örn: Xuanmeng1|Xuanmeng2)
 
 麦克风音量（百分比）
 == Mikrofon ses seviyesi (yüzde)
@@ -9714,23 +9831,23 @@ Hook
 
 [Friend auto follow]
 Follow this friend across servers
-== Follow this friend across servers
+== Bu arkadaşı sunucular arasında takip et
 
 [Friend auto follow]
 Following %s
-== Following %s
+== %s takip ediliyor
 
 [Friend auto follow]
 Following %s: switching in %.0fs
-== Following %s: switching in %.0fs
+== %s takip ediliyor: %.0f saniye içinde geçiş yapılıyor
 
 [Friend auto follow]
 Stop
-== Stop
+== Durdur
 
 [Friend auto follow]
 Stop following this friend
-== Stop following this friend
+== Bu arkadaşı takip etmeyi durdur
 
 [Graphics error]
 A render command failed. Try to update your GPU drivers.

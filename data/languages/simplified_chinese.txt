@@ -1,11 +1,11 @@
  min
-==  分钟
+== 分钟
 
  seconds
-==  秒
+== 秒
 
  seconds (never)
-==  秒 (不消失)
+== 秒 (不消失)
 
 "%s" is not compatible with pnglite and cannot be loaded by old DDNet versions:
 == "%s" 与 pnglite 不兼容，无法被旧版本 DDNet 加载
@@ -248,13 +248,13 @@
 == 9+ 条新被提及消息
 
 === All Local Saves ===
-== === 全部本地存档 ===
+== === 所有本地存档 ===
 
 === Saves for '%s' ===
-== === '%s' 的本地存档 ===
+== === '%s' 的存档 ===
 
 [%s] %s (Map: %s, Time: %s)
-== [%s] %s（地图：%s，保存时间：%s）
+== [%s] %s (地图：%s，时间：%s)
 
 _ or ' ' = blank spacer
 == _ 或 ' ' = 空白间隔
@@ -288,6 +288,12 @@ Active color
 
 Active disconnect
 == 主动断开
+
+Active lyrics line font size in px
+== 当前歌词行字号（px）
+
+Active lyrics line scale percent
+== 当前歌词行缩放百分比
 
 Active moderator mode disabled because you are afk.
 == 由于你已挂机，主动管理员模式已关闭
@@ -485,7 +491,7 @@ Adjust opacity of entity layers
 == 调整各个实体层的透明度
 
 Adjust the opacity of entities belonging to other teams, such as tees and name plates
-== 调整单人区域或其他队伍中玩家的不透明度
+== 调整其他队伍实体（如 Tee 和名牌）的不透明度
 
 Adjust your prediction margin while frozen
 == 调整冻结时的预测量
@@ -556,6 +562,9 @@ Always show own player's hook collision line
 Always translate
 == 始终翻译
 
+AMLL TTML DB API base URL (can be changed to a mirror)
+== AMLL TTML DB API 基础 URL（可更改为镜像）
+
 Amount
 == 预测量
 
@@ -566,7 +575,7 @@ Angle
 == 角度
 
 Angle:
-== 角度
+== 角度：
 
 Animation
 == 动画效果
@@ -601,6 +610,9 @@ API key
 Appearance
 == 游戏界面
 
+Apple Music media-user-token
+== Apple Music 媒体用户令牌
+
 Applied to %d same-family part(s).
 == 已应用到 %d 个同族部件。
 
@@ -623,10 +635,10 @@ Are you sure that you want to delete '%s'?
 == 你确定要删除'%s'吗？
 
 Are you sure that you want to delete the demo '%s'?
-== 确定要删除回放文件 "%s"？
+== 确定要删除回放文件“%s”吗？
 
 Are you sure that you want to delete the folder '%s'?
-== 确定要删除文件夹 "%s"？
+== 确定要删除文件夹“%s”吗？
 
 Are you sure that you want to delete the screenshot '%s'?
 == 确定要删除截图“%s”吗？
@@ -769,6 +781,9 @@ Auto enable in Gores mode
 Auto execute
 == 自动执行
 
+Auto fetch lyrics online when a new song is detected
+== 检测到新歌曲时自动在线获取歌词
+
 Auto gain control for mic (AGC, experimental)
 == 自动平衡麦克风音量（AGC，实验性）
 
@@ -782,7 +797,7 @@ Auto login Axiom server
 == 自动登录 Axiom 服务器
 
 Auto manage IME while typing
-== 输入时自动管理输入法
+== 输入时自动管理 IME
 
 Auto map vote
 == 自动地图投票
@@ -824,7 +839,7 @@ Auto unspec on unfreeze
 == 解冻自动取消旁观
 
 Auto weapon switch
-== 自动切锤
+== 自动切换武器
 
 Auto-follow delay
 == 自动跟随延迟
@@ -1049,13 +1064,13 @@ Can only drop onto same-size parts.
 == 只能拖放到同尺寸部件上。
 
 Can't /spec that quickly.
-== 你不能这么快再次 /spec
+== 你不能这么快再次 /spec。
 
 Can't disable team 0 mode. This team exceeds the maximum allowed size of %s players for regular team
 == 无法关闭 team 0 模式。该队伍人数已超过普通队伍允许上限 %s
 
 Can't enable team 0 mode with practice mode on.
-== 开启练习模式时不能启用 team 0 模式
+== 开启练习模式时不能启用 team 0 模式。
 
 Can't find a Tutorial server
 == 无法找到教学服务器
@@ -1571,7 +1586,7 @@ CP opacity
 == CP 点不透明度
 
 CP点边界的覆盖实体 alpha (0-100)
-== CP 点边界的覆盖实体 alpha (0-100)
+== CP 点边界的覆盖实体 alpha（0-100）
 
 Create a random skin
 == 随机创造皮肤
@@ -1619,7 +1634,7 @@ Current status
 == 当前状态
 
 Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
-== 当前时间：%s\n• 启动时间与游玩时长根据官方 JSON 数据计算\n• 同上\n• 同上上\n
+== 当前时间：%s\n- 启动时间与游玩时长根据官方 JSON 数据计算\n- 同上\n- 同上上\n
 
 Current: Ranks
 == 当前：查分
@@ -1652,7 +1667,7 @@ Custom prompt template
 == 自定义提示词模板
 
 Customize name and clan text effects
-== 自定义名字和战队文本效果
+== 自定义名称和战队文本特效
 
 Customize translate button and menu colors
 == 自定义翻译按钮和菜单颜色
@@ -1730,13 +1745,13 @@ ddnet-saves.txt not found
 == 未找到 ddnet-saves.txt
 
 DDNet/total CPU
-== DDNet/总 CPU
+== DDNet / 总 CPU
 
 DDRace HUD
 == DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
-== DDraceNetwork 是一款在线合作游戏，你和你团体里的 Tee 的目标是抵达地图的终点。作为新手你应该从有着最简单的地图的简单（Novice） 服务器入门。根据延迟来选择离你相近的服务器。
+== DDraceNetwork 是一款在线合作游戏，你和你团体里的 Tee 的目标是抵达地图的终点。作为新手你应该从有着最简单的地图的简单（Novice）服务器入门。根据延迟来选择离你相近的服务器。
 
 Deactivate
 == 停用
@@ -1778,7 +1793,7 @@ DeepSeek
 == DeepSeek
 
 DeepSeek API Key
-== DeepSeek API 密钥
+== DeepSeek API Key
 
 DeepSeek API key
 == DeepSeek API 密钥
@@ -1844,7 +1859,7 @@ Demo
 == 回放
 
 Demo effects
-== Demo 效果
+== Demo 特效
 
 Demo marker added
 == 已添加回放标记
@@ -1940,7 +1955,7 @@ Disconnect from the server
 == 与服务器断开连接
 
 Disconnected
-== 已断开
+== 已断开连接
 
 Discord
 == Discord
@@ -1991,7 +2006,7 @@ Displays X and Y velocity
 == 显示 X 和 Y 速度
 
 Displays your current angle in degrees
-== 显示你当前的角度(度)
+== 显示你当前的角度（度）
 
 Displays your frames per second
 == 显示你的每秒帧数
@@ -2162,10 +2177,10 @@ Each tab has a clear purpose
 == 每个标签页都有明确职责
 
 Ease in out quad
-== 二次缓入缓出
+== 缓入缓出二次
 
 Ease out cubic
-== 三次缓出
+== 缓出三次
 
 Echo follows the original chat color
 == Echo 跟随聊天里当时的实际颜色
@@ -2210,13 +2225,13 @@ Editor
 == 编辑器
 
 Elastic
-== 弹性缩放
+== 弹性
 
 Elastic back
-== 回弹缓出
+== 弹性回弹
 
 Elevated
-== 注意
+== 提升的
 
 Emotes are disabled.
 == 本服务器已禁用表情功能
@@ -2281,14 +2296,23 @@ Enable highlighted chat sound
 Enable Jelly Tee
 == 启用 Q 弹 Tee
 
+Enable karaoke word highlighting
+== 启用卡拉 OK 歌词高亮
+
 Enable keyword reply
 == 启用关键词回复
+
+Enable local lyrics cache
+== 启用本地歌词缓存
 
 Enable long pain sound (used when shooting in freeze)
 == 启用冻结呼叫声
 
 Enable lyrics
 == 启用歌词
+
+Enable lyrics HUD overlay
+== 启用歌词 HUD 叠加
 
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 == 使用指定 bug 启用地图兼容模式（例如：grenade-doubleexplosion@ddnet.tw）
@@ -2310,6 +2334,9 @@ Enable replays
 
 Enable server message sound
 == 启用服务器消息提示音
+
+Enable skin queue
+== 启用皮肤队列
 
 Enable skin queue rotation
 == 启用皮肤队列轮换
@@ -2345,7 +2372,7 @@ Enable Zen mode
 == 启用禅模式
 
 Enabled
-== 启用
+== 已启用
 
 Enables/disables active moderator mode for the player
 == 启用/禁用该玩家的活跃管理员模式
@@ -2360,10 +2387,10 @@ Endpoint
 == 端点
 
 Endpoint (optional)
-== 端点 (可选)
+== 端点（可选）
 
 Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
-== 请输入 /practice 或重新开始，否则 60 秒后整队会被强制死亡
+== 请输入 /practice 或重新开始，否则整队将在 60 秒后被处死
 
 Enter Password
 == 输入密码
@@ -2606,7 +2633,7 @@ File
 == 文件
 
 File '%s' already exists, do you want to overwrite it?
-== 文件名 "%s" 已经存在，是否要覆盖该文件？
+== 文件 '%s' 已经存在，是否要覆盖该文件？
 
 File already exists, do you want to overwrite it?
 == 文件已存在，是否覆盖？
@@ -2747,7 +2774,7 @@ Friends
 == 好友
 
 Friends only
-== 仅好友
+== 仅限好友
 
 Frozen Margin
 == 冻结预测值
@@ -2870,19 +2897,19 @@ Gives you infinite jump
 == 给你无限跳跃
 
 Glitch
-== 故障抖动
+== 故障
 
 Global toggle key
 == 全局开关键
 
 Glow
-== 光晕
+== 辉光
 
 Glow alpha
 == 辉光透明度
 
 Glow color
-== 光晕颜色
+== 辉光颜色
 
 Glow intensity
 == 辉光强度
@@ -2891,7 +2918,7 @@ Glow offset
 == 辉光偏移
 
 Glow range
-== 光晕范围
+== 辉光范围
 
 Go back one marker
 == 返回上一个标记
@@ -3040,6 +3067,12 @@ Hide jump effects
 Hide kill/finish messages
 == 隐藏死亡/完成消息
 
+Hide lyrics when no lyrics are found instead of showing a hint
+== 未找到歌词时隐藏，不显示提示
+
+Hide lyrics while media is paused
+== 媒体暂停时隐藏歌词
+
 Hide map progress
 == 隐藏地图进度
 
@@ -3116,16 +3149,16 @@ Hook Collisions
 == 瞄准辅助
 
 Hook collisions
-== 钩索辅助线
+== 钩索碰撞
 
 Hook line tip
-== 辅助线提示（实际可钩中 Tee 的长度）
+== 辅助线提示
 
 Hook Strength
 == 钩索强度
 
 Hook strength scope
-== 强弱钩范围
+== 钩索强度范围
 
 Hooking L/R: %.0f%%/%.0f%%
 == 出钩 L/R：%.0f%%/%.0f%%
@@ -3140,13 +3173,13 @@ Hover for tooltip
 == 悬停查看提示
 
 https://ddnet.org/discord
-== https://chat.teeworlds.cn/
+== https://ddnet.org/discord
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/wiki/Main_Page/zh
+== https://wiki.ddnet.org/
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/index.php?title=Mapping/zh&variant=zh-hans
+== https://wiki.ddnet.org/wiki/Mapping
 
 https://wiki.ddnet.org/wiki/Touch_controls
 == https://wiki.ddnet.org/wiki/Touch_controls/zh
@@ -3173,7 +3206,7 @@ i = Receive rate
 == i = 接收速率
 
 I am a robot
-== 我 是 机 器 人
+== 我是机器人
 
 I am away from the game window
 == 我不在游戏窗口前
@@ -3195,6 +3228,12 @@ In memory of me
 
 Inactive color
 == 按键未激活时颜色
+
+Inactive lyrics line font size in px
+== 非活跃歌词行字体大小（px）
+
+Inactive lyrics line minimum opacity percent
+== 非活跃歌词行最低不透明度百分比
 
 Incoming language
 == 接收语言
@@ -3239,13 +3278,13 @@ Ingame controller mode
 == 游戏内手柄瞄准模式
 
 Ingame controller sens.
-== 摇杆灵敏度（游戏）
+== 游戏内摇杆灵敏度
 
 Ingame cursor scale
 == 游戏内光标缩放
 
 Ingame mouse sens.
-== 鼠标灵敏度（游戏）
+== 游戏内鼠标灵敏度
 
 Initializing assets
 == 正在初始化资源
@@ -3399,6 +3438,9 @@ k = Resend loss
 
 Kaomoji
 == 表情符号
+
+Karaoke highlight soft edge width in px
+== 卡拉 OK 高亮柔边宽度（px）
 
 Key Bindings
 == 按键绑定
@@ -3766,8 +3808,86 @@ Long press on a touch button to select it.
 Low to high
 == 由低到高
 
+LRCLIB API base URL (can be changed to a mirror)
+== LRCLIB API 基础 URL（可更改为镜像）
+
 Lyrics
 == 歌词
+
+Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
+== 歌词自动搜索来源顺序与启用列表（空=默认；使用 | 分隔，例如 QQ|Kugou|Netease|LrcLib）
+
+Lyrics cache expiry days (0=never expire)
+== 歌词缓存过期天数（0=永不过期）
+
+Lyrics clock drift hard snap threshold in ms
+== 歌词时钟漂移硬捕捉阈值（ms）
+
+Lyrics fuzzy match score threshold
+== 歌词模糊匹配分数阈值
+
+Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
+== 歌词 HTTP 代理（例如 http://127.0.0.1:7890）
+
+Lyrics HTTP request timeout in ms
+== 歌词 HTTP 请求超时（ms）
+
+Lyrics HUD edge margin in px
+== 歌词 HUD 边缘边距（px）
+
+Lyrics line spacing in px
+== 歌词行间距（px）
+
+Lyrics line switch scroll duration in ms
+== 歌词行切换滚动时长（ms）
+
+Lyrics lines shown above active line
+== 当前行上方显示的歌词行数
+
+Lyrics lines shown below active line
+== 当前行下方显示的歌词行数
+
+Lyrics local media library folders (use | as separator)
+== 歌词本地媒体库文件夹（使用 | 分隔）
+
+Lyrics manual timeline offset in ms (runtime step 500ms)
+== 歌词手动时间轴偏移（ms，运行时步进 500ms）
+
+Lyrics opacity fade percent per distance line
+== 歌词每距离行不透明度淡出百分比
+
+Lyrics overall opacity percent
+== 歌词整体不透明度百分比
+
+Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
+== 歌词按来源匹配阈值（空=全局阈值；例如 QQ=60|LrcLib=70）
+
+Lyrics scale shrink percent per distance line
+== 歌词每距离行缩放缩小百分比
+
+Lyrics search strategy (0=source order, 1=parallel best match)
+== 歌词搜索策略（0=来源顺序，1=并行最佳匹配）
+
+Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
+== 歌词来源（0=自动最佳匹配，1=LRCLIB，2=酷狗，3=QQ，4=网易云，5=AMLL TTML DB，6=Apple Music，7=本地音乐文件，8=本地 LRC，9=本地 ESLRC，10=本地 TTML）
+
+Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
+== 歌词搜索时忽略缓存的来源（使用 | 分隔，例如 QQ|Kugou）
+
+Lyrics translation and transliteration color
+== 歌词翻译与音译颜色
+
+Lyrics: empty track
+== 歌词：歌词为空
+
+Lyrics: no lyrics found
+== 歌词：未找到歌词
+
+Lyrics: no media playing
+== 歌词：没有正在播放的媒体
+
+Lyrics: searching...
+== 歌词：正在搜索……
 
 Main Asset
 == 主材质
@@ -4096,8 +4216,47 @@ Name:
 Name: %s
 == 名称：%s
 
+Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)
+== 名牌钩子强度图标范围（0=自己 1=他人 2=强钩 3=弱钩 4=所有玩家）
+
+Nameplate strong hook icon color
+== 名牌强钩图标颜色
+
 Nameplate text
-== 名字板文本
+== 名牌文字
+
+Nameplate text border color
+== 名牌文字边框颜色
+
+Nameplate text border range
+== 名牌文字边框范围
+
+Nameplate text effects (1=Border 2=Gradient 4=Rainbow 8=Glow)
+== 名牌文字效果（1=边框 2=渐变 4=彩虹 8=发光）
+
+Nameplate text effects demo manual target client ID (-1=None)
+== 铭牌文本特效演示手动目标客户端 ID（-1=无）
+
+Nameplate text effects demo mode (0=Off 1=Smart 2=Manual target 3=Manual scope)
+== 铭牌文本特效演示模式（0=关闭 1=智能 2=手动目标 3=手动范围）
+
+Nameplate text effects playing scope (0=Off 1=Own 2=Others 3=Friends 4=Own and friends 5=All players)
+== 铭牌文本特效游戏范围（0=关闭 1=自己 2=他人 3=好友 4=自己和好友 5=所有玩家）
+
+Nameplate text effects spectate scope (0=Off 1=Spectated player 2=Others 3=Friends 4=Spectated player and friends 5=All players)
+== 铭牌文本特效观战范围（0=关闭 1=被观战玩家 2=他人 3=好友 4=被观战玩家和好友 5=所有玩家）
+
+Nameplate text glow color
+== 铭牌文本发光颜色
+
+Nameplate text glow range
+== 铭牌文本发光范围
+
+Nameplate text gradient color
+== 铭牌文本渐变颜色
+
+Nameplate weak hook icon color
+== 铭牌弱钩图标颜色
 
 Native scale (1.0)
 == 原生缩放 (1.0)
@@ -4136,7 +4295,7 @@ New preset name
 == 新预设名称
 
 New random timeout code
-== 随机生成新的超时代码（Timeout 代码）
+== 随机生成新的超时代码
 
 New UI
 == 新版 UI
@@ -4208,10 +4367,10 @@ No chat message to translate
 == 没有可翻译的消息
 
 No code
-== 无密码
+== 无代码
 
 No controller found. Plug in a controller.
-== 未检测到任何手柄。请尝试重新连接手柄。
+== 未检测到任何手柄。请连接手柄。
 
 No corresponding vote option found
 == 未找到对应投票选项
@@ -4502,7 +4661,7 @@ OpenAI
 == OpenAI
 
 OpenAI API Key
-== OpenAI API 密钥
+== OpenAI API Key
 
 OpenAI API key
 == OpenAI API 密钥
@@ -4661,10 +4820,10 @@ Pause/unpause game
 == 暂停/恢复游戏
 
 Personal best:
-== 个人最佳
+== 个人最佳：
 
 Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status
-== 在广播或游戏/回合计时器中显示时间的个人设置，计时器 s，其中 s = 广播的广播，游戏/回合计时器的游戏计时器，循环的循环，两者都适用，无计时器且不显示当前状态
+== 在广播或游戏/回合计时器中显示时间的个人设置，计时器 s，其中 s = broadcast 为广播，gametimer 为游戏/回合计时器，cycle 为循环，both 为两者都显示，none 为不显示计时器，留空则显示当前状态
 
 Pet
 == 宠物
@@ -4691,7 +4850,7 @@ Pie menu
 == 饼菜单
 
 Ping
-== 延迟
+== Ping
 
 Ping the current server
 == Ping 当前服务器
@@ -4719,6 +4878,9 @@ Play/pause the current demo
 
 Playback volume
 == 播放音量
+
+Played lyrics word color
+== 已播放歌词文字颜色
 
 Player
 == 玩家
@@ -4760,7 +4922,7 @@ Players
 == 玩家
 
 Players are not allowed to chat from VPNs at this time
-== 当前不允许使用 VPN 的玩家发言
+== 当前使用 VPN 的玩家不允许发言
 
 Players can collide on this server
 == 本服务器允许玩家碰撞
@@ -4775,7 +4937,7 @@ Players can't hook each other on this server
 == 本服务器不允许玩家互钩
 
 Playing effects
-== 游玩效果
+== 播放效果
 
 Please add a valid cut first
 == 请先添加有效裁剪片段
@@ -5231,10 +5393,10 @@ Remove
 == 删除
 
 Remove [group] [clan]:
-== 删除 [组名] [战队名] [原因]
+== 删除 [组名] [战队名]：
 
 Remove [group] [name]:
-== 删除 [组名] [玩家名] [原因]
+== 删除 [组名] [玩家名]：
 
 Remove a bind from the bindwheel
 == 从绑定轮盘移除绑定
@@ -5366,7 +5528,7 @@ removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, g
 == 从你身上移除 ID 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，手榴弹 = 3，激光 = 4，忍者 = 5）
 
 Rename
-== 改名
+== 重命名
 
 Rename a friend category
 == 重命名好友类别
@@ -5537,7 +5699,7 @@ Reset layout
 == 重置布局
 
 Reset position of mouse when opening bindwheel
-== 打开 快捷绑定轮盘 时重置鼠标位置
+== 打开快捷绑定轮盘时重置鼠标位置
 
 Reset stats when joining a server
 == 进入服务器时重置统计
@@ -5759,7 +5921,7 @@ Scoreboard opacity
 == 计分板不透明度
 
 Scoreboard point check
-== 计分板查分
+== 计分板积分检查
 
 Scores are private on this server
 == 本服务器的成绩是私密的
@@ -5960,7 +6122,7 @@ Server could not be started
 == 无法启动服务器
 
 Server could not be started. Make sure to grant the notification permission in the app settings so the server can run in the background.
-== 服务器无法启动。请确保在应用程序设置中授予通知权限，以便服务器可以在后台运行。
+== 无法启动服务器。请确保在应用程序设置中授予通知权限，以便服务器可以在后台运行。
 
 Server does not allow voting to kick players
 == 本服务器不允许发起踢人投票
@@ -6065,7 +6227,7 @@ Shape
 == 形状
 
 Short server names
-== 简短服务器名
+== 短服务器名称
 
 Shotgun
 == 霰弹枪
@@ -6289,6 +6451,12 @@ Show local time always
 Show logs of the last i seconds
 == 显示最后 i 秒的日志
 
+Show lyrics translation when available
+== 有译文时显示歌词翻译
+
+Show lyrics transliteration when available
+== 有音译时显示歌词音译
+
 Show moving tiles in entities
 == 在实体层显示移动方块
 
@@ -6443,7 +6611,7 @@ Show votes window after voting
 == 投票后不关闭投票窗口
 
 Show wake-up popup on the other tee
-== 在另一侧 tee 显示唤醒提示
+== 在另一侧 Tee 显示唤醒提示
 
 Show weapon trajectory guide
 == 显示武器弹道辅助线
@@ -6482,7 +6650,7 @@ Showing the team rank of other players is not allowed on this server.
 == 本服务器不允许查看其他玩家的队伍排名
 
 Showing the team top 5 is not allowed on this server.
-== 此服务器关闭了队伍前 5 查询
+== 本服务器不允许查看队伍前 5 名
 
 Showing the times of others is not allowed on this server.
 == 本服务器不允许查看其他玩家的成绩
@@ -6578,10 +6746,10 @@ Skin transition duration
 == 换皮动画时长
 
 Skin transition easing
-== 皮肤切换缓动
+== 换皮动画缓动
 
 Skin transition intensity
-== 皮肤切换强度
+== 换皮动画强度
 
 Skin transition type
 == 换皮动画类型
@@ -6680,7 +6848,7 @@ Spectate a player by Id
 == 按 ID 旁观玩家
 
 Spectate effects
-== 观战效果
+== 观战特效
 
 Spectate mode
 == 观战模式
@@ -6704,10 +6872,10 @@ Spectate the previous player
 == 旁观上一名玩家
 
 Spectated player
-== 被观战者
+== 被观战玩家
 
 Spectated player and friends
-== 被观战者和好友
+== 被观战的玩家与好友
 
 Spectators
 == 旁观者
@@ -6722,7 +6890,7 @@ Speed up the demo
 == 加快播放速度
 
 Speed:
-== 速度
+== 速度：
 
 Speedrun countdown timer
 == 速通倒计时器
@@ -6842,10 +7010,10 @@ Stroke fade time
 == 笔画消失时间
 
 Strong hook
-== 强钩
+== 强力钩
 
 Strong hook color
-== 强钩颜色
+== 强力钩颜色
 
 Strong Weak Hook
 == 强弱钩
@@ -7019,7 +7187,7 @@ Team can't be loaded while racing
 == 比赛进行中时不能读档
 
 Team can't be saved while a dragger is active
-== 拖拽器正在作用，暂时不能保存队伍
+== 有拖拽器生效时不能保存队伍存档
 
 Team can't be saved while in team 0 mode
 == 处于 0 队模式时不能保存队伍存档
@@ -7262,7 +7430,7 @@ There's an unsaved change in the touch controls editor, you might want to save i
 == 触控控件编辑器中有未保存的更改，建议先保存。
 
 There's an unsaved map in the editor, you might want to save it.
-== 编辑器中有尚未保存的地图，你或需要保存
+== 编辑器中有尚未保存的地图，建议先保存。
 
 Thinking mode requires a reasoning model
 == 启用思考模式需要使用推理模型
@@ -7466,7 +7634,7 @@ Translate button
 == 翻译按钮
 
 Translate ID:
-== 翻译 ID:
+== 翻译 ID：
 
 Translate last message (of a given name)
 == 翻译最后一条消息（给定名称）
@@ -7562,10 +7730,10 @@ u = Snapshot latency
 == u = 快照延迟
 
 UDP and TCP IP addresses seem to be different. Try disabling VPN, proxy or network accelerators.
-== UDP 与 TCP 的 IP 地址并不相同。请尝试屏蔽 VPN、代理网络以及网络加速器。
+== UDP 与 TCP 的 IP 地址并不相同。请尝试禁用 VPN、代理或网络加速器。
 
 UDP seems to be filtered.
-== UDP 疑似被过滤
+== UDP 疑似被过滤。
 
 UDP socket not open
 == UDP 套接字未打开
@@ -7595,10 +7763,10 @@ Unable to delete skin
 == 无法删除皮肤
 
 Unable to delete the demo '%s'
-== 无法删除回放文件 "%s"
+== 无法删除回放文件“%s”
 
 Unable to delete the folder '%s'. Make sure it's empty first.
-== 无法删除 "%s"，请确保你已清空该文件夹
+== 无法删除文件夹“%s”，请确保先清空该文件夹
 
 Unable to delete the screenshot '%s'
 == 无法删除截图“%s”
@@ -7682,10 +7850,10 @@ Unknown
 == 未知
 
 Unknown argument. Check '/rescuemode list'
-== 未知参数，输入 /rescuemode list 查看帮助
+== 未知参数。请查看 '/rescuemode list'
 
 Unknown emote. Use /emote to see available emotes.
-== 未知表情。输入 /emote 查看可用表情。
+== 未知表情。使用 /emote 查看可用表情
 
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 == 未知参数。可用值：default、gametimer、broadcast、both、none
@@ -7716,6 +7884,9 @@ Unmute player with list index
 
 Unmute:
 == 取消禁言：
+
+Unplayed lyrics word color
+== 未播放歌词文字颜色
 
 Unpredicted ghost opacity
 == 未预测影子不透明度
@@ -7796,7 +7967,7 @@ Use emote
 == 使用表情
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
-== 使用 K 键 自杀以重新开始，使用 Q 键 可以暂停以旁观他人或查看地图。在设置中可以查看其他按键绑定。
+== 使用 K 键自杀（重新开始），Q 键暂停并旁观其他玩家。其他按键绑定可在设置中查看。
 
 Use multi-char replacement based on word length
 == 根据词语长度使用多字符替换
@@ -7823,13 +7994,13 @@ Use the mouse wheel on a hovered module to scale it by 5%
 == 将鼠标悬停在 HUD 模块上并滚动滚轮可按 5% 缩放
 
 Use the top tabs to browse QmClient features by category
-== 通过顶部页签按分类浏览栖梦边栏功能
+== 通过顶部页签按分类浏览 QmClient 功能
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
-== 在 `add_favorite` 之后使用它来对收藏夹进行分组。从“begin_favorite_group”开始
+== 在 `add_favorite` 之后使用它来对收藏夹进行分组。从 `begin_favorite_group` 开始
 
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
-== 在“add_favorite”之前使用它来对收藏夹进行分组。以“end_favorite_group”结束
+== 在 `add_favorite` 之前使用它来对收藏夹进行分组。以 `end_favorite_group` 结束
 
 Use warlist colors instead of regular colors
 == 使用敌对列表颜色而不是常规颜色
@@ -7838,7 +8009,7 @@ Use warlist groups for indicator
 == 使用敌对列表作为指示器
 
 v = Velocity
-== v = Velocity（速度）
+== v = 速度
 
 V-Sync
 == 垂直同步
@@ -7868,7 +8039,7 @@ Video Background
 == 视频背景
 
 Video name:
-== 视频名称
+== 视频名称：
 
 Video was saved to '%s'
 == 视频保存至 "%s"
@@ -7886,7 +8057,7 @@ View switch found (at offset) with given number
 == 查看给定编号找到的开关（在偏移处）
 
 View tele found (at offset) with given number
-== 查看给定编号的 tele（带偏移）
+== 查看给定编号找到的传送点（在偏移处）
 
 Visibility
 == 可见度
@@ -7916,7 +8087,7 @@ Voice bitrate
 == 语音码率
 
 Voice chat
-== 说话
+== 语音聊天
 
 Voice distance radius (tiles)
 == 语音距离半径（格）
@@ -7967,7 +8138,7 @@ War Groups
 == 敌对群组
 
 War List
-== 战争列表
+== 敌对列表
 
 Warlist
 == 敌对列表
@@ -7979,10 +8150,10 @@ Warning
 == 警告
 
 Weak hook
-== 弱钩
+== 弱钩索
 
 Weak hook color
-== 弱钩颜色
+== 弱钩索颜色
 
 Weapon
 == 武器
@@ -8000,16 +8171,16 @@ Weapon switch animation
 == 武器切换动画
 
 Weapon switch distance
-== 切枪滑入距离
+== 武器切换距离
 
 Weapon switch duration
-== 切枪动画时长
+== 武器切换时长
 
 Weapon switch easing
-== 切枪动画缓动
+== 武器切换缓动
 
 Weapon switch rotation
-== 切枪旋转角度
+== 武器切换旋转
 
 Weapon Trajectory
 == 武器辅助线
@@ -8027,7 +8198,7 @@ Welcome to DDNet
 == 欢迎加入 DDNet
 
 What kind of blockbuster do you want to shoot?
-== 你想拍出怎样的大片
+== 你想拍出怎样的大片？
 
 What kind of Gores do you want to run?
 == 你想跑出怎样的 Gores？
@@ -8045,7 +8216,7 @@ Wheel animate
 == 滚轮动画
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
-== 当越过起跑线时，游戏里将有影子回放你的最佳成绩
+== 当越过起跑线时，显示一个影子回放你的最佳成绩
 
 Whether a switch is deactivated by default (otherwise activated)
 == 开关是否默认禁用（否则激活）
@@ -8054,16 +8225,16 @@ Whether to show players at any distance (off by default), optional i = 0 for off
 == 是否显示任意距离的玩家（默认关闭），可选 i = 0 为关闭，否则为打开
 
 Whether to show players from other teams or not (off by default), optional i = 0 for off, i = 1 for on, i = 2 for own team only
-== 是否显示其他队伍玩家（默认关），可选 i = 0 关，i = 1 开，i = 2 仅本队
+== 是否显示其他队伍玩家（默认关闭），可选 i = 0 关闭，i = 1 打开，i = 2 仅本队
 
 Whether to show players from other teams when spectating (on by default), optional i = 0 for off else for on
-== 旁观时是否显示其他队伍玩家（默认开），可选 i = 0 关，其他值开
+== 旁观时是否显示其他队伍玩家（默认打开），可选 i = 0 关闭，否则为打开
 
 Whether to use ninja jetpack or not. Makes jetpack look more awesome
 == 是否使用忍者喷气背包。让喷气背包看起来更酷
 
 Which message to display on zone enter; use 0 for normal area
-== 输入区域时显示哪些消息；使用 0 表示正常区域
+== 进入区域时显示哪些消息；使用 0 表示正常区域
 
 Which message to display on zone leave; use 0 for normal area
 == 离开区域时显示哪些消息；使用 0 表示正常区域
@@ -8084,7 +8255,7 @@ Who stuffed OBS in here
 == 谁把 OBS 塞进来了
 
 Why are you slowmo replaying to read this?
-== 所以你为什么要慢速回放来看这个
+== 所以你为什么要慢速回放来看这个？
 
 Width
 == 宽度
@@ -8093,10 +8264,10 @@ Width and height are required to be within the range from %d to %d.
 == 按键的宽和高需要在 %d 到 %d 内。
 
 Width of others' hook collision line
-== 其他玩家的钩索辅助线宽度
+== 其他玩家的钩索碰撞线宽度
 
 Width of your own hook collision line
-== 自己的钩索辅助线宽度
+== 自己的钩索碰撞线宽度
 
 Windowed
 == 窗口化
@@ -8186,7 +8357,7 @@ You can collide with others
 == 你现在可以与其他玩家碰撞
 
 You can hammer hit others
-== 已允许锤击其他玩家
+== 你现在可以用锤子攻击其他玩家
 
 You can hit others
 == 你现在可以攻击其他玩家
@@ -8210,7 +8381,7 @@ You can only vote after logging in.
 == 登录后才可以发起投票
 
 You can see other players. To disable this use DDNet client and type /showothers
-== 你现在能看到其他玩家。想关掉的话，在 DDNet 客户端里输入 /showothers
+== 你当前可以看到其他玩家。要关闭此功能，请使用 DDNet 客户端并输入 /showothers
 
 You can shoot others with grenade
 == 你现在可以用手雷攻击其他玩家
@@ -8234,7 +8405,7 @@ You can't collide with others
 == 你现在不能与其他玩家碰撞
 
 You can't hammer hit others
-== 已禁止锤击其他玩家
+== 你现在不能用锤子攻击其他玩家
 
 You can't hit others
 == 你现在不能攻击其他玩家
@@ -8321,7 +8492,7 @@ You must join a team and play with somebody or else you can't play
 == 你必须加入一个队伍并和其他人一起玩，否则无法开始
 
 You must restart the game for all settings to take effect.
-== 你需要重启游戏来使新设置生效。
+== 你需要重启游戏来使所有设置生效。
 
 You must wait %s seconds before making another vote.
 == 再次发起投票前还需要等待 %s 秒
@@ -8375,13 +8546,13 @@ Your friend %s is online and currently on map %s!
 == 你的好友 %s 在线，当前在地图 %s！
 
 Your locked team was killed because '%s' %s
-== 你的锁队全员被强制死亡，因为 '%s' %s 了
+== 你的锁队全员被处死，因为 '%s' %s 了
 
 Your movements are not taken into account when calculating the line colors
-== 移动所造成的瞄准偏移将不计入考量
+== 计算线条颜色时不考虑你的移动
 
 Your nickname '%s' is already used (%d points). Do you still want to use it?
-== 你使用的昵称 "%s" 在 DDNet 中有 %d 分的记录，这可能表示该昵称已经被其他玩家使用过。确认要使用这个名字吗？
+== 你使用的昵称 "%s" 已被使用（%d 分）。确认要使用这个名字吗？
 
 Your profile
 == 您的个人资料
@@ -8393,7 +8564,7 @@ Your swap request timed out %s seconds ago, use /swap again to request
 == 你的交换请求已在 %s 秒前超时，请重新输入 /swap 发起
 
 Your team has been killed because it contains an invalid tee state
-== 队伍中检测到不合法的 tee 状态，已被强制死亡
+== 你的队伍因包含无效 tee 状态而被处死
 
 Your team has not started yet
 == 你的队伍还没有开始
@@ -8402,16 +8573,16 @@ Your team is currently saving
 == 你的队伍当前正在保存
 
 Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
-== 队伍已无法完赛，又没开 /practice，已被强制死亡
+== 你的队伍因已无法完赛且未进入 /practice 模式而被处死
 
 Your team was unlocked by an unlock team tile
-== 你的队伍已被地图上的解锁图块解开锁定
+== 你的队伍已被解锁队伍图块解除锁定
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == 你的 timeout code 已设置。0.7 客户端超时后无法取回自己的 tee，但 0.6 客户端可以接管你的 tee
 
 z = Zoom
-== z = Zoom（缩放）
+== z = 缩放
 
 Zen Mode
 == 禅模式
@@ -8465,7 +8636,7 @@ Zoom out
 == 交换选项颜色
 
 仅在另一只 tee 离开当前视角时显示分身迷你视图
-== 仅在另一只 Tee 离开当前视角时显示分身迷你视图
+== 仅在另一只 tee 离开当前视角时显示分身迷你视图
 
 使用通知栏分类过滤
 == 使用通知栏分类过滤
@@ -8474,7 +8645,7 @@ Zoom out
 == 允许 FTAPI 自动翻译（可能导致过载）
 
 关键词回复使用Dummy
-== 关键词回复使用分身
+== 关键词回复使用 Dummy
 
 关键词回复规则（每行: [rename] [regex] 关键词=>回复）
 == 关键词回复规则（每行：[rename] [regex] 关键词=>回复）
@@ -8510,10 +8681,10 @@ Zoom out
 == 加入可锁定队伍后自动锁定
 
 动态视野平滑度（0=瞬时，100=最平滑）
-== 动态视野平滑度（0=瞬时，100=最平滑）
+== 动态视野平滑度（0 = 瞬时，100 = 最平滑）
 
 动态视野强度（0-200）
-== 动态视野强度（0-200）
+== 动态视野强度（0 - 200）
 
 压缩器攻击时间（毫秒）
 == 压缩器攻击时间（毫秒）
@@ -8557,20 +8728,11 @@ Zoom out
 名字板坐标行 Y 偏移
 == 名字板坐标行 Y 偏移
 
-名字板弱钩图标颜色
-== 名字板弱钩图标颜色
-
 名字板强弱行 X 偏移
 == 名字板强弱行 X 偏移
 
 名字板强弱行 Y 偏移
 == 名字板强弱行 Y 偏移
-
-名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
-== 名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
-
-名字板强钩图标颜色
-== 名字板强钩图标颜色
 
 名字板战队行 X 偏移
 == 名字板战队行 X 偏移
@@ -8583,36 +8745,6 @@ Zoom out
 
 名字板按键行 Y 偏移
 == 名字板按键行 Y 偏移
-
-名字板文本光晕范围
-== 名字板文本光晕范围
-
-名字板文本光晕颜色
-== 名字板文本光晕颜色
-
-名字板文本效果 Demo 手动目标 Client ID（-1=无）
-== 名字板文本效果 Demo 手动目标 Client ID（-1=无）
-
-名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
-== 名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
-
-名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
-== 名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
-
-名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
-== 名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
-
-名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
-== 名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
-
-名字板文本渐变颜色
-== 名字板文本渐变颜色
-
-名字板文本边框范围
-== 名字板文本边框范围
-
-名字板文本边框颜色
-== 名字板文本边框颜色
 
 名字板昵称行 X 偏移
 == 名字板昵称行 X 偏移
@@ -8675,7 +8807,7 @@ Zoom out
 == 启用动态视野，移动越快视野越宽
 
 启用增强激光特效（辉光+脉冲动画）
-== 启用增强激光特效（辉光 + 脉冲动画）
+== 启用增强激光特效（辉光+脉冲动画）
 
 启用复读功能
 == 启用复读功能
@@ -8738,7 +8870,7 @@ Zoom out
 == 噪声抑制强度（百分比）
 
 噪声抑制模式（0=关闭 1=简单 2=RNNoise）
-== 噪声抑制模式（0 = 关闭 1 = 简单 2 = RNNoise）
+== 噪声抑制模式（0=关闭 1=简单 2=RNNoise）
 
 在 Gores 游戏模式中自动启用 Gores 自动切换
 == 在 Gores 游戏模式中自动启用 Gores 自动切换
@@ -8774,7 +8906,7 @@ Zoom out
 == 地图进度条宽度（占屏幕宽度百分比）
 
 地图进度条样式（0=底部横条，1=HUD 内嵌）
-== 地图进度条样式（0 = 底部横条，1 = HUD 内嵌）
+== 地图进度条样式（0=底部横条，1=HUD 内嵌）
 
 地图进度条水平位置（中心点，占屏幕宽度百分比）
 == 地图进度条水平位置（中心点，占屏幕宽度百分比）
@@ -8837,7 +8969,7 @@ Zoom out
 == 已读的设置界面新功能标识
 
 开关图块的覆盖实体 alpha (0-100)
-== 开关图块的覆盖实体 alpha（0-100）
+== 开关图块的覆盖实体 alpha (0-100)
 
 忽略语音距离衰减
 == 忽略语音距离衰减
@@ -8886,9 +9018,6 @@ Zoom out
 
 显示地图进度调试点路线
 == 显示地图进度调试点路线
-
-显示歌词当前行指示器
-== 显示歌词当前行指示器
 
 显示版本过旧提示
 == 显示版本过旧提示
@@ -8962,9 +9091,6 @@ Zoom out
 歌词当前行颜色
 == 歌词当前行颜色
 
-歌词指示器颜色
-== 歌词指示器颜色
-
 歌词描边透明度
 == 歌词描边透明度
 
@@ -8985,15 +9111,6 @@ Zoom out
 
 歌词跑马灯速度
 == 歌词跑马灯速度
-
-歌词首字放大
-== 歌词首字放大
-
-歌词首字缩放百分比
-== 歌词首字缩放百分比
-
-歌词首字颜色
-== 歌词首字颜色
 
 武器切换动画持续时间（毫秒）
 == 武器切换动画持续时间（毫秒）
@@ -9332,10 +9449,10 @@ Zoom out
 == 背景 3D 粒子颜色模式：1=自定义，2=随机
 
 脉冲动画速度 ( 百分比, 100=正常)
-== 脉冲动画速度（百分比，100=正常）
+== 脉冲动画速度 ( 百分比，100=正常)
 
 脉冲振幅 (0-100)
-== 脉冲振幅（0-100）
+== 脉冲振幅 (0-100)
 
 腾讯云翻译 SecretId
 == 腾讯云翻译 SecretId
@@ -9614,7 +9731,7 @@ Zoom out
 == 隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）
 
 隐藏非好友姓名/部落并显示客户端 ID
-== 隐藏非好友姓名/战队并显示客户端 ID
+== 隐藏非好友姓名/部落并显示客户端 ID
 
 静音麦克风
 == 静音麦克风
@@ -9670,7 +9787,7 @@ You may have installed only DDNet.exe. Please use the full QmClient folder.
 
 [data_version.h]
 You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.
-== 喜报！你可能仅下载并替换了 DDNet.exe 文件，没有下载 QmClient.zip\n 请仔细阅读群公告的使用说明！！！
+== 你可能仅替换了 DDNet.exe 而跳过了 QmClient.zip。\n 请安装完整的 QmClient 包。
 
 [Demo details]
 map not included
@@ -9750,7 +9867,7 @@ Could not initialize the given graphics backend, this is probably because you di
 
 [Graphics error]
 Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初始化失败。请尝试打开配置目录中的设置文件（settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
+== 初始化失败。请尝试打开配置目录中的 settings_ddnet.cfg 文件，将 gfx_backend 改为 OpenGL 或 Vulkan 再重试。
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -9766,19 +9883,19 @@ Submitting the render commands failed. Try to update your GPU drivers.
 
 [Graphics error]
 Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 未知错误。请尝试打开配置目录中的设置文件（settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
+== 未知错误。请尝试打开配置目录中的 settings_ddnet.cfg 并将 gfx_backend 改为 OpenGL 或 Vulkan 再重试。
 
 [Hammer Mode]
 Normal
-== 正常(不旋转)
+== 正常（不旋转）
 
 [Hammer Mode]
 Rotate with cursor
-== 随光标旋转(垂直)
+== 随光标旋转（垂直）
 
 [Hammer Mode]
 Rotate with cursor like gun
-== 像枪一样随光标旋转(平行)
+== 像枪一样随光标旋转（平行）
 
 [Hertz]
 Hz

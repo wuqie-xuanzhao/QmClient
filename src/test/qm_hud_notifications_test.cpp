@@ -94,14 +94,15 @@ TEST(QmHudNotifications, MatchesKnownSoloPrompts)
 TEST(QmHudNotifications, HudEdgeMarginHelperOffsetsAnchoredRects)
 {
 	const CUIRect Rect{10.0f, 20.0f, 100.0f, 40.0f};
+	const QmHudEditor::SEdgeMargin Margin = QmHudEditor::SEdgeMargin::Uniform(8.0f);
 
-	const CUIRect LeftTop = QmHudEditor::InsetAnchoredRect(Rect, 8.0f, true, false, true, false);
+	const CUIRect LeftTop = QmHudEditor::ApplyEdgeMargin(Rect, Margin, true, false, true, false);
 	EXPECT_FLOAT_EQ(LeftTop.x, 18.0f);
 	EXPECT_FLOAT_EQ(LeftTop.y, 28.0f);
 	EXPECT_FLOAT_EQ(LeftTop.w, Rect.w);
 	EXPECT_FLOAT_EQ(LeftTop.h, Rect.h);
 
-	const CUIRect RightBottom = QmHudEditor::InsetAnchoredRect(Rect, 8.0f, false, true, false, true);
+	const CUIRect RightBottom = QmHudEditor::ApplyEdgeMargin(Rect, Margin, false, true, false, true);
 	EXPECT_FLOAT_EQ(RightBottom.x, 2.0f);
 	EXPECT_FLOAT_EQ(RightBottom.y, 12.0f);
 	EXPECT_FLOAT_EQ(RightBottom.w, Rect.w);
@@ -723,10 +724,10 @@ TEST(QmHudNotificationRules, SimplifiedChineseTranslationsUsePlainPromptText)
 	EXPECT_NE(Translations.find("key = \"Scoreboard point check\"\n[message.translations]\n"), std::string::npos);
 	EXPECT_NE(Translations.find("simplified_chinese = \"计分板查分\""), std::string::npos);
 	EXPECT_NE(Translations.find("key = \"Team can't be saved while a dragger is active\""), std::string::npos);
-	EXPECT_NE(Translations.find("simplified_chinese = \"拖拽器正在作用，暂时不能保存队伍\""), std::string::npos);
-	EXPECT_NE(Translations.find("simplified_chinese = \"此服务器关闭了队伍前 5 查询\""), std::string::npos);
-	EXPECT_NE(Translations.find("simplified_chinese = \"已允许锤击其他玩家\""), std::string::npos);
-	EXPECT_NE(Translations.find("simplified_chinese = \"已禁止锤击其他玩家\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"有拖拽器生效时不能保存队伍存档\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"本服务器不允许查看队伍前 5 名\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"你现在可以用锤子攻击其他玩家\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"你现在不能用锤子攻击其他玩家\""), std::string::npos);
 }
 
 TEST(QmHudNotificationRules, AnalyzesStaticVoteModerationMessage)
@@ -1144,10 +1145,11 @@ TEST(QmHudNotificationsGeometry, EdgeMarginInsetsOnlyAnchoredPreviewEdges)
 {
 	const CUIRect AnchorRect = {0.0f, 0.0f, 128.0f, 92.0f};
 	const CUIRect FreeRect = {100.0f, 40.0f, 128.0f, 92.0f};
+	const QmHudEditor::SEdgeMargin Margin = QmHudEditor::SEdgeMargin::Uniform(8.0f);
 
-	const CUIRect LeftInset = QmHudEditor::InsetAnchoredRect(AnchorRect, 8.0f, true, false, true, false);
-	const CUIRect RightInset = QmHudEditor::InsetAnchoredRect(AnchorRect, 8.0f, false, true, false, true);
-	const CUIRect FreeInset = QmHudEditor::InsetAnchoredRect(FreeRect, 8.0f, false, false, false, false);
+	const CUIRect LeftInset = QmHudEditor::ApplyEdgeMargin(AnchorRect, Margin, true, false, true, false);
+	const CUIRect RightInset = QmHudEditor::ApplyEdgeMargin(AnchorRect, Margin, false, true, false, true);
+	const CUIRect FreeInset = QmHudEditor::ApplyEdgeMargin(FreeRect, Margin, false, false, false, false);
 
 	EXPECT_FLOAT_EQ(LeftInset.x, 8.0f);
 	EXPECT_FLOAT_EQ(LeftInset.y, 8.0f);
@@ -1157,6 +1159,78 @@ TEST(QmHudNotificationsGeometry, EdgeMarginInsetsOnlyAnchoredPreviewEdges)
 	EXPECT_FLOAT_EQ(RightInset.w, 128.0f);
 	EXPECT_FLOAT_EQ(FreeInset.x, FreeRect.x);
 	EXPECT_FLOAT_EQ(FreeInset.y, FreeRect.y);
+}
+
+TEST(QmHudEditorGeometry, ApplyEdgeMarginMatchesLegacyNotificationInsetAcrossAnchors)
+{
+	const CUIRect AnchorRect = {0.0f, 0.0f, 128.0f, 92.0f};
+	const QmHudEditor::SEdgeMargin Margin = QmHudEditor::SEdgeMargin::Uniform(8.0f);
+
+	const CUIRect LeftTop = QmHudEditor::ApplyEdgeMargin(AnchorRect, Margin, true, false, true, false);
+	const CUIRect RightBottom = QmHudEditor::ApplyEdgeMargin(AnchorRect, Margin, false, true, false, true);
+
+	const CUIRect LegacyLeftTop = QmHudNotifications::InsetAnchoredRect(AnchorRect, 8.0f, true, false, true, false);
+	const CUIRect LegacyRightBottom = QmHudNotifications::InsetAnchoredRect(AnchorRect, 8.0f, false, true, false, true);
+
+	EXPECT_FLOAT_EQ(LeftTop.x, LegacyLeftTop.x);
+	EXPECT_FLOAT_EQ(LeftTop.y, LegacyLeftTop.y);
+	EXPECT_FLOAT_EQ(LeftTop.w, LegacyLeftTop.w);
+	EXPECT_FLOAT_EQ(LeftTop.h, LegacyLeftTop.h);
+	EXPECT_FLOAT_EQ(RightBottom.x, LegacyRightBottom.x);
+	EXPECT_FLOAT_EQ(RightBottom.y, LegacyRightBottom.y);
+}
+
+TEST(QmHudEditorGeometry, ApplyEdgeMarginHandlesNonUniformMargins)
+{
+	const CUIRect AnchorRect = {0.0f, 0.0f, 64.0f, 32.0f};
+	const QmHudEditor::SEdgeMargin Margin{4.0f, 8.0f, 2.0f, 16.0f};
+
+	const CUIRect LeftTop = QmHudEditor::ApplyEdgeMargin(AnchorRect, Margin, true, false, true, false);
+	EXPECT_FLOAT_EQ(LeftTop.x, 4.0f);
+	EXPECT_FLOAT_EQ(LeftTop.y, 2.0f);
+
+	const CUIRect RightBottom = QmHudEditor::ApplyEdgeMargin(AnchorRect, Margin, false, true, false, true);
+	EXPECT_FLOAT_EQ(RightBottom.x, -8.0f);
+	EXPECT_FLOAT_EQ(RightBottom.y, -16.0f);
+}
+
+TEST(QmHudEditorGeometry, ApplyEdgeMarginZeroIsIdentity)
+{
+	const CUIRect AnchorRect = {12.0f, 34.0f, 56.0f, 78.0f};
+	const QmHudEditor::SEdgeMargin Zero{};
+
+	const CUIRect LeftTop = QmHudEditor::ApplyEdgeMargin(AnchorRect, Zero, true, false, true, false);
+	const CUIRect RightBottom = QmHudEditor::ApplyEdgeMargin(AnchorRect, Zero, false, true, false, true);
+	const CUIRect Free = QmHudEditor::ApplyEdgeMargin(AnchorRect, Zero, false, false, false, false);
+
+	EXPECT_FLOAT_EQ(LeftTop.x, AnchorRect.x);
+	EXPECT_FLOAT_EQ(LeftTop.y, AnchorRect.y);
+	EXPECT_FLOAT_EQ(RightBottom.x, AnchorRect.x);
+	EXPECT_FLOAT_EQ(RightBottom.y, AnchorRect.y);
+	EXPECT_FLOAT_EQ(Free.x, AnchorRect.x);
+	EXPECT_FLOAT_EQ(Free.y, AnchorRect.y);
+}
+
+TEST(QmHudEditorGeometry, ApplyEdgeMarginIsZeroPredicate)
+{
+	EXPECT_TRUE((QmHudEditor::SEdgeMargin{}).IsZero());
+	EXPECT_FALSE(QmHudEditor::SEdgeMargin::Uniform(1.0f).IsZero());
+	EXPECT_FALSE((QmHudEditor::SEdgeMargin{0.0f, 0.0f, 0.0f, 0.5f}).IsZero());
+}
+
+TEST(QmHudEditorGeometry, ResolveHorizontalFlowFromVisibleRect)
+{
+	const float ScreenStartX = 0.0f;
+	const float ScreenWidth = 400.0f;
+	const CUIRect AnchoredLeft = {0.0f, 0.0f, 120.0f, 80.0f};
+	const CUIRect AnchoredRight = {280.0f, 0.0f, 120.0f, 80.0f};
+	const CUIRect CenterTilt = {100.0f, 0.0f, 80.0f, 60.0f};
+	const CUIRect FarRightTilt = {260.0f, 0.0f, 60.0f, 60.0f};
+
+	EXPECT_EQ(QmHudEditor::ResolveHorizontalFlow(AnchoredLeft, ScreenStartX, ScreenWidth), QmHudEditor::EHorizontalFlow::LeftToRight);
+	EXPECT_EQ(QmHudEditor::ResolveHorizontalFlow(AnchoredRight, ScreenStartX, ScreenWidth), QmHudEditor::EHorizontalFlow::RightToLeft);
+	EXPECT_EQ(QmHudEditor::ResolveHorizontalFlow(CenterTilt, ScreenStartX, ScreenWidth), QmHudEditor::EHorizontalFlow::LeftToRight);
+	EXPECT_EQ(QmHudEditor::ResolveHorizontalFlow(FarRightTilt, ScreenStartX, ScreenWidth), QmHudEditor::EHorizontalFlow::RightToLeft);
 }
 
 TEST(QmHudNotificationsGeometry, EditorPreviewRightFlowBoxMatchesStableRightEdge)

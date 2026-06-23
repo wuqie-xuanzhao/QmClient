@@ -166,6 +166,7 @@ option(IPO "Enable interprocedural optimizations" ON)
 option(FUSE_LD "Linker to use" OFF)
 option(SECURITY_COMPILER_FLAGS "Whether to set security-relevant compiler flags like -D_FORTIFY_SOURCE=2 and -fstack-protector-strong" ON)
 option(QM_DISABLE_PARALLEL_COMPILE "Disable /MP for compiler warnings-sensitive gates" OFF)
+option(QM_MSVC_USE_EMBEDDED_DEBUG_INFO "Use embedded MSVC debug information instead of per-target PDB files" OFF)
 option(QM_MSVC_ANALYZE "Enable MSVC /analyze static analysis (Windows only)" OFF)
 option(QM_STRICT_WARNINGS "Treat compiler warnings as errors" OFF)
 option(QM_BUILD_ICON_ATLAS "Build QmClient Tabler PNG icon atlas from SVG sources" ON)
@@ -2735,17 +2736,42 @@ if(CLIENT)
     components/qmclient/jelly_tee.cpp
     components/qmclient/jelly_tee.h
     components/qmclient/keyword_reply_rules.h
-    components/qmclient/lyrics/lyric_model.h
-    components/qmclient/lyrics/lyric_parser.cpp
-    components/qmclient/lyrics/lyric_parser.h
-    components/qmclient/lyrics_component.cpp
-    components/qmclient/lyrics_component.h
     components/qmclient/menus_qmclient.cpp
     components/qmclient/modes.cpp
     components/qmclient/modes.h
     components/qmclient/monitoring/monitoring.cpp
     components/qmclient/monitoring/monitoring_device_perf.cpp
     components/qmclient/monitoring/monitoring.h
+    components/qmclient/qm_lyrics/qm_lyrics.cpp
+    components/qmclient/qm_lyrics/qm_lyrics.h
+    components/qmclient/qm_lyrics/qm_lyrics_cache.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_cache.h
+    components/qmclient/qm_lyrics/qm_lyrics_clock.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_clock.h
+    components/qmclient/qm_lyrics/qm_lyrics_match.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_match.h
+    components/qmclient/qm_lyrics/qm_lyrics_model.h
+    components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.h
+    components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.h
+    components/qmclient/qm_lyrics/qm_lyrics_render.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_render.h
+    components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.h
+    components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.h
+    components/qmclient/qm_lyrics/qm_lyrics_source.h
+    components/qmclient/qm_lyrics/qm_lyrics_source_kugou.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_source_kugou.h
+    components/qmclient/qm_lyrics/qm_lyrics_source_local_files.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_source_local_files.h
+    components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.h
+    components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.h
+    components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
+    components/qmclient/qm_lyrics/qm_lyrics_song_search_map.h
     components/qmclient/qmclient.cpp
     components/qmclient/qmclient.h
     components/qmclient/qmclient_utils.cpp
@@ -3176,7 +3202,6 @@ if(CLIENT)
     # those files from whole-program optimization while keeping IPO enabled elsewhere.
     set_source_files_properties(
       src/game/client/components/qmclient/jelly_tee.cpp
-      src/game/client/components/qmclient/lyrics_component.cpp
       src/game/client/components/qmclient/scripting/impl.cpp
       PROPERTIES
       COMPILE_OPTIONS "$<$<CONFIG:Release>:/GL->;$<$<CONFIG:RelWithDebInfo>:/GL->")
@@ -3682,7 +3707,18 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_hud_notifications_test.cpp
     qm_new_ui_menu_branch_test.cpp
     qm_live_client_test.cpp
-    qm_lyrics_parser_test.cpp
+    qm_lyrics_cache_test.cpp
+    qm_lyrics_clock_test.cpp
+    qm_lyrics_match_test.cpp
+    qm_lyrics_parser_lrc_test.cpp
+    qm_lyrics_parser_ttml_test.cpp
+    qm_lyrics_render_test.cpp
+    qm_lyrics_source_amll_ttml_db_test.cpp
+    qm_lyrics_source_apple_music_test.cpp
+    qm_lyrics_source_local_files_test.cpp
+    qm_lyrics_source_lyricify_cn_test.cpp
+    qm_lyrics_source_lrclib_test.cpp
+    qm_lyrics_song_search_map_test.cpp
     qm_modes_test.cpp
     qmclient_update_version_test.cpp
     QmUiTokensTest.cpp
@@ -3701,6 +3737,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     render_target_test.cpp
     shell_execute_test.cpp
     snapshot_test.cpp
+    steam_presence_test.cpp
     str_test.cpp
     strip_path_and_extension_test.cpp
     swap_endian_test.cpp
@@ -3741,8 +3778,20 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/generated/client_data7.h
     src/game/client/components/qmclient/hud_notifications/hud_notification_catalog.cpp
     src/game/client/components/qmclient/hud_notifications/hud_notification_rules.cpp
-    src/game/client/components/qmclient/lyrics/lyric_parser.cpp
     src/game/client/components/qmclient/monitoring/monitoring_device_perf.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_cache.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_clock.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_match.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_render.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_kugou.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_local_files.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
+    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
     src/game/client/live/live_director.cpp
     src/game/client/live/live_replay_buffer.cpp
     src/game/client/components/qmclient/modes.cpp
@@ -3780,6 +3829,9 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   add_dependencies(${TARGET_TESTRUNNER} generate_protocol)
   target_link_libraries(${TARGET_TESTRUNNER} ${PNG_LIBRARIES} ${WebP_LIBRARIES} ${GTEST_LIBRARIES} ${LIBS_SERVER})
+  if(FFMPEG_FOUND)
+    target_link_libraries(${TARGET_TESTRUNNER} ${FFMPEG_LIBRARIES})
+  endif()
   target_compile_definitions(${TARGET_TESTRUNNER} PRIVATE
     DDNET_TEST_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
   )
@@ -3787,6 +3839,9 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     ${GTEST_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
   )
+  if(FFMPEG_FOUND)
+    target_include_directories(${TARGET_TESTRUNNER} SYSTEM PRIVATE ${FFMPEG_INCLUDE_DIRS})
+  endif()
 
   list(APPEND TARGETS_OWN ${TARGET_TESTRUNNER})
   list(APPEND TARGETS_LINK ${TARGET_TESTRUNNER})
@@ -4380,9 +4435,17 @@ foreach(target ${TARGETS})
     # Enable Edit & Continue (Hot Reload) support
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.25)
       if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,Release,RelWithDebInfo>:ProgramDatabase>")
+        if(QM_MSVC_USE_EMBEDDED_DEBUG_INFO)
+          set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,Release,RelWithDebInfo>:Embedded>")
+        else()
+          set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,Release,RelWithDebInfo>:ProgramDatabase>")
+        endif()
       else()
-        set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug>:EditAndContinue>$<$<CONFIG:Release,RelWithDebInfo>:ProgramDatabase>")
+        if(QM_MSVC_USE_EMBEDDED_DEBUG_INFO)
+          set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,Release,RelWithDebInfo>:Embedded>")
+        else()
+          set_property(TARGET ${target} PROPERTY MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug>:EditAndContinue>$<$<CONFIG:Release,RelWithDebInfo>:ProgramDatabase>")
+        endif()
       endif()
       target_link_options(${target} PRIVATE $<$<CONFIG:Debug>:/INCREMENTAL>)
       target_link_options(${target} PRIVATE

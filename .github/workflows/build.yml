@@ -85,6 +85,12 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
+      - name: Setup Python
+        id: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
       - name: Update version from tag
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
@@ -102,7 +108,7 @@ jobs:
         uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc  # v2.9.1
 
       - name: Cache CMake build
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: |
             build/_deps
@@ -111,7 +117,7 @@ jobs:
 
       - name: Cache Homebrew packages
         if: runner.os == 'macOS'
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: ~/Library/Caches/Homebrew
           key: homebrew-${{ runner.os }}-${{ hashFiles('.github/workflows/build.yml') }}
@@ -134,7 +140,20 @@ jobs:
 
       - name: Setup MSVC (Windows)
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@a102174a2b586eec2ea151a69e6fd14404a8ce7c  # v1.13.0
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vsPath) {
+            throw "Visual Studio with MSVC tools was not found"
+          }
+          $devCmd = Join-Path $vsPath "Common7\Tools\VsDevCmd.bat"
+          cmd /c "`"$devCmd`" -arch=x64 -host_arch=x64 && set" |
+            ForEach-Object {
+              if ($_ -match "^(.*?)=(.*)$") {
+                "$($matches[1])=$($matches[2])" >> $env:GITHUB_ENV
+              }
+            }
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -154,6 +173,9 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           export HOMEBREW_NO_AUTO_UPDATE=1
+          for tap in aws/tap azure/bicep; do
+            brew untap "$tap" 2>/dev/null || true
+          done
           for pkg in cmake ninja pkg-config python freetype sdl2 libpng webp libogg opus opusfile sqlite wavpack ffmpeg molten-vk vulkan-loader glslang; do
             if brew list --formula "$pkg" &>/dev/null; then
               brew link --overwrite "$pkg" 2>/dev/null || true
@@ -161,20 +183,25 @@ jobs:
               brew install "$pkg"
             fi
           done
-          python3 -m venv .venv-dmgbuild
-          . .venv-dmgbuild/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install dmgbuild Pillow
-          echo "${PWD}/.venv-dmgbuild/bin" >> "$GITHUB_PATH"
 
-      - name: Install Python build dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: python -m pip install Pillow
+      - name: Install Python build dependencies
+        shell: bash
+        env:
+          PYTHON_EXECUTABLE: ${{ steps.setup-python.outputs.python-path }}
+        run: |
+          "${PYTHON_EXECUTABLE}" -m pip install --upgrade pip
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            "${PYTHON_EXECUTABLE}" -m pip install dmgbuild Pillow
+          else
+            "${PYTHON_EXECUTABLE}" -m pip install Pillow
+          fi
 
       - name: Configure
         shell: bash
+        env:
+          PYTHON_EXECUTABLE: ${{ steps.setup-python.outputs.python-path }}
         run: |
-          ARGS=(-G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DDOWNLOAD_GTEST=ON)
+          ARGS=(-G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DDOWNLOAD_GTEST=ON -DPython3_EXECUTABLE="${PYTHON_EXECUTABLE}")
           case "$RUNNER_OS" in
             Linux)
               ARGS+=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
@@ -191,6 +218,7 @@ jobs:
               ARGS+=(
                 -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
                 -DPREFER_BUNDLED_LIBS=ON -DCMAKE_OBJECT_PATH_MAX=1024
+                -DQM_MSVC_USE_EMBEDDED_DEBUG_INFO=ON
               )
               ;;
           esac
@@ -201,7 +229,7 @@ jobs:
         run: cmake --build build --target game-client --parallel
 
       - name: Run tests
-        if: !(github.event_name == 'workflow_dispatch' && inputs.skip_tests == 'true')
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_tests == 'true') }}
         shell: bash
         run: cmake --build build --target run_tests --parallel
 
@@ -358,13 +386,13 @@ jobs:
         uses: Swatinem/rust-cache@23869a5bd66c73db3c0ac40331f3206eb23791dc  # v2.9.1
 
       - name: Cache cargo-ndk
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/cargo-ndk
           key: cargo-ndk-${{ runner.os }}
 
       - name: Cache Android NDK
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: |
             ~/.android/sdk/ndk
@@ -373,7 +401,7 @@ jobs:
           key: android-sdk-ndk-${{ env.ANDROID_NDK_VERSION }}
 
       - name: Cache Rust Android targets
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: |
             ~/.rustup/toolchains
@@ -410,11 +438,11 @@ jobs:
 
       - name: Cache WebP for Android
         id: cache-webp
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: ddnet-libs/webp/android
-          key: webp-android-v1.6.0-${{ hashFiles('.github/workflows/build.yml', 'ddnet-libs/webp/**') }}
-          restore-keys: webp-android-v1.6.0-
+          key: webp-android-v1.6.0-sharpyuv-${{ hashFiles('.github/workflows/build.yml', 'ddnet-libs/webp/**') }}
+          restore-keys: webp-android-v1.6.0-sharpyuv-
 
       - name: Build WebP for Android (Parallel)
         if: steps.cache-webp.outputs.cache-hit != 'true'
@@ -477,6 +505,7 @@ jobs:
             cp "install-${ABI}/lib/libwebp.a" "../ddnet-libs/webp/android/${DIR}/"
             cp "install-${ABI}/lib/libwebpdemux.a" "../ddnet-libs/webp/android/${DIR}/" 2>/dev/null || true
             cp "install-${ABI}/lib/libwebpmux.a" "../ddnet-libs/webp/android/${DIR}/" 2>/dev/null || true
+            cp "install-${ABI}/lib/libsharpyuv.a" "../ddnet-libs/webp/android/${DIR}/" 2>/dev/null || true
           done
           
           echo "All WebP builds completed"

@@ -41,8 +41,10 @@ python -m unittest discover qmclient_scripts/languages_qmclient/tests -v
 
 ```bash
 python qmclient_scripts/languages_qmclient/extract_strings.py
-python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages simplified_chinese,traditional_chinese,japanese,korean,russian,german,spanish,french,brazilian_portuguese,portuguese,turkish,polish --base-url https://api.deepseek.com --model deepseek-v4-flash --chat-extra-json '{"thinking":{"type":"disabled"}}' --batch-size 1024 --parallel-requests 10 --resume
+python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages simplified_chinese,traditional_chinese,japanese,korean,russian,german,spanish,french,brazilian_portuguese,portuguese,turkish,polish --base-url https://api.deepseek.com --model deepseek-chat --batch-size 48 --parallel-requests 8 --resume
 ```
+
+生成 draft 用于补缺时不要传 `--rewrite`。`--rewrite` 会把维护源里已有的译文也纳入任务，等同于接近全量重翻；只在明确需要重翻已有译文，或回填已审核 draft 并允许覆盖维护源时使用。补缺流程应依赖默认行为：跳过已有且质量检查通过的译文，只生成缺失或质量不合格的条目。
 
 审核 `translations_draft/<language>/*.toml` 后，显式回填维护源：
 
@@ -98,6 +100,8 @@ python qmclient_scripts/languages_qmclient/translate_with_local_http.py --langua
 python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages korean --module server_browser --write-back --resume
 ```
 
+回填后，成功写入维护源的 draft 条目应从 `translations_draft/<language>/<module>.toml` 中移除；如果该模块草稿没有剩余有效条目，应删除对应 draft 文件。失败或未写回的有效条目必须保留在 draft 中，方便后续重试或人工处理。
+
 回填后必须重新运行 `generate_all.py`、`validate.py` 和 `review_duplicate_entries.py`。如果回填结果出现未触碰条目的排序或空行变化，应先修写回脚本，不要把整模块格式化作为正常回填结果接受。
 
 ## 翻译风格维护
@@ -123,10 +127,24 @@ python qmclient_scripts/languages_qmclient/translate_with_local_http.py --langua
 DeepSeek 官方 API：
 
 ```bash
-python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages traditional_chinese --base-url https://api.deepseek.com --model deepseek-v4-flash --chat-extra-json '{"thinking":{"type":"disabled"}}' --batch-size 1024 --parallel-requests 2 --resume
+python qmclient_scripts/languages_qmclient/translate_with_local_http.py --languages traditional_chinese,korean,japanese --base-url https://api.deepseek.com --model deepseek-chat --batch-size 48 --parallel-requests 8 --resume
 ```
 
-翻译草稿任务默认不需要开启 thinking / reasoning 模式。OpenAI 兼容服务如果支持 `reasoning_effort = none`，可以用 `--reasoning-effort none` 关闭推理以提高吞吐；但不同厂商字段不统一，不能把 `none` 当成通用值。DeepSeek 官方 V4 接口按文档使用 `thinking.type` 控制思考模式，关闭时通过 `--chat-extra-json '{"thinking":{"type":"disabled"}}'` 透传厂商字段；如果启用思考，需要同步提高 `--max-tokens`，因为部分模型会先消耗 token 输出 `reasoning_content`，最终译文在 `content` 中才可用。
+翻译草稿任务默认不需要开启 thinking / reasoning 模式。DeepSeek 官方 API 优先使用 `deepseek-chat`，不要使用 `deepseek-reasoner`，也不要为普通翻译传 `--reasoning-effort`。如果某个兼容服务默认开启 thinking，必须用该服务文档指定的字段显式关闭；不同厂商字段不统一，不能把某个厂商的 `thinking` 或 `reasoning_effort` 当成通用值。如果确实启用思考，需要同步提高 `--max-tokens`，因为部分模型会先消耗 token 输出 `reasoning_content`，最终译文在 `content` 中才可用。
+
+性能注意：
+
+- 多语言补缺时，确认命令没有 `--rewrite`；否则会把已有翻译也重翻，任务量会从几百条放大到数千条。
+- `--parallel-requests` 控制单个语言内部的请求并发；如果脚本支持 `--parallel-languages`，再用它控制多语言并发。不要误以为逗号分隔的 `--languages` 天然并发。
+- DeepSeek 官方 API 可以使用较高并发。常规补缺建议从 `--batch-size 32` 到 `48`、`--parallel-requests 8` 起步；如果错误率低，再逐步提高。
+
+超时注意：
+
+- `translate_with_local_http.py --timeout` 只控制单个 HTTP 请求等待时间，不控制整条命令的总运行时间。
+- Codex、CI、外层 shell 或任务调度器可能有自己的总命令超时；总命令超时触发时，Python 进程会被直接终止，尚未写出的 draft 会丢失。
+- 大批量远端翻译不要一次性跑 12 种语言全量任务。推荐按语言或模块分段运行，例如先跑 `--languages korean,russian,german`，或加 `--modules qmclient,menus,misc` 分批。
+- 长任务中断后，先运行 `--write-back --resume` 回填已经生成并审核过的 draft，再继续用不带 `--rewrite` 的生成命令补剩余缺口。
+- 如果看到任务量异常放大，先用 `generate_all.py` / `validate.py --incremental` 和 TOML 缺失数量确认真实缺口，不要直接提高超时时间掩盖全量重翻问题。
 
 ## 审核边界
 

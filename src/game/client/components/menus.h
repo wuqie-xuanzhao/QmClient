@@ -2621,12 +2621,15 @@ private:
 	void RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item);
 	void HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder);
 	bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, int DropIndex);
+	float RenderTClientCacheSectionFallback(CUIRect &CurrentColumn, float TopMargin, float (CMenus::*pLayoutSection)(CUIRect &, bool));
+	void ConfigureSplitCachedStaticLayer(SSettingsSection &Section, const char *pTitle, std::function<float(CUIRect &)> MeasureSection, std::function<float(CUIRect &)> RenderInteractiveSection, float TopMargin);
 	void BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);
 	void BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);
 	float LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render);
 	float LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Render);
 	float LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render);
 	float LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render);
+	float RenderTClientHudInteractiveLayer(CUIRect &CurrentColumn);
 	int DoTClientSettingsButton_CheckBox(const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
 	int DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin);
 	int DoTClientSettingsButton_Menu(CButtonContainer *pButtonContainer, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f);

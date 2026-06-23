@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,6 +30,8 @@ LANGUAGE_ORDER = (
     "turkish",
     "polish",
 )
+CHINESE_LANGUAGES = {"simplified_chinese", "traditional_chinese"}
+CJK_TOLERANT_LANGUAGES = CHINESE_LANGUAGES | {"japanese", "korean"}
 
 
 @dataclass(frozen=True)
@@ -109,6 +112,168 @@ def normalize_translation(language: str, translation: str) -> str:
     return translation
 
 
+def translation_quality_errors(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+    *,
+    active_module_identities: set[tuple[str, str, str]] | None = None,
+    active_identities: set[tuple[str, str]] | None = None,
+    limit: int | None = None,
+) -> list[str]:
+    errors: list[str] = []
+    for module_name, module_entries in sorted(store.items()):
+        for (key, context), translations in sorted(module_entries.items()):
+            if (
+                active_module_identities is not None
+                and (module_name, key, context) not in active_module_identities
+            ):
+                continue
+            if (
+                active_identities is not None
+                and (key, context) not in active_identities
+            ):
+                continue
+            for language, translation in sorted(translations.items()):
+                normalized = normalize_translation(language, translation)
+                if language == "simplified_chinese" and translation != normalized:
+                    errors.append(
+                        f"{module_name}: [{context}] {key}: {language} typography "
+                        f"should be {toml_quote(normalized)}"
+                    )
+                if (
+                    language not in CHINESE_LANGUAGES
+                    and source_keys.has_cjk(key)
+                    and translation == key
+                ):
+                    errors.append(
+                        f"{module_name}: [{context}] {key}: {language} repeats CJK source key"
+                    )
+                if (
+                    language not in CHINESE_LANGUAGES
+                    and _looks_like_english_placeholder_key(key)
+                    and translation.strip() == key.strip()
+                ):
+                    errors.append(
+                        f"{module_name}: [{context}] {key}: {language} repeats English source key"
+                    )
+                if (
+                    language not in CJK_TOLERANT_LANGUAGES
+                    and source_keys.has_cjk(translation)
+                    and _looks_like_cjk_fallback(translation)
+                ):
+                    errors.append(
+                        f"{module_name}: [{context}] {key}: {language} contains CJK text "
+                        f"{toml_quote(translation)}"
+                    )
+                if limit is not None and len(errors) >= limit:
+                    return errors
+    return errors
+
+
+def toml_format_errors(path: Path) -> list[str]:
+    errors: list[str] = []
+    lines = path.read_text(encoding="utf-8").splitlines()
+    previous_message_line: int | None = None
+    for index, line in enumerate(lines):
+        if line.strip() != "[[message]]":
+            continue
+        line_number = index + 1
+        if previous_message_line is not None and index > 0 and lines[index - 1].strip():
+            errors.append(
+                f"{path}: line {line_number}: missing blank line before [[message]]"
+            )
+        previous_message_line = line_number
+    return errors
+
+
+def _looks_like_cjk_fallback(translation: str) -> bool:
+    cjk_count = sum(1 for char in translation if source_keys.has_cjk(char))
+    if cjk_count == 0:
+        return False
+    non_space_count = sum(1 for char in translation if not char.isspace())
+    if non_space_count == 0:
+        return False
+    return cjk_count >= 4 and cjk_count / non_space_count >= 0.35
+
+
+def _looks_like_english_placeholder_key(key: str) -> bool:
+    if source_keys.has_cjk(key) or "%" in key:
+        return False
+    if _may_keep_source_text(key):
+        return False
+    words = [word.strip("()[],:;.!?") for word in key.strip().split()]
+    if not any(any(char.isalpha() for char in word) for word in words):
+        return False
+    return any(word[:1].islower() for word in words)
+
+
+def _may_keep_source_text(source: str) -> bool:
+    if source in {
+        "DDNet",
+        "QmClient",
+        "TClient",
+        "OpenAI",
+        "API",
+        "HUD",
+        "Hz",
+        "FPS",
+        "Ping",
+        "Super",
+        "Demo",
+        "DDmaX",
+        "DeepSeek",
+        "DeepSeek API Key",
+        "Discord",
+        "Glitch",
+        "Gradient",
+        "Github",
+        "Linear",
+        "LibreTranslate",
+        "LibreTranslate API Key",
+        "OpenAI API Key",
+        "SecretId",
+        "SecretKey",
+        "Zhipu AI API Key",
+        "Tee",
+        "Tee 0.7",
+        "Qm",
+        "DDRace HUD",
+        "Lenny:",
+        "my_%s",
+        "entity_bg (Workshop)",
+        "Tencent Cloud",
+        "Tencent Cloud SecretId",
+        "Tencent Cloud SecretKey",
+        "Zhipu AI",
+        "V-Sync",
+        "DDmaX Easy",
+        "DDmaX Next",
+        "DDmaX Nut",
+        "DDmaX Pro",
+        "Ease in out quad",
+        "Ease out cubic",
+        "Brutal",
+        "Fun",
+        "Insane",
+        " min",
+        "Moderate",
+        "Novice",
+        "Oldschool",
+        "z = Zoom",
+    }:
+        return True
+    if re.fullmatch(r"[\W\d_%.:/\\-]+", source):
+        return True
+    if re.fullmatch(r"%[^\n]*\s(?:KiB|MiB)(?:/[a-zA-Z]+|\s*\([^)]*\))?", source):
+        return True
+    if re.fullmatch(r"[A-Z0-9_./% -]{1,24}", source):
+        return True
+    if re.fullmatch(r"[a-z0-9_./%-]{1,32}", source):
+        return True
+    if source.startswith(("http://", "https://", "/")):
+        return True
+    return False
+
+
 def dump_message_block(message: Message, translations: dict[str, str]) -> str:
     lines = ["[[message]]", f"key = {toml_quote(message.key)}"]
     if message.context:
@@ -174,9 +339,15 @@ def missing_translations_for(
         return [
             identity
             for identity in identities
-            if not flattened.get(identity, "") and not source_keys.has_cjk(identity[0])
+            if not flattened.get(identity, "")
+            and not source_keys.has_cjk(identity[0])
+            and not _may_keep_source_text(identity[0])
         ]
-    return [identity for identity in identities if not flattened.get(identity, "")]
+    return [
+        identity
+        for identity in identities
+        if not flattened.get(identity, "") and not _may_keep_source_text(identity[0])
+    ]
 
 
 def dump_module(messages: list[tuple[Message, dict[str, str]]]) -> str:
@@ -301,11 +472,15 @@ def patch_module_store(
         block = lines[start:index]
         identity = _block_identity(block)
         if identity is None or identity not in entries:
+            if output and output[-1] != "" and output[-1].strip() != "":
+                output.append("")
             output.extend(block)
             continue
 
         patched_block = _patch_message_block(block, entries[identity])
         patched_identities.add(identity)
+        if output and output[-1] != "" and output[-1].strip() != "":
+            output.append("")
         output.extend(patched_block)
 
     missing = [

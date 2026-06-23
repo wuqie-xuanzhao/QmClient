@@ -9,6 +9,7 @@
 #include <engine/shared/config.h>
 
 #include <game/client/component.h>
+#include <game/client/components/hud_editor.h>
 #include <game/client/components/qmclient/colored_parts.h>
 #include <game/client/ui_rect.h>
 #include <game/localization.h>
@@ -148,6 +149,11 @@ namespace QmHudNotifications
 		const float Width = maximum(AnchorRect.w, RenderWidth);
 		const float X = Flow == EHorizontalFlow::LeftToRight ? AnchorRect.x : AnchorRect.x + AnchorRect.w - Width;
 		return {X, AnchorRect.y, Width, AnchorRect.h};
+	}
+
+	inline CUIRect InsetAnchoredRect(const CUIRect &Rect, float Margin, bool AnchoredLeft, bool AnchoredRight, bool AnchoredTop, bool AnchoredBottom)
+	{
+		return QmHudEditor::ApplyEdgeMargin(Rect, QmHudEditor::SEdgeMargin::Uniform(Margin), AnchoredLeft, AnchoredRight, AnchoredTop, AnchoredBottom);
 	}
 
 	inline STextColorConfig TextColorConfig(ETextSource Source, int EchoInheritChatColor, unsigned SystemColor, unsigned EchoOverrideColor, unsigned ChatEchoColor)

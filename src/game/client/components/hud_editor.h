@@ -87,12 +87,34 @@ namespace QmHudEditor
 		return SnapAxisToGuides(Position, Size, ScreenStart, ScreenSize, nullptr, 0);
 	}
 
-	inline CUIRect InsetAnchoredRect(const CUIRect &Rect, float Margin, bool AnchoredLeft, bool AnchoredRight, bool AnchoredTop, bool AnchoredBottom)
+	struct SEdgeMargin
 	{
-		const float SafeMargin = std::max(0.0f, Margin);
+		float m_Left = 0.0f;
+		float m_Right = 0.0f;
+		float m_Top = 0.0f;
+		float m_Bottom = 0.0f;
+		bool IsZero() const { return m_Left == 0.0f && m_Right == 0.0f && m_Top == 0.0f && m_Bottom == 0.0f; }
+		static SEdgeMargin Uniform(float Value) { return {Value, Value, Value, Value}; }
+	};
+
+	enum class EHorizontalFlow
+	{
+		LeftToRight,
+		RightToLeft,
+	};
+
+	// 在变换前空间施加边距，向屏幕内侧推：贴左 +Left，贴右 -Right；非贴边方向不动。
+	// 宽高不变，与通知栏旧 InsetAnchoredRect 行为一致。
+	inline CUIRect ApplyEdgeMargin(const CUIRect &Rect, const SEdgeMargin &Margin,
+		bool AnchoredLeft, bool AnchoredRight, bool AnchoredTop, bool AnchoredBottom)
+	{
+		const float SafeLeft = maximum(0.0f, Margin.m_Left);
+		const float SafeRight = maximum(0.0f, Margin.m_Right);
+		const float SafeTop = maximum(0.0f, Margin.m_Top);
+		const float SafeBottom = maximum(0.0f, Margin.m_Bottom);
 		return {
-			Rect.x + (AnchoredLeft ? SafeMargin : (AnchoredRight ? -SafeMargin : 0.0f)),
-			Rect.y + (AnchoredTop ? SafeMargin : (AnchoredBottom ? -SafeMargin : 0.0f)),
+			Rect.x + (AnchoredLeft ? SafeLeft : (AnchoredRight ? -SafeRight : 0.0f)),
+			Rect.y + (AnchoredTop ? SafeTop : (AnchoredBottom ? -SafeBottom : 0.0f)),
 			Rect.w,
 			Rect.h};
 	}
@@ -103,6 +125,20 @@ namespace QmHudEditor
 		const float SafeMargin = std::max(0.0f, EdgeMargin);
 		const float X = AnchoredRight ? std::max(0.0f, ScreenWidth - Width - SafeMargin) : SafeMargin;
 		return {X, 50.0f, Width, 250.0f};
+	}
+
+	// 通用版：从可见矩形位置推导贴左/贴右。
+	// 与 anchor 距离 < EPSILON 视为贴边；非贴边按中心和屏幕中心比较。
+	inline EHorizontalFlow ResolveHorizontalFlow(const CUIRect &VisibleRect, float ScreenStartX, float ScreenWidth)
+	{
+		const float ScreenEndX = ScreenStartX + ScreenWidth;
+		if(std::fabs(VisibleRect.x - ScreenStartX) <= EPSILON)
+			return EHorizontalFlow::LeftToRight;
+		if(std::fabs((VisibleRect.x + VisibleRect.w) - ScreenEndX) <= EPSILON)
+			return EHorizontalFlow::RightToLeft;
+		const float VisibleCenterX = VisibleRect.x + VisibleRect.w * 0.5f;
+		const float ScreenCenterX = ScreenStartX + ScreenWidth * 0.5f;
+		return VisibleCenterX <= ScreenCenterX ? EHorizontalFlow::LeftToRight : EHorizontalFlow::RightToLeft;
 	}
 } // namespace QmHudEditor
 
@@ -200,6 +236,7 @@ public:
 		bool m_AnchoredRight = false;
 		bool m_AnchoredTop = false;
 		bool m_AnchoredBottom = false;
+		QmHudEditor::SEdgeMargin m_EdgeMargin{};
 	};
 
 	CHudEditor();
@@ -219,8 +256,10 @@ public:
 
 	STransformScope PreviewTransform(EHudEditorElement Element, const CUIRect &DefaultRect, bool Scalable = true);
 	STransformScope PreviewTransform(EHudEditorElement Element, const CUIRect &TransformRect, const CUIRect &VisibleRect, bool Scalable = true);
+	STransformScope PreviewTransform(EHudEditorElement Element, const CUIRect &TransformRect, const CUIRect &VisibleRect, const QmHudEditor::SEdgeMargin &EdgeMargin, bool Scalable = true);
 	STransformScope BeginTransform(EHudEditorElement Element, const CUIRect &DefaultRect, bool Scalable = true, bool ApplyMapScreen = true);
 	STransformScope BeginTransform(EHudEditorElement Element, const CUIRect &TransformRect, const CUIRect &VisibleRect, bool Scalable = true, bool ApplyMapScreen = true);
+	STransformScope BeginTransform(EHudEditorElement Element, const CUIRect &TransformRect, const CUIRect &VisibleRect, const QmHudEditor::SEdgeMargin &EdgeMargin, bool Scalable = true, bool ApplyMapScreen = true);
 	void EndTransform(const STransformScope &Scope);
 
 private:
@@ -241,6 +280,7 @@ private:
 		float m_StateOffsetX = 0.0f;
 		float m_StateOffsetY = 0.0f;
 		bool m_Scalable = true;
+		QmHudEditor::SEdgeMargin m_EdgeMargin{};
 	};
 
 	struct SAlignmentReferences
@@ -274,7 +314,7 @@ private:
 	void ParseLayoutConfig(const char *pConfig);
 	void SaveLayoutConfig();
 	void ResetLayoutConfig();
-	void ClampStateToScreen(SElementState &State, float BaseWidth, float BaseHeight, float StateOffsetX, float StateOffsetY) const;
+	void ClampStateToScreen(SElementState &State, float BaseWidth, float BaseHeight, float StateOffsetX, float StateOffsetY, const QmHudEditor::SEdgeMargin &EdgeMargin) const;
 	SElementState &EnsureState(EHudEditorElement Element);
 	const SElementState &State(EHudEditorElement Element) const;
 	int FindHoveredVisibleElement() const;
@@ -287,7 +327,7 @@ private:
 	bool DoJumpHintTextArea(CLineInput *pLineInput, const CUIRect *pRect, float FontSize);
 	void RenderJumpHintTextEditor(const CUIRect &Screen);
 	SAlignmentReferences BuildAlignmentReferences(EHudEditorElement DraggingElement) const;
-	bool ComputeTransformPlacement(EHudEditorElement Element, const CUIRect &TransformRect, const CUIRect &VisibleRect, bool Scalable, STransformScope &Scope, SVisibleElement *pVisible);
+	bool ComputeTransformPlacement(EHudEditorElement Element, const CUIRect &TransformRect, const CUIRect &VisibleRect, bool Scalable, STransformScope &Scope, SVisibleElement *pVisible, const QmHudEditor::SEdgeMargin &EdgeMargin);
 	static const char *ElementToken(EHudEditorElement Element);
 	static int ElementFromToken(const char *pToken);
 };

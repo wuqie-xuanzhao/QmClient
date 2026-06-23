@@ -2,11 +2,13 @@
 
 #if defined(CONF_FAMILY_WINDOWS) && defined(_MSC_VER)
 #define SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED 1
+#include <base/str.h>
 #include <base/system.h>
 
 #include <engine/image.h>
 #include <engine/shared/config.h>
 
+#include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Graphics.Imaging.h>
 #include <winrt/Windows.Media.Control.h>
@@ -45,8 +47,13 @@ struct SPlainState
 	char m_aTitle[128] = {};
 	char m_aArtist[128] = {};
 	char m_aAlbum[128] = {};
+	char m_aNeteaseSongId[128] = {};
+	char m_aQqMusicSongId[128] = {};
+	char m_aLinkedFileName[128] = {};
 	int64_t m_PositionMs = 0;
 	int64_t m_DurationMs = 0;
+	int64_t m_PositionUpdatedTick = 0;
+	double m_PlaybackRate = 1.0;
 };
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
@@ -127,6 +134,54 @@ static void ClearMediaText(SPlainState &State)
 	State.m_aTitle[0] = '\0';
 	State.m_aArtist[0] = '\0';
 	State.m_aAlbum[0] = '\0';
+	State.m_aNeteaseSongId[0] = '\0';
+	State.m_aQqMusicSongId[0] = '\0';
+	State.m_aLinkedFileName[0] = '\0';
+}
+
+template<typename TGenres>
+static std::string FindGenreValue(const TGenres &Genres, const char *pPrefix)
+{
+	if(pPrefix == nullptr || pPrefix[0] == '\0')
+		return {};
+	const uint32_t NumGenres = Genres.Size();
+	for(uint32_t i = 0; i < NumGenres; ++i)
+	{
+		const std::string Value = winrt::to_string(Genres.GetAt(i));
+		if(str_startswith(Value.c_str(), pPrefix))
+			return Value.substr(str_length(pPrefix));
+	}
+	return {};
+}
+
+static bool IsAppleMusicPlayerId(const char *pSourceAppId)
+{
+	return pSourceAppId != nullptr &&
+	       (str_find_nocase(pSourceAppId, "AppleMusic.exe") != nullptr ||
+		       str_startswith_nocase(pSourceAppId, "AppleInc.AppleMusicWin_") != nullptr);
+}
+
+static void RemoveSuffixNoCase(std::string &Value, const char *pSuffix)
+{
+	if(pSuffix == nullptr)
+		return;
+	const char *pMatch = str_endswith_nocase(Value.c_str(), pSuffix);
+	if(pMatch != nullptr)
+		Value.erase((size_t)(pMatch - Value.c_str()));
+}
+
+static void ApplyAppleMusicMetadataFix(const char *pSourceAppId, std::string &Artist, std::string &Album)
+{
+	if(!IsAppleMusicPlayerId(pSourceAppId))
+		return;
+	constexpr char APPLE_MUSIC_ARTIST_ALBUM_SEPARATOR[] = " \xE2\x80\x94 ";
+	const size_t Separator = Artist.find(APPLE_MUSIC_ARTIST_ALBUM_SEPARATOR);
+	if(Separator == std::string::npos)
+		return;
+	Album = Artist.substr(Separator + str_length(APPLE_MUSIC_ARTIST_ALBUM_SEPARATOR));
+	Artist = Artist.substr(0, Separator);
+	RemoveSuffixNoCase(Album, " - Single");
+	RemoveSuffixNoCase(Album, " - EP");
 }
 
 static void ClearMediaDetails(SPlainState &State, std::string &AlbumArtKey, CSystemMediaControls::SShared *pShared)
@@ -458,6 +513,10 @@ void CSystemMediaControls::ThreadMain()
 				State.m_CanPrev = Controls.IsPreviousEnabled();
 				State.m_CanNext = Controls.IsNextEnabled();
 				State.m_Playing = PlaybackInfo.PlaybackStatus() == GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing;
+				const auto PlaybackRate = PlaybackInfo.PlaybackRate();
+				State.m_PlaybackRate = PlaybackRate ? PlaybackRate.Value() : 1.0;
+				if(State.m_PlaybackRate <= 0.0)
+					State.m_PlaybackRate = 1.0;
 				const std::string SourceAppId = winrt::to_string(Session.SourceAppUserModelId());
 				str_copy(State.m_aSourceAppId, SourceAppId.c_str(), sizeof(State.m_aSourceAppId));
 
@@ -469,6 +528,13 @@ void CSystemMediaControls::ThreadMain()
 					std::this_thread::sleep_for(std::chrono::milliseconds(200));
 					continue;
 				}
+				const int64_t TimelineReadTick = time_get();
+				int64_t PositionUpdatedTick = TimelineReadTick;
+				const auto TimelineLastUpdated = Timeline.LastUpdatedTime();
+				const auto TimelineAge = winrt::clock::now() - TimelineLastUpdated;
+				const int64_t TimelineAgeMs = std::chrono::duration_cast<std::chrono::milliseconds>(TimelineAge).count();
+				if(TimelineAgeMs >= 0 && TimelineAgeMs <= 24 * 60 * 60 * 1000)
+					PositionUpdatedTick = TimelineReadTick - TimelineAgeMs * time_freq() / 1000;
 				const int64_t Start100ns = Timeline.StartTime().count();
 				const int64_t End100ns = Timeline.EndTime().count();
 				const int64_t Position100ns = Timeline.Position().count();
@@ -476,6 +542,7 @@ void CSystemMediaControls::ThreadMain()
 				const int64_t PositionRel100ns = Position100ns - Start100ns;
 				State.m_DurationMs = Duration100ns > 0 ? Duration100ns / 10000 : 0;
 				State.m_PositionMs = PositionRel100ns > 0 ? PositionRel100ns / 10000 : 0;
+				State.m_PositionUpdatedTick = PositionUpdatedTick;
 				HasMedia = true;
 
 				const auto Now = std::chrono::steady_clock::now();
@@ -501,8 +568,13 @@ void CSystemMediaControls::ThreadMain()
 							else
 							{
 								const std::string Title = winrt::to_string(MediaProps.Title());
-								const std::string Artist = winrt::to_string(MediaProps.Artist());
-								const std::string Album = winrt::to_string(MediaProps.AlbumTitle());
+								std::string Artist = winrt::to_string(MediaProps.Artist());
+								std::string Album = winrt::to_string(MediaProps.AlbumTitle());
+								const auto Genres = MediaProps.Genres();
+								const std::string NeteaseSongId = FindGenreValue(Genres, "NCM-");
+								const std::string QqMusicSongId = FindGenreValue(Genres, "QQ-");
+								const std::string LinkedFileName = FindGenreValue(Genres, "FILENAME-");
+								ApplyAppleMusicMetadataFix(State.m_aSourceAppId, Artist, Album);
 
 								if(!Title.empty())
 								{
@@ -530,6 +602,21 @@ void CSystemMediaControls::ThreadMain()
 								{
 									State.m_aAlbum[0] = '\0';
 								}
+
+								if(!NeteaseSongId.empty())
+									str_copy(State.m_aNeteaseSongId, NeteaseSongId.c_str(), sizeof(State.m_aNeteaseSongId));
+								else
+									State.m_aNeteaseSongId[0] = '\0';
+
+								if(!QqMusicSongId.empty())
+									str_copy(State.m_aQqMusicSongId, QqMusicSongId.c_str(), sizeof(State.m_aQqMusicSongId));
+								else
+									State.m_aQqMusicSongId[0] = '\0';
+
+								if(!LinkedFileName.empty())
+									str_copy(State.m_aLinkedFileName, LinkedFileName.c_str(), sizeof(State.m_aLinkedFileName));
+								else
+									State.m_aLinkedFileName[0] = '\0';
 
 								const bool HasText = !Title.empty() || !Artist.empty() || !Album.empty();
 								if(HasText)
@@ -679,8 +766,13 @@ void CSystemMediaControls::OnUpdate()
 		str_copy(m_pWinrt->m_State.m_aTitle, SharedState.m_aTitle, sizeof(m_pWinrt->m_State.m_aTitle));
 		str_copy(m_pWinrt->m_State.m_aArtist, SharedState.m_aArtist, sizeof(m_pWinrt->m_State.m_aArtist));
 		str_copy(m_pWinrt->m_State.m_aAlbum, SharedState.m_aAlbum, sizeof(m_pWinrt->m_State.m_aAlbum));
+		str_copy(m_pWinrt->m_State.m_aNeteaseSongId, SharedState.m_aNeteaseSongId, sizeof(m_pWinrt->m_State.m_aNeteaseSongId));
+		str_copy(m_pWinrt->m_State.m_aQqMusicSongId, SharedState.m_aQqMusicSongId, sizeof(m_pWinrt->m_State.m_aQqMusicSongId));
+		str_copy(m_pWinrt->m_State.m_aLinkedFileName, SharedState.m_aLinkedFileName, sizeof(m_pWinrt->m_State.m_aLinkedFileName));
 		m_pWinrt->m_State.m_PositionMs = SharedState.m_PositionMs;
 		m_pWinrt->m_State.m_DurationMs = SharedState.m_DurationMs;
+		m_pWinrt->m_State.m_PositionUpdatedTick = SharedState.m_PositionUpdatedTick;
+		m_pWinrt->m_State.m_PlaybackRate = SharedState.m_PlaybackRate;
 	}
 
 	ApplySharedAlbumArt(m_pShared.get(), m_pWinrt.get(), Graphics());

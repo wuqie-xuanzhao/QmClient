@@ -1382,7 +1382,10 @@ def _business_data_records_from_path(
                 )
         return records
 
-    if normalized.endswith("src/game/client/components/qmclient/lyrics_component.cpp"):
+    if (
+        "src/game/client/components/qmclient/qm_lyrics/" in normalized
+        and normalized.endswith(".cpp")
+    ):
         for text, line in _extract_cpp_string_literal_records(content):
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
             if any(

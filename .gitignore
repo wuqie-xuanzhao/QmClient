@@ -11,6 +11,8 @@ docs/dyl/BestClient/
 .agents/
 .codex/
 .codegraph/
+.env
+!.env.example
 
 # Local perf tooling artifacts
 qmclient_scripts/perf/node_modules/

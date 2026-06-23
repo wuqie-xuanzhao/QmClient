@@ -110,6 +110,36 @@ simplified_chinese = "开始游戏"
             self.assertIn('key = "Play"', content)
             self.assertIn('key = "Quit"', content)
 
+    def test_write_draft_module_can_replace_existing_draft_entries(self):
+        tasks = [
+            translate_with_local_http.TranslationTask("menus", ("Quit", ""), "Quit")
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            language_dir = draft_root / "simplified_chinese"
+            language_dir.mkdir(parents=True)
+            (language_dir / "menus.toml").write_text(
+                """[[message]]
+key = "Play"
+[message.translations]
+simplified_chinese = "开始游戏"
+""",
+                encoding="utf-8",
+            )
+            with mock.patch.object(
+                translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+            ):
+                out_path = translate_with_local_http.write_draft_module(
+                    "simplified_chinese",
+                    "menus",
+                    tasks,
+                    {("Quit", ""): "退出"},
+                    merge_existing=False,
+                )
+            content = out_path.read_text(encoding="utf-8")
+            self.assertNotIn('key = "Play"', content)
+            self.assertIn('key = "Quit"', content)
+
     def test_collect_tasks_only_returns_missing_entries(self):
         records = [
             mock.Mock(
@@ -302,6 +332,42 @@ simplified_chinese = "退出"
                 translate_with_local_http.resolve_api_key("cli-key"), "cli-key"
             )
 
+    def test_api_key_uses_deepseek_dotenv_for_deepseek_base_url(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env_file = Path(tmp) / ".env"
+            env_file.write_text(
+                "DEEPSEEK_API_KEY=deepseek-env-key\n"
+                "QMCLIENT_LOCAL_HTTP_API_KEY=generic-env-key\n",
+                encoding="utf-8",
+            )
+
+            with mock.patch.dict(os.environ, {}, clear=True):
+                self.assertEqual(
+                    translate_with_local_http.resolve_api_key(
+                        "", "https://api.deepseek.com", env_file
+                    ),
+                    "deepseek-env-key",
+                )
+                self.assertEqual(
+                    translate_with_local_http.resolve_api_key(
+                        "", "https://example.com/v1", env_file
+                    ),
+                    "generic-env-key",
+                )
+
+    def test_api_key_environment_overrides_dotenv(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env_file = Path(tmp) / ".env"
+            env_file.write_text("DEEPSEEK_API_KEY=dot-env-key\n", encoding="utf-8")
+
+            with mock.patch.dict(os.environ, {"DEEPSEEK_API_KEY": "process-env-key"}):
+                self.assertEqual(
+                    translate_with_local_http.resolve_api_key(
+                        "", "https://api.deepseek.com", env_file
+                    ),
+                    "process-env-key",
+                )
+
     def test_validate_translations_accepts_matching_items(self):
         tasks = [
             translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play"),
@@ -493,6 +559,34 @@ simplified_chinese = "开始游戏"
 
         executor_cls.assert_called_once_with(max_workers=10)
 
+    def test_translate_task_batches_allows_thirty_two_parallel_requests(self):
+        tasks_by_module = {
+            "menus": [
+                translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play")
+                for _ in range(33)
+            ]
+        }
+        fake_executor = mock.MagicMock()
+        fake_executor.__enter__.return_value.submit.side_effect = RuntimeError("stop")
+
+        with mock.patch.object(
+            translate_with_local_http.concurrent.futures,
+            "ThreadPoolExecutor",
+            return_value=fake_executor,
+        ) as executor_cls:
+            with self.assertRaises(RuntimeError):
+                translate_with_local_http.translate_task_batches(
+                    client=mock.Mock(),
+                    language="simplified_chinese",
+                    tasks_by_module=tasks_by_module,
+                    batch_size=1,
+                    prompt_assets=("", "", ""),
+                    store={},
+                    parallel_requests=32,
+                )
+
+        executor_cls.assert_called_once_with(max_workers=32)
+
     def test_main_resume_module_and_limit_skip_existing_draft(self):
         records = [
             mock.Mock(
@@ -546,8 +640,8 @@ simplified_chinese = "开始游戏"
                 mock.patch.object(sys, "argv", argv),
                 mock.patch.object(
                     translate_with_local_http.source_keys,
-                    "collect_source_key_records",
-                    return_value=records,
+                    "collect_incremental_source_key_records",
+                    return_value=(records, (), False),
                 ),
                 mock.patch.object(
                     translate_with_local_http.i18n_store,
@@ -568,6 +662,130 @@ simplified_chinese = "开始游戏"
             content = (language_dir / "menus.toml").read_text(encoding="utf-8")
             self.assertIn('key = "Quit"', content)
             self.assertNotIn('key = "Refresh"', content)
+
+    def test_write_back_draft_removes_written_module_draft(self):
+        record = mock.Mock(
+            key="Play",
+            source=Path("src/game/client/components/menus_settings.cpp"),
+            identity=mock.Mock(return_value=("Play", "")),
+        )
+        store = {"menus": {("Play", ""): {"simplified_chinese": "开始"}}}
+        source_texts = {("Play", ""): "Play"}
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            language_dir = draft_root / "simplified_chinese"
+            language_dir.mkdir(parents=True)
+            draft_path = language_dir / "menus.toml"
+            draft_path.write_text(
+                """[[message]]
+key = "Play"
+[message.translations]
+simplified_chinese = "开始游戏"
+""",
+                encoding="utf-8",
+            )
+            translations_dir = Path(tmp) / "i18n"
+            translations_dir.mkdir()
+            (translations_dir / "menus.toml").write_text(
+                """[[message]]
+key = "Play"
+[message.translations]
+simplified_chinese = "开始"
+""",
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "TRANSLATIONS_DIR",
+                    translations_dir,
+                ),
+            ):
+                written, failures = translate_with_local_http.write_back_draft(
+                    "simplified_chinese",
+                    modules={"menus"},
+                    source_records=[record],
+                    source_texts=source_texts,
+                    store=store,
+                    rewrite_existing=True,
+                )
+
+            self.assertEqual(failures, [])
+            self.assertEqual(written, 1)
+            self.assertFalse(draft_path.exists())
+
+    def test_write_back_draft_keeps_unwritten_module_draft_entries(self):
+        record = mock.Mock(
+            key="Play",
+            source=Path("src/game/client/components/menus_settings.cpp"),
+            identity=mock.Mock(return_value=("Play", "")),
+        )
+        store = {
+            "menus": {
+                ("Play", ""): {"simplified_chinese": "开始"},
+                ("Quit", ""): {},
+            }
+        }
+        source_texts = {("Play", ""): "Play", ("Quit", ""): "Quit"}
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            language_dir = draft_root / "simplified_chinese"
+            language_dir.mkdir(parents=True)
+            draft_path = language_dir / "menus.toml"
+            draft_path.write_text(
+                """[[message]]
+key = "Play"
+[message.translations]
+simplified_chinese = "开始游戏"
+
+[[message]]
+key = "Quit"
+[message.translations]
+simplified_chinese = "退出"
+""",
+                encoding="utf-8",
+            )
+            translations_dir = Path(tmp) / "i18n"
+            translations_dir.mkdir()
+            (translations_dir / "menus.toml").write_text(
+                """[[message]]
+key = "Play"
+[message.translations]
+simplified_chinese = "开始"
+
+[[message]]
+key = "Quit"
+[message.translations]
+""",
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "TRANSLATIONS_DIR",
+                    translations_dir,
+                ),
+            ):
+                written, failures = translate_with_local_http.write_back_draft(
+                    "simplified_chinese",
+                    modules={"menus"},
+                    source_records=[record],
+                    source_texts=source_texts,
+                    store=store,
+                    rewrite_existing=True,
+                )
+
+            self.assertEqual(failures, [])
+            self.assertEqual(written, 1)
+            content = draft_path.read_text(encoding="utf-8")
+            self.assertNotIn('key = "Play"', content)
+            self.assertIn('key = "Quit"', content)
 
     def test_main_dry_run_does_not_write_draft(self):
         records = [
@@ -594,8 +812,8 @@ simplified_chinese = "开始游戏"
                 mock.patch.object(sys, "argv", argv),
                 mock.patch.object(
                     translate_with_local_http.source_keys,
-                    "collect_source_key_records",
-                    return_value=records,
+                    "collect_incremental_source_key_records",
+                    return_value=(records, (), False),
                 ),
                 mock.patch.object(
                     translate_with_local_http.i18n_store,
@@ -647,8 +865,8 @@ simplified_chinese = "开始游戏"
                 mock.patch.object(sys, "argv", argv),
                 mock.patch.object(
                     translate_with_local_http.source_keys,
-                    "collect_source_key_records",
-                    return_value=records,
+                    "collect_incremental_source_key_records",
+                    return_value=(records, (), False),
                 ),
                 mock.patch.object(
                     translate_with_local_http.i18n_store,

@@ -95,6 +95,8 @@ Activate
 Activate all
 Active color
 Active disconnect
+Active lyrics line font size in px
+Active lyrics line scale percent
 Active moderator mode disabled because you are afk.
 Active moderator mode disabled for you.
 Active moderator mode enabled for you.
@@ -184,6 +186,7 @@ Always show chat
 Always show other players' hook collision lines
 Always show own player's hook collision line
 Always translate
+AMLL TTML DB API base URL (can be changed to a mirror)
 Amount
 And pick one randomly
 Angle
@@ -199,6 +202,7 @@ AntiPing: predict other players
 AntiPing: predict weapons
 API key
 Appearance
+Apple Music media-user-token
 Applied to %d same-family part(s).
 Apply
 Apply a saved profile by 1-based index to the current tee
@@ -255,6 +259,7 @@ Auto concurrency: %d (smart default)
 Auto disable when time expires
 Auto enable in Gores mode
 Auto execute
+Auto fetch lyrics online when a new song is detected
 Auto gain control for mic (AGC, experimental)
 Auto greet friends entering map
 Auto hot-reload after external saves
@@ -759,9 +764,12 @@ Enable Gores mode
 Enable gun sound
 Enable highlighted chat sound
 Enable Jelly Tee
+Enable karaoke word highlighting
 Enable keyword reply
+Enable local lyrics cache
 Enable long pain sound (used when shooting in freeze)
 Enable lyrics
+Enable lyrics HUD overlay
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 Enable mod weapon on %d: %s
 Enable pie menu
@@ -769,6 +777,7 @@ Enable regular chat sound
 Enable repeat
 Enable replays
 Enable server message sound
+Enable skin queue
 Enable skin queue rotation
 Enable speedrun timer
 Enable stereo positioning
@@ -1012,6 +1021,8 @@ Hide input emoticon
 Hide join/version prompts
 Hide jump effects
 Hide kill/finish messages
+Hide lyrics when no lyrics are found instead of showing a hint
+Hide lyrics while media is paused
 Hide map progress
 Hide nameplates
 Hide names
@@ -1064,6 +1075,8 @@ Import from clipboard
 Improved Anti Ping
 In memory of me
 Inactive color
+Inactive lyrics line font size in px
+Inactive lyrics line minimum opacity percent
 Incoming language
 Indicate map finish
 Indicator alive color
@@ -1132,6 +1145,7 @@ Jump
 Jump hint text
 k = Resend loss
 Kaomoji
+Karaoke highlight soft edge width in px
 Key Bindings
 Key Presses
 Key Sticking: ?
@@ -1254,7 +1268,33 @@ Logout of econ
 Logout of rcon
 Long press on a touch button to select it.
 Low to high
+LRCLIB API base URL (can be changed to a mirror)
 Lyrics
+Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
+Lyrics cache expiry days (0=never expire)
+Lyrics clock drift hard snap threshold in ms
+Lyrics fuzzy match score threshold
+Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
+Lyrics HTTP request timeout in ms
+Lyrics HUD edge margin in px
+Lyrics line spacing in px
+Lyrics line switch scroll duration in ms
+Lyrics lines shown above active line
+Lyrics lines shown below active line
+Lyrics local media library folders (use | as separator)
+Lyrics manual timeline offset in ms (runtime step 500ms)
+Lyrics opacity fade percent per distance line
+Lyrics overall opacity percent
+Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
+Lyrics scale shrink percent per distance line
+Lyrics search strategy (0=source order, 1=parallel best match)
+Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
+Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
+Lyrics translation and transliteration color
+Lyrics: empty track
+Lyrics: no lyrics found
+Lyrics: no media playing
+Lyrics: searching...
 Main Asset
 Main menu
 Make inactive tee fire
@@ -1364,7 +1404,20 @@ Name plates offset
 Name plates size
 Name:
 Name: %s
+Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)
+Nameplate strong hook icon color
 Nameplate text
+Nameplate text border color
+Nameplate text border range
+Nameplate text effects (1=Border 2=Gradient 4=Rainbow 8=Glow)
+Nameplate text effects demo manual target client ID (-1=None)
+Nameplate text effects demo mode (0=Off 1=Smart 2=Manual target 3=Manual scope)
+Nameplate text effects playing scope (0=Off 1=Own 2=Others 3=Friends 4=Own and friends 5=All players)
+Nameplate text effects spectate scope (0=Off 1=Spectated player 2=Others 3=Friends 4=Spectated player and friends 5=All players)
+Nameplate text glow color
+Nameplate text glow range
+Nameplate text gradient color
+Nameplate weak hook icon color
 Native scale (1.0)
 Need to have started the map to swap with a player.
 Negative stability buffer (for Gores)
@@ -1572,6 +1625,7 @@ Play the current demo
 Play/Pause
 Play/pause the current demo
 Playback volume
+Played lyrics word color
 Player
 Player already invited
 Player country:
@@ -2095,6 +2149,8 @@ Show list of mutes (page 1 by default, 20 entries per page)
 Show list of vote mutes (page 1 by default, 20 entries per page)
 Show local time always
 Show logs of the last i seconds
+Show lyrics translation when available
+Show lyrics transliteration when available
 Show moving tiles in entities
 Show name plates
 Show names in chat in team colors
@@ -2571,6 +2627,7 @@ Unmute player with client ID
 Unmute player with IP address
 Unmute player with list index
 Unmute:
+Unplayed lyrics word color
 Unpredicted ghost opacity
 Unregister protocol and file extensions
 Unsaved changes
@@ -2851,25 +2908,12 @@ Zoom out
 名字板元素允许在框内自由移动
 名字板坐标行 X 偏移
 名字板坐标行 Y 偏移
-名字板弱钩图标颜色
 名字板强弱行 X 偏移
 名字板强弱行 Y 偏移
-名字板强弱钩图标显示范围（0=仅自己 1=仅他人 2=仅强钩 3=仅弱钩 4=全部人）
-名字板强钩图标颜色
 名字板战队行 X 偏移
 名字板战队行 Y 偏移
 名字板按键行 X 偏移
 名字板按键行 Y 偏移
-名字板文本光晕范围
-名字板文本光晕颜色
-名字板文本效果 Demo 手动目标 Client ID（-1=无）
-名字板文本效果 Demo 模式（0=关闭 1=智能 2=手动目标 3=手动范围）
-名字板文本效果游玩范围（0=关闭 1=仅自己 2=仅他人 3=仅好友 4=自己和好友 5=全部人）
-名字板文本效果观战范围（0=关闭 1=被观战者 2=仅他人 3=仅好友 4=被观战者和好友 5=全部人）
-名字板文本效果（1=边框 2=渐变 4=彩虹 8=光晕）
-名字板文本渐变颜色
-名字板文本边框范围
-名字板文本边框颜色
 名字板昵称行 X 偏移
 名字板昵称行 Y 偏移
 名字牌X对齐提示严格模式
@@ -2961,7 +3005,6 @@ Zoom out
 显示分身迷你视图窗口
 显示地图进度条（内测中）
 显示地图进度调试点路线
-显示歌词当前行指示器
 显示版本过旧提示
 显示碰撞体积边框
 显示语音连接状态
@@ -2986,7 +3029,6 @@ Zoom out
 歌词下一行颜色
 歌词吸附灵动岛阈值
 歌词当前行颜色
-歌词指示器颜色
 歌词描边透明度
 歌词描边颜色
 歌词淡入淡出时间
@@ -2994,9 +3036,6 @@ Zoom out
 歌词背景颜色
 歌词超长时跑马灯
 歌词跑马灯速度
-歌词首字放大
-歌词首字缩放百分比
-歌词首字颜色
 武器切换动画持续时间（毫秒）
 武器切换动画旋转角度
 武器切换动画滑入距离

@@ -734,11 +734,11 @@ TEST(Skins, SkinQueueRotationUsesExplicitEnableSwitchAndUnboundedInterval)
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueLength, qm_dummy_skin_queue_length, 20, 0, 1024"), std::string::npos);
 	EXPECT_NE(Menus.find("int &QueueEnabled = m_Dummy ? g_Config.m_QmDummySkinQueueEnabled : g_Config.m_QmSkinQueueEnabled;"), std::string::npos);
 	EXPECT_NE(Menus.find("Localize(\"Enable skin queue rotation\")"), std::string::npos);
-	EXPECT_NE(Menus.find("CUIRect QueueRotationPanel;"), std::string::npos);
-	EXPECT_NE(Menus.find("QueueRotationPanel.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f), IGraphics::CORNER_ALL, 4.0f);"), std::string::npos);
-	EXPECT_NE(Menus.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee-skin-queue-enabled-heading\", &QueueEnabledHeading, Localize(\"Enabled\")"), std::string::npos);
-	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, nullptr, \"\", QueueEnabled, &QueueEnabledButton)"), std::string::npos);
-	EXPECT_EQ(Menus.find("QueueSection.HSplitTop(20.0f, &EnableQueueRect, &QueueSection);"), std::string::npos);
+	EXPECT_NE(Menus.find("CUIRect QueueEnabledRect;"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueSection.HSplitTop(20.0f, &QueueEnabledRect, &QueueSection);"), std::string::npos);
+	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", Localize(\"Enable skin queue\"), QueueEnabled, &QueueEnabledRect)"), std::string::npos);
+	EXPECT_EQ(Menus.find("Localize(\"Enabled\")"), std::string::npos);
+	EXPECT_EQ(Menus.find("tee-skin-queue-enabled-heading"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueInterval = maximum(QueueIntervalInput.GetInteger(), 1);"), std::string::npos);
 	EXPECT_EQ(Menus.find("QueueInterval = std::clamp(QueueIntervalInput.GetInteger(), 0,"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("!SkinQueueEnabledVar(Dummy)"), std::string::npos);
