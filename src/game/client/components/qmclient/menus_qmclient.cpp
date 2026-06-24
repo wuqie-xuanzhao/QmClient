@@ -5946,7 +5946,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				RenderTextEffectToggle(QM_TEXT_EFFECT_BORDER, "Nameplate text border", Localize("Border"));
 				RenderTextEffectToggle(QM_TEXT_EFFECT_GRADIENT, "Nameplate text gradient", Localize("Gradient"));
 				RenderTextEffectToggle(QM_TEXT_EFFECT_RAINBOW, "Nameplate text rainbow", Localize("Rainbow"));
-				RenderTextEffectToggle(QM_TEXT_EFFECT_GLOW, "Nameplate text glow", Localize("Glow"));
+				RenderTextEffectToggle(QM_TEXT_EFFECT_GLOW, "Nameplate text light halo", Localize("Light halo"));
 
 				SLabelProperties NameplateTextLabelProps;
 				NameplateTextLabelProps.m_DisallowNewline = true;
@@ -6040,7 +6040,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				});
 
 				static int s_NameplateTextGlowRangeInputId;
-				RenderNameplateTextControlRow("qmclient-nameplate-text-glow-range", Localize("Glow range"), [&](CUIRect &ControlCol) {
+				RenderNameplateTextControlRow("qmclient-nameplate-text-glow-range", Localize("Light halo range"), [&](CUIRect &ControlCol) {
 					RenderSliderWithValueInput(&s_NameplateTextGlowRangeInputId, ControlCol, &g_Config.m_QmNameplateTextGlowRange, 0, 12);
 				});
 
@@ -6049,7 +6049,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				static CButtonContainer s_NameplateTextGradientColorId;
 				DoLine_ColorPicker(&s_NameplateTextGradientColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Gradient color"), &g_Config.m_QmNameplateTextGradientColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
 				static CButtonContainer s_NameplateTextGlowColorId;
-				DoLine_ColorPicker(&s_NameplateTextGlowColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Glow color"), &g_Config.m_QmNameplateTextGlowColor, ColorRGBA(0.30f, 0.78f, 1.0f, 0.40f), false, nullptr, true);
+				DoLine_ColorPicker(&s_NameplateTextGlowColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Light halo color"), &g_Config.m_QmNameplateTextGlowColor, ColorRGBA(0.30f, 0.78f, 1.0f, 0.40f), false, nullptr, true);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;

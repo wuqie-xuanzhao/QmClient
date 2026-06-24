@@ -162,7 +162,7 @@ static ColorRGBA HookStrongWeakColor(EHookStrongWeakState State, float Alpha)
 static SQmTextEffectRenderStyle BuildQmNameplateTextStyle(CGameClient &This, ColorRGBA TextColor, bool UseEffects)
 {
 	SQmTextEffectRenderStyle Style;
-	Style.m_Effects = UseEffects ? g_Config.m_QmNameplateTextEffects : 0;
+	Style.m_Effects = UseEffects ? (g_Config.m_QmNameplateTextEffects & ~QM_TEXT_EFFECT_GRADIENT) : 0;
 	Style.m_TextColor = TextColor;
 	Style.m_OutlineColor = s_OutlineColor.WithMultipliedAlpha(TextColor.a);
 	Style.m_BorderColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextBorderColor, true)).WithMultipliedAlpha(TextColor.a);
@@ -172,6 +172,56 @@ static SQmTextEffectRenderStyle BuildQmNameplateTextStyle(CGameClient &This, Col
 	Style.m_GlowRange = (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 0, 12);
 	Style.m_Time = This.Client()->GlobalTime();
 	return Style;
+}
+
+static int CountUtf8Chars(const char *pText)
+{
+	int NumChars = 0;
+	const char *pCurrent = pText;
+	while(str_utf8_decode(&pCurrent) > 0)
+		++NumChars;
+	return NumChars;
+}
+
+static ColorRGBA LerpColor(const ColorRGBA &From, const ColorRGBA &To, float Amount)
+{
+	Amount = std::clamp(Amount, 0.0f, 1.0f);
+	return ColorRGBA(
+		From.r + (To.r - From.r) * Amount,
+		From.g + (To.g - From.g) * Amount,
+		From.b + (To.b - From.b) * Amount,
+		From.a + (To.a - From.a) * Amount);
+}
+
+static bool ColorEquals(const ColorRGBA &A, const ColorRGBA &B)
+{
+	return A.r == B.r && A.g == B.g && A.b == B.b && A.a == B.a;
+}
+
+static void AddNameplateGradientSplits(CTextCursor &Cursor, const char *pText, const ColorRGBA &BaseColor, int GradientColor)
+{
+	const int NumChars = CountUtf8Chars(pText);
+	if(NumChars <= 1)
+		return;
+
+	const ColorRGBA TargetColor = color_cast<ColorRGBA>(ColorHSLA(GradientColor, true)).WithAlpha(BaseColor.a);
+	const int StartChar = Cursor.m_CharCount;
+	const float Denominator = (float)(NumChars - 1);
+	Cursor.m_vColorSplits.reserve(Cursor.m_vColorSplits.size() + NumChars);
+
+	int CharIndex = 0;
+	const char *pCurrent = pText;
+	while(*pCurrent != '\0' && CharIndex < NumChars)
+	{
+		const char *pNext = pCurrent;
+		if(str_utf8_decode(&pNext) <= 0)
+			break;
+
+		const float Amount = (float)CharIndex / Denominator;
+		Cursor.m_vColorSplits.emplace_back(StartChar + CharIndex, 1, LerpColor(BaseColor, TargetColor, Amount));
+		pCurrent = pNext;
+		++CharIndex;
+	}
 }
 
 static bool NameplatePointInFrame(vec2 Position, vec2 FrameMin, vec2 FrameMax)
@@ -341,6 +391,8 @@ protected:
 	virtual bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) = 0;
 	virtual void UpdateText(CGameClient &This, const CNamePlateData &Data) = 0;
 	ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	bool m_UseTextEffects = false;
+	virtual ColorRGBA GetRenderTextColor() const { return m_Color; }
 	CNamePlatePartText(CGameClient &This) :
 		CNamePlatePart(This)
 	{
@@ -394,7 +446,7 @@ public:
 		if(!m_TextContainerIndex.Valid())
 			return;
 
-		This.RenderTools()->RenderTextContainerWithEffects(m_TextContainerIndex, BuildQmNameplateTextStyle(This, m_Color, false), Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
+		This.RenderTools()->RenderTextContainerWithEffects(m_TextContainerIndex, BuildQmNameplateTextStyle(This, GetRenderTextColor(), m_UseTextEffects), Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
 	}
 };
 
@@ -595,9 +647,17 @@ private:
 	float m_FontSize = -INFINITY;
 	bool m_IsLocal = false;
 	float m_Alpha = 1.0f;
-	bool m_UseTextEffects = false;
+	bool m_GradientEnabled = false;
+	int m_GradientColor = 0;
+	ColorRGBA m_GradientBaseColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 
 protected:
+	ColorRGBA GetRenderTextColor() const override
+	{
+		if(m_GradientEnabled)
+			return ColorRGBA(1.0f, 1.0f, 1.0f, m_Color.a);
+		return m_Color;
+	}
 	bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) override
 	{
 		m_Visible = Data.m_ShowName;
@@ -633,7 +693,11 @@ protected:
 			else if(This.m_WarList.GetWarData(Data.m_ClientId).m_WarClan)
 				m_Color = This.m_WarList.GetClanColor(Data.m_ClientId).WithAlpha(Data.m_Color.a);
 		}
-		return m_FontSize != Data.m_FontSize || str_comp(m_aText, Data.m_aName) != 0;
+		const bool GradientEnabled = m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_GRADIENT) != 0;
+		return m_FontSize != Data.m_FontSize ||
+		       str_comp(m_aText, Data.m_aName) != 0 ||
+		       m_GradientEnabled != GradientEnabled ||
+		       (GradientEnabled && (!ColorEquals(m_GradientBaseColor, m_Color) || m_GradientColor != g_Config.m_QmNameplateTextGradientColor));
 	}
 	void UpdateText(CGameClient &This, const CNamePlateData &Data) override
 	{
@@ -641,15 +705,14 @@ protected:
 		str_copy(m_aText, Data.m_aName, sizeof(m_aText));
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
+		m_GradientEnabled = m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_GRADIENT) != 0;
+		m_GradientColor = g_Config.m_QmNameplateTextGradientColor;
+		if(m_GradientEnabled)
+		{
+			m_GradientBaseColor = m_Color;
+			AddNameplateGradientSplits(Cursor, m_aText, m_Color, m_GradientColor);
+		}
 		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
-	}
-
-	void Render(CGameClient &This, vec2 Pos) const override
-	{
-		if(!m_TextContainerIndex.Valid())
-			return;
-
-		This.RenderTools()->RenderTextContainerWithEffects(m_TextContainerIndex, BuildQmNameplateTextStyle(This, m_Color, m_UseTextEffects), Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
 	}
 
 public:
@@ -662,18 +725,32 @@ class CNamePlatePartClan : public CNamePlatePartText
 private:
 	char m_aText[std::max<size_t>(MAX_CLAN_LENGTH, protocol7::MAX_CLAN_ARRAY_SIZE)] = "";
 	float m_FontSize = -INFINITY;
+	bool m_GradientEnabled = false;
+	int m_GradientColor = 0;
+	ColorRGBA m_GradientBaseColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 
 protected:
+	ColorRGBA GetRenderTextColor() const override
+	{
+		if(m_GradientEnabled)
+			return ColorRGBA(1.0f, 1.0f, 1.0f, m_Color.a);
+		return m_Color;
+	}
 	bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) override
 	{
 		m_Visible = Data.m_ShowClan;
 		if(!m_Visible)
 			return false;
 		m_Color = Data.m_Color;
+		m_UseTextEffects = Data.m_UseTextEffects;
 		// TClient
 		if(This.m_WarList.GetWarData(Data.m_ClientId).m_WarClan)
 			m_Color = This.m_WarList.GetClanColor(Data.m_ClientId).WithAlpha(Data.m_Color.a);
-		return m_FontSize != Data.m_FontSizeClan || str_comp(m_aText, Data.m_aClan[0] != '\0' ? Data.m_aClan : " ") != 0;
+		const bool GradientEnabled = m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_GRADIENT) != 0;
+		return m_FontSize != Data.m_FontSizeClan ||
+		       str_comp(m_aText, Data.m_aClan[0] != '\0' ? Data.m_aClan : " ") != 0 ||
+		       m_GradientEnabled != GradientEnabled ||
+		       (GradientEnabled && (!ColorEquals(m_GradientBaseColor, m_Color) || m_GradientColor != g_Config.m_QmNameplateTextGradientColor));
 	}
 	void UpdateText(CGameClient &This, const CNamePlateData &Data) override
 	{
@@ -681,6 +758,13 @@ protected:
 		str_copy(m_aText, Data.m_aClan[0] != '\0' ? Data.m_aClan : " ", sizeof(m_aText));
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
+		m_GradientEnabled = m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_GRADIENT) != 0;
+		m_GradientColor = g_Config.m_QmNameplateTextGradientColor;
+		if(m_GradientEnabled)
+		{
+			m_GradientBaseColor = m_Color;
+			AddNameplateGradientSplits(Cursor, m_aText, m_Color, m_GradientColor);
+		}
 		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
 	}
 
@@ -1381,6 +1465,7 @@ class CNamePlates::CNamePlatesData
 {
 public:
 	CNamePlate m_aNamePlates[MAX_CLIENTS];
+	CNamePlate m_aPreviewNamePlates[2];
 	SChatBubbleAnimState m_aChatBubbleAnim[MAX_CLIENTS];
 	SCoordXAlignState m_aCoordXAlign[MAX_CLIENTS];
 	SCoordXAlignFrameState m_CoordXAlignFrame;
@@ -1766,6 +1851,8 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 
 	CNamePlateData Data;
 	BuildPreviewData(Dummy, Data);
+	CNamePlate &NamePlate = m_pData->m_aPreviewNamePlates[Dummy];
+	NamePlate.Update(*GameClient(), Data);
 
 	CTeeRenderInfo TeeRenderInfo;
 	if(Dummy == 0)
@@ -1780,8 +1867,6 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	}
 	TeeRenderInfo.m_Size = 64.0f;
 
-	CNamePlate NamePlate(*GameClient(), Data);
-
 	// To keep the drag area visually identical when toggling between
 	// player/dummy preview, take the union of both sides' baseline frame
 	// sizes and use that as the unified size for sizing/anchoring/clamping.
@@ -1790,11 +1875,11 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	{
 		CNamePlateData OtherData;
 		BuildPreviewData(Dummy == 0 ? 1 : 0, OtherData);
-		CNamePlate OtherNamePlate(*GameClient(), OtherData);
+		CNamePlate &OtherNamePlate = m_pData->m_aPreviewNamePlates[Dummy == 0 ? 1 : 0];
+		OtherNamePlate.Update(*GameClient(), OtherData);
 		const vec2 OtherSize = OtherNamePlate.Size();
 		UnifiedFrameSize.x = std::max(UnifiedFrameSize.x, OtherSize.x);
 		UnifiedFrameSize.y = std::max(UnifiedFrameSize.y, OtherSize.y);
-		OtherNamePlate.Reset(*GameClient());
 	}
 
 	Position.y += UnifiedFrameSize.y / 2.0f;
@@ -1981,12 +2066,13 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		m_pData->m_FreeMoveDragRow = ENameplateCoreRow::NUM_ROWS;
 	}
 	NamePlate.Render(*GameClient(), Position);
-	NamePlate.Reset(*GameClient());
 }
 
 void CNamePlates::ResetNamePlates()
 {
 	for(CNamePlate &NamePlate : m_pData->m_aNamePlates)
+		NamePlate.Reset(*GameClient());
+	for(CNamePlate &NamePlate : m_pData->m_aPreviewNamePlates)
 		NamePlate.Reset(*GameClient());
 	for(SCoordXAlignState &CoordXAlignState : m_pData->m_aCoordXAlign)
 		CoordXAlignState = SCoordXAlignState();
@@ -2416,5 +2502,6 @@ CNamePlates::CNamePlates() :
 
 CNamePlates::~CNamePlates()
 {
+	ResetNamePlates();
 	delete m_pData;
 }

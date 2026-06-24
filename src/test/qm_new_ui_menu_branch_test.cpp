@@ -1222,7 +1222,8 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 
 	EXPECT_NE(NameplatesSource.find("BuildQmNameplateTextStyle("), std::string::npos);
 	EXPECT_NE(NameplatesSource.find("bool UseEffects"), std::string::npos);
-	EXPECT_NE(NameplatesSource.find("Style.m_Effects = UseEffects ? g_Config.m_QmNameplateTextEffects : 0;"), std::string::npos);
+	EXPECT_NE(NameplatesSource.find("Style.m_Effects = UseEffects ? (g_Config.m_QmNameplateTextEffects & ~QM_TEXT_EFFECT_GRADIENT) : 0;"), std::string::npos);
+	EXPECT_NE(NameplatesSource.find("AddNameplateGradientSplits(Cursor, m_aText, m_Color, m_GradientColor);"), std::string::npos);
 	EXPECT_EQ(NameplatesSource.find("QmRainbowName"), std::string::npos);
 	EXPECT_NE(NameplatesSource.find("Data.m_UseTextEffects = ShouldUseQmNameplateTextEffects("), std::string::npos);
 	EXPECT_NE(NameplatesSource.find("Style.m_OutlineColor = s_OutlineColor.WithMultipliedAlpha(TextColor.a);"), std::string::npos);
@@ -1241,7 +1242,8 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_NE(QmMenusSource.find("Demo target"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("auto RenderNameplateTextControlRow = [&](const char *pTextId, const char *pLabel, const auto &RenderControl)"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-border-range\", Localize(\"Border range\"), [&](CUIRect &ControlCol)"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-glow-range\", Localize(\"Glow range\"), [&](CUIRect &ControlCol)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-glow-range\", Localize(\"Light halo range\"), [&](CUIRect &ControlCol)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Localize(\"Light halo\")"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("NameplateTextLabelProps.m_DisallowNewline = true"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("NameplateTextLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("s_NameplateTextDemoTargetDropDownNames"), std::string::npos);
@@ -1249,6 +1251,8 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_NE(QmMenusSource.find("if(!DemoTargetListed)"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("g_Config.m_QmNameplateTextDemoTarget = DemoTargetNew - 1;"), std::string::npos);
 	EXPECT_EQ(QmMenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmRainbowName"), std::string::npos);
+	const std::string AppearanceSettings = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	EXPECT_NE(AppearanceSettings.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-hook-strength-size\", &g_Config.m_ClNamePlatesStrongSize, &g_Config.m_ClNamePlatesStrongSize, &Button, Localize(\"Size of hook strength icon and number indicator\"), -50, 100);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, TClientSettingsTabsPreserveHiddenStateAndVisibleCorners)

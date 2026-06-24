@@ -164,11 +164,29 @@ void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContai
 	if(Alpha <= 0.0f)
 		return;
 
-	const ColorRGBA EmptyOutline(0.0f, 0.0f, 0.0f, 0.0f);
+	const ColorRGBA EmptyText(0.0f, 0.0f, 0.0f, 0.0f);
 	const bool BorderEnabled = (Style.m_Effects & QM_TEXT_EFFECT_BORDER) != 0 && Style.m_BorderColor.a > 0.0f && Style.m_BorderRange > 0.0f;
 	const bool GlowEnabled = (Style.m_Effects & QM_TEXT_EFFECT_GLOW) != 0 && Style.m_GlowColor.a > 0.0f && Style.m_GlowRange > 0.0f;
-	const bool GradientEnabled = (Style.m_Effects & QM_TEXT_EFFECT_GRADIENT) != 0;
 	const bool RainbowEnabled = (Style.m_Effects & QM_TEXT_EFFECT_RAINBOW) != 0;
+	auto RenderOutlineOnly = [&](ColorRGBA Color, float OffsetX, float OffsetY) {
+		TextRender()->RenderTextContainer(TextContainerIndex, EmptyText, Color, X + OffsetX, Y + OffsetY);
+	};
+	static constexpr vec2 s_aBorderDirections[] = {
+		vec2(1.0f, 0.0f),
+		vec2(-1.0f, 0.0f),
+		vec2(0.0f, 1.0f),
+		vec2(0.0f, -1.0f),
+		vec2(0.70710677f, 0.70710677f),
+		vec2(-0.70710677f, 0.70710677f),
+		vec2(0.70710677f, -0.70710677f),
+		vec2(-0.70710677f, -0.70710677f),
+	};
+	static constexpr vec2 s_aGlowDirections[] = {
+		vec2(1.0f, 0.0f),
+		vec2(-1.0f, 0.0f),
+		vec2(0.0f, 1.0f),
+		vec2(0.0f, -1.0f),
+	};
 
 	if(GlowEnabled)
 	{
@@ -178,10 +196,8 @@ void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContai
 			const float Radius = Style.m_GlowRange * (float)(Pass + 1) / (float)GlowPasses;
 			const float PassAlpha = Style.m_GlowColor.a * Alpha * (1.0f - (float)Pass / (float)(GlowPasses + 1));
 			const ColorRGBA Glow = Style.m_GlowColor.WithAlpha(PassAlpha);
-			TextRender()->RenderTextContainer(TextContainerIndex, Glow, EmptyOutline, X - Radius, Y);
-			TextRender()->RenderTextContainer(TextContainerIndex, Glow, EmptyOutline, X + Radius, Y);
-			TextRender()->RenderTextContainer(TextContainerIndex, Glow, EmptyOutline, X, Y - Radius);
-			TextRender()->RenderTextContainer(TextContainerIndex, Glow, EmptyOutline, X, Y + Radius);
+			for(const vec2 &Dir : s_aGlowDirections)
+				RenderOutlineOnly(Glow, Dir.x * Radius, Dir.y * Radius);
 		}
 	}
 
@@ -190,11 +206,15 @@ void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContai
 		OutlineColor = Style.m_BorderColor.WithMultipliedAlpha(Alpha);
 	if(BorderEnabled && Style.m_BorderRange > 1.0f)
 	{
-		const float Radius = std::clamp(Style.m_BorderRange, 1.0f, 4.0f);
-		TextRender()->RenderTextContainer(TextContainerIndex, OutlineColor, EmptyOutline, X - Radius, Y);
-		TextRender()->RenderTextContainer(TextContainerIndex, OutlineColor, EmptyOutline, X + Radius, Y);
-		TextRender()->RenderTextContainer(TextContainerIndex, OutlineColor, EmptyOutline, X, Y - Radius);
-		TextRender()->RenderTextContainer(TextContainerIndex, OutlineColor, EmptyOutline, X, Y + Radius);
+		const int BorderPasses = std::clamp(round_to_int(Style.m_BorderRange), 1, 3);
+		for(int Pass = 0; Pass < BorderPasses; ++Pass)
+		{
+			const float Radius = (float)(Pass + 1);
+			const float PassAlpha = OutlineColor.a * (1.0f - (float)Pass / (float)(BorderPasses + 1));
+			const ColorRGBA Border = OutlineColor.WithAlpha(PassAlpha);
+			for(const vec2 &Dir : s_aBorderDirections)
+				RenderOutlineOnly(Border, Dir.x * Radius, Dir.y * Radius);
+		}
 	}
 
 	ColorRGBA TextColor = Style.m_TextColor;
@@ -202,16 +222,6 @@ void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContai
 	{
 		const float Hue = std::fmod(Style.m_Time * 0.15f, 1.0f);
 		TextColor = color_cast<ColorRGBA>(ColorHSLA(Hue, 0.7f, 0.65f, Alpha));
-	}
-	else if(GradientEnabled)
-	{
-		const float Mix = 0.5f + 0.5f * std::sin(Style.m_Time * 1.8f);
-		const ColorRGBA GradientColor = Style.m_GradientColor.WithAlpha(Style.m_TextColor.a);
-		TextColor = ColorRGBA(
-			Style.m_TextColor.r + (GradientColor.r - Style.m_TextColor.r) * Mix,
-			Style.m_TextColor.g + (GradientColor.g - Style.m_TextColor.g) * Mix,
-			Style.m_TextColor.b + (GradientColor.b - Style.m_TextColor.b) * Mix,
-			Style.m_TextColor.a);
 	}
 
 	TextRender()->RenderTextContainer(TextContainerIndex, TextColor, OutlineColor, X, Y);
