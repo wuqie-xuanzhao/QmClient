@@ -4815,8 +4815,8 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateHookStrengthSizeUsesSingleLineSlide
 
 	EXPECT_NE(NamePlateBranch.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-hook-strength-size\", &g_Config.m_ClNamePlatesStrongSize, &g_Config.m_ClNamePlatesStrongSize, &Button, Localize(\"Size of hook strength icon and number indicator\"), -50, 100);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("SCROLLBAR_OPTION_MULTILINE"), std::string::npos);
-	EXPECT_NE(ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp").find("Localize(\"Light halo\")"), std::string::npos);
-	EXPECT_NE(ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp").find("Localize(\"Light halo range\")"), std::string::npos);
+	EXPECT_NE(ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp").find("Localize(\"Glow\")"), std::string::npos);
+	EXPECT_NE(ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp").find("Localize(\"Glow range\")"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, AppearanceSettingsHeadingsUseBudgetedTextPipeline)

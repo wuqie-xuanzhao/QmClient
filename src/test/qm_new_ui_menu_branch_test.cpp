@@ -1242,8 +1242,8 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_NE(QmMenusSource.find("Demo target"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("auto RenderNameplateTextControlRow = [&](const char *pTextId, const char *pLabel, const auto &RenderControl)"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-border-range\", Localize(\"Border range\"), [&](CUIRect &ControlCol)"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-glow-range\", Localize(\"Light halo range\"), [&](CUIRect &ControlCol)"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("Localize(\"Light halo\")"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-glow-range\", Localize(\"Glow range\"), [&](CUIRect &ControlCol)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("Localize(\"Glow\")"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("NameplateTextLabelProps.m_DisallowNewline = true"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("NameplateTextLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
 	EXPECT_NE(QmMenusSource.find("s_NameplateTextDemoTargetDropDownNames"), std::string::npos);
