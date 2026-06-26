@@ -50,7 +50,7 @@ namespace
 		"- dummy = 分身\n"
 		"- hammer = 锤子\n"
 		"- shotgun = 霰弹枪\n"
-		"- grenade = 榴弹/手雷\n"
+		"- grenade = 榴弹炮\n"
 		"- laser = 激光枪\n"
 		"- ninja = 忍者\n"
 		"- kill = 自杀/击杀\n"

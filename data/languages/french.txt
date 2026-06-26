@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == Appliquer
 
+Apply a preset first
+== Appliquez d'abord un préréglage
+
 Apply a saved profile by 1-based index to the current tee
 == Appliquer un profil sauvegardé (index basé sur 1) au tee actuel
+
+Apply a writable preset and edit first
+== Appliquez d'abord un préréglage modifiable
 
 Apply Changes
 == Appliquer les modifications
 
-Apply this preset to the current queue
-== Appliquer ce préréglage à la file actuelle
+Apply this preset
+== Appliquer ce préréglage
 
 Are you sure that you want to delete %d selected items?
 == Êtes-vous sûr de vouloir supprimer %d éléments sélectionnés ?
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == Effacer la coupe actuelle (clic droit pour effacer toutes les coupes)
 
+Clear current queue
+== Vider la file actuelle
+
 Clear friend note
 == Effacer la note d'ami
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == Couleur de la ligne actuelle
 
-Current queue: %s
-== File actuelle : %s
-
 Current rescue mode: %s
 == Mode de sauvetage actuel : %s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == Échec de l'ouverture de la sortie par défaut
+
+Default preset
+== Préréglage par défaut
 
 Default zoom
 == Zoom par défaut
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == Modifier le pack audio
 
-Edit current queue
-== Modifier la file actuelle
-
 Edit Entry
 == Modifier l'entrée
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == Activer le mode Zen
-
-Enabled
-== Activé
 
 Enables/disables active moderator mode for the player
 == Active/désactive le mode modérateur actif pour le joueur
@@ -2838,9 +2841,6 @@ Gap between statusbar items
 
 General
 == Général
-
-Get all map players' skin IDs and auto add to rotate queue
-== Obtenir les ID de skin de tous les joueurs de la carte et les ajouter automatiquement à la file de rotation
 
 Getting game info
 == Obtention des informations du jeu
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == La file est vide
 
+Queue preset: %s
+== Préréglage de file: %s
+
 Quick action menu for players
 == Menu d'action rapide pour les joueurs
 
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == Sauvegarder toutes les modifications avant de fermer l'éditeur ?
 
+Save as
+== Enregistrer sous
+
 Save asset before closing?
 == Sauvegarder l'élément avant de fermer ?
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == Sauvegarder les modifications
 
-Save current
-== Sauvegarder l'actuel
+Save changes back to this preset
+== Enregistrer les modifications dans ce préréglage
 
 Save current queue as a new preset
 == Sauvegarder la file actuelle comme nouveau préréglage
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == Voyez à quel point vous jouez la comédie
 
-Select a preset first
-== Sélectionnez d'abord un préréglage
-
 Select all chat
 == Sélectionner tout le chat
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == Sélectionner l'exportation
-
-Select this preset to edit it
-== Sélectionner ce préréglage pour le modifier
 
 Selected %d
 == %d sélectionné(s)
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == Serveur non plein
+
+Server preset
+== Préréglage du serveur
 
 Server rollback
 == Rollback serveur

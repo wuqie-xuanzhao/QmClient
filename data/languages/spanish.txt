@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == Aplicar
 
+Apply a preset first
+== Aplica un preset primero
+
 Apply a saved profile by 1-based index to the current tee
 == Aplicar un perfil guardado por índice (basado en 1) al tee actual
+
+Apply a writable preset and edit first
+== Aplica un preset editable primero
 
 Apply Changes
 == Aplicar Cambios
 
-Apply this preset to the current queue
-== Aplicar esta preconfiguración a la cola actual
+Apply this preset
+== Aplicar este preset
 
 Are you sure that you want to delete %d selected items?
 == ¿Estás seguro de que quieres eliminar %d elementos seleccionados?
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == Limpiar el corte actual (clic derecho para limpiar todos los cortes)
 
+Clear current queue
+== Vaciar la cola actual
+
 Clear friend note
 == Borrar nota de amigo
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == Color de la línea actual
 
-Current queue: %s
-== Cola actual: %s
-
 Current rescue mode: %s
 == Modo de rescate actual: %s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == Fallo al abrir la salida predeterminada
+
+Default preset
+== Preajuste predeterminado
 
 Default zoom
 == Zoom predeterminado
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == Editar paquete de audio
 
-Edit current queue
-== Editar cola actual
-
 Edit Entry
 == Editar Entrada
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == Activar modo Zen
-
-Enabled
-== Habilitado
 
 Enables/disables active moderator mode for the player
 == Activa/desactiva el modo moderador activo para el jugador
@@ -2838,9 +2841,6 @@ Gap between statusbar items
 
 General
 == General
-
-Get all map players' skin IDs and auto add to rotate queue
-== Obtener IDs de skin de todos los jugadores del mapa y añadirlos automáticamente a la cola de rotación
 
 Getting game info
 == Obteniendo información del juego
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == La cola está vacía
 
+Queue preset: %s
+== Preajuste de cola: %s
+
 Quick action menu for players
 == Menú de acción rápida para jugadores
 
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == ¿Guardar todos los cambios antes de apagar el editor?
 
+Save as
+== Guardar como
+
 Save asset before closing?
 == ¿Guardar el activo antes de cerrar?
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == Guardar cambios
 
-Save current
-== Guardar actual
+Save changes back to this preset
+== Guardar cambios en este preset
 
 Save current queue as a new preset
 == Guardar la cola actual como una nueva preconfiguración
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == Mira cuánto actúas
 
-Select a preset first
-== Selecciona primero un preajuste
-
 Select all chat
 == Seleccionar todo el chat
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == Seleccionar exportación
-
-Select this preset to edit it
-== Seleccionar este preajuste para editarlo
 
 Selected %d
 == Seleccionado %d
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == Servidor no lleno
+
+Server preset
+== Preajuste del servidor
 
 Server rollback
 == Retroceso del servidor

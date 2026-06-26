@@ -5799,6 +5799,43 @@ TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)
 	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_bind_lookup\""), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, LaserPreviewDrawsWeaponBodiesBeforePreviewLaser)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::DoLaserPreview(const CUIRect *pRect, const ColorHSLA LaserOutlineColor, const ColorHSLA LaserInnerColor, const int LaserType)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t PreviewLaserPos = Body.find("GameClient()->m_Items.RenderLaser(From, Pos, OuterColor, InnerColor, 4.0f, TicksHead, LaserType, g_Config.m_QmLaserGlowIntensity);");
+	const size_t RifleBodyPos = Body.find("Graphics()->DrawSprite(Section.x + 30.0f, Section.y + Section.h / 2.0f, 60.0f);");
+	const size_t ShotgunBodyPos = Body.find("Graphics()->DrawSprite(Section.x + 30.0f, Section.y + Section.h / 2.0f, 60.0f);", RifleBodyPos + 1);
+
+	ASSERT_NE(PreviewLaserPos, std::string::npos);
+	ASSERT_NE(RifleBodyPos, std::string::npos);
+	ASSERT_NE(ShotgunBodyPos, std::string::npos);
+	EXPECT_LT(RifleBodyPos, PreviewLaserPos);
+	EXPECT_LT(ShotgunBodyPos, PreviewLaserPos);
+}
+
+TEST(QmMonitoringHelpers, LaserRoundCapsRenderedInBothEnhancedAndPlainPaths)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/items.cpp");
+	ASSERT_FALSE(Source.empty());
+
+	// RenderLaser splits into an enhanced-glow branch and a plain else branch.
+	// Round caps must be drawn in BOTH paths so toggling QmLaserRoundCaps is
+	// visible even without QmLaserEnhanced (the original bug: the toggle had
+	// no visible effect unless enhancement was also enabled).
+	const std::string RoundCapGuard = "if(g_Config.m_QmLaserRoundCaps)";
+	size_t Pos = 0;
+	int Count = 0;
+	while((Pos = Source.find(RoundCapGuard, Pos)) != std::string::npos)
+	{
+		++Count;
+		Pos += RoundCapGuard.size();
+	}
+	EXPECT_GE(Count, 2);
+}
+
 TEST(QmMonitoringHelpers, QmClientSearchSnapshotSignatureIgnoresVolatileMeasuredHeights)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");

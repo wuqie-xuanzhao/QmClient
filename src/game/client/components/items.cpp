@@ -493,6 +493,20 @@ void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA In
 				Pos + Out - ExtraOutlinePos);
 			Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
+			// Round caps mirror the enhanced-laser path so toggling
+			// QmLaserRoundCaps is visible even without QmLaserEnhanced.
+			if(g_Config.m_QmLaserRoundCaps)
+			{
+				const float OutlineWidth = 7.0f * Ia;
+				const float InnerWidth = 5.0f * Ia;
+				Graphics()->SetColor(OuterColor);
+				Graphics()->DrawCircle(From.x, From.y, OutlineWidth, 16);
+				Graphics()->DrawCircle(Pos.x, Pos.y, OutlineWidth, 16);
+				Graphics()->SetColor(InnerColor);
+				Graphics()->DrawCircle(From.x, From.y, InnerWidth, 16);
+				Graphics()->DrawCircle(Pos.x, Pos.y, InnerWidth, 16);
+			}
+
 			Graphics()->QuadsEnd();
 		}
 	}

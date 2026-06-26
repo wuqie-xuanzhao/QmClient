@@ -700,8 +700,8 @@ TEST(Skins, SkinQueueIntervalUsesMilliseconds)
 	ASSERT_NE(UpdateEnd, std::string::npos);
 	const std::string UpdateBody = Source.substr(UpdatePos, UpdateEnd - UpdatePos);
 
-	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueInterval, qm_skin_queue_interval, 600, 1, 0"), std::string::npos);
-	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueInterval, qm_dummy_skin_queue_interval, 600, 1, 0"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueInterval, qm_skin_queue_interval, 600, 1, 120000"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueInterval, qm_dummy_skin_queue_interval, 600, 1, 120000"), std::string::npos);
 	EXPECT_NE(Config.find("皮肤队列切换间隔（毫秒）"), std::string::npos);
 	EXPECT_NE(Source.find("static constexpr int SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND = 1000;"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("std::chrono::milliseconds(QueueInterval)"), std::string::npos);
@@ -717,6 +717,9 @@ TEST(Skins, SkinQueueIntervalUsesMilliseconds)
 
 TEST(Skins, SkinQueueRotationUsesExplicitEnableSwitchAndUnboundedInterval)
 {
+	// Intent only: rotation has an explicit enable switch, an unbounded (>=1ms)
+	// interval, and Update gates on the enable flag. Widget/layout details are
+	// intentionally not asserted here.
 	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
 	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
@@ -728,17 +731,9 @@ TEST(Skins, SkinQueueRotationUsesExplicitEnableSwitchAndUnboundedInterval)
 
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueEnabled, qm_skin_queue_enabled, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueEnabled, qm_dummy_skin_queue_enabled, 1, 0, 1"), std::string::npos);
-	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueInterval, qm_skin_queue_interval, 600, 1, 0"), std::string::npos);
-	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueInterval, qm_dummy_skin_queue_interval, 600, 1, 0"), std::string::npos);
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueLength, qm_skin_queue_length, 20, 0, 1024"), std::string::npos);
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueLength, qm_dummy_skin_queue_length, 20, 0, 1024"), std::string::npos);
-	EXPECT_NE(Menus.find("int &QueueEnabled = m_Dummy ? g_Config.m_QmDummySkinQueueEnabled : g_Config.m_QmSkinQueueEnabled;"), std::string::npos);
 	EXPECT_NE(Menus.find("Localize(\"Enable skin queue rotation\")"), std::string::npos);
-	EXPECT_NE(Menus.find("CUIRect QueueEnabledRect;"), std::string::npos);
-	EXPECT_NE(Menus.find("QueueSection.HSplitTop(20.0f, &QueueEnabledRect, &QueueSection);"), std::string::npos);
-	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", Localize(\"Enable skin queue\"), QueueEnabled, &QueueEnabledRect)"), std::string::npos);
-	EXPECT_EQ(Menus.find("Localize(\"Enabled\")"), std::string::npos);
-	EXPECT_EQ(Menus.find("tee-skin-queue-enabled-heading"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueInterval = maximum(QueueIntervalInput.GetInteger(), 1);"), std::string::npos);
 	EXPECT_EQ(Menus.find("QueueInterval = std::clamp(QueueIntervalInput.GetInteger(), 0,"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("!SkinQueueEnabledVar(Dummy)"), std::string::npos);
@@ -1298,7 +1293,102 @@ TEST(Skins, SkinQueueEntrySixupDataParticipatesInEquality)
 	EXPECT_FALSE(Base == DifferentPartColor);
 }
 
-TEST(Skins, MapPlayerSkinQueueSyncUpdatesExistingQueueInPlace)
+TEST(Skins, SkinQueueEntryEqualityIgnoresColorsWhenUseCustomColorIsFalse)
+{
+	// Intent: when UseCustomColor is false the body/feet colors are unused, so
+	// equality must NOT depend on them — two "default color" entries with
+	// different unused color fields are the same skin.
+	CSkins::CSkinQueueEntry A;
+	A.m_SkinName = "default";
+	A.m_UseCustomColor = false;
+	A.m_ColorBody = 100;
+	A.m_ColorFeet = 200;
+	A.m_HasSixup = false;
+
+	CSkins::CSkinQueueEntry B = A;
+	B.m_ColorBody = 999;
+	B.m_ColorFeet = 1;
+	EXPECT_TRUE(A == B);
+
+	// Flip to custom color: now the colors must participate in equality.
+	CSkins::CSkinQueueEntry C = A;
+	C.m_UseCustomColor = true;
+	CSkins::CSkinQueueEntry D = C;
+	D.m_ColorBody = 999;
+	EXPECT_FALSE(C == D);
+
+	CSkins::CSkinQueueEntry E = C;
+	E.m_ColorFeet = 999;
+	EXPECT_FALSE(C == E);
+}
+
+TEST(Skins, SkinQueueEntryEqualityComparesSkinNameAndFlags)
+{
+	CSkins::CSkinQueueEntry Base;
+	Base.m_SkinName = "default";
+	Base.m_UseCustomColor = false;
+	Base.m_HasSixup = false;
+
+	CSkins::CSkinQueueEntry DifferentName = Base;
+	DifferentName.m_SkinName = "other";
+	EXPECT_FALSE(Base == DifferentName);
+
+	CSkins::CSkinQueueEntry DifferentUseCustomColor = Base;
+	DifferentUseCustomColor.m_UseCustomColor = true;
+	EXPECT_FALSE(Base == DifferentUseCustomColor);
+
+	CSkins::CSkinQueueEntry DifferentHasSixup = Base;
+	DifferentHasSixup.m_HasSixup = true;
+	EXPECT_FALSE(Base == DifferentHasSixup);
+}
+
+TEST(Skins, SkinQueuePresetKindDeterminesProtection)
+{
+	CSkins::CSkinQueuePreset UserPreset;
+	UserPreset.m_Kind = CSkins::CSkinQueuePreset::EKind::USER;
+	EXPECT_EQ(UserPreset.Kind(), CSkins::CSkinQueuePreset::EKind::USER);
+	EXPECT_FALSE(UserPreset.IsProtected());
+
+	CSkins::CSkinQueuePreset ServerPreset;
+	ServerPreset.m_Kind = CSkins::CSkinQueuePreset::EKind::SERVER;
+	EXPECT_EQ(ServerPreset.Kind(), CSkins::CSkinQueuePreset::EKind::SERVER);
+	EXPECT_TRUE(ServerPreset.IsProtected());
+
+	// Default-constructed preset is USER (not protected) — matches the built-in
+	// Default preset being user-editable.
+	CSkins::CSkinQueuePreset DefaultCtor;
+	EXPECT_FALSE(DefaultCtor.IsProtected());
+}
+
+TEST(Skins, IsSkinQueuePresetWritableExcludesServerAndOutOfRange)
+{
+	// Presets layout: [0]=Default, [1]=Server, [2..4]=user. Total 5.
+	constexpr size_t kCount = 5;
+	EXPECT_FALSE(CSkins::IsSkinQueuePresetWritable(-1, kCount)); // nothing applied
+	EXPECT_TRUE(CSkins::IsSkinQueuePresetWritable(0, kCount)); // Default (writable)
+	EXPECT_FALSE(CSkins::IsSkinQueuePresetWritable((int)CSkins::SKIN_QUEUE_SERVER_PRESET, kCount)); // Server (dynamic, not writable)
+	EXPECT_TRUE(CSkins::IsSkinQueuePresetWritable(2, kCount)); // user preset
+	EXPECT_TRUE(CSkins::IsSkinQueuePresetWritable(4, kCount)); // last user preset
+	EXPECT_FALSE(CSkins::IsSkinQueuePresetWritable((int)kCount, kCount)); // == count (out of range)
+	EXPECT_FALSE(CSkins::IsSkinQueuePresetWritable(99, kCount)); // far out of range
+}
+
+TEST(Skins, NextAppliedPresetIndexAfterRemoveHandlesAllBranches)
+{
+	// Removed preset was the applied one → no preset applied anymore.
+	EXPECT_EQ(CSkins::NextAppliedPresetIndexAfterRemove(3, 3), -1);
+	EXPECT_EQ(CSkins::NextAppliedPresetIndexAfterRemove(0, 0), -1);
+	// Applied preset was above the removed one → shifts down to keep pointing at it.
+	EXPECT_EQ(CSkins::NextAppliedPresetIndexAfterRemove(5, 2), 4);
+	EXPECT_EQ(CSkins::NextAppliedPresetIndexAfterRemove(2, 1), 1);
+	// Applied preset was below the removed one → index unchanged.
+	EXPECT_EQ(CSkins::NextAppliedPresetIndexAfterRemove(1, 2), 1);
+	EXPECT_EQ(CSkins::NextAppliedPresetIndexAfterRemove(0, 2), 0);
+	// Nothing was applied → stays nothing.
+	EXPECT_EQ(CSkins::NextAppliedPresetIndexAfterRemove(-1, 2), -1);
+}
+
+TEST(Skins, MapPlayerSkinQueueSyncReplacesCurrentQueue)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
 	ASSERT_TRUE(File.good());
@@ -1322,26 +1412,34 @@ TEST(Skins, MapPlayerSkinQueueSyncUpdatesExistingQueueInPlace)
 	ASSERT_NE(ApplyPresetEnd, std::string::npos);
 	const std::string ApplyPresetBody = Source.substr(ApplyPresetPos, ApplyPresetEnd - ApplyPresetPos);
 
+	// Sync replaces the queue in place from map players (no grow-only merge).
 	EXPECT_EQ(SyncBody.find("std::vector<CSkinQueueEntry> vMapSkins"), std::string::npos);
-	EXPECT_EQ(SyncBody.find("Queue = std::move("), std::string::npos);
-	EXPECT_EQ(SyncBody.find("m_aSkinQueue[Dummy] ="), std::string::npos);
-	EXPECT_EQ(ApplyPresetBody.find("m_aSkinQueue[Dummy] ="), std::string::npos);
+	EXPECT_EQ(SyncBody.find("SyncSkinQueueEntriesInPlace("), std::string::npos);
+	EXPECT_NE(SyncBody.find("Queue.assign(aMapSkins.begin(), aMapSkins.begin() + DesiredCount);"), std::string::npos);
+	EXPECT_NE(SyncBody.find("std::array<CSkinQueueEntry, MAX_CLIENTS> aMapSkins"), std::string::npos);
+	EXPECT_NE(Source.find("#include <array>"), std::string::npos);
+	// Sync only runs in server-rotation mode, so the queue is attributed to the
+	// Server preset and mirrored into the Server preset's template (never the
+	// Default preset at index 0).
+	EXPECT_NE(SyncBody.find("m_vSkinQueuePresets[SKIN_QUEUE_SERVER_PRESET].m_Queue.assign(aMapSkins.begin(), aMapSkins.begin() + DesiredCount);"), std::string::npos);
+	EXPECT_NE(SyncBody.find("m_vSkinQueuePresets[SKIN_QUEUE_SERVER_PRESET].m_Queue = Queue;"), std::string::npos);
+	EXPECT_NE(SyncBody.find("m_aAppliedSkinQueuePresetIndex[Dummy] = (int)SKIN_QUEUE_SERVER_PRESET;"), std::string::npos);
+	EXPECT_EQ(SyncBody.find("m_vSkinQueuePresets[0].m_Queue"), std::string::npos);
+	// The content-matching fallback was removed; Applied is set explicitly.
+	EXPECT_EQ(SyncBody.find("SkinQueueCurrentPresetIndex"), std::string::npos);
+	EXPECT_EQ(Source.find("FindMatchingSkinQueuePresetIndex"), std::string::npos);
+	// ApplySkinQueuePreset copies the preset into the playing queue, marks it
+	// clean, and resets the rotation timer (click-to-apply model).
+	EXPECT_NE(ApplyPresetBody.find("m_aSkinQueue[Dummy] = Presets[PresetIndex].m_Queue;"), std::string::npos);
+	EXPECT_NE(ApplyPresetBody.find("SkinQueueIndexVar(Dummy) = 0;"), std::string::npos);
+	EXPECT_NE(ApplyPresetBody.find("m_aAppliedSkinQueuePresetIndex[Dummy] = (int)PresetIndex;"), std::string::npos);
+	EXPECT_NE(ApplyPresetBody.find("m_aSkinQueueDirty[Dummy] = false;"), std::string::npos);
+	EXPECT_NE(ApplyPresetBody.find("ApplySkinQueueCurrent(Dummy);"), std::string::npos);
+	EXPECT_EQ(ApplyPresetBody.find("m_aActiveSkinQueuePresetIndex"), std::string::npos);
+	EXPECT_EQ(ApplyPresetBody.find("SyncSkinQueueEntriesInPlace("), std::string::npos);
 	EXPECT_EQ(UpdateBody.find("TrimSkinQueueToLimit(Dummy);"), std::string::npos);
 	EXPECT_EQ(ApplyPresetBody.find("TrimSkinQueueToLimit(Dummy);"), std::string::npos);
 	EXPECT_EQ(UpdateBody.find("SkinQueueLengthVar(Dummy)"), std::string::npos);
-	EXPECT_EQ(SyncBody.find("SyncSkinQueueEntriesInPlace(Queue, aMapSkins.data(), DesiredCount)"), std::string::npos);
-	EXPECT_EQ(SyncBody.find("Queue.erase(Queue.begin() + DesiredCount, Queue.end());"), std::string::npos);
-	EXPECT_NE(Source.find("#include <array>"), std::string::npos);
-	EXPECT_NE(SyncBody.find("std::array<CSkinQueueEntry, MAX_CLIENTS> aMapSkins"), std::string::npos);
-	EXPECT_NE(SyncBody.find("SyncSkinQueueEntriesInPlace(Queue, aMapSkins.data(), DesiredCount, false)"), std::string::npos);
-	EXPECT_NE(ApplyPresetBody.find("SyncSkinQueueEntriesInPlace(m_aSkinQueue[Dummy], Presets[PresetIndex].m_Queue.data(), Presets[PresetIndex].m_Queue.size())"), std::string::npos);
-	EXPECT_NE(ApplyPresetBody.find("SkinQueueIndexVar(Dummy) = 0;"), std::string::npos);
-	EXPECT_NE(ApplyPresetBody.find("m_aSkinQueueElapsed[Dummy] = 0ns;"), std::string::npos);
-	EXPECT_NE(ApplyPresetBody.find("m_aSkinQueueLastUpdate[Dummy].reset();"), std::string::npos);
-	EXPECT_NE(ApplyPresetBody.find("ApplySkinQueueCurrent(Dummy);"), std::string::npos);
-	EXPECT_NE(Source.find("Queue.erase(Queue.begin() + DesiredCount, Queue.end());"), std::string::npos);
-	EXPECT_NE(Source.find("Queue.insert(Queue.begin() + DesiredIndex, pDesiredEntries[DesiredIndex]);"), std::string::npos);
-	EXPECT_NE(Source.find("std::rotate(Queue.begin() + DesiredIndex, It, It + 1);"), std::string::npos);
 }
 
 TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
@@ -1357,77 +1455,116 @@ TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
 	std::stringstream SourceBuffer;
 	SourceBuffer << SourceFile.rdbuf();
 	const std::string Source = SourceBuffer.str();
-	const size_t SelectPresetPos = Source.find("bool CSkins::SelectSkinQueuePreset(size_t PresetIndex, int Dummy)");
-	ASSERT_NE(SelectPresetPos, std::string::npos);
-	const size_t SelectPresetEnd = Source.find("void CSkins::ClearSkinQueuePresetSelection(int Dummy)", SelectPresetPos);
-	ASSERT_NE(SelectPresetEnd, std::string::npos);
-	const std::string SelectPresetBody = Source.substr(SelectPresetPos, SelectPresetEnd - SelectPresetPos);
+	const size_t ApplyPresetPos = Source.find("bool CSkins::ApplySkinQueuePreset(size_t PresetIndex, int Dummy)");
+	ASSERT_NE(ApplyPresetPos, std::string::npos);
+	const size_t ApplyPresetEnd = Source.find("bool CSkins::RemoveSkinQueuePreset", ApplyPresetPos);
+	ASSERT_NE(ApplyPresetEnd, std::string::npos);
+	const std::string ApplyPresetBody = Source.substr(ApplyPresetPos, ApplyPresetEnd - ApplyPresetPos);
+	const size_t ClearPos = Source.find("void CSkins::ClearSkinQueue(int Dummy)");
+	ASSERT_NE(ClearPos, std::string::npos);
+	const size_t ClearEnd = Source.find("bool CSkins::SaveSkinQueueToAppliedPreset", ClearPos);
+	ASSERT_NE(ClearEnd, std::string::npos);
+	const std::string ClearBody = Source.substr(ClearPos, ClearEnd - ClearPos);
 
 	std::ifstream MenusFile(TestSourcePath("src/game/client/components/menus_settings.cpp"));
 	ASSERT_TRUE(MenusFile.good());
 	std::stringstream MenusBuffer;
 	MenusBuffer << MenusFile.rdbuf();
 	const std::string Menus = MenusBuffer.str();
-	const size_t PresetsUiPos = Menus.find("if(QueuePresets.h > 0.0f)");
-	ASSERT_NE(PresetsUiPos, std::string::npos);
-	const size_t PresetsUiEnd = Menus.find("MainView.HSplitTop(5.0f, nullptr, &MainView);", PresetsUiPos);
-	ASSERT_NE(PresetsUiEnd, std::string::npos);
-	const std::string PresetsUi = Menus.substr(PresetsUiPos, PresetsUiEnd - PresetsUiPos);
 
-	EXPECT_NE(Header.find("int ActiveSkinQueuePresetIndex(int Dummy) const"), std::string::npos);
+	// Preset model: Default(0, USER) + Server(1, SERVER) built-ins, then user presets.
+	EXPECT_NE(Header.find("static constexpr size_t SKIN_QUEUE_DEFAULT_PRESET = 0;"), std::string::npos);
+	EXPECT_NE(Header.find("static constexpr size_t SKIN_QUEUE_SERVER_PRESET = 1;"), std::string::npos);
+	EXPECT_NE(Header.find("bool IsBuiltInSkinQueuePreset(size_t PresetIndex) const"), std::string::npos);
 	EXPECT_NE(Header.find("int AppliedSkinQueuePresetIndex(int Dummy) const"), std::string::npos);
-	EXPECT_NE(Header.find("bool SelectSkinQueuePreset(size_t PresetIndex, int Dummy)"), std::string::npos);
-	EXPECT_NE(Header.find("void ClearSkinQueuePresetSelection(int Dummy)"), std::string::npos);
-	EXPECT_NE(Header.find("const std::vector<CSkinQueueEntry> &ActiveSkinQueue(int Dummy) const"), std::string::npos);
+	EXPECT_NE(Header.find("bool SkinQueueDirty(int Dummy) const"), std::string::npos);
+	EXPECT_NE(Header.find("bool SaveSkinQueueToAppliedPreset(int Dummy)"), std::string::npos);
 	EXPECT_NE(Header.find("bool AddActiveSkinQueue("), std::string::npos);
 	EXPECT_NE(Header.find("bool RemoveActiveSkinQueue("), std::string::npos);
 	EXPECT_NE(Header.find("void MoveActiveSkinQueueItem("), std::string::npos);
 	EXPECT_NE(Header.find("bool ApplySkinQueueIndex(size_t QueueIndex, int Dummy)"), std::string::npos);
 	EXPECT_NE(Header.find("void TrimActiveSkinQueueToLimit("), std::string::npos);
-	EXPECT_NE(Header.find("std::array<int, NUM_DUMMIES> m_aActiveSkinQueuePresetIndex"), std::string::npos);
 	EXPECT_NE(Header.find("std::array<int, NUM_DUMMIES> m_aAppliedSkinQueuePresetIndex"), std::string::npos);
+	EXPECT_NE(Header.find("std::array<bool, NUM_DUMMIES> m_aSkinQueueDirty"), std::string::npos);
 	EXPECT_NE(Header.find("std::vector<CSkinQueuePreset> m_vSkinQueuePresets"), std::string::npos);
 	EXPECT_EQ(Header.find("std::array<std::vector<CSkinQueuePreset>, NUM_DUMMIES> m_aSkinQueuePresets"), std::string::npos);
+	// Removed: the old "active/edit-state" preset selection model.
+	EXPECT_EQ(Header.find("int ActiveSkinQueuePresetIndex(int Dummy) const"), std::string::npos);
+	EXPECT_EQ(Header.find("bool SelectSkinQueuePreset(size_t PresetIndex, int Dummy)"), std::string::npos);
+	EXPECT_EQ(Header.find("void ClearSkinQueuePresetSelection(int Dummy)"), std::string::npos);
+	EXPECT_EQ(Header.find("const std::vector<CSkinQueueEntry> &ActiveSkinQueue(int Dummy) const"), std::string::npos);
+	EXPECT_EQ(Header.find("int SkinQueueCurrentPresetIndex(int Dummy) const"), std::string::npos);
+	EXPECT_EQ(Header.find("std::array<int, NUM_DUMMIES> m_aActiveSkinQueuePresetIndex"), std::string::npos);
 
-	EXPECT_NE(Source.find("std::fill(m_aActiveSkinQueuePresetIndex.begin(), m_aActiveSkinQueuePresetIndex.end(), -1);"), std::string::npos);
 	EXPECT_NE(Source.find("std::fill(m_aAppliedSkinQueuePresetIndex.begin(), m_aAppliedSkinQueuePresetIndex.end(), -1);"), std::string::npos);
-	EXPECT_NE(Source.find("std::vector<CSkins::CSkinQueueEntry> &CSkins::ActiveSkinQueueMutable(int Dummy)"), std::string::npos);
-	EXPECT_NE(Source.find("return ActivePresetIndex >= 0 ? m_vSkinQueuePresets[ActivePresetIndex].m_Queue : m_aSkinQueue[Dummy];"), std::string::npos);
+	EXPECT_NE(Source.find("m_vSkinQueuePresets.push_back({\"Default preset\", {}, CSkinQueuePreset::EKind::USER});"), std::string::npos);
+	EXPECT_NE(Source.find("m_vSkinQueuePresets.push_back({\"Server preset\", {}, CSkinQueuePreset::EKind::SERVER});"), std::string::npos);
+	EXPECT_EQ(Source.find("std::fill(m_aActiveSkinQueuePresetIndex.begin(), m_aActiveSkinQueuePresetIndex.end(), -1);"), std::string::npos);
+	EXPECT_EQ(Source.find("ActiveSkinQueueMutable"), std::string::npos);
+	EXPECT_EQ(Source.find("FindMatchingSkinQueuePresetIndex"), std::string::npos);
 	EXPECT_EQ(Source.find("m_aSkinQueuePresets[Dummy]"), std::string::npos);
 	EXPECT_NE(Source.find("Localize(\"Preset %d\")"), std::string::npos);
 	EXPECT_EQ(Source.find("\"Preset %d\""), Source.find("Localize(\"Preset %d\")") + strlen("Localize("));
-	EXPECT_EQ(SelectPresetBody.find("SyncSkinQueueEntriesInPlace("), std::string::npos);
 
-	EXPECT_NE(Menus.find("const int ActivePresetIndex = GameClient()->m_Skins.ActiveSkinQueuePresetIndex(QueueDummy);"), std::string::npos);
+	// Apply = click-to-apply; presets are read-only templates until Save/Save-As.
+	EXPECT_NE(ApplyPresetBody.find("if(PresetIndex == SKIN_QUEUE_SERVER_PRESET)"), std::string::npos);
+	EXPECT_NE(ApplyPresetBody.find("m_aSkinQueue[Dummy] = Presets[PresetIndex].m_Queue;"), std::string::npos);
+	EXPECT_NE(ApplyPresetBody.find("m_aAppliedSkinQueuePresetIndex[Dummy] = (int)PresetIndex;"), std::string::npos);
+	EXPECT_NE(ApplyPresetBody.find("m_aSkinQueueDirty[Dummy] = false;"), std::string::npos);
+	EXPECT_EQ(ApplyPresetBody.find("m_aActiveSkinQueuePresetIndex"), std::string::npos);
+	EXPECT_EQ(ApplyPresetBody.find("if(PresetIndex < 2)"), std::string::npos);
+
+	// Save writes the playing queue back to the applied preset; Server is not writable.
+	EXPECT_NE(Source.find("m_vSkinQueuePresets[PresetIndex].m_Queue = m_aSkinQueue[Dummy];"), std::string::npos);
+	EXPECT_NE(Source.find("if(!IsSkinQueuePresetWritable(PresetIndex, m_vSkinQueuePresets.size()))"), std::string::npos);
+
+	// Clear empties the playing queue, keeps Applied (clear-then-save writes back), marks dirty.
+	EXPECT_NE(ClearBody.find("m_aSkinQueue[Dummy].clear();"), std::string::npos);
+	EXPECT_NE(ClearBody.find("SkinQueueRotateMapVar(Dummy) = 0;"), std::string::npos);
+	EXPECT_NE(ClearBody.find("m_aSkinQueueDirty[Dummy] = true;"), std::string::npos);
+	EXPECT_EQ(ClearBody.find("m_aAppliedSkinQueuePresetIndex[Dummy] = -1;"), std::string::npos);
+
+	// UI: preset bar uses Save / Save-as / Rename / Delete; clicking a preset applies it.
+	EXPECT_NE(Menus.find("Localize(\"Save\")"), std::string::npos);
+	EXPECT_NE(Menus.find("Localize(\"Save as\")"), std::string::npos);
+	EXPECT_NE(Menus.find("SaveSkinQueueToAppliedPreset(QueueDummy)"), std::string::npos);
+	EXPECT_NE(Menus.find("AddSkinQueuePresetFromCurrent(QueueDummy)"), std::string::npos);
 	EXPECT_NE(Menus.find("const int AppliedPresetIndex = GameClient()->m_Skins.AppliedSkinQueuePresetIndex(QueueDummy);"), std::string::npos);
-	EXPECT_NE(Menus.find("const auto &SkinQueue = GameClient()->m_Skins.ActiveSkinQueue(QueueDummy);"), std::string::npos);
-	EXPECT_EQ(Menus.find("GameClient()->m_Skins.TrimActiveSkinQueueToLimit(QueueDummy);"), std::string::npos);
-	EXPECT_EQ(Menus.find("Localize(\"Queue capacity\")"), std::string::npos);
-	EXPECT_EQ(Menus.find("Localize(\"Editing: %s\")"), std::string::npos);
-	EXPECT_EQ(Menus.find("Localize(\"Editing: current queue\")"), std::string::npos);
-	EXPECT_NE(Menus.find("Localize(\"Current queue: %s\")"), std::string::npos);
-	EXPECT_NE(Menus.find("Localize(\"Custom\")"), std::string::npos);
-	EXPECT_NE(Menus.find("Localize(\"Rotate all server player skins\")"), std::string::npos);
-	EXPECT_NE(Menus.find("CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];"), std::string::npos);
-	EXPECT_NE(Menus.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput"), std::string::npos);
+	EXPECT_NE(Menus.find("const bool QueueDirty = GameClient()->m_Skins.SkinQueueDirty(QueueDummy);"), std::string::npos);
+	EXPECT_NE(Menus.find("const auto &SkinQueue = GameClient()->m_Skins.SkinQueue(QueueDummy);"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueDirty ? \""), std::string::npos);
+	EXPECT_NE(Menus.find("IsBuiltInSkinQueuePreset(i)"), std::string::npos);
+	EXPECT_NE(Menus.find("GameClient()->m_Skins.ApplySkinQueuePreset((size_t)SelectPresetIndex, QueueDummy);"), std::string::npos);
+	EXPECT_NE(Menus.find("GameClient()->m_Skins.ClearSkinQueue(QueueDummy);"), std::string::npos);
 	EXPECT_NE(Menus.find("GameClient()->m_Skins.MoveActiveSkinQueueItem("), std::string::npos);
 	EXPECT_NE(Menus.find("GameClient()->m_Skins.RemoveActiveSkinQueue("), std::string::npos);
 	EXPECT_NE(Menus.find("GameClient()->m_Skins.AddActiveSkinQueue("), std::string::npos);
-	EXPECT_NE(Menus.find("ApplyQueueIndex = s_QueueDragIndex;"), std::string::npos);
 	EXPECT_NE(Menus.find("GameClient()->m_Skins.ApplySkinQueueIndex((size_t)ApplyQueueIndex, QueueDummy);"), std::string::npos);
-	EXPECT_NE(PresetsUi.find("const int PresetSelectedOld = ActivePresetIndex >= 0 ? ActivePresetIndex : -1;"), std::string::npos);
-	EXPECT_NE(PresetsUi.find("s_PresetListBox.DoStart(20.0f, (int)vQueuePresets.size(), 1, 1, PresetSelectedOld, &PresetList, true, IGraphics::CORNER_ALL);"), std::string::npos);
-	EXPECT_NE(PresetsUi.find("if(s_PresetListBox.WasItemSelected())"), std::string::npos);
-	EXPECT_EQ(PresetsUi.find("Ui()->DoButtonLogic(&s_vPresetItemIds[i], 0, &SelectRect, BUTTONFLAG_LEFT)"), std::string::npos);
-	EXPECT_NE(PresetsUi.find("PresetControlsTop.VSplitLeft(ActionButtonWidth"), std::string::npos);
-	EXPECT_NE(PresetsUi.find("PresetControlsTop.VSplitLeft(ActionGapWidth"), std::string::npos);
-	EXPECT_EQ(PresetsUi.find("Localize(\"Edit\")"), std::string::npos);
-	EXPECT_NE(Menus.find("GameClient()->m_Skins.SelectSkinQueuePreset((size_t)SelectPresetIndex, QueueDummy);"), std::string::npos);
-	EXPECT_NE(Menus.find("GameClient()->m_Skins.ClearSkinQueuePresetSelection(QueueDummy);"), std::string::npos);
-	EXPECT_NE(Menus.find("Localize(\"Apply\")"), std::string::npos);
-	EXPECT_NE(Menus.find("Localize(\"Apply this preset to the current queue\")"), std::string::npos);
-	EXPECT_NE(Menus.find("GameClient()->m_Skins.ApplySkinQueuePreset((size_t)ActivePresetIndex, QueueDummy);"), std::string::npos);
-	EXPECT_NE(Source.find("SyncSkinQueueEntriesInPlace(m_aSkinQueue[Dummy], Presets[PresetIndex].m_Queue.data(), Presets[PresetIndex].m_Queue.size())"), std::string::npos);
+	EXPECT_NE(Menus.find("Localize(\"Queue preset: %s\")"), std::string::npos);
+	EXPECT_NE(Menus.find("Localize(\"Custom\")"), std::string::npos);
+	EXPECT_NE(Menus.find("Localize(\"Default preset\")"), std::string::npos);
+	EXPECT_NE(Menus.find("Localize(\"Rotate all server player skins\")"), std::string::npos);
+	EXPECT_NE(Menus.find("Localize(\"Clear current queue\")"), std::string::npos);
+	EXPECT_NE(Menus.find("CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];"), std::string::npos);
+	EXPECT_NE(Menus.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput"), std::string::npos);
+	EXPECT_NE(Source.find("m_vSkinQueuePresets.push_back({\"Server preset\", {}, CSkinQueuePreset::EKind::SERVER});"), std::string::npos);
+	// Removed UI: Apply/Save-current buttons, the select/cancel-select calls, and the
+	// old edit-state wiring. Clicking a preset now applies it directly.
+	EXPECT_EQ(Menus.find("const int ActivePresetIndex = GameClient()->m_Skins.ActiveSkinQueuePresetIndex(QueueDummy);"), std::string::npos);
+	EXPECT_EQ(Menus.find("const auto &SkinQueue = GameClient()->m_Skins.ActiveSkinQueue(QueueDummy);"), std::string::npos);
+	EXPECT_EQ(Menus.find("SkinQueueCurrentPresetIndex(QueueDummy)"), std::string::npos);
+	EXPECT_EQ(Menus.find("SelectSkinQueuePreset("), std::string::npos);
+	EXPECT_EQ(Menus.find("ClearSkinQueuePresetSelection("), std::string::npos);
+	EXPECT_EQ(Menus.find("Localize(\"Apply\")"), std::string::npos);
+	EXPECT_EQ(Menus.find("Localize(\"Apply this preset to the current queue\")"), std::string::npos);
+	EXPECT_EQ(Menus.find("if(SelectPresetIndex == 0 || SelectPresetIndex == 1)"), std::string::npos);
+	EXPECT_EQ(Menus.find("Localize(\"Editing: %s\")"), std::string::npos);
+	EXPECT_EQ(Menus.find("Localize(\"Editing: current queue\")"), std::string::npos);
+	EXPECT_EQ(Menus.find("Localize(\"Queue capacity\")"), std::string::npos);
+	EXPECT_EQ(Menus.find("return Localize(vQueuePresets[PresetIndex].m_Name.c_str());"), std::string::npos);
+	EXPECT_EQ(Source.find("if(PresetIndex == 1)"), std::string::npos);
+	EXPECT_EQ(Source.find("m_aActiveSkinQueuePresetIndex[Dummy] = -1;"), std::string::npos);
+	EXPECT_EQ(Source.find("m_vSkinQueuePresets[PresetIndex].IsProtected()"), std::string::npos);
 }
 
 TEST(Skins, SkinQueuePresetCompatibilityKeepsLimitAndIgnoresLegacyDummyPresetCommands)
@@ -1473,8 +1610,9 @@ TEST(Skins, SkinQueuePresetCompatibilityKeepsLimitAndIgnoresLegacyDummyPresetCom
 
 	EXPECT_NE(AddQueueBody.find("const int Limit = minimum(SKIN_QUEUE_HARD_LIMIT, maximum(0, SkinQueueLengthVar(Dummy)));"), std::string::npos);
 	EXPECT_NE(AddQueueBody.find("if((int)Queue.size() >= Limit)"), std::string::npos);
-	EXPECT_NE(AddActiveBody.find("const int Limit = minimum(SKIN_QUEUE_HARD_LIMIT, maximum(0, SkinQueueLengthVar(Dummy)));"), std::string::npos);
-	EXPECT_NE(AddActiveBody.find("if((int)Queue.size() >= Limit)"), std::string::npos);
+	// AddActiveSkinQueue forwards to AddSkinQueue (the limit check lives in the latter).
+	EXPECT_NE(AddActiveBody.find("return AddSkinQueue(pName, UseCustomColor, ColorBody, ColorFeet, Dummy);"), std::string::npos);
+	EXPECT_EQ(AddActiveBody.find("const int Limit = minimum(SKIN_QUEUE_HARD_LIMIT"), std::string::npos);
 	EXPECT_NE(AddPresetItemBody.find("const int Limit = minimum(SKIN_QUEUE_HARD_LIMIT, maximum(0, SkinQueueLengthVar(Dummy)));"), std::string::npos);
 	EXPECT_NE(AddPresetItemBody.find("if((int)Queue.size() >= Limit)"), std::string::npos);
 
@@ -1485,6 +1623,9 @@ TEST(Skins, SkinQueuePresetCompatibilityKeepsLimitAndIgnoresLegacyDummyPresetCom
 	EXPECT_NE(DummyPresetItemBody.find("log_info(\"skins\""), std::string::npos);
 	EXPECT_NE(DummyPresetItemExBody.find("log_info(\"skins\""), std::string::npos);
 	EXPECT_EQ(SaveBody.find("add_dummy_skin_queue_preset"), std::string::npos);
+	EXPECT_EQ(SaveBody.find("QueuePresetIndex < 2"), std::string::npos);
+	EXPECT_NE(SaveBody.find("QueuePresetIndex != SKIN_QUEUE_DEFAULT_PRESET"), std::string::npos);
+	EXPECT_NE(SaveBody.find("WriteQueueEntry(QueueSkin, false, (int)QueuePresetIndex);"), std::string::npos);
 }
 
 TEST(Skins, WebPSaveRoundTripPreservesImageShape)

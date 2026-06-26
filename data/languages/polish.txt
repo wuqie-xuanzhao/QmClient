@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == Zastosuj
 
+Apply a preset first
+== Najpierw zastosuj preset
+
 Apply a saved profile by 1-based index to the current tee
 == Zastosuj zapisany profil (indeks od 1) do bieżącego tee
+
+Apply a writable preset and edit first
+== Najpierw zastosuj edytowalny preset
 
 Apply Changes
 == Zastosuj zmiany
 
-Apply this preset to the current queue
-== Zastosuj ten preset do bieżącej kolejki
+Apply this preset
+== Zastosuj ten preset
 
 Are you sure that you want to delete %d selected items?
 == Czy na pewno chcesz usunąć %d wybranych elementów?
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == Wyczyść bieżące przycięcie (kliknij prawym, aby wyczyścić wszystkie)
 
+Clear current queue
+== Wyczyść bieżącą kolejkę
+
 Clear friend note
 == Wyczyść notatkę znajomego
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == Kolor bieżącej linii
 
-Current queue: %s
-== Bieżąca kolejka: %s
-
 Current rescue mode: %s
 == Aktualny tryb ratunkowy: %s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == Domyślne otwarcie wyjścia nie powiodło się
+
+Default preset
+== Domyślny preset
 
 Default zoom
 == Domyślne przybliżenie
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == Edytuj pakiet audio
 
-Edit current queue
-== Edytuj bieżącą kolejkę
-
 Edit Entry
 == Edytuj wpis
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == Włącz tryb Zen
-
-Enabled
-== Włączone
 
 Enables/disables active moderator mode for the player
 == Włącza/wyłącza aktywny tryb moderatora dla gracza
@@ -2838,9 +2841,6 @@ Gap between statusbar items
 
 General
 == Ogólne
-
-Get all map players' skin IDs and auto add to rotate queue
-== Pobierz ID skinów wszystkich graczy na mapie i automatycznie dodaj do kolejki rotacji
 
 Getting game info
 == Pobieranie informacji o grze
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == Kolejka jest pusta
 
+Queue preset: %s
+== Preset kolejki: %s
+
 Quick action menu for players
 == Menu szybkich akcji dla graczy
 
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == Zapisać wszystkie zmiany przed wyłączeniem edytora?
 
+Save as
+== Zapisz jako
+
 Save asset before closing?
 == Zapisać zasób przed zamknięciem?
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == Zapisz zmiany
 
-Save current
-== Zapisz bieżący
+Save changes back to this preset
+== Zapisz zmiany w tym presecie
 
 Save current queue as a new preset
 == Zapisz bieżącą kolejkę jako nowy preset
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == Zobacz, jak bardzo grasz
 
-Select a preset first
-== Najpierw wybierz preset
-
 Select all chat
 == Zaznacz cały czat
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == Wybierz eksport
-
-Select this preset to edit it
-== Wybierz ten preset do edycji
 
 Selected %d
 == Wybrano %d
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == Serwer nie jest pełny
+
+Server preset
+== Preset serwera
 
 Server rollback
 == Cofnięcie serwera

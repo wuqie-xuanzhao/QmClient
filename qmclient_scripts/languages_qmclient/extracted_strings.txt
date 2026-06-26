@@ -205,9 +205,11 @@ Appearance
 Apple Music media-user-token
 Applied to %d same-family part(s).
 Apply
+Apply a preset first
 Apply a saved profile by 1-based index to the current tee
+Apply a writable preset and edit first
 Apply Changes
-Apply this preset to the current queue
+Apply this preset
 Are you sure that you want to delete %d selected items?
 Are you sure that you want to delete '%s'?
 Are you sure that you want to delete the demo '%s'?
@@ -421,6 +423,7 @@ Clear all favorite maps
 Clear Changes
 Clear chat messages
 Clear current cut (right click to clear all cuts)
+Clear current queue
 Clear friend note
 Clear local console
 Clear note
@@ -540,7 +543,6 @@ Current aspect ratio: Show default
 Current cut is invalid or already added
 Current file
 Current line color
-Current queue: %s
 Current rescue mode: %s
 Current status
 Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
@@ -605,6 +607,7 @@ default
 Default input open failed
 Default length
 Default output open failed
+Default preset
 Default zoom
 Delay
 Delete
@@ -733,7 +736,6 @@ Echo the text in chat window
 Edge margin
 Edit
 Edit audio pack
-Edit current queue
 Edit Entry
 Edit HUD
 Edit note
@@ -789,7 +791,6 @@ Enable voice
 Enable warlist
 Enable word filter list
 Enable Zen mode
-Enabled
 Enables/disables active moderator mode for the player
 Endless hook has been activated
 Endless hook has been deactivated
@@ -945,7 +946,6 @@ Gameplay
 Gap aim rescue
 Gap between statusbar items
 General
-Get all map players' skin IDs and auto add to rotate queue
 Getting game info
 Getting server list from master server
 Ghost
@@ -1742,6 +1742,7 @@ Query your own points
 Query your own rank
 Query your own team rank
 Queue is empty
+Queue preset: %s
 Quick action menu for players
 Quickly locate feature modules
 Quit
@@ -1936,10 +1937,11 @@ Save
 Save a replay of the last defined amount of seconds
 Save all changes before switching selected button?
 Save all changes before turning off the editor?
+Save as
 Save asset before closing?
 Save banlist in a file
 Save changes
-Save current
+Save changes back to this preset
 Save current queue as a new preset
 Save drawings to a given csv file (defaults to map name)
 Save failed!
@@ -1992,11 +1994,9 @@ Seconds
 SecretId
 SecretKey
 See how much you act
-Select a preset first
 Select all chat
 Select button by touch
 Select export
-Select this preset to edit it
 Selected %d
 Selected button not visible
 Selected candidate
@@ -2049,6 +2049,7 @@ Server IP
 Server kick/spec votes are no longer actively moderated.
 Server kick/spec votes will now be actively moderated.
 Server not full
+Server preset
 Server rollback
 Server RTT is elevated, response path is unstable
 Set a voice server to enable QmClient distribution

@@ -337,7 +337,7 @@ static const char *EntitiesDisplayName(const char *pName)
 	if(str_comp_nocase(pName, "DDNet") == 0)
 		return "官方";
 	if(str_comp_nocase(pName, "FNG") == 0)
-		return "冻结手雷";
+		return "冻结榴弹炮";
 	if(str_comp_nocase(pName, "Race") == 0)
 		return "竞速";
 	if(str_comp_nocase(pName, "Vanilla") == 0)

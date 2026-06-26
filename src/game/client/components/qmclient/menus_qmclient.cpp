@@ -3527,7 +3527,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckbox(&g_Config.m_QmAxiomAutoLogin, "qmclient-gores-axiom-auto-login", Localize("Auto login Axiom server"), &g_Config.m_QmAxiomAutoLogin, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
 
 				if(g_Config.m_QmAxiomAutoLogin)
 				{
@@ -3559,7 +3558,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					Ui()->DoEditBox(&s_AxiomLoginPassword, &PasswordEditRect, LgBodySize);
 					if(DoPasswordToggleButton(&s_AxiomPasswordToggleButton, s_ShowAxiomPassword, PasswordToggleRect))
 						s_ShowAxiomPassword = !s_ShowAxiomPassword;
-					CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
+					CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
@@ -3570,12 +3569,12 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					Ui()->DoEditBox(&s_AxiomDummyLoginPassword, &PasswordEditRect, LgBodySize);
 					if(DoPasswordToggleButton(&s_AxiomDummyPasswordToggleButton, s_ShowAxiomDummyPassword, PasswordToggleRect))
 						s_ShowAxiomDummyPassword = !s_ShowAxiomDummyPassword;
-					CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
+					CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
 				}
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckbox(&g_Config.m_QmGoresAutoEnable, "qmclient-gores-auto-enable", Localize("Auto enable in Gores mode"), &g_Config.m_QmGoresAutoEnable, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
+				CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
 
 				if(g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable)
 				{
@@ -3596,7 +3595,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					DoQmSettingsCheckbox(&g_Config.m_QmGoresHideGuides, "qmclient-gores-hide-guides", Localize("Hide guide lines"), &g_Config.m_QmGoresHideGuides, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
+					CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
 				}
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);

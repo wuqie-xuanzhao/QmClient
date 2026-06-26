@@ -6,6 +6,7 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <engine/client/plausible_sizes.h>
 #include <engine/engine.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
@@ -80,16 +81,6 @@ static void EnsureMainThreadIdInitialized()
 static bool IsMainThread()
 {
 	return std::this_thread::get_id() == gs_MainThreadId;
-}
-
-static bool IsPlausibleWindowRefreshRate(int RefreshRate)
-{
-	return RefreshRate >= 0 && RefreshRate <= 1000;
-}
-
-static bool IsPlausibleWindowSize(int Width, int Height)
-{
-	return Width >= 320 && Height >= 240 && Width <= 16384 && Height <= 16384;
 }
 
 static int LogicalWindowSizeFromViewport(int ViewportSize, float HiDPIScale)
@@ -3669,7 +3660,7 @@ void CGraphics_Threaded::GotResized(int w, int h, int RefreshRate)
 	// if RefreshRate is -1 use the current config refresh rate
 	if(RefreshRate == -1)
 		RefreshRate = g_Config.m_GfxScreenRefreshRate;
-	if(!IsPlausibleWindowRefreshRate(RefreshRate))
+	if(!IsPlausibleRefreshRate(RefreshRate))
 	{
 		log_warn("gfx", "Ignoring implausible refresh rate during resize: %d", RefreshRate);
 		RefreshRate = m_ScreenRefreshRate;

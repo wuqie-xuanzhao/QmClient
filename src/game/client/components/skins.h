@@ -533,18 +533,46 @@ public:
 	class CSkinQueuePreset
 	{
 	public:
+		enum class EKind
+		{
+			USER,
+			SERVER,
+		};
+
 		std::string m_Name;
 		std::vector<CSkinQueueEntry> m_Queue;
+		EKind m_Kind = EKind::USER;
+
+		bool IsProtected() const { return m_Kind != EKind::USER; }
+		EKind Kind() const { return m_Kind; }
 	};
 
 	const std::vector<CSkinQueueEntry> &SkinQueue(int Dummy) const { return m_aSkinQueue[Dummy]; }
 	const std::vector<CSkinQueuePreset> &SkinQueuePresets(int Dummy) const { return m_vSkinQueuePresets; }
-	int ActiveSkinQueuePresetIndex(int Dummy) const { return m_aActiveSkinQueuePresetIndex[Dummy]; }
 	int AppliedSkinQueuePresetIndex(int Dummy) const { return m_aAppliedSkinQueuePresetIndex[Dummy]; }
-	const std::vector<CSkinQueueEntry> &ActiveSkinQueue(int Dummy) const;
+	bool SkinQueueDirty(int Dummy) const { return m_aSkinQueueDirty[Dummy]; }
+	static constexpr size_t SKIN_QUEUE_DEFAULT_PRESET = 0;
+	static constexpr size_t SKIN_QUEUE_SERVER_PRESET = 1;
+	bool IsBuiltInSkinQueuePreset(size_t PresetIndex) const { return PresetIndex < 2; }
+	// A preset is writable (Save can overwrite it) when it exists and is not the
+	// dynamic Server preset. Pure helper, defined inline so unit tests can call
+	// it without linking the full CSkins object.
+	static bool IsSkinQueuePresetWritable(int PresetIndex, size_t PresetCount)
+	{
+		return PresetIndex >= 0 && (size_t)PresetIndex < PresetCount && PresetIndex != (int)SKIN_QUEUE_SERVER_PRESET;
+	}
+	// After removing a preset, recompute a dummy's Applied index: the removed
+	// preset → -1, anything above shifts down, anything below is unchanged.
+	static int NextAppliedPresetIndexAfterRemove(int Current, int Removed)
+	{
+		if(Current == Removed)
+			return -1;
+		if(Current > Removed)
+			return Current - 1;
+		return Current;
+	}
 	bool IsInSkinQueue(const char *pName, int Dummy) const;
 	bool IsInSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const;
-	bool IsInActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy) const;
 	bool AddSkinQueue(const char *pName, int Dummy);
 	bool AddSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool AddActiveSkinQueue(const char *pName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
@@ -559,9 +587,9 @@ public:
 	void TrimSkinQueueToLimit(int Dummy);
 	void TrimActiveSkinQueueToLimit(int Dummy);
 	bool AddSkinQueuePresetFromCurrent(int Dummy);
+	bool SaveSkinQueueToAppliedPreset(int Dummy);
 	bool RenameSkinQueuePreset(size_t PresetIndex, const char *pName, int Dummy);
-	bool SelectSkinQueuePreset(size_t PresetIndex, int Dummy);
-	void ClearSkinQueuePresetSelection(int Dummy);
+	void ClearSkinQueue(int Dummy);
 	bool ApplySkinQueuePreset(size_t PresetIndex, int Dummy);
 	bool RemoveSkinQueuePreset(size_t PresetIndex, int Dummy);
 
@@ -811,7 +839,6 @@ private:
 	bool AddSkinQueuePresetItem(int PresetIndex, const char *pSkinName, bool UseCustomColor, int ColorBody, int ColorFeet, int Dummy);
 	bool AddSkinQueueImpl(const CSkinQueueEntry &Entry, int Dummy);
 	bool RemoveSkinQueueImpl(const CSkinQueueEntry &Entry, int Dummy);
-	std::vector<CSkinQueueEntry> &ActiveSkinQueueMutable(int Dummy);
 
 	friend class CSkinProfiles;
 
@@ -838,8 +865,8 @@ private:
 	std::set<std::string> m_Favorites;
 	std::array<std::vector<CSkinQueueEntry>, NUM_DUMMIES> m_aSkinQueue;
 	std::vector<CSkinQueuePreset> m_vSkinQueuePresets;
-	std::array<int, NUM_DUMMIES> m_aActiveSkinQueuePresetIndex = {};
 	std::array<int, NUM_DUMMIES> m_aAppliedSkinQueuePresetIndex = {};
+	std::array<bool, NUM_DUMMIES> m_aSkinQueueDirty = {};
 	std::array<std::chrono::nanoseconds, NUM_DUMMIES> m_aSkinQueueElapsed = {};
 	std::array<std::optional<std::chrono::nanoseconds>, NUM_DUMMIES> m_aSkinQueueLastUpdate = {};
 

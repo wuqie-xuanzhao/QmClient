@@ -5257,7 +5257,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 		const auto [PreviewContentWidth, PreviewContentHeight] = ComputeAssetPreviewContentSize(true);
 		const CUIRect PreviewRect = ComputePreviewDrawRect(PreviewFrameRect, PreviewContentWidth, PreviewContentHeight);
-		const float TileSize = minimum(PreviewRect.w / (float)COLS, PreviewRect.h / (float)ROWS);
+		const float TileSize = ComputeEntityPreviewTileSize(PreviewRect.w, PreviewRect.h, COLS, ROWS);
 		const float OffX = PreviewRect.x;
 		const float OffY = PreviewRect.y + (PreviewRect.h - ROWS * TileSize) / 2.0f;
 

@@ -1825,7 +1825,27 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		Data.m_CoordXAligned = false;
 		Data.m_CoordXAlignColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateCoordXAlignHintColor));
 
-		Data.m_ShowDirection = g_Config.m_ClShowDirection != 0 ? true : false;
+		// Preview has no player info; treat the active dummy as local (mirrors pPlayerInfo->m_Local),
+		// so Others/Only self show different direction across the two dummies.
+		const bool PreviewIsLocal = DummyIdx == g_Config.m_ClDummy;
+		switch(g_Config.m_ClShowDirection)
+		{
+		case 0: // Off
+			Data.m_ShowDirection = false;
+			break;
+		case 1: // Others
+			Data.m_ShowDirection = !PreviewIsLocal;
+			break;
+		case 2: // Everyone
+			Data.m_ShowDirection = true;
+			break;
+		case 3: // Only self
+			Data.m_ShowDirection = PreviewIsLocal;
+			break;
+		default:
+			Data.m_ShowDirection = false;
+			dbg_assert_failed("ShowDirectionConfig invalid");
+		}
 		Data.m_DirLeft = Data.m_DirJump = Data.m_DirRight = true;
 		Data.m_FontSizeDirection = FontSizeDirection;
 

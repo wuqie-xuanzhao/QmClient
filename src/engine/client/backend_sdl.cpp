@@ -16,6 +16,7 @@
 #include <SDL_vulkan.h>
 
 #if defined(CONF_VIDEORECORDER)
+#include <engine/client/plausible_sizes.h>
 #include <engine/shared/video.h>
 #endif
 
@@ -1007,16 +1008,6 @@ static void DisplayToVideoMode(CVideoMode *pVMode, SDL_DisplayMode *pMode, float
 	pVMode->m_Green = SDL_BITSPERPIXEL(pMode->format);
 	pVMode->m_Blue = SDL_BITSPERPIXEL(pMode->format);
 	pVMode->m_Format = pMode->format;
-}
-
-[[maybe_unused]] static bool IsPlausibleRefreshRate(int RefreshRate)
-{
-	return RefreshRate >= 0 && RefreshRate <= 1000;
-}
-
-[[maybe_unused]] static bool IsPlausibleWindowSize(int Width, int Height)
-{
-	return Width >= 320 && Height >= 240 && Width <= 16384 && Height <= 16384;
 }
 
 void CGraphicsBackend_SDL_GL::GetVideoModes(CVideoMode *pModes, int MaxModes, int *pNumModes, float HiDPIScale, int MaxWindowWidth, int MaxWindowHeight, int ScreenId)

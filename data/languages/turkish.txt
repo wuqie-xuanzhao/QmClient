@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == Uygula
 
+Apply a preset first
+== Önce bir ön ayar uygulayın
+
 Apply a saved profile by 1-based index to the current tee
 == Kaydedilmiş bir profili 1 tabanlı indeksle mevcut tee'ye uygula
+
+Apply a writable preset and edit first
+== Önce düzenlenebilir bir ön ayar uygulayın
 
 Apply Changes
 == Değişiklikleri Uygula
 
-Apply this preset to the current queue
-== Bu ön ayarı mevcut sıraya uygula
+Apply this preset
+== Bu ön ayarı uygula
 
 Are you sure that you want to delete %d selected items?
 == %d seçili öğeyi silmek istediğinize emin misiniz?
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == Geçerli kesimi temizle (sağ tık tüm kesimleri temizler)
 
+Clear current queue
+== Geçerli kuyruğu temizle
+
 Clear friend note
 == Arkadaş notunu temizle
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == Geçerli satır rengi
 
-Current queue: %s
-== Geçerli sıra: %s
-
 Current rescue mode: %s
 == Mevcut kurtarma modu: %s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == Varsayılan çıkış açılamadı
+
+Default preset
+== Varsayılan ön ayar
 
 Default zoom
 == Varsayılan yakınlaştırma
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == Ses paketini düzenle
 
-Edit current queue
-== Geçerli sırayı düzenle
-
 Edit Entry
 == Girişi Düzenle
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == Zen modunu etkinleştir
-
-Enabled
-== Etkin
 
 Enables/disables active moderator mode for the player
 == Oyuncu için aktif moderatör modunu etkinleştirir/devre dışı bırakır
@@ -2838,9 +2841,6 @@ Gap between statusbar items
 
 General
 == Genel
-
-Get all map players' skin IDs and auto add to rotate queue
-== Haritadaki tüm oyuncuların skin kimliklerini al ve dönüşüm sırasına otomatik ekle
 
 Getting game info
 == Oyun bilgisi alınıyor
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == Sıra boş
 
+Queue preset: %s
+== Kuyruk ön ayarı: %s
+
 Quick action menu for players
 == Oyuncular için hızlı işlem menüsü
 
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == Düzenleyiciyi kapatmadan önce tüm değişiklikler kaydedilsin mi?
 
+Save as
+== Farklı kaydet
+
 Save asset before closing?
 == Kapatmadan önce varlık kaydedilsin mi?
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == Değişiklikleri kaydet
 
-Save current
-== Geçerliyi kaydet
+Save changes back to this preset
+== Değişiklikleri bu ön ayara kaydet
 
 Save current queue as a new preset
 == Geçerli sırayı yeni bir ön ayar olarak kaydet
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == Ne kadar oynadığını gör
 
-Select a preset first
-== Önce bir ön ayar seç
-
 Select all chat
 == Tüm sohbeti seç
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == Dışa aktarımı seç
-
-Select this preset to edit it
-== Düzenlemek için bu ön ayarı seç
 
 Selected %d
 == %d seçildi
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == Sunucu dolu değil
+
+Server preset
+== Sunucu ön ayarı
 
 Server rollback
 == Sunucu geri alma

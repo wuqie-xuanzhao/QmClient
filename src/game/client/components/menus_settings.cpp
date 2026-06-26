@@ -1517,11 +1517,27 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	int &QueueEnabled = m_Dummy ? g_Config.m_QmDummySkinQueueEnabled : g_Config.m_QmSkinQueueEnabled;
 	int &QueueInterval = m_Dummy ? g_Config.m_QmDummySkinQueueInterval : g_Config.m_QmSkinQueueInterval;
 	int &QueueIndex = m_Dummy ? g_Config.m_QmDummySkinQueueIndex : g_Config.m_QmSkinQueueIndex;
-	int &QueueRotateMap = m_Dummy ? g_Config.m_QmDummySkinQueueRotateMap : g_Config.m_QmSkinQueueRotateMap;
-	const int ActivePresetIndex = GameClient()->m_Skins.ActiveSkinQueuePresetIndex(QueueDummy);
 	const int AppliedPresetIndex = GameClient()->m_Skins.AppliedSkinQueuePresetIndex(QueueDummy);
-	const auto &SkinQueue = GameClient()->m_Skins.ActiveSkinQueue(QueueDummy);
+	// In the new model the "selected" preset shown in the UI is exactly the one
+	// the playing queue was last applied from; there is no separate edit-state.
+	const int ActivePresetIndex = AppliedPresetIndex;
+	const bool QueueDirty = GameClient()->m_Skins.SkinQueueDirty(QueueDummy);
+	const auto &SkinQueue = GameClient()->m_Skins.SkinQueue(QueueDummy);
 	const auto &vQueuePresets = GameClient()->m_Skins.SkinQueuePresets(QueueDummy);
+	const auto &&PresetDisplayName = [&](size_t PresetIndex) {
+		// Built-in presets use fixed display names so they can be localized
+		// (and extracted by extract_strings.py) instead of relying on the
+		// runtime m_Name literal, which the extractor cannot see.
+		if(PresetIndex == 0)
+		{
+			return Localize("Default preset");
+		}
+		if(PresetIndex == 1)
+		{
+			return Localize("Server preset");
+		}
+		return vQueuePresets[PresetIndex].m_Name.c_str();
+	};
 	const CSkin *pDefaultSkin = GameClient()->m_Skins.Find("default");
 	const CSkins::CSkinContainer *pOwnSkinContainer = GameClient()->m_Skins.FindContainerOrNullptr(pSkinName[0] == '\0' ? "default" : pSkinName);
 	if(pOwnSkinContainer != nullptr && pOwnSkinContainer->IsSpecial())
@@ -1742,7 +1758,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		QueueHeader.VSplitLeft(QueueHeader.w * 0.48f, &QueueTitleRect, &CurrentQueueRect);
 		QueueTitleRect.VSplitRight(4.0f, &QueueTitleRect, nullptr);
 		char aQueueLabel[64];
-		str_format(aQueueLabel, sizeof(aQueueLabel), "%s (%d)", Localize("Skin queue"), (int)SkinQueue.size());
+		str_format(aQueueLabel, sizeof(aQueueLabel), "%s%s (%d)", QueueDirty ? "● " : "", Localize("Skin queue"), (int)SkinQueue.size());
 		SLabelProperties QueueHeaderProps;
 		QueueHeaderProps.m_MaxWidth = QueueTitleRect.w;
 		QueueHeaderProps.m_DisallowNewline = true;
@@ -1752,25 +1768,27 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		char aCurrentQueueLabel[128];
 		if(AppliedPresetIndex >= 0 && (size_t)AppliedPresetIndex < vQueuePresets.size())
 		{
-			str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Current queue: %s"), vQueuePresets[AppliedPresetIndex].m_Name.c_str());
+			str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Queue preset: %s"), PresetDisplayName((size_t)AppliedPresetIndex));
 		}
 		else
 		{
-			str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Current queue: %s"), Localize("Custom"));
+			str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Queue preset: %s"), Localize("Custom"));
 		}
 		SLabelProperties CurrentQueueLabelProps;
 		CurrentQueueLabelProps.m_MaxWidth = CurrentQueueRect.w;
 		CurrentQueueLabelProps.m_DisallowNewline = true;
 		CurrentQueueLabelProps.m_StopAtEnd = true;
 		CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
-		Ui()->DoLabel(&CurrentQueueRect, aCurrentQueueLabel, 9.0f, TEXTALIGN_MR, CurrentQueueLabelProps);
-		CUIRect RotateMapRect;
-		QueueSection.HSplitTop(20.0f, &RotateMapRect, &QueueSection);
-		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueRotateMap, QueueDummy ? "tee-dummy-queue-rotate-all-maps" : "tee-player-queue-rotate-all-maps", Localize("Rotate all server player skins"), QueueRotateMap, &RotateMapRect))
+		CUIRect CurrentQueueLabelRect, ClearQueueRect;
+		CurrentQueueRect.VSplitRight(CurrentQueueRect.h, &CurrentQueueLabelRect, &ClearQueueRect);
+		Ui()->DoLabel(&CurrentQueueLabelRect, aCurrentQueueLabel, 9.0f, TEXTALIGN_MR, CurrentQueueLabelProps);
+		static CButtonContainer s_ClearQueueButton;
+		if(Ui()->DoButton_FontIcon(&s_ClearQueueButton, FONT_ICON_TRASH, 0, &ClearQueueRect, IGraphics::CORNER_ALL))
 		{
-			QueueRotateMap ^= 1;
+			GameClient()->m_Skins.ClearSkinQueue(QueueDummy);
 		}
-		GameClient()->m_Tooltips.DoToolTip(&QueueRotateMap, &RotateMapRect, Localize("Get all map players' skin IDs and auto add to rotate queue"));
+		GameClient()->m_Tooltips.DoToolTip(&s_ClearQueueButton, &ClearQueueRect, Localize("Clear current queue"));
+		QueueSection.HSplitTop(20.0f, nullptr, &QueueSection);
 
 		CUIRect QueueEnabledRect;
 		QueueSection.HSplitTop(20.0f, &QueueEnabledRect, &QueueSection);
@@ -1883,7 +1901,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					DragTarget = (int)i;
 				}
 
-				if(ActivePresetIndex < 0 && (int)i == QueueIndex)
+				if((int)i == QueueIndex)
 				{
 					Item.m_Rect.Draw(ColorRGBA(0.2f, 0.6f, 0.3f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
 				}
@@ -2004,7 +2022,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				{
 					GameClient()->m_Skins.MoveActiveSkinQueueItem((size_t)s_QueueDragIndex, (size_t)DragTarget, QueueDummy);
 				}
-				else if(!s_QueueDragging && ActivePresetIndex < 0)
+				else if(!s_QueueDragging)
 				{
 					ApplyQueueIndex = s_QueueDragIndex;
 				}
@@ -2037,56 +2055,46 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			QueuePresets.HSplitTop(3.0f, nullptr, &QueuePresets);
 			QueuePresets.HSplitTop(20.0f, &PresetControls, &QueuePresets);
 			CUIRect PresetControlsTop = PresetControls;
-			CUIRect CurrentQueueButton, PrimaryActionButton, RenamePresetButton, RemovePresetButton;
+			CUIRect SaveButton, SaveAsButton, RenamePresetButton, RemovePresetButton;
 			const float ActionGapWidth = 4.0f;
 			const float ActionButtonWidth = (PresetControlsTop.w - ActionGapWidth * 3.0f) / 4.0f;
-			PresetControlsTop.VSplitLeft(ActionButtonWidth, &CurrentQueueButton, &PresetControlsTop);
+			PresetControlsTop.VSplitLeft(ActionButtonWidth, &SaveButton, &PresetControlsTop);
 			PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &PresetControlsTop);
-			PresetControlsTop.VSplitLeft(ActionButtonWidth, &PrimaryActionButton, &PresetControlsTop);
+			PresetControlsTop.VSplitLeft(ActionButtonWidth, &SaveAsButton, &PresetControlsTop);
 			PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &PresetControlsTop);
 			PresetControlsTop.VSplitLeft(ActionButtonWidth, &RenamePresetButton, &PresetControlsTop);
 			PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &RemovePresetButton);
-			static CButtonContainer s_CurrentQueueButton;
-			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_CurrentQueueButton, "tee-select-current-skin-queue", Localize("Current"), ActivePresetIndex < 0 ? 1 : 0, &CurrentQueueButton))
+			const bool HasAppliedPreset = ActivePresetIndex >= 0 && (size_t)ActivePresetIndex < vQueuePresets.size();
+			const bool CanSavePreset = HasAppliedPreset && ActivePresetIndex != (int)CSkins::SKIN_QUEUE_SERVER_PRESET && QueueDirty;
+			const bool CanSaveAsPreset = !SkinQueue.empty();
+			const bool CanRenamePreset = HasAppliedPreset && ActivePresetIndex != (int)CSkins::SKIN_QUEUE_SERVER_PRESET;
+			const bool CanRemovePreset = HasAppliedPreset && (size_t)ActivePresetIndex >= 2;
+			static CButtonContainer s_SavePresetButton;
+			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_SavePresetButton, "tee-save-skin-queue-preset", Localize("Save"), CanSavePreset ? 0 : -1, &SaveButton) && CanSavePreset)
 			{
-				GameClient()->m_Skins.ClearSkinQueuePresetSelection(QueueDummy);
+				GameClient()->m_Skins.SaveSkinQueueToAppliedPreset(QueueDummy);
 			}
-			GameClient()->m_Tooltips.DoToolTip(&s_CurrentQueueButton, &CurrentQueueButton, Localize("Edit current queue"));
-
-			static CButtonContainer s_PrimaryPresetActionButton;
-			if(ActivePresetIndex >= 0 && (size_t)ActivePresetIndex < vQueuePresets.size())
+			GameClient()->m_Tooltips.DoToolTip(&s_SavePresetButton, &SaveButton, CanSavePreset ? Localize("Save changes back to this preset") : Localize("Apply a writable preset and edit first"));
+			static CButtonContainer s_SaveAsPresetButton;
+			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_SaveAsPresetButton, "tee-save-as-skin-queue-preset", Localize("Save as"), CanSaveAsPreset ? 0 : -1, &SaveAsButton) && CanSaveAsPreset)
 			{
-				if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_PrimaryPresetActionButton, "tee-apply-skin-queue-preset", Localize("Apply"), 0, &PrimaryActionButton))
-				{
-					GameClient()->m_Skins.ApplySkinQueuePreset((size_t)ActivePresetIndex, QueueDummy);
-				}
-				GameClient()->m_Tooltips.DoToolTip(&s_PrimaryPresetActionButton, &PrimaryActionButton, Localize("Apply this preset to the current queue"));
+				GameClient()->m_Skins.AddSkinQueuePresetFromCurrent(QueueDummy);
 			}
-			else
-			{
-				const bool DisableSavePreset = SkinQueue.empty();
-				if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_PrimaryPresetActionButton, "tee-save-current-skin-queue-preset", Localize("Save current"), DisableSavePreset ? -1 : 0, &PrimaryActionButton) && !DisableSavePreset)
-				{
-					GameClient()->m_Skins.AddSkinQueuePresetFromCurrent(QueueDummy);
-				}
-				GameClient()->m_Tooltips.DoToolTip(&s_PrimaryPresetActionButton, &PrimaryActionButton, DisableSavePreset ? Localize("Queue is empty") : Localize("Save current queue as a new preset"));
-			}
-
+			GameClient()->m_Tooltips.DoToolTip(&s_SaveAsPresetButton, &SaveAsButton, CanSaveAsPreset ? Localize("Save current queue as a new preset") : Localize("Queue is empty"));
 			static CButtonContainer s_RenameSelectedPresetButton;
 			static CButtonContainer s_RemoveSelectedPresetButton;
-			const bool HasSelectedPreset = ActivePresetIndex >= 0 && (size_t)ActivePresetIndex < vQueuePresets.size();
 			int RenamePresetIndex = -1;
 			int RemovePresetIndex = -1;
-			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RenameSelectedPresetButton, "tee-rename-selected-skin-queue-preset", Localize("Rename"), HasSelectedPreset ? 0 : -1, &RenamePresetButton) && HasSelectedPreset)
+			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RenameSelectedPresetButton, "tee-rename-selected-skin-queue-preset", Localize("Rename"), CanRenamePreset ? 0 : -1, &RenamePresetButton) && CanRenamePreset)
 			{
 				RenamePresetIndex = ActivePresetIndex;
 			}
-			GameClient()->m_Tooltips.DoToolTip(&s_RenameSelectedPresetButton, &RenamePresetButton, HasSelectedPreset ? Localize("Open rename dialog") : Localize("Select a preset first"));
-			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RemoveSelectedPresetButton, "tee-delete-selected-skin-queue-preset", Localize("Delete"), HasSelectedPreset ? 0 : -1, &RemovePresetButton) && HasSelectedPreset)
+			GameClient()->m_Tooltips.DoToolTip(&s_RenameSelectedPresetButton, &RenamePresetButton, CanRenamePreset ? Localize("Open rename dialog") : Localize("Apply a preset first"));
+			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RemoveSelectedPresetButton, "tee-delete-selected-skin-queue-preset", Localize("Delete"), CanRemovePreset ? 0 : -1, &RemovePresetButton) && CanRemovePreset)
 			{
 				RemovePresetIndex = ActivePresetIndex;
 			}
-			GameClient()->m_Tooltips.DoToolTip(&s_RemoveSelectedPresetButton, &RemovePresetButton, HasSelectedPreset ? Localize("Delete this preset") : Localize("Select a preset first"));
+			GameClient()->m_Tooltips.DoToolTip(&s_RemoveSelectedPresetButton, &RemovePresetButton, CanRemovePreset ? Localize("Delete this preset") : Localize("Apply a preset first"));
 
 			QueuePresets.HSplitTop(3.0f, nullptr, &QueuePresets);
 			PresetList = QueuePresets;
@@ -2122,7 +2130,14 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 						Item.m_Rect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 3.0f);
 					}
 					char aEntryLabel[96];
-					str_format(aEntryLabel, sizeof(aEntryLabel), "%s (%d)", vQueuePresets[i].m_Name.c_str(), (int)vQueuePresets[i].m_Queue.size());
+					if(GameClient()->m_Skins.IsBuiltInSkinQueuePreset(i))
+					{
+						str_format(aEntryLabel, sizeof(aEntryLabel), "%s (%d)", PresetDisplayName(i), (int)vQueuePresets[i].m_Queue.size());
+					}
+					else
+					{
+						str_format(aEntryLabel, sizeof(aEntryLabel), "%s (%d)", vQueuePresets[i].m_Name.c_str(), (int)vQueuePresets[i].m_Queue.size());
+					}
 					SLabelProperties PresetNameProps;
 					PresetNameProps.m_MaxWidth = NameRect.w;
 					PresetNameProps.m_DisallowNewline = true;
@@ -2130,7 +2145,20 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					PresetNameProps.m_MinimumFontSize = 6.0f;
 					Ui()->DoLabel(&NameRect, aEntryLabel, 11.0f, TEXTALIGN_ML, PresetNameProps);
 
-					GameClient()->m_Tooltips.DoToolTip(&s_vPresetItemIds[i], &SelectRect, Localize("Select this preset to edit it"));
+					const char *pPresetTooltip = nullptr;
+					if(i == CSkins::SKIN_QUEUE_SERVER_PRESET)
+					{
+						pPresetTooltip = Localize("Rotate all server player skins");
+					}
+					else if(GameClient()->m_Skins.IsBuiltInSkinQueuePreset(i))
+					{
+						pPresetTooltip = Localize("Default preset");
+					}
+					else
+					{
+						pPresetTooltip = Localize("Apply this preset");
+					}
+					GameClient()->m_Tooltips.DoToolTip(&s_vPresetItemIds[i], &SelectRect, pPresetTooltip);
 				}
 				const int PresetListSelectedIndex = s_PresetListBox.DoEnd();
 				if(s_PresetListBox.WasItemSelected())
@@ -2149,7 +2177,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				}
 				else if(SelectPresetIndex >= 0)
 				{
-					GameClient()->m_Skins.SelectSkinQueuePreset((size_t)SelectPresetIndex, QueueDummy);
+					GameClient()->m_Skins.ApplySkinQueuePreset((size_t)SelectPresetIndex, QueueDummy);
 				}
 				else if(RemovePresetIndex >= 0)
 				{
@@ -2477,7 +2505,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			IconRow.VSplitRight(20.0f, &IconRow, &FavIcon);
 			IconRow.VSplitRight(2.0f, &IconRow, nullptr);
 			IconRow.VSplitRight(20.0f, &IconRow, &QueueIcon);
-			const bool InQueue = GameClient()->m_Skins.IsInActiveSkinQueue(pSkinContainer->Name(), EntryUseCustomColor, EntryColorBody, EntryColorFeet, QueueDummy);
+			const bool InQueue = GameClient()->m_Skins.IsInSkinQueue(pSkinContainer->Name(), EntryUseCustomColor, EntryColorBody, EntryColorFeet, QueueDummy);
 			if(DoButtonSkinQueue(&s_vQueueButtonIds[i], SkinListEntry.ListItemId(), InQueue, false, &QueueIcon))
 			{
 				if(InQueue)

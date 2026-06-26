@@ -3199,22 +3199,6 @@ turkish = "Oynanış"
 polish = "Rozgrywka"
 
 [[message]]
-key = "Get all map players' skin IDs and auto add to rotate queue"
-[message.translations]
-simplified_chinese = "获取全图玩家皮肤 ID 并自动作为轮换队列"
-traditional_chinese = "獲取全圖玩家皮膚 ID 並自動加入輪換佇列"
-japanese = "全マッププレイヤーのスキン ID を取得し、自動でローテーションキューに追加"
-korean = "모든 맵 플레이어의 스킨 ID를 가져와 자동으로 회전 대기열에 추가"
-russian = "Получить ID скинов всех игроков на карте и добавить в очередь смены"
-german = "Skin-IDs aller Karten-Spieler abrufen und automatisch zur Rotationswarteschlange hinzufügen"
-spanish = "Obtener IDs de skin de todos los jugadores del mapa y añadirlos automáticamente a la cola de rotación"
-french = "Obtenir les ID de skin de tous les joueurs de la carte et les ajouter automatiquement à la file de rotation"
-brazilian_portuguese = "Obter IDs de skin de todos os jogadores do mapa e adicionar automaticamente à fila de rotação"
-portuguese = "Obter IDs de skin de todos os jogadores do mapa e adicionar automaticamente à fila de rotação"
-turkish = "Haritadaki tüm oyuncuların skin kimliklerini al ve dönüşüm sırasına otomatik ekle"
-polish = "Pobierz ID skinów wszystkich graczy na mapie i automatycznie dodaj do kolejki rotacji"
-
-[[message]]
 key = "Ghosts directory"
 [message.translations]
 simplified_chinese = "影子目录"
@@ -5133,6 +5117,166 @@ brazilian_portuguese = "Barra de predefinições"
 portuguese = "Barra de predefinições"
 turkish = "Ön ayar çubuğu"
 polish = "Pasek presetów"
+
+[[message]]
+key = "Queue preset: %s"
+[message.translations]
+simplified_chinese = "队列预设：%s"
+traditional_chinese = "佇列預設: %s"
+japanese = "キュープリセット: %s"
+korean = "큐 프리셋: %s"
+russian = "Пресет очереди: %s"
+german = "Warteschlangen-Preset: %s"
+spanish = "Preajuste de cola: %s"
+french = "Préréglage de file: %s"
+brazilian_portuguese = "Predefinição da fila: %s"
+portuguese = "Predefinição da fila: %s"
+turkish = "Kuyruk ön ayarı: %s"
+polish = "Preset kolejki: %s"
+
+[[message]]
+key = "Default preset"
+[message.translations]
+simplified_chinese = "默认预设"
+traditional_chinese = "預設"
+japanese = "デフォルトプリセット"
+korean = "기본 프리셋"
+russian = "Пресет по умолчанию"
+german = "Standard-Preset"
+spanish = "Preajuste predeterminado"
+french = "Préréglage par défaut"
+brazilian_portuguese = "Predefinição padrão"
+portuguese = "Predefinição padrão"
+turkish = "Varsayılan ön ayar"
+polish = "Domyślny preset"
+
+[[message]]
+key = "Server preset"
+[message.translations]
+simplified_chinese = "服务器预设"
+traditional_chinese = "伺服器預設"
+japanese = "サーバープリセット"
+korean = "서버 프리셋"
+russian = "Пресет сервера"
+german = "Server-Preset"
+spanish = "Preajuste del servidor"
+french = "Préréglage du serveur"
+brazilian_portuguese = "Predefinição do servidor"
+portuguese = "Predefinição do servidor"
+turkish = "Sunucu ön ayarı"
+polish = "Preset serwera"
+
+[[message]]
+key = "Save as"
+[message.translations]
+simplified_chinese = "另存为"
+traditional_chinese = "另存為"
+japanese = "名前を付けて保存"
+korean = "다른 이름으로 저장"
+russian = "Сохранить как"
+german = "Speichern unter"
+spanish = "Guardar como"
+french = "Enregistrer sous"
+brazilian_portuguese = "Salvar como"
+portuguese = "Guardar como"
+turkish = "Farklı kaydet"
+polish = "Zapisz jako"
+
+[[message]]
+key = "Save changes back to this preset"
+[message.translations]
+simplified_chinese = "将改动保存回此预设"
+traditional_chinese = "將變更儲存回此預設"
+japanese = "変更をこのプリセットに保存"
+korean = "변경 사항을 이 프리셋에 저장"
+russian = "Сохранить изменения в этот пресет"
+german = "Änderungen in diesem Preset speichern"
+spanish = "Guardar cambios en este preset"
+french = "Enregistrer les modifications dans ce préréglage"
+brazilian_portuguese = "Salvar alterações neste preset"
+portuguese = "Guardar alterações neste preset"
+turkish = "Değişiklikleri bu ön ayara kaydet"
+polish = "Zapisz zmiany w tym presecie"
+
+[[message]]
+key = "Apply this preset"
+[message.translations]
+simplified_chinese = "应用此预设"
+traditional_chinese = "套用此預設"
+japanese = "このプリセットを適用"
+korean = "이 프리셋 적용"
+russian = "Применить этот пресет"
+german = "Dieses Preset anwenden"
+spanish = "Aplicar este preset"
+french = "Appliquer ce préréglage"
+brazilian_portuguese = "Aplicar este preset"
+portuguese = "Aplicar este preset"
+turkish = "Bu ön ayarı uygula"
+polish = "Zastosuj ten preset"
+
+[[message]]
+key = "Apply a preset first"
+[message.translations]
+simplified_chinese = "先应用一个预设"
+traditional_chinese = "先套用一個預設"
+japanese = "まずプリセットを適用"
+korean = "먼저 프리셋을 적용하세요"
+russian = "Сначала примените пресет"
+german = "Zuerst ein Preset anwenden"
+spanish = "Aplica un preset primero"
+french = "Appliquez d'abord un préréglage"
+brazilian_portuguese = "Aplique um preset primeiro"
+portuguese = "Aplique um preset primeiro"
+turkish = "Önce bir ön ayar uygulayın"
+polish = "Najpierw zastosuj preset"
+
+[[message]]
+key = "Apply a writable preset and edit first"
+[message.translations]
+simplified_chinese = "先应用一个可编辑的预设"
+traditional_chinese = "先套用一個可編輯的預設"
+japanese = "まず編集可能なプリセットを適用"
+korean = "먼저 편집 가능한 프리셋을 적용하세요"
+russian = "Сначала примените редактируемый пресет"
+german = "Zuerst ein bearbeitbares Preset anwenden"
+spanish = "Aplica un preset editable primero"
+french = "Appliquez d'abord un préréglage modifiable"
+brazilian_portuguese = "Aplique um preset editável primeiro"
+portuguese = "Aplique um preset editável primeiro"
+turkish = "Önce düzenlenebilir bir ön ayar uygulayın"
+polish = "Najpierw zastosuj edytowalny preset"
+
+[[message]]
+key = "Rotate all server player skins"
+[message.translations]
+simplified_chinese = "轮换服务器所有人皮肤"
+traditional_chinese = "輪換伺服器所有人皮膚"
+japanese = "サーバー全プレイヤースキンをローテーション"
+korean = "모든 서버 플레이어 스킨 순환"
+russian = "Чередовать скины всех игроков сервера"
+german = "Skins aller Serverspieler rotieren"
+spanish = "Rotar skins de todos los jugadores del servidor"
+french = "Faire tourner les skins de tous les joueurs du serveur"
+brazilian_portuguese = "Alternar skins de todos os jogadores do servidor"
+portuguese = "Alternar skins de todos os jogadores do servidor"
+turkish = "Sunucudaki tüm oyuncu skinlerini döndür"
+polish = "Rotuj skiny wszystkich graczy na serwerze"
+
+[[message]]
+key = "Clear current queue"
+[message.translations]
+simplified_chinese = "清空当前队列"
+traditional_chinese = "清空目前佇列"
+japanese = "現在のキューをクリア"
+korean = "현재 큐 비우기"
+russian = "Очистить текущую очередь"
+german = "Aktuelle Warteschlange leeren"
+spanish = "Vaciar la cola actual"
+french = "Vider la file actuelle"
+brazilian_portuguese = "Limpar fila atual"
+portuguese = "Limpar fila atual"
+turkish = "Geçerli kuyruğu temizle"
+polish = "Wyczyść bieżącą kolejkę"
 
 [[message]]
 key = "Prev. weapon"
@@ -9132,22 +9276,6 @@ brazilian_portuguese = "Predefinição %d"
 portuguese = "Predefinição %d"
 turkish = "Ön ayar %d"
 polish = "Preset %d"
-
-[[message]]
-key = "Rotate all server player skins"
-[message.translations]
-simplified_chinese = "轮换服务器所有人皮肤"
-traditional_chinese = "輪換伺服器所有人皮膚"
-japanese = "サーバー全プレイヤースキンをローテーション"
-korean = "모든 서버 플레이어 스킨 순환"
-russian = "Чередовать скины всех игроков сервера"
-german = "Skins aller Serverspieler rotieren"
-spanish = "Rotar skins de todos los jugadores del servidor"
-french = "Faire tourner les skins de tous les joueurs du serveur"
-brazilian_portuguese = "Alternar skins de todos os jogadores do servidor"
-portuguese = "Alternar skins de todos os jogadores do servidor"
-turkish = "Sunucudaki tüm oyuncu skinlerini döndür"
-polish = "Rotuj skiny wszystkich graczy na serwerze"
 
 [[message]]
 key = "Prediction margin"

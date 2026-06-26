@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == 적용
 
+Apply a preset first
+== 먼저 프리셋을 적용하세요
+
 Apply a saved profile by 1-based index to the current tee
 == 1부터 시작하는 인덱스로 저장된 프로필을 현재 티에 적용
+
+Apply a writable preset and edit first
+== 먼저 편집 가능한 프리셋을 적용하세요
 
 Apply Changes
 == 변경 사항 적용
 
-Apply this preset to the current queue
-== 이 프리셋을 현재 대기열에 적용
+Apply this preset
+== 이 프리셋 적용
 
 Are you sure that you want to delete %d selected items?
 == %d개의 선택된 항목을 삭제하시겠습니까?
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == 현재 잘라낸 구간 지우기 (우클릭 시 모든 구간 지우기)
 
+Clear current queue
+== 현재 큐 비우기
+
 Clear friend note
 == 친구 메모 지우기
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == 현재 선 색상
 
-Current queue: %s
-== 현재 대기열: %s
-
 Current rescue mode: %s
 == 현재 구조 모드: %s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == 기본 출력 열기 실패
+
+Default preset
+== 기본 프리셋
 
 Default zoom
 == 기본 줌
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == 오디오 팩 편집
 
-Edit current queue
-== 현재 큐 편집
-
 Edit Entry
 == 항목 편집
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == Zen 모드 활성화
-
-Enabled
-== 활성화됨
 
 Enables/disables active moderator mode for the player
 == 플레이어의 활성 중재자 모드 활성화/비활성화
@@ -2838,9 +2841,6 @@ Gap between statusbar items
 
 General
 == 일반
-
-Get all map players' skin IDs and auto add to rotate queue
-== 모든 맵 플레이어의 스킨 ID를 가져와 자동으로 회전 대기열에 추가
 
 Getting game info
 == 게임 정보를 가져오는 중
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == 대기열이 비어 있습니다
 
+Queue preset: %s
+== 큐 프리셋: %s
+
 Quick action menu for players
 == 플레이어 빠른 작업 메뉴
 
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == 편집기를 끄기 전에 모든 변경 사항을 저장하시겠습니까?
 
+Save as
+== 다른 이름으로 저장
+
 Save asset before closing?
 == 닫기 전에 에셋을 저장하시겠습니까?
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == 변경 사항 저장
 
-Save current
-== 현재 저장
+Save changes back to this preset
+== 변경 사항을 이 프리셋에 저장
 
 Save current queue as a new preset
 == 현재 큐를 새 프리셋으로 저장
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == 당신이 얼마나 연기하는지 확인
 
-Select a preset first
-== 먼저 프리셋을 선택하세요
-
 Select all chat
 == 모든 채팅 선택
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == 내보내기 선택
-
-Select this preset to edit it
-== 이 프리셋을 선택하여 편집
 
 Selected %d
 == %d개 선택됨
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == 서버가 가득 차지 않음
+
+Server preset
+== 서버 프리셋
 
 Server rollback
 == 서버 롤백

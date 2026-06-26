@@ -1210,52 +1210,61 @@ void CMenus::DoLaserPreview(const CUIRect *pRect, const ColorHSLA LaserOutlineCo
 	const float TicksHead = Client()->GlobalTime() * Client()->GameTickSpeed();
 
 	// TicksBody = 4.0 for less laser width for weapon alignment
-	GameClient()->m_Items.RenderLaser(From, Pos, OuterColor, InnerColor, 4.0f, TicksHead, LaserType, g_Config.m_QmLaserGlowIntensity);
-
-	switch(LaserType)
+	if(LaserType == LASERTYPE_RIFLE || LaserType == LASERTYPE_SHOTGUN)
 	{
-	case LASERTYPE_RIFLE:
-		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteWeaponLaser);
-		Graphics()->SelectSprite(SPRITE_WEAPON_LASER_BODY);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(0, 0, 1, 1);
-		Graphics()->DrawSprite(Section.x + 30.0f, Section.y + Section.h / 2.0f, 60.0f);
-		Graphics()->QuadsEnd();
-		break;
-	case LASERTYPE_SHOTGUN:
-		Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteWeaponShotgun);
-		Graphics()->SelectSprite(SPRITE_WEAPON_SHOTGUN_BODY);
-		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetSubset(0, 0, 1, 1);
-		Graphics()->DrawSprite(Section.x + 30.0f, Section.y + Section.h / 2.0f, 60.0f);
-		Graphics()->QuadsEnd();
-		break;
-	case LASERTYPE_DRAGGER:
-	{
-		CTeeRenderInfo TeeRenderInfo;
-		TeeRenderInfo.Apply(GameClient()->m_Skins.Find(g_Config.m_ClPlayerSkin));
-		TeeRenderInfo.ApplyColors(g_Config.m_ClPlayerUseCustomColor, g_Config.m_ClPlayerColorBody, g_Config.m_ClPlayerColorFeet);
-		TeeRenderInfo.m_Size = 64.0f;
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, EMOTE_NORMAL, vec2(-1, 0), Pos);
-		break;
+		switch(LaserType)
+		{
+		case LASERTYPE_RIFLE:
+			Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteWeaponLaser);
+			Graphics()->SelectSprite(SPRITE_WEAPON_LASER_BODY);
+			Graphics()->QuadsBegin();
+			Graphics()->QuadsSetSubset(0, 0, 1, 1);
+			Graphics()->DrawSprite(Section.x + 30.0f, Section.y + Section.h / 2.0f, 60.0f);
+			Graphics()->QuadsEnd();
+			break;
+		case LASERTYPE_SHOTGUN:
+			Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteWeaponShotgun);
+			Graphics()->SelectSprite(SPRITE_WEAPON_SHOTGUN_BODY);
+			Graphics()->QuadsBegin();
+			Graphics()->QuadsSetSubset(0, 0, 1, 1);
+			Graphics()->DrawSprite(Section.x + 30.0f, Section.y + Section.h / 2.0f, 60.0f);
+			Graphics()->QuadsEnd();
+			break;
+		}
+		GameClient()->m_Items.RenderLaser(From, Pos, OuterColor, InnerColor, 4.0f, TicksHead, LaserType, g_Config.m_QmLaserGlowIntensity);
 	}
-	case LASERTYPE_FREEZE:
+	else
 	{
-		CTeeRenderInfo TeeRenderInfo;
-		if(g_Config.m_ClShowNinja)
-			TeeRenderInfo.Apply(GameClient()->m_Skins.Find("x_ninja"));
-		else
-			TeeRenderInfo.Apply(GameClient()->m_Skins.Find(g_Config.m_ClPlayerSkin));
-		TeeRenderInfo.m_TeeRenderFlags = TEE_EFFECT_FROZEN;
-		TeeRenderInfo.m_Size = 64.0f;
-		TeeRenderInfo.m_ColorBody = ColorRGBA(1, 1, 1);
-		TeeRenderInfo.m_ColorFeet = ColorRGBA(1, 1, 1);
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, EMOTE_PAIN, vec2(1, 0), From);
-		GameClient()->m_Effects.FreezingFlakes(From, vec2(32, 32), 1.0f);
-		break;
-	}
-	default:
 		GameClient()->m_Items.RenderLaser(From, From, OuterColor, InnerColor, 4.0f, TicksHead, LaserType, 100.0f);
+		switch(LaserType)
+		{
+		case LASERTYPE_DRAGGER:
+		{
+			CTeeRenderInfo TeeRenderInfo;
+			TeeRenderInfo.Apply(GameClient()->m_Skins.Find(g_Config.m_ClPlayerSkin));
+			TeeRenderInfo.ApplyColors(g_Config.m_ClPlayerUseCustomColor, g_Config.m_ClPlayerColorBody, g_Config.m_ClPlayerColorFeet);
+			TeeRenderInfo.m_Size = 64.0f;
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, EMOTE_NORMAL, vec2(-1, 0), Pos);
+			break;
+		}
+		case LASERTYPE_FREEZE:
+		{
+			CTeeRenderInfo TeeRenderInfo;
+			if(g_Config.m_ClShowNinja)
+				TeeRenderInfo.Apply(GameClient()->m_Skins.Find("x_ninja"));
+			else
+				TeeRenderInfo.Apply(GameClient()->m_Skins.Find(g_Config.m_ClPlayerSkin));
+			TeeRenderInfo.m_TeeRenderFlags = TEE_EFFECT_FROZEN;
+			TeeRenderInfo.m_Size = 64.0f;
+			TeeRenderInfo.m_ColorBody = ColorRGBA(1, 1, 1);
+			TeeRenderInfo.m_ColorFeet = ColorRGBA(1, 1, 1);
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, EMOTE_PAIN, vec2(1, 0), From);
+			GameClient()->m_Effects.FreezingFlakes(From, vec2(32, 32), 1.0f);
+			break;
+		}
+		default:
+			break;
+		}
 	}
 }
 

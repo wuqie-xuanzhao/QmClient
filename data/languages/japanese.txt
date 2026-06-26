@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == 適用
 
+Apply a preset first
+== まずプリセットを適用
+
 Apply a saved profile by 1-based index to the current tee
 == 1 から始まるインデックスで保存済みプロファイルを現在の Tee に適用
+
+Apply a writable preset and edit first
+== まず編集可能なプリセットを適用
 
 Apply Changes
 == 変更を適用
 
-Apply this preset to the current queue
-== このプリセットを現在のキューに適用
+Apply this preset
+== このプリセットを適用
 
 Are you sure that you want to delete %d selected items?
 == %d 個の選択項目を削除してもよろしいですか？
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == 現在のカットをクリア（右クリックですべてのカットをクリア）
 
+Clear current queue
+== 現在のキューをクリア
+
 Clear friend note
 == フレンドメモをクリア
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == 現在の行の色
 
-Current queue: %s
-== 現在のキュー：%s
-
 Current rescue mode: %s
 == 現在のレスキューモード：%s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == デフォルト出力のオープンに失敗しました
+
+Default preset
+== デフォルトプリセット
 
 Default zoom
 == デフォルトのズーム
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == オーディオパックを編集
 
-Edit current queue
-== 現在のキューを編集
-
 Edit Entry
 == エントリーを編集
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == 禅モードを有効にする
-
-Enabled
-== 有効
 
 Enables/disables active moderator mode for the player
 == プレイヤーのアクティブモデレーターモードを有効/無効にします
@@ -2838,9 +2841,6 @@ Gap between statusbar items
 
 General
 == 一般
-
-Get all map players' skin IDs and auto add to rotate queue
-== 全マッププレイヤーのスキン ID を取得し、自動でローテーションキューに追加
 
 Getting game info
 == ゲーム情報を取得中
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == キューが空です
 
+Queue preset: %s
+== キュープリセット: %s
+
 Quick action menu for players
 == プレイヤー向けクイックアクションメニュー
 
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == エディターを閉じる前にすべての変更を保存しますか？
 
+Save as
+== 名前を付けて保存
+
 Save asset before closing?
 == アセットを閉じる前に保存しますか？
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == 変更を保存
 
-Save current
-== 現在を保存
+Save changes back to this preset
+== 変更をこのプリセットに保存
 
 Save current queue as a new preset
 == 現在のキューを新しいプリセットとして保存
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == 自分がどれだけ演技しているか確認
 
-Select a preset first
-== まずプリセットを選択
-
 Select all chat
 == すべてのチャットを選択
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == エクスポート内容を選択
-
-Select this preset to edit it
-== このプリセットを選択して編集する
 
 Selected %d
 == %d 個選択済み
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == サーバーが満員ではない
+
+Server preset
+== サーバープリセット
 
 Server rollback
 == サーバーロールバック

@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == Anwenden
 
+Apply a preset first
+== Zuerst ein Preset anwenden
+
 Apply a saved profile by 1-based index to the current tee
 == Ein gespeichertes Profil (1-basiert) auf den aktuellen Tee anwenden
+
+Apply a writable preset and edit first
+== Zuerst ein bearbeitbares Preset anwenden
 
 Apply Changes
 == Änderungen übernehmen
 
-Apply this preset to the current queue
-== Dieses Preset auf die aktuelle Warteschlange anwenden
+Apply this preset
+== Dieses Preset anwenden
 
 Are you sure that you want to delete %d selected items?
 == Sind Sie sicher, dass Sie %d ausgewählte Elemente löschen möchten?
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == Aktuellen Schnitt löschen (Rechtsklick, um alle Schnitte zu löschen)
 
+Clear current queue
+== Aktuelle Warteschlange leeren
+
 Clear friend note
 == Freundesnotiz löschen
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == Aktuelle Zeilenfarbe
 
-Current queue: %s
-== Aktuelle Warteschlange: %s
-
 Current rescue mode: %s
 == Aktueller Rettungsmodus: %s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == Standardausgabe öffnen fehlgeschlagen
+
+Default preset
+== Standard-Preset
 
 Default zoom
 == Standard-Zoom
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == Audio-Paket bearbeiten
 
-Edit current queue
-== Aktuelle Warteschlange bearbeiten
-
 Edit Entry
 == Eintrag bearbeiten
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == Zen-Modus aktivieren
-
-Enabled
-== Aktiviert
 
 Enables/disables active moderator mode for the player
 == Aktiviert/deaktiviert den aktiven Moderator-Modus für den Spieler
@@ -2838,9 +2841,6 @@ Gap between statusbar items
 
 General
 == Allgemein
-
-Get all map players' skin IDs and auto add to rotate queue
-== Skin-IDs aller Karten-Spieler abrufen und automatisch zur Rotationswarteschlange hinzufügen
 
 Getting game info
 == Spieleinfo wird abgerufen
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == Warteschlange ist leer
 
+Queue preset: %s
+== Warteschlangen-Preset: %s
+
 Quick action menu for players
 == Schnellaktionsmenü für Spieler
 
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == Alle Änderungen speichern, bevor der Editor ausgeschaltet wird?
 
+Save as
+== Speichern unter
+
 Save asset before closing?
 == Asset vor dem Schließen speichern?
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == Änderungen speichern
 
-Save current
-== Aktuelles speichern
+Save changes back to this preset
+== Änderungen in diesem Preset speichern
 
 Save current queue as a new preset
 == Aktuelle Warteschlange als neues Preset speichern
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == Sieh, wie sehr du schauspielerst
 
-Select a preset first
-== Zuerst ein Preset wählen
-
 Select all chat
 == Gesamten Chat auswählen
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == Export auswählen
-
-Select this preset to edit it
-== Dieses Preset zum Bearbeiten wählen
 
 Selected %d
 == %d ausgewählt
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == Server nicht voll
+
+Server preset
+== Server-Preset
 
 Server rollback
 == Server-Rollback

@@ -206,7 +206,7 @@ void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContai
 		OutlineColor = Style.m_BorderColor.WithMultipliedAlpha(Alpha);
 	if(BorderEnabled && Style.m_BorderRange > 1.0f)
 	{
-		const int BorderPasses = std::clamp(round_to_int(Style.m_BorderRange), 1, 3);
+		const int BorderPasses = std::clamp(round_to_int(Style.m_BorderRange), 1, 4);
 		for(int Pass = 0; Pass < BorderPasses; ++Pass)
 		{
 			const float Radius = (float)(Pass + 1);

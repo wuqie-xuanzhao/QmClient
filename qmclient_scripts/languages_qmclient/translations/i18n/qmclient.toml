@@ -10081,8 +10081,8 @@ polish = "Kolor hitboxu Tee"
 [[message]]
 key = "Teleport grenade disabled"
 [message.translations]
-simplified_chinese = "传送手雷已关闭"
-traditional_chinese = "傳送手雷已關閉"
+simplified_chinese = "传送榴弹炮已关闭"
+traditional_chinese = "傳送榴彈砲已關閉"
 japanese = "テレポートグレネード無効"
 korean = "텔레포트 수류탄 비활성화됨"
 russian = "Телепорт-граната отключена"
@@ -10097,8 +10097,8 @@ polish = "Granat teleportacyjny wyłączony"
 [[message]]
 key = "Teleport grenade enabled"
 [message.translations]
-simplified_chinese = "传送手雷已开启"
-traditional_chinese = "傳送手雷已開啟"
+simplified_chinese = "传送榴弹炮已开启"
+traditional_chinese = "傳送榴彈砲已開啟"
 japanese = "テレポートグレネード有効"
 korean = "텔레포트 수류탄 활성화됨"
 russian = "Телепорт-граната включена"
@@ -11969,8 +11969,8 @@ polish = "Możesz widzieć innych graczy. Aby to wyłączyć, użyj klienta DDNe
 [[message]]
 key = "You can shoot others with grenade"
 [message.translations]
-simplified_chinese = "你现在可以用手雷攻击其他玩家"
-traditional_chinese = "你現在可以用手雷攻擊其他玩家"
+simplified_chinese = "你现在可以用榴弹炮攻击其他玩家"
+traditional_chinese = "你現在可以用榴彈砲攻擊其他玩家"
 japanese = "グレネードで他のプレイヤーを攻撃できるようになりました"
 korean = "다른 플레이어를 수류탄으로 공격할 수 있습니다"
 russian = "Вы можете стрелять в других из гранатомёта"
@@ -12209,8 +12209,8 @@ polish = "Nie możesz przenieść siebie do widzów"
 [[message]]
 key = "You can't shoot others with grenade"
 [message.translations]
-simplified_chinese = "你现在不能用手雷攻击其他玩家"
-traditional_chinese = "你現在不能用手雷攻擊其他玩家"
+simplified_chinese = "你现在不能用榴弹炮攻击其他玩家"
+traditional_chinese = "你現在不能用榴彈砲攻擊其他玩家"
 japanese = "グレネードで他のプレイヤーを攻撃できなくなりました"
 korean = "다른 플레이어를 수류탄으로 공격할 수 없습니다"
 russian = "Вы не можете стрелять в других из гранатомёта"

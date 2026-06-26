@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == Применить
 
+Apply a preset first
+== Сначала примените пресет
+
 Apply a saved profile by 1-based index to the current tee
 == Применить сохранённый профиль по индексу (начиная с 1) к текущему ти
+
+Apply a writable preset and edit first
+== Сначала примените редактируемый пресет
 
 Apply Changes
 == Применить изменения
 
-Apply this preset to the current queue
-== Применить этот пресет к текущей очереди
+Apply this preset
+== Применить этот пресет
 
 Are you sure that you want to delete %d selected items?
 == Вы уверены, что хотите удалить %d выбранных элементов?
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == Очистить текущий отрезок (правый клик — очистить все отрезки)
 
+Clear current queue
+== Очистить текущую очередь
+
 Clear friend note
 == Очистить заметку друга
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == Цвет текущей строки
 
-Current queue: %s
-== Текущая очередь: %s
-
 Current rescue mode: %s
 == Текущий режим спасения: %s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == Ошибка открытия устройства вывода по умолчанию
+
+Default preset
+== Пресет по умолчанию
 
 Default zoom
 == Масштаб по умолчанию
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == Редактировать аудиопакет
 
-Edit current queue
-== Редактировать текущую очередь
-
 Edit Entry
 == Редактировать запись
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == Включить Zen-режим
-
-Enabled
-== Включено
 
 Enables/disables active moderator mode for the player
 == Включает/отключает режим активного модератора для игрока
@@ -2838,9 +2841,6 @@ Gap between statusbar items
 
 General
 == Общие
-
-Get all map players' skin IDs and auto add to rotate queue
-== Получить ID скинов всех игроков на карте и добавить в очередь смены
 
 Getting game info
 == Получение информации об игре
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == Очередь пуста
 
+Queue preset: %s
+== Пресет очереди: %s
+
 Quick action menu for players
 == Меню быстрых действий для игроков
 
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == Сохранить все изменения перед закрытием редактора?
 
+Save as
+== Сохранить как
+
 Save asset before closing?
 == Сохранить ресурс перед закрытием?
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == Сохранить изменения
 
-Save current
-== Сохранить текущий
+Save changes back to this preset
+== Сохранить изменения в этот пресет
 
 Save current queue as a new preset
 == Сохранить текущую очередь как новый пресет
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == Выбранный тип таймера не поддерживается вашим клиентом
 
-Select a preset first
-== Сначала выберите пресет
-
 Select all chat
 == Выбрать весь чат
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == Выбрать экспорт
-
-Select this preset to edit it
-== Выбрать этот пресет для редактирования
 
 Selected %d
 == Выбрано %d
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == Сервер не заполнен
+
+Server preset
+== Пресет сервера
 
 Server rollback
 == Откат сервера

@@ -1,3 +1,5 @@
+#include <engine/client/plausible_sizes.h>
+
 #include <game/client/components/menus.h>
 
 #include <gtest/gtest.h>
@@ -5,6 +7,23 @@
 
 #include <algorithm>
 #include <string>
+
+TEST(PlausibleSizes, RefreshRateAndWindowGuardsMatchContract)
+{
+	// Refresh rate: 0..1000 inclusive is the persisted-range contract.
+	EXPECT_TRUE(IsPlausibleRefreshRate(0));
+	EXPECT_TRUE(IsPlausibleRefreshRate(60));
+	EXPECT_TRUE(IsPlausibleRefreshRate(1000));
+	EXPECT_FALSE(IsPlausibleRefreshRate(-1));
+	EXPECT_FALSE(IsPlausibleRefreshRate(1001));
+	// Window size: 320..16384 on both axes.
+	EXPECT_TRUE(IsPlausibleWindowSize(320, 240));
+	EXPECT_TRUE(IsPlausibleWindowSize(16384, 16384));
+	EXPECT_FALSE(IsPlausibleWindowSize(319, 240)); // under min width
+	EXPECT_FALSE(IsPlausibleWindowSize(320, 239)); // under min height
+	EXPECT_FALSE(IsPlausibleWindowSize(16385, 1080)); // over max width
+	EXPECT_FALSE(IsPlausibleWindowSize(1920, 16385)); // over max height
+}
 
 namespace
 {
@@ -1395,17 +1414,18 @@ TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
 	const std::string Backend = ReadTextFile("src/engine/client/backend_sdl.cpp");
 	const std::string Graphics = ReadTextFile("src/engine/client/graphics_threaded.cpp");
 
-	EXPECT_NE(Backend.find("static bool IsPlausibleRefreshRate(int RefreshRate)"), std::string::npos);
-	EXPECT_NE(Backend.find("static bool IsPlausibleWindowSize(int Width, int Height)"), std::string::npos);
+	// IsPlausible* guards now live in the shared plausible_sizes.h header
+	// (behavior-tested in PlausibleSizes.RefreshRateAndWindowGuardsMatchContract);
+	// both backends include it instead of re-declaring file-static copies.
+	EXPECT_NE(Backend.find("#include <engine/client/plausible_sizes.h>"), std::string::npos);
 	EXPECT_NE(Backend.find("Ignoring implausible configured window size"), std::string::npos);
 	EXPECT_NE(Backend.find("*pWidth = DisplayMode.w;"), std::string::npos);
 	EXPECT_NE(Backend.find("*pHeight = DisplayMode.h;"), std::string::npos);
 	EXPECT_NE(Backend.find("Ignoring implausible configured refresh rate"), std::string::npos);
 	EXPECT_NE(Backend.find("*pRefreshRate = 0;"), std::string::npos);
-	EXPECT_NE(Graphics.find("static bool IsPlausibleWindowRefreshRate(int RefreshRate)"), std::string::npos);
+	EXPECT_NE(Graphics.find("#include <engine/client/plausible_sizes.h>"), std::string::npos);
 	EXPECT_NE(Graphics.find("Ignoring implausible refresh rate during resize"), std::string::npos);
 	EXPECT_NE(Graphics.find("RefreshRate = m_ScreenRefreshRate;"), std::string::npos);
-	EXPECT_NE(Graphics.find("static bool IsPlausibleWindowSize(int Width, int Height)"), std::string::npos);
 	EXPECT_NE(Graphics.find("static int LogicalWindowSizeFromViewport(int ViewportSize, float HiDPIScale)"), std::string::npos);
 	EXPECT_NE(Graphics.find("Ignoring implausible resize dimensions"), std::string::npos);
 	EXPECT_NE(Graphics.find("if(IsPlausibleWindowSize(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight))"), std::string::npos);

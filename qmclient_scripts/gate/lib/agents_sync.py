@@ -47,7 +47,10 @@ def read_state() -> dict:
     if not STATE_PATH.exists():
         return {}
     with STATE_PATH.open("r", encoding="utf-8") as file:
-        return json.load(file)
+        try:
+            return json.load(file)
+        except json.JSONDecodeError:
+            return {}
 
 
 def write_state(agents_text: str, claude_text: str) -> None:

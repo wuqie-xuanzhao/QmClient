@@ -619,14 +619,20 @@ Applied to %d same-family part(s).
 Apply
 == 套用
 
+Apply a preset first
+== 先套用一個預設
+
 Apply a saved profile by 1-based index to the current tee
 == 按從 1 開始的序號將已儲存的模板套用到當前角色
+
+Apply a writable preset and edit first
+== 先套用一個可編輯的預設
 
 Apply Changes
 == 套用變更
 
-Apply this preset to the current queue
-== 一鍵套用此預設到當前佇列
+Apply this preset
+== 套用此預設
 
 Are you sure that you want to delete %d selected items?
 == 確定要刪除 %d 個選中項嗎？
@@ -1267,6 +1273,9 @@ Clear chat messages
 Clear current cut (right click to clear all cuts)
 == 清除當前片段（右鍵清除全部片段）
 
+Clear current queue
+== 清空目前佇列
+
 Clear friend note
 == 清除好友備註
 
@@ -1624,9 +1633,6 @@ Current file
 Current line color
 == 當前行顏色
 
-Current queue: %s
-== 目前佇列：%s
-
 Current rescue mode: %s
 == 當前救援模式：%s
 
@@ -1818,6 +1824,9 @@ Default length
 
 Default output open failed
 == 預設輸出開啟失敗
+
+Default preset
+== 預設
 
 Default zoom
 == 預設縮放
@@ -2203,9 +2212,6 @@ Edit
 Edit audio pack
 == 編輯音訊包
 
-Edit current queue
-== 編輯當前佇列
-
 Edit Entry
 == 編輯條目
 
@@ -2370,9 +2376,6 @@ Enable word filter list
 
 Enable Zen mode
 == 啟用禪模式
-
-Enabled
-== 已啟用
 
 Enables/disables active moderator mode for the player
 == 啟用/停用該玩家的活躍管理員模式
@@ -2839,9 +2842,6 @@ Gap between statusbar items
 General
 == 一般
 
-Get all map players' skin IDs and auto add to rotate queue
-== 獲取全圖玩家皮膚 ID 並自動加入輪換佇列
-
 Getting game info
 == 正在獲取遊戲資訊
 
@@ -2885,7 +2885,7 @@ Gives jetpack to you
 == 給你噴射背包
 
 Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
-== 給你 ID 為 i 的武器（全部 = -1，槌子 = 0，槍 = 1，霰彈槍 = 2，手榴彈 = 3，雷射 = 4，忍者 = 5）
+== 給你 ID 為 i 的武器（全部 = -1，槌子 = 0，槍 = 1，霰彈槍 = 2，榴彈砲 = 3，雷射 = 4，忍者 = 5）
 
 Gives you as many jumps as you specify
 == 給予你指定次數的跳躍
@@ -5230,6 +5230,9 @@ Query your own team rank
 Queue is empty
 == 隊列為空
 
+Queue preset: %s
+== 佇列預設: %s
+
 Quick action menu for players
 == 對玩家快捷操作選單
 
@@ -5525,7 +5528,7 @@ Removes the shotgun from you
 == 從你身上拿走霰彈槍
 
 removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
-== 從你身上移除 ID 為 i 的武器（全部 = -1，鎚子 = 0，槍 = 1，霰彈槍 = 2，手榴彈 = 3，雷射 = 4，忍者 = 5）
+== 從你身上移除 ID 為 i 的武器（全部 = -1，鎚子 = 0，槍 = 1，霰彈槍 = 2，榴彈砲 = 3，雷射 = 4，忍者 = 5）
 
 Rename
 == 重新命名
@@ -5812,6 +5815,9 @@ Save all changes before switching selected button?
 Save all changes before turning off the editor?
 == 是否在關閉編輯器前儲存變更？
 
+Save as
+== 另存為
+
 Save asset before closing?
 == 關閉前儲存材質嗎？
 
@@ -5821,8 +5827,8 @@ Save banlist in a file
 Save changes
 == 儲存更改
 
-Save current
-== 儲存目前
+Save changes back to this preset
+== 將變更儲存回此預設
 
 Save current queue as a new preset
 == 一鍵儲存目前佇列為新預設
@@ -5980,9 +5986,6 @@ SecretKey
 See how much you act
 == 看看你有多演
 
-Select a preset first
-== 先選擇一個預設
-
 Select all chat
 == 全選聊天記錄
 
@@ -5991,9 +5994,6 @@ Select button by touch
 
 Select export
 == 選擇匯出內容
-
-Select this preset to edit it
-== 選擇此預設進行編輯
 
 Selected %d
 == 已選擇 %d 項
@@ -6150,6 +6150,9 @@ Server kick/spec votes will now be actively moderated.
 
 Server not full
 == 伺服器未滿
+
+Server preset
+== 伺服器預設
 
 Server rollback
 == 伺服器回滾
@@ -7274,10 +7277,10 @@ Teleport free spectator camera between hovered tele-in/out or checkpoint tele an
 == 在懸停的傳送入口/出口或檢查點傳送點與其對應點之間傳送自由觀戰鏡頭
 
 Teleport grenade disabled
-== 傳送手雷已關閉
+== 傳送榴彈砲已關閉
 
 Teleport grenade enabled
-== 傳送手雷已開啟
+== 傳送榴彈砲已開啟
 
 Teleport gun disabled
 == 傳送槍已關閉
@@ -8384,7 +8387,7 @@ You can see other players. To disable this use DDNet client and type /showothers
 == 你當前可以看到其他玩家。要關閉此功能請使用 DDNet 客戶端並輸入 /showothers
 
 You can shoot others with grenade
-== 你現在可以用手雷攻擊其他玩家
+== 你現在可以用榴彈砲攻擊其他玩家
 
 You can shoot others with laser
 == 你現在可以用雷射攻擊其他玩家
@@ -8429,7 +8432,7 @@ You can't move yourself to spectators
 == 你不能把自己移到旁觀
 
 You can't shoot others with grenade
-== 你現在不能用手雷攻擊其他玩家
+== 你現在不能用榴彈砲攻擊其他玩家
 
 You can't shoot others with laser
 == 你現在不能用雷射攻擊其他玩家
