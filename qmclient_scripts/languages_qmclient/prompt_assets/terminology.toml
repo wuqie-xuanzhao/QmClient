@@ -1,5 +1,6 @@
 [[term]]
 source = "Clan"
+enforce = "exact"
 simplified_chinese = "战队"
 traditional_chinese = "戰隊"
 korean = "클랜"
@@ -15,6 +16,7 @@ polish = "Klan"
 
 [[term]]
 source = "Dummy"
+enforce = "pattern"
 simplified_chinese = "分身"
 traditional_chinese = "分身"
 korean = "더미"
@@ -30,6 +32,7 @@ polish = "Kukła"
 
 [[term]]
 source = "Server"
+enforce = "prompt_only"
 simplified_chinese = "服务器"
 traditional_chinese = "伺服器"
 korean = "서버"
@@ -45,6 +48,7 @@ polish = "Serwer"
 
 [[term]]
 source = "Map"
+enforce = "prompt_only"
 simplified_chinese = "地图"
 traditional_chinese = "地圖"
 korean = "맵"
@@ -60,6 +64,7 @@ polish = "Mapa"
 
 [[term]]
 source = "Tencent Cloud"
+enforce = "pattern"
 simplified_chinese = "腾讯云"
 traditional_chinese = "騰訊雲"
 korean = "텐센트 클라우드"
@@ -75,6 +80,7 @@ polish = "Tencent Cloud"
 
 [[term]]
 source = "Lyrics"
+enforce = "pattern"
 simplified_chinese = "歌词"
 traditional_chinese = "歌詞"
 korean = "가사"
@@ -90,6 +96,7 @@ polish = "Tekst utworu"
 
 [[term]]
 source = "HUD"
+enforce = "pattern"
 simplified_chinese = "HUD"
 traditional_chinese = "HUD"
 korean = "HUD"
@@ -105,6 +112,7 @@ polish = "HUD"
 
 [[term]]
 source = "cache"
+enforce = "prompt_only"
 simplified_chinese = "缓存"
 traditional_chinese = "快取"
 korean = "캐시"
@@ -120,6 +128,7 @@ polish = "pamięć podręczna"
 
 [[term]]
 source = "source"
+enforce = "prompt_only"
 simplified_chinese = "来源"
 traditional_chinese = "來源"
 korean = "소스"
@@ -135,6 +144,7 @@ polish = "źródło"
 
 [[term]]
 source = "threshold"
+enforce = "prompt_only"
 simplified_chinese = "阈值"
 traditional_chinese = "閾值"
 korean = "임계값"
@@ -150,6 +160,7 @@ polish = "próg"
 
 [[term]]
 source = "px"
+enforce = "exact"
 simplified_chinese = "px"
 traditional_chinese = "px"
 korean = "px"
@@ -165,6 +176,7 @@ polish = "px"
 
 [[term]]
 source = "ms"
+enforce = "exact"
 simplified_chinese = "ms"
 traditional_chinese = "ms"
 korean = "ms"
@@ -180,6 +192,7 @@ polish = "ms"
 
 [[term]]
 source = "Hammer"
+enforce = "exact"
 simplified_chinese = "锤子"
 traditional_chinese = "槌子"
 korean = "망치"
@@ -195,6 +208,7 @@ polish = "młotek"
 
 [[term]]
 source = "Shotgun"
+enforce = "exact"
 simplified_chinese = "霰弹枪"
 traditional_chinese = "霰彈槍"
 korean = "산탄총"
@@ -210,7 +224,8 @@ polish = "strzelba"
 
 [[term]]
 source = "Grenade"
-simplified_chinese = "榴弹炮"
+enforce = "pattern"
+simplified_chinese = "榴弹枪"
 traditional_chinese = "榴彈砲"
 korean = "유탄"
 japanese = "グレネード"
@@ -224,7 +239,40 @@ turkish = "bomba"
 polish = "granat"
 
 [[term]]
+source = "Hook"
+enforce = "exact"
+simplified_chinese = "钩索"
+traditional_chinese = "鉤索"
+korean = "갈고리"
+japanese = "フック"
+russian = "крюк"
+german = "Haken"
+spanish = "gancho"
+french = "crochet"
+brazilian_portuguese = "gancho"
+portuguese = "gancho"
+turkish = "kanca"
+polish = "hak"
+
+[[term]]
+source = "Hook collision line"
+enforce = "exact"
+simplified_chinese = "钩索辅助线"
+traditional_chinese = "鉤索輔助線"
+korean = "갈고리 충돌선"
+japanese = "フック衝突線"
+russian = "линия столкновения крюка"
+german = "Haken-Kollisionslinie"
+spanish = "línea de colisión de gancho"
+french = "ligne de collision de crochet"
+brazilian_portuguese = "linha de colisão de gancho"
+portuguese = "linha de colisão de gancho"
+turkish = "kanca çarpışma çizgisi"
+polish = "linia kolizji haka"
+
+[[term]]
 source = "Grenade Launcher"
+enforce = "exact"
 simplified_chinese = "榴弹炮"
 traditional_chinese = "榴彈砲"
 korean = "유탄 발사기"
@@ -240,6 +288,7 @@ polish = "granatnik"
 
 [[term]]
 source = "Laser"
+enforce = "exact"
 simplified_chinese = "激光"
 traditional_chinese = "雷射"
 korean = "레이저"
@@ -255,6 +304,7 @@ polish = "laser"
 
 [[term]]
 source = "Ninja"
+enforce = "exact"
 simplified_chinese = "忍者"
 traditional_chinese = "忍者"
 korean = "닌자"
@@ -267,3 +317,178 @@ brazilian_portuguese = "ninja"
 portuguese = "ninja"
 turkish = "ninja"
 polish = "ninja"
+
+[[term]]
+source = "Pistol"
+enforce = "exact"
+simplified_chinese = "手枪"
+
+[[term]]
+source = "Gun"
+enforce = "prompt_only"
+simplified_chinese = "手枪"
+
+[[term]]
+source = "Tee"
+enforce = "prompt_only"
+simplified_chinese = "Tee"
+
+[[term]]
+source = "Scoreboard"
+enforce = "exact"
+simplified_chinese = "计分板"
+
+[[term]]
+source = "Console"
+enforce = "exact"
+simplified_chinese = "控制台"
+
+[[term]]
+source = "Demo"
+enforce = "prompt_only"
+simplified_chinese = "回放"
+
+[[term]]
+source = "Editor"
+enforce = "exact"
+simplified_chinese = "编辑器"
+
+[[term]]
+source = "Client"
+enforce = "prompt_only"
+simplified_chinese = "客户端"
+
+[[term]]
+source = "Settings"
+enforce = "prompt_only"
+simplified_chinese = "设置"
+
+[[term]]
+source = "Team"
+enforce = "prompt_only"
+simplified_chinese = "队伍"
+
+[[term]]
+source = "Vote"
+enforce = "prompt_only"
+simplified_chinese = "投票"
+
+[[term]]
+source = "Spectate"
+enforce = "prompt_only"
+simplified_chinese = "旁观"
+
+[[term]]
+source = "Freeze"
+enforce = "prompt_only"
+simplified_chinese = "冻结"
+
+[[term]]
+source = "Unfreeze"
+enforce = "prompt_only"
+simplified_chinese = "解冻"
+
+[[term]]
+source = "Skin"
+enforce = "prompt_only"
+simplified_chinese = "皮肤"
+
+[[term]]
+source = "Assets"
+enforce = "prompt_only"
+simplified_chinese = "资源"
+
+[[term]]
+source = "Entities"
+enforce = "prompt_only"
+simplified_chinese = "实体层"
+
+[[term]]
+source = "Prediction"
+enforce = "prompt_only"
+simplified_chinese = "预测"
+
+[[term]]
+source = "AntiPing"
+enforce = "prompt_only"
+simplified_chinese = "延迟补偿（AntiPing）"
+
+[[term]]
+source = "Skin queue"
+enforce = "pattern"
+simplified_chinese = "皮肤队列"
+
+[[term]]
+source = "Preset"
+enforce = "prompt_only"
+simplified_chinese = "预设"
+
+[[term]]
+source = "Gores mode"
+enforce = "pattern"
+simplified_chinese = "Gores 模式"
+
+[[term]]
+source = "Hitbox mode"
+enforce = "pattern"
+simplified_chinese = "碰撞箱模式"
+
+[[term]]
+source = "Notification"
+enforce = "prompt_only"
+simplified_chinese = "通知"
+
+[[term]]
+source = "Translation backend"
+enforce = "pattern"
+simplified_chinese = "翻译后端"
+
+[[term]]
+source = "Voice chat"
+enforce = "pattern"
+simplified_chinese = "语音聊天"
+
+[[term]]
+source = "Lyrics HTTP request timeout"
+enforce = "pattern"
+simplified_chinese = "歌词 HTTP 请求超时"
+
+[[term]]
+source = "FPS"
+enforce = "exact"
+simplified_chinese = "FPS"
+
+[[term]]
+source = "Ping"
+enforce = "prompt_only"
+simplified_chinese = "Ping"
+
+[[term]]
+source = "KiB"
+enforce = "exact"
+simplified_chinese = "KiB"
+
+[[term]]
+source = "MiB"
+enforce = "exact"
+simplified_chinese = "MiB"
+
+[[term]]
+source = "API"
+enforce = "exact"
+simplified_chinese = "API"
+
+[[term]]
+source = "HTTP"
+enforce = "exact"
+simplified_chinese = "HTTP"
+
+[[term]]
+source = "JSON"
+enforce = "exact"
+simplified_chinese = "JSON"
+
+[[term]]
+source = "UI"
+enforce = "exact"
+simplified_chinese = "UI"

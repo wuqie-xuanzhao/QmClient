@@ -8721,7 +8721,7 @@ polish = "Pokaż debug trasy mapy w kropki"
 [[message]]
 key = "Show grenade and laser trajectory preview"
 [message.translations]
-simplified_chinese = "显示枪榴弹和激光轨迹预览"
+simplified_chinese = "显示榴弹枪和激光轨迹预览"
 traditional_chinese = "顯示榴彈與雷射軌跡預覽"
 japanese = "グレネードとレーザーの軌道プレビューを表示"
 korean = "수류탄 및 레이저 궤적 미리보기 표시"
@@ -10081,7 +10081,7 @@ polish = "Kolor hitboxu Tee"
 [[message]]
 key = "Teleport grenade disabled"
 [message.translations]
-simplified_chinese = "传送榴弹炮已关闭"
+simplified_chinese = "传送榴弹枪已关闭"
 traditional_chinese = "傳送榴彈砲已關閉"
 japanese = "テレポートグレネード無効"
 korean = "텔레포트 수류탄 비활성화됨"
@@ -10097,7 +10097,7 @@ polish = "Granat teleportacyjny wyłączony"
 [[message]]
 key = "Teleport grenade enabled"
 [message.translations]
-simplified_chinese = "传送榴弹炮已开启"
+simplified_chinese = "传送榴弹枪已开启"
 traditional_chinese = "傳送榴彈砲已開啟"
 japanese = "テレポートグレネード有効"
 korean = "텔레포트 수류탄 활성화됨"
@@ -10289,7 +10289,7 @@ polish = "Dziękujemy za wsparcie QmClient"
 [[message]]
 key = "The best voice chat, of course!"
 [message.translations]
-simplified_chinese = "当然是最好的语音啦！"
+simplified_chinese = "当然是最好的语音聊天啦！"
 traditional_chinese = "當然是最好的語音啦！"
 japanese = "もちろん最高のボイスチャットです！"
 korean = "물론 최고의 음성 채팅이죠!"
@@ -11969,7 +11969,7 @@ polish = "Możesz widzieć innych graczy. Aby to wyłączyć, użyj klienta DDNe
 [[message]]
 key = "You can shoot others with grenade"
 [message.translations]
-simplified_chinese = "你现在可以用榴弹炮攻击其他玩家"
+simplified_chinese = "你现在可以用榴弹枪攻击其他玩家"
 traditional_chinese = "你現在可以用榴彈砲攻擊其他玩家"
 japanese = "グレネードで他のプレイヤーを攻撃できるようになりました"
 korean = "다른 플레이어를 수류탄으로 공격할 수 있습니다"
@@ -12209,7 +12209,7 @@ polish = "Nie możesz przenieść siebie do widzów"
 [[message]]
 key = "You can't shoot others with grenade"
 [message.translations]
-simplified_chinese = "你现在不能用榴弹炮攻击其他玩家"
+simplified_chinese = "你现在不能用榴弹枪攻击其他玩家"
 traditional_chinese = "你現在不能用榴彈砲攻擊其他玩家"
 japanese = "グレネードで他のプレイヤーを攻撃できなくなりました"
 korean = "다른 플레이어를 수류탄으로 공격할 수 없습니다"
@@ -14273,7 +14273,7 @@ polish = "Próg przyciągania"
 [[message]]
 key = "Switch inactive tee to grenade"
 [message.translations]
-simplified_chinese = "将非活动 Tee 切换到榴弹"
+simplified_chinese = "将非活动 Tee 切换到榴弹枪"
 traditional_chinese = "將非活動 Tee 切換到榴彈"
 japanese = "Switch inactive tee to grenade"
 korean = "Switch inactive tee to grenade"
@@ -17203,7 +17203,7 @@ polish = "Zezwalaj na automatyczne tłumaczenie FTAPI (może spowodować przeci�
 [[message]]
 key = "关键词回复使用Dummy"
 [message.translations]
-simplified_chinese = "关键词回复使用 Dummy"
+simplified_chinese = "关键词回复使用分身"
 traditional_chinese = "關鍵詞回覆使用分身"
 japanese = "キーワード返信にダミーを使用"
 korean = "키워드 응답에 더미 사용"
@@ -19395,7 +19395,7 @@ polish = "Gdy zarówno postać główna, jak i kukła są zamrożone, automatycz
 [[message]]
 key = "本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示"
 [message.translations]
-simplified_chinese = "本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示"
+simplified_chinese = "本体或分身被锤醒时，在对应玩家随机的左上或右上角显示提示"
 traditional_chinese = "本體或 Dummy 被錘醒時，在對應玩家隨機的左上或右上角顯示提示"
 japanese = "本体またはダミーがハンマーで起こされた時、対応するプレイヤーの左上または右上にランダムで通知を表示"
 korean = "본체 또는 더미가 망치에 깨어날 때, 해당 플레이어의 무작위 왼쪽 위 또는 오른쪽 위에 알림 표시"

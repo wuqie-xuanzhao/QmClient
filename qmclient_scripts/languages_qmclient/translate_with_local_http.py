@@ -8,6 +8,7 @@ import concurrent.futures
 import json
 import os
 import re
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -25,6 +26,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[1]
 TRANSLATIONS_DRAFT_DIR = SCRIPT_DIR / "translations_draft"
 PROMPT_ASSETS_DIR = SCRIPT_DIR / "prompt_assets"
+DDNET_SIMPLIFIED_CHINESE_PATH = PROMPT_ASSETS_DIR / "ddnet_simplified_chinese.txt"
 INDEXED_LINE_RE = re.compile(r"^\s*(\d+)[\.)]\s*(.*)\s*$")
 MAX_PARALLEL_REQUESTS = 32
 MAX_PARALLEL_LANGUAGES = 12
@@ -328,6 +330,12 @@ class TranslationTask:
     existing_translation: str = ""
 
 
+@dataclass(frozen=True)
+class TerminologyTerm:
+    translation: str
+    enforce: str = "prompt_only"
+
+
 def read_text(path: Path, fallback: str = "") -> str:
     if not path.exists():
         return fallback
@@ -340,6 +348,127 @@ def load_prompt_assets() -> tuple[str, str, str]:
         read_text(PROMPT_ASSETS_DIR / "terminology.toml", ""),
         read_text(PROMPT_ASSETS_DIR / "few_shots.toml", ""),
     )
+
+
+def parse_terminology_terms(raw_toml: str) -> dict[str, dict[str, TerminologyTerm]]:
+    if not raw_toml.strip():
+        return {}
+    data = tomllib.loads(raw_toml)
+    terms_by_language: dict[str, dict[str, TerminologyTerm]] = {}
+    for item in data.get("term", []):
+        if not isinstance(item, dict):
+            continue
+        source = item.get("source", "")
+        if not isinstance(source, str) or not source:
+            continue
+        enforce = item.get("enforce", "prompt_only")
+        if enforce not in {"exact", "pattern", "prompt_only"}:
+            enforce = "prompt_only"
+        for language, translation in item.items():
+            if language in {"source", "enforce"}:
+                continue
+            if (
+                isinstance(language, str)
+                and isinstance(translation, str)
+                and translation
+            ):
+                terms_by_language.setdefault(language, {})[source] = TerminologyTerm(
+                    translation, enforce
+                )
+    return terms_by_language
+
+
+def parse_terminology_by_language(raw_toml: str) -> dict[str, dict[str, str]]:
+    return {
+        language: {source: term.translation for source, term in sorted(terms.items())}
+        for language, terms in parse_terminology_terms(raw_toml).items()
+    }
+
+
+def parse_twlang_pairs(raw_text: str) -> dict[str, str]:
+    terms: dict[str, str] = {}
+    lines = raw_text.splitlines()
+    index = 0
+    while index + 1 < len(lines):
+        source = lines[index].strip("\ufeff")
+        marker = lines[index + 1]
+        if source and marker.startswith("== "):
+            terms[source] = marker[3:]
+            index += 3
+            continue
+        index += 1
+    return terms
+
+
+def load_official_simplified_chinese_terms(path: Path | None = None) -> dict[str, str]:
+    reference_path = path or DDNET_SIMPLIFIED_CHINESE_PATH
+    if not reference_path.exists():
+        return {}
+    return parse_twlang_pairs(reference_path.read_text(encoding="utf-8-sig"))
+
+
+def official_terminology_for_language(language: str) -> dict[str, str]:
+    if language != "simplified_chinese":
+        return {}
+    return load_official_simplified_chinese_terms()
+
+
+def task_scoped_terms(
+    tasks: list[TranslationTask], terminology: dict[str, str]
+) -> dict[str, str]:
+    source_texts = {task.source_text for task in tasks}
+    return {
+        source: translation
+        for source, translation in terminology.items()
+        if source in source_texts
+    }
+
+
+def render_terminology_for_language(
+    language: str, raw_toml: str, target_name: str
+) -> tuple[str, dict[str, str]]:
+    terminology = parse_terminology_by_language(raw_toml).get(language, {})
+    if not terminology:
+        return "(none)", {}
+    lines = [f"Terminology for {target_name}:"]
+    for source, translation in sorted(
+        terminology.items(), key=lambda item: item[0].casefold()
+    ):
+        lines.append(f"- {source} => {translation}")
+    return "\n".join(lines), terminology
+
+
+def render_official_references_for_language(
+    language: str, tasks: list[TranslationTask], target_name: str
+) -> tuple[str, dict[str, str]]:
+    references = task_scoped_terms(tasks, official_terminology_for_language(language))
+    if not references:
+        return "(none)", {}
+    lines = [f"Official DDNet {target_name} references for exact source keys:"]
+    for source, translation in sorted(
+        references.items(), key=lambda item: item[0].casefold()
+    ):
+        lines.append(f"- {source} => {translation}")
+    return "\n".join(lines), references
+
+
+def terminology_terms_for_language_from_assets(
+    language: str, prompt_assets: tuple[str, str, str]
+) -> dict[str, TerminologyTerm]:
+    if language != "simplified_chinese":
+        return {}
+    return parse_terminology_terms(prompt_assets[1]).get(language, {})
+
+
+def terminology_for_language_from_assets(
+    language: str, prompt_assets: tuple[str, str, str]
+) -> dict[str, str]:
+    return {
+        source: term.translation
+        for source, term in terminology_terms_for_language_from_assets(
+            language, prompt_assets
+        ).items()
+    }
 
 
 def parse_csv_values(value: str) -> list[str]:
@@ -502,15 +631,23 @@ def render_prompt(
         "turkish": "Turkish",
         "polish": "Polish",
     }
+    target_name = target_names.get(language, language)
+    rendered_terminology, _terminology = render_terminology_for_language(
+        language, prompt_assets[1], target_name
+    )
+    rendered_official_references, _official_references = (
+        render_official_references_for_language(language, tasks, target_name)
+    )
     lines = [
         "# QmClient translation task",
         prompt_assets[0].strip(),
         "",
-        f"Target language: {target_names.get(language, language)}",
+        f"Target language: {target_name}",
         f"Module: {module}",
         "",
-        "Terminology:",
-        prompt_assets[1].strip(),
+        rendered_terminology,
+        "",
+        rendered_official_references,
         "",
         "Few shots:",
         prompt_assets[2].strip(),
@@ -672,7 +809,76 @@ def may_keep_source_text_for_language(language: str, source: str) -> bool:
     ) or may_keep_source_text(source)
 
 
-def language_quality_failure(language: str, source: str, translation: str) -> str:
+def terminology_quality_failure(
+    source: str,
+    translation: str,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
+) -> str:
+    if not terminology:
+        return ""
+    if source in terminology:
+        term = _coerce_terminology_term(terminology[source], "exact")
+        if term.enforce == "prompt_only":
+            return ""
+        if term.translation and term.translation not in translation:
+            return f"terminology mismatch: expected {term.translation!r} for {source!r}"
+        return ""
+    for term_source, expected in sorted(
+        terminology.items(), key=lambda item: len(item[0]), reverse=True
+    ):
+        term = _coerce_terminology_term(expected, "pattern")
+        if term.enforce != "pattern":
+            continue
+        if not _source_contains_term(source, term_source):
+            continue
+        if term.translation and term.translation not in translation:
+            return (
+                f"terminology mismatch: expected {term.translation!r} for "
+                f"{term_source!r}"
+            )
+        return ""
+    return ""
+
+
+def _coerce_terminology_term(
+    value: str | TerminologyTerm, default_enforce: str
+) -> TerminologyTerm:
+    if isinstance(value, TerminologyTerm):
+        return value
+    return TerminologyTerm(value, default_enforce)
+
+
+def _source_contains_term(source: str, term_source: str) -> bool:
+    if len(term_source) <= 2:
+        return False
+    if term_source == "Hook":
+        return source.strip().casefold() == "hook"
+    if term_source == "Hook collision line":
+        return source.strip().casefold() == "hook collision line"
+    if term_source == "Grenade":
+        lowered = source.strip().casefold()
+        return (
+            lowered == "grenade"
+            or lowered.startswith("switch ")
+            and " to grenade" in lowered
+        )
+    return (
+        re.search(
+            rf"(?<![A-Za-z0-9]){re.escape(term_source)}(?![A-Za-z0-9])",
+            source,
+            flags=re.IGNORECASE,
+        )
+        is not None
+    )
+
+
+def language_quality_failure(
+    language: str,
+    source: str,
+    translation: str,
+    *,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
+) -> str:
     translation = translation.strip()
     if not translation:
         return "empty translation returned"
@@ -713,6 +919,9 @@ def language_quality_failure(language: str, source: str, translation: str) -> st
     ):
         if not may_keep_source_text_for_language(language, source):
             return "russian output does not contain cyrillic text"
+    terminology_reason = terminology_quality_failure(source, translation, terminology)
+    if terminology_reason:
+        return terminology_reason
     return ""
 
 
@@ -741,6 +950,8 @@ def validate_json_translations(
     tasks: list[TranslationTask],
     response_items: list[dict],
     language: str,
+    *,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
 ) -> tuple[dict[tuple[str, str], str], list[str]]:
     requested = {task.identity: task for task in tasks}
     remaining = set(requested)
@@ -755,7 +966,10 @@ def validate_json_translations(
             failures.append(f"unexpected identity returned: {identity!r}")
             continue
         reason = language_quality_failure(
-            language, requested[identity].source_text, translation
+            language,
+            requested[identity].source_text,
+            translation,
+            terminology=terminology,
         )
         if reason:
             failures.append(f"{reason}: {identity!r}")
@@ -780,8 +994,12 @@ def validate_translations(
     tasks: list[TranslationTask],
     response_items: list[dict],
     language: str = "simplified_chinese",
+    *,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
 ) -> tuple[dict[tuple[str, str], str], list[str]]:
-    return validate_json_translations(tasks, response_items, language)
+    return validate_json_translations(
+        tasks, response_items, language, terminology=terminology
+    )
 
 
 def apply_translations_to_store(
@@ -821,21 +1039,29 @@ def translation_patch_for_language(
 
 
 def parse_translation_output(
-    text: str, tasks: list[TranslationTask], language: str
+    text: str,
+    tasks: list[TranslationTask],
+    language: str,
+    *,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
 ) -> tuple[dict[tuple[str, str], str], list[str]]:
     try:
         payload = json.loads(text)
     except json.JSONDecodeError:
         payload = None
     if isinstance(payload, list) and all(isinstance(item, dict) for item in payload):
-        return validate_json_translations(tasks, payload, language)
+        return validate_json_translations(
+            tasks, payload, language, terminology=terminology
+        )
     lines = parse_indexed_response_lines(text, len(tasks))
     if lines is None:
         return {}, ["numbered response is incomplete or malformed"]
     translated: dict[tuple[str, str], str] = {}
     failures: list[str] = []
     for task, translation in zip(tasks, lines):
-        reason = language_quality_failure(language, task.source_text, translation)
+        reason = language_quality_failure(
+            language, task.source_text, translation, terminology=terminology
+        )
         if reason:
             failures.append(f"{reason}: {task.identity!r}")
             continue
@@ -873,7 +1099,10 @@ def load_existing_draft_module(
 
 
 def load_existing_valid_draft_identities(
-    language: str, source_texts: dict[tuple[str, str], str]
+    language: str,
+    source_texts: dict[tuple[str, str], str],
+    *,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
 ) -> set[tuple[str, str]]:
     valid: set[tuple[str, str]] = set()
     draft_dir = TRANSLATIONS_DRAFT_DIR / language
@@ -886,7 +1115,7 @@ def load_existing_valid_draft_identities(
             translation = translations.get(language, "")
             source = source_texts.get(identity, identity[0])
             if translation and not language_quality_failure(
-                language, source, translation
+                language, source, translation, terminology=terminology
             ):
                 valid.add(identity)
     return valid
@@ -896,6 +1125,8 @@ def load_valid_draft_translations(
     language: str,
     source_texts: dict[tuple[str, str], str],
     modules: set[str] | None = None,
+    *,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
 ) -> dict[str, dict[tuple[str, str], str]]:
     by_module: dict[str, dict[tuple[str, str], str]] = {}
     draft_dir = TRANSLATIONS_DRAFT_DIR / language
@@ -911,7 +1142,7 @@ def load_valid_draft_translations(
             translation = translations.get(language, "")
             source = source_texts.get(identity, identity[0])
             if translation and not language_quality_failure(
-                language, source, translation
+                language, source, translation, terminology=terminology
             ):
                 by_module.setdefault(module, {})[identity] = translation
     return by_module
@@ -935,6 +1166,7 @@ def write_draft_module(
     *,
     source_texts: dict[tuple[str, str], str] | None = None,
     merge_existing: bool = True,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
 ) -> Path:
     draft_dir = TRANSLATIONS_DRAFT_DIR / language
     draft_dir.mkdir(parents=True, exist_ok=True)
@@ -951,6 +1183,7 @@ def write_draft_module(
                 language,
                 source_texts.get(identity, identity[0]),
                 translation_map.get(language, ""),
+                terminology=terminology,
             )
         }
     for task in tasks:
@@ -991,6 +1224,8 @@ def prune_written_draft_module(
     module: str,
     written_identities: set[tuple[str, str]],
     source_texts: dict[tuple[str, str], str],
+    *,
+    terminology: dict[str, str | TerminologyTerm] | None = None,
 ) -> None:
     draft_path = TRANSLATIONS_DRAFT_DIR / language / f"{module}.toml"
     if not draft_path.exists():
@@ -1001,7 +1236,10 @@ def prune_written_draft_module(
         if identity in written_identities:
             continue
         if translation and not language_quality_failure(
-            language, source_texts.get(identity, identity[0]), translation
+            language,
+            source_texts.get(identity, identity[0]),
+            translation,
+            terminology=terminology,
         ):
             remaining[identity] = translations
     if not remaining:
@@ -1024,8 +1262,13 @@ def write_back_draft(
     source_texts: dict[tuple[str, str], str],
     store: dict[str, dict[tuple[str, str], dict[str, str]]],
     rewrite_existing: bool = False,
+    prompt_assets: tuple[str, str, str] | None = None,
 ) -> tuple[int, list[str]]:
-    draft_by_module = load_valid_draft_translations(language, source_texts, modules)
+    prompt_assets = prompt_assets or load_prompt_assets()
+    terminology = terminology_terms_for_language_from_assets(language, prompt_assets)
+    draft_by_module = load_valid_draft_translations(
+        language, source_texts, modules, terminology=terminology
+    )
     if not draft_by_module:
         return 0, [f"no valid draft translations found for {language}"]
 
@@ -1060,6 +1303,7 @@ def write_back_draft(
             module,
             set(translations),
             source_texts,
+            terminology=terminology,
         )
         written += len(translations)
         print(
@@ -1079,6 +1323,7 @@ def translate_batch(
     prompt_assets: tuple[str, str, str],
     store: dict[str, dict[tuple[str, str], dict[str, str]]],
 ) -> tuple[dict[tuple[str, str], str], list[str]]:
+    terminology = terminology_terms_for_language_from_assets(language, prompt_assets)
     prompt = render_prompt(
         language,
         module,
@@ -1090,7 +1335,9 @@ def translate_batch(
         response = client.chat_completion(
             [ChatMessage("system", prompt_assets[0]), ChatMessage("user", prompt)]
         )
-        return parse_translation_output(response, batch, language)
+        return parse_translation_output(
+            response, batch, language, terminology=terminology
+        )
     except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return {}, [f"batch {module}#{batch_number}: {exc}"]
 
@@ -1174,8 +1421,11 @@ def translate_language_to_drafts(
     prompt_assets: tuple[str, str, str],
     client: LocalHttpClient,
 ) -> None:
+    terminology = terminology_terms_for_language_from_assets(language, prompt_assets)
     existing_draft = (
-        load_existing_valid_draft_identities(language, source_texts)
+        load_existing_valid_draft_identities(
+            language, source_texts, terminology=terminology
+        )
         if args.resume and should_write_draft(language, args.write_back)
         else set()
     )
@@ -1232,6 +1482,7 @@ def translate_language_to_drafts(
                 translated,
                 source_texts=source_texts,
                 merge_existing=not args.rewrite,
+                terminology=terminology,
             )
             print(
                 f"{language}: wrote draft {out_path} "

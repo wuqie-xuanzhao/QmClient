@@ -596,7 +596,7 @@ AntiPing (latency compensation)
 == 延迟补偿（AntiPing）
 
 AntiPing: predict grenade path
-== 延迟补偿：预测榴弹炮路径
+== 延迟补偿：预测榴弹枪路径
 
 AntiPing: predict other players
 == 延迟补偿：预测其他玩家
@@ -2885,7 +2885,7 @@ Gives jetpack to you
 == 给你喷气背包
 
 Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
-== 给你 id 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，榴弹炮 = 3，激光 = 4，忍者 = 5）
+== 给你 id 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，榴弹枪 = 3，激光 = 4，忍者 = 5）
 
 Gives you as many jumps as you specify
 == 给予你指定次数的跳跃
@@ -2981,7 +2981,7 @@ Greeting text
 == 打招呼文本
 
 Grenade
-== 榴弹炮
+== 榴弹枪
 
 Group name
 == 分组名称
@@ -5528,7 +5528,7 @@ Removes the shotgun from you
 == 从你身上拿走霰弹枪
 
 removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)
-== 从你身上移除 ID 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，榴弹炮 = 3，激光 = 4，忍者 = 5）
+== 从你身上移除 ID 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，榴弹枪 = 3，激光 = 4，忍者 = 5）
 
 Rename
 == 重命名
@@ -6374,7 +6374,7 @@ Show ghost
 == 显示影子
 
 Show grenade and laser trajectory preview
-== 显示枪榴弹和激光轨迹预览
+== 显示榴弹枪和激光轨迹预览
 
 Show Grid
 == 显示网格
@@ -7058,7 +7058,7 @@ Switch failed
 == 切换失败
 
 Switch inactive tee to grenade
-== 将非活动 Tee 切换到榴弹
+== 将非活动 Tee 切换到榴弹枪
 
 Switch inactive tee to gun
 == 将非活动 Tee 切换到手枪
@@ -7091,7 +7091,7 @@ Switch team
 == 切换队伍
 
 Switch to grenade
-== 切换到榴弹炮
+== 切换到榴弹枪
 
 Switch to gun
 == 切换到枪
@@ -7277,10 +7277,10 @@ Teleport free spectator camera between hovered tele-in/out or checkpoint tele an
 == 在悬停的传送入口/出口或检查点传送点与其对应点之间传送自由观战镜头
 
 Teleport grenade disabled
-== 传送榴弹炮已关闭
+== 传送榴弹枪已关闭
 
 Teleport grenade enabled
-== 传送榴弹炮已开启
+== 传送榴弹枪已开启
 
 Teleport gun disabled
 == 传送枪已关闭
@@ -7361,7 +7361,7 @@ The audio device couldn't be initialised.
 == 初始化音频设备失败。
 
 The best voice chat, of course!
-== 当然是最好的语音啦！
+== 当然是最好的语音聊天啦！
 
 The Config tab reuses QmClient's client config browser
 == 配置页复用栖梦里的客户端配置浏览器
@@ -8387,7 +8387,7 @@ You can see other players. To disable this use DDNet client and type /showothers
 == 你当前可以看到其他玩家。要关闭此功能，请使用 DDNet 客户端并输入 /showothers
 
 You can shoot others with grenade
-== 你现在可以用榴弹炮攻击其他玩家
+== 你现在可以用榴弹枪攻击其他玩家
 
 You can shoot others with laser
 == 你现在可以用激光攻击其他玩家
@@ -8432,7 +8432,7 @@ You can't move yourself to spectators
 == 你不能把自己移到旁观
 
 You can't shoot others with grenade
-== 你现在不能用榴弹炮攻击其他玩家
+== 你现在不能用榴弹枪攻击其他玩家
 
 You can't shoot others with laser
 == 你现在不能用激光攻击其他玩家
@@ -8648,7 +8648,7 @@ Zoom out
 == 允许 FTAPI 自动翻译（可能导致过载）
 
 关键词回复使用Dummy
-== 关键词回复使用 Dummy
+== 关键词回复使用分身
 
 关键词回复规则（每行: [rename] [regex] 关键词=>回复）
 == 关键词回复规则（每行：[rename] [regex] 关键词=>回复）
@@ -9059,7 +9059,7 @@ Zoom out
 == 本体和分身都被冻结时，自动切换到先解冻的那个
 
 本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示
-== 本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示
+== 本体或分身被锤醒时，在对应玩家随机的左上或右上角显示提示
 
 本地目标语言识别占比阈值
 == 本地目标语言识别占比阈值

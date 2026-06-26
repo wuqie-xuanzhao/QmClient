@@ -620,7 +620,7 @@ namespace
 		if(TryApplyBestCandidate(pImpl, pStorage, TrackKey))
 			return;
 		pImpl->m_State = CQmLyrics::SImpl::EState::NO_RESULT;
-		SetStateStatus(pImpl, "Lyrics: no lyrics found");
+		SetStateStatus(pImpl, Localize("Lyrics: no lyrics found"));
 		pImpl->m_vPendingCandidates.clear();
 	}
 
@@ -722,7 +722,7 @@ void CQmLyrics::TickStateMachine()
 			CancelAllSources(m_pImpl.get());
 		ResetPlaybackState(m_pImpl.get());
 		m_pImpl->m_State = SImpl::EState::IDLE;
-		SetStateStatus(m_pImpl.get(), "Lyrics: no media playing");
+		SetStateStatus(m_pImpl.get(), Localize("Lyrics: no media playing"));
 		return;
 	}
 	m_pImpl->m_LastMediaPlaying = MediaState.m_Playing;
@@ -830,7 +830,7 @@ void CQmLyrics::TickStateMachine()
 		else if(!HasUsefulQuery(m_pImpl->m_PendingQuery))
 		{
 			m_pImpl->m_State = SImpl::EState::NO_RESULT;
-			SetStateStatus(m_pImpl.get(), "Lyrics: no media playing");
+			SetStateStatus(m_pImpl.get(), Localize("Lyrics: no media playing"));
 		}
 		else if(TryLoadCache(m_pImpl.get(), Storage(), m_pImpl->m_LastTrackKey, RequiredSourceId, m_pImpl->m_vSourceOrder))
 		{
@@ -839,7 +839,7 @@ void CQmLyrics::TickStateMachine()
 		else if(g_Config.m_QmLyricsAutoFetch)
 		{
 			m_pImpl->m_State = SImpl::EState::FETCHING;
-			SetStateStatus(m_pImpl.get(), "Lyrics: searching...");
+			SetStateStatus(m_pImpl.get(), Localize("Lyrics: searching..."));
 			m_pImpl->m_SearchGeneration++;
 			m_pImpl->m_PendingSources = 0;
 			m_pImpl->m_NextSourceOrderIndex = 0;
@@ -852,7 +852,7 @@ void CQmLyrics::TickStateMachine()
 				if(m_pImpl->m_PendingSources == 0)
 				{
 					m_pImpl->m_State = SImpl::EState::NO_RESULT;
-					SetStateStatus(m_pImpl.get(), "Lyrics: no lyrics found");
+					SetStateStatus(m_pImpl.get(), Localize("Lyrics: no lyrics found"));
 				}
 			}
 		}
@@ -875,7 +875,7 @@ void CQmLyrics::TickStateMachine()
 		if(!Dispatched)
 		{
 			m_pImpl->m_State = SImpl::EState::NO_RESULT;
-			SetStateStatus(m_pImpl.get(), "Lyrics: no lyrics found");
+			SetStateStatus(m_pImpl.get(), Localize("Lyrics: no lyrics found"));
 			m_pImpl->m_vPendingCandidates.clear();
 		}
 	}

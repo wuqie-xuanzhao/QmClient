@@ -417,7 +417,7 @@ polish = "AntiPing (kompensacja opóźnienia)"
 [[message]]
 key = "AntiPing: predict grenade path"
 [message.translations]
-simplified_chinese = "延迟补偿：预测榴弹炮路径"
+simplified_chinese = "延迟补偿：预测榴弹枪路径"
 traditional_chinese = "延遲補償：預測榴彈砲路徑"
 japanese = "AntiPing：グレネード軌道を予測"
 korean = "안티핑: 유탄 경로 예측"
@@ -3233,7 +3233,7 @@ polish = "Karta graficzna"
 [[message]]
 key = "Grenade"
 [message.translations]
-simplified_chinese = "榴弹炮"
+simplified_chinese = "榴弹枪"
 traditional_chinese = "榴彈砲"
 japanese = "グレネード"
 korean = "유탄"

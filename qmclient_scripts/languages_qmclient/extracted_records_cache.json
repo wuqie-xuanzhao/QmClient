@@ -2511,6 +2511,13 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/tclient/menus_tclient.cpp",
       "context": "",
+      "line": 1381
+    },
+    {
+      "key": "Auto reply",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/tclient/menus_tclient.cpp",
+      "context": "",
       "line": 2271
     },
     {
@@ -12493,6 +12500,27 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
       "context": "",
+      "line": 623
+    },
+    {
+      "key": "Lyrics: no lyrics found",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
+      "context": "",
+      "line": 855
+    },
+    {
+      "key": "Lyrics: no lyrics found",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
+      "context": "",
+      "line": 878
+    },
+    {
+      "key": "Lyrics: no lyrics found",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
+      "context": "",
       "line": 1147
     },
     {
@@ -12500,7 +12528,28 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
       "context": "",
+      "line": 725
+    },
+    {
+      "key": "Lyrics: no media playing",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
+      "context": "",
+      "line": 833
+    },
+    {
+      "key": "Lyrics: no media playing",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
+      "context": "",
       "line": 1141
+    },
+    {
+      "key": "Lyrics: searching...",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/qmclient/qm_lyrics/qm_lyrics.cpp",
+      "context": "",
+      "line": 842
     },
     {
       "key": "Lyrics: searching...",
@@ -26102,6 +26151,13 @@
       "source": "src/game/client/components/tclient/menus_tclient.cpp",
       "context": "",
       "line": 1134
+    },
+    {
+      "key": "Visual: Font & Cursor",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/tclient/menus_tclient.cpp",
+      "context": "",
+      "line": 1372
     },
     {
       "key": "Visual: Font & Cursor",

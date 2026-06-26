@@ -117,6 +117,7 @@ def translation_quality_errors(
     *,
     active_module_identities: set[tuple[str, str, str]] | None = None,
     active_identities: set[tuple[str, str]] | None = None,
+    terminology_by_language: dict[str, dict[str, str]] | None = None,
     limit: int | None = None,
 ) -> list[str]:
     errors: list[str] = []
@@ -164,9 +165,85 @@ def translation_quality_errors(
                         f"{module_name}: [{context}] {key}: {language} contains CJK text "
                         f"{toml_quote(translation)}"
                     )
+                terminology_reason = _terminology_quality_failure(
+                    key,
+                    translation,
+                    (terminology_by_language or {}).get(language, {}),
+                )
+                if terminology_reason:
+                    errors.append(
+                        f"{module_name}: [{context}] {key}: {language} "
+                        f"{terminology_reason}"
+                    )
                 if limit is not None and len(errors) >= limit:
                     return errors
     return errors
+
+
+def _terminology_quality_failure(
+    source: str, translation: str, terminology: dict[str, object]
+) -> str:
+    if not terminology:
+        return ""
+    if source in terminology:
+        expected, enforce = _terminology_value_parts(terminology[source], "exact")
+        if enforce == "prompt_only":
+            return ""
+        if expected and expected not in translation:
+            return (
+                f"terminology mismatch: expected {toml_quote(expected)} "
+                f"for {toml_quote(source)}"
+            )
+        return ""
+    for term_source, expected in sorted(
+        terminology.items(), key=lambda item: len(item[0]), reverse=True
+    ):
+        expected_translation, enforce = _terminology_value_parts(expected, "pattern")
+        if enforce != "pattern":
+            continue
+        if not _source_contains_term(source, term_source):
+            continue
+        if expected_translation and expected_translation not in translation:
+            return (
+                f"terminology mismatch: expected {toml_quote(expected_translation)} "
+                f"for {toml_quote(term_source)}"
+            )
+        return ""
+    return ""
+
+
+def _terminology_value_parts(value: object, default_enforce: str) -> tuple[str, str]:
+    translation = getattr(value, "translation", value)
+    enforce = getattr(value, "enforce", default_enforce)
+    if not isinstance(translation, str):
+        translation = ""
+    if enforce not in {"exact", "pattern", "prompt_only"}:
+        enforce = default_enforce
+    return translation, enforce
+
+
+def _source_contains_term(source: str, term_source: str) -> bool:
+    if len(term_source) <= 2:
+        return False
+    if term_source == "Hook":
+        return source.strip().casefold() == "hook"
+    if term_source == "Hook collision line":
+        return source.strip().casefold() == "hook collision line"
+    if term_source == "Grenade":
+        lowered = source.strip().casefold()
+        return (
+            lowered == "grenade"
+            or lowered.startswith("switch ")
+            and " to grenade" in lowered
+        )
+    return (
+        re.search(
+            rf"(?<![A-Za-z0-9]){re.escape(term_source)}(?![A-Za-z0-9])",
+            source,
+            flags=re.IGNORECASE,
+        )
+        is not None
+    )
 
 
 def toml_format_errors(path: Path) -> list[str]:

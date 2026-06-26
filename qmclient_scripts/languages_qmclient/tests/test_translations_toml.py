@@ -299,6 +299,23 @@ japanese = "適用"
             any("spanish repeats English source key" in item for item in errors)
         )
 
+    def test_translation_quality_rejects_simplified_chinese_terminology_mismatch(self):
+        store = {
+            "menus": {
+                ("Grenade", ""): {
+                    "simplified_chinese": "榴弹炮",
+                }
+            }
+        }
+
+        errors = i18n_store.translation_quality_errors(
+            store,
+            terminology_by_language={"simplified_chinese": {"Grenade": "榴弹枪"}},
+        )
+
+        self.assertTrue(any("terminology mismatch" in item for item in errors))
+        self.assertTrue(any("榴弹枪" in item for item in errors))
+
     def test_translation_quality_can_be_limited_to_active_identities(self):
         store = {
             "qmclient": {

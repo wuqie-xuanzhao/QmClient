@@ -11,6 +11,7 @@ This script is read-only. It validates:
 import os
 import sys
 import argparse
+from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.dirname(__file__))
@@ -18,6 +19,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import generate_all
 import i18n_store
 import source_keys
+import translate_with_local_http
 import twlang_qmclient as twlang
 
 parser = argparse.ArgumentParser(description="Validate QmClient language sync.")
@@ -160,6 +162,17 @@ for language in generate_all.GENERATED_LANGUAGES:
         for key, context in missing_toml[:10]:
             print(f"    - [{context}] {key}" if context else f"    - {key}")
 
+terminology_by_language = {}
+terminology_path = (
+    Path(__file__).resolve().parent / "prompt_assets" / "terminology.toml"
+)
+if terminology_path.exists():
+    parsed_terminology = translate_with_local_http.parse_terminology_terms(
+        terminology_path.read_text(encoding="utf-8")
+    )
+    terminology_by_language = {
+        "simplified_chinese": parsed_terminology.get("simplified_chinese", {})
+    }
 translation_quality_errors = i18n_store.translation_quality_errors(
     loaded_i18n_store,
     active_module_identities={
@@ -170,6 +183,7 @@ translation_quality_errors = i18n_store.translation_quality_errors(
         )
         for record in current_records
     },
+    terminology_by_language=terminology_by_language,
     limit=20,
 )
 if translation_quality_errors:

@@ -1692,6 +1692,54 @@ def _business_data_records_from_path(
             line_text = lines[line - 1] if 0 < line <= len(lines) else ""
             if "dbg_assert" in line_text or "m_SkinsUsageList" in text:
                 add_business(text, line, "skin manager assertion diagnostic text")
+            elif text in {"Default preset", "Server preset"}:
+                add_business(text, line, "skin queue built-in preset storage name")
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/menus.h"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "return " in line_text and any(
+                token in text
+                for token in (
+                    "DDmaX",
+                    "古典",
+                    "简单图",
+                    "中阶图",
+                    "高阶",
+                    "疯狂",
+                    "分身",
+                    "单人",
+                )
+            ):
+                add_business(
+                    text, line, "server browser normalized game type display name"
+                )
+        if records:
+            return records
+
+    if normalized.endswith("src/game/client/components/system_media_controls.cpp"):
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "APPLE_MUSIC_ARTIST_ALBUM_SEPARATOR" in line_text:
+                add_business(text, line, "Apple Music metadata parser separator")
+        if records:
+            return records
+
+    if "/src/game/client/components/qmclient/qm_lyrics/" in f"/{normalized}":
+        for text, line in _extract_cpp_string_literal_records(content):
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if (
+                'HeaderString("User-Agent"' in line_text
+                or "Error(" in line_text
+                or text == "': pOut->append("
+            ) and looks_human_readable(text):
+                add_business(
+                    text,
+                    line,
+                    "lyrics provider request metadata or internal diagnostic text",
+                )
         if records:
             return records
 

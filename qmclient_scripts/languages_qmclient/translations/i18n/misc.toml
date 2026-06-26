@@ -2225,7 +2225,7 @@ polish = "Daje ci plecak odrzutowy"
 [[message]]
 key = "Gives weapon with id i to you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)"
 [message.translations]
-simplified_chinese = "给你 id 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，榴弹炮 = 3，激光 = 4，忍者 = 5）"
+simplified_chinese = "给你 id 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，榴弹枪 = 3，激光 = 4，忍者 = 5）"
 traditional_chinese = "給你 ID 為 i 的武器（全部 = -1，槌子 = 0，槍 = 1，霰彈槍 = 2，榴彈砲 = 3，雷射 = 4，忍者 = 5）"
 japanese = "ID i の武器をあなたに与えます（すべて = -1、ハンマー = 0、ガン = 1、ショットガン = 2、グレネード = 3、レーザー = 4、ニンジャ = 5）"
 korean = "ID i 의 무기를 당신에게 줍니다 (전체 = -1, 망치 = 0, 권총 = 1, 산탄총 = 2, 유탄 = 3, 레이저 = 4, 닌자 = 5)"
@@ -4881,7 +4881,7 @@ polish = "Usuwa strzelbę z ciebie"
 [[message]]
 key = "removes weapon with id i from you (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, laser = 4, ninja = 5)"
 [message.translations]
-simplified_chinese = "从你身上移除 ID 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，榴弹炮 = 3，激光 = 4，忍者 = 5）"
+simplified_chinese = "从你身上移除 ID 为 i 的武器（全部 = -1，锤子 = 0，枪 = 1，霰弹枪 = 2，榴弹枪 = 3，激光 = 4，忍者 = 5）"
 traditional_chinese = "從你身上移除 ID 為 i 的武器（全部 = -1，鎚子 = 0，槍 = 1，霰彈槍 = 2，榴彈砲 = 3，雷射 = 4，忍者 = 5）"
 japanese = "あなたから ID i の武器を削除する（全て = -1、ハンマー = 0、ガン = 1、ショットガン = 2、グレネード = 3、レーザー = 4、忍者 = 5）"
 korean = "ID i의 무기를 당신에게서 제거합니다 (전체 = -1, 망치 = 0, 권총 = 1, 샷건 = 2, 유탄 = 3, 레이저 = 4, 닌자 = 5)"
@@ -6547,7 +6547,7 @@ key = "Switch dummy to grenade"
 [message.translations]
 japanese = "ダミーをグレネードに切り替え"
 korean = "더미를 수류탄으로 전환"
-simplified_chinese = "切换分身到榴弹炮"
+simplified_chinese = "将分身切换到榴弹枪"
 traditional_chinese = "切換分身到榴彈砲"
 russian = "Переключить дамми на гранату"
 german = "Dummy auf Granate umschalten"
@@ -6673,7 +6673,7 @@ polish = "Przełącz tryb obserwacji"
 [[message]]
 key = "Switch to grenade"
 [message.translations]
-simplified_chinese = "切换到榴弹炮"
+simplified_chinese = "切换到榴弹枪"
 traditional_chinese = "切換到榴彈發射器"
 japanese = "グレネードに切り替え"
 korean = "유탄 발사기로 전환"
@@ -9179,7 +9179,7 @@ korean = "토스트 메시지 표시"
 [[message]]
 key = "Switch inactive tee to grenade"
 [message.translations]
-simplified_chinese = "将非活跃分身切换到榴弹炮"
+simplified_chinese = "将非活跃分身切换到榴弹枪"
 traditional_chinese = "將非活躍 Tee 切換到榴彈發射器"
 japanese = "非アクティブな Tee をグレネードに切り替える"
 korean = "비활성 Tee를 유탄으로 전환"

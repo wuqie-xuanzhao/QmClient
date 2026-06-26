@@ -54,6 +54,124 @@ class TranslateWithLocalHttpTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             translate_with_local_http.parse_response('{"key":"Play"}')
 
+    def test_render_prompt_includes_target_language_terminology_only(self):
+        tasks = [
+            translate_with_local_http.TranslationTask(
+                "menus", ("Grenade", ""), "Grenade"
+            )
+        ]
+        terminology = """[[term]]
+source = "Grenade"
+simplified_chinese = "榴弹枪"
+traditional_chinese = "榴彈槍"
+"""
+
+        prompt = translate_with_local_http.render_prompt(
+            "simplified_chinese",
+            "menus",
+            tasks,
+            prompt_assets=("# Rules", terminology, ""),
+            store={},
+        )
+
+        self.assertIn("Terminology for Simplified Chinese:", prompt)
+        self.assertIn("- Grenade => 榴弹枪", prompt)
+        self.assertNotIn("[[term]]", prompt)
+        self.assertNotIn("traditional_chinese", prompt)
+        self.assertNotIn("榴彈槍", prompt)
+
+    def test_parse_terminology_keeps_enforcement_strategy(self):
+        terminology = """[[term]]
+source = "Grenade"
+simplified_chinese = "榴弹枪"
+enforce = "pattern"
+
+[[term]]
+source = "Spectate"
+simplified_chinese = "旁观"
+enforce = "prompt_only"
+"""
+
+        terms = translate_with_local_http.parse_terminology_terms(terminology)
+
+        self.assertEqual(terms["simplified_chinese"]["Grenade"].translation, "榴弹枪")
+        self.assertEqual(terms["simplified_chinese"]["Grenade"].enforce, "pattern")
+        self.assertEqual(terms["simplified_chinese"]["Spectate"].enforce, "prompt_only")
+
+    def test_maintained_simplified_chinese_terminology_covers_core_terms(self):
+        terminology_path = (
+            translate_with_local_http.PROMPT_ASSETS_DIR / "terminology.toml"
+        )
+
+        terms = translate_with_local_http.parse_terminology_terms(
+            terminology_path.read_text(encoding="utf-8")
+        )["simplified_chinese"]
+
+        expected_terms = {
+            "Grenade": ("榴弹枪", "pattern"),
+            "Pistol": ("手枪", "exact"),
+            "Hook": ("钩索", "exact"),
+            "Scoreboard": ("计分板", "exact"),
+            "Console": ("控制台", "exact"),
+            "Demo": ("回放", "prompt_only"),
+            "Spectate": ("旁观", "prompt_only"),
+            "AntiPing": ("延迟补偿（AntiPing）", "prompt_only"),
+            "Skin queue": ("皮肤队列", "pattern"),
+            "Translation backend": ("翻译后端", "pattern"),
+            "HTTP": ("HTTP", "exact"),
+        }
+        self.assertGreaterEqual(len(terms), 50)
+        for source, (translation, enforce) in expected_terms.items():
+            self.assertEqual(terms[source].translation, translation)
+            self.assertEqual(terms[source].enforce, enforce)
+
+    def test_parse_twlang_pairs_loads_official_simplified_chinese_terms(self):
+        terms = translate_with_local_http.parse_twlang_pairs(
+            "Grenade\n== 榴弹枪\n\nHook\n== 钩索\n"
+        )
+
+        self.assertEqual(terms["Grenade"], "榴弹枪")
+        self.assertEqual(terms["Hook"], "钩索")
+
+    def test_render_prompt_includes_task_scoped_official_references(self):
+        tasks = [
+            translate_with_local_http.TranslationTask(
+                "menus", ("Grenade", ""), "Grenade"
+            )
+        ]
+
+        with mock.patch.object(
+            translate_with_local_http,
+            "official_terminology_for_language",
+            return_value={"Grenade": "榴弹枪", "Hook": "钩索"},
+        ):
+            prompt = translate_with_local_http.render_prompt(
+                "simplified_chinese",
+                "menus",
+                tasks,
+                prompt_assets=("# Rules", "", ""),
+                store={},
+            )
+
+        self.assertIn("Official DDNet Simplified Chinese references", prompt)
+        self.assertIn("- Grenade => 榴弹枪", prompt)
+        self.assertNotIn("- Hook => 钩索", prompt)
+
+    def test_official_references_do_not_become_global_hard_checks(self):
+        with mock.patch.object(
+            translate_with_local_http,
+            "official_terminology_for_language",
+            return_value={"Spectate": "旁观者菜单"},
+        ):
+            terminology = (
+                translate_with_local_http.terminology_for_language_from_assets(
+                    "simplified_chinese",
+                    ("", "", ""),
+                )
+            )
+
+        self.assertNotIn("Spectate", terminology)
+
     def test_parse_response_rejects_non_object_items(self):
         with self.assertRaises(ValueError):
             translate_with_local_http.parse_response('["bad"]')
@@ -406,6 +524,91 @@ simplified_chinese = "退出"
         self.assertIn("unchanged source", failures[1])
         self.assertIn("missing translation", failures[2])
 
+    def test_validate_translations_rejects_simplified_chinese_terminology_mismatch(
+        self,
+    ):
+        tasks = [
+            translate_with_local_http.TranslationTask(
+                "menus", ("Grenade", ""), "Grenade"
+            )
+        ]
+
+        translations, failures = translate_with_local_http.validate_translations(
+            tasks,
+            [{"key": "Grenade", "context": "", "translation": "榴弹炮"}],
+            "simplified_chinese",
+            terminology={
+                "Grenade": translate_with_local_http.TerminologyTerm("榴弹枪", "exact")
+            },
+        )
+
+        self.assertEqual(translations, {})
+        self.assertTrue(any("terminology mismatch" in item for item in failures))
+        self.assertTrue(any("榴弹枪" in item for item in failures))
+
+    def test_terminology_quality_prefers_longer_matching_term(self):
+        self.assertEqual(
+            translate_with_local_http.terminology_quality_failure(
+                "Grenade Launcher",
+                "榴弹炮",
+                {
+                    "Grenade": translate_with_local_http.TerminologyTerm(
+                        "榴弹枪", "pattern"
+                    ),
+                    "Grenade Launcher": translate_with_local_http.TerminologyTerm(
+                        "榴弹炮", "exact"
+                    ),
+                },
+            ),
+            "",
+        )
+
+    def test_terminology_quality_prefers_exact_official_source_key(self):
+        self.assertEqual(
+            translate_with_local_http.terminology_quality_failure(
+                "Grenade Launcher",
+                "榴弹炮",
+                {
+                    "Grenade": translate_with_local_http.TerminologyTerm(
+                        "榴弹枪", "pattern"
+                    ),
+                    "Grenade Launcher": translate_with_local_http.TerminologyTerm(
+                        "榴弹炮", "exact"
+                    ),
+                },
+            ),
+            "",
+        )
+        self.assertIn(
+            "terminology mismatch",
+            translate_with_local_http.terminology_quality_failure(
+                "Grenade",
+                "榴弹炮",
+                {
+                    "Grenade": translate_with_local_http.TerminologyTerm(
+                        "榴弹枪", "exact"
+                    ),
+                    "Grenade Launcher": translate_with_local_http.TerminologyTerm(
+                        "榴弹炮", "exact"
+                    ),
+                },
+            ),
+        )
+
+    def test_prompt_only_terminology_does_not_block_quality(self):
+        self.assertEqual(
+            translate_with_local_http.terminology_quality_failure(
+                "Spectate",
+                "旁观者菜单",
+                {
+                    "Spectate": translate_with_local_http.TerminologyTerm(
+                        "旁观", "prompt_only"
+                    )
+                },
+            ),
+            "",
+        )
+
     def test_parse_translation_output_accepts_reordered_json_items(self):
         tasks = [
             translate_with_local_http.TranslationTask("menus", ("Play", ""), "Play"),
@@ -662,6 +865,84 @@ simplified_chinese = "开始游戏"
             content = (language_dir / "menus.toml").read_text(encoding="utf-8")
             self.assertIn('key = "Quit"', content)
             self.assertNotIn('key = "Refresh"', content)
+
+    def test_main_resume_retranslates_draft_with_terminology_mismatch(self):
+        records = [
+            mock.Mock(
+                key="Grenade",
+                source=Path("src/game/client/components/menus_settings.cpp"),
+                identity=mock.Mock(return_value=("Grenade", "")),
+            ),
+        ]
+        store = {"menus": {}}
+        fake_client = mock.Mock()
+        fake_client.chat_completion.return_value = json.dumps(
+            [{"key": "Grenade", "context": "", "translation": "榴弹枪"}]
+        )
+        terminology = """[[term]]
+source = "Grenade"
+simplified_chinese = "榴弹枪"
+enforce = "exact"
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            language_dir = draft_root / "simplified_chinese"
+            language_dir.mkdir(parents=True)
+            draft_path = language_dir / "menus.toml"
+            draft_path.write_text(
+                """[[message]]
+key = "Grenade"
+[message.translations]
+simplified_chinese = "榴弹炮"
+""",
+                encoding="utf-8",
+            )
+            argv = [
+                "translate_with_local_http.py",
+                "--languages",
+                "simplified_chinese",
+                "--base-url",
+                "http://127.0.0.1:1337/v1",
+                "--model",
+                "local-model",
+                "--module",
+                "menus",
+                "--limit",
+                "1",
+                "--resume",
+            ]
+            with (
+                mock.patch.object(sys, "argv", argv),
+                mock.patch.object(
+                    translate_with_local_http.source_keys,
+                    "collect_incremental_source_key_records",
+                    return_value=(records, (), False),
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "load_language_store",
+                    return_value=store,
+                ),
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http,
+                    "load_prompt_assets",
+                    return_value=("# Rules", terminology, ""),
+                ),
+                mock.patch.object(
+                    translate_with_local_http,
+                    "LocalHttpClient",
+                    return_value=fake_client,
+                ),
+            ):
+                translate_with_local_http.main()
+
+            fake_client.chat_completion.assert_called_once()
+            content = draft_path.read_text(encoding="utf-8")
+            self.assertIn('simplified_chinese = "榴弹枪"', content)
+            self.assertNotIn("榴弹炮", content)
 
     def test_write_back_draft_removes_written_module_draft(self):
         record = mock.Mock(

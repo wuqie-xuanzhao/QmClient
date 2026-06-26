@@ -1369,7 +1369,7 @@ SSettingsSection CMenus::BuildTClientThemeCacheSection()
 {
 	SSettingsSection S;
 	S.m_pName = "Visual: Font & Cursor";
-	ConfigureSettingsCardSection(S, "Visual: Font & Cursor", "tclient:visual-font-cursor", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);
+	ConfigureSettingsCardSection(S, Localizable("Visual: Font & Cursor"), "tclient:visual-font-cursor", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);
 	S.m_DependencyConfigInts = {&g_Config.m_TcCursorScale, &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcHammerRotatesWithCursor};
 	return S;
 }
@@ -1378,7 +1378,7 @@ SSettingsSection CMenus::BuildTClientAutoReplyCacheSection()
 {
 	SSettingsSection S;
 	S.m_pName = "Auto reply";
-	ConfigureSettingsCardSection(S, "Auto reply", "tclient:auto-reply", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientAutoReplyCacheSection(Col, Render); }, MarginBetweenSections);
+	ConfigureSettingsCardSection(S, Localizable("Auto reply"), "tclient:auto-reply", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientAutoReplyCacheSection(Col, Render); }, MarginBetweenSections);
 	S.m_DependencyConfigInts = {&g_Config.m_TcAutoReplyMuted, &g_Config.m_TcAutoReplyMinimized};
 	return S;
 }
