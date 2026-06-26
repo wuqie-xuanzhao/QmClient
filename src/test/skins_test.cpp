@@ -1099,6 +1099,40 @@ TEST(Skins, SkinListWaitsForCompletePlanInsteadOfSeedingPlaceholderEntry)
 	EXPECT_NE(Source.find("m_SkinList.m_vSkins = std::move(m_vPendingSkinListEntries);"), std::string::npos);
 }
 
+TEST(Skins, TeeSkinRefreshClearsListPreviewCacheBeforeReloadingSkinTextures)
+{
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+	const size_t RefreshBranch = Menus.find("if(ShouldRefresh)");
+	ASSERT_NE(RefreshBranch, std::string::npos);
+	const size_t RefreshSkins = Menus.find("GameClient()->RefreshSkins(CSkinDescriptor::FLAG_SIX);", RefreshBranch);
+	ASSERT_NE(RefreshSkins, std::string::npos);
+	const std::string RefreshBody = Menus.substr(RefreshBranch, RefreshSkins - RefreshBranch);
+
+	EXPECT_NE(Menus.find("void ClearSettingsTeeListPreviewCache()"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("ClearSettingsTeeListPreviewCache();"), std::string::npos);
+}
+
+TEST(Skins, AbortedLocalSkinLoadJobStopsBeforeExpensiveRefreshWork)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const size_t RunPos = Source.find("void CSkins::CSkinLoadJob::Run()");
+	ASSERT_NE(RunPos, std::string::npos);
+	const size_t DownloadRunPos = Source.find("void CSkins::CSkinDownloadJob::Run()", RunPos);
+	ASSERT_NE(DownloadRunPos, std::string::npos);
+	const std::string RunBody = Source.substr(RunPos, DownloadRunPos - RunPos);
+
+	const size_t ReadFilePos = RunBody.find("Storage()->ReadFile(aPath, m_StorageType");
+	const size_t DecodePos = RunBody.find("CImageLoader::LoadPng(pFileData, FileSize, aPath, m_Data.m_Info)");
+	const size_t PreparePos = RunBody.find("PrepareSkinData(m_aName, m_Data)");
+	ASSERT_NE(ReadFilePos, std::string::npos);
+	ASSERT_NE(DecodePos, std::string::npos);
+	ASSERT_NE(PreparePos, std::string::npos);
+
+	EXPECT_LT(RunBody.find("if(State() == IJob::STATE_ABORTED)"), ReadFilePos);
+	EXPECT_LT(RunBody.find("if(State() == IJob::STATE_ABORTED)", ReadFilePos), DecodePos);
+	EXPECT_LT(RunBody.find("if(State() == IJob::STATE_ABORTED)", DecodePos), PreparePos);
+}
+
 TEST(Skins, AsyncSkinListKeepsQueuedColorVariantsSelectable)
 {
 	std::ifstream HeaderFile(TestSourcePath("src/game/client/components/skins.h"));

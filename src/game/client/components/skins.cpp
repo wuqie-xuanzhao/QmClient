@@ -3322,11 +3322,22 @@ void CSkins::CSkinLoadJob::Run()
 	char aPath[IO_MAX_PATH_LENGTH];
 	str_format(aPath, sizeof(aPath), "skins/%s.png", m_aName);
 
+	if(State() == IJob::STATE_ABORTED)
+	{
+		return;
+	}
+
 	void *pFileData = nullptr;
 	unsigned FileSize = 0;
 	if(!m_pSkins->Storage()->ReadFile(aPath, m_StorageType, &pFileData, &FileSize))
 	{
 		log_error("skins", "Failed to read skin file '%s'", aPath);
+		return;
+	}
+
+	if(State() == IJob::STATE_ABORTED)
+	{
+		free(pFileData);
 		return;
 	}
 

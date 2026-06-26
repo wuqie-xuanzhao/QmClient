@@ -242,9 +242,19 @@ namespace
 			if(Oldest != m_Cache.end())
 				m_Cache.erase(Oldest);
 		}
+
+		void Clear()
+		{
+			m_Cache.clear();
+		}
 	};
 
 	SSettingsTeeListPreviewCache gs_TeeListPreviewCache;
+
+	void ClearSettingsTeeListPreviewCache()
+	{
+		gs_TeeListPreviewCache.Clear();
+	}
 
 	struct STeeListDrainPerfSession
 	{
@@ -2952,6 +2962,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		str_format(aPayload, sizeof(aPayload), "event=tee_refresh_begin visible_rows=%d first_visible_skin=%s",
 			(int)vVisibleSkinIndices.size(), pFirstVisibleSkin);
 		QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
+		ClearSettingsTeeListPreviewCache();
 		GameClient()->RefreshSkins(CSkinDescriptor::FLAG_SIX);
 	}
 }
