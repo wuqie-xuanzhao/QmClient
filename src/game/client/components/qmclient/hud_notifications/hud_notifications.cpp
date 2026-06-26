@@ -14,10 +14,10 @@
 
 namespace
 {
-	float EaseOutCubic(float t)
+	float SmoothStep(float t)
 	{
 		t = std::clamp(t, 0.0f, 1.0f);
-		return 1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t);
+		return t * t * (3.0f - 2.0f * t);
 	}
 
 	ColorRGBA ApplyAlpha(ColorRGBA Color, float Alpha)
@@ -54,6 +54,7 @@ CUIRect CQmHudNotifications::MeasureVisibleRect(const CUIRect &BaseRect, bool Pr
 	const float MinBoxWidth = QmHudNotifications::MinBoxWidth(FontSize);
 	const float Gap = 4.0f * QmHudNotifications::SmallTextScale(FontSize);
 	const float TextMaxWidth = maximum(1.0f, BaseRect.w - PaddingX * 2.0f);
+	(void)StableEditorGeometry;
 
 	SNotification PreviewNotification;
 	const SNotification *apVisible[8] = {};
@@ -63,7 +64,6 @@ CUIRect CQmHudNotifications::MeasureVisibleRect(const CUIRect &BaseRect, bool Pr
 
 	float MaxWidth = 0.0f;
 	float UsedHeight = 0.0f;
-	float MaxSlideOffset = 0.0f;
 	for(int i = 0; i < NumVisible; ++i)
 	{
 		const STextBoundingBox TextBox = TextRender()->TextBoundingBox(FontSize, apVisible[i]->m_aText, -1, TextMaxWidth);
@@ -71,11 +71,9 @@ CUIRect CQmHudNotifications::MeasureVisibleRect(const CUIRect &BaseRect, bool Pr
 		const float BoxH = maximum(FontSize + PaddingY * 2.0f, TextBox.m_H + PaddingY * 2.0f);
 		MaxWidth = maximum(MaxWidth, BoxW);
 		UsedHeight += BoxH + (i + 1 < NumVisible ? Gap : 0.0f);
-		if(!StableEditorGeometry && std::clamp(g_Config.m_QmHudNotificationsAnimType, 0, 2) == 0 && QmHudNotifications::ClampAnimationMs(g_Config.m_QmHudNotificationsAnimMs) > 0)
-			MaxSlideOffset = maximum(MaxSlideOffset, 32.0f);
 	}
 
-	return QmHudNotifications::NotificationVisibleRect(BaseRect, MaxWidth, UsedHeight, Flow, MaxSlideOffset);
+	return QmHudNotifications::NotificationVisibleRect(BaseRect, MaxWidth, UsedHeight, Flow);
 }
 
 CQmHudNotifications::SEditorPreviewMetrics CQmHudNotifications::MeasureEditorPreviewMetrics(const CUIRect &BaseRect)
@@ -311,11 +309,11 @@ void CQmHudNotifications::RenderNotifications(const CUIRect &BaseRect, const CUI
 		if(!StableEditorGeometry && AnimType != 2 && AnimMs > 0)
 		{
 			if(ElapsedMs < AnimMs)
-				Alpha = EaseOutCubic(ElapsedMs / (float)AnimMs);
+				Alpha = SmoothStep(ElapsedMs / (float)AnimMs);
 			else if(ElapsedMs > AnimMs + HoldMs)
-				Alpha = 1.0f - EaseOutCubic((ElapsedMs - AnimMs - HoldMs) / (float)AnimMs);
+				Alpha = 1.0f - SmoothStep((ElapsedMs - AnimMs - HoldMs) / (float)AnimMs);
 			if(AnimType == 0)
-				OffsetX = (1.0f - Alpha) * 32.0f;
+				OffsetX = (1.0f - Alpha) * 14.0f * QmHudNotifications::SmallTextScale(FontSize);
 		}
 
 		const STextBoundingBox TextBox = TextRender()->TextBoundingBox(FontSize, Notification.m_aText, -1, TextMaxWidth);

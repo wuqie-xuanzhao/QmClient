@@ -289,11 +289,11 @@ Active color
 Active disconnect
 == 主动断开
 
-Active lyrics line font size in px
-== 当前歌词行字号（px）
+Active line font size
+== 当前行字号
 
-Active lyrics line scale percent
-== 当前歌词行缩放百分比
+Active line scale
+== 当前行缩放
 
 Active moderator mode disabled because you are afk.
 == 由于你已挂机，主动管理员模式已关闭
@@ -562,8 +562,8 @@ Always show own player's hook collision line
 Always translate
 == 始终翻译
 
-AMLL TTML DB API base URL (can be changed to a mirror)
-== AMLL TTML DB API 基础 URL（可更改为镜像）
+AMLL TTML DB API 基地址（可改成镜像）
+== AMLL TTML DB API 基地址（可改成镜像）
 
 Amount
 == 预测量
@@ -787,8 +787,8 @@ Auto enable in Gores mode
 Auto execute
 == 自动执行
 
-Auto fetch lyrics online when a new song is detected
-== 检测到新歌曲时自动在线获取歌词
+Auto fetch lyrics
+== 自动获取歌词
 
 Auto gain control for mic (AGC, experimental)
 == 自动平衡麦克风音量（AGC，实验性）
@@ -973,6 +973,9 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 最高
 
+Best match
+== 最佳匹配
+
 Bind key to execute a command or view keybindings
 == 绑定按键以执行命令或查看按键绑定
 
@@ -1053,6 +1056,9 @@ Buttons
 
 c = Player position
 == c = 玩家坐标
+
+Cache TTL
+== 缓存有效期
 
 Calculate unfinished maps for player in certain mode
 == 计算玩家某个模式下的未完成图
@@ -1350,6 +1356,9 @@ Client prediction time is high
 
 Client uptime
 == 客户端启动时间
+
+Clock drift hard-snap
+== 时钟漂移硬切阈值
 
 Close
 == 关闭
@@ -2029,6 +2038,12 @@ Displays your ping to the current server
 Dissolve
 == 消散
 
+Distance fade per line
+== 远离行透明度衰减
+
+Distance scale falloff
+== 远离行缩小幅度
+
 Do not translate server messages
 == 不翻译服务器消息
 
@@ -2302,23 +2317,14 @@ Enable highlighted chat sound
 Enable Jelly Tee
 == 启用 Q 弹 Tee
 
-Enable karaoke word highlighting
-== 启用卡拉 OK 歌词高亮
-
 Enable keyword reply
 == 启用关键词回复
-
-Enable local lyrics cache
-== 启用本地歌词缓存
 
 Enable long pain sound (used when shooting in freeze)
 == 启用冻结呼叫声
 
 Enable lyrics
 == 启用歌词
-
-Enable lyrics HUD overlay
-== 启用歌词 HUD 叠加
 
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 == 使用指定 bug 启用地图兼容模式（例如：grenade-doubleexplosion@ddnet.tw）
@@ -2974,6 +2980,9 @@ Gradient color
 Graphics
 == 图像
 
+Graphics backend
+== 图形后端
+
 Graphics card
 == 显卡
 
@@ -2988,6 +2997,9 @@ Group name
 
 Guide line color
 == 辅助线颜色
+
+Gun
+== 手枪
 
 Hammer
 == 锤子
@@ -3106,6 +3118,9 @@ Hide UI for focused gameplay
 Hide weapon muzzle flashes
 == 隐藏武器火焰
 
+Hide when paused
+== 暂停时隐藏
+
 Hide without media state
 == 无媒体状态时隐藏
 
@@ -3217,6 +3232,9 @@ I muted you
 Idiot word filter
 == 傻逼词过滤器
 
+Ignore cache providers
+== 忽略缓存来源
+
 Import from clipboard
 == 从剪贴板导入
 
@@ -3229,11 +3247,8 @@ In memory of me
 Inactive color
 == 按键未激活时颜色
 
-Inactive lyrics line font size in px
-== 非活跃歌词行字体大小（px）
-
-Inactive lyrics line minimum opacity percent
-== 非活跃歌词行最低不透明度百分比
+Inactive line opacity
+== 非当前行不透明度
 
 Incoming language
 == 接收语言
@@ -3439,8 +3454,8 @@ k = Resend loss
 Kaomoji
 == 表情符号
 
-Karaoke highlight soft edge width in px
-== 卡拉 OK 高亮柔边宽度（px）
+Karaoke edge softness
+== 逐字高亮边缘柔化
 
 Key Bindings
 == 按键绑定
@@ -3607,6 +3622,12 @@ LibreTranslate API Key
 LibreTranslate 端点
 == LibreTranslate 端点
 
+Line scroll duration
+== 行切换滚动时长
+
+Line spacing
+== 行间距
+
 Line width
 == 线宽
 
@@ -3618,6 +3639,12 @@ Lines
 
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
+
+Lines above active
+== 当前行上方行数
+
+Lines below active
+== 当前行下方行数
 
 List all commands that are available in practice mode
 == 列出练习模式下可用的所有命令
@@ -3760,6 +3787,18 @@ Local
 Local + Dummy
 == 本地 + 分身
 
+Local ESLRC file
+== 本地 ESLRC 文件
+
+Local LRC file
+== 本地 LRC 文件
+
+Local media folders
+== 本地媒体目录
+
+Local music file
+== 本地音乐文件
+
 Local only
 == 仅本地
 
@@ -3777,6 +3816,9 @@ Local test mode, no server needed
 
 Local Time
 == 本地时间
+
+Local TTML file
+== 本地 TTML 文件
 
 Local-only
 == 仅本地资源
@@ -3808,44 +3850,17 @@ Long press on a touch button to select it.
 Low to high
 == 由低到高
 
-LRCLIB API base URL (can be changed to a mirror)
-== LRCLIB API 基础 URL（可更改为镜像）
+LRCLIB API 基地址（可改成镜像）
+== LRCLIB API 基地址（可改成镜像）
 
 Lyrics
 == 歌词
 
-Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
-== 歌词自动搜索来源顺序与启用列表（空=默认；使用 | 分隔，例如 QQ|Kugou|Netease|LrcLib）
-
-Lyrics cache expiry days (0=never expire)
-== 歌词缓存过期天数（0=永不过期）
-
-Lyrics clock drift hard snap threshold in ms
-== 歌词时钟漂移硬捕捉阈值（ms）
-
-Lyrics fuzzy match score threshold
-== 歌词模糊匹配分数阈值
-
 Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
 == 歌词 HTTP 代理（例如 http://127.0.0.1:7890）
 
-Lyrics HTTP request timeout in ms
-== 歌词 HTTP 请求超时（ms）
-
-Lyrics HUD edge margin in px
-== 歌词 HUD 边缘边距（px）
-
-Lyrics line spacing in px
-== 歌词行间距（px）
-
-Lyrics line switch scroll duration in ms
-== 歌词行切换滚动时长（ms）
-
-Lyrics lines shown above active line
-== 当前行上方显示的歌词行数
-
-Lyrics lines shown below active line
-== 当前行下方显示的歌词行数
+Lyrics HTTP timeout
+== 歌词 HTTP 超时
 
 Lyrics local media library folders (use | as separator)
 == 歌词本地媒体库文件夹（使用 | 分隔）
@@ -3853,29 +3868,14 @@ Lyrics local media library folders (use | as separator)
 Lyrics manual timeline offset in ms (runtime step 500ms)
 == 歌词手动时间轴偏移（ms，运行时步进 500ms）
 
-Lyrics opacity fade percent per distance line
-== 歌词每距离行不透明度淡出百分比
+Lyrics search type
+== 歌词搜索策略
 
-Lyrics overall opacity percent
-== 歌词整体不透明度百分比
+Lyrics source
+== 歌词来源
 
-Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== 歌词按来源匹配阈值（空=全局阈值；例如 QQ=60|LrcLib=70）
-
-Lyrics scale shrink percent per distance line
-== 歌词每距离行缩放缩小百分比
-
-Lyrics search strategy (0=source order, 1=parallel best match)
-== 歌词搜索策略（0=来源顺序，1=并行最佳匹配）
-
-Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== 歌词来源（0=自动最佳匹配，1=LRCLIB，2=酷狗，3=QQ，4=网易云，5=AMLL TTML DB，6=Apple Music，7=本地音乐文件，8=本地 LRC，9=本地 ESLRC，10=本地 TTML）
-
-Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
-== 歌词搜索时忽略缓存的来源（使用 | 分隔，例如 QQ|Kugou）
-
-Lyrics translation and transliteration color
-== 歌词翻译与音译颜色
+Lyrics source order
+== 歌词来源顺序
 
 Lyrics: empty track
 == 歌词：歌词为空
@@ -3999,6 +3999,9 @@ Markers
 
 Match %d of %d
 == 匹配 %d/%d
+
+Match score threshold
+== 匹配评分阈值
 
 Matched with callable peer
 == 已匹配到可通话对端
@@ -4687,6 +4690,9 @@ Option color
 Other
 == 其他
 
+Other lines font size
+== 其他行字号
+
 Others
 == 他人
 
@@ -4819,6 +4825,9 @@ Pause the current demo
 Pause/unpause game
 == 暂停/恢复游戏
 
+Per-word highlight (karaoke)
+== 逐字高亮（卡拉 OK）
+
 Personal best:
 == 个人最佳：
 
@@ -4879,8 +4888,8 @@ Play/pause the current demo
 Playback volume
 == 播放音量
 
-Played lyrics word color
-== 已播放歌词文字颜色
+Played word color
+== 已播放词颜色
 
 Player
 == 玩家
@@ -5106,6 +5115,9 @@ Progress bar height
 
 Progress bar width
 == 进度条宽度
+
+Provider thresholds
+== 来源匹配阈值
 
 PTT 释放延迟（毫秒）
 == PTT 释放延迟（毫秒）
@@ -5569,9 +5581,6 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == 渲染成迷你 Tee 而不是圆圈
 
-Renderer
-== 渲染设置
-
 Renders your frame rate in the top right
 == 在右上角显示帧率
 
@@ -5712,6 +5721,9 @@ Reset to defaults
 
 Reset zone tuning in zone x or in all zones
 == 重置区域 x（或全部区域）的调参配置
+
+Respawn default weapon
+== 重生默认武器
 
 Restart
 == 重新开始
@@ -6106,6 +6118,9 @@ Sends a command to the antibot
 Separate with commas
 == 用 , 分隔
 
+Sequential
+== 按顺序
+
 Server
 == 服务器
 
@@ -6412,6 +6427,9 @@ Show important server prompts and Echo messages as popups
 Show important server prompts as notifications
 == 重要服务器提示改走通知栏
 
+Show in Dynamic Island
+== 显示在灵动岛内
+
 Show info about the map with name r gives (current map by default)
 == 显示有关名称为 r 的地图的信息（默认为当前地图）
 
@@ -6453,12 +6471,6 @@ Show local time always
 
 Show logs of the last i seconds
 == 显示最后 i 秒的日志
-
-Show lyrics translation when available
-== 有译文时显示歌词翻译
-
-Show lyrics transliteration when available
-== 有音译时显示歌词音译
 
 Show moving tiles in entities
 == 在实体层显示移动方块
@@ -6600,6 +6612,9 @@ Show tiles layers from BG map
 
 Show toast
 == 显示 toast
+
+Show translation
+== 显示翻译
 
 Show unknown server messages
 == 显示未知服务器消息
@@ -7660,6 +7675,9 @@ Translating to %s...
 Translation backend invalid, sending original
 == 翻译后端无效，发送原文
 
+Translation color
+== 翻译颜色
+
 Translation queue full, sending original
 == 翻译队列已满，发送原文
 
@@ -7888,8 +7906,8 @@ Unmute player with list index
 Unmute:
 == 取消禁言：
 
-Unplayed lyrics word color
-== 未播放歌词文字颜色
+Unplayed word color
+== 未播放词颜色
 
 Unpredicted ghost opacity
 == 未预测影子不透明度
@@ -8824,6 +8842,15 @@ Zoom out
 启用新版设置页面 UI
 == 启用新版设置页面 UI
 
+启用歌词 HUD 叠加层
+== 启用歌词 HUD 叠加层
+
+启用歌词本地缓存
+== 启用歌词本地缓存
+
+启用歌词逐字高亮
+== 启用歌词逐字高亮
+
 启用玩家统计面板
 == 启用玩家统计面板
 
@@ -8959,6 +8986,9 @@ Zoom out
 将性能调试日志写入专用文件
 == 将性能调试日志写入专用文件
 
+将歌词显示在灵动岛内
+== 将歌词显示在灵动岛内
+
 屏蔽词列表（用,分隔）
 == 屏蔽词列表（用 , 分隔）
 
@@ -8967,6 +8997,9 @@ Zoom out
 
 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
 == 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
+
+已播放词颜色
+== 已播放词颜色
 
 已读的设置界面新功能标识
 == 已读的设置界面新功能标识
@@ -9007,6 +9040,9 @@ Zoom out
 无系统媒体状态时隐藏歌词
 == 无系统媒体状态时隐藏歌词
 
+时钟漂移硬切阈值 ms
+== 时钟漂移硬切阈值 ms
+
 时间耗尽后自动禁用速通计时器
 == 时间耗尽后自动禁用速通计时器
 
@@ -9021,6 +9057,12 @@ Zoom out
 
 显示地图进度调试点路线
 == 显示地图进度调试点路线
+
+显示歌词翻译（若有）
+== 显示歌词翻译（若有）
+
+显示歌词音译（若有）
+== 显示歌词音译（若有）
 
 显示版本过旧提示
 == 显示版本过旧提示
@@ -9055,6 +9097,9 @@ Zoom out
 替换方式 0=Regex 1=Full 2=Both
 == 替换方式 0=Regex 1=Full 2=Both
 
+未播放词颜色
+== 未播放词颜色
+
 本体和分身都被冻结时，自动切换到先解冻的那个
 == 本体和分身都被冻结时，自动切换到先解冻的那个
 
@@ -9085,6 +9130,15 @@ Zoom out
 根据文本输入焦点自动启用或关闭 IME
 == 根据文本输入焦点自动启用或关闭 IME
 
+检测新歌时自动联网拉取歌词
+== 检测新歌时自动联网拉取歌词
+
+歌词 HTTP 请求超时 ms
+== 歌词 HTTP 请求超时 ms
+
+歌词 HUD 贴边外边距 px
+== 歌词 HUD 贴边外边距 px
+
 歌词下一行颜色
 == 歌词下一行颜色
 
@@ -9100,14 +9154,44 @@ Zoom out
 歌词描边颜色
 == 歌词描边颜色
 
+歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+== 歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+
+歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
+== 歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
+
+歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
+== 歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
+
+歌词整体不透明度 %
+== 歌词整体不透明度 %
+
+歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
+== 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
+
+歌词模糊匹配评分阈值
+== 歌词模糊匹配评分阈值
+
 歌词淡入淡出时间
 == 歌词淡入淡出时间
+
+歌词缓存过期天数（0=永久）
+== 歌词缓存过期天数（0=永久）
+
+歌词翻译/音译颜色
+== 歌词翻译/音译颜色
 
 歌词背景透明度
 == 歌词背景透明度
 
 歌词背景颜色
 == 歌词背景颜色
+
+歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
+== 歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
+
+歌词行间距 px
+== 歌词行间距 px
 
 歌词超长时跑马灯
 == 歌词超长时跑马灯
@@ -9145,6 +9229,18 @@ Zoom out
 死亡后显示记分牌
 == 死亡后显示记分牌
 
+活动行上方显示行数
+== 活动行上方显示行数
+
+活动行下方显示行数
+== 活动行下方显示行数
+
+活动行字号 px
+== 活动行字号 px
+
+活动行缩放百分比
+== 活动行缩放百分比
+
 深度冻结图块的叠加实体 alpha (0-100)
 == 深度冻结图块的叠加实体 alpha (0-100)
 
@@ -9162,6 +9258,9 @@ Zoom out
 
 激光辉光强度 (0-100)
 == 激光辉光强度 (0-100)
+
+灵动岛 HUD 编辑器贴边外边距 px
+== 灵动岛 HUD 编辑器贴边外边距 px
 
 灵动岛使用原版样式
 == 灵动岛使用原版样式
@@ -9517,6 +9616,9 @@ Zoom out
 菜单不透明度 (Menu opacity 0-100)
 == 菜单不透明度 (Menu opacity 0-100)
 
+行切换滚动时长 ms
+== 行切换滚动时长 ms
+
 被屏蔽词控制台颜色
 == 被屏蔽词控制台颜色
 
@@ -9649,8 +9751,17 @@ Zoom out
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 
+远离行每行缩小百分比
+== 远离行每行缩小百分比
+
+远离行每行透明度衰减 %
+== 远离行每行透明度衰减 %
+
 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
 == 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
+
+逐字边缘软过渡宽度 px
+== 逐字边缘软过渡宽度 px
 
 通用界面透明度
 == 通用界面透明度
@@ -9721,6 +9832,9 @@ Zoom out
 速通计时器秒
 == 速通计时器秒
 
+重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
+== 重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
+
 锤人换皮肤
 == 锤人换皮肤
 
@@ -9741,6 +9855,12 @@ Zoom out
 
 非好友使用默认皮肤
 == 非好友使用默认皮肤
+
+非活动行字号 px
+== 非活动行字号 px
+
+非活动行最小不透明度 %
+== 非活动行最小不透明度 %
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == 饼菜单改名名单（使用 | 分隔，如：璇梦 1|璇梦 2）

@@ -1842,11 +1842,17 @@ void CPlayers::OnRender()
 
 		float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
 		if(Alpha >= 1.0f)
-			Alpha = (GameClient()->IsOtherTeam(ClientId) || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
+		{
+			const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
+			const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
+			Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
+		}
 		if(ClientId == -2) // ghost
 		{
 			Alpha = g_Config.m_ClRaceGhostAlpha / 100.f;
 		}
+		if(GameClient()->m_Skins.FindOrNullptr("x_spec") == nullptr || !SpectatorTeeRenderInfo() || !SpectatorTeeRenderInfo()->TeeRenderInfo().Valid())
+			continue;
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo(), EMOTE_BLINK, vec2(1, 0), Client.m_SpecChar, Alpha);
 	}
 

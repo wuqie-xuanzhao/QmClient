@@ -409,13 +409,17 @@ bool CHudEditor::ComputeTransformPlacement(EHudEditorElement Element, const CUIR
 	Scope.m_AnchoredRight = std::fabs(Scope.m_VisibleRect.x + Scope.m_VisibleRect.w - (EffScreenX0 + EffScreenW)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
 	Scope.m_AnchoredTop = std::fabs(Scope.m_VisibleRect.y - EffScreenY0) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
 	Scope.m_AnchoredBottom = std::fabs(Scope.m_VisibleRect.y + Scope.m_VisibleRect.h - (EffScreenY0 + EffScreenH)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-	if(Scope.m_AnchoredLeft)
+	const bool TouchesScreenLeft = std::fabs(Scope.m_VisibleRect.x - ScreenX0) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
+	const bool TouchesScreenRight = std::fabs(Scope.m_VisibleRect.x + Scope.m_VisibleRect.w - ScreenX1) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
+	const bool TouchesScreenTop = std::fabs(Scope.m_VisibleRect.y - ScreenY0) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
+	const bool TouchesScreenBottom = std::fabs(Scope.m_VisibleRect.y + Scope.m_VisibleRect.h - ScreenY1) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
+	if(TouchesScreenLeft)
 		Scope.m_Corners &= ~IGraphics::CORNER_L;
-	if(Scope.m_AnchoredRight)
+	if(TouchesScreenRight)
 		Scope.m_Corners &= ~IGraphics::CORNER_R;
-	if(Scope.m_AnchoredTop)
+	if(TouchesScreenTop)
 		Scope.m_Corners &= ~IGraphics::CORNER_T;
-	if(Scope.m_AnchoredBottom)
+	if(TouchesScreenBottom)
 		Scope.m_Corners &= ~IGraphics::CORNER_B;
 
 	if(pVisible != nullptr)
@@ -768,6 +772,10 @@ void CHudEditor::OnRender()
 		ResetLayoutConfig();
 
 	const int HoveredIndex = ResetButtonHovered ? -1 : FindHoveredVisibleElement();
+	bool ShowDragGuideX = false;
+	bool ShowDragGuideY = false;
+	float DragGuideX = 0.0f;
+	float DragGuideY = 0.0f;
 	if(m_DraggingElement >= 0)
 	{
 		const bool MouseReleased = !Ui()->MouseButton(0) && Ui()->LastMouseButton(0);
@@ -802,12 +810,22 @@ void CHudEditor::OnRender()
 			const float Width = Visible.m_BaseWidth * Scale;
 			const float Height = Visible.m_BaseHeight * Scale;
 			const SAlignmentReferences References = BuildAlignmentReferences(Visible.m_Element);
-			const float X = QmHudEditor::SnapAxisToGuides(Ui()->MouseX() - m_DragGrabOffset.x, Width, pUiScreen->x, pUiScreen->w, References.m_aXReferences.data(), References.m_XCount);
-			const float Y = QmHudEditor::SnapAxisToGuides(Ui()->MouseY() - m_DragGrabOffset.y, Height, pUiScreen->y, pUiScreen->h, References.m_aYReferences.data(), References.m_YCount);
 			const float SafeLeft = maximum(0.0f, Visible.m_EdgeMargin.m_Left);
 			const float SafeRight = maximum(0.0f, Visible.m_EdgeMargin.m_Right);
 			const float SafeTop = maximum(0.0f, Visible.m_EdgeMargin.m_Top);
 			const float SafeBottom = maximum(0.0f, Visible.m_EdgeMargin.m_Bottom);
+			const float SafeScreenX = pUiScreen->x + SafeLeft;
+			const float SafeScreenY = pUiScreen->y + SafeTop;
+			const float SafeScreenW = maximum(QmHudEditor::EPSILON, pUiScreen->w - SafeLeft - SafeRight);
+			const float SafeScreenH = maximum(QmHudEditor::EPSILON, pUiScreen->h - SafeTop - SafeBottom);
+			const QmHudEditor::SSnapAxisResult SnapX = QmHudEditor::SnapAxisToGuidesEx(Ui()->MouseX() - m_DragGrabOffset.x, Width, SafeScreenX, SafeScreenW, References.m_aXReferences.data(), References.m_XCount);
+			const QmHudEditor::SSnapAxisResult SnapY = QmHudEditor::SnapAxisToGuidesEx(Ui()->MouseY() - m_DragGrabOffset.y, Height, SafeScreenY, SafeScreenH, References.m_aYReferences.data(), References.m_YCount);
+			const float X = SnapX.m_Position;
+			const float Y = SnapY.m_Position;
+			ShowDragGuideX = SnapX.m_HasGuide;
+			ShowDragGuideY = SnapY.m_HasGuide;
+			DragGuideX = SnapX.m_GuidePosition;
+			DragGuideY = SnapY.m_GuidePosition;
 			const bool SnapLeft = std::fabs(X - (pUiScreen->x + SafeLeft)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
 			const bool SnapRight = std::fabs(X + Width - (pUiScreen->x + pUiScreen->w - SafeRight)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
 			const bool SnapTop = std::fabs(Y - (pUiScreen->y + SafeTop)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
@@ -843,6 +861,15 @@ void CHudEditor::OnRender()
 	float PrevY1 = 0.0f;
 	Graphics()->GetScreen(&PrevX0, &PrevY0, &PrevX1, &PrevY1);
 	Graphics()->MapScreen(pUiScreen->x, pUiScreen->y, pUiScreen->x + pUiScreen->w, pUiScreen->y + pUiScreen->h);
+
+	if(m_DraggingElement >= 0 && (ShowDragGuideX || ShowDragGuideY))
+	{
+		const ColorRGBA GuideColor(1.0f, 0.82f, 0.20f, 0.70f);
+		if(ShowDragGuideX)
+			Graphics()->DrawRect(DragGuideX - 0.5f, pUiScreen->y, 1.0f, pUiScreen->h, GuideColor, IGraphics::CORNER_NONE, 0.0f);
+		if(ShowDragGuideY)
+			Graphics()->DrawRect(pUiScreen->x, DragGuideY - 0.5f, pUiScreen->w, 1.0f, GuideColor, IGraphics::CORNER_NONE, 0.0f);
+	}
 
 	for(size_t i = 0; i < m_vVisibleElements.size(); ++i)
 	{

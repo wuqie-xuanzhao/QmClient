@@ -7370,6 +7370,16 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudIslandShowTeam, "Show team", Localize("Show team"), &g_Config.m_QmHudIslandShowTeam, &Row, LgLineHeight);
 				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				{
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+					DoQmSettingsLabel("qmclient-dynamic-island-edge-margin", &LabelColValue, Localize("Edge margin"), LgBodySize);
+					static int s_QmHudIslandEdgeMarginInputId;
+					RenderSliderWithValueInput(&s_QmHudIslandEdgeMarginInputId, ControlColValue, &g_Config.m_QmHudIslandEdgeMargin, 0, 64, "px");
+				}
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
 				if(g_Config.m_QmHudIslandUseOriginalStyle)
 				{
 				}
@@ -7509,6 +7519,155 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				static CButtonContainer s_LyricsOutlineColorId;
 				DoLine_ColorPicker(&s_LyricsOutlineColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Outline color"), &g_Config.m_QmLyricsOutlineColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
 
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoFetch, "Auto fetch lyrics", Localize("Auto fetch lyrics"), &g_Config.m_QmLyricsAutoFetch, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsInMediaIsland, "Show in Dynamic Island", Localize("Show in Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsKaraoke, "Per-word highlight (karaoke)", Localize("Per-word highlight (karaoke)"), &g_Config.m_QmLyricsKaraoke, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsHideWhenPaused, "Hide when paused", Localize("Hide when paused"), &g_Config.m_QmLyricsHideWhenPaused, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsShowTranslation, "Show translation", Localize("Show translation"), &g_Config.m_QmLyricsShowTranslation, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				{
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+					DoQmSettingsLabel("qmclient-lyrics-source", &LabelColValue, Localize("Lyrics source"), LgBodySize);
+					const char *apLyricsSourceNames[] = {
+						Localize("Auto"),
+						"LRCLIB",
+						"Kugou",
+						"QQ",
+						"Netease",
+						"AMLL TTML DB",
+						"Apple Music",
+						Localize("Local music file"),
+						Localize("Local LRC file"),
+						Localize("Local ESLRC file"),
+						Localize("Local TTML file"),
+					};
+					static CUi::SDropDownState s_QmLyricsSourceDropDownState;
+					static CScrollRegion s_QmLyricsSourceDropDownScrollRegion;
+					s_QmLyricsSourceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_QmLyricsSourceDropDownScrollRegion;
+					const int SourceSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSource, 0, 10), apLyricsSourceNames, std::size(apLyricsSourceNames), s_QmLyricsSourceDropDownState);
+					if(SourceSelectedNew != g_Config.m_QmLyricsSource)
+						g_Config.m_QmLyricsSource = SourceSelectedNew;
+				}
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				{
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+					DoQmSettingsLabel("qmclient-lyrics-search-type", &LabelColValue, Localize("Lyrics search type"), LgBodySize);
+					const char *apLyricsSearchTypeNames[] = {
+						Localize("Sequential"),
+						Localize("Best match"),
+					};
+					static CUi::SDropDownState s_QmLyricsSearchTypeDropDownState;
+					const int SearchTypeSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSearchType, 0, 1), apLyricsSearchTypeNames, std::size(apLyricsSearchTypeNames), s_QmLyricsSearchTypeDropDownState);
+					if(SearchTypeSelectedNew != g_Config.m_QmLyricsSearchType)
+						g_Config.m_QmLyricsSearchType = SearchTypeSelectedNew;
+				}
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+				auto RenderLyricSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+					DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, LgBodySize);
+					RenderSliderWithValueInput(pId, ControlColValue, pValue, MinValue, MaxValue, pSuffix);
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				};
+				auto RenderLyricHalfSecondOffsetSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue) {
+					const int OriginalValue = *pValue;
+					const int AbsOffset = std::abs(*pValue);
+					const int SnappedAbs = ((AbsOffset + 250) / 500) * 500;
+					int StepValue = std::clamp((*pValue < 0 ? -SnappedAbs : SnappedAbs) / 500, -60, 60);
+					RenderLyricSlider(pId, pTextId, pLabel, &StepValue, -60, 60, "x0.5s");
+					if(PrewarmOnly || Ui()->RenderOnly())
+						*pValue = OriginalValue;
+					else
+						*pValue = StepValue * 500;
+				};
+				auto RenderLyricTextInput = [&](CLineInput *pLineInput, const char *pTextId, const char *pLabel, char *pValue, size_t ValueSize, const char *pEmptyText) {
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
+					DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, LgBodySize);
+					if(!pLineInput->IsActive() && str_comp(pLineInput->GetString(), pValue) != 0)
+						pLineInput->Set(pValue);
+					pLineInput->SetEmptyText(pEmptyText);
+					if(Ui()->DoEditBox(pLineInput, &ControlColValue, LgBodySize))
+						str_copy(pValue, pLineInput->GetString(), ValueSize);
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				};
+
+				static CLineInput s_QmLyricsSourceOrder(g_Config.m_QmLyricsSourceOrder, sizeof(g_Config.m_QmLyricsSourceOrder));
+				RenderLyricTextInput(&s_QmLyricsSourceOrder, "qmclient-lyrics-source-order", Localize("Lyrics source order"), g_Config.m_QmLyricsSourceOrder, sizeof(g_Config.m_QmLyricsSourceOrder), "QQ|Kugou|Netease|LrcLib|AmllTtmlDb|LocalMusicFile|LocalLrcFile|LocalEslrcFile|LocalTtmlFile|AppleMusic");
+				static CLineInput s_QmLyricsProviderThresholds(g_Config.m_QmLyricsProviderThresholds, sizeof(g_Config.m_QmLyricsProviderThresholds));
+				RenderLyricTextInput(&s_QmLyricsProviderThresholds, "qmclient-lyrics-provider-thresholds", Localize("Provider thresholds"), g_Config.m_QmLyricsProviderThresholds, sizeof(g_Config.m_QmLyricsProviderThresholds), "QQ=60|LrcLib=70");
+				static CLineInput s_QmLyricsIgnoreCacheProviders(g_Config.m_QmLyricsIgnoreCacheProviders, sizeof(g_Config.m_QmLyricsIgnoreCacheProviders));
+				RenderLyricTextInput(&s_QmLyricsIgnoreCacheProviders, "qmclient-lyrics-ignore-cache-providers", Localize("Ignore cache providers"), g_Config.m_QmLyricsIgnoreCacheProviders, sizeof(g_Config.m_QmLyricsIgnoreCacheProviders), "QQ|Kugou");
+				static CLineInput s_QmLyricsAppleMusicMediaUserToken(g_Config.m_QmLyricsAppleMusicMediaUserToken, sizeof(g_Config.m_QmLyricsAppleMusicMediaUserToken));
+				RenderLyricTextInput(&s_QmLyricsAppleMusicMediaUserToken, "qmclient-lyrics-apple-music-token", Localize("Apple Music media-user-token"), g_Config.m_QmLyricsAppleMusicMediaUserToken, sizeof(g_Config.m_QmLyricsAppleMusicMediaUserToken), "media-user-token");
+				static CLineInput s_QmLyricsLocalMediaFolders(g_Config.m_QmLyricsLocalMediaFolders, sizeof(g_Config.m_QmLyricsLocalMediaFolders));
+				RenderLyricTextInput(&s_QmLyricsLocalMediaFolders, "qmclient-lyrics-local-media-folders", Localize("Local media folders"), g_Config.m_QmLyricsLocalMediaFolders, sizeof(g_Config.m_QmLyricsLocalMediaFolders), "D:/Music|E:/Music");
+
+				static int s_QmLyricsLinesAbove;
+				RenderLyricSlider(&s_QmLyricsLinesAbove, "qmclient-lyrics-lines-above", Localize("Lines above active"), &g_Config.m_QmLyricsLinesAbove, 0, 6);
+				static int s_QmLyricsLinesBelow;
+				RenderLyricSlider(&s_QmLyricsLinesBelow, "qmclient-lyrics-lines-below", Localize("Lines below active"), &g_Config.m_QmLyricsLinesBelow, 0, 6);
+				static int s_QmLyricsFontSize;
+				RenderLyricSlider(&s_QmLyricsFontSize, "qmclient-lyrics-font-size", Localize("Active line font size"), &g_Config.m_QmLyricsFontSize, 8, 48);
+				static int s_QmLyricsFontSizeOther;
+				RenderLyricSlider(&s_QmLyricsFontSizeOther, "qmclient-lyrics-font-size-other", Localize("Other lines font size"), &g_Config.m_QmLyricsFontSizeOther, 6, 40);
+				static int s_QmLyricsLineSpacing;
+				RenderLyricSlider(&s_QmLyricsLineSpacing, "qmclient-lyrics-line-spacing", Localize("Line spacing"), &g_Config.m_QmLyricsLineSpacing, 0, 40, "px");
+				static int s_QmLyricsOpacity;
+				RenderLyricSlider(&s_QmLyricsOpacity, "qmclient-lyrics-opacity", Localize("Opacity"), &g_Config.m_QmLyricsOpacity, 0, 100, "%");
+				static int s_QmLyricsInactiveOpacity;
+				RenderLyricSlider(&s_QmLyricsInactiveOpacity, "qmclient-lyrics-inactive-opacity", Localize("Inactive line opacity"), &g_Config.m_QmLyricsInactiveOpacity, 0, 100, "%");
+				static int s_QmLyricsScaleActive;
+				RenderLyricSlider(&s_QmLyricsScaleActive, "qmclient-lyrics-scale-active", Localize("Active line scale"), &g_Config.m_QmLyricsScaleActive, 100, 200, "%");
+				static int s_QmLyricsScaleFalloff;
+				RenderLyricSlider(&s_QmLyricsScaleFalloff, "qmclient-lyrics-scale-falloff", Localize("Distance scale falloff"), &g_Config.m_QmLyricsScaleFalloff, 0, 20, "%");
+				static int s_QmLyricsFadePerLine;
+				RenderLyricSlider(&s_QmLyricsFadePerLine, "qmclient-lyrics-fade-per-line", Localize("Distance fade per line"), &g_Config.m_QmLyricsFadePerLine, 0, 40, "%");
+				static int s_QmLyricsHighlightEdgeSoft;
+				RenderLyricSlider(&s_QmLyricsHighlightEdgeSoft, "qmclient-lyrics-highlight-edge-soft", Localize("Karaoke edge softness"), &g_Config.m_QmLyricsHighlightEdgeSoft, 0, 32, "px");
+				static int s_QmLyricsScrollMs;
+				RenderLyricSlider(&s_QmLyricsScrollMs, "qmclient-lyrics-scroll-ms", Localize("Line scroll duration"), &g_Config.m_QmLyricsScrollMs, 0, 1000, "ms");
+				static int s_QmLyricsMatchThreshold;
+				RenderLyricSlider(&s_QmLyricsMatchThreshold, "qmclient-lyrics-match-threshold", Localize("Match score threshold"), &g_Config.m_QmLyricsMatchThreshold, 0, 100);
+				static int s_QmLyricsOffsetMs;
+				RenderLyricHalfSecondOffsetSlider(&s_QmLyricsOffsetMs, "qmclient-lyrics-offset-ms", Localize("Time offset"), &g_Config.m_QmLyricsOffsetMs);
+				static int s_QmLyricsDriftCorrectMs;
+				RenderLyricSlider(&s_QmLyricsDriftCorrectMs, "qmclient-lyrics-drift-correct-ms", Localize("Clock drift hard-snap"), &g_Config.m_QmLyricsDriftCorrectMs, 100, 5000, "ms");
+				static int s_QmLyricsEdgeMargin;
+				RenderLyricSlider(&s_QmLyricsEdgeMargin, "qmclient-lyrics-edge-margin", Localize("Edge margin"), &g_Config.m_QmLyricsEdgeMargin, 0, 64, "px");
+				static int s_QmLyricsHttpTimeoutMs;
+				RenderLyricSlider(&s_QmLyricsHttpTimeoutMs, "qmclient-lyrics-http-timeout-ms", Localize("Lyrics HTTP timeout"), &g_Config.m_QmLyricsHttpTimeoutMs, 500, 30000, "ms");
+				static int s_QmLyricsCacheTtlDays;
+				RenderLyricSlider(&s_QmLyricsCacheTtlDays, "qmclient-lyrics-cache-ttl-days", Localize("Cache TTL"), &g_Config.m_QmLyricsCacheTtlDays, 0, 3650, " d");
+
+				static CButtonContainer s_LyricsColorPlayedId;
+				DoLine_ColorPicker(&s_LyricsColorPlayedId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Played word color"), &g_Config.m_QmLyricsColorPlayed, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+				static CButtonContainer s_LyricsColorUnplayedId;
+				DoLine_ColorPicker(&s_LyricsColorUnplayedId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Unplayed word color"), &g_Config.m_QmLyricsColorUnplayed, ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f), false, nullptr, true);
+				static CButtonContainer s_LyricsColorTranslationId;
+				DoLine_ColorPicker(&s_LyricsColorTranslationId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Translation color"), &g_Config.m_QmLyricsColorTranslation, ColorRGBA(0.55f, 0.55f, 0.55f, 1.0f), false, nullptr, true);
 				CUIRect Preview;
 				const float PreviewFont = (float)g_Config.m_QmSmtcLyricsFontSize;
 				const float PreviewPaddingX = 10.0f;

@@ -289,11 +289,11 @@ Active color
 Active disconnect
 == Aktif bağlantı kesme
 
-Active lyrics line font size in px
-== Aktif şarkı sözü satırı yazı tipi boyutu (px)
+Active line font size
+== Etkin satır yazı tipi boyutu
 
-Active lyrics line scale percent
-== Aktif şarkı sözü satırı ölçek yüzdesi
+Active line scale
+== Etkin satır ölçeği
 
 Active moderator mode disabled because you are afk.
 == AFK olduğun için aktif moderatör modu devre dışı bırakıldı.
@@ -562,8 +562,8 @@ Always show own player's hook collision line
 Always translate
 == Her zaman çevir
 
-AMLL TTML DB API base URL (can be changed to a mirror)
-== AMLL TTML DB API temel URL'si (bir yansıtıcı ile değiştirilebilir)
+AMLL TTML DB API 基地址（可改成镜像）
+== AMLL TTML DB API base URL (can be changed to a mirror)
 
 Amount
 == Miktar
@@ -787,8 +787,8 @@ Auto enable in Gores mode
 Auto execute
 == Otomatik çalıştır
 
-Auto fetch lyrics online when a new song is detected
-== Yeni bir şarkı algılandığında çevrimiçi şarkı sözlerini otomatik getir
+Auto fetch lyrics
+== Auto fetch lyrics setting
 
 Auto gain control for mic (AGC, experimental)
 == Mikrofon için otomatik kazanç kontrolü (AGC, deneysel)
@@ -973,6 +973,9 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == En iyi
 
+Best match
+== Best match setting
+
 Bind key to execute a command or view keybindings
 == Bir komutu yürütmek için tuş bağla veya tuş bağlantılarını görüntüle
 
@@ -1053,6 +1056,9 @@ Buttons
 
 c = Player position
 == c = Oyuncu konumu
+
+Cache TTL
+== Cache TTL setting
 
 Calculate unfinished maps for player in certain mode
 == Belirli bir modda oyuncu için bitmemiş haritaları hesapla
@@ -1350,6 +1356,9 @@ Client prediction time is high
 
 Client uptime
 == İstemci çalışma süresi
+
+Clock drift hard-snap
+== Clock drift hard-snap setting
 
 Close
 == Kapat
@@ -2029,6 +2038,12 @@ Displays your ping to the current server
 Dissolve
 == Çözün
 
+Distance fade per line
+== Distance fade per line setting
+
+Distance scale falloff
+== Distance scale falloff setting
+
 Do not translate server messages
 == Sunucu mesajlarını çevirme
 
@@ -2302,23 +2317,14 @@ Enable highlighted chat sound
 Enable Jelly Tee
 == Jelly Tee'yi Etkinleştir
 
-Enable karaoke word highlighting
-== Karaoke kelime vurgulamayı etkinleştir
-
 Enable keyword reply
 == Anahtar kelime yanıtını etkinleştir
-
-Enable local lyrics cache
-== Yerel şarkı sözü önbelleğini etkinleştir
 
 Enable long pain sound (used when shooting in freeze)
 == Uzun acı sesini etkinleştir (dondurucuda ateş ederken kullanılır)
 
 Enable lyrics
 == Şarkı sözlerini etkinleştir
-
-Enable lyrics HUD overlay
-== Şarkı sözü HUD kaplamasını etkinleştir
 
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 == Belirtilen hatayı kullanarak harita uyumluluk modunu etkinleştir (örnek: grenade-doubleexplosion@ddnet.tw)
@@ -2974,6 +2980,9 @@ Gradient color
 Graphics
 == Grafikler
 
+Graphics backend
+== Grafik arka ucu
+
 Graphics card
 == Ekran kartı
 
@@ -2988,6 +2997,9 @@ Group name
 
 Guide line color
 == Kılavuz çizgisi rengi
+
+Gun
+== Tabanca
 
 Hammer
 == Çekiç
@@ -3106,6 +3118,9 @@ Hide UI for focused gameplay
 Hide weapon muzzle flashes
 == Silah namlu flaşlarını gizle
 
+Hide when paused
+== Hide when paused setting
+
 Hide without media state
 == Medya durumu olmadığında gizle
 
@@ -3217,6 +3232,9 @@ I muted you
 Idiot word filter
 == Aptal kelime filtresi
 
+Ignore cache providers
+== Ignore cache providers setting
+
 Import from clipboard
 == Panodan içe aktar
 
@@ -3229,11 +3247,8 @@ In memory of me
 Inactive color
 == Etkin olmayan renk
 
-Inactive lyrics line font size in px
-== Pasif şarkı sözü satırı yazı tipi boyutu (px)
-
-Inactive lyrics line minimum opacity percent
-== Pasif şarkı sözü satırı minimum opaklık yüzdesi
+Inactive line opacity
+== Inactive line opacity setting
 
 Incoming language
 == Gelen dil
@@ -3439,8 +3454,8 @@ k = Resend loss
 Kaomoji
 == Kaomoji
 
-Karaoke highlight soft edge width in px
-== Karaoke vurgu yumuşak kenar genişliği (px)
+Karaoke edge softness
+== Karaoke edge softness setting
 
 Key Bindings
 == Tuş Bağlamaları
@@ -3607,6 +3622,12 @@ LibreTranslate API Key
 LibreTranslate 端点
 == LibreTranslate uç noktası
 
+Line scroll duration
+== Line scroll duration setting
+
+Line spacing
+== Line spacing setting
+
 Line width
 == Çizgi genişliği
 
@@ -3618,6 +3639,12 @@ Lines
 
 Lines %d - %d (%s)
 == Satırlar %d - %d (%s)
+
+Lines above active
+== Lines above active setting
+
+Lines below active
+== Lines below active setting
 
 List all commands that are available in practice mode
 == Pratik modunda mevcut olan tüm komutları listele
@@ -3760,6 +3787,18 @@ Local
 Local + Dummy
 == Yerel + Dummy
 
+Local ESLRC file
+== Local ESLRC file setting
+
+Local LRC file
+== Local LRC file setting
+
+Local media folders
+== Local media folders setting
+
+Local music file
+== Local music file setting
+
 Local only
 == Yalnızca yerel
 
@@ -3777,6 +3816,9 @@ Local test mode, no server needed
 
 Local Time
 == Yerel Saat
+
+Local TTML file
+== Local TTML file setting
 
 Local-only
 == Yalnızca yerel
@@ -3808,44 +3850,17 @@ Long press on a touch button to select it.
 Low to high
 == Düşükten yükseğe
 
-LRCLIB API base URL (can be changed to a mirror)
-== LRCLIB API temel URL'si (bir aynaya değiştirilebilir)
+LRCLIB API 基地址（可改成镜像）
+== LRCLIB API base URL (can be changed to a mirror)
 
 Lyrics
 == Şarkı sözleri
 
-Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
-== Şarkı sözü otomatik arama kaynak sırası ve etkinleştirme listesi (boş=varsayılan; ayırıcı olarak | kullanın, örn. QQ|Kugou|Netease|LrcLib)
-
-Lyrics cache expiry days (0=never expire)
-== Şarkı sözü önbellek son kullanma günü (0=hiç sona ermez)
-
-Lyrics clock drift hard snap threshold in ms
-== Şarkı sözü saat kayması sert yakalama eşiği (ms)
-
-Lyrics fuzzy match score threshold
-== Şarkı sözleri bulanık eşleşme puan eşiği
-
 Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
 == Şarkı sözleri HTTP proxy (ör. http://127.0.0.1:7890)
 
-Lyrics HTTP request timeout in ms
-== Şarkı sözleri HTTP istek zaman aşımı (ms)
-
-Lyrics HUD edge margin in px
-== Şarkı sözleri HUD kenar boşluğu (px)
-
-Lyrics line spacing in px
-== Şarkı sözleri satır aralığı (px)
-
-Lyrics line switch scroll duration in ms
-== Şarkı sözleri satır geçiş kaydırma süresi (ms)
-
-Lyrics lines shown above active line
-== Şarkı sözleri aktif satırın üstünde gösterilen satır sayısı
-
-Lyrics lines shown below active line
-== Şarkı sözleri aktif satırın altında gösterilen satır sayısı
+Lyrics HTTP timeout
+== Lyrics HTTP timeout setting
 
 Lyrics local media library folders (use | as separator)
 == Şarkı sözleri yerel medya kütüphanesi klasörleri (ayraç olarak | kullanın)
@@ -3853,29 +3868,14 @@ Lyrics local media library folders (use | as separator)
 Lyrics manual timeline offset in ms (runtime step 500ms)
 == Şarkı sözleri manuel zaman çizelgesi ofseti (ms, çalışma zamanında adım 500ms)
 
-Lyrics opacity fade percent per distance line
-== Şarkı sözleri mesafe satırı başına opaklık solma yüzdesi
+Lyrics search type
+== Lyrics search type setting
 
-Lyrics overall opacity percent
-== Şarkı sözleri genel opaklık yüzdesi
+Lyrics source
+== Lyrics source setting
 
-Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== Şarkı sözleri kaynak başına eşleşme eşikleri (boş=genel eşik; örn. QQ=60|LrcLib=70)
-
-Lyrics scale shrink percent per distance line
-== Şarkı sözleri mesafe satırı başına ölçek küçültme yüzdesi
-
-Lyrics search strategy (0=source order, 1=parallel best match)
-== Şarkı sözleri arama stratejisi (0=kaynak sırası, 1=paralel en iyi eşleşme)
-
-Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== Şarkı sözleri kaynağı (0=Otomatik en iyi eşleşme, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Yerel Müzik Dosyası, 8=Yerel LRC, 9=Yerel ESLRC, 10=Yerel TTML)
-
-Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
-== Şarkı sözleri arama sırasında önbelleği yok sayan kaynaklar (ayraç olarak | kullanın, örn. QQ|Kugou)
-
-Lyrics translation and transliteration color
-== Şarkı sözleri çeviri ve harf çevirisi rengi
+Lyrics source order
+== Lyrics source order setting
 
 Lyrics: empty track
 == Şarkı sözleri: boş parça
@@ -3999,6 +3999,9 @@ Markers
 
 Match %d of %d
 == %d / %d eşleşmesi
+
+Match score threshold
+== Match score threshold setting
 
 Matched with callable peer
 == Aranabilir eşle eşleşti
@@ -4687,6 +4690,9 @@ Option color
 Other
 == Diğer
 
+Other lines font size
+== Diğer satırların yazı tipi boyutu
+
 Others
 == Diğerleri
 
@@ -4819,6 +4825,9 @@ Pause the current demo
 Pause/unpause game
 == Oyunu duraklat/duraklatmayı kaldır
 
+Per-word highlight (karaoke)
+== Per-word highlight (karaoke) setting
+
 Personal best:
 == Kişisel en iyi:
 
@@ -4879,8 +4888,8 @@ Play/pause the current demo
 Playback volume
 == Oynatma sesi
 
-Played lyrics word color
-== Oynatılan şarkı sözü kelime rengi
+Played word color
+== Played word color setting
 
 Player
 == Oyuncu
@@ -5106,6 +5115,9 @@ Progress bar height
 
 Progress bar width
 == İlerleme çubuğu genişliği
+
+Provider thresholds
+== Provider thresholds setting
 
 PTT 释放延迟（毫秒）
 == PTT bırakma gecikmesi (ms)
@@ -5569,9 +5581,6 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Daireler yerine minik teeler işle
 
-Renderer
-== Oluşturucu
-
 Renders your frame rate in the top right
 == Sağ üstte kare hızınızı gösterir
 
@@ -5712,6 +5721,9 @@ Reset to defaults
 
 Reset zone tuning in zone x or in all zones
 == x bölgesindeki veya tüm bölgelerdeki bölge ayarını sıfırla
+
+Respawn default weapon
+== Yeniden doğuş varsayılan silahı
 
 Restart
 == Yeniden Başlat
@@ -6106,6 +6118,9 @@ Sends a command to the antibot
 Separate with commas
 == Virgülle ayır
 
+Sequential
+== Sequential setting
+
 Server
 == Sunucu
 
@@ -6412,6 +6427,9 @@ Show important server prompts and Echo messages as popups
 Show important server prompts as notifications
 == Önemli sunucu uyarılarını bildirim olarak göster
 
+Show in Dynamic Island
+== Dynamic Island içinde göster
+
 Show info about the map with name r gives (current map by default)
 == r adındaki harita hakkında bilgi gösterir (varsayılan olarak geçerli harita)
 
@@ -6453,12 +6471,6 @@ Show local time always
 
 Show logs of the last i seconds
 == Son i saniyenin günlüklerini göster
-
-Show lyrics translation when available
-== Varsa şarkı sözü çevirisini göster
-
-Show lyrics transliteration when available
-== Varsa şarkı sözü harf çevirisini göster
 
 Show moving tiles in entities
 == Varlıklarda hareketli karoları göster
@@ -6600,6 +6612,9 @@ Show tiles layers from BG map
 
 Show toast
 == Toast'ı göster
+
+Show translation
+== Show translation setting
 
 Show unknown server messages
 == Bilinmeyen sunucu mesajlarını göster
@@ -7660,6 +7675,9 @@ Translating to %s...
 Translation backend invalid, sending original
 == Çeviri arka ucu geçersiz, orijinal metin gönderiliyor
 
+Translation color
+== Translation color setting
+
 Translation queue full, sending original
 == Çeviri kuyruğu dolu, orijinal metin gönderiliyor
 
@@ -7888,8 +7906,8 @@ Unmute player with list index
 Unmute:
 == Sessizi Kaldır:
 
-Unplayed lyrics word color
-== Çalınmayan şarkı sözü kelime rengi
+Unplayed word color
+== Unplayed word color setting
 
 Unpredicted ghost opacity
 == Tahmin edilmemiş hayalet opaklığı
@@ -8824,6 +8842,15 @@ Zoom out
 启用新版设置页面 UI
 == Yeni ayarlar sayfası UI’ını etkinleştir
 
+启用歌词 HUD 叠加层
+== Enable lyrics HUD overlay
+
+启用歌词本地缓存
+== Enable local lyrics cache
+
+启用歌词逐字高亮
+== Enable karaoke word highlighting
+
 启用玩家统计面板
 == Oyuncu istatistik panelini etkinleştir
 
@@ -8959,6 +8986,9 @@ Zoom out
 将性能调试日志写入专用文件
 == Performans hata ayıklama günlüklerini özel bir dosyaya yaz
 
+将歌词显示在灵动岛内
+== Show lyrics in Dynamic Island
+
 屏蔽词列表（用,分隔）
 == Engellenen kelime listesi (virgülle ayırın)
 
@@ -8967,6 +8997,9 @@ Zoom out
 
 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
 == feat-003 paylaşımlı UI ilkel dogfood sayfasını göster (QmClient ayarlar sayfasını devralır, 11 ilkel + spring/easing animasyonlarının görsel doğrulaması için)
+
+已播放词颜色
+== Played word color
 
 已读的设置界面新功能标识
 == Okunan ayarlar arayüzü yeni özellik göstergeleri
@@ -9007,6 +9040,9 @@ Zoom out
 无系统媒体状态时隐藏歌词
 == Sistem medya durumu yokken şarkı sözlerini gizle
 
+时钟漂移硬切阈值 ms
+== Clock drift hard-snap threshold ms
+
 时间耗尽后自动禁用速通计时器
 == Süre dolduğunda hızlı geçiş zamanlayıcısını otomatik devre dışı bırak
 
@@ -9021,6 +9057,12 @@ Zoom out
 
 显示地图进度调试点路线
 == Harita ilerleme kontrol noktası rotasını göster
+
+显示歌词翻译（若有）
+== Show lyrics translation when available
+
+显示歌词音译（若有）
+== Show lyrics transliteration when available
 
 显示版本过旧提示
 == Sürüm çok eski uyarısını göster
@@ -9055,6 +9097,9 @@ Zoom out
 替换方式 0=Regex 1=Full 2=Both
 == Değiştirme yöntemi 0=Regex 1=Tam 2=Her İkisi
 
+未播放词颜色
+== Unplayed word color
+
 本体和分身都被冻结时，自动切换到先解冻的那个
 == Ana karakter ve Dummy donduğunda, önce çözülenine otomatik geç
 
@@ -9085,6 +9130,15 @@ Zoom out
 根据文本输入焦点自动启用或关闭 IME
 == Metin girişi odağına göre IME’yi otomatik aç veya kapat
 
+检测新歌时自动联网拉取歌词
+== Auto fetch lyrics online when a new song is detected
+
+歌词 HTTP 请求超时 ms
+== Lyrics HTTP request timeout ms
+
+歌词 HUD 贴边外边距 px
+== Lyrics HUD edge margin px
+
 歌词下一行颜色
 == Sonraki şarkı sözü satırı rengi
 
@@ -9098,16 +9152,46 @@ Zoom out
 == Şarkı sözü kontur şeffaflığı
 
 歌词描边颜色
-== Şarkı sözü kontur rengi
+== Lyrics outline color
+
+歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+== Lyrics providers that ignore cache during search
+
+歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
+== Lyrics search strategy
+
+歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
+== Lyrics source
+
+歌词整体不透明度 %
+== Lyrics overall opacity percent
+
+歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
+== Lyrics per-source match thresholds
+
+歌词模糊匹配评分阈值
+== Lyrics fuzzy match score threshold
 
 歌词淡入淡出时间
 == Şarkı sözü belirme ve kaybolma süresi
+
+歌词缓存过期天数（0=永久）
+== Lyrics cache expiry days
+
+歌词翻译/音译颜色
+== Lyrics translation/transliteration color
 
 歌词背景透明度
 == Şarkı sözü arka plan şeffaflığı
 
 歌词背景颜色
-== Şarkı sözü arka plan rengi
+== Lyrics background color
+
+歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
+== Lyrics auto-search source order and enabled list
+
+歌词行间距 px
+== Lyrics line spacing px
 
 歌词超长时跑马灯
 == Şarkı sözü çok uzunsa kayan yazı kullan
@@ -9145,6 +9229,18 @@ Zoom out
 死亡后显示记分牌
 == Ölümden sonra skor tablosunu göster
 
+活动行上方显示行数
+== Lines shown above active line
+
+活动行下方显示行数
+== Lines shown below active line
+
+活动行字号 px
+== Active lyrics line font size px
+
+活动行缩放百分比
+== Active lyrics line scale percent
+
 深度冻结图块的叠加实体 alpha (0-100)
 == Derin donmuş blokların üst üste binen varlık alfası (0-100)
 
@@ -9162,6 +9258,9 @@ Zoom out
 
 激光辉光强度 (0-100)
 == Lazer parıltı yoğunluğu (0-100)
+
+灵动岛 HUD 编辑器贴边外边距 px
+== Dynamic Island HUD editor edge margin px
 
 灵动岛使用原版样式
 == Dinamik Ada orijinal stili kullan
@@ -9517,6 +9616,9 @@ Zoom out
 菜单不透明度 (Menu opacity 0-100)
 == Menü Opaklığı (0-100)
 
+行切换滚动时长 ms
+== Line switch scroll duration ms
+
 被屏蔽词控制台颜色
 == Engellenen Kelime Konsol Rengi
 
@@ -9649,8 +9751,17 @@ Zoom out
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == Sunucuya girerken istatistikleri sıfırla (0=Kümülatif istatistikler, 1=Her girişte sıfırla)
 
+远离行每行缩小百分比
+== Lyrics scale shrink percent per distance line
+
+远离行每行透明度衰减 %
+== Lyrics opacity fade percent per distance line
+
 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
 == Uzaktaki parçacıklar: Merkez sunucu aracılığıyla diğer oyuncuları senkronize et ve işle (karşı tarafın yerel+uzak seçeneğini açması gerekir)
+
+逐字边缘软过渡宽度 px
+== Karaoke highlight soft edge width px
 
 通用界面透明度
 == Genel arayüz şeffaflığı
@@ -9721,6 +9832,9 @@ Zoom out
 速通计时器秒
 == Hızlı geçiş sayacı saniye
 
+重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
+== Default weapon requested after respawn
+
 锤人换皮肤
 == Çekiçle vurulunca skin değiştir
 
@@ -9741,6 +9855,12 @@ Zoom out
 
 非好友使用默认皮肤
 == Arkadaş olmayanlar varsayılan skin kullansın
+
+非活动行字号 px
+== Inactive lyrics line font size px
+
+非活动行最小不透明度 %
+== Inactive lyrics line minimum opacity percent
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Pasta menüsü yeniden adlandırma listesi (| ile ayırın, örn: Xuanmeng1|Xuanmeng2)

@@ -5,8 +5,11 @@
 #include "qm_lyrics_model.h"
 #include "qm_lyrics_source.h"
 
+#include <base/color.h>
+
 #include <game/client/component.h>
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -14,6 +17,8 @@ namespace QmLyrics
 {
 	class CCacheIndex;
 }
+
+class CUIRect;
 
 // 歌词 HUD 主组件。
 //
@@ -39,6 +44,9 @@ public:
 	void OnShutdown() override;
 	void OnReset() override;
 	void OnRender() override;
+
+	bool GetMediaIslandText(char *pBuf, size_t BufSize, ColorRGBA *pColor) const;
+	bool RenderMediaIslandLine(const CUIRect &Rect, float FontSize, float Alpha);
 
 	struct SImpl;
 

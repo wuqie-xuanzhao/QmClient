@@ -840,6 +840,7 @@ public:
 	void OnConnected() override;
 	void OnRender() override;
 	void OnUpdate() override;
+	int RenderThrottleRefreshRate() const override;
 	void OnScreenshotTaken(class CImageInfo &&Image) override;
 	void OnDummyDisconnect() override;
 	void OnDummyManualDisconnect() override;

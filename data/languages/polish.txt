@@ -289,11 +289,11 @@ Active color
 Active disconnect
 == Aktywne rozłączenie
 
-Active lyrics line font size in px
-== Rozmiar czcionki aktywnej linii tekstu utworu w px
+Active line font size
+== Rozmiar czcionki aktywnego wiersza
 
-Active lyrics line scale percent
-== Skala procentowa aktywnej linii tekstu utworu
+Active line scale
+== Skala aktywnego wiersza
 
 Active moderator mode disabled because you are afk.
 == Tryb aktywnego moderatora wyłączony, ponieważ jesteś AFK.
@@ -562,8 +562,8 @@ Always show own player's hook collision line
 Always translate
 == Zawsze tłumacz
 
-AMLL TTML DB API base URL (can be changed to a mirror)
-== AMLL TTML DB API  podstawowy URL (można zmienić na mirror)
+AMLL TTML DB API 基地址（可改成镜像）
+== AMLL TTML DB API base URL (can be changed to a mirror)
 
 Amount
 == Ilość
@@ -787,8 +787,8 @@ Auto enable in Gores mode
 Auto execute
 == Auto wykonanie
 
-Auto fetch lyrics online when a new song is detected
-== Automatycznie pobieraj tekst utworu online po wykryciu nowej piosenki
+Auto fetch lyrics
+== Auto fetch lyrics setting
 
 Auto gain control for mic (AGC, experimental)
 == Automatyczna regulacja wzmocnienia mikrofonu (AGC, eksperymentalne)
@@ -973,6 +973,9 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Najlepszy
 
+Best match
+== Best match setting
+
 Bind key to execute a command or view keybindings
 == Przypisz klawisz do wykonania polecenia lub wyświetl przypisania klawiszy
 
@@ -1053,6 +1056,9 @@ Buttons
 
 c = Player position
 == c = Pozycja gracza
+
+Cache TTL
+== Cache TTL setting
 
 Calculate unfinished maps for player in certain mode
 == Oblicz niedokończone mapy dla gracza w danym trybie
@@ -1350,6 +1356,9 @@ Client prediction time is high
 
 Client uptime
 == Czas działania klienta
+
+Clock drift hard-snap
+== Clock drift hard-snap setting
 
 Close
 == Zamknij
@@ -2029,6 +2038,12 @@ Displays your ping to the current server
 Dissolve
 == Rozpuść
 
+Distance fade per line
+== Distance fade per line setting
+
+Distance scale falloff
+== Distance scale falloff setting
+
 Do not translate server messages
 == Nie tłumacz wiadomości serwera
 
@@ -2302,23 +2317,14 @@ Enable highlighted chat sound
 Enable Jelly Tee
 == Włącz Jelly Tee
 
-Enable karaoke word highlighting
-== Włącz podświetlanie słów w karaoke
-
 Enable keyword reply
 == Włącz odpowiedź na słowa kluczowe
-
-Enable local lyrics cache
-== Włącz lokalną pamięć podręczną tekstów utworów
 
 Enable long pain sound (used when shooting in freeze)
 == Włącz długi dźwięk bólu (używany podczas strzelania w zamrożeniu)
 
 Enable lyrics
 == Włącz tekst utworu
-
-Enable lyrics HUD overlay
-== Włącz nakładkę HUD tekstu utworu
 
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 == Włącz tryb zgodności mapy z użyciem określonego błędu (np. grenade-doubleexplosion@ddnet.tw)
@@ -2974,6 +2980,9 @@ Gradient color
 Graphics
 == Grafika
 
+Graphics backend
+== Backend graficzny
+
 Graphics card
 == Karta graficzna
 
@@ -2988,6 +2997,9 @@ Group name
 
 Guide line color
 == Kolor linii prowadzącej
+
+Gun
+== Pistolet
 
 Hammer
 == Młotek
@@ -3106,6 +3118,9 @@ Hide UI for focused gameplay
 Hide weapon muzzle flashes
 == Ukryj błyski wylotu broni
 
+Hide when paused
+== Hide when paused setting
+
 Hide without media state
 == Ukryj, gdy brak stanu multimediów
 
@@ -3217,6 +3232,9 @@ I muted you
 Idiot word filter
 == Filtr idiotycznych słów
 
+Ignore cache providers
+== Ignore cache providers setting
+
 Import from clipboard
 == Importuj ze schowka
 
@@ -3229,11 +3247,8 @@ In memory of me
 Inactive color
 == Kolor nieaktywny
 
-Inactive lyrics line font size in px
-== Rozmiar czcionki nieaktywnej linii tekstu utworu w px
-
-Inactive lyrics line minimum opacity percent
-== Minimalna procentowa przezroczystość nieaktywnej linii tekstu utworu
+Inactive line opacity
+== Inactive line opacity setting
 
 Incoming language
 == Język przychodzący
@@ -3439,8 +3454,8 @@ k = Resend loss
 Kaomoji
 == Kaomoji
 
-Karaoke highlight soft edge width in px
-== Szerokość miękkiej krawędzi podświetlenia karaoke w px
+Karaoke edge softness
+== Karaoke edge softness setting
 
 Key Bindings
 == Przypisania klawiszy
@@ -3607,6 +3622,12 @@ LibreTranslate API Key
 LibreTranslate 端点
 == Punkt końcowy LibreTranslate
 
+Line scroll duration
+== Line scroll duration setting
+
+Line spacing
+== Line spacing setting
+
 Line width
 == Szerokość linii
 
@@ -3618,6 +3639,12 @@ Lines
 
 Lines %d - %d (%s)
 == Linie %d - %d (%s)
+
+Lines above active
+== Lines above active setting
+
+Lines below active
+== Lines below active setting
 
 List all commands that are available in practice mode
 == Wymień wszystkie polecenia dostępne w trybie treningowym
@@ -3760,6 +3787,18 @@ Local
 Local + Dummy
 == Lokalny + kukła
 
+Local ESLRC file
+== Local ESLRC file setting
+
+Local LRC file
+== Local LRC file setting
+
+Local media folders
+== Local media folders setting
+
+Local music file
+== Local music file setting
+
 Local only
 == Tylko lokalny
 
@@ -3777,6 +3816,9 @@ Local test mode, no server needed
 
 Local Time
 == Czas lokalny
+
+Local TTML file
+== Local TTML file setting
 
 Local-only
 == Tylko lokalne
@@ -3808,44 +3850,17 @@ Long press on a touch button to select it.
 Low to high
 == Od niskiego do wysokiego
 
-LRCLIB API base URL (can be changed to a mirror)
-== Podstawowy URL API LRCLIB (można zmienić na mirror)
+LRCLIB API 基地址（可改成镜像）
+== LRCLIB API base URL (can be changed to a mirror)
 
 Lyrics
 == Tekst utworu
 
-Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
-== Kolejność i lista włączonych źródeł automatycznego wyszukiwania tekstu utworu (puste=domyślne; użyj | jako separatora, np. QQ|Kugou|Netease|LrcLib)
-
-Lyrics cache expiry days (0=never expire)
-== Dni wygaśnięcia pamięci podręcznej tekstu utworu (0= nigdy nie wygasa)
-
-Lyrics clock drift hard snap threshold in ms
-== Próg twardego przyciągania zegara tekstu utworu w ms
-
-Lyrics fuzzy match score threshold
-== Próg wyniku rozmytego dopasowania tekstu utworu
-
 Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
 == Proxy HTTP dla tekstu utworu (np. http://127.0.0.1:7890)
 
-Lyrics HTTP request timeout in ms
-== Limit czasu żądania HTTP dla tekstu utworu w ms
-
-Lyrics HUD edge margin in px
-== Margines krawędzi HUD tekstu utworu w px
-
-Lyrics line spacing in px
-== Odstęp między wierszami tekstu utworu w px
-
-Lyrics line switch scroll duration in ms
-== Czas przewijania przy zmianie wiersza tekstu utworu w ms
-
-Lyrics lines shown above active line
-== Liczba wierszy tekstu utworu powyżej aktywnego wiersza
-
-Lyrics lines shown below active line
-== Liczba wierszy tekstu utworu poniżej aktywnego wiersza
+Lyrics HTTP timeout
+== Lyrics HTTP timeout setting
 
 Lyrics local media library folders (use | as separator)
 == Foldery lokalnej biblioteki multimediów dla tekstu utworu (użyj | jako separatora)
@@ -3853,29 +3868,14 @@ Lyrics local media library folders (use | as separator)
 Lyrics manual timeline offset in ms (runtime step 500ms)
 == Ręczne przesunięcie osi czasu tekstu utworu w ms (krok w czasie rzeczywistym 500 ms)
 
-Lyrics opacity fade percent per distance line
-== Procent zaniku przezroczystości tekstu utworu na linię odległości
+Lyrics search type
+== Lyrics search type setting
 
-Lyrics overall opacity percent
-== Ogólny procent przezroczystości tekstu utworu
+Lyrics source
+== Lyrics source setting
 
-Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== Progi dopasowania tekstu utworu według źródła (puste=próg globalny; np. QQ=60|LrcLib=70)
-
-Lyrics scale shrink percent per distance line
-== Procent zmniejszenia skali tekstu utworu na linię odległości
-
-Lyrics search strategy (0=source order, 1=parallel best match)
-== Strategia wyszukiwania tekstu utworu (0=kolejność źródeł, 1=równoległe najlepsze dopasowanie)
-
-Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== Źródło tekstu utworu (0=Auto najlepsze dopasowanie, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Lokalny plik muzyczny, 8=Lokalny LRC, 9=Lokalny ESLRC, 10=Lokalny TTML)
-
-Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
-== Źródła tekstu utworu pomijające pamięć podręczną podczas wyszukiwania (użyj | jako separatora, np. QQ|Kugou)
-
-Lyrics translation and transliteration color
-== Kolor tłumaczenia i transliteracji tekstu utworu
+Lyrics source order
+== Lyrics source order setting
 
 Lyrics: empty track
 == Tekst utworu: pusty utwór
@@ -3999,6 +3999,9 @@ Markers
 
 Match %d of %d
 == Wynik %d z %d
+
+Match score threshold
+== Match score threshold setting
 
 Matched with callable peer
 == Dopasowano do osiągalnego peera
@@ -4687,6 +4690,9 @@ Option color
 Other
 == Inne
 
+Other lines font size
+== Rozmiar czcionki pozostałych wierszy
+
 Others
 == Inni
 
@@ -4819,6 +4825,9 @@ Pause the current demo
 Pause/unpause game
 == Wstrzymaj/wznów grę
 
+Per-word highlight (karaoke)
+== Per-word highlight (karaoke) setting
+
 Personal best:
 == Rekord osobisty:
 
@@ -4879,8 +4888,8 @@ Play/pause the current demo
 Playback volume
 == Głośność odtwarzania
 
-Played lyrics word color
-== Kolor tekstu odtworzonego utworu
+Played word color
+== Played word color setting
 
 Player
 == Gracz
@@ -5106,6 +5115,9 @@ Progress bar height
 
 Progress bar width
 == Szerokość paska postępu
+
+Provider thresholds
+== Provider thresholds setting
 
 PTT 释放延迟（毫秒）
 == Opóźnienie zwolnienia PTT (ms)
@@ -5569,9 +5581,6 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == Renderuj małe tee zamiast okręgów
 
-Renderer
-== Technologia renderowania
-
 Renders your frame rate in the top right
 == Wyświetla liczbę klatek na sekundę w prawym górnym rogu
 
@@ -5712,6 +5721,9 @@ Reset to defaults
 
 Reset zone tuning in zone x or in all zones
 == Zresetuj strojenie strefy w strefie x lub we wszystkich strefach
+
+Respawn default weapon
+== Domyślna broń po odrodzeniu
 
 Restart
 == Restart
@@ -6106,6 +6118,9 @@ Sends a command to the antibot
 Separate with commas
 == Oddziel przecinkami
 
+Sequential
+== Sequential setting
+
 Server
 == Serwer
 
@@ -6412,6 +6427,9 @@ Show important server prompts and Echo messages as popups
 Show important server prompts as notifications
 == Pokazuj ważne komunikaty serwera jako powiadomienia
 
+Show in Dynamic Island
+== Pokaż w Dynamic Island
+
 Show info about the map with name r gives (current map by default)
 == Pokaż informacje o mapie o nazwie r (domyślnie bieżąca mapa)
 
@@ -6453,12 +6471,6 @@ Show local time always
 
 Show logs of the last i seconds
 == Pokaż logi z ostatnich i sekund
-
-Show lyrics translation when available
-== Pokaż tłumaczenie tekstu utworu, gdy dostępne
-
-Show lyrics transliteration when available
-== Pokaż transliterację tekstu utworu, gdy dostępna
 
 Show moving tiles in entities
 == Pokaż ruchome kafelki w obiektach
@@ -6600,6 +6612,9 @@ Show tiles layers from BG map
 
 Show toast
 == Pokaż toast
+
+Show translation
+== Show translation setting
 
 Show unknown server messages
 == Pokazuj nieznane wiadomości serwera
@@ -7660,6 +7675,9 @@ Translating to %s...
 Translation backend invalid, sending original
 == Backend tłumaczenia nieprawidłowy, wysyłanie oryginału
 
+Translation color
+== Translation color setting
+
 Translation queue full, sending original
 == Kolejka tłumaczeń pełna, wysyłanie oryginału
 
@@ -7888,8 +7906,8 @@ Unmute player with list index
 Unmute:
 == Odcisz:
 
-Unplayed lyrics word color
-== Kolor nieodtworzonego tekstu utworu
+Unplayed word color
+== Unplayed word color setting
 
 Unpredicted ghost opacity
 == Nieprzezroczystość nieprzewidzianego ducha
@@ -8824,6 +8842,15 @@ Zoom out
 启用新版设置页面 UI
 == Włącz nowy interfejs strony ustawień
 
+启用歌词 HUD 叠加层
+== Enable lyrics HUD overlay
+
+启用歌词本地缓存
+== Enable local lyrics cache
+
+启用歌词逐字高亮
+== Enable karaoke word highlighting
+
 启用玩家统计面板
 == Włącz panel statystyk gracza
 
@@ -8959,6 +8986,9 @@ Zoom out
 将性能调试日志写入专用文件
 == Zapisz dziennik debugowania wydajności do osobnego pliku
 
+将歌词显示在灵动岛内
+== Show lyrics in Dynamic Island
+
 屏蔽词列表（用,分隔）
 == Lista słów do zablokowania (oddzielone przecinkami)
 
@@ -8967,6 +8997,9 @@ Zoom out
 
 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
 == Pokaż stronę dogfood współdzielonych prymitywów UI feat-003 (przejmuje stronę ustawień QmClient, do wizualnej weryfikacji 11 prymitywów + animacji spring/easing)
+
+已播放词颜色
+== Played word color
 
 已读的设置界面新功能标识
 == Oznaczenia nowych funkcji w interfejsie ustawień jako przeczytane
@@ -9007,6 +9040,9 @@ Zoom out
 无系统媒体状态时隐藏歌词
 == Ukryj tekst utworu, gdy brak stanu odtwarzacza systemowego
 
+时钟漂移硬切阈值 ms
+== Clock drift hard-snap threshold ms
+
 时间耗尽后自动禁用速通计时器
 == Automatycznie wyłącz timer speedruna po upływie czasu
 
@@ -9021,6 +9057,12 @@ Zoom out
 
 显示地图进度调试点路线
 == Pokaż trasę punktów kontrolnych postępu mapy
+
+显示歌词翻译（若有）
+== Show lyrics translation when available
+
+显示歌词音译（若有）
+== Show lyrics transliteration when available
 
 显示版本过旧提示
 == Pokaż ostrzeżenie o zbyt starej wersji
@@ -9055,6 +9097,9 @@ Zoom out
 替换方式 0=Regex 1=Full 2=Both
 == Tryb zastępowania 0=Regex 1=Pełny 2=Oba
 
+未播放词颜色
+== Unplayed word color
+
 本体和分身都被冻结时，自动切换到先解冻的那个
 == Gdy zarówno postać główna, jak i kukła są zamrożone, automatycznie przełącz na tę, która pierwsza się rozmrozi
 
@@ -9085,6 +9130,15 @@ Zoom out
 根据文本输入焦点自动启用或关闭 IME
 == Automatycznie włączaj lub wyłączaj IME w zależności od fokusu wprowadzania tekstu
 
+检测新歌时自动联网拉取歌词
+== Auto fetch lyrics online when a new song is detected
+
+歌词 HTTP 请求超时 ms
+== Lyrics HTTP request timeout ms
+
+歌词 HUD 贴边外边距 px
+== Lyrics HUD edge margin px
+
 歌词下一行颜色
 == Kolor następnego wiersza tekstu utworu
 
@@ -9098,16 +9152,46 @@ Zoom out
 == Przezroczystość obrysu tekstu utworu
 
 歌词描边颜色
-== Kolor obrysu tekstu utworu
+== Lyrics outline color
+
+歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+== Lyrics providers that ignore cache during search
+
+歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
+== Lyrics search strategy
+
+歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
+== Lyrics source
+
+歌词整体不透明度 %
+== Lyrics overall opacity percent
+
+歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
+== Lyrics per-source match thresholds
+
+歌词模糊匹配评分阈值
+== Lyrics fuzzy match score threshold
 
 歌词淡入淡出时间
 == Czas zanikania i pojawiania się tekstu utworu
+
+歌词缓存过期天数（0=永久）
+== Lyrics cache expiry days
+
+歌词翻译/音译颜色
+== Lyrics translation/transliteration color
 
 歌词背景透明度
 == Przezroczystość tła tekstu utworu
 
 歌词背景颜色
-== Kolor tła tekstu utworu
+== Lyrics background color
+
+歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
+== Lyrics auto-search source order and enabled list
+
+歌词行间距 px
+== Lyrics line spacing px
 
 歌词超长时跑马灯
 == Przewijanie tekstu utworu, gdy jest zbyt długi
@@ -9145,6 +9229,18 @@ Zoom out
 死亡后显示记分牌
 == Pokaż tablicę wyników po śmierci
 
+活动行上方显示行数
+== Lines shown above active line
+
+活动行下方显示行数
+== Lines shown below active line
+
+活动行字号 px
+== Active lyrics line font size px
+
+活动行缩放百分比
+== Active lyrics line scale percent
+
 深度冻结图块的叠加实体 alpha (0-100)
 == Alfa nakładki obiektów głęboko zamrażających kafelków (0-100)
 
@@ -9162,6 +9258,9 @@ Zoom out
 
 激光辉光强度 (0-100)
 == Intensywność poświaty lasera (0-100)
+
+灵动岛 HUD 编辑器贴边外边距 px
+== Dynamic Island HUD editor edge margin px
 
 灵动岛使用原版样式
 == Dynamic Island używa oryginalnego stylu
@@ -9517,6 +9616,9 @@ Zoom out
 菜单不透明度 (Menu opacity 0-100)
 == Nieprzezroczystość menu (Menu opacity 0-100)
 
+行切换滚动时长 ms
+== Line switch scroll duration ms
+
 被屏蔽词控制台颜色
 == Kolor konsoli dla zablokowanych słów
 
@@ -9649,8 +9751,17 @@ Zoom out
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == Resetuj statystyki przy wejściu na serwer (0 = statystyki skumulowane, 1 = resetuj przy każdym wejściu)
 
+远离行每行缩小百分比
+== Lyrics scale shrink percent per distance line
+
+远离行每行透明度衰减 %
+== Lyrics opacity fade percent per distance line
+
 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
 == Zdalne cząsteczki: synchronizuj i renderuj innych graczy przez serwer centralny (wymaga włączenia lokalnego + zdalnego u drugiej osoby)
+
+逐字边缘软过渡宽度 px
+== Karaoke highlight soft edge width px
 
 通用界面透明度
 == Ogólna przezroczystość interfejsu
@@ -9721,6 +9832,9 @@ Zoom out
 速通计时器秒
 == Sekundy licznika czasu speedrun
 
+重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
+== Default weapon requested after respawn
+
 锤人换皮肤
 == Zmiana skórki po uderzeniu młotkiem
 
@@ -9741,6 +9855,12 @@ Zoom out
 
 非好友使用默认皮肤
 == Domyślna skórka dla nie-znajomych
+
+非活动行字号 px
+== Inactive lyrics line font size px
+
+非活动行最小不透明度 %
+== Inactive lyrics line minimum opacity percent
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Lista zmienionych nazw w menu kołowym (oddzielone |, np. Gracz1|Gracz2)

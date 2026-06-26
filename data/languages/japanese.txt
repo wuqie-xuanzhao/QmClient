@@ -289,11 +289,11 @@ Active color
 Active disconnect
 == アクティブ切断
 
-Active lyrics line font size in px
-== アクティブ歌詞行のフォントサイズ（px）
+Active line font size
+== アクティブ行のフォントサイズ
 
-Active lyrics line scale percent
-== アクティブ歌詞行のスケールパーセント
+Active line scale
+== アクティブ行の拡大率
 
 Active moderator mode disabled because you are afk.
 == アクティブモデレーターモードは AFK のため無効になりました。
@@ -562,8 +562,8 @@ Always show own player's hook collision line
 Always translate
 == 常に翻訳
 
-AMLL TTML DB API base URL (can be changed to a mirror)
-== AMLL TTML DB API ベース URL（ミラーに変更可能）
+AMLL TTML DB API 基地址（可改成镜像）
+== AMLL TTML DB API base URL (can be changed to a mirror)
 
 Amount
 == 量
@@ -787,8 +787,8 @@ Auto enable in Gores mode
 Auto execute
 == 自動実行
 
-Auto fetch lyrics online when a new song is detected
-== 新しい曲が検出されたときに歌詞を自動的にオンラインで取得
+Auto fetch lyrics
+== Auto fetch lyrics setting
 
 Auto gain control for mic (AGC, experimental)
 == マイクの自動ゲインコントロール（AGC、実験的）
@@ -973,6 +973,9 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 最高
 
+Best match
+== Best match setting
+
 Bind key to execute a command or view keybindings
 == キーをバインドしてコマンドを実行するか、キーバインドを表示する
 
@@ -1053,6 +1056,9 @@ Buttons
 
 c = Player position
 == c = プレイヤー座標
+
+Cache TTL
+== Cache TTL setting
 
 Calculate unfinished maps for player in certain mode
 == 特定モードでのプレイヤーの未完了マップを計算
@@ -1350,6 +1356,9 @@ Client prediction time is high
 
 Client uptime
 == クライアント稼働時間
+
+Clock drift hard-snap
+== Clock drift hard-snap setting
 
 Close
 == 閉じる
@@ -2029,6 +2038,12 @@ Displays your ping to the current server
 Dissolve
 == ディゾルブ
 
+Distance fade per line
+== Distance fade per line setting
+
+Distance scale falloff
+== Distance scale falloff setting
+
 Do not translate server messages
 == サーバーメッセージを翻訳しない
 
@@ -2302,23 +2317,14 @@ Enable highlighted chat sound
 Enable Jelly Tee
 == ジェリーティーを有効化
 
-Enable karaoke word highlighting
-== カラオケの単語ハイライトを有効にする
-
 Enable keyword reply
 == キーワード返信を有効にする
-
-Enable local lyrics cache
-== ローカルの歌詞キャッシュを有効にする
 
 Enable long pain sound (used when shooting in freeze)
 == ロングペインサウンドを有効にする（フリーズ中に射撃したときに使用）
 
 Enable lyrics
 == 歌詞を有効にする
-
-Enable lyrics HUD overlay
-== 歌詞 HUD オーバーレイを有効にする
 
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 == 指定されたバグを使用してマップ互換モードを有効にする（例：grenade-doubleexplosion@ddnet.tw）
@@ -2974,6 +2980,9 @@ Gradient color
 Graphics
 == グラフィック
 
+Graphics backend
+== グラフィックスバックエンド
+
 Graphics card
 == グラフィックカード
 
@@ -2988,6 +2997,9 @@ Group name
 
 Guide line color
 == ガイドラインの色
+
+Gun
+== ピストル
 
 Hammer
 == ハンマー
@@ -3106,6 +3118,9 @@ Hide UI for focused gameplay
 Hide weapon muzzle flashes
 == 武器の発射炎を非表示
 
+Hide when paused
+== Hide when paused setting
+
 Hide without media state
 == メディア状態がないときは非表示
 
@@ -3217,6 +3232,9 @@ I muted you
 Idiot word filter
 == バカ言葉フィルター
 
+Ignore cache providers
+== Ignore cache providers setting
+
 Import from clipboard
 == クリップボードからインポート
 
@@ -3229,11 +3247,8 @@ In memory of me
 Inactive color
 == 非アクティブ時の色
 
-Inactive lyrics line font size in px
-== 非アクティブな歌詞行のフォントサイズ（px）
-
-Inactive lyrics line minimum opacity percent
-== 非アクティブな歌詞行の最小不透明度（%）
+Inactive line opacity
+== Inactive line opacity setting
 
 Incoming language
 == 受信言語
@@ -3439,8 +3454,8 @@ k = Resend loss
 Kaomoji
 == 顔文字
 
-Karaoke highlight soft edge width in px
-== カラオケハイライトのソフトエッジ幅（px）
+Karaoke edge softness
+== Karaoke edge softness setting
 
 Key Bindings
 == キーバインディング
@@ -3607,6 +3622,12 @@ LibreTranslate API Key
 LibreTranslate 端点
 == LibreTranslate エンドポイント
 
+Line scroll duration
+== Line scroll duration setting
+
+Line spacing
+== Line spacing setting
+
 Line width
 == 線幅
 
@@ -3618,6 +3639,12 @@ Lines
 
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
+
+Lines above active
+== Lines above active setting
+
+Lines below active
+== Lines below active setting
 
 List all commands that are available in practice mode
 == 練習モードで使用可能なすべてのコマンドを一覧表示
@@ -3760,6 +3787,18 @@ Local
 Local + Dummy
 == ローカル + ダミー
 
+Local ESLRC file
+== Local ESLRC file setting
+
+Local LRC file
+== Local LRC file setting
+
+Local media folders
+== Local media folders setting
+
+Local music file
+== Local music file setting
+
 Local only
 == ローカルのみ
 
@@ -3777,6 +3816,9 @@ Local test mode, no server needed
 
 Local Time
 == ローカル時間
+
+Local TTML file
+== Local TTML file setting
 
 Local-only
 == ローカルのみ
@@ -3808,44 +3850,17 @@ Long press on a touch button to select it.
 Low to high
 == 低い順
 
-LRCLIB API base URL (can be changed to a mirror)
-== LRCLIB API ベース URL（ミラーに変更可能）
+LRCLIB API 基地址（可改成镜像）
+== LRCLIB API base URL (can be changed to a mirror)
 
 Lyrics
 == 歌詞
 
-Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
-== 歌詞の自動検索ソース順序と有効リスト（空=デフォルト；区切り文字として | を使用、例：QQ|Kugou|Netease|LrcLib）
-
-Lyrics cache expiry days (0=never expire)
-== 歌詞キャッシュの有効期限日数（0=無期限）
-
-Lyrics clock drift hard snap threshold in ms
-== 歌詞の時計ドリフトハードスナップしきい値（ms）
-
-Lyrics fuzzy match score threshold
-== 歌詞のあいまい一致スコアしきい値
-
 Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
 == 歌詞 HTTP プロキシ（例：http://127.0.0.1:7890）
 
-Lyrics HTTP request timeout in ms
-== 歌詞 HTTP リクエストタイムアウト（ms）
-
-Lyrics HUD edge margin in px
-== 歌詞 HUD エッジマージン（px）
-
-Lyrics line spacing in px
-== 歌詞の行間（px）
-
-Lyrics line switch scroll duration in ms
-== 歌詞の行切り替えスクロール時間（ms）
-
-Lyrics lines shown above active line
-== アクティブ行より上に表示する歌詞の行数
-
-Lyrics lines shown below active line
-== アクティブ行より下に表示する歌詞の行数
+Lyrics HTTP timeout
+== Lyrics HTTP timeout setting
 
 Lyrics local media library folders (use | as separator)
 == 歌詞のローカルメディアライブラリフォルダ（区切り文字として | を使用）
@@ -3853,29 +3868,14 @@ Lyrics local media library folders (use | as separator)
 Lyrics manual timeline offset in ms (runtime step 500ms)
 == 歌詞の手動タイムラインオフセット（ms、実行時ステップ 500ms）
 
-Lyrics opacity fade percent per distance line
-== 距離行ごとの歌詞不透明度フェード率（%）
+Lyrics search type
+== Lyrics search type setting
 
-Lyrics overall opacity percent
-== 歌詞全体の不透明度（%）
+Lyrics source
+== Lyrics source setting
 
-Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== ソースごとの歌詞一致しきい値（空=グローバルしきい値；例：QQ=60|LrcLib=70）
-
-Lyrics scale shrink percent per distance line
-== 距離行ごとの歌詞スケール縮小率（%）
-
-Lyrics search strategy (0=source order, 1=parallel best match)
-== 歌詞検索戦略（0=ソース順、1=並列ベストマッチ）
-
-Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== 歌詞ソース（0=自動ベストマッチ、1=LRCLIB、2=Kugou、3=QQ、4=Netease、5=AMLL TTML DB、6=Apple Music、7=ローカル音楽ファイル、8=ローカル LRC、9=ローカル ESLRC、10=ローカル TTML）
-
-Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
-== 検索中にキャッシュを無視する歌詞ソース（区切り文字として | を使用、例：QQ|Kugou）
-
-Lyrics translation and transliteration color
-== 歌詞の翻訳と音訳の色
+Lyrics source order
+== Lyrics source order setting
 
 Lyrics: empty track
 == 歌詞：トラックが空です
@@ -3999,6 +3999,9 @@ Markers
 
 Match %d of %d
 == 試合 %d/%d
+
+Match score threshold
+== Match score threshold setting
 
 Matched with callable peer
 == 通話可能なピアとマッチしました
@@ -4687,6 +4690,9 @@ Option color
 Other
 == その他
 
+Other lines font size
+== 他の行のフォントサイズ
+
 Others
 == その他
 
@@ -4819,6 +4825,9 @@ Pause the current demo
 Pause/unpause game
 == ゲームの一時停止/再開
 
+Per-word highlight (karaoke)
+== Per-word highlight (karaoke) setting
+
 Personal best:
 == 自己ベスト：
 
@@ -4879,8 +4888,8 @@ Play/pause the current demo
 Playback volume
 == 再生音量
 
-Played lyrics word color
-== 再生済み歌詞の文字色
+Played word color
+== Played word color setting
 
 Player
 == プレイヤー
@@ -5106,6 +5115,9 @@ Progress bar height
 
 Progress bar width
 == プログレスバーの幅
+
+Provider thresholds
+== Provider thresholds setting
 
 PTT 释放延迟（毫秒）
 == PTT リリース遅延（ミリ秒）
@@ -5569,9 +5581,6 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == 円の代わりにミニTeeをレンダリング
 
-Renderer
-== レンダラー
-
 Renders your frame rate in the top right
 == 右上にフレームレートを表示
 
@@ -5712,6 +5721,9 @@ Reset to defaults
 
 Reset zone tuning in zone x or in all zones
 == ゾーン x または全ゾーンのチューニングをリセット
+
+Respawn default weapon
+== リスポーン時の既定武器
 
 Restart
 == 再起動
@@ -6106,6 +6118,9 @@ Sends a command to the antibot
 Separate with commas
 == カンマで区切る
 
+Sequential
+== Sequential setting
+
 Server
 == サーバー
 
@@ -6412,6 +6427,9 @@ Show important server prompts and Echo messages as popups
 Show important server prompts as notifications
 == 重要なサーバープロンプトを通知として表示
 
+Show in Dynamic Island
+== Dynamic Island に表示
+
 Show info about the map with name r gives (current map by default)
 == 名前 r のマップに関する情報を表示する（デフォルトは現在のマップ）
 
@@ -6453,12 +6471,6 @@ Show local time always
 
 Show logs of the last i seconds
 == 最後の i 秒間のログを表示する
-
-Show lyrics translation when available
-== 利用可能な場合に歌詞の翻訳を表示
-
-Show lyrics transliteration when available
-== 利用可能な場合に歌詞の音訳を表示
 
 Show moving tiles in entities
 == エンティティに移動タイルを表示
@@ -6600,6 +6612,9 @@ Show tiles layers from BG map
 
 Show toast
 == トーストを表示
+
+Show translation
+== Show translation setting
 
 Show unknown server messages
 == 不明なサーバーメッセージを表示
@@ -7660,6 +7675,9 @@ Translating to %s...
 Translation backend invalid, sending original
 == 翻訳バックエンドが無効なため、原文を送信
 
+Translation color
+== Translation color setting
+
 Translation queue full, sending original
 == 翻訳キューがいっぱいのため、原文を送信
 
@@ -7888,8 +7906,8 @@ Unmute player with list index
 Unmute:
 == ミュート解除:
 
-Unplayed lyrics word color
-== 未再生の歌詞の単語の色
+Unplayed word color
+== Unplayed word color setting
 
 Unpredicted ghost opacity
 == 未予測ゴーストの不透明度
@@ -8824,6 +8842,15 @@ Zoom out
 启用新版设置页面 UI
 == 新しい設定ページ UI を有効にする
 
+启用歌词 HUD 叠加层
+== Enable lyrics HUD overlay
+
+启用歌词本地缓存
+== Enable local lyrics cache
+
+启用歌词逐字高亮
+== Enable karaoke word highlighting
+
 启用玩家统计面板
 == プレイヤー統計パネルを有効にする
 
@@ -8959,6 +8986,9 @@ Zoom out
 将性能调试日志写入专用文件
 == パフォーマンスデバッグログを専用ファイルに書き込む
 
+将歌词显示在灵动岛内
+== Show lyrics in Dynamic Island
+
 屏蔽词列表（用,分隔）
 == フィルターワードリスト（,で区切る）
 
@@ -8967,6 +8997,9 @@ Zoom out
 
 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
 == feat-003 共有 UI プリミティブ dogfood ページを表示する（QmClient 設定ページを引き継ぎ、11 個のプリミティブ + spring/easing アニメーションを視覚検証するため）
+
+已播放词颜色
+== Played word color
 
 已读的设置界面新功能标识
 == 既読の設定画面新機能インジケーター
@@ -9007,6 +9040,9 @@ Zoom out
 无系统媒体状态时隐藏歌词
 == システムメディアステータスがない場合に歌詞を非表示
 
+时钟漂移硬切阈值 ms
+== Clock drift hard-snap threshold ms
+
 时间耗尽后自动禁用速通计时器
 == 時間切れ後にスピードラインタイマーを自動無効化
 
@@ -9021,6 +9057,12 @@ Zoom out
 
 显示地图进度调试点路线
 == マップ進行チェックポイントルートを表示
+
+显示歌词翻译（若有）
+== Show lyrics translation when available
+
+显示歌词音译（若有）
+== Show lyrics transliteration when available
 
 显示版本过旧提示
 == バージョンが古すぎる場合の警告を表示
@@ -9055,6 +9097,9 @@ Zoom out
 替换方式 0=Regex 1=Full 2=Both
 == 置換方式 0=正規表現 1=完全一致 2=両方
 
+未播放词颜色
+== Unplayed word color
+
 本体和分身都被冻结时，自动切换到先解冻的那个
 == 本体とダミーの両方が凍結された場合、先に解凍される方に自動切替
 
@@ -9085,6 +9130,15 @@ Zoom out
 根据文本输入焦点自动启用或关闭 IME
 == テキスト入力のフォーカスに応じて IME を自動的に有効化/無効化
 
+检测新歌时自动联网拉取歌词
+== Auto fetch lyrics online when a new song is detected
+
+歌词 HTTP 请求超时 ms
+== Lyrics HTTP request timeout ms
+
+歌词 HUD 贴边外边距 px
+== Lyrics HUD edge margin px
+
 歌词下一行颜色
 == 歌詞の次の行の色
 
@@ -9098,16 +9152,46 @@ Zoom out
 == 歌詞の輪郭透明度
 
 歌词描边颜色
-== 歌詞の輪郭色
+== Lyrics outline color
+
+歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+== Lyrics providers that ignore cache during search
+
+歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
+== Lyrics search strategy
+
+歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
+== Lyrics source
+
+歌词整体不透明度 %
+== Lyrics overall opacity percent
+
+歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
+== Lyrics per-source match thresholds
+
+歌词模糊匹配评分阈值
+== Lyrics fuzzy match score threshold
 
 歌词淡入淡出时间
 == 歌詞のフェードイン/アウト時間
+
+歌词缓存过期天数（0=永久）
+== Lyrics cache expiry days
+
+歌词翻译/音译颜色
+== Lyrics translation/transliteration color
 
 歌词背景透明度
 == 歌詞の背景透明度
 
 歌词背景颜色
-== 歌詞の背景色
+== Lyrics background color
+
+歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
+== Lyrics auto-search source order and enabled list
+
+歌词行间距 px
+== Lyrics line spacing px
 
 歌词超长时跑马灯
 == 歌詞が長すぎる場合のマーキー
@@ -9145,6 +9229,18 @@ Zoom out
 死亡后显示记分牌
 == 死亡後にスコアボードを表示
 
+活动行上方显示行数
+== Lines shown above active line
+
+活动行下方显示行数
+== Lines shown below active line
+
+活动行字号 px
+== Active lyrics line font size px
+
+活动行缩放百分比
+== Active lyrics line scale percent
+
 深度冻结图块的叠加实体 alpha (0-100)
 == 深い凍結タイルの重ね合わせエンティティのアルファ（0-100）
 
@@ -9162,6 +9258,9 @@ Zoom out
 
 激光辉光强度 (0-100)
 == レーザーのグロー強度（0-100）
+
+灵动岛 HUD 编辑器贴边外边距 px
+== Dynamic Island HUD editor edge margin px
 
 灵动岛使用原版样式
 == ダイナミックアイランドにオリジナルスタイルを使用
@@ -9517,6 +9616,9 @@ Zoom out
 菜单不透明度 (Menu opacity 0-100)
 == メニューの不透明度（Menu opacity 0-100）
 
+行切换滚动时长 ms
+== Line switch scroll duration ms
+
 被屏蔽词控制台颜色
 == ブロックされたワードのコンソール色
 
@@ -9649,8 +9751,17 @@ Zoom out
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == サーバー参加時に統計をリセット（0=累積統計、1=参加ごとにリセット）
 
+远离行每行缩小百分比
+== Lyrics scale shrink percent per distance line
+
+远离行每行透明度衰减 %
+== Lyrics opacity fade percent per distance line
+
 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
 == リモートパーティクル：中央サーバー経由で他のプレイヤーを同期・レンダリング（相手側でローカル＋リモートを有効にする必要あり）
+
+逐字边缘软过渡宽度 px
+== Karaoke highlight soft edge width px
 
 通用界面透明度
 == 汎用 UI の透明度
@@ -9721,6 +9832,9 @@ Zoom out
 速通计时器秒
 == スピードランタイマーの秒
 
+重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
+== Default weapon requested after respawn
+
 锤人换皮肤
 == ハンマーでスキンを変更
 
@@ -9741,6 +9855,12 @@ Zoom out
 
 非好友使用默认皮肤
 == フレンド以外はデフォルトスキンを使用
+
+非活动行字号 px
+== Inactive lyrics line font size px
+
+非活动行最小不透明度 %
+== Inactive lyrics line minimum opacity percent
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == パイメニューの名前変更リスト（| で区切る、例：璇夢1|璇夢2）

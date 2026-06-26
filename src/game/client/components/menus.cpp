@@ -109,6 +109,8 @@ namespace
 	constexpr float MENU_TAB_DEFAULT_W_OFFSET = 0.0f;
 	constexpr float MENU_TAB_DEFAULT_H_OFFSET = 3.0f;
 	constexpr float MENU_TAB_ANIM_EPSILON = 0.0001f;
+	constexpr int MENU_IDLE_REFRESH_RATE = 60;
+	constexpr auto MENU_IDLE_INTERACTION_GRACE_TIME = 450ms;
 	int s_LastPlanCollectionScreenBucket = -1;
 	CUIRect MenuButtonTextRect(const CUIRect *pRect, float FontFactor, float HoverLift)
 	{
@@ -4147,6 +4149,7 @@ void CMenus::SetActive(bool Active)
 	{
 		Ui()->SetHotItem(nullptr);
 		Ui()->SetActiveItem(nullptr);
+		MarkMenuInteraction();
 	}
 	m_MenuActive = Active;
 	if(!m_MenuActive)
@@ -4176,6 +4179,11 @@ void CMenus::SetActive(bool Active)
 	{
 		GameClient()->OnRelease();
 	}
+}
+
+void CMenus::MarkMenuInteraction()
+{
+	m_LastMenuInteractionTime = time_get_nanoseconds();
 }
 
 bool CMenus::IsSettingsPageActive() const
@@ -4227,6 +4235,47 @@ const char *CMenus::CurrentQmUiPerfOperation() const
 	case SETTINGS_QMCLIENT: return "settings_qmclient";
 	default: return "settings_unknown";
 	}
+}
+
+int CMenus::IdleRenderFrameRate() const
+{
+	if(!IsActive() || !InterfacesInitialized())
+		return 0;
+
+	const IClient::EClientState ClientState = Client()->State();
+	if(ClientState == IClient::STATE_CONNECTING || ClientState == IClient::STATE_LOADING || ClientState == IClient::STATE_QUITTING || ClientState == IClient::STATE_RESTARTING)
+		return 0;
+
+	if(Ui()->ActiveItem() != nullptr || CLineInput::GetActiveInput() != nullptr || GameClient()->m_KeyBinder.IsActive() || Ui()->IsPopupOpen())
+		return 0;
+
+	if(GameClient()->m_MenuBackground.IsLoading())
+		return 0;
+
+	const SUiV2PerfStats &UiRuntimeStats = GameClient()->UiRuntimeV2()->LastStats();
+	if(UiRuntimeStats.m_ActiveAnimCount > 0 || UiRuntimeStats.m_QueuedAnimCount > 0)
+		return 0;
+
+	if(IsSettingsPageActive())
+	{
+		if(m_SettingsPerfWindowTracker.HasActiveWindow() ||
+			m_SettingsPageSwitchActive ||
+			m_SettingsScrollActive ||
+			m_SettingsPostScrollRecoveryFrames > 0 ||
+			m_MenuTextPlanCollecting ||
+			m_MenuTextPlanPendingActive ||
+			SettingsTextPlanCollectionRemaining() > 0 ||
+			SettingsTextPrebuildRemaining() > 0 ||
+			CountMissingSettingsMenuTextPlanItems() > 0)
+		{
+			return 0;
+		}
+	}
+
+	if(time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME)
+		return 0;
+
+	return MENU_IDLE_REFRESH_RATE;
 }
 
 CMenus::SSettingsScrollRegionFrame CMenus::BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY)
@@ -5756,6 +5805,7 @@ bool CMenus::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
 	if(!m_MenuActive)
 		return false;
 
+	MarkMenuInteraction();
 	Ui()->ConvertMouseMove(&x, &y, CursorType);
 	Ui()->OnCursorMove(x, y);
 
@@ -5770,6 +5820,7 @@ bool CMenus::OnInput(const IInput::CEvent &Event)
 	// Escape key is always handled to activate/deactivate menu
 	if((Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE) || IsActive())
 	{
+		MarkMenuInteraction();
 		Ui()->OnInput(Event);
 		return true;
 	}
@@ -6097,6 +6148,8 @@ const CMenus::CMenuImage *CMenus::FindMenuImage(const char *pName)
 void CMenus::SetMenuPage(int NewPage)
 {
 	const int OldPage = m_MenuPage;
+	if(OldPage != NewPage)
+		MarkMenuInteraction();
 	if(OldPage == PAGE_SETTINGS && NewPage != PAGE_SETTINGS)
 	{
 		ClearQmClientSettingsSearchInputs();
@@ -6181,6 +6234,8 @@ void CMenus::SetGamePage(int NewPage)
 		NewPage = PAGE_GAME;
 
 	const int OldPage = m_GamePage;
+	if(OldPage != NewPage)
+		MarkMenuInteraction();
 	if(PerfDebugEnabled() && OldPage != NewPage)
 	{
 		char aPayload[160];
@@ -6279,6 +6334,8 @@ void CMenus::ForceRefreshLanPage()
 
 void CMenus::SetShowStart(bool ShowStart)
 {
+	if(m_ShowStart != ShowStart)
+		MarkMenuInteraction();
 	m_ShowStart = ShowStart;
 }
 

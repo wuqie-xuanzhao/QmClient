@@ -3231,6 +3231,22 @@ turkish = "Ekran kartı"
 polish = "Karta graficzna"
 
 [[message]]
+key = "Graphics backend"
+[message.translations]
+japanese = "グラフィックスバックエンド"
+korean = "그래픽 백엔드"
+simplified_chinese = "图形后端"
+traditional_chinese = "圖形後端"
+russian = "Графический бэкенд"
+german = "Grafik-Backend"
+spanish = "Backend gráfico"
+french = "Backend graphique"
+brazilian_portuguese = "Backend gráfico"
+portuguese = "Backend gráfico"
+turkish = "Grafik arka ucu"
+polish = "Backend graficzny"
+
+[[message]]
 key = "Grenade"
 [message.translations]
 simplified_chinese = "榴弹枪"
@@ -3245,6 +3261,22 @@ brazilian_portuguese = "Granada"
 portuguese = "Granada"
 turkish = "Bombaatar"
 polish = "Granat"
+
+[[message]]
+key = "Gun"
+[message.translations]
+japanese = "ピストル"
+korean = "권총"
+simplified_chinese = "手枪"
+traditional_chinese = "手槍"
+russian = "Пистолет"
+german = "Pistole"
+spanish = "Pistola"
+french = "Pistolet"
+brazilian_portuguese = "Pistola"
+portuguese = "Pistola"
+turkish = "Tabanca"
+polish = "Pistolet"
 
 [[message]]
 key = "Hammer"
@@ -5757,6 +5789,22 @@ brazilian_portuguese = "Redefinir layout"
 portuguese = "Repor layout"
 turkish = "Düzeni sıfırla"
 polish = "Resetuj układ"
+
+[[message]]
+key = "Respawn default weapon"
+[message.translations]
+japanese = "リスポーン時の既定武器"
+korean = "부활 기본 무기"
+simplified_chinese = "重生默认武器"
+traditional_chinese = "重生預設武器"
+russian = "Оружие после возрождения"
+german = "Standardwaffe nach Respawn"
+spanish = "Arma predeterminada al reaparecer"
+french = "Arme par défaut à la réapparition"
+brazilian_portuguese = "Arma padrão ao renascer"
+portuguese = "Arma predefinida ao renascer"
+turkish = "Yeniden doğuş varsayılan silahı"
+polish = "Domyślna broń po odrodzeniu"
 
 [[message]]
 key = "Rifle Laser Inner Color"

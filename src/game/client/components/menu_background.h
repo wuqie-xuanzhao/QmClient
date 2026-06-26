@@ -111,6 +111,7 @@ private:
 	void QueueThemeIconLoad(CTheme &Theme);
 	void ProcessThemeIconJobs();
 	void UpdateThemeLoading();
+	void InvalidateCurrentPosition();
 
 	std::vector<CTheme> m_vThemes;
 	std::shared_ptr<CThemeListLoadJob> m_pThemeListLoadJob;

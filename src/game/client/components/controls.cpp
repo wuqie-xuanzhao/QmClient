@@ -17,6 +17,29 @@
 #include <game/client/gameclient.h>
 #include <game/collision.h>
 
+#include <algorithm>
+
+namespace
+{
+	bool s_aQmHadLocalCharacter[NUM_DUMMIES] = {};
+
+	int QmRespawnDefaultWantedWeapon()
+	{
+		const int ConfigWeapon = std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5);
+		if(ConfigWeapon <= 0)
+			return 0;
+		return minimum(ConfigWeapon, WEAPON_LASER + 1);
+	}
+
+	bool QmDummyHasActiveCharacter(const CGameClient *pGameClient, int Dummy)
+	{
+		if(Dummy < 0 || Dummy >= NUM_DUMMIES)
+			return false;
+		const int ClientId = pGameClient->m_aLocalIds[Dummy];
+		return ClientId >= 0 && ClientId < MAX_CLIENTS && pGameClient->m_Snap.m_aCharacters[ClientId].m_Active;
+	}
+}
+
 CControls::CControls()
 {
 	mem_zero(&m_aLastData, sizeof(m_aLastData));
@@ -36,6 +59,8 @@ void CControls::OnReset()
 
 	for(int &AmmoCount : m_aAmmoCount)
 		AmmoCount = 0;
+	for(bool &HadLocalCharacter : s_aQmHadLocalCharacter)
+		HadLocalCharacter = false;
 
 	m_LastSendTime = 0;
 }
@@ -58,6 +83,7 @@ void CControls::OnPlayerDeath()
 {
 	for(int &AmmoCount : m_aAmmoCount)
 		AmmoCount = 0;
+	s_aQmHadLocalCharacter[g_Config.m_ClDummy] = false;
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
@@ -376,6 +402,18 @@ void CControls::OnRender()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
+
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		const bool HasActiveCharacter = QmDummyHasActiveCharacter(GameClient(), Dummy);
+		if(Dummy == g_Config.m_ClDummy && HasActiveCharacter && !s_aQmHadLocalCharacter[Dummy])
+		{
+			const int WantedWeapon = QmRespawnDefaultWantedWeapon();
+			if(WantedWeapon > 0)
+				m_aInputData[Dummy].m_WantedWeapon = WantedWeapon;
+		}
+		s_aQmHadLocalCharacter[Dummy] = HasActiveCharacter;
+	}
 
 	if(g_Config.m_ClAutoswitchWeaponsOutOfAmmo && !GameClient()->m_GameInfo.m_UnlimitedAmmo && GameClient()->m_Snap.m_pLocalCharacter)
 	{

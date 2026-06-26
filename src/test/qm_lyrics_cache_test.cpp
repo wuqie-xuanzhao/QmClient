@@ -37,6 +37,16 @@ TEST(QmLyricsCache, BuildCacheKeyAndFileName)
 	EXPECT_EQ(Key, Key2);
 }
 
+TEST(QmLyricsCache, ValidatesPayloadFileName)
+{
+	EXPECT_TRUE(IsValidCachePayloadFileName("0123456789abcdef.json"));
+	EXPECT_TRUE(IsValidCachePayloadFileName("0123456789ABCDEF.json"));
+	EXPECT_FALSE(IsValidCachePayloadFileName("../outside.json"));
+	EXPECT_FALSE(IsValidCachePayloadFileName("0123456789abcdeg.json"));
+	EXPECT_FALSE(IsValidCachePayloadFileName("0123456789abcdef.txt"));
+	EXPECT_FALSE(IsValidCachePayloadFileName("0123456789abcdef0.json"));
+}
+
 TEST(QmLyricsCache, UpsertAndLookup)
 {
 	CCacheIndex Idx;
@@ -68,6 +78,21 @@ TEST(QmLyricsCache, UpsertReplacesAndReturnsEvictedFile)
 	const SCacheEntry *pHit = Idx.Lookup("k1", 3000);
 	ASSERT_NE(pHit, nullptr);
 	EXPECT_EQ(pHit->m_FileName, "new.json");
+}
+
+TEST(QmLyricsCache, RemoveReturnsPayloadFileName)
+{
+	CCacheIndex Idx;
+	SCacheEntry Entry = MakeEntry("k1", 1000);
+	Entry.m_FileName = "0123456789abcdef.json";
+	Idx.Upsert(Entry, 100);
+
+	std::string FileName;
+	EXPECT_TRUE(Idx.Remove("k1", &FileName));
+	EXPECT_EQ(FileName, "0123456789abcdef.json");
+	EXPECT_EQ(Idx.Lookup("k1", 2000), nullptr);
+	EXPECT_EQ(Idx.Size(), 0u);
+	EXPECT_FALSE(Idx.Remove("k1", &FileName));
 }
 
 TEST(QmLyricsCache, LruEvictionWhenOverCapacity)
@@ -156,4 +181,20 @@ TEST(QmLyricsCache, FromJsonEmptyEntriesArray)
 	char aErr[128];
 	ASSERT_TRUE(Idx.FromJson("{\"entries\":[]}", aErr, sizeof(aErr)));
 	EXPECT_EQ(Idx.Size(), 0u);
+}
+
+TEST(QmLyricsCache, FromJsonSkipsUnsafePayloadFileNames)
+{
+	const char *pJson = R"({
+		"entries": [
+			{"key":"ok","file":"0123456789abcdef.json","source":"lrclib","score":95,"used":20,"stored":10},
+			{"key":"bad","file":"../outside.json","source":"lrclib","score":95,"used":20,"stored":10}
+		]
+	})";
+	CCacheIndex Idx;
+	char aErr[128];
+	ASSERT_TRUE(Idx.FromJson(pJson, aErr, sizeof(aErr)));
+	EXPECT_NE(Idx.Lookup("ok", 30), nullptr);
+	EXPECT_EQ(Idx.Lookup("bad", 30), nullptr);
+	EXPECT_EQ(Idx.Size(), 1u);
 }

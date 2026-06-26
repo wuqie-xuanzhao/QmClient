@@ -1538,7 +1538,7 @@ TEST(QmMonitoringHelpers, SettingsStaticLabelsUseTextElementCache)
 		Buffer << File.rdbuf();
 		const std::string Source = Buffer.str();
 
-		EXPECT_NE(Source.find("ConfigureSettingsCardSection(S, \"Visual: Font & Cursor\""), std::string::npos);
+		EXPECT_NE(Source.find("ConfigureSettingsCardSection(S, Localizable(\"Visual: Font & Cursor\")"), std::string::npos);
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-visual-font-cursor-title\")"), std::string::npos);
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, \"tclient-custom-font-label\")"), std::string::npos);
 	}
@@ -1582,14 +1582,14 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 	const size_t ThemeSectionEnd = Source.find("SSettingsSection CMenus::BuildTClientAutoReplyCacheSection()", ThemeSection);
 	ASSERT_NE(ThemeSectionEnd, std::string::npos);
 	const std::string ThemeBody = Source.substr(ThemeSection, ThemeSectionEnd - ThemeSection);
-	EXPECT_NE(ThemeBody.find("ConfigureSettingsCardSection(S, \"Visual: Font & Cursor\", \"tclient:visual-font-cursor\", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);"), std::string::npos);
+	EXPECT_NE(ThemeBody.find("ConfigureSettingsCardSection(S, Localizable(\"Visual: Font & Cursor\"), \"tclient:visual-font-cursor\", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);"), std::string::npos);
 
 	const size_t AutoReplySection = Source.find("SSettingsSection CMenus::BuildTClientAutoReplyCacheSection()");
 	ASSERT_NE(AutoReplySection, std::string::npos);
 	const size_t AutoReplySectionEnd = Source.find("SSettingsSection CMenus::BuildTClientPetCacheSection()", AutoReplySection);
 	ASSERT_NE(AutoReplySectionEnd, std::string::npos);
 	const std::string AutoReplyBody = Source.substr(AutoReplySection, AutoReplySectionEnd - AutoReplySection);
-	EXPECT_NE(AutoReplyBody.find("ConfigureSettingsCardSection(S, \"Auto reply\", \"tclient:auto-reply\", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientAutoReplyCacheSection(Col, Render); }, MarginBetweenSections);"), std::string::npos);
+	EXPECT_NE(AutoReplyBody.find("ConfigureSettingsCardSection(S, Localizable(\"Auto reply\"), \"tclient:auto-reply\", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientAutoReplyCacheSection(Col, Render); }, MarginBetweenSections);"), std::string::npos);
 
 	const size_t PetSection = Source.find("SSettingsSection CMenus::BuildTClientPetCacheSection()");
 	ASSERT_NE(PetSection, std::string::npos);
@@ -4642,6 +4642,98 @@ TEST(QmMonitoringHelpers, MenuBackgroundRenderSkipsBeforeInterfacesAreReady)
 	EXPECT_NE(Body.find("return false;"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, MenuBackgroundKeepsPositionAcrossIdleFrames)
+{
+	const std::string MenuBackgroundSource = ReadRepoFile("src/game/client/components/menu_background.cpp");
+	const std::string RenderBody = ExtractSourceFunctionBody(MenuBackgroundSource, "bool CMenuBackground::Render()");
+	const std::string ChangePositionBody = ExtractSourceFunctionBody(MenuBackgroundSource, "void CMenuBackground::ChangePosition(int PositionNumber)");
+	const std::string LoadBody = ExtractSourceFunctionBody(MenuBackgroundSource, "void CMenuBackground::LoadMenuBackground(bool HasDayHint, bool HasNightHint)");
+	ASSERT_FALSE(RenderBody.empty());
+	ASSERT_FALSE(ChangePositionBody.empty());
+	ASSERT_FALSE(LoadBody.empty());
+
+	EXPECT_EQ(RenderBody.find("m_CurrentPosition = -1;"), std::string::npos);
+	EXPECT_NE(ChangePositionBody.find("if(NewPosition == m_CurrentPosition)"), std::string::npos);
+	EXPECT_NE(ChangePositionBody.find("return;"), std::string::npos);
+	EXPECT_NE(LoadBody.find("InvalidateCurrentPosition();"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, StartMenuHasConcretePerfStagesAndNoPerFrameV2LayoutAllocation)
+{
+	const std::string StartMenuSource = ReadRepoFile("src/game/client/components/menus_start.cpp");
+	const std::string Body = ExtractSourceFunctionBody(StartMenuSource, "void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(StartMenuSource.find("LogStartMenuPerfStage"), std::string::npos);
+	EXPECT_NE(Body.find("const bool TrackPerf = QmPerfEnabled();"), std::string::npos);
+	EXPECT_NE(Body.find("start_menu_logo"), std::string::npos);
+	EXPECT_NE(Body.find("start_menu_external_layout"), std::string::npos);
+	EXPECT_NE(Body.find("start_menu_external_buttons"), std::string::npos);
+	EXPECT_NE(Body.find("start_menu_main_buttons"), std::string::npos);
+	EXPECT_NE(Body.find("start_menu_version_console"), std::string::npos);
+	EXPECT_NE(Body.find("start_menu_total"), std::string::npos);
+	EXPECT_NE(StartMenuSource.find("static std::vector<SUiLayoutChild> s_vExternalButtonChildren(6);"), std::string::npos);
+	EXPECT_NE(StartMenuSource.find("static std::vector<SUiLayoutChild> s_vMainButtonChildren(5);"), std::string::npos);
+	EXPECT_EQ(StartMenuSource.find("std::vector<SUiLayoutChild> vChildren("), std::string::npos);
+	EXPECT_EQ(StartMenuSource.find("CPerfTimer"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, MenuIdleRenderThrottleWaitsForRealIdleState)
+{
+	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Body = ExtractSourceFunctionBody(MenusSource, "int CMenus::IdleRenderFrameRate() const");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(MenusHeader.find("std::chrono::nanoseconds m_LastMenuInteractionTime"), std::string::npos);
+	EXPECT_NE(MenusSource.find("constexpr int MENU_IDLE_REFRESH_RATE = 60;"), std::string::npos);
+	EXPECT_NE(MenusSource.find("constexpr auto MENU_IDLE_INTERACTION_GRACE_TIME = 450ms;"), std::string::npos);
+	EXPECT_NE(Body.find("!InterfacesInitialized()"), std::string::npos);
+	EXPECT_NE(Body.find("Ui()->ActiveItem() != nullptr"), std::string::npos);
+	EXPECT_NE(Body.find("CLineInput::GetActiveInput() != nullptr"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->m_KeyBinder.IsActive()"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->m_MenuBackground.IsLoading()"), std::string::npos);
+	EXPECT_NE(Body.find("UiRuntimeStats.m_ActiveAnimCount > 0"), std::string::npos);
+	EXPECT_NE(Body.find("m_SettingsPerfWindowTracker.HasActiveWindow()"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsTextPlanCollectionRemaining() > 0"), std::string::npos);
+	EXPECT_NE(Body.find("CountMissingSettingsMenuTextPlanItems() > 0"), std::string::npos);
+	EXPECT_NE(Body.find("time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME"), std::string::npos);
+	EXPECT_NE(Body.find("return MENU_IDLE_REFRESH_RATE;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ClientRenderLoopUsesGameClientIdleThrottleWithOneFrameRatePath)
+{
+	const std::string ClientSource = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string ClientInterface = ReadRepoFile("src/engine/client.h");
+	const std::string GameClientHeader = ReadRepoFile("src/game/client/gameclient.h");
+	const std::string GameClientSource = ReadRepoFile("src/game/client/gameclient.cpp");
+	const std::string Forwarder = ExtractSourceFunctionBody(GameClientSource, "int CGameClient::RenderThrottleRefreshRate() const");
+	ASSERT_FALSE(Forwarder.empty());
+
+	EXPECT_NE(ClientInterface.find("virtual int RenderThrottleRefreshRate() const = 0;"), std::string::npos);
+	EXPECT_NE(GameClientHeader.find("int RenderThrottleRefreshRate() const override;"), std::string::npos);
+	EXPECT_NE(Forwarder.find("return m_Menus.IdleRenderFrameRate();"), std::string::npos);
+	EXPECT_NE(ClientSource.find("RequestedRenderThrottleRate = GameClient()->RenderThrottleRefreshRate();"), std::string::npos);
+	EXPECT_NE(ClientSource.find("GfxRefreshRate = std::clamp(RequestedRenderThrottleRate, 10, 10000);"), std::string::npos);
+	EXPECT_NE(ClientSource.find("IdleRenderThrottleRate = GfxRefreshRate;"), std::string::npos);
+	EXPECT_NE(ClientSource.find("int LastIdleRenderThrottleRate = -1;"), std::string::npos);
+	EXPECT_NE(ClientSource.find("event=idle_render_throttle rate=%d requested=%d configured=%d vsync=%d"), std::string::npos);
+	EXPECT_NE(ClientSource.find("LastIdleRenderThrottleRate = IdleRenderThrottleRate;"), std::string::npos);
+	EXPECT_NE(ClientSource.find("fs_makedir_rec_for(aPerfLogCompletePath);"), std::string::npos);
+	EXPECT_NE(ClientSource.find("PerfLogfile = io_open(aPerfLogCompletePath, IOFLAG_WRITE);"), std::string::npos);
+	EXPECT_NE(ClientSource.find("char aWorkingDir[IO_MAX_PATH_LENGTH];"), std::string::npos);
+	EXPECT_NE(ClientSource.find("if(fs_getcwd(aWorkingDir, sizeof(aWorkingDir)))"), std::string::npos);
+	EXPECT_NE(ClientSource.find("str_format(aPerfLogCompletePath, sizeof(aPerfLogCompletePath), \"%s/%s\", aWorkingDir, aPerfLogPath);"), std::string::npos);
+	EXPECT_NE(ClientSource.find("const int64_t RenderFrameTicks = GfxRefreshRate > 0 ? time_freq() / (int64_t)GfxRefreshRate : 0;"), std::string::npos);
+	EXPECT_NE(ClientSource.find("(!GfxRefreshRate || RenderFrameTicks <= Now - LastRenderTime)"), std::string::npos);
+	EXPECT_NE(ClientSource.find("int64_t AdditionalTime = GfxRefreshRate ? ((Now - LastRenderTime) - RenderFrameTicks) : 0;"), std::string::npos);
+	EXPECT_NE(ClientSource.find("state=%d render_rate=%d throttle=%d"), std::string::npos);
+	EXPECT_NE(ClientSource.find("const auto WaitWithNetwork = [&](std::chrono::nanoseconds WaitTime)"), std::string::npos);
+	EXPECT_NE(ClientSource.find("else if(IdleRenderThrottleRate > 0)"), std::string::npos);
+	EXPECT_NE(ClientSource.find("SleepTimeInNanoSeconds = (std::chrono::nanoseconds(1s) / (int64_t)IdleRenderThrottleRate) - (Now - LastTime);"), std::string::npos);
+	EXPECT_EQ(ClientSource.find("time_freq() / (int64_t)g_Config.m_GfxRefreshRate"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, ConsoleQueuedResultCopyPreservesExternalArguments)
 {
 	const std::string ConsoleSource = ReadRepoFile("src/engine/shared/console.cpp");
@@ -6080,6 +6172,40 @@ TEST(QmMonitoringHelpers, VulkanStandardLinePipelineCreatesTexturedVariant)
 	EXPECT_NE(Source.find("GetStandardPipeLayout(IsLineGeometry, IsTextured, BlendModeIndex, DynamicIndex)"), std::string::npos);
 	EXPECT_NE(Source.find("if(!CreateStandardGraphicsPipeline(\"shader/vulkan/prim.vert.spv\", \"shader/vulkan/prim.frag.spv\", false, true))"), std::string::npos);
 	EXPECT_NE(Source.find("if(!CreateStandardGraphicsPipeline(\"shader/vulkan/prim_textured.vert.spv\", \"shader/vulkan/prim_textured.frag.spv\", true, true))"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, VulkanDescriptorPoolFreeAvoidsUserVisibleAccountingAssert)
+{
+	const std::string Source = ReadRepoFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const std::string FreeBody = ExtractSourceFunctionBody(Source, "void FreeDescriptorSetFromPool(SDeviceDescriptorSet &DescrSet)");
+	const std::string DestroyBody = ExtractSourceFunctionBody(Source, "void DestroyDescriptorPools()");
+	const std::string CreateImageBody = ExtractSourceFunctionBody(Source, "[[nodiscard]] bool CreateImage(uint32_t Width, uint32_t Height, uint32_t Depth, size_t MipMapLevelCount, VkFormat Format, VkImageTiling Tiling, VkImage &Image, SMemoryImageBlock<IMAGE_BUFFER_CACHE_ID> &ImageMemory, VkImageUsageFlags ImageUsage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VkSampleCountFlagBits SampleCount = VK_SAMPLE_COUNT_FLAG_BITS_MAX_ENUM)");
+	const std::string CreateRenderTargetDescriptorSetBody = ExtractSourceFunctionBody(Source, "[[nodiscard]] bool CreateRenderTargetDescriptorSet(SRenderTarget &Target, size_t DescrIndex)");
+	const std::string CreateRenderTargetBody = ExtractSourceFunctionBody(Source, "[[nodiscard]] bool Cmd_RenderTarget_Create(const CCommandBuffer::SCommand_RenderTarget_Create *pCommand)");
+	ASSERT_FALSE(FreeBody.empty());
+	ASSERT_FALSE(DestroyBody.empty());
+	ASSERT_FALSE(CreateImageBody.empty());
+	ASSERT_FALSE(CreateRenderTargetDescriptorSetBody.empty());
+	ASSERT_FALSE(CreateRenderTargetBody.empty());
+
+	EXPECT_NE(DestroyBody.find("DestroyDescriptorPoolList"), std::string::npos);
+	EXPECT_NE(DestroyBody.find("DescriptorPools.m_vPools.clear();"), std::string::npos);
+	EXPECT_NE(FreeBody.find("DescrSet.m_PoolIndex >= DescrSet.m_pPools->m_vPools.size()"), std::string::npos);
+	EXPECT_NE(FreeBody.find("descriptor set references stale pool index"), std::string::npos);
+	EXPECT_NE(FreeBody.find("Pool.m_CurSize == 0"), std::string::npos);
+	EXPECT_NE(FreeBody.find("descriptor pool accounting underflow prevented"), std::string::npos);
+	EXPECT_EQ(FreeBody.find("dbg_assert(Pool.m_CurSize > 0"), std::string::npos);
+	EXPECT_NE(CreateImageBody.find("Image = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(CreateImageBody.find("return false;"), std::string::npos);
+	EXPECT_LT(CreateImageBody.find("return false;"), CreateImageBody.find("vkGetImageMemoryRequirements("));
+	EXPECT_NE(CreateImageBody.find("if(!GetImageMemory("), std::string::npos);
+	EXPECT_NE(CreateImageBody.find("vkDestroyImage(m_VKDevice, Image, nullptr);"), std::string::npos);
+	EXPECT_NE(CreateImageBody.find("if(vkBindImageMemory("), std::string::npos);
+	EXPECT_NE(CreateImageBody.find("FreeImageMemBlock(ImageMemory);"), std::string::npos);
+	EXPECT_NE(CreateImageBody.find("ImageMemory = {};"), std::string::npos);
+	EXPECT_NE(CreateRenderTargetDescriptorSetBody.find("FreeDescriptorSetFromPool(DescrSet);"), std::string::npos);
+	EXPECT_NE(CreateRenderTargetDescriptorSetBody.find("m_FrameProfileStats.m_DescriptorAllocations++;"), std::string::npos);
+	EXPECT_NE(CreateRenderTargetBody.find("DestroyRenderTarget(Target);\n\t\t\treturn false;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, WindowsReleaseBuildProducesPdbSymbols)

@@ -55,6 +55,26 @@ using namespace std::chrono_literals;
 
 namespace
 {
+	void FormatQmGraphicsBackendDisplayName(char *pBuf, int BufSize, const char *pBackendName, int Major, int Minor, int Patch, bool IsDefault)
+	{
+		const char *pSafeBackendName = pBackendName != nullptr ? pBackendName : "";
+		char aBackendDisplayName[128];
+		if(str_comp_nocase(pSafeBackendName, "OpenGL") == 0)
+		{
+			str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "OpenGL_QmClient_%d_%d", Major, Minor);
+		}
+		else if(str_comp_nocase(pSafeBackendName, "Vulkan") == 0)
+		{
+			str_copy(aBackendDisplayName, "Vulkan_QmClient", sizeof(aBackendDisplayName));
+		}
+		else
+		{
+			str_format(aBackendDisplayName, sizeof(aBackendDisplayName), "%s (%d.%d.%d)", pSafeBackendName, Major, Minor, Patch);
+		}
+
+		str_format(pBuf, BufSize, "%s%s%s", aBackendDisplayName, IsDefault ? " - " : "", IsDefault ? Localize("default") : "");
+	}
+
 	void GetSettingsTeePreviewBounds(const CAnimState *pAnim, const CTeeRenderInfo &Info, float &MinX, float &MinY, float &MaxX, float &MaxY)
 	{
 		if(Info.m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_BODY).IsValid())
@@ -783,6 +803,25 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeaponsOutOfAmmo, "general-switch-weapon-out-of-ammo", Localize("Switch weapon when out of ammo"), g_Config.m_ClAutoswitchWeaponsOutOfAmmo, &Button))
 			g_Config.m_ClAutoswitchWeaponsOutOfAmmo ^= 1;
 
+		Left.HSplitTop(5.0f, nullptr, &Left);
+		Left.HSplitTop(20.0f, &Button, &Left);
+		{
+			CUIRect Label, DropDown;
+			Button.VSplitLeft(150.0f, &Label, &DropDown);
+			DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "general-respawn-default-weapon-label", &Label, Localize("Respawn default weapon"), 14.0f, TEXTALIGN_ML);
+			const char *apRespawnDefaultWeapons[] = {
+				Localize("Off"),
+				Localize("Hammer"),
+				Localize("Gun"),
+				Localize("Shotgun"),
+				Localize("Grenade"),
+				Localize("Laser")};
+			static CUi::SDropDownState s_RespawnDefaultWeaponDropDownState;
+			const int RespawnDefaultWeapon = Ui()->DoDropDown(&DropDown, std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5), apRespawnDefaultWeapons, std::size(apRespawnDefaultWeapons), s_RespawnDefaultWeaponDropDownState);
+			if(RespawnDefaultWeapon != g_Config.m_QmRespawnDefaultWeapon)
+				g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
+		}
+
 		Right.HSplitTop(5.0f, nullptr, &Right);
 		PrepareLanguagePageCache(Right.w, false);
 		RenderLanguageSelection(Right);
@@ -1222,13 +1261,15 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	// country flag selector
 	static CLineInputBuffered<25> s_FlagFilterInput;
 
-	std::vector<const CCountryFlags::CCountryFlag *> vpFilteredFlags;
+	static std::vector<const CCountryFlags::CCountryFlag *> s_vpFilteredFlags;
+	s_vpFilteredFlags.clear();
+	s_vpFilteredFlags.reserve(GameClient()->m_CountryFlags.Num());
 	for(size_t i = 0; i < GameClient()->m_CountryFlags.Num(); ++i)
 	{
 		const CCountryFlags::CCountryFlag &Entry = GameClient()->m_CountryFlags.GetByIndex(i);
 		if(!str_find_nocase(Entry.m_aCountryCodeString, s_FlagFilterInput.GetString()))
 			continue;
-		vpFilteredFlags.push_back(&Entry);
+		s_vpFilteredFlags.push_back(&Entry);
 	}
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
 	MainView.HSplitBottom(20.0f, &MainView, &QuickSearch);
@@ -1237,11 +1278,11 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	int SelectedOld = -1;
 	static CListBox s_ListBox;
-	s_ListBox.DoStart(48.0f, vpFilteredFlags.size(), 10, 3, SelectedOld, &MainView);
+	s_ListBox.DoStart(48.0f, s_vpFilteredFlags.size(), 10, 3, SelectedOld, &MainView);
 
-	for(size_t i = 0; i < vpFilteredFlags.size(); i++)
+	for(size_t i = 0; i < s_vpFilteredFlags.size(); i++)
 	{
-		const CCountryFlags::CCountryFlag *pEntry = vpFilteredFlags[i];
+		const CCountryFlags::CCountryFlag *pEntry = s_vpFilteredFlags[i];
 
 		if(pEntry->m_CountryCode == *pCountry)
 			SelectedOld = i;
@@ -1266,9 +1307,9 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	}
 
 	const int NewSelected = s_ListBox.DoEnd();
-	if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < (int)vpFilteredFlags.size())
+	if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < (int)s_vpFilteredFlags.size())
 	{
-		*pCountry = vpFilteredFlags[NewSelected]->m_CountryCode;
+		*pCountry = s_vpFilteredFlags[NewSelected]->m_CountryCode;
 		SetNeedSendInfo();
 	}
 
@@ -3170,15 +3211,21 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		const int NumScreens = Graphics()->GetNumScreens();
 		static std::vector<std::string> s_vScreenNames;
 		static std::vector<const char *> s_vpScreenNames;
-		s_vScreenNames.resize(NumScreens);
-		s_vpScreenNames.resize(NumScreens);
-
-		for(int i = 0; i < NumScreens; ++i)
+		static char s_aScreenNamesCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
+		const bool RefreshScreenNames = s_vScreenNames.size() != (size_t)NumScreens || str_comp(s_aScreenNamesCacheLanguage, g_Config.m_ClLanguagefile) != 0;
+		if(RefreshScreenNames)
 		{
-			str_format(aBuf, sizeof(aBuf), "%s %d: %s", Localize("Screen"), i, Graphics()->GetScreenName(i));
-			s_vScreenNames[i] = aBuf;
-			s_vpScreenNames[i] = s_vScreenNames[i].c_str();
+			s_vScreenNames.resize(NumScreens);
+			for(int i = 0; i < NumScreens; ++i)
+			{
+				str_format(aBuf, sizeof(aBuf), "%s %d: %s", Localize("Screen"), i, Graphics()->GetScreenName(i));
+				s_vScreenNames[i] = aBuf;
+			}
+			str_copy(s_aScreenNamesCacheLanguage, g_Config.m_ClLanguagefile);
 		}
+		s_vpScreenNames.resize(NumScreens);
+		for(int i = 0; i < NumScreens; ++i)
+			s_vpScreenNames[i] = s_vScreenNames[i].c_str();
 
 		static CUi::SDropDownState s_ScreenDropDownState;
 		static CScrollRegion s_ScreenDropDownScrollRegion;
@@ -3300,26 +3347,44 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		const char *m_pBackendName = "";
 		bool m_Found = false;
 	};
-	std::array<std::array<SMenuBackendInfo, EGraphicsDriverAgeType::GRAPHICS_DRIVER_AGE_TYPE_COUNT>, EBackendType::BACKEND_TYPE_COUNT> aaSupportedBackends{};
-	uint32_t FoundBackendCount = 0;
-	for(uint32_t i = 0; i < BACKEND_TYPE_COUNT; ++i)
+	static std::vector<SMenuBackendInfo> s_vSupportedBackendInfos;
+	static std::vector<std::string> s_vSupportedBackendNames;
+	static bool s_BackendListCacheValid = false;
+	static int s_BackendListCacheDriverBlocked = -1;
+	static char s_aBackendListCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
+	if(!s_BackendListCacheValid ||
+		s_BackendListCacheDriverBlocked != g_Config.m_GfxDriverIsBlocked ||
+		str_comp(s_aBackendListCacheLanguage, g_Config.m_ClLanguagefile) != 0)
 	{
-		if(EBackendType(i) == BACKEND_TYPE_AUTO)
-			continue;
-		for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
+		s_vSupportedBackendInfos.clear();
+		s_vSupportedBackendNames.clear();
+		for(uint32_t i = 0; i < BACKEND_TYPE_COUNT; ++i)
 		{
-			auto &Info = aaSupportedBackends[i][n];
-			if(Graphics()->GetDriverVersion(EGraphicsDriverAgeType(n), Info.m_Major, Info.m_Minor, Info.m_Patch, Info.m_pBackendName, EBackendType(i)))
+			if(EBackendType(i) == BACKEND_TYPE_AUTO)
+				continue;
+			for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
 			{
-				// don't count blocked opengl drivers
-				if(EBackendType(i) != BACKEND_TYPE_OPENGL || EGraphicsDriverAgeType(n) == GRAPHICS_DRIVER_AGE_TYPE_LEGACY || g_Config.m_GfxDriverIsBlocked == 0)
+				SMenuBackendInfo Info;
+				if(Graphics()->GetDriverVersion(EGraphicsDriverAgeType(n), Info.m_Major, Info.m_Minor, Info.m_Patch, Info.m_pBackendName, EBackendType(i)))
 				{
-					Info.m_Found = true;
-					++FoundBackendCount;
+					// don't count blocked opengl drivers
+					if(EBackendType(i) != BACKEND_TYPE_OPENGL || EGraphicsDriverAgeType(n) == GRAPHICS_DRIVER_AGE_TYPE_LEGACY || g_Config.m_GfxDriverIsBlocked == 0)
+					{
+						Info.m_Found = true;
+						char aTmpBackendName[256];
+						const bool IsDefault = str_comp_nocase(Info.m_pBackendName, CConfig::ms_pGfxBackend) == 0 && Info.m_Major == CConfig::ms_GfxGLMajor && Info.m_Minor == CConfig::ms_GfxGLMinor && Info.m_Patch == CConfig::ms_GfxGLPatch;
+						FormatQmGraphicsBackendDisplayName(aTmpBackendName, sizeof(aTmpBackendName), Info.m_pBackendName, Info.m_Major, Info.m_Minor, Info.m_Patch, IsDefault);
+						s_vSupportedBackendInfos.push_back(Info);
+						s_vSupportedBackendNames.emplace_back(aTmpBackendName);
+					}
 				}
 			}
 		}
+		s_BackendListCacheValid = true;
+		s_BackendListCacheDriverBlocked = g_Config.m_GfxDriverIsBlocked;
+		str_copy(s_aBackendListCacheLanguage, g_Config.m_ClLanguagefile);
 	}
+	const uint32_t FoundBackendCount = (uint32_t)s_vSupportedBackendInfos.size();
 
 	if(FoundBackendCount > 1)
 	{
@@ -3328,64 +3393,47 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		MainView.HSplitTop(20.0f, &Text, &MainView);
 		MainView.HSplitTop(2.0f, nullptr, &MainView);
 		MainView.HSplitTop(20.0f, &BackendDropDown, &MainView);
-		DoSettingsMenuLabel(SETTINGS_GRAPHICS, -1, -1, "graphics-renderer-title", &Text, Localize("Renderer"), 16.0f, TEXTALIGN_MC);
+		DoSettingsMenuLabel(SETTINGS_GRAPHICS, -1, -1, "graphics-renderer-title", &Text, Localize("Graphics backend"), 16.0f, TEXTALIGN_MC);
 
-		static std::vector<std::string> s_vBackendIdNames;
 		static std::vector<const char *> s_vpBackendIdNamesCStr;
 		static std::vector<SMenuBackendInfo> s_vBackendInfos;
+		static std::string s_CustomBackendName;
 
-		size_t BackendCount = FoundBackendCount + 1;
-		s_vBackendIdNames.resize(BackendCount);
+		size_t BackendCount = FoundBackendCount;
 		s_vpBackendIdNamesCStr.resize(BackendCount);
 		s_vBackendInfos.resize(BackendCount);
 
-		char aTmpBackendName[256];
-
-		auto IsInfoDefault = [](const SMenuBackendInfo &CheckInfo) {
-			return str_comp_nocase(CheckInfo.m_pBackendName, CConfig::ms_pGfxBackend) == 0 && CheckInfo.m_Major == CConfig::ms_GfxGLMajor && CheckInfo.m_Minor == CConfig::ms_GfxGLMinor && CheckInfo.m_Patch == CConfig::ms_GfxGLPatch;
-		};
-
 		int SelectedOldBackend = -1;
-		uint32_t CurCounter = 0;
-		for(uint32_t i = 0; i < BACKEND_TYPE_COUNT; ++i)
+		for(size_t i = 0; i < BackendCount; ++i)
 		{
-			for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
+			const SMenuBackendInfo &Info = s_vSupportedBackendInfos[i];
+			s_vpBackendIdNamesCStr[i] = s_vSupportedBackendNames[i].c_str();
+			s_vBackendInfos[i] = Info;
+			if(str_comp_nocase(Info.m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == Info.m_Major && g_Config.m_GfxGLMinor == Info.m_Minor && g_Config.m_GfxGLPatch == Info.m_Patch)
 			{
-				auto &Info = aaSupportedBackends[i][n];
-				if(Info.m_Found)
-				{
-					bool IsDefault = IsInfoDefault(Info);
-					str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s (%d.%d.%d)%s%s", Info.m_pBackendName, Info.m_Major, Info.m_Minor, Info.m_Patch, IsDefault ? " - " : "", IsDefault ? Localize("default") : "");
-					s_vBackendIdNames[CurCounter] = aTmpBackendName;
-					s_vpBackendIdNamesCStr[CurCounter] = s_vBackendIdNames[CurCounter].c_str();
-					if(str_comp_nocase(Info.m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == Info.m_Major && g_Config.m_GfxGLMinor == Info.m_Minor && g_Config.m_GfxGLPatch == Info.m_Patch)
-					{
-						SelectedOldBackend = CurCounter;
-					}
-
-					s_vBackendInfos[CurCounter] = Info;
-					++CurCounter;
-				}
+				SelectedOldBackend = (int)i;
 			}
 		}
 
-		if(SelectedOldBackend != -1)
-		{
-			// no custom selected
-			BackendCount -= 1;
-		}
-		else
+		if(SelectedOldBackend == -1)
 		{
 			// custom selected one
-			str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s (%s %d.%d.%d)", Localize("custom"), g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch);
-			s_vBackendIdNames[CurCounter] = aTmpBackendName;
-			s_vpBackendIdNamesCStr[CurCounter] = s_vBackendIdNames[CurCounter].c_str();
-			SelectedOldBackend = CurCounter;
+			char aCustomBackendName[128];
+			char aTmpBackendName[256];
+			FormatQmGraphicsBackendDisplayName(aCustomBackendName, sizeof(aCustomBackendName), g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch, false);
+			str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s (%s)", Localize("custom"), aCustomBackendName);
+			s_CustomBackendName = aTmpBackendName;
+			s_vpBackendIdNamesCStr.push_back(s_CustomBackendName.c_str());
 
-			s_vBackendInfos[CurCounter].m_pBackendName = "custom";
-			s_vBackendInfos[CurCounter].m_Major = g_Config.m_GfxGLMajor;
-			s_vBackendInfos[CurCounter].m_Minor = g_Config.m_GfxGLMinor;
-			s_vBackendInfos[CurCounter].m_Patch = g_Config.m_GfxGLPatch;
+			SMenuBackendInfo CustomInfo;
+			CustomInfo.m_pBackendName = "custom";
+			CustomInfo.m_Major = g_Config.m_GfxGLMajor;
+			CustomInfo.m_Minor = g_Config.m_GfxGLMinor;
+			CustomInfo.m_Patch = g_Config.m_GfxGLPatch;
+			s_vBackendInfos.push_back(CustomInfo);
+
+			SelectedOldBackend = (int)BackendCount;
+			++BackendCount;
 		}
 
 		static int s_SelectedOldBackend = -1;
@@ -3420,20 +3468,37 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		MainView.HSplitTop(20.0f, &GpuDropDown, &MainView);
 		DoSettingsMenuLabel(SETTINGS_GRAPHICS, -1, -1, "graphics-card-title", &Text, Localize("Graphics card"), 16.0f, TEXTALIGN_MC);
 
+		static std::vector<std::string> s_vGpuIdNames;
 		static std::vector<const char *> s_vpGpuIdNames;
+		static char s_aGpuListCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
 
 		size_t GpuCount = GpuList.m_vGpus.size() + 1;
-		s_vpGpuIdNames.resize(GpuCount);
-
 		char aCurDeviceName[256 + 4];
+		str_format(aCurDeviceName, sizeof(aCurDeviceName), "%s (%s)", Localize("auto"), GpuList.m_AutoGpu.m_aName);
+		bool GpuNameCacheDirty = s_vGpuIdNames.size() != GpuCount || str_comp(s_aGpuListCacheLanguage, g_Config.m_ClLanguagefile) != 0;
+		if(!GpuNameCacheDirty)
+		{
+			GpuNameCacheDirty = s_vGpuIdNames[0] != aCurDeviceName;
+			for(size_t i = 1; !GpuNameCacheDirty && i < GpuCount; ++i)
+				GpuNameCacheDirty = s_vGpuIdNames[i] != GpuList.m_vGpus[i - 1].m_aName;
+		}
+		if(GpuNameCacheDirty)
+		{
+			s_vGpuIdNames.resize(GpuCount);
+			s_vGpuIdNames[0] = aCurDeviceName;
+			for(size_t i = 1; i < GpuCount; ++i)
+				s_vGpuIdNames[i] = GpuList.m_vGpus[i - 1].m_aName;
+			str_copy(s_aGpuListCacheLanguage, g_Config.m_ClLanguagefile);
+		}
+		s_vpGpuIdNames.resize(GpuCount);
+		for(size_t i = 0; i < GpuCount; ++i)
+			s_vpGpuIdNames[i] = s_vGpuIdNames[i].c_str();
 
 		int OldSelectedGpu = -1;
 		for(size_t i = 0; i < GpuCount; ++i)
 		{
 			if(i == 0)
 			{
-				str_format(aCurDeviceName, sizeof(aCurDeviceName), "%s (%s)", Localize("auto"), GpuList.m_AutoGpu.m_aName);
-				s_vpGpuIdNames[i] = aCurDeviceName;
 				if(str_comp("auto", g_Config.m_GfxGpuName) == 0)
 				{
 					OldSelectedGpu = 0;
@@ -3441,7 +3506,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			}
 			else
 			{
-				s_vpGpuIdNames[i] = GpuList.m_vGpus[i - 1].m_aName;
 				if(str_comp(GpuList.m_vGpus[i - 1].m_aName, g_Config.m_GfxGpuName) == 0)
 				{
 					OldSelectedGpu = i;

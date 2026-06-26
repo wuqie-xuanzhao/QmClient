@@ -76,13 +76,21 @@ struct SCoordXAlignState
 	bool m_Active = false;
 	bool m_Aligned = false;
 	float m_WindowStartTime = 0.0f;
+	int m_ReferenceClientId = -1;
 };
 
 struct SCoordXAlignFrameState
 {
 	bool m_LocalAligned = false;
+	bool m_aClientAligned[MAX_CLIENTS] = {};
 	int m_LocalClientId = -1;
 	int m_LocalRoundedX = 0;
+};
+
+struct SCoordXAlignReference
+{
+	int m_ClientId = -1;
+	int m_RoundedX = 0;
 };
 
 static uint64_t ChatBubbleAnimNodeKey(int ClientId)
@@ -1149,6 +1157,21 @@ private:
 		HeightTotal += LineSize.y;
 		return vec2(WidthMax, HeightTotal);
 	}
+	vec2 CoreRowSize(const SCoreRowParts &CoreRow) const
+	{
+		return RangeSize(CoreRow.m_Start, CoreRow.m_End);
+	}
+	vec2 LayoutCoreRowSize(const SCoreRowParts &CoreRow, const CNamePlate *pLayoutReference) const
+	{
+		if(pLayoutReference == nullptr)
+			return CoreRowSize(CoreRow);
+		for(const SCoreRowParts &ReferenceCoreRow : pLayoutReference->m_vCoreRows)
+		{
+			if(ReferenceCoreRow.m_Row == CoreRow.m_Row)
+				return pLayoutReference->CoreRowSize(ReferenceCoreRow);
+		}
+		return CoreRowSize(CoreRow);
+	}
 	float RangeTopY(vec2 PositionBottomMiddle, size_t StartIndex, size_t EndIndex) const
 	{
 		vec2 Position = PositionBottomMiddle;
@@ -1212,14 +1235,16 @@ public:
 	// stable regardless of how rows are dragged; rows are clamped to it.
 	void ComputeBaselineLayout(vec2 PositionBottomMiddle, ENameplateCoreRow TargetRow,
 		bool &HasFrame, vec2 &FrameMin, vec2 &FrameMax,
-		bool &HasTargetRow, vec2 &TargetRowCenter, vec2 &TargetRowSize) const
+		bool &HasTargetRow, vec2 &TargetRowCenter, vec2 &TargetRowSize,
+		const CNamePlate *pLayoutReference = nullptr) const
 	{
 		HasFrame = false;
 		HasTargetRow = false;
 		vec2 Position = PositionBottomMiddle;
 		for(const SCoreRowParts &CoreRow : m_vCoreRows)
 		{
-			const vec2 Size = RangeSize(CoreRow.m_Start, CoreRow.m_End);
+			const vec2 Size = CoreRowSize(CoreRow);
+			const vec2 LayoutSize = LayoutCoreRowSize(CoreRow, pLayoutReference);
 			if(Size.x > 0.0f && Size.y > 0.0f)
 			{
 				// Baseline rect (no offset).
@@ -1245,7 +1270,7 @@ public:
 					HasTargetRow = true;
 				}
 			}
-			Position.y -= Size.y;
+			Position.y -= LayoutSize.y;
 		}
 	}
 	// Returns the baseline frame only.
@@ -1378,7 +1403,7 @@ public:
 		for(auto &Part : m_vpParts)
 			Part->Update(This, Data);
 	}
-	void Render(CGameClient &This, const vec2 &PositionBottomMiddle)
+	void Render(CGameClient &This, const vec2 &PositionBottomMiddle, const CNamePlate *pLayoutReference = nullptr)
 	{
 		dbg_assert(m_Inited, "Tried to render uninited nameplate");
 		if(NameplateFreeMoveEnabled())
@@ -1389,10 +1414,11 @@ public:
 			vec2 BaselinePos = PositionBottomMiddle;
 			for(const SCoreRowParts &CoreRow : m_vCoreRows)
 			{
-				const vec2 Size = RangeSize(CoreRow.m_Start, CoreRow.m_End);
+				const vec2 Size = CoreRowSize(CoreRow);
+				const vec2 LayoutSize = LayoutCoreRowSize(CoreRow, pLayoutReference);
 				if(Size.x > 0.0f && Size.y > 0.0f)
 					RenderRange(This, BaselinePos + NameplateCoreRowOffset(CoreRow.m_Row), CoreRow.m_Start, CoreRow.m_End);
-				BaselinePos.y -= Size.y;
+				BaselinePos.y -= LayoutSize.y;
 			}
 			This.Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			return;
@@ -1438,7 +1464,7 @@ public:
 		}
 		return RangeSize(0, m_vpParts.size());
 	}
-	void CollectCoreRowRects(vec2 PositionBottomMiddle, std::array<SNameplateCoreRowRect, kNameplateCoreRowCount> &aRects) const
+	void CollectCoreRowRects(vec2 PositionBottomMiddle, std::array<SNameplateCoreRowRect, kNameplateCoreRowCount> &aRects, const CNamePlate *pLayoutReference = nullptr) const
 	{
 		for(SNameplateCoreRowRect &Rect : aRects)
 			Rect = SNameplateCoreRowRect();
@@ -1446,7 +1472,8 @@ public:
 		vec2 BaselinePos = PositionBottomMiddle;
 		for(const SCoreRowParts &CoreRow : m_vCoreRows)
 		{
-			const vec2 Size = RangeSize(CoreRow.m_Start, CoreRow.m_End);
+			const vec2 Size = CoreRowSize(CoreRow);
+			const vec2 LayoutSize = LayoutCoreRowSize(CoreRow, pLayoutReference);
 			if(Size.x > 0.0f && Size.y > 0.0f)
 			{
 				SNameplateCoreRowRect &Rect = aRects[static_cast<int>(CoreRow.m_Row)];
@@ -1456,7 +1483,7 @@ public:
 				Rect.m_Max = vec2(RowPosition.x + Size.x / 2.0f, RowPosition.y);
 				Rect.m_Visible = true;
 			}
-			BaselinePos.y -= Size.y;
+			BaselinePos.y -= LayoutSize.y;
 		}
 	}
 };
@@ -1465,6 +1492,7 @@ class CNamePlates::CNamePlatesData
 {
 public:
 	CNamePlate m_aNamePlates[MAX_CLIENTS];
+	CNamePlate m_aNamePlateFrameReferences[MAX_CLIENTS];
 	CNamePlate m_aPreviewNamePlates[2];
 	SChatBubbleAnimState m_aChatBubbleAnim[MAX_CLIENTS];
 	SCoordXAlignState m_aCoordXAlign[MAX_CLIENTS];
@@ -1499,49 +1527,99 @@ void CNamePlates::UpdateCoordXAlignFrameState()
 			CoordXAlignState = SCoordXAlignState();
 		return;
 	}
-	if(GameClient()->m_Snap.m_LocalClientId < 0 || GameClient()->m_Snap.m_LocalClientId >= MAX_CLIENTS)
+	std::array<SCoordXAlignReference, NUM_DUMMIES> aLocalRefs{};
+	int NumLocalRefs = 0;
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
 	{
-		for(SCoordXAlignState &CoordXAlignState : m_pData->m_aCoordXAlign)
-			CoordXAlignState = SCoordXAlignState();
-		return;
+		const int LocalClientId = GameClient()->m_aLocalIds[Dummy];
+		if(LocalClientId < 0 || LocalClientId >= MAX_CLIENTS)
+			continue;
+		if(!GameClient()->m_Snap.m_apPlayerInfos[LocalClientId])
+			continue;
+		if(!GameClient()->m_Snap.m_aCharacters[LocalClientId].m_Active)
+			continue;
+
+		const vec2 LocalPos = LocalClientId == GameClient()->m_Snap.m_LocalClientId ?
+					      GameClient()->m_LocalCharacterPos :
+					      GameClient()->m_aClients[LocalClientId].m_RenderPos;
+		aLocalRefs[NumLocalRefs++] = {LocalClientId, RoundCoordToCentitiles(LocalPos.x / 32.0f)};
 	}
-	if(!GameClient()->m_Snap.m_aCharacters[GameClient()->m_Snap.m_LocalClientId].m_Active)
+
+	if(NumLocalRefs == 0)
 	{
 		for(SCoordXAlignState &CoordXAlignState : m_pData->m_aCoordXAlign)
 			CoordXAlignState = SCoordXAlignState();
 		return;
 	}
 
-	FrameState.m_LocalClientId = GameClient()->m_Snap.m_LocalClientId;
-	FrameState.m_LocalRoundedX = RoundCoordToCentitiles(GameClient()->m_LocalCharacterPos.x / 32.0f);
+	FrameState.m_LocalClientId = aLocalRefs[0].m_ClientId;
+	FrameState.m_LocalRoundedX = aLocalRefs[0].m_RoundedX;
 
 	const int MaxAllowedDiff = g_Config.m_QmNameplateCoordXAlignHintStrict ? 0 : 3;
 	const float WindowSeconds = std::clamp(g_Config.m_QmNameplateCoordXAlignHintWindowMs / 1000.0f, 0.1f, 3.0f);
 	const float Now = Client()->LocalTime();
 	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
 	{
-		if(ClientId == FrameState.m_LocalClientId || !GameClient()->m_Snap.m_apPlayerInfos[ClientId])
+		SCoordXAlignState &CoordXAlignState = m_pData->m_aCoordXAlign[ClientId];
+		if(!GameClient()->m_Snap.m_apPlayerInfos[ClientId])
+		{
+			CoordXAlignState = SCoordXAlignState();
 			continue;
+		}
 		if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active || GameClient()->m_aClients[ClientId].m_IsVolleyBall)
+		{
+			CoordXAlignState = SCoordXAlignState();
 			continue;
+		}
 		if(GameClient()->IsOtherTeam(ClientId))
 		{
-			m_pData->m_aCoordXAlign[ClientId] = SCoordXAlignState();
+			CoordXAlignState = SCoordXAlignState();
 			continue;
 		}
 
-		SCoordXAlignState &CoordXAlignState = m_pData->m_aCoordXAlign[ClientId];
-		const int RoundedX = RoundCoordToCentitiles(GameClient()->m_aClients[ClientId].m_RenderPos.x / 32.0f);
-		const int RoundedXDiff = absolute(RoundedX - FrameState.m_LocalRoundedX);
-		if(!CoordXAlignState.m_Active || RoundedXDiff > MaxAllowedDiff)
+		int RoundedX = RoundCoordToCentitiles(GameClient()->m_aClients[ClientId].m_RenderPos.x / 32.0f);
+		for(int i = 0; i < NumLocalRefs; ++i)
+		{
+			if(aLocalRefs[i].m_ClientId == ClientId)
+			{
+				RoundedX = aLocalRefs[i].m_RoundedX;
+				break;
+			}
+		}
+
+		int ReferenceClientId = -1;
+		int RoundedXDiff = std::numeric_limits<int>::max();
+		for(int i = 0; i < NumLocalRefs; ++i)
+		{
+			if(aLocalRefs[i].m_ClientId == ClientId)
+				continue;
+			const int Diff = absolute(RoundedX - aLocalRefs[i].m_RoundedX);
+			if(Diff < RoundedXDiff)
+			{
+				RoundedXDiff = Diff;
+				ReferenceClientId = aLocalRefs[i].m_ClientId;
+			}
+		}
+		if(RoundedXDiff == std::numeric_limits<int>::max())
+		{
+			CoordXAlignState = SCoordXAlignState();
+			continue;
+		}
+		if(!CoordXAlignState.m_Active || RoundedXDiff > MaxAllowedDiff || CoordXAlignState.m_ReferenceClientId != ReferenceClientId)
 		{
 			CoordXAlignState.m_Active = true;
 			CoordXAlignState.m_Aligned = false;
 			CoordXAlignState.m_WindowStartTime = Now;
+			CoordXAlignState.m_ReferenceClientId = ReferenceClientId;
 		}
 		CoordXAlignState.m_Aligned = RoundedXDiff <= MaxAllowedDiff && Now - CoordXAlignState.m_WindowStartTime >= WindowSeconds;
 		if(CoordXAlignState.m_Aligned)
+		{
 			FrameState.m_LocalAligned = true;
+			FrameState.m_aClientAligned[ClientId] = true;
+			if(ReferenceClientId >= 0 && ReferenceClientId < MAX_CLIENTS)
+				FrameState.m_aClientAligned[ReferenceClientId] = true;
+		}
 	}
 }
 
@@ -1616,26 +1694,24 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 		(Data.m_CoordXAlignHint || Data.m_CoordXAlignHintStrict);
 	const bool LocalCoordXAligned =
 		TrackCoordXAlign &&
-		ClientId == m_pData->m_CoordXAlignFrame.m_LocalClientId &&
-		m_pData->m_CoordXAlignFrame.m_LocalAligned;
-	const bool NameplateScopeAllowsCoords = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;
-	const bool CoordModuleAllowsCoords = pPlayerInfo->m_Local ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
-	const bool ShowLocalAlignedCoordX = NameplateScopeAllowsCoords && CoordXAlignHintEnabled && LocalCoordXAligned;
-	Data.m_ShowCoordX = (NameplateScopeAllowsCoords && CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordX != 0) || ShowLocalAlignedCoordX;
-	Data.m_ShowCoordY = NameplateScopeAllowsCoords && CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordY != 0;
-	Data.m_ShowCoords = (NameplateScopeAllowsCoords && CoordModuleAllowsCoords) || ShowLocalAlignedCoordX;
+		IsAnyLocalClient &&
+		m_pData->m_CoordXAlignFrame.m_aClientAligned[ClientId];
+	const bool CoordModuleAllowsCoords = IsAnyLocalClient ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
+	const bool ShowLocalAlignedCoordX = CoordModuleAllowsCoords && CoordXAlignHintEnabled && LocalCoordXAligned;
+	Data.m_ShowCoordX = (CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordX != 0) || ShowLocalAlignedCoordX;
+	Data.m_ShowCoordY = CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordY != 0;
+	Data.m_ShowCoords = CoordModuleAllowsCoords || ShowLocalAlignedCoordX;
 	Data.m_Coords = Position / 32.0f;
 	Data.m_FontSizeCoords = 18.0f + 20.0f * g_Config.m_ClNamePlatesCoordsSize / 100.0f;
 
 	const bool ShouldTrackCoordXAlign =
 		TrackCoordXAlign &&
-		!IsAnyLocalClient &&
 		GameClient()->m_Snap.m_LocalClientId >= 0 &&
 		!OtherTeam &&
 		CoordXAlignHintEnabled;
 	if(ShouldTrackCoordXAlign)
 	{
-		Data.m_CoordXAligned = CoordXAlignState.m_Aligned;
+		Data.m_CoordXAligned = IsAnyLocalClient ? LocalCoordXAligned : CoordXAlignState.m_Aligned;
 	}
 	else
 	{
@@ -1762,11 +1838,31 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 		Data.m_ShowClan = true;
 	Data.m_Local = pPlayerInfo->m_Local;
 
+	CNamePlate *pLayoutReference = nullptr;
+	if(Alpha > 0.0f && NameplateFreeMoveEnabled() && (!g_Config.m_ClNamePlates || !g_Config.m_ClNamePlatesOwn))
+	{
+		CNamePlateData FrameData = Data;
+		FrameData.m_ShowName = true;
+		FrameData.m_ShowFriendMark = FrameData.m_ShowName && g_Config.m_ClNamePlatesFriendMark && GameClient()->m_aClients[ClientId].m_Friend;
+		FrameData.m_ShowClientId = FrameData.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;
+		FrameData.m_ShowClan = FrameData.m_ShowName && g_Config.m_ClNamePlatesClan && !HideIdentity;
+		const bool FrameShowLocalAlignedCoordX = CoordModuleAllowsCoords && CoordXAlignHintEnabled && LocalCoordXAligned;
+		FrameData.m_ShowCoordX = (CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordX != 0) || FrameShowLocalAlignedCoordX;
+		FrameData.m_ShowCoordY = CoordModuleAllowsCoords && g_Config.m_QmNameplateCoordY != 0;
+		FrameData.m_ShowCoords = CoordModuleAllowsCoords || FrameShowLocalAlignedCoordX;
+		if(FrameData.m_ShowName && !HideIdentity && g_Config.m_TcWarList && g_Config.m_TcWarListShowClan && GameClient()->m_WarList.GetWarData(ClientId).m_WarClan)
+			FrameData.m_ShowClan = true;
+
+		CNamePlate &FrameNamePlate = m_pData->m_aNamePlateFrameReferences[ClientId];
+		FrameNamePlate.Update(*GameClient(), FrameData);
+		pLayoutReference = &FrameNamePlate;
+	}
+
 	// Check if the nameplate is actually on screen
 	CNamePlate &NamePlate = m_pData->m_aNamePlates[ClientId];
 	NamePlate.Update(*GameClient(), Data);
 	if(Alpha > 0.0f)
-		NamePlate.Render(*GameClient(), Position - vec2(0.0f, (float)g_Config.m_ClNamePlatesOffset));
+		NamePlate.Render(*GameClient(), Position - vec2(0.0f, (float)g_Config.m_ClNamePlatesOffset), pLayoutReference);
 }
 
 void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
@@ -1778,12 +1874,15 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	const float FontSizeDirection = 18.0f + 20.0f * g_Config.m_ClDirectionSize / 100.0f;
 	const float FontSizeHookStrongWeak = 18.0f + 20.0f * g_Config.m_ClNamePlatesStrongSize / 100.0f;
 
-	auto BuildPreviewData = [&](int DummyIdx, CNamePlateData &Data) {
+	auto BuildPreviewData = [&](int DummyIdx, CNamePlateData &Data, bool ForceNameplateScopeAll = false) {
 		Data.m_InGame = false;
 		Data.m_Color = g_Config.m_ClNamePlatesTeamcolors ? GameClient()->GetDDTeamColor(13, 0.75f) : TextRender()->DefaultTextColor();
 		Data.m_Color.a = 1.0f;
+		const bool IsOwnPreview = DummyIdx == 0;
+		const bool NameplateScopeAllowsPreview = ForceNameplateScopeAll || (IsOwnPreview ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates);
+		const bool CoordModuleAllowsPreview = IsOwnPreview ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
 
-		Data.m_ShowName = g_Config.m_ClNamePlates || g_Config.m_ClNamePlatesOwn;
+		Data.m_ShowName = NameplateScopeAllowsPreview;
 		Data.m_UseTextEffects = ShouldUseQmNameplateTextEffects(
 			g_Config.m_QmNameplateTextPlayingScope,
 			g_Config.m_QmNameplateTextSpectateScope,
@@ -1802,12 +1901,12 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 
 		Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark;
 
-		Data.m_ShowClientId = g_Config.m_Debug || g_Config.m_ClNamePlatesIds;
+		Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds);
 		Data.m_ClientId = DummyIdx;
 		Data.m_ClientIdSeparateLine = g_Config.m_ClNamePlatesIdsSeparateLine;
 		Data.m_FontSizeClientId = Data.m_ClientIdSeparateLine ? (18.0f + 20.0f * g_Config.m_ClNamePlatesIdsSize / 100.0f) : Data.m_FontSize;
 
-		Data.m_ShowClan = g_Config.m_ClNamePlatesClan;
+		Data.m_ShowClan = Data.m_ShowName && g_Config.m_ClNamePlatesClan;
 		const char *pClan = DummyIdx == 0 ? g_Config.m_PlayerClan : g_Config.m_ClDummyClan;
 		str_copy(Data.m_aClan, str_utf8_skip_whitespaces(pClan));
 		str_utf8_trim_right(Data.m_aClan);
@@ -1815,9 +1914,9 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 			str_copy(Data.m_aClan, Localize("Clan Name"));
 		Data.m_FontSizeClan = FontSizeClan;
 
-		Data.m_ShowCoordX = g_Config.m_QmNameplateCoordX != 0;
-		Data.m_ShowCoordY = g_Config.m_QmNameplateCoordY != 0;
-		Data.m_ShowCoords = g_Config.m_QmNameplateCoords || g_Config.m_QmNameplateCoordsOwn;
+		Data.m_ShowCoords = CoordModuleAllowsPreview;
+		Data.m_ShowCoordX = Data.m_ShowCoords && g_Config.m_QmNameplateCoordX != 0;
+		Data.m_ShowCoordY = Data.m_ShowCoords && g_Config.m_QmNameplateCoordY != 0;
 		Data.m_Coords = vec2(12.34f + DummyIdx, 56.78f + DummyIdx);
 		Data.m_FontSizeCoords = FontSizeCoords;
 		Data.m_CoordXAlignHint = false;
@@ -1891,15 +1990,23 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	// player/dummy preview, take the union of both sides' baseline frame
 	// sizes and use that as the unified size for sizing/anchoring/clamping.
 	vec2 UnifiedFrameSize = NamePlate.Size();
+	CNamePlate FrameNamePlate;
+	CNamePlate *pFrameNamePlate = nullptr;
 	if(NameplateFreeMoveEnabled())
 	{
-		CNamePlateData OtherData;
-		BuildPreviewData(Dummy == 0 ? 1 : 0, OtherData);
-		CNamePlate &OtherNamePlate = m_pData->m_aPreviewNamePlates[Dummy == 0 ? 1 : 0];
-		OtherNamePlate.Update(*GameClient(), OtherData);
-		const vec2 OtherSize = OtherNamePlate.Size();
+		CNamePlateData FrameData;
+		BuildPreviewData(Dummy, FrameData, true);
+		FrameNamePlate.Update(*GameClient(), FrameData);
+		pFrameNamePlate = &FrameNamePlate;
+
+		CNamePlateData OtherFrameData;
+		BuildPreviewData(Dummy == 0 ? 1 : 0, OtherFrameData, true);
+		CNamePlate OtherFrameNamePlate(*GameClient(), OtherFrameData);
+		UnifiedFrameSize = FrameNamePlate.Size();
+		const vec2 OtherSize = OtherFrameNamePlate.Size();
 		UnifiedFrameSize.x = std::max(UnifiedFrameSize.x, OtherSize.x);
 		UnifiedFrameSize.y = std::max(UnifiedFrameSize.y, OtherSize.y);
+		OtherFrameNamePlate.Reset(*GameClient());
 	}
 
 	Position.y += UnifiedFrameSize.y / 2.0f;
@@ -1922,7 +2029,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		bool BaseHasFrame = false;
 		vec2 BaseFrameMin = vec2(0.0f, 0.0f);
 		vec2 BaseFrameMax = vec2(0.0f, 0.0f);
-		NamePlate.ComputeBaselineFrame(NameplateBottomMiddle, BaseHasFrame, BaseFrameMin, BaseFrameMax);
+		pFrameNamePlate->ComputeBaselineFrame(NameplateBottomMiddle, BaseHasFrame, BaseFrameMin, BaseFrameMax);
 		if(BaseHasFrame)
 		{
 			const vec2 Center = (BaseFrameMin + BaseFrameMax) * 0.5f;
@@ -1945,7 +2052,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	if(NameplateFreeMoveEnabled())
 	{
 		std::array<SNameplateCoreRowRect, kNameplateCoreRowCount> aEditorRects;
-		NamePlate.CollectCoreRowRects(Position, aEditorRects);
+		NamePlate.CollectCoreRowRects(Position, aEditorRects, pFrameNamePlate);
 
 		const vec2 MousePosition = Ui()->MousePos();
 		ENameplateCoreRow HoveredRow = ENameplateCoreRow::NUM_ROWS;
@@ -1988,7 +2095,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 			vec2 DragRowSize = vec2(0.0f, 0.0f);
 			NamePlate.ComputeBaselineLayout(Position, m_pData->m_FreeMoveDragRow,
 				DragIgnoreFrame, DragIgnoreFrameMin, DragIgnoreFrameMax,
-				DragHasRow, DragRowCenter, DragRowSize);
+				DragHasRow, DragRowCenter, DragRowSize, pFrameNamePlate);
 			const vec2 DragFrameMin = FrameMin;
 			const vec2 DragFrameMax = FrameMax;
 			const bool DragHasFrame = HasFrame;
@@ -2039,7 +2146,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 				const int NewOffsetY = std::clamp(round_to_int(m_pData->m_FreeMoveDragStartOffset.y + MousePosition.y - m_pData->m_FreeMoveDragStartMouse.y), LimitMinY, LimitMaxY);
 				*pOffsetY = NewOffsetY;
 			}
-			NamePlate.CollectCoreRowRects(Position, aEditorRects);
+			NamePlate.CollectCoreRowRects(Position, aEditorRects, pFrameNamePlate);
 		}
 
 		const bool DraggingAnyRow = m_pData->m_FreeMoveDragRow != ENameplateCoreRow::NUM_ROWS;
@@ -2085,12 +2192,16 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	{
 		m_pData->m_FreeMoveDragRow = ENameplateCoreRow::NUM_ROWS;
 	}
-	NamePlate.Render(*GameClient(), Position);
+	NamePlate.Render(*GameClient(), Position, pFrameNamePlate);
+	if(pFrameNamePlate != nullptr)
+		pFrameNamePlate->Reset(*GameClient());
 }
 
 void CNamePlates::ResetNamePlates()
 {
 	for(CNamePlate &NamePlate : m_pData->m_aNamePlates)
+		NamePlate.Reset(*GameClient());
+	for(CNamePlate &NamePlate : m_pData->m_aNamePlateFrameReferences)
 		NamePlate.Reset(*GameClient());
 	for(CNamePlate &NamePlate : m_pData->m_aPreviewNamePlates)
 		NamePlate.Reset(*GameClient());

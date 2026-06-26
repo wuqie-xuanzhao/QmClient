@@ -17,12 +17,14 @@
 #include <game/client/QmUi/QmLegacy.h>
 #include <game/client/QmUi/UiButtons.h>
 #include <game/client/QmUi/UiContext.h>
+#include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
 #include <game/version.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <vector>
@@ -35,6 +37,29 @@ using namespace FontIcons;
 
 namespace
 {
+	std::chrono::nanoseconds StartMenuPerfNow(bool TrackPerf)
+	{
+		return TrackPerf ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+	}
+
+	double StartMenuPerfElapsedMs(std::chrono::nanoseconds StartTime)
+	{
+		return std::chrono::duration<double, std::milli>(time_get_nanoseconds() - StartTime).count();
+	}
+
+	void LogStartMenuPerfStage(const IClient *pClient, const char *pStage, std::chrono::nanoseconds StartTime, bool TrackPerf, bool UseV2Layout, const char *pExtra = nullptr)
+	{
+		if(!TrackPerf)
+			return;
+
+		char aExtra[192];
+		if(pExtra != nullptr && pExtra[0] != '\0')
+			str_format(aExtra, sizeof(aExtra), "operation=start_menu page=start layout=%s %s", UseV2Layout ? "v2" : "legacy", pExtra);
+		else
+			str_format(aExtra, sizeof(aExtra), "operation=start_menu page=start layout=%s", UseV2Layout ? "v2" : "legacy");
+		QmPerfLogStage("perf/menu", pStage, StartMenuPerfElapsedMs(StartTime), false, pClient, "start", nullptr, aExtra);
+	}
+
 	void ComputeExternalButtons(const CUIRect &MainView, bool UseV2Layout, CUIRect &DiscordButton, CUIRect &LearnButton, CUIRect &TutorialButton, CUIRect &WebsiteButton, CUIRect &StatisticsButton, CUIRect &NewsButton)
 	{
 		CUIRect ExtMenu;
@@ -64,19 +89,19 @@ namespace
 		ContainerStyle.m_AlignItems = EUiAlign::STRETCH;
 		ContainerStyle.m_JustifyContent = EUiAlign::END;
 
-		std::vector<SUiLayoutChild> vChildren(6);
-		for(SUiLayoutChild &Child : vChildren)
+		static std::vector<SUiLayoutChild> s_vExternalButtonChildren(6);
+		for(SUiLayoutChild &Child : s_vExternalButtonChildren)
 		{
 			Child.m_Style.m_Height = SUiLength::Px(20.0f);
 		}
 
-		LayoutEngine.ComputeChildren(ContainerStyle, CUiV2LegacyAdapter::FromCUIRect(ExtMenu), vChildren);
-		StatisticsButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[0].m_Box);
-		NewsButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[1].m_Box);
-		WebsiteButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[2].m_Box);
-		TutorialButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[3].m_Box);
-		LearnButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[4].m_Box);
-		DiscordButton = CUiV2LegacyAdapter::ToCUIRect(vChildren[5].m_Box);
+		LayoutEngine.ComputeChildren(ContainerStyle, CUiV2LegacyAdapter::FromCUIRect(ExtMenu), s_vExternalButtonChildren);
+		StatisticsButton = CUiV2LegacyAdapter::ToCUIRect(s_vExternalButtonChildren[0].m_Box);
+		NewsButton = CUiV2LegacyAdapter::ToCUIRect(s_vExternalButtonChildren[1].m_Box);
+		WebsiteButton = CUiV2LegacyAdapter::ToCUIRect(s_vExternalButtonChildren[2].m_Box);
+		TutorialButton = CUiV2LegacyAdapter::ToCUIRect(s_vExternalButtonChildren[3].m_Box);
+		LearnButton = CUiV2LegacyAdapter::ToCUIRect(s_vExternalButtonChildren[4].m_Box);
+		DiscordButton = CUiV2LegacyAdapter::ToCUIRect(s_vExternalButtonChildren[5].m_Box);
 	}
 
 	void ComputeMainButtons(const CUIRect &MenuArea, bool UseV2Layout, CUIRect aMenuButtons[6])
@@ -109,18 +134,18 @@ namespace
 		ContainerStyle.m_AlignItems = EUiAlign::STRETCH;
 		ContainerStyle.m_JustifyContent = EUiAlign::END;
 
-		std::vector<SUiLayoutChild> vChildren(5);
-		for(SUiLayoutChild &Child : vChildren)
+		static std::vector<SUiLayoutChild> s_vMainButtonChildren(5);
+		for(SUiLayoutChild &Child : s_vMainButtonChildren)
 		{
 			Child.m_Style.m_Height = SUiLength::Px(40.0f);
 		}
 
-		LayoutEngine.ComputeChildren(ContainerStyle, CUiV2LegacyAdapter::FromCUIRect(TopArea), vChildren);
-		aMenuButtons[5] = CUiV2LegacyAdapter::ToCUIRect(vChildren[0].m_Box);
-		aMenuButtons[4] = CUiV2LegacyAdapter::ToCUIRect(vChildren[1].m_Box);
-		aMenuButtons[3] = CUiV2LegacyAdapter::ToCUIRect(vChildren[2].m_Box);
-		aMenuButtons[2] = CUiV2LegacyAdapter::ToCUIRect(vChildren[3].m_Box);
-		aMenuButtons[1] = CUiV2LegacyAdapter::ToCUIRect(vChildren[4].m_Box);
+		LayoutEngine.ComputeChildren(ContainerStyle, CUiV2LegacyAdapter::FromCUIRect(TopArea), s_vMainButtonChildren);
+		aMenuButtons[5] = CUiV2LegacyAdapter::ToCUIRect(s_vMainButtonChildren[0].m_Box);
+		aMenuButtons[4] = CUiV2LegacyAdapter::ToCUIRect(s_vMainButtonChildren[1].m_Box);
+		aMenuButtons[3] = CUiV2LegacyAdapter::ToCUIRect(s_vMainButtonChildren[2].m_Box);
+		aMenuButtons[2] = CUiV2LegacyAdapter::ToCUIRect(s_vMainButtonChildren[3].m_Box);
+		aMenuButtons[1] = CUiV2LegacyAdapter::ToCUIRect(s_vMainButtonChildren[4].m_Box);
 	}
 
 }
@@ -137,74 +162,88 @@ void CMenusStart::RenderStartMenuV2(CUIRect MainView)
 
 void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 {
+	const bool TrackPerf = QmPerfEnabled();
+	const std::chrono::nanoseconds TotalStart = StartMenuPerfNow(TrackPerf);
 	GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_START);
 
 	// render logo
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1, 1, 1, 1);
-	IGraphics::CQuadItem QuadItem(MainView.w / 2 - 170, 60, 360, 103);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+	{
+		const std::chrono::nanoseconds StageStart = StartMenuPerfNow(TrackPerf);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BANNER].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1, 1, 1, 1);
+		IGraphics::CQuadItem QuadItem(MainView.w / 2 - 170, 60, 360, 103);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+		LogStartMenuPerfStage(Client(), "start_menu_logo", StageStart, TrackPerf, UseV2Layout);
+	}
 
 	const float Rounding = 10.0f;
 	const float VMargin = MainView.w / 2 - 190.0f;
 
 	int NewPage = -1;
 	CUIRect DiscordButtonRect, LearnButtonRect, TutorialButtonRect, WebsiteButtonRect, StatisticsButtonRect, NewsButtonRect;
-	ComputeExternalButtons(MainView, UseV2Layout, DiscordButtonRect, LearnButtonRect, TutorialButtonRect, WebsiteButtonRect, StatisticsButtonRect, NewsButtonRect);
-	static CButtonContainer s_DiscordButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_DiscordButton, Localize("Discord"), 0, &DiscordButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 	{
-		Client()->ViewLink(Localize("https://ddnet.org/discord"));
+		const std::chrono::nanoseconds StageStart = StartMenuPerfNow(TrackPerf);
+		ComputeExternalButtons(MainView, UseV2Layout, DiscordButtonRect, LearnButtonRect, TutorialButtonRect, WebsiteButtonRect, StatisticsButtonRect, NewsButtonRect);
+		LogStartMenuPerfStage(Client(), "start_menu_external_layout", StageStart, TrackPerf, UseV2Layout);
 	}
-
-	static CButtonContainer s_LearnButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_LearnButton, Localize("Learn"), 0, &LearnButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 	{
-		Client()->ViewLink(Localize("https://wiki.ddnet.org/"));
-	}
-
-	static CButtonContainer s_TutorialButton;
-	static float s_JoinTutorialTime = 0.0f;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_TutorialButton, Localize("Tutorial"), 0, &TutorialButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) ||
-		(s_JoinTutorialTime != 0.0f && Client()->LocalTime() >= s_JoinTutorialTime))
-	{
-		// Activate internet tab before joining tutorial to make sure the server info
-		// for the tutorial servers is available.
-		GameClient()->m_Menus.SetMenuPage(CMenus::PAGE_INTERNET);
-		GameClient()->m_Menus.RefreshBrowserTab(true);
-		const char *pAddr = ServerBrowser()->GetTutorialServer();
-		if(pAddr)
+		const std::chrono::nanoseconds StageStart = StartMenuPerfNow(TrackPerf);
+		static CButtonContainer s_DiscordButton;
+		if(GameClient()->m_Menus.DoButton_Menu(&s_DiscordButton, Localize("Discord"), 0, &DiscordButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 		{
-			Client()->Connect(pAddr);
-			s_JoinTutorialTime = 0.0f;
+			Client()->ViewLink(Localize("https://ddnet.org/discord"));
 		}
-		else if(s_JoinTutorialTime == 0.0f)
+
+		static CButtonContainer s_LearnButton;
+		if(GameClient()->m_Menus.DoButton_Menu(&s_LearnButton, Localize("Learn"), 0, &LearnButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 		{
-			dbg_msg("menus", "couldn't find tutorial server, retrying in 5 seconds");
-			s_JoinTutorialTime = Client()->LocalTime() + 5.0f;
+			Client()->ViewLink(Localize("https://wiki.ddnet.org/"));
 		}
-		else
+
+		static CButtonContainer s_TutorialButton;
+		static float s_JoinTutorialTime = 0.0f;
+		if(GameClient()->m_Menus.DoButton_Menu(&s_TutorialButton, Localize("Tutorial"), 0, &TutorialButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) ||
+			(s_JoinTutorialTime != 0.0f && Client()->LocalTime() >= s_JoinTutorialTime))
 		{
-			Client()->AddWarning(SWarning(Localize("Can't find a Tutorial server")));
-			s_JoinTutorialTime = 0.0f;
+			// Activate internet tab before joining tutorial to make sure the server info
+			// for the tutorial servers is available.
+			GameClient()->m_Menus.SetMenuPage(CMenus::PAGE_INTERNET);
+			GameClient()->m_Menus.RefreshBrowserTab(true);
+			const char *pAddr = ServerBrowser()->GetTutorialServer();
+			if(pAddr)
+			{
+				Client()->Connect(pAddr);
+				s_JoinTutorialTime = 0.0f;
+			}
+			else if(s_JoinTutorialTime == 0.0f)
+			{
+				dbg_msg("menus", "couldn't find tutorial server, retrying in 5 seconds");
+				s_JoinTutorialTime = Client()->LocalTime() + 5.0f;
+			}
+			else
+			{
+				Client()->AddWarning(SWarning(Localize("Can't find a Tutorial server")));
+				s_JoinTutorialTime = 0.0f;
+			}
 		}
+
+		static CButtonContainer s_WebsiteButton;
+		if(GameClient()->m_Menus.DoButton_Menu(&s_WebsiteButton, Localize("Website"), 0, &WebsiteButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		{
+			Client()->ViewLink("https://ddnet.org/");
+		}
+
+		static CButtonContainer s_StatisticsButton;
+		if(GameClient()->m_Menus.DoButton_Menu(&s_StatisticsButton, Localize("Stats"), 0, &StatisticsButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+			NewPage = CMenus::PAGE_STATS;
+
+		static CButtonContainer s_NewsButton;
+		if(GameClient()->m_Menus.DoButton_Menu(&s_NewsButton, Localize("News"), 0, &NewsButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, g_Config.m_UiUnreadNews ? ColorRGBA(0.0f, 1.0f, 0.0f, 0.25f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) || CheckHotKey(KEY_N))
+			NewPage = CMenus::PAGE_NEWS;
+		LogStartMenuPerfStage(Client(), "start_menu_external_buttons", StageStart, TrackPerf, UseV2Layout);
 	}
-
-	static CButtonContainer s_WebsiteButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_WebsiteButton, Localize("Website"), 0, &WebsiteButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-	{
-		Client()->ViewLink("https://ddnet.org/");
-	}
-
-	static CButtonContainer s_StatisticsButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_StatisticsButton, Localize("Stats"), 0, &StatisticsButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
-		NewPage = CMenus::PAGE_STATS;
-
-	static CButtonContainer s_NewsButton;
-	if(GameClient()->m_Menus.DoButton_Menu(&s_NewsButton, Localize("News"), 0, &NewsButtonRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, g_Config.m_UiUnreadNews ? ColorRGBA(0.0f, 1.0f, 0.0f, 0.25f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)) || CheckHotKey(KEY_N))
-		NewPage = CMenus::PAGE_NEWS;
 
 	CUIRect Menu;
 	MainView.VMargin(VMargin, &Menu);
@@ -219,6 +258,7 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 	const bool LocalServerRunning = GameClient()->m_LocalServer.IsServerRunning();
 	const bool EditorDirty = GameClient()->Editor()->HasUnsavedData();
 	{
+		const std::chrono::nanoseconds StageStart = StartMenuPerfNow(TrackPerf);
 		constexpr int MenuButtonCount = 6;
 		CUIRect aMenuButtons[MenuButtonCount];
 		ComputeMainButtons(Menu, UseV2Layout, aMenuButtons);
@@ -404,55 +444,63 @@ void CMenusStart::RenderStartMenuImpl(CUIRect MainView, bool UseV2Layout)
 				NewPage = ((g_Config.m_UiPage >= CMenus::PAGE_INTERNET && g_Config.m_UiPage <= CMenus::PAGE_FAVORITE_COMMUNITY_5) || g_Config.m_UiPage == CMenus::PAGE_FAVORITE_MAPS) ? g_Config.m_UiPage : CMenus::PAGE_INTERNET;
 			}
 		}
+		char aButtonExtra[64];
+		str_format(aButtonExtra, sizeof(aButtonExtra), "images=%d", g_Config.m_ClShowStartMenuImages ? 1 : 0);
+		LogStartMenuPerfStage(Client(), "start_menu_main_buttons", StageStart, TrackPerf, UseV2Layout, aButtonExtra);
 	}
 
 	// render version
-	CUIRect CurVersion, ConsoleButton;
-	MainView.HSplitBottom(45.0f, nullptr, &CurVersion);
-	CurVersion.VSplitRight(40.0f, &CurVersion, nullptr);
-	CurVersion.HSplitTop(20.0f, &ConsoleButton, &CurVersion);
-	CurVersion.HSplitTop(5.0f, nullptr, &CurVersion);
-	ConsoleButton.VSplitRight(40.0f, nullptr, &ConsoleButton);
-	Ui()->DoLabel(&CurVersion, GAME_RELEASE_VERSION, 14.0f, TEXTALIGN_MR);
+	{
+		const std::chrono::nanoseconds StageStart = StartMenuPerfNow(TrackPerf);
+		CUIRect CurVersion, ConsoleButton;
+		MainView.HSplitBottom(45.0f, nullptr, &CurVersion);
+		CurVersion.VSplitRight(40.0f, &CurVersion, nullptr);
+		CurVersion.HSplitTop(20.0f, &ConsoleButton, &CurVersion);
+		CurVersion.HSplitTop(5.0f, nullptr, &CurVersion);
+		ConsoleButton.VSplitRight(40.0f, nullptr, &ConsoleButton);
+		Ui()->DoLabel(&CurVersion, GAME_RELEASE_VERSION, 14.0f, TEXTALIGN_MR);
 
-	CUIRect TClientVersion;
-	MainView.HSplitTop(15.0f, &TClientVersion, &MainView);
-	TClientVersion.VSplitRight(40.0f, &TClientVersion, nullptr);
-	char aTBuf[64];
-	str_format(aTBuf, sizeof(aTBuf), CLIENT_NAME " %s", CLIENT_RELEASE_VERSION);
-	Ui()->DoLabel(&TClientVersion, aTBuf, 14.0f, TEXTALIGN_MR);
+		CUIRect TClientVersion;
+		MainView.HSplitTop(15.0f, &TClientVersion, &MainView);
+		TClientVersion.VSplitRight(40.0f, &TClientVersion, nullptr);
+		char aTBuf[64];
+		str_format(aTBuf, sizeof(aTBuf), CLIENT_NAME " %s", CLIENT_RELEASE_VERSION);
+		Ui()->DoLabel(&TClientVersion, aTBuf, 14.0f, TEXTALIGN_MR);
 #if defined(CONF_AUTOUPDATE)
-	CUIRect UpdateToDateText;
-	MainView.HSplitTop(15.0f, &UpdateToDateText, nullptr);
-	UpdateToDateText.VSplitRight(40.0f, &UpdateToDateText, nullptr);
-	if(!GameClient()->m_TClient.m_FetchedQmClientUpdateInfo)
-	{
-		Ui()->DoLabel(&UpdateToDateText, Localize("(Fetching Update Info)"), 14.0f, TEXTALIGN_MR);
-	}
-	else if(GameClient()->m_TClient.NeedQmClientUpdate())
-	{
-		Ui()->DoLabel(&UpdateToDateText, Localize("(Update required)"), 14.0f, TEXTALIGN_MR);
-	}
-	else
-	{
-		Ui()->DoLabel(&UpdateToDateText, Localize("(On Latest)"), 14.0f, TEXTALIGN_MR);
-	}
+		CUIRect UpdateToDateText;
+		MainView.HSplitTop(15.0f, &UpdateToDateText, nullptr);
+		UpdateToDateText.VSplitRight(40.0f, &UpdateToDateText, nullptr);
+		if(!GameClient()->m_TClient.m_FetchedQmClientUpdateInfo)
+		{
+			Ui()->DoLabel(&UpdateToDateText, Localize("(Fetching Update Info)"), 14.0f, TEXTALIGN_MR);
+		}
+		else if(GameClient()->m_TClient.NeedQmClientUpdate())
+		{
+			Ui()->DoLabel(&UpdateToDateText, Localize("(Update required)"), 14.0f, TEXTALIGN_MR);
+		}
+		else
+		{
+			Ui()->DoLabel(&UpdateToDateText, Localize("(On Latest)"), 14.0f, TEXTALIGN_MR);
+		}
 #endif
-	static CButtonContainer s_ConsoleButton;
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-	if(GameClient()->m_Menus.DoButton_Menu(&s_ConsoleButton, FONT_ICON_TERMINAL, 0, &ConsoleButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f)))
-	{
-		GameClient()->m_GameConsole.Toggle(CGameConsole::CONSOLETYPE_LOCAL);
+		static CButtonContainer s_ConsoleButton;
+		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+		if(GameClient()->m_Menus.DoButton_Menu(&s_ConsoleButton, FONT_ICON_TERMINAL, 0, &ConsoleButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.1f)))
+		{
+			GameClient()->m_GameConsole.Toggle(CGameConsole::CONSOLETYPE_LOCAL);
+		}
+		TextRender()->SetRenderFlags(0);
+		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		LogStartMenuPerfStage(Client(), "start_menu_version_console", StageStart, TrackPerf, UseV2Layout);
 	}
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 
 	if(NewPage != -1)
 	{
 		GameClient()->m_Menus.SetShowStart(false);
 		GameClient()->m_Menus.SetMenuPage(NewPage);
 	}
+	LogStartMenuPerfStage(Client(), "start_menu_total", TotalStart, TrackPerf, UseV2Layout);
 }
 
 bool CMenusStart::CheckHotKey(int Key) const

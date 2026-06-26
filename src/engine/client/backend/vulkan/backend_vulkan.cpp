@@ -3422,15 +3422,28 @@ protected:
 		if(vkCreateImage(m_VKDevice, &ImageInfo, nullptr, &Image) != VK_SUCCESS)
 		{
 			dbg_msg("vulkan", "failed to create image!");
+			Image = VK_NULL_HANDLE;
+			return false;
 		}
 
 		VkMemoryRequirements MemRequirements;
 		vkGetImageMemoryRequirements(m_VKDevice, Image, &MemRequirements);
 
 		if(!GetImageMemory(ImageMemory, MemRequirements.size, MemRequirements.alignment, MemRequirements.memoryTypeBits))
+		{
+			vkDestroyImage(m_VKDevice, Image, nullptr);
+			Image = VK_NULL_HANDLE;
 			return false;
+		}
 
-		vkBindImageMemory(m_VKDevice, Image, ImageMemory.m_BufferMem.m_Mem, ImageMemory.m_HeapData.m_OffsetToAlign);
+		if(vkBindImageMemory(m_VKDevice, Image, ImageMemory.m_BufferMem.m_Mem, ImageMemory.m_HeapData.m_OffsetToAlign) != VK_SUCCESS)
+		{
+			FreeImageMemBlock(ImageMemory);
+			vkDestroyImage(m_VKDevice, Image, nullptr);
+			Image = VK_NULL_HANDLE;
+			ImageMemory = {};
+			return false;
+		}
 
 		return true;
 	}
@@ -6534,16 +6547,20 @@ public:
 
 	void DestroyDescriptorPools()
 	{
-		for(auto &DescrPool : m_StandardTextureDescrPool.m_vPools)
-			vkDestroyDescriptorPool(m_VKDevice, DescrPool.m_Pool, nullptr);
-		for(auto &DescrPool : m_TextTextureDescrPool.m_vPools)
-			vkDestroyDescriptorPool(m_VKDevice, DescrPool.m_Pool, nullptr);
+		const auto DestroyDescriptorPoolList = [this](SDeviceDescriptorPools &DescriptorPools) {
+			for(auto &DescrPool : DescriptorPools.m_vPools)
+			{
+				if(DescrPool.m_Pool != VK_NULL_HANDLE)
+					vkDestroyDescriptorPool(m_VKDevice, DescrPool.m_Pool, nullptr);
+				DescrPool = {};
+			}
+			DescriptorPools.m_vPools.clear();
+		};
 
+		DestroyDescriptorPoolList(m_StandardTextureDescrPool);
+		DestroyDescriptorPoolList(m_TextTextureDescrPool);
 		for(auto &UniformBufferDescrPool : m_vUniformBufferDescrPools)
-		{
-			for(auto &DescrPool : UniformBufferDescrPool.m_vPools)
-				vkDestroyDescriptorPool(m_VKDevice, DescrPool.m_Pool, nullptr);
-		}
+			DestroyDescriptorPoolList(UniformBufferDescrPool);
 		m_vUniformBufferDescrPools.clear();
 	}
 
@@ -6619,10 +6636,21 @@ public:
 	{
 		if(DescrSet.m_PoolIndex != std::numeric_limits<size_t>::max() && DescrSet.m_pPools != nullptr)
 		{
+			if(DescrSet.m_PoolIndex >= DescrSet.m_pPools->m_vPools.size())
+			{
+				log_warn("vulkan", "descriptor set references stale pool index %" PRIzu " (pool count %" PRIzu "), skipping explicit descriptor free", DescrSet.m_PoolIndex, DescrSet.m_pPools->m_vPools.size());
+				DescrSet = {};
+				return;
+			}
 			auto &Pool = DescrSet.m_pPools->m_vPools[DescrSet.m_PoolIndex];
 			if(DescrSet.m_Descriptor != VK_NULL_HANDLE)
 				vkFreeDescriptorSets(m_VKDevice, Pool.m_Pool, 1, &DescrSet.m_Descriptor);
-			dbg_assert(Pool.m_CurSize > 0, "Descriptor pool accounting is inconsistent.");
+			if(Pool.m_CurSize == 0)
+			{
+				log_warn("vulkan", "descriptor pool accounting underflow prevented while freeing descriptor set");
+				DescrSet = {};
+				return;
+			}
 			Pool.m_CurSize -= 1;
 		}
 		DescrSet = {};
@@ -6685,7 +6713,11 @@ public:
 		DesAllocInfo.descriptorSetCount = 1;
 		DesAllocInfo.pSetLayouts = &m_StandardTexturedDescriptorSetLayout;
 		if(vkAllocateDescriptorSets(m_VKDevice, &DesAllocInfo, &DescrSet.m_Descriptor) != VK_SUCCESS)
+		{
+			FreeDescriptorSetFromPool(DescrSet);
 			return false;
+		}
+		m_FrameProfileStats.m_DescriptorAllocations++;
 
 		VkDescriptorImageInfo ImageInfo{};
 		ImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -7962,10 +7994,16 @@ public:
 		Target.m_Width = pCommand->m_Width;
 		Target.m_Height = pCommand->m_Height;
 		if(!CreateImage(Target.m_Width, Target.m_Height, 1, 1, RenderTargetReadbackFormat(), VK_IMAGE_TILING_OPTIMAL, Target.m_Image, Target.m_ImageMem, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_SAMPLE_COUNT_1_BIT))
+		{
+			DestroyRenderTarget(Target);
 			return false;
+		}
 		Target.m_ImageView = CreateImageView(Target.m_Image, RenderTargetReadbackFormat(), VK_IMAGE_VIEW_TYPE_2D, 1, 1);
 		if(Target.m_ImageView == VK_NULL_HANDLE)
+		{
+			DestroyRenderTarget(Target);
 			return false;
+		}
 
 		VkFramebufferCreateInfo FramebufferInfo{};
 		FramebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -7976,9 +8014,15 @@ public:
 		FramebufferInfo.height = Target.m_Height;
 		FramebufferInfo.layers = 1;
 		if(vkCreateFramebuffer(m_VKDevice, &FramebufferInfo, nullptr, &Target.m_Framebuffer) != VK_SUCCESS)
+		{
+			DestroyRenderTarget(Target);
 			return false;
+		}
 		if(!CreateRenderTargetDescriptorSet(Target, 0) || !CreateRenderTargetDescriptorSet(Target, 1))
+		{
+			DestroyRenderTarget(Target);
 			return false;
+		}
 		return true;
 	}
 

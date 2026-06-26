@@ -37,6 +37,12 @@ TEST(QmLyricsNormalize, StripsLiveAndRemaster)
 	EXPECT_EQ(NormalizeForMatch("Imagine (Acoustic Version)"), "imagine");
 }
 
+TEST(QmLyricsNormalize, KeepsNonModifierBracketsButStillStripsLaterModifiers)
+{
+	EXPECT_EQ(NormalizeForMatch("Song (Movie Theme) (Live)"), "song movie theme");
+	EXPECT_EQ(NormalizeForMatch("Song [Opening] [Remaster]"), "song opening");
+}
+
 TEST(QmLyricsNormalize, StripsAsciiAccents)
 {
 	EXPECT_EQ(NormalizeForMatch("Café Müller"), "cafe muller");
@@ -173,4 +179,22 @@ TEST(QmLyricsScore, FallsBackToLinkedFileNameFingerprint)
 	C.m_Title = "Bohemian Rhapsody";
 	C.m_Artist = "Queen";
 	EXPECT_NEAR(Score(Q, C), 100.0f, 0.001f);
+}
+
+TEST(QmLyricsCandidateApplyRank, SortsByScoreSourceConfidenceAndStableOrder)
+{
+	std::vector<SCandidateApplyRank> vRanks = {
+		{0, 90.0f, 0.0f},
+		{1, 90.0f, 0.0f},
+		{2, 89.995f, 1.0f},
+		{3, 91.0f, 0.0f},
+	};
+
+	SortCandidateApplyRanks(&vRanks);
+
+	ASSERT_EQ(vRanks.size(), 4u);
+	EXPECT_EQ(vRanks[0].m_Index, 3u);
+	EXPECT_EQ(vRanks[1].m_Index, 2u);
+	EXPECT_EQ(vRanks[2].m_Index, 0u);
+	EXPECT_EQ(vRanks[3].m_Index, 1u);
 }

@@ -289,11 +289,11 @@ Active color
 Active disconnect
 == 능동적 연결 끊기
 
-Active lyrics line font size in px
-== 활성 가사 줄 글꼴 크기 (px)
+Active line font size
+== 활성 줄 글꼴 크기
 
-Active lyrics line scale percent
-== 활성 가사 줄 확대 비율 (%)
+Active line scale
+== 활성 줄 배율
 
 Active moderator mode disabled because you are afk.
 == 자리 비움 상태이므로 능동적 관리자 모드가 비활성화되었습니다.
@@ -562,8 +562,8 @@ Always show own player's hook collision line
 Always translate
 == 항상 번역
 
-AMLL TTML DB API base URL (can be changed to a mirror)
-== AMLL TTML DB API 기본 URL (미러로 변경 가능)
+AMLL TTML DB API 基地址（可改成镜像）
+== AMLL TTML DB API base URL (can be changed to a mirror)
 
 Amount
 == 양
@@ -787,8 +787,8 @@ Auto enable in Gores mode
 Auto execute
 == 자동 실행
 
-Auto fetch lyrics online when a new song is detected
-== 새 노래가 감지되면 자동으로 온라인에서 가사 가져오기
+Auto fetch lyrics
+== Auto fetch lyrics setting
 
 Auto gain control for mic (AGC, experimental)
 == 마이크 자동 게인 제어 (AGC, 실험적)
@@ -973,6 +973,9 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 최고
 
+Best match
+== Best match setting
+
 Bind key to execute a command or view keybindings
 == 키를 바인딩하여 명령을 실행하거나 키바인딩을 확인합니다
 
@@ -1053,6 +1056,9 @@ Buttons
 
 c = Player position
 == c = 플레이어 위치
+
+Cache TTL
+== Cache TTL setting
 
 Calculate unfinished maps for player in certain mode
 == 특정 모드에서 플레이어의 미완료 맵 계산
@@ -1350,6 +1356,9 @@ Client prediction time is high
 
 Client uptime
 == 클라이언트 가동 시간
+
+Clock drift hard-snap
+== Clock drift hard-snap setting
 
 Close
 == 닫기
@@ -2029,6 +2038,12 @@ Displays your ping to the current server
 Dissolve
 == 용해
 
+Distance fade per line
+== Distance fade per line setting
+
+Distance scale falloff
+== Distance scale falloff setting
+
 Do not translate server messages
 == 서버 메시지 번역 안 함
 
@@ -2302,23 +2317,14 @@ Enable highlighted chat sound
 Enable Jelly Tee
 == 젤리 티 활성화
 
-Enable karaoke word highlighting
-== 노래방 가사 강조 활성화
-
 Enable keyword reply
 == 키워드 응답 활성화
-
-Enable local lyrics cache
-== 로컬 가사 캐시 활성화
 
 Enable long pain sound (used when shooting in freeze)
 == 긴 고통 사운드 활성화 (프리즈에서 쏠 때 사용)
 
 Enable lyrics
 == 가사 활성화
-
-Enable lyrics HUD overlay
-== 가사 HUD 오버레이 활성화
 
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 == 지정된 버그를 사용하여 맵 호환 모드 활성화 (예: grenade-doubleexplosion@ddnet.tw)
@@ -2974,6 +2980,9 @@ Gradient color
 Graphics
 == 그래픽
 
+Graphics backend
+== 그래픽 백엔드
+
 Graphics card
 == 그래픽 카드
 
@@ -2988,6 +2997,9 @@ Group name
 
 Guide line color
 == 가이드 라인 색상
+
+Gun
+== 권총
 
 Hammer
 == 망치
@@ -3106,6 +3118,9 @@ Hide UI for focused gameplay
 Hide weapon muzzle flashes
 == 무기 총구 섬광 숨기기
 
+Hide when paused
+== Hide when paused setting
+
 Hide without media state
 == 미디어 상태 없을 때 숨기기
 
@@ -3217,6 +3232,9 @@ I muted you
 Idiot word filter
 == 바보 단어 필터
 
+Ignore cache providers
+== Ignore cache providers setting
+
 Import from clipboard
 == 클립보드에서 가져오기
 
@@ -3229,11 +3247,8 @@ In memory of me
 Inactive color
 == 비활성 색상
 
-Inactive lyrics line font size in px
-== 비활성 가사 줄 글꼴 크기 (px)
-
-Inactive lyrics line minimum opacity percent
-== 비활성 가사 줄 최소 불투명도 백분율
+Inactive line opacity
+== Inactive line opacity setting
 
 Incoming language
 == 수신 언어
@@ -3439,8 +3454,8 @@ k = Resend loss
 Kaomoji
 == 카오모지
 
-Karaoke highlight soft edge width in px
-== 노래방 하이라이트 소프트 엣지 너비 (px)
+Karaoke edge softness
+== Karaoke edge softness setting
 
 Key Bindings
 == 키 바인딩
@@ -3607,6 +3622,12 @@ LibreTranslate API Key
 LibreTranslate 端点
 == LibreTranslate 엔드포인트
 
+Line scroll duration
+== Line scroll duration setting
+
+Line spacing
+== Line spacing setting
+
 Line width
 == 선 두께
 
@@ -3618,6 +3639,12 @@ Lines
 
 Lines %d - %d (%s)
 == %d행 - %d행 (%s)
+
+Lines above active
+== Lines above active setting
+
+Lines below active
+== Lines below active setting
 
 List all commands that are available in practice mode
 == 연습 모드에서 사용 가능한 모든 명령을 나열합니다
@@ -3760,6 +3787,18 @@ Local
 Local + Dummy
 == 로컬 + 더미
 
+Local ESLRC file
+== Local ESLRC file setting
+
+Local LRC file
+== Local LRC file setting
+
+Local media folders
+== Local media folders setting
+
+Local music file
+== Local music file setting
+
 Local only
 == 로컬 전용
 
@@ -3777,6 +3816,9 @@ Local test mode, no server needed
 
 Local Time
 == 로컬 시간
+
+Local TTML file
+== Local TTML file setting
 
 Local-only
 == 로컬 전용
@@ -3808,44 +3850,17 @@ Long press on a touch button to select it.
 Low to high
 == 낮음에서 높음으로
 
-LRCLIB API base URL (can be changed to a mirror)
-== LRCLIB API 기본 URL (미러로 변경 가능)
+LRCLIB API 基地址（可改成镜像）
+== LRCLIB API base URL (can be changed to a mirror)
 
 Lyrics
 == 가사
 
-Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
-== 가사 자동 검색 소스 순서 및 활성화 목록 (비우면 기본값; |로 구분, 예: QQ|Kugou|Netease|LrcLib)
-
-Lyrics cache expiry days (0=never expire)
-== 가사 캐시 만료 일수 (0=만료 안 함)
-
-Lyrics clock drift hard snap threshold in ms
-== 가사 시계 드리프트 하드 스냅 임계값 (ms)
-
-Lyrics fuzzy match score threshold
-== 가사 퍼지 매치 점수 임계값
-
 Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
 == 가사 HTTP 프록시 (예: http://127.0.0.1:7890)
 
-Lyrics HTTP request timeout in ms
-== 가사 HTTP 요청 타임아웃 (ms)
-
-Lyrics HUD edge margin in px
-== 가사 HUD 가장자리 여백 (px)
-
-Lyrics line spacing in px
-== 가사 줄 간격 (px)
-
-Lyrics line switch scroll duration in ms
-== 가사 줄 전환 스크롤 지속 시간 (ms)
-
-Lyrics lines shown above active line
-== 활성 줄 위에 표시되는 가사 줄 수
-
-Lyrics lines shown below active line
-== 활성 줄 아래에 표시되는 가사 줄 수
+Lyrics HTTP timeout
+== Lyrics HTTP timeout setting
 
 Lyrics local media library folders (use | as separator)
 == 가사 로컬 미디어 라이브러리 폴더 (|로 구분)
@@ -3853,29 +3868,14 @@ Lyrics local media library folders (use | as separator)
 Lyrics manual timeline offset in ms (runtime step 500ms)
 == 가사 수동 타임라인 오프셋 (ms, 런타임 단계 500ms)
 
-Lyrics opacity fade percent per distance line
-== 가사 거리 줄당 불투명도 페이드 비율
+Lyrics search type
+== Lyrics search type setting
 
-Lyrics overall opacity percent
-== 가사 전체 불투명도 비율
+Lyrics source
+== Lyrics source setting
 
-Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== 가사 소스별 매치 임계값 (비우면 전역 임계값; 예: QQ=60|LrcLib=70)
-
-Lyrics scale shrink percent per distance line
-== 가사 거리 줄당 크기 축소 비율
-
-Lyrics search strategy (0=source order, 1=parallel best match)
-== 가사 검색 전략 (0=소스 순서, 1=병렬 최적 매치)
-
-Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== 가사 소스 (0=자동 최적 매치, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=로컬 음악 파일, 8=로컬 LRC, 9=로컬 ESLRC, 10=로컬 TTML)
-
-Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
-== 검색 중 캐시를 무시할 가사 소스 (|로 구분, 예: QQ|Kugou)
-
-Lyrics translation and transliteration color
-== 가사 번역 및 음역 색상
+Lyrics source order
+== Lyrics source order setting
 
 Lyrics: empty track
 == 가사: 빈 트랙
@@ -3999,6 +3999,9 @@ Markers
 
 Match %d of %d
 == %d/%d 매치
+
+Match score threshold
+== Match score threshold setting
 
 Matched with callable peer
 == 통화 가능 피어와 매칭됨
@@ -4687,6 +4690,9 @@ Option color
 Other
 == 기타
 
+Other lines font size
+== 다른 줄 글꼴 크기
+
 Others
 == 다른 사람
 
@@ -4819,6 +4825,9 @@ Pause the current demo
 Pause/unpause game
 == 게임 일시정지/재개
 
+Per-word highlight (karaoke)
+== Per-word highlight (karaoke) setting
+
 Personal best:
 == 개인 최고 기록:
 
@@ -4879,8 +4888,8 @@ Play/pause the current demo
 Playback volume
 == 재생 볼륨
 
-Played lyrics word color
-== 재생된 가사 글자 색상
+Played word color
+== Played word color setting
 
 Player
 == 플레이어
@@ -5106,6 +5115,9 @@ Progress bar height
 
 Progress bar width
 == 진행 표시줄 너비
+
+Provider thresholds
+== Provider thresholds setting
 
 PTT 释放延迟（毫秒）
 == PTT 해제 지연 (밀리초)
@@ -5569,9 +5581,6 @@ Render ghosts as circles
 Render tiny tees instead of circles
 == 원 대신 미니 Tee 로 렌더링
 
-Renderer
-== 렌더러
-
 Renders your frame rate in the top right
 == 오른쪽 상단에 프레임 속도를 표시합니다
 
@@ -5712,6 +5721,9 @@ Reset to defaults
 
 Reset zone tuning in zone x or in all zones
 == 영역 x 또는 모든 영역의 영역 튜닝을 초기화
+
+Respawn default weapon
+== 부활 기본 무기
 
 Restart
 == 다시 시작
@@ -6106,6 +6118,9 @@ Sends a command to the antibot
 Separate with commas
 == 쉼표로 구분
 
+Sequential
+== Sequential setting
+
 Server
 == 서버
 
@@ -6412,6 +6427,9 @@ Show important server prompts and Echo messages as popups
 Show important server prompts as notifications
 == 중요한 서버 프롬프트를 알림으로 표시
 
+Show in Dynamic Island
+== Dynamic Island에 표시
+
 Show info about the map with name r gives (current map by default)
 == 이름이 r 인 맵에 대한 정보 표시 (기본값은 현재 맵)
 
@@ -6453,12 +6471,6 @@ Show local time always
 
 Show logs of the last i seconds
 == 마지막 i 초의 로그 표시
-
-Show lyrics translation when available
-== 번역이 있을 때 가사 번역 표시
-
-Show lyrics transliteration when available
-== 음역이 있을 때 가사 음역 표시
 
 Show moving tiles in entities
 == 엔티티에 움직이는 타일 표시
@@ -6600,6 +6612,9 @@ Show tiles layers from BG map
 
 Show toast
 == 토스트 표시
+
+Show translation
+== Show translation setting
 
 Show unknown server messages
 == 알 수 없는 서버 메시지 표시
@@ -7660,6 +7675,9 @@ Translating to %s...
 Translation backend invalid, sending original
 == 번역 백엔드가 유효하지 않음, 원문 전송
 
+Translation color
+== Translation color setting
+
 Translation queue full, sending original
 == 번역 대기열이 가득 참, 원문 전송
 
@@ -7888,8 +7906,8 @@ Unmute player with list index
 Unmute:
 == 음소거 해제：
 
-Unplayed lyrics word color
-== 재생되지 않은 가사 단어 색상
+Unplayed word color
+== Unplayed word color setting
 
 Unpredicted ghost opacity
 == 예측되지 않은 고스트 불투명도
@@ -8824,6 +8842,15 @@ Zoom out
 启用新版设置页面 UI
 == 새 설정 페이지 UI 활성화
 
+启用歌词 HUD 叠加层
+== Enable lyrics HUD overlay
+
+启用歌词本地缓存
+== Enable local lyrics cache
+
+启用歌词逐字高亮
+== Enable karaoke word highlighting
+
 启用玩家统计面板
 == 플레이어 통계 패널 활성화
 
@@ -8959,6 +8986,9 @@ Zoom out
 将性能调试日志写入专用文件
 == 성능 디버그 로그를 전용 파일에 기록
 
+将歌词显示在灵动岛内
+== Show lyrics in Dynamic Island
+
 屏蔽词列表（用,分隔）
 == 차단 단어 목록(,로 구분)
 
@@ -8967,6 +8997,9 @@ Zoom out
 
 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
 == feat-003 공유 UI 프리미티브 dogfood 페이지 표시(QmClient 설정 페이지를 대체하여 11개 프리미티브 + spring/easing 애니메이션 시각적 검증용)
+
+已播放词颜色
+== Played word color
 
 已读的设置界面新功能标识
 == 읽은 설정 인터페이스 새 기능 표시
@@ -9007,6 +9040,9 @@ Zoom out
 无系统媒体状态时隐藏歌词
 == 시스템 미디어 상태 없을 때 가사 숨기기
 
+时钟漂移硬切阈值 ms
+== Clock drift hard-snap threshold ms
+
 时间耗尽后自动禁用速通计时器
 == 시간 초과 후 스피드런 타이머 자동 비활성화
 
@@ -9021,6 +9057,12 @@ Zoom out
 
 显示地图进度调试点路线
 == 맵 진행률 체크포인트 경로 표시
+
+显示歌词翻译（若有）
+== Show lyrics translation when available
+
+显示歌词音译（若有）
+== Show lyrics transliteration when available
 
 显示版本过旧提示
 == 버전이 너무 오래됨 알림 표시
@@ -9055,6 +9097,9 @@ Zoom out
 替换方式 0=Regex 1=Full 2=Both
 == 대체 방식 0=Regex 1=Full 2=Both
 
+未播放词颜色
+== Unplayed word color
+
 本体和分身都被冻结时，自动切换到先解冻的那个
 == 본체와 더미가 모두 얼었을 때, 먼저 해동되는 쪽으로 자동 전환
 
@@ -9085,6 +9130,15 @@ Zoom out
 根据文本输入焦点自动启用或关闭 IME
 == 텍스트 입력 포커스에 따라 IME 자동 활성화 또는 비활성화
 
+检测新歌时自动联网拉取歌词
+== Auto fetch lyrics online when a new song is detected
+
+歌词 HTTP 请求超时 ms
+== Lyrics HTTP request timeout ms
+
+歌词 HUD 贴边外边距 px
+== Lyrics HUD edge margin px
+
 歌词下一行颜色
 == 가사 다음 줄 색상
 
@@ -9098,16 +9152,46 @@ Zoom out
 == 가사 외곽선 투명도
 
 歌词描边颜色
-== 가사 외곽선 색상
+== Lyrics outline color
+
+歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+== Lyrics providers that ignore cache during search
+
+歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
+== Lyrics search strategy
+
+歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
+== Lyrics source
+
+歌词整体不透明度 %
+== Lyrics overall opacity percent
+
+歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
+== Lyrics per-source match thresholds
+
+歌词模糊匹配评分阈值
+== Lyrics fuzzy match score threshold
 
 歌词淡入淡出时间
 == 가사 페이드 인/아웃 시간
+
+歌词缓存过期天数（0=永久）
+== Lyrics cache expiry days
+
+歌词翻译/音译颜色
+== Lyrics translation/transliteration color
 
 歌词背景透明度
 == 가사 배경 투명도
 
 歌词背景颜色
-== 가사 배경 색상
+== Lyrics background color
+
+歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
+== Lyrics auto-search source order and enabled list
+
+歌词行间距 px
+== Lyrics line spacing px
 
 歌词超长时跑马灯
 == 가사가 너무 길 때 마키
@@ -9145,6 +9229,18 @@ Zoom out
 死亡后显示记分牌
 == 사망 후 점수판 표시
 
+活动行上方显示行数
+== Lines shown above active line
+
+活动行下方显示行数
+== Lines shown below active line
+
+活动行字号 px
+== Active lyrics line font size px
+
+活动行缩放百分比
+== Active lyrics line scale percent
+
 深度冻结图块的叠加实体 alpha (0-100)
 == 깊은 빙결 타일의 오버레이 엔티티 알파 (0-100)
 
@@ -9162,6 +9258,9 @@ Zoom out
 
 激光辉光强度 (0-100)
 == 레이저 광선 강도 (0-100)
+
+灵动岛 HUD 编辑器贴边外边距 px
+== Dynamic Island HUD editor edge margin px
 
 灵动岛使用原版样式
 == 다이나믹 아일랜드 오리지널 스타일 사용
@@ -9517,6 +9616,9 @@ Zoom out
 菜单不透明度 (Menu opacity 0-100)
 == 메뉴 불투명도 (Menu opacity 0-100)
 
+行切换滚动时长 ms
+== Line switch scroll duration ms
+
 被屏蔽词控制台颜色
 == 차단된 단어 콘솔 색상
 
@@ -9649,8 +9751,17 @@ Zoom out
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == 서버 입장 시 통계 초기화 (0=누적 통계, 1=입장 시마다 초기화)
 
+远离行每行缩小百分比
+== Lyrics scale shrink percent per distance line
+
+远离行每行透明度衰减 %
+== Lyrics opacity fade percent per distance line
+
 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
 == 원격 파티클: 중앙 서버를 통해 다른 플레이어 동기화 및 렌더링 (상대방이 로컬+원격을 켜야 함)
+
+逐字边缘软过渡宽度 px
+== Karaoke highlight soft edge width px
 
 通用界面透明度
 == 일반 UI 투명도
@@ -9721,6 +9832,9 @@ Zoom out
 速通计时器秒
 == 스피드런 타이머 초
 
+重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
+== Default weapon requested after respawn
+
 锤人换皮肤
 == 망치로 스킨 변경
 
@@ -9741,6 +9855,12 @@ Zoom out
 
 非好友使用默认皮肤
 == 친구가 아닌 플레이어에게 기본 스킨 사용
+
+非活动行字号 px
+== Inactive lyrics line font size px
+
+非活动行最小不透明度 %
+== Inactive lyrics line minimum opacity percent
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == 파이 메뉴 이름 변경 목록 (|로 구분, 예: 현몽1|현몽2)

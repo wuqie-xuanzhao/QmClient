@@ -394,6 +394,7 @@ void CMenuBackground::LoadMenuBackground(bool HasDayHint, bool HasNightHint)
 	m_pImages = m_pBackgroundImages;
 
 	ResetPositions();
+	InvalidateCurrentPosition();
 
 	char aMenuMapClean[IO_MAX_PATH_LENGTH];
 	str_copy(aMenuMapClean, g_Config.m_ClMenuMap, sizeof(aMenuMapClean));
@@ -709,8 +710,6 @@ bool CMenuBackground::Render()
 
 	CMapLayers::OnRender();
 
-	m_CurrentPosition = -1;
-
 	return true;
 }
 
@@ -721,21 +720,21 @@ CCamera *CMenuBackground::GetCurCamera()
 
 void CMenuBackground::ChangePosition(int PositionNumber)
 {
-	if(PositionNumber != m_CurrentPosition)
-	{
-		if(PositionNumber >= POS_START && PositionNumber < NUM_POS)
-		{
-			m_CurrentPosition = PositionNumber;
-		}
-		else
-		{
-			m_CurrentPosition = POS_START;
-		}
+	const int NewPosition = PositionNumber >= POS_START && PositionNumber < NUM_POS ? PositionNumber : POS_START;
+	if(NewPosition == m_CurrentPosition)
+		return;
 
-		m_ChangedPosition = true;
-	}
+	m_CurrentPosition = NewPosition;
+	m_ChangedPosition = true;
 	m_AnimationStartPos = m_Camera.m_Center;
 	m_RotationCenter = m_aPositions[m_CurrentPosition];
+	m_MoveTime = 0.0f;
+}
+
+void CMenuBackground::InvalidateCurrentPosition()
+{
+	m_CurrentPosition = -1;
+	m_ChangedPosition = false;
 	m_MoveTime = 0.0f;
 }
 

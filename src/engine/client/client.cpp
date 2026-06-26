@@ -3953,6 +3953,8 @@ void CClient::Run()
 
 	auto LastTime = time_get_nanoseconds();
 	int64_t LastRenderTime = time_get();
+	int LastIdleRenderThrottleRate = -1;
+	int LastRequestedRenderThrottleRate = -1;
 
 	while(true)
 	{
@@ -4041,6 +4043,8 @@ void CClient::Run()
 			g_Config.m_ClEditor = g_Config.m_ClEditor ^ 1;
 		}
 
+		int IdleRenderThrottleRate = 0;
+
 		// render
 		{
 			if(g_Config.m_ClEditor)
@@ -4072,6 +4076,16 @@ void CClient::Run()
 			bool AsyncRenderOld = g_Config.m_GfxAsyncRenderOld;
 
 			int GfxRefreshRate = g_Config.m_GfxRefreshRate;
+			int RequestedRenderThrottleRate = 0;
+			if(g_Config.m_GfxVsync == 0 && GfxRefreshRate == 0)
+			{
+				RequestedRenderThrottleRate = GameClient()->RenderThrottleRefreshRate();
+				if(RequestedRenderThrottleRate > 0)
+				{
+					GfxRefreshRate = std::clamp(RequestedRenderThrottleRate, 10, 10000);
+					IdleRenderThrottleRate = GfxRefreshRate;
+				}
+			}
 
 #if defined(CONF_VIDEORECORDER)
 			// keep rendering synced
@@ -4079,12 +4093,24 @@ void CClient::Run()
 			{
 				AsyncRenderOld = false;
 				GfxRefreshRate = 0;
+				RequestedRenderThrottleRate = 0;
+				IdleRenderThrottleRate = 0;
 			}
 #endif
+			if(QmPerfEnabled() && (IdleRenderThrottleRate != LastIdleRenderThrottleRate || RequestedRenderThrottleRate != LastRequestedRenderThrottleRate))
+			{
+				char aPayload[192];
+				str_format(aPayload, sizeof(aPayload), "event=idle_render_throttle rate=%d requested=%d configured=%d vsync=%d state=%d render_active=%d async_old=%d",
+					IdleRenderThrottleRate, RequestedRenderThrottleRate, g_Config.m_GfxRefreshRate, g_Config.m_GfxVsync, State(), IsRenderActive ? 1 : 0, AsyncRenderOld ? 1 : 0);
+				QmPerfLogPayload("perf/main_thread", aPayload, this);
+				LastIdleRenderThrottleRate = IdleRenderThrottleRate;
+				LastRequestedRenderThrottleRate = RequestedRenderThrottleRate;
+			}
+			const int64_t RenderFrameTicks = GfxRefreshRate > 0 ? time_freq() / (int64_t)GfxRefreshRate : 0;
 
 			if(IsRenderActive &&
 				(!AsyncRenderOld || m_pGraphics->IsIdle()) &&
-				(!GfxRefreshRate || (time_freq() / (int64_t)g_Config.m_GfxRefreshRate) <= Now - LastRenderTime))
+				(!GfxRefreshRate || RenderFrameTicks <= Now - LastRenderTime))
 			{
 				// update frametime
 				m_RenderFrameTime = (Now - m_LastRenderTime) / (float)time_freq();
@@ -4106,7 +4132,7 @@ void CClient::Run()
 				m_FrameTimeAverage = m_FrameTimeAverage * 0.9f + m_RenderFrameTime * 0.1f;
 
 				// keep the overflow time - it's used to make sure the gfx refreshrate is reached
-				int64_t AdditionalTime = g_Config.m_GfxRefreshRate ? ((Now - LastRenderTime) - (time_freq() / (int64_t)g_Config.m_GfxRefreshRate)) : 0;
+				int64_t AdditionalTime = GfxRefreshRate ? ((Now - LastRenderTime) - RenderFrameTicks) : 0;
 				// if the value is over the frametime of a 60 fps frame, reset the additional time (drop the frames, that are lost already)
 				if(AdditionalTime > (time_freq() / 60))
 					AdditionalTime = (time_freq() / 60);
@@ -4116,22 +4142,22 @@ void CClient::Run()
 				{
 					CPerfTimer StageTimer;
 					Render();
-					char aExtra[64];
-					str_format(aExtra, sizeof(aExtra), "state=%d", State());
+					char aExtra[96];
+					str_format(aExtra, sizeof(aExtra), "state=%d render_rate=%d throttle=%d", State(), GfxRefreshRate, RequestedRenderThrottleRate);
 					QmPerfLogStage("perf/main_thread", "frame_render", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
 				}
 				{
 					CPerfTimer StageTimer;
 					m_pGraphics->Swap();
-					char aExtra[64];
-					str_format(aExtra, sizeof(aExtra), "state=%d", State());
+					char aExtra[96];
+					str_format(aExtra, sizeof(aExtra), "state=%d render_rate=%d throttle=%d", State(), GfxRefreshRate, RequestedRenderThrottleRate);
 					QmPerfLogStage("perf/main_thread", "graphics_swap", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
 				}
 			}
 			else if(!IsRenderActive)
 			{
 				// if the client does not render, it should reset its render time to a time where it would render the first frame, when it wakes up again
-				LastRenderTime = g_Config.m_GfxRefreshRate ? (Now - (time_freq() / (int64_t)g_Config.m_GfxRefreshRate)) : Now;
+				LastRenderTime = GfxRefreshRate ? (Now - RenderFrameTicks) : Now;
 			}
 		}
 
@@ -4149,6 +4175,17 @@ void CClient::Run()
 		auto Now = time_get_nanoseconds();
 		decltype(Now) SleepTimeInNanoSeconds{0};
 		bool Slept = false;
+		const auto WaitWithNetwork = [&](std::chrono::nanoseconds WaitTime) {
+			auto SleepTimeInNanoSecondsInner = WaitTime;
+			auto NowInner = Now;
+			while(std::chrono::duration_cast<std::chrono::microseconds>(SleepTimeInNanoSecondsInner) > 0us)
+			{
+				net_socket_read_wait(m_aNetClient[CONN_MAIN].m_Socket, SleepTimeInNanoSecondsInner);
+				auto NowInnerCalc = time_get_nanoseconds();
+				SleepTimeInNanoSecondsInner -= (NowInnerCalc - NowInner);
+				NowInner = NowInnerCalc;
+			}
+		};
 		if(g_Config.m_ClRefreshRateInactive && !m_pGraphics->WindowActive())
 		{
 			SleepTimeInNanoSeconds = (std::chrono::nanoseconds(1s) / (int64_t)g_Config.m_ClRefreshRateInactive) - (Now - LastTime);
@@ -4158,15 +4195,13 @@ void CClient::Run()
 		else if(g_Config.m_ClRefreshRate)
 		{
 			SleepTimeInNanoSeconds = (std::chrono::nanoseconds(1s) / (int64_t)g_Config.m_ClRefreshRate) - (Now - LastTime);
-			auto SleepTimeInNanoSecondsInner = SleepTimeInNanoSeconds;
-			auto NowInner = Now;
-			while(std::chrono::duration_cast<std::chrono::microseconds>(SleepTimeInNanoSecondsInner) > 0us)
-			{
-				net_socket_read_wait(m_aNetClient[CONN_MAIN].m_Socket, SleepTimeInNanoSecondsInner);
-				auto NowInnerCalc = time_get_nanoseconds();
-				SleepTimeInNanoSecondsInner -= (NowInnerCalc - NowInner);
-				NowInner = NowInnerCalc;
-			}
+			WaitWithNetwork(SleepTimeInNanoSeconds);
+			Slept = true;
+		}
+		else if(IdleRenderThrottleRate > 0)
+		{
+			SleepTimeInNanoSeconds = (std::chrono::nanoseconds(1s) / (int64_t)IdleRenderThrottleRate) - (Now - LastTime);
+			WaitWithNetwork(SleepTimeInNanoSeconds);
 			Slept = true;
 		}
 		if(Slept)
@@ -6091,6 +6126,21 @@ int main(int argc, const char **argv)
 		char aPerfLogCompletePath[IO_MAX_PATH_LENGTH];
 		pStorage->GetCompletePath(IStorage::TYPE_SAVE, aPerfLogPath, aPerfLogCompletePath, sizeof(aPerfLogCompletePath));
 		IOHANDLE PerfLogfile = pStorage->OpenFile(aPerfLogPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(!PerfLogfile)
+		{
+			fs_makedir_rec_for(aPerfLogCompletePath);
+			PerfLogfile = io_open(aPerfLogCompletePath, IOFLAG_WRITE);
+		}
+		if(!PerfLogfile)
+		{
+			char aWorkingDir[IO_MAX_PATH_LENGTH];
+			if(fs_getcwd(aWorkingDir, sizeof(aWorkingDir)))
+			{
+				str_format(aPerfLogCompletePath, sizeof(aPerfLogCompletePath), "%s/%s", aWorkingDir, aPerfLogPath);
+				fs_makedir_rec_for(aPerfLogCompletePath);
+				PerfLogfile = io_open(aPerfLogCompletePath, IOFLAG_WRITE);
+			}
+		}
 		if(PerfLogfile)
 		{
 			pFuturePerfFileLogger->Set(log_logger_prefix_file(PerfLogfile, "perf/"));

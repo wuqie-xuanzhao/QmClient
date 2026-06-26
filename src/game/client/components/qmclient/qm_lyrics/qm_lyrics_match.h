@@ -1,9 +1,11 @@
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_QM_LYRICS_QM_LYRICS_MATCH_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_QM_LYRICS_QM_LYRICS_MATCH_H
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace QmLyrics
 {
@@ -68,6 +70,16 @@ namespace QmLyrics
 	{
 		return ScoreMatch(Q, C, SMatchWeights{});
 	}
+
+	struct SCandidateApplyRank
+	{
+		size_t m_Index = 0;
+		float m_Score = 0.0f;
+		float m_SourceScore = 0.0f;
+	};
+
+	float CandidateApplyRankScore(const SCandidateApplyRank &Rank);
+	void SortCandidateApplyRanks(std::vector<SCandidateApplyRank> *pvRanks);
 
 } // namespace QmLyrics
 

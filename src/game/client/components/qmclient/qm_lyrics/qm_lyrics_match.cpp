@@ -36,9 +36,10 @@ namespace QmLyrics
 			};
 
 			auto StripBracketed = [&](char OpenCh, char CloseCh) {
-				while(true)
+				size_t Search = 0;
+				while(Search < Text.size())
 				{
-					const size_t Open = Text.find(OpenCh);
+					const size_t Open = Text.find(OpenCh, Search);
 					if(Open == std::string::npos)
 						break;
 					const size_t Close = Text.find(CloseCh, Open + 1);
@@ -46,9 +47,14 @@ namespace QmLyrics
 						break;
 					std::string_view Inside(Text.data() + Open + 1, Close - Open - 1);
 					if(ContainsAnyToken(Inside))
+					{
 						Text.erase(Open, Close - Open + 1);
+						Search = Open;
+					}
 					else
-						break; // 没含修饰 token，保留以避免误删（如 "(Remix)" 误删但 "(Acoustic Version)" 含 token 也删）
+					{
+						Search = Close + 1;
+					}
 				}
 			};
 			StripBracketed('(', ')');
@@ -547,6 +553,18 @@ namespace QmLyrics
 		if(LocalFingerprint.empty() || RemoteFingerprint.empty())
 			return 0.0f;
 		return std::round(JaroWinklerSimilarity(LocalFingerprint, RemoteFingerprint) * 100.0f);
+	}
+
+	float CandidateApplyRankScore(const SCandidateApplyRank &Rank)
+	{
+		return Rank.m_Score + std::clamp(Rank.m_SourceScore, 0.0f, 1.0f) * 0.01f;
+	}
+
+	void SortCandidateApplyRanks(std::vector<SCandidateApplyRank> *pvRanks)
+	{
+		std::stable_sort(pvRanks->begin(), pvRanks->end(), [](const SCandidateApplyRank &A, const SCandidateApplyRank &B) {
+			return CandidateApplyRankScore(A) > CandidateApplyRankScore(B);
+		});
 	}
 
 } // namespace QmLyrics

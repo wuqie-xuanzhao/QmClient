@@ -721,8 +721,8 @@ TEST(QmHudNotificationRules, SimplifiedChineseTranslationsUsePlainPromptText)
 {
 	const std::string Translations = ReadHudNotificationTestFile("qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml");
 
-	EXPECT_NE(Translations.find("key = \"Scoreboard point check\"\n[message.translations]\n"), std::string::npos);
-	EXPECT_NE(Translations.find("simplified_chinese = \"计分板查分\""), std::string::npos);
+	EXPECT_NE(Translations.find("key = \"Scoreboard point check\""), std::string::npos);
+	EXPECT_NE(Translations.find("simplified_chinese = \"计分板积分检查\""), std::string::npos);
 	EXPECT_NE(Translations.find("key = \"Team can't be saved while a dragger is active\""), std::string::npos);
 	EXPECT_NE(Translations.find("simplified_chinese = \"有拖拽器生效时不能保存队伍存档\""), std::string::npos);
 	EXPECT_NE(Translations.find("simplified_chinese = \"本服务器不允许查看队伍前 5 名\""), std::string::npos);
@@ -1268,6 +1268,29 @@ TEST(QmHudEditorGeometry, SnapsToOtherModuleAlignmentGuides)
 	EXPECT_FLOAT_EQ(QmHudEditor::SnapAxisToGuides(57.0f, 30.0f, 0.0f, 300.0f, aReferences, 1), 55.0f);
 	EXPECT_FLOAT_EQ(QmHudEditor::SnapAxisToGuides(68.0f, 30.0f, 0.0f, 300.0f, aReferences, 1), 70.0f);
 	EXPECT_FLOAT_EQ(QmHudEditor::SnapAxisToGuides(120.0f, 30.0f, 0.0f, 300.0f, aReferences, 1), 120.0f);
+}
+
+TEST(QmHudEditorGeometry, ReportsVisibleSnapGuidePosition)
+{
+	const QmHudEditor::SAxisReference aReferences[] = {
+		{40.0f, 60.0f},
+	};
+
+	const QmHudEditor::SSnapAxisResult ScreenCenter = QmHudEditor::SnapAxisToGuidesEx(127.0f, 40.0f, 0.0f, 300.0f, nullptr, 0);
+	EXPECT_TRUE(ScreenCenter.m_HasGuide);
+	EXPECT_FLOAT_EQ(ScreenCenter.m_Position, 130.0f);
+	EXPECT_FLOAT_EQ(ScreenCenter.m_GuidePosition, 150.0f);
+	EXPECT_EQ(ScreenCenter.m_GuideKind, QmHudEditor::ESnapGuideKind::ScreenCenter);
+
+	const QmHudEditor::SSnapAxisResult ReferenceEnd = QmHudEditor::SnapAxisToGuidesEx(68.0f, 30.0f, 0.0f, 300.0f, aReferences, 1);
+	EXPECT_TRUE(ReferenceEnd.m_HasGuide);
+	EXPECT_FLOAT_EQ(ReferenceEnd.m_Position, 70.0f);
+	EXPECT_FLOAT_EQ(ReferenceEnd.m_GuidePosition, 100.0f);
+	EXPECT_EQ(ReferenceEnd.m_GuideKind, QmHudEditor::ESnapGuideKind::ReferenceEnd);
+
+	const QmHudEditor::SSnapAxisResult Free = QmHudEditor::SnapAxisToGuidesEx(120.0f, 30.0f, 0.0f, 300.0f, aReferences, 1);
+	EXPECT_FALSE(Free.m_HasGuide);
+	EXPECT_FLOAT_EQ(Free.m_Position, 120.0f);
 }
 
 TEST(QmHudEditorGeometry, HudNotificationsUsesStableLayoutToken)

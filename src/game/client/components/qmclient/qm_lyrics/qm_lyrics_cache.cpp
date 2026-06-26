@@ -108,6 +108,20 @@ namespace QmLyrics
 		return aOut;
 	}
 
+	bool IsValidCachePayloadFileName(std::string_view FileName)
+	{
+		if(FileName.size() != 21 || FileName.substr(16) != ".json")
+			return false;
+		for(size_t i = 0; i < 16; ++i)
+		{
+			const char C = FileName[i];
+			const bool HexDigit = (C >= '0' && C <= '9') || (C >= 'a' && C <= 'f') || (C >= 'A' && C <= 'F');
+			if(!HexDigit)
+				return false;
+		}
+		return true;
+	}
+
 	std::vector<std::string> CCacheIndex::Upsert(const SCacheEntry &Entry, int MaxEntries)
 	{
 		std::vector<std::string> vEvicted;
@@ -155,6 +169,17 @@ namespace QmLyrics
 			return nullptr;
 		It->second.m_LastUsedAt = NowUnixSec;
 		return &It->second;
+	}
+
+	bool CCacheIndex::Remove(std::string_view Key, std::string *pFileName)
+	{
+		auto It = m_mEntries.find(std::string(Key));
+		if(It == m_mEntries.end())
+			return false;
+		if(pFileName != nullptr)
+			*pFileName = It->second.m_FileName;
+		m_mEntries.erase(It);
+		return true;
 	}
 
 	std::vector<std::string> CCacheIndex::EvictExpired(int TtlDays, int64_t NowUnixSec)
@@ -258,7 +283,7 @@ namespace QmLyrics
 			Entry.m_Score = (float)JsonDouble(&(*pItem)["score"]);
 			Entry.m_LastUsedAt = JsonInt(&(*pItem)["used"]);
 			Entry.m_StoredAt = JsonInt(&(*pItem)["stored"]);
-			if(Entry.m_Key.empty() || Entry.m_FileName.empty())
+			if(Entry.m_Key.empty() || !IsValidCachePayloadFileName(Entry.m_FileName))
 				continue;
 			mNew.emplace(Entry.m_Key, std::move(Entry));
 		}
@@ -335,7 +360,7 @@ namespace QmLyrics
 
 	bool LoadCachePayload(IStorage *pStorage, const char *pFileName, SCachePayload *pOut)
 	{
-		if(pStorage == nullptr || pFileName == nullptr || pFileName[0] == '\0' || pOut == nullptr)
+		if(pStorage == nullptr || pFileName == nullptr || !IsValidCachePayloadFileName(pFileName) || pOut == nullptr)
 			return false;
 		const std::string Path = CachePayloadPath(pFileName);
 		char *pJsonText = pStorage->ReadFileStr(Path.c_str(), IStorage::TYPE_SAVE);
@@ -377,7 +402,7 @@ namespace QmLyrics
 
 	bool SaveCachePayload(IStorage *pStorage, const char *pFileName, const SCachePayload &Payload)
 	{
-		if(pFileName == nullptr || pFileName[0] == '\0' || Payload.m_RawText.empty() || !EnsureCacheDir(pStorage))
+		if(pFileName == nullptr || !IsValidCachePayloadFileName(pFileName) || Payload.m_RawText.empty() || !EnsureCacheDir(pStorage))
 			return false;
 
 		CJsonStringWriter Writer;
@@ -417,7 +442,7 @@ namespace QmLyrics
 
 	void RemoveCachePayload(IStorage *pStorage, const char *pFileName)
 	{
-		if(pStorage == nullptr || pFileName == nullptr || pFileName[0] == '\0')
+		if(pStorage == nullptr || pFileName == nullptr || !IsValidCachePayloadFileName(pFileName))
 			return;
 		const std::string Path = CachePayloadPath(pFileName);
 		pStorage->RemoveFile(Path.c_str(), IStorage::TYPE_SAVE);

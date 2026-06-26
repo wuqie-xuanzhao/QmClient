@@ -36,6 +36,9 @@ namespace QmLyrics
 		// 查找；命中时更新 m_LastUsedAt 为 NowUnixSec 并返回条目指针；未命中返回 nullptr。
 		const SCacheEntry *Lookup(std::string_view Key, int64_t NowUnixSec);
 
+		// 按 key 删除条目；如果需要清理 payload，pFileName 接收原文件名。
+		bool Remove(std::string_view Key, std::string *pFileName = nullptr);
+
 		// 删除过期条目（StoredAt + TtlDays 早于 NowUnixSec）。TtlDays<=0 视作永不过期。
 		// 返回被淘汰的文件名列表。
 		std::vector<std::string> EvictExpired(int TtlDays, int64_t NowUnixSec);
@@ -59,6 +62,7 @@ namespace QmLyrics
 	// FileName：sha256(Key) 取前 16 hex 字符 + ".json"。
 	std::string BuildCacheKey(std::string_view Title, std::string_view Artist, std::string_view Album, int DurationSec);
 	std::string FileNameForKey(std::string_view Key);
+	bool IsValidCachePayloadFileName(std::string_view FileName);
 
 	struct SCachePayload
 	{

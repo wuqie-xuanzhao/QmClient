@@ -95,8 +95,8 @@ Activate
 Activate all
 Active color
 Active disconnect
-Active lyrics line font size in px
-Active lyrics line scale percent
+Active line font size
+Active line scale
 Active moderator mode disabled because you are afk.
 Active moderator mode disabled for you.
 Active moderator mode enabled for you.
@@ -186,7 +186,7 @@ Always show chat
 Always show other players' hook collision lines
 Always show own player's hook collision line
 Always translate
-AMLL TTML DB API base URL (can be changed to a mirror)
+AMLL TTML DB API 基地址（可改成镜像）
 Amount
 And pick one randomly
 Angle
@@ -261,7 +261,7 @@ Auto concurrency: %d (smart default)
 Auto disable when time expires
 Auto enable in Gores mode
 Auto execute
-Auto fetch lyrics online when a new song is detected
+Auto fetch lyrics
 Auto gain control for mic (AGC, experimental)
 Auto greet friends entering map
 Auto hot-reload after external saves
@@ -323,6 +323,7 @@ Behavior
 Behavior type
 Benchmark frame times for number of seconds to file, then quit
 Best
+Best match
 Bind key to execute a command or view keybindings
 Bind Wheel
 Bind Wheel Key
@@ -350,6 +351,7 @@ Button - Enabled
 Button position is outside of the screen.
 Buttons
 c = Player position
+Cache TTL
 Calculate unfinished maps for player in certain mode
 Call vote
 Camera
@@ -449,6 +451,7 @@ Client message
 Client performance pressure is high
 Client prediction time is high
 Client uptime
+Clock drift hard-snap
 Close
 Close the demo player
 Color
@@ -675,6 +678,8 @@ Displays your frames per second
 Displays your local time
 Displays your ping to the current server
 Dissolve
+Distance fade per line
+Distance scale falloff
 Do not translate server messages
 Donor (drag parts from left)
 Donor Asset
@@ -766,12 +771,9 @@ Enable Gores mode
 Enable gun sound
 Enable highlighted chat sound
 Enable Jelly Tee
-Enable karaoke word highlighting
 Enable keyword reply
-Enable local lyrics cache
 Enable long pain sound (used when shooting in freeze)
 Enable lyrics
-Enable lyrics HUD overlay
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 Enable mod weapon on %d: %s
 Enable pie menu
@@ -990,11 +992,13 @@ Grabs
 Gradient
 Gradient color
 Graphics
+Graphics backend
 Graphics card
 Greeting text
 Grenade
 Group name
 Guide line color
+Gun
 Hammer
 Hammer Mode:
 Hammer skin steal
@@ -1034,6 +1038,7 @@ Hide sponsor QR code
 Hide toast
 Hide UI for focused gameplay
 Hide weapon muzzle flashes
+Hide when paused
 Hide without media state
 High Detail
 High process priority
@@ -1071,12 +1076,12 @@ I am a robot
 I am away from the game window
 I muted you
 Idiot word filter
+Ignore cache providers
 Import from clipboard
 Improved Anti Ping
 In memory of me
 Inactive color
-Inactive lyrics line font size in px
-Inactive lyrics line minimum opacity percent
+Inactive line opacity
 Incoming language
 Indicate map finish
 Indicator alive color
@@ -1145,7 +1150,7 @@ Jump
 Jump hint text
 k = Resend loss
 Kaomoji
-Karaoke highlight soft edge width in px
+Karaoke edge softness
 Key Bindings
 Key Presses
 Key Sticking: ?
@@ -1201,10 +1206,14 @@ Lht.
 LibreTranslate
 LibreTranslate API Key
 LibreTranslate 端点
+Line scroll duration
+Line spacing
 Line width
 Linear
 Lines
 Lines %d - %d (%s)
+Lines above active
+Lines below active
 List all commands that are available in practice mode
 List all commands which are accessible for given access level
 List all commands which are accessible for users
@@ -1252,12 +1261,17 @@ Loading sound files
 Loading…
 Local
 Local + Dummy
+Local ESLRC file
+Local LRC file
+Local media folders
+Local music file
 Local only
 Local particle effects
 Local saves
 Local test mode
 Local test mode, no server needed
 Local Time
+Local TTML file
 Local-only
 Lock delay
 Lock team
@@ -1268,29 +1282,15 @@ Logout of econ
 Logout of rcon
 Long press on a touch button to select it.
 Low to high
-LRCLIB API base URL (can be changed to a mirror)
+LRCLIB API 基地址（可改成镜像）
 Lyrics
-Lyrics auto-search source order and enable list (empty=default; use | as separator, e.g. QQ|Kugou|Netease|LrcLib)
-Lyrics cache expiry days (0=never expire)
-Lyrics clock drift hard snap threshold in ms
-Lyrics fuzzy match score threshold
 Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-Lyrics HTTP request timeout in ms
-Lyrics HUD edge margin in px
-Lyrics line spacing in px
-Lyrics line switch scroll duration in ms
-Lyrics lines shown above active line
-Lyrics lines shown below active line
+Lyrics HTTP timeout
 Lyrics local media library folders (use | as separator)
 Lyrics manual timeline offset in ms (runtime step 500ms)
-Lyrics opacity fade percent per distance line
-Lyrics overall opacity percent
-Lyrics per-source match thresholds (empty=global threshold; e.g. QQ=60|LrcLib=70)
-Lyrics scale shrink percent per distance line
-Lyrics search strategy (0=source order, 1=parallel best match)
-Lyrics source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-Lyrics sources that ignore cache during search (use | as separator, e.g. QQ|Kugou)
-Lyrics translation and transliteration color
+Lyrics search type
+Lyrics source
+Lyrics source order
 Lyrics: empty track
 Lyrics: no lyrics found
 Lyrics: no media playing
@@ -1332,6 +1332,7 @@ Mark the end of a cut (right click to reset)
 Mark the end of a demo cut
 Markers
 Match %d of %d
+Match score threshold
 Matched with callable peer
 Max CSVs
 Max demos
@@ -1561,6 +1562,7 @@ Opt out of spectator count and hide auth status to non-authed players (1 = hidde
 Optimistic prediction along stable direction
 Option color
 Other
+Other lines font size
 Others
 Others only
 Outgoing language
@@ -1605,6 +1607,7 @@ Password incorrect
 Pause
 Pause the current demo
 Pause/unpause game
+Per-word highlight (karaoke)
 Personal best:
 Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status
 Pet
@@ -1625,7 +1628,7 @@ Play the current demo
 Play/Pause
 Play/pause the current demo
 Playback volume
-Played lyrics word color
+Played word color
 Player
 Player already invited
 Player country:
@@ -1701,6 +1704,7 @@ Profiles file
 Progress bar color
 Progress bar height
 Progress bar width
+Provider thresholds
 PTT 释放延迟（毫秒）
 Publicly messages everyone your current time in this current running race
 Pulse
@@ -1855,7 +1859,6 @@ Render cut to video
 Render demo
 Render ghosts as circles
 Render tiny tees instead of circles
-Renderer
 Renders your frame rate in the top right
 Repeat message
 Repeat the latest chat message
@@ -1903,6 +1906,7 @@ Reset position of mouse when opening bindwheel
 Reset stats when joining a server
 Reset to defaults
 Reset zone tuning in zone x or in all zones
+Respawn default weapon
 Restart
 Restart in x seconds (0 = abort)
 Restart the client
@@ -2034,6 +2038,7 @@ Sending locally, suggest the other party unmute or confirm they can receive
 Sending, waiting for peer echo
 Sends a command to the antibot
 Separate with commas
+Sequential
 Server
 Server address:
 Server alert
@@ -2136,6 +2141,7 @@ Show HUD
 Show important server prompts
 Show important server prompts and Echo messages as popups
 Show important server prompts as notifications
+Show in Dynamic Island
 Show info about the map with name r gives (current map by default)
 Show information about this server
 Show ingame HUD
@@ -2150,8 +2156,6 @@ Show list of mutes (page 1 by default, 20 entries per page)
 Show list of vote mutes (page 1 by default, 20 entries per page)
 Show local time always
 Show logs of the last i seconds
-Show lyrics translation when available
-Show lyrics transliteration when available
 Show moving tiles in entities
 Show name plates
 Show names in chat in team colors
@@ -2199,6 +2203,7 @@ Show the server rules
 Show the server settings list
 Show tiles layers from BG map
 Show toast
+Show translation
 Show unknown server messages
 Show unpredicted ghosts for other players
 Show voice connection status
@@ -2552,6 +2557,7 @@ Translate:
 Translated text hidden due to streamer mode
 Translating to %s...
 Translation backend invalid, sending original
+Translation color
 Translation queue full, sending original
 Translation service
 Translation Settings
@@ -2628,7 +2634,7 @@ Unmute player with client ID
 Unmute player with IP address
 Unmute player with list index
 Unmute:
-Unplayed lyrics word color
+Unplayed word color
 Unpredicted ghost opacity
 Unregister protocol and file extensions
 Unsaved changes
@@ -2940,6 +2946,9 @@ Zoom out
 启用屏蔽词列表
 启用新版 IME 候选栏
 启用新版设置页面 UI
+启用歌词 HUD 叠加层
+启用歌词本地缓存
+启用歌词逐字高亮
 启用玩家统计面板
 启用皮肤切换动画
 启用皮肤队列轮换
@@ -2985,9 +2994,11 @@ Zoom out
 客户端消息文字渐变颜色
 将 Q 弹 Tee 形变应用到其他玩家
 将性能调试日志写入专用文件
+将歌词显示在灵动岛内
 屏蔽词列表（用,分隔）
 屏蔽词替换字符
 展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）
+已播放词颜色
 已读的设置界面新功能标识
 开关图块的覆盖实体 alpha (0-100)
 忽略语音距离衰减
@@ -3001,11 +3012,14 @@ Zoom out
 提及选项颜色
 旁观时按镜头中心收听
 无系统媒体状态时隐藏歌词
+时钟漂移硬切阈值 ms
 时间耗尽后自动禁用速通计时器
 显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户
 显示分身迷你视图窗口
 显示地图进度条（内测中）
 显示地图进度调试点路线
+显示歌词翻译（若有）
+显示歌词音译（若有）
 显示版本过旧提示
 显示碰撞体积边框
 显示语音连接状态
@@ -3017,6 +3031,7 @@ Zoom out
 智谱AI 模型名称
 智谱AI 端点（留空使用默认）
 替换方式 0=Regex 1=Full 2=Both
+未播放词颜色
 本体和分身都被冻结时，自动切换到先解冻的那个
 本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示
 本地目标语言识别占比阈值
@@ -3027,14 +3042,27 @@ Zoom out
 栖梦侧栏模块排序
 根据位置小数部分显示跳跃提示
 根据文本输入焦点自动启用或关闭 IME
+检测新歌时自动联网拉取歌词
+歌词 HTTP 请求超时 ms
+歌词 HUD 贴边外边距 px
 歌词下一行颜色
 歌词吸附灵动岛阈值
 歌词当前行颜色
 歌词描边透明度
 歌词描边颜色
+歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
+歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
+歌词整体不透明度 %
+歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
+歌词模糊匹配评分阈值
 歌词淡入淡出时间
+歌词缓存过期天数（0=永久）
+歌词翻译/音译颜色
 歌词背景透明度
 歌词背景颜色
+歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
+歌词行间距 px
 歌词超长时跑马灯
 歌词跑马灯速度
 武器切换动画持续时间（毫秒）
@@ -3047,12 +3075,17 @@ Zoom out
 武器弹道辅助线透明度
 武器弹道辅助线颜色
 死亡后显示记分牌
+活动行上方显示行数
+活动行下方显示行数
+活动行字号 px
+活动行缩放百分比
 深度冻结图块的叠加实体 alpha (0-100)
 深度解冻图块的叠加实体 alpha (0-100)
 激光半透明度 (0=完全透明, 100=不透明)
 激光圆角端点 (0=方角, 1=圆角)
 激光大小/粗细 (百分比, 100=默认)
 激光辉光强度 (0-100)
+灵动岛 HUD 编辑器贴边外边距 px
 灵动岛使用原版样式
 灵动岛背景透明度
 灵动岛背景颜色
@@ -3171,6 +3204,7 @@ Zoom out
 自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）
 自定义翻译提示词（覆盖内置提示词）
 菜单不透明度 (Menu opacity 0-100)
+行切换滚动时长 ms
 被屏蔽词控制台颜色
 被解冻时自动取消旁观
 被锤/榴弹击中时随机表情
@@ -3215,7 +3249,10 @@ Zoom out
 输出语音调试日志
 进入 Axiom 社区服务器后自动登录
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
+远离行每行缩小百分比
+远离行每行透明度衰减 %
 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）
+逐字边缘软过渡宽度 px
 通用界面透明度
 通知栏 echo 继承聊天 echo 颜色
 通知栏 echo 覆盖文字颜色
@@ -3239,6 +3276,7 @@ Zoom out
 速通计时器时间（MMSS 格式，兼容旧版）
 速通计时器毫秒
 速通计时器秒
+重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）
 锤人换皮肤
 队伍消息文字渐变颜色
 限幅器阈值（百分比）
@@ -3246,6 +3284,8 @@ Zoom out
 隐藏非好友姓名/部落并显示客户端 ID
 静音麦克风
 非好友使用默认皮肤
+非活动行字号 px
+非活动行最小不透明度 %
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 麦克风音量（百分比）
 [Assets editor blend mode]	Multiply

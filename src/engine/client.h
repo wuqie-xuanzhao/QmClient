@@ -406,6 +406,8 @@ public:
 	virtual void OnShutdown() = 0;
 	virtual void OnRender() = 0;
 	virtual void OnUpdate() = 0;
+	// Render-only idle throttle requested by the game UI; 0 keeps the configured rate.
+	virtual int RenderThrottleRefreshRate() const = 0;
 	virtual void OnStateChange(int NewState, int OldState) = 0;
 	virtual void OnScreenshotTaken(class CImageInfo &&Image) = 0;
 	virtual void OnConnected() = 0;

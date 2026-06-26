@@ -519,6 +519,7 @@ namespace
 
 	void CancelAllSources(CQmLyrics::SImpl *pImpl)
 	{
+		++pImpl->m_SearchGeneration;
 		for(std::unique_ptr<QmLyrics::IQmLyricsSource> &pSource : pImpl->m_vSources)
 		{
 			if(pSource)
@@ -589,28 +590,31 @@ namespace
 
 	bool TryApplyBestCandidate(CQmLyrics::SImpl *pImpl, IStorage *pStorage, const std::string &TrackKey)
 	{
-		float BestScore = -1.0f;
-		const QmLyrics::SSourceCandidate *pBest = nullptr;
-		for(const QmLyrics::SSourceCandidate &Candidate : pImpl->m_vPendingCandidates)
+		std::vector<QmLyrics::SCandidateApplyRank> vRanked;
+		vRanked.reserve(pImpl->m_vPendingCandidates.size());
+		for(size_t i = 0; i < pImpl->m_vPendingCandidates.size(); ++i)
 		{
+			const QmLyrics::SSourceCandidate &Candidate = pImpl->m_vPendingCandidates[i];
 			if(Candidate.m_RawText.empty())
 				continue;
 			const float Score = QmLyrics::Score(pImpl->m_PendingQuery, Candidate.m_Metadata);
 			const float Threshold = (float)MatchThresholdForSource(Candidate.m_SourceId);
 			if(Score < Threshold)
 				continue;
-			if(Score > BestScore)
-			{
-				BestScore = Score;
-				pBest = &Candidate;
-			}
+			vRanked.push_back({i, Score, Candidate.m_SourceScore});
 		}
 
-		if(pBest != nullptr && ApplyCandidate(pImpl, *pBest, BestScore))
+		QmLyrics::SortCandidateApplyRanks(&vRanked);
+
+		for(const QmLyrics::SCandidateApplyRank &Ranked : vRanked)
 		{
-			StoreCandidateInCache(pImpl, pStorage, TrackKey, *pBest, BestScore);
-			pImpl->m_vPendingCandidates.clear();
-			return true;
+			const QmLyrics::SSourceCandidate &Candidate = pImpl->m_vPendingCandidates[Ranked.m_Index];
+			if(ApplyCandidate(pImpl, Candidate, Ranked.m_Score))
+			{
+				StoreCandidateInCache(pImpl, pStorage, TrackKey, Candidate, Ranked.m_Score);
+				pImpl->m_vPendingCandidates.clear();
+				return true;
+			}
 		}
 		return false;
 	}
@@ -644,7 +648,10 @@ namespace
 		QmLyrics::SCachePayload Payload;
 		if(!QmLyrics::LoadCachePayload(pStorage, pEntry->m_FileName.c_str(), &Payload))
 		{
-			QmLyrics::RemoveCachePayload(pStorage, pEntry->m_FileName.c_str());
+			std::string FileName = pEntry->m_FileName;
+			pImpl->m_Cache.Remove(EntryKey, &FileName);
+			QmLyrics::RemoveCachePayload(pStorage, FileName.c_str());
+			QmLyrics::SaveCacheIndex(pStorage, pImpl->m_Cache);
 			return false;
 		}
 		const QmLyrics::SSourceCandidate Candidate = CandidateFromPayload(Payload);
@@ -667,6 +674,8 @@ namespace
 		const std::vector<std::string> vExpired = pImpl->m_Cache.EvictExpired(g_Config.m_QmLyricsCacheTtlDays, NowSec);
 		for(const std::string &FileName : vExpired)
 			QmLyrics::RemoveCachePayload(pStorage, FileName.c_str());
+		if(!vExpired.empty())
+			QmLyrics::SaveCacheIndex(pStorage, pImpl->m_Cache);
 
 		if(!RequiredSourceId.empty())
 		{
@@ -1007,6 +1016,13 @@ namespace
 	{
 		const char *pText = VisibleLineText(Line);
 		const float FullLineWidth = pTextRender->TextWidth(FontSize, pText);
+		if(Line.m_vWords.empty())
+			return FullLineWidth * QmLyrics::LinePlayProgress(Line, NowMs);
+		if(QmLyrics::WordPlayProgress(Line.m_vWords.front(), NowMs) <= 0.0f)
+			return 0.0f;
+		if(QmLyrics::WordPlayProgress(Line.m_vWords.back(), NowMs) >= 1.0f)
+			return FullLineWidth;
+
 		float FallbackWidth = 0.0f;
 		const float SpaceWidth = pTextRender->TextWidth(FontSize, " ");
 		size_t SearchOffset = 0;
@@ -1027,8 +1043,6 @@ namespace
 			if(Progress < 1.0f)
 				break;
 		}
-		if(!Line.m_vWords.empty() && QmLyrics::WordPlayProgress(Line.m_vWords.back(), NowMs) >= 1.0f)
-			return FullLineWidth;
 		return std::clamp(FallbackWidth, 0.0f, FullLineWidth);
 	}
 
@@ -1084,9 +1098,119 @@ namespace
 
 } // namespace
 
+bool CQmLyrics::GetMediaIslandText(char *pBuf, size_t BufSize, ColorRGBA *pColor) const
+{
+	if(pBuf == nullptr || BufSize == 0)
+		return false;
+	pBuf[0] = '\0';
+
+	if(!g_Config.m_QmLyrics || !g_Config.m_QmLyricsInMediaIsland || g_Config.m_QmHudIslandUseOriginalStyle)
+		return false;
+	if(g_Config.m_QmLyricsHideWhenPaused && m_pImpl->m_State == SImpl::EState::READY && !m_pImpl->m_LastMediaPlaying)
+		return false;
+	if(g_Config.m_QmLyricsHideNoLyrics && m_pImpl->m_State == SImpl::EState::NO_RESULT)
+		return false;
+
+	auto SetText = [&](const char *pText, ColorRGBA Color) {
+		str_copy(pBuf, pText != nullptr ? pText : "", BufSize);
+		if(pColor != nullptr)
+			*pColor = Color;
+		return pBuf[0] != '\0';
+	};
+
+	const float Opacity = std::clamp(g_Config.m_QmLyricsOpacity / 100.0f, 0.0f, 1.0f);
+	switch(m_pImpl->m_State)
+	{
+	case SImpl::EState::IDLE:
+		return false;
+	case SImpl::EState::FETCHING:
+		return SetText(Localize("Lyrics: searching..."), ColorRGBA(0.7f, 0.85f, 1.0f, 0.90f * Opacity));
+	case SImpl::EState::NO_RESULT:
+		return SetText(Localize("Lyrics: no lyrics found"), ColorRGBA(1.0f, 0.7f, 0.7f, 0.90f * Opacity));
+	case SImpl::EState::READY:
+		break;
+	}
+
+	if(m_pImpl->m_Track.m_vLines.empty())
+		return SetText(Localize("Lyrics: empty track"), ColorRGBA(1.0f, 0.7f, 0.7f, 0.90f * Opacity));
+
+	const int64_t NowMs = m_pImpl->m_Clock.Now(time_get(), time_freq());
+	const int Active = QmLyrics::ResolveDisplayLineIndex(m_pImpl->m_Track, m_pImpl->m_ActiveLineIndex, NowMs);
+	if(Active < 0 || Active >= (int)m_pImpl->m_Track.m_vLines.size())
+		return false;
+
+	ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColorPlayed, true));
+	Color.a *= 0.92f * Opacity;
+	return SetText(VisibleLineText(m_pImpl->m_Track.m_vLines[Active]), Color);
+}
+
+bool CQmLyrics::RenderMediaIslandLine(const CUIRect &Rect, float FontSize, float Alpha)
+{
+	if(!g_Config.m_QmLyrics || !g_Config.m_QmLyricsInMediaIsland || g_Config.m_QmHudIslandUseOriginalStyle)
+		return false;
+	if(g_Config.m_QmLyricsHideWhenPaused && m_pImpl->m_State == SImpl::EState::READY && !m_pImpl->m_LastMediaPlaying)
+		return false;
+	if(g_Config.m_QmLyricsHideNoLyrics && m_pImpl->m_State == SImpl::EState::NO_RESULT)
+		return false;
+	if(Rect.w <= 0.0f || Rect.h <= 0.0f || Alpha <= 0.0f)
+		return false;
+
+	const float Opacity = std::clamp(g_Config.m_QmLyricsOpacity / 100.0f, 0.0f, 1.0f) * Alpha;
+	const float TextY = Rect.y + std::max(0.0f, (Rect.h - FontSize) * 0.5f);
+
+	const unsigned int PrevFlags = TextRender()->GetRenderFlags();
+	const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
+	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
+
+	auto DrawStatus = [&](const char *pText, ColorRGBA Color) {
+		DrawStatusLine(TextRender(), Rect, pText, FontSize, TextY, Color);
+	};
+
+	bool Rendered = true;
+	switch(m_pImpl->m_State)
+	{
+	case SImpl::EState::IDLE:
+		Rendered = false;
+		break;
+	case SImpl::EState::FETCHING:
+		DrawStatus(Localize("Lyrics: searching..."), ColorRGBA(0.7f, 0.85f, 1.0f, 0.90f * Opacity));
+		break;
+	case SImpl::EState::NO_RESULT:
+		DrawStatus(Localize("Lyrics: no lyrics found"), ColorRGBA(1.0f, 0.7f, 0.7f, 0.90f * Opacity));
+		break;
+	case SImpl::EState::READY:
+		if(m_pImpl->m_Track.m_vLines.empty())
+		{
+			DrawStatus(Localize("Lyrics: empty track"), ColorRGBA(1.0f, 0.7f, 0.7f, 0.90f * Opacity));
+			break;
+		}
+
+		{
+			const int64_t NowMs = m_pImpl->m_Clock.Now(time_get(), time_freq());
+			const int Active = QmLyrics::ResolveDisplayLineIndex(m_pImpl->m_Track, m_pImpl->m_ActiveLineIndex, NowMs);
+			if(Active < 0 || Active >= (int)m_pImpl->m_Track.m_vLines.size())
+			{
+				Rendered = false;
+				break;
+			}
+
+			ColorRGBA Played = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColorPlayed, true));
+			ColorRGBA Unplayed = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColorUnplayed, true));
+			DrawKaraokeLine(TextRender(), Graphics(), m_pImpl->m_Track.m_vLines[Active], NowMs, Rect, FontSize, TextY, Played, Unplayed, Opacity);
+		}
+		break;
+	}
+
+	TextRender()->TextColor(PrevTextColor);
+	TextRender()->SetRenderFlags(PrevFlags);
+	return Rendered;
+}
+
 void CQmLyrics::RenderHud()
 {
 	if(!g_Config.m_QmLyrics)
+		return;
+	if(g_Config.m_QmLyricsInMediaIsland && !g_Config.m_QmHudIslandUseOriginalStyle)
 		return;
 	if(g_Config.m_QmLyricsHideWhenPaused && m_pImpl->m_State == SImpl::EState::READY && !m_pImpl->m_LastMediaPlaying)
 		return;

@@ -3131,6 +3131,10 @@ bool CHud::HasVisibleMediaIsland() const
 			return true;
 	}
 
+	char aLyricsIslandBuf[256];
+	if(GameClient()->m_QmLyrics.GetMediaIslandText(aLyricsIslandBuf, sizeof(aLyricsIslandBuf), nullptr))
+		return true;
+
 	if(!(g_Config.m_QmSmtcEnable && g_Config.m_QmSmtcShowHud))
 		return false;
 
@@ -3297,9 +3301,12 @@ void CHud::RenderMediaIsland()
 	const bool ShowSpectator = SpectatorCount > 0;
 	char aTeamBuf[32];
 	const bool ShowTeam = BuildHudTeamText(*GameClient(), aTeamBuf, sizeof(aTeamBuf));
+	char aLyricsIslandBuf[256];
+	ColorRGBA LyricsIslandColor(0.97f, 0.98f, 1.0f, 0.90f);
+	const bool ShowLyricsIslandLine = GameClient()->m_QmLyrics.GetMediaIslandText(aLyricsIslandBuf, sizeof(aLyricsIslandBuf), &LyricsIslandColor);
 	const bool ShowTopRow = HasMediaState || ShowLocalTime || TimerCapsule.m_Visible || ShowRecordingStatus || ShowSpectator || ShowTeam;
 
-	if(!ShowTopRow && !ShowSwapCountdown && !ShowSwitchCountdown && !ShowFrozenSummaryInBottomRow)
+	if(!ShowTopRow && !ShowLyricsIslandLine && !ShowSwapCountdown && !ShowSwitchCountdown && !ShowFrozenSummaryInBottomRow)
 	{
 		m_MediaIslandAnimState.Reset();
 		m_MediaIslandLastVisibleRectValid = false;
@@ -3391,6 +3398,7 @@ void CHud::RenderMediaIsland()
 	constexpr float BottomRowDividerInset = 10.0f;
 	constexpr float CoverRotationSpeed = 0.75f;
 	constexpr float Tau = 6.28318530718f;
+	const float MaxUnifiedWidth = std::max(0.0f, m_Width - ScreenPadding * 2.0f);
 
 	const float TimeSlotWidth = std::round(TextRender()->TextBoundingBox(MetaFontSize, aTimeSlotBuf).m_W);
 	const float TimeTextWidth = std::round(TextRender()->TextBoundingBox(MetaFontSize, aTimeDisplayBuf).m_W);
@@ -3408,7 +3416,8 @@ void CHud::RenderMediaIsland()
 	const float RawExpandedStatusWidth = StatusPaddingLeft + StatusDotSize + StatusDotGap + StatusTextWidth + StatusPaddingRight;
 	const float FrozenSummaryTextWidth = ShowFrozenSummaryInStatus ? std::round(TextRender()->TextBoundingBox(StatusFontSize, aFrozenSummaryBuf).m_W) : 0.0f;
 	const float FrozenSummaryStatusWidth = ShowFrozenSummaryInStatus ? (StatusPaddingLeft + FrozenSummaryTextWidth + StatusPaddingRight) : 0.0f;
-	const bool ShowBottomRow = ShowSwapCountdown || ShowSwitchCountdown || ShowFrozenSummaryInBottomRow;
+	const bool ShowBottomRow = ShowLyricsIslandLine || ShowSwapCountdown || ShowSwitchCountdown || ShowFrozenSummaryInBottomRow;
+	const float LyricsBottomContentWidth = ShowLyricsIslandLine ? std::round(TextRender()->TextBoundingBox(BottomFontSize, aLyricsIslandBuf).m_W) : 0.0f;
 	struct SBottomTextLayoutItem
 	{
 		const char *m_pText = nullptr;
@@ -3435,8 +3444,9 @@ void CHud::RenderMediaIsland()
 	float SwapBottomContentWidth = 0.0f;
 	for(int i = 0; i < SwapList.m_Count; ++i)
 		SwapBottomContentWidth = std::max(SwapBottomContentWidth, std::round(TextRender()->TextBoundingBox(BottomFontSize, SwapList.m_aInfos[i].m_aText).m_W));
-	const int BottomRowLineCount = SwapList.m_Count + (BottomLayoutItemCount > 0 ? 1 : 0);
-	const float NaturalBottomContentWidth = std::max(SwapBottomContentWidth, UtilityBottomContentWidth);
+	const int BottomRowLineCount = (ShowLyricsIslandLine ? 1 : 0) + SwapList.m_Count + (BottomLayoutItemCount > 0 ? 1 : 0);
+	const float MaxBottomContentWidth = std::max(0.0f, MaxUnifiedWidth - BottomRowPaddingX * 2.0f);
+	const float NaturalBottomContentWidth = std::min(MaxBottomContentWidth, std::max(LyricsBottomContentWidth, std::max(SwapBottomContentWidth, UtilityBottomContentWidth)));
 	const float DesiredBottomUnifiedWidth = BottomRowLineCount > 0 ? (NaturalBottomContentWidth + BottomRowPaddingX * 2.0f) : 0.0f;
 	const bool ShowCover = HasMediaState;
 	const int MetaItemCount = (ShowTeam ? 1 : 0) + (ShowSpectator ? 1 : 0) + (ShowLocalTime ? 1 : 0);
@@ -3600,7 +3610,8 @@ void CHud::RenderMediaIsland()
 	const float TimerTextY = TimerCapsule.m_TextY;
 	ColorRGBA IslandBackgroundColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmHudIslandBgColor));
 	IslandBackgroundColor.a = std::clamp(g_Config.m_QmHudIslandBgOpacity / 100.0f, 0.0f, 1.0f);
-	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::MediaIsland, EditorTransformRect, EditorVisibleRect);
+	const QmHudEditor::SEdgeMargin IslandEdgeMargin = QmHudEditor::SEdgeMargin::Uniform((float)g_Config.m_QmHudIslandEdgeMargin);
+	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::MediaIsland, EditorTransformRect, EditorVisibleRect, IslandEdgeMargin);
 
 	DrawSmoothRoundedRect(Graphics(), IslandX, IslandY, UnifiedWidth, AnimatedIslandHeight, Radius, IslandBackgroundColor, HudEditorScope.m_Corners);
 
@@ -3754,6 +3765,16 @@ void CHud::RenderMediaIsland()
 			ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 			float m_Width = 0.0f;
 		};
+
+		if(ShowLyricsIslandLine)
+		{
+			ColorRGBA LyricsTextColor = LyricsIslandColor;
+			LyricsTextColor.a *= BottomAlpha;
+			const CUIRect LyricsRect = {IslandX, BottomTextY, UnifiedWidth, BottomRowLineHeight};
+			if(!GameClient()->m_QmLyrics.RenderMediaIslandLine(LyricsRect, BottomFontSize, BottomAlpha))
+				RenderBottomTextCentered(BottomTextY, aLyricsIslandBuf, LyricsTextColor);
+			BottomTextY += BottomRowLineHeight;
+		}
 
 		for(int i = 0; i < SwapList.m_Count; ++i)
 		{
