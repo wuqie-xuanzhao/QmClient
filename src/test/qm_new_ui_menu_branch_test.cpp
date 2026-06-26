@@ -704,8 +704,8 @@ TEST(QmNewUiMenuBranches, NameplatePreviewShowsPlayerStrongHookMarker)
 	EXPECT_NE(RenderNamePlatePreview.find("if(DummyIdx == g_Config.m_ClDummy)"), std::string::npos);
 	EXPECT_NE(RenderNamePlatePreview.find("Data.m_HookStrongWeakState = EHookStrongWeakState::NEUTRAL;"), std::string::npos);
 	EXPECT_NE(RenderNamePlatePreview.find("Data.m_HookStrongWeakState = Data.m_HookStrongWeakId == 2 ? EHookStrongWeakState::STRONG : EHookStrongWeakState::WEAK;"), std::string::npos);
-	EXPECT_NE(RenderNamePlatePreview.find("ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, true, false, false)"), std::string::npos);
-	EXPECT_NE(RenderNamePlatePreview.find("ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, false, Strong, Weak)"), std::string::npos);
+	EXPECT_NE(RenderNamePlatePreview.find("Data.m_ShowHookStrongWeak = NameplateScopeAllowsPreview && (Data.m_ShowHookStrongWeakId || (g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, true, false, false)));"), std::string::npos);
+	EXPECT_NE(RenderNamePlatePreview.find("Data.m_ShowHookStrongWeak = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, false, Strong, Weak);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NameplatePreviewNameScopeGatesPlateExceptDirectionKeys)
@@ -725,7 +725,8 @@ TEST(QmNewUiMenuBranches, NameplatePreviewNameScopeGatesPlateExceptDirectionKeys
 	EXPECT_NE(RenderNamePlatePreview.find("case 1: // Others\n\t\t\tData.m_ShowDirection = !PreviewIsLocal;"), std::string::npos);
 	EXPECT_NE(RenderNamePlatePreview.find("case 2: // Everyone\n\t\t\tData.m_ShowDirection = true;"), std::string::npos);
 	EXPECT_NE(RenderNamePlatePreview.find("case 3: // Only self\n\t\t\tData.m_ShowDirection = PreviewIsLocal;"), std::string::npos);
-	EXPECT_NE(RenderNamePlatePreview.find("Data.m_ShowHookStrongWeakId = g_Config.m_ClNamePlatesStrong == 2;"), std::string::npos);
+	EXPECT_NE(RenderNamePlatePreview.find("Data.m_ShowHookStrongWeakId = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong == 2;"), std::string::npos);
+	EXPECT_EQ(RenderNamePlatePreview.find("Data.m_ShowHookStrongWeakId = g_Config.m_ClNamePlatesStrong == 2;"), std::string::npos);
 	EXPECT_EQ(RenderNamePlatePreview.find("Data.m_ShowName = g_Config.m_ClNamePlates || g_Config.m_ClNamePlatesOwn;"), std::string::npos);
 	EXPECT_EQ(RenderNamePlatePreview.find("Data.m_ShowDirection = NameplateScopeAllowsPreview && !IsOwnPreview;"), std::string::npos);
 	EXPECT_EQ(RenderNamePlatePreview.find("Data.m_ShowDirection = NameplateScopeAllowsPreview;"), std::string::npos);

@@ -1950,18 +1950,18 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 
 		Data.m_FontSizeHookStrongWeak = FontSizeHookStrongWeak;
 		Data.m_HookStrongWeakId = Data.m_ClientId;
-		Data.m_ShowHookStrongWeakId = g_Config.m_ClNamePlatesStrong == 2;
+		Data.m_ShowHookStrongWeakId = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong == 2;
 		if(DummyIdx == g_Config.m_ClDummy)
 		{
 			Data.m_HookStrongWeakState = EHookStrongWeakState::NEUTRAL;
-			Data.m_ShowHookStrongWeak = Data.m_ShowHookStrongWeakId || (g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, true, false, false));
+			Data.m_ShowHookStrongWeak = NameplateScopeAllowsPreview && (Data.m_ShowHookStrongWeakId || (g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, true, false, false)));
 		}
 		else
 		{
 			Data.m_HookStrongWeakState = Data.m_HookStrongWeakId == 2 ? EHookStrongWeakState::STRONG : EHookStrongWeakState::WEAK;
 			const bool Strong = Data.m_HookStrongWeakState == EHookStrongWeakState::STRONG;
 			const bool Weak = Data.m_HookStrongWeakState == EHookStrongWeakState::WEAK;
-			Data.m_ShowHookStrongWeak = g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, false, Strong, Weak);
+			Data.m_ShowHookStrongWeak = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, false, Strong, Weak);
 		}
 
 		// TClient
