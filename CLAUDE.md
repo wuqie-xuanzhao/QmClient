@@ -64,12 +64,22 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 ### 修改文档后
 
 - 先判断这次文档改动是否改变了入口或规范；如果改变了，先同步修改 `check_docs.py` 或其约束，再跑文档检查。
-- 运行 `python qmclient_scripts/gate/check_docs.py --sync-only --prefer agents`，再运行 `python qmclient_scripts/gate/check_docs.py`，确认没有断链或镜像漂移。
+- 运行 `python qmclient_scripts/gate/check_docs.py --sync-only --prefer agents`，再运行 `python qmclient_scripts/gate/check_docs.py`，确认 AGENTS / CLAUDE 镜像一致（check_docs 目前只校验镜像同步，不查 markdown 断链）。
 
 ### 最终汇报
 
 - 最终汇报必须写清：改了什么、跑了哪些验证、结果如何、还有哪些 gaps。
 - 没跑的不要说通过；没收口的不要说完成。
+
+### 发版（用户说要发新版本时）
+
+1. `python qmclient_scripts/bump_version.py --tag vX.Y.Z`（更新 `src/game/version.h` + `docs/info.json`；版本倒退/重复会 stderr 警告）
+2. 提交版本号改动：`chore: bump version to X.Y.Z`
+3. `git tag vX.Y.Z && git push origin vX.Y.Z`
+4. CI（`.github/workflows/build.yml` 的 `release-desktop` / `release-android`）自动构建多平台产物、调 `generate_release_notes.py` 生成 release note 并发布 GitHub Release。
+5. release note 是机械草稿，按 `docs/RELEASE_NOTE_TEMPLATE.md` 人工润色后编辑该 Release。
+
+> nightly 由 `.github/workflows/nightly.yml` 定时构建并覆盖 `nightly` tag，无需手动发版。补发/重发见 `docs/ai-workflow/git-workflow.md`「Release 补发与重发」。
 
 ## 全局硬约束（简略版，详细看 `docs/ai-workflow/ddnet-development.md`）
 
@@ -101,9 +111,10 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 - 修改 `qmclient_scripts/languages_qmclient/`、`data/languages/*.txt`、`qmclient_scripts/languages_qmclient/translations/i18n/*.toml`，或新增/删除 `Localize`、`Localizable`、`Register` help 文本后，按顺序运行 `python qmclient_scripts/languages_qmclient/extract_strings.py`、`python qmclient_scripts/languages_qmclient/generate_all.py`、`python qmclient_scripts/languages_qmclient/validate.py`、`python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0`
 - `qmclient_scripts/languages_qmclient/translations/i18n/*.toml` 是翻译维护库；`data/languages/*.txt` 是生成产物，不作为手工维护的长期真相源。
 - 新增英文 source key 后，先用 `extract_strings.py` 更新 active key，再用 `translate_with_local_http.py --languages ...` 生成 `translations_draft/<language>/*.toml`；审核 draft 后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，随后运行 `generate_all.py` 生成运行时语言文件。
-- Windows 上默认用 `qmclient_scripts/cmake-windows.cmd` 作为构建入口；常规构建/测试目录是 `cmake-build-release`，交互式完整构建命令：`qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`。自动化子进程显式走 `cmd.exe` 宿主时再使用 `cmd /c qmclient_scripts/cmake-windows.cmd ...`；只有已确认当前 shell 已注入可用的 VS/MSVC 环境时，才直接使用裸 `cmake`
+- Windows 上默认用 `qmclient_scripts/cmake-windows.cmd` 作为构建入口；常规构建/测试目录是 `cmake-build-release`，交互式完整构建命令：`cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`。自动化子进程显式走 `cmd.exe` 宿主时再使用 `cmd /c qmclient_scripts/cmake-windows.cmd ...`；只有已确认当前 shell 已注入可用的 VS/MSVC 环境时，才直接使用裸 `cmake`
 - 构建目录名规范：debug - `cmake-build-debug`；release - `cmake-build-release`；release-pdb - `cmake-build-release-pdb`
 - 同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 不要并行发起；这些目标会共享生成产物和中间文件，必须串行执行。需要并行时，只能拆到不同 build 目录。
+- 一切日志, 或者临时文件, 一定要放到 tmp/ 下面去, 不要放到根目录!!!
 
 ## 十二原则：软件工程
 

@@ -2,6 +2,8 @@
 
 > 📄 本文档另有 <a href="CONTRIBUTING.md">English</a> 版本</p>
 
+> ℹ️ 这是上游 DDNet 的贡献指南。**QmClient 专属工作流**（commit/PR 格式、release、gate、AI agent 规则）在 [`AGENTS.md`](AGENTS.md) 与 [`docs/ai-workflow/`](docs/ai-workflow/meta.md)，做 QmClient 相关工作时以那里为准。
+
 ## 概述
 
 在开始编写代码之前，请先创建一个 Issue 讨论这个想法。

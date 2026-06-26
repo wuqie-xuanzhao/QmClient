@@ -2,6 +2,8 @@
 
 > 📄 This document is available in <a href="CONTRIBUTING_zh.md">中文</a></p>
 
+> ℹ️ This is the upstream DDNet guide. **QmClient-specific workflow** (commit/PR format, release, gate, AI agent rules) is in [`AGENTS.md`](AGENTS.md) and [`docs/ai-workflow/`](docs/ai-workflow/meta.md) — follow those for QmClient work.
+
 ## General
 
 Please open an issue first discussing the idea before starting to write code.

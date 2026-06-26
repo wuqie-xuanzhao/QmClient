@@ -96,7 +96,20 @@ test(score): 补充完赛消息解析回归测试
 - 不要把大段验证日志贴进 body
 - 只有明显属于本地临时产物或与本轮无关的内容才排除在提交外
 
+### 特殊提交（边界）
+
+以下提交可豁免 `<type>(<scope>):` 格式或使用固定 scope：
+
+- **Merge commit**：保留 git 默认 message（`Merge branch ...` / `Merge pull request #N`），不必改写。
+- **上游同步**：用 `chore(sync): <简述>`，如 `chore(sync): 对齐上游版本号到 2.63.3`。
+- **Cherry-pick**：前缀仍按 `fix(...)`/`feat(...)` 写，可保留 `(cherry picked from commit ...)` 尾注。
+- **版本号提交**：`chore: bump version to X.Y.Z`（配合 `bump_version.py`）。
+
+这些规则与 `qmclient_scripts/check_commit_msg.py` 的豁免逻辑一致。
+
 ## PR 规范
+
+> GitHub PR 正文模板见 `.github/pull_request_template.md`（含兼容性、高风险区域 checklist）。**PR 正文以模板为准**；下面的 `## Summary` / 类型分组结构同样适用于 commit body 和最终汇报，分组类型一致。
 
 ### PR 标题
 
@@ -235,20 +248,28 @@ PR 正文默认使用以下结构：
 
 ## Release 说明
 
-GitHub release 说明由 `qmclient_scripts/generate_release_notes.py` 统一生成。
+GitHub release 说明由 `qmclient_scripts/generate_release_notes.py` 统一生成，输出按「功能领域」分组（依据 commit 的 scope）、纯中文；工程类提交（ci/build/gate 等）不进 release note。
+
+脚本输出是机械化草稿，终稿需按 `docs/RELEASE_NOTE_TEMPLATE.md` 人工润色（改写为玩家视角、合并相近条目、删除冗余前缀等）。
 
 如果某个提交需要更稳定的发布说明，可以在 commit body 里补：
 
 ```text
 Release-ZH: 中文发布说明
-Release-EN: English release note
 ```
 
 规则：
 
-- 这两个字段都是可选项
-- 如果缺失，脚本回退到 commit subject
-- 面向用户的重要功能或修复，优先补这两个字段
+- `Release-ZH:` 是可选项
+- 如果缺失，脚本回退到 commit subject 的描述
+- 面向用户的重要功能或修复，优先补 `Release-ZH:`
+- 主题分组依赖 commit 的 scope，提交时务必带规范 scope（如 `feat(settings):`）
+
+### Release 补发与重发（边界）
+
+- **补发产物**：tag 已存在但 GitHub Release 缺失或产物不全时，重新 `git push origin <tag>` 不会重新触发 CI（tag 未变）。需在 GitHub Actions 中从对应 tag ref 手动运行 `build.yml`，让 release jobs 按该 tag 重建 Release。
+- **不要强推正式 tag**：`vX.Y.Z` 一旦发布不要 `git tag -f` 强推，会破坏已下载用户的版本标识；要修正只能发新版本。
+- **nightly 可覆盖**：`nightly` tag 每次 nightly 构建都 force-push 覆盖，属正常行为。
 
 ## 版本 / Tag / Release
 

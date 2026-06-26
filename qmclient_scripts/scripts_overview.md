@@ -44,6 +44,8 @@
 - `qmclient_scripts/cmake-windows.cmd`
 - `qmclient_scripts/darwin_fix_install_names.py`
 - `qmclient_scripts/make_lib_openssl.sh`
+- `qmclient_scripts/cmake-windows-filter.py` — 过滤 Windows/MSVC 构建日志噪音（如"注意: 包含文件:"前缀）
+- `qmclient_scripts/repair_ninja_msvc_prefix.py` — 修复 Ninja + MSVC 下的依赖前缀编码（configure/build 通用）
 
 ### 3. 代码卫生与内容生成辅助
 

@@ -2,9 +2,12 @@
 """
 QmClient 治理文档检查入口。
 
-单一事实源：
-1. 先同步 AGENTS.md / CLAUDE.md。
-2. 再检查 harness 文档、状态文件、脚本入口与 workflow 语义是否一致。
+当前职责（单一事实源：AGENTS.md 与 CLAUDE.md 必须互为镜像）：
+1. 同步 AGENTS.md 与 CLAUDE.md，消除双份维护漂移。
+2. 报告两者是否一致。
+
+注：本脚本目前只校验 AGENTS / CLAUDE 镜像一致性，不做 markdown 断链、
+ai-workflow 文件完整性或 workflow 语义检查——这些目前靠人工和 review 保证。
 """
 
 from __future__ import annotations
@@ -44,10 +47,10 @@ def main() -> int:
         print(f"- {prefix}：{result.title} - {result.detail}")
 
     if failed:
-        print("\n结论：存在治理文档漂移或断链，需要修复。")
+        print("\n结论：AGENTS / CLAUDE 镜像不一致，需要修复。")
         return 1
 
-    print("\n结论：治理文档入口一致，未发现断链。")
+    print("\n结论：AGENTS / CLAUDE 镜像一致。")
     return 0
 
 

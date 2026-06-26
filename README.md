@@ -15,6 +15,8 @@
 Q1menG Client is a customised client built upon DDNet and TaterClient.\
 The aim is to provide a more modern UI experience, a wider range of configurable visual effects, and more user-friendly day-to-day features, whilst maintaining compatibility with the core gameplay.
 
+> 🤖 **AI agents / contributors**: workflow rules (commit, PR, release, build) live in [`AGENTS.md`](AGENTS.md) and [`docs/ai-workflow/`](docs/ai-workflow/meta.md). Start there.
+
 ## ✨ Features
 
 - Smooth UI transitions and HUD animations
