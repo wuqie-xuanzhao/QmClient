@@ -962,6 +962,14 @@ public:
 				return "Dummy";
 			if(str_find_nocase(pText, "Solo") || str_find(pText, "单人"))
 				return "Solo";
+			if(str_find(pText, "活动"))
+				return "活动";
+			if(str_find(pText, "极限"))
+				return "极限";
+			if(str_find(pText, "训练"))
+				return "训练";
+			if(str_find(pText, "娱乐"))
+				return "娱乐";
 			return nullptr;
 		};
 
@@ -2493,6 +2501,48 @@ private:
 		float m_FinalOffsetY = 0.0f;
 	};
 
+	struct SQmSettingsCardStyle
+	{
+		float m_Padding = 14.0f;
+		float m_Spacing = 16.0f;
+		float m_CornerRadius = 12.0f;
+		float m_ScrollbarWidth = 28.0f;
+		float m_ScrollbarMargin = 8.0f;
+		ColorRGBA m_GlassColor = ColorRGBA(0.08f, 0.09f, 0.12f, 0.70f);
+		ColorRGBA m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f);
+		ColorRGBA m_ShadowColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f);
+	};
+
+	struct SSettingsCardDeckCard
+	{
+		const char *m_pStableId = nullptr;
+		const char *m_pTitle = nullptr;
+		ESettingsCardDeckColumn m_Column = ESettingsCardDeckColumn::LEFT;
+		CUIRect m_Rect;
+		CUIRect m_ContentRect;
+		CUIRect m_HandleRect;
+		CUIRect m_TitleRect;
+	};
+
+	struct SSettingsCardDeckLayout
+	{
+		const char *m_pDeckId = nullptr;
+		CScrollRegion *m_pScrollRegion = nullptr;
+		SSettingsScrollRegionFrame m_ScrollFrame;
+		SQmSettingsCardStyle m_Style;
+		CUIRect m_View;
+		CUIRect m_aColumns[2];
+		CUIRect m_aBaseColumns[2];
+		CUIRect m_EndRect;
+		std::vector<std::string> *m_pOrder = nullptr;
+		std::vector<std::string> m_vActiveCardIds;
+		float m_UiScale = 1.0f;
+		float m_Spacing = 16.0f;
+		int m_Page = -1;
+		bool m_TwoColumns = false;
+		int m_CardCount = 0;
+	};
+
 	struct SSettingsUiBudgetFrame
 	{
 		double m_LayoutMs = 0.0;
@@ -2510,6 +2560,16 @@ private:
 
 	SSettingsScrollRegionFrame BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY);
 	void FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsScrollRegionFrame &Frame, const CUIRect *pEndRect = nullptr, int Page = -1, bool TrackScrollActive = true);
+	SQmSettingsCardStyle QmSettingsCardStyle(float UiScale) const;
+	CScrollRegionParams QmSettingsScrollRegionParams(float UiScale) const;
+	void RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const;
+	SSettingsCardDeckLayout BeginSettingsCardDeck(CUIRect MainView, CScrollRegion &ScrollRegion, float PreviousScrollY, float UiScale, const char *pDeckId, int Page, std::vector<std::string> *pOrder = nullptr, const std::vector<std::string> *pActiveCardIds = nullptr);
+	SSettingsCardDeckCard BeginSettingsCardDeckCard(SSettingsCardDeckLayout &Deck, const char *pStableId, const char *pTitle, float MinHeight, float LastMeasuredHeight, ESettingsCardDeckColumn PreferredColumn = ESettingsCardDeckColumn::LEFT, bool ForcePreferredColumn = false);
+	void EndSettingsCardDeck(SSettingsCardDeckLayout &Deck, float *pPreviousScrollY);
+	void RenderSettingsCardDragHandle(const CUIRect &Card, CUIRect *pHandleRect, const SQmSettingsCardStyle &Style);
+	void RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck);
+	std::vector<std::string> *SettingsCardDeckOrder(const char *pDeckId);
+	bool SettingsCardDeckIsActiveStableId(const SSettingsCardDeckLayout &Deck, const std::string &StableId) const;
 	void PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &Input);
 	SSettingsAdaptiveBudgetOutput BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer Consumer, const char *pSource, SSettingsAdaptiveBudgetInput Input);
 	bool MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, int StrLen, const CTextCursor *pReadCursor);
@@ -2586,6 +2646,10 @@ private:
 	SSettingsMenuTextPlanCollectionStats m_SettingsMenuTextLastCollectionStats;
 	std::vector<std::string> m_vTClientLeftCardOrder;
 	std::vector<std::string> m_vTClientRightCardOrder;
+	std::unordered_map<std::string, std::vector<std::string>> m_SettingsCardDeckOrders;
+	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMeasuredHeights;
+	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMinHeights;
+	std::unordered_map<std::string, std::unordered_map<std::string, int>> m_SettingsCardDeckColumnPrefs;
 	std::vector<SSettingsCardDeckItem> m_vTClientSettingsCardDeckItems;
 	SSettingsCardDeckDragState m_TClientSettingsCardDragState;
 	bool m_TClientSettingsCardDeckOrderDirty = false;

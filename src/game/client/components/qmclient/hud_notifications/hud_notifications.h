@@ -4,6 +4,7 @@
 #include "hud_notification_rules.h"
 
 #include <base/color.h>
+#include <base/math.h>
 #include <base/system.h>
 
 #include <engine/shared/config.h>
@@ -96,6 +97,13 @@ namespace QmHudNotifications
 	inline float MinBoxWidth(float FontSize)
 	{
 		return 82.0f * SmallTextScale(FontSize);
+	}
+
+	inline float RepeatCountElasticScale(float t)
+	{
+		t = std::clamp(t, 0.0f, 1.0f);
+		const float Overshoot = std::sin(t * pi) * 0.28f;
+		return 1.0f + Overshoot * (1.0f - t);
 	}
 
 	inline EHorizontalFlow ResolveHorizontalFlow(bool AnchoredLeft, bool AnchoredRight, float VisibleCenterX, float ScreenCenterX)
@@ -266,7 +274,9 @@ private:
 		EKind m_Kind = EKind::Echo;
 		char m_aText[256] = {};
 		char m_aCollapseText[256] = {};
+		char m_aRepeatText[32] = {};
 		int64_t m_StartTime = 0;
+		int64_t m_RepeatAnimTime = 0;
 		unsigned m_EchoColor = 0;
 		bool m_HasEchoColor = false;
 		int m_RepeatCount = 1;
@@ -321,8 +331,8 @@ private:
 				str_comp(Last.m_aCollapseText, pText) == 0)
 			{
 				Last.m_RepeatCount += 1;
-				Last.m_StartTime = time_get();
-				str_format(Last.m_aText, sizeof(Last.m_aText), "%s x%d", Last.m_aCollapseText, Last.m_RepeatCount);
+				Last.m_RepeatAnimTime = time_get();
+				str_format(Last.m_aRepeatText, sizeof(Last.m_aRepeatText), "x%d", Last.m_RepeatCount);
 				return;
 			}
 		}
@@ -332,6 +342,7 @@ private:
 		str_copy(Notification.m_aText, pText);
 		str_copy(Notification.m_aCollapseText, pText);
 		Notification.m_StartTime = time_get();
+		Notification.m_RepeatAnimTime = 0;
 		Notification.m_EchoColor = EchoColor;
 		Notification.m_HasEchoColor = HasEchoColor;
 		m_vNotifications.push_back(Notification);

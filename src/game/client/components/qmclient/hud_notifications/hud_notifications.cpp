@@ -317,7 +317,10 @@ void CQmHudNotifications::RenderNotifications(const CUIRect &BaseRect, const CUI
 		}
 
 		const STextBoundingBox TextBox = TextRender()->TextBoundingBox(FontSize, Notification.m_aText, -1, TextMaxWidth);
-		const float NaturalBoxW = maximum(MinBoxWidth, TextBox.m_W + PaddingX * 2.0f);
+		const bool HasRepeatText = Notification.m_aRepeatText[0] != '\0';
+		const STextBoundingBox RepeatTextBox = HasRepeatText ? TextRender()->TextBoundingBox(FontSize, Notification.m_aRepeatText, -1, TextMaxWidth) : STextBoundingBox{};
+		const float RepeatGap = HasRepeatText ? 4.0f * QmHudNotifications::SmallTextScale(FontSize) : 0.0f;
+		const float NaturalBoxW = maximum(MinBoxWidth, TextBox.m_W + RepeatGap + RepeatTextBox.m_W + PaddingX * 2.0f);
 		const float BoxW = QmHudNotifications::NotificationBoxWidth(BaseRect, NaturalBoxW);
 		const float BoxH = maximum(FontSize + PaddingY * 2.0f, TextBox.m_H + PaddingY * 2.0f);
 		CUIRect Box = {QmHudNotifications::NotificationBoxX(BaseRect, BoxW, Flow, OffsetX), Y, BoxW, BoxH};
@@ -330,6 +333,13 @@ void CQmHudNotifications::RenderNotifications(const CUIRect &BaseRect, const CUI
 		const ColorRGBA TextColor = color_cast<ColorRGBA>(ColorHSLA(TextColorConfig.m_Color, TextColorConfig.m_HasAlpha));
 		TextRender()->TextColor(ApplyAlpha(TextColor, Alpha));
 		TextRender()->Text(Box.x + PaddingX, Box.y + PaddingY, FontSize, Notification.m_aText, TextMaxWidth);
+		if(HasRepeatText)
+		{
+			const int RepeatElapsedMs = Notification.m_RepeatAnimTime > 0 ? (int)((Now - Notification.m_RepeatAnimTime) * 1000 / time_freq()) : AnimMs;
+			float RepeatScale = QmHudNotifications::RepeatCountElasticScale(AnimMs > 0 ? RepeatElapsedMs / (float)AnimMs : 1.0f);
+			const float RepeatX = Box.x + PaddingX + TextBox.m_W + RepeatGap;
+			TextRender()->Text(RepeatX, Box.y + PaddingY, FontSize * RepeatScale, Notification.m_aRepeatText, TextMaxWidth);
+		}
 
 		Y += BoxH + Gap;
 	}

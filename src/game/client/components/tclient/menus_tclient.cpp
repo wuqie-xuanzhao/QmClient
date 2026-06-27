@@ -1008,8 +1008,7 @@ void CMenus::InsetTClientCacheSectionContent(CUIRect &ContentRect) const
 
 void CMenus::DrawTClientCacheSectionBox(CUIRect BoxRect)
 {
-	BoxRect = TClientCacheSectionBoxRect(BoxRect);
-	BoxRect.Draw(Ui()->ScaleBackgroundAlpha(MenuPanelColor(0.92f)), IGraphics::CORNER_ALL, 10.0f);
+	RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));
 }
 
 float CMenus::RenderSettingsCardSection(const char *pSectionName, CUIRect &CurrentColumn, const std::function<float(CUIRect &, bool)> &LayoutSection, float TopMargin)
@@ -1060,6 +1059,11 @@ void CMenus::RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item)
 void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder)
 {
 	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
+	if((DragState.m_Active || DragState.m_PressPending) && !Input()->ModifierIsPressed())
+	{
+		DragState = {};
+		return;
+	}
 	if(DragState.m_Active && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))
 		DragState = {};
 	if(DragState.m_PressPending && !Ui()->MouseButton(0) && !Ui()->LastMouseButton(0))
@@ -1444,10 +1448,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollUnit = 60.0f;
-	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
-	ScrollParams.m_ScrollbarMargin = 5.0f;
+	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
 	SSettingsScrollRegionFrame ScrollFrame;
 	auto LogSettingsStage = [&](const char *pStage, const CPerfTimer &Timer) {
 		char aExtra[192];
@@ -1602,9 +1603,10 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					const CUIRect StartRect = Col;
 					const float Height = RenderFn ? RenderFn(Col) : 0.0f;
 					CUIRect CardRect = {StartRect.x, StartRect.y, StartRect.w, Col.y - StartRect.y};
-					CUIRect HeaderRect = CardRect;
-					HeaderRect.HSplitTop(Margin + HeadlineHeight + MarginSmall, &HeaderRect, nullptr);
-					const SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HeaderRect);
+					const CUIRect CardBoxRect = TClientCacheSectionBoxRect(CardRect);
+					CUIRect HandleRect;
+					RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));
+					const SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);
 					RegisterSettingsCardDeckItem(Item);
 					HandleSettingsCardDeckDrag(Item, ColumnId, &vOrder);
 					if(SettingsCardDeckIsDraggingItem(m_TClientSettingsCardDragState, Item))
@@ -3453,7 +3455,15 @@ void CMenus::SaveSettingsRuntimeCacheMetadata()
 void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
 {
 	CUIRect LeftView, RightView, Label, Button;
-	MainView.VSplitLeft(MainView.w / 2.1f, &LeftView, &RightView);
+	static CScrollRegion s_BindWheelSettingsScrollRegion;
+	static float s_BindWheelSettingsScrollY = 0.0f;
+	static float s_BindWheelEditorCardHeight = 0.0f;
+	static float s_BindWheelPreviewCardHeight = 0.0f;
+	SSettingsCardDeckLayout BindWheelDeck = BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion, s_BindWheelSettingsScrollY, 1.0f, "tclient-bind-wheel", SETTINGS_TCLIENT);
+	SSettingsCardDeckCard BindWheelEditorCard = BeginSettingsCardDeckCard(BindWheelDeck, "tclient-bind-wheel-editor", Localize("Bind Wheel"), 320.0f, s_BindWheelEditorCardHeight);
+	SSettingsCardDeckCard BindWheelPreviewCard = BeginSettingsCardDeckCard(BindWheelDeck, "tclient-bind-wheel-preview", Localize("Preview"), 320.0f, s_BindWheelPreviewCardHeight);
+	LeftView = BindWheelEditorCard.m_ContentRect;
+	RightView = BindWheelPreviewCard.m_ContentRect;
 
 	const float Radius = minimum(RightView.w, RightView.h) / 2.0f;
 	vec2 Center = RightView.Center();
@@ -3600,20 +3610,27 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
 	LeftView.HSplitTop(LineSize * 0.8f, &Label, &LeftView);
 	DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, "tclient-bindwheel-footer-mouse", &Label, Localize("L select  R swap  M select only"), FontSize * 0.8f, TEXTALIGN_ML);
 	LogTClientPerfStage("tclient_bindwheel_footer_text", FooterTextTimer.ElapsedMs(), false);
+	const float BindWheelEditorContentBottom = LeftView.y;
+	float BindWheelEditorBottom = maximum(BindWheelEditorContentBottom, Label.y + Label.h);
 
 	{
 		CPerfTimer FooterControlsTimer;
 		LeftView.HSplitBottom(LineSize, &LeftView, &Label);
+		BindWheelEditorBottom = maximum(BindWheelEditorBottom, Label.y + Label.h);
 		static CButtonContainer s_ReaderButtonWheel, s_ClearButtonWheel;
 		DoLine_KeyReader(Label, s_ReaderButtonWheel, s_ClearButtonWheel, Localize("Bind Wheel Key"), "+bindwheel");
 
 		LeftView.HSplitBottom(LineSize, &LeftView, &Label);
+		BindWheelEditorBottom = maximum(BindWheelEditorBottom, Label.y + Label.h);
 		CUIRect CheckBoxRect;
 		Label.HSplitTop(LineSize, &CheckBoxRect, &Label);
 		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_BINDWHEEL, TCLIENT_TAB_BINDWHEEL, &g_Config.m_TcResetBindWheelMouse, "tclient-bindwheel-reset-mouse", Localize("Reset position of mouse when opening bindwheel"), g_Config.m_TcResetBindWheelMouse, &CheckBoxRect))
 			g_Config.m_TcResetBindWheelMouse ^= 1;
 		LogTClientPerfStage("tclient_bindwheel_footer_controls", FooterControlsTimer.ElapsedMs(), false);
 	}
+	s_BindWheelEditorCardHeight = maximum(BindWheelEditorBottom + BindWheelDeck.m_Style.m_Padding - BindWheelEditorCard.m_Rect.y, 320.0f);
+	s_BindWheelPreviewCardHeight = maximum(BindWheelPreviewCard.m_ContentRect.y + BindWheelPreviewCard.m_ContentRect.h + BindWheelDeck.m_Style.m_Padding - BindWheelPreviewCard.m_Rect.y, 320.0f);
+	EndSettingsCardDeck(BindWheelDeck, &s_BindWheelSettingsScrollY);
 }
 
 void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)
@@ -3623,10 +3640,7 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollUnit = 60.0f;
-	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
-	ScrollParams.m_ScrollbarMargin = 5.0f;
+	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
 	static float s_PrevChatBindsScrollY = 0.0f;
 	SSettingsScrollRegionFrame ScrollFrame;
 	{
@@ -4246,14 +4260,25 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 {
 	CUIRect LeftView, RightView, Button, Label, StatusBar;
+	static CScrollRegion s_StatusBarSettingsScrollRegion;
+	static float s_StatusBarSettingsScrollY = 0.0f;
+	static float s_StatusBarSettingsCardHeight = 0.0f;
+	static float s_StatusBarItemsCardHeight = 0.0f;
+	static float s_StatusBarPreviewCardHeight = 0.0f;
+	SSettingsCardDeckLayout StatusBarDeck;
+	SSettingsCardDeckCard SettingsCard;
+	SSettingsCardDeckCard ItemsCard;
+	SSettingsCardDeckCard PreviewCard;
 
 	{
 		CPerfTimer LayoutTimer;
-		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
-		MainView.HSplitBottom(100.0f, &MainView, &StatusBar);
-		MainView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
-		LeftView.VSplitLeft(MarginSmall, nullptr, &LeftView);
-		RightView.VSplitRight(MarginSmall, &RightView, nullptr);
+		StatusBarDeck = BeginSettingsCardDeck(MainView, s_StatusBarSettingsScrollRegion, s_StatusBarSettingsScrollY, 1.0f, "tclient-status-bar", SETTINGS_TCLIENT);
+		SettingsCard = BeginSettingsCardDeckCard(StatusBarDeck, "tclient-status-bar-settings", Localize("Status Bar"), 360.0f, s_StatusBarSettingsCardHeight);
+		ItemsCard = BeginSettingsCardDeckCard(StatusBarDeck, "tclient-status-bar-items", Localize("Status Bar Codes"), 360.0f, s_StatusBarItemsCardHeight);
+		PreviewCard = BeginSettingsCardDeckCard(StatusBarDeck, "tclient-status-bar-preview", Localize("Preview"), 190.0f, s_StatusBarPreviewCardHeight);
+		LeftView = SettingsCard.m_ContentRect;
+		RightView = ItemsCard.m_ContentRect;
+		StatusBar = PreviewCard.m_ContentRect;
 		LogTClientPerfStageEx("tclient_statusbar", "layout", ETClientSettingsPerfStage::SECTION_LAYOUT, LayoutTimer.ElapsedMs());
 	}
 
@@ -4295,7 +4320,7 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 			Ui()->DoLabel(&PreviewItem, aBuf, FontSize, TEXTALIGN_MC);
 		}
 	};
-	auto RenderStatusBarCodes = [&](CUIRect View, int Limit) {
+	auto RenderStatusBarCodes = [&](CUIRect View, int Limit, bool TwoColumns) {
 		const char *apCodes[] = {
 			Localize("a = View angle"),
 			Localize("p = Ping latency"),
@@ -4317,29 +4342,39 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 			Localize("y = DDNet memory usage"),
 			Localize("_ or ' ' = blank spacer"),
 		};
-		View.HSplitTop(HeadlineHeight, &Label, &View);
-		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-codes-title", &Label, Localize("Status Bar Codes:"), HeadlineFontSize, TEXTALIGN_ML);
-		View.HSplitTop(MarginSmall, nullptr, &View);
 		const int RenderCount = Limit > 0 ? minimum(Limit, (int)std::size(apCodes)) : (int)std::size(apCodes);
-		for(int i = 0; i < RenderCount; ++i)
+		if(TwoColumns && View.w > 360.0f)
 		{
-			View.HSplitTop(LineSize, &Label, &View);
-			Ui()->DoLabel(&Label, apCodes[i], FontSize, TEXTALIGN_ML);
+			CUIRect LeftCodes, RightCodes;
+			View.VSplitMid(&LeftCodes, &RightCodes, MarginSmall);
+			const int LeftCount = (RenderCount + 1) / 2;
+			for(int i = 0; i < RenderCount; ++i)
+			{
+				CUIRect &Column = i < LeftCount ? LeftCodes : RightCodes;
+				Column.HSplitTop(LineSize, &Label, &Column);
+				Ui()->DoLabel(&Label, apCodes[i], FontSize, TEXTALIGN_ML);
+			}
 		}
-		if(RenderCount < (int)std::size(apCodes))
+		else
 		{
-			char aBuf[64];
-			View.HSplitTop(LineSize, &Label, &View);
-			str_format(aBuf, sizeof(aBuf), Localize("+%d more codes"), (int)std::size(apCodes) - RenderCount);
-			Ui()->DoLabel(&Label, aBuf, FontSize, TEXTALIGN_ML);
+			for(int i = 0; i < RenderCount; ++i)
+			{
+				View.HSplitTop(LineSize, &Label, &View);
+				Ui()->DoLabel(&Label, apCodes[i], FontSize, TEXTALIGN_ML);
+			}
+			if(RenderCount < (int)std::size(apCodes))
+			{
+				char aBuf[64];
+				View.HSplitTop(LineSize, &Label, &View);
+				str_format(aBuf, sizeof(aBuf), Localize("+%d more codes"), (int)std::size(apCodes) - RenderCount);
+				Ui()->DoLabel(&Label, aBuf, FontSize, TEXTALIGN_ML);
+			}
 		}
 	};
+	float StatusBarSettingsContentBottom = LeftView.y;
+	float StatusBarItemsContentBottom = RightView.y;
 	{
 		CPerfTimer SectionsTimer;
-		LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
-		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-main-title", &Label, Localize("Status Bar"), HeadlineFontSize, TEXTALIGN_ML);
-		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
-
 		CUIRect CheckBoxRect;
 		LeftView.HSplitTop(LineSize, &CheckBoxRect, &LeftView);
 		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, &g_Config.m_TcStatusBar, "tclient-statusbar-show", Localize("Show status bar"), g_Config.m_TcStatusBar, &CheckBoxRect))
@@ -4351,7 +4386,6 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 		DoSettingsScrollbarOption(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-height", &g_Config.m_TcStatusBarHeight, &g_Config.m_TcStatusBarHeight, &Button, Localize("Status bar height"), 1, 16);
 
 		LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
-		LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
 		DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-local-time-title", &Label, Localize("Local Time"), HeadlineFontSize, TEXTALIGN_ML);
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 		LeftView.HSplitTop(LineSize, &CheckBoxRect, &LeftView);
@@ -4360,7 +4394,6 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 		LeftView.HSplitTop(LineSize, &CheckBoxRect, &LeftView);
 		if(DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, &g_Config.m_TcStatusBarLocalTimeSeconds, "tclient-statusbar-seconds", Localize("Show seconds on clock"), g_Config.m_TcStatusBarLocalTimeSeconds, &CheckBoxRect))
 			g_Config.m_TcStatusBarLocalTimeSeconds ^= 1;
-		LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
 		{
 			LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);
 			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-colors-title", &Label, Localize("Colors"), HeadlineFontSize, TEXTALIGN_ML);
@@ -4374,14 +4407,16 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 			LeftView.HSplitTop(LineSize, &Button, &LeftView);
 			DoSettingsScrollbarOption(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-text-alpha", &g_Config.m_TcStatusBarTextAlpha, &g_Config.m_TcStatusBarTextAlpha, &Button, Localize("Text alpha"), 0, 100);
 		}
+		StatusBarSettingsContentBottom = LeftView.y;
 		LogTClientPerfStageEx("tclient_statusbar", "sections", ETClientSettingsPerfStage::INTERACTIVE_LAYER, SectionsTimer.ElapsedMs());
 	}
 
 	{
 		CPerfTimer CodesTimer;
-		RenderStatusBarCodes(RightView, 0);
+		RenderStatusBarCodes(RightView, 0, true);
 		LogTClientPerfStageEx("tclient_statusbar", "codes", ETClientSettingsPerfStage::TEXT_CACHE, CodesTimer.ElapsedMs());
 	}
+	StatusBarItemsContentBottom = RightView.y;
 
 	CPerfTimer EditorTimer;
 	static int s_SelectedItem = -1;
@@ -4394,6 +4429,7 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 
 	CUIRect StatusScheme, StatusButtons, ItemLabel;
 	static CButtonContainer s_ApplyButton, s_AddButton, s_RemoveButton;
+	float StatusBarPreviewContentBottom = StatusBar.y + StatusBar.h;
 	StatusBar.HSplitBottom(LineSize + MarginSmall, &StatusBar, &StatusScheme);
 	StatusBar.HSplitTop(LineSize + MarginSmall, &ItemLabel, &StatusBar);
 	StatusScheme.HSplitTop(MarginSmall, nullptr, &StatusScheme);
@@ -4472,6 +4508,10 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 	{
 		RenderStatusBarPreview(StatusBar);
 		LogTClientPerfStageEx("tclient_statusbar", "editor", ETClientSettingsPerfStage::STATIC_LAYER, EditorTimer.ElapsedMs());
+		s_StatusBarSettingsCardHeight = maximum(StatusBarSettingsContentBottom + StatusBarDeck.m_Style.m_Padding - SettingsCard.m_Rect.y, 360.0f);
+		s_StatusBarItemsCardHeight = maximum(StatusBarItemsContentBottom + StatusBarDeck.m_Style.m_Padding - ItemsCard.m_Rect.y, 360.0f);
+		s_StatusBarPreviewCardHeight = maximum(StatusBarPreviewContentBottom + StatusBarDeck.m_Style.m_Padding - PreviewCard.m_Rect.y, 190.0f);
+		EndSettingsCardDeck(StatusBarDeck, &s_StatusBarSettingsScrollY);
 		return;
 	}
 	float AvailableWidth = StatusBar.w;
@@ -4569,6 +4609,10 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 	if(!StatusItemActive)
 		s_SelectedItem = std::max(-1, s_SelectedItem);
 	LogTClientPerfStageEx("tclient_statusbar", "editor", ETClientSettingsPerfStage::STATIC_LAYER, EditorTimer.ElapsedMs());
+	s_StatusBarSettingsCardHeight = maximum(StatusBarSettingsContentBottom + StatusBarDeck.m_Style.m_Padding - SettingsCard.m_Rect.y, 360.0f);
+	s_StatusBarItemsCardHeight = maximum(StatusBarItemsContentBottom + StatusBarDeck.m_Style.m_Padding - ItemsCard.m_Rect.y, 360.0f);
+	s_StatusBarPreviewCardHeight = maximum(StatusBarPreviewContentBottom + StatusBarDeck.m_Style.m_Padding - PreviewCard.m_Rect.y, 190.0f);
+	EndSettingsCardDeck(StatusBarDeck, &s_StatusBarSettingsScrollY);
 }
 
 void CMenus::RenderSettingsTClientInfo(CUIRect MainView)
@@ -5585,9 +5629,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollUnit = 60.0f;
-	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
 	CPerfTimer ListTimer;
 	static float s_PrevConfigsScrollY = 0.0f;
 	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams, s_PrevConfigsScrollY);

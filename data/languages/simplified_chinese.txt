@@ -1681,9 +1681,6 @@ Custom Font:
 Custom prompt template
 == 自定义提示词模板
 
-Customize name and clan text effects
-== 自定义名称和战队文本特效
-
 Customize translate button and menu colors
 == 自定义翻译按钮和菜单颜色
 
@@ -1979,6 +1976,9 @@ Discord
 == Discord
 
 Display mode
+== 显示模式
+
+Display modes
 == 显示模式
 
 Display your race time
@@ -2983,6 +2983,9 @@ Graphics backend
 Graphics card
 == 显卡
 
+Graphics display
+== 图像显示
+
 Greeting text
 == 打招呼文本
 
@@ -3544,17 +3547,11 @@ Laser effect enhancement
 Laser Enhancement
 == 激光增强
 
-Laser preview
-== 激光预览
-
 Laser settings
 == 激光设置
 
 Laser size
 == 激光大小
-
-Laser style
-== 激光样式
 
 Last page in console
 == 控制台最后一页
@@ -6016,9 +6013,6 @@ Selected candidate
 Selected candidate %d/%d under cursor.
 == 已选中光标下的候选项 %d/%d。
 
-Selected pack
-== 当前音频包
-
 Selected server
 == 已选中服务器
 
@@ -6979,8 +6973,8 @@ Status Bar
 Status bar alpha
 == 状态栏透明度
 
-Status Bar Codes:
-== 状态栏代码：
+Status Bar Codes
+== 状态栏代码
 
 Status bar color
 == 状态栏颜色
@@ -8115,6 +8109,9 @@ Voice chat
 
 Voice distance radius (tiles)
 == 语音距离半径（格）
+
+Volume
+== 音量
 
 Vote a map by name
 == 按名称对地图进行投票

@@ -1681,9 +1681,6 @@ Custom Font:
 Custom prompt template
 == Пользовательский шаблон промпта
 
-Customize name and clan text effects
-== Настройка текстовых эффектов имени и клана
-
 Customize translate button and menu colors
 == Настройка цветов кнопки перевода и меню
 
@@ -1980,6 +1977,9 @@ Discord
 
 Display mode
 == Режим отображения
+
+Display modes
+== Режимы отображения
 
 Display your race time
 == Показывает ваше время гонки
@@ -2983,6 +2983,9 @@ Graphics backend
 Graphics card
 == Видеокарта
 
+Graphics display
+== Отображение графики
+
 Greeting text
 == Текст приветствия
 
@@ -3544,17 +3547,11 @@ Laser effect enhancement
 Laser Enhancement
 == Улучшение лазера
 
-Laser preview
-== Предпросмотр лазера
-
 Laser settings
 == Настройки лазера
 
 Laser size
 == Размер лазера
-
-Laser style
-== Стиль лазера
 
 Last page in console
 == Последняя страница в консоли
@@ -6016,9 +6013,6 @@ Selected candidate
 Selected candidate %d/%d under cursor.
 == Выбран кандидат %d/%d под курсором.
 
-Selected pack
-== Выбранный пакет
-
 Selected server
 == Выбранный сервер
 
@@ -6979,8 +6973,8 @@ Status Bar
 Status bar alpha
 == Альфа строки состояния
 
-Status Bar Codes:
-== Коды строки состояния:
+Status Bar Codes
+== Коды строки состояния
 
 Status bar color
 == Цвет строки состояния
@@ -8115,6 +8109,9 @@ Voice chat
 
 Voice distance radius (tiles)
 == Радиус расстояния голоса (тайлы)
+
+Volume
+== Громкость
 
 Vote a map by name
 == Проголосовать за карту по имени

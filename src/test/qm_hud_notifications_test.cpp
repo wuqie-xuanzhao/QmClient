@@ -80,6 +80,29 @@ namespace
 		Buffer << File.rdbuf();
 		return Buffer.str();
 	}
+
+	std::string FunctionBodySource(const std::string &Source, const std::string &Signature)
+	{
+		const size_t Start = Source.find(Signature);
+		if(Start == std::string::npos)
+			return {};
+		const size_t OpenBrace = Source.find('{', Start);
+		if(OpenBrace == std::string::npos)
+			return {};
+		int Depth = 0;
+		for(size_t i = OpenBrace; i < Source.size(); ++i)
+		{
+			if(Source[i] == '{')
+				++Depth;
+			else if(Source[i] == '}')
+			{
+				--Depth;
+				if(Depth == 0)
+					return Source.substr(Start, i - Start + 1);
+			}
+		}
+		return {};
+	}
 } // namespace
 
 TEST(QmHudNotifications, MatchesKnownSoloPrompts)
@@ -331,6 +354,22 @@ TEST(QmHudNotifications, StaticEnglishAndChineseMessagesShareTheSameSemanticKey)
 
 	EXPECT_EQ(English.m_MessageKey, Chinese.m_MessageKey);
 	EXPECT_STREQ(English.m_aLocalizedText, Chinese.m_aLocalizedText);
+}
+
+TEST(QmHudNotifications, RepeatedNotificationsAnimateOnlyTheCounter)
+{
+	const std::string Header = ReadHudNotificationTestFile("src/game/client/components/qmclient/hud_notifications/hud_notifications.h");
+	EXPECT_NE(Header.find("int64_t m_RepeatAnimTime = 0;"), std::string::npos);
+	EXPECT_NE(Header.find("Last.m_RepeatAnimTime = time_get();"), std::string::npos);
+	EXPECT_EQ(Header.find("Last.m_StartTime = time_get();"), std::string::npos);
+	EXPECT_NE(Header.find("str_format(Last.m_aRepeatText, sizeof(Last.m_aRepeatText), \"x%d\", Last.m_RepeatCount);"), std::string::npos);
+
+	const std::string Source = ReadHudNotificationTestFile("src/game/client/components/qmclient/hud_notifications/hud_notifications.cpp");
+	const std::string RenderNotifications = FunctionBodySource(Source, "void CQmHudNotifications::RenderNotifications(");
+	ASSERT_FALSE(RenderNotifications.empty());
+	EXPECT_NE(RenderNotifications.find("RepeatScale = QmHudNotifications::RepeatCountElasticScale"), std::string::npos);
+	EXPECT_NE(RenderNotifications.find("Notification.m_aRepeatText"), std::string::npos);
+	EXPECT_NE(RenderNotifications.find("TextRender()->Text(RepeatX, Box.y + PaddingY, FontSize * RepeatScale"), std::string::npos);
 }
 
 TEST(QmHudNotifications, TimeoutCodeSetRequiresTheExplicitSemanticAliasText)

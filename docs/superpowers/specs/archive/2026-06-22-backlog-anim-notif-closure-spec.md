@@ -2,7 +2,7 @@
 
 - 创建：2026-06-22
 - 状态：active
-- 上游规格：`docs/superpowers/specs/2026-06-20-backlog-consolidation-spec.html`
+- 上游规格：`docs/superpowers/specs/2026-06-20-待办整合规格.html`
 - 核验基线：HEAD `dff7a87fa9`（2026-06-22 `read` / `search` 实际核验）
 
 ## 背景与现状核验
@@ -108,7 +108,7 @@ AWKWARD 集中在两类问题：①「被处死」机器翻译腔（4 处）② 
 - `src/test/skin_transition_test.cpp`（2 个新测试）
 - `qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml`（6 条 simplified_chinese + 2 个新类型名 key）
 - `data/languages/*.txt`（生成产物，由生成链产出）
-- `docs/superpowers/specs/2026-06-20-backlog-consolidation-spec.html`（状态同步）
+- `docs/superpowers/specs/2026-06-20-待办整合规格.html`（状态同步）
 
 ## 风险与依赖
 

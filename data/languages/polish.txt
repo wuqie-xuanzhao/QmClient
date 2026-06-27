@@ -1681,9 +1681,6 @@ Custom Font:
 Custom prompt template
 == Niestandardowy szablon promptu
 
-Customize name and clan text effects
-== Dostosuj efekty tekstu nazwy i klanu
-
 Customize translate button and menu colors
 == Dostosuj kolory przycisku tłumaczenia i menu
 
@@ -1980,6 +1977,9 @@ Discord
 
 Display mode
 == Tryb wyświetlania
+
+Display modes
+== Tryby wyświetlania
 
 Display your race time
 == Wyświetla twój czas wyścigu
@@ -2983,6 +2983,9 @@ Graphics backend
 Graphics card
 == Karta graficzna
 
+Graphics display
+== Wyświetlanie grafiki
+
 Greeting text
 == Tekst powitania
 
@@ -3544,17 +3547,11 @@ Laser effect enhancement
 Laser Enhancement
 == Ulepszenie lasera
 
-Laser preview
-== Podgląd lasera
-
 Laser settings
 == Ustawienia lasera
 
 Laser size
 == Rozmiar lasera
-
-Laser style
-== Styl lasera
 
 Last page in console
 == Ostatnia strona w konsoli
@@ -6016,9 +6013,6 @@ Selected candidate
 Selected candidate %d/%d under cursor.
 == Wybrany kandydat %d/%d pod kursorem.
 
-Selected pack
-== Wybrany pakiet
-
 Selected server
 == Wybrany serwer
 
@@ -6979,8 +6973,8 @@ Status Bar
 Status bar alpha
 == Przezroczystość paska statusu
 
-Status Bar Codes:
-== Kody paska statusu:
+Status Bar Codes
+== Kody paska stanu
 
 Status bar color
 == Kolor paska statusu
@@ -8115,6 +8109,9 @@ Voice chat
 
 Voice distance radius (tiles)
 == Promień dystansu głosu (kafelki)
+
+Volume
+== Głośność
 
 Vote a map by name
 == Głosuj na mapę po nazwie

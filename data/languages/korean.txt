@@ -1681,9 +1681,6 @@ Custom Font:
 Custom prompt template
 == 사용자 정의 프롬프트 템플릿
 
-Customize name and clan text effects
-== 이름 및 클랜 텍스트 효과 사용자 정의
-
 Customize translate button and menu colors
 == 번역 버튼 및 메뉴 색상 사용자 정의
 
@@ -1980,6 +1977,9 @@ Discord
 
 Display mode
 == 디스플레이 모드
+
+Display modes
+== 표시 모드
 
 Display your race time
 == 레이스 시간 표시
@@ -2983,6 +2983,9 @@ Graphics backend
 Graphics card
 == 그래픽 카드
 
+Graphics display
+== 그래픽 표시
+
 Greeting text
 == 인사말 텍스트
 
@@ -3544,17 +3547,11 @@ Laser effect enhancement
 Laser Enhancement
 == 레이저 향상
 
-Laser preview
-== 레이저 미리보기
-
 Laser settings
 == 레이저 설정
 
 Laser size
 == 레이저 크기
-
-Laser style
-== 레이저 스타일
 
 Last page in console
 == 콘솔의 마지막 페이지
@@ -6016,9 +6013,6 @@ Selected candidate
 Selected candidate %d/%d under cursor.
 == 커서 아래에 선택된 후보 %d/%d.
 
-Selected pack
-== 선택된 팩
-
 Selected server
 == 선택한 서버
 
@@ -6979,8 +6973,8 @@ Status Bar
 Status bar alpha
 == 상태 표시줄 투명도
 
-Status Bar Codes:
-== 상태 표시줄 코드：
+Status Bar Codes
+== 상태 표시줄 코드
 
 Status bar color
 == 상태 표시줄 색상
@@ -8115,6 +8109,9 @@ Voice chat
 
 Voice distance radius (tiles)
 == 음성 거리 반경 (타일)
+
+Volume
+== 볼륨
 
 Vote a map by name
 == 이름으로 맵 투표

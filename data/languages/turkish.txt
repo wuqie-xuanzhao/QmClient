@@ -1681,9 +1681,6 @@ Custom Font:
 Custom prompt template
 == Özel istem şablonu
 
-Customize name and clan text effects
-== İsim ve klan metin efektlerini özelleştir
-
 Customize translate button and menu colors
 == Çevir düğmesi ve menü renklerini özelleştir
 
@@ -1980,6 +1977,9 @@ Discord
 
 Display mode
 == Görüntüleme modu
+
+Display modes
+== Görüntü modları
 
 Display your race time
 == Yarış sürenizi gösterir
@@ -2983,6 +2983,9 @@ Graphics backend
 Graphics card
 == Ekran kartı
 
+Graphics display
+== Grafik görüntüsü
+
 Greeting text
 == Selamlama metni
 
@@ -3544,17 +3547,11 @@ Laser effect enhancement
 Laser Enhancement
 == Lazer İyileştirmesi
 
-Laser preview
-== Lazer önizlemesi
-
 Laser settings
 == Lazer ayarları
 
 Laser size
 == Lazer boyutu
-
-Laser style
-== Lazer stili
 
 Last page in console
 == Konsolda son sayfa
@@ -6016,9 +6013,6 @@ Selected candidate
 Selected candidate %d/%d under cursor.
 == İmleç altında seçilen aday %d/%d.
 
-Selected pack
-== Seçilen paket
-
 Selected server
 == Seçili sunucu
 
@@ -6979,8 +6973,8 @@ Status Bar
 Status bar alpha
 == Durum çubuğu alfası
 
-Status Bar Codes:
-== Durum Çubuğu Kodları:
+Status Bar Codes
+== Durum çubuğu kodları
 
 Status bar color
 == Durum çubuğu rengi
@@ -8115,6 +8109,9 @@ Voice chat
 
 Voice distance radius (tiles)
 == Ses mesafesi yarıçapı (karo)
+
+Volume
+== Ses düzeyi
 
 Vote a map by name
 == Bir haritayı adına göre oyla

@@ -559,7 +559,6 @@ Custom aspect ratio
 Custom colors
 Custom Font:
 Custom prompt template
-Customize name and clan text effects
 Customize translate button and menu colors
 Cut interval
 Cut length
@@ -659,6 +658,7 @@ Disconnect from the server
 Disconnected
 Discord
 Display mode
+Display modes
 Display your race time
 Displays client prediction latency
 Displays client receive rate
@@ -993,6 +993,7 @@ Gradient color
 Graphics
 Graphics backend
 Graphics card
+Graphics display
 Greeting text
 Grenade
 Group name
@@ -1180,10 +1181,8 @@ Large text content
 Laser
 Laser effect enhancement
 Laser Enhancement
-Laser preview
 Laser settings
 Laser size
-Laser style
 Last page in console
 Latency
 Latency Jitter
@@ -2004,7 +2003,6 @@ Selected %d
 Selected button not visible
 Selected candidate
 Selected candidate %d/%d under cursor.
-Selected pack
 Selected server
 Selected timertype is not supported by your client
 Selection
@@ -2325,7 +2323,7 @@ Stats notes
 Status
 Status Bar
 Status bar alpha
-Status Bar Codes:
+Status Bar Codes
 Status bar color
 Status bar height
 Status normal, check details below if still experiencing issues
@@ -2704,6 +2702,7 @@ Voice activation release delay
 Voice bitrate
 Voice chat
 Voice distance radius (tiles)
+Volume
 Vote a map by name
 Vote command:
 Vote description:

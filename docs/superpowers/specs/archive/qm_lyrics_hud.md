@@ -315,7 +315,7 @@ QmClient 首版**不**做 DLL 热加载，但**类层级**复刻这些契约（�
 
 ### HUD 编辑器接入
 
-复用 #10 共用贴边 Helpers（见 `2026-06-20-backlog-consolidation-spec.html` 的 #10 节）：
+复用 #10 共用贴边 Helpers（见 `2026-06-20-待办整合规格.html` 的 #10 节）：
 
 - 在 `EHudEditorElement` 加 `Lyrics`。
 - `BeginTransform(EHudEditorElement::Lyrics, BaseRect)` 让歌词框可拖拽/缩放/贴边。

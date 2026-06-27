@@ -1893,6 +1893,19 @@ void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, fl
 	if(Y + Height > Screen()->h - Margin)
 		Y = maximum<float>(Y - Height, Margin);
 
+	auto ExistingPopupMenu = std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end(), [pId](const SPopupMenu &PopupMenu) { return PopupMenu.m_pId == pId; });
+	if(ExistingPopupMenu != m_vPopupMenus.end())
+	{
+		ExistingPopupMenu->m_Props = Props;
+		ExistingPopupMenu->m_Rect.x = X;
+		ExistingPopupMenu->m_Rect.y = Y;
+		ExistingPopupMenu->m_Rect.w = Width;
+		ExistingPopupMenu->m_Rect.h = Height;
+		ExistingPopupMenu->m_pContext = pContext;
+		ExistingPopupMenu->m_pfnFunc = pfnFunc;
+		return;
+	}
+
 	m_vPopupMenus.emplace_back();
 	SPopupMenu *pNewMenu = &m_vPopupMenus.back();
 	pNewMenu->m_pId = pId;
@@ -2228,7 +2241,10 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	Props.m_HintCanChangePositionOrSize = true;
 	Props.m_ShowDropDownIcon = true;
 	if(IsPopupOpen(&State.m_SelectionPopupContext))
+	{
 		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
+		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
+	}
 	if(DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props))
 	{
 		CScrollRegion *pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion;

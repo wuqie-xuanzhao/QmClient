@@ -148,7 +148,7 @@
     <header class="hero">
       <div class="meta">
         <span class="pill ok">active</span>
-        <span class="pill secondary">2026-06-20 创建 · 2026-06-22 重写 · 2026-06-27 合并</span>
+        <span class="pill secondary">2026-06-20 创建 · 2026-06-22 重写 · 2026-06-27 合并 + 调研收口</span>
         <span class="pill warn">HTML 重写版</span>
       </div>
       <h1>QmClient 待办整合规格（半 plan 式）</h1>
@@ -301,14 +301,16 @@
       <ul>
         <li><span class="badge bad">todo</span> <strong>#20.3</strong>：相机核心改动审批；补 demo、观战、freeview clamp、existing smoothing 回归清单。</li>
         <li><span class="badge bad">todo</span> <strong>#16</strong>：进程优先级平台能力矩阵（Windows/Linux/macOS/Android）。</li>
-        <li><span class="badge bad">todo</span> <strong>#11</strong>：PS blend mode 公式、边界值测试和渲染性能 spike。</li>
-        <li><span class="badge bad">todo</span> <strong>B8</strong>：持久统计存储格式、清理策略和隐私边界。</li>
+        <li><span class="badge warn">已调研</span> <strong>#11</strong>：Multiply 零成本可做；Frankenstein 已有 4 模式仅缺 SoftLight/HardLight；Screen/Overlay 卡 shader 命门（详见 #11 章节）。</li>
+        <li><span class="badge warn">已调研</span> <strong>B8</strong>：复用 map_notes.json 范例，新建 CQmStatHistory 只读 m_aStats，可行（详见 B8 章节）。</li>
         <li><span class="badge bad">todo</span> <strong>#20.4</strong>：3D Particles 差异审计——不直接移植 BC <code>C3DParticles</code>，对照已有 <code>CBackgroundParticles</code> 的 focus/optimizer guard、淡入淡出、push/collide、glow 参数，只补强缺失能力。</li>
         <li><span class="badge bad">todo</span> <strong>#14.1 / #14.3 / #14.5</strong>：聊天翻译按钮位置、滚动条跟随、动画弹性化（依赖 #14.2 已完成的贴边 helpers）。</li>
-        <li><span class="badge bad">todo</span> <strong>#17</strong>：通知栏文本语义化扫描（120 条规则逐条标注）。</li>
+        <li><span class="badge ok">done</span> <strong>#17</strong>：通知栏文本语义化已完成（159 条 audit，6 条口语化重写，见 #17 章节与收口 spec）。原误标 todo，已修正。</li>
         <li><span class="badge bad">todo</span> <strong>#18</strong>：IME 样式可视化（暴露 <code>QmNewIme</code> 到栖梦-视觉页）。</li>
-        <li><span class="badge bad">todo</span> <strong>B1~B4</strong>：钩子进度条、HUD 编辑器 Flexbox、武器命中反馈、聊天气泡样式。</li>
+        <li><span class="badge warn">已调研</span> <strong>B1 / B3</strong>：钩子进度条（推翻广播假设、不碰物理）、武器命中反馈（不碰物理，复用 jelly 模式）——均可行，见各自章节。</li>
+        <li><span class="badge warn">已调研</span> <strong>B2（红绿虚线）/ B4</strong>：B2 红绿虚线已完成 80% 可立即做（Flexbox 另立）；B4 聊天气泡样式仍待做。</li>
       </ul>
+      <div class="note ok"><strong>2026-06-27 调研收口</strong>：本轮对 #11 / B1 / B2 / B3 / B8 五项派 research 子会话做 codegraph 级可行性核验，结论已写入各任务章节的「2026-06-27 调研结论」note 框，并同步更新下方优先级分组表。关键修正：B1 推翻「m_HookTick 不广播」、B1/B3「物理敏感」可降级、#11 的 Screen/Overlay 卡 shader 命门。完整 5 份报告另存于工作区 <code>workspace-files/.context/note.md</code> 顶部条目。</div>
 
       <div class="note ok">
         <strong>实现收口说明（2026-06-22 核验）</strong>：commit <code>7dd0b6ec09</code>「feat(backlog): 增加好友跟随、HUD 贴边与皮肤排序」一次性落地了 #8/#9/#10/#14.2/#14.4/#15/#19/#20.1/#20.2/B5/B7/B9 共 12 项。commit <code>e54bb209ac</code>「refactor(hud-editor): 提升共用贴边 helpers」补齐了 <code>SEdgeMargin</code> 通用设施。已通过 quick gate（10 passed, 0 warnings, 0 failures）和 run_cxx_tests（1455/1455）。
@@ -360,12 +362,12 @@
       <table>
         <thead><tr><th>任务</th><th>类型</th><th>状态</th><th>说明</th></tr></thead>
         <tbody>
-          <tr><td>#11</td><td>增强</td><td><span class="badge bad">调研</span></td><td>资源编辑器 PS blend modes（先调研再实现）</td></tr>
+          <tr><td>#11</td><td>增强</td><td><span class="badge warn">已调研</span></td><td>Multiply 零成本可做；Frankenstein 已有 4 模式；Screen/Overlay 卡 shader 命门</td></tr>
           <tr><td>#8</td><td>BUG 修复</td><td><span class="badge ok">已实现</span></td><td>滚动抖动根治（预算连续过渡已落地）</td></tr>
           <tr><td>#20</td><td>移植</td><td><span class="badge warn">部分</span></td><td>BestClient 4 子功能（#20.1/#20.2 已做，#20.3/#20.4 待调研）</td></tr>
           <tr><td>B5</td><td>增强</td><td><span class="badge ok">已实现</span></td><td>自动跟随好友服务器</td></tr>
           <tr><td>B6</td><td>增强</td><td><span class="badge warn">待做</span></td><td>马甲注册与识别（拆双类型）</td></tr>
-          <tr><td>B8</td><td>增强</td><td><span class="badge bad">调研</span></td><td>持久化统计数据存储格式</td></tr>
+          <tr><td>B8</td><td>增强</td><td><span class="badge warn">已调研</span></td><td>复用 map_notes.json 范例，CQmStatHistory 只读 m_aStats，可行（不含完赛时间）</td></tr>
           <tr><td>B9</td><td>增强</td><td><span class="badge ok">已实现</span></td><td>投票换图已完成地图图标</td></tr>
         </tbody>
       </table>
@@ -378,9 +380,9 @@
           <tr><td>#16</td><td>增强</td><td><span class="badge bad">审批</span></td><td>进程高优先级（跨平台 spike）</td></tr>
           <tr><td>#20.3</td><td>移植</td><td><span class="badge bad">审批</span></td><td>电影级摄像机（上游核心 camera.cpp）</td></tr>
           <tr><td>#20.4</td><td>移植</td><td><span class="badge bad">审计</span></td><td>3D Particles（与已有 CBackgroundParticles 差异审计）</td></tr>
-          <tr><td>B1</td><td>增强</td><td><span class="badge bad">物理</span></td><td>名字板钩子进度条（HookDuration 物理敏感）</td></tr>
-          <tr><td>B2</td><td>增强</td><td><span class="badge bad">架构</span></td><td>HUD 编辑器 Flexbox（大改动）</td></tr>
-          <tr><td>B3</td><td>增强</td><td><span class="badge bad">物理</span></td><td>武器命中反馈（命中判定）</td></tr>
+          <tr><td>B1</td><td>增强</td><td><span class="badge warn">已调研</span></td><td>名字板钩子进度条（推翻广播假设，m_HookTick 可读，不碰物理）</td></tr>
+          <tr><td>B2</td><td>增强</td><td><span class="badge warn">虚线可做</span></td><td>红绿虚线已完成 80% 可立即做；Flexbox 仍待设计（2-3 周）</td></tr>
+          <tr><td>B3</td><td>增强</td><td><span class="badge warn">已调研</span></td><td>武器命中反馈（只读信号+粒子，不碰物理，复用 jelly 模式）</td></tr>
           <tr><td>B4</td><td>增强</td><td><span class="badge warn">待做</span></td><td>聊天气泡漫画样式</td></tr>
         </tbody>
       </table>
@@ -505,7 +507,17 @@
     <section class="card" id="t11">
       <div class="task-header">
         <h2>#11 资源编辑器混合颜色模式、叠加模式增强</h2>
-        <span class="badge bad">需调研</span>
+        <span class="badge warn">已调研·部分可行</span>
+      </div>
+
+      <div class="note ok">
+        <strong>2026-06-27 调研结论（research 子会话 codegraph 核验）</strong>：<strong>部分可行，分两层</strong>。
+        <ul>
+          <li><strong>Frankenstein 编辑器侧已完整实现 MULTIPLY/NORMAL/SCREEN/OVERLAY 四种 per-pixel CPU blend</strong>（<code>menus.h:701-728</code> <code>AssetsEditorBlendColor</code> + <code>menus.h:748-781</code> 烘焙），已有测试 <code>assets_editor_layout_test.cpp</code>；只缺 SoftLight/HardLight（加 2 个 case 即可，低成本）。下方「现状」段「只有染色/替换一种模式」的描述已被推翻，以本结论为准。</li>
+          <li><strong>游戏内皮肤染色的 Multiply = GPU 固定管线天然行为</strong>（<code>SetColor</code> 顶点色 × 纹理 modulate，<code>render.cpp:645/733</code>、<code>graphics_threaded.cpp:1531</code>），加 <code>qm_skin_blend_mode</code> 枚举语义即可，<strong>零渲染改动、不触及上游</strong>。配置项放 <code>config_variables_qmclient.h</code>，不污染上游 <code>render.h</code>。</li>
+          <li><strong>Screen/Overlay/SoftLight/HardLight 实时染色：当前架构不可行</strong>——需暴露自定义 sprite shader，而 <code>UseProgram</code> 后端私有、<code>IGraphics</code> 未暴露（与 UI 重构规格第 9 章「shader 命门」、工作区 note.md 画质调研一致）。<strong>必须捆绑「shader 通道」做</strong>，不应单独为皮肤 blend 开。</li>
+        </ul>
+        <strong>推荐路径</strong>：Multiply 立即可做；Frankenstein 补 SoftLight/HardLight；Screen/Overlay 等 shader 通道就绪再做。性能：Multiply 零开销，shader 模式 fragment 多 2-4 条 ALU（DDNet 是 CPU/draw-call 瓶颈非 GPU）。<strong>待确认</strong>：<code>AssetsEditorBlendColor</code> 归属（上游 assets browser vs QmClient 自有，影响补 SoftLight 是否撞上游）。
       </div>
 
       <h3>现状</h3>
@@ -931,15 +943,35 @@ return ActiveBind.m_ModifierMask == KeyModifier::NONE &&
       <h2>第二批待办整合（用户补充 TODO，B1 ~ B9）</h2>
       <p class="muted">本节整合用户在动画审计后补充的一批 TODO。每项标注现状（已实现/部分/全新）、是否触及上游保护区域、优先级。与 <code>docs/dyl/QmClient_docs/</code> 现状页交叉引用，避免重复规划。</p>
 
-      <h3>B1. 名字板钩子进度条 <span class="badge bad">物理敏感</span></h3>
+      <h3>B1. 名字板钩子进度条 <span class="badge warn">已调研·可做</span></h3>
       <p><strong>现状</strong>：无尽钩图标已实现（<code>hud.cpp:4062-4068</code>）。<strong>约束</strong>：触及上游物理区域（HookDuration 调谐）。<strong>限制</strong>：<code>m_HookTick</code>（剩余钩 ticks）<strong>不在 <code>CNetObj_Character</code> snapshot 里广播</strong>，是 core 内部状态。进度条只能<strong>估算</strong>——记录 <code>HookedPlayer</code> 从 -1 变为有效 id 的那一 tick 作为起点，用 <code>1.25f - HookDuration</code> 作为总时长倒计时。</p>
       <p><strong>UI 实现方案</strong>：复用 <code>CUi::RenderProgressSpinner</code>（<code>ui.cpp:1848-1886</code>）——现成圆形弧形进度条。相关现状页：<code>docs/dyl/QmClient_docs/规划/钩子进度状态.html</code>。</p>
+      <div class="note ok">
+        <strong>2026-06-27 调研结论</strong>：<strong>推翻原「m_HookTick 不广播」假设——它是 <code>CNetObj_Character</code> 的广播字段</strong>（<code>generated/protocol.h:508-510</code>），服务器 <code>character.cpp:1143/1176</code> 写入广播，客户端 <code>m_Snap.m_aCharacters[i].m_Cur.m_HookTick</code> 直接可读，<strong>tick 级精度（20ms），无需本地计时</strong>。进度 = <code>m_HookTick / 60</code>（GRABBED 每 tick +1，<code>gamecore.cpp:447</code>，到 60 强制释放；钩墙 <code>HookedPlayer==-1</code> 不显示）。集成点 <code>nameplates.cpp:1623 RenderNamePlateGame</code>。<strong>不触及物理</strong>（HookDuration 全程只读），原「物理敏感」定性可降级。<strong>待决策</strong>：画「钩人者」（O(1)，推荐）还是「被钩者」（O(MAX_CLIENTS)）；是否精确读 tune zone 的 HookDuration（短钩地图起点会偏）。
+      </div>
 
-      <h3>B2. HUD 编辑器增强 <span class="badge bad">架构</span></h3>
+      <h3>B2. HUD 编辑器增强 <span class="badge warn">已调研·虚线可做</span></h3>
       <p><strong>现状</strong>：吸附已有（<code>SnapAxisToScreenEdges</code>、<code>SnapAxisToGuides</code>、边缘锚定）。<strong>子项</strong>：红绿虚线参考线、拖拽排列 Flexbox。<strong>风险</strong>：Flexbox 是大改动，影响所有 HUD 元素布局。建议先做红绿虚线（小改动），Flexbox 另行调研。相关现状页：<code>docs/dyl/QmClient_docs/规划/HUD视觉辅助状态.html</code>。</p>
+      <div class="note ok">
+        <strong>2026-06-27 调研结论</strong>：<strong>红绿虚线已完成 80%，可立即做（半天-1 天，零上游）；Flexbox 是范式重构（2-3 周，高风险），需单独立项</strong>。
+        <ul>
+          <li><strong>红绿虚线</strong>：<code>hud_editor.cpp:865-872</code> 已在画参考线（当前是<strong>单色黄实线</strong>），改动 = 换色（X 红 / Y 绿）+ 实线→虚线。图形层 <code>LinesBegin/LinesDraw</code> 原语齐备（<code>graphics.h:435-447</code>），自写 <code>DrawDashedLine</code> 约 15-20 行。另外 <code>m_GuideKind</code>（6 类，<code>hud_editor.h:28-37</code>）已产出但未被消费，可零成本用来按「屏幕参考 vs 元素参考」分色。改动 100% 局限 <code>hud_editor.cpp</code>。</li>
+          <li><strong>Flexbox</strong>：当前是纯绝对定位 permille（<code>SElementState</code>，<code>hud_editor.h:294-300</code>），<code>SEdgeMargin/ApplyEdgeMargin</code> 等只是贴边辅助<strong>不是容器布局</strong>。改 Flexbox 影响数据模型/布局核心/序列化/拖拽，跨 8 文件 24 元素。若保持 <code>BeginTransform</code> API 不变可不碰 <code>hud.cpp</code> 上游。</li>
+        </ul>
+        二者<strong>解耦为独立 PR</strong>，先做红绿虚线。
+      </div>
 
-      <h3>B3. 武器命中反馈 <span class="badge bad">物理</span></h3>
+      <h3>B3. 武器命中反馈 <span class="badge warn">已调研·可做</span></h3>
       <p><strong>现状</strong>：钩子/手枪命中时无特定粒子反馈。<strong>影响范围</strong>：<code>weapon_trajectory.cpp</code>、<code>effects.cpp</code>（粒子）。⚠️ 物理敏感（钩子命中判定）。与第一批 frontend design 建议的「钩中反馈」一致，可合并实现。</p>
+      <div class="note ok">
+        <strong>2026-06-27 调研结论</strong>：<strong>可行，低风险，不碰物理</strong>——复用 QmClient 已验证的 jelly 锤子命中反馈模式（<code>players.cpp:77-130</code>），所有命中信号客户端均<strong>只读</strong>消费，不改判定逻辑。三档：
+        <ul>
+          <li><strong>锤子命中（现成）</strong>：<code>NETEVENTTYPE_HAMMERHIT</code> 已触发 <code>m_Effects.HammerHit()</code>（<code>gameclient.cpp:3113</code>、<code>effects.cpp:420-442</code>），仅增强。</li>
+          <li><strong>钩子命中（推荐 MVP）</strong>：<code>m_HookState</code> 跃变 + <code>m_HookedPlayer</code> 广播字段推断（<code>protocol.h:508-514</code>）；本地玩家用 <code>COREEVENT_HOOK_ATTACH_PLAYER/GROUND</code> 位事件（<code>gamecore.h:120-126</code>）。新增 <code>CEffects::HookHit()</code> 与 <code>HammerHit</code> 同构，挂载点 <code>ProcessEvents</code>（<code>gameclient.cpp:3082</code>）。</li>
+          <li><strong>手枪命中 tee（信号最弱，建议非 MVP）</strong>：<code>TakeDamage</code> 只设 <code>EMOTE_PAIN</code> + 改速度、无专门网络事件（<code>character.cpp:1034-1044</code>），只能从表情/速度推断，会被冻结干扰。</li>
+        </ul>
+        <strong>不触及</strong>：<code>gamecore.cpp</code>/<code>character.cpp</code> 判定、协议、预测、demo、camera；粒子是本地渲染不上行，demo 可正常重放。原「物理敏感」定性可降级。
+      </div>
 
       <h3>B4. 聊天气泡漫画样式 <span class="badge warn">待做</span></h3>
       <p><strong>现状</strong>：聊天气泡配置有 <code>QmChatBubbleTextColor</code> 等，有消失动画，但<strong>没有</strong>样式枚举（漫画气泡/圆角矩形/无背景等）。相关现状页：<code>docs/dyl/QmClient_docs/规划/聊天UI状态.html</code>。</p>
@@ -981,8 +1013,11 @@ return ActiveBind.m_ModifierMask == KeyModifier::NONE &&
       <h3>B7. 好友分类 <span class="badge ok">已实现</span></h3>
       <p><strong>已实现</strong>：后端分类命令已注册（<code>friends.cpp:145-148</code>）。UI 入口已显式化——分类标题旁加齿轮管理按钮（<code>m_vFriendsCategoryManageButtons</code>，<code>menus_browser.cpp:2370</code>）+ tooltip「Manage categories」/「Right-click or use the gear to manage categories」（:2374-2375）。右键分类标题仍可触发管理弹窗（:2378-2380）。添加好友对话框里有分类下拉 + 「+ 新建分类」选项（:3012）。</p>
 
-      <h3>B8. 持久化统计数据（Ranks） <span class="badge bad">调研</span></h3>
+      <h3>B8. 持久化统计数据（Ranks） <span class="badge warn">已调研·可做</span></h3>
       <p><strong>现状</strong>：当前每局重置，玩家统计仅会话内有效。搜索 <code>PersistStat</code>/<code>StatRank</code> 无本地持久化命中。<strong>子项</strong>：本地 JSON/Toml 持久化、Kog 死亡榜。<strong>影响范围</strong>：新增持久化文件、<code>statboard</code> 组件、<code>qmclient/</code> 工具。相关现状页：<code>docs/dyl/QmClient_docs/规划/持久统计状态.html</code>、<code>本地比赛历史.html</code>。</p>
+      <div class="note ok">
+        <strong>2026-06-27 调研结论</strong>：<strong>可行，风险低</strong>——QmClient 已有成熟 JSON 持久化范例 <code>qmclient/map_notes.json</code>（<code>tclient.cpp:67</code>，<code>JsonParseEx</code> + <code>CJsonFileWriter</code> + 脏标记延迟落盘 <code>tclient.cpp:4687-4781</code>）。statboard 数据在 <code>GameClient()-&gt;m_aStats</code>（<code>CClientStats</code>，<code>gameclient.h:793-828</code>），纯内存、每局清零（<code>OnReset</code> <code>statboard.cpp:23-30</code>）；全仓库搜索 <code>PersistStat/StatRank</code> <strong>0 命中</strong>确认无持久化。推荐：新建独立组件 <code>CQmStatHistory</code>，<strong>只读</strong> <code>m_aStats</code>，局结束（<code>GAMESTATEFLAG_GAMEOVER</code> <code>statboard.cpp:135</code>）/断线时快照写入 <code>qmclient/stat_history.json</code>，<strong>不改上游 CClientStats</strong>。JSON 是项目主流（无 Toml）；清理走 LRU/时间/手动命令（参照 <code>ConSaveList</code> <code>tclient.cpp:5080</code>）。<strong>不触及</strong>协议/物理/预测/demo/camera。<strong>边界</strong>：statboard 是 PvP 对战统计（frags/deaths/旗帜/spree），<strong>不含完赛时间</strong>（server 权威 score，需另立调研）。
+      </div>
 
       <h3>B9. 投票换图功能增强 <span class="badge ok">已实现</span></h3>
       <p><strong>已实现</strong>：投票换图面板（<code>menus_ingame.cpp</code> PAGE_CALLVOTE）显示已完成地图图标（<code>FONT_ICON_FLAG_CHECKERED</code>，:2172-2178）。复用 <code>g_Config.m_BrIndicateFinished</code> + community <code>HasRank()</code> 判断（:2169）。已完成地图在投票列表中显示勾选图标，与服务器列表一致。</p>
@@ -994,7 +1029,7 @@ return ActiveBind.m_ModifierMask == KeyModifier::NONE &&
           <tr><td><span class="badge ok">已完成</span></td><td>B5、B7、B9</td><td>数据源/UI 入口/图标已落地</td></tr>
           <tr><td><span class="badge warn">中</span></td><td>B6</td><td>拆双类型，类型 B 可独立推进</td></tr>
           <tr><td><span class="badge warn">低</span></td><td>B4</td><td>聊天气泡样式枚举</td></tr>
-          <tr><td><span class="badge bad">需调研</span></td><td>B1、B2、B3、B8</td><td>物理敏感/架构改动/存储格式</td></tr>
+          <tr><td><span class="badge warn">已调研·可做</span></td><td>B1、B2(虚线)、B3、B8</td><td>06-27 codegraph 核验：B1/B3 不碰物理、B8 复用 JSON 范例、B2 红绿虚线已完成 80%。仅 B2 Flexbox 仍待设计</td></tr>
         </tbody>
       </table>
     </section>
@@ -1036,7 +1071,7 @@ return ActiveBind.m_ModifierMask == KeyModifier::NONE &&
       </ul>
     </section>
 
-    <p class="footer">本规格是 backlog 整合 PRD，不是实施计划。实施前仍需读取当前源码和对应工作流文档。已实现项的代码事实以当前源码和 commit <code>7dd0b6ec09</code>/<code>e54bb209ac</code> 为准。本文档由原 Markdown 版本（<code>2026-06-20-backlog-consolidation-spec.md</code>）于 2026-06-22 重写为 HTML 并按当前现状更新；<strong>2026-06-27 合并</strong>：原 MD 中未实现任务（#11 blend 公式表、#16 平台细节、#18 三选一枚举、B6 类型 A 详细设计/验收/风险、BC 移植分步计划）的设计细节已回填本文档，原 MD 已删除，本文档为唯一权威源。</p>
+    <p class="footer">本规格是 backlog 整合 PRD，不是实施计划。实施前仍需读取当前源码和对应工作流文档。已实现项的代码事实以当前源码和 commit <code>7dd0b6ec09</code>/<code>e54bb209ac</code> 为准。本文档由原 Markdown 版本（<code>2026-06-20-backlog-consolidation-spec.md</code>）于 2026-06-22 重写为 HTML 并按当前现状更新；<strong>2026-06-27 合并</strong>：原 MD 中未实现任务（#11 blend 公式表、#16 平台细节、#18 三选一枚举、B6 类型 A 详细设计/验收/风险、BC 移植分步计划）的设计细节已回填本文档，原 MD 已删除，本文档为唯一权威源。<strong>2026-06-27 调研收口</strong>：对 #11/B1/B2/B3/B8 派 research 子会话做 codegraph 级可行性核验，结论已写入各任务章节「2026-06-27 调研结论」note 框并同步优先级分组；完整 5 份报告见 <code>workspace-files/.context/note.md</code>。</p>
   </div>
 </body>
 </html>

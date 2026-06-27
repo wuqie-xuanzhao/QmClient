@@ -18,7 +18,7 @@ docs/dyl/BestClient/
 qmclient_scripts/perf/node_modules/
 qmclient_scripts/languages_qmclient/translations_draft/
 
-# Local Codex screenshots
+# 本地资源
 .codex-*.png
 .superpowers
 .trae
@@ -26,7 +26,7 @@ qmclient_scripts/languages_qmclient/translations_draft/
 skills/
 docs/Promting.md
 
-# tmp
+# 临时文件
 tmp/
 QmClient_codeQmClienttmp_harness_repo/
 tmp_harness_deusyu/

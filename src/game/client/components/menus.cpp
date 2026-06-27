@@ -4313,6 +4313,263 @@ void CMenus::FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsSc
 	}
 }
 
+CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
+{
+	SQmSettingsCardStyle Style;
+	Style.m_Padding = std::clamp(14.0f * UiScale, 10.0f, 14.0f);
+	Style.m_Spacing = std::clamp(16.0f * UiScale, 10.0f, 16.0f);
+	Style.m_CornerRadius = std::clamp(12.0f * UiScale, 8.0f, 12.0f);
+	Style.m_ScrollbarWidth = std::clamp(28.0f * UiScale, 24.0f, 28.0f);
+	Style.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
+	return Style;
+}
+
+CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const
+{
+	const SQmSettingsCardStyle Style = QmSettingsCardStyle(UiScale);
+	CScrollRegionParams Params;
+	Params.m_ScrollUnit = 60.0f * UiScale;
+	Params.m_ScrollbarWidth = Style.m_ScrollbarWidth;
+	Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;
+	Params.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+	return Params;
+}
+
+void CMenus::RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const
+{
+	CUIRect Shadow = Card;
+	Shadow.x += 1.5f;
+	Shadow.y += 2.0f;
+	Shadow.Draw(Style.m_ShadowColor, IGraphics::CORNER_ALL, Style.m_CornerRadius);
+	Card.Draw(Style.m_GlassColor, IGraphics::CORNER_ALL, Style.m_CornerRadius);
+	CUIRect TopHighlight = Card;
+	TopHighlight.h = 1.0f;
+	TopHighlight.x += Style.m_CornerRadius;
+	TopHighlight.w = maximum(0.0f, TopHighlight.w - Style.m_CornerRadius * 2.0f);
+	TopHighlight.Draw(Style.m_HighlightColor, IGraphics::CORNER_NONE, 0.0f);
+}
+
+std::vector<std::string> *CMenus::SettingsCardDeckOrder(const char *pDeckId)
+{
+	if(pDeckId == nullptr || pDeckId[0] == '\0')
+		return nullptr;
+	return &m_SettingsCardDeckOrders[pDeckId];
+}
+
+static void SettingsCardDeckEnsureStableId(std::vector<std::string> &vOrder, const char *pStableId)
+{
+	if(pStableId == nullptr || pStableId[0] == '\0')
+		return;
+	if(std::find(vOrder.begin(), vOrder.end(), pStableId) == vOrder.end())
+		vOrder.emplace_back(pStableId);
+}
+
+static int SettingsCardDeckOrderIndex(const std::vector<std::string> &vOrder, const char *pStableId, int FallbackIndex)
+{
+	if(pStableId == nullptr || pStableId[0] == '\0')
+		return FallbackIndex;
+	const auto It = std::find(vOrder.begin(), vOrder.end(), pStableId);
+	return It == vOrder.end() ? FallbackIndex : (int)std::distance(vOrder.begin(), It);
+}
+
+bool CMenus::SettingsCardDeckIsActiveStableId(const SSettingsCardDeckLayout &Deck, const std::string &StableId) const
+{
+	if(Deck.m_vActiveCardIds.empty())
+		return true;
+	return std::find(Deck.m_vActiveCardIds.begin(), Deck.m_vActiveCardIds.end(), StableId) != Deck.m_vActiveCardIds.end();
+}
+
+CMenus::SSettingsCardDeckLayout CMenus::BeginSettingsCardDeck(CUIRect MainView, CScrollRegion &ScrollRegion, float PreviousScrollY, float UiScale, const char *pDeckId, int Page, std::vector<std::string> *pOrder, const std::vector<std::string> *pActiveCardIds)
+{
+	SSettingsCardDeckLayout Deck;
+	Deck.m_pDeckId = pDeckId;
+	Deck.m_pScrollRegion = &ScrollRegion;
+	Deck.m_pOrder = pOrder != nullptr ? pOrder : SettingsCardDeckOrder(pDeckId);
+	if(pActiveCardIds != nullptr)
+		Deck.m_vActiveCardIds = *pActiveCardIds;
+	Deck.m_Style = QmSettingsCardStyle(UiScale);
+	Deck.m_UiScale = UiScale;
+	Deck.m_Page = Page;
+	Deck.m_Spacing = Deck.m_Style.m_Spacing;
+	m_vTClientSettingsCardDeckItems.clear();
+
+	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);
+	Deck.m_ScrollFrame = BeginSettingsScrollRegion(ScrollRegion, &MainView, ScrollParams, PreviousScrollY);
+	MainView.y += Deck.m_ScrollFrame.m_BeginOffset.y;
+	MainView.HSplitTop(Deck.m_Spacing, nullptr, &MainView);
+	Deck.m_View = MainView;
+	Deck.m_TwoColumns = MainView.w >= 620.0f * UiScale;
+	if(Deck.m_TwoColumns)
+		MainView.VSplitMid(&Deck.m_aColumns[0], &Deck.m_aColumns[1], Deck.m_Spacing);
+	else
+	{
+		Deck.m_aColumns[0] = MainView;
+		Deck.m_aColumns[1] = MainView;
+	}
+	Deck.m_aBaseColumns[0] = Deck.m_aColumns[0];
+	Deck.m_aBaseColumns[1] = Deck.m_aColumns[1];
+	Deck.m_EndRect = {MainView.x, MainView.y, MainView.w, 1.0f};
+	return Deck;
+}
+
+CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDeckLayout &Deck, const char *pStableId, const char *pTitle, float MinHeight, float LastMeasuredHeight, ESettingsCardDeckColumn PreferredColumn, bool ForcePreferredColumn)
+{
+	SSettingsCardDeckCard Card;
+	Card.m_pStableId = pStableId;
+	Card.m_pTitle = pTitle;
+	if(Deck.m_pOrder != nullptr)
+		SettingsCardDeckEnsureStableId(*Deck.m_pOrder, pStableId);
+	int OrderIndex = Deck.m_CardCount;
+	if(Deck.m_pOrder != nullptr)
+		OrderIndex = SettingsCardDeckOrderIndex(*Deck.m_pOrder, pStableId, Deck.m_CardCount);
+	std::unordered_map<std::string, float> *pMeasuredHeights = Deck.m_pDeckId != nullptr ? &m_SettingsCardDeckMeasuredHeights[Deck.m_pDeckId] : nullptr;
+	std::unordered_map<std::string, float> *pMinHeights = Deck.m_pDeckId != nullptr ? &m_SettingsCardDeckMinHeights[Deck.m_pDeckId] : nullptr;
+	std::unordered_map<std::string, int> *pColumnPrefs = Deck.m_pDeckId != nullptr ? &m_SettingsCardDeckColumnPrefs[Deck.m_pDeckId] : nullptr;
+	if(pMeasuredHeights != nullptr && pStableId != nullptr && pStableId[0] != '\0')
+		(*pMeasuredHeights)[pStableId] = LastMeasuredHeight;
+	if(pMinHeights != nullptr && pStableId != nullptr && pStableId[0] != '\0')
+		(*pMinHeights)[pStableId] = MinHeight;
+	if(pColumnPrefs != nullptr && pStableId != nullptr && pStableId[0] != '\0')
+		(*pColumnPrefs)[pStableId] = (ForcePreferredColumn ? 0x10 : 0) | (PreferredColumn == ESettingsCardDeckColumn::RIGHT ? 1 : 0);
+
+	CUIRect aVirtualColumns[2] = {Deck.m_aBaseColumns[0], Deck.m_aBaseColumns[1]};
+	if(Deck.m_pOrder != nullptr)
+	{
+		for(size_t OrderPos = 0; OrderPos < Deck.m_pOrder->size(); ++OrderPos)
+		{
+			const std::string &StableId = (*Deck.m_pOrder)[OrderPos];
+			if(!SettingsCardDeckIsActiveStableId(Deck, StableId))
+				continue;
+			const float OrderedMinHeight = pMinHeights != nullptr && pMinHeights->find(StableId) != pMinHeights->end() ? (*pMinHeights)[StableId] : MinHeight;
+			const float OrderedMeasuredHeight = pMeasuredHeights != nullptr && pMeasuredHeights->find(StableId) != pMeasuredHeights->end() ? (*pMeasuredHeights)[StableId] : OrderedMinHeight;
+			const float OrderedHeight = maximum(OrderedMinHeight, OrderedMeasuredHeight > 0.0f ? OrderedMeasuredHeight : OrderedMinHeight);
+			int ColumnPref = 0;
+			if(pColumnPrefs != nullptr)
+			{
+				const auto PrefIt = pColumnPrefs->find(StableId);
+				if(PrefIt != pColumnPrefs->end())
+					ColumnPref = PrefIt->second;
+			}
+			bool OrderedUseRightColumn = Deck.m_TwoColumns && aVirtualColumns[1].y < aVirtualColumns[0].y;
+			if(Deck.m_TwoColumns && (ColumnPref & 0x10) != 0)
+				OrderedUseRightColumn = (ColumnPref & 0x1) != 0;
+			if(pStableId != nullptr && StableId == pStableId)
+				break;
+			aVirtualColumns[OrderedUseRightColumn ? 1 : 0].y += OrderedHeight + Deck.m_Spacing;
+		}
+	}
+	bool UseRightColumn = Deck.m_TwoColumns && aVirtualColumns[1].y < aVirtualColumns[0].y;
+	if(Deck.m_TwoColumns && ForcePreferredColumn)
+		UseRightColumn = PreferredColumn == ESettingsCardDeckColumn::RIGHT;
+	Card.m_Column = UseRightColumn ? ESettingsCardDeckColumn::RIGHT : ESettingsCardDeckColumn::LEFT;
+	const float CardHeight = maximum(MinHeight, LastMeasuredHeight > 0.0f ? LastMeasuredHeight : MinHeight);
+	Card.m_Rect = aVirtualColumns[UseRightColumn ? 1 : 0];
+	Card.m_Rect.h = CardHeight;
+	Deck.m_aColumns[0].y = maximum(Deck.m_aColumns[0].y, aVirtualColumns[0].y);
+	Deck.m_aColumns[1].y = maximum(Deck.m_aColumns[1].y, aVirtualColumns[1].y);
+	Deck.m_aColumns[UseRightColumn ? 1 : 0].y = maximum(Deck.m_aColumns[UseRightColumn ? 1 : 0].y, Card.m_Rect.y + CardHeight + Deck.m_Spacing);
+
+	RenderQmSettingsGlassCard(Card.m_Rect, Deck.m_Style);
+	RenderSettingsCardDragHandle(Card.m_Rect, &Card.m_HandleRect, Deck.m_Style);
+	Card.m_Rect.Margin(Deck.m_Style.m_Padding, &Card.m_ContentRect);
+	Card.m_ContentRect.HSplitTop(28.0f * Deck.m_UiScale, &Card.m_TitleRect, &Card.m_ContentRect);
+	if(Card.m_HandleRect.w > 0.0f)
+		Card.m_TitleRect.VSplitRight(Card.m_HandleRect.w + Deck.m_Style.m_Padding, &Card.m_TitleRect, nullptr);
+	DoSettingsLabel(Deck.m_Page, -1, Card.m_pStableId, &Card.m_TitleRect, pTitle, 18.0f * Deck.m_UiScale, TEXTALIGN_ML);
+	Card.m_ContentRect.HSplitTop(Deck.m_Style.m_Padding * 0.5f, nullptr, &Card.m_ContentRect);
+
+	SSettingsSection Section;
+	Section.m_pStableCardId = pStableId;
+	Section.m_pName = Deck.m_pDeckId;
+	SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(Section, Card.m_Column, OrderIndex, Card.m_Rect, Card.m_HandleRect);
+	Deck.m_CardCount++;
+	RegisterSettingsCardDeckItem(Item);
+	HandleSettingsCardDeckDrag(Item, Card.m_Column, Deck.m_pOrder);
+	return Card;
+}
+
+void CMenus::EndSettingsCardDeck(SSettingsCardDeckLayout &Deck, float *pPreviousScrollY)
+{
+	const float LeftBottom = Deck.m_aColumns[0].y;
+	const float RightBottom = Deck.m_TwoColumns ? Deck.m_aColumns[1].y : LeftBottom;
+	Deck.m_EndRect.y = maximum(LeftBottom, RightBottom);
+	Deck.m_EndRect.h = Deck.m_Style.m_Spacing;
+	FinishSettingsScrollRegion(*Deck.m_pScrollRegion, Deck.m_ScrollFrame, &Deck.m_EndRect, Deck.m_Page);
+	RenderSettingsCardDeckDragOverlay(Deck);
+	if(pPreviousScrollY != nullptr)
+		*pPreviousScrollY = Deck.m_ScrollFrame.m_FinalOffsetY;
+}
+
+void CMenus::RenderSettingsCardDragHandle(const CUIRect &Card, CUIRect *pHandleRect, const SQmSettingsCardStyle &Style)
+{
+	const float HandleSize = std::clamp(24.0f * (Style.m_Padding / 14.0f), 18.0f, 24.0f);
+	CUIRect LocalHandleRect;
+	if(pHandleRect == nullptr)
+		pHandleRect = &LocalHandleRect;
+	CUIRect HandleColumn;
+	Card.VSplitRight(HandleSize + Style.m_Padding, nullptr, &HandleColumn);
+	HandleColumn.HSplitTop(Style.m_Padding * 0.5f, nullptr, &HandleColumn);
+	HandleColumn.HSplitTop(HandleSize, pHandleRect, nullptr);
+	pHandleRect->VMargin((pHandleRect->w - HandleSize) * 0.5f, pHandleRect);
+
+	const bool CtrlHeld = Input()->ModifierIsPressed();
+	const bool Hovered = Ui()->MouseHovered(pHandleRect);
+	const ColorRGBA DotColor = CtrlHeld || Hovered ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.78f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.38f);
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(DotColor);
+	const float DotRadius = maximum(1.25f, HandleSize * 0.075f);
+	for(int Col = 0; Col < 2; ++Col)
+	{
+		for(int Row = 0; Row < 3; ++Row)
+		{
+			const float X = pHandleRect->x + HandleSize * (0.36f + Col * 0.28f);
+			const float Y = pHandleRect->y + HandleSize * (0.28f + Row * 0.22f);
+			Graphics()->DrawCircle(X, Y, DotRadius, 8);
+		}
+	}
+	Graphics()->QuadsEnd();
+}
+
+void CMenus::RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck)
+{
+	if(!m_TClientSettingsCardDragState.m_Active)
+		return;
+	if(Ui()->MouseButton(0))
+	{
+		m_TClientSettingsCardDragState.m_DropIndex = SettingsCardDeckDropIndexForColumnItems(
+			m_vTClientSettingsCardDeckItems,
+			m_TClientSettingsCardDragState.m_Item.m_Column,
+			Ui()->MouseX(),
+			Ui()->MouseY(),
+			m_TClientSettingsCardDragState.m_DropIndex);
+		for(const SSettingsCardDeckItem &Item : m_vTClientSettingsCardDeckItems)
+		{
+			if(Item.m_Column != m_TClientSettingsCardDragState.m_Item.m_Column)
+				continue;
+			const CUIRect DropIndicator = SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex, 4.0f);
+			if(Ui()->MouseHovered(&Item.m_Rect))
+				DropIndicator.Draw(ColorRGBA(1.0f, 0.72f, 0.35f, 0.85f), IGraphics::CORNER_ALL, 2.0f);
+		}
+		const float AutoScrollDelta = SettingsCardDeckAutoScrollDelta(Ui()->MouseY(), Deck.m_View.y, Deck.m_View.y + Deck.m_View.h, 32.0f, 60.0f * Deck.m_UiScale);
+		if(AutoScrollDelta != 0.0f && Deck.m_pScrollRegion != nullptr)
+			Deck.m_pScrollRegion->ScrollRelativeDirect(AutoScrollDelta);
+		CUIRect DragProxy = SettingsCardDeckProxyRect(m_TClientSettingsCardDragState.m_Item, Ui()->MouseX(), Ui()->MouseY());
+		RenderQmSettingsGlassCard(DragProxy, Deck.m_Style);
+		DragProxy.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, Deck.m_Style.m_CornerRadius);
+	}
+	else if(Ui()->LastMouseButton(0))
+	{
+		const int DropIndex = SettingsCardDeckDropIndexForColumnItems(
+			m_vTClientSettingsCardDeckItems,
+			m_TClientSettingsCardDragState.m_Item.m_Column,
+			Ui()->MouseX(),
+			Ui()->MouseY(),
+			m_TClientSettingsCardDragState.m_DropIndex);
+		CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropIndex);
+	}
+}
+
 void CMenus::StartSettingsPerfFixedWindow(const char *pOperation, const char *pContext, const char *pPage, const char *pTab, int MaxFrames)
 {
 	if(!PerfDebugEnabled())

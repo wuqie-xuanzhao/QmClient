@@ -1681,9 +1681,6 @@ Custom Font:
 Custom prompt template
 == カスタムプロンプトテンプレート
 
-Customize name and clan text effects
-== 名前とクランのテキストエフェクトをカスタマイズ
-
 Customize translate button and menu colors
 == 翻訳ボタンとメニューの色をカスタマイズ
 
@@ -1979,6 +1976,9 @@ Discord
 == Discord
 
 Display mode
+== 表示モード
+
+Display modes
 == 表示モード
 
 Display your race time
@@ -2983,6 +2983,9 @@ Graphics backend
 Graphics card
 == グラフィックカード
 
+Graphics display
+== グラフィック表示
+
 Greeting text
 == 挨拶テキスト
 
@@ -3544,17 +3547,11 @@ Laser effect enhancement
 Laser Enhancement
 == レーザー強化
 
-Laser preview
-== レーザープレビュー
-
 Laser settings
 == レーザー設定
 
 Laser size
 == レーザーサイズ
-
-Laser style
-== レーザースタイル
 
 Last page in console
 == コンソールの最終ページ
@@ -6016,9 +6013,6 @@ Selected candidate
 Selected candidate %d/%d under cursor.
 == カーソル下の候補 %d/%d を選択しました。
 
-Selected pack
-== 選択されたパック
-
 Selected server
 == 選択したサーバー
 
@@ -6979,8 +6973,8 @@ Status Bar
 Status bar alpha
 == ステータスバーのアルファ
 
-Status Bar Codes:
-== ステータスバーコード：
+Status Bar Codes
+== ステータスバーコード
 
 Status bar color
 == ステータスバーの色
@@ -8115,6 +8109,9 @@ Voice chat
 
 Voice distance radius (tiles)
 == 音声距離半径（タイル）
+
+Volume
+== 音量
 
 Vote a map by name
 == マップ名で投票する

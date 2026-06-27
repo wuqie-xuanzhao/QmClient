@@ -227,46 +227,47 @@ TEST(QmNewUiMenuBranches, BrowserInteriorBackgroundsUseMapBrowserOpacity)
 	EXPECT_EQ(Source.find("BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.3f))"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, QmHudNameplateTextCardUsesDedicatedScrollRegion)
+TEST(QmNewUiMenuBranches, AppearanceNamePlateContainsNameplateTextControlsWithoutInternalScrollRegion)
 {
-	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const size_t RenderColumnSwitch = Source.find("switch(pModule->m_Id)");
-	ASSERT_NE(RenderColumnSwitch, std::string::npos);
-	const size_t NameplateTextCase = Source.find("case EQmModuleId::NameplateText:", RenderColumnSwitch);
-	ASSERT_NE(NameplateTextCase, std::string::npos);
-	const size_t FavoriteMapsCase = Source.find("case EQmModuleId::FavoriteMaps:", NameplateTextCase);
-	ASSERT_NE(FavoriteMapsCase, std::string::npos);
-	const std::string NameplateTextBlock = Source.substr(NameplateTextCase, FavoriteMapsCase - NameplateTextCase);
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	ASSERT_FALSE(NamePlateBranch.empty());
 
-	const size_t HeadlinePos = NameplateTextBlock.find("Localize(\"Nameplate text\")");
-	const size_t BeginScrollPos = NameplateTextBlock.find("BeginSettingsScrollRegion(s_NameplateTextCardScrollRegion");
-	const size_t FinishScrollPos = NameplateTextBlock.find("FinishSettingsScrollRegion(s_NameplateTextCardScrollRegion");
-	const size_t RegisterPos = NameplateTextBlock.find("RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());");
-	const size_t DragPos = NameplateTextBlock.find("HandleModuleDragState(pModule, s_GlassCards.back());");
+	const size_t NamePlateTitlePos = NamePlateBranch.find("Localize(\"Name Plate\")");
+	const size_t TextSettingsPos = NamePlateBranch.find("Localize(\"Nameplate text\")");
+	const size_t HookStrengthPos = NamePlateBranch.find("Localize(\"Hook Strength\")");
+	ASSERT_NE(NamePlateTitlePos, std::string::npos);
+	ASSERT_NE(TextSettingsPos, std::string::npos);
+	ASSERT_NE(HookStrengthPos, std::string::npos);
+	EXPECT_LT(NamePlateTitlePos, TextSettingsPos);
+	EXPECT_LT(TextSettingsPos, HookStrengthPos);
 
-	ASSERT_NE(HeadlinePos, std::string::npos);
-	ASSERT_NE(BeginScrollPos, std::string::npos);
-	ASSERT_NE(FinishScrollPos, std::string::npos);
-	ASSERT_NE(RegisterPos, std::string::npos);
-	ASSERT_NE(DragPos, std::string::npos);
-	EXPECT_LT(HeadlinePos, BeginScrollPos);
-	EXPECT_LT(BeginScrollPos, FinishScrollPos);
-	EXPECT_LT(FinishScrollPos, RegisterPos);
-	EXPECT_LT(RegisterPos, DragPos);
+	EXPECT_NE(NamePlateBranch.find("g_Config.m_QmNameplateTextEffects"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("QM_TEXT_EFFECT_BORDER"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("QM_TEXT_EFFECT_GRADIENT"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("QM_TEXT_EFFECT_RAINBOW"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("QM_TEXT_EFFECT_GLOW"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Localize(\"Playing effects\")"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Localize(\"Spectate effects\")"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Localize(\"Demo effects\")"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Localize(\"Demo target\")"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Localize(\"Border range\")"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Localize(\"Glow range\")"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("DoLine_ColorPicker(&s_NameplateTextBorderColorId"), std::string::npos);
 
-	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextCardScrollRegion;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("NameplateTextScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("NameplateTextScrollParams.m_ScrollUnit = 60.0f * UiScale;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("NameplateTextScrollParams.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("CardContent.y += NameplateTextScrollOffset.y;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("CUIRect NameplateTextScrollEnd = CardContent;"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("static CScrollRegion s_NameplateTextCardScrollRegion;"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("BeginSettingsScrollRegion(s_NameplateTextCardScrollRegion"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("FinishSettingsScrollRegion(s_NameplateTextCardScrollRegion"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NameplateTextPlayingDropDownScrollRegion;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NameplateTextSpectateDropDownScrollRegion;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NameplateTextDemoDropDownScrollRegion;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NameplateTextDemoTargetDropDownScrollRegion;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("s_NameplateTextDemoTargetDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_NameplateTextDemoTargetDropDownScrollRegion;"), std::string::npos);
 
-	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextPlayingDropDownScrollRegion;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextSpectateDropDownScrollRegion;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextDemoDropDownScrollRegion;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextDemoTargetDropDownScrollRegion;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;"), std::string::npos);
-	EXPECT_NE(NameplateTextBlock.find("s_NameplateTextDemoTargetDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_NameplateTextDemoTargetDropDownScrollRegion;"), std::string::npos);
+	const std::string QmSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	EXPECT_EQ(QmSource.find("auto RenderNameplateTextSettings = [&](CUIRect &CardContent)"), std::string::npos);
+	EXPECT_EQ(QmSource.find("RenderNameplateTextSettings(CardContent);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, DemoBrowserUsesExplicitLegacyShellBranches)
@@ -1190,6 +1191,22 @@ TEST(QmNewUiMenuBranches, ShortServerNamesCoverKnownFamilies)
 	str_copy(Info.m_aGameType, "Gores");
 	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN10 钩累死");
 
+	str_copy(Info.m_aName, "Axiom ◇ 广州 ✦ 活动 - CHN9 AXRace");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "活动 - CHN9 AXRace");
+
+	str_copy(Info.m_aName, "Axiom ◇ 广州 ✦ 极限 - CHN9 钩累死");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "极限 - CHN9 钩累死");
+
+	str_copy(Info.m_aName, "Axiom ◇ 上海 ✦ 训练 - CHN2 钩累死");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "训练 - CHN2 钩累死");
+
+	str_copy(Info.m_aName, "Axiom ◇ 成都 ✦ 娱乐 - CHN12 钩累死");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "娱乐 - CHN12 钩累死");
+
 	str_copy(Info.m_aName, "DDNet Moderate - CHN7 西安");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
 	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "中阶图 - CHN7 西安");
@@ -1430,28 +1447,28 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_NE(NameplatesSource.find("RenderTools()->RenderTextContainerWithEffects"), std::string::npos);
 	EXPECT_EQ(NameplatesSource.find("Rainbow name for local player"), std::string::npos);
 
-	EXPECT_NE(QmMenusSource.find("EQmModuleId::NameplateText"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("nameplate_text"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("Nameplate text"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("QmNameplateTextEffects"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("QmNameplateTextGlowRange"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("DoLine_ColorPicker(&s_NameplateTextBorderColorId"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("Playing effects"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("Spectate effects"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("Demo effects"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("Demo target"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("auto RenderNameplateTextControlRow = [&](const char *pTextId, const char *pLabel, const auto &RenderControl)"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-border-range\", Localize(\"Border range\"), [&](CUIRect &ControlCol)"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("RenderNameplateTextControlRow(\"qmclient-nameplate-text-glow-range\", Localize(\"Glow range\"), [&](CUIRect &ControlCol)"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("Localize(\"Glow\")"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("NameplateTextLabelProps.m_DisallowNewline = true"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("NameplateTextLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("s_NameplateTextDemoTargetDropDownNames"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("bool DemoTargetListed = g_Config.m_QmNameplateTextDemoTarget < 0;"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("if(!DemoTargetListed)"), std::string::npos);
-	EXPECT_NE(QmMenusSource.find("g_Config.m_QmNameplateTextDemoTarget = DemoTargetNew - 1;"), std::string::npos);
-	EXPECT_EQ(QmMenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmRainbowName"), std::string::npos);
 	const std::string AppearanceSettings = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string NamePlateBranch = BlockBodyAfter(AppearanceSettings, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	ASSERT_FALSE(NamePlateBranch.empty());
+	EXPECT_EQ(QmMenusSource.find("RenderNameplateTextSettings(CardContent);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Nameplate text"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("QmNameplateTextEffects"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("QmNameplateTextGlowRange"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("DoLine_ColorPicker(&s_NameplateTextBorderColorId"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Playing effects"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Spectate effects"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Demo effects"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Demo target"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("auto RenderNameplateTextControlRow = [&](const char *pTextId, const char *pLabel, const auto &RenderControl)"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-nameplate-text-border-range\""), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-nameplate-text-glow-range\""), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Localize(\"Glow\")"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NameplateTextLabelProps.m_DisallowNewline = true"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NameplateTextLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("s_NameplateTextDemoTargetDropDownNames"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("bool DemoTargetListed = g_Config.m_QmNameplateTextDemoTarget < 0;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("if(!DemoTargetListed)"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("g_Config.m_QmNameplateTextDemoTarget = DemoTargetNew - 1;"), std::string::npos);
 	EXPECT_NE(AppearanceSettings.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-hook-strength-size\", &g_Config.m_ClNamePlatesStrongSize, &g_Config.m_ClNamePlatesStrongSize, &Button, Localize(\"Size of hook strength icon and number indicator\"), -50, 100);"), std::string::npos);
 }
 
@@ -1470,23 +1487,334 @@ TEST(QmNewUiMenuBranches, NameplatePreviewRebuildsTextContainerInsteadOfAppendin
 	EXPECT_EQ(Body.find("NameplateTextEffectPadding"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, QmLaserSettingsPreviewIncludesEntityLaserTypes)
+TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 {
-	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string RenderSettingsQmClient = FunctionBody(Source, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	const size_t LaserHeadlinePos = RenderSettingsQmClient.find("RenderQmModuleHeadline(CardContent, 5, Localize(\"Laser settings\"), Localize(\"Laser style\"));");
-	ASSERT_NE(LaserHeadlinePos, std::string::npos);
-	const size_t LaserModulePos = RenderSettingsQmClient.rfind("case EQmModuleId::Laser:", LaserHeadlinePos);
-	ASSERT_NE(LaserModulePos, std::string::npos);
-	const size_t NextModulePos = RenderSettingsQmClient.find("case EQmModuleId::PlayerStats:", LaserModulePos);
-	ASSERT_NE(NextModulePos, std::string::npos);
-	const std::string LaserModule = RenderSettingsQmClient.substr(LaserModulePos, NextModulePos - LaserModulePos);
+	const std::string QmSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string RenderSettingsQmClient = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(RenderSettingsQmClient.empty());
+	const std::string VisualModules = BlockBodyAfter(RenderSettingsQmClient, "static constexpr std::array<EQmModuleId, 9> s_aQmVisualModules = {");
+	ASSERT_FALSE(VisualModules.empty());
+	EXPECT_EQ(VisualModules.find("EQmModuleId::Laser"), std::string::npos);
+	EXPECT_EQ(VisualModules.find("EQmModuleId::NameplateText"), std::string::npos);
+	EXPECT_EQ(RenderSettingsQmClient.find("{EQmModuleId::NameplateText, EQmModuleColumn::Right"), std::string::npos);
+	EXPECT_EQ(RenderSettingsQmClient.find("RenderQmModuleHeadline(CardContent, 5, Localize(\"Laser settings\"), Localize(\"Laser style\"));"), std::string::npos);
 
-	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_RIFLE);"), std::string::npos);
-	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_SHOTGUN);"), std::string::npos);
-	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_DOOR);"), std::string::npos);
-	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_FREEZE);"), std::string::npos);
-	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_DRAGGER);"), std::string::npos);
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
+	ASSERT_FALSE(LaserBranch.empty());
+	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("static CScrollRegion s_LaserSettingsScrollRegion;"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("BeginSettingsScrollRegion(s_LaserSettingsScrollRegion, &LaserScrollView, ScrollParams"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("FinishSettingsScrollRegion(s_LaserSettingsScrollRegion, ScrollFrame, &LaserScrollEnd, SETTINGS_APPEARANCE"), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("const float EnhancedContentHeight ="), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("const float ColorContentHeight ="), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("const float PreviewContentHeight ="), std::string::npos);
+	EXPECT_NE(LaserBranch.find("static float s_LaserMeasuredEnhancedCardHeight = 0.0f;"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("static float s_LaserMeasuredColorCardHeight = 0.0f;"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("static float s_LaserMeasuredPreviewCardHeight = 0.0f;"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("LineSize * 5.0f + MarginSmall * 5.0f +"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("s_LaserMeasuredEnhancedCardHeight = maximum(EnhancedCardContent.y + LaserCardPadding - EnhancedCard.y, LaserEnhancedMinCardHeight);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("s_LaserMeasuredColorCardHeight = maximum(ColorCardContent.y + LaserCardPadding - ColorCard.y, LaserColorMinCardHeight);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("s_LaserMeasuredPreviewCardHeight = maximum(PreviewCardContent.y + LaserCardPadding - PreviewCard.y, LaserPreviewMinCardHeight);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("LaserScrollEnd.y = maximum(LeftColumnBottom, RightColumnBottom) + MarginBetweenViews;"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("DoAppearanceHeading(EnhancedCardContent, \"appearance-laser-enhancement-title\", Localize(\"Laser settings\"), HeadlineFontSize, HeadlineHeight);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_APPEARANCE, APPEARANCE_TAB_LASER, &g_Config.m_QmLaserEnhanced"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("g_Config.m_QmLaserGlowIntensity"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("g_Config.m_QmLaserSize"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("g_Config.m_QmLaserAlpha"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("g_Config.m_QmLaserRoundCaps"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("g_Config.m_QmLaserPulseSpeed"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("g_Config.m_QmLaserPulseAmplitude"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserRifleOutlineColor, LaserRifleInnerColor, LASERTYPE_RIFLE);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserShotgunOutlineColor, LaserShotgunInnerColor, LASERTYPE_SHOTGUN);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserDoorOutlineColor, LaserDoorInnerColor, LASERTYPE_DOOR);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserFreezeOutlineColor, LaserFreezeInnerColor, LASERTYPE_FREEZE);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserDraggerOutlineColor, LaserDraggerInnerColor, LASERTYPE_DRAGGER);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
+{
+	const std::string HeaderSource = ReadTextFile("src/game/client/components/menus.h");
+	EXPECT_NE(HeaderSource.find("struct SQmSettingsCardStyle"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("SQmSettingsCardStyle QmSettingsCardStyle(float UiScale) const;"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("CScrollRegionParams QmSettingsScrollRegionParams(float UiScale) const;"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("void RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const;"), std::string::npos);
+
+	const std::string MenuSource = ReadTextFile("src/game/client/components/menus.cpp");
+	EXPECT_NE(MenuSource.find("CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const"), std::string::npos);
+	EXPECT_NE(MenuSource.find("Style.m_ScrollbarWidth = std::clamp(28.0f * UiScale, 24.0f, 28.0f);"), std::string::npos);
+	EXPECT_NE(MenuSource.find("Params.m_ScrollbarWidth = Style.m_ScrollbarWidth;"), std::string::npos);
+	EXPECT_NE(MenuSource.find("Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;"), std::string::npos);
+	EXPECT_NE(MenuSource.find("void CMenus::RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const"), std::string::npos);
+
+	const std::string QmSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string RenderSettingsQmClient = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(RenderSettingsQmClient.empty());
+
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	ASSERT_FALSE(NamePlateBranch.empty());
+	EXPECT_NE(NamePlateBranch.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlateSettingsCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlatePreviewCard, QmCardStyle);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsShadow.Draw"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewShadow.Draw"), std::string::npos);
+
+	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
+	ASSERT_FALSE(LaserBranch.empty());
+	EXPECT_NE(LaserBranch.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(EnhancedCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(ColorCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(PreviewCard, QmCardStyle);"), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("auto RenderQmSettingsGlassCard ="), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("80.0f * UiScale"), std::string::npos);
+
+	EXPECT_NE(RenderSettingsQmClient.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsQmClient.find("CScrollRegionParams NameplateTextScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("RenderQmSettingsGlassCard(Card, QmCardStyle);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsQmClient.find("Card.Draw(LgGlassColor"), std::string::npos);
+
+	const std::string RenderSettingsQmClientOverview = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(RenderSettingsQmClientOverview.empty());
+	EXPECT_NE(RenderSettingsQmClientOverview.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClientOverview.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClientOverview.find("RenderQmSettingsGlassCard(Card, QmCardStyle);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsQmClientOverview.find("auto DrawCardBackground ="), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
+{
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string RenderSettingsAppearance = FunctionBody(SettingsSource, "void CMenus::RenderSettingsAppearance(CUIRect MainView)");
+	ASSERT_FALSE(RenderSettingsAppearance.empty());
+	EXPECT_NE(RenderSettingsAppearance.find("auto BeginAppearanceCard ="), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("auto MeasureAppearanceCardHeight ="), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("RenderSettingsCardDragHandle(Card, &HandleRect, AppearanceQmCardStyle);"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("SettingsCardDeckItemFromSection(Section, Column, Order, Card, HandleRect);"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("RegisterSettingsCardDeckItem(Item);"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("HandleSettingsCardDeckDrag(Item, Column, pOrder);"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("RenderSettingsCardDeckDragOverlay(AppearanceDeckOverlay);"), std::string::npos);
+
+	const std::string HudBranch = BlockBodyAfter(RenderSettingsAppearance, "if(s_CurTab == APPEARANCE_TAB_HUD)");
+	ASSERT_FALSE(HudBranch.empty());
+	EXPECT_NE(HudBranch.find("BeginAppearanceCard(LeftView, HudMinCardHeight"), std::string::npos);
+	EXPECT_NE(HudBranch.find("\"appearance-hud-main\""), std::string::npos);
+	EXPECT_NE(HudBranch.find("\"appearance-hud-ddrace\""), std::string::npos);
+	EXPECT_NE(HudBranch.find("s_HudMeasuredLeftCardHeight = MeasureAppearanceCardHeight"), std::string::npos);
+
+	const std::string ChatBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_CHAT)");
+	ASSERT_FALSE(ChatBranch.empty());
+	EXPECT_NE(ChatBranch.find("static CScrollRegion s_ChatSettingsScrollRegion;"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(AppearanceUiScale);"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ChatSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("const float ChatTopCardsBottom = maximum(ChatLeftCard.y + ChatLeftCard.h, ChatRightCard.y + ChatRightCard.h);"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("PreviewView.y = ChatTopCardsBottom + MarginBetweenViews;"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("PreviewView.w = ChatLeftCard.w;"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("FinishSettingsScrollRegion(s_ChatSettingsScrollRegion, ScrollFrame, &ChatScrollEnd, SETTINGS_APPEARANCE);"), std::string::npos);
+	EXPECT_EQ(ChatBranch.find("ContentView.HSplitBottom(220.0f"), std::string::npos);
+	EXPECT_EQ(ChatBranch.find("PreviewView.w *= 0.5f;"), std::string::npos);
+	EXPECT_NE(ChatBranch.find("\"appearance-chat-settings\""), std::string::npos);
+	EXPECT_NE(ChatBranch.find("\"appearance-chat-messages\""), std::string::npos);
+	EXPECT_NE(ChatBranch.find("\"appearance-chat-preview\""), std::string::npos);
+
+	const std::string NamePlateBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	ASSERT_FALSE(NamePlateBranch.empty());
+	EXPECT_NE(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlateSettingsCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlatePreviewCard, QmCardStyle);"), std::string::npos);
+
+	const std::string HookCollisionBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)");
+	ASSERT_FALSE(HookCollisionBranch.empty());
+	EXPECT_NE(HookCollisionBranch.find("\"appearance-hook-collision-main\""), std::string::npos);
+	EXPECT_NE(HookCollisionBranch.find("\"appearance-hook-collision-preview\""), std::string::npos);
+
+	const std::string InfoMessagesBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_INFO_MESSAGES)");
+	ASSERT_FALSE(InfoMessagesBranch.empty());
+	EXPECT_NE(InfoMessagesBranch.find("\"appearance-info-messages\""), std::string::npos);
+
+	const std::string LaserBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
+	ASSERT_FALSE(LaserBranch.empty());
+	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(EnhancedCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(ColorCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(PreviewCard, QmCardStyle);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, TClientSettingsCardsUseSharedQmCardStyle)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string HeaderSource = ReadTextFile("src/game/client/components/menus.h");
+	const std::string RenderSettingsTClientSettings = FunctionBody(Source, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
+	const std::string RenderSettingsTClientChatBinds = FunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)");
+	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
+	ASSERT_FALSE(RenderSettingsTClientChatBinds.empty());
+
+	EXPECT_NE(Source.find("RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientSettings.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientChatBinds.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);"), std::string::npos);
+	EXPECT_EQ(Source.find("ScrollParams.m_ScrollUnit = 60.0f;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientSettings.find("ScrollParams.m_ScrollbarMargin = 5.0f;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientChatBinds.find("ScrollParams.m_ScrollbarMargin = 5.0f;"), std::string::npos);
+	EXPECT_EQ(Source.find("BoxRect.Draw(Ui()->ScaleBackgroundAlpha(MenuPanelColor(0.92f))"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("void DrawTClientCacheSectionBox(CUIRect BoxRect);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, DDNetSettingsPageUsesSharedQmCards)
+{
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string RenderSettingsDDNet = FunctionBody(SettingsSource, "void CMenus::RenderSettingsDDNet(CUIRect MainView)");
+	ASSERT_FALSE(RenderSettingsDDNet.empty());
+
+	EXPECT_NE(RenderSettingsDDNet.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("static CScrollRegion s_DDNetSettingsScrollRegion;"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("SSettingsCardDeckLayout DDNetDeck = BeginSettingsCardDeck(MainView, s_DDNetSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("auto MeasureDDNetCardHeight ="), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-demo\", Localize(\"Demo\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-gameplay\", Localize(\"Gameplay\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("CUIRect GameplayRow;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("Gameplay.VSplitMid(&Left, &Right, 20.0f);"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-background\", Localize(\"Background\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-miscellaneous\", Localize(\"Miscellaneous\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("EndSettingsCardDeck(DDNetDeck, &s_PrevDDNetSettingsScrollY);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("auto BeginDDNetCard ="), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("MainView.HSplitTop(130.0f, &Demo, &MainView);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("MainView.HSplitTop(GameplayHeight, &Gameplay, &MainView);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelStatusBar)
+{
+	const std::string HeaderSource = ReadTextFile("src/game/client/components/menus.h");
+	EXPECT_NE(HeaderSource.find("struct SSettingsCardDeckLayout"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("struct SSettingsCardDeckCard"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("SSettingsCardDeckLayout BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_NE(HeaderSource.find("SSettingsCardDeckCard BeginSettingsCardDeckCard("), std::string::npos);
+	EXPECT_NE(HeaderSource.find("void EndSettingsCardDeck("), std::string::npos);
+	EXPECT_NE(HeaderSource.find("void RenderSettingsCardDragHandle("), std::string::npos);
+	EXPECT_NE(HeaderSource.find("void RenderSettingsCardDeckDragOverlay("), std::string::npos);
+	EXPECT_NE(HeaderSource.find("std::unordered_map<std::string, std::vector<std::string>> m_SettingsCardDeckOrders;"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("std::vector<std::string> *SettingsCardDeckOrder("), std::string::npos);
+	EXPECT_NE(HeaderSource.find("std::vector<std::string> m_vActiveCardIds;"), std::string::npos);
+
+	const std::string MenuSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string BeginDeck = FunctionBody(MenuSource, "CMenus::SSettingsCardDeckLayout CMenus::BeginSettingsCardDeck(");
+	const std::string BeginCard = FunctionBody(MenuSource, "CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(");
+	const std::string EndDeck = FunctionBody(MenuSource, "void CMenus::EndSettingsCardDeck(");
+	const std::string DeckOrder = FunctionBody(MenuSource, "std::vector<std::string> *CMenus::SettingsCardDeckOrder(");
+	const std::string RenderHandle = FunctionBody(MenuSource, "void CMenus::RenderSettingsCardDragHandle(");
+	EXPECT_NE(BeginDeck.find("QmSettingsScrollRegionParams(UiScale)"), std::string::npos);
+	EXPECT_NE(BeginDeck.find("Deck.m_pOrder = pOrder != nullptr ? pOrder : SettingsCardDeckOrder(pDeckId);"), std::string::npos);
+	EXPECT_NE(DeckOrder.find("m_SettingsCardDeckOrders[pDeckId]"), std::string::npos);
+	EXPECT_NE(BeginCard.find("SettingsCardDeckEnsureStableId(*Deck.m_pOrder, pStableId);"), std::string::npos);
+	EXPECT_NE(BeginCard.find("SettingsCardDeckOrderIndex(*Deck.m_pOrder, pStableId, Deck.m_CardCount);"), std::string::npos);
+	EXPECT_NE(BeginCard.find("SettingsCardDeckIsActiveStableId(Deck, StableId)"), std::string::npos);
+	EXPECT_NE(BeginCard.find("RenderQmSettingsGlassCard(Card.m_Rect, Deck.m_Style);"), std::string::npos);
+	EXPECT_NE(BeginCard.find("DoSettingsLabel(Deck.m_Page, -1, Card.m_pStableId, &Card.m_TitleRect, pTitle"), std::string::npos);
+	EXPECT_NE(BeginCard.find("RenderSettingsCardDragHandle(Card.m_Rect, &Card.m_HandleRect, Deck.m_Style);"), std::string::npos);
+	EXPECT_NE(EndDeck.find("RenderSettingsCardDeckDragOverlay(Deck);"), std::string::npos);
+	EXPECT_NE(RenderHandle.find("Input()->ModifierIsPressed()"), std::string::npos);
+	EXPECT_NE(RenderHandle.find("Card.VSplitRight(HandleSize"), std::string::npos);
+	EXPECT_EQ(RenderHandle.find("pHandleRect->Draw(HandleBg"), std::string::npos);
+	EXPECT_EQ(RenderHandle.find("HandleBorderRect.DrawOutline(HandleBorder);"), std::string::npos);
+	EXPECT_NE(RenderHandle.find(": ColorRGBA(1.0f, 1.0f, 1.0f, 0.38f);"), std::string::npos);
+
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string FormatBackendDisplayName = FunctionBody(SettingsSource, "void FormatQmGraphicsBackendDisplayName(");
+	ASSERT_FALSE(FormatBackendDisplayName.empty());
+	EXPECT_NE(FormatBackendDisplayName.find("\"OpenGL QmClient %d.%d\""), std::string::npos);
+	EXPECT_EQ(FormatBackendDisplayName.find("\"OpenGL_QmClient_%d_%d\""), std::string::npos);
+	const std::string RenderSettingsSound = FunctionBody(SettingsSource, "void CMenus::RenderSettingsSound(CUIRect MainView)");
+	ASSERT_FALSE(RenderSettingsSound.empty());
+	EXPECT_NE(RenderSettingsSound.find("BeginSettingsCardDeck(MainView, s_SoundSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("vSoundActiveCards.emplace_back(\"sound-toggle\");"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("vSoundActiveCards.emplace_back(\"sound-volume\");"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("vSoundActiveCards.emplace_back(\"sound-audio-pack\");"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("&vSoundActiveCards"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("BeginSettingsCardDeckCard(SoundDeck, \"sound-toggle\", Localize(\"Sound\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("BeginSettingsCardDeckCard(SoundDeck, \"sound-volume\", Localize(\"Volume\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("BeginSettingsCardDeckCard(SoundDeck, \"sound-audio-pack\", Localize(\"Audio packs\"),"), std::string::npos);
+	EXPECT_LT(RenderSettingsSound.find("BeginSettingsCardDeckCard(SoundDeck, \"sound-volume\""), RenderSettingsSound.find("BeginSettingsCardDeckCard(SoundDeck, \"sound-audio-pack\""));
+	EXPECT_NE(RenderSettingsSound.find("SoundDeck.m_aColumns[1].h"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("DoButton_Menu(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT"), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("str_format(aBadge, sizeof(aBadge), \"%d\", Entry.m_FileCount);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsSound.find("str_copy(aBadge, Localize(\"Built-in\"), sizeof(aBadge));"), std::string::npos);
+	EXPECT_EQ(RenderSettingsSound.find("Localize(\"Selected pack\")"), std::string::npos);
+	EXPECT_EQ(RenderSettingsSound.find("\"audio_packs_title\""), std::string::npos);
+	EXPECT_NE(RenderSettingsSound.find("EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsSound.find("AudioPackView.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f)"), std::string::npos);
+
+	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string RenderSettingsTClientSettings = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
+	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)");
+	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)");
+	const std::string HandleSettingsCardDeckDrag = FunctionBody(TClientSource, "void CMenus::HandleSettingsCardDeckDrag(");
+	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
+	ASSERT_FALSE(RenderSettingsTClientBindWheel.empty());
+	ASSERT_FALSE(RenderSettingsTClientStatusBar.empty());
+	ASSERT_FALSE(HandleSettingsCardDeckDrag.empty());
+	EXPECT_NE(HandleSettingsCardDeckDrag.find("(DragState.m_Active || DragState.m_PressPending) && !Input()->ModifierIsPressed()"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientSettings.find("RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientSettings.find("SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeckCard(BindWheelDeck, \"tclient-bind-wheel-editor\", Localize(\"Bind Wheel\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeckCard(BindWheelDeck, \"tclient-bind-wheel-preview\", Localize(\"Preview\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("EndSettingsCardDeck(BindWheelDeck, &s_BindWheelSettingsScrollY);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientBindWheel.find("MainView.VSplitLeft(MainView.w / 2.1f"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion, s_BindWheelSettingsScrollY, 1.0f, \"tclient-bind-wheel\", SETTINGS_TCLIENT, nullptr)"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeck(MainView, s_StatusBarSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeckCard(StatusBarDeck, \"tclient-status-bar-settings\", Localize(\"Status Bar\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeckCard(StatusBarDeck, \"tclient-status-bar-items\", Localize(\"Status Bar Codes\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeckCard(StatusBarDeck, \"tclient-status-bar-preview\", Localize(\"Preview\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("RenderStatusBarCodes(RightView, 0, true);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("EndSettingsCardDeck(StatusBarDeck, &s_StatusBarSettingsScrollY);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("MainView.HSplitBottom(100.0f, &MainView, &StatusBar);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);\n\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsTClientStatusBar.find("tclient-statusbar-seconds\", Localize(\"Show seconds on clock\"), g_Config.m_TcStatusBarLocalTimeSeconds, &CheckBoxRect))\n\t\t\tg_Config.m_TcStatusBarLocalTimeSeconds ^= 1;\n\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);\n\t\t{\n\t\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("float StatusBarSettingsContentBottom = LeftView.y;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientStatusBar.find("float StatusBarPreviewContentBottom = StatusBar.y + StatusBar.h;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("const float BindWheelEditorContentBottom = LeftView.y;"), std::string::npos);
+	EXPECT_NE(RenderSettingsTClientBindWheel.find("s_BindWheelEditorCardHeight = maximum(BindWheelEditorBottom + BindWheelDeck.m_Style.m_Padding - BindWheelEditorCard.m_Rect.y, 320.0f);"), std::string::npos);
+
+	const std::string RenderSettingsGraphics = FunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(RenderSettingsGraphics.empty());
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeck(MainView, s_GraphicsSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"graphics-display\", Localize(\"Graphics display\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"graphics-visual\", Localize(\"Visual\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"graphics-backend\", Localize(\"Graphics backend\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"graphics-modes\", Localize(\"Display modes\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsModesMinCardHeight = maximum(420.0f * UiScale, GraphicsDeck.m_View.h - GraphicsDeck.m_Style.m_Spacing);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("s_GraphicsDisplayCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - DisplayCard.m_Rect.y, GraphicsDisplayMinCardHeight);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("s_GraphicsVisualCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - VisualCard.m_Rect.y, GraphicsVisualMinCardHeight);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("s_GraphicsBackendCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - BackendCard.m_Rect.y, GraphicsBackendMinCardHeight);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("s_GraphicsModesCardHeight = maximum(ModeList.y + GraphicsDeck.m_Style.m_Padding - ModesCard.m_Rect.y, GraphicsModesMinCardHeight);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsGraphics.find("\"graphics-renderer-title\""), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("EndSettingsCardDeck(GraphicsDeck, &s_GraphicsSettingsScrollY);"), std::string::npos);
+	EXPECT_EQ(RenderSettingsGraphics.find("MainView.VSplitLeft(OptionsBlockWidth"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, SettingsCardFeedbackFixesUseStableLayouts)
+{
+	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string RenderSettingsDDNet = FunctionBody(SettingsSource, "void CMenus::RenderSettingsDDNet(CUIRect MainView)");
+	ASSERT_FALSE(RenderSettingsDDNet.empty());
+	EXPECT_NE(RenderSettingsDDNet.find("SSettingsCardDeckLayout DDNetDeck = BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-demo\", Localize(\"Demo\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-gameplay\", Localize(\"Gameplay\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-background\", Localize(\"Background\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-miscellaneous\", Localize(\"Miscellaneous\"),"), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("BeginDDNetCard(MainView"), std::string::npos);
+
+	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	ASSERT_FALSE(NamePlateBranch.empty());
+	EXPECT_EQ(NamePlateBranch.find("BeginSettingsScrollRegion(s_NameplateTextCardScrollRegion"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("FinishSettingsScrollRegion(s_NameplateTextCardScrollRegion"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("Localize(\"Nameplate text\")"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NameplateTextExpandedMinHeight"), std::string::npos);
+
+	const std::string QmSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	EXPECT_EQ(QmSource.find("RenderNameplateTextSettings(CardContent);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, LaserPreviewEntityBranchesReserveEndpointDecorationSpace)
@@ -1719,8 +2047,10 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesQmClientDisplayNames)
 
 	ASSERT_FALSE(Formatter.empty());
 	ASSERT_FALSE(RenderSettingsGraphics.empty());
-	EXPECT_NE(Formatter.find("\"OpenGL_QmClient_%d_%d\""), std::string::npos);
-	EXPECT_NE(Formatter.find("\"Vulkan_QmClient\""), std::string::npos);
+	EXPECT_NE(Formatter.find("\"OpenGL QmClient %d.%d\""), std::string::npos);
+	EXPECT_NE(Formatter.find("\"Vulkan QmClient\""), std::string::npos);
+	EXPECT_EQ(Formatter.find("\"OpenGL_QmClient_%d_%d\""), std::string::npos);
+	EXPECT_EQ(Formatter.find("\"Vulkan_QmClient\""), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Graphics backend\")"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("FormatQmGraphicsBackendDisplayName(aTmpBackendName"), std::string::npos);
 	EXPECT_NE(Source.find("static std::vector<const CCountryFlags::CCountryFlag *> s_vpFilteredFlags"), std::string::npos);
@@ -1732,4 +2062,19 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesQmClientDisplayNames)
 	EXPECT_NE(RenderSettingsGraphics.find("s_vGpuIdNames"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("s_vpGpuIdNames[i] = aCurDeviceName"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("Localize(\"Renderer\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
+{
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)");
+	const std::string DoPopupMenu = FunctionBody(UiSource, "void CUi::DoPopupMenu(");
+
+	ASSERT_FALSE(DoDropDown.empty());
+	ASSERT_FALSE(DoPopupMenu.empty());
+	EXPECT_NE(DoDropDown.find("if(IsPopupOpen(&State.m_SelectionPopupContext))"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);"), std::string::npos);
+	EXPECT_NE(DoPopupMenu.find("std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end()"), std::string::npos);
+	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.x = X;"), std::string::npos);
+	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.y = Y;"), std::string::npos);
 }
