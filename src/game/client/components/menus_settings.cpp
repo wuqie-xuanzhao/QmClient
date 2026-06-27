@@ -6097,7 +6097,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	{
 		const float UiScale = minimum(1.0f, maximum(0.85f, ContentView.w / 800.0f));
 		const float NamePlateCardCornerRadius = std::clamp(12.0f * UiScale, 8.0f, 12.0f);
-		const float QmClientSettingsScrollbarWidth = std::clamp(28.0f * UiScale, 24.0f, 28.0f);
 		const float QmClientSettingsScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
 		const float NamePlateContentPaddingY = std::clamp(14.0f * UiScale, 10.0f, 14.0f);
 		const ColorRGBA NamePlateSettingsGlassColor(0.08f, 0.09f, 0.12f, 0.70f);
@@ -6105,9 +6104,9 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		const ColorRGBA NamePlateSettingsShadowColor(0.0f, 0.0f, 0.0f, 0.12f);
 		static CScrollRegion s_NamePlateSettingsScrollRegion;
 		static float s_PrevNamePlateSettingsScrollY = 0.0f;
+		static float s_NamePlateMeasuredCardHeight = 0.0f;
 		CScrollRegionParams ScrollParams;
 		ScrollParams.m_ScrollUnit = 60.0f * UiScale;
-		ScrollParams.m_ScrollbarWidth = QmClientSettingsScrollbarWidth;
 		ScrollParams.m_ScrollbarMargin = QmClientSettingsScrollbarMargin;
 		ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 		CUIRect NamePlateScrollView = ContentView;
@@ -6134,7 +6133,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			NamePlateRadioLineHeight +
 			(g_Config.m_ClShowDirection > 0 ? LineSize : 0.0f);
 		const float NamePlatePreviewContentHeight = HeadlineHeight + 2.0f * MarginSmall + 3.0f * LineSize + MarginSmall;
-		const float NamePlateCardHeight = maximum(NamePlateScrollView.h, maximum(NamePlateSettingsContentHeight, NamePlatePreviewContentHeight) + 2.0f * NamePlateContentPaddingY);
+		const float NamePlateEstimatedCardHeight = maximum(NamePlateScrollView.h, maximum(NamePlateSettingsContentHeight, NamePlatePreviewContentHeight) + 2.0f * NamePlateContentPaddingY);
+		const float NamePlateCardHeight = maximum(NamePlateEstimatedCardHeight, s_NamePlateMeasuredCardHeight);
 
 		CUIRect NamePlateSettingsCard = LeftView;
 		NamePlateSettingsCard.h = NamePlateCardHeight;
@@ -6313,8 +6313,10 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 		GameClient()->m_NamePlates.RenderNamePlatePreview(Position, Dummy);
 
+		const float NamePlateMeasuredContentBottom = maximum(LeftView.y, RightView.y) + NamePlateContentPaddingY;
+		s_NamePlateMeasuredCardHeight = maximum(NamePlateMeasuredContentBottom - NamePlateSettingsCard.y, NamePlateEstimatedCardHeight);
 		CUIRect NamePlateScrollEnd = NamePlateScrollView;
-		NamePlateScrollEnd.y = NamePlateSettingsCard.y + NamePlateSettingsCard.h;
+		NamePlateScrollEnd.y = NamePlateSettingsCard.y + maximum(NamePlateSettingsCard.h, s_NamePlateMeasuredCardHeight);
 		NamePlateScrollEnd.h = 1.0f;
 		FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE);
 		s_PrevNamePlateSettingsScrollY = ScrollFrame.m_FinalOffsetY;
