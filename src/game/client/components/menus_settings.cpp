@@ -6095,23 +6095,23 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	}
 	else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)
 	{
-		ContentView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
 		const float UiScale = minimum(1.0f, maximum(0.85f, ContentView.w / 800.0f));
-
-		CUIRect NamePlateSettingsCard = LeftView;
-		DrawTClientCacheSectionBox(NamePlateSettingsCard);
-		CUIRect NamePlateSettingsView = LeftView;
-		InsetTClientCacheSectionContent(NamePlateSettingsView);
-
 		static CScrollRegion s_NamePlateSettingsScrollRegion;
 		static float s_PrevNamePlateSettingsScrollY = 0.0f;
 		CScrollRegionParams ScrollParams;
 		ScrollParams.m_ScrollUnit = 60.0f * UiScale;
 		ScrollParams.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
 		ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
-		SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateSettingsView, ScrollParams, s_PrevNamePlateSettingsScrollY);
-		NamePlateSettingsView.y += ScrollFrame.m_BeginOffset.y;
-		LeftView = NamePlateSettingsView;
+		CUIRect NamePlateScrollView = ContentView;
+		SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateScrollView, ScrollParams, s_PrevNamePlateSettingsScrollY);
+		NamePlateScrollView.y += ScrollFrame.m_BeginOffset.y;
+		const float NamePlateRightContentBottom = NamePlateScrollView.y + NamePlateScrollView.h;
+
+		NamePlateScrollView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
+
+		CUIRect NamePlateSettingsCard = LeftView;
+		DrawTClientCacheSectionBox(NamePlateSettingsCard);
+		InsetTClientCacheSectionContent(LeftView);
 
 		// ***** Name Plate ***** //
 		DoAppearanceHeading(LeftView, "appearance-name-plate-title", Localize("Name Plate"), HeadlineFontSize, HeadlineHeight);
@@ -6216,10 +6216,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		if(g_Config.m_ClShowDirection > 0)
 			DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, "appearance-key-press-icons-size", &g_Config.m_ClDirectionSize, &g_Config.m_ClDirectionSize, &Button, Localize("Size of key press icons"), -50, 100);
 
-		CUIRect NamePlateScrollEnd = LeftView;
-		FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE);
-		s_PrevNamePlateSettingsScrollY = ScrollFrame.m_FinalOffsetY;
-
 		// ***** Name Plate Preview ***** //
 		DoAppearanceHeading(RightView, "appearance-name-plate-preview-title", Localize("Preview"), HeadlineFontSize, HeadlineHeight);
 		RightView.HSplitTop(2.0f * MarginSmall, nullptr, &RightView);
@@ -6261,6 +6257,12 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		const vec2 Position = RightView.Center();
 
 		GameClient()->m_NamePlates.RenderNamePlatePreview(Position, Dummy);
+
+		CUIRect NamePlateScrollEnd = NamePlateScrollView;
+		NamePlateScrollEnd.y = maximum(LeftView.y, NamePlateRightContentBottom);
+		NamePlateScrollEnd.h = 1.0f;
+		FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE);
+		s_PrevNamePlateSettingsScrollY = ScrollFrame.m_FinalOffsetY;
 	}
 	else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)
 	{
