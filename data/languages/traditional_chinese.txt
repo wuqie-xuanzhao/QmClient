@@ -845,7 +845,7 @@ Auto unspec on unfreeze
 == 解凍自動取消旁觀
 
 Auto weapon switch
-== 自動切換武器
+== 自動切錘
 
 Auto-follow delay
 == 自動跟隨延遲
@@ -1808,7 +1808,7 @@ DeepSeek
 == DeepSeek
 
 DeepSeek API Key
-== DeepSeek API Key
+== DeepSeek API 密鑰
 
 DeepSeek API key
 == DeepSeek API 密鑰
@@ -2346,9 +2346,6 @@ Enable replays
 
 Enable server message sound
 == 啟用伺服器訊息提示音
-
-Enable skin queue
-== 啟用皮膚佇列
 
 Enable skin queue rotation
 == 啟用皮膚佇列輪換
@@ -6556,6 +6553,9 @@ Show seconds on clock
 Show server help and usage messages
 == 顯示伺服器幫助與用法說明
 
+Show skin date and author
+== 顯示皮膚日期和作者
+
 Show skin names in nameplate
 == 在玩家暱稱旁顯示皮膚名
 
@@ -6753,6 +6753,9 @@ Skin prefix
 
 Skin queue
 == 皮膚佇列
+
+Skin sort
+== 皮膚排序
 
 Skin transition
 == 皮膚切換
@@ -7502,7 +7505,7 @@ Tile outlines
 == 牆體輪廓
 
 Time
-== 用時
+== 時間
 
 TIME EXPIRED!
 == 時間耗盡！
@@ -8171,10 +8174,10 @@ Warning
 == 警告
 
 Weak hook
-== 弱鉤索
+== 弱鉤
 
 Weak hook color
-== 弱鉤索顏色
+== 弱鉤顏色
 
 Weapon
 == 武器
@@ -8612,7 +8615,7 @@ Zen mode key
 == 禪模式按鍵
 
 Zhipu AI
-== 智譜 AI
+== 智譜清言
 
 Zhipu API key
 == 智譜 API 金鑰
@@ -9016,6 +9019,9 @@ Zoom out
 拿到额外武器时停用 Gores 自动切换
 == 拿到額外武器時停用 Gores 自動切換
 
+按发布时间排序时显示皮肤发布日期和作者
+== 按發布時間排序時顯示皮膚發布日期和作者
+
 按名字单独音量（name=percent）
 == 按名字單獨音量（name=percent）
 
@@ -9300,6 +9306,9 @@ Zoom out
 
 皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
 == 皮膚切換動畫範圍：0=僅自己 1=本地+分身 2=所有玩家
+
+皮肤列表排序模式（0=名称，1=发布时间）
+== 皮膚列表排序模式（0=名稱，1=發布時間）
 
 皮肤队列切换间隔（毫秒）
 == 皮膚佇列切換間隔（毫秒）

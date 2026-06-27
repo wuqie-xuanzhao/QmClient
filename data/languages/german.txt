@@ -2347,9 +2347,6 @@ Enable replays
 Enable server message sound
 == Server-Nachrichten-Sound aktivieren
 
-Enable skin queue
-== Skin-Queue aktivieren
-
 Enable skin queue rotation
 == Skin-Queue-Rotation aktivieren
 
@@ -6556,6 +6553,9 @@ Show seconds on clock
 Show server help and usage messages
 == Server-Hilfe und Nutzungshinweise anzeigen
 
+Show skin date and author
+== Skin-Datum und Autor anzeigen
+
 Show skin names in nameplate
 == Skin-Namen im Namensschild anzeigen
 
@@ -6753,6 +6753,9 @@ Skin prefix
 
 Skin queue
 == Skin-Warteschlange
+
+Skin sort
+== Skin-Sortierung
 
 Skin transition
 == Skin-Übergang
@@ -9016,6 +9019,9 @@ Zoom out
 拿到额外武器时停用 Gores 自动切换
 == Gores automatischen Waffenwechsel bei Aufnahme einer zusätzlichen Waffe deaktivieren
 
+按发布时间排序时显示皮肤发布日期和作者
+== Skin-Veröffentlichungsdatum und Autor beim Sortieren nach Veröffentlichungszeit anzeigen
+
 按名字单独音量（name=percent）
 == Individuelle Lautstärke nach Name (name=Prozent)
 
@@ -9300,6 +9306,9 @@ Zoom out
 
 皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
 == Skin-Wechsel-Animationsbereich: 0=Nur ich, 1=Lokal+Dummy, 2=Alle Spieler
+
+皮肤列表排序模式（0=名称，1=发布时间）
+== Sortiermodus der Skin-Liste (0=Name, 1=Veröffentlichungszeit)
 
 皮肤队列切换间隔（毫秒）
 == Skin-Wechsel-Intervall in Millisekunden

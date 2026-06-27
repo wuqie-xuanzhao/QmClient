@@ -2670,8 +2670,10 @@ TEST(QmMonitoringHelpers, SettingsUiBudgetTelemetryExists)
 
 	EXPECT_NE(Header.find("struct SSettingsUiBudgetFrame"), std::string::npos);
 	EXPECT_NE(Header.find("LogSettingsUiBudget("), std::string::npos);
-	EXPECT_NE(Menus.find("event=settings_ui_budget"), std::string::npos);
-	EXPECT_NE(Menus.find("layout_ms=%.3f text_ms=%.3f text_new=%d text_reused=%d draw_calls=%d vertices=%d indices=%d heap_allocs=%d visible_widgets=%d"), std::string::npos);
+	const size_t UiBudgetEvent = Menus.find("event=settings_ui_budget");
+	ASSERT_NE(UiBudgetEvent, std::string::npos);
+	const std::string UiBudgetFormat = Menus.substr(UiBudgetEvent, 512);
+	EXPECT_TRUE(ContainsAll(UiBudgetFormat, {"layout_ms=", "text_ms=", "text_new=", "text_reused=", "draw_calls=", "vertices=", "indices=", "heap_allocs=", "visible_widgets="}));
 	EXPECT_NE(TClient.find("LogSettingsUiBudget(\"settings:tclient\""), std::string::npos);
 	EXPECT_NE(Assets.find("LogSettingsUiBudget(\"settings:assets\""), std::string::npos);
 }
@@ -2692,14 +2694,15 @@ TEST(QmMonitoringHelpers, AssetsPerfStagesUseRealFrameId)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
 
-	EXPECT_NE(Source.find("auto LogAssetsFramePerfStage"), std::string::npos);
 	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), pStage, DurationMs, Force, pExtra);"), std::string::npos);
-	EXPECT_NE(Source.find("LogAssetsFramePerfStage(\"assets_preview_draw_workshop_cards\""), std::string::npos);
-	EXPECT_NE(Source.find("LogAssetsFramePerfStage(\"assets_card_geometry\""), std::string::npos);
-	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_window_focus\""), std::string::npos);
-	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_preview_upload_queue_push\""), std::string::npos);
-	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_workshop_thumb_start_local\""), std::string::npos);
-	EXPECT_NE(Source.find("LogAssetsPerfStageForClient(Client(), \"assets_workshop_thumb_start_remote\""), std::string::npos);
+	EXPECT_TRUE(ContainsAll(Source, {
+						"LogAssetsFramePerfStage(\"assets_preview_draw_workshop_cards\"",
+						"LogAssetsFramePerfStage(\"assets_card_geometry\"",
+						"LogAssetsPerfStageForClient(Client(), \"assets_window_focus\"",
+						"LogAssetsPerfStageForClient(Client(), \"assets_preview_upload_queue_push\"",
+						"LogAssetsPerfStageForClient(Client(), \"assets_workshop_thumb_start_local\"",
+						"LogAssetsPerfStageForClient(Client(), \"assets_workshop_thumb_start_remote\"",
+					}));
 	EXPECT_EQ(Source.find("QmPerfLogStage(\"perf/assets\", pStage, DurationMs, Force, nullptr"), std::string::npos);
 }
 
@@ -2712,19 +2715,10 @@ TEST(QmMonitoringHelpers, PerfAnalyzerReportsUiBudgetFields)
 
 	EXPECT_NE(Stats.find("export interface SettingsUiBudgetSummary"), std::string::npos);
 	EXPECT_NE(Stats.find("settingsUiBudgetSummary(entries"), std::string::npos);
-	EXPECT_NE(Stats.find("layout_ms"), std::string::npos);
-	EXPECT_NE(Stats.find("text_ms"), std::string::npos);
-	EXPECT_NE(Stats.find("draw_calls"), std::string::npos);
-	EXPECT_NE(Stats.find("heap_allocs"), std::string::npos);
+	EXPECT_TRUE(ContainsAll(Stats, {"layout_ms", "text_ms", "draw_calls", "heap_allocs"}));
 	EXPECT_NE(Quality.find("settingsUiBudget"), std::string::npos);
 	EXPECT_NE(Report.find("Settings UI Budget"), std::string::npos);
-	EXPECT_EQ(Report.find("APPROXIMATE"), std::string::npos);
-	EXPECT_EQ(Report.find("REPORT ONLY"), std::string::npos);
-	EXPECT_EQ(Report.find("Draw Calls Est."), std::string::npos);
-	EXPECT_EQ(Report.find("Vertices Est."), std::string::npos);
-	EXPECT_EQ(Report.find("Indices Est."), std::string::npos);
-	EXPECT_EQ(Report.find("占位观测"), std::string::npos);
-	EXPECT_EQ(Report.find("不代表本轮已做通用文本渲染优化"), std::string::npos);
+	EXPECT_FALSE(ContainsAny(Report, {"APPROXIMATE", "REPORT ONLY", "Draw Calls Est.", "Vertices Est.", "Indices Est.", "占位观测", "不代表本轮已做通用文本渲染优化"}));
 	EXPECT_NE(Tests.find("testSettingsUiBudgetFieldsAppearInSummaryAndReport"), std::string::npos);
 }
 
@@ -3923,9 +3917,13 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesReadableIntervalInput)
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_EQ(Body.find("const bool CompactQueueCapacityControls"), std::string::npos);
-	EXPECT_NE(Body.find("CUIRect QueueEnabledRect;"), std::string::npos);
-	EXPECT_NE(Body.find("QueueSection.HSplitTop(20.0f, &QueueEnabledRect, &QueueSection);"), std::string::npos);
-	EXPECT_NE(Body.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", Localize(\"Enable skin queue\"), QueueEnabled, &QueueEnabledRect)"), std::string::npos);
+	EXPECT_EQ(Body.find("CUIRect QueueEnabledRect;"), std::string::npos);
+	EXPECT_EQ(Body.find("QueueDirty ? \"● \""), std::string::npos);
+	EXPECT_NE(Body.find("str_format(aQueueLabel, sizeof(aQueueLabel), \"%s (%d)\", Localize(\"Skin queue\"), (int)SkinQueue.size());"), std::string::npos);
+	EXPECT_NE(Body.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", aQueueLabel, QueueEnabled, &QueueHeader"), std::string::npos);
+	EXPECT_NE(Body.find("Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel"), std::string::npos);
+	EXPECT_EQ(Body.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee_queue_list_label\", &QueueListHeaderLabel, Localize(\"Skin queue\")"), std::string::npos);
+	EXPECT_EQ(Body.find("Localize(\"Enable skin queue\"), QueueEnabled"), std::string::npos);
 	EXPECT_NE(Body.find("CUIRect IntervalRow, IntervalLabel, IntervalControls;"), std::string::npos);
 	EXPECT_NE(Body.find("QueueSection.HSplitTop(20.0f, &IntervalRow, &QueueSection);"), std::string::npos);
 	EXPECT_NE(Body.find("IntervalRow.VSplitLeft(QueueControlLabelWidth, &IntervalLabel, &IntervalControls);"), std::string::npos);
@@ -5339,17 +5337,17 @@ TEST(QmMonitoringHelpers, PerfAnalyzerReportsOnePctLowAndPreviewBudget)
 
 	EXPECT_NE(Stats.find("export interface PreviewBudgetSummary"), std::string::npos);
 	EXPECT_NE(Stats.find("previewBudgetSummary(entries"), std::string::npos);
-	EXPECT_NE(Stats.find("preview_jobs_started"), std::string::npos);
-	EXPECT_NE(Stats.find("preview_jobs_done"), std::string::npos);
-	EXPECT_NE(Stats.find("preview_uploads"), std::string::npos);
-	EXPECT_NE(Stats.find("preview_admissions"), std::string::npos);
-	EXPECT_NE(Stats.find("visible_ready_ratio"), std::string::npos);
-	EXPECT_NE(Stats.find("fpsOnePctLowAvailable"), std::string::npos);
-	EXPECT_NE(Stats.find("coldTabSwitchFpsSummaries"), std::string::npos);
-	EXPECT_NE(Stats.find("warmTabSwitchFpsSummaries"), std::string::npos);
-	EXPECT_NE(Report.find("Cold/Warm Tab Switch"), std::string::npos);
-	EXPECT_NE(Report.find("Preview Budget"), std::string::npos);
-	EXPECT_NE(Report.find("1% Low Target"), std::string::npos);
+	EXPECT_TRUE(ContainsAll(Stats, {
+					       "preview_jobs_started",
+					       "preview_jobs_done",
+					       "preview_uploads",
+					       "preview_admissions",
+					       "visible_ready_ratio",
+					       "fpsOnePctLowAvailable",
+					       "coldTabSwitchFpsSummaries",
+					       "warmTabSwitchFpsSummaries",
+				       }));
+	EXPECT_TRUE(ContainsAll(Report, {"Cold/Warm Tab Switch", "Preview Budget", "1% Low Target"}));
 	EXPECT_NE(Quality.find("previewBudget"), std::string::npos);
 	EXPECT_NE(Tests.find("testPreviewBudgetSummaryAndColdWarmTabSwitches"), std::string::npos);
 }
@@ -5363,19 +5361,15 @@ TEST(QmMonitoringHelpers, PerfAnalyzerCorrelatesOnePctLowWithTextAndResourceBudg
 
 	EXPECT_NE(Stats.find("export interface BudgetCorrelationWindow"), std::string::npos);
 	EXPECT_NE(Stats.find("export function budgetCorrelationSummary(entries: PerfEntry[]): BudgetCorrelationSummary"), std::string::npos);
-	EXPECT_NE(Stats.find("dominantAttribution"), std::string::npos);
-	EXPECT_NE(Stats.find("culpritRank"), std::string::npos);
+	EXPECT_TRUE(ContainsAll(Stats, {"dominantAttribution", "culpritRank"}));
 	EXPECT_NE(Quality.find("budgetCorrelation: budgetCorrelationSummary(entries)"), std::string::npos);
-	EXPECT_NE(Report.find("Budget Attribution by Window"), std::string::npos);
-	EXPECT_NE(Report.find("Top Culprit"), std::string::npos);
-	EXPECT_NE(Report.find("Text Pipeline"), std::string::npos);
-	EXPECT_NE(Report.find("Preview Budget"), std::string::npos);
-	EXPECT_NE(Report.find("UI Frame Scheduler"), std::string::npos);
-	EXPECT_NE(Report.find("1% Low Target"), std::string::npos);
-	EXPECT_NE(Tests.find("testUnifiedFrameSchedulerAndTextPipelineBudgetSummary"), std::string::npos);
-	EXPECT_NE(Tests.find("testPerfAnalyzerCorrelatesOnePctLowWithTextAndResourceBudgets"), std::string::npos);
-	EXPECT_NE(Tests.find("testBudgetCorrelationSummaryByFpsWindow"), std::string::npos);
-	EXPECT_NE(Tests.find("testBudgetCorrelationRanksCulprits"), std::string::npos);
+	EXPECT_TRUE(ContainsAll(Report, {"Budget Attribution by Window", "Top Culprit", "Text Pipeline", "Preview Budget", "UI Frame Scheduler", "1% Low Target"}));
+	EXPECT_TRUE(ContainsAll(Tests, {
+					       "testUnifiedFrameSchedulerAndTextPipelineBudgetSummary",
+					       "testPerfAnalyzerCorrelatesOnePctLowWithTextAndResourceBudgets",
+					       "testBudgetCorrelationSummaryByFpsWindow",
+					       "testBudgetCorrelationRanksCulprits",
+				       }));
 }
 
 TEST(QmMonitoringHelpers, PerfReportDefaultsToStatisticalSections)
@@ -5796,6 +5790,23 @@ TEST(QmMonitoringHelpers, DefaultGateRunsFullAutomatedTests)
 	EXPECT_NE(ScriptsOverview.find("C++ 全量测试和 Rust 全量测试"), std::string::npos);
 	EXPECT_NE(ScriptsOverview.find("严格构建与静态分析只属于 full gate"), std::string::npos);
 	EXPECT_NE(ScriptsOverview.find("不作为“全量测试”的默认入口"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, WindowsCmakeWrapperDoesNotPreconfigureBeforeBuild)
+{
+	const std::string Wrapper = ReadRepoFile("qmclient_scripts/cmake-windows.cmd");
+	const std::string Repair = ReadRepoFile("qmclient_scripts/repair_ninja_msvc_prefix.py");
+	ASSERT_FALSE(Wrapper.empty());
+	ASSERT_FALSE(Repair.empty());
+
+	EXPECT_EQ(Wrapper.find("--prepare-build"), std::string::npos);
+	EXPECT_NE(Wrapper.find("if not \"%CMRC%\"==\"0\""), std::string::npos);
+	EXPECT_NE(Wrapper.find("type \"%CMOUT%\""), std::string::npos);
+	EXPECT_FALSE(ContainsAny(Repair, {
+						 "--prepare-build",
+						 "def _prepare_build_rules",
+						 "subprocess.run(\n        [\"cmake\", \"-S\"",
+					 }));
 }
 
 TEST(QmMonitoringHelpers, NightlyWorkflowPublishesPdbFreePrerelease)

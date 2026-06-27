@@ -166,6 +166,10 @@ public:
 		int StorageType() const { return m_StorageType; }
 		time_t LastModified() const { return m_LastModified; }
 		void SetLastModified(time_t LastModified) { m_LastModified = LastModified; }
+		int OfficialReleaseDate() const { return m_OfficialReleaseDate; }
+		void SetOfficialReleaseDate(int OfficialReleaseDate) { m_OfficialReleaseDate = OfficialReleaseDate; }
+		const char *OfficialCreator() const { return m_aOfficialCreator; }
+		void SetOfficialCreator(const char *pOfficialCreator) { str_copy(m_aOfficialCreator, pOfficialCreator == nullptr ? "" : pOfficialCreator, sizeof(m_aOfficialCreator)); }
 		bool IsVanilla() const { return m_Vanilla; }
 		bool IsSpecial() const { return m_Special; }
 		bool IsAlwaysLoaded() const { return m_AlwaysLoaded; }
@@ -241,6 +245,8 @@ public:
 		EType m_Type;
 		int m_StorageType;
 		time_t m_LastModified = 0;
+		int m_OfficialReleaseDate = 0;
+		char m_aOfficialCreator[MAX_NAME_LENGTH] = {};
 		bool m_Vanilla;
 		bool m_Special;
 		bool m_AlwaysLoaded;
@@ -464,6 +470,7 @@ public:
 	void Refresh(TSkinLoadedCallback &&SkinLoadedCallback);
 	CSkinLoadingStats LoadingStats() const;
 	CSkinList &SkinList(int Dummy);
+	void RebuildSkinListPlan();
 	bool SkinListSkeletonReady() const;
 	bool SkinListReady() const;
 	uint64_t SettingsSourceUploadsCompleted() const { return m_SettingsSourceUploadsCompleted; }
@@ -598,6 +605,26 @@ public:
 	const char *SkinPrefix() const;
 
 	static bool IsSpecialSkin(const char *pName);
+	static int ParseOfficialSkinReleaseDateKey(const char *pDate)
+	{
+		if(pDate == nullptr)
+			return 0;
+		int Key = 0;
+		for(int i = 0; i < 10; ++i)
+		{
+			const char c = pDate[i];
+			if(i == 4 || i == 7)
+			{
+				if(c != '-')
+					return 0;
+				continue;
+			}
+			if(c < '0' || c > '9')
+				return 0;
+			Key = Key * 10 + (c - '0');
+		}
+		return pDate[10] == '\0' ? Key : 0;
+	}
 
 private:
 	static bool IsVanillaSkin(const char *pName);
@@ -739,12 +766,14 @@ private:
 		bool m_NotFound = false;
 		bool m_Special = false;
 		bool m_ForceShowNotFound = false;
+		int m_OfficialReleaseDate = 0;
+		time_t m_LastModified = 0;
 	};
 
 	class CSkinListPlanJob : public IJob
 	{
 	public:
-		CSkinListPlanJob(std::vector<SSkinListSnapshotEntry> vEntries, std::string Filter, int Generation);
+		CSkinListPlanJob(std::vector<SSkinListSnapshotEntry> vEntries, std::string Filter, int Generation, int SortMode);
 
 		struct SResult
 		{
@@ -762,6 +791,7 @@ private:
 	private:
 		std::vector<SSkinListSnapshotEntry> m_vEntries;
 		std::string m_Filter;
+		int m_SortMode = 0;
 		SResult m_Result;
 	};
 
@@ -775,6 +805,7 @@ private:
 			struct SEntry
 			{
 				std::string m_Name;
+				CSkinContainer::EType m_Type = CSkinContainer::EType::LOCAL;
 				int m_StorageType = IStorage::TYPE_ALL;
 				time_t m_LastModified = 0;
 			};
@@ -788,9 +819,11 @@ private:
 
 	private:
 		static int ScanCallback(const CFsFileInfo *pInfo, int IsDir, int StorageType, void *pUser);
+		void ScanDirectory(const char *pDirectory, CSkinContainer::EType Type);
 
 		IStorage *m_pStorage;
 		SResult m_Result;
+		CSkinContainer::EType m_CurrentScanType = CSkinContainer::EType::LOCAL;
 	};
 
 	static bool PrepareSkinData(const char *pName, CSkinLoadData &Data);
@@ -809,6 +842,10 @@ private:
 	size_t LoadedSkinLimit() const;
 	void QueueSkinDirectoryScanJob();
 	void ProcessSkinDirectoryScanJob();
+	void QueueOfficialSkinIndexRequest();
+	void ProcessOfficialSkinIndexRequest();
+	void LoadOfficialSkinIndexCache();
+	bool ApplyOfficialSkinIndexJson(const char *pJson, size_t JsonSize);
 	void QueueSkinListPlanJob(int Dummy);
 	void ProcessSkinListPlanJob();
 	CSkinListEntry MakeSkinListEntry(const CSkinContainer *pSkinContainer, std::optional<CSkinListEntry::SColorKey> ColorKey) const;
@@ -854,6 +891,7 @@ private:
 	CSkinList m_SkinList;
 	std::shared_ptr<CSkinDirectoryScanJob> m_pSkinDirectoryScanJob;
 	std::shared_ptr<CSkinListPlanJob> m_pSkinListPlanJob;
+	std::shared_ptr<CHttpRequest> m_pOfficialSkinIndexRequest;
 	std::vector<SSettingsSkinListEntry> m_vPendingSkinListMergeEntries;
 	std::vector<CSkinListEntry> m_vPendingSkinListEntries;
 	size_t m_SkinListMergeCursor = 0;

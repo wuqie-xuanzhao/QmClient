@@ -41,50 +41,52 @@ if defined VSINSTALLDIR (
 	if exist "%VSINSTALLDIR%Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe" set "PATH=%VSINSTALLDIR%Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;%PATH%"
 )
 
-if /I "%~1"=="--build" (
-	rem Repair msvc_deps_prefix before the build so Ninja can record dependencies in this run.
-	if defined FALLBACK_PYTHON (
-		"%FALLBACK_PYTHON%" "%~dp0repair_ninja_msvc_prefix.py" --prepare-build %* >nul 2>&1
-	) else (
-		py.exe -3 "%~dp0repair_ninja_msvc_prefix.py" --prepare-build %* >nul 2>&1
+set "CMAKE_EXE="
+if exist "D:\Scoop\apps\cmake\current\bin\cmake.exe" set "CMAKE_EXE=D:\Scoop\apps\cmake\current\bin\cmake.exe"
+if not defined CMAKE_EXE (
+	for /f "delims=" %%I in ('where cmake.exe 2^>nul') do (
+		if not defined CMAKE_EXE set "CMAKE_EXE=%%~fI"
 	)
-	if errorlevel 1 (
-		python "%~dp0repair_ninja_msvc_prefix.py" --prepare-build %* >nul 2>&1
-		if errorlevel 1 (
-			exit /b 1
-		)
-	)
+)
+if not defined CMAKE_EXE (
+	echo Failed to locate cmake.exe.
+	exit /b 1
 )
 
 set "CMOUT=%TEMP%\cmake-windows-%RANDOM%.log"
 if /I "%~1"=="--build" (
-	cmake %* > "%CMOUT%" 2>&1
+	"%CMAKE_EXE%" %* > "%CMOUT%" 2>&1
 ) else if /I "%~1"=="-E" (
-	cmake %* > "%CMOUT%" 2>&1
+	"%CMAKE_EXE%" %* > "%CMOUT%" 2>&1
 ) else if /I "%~1"=="-P" (
-	cmake %* > "%CMOUT%" 2>&1
+	"%CMAKE_EXE%" %* > "%CMOUT%" 2>&1
 ) else if /I "%~1"=="--install" (
-	cmake %* > "%CMOUT%" 2>&1
+	"%CMAKE_EXE%" %* > "%CMOUT%" 2>&1
 ) else if /I "%~1"=="--open" (
-	cmake %* > "%CMOUT%" 2>&1
+	"%CMAKE_EXE%" %* > "%CMOUT%" 2>&1
 ) else if /I "%~1"=="--workflow" (
-	cmake %* > "%CMOUT%" 2>&1
+	"%CMAKE_EXE%" %* > "%CMOUT%" 2>&1
 ) else (
-	cmake -Wno-dev %* > "%CMOUT%" 2>&1
+	"%CMAKE_EXE%" -Wno-dev %* > "%CMOUT%" 2>&1
 )
 set "CMRC=%errorlevel%"
+if not "%CMRC%"=="0" (
+	type "%CMOUT%"
+	del /Q "%CMOUT%" >nul 2>&1
+	exit /b %CMRC%
+)
 
 set "RULES_FIXED="
 rem Repair rules.ninja again in case configure/build regenerated it during this command.
 if defined FALLBACK_PYTHON (
-	"%FALLBACK_PYTHON%" "%~dp0repair_ninja_msvc_prefix.py" %*
+	call "%FALLBACK_PYTHON%" "%~dp0repair_ninja_msvc_prefix.py" %*
 ) else (
-	py.exe -3 "%~dp0repair_ninja_msvc_prefix.py" %*
+	call py.exe -3 "%~dp0repair_ninja_msvc_prefix.py" %*
 )
 if not errorlevel 1 (
 	set "RULES_FIXED=1"
 ) else (
-	python "%~dp0repair_ninja_msvc_prefix.py" %*
+	call python "%~dp0repair_ninja_msvc_prefix.py" %*
 	if not errorlevel 1 (
 		set "RULES_FIXED=1"
 	)
@@ -92,14 +94,14 @@ if not errorlevel 1 (
 
 set "FILTERED="
 if defined FALLBACK_PYTHON (
-	"%FALLBACK_PYTHON%" "%~dp0cmake-windows-filter.py" "%CMOUT%"
+	call "%FALLBACK_PYTHON%" "%~dp0cmake-windows-filter.py" "%CMOUT%"
 ) else (
-	py.exe -3 "%~dp0cmake-windows-filter.py" "%CMOUT%"
+	call py.exe -3 "%~dp0cmake-windows-filter.py" "%CMOUT%"
 )
 if not errorlevel 1 (
 	set "FILTERED=1"
 ) else (
-	python "%~dp0cmake-windows-filter.py" "%CMOUT%"
+	call python "%~dp0cmake-windows-filter.py" "%CMOUT%"
 	if not errorlevel 1 (
 		set "FILTERED=1"
 	)

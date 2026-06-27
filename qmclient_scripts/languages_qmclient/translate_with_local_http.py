@@ -30,6 +30,12 @@ DDNET_SIMPLIFIED_CHINESE_PATH = PROMPT_ASSETS_DIR / "ddnet_simplified_chinese.tx
 INDEXED_LINE_RE = re.compile(r"^\s*(\d+)[\.)]\s*(.*)\s*$")
 MAX_PARALLEL_REQUESTS = 32
 MAX_PARALLEL_LANGUAGES = 12
+DEFAULT_BASE_URL = "https://api.deepseek.com"
+DEFAULT_MODEL = "deepseek-v4-flash"
+DEFAULT_API_KEY_ENV = "DEEPSEEK_API_KEY"
+_CPU_COUNT = os.cpu_count() or 4
+DEFAULT_PARALLEL_LANGUAGES = min(MAX_PARALLEL_LANGUAGES, max(1, _CPU_COUNT - 2))
+DEFAULT_PARALLEL_REQUESTS = 4
 SAME_SOURCE_ALLOWED_BY_LANGUAGE = {
     "german": {
         "%c Team %d",
@@ -1501,18 +1507,45 @@ def selected_modules(args: argparse.Namespace) -> set[str]:
     return set(values)
 
 
+def clean_empty_drafts() -> list[str]:
+    removed: list[str] = []
+    if not TRANSLATIONS_DRAFT_DIR.exists():
+        return removed
+    for path in sorted(TRANSLATIONS_DRAFT_DIR.rglob("*.toml")):
+        text = path.read_text(encoding="utf-8").strip()
+        if not text:
+            path.unlink()
+            removed.append(str(path))
+    directories = sorted(
+        [path for path in TRANSLATIONS_DRAFT_DIR.rglob("*") if path.is_dir()],
+        key=lambda path: len(path.parts),
+        reverse=True,
+    )
+    for directory in directories:
+        try:
+            directory.rmdir()
+            removed.append(str(directory))
+        except OSError:
+            pass
+    return removed
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--languages", default="simplified_chinese")
-    parser.add_argument("--base-url", default="")
-    parser.add_argument("--model", default="")
-    parser.add_argument("--api-key", default="")
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    parser.add_argument("--model", default=DEFAULT_MODEL)
+    parser.add_argument("--api-key", default=os.getenv(DEFAULT_API_KEY_ENV, ""))
     parser.add_argument("--module", default="")
     parser.add_argument("--modules", default="")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--batch-size", type=int, default=1024)
-    parser.add_argument("--parallel-requests", type=int, default=1)
-    parser.add_argument("--parallel-languages", type=int, default=1)
+    parser.add_argument(
+        "--parallel-requests", type=int, default=DEFAULT_PARALLEL_REQUESTS
+    )
+    parser.add_argument(
+        "--parallel-languages", type=int, default=DEFAULT_PARALLEL_LANGUAGES
+    )
     parser.add_argument("--max-tokens", type=int)
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument("--chat-extra-json", default="")
@@ -1520,6 +1553,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--rewrite", action="store_true")
     parser.add_argument("--write-back", action="store_true")
+    parser.add_argument("--clean-drafts", action="store_true")
+    parser.add_argument("--auto-clean", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--full-scan",
@@ -1531,6 +1566,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     args = build_parser().parse_args()
+    if args.clean_drafts:
+        removed = clean_empty_drafts()
+        for path in removed:
+            print(f"removed {path}")
+        if not removed:
+            print("no empty draft files or directories")
+        return
     modules = selected_modules(args)
     languages = parse_csv_values(args.languages)
     if args.full_scan:
@@ -1544,10 +1586,6 @@ def main() -> None:
     prompt_assets = load_prompt_assets()
     client = None
     if not args.write_back:
-        if not args.base_url or not args.model:
-            raise SystemExit(
-                "--base-url and --model are required unless --write-back is used"
-            )
         client = LocalHttpClient(
             base_url=args.base_url,
             model=args.model,
@@ -1572,6 +1610,10 @@ def main() -> None:
                 print(f"{language}: no draft translations written back")
             for failure in failures:
                 print(f"  - {failure}")
+        if args.auto_clean:
+            removed = clean_empty_drafts()
+            for path in removed:
+                print(f"removed {path}")
         return
 
     assert client is not None
@@ -1596,6 +1638,10 @@ def main() -> None:
             ]
             for future in concurrent.futures.as_completed(futures):
                 future.result()
+        if args.auto_clean:
+            removed = clean_empty_drafts()
+            for path in removed:
+                print(f"removed {path}")
         return
 
     for language in languages:
@@ -1609,6 +1655,10 @@ def main() -> None:
             prompt_assets=prompt_assets,
             client=client,
         )
+    if args.auto_clean:
+        removed = clean_empty_drafts()
+        for path in removed:
+            print(f"removed {path}")
 
 
 if __name__ == "__main__":

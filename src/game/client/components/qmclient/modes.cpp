@@ -84,6 +84,21 @@ int QmGoresHammerWakeupReleaseFireState(int CurrentFire)
 	return ((CurrentFire + 1) & ~1) & INPUT_STATE_MASK;
 }
 
+int GoresRestoreWeaponAfterHammer(int PreHammerWeapon, bool HasPreHammerWeapon)
+{
+	return HasPreHammerWeapon ? PreHammerWeapon : WEAPON_GUN;
+}
+
+bool ShouldPulseGoresHammerOnFire(bool GoresCycleActive, bool FireJustPressed, bool CurrentWeaponIsHammer, bool FreezeWakeupActive)
+{
+	return GoresCycleActive && FireJustPressed && !CurrentWeaponIsHammer && !FreezeWakeupActive;
+}
+
+bool ShouldRestoreGoresWeaponAfterHammer(bool CurrentWeaponIsHammer, bool HasPreHammerWeapon)
+{
+	return CurrentWeaponIsHammer && HasPreHammerWeapon;
+}
+
 bool ShouldShowQmHookStrongWeakScope(int Scope, bool Self, bool Strong, bool Weak)
 {
 	switch(Scope)

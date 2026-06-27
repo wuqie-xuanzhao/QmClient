@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="dcterms.date" content="2026-06-20" />
-  <meta name="updated" content="2026-06-22" />
+  <meta name="updated" content="2026-06-27" />
   <meta name="status" content="active" />
-  <meta name="source-md" content="2026-06-20-backlog-consolidation-spec.md (deleted after rewrite)" />
+  <meta name="source-md" content="2026-06-20-backlog-consolidation-spec.md (deleted 2026-06-27, content merged into this HTML)" />
   <title>QmClient 待办整合规格（半 plan 式）</title>
   <style>
     :root {
@@ -148,7 +148,7 @@
     <header class="hero">
       <div class="meta">
         <span class="pill ok">active</span>
-        <span class="pill secondary">2026-06-20 创建 · 2026-06-22 更新</span>
+        <span class="pill secondary">2026-06-20 创建 · 2026-06-22 重写 · 2026-06-27 合并</span>
         <span class="pill warn">HTML 重写版</span>
       </div>
       <h1>QmClient 待办整合规格（半 plan 式）</h1>
@@ -516,6 +516,18 @@
 
       <h3>设计方向</h3>
       <p><strong>先调研 PS blend modes，再挑选对皮肤染色有意义的子集实现。</strong> 推荐实现 Multiply / Screen / Overlay 三种。接入点：在 <code>ApplyColors</code> 或渲染管线层（<code>players.cpp</code> 的皮肤渲染）加入 blend 运算。新增配置 <code>qm_skin_blend_mode</code>（枚举），在 Frankenstein 编辑器和设置页暴露。</p>
+      <table>
+        <thead><tr><th>模式</th><th>公式（C_result = f(C_base, C_blend)）</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>Normal（替换）</td><td>C_blend</td><td>当前已有</td></tr>
+          <tr><td>Multiply</td><td>C_base × C_blend</td><td>加深、阴影</td></tr>
+          <tr><td>Screen</td><td>1 - (1-C_base)(1-C_blend)</td><td>提亮</td></tr>
+          <tr><td>Overlay</td><td>C_base&lt;0.5 ? 2×base×blend : 1-2(1-base)(1-blend)</td><td>增强对比</td></tr>
+          <tr><td>SoftLight</td><td>基于 Pegtop/Penoline 公式</td><td>柔和叠加</td></tr>
+          <tr><td>HardLight</td><td>Overlay 的 blend/base 互换</td><td>强烈叠加</td></tr>
+        </tbody>
+      </table>
+      <p class="small">验收：至少实现 Multiply / Screen / Overlay 三种；默认（Normal）与当前染色完全一致无回归；每个模式有边界值单元测试；Frankenstein 编辑器可实时预览。</p>
 
       <h3>风险与依赖</h3>
       <ul>
@@ -663,8 +675,10 @@
       <h3>设计方向</h3>
       <ol>
         <li><strong>设置页 UI</strong>：在栖梦或系统工具页加 <code>QmProcessHighPriority</code> 开关。</li>
-        <li><strong>热重载</strong>：抽出为可热重载的函数，加 config chain callback。</li>
-        <li><strong>跨平台</strong>：Linux/macOS/Android 平台能力调研。</li>
+        <li><strong>热重载</strong>：把 <code>client.cpp:5931-5939</code> 抽出为可热重载的函数，加 <code>Console()-&gt;Chain</code> callback，配置变更时重新调用 <code>SetPriorityClass</code>。</li>
+        <li><strong>跨平台能力矩阵</strong>：Linux/macOS 用 <code>setpriority(PRIO_PROCESS, 0, nice_value)</code>——非 root 只能降低不能提高，需降级处理；Android 用 <code>Process.setThreadPriority</code>（JNI）——后台限制严格，可能只对前台有效。</li>
+        <li><strong>优先级档位</strong>：考虑用 <code>ABOVE_NORMAL_PRIORITY_CLASS</code> 替代 <code>HIGH_PRIORITY_CLASS</code>（更安全，避免游戏死循环锁死系统）。</li>
+        <li><strong>网络优先级</strong>：确认 <code>m_Tos</code>（DDNet 网络层 TOS/QoS）和进程优先级独立、互不影响。</li>
       </ol>
 
       <h3>风险与依赖</h3>
@@ -723,7 +737,12 @@
       <p>用户要的三种模式<strong>实际都已存在</strong>。真正的 gap 只有两个：<code>QmNewIme</code> 配置<strong>没有在栖梦-视觉页面可视化</strong>（用户核心诉求）。</p>
 
       <h3>设计方向</h3>
-      <p>在栖梦-视觉页面暴露 <code>QmNewIme</code> 开关（旧版 vs 新版候选栏），这是最小改动，满足核心诉求。低风险：暴露已有配置项到设置页，几乎无代码风险。</p>
+      <ol>
+        <li>在栖梦-视觉页面暴露 <code>QmNewIme</code> 开关（旧版 vs 新版候选栏），这是最小改动，满足核心诉求。</li>
+        <li><strong>（可选）Windows 支持系统原生 IME</strong>：把 <code>QmImeShouldUseSystemCandidateUi()</code> 从硬编码 false 改为可配置（新增 <code>qm_ime_use_system_ui</code>），让 Windows 用户也能用微信输入法等原生 UI；切换时正确设置 <code>SDL_HINT_IME_SHOW_UI</code>，避免自绘候选词 + 原生窗口叠加。</li>
+        <li><strong>（可选）统一为三选一枚举</strong>：<code>qm_ime_style</code>（0=旧版自绘, 1=新版弹窗, 2=系统原生），替代 <code>QmNewIme</code> + 平台硬编码的组合，逻辑更清晰。</li>
+      </ol>
+      <p class="small">低风险：暴露已有配置项到设置页，几乎无代码风险。中风险：Windows 开放系统原生 IME 需正确处理 <code>SDL_HINT_IME_SHOW_UI</code>。<code>qm_ime_platform_test.cpp</code> 改动后需全绿。</p>
     </section>
 
     <!-- ============= #19 ============= -->
@@ -791,6 +810,15 @@ return ActiveBind.m_ModifierMask == KeyModifier::NONE &&
       <p>BC 的 3D Particles 和 QmClient 已有的背景 3D 粒子实现不同。QmClient 已有 <code>CBackgroundParticles</code> 和 <code>qm_3d_particles*</code> 配置，且类型比 BC 更丰富。</p>
       <h4>当前权威口径</h4>
       <p>#20.4 <strong>不应直接复制 <code>C3DParticles</code></strong> / 新增 <code>qm_weapon_3d_particles*</code>，避免重复组件和重复 UI。下一步应做<strong>差异审计小 spec</strong>：对照 BC <code>C3DParticles</code> 的 focus/optimizer guard、淡入淡出、push/collide、glow 参数，只补强 QmClient <code>CBackgroundParticles</code> 缺失的能力。</p>
+
+      <h3>BC 移植分步实现计划（按风险从低到高）</h3>
+      <p class="muted">合并自原 Markdown 规格的分步顺序。每个子功能独立 commit，不混合。</p>
+      <ol>
+        <li><strong>#20.2 3D 表情阴影</strong>（低风险，~30 行单文件）— <span class="badge ok">已实现</span>，先做。</li>
+        <li><strong>#20.4 3D Particles</strong>（中风险，新组件不破坏现有，但需与 <code>CBackgroundParticles</code> 差异审计后只补强缺失能力）— <span class="badge bad">待审计</span>，其次。</li>
+        <li><strong>#20.1 简短服务器名</strong>（KoG 已有 BC 实现可移植；Axiom/CHN DDR 难度词枚举已补全中文别名）— <span class="badge ok">已实现</span>，可与 20.2 并行准备。</li>
+        <li><strong>#20.3 电影摄像机</strong>（高风险，上游核心 <code>camera.cpp</code>）— <span class="badge bad">待审批</span>，<strong>最后做</strong>，单独 commit + 充分回归测试（demo 回放 / 观战 / freeview clamp / existing drift·FOV·smoothing 不回归）。</li>
+      </ol>
     </section>
 
     <!-- ============= 共用贴边 Helpers 设计 ============= -->
@@ -926,10 +954,29 @@ return ActiveBind.m_ModifierMask == KeyModifier::NONE &&
       <h4>类型 A：公告马甲（alt_account）——主动注册，所有 QmClient 用户可见</h4>
       <p>玩家自己声明「我是 XXX 的马甲」，注册后所有 QmClient 用户都能看到标注。UI 极简（填主号名 + 马甲名，无发码/无验证码）。客户端在 <code>/qm/users.json</code> 在线名单里按名字查到主号的 <code>qid</code>，走 <code>POST /qm/alt/register</code>。</p>
       <p><strong>服务端需新增接口（由远程仓库主实现）</strong>：<code>POST /qm/alt/register</code>、<code>/qm/users.json</code> 下发 <code>alt_of</code>、<code>/qm/report</code> 接收 <code>alt_of</code>、<code>GET /qm/alt/lookup</code>。</p>
-      <p><strong>客户端实现范围（本开发者做）</strong>：马甲管理 UI、注册调用 + report 字段、users.json 解析扩展、渲染、配置。</p>
+      <p><strong>客户端实现范围（本开发者做）</strong>：马甲管理 UI、注册调用 + report 字段、users.json 解析扩展、渲染、配置。具体 7 点：① 「马甲管理」设置区 UI（<code>menus_qmclient.cpp</code>，极简两输入框）；② 名字→qid 转换（复用 <code>/qm/users.json</code> 查询，<code>qmclient_utils.cpp</code>）；③ <code>/qm/alt/register</code> 调用封装（HTTP POST，带 auth_token）；④ <code>/qm/users.json</code> 解析扩展（读 <code>alt_of</code> / <code>alt_name</code>）；⑤ 缓存 + 渲染（名字板/计分板标注「[主号名]的马甲」，复用 warlist 标注布局）；⑥ 配置项 <code>QmAltEnabled</code>/<code>QmAltMainName</code>/<code>QmAltName</code>；⑦ 服务端未就绪时的优雅降级。</p>
+      <p><strong>注册流程（名字 → qid 转换）</strong>：① 用户填主号名 → 客户端在 <code>/qm/users.json</code> 在线名单按名字查主号 <code>qid</code>（<code>m_vLocalServerMarks</code>，<code>qmclient_utils.cpp:126-132</code>）；② 调 <code>POST /qm/alt/register</code>（携带 auth_token + 主号 qid + 马甲名）→ 服务端记录 <code>{alt_qid, main_qid, alt_name}</code>；③ 主号不在线时无法立即注册 → 提示「主号当前不在线，请稍后重试」。</p>
+      <p><strong>数据流（复用现有 <code>/qm/*</code> 服务）</strong>：上报 <code>/qm/report</code> 每个 player 对象增加可选 <code>alt_of</code> 字段（主号 qid，服务端不识别则忽略）；下发 <code>/qm/users.json</code> 每个条目增加可选 <code>alt_of</code> + <code>alt_name</code>；客户端渲染时 <code>GetQ1menGClientQid(ClientId)</code> → 查缓存 → 标注主号名。识别链已闭合：名字 → qid → ClientId（改名不影响绑定）。</p>
+      <p><strong>优雅降级</strong>：服务端未就绪时（HTTP 404/超时）注册按钮提示「服务暂不可用」，不报错、不影响其他功能。基于 qid 而非名字，主号/马甲改名后关系不丢失。</p>
 
       <h4>类型 B：私人标注（private_tag）——你标注别人，仅自己可见（类似 warlist）</h4>
       <p>复用 TClient warlist 机制（<code>CWarList</code>，本地存储 <code>qmclient_warlist.cfg</code>）。推荐新建 <code>CPrivateTag</code> 组件（避免污染「敌对」语义）。UI：右键玩家名添加「标注为 XXX 的马甲」。</p>
+
+      <h4>验收标准</h4>
+      <ol>
+        <li><strong>类型 A（服务端就绪后）</strong>：填主号名 + 马甲名 → 注册成功 → 所有 QmClient 用户在名字板/计分板看到「[主号名]的马甲」。</li>
+        <li><strong>类型 A（服务端未就绪）</strong>：注册按钮提示「服务暂不可用」，不报错，UI 正常显示，不影响其他功能。</li>
+        <li><strong>改名稳定</strong>：主号或马甲改名后，因绑定基于 qid 而非名字，关系不丢失。</li>
+        <li><strong>类型 B</strong>：能给任意玩家打私人标签、仅自己可见、名字板/计分板显示。</li>
+        <li>两类标注可共存（同一玩家既有公告马甲标注又有私人标注）。</li>
+      </ol>
+      <h4>风险</h4>
+      <ul>
+        <li>类型 A 依赖远程仓库主实现服务端——客户端按契约先行，服务端未就绪则优雅降级（设计取舍，非缺陷）。</li>
+        <li>主号不在线时无法注册（查不到 qid）——可接受限制。</li>
+        <li>私人标注用名字匹配，改名会失效（类型 A 用 qid 不受影响）。</li>
+        <li>任何人都能声明是某人的马甲（无主号审批）——用户接受此简化优先于防冒认；如后续需防冒认再加服务端白名单。</li>
+      </ul>
 
       <h3>B7. 好友分类 <span class="badge ok">已实现</span></h3>
       <p><strong>已实现</strong>：后端分类命令已注册（<code>friends.cpp:145-148</code>）。UI 入口已显式化——分类标题旁加齿轮管理按钮（<code>m_vFriendsCategoryManageButtons</code>，<code>menus_browser.cpp:2370</code>）+ tooltip「Manage categories」/「Right-click or use the gear to manage categories」（:2374-2375）。右键分类标题仍可触发管理弹窗（:2378-2380）。添加好友对话框里有分类下拉 + 「+ 新建分类」选项（:3012）。</p>
@@ -989,7 +1036,7 @@ return ActiveBind.m_ModifierMask == KeyModifier::NONE &&
       </ul>
     </section>
 
-    <p class="footer">本规格是 backlog 整合 PRD，不是实施计划。实施前仍需读取当前源码和对应工作流文档。已实现项的代码事实以当前源码和 commit <code>7dd0b6ec09</code>/<code>e54bb209ac</code> 为准。本文档由原 Markdown 版本（<code>2026-06-20-backlog-consolidation-spec.md</code>）于 2026-06-22 重写为 HTML 并按当前现状更新。</p>
+    <p class="footer">本规格是 backlog 整合 PRD，不是实施计划。实施前仍需读取当前源码和对应工作流文档。已实现项的代码事实以当前源码和 commit <code>7dd0b6ec09</code>/<code>e54bb209ac</code> 为准。本文档由原 Markdown 版本（<code>2026-06-20-backlog-consolidation-spec.md</code>）于 2026-06-22 重写为 HTML 并按当前现状更新；<strong>2026-06-27 合并</strong>：原 MD 中未实现任务（#11 blend 公式表、#16 平台细节、#18 三选一枚举、B6 类型 A 详细设计/验收/风险、BC 移植分步计划）的设计细节已回填本文档，原 MD 已删除，本文档为唯一权威源。</p>
   </div>
 </body>
 </html>

@@ -263,7 +263,11 @@ japanese = "適用"
                 ],
                 "spanish",
             ),
-            [("Active line font size", "")],
+            [
+                ("DeepSeek API Key", ""),
+                ("OpenAI API Key", ""),
+                ("Active line font size", ""),
+            ],
         )
 
     def test_translation_quality_rejects_cjk_source_fallback_for_non_chinese(self):
@@ -297,6 +301,23 @@ japanese = "適用"
 
         self.assertTrue(
             any("spanish repeats English source key" in item for item in errors)
+        )
+
+    def test_translation_quality_rejects_title_case_brand_phrase_fallback(self):
+        store = {
+            "qmclient": {
+                ("OpenAI API Key", ""): {
+                    "spanish": "OpenAI API Key",
+                    "simplified_chinese": "OpenAI API 密钥",
+                }
+            }
+        }
+
+        errors = i18n_store.translation_quality_errors(store)
+
+        self.assertTrue(
+            any("spanish repeats English source key" in item for item in errors),
+            f"expected title-case fallback to be rejected; got: {errors}",
         )
 
     def test_translation_quality_rejects_simplified_chinese_terminology_mismatch(self):
@@ -339,6 +360,7 @@ japanese = "適用"
         store = {
             "menus": {
                 ("auto", ""): {"spanish": "auto"},
+                ("Shotgun", ""): {"portuguese": "Shotgun"},
                 ("entity_bg (Workshop)", ""): {
                     "spanish": "entity_bg (Workshop)",
                     "japanese": "entity_bg (Workshop)",
@@ -346,6 +368,8 @@ japanese = "適用"
                 ("https://ddnet.org/discord", ""): {
                     "spanish": "https://ddnet.org/discord"
                 },
+                ("Demo", ""): {"spanish": "Demo"},
+                ("HUD", ""): {"spanish": "HUD"},
             }
         }
 
@@ -376,6 +400,41 @@ japanese = "適用"
         }
 
         self.assertEqual(i18n_store.translation_quality_errors(store), [])
+
+    def test_translation_quality_report_warns_for_placeholder_mismatch(self):
+        store = {
+            "menus": {
+                ("Player %s joined", ""): {
+                    "spanish": "El jugador se unió",
+                    "simplified_chinese": "玩家 %s 加入",
+                }
+            }
+        }
+
+        report = i18n_store.translation_quality_report(store)
+
+        self.assertEqual(report.errors, [])
+        self.assertTrue(
+            any("placeholder mismatch" in item for item in report.warnings),
+            report.warnings,
+        )
+
+    def test_translation_quality_report_warns_for_long_translation(self):
+        store = {
+            "menus": {
+                ("Short label", ""): {
+                    "spanish": "Esta traducción es deliberadamente demasiado larga para una etiqueta corta",
+                }
+            }
+        }
+
+        report = i18n_store.translation_quality_report(store)
+
+        self.assertEqual(report.errors, [])
+        self.assertTrue(
+            any("length risk" in item for item in report.warnings),
+            report.warnings,
+        )
 
 
 if __name__ == "__main__":

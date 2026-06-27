@@ -32,6 +32,7 @@ LANGUAGE_ORDER = (
 )
 CHINESE_LANGUAGES = {"simplified_chinese", "traditional_chinese"}
 CJK_TOLERANT_LANGUAGES = CHINESE_LANGUAGES | {"japanese", "korean"}
+PLACEHOLDER_RE = re.compile(r"%[sdifc]|%\.[0-9]+[fd]|%%|\{[A-Za-z0-9_]+\}")
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,12 @@ class Message:
 
     def identity(self) -> tuple[str, str]:
         return (self.key, self.context)
+
+
+@dataclass(frozen=True)
+class TranslationQualityReport:
+    errors: list[str]
+    warnings: list[str]
 
 
 def toml_quote(value: str) -> str:
@@ -180,6 +187,69 @@ def translation_quality_errors(
     return errors
 
 
+def translation_quality_report(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+    *,
+    active_module_identities: set[tuple[str, str, str]] | None = None,
+    active_identities: set[tuple[str, str]] | None = None,
+    terminology_by_language: dict[str, dict[str, str]] | None = None,
+    limit: int | None = None,
+) -> TranslationQualityReport:
+    errors = translation_quality_errors(
+        store,
+        active_module_identities=active_module_identities,
+        active_identities=active_identities,
+        terminology_by_language=terminology_by_language,
+        limit=limit,
+    )
+    warnings = translation_quality_warnings(
+        store,
+        active_module_identities=active_module_identities,
+        active_identities=active_identities,
+        limit=limit,
+    )
+    return TranslationQualityReport(errors=errors, warnings=warnings)
+
+
+def translation_quality_warnings(
+    store: dict[str, dict[tuple[str, str], dict[str, str]]],
+    *,
+    active_module_identities: set[tuple[str, str, str]] | None = None,
+    active_identities: set[tuple[str, str]] | None = None,
+    limit: int | None = None,
+) -> list[str]:
+    warnings: list[str] = []
+    for module_name, module_entries in sorted(store.items()):
+        for (key, context), translations in sorted(module_entries.items()):
+            if (
+                active_module_identities is not None
+                and (module_name, key, context) not in active_module_identities
+            ):
+                continue
+            if (
+                active_identities is not None
+                and (key, context) not in active_identities
+            ):
+                continue
+            source_placeholders = sorted(PLACEHOLDER_RE.findall(key))
+            for language, translation in sorted(translations.items()):
+                translation_placeholders = sorted(PLACEHOLDER_RE.findall(translation))
+                if source_placeholders != translation_placeholders:
+                    warnings.append(
+                        f"{module_name}: [{context}] {key}: {language} "
+                        f"placeholder mismatch: source {source_placeholders} "
+                        f"translation {translation_placeholders}"
+                    )
+                if len(key) > 10 and len(translation) > len(key) * 2.5:
+                    warnings.append(
+                        f"{module_name}: [{context}] {key}: {language} length risk: "
+                        f"source {len(key)} translation {len(translation)}"
+                    )
+                if limit is not None and len(warnings) >= limit:
+                    return warnings
+    return warnings
+
+
 def _terminology_quality_failure(
     source: str, translation: str, terminology: dict[str, object]
 ) -> str:
@@ -278,9 +348,10 @@ def _looks_like_english_placeholder_key(key: str) -> bool:
     if _may_keep_source_text(key):
         return False
     words = [word.strip("()[],:;.!?") for word in key.strip().split()]
-    if not any(any(char.isalpha() for char in word) for word in words):
+    alpha_words = [word for word in words if any(char.isalpha() for char in word)]
+    if not alpha_words:
         return False
-    return any(word[:1].islower() for word in words)
+    return len(alpha_words) >= 2
 
 
 def _may_keep_source_text(source: str) -> bool:
@@ -290,28 +361,58 @@ def _may_keep_source_text(source: str) -> bool:
         "TClient",
         "OpenAI",
         "API",
+        "Alpha",
+        "Classic Easy",
+        "Classic Next",
+        "Classic Nut",
+        "Classic Pro",
+        "Client",
+        "Community",
+        "Console",
+        "Controller",
+        "Credits",
+        "Date",
+        "Demos",
+        "Editor",
+        "Emoticon",
+        "Emoticons",
+        "Error",
+        "Extras",
+        "Hammer",
         "HUD",
+        "Folder",
+        "General",
         "Hz",
         "FPS",
+        "Internet",
+        "Live",
+        "Laser",
+        "Mode",
+        "Mouse",
+        "Name",
+        "No",
+        "Normal",
+        "Ok",
+        "Pause",
         "Ping",
+        "Restart",
+        "Screenshots",
         "Super",
+        "Team",
         "Demo",
         "DDmaX",
         "DeepSeek",
-        "DeepSeek API Key",
         "Discord",
         "Glitch",
         "Gradient",
         "Github",
         "Linear",
         "LibreTranslate",
-        "LibreTranslate API Key",
-        "OpenAI API Key",
         "SecretId",
         "SecretKey",
-        "Zhipu AI API Key",
         "Tee",
         "Tee 0.7",
+        "Local + Dummy",
         "Qm",
         "DDRace HUD",
         "Lenny:",

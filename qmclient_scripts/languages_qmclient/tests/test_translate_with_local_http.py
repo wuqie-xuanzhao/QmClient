@@ -46,6 +46,15 @@ class LocalHttpClientTest(unittest.TestCase):
 
 
 class TranslateWithLocalHttpTest(unittest.TestCase):
+    def test_parser_uses_deepseek_defaults(self):
+        args = translate_with_local_http.build_parser().parse_args([])
+
+        self.assertEqual(args.base_url, "https://api.deepseek.com")
+        self.assertEqual(args.model, "deepseek-v4-flash")
+        self.assertEqual(args.api_key, os.getenv("DEEPSEEK_API_KEY", ""))
+        self.assertGreaterEqual(args.parallel_requests, 1)
+        self.assertGreaterEqual(args.parallel_languages, 1)
+
     def test_parse_response_requires_json_array(self):
         parsed = translate_with_local_http.parse_response(
             '[{"key":"Play","context":"","translation":"开始"}]'
@@ -79,6 +88,29 @@ traditional_chinese = "榴彈槍"
         self.assertNotIn("[[term]]", prompt)
         self.assertNotIn("traditional_chinese", prompt)
         self.assertNotIn("榴彈槍", prompt)
+
+    def test_render_prompt_includes_zhipu_ai_terminology(self):
+        tasks = [
+            translate_with_local_http.TranslationTask(
+                "qmclient", ("Zhipu AI API Key", ""), "Zhipu AI API Key"
+            )
+        ]
+        terminology = """[[term]]
+source = "Zhipu AI"
+enforce = "pattern"
+simplified_chinese = "智谱清言"
+"""
+
+        prompt = translate_with_local_http.render_prompt(
+            "simplified_chinese",
+            "qmclient",
+            tasks,
+            prompt_assets=("# Rules", terminology, ""),
+            store={},
+        )
+
+        self.assertIn("- Zhipu AI => 智谱清言", prompt)
+        self.assertNotIn("{terminology}", prompt)
 
     def test_parse_terminology_keeps_enforcement_strategy(self):
         terminology = """[[term]]
@@ -1068,6 +1100,31 @@ key = "Quit"
             self.assertNotIn('key = "Play"', content)
             self.assertIn('key = "Quit"', content)
 
+    def test_clean_empty_drafts_removes_empty_files_and_directories(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            empty_dir = draft_root / "spanish"
+            empty_dir.mkdir(parents=True)
+            empty_file = empty_dir / "menus.toml"
+            empty_file.write_text("  \n", encoding="utf-8")
+            kept_dir = draft_root / "french"
+            kept_dir.mkdir()
+            kept_file = kept_dir / "menus.toml"
+            kept_file.write_text(
+                '[[message]]\nkey = "Play"\n[message.translations]\nfrench = "Jouer"\n',
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(
+                translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+            ):
+                removed = translate_with_local_http.clean_empty_drafts()
+
+            self.assertFalse(empty_file.exists())
+            self.assertFalse(empty_dir.exists())
+            self.assertTrue(kept_file.exists())
+            self.assertTrue(any("menus.toml" in item for item in removed))
+
     def test_main_dry_run_does_not_write_draft(self):
         records = [
             mock.Mock(
@@ -1169,6 +1226,58 @@ key = "Quit"
             )
             self.assertIn('key = "Quit"', content)
             self.assertNotIn('key = "Play"', content)
+
+    def test_main_auto_clean_runs_after_parallel_languages(self):
+        records = [
+            mock.Mock(
+                key="Play",
+                source=Path("src/game/client/components/menus_settings.cpp"),
+                identity=mock.Mock(return_value=("Play", "")),
+            ),
+        ]
+        store = {"menus": {}}
+        with tempfile.TemporaryDirectory() as tmp:
+            draft_root = Path(tmp)
+            empty_dir = draft_root / "spanish"
+            empty_dir.mkdir(parents=True)
+            empty_file = empty_dir / "menus.toml"
+            empty_file.write_text(" \n", encoding="utf-8")
+            argv = [
+                "translate_with_local_http.py",
+                "--languages",
+                "spanish,french",
+                "--parallel-languages",
+                "2",
+                "--auto-clean",
+                "--module",
+                "menus",
+                "--limit",
+                "1",
+            ]
+            with (
+                mock.patch.object(sys, "argv", argv),
+                mock.patch.object(
+                    translate_with_local_http.source_keys,
+                    "collect_incremental_source_key_records",
+                    return_value=(records, (), False),
+                ),
+                mock.patch.object(
+                    translate_with_local_http.i18n_store,
+                    "load_language_store",
+                    return_value=store,
+                ),
+                mock.patch.object(
+                    translate_with_local_http, "TRANSLATIONS_DRAFT_DIR", draft_root
+                ),
+                mock.patch.object(
+                    translate_with_local_http, "translate_language_to_drafts"
+                ) as translate_language,
+            ):
+                translate_with_local_http.main()
+
+            self.assertEqual(translate_language.call_count, 2)
+            self.assertFalse(empty_file.exists())
+            self.assertFalse(empty_dir.exists())
 
 
 if __name__ == "__main__":

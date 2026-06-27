@@ -1000,6 +1000,12 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, const void *pId, const 
 
 int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect)
 {
+	SLabelProperties Props;
+	return DoSettingsButton_CheckBox(Page, Tab, Subtab, pId, pTextId, pText, Checked, pRect, Props);
+}
+
+int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps)
+{
 	if(pTextId == nullptr)
 	{
 		return DoButton_CheckBox_Common(pId, pText, Checked ? "X" : "", pRect, BUTTONFLAG_LEFT);
@@ -1008,9 +1014,10 @@ int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void 
 	pRect->VSplitLeft(pRect->h, &Box, &Label);
 	Label.VSplitLeft(5.0f, nullptr, &Label);
 	Box.Margin(2.0f, &Box);
-	SLabelProperties Props;
+	SLabelProperties Props = LabelProps;
 	Props.m_MaxWidth = Label.w;
-	Props.m_MinimumFontSize = Box.h * CUi::ms_FontmodHeight * 0.7f;
+	if(Props.m_MinimumFontSize <= 0.0f)
+		Props.m_MinimumFontSize = Box.h * CUi::ms_FontmodHeight * 0.7f;
 	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_ML, Props);
 	if(m_MenuTextPlanCollecting)
 	{
@@ -1237,7 +1244,8 @@ void CMenus::DoLaserPreview(const CUIRect *pRect, const ColorHSLA LaserOutlineCo
 	}
 	else
 	{
-		GameClient()->m_Items.RenderLaser(From, From, OuterColor, InnerColor, 4.0f, TicksHead, LaserType, 100.0f);
+		const vec2 EntityLaserEnd = LaserType == LASERTYPE_DOOR ? Pos - vec2(34.0f, 0.0f) : Pos - vec2(42.0f, 0.0f);
+		GameClient()->m_Items.RenderLaser(From, EntityLaserEnd, OuterColor, InnerColor, 4.0f, TicksHead, LaserType, 100.0f);
 		switch(LaserType)
 		{
 		case LASERTYPE_DRAGGER:
@@ -1246,7 +1254,7 @@ void CMenus::DoLaserPreview(const CUIRect *pRect, const ColorHSLA LaserOutlineCo
 			TeeRenderInfo.Apply(GameClient()->m_Skins.Find(g_Config.m_ClPlayerSkin));
 			TeeRenderInfo.ApplyColors(g_Config.m_ClPlayerUseCustomColor, g_Config.m_ClPlayerColorBody, g_Config.m_ClPlayerColorFeet);
 			TeeRenderInfo.m_Size = 64.0f;
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, EMOTE_NORMAL, vec2(-1, 0), Pos);
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, EMOTE_NORMAL, vec2(-1, 0), Pos - vec2(20.0f, 0.0f));
 			break;
 		}
 		case LASERTYPE_FREEZE:

@@ -511,7 +511,56 @@ void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA In
 		}
 	}
 
-	// render head
+	// DDNet entity beams reuse the laser rendering path, but their endpoints are
+	// not normal laser impact splats. Keep these branches aligned with upstream:
+	// door draws the blocker at Pos, dragger draws the pulley/orbs at From, and
+	// freeze draws the hectagon/snowflake at Pos. The generic splat below is only
+	// for weapon lasers and other non-entity laser types.
+	if(Type == LASERTYPE_DOOR)
+	{
+		Graphics()->TextureClear();
+		Graphics()->QuadsSetRotation(0.0f);
+		Graphics()->SetColor(OuterColor);
+		Graphics()->RenderQuadContainerEx(m_ItemsQuadContainerIndex, m_DoorHeadOffset, 1, Pos.x - 8.0f, Pos.y - 8.0f);
+		Graphics()->SetColor(InnerColor);
+		Graphics()->RenderQuadContainerEx(m_ItemsQuadContainerIndex, m_DoorHeadOffset, 1, Pos.x - 6.0f, Pos.y - 6.0f, 6.0f / 8.0f, 6.0f / 8.0f);
+	}
+	else if(Type == LASERTYPE_DRAGGER)
+	{
+		Graphics()->TextureSet(GameClient()->m_ExtrasSkin.m_SpritePulley);
+		for(int Inner = 0; Inner < 2; ++Inner)
+		{
+			Graphics()->SetColor(Inner ? InnerColor : OuterColor);
+			float Size = Inner ? 4.0f / 5.0f : 1.0f;
+			if(Len > 0.0f)
+			{
+				Graphics()->QuadsSetRotation(0.0f);
+				Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_PulleyHeadOffset, From.x, From.y, Size, Size);
+			}
+
+			Size = Inner ? 0.75f - 1.0f / 5.0f : 0.75f;
+			for(int Orb = 0; Orb < 3; ++Orb)
+			{
+				vec2 Offset(10.0f, 0.0f);
+				Offset = rotate(Offset, Orb * 120.0f + TicksHead);
+				Graphics()->QuadsSetRotation(TicksHead + Orb * pi * 2.0f / 3.0f);
+				Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_PulleyHeadOffset, From.x + Offset.x, From.y + Offset.y, Size, Size);
+			}
+		}
+	}
+	else if(Type == LASERTYPE_FREEZE)
+	{
+		const float Pulsation = 6.0f / 5.0f + 1.0f / 10.0f * std::sin(TicksHead / 2.0f);
+		const float Angle = angle(Pos - From);
+		Graphics()->TextureSet(GameClient()->m_ExtrasSkin.m_SpriteHectagon);
+		Graphics()->QuadsSetRotation(Angle);
+		Graphics()->SetColor(OuterColor);
+		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_FreezeHeadOffset, Pos.x, Pos.y, 6.0f / 5.0f * Pulsation, 6.0f / 5.0f * Pulsation);
+		Graphics()->TextureSet(GameClient()->m_ExtrasSkin.m_SpriteParticleSnowflake);
+		Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f));
+		Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, m_FreezeHeadOffset, Pos.x, Pos.y, Pulsation, Pulsation);
+	}
+	else
 	{
 		int CurParticle = (int)TicksHead % 3;
 		Graphics()->TextureSet(GameClient()->m_ParticlesSkin.m_aSpriteParticleSplat[CurParticle]);

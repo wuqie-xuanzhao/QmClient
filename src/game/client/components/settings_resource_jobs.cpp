@@ -76,13 +76,20 @@ bool SettingsSkinListEntryReady(bool SourceReady, bool TerminalFailure, bool Pre
 	return SettingsSkinListEntryVisualReady(SourceReady, TerminalFailure, PreviewCacheReady);
 }
 
-SSettingsSkinListPlan BuildSettingsSkinListPlan(std::vector<SSettingsSkinListEntry> vEntries)
+SSettingsSkinListPlan BuildSettingsSkinListPlan(std::vector<SSettingsSkinListEntry> vEntries, int SortMode)
 {
-	std::stable_sort(vEntries.begin(), vEntries.end(), [](const SSettingsSkinListEntry &A, const SSettingsSkinListEntry &B) {
+	std::stable_sort(vEntries.begin(), vEntries.end(), [SortMode](const SSettingsSkinListEntry &A, const SSettingsSkinListEntry &B) {
 		if(A.m_Selected != B.m_Selected)
 			return A.m_Selected && !B.m_Selected;
 		if(A.m_Favorite != B.m_Favorite)
 			return A.m_Favorite && !B.m_Favorite;
+		if(SortMode == 1)
+		{
+			if(A.m_OfficialReleaseDate != B.m_OfficialReleaseDate)
+				return A.m_OfficialReleaseDate > B.m_OfficialReleaseDate;
+			if(A.m_LastModified != B.m_LastModified)
+				return A.m_LastModified > B.m_LastModified;
+		}
 		return A.m_Name < B.m_Name;
 	});
 

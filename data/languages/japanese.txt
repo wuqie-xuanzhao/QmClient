@@ -2347,9 +2347,6 @@ Enable replays
 Enable server message sound
 == サーバーメッセージサウンドを有効にする
 
-Enable skin queue
-== スキンキューを有効にする
-
 Enable skin queue rotation
 == スキンキューのローテーションを有効にする
 
@@ -6556,6 +6553,9 @@ Show seconds on clock
 Show server help and usage messages
 == サーバーのヘルプと使用方法のメッセージを表示
 
+Show skin date and author
+== スキンの日付と作者を表示
+
 Show skin names in nameplate
 == ネームプレートにスキン名を表示
 
@@ -6753,6 +6753,9 @@ Skin prefix
 
 Skin queue
 == スキンキュー
+
+Skin sort
+== スキンの並び順
 
 Skin transition
 == スキン切り替え
@@ -9016,6 +9019,9 @@ Zoom out
 拿到额外武器时停用 Gores 自动切换
 == 追加武器を取得したときに Gores 自動切り替えを無効にする
 
+按发布时间排序时显示皮肤发布日期和作者
+== 公開日順のときにスキンの公開日と作者を表示
+
 按名字单独音量（name=percent）
 == 名前別個別音量（名前=パーセント）
 
@@ -9300,6 +9306,9 @@ Zoom out
 
 皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
 == スキン切り替えアニメーションの範囲: 0=自分だけ、1=ローカル+ダミー、2=全プレイヤー
+
+皮肤列表排序模式（0=名称，1=发布时间）
+== スキン一覧の並び順モード（0=名前、1=公開日）
 
 皮肤队列切换间隔（毫秒）
 == スキンキュー切り替え間隔（ミリ秒）

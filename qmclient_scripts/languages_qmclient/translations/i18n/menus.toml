@@ -7347,6 +7347,38 @@ turkish = "Skin sırası"
 polish = "Kolejka skinów"
 
 [[message]]
+key = "Skin sort"
+[message.translations]
+simplified_chinese = "皮肤排序"
+traditional_chinese = "皮膚排序"
+japanese = "スキンの並び順"
+korean = "스킨 정렬"
+russian = "Сортировка скинов"
+german = "Skin-Sortierung"
+spanish = "Orden de skins"
+french = "Tri des skins"
+brazilian_portuguese = "Ordenação de skins"
+portuguese = "Ordenação de skins"
+turkish = "Skin sıralama"
+polish = "Sortowanie skinów"
+
+[[message]]
+key = "Show skin date and author"
+[message.translations]
+simplified_chinese = "显示皮肤日期和作者"
+traditional_chinese = "顯示皮膚日期和作者"
+japanese = "スキンの日付と作者を表示"
+korean = "스킨 날짜와 제작자 표시"
+russian = "Показывать дату и автора скина"
+german = "Skin-Datum und Autor anzeigen"
+spanish = "Mostrar fecha y autor del skin"
+french = "Afficher la date et l'auteur du skin"
+brazilian_portuguese = "Mostrar data e autor da skin"
+portuguese = "Mostrar data e autor da skin"
+turkish = "Skin tarihini ve yazarını göster"
+polish = "Pokaż datę i autora skina"
+
+[[message]]
 key = "Skins directory"
 [message.translations]
 simplified_chinese = "皮肤目录"
@@ -7877,8 +7909,8 @@ polish = "kafelek"
 [[message]]
 key = "Time"
 [message.translations]
-simplified_chinese = "用时"
-traditional_chinese = "用時"
+simplified_chinese = "时间"
+traditional_chinese = "時間"
 japanese = "タイム"
 korean = "시간"
 russian = "Время"
@@ -9413,7 +9445,7 @@ simplified_chinese = "自身"
 [[message]]
 key = "Strong hook"
 [message.translations]
-simplified_chinese = "强力钩"
+simplified_chinese = "强钩"
 traditional_chinese = "強鉤"
 japanese = "ストロングフック"
 korean = "강력 갈고리"
@@ -9429,7 +9461,7 @@ polish = "Mocny hak"
 [[message]]
 key = "Strong hook color"
 [message.translations]
-simplified_chinese = "强力钩颜色"
+simplified_chinese = "强钩颜色"
 traditional_chinese = "強鉤顏色"
 japanese = "ストロングフックの色"
 korean = "강력 갈고리 색상"
@@ -9445,8 +9477,8 @@ polish = "Kolor mocnego haka"
 [[message]]
 key = "Weak hook"
 [message.translations]
-simplified_chinese = "弱钩索"
-traditional_chinese = "弱鉤索"
+simplified_chinese = "弱钩"
+traditional_chinese = "弱鉤"
 japanese = "弱いフック"
 korean = "약한 갈고리"
 russian = "Слабый крюк"
@@ -9461,8 +9493,8 @@ polish = "Słaby hak"
 [[message]]
 key = "Weak hook color"
 [message.translations]
-simplified_chinese = "弱钩索颜色"
-traditional_chinese = "弱鉤索顏色"
+simplified_chinese = "弱钩颜色"
+traditional_chinese = "弱鉤顏色"
 japanese = "弱いフックの色"
 korean = "약한 갈고리 색상"
 russian = "Цвет слабого крюка"

@@ -271,6 +271,34 @@ turkish = "kanca çarpışma çizgisi"
 polish = "linia kolizji haka"
 
 [[term]]
+source = "Strong hook"
+enforce = "exact"
+simplified_chinese = "强钩"
+traditional_chinese = "強鉤"
+
+[[term]]
+source = "Weak hook"
+enforce = "exact"
+simplified_chinese = "弱钩"
+traditional_chinese = "弱鉤"
+
+[[term]]
+source = "Zhipu AI"
+enforce = "pattern"
+simplified_chinese = "智谱清言"
+traditional_chinese = "智譜清言"
+korean = "Zhipu AI"
+japanese = "Zhipu AI"
+russian = "Zhipu AI"
+german = "Zhipu AI"
+spanish = "Zhipu AI"
+french = "Zhipu AI"
+brazilian_portuguese = "Zhipu AI"
+portuguese = "Zhipu AI"
+turkish = "Zhipu AI"
+polish = "Zhipu AI"
+
+[[term]]
 source = "Grenade Launcher"
 enforce = "exact"
 simplified_chinese = "榴弹炮"

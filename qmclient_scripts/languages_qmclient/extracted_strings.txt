@@ -781,7 +781,6 @@ Enable regular chat sound
 Enable repeat
 Enable replays
 Enable server message sound
-Enable skin queue
 Enable skin queue rotation
 Enable speedrun timer
 Enable stereo positioning
@@ -2184,6 +2183,7 @@ Show score
 Show scoreboard
 Show seconds on clock
 Show server help and usage messages
+Show skin date and author
 Show skin names in nameplate
 Show song info in top-left corner
 Show spectator cursor
@@ -2250,6 +2250,7 @@ Skin Database
 Skin is loading.
 Skin prefix
 Skin queue
+Skin sort
 Skin transition
 Skin transition animation
 Skin transition duration
@@ -3004,6 +3005,7 @@ Zoom out
 忽略语音距离衰减
 性能调试日志阈值（毫秒）
 拿到额外武器时停用 Gores 自动切换
+按发布时间排序时显示皮肤发布日期和作者
 按名字单独音量（name=percent）
 按屏蔽词长度多字符替换
 接收 VAD 讲话者
@@ -3099,6 +3101,7 @@ Zoom out
 皮肤切换动画类型（0=残影弹出 1=柔和淡变 2=向左滑切 3=旋转弹出 4=明暗切换 5=故障抖动 6=弹性缩放）
 皮肤切换动画缓动模式
 皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
+皮肤列表排序模式（0=名称，1=发布时间）
 皮肤队列切换间隔（毫秒）
 皮肤队列当前位置
 皮肤队列最大长度

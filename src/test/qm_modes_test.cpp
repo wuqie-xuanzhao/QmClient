@@ -2,6 +2,8 @@
 
 #include <engine/shared/config.h>
 
+#include <generated/protocol.h>
+
 #include <game/client/components/qmclient/modes.h>
 
 #include <gtest/gtest.h>
@@ -99,6 +101,29 @@ TEST(QmGoresMode, HammerWakeupReleaseClearsOnlyPendingAutomaticPress)
 
 	EXPECT_EQ(QmGoresHammerWakeupReleaseFireState(1), 2);
 	EXPECT_EQ(QmGoresHammerWakeupReleaseFireState(3), 4);
+}
+
+TEST(QmGoresMode, RestoreWeaponAfterHammerUsesRecordedWeapon)
+{
+	EXPECT_EQ(GoresRestoreWeaponAfterHammer(WEAPON_LASER, true), WEAPON_LASER);
+	EXPECT_EQ(GoresRestoreWeaponAfterHammer(WEAPON_GRENADE, true), WEAPON_GRENADE);
+	EXPECT_EQ(GoresRestoreWeaponAfterHammer(WEAPON_GUN, false), WEAPON_GUN);
+}
+
+TEST(QmGoresMode, FireKeydownPulseRequiresActiveCycleAndNonHammerWeapon)
+{
+	EXPECT_TRUE(ShouldPulseGoresHammerOnFire(true, true, false, false));
+	EXPECT_FALSE(ShouldPulseGoresHammerOnFire(false, true, false, false));
+	EXPECT_FALSE(ShouldPulseGoresHammerOnFire(true, false, false, false));
+	EXPECT_FALSE(ShouldPulseGoresHammerOnFire(true, true, true, false));
+	EXPECT_FALSE(ShouldPulseGoresHammerOnFire(true, true, false, true));
+}
+
+TEST(QmGoresMode, RestoresRecordedWeaponEvenWhenTwoWeaponCycleIsInactive)
+{
+	EXPECT_TRUE(ShouldRestoreGoresWeaponAfterHammer(true, true));
+	EXPECT_FALSE(ShouldRestoreGoresWeaponAfterHammer(false, true));
+	EXPECT_FALSE(ShouldRestoreGoresWeaponAfterHammer(true, false));
 }
 
 TEST(QmNameplateHookStrongWeak, ScopeFiltersExpectedPlayers)

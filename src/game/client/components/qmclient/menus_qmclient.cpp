@@ -5743,6 +5743,33 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_SHOTGUN);
 				}
 
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				CardContent.HSplitTop(LaserPreviewHeightQM, &LaserPreviewRectQM, &CardContent);
+				LaserPreviewRectQM.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.3f), IGraphics::CORNER_ALL, 8.0f);
+				{
+					ColorHSLA OutlineColor = ColorHSLA(g_Config.m_ClLaserDoorOutlineColor);
+					ColorHSLA InnerColor = ColorHSLA(g_Config.m_ClLaserDoorInnerColor);
+					DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_DOOR);
+				}
+
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				CardContent.HSplitTop(LaserPreviewHeightQM, &LaserPreviewRectQM, &CardContent);
+				LaserPreviewRectQM.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.3f), IGraphics::CORNER_ALL, 8.0f);
+				{
+					ColorHSLA OutlineColor = ColorHSLA(g_Config.m_ClLaserFreezeOutlineColor);
+					ColorHSLA InnerColor = ColorHSLA(g_Config.m_ClLaserFreezeInnerColor);
+					DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_FREEZE);
+				}
+
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				CardContent.HSplitTop(LaserPreviewHeightQM, &LaserPreviewRectQM, &CardContent);
+				LaserPreviewRectQM.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.3f), IGraphics::CORNER_ALL, 8.0f);
+				{
+					ColorHSLA OutlineColor = ColorHSLA(g_Config.m_ClLaserDraggerOutlineColor);
+					ColorHSLA InnerColor = ColorHSLA(g_Config.m_ClLaserDraggerInnerColor);
+					DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_DRAGGER);
+				}
+
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;

@@ -173,7 +173,7 @@ if terminology_path.exists():
     terminology_by_language = {
         "simplified_chinese": parsed_terminology.get("simplified_chinese", {})
     }
-translation_quality_errors = i18n_store.translation_quality_errors(
+translation_quality_report = i18n_store.translation_quality_report(
     loaded_i18n_store,
     active_module_identities={
         (
@@ -186,6 +186,7 @@ translation_quality_errors = i18n_store.translation_quality_errors(
     terminology_by_language=terminology_by_language,
     limit=20,
 )
+translation_quality_errors = translation_quality_report.errors
 if translation_quality_errors:
     errors.append(f"TOML translation quality errors: {len(translation_quality_errors)}")
     print(f"  FAIL: TOML translation quality errors: {len(translation_quality_errors)}")
@@ -193,6 +194,15 @@ if translation_quality_errors:
         print(f"    - {error}")
 else:
     print("  OK: TOML translation quality checks")
+if translation_quality_report.warnings:
+    print(
+        f"  WARN: TOML translation quality warnings: "
+        f"{len(translation_quality_report.warnings)}"
+    )
+    for warning in translation_quality_report.warnings[:10]:
+        print(f"    - {warning}")
+else:
+    print("  OK: TOML translation quality warnings")
 
 toml_format_errors = []
 for path in sorted(i18n_store.TRANSLATIONS_DIR.glob("*.toml")):

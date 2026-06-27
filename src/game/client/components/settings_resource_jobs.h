@@ -20,6 +20,8 @@ struct SSettingsSkinListEntry
 	bool m_Selected = false;
 	bool m_Favorite = false;
 	std::optional<SSettingsSkinListColorKey> m_ColorKey;
+	int m_OfficialReleaseDate = 0;
+	time_t m_LastModified = 0;
 };
 
 struct SSettingsSkinListPlan
@@ -371,7 +373,7 @@ SSettingsSkinListVisibleRange SettingsSkinListVisibleRangeForScroll(float Scroll
 bool SettingsSkinListEntryVisualReady(bool SourceReady, bool TerminalFailure, bool PreviewCacheReady);
 bool SettingsSkinListEntrySourceSettled(bool SourceReady, bool TerminalFailure);
 bool SettingsSkinListEntryReady(bool SourceReady, bool TerminalFailure, bool PreviewCacheReady);
-SSettingsSkinListPlan BuildSettingsSkinListPlan(std::vector<SSettingsSkinListEntry> vEntries);
+SSettingsSkinListPlan BuildSettingsSkinListPlan(std::vector<SSettingsSkinListEntry> vEntries, int SortMode = 0);
 std::vector<int> BuildSettingsCountryFlagWarmupPlan(const std::vector<int> &vCountryCodes);
 bool SettingsResourceConsumeMergeEntry(SSettingsResourceMergeBudget &Budget);
 bool SettingsResourceConsumeGpuUpload(SSettingsResourceMergeBudget &Budget);

@@ -287,28 +287,119 @@ TEST(Skins, TeeSkinListVirtualizationUsesFourColumnContract)
 	EXPECT_NE(JobsSource.find("constexpr int TeeSkinListItemsPerRow = 4;"), std::string::npos);
 }
 
-TEST(Skins, TeeSkinListSortsByModifiedTimeAfterFavorites)
+TEST(Skins, TeeSkinListSortModeKeepsFavoritesPinnedThenUsesOfficialDate)
 {
 	const std::string Header = ReadTestSourceFile("src/game/client/components/skins.h");
 	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const std::string ConfigSource = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string MenusSource = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+	const std::string MenusI18nSource = ReadTestSourceFile("qmclient_scripts/languages_qmclient/translations/i18n/menus.toml");
 	const size_t ComparePos = Source.find("bool CSkins::CSkinListEntry::operator<");
 	const size_t ScanJobPos = Source.find("int CSkins::CSkinDirectoryScanJob::ScanCallback");
+	const size_t RenderTeePos = MenusSource.find("void CMenus::RenderSettingsTee(CUIRect MainView)");
+	const size_t RenderTeeEnd = MenusSource.find("void CMenus::RenderSettingsAppearance", RenderTeePos);
 	ASSERT_NE(ComparePos, std::string::npos);
 	ASSERT_NE(ScanJobPos, std::string::npos);
+	ASSERT_NE(RenderTeePos, std::string::npos);
+	ASSERT_NE(RenderTeeEnd, std::string::npos);
 	const std::string CompareBody = Source.substr(ComparePos, 1200);
 	const std::string ScanJobBody = Source.substr(ScanJobPos, 900);
+	const std::string RenderTeeBody = MenusSource.substr(RenderTeePos, RenderTeeEnd - RenderTeePos);
 
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinSortMode, qm_skin_sort_mode, 0, 0, 1"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinShowMetadata, qm_skin_show_metadata, 0, 0, 1"), std::string::npos);
 	EXPECT_NE(Header.find("time_t m_LastModified"), std::string::npos);
 	EXPECT_NE(Header.find("time_t LastModified() const"), std::string::npos);
-	EXPECT_NE(Source.find("ListDirectoryInfo(IStorage::TYPE_ALL, \"skins\""), std::string::npos);
+	EXPECT_NE(Header.find("int m_OfficialReleaseDate"), std::string::npos);
+	EXPECT_NE(Header.find("int OfficialReleaseDate() const"), std::string::npos);
+	EXPECT_NE(Header.find("char m_aOfficialCreator"), std::string::npos);
+	EXPECT_NE(Header.find("const char *OfficialCreator() const"), std::string::npos);
+	EXPECT_NE(Source.find("ListDirectoryInfo(IStorage::TYPE_ALL, pDirectory"), std::string::npos);
+	EXPECT_NE(Source.find("ScanDirectory(\"skins\", CSkinContainer::EType::LOCAL);"), std::string::npos);
+	EXPECT_NE(Source.find("ScanDirectory(\"downloadedskins\", CSkinContainer::EType::DOWNLOAD);"), std::string::npos);
+	EXPECT_NE(Source.find("OFFICIAL_SKIN_INDEX_URL = \"https://ddnet.org/skins/skin/skins.json\""), std::string::npos);
+	EXPECT_NE(Source.find("OFFICIAL_SKIN_INDEX_CACHE_PATH = \"downloadedskins/official_skins.json\""), std::string::npos);
+	EXPECT_NE(Source.find("QueueOfficialSkinIndexRequest();"), std::string::npos);
+	EXPECT_NE(Source.find("LoadOfficialSkinIndexCache();"), std::string::npos);
+	EXPECT_NE(Source.find("json_string_get(json_object_get(pEntry, \"date\"))"), std::string::npos);
+	EXPECT_NE(Source.find("json_string_get(json_object_get(pEntry, \"creator\"))"), std::string::npos);
 	EXPECT_NE(ScanJobBody.find("pInfo->m_TimeModified"), std::string::npos);
+	EXPECT_NE(CompareBody.find("g_Config.m_QmSkinSortMode"), std::string::npos);
+	EXPECT_NE(CompareBody.find("OfficialReleaseDate()"), std::string::npos);
 	EXPECT_NE(CompareBody.find("LastModified()"), std::string::npos);
+	EXPECT_NE(CompareBody.find("OfficialReleaseDate > OtherOfficialReleaseDate"), std::string::npos);
 	EXPECT_NE(CompareBody.find("LastModified() > Other.m_pSkinContainer->LastModified()"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("g_Config.m_QmSkinSortMode"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("Localize(\"Skin sort\")"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("Localize(\"Name\")"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("Localize(\"Time\")"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("SkinPrefix.HSplitTop(20.0f, &SortModeControl"), std::string::npos);
+	const size_t SortChangePos = RenderTeeBody.find("if(g_Config.m_QmSkinSortMode != SkinSortModeNew)");
+	ASSERT_NE(SortChangePos, std::string::npos);
+	const size_t SortChangeEnd = RenderTeeBody.find("SkinPrefix.HSplitTop(4.0f, nullptr, &SkinPrefix);", SortChangePos);
+	ASSERT_NE(SortChangeEnd, std::string::npos);
+	const std::string SortChangeBody = RenderTeeBody.substr(SortChangePos, SortChangeEnd - SortChangePos);
+	EXPECT_NE(SortChangeBody.find("GameClient()->m_Skins.RebuildSkinListPlan();"), std::string::npos);
+	EXPECT_EQ(SortChangeBody.find("GameClient()->m_Skins.Refresh"), std::string::npos);
+	EXPECT_EQ(SortChangeBody.find("ClearSettingsTeeListPreviewCache"), std::string::npos);
+	EXPECT_EQ(SortChangeBody.find("SkinList(m_Dummy).ForceRefresh"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("Localize(\"Show skin date and author\")"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("g_Config.m_QmSkinShowMetadata"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("const bool ShowSkinMetadata = g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata;"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("pSkinContainer->OfficialCreator()"), std::string::npos);
+	const size_t TimeTranslationPos = MenusI18nSource.find("key = \"Time\"");
+	ASSERT_NE(TimeTranslationPos, std::string::npos);
+	const size_t TimeTranslationEnd = MenusI18nSource.find("[[message]]", TimeTranslationPos + 1);
+	const std::string TimeTranslationBody = MenusI18nSource.substr(TimeTranslationPos, TimeTranslationEnd - TimeTranslationPos);
+	EXPECT_NE(TimeTranslationBody.find("simplified_chinese = \"时间\""), std::string::npos);
+	EXPECT_EQ(TimeTranslationBody.find("simplified_chinese = \"用时\""), std::string::npos);
+	const size_t ToolbarCommentPos = RenderTeeBody.find("// Layout bottom controls and use remainder for skin selector");
+	ASSERT_NE(ToolbarCommentPos, std::string::npos);
+	const std::string BottomToolbarBody = RenderTeeBody.substr(ToolbarCommentPos);
+	EXPECT_EQ(BottomToolbarBody.find("SkinSortModeControlWidth"), std::string::npos);
+	EXPECT_NE(BottomToolbarBody.find("constexpr float SkinControlLabelPadding = 14.0f;"), std::string::npos);
+	const size_t RefreshRightPos = BottomToolbarBody.find("ControlsArea.VSplitRight(SkinRefreshButtonWidth, &ControlsArea, &RefreshButton);");
+	const size_t EditButtonPos = BottomToolbarBody.find("SplitSkinToolbarLeft(ControlsArea, EditTextureButtonWidth, &EditTextureButton);");
+	ASSERT_NE(RefreshRightPos, std::string::npos);
+	ASSERT_NE(EditButtonPos, std::string::npos);
+	EXPECT_LT(RefreshRightPos, EditButtonPos);
 	const size_t FavoritePos = CompareBody.find("m_Favorite");
+	const size_t SortModePos = CompareBody.find("g_Config.m_QmSkinSortMode");
 	const size_t ModifiedPos = CompareBody.find("LastModified()");
 	ASSERT_NE(FavoritePos, std::string::npos);
+	ASSERT_NE(SortModePos, std::string::npos);
 	ASSERT_NE(ModifiedPos, std::string::npos);
-	EXPECT_LT(FavoritePos, ModifiedPos);
+	EXPECT_LT(FavoritePos, SortModePos);
+	EXPECT_LT(SortModePos, ModifiedPos);
+	EXPECT_NE(CompareBody.find("if(g_Config.m_QmSkinSortMode == 1)"), std::string::npos);
+	EXPECT_NE(CompareBody.find("if(m_Favorite && !Other.m_Favorite)"), std::string::npos);
+}
+
+TEST(Skins, OfficialSkinIndexCreatesMissingDownloadEntries)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const size_t ApplyIndexPos = Source.find("bool CSkins::ApplyOfficialSkinIndexJson(const char *pJson, size_t JsonSize)");
+	ASSERT_NE(ApplyIndexPos, std::string::npos);
+	const size_t ApplyIndexEnd = Source.find("void CSkins::ProcessSkinListPlanJob()", ApplyIndexPos);
+	ASSERT_NE(ApplyIndexEnd, std::string::npos);
+	const std::string ApplyIndexBody = Source.substr(ApplyIndexPos, ApplyIndexEnd - ApplyIndexPos);
+
+	EXPECT_NE(ApplyIndexBody.find("CSkinContainer SkinContainer(this, pName, CSkinContainer::EType::DOWNLOAD, IStorage::TYPE_SAVE);"), std::string::npos);
+	EXPECT_NE(ApplyIndexBody.find("pSkinContainer->SetState(pSkinContainer->DetermineInitialState());"), std::string::npos);
+	EXPECT_NE(ApplyIndexBody.find("ExistingSkin = m_Skins.insert({pSkinContainer->Name(), std::move(pSkinContainer)}).first;"), std::string::npos);
+	EXPECT_NE(ApplyIndexBody.find("SetOfficialReleaseDate(ReleaseDate)"), std::string::npos);
+	EXPECT_EQ(ApplyIndexBody.find("if(ExistingSkin == m_Skins.end())\n\t\t\t\tcontinue;"), std::string::npos);
+}
+
+TEST(Skins, OfficialSkinReleaseDateParserAcceptsIsoDateOnly)
+{
+	EXPECT_EQ(CSkins::ParseOfficialSkinReleaseDateKey("2026-06-14"), 20260614);
+	EXPECT_EQ(CSkins::ParseOfficialSkinReleaseDateKey("2015-01-29"), 20150129);
+	EXPECT_EQ(CSkins::ParseOfficialSkinReleaseDateKey(nullptr), 0);
+	EXPECT_EQ(CSkins::ParseOfficialSkinReleaseDateKey("20260614"), 0);
+	EXPECT_EQ(CSkins::ParseOfficialSkinReleaseDateKey("2026/06/14"), 0);
+	EXPECT_EQ(CSkins::ParseOfficialSkinReleaseDateKey("2026-6-14"), 0);
+	EXPECT_EQ(CSkins::ParseOfficialSkinReleaseDateKey("2026-0x-14"), 0);
 }
 
 TEST(Skins, TeeSkinListStableIdleAvoidsFullBackgroundScan)
@@ -599,6 +690,25 @@ TEST(Skins, ManagedTeeRenderInfoDefersUnloadedSkinInsteadOfApplyingFallback)
 	EXPECT_NE(RefreshSkinBody.find("DescriptorRenderInfoReady = SixReady || SevenReady;"), std::string::npos);
 	EXPECT_NE(RefreshSkinBody.find("pManagedTeeRenderInfo->SetDescriptorRenderInfoReady(DescriptorRenderInfoReady);"), std::string::npos);
 	EXPECT_EQ(RefreshSkinBody.find("TeeInfo.Apply(m_Skins.Find("), std::string::npos);
+}
+
+TEST(Skins, SkinRefreshDoesNotFloodPendingQueueBeforeVisibleRequests)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const size_t RefreshPos = Source.find("void CSkins::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)");
+	ASSERT_NE(RefreshPos, std::string::npos);
+	const size_t LoadingStatsPos = Source.find("CSkins::CSkinLoadingStats CSkins::LoadingStats() const", RefreshPos);
+	ASSERT_NE(LoadingStatsPos, std::string::npos);
+	const std::string RefreshBody = Source.substr(RefreshPos, LoadingStatsPos - RefreshPos);
+
+	EXPECT_NE(RefreshBody.find("if(pSkinContainer->m_pLoadJob)"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("pSkinContainer->m_pSkin->m_OriginalSkin.Unload(Graphics());"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("pSkinContainer->m_pSkin->m_ColorableSkin.Unload(Graphics());"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("pSkinContainer->m_pSkin.reset();"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("pSkinContainer->SetState(CSkinContainer::EState::PENDING, ESettingsResourcePriority::VISIBLE);"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("if(pSkinContainer->m_State != CSkinContainer::EState::LOADED)"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("pSkinContainer->SetState(pSkinContainer->DetermineInitialState());"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("LoadSkinDirect(\"default\");"), std::string::npos);
 }
 
 TEST(Skins, SkinTransitionDefersKeyUntilDescriptorRenderInfoIsReady)
@@ -1094,6 +1204,26 @@ TEST(Skins, SkinListWaitsForCompletePlanInsteadOfSeedingPlaceholderEntry)
 	EXPECT_NE(Source.find("m_SkinList.m_vSkins = std::move(m_vPendingSkinListEntries);"), std::string::npos);
 }
 
+TEST(Skins, SkinRefreshKeepsExistingListWhileNewPlanLoads)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const size_t RefreshPos = Source.find("void CSkins::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)");
+	ASSERT_NE(RefreshPos, std::string::npos);
+	const size_t StatsPos = Source.find("CSkins::CSkinLoadingStats CSkins::LoadingStats() const", RefreshPos);
+	ASSERT_NE(StatsPos, std::string::npos);
+	const std::string RefreshBody = Source.substr(RefreshPos, StatsPos - RefreshPos);
+
+	EXPECT_EQ(RefreshBody.find("m_SkinList.m_vSkins.clear();"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("m_SkinList.m_UnfilteredCount = 0;"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("str_comp(pSkinContainer->Name(), \"default\") == 0"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("continue;"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("pSkinContainer->SetState(CSkinContainer::EState::PENDING"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("pSkinContainer->SetState(pSkinContainer->DetermineInitialState());"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("pSkinContainer->m_pSkin.reset();"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("m_SkinsUsageList.clear();"), std::string::npos);
+	EXPECT_EQ(RefreshBody.find("m_SkinsBackgroundList.clear();"), std::string::npos);
+}
+
 TEST(Skins, TeeSkinRefreshClearsListPreviewCacheBeforeReloadingSkinTextures)
 {
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
@@ -1105,6 +1235,20 @@ TEST(Skins, TeeSkinRefreshClearsListPreviewCacheBeforeReloadingSkinTextures)
 
 	EXPECT_NE(Menus.find("void ClearSettingsTeeListPreviewCache()"), std::string::npos);
 	EXPECT_NE(RefreshBody.find("ClearSettingsTeeListPreviewCache();"), std::string::npos);
+}
+
+TEST(Skins, TeeSkinListLoadingEntriesUseDefaultSkinFallbackWithLoadingIndicator)
+{
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+	const size_t RenderTeePos = Menus.find("void CMenus::RenderSettingsTee(CUIRect MainView)");
+	ASSERT_NE(RenderTeePos, std::string::npos);
+	const size_t RenderTeeEnd = Menus.find("void CMenus::RenderSettingsAppearance", RenderTeePos);
+	ASSERT_NE(RenderTeeEnd, std::string::npos);
+	const std::string RenderTeeBody = Menus.substr(RenderTeePos, RenderTeeEnd - RenderTeePos);
+
+	EXPECT_NE(RenderTeeBody.find("State == CSkins::CSkinContainer::EState::LOADED ? pSkinContainer->Skin().get() : pDefaultSkin"), std::string::npos);
+	EXPECT_NE(RenderTeeBody.find("RenderSkinStatus(Item.m_Rect, pSkinContainer, SkinListEntry.ErrorTooltipId(), PreviewCacheReady);"), std::string::npos);
+	EXPECT_EQ(RenderTeeBody.find("RenderSettingsSkinListPlaceholder"), std::string::npos);
 }
 
 TEST(Skins, AbortedLocalSkinLoadJobStopsBeforeExpensiveRefreshWork)
@@ -1163,7 +1307,7 @@ TEST(Skins, AsyncSkinListKeepsQueuedColorVariantsSelectable)
 	EXPECT_NE(MenuSource.find("*pColorFeet = SelectedColorKey.m_ColorFeet;"), std::string::npos);
 }
 
-TEST(Skins, DirectoryScanPromotesDownloadContainersToLocal)
+TEST(Skins, DirectoryScanMergesLocalAndDownloadedSkinsWithLocalPriority)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
 	ASSERT_TRUE(File.good());
@@ -1177,9 +1321,15 @@ TEST(Skins, DirectoryScanPromotesDownloadContainersToLocal)
 	ASSERT_NE(ProcessListPlanPos, std::string::npos);
 	const std::string ProcessDirectoryBody = Source.substr(ProcessDirectoryPos, ProcessListPlanPos - ProcessDirectoryPos);
 
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->Type() == CSkinContainer::EType::DOWNLOAD"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_Type = CSkinContainer::EType::LOCAL;"), std::string::npos);
+	EXPECT_NE(Source.find("ScanDirectory(\"skins\", CSkinContainer::EType::LOCAL);"), std::string::npos);
+	EXPECT_NE(Source.find("ScanDirectory(\"downloadedskins\", CSkinContainer::EType::DOWNLOAD);"), std::string::npos);
+	EXPECT_NE(ProcessDirectoryBody.find("const bool KeepExistingLocalSkin ="), std::string::npos);
+	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->Type() == CSkinContainer::EType::LOCAL"), std::string::npos);
+	EXPECT_NE(ProcessDirectoryBody.find("Entry.m_Type == CSkinContainer::EType::DOWNLOAD"), std::string::npos);
+	EXPECT_NE(ProcessDirectoryBody.find("if(KeepExistingLocalSkin)"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_StorageType = Entry.m_StorageType;"), std::string::npos);
+	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_Type = Entry.m_Type;"), std::string::npos);
+	EXPECT_NE(ProcessDirectoryBody.find("CSkinContainer SkinContainer(this, Entry.m_Name.c_str(), Entry.m_Type, Entry.m_StorageType);"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->SetLastModified(Entry.m_LastModified);"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_pLoadJob->Abort();"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("if(OldState == CSkinContainer::EState::LOADED && pSkinContainer->m_pSkin)"), std::string::npos);
@@ -1532,7 +1682,21 @@ TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_NE(Menus.find("const int AppliedPresetIndex = GameClient()->m_Skins.AppliedSkinQueuePresetIndex(QueueDummy);"), std::string::npos);
 	EXPECT_NE(Menus.find("const bool QueueDirty = GameClient()->m_Skins.SkinQueueDirty(QueueDummy);"), std::string::npos);
 	EXPECT_NE(Menus.find("const auto &SkinQueue = GameClient()->m_Skins.SkinQueue(QueueDummy);"), std::string::npos);
-	EXPECT_NE(Menus.find("QueueDirty ? \""), std::string::npos);
+	EXPECT_EQ(Menus.find("QueueDirty ? \"● \""), std::string::npos);
+	EXPECT_NE(Menus.find("QueueTitleLabelProps.m_DisallowNewline = true;"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueTitleLabelProps.m_MinimumFontSize = 6.0f;"), std::string::npos);
+	EXPECT_EQ(Menus.find("CurrentQueueRect"), std::string::npos);
+	EXPECT_EQ(Menus.find("QueueHeader.VSplitLeft(QueueHeader.w * 0.48f"), std::string::npos);
+	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", aQueueLabel, QueueEnabled, &QueueHeader"), std::string::npos);
+	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", aQueueLabel"), std::string::npos);
+	EXPECT_EQ(Menus.find("Localize(\"Enable skin queue\"), QueueEnabled"), std::string::npos);
+	EXPECT_EQ(Menus.find("CUIRect QueueEnabledRect"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueSection.HSplitTop(QueueSection.h * 0.62f, &QueueList"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueList.HSplitTop(18.0f, &QueueListHeader"), std::string::npos);
+	EXPECT_NE(Menus.find("CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;"), std::string::npos);
+	EXPECT_NE(Menus.find("Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel"), std::string::npos);
+	EXPECT_EQ(Menus.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee_queue_list_label\", &QueueListHeaderLabel, Localize(\"Skin queue\")"), std::string::npos);
+	EXPECT_NE(Menus.find("s_TeeClearCurrentSkinQueueButton"), std::string::npos);
 	EXPECT_NE(Menus.find("IsBuiltInSkinQueuePreset(i)"), std::string::npos);
 	EXPECT_NE(Menus.find("GameClient()->m_Skins.ApplySkinQueuePreset((size_t)SelectPresetIndex, QueueDummy);"), std::string::npos);
 	EXPECT_NE(Menus.find("GameClient()->m_Skins.ClearSkinQueue(QueueDummy);"), std::string::npos);
@@ -1567,7 +1731,7 @@ TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_EQ(Source.find("m_vSkinQueuePresets[PresetIndex].IsProtected()"), std::string::npos);
 }
 
-TEST(Skins, SkinQueuePresetCompatibilityKeepsLimitAndIgnoresLegacyDummyPresetCommands)
+TEST(Skins, SkinQueuePresetCompatibilityKeepsLimitAndMigratesLegacyDummyPresetCommands)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
 	ASSERT_TRUE(File.good());
@@ -1589,6 +1753,10 @@ TEST(Skins, SkinQueuePresetCompatibilityKeepsLimitAndIgnoresLegacyDummyPresetCom
 	const size_t AddPresetItemEnd = Source.find("bool CSkins::AddSkinQueuePresetFromCurrent", AddPresetItemPos);
 	ASSERT_NE(AddPresetItemEnd, std::string::npos);
 	const std::string AddPresetItemBody = Source.substr(AddPresetItemPos, AddPresetItemEnd - AddPresetItemPos);
+	const size_t AddPresetPos = Source.find("bool CSkins::AddSkinQueuePreset(const char *pName, int Dummy)");
+	ASSERT_NE(AddPresetPos, std::string::npos);
+	ASSERT_LT(AddPresetPos, AddPresetItemPos);
+	const std::string AddPresetBody = Source.substr(AddPresetPos, AddPresetItemPos - AddPresetPos);
 	const size_t DummyPresetPos = Source.find("void CSkins::ConAddDummySkinQueuePreset(IConsole::IResult *pResult, void *pUserData)");
 	ASSERT_NE(DummyPresetPos, std::string::npos);
 	const size_t DummyPresetEnd = Source.find("void CSkins::ConAddSkinQueuePresetItem", DummyPresetPos);
@@ -1613,15 +1781,19 @@ TEST(Skins, SkinQueuePresetCompatibilityKeepsLimitAndIgnoresLegacyDummyPresetCom
 	// AddActiveSkinQueue forwards to AddSkinQueue (the limit check lives in the latter).
 	EXPECT_NE(AddActiveBody.find("return AddSkinQueue(pName, UseCustomColor, ColorBody, ColorFeet, Dummy);"), std::string::npos);
 	EXPECT_EQ(AddActiveBody.find("const int Limit = minimum(SKIN_QUEUE_HARD_LIMIT"), std::string::npos);
+	EXPECT_NE(Source.find("SKIN_QUEUE_PRESET_HARD_LIMIT"), std::string::npos);
+	EXPECT_NE(AddPresetBody.find("Presets.size() >= SKIN_QUEUE_PRESET_HARD_LIMIT"), std::string::npos);
+	EXPECT_NE(AddPresetBody.find("std::find_if(Presets.begin(), Presets.end()"), std::string::npos);
+	EXPECT_NE(AddPresetBody.find("str_comp(Preset.m_Name.c_str(), aPresetName) == 0"), std::string::npos);
 	EXPECT_NE(AddPresetItemBody.find("const int Limit = minimum(SKIN_QUEUE_HARD_LIMIT, maximum(0, SkinQueueLengthVar(Dummy)));"), std::string::npos);
 	EXPECT_NE(AddPresetItemBody.find("if((int)Queue.size() >= Limit)"), std::string::npos);
 
-	EXPECT_EQ(DummyPresetBody.find("AddSkinQueuePreset("), std::string::npos);
-	EXPECT_EQ(DummyPresetItemBody.find("AddSkinQueuePresetItem("), std::string::npos);
-	EXPECT_EQ(DummyPresetItemExBody.find("AddSkinQueuePresetItem("), std::string::npos);
-	EXPECT_NE(DummyPresetBody.find("log_info(\"skins\""), std::string::npos);
-	EXPECT_NE(DummyPresetItemBody.find("log_info(\"skins\""), std::string::npos);
-	EXPECT_NE(DummyPresetItemExBody.find("log_info(\"skins\""), std::string::npos);
+	EXPECT_NE(DummyPresetBody.find("AddSkinQueuePreset("), std::string::npos);
+	EXPECT_NE(DummyPresetItemBody.find("AddSkinQueuePresetItem("), std::string::npos);
+	EXPECT_NE(DummyPresetItemExBody.find("AddSkinQueuePresetItem("), std::string::npos);
+	EXPECT_EQ(DummyPresetBody.find("Ignoring legacy dummy skin queue preset"), std::string::npos);
+	EXPECT_EQ(DummyPresetItemBody.find("Ignoring legacy dummy skin queue preset item"), std::string::npos);
+	EXPECT_EQ(DummyPresetItemExBody.find("Ignoring legacy dummy skin queue preset item"), std::string::npos);
 	EXPECT_EQ(SaveBody.find("add_dummy_skin_queue_preset"), std::string::npos);
 	EXPECT_EQ(SaveBody.find("QueuePresetIndex < 2"), std::string::npos);
 	EXPECT_NE(SaveBody.find("QueuePresetIndex != SKIN_QUEUE_DEFAULT_PRESET"), std::string::npos);

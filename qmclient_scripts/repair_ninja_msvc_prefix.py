@@ -10,8 +10,6 @@ from pathlib import Path
 def _find_build_dir(argv: list[str]) -> Path | None:
     # 同时兼容 configure 的 -B 和 build 的 --build，两条命令都共用这一份修复入口。
     for i, arg in enumerate(argv):
-        if arg == "--prepare-build":
-            continue
         if arg == "-B" and i + 1 < len(argv):
             return Path(argv[i + 1])
         if arg == "--build" and i + 1 < len(argv):
@@ -95,33 +93,8 @@ def _repair_rules_file(rules_file: Path, expected_prefix: str) -> bool:
     return True
 
 
-def _prepare_build_rules(build_dir: Path, cache_file: Path, rules_file: Path) -> bool:
-    # build 前先主动跑一次 configure，让本次 cmake --build 使用的是刚生成的规则文件；
-    # 然后立刻把前缀修正掉，避免旧目录里带病的 rules.ninja 继续参与当前构建。
-    source_dir = _read_cache_value(cache_file, "CMAKE_HOME_DIRECTORY")
-    if not source_dir:
-        return False
-
-    result = subprocess.run(
-        ["cmake", "-S", source_dir, "-B", str(build_dir)],
-        check=False,
-    )
-    if result.returncode != 0:
-        return False
-
-    # 重新生成后立刻 patch，保证当前这次 cmake --build 读到的已经是修正后的规则。
-    expected_prefix = _extract_showincludes_prefix(build_dir)
-    if expected_prefix:
-        _repair_rules_file(rules_file, expected_prefix)
-        return True
-    return False
-
-
 def main() -> int:
-    # --prepare-build 用在 cmake-windows.cmd 的 build 前阶段；
-    # 普通模式则用于 configure/build 结束后的二次修补。
     argv = sys.argv[1:]
-    prepare_build = "--prepare-build" in argv
 
     build_dir = _find_build_dir(argv)
     if build_dir is None:
@@ -133,9 +106,6 @@ def main() -> int:
     cache_file = build_dir / "CMakeCache.txt"
     rules_file = build_dir / "CMakeFiles" / "rules.ninja"
     if not rules_file.is_file() or not cache_file.is_file():
-        return 1
-
-    if prepare_build and not _prepare_build_rules(build_dir, cache_file, rules_file):
         return 1
 
     prefix = _extract_showincludes_prefix(build_dir)

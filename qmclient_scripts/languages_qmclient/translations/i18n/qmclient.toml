@@ -12881,8 +12881,8 @@ polish = "Klawisz trybu Zen"
 [[message]]
 key = "Zhipu AI"
 [message.translations]
-simplified_chinese = "智谱 AI"
-traditional_chinese = "智譜 AI"
+simplified_chinese = "智谱清言"
+traditional_chinese = "智譜清言"
 japanese = "Zhipu AI"
 korean = "지푸 AI"
 russian = "Zhipu AI"
@@ -15233,8 +15233,8 @@ polish = "Automatycznie zarządzaj IME podczas pisania"
 [[message]]
 key = "Auto weapon switch"
 [message.translations]
-simplified_chinese = "自动切换武器"
-traditional_chinese = "自動切換武器"
+simplified_chinese = "自动切锤"
+traditional_chinese = "自動切錘"
 japanese = "自動武器切り替え"
 korean = "자동 무기 전환"
 russian = "Автоматическое переключение оружия"
@@ -16794,6 +16794,38 @@ brazilian_portuguese = "Nomes de servidor curtos"
 portuguese = "Nomes de servidor curtos"
 turkish = "Kısa sunucu adları"
 polish = "Krótkie nazwy serwerów"
+
+[[message]]
+key = "皮肤列表排序模式（0=名称，1=发布时间）"
+[message.translations]
+simplified_chinese = "皮肤列表排序模式（0=名称，1=发布时间）"
+traditional_chinese = "皮膚列表排序模式（0=名稱，1=發布時間）"
+japanese = "スキン一覧の並び順モード（0=名前、1=公開日）"
+korean = "스킨 목록 정렬 모드(0=이름, 1=게시 시간)"
+russian = "Режим сортировки списка скинов (0=имя, 1=дата публикации)"
+german = "Sortiermodus der Skin-Liste (0=Name, 1=Veröffentlichungszeit)"
+spanish = "Modo de orden de la lista de skins (0=nombre, 1=fecha de publicación)"
+french = "Mode de tri de la liste des skins (0=nom, 1=date de publication)"
+brazilian_portuguese = "Modo de ordenação da lista de skins (0=nome, 1=data de publicação)"
+portuguese = "Modo de ordenação da lista de skins (0=nome, 1=data de publicação)"
+turkish = "Skin listesi sıralama modu (0=ad, 1=yayın zamanı)"
+polish = "Tryb sortowania listy skinów (0=nazwa, 1=data publikacji)"
+
+[[message]]
+key = "按发布时间排序时显示皮肤发布日期和作者"
+[message.translations]
+simplified_chinese = "按发布时间排序时显示皮肤发布日期和作者"
+traditional_chinese = "按發布時間排序時顯示皮膚發布日期和作者"
+japanese = "公開日順のときにスキンの公開日と作者を表示"
+korean = "게시 시간순 정렬 시 스킨 게시일과 제작자 표시"
+russian = "Показывать дату публикации и автора скина при сортировке по дате"
+german = "Skin-Veröffentlichungsdatum und Autor beim Sortieren nach Veröffentlichungszeit anzeigen"
+spanish = "Mostrar la fecha de publicación y el autor del skin al ordenar por fecha"
+french = "Afficher la date de publication et l'auteur du skin lors du tri par date"
+brazilian_portuguese = "Mostrar a data de publicação e o autor da skin ao ordenar por data"
+portuguese = "Mostrar a data de publicação e o autor da skin ao ordenar por data"
+turkish = "Yayın zamanına göre sıralarken skin yayın tarihini ve yazarını göster"
+polish = "Pokaż datę publikacji i autora skina podczas sortowania według daty"
 
 [[message]]
 key = "Show lyrics translation when available"
@@ -23091,6 +23123,7 @@ polish = "Głośność mikrofonu (procent)"
 [[message]]
 key = "OpenAI API Key"
 [message.translations]
+simplified_chinese = "OpenAI API 密钥"
 traditional_chinese = "OpenAI API 金鑰"
 japanese = "OpenAI API キー"
 korean = "OpenAI API 키"
@@ -23106,7 +23139,8 @@ polish = "Klucz API OpenAI"
 [[message]]
 key = "DeepSeek API Key"
 [message.translations]
-traditional_chinese = "DeepSeek API Key"
+simplified_chinese = "DeepSeek API 密钥"
+traditional_chinese = "DeepSeek API 密鑰"
 japanese = "DeepSeek API キー"
 korean = "DeepSeek API 키"
 russian = "API-ключ DeepSeek"

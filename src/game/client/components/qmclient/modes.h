@@ -114,6 +114,9 @@ bool ShouldTriggerQmGoresHammerWakeup(bool GoresCycleActive, bool HammerRequeste
 int QmGoresHammerWakeupFireState(int CurrentFire);
 bool ShouldReleaseQmGoresHammerWakeupFire(bool PendingRelease, int CurrentFire);
 int QmGoresHammerWakeupReleaseFireState(int CurrentFire);
+int GoresRestoreWeaponAfterHammer(int PreHammerWeapon, bool HasPreHammerWeapon);
+bool ShouldPulseGoresHammerOnFire(bool GoresCycleActive, bool FireJustPressed, bool CurrentWeaponIsHammer, bool FreezeWakeupActive);
+bool ShouldRestoreGoresWeaponAfterHammer(bool CurrentWeaponIsHammer, bool HasPreHammerWeapon);
 bool ShouldShowQmHookStrongWeakScope(int Scope, bool Self, bool Strong, bool Weak);
 bool ShouldUseQmNameplateTextEffects(int PlayingScope, int SpectateScope, int DemoMode, int DemoTarget, bool DemoPlayback, bool Spectating, bool Self, bool Friend, bool SpectateTarget, int ClientId);
 

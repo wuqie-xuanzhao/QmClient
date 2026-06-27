@@ -2347,9 +2347,6 @@ Enable replays
 Enable server message sound
 == Sunucu mesajı sesini etkinleştir
 
-Enable skin queue
-== Deri kuyruğunu etkinleştir
-
 Enable skin queue rotation
 == Deri kuyruğu dönüşünü etkinleştir
 
@@ -6556,6 +6553,9 @@ Show seconds on clock
 Show server help and usage messages
 == Sunucu yardım ve kullanım mesajlarını göster
 
+Show skin date and author
+== Skin tarihini ve yazarını göster
+
 Show skin names in nameplate
 == İsim levhasında görünüm adlarını göster
 
@@ -6753,6 +6753,9 @@ Skin prefix
 
 Skin queue
 == Skin sırası
+
+Skin sort
+== Skin sıralama
 
 Skin transition
 == Görünüm geçişi
@@ -9016,6 +9019,9 @@ Zoom out
 拿到额外武器时停用 Gores 自动切换
 == Ekstra silah alındığında Gores otomatik değiştirmeyi devre dışı bırak
 
+按发布时间排序时显示皮肤发布日期和作者
+== Yayın zamanına göre sıralarken skin yayın tarihini ve yazarını göster
+
 按名字单独音量（name=percent）
 == İsme göre bireysel ses seviyesi (isim=yüzde)
 
@@ -9300,6 +9306,9 @@ Zoom out
 
 皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
 == Skin geçiş animasyonu kapsamı: 0=Sadece kendim 1=Yerel+Dummy 2=Tüm oyuncular
+
+皮肤列表排序模式（0=名称，1=发布时间）
+== Skin listesi sıralama modu (0=ad, 1=yayın zamanı)
 
 皮肤队列切换间隔（毫秒）
 == Skin kuyruğu geçiş aralığı (ms)

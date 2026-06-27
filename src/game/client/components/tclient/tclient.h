@@ -13,6 +13,8 @@
 #include <engine/shared/protocol.h>
 #include <engine/textrender.h>
 
+#include <generated/protocol.h>
+
 #include <game/client/component.h>
 #include <game/client/components/qmclient/modes.h>
 
@@ -246,10 +248,14 @@ class CTClient : public CComponent
 	int m_aGoresRunStartDistanceToFinish[NUM_DUMMIES] = {0, 0};
 	bool m_aGoresMapProgressValid[NUM_DUMMIES] = {false, false};
 	float m_aGoresMapProgress[NUM_DUMMIES] = {0.0f, 0.0f};
+	int m_aGoresPreHammerWeapon[NUM_DUMMIES] = {WEAPON_GUN, WEAPON_GUN};
+	bool m_aGoresHasPreHammerWeapon[NUM_DUMMIES] = {false, false};
+	bool m_aPrevFireForGores[NUM_DUMMIES] = {false, false};
 	bool IsGoresGameMode() const;
 	bool IsGoresMapProgressMap() const;
 	bool IsGoresModuleEnabled() const;
 	bool HasBlockingGoresWeapon() const;
+	bool HasExtraGoresWeapon() const;
 	void UpdateGoresWeaponCycle();
 	void InvalidateGoresDistanceField();
 	void EnsureGoresDistanceField();

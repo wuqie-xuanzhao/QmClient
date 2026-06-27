@@ -31,6 +31,8 @@ MACRO_CONFIG_STR(QmNewFeatureMarksRead, qm_new_feature_marks_read, 1024, "", CFG
 MACRO_CONFIG_INT(QmImeAutoManage, qm_ime_auto_manage, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "根据文本输入焦点自动启用或关闭 IME")
 MACRO_CONFIG_INT(QmNewIme, qm_new_ime, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用新版 IME 候选栏")
 MACRO_CONFIG_INT(QmShortServerNames, qm_short_server_names, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在服务器浏览器中显示简短服务器名")
+MACRO_CONFIG_INT(QmSkinSortMode, qm_skin_sort_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "皮肤列表排序模式（0=名称，1=发布时间）")
+MACRO_CONFIG_INT(QmSkinShowMetadata, qm_skin_show_metadata, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "按发布时间排序时显示皮肤发布日期和作者")
 
 // Report / 举报
 MACRO_CONFIG_STR(QmReportEndpoint, qm_report_endpoint, 128, "http://124.222.146.111:8790", CFGFLAG_CLIENT | CFGFLAG_SAVE, "举报服务地址")

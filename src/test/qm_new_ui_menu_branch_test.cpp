@@ -341,6 +341,14 @@ TEST(QmNewUiMenuBranches, QmClientUpdateFlowUsesQmClientNamingAndComparisonHelpe
 	EXPECT_EQ(MenusStartSource.find("NeedUpdate()"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, TClientHeaderIncludesGeneratedProtocolForWeaponDefaults)
+{
+	const std::string TClientHeader = ReadTextFile("src/game/client/components/tclient/tclient.h");
+
+	EXPECT_NE(TClientHeader.find("#include <generated/protocol.h>"), std::string::npos);
+	EXPECT_NE(TClientHeader.find("m_aGoresPreHammerWeapon[NUM_DUMMIES] = {WEAPON_GUN, WEAPON_GUN};"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, StartMenuKeepsExplicitUseV2AndLegacyButtonPaths)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_start.cpp");
@@ -1403,6 +1411,91 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_EQ(QmMenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmRainbowName"), std::string::npos);
 	const std::string AppearanceSettings = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	EXPECT_NE(AppearanceSettings.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-hook-strength-size\", &g_Config.m_ClNamePlatesStrongSize, &g_Config.m_ClNamePlatesStrongSize, &Button, Localize(\"Size of hook strength icon and number indicator\"), -50, 100);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, NameplatePreviewRebuildsTextContainerInsteadOfAppendingSizes)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/nameplates.cpp");
+	const std::string Body = BlockBodyAfter(Source, "void Update(CGameClient &This, const CNamePlateData &Data) override");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t DeletePos = Body.find("This.TextRender()->DeleteTextContainer(m_TextContainerIndex);");
+	const size_t UpdateTextPos = Body.find("UpdateText(This, Data);");
+	ASSERT_NE(DeletePos, std::string::npos);
+	ASSERT_NE(UpdateTextPos, std::string::npos);
+	EXPECT_LT(DeletePos, UpdateTextPos);
+	EXPECT_EQ(Body.find("else\n\t\t{\n\t\t\tUpdateText(This, Data);\n\t\t}"), std::string::npos);
+	EXPECT_EQ(Body.find("NameplateTextEffectPadding"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, QmLaserSettingsPreviewIncludesEntityLaserTypes)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string RenderSettingsQmClient = FunctionBody(Source, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	const size_t LaserHeadlinePos = RenderSettingsQmClient.find("RenderQmModuleHeadline(CardContent, 5, Localize(\"Laser settings\"), Localize(\"Laser style\"));");
+	ASSERT_NE(LaserHeadlinePos, std::string::npos);
+	const size_t LaserModulePos = RenderSettingsQmClient.rfind("case EQmModuleId::Laser:", LaserHeadlinePos);
+	ASSERT_NE(LaserModulePos, std::string::npos);
+	const size_t NextModulePos = RenderSettingsQmClient.find("case EQmModuleId::PlayerStats:", LaserModulePos);
+	ASSERT_NE(NextModulePos, std::string::npos);
+	const std::string LaserModule = RenderSettingsQmClient.substr(LaserModulePos, NextModulePos - LaserModulePos);
+
+	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_RIFLE);"), std::string::npos);
+	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_SHOTGUN);"), std::string::npos);
+	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_DOOR);"), std::string::npos);
+	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_FREEZE);"), std::string::npos);
+	EXPECT_NE(LaserModule.find("DoLaserPreview(&LaserPreviewRectQM, OutlineColor, InnerColor, LASERTYPE_DRAGGER);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, LaserPreviewEntityBranchesReserveEndpointDecorationSpace)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string DoLaserPreview = FunctionBody(Source, "void CMenus::DoLaserPreview(const CUIRect *pRect, const ColorHSLA LaserOutlineColor, const ColorHSLA LaserInnerColor, const int LaserType)");
+
+	EXPECT_NE(DoLaserPreview.find("const vec2 EntityLaserEnd = LaserType == LASERTYPE_DOOR ? Pos - vec2(34.0f, 0.0f) : Pos - vec2(42.0f, 0.0f);"), std::string::npos);
+	EXPECT_NE(DoLaserPreview.find("RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, EMOTE_NORMAL, vec2(-1, 0), Pos - vec2(20.0f, 0.0f));"), std::string::npos);
+	EXPECT_EQ(DoLaserPreview.find("RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, EMOTE_NORMAL, vec2(-1, 0), Pos);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, LaserEntityTypesUseDdnetEndpointRendering)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/items.cpp");
+	const std::string RenderLaser = FunctionBody(Source, "void CItems::RenderLaser(vec2 From, vec2 Pos, ColorRGBA OuterColor, ColorRGBA InnerColor, float TicksBody, float TicksHead, int Type, float GlowIntensity) const");
+	ASSERT_FALSE(RenderLaser.empty());
+
+	// Regression guard for DDNet entity beams: door/freeze/dragger are carried by
+	// the laser render path, but they are not weapon lasers and must not receive
+	// generic impact-splat endpoints. The endpoint side is part of the behavior:
+	// door blocker at Pos only, dragger pulley at From, freeze hectagon at Pos.
+	const size_t DoorBranchPos = RenderLaser.find("if(Type == LASERTYPE_DOOR)");
+	const size_t DraggerBranchPos = RenderLaser.find("else if(Type == LASERTYPE_DRAGGER)");
+	const size_t FreezeBranchPos = RenderLaser.find("else if(Type == LASERTYPE_FREEZE)");
+	const size_t GenericHeadPos = RenderLaser.find("else\n\t{", FreezeBranchPos);
+	ASSERT_NE(DoorBranchPos, std::string::npos);
+	ASSERT_NE(DraggerBranchPos, std::string::npos);
+	ASSERT_NE(FreezeBranchPos, std::string::npos);
+	ASSERT_NE(GenericHeadPos, std::string::npos);
+	EXPECT_LT(DoorBranchPos, GenericHeadPos);
+	EXPECT_LT(DraggerBranchPos, GenericHeadPos);
+	EXPECT_LT(FreezeBranchPos, GenericHeadPos);
+
+	const std::string DoorBranch = RenderLaser.substr(DoorBranchPos, DraggerBranchPos - DoorBranchPos);
+	const std::string DraggerBranch = RenderLaser.substr(DraggerBranchPos, FreezeBranchPos - DraggerBranchPos);
+	const std::string FreezeBranch = RenderLaser.substr(FreezeBranchPos, GenericHeadPos - FreezeBranchPos);
+	const std::string GenericHeadBranch = RenderLaser.substr(GenericHeadPos);
+	EXPECT_NE(DoorBranch.find("m_DoorHeadOffset"), std::string::npos);
+	EXPECT_NE(DoorBranch.find("Pos.x - 8.0f, Pos.y - 8.0f"), std::string::npos);
+	EXPECT_EQ(DoorBranch.find("From.x"), std::string::npos);
+	EXPECT_NE(DraggerBranch.find("GameClient()->m_ExtrasSkin.m_SpritePulley"), std::string::npos);
+	EXPECT_NE(DraggerBranch.find("m_PulleyHeadOffset, From.x, From.y"), std::string::npos);
+	EXPECT_EQ(DraggerBranch.find("m_PulleyHeadOffset, Pos.x, Pos.y"), std::string::npos);
+	EXPECT_NE(FreezeBranch.find("GameClient()->m_ExtrasSkin.m_SpriteHectagon"), std::string::npos);
+	EXPECT_NE(FreezeBranch.find("m_FreezeHeadOffset, Pos.x, Pos.y"), std::string::npos);
+	EXPECT_EQ(FreezeBranch.find("m_FreezeHeadOffset, From.x, From.y"), std::string::npos);
+	EXPECT_NE(GenericHeadBranch.find("m_aParticleSplatOffset[CurParticle]"), std::string::npos);
+	EXPECT_EQ(DoorBranch.find("m_aParticleSplatOffset"), std::string::npos);
+	EXPECT_EQ(DraggerBranch.find("m_aParticleSplatOffset"), std::string::npos);
+	EXPECT_EQ(FreezeBranch.find("m_aParticleSplatOffset"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, TClientSettingsTabsPreserveHiddenStateAndVisibleCorners)

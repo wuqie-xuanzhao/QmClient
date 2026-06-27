@@ -1442,7 +1442,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	const float EyeLineSize = 40.0f;
 	const bool RenderEyesBelow = MainView.w < 750.0f;
-	CUIRect YourSkin, Checkboxes, SkinPrefix, Eyes, Button, Label;
+	CUIRect YourSkin, Checkboxes, SkinPrefix, Eyes, Button, Label, SortModeControl;
 	MainView.HSplitTop(130.0f, &YourSkin, &MainView);
 	if(RenderEyesBelow)
 	{
@@ -1517,6 +1517,31 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				str_copy(g_Config.m_ClSkinPrefix, s_apSkinPrefixes[i]);
 				ShouldRefresh = true;
 			}
+		}
+
+		SkinPrefix.HSplitTop(4.0f, nullptr, &SkinPrefix);
+		SkinPrefix.HSplitTop(20.0f, &SortModeControl, &SkinPrefix);
+		static CUi::SDropDownState s_SkinSortModeDropDownState;
+		const char *apSkinSortModeNames[] = {
+			Localize("Name"),
+			Localize("Time"),
+		};
+		CUIRect SortLabel, SortDropDown;
+		SortModeControl.VSplitLeft(42.0f, &SortLabel, &SortDropDown);
+		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_skin_sort_label", &SortLabel, Localize("Skin sort"), 10.0f, TEXTALIGN_ML);
+		const int SkinSortMode = std::clamp(g_Config.m_QmSkinSortMode, 0, 1);
+		const int SkinSortModeNew = Ui()->DoDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState);
+		if(g_Config.m_QmSkinSortMode != SkinSortModeNew)
+		{
+			g_Config.m_QmSkinSortMode = SkinSortModeNew;
+			GameClient()->m_Skins.RebuildSkinListPlan();
+		}
+
+		SkinPrefix.HSplitTop(4.0f, nullptr, &SkinPrefix);
+		SkinPrefix.HSplitTop(20.0f, &Button, &SkinPrefix);
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_QmSkinShowMetadata, "tee-show-skin-metadata", Localize("Show skin date and author"), g_Config.m_QmSkinShowMetadata, &Button))
+		{
+			g_Config.m_QmSkinShowMetadata ^= 1;
 		}
 	}
 	CUIRect RandomColorsButton;
@@ -1795,17 +1820,17 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		CUIRect QueueSection = QueuePanel;
 		CUIRect QueueHeader, QueueControls, QueueList, QueuePresets;
 		QueueSection.HSplitTop(22.0f, &QueueHeader, &QueueSection);
-		CUIRect QueueTitleRect, CurrentQueueRect;
-		QueueHeader.VSplitLeft(QueueHeader.w * 0.48f, &QueueTitleRect, &CurrentQueueRect);
-		QueueTitleRect.VSplitRight(4.0f, &QueueTitleRect, nullptr);
 		char aQueueLabel[64];
-		str_format(aQueueLabel, sizeof(aQueueLabel), "%s%s (%d)", QueueDirty ? "● " : "", Localize("Skin queue"), (int)SkinQueue.size());
-		SLabelProperties QueueHeaderProps;
-		QueueHeaderProps.m_MaxWidth = QueueTitleRect.w;
-		QueueHeaderProps.m_DisallowNewline = true;
-		QueueHeaderProps.m_StopAtEnd = true;
-		QueueHeaderProps.m_MinimumFontSize = 8.0f;
-		Ui()->DoLabel(&QueueTitleRect, aQueueLabel, 14.0f, TEXTALIGN_ML, QueueHeaderProps);
+		str_format(aQueueLabel, sizeof(aQueueLabel), "%s (%d)", Localize("Skin queue"), (int)SkinQueue.size());
+		SLabelProperties QueueTitleLabelProps;
+		QueueTitleLabelProps.m_DisallowNewline = true;
+		QueueTitleLabelProps.m_StopAtEnd = true;
+		QueueTitleLabelProps.m_MinimumFontSize = 6.0f;
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? "tee-dummy-skin-queue-enabled" : "tee-player-skin-queue-enabled", aQueueLabel, QueueEnabled, &QueueHeader, QueueTitleLabelProps))
+		{
+			QueueEnabled ^= 1;
+		}
+		GameClient()->m_Tooltips.DoToolTip(&QueueEnabled, &QueueHeader, Localize("Enable skin queue rotation"));
 		char aCurrentQueueLabel[128];
 		if(AppliedPresetIndex >= 0 && (size_t)AppliedPresetIndex < vQueuePresets.size())
 		{
@@ -1816,28 +1841,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Queue preset: %s"), Localize("Custom"));
 		}
 		SLabelProperties CurrentQueueLabelProps;
-		CurrentQueueLabelProps.m_MaxWidth = CurrentQueueRect.w;
 		CurrentQueueLabelProps.m_DisallowNewline = true;
 		CurrentQueueLabelProps.m_StopAtEnd = true;
 		CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
-		CUIRect CurrentQueueLabelRect, ClearQueueRect;
-		CurrentQueueRect.VSplitRight(CurrentQueueRect.h, &CurrentQueueLabelRect, &ClearQueueRect);
-		Ui()->DoLabel(&CurrentQueueLabelRect, aCurrentQueueLabel, 9.0f, TEXTALIGN_MR, CurrentQueueLabelProps);
-		static CButtonContainer s_ClearQueueButton;
-		if(Ui()->DoButton_FontIcon(&s_ClearQueueButton, FONT_ICON_TRASH, 0, &ClearQueueRect, IGraphics::CORNER_ALL))
-		{
-			GameClient()->m_Skins.ClearSkinQueue(QueueDummy);
-		}
-		GameClient()->m_Tooltips.DoToolTip(&s_ClearQueueButton, &ClearQueueRect, Localize("Clear current queue"));
-		QueueSection.HSplitTop(20.0f, nullptr, &QueueSection);
-
-		CUIRect QueueEnabledRect;
-		QueueSection.HSplitTop(20.0f, &QueueEnabledRect, &QueueSection);
-		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, QueueDummy ? "tee-dummy-skin-queue-enabled" : "tee-player-skin-queue-enabled", Localize("Enable skin queue"), QueueEnabled, &QueueEnabledRect))
-		{
-			QueueEnabled ^= 1;
-		}
-		GameClient()->m_Tooltips.DoToolTip(&QueueEnabled, &QueueEnabledRect, Localize("Enable skin queue rotation"));
+		QueueSection.HSplitTop(8.0f, nullptr, &QueueSection);
 
 		CUIRect IntervalRow, IntervalLabel, IntervalControls;
 		QueueSection.HSplitTop(20.0f, &IntervalRow, &QueueSection);
@@ -1879,8 +1886,22 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 		Ui()->DoLabel(&IntervalUnit, "ms", IntervalUnit.h * CUi::ms_FontmodHeight * 0.75f, TEXTALIGN_MC);
 
-		QueueSection.HSplitTop(5.0f, nullptr, &QueueSection);
-		QueueSection.HSplitMid(&QueueList, &QueuePresets, 6.0f);
+		QueueSection.HSplitTop(3.0f, nullptr, &QueueSection);
+		QueueSection.HSplitTop(QueueSection.h * 0.62f, &QueueList, &QueuePresets);
+		QueuePresets.HSplitTop(6.0f, nullptr, &QueuePresets);
+
+		CUIRect QueueListHeader, QueueListBody;
+		QueueList.HSplitTop(18.0f, &QueueListHeader, &QueueListBody);
+		CUIRect QueueListHeaderLabel, ClearQueueRect;
+		QueueListHeader.VSplitRight(18.0f, &QueueListHeaderLabel, &ClearQueueRect);
+		CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;
+		Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel, 10.0f, TEXTALIGN_ML, CurrentQueueLabelProps);
+		static CButtonContainer s_TeeClearCurrentSkinQueueButton;
+		if(Ui()->DoButton_FontIcon(&s_TeeClearCurrentSkinQueueButton, FONT_ICON_TRASH, 0, &ClearQueueRect, BUTTONFLAG_LEFT))
+		{
+			GameClient()->m_Skins.ClearSkinQueue(QueueDummy);
+		}
+		GameClient()->m_Tooltips.DoToolTip(&s_TeeClearCurrentSkinQueueButton, &ClearQueueRect, Localize("Clear current queue"));
 
 		static CListBox s_QueueListBox;
 		static std::vector<char> s_QueueItemIds;
@@ -1907,7 +1928,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		if(SkinQueue.empty())
 		{
-			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_queue_empty_label", &QueueList, Localize("Queue is empty"), 12.0f, TEXTALIGN_MC);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_queue_empty_label", &QueueListBody, Localize("Queue is empty"), 12.0f, TEXTALIGN_MC);
 		}
 		else
 		{
@@ -1926,7 +1947,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				DragTarget = -1;
 			}
 
-			s_QueueListBox.DoStart(20.0f, (int)SkinQueue.size(), 1, 1, -1, &QueueList, true, IGraphics::CORNER_ALL);
+			s_QueueListBox.DoStart(20.0f, (int)SkinQueue.size(), 1, 1, -1, &QueueListBody, true, IGraphics::CORNER_ALL);
 			for(size_t i = 0; i < SkinQueue.size(); ++i)
 			{
 				const CListboxItem Item = s_QueueListBox.DoNextItem(&s_QueueItemIds[i], false, 3.0f);
@@ -2235,7 +2256,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	constexpr float SkinControlGap = 10.0f;
 	constexpr float SkinControlLineHeight = 20.0f;
 	constexpr float SkinControlLabelFontSize = 14.0f;
-	constexpr float SkinControlLabelPadding = 24.0f;
+	constexpr float SkinControlLabelPadding = 14.0f;
 	constexpr float SkinRefreshButtonWidth = 25.0f;
 	constexpr float SkinSearchPreferredWidth = 220.0f;
 	const char *pSkinDatabaseLabel = Localize("Skin Database");
@@ -2276,11 +2297,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	auto SplitSkinToolbarGap = [&](CUIRect &Rect) {
 		SplitSkinToolbarLeft(Rect, SkinControlGap, nullptr);
 	};
+	ControlsArea.VSplitRight(SkinRefreshButtonWidth, &ControlsArea, &RefreshButton);
+	ControlsArea.VSplitRight(SkinControlGap, &ControlsArea, nullptr);
 	SplitSkinToolbarLeft(ControlsArea, DatabaseButtonWidth, &DatabaseButton);
 	SplitSkinToolbarGap(ControlsArea);
 	SplitSkinToolbarLeft(ControlsArea, DirectoryButtonWidth, &DirectoryButton);
-	SplitSkinToolbarGap(ControlsArea);
-	SplitSkinToolbarLeft(ControlsArea, SkinRefreshButtonWidth, &RefreshButton);
 	SplitSkinToolbarGap(ControlsArea);
 	SplitSkinToolbarLeft(ControlsArea, EditTextureButtonWidth, &EditTextureButton);
 
@@ -2382,6 +2403,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		1);
 	int RowsIterated = 0;
 	int RowsRendered = 0;
+	const bool ShowSkinMetadata = g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata;
 	auto DoButtonSkinQueue = [&](const void *pButtonId, const void *pParentId, bool InQueue, bool Disabled, const CUIRect *pRect) {
 		if(InQueue || (pParentId != nullptr && Ui()->HotItem() == pParentId) || Ui()->HotItem() == pButtonId)
 		{
@@ -2469,7 +2491,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		if(EntryNonTerminalWaiting)
 			++VisibleNonTerminalWaitingCount;
 		const CSkin *pSkin = State == CSkins::CSkinContainer::EState::LOADED ? pSkinContainer->Skin().get() : pDefaultSkin;
-
 		Item.m_Rect.VSplitLeft(60.0f, &Button, &Label);
 
 		{
@@ -2526,7 +2547,41 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				const auto [MatchStart, MatchLength] = NameMatch.value();
 				Props.m_vColorSplits.emplace_back(MatchStart, MatchLength, ColorRGBA(0.4f, 0.4f, 1.0f, 1.0f));
 			}
-			Ui()->DoLabel(&LabelContent, pSkinContainer->Name(), 12.0f, TEXTALIGN_ML, Props);
+			char aSkinMetadata[96] = "";
+			const int OfficialReleaseDate = pSkinContainer->OfficialReleaseDate();
+			const char *pOfficialCreator = pSkinContainer->OfficialCreator();
+			if(ShowSkinMetadata && (OfficialReleaseDate > 0 || pOfficialCreator[0] != '\0'))
+			{
+				char aDate[16] = "";
+				if(OfficialReleaseDate > 0)
+				{
+					str_format(aDate, sizeof(aDate), "%04d-%02d-%02d", OfficialReleaseDate / 10000, (OfficialReleaseDate / 100) % 100, OfficialReleaseDate % 100);
+				}
+				if(aDate[0] != '\0' && pOfficialCreator[0] != '\0')
+					str_format(aSkinMetadata, sizeof(aSkinMetadata), "%s - %s", aDate, pOfficialCreator);
+				else if(aDate[0] != '\0')
+					str_copy(aSkinMetadata, aDate, sizeof(aSkinMetadata));
+				else
+					str_copy(aSkinMetadata, pOfficialCreator, sizeof(aSkinMetadata));
+			}
+			if(aSkinMetadata[0] != '\0')
+			{
+				CUIRect NameLine, MetadataLine;
+				LabelContent.HSplitTop(25.0f, &NameLine, &MetadataLine);
+				Ui()->DoLabel(&NameLine, pSkinContainer->Name(), 12.0f, TEXTALIGN_ML, Props);
+				MetadataLine.HSplitTop(16.0f, &MetadataLine, nullptr);
+				SLabelProperties MetadataProps;
+				MetadataProps.m_MaxWidth = MetadataLine.w - 5.0f;
+				MetadataProps.m_DisallowNewline = true;
+				MetadataProps.m_StopAtEnd = true;
+				TextRender()->TextColor(ColorRGBA(0.8f, 0.8f, 0.8f, 0.8f));
+				Ui()->DoLabel(&MetadataLine, aSkinMetadata, 9.0f, TEXTALIGN_ML, MetadataProps);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+			}
+			else
+			{
+				Ui()->DoLabel(&LabelContent, pSkinContainer->Name(), 12.0f, TEXTALIGN_ML, Props);
+			}
 		}
 
 		if(g_Config.m_Debug)

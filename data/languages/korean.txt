@@ -2347,9 +2347,6 @@ Enable replays
 Enable server message sound
 == 서버 메시지 사운드 활성화
 
-Enable skin queue
-== 스킨 큐 활성화
-
 Enable skin queue rotation
 == 스킨 큐 순환 활성화
 
@@ -6556,6 +6553,9 @@ Show seconds on clock
 Show server help and usage messages
 == 서버 도움말 및 사용법 메시지 표시
 
+Show skin date and author
+== 스킨 날짜와 제작자 표시
+
 Show skin names in nameplate
 == 이름표에 스킨 이름 표시
 
@@ -6753,6 +6753,9 @@ Skin prefix
 
 Skin queue
 == 스킨 대기열
+
+Skin sort
+== 스킨 정렬
 
 Skin transition
 == 스킨 전환
@@ -9016,6 +9019,9 @@ Zoom out
 拿到额外武器时停用 Gores 自动切换
 == 추가 무기 획득 시 Gores 자동 전환 비활성화
 
+按发布时间排序时显示皮肤发布日期和作者
+== 게시 시간순 정렬 시 스킨 게시일과 제작자 표시
+
 按名字单独音量（name=percent）
 == 이름별 개별 볼륨 (name=percent)
 
@@ -9300,6 +9306,9 @@ Zoom out
 
 皮肤切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家
 == 스킨 전환 애니메이션 범위: 0=자신만 1=로컬+더미 2=모든 플레이어
+
+皮肤列表排序模式（0=名称，1=发布时间）
+== 스킨 목록 정렬 모드(0=이름, 1=게시 시간)
 
 皮肤队列切换间隔（毫秒）
 == 스킨 큐 전환 간격 (밀리초)
