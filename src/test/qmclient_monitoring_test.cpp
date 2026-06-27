@@ -4909,6 +4909,23 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateHookStrengthSizeUsesSingleLineSlide
 	EXPECT_NE(ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp").find("Localize(\"Glow range\")"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
+{
+	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string NamePlateBranch = ExtractSourceBlock(Settings, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)", "else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)");
+	ASSERT_FALSE(NamePlateBranch.empty());
+
+	EXPECT_NE(NamePlateBranch.find("DrawTClientCacheSectionBox(NamePlateSettingsCard);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("InsetTClientCacheSectionContent(NamePlateSettingsView);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NamePlateSettingsScrollRegion;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateSettingsView, ScrollParams"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("60.0f"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("std::clamp(8.0f * UiScale"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("RenderNamePlatePreview"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, AppearanceSettingsHeadingsUseBudgetedTextPipeline)
 {
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
