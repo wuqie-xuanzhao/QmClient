@@ -4921,6 +4921,12 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("CUIRect NamePlatePreviewCard = RightView;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewCard.h = maximum(NamePlatePreviewCard.h, NamePlateScrollView.h);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
+	EXPECT_LT(NamePlateBranch.find("CUIRect NamePlatePreviewCard = RightView;"), NamePlateBranch.find("RenderNamePlatePreview"));
 	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NamePlateSettingsScrollRegion;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateScrollView, ScrollParams"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateSettingsView"), std::string::npos);

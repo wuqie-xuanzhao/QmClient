@@ -6129,6 +6129,20 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		NamePlateSettingsTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);
 		InsetTClientCacheSectionContent(LeftView);
 
+		CUIRect NamePlatePreviewCard = RightView;
+		NamePlatePreviewCard.h = maximum(NamePlatePreviewCard.h, NamePlateScrollView.h);
+		CUIRect NamePlatePreviewShadow = NamePlatePreviewCard;
+		NamePlatePreviewShadow.x += 1.5f;
+		NamePlatePreviewShadow.y += 2.0f;
+		NamePlatePreviewShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);
+		NamePlatePreviewCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);
+		CUIRect NamePlatePreviewTopHighlight = NamePlatePreviewCard;
+		NamePlatePreviewTopHighlight.h = 1.0f;
+		NamePlatePreviewTopHighlight.x += NamePlateCardCornerRadius;
+		NamePlatePreviewTopHighlight.w -= NamePlateCardCornerRadius * 2.0f;
+		NamePlatePreviewTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);
+		InsetTClientCacheSectionContent(RightView);
+
 		// ***** Name Plate ***** //
 		DoAppearanceHeading(LeftView, "appearance-name-plate-title", Localize("Name Plate"), HeadlineFontSize, HeadlineHeight);
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
