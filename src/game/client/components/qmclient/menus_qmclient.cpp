@@ -5956,6 +5956,21 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 8, Localize("Nameplate text"), Localize("Customize name and clan text effects"));
 
+				static CScrollRegion s_NameplateTextCardScrollRegion;
+				static float s_PrevNameplateTextCardScrollY = 0.0f;
+				CScrollRegionParams NameplateTextScrollParams;
+				NameplateTextScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+				NameplateTextScrollParams.m_ScrollUnit = 60.0f * UiScale;
+				NameplateTextScrollParams.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
+				const float NameplateTextScrollHeight = std::clamp(260.0f * UiScale, LgLineHeight * 4.0f + LgLineSpacing * 3.0f, 320.0f * UiScale);
+				CUIRect NameplateTextScrollView;
+				CardContent.HSplitTop(NameplateTextScrollHeight, &NameplateTextScrollView, &CardContent);
+				CUIRect NameplateTextCardTail = CardContent;
+				SSettingsScrollRegionFrame NameplateTextScrollFrame = BeginSettingsScrollRegion(s_NameplateTextCardScrollRegion, &NameplateTextScrollView, NameplateTextScrollParams, s_PrevNameplateTextCardScrollY);
+				vec2 NameplateTextScrollOffset = NameplateTextScrollFrame.m_BeginOffset;
+				CardContent = NameplateTextScrollView;
+				CardContent.y += NameplateTextScrollOffset.y;
+
 				auto RenderTextEffectToggle = [&](int Effect, const char *pTextId, const char *pText) {
 					int Enabled = (g_Config.m_QmNameplateTextEffects & Effect) != 0 ? 1 : 0;
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -6078,6 +6093,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				DoLine_ColorPicker(&s_NameplateTextGlowColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Glow color"), &g_Config.m_QmNameplateTextGlowColor, ColorRGBA(0.30f, 0.78f, 1.0f, 0.40f), false, nullptr, true);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+				CUIRect NameplateTextScrollEnd = CardContent;
+				FinishSettingsScrollRegion(s_NameplateTextCardScrollRegion, NameplateTextScrollFrame, &NameplateTextScrollEnd, -1, !PrewarmOnly && !m_MenuTextPlanCollecting);
+				if(!PrewarmOnly && !m_MenuTextPlanCollecting)
+					s_PrevNameplateTextCardScrollY = NameplateTextScrollFrame.m_FinalOffsetY;
+				CardContent = NameplateTextCardTail;
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());

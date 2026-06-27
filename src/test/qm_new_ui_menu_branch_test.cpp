@@ -227,6 +227,48 @@ TEST(QmNewUiMenuBranches, BrowserInteriorBackgroundsUseMapBrowserOpacity)
 	EXPECT_EQ(Source.find("BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.3f))"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, QmHudNameplateTextCardUsesDedicatedScrollRegion)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const size_t RenderColumnSwitch = Source.find("switch(pModule->m_Id)");
+	ASSERT_NE(RenderColumnSwitch, std::string::npos);
+	const size_t NameplateTextCase = Source.find("case EQmModuleId::NameplateText:", RenderColumnSwitch);
+	ASSERT_NE(NameplateTextCase, std::string::npos);
+	const size_t FavoriteMapsCase = Source.find("case EQmModuleId::FavoriteMaps:", NameplateTextCase);
+	ASSERT_NE(FavoriteMapsCase, std::string::npos);
+	const std::string NameplateTextBlock = Source.substr(NameplateTextCase, FavoriteMapsCase - NameplateTextCase);
+
+	const size_t HeadlinePos = NameplateTextBlock.find("Localize(\"Nameplate text\")");
+	const size_t BeginScrollPos = NameplateTextBlock.find("BeginSettingsScrollRegion(s_NameplateTextCardScrollRegion");
+	const size_t FinishScrollPos = NameplateTextBlock.find("FinishSettingsScrollRegion(s_NameplateTextCardScrollRegion");
+	const size_t RegisterPos = NameplateTextBlock.find("RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());");
+	const size_t DragPos = NameplateTextBlock.find("HandleModuleDragState(pModule, s_GlassCards.back());");
+
+	ASSERT_NE(HeadlinePos, std::string::npos);
+	ASSERT_NE(BeginScrollPos, std::string::npos);
+	ASSERT_NE(FinishScrollPos, std::string::npos);
+	ASSERT_NE(RegisterPos, std::string::npos);
+	ASSERT_NE(DragPos, std::string::npos);
+	EXPECT_LT(HeadlinePos, BeginScrollPos);
+	EXPECT_LT(BeginScrollPos, FinishScrollPos);
+	EXPECT_LT(FinishScrollPos, RegisterPos);
+	EXPECT_LT(RegisterPos, DragPos);
+
+	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextCardScrollRegion;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("NameplateTextScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("NameplateTextScrollParams.m_ScrollUnit = 60.0f * UiScale;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("NameplateTextScrollParams.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("CardContent.y += NameplateTextScrollOffset.y;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("CUIRect NameplateTextScrollEnd = CardContent;"), std::string::npos);
+
+	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextPlayingDropDownScrollRegion;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextSpectateDropDownScrollRegion;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextDemoDropDownScrollRegion;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("static CScrollRegion s_NameplateTextDemoTargetDropDownScrollRegion;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;"), std::string::npos);
+	EXPECT_NE(NameplateTextBlock.find("s_NameplateTextDemoTargetDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_NameplateTextDemoTargetDropDownScrollRegion;"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, DemoBrowserUsesExplicitLegacyShellBranches)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_demo.cpp");
