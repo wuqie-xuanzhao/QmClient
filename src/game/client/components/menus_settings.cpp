@@ -6104,7 +6104,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		const ColorRGBA NamePlateSettingsShadowColor(0.0f, 0.0f, 0.0f, 0.12f);
 		static CScrollRegion s_NamePlateSettingsScrollRegion;
 		static float s_PrevNamePlateSettingsScrollY = 0.0f;
-		static float s_NamePlateMeasuredCardHeight = 0.0f;
+		static float s_NamePlateMeasuredSettingsCardHeight = 0.0f;
+		static float s_NamePlateMeasuredPreviewCardHeight = 0.0f;
 		CScrollRegionParams ScrollParams;
 		ScrollParams.m_ScrollUnit = 60.0f * UiScale;
 		ScrollParams.m_ScrollbarMargin = QmClientSettingsScrollbarMargin;
@@ -6133,11 +6134,13 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			NamePlateRadioLineHeight +
 			(g_Config.m_ClShowDirection > 0 ? LineSize : 0.0f);
 		const float NamePlatePreviewContentHeight = HeadlineHeight + 2.0f * MarginSmall + 3.0f * LineSize + MarginSmall;
-		const float NamePlateEstimatedCardHeight = maximum(NamePlateScrollView.h, maximum(NamePlateSettingsContentHeight, NamePlatePreviewContentHeight) + 2.0f * NamePlateContentPaddingY);
-		const float NamePlateCardHeight = maximum(NamePlateEstimatedCardHeight, s_NamePlateMeasuredCardHeight);
+		const float NamePlateEstimatedSettingsCardHeight = maximum(NamePlateScrollView.h, NamePlateSettingsContentHeight + 2.0f * NamePlateContentPaddingY);
+		const float NamePlateEstimatedPreviewCardHeight = maximum(NamePlateScrollView.h, NamePlatePreviewContentHeight + 2.0f * NamePlateContentPaddingY);
+		const float NamePlateSettingsCardHeight = maximum(NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight);
+		const float NamePlatePreviewCardHeight = maximum(NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight);
 
 		CUIRect NamePlateSettingsCard = LeftView;
-		NamePlateSettingsCard.h = NamePlateCardHeight;
+		NamePlateSettingsCard.h = NamePlateSettingsCardHeight;
 		CUIRect NamePlateSettingsShadow = NamePlateSettingsCard;
 		NamePlateSettingsShadow.x += 1.5f;
 		NamePlateSettingsShadow.y += 2.0f;
@@ -6153,7 +6156,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		LeftView.HSplitBottom(NamePlateContentPaddingY, &LeftView, nullptr);
 
 		CUIRect NamePlatePreviewCard = RightView;
-		NamePlatePreviewCard.h = NamePlateCardHeight;
+		NamePlatePreviewCard.h = NamePlatePreviewCardHeight;
 		CUIRect NamePlatePreviewShadow = NamePlatePreviewCard;
 		NamePlatePreviewShadow.x += 1.5f;
 		NamePlatePreviewShadow.y += 2.0f;
@@ -6313,10 +6316,12 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 		GameClient()->m_NamePlates.RenderNamePlatePreview(Position, Dummy);
 
-		const float NamePlateMeasuredContentBottom = maximum(LeftView.y, RightView.y) + NamePlateContentPaddingY;
-		s_NamePlateMeasuredCardHeight = maximum(NamePlateMeasuredContentBottom - NamePlateSettingsCard.y, NamePlateEstimatedCardHeight);
+		const float NamePlateMeasuredSettingsContentBottom = LeftView.y + NamePlateContentPaddingY;
+		const float NamePlateMeasuredPreviewContentBottom = RightView.y + NamePlateContentPaddingY;
+		s_NamePlateMeasuredSettingsCardHeight = maximum(NamePlateMeasuredSettingsContentBottom - NamePlateSettingsCard.y, NamePlateEstimatedSettingsCardHeight);
+		s_NamePlateMeasuredPreviewCardHeight = maximum(NamePlateMeasuredPreviewContentBottom - NamePlatePreviewCard.y, NamePlateEstimatedPreviewCardHeight);
 		CUIRect NamePlateScrollEnd = NamePlateScrollView;
-		NamePlateScrollEnd.y = NamePlateSettingsCard.y + maximum(NamePlateSettingsCard.h, s_NamePlateMeasuredCardHeight);
+		NamePlateScrollEnd.y = maximum(NamePlateSettingsCard.y + maximum(NamePlateSettingsCard.h, s_NamePlateMeasuredSettingsCardHeight), NamePlatePreviewCard.y + maximum(NamePlatePreviewCard.h, s_NamePlateMeasuredPreviewCardHeight));
 		NamePlateScrollEnd.h = 1.0f;
 		FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE);
 		s_PrevNamePlateSettingsScrollY = ScrollFrame.m_FinalOffsetY;

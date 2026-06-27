@@ -4917,7 +4917,9 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 
 	EXPECT_EQ(NamePlateBranch.find("DrawTClientCacheSectionBox("), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("s_NamePlateSettingsCardHeight"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("static float s_NamePlateMeasuredCardHeight = 0.0f;"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("s_NamePlateMeasuredCardHeight"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("static float s_NamePlateMeasuredSettingsCardHeight = 0.0f;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("static float s_NamePlateMeasuredPreviewCardHeight = 0.0f;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float QmClientSettingsScrollbarWidth"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const float QmClientSettingsScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const float NamePlateContentPaddingY = std::clamp(14.0f * UiScale, 10.0f, 14.0f);"), std::string::npos);
@@ -4926,16 +4928,20 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_NE(NamePlateBranch.find("NamePlateRadioLineHeight + LineSize"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("g_Config.m_ClNamePlatesStrong ? NamePlateRadioLineHeight : LineSize"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const float NamePlatePreviewContentHeight = HeadlineHeight + 2.0f * MarginSmall + 3.0f * LineSize + MarginSmall;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateEstimatedCardHeight = maximum(NamePlateScrollView.h, maximum(NamePlateSettingsContentHeight, NamePlatePreviewContentHeight) + 2.0f * NamePlateContentPaddingY);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateCardHeight = maximum(NamePlateEstimatedCardHeight, s_NamePlateMeasuredCardHeight);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsCard.h = NamePlateCardHeight;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("const float NamePlateEstimatedSettingsCardHeight = maximum(NamePlateScrollView.h, NamePlateSettingsContentHeight + 2.0f * NamePlateContentPaddingY);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("const float NamePlateEstimatedPreviewCardHeight = maximum(NamePlateScrollView.h, NamePlatePreviewContentHeight + 2.0f * NamePlateContentPaddingY);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("const float NamePlateSettingsCardHeight = maximum(NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("const float NamePlatePreviewCardHeight = maximum(NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("const float NamePlateCardHeight"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsCard.h = NamePlateSettingsCardHeight;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("LeftView.HSplitTop(NamePlateContentPaddingY, nullptr, &LeftView);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("LeftView.HSplitBottom(NamePlateContentPaddingY, &LeftView, nullptr);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("CUIRect NamePlatePreviewCard = RightView;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlateCardHeight;"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlateCardHeight;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlatePreviewCardHeight;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
@@ -4953,9 +4959,11 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarMargin = std::clamp(5.0f * UiScale, 4.0f, 5.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float NamePlateRightContentBottom = NamePlateScrollView.y + NamePlateScrollView.h;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateMeasuredContentBottom = maximum(LeftView.y, RightView.y) + NamePlateContentPaddingY;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("s_NamePlateMeasuredCardHeight = maximum(NamePlateMeasuredContentBottom - NamePlateSettingsCard.y, NamePlateEstimatedCardHeight);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateScrollEnd.y = NamePlateSettingsCard.y + maximum(NamePlateSettingsCard.h, s_NamePlateMeasuredCardHeight);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("const float NamePlateMeasuredSettingsContentBottom = LeftView.y + NamePlateContentPaddingY;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("const float NamePlateMeasuredPreviewContentBottom = RightView.y + NamePlateContentPaddingY;"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("s_NamePlateMeasuredSettingsCardHeight = maximum(NamePlateMeasuredSettingsContentBottom - NamePlateSettingsCard.y, NamePlateEstimatedSettingsCardHeight);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("s_NamePlateMeasuredPreviewCardHeight = maximum(NamePlateMeasuredPreviewContentBottom - NamePlatePreviewCard.y, NamePlateEstimatedPreviewCardHeight);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("NamePlateScrollEnd.y = maximum(NamePlateSettingsCard.y + maximum(NamePlateSettingsCard.h, s_NamePlateMeasuredSettingsCardHeight), NamePlatePreviewCard.y + maximum(NamePlatePreviewCard.h, s_NamePlateMeasuredPreviewCardHeight));"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("RenderNamePlatePreview"), std::string::npos);
 	EXPECT_LT(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateScrollView, ScrollParams"), NamePlateBranch.find("ContentView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);"));
 }
