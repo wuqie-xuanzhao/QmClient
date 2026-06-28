@@ -248,6 +248,14 @@ public:
 	{
 		return m_vNotifications.empty() ? "" : m_vNotifications.back().m_aText;
 	}
+	int LastNotificationRepeatCountForTests() const
+	{
+		return m_vNotifications.empty() ? 0 : m_vNotifications.back().m_RepeatCount;
+	}
+	const char *LastNotificationRepeatTextForTests() const
+	{
+		return m_vNotifications.empty() ? "" : m_vNotifications.back().m_aRepeatText;
+	}
 	QmHudNotifications::ESoloPrompt PendingCompatPromptForTests() const
 	{
 		return m_PendingCompatPrompt;

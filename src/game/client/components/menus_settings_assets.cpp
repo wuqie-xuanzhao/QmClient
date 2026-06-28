@@ -3816,91 +3816,50 @@ void CMenus::InvalidateSettingsAssetResourcePlan()
 	gs_NextAssetWarmupTab = ASSETS_TAB_ENTITIES;
 }
 
+template<typename TItem>
+static void PublishSettingsAssetMergeEntriesTyped(std::vector<TItem> &vList, int Tab, const std::vector<CMenus::SSettingsAssetMergeEntry> &vEntries, IStorage *pStorage)
+{
+	vList.reserve(vList.size() + vEntries.size());
+	for(const CMenus::SSettingsAssetMergeEntry &Entry : vEntries)
+	{
+		TItem Item;
+		str_copy(Item.m_aName, Entry.m_aName);
+		PopulateLocalAssetAuthor(Item, Tab, pStorage);
+		vList.push_back(Item);
+	}
+}
+
 void CMenus::PublishSettingsAssetMergeEntries(int Tab, const std::vector<SSettingsAssetMergeEntry> &vEntries)
 {
 	switch(Tab)
 	{
 	case ASSETS_TAB_ENTITIES:
-		m_vEntitiesList.reserve(m_vEntitiesList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomEntities Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vEntitiesList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomEntities>(m_vEntitiesList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_GAME:
-		m_vGameList.reserve(m_vGameList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomGame Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vGameList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomGame>(m_vGameList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_EMOTICONS:
-		m_vEmoticonList.reserve(m_vEmoticonList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomEmoticon Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vEmoticonList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomEmoticon>(m_vEmoticonList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_PARTICLES:
-		m_vParticlesList.reserve(m_vParticlesList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomParticle Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vParticlesList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomParticle>(m_vParticlesList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_HUD:
-		m_vHudList.reserve(m_vHudList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomHud Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vHudList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomHud>(m_vHudList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_GUI_CURSOR:
-		m_vGuiCursorList.reserve(m_vGuiCursorList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomGuiCursor Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vGuiCursorList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomGuiCursor>(m_vGuiCursorList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_ARROW:
-		m_vArrowList.reserve(m_vArrowList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomArrow Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vArrowList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomArrow>(m_vArrowList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_STRONG_WEAK:
-		m_vStrongWeakList.reserve(m_vStrongWeakList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomStrongWeak Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vStrongWeakList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomStrongWeak>(m_vStrongWeakList, Tab, vEntries, Storage());
 		break;
 	case ASSETS_TAB_ENTITY_BG:
+		// ENTITY_BG maintains a source-name/source-kind index instead of an item list,
+		// so it cannot share the typed merge path used by the other tabs.
 		m_vEntityBgSourceNames.reserve(m_vEntityBgSourceNames.size() + vEntries.size());
 		for(const SSettingsAssetMergeEntry &Entry : vEntries)
 		{
@@ -3913,14 +3872,7 @@ void CMenus::PublishSettingsAssetMergeEntries(int Tab, const std::vector<SSettin
 		}
 		break;
 	case ASSETS_TAB_EXTRAS:
-		m_vExtrasList.reserve(m_vExtrasList.size() + vEntries.size());
-		for(const SSettingsAssetMergeEntry &Entry : vEntries)
-		{
-			SCustomExtras Item;
-			str_copy(Item.m_aName, Entry.m_aName);
-			PopulateLocalAssetAuthor(Item, Tab, Storage());
-			m_vExtrasList.push_back(Item);
-		}
+		PublishSettingsAssetMergeEntriesTyped<SCustomExtras>(m_vExtrasList, Tab, vEntries, Storage());
 		break;
 	default:
 		break;

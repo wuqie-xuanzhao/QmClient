@@ -4318,7 +4318,7 @@ CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 	SQmSettingsCardStyle Style;
 	Style.m_Padding = std::clamp(14.0f * UiScale, 10.0f, 14.0f);
 	Style.m_Spacing = std::clamp(16.0f * UiScale, 10.0f, 16.0f);
-	Style.m_CornerRadius = std::clamp(12.0f * UiScale, 8.0f, 12.0f);
+	Style.m_CornerRadius = std::clamp(10.0f * UiScale, 7.0f, 10.0f);
 	Style.m_ScrollbarWidth = std::clamp(28.0f * UiScale, 24.0f, 28.0f);
 	Style.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
 	return Style;
@@ -4337,16 +4337,25 @@ CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const
 
 void CMenus::RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const
 {
-	CUIRect Shadow = Card;
-	Shadow.x += 1.5f;
-	Shadow.y += 2.0f;
-	Shadow.Draw(Style.m_ShadowColor, IGraphics::CORNER_ALL, Style.m_CornerRadius);
-	Card.Draw(Style.m_GlassColor, IGraphics::CORNER_ALL, Style.m_CornerRadius);
-	CUIRect TopHighlight = Card;
-	TopHighlight.h = 1.0f;
-	TopHighlight.x += Style.m_CornerRadius;
-	TopHighlight.w = maximum(0.0f, TopHighlight.w - Style.m_CornerRadius * 2.0f);
-	TopHighlight.Draw(Style.m_HighlightColor, IGraphics::CORNER_NONE, 0.0f);
+	// 外边框：underlay 外扩半透明圆角 fill，由主体盖上露出 ~1px 描边
+	// （栖梦侧栏用 QuadContainer 合批不走这里；其他设置页 clip 宽松不裁剪）
+	CUIRect BorderBg = Card;
+	BorderBg.Margin(-1.0f, &BorderBg);
+	BorderBg.Draw(Style.m_HairlineColor, IGraphics::CORNER_ALL, Style.m_CornerRadius + 1.0f);
+
+	// 主体（顶部略亮渐变）
+	const ColorRGBA TopFill(
+		Style.m_GlassColor.r * 1.08f,
+		Style.m_GlassColor.g * 1.08f,
+		Style.m_GlassColor.b * 1.10f,
+		Style.m_GlassColor.a);
+	Card.Draw4(TopFill, TopFill, Style.m_GlassColor, Style.m_GlassColor, IGraphics::CORNER_ALL, Style.m_CornerRadius);
+
+	// 毛玻璃背景模糊（qm_card_backdrop_blur 开启时）：真背景降采样模糊待实现，现阶段为磨砂雾感占位
+	if(g_Config.m_QmCardBackdropBlur != 0)
+	{
+		Card.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.03f), IGraphics::CORNER_ALL, Style.m_CornerRadius);
+	}
 }
 
 std::vector<std::string> *CMenus::SettingsCardDeckOrder(const char *pDeckId)

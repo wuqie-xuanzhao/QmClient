@@ -956,7 +956,9 @@ TEST(QmHudNotifications, ConsecutiveIdenticalSystemNotificationsCollapseIntoRepe
 	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
 
 	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
-	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "Team save already in progress x3");
+	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "Team save already in progress");
+	EXPECT_EQ(Notifications.LastNotificationRepeatCountForTests(), 3);
+	EXPECT_STREQ(Notifications.LastNotificationRepeatTextForTests(), "x3");
 }
 
 TEST(QmHudNotifications, HandleServerChatRespectsDisabledSystemRoute)

@@ -32,7 +32,8 @@ class CSemaphore;
 
 static std::thread::id gs_MainThreadId;
 static bool gs_MainThreadIdInitialized = false;
-static constexpr int RECT_CORNER_SEGMENTS = 16;
+static constexpr int RECT_CORNER_SEGMENTS = 48; // 圆角段数上限（栈数组大小）；实际段数由 qm_rect_corner_segments 配置（默认 32）
+static inline int RoundedRectSegmentCount() { return std::clamp(g_Config.m_QmRectCornerSegments & ~1, 8, RECT_CORNER_SEGMENTS); } // & ~1 规整偶数：i+=2 循环每轮画两段角度，奇数末段会越过 90° 圆弧终点
 static constexpr float RECT_ANTIALIAS_PIXEL_SIZE = 1.25f;
 
 static ColorRGBA CommandColorToColorRGBA(const CCommandBuffer::SColor &Color)
@@ -1802,11 +1803,12 @@ void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h
 	}
 
 	const float OuterRadius = r + AntialiasSize;
-	const float SegmentsAngle = pi / 2 / RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
+	const float SegmentsAngle = pi / 2 / NumSegments;
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
-	for(int Segment = 0; Segment < RECT_CORNER_SEGMENTS; ++Segment)
+	for(int Segment = 0; Segment < NumSegments; ++Segment)
 	{
 		const float AngleStart = Segment * SegmentsAngle;
 		const float AngleEnd = (Segment + 1) * SegmentsAngle;
@@ -1832,9 +1834,9 @@ void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h
 
 void CGraphics_Threaded::DrawRectExt(float x, float y, float w, float h, float r, int Corners)
 {
-	constexpr int NumSegments = RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
 	const float SegmentsAngle = pi / 2 / NumSegments;
-	IGraphics::CFreeformItem aFreeform[NumSegments * 4];
+	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
 	for(int i = 0; i < NumSegments; i += 2)
@@ -1954,13 +1956,14 @@ void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float 
 	}
 
 	const float OuterRadius = r + AntialiasSize;
-	const float SegmentsAngle = pi / 2 / RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
+	const float SegmentsAngle = pi / 2 / NumSegments;
 	auto DrawCorner = [&](int Corner, ColorRGBA CornerColor, float CenterX, float CenterY, float XDirection, float YDirection) {
 		if(!(Corners & Corner) || CornerColor.a <= 0.0f)
 			return;
 
 		IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS];
-		for(int Segment = 0; Segment < RECT_CORNER_SEGMENTS; ++Segment)
+		for(int Segment = 0; Segment < NumSegments; ++Segment)
 		{
 			const float AngleStart = Segment * SegmentsAngle;
 			const float AngleEnd = (Segment + 1) * SegmentsAngle;
@@ -1969,7 +1972,7 @@ void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float 
 
 		const ColorRGBA TransparentColor = ColorWithAlpha(CornerColor, 0.0f);
 		SetColor4(CornerColor, TransparentColor, CornerColor, TransparentColor);
-		QuadsDrawFreeform(aFreeform, std::size(aFreeform));
+		QuadsDrawFreeform(aFreeform, NumSegments);
 	};
 
 	DrawCorner(CORNER_TL, ColorTopLeft, x + r, y + r, -1.0f, -1.0f);
@@ -1990,7 +1993,7 @@ void CGraphics_Threaded::DrawRectExt4(float x, float y, float w, float h, ColorR
 		return;
 	}
 
-	constexpr int NumSegments = RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
 	const float SegmentsAngle = pi / 2 / NumSegments;
 	for(int i = 0; i < NumSegments; i += 2)
 	{
@@ -2150,11 +2153,12 @@ void CGraphics_Threaded::AddRectExtAntialiasToContainer(int ContainerIndex, floa
 	}
 
 	const float OuterRadius = r + AntialiasSize;
-	const float SegmentsAngle = pi / 2 / RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
+	const float SegmentsAngle = pi / 2 / NumSegments;
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
-	for(int Segment = 0; Segment < RECT_CORNER_SEGMENTS; ++Segment)
+	for(int Segment = 0; Segment < NumSegments; ++Segment)
 	{
 		const float AngleStart = Segment * SegmentsAngle;
 		const float AngleEnd = (Segment + 1) * SegmentsAngle;
@@ -2191,9 +2195,9 @@ int CGraphics_Threaded::CreateRectQuadContainer(float x, float y, float w, float
 		return ContainerIndex;
 	}
 
-	constexpr int NumSegments = RECT_CORNER_SEGMENTS;
+	const int NumSegments = RoundedRectSegmentCount();
 	const float SegmentsAngle = pi / 2 / NumSegments;
-	IGraphics::CFreeformItem aFreeform[NumSegments * 4];
+	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
 	for(int i = 0; i < NumSegments; i += 2)

@@ -103,6 +103,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 - 真实 commit / PR 标题按 `docs/ai-workflow/git-workflow.md`：`<type>(<scope>): <中文简述>`，并默认补全 commit body
 - `FEAT`、`FIX`、`DEL` 可用于 commit body 分组，也可用于最终汇报分组
 - 仓库文档中的文件、命令行和目录路径统一使用前斜杠 `/`（如 `src/game/client/components/qmclient/`, `qmclient_scripts/cmake-windows.cmd`）
+- 注释必须使用中文（如 `// 这是一个注释`）
 
 ## 构建与命令
 

@@ -1467,6 +1467,13 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 2609, "animated-style"},
 		{pFile, 2610, "user-generated"},
 		{pFile, 7202, "stateful-new-label"},
+		{pFile, 981, "dynamic-value"},
+		{pFile, 988, "dynamic-value"},
+		{pFile, 992, "dynamic-value"},
+		{pFile, 996, "dynamic-value"},
+		{pFile, 997, "dynamic-value"},
+		{pFile, 999, "dynamic-value"},
+		{pFile, 1000, "dynamic-value"},
 	};
 	const std::vector<SStableTextCandidate> vUnexpected = FilterCandidatesNotCoveredByMenuPoolOrAllowlist(pFile, vCandidates, vAllowlist);
 	EXPECT_TRUE(vUnexpected.empty()) << JoinCandidates(vUnexpected);
@@ -1522,11 +1529,7 @@ TEST(QmMonitoringHelpers, SettingsStaticLabelsUseTextElementCache)
 
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TEE, -1, \"tee-name-label\")"), std::string::npos);
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_TEE, -1, \"tee-clan-label\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_DDNET, -1, \"ddnet-demo-title\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_DDNET, -1, \"ddnet-ghost-title\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_DDNET, -1, \"ddnet-gameplay-title\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_DDNET, -1, \"ddnet-background-title\")"), std::string::npos);
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_DDNET, -1, \"ddnet-miscellaneous-title\")"), std::string::npos);
+		// DDNet 标题（demo/ghost/gameplay/background/miscellaneous）已迁移到 card deck（BeginSettingsCardDeckCard），不再用独立 SettingsTextElement title
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_DDNET, -1, \"ddnet-run-on-join-label\")"), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &s_UseCurrentMapId, \"Use current map as background\""), std::string::npos);
 		EXPECT_NE(Source.find("DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClBackgroundShowTilesLayers, \"Show tiles layers from BG map\""), std::string::npos);
@@ -1658,11 +1661,11 @@ TEST(QmMonitoringHelpers, TClientSettingsCardsUseSharedBoxAndAlignedFirstSection
 	EXPECT_EQ(DrawBoxBody.find("CUi::ms_DarkButtonColorFunction.GetColor(false, false)"), std::string::npos);
 	EXPECT_EQ(Source.find("ColorRGBA TClientCacheSectionBackgroundColor()"), std::string::npos);
 	EXPECT_EQ(Source.find("return ColorRGBA(0.08f, 0.085f, 0.09f, 0.92f);"), std::string::npos);
-	EXPECT_NE(DrawBoxBody.find("BoxRect.Draw(Ui()->ScaleBackgroundAlpha(MenuPanelColor(0.92f)), IGraphics::CORNER_ALL, 10.0f);"), std::string::npos);
+	EXPECT_NE(DrawBoxBody.find("RenderQmSettingsGlassCard(TClientCacheSectionBoxRect(BoxRect), QmSettingsCardStyle(1.0f));"), std::string::npos);
 	EXPECT_EQ(DrawBoxBody.find("Ui()->RenderBatchableRect(&BoxRect"), std::string::npos);
 	EXPECT_EQ(DrawBoxBody.find("BoxRect.w += Padding;"), std::string::npos);
 	EXPECT_EQ(DrawBoxBody.find("BoxRect.x -= Padding * 0.5f;"), std::string::npos);
-	EXPECT_NE(DrawBoxBody.find("BoxRect = TClientCacheSectionBoxRect(BoxRect);"), std::string::npos);
+	EXPECT_EQ(DrawBoxBody.find("BoxRect = TClientCacheSectionBoxRect(BoxRect);"), std::string::npos);
 
 	const size_t InsetHelper = Source.find("void CMenus::InsetTClientCacheSectionContent(CUIRect &ContentRect) const");
 	ASSERT_NE(InsetHelper, std::string::npos);
@@ -2105,11 +2108,6 @@ TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
 		"\"client-title\"",
 		"\"tee-name-label\"",
 		"\"tee-clan-label\"",
-		"\"ddnet-demo-title\"",
-		"\"ddnet-ghost-title\"",
-		"\"ddnet-gameplay-title\"",
-		"\"ddnet-background-title\"",
-		"\"ddnet-miscellaneous-title\"",
 		"\"ddnet-run-on-join-label\"",
 		"\"Save the best demo of each race\"",
 		"\"Enable replays\"",
@@ -2134,8 +2132,6 @@ TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
 
 	const std::vector<std::string> vRequiredTClientIds = {
 		"\"tclient-outline-width\"",
-		"\"tclient-statusbar-main-title\"",
-		"\"tclient-statusbar-codes-title\"",
 		"\"tclient-statusbar-local-time-title\"",
 		"\"tclient-statusbar-colors-title\"",
 		"\"tclient-statusbar-empty-preview\"",
@@ -4905,8 +4901,8 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateHookStrengthSizeUsesSingleLineSlide
 
 	EXPECT_NE(NamePlateBranch.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-hook-strength-size\", &g_Config.m_ClNamePlatesStrongSize, &g_Config.m_ClNamePlatesStrongSize, &Button, Localize(\"Size of hook strength icon and number indicator\"), -50, 100);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("SCROLLBAR_OPTION_MULTILINE"), std::string::npos);
-	EXPECT_NE(ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp").find("Localize(\"Glow\")"), std::string::npos);
-	EXPECT_NE(ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp").find("Localize(\"Glow range\")"), std::string::npos);
+	EXPECT_NE(ReadRepoFile("src/game/client/components/menus_settings.cpp").find("Localize(\"Glow\")"), std::string::npos);
+	EXPECT_NE(ReadRepoFile("src/game/client/components/menus_settings.cpp").find("Localize(\"Glow range\")"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
@@ -4921,8 +4917,8 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_NE(NamePlateBranch.find("static float s_NamePlateMeasuredSettingsCardHeight = 0.0f;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("static float s_NamePlateMeasuredPreviewCardHeight = 0.0f;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float QmClientSettingsScrollbarWidth"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float QmClientSettingsScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateContentPaddingY = std::clamp(14.0f * UiScale, 10.0f, 14.0f);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("const float QmClientSettingsScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("const float NamePlateContentPaddingY = std::clamp(14.0f * UiScale, 10.0f, 14.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const float NamePlateRadioLineHeight = 22.0f;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const float NamePlateSettingsContentHeight ="), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlateRadioLineHeight + LineSize"), std::string::npos);
@@ -4934,27 +4930,27 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_NE(NamePlateBranch.find("const float NamePlatePreviewCardHeight = maximum(NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float NamePlateCardHeight"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsCard.h = NamePlateSettingsCardHeight;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("LeftView.HSplitTop(NamePlateContentPaddingY, nullptr, &LeftView);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("LeftView.HSplitBottom(NamePlateContentPaddingY, &LeftView, nullptr);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("CUIRect NamePlatePreviewCard = RightView;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlateCardHeight;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlatePreviewCardHeight;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("RightView.HSplitTop(NamePlateContentPaddingY, nullptr, &RightView);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("RightView.HSplitBottom(NamePlateContentPaddingY, &RightView, nullptr);"), std::string::npos);
 	EXPECT_LT(NamePlateBranch.find("CUIRect NamePlatePreviewCard = RightView;"), NamePlateBranch.find("RenderNamePlatePreview"));
 	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NamePlateSettingsScrollRegion;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateScrollView, ScrollParams"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateSettingsView"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("60.0f"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("60.0f"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarWidth ="), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("ScrollParams.m_ScrollbarMargin = QmClientSettingsScrollbarMargin;"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarMargin = QmClientSettingsScrollbarMargin;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarWidth = std::clamp(20.0f * UiScale, 18.0f, 20.0f);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("ScrollParams.m_ScrollbarMargin = std::clamp(5.0f * UiScale, 4.0f, 5.0f);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE"), std::string::npos);

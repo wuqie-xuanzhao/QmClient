@@ -143,6 +143,7 @@ private:
 	std::optional<std::chrono::nanoseconds> m_SkinPartsList7LastRefreshTime;
 
 	int m_DirectionQuadContainerIndex;
+	int m_QmCardBgQuadContainerIndex = -1; // 栖梦侧栏卡片背景合批容器（DrawCall 合批：每帧 Reset+AddQuaps+Upload+RenderQuadContainer）
 
 	// menus_settings_assets.cpp
 public:
@@ -2505,12 +2506,13 @@ private:
 	{
 		float m_Padding = 14.0f;
 		float m_Spacing = 16.0f;
-		float m_CornerRadius = 12.0f;
+		float m_CornerRadius = 10.0f; // 12 → 10（macOS 更克制）
 		float m_ScrollbarWidth = 28.0f;
 		float m_ScrollbarMargin = 8.0f;
-		ColorRGBA m_GlassColor = ColorRGBA(0.08f, 0.09f, 0.12f, 0.70f);
-		ColorRGBA m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f);
-		ColorRGBA m_ShadowColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f);
+		ColorRGBA m_GlassColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f); // 现代移动端深色 surface：更亮清透（配合 qm_card_backdrop_blur 毛玻璃）
+		ColorRGBA m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f); // 0.05 → 0.06（hairline 旁维持可读）
+		ColorRGBA m_HairlineColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f); // 新增：hairline 边框色
+		ColorRGBA m_ShadowColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f); // 保留字段，置透明（不再绘制，为以后内嵌阴影留口子）
 	};
 
 	struct SSettingsCardDeckCard

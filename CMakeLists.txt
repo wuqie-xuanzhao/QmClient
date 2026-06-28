@@ -2622,6 +2622,8 @@ if(CLIENT)
     QmUi/UiNavigation.h
     QmUi/UiOverlays.h
     QmUi/UiTokens.h
+    QmUi/QmCardOrderModel.cpp
+    QmUi/QmCardOrderModel.h
     animstate.cpp
     animstate.h
     component.cpp
@@ -3664,6 +3666,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     QmIconAtlasTest.cpp
     QmLayoutTest.cpp
     QmUiTokensTest.cpp
+    qm_card_order_model_test.cpp
     aio_test.cpp
     assets_editor_layout_test.cpp
     assets_preview_scale_test.cpp
@@ -3773,6 +3776,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/settings_warmup.cpp
     src/game/client/QmUi/QmAnim.cpp
     src/game/client/QmUi/QmLayout.cpp
+    src/game/client/QmUi/QmCardOrderModel.cpp
     src/game/client/components/assets_resource_registry.cpp
     src/generated/client_data.h
     src/generated/client_data7.h

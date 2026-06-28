@@ -890,27 +890,84 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 	MainView.VSplitMid(&LeftView, &RightView, LgCardSpacing);
 
-	// === 绘制 Liquid Glass 卡片背景 ===
+	// === 绘制 Liquid Glass 卡片背景（DrawCall 合批：一个 QuadContainer 收集所有可见卡的边框+主体+磨砂，1 drawcall）===
 	{
 		CPerfTimer StageTimer;
 		int VisibleCardCount = 0;
+		if(m_QmCardBgQuadContainerIndex == -1)
+			m_QmCardBgQuadContainerIndex = Graphics()->CreateQuadContainer(false);
+		Graphics()->QuadContainerReset(m_QmCardBgQuadContainerIndex);
+
+		constexpr int MaxRectSegments = 48;
+		auto AddRoundedRectToContainer = [&](const CUIRect &Rect, float Radius) {
+			const float x = Rect.x, y = Rect.y, w = Rect.w, h = Rect.h;
+			float r = Radius;
+			if(r <= 0.0f || w <= 0.0f || h <= 0.0f)
+			{
+				IGraphics::CQuadItem Q(x, y, w, h);
+				Graphics()->QuadContainerAddQuads(m_QmCardBgQuadContainerIndex, &Q, 1);
+				return;
+			}
+			if(r * 2 > w)
+				r = w * 0.5f;
+			if(r * 2 > h)
+				r = h * 0.5f;
+			const int NumSegments = std::clamp(g_Config.m_QmRectCornerSegments & ~1, 8, MaxRectSegments);
+			const float SegmentsAngle = pi / 2 / NumSegments;
+			IGraphics::CFreeformItem aFreeform[MaxRectSegments * 4];
+			size_t NumItems = 0;
+			for(int i = 0; i < NumSegments; i += 2)
+			{
+				const float a1 = i * SegmentsAngle;
+				const float a2 = (i + 1) * SegmentsAngle;
+				const float a3 = (i + 2) * SegmentsAngle;
+				const float Ca1 = std::cos(a1), Ca2 = std::cos(a2), Ca3 = std::cos(a3);
+				const float Sa1 = std::sin(a1), Sa2 = std::sin(a2), Sa3 = std::sin(a3);
+				aFreeform[NumItems++] = IGraphics::CFreeformItem(x + r, y + r, x + (1 - Ca1) * r, y + (1 - Sa1) * r, x + (1 - Ca3) * r, y + (1 - Sa3) * r, x + (1 - Ca2) * r, y + (1 - Sa2) * r);
+				aFreeform[NumItems++] = IGraphics::CFreeformItem(x + w - r, y + r, x + w - r + Ca1 * r, y + (1 - Sa1) * r, x + w - r + Ca3 * r, y + (1 - Sa3) * r, x + w - r + Ca2 * r, y + (1 - Sa2) * r);
+				aFreeform[NumItems++] = IGraphics::CFreeformItem(x + r, y + h - r, x + (1 - Ca1) * r, y + h - r + Sa1 * r, x + (1 - Ca3) * r, y + h - r + Sa3 * r, x + (1 - Ca2) * r, y + h - r + Sa2 * r);
+				aFreeform[NumItems++] = IGraphics::CFreeformItem(x + w - r, y + h - r, x + w - r + Ca1 * r, y + h - r + Sa1 * r, x + w - r + Ca3 * r, y + h - r + Sa3 * r, x + w - r + Ca2 * r, y + h - r + Sa2 * r);
+			}
+			if(NumItems > 0)
+				Graphics()->QuadContainerAddQuads(m_QmCardBgQuadContainerIndex, aFreeform, (int)NumItems);
+			IGraphics::CQuadItem aQuads[5] = {
+				IGraphics::CQuadItem(x + r, y + r, w - r * 2, h - r * 2),
+				IGraphics::CQuadItem(x + r, y, w - r * 2, r),
+				IGraphics::CQuadItem(x + r, y + h - r, w - r * 2, r),
+				IGraphics::CQuadItem(x, y + r, r, h - r * 2),
+				IGraphics::CQuadItem(x + w - r, y + r, r, h - r * 2),
+			};
+			Graphics()->QuadContainerAddQuads(m_QmCardBgQuadContainerIndex, aQuads, 5);
+		};
+
+		const float BorderWidth = 1.5f;
 		for(CUIRect &Card : s_GlassCards)
 		{
 			Card.y -= s_PrevScrollOffset.y - ScrollOffset.y;
-
-			// 视口裁剪：跳过完全在可见区外的卡片背景。module 内容渲染已用
-			// IsSectionVisible 裁剪 (见 RegisterModuleCard / config tab)，这里补上
-			// 背景层裁剪，避免对视口外卡片绘制 3 层矩形 (阴影/玻璃/高光) 的 DrawCall。
-			// 滚动时视口外卡片可能很多 (功能/配置 tab 数十 module)，不裁剪会贡献
-			// function_tab_total / config_tab_total 的尾部尖峰 (实测 152ms / 149ms)。
 			if(!IsSectionVisible(Card, ModuleCullContext))
 				continue;
 			++VisibleCardCount;
-
-			RenderQmSettingsGlassCard(Card, QmCardStyle);
+			// 边框：Card 全画，HairlineColor（顶点色 = 当前 SetColor）
+			Graphics()->SetColor(QmCardStyle.m_HairlineColor);
+			AddRoundedRectToContainer(Card, QmCardStyle.m_CornerRadius);
+			// 主体：Inner 内缩，GlassColor（去 Draw4 渐变简化合批，明度分层靠 GlassColor vs 背景）
+			CUIRect Inner = Card;
+			Inner.Margin(BorderWidth, &Inner);
+			Graphics()->SetColor(QmCardStyle.m_GlassColor);
+			AddRoundedRectToContainer(Inner, maximum(0.0f, QmCardStyle.m_CornerRadius - BorderWidth));
+			// 磨砂雾感（blur 开时，白色叠加）
+			if(g_Config.m_QmCardBackdropBlur != 0)
+			{
+				Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.03f));
+				AddRoundedRectToContainer(Inner, maximum(0.0f, QmCardStyle.m_CornerRadius - BorderWidth));
+			}
 		}
+		Graphics()->QuadContainerUpload(m_QmCardBgQuadContainerIndex);
+		Graphics()->TextureClear();
+		Graphics()->RenderQuadContainer(m_QmCardBgQuadContainerIndex, -1);
+
 		char aGlassExtra[96];
-		str_format(aGlassExtra, sizeof(aGlassExtra), "tab=%s cards=%d/%d", QmSettingsTabName(m_QmClientSettingsTab), VisibleCardCount, (int)s_GlassCards.size());
+		str_format(aGlassExtra, sizeof(aGlassExtra), "tab=%s cards=%d/%d batched", QmSettingsTabName(m_QmClientSettingsTab), VisibleCardCount, (int)s_GlassCards.size());
 		LogQmPerfStage(Client(), "glass_cards_draw", StageTimer.ElapsedMs(), false, aGlassExtra);
 	}
 	if(!PrewarmOnly)
@@ -1326,6 +1383,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		Background3D,
 		WeaponTrajectory,
 		WeaponAnimation,
+		CardAppearance,
 	};
 
 	enum class EQmModuleColumn
@@ -1375,6 +1433,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::Background3D: return "background_3d";
 		case EQmModuleId::WeaponTrajectory: return "weapon_trajectory";
 		case EQmModuleId::WeaponAnimation: return "weapon_animation";
+		case EQmModuleId::CardAppearance: return "card_appearance";
 		}
 		return "unknown";
 	};
@@ -1399,7 +1458,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 36;
+	constexpr size_t QmModuleCount = 37;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
@@ -1437,12 +1496,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		{EQmModuleId::DynamicIsland, EQmModuleColumn::Right, 14, "dynamic_island"},
 		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 15, "system_media_controls"},
 		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 16, "lyrics"},
-		{EQmModuleId::Background3D, EQmModuleColumn::Right, 17, "background_3d"}}};
+		{EQmModuleId::Background3D, EQmModuleColumn::Right, 17, "background_3d"},
+		{EQmModuleId::CardAppearance, EQmModuleColumn::Left, 17, "card_appearance"}}};
 
-	static constexpr std::array<EQmModuleId, 9> s_aQmVisualModules = {
+	static constexpr std::array<EQmModuleId, 10> s_aQmVisualModules = {
 		EQmModuleId::ChatBubble, EQmModuleId::CameraView, EQmModuleId::SkinTransition,
 		EQmModuleId::FocusMode, EQmModuleId::WeaponAnimation, EQmModuleId::Streamer, EQmModuleId::EntityOverlay,
-		EQmModuleId::CollisionHitbox, EQmModuleId::TranslateUi};
+		EQmModuleId::CollisionHitbox, EQmModuleId::TranslateUi, EQmModuleId::CardAppearance};
 	static constexpr std::array<EQmModuleId, 13> s_aQmFunctionModules = {
 		EQmModuleId::GoresActor, EQmModuleId::Gores, EQmModuleId::KeyBinds,
 		EQmModuleId::MiniFeatures, EQmModuleId::JumpHint, EQmModuleId::WeaponTrajectory, EQmModuleId::FriendNotify,
@@ -2379,6 +2439,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 强度 qiangdu easing 缓动 huandong 锤中偷皮 chuizhong toupi 故障 guzhang glitch 抖动 doudong 弹性 tanxing elastic";
 		case EQmModuleId::WeaponTrajectory: return "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi";
 		case EQmModuleId::WeaponAnimation: return "武器动画 wuqi donghua weapon animation 切换武器动画 qiehuan wuqi donghua weapon switch animation 滑入 huaru 旋转 xuanzhuan";
+		case EQmModuleId::CardAppearance: return "卡片外观 kapian waiguan card appearance backdrop blur 毛玻璃 maoboli 圆角 yuanjiao corner segments";
 		case EQmModuleId::CameraView: return "镜头 jingtou camera drift 漂移 piaoyi dynamic fov 动态视野 dongtai shiye 纵横比 zonghengbi aspect ratio preset 预设 yushe 自定义 zidinyi 视野视角 shijiao";
 		case EQmModuleId::DummyMiniView: return "分身小窗 fenshen xiaochuang dummy mini view 预览 yulan 缩放 suofang 小窗大小 daxiao 离开视角 offscreen 自动显示 zidong xianshi";
 		case EQmModuleId::Coords: return "显示坐标 xianshi zuobiao coords position 自己坐标 ziji 他人坐标 taren 显示x xianshi x 显示y xianshi y 对齐提示 duiqi tishi 严格对齐 yange duiqi";
@@ -2718,6 +2779,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return {2, Localize("Weapon Trajectory"), Localize("Show grenade and laser trajectory preview")};
 		case EQmModuleId::WeaponAnimation:
 			return {2, Localize("Weapon animation"), Localize("Play a slide-in rotation animation when switching weapons"), "qm_2_62_8_weapon_animation"};
+		case EQmModuleId::CardAppearance:
+			return {0, Localize("Card Appearance"), Localize("Card background blur and corner rounding")};
 		case EQmModuleId::CameraView:
 			return {
 				10,
@@ -5467,6 +5530,31 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 						GameClient()->TClientComponent().QueueAspectApply();
 				}
 
+				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
+				Column.y = CardContent.y;
+				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
+				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
+				HandleModuleDragState(pModule, s_GlassCards.back());
+			}
+			break;
+			case EQmModuleId::CardAppearance:
+			{
+				// ========== 模块: 卡片外观 ==========
+				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
+				CUIRect CardAppearanceStart = Column;
+				s_GlassCards.push_back(CardAppearanceStart);
+				Column.HSplitTop(LgCardPadding, nullptr, &Column);
+				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
+				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
+				RenderQmModuleHeadline(CardContent, 0, Localize("Card Appearance"), Localize("Card background blur and corner rounding"));
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				DoQmSettingsCheckbox(&g_Config.m_QmCardBackdropBlur, "qmclient-card-backdrop-blur", Localize("Card background blur (high performance only)"), &g_Config.m_QmCardBackdropBlur, &Row, LgLineHeight);
+				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
+				DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-card-corner-segments"), &LabelCol, Localize("Corner segments"), LgBodySize, TEXTALIGN_ML);
+				static int s_QmCardCornerSegmentsInputId;
+				RenderSliderWithValueInput(&s_QmCardCornerSegmentsInputId, ControlCol, &g_Config.m_QmRectCornerSegments, 8, 48, "");
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;

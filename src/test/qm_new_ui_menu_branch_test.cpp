@@ -1492,7 +1492,7 @@ TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 	const std::string QmSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string RenderSettingsQmClient = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
 	ASSERT_FALSE(RenderSettingsQmClient.empty());
-	const std::string VisualModules = BlockBodyAfter(RenderSettingsQmClient, "static constexpr std::array<EQmModuleId, 9> s_aQmVisualModules = {");
+	const std::string VisualModules = BlockBodyAfter(RenderSettingsQmClient, "static constexpr std::array<EQmModuleId, 10> s_aQmVisualModules = {");
 	ASSERT_FALSE(VisualModules.empty());
 	EXPECT_EQ(VisualModules.find("EQmModuleId::Laser"), std::string::npos);
 	EXPECT_EQ(VisualModules.find("EQmModuleId::NameplateText"), std::string::npos);
@@ -1576,7 +1576,7 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	EXPECT_NE(RenderSettingsQmClient.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsQmClient.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsQmClient.find("CScrollRegionParams NameplateTextScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
-	EXPECT_NE(RenderSettingsQmClient.find("RenderQmSettingsGlassCard(Card, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("RenderQuadContainer(m_QmCardBgQuadContainerIndex"), std::string::npos); // 栖梦侧栏卡片背景走 DrawCall 合批（QuadContainer，替代逐卡 RenderQmSettingsGlassCard）
 	EXPECT_EQ(RenderSettingsQmClient.find("Card.Draw(LgGlassColor"), std::string::npos);
 
 	const std::string RenderSettingsQmClientOverview = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
@@ -1585,6 +1585,28 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	EXPECT_NE(RenderSettingsQmClientOverview.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsQmClientOverview.find("RenderQmSettingsGlassCard(Card, QmCardStyle);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsQmClientOverview.find("auto DrawCardBackground ="), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, GlassCardUsesFlatHairlineWithoutDropShadow)
+{
+	const std::string MenuSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string Body = FunctionBody(MenuSource, "void CMenus::RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const");
+	ASSERT_FALSE(Body.empty());
+
+	// 扁平极简：去掉外投影（深色背景下黑投影无效且粗糙）
+	EXPECT_EQ(Body.find("Shadow.Draw"), std::string::npos);
+
+	// 边框：underlay 外扩圆角 fill 范式（BorderBg 外扩 + 主体盖上露描边）
+	EXPECT_NE(Body.find("BorderBg.Margin(-1.0f, &BorderBg)"), std::string::npos);
+	EXPECT_NE(Body.find("Style.m_HairlineColor"), std::string::npos);
+
+	// 明度分层主体仍在
+	EXPECT_NE(Body.find("m_GlassColor"), std::string::npos);
+
+	// struct 新增 m_HairlineColor 字段，m_ShadowColor 保留（置透明，为以后内嵌阴影留口子）
+	const std::string HeaderSource = ReadTextFile("src/game/client/components/menus.h");
+	EXPECT_NE(HeaderSource.find("ColorRGBA m_HairlineColor"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("ColorRGBA m_ShadowColor"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
