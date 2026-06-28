@@ -1458,7 +1458,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 37;
+	constexpr size_t QmModuleCount = 38;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
@@ -2202,7 +2202,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	{
 		const SQmModuleEntry *m_pModule;
 		EQmModuleColumn m_Column;
-		CUIRect m_Rect;
+		CUIRect m_Rect;         // DisplayRect：当前显示位置（每帧 SPRING lerp 向 m_TargetRect，让位动画）
+		CUIRect m_TargetRect;   // 布局目标位置（布局算法每帧写入，order 变化只改这里）
 	};
 
 	struct SQmModuleDropPreview
@@ -2299,6 +2300,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	static std::vector<SQmModuleCardInfo> s_vModuleCards;
 	static std::vector<const SQmModuleCardInfo *> s_vLeftCards;
 	static std::vector<const SQmModuleCardInfo *> s_vRightCards;
+	// 跨帧 DisplayRect cache（让位动画核心）：按 module state index 存上一帧显示位置，
+	// 每帧 lerp 追赶布局 TargetRect。独立于 s_vModuleCards（后者每帧 clear 重建）。
+	static std::array<CUIRect, QmModuleCount> s_aQmModuleDisplayRects{};
 	std::vector<SQmModuleCardInfo> &ModuleCards = s_vModuleCards;
 	std::vector<const SQmModuleCardInfo *> &LeftCards = s_vLeftCards;
 	std::vector<const SQmModuleCardInfo *> &RightCards = s_vRightCards;
@@ -2309,13 +2313,22 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	LeftCards.reserve(s_aQmModuleLayout.size());
 	RightCards.reserve(s_aQmModuleLayout.size());
 
-	auto RegisterModuleCard = [&](const SQmModuleEntry *pModule, EQmModuleColumn Column, const CUIRect &Rect) {
-		ModuleCards.push_back({pModule, Column, Rect});
-		s_aQmModuleLastHeights[GetQmModuleStateIndexById(pModule->m_Id)] = Rect.h;
+	float QmCardOffsetX = 0.0f, QmCardOffsetY = 0.0f; // 当前模块 DisplayRect→TargetRect 偏移（RenderColumnModules for 循环设，RegisterModuleCard 读）
+	auto RegisterModuleCard = [&](const SQmModuleEntry *pModule, EQmModuleColumn ColumnId, const CUIRect &DisplayRectParam) {
+		// param 是偏移后的 DisplayRect（Column 偏移时）；TargetRect = param - offset（恢复布局位置）
+		const int StateIndex = GetQmModuleStateIndexById(pModule->m_Id);
+		CUIRect TargetRect = DisplayRectParam;
+		TargetRect.x -= QmCardOffsetX;
+		TargetRect.y -= QmCardOffsetY;
+		CUIRect CachedRect = s_aQmModuleDisplayRects[StateIndex];
+		if(CachedRect.w <= 0.0f || CachedRect.h <= 0.0f)
+			CachedRect = TargetRect;
+		ModuleCards.push_back({pModule, ColumnId, CachedRect, TargetRect});
+		s_aQmModuleLastHeights[StateIndex] = TargetRect.h;
 		const SQmModuleCardInfo *pInfo = &ModuleCards.back();
-		if(Column == EQmModuleColumn::Left)
+		if(ColumnId == EQmModuleColumn::Left)
 			LeftCards.push_back(pInfo);
-		else if(Column == EQmModuleColumn::Right)
+		else if(ColumnId == EQmModuleColumn::Right)
 			RightCards.push_back(pInfo);
 	};
 	auto HandleSearchCollapseButton = [&](const SQmModuleEntry *pModule, const CUIRect &CardRect) {
@@ -3367,8 +3380,28 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		};
 		for(const SQmModuleEntry *pModule : Modules)
 		{
+			// 恢复上一模块的 Column 偏移（让位动画：渲染时偏移 Column 到 DisplayRect，布局累加用 TargetRect）
+			Column.x -= QmCardOffsetX;
+			Column.y -= QmCardOffsetY;
+			QmCardOffsetX = 0.0f;
+			QmCardOffsetY = 0.0f;
+
 			if(SkipOffscreenModule(pModule, Column))
 				continue;
+
+			// 让位偏移：只在拖拽态偏移 Column 到 DisplayRect（非拖拽态 offset=0，卡片正常）
+			if(s_DragState.m_pDragging != nullptr)
+			{
+				const int SI = GetQmModuleStateIndexById(pModule->m_Id);
+				const CUIRect &DispRect = s_aQmModuleDisplayRects[SI];
+				if(DispRect.w > 0.0f)
+				{
+					QmCardOffsetX = DispRect.x - Column.x;
+					QmCardOffsetY = DispRect.y - (Column.y + LgCardSpacing);
+					Column.x += QmCardOffsetX;
+					Column.y += QmCardOffsetY;
+				}
+			}
 
 			CPerfTimer ModuleTimer;
 			const SQmModuleHeadlineInfo HeadlineInfo = GetQmModuleHeadlineInfo(pModule->m_Id);
@@ -7838,6 +7871,37 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		RenderColumnModules(RenderedLeftModules, EQmModuleColumn::Left);
 		if(!SearchSingleColumnMode)
 			RenderColumnModules(RenderedRightModules, EQmModuleColumn::Right);
+	// 让位动画：每帧 lerp 跨帧 cache（DisplayRect）→ 布局 TargetRect
+	{
+		const float LerpT = 0.25f;
+		for(const SQmModuleCardInfo &Info : ModuleCards)
+		{
+			const int StateIndex = GetQmModuleStateIndexById(Info.m_pModule->m_Id);
+			if(Info.m_pModule == s_DragState.m_pDragging)
+			{
+				s_aQmModuleDisplayRects[StateIndex].x = Ui()->MouseX() - s_DragState.m_GrabOffset.x;
+				s_aQmModuleDisplayRects[StateIndex].y = Ui()->MouseY() - s_DragState.m_GrabOffset.y;
+				s_aQmModuleDisplayRects[StateIndex].w = Info.m_TargetRect.w;
+				s_aQmModuleDisplayRects[StateIndex].h = Info.m_TargetRect.h;
+			}
+			else
+			{
+				CUIRect &Disp = s_aQmModuleDisplayRects[StateIndex];
+				// 首次初始化 = TargetRect（不 lerp 从 {0}，否则卡片偏到 TargetRect*0.25）
+				if(Disp.w <= 0.0f || Disp.h <= 0.0f)
+				{
+					Disp = Info.m_TargetRect;
+				}
+				else
+				{
+					Disp.x += (Info.m_TargetRect.x - Disp.x) * LerpT;
+					Disp.y += (Info.m_TargetRect.y - Disp.y) * LerpT;
+					Disp.w = Info.m_TargetRect.w;
+					Disp.h = Info.m_TargetRect.h;
+				}
+			}
+		}
+	}
 		char aRenderExtra[128];
 		str_format(aRenderExtra, sizeof(aRenderExtra), "tab=%s transition=%d search=%d left=%d right=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0, HasModuleSearch ? 1 : 0,
