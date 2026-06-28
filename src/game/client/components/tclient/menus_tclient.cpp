@@ -1103,6 +1103,22 @@ bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, in
 	{
 		m_TClientSettingsCardDeckOrderDirty = true;
 		Moved = true;
+		// 持久化：序列化两列 → config
+		char aSerialized[sizeof(g_Config.m_QmSettingsCardOrder)];
+		aSerialized[0] = '\0';
+		for(size_t i = 0; i < m_vTClientLeftCardOrder.size(); ++i)
+		{
+			char aEntry[128];
+			str_format(aEntry, sizeof(aEntry), "%s:0:%d;", m_vTClientLeftCardOrder[i].c_str(), (int)i);
+			str_append(aSerialized, aEntry, sizeof(aSerialized));
+		}
+		for(size_t i = 0; i < m_vTClientRightCardOrder.size(); ++i)
+		{
+			char aEntry[128];
+			str_format(aEntry, sizeof(aEntry), "%s:1:%d;", m_vTClientRightCardOrder[i].c_str(), (int)i);
+			str_append(aSerialized, aEntry, sizeof(aSerialized));
+		}
+		str_copy(g_Config.m_QmSettingsCardOrder, aSerialized, sizeof(g_Config.m_QmSettingsCardOrder));
 	}
 	DragState = {};
 	return Moved;
@@ -1580,6 +1596,39 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	const bool TClientSettingsCardDeckOrderDirtyAtFrameStart = !PrewarmOnly && m_TClientSettingsCardDeckOrderDirty;
 	if(TClientSettingsCardDeckOrderDirtyAtFrameStart)
 		m_TClientSettingsCardDeckOrderDirty = false;
+
+	// 持久化：从 config 解析卡片顺序（str_comp cache 检测变化，避免每帧覆盖拖拽中的 vOrder）
+	if(!PrewarmOnly)
+	{
+		static char s_TClientCardOrderCache[sizeof(g_Config.m_QmSettingsCardOrder)] = {};
+		if(str_comp(s_TClientCardOrderCache, g_Config.m_QmSettingsCardOrder) != 0)
+		{
+			str_copy(s_TClientCardOrderCache, g_Config.m_QmSettingsCardOrder, sizeof(s_TClientCardOrderCache));
+			if(g_Config.m_QmSettingsCardOrder[0] != '\0')
+			{
+				m_vTClientLeftCardOrder.clear();
+				m_vTClientRightCardOrder.clear();
+				const char *p = g_Config.m_QmSettingsCardOrder;
+				char aToken[128];
+				while((p = str_next_token(p, ";", aToken, sizeof(aToken))) != nullptr)
+				{
+					if(aToken[0] == '\0')
+						continue;
+					char aId[64];
+					const char *pRest = str_next_token(aToken, ":", aId, sizeof(aId));
+					if(pRest == nullptr)
+						continue;
+					char aCol[16];
+					str_next_token(pRest, ":", aCol, sizeof(aCol));
+					int Col = atoi(aCol);
+					if(Col == 0)
+						m_vTClientLeftCardOrder.push_back(aId);
+					else if(Col == 1)
+						m_vTClientRightCardOrder.push_back(aId);
+				}
+			}
+		}
+	}
 
 	auto EnsureSettingsCardDeckOrder = [](std::vector<std::string> &vOrder, const std::vector<SSettingsSection> &vSections) {
 		for(const SSettingsSection &Section : vSections)

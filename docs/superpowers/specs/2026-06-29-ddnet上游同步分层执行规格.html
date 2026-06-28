@@ -229,6 +229,56 @@
       </div>
     </section>
 
+    <section class="card" id="single-cases">
+      <h2>⑦ 需要单独开案的项，已补充调研结论</h2>
+      <p>下面这些不是“普通同步补丁”，而是要么已经在本仓库里形成了自己的实现脉络，要么一旦跟随官方就会触碰兼容性、格式或默认行为，因此都应该单独开案，不能混进 P0 / P1 清单。</p>
+      <table>
+        <thead>
+          <tr>
+            <th>议题</th>
+            <th>当前状态</th>
+            <th>为什么单独开案</th>
+            <th>后续还要补的调研</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>CScrollRegion</code> 横向滚动整组重构</td>
+            <td>当前实现仍是明显的纵向滚动模型：<code>Begin</code>/<code>End</code>/<code>AddRect</code>/<code>RectClipped</code> 配合 <code>SetContentHeightForNextFrame</code>，并且菜单、列表、下拉框和设置页都已经在大面积使用它；<code>HEIGHT_MAGIC_FIX</code> 仍然是现成的补丁位。<code>src/game/client/ui_scrollregion.h:89-144</code>，<code>src/game/client/ui_scrollregion.cpp:36-304</code>，<code>src/game/client/ui_listbox.cpp:107-231</code>，<code>src/game/client/components/tclient/menus_tclient.cpp:3397-3430</code></td>
+            <td>这不是一个单点 bugfix，而是会波及所有依赖滚动区域的 UI；如果要吸收官方的横向滚动设计，得先统一滚动轴语义、裁剪语义和现有的 height fix 策略。</td>
+            <td>先确认官方那组改动是“新增横向能力”还是“替换现有 API”；再评估对菜单、设置页、下拉框和列表虚拟化的实际冲击。</td>
+          </tr>
+          <tr>
+            <td><code>CEditorMap</code> / <code>CEditorObject</code> 封装整组重构</td>
+            <td>当前仓库已经有非常重的 <code>CEditorMap</code>：它直接持有 groups/images/envelopes/sounds/settings、history/tracker、保存加载和各类选中状态，编辑器对象也已经大量吃进 <code>CEditorMap *</code>。<code>src/game/editor/mapitems/map.h:51-148</code>，<code>src/game/editor/mapitems/map.cpp:31-600</code>，<code>src/game/editor/editor_actions.h:12-669</code></td>
+            <td>官方这组更像是编辑器对象模型的重新分层，不是简单补一个函数；本地已经有自己的 map/object 组织方式，直接按提交粒度吸收会非常容易断链。</td>
+            <td>先确认官方目标到底是“多地图编辑”还是“状态搬家 + 统一对象生命周期”；再决定是否整组跟随。</td>
+          </tr>
+          <tr>
+            <td>snapshot Rust 化继续项</td>
+            <td>当前是双轨状态：Rust 侧已经有 <code>snapshot/builder.rs</code>、<code>snapshot/delta.rs</code>，Cargo 也已经拉了 <code>libtw2</code>；但 C++ 侧 <code>snapshot.cpp</code> 仍然保留 <code>CSnapshotDelta::CreateDelta</code>/<code>UnpackDelta</code>/<code>CSnapshotBuilder</code>，<code>demo.cpp</code>、client、server 还直接依赖这套接口。<code>src/engine/shared/Cargo.toml:18-25</code>，<code>src/engine/shared/snapshot/builder.rs:3-154</code>，<code>src/engine/shared/snapshot/delta.rs:89-217</code>，<code>src/engine/shared/snapshot.cpp:313-862</code>，<code>src/engine/shared/demo.cpp:45-1544</code>，<code>src/engine/client/client.cpp:2772-2910</code>，<code>src/engine/server/server.cpp:1092-1111</code></td>
+            <td>这已经不是“同步一个 bugfix”，而是核心网络格式实现的架构迁移；一旦继续往前推，就会同时影响 client、server、demo、teehistorian 的数据路径。</td>
+            <td>决定是“补完双轨并清理 C++”还是“接受当前半 Rust 状态后只继续修 Bug”；再按这个决策拆下一批案。</td>
+          </tr>
+          <tr>
+            <td>demo / teehistorian 格式相关提交</td>
+            <td><code>CDemoRecorder</code>/<code>CDemoPlayer</code> 和 <code>CTeeHistorian</code> 都是持久格式写入/读取主路径：demo 录放直接调用 <code>CSnapshotDelta::CreateDelta</code>/<code>UnpackDelta</code>，teehistorian 还带有 <code>version_minor</code>、join/rejoin/ready/drop 这些状态记录。<code>src/engine/shared/demo.h:18-171</code>，<code>src/engine/shared/demo.cpp:45-1544</code>，<code>src/game/server/teehistorian.h:17-92</code>，<code>src/game/server/teehistorian.cpp:88-875</code></td>
+            <td>这些提交一旦碰到格式，就不是“今天能不能合”而是“旧回放和旧记录还能不能读”；必须按格式兼容和版本策略单独审。</td>
+            <td>需要单独列 demo / teehistorian 兼容矩阵，明确是否 bump 版本、是否保留旧格式读写、以及需要哪些样本回放做回归。</td>
+          </tr>
+          <tr>
+            <td>Vulkan 默认行为</td>
+            <td>当前配置默认值就是平台分支决定的：Android / Emscripten 走 GLES，Windows x64 和其他非 IA32、非 macOS 平台默认是 <code>Vulkan</code>，macOS / IA32 默认 <code>OpenGL</code>；设置页还会把后端显示成 <code>Vulkan QmClient</code>。<code>src/engine/shared/config_variables.h:824-830</code>，<code>src/engine/client/backend_sdl.cpp:748-782</code>，<code>src/game/client/components/menus_settings.cpp:66-68</code></td>
+            <td>这不是格式问题，而是产品默认行为问题；一旦跟随官方“在 Windows 默认关 Vulkan”，就会直接改变用户启动后的首选后端。</td>
+            <td>需要先查当前 Windows 用户的后端占比和 Vulkan 失败率，再决定是否跟随官方默认策略，不能只看上游提交本身。</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note">
+        这里补完后的判断是：<strong>P2 项里最该单独开案的，不是“难读的提交”，而是“会改变长期行为或格式边界的提交”</strong>。反过来，那些只是边界修复的提交，仍然可以留在 P0 / P1 里一条条合。
+      </div>
+    </section>
+
     <p class="footer">如果你要，我下一步可以继续把 P0 / P1 再拆成真正的“可执行顺序版”，按每条提交的建议合并次序列出来。</p>
   </div>
 </body>

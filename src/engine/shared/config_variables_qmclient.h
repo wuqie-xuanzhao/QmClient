@@ -20,6 +20,7 @@ MACRO_CONFIG_INT(QmUiRuntimeV2Debug, qm_ui_runtime_v2_debug, 0, 0, 1, CFGFLAG_CL
 MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 2, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmUi 动效强度：0=关闭 1=降低 2=完整")
 MACRO_CONFIG_INT(QmCardBackdropBlur, qm_card_backdrop_blur, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）")
 MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 32, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）")
+MACRO_CONFIG_STR(QmSettingsCardOrder, qm_settings_card_order, 2048, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tclient 设置卡片排序（格式 id:col:order; 分号分隔）")
 MACRO_CONFIG_INT(DbgQmUiDogfood, dbg_qm_ui_dogfood, 0, 0, 1, CFGFLAG_CLIENT, "展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）")
 MACRO_CONFIG_INT(QmNewUi, qm_new_ui, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用新版设置页面 UI")
 MACRO_CONFIG_COL(QmUiColor, qm_ui_color, 0x000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "界面颜色")
