@@ -113,7 +113,7 @@ QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客�
 - `qmclient_scripts/languages_qmclient/translations/i18n/*.toml` 是翻译维护库；`data/languages/*.txt` 是生成产物，不作为手工维护的长期真相源。
 - 新增英文 source key 后，先用 `extract_strings.py` 更新 active key，再用 `translate_with_local_http.py --languages ...` 生成 `translations_draft/<language>/*.toml`；审核 draft 后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，随后运行 `generate_all.py` 生成运行时语言文件。
 - Windows 上默认用 `qmclient_scripts/cmake-windows.cmd` 作为构建入口；常规构建/测试目录是 `cmake-build-release`，交互式完整构建命令：`cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`。自动化子进程显式走 `cmd.exe` 宿主时再使用 `cmd /c qmclient_scripts/cmake-windows.cmd ...`；只有已确认当前 shell 已注入可用的 VS/MSVC 环境时，才直接使用裸 `cmake`
-- 构建目录名规范：debug - `cmake-build-debug`；release - `cmake-build-release`；release-pdb - `cmake-build-release-pdb`
+- 构建目录名规范：debug - `cmake-build-debug`；release - `cmake-build-release`
 - 同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 不要并行发起；这些目标会共享生成产物和中间文件，必须串行执行。需要并行时，只能拆到不同 build 目录。
 - 一切日志, 或者临时文件, 一定要放到 tmp/ 下面去, 不要放到根目录!!!
 

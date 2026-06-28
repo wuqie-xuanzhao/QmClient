@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="date" content="2026-06-29">
+<meta name="status" content="active">
+<meta name="source" content="阶段2 拖拽架构调研 + 让位动画实践 + 用户全局卡片持久化需求">
+<title>QmClient 全局卡片架构规格：统一拖拽 + 让位动画 + 持久化</title>
+<style>
+:root{
+  --bg:#f5f5f7; --surface:#fff; --surface2:#f2f2f7; --surface3:#e5e5ea;
+  --text:#1d1d1f; --text2:#3c3c43; --text3:#8e8e93; --text4:#aeaeb2;
+  --sep:rgba(60,60,67,.12); --sep2:rgba(60,60,67,.08);
+  --accent:#007aff; --green:#34c759; --orange:#ff9500; --red:#ff3b30; --purple:#af52de;
+  --radius:10px; --radius-lg:14px;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"SF Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text2);line-height:1.65;padding:0 0 5rem;font-size:15px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:0 1.5rem}
+h1{font-size:2.1rem;font-weight:700;letter-spacing:-.03em;color:var(--text);margin:0 0 .3rem}
+h2{font-size:1.4rem;font-weight:600;letter-spacing:-.01em;color:var(--text);margin:3rem 0 .8rem;padding-bottom:.6rem;border-bottom:1px solid var(--sep)}
+h3{font-size:1.12rem;font-weight:600;color:var(--text);margin:2rem 0 .5rem}
+h4{font-size:1rem;font-weight:600;color:var(--text2);margin:1.4rem 0 .4rem}
+p{margin-bottom:.7rem}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface3);padding:.12em .4em;border-radius:5px;color:var(--text)}
+pre{background:var(--surface);border:1px solid var(--sep);border-radius:var(--radius);padding:1.1rem 1.3rem;overflow-x:auto;margin:1rem 0;font-size:.85rem;line-height:1.55}
+pre code{background:none;padding:0;color:var(--text)}
+ul,ol{padding-left:1.3rem;margin-bottom:.7rem}
+li{margin-bottom:.3rem}
+strong{color:var(--text);font-weight:600}
+em{color:var(--text3);font-style:normal}
+.meta{color:var(--text3);font-size:.82rem}
+.alert{padding:1rem 1.2rem;border-radius:var(--radius);margin:1rem 0;border:1px solid var(--sep)}
+.note{background:rgba(0,122,255,.06);border-color:rgba(0,122,255,.2)}
+.good{background:rgba(52,199,89,.06);border-color:rgba(52,199,89,.2)}
+.warn{background:rgba(255,149,0,.06);border-color:rgba(255,149,0,.2)}
+.danger{background:rgba(255,59,48,.06);border-color:rgba(255,59,48,.2)}
+table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.88rem}
+th,td{border:1px solid var(--sep);padding:.5rem .7rem;text-align:left}
+th{background:var(--surface2);font-weight:600;color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>全局卡片架构：统一拖拽 + 让位动画 + 持久化</h1>
+<p class="meta">2026-06-29 · status: active · 来源：阶段 2 拖拽架构调研 + 让位动画实践 + 用户全局卡片持久化需求</p>
+
+<div class="alert danger"><strong>现状问题</strong>：四套卡片实现并存（栖梦侧栏合批 / 单卡 underlay / Tclient deck / section_loader 通用层），两套拖拽范式（栖梦长按 0.3s / Tclient 已统一长按），两套持久化（QmSidebarCardOrder / qm_settings_card_order），让位动画框架在但效果不对（拖拽中 TargetRect 不变 → 无让位）。本规格定义全局统一架构。</div>
+
+<h2 id="g1">1 · 设计目标</h2>
+<p><strong>iPhone 主屏风拖拽 UX</strong>：长按 → 被拖卡跟手 + 其他卡实时让位（spring lerp）→ 松手归位 + 持久化。<strong>全局卡片管理</strong>：一套 Model 管所有设置页卡片，每页只筛选展示，拖拽改全局 → 跨页保留。</p>
+
+<h2 id="g2">2 · 全局卡片 Model（核心）</h2>
+
+<h3>2.1 统一注册表</h3>
+<p>所有设置页卡片注册到同一个 <code>qm_card_order::CModel</code>（已建，阶段 2 Step 1 产物）。每个卡片声明 <code>{stableId, page, column, order}</code>：</p>
+<ul>
+  <li><code>stableId</code>：全局唯一（如 <code>"qm:visual:card_appearance"</code>、<code>"tclient:visual-font-cursor"</code>）</li>
+  <li><code>page</code>：归属页面（<code>"qmclient"</code> / <code>"tclient"</code> / <code>"ddnet"</code> / <code>"appearance"</code>）</li>
+  <li><code>column</code>：列（Left / Right / Full）</li>
+  <li><code>order</code>：列内顺序</li>
+</ul>
+<p>页面渲染时 <code>Model.ColumnIndices(page, column)</code> 筛选本页卡片。</p>
+
+<h3>2.2 持久化</h3>
+<p>单一 config <code>qm_global_card_order</code>（格式 <code>id:page:col:order;</code>），替代当前的 <code>QmSidebarCardOrder</code> + <code>qm_settings_card_order</code> 两套。<code>CModel::Parse</code> 容错（未知 id 跳过），<code>CModel::Serialize</code> 写入。每帧 <code>str_comp</code> cache 检测变化。</p>
+<p>迁移：首次启动检测旧 <code>QmSidebarCardOrder</code> / <code>qm_settings_card_order</code>，合并到 <code>qm_global_card_order</code>。</p>
+
+<div class="alert note"><strong>用户发散</strong>："持久化是全局的，每个页面只是展示卡片，可以随意移动组合" — 本规格采纳：卡片是全局资源，页面是展示层（filter），拖拽改全局 → 所有页生效。</p>
+
+<h2 id="g3">3 · 让位动画（iPhone 风）</h2>
+
+<h3>3.1 当前问题</h3>
+<p>拖拽中 <code>order</code> 不变（只算 <code>DropIndex</code>）→ <code>TargetRect</code> 不变 → <code>cache lerp</code> 追赶自己 → <code>offset=0</code> → 无让位。松手 <code>CommitDropPreview</code> 改 order → TargetRect 变 → 但下一帧非拖拽态 <code>offset=0</code> → 跳变。</p>
+
+<h3>3.2 正确实现：拖拽中实时预览布局</h3>
+<p><code>UpdateDropPreview</code> 不只算 <code>DropIndex</code>，而是生成一个<strong>预览布局</strong>（PreviewLayout）：</p>
+<ol>
+  <li>基于当前全局 Model + 被拖卡的新位置（DropColumn + DropIndex），计算<strong>每张卡片的预览 TargetRect</strong></li>
+  <li>预览 TargetRect 写入 <code>ModuleCards[i].m_TargetRect</code>（不 commit 到 Model，只渲染层预览）</li>
+  <li><code>AnimateModuleCardPositions</code> lerp <code>cache → 预览 TargetRect</code></li>
+  <li>Column 偏移到 cache → 卡片在 lerp 中间位置（实时滑动让位）</li>
+</ol>
+<p>松手 <code>CommitDropPreview</code> → Model.Move（commit 预览到真实数据）+ Serialize 落盘。</p>
+
+<h3>3.3 松手归位</h3>
+<p>松手后 <code>m_pDragging=nullptr</code>，但 <strong>松手帧仍保持 Column 偏移</strong>（offset 不立即归零，走 cache lerp 自然收敛到 TargetRect）。即松手后 offset 从当前 cache 值 lerp 到 0（约 10 帧 0.17s）。</p>
+<p>实现：<code>offset</code> 不硬切 0，而是 <code>offset *= (1-LerpT)</code> lerp 到 0。</p>
+
+<div class="alert warn"><strong>技术要点</strong>：预览布局计算需要在 <code>UpdateDropPreview</code> 中模拟 "如果被拖卡在 DropIndex 位置，其他卡的 rect 会怎样"。当前栖梦的 <code>ColumnSplitX</code> + 遍历 prev/next 逻辑可以复用，但需要输出每张卡的 TargetRect（不只是落点 line）。</div>
+
+<h2 id="g4">4 · 统一拖拽架构</h2>
+
+<h3>4.1 消除 section_loader 旧拖拽</h3>
+<p>Tclient 的 <code>SSettingsCardDeckDragState</code> / <code>SettingsCardDeckCanStartDrag</code> / <code>BeginPress</code> / <code>TryPromotePress</code> / <code>MoveWithinColumn</code> / <code>DropIndexForHoveredItem</code> / <code>ApplyOrder</code> / <code>AutoScrollDelta</code> 全部删除，栖梦的 <code>SQmModuleDragState</code> / <code>HandleModuleDragState</code> / <code>UpdateDropPreview</code> / <code>CommitDropPreview</code> / <code>RenderDragGhost</code> 泛化为公共拖拽层。</p>
+
+<h3>4.2 统一入口</h3>
+<p>新建 <code>QmUi/QmCardDrag.h</code>（纯函数模板，可 TDD）：</p>
+<pre><code>// 长按状态机
+struct SCardDragState&lt;TCardId&gt; {
+    TCardId m_PressedId, m_DraggingId;
+    float m_PressStartTime;
+    vec2 m_GrabOffset;
+};
+
+// 长按晋升（每卡调用）
+void HandlePressPromote(state, card, now, holdSec, mouseDown);
+
+// 预览布局（每帧，输出每卡预览 TargetRect）
+struct SDropPreview { int targetColumn, dropIndex; ... };
+SDropPreview ComputeDropPreview(cards, mouseX, mouseY, columnSplitX);
+
+// 让位 lerp（每帧）
+void LerpDisplayRects(cache, targetRects, draggingId, mouseX, mouseY, lerpT);</code></pre>
+
+<h3>4.3 保留 Tclient 独有价值</h3>
+<p><code>SettingsCardDeckAutoScrollDelta</code>（边缘自动滚动，栖梦无）→ 并入公共拖拽层。</p>
+
+<h2 id="g5">5 · 视觉统一（阶段 4 复用）</h2>
+<p>所有设置页卡片统一到 <code>ui_widget::DrawCard</code>（QmUi/UiContainers.h），消除 <code>RenderQmSettingsGlassCard</code> underlay + 栖梦合批的视觉割裂。<code>SQmSettingsCardStyle</code> 基于 <code>ui_token::</code> 派生。</p>
+
+<h2 id="g6">6 · 实施路线</h2>
+<table>
+<tr><th>阶段</th><th>内容</th><th>工作量</th><th>依赖</th></tr>
+<tr><td><strong>B1</strong></td><td>全局 Model 扩展（加 page 字段 + CModel API）+ 迁移栖梦侧栏接入</td><td>1 天</td><td>CardOrderModel 已建</td></tr>
+<tr><td><strong>B2</strong></td><td>持久化迁移（qm_global_card_order + 旧 config 合并）</td><td>0.5 天</td><td>B1</td></tr>
+<tr><td><strong>A1</strong></td><td>提取公共拖拽层（QmCardDrag.h，从栖梦 lambda 泛化）</td><td>1 天</td><td>无</td></tr>
+<tr><td><strong>A2</strong></td><td>让位动画重做（UpdateDropPreview 输出预览 TargetRect + 松手 lerp offset）</td><td>1.5 天</td><td>A1 + B1</td></tr>
+<tr><td><strong>C1</strong></td><td>Tclient 迁入全局 Model + 公共拖拽层 + 删 section_loader 旧代码</td><td>1 天</td><td>A1 + B1</td></tr>
+<tr><td><strong>D1</strong></td><td>设置 deck 迁入全局 Model</td><td>0.5 天</td><td>C1</td></tr>
+<tr><td><strong>E1</strong></td><td>视觉统一（ui_widget::DrawCard 收敛）</td><td>1 天</td><td>B1（页面已用全局 Model）</td></tr>
+</table>
+<p><strong>合计约 6 天</strong>。B1→B2 先建地基，A1+A2 做让位，C1→D1 扩展迁移，E1 视觉统一。</p>
+
+<h2 id="g7">7 · 约束</h2>
+<ul>
+  <li>不改 DDNet 上游协议 / 物理 / 预测 / 碰撞</li>
+  <li>QmClient 配置项统一 <code>qm_</code> 前缀</li>
+  <li>拖拽触发统一长按 0.3s（已实现，不用 Ctrl）</li>
+  <li>section_loader.h 只保留渲染层（渐进渲染 + section 管理），拖拽逻辑全删</li>
+  <li>全局 Model 是唯一持久化权威，旧 config 一次性迁移后废弃</li>
+</ul>
+
+</div>
+</body>
+</html>

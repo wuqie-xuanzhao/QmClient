@@ -1497,6 +1497,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 15, "system_media_controls"},
 		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 16, "lyrics"},
 		{EQmModuleId::Background3D, EQmModuleColumn::Right, 17, "background_3d"},
+		{EQmModuleId::NameplateText, EQmModuleColumn::Right, 18, "nameplate_text"},
 		{EQmModuleId::CardAppearance, EQmModuleColumn::Left, 17, "card_appearance"}}};
 
 	static constexpr std::array<EQmModuleId, 10> s_aQmVisualModules = {
@@ -7876,6 +7877,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const float LerpT = 0.25f;
 		for(const SQmModuleCardInfo &Info : ModuleCards)
 		{
+			dbg_assert(Info.m_pModule != nullptr, "AnimateModuleCardPositions: nullptr module");
 			const int StateIndex = GetQmModuleStateIndexById(Info.m_pModule->m_Id);
 			if(Info.m_pModule == s_DragState.m_pDragging)
 			{
