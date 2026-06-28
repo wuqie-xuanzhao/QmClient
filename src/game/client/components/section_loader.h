@@ -49,6 +49,7 @@ struct SSettingsCardDeckDragState
 {
 	bool m_Active = false;
 	bool m_PressPending = false;
+	int64_t m_PressStartTime = 0; // 长按触发：按下时 time_get() 时间戳
 	SSettingsCardDeckItem m_Item;
 	SSettingsCardDeckItem m_PressedItem;
 	float m_PlaceholderHeight = 0.0f;
@@ -64,8 +65,8 @@ struct SSettingsCardDeckDragStartInput
 
 inline bool SettingsCardDeckCanStartDrag(const SSettingsCardDeckDragStartInput &Input)
 {
-	return Input.m_CtrlPressed &&
-	       Input.m_HitRegion == ESettingsCardDragHitRegion::CHROME &&
+	// 长按触发（不依赖 Ctrl，统一栖梦范式）
+	return Input.m_HitRegion == ESettingsCardDragHitRegion::CHROME &&
 	       Input.m_pItem != nullptr &&
 	       Input.m_pItem->m_pStableId != nullptr &&
 	       Input.m_pItem->m_pStableId[0] != '\0';

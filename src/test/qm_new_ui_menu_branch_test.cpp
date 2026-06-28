@@ -1776,7 +1776,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	ASSERT_FALSE(RenderSettingsTClientBindWheel.empty());
 	ASSERT_FALSE(RenderSettingsTClientStatusBar.empty());
 	ASSERT_FALSE(HandleSettingsCardDeckDrag.empty());
-	EXPECT_NE(HandleSettingsCardDeckDrag.find("(DragState.m_Active || DragState.m_PressPending) && !Input()->ModifierIsPressed()"), std::string::npos);
+	EXPECT_NE(HandleSettingsCardDeckDrag.find("(time_get() - DragState.m_PressStartTime) / (float)time_freq() >= 0.3f"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientSettings.find("RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientSettings.find("SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);"), std::string::npos);
 	EXPECT_NE(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion"), std::string::npos);

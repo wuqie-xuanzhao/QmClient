@@ -1694,7 +1694,7 @@ TEST(QmMonitoringHelpers, TClientSettingsCardDeckDragRuntimeUsesCtrlHeaderGate)
 	EXPECT_NE(Header.find("std::vector<std::string> m_vTClientRightCardOrder;"), std::string::npos);
 	EXPECT_NE(Header.find("SSettingsCardDeckDragState m_TClientSettingsCardDragState;"), std::string::npos);
 	EXPECT_NE(Source.find("RegisterSettingsCardDeckItem(Item);"), std::string::npos);
-	EXPECT_NE(Source.find("SettingsCardDeckCanStartDrag({&Item, Input()->ModifierIsPressed(), HitRegion})"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckCanStartDrag({&Item, false, HitRegion})"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardDeckBeginPress(DragState, Item);"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardDeckTryPromotePress(DragState);"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardDeckClearPress(DragState);"), std::string::npos);

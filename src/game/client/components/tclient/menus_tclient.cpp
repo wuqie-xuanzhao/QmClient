@@ -1059,7 +1059,7 @@ void CMenus::RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item)
 void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder)
 {
 	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
-	if((DragState.m_Active || DragState.m_PressPending) && !Input()->ModifierIsPressed())
+	if((DragState.m_Active || DragState.m_PressPending) && false)
 	{
 		DragState = {};
 		return;
@@ -1071,11 +1071,12 @@ void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESett
 
 	const ESettingsCardDragHitRegion HitRegion = Ui()->MouseHovered(&Item.m_HeaderRect) ? ESettingsCardDragHitRegion::CHROME : Ui()->MouseHovered(&Item.m_Rect) ? ESettingsCardDragHitRegion::CONTENT :
 																				      ESettingsCardDragHitRegion::NONE;
-	if(!DragState.m_Active && !DragState.m_PressPending && Ui()->MouseButtonClicked(0) && SettingsCardDeckCanStartDrag({&Item, Input()->ModifierIsPressed(), HitRegion}))
+	if(!DragState.m_Active && !DragState.m_PressPending && Ui()->MouseButtonClicked(0) && SettingsCardDeckCanStartDrag({&Item, false, HitRegion}))
 	{
 		SettingsCardDeckBeginPress(DragState, Item);
+		DragState.m_PressStartTime = time_get();
 	}
-	else if(!DragState.m_Active && DragState.m_PressPending && Ui()->MouseButton(0) && Input()->ModifierIsPressed())
+	else if(!DragState.m_Active && DragState.m_PressPending && Ui()->MouseButton(0) && (time_get() - DragState.m_PressStartTime) / (float)time_freq() >= 0.3f)
 	{
 		SettingsCardDeckTryPromotePress(DragState);
 	}

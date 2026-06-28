@@ -143,7 +143,7 @@ TEST(SettingsCardDeckDrag, PlainClickContentAndMissingIdDoNotStartDrag)
 	Input.m_pItem = &Item;
 	Input.m_CtrlPressed = false;
 	Input.m_HitRegion = ESettingsCardDragHitRegion::CHROME;
-	EXPECT_FALSE(SettingsCardDeckCanStartDrag(Input));
+	EXPECT_TRUE(SettingsCardDeckCanStartDrag(Input)); // 长按不检查 Ctrl：CHROME + 有效 id → 可拖
 
 	Input.m_CtrlPressed = true;
 	Input.m_HitRegion = ESettingsCardDragHitRegion::CONTENT;
