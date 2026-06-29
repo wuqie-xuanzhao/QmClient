@@ -2,6 +2,7 @@
 #define GAME_CLIENT_QMUI_QMCARDORDERMODEL_H
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // 卡片顺序数据模型（阶段 2 拖拽架构的地基）。
@@ -39,6 +40,11 @@ namespace qm_card_order
 		// 按序返回某 tab 某 column 的 entry index（组件编辑器按"页是展示层"筛选：tab=页/画布，column=列）
 		std::vector<int> ColumnIndices(const char *pTab, int Column) const;
 
+		// 构建 stableId→连续 index 注册表（让位 lerp 保持 O(1) 查找的性能地基；SetEntries/Parse 后自动维护）
+		void BuildStateIndex();
+		// O(1) 查询 stableId 的 state index（未命中或 nullptr 返回 -1）
+		int StateIndexForStableId(const char *pStableId) const;
+
 		// 持久化：格式 "id:col:order;"（照搬栖梦 QmSidebarCardOrder 格式）
 		void Serialize(char *pBuf, int BufSize) const;
 		// 容错解析：未知/重复/非法 key 跳过（照搬 ParseQmModuleLayout）
@@ -49,6 +55,7 @@ namespace qm_card_order
 
 	private:
 		std::vector<SEntry> m_vEntries;
+		std::unordered_map<std::string, int> m_StableIdToState; // stableId→连续 index 注册表（让位 lerp O(1) 查找）
 		bool m_Dirty = false;
 	};
 } // namespace qm_card_order

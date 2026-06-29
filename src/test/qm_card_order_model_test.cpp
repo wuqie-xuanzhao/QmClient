@@ -92,3 +92,17 @@ TEST(QmCardOrderModel, ColumnIndicesFiltersByTabAndColumn)
 	ASSERT_EQ(VisLeft.size(), 1u);
 	EXPECT_STREQ(M.Entry(VisLeft[0]).m_pStableId, "qm:chat_bubble");
 }
+
+// 意图：让位 lerp 每帧每卡查 state index，必须 O(1)——否则 69 卡拖拽掉帧。
+// 栖梦靠 EQmModuleId 连续枚举白嫖 O(1) state 下标；全局卡用 stableId 无连续枚举，
+// 故建 stableId→连续 index 注册表，让位 lerp 保持 O(1) 查找（性能地基，禁线性退化 O(N²)）。
+TEST(QmCardOrderModel, StateIndexIsOLookupByStableId)
+{
+	qm_card_order::CModel M;
+	M.SetEntries({{"qm:a", "t", 1, 0}, {"qm:b", "t", 1, 1}, {"qm:c", "t", 1, 2}});
+	M.BuildStateIndex(); // 构建 stableId→连续 index
+	// 已知 id O(1) 命中
+	EXPECT_EQ(M.StateIndexForStableId("qm:b"), 1);
+	// 未知 id 返回 -1（容错，不崩溃）
+	EXPECT_EQ(M.StateIndexForStableId("qm:unknown"), -1);
+}

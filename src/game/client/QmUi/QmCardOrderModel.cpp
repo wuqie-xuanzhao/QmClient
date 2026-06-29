@@ -10,6 +10,7 @@ namespace qm_card_order
 	{
 		m_vEntries = std::move(Entries);
 		m_Dirty = true;
+		BuildStateIndex(); // 维护 stableId→index 注册表（让位 lerp O(1) 地基）
 	}
 
 	int CModel::FindByStableId(const char *pStableId) const
@@ -42,6 +43,7 @@ namespace qm_card_order
 		for(int o = 0; o < (int)vOthers.size(); ++o)
 			m_vEntries[vOthers[o]].m_OrderInColumn = o;
 		m_Dirty = true;
+		// Move 仅改 column/order，不改 stableId 集合与 vector 位置，state index 注册表无需重建
 	}
 
 	void CModel::NormalizeColumns()
@@ -98,6 +100,28 @@ namespace qm_card_order
 			return m_vEntries[a].m_OrderInColumn < m_vEntries[b].m_OrderInColumn;
 		});
 		return v;
+	}
+
+	void CModel::BuildStateIndex()
+	{
+		m_StableIdToState.clear();
+		for(size_t i = 0; i < m_vEntries.size(); ++i)
+		{
+			if(m_vEntries[i].m_pStableId == nullptr)
+				continue;
+			// 首次出现的 stableId 入表（重复 id 取首次，与 Parse 容错语义一致）
+			m_StableIdToState.try_emplace(m_vEntries[i].m_pStableId, (int)i);
+		}
+	}
+
+	int CModel::StateIndexForStableId(const char *pStableId) const
+	{
+		if(pStableId == nullptr)
+			return -1;
+		const auto It = m_StableIdToState.find(pStableId);
+		if(It == m_StableIdToState.end())
+			return -1;
+		return It->second;
 	}
 
 	void CModel::Serialize(char *pBuf, int BufSize) const
@@ -161,6 +185,7 @@ namespace qm_card_order
 			m_vEntries.push_back(E);
 		}
 		m_Dirty = true;
+		BuildStateIndex(); // 解析后重建 stableId→index 注册表
 		return true;
 	}
 } // namespace qm_card_order
