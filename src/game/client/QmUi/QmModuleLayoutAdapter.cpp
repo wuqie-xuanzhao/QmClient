@@ -35,27 +35,47 @@ namespace qm_module
 		case EQmModuleColumn::Left: return "left";
 		case EQmModuleColumn::Right: return "right";
 		}
-		return "full";
+		return "left";
 	}
 
+	// 等价栖梦 ParseQmModuleColumn：str_comp_nocase 命中 full/left/right，否则 str_toint 解析整数 0/1/2。
 	bool ParseQmModuleColumnString(const char *pStr, EQmModuleColumn *pOut)
 	{
 		if(pStr == nullptr || pOut == nullptr)
 			return false;
-		if(str_comp(pStr, "full") == 0)
+		if(str_comp_nocase(pStr, "full") == 0)
 		{
 			*pOut = EQmModuleColumn::Full;
 			return true;
 		}
-		if(str_comp(pStr, "left") == 0)
+		if(str_comp_nocase(pStr, "left") == 0)
 		{
 			*pOut = EQmModuleColumn::Left;
 			return true;
 		}
-		if(str_comp(pStr, "right") == 0)
+		if(str_comp_nocase(pStr, "right") == 0)
 		{
 			*pOut = EQmModuleColumn::Right;
 			return true;
+		}
+		int Num = 0;
+		if(str_toint(pStr, &Num))
+		{
+			if(Num == 0)
+			{
+				*pOut = EQmModuleColumn::Full;
+				return true;
+			}
+			if(Num == 1)
+			{
+				*pOut = EQmModuleColumn::Left;
+				return true;
+			}
+			if(Num == 2)
+			{
+				*pOut = EQmModuleColumn::Right;
+				return true;
+			}
 		}
 		return false;
 	}
@@ -144,15 +164,16 @@ namespace qm_module
 		NormalizeColumn(EQmModuleColumn::Right);
 	}
 
-	void ParseLegacyQmLayout(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults, std::vector<SQmModuleEntry> &vOut)
+	bool ParseLegacyQmLayout(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults, std::vector<SQmModuleEntry> &vOut)
 	{
 		vOut = vDefaults; // 基准（含全卡，缺失卡兜底）
 		if(pConfig == nullptr || pConfig[0] == '\0')
 		{
 			NormalizeQmLayoutColumns(vOut);
-			return;
+			return false; // 空 config：调用方据此走 SmartDefaults 回退
 		}
 
+		bool AnyParsed = false;
 		std::vector<bool> vSeen(vDefaults.size(), false);
 		char aEntry[128];
 		const char *pEntry = pConfig;
@@ -223,8 +244,10 @@ namespace qm_module
 			vOut[Index].m_Column = Column;
 			vOut[Index].m_OrderInColumn = Order;
 			vSeen[Index] = true;
+			AnyParsed = true;
 		}
 		NormalizeQmLayoutColumns(vOut);
+		return AnyParsed;
 	}
 
 	void SerializeLegacyQmLayout(const std::vector<SQmModuleEntry> &vEntries, char *pOut, int OutSize)
