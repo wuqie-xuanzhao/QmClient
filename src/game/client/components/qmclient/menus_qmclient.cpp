@@ -1369,7 +1369,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		Laser,
 		PlayerStats,
 		CollisionHitbox,
-		NameplateText,
 		FavoriteMaps,
 		HJAssist,
 		SpeedrunTimer,
@@ -1419,7 +1418,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		case EQmModuleId::Laser: return "laser";
 		case EQmModuleId::PlayerStats: return "player_stats";
 		case EQmModuleId::CollisionHitbox: return "collision_hitbox";
-		case EQmModuleId::NameplateText: return "nameplate_text";
 		case EQmModuleId::FavoriteMaps: return "favorite_maps";
 		case EQmModuleId::HJAssist: return "hj_assist";
 		case EQmModuleId::SpeedrunTimer: return "speedrun_timer";
@@ -1458,7 +1456,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 38;
+	constexpr size_t QmModuleCount = 37;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
@@ -1497,7 +1495,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		{EQmModuleId::SystemMediaControls, EQmModuleColumn::Right, 15, "system_media_controls"},
 		{EQmModuleId::Lyrics, EQmModuleColumn::Right, 16, "lyrics"},
 		{EQmModuleId::Background3D, EQmModuleColumn::Right, 17, "background_3d"},
-		{EQmModuleId::NameplateText, EQmModuleColumn::Right, 18, "nameplate_text"},
 		{EQmModuleId::CardAppearance, EQmModuleColumn::Left, 17, "card_appearance"}}};
 
 	static constexpr std::array<EQmModuleId, 10> s_aQmVisualModules = {
@@ -5900,11 +5897,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
 				HandleModuleDragState(pModule, s_GlassCards.back());
-			}
-			break;
-			case EQmModuleId::NameplateText:
-			{
-				// Kept for persisted legacy layouts; the controls are rendered inside the HUD coordinates/nameplate card.
 			}
 			break;
 			case EQmModuleId::FavoriteMaps:
