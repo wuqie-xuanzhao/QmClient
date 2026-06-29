@@ -53,13 +53,16 @@ bool CPacketChunkUnpacker::UnpackNextChunk(CNetChunk *pChunk)
 		}
 
 		const int HeaderSplit = m_pConnection->m_Sixup ? 6 : 4;
-		auto UnpackChunkHeader = [pEnd, HeaderSplit](unsigned char *&pData, CNetChunkHeader &Header) {
-			if(pEnd - pData < 2)
+		auto HasBytes = [pEnd](const unsigned char *pData, int Size) {
+			return Size >= 0 && pData <= pEnd && pEnd - pData >= Size;
+		};
+		auto UnpackChunkHeader = [HasBytes, HeaderSplit](unsigned char *&pData, CNetChunkHeader &Header) {
+			if(!HasBytes(pData, 2))
 			{
 				return false;
 			}
 			const bool Vital = ((pData[0] >> 6) & NET_CHUNKFLAG_VITAL) != 0;
-			if(Vital && pEnd - pData < 3)
+			if(Vital && !HasBytes(pData, 3))
 			{
 				return false;
 			}
@@ -71,7 +74,7 @@ bool CPacketChunkUnpacker::UnpackNextChunk(CNetChunk *pChunk)
 		for(int i = 0; i < m_CurrentChunk; i++)
 		{
 			CNetChunkHeader SkippedHeader;
-			if(!UnpackChunkHeader(pData, SkippedHeader) || pEnd - pData < SkippedHeader.m_Size)
+			if(!UnpackChunkHeader(pData, SkippedHeader) || !HasBytes(pData, SkippedHeader.m_Size))
 			{
 				m_Valid = false;
 				return false;
@@ -88,7 +91,7 @@ bool CPacketChunkUnpacker::UnpackNextChunk(CNetChunk *pChunk)
 		}
 		m_CurrentChunk++;
 
-		if(pEnd - pData < Header.m_Size)
+		if(!HasBytes(pData, Header.m_Size))
 		{
 			m_Valid = false;
 			return false;
