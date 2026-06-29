@@ -19,6 +19,7 @@
 #if !defined(CONF_FAMILY_WINDOWS)
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 using std::string;
@@ -48,9 +49,29 @@ static inline bool IsUnreserved(unsigned char c)
 
 static bool IsAllowedUpdaterPath(const char *pPath)
 {
-	return fs_is_relative_path(pPath) &&
-	       str_find(pPath, "..") == nullptr &&
-	       str_valid_filename(fs_filename(pPath));
+	if(!fs_is_relative_path(pPath) || str_find(pPath, "..") != nullptr)
+		return false;
+
+	char aSegment[IO_MAX_PATH_LENGTH];
+	size_t SegmentLength = 0;
+	for(const char *pIter = pPath;; ++pIter)
+	{
+		if(*pIter == '/' || *pIter == '\0')
+		{
+			if(SegmentLength == 0 || SegmentLength >= sizeof(aSegment))
+				return false;
+			aSegment[SegmentLength] = '\0';
+			if(str_comp(aSegment, ".") == 0 || !str_valid_filename(aSegment))
+				return false;
+			SegmentLength = 0;
+			if(*pIter == '\0')
+				return true;
+			continue;
+		}
+		if(SegmentLength + 1 >= sizeof(aSegment))
+			return false;
+		aSegment[SegmentLength++] = *pIter;
+	}
 }
 
 static void UrlEncodePath(const char *pIn, char *pOut, size_t OutSize)
@@ -117,18 +138,24 @@ static bool SetExecutableBit(const char *pPath)
 		log_error("updater", "Failed to open file descriptor to set executable bit of '%s'", pPath);
 		return false;
 	}
+	bool Success = true;
 	struct stat FileStats;
 	if(fstat(FileDescriptor, &FileStats) != 0)
 	{
 		log_error("updater", "Failed to determine file stats to set executable bit of '%s'", pPath);
-		return false;
+		Success = false;
 	}
-	if(fchmod(FileDescriptor, FileStats.st_mode | S_IXUSR | S_IXGRP | S_IXOTH) != 0)
+	else if(fchmod(FileDescriptor, FileStats.st_mode | S_IXUSR | S_IXGRP | S_IXOTH) != 0)
 	{
 		log_error("updater", "Failed to set executable bit of '%s'", pPath);
-		return false;
+		Success = false;
 	}
-	return true;
+	if(close(FileDescriptor) != 0)
+	{
+		log_error("updater", "Failed to close file descriptor after setting executable bit of '%s'", pPath);
+		Success = false;
+	}
+	return Success;
 }
 #endif
 
@@ -223,20 +250,19 @@ void CUpdater::FetchFile(const char *pFile, const char *pDestPath)
 bool CUpdater::MoveFile(const char *pFile)
 {
 	char aBuf[256];
-	const size_t Length = str_length(pFile);
 	bool Success = true;
 
 #if !defined(CONF_FAMILY_WINDOWS)
-	if(!str_comp_nocase(pFile + Length - 4, ".dll"))
+	if(str_endswith_nocase(pFile, ".dll"))
 		return Success;
 #endif
 
 #if !defined(CONF_PLATFORM_LINUX)
-	if(!str_comp_nocase(pFile + Length - 3, ".so"))
+	if(str_endswith_nocase(pFile, ".so"))
 		return Success;
 #endif
 
-	if(!str_comp_nocase(pFile + Length - 4, ".dll") || !str_comp_nocase(pFile + Length - 3, ".so"))
+	if(str_endswith_nocase(pFile, ".dll") || str_endswith_nocase(pFile, ".so"))
 	{
 		str_format(aBuf, sizeof(aBuf), "%s.old", pFile);
 		m_pStorage->RenameBinaryFile(pFile, aBuf);
@@ -439,7 +465,7 @@ void CUpdater::RunningUpdate()
 		{
 			const char *pFile = Job.first.c_str();
 			const size_t Length = str_length(pFile);
-			if(!str_comp_nocase(pFile + Length - 4, ".dll"))
+			if(str_endswith_nocase(pFile, ".dll"))
 			{
 #if defined(CONF_FAMILY_WINDOWS)
 				char aBuf[512];
@@ -450,7 +476,7 @@ void CUpdater::RunningUpdate()
 #endif
 				// Ignore DLL downloads on other platforms
 			}
-			else if(!str_comp_nocase(pFile + Length - 3, ".so"))
+			else if(str_endswith_nocase(pFile, ".so"))
 			{
 #if defined(CONF_PLATFORM_LINUX)
 				char aBuf[512];
