@@ -2626,6 +2626,7 @@ if(CLIENT)
     QmUi/QmCardOrderModel.h
     QmUi/QmCardRegistry.cpp
     QmUi/QmCardRegistry.h
+    QmUi/QmModuleTypes.h
     animstate.cpp
     animstate.h
     component.cpp

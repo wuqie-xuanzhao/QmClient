@@ -18,6 +18,7 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/QmModuleTypes.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiDogfood.h>
 #include <game/client/animstate.h>
@@ -586,6 +587,7 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 
 void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)
 {
+	using namespace qm_module;
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
 
 	// feat-003 dogfood: when dbg_qm_ui_dogfood is on, take over the QmClient
@@ -1344,54 +1346,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		Content.HSplitTop(LgLineSpacing, nullptr, &Content);
 	};
 
-	enum class EQmModuleId
-	{
-		Info,
-		ChatBubble,
-		GoresActor,
-		Gores,
-		FocusMode,
-		KeyBinds,
-		MiniFeatures,
-		JumpHint,
-		SkinTransition,
-		CameraView,
-		DummyMiniView,
-		Coords,
-		Streamer,
-		FriendNotify,
-		BlockWords,
-		Translate,
-		TranslateUi,
-		QiaFen,
-		PieMenu,
-		EntityOverlay,
-		Laser,
-		PlayerStats,
-		CollisionHitbox,
-		FavoriteMaps,
-		HJAssist,
-		SpeedrunTimer,
-		DebugGraph,
-		InputOverlay,
-		HudNotifications,
-		Voice,
-		DynamicIsland,
-		SystemMediaControls,
-		Lyrics,
-		Background3D,
-		WeaponTrajectory,
-		WeaponAnimation,
-		CardAppearance,
-	};
-
-	enum class EQmModuleColumn
-	{
-		Full,
-		Left,
-		Right,
-	};
-
 	auto QmModuleIdName = [](EQmModuleId Id) -> const char * {
 		switch(Id)
 		{
@@ -1447,16 +1401,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		default: return "active_tab_total";
 		}
 	};
-
-	struct SQmModuleEntry
-	{
-		EQmModuleId m_Id;
-		EQmModuleColumn m_Column;
-		int m_OrderInColumn;
-		const char *m_pKey;
-	};
-
-	constexpr size_t QmModuleCount = 37;
 
 	// Layout string format: key:column:order; entries separated by ';'.
 	static const std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleDefaults = {{{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
