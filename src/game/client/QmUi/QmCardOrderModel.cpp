@@ -81,6 +81,25 @@ namespace qm_card_order
 		return v;
 	}
 
+	std::vector<int> CModel::ColumnIndices(const char *pTab, int Column) const
+	{
+		std::vector<int> v;
+		for(size_t i = 0; i < m_vEntries.size(); ++i)
+		{
+			const SEntry &E = m_vEntries[i];
+			if(E.m_Column != Column)
+				continue;
+			// tab 为可变位置维度：仅当卡有归属 tab 且与查询 tab 一致时命中（tab=nullptr 的卡不归属任何页）
+			if(E.m_pDefaultTab == nullptr || pTab == nullptr || str_comp(E.m_pDefaultTab, pTab) != 0)
+				continue;
+			v.push_back((int)i);
+		}
+		std::stable_sort(v.begin(), v.end(), [&](int a, int b) {
+			return m_vEntries[a].m_OrderInColumn < m_vEntries[b].m_OrderInColumn;
+		});
+		return v;
+	}
+
 	void CModel::Serialize(char *pBuf, int BufSize) const
 	{
 		if(pBuf == nullptr || BufSize <= 0)

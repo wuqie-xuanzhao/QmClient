@@ -10,43 +10,47 @@
 // NormalizeQmModuleLayoutColumns 为骨架演进。
 namespace qm_card_order
 {
-struct SEntry
-{
-	const char *m_pStableId = nullptr; // 稳定 id（栖梦用 m_pKey 如 "chat_bubble"，Tclient 用 stable id）
-	int m_Column = 0; // 列号（0=Full/Left, 1=Right，或泛化）
-	int m_OrderInColumn = 0; // 列内排序
-};
+	struct SEntry
+	{
+		const char *m_pStableId = nullptr; // 稳定 id（栖梦用 m_pKey 如 "chat_bubble"，Tclient 用 stable id）
+		const char *m_pDefaultTab = nullptr; // 该卡当前归属 tab（tab 是可变位置维度而非固有归属；运行时为注册表默认 tab 的快照）
+		int m_Column = 0; // 列号（0=Full/Left, 1=Right，或泛化）
+		int m_OrderInColumn = 0; // 列内排序
+	};
 
-class CModel
-{
-public:
-	void SetEntries(std::vector<SEntry> Entries);
-	int Count() const { return (int)m_vEntries.size(); }
-	const SEntry &Entry(int Index) const { return m_vEntries[Index]; }
+	class CModel
+	{
+	public:
+		void SetEntries(std::vector<SEntry> Entries);
+		int Count() const { return (int)m_vEntries.size(); }
+		const SEntry &Entry(int Index) const { return m_vEntries[Index]; }
 
-	int FindByStableId(const char *pStableId) const;
+		int FindByStableId(const char *pStableId) const;
 
-	// 核心操作：把 pStableId 移到 ToColumn 的 ToOrder 位置
-	void Move(const char *pStableId, int ToColumn, int ToOrder);
+		// 核心操作：把 pStableId 移到 ToColumn 的 ToOrder 位置
+		void Move(const char *pStableId, int ToColumn, int ToOrder);
 
-	// order 连续化（消除空洞），按列 stable_sort
-	void NormalizeColumns();
+		// order 连续化（消除空洞），按列 stable_sort
+		void NormalizeColumns();
 
-	// 按序返回某列的 entry index
-	std::vector<int> ColumnIndices(int Column) const;
+		// 按序返回某列的 entry index
+		std::vector<int> ColumnIndices(int Column) const;
 
-	// 持久化：格式 "id:col:order;"（照搬栖梦 QmSidebarCardOrder 格式）
-	void Serialize(char *pBuf, int BufSize) const;
-	// 容错解析：未知/重复/非法 key 跳过（照搬 ParseQmModuleLayout）
-	bool Parse(const char *pStr, const std::vector<const char *> &vValidIds);
+		// 按序返回某 tab 某 column 的 entry index（组件编辑器按"页是展示层"筛选：tab=页/画布，column=列）
+		std::vector<int> ColumnIndices(const char *pTab, int Column) const;
 
-	bool IsDirty() const { return m_Dirty; }
-	void ClearDirty() { m_Dirty = false; }
+		// 持久化：格式 "id:col:order;"（照搬栖梦 QmSidebarCardOrder 格式）
+		void Serialize(char *pBuf, int BufSize) const;
+		// 容错解析：未知/重复/非法 key 跳过（照搬 ParseQmModuleLayout）
+		bool Parse(const char *pStr, const std::vector<const char *> &vValidIds);
 
-private:
-	std::vector<SEntry> m_vEntries;
-	bool m_Dirty = false;
-};
+		bool IsDirty() const { return m_Dirty; }
+		void ClearDirty() { m_Dirty = false; }
+
+	private:
+		std::vector<SEntry> m_vEntries;
+		bool m_Dirty = false;
+	};
 } // namespace qm_card_order
 
 #endif // GAME_CLIENT_QMUI_QMCARDORDERMODEL_H

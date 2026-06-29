@@ -1,13 +1,13 @@
-#include <gtest/gtest.h>
-
 #include <game/client/QmUi/QmCardOrderModel.h>
+
+#include <gtest/gtest.h>
 
 #include <cstring>
 
 TEST(QmCardOrderModel, MoveReordersWithinColumn)
 {
 	qm_card_order::CModel M;
-	M.SetEntries({{"a", 1, 0}, {"b", 1, 1}, {"c", 1, 2}});
+	M.SetEntries({{"a", nullptr, 1, 0}, {"b", nullptr, 1, 1}, {"c", nullptr, 1, 2}});
 	M.ClearDirty();
 	M.Move("a", 1, 2); // a 移到末尾
 	auto Col = M.ColumnIndices(1);
@@ -21,7 +21,7 @@ TEST(QmCardOrderModel, MoveReordersWithinColumn)
 TEST(QmCardOrderModel, SerializeParseRoundtrip)
 {
 	qm_card_order::CModel M;
-	M.SetEntries({{"a", 1, 0}, {"b", 1, 1}, {"c", 2, 0}});
+	M.SetEntries({{"a", nullptr, 1, 0}, {"b", nullptr, 1, 1}, {"c", nullptr, 2, 0}});
 	char aBuf[256];
 	M.Serialize(aBuf, sizeof(aBuf));
 
@@ -51,7 +51,7 @@ TEST(QmCardOrderModel, ParseToleratesBadKeys)
 TEST(QmCardOrderModel, NormalizeColumnsFillsGaps)
 {
 	qm_card_order::CModel M;
-	M.SetEntries({{"a", 1, 5}, {"b", 1, 10}, {"c", 2, 3}});
+	M.SetEntries({{"a", nullptr, 1, 5}, {"b", nullptr, 1, 10}, {"c", nullptr, 2, 3}});
 	M.ClearDirty();
 	M.NormalizeColumns();
 	auto Col1 = M.ColumnIndices(1);
@@ -67,11 +67,28 @@ TEST(QmCardOrderModel, NormalizeColumnsFillsGaps)
 TEST(QmCardOrderModel, MoveMarksDirty)
 {
 	qm_card_order::CModel M;
-	M.SetEntries({{"a", 1, 0}, {"b", 1, 1}});
+	M.SetEntries({{"a", nullptr, 1, 0}, {"b", nullptr, 1, 1}});
 	M.ClearDirty();
 	EXPECT_FALSE(M.IsDirty());
 	M.Move("a", 1, 1);
 	EXPECT_TRUE(M.IsDirty());
 	M.ClearDirty();
 	EXPECT_FALSE(M.IsDirty());
+}
+
+// 意图：组件编辑器按 tab+column 筛选本页卡片——这是"页面是展示层"的核心查询。
+// tab 是可变位置维度（非卡片固有归属），column 是列，二者共同定位一张卡在画布上的位置。
+TEST(QmCardOrderModel, ColumnIndicesFiltersByTabAndColumn)
+{
+	qm_card_order::CModel M;
+	std::vector<qm_card_order::SEntry> E = {
+		{"qm:chat_bubble", "visual", 1, 0}, // tab="visual", Left
+		{"qm:coords", "hud", 1, 0}, // tab="hud", Left
+		{"qm:camera_view", "visual", 2, 0}, // tab="visual", Right
+	};
+	M.SetEntries(E);
+	// visual tab 的 Left 列：只应含 chat_bubble，不含 coords（hud）
+	auto VisLeft = M.ColumnIndices("visual", 1);
+	ASSERT_EQ(VisLeft.size(), 1u);
+	EXPECT_STREQ(M.Entry(VisLeft[0]).m_pStableId, "qm:chat_bubble");
 }
