@@ -56,50 +56,74 @@ th{background:var(--surface2);font-weight:600;color:var(--text)}
 
 <h2 id="g1">1 · 设计目标</h2>
 <p><strong>iPhone 主屏风拖拽 UX</strong>：长按 → 被拖卡跟手 + 其他卡实时让位（spring lerp）→ 松手归位 + 持久化。<strong>全局卡片管理</strong>：一套 Model 管所有设置页卡片，每页只筛选展示，拖拽改全局 → 跨页保留。</p>
+<div class="alert good"><strong>已确认愿景</strong>（用户 2026-06-29 确认）：全局卡片 = <strong>跨页面组件编辑器</strong>。卡片是 first-class 全局组件，可在任意 tab/列/位置间排布迁移，<strong>tab 是可改的位置维度而非固有归属</strong>。全局单例 Model 是正确架构，不再标记为待验证。stableId 命名规范、默认值系统、稳定持久化模型的完整设计见 <code>docs/superpowers/specs/2026-06-29-全局卡片-组件编辑器与stableId设计.md</code>（含 69 张卡的注册表附录）。</div>
 
 <h2 id="g2">2 · 全局卡片 Model（核心）</h2>
 
 <h3>2.1 统一注册表</h3>
-<p>所有设置页卡片注册到同一个 <code>qm_card_order::CModel</code>（已建，阶段 2 Step 1 产物）。每个卡片声明 <code>{stableId, page, column, order}</code>：</p>
+<p>所有设置页卡片注册到同一个 <code>qm_card_order::CModel</code>（已建，阶段 2 Step 1 产物，<code>QmUi/QmCardOrderModel.h</code>）。当前 <code>SEntry</code> 有 <code>{m_pStableId, m_Column, m_OrderInColumn}</code>，<strong><code>page</code> 字段待 B1 加入</strong>。目标态每卡声明 <code>{stableId, page, column, order}</code>：</p>
 <ul>
   <li><code>stableId</code>：全局唯一（如 <code>"qm:visual:card_appearance"</code>、<code>"tclient:visual-font-cursor"</code>）</li>
   <li><code>page</code>：归属页面（<code>"qmclient"</code> / <code>"tclient"</code> / <code>"ddnet"</code> / <code>"appearance"</code>）</li>
   <li><code>column</code>：列（Left / Right / Full）</li>
   <li><code>order</code>：列内顺序</li>
 </ul>
-<p>页面渲染时 <code>Model.ColumnIndices(page, column)</code> 筛选本页卡片。</p>
+<p>页面渲染时 <code>Model.ColumnIndices(page, column)</code> 筛选本页卡片（<strong>B1 待建 page 重载</strong>——当前 <code>ColumnIndices(int Column)</code> 只按列筛）。</p>
 
 <h3>2.2 持久化</h3>
-<p>单一 config <code>qm_global_card_order</code>（格式 <code>id:page:col:order;</code>），替代当前的 <code>QmSidebarCardOrder</code> + <code>qm_settings_card_order</code> 两套。<code>CModel::Parse</code> 容错（未知 id 跳过），<code>CModel::Serialize</code> 写入。每帧 <code>str_comp</code> cache 检测变化。</p>
-<p>迁移：首次启动检测旧 <code>QmSidebarCardOrder</code> / <code>qm_settings_card_order</code>，合并到 <code>qm_global_card_order</code>。</p>
+<p>单一 config <code>qm_global_card_order</code>（格式 <code>&lt;stableId&gt;|&lt;tab&gt;|&lt;col&gt;|&lt;order&gt;;</code>，用 <code>|</code> 分隔字段——stableId 含 <code>:</code>，用 <code>:</code> 分隔会歧义；详见设计文档 §5.2），替代当前的 <code>QmSidebarCardOrder</code> + <code>qm_settings_card_order</code> 两套。<code>CModel::Parse</code> 容错（未知 id 跳过），<code>CModel::Serialize</code> 写入。<strong>用 <code>CModel::IsDirty()</code> 触发序列化落盘</strong>（替代当前栖梦每帧 <code>str_comp</code> 序列化后比对 cache 的冗余做法）—— <strong>注</strong>：CModel 当前仅测试用，B1 接入生产链路后 IsDirty 才生效（设计文档 §8.3）。</p>
 
-<div class="alert note"><strong>用户发散</strong>："持久化是全局的，每个页面只是展示卡片，可以随意移动组合" — 本规格采纳：卡片是全局资源，页面是展示层（filter），拖拽改全局 → 所有页生效。</p>
+<h4>2.2.1 迁移（一次性，需覆盖边界）</h4>
+<p>首次启动检测旧 <code>QmSidebarCardOrder</code> / <code>qm_settings_card_order</code>，合并到 <code>qm_global_card_order</code>。这是<strong>会丢用户布局的高风险操作</strong>，必须覆盖以下边界：</p>
+<ul>
+  <li><strong>幂等</strong>：新增 <code>qm_card_order_migrated</code> 标志（bool config）。已迁移则跳过，避免新旧并存时重复合并冲突；迁移成功后置位。</li>
+  <li><strong>stableId 映射</strong>：栖梦旧格式 <code>key:col:order;</code>（如 <code>chat_bubble:1:0;</code>，无 page）需映射到新 <code>id:page:col:order;</code>。维护一张"旧 key → 新 stableId + page"映射表（在 <code>B1</code> 落地），映射失败的 key 按<strong>保留原列原序、page 取该卡默认归属页</strong>兜底，不能丢弃。</li>
+  <li><strong>格式兼容</strong>：<code>CModel::Parse</code> 按<strong>分隔符</strong>区分新旧——含 <code>|</code> 走新格式（<code>id|tab|col|order</code> 四段），否则按旧 <code>:</code> 三段（栖梦 <code>key:col:order</code> / Tclient <code>id:col:order</code>）回退；字段数不足或非法值跳过该条不中断解析。</li>
+  <li><strong>buffer 容量</strong>：<code>MACRO_CONFIG</code> 字符串是定长 buffer。卡片从 ~37 扩到全局 80+，序列化串约翻倍。<code>B2</code> 需估算 <code>qm_global_card_order</code> 容量并校验 <code>Serialize</code> 不截断（参考现有 <code>sizeof(g_Config.m_QmSidebarCardOrder)</code>）。</li>
+  <li><strong>降级回退</strong>：旧版不读 <code>qm_global_card_order</code>。需说明"新版→旧版→新版"往返会触发重新迁移（幂等标志保护），可接受顺序短暂丢失，不可静默。</li>
+</ul>
+<p>迁移完成后旧 config <strong>不立即删除</strong>（保留一个版本作为回滚锚点），下一版本再清理。</p>
+
+<div class="alert note"><strong>用户发散</strong>："持久化是全局的，每个页面只是展示卡片，可以随意移动组合" — 本规格采纳：卡片是全局资源，页面是展示层（filter），拖拽改全局 → 所有页生效。</div>
 
 <h2 id="g3">3 · 让位动画（iPhone 风）</h2>
 
 <h3>3.1 当前问题</h3>
-<p>拖拽中 <code>order</code> 不变（只算 <code>DropIndex</code>）→ <code>TargetRect</code> 不变 → <code>cache lerp</code> 追赶自己 → <code>offset=0</code> → 无让位。松手 <code>CommitDropPreview</code> 改 order → TargetRect 变 → 但下一帧非拖拽态 <code>offset=0</code> → 跳变。</p>
+<p>让位是 <strong>per-card <code>DisplayRect</code> lerp 追 <code>TargetRect</code></strong>（<code>Disp += (Target - Disp) * LerpT</code>，LerpT=0.25，见 <code>menus_qmclient.cpp:7899</code>），不存在"Column 偏移 offset"变量。拖拽中 <code>UpdateDropPreview</code> 只算落点 <code>DropIndex</code>，<strong>不改 <code>m_OrderInColumn</code>、也不重排布局</strong> → 布局每帧算出的 <code>TargetRect</code> 不含被拖卡的腾位 → 其他卡的 <code>DisplayRect</code> 追一个<strong>静止目标</strong> → 全部停在原位 → 无让位视觉效果。松手 <code>CommitDropPreview</code> 才改 order → <code>TargetRect</code> 突变 → 其他卡从原位开始 lerp 让位、被拖卡从鼠标位置 lerp 到最终落点（松手即收敛无跳变，但让位滞后到松手才发生）。</p>
 
 <h3>3.2 正确实现：拖拽中实时预览布局</h3>
 <p><code>UpdateDropPreview</code> 不只算 <code>DropIndex</code>，而是生成一个<strong>预览布局</strong>（PreviewLayout）：</p>
 <ol>
   <li>基于当前全局 Model + 被拖卡的新位置（DropColumn + DropIndex），计算<strong>每张卡片的预览 TargetRect</strong></li>
   <li>预览 TargetRect 写入 <code>ModuleCards[i].m_TargetRect</code>（不 commit 到 Model，只渲染层预览）</li>
-  <li><code>AnimateModuleCardPositions</code> lerp <code>cache → 预览 TargetRect</code></li>
-  <li>Column 偏移到 cache → 卡片在 lerp 中间位置（实时滑动让位）</li>
+  <li><code>AnimateModuleCardPositions</code> lerp <code>DisplayRect → 预览 TargetRect</code></li>
+  <li>其他卡的 <code>DisplayRect</code> 处于 lerp 中间位置 → 实时滑动让位（<strong>不需要 Column 级 offset</strong>，每卡各自追自己的预览目标）</li>
 </ol>
 <p>松手 <code>CommitDropPreview</code> → Model.Move（commit 预览到真实数据）+ Serialize 落盘。</p>
 
 <h3>3.3 松手归位</h3>
-<p>松手后 <code>m_pDragging=nullptr</code>，但 <strong>松手帧仍保持 Column 偏移</strong>（offset 不立即归零，走 cache lerp 自然收敛到 TargetRect）。即松手后 offset 从当前 cache 值 lerp 到 0（约 10 帧 0.17s）。</p>
-<p>实现：<code>offset</code> 不硬切 0，而是 <code>offset *= (1-LerpT)</code> lerp 到 0。</p>
+<p>松手 <code>CommitDropPreview</code> 后 <code>m_pDragging=nullptr</code>，被拖卡退出"跟鼠标"特殊分支（<code>menus_qmclient.cpp:7882</code>），改为<strong>普通 per-card lerp</strong>：从松手时的鼠标位置自然收敛到 commit 后的新 <code>TargetRect</code>（最终落点）。其他卡因松手帧 order 已变、<code>TargetRect</code> 已更新，从让位中间态收敛到最终位置。整列收敛约 <code>LerpT=0.25</code> × 若干帧（≈0.15–0.2s）。</p>
+<p>实现要点：松手帧<strong>不要</strong>对被拖卡做任何坐标硬切——保持其当前 <code>DisplayRect</code>（鼠标位置），交给现有 lerp 自然滑入最终位置，避免跳变。<code>DisplayRect</code> 首次初始化仍走 <code>:7892-7895</code> 的"直接设 TargetRect"保护。</p>
 
 <div class="alert warn"><strong>技术要点</strong>：预览布局计算需要在 <code>UpdateDropPreview</code> 中模拟 "如果被拖卡在 DropIndex 位置，其他卡的 rect 会怎样"。当前栖梦的 <code>ColumnSplitX</code> + 遍历 prev/next 逻辑可以复用，但需要输出每张卡的 TargetRect（不只是落点 line）。</div>
+
+<h3>3.4 让位边界情况</h3>
+<p>预览布局计算需显式覆盖以下场景（核实自 <code>menus_qmclient.cpp</code> 现状）：</p>
+<ul>
+  <li><strong>跨列拖拽</strong>：<code>CommitDropPreview</code>(<code>:7824-7849</code>) 已支持跨列 erase+insert，但<strong>拖拽中实时</strong>跨列让位需同时算源列腾位 + 目标列插入两列的预览 <code>TargetRect</code>，不能只算单列。</li>
+  <li><strong>Full 列模块</strong>：<code>:7795</code> <code>if(m_Column==Full) return false</code>——Full 卡不拖不让位。全局 Model 里 Full 卡的 <code>column</code> 取值与跨页处理需在 B1 明确（建议 Full 卡不进 page filter 的可重排集合）。</li>
+  <li><strong>搜索过滤态</strong>：<code>:7914</code> <code>HasModuleSearch</code> 时 <code>ResetModuleDragState</code>（禁拖）。预览布局应尊重过滤后的可见集，被过滤掉的卡不参与让位。</li>
+  <li><strong>折叠卡高度</strong>（路线图阶段 5 <code>qm_settings_card_collapsed</code>）：折叠卡 <code>TargetRect</code> 高度变小，预览布局须用<strong>当前实际折叠高度</strong>，不能假定全展开。</li>
+  <li><strong>页面切换抖动</strong>：全局 Model 下切页时旧页 <code>ModuleCards</code> 还在 lerp 收敛、新页 <code>TargetRect</code> 突变 → 需切页时重置 <code>DisplayRect</code> 初值（走 <code>:7892</code> 保护）或暂停一帧 lerp，避免抖动。</li>
+  <li><strong>性能（缓存）</strong>：<code>UpdateDropPreview</code> 每帧重算所有卡预览布局——DropIndex/被拖列不变时应<strong>缓存复用</strong>，仅在变化时重算，避免每帧全量 O(N)；同时 <code>TargetRect</code> 每帧变会影响卡片背景合批 cull（<code>:947</code>），需确认合批稳定。</li>
+  <li><strong>动画曲线</strong>：让位 lerp 当前用固定 <code>LerpT=0.25</code> 指数衰减（≈临界阻尼，够用）。若快速连续拖拽/跨列出现抖动，改用 <code>ResolveUiAnimValue</code> 的 SPRING+MERGE_TARGET 重载（<code>note.md</code> 05:06 结论：改 target 不重启不丢 velocity，TWEEN 会抖）。</li>
+</ul>
 
 <h2 id="g4">4 · 统一拖拽架构</h2>
 
 <h3>4.1 消除 section_loader 旧拖拽</h3>
 <p>Tclient 的 <code>SSettingsCardDeckDragState</code> / <code>SettingsCardDeckCanStartDrag</code> / <code>BeginPress</code> / <code>TryPromotePress</code> / <code>MoveWithinColumn</code> / <code>DropIndexForHoveredItem</code> / <code>ApplyOrder</code> / <code>AutoScrollDelta</code> 全部删除，栖梦的 <code>SQmModuleDragState</code> / <code>HandleModuleDragState</code> / <code>UpdateDropPreview</code> / <code>CommitDropPreview</code> / <code>RenderDragGhost</code> 泛化为公共拖拽层。</p>
+<div class="alert warn"><strong>影响面</strong>（Review 核实）：这 8 个 helper 在 <code>menus.cpp</code> / <code>menus.h</code> / <code>menus_settings.cpp</code> 均有引用，<strong>非仅 Tclient</strong>。QmClient 自有的 <code>BeginSettingsCardDeckCard</code> 也走同一 <code>HandleSettingsCardDeckDrag</code>（当前传 <code>nullptr</code> 禁用重排），C1 删除前必须全量排查调用方，迁移后改接公共拖拽层。</div>
 
 <h3>4.2 统一入口</h3>
 <p>新建 <code>QmUi/QmCardDrag.h</code>（纯函数模板，可 TDD）：</p>
@@ -129,15 +153,16 @@ void LerpDisplayRects(cache, targetRects, draggingId, mouseX, mouseY, lerpT);</c
 <h2 id="g6">6 · 实施路线</h2>
 <table>
 <tr><th>阶段</th><th>内容</th><th>工作量</th><th>依赖</th></tr>
-<tr><td><strong>B1</strong></td><td>全局 Model 扩展（加 page 字段 + CModel API）+ 迁移栖梦侧栏接入</td><td>1 天</td><td>CardOrderModel 已建</td></tr>
-<tr><td><strong>B2</strong></td><td>持久化迁移（qm_global_card_order + 旧 config 合并）</td><td>0.5 天</td><td>B1</td></tr>
+<tr><td><strong>B1</strong></td><td>全局 Model 扩展（加 page 字段 + CModel API）+ 迁移栖梦侧栏接入 + <strong>为 Tclient 15 / 设置 deck 16 共 31 张卡补显式默认 Placement</strong>（见设计文档注册表 Gap）+ <strong>性能硬约束</strong>：① 建 stableId→连续 index 注册表（与组件注册表合并，保让位 lerp O(1)，否则退化为 O(N²)）；② IsDirty 触发序列化，消除每帧 Serialize 冗余（设计文档 §8）</td><td>1.5–2 天</td><td>CardOrderModel 已建</td></tr>
+<tr><td><strong>B2</strong></td><td>持久化迁移（qm_global_card_order + 旧 config 合并 + 2.2.1 全部边界：幂等/stableId映射/格式兼容/buffer/降级）</td><td>1.5 天</td><td>B1</td></tr>
 <tr><td><strong>A1</strong></td><td>提取公共拖拽层（QmCardDrag.h，从栖梦 lambda 泛化）</td><td>1 天</td><td>无</td></tr>
-<tr><td><strong>A2</strong></td><td>让位动画重做（UpdateDropPreview 输出预览 TargetRect + 松手 lerp offset）</td><td>1.5 天</td><td>A1 + B1</td></tr>
-<tr><td><strong>C1</strong></td><td>Tclient 迁入全局 Model + 公共拖拽层 + 删 section_loader 旧代码</td><td>1 天</td><td>A1 + B1</td></tr>
+<tr><td><strong>A2</strong></td><td>让位动画重做（UpdateDropPreview 输出预览 TargetRect + 松手 per-card lerp 收敛）</td><td>1.5 天</td><td>A1 + B1</td></tr>
+<tr><td><strong>C1</strong></td><td>Tclient 迁入全局 Model + 公共拖拽层 + 删 section_loader 旧代码（<strong>注意</strong>：section_loader.h 的 8 个 helper 被 menus.cpp/menus.h/menus_settings.cpp 多处引用，非仅 Tclient，删除前需全量排查调用方）</td><td>1.5 天</td><td>A1 + B1</td></tr>
 <tr><td><strong>D1</strong></td><td>设置 deck 迁入全局 Model</td><td>0.5 天</td><td>C1</td></tr>
-<tr><td><strong>E1</strong></td><td>视觉统一（ui_widget::DrawCard 收敛）</td><td>1 天</td><td>B1（页面已用全局 Model）</td></tr>
+<tr><td><strong>E1</strong></td><td>视觉统一（ui_widget::DrawCard 收敛，消除 RenderQmSettingsGlassCard underlay + 栖梦合批割裂）</td><td>1 天</td><td>B1 + C1 + D1（页面已全部用统一 Model）</td></tr>
 </table>
-<p><strong>合计约 6 天</strong>。B1→B2 先建地基，A1+A2 做让位，C1→D1 扩展迁移，E1 视觉统一。</p>
+<p><strong>合计约 8.5–9 天</strong>（含每阶段 TDD 测试 + gate 验证）。B1→B2 先建地基，A1+A2 做让位，C1→D1 扩展迁移，E1 视觉统一。<strong>顺序约束：A2（让位重做）必须先于 E1（视觉收敛）</strong>——两者都动卡片渲染路径，先稳定让位的 TargetRect 写入时机，再做 DrawCard 统一。</p>
+<p><em>验证口径</em>：每阶段按 <code>docs/ai-workflow/verification.md</code> 跑 TDD（先红后绿）+ <code>check_gate.py --mode quick</code>；B2/C1 等高风险改动提交前补到 <code>--mode default</code>。</p>
 
 <h2 id="g7">7 · 约束</h2>
 <ul>
@@ -146,6 +171,7 @@ void LerpDisplayRects(cache, targetRects, draggingId, mouseX, mouseY, lerpT);</c
   <li>拖拽触发统一长按 0.3s（已实现，不用 Ctrl）</li>
   <li>section_loader.h 只保留渲染层（渐进渲染 + section 管理），拖拽逻辑全删</li>
   <li>全局 Model 是唯一持久化权威，旧 config 一次性迁移后废弃</li>
+  <li><strong>性能约束</strong>（设计文档 §8）：让位 lerp 必须保持 O(1) state 查找（建 stableId→index 注册表，禁线性查找退化为 O(N²)）；序列化用 <code>IsDirty</code> 触发，禁每帧 Serialize 冗余</li>
 </ul>
 
 </div>
