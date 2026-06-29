@@ -7005,19 +7005,6 @@ void CEditor::HandleWriterFinishJobs()
 	const bool CollabSnapshotJob = m_CollabSnapshotSavePending && str_comp(pJob->GetRealFilename(), QM_EDITOR_COLLAB_SNAPSHOT_PATH) == 0;
 
 	char aBuf[2 * IO_MAX_PATH_LENGTH + 128];
-	if(!Storage()->RemoveFile(pJob->GetRealFilename(), IStorage::TYPE_SAVE))
-	{
-		if(CollabSnapshotJob)
-		{
-			m_CollabSnapshotSavePending = false;
-			SetCollabStatus("同步失败：无法删除旧地图快照");
-		}
-		str_format(aBuf, sizeof(aBuf), "保存失败：无法删除旧地图文件“%s”。", pJob->GetRealFilename());
-		ShowFileDialogError("%s", aBuf);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor/save", aBuf);
-		return;
-	}
-
 	if(!Storage()->RenameFile(pJob->GetTempFilename(), pJob->GetRealFilename(), IStorage::TYPE_SAVE))
 	{
 		if(CollabSnapshotJob)
