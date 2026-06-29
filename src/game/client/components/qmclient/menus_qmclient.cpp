@@ -7720,11 +7720,13 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return;
 
 		const SQmModuleEntry *pDragged = s_DropPreview.m_pDragged;
-		const int DraggedSI = GetQmModuleStateIndexById(pDragged->m_Id);
 		const float DraggedH = std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));
+		// A2 修订（文本环绕模型）：让位位移封顶——间距一致，大卡超出部分同层覆盖（不割裂、不挤出视野）
+		const float YieldCap = LgHeadlineSize + LgCardPadding * 2.0f;
+		const float Yield = std::min(DraggedH, YieldCap) + LgCardSpacing;
+		// 被拖卡连续插入位置（鼠标 y，实时，无延迟——"文本环绕图片"模型）
+		const float DragY = Ui()->MouseY();
 		auto CardH = [&](const SQmModuleEntry *pE) -> float {
-			if(pE == pDragged)
-				return DraggedH;
 			const int SI = GetQmModuleStateIndexById(pE->m_Id);
 			const float H = s_aQmModuleLastHeights[SI];
 			return H > 0.0f ? H : GetQmModuleDefaultEstimatedHeight(*pE);
@@ -7737,32 +7739,31 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			R.h = H;
 			return R;
 		};
-		// 单列累加：被拖卡在 TargetColumn:InsertIndex 占位（LogicalIdx 遇被拖 continue 不 ++，与 UpdateDropPreview 的 InsertIndex 语义对账）
+		// 单列连续让位：目标列基于 DragY 连续插入（被拖卡 y 决定插入点，DragY<卡中线则插入），后续卡下滑 Yield 让位；非目标列原位
 		auto LayoutOneColumn = [&](EQmModuleColumn Col, const std::vector<const SQmModuleEntry *> &vCards,
 					       float ColumnTop, const CUIRect &ColFrame) {
 			float Y = ColumnTop;
-			int LogicalIdx = 0;
+			const bool IsTargetCol = (Col == s_DropPreview.m_TargetColumn);
+			bool DraggedInserted = false;
 			for(const SQmModuleEntry *pE : vCards)
 			{
 				if(pE == pDragged)
-					continue; // 被拖卡不在此占位（在落点单独占位）
-				if(Col == s_DropPreview.m_TargetColumn && LogicalIdx == s_DropPreview.m_InsertIndex)
+					continue;
+				if(IsTargetCol && !DraggedInserted)
 				{
-					Y += LgCardSpacing;
-					s_aQmModulePreviewRects[DraggedSI] = MakeRect(ColFrame, Y, DraggedH);
-					Y += DraggedH;
+					const float CardMidY = Y + LgCardSpacing + CardH(pE) * 0.5f;
+					if(DragY < CardMidY)
+					{
+						Y += Yield; // 被拖卡在此卡前插入，后续卡下滑让位（封顶 Yield）
+						DraggedInserted = true;
+					}
 				}
 				Y += LgCardSpacing;
 				s_aQmModulePreviewRects[GetQmModuleStateIndexById(pE->m_Id)] = MakeRect(ColFrame, Y, CardH(pE));
 				Y += CardH(pE);
-				++LogicalIdx;
 			}
-			// 列尾插入（含空列）
-			if(Col == s_DropPreview.m_TargetColumn && LogicalIdx == s_DropPreview.m_InsertIndex)
-			{
-				Y += LgCardSpacing;
-				s_aQmModulePreviewRects[DraggedSI] = MakeRect(ColFrame, Y, DraggedH);
-			}
+			if(IsTargetCol && !DraggedInserted)
+				Y += Yield; // 列尾插入（含空列）
 		};
 
 		EnsureColumnTops();
@@ -7784,24 +7785,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	};
 
 	auto RenderDragGhost = [&]() {
+		// A2 修订（扁平化）：被拖卡和其他卡同层渲染——不画悬浮 Ghost（阴影/高亮/轮廓）。
+		// 被拖卡由 RenderColumnModules 按 DisplayRect（lerp 块设鼠标位置）渲染，与其他卡同层，视觉一致。
 		if(s_DragState.m_pDragging == nullptr || !s_DragState.m_HasDragAnchor)
 			return;
-		CUIRect Ghost;
-		Ghost.x = Ui()->MouseX() - s_DragState.m_GrabOffset.x;
-		Ghost.y = Ui()->MouseY() - s_DragState.m_GrabOffset.y;
-		Ghost.w = s_DragState.m_DraggedWidth;
-		Ghost.h = s_DragState.m_DraggedHeight;
-		CUIRect Shadow = Ghost;
-		Shadow.x += 1.5f;
-		Shadow.y += 2.0f;
-		Shadow.Draw(LgShadowColor, IGraphics::CORNER_ALL, LgCornerRadius);
-		Ghost.Draw(DragGhostColor, IGraphics::CORNER_ALL, LgCornerRadius);
-		CUIRect TopHighlight = Ghost;
-		TopHighlight.h = 1.0f;
-		TopHighlight.x += LgCornerRadius;
-		TopHighlight.w = maximum(0.0f, TopHighlight.w - LgCornerRadius * 2.0f);
-		TopHighlight.Draw(LgHighlightColor, IGraphics::CORNER_NONE, 0.0f);
-		DrawDragOutline(Ghost);
 	};
 
 	auto CommitDropPreview = [&]() -> bool {
