@@ -4,8 +4,20 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 using namespace qm_module;
+
+// 测试用小规模 defaults（3 卡：Full/Left/Right 各一），复用真实 EQmModuleId 占位。
+// ParseLegacyQmLayout 按 m_pKey 匹配，与 m_Id 数值无关。
+static std::vector<SQmModuleEntry> MakeTestDefaults()
+{
+	return {
+		{EQmModuleId::Info, EQmModuleColumn::Full, 0, "info"},
+		{EQmModuleId::ChatBubble, EQmModuleColumn::Left, 0, "chat_bubble"},
+		{EQmModuleId::CameraView, EQmModuleColumn::Right, 0, "camera_view"},
+	};
+}
 
 TEST(QmModuleLayoutAdapter, ColumnIntRoundtrip)
 {
@@ -69,4 +81,62 @@ TEST(QmModuleLayoutAdapter, AllModulesHaveUniqueReversibleStableId)
 		EXPECT_EQ(Back, Id);
 	}
 	EXPECT_EQ(Ids.size(), QmModuleCount);
+}
+
+// 意图：Parse/Serialize 往返保持用户布局，缺失卡用 defaults 兜底（栖梦已验证的"全量+补全"模型）。
+TEST(QmModuleLayoutAdapter, ParseSerializeRoundtripKeepsDefaults)
+{
+	auto Defaults = MakeTestDefaults();
+	std::vector<SQmModuleEntry> Out;
+	ParseLegacyQmLayout("chat_bubble:left:0;camera_view:right:0", Defaults, Out);
+	char aBuf[256];
+	SerializeLegacyQmLayout(Out, aBuf, sizeof(aBuf));
+	const std::string Result(aBuf);
+	EXPECT_NE(Result.find("chat_bubble:left:0"), std::string::npos);
+	EXPECT_NE(Result.find("camera_view:right:0"), std::string::npos);
+	EXPECT_NE(Result.find("info:full:0"), std::string::npos); // 缺失卡 defaults 兜底
+}
+
+// 意图：Full 列保护——info（默认 Full）不可改列；非 Full 卡不可拖成 Full（回退默认列）。
+TEST(QmModuleLayoutAdapter, FullColumnProtection)
+{
+	auto Defaults = MakeTestDefaults();
+	std::vector<SQmModuleEntry> Out;
+	ParseLegacyQmLayout("info:left:0;chat_bubble:full:0", Defaults, Out);
+	ASSERT_EQ(Out.size(), 3u);
+	EXPECT_EQ(Out[0].m_Column, EQmModuleColumn::Full); // info 强制 Full
+	EXPECT_EQ(Out[1].m_Column, EQmModuleColumn::Left); // chat_bubble 解析成 full 回退 Left
+}
+
+// 意图：容错——未知 key 跳过；重复 key 取首次；非法 column/order 字段跳过整条（回退默认）。
+TEST(QmModuleLayoutAdapter, ParseToleratesBadKeys)
+{
+	auto Defaults = MakeTestDefaults();
+	std::vector<SQmModuleEntry> Out;
+	ParseLegacyQmLayout("unknown:left:0;chat_bubble:left:0;chat_bubble:right:1;camera_view:bad:0", Defaults, Out);
+	ASSERT_EQ(Out.size(), 3u);
+	EXPECT_EQ(Out[1].m_Column, EQmModuleColumn::Left); // chat_bubble 取首次 left:0
+	EXPECT_EQ(Out[1].m_OrderInColumn, 0);
+	EXPECT_EQ(Out[2].m_Column, EQmModuleColumn::Right); // camera_view 非法 column → 默认 right
+}
+
+// 意图：空 config 走 defaults + Normalize（栖梦 SmartDefaults 的回退路径）。
+TEST(QmModuleLayoutAdapter, EmptyConfigReturnsDefaults)
+{
+	auto Defaults = MakeTestDefaults();
+	std::vector<SQmModuleEntry> Out;
+	ParseLegacyQmLayout("", Defaults, Out);
+	ASSERT_EQ(Out.size(), 3u);
+	EXPECT_EQ(Out[0].m_Column, EQmModuleColumn::Full);
+	EXPECT_EQ(Out[1].m_Column, EQmModuleColumn::Left);
+	EXPECT_EQ(Out[2].m_Column, EQmModuleColumn::Right);
+}
+
+// 意图：order 空洞由 Normalize 连续化（消除拖拽/迁移后的间距）。
+TEST(QmModuleLayoutAdapter, NormalizeFillsOrderGaps)
+{
+	auto Defaults = MakeTestDefaults();
+	std::vector<SQmModuleEntry> Out;
+	ParseLegacyQmLayout("chat_bubble:left:5", Defaults, Out);
+	EXPECT_EQ(Out[1].m_OrderInColumn, 0); // Left 列仅 chat_bubble，Normalize 后 0
 }

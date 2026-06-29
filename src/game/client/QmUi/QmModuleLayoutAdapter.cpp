@@ -2,6 +2,8 @@
 
 #include <base/system.h>
 
+#include <algorithm>
+
 namespace qm_module
 {
 	int QmModuleColumnToInt(EQmModuleColumn Column)
@@ -118,5 +120,129 @@ namespace qm_module
 			}
 		}
 		return false;
+	}
+
+	void NormalizeQmLayoutColumns(std::vector<SQmModuleEntry> &vEntries)
+	{
+		auto NormalizeColumn = [&](EQmModuleColumn Column) {
+			std::vector<int> vIndices;
+			vIndices.reserve(vEntries.size());
+			for(size_t i = 0; i < vEntries.size(); ++i)
+			{
+				if(vEntries[i].m_Column == Column)
+					vIndices.push_back(static_cast<int>(i));
+			}
+			std::stable_sort(vIndices.begin(), vIndices.end(), [&](int a, int b) {
+				if(vEntries[a].m_OrderInColumn != vEntries[b].m_OrderInColumn)
+					return vEntries[a].m_OrderInColumn < vEntries[b].m_OrderInColumn;
+				return a < b;
+			});
+			for(size_t i = 0; i < vIndices.size(); ++i)
+				vEntries[vIndices[i]].m_OrderInColumn = static_cast<int>(i);
+		};
+		NormalizeColumn(EQmModuleColumn::Left);
+		NormalizeColumn(EQmModuleColumn::Right);
+	}
+
+	void ParseLegacyQmLayout(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults, std::vector<SQmModuleEntry> &vOut)
+	{
+		vOut = vDefaults; // 基准（含全卡，缺失卡兜底）
+		if(pConfig == nullptr || pConfig[0] == '\0')
+		{
+			NormalizeQmLayoutColumns(vOut);
+			return;
+		}
+
+		std::vector<bool> vSeen(vDefaults.size(), false);
+		char aEntry[128];
+		const char *pEntry = pConfig;
+		while((pEntry = str_next_token(pEntry, ";", aEntry, sizeof(aEntry))) != nullptr)
+		{
+			if(aEntry[0] == '\0')
+				continue;
+
+			char aKey[64];
+			char aColumn[16] = "";
+			char aOrder[16] = "";
+			const char *pField = str_next_token(aEntry, ":", aKey, sizeof(aKey));
+			if(aKey[0] == '\0')
+				continue;
+
+			int Index = -1;
+			for(size_t i = 0; i < vDefaults.size(); ++i)
+			{
+				if(vDefaults[i].m_pKey != nullptr && str_comp(vDefaults[i].m_pKey, aKey) == 0)
+				{
+					Index = static_cast<int>(i);
+					break;
+				}
+			}
+			if(Index < 0)
+				continue; // 未知 key 跳过
+			if(vSeen[Index])
+				continue; // 重复 key 跳过
+
+			const SQmModuleEntry &DefaultEntry = vDefaults[Index];
+			EQmModuleColumn Column = DefaultEntry.m_Column;
+			int Order = DefaultEntry.m_OrderInColumn;
+			bool InvalidField = false;
+
+			if(pField != nullptr)
+			{
+				pField = str_next_token(pField, ":", aColumn, sizeof(aColumn));
+				if(aColumn[0] != '\0')
+				{
+					EQmModuleColumn ParsedColumn;
+					if(ParseQmModuleColumnString(aColumn, &ParsedColumn))
+						Column = ParsedColumn;
+					else
+						InvalidField = true;
+				}
+			}
+			if(pField != nullptr)
+			{
+				str_next_token(pField, ":", aOrder, sizeof(aOrder));
+				if(aOrder[0] != '\0')
+				{
+					int ParsedOrder = 0;
+					if(str_toint(aOrder, &ParsedOrder) && ParsedOrder >= 0)
+						Order = ParsedOrder;
+					else
+						InvalidField = true;
+				}
+			}
+			if(InvalidField)
+				continue; // 非法字段跳过整条
+
+			// Full 列保护：默认 Full 的卡强制 Full；非 Full 卡解析成 Full 回退默认列
+			if(DefaultEntry.m_Column == EQmModuleColumn::Full)
+				Column = EQmModuleColumn::Full;
+			else if(Column == EQmModuleColumn::Full)
+				Column = DefaultEntry.m_Column;
+
+			vOut[Index].m_Column = Column;
+			vOut[Index].m_OrderInColumn = Order;
+			vSeen[Index] = true;
+		}
+		NormalizeQmLayoutColumns(vOut);
+	}
+
+	void SerializeLegacyQmLayout(const std::vector<SQmModuleEntry> &vEntries, char *pOut, int OutSize)
+	{
+		if(pOut == nullptr || OutSize <= 0)
+			return;
+		pOut[0] = '\0';
+		bool First = true;
+		for(const SQmModuleEntry &Entry : vEntries)
+		{
+			if(Entry.m_pKey == nullptr)
+				continue;
+			char aEntry[128];
+			str_format(aEntry, sizeof(aEntry), "%s:%s:%d", Entry.m_pKey, QmModuleColumnToString(Entry.m_Column), Entry.m_OrderInColumn);
+			if(!First)
+				str_append(pOut, ";", OutSize);
+			str_append(pOut, aEntry, OutSize);
+			First = false;
+		}
 	}
 } // namespace qm_module
