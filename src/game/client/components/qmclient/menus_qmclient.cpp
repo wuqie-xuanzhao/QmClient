@@ -2157,10 +2157,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		int m_InsertIndex;
 		bool m_Active;
 		bool m_Valid;
+		bool m_PreviewValid; // A2：预览布局（含腾位）是否有效，lerp 据此用预览 TargetRect
 		CUIRect m_LineRect;
 	};
 
-	static SQmModuleDropPreview s_DropPreview = {nullptr, nullptr, nullptr, EQmModuleColumn::Left, 0, false, false, CUIRect()};
+	static SQmModuleDropPreview s_DropPreview = {nullptr, nullptr, nullptr, EQmModuleColumn::Left, 0, false, false, false, CUIRect()};
 	const float DropPreviewThickness = std::clamp(3.0f * UiScale, 2.0f, 4.0f);
 	const ColorRGBA DropPreviewColor(0.2f, 0.9f, 0.4f, 0.9f);
 	bool SearchSingleColumnMode = false;
@@ -2178,6 +2179,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		s_DropPreview.m_pDragged = nullptr;
 		s_DropPreview.m_pPrevVisible = nullptr;
 		s_DropPreview.m_pNextVisible = nullptr;
+		s_DropPreview.m_PreviewValid = false;
 	};
 	static std::array<CButtonContainer, QmModuleCount> s_aModuleCollapseButtons;
 	auto GetModuleCollapseButtonRect = [&](const SQmModuleEntry *pModule, const CUIRect &CardRect, CUIRect *pOutRect) -> bool {
@@ -2245,6 +2247,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	// 跨帧 DisplayRect cache（让位动画核心）：按 module state index 存上一帧显示位置，
 	// 每帧 lerp 追赶布局 TargetRect。独立于 s_vModuleCards（后者每帧 clear 重建）。
 	static std::array<CUIRect, QmModuleCount> s_aQmModuleDisplayRects{};
+	static std::array<CUIRect, QmModuleCount> s_aQmModulePreviewRects{}; // A2：预览布局（拖拽中含腾位），lerp 据此实时让位
 	std::vector<SQmModuleCardInfo> &ModuleCards = s_vModuleCards;
 	std::vector<const SQmModuleCardInfo *> &LeftCards = s_vLeftCards;
 	std::vector<const SQmModuleCardInfo *> &RightCards = s_vRightCards;
@@ -7566,6 +7569,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	auto UpdateDropPreview = [&]() {
 		s_DropPreview.m_Active = false;
 		s_DropPreview.m_Valid = false;
+		s_DropPreview.m_PreviewValid = false;
 		s_DropPreview.m_pDragged = nullptr;
 		s_DropPreview.m_pPrevVisible = nullptr;
 		s_DropPreview.m_pNextVisible = nullptr;
@@ -7704,6 +7708,81 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		s_DropPreview.m_LineRect = LineRect;
 	};
 
+	// A2：算预览布局（被拖卡在 s_DropPreview 落点时每卡的 rect，含腾位）。lerp 用此实时让位。
+	// 复用渲染期 HSplitTop 几何（ColumnTop + LgCardSpacing + CardHeight），边界天然正确。
+	// 不写 s_aQmModuleLayout（预览只渲染层；松手 CommitDropPreview 才 commit）。
+	auto ComputeDropPreviewLayout = [&]() {
+		s_aQmModulePreviewRects.fill(CUIRect{});
+		s_DropPreview.m_PreviewValid = false;
+		if(!s_DropPreview.m_Active || !s_DropPreview.m_Valid || s_DropPreview.m_pDragged == nullptr)
+			return;
+		if(s_DropPreview.m_pDragged->m_Column == EQmModuleColumn::Full)
+			return;
+
+		const SQmModuleEntry *pDragged = s_DropPreview.m_pDragged;
+		const int DraggedSI = GetQmModuleStateIndexById(pDragged->m_Id);
+		const float DraggedH = std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));
+		auto CardH = [&](const SQmModuleEntry *pE) -> float {
+			if(pE == pDragged)
+				return DraggedH;
+			const int SI = GetQmModuleStateIndexById(pE->m_Id);
+			const float H = s_aQmModuleLastHeights[SI];
+			return H > 0.0f ? H : GetQmModuleDefaultEstimatedHeight(*pE);
+		};
+		auto MakeRect = [](const CUIRect &CF, float Y, float H) {
+			CUIRect R;
+			R.x = CF.x;
+			R.w = CF.w;
+			R.y = Y;
+			R.h = H;
+			return R;
+		};
+		// 单列累加：被拖卡在 TargetColumn:InsertIndex 占位（LogicalIdx 遇被拖 continue 不 ++，与 UpdateDropPreview 的 InsertIndex 语义对账）
+		auto LayoutOneColumn = [&](EQmModuleColumn Col, const std::vector<const SQmModuleEntry *> &vCards,
+					       float ColumnTop, const CUIRect &ColFrame) {
+			float Y = ColumnTop;
+			int LogicalIdx = 0;
+			for(const SQmModuleEntry *pE : vCards)
+			{
+				if(pE == pDragged)
+					continue; // 被拖卡不在此占位（在落点单独占位）
+				if(Col == s_DropPreview.m_TargetColumn && LogicalIdx == s_DropPreview.m_InsertIndex)
+				{
+					Y += LgCardSpacing;
+					s_aQmModulePreviewRects[DraggedSI] = MakeRect(ColFrame, Y, DraggedH);
+					Y += DraggedH;
+				}
+				Y += LgCardSpacing;
+				s_aQmModulePreviewRects[GetQmModuleStateIndexById(pE->m_Id)] = MakeRect(ColFrame, Y, CardH(pE));
+				Y += CardH(pE);
+				++LogicalIdx;
+			}
+			// 列尾插入（含空列）
+			if(Col == s_DropPreview.m_TargetColumn && LogicalIdx == s_DropPreview.m_InsertIndex)
+			{
+				Y += LgCardSpacing;
+				s_aQmModulePreviewRects[DraggedSI] = MakeRect(ColFrame, Y, DraggedH);
+			}
+		};
+
+		EnsureColumnTops();
+		if(CompactLayout || SearchSingleColumnMode)
+		{
+			std::vector<const SQmModuleEntry *> vMerged;
+			for(const SQmModuleEntry *pE : s_vCachedLeftModules)
+				vMerged.push_back(pE);
+			for(const SQmModuleEntry *pE : s_vCachedRightModules)
+				vMerged.push_back(pE);
+			LayoutOneColumn(EQmModuleColumn::Left, vMerged, LeftColumnTop, LeftColumnFrame);
+		}
+		else
+		{
+			LayoutOneColumn(EQmModuleColumn::Left, s_vCachedLeftModules, LeftColumnTop, LeftColumnFrame);
+			LayoutOneColumn(EQmModuleColumn::Right, s_vCachedRightModules, RightColumnTop, RightColumnFrame);
+		}
+		s_DropPreview.m_PreviewValid = true;
+	};
+
 	auto RenderDragGhost = [&]() {
 		if(s_DragState.m_pDragging == nullptr || !s_DragState.m_HasDragAnchor)
 			return;
@@ -7825,17 +7904,19 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				else
 				{
 					CUIRect &Disp = s_aQmModuleDisplayRects[StateIndex];
-					// 首次初始化 = TargetRect（不 lerp 从 {0}，否则卡片偏到 TargetRect*0.25）
+					// A2：拖拽中用预览 TargetRect（含腾位）实时让位；否则布局 TargetRect
+					const CUIRect &EffectiveTarget = (s_DropPreview.m_PreviewValid && s_aQmModulePreviewRects[StateIndex].w > 0.0f) ? s_aQmModulePreviewRects[StateIndex] : Info.m_TargetRect;
+					// 首次初始化 = EffectiveTarget（不 lerp 从 {0}，否则卡片偏到 EffectiveTarget*0.25）
 					if(Disp.w <= 0.0f || Disp.h <= 0.0f)
 					{
-						Disp = Info.m_TargetRect;
+						Disp = EffectiveTarget;
 					}
 					else
 					{
-						Disp.x += (Info.m_TargetRect.x - Disp.x) * LerpT;
-						Disp.y += (Info.m_TargetRect.y - Disp.y) * LerpT;
-						Disp.w = Info.m_TargetRect.w;
-						Disp.h = Info.m_TargetRect.h;
+						Disp.x += (EffectiveTarget.x - Disp.x) * LerpT;
+						Disp.y += (EffectiveTarget.y - Disp.y) * LerpT;
+						Disp.w = EffectiveTarget.w;
+						Disp.h = EffectiveTarget.h;
 					}
 				}
 			}
@@ -7854,6 +7935,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	else if(!PrewarmOnly)
 	{
 		UpdateDropPreview();
+		ComputeDropPreviewLayout();
 		RenderDragGhost();
 		const bool MouseReleased = !Ui()->MouseButton(0) && Ui()->LastMouseButton(0);
 		if(MouseReleased)
