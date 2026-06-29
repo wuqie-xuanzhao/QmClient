@@ -2238,7 +2238,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 		if(s_DragState.m_pDragging != pModule)
 			return;
-		DrawDragOutline(CardRect);
+		// 被拖卡轮廓（黄框）已移除（扁平化：被拖卡和其他卡同层，无指示框）
 	};
 
 	static std::vector<SQmModuleCardInfo> s_vModuleCards;
@@ -7721,9 +7721,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 		const SQmModuleEntry *pDragged = s_DropPreview.m_pDragged;
 		const float DraggedH = std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));
-		// A2 修订（文本环绕模型）：让位位移封顶——间距一致，大卡超出部分同层覆盖（不割裂、不挤出视野）
-		const float YieldCap = LgHeadlineSize + LgCardPadding * 2.0f;
-		const float Yield = std::min(DraggedH, YieldCap) + LgCardSpacing;
+		// 文本环绕模型（pretext 式）：让位 = 被拖卡占位高度（DraggedH），其他卡让出被拖卡占的空间 → 同层环绕，不覆盖（间距 LgCardSpacing 统一）。大卡让位大是物理真实（float 图片占位大，文本让多）
+		const float Yield = DraggedH + LgCardSpacing;
 		// 被拖卡连续插入位置（鼠标 y，实时，无延迟——"文本环绕图片"模型）
 		const float DragY = Ui()->MouseY();
 		auto CardH = [&](const SQmModuleEntry *pE) -> float {
@@ -7932,7 +7931,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			ResetModuleDragState();
 		}
 		if(s_DropPreview.m_Active && s_DropPreview.m_Valid)
-			s_DropPreview.m_LineRect.Draw(DropPreviewColor, IGraphics::CORNER_ALL, DropPreviewThickness);
+		{
+			// 落点绿线已移除（扁平化：被拖卡跟鼠标 + 其他卡环绕让位，无需绿线指示）
+		}
 	}
 	if(!ColumnsReady)
 		EnsureColumns();
