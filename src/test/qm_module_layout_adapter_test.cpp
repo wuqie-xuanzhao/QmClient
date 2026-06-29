@@ -217,7 +217,6 @@ TEST(QmModuleLayoutAdapter, NormalizeFillsOrderGaps)
 }
 
 // 意图：真实 37 卡 serialize→parse 等价（行为等价回归基线的核心凭证）。
-// 每卡的 Id + column 必须保持；order 因 Normalize 连续化不比对具体值（空洞被填）。
 TEST(QmModuleLayoutAdapter, AllLegacyKeysRoundtripPreservesColumns)
 {
 	auto Defaults = MakeAll37Defaults();
@@ -232,4 +231,44 @@ TEST(QmModuleLayoutAdapter, AllLegacyKeysRoundtripPreservesColumns)
 		EXPECT_EQ(Out[i].m_Id, Defaults[i].m_Id) << "卡 " << Defaults[i].m_pKey;
 		EXPECT_EQ(Out[i].m_Column, Defaults[i].m_Column) << "卡 " << Defaults[i].m_pKey << " 列变化";
 	}
+}
+
+// === Step 2: CModel 接入 ===
+
+// 意图：CModel 路径（Load+Serialize）必须等价 Step 1b 旧基线（Parse+Serialize），否则 CModel 接入破坏等价性。
+TEST(QmModuleLayoutAdapter, LoadSerializeMatchesLegacyBaseline)
+{
+	auto Defaults = MakeAll37Defaults();
+	const char *pConfig = "chat_bubble:left:0;camera_view:right:0;coords:left:3";
+	std::vector<SQmModuleEntry> Legacy;
+	ParseLegacyQmLayout(pConfig, Defaults, Legacy);
+	char aLegacy[2048];
+	SerializeLegacyQmLayout(Legacy, aLegacy, sizeof(aLegacy));
+	LoadQmLayoutIntoModel(pConfig, Defaults);
+	char aModel[2048];
+	SerializeQmLayoutFromModel(aModel, sizeof(aModel));
+	EXPECT_STREQ(aModel, aLegacy);
+}
+
+// 意图：Move 改 CModel 布局，Serialize 反映新位置；Move 后 dirty（触发序列化）。
+TEST(QmModuleLayoutAdapter, MoveUpdatesModelAndSetsDirty)
+{
+	auto Defaults = MakeAll37Defaults();
+	LoadQmLayoutIntoModel("chat_bubble:left:0;camera_view:right:0", Defaults);
+	EXPECT_FALSE(IsQmLayoutModelDirty()); // Load 后清 dirty
+	EXPECT_TRUE(MoveQmModuleInModel(EQmModuleId::ChatBubble, EQmModuleColumn::Right, 0));
+	EXPECT_TRUE(IsQmLayoutModelDirty()); // Move 置 dirty
+	char aBuf[2048];
+	SerializeQmLayoutFromModel(aBuf, sizeof(aBuf));
+	const std::string Result(aBuf);
+	EXPECT_NE(Result.find("chat_bubble:right:"), std::string::npos);
+	EXPECT_EQ(Result.find("chat_bubble:left:"), std::string::npos);
+}
+
+// 意图：Full 保护——非 Full 卡不可拖成 Full（目标 Full 拒绝）。
+TEST(QmModuleLayoutAdapter, MoveRejectsFullTarget)
+{
+	auto Defaults = MakeAll37Defaults();
+	LoadQmLayoutIntoModel("chat_bubble:left:0", Defaults);
+	EXPECT_FALSE(MoveQmModuleInModel(EQmModuleId::ChatBubble, EQmModuleColumn::Full, 0));
 }

@@ -268,4 +268,67 @@ namespace qm_module
 			First = false;
 		}
 	}
+
+	qm_card_order::CModel &QmModuleLayoutModel()
+	{
+		static qm_card_order::CModel s_QmLayoutModel;
+		return s_QmLayoutModel;
+	}
+
+	void LoadQmLayoutIntoModel(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults)
+	{
+		qm_card_order::CModel &Model = QmModuleLayoutModel();
+		std::vector<SQmModuleEntry> vParsed;
+		ParseLegacyQmLayout(pConfig, vDefaults, vParsed);
+		std::vector<qm_card_order::SEntry> vModelEntries;
+		vModelEntries.reserve(vParsed.size());
+		for(const SQmModuleEntry &E : vParsed)
+		{
+			const char *pStable = QmModuleStableId(E.m_Id);
+			if(pStable == nullptr)
+				continue;
+			// tab 从注册表查（全局卡全集的默认 tab；栖梦模块在注册表都有对应 qm: 条目）
+			const char *pTab = nullptr;
+			const qm_card_registry::SCardDefault *pReg = qm_card_registry::FindByStableId(pStable);
+			if(pReg != nullptr)
+				pTab = pReg->m_pDefaultTab;
+			vModelEntries.push_back({pStable, pTab, QmModuleColumnToInt(E.m_Column), E.m_OrderInColumn});
+		}
+		Model.SetEntries(vModelEntries);
+		Model.ClearDirty(); // 加载完成，清除 dirty（后续 Move 才置 dirty 触发序列化）
+	}
+
+	void SerializeQmLayoutFromModel(char *pOut, int OutSize)
+	{
+		qm_card_order::CModel &Model = QmModuleLayoutModel();
+		std::vector<SQmModuleEntry> vEntries;
+		vEntries.reserve(Model.Count());
+		for(int i = 0; i < Model.Count(); ++i)
+		{
+			const qm_card_order::SEntry &E = Model.Entry(i);
+			EQmModuleId Id;
+			if(!QmModuleIdFromStableId(E.m_pStableId, &Id))
+				continue;
+			// stableId "qm:<key>" 去 "qm:" 前缀 = 持久化 key（与 s_aQmModuleDefaults.m_pKey 一致）
+			const char *pKey = E.m_pStableId + 3;
+			vEntries.push_back({Id, QmModuleColumnFromInt(E.m_Column), E.m_OrderInColumn, pKey});
+		}
+		SerializeLegacyQmLayout(vEntries, pOut, OutSize);
+	}
+
+	bool MoveQmModuleInModel(EQmModuleId Id, EQmModuleColumn TargetColumn, int TargetOrder)
+	{
+		qm_card_order::CModel &Model = QmModuleLayoutModel();
+		const char *pStable = QmModuleStableId(Id);
+		if(pStable == nullptr)
+			return false;
+		// Full 保护：目标 Full 拒绝（非 Full 卡不可拖成 Full）；源 Full 卡的拒拖由调用方 CommitDropPreview 保证
+		if(TargetColumn == EQmModuleColumn::Full)
+			return false;
+		Model.Move(pStable, QmModuleColumnToInt(TargetColumn), TargetOrder);
+		return true;
+	}
+
+	bool IsQmLayoutModelDirty() { return QmModuleLayoutModel().IsDirty(); }
+	void ClearQmLayoutModelDirty() { QmModuleLayoutModel().ClearDirty(); }
 } // namespace qm_module
