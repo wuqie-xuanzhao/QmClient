@@ -29,6 +29,11 @@ namespace qm_card_registry
 
 	// 按 stableId 查默认 Placement（未命中或 nullptr 返回 nullptr）
 	const SCardDefault *FindByStableId(const char *pStableId);
+
+	// 栖梦旧 key（持久化 key）→ stableId 迁移映射（从注册表派生，DRY）。
+	// 命中返回 "qm:<key>"，未命中或 nullptr 返回 nullptr。
+	// UI 名（如 QiaFen 的 keyword_reply）不在注册表故不映射——以持久化 key 为权威，避免迁移丢用户布局。
+	const char *MigrateLegacyKey(const char *pLegacyKey);
 } // namespace qm_card_registry
 
 #endif // GAME_CLIENT_QMUI_QMCARDREGISTRY_H

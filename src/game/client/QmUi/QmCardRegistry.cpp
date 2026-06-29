@@ -103,4 +103,16 @@ namespace qm_card_registry
 		}
 		return nullptr;
 	}
+
+	const char *MigrateLegacyKey(const char *pLegacyKey)
+	{
+		if(pLegacyKey == nullptr)
+			return nullptr;
+		// 从注册表派生：构造 stableId="qm:"+legacyKey 查表（DRY，不硬编码 key 列表）。
+		// UI 名（如 keyword_reply）不在注册表，构造后查不到→nullptr，天然以持久化 key 为权威。
+		char aStableId[128];
+		str_format(aStableId, sizeof(aStableId), "qm:%s", pLegacyKey);
+		const SCardDefault *D = FindByStableId(aStableId);
+		return D != nullptr ? D->m_pStableId : nullptr;
+	}
 } // namespace qm_card_registry

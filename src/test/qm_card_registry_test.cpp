@@ -31,3 +31,27 @@ TEST(QmCardRegistry, DataDebtCardsHaveTabAssignment)
 	EXPECT_NE(qm_card_registry::FindByStableId("qm:laser")->m_pDefaultTab, nullptr);
 	EXPECT_NE(qm_card_registry::FindByStableId("qm:nameplate_text")->m_pDefaultTab, nullptr);
 }
+
+// 意图：B2 迁移要把栖梦旧 key（chat_bubble）映射到新 stableId（qm:chat_bubble）。
+// 映射函数从注册表派生（DRY）；QiaFen 以持久化 key qiafen 为权威，UI 名 keyword_reply 不映射。
+TEST(QmCardRegistry, MigratesLegacyKeyToNamespaced)
+{
+	EXPECT_EQ(std::string(qm_card_registry::MigrateLegacyKey("chat_bubble")), "qm:chat_bubble");
+	EXPECT_EQ(std::string(qm_card_registry::MigrateLegacyKey("qiafen")), "qm:qiafen");
+	EXPECT_EQ(qm_card_registry::MigrateLegacyKey("keyword_reply"), nullptr); // UI 名不映射
+}
+
+// 意图：栖梦 38 个 m_pKey 必须全部可映射（迁移兜底全覆盖，无遗漏）。
+TEST(QmCardRegistry, AllQimengLegacyKeysMigratable)
+{
+	for(const auto &E : qm_card_registry::Defaults())
+	{
+		std::string Id = E.m_pStableId;
+		if(Id.rfind("qm:", 0) == 0)
+		{
+			std::string Legacy = Id.substr(3);
+			EXPECT_NE(qm_card_registry::MigrateLegacyKey(Legacy.c_str()), nullptr)
+				<< "未映射的栖梦 key: " << Legacy;
+		}
+	}
+}
