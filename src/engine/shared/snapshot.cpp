@@ -5,11 +5,9 @@
 #include "compression.h"
 #include "uuid_manager.h"
 
-#include <base/bytes.h>
-#include <base/dbg.h>
 #include <base/math.h>
-#include <base/mem.h>
 #include <base/str.h>
+#include <base/system.h>
 
 #include <generated/protocol7.h>
 #include <generated/protocolglue.h>
