@@ -4606,7 +4606,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 
 	const bool PackChanged = str_comp(g_Config.m_SndPack, s_aSndPack) != 0;
-		m_NeedRestartSound = m_NeedRestartSound || PackChanged;
+	m_NeedRestartSound = m_NeedRestartSound || PackChanged;
 	EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);
 }
 

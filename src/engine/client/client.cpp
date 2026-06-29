@@ -1712,7 +1712,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, SHA256_DI
 
 	// Unload the current map and reset all snapshots before loading a new map,
 	// because the snapshots are only valid for the old map.
-	GameClient()->Map()->Unload();
+	m_pMap->Unload();
 	for(int Dummy = 0; Dummy < NUM_DUMMIES; Dummy++)
 	{
 		m_aapSnapshots[Dummy][SNAP_CURRENT] = nullptr;
@@ -1725,7 +1725,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, SHA256_DI
 	m_SnapCrcErrors = 0;
 	GameClient()->InvalidateSnapshot();
 
-	if(!GameClient()->Map()->Load(pName, Storage(), pFilename, IStorage::TYPE_ALL))
+	if(!m_pMap->Load(pFilename))
 	{
 		str_format(s_aErrorMsg, sizeof(s_aErrorMsg), "map '%s' not found", pFilename);
 		return s_aErrorMsg;
@@ -2030,7 +2030,7 @@ void CClient::ProcessServerInfo(int RawType, NETADDR *pFrom, const void *pData, 
 			// newer or equal to something the server already sent
 			// us.
 			if(SavedType >= m_CurrentServerInfo.m_Type &&
-				GameClient()->Map()->IsLoaded())
+				m_pMap->IsLoaded())
 			{
 				m_CurrentServerInfo = Info;
 				m_CurrentServerInfoRequestTime = -1;
@@ -2461,7 +2461,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		}
 		else if(Conn == CONN_MAIN && (pPacket->m_Flags & NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_CON_READY)
 		{
-			if(!GameClient()->Map()->IsLoaded())
+			if(!m_pMap->IsLoaded())
 			{
 				return;
 			}
@@ -2730,7 +2730,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 		{
 			// We are not allowed to process snapshots yet.
 			if(State() < IClient::STATE_LOADING ||
-				!GameClient()->Map()->IsLoaded())
+				!m_pMap->IsLoaded())
 			{
 				return;
 			}

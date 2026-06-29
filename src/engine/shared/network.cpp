@@ -52,23 +52,43 @@ bool CPacketChunkUnpacker::UnpackNextChunk(CNetChunk *pChunk)
 			return false;
 		}
 
-		unsigned char *pData = m_Data.m_aChunkData;
-
-		// TODO: add checking here so we don't read too far
 		const int HeaderSplit = m_pConnection->m_Sixup ? 6 : 4;
+		auto UnpackChunkHeader = [pEnd, HeaderSplit](unsigned char *&pData, CNetChunkHeader &Header) {
+			if(pEnd - pData < 2)
+			{
+				return false;
+			}
+			const bool Vital = ((pData[0] >> 6) & NET_CHUNKFLAG_VITAL) != 0;
+			if(Vital && pEnd - pData < 3)
+			{
+				return false;
+			}
+			pData = Header.Unpack(pData, HeaderSplit);
+			return true;
+		};
+
+		unsigned char *pData = m_Data.m_aChunkData;
 		for(int i = 0; i < m_CurrentChunk; i++)
 		{
 			CNetChunkHeader SkippedHeader;
-			pData = SkippedHeader.Unpack(pData, HeaderSplit);
+			if(!UnpackChunkHeader(pData, SkippedHeader) || pEnd - pData < SkippedHeader.m_Size)
+			{
+				m_Valid = false;
+				return false;
+			}
 			pData += SkippedHeader.m_Size;
 		}
 
 		// unpack the header
 		CNetChunkHeader Header;
-		pData = Header.Unpack(pData, HeaderSplit);
+		if(!UnpackChunkHeader(pData, Header))
+		{
+			m_Valid = false;
+			return false;
+		}
 		m_CurrentChunk++;
 
-		if(pData + Header.m_Size > pEnd)
+		if(pEnd - pData < Header.m_Size)
 		{
 			m_Valid = false;
 			return false;

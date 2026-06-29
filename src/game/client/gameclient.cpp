@@ -4884,8 +4884,6 @@ void CGameClient::OnPredict()
 				}
 			}
 		}
-
-		HandlePredictedEvents(Tick);
 	}
 
 	// detect mispredictions of other players and make corrections smoother when possible

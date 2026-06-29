@@ -8856,7 +8856,7 @@ void CEditor::AdjustBrushSpecialTiles(bool UseNextFree, int Adjust)
 
 		std::shared_ptr<CLayerTiles> pLayerTiles = std::static_pointer_cast<CLayerTiles>(pLayer);
 
-		if(pLayerTiles->m_HasTele && (!UseNextFree || Map()->m_pTeleLayer != nullptr))
+		if(pLayerTiles->m_HasTele && (!UseNextFree || m_Map.m_pTeleLayer != nullptr))
 		{
 			const int NextFreeTeleNumber = UseNextFree ? m_Map.m_pTeleLayer->FindNextFreeNumber(false) : 0;
 			const int NextFreeCheckpointNumber = UseNextFree ? m_Map.m_pTeleLayer->FindNextFreeNumber(true) : 0;
@@ -8909,7 +8909,7 @@ void CEditor::AdjustBrushSpecialTiles(bool UseNextFree, int Adjust)
 				}
 			}
 		}
-		else if(pLayerTiles->m_HasSwitch && (!UseNextFree || Map()->m_pSwitchLayer != nullptr))
+		else if(pLayerTiles->m_HasSwitch && (!UseNextFree || m_Map.m_pSwitchLayer != nullptr))
 		{
 			const int NextFreeNumber = UseNextFree ? m_Map.m_pSwitchLayer->FindNextFreeNumber() : 0;
 			std::shared_ptr<CLayerSwitch> pSwitchLayer = std::static_pointer_cast<CLayerSwitch>(pLayer);

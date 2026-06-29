@@ -17,6 +17,7 @@
 #include <engine/map.h>
 #include <engine/server.h>
 #include <engine/server/authmanager.h>
+#include <engine/shared/client_brand.h>
 #include <engine/shared/compression.h>
 #include <engine/shared/config.h>
 #include <engine/shared/console.h>
@@ -36,7 +37,6 @@
 #include <engine/shared/protocol.h>
 #include <engine/shared/protocol7.h>
 #include <engine/shared/protocol_ex.h>
-#include <engine/shared/client_brand.h>
 #include <engine/shared/rust_version.h>
 #include <engine/shared/snapshot.h>
 #include <engine/storage.h>
@@ -3118,7 +3118,7 @@ void CServer::PumpNetwork(bool PacketWaiting)
 	CNetChunk Packet;
 	SECURITY_TOKEN ResponseToken;
 	const bool PrintKcpStats = Config()->m_SvKcpStats &&
-		(m_KcpLastStatsTime == 0 || time_get() - m_KcpLastStatsTime >= time_freq() * 5);
+				   (m_KcpLastStatsTime == 0 || time_get() - m_KcpLastStatsTime >= time_freq() * 5);
 
 	for(int ClientId = 0; ClientId < MaxClients(); ++ClientId)
 	{
