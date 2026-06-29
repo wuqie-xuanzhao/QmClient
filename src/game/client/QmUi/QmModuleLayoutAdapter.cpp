@@ -298,7 +298,7 @@ namespace qm_module
 		Model.ClearDirty(); // 加载完成，清除 dirty（后续 Move 才置 dirty 触发序列化）
 	}
 
-	void SerializeQmLayoutFromModel(char *pOut, int OutSize)
+	std::vector<SQmModuleEntry> SyncModelToLegacyLayout()
 	{
 		qm_card_order::CModel &Model = QmModuleLayoutModel();
 		std::vector<SQmModuleEntry> vEntries;
@@ -313,6 +313,12 @@ namespace qm_module
 			const char *pKey = E.m_pStableId + 3;
 			vEntries.push_back({Id, QmModuleColumnFromInt(E.m_Column), E.m_OrderInColumn, pKey});
 		}
+		return vEntries;
+	}
+
+	void SerializeQmLayoutFromModel(char *pOut, int OutSize)
+	{
+		std::vector<SQmModuleEntry> vEntries = SyncModelToLegacyLayout();
 		SerializeLegacyQmLayout(vEntries, pOut, OutSize);
 	}
 

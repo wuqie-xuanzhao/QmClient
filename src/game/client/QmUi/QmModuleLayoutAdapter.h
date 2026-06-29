@@ -34,6 +34,9 @@ namespace qm_module
 	// 栖梦 config → CModel：ParseLegacyQmLayout 解析（defaults 基准 + Full 保护 + 容错 + Normalize）
 	// → 转 CModel::SEntry（stableId + tab 从注册表查 + column int + order）→ SetEntries；加载后 ClearDirty。
 	void LoadQmLayoutIntoModel(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults);
+	// CModel → SQmModuleEntry[]（按 stableId 反查 EQmModuleId，column int→枚举，key=stableId 去 "qm:" 前缀 = 持久化 key）。
+	// 供 Step 4 的 RefreshQmModuleLayoutFromModel（写 s_aQmModuleLayout）+ SerializeQmLayoutFromModel 复用。
+	std::vector<SQmModuleEntry> SyncModelToLegacyLayout();
 	// CModel → 栖梦 config：CModel entries 转 SQmModuleEntry（key 用 stableId 去 "qm:" 前缀 = 持久化 key），SerializeLegacyQmLayout 输出。
 	void SerializeQmLayoutFromModel(char *pOut, int OutSize);
 	// CModel.Move + Full 保护（目标 Full 拒绝——非 Full 卡不可拖成 Full；源 Full 卡的拒拖由调用方 CommitDropPreview 保证）。返回是否移动。

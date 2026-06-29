@@ -272,3 +272,30 @@ TEST(QmModuleLayoutAdapter, MoveRejectsFullTarget)
 	LoadQmLayoutIntoModel("chat_bubble:left:0", Defaults);
 	EXPECT_FALSE(MoveQmModuleInModel(EQmModuleId::ChatBubble, EQmModuleColumn::Full, 0));
 }
+
+// 意图：SyncModelToLegacyLayout 把 CModel 转 SQmModuleEntry[]（全卡 + 列保持），供 Step 4 Refresh + Serialize 复用。
+TEST(QmModuleLayoutAdapter, SyncModelToLegacyLayoutPreservesColumns)
+{
+	auto Defaults = MakeAll37Defaults();
+	LoadQmLayoutIntoModel("chat_bubble:left:0;camera_view:right:0", Defaults);
+	std::vector<SQmModuleEntry> vEntries = SyncModelToLegacyLayout();
+	ASSERT_EQ(vEntries.size(), Defaults.size()); // 全 37 卡
+	bool FoundChatBubble = false;
+	bool FoundCameraView = false;
+	for(const SQmModuleEntry &E : vEntries)
+	{
+		std::string Key = E.m_pKey ? E.m_pKey : "";
+		if(Key == "chat_bubble")
+		{
+			EXPECT_EQ(E.m_Column, EQmModuleColumn::Left);
+			FoundChatBubble = true;
+		}
+		if(Key == "camera_view")
+		{
+			EXPECT_EQ(E.m_Column, EQmModuleColumn::Right);
+			FoundCameraView = true;
+		}
+	}
+	EXPECT_TRUE(FoundChatBubble);
+	EXPECT_TRUE(FoundCameraView);
+}
