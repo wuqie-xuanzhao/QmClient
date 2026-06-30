@@ -7720,7 +7720,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			return;
 
 		const SQmModuleEntry *pDragged = s_DropPreview.m_pDragged;
-		const float DraggedH = std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));
+		const int DraggedSI = GetQmModuleStateIndexById(pDragged->m_Id);
+		const float LastDraggedH = s_aQmModuleLastHeights[DraggedSI];
+		// 让位高度用被拖卡【当前渲染高度】（s_aQmModuleLastHeights），而非按下时的旧 m_DraggedHeight——
+		// 否则被拖卡展开/折叠后高度变化，让位不够 → 被拖卡覆盖下方卡（"消失"）
+		const float DraggedH = (LastDraggedH > 0.0f) ? LastDraggedH : std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));
 		// 文本环绕模型（pretext 式）：让位 = 被拖卡占位高度（DraggedH），其他卡让出被拖卡占的空间 → 同层环绕，不覆盖（间距 LgCardSpacing 统一）。大卡让位大是物理真实（float 图片占位大，文本让多）
 		const float Yield = DraggedH + LgCardSpacing;
 		// 被拖卡连续插入位置（鼠标 y，实时，无延迟——"文本环绕图片"模型）
