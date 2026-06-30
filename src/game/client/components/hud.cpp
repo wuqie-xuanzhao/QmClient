@@ -2862,17 +2862,7 @@ void CHud::RenderSwitchCountdowns()
 		if(g_Config.m_ClShowFrozenText > 0)
 			TextRender()->Text(0, m_Width / 2 - TextRender()->TextWidth(0, 10, aBuf, -1, -1.0f) / 2, 12, 10, aBuf, -1.0f);
 
-<<<<<<< HEAD
 		if(g_Config.m_ClShowFrozenHud > 0 && !m_pClient->m_Scoreboard.Active())
-=======
-		//if(m_pClient->m_PredictedChar.m_ActiveWeapon)
-		
-		//str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_PrevPredicted.m_FreezeEnd);
-		//str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_ClWhatsMyPing);
-
-		//TextRender()->Text(0, m_Width / 2 - TextRender()->TextWidth(0, 10, aBuf, -1, -1.0f) / 2, 20, 10, aBuf, -1.0f);
-		if(g_Config.m_ClShowFrozenHud > 0 && !m_pClient->m_Scoreboard.Active() && !(LocalTeamID == 0 && g_Config.m_ClFrozenHudTeamOnly))
->>>>>>> febbb28663 (fix spec skin bug, added only display frozen hud in team option. changed default of helper percent)
 		{
 			CTeeRenderInfo FreezeInfo;
 			int Skin = m_pClient->m_Skins.Find("x_ninja");
@@ -2909,7 +2899,7 @@ void CHud::RenderSwitchCountdowns()
 			int NumInRow = 0;
 			int CurrentRow = 0;
 			
-			for(int OverflowIndex = 0; OverflowIndex < 1 + Overflow; OverflowIndex++)
+			for(int OverflowIndex = 0; OverflowIndex < 1 +Overflow; OverflowIndex++)
 			{
 				for(int i = 0; i < MAX_CLIENTS && NumDisplayed < MaxTees * MaxRows; i++)
 				{
@@ -2949,7 +2939,6 @@ void CHud::RenderSwitchCountdowns()
 						RenderTools()->GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
 						vec2 TeeRenderPos(StartPos + progressiveOffset, 9.0f + CurrentRow * TeeSize);
 						float Alpha = 1.0f;
-						CNetObj_Character CurChar = m_pClient->m_aClients[i].m_RenderCur;
 						if(g_Config.m_ClShowFrozenHud == 2.0 && Frozen)
 						{
 							Alpha = 0.6f;
@@ -2958,7 +2947,7 @@ void CHud::RenderSwitchCountdowns()
 							TeeInfo.m_ColorBody.b *= 0.4;
 						}
 						if(Frozen)
-							RenderTools()->RenderTee(pIdleState, &TeeInfo, CurChar.m_Emote, vec2(1.0f, 0.0f), TeeRenderPos, Alpha);
+							RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_PAIN, vec2(1.0f, 0.0f), TeeRenderPos, Alpha);
 						else
 							RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
 						progressiveOffset += TeeSize;

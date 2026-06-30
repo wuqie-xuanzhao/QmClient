@@ -1405,7 +1405,6 @@ void CPlayers::RenderPlayerGhost(
 	{
 		if(Inactive)
 		{
-<<<<<<< HEAD
 			State.Add(Direction.x < 0 ? &g_pData->m_aAnimations[ANIM_SIT_LEFT] : &g_pData->m_aAnimations[ANIM_SIT_RIGHT], 0, 1.0f);
 			RenderInfo.m_FeetFlipped = true;
 		}
@@ -1421,16 +1420,6 @@ void CPlayers::RenderPlayerGhost(
 		else
 			State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
 	}
-=======
-			// only render active characters
-			if(!m_pClient->m_aClients[i].m_Active)
-				continue;
-
-			if(p % 3 == 0 && !m_pClient->m_aClients[i].m_SpecCharPresent && !g_Config.m_ClFixKoGSpec)
-				continue;
-			if(p % 3 != 0 && !m_pClient->m_Snap.m_aCharacters[i].m_Active)
-				continue;
->>>>>>> febbb28663 (fix spec skin bug, added only display frozen hud in team option. changed default of helper percent)
 
 	const float HammerAnimationTimeScale = 5.0f;
 	if(Player.m_Weapon == WEAPON_HAMMER)
