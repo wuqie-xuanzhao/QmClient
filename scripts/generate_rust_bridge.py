@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import subprocess
 import sys
-import argparse
 
 os.chdir(os.path.dirname(__file__) + "/..")
 
@@ -34,7 +34,6 @@ def main():
     p = argparse.ArgumentParser(description="Generate src/rust-bridge")
     _args = p.parse_args()
 
-<<<<<<< HEAD
     cxxbridge = find_cxxbridge(version="1.0.194")
     for input_, output_prefix in FILES.items():
         subprocess.check_call(
@@ -55,24 +54,6 @@ def main():
             "src/rust-bridge/base/cxx.h",
         ]
     )
-=======
-	cxxbridge = find_cxxbridge(version="1.0.194")
-	for input_, output_prefix in FILES.items():
-		subprocess.check_call([
-			cxxbridge,
-			input_,
-			"--output",
-			f"{output_prefix}.cpp",
-			"--output",
-			f"{output_prefix}.h",
-		])
-	subprocess.check_call([
-		cxxbridge,
-		"--header",
-		"--output",
-		"src/rust-bridge/base/cxx.h",
-	])
->>>>>>> 7bcb5a738e (Upgrade cxx to 1.0.194)
 
 
 if __name__ == "__main__":
