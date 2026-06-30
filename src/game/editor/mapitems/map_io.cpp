@@ -87,7 +87,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 	CDataFileWriter Writer;
 	if(!Writer.Open(m_pEditor->Storage(), aFilenameTmp))
 	{
-	str_format(aBuf, sizeof(aBuf), "错误：无法打开文件“%s”进行写入。", aFilenameTmp);
+		str_format(aBuf, sizeof(aBuf), "错误：无法打开文件“%s”进行写入。", aFilenameTmp);
 		ErrorHandler(aBuf);
 		return false;
 	}
@@ -235,7 +235,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 		{
 			if(pLayer->m_Type == LAYERTYPE_TILES)
 			{
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存图块层");
+				m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存图块层");
 				std::shared_ptr<CLayerTiles> pLayerTiles = std::static_pointer_cast<CLayerTiles>(pLayer);
 				pLayerTiles->PrepareForSave();
 
@@ -367,7 +367,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 			}
 			else if(pLayer->m_Type == LAYERTYPE_QUADS)
 			{
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存四边形层");
+				m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存四边形层");
 				std::shared_ptr<CLayerQuads> pLayerQuads = std::static_pointer_cast<CLayerQuads>(pLayer);
 				CMapItemLayerQuads Item;
 				Item.m_Version = 2;
@@ -406,7 +406,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 			}
 			else if(pLayer->m_Type == LAYERTYPE_SOUNDS)
 			{
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存声音层");
+				m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存声音层");
 				std::shared_ptr<CLayerSounds> pLayerSounds = std::static_pointer_cast<CLayerSounds>(pLayer);
 				CMapItemLayerSounds Item;
 				Item.m_Version = 2;
@@ -580,7 +580,7 @@ bool CEditorMap::PerformPreSaveSanityChecks(const std::function<void(const char 
 	{
 		if(!pImage->m_External && pImage->m_pData == nullptr)
 		{
-		str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为图像“%s”未能加载。请移除或替换该图像。", pImage->m_aName);
+			str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为图像“%s”未能加载。请移除或替换该图像。", pImage->m_aName);
 			ErrorHandler(aErrorMessage);
 			Success = false;
 		}
@@ -590,7 +590,7 @@ bool CEditorMap::PerformPreSaveSanityChecks(const std::function<void(const char 
 	{
 		if(pSound->m_pData == nullptr)
 		{
-		str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为声音“%s”未能加载。请移除或替换该声音。", pSound->m_aName);
+			str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为声音“%s”未能加载。请移除或替换该声音。", pSound->m_aName);
 			ErrorHandler(aErrorMessage);
 			Success = false;
 		}
@@ -635,7 +635,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 				if(pStr == nullptr)
 				{
 					char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "错误：无法从地图信息中读取%s。", pErrorContext);
+					str_format(aBuf, sizeof(aBuf), "错误：无法从地图信息中读取%s。", pErrorContext);
 					ErrorHandler(aBuf);
 					pBuffer[0] = '\0';
 				}
@@ -645,10 +645,10 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 				}
 			};
 
-		ReadStringInfo(pItem->m_Author, m_MapInfo.m_aAuthor, sizeof(m_MapInfo.m_aAuthor), "作者");
-		ReadStringInfo(pItem->m_MapVersion, m_MapInfo.m_aVersion, sizeof(m_MapInfo.m_aVersion), "版本");
-		ReadStringInfo(pItem->m_Credits, m_MapInfo.m_aCredits, sizeof(m_MapInfo.m_aCredits), "致谢");
-		ReadStringInfo(pItem->m_License, m_MapInfo.m_aLicense, sizeof(m_MapInfo.m_aLicense), "许可");
+			ReadStringInfo(pItem->m_Author, m_MapInfo.m_aAuthor, sizeof(m_MapInfo.m_aAuthor), "作者");
+			ReadStringInfo(pItem->m_MapVersion, m_MapInfo.m_aVersion, sizeof(m_MapInfo.m_aVersion), "版本");
+			ReadStringInfo(pItem->m_Credits, m_MapInfo.m_aCredits, sizeof(m_MapInfo.m_aCredits), "致谢");
+			ReadStringInfo(pItem->m_License, m_MapInfo.m_aLicense, sizeof(m_MapInfo.m_aLicense), "许可");
 
 			if(pItem->m_Version != 1 || ItemSize < (int)sizeof(CMapItemInfoSettings))
 				break;
@@ -684,7 +684,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 			if(pName == nullptr || pName[0] == '\0')
 			{
 				char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "错误：无法读取图像 %d 的名称。", i);
+				str_format(aBuf, sizeof(aBuf), "错误：无法读取图像 %d 的名称。", i);
 				ErrorHandler(aBuf);
 			}
 			else
@@ -693,7 +693,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 			if(pItem->m_Version > 1 && pItem->m_MustBe1 != 1)
 			{
 				char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "错误：图像 %d“%s”的类型不受支持。", i, pImg->m_aName);
+				str_format(aBuf, sizeof(aBuf), "错误：图像 %d“%s”的类型不受支持。", i, pImg->m_aName);
 				ErrorHandler(aBuf);
 			}
 
@@ -725,7 +725,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 				}
 				else
 				{
-				str_format(aBuf, sizeof(aBuf), "错误：无法加载外部图像“%s”。", pImg->m_aName);
+					str_format(aBuf, sizeof(aBuf), "错误：无法加载外部图像“%s”。", pImg->m_aName);
 					ErrorHandler(aBuf);
 				}
 			}
@@ -799,7 +799,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 			if(pName == nullptr || pName[0] == '\0')
 			{
 				char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "错误：无法读取声音 %d 的名称。", i);
+				str_format(aBuf, sizeof(aBuf), "错误：无法读取声音 %d 的名称。", i);
 				ErrorHandler(aBuf);
 			}
 			else
@@ -817,7 +817,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 				}
 				else
 				{
-				str_format(aBuf, sizeof(aBuf), "错误：无法加载外部声音“%s”。", pSound->m_aName);
+					str_format(aBuf, sizeof(aBuf), "错误：无法加载外部声音“%s”。", pSound->m_aName);
 					ErrorHandler(aBuf);
 				}
 			}
@@ -1203,7 +1203,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 			if(Channels != pItem->m_Channels)
 			{
 				char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "错误：包络线 %d 的通道数 %d 无效，已更正为 %d。", e, pItem->m_Channels, Channels);
+				str_format(aBuf, sizeof(aBuf), "错误：包络线 %d 的通道数 %d 无效，已更正为 %d。", e, pItem->m_Channels, Channels);
 				ErrorHandler(aBuf);
 			}
 
@@ -1427,7 +1427,7 @@ void CEditorMap::PerformSanityChecks(const FErrorHandler &ErrorHandler)
 						{
 							pLayerTiles->m_Image = -1;
 							char aBuf[IO_MAX_PATH_LENGTH + 128];
-			str_format(aBuf, sizeof(aBuf), "错误：图像“%s”（大小 %" PRIzu "x%" PRIzu "）的宽或高不能被 16 整除，因此不能用于图块层。已取消组 #%" PRIzu "“%s”中图层 #%" PRIzu "“%s”的图像。", pImage->m_aName, pImage->m_Width, pImage->m_Height, GroupIndex, pGroup->m_aName, LayerIndex, pLayer->m_aName);
+							str_format(aBuf, sizeof(aBuf), "错误：图像“%s”（大小 %" PRIzu "x%" PRIzu "）的宽或高不能被 16 整除，因此不能用于图块层。已取消组 #%" PRIzu "“%s”中图层 #%" PRIzu "“%s”的图像。", pImage->m_aName, pImage->m_Width, pImage->m_Height, GroupIndex, pGroup->m_aName, LayerIndex, pLayer->m_aName);
 							ErrorHandler(aBuf);
 						}
 					}

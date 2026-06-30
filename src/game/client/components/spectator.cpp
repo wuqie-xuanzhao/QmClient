@@ -746,5 +746,3 @@ void CSpectator::SpectateClosest()
 	if(NewSpectatorId > -1)
 		Spectate(NewSpectatorId);
 }
-
-

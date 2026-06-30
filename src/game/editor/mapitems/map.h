@@ -16,9 +16,9 @@
 #include <game/editor/mapitems/envelope.h>
 #include <game/editor/mapitems/layer.h>
 #include <game/editor/proof_mode.h>
-#include <game/editor/references.h>
-#include <game/editor/quadart.h>
 #include <game/editor/quad_knife.h>
+#include <game/editor/quadart.h>
+#include <game/editor/references.h>
 
 #include <functional>
 #include <memory>

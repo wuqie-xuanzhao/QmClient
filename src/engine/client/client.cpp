@@ -5089,8 +5089,7 @@ bool CClient::DemoRecorder_AddDemoMarker(int Recorder)
 	return DemoRecorders()[Recorder].AddDemoMarker();
 }
 
-CDemoRecorder (&CClient::DemoRecorders())[RECORDER_MAX]
-{
+CDemoRecorder (&CClient::DemoRecorders()) [RECORDER_MAX] {
 	if(IsSixup())
 	{
 		return m_aDemoRecordersSixup;
