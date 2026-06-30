@@ -4365,8 +4365,6 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		s_SndPackInit = true;
 	}
 
-=======
->>>>>>> 2b51f7bfbe (Fix sound settings restart hint when changing setting by console)
 	CUIRect Button;
 	auto DoSliderWithValueInput = [this](const void *pId, int *pOption, const CUIRect &Rect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, const char *pSuffix = "") {
 		CUIRect Label, Controls, Slider, Input, SuffixRect;

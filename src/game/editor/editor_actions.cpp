@@ -400,6 +400,7 @@ CEditorActionEditQuadProp::CEditorActionEditQuadProp(CEditorMap *pMap, int Group
 		"位置纵",
 		"位置包络线",
 		"位置包络线偏移",
+		"颜色",
 		"颜色包络线",
 		"颜色包络线偏移"};
 	static_assert(std::size(s_apNames) == (size_t)EQuadProp::NUM_PROPS);
