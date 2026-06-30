@@ -1981,7 +1981,7 @@ void CUi::RenderBackButton()
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH |
 				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING |
 				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-	DoLabel(&m_BackButtonRect, FontIcon::CHEVRON_LEFT, m_BackButtonRect.w * 0.5f, TEXTALIGN_MC);
+	DoLabel(&m_BackButtonRect, FONT_ICON_CHEVRON_LEFT, m_BackButtonRect.w * 0.5f, TEXTALIGN_MC);
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 }

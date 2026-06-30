@@ -7197,7 +7197,11 @@ void CEditor::OnInput(const IInput::CEvent &Event)
 	{
 		if((Event.m_Flags & IInput::FLAG_PRESS) != 0 && (Event.m_Flags & IInput::FLAG_REPEAT) == 0)
 		{
-			m_QuickActionShowHelp.Call();
+			const char *pLink = Localize("https://wiki.ddnet.org/wiki/Mapping");
+			if(!Client()->ViewLink(pLink))
+			{
+				ShowFileDialogError("无法在默认浏览器中打开链接“%s”。", pLink);
+			}
 		}
 		return;
 	}
