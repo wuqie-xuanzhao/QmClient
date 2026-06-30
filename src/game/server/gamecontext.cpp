@@ -1056,24 +1056,6 @@ void CGameContext::AbortVoteKickOnDisconnect(int ClientId)
 		m_VoteEnforce = VOTE_ENFORCE_ABORT;
 }
 
-void CGameContext::CheckPureTuning()
-{
-	// might not be created yet during start up
-	if(!m_pController)
-		return;
-
-	if(str_comp(m_pController->m_pGameType, "DM") == 0 ||
-		str_comp(m_pController->m_pGameType, "TDM") == 0 ||
-		str_comp(m_pController->m_pGameType, "CTF") == 0)
-	{
-		if(mem_comp(&CTuningParams::DEFAULT, &m_aTuningList[0], sizeof(CTuningParams)) != 0)
-		{
-			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "resetting tuning due to pure server");
-			m_aTuningList[0] = CTuningParams::DEFAULT;
-		}
-	}
-}
-
 void CGameContext::SendTuningParams(int ClientId, int Zone)
 {
 	if(ClientId == -1)
@@ -1095,8 +1077,6 @@ void CGameContext::SendTuningParams(int ClientId, int Zone)
 		}
 		return;
 	}
-
-	CheckPureTuning();
 
 	dbg_assert(0 <= ClientId && ClientId < MAX_CLIENTS, "Invalid ClientId: %d", ClientId);
 	dbg_assert(m_apPlayers[ClientId], "client %d without player", ClientId);
@@ -1171,9 +1151,6 @@ void CGameContext::OnPreTickTeehistorian()
 
 void CGameContext::OnTick()
 {
-	// check tuning
-	CheckPureTuning();
-
 	if(m_TeeHistorianActive)
 	{
 		int Error = aio_error(m_pTeeHistorianFile);
@@ -4257,6 +4234,11 @@ void CGameContext::OnInit(const void *pPersistentData)
 		m_pController = new CGameControllerMod(this);
 	else
 		m_pController = new CGameControllerDDNet(this);
+
+	for(const char *pReservedGameType : {"DM", "TDM", "CTF", "LMS", "LTS"})
+	{
+		dbg_assert(str_comp(m_pController->m_pGameType, pReservedGameType) != 0, "Using reserved gametype '%s' is not allowed", m_pController->m_pGameType);
+	}
 
 	ReadCensorList();
 
