@@ -7,8 +7,9 @@
 
 #include "system.h"
 
-#include <shlobj.h> // SHChangeNotify
 #include <windows.h>
+
+#include <shlobj.h> // SHChangeNotify
 
 std::string windows_format_system_message(unsigned long error)
 {

@@ -8,9 +8,10 @@
 #include <memory>
 
 #if defined(CONF_FAMILY_WINDOWS)
+#include <windows.h>
+
 #include <fcntl.h>
 #include <io.h>
-#include <windows.h>
 #else
 #include <unistd.h>
 #endif

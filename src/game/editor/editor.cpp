@@ -2149,7 +2149,6 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, CEnvelope *pEnvelope, int QuadI
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
-
 void CEditor::UpdateHotQuadPoint(const CLayerQuads *pLayer)
 {
 	const vec2 MouseWorld = MapView()->MouseWorldPos();

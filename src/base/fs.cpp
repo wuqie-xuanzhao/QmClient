@@ -12,8 +12,9 @@
 #include <unistd.h>
 
 #elif defined(CONF_FAMILY_WINDOWS)
-#include <io.h>
 #include <windows.h>
+
+#include <io.h>
 
 #include <string>
 #else
