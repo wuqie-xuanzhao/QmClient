@@ -1,6 +1,8 @@
 #include "image.h"
 #include "sound.h"
 
+#include <base/log.h>
+
 #include <engine/client.h>
 #include <engine/console.h>
 #include <engine/gfx/image_manipulation.h>
