@@ -155,6 +155,54 @@ status: active
 - demo / teehistorian / 0.7 兼容的剩余批次
 - quick gate 的既有格式债未收口，当前不能当作仓库整体已通过
 
+## 2026-07-01 独立修复小批次进展
+
+本轮在 Rust/vendor/CMake 验证收口后，继续尝试 IMap / client / network / server 附近候选。IMap 入口提交冲突面涉及 client map 所有权、背景地图、菜单背景和 server map 接口，已作为 P2 架构组 deferred；随后切换到独立小修复批次。
+
+已合入官方提交：
+
+- `c0c9934db2418756c91af7a0b919ae66c5c8e47f` → `325f492dcd Make descriptions of refresh rate settings more clear`
+- `be9e4ef823b1627b67449eac03957e6bdde3316a` → `661423fc9e fixup! Make descriptions of refresh rate settings more clear`
+- `72319957ce916c3e4ed17d9c4147c480b3ea349b` → `027b13c25d Fix malformed network chunk sending for maplist`
+- `36ea91508ed47c84797cbbe0e0ca9063aa6c4e4c` → `2cb0c010b8 Add assertion to check chunk size in CNetChunkHeader::Pack`
+- `dbacbe161f13d0796c5ed27205634bbb1d763ce3` → `a7a33c8e4d Add FindPlayerByName() helper`
+
+本轮 covered / empty 并跳过：
+
+- `797a3c38cf8fa2ea5debe182b544949d884f2756`：`TEAM_SPECTATORS` 替换已由本地代码覆盖，cherry-pick 为空。
+- `ced6ea148da4b858ecb8056d73bb2ce23bf6108e`：多行粘贴替换空格的 chat 行为已由本地代码覆盖，cherry-pick 为空。
+- `7ec722151b0c8251c2e5b39c92941a6ad7ab1ff3`：Hook Line Tip alpha 预览行为已由 QmClient 设置页/预览代码覆盖，cherry-pick 为空。
+- `4aa818fd8b83bba3bcb31aac157c3bdf5166c7fb`：SDL3 headless `SetWindowGrab()` 崩溃修复已由当前 backend_sdl 覆盖，cherry-pick 为空。
+
+本轮明确 skip / deferred：
+
+- `14adb4cf0ccd16f7d9c6aca4aad90ea77fe99279`：IMap 非 kernel 接口合并入口，冲突覆盖 `client.cpp`、`background.cpp/h`、`menu_background.cpp/h`、`gameclient.cpp/h` 和 server map 接口；作为 IMap P2 架构组 deferred。
+- `8cb5f698c97078cf560421ea0aa7f7ae57146e0c`、`911b4f93261557616a5392c50a6bbf0b8fb51780`、`b07f47a2098fda43dc8c89ef3543ced007758728`、`863bad84aa11fa5078c60f45ac9df72f611b1055`：依赖 IMap 入口的后续组，随前置 deferred。
+- `f1de2b9214235ef4c7e8f66c701449545eefe991`：标准头检查脚本 Python 重写冲突 QmClient 自有 governance workflow 和已存在脚本，本轮 deferred。
+- `3a15659d56e7485fb8cba9b8aa290ac9ef352f3b`：server rcon auth 纯结构搬迁，冲突在高改 server 区，本轮 deferred。
+- `35951acb9f09df7308c33a8561cb279a29415b65`：server client version 方法搬迁，冲突在高改 server 区，本轮 deferred。
+
+本轮冲突处理要点：
+
+- `config_variables.h` / `menus_settings.cpp`：保留 QmClient 中文配置文案和设置页 tracking wrapper，合入上游对 game update rate 与 rendering refresh rate 的命名区分。
+- `network.h` / `server.cpp`：合入 maplist chunk 发送边界修复，保持 QmClient server 结构。
+- `network.cpp`：合入 `CNetChunkHeader::Pack` chunk size 断言。
+- `gamecontext.cpp/h`、`ddracechat.cpp`、`player.cpp`：合入 `FindPlayerByName()` helper，保留本地 server 行为。
+
+本轮验证：
+
+- `python qmclient_scripts/gate/check_gate.py --mode quick --base-ref d87500ace94a3d6ab43b2bbbbb49828952eaa9fb`
+  - 结果：失败 2 项，7 项通过。失败项仍为既有格式债：`src/game/client/components/countryflags.cpp` 的 clang-format；`datasrc/network.py`、`scripts/generate_unicode_confusables_data.py` 的 ruff format。
+- `cmd /c qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target game-client -j 14`
+  - 结果：通过；仅有 `client.cpp` 若干 `[[nodiscard]]` warning。
+
+本轮量化：
+
+- 当前基线 `d87500ace94a3d6ab43b2bbbbb49828952eaa9fb` 之后本地提交数：`407`
+- 当前按 cherry-pick trailer 统计的唯一官方提交数：`290`
+- 按原交接约 `786` 个官方普通提交估算，剩余上界：`496`
+- 当前本地 `ddnet/master` 相对基线普通提交数为 `787`，按该动态口径剩余上界：`497`
+
 ## 当前重要决策
 
 ## 2026-07-01 本轮批量推进记录
