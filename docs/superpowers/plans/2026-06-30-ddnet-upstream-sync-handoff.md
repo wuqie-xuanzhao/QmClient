@@ -203,6 +203,60 @@ status: active
 - 按原交接约 `786` 个官方普通提交估算，剩余上界：`496`
 - 当前本地 `ddnet/master` 相对基线普通提交数为 `787`，按该动态口径剩余上界：`497`
 
+## 2026-07-01 UI / editor / graphics 修复批次进展
+
+本轮从 `dbacbe161f` 后续继续挑可独立合入的 UI、editor、graphics 和 client 行为修复，跳过 base 文件搬迁、server 结构搬迁和 i18n/CI。
+
+已合入官方提交：
+
+- `2eab41a6f00d79fb9d7b13bd4dc09bda1ddad6ec` → `d9b6a53eb0 add real HSL values to the Hsla scrollbars`
+- `fb49e396c999345a2f27a125b34f9bc86b91b58f` → `ea62c77edf Fix redo of envelope edit point time action`
+- `8863fe6101cfeb0047b9c5ade4219f9849c2026a` → `c6aaddeb34 Fix redo of envelope edit action`
+- `a6275b59f3a1be6c9b73be5ea1fcc079f53f6404` → `85d75a8a69 Fix: Editor can't find tele out (#11854)`
+- `9fc61447255d56b3a4c0573a84a6599b041354d2` → `bb29a59a60 Fix editor map not being saved if editor is quit before job is done`
+- `53bddfdebdebf3f980d285a13f7f8010d78d81e7` → `643d6499c0 Improve OpenGL backend logging`
+- `3e89dca02c62821ce8a82ead2522abb18d310656` → `34ae4772be Keep selected player highlighted while scoreboard popup is open`
+
+本轮本地 follow-up：
+
+- `7056e907e1 fix(sync): 补齐编辑器保存任务日志依赖`：为 `9fc6144725` 引入的 `log_error` / `log_trace` 调用补充 `base/log.h` include，修复 Windows `game-client` 构建。
+
+本轮 covered / empty 并跳过：
+
+- `703b4a046750d4e06172b6d116726e61593e1d1a`：death tests stuck 修复已由本地测试入口覆盖，cherry-pick 为空。
+- `d2165262cb28a007657f886f70932fe98e4fe1bb`：scrollbar 多 flag 行为已由当前 UI 代码覆盖，cherry-pick 为空。
+- `f71afae23a55c1f7b07503ea64de27b50e0a7806`：vanilla pickup sound 预测修复已覆盖，cherry-pick 为空。
+- `e782b2b0ed938521dfc3fe2432b1391124e3db0a`：0.6 rcon command completion 修复已覆盖，cherry-pick 为空。
+- `32fef046e079cb3448caa94ff8df574d9c792ef5`：redo envelope point crash 修复已覆盖，cherry-pick 为空。
+- `4299da8fb8b726b3ed22e329abbe8c268b8bdc39`：Vulkan heap binary search UB 修复已覆盖，cherry-pick 为空。
+- `e34cc23628ef8ba8cc6ed8e0a2e49a49cf04788e`：fatal graphics error popup 改进已基本覆盖；冲突解后无净 diff，保留 QmClient `dumps/QmClient_Crash` 路径。
+- `5d05431b81f334c416d283e37a08fffac6149722`：dummy control input storage 修复已覆盖，cherry-pick 为空。
+
+本轮明确 skip / deferred：
+
+- `35951acb9f09df7308c33a8561cb279a29415b65`：server client version 方法搬迁，前一轮已判定高改 server 区 deferred。
+- `7e13c27055ccb1ccb74c8c9feb4d84d656c47900`、`57ab0e6560c038ecc57f917e02fdf43d2dd5ee0d`、`c4b0813f0df002ecabf2c52035eb70275493597e`、`8353085e21aa9a88b099e9754684923422abaabe`、`6e321611f767a642aed05842a283c6e04899ceb4`、`e63b31d2662dcf564359f3dfe3aca13a1a0057e8` 等：base/process/bytes/os/net 文件搬迁或文档重构，普通同步线 deferred。
+- `3552f7c9eb68d2bf0271f329aa21d7a1765ddaf0`、`58b19570fbefcb708fdcf236af4f79b8f20e9a3d`、`aba214e895aef9c9e80871a40297d9d0c76827bd`、`27eb413e4ac71c413ec7f011e5604534923fcc20`、`7de1b10535ff01b2d0870adcde4f82a549268c49` 等：gameplay / prediction 行为决策项，需按兼容性边界单独审。
+
+本轮冲突处理要点：
+
+- `editor.cpp` / `mapitems/map_io.cpp`：采用上游把最终 rename 放进 writer job 的修复，保留 QmClient 协作快照保存失败状态和成功后 `UploadCollabSnapshot()`。
+- `backend_opengl.cpp` / `backend_opengl3.cpp`：采用上游 `log_warn` / `log_debug` 日志 API，同时保留 QmClient 更详细的 texture resize slot/size 信息。
+- `scoreboard.cpp`：保留 QmClient `ClientData` 按钮 ID 结构，只补 popup 打开时继续高亮选中玩家的条件。
+
+本轮验证：
+
+- `python qmclient_scripts/gate/check_gate.py --mode quick --base-ref d87500ace94a3d6ab43b2bbbbb49828952eaa9fb`
+  - 结果：失败 2 项，7 项通过。失败项仍为既有格式债：`src/game/client/components/countryflags.cpp` 的 clang-format；`datasrc/network.py`、`scripts/generate_unicode_confusables_data.py` 的 ruff format。
+- `cmd /c qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target game-client -j 14`
+  - 结果：通过。
+
+本轮量化：
+
+- 当前基线 `d87500ace94a3d6ab43b2bbbbb49828952eaa9fb` 之后本地提交数：`415`
+- 当前按 cherry-pick trailer 统计的唯一官方提交数：`297`
+- 按原交接约 `786` 个官方普通提交估算，剩余上界：`489`
+- 当前本地 `ddnet/master` 相对基线普通提交数为 `787`，按该动态口径剩余上界：`490`
 ## 当前重要决策
 
 ## 2026-07-01 本轮批量推进记录
