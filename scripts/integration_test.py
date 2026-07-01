@@ -76,7 +76,9 @@ class Timeout(namedtuple("Timeout", ["id", "description"])):
 
 # This class is used to track that each timeout value is multiplied by
 # `timeout_multiplier` exactly once.
-class TimeoutParam(namedtuple("Timeout", ["start", "unmultiplied_duration", "description"])):
+class TimeoutParam(
+    namedtuple("Timeout", ["start", "unmultiplied_duration", "description"])
+):
     def __new__(cls, duration, description):
         return super().__new__(cls, time(), duration, description)
 
@@ -1084,7 +1086,6 @@ def smoke_test(test_env):
     server.wait_for_log_exact(
         "server: ClientId=0 authed with key='default_admin' (admin)"
     )
-
 
     client1.command(
         'say "/mc; {}"'.format(
