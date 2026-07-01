@@ -1056,7 +1056,6 @@ def smoke_test(test_env):
         "server: ClientId=0 authed with key='default_admin' (admin)"
     )
 
-
     client1.command(
         'say "/mc; {}"'.format(
             "; ".join(

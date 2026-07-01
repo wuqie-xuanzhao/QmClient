@@ -161,7 +161,6 @@ void CEmoticon::OnRender()
 	else if(length(m_SelectorMouse) > s_InnerMouseLimitRadius)
 		m_SelectedEyeEmote = PositiveMod(std::round(SelectorAngle / (2.0f * pi) * (float)NUM_EMOTES), NUM_EMOTES);
 
-
 	const vec2 ScreenCenter = Screen.Center();
 
 	Ui()->MapScreen();

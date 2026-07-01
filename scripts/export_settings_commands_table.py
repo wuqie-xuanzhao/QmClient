@@ -151,7 +151,6 @@ def parse_tunings(lines):
         except Exception as e:
             raise RuntimeError("Failed to parse tuning value: {value}") from e
 
-
     parsed_tunings = []
     for line in lines:
         args = re.match(r"^MACRO_TUNING_PARAM\((.*)\)", line)
