@@ -3446,7 +3446,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					{
 						Info.m_Found = true;
 						char aTmpBackendName[256];
-					const bool IsDefault = str_comp_nocase(Info.m_pBackendName, DefaultConfig::GfxBackend) == 0 && Info.m_Major == DefaultConfig::GfxGLMajor && Info.m_Minor == DefaultConfig::GfxGLMinor && Info.m_Patch == DefaultConfig::GfxGLPatch;
+						const bool IsDefault = str_comp_nocase(Info.m_pBackendName, DefaultConfig::GfxBackend) == 0 && Info.m_Major == DefaultConfig::GfxGLMajor && Info.m_Minor == DefaultConfig::GfxGLMinor && Info.m_Patch == DefaultConfig::GfxGLPatch;
 						FormatQmGraphicsBackendDisplayName(aTmpBackendName, sizeof(aTmpBackendName), Info.m_pBackendName, Info.m_Major, Info.m_Minor, Info.m_Patch, IsDefault);
 						s_vSupportedBackendInfos.push_back(Info);
 						s_vSupportedBackendNames.emplace_back(aTmpBackendName);

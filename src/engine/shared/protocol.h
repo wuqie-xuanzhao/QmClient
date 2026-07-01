@@ -165,6 +165,8 @@ namespace TuneZone
 	inline constexpr int NUM = 256;
 };
 
+inline constexpr int NUM_TUNEZONES = TuneZone::NUM;
+
 namespace FinishTime
 {
 	inline constexpr int NOT_FINISHED_TIMESCORE = -9999;

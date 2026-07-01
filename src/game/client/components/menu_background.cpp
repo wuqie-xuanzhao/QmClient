@@ -528,14 +528,14 @@ void CMenuBackground::LoadMenuBackground(bool HasDayHint, bool HasNightHint)
 			FormatThemePath(aBuf, sizeof(aBuf), pMenuMap);
 			if(HasMapExtension)
 			{
-				if(Storage()->FileExists(aBuf, IStorage::TYPE_ALL) && m_pMap->Load(aBuf))
+				if(Storage()->FileExists(aBuf, IStorage::TYPE_ALL) && m_pMap->Load(aBuf, IStorage::TYPE_ALL))
 				{
 					m_Loaded = true;
 				}
 				else
 				{
 					char aFound[IO_MAX_PATH_LENGTH];
-					if(FindThemeFile(aBuf, "", aFound, sizeof(aFound)) && m_pMap->Load(aFound))
+					if(FindThemeFile(aBuf, "", aFound, sizeof(aFound)) && m_pMap->Load(aFound, IStorage::TYPE_ALL))
 					{
 						m_Loaded = true;
 					}

@@ -1949,16 +1949,16 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 			break;
 		default:
 			dbg_assert_failed("unknown team mode");
-	}
-	if((Config()->m_SvTeam == SV_TEAM_ALLOWED || Config()->m_SvTeam == SV_TEAM_MANDATORY) && (Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize || Config()->m_SvMaxTeamSize != DefaultConfig::SvMaxTeamSize))
-	{
-		if(Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize && Config()->m_SvMaxTeamSize != DefaultConfig::SvMaxTeamSize)
-			str_format(aBuf, sizeof(aBuf), "%s (%s %d, %s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
-		else if(Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize)
-			str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize);
-		else
-			str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
-	}
+		}
+		if((Config()->m_SvTeam == SV_TEAM_ALLOWED || Config()->m_SvTeam == SV_TEAM_MANDATORY) && (Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize || Config()->m_SvMaxTeamSize != DefaultConfig::SvMaxTeamSize))
+		{
+			if(Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize && Config()->m_SvMaxTeamSize != DefaultConfig::SvMaxTeamSize)
+				str_format(aBuf, sizeof(aBuf), "%s (%s %d, %s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
+			else if(Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize)
+				str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize);
+			else
+				str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
+		}
 		else
 		{
 			str_format(aBuf, sizeof(aBuf), "%s", pTeamMode);
