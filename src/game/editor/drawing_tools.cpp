@@ -722,7 +722,7 @@ std::shared_ptr<CLayerTiles> CEditorDrawingTools::MakeTileBrush(CEditor *pEditor
 	pBrush->m_HasSpeedup = pTargetLayer->m_HasSpeedup;
 	pBrush->m_HasSwitch = pTargetLayer->m_HasSwitch;
 	pBrush->m_HasTune = pTargetLayer->m_HasTune;
-	str_copy(pBrush->m_aFilename, pEditor->m_aFilename);
+	str_copy(pBrush->m_aFilename, pEditor->Map()->m_aFilename);
 
 	if(Empty)
 	{

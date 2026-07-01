@@ -6632,11 +6632,11 @@ void CEditor::RenderMousePointer()
 	if(!m_ShowMousePointer)
 		return;
 
-	if(m_MouseAxisLockState == EAxisLock::HORIZONTAL)
+	if(m_MouseAxisLockState == EAxisLock::Horizontal)
 	{
 		m_CursorType = CURSOR_RESIZE_H;
 	}
-	else if(m_MouseAxisLockState == EAxisLock::VERTICAL)
+	else if(m_MouseAxisLockState == EAxisLock::Vertical)
 	{
 		m_CursorType = CURSOR_RESIZE_V;
 	}

@@ -3,6 +3,7 @@
 
 #include "dbg.h"
 
+#include "fs.h"
 #include "logger.h"
 #include "str.h"
 

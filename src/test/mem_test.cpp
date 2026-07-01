@@ -1,6 +1,6 @@
 #include <base/mem.h>
-#include <base/net.h>
 #include <base/secure.h>
+#include <base/system.h>
 
 #include <gtest/gtest.h>
 

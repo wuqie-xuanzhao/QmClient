@@ -17,6 +17,7 @@
 #include <engine/console.h>
 #include <engine/input.h>
 #include <engine/keys.h>
+#include <engine/map.h>
 #include <engine/shared/client_brand.h>
 #include <engine/shared/config.h>
 #include <engine/shared/snapshot.h>
@@ -462,6 +463,7 @@ public:
 	class CRenderTools *RenderTools() { return &m_RenderTools; }
 	class CRenderMap *RenderMap() { return &m_RenderMap; }
 	class CLayers *Layers() { return &m_Layers; }
+	class IEngineMap *Map() { return Kernel()->RequestInterface<IEngineMap>(); }
 	CCollision *Collision() { return &m_Collision; }
 	const CCollision *Collision() const { return &m_Collision; }
 	const CRaceHelper *RaceHelper() const { return &m_RaceHelper; }
@@ -926,8 +928,6 @@ public:
 
 	void ApplyPreInputs(int Tick, bool Direct, CGameWorld &GameWorld);
 	bool GetDummyFastInput(CNetObj_PlayerInput &DummyFastInput, const CNetObj_PlayerInput *pDummyInputData, const class CCharacter *pDummyChar, int LocalTee, int DummyTee) const;
-
-	void ApplyPreInputs(int Tick, bool Direct, CGameWorld &GameWorld);
 
 	int m_aNextChangeInfo[NUM_DUMMIES];
 
