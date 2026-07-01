@@ -4931,7 +4931,7 @@ void CGameClient::OnPredict()
 		}
 
 		HandlePredictedEvents(Tick);
-<<	}
+	}
 
 	if(FastInputTicks > 0)
 		m_PredictedWorld.CopyWorld(&m_RegularPredictedWorld);
