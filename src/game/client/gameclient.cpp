@@ -2334,35 +2334,6 @@ float CGameClient::GetAnimationPlaybackSpeed() const
 	return 1.0f;
 }
 
-bool CGameClient::AntiPingPlayers() const
-{
-	return g_Config.m_ClAntiPing &&
-	       g_Config.m_ClAntiPingPlayers &&
-	       !m_Snap.m_SpecInfo.m_Active &&
-	       Client()->State() != IClient::STATE_DEMOPLAYBACK;
-}
-bool CGameClient::AntiPingGrenade() const
-{
-	return g_Config.m_ClAntiPing &&
-	       g_Config.m_ClAntiPingGrenade &&
-	       !m_Snap.m_SpecInfo.m_Active &&
-	       Client()->State() != IClient::STATE_DEMOPLAYBACK;
-}
-
-bool CGameClient::AntiPingWeapons() const
-{
-	return g_Config.m_ClAntiPing &&
-	       g_Config.m_ClAntiPingWeapons &&
-	       !m_Snap.m_SpecInfo.m_Active &&
-	       Client()->State() != IClient::STATE_DEMOPLAYBACK;
-}
-
-bool CGameClient::AntiPingGunfire() const
-{
-	return AntiPingGrenade() &&
-	       AntiPingWeapons() &&
-	       g_Config.m_ClAntiPingGunfire;
-}
 
 bool CGameClient::Predict() const
 {
