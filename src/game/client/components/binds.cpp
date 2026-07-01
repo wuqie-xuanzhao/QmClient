@@ -462,7 +462,7 @@ void CBinds::RefreshActiveBinds()
 
 		ForEachTopLevelBindCommand(pBind, [&](const char *pCommand) {
 			if(pCommand[0] == '+')
-				Console()->ExecuteLineStroked(1, pCommand);
+				Console()->ExecuteLineStroked(1, pCommand, IConsole::CLIENT_ID_UNSPECIFIED);
 		});
 	}
 }
