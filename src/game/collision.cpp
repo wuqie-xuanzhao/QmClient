@@ -1214,6 +1214,11 @@ void CCollision::SetDoorCollisionAt(float x, float y, unsigned char Type, unsign
 	m_pDoor[Ny * m_Width + Nx].m_Number = Number;
 }
 
+void CCollision::SetDoorCollisionAt(float x, float y, int Type, int Flags, int Number)
+{
+	SetDoorCollisionAt(x, y, static_cast<unsigned char>(Type), static_cast<unsigned char>(Flags), static_cast<unsigned char>(Number));
+}
+
 void CCollision::GetDoorTile(int Index, CDoorTile *pDoorTile) const
 {
 	if(!pDoorTile)
