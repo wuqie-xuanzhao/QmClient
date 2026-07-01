@@ -2,8 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "lineinput.h"
 
-#include "ui.h"
 #include "QmUi/QmTheme.h"
+#include "ui.h"
 
 #include <engine/external/tinyexpr.h>
 #include <engine/keys.h>
