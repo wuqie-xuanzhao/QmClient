@@ -854,7 +854,7 @@ void CConsole::ConCommandStatus(IResult *pResult, void *pUser)
 void CConsole::ConUserCommandStatus(IResult *pResult, void *pUser)
 {
 	CConsole *pConsole = static_cast<CConsole *>(pUser);
-<<	pConsole->Print(OUTPUT_LEVEL_STANDARD, "chatresp", "可用聊天命令列表：");
+	pConsole->Print(OUTPUT_LEVEL_STANDARD, "chatresp", "可用聊天命令列表：");
 	//List all commands which are accessible for users
 	pConsole->PrintCommandList(EAccessLevel::USER, CMDFLAG_PRACTICE);
 }
