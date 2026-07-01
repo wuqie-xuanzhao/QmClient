@@ -184,6 +184,7 @@ class Float(BaseType):
     def EmitDefinition(self, _name):
         return [f"{self.value:f}f"]
 
+
 class String(BaseType):
     def __init__(self, value):
         BaseType.__init__(self, "const char*")
