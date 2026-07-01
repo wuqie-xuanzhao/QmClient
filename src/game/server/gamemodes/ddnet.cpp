@@ -204,7 +204,7 @@ void CGameControllerDDNet::OnPlayerConnect(CPlayer *pPlayer)
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf, -1, CGameContext::FLAG_SIX);
 
 		GameServer()->SendChatTarget(ClientId, "DDraceNetwork 版本: " GAME_VERSION);
-		//DDraceNetwork Mod. Version: 
+		//DDraceNetwork Mod. Version:
 		GameServer()->SendChatTarget(ClientId, "请访问 DDNet.org，或输入 /info，并确保阅读 /rules");
 		//please visit DDNet.org or say /info and make sure to read our /rules
 	}
