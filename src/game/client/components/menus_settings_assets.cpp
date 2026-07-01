@@ -4444,10 +4444,9 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		if(m_vExtrasList.size() != gs_aCustomListSize[s_CurCustomTab])
 			gs_aInitCustomList[s_CurCustomTab] = true;
 		break;
-	}
-	else
-	{
+	default:
 		dbg_assert_failed("Invalid s_CurCustomTab: %d", s_CurCustomTab);
+		break;
 	}
 
 	MainView.HSplitTop(10.0f, nullptr, &MainView);

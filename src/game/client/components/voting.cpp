@@ -9,10 +9,10 @@
 
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/localization.h>
 
 namespace
@@ -228,6 +228,150 @@ CVoting::CVoting()
 	ClearOptions();
 	CVoting::OnReset();
 	ClearUnfinishedMapVoteChain();
+}
+
+int CVoting::FindMapVoteOptionIndex(const char *pMapName) const
+{
+	if(!pMapName || pMapName[0] == '\0')
+		return -1;
+
+	int i = 0;
+	for(const CVoteOptionClient *pOption = m_pFirst; pOption; pOption = pOption->m_pNext, ++i)
+	{
+		char aMapName[128];
+		if(ExtractMapName(pOption->m_aDescription, aMapName, sizeof(aMapName)) && str_comp_nocase(aMapName, pMapName) == 0)
+			return i;
+	}
+	return -1;
+}
+
+int CVoting::FindTypeVoteOptionIndex(const char *pTypeKey, const char *pTypeLabel) const
+{
+	if(!pTypeKey || pTypeKey[0] == '\0')
+		return -1;
+
+	char aTypeLabelPlural[64];
+	char aTypeLabelSingular[64];
+	char aTypeLabelLocalized[64];
+	str_format(aTypeLabelPlural, sizeof(aTypeLabelPlural), "%s Maps", pTypeKey);
+	str_format(aTypeLabelSingular, sizeof(aTypeLabelSingular), "%s Map", pTypeKey);
+	if(pTypeLabel && pTypeLabel[0] != '\0')
+		str_format(aTypeLabelLocalized, sizeof(aTypeLabelLocalized), "%s图", pTypeLabel);
+	else
+		aTypeLabelLocalized[0] = '\0';
+
+	int i = 0;
+	for(const CVoteOptionClient *pOption = m_pFirst; pOption; pOption = pOption->m_pNext, ++i)
+	{
+		if(HasTypeVoteMatch(pOption->m_aDescription, aTypeLabelPlural) || HasTypeVoteMatch(pOption->m_aDescription, aTypeLabelSingular))
+			return i;
+		if(aTypeLabelLocalized[0] != '\0' && HasTypeVoteMatch(pOption->m_aDescription, aTypeLabelLocalized))
+			return i;
+		if(pTypeLabel && pTypeLabel[0] != '\0' && HasTypeVoteMatch(pOption->m_aDescription, pTypeLabel))
+			return i;
+	}
+	return -1;
+}
+
+bool CVoting::MatchTypeVoteDescription(const char *pDescription) const
+{
+	if(!pDescription || m_aPendingTypeKey[0] == '\0')
+		return false;
+
+	char aTypeLabelPlural[64];
+	char aTypeLabelSingular[64];
+	str_format(aTypeLabelPlural, sizeof(aTypeLabelPlural), "%s Maps", m_aPendingTypeKey);
+	str_format(aTypeLabelSingular, sizeof(aTypeLabelSingular), "%s Map", m_aPendingTypeKey);
+	if(HasTypeVoteMatch(pDescription, aTypeLabelPlural) || HasTypeVoteMatch(pDescription, aTypeLabelSingular))
+		return true;
+
+	if(m_aPendingTypeLabel[0] != '\0')
+	{
+		char aTypeLabelLocalized[64];
+		str_format(aTypeLabelLocalized, sizeof(aTypeLabelLocalized), "%s图", m_aPendingTypeLabel);
+		if(HasTypeVoteMatch(pDescription, aTypeLabelLocalized))
+			return true;
+		if(HasTypeVoteMatch(pDescription, m_aPendingTypeLabel))
+			return true;
+	}
+
+	return false;
+}
+
+bool CVoting::TryCallPendingMapVote()
+{
+	if(!m_PendingMapVoteReady || m_aPendingMap[0] == '\0')
+		return false;
+	if(IsVoting())
+		return false;
+
+	const int MapOptionIndex = FindMapVoteOptionIndex(m_aPendingMap);
+	if(MapOptionIndex < 0)
+		return false;
+
+	CallvoteOption(MapOptionIndex, "");
+	ClearUnfinishedMapVoteChain();
+	return true;
+}
+
+CVoting::EUnfinishedMapVoteAction CVoting::StartUnfinishedMapVoteChain(const char *pMapName, const char *pTypeKey, const char *pTypeLabel)
+{
+	ClearUnfinishedMapVoteChain();
+	if(!pMapName || pMapName[0] == '\0')
+		return EUnfinishedMapVoteAction::NO_OPTION;
+
+	const int MapOptionIndex = FindMapVoteOptionIndex(pMapName);
+	if(MapOptionIndex >= 0)
+	{
+		CallvoteOption(MapOptionIndex, "");
+		return EUnfinishedMapVoteAction::MAP_VOTE_SENT;
+	}
+
+	const int TypeOptionIndex = FindTypeVoteOptionIndex(pTypeKey, pTypeLabel);
+	if(TypeOptionIndex >= 0)
+	{
+		str_copy(m_aPendingMap, pMapName, sizeof(m_aPendingMap));
+		str_copy(m_aPendingTypeKey, pTypeKey ? pTypeKey : "", sizeof(m_aPendingTypeKey));
+		str_copy(m_aPendingTypeLabel, pTypeLabel ? pTypeLabel : "", sizeof(m_aPendingTypeLabel));
+		m_PendingTypeVoteActive = false;
+		m_PendingMapVoteReady = false;
+		CallvoteOption(TypeOptionIndex, "");
+		return EUnfinishedMapVoteAction::TYPE_VOTE_SENT;
+	}
+
+	return EUnfinishedMapVoteAction::NO_OPTION;
+}
+
+void CVoting::ClearUnfinishedMapVoteChain()
+{
+	m_aPendingMap[0] = '\0';
+	m_aPendingTypeKey[0] = '\0';
+	m_aPendingTypeLabel[0] = '\0';
+	m_PendingTypeVoteActive = false;
+	m_PendingMapVoteReady = false;
+}
+
+void CVoting::OnVoteResult(EVoteResult Result)
+{
+	if(m_aPendingMap[0] == '\0')
+		return;
+
+	if(!m_PendingTypeVoteActive)
+	{
+		ClearUnfinishedMapVoteChain();
+		return;
+	}
+
+	m_PendingTypeVoteActive = false;
+	if(Result == EVoteResult::PASS)
+	{
+		m_PendingMapVoteReady = true;
+		TryCallPendingMapVote();
+	}
+	else
+	{
+		ClearUnfinishedMapVoteChain();
+	}
 }
 
 void CVoting::AddOption(const char *pDescription)

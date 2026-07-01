@@ -128,6 +128,7 @@ public:
 	bool AddRect(const CUIRect &Rect, bool ShouldScrollHere = false); // returns true if the added rect is visible (not clipped)
 	void ScrollHere(EScrollOption Option = SCROLLHERE_KEEP_IN_VIEW);
 	void ScrollRelative(EScrollRelative Direction, float SpeedMultiplier = 1.0f);
+	void ScrollRelativeDirect(vec2 ScrollAmount);
 	void ScrollRelativeDirect(float ScrollAmount);
 	void SetScrollOffsetY(float OffsetY);
 	void SetContentHeightForNextFrame(float ContentHeight);

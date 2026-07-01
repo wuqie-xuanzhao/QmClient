@@ -13,15 +13,15 @@ status: active
 
 ## 量化进度
 
-截至 `7739668a63 Rename generated protocolglue.cpp to protocolglue_generated.cpp`：
+截至当前 `HEAD`：
 
 - 官方 `ddnet/master` 相对基线总提交数：`1316`
 - 排除 merge commit 后的官方普通提交数：`786`
-- 当前分支相对基线本地提交数：`198`
-- 已记录的官方 cherry-pick trailer：`123`
-- 去重后的官方 cherry-pick 提交数：`116`
-- 仅按已 cherry-pick 计，剩余官方普通提交上界：`786 - 116 = 670`
-- 已人工判定 covered / empty / skip 的提交会降低实际剩余量，但不会增加 cherry-pick trailer 数；当前仍应按约 `650+` 个待处理项规划后续批次。
+- 当前分支相对基线本地提交数：`401`
+- 已记录的官方 cherry-pick trailer：`285`
+- 去重后的官方 cherry-pick 提交数：`285`
+- 仅按已 cherry-pick 计，剩余官方普通提交上界：`786 - 285 = 501`
+- 已人工判定 covered / empty / skip 的提交会降低实际剩余量，但不会增加 cherry-pick trailer 数；当前仍应按约 `500+` 个待处理项规划后续批次。
 
 ## 最近完成的验证点
 
@@ -105,7 +105,121 @@ status: active
 - 当前按 cherry-pick trailer 统计的唯一官方提交数：245。
 - 按约 786 个官方普通提交估算，剩余上界：541；该数字未扣除历史和本轮 covered / skip，因此是保守上界。
 
+## 2026-07-01 后续批次进展
+
+本轮继续从 Rust 工具链后续候选推进，并把冲突直接解掉到批末。
+
+已合入官方提交：
+
+- `7d6365ab845e7a4635036665114b4f946a2c6bd8` → `836af7f5f8 cleanup DoPropertiesWithState`
+- `ec8ce8dc85c324631f60857840961fbc52a96598` → `8cd7d31afc Reduce conditional compilation of debug dummies`
+- `85f17b77ef8606f8170f18aba9ed3757a4ca03d2` → `6c4d4a8a6d Remove conditional compilation for dbg_stress`
+- `f109640c2d0433d5b18172f2487dae99be787ce3` → `e38185dd60 Exclude debug only settings from html documentation`
+- `a0828b6291c399aca15434df6ef39a017e637cbe` → `045c22b961 Include Android package name in log system/tag string`
+- `ea670dcc104a724954a9c2399756b81e0039e053` → `9502942c68 demo menu mouse seek improvements`
+- `5fda31e735e44c05f01be6db59d5f506384026f0` → `c6d5c79844 Show hundreths or thousands in scoreboard, scoreboard title and hud`
+
+已判定 covered / empty 并跳过：
+
+- `2c6c75f1cc32f2e8c534fd2559dbc0f7f5e62c7d`：`AntiPingPlayers` 已不再依赖 collision/hooking gating，且保留 QmClient fast-practice 强制预测分支，cherry-pick 为空。
+- `b354144d9a66670a908abb1c834cfbef6a928878`：`Fix prediction when player has no weapon` 对应行为已被 QmClient 当前预测代码覆盖，cherry-pick 为空。
+
+本轮冲突处理要点：
+
+- `editor_props.cpp`：保留 QmClient 中文 tooltip / 按钮文本，合入上游 `DoPropertiesWithState` 的去重清理。
+- `config_variables.h` / `export_settings_commands_table.py`：把 `CFGFLAG_DEBUG_SERVER` / `CFGFLAG_DEBUG_CLIENT` 语义接入导出脚本，保持 QmClient 中文配置文案。
+- `scripts/android/cmake_android.sh` / `src/base/log.cpp` / `src/engine/server/main.cpp`：保留 QmClient Android 构建参数分层，新增 dotted package name 用于 Android log tag，JNI 仍用下划线形式。
+- `menus_demo.cpp`：合入上游 demo seek 改进，同时保留 QmClient timeline marker 吸附逻辑。
+- `scoreboard.cpp` / `ui.cpp` / `gameclient.cpp`：合入上游千分/百分精度时间显示，保留 QmClient scoreboard 布局、品牌列和 Points 列。
+
+本轮验证：
+
+- `cmd /c qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target game-client -j 14`
+  - 结果：通过。首次链接因 stale 对象文件还抓到旧符号，删除 `background.cpp.obj` 后重编通过。
+- `python qmclient_scripts/gate/check_gate.py --mode quick --base-ref d87500ace94a3d6ab43b2bbbbb49828952eaa9fb`
+  - 结果：失败 2 项，均为仓库既有格式债：
+    - `src/test/net_test.cpp`、`src/test/translate_llm_provider_test.cpp` 等 clang-format 旧问题
+    - `datasrc/network.py`、`scripts/generate_rust_bridge.py`、`scripts/generate_unicode_confusables_data.py` 的 ruff format
+
+本轮量化：
+
+- 本轮新增官方 cherry-pick trailer：`7`
+- 当前基线后本地提交数：`372`
+- 当前按 cherry-pick trailer 统计的唯一官方提交数：`261`
+- 按约 `786` 个官方普通提交估算，剩余上界：`525`
+
+剩余 gap：
+
+- Rust / vendor / CMake 后续：`a4dd3b943daf50437405a2a3ce5f433398264809`、`03c77ae831e0aff149dd440d416553efcb427bcd`、`f1357b2ce86177a20e8a6e00077c1d431b1acda0`、`7bcb5a738e7bf1a14038f1327dba3ad925320e7c`
+- `CScrollRegion` / editor map-object / editor object 相关 P2 批次
+- demo / teehistorian / 0.7 兼容的剩余批次
+- quick gate 的既有格式债未收口，当前不能当作仓库整体已通过
+
 ## 当前重要决策
+
+## 2026-07-01 本轮批量推进记录
+
+本轮从 Rust 工具链后续和后续客户端/基础设施候选继续推进，保持只 cherry-pick 官方单提交，不整体 merge / rebase。
+
+已合入官方提交：
+
+- `7bcb5a738e7bf1a14038f1327dba3ad925320e7c` → `3fb51a7be5 Upgrade cxx to 1.0.194`
+- `73bbb3435a` → `7158b9f7b7 Minor refactoring of fullscreen popup rendering`
+- `8cf6af652c` → `992fcd23ff Improve user experience when joining Tutorial server`
+- `af4a274f82` → `c630f7a830 Assert that client slot not empty when sending reconnect/redirect`
+- `6cc1dd44ef` → `d2389d3625 Fix clang-analyzer-security.ArrayBound by adding assertions`
+- `f28d978cab` → `4372925924 Add some comments to client time functions`
+- `3c6d7c9887` → `1fa9f6a5f7 Remove unused includes and definitions in system.cpp for macOS`
+- `02f0df0dcd` → `f5b03a982d Remove incorrect doc about client time`
+- `af7be5f58e` → `a2b25b4a0e Improve Emscripten log output in HTML wrapper`
+- `e485cf2a0e` → `b7e9093170 Parse ANSI colors of log lines in Emscripten wrapper`
+- `737d8e1d0c` → `9b8ef4765b Improve Emscripten error handling and quitting behavior`
+- `936d30a4e3` → `b225bb431c Line split clangd array to help forks with git conflicts`
+
+本轮 covered / empty 并跳过：
+
+- `03c77ae831e0aff149dd440d416553efcb427bcd`：Rust 版本检查本地已覆盖，QmClient 已有 `1.85.0` MSRV 检查。
+- `f1357b2ce86177a20e8a6e00077c1d431b1acda0`：Rust MSRV bump 本地已覆盖；保留 QmClient 自有 `build.yml`，不引入官方旧 CI 结构。
+- `bde78f3202`：server auto demo 记录 tuning 的语义已由当前 Rust snapshot builder / `OnSnap(-1, ..., true)` 路径覆盖，解冲突后为空。
+- `69dbf395dc`：racefinish 停止 demo/ghost 记录已由当前代码覆盖，cherry-pick 为空。
+- `b55657a02c`：particle texture OOB 防护已由当前代码覆盖，cherry-pick 为空。
+- `3a90f3e98d`：`std::optional<CMapDetails>` 已由当前代码覆盖，QmClient 保留更严格的 `m_Size` 校验字段。
+- `3041cc262c`：`NETMSG_MAP_DETAILS` / `NETMSG_MAP_CHANGE` map size 校验已由当前代码覆盖，cherry-pick 为空。
+
+本轮明确 skip / deferred：
+
+- `a4dd3b943daf50437405a2a3ce5f433398264809`：merge commit，不按普通单提交 cherry-pick。
+- `e152c80d52`：纯线程函数搬迁重构，冲突扩到 `CMakeLists.txt`、`system.cpp`、`jobs.cpp`，本轮普通同步线 deferred。
+- `2302875af1`：font icons 搬到 `engine/font_icons.h`，冲突覆盖 HUD、菜单、编辑器多个 QmClient 高改区，作为整组重构 deferred。
+- `9fcd88046e`：依赖 `2302875af1` 的 `font_icons.h` 字面量清理，随前置提交 deferred。
+
+本轮冲突处理要点：
+
+- `.github/workflows/build.yml`：保留 QmClient 自有 release/build workflow，只吸收 Rust MSRV 已覆盖事实；不回退到官方旧 CI。
+- `scripts/generate_rust_bridge.py`：保持 QmClient 当前 Python 风格与 `cxxbridge 1.0.194`。
+- `src/game/client/components/menus_start.cpp` / `menus.h`：教程按钮改用本地已有 `CMenus::JoinTutorial()` 状态机，保留 QmClient V2 start menu 布局。
+- `src/engine/server/server.cpp`：保留 QmClient Rust snapshot builder / live observer 结构，不回退到旧 `m_SnapshotBuilder`。
+- `src/game/client/components/menus_settings_assets.cpp`：保留 QmClient 10-tab assets 结构，只保留非法 tab 断言语义。
+- `src/base/system.cpp`：保留 `_NSGetExecutablePath` 需要的 `<mach-o/dyld.h>`，移除未使用的 macOS 旧 include。
+- `src/engine/client/client.cpp` / `.h`：保留已存在的 `std::optional<CMapDetails>`，同时保留 QmClient 的 map size 校验字段。
+- `src/game/client/components/background.cpp`：补齐 `EIoSeekOrigin Origin` 变量名，收口官方 enum-class seek 改动后的 Windows 编译错误。
+- `src/game/client/components/menus_settings_assets.cpp`：把非法 assets tab 断言接到 `switch` 的 `default` 分支，保留 QmClient 10-tab 刷新结构。
+- `src/game/client/ui_scrollregion.cpp` / `.h`：当前代码已半吸收横向滚动参数，补齐 `ScrollRelativeDirect(vec2)`，保留旧 `float` 重载以兼容本地纵向调用。
+- `src/game/client/components/voting.cpp`：恢复 QmClient 未完成地图投票链实现，修复头文件声明与实现丢失导致的链接错误。
+
+本轮量化：
+
+- 当前基线 `d87500ace94a3d6ab43b2bbbbb49828952eaa9fb` 之后本地提交数：`401`
+- 当前按 cherry-pick trailer 统计的唯一官方提交数：`285`
+- 按约 `786` 个官方普通提交估算，剩余上界：`501`
+- 本轮处理候选约 `24` 个：实质合入 `12` 个，covered / empty `7` 个，明确 deferred / skip `4` 个，merge commit `1` 个。
+
+本轮验证：
+
+- `cmd /c qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target game-client -j 14`
+  - 结果：通过。期间修复 `background.cpp` 变量名、`menus_settings_assets.cpp` 悬空 `else`、`CScrollRegion` 双轴接口半合状态、`CVoting` 丢失实现；另清理了受 `CHeap::Allocate(size_t, size_t)` 签名变化影响的 stale MSVC 对象后重链通过。
+- `python qmclient_scripts/gate/check_gate.py --mode quick --base-ref d87500ace94a3d6ab43b2bbbbb49828952eaa9fb`
+  - 结果：失败 2 项，7 项通过。失败项已收敛为既有格式债：`src/game/client/components/countryflags.cpp` 的 clang-format；`datasrc/network.py`、`scripts/generate_unicode_confusables_data.py` 的 ruff format。本轮新增 `voting.cpp` 格式问题已修复。
 
 - snapshot/Rust 线保留 QmClient 现有 Rust bridge，不接受官方旧 C++ builder / delta API 回退。
 - server snapshot 继续保留：
@@ -121,16 +235,13 @@ status: active
 
 优先继续处理：
 
-1. snapshot / Rust 工具链后续：
-   - `a4dd3b943d`、`03c77ae831`、`f1357b2ce8`：Rust 版本检测和最低版本。
-   - `7bcb5a738e`：升级 `cxx` 到 `1.0.194`，需要构建验证。
-2. 用户点名的 chunk unpacker 边界收口：
+1. 用户点名的 chunk unpacker 边界收口：
    - QmClient 当前 `CPacketChunkUnpacker::UnpackNextChunk` 已有 `pEnd` 边界判断，但仍需专项确认 skip loop 是否覆盖所有路径。
-3. P2 必做区域：
+2. P2 必做区域：
    - `CScrollRegion` 横向滚动整组。
    - `CEditorMap` / `CEditorObject` 编辑器整组。
    - demo / teehistorian 格式提交，例如 `80aec863ef`、`5238ab4717`、`368ab203b3`、`9226cb6a69`。
-4. 继续 P0 / P1 客户端修复：
+3. 继续 P0 / P1 客户端修复：
    - 网络、浏览器、音频、渲染、0.7 兼容、demo / ghost 健壮性。
 
 ## 下一会话启动建议

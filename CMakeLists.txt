@@ -2115,6 +2115,11 @@ generate_source("src/generated/protocol.h" "network_header")
 generate_source("src/generated/server_data.cpp" "server_content_source")
 generate_source("src/generated/server_data.h" "server_content_header")
 
+add_custom_target(generate_content_types
+  DEPENDS
+    src/generated/data_types.h
+)
+
 generate_source7("src/generated/protocol7.cpp" "network_source")
 generate_source7("src/generated/protocol7.h" "network_header")
 generate_source7("src/generated/client_data7.cpp" "client_content_source")

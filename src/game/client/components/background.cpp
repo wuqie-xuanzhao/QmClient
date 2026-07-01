@@ -286,7 +286,7 @@ namespace
 		}
 
 		Whence &= ~AVSEEK_FORCE;
-		EIoSeekOrigin origin;
+		EIoSeekOrigin Origin;
 		switch(Whence)
 		{
 		case SEEK_SET:

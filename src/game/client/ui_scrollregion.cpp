@@ -43,7 +43,12 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 	DrawBackground(ScrollbarBg);
 
 	if(!ContentOverflows())
-		m_ContentScrollOffset = 0.0f;
+	{
+		if(m_Params.m_ScrollHorizontal)
+			m_ContentScrollOff.x = 0.0f;
+		else
+			m_ContentScrollOff.y = 0.0f;
+	}
 	m_ContentSize = 0.0f;
 
 	Ui()->ClipEnable(&m_ClipRect);
@@ -115,10 +120,16 @@ void CScrollRegion::ScrollRelative(EScrollRelative Direction, float SpeedMultipl
 	m_ScrollSpeedMultiplier = SpeedMultiplier;
 }
 
-void CScrollRegion::ScrollRelativeDirect(float ScrollAmount)
+void CScrollRegion::ScrollRelativeDirect(vec2 ScrollAmount)
 {
 	const float ClipSize = m_Params.m_ScrollHorizontal ? m_ClipRect.w : m_ClipRect.h;
-	m_RequestScrollPos = std::clamp(m_ScrollPos + ScrollAmount, 0.0f, m_ContentSize - ClipSize);
+	const float ScrollAmountAxis = m_Params.m_ScrollHorizontal ? ScrollAmount.x : ScrollAmount.y;
+	m_RequestScrollPos = std::clamp(m_ScrollPos + ScrollAmountAxis, 0.0f, m_ContentSize - ClipSize);
+}
+
+void CScrollRegion::ScrollRelativeDirect(float ScrollAmount)
+{
+	ScrollRelativeDirect(vec2(0.0f, ScrollAmount));
 }
 
 void CScrollRegion::SetScrollOffsetY(float OffsetY)
