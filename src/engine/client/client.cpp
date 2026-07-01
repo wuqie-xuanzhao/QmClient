@@ -5010,7 +5010,6 @@ void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp, int 
 		{
 			str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", pFilename, aTimestamp);
 		}
-
 	}
 	else
 	{
