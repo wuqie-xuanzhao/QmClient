@@ -1264,7 +1264,6 @@ private:
 	void DetectStrongHook();
 
 	int m_PredictedDummyId;
-	vec2 GetSmoothPos(int ClientId);
 
 	int m_IsDummySwapping;
 	bool m_RequestPredictionRefreshAfterConfigChange = false;

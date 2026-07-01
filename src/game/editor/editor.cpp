@@ -3947,7 +3947,7 @@ bool CEditor::LoadCollabSnapshot(const char *pFilename, int StorageType)
 
 	const auto &&ErrorHandler = [this](const char *pErrorMessage) {
 		SetCollabStatus("%s", pErrorMessage);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor/collab", pErrorMessage);
+		log_error("editor/collab", "%s", pErrorMessage);
 	};
 
 	Reset();
@@ -7343,8 +7343,8 @@ bool CEditor::Load(const char *pFilename, int StorageType)
 	bool Result = Map()->Load(pFilename, StorageType, std::move(ErrorHandler));
 	if(Result)
 	{
-		m_Map.SortImages();
-		SelectGameLayer();
+		Map()->SortImages();
+		Map()->SelectGameLayer();
 
 		for(CEditorComponent &Component : m_vComponents)
 			Component.OnMapLoad();
