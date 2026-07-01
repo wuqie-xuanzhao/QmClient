@@ -1098,7 +1098,7 @@ bool CDemoPlayer::SetPos(int WantedTick)
 		m_Info.m_Info.m_CurrentTick < m_vKeyFrames[KeyFrame].m_Tick || // we are before the wanted KeyFrame OR
 		(KeyFrame != m_vKeyFrames.size() - 1 && m_Info.m_Info.m_CurrentTick >= m_vKeyFrames[KeyFrame + 1].m_Tick)) // we are after the wanted KeyFrame
 	{
-<<		if(io_seek(m_File, m_vKeyFrames[KeyFrame].m_Filepos, EIoSeekOrigin::START) != 0)
+		if(io_seek(m_File, m_vKeyFrames[KeyFrame].m_Filepos, EIoSeekOrigin::START) != 0)
 		{
 			Stop("Error seeking keyframe position");
 			return false;
