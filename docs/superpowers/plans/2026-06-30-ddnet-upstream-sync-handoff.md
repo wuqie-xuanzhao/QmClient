@@ -259,6 +259,56 @@ status: active
 - 当前本地 `ddnet/master` 相对基线普通提交数为 `787`，按该动态口径剩余上界：`490`
 ## 当前重要决策
 
+## 2026-07-01 editor / UI / server 小批次推进记录
+
+本轮从 `be3dd82a5f` 后续候选继续，优先处理 editor、scoreboard/serverbrowser、server 投票与 text 渲染附近的小修复；遇到大范围 base 搬迁、协议对象扩展、editor map/object 重构时按 P2 deferred，不强行塞入普通同步线。
+
+已合入官方提交：
+
+- `cbd4d12091700ab73c8e30dd83f51a502afb6f6f` → `1e248c73ef Fix editor value selectors returning property even when unchanged`
+
+本轮 covered / empty 并跳过：
+
+- `be3dd82a5f3b3762cf99d7555c73d9fc66dbeadb`：QmClient 已有独立 `CQuadPopupContext` / `CPointPopupContext`，并且 editor 选择状态已迁移到 `Map()`；保留本地 MapView/editor 架构。
+- `785fb4fdfcb83ea61c8b687cd7bb7b02c7d8a7ef`：`std::begin` / `std::end` tracker 写法已覆盖，冲突解后无净 diff。
+- `f48532d205b1be6df41ba26ac9f33abb60308c81`：`CEditorActionEditQuadPoint::Apply()` 已存在，保留 QmClient 额外 `CEditorActionEditQuadColor`。
+- `72a5a8643263d3d740894b911d615f12ff33e4c5`：设置所有 quad points 颜色的 action / tracker / popup 路径已由 QmClient 覆盖，保留本地中文 UI 与 `Map()` 结构。
+- `4c806941f8`：yes forced vote 已按当前 console 签名走与普通 passed vote 等价的 `ExecuteLine(m_aVoteCommand, IConsole::CLIENT_ID_UNSPECIFIED)` 路径。
+- `a2cb0702e1`：server-only `logfile` 标记已覆盖，cherry-pick 为空。
+- `1a584373af`：scoreboard 玩家行与 spectator 行点击 popup 已由 QmClient 当前布局覆盖，保留本地品牌列、SMTC 面板和 streamer identity 处理。
+- `70225fe48e`：friend highlighting 已由 QmClient 朋友列表颜色/分类逻辑覆盖，冲突解后为空。
+- `671d2edcb9`、`71c561d394`、`d5fecf9550`、`db530cfafe`：当前 server / motd 代码已覆盖对应小清理或限制修复，cherry-pick 为空。
+- `8837a59425`：`CTextCursor::m_MaxLines` 与显式换行的边界处理已覆盖，保留本地 selection / calculated line-end 检查。
+
+本轮明确 skip / deferred：
+
+- `557b59bbbc`、`c9bb2a195a`：Windows-specific system 函数搬迁，归入 base/windows 文件搬迁 P2 组。
+- `aed6660c52`：`CEnvelopeState` 重构会覆盖 QmClient 预测 tick / demo playback / spectator 分支，归入客户端 envelope 行为审查 P2 组。
+- `3c5fcab898`：扩展 player info 与 millisecond 排序，涉及 `datasrc/network.py`、协议头、HUD、scoreboard、gameclient、server player，归入协议兼容性 P2 组。
+- `d8234eb894`：editor 改用 `log_*` 的重构与 editor map/object 迁移耦合，归入 editor logging / object P2 组。
+- `f4473c3ed3`：上游提交会重新引入旧 `DoQuadKnife` 裸字段实现；QmClient 已使用 `QuadKnife()` 组件封装，归入 editor quad knife P2 复核组。
+
+本轮冲突处理要点：
+
+- `editor_props.cpp`：保留 QmClient 中文 tooltip / 按钮文本，合入上游 value selector 只有在值实际变化或正在编辑时才返回 property 的逻辑；angle scroll 的加减按钮改为先汇总 `NewValue` 再统一判断是否变化。
+- editor popup / tracker / action 冲突：均优先保留 QmClient `Map()`、`QuadKnife()` 和本地 action 扩展；已覆盖项不制造空提交。
+- scoreboard / browser 冲突：保留 QmClient 新布局、朋友分类、备注、自动跟随、SMTC 和 streamer identity 处理；已覆盖项 skip。
+
+本轮验证：
+
+- `cmd /c qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target game-client -j 14`
+  - 结果：通过；仅有 `src/engine/client/client.cpp` 既有 `[[nodiscard]]` warning。
+- `python qmclient_scripts/gate/check_gate.py --mode quick --base-ref d87500ace94a3d6ab43b2bbbbb49828952eaa9fb`
+  - 结果：失败 2 项，7 项通过。失败项仍为既有格式债：`src/game/client/components/countryflags.cpp` 的 clang-format；`datasrc/network.py`、`scripts/generate_unicode_confusables_data.py` 的 ruff format。
+
+本轮量化：
+
+- 当前基线 `d87500ace94a3d6ab43b2bbbbb49828952eaa9fb` 之后本地提交数：`426`
+- 当前按 cherry-pick trailer 统计的唯一官方提交数：`303`
+- 当前本地 `ddnet/master` 相对基线普通提交数：`787`
+- 按动态口径估算，剩余官方普通提交上界：`787 - 303 = 484`
+- 本轮处理候选约 `20+` 个：实质合入 `1` 个，covered / empty `12+` 个，明确 deferred `7` 个。
+
 ## 2026-07-01 客户端 / editor / snapshot 小批次进展
 
 本轮继续按 20-50 个候选窗口推进，从 `5d05431b81` 后续候选中选择可独立合入的客户端、editor、基础时间和 snapshot 语义修复；P3 文档 / i18n / CI / 版本号项不进入普通同步线。
