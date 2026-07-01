@@ -2330,19 +2330,6 @@ void CSkins::RefreshEventSkins()
 	}
 }
 
-void CSkins::RefreshEventSkins()
-{
-	m_aEventSkinPrefix[0] = '\0';
-
-	if(g_Config.m_Events)
-	{
-		if(time_season() == SEASON_XMAS)
-		{
-			str_copy(m_aEventSkinPrefix, "santa");
-		}
-	}
-}
-
 void CSkins::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)
 {
 	if(m_pSkinDirectoryScanJob)
