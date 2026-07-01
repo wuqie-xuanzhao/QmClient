@@ -2334,7 +2334,6 @@ float CGameClient::GetAnimationPlaybackSpeed() const
 	return 1.0f;
 }
 
-
 bool CGameClient::Predict() const
 {
 	if(!g_Config.m_ClPredict && !m_FastPractice.Enabled())

@@ -2330,7 +2330,6 @@ void CSkins::RefreshEventSkins()
 	}
 }
 
-
 void CSkins::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)
 {
 	if(m_pSkinDirectoryScanJob)

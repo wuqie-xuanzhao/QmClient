@@ -1220,7 +1220,6 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 				}
 			}
 
-
 			// score
 			CUIRect ScorePosition;
 			ScorePosition.x = ScoreOffset;
