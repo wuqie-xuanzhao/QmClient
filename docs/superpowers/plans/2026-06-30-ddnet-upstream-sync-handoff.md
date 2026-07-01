@@ -259,6 +259,68 @@ status: active
 - 当前本地 `ddnet/master` 相对基线普通提交数为 `787`，按该动态口径剩余上界：`490`
 ## 当前重要决策
 
+## 2026-07-01 客户端 / editor / snapshot 小批次进展
+
+本轮继续按 20-50 个候选窗口推进，从 `5d05431b81` 后续候选中选择可独立合入的客户端、editor、基础时间和 snapshot 语义修复；P3 文档 / i18n / CI / 版本号项不进入普通同步线。
+
+已合入官方提交：
+
+- `366a3591460ae2024b4b0b9add65b3e27c7ed3d2` → `c3283c6a48 demo: add tooltips to demo browser buttons`
+- `e1dfa30f8b1b7fea47d09cb14ba2c95b7b4f159d` → `d362c18f0e editor: preserve quad art group for undo/redo`
+- `49c07c63ec42415e5c1fdc10328eed78f2156862` → `21a8598bc0 Remove unnecessary calls of IGraphics::BlendNormal function`
+- `0f2aef81bb375a06461288d03c781e6dcbbae5be` → `53b022d221 implement precise milliseconds_from_float function and refactor millisecond compute code`
+- `e7aecb02cd77d93d7f2a08dd26bc0b56aad3dad8` → `f7af9f74e9 fix hook collision line of unpredicted players having wrong tunings`
+- `00b3be431bb8f62e67aff410d36ecb39e1b91cda` → `dd3c739b66 Make sure to not use the internal item type of snaps`
+
+本轮本地 follow-up：
+
+- `2b55188175 style(sync): 收口上游同步触发的 lineinput 格式`：`49c07c63ec` 触发 `src/game/client/lineinput.cpp` include 顺序格式检查，按项目 clang-format 结果收口，不处理既有 `countryflags.cpp` 格式债。
+
+本轮 covered / empty 并跳过：
+
+- `aafe1c7ac1560f0860e10249067185e52a2a39be`：bit flag enum 的 `1U<<` 修复已由 `datasrc/compile.py` 当前代码覆盖，冲突解后为空。
+- `825a2fc374...`：unbuffered backend debug tile clip 修复已覆盖，cherry-pick 为空。
+- `8b6a42ef45...`：unbuffered backend quad clipping 修复已覆盖，cherry-pick 为空。
+- `a8a5a42264...`：`CMenus::CompareFilenameAscending` strict-weak ordering 已覆盖，cherry-pick 为空。
+- `ec20049369...`：`CDemoItem::operator<` strict-weak ordering 已覆盖，cherry-pick 为空。
+- `cb252fde7c...`：OpenGL 1 default blend mode 修复已覆盖，cherry-pick 为空。
+- `6ea7f4ae1a354a1da5cba1402fc3f56c7f3e2d60`：`find_next_power_of_two_minus_one` 的 `>> 8` 修复已在 QmClient 当前 `src/base/system.cpp` 中存在；官方修改的 `src/base/secure.cpp` 在本地已迁移 / 删除。
+- `e33e31f793...`：GLSL smooth qualifier 修复已覆盖，cherry-pick 为空。
+- `de326e250d32a50ec9b8335ad1ed53b4be812617`：warmup timer 使用固定 `"0.0"` 宽度避免抖动的修复已由 QmClient HUD editor 包装后的 `RenderWarmupTimer()` 覆盖，冲突解后为空。
+
+本轮明确 skip / deferred：
+
+- `4dd20cc2f4`、`3421ee2907` 等 i18n / translations：QmClient 有独立翻译体系，普通同步线 skip。
+- `5a0a059de7`、`657434a07c`、`b8f059ef1d`、`ae69fe4749`、`f3ac2c06f1`、`ccd3f932d0`、`5204da1cc8`、`fc793d9036` 等 Doxyfile / README / 文档重组：P3 文档项，本轮 skip。
+- `3e1288c57b`、`fa18b36bad`：官方版本号 / nightly bump，QmClient 使用自有版本流程，skip。
+- `3400febf94`、`2063fa5152`、`281620af8c` 及 integration-test / CI 运行环境提交：P3 CI / 测试基础设施项，本轮 skip。
+- `9a2211788f`、`246ae771a1`、`2e83185f1e` 等 server gameplay / practice 语义项：进入 P2 兼容性决策队列，未在普通客户端批次处理。
+
+本轮冲突处理要点：
+
+- `menus_demo.cpp`：保留 QmClient demo 浏览器的多选删除、截图浏览和 pending render source 状态，只把官方 play / rename / delete / render tooltip 接入本地按钮流程。
+- `editor_actions.cpp/h`、`quadart.cpp`：采用上游保存已创建 `CLayerGroup` 指针的 quad art undo/redo 语义，保留 QmClient 中文 action 文本和本地 include 组织。
+- `render_layer.cpp`：删除多余 `BlendNormal()`，但保留 QmClient tele / switch 实体层 alpha 分层、checkpoint 可选 visual 和 overlay 配置。
+- `time.cpp/h`、`str_test.cpp`、`time_test.cpp`、`ddnet.cpp`：引入 `time_milliseconds_from_seconds()`，但不迁移到官方新版 `ETimeFormat`，保持 QmClient 当前 `TIME_*` API；新增/适配大秒数精度测试。
+- `players.cpp`：未预测玩家 hook collision line 的 fallback tuning 改为本地 predicted core，保留 QmClient 注释掉的 TClient cursor-distance 分支不启用。
+- `client.cpp`、`snapshot.cpp/h`、`sixup_translate_snapshot.cpp`、`demo_extract_chat.cpp`：接入 `CSnapshotItem::InternalType()` 命名和 external `ItemType` 使用约束；保留 QmClient Rust `CSnapshotBuilder` / `CSnapshotBuffer`，不回退到官方旧 C++ delta / builder 实现。
+
+本轮验证：
+
+- `cmd /c qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target game-client -j 14`
+  - 结果：通过；仅有 `client.cpp` 既有 `[[nodiscard]]` warning。
+- `python qmclient_scripts/gate/check_gate.py --mode quick --base-ref d87500ace94a3d6ab43b2bbbbb49828952eaa9fb`
+  - 首次结果：失败 2 项，其中新增触发 `src/game/client/lineinput.cpp` clang-format；已用 `2b55188175` 收口。
+  - 第二次结果：失败 2 项，7 项通过。失败项已回到既有格式债：`src/game/client/components/countryflags.cpp` clang-format；`datasrc/network.py`、`scripts/generate_unicode_confusables_data.py` ruff format。
+
+本轮量化：
+
+- 当前基线 `d87500ace94a3d6ab43b2bbbbb49828952eaa9fb` 之后本地提交数：`424`
+- 当前按 cherry-pick trailer 统计的唯一官方提交数：`302`
+- 当前本地 `ddnet/master` 相对基线普通提交数：`787`
+- 按动态口径估算，剩余官方普通提交上界：`787 - 302 = 485`
+- 本轮处理候选约 `30+` 个：实质合入官方提交 `6` 个，covered / empty `9` 个，P3 / P2 skip-deferred 约 `15+` 个。
+
 ## 2026-07-01 本轮批量推进记录
 
 本轮从 Rust 工具链后续和后续客户端/基础设施候选继续推进，保持只 cherry-pick 官方单提交，不整体 merge / rebase。
