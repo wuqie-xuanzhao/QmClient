@@ -1495,7 +1495,10 @@ void CScoreboard::OnRender()
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 
-\tif(ShouldHideFocusScoreboard(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideScoreboard != 0))\r\n\t{\r\n\t\tif(m_MouseUnlocked)\r\n\t\t\tLockMouse();
+	if(ShouldHideFocusScoreboard(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideScoreboard != 0))
+	{
+		if(m_MouseUnlocked)
+			LockMouse();
 		return;
 	}
 
