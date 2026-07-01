@@ -108,13 +108,13 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 	// don't check for validity of the projectile for the current weapon here, so particle effects are rendered for mod compatibility
 	if(CurWeapon == WEAPON_GRENADE)
 	{
-	if(AllowEffects && !ShouldHideFocusExplosionEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideExplosionEffects != 0))
-		GameClient()->m_Effects.SmokeTrail(Pos, Vel * -1, Alpha, 0.0f);
-	static float s_Time = 0.0f;
-	static float s_LastLocalTime = LocalTime();
-	s_Time += (LocalTime() - s_LastLocalTime) * GameClient()->GetAnimationPlaybackSpeed();
-	s_LastLocalTime = LocalTime();
-	Graphics()->QuadsSetRotation(s_Time * pi * 2 * 2 + ItemId);
+		if(AllowEffects && !ShouldHideFocusExplosionEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideExplosionEffects != 0))
+			GameClient()->m_Effects.SmokeTrail(Pos, Vel * -1, Alpha, 0.0f);
+		static float s_Time = 0.0f;
+		static float s_LastLocalTime = LocalTime();
+		s_Time += (LocalTime() - s_LastLocalTime) * GameClient()->GetAnimationPlaybackSpeed();
+		s_LastLocalTime = LocalTime();
+		Graphics()->QuadsSetRotation(s_Time * pi * 2 * 2 + ItemId);
 	}
 	else
 	{
