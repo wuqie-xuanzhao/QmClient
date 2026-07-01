@@ -62,12 +62,14 @@
 #endif
 
 #elif defined(CONF_FAMILY_WINDOWS)
+#include <winsock2.h>
+
+#include <windows.h>
+
 #include <io.h>
 #include <objbase.h>
 #include <process.h>
 #include <shellapi.h>
-#include <windows.h>
-#include <winsock2.h>
 #include <ws2tcpip.h>
 
 #include <cerrno>

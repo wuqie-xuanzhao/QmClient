@@ -16,10 +16,11 @@
 #include <unistd.h>
 
 #elif defined(CONF_FAMILY_WINDOWS)
+#include <windows.h>
+
 #include <io.h>
 #include <shlobj.h> // SHGetKnownFolderPath
 #include <shlwapi.h>
-#include <windows.h>
 
 #include <string>
 #else
