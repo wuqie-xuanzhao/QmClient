@@ -16,8 +16,6 @@
 #include <fcntl.h>
 #include <io.h>
 #else
-#include "io.h"
-
 #include <unistd.h>
 #endif
 

@@ -174,7 +174,8 @@ const CCharacter *CInteractions::OwnerCharacter(const CGameContext *pGameServer)
 	const CCharacter *pChr = pGameServer->GetPlayerChar(m_OwnerId);
 	if(!pChr)
 		return nullptr;
-	if(pChr->GetPlayer()->GetUniqueCid() != m_UniqueOwnerId)
+	const CPlayer *pPlayer = GetPlayer(pGameServer, m_OwnerId);
+	if(!pPlayer || pPlayer->GetUniqueCid() != m_UniqueOwnerId)
 		return nullptr;
 	return pChr;
 }

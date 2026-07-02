@@ -1216,6 +1216,9 @@ void CCollision::SetDoorCollisionAt(float x, float y, unsigned char Type, unsign
 
 void CCollision::SetDoorCollisionAt(float x, float y, int Type, int Flags, int Number)
 {
+	if(!in_range(Type, 0, 255) || !in_range(Flags, 0, 255) || !in_range(Number, 0, 255))
+		return;
+
 	SetDoorCollisionAt(x, y, static_cast<unsigned char>(Type), static_cast<unsigned char>(Flags), static_cast<unsigned char>(Number));
 }
 

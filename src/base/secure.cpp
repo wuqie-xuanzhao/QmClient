@@ -4,6 +4,7 @@
 #include "secure.h"
 
 #include "dbg.h"
+#include "system.h"
 #include "types.h"
 #include "windows.h"
 
@@ -14,8 +15,6 @@
 #include <wtypes.h>
 // Need to include wtypes.h before wincrypt.h because the latter is missing the former include
 #include <wincrypt.h>
-#else
-#include "io.h"
 #endif
 
 struct SECURE_RANDOM_DATA

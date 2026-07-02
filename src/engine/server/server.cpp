@@ -2156,7 +2156,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_ENTERGAME)
 		{
-	else if(m_aClients[ClientId].m_State >= CClient::STATE_READY && !m_aClients[ClientId].m_IsLiveObserver)
+			if(m_aClients[ClientId].m_State >= CClient::STATE_READY && !m_aClients[ClientId].m_IsLiveObserver)
 			{
 				if(m_aClients[ClientId].m_KcpNegotiated && !m_NetServer.IsKcpActive(ClientId))
 				{
@@ -3935,7 +3935,7 @@ int CServer::Run()
 	m_pRegister->OnShutdown();
 	m_Econ.Shutdown();
 	m_Fifo.Shutdown();
-	m_pHttp->Shutdown();
+	m_Http.Shutdown();
 	Engine()->ShutdownJobs();
 
 	GameServer()->OnShutdown(nullptr);
