@@ -6202,8 +6202,8 @@ void CEditor::Render()
 		       m_Dialog == DIALOG_NONE &&
 		       CLineInput::GetActiveInput() == nullptr &&
 		       Map()->m_vSelectedLayers.size() == 1 &&
-			   Map()->SelectedLayer(0) != nullptr &&
-			   (Map()->SelectedLayer(0)->m_Type == LAYERTYPE_TILES || Map()->SelectedLayer(0)->m_Type == LAYERTYPE_QUADS) &&
+		       Map()->SelectedLayer(0) != nullptr &&
+		       (Map()->SelectedLayer(0)->m_Type == LAYERTYPE_TILES || Map()->SelectedLayer(0)->m_Type == LAYERTYPE_QUADS) &&
 		       Input()->KeyIsPressed(KEY_SPACE);
 
 	if(m_GuiActive)

@@ -3,11 +3,11 @@
 #ifndef GAME_CLIENT_QMUI_QMANIMRESOLVE_H
 #define GAME_CLIENT_QMUI_QMANIMRESOLVE_H
 
+#include "QmAnim.h"
+
 #include <base/color.h>
 
 #include <cstdint>
-
-#include "QmAnim.h"
 
 class CUIRect;
 

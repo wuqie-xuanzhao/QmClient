@@ -13,10 +13,10 @@
 #include <engine/shared/linereader.h>
 #include <engine/storage.h>
 
-#include <game/client/gameclient.h>
 #include <game/client/components/menus.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/settings_runtime_cache.h>
+#include <game/client/gameclient.h>
 
 namespace
 {

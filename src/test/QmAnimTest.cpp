@@ -5,34 +5,35 @@
 #include <game/client/QmUi/QmAnim.h>
 #include <game/client/QmUi/QmAnimCurves.h>
 
-#include <cmath>
 #include <gtest/gtest.h>
+
+#include <cmath>
 
 namespace
 {
-void AdvanceFor(CUiV2AnimationRuntime &Runtime, float Seconds)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	const float Dt = 1.0f / 60.0f;
-	int Steps = static_cast<int>(Seconds / Dt) + 1;
-	for(int i = 0; i < Steps; ++i)
-		Runtime.Advance(Dt);
-}
+	void AdvanceFor(CUiV2AnimationRuntime &Runtime, float Seconds)
+	{
+		g_Config.m_QmUiMotionLevel = 2;
+		const float Dt = 1.0f / 60.0f;
+		int Steps = static_cast<int>(Seconds / Dt) + 1;
+		for(int i = 0; i < Steps; ++i)
+			Runtime.Advance(Dt);
+	}
 
-SUiAnimRequest MakeRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, float DurationSec, int Priority, EUiAnimInterruptPolicy Interrupt, uint32_t TrackId)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	SUiAnimRequest Request;
-	Request.m_NodeKey = NodeKey;
-	Request.m_Property = Property;
-	Request.m_Target = Target;
-	Request.m_Transition.m_DurationSec = DurationSec;
-	Request.m_Transition.m_Priority = Priority;
-	Request.m_Transition.m_Interrupt = Interrupt;
-	Request.m_Transition.m_Easing = EEasing::LINEAR;
-	Request.m_TrackId = TrackId;
-	return Request;
-}
+	SUiAnimRequest MakeRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, float DurationSec, int Priority, EUiAnimInterruptPolicy Interrupt, uint32_t TrackId)
+	{
+		g_Config.m_QmUiMotionLevel = 2;
+		SUiAnimRequest Request;
+		Request.m_NodeKey = NodeKey;
+		Request.m_Property = Property;
+		Request.m_Target = Target;
+		Request.m_Transition.m_DurationSec = DurationSec;
+		Request.m_Transition.m_Priority = Priority;
+		Request.m_Transition.m_Interrupt = Interrupt;
+		Request.m_Transition.m_Easing = EEasing::LINEAR;
+		Request.m_TrackId = TrackId;
+		return Request;
+	}
 }
 
 TEST(UiV2Anim, ReplacePolicyReplacesCurrentTrack)
@@ -177,18 +178,18 @@ TEST(UiV2Anim, ZeroDurationCompletesImmediately)
 
 namespace
 {
-SUiAnimRequest MakeSpringRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, uint32_t TrackId)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	SUiAnimRequest Request;
-	Request.m_NodeKey = NodeKey;
-	Request.m_Property = Property;
-	Request.m_Target = Target;
-	Request.m_Transition.m_Driver = EUiAnimDriver::SPRING;
-	Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::REPLACE;
-	Request.m_TrackId = TrackId;
-	return Request;
-}
+	SUiAnimRequest MakeSpringRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, uint32_t TrackId)
+	{
+		g_Config.m_QmUiMotionLevel = 2;
+		SUiAnimRequest Request;
+		Request.m_NodeKey = NodeKey;
+		Request.m_Property = Property;
+		Request.m_Target = Target;
+		Request.m_Transition.m_Driver = EUiAnimDriver::SPRING;
+		Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::REPLACE;
+		Request.m_TrackId = TrackId;
+		return Request;
+	}
 }
 
 TEST(UiV2AnimSpring, ConvergesToTarget)
@@ -270,19 +271,19 @@ TEST(UiV2AnimSpring, MergeTargetPreservesVelocity)
 
 namespace
 {
-SUiAnimRequest MakeTweenRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, float DurationSec, EEasing Easing, uint32_t TrackId)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	SUiAnimRequest Request;
-	Request.m_NodeKey = NodeKey;
-	Request.m_Property = Property;
-	Request.m_Target = Target;
-	Request.m_Transition.m_DurationSec = DurationSec;
-	Request.m_Transition.m_Easing = Easing;
-	Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::REPLACE;
-	Request.m_TrackId = TrackId;
-	return Request;
-}
+	SUiAnimRequest MakeTweenRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, float DurationSec, EEasing Easing, uint32_t TrackId)
+	{
+		g_Config.m_QmUiMotionLevel = 2;
+		SUiAnimRequest Request;
+		Request.m_NodeKey = NodeKey;
+		Request.m_Property = Property;
+		Request.m_Target = Target;
+		Request.m_Transition.m_DurationSec = DurationSec;
+		Request.m_Transition.m_Easing = Easing;
+		Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::REPLACE;
+		Request.m_TrackId = TrackId;
+		return Request;
+	}
 }
 
 TEST(UiV2AnimEasing, OutBackOvershoots)

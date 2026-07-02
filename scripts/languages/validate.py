@@ -24,39 +24,33 @@ total_errors = 0
 
 
 def print_validation_error(error, filename, error_line):
-    print(f"Invalid: {translated}")
-    print(f"- {error} in {filename}:{error_line + 1}\n")
-    global total_errors
-    total_errors += 1
+	print(f"Invalid: {translated}")
+	print(f"- {error} in {filename}:{error_line + 1}\n")
+	global total_errors
+	total_errors += 1
 
 
 if len(sys.argv) > 1:
-    languages = sys.argv[1:]
+	languages = sys.argv[1:]
 else:
-    languages = twlang.languages()
+	languages = twlang.languages()
 local = twlang.localizes()
 
 for language in languages:
-    translations = twlang.translations(language)
+	translations = twlang.translations(language)
 
-    for (english, _), (line, translated, _) in translations.items():
-        if not translated:
-            continue
+	for (english, _), (line, translated, _) in translations.items():
+		if not translated:
+			continue
 
-        # Validate c format strings. Strings that move the formatters are not validated.
-        if (
-            re.findall(cfmt, english, flags=re.X)
-            != re.findall(cfmt, translated, flags=re.X)
-            and "1$" not in translated
-        ):
-            print_validation_error("Non-matching formatting", language, line)
+		# Validate c format strings. Strings that move the formatters are not validated.
+		if re.findall(cfmt, english, flags=re.X) != re.findall(cfmt, translated, flags=re.X) and "1$" not in translated:
+			print_validation_error("Non-matching formatting", language, line)
 
-        # Check for elipisis
-        if "…" in english and "..." in translated:
-            print_validation_error(
-                "Usage of ... instead of the … character", language, line
-            )
+		# Check for elipisis
+		if "…" in english and "..." in translated:
+			print_validation_error("Usage of ... instead of the … character", language, line)
 
 if total_errors:
-    print(f"Found {total_errors} {'error' if total_errors == 1 else 'errors'} ")
-    sys.exit(1)
+	print(f"Found {total_errors} {'error' if total_errors == 1 else 'errors'} ")
+	sys.exit(1)

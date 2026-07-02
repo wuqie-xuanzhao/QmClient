@@ -1,4 +1,5 @@
 #include "image_loader.h"
+
 #include "image_manipulation.h"
 
 #include <base/log.h>
@@ -289,7 +290,7 @@ bool CImageLoader::LoadPng(CByteBufferReader &Reader, const char *pContextName, 
 		Cleanup();
 		return false;
 	}
-	pRowPointers = new (std::nothrow) png_bytep[Height];
+	pRowPointers = new(std::nothrow) png_bytep[Height];
 	if(pRowPointers == nullptr)
 	{
 		Image.Free();

@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <game/client/QmUi/QmCardOrderModel.h>
+
+#include <gtest/gtest.h>
 
 #include <cstring>
 

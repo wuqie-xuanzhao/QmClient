@@ -1,27 +1,27 @@
-#include <gtest/gtest.h>
-
 #include <game/client/live/live_director.h>
 #include <game/client/live/live_replay_buffer.h>
 #include <game/teamscore.h>
+
+#include <gtest/gtest.h>
 
 #include <array>
 #include <cstdint>
 
 namespace
 {
-std::array<int, MAX_CLIENTS> DefaultTeams()
-{
-	std::array<int, MAX_CLIENTS> aTeams{};
-	aTeams.fill(TEAM_FLOCK);
-	return aTeams;
-}
+	std::array<int, MAX_CLIENTS> DefaultTeams()
+	{
+		std::array<int, MAX_CLIENTS> aTeams{};
+		aTeams.fill(TEAM_FLOCK);
+		return aTeams;
+	}
 
-std::array<bool, MAX_CLIENTS> DefaultActivePlayers()
-{
-	std::array<bool, MAX_CLIENTS> aActivePlayers{};
-	aActivePlayers.fill(false);
-	return aActivePlayers;
-}
+	std::array<bool, MAX_CLIENTS> DefaultActivePlayers()
+	{
+		std::array<bool, MAX_CLIENTS> aActivePlayers{};
+		aActivePlayers.fill(false);
+		return aActivePlayers;
+	}
 } // namespace
 
 TEST(QmLiveDirector, BuildsRowsForActiveDDRaceTeams)

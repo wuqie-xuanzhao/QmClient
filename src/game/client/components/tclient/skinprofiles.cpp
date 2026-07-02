@@ -7,8 +7,6 @@
 #include <game/client/gameclient.h>
 #include <game/localization.h>
 
-
-
 static void EscapeParam(char *pDst, const char *pSrc, int Size)
 {
 	str_escape(&pDst, pSrc, pDst + Size);

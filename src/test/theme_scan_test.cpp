@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <game/client/components/theme_scan.h>
+
+#include <gtest/gtest.h>
 
 TEST(ThemeScan, FileCandidateDetection)
 {

@@ -1,8 +1,8 @@
 #include "test.h"
 
 #include <base/fs.h>
-#include <base/system.h>
 #include <base/str.h>
+#include <base/system.h>
 
 #include <gtest/gtest.h>
 

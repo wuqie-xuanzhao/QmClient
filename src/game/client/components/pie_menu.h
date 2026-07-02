@@ -50,8 +50,8 @@ private:
 	std::vector<std::string> m_vRenameQueue;
 
 	// Menu parameters (in screen pixels) - scaled 1.8x
-	static constexpr float INNER_RADIUS = 108.0f;  // 60 * 1.8
-	static constexpr float OUTER_RADIUS = 288.0f;  // 160 * 1.8
+	static constexpr float INNER_RADIUS = 108.0f; // 60 * 1.8
+	static constexpr float OUTER_RADIUS = 288.0f; // 160 * 1.8
 	static constexpr float SECONDARY_INNER_RADIUS = OUTER_RADIUS + 12.0f;
 	static constexpr float SECONDARY_OUTER_RADIUS = OUTER_RADIUS + 108.0f;
 	static constexpr float START_ANGLE = -90.0f; // Start from 12 o'clock

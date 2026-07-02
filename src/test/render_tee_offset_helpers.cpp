@@ -1,7 +1,7 @@
+#include <engine/shared/config.h>
+
 #include <game/client/animstate.h>
 #include <game/client/render.h>
-
-#include <engine/shared/config.h>
 
 void CRenderTools::GetRenderTeeAnimScaleAndBaseSize(const CTeeRenderInfo *pInfo, float &AnimScale, float &BaseSize)
 {

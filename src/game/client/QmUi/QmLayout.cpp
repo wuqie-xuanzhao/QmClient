@@ -7,49 +7,49 @@
 
 namespace
 {
-float ResolveLengthNoFlex(const SUiLength &Length, float ParentAxis, float AutoValue)
-{
-	switch(Length.m_Type)
+	float ResolveLengthNoFlex(const SUiLength &Length, float ParentAxis, float AutoValue)
 	{
-	case EUiLengthType::AUTO:
-		return AutoValue;
-	case EUiLengthType::PX:
-		return Length.m_Value;
-	case EUiLengthType::PERCENT:
-		return ParentAxis * Length.m_Value;
-	case EUiLengthType::FLEX:
+		switch(Length.m_Type)
+		{
+		case EUiLengthType::AUTO:
+			return AutoValue;
+		case EUiLengthType::PX:
+			return Length.m_Value;
+		case EUiLengthType::PERCENT:
+			return ParentAxis * Length.m_Value;
+		case EUiLengthType::FLEX:
+			return AutoValue;
+		}
 		return AutoValue;
 	}
-	return AutoValue;
-}
 
-bool ResolveConstraint(const SUiLength &Length, float ParentAxis, float &OutValue)
-{
-	switch(Length.m_Type)
+	bool ResolveConstraint(const SUiLength &Length, float ParentAxis, float &OutValue)
 	{
-	case EUiLengthType::PX:
-		OutValue = Length.m_Value;
-		return true;
-	case EUiLengthType::PERCENT:
-		OutValue = ParentAxis * Length.m_Value;
-		return true;
-	case EUiLengthType::AUTO:
-	case EUiLengthType::FLEX:
+		switch(Length.m_Type)
+		{
+		case EUiLengthType::PX:
+			OutValue = Length.m_Value;
+			return true;
+		case EUiLengthType::PERCENT:
+			OutValue = ParentAxis * Length.m_Value;
+			return true;
+		case EUiLengthType::AUTO:
+		case EUiLengthType::FLEX:
+			return false;
+		}
 		return false;
 	}
-	return false;
-}
 
-float ApplyMinMax(float Value, const SUiLength &MinValue, const SUiLength &MaxValue, float ParentAxis)
-{
-	float Resolved = Value;
-	float Bound = 0.0f;
-	if(ResolveConstraint(MinValue, ParentAxis, Bound))
-		Resolved = std::max(Resolved, Bound);
-	if(ResolveConstraint(MaxValue, ParentAxis, Bound))
-		Resolved = std::min(Resolved, Bound);
-	return std::max(0.0f, Resolved);
-}
+	float ApplyMinMax(float Value, const SUiLength &MinValue, const SUiLength &MaxValue, float ParentAxis)
+	{
+		float Resolved = Value;
+		float Bound = 0.0f;
+		if(ResolveConstraint(MinValue, ParentAxis, Bound))
+			Resolved = std::max(Resolved, Bound);
+		if(ResolveConstraint(MaxValue, ParentAxis, Bound))
+			Resolved = std::min(Resolved, Bound);
+		return std::max(0.0f, Resolved);
+	}
 }
 
 SUiLayoutBox CUiV2LayoutEngine::ResolveRoot(const SUiLayoutBox &RootBox) const
@@ -147,7 +147,7 @@ void CUiV2LayoutEngine::ComputeChildren(const SUiStyle &ContainerStyle, const SU
 		const float PreferredCross = IsRow ? vChildren[i].m_Box.m_H : vChildren[i].m_Box.m_W;
 
 		const bool StretchAuto = ContainerStyle.m_AlignItems == EUiAlign::STRETCH &&
-			(CrossLength.m_Type == EUiLengthType::AUTO || CrossLength.m_Type == EUiLengthType::FLEX);
+					 (CrossLength.m_Type == EUiLengthType::AUTO || CrossLength.m_Type == EUiLengthType::FLEX);
 		float Cross = StretchAuto ? ParentCross : ResolveLengthNoFlex(CrossLength, ParentCross, PreferredCross);
 		Cross = ApplyMinMax(Cross, MinCross, MaxCross, ParentCross);
 		vCrossSizes[i] = Cross;

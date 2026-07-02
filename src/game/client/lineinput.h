@@ -22,14 +22,14 @@ enum class EInputPriority
 
 namespace qm_ime_overlay
 {
-inline int NormalizeSelectedCandidateIndex(int SelectedIndex, int CandidateCount)
-{
-	if(CandidateCount <= 0)
-		return -1;
-	if(SelectedIndex < 0 || SelectedIndex >= CandidateCount)
-		return 0;
-	return SelectedIndex;
-}
+	inline int NormalizeSelectedCandidateIndex(int SelectedIndex, int CandidateCount)
+	{
+		if(CandidateCount <= 0)
+			return -1;
+		if(SelectedIndex < 0 || SelectedIndex >= CandidateCount)
+			return 0;
+		return SelectedIndex;
+	}
 } // namespace qm_ime_overlay
 
 // line input helper

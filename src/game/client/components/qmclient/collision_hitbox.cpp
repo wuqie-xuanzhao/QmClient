@@ -1,12 +1,8 @@
 #include "collision_hitbox.h"
 
-#include <algorithm>
-#include <cmath>
-#include <limits>
-#include <vector>
-
 #include <base/log.h>
 #include <base/math.h>
+
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
@@ -19,6 +15,11 @@
 #include <game/client/projectile_data.h>
 #include <game/gamecore.h>
 #include <game/mapitems.h>
+
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <vector>
 
 // 地图层类型
 enum class HitboxLayer
@@ -559,7 +560,7 @@ void CCollisionHitbox::RenderPickupHitboxes()
 			continue;
 
 		if(Data.m_Pos.x + PickupRadius < ScreenX0 || Data.m_Pos.x - PickupRadius > ScreenX1 ||
-		   Data.m_Pos.y + PickupRadius < ScreenY0 || Data.m_Pos.y - PickupRadius > ScreenY1)
+			Data.m_Pos.y + PickupRadius < ScreenY0 || Data.m_Pos.y - PickupRadius > ScreenY1)
 			continue;
 
 		DrawBoxOutline(Data.m_Pos, PickupRadius, ShieldColor);

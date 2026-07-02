@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <game/client/components/qmclient/keyword_reply_rules.h>
+
+#include <gtest/gtest.h>
 
 #include <cstring>
 

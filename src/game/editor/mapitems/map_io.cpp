@@ -108,7 +108,7 @@ bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 	CDataFileWriter Writer;
 	if(!Writer.Open(m_pEditor->Storage(), aFilenameTmp))
 	{
-	str_format(aBuf, sizeof(aBuf), "错误：无法打开文件“%s”进行写入。", aFilenameTmp);
+		str_format(aBuf, sizeof(aBuf), "错误：无法打开文件“%s”进行写入。", aFilenameTmp);
 		ErrorHandler(aBuf);
 		return false;
 	}

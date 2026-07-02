@@ -16,8 +16,6 @@ const char *Localize(const char *pStr, const char *pContext)
 	return pNewStr ? pNewStr : pStr;
 }
 
-
-
 void CLocalizationDatabase::LoadIndexfile(IStorage *pStorage, IConsole *pConsole)
 {
 	m_vLanguages.clear();

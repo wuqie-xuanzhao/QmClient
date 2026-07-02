@@ -2202,8 +2202,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	{
 		const SQmModuleEntry *m_pModule;
 		EQmModuleColumn m_Column;
-		CUIRect m_Rect;         // DisplayRect：当前显示位置（每帧 SPRING lerp 向 m_TargetRect，让位动画）
-		CUIRect m_TargetRect;   // 布局目标位置（布局算法每帧写入，order 变化只改这里）
+		CUIRect m_Rect; // DisplayRect：当前显示位置（每帧 SPRING lerp 向 m_TargetRect，让位动画）
+		CUIRect m_TargetRect; // 布局目标位置（布局算法每帧写入，order 变化只改这里）
 	};
 
 	struct SQmModuleDropPreview
@@ -7871,37 +7871,37 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		RenderColumnModules(RenderedLeftModules, EQmModuleColumn::Left);
 		if(!SearchSingleColumnMode)
 			RenderColumnModules(RenderedRightModules, EQmModuleColumn::Right);
-	// 让位动画：每帧 lerp 跨帧 cache（DisplayRect）→ 布局 TargetRect
-	{
-		const float LerpT = 0.25f;
-		for(const SQmModuleCardInfo &Info : ModuleCards)
+		// 让位动画：每帧 lerp 跨帧 cache（DisplayRect）→ 布局 TargetRect
 		{
-			const int StateIndex = GetQmModuleStateIndexById(Info.m_pModule->m_Id);
-			if(Info.m_pModule == s_DragState.m_pDragging)
+			const float LerpT = 0.25f;
+			for(const SQmModuleCardInfo &Info : ModuleCards)
 			{
-				s_aQmModuleDisplayRects[StateIndex].x = Ui()->MouseX() - s_DragState.m_GrabOffset.x;
-				s_aQmModuleDisplayRects[StateIndex].y = Ui()->MouseY() - s_DragState.m_GrabOffset.y;
-				s_aQmModuleDisplayRects[StateIndex].w = Info.m_TargetRect.w;
-				s_aQmModuleDisplayRects[StateIndex].h = Info.m_TargetRect.h;
-			}
-			else
-			{
-				CUIRect &Disp = s_aQmModuleDisplayRects[StateIndex];
-				// 首次初始化 = TargetRect（不 lerp 从 {0}，否则卡片偏到 TargetRect*0.25）
-				if(Disp.w <= 0.0f || Disp.h <= 0.0f)
+				const int StateIndex = GetQmModuleStateIndexById(Info.m_pModule->m_Id);
+				if(Info.m_pModule == s_DragState.m_pDragging)
 				{
-					Disp = Info.m_TargetRect;
+					s_aQmModuleDisplayRects[StateIndex].x = Ui()->MouseX() - s_DragState.m_GrabOffset.x;
+					s_aQmModuleDisplayRects[StateIndex].y = Ui()->MouseY() - s_DragState.m_GrabOffset.y;
+					s_aQmModuleDisplayRects[StateIndex].w = Info.m_TargetRect.w;
+					s_aQmModuleDisplayRects[StateIndex].h = Info.m_TargetRect.h;
 				}
 				else
 				{
-					Disp.x += (Info.m_TargetRect.x - Disp.x) * LerpT;
-					Disp.y += (Info.m_TargetRect.y - Disp.y) * LerpT;
-					Disp.w = Info.m_TargetRect.w;
-					Disp.h = Info.m_TargetRect.h;
+					CUIRect &Disp = s_aQmModuleDisplayRects[StateIndex];
+					// 首次初始化 = TargetRect（不 lerp 从 {0}，否则卡片偏到 TargetRect*0.25）
+					if(Disp.w <= 0.0f || Disp.h <= 0.0f)
+					{
+						Disp = Info.m_TargetRect;
+					}
+					else
+					{
+						Disp.x += (Info.m_TargetRect.x - Disp.x) * LerpT;
+						Disp.y += (Info.m_TargetRect.y - Disp.y) * LerpT;
+						Disp.w = Info.m_TargetRect.w;
+						Disp.h = Info.m_TargetRect.h;
+					}
 				}
 			}
 		}
-	}
 		char aRenderExtra[128];
 		str_format(aRenderExtra, sizeof(aRenderExtra), "tab=%s transition=%d search=%d left=%d right=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0, HasModuleSearch ? 1 : 0,

@@ -10,12 +10,12 @@
 #include <generated/client_data.h>
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
 #include <game/client/prediction/gameworld.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/localization.h>
 
 static constexpr float ROW_HEIGHT = 46.0f;

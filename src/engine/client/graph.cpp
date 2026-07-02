@@ -5,6 +5,7 @@
 
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+
 #include <game/localization.h>
 
 #include <limits>
