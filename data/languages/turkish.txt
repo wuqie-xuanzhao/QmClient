@@ -11,10 +11,10 @@
 == "%s" pnglite ile uyumlu değil ve eski DDNet sürümleri tarafından yüklenemez
 
 %.2f KiB
-== %.2f KiB
+== Pending turkish translation 4491cdace4
 
 %.2f MiB
-== %.2f MiB
+== Pending turkish translation 8b62dc1eed
 
 %c Team %d
 == %c Takım %d
@@ -65,7 +65,7 @@
 == %d kullanıcı
 
 %d/%d KiB (%.1f KiB/s)
-== %d/%d KiB (%.1f KiB/s)
+== Pending turkish translation 060ac17398
 
 %ds left
 == %d saniye kaldı
@@ -83,7 +83,7 @@
 == %i saniye kaldı
 
 %s (/%s %s)
-== %s (/%s %s)
+== Pending turkish translation e8878b6c21
 
 %s and %s have swapped
 == %s ve %s yer değiştirdi
@@ -273,6 +273,9 @@ A screenshot with this name already exists
 
 A Tee
 == Bir Tee
+
+A vote is currently active.
+== Pending turkish translation ebdf80e4de
 
 Abort
 == İptal
@@ -547,6 +550,9 @@ Allows maps to render with more detail
 Alpha
 == Alfa
 
+Also apply to dummy
+== Dummy'ye de uygula
+
 Always show
 == Her zaman göster
 
@@ -808,6 +814,9 @@ Auto manage IME while typing
 Auto map vote
 == Otomatik harita oylaması
 
+Auto margin
+== Pending turkish translation 2247624fea
+
 Auto refresh server list
 == Sunucu listesini otomatik yenile
 
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == En iyi
 
+Best input
+== Pending turkish translation 0e33b78c40
+
+Best input others
+== Pending turkish translation 67d96bc262
+
+Best input 平滑百分比
+== Pending turkish translation 2d63798261
+
+Best input 延迟补偿百分比
+== Pending turkish translation c6150047da
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Pending turkish translation 53542d177f
+
+Best input 预测偏移（0.01 tick）
+== Pending turkish translation 46b7c5ae56
+
 Best match
 == Best match setting
 
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == Düğme - Etkin
 
+Button browser
+== Pending turkish translation 77ca71a81a
+
 Button position is outside of the screen.
 == Düğme konumu ekranın dışında.
 
 Buttons
 == Düğmeler
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Pending turkish translation d6e7018deb
+
+Buttons with this behavior execute console commands like regular key binds.
+== Pending turkish translation 318341a3b1
+
+Buttons with this behavior execute some predefined actions.
+== Pending turkish translation c8e0272a3a
 
 c = Player position
 == c = Oyuncu konumu
@@ -1110,6 +1149,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Swap yapılamaz: diğer oyuncu takımında değil
+
+Card Appearance
+== Pending turkish translation 772dfc109b
+
+Card background blur (high performance only)
+== Pending turkish translation 0f1f254ce9
+
+Card background blur and corner rounding
+== Pending turkish translation 6503273091
 
 Category
 == Kategori
@@ -1323,6 +1371,9 @@ Click to remove this community from favorites
 
 Click to remove this player from your friends list.
 == Bu oyuncuyu arkadaş listenizden kaldırmak için tıklayın.
+
+Click to restore full match
+== Pending turkish translation f632eb0b4c
 
 Click to select server. Double click to join your friend.
 == Sunucuyu seçmek için tıklayın. Arkadaşınıza katılmak için çift tıklayın.
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == Skin'i kopyala
 
+Corner segments
+== Pending turkish translation 40ff82e56c
+
 Could not check for existing player with your name. Check your internet connection.
 == Adınızla mevcut bir oyuncu kontrol edilemedi. İnternet bağlantınızı kontrol edin.
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == Rapor tarama isteği oluşturulamadı
+
+Could not find a Tutorial server. Check your internet connection.
+== Pending turkish translation 88fb5213df
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Pending turkish translation 933ebe3578
 
 Could not find your Team
 == Takımın bulunamadı
@@ -1696,6 +1756,9 @@ Cut segments
 Cute:
 == Sevimli:
 
+Cycle custom Tee hue
+== Özel Tee tonunu döngüye al
+
 Cycle through emotes
 == Emojiler arasında döngü yap
 
@@ -1718,22 +1781,22 @@ Days
 == Gün
 
 DDmaX
-== DDmaX
+== Pending turkish translation 86cf18c081
 
 DDmaX Easy
-== DDmaX Easy
+== Pending turkish translation 68d6830a91
 
 DDmaX Next
-== DDmaX Next
+== Pending turkish translation 450da78050
 
 DDmaX Nut
-== DDmaX Nut
+== Pending turkish translation 3235d64850
 
 DDmaX Pro
-== DDmaX Pro
+== Pending turkish translation ea236e6975
 
 DDNet
-== DDNet
+== Pending turkish translation d03ad629cb
 
 DDNet / Total CPU
 == DDNet / toplam CPU
@@ -1760,7 +1823,7 @@ DDNet/total CPU
 == DDNet/toplam CPU
 
 DDRace HUD
-== DDRace HUD
+== Pending turkish translation b2553cb4cc
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork, sizin ve tee grubunuzun haritanın bitiş çizgisine ulaşmayı hedeflediği işbirlikçi bir çevrimiçi oyundur. Yeni başlayan biri olarak, en kolay haritaları barındıran Novice sunucularında başlamalısınız. Size yakın bir sunucu seçmek için ping'i göz önünde bulundurun.
@@ -1802,7 +1865,7 @@ Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 == Deepfly modu (0=normal, 1=DF, 2=HDF, 3=özel)
 
 DeepSeek
-== DeepSeek
+== Pending turkish translation 53bf7ca6a3
 
 DeepSeek API Key
 == DeepSeek API Anahtarı
@@ -1871,13 +1934,16 @@ Delete this preset
 == Bu ön ayarı sil
 
 Demo
-== Demo
+== Pending turkish translation 9aaf810aea
 
 Demo effects
 == Demo efektleri
 
 Demo marker added
 == Demo işareti eklendi
+
+Demo player is currently active.
+== Pending turkish translation 63a96ba569
 
 Demo target
 == Demo hedefi
@@ -1922,7 +1988,7 @@ Developers and sponsors
 == Geliştiriciler ve sponsorlar
 
 DF
-== DF
+== Pending turkish translation 6576529f5b
 
 Diamond
 == Elmas
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == Diğer silahları aldıktan sonra devre dışı bırak
+
+Disable QmLive team preview/render filter
+== Pending turkish translation 5d22a36127
 
 Disabled
 == Devre dışı
@@ -1973,7 +2042,7 @@ Disconnected
 == Bağlantı kesildi
 
 Discord
-== Discord
+== Pending turkish translation 3d59dc4d9a
 
 Display mode
 == Görüntüleme modu
@@ -2132,7 +2201,7 @@ Dummies are not allowed on this server
 == Bu sunucuda dummy'lere izin verilmiyor
 
 Dummy
-== Dummy
+== Pending turkish translation 96ac05631e
 
 Dummy Control: %s
 == Dummy Kontrolü: %s
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == Dummy kancası
+
+Dummy is allowed on this server.
+== Pending turkish translation 72c2117a9a
+
+Dummy is currently connected.
+== Pending turkish translation e40449a922
 
 Dummy jump
 == Dummy zıpla
@@ -2420,7 +2495,7 @@ Entity Preview
 == Varlık Önizlemesi
 
 entity_bg (Workshop)
-== entity_bg (Workshop)
+== Pending turkish translation dcad2e1688
 
 Erase items on the in game background
 == Oyun arka planındaki öğeleri sil
@@ -2430,6 +2505,9 @@ Error
 
 Error checking player name
 == Oyuncu adı kontrol edilirken hata oluştu
+
+Error joining Tutorial server
+== Pending turkish translation af6c942791
 
 Error loading communities
 == Topluluklar yüklenirken hata oluştu
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Yedek basit gürültü azaltma gücü
 
+Fast input
+== Pending turkish translation b30d29c3b0
+
 Fast input (reduce visual latency)
 == Hızlı giriş (görsel gecikmeyi azaltır)
 
@@ -2646,6 +2727,15 @@ File already exists, do you want to overwrite it?
 
 Filter connecting players
 == Bağlanan oyuncuları filtrele
+
+Filter off
+== Pending turkish translation 75ec467ec1
+
+Filter Team %d
+== Pending turkish translation 384027abaf
+
+Filter: Team %d
+== Pending turkish translation 776c62d51b
 
 Find all ban records for the specified IP address
 == Belirtilen IP adresi için tüm yasak kayıtlarını bul
@@ -2711,7 +2801,7 @@ FPM
 == K/D
 
 FPS
-== FPS
+== Pending turkish translation 38b49f0585
 
 Frags
 == Öldürme
@@ -2789,10 +2879,13 @@ FSAA samples
 == FSAA örnekleri
 
 FTAPI
-== FTAPI
+== Pending turkish translation dadb33fa76
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == Aşırı yüklemeyi önlemek için FTAPI otomatik çevirisi devre dışı bırakıldı. Gerekirse ayarlardan etkinleştirin.
+
+Full demo + sidecar
+== Pending turkish translation 09fcb94be4
 
 Full map listen in same room
 == Aynı odada tam harita dinleme
@@ -2861,7 +2954,7 @@ Ghosts directory
 == Hayaletler dizini
 
 Github
-== Github
+== Pending turkish translation f722b4211f
 
 Give back right to vote to player with client ID
 == İstemci kimliğine sahip oyuncuya oy kullanma hakkını geri ver
@@ -3020,7 +3113,7 @@ Has save
 == Kaydı var
 
 HDF
-== HDF
+== Pending turkish translation 3d3ed57204
 
 Heart
 == Kalp
@@ -3078,12 +3171,6 @@ Hide jump effects
 
 Hide kill/finish messages
 == Öldürme/bitirme mesajlarını gizle
-
-Hide lyrics when no lyrics are found instead of showing a hint
-== Şarkı sözü bulunamadığında ipucu göstermek yerine gizle
-
-Hide lyrics while media is paused
-== Medya duraklatıldığında şarkı sözlerini gizle
 
 Hide map progress
 == Harita ilerlemesini gizle
@@ -3188,19 +3275,19 @@ Hover for tooltip
 == İpucu için üzerine gel
 
 https://ddnet.org/discord
-== https://ddnet.org/discord
+== Pending turkish translation e2c87cc42f
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+== Pending turkish translation cf2eaefaae
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
+== Pending turkish translation acf133c475
 
 https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls
+== Pending turkish translation d33cc85887
 
 HUD
-== HUD
+== Pending turkish translation a36a4a4029
 
 HUD editor preview
 == HUD düzenleyici önizlemesi
@@ -3216,6 +3303,9 @@ HUD 编辑器布局
 
 Hue
 == Renk tonu
+
+Hue speed
+== Ton hızı
 
 i = Receive rate
 == i = Alma hızı
@@ -3331,6 +3421,9 @@ Input overlay
 Input overlay display
 == Giriş kaplaması görüntüsü
 
+Input smoothing
+== Pending turkish translation b3059c3a4b
+
 Input switch
 == Giriş anahtarı
 
@@ -3348,6 +3441,9 @@ Internet
 
 Internet (From online source)
 == İnternet (Çevrimiçi kaynaktan)
+
+Interpolation
+== Pending turkish translation b06aa5e78a
 
 Invalid client id to kick
 == Atılacak istemci kimliği geçersiz
@@ -3442,6 +3538,9 @@ Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
 == Katılma, sürüm, kurallar ve yardım mesajları açılır bildirim yerine sohbette kalır
 
+Joining Tutorial server
+== Pending turkish translation 629fd929c3
+
 Jump
 == Zıpla
 
@@ -3452,7 +3551,7 @@ k = Resend loss
 == k = Yeniden gönderme kaybı
 
 Kaomoji
-== Kaomoji
+== Pending turkish translation 45056ab4c4
 
 Karaoke edge softness
 == Karaoke edge softness setting
@@ -3559,6 +3658,9 @@ Last page in console
 Latency
 == Gecikme
 
+Latency compensation
+== Pending turkish translation 9a08c92d15
+
 Latency Jitter
 == Gecikme dalgalanması
 
@@ -3599,7 +3701,7 @@ Length
 == Uzunluk
 
 Lenny:
-== Lenny:
+== Pending turkish translation 0f23644272
 
 Lets you join team i (shows your team if left blank)
 == i takımına katılmanı sağlar (boş bırakılırsa takımını gösterir)
@@ -3608,7 +3710,7 @@ Lht.
 == Prl.
 
 LibreTranslate
-== LibreTranslate
+== Pending turkish translation fecc1d8b0a
 
 LibreTranslate API Key
 == LibreTranslate API Anahtarı
@@ -3689,7 +3791,7 @@ Live director
 == Canlı yönetmen
 
 LLM API
-== LLM API
+== Pending turkish translation 57a573caa1
 
 LLM provider
 == LLM sağlayıcısı
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == Rcon'dan çıkış yap
 
-Long press on a touch button to select it.
-== Bir dokunmatik düğmeyi seçmek için uzun basın.
-
 Low to high
 == Düşükten yükseğe
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == Şarkı sözleri
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== Şarkı sözleri HTTP proxy (ör. http://127.0.0.1:7890)
-
 Lyrics HTTP timeout
 == Lyrics HTTP timeout setting
-
-Lyrics local media library folders (use | as separator)
-== Şarkı sözleri yerel medya kütüphanesi klasörleri (ayraç olarak | kullanın)
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== Şarkı sözleri manuel zaman çizelgesi ofseti (ms, çalışma zamanında adım 500ms)
 
 Lyrics search type
 == Lyrics search type setting
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == Ana menü
-
-Make inactive tee fire
-== Make inactive tee fire
-
-Make inactive tee hook
-== Make inactive tee hook
-
-Make inactive tee jump
-== Make inactive tee jump
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == Arka uçun OpenAI uyumlu düşünme parametrelerini desteklediğinden emin olun
@@ -4073,7 +4154,7 @@ Minimize the client
 == İstemciyi simge durumuna küçült
 
 minimum
-== minimum
+== Pending turkish translation 2e48d8178a
 
 Minimum match chars
 == Minimum eşleşme karakteri
@@ -4097,7 +4178,7 @@ Mode
 == Mod
 
 Model
-== Model
+== Pending turkish translation 76f9b7976d
 
 Moderate
 == Orta
@@ -4112,16 +4193,10 @@ Modules snap to screen edges, center lines and other HUD modules while dragging
 == Modüller sürüklerken ekran kenarlarına, orta çizgilere ve diğer HUD modüllerine yapışır
 
 MOTD
-== MOTD
+== Pending turkish translation 208547d9b3
 
 Mouse
 == Fare
-
-Move inactive tee left
-== Move inactive tee left
-
-Move inactive tee right
-== Move inactive tee right
 
 Move left
 == Sola hareket et
@@ -4265,7 +4340,7 @@ Negative stability buffer (for Gores)
 == Negatif stabilite tamponu (Gores için)
 
 Net
-== Net
+== Pending turkish translation d9c05605e3
 
 Netversion
 == Ağ sürümü
@@ -4481,7 +4556,7 @@ None
 == Yok
 
 Normal
-== Normal
+== Pending turkish translation b97fe1421e
 
 Normal Color
 == Normal Renk
@@ -4562,7 +4637,7 @@ Offline
 == Çevrimdışı
 
 Ohhhhhhhhhhhhhhhh
-== Ohhhhhhhhhhhhhhhh
+== Pending turkish translation 7280285713
 
 Ok
 == Tamam
@@ -4581,6 +4656,9 @@ Online Players
 
 Only .wv files are supported right now.
 == Şu anda yalnızca .wv dosyaları desteklenmektedir.
+
+Only affects custom Tee colors.
+== Yalnızca özel Tee renklerini etkiler.
 
 Only Apple Can Do
 == Yalnızca Apple Yapabilir
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == Renk seçiciyi aç
+
+Open DDNet Wiki
+== Pending turkish translation 981663bef1
 
 Open emote selector
 == İfade seçiciyi aç
@@ -4651,11 +4732,17 @@ Open the folder containing screenshots
 Open the saves file
 == Kayıtlı oyun dosyasını aç
 
+Open the selected folder
+== Pending turkish translation 22041fde5e
+
+Open the selected screenshot
+== Pending turkish translation 4e33c9212c
+
 Open the settings file
 == Ayarlar dosyasını aç
 
 OpenAI
-== OpenAI
+== Pending turkish translation 284f39577f
 
 OpenAI API Key
 == OpenAI API Anahtarı
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == Açıldı
+
+Opens the emoticon selector (this does not work with binds).
+== Pending turkish translation 8f48c12399
+
+Opens the ingame menu immediately when released.
+== Pending turkish translation 7cacf3f4e2
+
+Opens the spectator menu (this does not work with binds).
+== Pending turkish translation 3b93dd4003
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == İzleyici sayısından çık ve yetkisiz oyunculara kimlik doğrulama durumunu gizle (1 = gizli, 0 = göster)
@@ -4853,7 +4949,7 @@ Pie menu
 == Pasta menüsü
 
 Ping
-== Ping
+== Pending turkish translation f930711af3
 
 Ping the current server
 == Geçerli sunucuya ping at
@@ -4872,6 +4968,9 @@ Play background music
 
 Play the current demo
 == Geçerli demoyu oynat
+
+Play the selected demo
+== Pending turkish translation 9d04d974ed
 
 Play/Pause
 == Oynat/Duraklat
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == Oyuncu göstergesi
+
+Player is currently authed in rcon.
+== Pending turkish translation 0f5b2a64bc
+
+Player is ingame, i.e. not spectating.
+== Pending turkish translation dd01699108
 
 Player is on a different team
 == Oyuncu farklı bir takımda
@@ -5026,6 +5131,9 @@ Prediction Margin
 Prediction margin
 == Tahmin payı
 
+Prediction offset
+== Pending turkish translation a6e46944bc
+
 Prediction time
 == Tahmin süresi
 
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == Seçili dosyayı önizle
+
+Preview visibilities
+== Pending turkish translation 95df06296d
+
+Preview/render only one DDRace team from a full match demo
+== Pending turkish translation cf8946c190
+
+Preview/render only this team
+== Pending turkish translation e65a07c61a
 
 Previous
 == Önceki
@@ -5174,13 +5291,13 @@ Q 弹 Tee 形变持续时间
 == Zıpzıp Tee deformasyon süresi
 
 Qm
-== Qm
+== Pending turkish translation 1757594b8a
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: indeks 1 ile %d arasında olmalıdır
 
 QmClient
-== QmClient
+== Pending turkish translation 56bc9dc2fb
 
 QmClient chat log
 == QmClient sohbet günlüğü
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == QmClient Ayarları
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== Pending turkish translation 222df08b56
+
+QmLiveClient：启用单队隔离画面过滤
+== Pending turkish translation b06d42be3c
+
+QmLiveClient：启用单队隔离音效过滤
+== Pending turkish translation f81e9b9ab9
+
+QmLiveClient：完成排名卡片不透明度百分比
+== Pending turkish translation d754b6881f
+
+QmLiveClient：完成排名卡片显示秒数
+== Pending turkish translation e4f30e0114
+
+QmLiveClient：完成排名卡片缩放百分比
+== Pending turkish translation b8ab98ec2b
+
+QmLiveClient：完整比赛 demo 录制开关
+== Pending turkish translation 8bac06ace8
+
+QmLiveClient：排名 HUD 队伍范围上限
+== Pending turkish translation 2cacb1dba1
+
+QmLiveClient：排名 HUD 队伍范围下限
+== Pending turkish translation eed3afadbc
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== Pending turkish translation 34cd86ee6c
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== Pending turkish translation 6bd9a30107
+
+QmLiveClient：显示队伍完成排名卡片
+== Pending turkish translation c331cbf694
+
+QmLiveClient：隐藏非目标队伍完成提示
+== Pending turkish translation 3132410d45
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == QmUi animasyon şiddeti: 0=Kapalı 1=Azaltılmış 2=Tam
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== Pending turkish translation 73f1b6683c
 
 QQ group: 1076765929 (click to copy)
 == QQ grubu: 1076765929 (kopyalamak için tıklayın)
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == Demo kaydet
 
+Record match
+== Pending turkish translation 7bc1831a9a
+
 Record to a file
 == Bir dosyaya kaydet
 
@@ -5352,6 +5514,9 @@ Refresh interval
 
 Refresh Rate
 == Yenileme Hızı
+
+Refresh the demo list
+== Pending turkish translation 13c5bf54eb
 
 Regex
 == Düzenli ifade
@@ -5731,6 +5896,9 @@ Restart the client
 Restarting. Please wait…
 == Yeniden başlatılıyor. Lütfen bekleyin…
 
+Retrying…
+== Pending turkish translation eeee16bb1f
+
 Rifle Laser Inner Color
 == Tüfek Lazer İç Rengi
 
@@ -5800,6 +5968,9 @@ Run server
 SA
 == Güney Amerika
 
+Saiko+ 输入量（0.01 tick）
+== Pending turkish translation 71e74522d5
+
 Same as "vote no"
 == "hayır oyu" ile aynı
 
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == Son %d dakikayı kaydet
 
-Save power by lowering refresh rate (higher input latency)
-== Yenileme hızını düşürerek güç tasarrufu yapın (daha yüksek giriş gecikmesi)
+Save power by lowering update rate (higher input latency)
+== Pending turkish translation 93c411008f
 
 Save skin
 == Skin'i kaydet
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == Sohbette söyle
 
-Say in chat as inactive tee
-== Say in chat as inactive tee
-
 Say in team chat
 == Takım sohbetinde söyle
-
-Say in team chat as inactive tee
-== Say in team chat as inactive tee
 
 Scanning current server
 == Geçerli sunucu taranıyor
@@ -6036,27 +6201,6 @@ Send
 
 Send & Receive
 == Gönder ve Al
-
-Send /load as inactive tee
-== Send /load as inactive tee
-
-Send /lock as inactive tee
-== Send /lock as inactive tee
-
-Send /pause as inactive tee
-== Send /pause as inactive tee
-
-Send /rescue as inactive tee
-== Send /rescue as inactive tee
-
-Send /save as inactive tee
-== Send /save as inactive tee
-
-Send /spec as inactive tee
-== Send /spec as inactive tee
-
-Send /team as inactive tee
-== Send /team as inactive tee
 
 Send a moderator alert message to player
 == Oyuncuya bir moderatör uyarı mesajı gönder
@@ -6728,7 +6872,7 @@ Size of key press icons
 == Tuş vuruşu simgelerinin boyutu
 
 Skin
-== Skin
+== Pending turkish translation 142de33e2b
 
 Skin could not be found.
 == Skin bulunamadı.
@@ -6800,7 +6944,7 @@ Smooth fade
 == Yumuşak geçiş
 
 SMTC
-== SMTC
+== Pending turkish translation 342af7e910
 
 Snap threshold
 == Yakalama eşiği
@@ -6818,7 +6962,7 @@ Solid tile outline opacity
 == Katı karo anahat opaklığı
 
 Solo
-== Solo
+== Pending turkish translation c573070c9d
 
 Some fonts could not be loaded. Check the local console for details.
 == Bazı yazı tipleri yüklenemedi. Ayrıntılar için yerel konsolu kontrol edin.
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == Hayaletlerin oynatımını başlat
 
+Start QmLive full match demo recording
+== Pending turkish translation 4eba0a2549
+
 Start recording a demo
 == Bir demo kaydetmeye başla
 
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == Durum Şeması:
 
+Stop match record
+== Pending turkish translation 222aa3cc17
+
 Stop practice
 == Pratiği durdur
+
+Stop QmLive full match demo recording
+== Pending turkish translation 029e892406
 
 Stop record
 == Kaydı durdur
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == Zorunlu solo sunucularda takas kullanılamaz.
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Pending turkish translation 067605a287
+
 Switch
 == Değiştir
 
 Switch failed
 == Değiştirme başarısız
-
-Switch inactive tee to grenade
-== Switch inactive tee to grenade
-
-Switch inactive tee to gun
-== Switch inactive tee to gun
-
-Switch inactive tee to hammer
-== Switch inactive tee to hammer
-
-Switch inactive tee to laser
-== Switch inactive tee to laser
-
-Switch inactive tee to next weapon
-== Switch inactive tee to next weapon
-
-Switch inactive tee to previous weapon
-== Switch inactive tee to previous weapon
-
-Switch inactive tee to shotgun
-== Switch inactive tee to shotgun
 
 Switch interval
 == Geçiş aralığı
@@ -7175,13 +7310,16 @@ Target language ratio
 == Hedef dil oranı
 
 TClient
-== TClient
+== Pending turkish translation 78ee2bc757
 
 TClient Developers
 == TClient Geliştiricileri
 
 TClient Links
 == TClient Bağlantıları
+
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Pending turkish translation 98d5ba2a7a
 
 Team
 == Takım
@@ -7259,10 +7397,13 @@ Teams are not available on this server; if the team is locked, any team member d
 == Bu sunucuda takımlar mevcut değil; takım kilitliyse, herhangi bir takım üyesinin ölümü tüm takımı öldürür
 
 Tee
-== Tee
+== Pending turkish translation 95337f60ba
 
 Tee 0.7
-== Tee 0.7
+== Pending turkish translation 3ba449c175
+
+Tee appearance
+== Tee görünümü
 
 Tee hitbox
 == Tee hitbox'ı
@@ -7343,7 +7484,7 @@ Temporary free camera
 == Geçici serbest kamera
 
 Tencent Cloud
-== Tencent Cloud
+== Pending turkish translation 3ebd6bfa76
 
 Tencent Cloud SecretId
 == Tencent Cloud gizli ID
@@ -7377,6 +7518,12 @@ The best voice chat, of course!
 
 The Config tab reuses QmClient's client config browser
 == Yapılandırma sekmesi, QmClient'ın istemci yapılandırma tarayıcısını yeniden kullanır
+
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== Pending turkish translation f4371ea0eb
+
+The extra menu with the given number is activated.
+== Pending turkish translation 9e508247c6
 
 The force pause timer is now over, you can exit with /spec
 == Zorunlu duraklatma süresi doldu, /spec ile çıkabilirsiniz
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == Temalar dizini
+
+There are no Tutorial servers available
+== Pending turkish translation a2b9f00754
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == Dokunmatik kontroller düzenleyicisinde kaydedilmemiş değişiklikler var. Önce kaydetmeniz önerilir.
@@ -7771,6 +7921,9 @@ UI opacity
 UI scale
 == UI ölçeği
 
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== Pending turkish translation 35d4e781d7
+
 UI大小百分比 (UI scale percentage)
 == UI boyut yüzdesi
 
@@ -7939,6 +8092,9 @@ Update notice
 Update or add a specific war group
 == Belirli bir savaş grubunu güncelle veya ekle
 
+Update Rate
+== Pending turkish translation 072386797c
+
 Updating feature list...
 == Özellik listesi güncelleniyor...
 
@@ -8026,11 +8182,14 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == Gösterge için savaş listesi gruplarını kullan
 
+Uses the active action with the current aiming position.
+== Pending turkish translation fe8be4e143
+
 v = Velocity
 == v = Hız
 
 V-Sync
-== V-Sync
+== Pending turkish translation 1a7249fd4b
 
 VAD 允许名单（逗号分隔）
 == VAD izin listesi (virgülle ayrılmış)
@@ -8076,6 +8235,18 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == Verilen numaraya sahip tele'yi (ofsette) bul ve görüntüle
+
+Virtual joystick which always uses fire.
+== Pending turkish translation 754e6e66e5
+
+Virtual joystick which always uses hook.
+== Pending turkish translation 9e1469d150
+
+Virtual joystick which only aims without using an action.
+== Pending turkish translation 96db00ce61
+
+Virtual joystick which uses the active action.
+== Pending turkish translation 81873d97c1
 
 Visibility
 == Görünürlük
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == Yeni bir oylama çağırmadan önce mevcut oylamanın bitmesini bekleyin.
+
+Waiting for local server to start…
+== Pending turkish translation cbacf2f420
+
+Waiting for local server to stop…
+== Pending turkish translation baa1e35a60
 
 Waiting for snapshot
 == Anlık görüntü bekleniyor
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == Tekerlek animasyonu
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== TClient gökkuşağı Tee açıkken bu özellik etkili olmaz.
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Başlangıç çizgisini geçtiğinde, en iyi zamanının hareketlerini gösteren bir hayalet oyuncu belirir
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == Yalnızca takım arkadaşınızı atabilirsiniz
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== Pending turkish translation 30f8e14615
+
 You can now jump %s times
 == Artık %s kez zıplayabilirsiniz
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == Diğer oyuncuları görebilirsiniz. Bunu devre dışı bırakmak için DDNet istemcisini kullanın ve /showothers yazın
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== Pending turkish translation 64bab304a8
 
 You can shoot others with grenade
 == Başkalarına bombayla ateş edebilirsiniz
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == /practice açık olan bir takımda değilsiniz. Alıştırma etkinken bir sıralama kazanamayacağınızı unutmayın.
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== Pending turkish translation e3004b2cb2
+
 You're the last one!
 == Son sensin!
 
@@ -8612,7 +8801,7 @@ Zen mode key
 == Zen modu tuşu
 
 Zhipu AI
-== Zhipu AI
+== Pending turkish translation b1abef6988
 
 Zhipu API key
 == Zhipu API anahtarı
@@ -8628,6 +8817,9 @@ Zoom in
 
 Zoom increase
 == Yakınlaştırmayı artır
+
+Zoom is allowed on this server.
+== Pending turkish translation 36f0da83db
 
 Zoom out
 == Uzaklaştır
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == Dinamik Görüş Alanı Gücü (0-200)
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== Pending turkish translation 0bbaae838d
+
 压缩器攻击时间（毫秒）
 == Kompresör Saldırı Süresi (ms)
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == Görünürlük Filtreleme Modu
+
+同时循环分身自定义 Tee 色调
+== Pending turkish translation ed162b0524
 
 同组全图收听
 == Aynı Gruptaki Herkesi Haritada Duy
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == İstemci mesajı metin gradyan rengi
 
+将 Best input 应用于其他 Tee
+== Pending turkish translation ced9d0a9ee
+
 将 Q 弹 Tee 形变应用到其他玩家
-== Q弹 Tee deformasyonunu diğer oyunculara uygula
+== Pending turkish translation 0f2cf85cb2
+
+将 Saiko+ 应用于其他 Tee
+== Pending turkish translation 8f9add1e06
 
 将性能调试日志写入专用文件
 == Performans hata ayıklama günlüklerini özel bir dosyaya yaz
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == Anahtar döşemelerin kaplama varlık alfası (0-100)
+
+循环本体自定义 Tee 色调
+== Pending turkish translation 652a91393f
+
+循环本体自定义 Tee 色调速度（度/秒）
+== Pending turkish translation c038e071b7
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== Pending turkish translation 107cb1a1a3
 
 忽略语音距离衰减
 == Ses mesafesi zayıflamasını yoksay
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == Zhipu AI uç noktası (varsayılan için boş bırak)
 
+暂停时隐藏歌词
+== Pending turkish translation 489e50d6dd
+
 替换方式 0=Regex 1=Full 2=Both
 == Değiştirme yöntemi 0=Regex 1=Tam 2=Her İkisi
+
+未找到歌词时隐藏（而非显示提示）
+== Pending turkish translation 85a4fb9fd1
 
 未播放词颜色
 == Unplayed word color
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == Auto fetch lyrics online when a new song is detected
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== Pending turkish translation 022d7cbffe
+
 歌词 HTTP 请求超时 ms
 == Lyrics HTTP request timeout ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == Geçerli şarkı sözü satırı rengi
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== Pending turkish translation 9c299ec1b6
 
 歌词描边透明度
 == Şarkı sözü kontur şeffaflığı
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == Lyrics overall opacity percent
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== Pending turkish translation 75a30a286c
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == Lyrics per-source match thresholds
@@ -9598,6 +9826,9 @@ Zoom out
 自动获取全图玩家皮肤并作为轮换队列
 == Haritadaki Tüm Oyuncuların Skinlerini Otomatik Al ve Döngü Kuyruğu Olarak Kullan
 
+自动调整预测边距（关闭后固定使用基础预测边距）
+== Pending turkish translation 5da955e491
+
 自动跟随好友换服延迟（秒）
 == Arkadaşı Otomatik Takip Etme Sunucu Değiştirme Gecikmesi (saniye)
 
@@ -9880,7 +10111,7 @@ Multiply
 
 [Assets editor blend mode]
 Normal
-== Normal
+== Pending turkish translation b97fe1421e
 
 [Assets editor blend mode]
 Overlay
@@ -10016,7 +10247,7 @@ Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.c
 
 [Hammer Mode]
 Normal
-== Normal
+== Pending turkish translation b97fe1421e
 
 [Hammer Mode]
 Rotate with cursor
@@ -10028,7 +10259,7 @@ Rotate with cursor like gun
 
 [Hertz]
 Hz
-== Hz
+== Pending turkish translation d4c3bed1ab
 
 [Important alert message]
 Press Esc or Tab to dismiss…
@@ -10164,7 +10395,7 @@ Play
 
 [Team and size]
 %d\n(%d/%d)
-== %d\n(%d/%d)
+== Pending turkish translation 77d7283e64
 
 [Team size]
 maximum
@@ -10172,7 +10403,7 @@ maximum
 
 [Team size]
 minimum
-== minimum
+== Pending turkish translation 2e48d8178a
 
 [Team status]
 allowed
@@ -10188,7 +10419,7 @@ required
 
 [Team status]
 solo
-== solo
+== Pending turkish translation 72a3ac8be6
 
 [Touch button behavior]
 Bind

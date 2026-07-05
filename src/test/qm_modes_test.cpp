@@ -32,6 +32,17 @@ TEST(QmGoresMode, DebugRouteDoesNotUseHideGuidesGate)
 	EXPECT_FALSE(ShouldRenderGoresDebugRoute(true, true, false));
 }
 
+TEST(QmGoresMode, MovingWaterTilesRequireAxiomOrGoresContext)
+{
+	EXPECT_TRUE(ShouldEnableQmMovingWaterTiles("Gores", "", "", ""));
+	EXPECT_TRUE(ShouldEnableQmMovingWaterTiles("", "DDNet Gores", "", ""));
+	EXPECT_TRUE(ShouldEnableQmMovingWaterTiles("", "", "axiom-cn", ""));
+	EXPECT_TRUE(ShouldEnableQmMovingWaterTiles("", "", "", "Axiom"));
+
+	EXPECT_FALSE(ShouldEnableQmMovingWaterTiles("DDRaceNetwork", "DDNet", "kog", "DDNet"));
+	EXPECT_FALSE(ShouldEnableQmMovingWaterTiles(nullptr, nullptr, nullptr, nullptr));
+}
+
 TEST(QmGoresMode, LinkedFastInputDirectlyFollowsGoresMode)
 {
 	bool Changed = false;

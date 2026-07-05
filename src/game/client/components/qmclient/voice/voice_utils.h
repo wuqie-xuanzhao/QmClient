@@ -59,7 +59,7 @@ namespace VoiceUtils
 
 	struct SVoiceProcessingFactoryDefaults
 	{
-		int m_NoiseSuppressMode = VOICE_NOISE_SUPPRESS_RNNOISE;
+		int m_NoiseSuppressMode = VOICE_NOISE_SUPPRESS_OFF;
 		int m_NoiseSuppressStrength = 35;
 		float m_HpfCutoffHz = VOICE_HPF_CUTOFF_HZ;
 		float m_CompressorThreshold = 0.24f;

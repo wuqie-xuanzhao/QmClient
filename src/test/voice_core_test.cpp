@@ -938,10 +938,10 @@ TEST(VoiceUtils, ComputeVoiceEncoderTargetsHealthyNetwork)
 	EXPECT_FALSE(TargetFec);
 }
 
-TEST(VoiceUtils, VoiceProcessingFactoryDefaultsUseModerateRnnoiseStrength)
+TEST(VoiceUtils, VoiceProcessingFactoryDefaultsDisableNoiseSuppressByDefault)
 {
 	const auto Defaults = VoiceProcessingFactoryDefaults();
-	EXPECT_EQ(Defaults.m_NoiseSuppressMode, VOICE_NOISE_SUPPRESS_RNNOISE);
+	EXPECT_EQ(Defaults.m_NoiseSuppressMode, VOICE_NOISE_SUPPRESS_OFF);
 	EXPECT_EQ(Defaults.m_NoiseSuppressStrength, 35);
 	EXPECT_EQ(Defaults.m_EncoderComplexity, 8);
 }
@@ -1550,7 +1550,7 @@ TEST(VoiceCore, VoiceProcessingFactoryDefaultsMatchRoadmapDefaults)
 {
 	const auto Defaults = VoiceProcessingFactoryDefaults();
 
-	EXPECT_EQ(Defaults.m_NoiseSuppressMode, VOICE_NOISE_SUPPRESS_RNNOISE);
+	EXPECT_EQ(Defaults.m_NoiseSuppressMode, VOICE_NOISE_SUPPRESS_OFF);
 	EXPECT_EQ(Defaults.m_NoiseSuppressStrength, 35);
 	EXPECT_NEAR(Defaults.m_HpfCutoffHz, VOICE_HPF_CUTOFF_HZ, 0.001f);
 	EXPECT_NEAR(Defaults.m_CompressorThreshold, 0.24f, 0.001f);
@@ -1566,7 +1566,7 @@ TEST(VoiceUtils, VoiceProcessingFactoryDefaultsMatchConfigDefaults)
 {
 	const auto Defaults = VoiceProcessingFactoryDefaults();
 
-	EXPECT_EQ(Defaults.m_NoiseSuppressMode, 2);
+	EXPECT_EQ(Defaults.m_NoiseSuppressMode, 0);
 	EXPECT_EQ(Defaults.m_NoiseSuppressStrength, 35);
 	EXPECT_NEAR(Defaults.m_HpfCutoffHz, VOICE_HPF_CUTOFF_HZ, 0.001f);
 	EXPECT_NEAR(Defaults.m_CompressorThreshold, 0.24f, 0.001f);

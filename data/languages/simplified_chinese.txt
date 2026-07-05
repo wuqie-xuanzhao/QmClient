@@ -274,6 +274,9 @@ A screenshot with this name already exists
 A Tee
 == 其他玩家
 
+A vote is currently active.
+== A vote is currently active.
+
 Abort
 == 取消
 
@@ -547,6 +550,9 @@ Allows maps to render with more detail
 Alpha
 == 透明度
 
+Also apply to dummy
+== 同时应用到分身
+
 Always show
 == 始终显示
 
@@ -808,6 +814,9 @@ Auto manage IME while typing
 Auto map vote
 == 自动地图投票
 
+Auto margin
+== Auto margin
+
 Auto refresh server list
 == 自动刷新服务器列表
 
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 最高
 
+Best input
+== Best input
+
+Best input others
+== Best input others
+
+Best input 平滑百分比
+== Best input 平滑百分比
+
+Best input 延迟补偿百分比
+== Best input 延迟补偿百分比
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Best input 插值模式（1=linear 2=cubic 3=smooth）
+
+Best input 预测偏移（0.01 tick）
+== Best input 预测偏移（0.01 tick）
+
 Best match
 == 最佳匹配
 
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == 按钮 - 已启用
 
+Button browser
+== Button browser
+
 Button position is outside of the screen.
 == 按键的位置在屏幕之外。
 
 Buttons
 == 按键
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Buttons with this behavior cycle between executing one of two or more specified commands.
+
+Buttons with this behavior execute console commands like regular key binds.
+== Buttons with this behavior execute console commands like regular key binds.
+
+Buttons with this behavior execute some predefined actions.
+== Buttons with this behavior execute some predefined actions.
 
 c = Player position
 == c = 玩家坐标
@@ -1110,6 +1149,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == 无法交换：对方不在你的队伍中
+
+Card Appearance
+== Card Appearance
+
+Card background blur (high performance only)
+== Card background blur (high performance only)
+
+Card background blur and corner rounding
+== Card background blur and corner rounding
 
 Category
 == 分类
@@ -1323,6 +1371,9 @@ Click to remove this community from favorites
 
 Click to remove this player from your friends list.
 == 单击从你的好友列表移除此玩家
+
+Click to restore full match
+== 点击恢复完整比赛
 
 Click to select server. Double click to join your friend.
 == 单击以选择此服务器。双击加入好友所在服务器。
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == 复制皮肤
 
+Corner segments
+== Corner segments
+
 Could not check for existing player with your name. Check your internet connection.
 == 无法验证是否已存在相同名称的玩家。请检查你的网络连接。
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == 创建举报扫描请求失败
+
+Could not find a Tutorial server. Check your internet connection.
+== Could not find a Tutorial server. Check your internet connection.
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Could not find online Tutorial server.\nStarting and connecting to local server…
 
 Could not find your Team
 == 找不到你的队伍
@@ -1695,6 +1755,9 @@ Cut segments
 
 Cute:
 == 可爱：
+
+Cycle custom Tee hue
+== 循环自定义 Tee 色调
 
 Cycle through emotes
 == 循环显示表情
@@ -1879,6 +1942,9 @@ Demo effects
 Demo marker added
 == 已添加回放标记
 
+Demo player is currently active.
+== Demo player is currently active.
+
 Demo target
 == Demo 目标
 
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == 拿到其他武器时停用
+
+Disable QmLive team preview/render filter
+== 关闭 QmLive 队伍预览/渲染过滤
 
 Disabled
 == 已禁用
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == 分身钩
+
+Dummy is allowed on this server.
+== 此服务器允许分身。
+
+Dummy is currently connected.
+== 分身当前已连接。
 
 Dummy jump
 == 分身跳
@@ -2431,6 +2506,9 @@ Error
 Error checking player name
 == 检查玩家名称时出错
 
+Error joining Tutorial server
+== Error joining Tutorial server
+
 Error loading communities
 == 加载社区列表失败
 
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == 回退后的简单降噪强度
 
+Fast input
+== Fast input
+
 Fast input (reduce visual latency)
 == 快速输入（降低视觉延迟）
 
@@ -2646,6 +2727,15 @@ File already exists, do you want to overwrite it?
 
 Filter connecting players
 == 筛选正在连接的玩家
+
+Filter off
+== 关闭过滤
+
+Filter Team %d
+== 过滤队伍 %d
+
+Filter: Team %d
+== 过滤：队伍 %d
 
 Find all ban records for the specified IP address
 == 查询指定 IP 的全部封禁记录
@@ -2793,6 +2883,9 @@ FTAPI
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == FTAPI 自动翻译已禁用以防止过载。如需启用请在设置中配置。
+
+Full demo + sidecar
+== 完整 demo + sidecar
 
 Full map listen in same room
 == 同房间全图收听
@@ -3079,12 +3172,6 @@ Hide jump effects
 Hide kill/finish messages
 == 隐藏死亡/完成消息
 
-Hide lyrics when no lyrics are found instead of showing a hint
-== 未找到歌词时隐藏，不显示提示
-
-Hide lyrics while media is paused
-== 媒体暂停时隐藏歌词
-
 Hide map progress
 == 隐藏地图进度
 
@@ -3217,6 +3304,9 @@ HUD 编辑器布局
 Hue
 == 色调
 
+Hue speed
+== 变色速度
+
 i = Receive rate
 == i = 接收速率
 
@@ -3331,6 +3421,9 @@ Input overlay
 Input overlay display
 == 按键显示叠加
 
+Input smoothing
+== Input smoothing
+
 Input switch
 == 输入切换
 
@@ -3348,6 +3441,9 @@ Internet
 
 Internet (From online source)
 == Internet（来源于网络）
+
+Interpolation
+== Interpolation
 
 Invalid client id to kick
 == 用于踢人的客户端 ID 无效
@@ -3441,6 +3537,9 @@ Join Tutorial Server
 
 Join, version, rules, and help messages stay in chat instead of popups
 == 入服、版本、规则和帮助消息会留在聊天里，不弹出显示
+
+Joining Tutorial server
+== Joining Tutorial server
 
 Jump
 == 跳跃
@@ -3558,6 +3657,9 @@ Last page in console
 
 Latency
 == 延迟
+
+Latency compensation
+== Latency compensation
 
 Latency Jitter
 == 延迟抖动
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == 退出 rcon 登录
 
-Long press on a touch button to select it.
-== 长按一个按键即可选择。
-
 Low to high
 == 由低到高
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == 歌词
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== 歌词 HTTP 代理（例如 http://127.0.0.1:7890）
-
 Lyrics HTTP timeout
 == 歌词 HTTP 超时
-
-Lyrics local media library folders (use | as separator)
-== 歌词本地媒体库文件夹（使用 | 分隔）
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== 歌词手动时间轴偏移（ms，运行时步进 500ms）
 
 Lyrics search type
 == 歌词搜索策略
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == 主菜单
-
-Make inactive tee fire
-== 控制非活动 Tee 开火
-
-Make inactive tee hook
-== 控制非活动 Tee 出钩
-
-Make inactive tee jump
-== 控制非活动 Tee 跳跃
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == 确保后端支持 OpenAI 兼容的思考参数
@@ -4116,12 +4197,6 @@ MOTD
 
 Mouse
 == 鼠标
-
-Move inactive tee left
-== 控制非活动 Tee 左移
-
-Move inactive tee right
-== 控制非活动 Tee 右移
 
 Move left
 == 向左移动
@@ -4582,6 +4657,9 @@ Online Players
 Only .wv files are supported right now.
 == 当前仅支持 .wv 文件
 
+Only affects custom Tee colors.
+== 仅对自定义 Tee 颜色生效。
+
 Only Apple Can Do
 == 只有 Apple 才能做到
 
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == 打开选色
+
+Open DDNet Wiki
+== Open DDNet Wiki
 
 Open emote selector
 == 打开表情选择器
@@ -4651,6 +4732,12 @@ Open the folder containing screenshots
 Open the saves file
 == 打开存档密码文件
 
+Open the selected folder
+== Open the selected folder
+
+Open the selected screenshot
+== Open the selected screenshot
+
 Open the settings file
 == 打开设置文件
 
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == 已打开
+
+Opens the emoticon selector (this does not work with binds).
+== Opens the emoticon selector (this does not work with binds).
+
+Opens the ingame menu immediately when released.
+== Opens the ingame menu immediately when released.
+
+Opens the spectator menu (this does not work with binds).
+== Opens the spectator menu (this does not work with binds).
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == 选择退出观众计数并对未经授权的玩家隐藏身份验证状态（1 = 隐藏，0 = 显示）
@@ -4873,6 +4969,9 @@ Play background music
 Play the current demo
 == 播放回放
 
+Play the selected demo
+== Play the selected demo
+
 Play/Pause
 == 播放/暂停
 
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == 玩家指示器
+
+Player is currently authed in rcon.
+== Player is currently authed in rcon.
+
+Player is ingame, i.e. not spectating.
+== Player is ingame, i.e. not spectating.
 
 Player is on a different team
 == 目标玩家不在你的队伍里
@@ -5026,6 +5131,9 @@ Prediction Margin
 Prediction margin
 == 预测边距
 
+Prediction offset
+== Prediction offset
+
 Prediction time
 == 预测耗时
 
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == 试听已选文件
+
+Preview visibilities
+== Preview visibilities
+
+Preview/render only one DDRace team from a full match demo
+== 从完整比赛 demo 中只预览/渲染一个 DDRace 队伍
+
+Preview/render only this team
+== 仅预览/渲染此队伍
 
 Previous
 == 上一个
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == QmClient 设置
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+
+QmLiveClient：启用单队隔离画面过滤
+== QmLiveClient：启用单队隔离画面过滤
+
+QmLiveClient：启用单队隔离音效过滤
+== QmLiveClient：启用单队隔离音效过滤
+
+QmLiveClient：完成排名卡片不透明度百分比
+== QmLiveClient：完成排名卡片不透明度百分比
+
+QmLiveClient：完成排名卡片显示秒数
+== QmLiveClient：完成排名卡片显示秒数
+
+QmLiveClient：完成排名卡片缩放百分比
+== QmLiveClient：完成排名卡片缩放百分比
+
+QmLiveClient：完整比赛 demo 录制开关
+== QmLiveClient：完整比赛 demo 录制开关
+
+QmLiveClient：排名 HUD 队伍范围上限
+== QmLiveClient：排名 HUD 队伍范围上限
+
+QmLiveClient：排名 HUD 队伍范围下限
+== QmLiveClient：排名 HUD 队伍范围下限
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== QmLiveClient：无法识别来源的玩家型事件默认过滤
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== QmLiveClient：显示配置范围外队伍的完成卡片
+
+QmLiveClient：显示队伍完成排名卡片
+== QmLiveClient：显示队伍完成排名卡片
+
+QmLiveClient：隐藏非目标队伍完成提示
+== QmLiveClient：隐藏非目标队伍完成提示
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == QmUi 动效强度：0=关闭 1=降低 2=完整
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
 
 QQ group: 1076765929 (click to copy)
 == QQ 群：1076765929（点击复制）
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == 录制回放
 
+Record match
+== 录制比赛
+
 Record to a file
 == 记录到文件
 
@@ -5352,6 +5514,9 @@ Refresh interval
 
 Refresh Rate
 == 刷新率
+
+Refresh the demo list
+== Refresh the demo list
 
 Regex
 == 正则
@@ -5731,6 +5896,9 @@ Restart the client
 Restarting. Please wait…
 == 正在重启，请稍等
 
+Retrying…
+== Retrying…
+
 Rifle Laser Inner Color
 == 激光枪弹道实心颜色
 
@@ -5800,6 +5968,9 @@ Run server
 SA
 == 南美
 
+Saiko+ 输入量（0.01 tick）
+== Saiko+ 输入量（0.01 tick）
+
 Same as "vote no"
 == 与“投反对票”相同
 
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == 保存前 %d 分钟
 
-Save power by lowering refresh rate (higher input latency)
-== 省电模式（限制帧率上限以降低功耗但也将提高输入延迟）
+Save power by lowering update rate (higher input latency)
+== Save power by lowering update rate (higher input latency)
 
 Save skin
 == 保存皮肤
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == 在聊天中说
 
-Say in chat as inactive tee
-== 以非活动 Tee 发送聊天
-
 Say in team chat
 == 在队伍聊天中说
-
-Say in team chat as inactive tee
-== 以非活动 Tee 发送团队聊天
 
 Scanning current server
 == 正在扫描当前服务器
@@ -6036,27 +6201,6 @@ Send
 
 Send & Receive
 == 收发
-
-Send /load as inactive tee
-== 以非活动 Tee 发送 /load
-
-Send /lock as inactive tee
-== 以非活动 Tee 发送 /lock
-
-Send /pause as inactive tee
-== 以非活动 Tee 发送 /pause
-
-Send /rescue as inactive tee
-== 以非活动 Tee 发送 /rescue
-
-Send /save as inactive tee
-== 以非活动 Tee 发送 /save
-
-Send /spec as inactive tee
-== 以非活动 Tee 发送 /spec
-
-Send /team as inactive tee
-== 以非活动 Tee 发送 /team
 
 Send a moderator alert message to player
 == 向玩家发送管理员提醒消息
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == 开始播放鬼影
 
+Start QmLive full match demo recording
+== 开始 QmLive 完整比赛 demo 录制
+
 Start recording a demo
 == 开始录制回放
 
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == 状态方案：
 
+Stop match record
+== 停止比赛录制
+
 Stop practice
 == 停止练习
+
+Stop QmLive full match demo recording
+== 停止 QmLive 完整比赛 demo 录制
 
 Stop record
 == 停止录制
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == 强制 solo 服务器上不能使用交换功能
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+
 Switch
 == 切换
 
 Switch failed
 == 切换失败
-
-Switch inactive tee to grenade
-== 将非活动 Tee 切换到榴弹枪
-
-Switch inactive tee to gun
-== 将非活动 Tee 切换到手枪
-
-Switch inactive tee to hammer
-== 将非活动 Tee 切换到锤子
-
-Switch inactive tee to laser
-== 将非活动 Tee 切换到激光
-
-Switch inactive tee to next weapon
-== 将非活动 Tee 切换到下一个武器
-
-Switch inactive tee to previous weapon
-== 将非活动 Tee 切换到上一个武器
-
-Switch inactive tee to shotgun
-== 将非活动 Tee 切换到霰弹枪
 
 Switch interval
 == 切换间隔
@@ -7183,6 +7318,9 @@ TClient Developers
 TClient Links
 == TClient 链接
 
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+
 Team
 == 队伍
 
@@ -7263,6 +7401,9 @@ Tee
 
 Tee 0.7
 == Tee 0.7
+
+Tee appearance
+== Tee 外观
 
 Tee hitbox
 == Tee 碰撞箱
@@ -7378,6 +7519,12 @@ The best voice chat, of course!
 The Config tab reuses QmClient's client config browser
 == 配置页复用栖梦里的客户端配置浏览器
 
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+
+The extra menu with the given number is activated.
+== The extra menu with the given number is activated.
+
 The force pause timer is now over, you can exit with /spec
 == 强制暂停计时已结束，你现在可以用 /spec 退出
 
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == 主题目录
+
+There are no Tutorial servers available
+== There are no Tutorial servers available
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == 触控控件编辑器中有未保存的更改，建议先保存。
@@ -7771,6 +7921,9 @@ UI opacity
 UI scale
 == UI 大小
 
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+
 UI大小百分比 (UI scale percentage)
 == UI 大小百分比
 
@@ -7939,6 +8092,9 @@ Update notice
 Update or add a specific war group
 == 更新或添加指定敌对分组
 
+Update Rate
+== Update Rate
+
 Updating feature list...
 == 更新功能列表……
 
@@ -8026,6 +8182,9 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == 使用敌对列表作为指示器
 
+Uses the active action with the current aiming position.
+== Uses the active action with the current aiming position.
+
 v = Velocity
 == v = 速度
 
@@ -8076,6 +8235,18 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == 查看给定编号找到的传送点（在偏移处）
+
+Virtual joystick which always uses fire.
+== Virtual joystick which always uses fire.
+
+Virtual joystick which always uses hook.
+== Virtual joystick which always uses hook.
+
+Virtual joystick which only aims without using an action.
+== Virtual joystick which only aims without using an action.
+
+Virtual joystick which uses the active action.
+== Virtual joystick which uses the active action.
 
 Visibility
 == 可见度
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == 请先等待当前投票结束，再发起新的投票
+
+Waiting for local server to start…
+== Waiting for local server to start…
+
+Waiting for local server to stop…
+== Waiting for local server to stop…
 
 Waiting for snapshot
 == 等待快照
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == 滚轮动画
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== 已启用 TClient 彩虹 Tee 时，本功能不会生效。
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 当越过起跑线时，显示一个影子回放你的最佳成绩
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == 你只能踢自己队伍里的成员
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+
 You can now jump %s times
 == 你现在可以跳跃 %s 次
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == 你当前可以看到其他玩家。要关闭此功能，请使用 DDNet 客户端并输入 /showothers
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
 
 You can shoot others with grenade
 == 你现在可以用榴弹枪攻击其他玩家
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == 你当前不在开启了 /practice 的队伍中。注意：练习模式下无法获得排名
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+
 You're the last one!
 == 就你一个啦！
 
@@ -8629,6 +8818,9 @@ Zoom in
 Zoom increase
 == 放大视角
 
+Zoom is allowed on this server.
+== Zoom is allowed on this server.
+
 Zoom out
 == 缩小视野
 
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == 动态视野强度（0 - 200）
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== 卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+
 压缩器攻击时间（毫秒）
 == 压缩器攻击时间（毫秒）
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == 可见性过滤模式
+
+同时循环分身自定义 Tee 色调
+== 同时循环分身自定义 Tee 色调
 
 同组全图收听
 == 同组全图收听
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == 客户端消息文字渐变颜色
 
+将 Best input 应用于其他 Tee
+== 将 Best input 应用于其他 Tee
+
 将 Q 弹 Tee 形变应用到其他玩家
 == 将 Q 弹 Tee 形变应用到其他玩家
+
+将 Saiko+ 应用于其他 Tee
+== 将 Saiko+ 应用于其他 Tee
 
 将性能调试日志写入专用文件
 == 将性能调试日志写入专用文件
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == 开关图块的覆盖实体 alpha (0-100)
+
+循环本体自定义 Tee 色调
+== 循环本体自定义 Tee 色调
+
+循环本体自定义 Tee 色调速度（度/秒）
+== 循环本体自定义 Tee 色调速度（度/秒）
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== 快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
 
 忽略语音距离衰减
 == 忽略语音距离衰减
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == 智谱 AI 端点（留空使用默认）
 
+暂停时隐藏歌词
+== 暂停时隐藏歌词
+
 替换方式 0=Regex 1=Full 2=Both
 == 替换方式 0=Regex 1=Full 2=Both
+
+未找到歌词时隐藏（而非显示提示）
+== 未找到歌词时隐藏（而非显示提示）
 
 未播放词颜色
 == 未播放词颜色
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == 检测新歌时自动联网拉取歌词
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== 歌词 HTTP 代理（如 http://127.0.0.1:7890）
+
 歌词 HTTP 请求超时 ms
 == 歌词 HTTP 请求超时 ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == 歌词当前行颜色
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== 歌词手动时间轴偏移 ms（运行时按 500ms 步进）
 
 歌词描边透明度
 == 歌词描边透明度
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == 歌词整体不透明度 %
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== 歌词本地媒体库目录（多个目录用 | 分隔）
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
@@ -9597,6 +9825,9 @@ Zoom out
 
 自动获取全图玩家皮肤并作为轮换队列
 == 自动获取全图玩家皮肤并作为轮换队列
+
+自动调整预测边距（关闭后固定使用基础预测边距）
+== 自动调整预测边距（关闭后固定使用基础预测边距）
 
 自动跟随好友换服延迟（秒）
 == 自动跟随好友换服延迟（秒）

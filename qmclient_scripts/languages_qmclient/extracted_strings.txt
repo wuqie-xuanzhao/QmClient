@@ -90,6 +90,7 @@ A demo with this name already exists
 A folder with this name already exists
 A screenshot with this name already exists
 A Tee
+A vote is currently active.
 Abort
 Activate
 Activate all
@@ -181,6 +182,7 @@ Allow Duplicate Entries
 Allow mic permission in system settings, then reopen voice
 Allows maps to render with more detail
 Alpha
+Also apply to dummy
 Always show
 Always show chat
 Always show other players' hook collision lines
@@ -268,6 +270,7 @@ Auto hot-reload after external saves
 Auto login Axiom server
 Auto manage IME while typing
 Auto map vote
+Auto margin
 Auto refresh server list
 Auto reject vote
 Auto reply
@@ -323,6 +326,12 @@ Behavior
 Behavior type
 Benchmark frame times for number of seconds to file, then quit
 Best
+Best input
+Best input others
+Best input 平滑百分比
+Best input 延迟补偿百分比
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+Best input 预测偏移（0.01 tick）
 Best match
 Bind key to execute a command or view keybindings
 Bind Wheel
@@ -348,8 +357,12 @@ Buffer memory
 Built-in
 Button - Disabled
 Button - Enabled
+Button browser
 Button position is outside of the screen.
 Buttons
+Buttons with this behavior cycle between executing one of two or more specified commands.
+Buttons with this behavior execute console commands like regular key binds.
+Buttons with this behavior execute some predefined actions.
 c = Player position
 Cache TTL
 Calculate unfinished maps for player in certain mode
@@ -369,6 +382,9 @@ Cancel
 Cancel your swap request
 Candidate files
 Cannot swap: the other player is not in your team
+Card Appearance
+Card background blur (high performance only)
+Card background blur and corner rounding
 Category
 Category name
 Change indicator offset based on distance to other tees
@@ -440,6 +456,7 @@ Click to copy this player's name to clipboard
 Click to remove this clan from your friends list.
 Click to remove this community from favorites
 Click to remove this player from your friends list.
+Click to restore full match
 Click to select server. Double click to join your friend.
 Click to set color
 Client
@@ -516,9 +533,12 @@ Copy
 Copy info
 Copy name
 Copy skin
+Corner segments
 Could not check for existing player with your name. Check your internet connection.
 Could not connect dummy
 Could not create report scan request
+Could not find a Tutorial server. Check your internet connection.
+Could not find online Tutorial server.\nStarting and connecting to local server…
 Could not find your Team
 Could not get current server address
 Could not get server list from master server
@@ -564,6 +584,7 @@ Cut interval
 Cut length
 Cut segments
 Cute:
+Cycle custom Tee hue
 Cycle through emotes
 d = Prediction latency
 Damn grenadiers, all go to spa!
@@ -625,6 +646,7 @@ Delete this preset
 Demo
 Demo effects
 Demo marker added
+Demo player is currently active.
 Demo target
 Demofile: %s
 Demos
@@ -648,6 +670,7 @@ Direct touch input while spectating
 Direction Keys
 disable
 Disable after picking up other weapons
+Disable QmLive team preview/render filter
 Disabled
 Disagree
 Discard
@@ -715,6 +738,8 @@ Dummy copy
 Dummy fire
 Dummy hammer fly
 Dummy hook
+Dummy is allowed on this server.
+Dummy is currently connected.
 Dummy jump
 Dummy mini view
 Dummy sync: %s
@@ -809,6 +834,7 @@ entity_bg (Workshop)
 Erase items on the in game background
 Error
 Error checking player name
+Error joining Tutorial server
 Error loading communities
 Error loading demo
 Error loading touch controls
@@ -864,6 +890,7 @@ Failed to read saves file
 Failed to write PNG export.
 Fake CTF flags
 Fallback simple noise reduction strength
+Fast input
 Fast input (reduce visual latency)
 Fast input others
 Fast practice
@@ -881,6 +908,9 @@ File
 File '%s' already exists, do you want to overwrite it?
 File already exists, do you want to overwrite it?
 Filter connecting players
+Filter off
+Filter Team %d
+Filter: Team %d
 Find all ban records for the specified IP address
 Finish data source
 Finish Name
@@ -930,6 +960,7 @@ Frozen Margin
 FSAA samples
 FTAPI
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
+Full demo + sidecar
 Full map listen in same room
 Fullscreen
 Fun
@@ -1025,8 +1056,6 @@ Hide input emoticon
 Hide join/version prompts
 Hide jump effects
 Hide kill/finish messages
-Hide lyrics when no lyrics are found instead of showing a hint
-Hide lyrics while media is paused
 Hide map progress
 Hide nameplates
 Hide names
@@ -1071,6 +1100,7 @@ HUD rainbow colors
 HUD 灵动岛显示队伍
 HUD 编辑器布局
 Hue
+Hue speed
 i = Receive rate
 I am a robot
 I am away from the game window
@@ -1109,12 +1139,14 @@ Input device open failed
 Input device open failed, try reconnecting headset/mic or reselecting input device
 Input overlay
 Input overlay display
+Input smoothing
 Input switch
 Insane
 Interface
 Intermediate
 Internet
 Internet (From online source)
+Interpolation
 Invalid client id to kick
 Invalid client id to move to spectators
 Invalid Demo
@@ -1146,6 +1178,7 @@ Join team %s
 Join the team of the specified player
 Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
+Joining Tutorial server
 Jump
 Jump hint text
 k = Resend loss
@@ -1185,6 +1218,7 @@ Laser settings
 Laser size
 Last page in console
 Latency
+Latency compensation
 Latency Jitter
 Latency jitter
 Layout
@@ -1278,14 +1312,10 @@ Locked
 Log the network
 Logout of econ
 Logout of rcon
-Long press on a touch button to select it.
 Low to high
 LRCLIB API 基地址（可改成镜像）
 Lyrics
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
 Lyrics HTTP timeout
-Lyrics local media library folders (use | as separator)
-Lyrics manual timeline offset in ms (runtime step 500ms)
 Lyrics search type
 Lyrics source
 Lyrics source order
@@ -1295,9 +1325,6 @@ Lyrics: no media playing
 Lyrics: searching...
 Main Asset
 Main menu
-Make inactive tee fire
-Make inactive tee hook
-Make inactive tee jump
 Make sure the backend supports OpenAI-compatible thinking parameters
 Makes you a ninja
 Makes you live frozen
@@ -1371,8 +1398,6 @@ Modified
 Modules snap to screen edges, center lines and other HUD modules while dragging
 MOTD
 Mouse
-Move inactive tee left
-Move inactive tee right
 Move left
 Move player to spectators
 Move right
@@ -1526,6 +1551,7 @@ On
 Online friends
 Online Players
 Only .wv files are supported right now.
+Only affects custom Tee colors.
 Only Apple Can Do
 Only save improvements
 Only show after joining a team
@@ -1537,6 +1563,7 @@ Opacity
 Opacity of freeze bars inside freeze
 Open bindwheel selector
 Open color picker
+Open DDNet Wiki
 Open emote selector
 Open modal
 Open pie menu
@@ -1549,6 +1576,8 @@ Open the directory to add custom themes
 Open the folder containing demo files
 Open the folder containing screenshots
 Open the saves file
+Open the selected folder
+Open the selected screenshot
 Open the settings file
 OpenAI
 OpenAI API Key
@@ -1556,6 +1585,9 @@ OpenAI API key
 OpenAI 模型名称
 OpenAI 端点（留空使用默认）
 Opened
+Opens the emoticon selector (this does not work with binds).
+Opens the ingame menu immediately when released.
+Opens the spectator menu (this does not work with binds).
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 Optimistic prediction along stable direction
 Option color
@@ -1623,6 +1655,7 @@ Play a slide-in rotation animation when switching weapons
 Play back a demo
 Play background music
 Play the current demo
+Play the selected demo
 Play/Pause
 Play/pause the current demo
 Playback volume
@@ -1633,6 +1666,8 @@ Player country:
 Player data
 Player Indicator
 Player indicator
+Player is currently authed in rcon.
+Player is ingame, i.e. not spectating.
 Player is on a different team
 Player name:
 Player not found
@@ -1674,6 +1709,7 @@ Prediction latency
 Prediction latency is elevated, prediction path pressure is high
 Prediction Margin
 Prediction margin
+Prediction offset
 Prediction time
 Preparing demo playback
 Preset %d
@@ -1690,6 +1726,9 @@ Preview dummy nameplate
 Preview import file
 Preview player nameplate
 Preview selected file
+Preview visibilities
+Preview/render only one DDRace team from a full match demo
+Preview/render only this team
 Previous
 Previous page in console
 Primary
@@ -1731,7 +1770,21 @@ QmClient Community
 QmClient online distribution
 QmClient overview
 QmClient Settings
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+QmLiveClient：启用单队隔离画面过滤
+QmLiveClient：启用单队隔离音效过滤
+QmLiveClient：完成排名卡片不透明度百分比
+QmLiveClient：完成排名卡片显示秒数
+QmLiveClient：完成排名卡片缩放百分比
+QmLiveClient：完整比赛 demo 录制开关
+QmLiveClient：排名 HUD 队伍范围上限
+QmLiveClient：排名 HUD 队伍范围下限
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+QmLiveClient：显示配置范围外队伍的完成卡片
+QmLiveClient：显示队伍完成排名卡片
+QmLiveClient：隐藏非目标队伍完成提示
 QmUi 动效强度：0=关闭 1=降低 2=完整
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
 QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 Query information for map %s
@@ -1776,6 +1829,7 @@ Receive rate
 Receiving
 Reconnect in %d sec
 Record demo
+Record match
 Record to a file
 Red
 Red team
@@ -1783,6 +1837,7 @@ Red team wins!
 Refresh
 Refresh interval
 Refresh Rate
+Refresh the demo list
 Regex
 Region
 Regular background color
@@ -1909,6 +1964,7 @@ Restart
 Restart in x seconds (0 = abort)
 Restart the client
 Restarting. Please wait…
+Retrying…
 Rifle Laser Inner Color
 Rifle Laser Outline Color
 Right jump
@@ -1932,6 +1988,7 @@ Run chai script
 Run on join
 Run server
 SA
+Saiko+ 输入量（0.01 tick）
 Same as "vote no"
 Same clan color in scoreboard
 Sat.
@@ -1949,7 +2006,7 @@ Save drawings to a given csv file (defaults to map name)
 Save failed!
 Save ghost
 Save last %d min
-Save power by lowering refresh rate (higher input latency)
+Save power by lowering update rate (higher input latency)
 Save skin
 Save team with code r.
 Save the best demo of each race
@@ -1965,9 +2022,7 @@ Save/Load Name
 Save/Load Skin
 Saves file
 Say in chat
-Say in chat as inactive tee
 Say in team chat
-Say in team chat as inactive tee
 Scanning current server
 Scanning current server...
 Score
@@ -2011,13 +2066,6 @@ Self and friends
 Self only
 Send
 Send & Receive
-Send /load as inactive tee
-Send /lock as inactive tee
-Send /pause as inactive tee
-Send /rescue as inactive tee
-Send /save as inactive tee
-Send /spec as inactive tee
-Send /team as inactive tee
 Send a moderator alert message to player
 Send a server alert message to all players
 Send a whisper: /w player message
@@ -2315,6 +2363,7 @@ Start and connect to local server
 Start here to quickly diagnose if the issue is with device, server, or room
 Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
+Start QmLive full match demo recording
 Start recording a demo
 Start recording a video
 Statboard
@@ -2328,7 +2377,9 @@ Status bar color
 Status bar height
 Status normal, check details below if still experiencing issues
 Status Scheme:
+Stop match record
 Stop practice
+Stop QmLive full match demo recording
 Stop record
 Stop recording
 Stop recording a demo
@@ -2353,15 +2404,9 @@ Swap
 Swap ghosts with regular players
 Swap is disabled on this server.
 Swap is not available on forced solo servers.
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
 Switch
 Switch failed
-Switch inactive tee to grenade
-Switch inactive tee to gun
-Switch inactive tee to hammer
-Switch inactive tee to laser
-Switch inactive tee to next weapon
-Switch inactive tee to previous weapon
-Switch inactive tee to shotgun
 Switch interval
 Switch opacity
 Switch spectator mode
@@ -2393,6 +2438,7 @@ Target language ratio
 TClient
 TClient Developers
 TClient Links
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
 Team
 Team %d
 Team %d (%d/%d)
@@ -2420,6 +2466,7 @@ Teams are disabled
 Teams are not available on this server; if the team is locked, any team member dying will kill the whole team
 Tee
 Tee 0.7
+Tee appearance
 Tee hitbox
 Tee hitbox color
 Tee size
@@ -2458,6 +2505,8 @@ Thanks for supporting QmClient
 The audio device couldn't be initialised.
 The best voice chat, of course!
 The Config tab reuses QmClient's client config browser
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+The extra menu with the given number is activated.
 The force pause timer is now over, you can exit with /spec
 The format of texture %s is not RGBA which will cause visual bugs.
 The Functions tab contains tools, automation, and gameplay helpers
@@ -2471,6 +2520,7 @@ The Visuals tab contains appearance and rendering options
 The width of texture %s is not divisible by %d, or the height is not divisible by %d, which might cause visual bugs.
 Theme
 Themes directory
+There are no Tutorial servers available
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 There is no checkpoint teleporter with that index on the map.
 There is no teleporter with that index on the map.
@@ -2589,6 +2639,7 @@ UI controller sens.
 UI mouse sens.
 UI opacity
 UI scale
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
 UI大小百分比 (UI scale percentage)
 Unable to delete %d selected items. The first failing item was '%s'.
 Unable to delete skin
@@ -2645,6 +2696,7 @@ Update finished. Please restart the client
 Update finished. Restarting...
 Update notice
 Update or add a specific war group
+Update Rate
 Updating feature list...
 Uploading map data to GPU
 Usage: %s %s
@@ -2674,6 +2726,7 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 Use warlist colors instead of regular colors
 Use warlist groups for indicator
+Uses the active action with the current aiming position.
 v = Velocity
 V-Sync
 VAD 允许名单（逗号分隔）
@@ -2691,6 +2744,10 @@ View latest updates
 View margin
 View switch found (at offset) with given number
 View tele found (at offset) with given number
+Virtual joystick which always uses fire.
+Virtual joystick which always uses hook.
+Virtual joystick which only aims without using an action.
+Virtual joystick which uses the active action.
 Visibility
 Visual
 Visual: Effects
@@ -2712,6 +2769,8 @@ Vote yes
 Vote yes/no
 Voting
 Wait for current vote to end before calling a new one.
+Waiting for local server to start…
+Waiting for local server to stop…
 Waiting for snapshot
 Waiting to open
 Waiting to open input device
@@ -2744,6 +2803,7 @@ What kind of laser do you want?
 What kind of life do you want to run?
 What's done is done, no use saying more
 Wheel animate
+When TClient rainbow Tee is enabled, this feature has no effect.
 When you cross the start line, show a ghost tee replicating the movements of your best time
 Whether a switch is deactivated by default (otherwise activated)
 Whether to show players at any distance (off by default), optional i = 0 for off else for on
@@ -2795,11 +2855,13 @@ You can hammer hit others
 You can hit others
 You can hook others
 You can kick only your team member
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
 You can now jump %s times
 You can now use the preset eye emotes.
 You can only move your team member to spectators
 You can only vote after logging in.
 You can see other players. To disable this use DDNet client and type /showothers
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
 You can shoot others with grenade
 You can shoot others with laser
 You can shoot others with shotgun
@@ -2848,6 +2910,7 @@ You will receive global chat and server messages
 You will receive whispers
 You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
 You're the last one!
 Your current race time is %s
 Your current version is outdated. Please update from the QQ group.
@@ -2875,6 +2938,7 @@ Zoom
 Zoom decrease
 Zoom in
 Zoom increase
+Zoom is allowed on this server.
 Zoom out
 ⚠️ FTAPI is a free service. Excessive use may cause service suspension.
 ⚠️ LibreTranslate API Key not set
@@ -2901,6 +2965,7 @@ Zoom out
 加入可锁定队伍后自动锁定
 动态视野平滑度（0=瞬时，100=最平滑）
 动态视野强度（0-200）
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
 压缩器攻击时间（毫秒）
 压缩器比率（x10）
 压缩器补偿增益（百分比）
@@ -2908,6 +2973,7 @@ Zoom out
 压缩器阈值（百分比）
 反转相机漂移方向
 可见性过滤模式
+同时循环分身自定义 Tee 色调
 同组全图收听
 名单过滤模式
 名字板元素允许 X 轴自由移动
@@ -2992,7 +3058,9 @@ Zoom out
 好友进服大字提示文本（使用%s表示好友名）
 好友选项颜色
 客户端消息文字渐变颜色
+将 Best input 应用于其他 Tee
 将 Q 弹 Tee 形变应用到其他玩家
+将 Saiko+ 应用于其他 Tee
 将性能调试日志写入专用文件
 将歌词显示在灵动岛内
 屏蔽词列表（用,分隔）
@@ -3001,6 +3069,9 @@ Zoom out
 已播放词颜色
 已读的设置界面新功能标识
 开关图块的覆盖实体 alpha (0-100)
+循环本体自定义 Tee 色调
+循环本体自定义 Tee 色调速度（度/秒）
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
 忽略语音距离衰减
 性能调试日志阈值（毫秒）
 拿到额外武器时停用 Gores 自动切换
@@ -3031,7 +3102,9 @@ Zoom out
 智谱AI API Key
 智谱AI 模型名称
 智谱AI 端点（留空使用默认）
+暂停时隐藏歌词
 替换方式 0=Regex 1=Full 2=Both
+未找到歌词时隐藏（而非显示提示）
 未播放词颜色
 本体和分身都被冻结时，自动切换到先解冻的那个
 本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示
@@ -3044,17 +3117,20 @@ Zoom out
 根据位置小数部分显示跳跃提示
 根据文本输入焦点自动启用或关闭 IME
 检测新歌时自动联网拉取歌词
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
 歌词 HTTP 请求超时 ms
 歌词 HUD 贴边外边距 px
 歌词下一行颜色
 歌词吸附灵动岛阈值
 歌词当前行颜色
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
 歌词描边透明度
 歌词描边颜色
 歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
 歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
 歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
 歌词整体不透明度 %
+歌词本地媒体库目录（多个目录用 | 分隔）
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 歌词模糊匹配评分阈值
 歌词淡入淡出时间
@@ -3198,6 +3274,7 @@ Zoom out
 自动翻译模式 (0=仅常见源语言输入时触发, 1=始终翻译)
 自动获取全图玩家皮肤并作为分身轮换队列
 自动获取全图玩家皮肤并作为轮换队列
+自动调整预测边距（关闭后固定使用基础预测边距）
 自动跟随好友换服延迟（秒）
 自动锁定延迟（秒）
 自定义 Provider API Key

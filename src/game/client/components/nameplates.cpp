@@ -356,6 +356,7 @@ public:
 	bool m_DirJump;
 	bool m_DirRight;
 	float m_FontSizeDirection;
+	bool m_ReserveHookStrongWeakRow;
 	bool m_ShowHookStrongWeak;
 	EHookStrongWeakState m_HookStrongWeakState;
 	bool m_ShowHookStrongWeakId;
@@ -375,6 +376,7 @@ protected:
 	bool m_NewLine = false; // Whether this part is a new line (doesn't do anything else)
 	bool m_Visible = true; // Whether this part is visible
 	bool m_ShiftOnInvis = false; // Whether when not visible will still take up space
+	bool m_ReserveLineHeight = false; // Whether an invisible part keeps only vertical row space
 	CNamePlatePart(CGameClient &This) {}
 
 public:
@@ -386,6 +388,7 @@ public:
 	bool NewLine() const { return m_NewLine; }
 	bool Visible() const { return m_Visible; }
 	bool ShiftOnInvis() const { return m_ShiftOnInvis; }
+	bool ReserveLineHeight() const { return m_ReserveLineHeight; }
 	CNamePlatePart() = delete;
 	virtual ~CNamePlatePart() = default;
 };
@@ -812,6 +815,24 @@ public:
 	}
 };
 
+class CNamePlatePartHookStrongWeakRowReserve : public CNamePlatePart
+{
+public:
+	CNamePlatePartHookStrongWeakRowReserve(CGameClient &This) :
+		CNamePlatePart(This)
+	{
+		m_Visible = false;
+		m_Padding = vec2(0.0f, 0.0f);
+	}
+
+	void Update(CGameClient &This, const CNamePlateData &Data) override
+	{
+		m_Visible = false;
+		m_ReserveLineHeight = Data.m_ReserveHookStrongWeakRow;
+		m_Size = vec2(0.0f, Data.m_FontSizeHookStrongWeak + DEFAULT_PADDING);
+	}
+};
+
 class CNamePlatePartHookStrongWeakId : public CNamePlatePartText
 {
 private:
@@ -1149,6 +1170,11 @@ private:
 				LineSize.x += Part.Size().x + Part.Padding().x;
 				LineSize.y = std::max(LineSize.y, Part.Size().y + Part.Padding().y);
 			}
+			else if(Part.ReserveLineHeight())
+			{
+				Empty = false;
+				LineSize.y = std::max(LineSize.y, Part.Size().y + Part.Padding().y);
+			}
 		}
 		WidthMax = std::max(WidthMax, LineSize.x);
 		HeightTotal += LineSize.y;
@@ -1193,6 +1219,11 @@ private:
 				LineSize.x += Part.Size().x + Part.Padding().x;
 				LineSize.y = std::max(LineSize.y, Part.Size().y + Part.Padding().y);
 			}
+			else if(Part.ReserveLineHeight())
+			{
+				Empty = false;
+				LineSize.y = std::max(LineSize.y, Part.Size().y + Part.Padding().y);
+			}
 		}
 		return std::min(Top, Position.y - LineSize.y / 2.0f);
 	}
@@ -1219,6 +1250,11 @@ private:
 			{
 				Empty = false;
 				LineSize.x += Part.Size().x + Part.Padding().x;
+				LineSize.y = std::max(LineSize.y, Part.Size().y + Part.Padding().y);
+			}
+			else if(Part.ReserveLineHeight())
+			{
+				Empty = false;
 				LineSize.y = std::max(LineSize.y, Part.Size().y + Part.Padding().y);
 			}
 		}
@@ -1313,6 +1349,7 @@ private:
 
 	void AddHookRow(CGameClient &This)
 	{
+		AddPart<CNamePlatePartHookStrongWeakRowReserve>(This);
 		AddPart<CNamePlatePartHookStrongWeak>(This);
 		AddPart<CNamePlatePartHookStrongWeakId>(This);
 		AddPart<CNamePlatePartNewLine>(This);
@@ -1799,6 +1836,7 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	}
 
 	Data.m_ShowHookStrongWeak = false;
+	Data.m_ReserveHookStrongWeakRow = g_Config.m_Debug || g_Config.m_ClNamePlatesStrong > 0;
 	Data.m_HookStrongWeakState = EHookStrongWeakState::NEUTRAL;
 	Data.m_ShowHookStrongWeakId = false;
 	Data.m_HookStrongWeakId = 0;
@@ -1947,6 +1985,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 
 		Data.m_FontSizeHookStrongWeak = FontSizeHookStrongWeak;
 		Data.m_HookStrongWeakId = Data.m_ClientId;
+		Data.m_ReserveHookStrongWeakRow = g_Config.m_Debug || g_Config.m_ClNamePlatesStrong > 0;
 		Data.m_ShowHookStrongWeakId = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong == 2;
 		if(DummyIdx == g_Config.m_ClDummy)
 		{
@@ -2578,6 +2617,12 @@ void CNamePlates::OnRender()
 		{
 			const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apPlayerInfos[i];
 			if(!pInfo)
+			{
+				ResetChatBubbleAnimState(i);
+				m_pData->m_aCoordXAlign[i] = SCoordXAlignState();
+				continue;
+			}
+			if(!GameClient()->LiveTeamFilterAllowsClient(i))
 			{
 				ResetChatBubbleAnimState(i);
 				m_pData->m_aCoordXAlign[i] = SCoordXAlignState();

@@ -1647,6 +1647,9 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 
 void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass)
 {
+	if(ClientId >= 0 && !GameClient()->LiveTeamFilterAllowsClient(ClientId))
+		return;
+
 	if(*pLine == 0 ||
 		(ClientId == SERVER_MSG && !g_Config.m_ClShowChatSystem) ||
 		(ClientId >= 0 && (GameClient()->m_aClients[ClientId].m_aName[0] == '\0' || // unknown client
@@ -2451,19 +2454,23 @@ void CChat::OnRender()
 
 		// 计算翻译按钮大小并调整输入框宽度
 		const float MessageMaxWidth = InputCursor.m_LineWidth - (InputCursor.m_X - InputCursor.m_StartX) - TranslateButtonSize - TranslateButtonGap;
-		const CUIRect ClippingRect = {InputCursor.m_X, InputCursor.m_Y, MessageMaxWidth, 2.25f * InputCursor.m_FontSize};
-		InputBlockRect = {x, ClippingRect.y, ChatRect.w - x, ClippingRect.h};
+		const float InputContentHeight = 2.25f * InputCursor.m_FontSize;
+		const float InputClipPaddingTop = maximum(1.0f, InputCursor.m_FontSize * 0.18f);
+		const float InputClipPaddingBottom = maximum(1.0f, InputCursor.m_FontSize * 0.10f);
+		const CUIRect InputContentRect = {InputCursor.m_X, InputCursor.m_Y, MessageMaxWidth, InputContentHeight};
+		const CUIRect InputClippingRect = {InputContentRect.x, InputContentRect.y - InputClipPaddingTop, InputContentRect.w, InputContentRect.h + InputClipPaddingTop + InputClipPaddingBottom};
+		InputBlockRect = {x, InputContentRect.y, ChatRect.w - x, InputContentRect.h};
 		InputBlockRectValid = true;
-		ExtendBounds(x, InputCursor.m_Y, ChatRect.w - x, ClippingRect.h);
+		ExtendBounds(x, InputContentRect.y, ChatRect.w - x, InputContentRect.h);
 		const float XScale = Graphics()->ScreenWidth() / Width;
 		const float YScale = Graphics()->ScreenHeight() / Height;
-		Graphics()->ClipEnable((int)(ClippingRect.x * XScale), (int)(ClippingRect.y * YScale), (int)(ClippingRect.w * XScale), (int)(ClippingRect.h * YScale));
+		Graphics()->ClipEnable((int)(InputClippingRect.x * XScale), (int)(InputClippingRect.y * YScale), (int)(InputClippingRect.w * XScale), (int)(InputClippingRect.h * YScale));
 
 		float ScrollOffset = m_Input.GetScrollOffset();
 		float ScrollOffsetChange = m_Input.GetScrollOffsetChange();
 
 		m_Input.Activate(EInputPriority::CHAT); // Ensure that the input is active
-		const CUIRect InputCursorRect = {InputCursor.m_X, InputCursor.m_Y - ScrollOffset, 0.0f, 0.0f};
+		const CUIRect InputCursorRect = {InputContentRect.x, InputContentRect.y + InputClipPaddingTop - ScrollOffset, 0.0f, 0.0f};
 		const bool WasChanged = m_Input.WasChanged();
 		const bool WasCursorChanged = m_Input.WasCursorChanged();
 		const bool Changed = WasChanged || WasCursorChanged;
@@ -2471,14 +2478,14 @@ void CChat::OnRender()
 
 		Graphics()->ClipDisable();
 
-		// Scroll up or down to keep the caret inside the clipping rect
-		const float CaretPositionY = m_Input.GetCaretPosition().y - ScrollOffsetChange;
-		if(CaretPositionY < ClippingRect.y)
-			ScrollOffsetChange -= ClippingRect.y - CaretPositionY;
-		else if(CaretPositionY + InputCursor.m_FontSize > ClippingRect.y + ClippingRect.h)
-			ScrollOffsetChange += CaretPositionY + InputCursor.m_FontSize - (ClippingRect.y + ClippingRect.h);
+		// Scroll up or down to keep the caret inside the content rect.
+		const float CaretPositionY = m_Input.GetCaretPosition().y - InputClipPaddingTop - ScrollOffsetChange;
+		if(CaretPositionY < InputContentRect.y)
+			ScrollOffsetChange -= InputContentRect.y - CaretPositionY;
+		else if(CaretPositionY + InputCursor.m_FontSize > InputContentRect.y + InputContentRect.h)
+			ScrollOffsetChange += CaretPositionY + InputCursor.m_FontSize - (InputContentRect.y + InputContentRect.h);
 
-		Ui()->DoSmoothScrollLogic(&ScrollOffset, &ScrollOffsetChange, ClippingRect.h, BoundingBox.m_H);
+		Ui()->DoSmoothScrollLogic(&ScrollOffset, &ScrollOffsetChange, InputContentRect.h, BoundingBox.m_H);
 
 		m_Input.SetScrollOffset(ScrollOffset);
 		m_Input.SetScrollOffsetChange(ScrollOffsetChange);
@@ -2503,8 +2510,8 @@ void CChat::OnRender()
 		if(HasCommandPreview)
 		{
 			CTextCursor PreviewCursor;
-			const float PreviewY = ClippingRect.y + minimum(BoundingBox.m_H, ClippingRect.h) + 2.0f;
-			PreviewCursor.SetPosition(vec2(ClippingRect.x, PreviewY));
+			const float PreviewY = InputContentRect.y + minimum(BoundingBox.m_H, InputContentRect.h) + 2.0f;
+			PreviewCursor.SetPosition(vec2(InputContentRect.x, PreviewY));
 			PreviewCursor.m_FontSize = CommandPreviewFontSize;
 			PreviewCursor.m_LineWidth = MessageMaxWidth;
 			PreviewCursor.m_Flags = TEXTFLAG_RENDER;
@@ -2515,7 +2522,7 @@ void CChat::OnRender()
 		}
 
 		// 渲染翻译按钮
-		CUIRect TranslateButtonRect = {x, ClippingRect.y, TranslateButtonSize, maximum(InputCursor.m_FontSize + 4.0f, 16.0f)};
+		CUIRect TranslateButtonRect = {InputContentRect.x + InputContentRect.w + TranslateButtonGap, InputContentRect.y, TranslateButtonSize, maximum(InputCursor.m_FontSize + 4.0f, 16.0f)};
 		RenderTranslateButton(TranslateButtonRect);
 	}
 	else
@@ -2886,7 +2893,7 @@ static bool ShouldSyncTeamCommandToOther(const char *pLine)
 void CChat::SendChat(int Team, const char *pLine)
 {
 #if defined(CONF_QM_LIVE_CLIENT)
-	if(GameClient()->Client()->QmLiveDirectorActive() && ShouldBlockLiveDirectorChatCommand(pLine))
+	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER && ShouldBlockLiveDirectorChatCommand(pLine))
 		return;
 #endif
 
@@ -2927,7 +2934,7 @@ void CChat::SendChat(int Team, const char *pLine)
 void CChat::SendChatOnConn(int Conn, int Team, const char *pLine)
 {
 #if defined(CONF_QM_LIVE_CLIENT)
-	if(GameClient()->Client()->QmLiveDirectorActive() && ShouldBlockLiveDirectorChatCommand(pLine))
+	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER && ShouldBlockLiveDirectorChatCommand(pLine))
 		return;
 #endif
 

@@ -31,6 +31,17 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId)
 {
 	int CurWeapon = std::clamp(pCurrent->m_Type, 0, NUM_WEAPONS - 1);
 	const bool AllowEffects = !GameClient()->IsRenderingDummyMiniMap();
+	if(pCurrent->m_ExtraInfo)
+	{
+		if(pCurrent->m_Owner >= 0 && !GameClient()->LiveTeamFilterAllowsKnownOwner(pCurrent->m_Owner))
+			return;
+		if(pCurrent->m_Owner < 0 && GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+			return;
+	}
+	else if(GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+	{
+		return;
+	}
 
 	// get positions
 	float Curvature = 0;
@@ -266,6 +277,18 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 void CItems::RenderLaser(const CLaserData *pCurrent, bool IsPredicted)
 {
 	int Type = std::clamp(pCurrent->m_Type, -1, NUM_LASERTYPES - 1);
+	const bool PlayerLaserType = Type == LASERTYPE_RIFLE || Type == LASERTYPE_SHOTGUN || Type == LASERTYPE_GUN || Type == LASERTYPE_PLASMA;
+	if(pCurrent->m_ExtraInfo)
+	{
+		if(pCurrent->m_Owner >= 0 && !GameClient()->LiveTeamFilterAllowsKnownOwner(pCurrent->m_Owner))
+			return;
+		if(pCurrent->m_Owner < 0 && PlayerLaserType && GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+			return;
+	}
+	else if(PlayerLaserType && GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+	{
+		return;
+	}
 	int ColorIn, ColorOut;
 	switch(Type)
 	{
@@ -816,6 +839,17 @@ void CItems::ReconstructSmokeTrail(const CProjectileData *pCurrent, int DestroyT
 {
 	if(GameClient()->IsRenderingDummyMiniMap())
 		return;
+	if(pCurrent->m_ExtraInfo)
+	{
+		if(pCurrent->m_Owner >= 0 && !GameClient()->LiveTeamFilterAllowsKnownOwner(pCurrent->m_Owner))
+			return;
+		if(pCurrent->m_Owner < 0 && GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+			return;
+	}
+	else if(GameClient()->LiveTeamFilterActive() && !GameClient()->LiveTeamFilterAllowsUnknownPlayerEvent())
+	{
+		return;
+	}
 
 	bool LocalPlayerInGame = false;
 

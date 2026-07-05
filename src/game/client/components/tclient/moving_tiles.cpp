@@ -4,8 +4,10 @@
 #include <base/str.h>
 
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
 
+#include <game/client/components/qmclient/modes.h>
 #include <game/client/gameclient.h>
 
 #include <algorithm>
@@ -76,6 +78,38 @@ static bool QuadLayerUsesMovingWaterImage(IMap *pMap, const CMapItemLayerQuads *
 void CMovingTiles::Reset()
 {
 	m_vQuads.clear();
+	m_HasAxiomOrGoresOnlyQuads = false;
+}
+
+bool CMovingTiles::ShouldRenderMovingWater() const
+{
+	if(Client()->State() != IClient::STATE_ONLINE)
+		return false;
+
+	CServerInfo ServerInfo = {};
+	Client()->GetServerInfo(&ServerInfo);
+
+	const char *pServerInfoGameType = ServerInfo.m_aGameType;
+	const char *pCommunityId = ServerInfo.m_aCommunityId;
+
+	IServerBrowser *pServerBrowser = ServerBrowser();
+	const NETADDR *pServerAddr = Client()->ServerAddress();
+	const IServerBrowser::CServerEntry *pEntry = pServerBrowser && pServerAddr ? pServerBrowser->Find(*pServerAddr) : nullptr;
+	if(pEntry)
+	{
+		if(!pServerInfoGameType || pServerInfoGameType[0] == '\0')
+			pServerInfoGameType = pEntry->m_Info.m_aGameType;
+		pCommunityId = pEntry->m_Info.m_aCommunityId;
+	}
+	else if(GameClient()->m_ConnectServerInfo)
+	{
+		if(!pServerInfoGameType || pServerInfoGameType[0] == '\0')
+			pServerInfoGameType = GameClient()->m_ConnectServerInfo->m_aGameType;
+		pCommunityId = GameClient()->m_ConnectServerInfo->m_aCommunityId;
+	}
+
+	const CCommunity *pCommunity = pServerBrowser && pCommunityId && pCommunityId[0] != '\0' ? pServerBrowser->Community(pCommunityId) : nullptr;
+	return ShouldEnableQmMovingWaterTiles(GameClient()->m_GameInfo.m_aGameType, pServerInfoGameType, pCommunityId, pCommunity ? pCommunity->Name() : nullptr);
 }
 
 void CMovingTiles::OnStateChange(int NewState, int OldState)
@@ -113,6 +147,7 @@ void CMovingTiles::OnMapLoad()
 			QuadName(pQuadLayer->m_aName, std::size(pQuadLayer->m_aName), aLayerName, sizeof(aLayerName));
 
 			EQType Type = EQType::NONE;
+			bool RequiresAxiomOrGores = false;
 			for(size_t NameIndex = 0; NameIndex < std::size(gs_aValidMovingTileQuadNames); NameIndex++)
 			{
 				if(str_comp(gs_aValidMovingTileQuadNames[NameIndex], aLayerName) != 0)
@@ -122,9 +157,15 @@ void CMovingTiles::OnMapLoad()
 				break;
 			}
 			if(Type == EQType::NONE && IsMovingWaterImageName(aLayerName))
+			{
 				Type = EQType::FREEZE;
+				RequiresAxiomOrGores = true;
+			}
 			if(Type == EQType::NONE && QuadLayerUsesMovingWaterImage(pMap, pQuadLayer))
+			{
 				Type = EQType::FREEZE;
+				RequiresAxiomOrGores = true;
+			}
 			if(Type == EQType::NONE)
 				continue;
 
@@ -141,6 +182,8 @@ void CMovingTiles::OnMapLoad()
 				QuadData.m_pGroup = pGroup;
 				QuadData.m_pLayer = pQuadLayer;
 				QuadData.m_Type = Type;
+				QuadData.m_RequiresAxiomOrGores = RequiresAxiomOrGores;
+				m_HasAxiomOrGoresOnlyQuads = m_HasAxiomOrGoresOnlyQuads || RequiresAxiomOrGores;
 				for(int PointIndex = 0; PointIndex < 5; PointIndex++)
 					QuadData.m_Pos[PointIndex] = vec2(fx2f(QuadData.m_pQuad->m_aPoints[PointIndex].x), fx2f(QuadData.m_pQuad->m_aPoints[PointIndex].y));
 				m_vQuads.push_back(QuadData);
@@ -159,6 +202,7 @@ void CMovingTiles::OnRender()
 
 	const vec2 Center = GameClient()->m_Camera.m_Center;
 	const float Zoom = GameClient()->m_Camera.m_Zoom;
+	const bool RenderMovingWater = !m_HasAxiomOrGoresOnlyQuads || ShouldRenderMovingWater();
 
 	auto ApplyGroupState = [&](const CMapItemGroup *pGroup) -> bool {
 		Graphics()->ClipDisable();
@@ -242,6 +286,9 @@ void CMovingTiles::OnRender()
 			for(size_t QuadIndex = QuadStart; QuadIndex < QuadEnd; QuadIndex++)
 			{
 				const CQuadData &QuadData = m_vQuads[QuadIndex];
+				if(QuadData.m_RequiresAxiomOrGores && !RenderMovingWater)
+					continue;
+
 				const CQuad *pQuad = QuadData.m_pQuad;
 				if(!pQuad)
 					continue;

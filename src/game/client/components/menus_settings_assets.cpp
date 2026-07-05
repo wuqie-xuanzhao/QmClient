@@ -3419,28 +3419,36 @@ namespace
 	}
 } // namespace
 
+template<typename TName>
+static const CMenus::SCustomItem *GetCustomItemFromSearchList(const std::vector<TName *> &vpSearchList, size_t Index)
+{
+	if(Index >= vpSearchList.size())
+		return nullptr;
+	return vpSearchList[Index];
+}
+
 static const CMenus::SCustomItem *GetCustomItem(int CurTab, size_t Index)
 {
 	if(CurTab == ASSETS_TAB_ENTITIES)
-		return gs_vpSearchEntitiesList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchEntitiesList, Index);
 	else if(CurTab == ASSETS_TAB_GAME)
-		return gs_vpSearchGamesList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchGamesList, Index);
 	else if(CurTab == ASSETS_TAB_EMOTICONS)
-		return gs_vpSearchEmoticonsList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchEmoticonsList, Index);
 	else if(CurTab == ASSETS_TAB_PARTICLES)
-		return gs_vpSearchParticlesList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchParticlesList, Index);
 	else if(CurTab == ASSETS_TAB_HUD)
-		return gs_vpSearchHudList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchHudList, Index);
 	else if(CurTab == ASSETS_TAB_GUI_CURSOR)
-		return gs_vpSearchGuiCursorList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchGuiCursorList, Index);
 	else if(CurTab == ASSETS_TAB_ARROW)
-		return gs_vpSearchArrowList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchArrowList, Index);
 	else if(CurTab == ASSETS_TAB_STRONG_WEAK)
-		return gs_vpSearchStrongWeakList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchStrongWeakList, Index);
 	else if(CurTab == ASSETS_TAB_ENTITY_BG)
-		return gs_vpSearchEntityBgList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchEntityBgList, Index);
 	else if(CurTab == ASSETS_TAB_EXTRAS)
-		return gs_vpSearchExtrasList[Index];
+		return GetCustomItemFromSearchList(gs_vpSearchExtrasList, Index);
 	dbg_assert_failed("Invalid CurTab: %d", CurTab);
 }
 
@@ -6663,6 +6671,8 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			{
 				ClearCustomItems(s_CurCustomTab);
 			}
+			// Local list refresh invalidates SearchListSize and search pointer arrays for this frame.
+			return;
 		}
 
 		WorkshopHudView.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f), IGraphics::CORNER_ALL, 8.0f);

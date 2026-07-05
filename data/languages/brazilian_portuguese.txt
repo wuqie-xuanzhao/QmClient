@@ -1,5 +1,5 @@
  min
-==  min
+== Pending brazilian_portuguese translation a33046ec5b
 
  seconds
 == segundos
@@ -11,19 +11,19 @@
 == "%s" não é compatível com pnglite e não pode ser carregado por versões antigas do DDNet
 
 %.2f KiB
-== %.2f KiB
+== Pending brazilian_portuguese translation 4e00210e4e
 
 %.2f MiB
-== %.2f MiB
+== Pending brazilian_portuguese translation 9d211ddb9d
 
 %c Team %d
 == %c Equipe %d
 
 %d dummies
-== %d dummies
+== Pending brazilian_portuguese translation d8d25d13f1
 
 %d dummy
-== %d dummy
+== Pending brazilian_portuguese translation b6227c07ee
 
 %d items selected
 == %d itens selecionados
@@ -65,7 +65,7 @@
 == %d usuários
 
 %d/%d KiB (%.1f KiB/s)
-== %d/%d KiB (%.1f KiB/s)
+== Pending brazilian_portuguese translation f668268605
 
 %ds left
 == Restam %d s
@@ -83,7 +83,7 @@
 == %i segundos restantes
 
 %s (/%s %s)
-== %s (/%s %s)
+== Pending brazilian_portuguese translation 163f9b4e5d
 
 %s and %s have swapped
 == %s e %s trocaram de lugar
@@ -273,6 +273,9 @@ A screenshot with this name already exists
 
 A Tee
 == Um Tee
+
+A vote is currently active.
+== Pending brazilian_portuguese translation 81bf123108
 
 Abort
 == Cancelar
@@ -503,7 +506,7 @@ Advanced options
 == Opções avançadas
 
 AFR
-== AFR
+== Pending brazilian_portuguese translation f744b522aa
 
 After Load
 == Após Carregar
@@ -546,6 +549,9 @@ Allows maps to render with more detail
 
 Alpha
 == Alfa
+
+Also apply to dummy
+== Aplicar também ao dummy
 
 Always show
 == Mostrar sempre
@@ -698,7 +704,7 @@ Are you sure you want to save your skin? If a skin with this name already exists
 == Tem certeza de que deseja salvar sua skin? Se uma skin com este nome já existir, ela será substituída.
 
 ASI
-== ASI
+== Pending brazilian_portuguese translation 3f62f8ecb3
 
 Aspect ratio preset
 == Predefinição de proporção
@@ -746,7 +752,7 @@ Audio slots
 == Slots de áudio
 
 AUS
-== AUS
+== Pending brazilian_portuguese translation 9016be4d8f
 
 Authed name color in scoreboard
 == Cor do nome autenticado no placar
@@ -764,7 +770,7 @@ Auto
 == Automático
 
 auto
-== auto
+== Pending brazilian_portuguese translation beb8ff3b9a
 
 Auto agree vote
 == Votar automaticamente a favor
@@ -807,6 +813,9 @@ Auto manage IME while typing
 
 Auto map vote
 == Votar mapa automaticamente
+
+Auto margin
+== Pending brazilian_portuguese translation 3ea54b20b8
 
 Auto refresh server list
 == Atualizar automaticamente a lista de servidores
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Melhor
 
+Best input
+== Pending brazilian_portuguese translation e37eb295d8
+
+Best input others
+== Pending brazilian_portuguese translation d2feb60854
+
+Best input 平滑百分比
+== Pending brazilian_portuguese translation ac900cc8f3
+
+Best input 延迟补偿百分比
+== Pending brazilian_portuguese translation 391756e55f
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Pending brazilian_portuguese translation 396a32faf6
+
+Best input 预测偏移（0.01 tick）
+== Pending brazilian_portuguese translation 359d5b8809
+
 Best match
 == Best match setting
 
@@ -1031,7 +1058,7 @@ Browser
 == Navegador
 
 Brutal
-== Brutal
+== Pending brazilian_portuguese translation 867e584267
 
 Bubble opacity
 == Opacidade da bolha
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == Botão - Ativado
 
+Button browser
+== Pending brazilian_portuguese translation 4f251b4068
+
 Button position is outside of the screen.
 == A posição do botão está fora da tela.
 
 Buttons
 == Botões
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Pending brazilian_portuguese translation c602252d63
+
+Buttons with this behavior execute console commands like regular key binds.
+== Pending brazilian_portuguese translation 646fb3caae
+
+Buttons with this behavior execute some predefined actions.
+== Pending brazilian_portuguese translation 4ea175c36c
 
 c = Player position
 == c = Posição do jogador
@@ -1111,6 +1150,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == Não é possível trocar: o outro jogador não está na sua equipe
 
+Card Appearance
+== Pending brazilian_portuguese translation f932029186
+
+Card background blur (high performance only)
+== Pending brazilian_portuguese translation 8b2250b6ce
+
+Card background blur and corner rounding
+== Pending brazilian_portuguese translation ba6250385a
+
 Category
 == Categoria
 
@@ -1142,7 +1190,7 @@ Changing name to %s near finish
 == Mudando nome para %s perto da chegada
 
 Chat
-== Chat
+== Pending brazilian_portuguese translation 9174d7827b
 
 Chat background color
 == Cor de fundo do chat
@@ -1205,7 +1253,7 @@ Checking for existing player with your name
 == Verificando se já existe um jogador com seu nome
 
 CHN
-== CHN
+== Pending brazilian_portuguese translation b96c4d02f5
 
 Choose country flag
 == Escolher bandeira do país
@@ -1324,6 +1372,9 @@ Click to remove this community from favorites
 Click to remove this player from your friends list.
 == Clique para remover este jogador da sua lista de amigos.
 
+Click to restore full match
+== Pending brazilian_portuguese translation aa57c30184
+
 Click to select server. Double click to join your friend.
 == Clique para selecionar o servidor. Clique duas vezes para entrar no servidor do seu amigo.
 
@@ -1382,7 +1433,7 @@ Colors of the hook collision line, in case of a possible collision with:
 == Cores da linha de colisão de gancho, em caso de possível colisão com:
 
 Combo
-== Combo
+== Pending brazilian_portuguese translation ea8a0a2ea2
 
 Command
 == Comando
@@ -1415,7 +1466,7 @@ Concurrency (0 = auto)
 == Concorrência (0 = automático)
 
 Config
-== Config
+== Pending brazilian_portuguese translation fc4a767d8b
 
 Config directory
 == Diretório de configuração
@@ -1502,7 +1553,7 @@ Connection upstream
 == Conexão upstream
 
 Console
-== Console
+== Pending brazilian_portuguese translation 715a68d6ea
 
 Console color
 == Cor do console
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == Copiar skin
 
+Corner segments
+== Pending brazilian_portuguese translation 59373dbd19
+
 Could not check for existing player with your name. Check your internet connection.
 == Não foi possível verificar se já existe um jogador com seu nome. Verifique sua conexão com a internet.
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == Não foi possível criar a solicitação de varredura da denúncia
+
+Could not find a Tutorial server. Check your internet connection.
+== Pending brazilian_portuguese translation fae042b1d4
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Pending brazilian_portuguese translation 136fc7f912
 
 Could not find your Team
 == Não foi possível encontrar seu time
@@ -1696,6 +1756,9 @@ Cut segments
 Cute:
 == Fofo:
 
+Cycle custom Tee hue
+== Alternar matiz personalizada do Tee
+
 Cycle through emotes
 == Percorrer emotes
 
@@ -1718,22 +1781,22 @@ Days
 == Dias
 
 DDmaX
-== DDmaX
+== Pending brazilian_portuguese translation dc63dac655
 
 DDmaX Easy
-== DDmaX Easy
+== Pending brazilian_portuguese translation 8997f0ec5f
 
 DDmaX Next
-== DDmaX Next
+== Pending brazilian_portuguese translation e53da82c14
 
 DDmaX Nut
-== DDmaX Nut
+== Pending brazilian_portuguese translation e82ebe2bac
 
 DDmaX Pro
-== DDmaX Pro
+== Pending brazilian_portuguese translation 51a3d7eae9
 
 DDNet
-== DDNet
+== Pending brazilian_portuguese translation f13dca507e
 
 DDNet / Total CPU
 == DDNet / CPU total
@@ -1802,7 +1865,7 @@ Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 == Modo Deepfly (0=normal, 1=DF, 2=HDF, 3=personalizado)
 
 DeepSeek
-== DeepSeek
+== Pending brazilian_portuguese translation 6da188e973
 
 DeepSeek API Key
 == Chave da API DeepSeek
@@ -1871,13 +1934,16 @@ Delete this preset
 == Excluir esta predefinição
 
 Demo
-== Demo
+== Pending brazilian_portuguese translation 836b4ec893
 
 Demo effects
 == Efeitos de demo
 
 Demo marker added
 == Marcador de demo adicionado
+
+Demo player is currently active.
+== Pending brazilian_portuguese translation e56d57927d
 
 Demo target
 == Alvo do demo
@@ -1922,7 +1988,7 @@ Developers and sponsors
 == Desenvolvedores e patrocinadores
 
 DF
-== DF
+== Pending brazilian_portuguese translation 2b6cd6f7c3
 
 Diamond
 == Diamante
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == Desativar ao pegar outras armas
+
+Disable QmLive team preview/render filter
+== Pending brazilian_portuguese translation 78ccccd849
 
 Disabled
 == Desativado
@@ -1973,7 +2042,7 @@ Disconnected
 == Desconectado
 
 Discord
-== Discord
+== Pending brazilian_portuguese translation a6ef42ee2a
 
 Display mode
 == Modo de exibição
@@ -2132,7 +2201,7 @@ Dummies are not allowed on this server
 == Dummies não são permitidos neste servidor
 
 Dummy
-== Dummy
+== Pending brazilian_portuguese translation 5fffbe5a30
 
 Dummy Control: %s
 == Controle do Dummy: %s
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == Dummy ganchar
+
+Dummy is allowed on this server.
+== Pending brazilian_portuguese translation a5a557c665
+
+Dummy is currently connected.
+== Pending brazilian_portuguese translation 180e6ca7cb
 
 Dummy jump
 == Dummy pular
@@ -2201,10 +2276,10 @@ Each tab has a clear purpose
 == Cada aba tem um propósito claro
 
 Ease in out quad
-== Ease in out quad
+== Pending brazilian_portuguese translation 86cfe73cb8
 
 Ease out cubic
-== Ease out cubic
+== Pending brazilian_portuguese translation dfd05538ff
 
 Echo follows the original chat color
 == Echo segue a cor original do chat
@@ -2243,7 +2318,7 @@ Edit touch controls
 == Editar controles de toque
 
 Editor
-== Editor
+== Pending brazilian_portuguese translation d2f143a4dc
 
 Elastic
 == Elástico
@@ -2258,7 +2333,7 @@ Emotes are disabled.
 == Emotes estão desabilitados.
 
 Emoticon
-== Emoticon
+== Pending brazilian_portuguese translation 83f94f2d75
 
 Emoticon ID
 == ID do emoticon
@@ -2267,7 +2342,7 @@ Emoticon shadow
 == Sombra do emoticon
 
 Emoticons
-== Emoticons
+== Pending brazilian_portuguese translation ecb20eaf28
 
 enable
 == ativar
@@ -2390,7 +2465,7 @@ Endless hook has been deactivated
 == Gancho infinito foi desativado
 
 Endpoint
-== Endpoint
+== Pending brazilian_portuguese translation cb39161be5
 
 Endpoint (optional)
 == Endpoint (opcional)
@@ -2420,7 +2495,7 @@ Entity Preview
 == Pré-visualização de entidades
 
 entity_bg (Workshop)
-== entity_bg (Workshop)
+== Pending brazilian_portuguese translation a5512094e1
 
 Erase items on the in game background
 == Apagar itens no fundo do jogo
@@ -2430,6 +2505,9 @@ Error
 
 Error checking player name
 == Erro ao verificar nome do jogador
+
+Error joining Tutorial server
+== Pending brazilian_portuguese translation 94fc1c933a
 
 Error loading communities
 == Erro ao carregar comunidades
@@ -2456,7 +2534,7 @@ ESC replay minutes
 == Minutos de replay do ESC
 
 EUR
-== EUR
+== Pending brazilian_portuguese translation a394d3e2b8
 
 Evaluate an expression
 == Avaliar uma expressão
@@ -2525,7 +2603,7 @@ Exported to %s
 == Exportado para %s
 
 Extras
-== Extras
+== Pending brazilian_portuguese translation 55817260f2
 
 f = Frame rate
 == f = Taxa de quadros
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Força de redução de ruído simples de fallback
 
+Fast input
+== Pending brazilian_portuguese translation d949497556
+
 Fast input (reduce visual latency)
 == Entrada rápida (reduz latência visual)
 
@@ -2646,6 +2727,15 @@ File already exists, do you want to overwrite it?
 
 Filter connecting players
 == Filtrar jogadores conectando
+
+Filter off
+== Pending brazilian_portuguese translation 089b469628
+
+Filter Team %d
+== Pending brazilian_portuguese translation ce60ef22a4
+
+Filter: Team %d
+== Pending brazilian_portuguese translation c047e141d2
 
 Find all ban records for the specified IP address
 == Encontrar todos os registros de ban para o endereço IP especificado
@@ -2708,10 +2798,10 @@ Found %d modules
 == %d módulos encontrados
 
 FPM
-== FPM
+== Pending brazilian_portuguese translation 3c39148d56
 
 FPS
-== FPS
+== Pending brazilian_portuguese translation 36be51cbde
 
 Frags
 == Abates
@@ -2789,10 +2879,13 @@ FSAA samples
 == Amostras FSAA
 
 FTAPI
-== FTAPI
+== Pending brazilian_portuguese translation 6528501aeb
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == A tradução automática FTAPI está desativada para evitar sobrecarga. Ative nas configurações se necessário.
+
+Full demo + sidecar
+== Pending brazilian_portuguese translation e7625ff27d
 
 Full map listen in same room
 == Ouvir mapa inteiro na mesma sala
@@ -2861,7 +2954,7 @@ Ghosts directory
 == Diretório de fantasmas
 
 Github
-== Github
+== Pending brazilian_portuguese translation 6f233d5125
 
 Give back right to vote to player with client ID
 == Devolver direito de voto ao jogador com ID de cliente
@@ -2900,7 +2993,7 @@ Gives you infinite jump
 == Dá a você pulo infinito
 
 Glitch
-== Glitch
+== Pending brazilian_portuguese translation ae3341af65
 
 Global toggle key
 == Tecla de alternância global
@@ -3020,7 +3113,7 @@ Has save
 == Tem save
 
 HDF
-== HDF
+== Pending brazilian_portuguese translation e8235f989f
 
 Heart
 == Coração
@@ -3078,12 +3171,6 @@ Hide jump effects
 
 Hide kill/finish messages
 == Ocultar mensagens de morte/finalização
-
-Hide lyrics when no lyrics are found instead of showing a hint
-== Ocultar letra quando nenhuma for encontrada, em vez de mostrar uma dica
-
-Hide lyrics while media is paused
-== Ocultar letra enquanto a mídia estiver pausada
 
 Hide map progress
 == Ocultar progresso do mapa
@@ -3188,19 +3275,19 @@ Hover for tooltip
 == Passe o mouse para ver a dica
 
 https://ddnet.org/discord
-== https://ddnet.org/discord
+== Pending brazilian_portuguese translation f10b752ae0
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+== Pending brazilian_portuguese translation 5e6cc7a446
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
+== Pending brazilian_portuguese translation 7e2d44bf37
 
 https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls
+== Pending brazilian_portuguese translation 9c9d89d2f5
 
 HUD
-== HUD
+== Pending brazilian_portuguese translation 0b0376a16e
 
 HUD editor preview
 == Visualização do editor de HUD
@@ -3216,6 +3303,9 @@ HUD 编辑器布局
 
 Hue
 == Matiz
+
+Hue speed
+== Velocidade da matiz
 
 i = Receive rate
 == i = Taxa de recebimento
@@ -3331,6 +3421,9 @@ Input overlay
 Input overlay display
 == Exibição de sobreposição de entrada
 
+Input smoothing
+== Pending brazilian_portuguese translation 3db60c3902
+
 Input switch
 == Troca de entrada
 
@@ -3338,16 +3431,19 @@ Insane
 == Insano
 
 Interface
-== Interface
+== Pending brazilian_portuguese translation 07a57441b5
 
 Intermediate
 == Intermediário
 
 Internet
-== Internet
+== Pending brazilian_portuguese translation 3034b92d71
 
 Internet (From online source)
 == Internet (De fonte online)
+
+Interpolation
+== Pending brazilian_portuguese translation 55d42091b8
 
 Invalid client id to kick
 == ID de cliente inválido para expulsar
@@ -3410,7 +3506,7 @@ Jelly strength
 == Força da gelatina
 
 Jitter
-== Jitter
+== Pending brazilian_portuguese translation 06523011c5
 
 Join a team to enable practice mode, which means you can use /r, but can't earn a rank.
 == Entre em um time para ativar o modo de prática, o que significa que você pode usar /r, mas não pode ganhar um rank.
@@ -3442,6 +3538,9 @@ Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
 == Mensagens de entrada, versão, regras e ajuda ficam no chat em vez de pop-ups
 
+Joining Tutorial server
+== Pending brazilian_portuguese translation ce3f5e45ad
+
 Jump
 == Pular
 
@@ -3452,7 +3551,7 @@ k = Resend loss
 == k = Perda de reenvio
 
 Kaomoji
-== Kaomoji
+== Pending brazilian_portuguese translation 5a631531d4
 
 Karaoke edge softness
 == Karaoke edge softness setting
@@ -3527,7 +3626,7 @@ Label type
 == Tipo de rótulo
 
 LAN
-== LAN
+== Pending brazilian_portuguese translation 8027023f21
 
 Language
 == Idioma
@@ -3539,7 +3638,7 @@ Large text content
 == Conteúdo do texto grande
 
 Laser
-== Laser
+== Pending brazilian_portuguese translation 1d36a8ea7b
 
 Laser effect enhancement
 == Aprimoramento de efeito de laser
@@ -3559,6 +3658,9 @@ Last page in console
 Latency
 == Latência
 
+Latency compensation
+== Pending brazilian_portuguese translation d8321facb8
+
 Latency Jitter
 == Variação de latência
 
@@ -3566,7 +3668,7 @@ Latency jitter
 == Variação de latência
 
 Layout
-== Layout
+== Pending brazilian_portuguese translation 177118e04f
 
 Leak IP
 == Vazar IP
@@ -3599,7 +3701,7 @@ Length
 == Duração
 
 Lenny:
-== Lenny:
+== Pending brazilian_portuguese translation d1e9501190
 
 Lets you join team i (shows your team if left blank)
 == Permite entrar na equipe i (mostra sua equipe se deixado em branco)
@@ -3608,7 +3710,7 @@ Lht.
 == Brilho
 
 LibreTranslate
-== LibreTranslate
+== Pending brazilian_portuguese translation c1b78c10d6
 
 LibreTranslate API Key
 == Chave da API LibreTranslate
@@ -3626,7 +3728,7 @@ Line width
 == Largura da linha
 
 Linear
-== Linear
+== Pending brazilian_portuguese translation 38aeb4b316
 
 Lines
 == Linhas
@@ -3683,13 +3785,13 @@ List players containing name or all players
 == Listar jogadores contendo nome ou todos os jogadores
 
 Literal
-== Literal
+== Pending brazilian_portuguese translation e3ff1f66f2
 
 Live director
 == Diretor ao vivo
 
 LLM API
-== LLM API
+== Pending brazilian_portuguese translation d1f813f92e
 
 LLM provider
 == Provedor de LLM
@@ -3779,7 +3881,7 @@ Local
 == Local
 
 Local + Dummy
-== Local + Dummy
+== Pending brazilian_portuguese translation 32bc0c0036
 
 Local ESLRC file
 == Local ESLRC file setting
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == Sair do rcon
 
-Long press on a touch button to select it.
-== Pressione longamente um botão de toque para selecioná-lo.
-
 Low to high
 == Baixo para alto
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == Letra
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== Proxy HTTP da letra (ex.: http://127.0.0.1:7890)
-
 Lyrics HTTP timeout
 == Lyrics HTTP timeout setting
-
-Lyrics local media library folders (use | as separator)
-== Pastas da biblioteca de mídia local da letra (use | como separador)
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== Deslocamento manual da linha do tempo da letra em ms (passo de 500ms em tempo de execução)
 
 Lyrics search type
 == Lyrics search type setting
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == Menu principal
-
-Make inactive tee fire
-== Make inactive tee fire
-
-Make inactive tee hook
-== Make inactive tee hook
-
-Make inactive tee jump
-== Make inactive tee jump
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == Certifique-se de que o backend suporta parâmetros de pensamento compatíveis com OpenAI
@@ -3926,7 +4007,7 @@ Manage categories
 == Gerenciar categorias
 
 Manual
-== Manual
+== Pending brazilian_portuguese translation f96bc37a95
 
 Manual concurrency: %d
 == Concorrência manual: %d
@@ -4112,16 +4193,10 @@ Modules snap to screen edges, center lines and other HUD modules while dragging
 == Módulos se encaixam nas bordas da tela, linhas centrais e outros módulos da HUD enquanto arrasta
 
 MOTD
-== MOTD
+== Pending brazilian_portuguese translation 5e698f0f96
 
 Mouse
-== Mouse
-
-Move inactive tee left
-== Move inactive tee left
-
-Move inactive tee right
-== Move inactive tee right
+== Pending brazilian_portuguese translation 2a122f82cf
 
 Move left
 == Mover para esquerda
@@ -4193,7 +4268,7 @@ n = Prediction latency
 == n = Latência de previsão
 
 NA
-== NA
+== Pending brazilian_portuguese translation 1b36ac6849
 
 Name
 == Nome
@@ -4481,7 +4556,7 @@ None
 == Nenhum
 
 Normal
-== Normal
+== Pending brazilian_portuguese translation c288835a7e
 
 Normal Color
 == Cor normal
@@ -4559,16 +4634,16 @@ Official community links
 == Links oficiais da comunidade
 
 Offline
-== Offline
+== Pending brazilian_portuguese translation 1aa6f81dab
 
 Ohhhhhhhhhhhhhhhh
-== Ohhhhhhhhhhhhhhhh
+== Pending brazilian_portuguese translation 22ce26a1b5
 
 Ok
-== Ok
+== Pending brazilian_portuguese translation bf240cb799
 
 Oldschool
-== Oldschool
+== Pending brazilian_portuguese translation 3dee402e1b
 
 On
 == Ligado
@@ -4581,6 +4656,9 @@ Online Players
 
 Only .wv files are supported right now.
 == Apenas arquivos .wv são suportados no momento.
+
+Only affects custom Tee colors.
+== Afeta apenas as cores personalizadas do Tee.
 
 Only Apple Can Do
 == Só a Apple Consegue Fazer
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == Abrir seletor de cores
+
+Open DDNet Wiki
+== Pending brazilian_portuguese translation efc2c54ded
 
 Open emote selector
 == Abrir seletor de emotes
@@ -4651,11 +4732,17 @@ Open the folder containing screenshots
 Open the saves file
 == Abrir o arquivo de saves
 
+Open the selected folder
+== Pending brazilian_portuguese translation fd78c14b9e
+
+Open the selected screenshot
+== Pending brazilian_portuguese translation 8af3183d2d
+
 Open the settings file
 == Abrir o arquivo de configurações
 
 OpenAI
-== OpenAI
+== Pending brazilian_portuguese translation b72a2c1895
 
 OpenAI API Key
 == Chave da API OpenAI
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == Aberto
+
+Opens the emoticon selector (this does not work with binds).
+== Pending brazilian_portuguese translation cadb172eb3
+
+Opens the ingame menu immediately when released.
+== Pending brazilian_portuguese translation 6b7a8153c6
+
+Opens the spectator menu (this does not work with binds).
+== Pending brazilian_portuguese translation 219dd45444
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == Optar por não aparecer na contagem de espectadores e ocultar status de autenticação para jogadores não autenticados (1 = oculto, 0 = mostrado)
@@ -4853,7 +4949,7 @@ Pie menu
 == Menu radial
 
 Ping
-== Ping
+== Pending brazilian_portuguese translation 32ffbe90df
 
 Ping the current server
 == Pingar o servidor atual
@@ -4872,6 +4968,9 @@ Play background music
 
 Play the current demo
 == Reproduzir a demo atual
+
+Play the selected demo
+== Pending brazilian_portuguese translation 29d6bb8ecf
 
 Play/Pause
 == Tocar/Pausar
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == Indicador de jogador
+
+Player is currently authed in rcon.
+== Pending brazilian_portuguese translation fd5508b738
+
+Player is ingame, i.e. not spectating.
+== Pending brazilian_portuguese translation ca7506dcf0
 
 Player is on a different team
 == O jogador está em um time diferente
@@ -5026,6 +5131,9 @@ Prediction Margin
 Prediction margin
 == Margem de previsão
 
+Prediction offset
+== Pending brazilian_portuguese translation 302c21e3ae
+
 Prediction time
 == Tempo de previsão
 
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == Pré-visualizar arquivo selecionado
+
+Preview visibilities
+== Pending brazilian_portuguese translation c0e82d2eae
+
+Preview/render only one DDRace team from a full match demo
+== Pending brazilian_portuguese translation 3148934f8b
+
+Preview/render only this team
+== Pending brazilian_portuguese translation a96b04b4c3
 
 Previous
 == Anterior
@@ -5174,13 +5291,13 @@ Q 弹 Tee 形变持续时间
 == Duração da deformação do Tee elástico
 
 Qm
-== Qm
+== Pending brazilian_portuguese translation 7e524fc5c0
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: índice deve estar entre 1 e %d
 
 QmClient
-== QmClient
+== Pending brazilian_portuguese translation 20fab20101
 
 QmClient chat log
 == Registro de chat do QmClient
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == Configurações do QmClient
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== Pending brazilian_portuguese translation 98fdbf1a54
+
+QmLiveClient：启用单队隔离画面过滤
+== Pending brazilian_portuguese translation 98cd72f399
+
+QmLiveClient：启用单队隔离音效过滤
+== Pending brazilian_portuguese translation 6b6ad37217
+
+QmLiveClient：完成排名卡片不透明度百分比
+== Pending brazilian_portuguese translation 0321f968fc
+
+QmLiveClient：完成排名卡片显示秒数
+== Pending brazilian_portuguese translation 92c558a93e
+
+QmLiveClient：完成排名卡片缩放百分比
+== Pending brazilian_portuguese translation 13b723f09e
+
+QmLiveClient：完整比赛 demo 录制开关
+== Pending brazilian_portuguese translation c7b5cba40f
+
+QmLiveClient：排名 HUD 队伍范围上限
+== Pending brazilian_portuguese translation bdb1f98ea6
+
+QmLiveClient：排名 HUD 队伍范围下限
+== Pending brazilian_portuguese translation b0db667f6e
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== Pending brazilian_portuguese translation 3950a7d0fc
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== Pending brazilian_portuguese translation f8cfdd5dbe
+
+QmLiveClient：显示队伍完成排名卡片
+== Pending brazilian_portuguese translation 01f793d697
+
+QmLiveClient：隐藏非目标队伍完成提示
+== Pending brazilian_portuguese translation 20b433746c
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == Intensidade dos efeitos visuais do QmUi: 0=Desligado 1=Reduzido 2=Completo
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== Pending brazilian_portuguese translation 786b1838b2
 
 QQ group: 1076765929 (click to copy)
 == Grupo QQ: 1076765929 (clique para copiar)
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == Gravar demo
 
+Record match
+== Pending brazilian_portuguese translation 3f0c81e7a3
+
 Record to a file
 == Gravar em um arquivo
 
@@ -5353,8 +5515,11 @@ Refresh interval
 Refresh Rate
 == Taxa de atualização
 
+Refresh the demo list
+== Pending brazilian_portuguese translation b5ba485cfb
+
 Regex
-== Regex
+== Pending brazilian_portuguese translation 894e698069
 
 Region
 == Região
@@ -5731,6 +5896,9 @@ Restart the client
 Restarting. Please wait…
 == Reiniciando. Por favor, aguarde…
 
+Retrying…
+== Pending brazilian_portuguese translation 07148eaa72
+
 Rifle Laser Inner Color
 == Cor interna do laser do rifle
 
@@ -5798,7 +5966,10 @@ Run server
 == Executar servidor
 
 SA
-== SA
+== Pending brazilian_portuguese translation 14af60b385
+
+Saiko+ 输入量（0.01 tick）
+== Pending brazilian_portuguese translation f00ff555ec
 
 Same as "vote no"
 == Igual a "votar não"
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == Salvar últimos %d min
 
-Save power by lowering refresh rate (higher input latency)
-== Economizar energia reduzindo a taxa de atualização (maior latência de entrada)
+Save power by lowering update rate (higher input latency)
+== Pending brazilian_portuguese translation f00846a0d4
 
 Save skin
 == Salvar skin
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == Dizer no chat
 
-Say in chat as inactive tee
-== Say in chat as inactive tee
-
 Say in team chat
 == Dizer no chat da equipe
-
-Say in team chat as inactive tee
-== Say in team chat as inactive tee
 
 Scanning current server
 == Escaneando o servidor atual
@@ -6036,27 +6201,6 @@ Send
 
 Send & Receive
 == Enviar e Receber
-
-Send /load as inactive tee
-== Send /load as inactive tee
-
-Send /lock as inactive tee
-== Send /lock as inactive tee
-
-Send /pause as inactive tee
-== Send /pause as inactive tee
-
-Send /rescue as inactive tee
-== Send /rescue as inactive tee
-
-Send /save as inactive tee
-== Send /save as inactive tee
-
-Send /spec as inactive tee
-== Send /spec as inactive tee
-
-Send /team as inactive tee
-== Send /team as inactive tee
 
 Send a moderator alert message to player
 == Enviar uma mensagem de alerta de moderador para o jogador
@@ -6728,7 +6872,7 @@ Size of key press icons
 == Tamanho dos ícones de teclas pressionadas
 
 Skin
-== Skin
+== Pending brazilian_portuguese translation 844f440535
 
 Skin could not be found.
 == Skin não encontrada.
@@ -6800,7 +6944,7 @@ Smooth fade
 == Desvanecimento suave
 
 SMTC
-== SMTC
+== Pending brazilian_portuguese translation b7c5bf6da2
 
 Snap threshold
 == Limiar de snap
@@ -6809,7 +6953,7 @@ Snapshot Latency
 == Latência de snapshots
 
 Social
-== Social
+== Pending brazilian_portuguese translation 948b6143dc
 
 Solid
 == Sólido
@@ -6818,7 +6962,7 @@ Solid tile outline opacity
 == Opacidade do contorno de tile sólido
 
 Solo
-== Solo
+== Pending brazilian_portuguese translation 937bd25ee3
 
 Some fonts could not be loaded. Check the local console for details.
 == Algumas fontes não puderam ser carregadas. Verifique o console local para detalhes.
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == Iniciar reprodução de fantasmas
 
+Start QmLive full match demo recording
+== Pending brazilian_portuguese translation 02c7967998
+
 Start recording a demo
 == Iniciar gravação de uma demo
 
@@ -6965,7 +7112,7 @@ Stats notes
 == Notas de estatísticas
 
 Status
-== Status
+== Pending brazilian_portuguese translation a5f64d97b5
 
 Status Bar
 == Barra de Status
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == Esquema de Status:
 
+Stop match record
+== Pending brazilian_portuguese translation b05756425a
+
 Stop practice
 == Parar prática
+
+Stop QmLive full match demo recording
+== Pending brazilian_portuguese translation 06846a82d2
 
 Stop record
 == Parar gravação
@@ -7046,7 +7199,7 @@ Suicides
 == Suicídios
 
 Super
-== Super
+== Pending brazilian_portuguese translation 2152eee828
 
 Support ♥
 == Apoie ♥
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == A troca não está disponível em servidores solo forçados.
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Pending brazilian_portuguese translation f2a4eb2beb
+
 Switch
 == Alternar
 
 Switch failed
 == Falha na alternância
-
-Switch inactive tee to grenade
-== Switch inactive tee to grenade
-
-Switch inactive tee to gun
-== Switch inactive tee to gun
-
-Switch inactive tee to hammer
-== Switch inactive tee to hammer
-
-Switch inactive tee to laser
-== Switch inactive tee to laser
-
-Switch inactive tee to next weapon
-== Switch inactive tee to next weapon
-
-Switch inactive tee to previous weapon
-== Switch inactive tee to previous weapon
-
-Switch inactive tee to shotgun
-== Switch inactive tee to shotgun
 
 Switch interval
 == Intervalo de alternância
@@ -7160,7 +7295,7 @@ System prompt text color
 == Cor do texto de prompt do sistema
 
 Tags
-== Tags
+== Pending brazilian_portuguese translation e378736fa4
 
 Take a screenshot
 == Tirar uma captura de tela
@@ -7175,13 +7310,16 @@ Target language ratio
 == Proporção do idioma alvo
 
 TClient
-== TClient
+== Pending brazilian_portuguese translation 92f9151dfc
 
 TClient Developers
 == Desenvolvedores do TClient
 
 TClient Links
 == Links do TClient
+
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Pending brazilian_portuguese translation 8b34b529a6
 
 Team
 == Equipe
@@ -7259,10 +7397,13 @@ Teams are not available on this server; if the team is locked, any team member d
 == Times não estão disponíveis neste servidor; se o time estiver trancado, qualquer membro do time que morrer matará todo o time
 
 Tee
-== Tee
+== Pending brazilian_portuguese translation abbe0c1bce
 
 Tee 0.7
-== Tee 0.7
+== Pending brazilian_portuguese translation 85ad15d24f
+
+Tee appearance
+== Aparência do Tee
 
 Tee hitbox
 == Hitbox do Tee
@@ -7283,7 +7424,7 @@ Tee Trails
 == Rastros do Tee
 
 Tele
-== Tele
+== Pending brazilian_portuguese translation 36cf99bc47
 
 Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart
 == Teleportar câmera de espectador livre entre tele-in/out ou checkpoint tele pairando e uma contraparte correspondente
@@ -7343,7 +7484,7 @@ Temporary free camera
 == Câmera livre temporária
 
 Tencent Cloud
-== Tencent Cloud
+== Pending brazilian_portuguese translation 5c7fd6b5c5
 
 Tencent Cloud SecretId
 == ID secreto da Tencent Cloud
@@ -7377,6 +7518,12 @@ The best voice chat, of course!
 
 The Config tab reuses QmClient's client config browser
 == A aba Config reutiliza o navegador de configuração do cliente do QmClient
+
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== Pending brazilian_portuguese translation 19757b7fbf
+
+The extra menu with the given number is activated.
+== Pending brazilian_portuguese translation 01c254ecc9
 
 The force pause timer is now over, you can exit with /spec
 == O temporizador de pausa forçada terminou, você pode sair com /spec
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == Diretório de temas
+
+There are no Tutorial servers available
+== Pending brazilian_portuguese translation 33c904d067
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == Há alterações não salvas no editor de controles de toque. Salvar primeiro é recomendado.
@@ -7493,7 +7643,7 @@ This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips.
 == Esta dica é fornecida por ui_widget::Tooltip, uma camada fina sobre CTooltips.
 
 tile
-== tile
+== Pending brazilian_portuguese translation b23b4a6504
 
 Tile outlines
 == Contornos de tiles
@@ -7622,13 +7772,13 @@ Too many translation tasks
 == Muitas tarefas de tradução
 
 Total
-== Total
+== Pending brazilian_portuguese translation 4e31231c86
 
 Total friends
 == Total de amigos
 
 Total: %d save(s)
-== Total: %d save(s)
+== Pending brazilian_portuguese translation 3b215b9956
 
 Traditional
 == Tradicional
@@ -7727,7 +7877,7 @@ Tune variable to value or show current value
 == Ajustar variável para valor ou mostrar valor atual
 
 Tutorial
-== Tutorial
+== Pending brazilian_portuguese translation 6afb3eb052
 
 Twinkle strength
 == Intensidade do brilho
@@ -7770,6 +7920,9 @@ UI opacity
 
 UI scale
 == Escala da interface
+
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== Pending brazilian_portuguese translation 8e87c8201f
 
 UI大小百分比 (UI scale percentage)
 == Porcentagem do tamanho da UI
@@ -7939,6 +8092,9 @@ Update notice
 Update or add a specific war group
 == Atualizar ou adicionar um grupo de guerra específico
 
+Update Rate
+== Pending brazilian_portuguese translation 66d58d3b74
+
 Updating feature list...
 == Atualizando lista de recursos...
 
@@ -8026,11 +8182,14 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == Usar grupos da lista de guerra para o indicador
 
+Uses the active action with the current aiming position.
+== Pending brazilian_portuguese translation 09f8a8b8ae
+
 v = Velocity
 == v = Velocidade
 
 V-Sync
-== V-Sync
+== Pending brazilian_portuguese translation dabd7285d9
 
 VAD 允许名单（逗号分隔）
 == Lista de permissão do VAD (separada por vírgulas)
@@ -8077,11 +8236,23 @@ View switch found (at offset) with given number
 View tele found (at offset) with given number
 == Ver tele encontrado (no offset) com o número dado
 
+Virtual joystick which always uses fire.
+== Pending brazilian_portuguese translation 42ab0b77ab
+
+Virtual joystick which always uses hook.
+== Pending brazilian_portuguese translation 0cd055e92c
+
+Virtual joystick which only aims without using an action.
+== Pending brazilian_portuguese translation aac6631ca1
+
+Virtual joystick which uses the active action.
+== Pending brazilian_portuguese translation a8fd7bf56e
+
 Visibility
 == Visibilidade
 
 Visual
-== Visual
+== Pending brazilian_portuguese translation 9e490a27b9
 
 Visual: Effects
 == Visual: Efeitos
@@ -8111,7 +8282,7 @@ Voice distance radius (tiles)
 == Raio de distância de voz (tiles)
 
 Volume
-== Volume
+== Pending brazilian_portuguese translation d5d3afe51b
 
 Vote a map by name
 == Votar em um mapa pelo nome
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == Aguarde a votação atual terminar antes de convocar uma nova.
+
+Waiting for local server to start…
+== Pending brazilian_portuguese translation 8aff4e6480
+
+Waiting for local server to stop…
+== Pending brazilian_portuguese translation 516dfcf582
 
 Waiting for snapshot
 == Aguardando snapshot
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == Animação da roda
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== Quando o Tee arco-íris do TClient está ativado, este recurso não tem efeito.
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Quando você cruza a linha de largada, mostre um fantasma replicando os movimentos do seu melhor tempo
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == Você só pode expulsar membros do seu time
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== Pending brazilian_portuguese translation a3bbf29fdc
+
 You can now jump %s times
 == Você pode agora pular %s vezes
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == Você pode ver outros jogadores. Para desabilitar, use o cliente DDNet e digite /showothers
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== Pending brazilian_portuguese translation 241e8995ed
 
 You can shoot others with grenade
 == Você pode atirar em outros com granada
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Você não está em um time com /practice ativado. Note que você não pode ganhar um rank com a prática ativada.
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== Pending brazilian_portuguese translation 6fc81340aa
+
 You're the last one!
 == Você é o último!
 
@@ -8603,7 +8792,7 @@ Your timeout code has been set. 0.7 clients can not reclaim their tees on timeou
 == Seu código de timeout foi definido. Clientes 0.7 não podem recuperar seus tees no timeout; no entanto, um cliente 0.6 pode reivindicar seu tee
 
 z = Zoom
-== z = Zoom
+== Pending brazilian_portuguese translation 558fca386e
 
 Zen Mode
 == Modo Zen
@@ -8612,13 +8801,13 @@ Zen mode key
 == Tecla do modo Zen
 
 Zhipu AI
-== Zhipu AI
+== Pending brazilian_portuguese translation 04498fbc68
 
 Zhipu API key
 == Chave da API Zhipu
 
 Zoom
-== Zoom
+== Pending brazilian_portuguese translation bb57c0cfee
 
 Zoom decrease
 == Diminuir zoom
@@ -8628,6 +8817,9 @@ Zoom in
 
 Zoom increase
 == Aumentar zoom
+
+Zoom is allowed on this server.
+== Pending brazilian_portuguese translation db12e4ad24
 
 Zoom out
 == Diminuir zoom
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == Intensidade da visão dinâmica (0 - 200)
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== Pending brazilian_portuguese translation b2c15101f3
+
 压缩器攻击时间（毫秒）
 == Tempo de ataque do compressor (ms)
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == Modo de filtro de visibilidade
+
+同时循环分身自定义 Tee 色调
+== Pending brazilian_portuguese translation 4af60953ce
 
 同组全图收听
 == Ouvir todo o mapa no mesmo grupo
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == Cor gradiente do texto de mensagem do cliente
 
+将 Best input 应用于其他 Tee
+== Pending brazilian_portuguese translation 9c728436ec
+
 将 Q 弹 Tee 形变应用到其他玩家
 == Aplicar deformação do Tee elástico a outros jogadores
+
+将 Saiko+ 应用于其他 Tee
+== Pending brazilian_portuguese translation 83ec5b8a22
 
 将性能调试日志写入专用文件
 == Gravar log de depuração de desempenho em arquivo dedicado
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == Alpha da entidade de sobreposição do bloco alternável (0-100)
+
+循环本体自定义 Tee 色调
+== Pending brazilian_portuguese translation 3e1498ef7d
+
+循环本体自定义 Tee 色调速度（度/秒）
+== Pending brazilian_portuguese translation da68a1b5f8
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== Pending brazilian_portuguese translation b31dc066f5
 
 忽略语音距离衰减
 == Ignorar atenuação de distância de voz
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == Endpoint do ZhiPu AI (deixe em branco para usar o padrão)
 
+暂停时隐藏歌词
+== Pending brazilian_portuguese translation 30fbad942b
+
 替换方式 0=Regex 1=Full 2=Both
 == Modo de substituição 0=Regex 1=Completo 2=Ambos
+
+未找到歌词时隐藏（而非显示提示）
+== Pending brazilian_portuguese translation 7ceff4d700
 
 未播放词颜色
 == Unplayed word color
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == Auto fetch lyrics online when a new song is detected
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== Pending brazilian_portuguese translation f1a1c5769c
+
 歌词 HTTP 请求超时 ms
 == Lyrics HTTP request timeout ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == Cor da linha atual da letra
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== Pending brazilian_portuguese translation 026adf84a2
 
 歌词描边透明度
 == Opacidade do contorno da letra
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == Lyrics overall opacity percent
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== Pending brazilian_portuguese translation 13b66418a7
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == Lyrics per-source match thresholds
@@ -9598,6 +9826,9 @@ Zoom out
 自动获取全图玩家皮肤并作为轮换队列
 == Obter automaticamente skins de todos os jogadores do mapa e usar como fila de rotação
 
+自动调整预测边距（关闭后固定使用基础预测边距）
+== Pending brazilian_portuguese translation f894cbfddc
+
 自动跟随好友换服延迟（秒）
 == Atraso para seguir automaticamente amigo ao trocar de servidor (segundos)
 
@@ -9880,7 +10111,7 @@ Multiply
 
 [Assets editor blend mode]
 Normal
-== Normal
+== Pending brazilian_portuguese translation c288835a7e
 
 [Assets editor blend mode]
 Overlay
@@ -9932,7 +10163,7 @@ Live
 
 [Demo player duration]
 %s min.
-== %s min.
+== Pending brazilian_portuguese translation 5d146e23ef
 
 [Demo player duration]
 %s sec.
@@ -10016,7 +10247,7 @@ Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.c
 
 [Hammer Mode]
 Normal
-== Normal
+== Pending brazilian_portuguese translation c288835a7e
 
 [Hammer Mode]
 Rotate with cursor
@@ -10028,7 +10259,7 @@ Rotate with cursor like gun
 
 [Hertz]
 Hz
-== Hz
+== Pending brazilian_portuguese translation f82d63a6ad
 
 [Important alert message]
 Press Esc or Tab to dismiss…
@@ -10048,7 +10279,7 @@ Width
 
 [Predefined touch button behaviors]
 Emoticon
-== Emoticon
+== Pending brazilian_portuguese translation 83f94f2d75
 
 [Predefined touch button behaviors]
 Extra Menu
@@ -10152,7 +10383,7 @@ Following %s
 
 [Spectating Camera Mode Icon]
 AUTO
-== AUTO
+== Pending brazilian_portuguese translation 5cd2554fae
 
 [Spectators]
 %d others…
@@ -10164,7 +10395,7 @@ Play
 
 [Team and size]
 %d\n(%d/%d)
-== %d\n(%d/%d)
+== Pending brazilian_portuguese translation 5b14120b35
 
 [Team size]
 maximum
@@ -10188,7 +10419,7 @@ required
 
 [Team status]
 solo
-== solo
+== Pending brazilian_portuguese translation 7aa25295f6
 
 [Touch button behavior]
 Bind

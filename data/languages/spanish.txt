@@ -1,5 +1,5 @@
  min
-==  min
+== Pending spanish translation 451255d7fc
 
  seconds
 == segundos
@@ -11,19 +11,19 @@
 == "%s" no es compatible con pnglite y no puede ser cargado por versiones antiguas de DDNet
 
 %.2f KiB
-== %.2f KiB
+== Pending spanish translation 4cba9a9d40
 
 %.2f MiB
-== %.2f MiB
+== Pending spanish translation 84519443fe
 
 %c Team %d
 == %c Equipo %d
 
 %d dummies
-== %d dummies
+== Pending spanish translation 27345bc4e6
 
 %d dummy
-== %d dummy
+== Pending spanish translation 4bbf7d6605
 
 %d items selected
 == %d elementos seleccionados
@@ -65,7 +65,7 @@
 == %d usuarios
 
 %d/%d KiB (%.1f KiB/s)
-== %d/%d KiB (%.1f KiB/s)
+== Pending spanish translation 3f94e8bceb
 
 %ds left
 == Quedan %d s
@@ -83,7 +83,7 @@
 == Quedan %i segundos
 
 %s (/%s %s)
-== %s (/%s %s)
+== Pending spanish translation 8eee0bf484
 
 %s and %s have swapped
 == %s y %s han intercambiado
@@ -273,6 +273,9 @@ A screenshot with this name already exists
 
 A Tee
 == Un Tee
+
+A vote is currently active.
+== Pending spanish translation ffd492c82c
 
 Abort
 == Cancelar
@@ -547,6 +550,9 @@ Allows maps to render with more detail
 Alpha
 == Alfa
 
+Also apply to dummy
+== Aplicar también al dummy
+
 Always show
 == Mostrar siempre
 
@@ -719,7 +725,7 @@ Attempt to change your name when near finish
 == Intentar cambiar tu nombre cerca de la meta
 
 Audio
-== Audio
+== Pending spanish translation 5837fe3f8d
 
 Audio backend init failed
 == Fallo al iniciar el backend de audio
@@ -761,7 +767,7 @@ Authorized player forced vote '%s'
 == El jugador autorizado forzó la votación '%s'
 
 Auto
-== Auto
+== Pending spanish translation 12a3021501
 
 auto
 == auto.
@@ -807,6 +813,9 @@ Auto manage IME while typing
 
 Auto map vote
 == Votar mapa automáticamente
+
+Auto margin
+== Pending spanish translation 934046a9e8
 
 Auto refresh server list
 == Actualizar automáticamente la lista de servidores
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Mejor
 
+Best input
+== Pending spanish translation 76733e22e6
+
+Best input others
+== Pending spanish translation db56b9569b
+
+Best input 平滑百分比
+== Pending spanish translation 62f6866ff5
+
+Best input 延迟补偿百分比
+== Pending spanish translation d0bb25f467
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Pending spanish translation 3eb4306750
+
+Best input 预测偏移（0.01 tick）
+== Pending spanish translation ff15c1df2d
+
 Best match
 == Best match setting
 
@@ -1031,7 +1058,7 @@ Browser
 == Examinar
 
 Brutal
-== Brutal
+== Pending spanish translation c4804f6a4f
 
 Bubble opacity
 == Opacidad de la burbuja
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == Botón - Activado
 
+Button browser
+== Pending spanish translation 8f7119a2ee
+
 Button position is outside of the screen.
 == La posición del botón está fuera de la pantalla.
 
 Buttons
 == Botones
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Pending spanish translation bcbe2b31b0
+
+Buttons with this behavior execute console commands like regular key binds.
+== Pending spanish translation 7c67126aec
+
+Buttons with this behavior execute some predefined actions.
+== Pending spanish translation 5526f65205
 
 c = Player position
 == c = Posición del jugador
@@ -1111,6 +1150,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == No se puede intercambiar: el otro jugador no está en tu equipo
 
+Card Appearance
+== Pending spanish translation 57b2cc1668
+
+Card background blur (high performance only)
+== Pending spanish translation 208260b029
+
+Card background blur and corner rounding
+== Pending spanish translation 95bb622ebd
+
 Category
 == Categoría
 
@@ -1142,7 +1190,7 @@ Changing name to %s near finish
 == Cambiando nombre a %s cerca de la meta
 
 Chat
-== Chat
+== Pending spanish translation 68997bb453
 
 Chat background color
 == Color de fondo del chat
@@ -1220,7 +1268,7 @@ Choose whether to browse replays or screenshots
 == Elegir si navegar por demos o capturas de pantalla
 
 Clan
-== Clan
+== Pending spanish translation 1741fc49e9
 
 Clan color in friends list
 == Color del Clan en la lista de amigos
@@ -1235,7 +1283,7 @@ Clan plates size
 == Tamaño de las placas de Clan
 
 Clan: %s
-== Clan: %s
+== Pending spanish translation fc57ed0198
 
 Classic
 == Clásico
@@ -1324,6 +1372,9 @@ Click to remove this community from favorites
 Click to remove this player from your friends list.
 == Haz clic para eliminar este jugador de tu lista de amigos.
 
+Click to restore full match
+== Pending spanish translation 523b40b29c
+
 Click to select server. Double click to join your friend.
 == Haz clic para seleccionar servidor. Haz doble clic para unirte a tu amigo.
 
@@ -1367,7 +1418,7 @@ Close the demo player
 == Cerrar el reproductor de demos
 
 Color
-== Color
+== Pending spanish translation 115d641401
 
 Colors
 == Colores
@@ -1382,7 +1433,7 @@ Colors of the hook collision line, in case of a possible collision with:
 == Colores de la línea de colisión de gancho, en caso de una posible colisión con:
 
 Combo
-== Combo
+== Pending spanish translation 3979002322
 
 Command
 == Comando
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == Copiar skin
 
+Corner segments
+== Pending spanish translation 34b170fdca
+
 Could not check for existing player with your name. Check your internet connection.
 == No se pudo comprobar si ya existe un jugador con tu nombre. Revisa tu conexión a internet.
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == No se pudo crear la solicitud de escaneo de reporte
+
+Could not find a Tutorial server. Check your internet connection.
+== Pending spanish translation b967d5c5cd
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Pending spanish translation 6c998c9529
 
 Could not find your Team
 == No se pudo encontrar tu equipo
@@ -1696,6 +1756,9 @@ Cut segments
 Cute:
 == Lindo:
 
+Cycle custom Tee hue
+== Ciclar tono personalizado del Tee
+
 Cycle through emotes
 == Ciclar entre emotes
 
@@ -1718,7 +1781,7 @@ Days
 == Días
 
 DDmaX
-== DDmaX
+== Pending spanish translation 9c57bec6eb
 
 DDmaX Easy
 == DDmaX Fácil
@@ -1730,10 +1793,10 @@ DDmaX Nut
 == DDmaX Loco
 
 DDmaX Pro
-== DDmaX Pro
+== Pending spanish translation 46ba231103
 
 DDNet
-== DDNet
+== Pending spanish translation 20a1450238
 
 DDNet / Total CPU
 == DDNet / CPU total
@@ -1802,7 +1865,7 @@ Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 == Modo Deepfly (0=Normal, 1=DF, 2=HDF, 3=Personalizado)
 
 DeepSeek
-== DeepSeek
+== Pending spanish translation 95dbce93ab
 
 DeepSeek API Key
 == Clave de API de DeepSeek
@@ -1871,13 +1934,16 @@ Delete this preset
 == Eliminar esta preconfiguración
 
 Demo
-== Demo
+== Pending spanish translation 0abe0c8fab
 
 Demo effects
 == Efectos de demo
 
 Demo marker added
 == Marcador de demo añadido
+
+Demo player is currently active.
+== Pending spanish translation 42aad7b81e
 
 Demo target
 == Destino de la demo
@@ -1886,7 +1952,7 @@ Demofile: %s
 == Archivo de demo: %s
 
 Demos
-== Demos
+== Pending spanish translation dc956383e5
 
 Demos directory
 == Directorio de demos
@@ -1922,7 +1988,7 @@ Developers and sponsors
 == Desarrolladores y patrocinadores
 
 DF
-== DF
+== Pending spanish translation 5722b8bc2f
 
 Diamond
 == Diamante
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == Desactivar al recoger otras armas
+
+Disable QmLive team preview/render filter
+== Pending spanish translation 02e8b9804c
 
 Disabled
 == Deshabilitado
@@ -1973,7 +2042,7 @@ Disconnected
 == Desconectado
 
 Discord
-== Discord
+== Pending spanish translation abf57a318e
 
 Display mode
 == Modo de visualización
@@ -2132,7 +2201,7 @@ Dummies are not allowed on this server
 == No se permiten Dummies en este servidor
 
 Dummy
-== Dummy
+== Pending spanish translation 16f188505e
 
 Dummy Control: %s
 == Control del Dummy: %s
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == Gancho de Dummy
+
+Dummy is allowed on this server.
+== Pending spanish translation 53d0cdfae1
+
+Dummy is currently connected.
+== Pending spanish translation 69a55922da
 
 Dummy jump
 == Salto de Dummy
@@ -2243,7 +2318,7 @@ Edit touch controls
 == Editar controles táctiles
 
 Editor
-== Editor
+== Pending spanish translation b25bce2fbc
 
 Elastic
 == Elástico
@@ -2390,7 +2465,7 @@ Endless hook has been deactivated
 == El gancho infinito ha sido desactivado
 
 Endpoint
-== Endpoint
+== Pending spanish translation b8f5b7f610
 
 Endpoint (optional)
 == Endpoint (opcional)
@@ -2420,16 +2495,19 @@ Entity Preview
 == Vista previa de entidades
 
 entity_bg (Workshop)
-== entity_bg (Workshop)
+== Pending spanish translation 2419480368
 
 Erase items on the in game background
 == Borrar elementos en el fondo del juego
 
 Error
-== Error
+== Pending spanish translation d85b2b9ca5
 
 Error checking player name
 == Error al comprobar el nombre del jugador
+
+Error joining Tutorial server
+== Pending spanish translation c0879f2049
 
 Error loading communities
 == Error al cargar comunidades
@@ -2525,7 +2603,7 @@ Exported to %s
 == Exportado a %s
 
 Extras
-== Extras
+== Pending spanish translation f1dd90aef8
 
 f = Frame rate
 == f = Fotogramas por segundo
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Fuerza de reducción de ruido simple de respaldo
 
+Fast input
+== Pending spanish translation 07a2b5ddd4
+
 Fast input (reduce visual latency)
 == Entrada rápida (reduce la latencia visual)
 
@@ -2646,6 +2727,15 @@ File already exists, do you want to overwrite it?
 
 Filter connecting players
 == Filtrar jugadores conectándose
+
+Filter off
+== Pending spanish translation 633161ef8d
+
+Filter Team %d
+== Pending spanish translation 6da22e3cc0
+
+Filter: Team %d
+== Pending spanish translation 586085bf77
 
 Find all ban records for the specified IP address
 == Encontrar todos los registros de baneo para la dirección IP especificada
@@ -2708,10 +2798,10 @@ Found %d modules
 == Se encontraron %d módulos
 
 FPM
-== FPM
+== Pending spanish translation 6f263a4e2b
 
 FPS
-== FPS
+== Pending spanish translation ec249ab107
 
 Frags
 == Asesinatos
@@ -2789,10 +2879,13 @@ FSAA samples
 == Muestras FSAA
 
 FTAPI
-== FTAPI
+== Pending spanish translation bfb53118ca
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == La traducción automática de FTAPI está desactivada para evitar sobrecarga. Actívala en ajustes si es necesario.
+
+Full demo + sidecar
+== Pending spanish translation afcec9ef1a
 
 Full map listen in same room
 == Escuchar en todo el mapa en la misma sala
@@ -2843,7 +2936,7 @@ Gap between statusbar items
 == Espacio entre elementos de la barra de estado
 
 General
-== General
+== Pending spanish translation aa700f5115
 
 Getting game info
 == Obteniendo información del juego
@@ -2861,7 +2954,7 @@ Ghosts directory
 == Directorio de fantasmas
 
 Github
-== Github
+== Pending spanish translation efcbdbe0c1
 
 Give back right to vote to player with client ID
 == Devolver el derecho a voto al jugador con ID de cliente
@@ -2900,7 +2993,7 @@ Gives you infinite jump
 == Te da salto infinito
 
 Glitch
-== Glitch
+== Pending spanish translation 8bd87e8c3c
 
 Global toggle key
 == Tecla de activación global
@@ -3020,7 +3113,7 @@ Has save
 == Tiene guardado
 
 HDF
-== HDF
+== Pending spanish translation 25de2ebb58
 
 Heart
 == Corazón
@@ -3078,12 +3171,6 @@ Hide jump effects
 
 Hide kill/finish messages
 == Ocultar mensajes de muerte/finalización
-
-Hide lyrics when no lyrics are found instead of showing a hint
-== Ocultar letra cuando no se encuentre ninguna en lugar de mostrar una pista
-
-Hide lyrics while media is paused
-== Ocultar letra mientras el medio esté en pausa
 
 Hide map progress
 == Ocultar progreso del mapa
@@ -3188,19 +3275,19 @@ Hover for tooltip
 == Pasa el cursor para ver ayuda
 
 https://ddnet.org/discord
-== https://ddnet.org/discord
+== Pending spanish translation 9c49932c9a
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+== Pending spanish translation 55a65cc587
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
+== Pending spanish translation f4c852949f
 
 https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls
+== Pending spanish translation 4b8613bfb7
 
 HUD
-== HUD
+== Pending spanish translation d045454b73
 
 HUD editor preview
 == Vista previa del editor HUD
@@ -3216,6 +3303,9 @@ HUD 编辑器布局
 
 Hue
 == Tono
+
+Hue speed
+== Velocidad de tono
 
 i = Receive rate
 == i = Tasa de recepción
@@ -3331,6 +3421,9 @@ Input overlay
 Input overlay display
 == Visualización de superposición de entrada
 
+Input smoothing
+== Pending spanish translation fb7eee4b5a
+
 Input switch
 == Cambio de entrada
 
@@ -3344,10 +3437,13 @@ Intermediate
 == Intermedio
 
 Internet
-== Internet
+== Pending spanish translation f87935bb80
 
 Internet (From online source)
 == Internet (De fuente en línea)
+
+Interpolation
+== Pending spanish translation 631393169b
 
 Invalid client id to kick
 == ID de cliente no válido para expulsar
@@ -3410,7 +3506,7 @@ Jelly strength
 == Fuerza de la gelatina
 
 Jitter
-== Jitter
+== Pending spanish translation a5370575ae
 
 Join a team to enable practice mode, which means you can use /r, but can't earn a rank.
 == Únete a un equipo para activar el modo práctica, lo que significa que puedes usar /r, pero no puedes obtener un rango.
@@ -3442,6 +3538,9 @@ Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
 == Los mensajes de entrada, versión, reglas y ayuda permanecen en el chat en vez de aparecer como popups
 
+Joining Tutorial server
+== Pending spanish translation 90a1348334
+
 Jump
 == Saltar
 
@@ -3452,7 +3551,7 @@ k = Resend loss
 == k = Pérdida de reenvío
 
 Kaomoji
-== Kaomoji
+== Pending spanish translation 1b51af8840
 
 Karaoke edge softness
 == Karaoke edge softness setting
@@ -3527,7 +3626,7 @@ Label type
 == Tipo de etiqueta
 
 LAN
-== LAN
+== Pending spanish translation b5c3e6214d
 
 Language
 == Idioma
@@ -3558,6 +3657,9 @@ Last page in console
 
 Latency
 == Latencia
+
+Latency compensation
+== Pending spanish translation 462e438908
 
 Latency Jitter
 == Fluctuación de latencia
@@ -3599,7 +3701,7 @@ Length
 == Duración
 
 Lenny:
-== Lenny:
+== Pending spanish translation e3cba39cd2
 
 Lets you join team i (shows your team if left blank)
 == Te permite unirte al equipo i (muestra tu equipo si se deja en blanco)
@@ -3608,7 +3710,7 @@ Lht.
 == Brillo
 
 LibreTranslate
-== LibreTranslate
+== Pending spanish translation ee53790b75
 
 LibreTranslate API Key
 == Clave API de LibreTranslate
@@ -3683,13 +3785,13 @@ List players containing name or all players
 == Listar jugadores que contengan el nombre o todos los jugadores
 
 Literal
-== Literal
+== Pending spanish translation 66b77fe0c7
 
 Live director
 == Director en vivo
 
 LLM API
-== LLM API
+== Pending spanish translation 262655f8ac
 
 LLM provider
 == Proveedor de LLM
@@ -3779,7 +3881,7 @@ Local
 == Local
 
 Local + Dummy
-== Local + Dummy
+== Pending spanish translation 959c840b61
 
 Local ESLRC file
 == Local ESLRC file setting
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == Cerrar sesión de rcon
 
-Long press on a touch button to select it.
-== Mantén presionado un botón táctil para seleccionarlo.
-
 Low to high
 == De bajo a alto
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == Letra
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== Proxy HTTP para letras (ej. http://127.0.0.1:7890)
-
 Lyrics HTTP timeout
 == Lyrics HTTP timeout setting
-
-Lyrics local media library folders (use | as separator)
-== Carpetas de la biblioteca multimedia local para letras (usa | como separador)
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== Desplazamiento manual de la línea de tiempo de letras en ms (paso en tiempo real de 500 ms)
 
 Lyrics search type
 == Lyrics search type setting
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == Menú principal
-
-Make inactive tee fire
-== Make inactive tee fire
-
-Make inactive tee hook
-== Make inactive tee hook
-
-Make inactive tee jump
-== Make inactive tee jump
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == Asegúrate de que el backend admita parámetros de pensamiento compatibles con OpenAI
@@ -3926,7 +4007,7 @@ Manage categories
 == Gestionar categorías
 
 Manual
-== Manual
+== Pending spanish translation 35e081d602
 
 Manual concurrency: %d
 == Concurrencia manual: %d
@@ -4112,16 +4193,10 @@ Modules snap to screen edges, center lines and other HUD modules while dragging
 == Los módulos se ajustan a los bordes de la pantalla, líneas centrales y otros módulos HUD mientras se arrastran
 
 MOTD
-== MOTD
+== Pending spanish translation 0cfaca0460
 
 Mouse
 == Ratón
-
-Move inactive tee left
-== Move inactive tee left
-
-Move inactive tee right
-== Move inactive tee right
 
 Move left
 == Mover a la izquierda
@@ -4316,7 +4391,7 @@ Nickname
 == Apodo
 
 No
-== No
+== Pending spanish translation cb37d7b208
 
 No active QmClient reports yet
 == Aún no hay informes activos de QmClient
@@ -4481,7 +4556,7 @@ None
 == Ninguno
 
 Normal
-== Normal
+== Pending spanish translation 535993abe2
 
 Normal Color
 == Color normal
@@ -4562,7 +4637,7 @@ Offline
 == Desconectado
 
 Ohhhhhhhhhhhhhhhh
-== Ohhhhhhhhhhhhhhhh
+== Pending spanish translation dbe6cc49dd
 
 Ok
 == Aceptar
@@ -4581,6 +4656,9 @@ Online Players
 
 Only .wv files are supported right now.
 == Solo se admiten archivos .wv por ahora.
+
+Only affects custom Tee colors.
+== Solo afecta los colores personalizados del Tee.
 
 Only Apple Can Do
 == Solo Apple puede hacerlo
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == Abrir selector de color
+
+Open DDNet Wiki
+== Pending spanish translation 0b61dd3663
 
 Open emote selector
 == Abrir selector de emotes
@@ -4651,11 +4732,17 @@ Open the folder containing screenshots
 Open the saves file
 == Abrir el archivo de guardado
 
+Open the selected folder
+== Pending spanish translation 04a9a076da
+
+Open the selected screenshot
+== Pending spanish translation bd5cc59fa3
+
 Open the settings file
 == Abrir el archivo de configuración
 
 OpenAI
-== OpenAI
+== Pending spanish translation f1b2532948
 
 OpenAI API Key
 == Clave de API de OpenAI
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == Abierto
+
+Opens the emoticon selector (this does not work with binds).
+== Pending spanish translation e50e1aa9cd
+
+Opens the ingame menu immediately when released.
+== Pending spanish translation 85115b397c
+
+Opens the spectator menu (this does not work with binds).
+== Pending spanish translation 6452f47e28
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == Optar por no participar en el conteo de espectadores y ocultar el estado de autenticación a jugadores no autenticados (1 = oculto, 0 = mostrado)
@@ -4853,7 +4949,7 @@ Pie menu
 == Menú circular
 
 Ping
-== Ping
+== Pending spanish translation 73aef3cd76
 
 Ping the current server
 == Hacer ping al servidor actual
@@ -4872,6 +4968,9 @@ Play background music
 
 Play the current demo
 == Reproducir la demo actual
+
+Play the selected demo
+== Pending spanish translation 0f5cb63aee
 
 Play/Pause
 == Reproducir/Pausar
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == Indicador de jugador
+
+Player is currently authed in rcon.
+== Pending spanish translation ea1e95c996
+
+Player is ingame, i.e. not spectating.
+== Pending spanish translation 1695555ab5
 
 Player is on a different team
 == El jugador está en un equipo diferente
@@ -5026,6 +5131,9 @@ Prediction Margin
 Prediction margin
 == Margen de predicción
 
+Prediction offset
+== Pending spanish translation 344862db34
+
 Prediction time
 == Tiempo de predicción
 
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == Previsualizar archivo seleccionado
+
+Preview visibilities
+== Pending spanish translation 1f0cef0b7c
+
+Preview/render only one DDRace team from a full match demo
+== Pending spanish translation 0e48b6256b
+
+Preview/render only this team
+== Pending spanish translation a15376c781
 
 Previous
 == Anterior
@@ -5174,13 +5291,13 @@ Q 弹 Tee 形变持续时间
 == Duración de deformación de Tee elástico
 
 Qm
-== Qm
+== Pending spanish translation e4653ae575
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: el índice debe estar entre 1 y %d
 
 QmClient
-== QmClient
+== Pending spanish translation db01df3775
 
 QmClient chat log
 == Registro de chat de QmClient
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == Ajustes de QmClient
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== Pending spanish translation 82cb284383
+
+QmLiveClient：启用单队隔离画面过滤
+== Pending spanish translation 311a2baa79
+
+QmLiveClient：启用单队隔离音效过滤
+== Pending spanish translation 75cb9f6bf9
+
+QmLiveClient：完成排名卡片不透明度百分比
+== Pending spanish translation ccac5441b1
+
+QmLiveClient：完成排名卡片显示秒数
+== Pending spanish translation 409e333c1d
+
+QmLiveClient：完成排名卡片缩放百分比
+== Pending spanish translation c6934b5f28
+
+QmLiveClient：完整比赛 demo 录制开关
+== Pending spanish translation 19208952de
+
+QmLiveClient：排名 HUD 队伍范围上限
+== Pending spanish translation f8a43d35ef
+
+QmLiveClient：排名 HUD 队伍范围下限
+== Pending spanish translation 3179ab0f14
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== Pending spanish translation 5d102aecc8
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== Pending spanish translation 959ce00c3d
+
+QmLiveClient：显示队伍完成排名卡片
+== Pending spanish translation 8c2b6b56a1
+
+QmLiveClient：隐藏非目标队伍完成提示
+== Pending spanish translation 14b1b8ba50
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == Intensidad de animación de QmUi: 0=Desactivado 1=Reducido 2=Completo
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== Pending spanish translation 54786e631d
 
 QQ group: 1076765929 (click to copy)
 == Grupo QQ: 1076765929 (haz clic para copiar)
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == Grabar demo
 
+Record match
+== Pending spanish translation efbaad5a45
+
 Record to a file
 == Grabar en un archivo
 
@@ -5353,8 +5515,11 @@ Refresh interval
 Refresh Rate
 == Tasa de refresco
 
+Refresh the demo list
+== Pending spanish translation 1ef58ceaa4
+
 Regex
-== Regex
+== Pending spanish translation bca2f3aa64
 
 Region
 == Región
@@ -5731,6 +5896,9 @@ Restart the client
 Restarting. Please wait…
 == Reiniciando. Por favor espera…
 
+Retrying…
+== Pending spanish translation f331ea868f
+
 Rifle Laser Inner Color
 == Color interior del láser del rifle
 
@@ -5800,6 +5968,9 @@ Run server
 SA
 == Sudamérica
 
+Saiko+ 输入量（0.01 tick）
+== Pending spanish translation 369fbf26a6
+
 Same as "vote no"
 == Igual que "votar no"
 
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == Guardar los últimos %d min
 
-Save power by lowering refresh rate (higher input latency)
-== Ahorrar energía reduciendo la tasa de refresco (mayor latencia de entrada)
+Save power by lowering update rate (higher input latency)
+== Pending spanish translation dfe7a9e88e
 
 Save skin
 == Guardar skin
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == Decir en el chat
 
-Say in chat as inactive tee
-== Say in chat as inactive tee
-
 Say in team chat
 == Decir en el chat de equipo
-
-Say in team chat as inactive tee
-== Say in team chat as inactive tee
 
 Scanning current server
 == Escaneando el servidor actual
@@ -6036,27 +6201,6 @@ Send
 
 Send & Receive
 == Enviar y recibir
-
-Send /load as inactive tee
-== Send /load as inactive tee
-
-Send /lock as inactive tee
-== Send /lock as inactive tee
-
-Send /pause as inactive tee
-== Send /pause as inactive tee
-
-Send /rescue as inactive tee
-== Send /rescue as inactive tee
-
-Send /save as inactive tee
-== Send /save as inactive tee
-
-Send /spec as inactive tee
-== Send /spec as inactive tee
-
-Send /team as inactive tee
-== Send /team as inactive tee
 
 Send a moderator alert message to player
 == Enviar un mensaje de alerta de moderador al jugador
@@ -6710,7 +6854,7 @@ Silently disconnect from the current server while keeping Tee timeout protection
 == Desconectarse silenciosamente del servidor actual mientras se mantiene la protección de tiempo de espera del Tee
 
 Simple
-== Simple
+== Pending spanish translation 92c8f053cb
 
 Simple noise reduction
 == Reducción de ruido simple
@@ -6728,7 +6872,7 @@ Size of key press icons
 == Tamaño de los iconos de pulsaciones de teclas
 
 Skin
-== Skin
+== Pending spanish translation 6ba1375edf
 
 Skin could not be found.
 == No se pudo encontrar el skin.
@@ -6800,7 +6944,7 @@ Smooth fade
 == Fundido suave
 
 SMTC
-== SMTC
+== Pending spanish translation f486730ddf
 
 Snap threshold
 == Umbral de ajuste
@@ -6809,7 +6953,7 @@ Snapshot Latency
 == Latencia de snapshots
 
 Social
-== Social
+== Pending spanish translation 989a3a21bb
 
 Solid
 == Sólido
@@ -6818,7 +6962,7 @@ Solid tile outline opacity
 == Opacidad del contorno de casilla sólida
 
 Solo
-== Solo
+== Pending spanish translation f03ef639ac
 
 Some fonts could not be loaded. Check the local console for details.
 == No se pudieron cargar algunas fuentes. Revisa la consola local para más detalles.
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == Iniciar reproducción de fantasmas
 
+Start QmLive full match demo recording
+== Pending spanish translation 26d5fd8404
+
 Start recording a demo
 == Iniciar grabación de una demo
 
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == Esquema de Estado:
 
+Stop match record
+== Pending spanish translation 20a4e47958
+
 Stop practice
 == Detener práctica
+
+Stop QmLive full match demo recording
+== Pending spanish translation bcf6e6cade
 
 Stop record
 == Detener grabación
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == El intercambio no está disponible en servidores de solo forzado.
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Pending spanish translation bb4784ebb5
+
 Switch
 == Cambiar
 
 Switch failed
 == Cambio fallido
-
-Switch inactive tee to grenade
-== Switch inactive tee to grenade
-
-Switch inactive tee to gun
-== Switch inactive tee to gun
-
-Switch inactive tee to hammer
-== Switch inactive tee to hammer
-
-Switch inactive tee to laser
-== Switch inactive tee to laser
-
-Switch inactive tee to next weapon
-== Switch inactive tee to next weapon
-
-Switch inactive tee to previous weapon
-== Switch inactive tee to previous weapon
-
-Switch inactive tee to shotgun
-== Switch inactive tee to shotgun
 
 Switch interval
 == Intervalo de cambio
@@ -7175,13 +7310,16 @@ Target language ratio
 == Proporción del idioma de destino
 
 TClient
-== TClient
+== Pending spanish translation f48a822140
 
 TClient Developers
 == Desarrolladores de TClient
 
 TClient Links
 == Enlaces de TClient
+
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Pending spanish translation e2d12d820e
 
 Team
 == Equipo
@@ -7259,10 +7397,13 @@ Teams are not available on this server; if the team is locked, any team member d
 == Los equipos no están disponibles en este servidor; si el equipo está bloqueado, cualquier miembro que muera matará a todo el equipo
 
 Tee
-== Tee
+== Pending spanish translation cb922ea12f
 
 Tee 0.7
-== Tee 0.7
+== Pending spanish translation 89484c2abe
+
+Tee appearance
+== Apariencia del Tee
 
 Tee hitbox
 == Hitbox del Tee
@@ -7283,7 +7424,7 @@ Tee Trails
 == Estelas de Tee
 
 Tele
-== Tele
+== Pending spanish translation a1b5b53d95
 
 Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart
 == Teletransportar la cámara libre del espectador entre el teleport de entrada/salida o el checkpoint tele señalado y una contraparte coincidente
@@ -7343,7 +7484,7 @@ Temporary free camera
 == Cámara libre temporal
 
 Tencent Cloud
-== Tencent Cloud
+== Pending spanish translation 0280eac21b
 
 Tencent Cloud SecretId
 == ID secreto de Tencent Cloud
@@ -7377,6 +7518,12 @@ The best voice chat, of course!
 
 The Config tab reuses QmClient's client config browser
 == La pestaña Config reutiliza el navegador de configuración del cliente de QmClient
+
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== Pending spanish translation cd7b52222e
+
+The extra menu with the given number is activated.
+== Pending spanish translation fa39b9f39d
 
 The force pause timer is now over, you can exit with /spec
 == El temporizador de pausa forzada ha terminado, puedes salir con /spec
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == Directorio de temas
+
+There are no Tutorial servers available
+== Pending spanish translation 7078ded7aa
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == Hay cambios sin guardar en el editor de controles táctiles. Se recomienda guardar primero.
@@ -7622,7 +7772,7 @@ Too many translation tasks
 == Demasiadas tareas de traducción
 
 Total
-== Total
+== Pending spanish translation 7564f748e2
 
 Total friends
 == Amigos totales
@@ -7727,7 +7877,7 @@ Tune variable to value or show current value
 == Ajustar variable a valor o mostrar valor actual
 
 Tutorial
-== Tutorial
+== Pending spanish translation 7b107d83b2
 
 Twinkle strength
 == Intensidad de destello
@@ -7770,6 +7920,9 @@ UI opacity
 
 UI scale
 == Escala de UI
+
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== Pending spanish translation 63f3792495
 
 UI大小百分比 (UI scale percentage)
 == Porcentaje de tamaño de UI
@@ -7939,6 +8092,9 @@ Update notice
 Update or add a specific war group
 == Actualizar o añadir un grupo de guerra específico
 
+Update Rate
+== Pending spanish translation 040646f052
+
 Updating feature list...
 == Actualizando lista de funciones...
 
@@ -8026,11 +8182,14 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == Usar grupos de la lista de guerra para el indicador
 
+Uses the active action with the current aiming position.
+== Pending spanish translation 99780f2eb9
+
 v = Velocity
 == v = Velocidad
 
 V-Sync
-== V-Sync
+== Pending spanish translation 981dc14195
 
 VAD 允许名单（逗号分隔）
 == Lista de permitidos de VAD (separada por comas)
@@ -8077,11 +8236,23 @@ View switch found (at offset) with given number
 View tele found (at offset) with given number
 == Ver teletransporte encontrado (en desplazamiento) con el número dado
 
+Virtual joystick which always uses fire.
+== Pending spanish translation ab277ac2d8
+
+Virtual joystick which always uses hook.
+== Pending spanish translation 04b337147f
+
+Virtual joystick which only aims without using an action.
+== Pending spanish translation c0e2ae38e1
+
+Virtual joystick which uses the active action.
+== Pending spanish translation cd62264319
+
 Visibility
 == Visibilidad
 
 Visual
-== Visual
+== Pending spanish translation 5f84e20448
 
 Visual: Effects
 == Visual: Efectos
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == Espera a que termine la votación actual antes de convocar una nueva.
+
+Waiting for local server to start…
+== Pending spanish translation 8bed5136af
+
+Waiting for local server to stop…
+== Pending spanish translation 3c6ab91d9c
 
 Waiting for snapshot
 == Esperando instantánea
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == Animación de la rueda
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== Cuando el Tee arcoíris de TClient está activado, esta función no tiene efecto.
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Al cruzar la línea de salida, muestra un fantasma que replica los movimientos de tu mejor tiempo
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == Solo puedes expulsar a los miembros de tu equipo
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== Pending spanish translation 17c1f98600
+
 You can now jump %s times
 == Ahora puedes saltar %s veces
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == Puedes ver a otros jugadores. Para deshabilitar esto, usa el cliente DDNet y escribe /showothers
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== Pending spanish translation c5327a4646
 
 You can shoot others with grenade
 == Puedes disparar a otros con granada
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == No estás en un equipo con /practice activado. Ten en cuenta que no puedes obtener un rango con la práctica habilitada.
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== Pending spanish translation 169a0a58a2
+
 You're the last one!
 == ¡Eres el último!
 
@@ -8603,7 +8792,7 @@ Your timeout code has been set. 0.7 clients can not reclaim their tees on timeou
 == Tu código de timeout ha sido configurado. Los clientes 0.7 no pueden recuperar sus tees al hacer timeout; sin embargo, un cliente 0.6 puede reclamar tu tee
 
 z = Zoom
-== z = Zoom
+== Pending spanish translation 032df950bf
 
 Zen Mode
 == Modo Zen
@@ -8612,13 +8801,13 @@ Zen mode key
 == Tecla del modo Zen
 
 Zhipu AI
-== Zhipu AI
+== Pending spanish translation 8bc1e6f07a
 
 Zhipu API key
 == Clave API de Zhipu
 
 Zoom
-== Zoom
+== Pending spanish translation 0047e8104f
 
 Zoom decrease
 == Reducir zoom
@@ -8628,6 +8817,9 @@ Zoom in
 
 Zoom increase
 == Aumentar zoom
+
+Zoom is allowed on this server.
+== Pending spanish translation d86c3687a8
 
 Zoom out
 == Alejar
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == Intensidad de la cámara dinámica (0 - 200)
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== Pending spanish translation 191ba9840b
+
 压缩器攻击时间（毫秒）
 == Tiempo de ataque del compresor (ms)
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == Modo de filtro de visibilidad
+
+同时循环分身自定义 Tee 色调
+== Pending spanish translation 581bdda9e8
 
 同组全图收听
 == Escuchar todo el mapa en el mismo grupo
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == Color degradado del texto de mensajes del cliente
 
+将 Best input 应用于其他 Tee
+== Pending spanish translation 4cde443dac
+
 将 Q 弹 Tee 形变应用到其他玩家
 == Aplicar deformación de Tee elástico a otros jugadores
+
+将 Saiko+ 应用于其他 Tee
+== Pending spanish translation 42ac517e0a
 
 将性能调试日志写入专用文件
 == Escribir registros de depuración de rendimiento en un archivo dedicado
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == Alpha de entidades de superposición de tiles de interruptor (0-100)
+
+循环本体自定义 Tee 色调
+== Pending spanish translation e431dc56f8
+
+循环本体自定义 Tee 色调速度（度/秒）
+== Pending spanish translation 9e3723ec25
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== Pending spanish translation c6d2f4a1f6
 
 忽略语音距离衰减
 == Ignorar atenuación de distancia de voz
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == Endpoint de ZhiPu AI (dejar vacío para usar el predeterminado)
 
+暂停时隐藏歌词
+== Pending spanish translation d47357e48f
+
 替换方式 0=Regex 1=Full 2=Both
 == Modo de reemplazo 0=Regex 1=Completo 2=Ambos
+
+未找到歌词时隐藏（而非显示提示）
+== Pending spanish translation 8d5d3341a1
 
 未播放词颜色
 == Unplayed word color
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == Auto fetch lyrics online when a new song is detected
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== Pending spanish translation 0ad50a0c47
+
 歌词 HTTP 请求超时 ms
 == Lyrics HTTP request timeout ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == Color de la línea actual de la letra
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== Pending spanish translation ab7d5f6b05
 
 歌词描边透明度
 == Opacidad del contorno de la letra
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == Lyrics overall opacity percent
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== Pending spanish translation 9e5330bac2
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == Lyrics per-source match thresholds
@@ -9598,6 +9826,9 @@ Zoom out
 自动获取全图玩家皮肤并作为轮换队列
 == Obtener automáticamente las skins de todos los jugadores del mapa y usarlas como cola de rotación
 
+自动调整预测边距（关闭后固定使用基础预测边距）
+== Pending spanish translation 1c70a99f5c
+
 自动跟随好友换服延迟（秒）
 == Retraso al seguir automáticamente a un amigo al cambiar de servidor (segundos)
 
@@ -9880,7 +10111,7 @@ Multiply
 
 [Assets editor blend mode]
 Normal
-== Normal
+== Pending spanish translation 535993abe2
 
 [Assets editor blend mode]
 Overlay
@@ -9932,7 +10163,7 @@ Live
 
 [Demo player duration]
 %s min.
-== %s min.
+== Pending spanish translation 0be1f390f2
 
 [Demo player duration]
 %s sec.
@@ -10016,7 +10247,7 @@ Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.c
 
 [Hammer Mode]
 Normal
-== Normal
+== Pending spanish translation 535993abe2
 
 [Hammer Mode]
 Rotate with cursor
@@ -10028,7 +10259,7 @@ Rotate with cursor like gun
 
 [Hertz]
 Hz
-== Hz
+== Pending spanish translation 8b9ffa3e0c
 
 [Important alert message]
 Press Esc or Tab to dismiss…
@@ -10152,7 +10383,7 @@ Following %s
 
 [Spectating Camera Mode Icon]
 AUTO
-== AUTO
+== Pending spanish translation e386bb237e
 
 [Spectators]
 %d others…
@@ -10164,7 +10395,7 @@ Play
 
 [Team and size]
 %d\n(%d/%d)
-== %d\n(%d/%d)
+== Pending spanish translation a969a62e79
 
 [Team size]
 maximum
@@ -10188,7 +10419,7 @@ required
 
 [Team status]
 solo
-== solo
+== Pending spanish translation c32e45d9e1
 
 [Touch button behavior]
 Bind

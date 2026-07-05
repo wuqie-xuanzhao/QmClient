@@ -1341,6 +1341,16 @@ TEST(SettingsResourceJobs, RuntimeWarmupOnlyRunsOnSettingsPageWhenIdle)
 	EXPECT_FALSE(SettingsRuntimeWarmupShouldRun(false, true, false, false, false, false, false));
 }
 
+TEST(SettingsResourceJobs, RuntimePrewarmCallsitesRequireVisibleIdleSettingsPage)
+{
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus.cpp");
+
+	EXPECT_EQ(Menus.find("SettingsRuntimeWarmupShouldRun(\n\t\t\t\tg_Config.m_QmSettingsPrewarm != 0,\n\t\t\t\ttrue,"), std::string::npos);
+	EXPECT_NE(Menus.find("SettingsRuntimeWarmupShouldRun(\n\t\t\t\tg_Config.m_QmSettingsPrewarm != 0,\n\t\t\t\tm_MenuPage == PAGE_SETTINGS,"), std::string::npos);
+	EXPECT_NE(Menus.find("SettingsRuntimeWarmupShouldRun(\n\t\t\t\tg_Config.m_QmSettingsPrewarm != 0,\n\t\t\t\tm_GamePage == PAGE_SETTINGS,"), std::string::npos);
+	EXPECT_NE(Menus.find("m_SettingsPageSwitchActive || TransitionActive"), std::string::npos);
+}
+
 TEST(SettingsResourceJobs, IdlePrewarmSkipsImmediateModeRenderPasses)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/menus.cpp"));
@@ -2210,6 +2220,25 @@ TEST(SettingsWarmup, MenuTextPrebuildDoesNotRenderPages)
 	EXPECT_EQ(Menus.find("RenderSettingsQmClient(MainView, false, true)"), std::string::npos);
 	EXPECT_NE(TClient.find("PrewarmOnly"), std::string::npos);
 	EXPECT_NE(QmClient.find("PrewarmOnly"), std::string::npos);
+}
+
+TEST(SettingsWarmup, SettingsPrewarmDefaultDisabled)
+{
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSettingsPrewarm, qm_settings_prewarm, 0, 0, 1,"), std::string::npos);
+	EXPECT_EQ(Config.find("MACRO_CONFIG_INT(QmSettingsPrewarm, qm_settings_prewarm, 1, 0, 1,"), std::string::npos);
+}
+
+TEST(SettingsWarmup, TextPlanCollectionUsesPrewarmOnlyRenderers)
+{
+	const std::string Settings = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+	const std::string QmClient = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	EXPECT_NE(Settings.find("RenderSettingsTClient(ContentView, CollectingMenuTextPlan);"), std::string::npos);
+	EXPECT_NE(Settings.find("RenderSettingsQmClient(ContentView, false, CollectingMenuTextPlan);"), std::string::npos);
+	EXPECT_NE(QmClient.find("Ctx.m_pAnim = PrewarmOnly ? nullptr"), std::string::npos);
+	EXPECT_NE(QmClient.find("if(!PrewarmOnly)\n\t\t\tm_SettingsPageSwitchActive = m_SettingsPageSwitchActive || TabTransitionActive;"), std::string::npos);
 }
 
 TEST(SettingsWarmup, MenuTextPrebuildLogsRemainingMissingPlanItems)

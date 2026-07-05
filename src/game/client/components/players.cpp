@@ -22,6 +22,7 @@
 #include <game/client/components/flow.h>
 #include <game/client/components/qmclient/jelly_tee.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/tee_hue_cycle.h>
 #include <game/client/components/skins.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
@@ -1151,6 +1152,33 @@ void CPlayers::RenderPlayer(
 	const std::chrono::nanoseconds Now = time_get_nanoseconds();
 	const CTeeRenderInfo *pPreviousSkinInfo = ClientId >= 0 ? GameClient()->m_aClients[ClientId].SkinChangePreviousRenderInfo(Now) : nullptr;
 	const float SkinTransitionProgress = ClientId >= 0 ? GameClient()->m_aClients[ClientId].SkinChangeTransitionProgress(Now) : 1.0f;
+	CTeeRenderInfo PreviousSkinInfoHueCycle;
+	int LocalDummy = -1;
+	if(ClientId >= 0)
+	{
+		if(ClientId == GameClient()->m_aLocalIds[0])
+			LocalDummy = 0;
+		else if(ClientId == GameClient()->m_aLocalIds[1])
+			LocalDummy = 1;
+	}
+	if(LocalDummy >= 0 && (LocalDummy == 0 || g_Config.m_QmCycleTeeHueDummy != 0))
+	{
+		const bool UseCustomColors = LocalDummy != 0 ? g_Config.m_ClDummyUseCustomColor != 0 : g_Config.m_ClPlayerUseCustomColor != 0;
+		const bool UseCustomColors7 = LocalDummy != 0 ? (g_Config.m_ClDummy7UseCustomColorBody != 0 || g_Config.m_ClDummy7UseCustomColorFeet != 0) : (g_Config.m_ClPlayer7UseCustomColorBody != 0 || g_Config.m_ClPlayer7UseCustomColorFeet != 0);
+		SQmTeeHueCycleConfig HueCycleConfig;
+		HueCycleConfig.m_Enabled = g_Config.m_QmCycleTeeHue != 0;
+		HueCycleConfig.m_PlayerUsesCustomColors = !GameClient()->IsTeamPlay() && (UseCustomColors || UseCustomColors7);
+		HueCycleConfig.m_TClientRainbowTees = g_Config.m_TcRainbowTees != 0;
+		HueCycleConfig.m_SpeedDegreesPerSecond = g_Config.m_QmCycleTeeHueSpeed;
+		HueCycleConfig.m_TimeSeconds = Now.count() / 1000000000.0;
+		HueCycleConfig.m_SixupIndex = g_Config.m_ClDummy;
+		if(QmApplyTeeHueCycle(RenderInfo, HueCycleConfig) && pPreviousSkinInfo != nullptr)
+		{
+			PreviousSkinInfoHueCycle = *pPreviousSkinInfo;
+			QmApplyTeeHueCycle(PreviousSkinInfoHueCycle, HueCycleConfig);
+			pPreviousSkinInfo = &PreviousSkinInfoHueCycle;
+		}
+	}
 	RenderTools()->RenderTeeWithSkinChangeTransition(&State, pPreviousSkinInfo, &RenderInfo, Player.m_Emote, Direction, Position, SkinTransitionProgress, Alpha, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle);
 
 	float TeeAnimScale, TeeBaseSize;
@@ -1699,7 +1727,8 @@ void CPlayers::RenderPlayerGhost(
 
 inline bool CPlayers::IsPlayerInfoAvailable(int ClientId) const
 {
-	return GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
+	return GameClient()->LiveTeamFilterAllowsClient(ClientId) &&
+	       GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
 	       GameClient()->m_Snap.m_apPrevPlayerInfos[ClientId] != nullptr &&
 	       GameClient()->m_Snap.m_apPlayerInfos[ClientId] != nullptr;
 }
@@ -1849,6 +1878,8 @@ void CPlayers::OnRender()
 			continue;
 
 		float Alpha = GameClient()->LiveObserverClientAlpha(ClientId);
+		if(Alpha <= 0.0f)
+			continue;
 		if(Alpha >= 1.0f)
 		{
 			const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
@@ -1922,6 +1953,7 @@ void CPlayers::CreateSpectatorTeeRenderInfo()
 {
 	CTeeRenderInfo SpectatorTeeRenderInfo;
 	SpectatorTeeRenderInfo.m_Size = 64.0f;
+	SpectatorTeeRenderInfo.m_TeeRenderFlags = TEE_PREVIEW_LAYER_BODY_OUTLINE;
 	CSkinDescriptor SpectatorSkinDescriptor;
 	SpectatorSkinDescriptor.m_Flags |= CSkinDescriptor::FLAG_SIX;
 	str_copy(SpectatorSkinDescriptor.m_aSkinName, "x_spec");

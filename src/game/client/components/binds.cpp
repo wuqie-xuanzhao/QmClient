@@ -2,6 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "binds.h"
 
+#include "binds_deepfly_mode.h"
+
 #include <base/log.h>
 #include <base/system.h>
 
@@ -17,105 +19,6 @@
 
 static constexpr LOG_COLOR BIND_PRINT_COLOR{255, 255, 204};
 
-// NOLINTNEXTLINE(misc-use-internal-linkage)
-enum EDeepflyMode
-{
-	DEEPFLY_MODE_NONE = -1,
-	DEEPFLY_MODE_NORMAL = 0,
-	DEEPFLY_MODE_DF = 1,
-	DEEPFLY_MODE_HDF = 2,
-	DEEPFLY_MODE_CUSTOM = 3,
-};
-
-static void NormalizeBindCommand(const char *pCommand, char *pNormalized, size_t NormalizedSize)
-{
-	size_t OutLen = 0;
-	bool PendingSpace = false;
-
-	while(*pCommand != '\0' && str_isspace(*pCommand))
-		++pCommand;
-
-	while(*pCommand != '\0' && OutLen + 1 < NormalizedSize)
-	{
-		if(str_isspace(*pCommand))
-		{
-			PendingSpace = OutLen > 0;
-		}
-		else
-		{
-			if(PendingSpace && OutLen + 1 < NormalizedSize)
-			{
-				pNormalized[OutLen++] = ' ';
-				PendingSpace = false;
-			}
-			pNormalized[OutLen++] = *pCommand;
-		}
-		++pCommand;
-	}
-
-	while(OutLen > 0 && pNormalized[OutLen - 1] == ' ')
-		--OutLen;
-	pNormalized[OutLen] = '\0';
-}
-
-template<typename F>
-static void ForEachTopLevelBindCommand(const char *pCommand, F &&Fn)
-{
-	if(!pCommand)
-		return;
-
-	char aCurrentCommand[1024];
-	size_t CurrentLen = 0;
-	bool InQuotes = false;
-	bool EscapeNext = false;
-
-	const auto FlushCommand = [&]() {
-		aCurrentCommand[CurrentLen] = '\0';
-
-		char aNormalized[1024];
-		NormalizeBindCommand(aCurrentCommand, aNormalized, sizeof(aNormalized));
-		if(aNormalized[0] != '\0')
-		{
-			Fn(aNormalized);
-		}
-
-		CurrentLen = 0;
-	};
-
-	while(*pCommand != '\0')
-	{
-		const char c = *pCommand++;
-		if(c == ';' && !InQuotes)
-		{
-			FlushCommand();
-			EscapeNext = false;
-			continue;
-		}
-
-		if(CurrentLen + 1 < sizeof(aCurrentCommand))
-		{
-			aCurrentCommand[CurrentLen++] = c;
-		}
-
-		if(EscapeNext)
-		{
-			EscapeNext = false;
-			continue;
-		}
-
-		if(c == '\\')
-		{
-			EscapeNext = true;
-		}
-		else if(c == '"')
-		{
-			InQuotes = !InQuotes;
-		}
-	}
-
-	FlushCommand();
-}
-
 [[maybe_unused]] static bool BindContainsCommand(const char *pBind, const char *pCommand)
 {
 	if(!pBind || !pCommand || pCommand[0] == '\0')
@@ -127,60 +30,6 @@ static void ForEachTopLevelBindCommand(const char *pCommand, F &&Fn)
 			Found = true;
 	});
 	return Found;
-}
-
-static bool IsDeepflyFireCommand(const char *pCommand)
-{
-	return str_comp_nocase(pCommand, "+fire") == 0;
-}
-
-static bool IsDeepflyDummyHammerToggleCommand(const char *pCommand)
-{
-	return str_comp_nocase(pCommand, "+toggle cl_dummy_hammer 1 0") == 0;
-}
-
-static bool IsIndirectDeepflyScriptCommand(const char *pCommand)
-{
-	// These commands only switch the actual fire bind indirectly, e.g.
-	// `bind mouse4 "bind mouse1 \"+fire\""` or `bind t "exec cfg\\clean.cfg"`.
-	// The HUD mode is refreshed again when those nested bind commands run, so
-	// the wrapper script itself should not count as a deepfly custom bind.
-	return str_startswith_nocase(pCommand, "bind ") != nullptr ||
-	       str_startswith_nocase(pCommand, "unbind ") != nullptr ||
-	       str_comp_nocase(pCommand, "unbindall") == 0 ||
-	       str_startswith_nocase(pCommand, "exec ") != nullptr;
-}
-
-static int DetectDeepflyModeFromBindCommand(const char *pCommand)
-{
-	if(!pCommand || pCommand[0] == '\0')
-		return DEEPFLY_MODE_NONE;
-
-	bool HasFire = false;
-	bool HasDummyHammerToggle = false;
-	bool HasOtherCommand = false;
-	bool HasIndirectScriptCommand = false;
-
-	ForEachTopLevelBindCommand(pCommand, [&](const char *pNormalizedCommand) {
-		if(IsDeepflyFireCommand(pNormalizedCommand))
-			HasFire = true;
-		else if(IsDeepflyDummyHammerToggleCommand(pNormalizedCommand))
-			HasDummyHammerToggle = true;
-		else if(IsIndirectDeepflyScriptCommand(pNormalizedCommand))
-			HasIndirectScriptCommand = true;
-		else
-			HasOtherCommand = true;
-	});
-
-	if(!HasFire && !HasDummyHammerToggle)
-		return DEEPFLY_MODE_NONE;
-	if(HasOtherCommand || HasIndirectScriptCommand)
-		return DEEPFLY_MODE_CUSTOM;
-	if(HasFire && HasDummyHammerToggle)
-		return DEEPFLY_MODE_DF;
-	if(HasDummyHammerToggle)
-		return DEEPFLY_MODE_HDF;
-	return DEEPFLY_MODE_NORMAL;
 }
 
 static bool ShouldAppendGoresPrevWeapon(const CGameClient *pGameClient)

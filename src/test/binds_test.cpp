@@ -1,4 +1,5 @@
 #include <game/client/components/binds.h>
+#include <game/client/components/binds_deepfly_mode.h>
 
 #include <gtest/gtest.h>
 
@@ -36,4 +37,41 @@ TEST(Binds, ReleasesShiftOnlyBindWhenScreenshotModifierIsPressedLater)
 	EXPECT_FALSE(CBinds::ShouldReleaseUnmodifiedModifierBindOnModifierPress(CBindSlot(KEY_C, KeyModifier::NONE), 1 << KeyModifier::CTRL));
 	EXPECT_FALSE(CBinds::ShouldReleaseUnmodifiedModifierBindOnModifierPress(CBindSlot(KEY_LSHIFT, 1 << KeyModifier::SHIFT), 1 << KeyModifier::CTRL));
 	EXPECT_FALSE(CBinds::ShouldReleaseUnmodifiedModifierBindOnModifierPress(CBindSlot(KEY_LSHIFT, KeyModifier::NONE), (1 << KeyModifier::CTRL) | (1 << KeyModifier::ALT)));
+}
+
+TEST(Binds, DetectsCoreDeepflyModes)
+{
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+fire"), DEEPFLY_MODE_NORMAL);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+toggle cl_dummy_hammer 1 0"), DEEPFLY_MODE_HDF);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+fire;+toggle cl_dummy_hammer 1 0"), DEEPFLY_MODE_DF);
+}
+
+TEST(Binds, AllowsWhitelistedDeepflyAuxiliaryCommands)
+{
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+weapon1;+fire;+toggle cl_dummy_hammer 1 0;dummy_reset"), DEEPFLY_MODE_DF);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("echo \"DF enabled\";+fire;+toggle cl_dummy_hammer 1 0"), DEEPFLY_MODE_DF);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("echo \"DF; enabled\";+fire;+toggle cl_dummy_hammer 1 0"), DEEPFLY_MODE_DF);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+showhookcoll;+fire;+toggle cl_dummy_hammer 1 0"), DEEPFLY_MODE_DF);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("echo \"HDF\";+toggle cl_dummy_hammer 1 0"), DEEPFLY_MODE_HDF);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+weapon1;+toggle cl_dummy_hammer 1 0;dummy_reset"), DEEPFLY_MODE_HDF);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+weapon1;+fire;dummy_reset"), DEEPFLY_MODE_NORMAL);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("echo \"normal fire\";+fire"), DEEPFLY_MODE_NORMAL);
+}
+
+TEST(Binds, KeepsInputAndScriptCommandsCustomForDeepflyModes)
+{
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+fire;+toggle cl_dummy_hammer 1 0;+left"), DEEPFLY_MODE_CUSTOM);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+fire;+toggle cl_dummy_hammer 1 0;+jump"), DEEPFLY_MODE_CUSTOM);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+fire;+toggle cl_dummy_hammer 1 0;exec cfg/deepfly.cfg"), DEEPFLY_MODE_CUSTOM);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+fire;+toggle cl_dummy_hammer 1 0;bind mouse1 +fire"), DEEPFLY_MODE_CUSTOM);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+fire;+toggle cl_dummy_hammer 1 0;unbind mouse1"), DEEPFLY_MODE_CUSTOM);
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("+fire;+toggle cl_dummy_hammer 1 0;unbindall"), DEEPFLY_MODE_CUSTOM);
+}
+
+TEST(Binds, MatchesDeepflyAuxiliaryCommandsByCommandName)
+{
+	EXPECT_TRUE(IsDeepflyAuxiliaryCommand("echo test"));
+	EXPECT_TRUE(IsDeepflyAuxiliaryCommand("echo \"DF enabled\""));
+	EXPECT_FALSE(IsDeepflyAuxiliaryCommand("echofoo"));
+	EXPECT_EQ(DetectDeepflyModeFromBindCommand("echofoo;+fire;+toggle cl_dummy_hammer 1 0"), DEEPFLY_MODE_CUSTOM);
 }

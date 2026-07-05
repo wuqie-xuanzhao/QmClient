@@ -1,8 +1,15 @@
 #include "modes.h"
 
+#include <base/str.h>
+
 #include <generated/protocol.h>
 
 #include <algorithm>
+
+static bool QmTextContainsNoCase(const char *pText, const char *pNeedle)
+{
+	return pText && pText[0] != '\0' && pNeedle && pNeedle[0] != '\0' && str_find_nocase(pText, pNeedle) != nullptr;
+}
 
 int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActive, int CurrentValue, int HiddenValue, bool &Changed)
 {
@@ -191,6 +198,14 @@ bool ShouldHideGoresGuide(bool GoresEnabled, bool HideGuidesEnabled, bool Manual
 bool ShouldRenderGoresDebugRoute(bool Online, bool DebugRouteEnabled, bool GoresMapProgressEnabled)
 {
 	return Online && DebugRouteEnabled && GoresMapProgressEnabled;
+}
+
+bool ShouldEnableQmMovingWaterTiles(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName)
+{
+	return QmTextContainsNoCase(pGameInfoGameType, "gores") ||
+	       QmTextContainsNoCase(pServerInfoGameType, "gores") ||
+	       QmTextContainsNoCase(pCommunityId, "axiom") ||
+	       QmTextContainsNoCase(pCommunityName, "axiom");
 }
 
 bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget)

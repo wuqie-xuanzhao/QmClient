@@ -11,10 +11,10 @@
 == "%s" несовместим с pnglite и не может быть загружен старыми версиями DDNet:
 
 %.2f KiB
-== %.2f KiB
+== Pending russian translation 612c0a4b01
 
 %.2f MiB
-== %.2f MiB
+== Pending russian translation 829105bad5
 
 %c Team %d
 == %c Команда %d
@@ -83,7 +83,7 @@
 == Осталось %i секунд
 
 %s (/%s %s)
-== %s (/%s %s)
+== Pending russian translation db011b76fd
 
 %s and %s have swapped
 == %s и %s обменялись
@@ -273,6 +273,9 @@ A screenshot with this name already exists
 
 A Tee
 == Игрок
+
+A vote is currently active.
+== Pending russian translation 126d66345f
 
 Abort
 == Отмена
@@ -547,6 +550,9 @@ Allows maps to render with more detail
 Alpha
 == Альфа
 
+Also apply to dummy
+== Также применять к dummy
+
 Always show
 == Всегда показывать
 
@@ -808,6 +814,9 @@ Auto manage IME while typing
 Auto map vote
 == Автоголосование за карту
 
+Auto margin
+== Pending russian translation 72e39ae2a9
+
 Auto refresh server list
 == Автообновление списка серверов
 
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Лучший
 
+Best input
+== Pending russian translation 9d27008e86
+
+Best input others
+== Pending russian translation 8fdc27d4f1
+
+Best input 平滑百分比
+== Pending russian translation bd3e853754
+
+Best input 延迟补偿百分比
+== Pending russian translation 45b2c1884c
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Pending russian translation 2365ba3c62
+
+Best input 预测偏移（0.01 tick）
+== Pending russian translation ce90a98203
+
 Best match
 == Best match setting
 
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == Кнопка - Включена
 
+Button browser
+== Pending russian translation 1f5005a151
+
 Button position is outside of the screen.
 == Позиция кнопки находится за пределами экрана.
 
 Buttons
 == Кнопки
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Pending russian translation b860823bdb
+
+Buttons with this behavior execute console commands like regular key binds.
+== Pending russian translation 0f62a6ffef
+
+Buttons with this behavior execute some predefined actions.
+== Pending russian translation df80d82bd6
 
 c = Player position
 == c = Позиция игрока
@@ -1110,6 +1149,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Нельзя обменяться: другой игрок не в вашей команде
+
+Card Appearance
+== Pending russian translation a296d6386c
+
+Card background blur (high performance only)
+== Pending russian translation 2c167916e7
+
+Card background blur and corner rounding
+== Pending russian translation 5d9a5342c2
 
 Category
 == Категория
@@ -1323,6 +1371,9 @@ Click to remove this community from favorites
 
 Click to remove this player from your friends list.
 == Нажмите, чтобы удалить этого игрока из списка друзей.
+
+Click to restore full match
+== Pending russian translation 66cec3c943
 
 Click to select server. Double click to join your friend.
 == Нажмите, чтобы выбрать сервер. Дважды нажмите, чтобы присоединиться к другу.
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == Копировать скин
 
+Corner segments
+== Pending russian translation 1b13652a85
+
 Could not check for existing player with your name. Check your internet connection.
 == Не удалось проверить существующего игрока с вашим именем. Проверьте подключение к интернету.
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == Не удалось создать запрос сканирования жалобы
+
+Could not find a Tutorial server. Check your internet connection.
+== Pending russian translation 7fb6f1fdde
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Pending russian translation 2b83c826e5
 
 Could not find your Team
 == Не удалось найти вашу команду
@@ -1696,6 +1756,9 @@ Cut segments
 Cute:
 == Мило:
 
+Cycle custom Tee hue
+== Циклически менять оттенок пользовательского Tee
+
 Cycle through emotes
 == Циклическое переключение эмоций
 
@@ -1718,22 +1781,22 @@ Days
 == Дней
 
 DDmaX
-== DDmaX
+== Pending russian translation 7183ca41ff
 
 DDmaX Easy
-== DDmaX Easy
+== Pending russian translation 32dcb8feac
 
 DDmaX Next
-== DDmaX Next
+== Pending russian translation f43a6a96c3
 
 DDmaX Nut
-== DDmaX Nut
+== Pending russian translation c2793afdab
 
 DDmaX Pro
-== DDmaX Pro
+== Pending russian translation 2f21d2cd93
 
 DDNet
-== DDNet
+== Pending russian translation e6e328dcfb
 
 DDNet / Total CPU
 == DDNet / всего CPU
@@ -1760,7 +1823,7 @@ DDNet/total CPU
 == DDNet/общий CPU
 
 DDRace HUD
-== DDRace HUD
+== Pending russian translation 87b85f7d3d
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork — это кооперативная онлайн-игра, где ваша цель и цель вашей группы ти — достичь финиша карты. Новичкам стоит начинать на серверах Novice, где находятся самые простые карты. Учитывайте пинг при выборе ближайшего к вам сервера.
@@ -1802,7 +1865,7 @@ Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 == Режим Deepfly (0=нормальный, 1=DF, 2=HDF, 3=пользовательский)
 
 DeepSeek
-== DeepSeek
+== Pending russian translation e2f5f84357
 
 DeepSeek API Key
 == API-ключ DeepSeek
@@ -1879,6 +1942,9 @@ Demo effects
 Demo marker added
 == Маркер демки добавлен
 
+Demo player is currently active.
+== Pending russian translation fcf1c6517e
+
 Demo target
 == Цель демо
 
@@ -1922,7 +1988,7 @@ Developers and sponsors
 == Разработчики и спонсоры
 
 DF
-== DF
+== Pending russian translation b2d4c675fe
 
 Diamond
 == Ромб
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == Отключить после подбора другого оружия
+
+Disable QmLive team preview/render filter
+== Pending russian translation 6da75dbfee
 
 Disabled
 == Отключено
@@ -1973,7 +2042,7 @@ Disconnected
 == Отключено
 
 Discord
-== Discord
+== Pending russian translation ca62c3173a
 
 Display mode
 == Режим отображения
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == Крюк дамми
+
+Dummy is allowed on this server.
+== Pending russian translation dff56d560c
+
+Dummy is currently connected.
+== Pending russian translation 416dd75efd
 
 Dummy jump
 == Прыжок дамми
@@ -2431,6 +2506,9 @@ Error
 Error checking player name
 == Ошибка проверки имени игрока
 
+Error joining Tutorial server
+== Pending russian translation 668a7b20ee
+
 Error loading communities
 == Ошибка загрузки сообществ
 
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Запасная простая сила шумоподавления
 
+Fast input
+== Pending russian translation 9103c86078
+
 Fast input (reduce visual latency)
 == Быстрый ввод (уменьшает визуальную задержку)
 
@@ -2646,6 +2727,15 @@ File already exists, do you want to overwrite it?
 
 Filter connecting players
 == Фильтр подключающихся игроков
+
+Filter off
+== Pending russian translation a0ed0776fb
+
+Filter Team %d
+== Pending russian translation 2e61287d77
+
+Filter: Team %d
+== Pending russian translation 21f06d09f5
 
 Find all ban records for the specified IP address
 == Найти все записи банов для указанного IP-адреса
@@ -2711,7 +2801,7 @@ FPM
 == Убийств/мин
 
 FPS
-== FPS
+== Pending russian translation 3d1f5e07f3
 
 Frags
 == Фраги
@@ -2789,10 +2879,13 @@ FSAA samples
 == Сэмплы FSAA
 
 FTAPI
-== FTAPI
+== Pending russian translation 016b6302ab
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == Автоперевод FTAPI отключён для предотвращения перегрузки. Включите в настройках при необходимости.
+
+Full demo + sidecar
+== Pending russian translation 5c08477d39
 
 Full map listen in same room
 == Прослушивание всей карты в той же комнате
@@ -2861,7 +2954,7 @@ Ghosts directory
 == Папка призраков
 
 Github
-== Github
+== Pending russian translation b9c5722ff7
 
 Give back right to vote to player with client ID
 == Вернуть право голоса игроку с ID клиента
@@ -3020,7 +3113,7 @@ Has save
 == Есть сохранение
 
 HDF
-== HDF
+== Pending russian translation 2add62762a
 
 Heart
 == Сердце
@@ -3078,12 +3171,6 @@ Hide jump effects
 
 Hide kill/finish messages
 == Скрыть сообщения об убийстве/финише
-
-Hide lyrics when no lyrics are found instead of showing a hint
-== Скрывать текст песни, если он не найден, вместо показа подсказки
-
-Hide lyrics while media is paused
-== Скрывать текст песни, когда медиа приостановлено
 
 Hide map progress
 == Скрыть прогресс карты
@@ -3188,19 +3275,19 @@ Hover for tooltip
 == Наведите для подсказки
 
 https://ddnet.org/discord
-== https://ddnet.org/discord
+== Pending russian translation eefd2622f2
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+== Pending russian translation 7bdaefe79b
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
+== Pending russian translation 2660a5c449
 
 https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls
+== Pending russian translation 6476d20455
 
 HUD
-== HUD
+== Pending russian translation ca4c219d3c
 
 HUD editor preview
 == Предпросмотр редактора HUD
@@ -3216,6 +3303,9 @@ HUD 编辑器布局
 
 Hue
 == Оттенок
+
+Hue speed
+== Скорость оттенка
 
 i = Receive rate
 == i = Скорость приёма
@@ -3331,6 +3421,9 @@ Input overlay
 Input overlay display
 == Отображение наложения ввода
 
+Input smoothing
+== Pending russian translation 52a5c9391c
+
 Input switch
 == Переключение ввода
 
@@ -3348,6 +3441,9 @@ Internet
 
 Internet (From online source)
 == Интернет (из онлайн-источника)
+
+Interpolation
+== Pending russian translation 4da3d7c4d8
 
 Invalid client id to kick
 == Неверный ID клиента для кика
@@ -3441,6 +3537,9 @@ Join Tutorial Server
 
 Join, version, rules, and help messages stay in chat instead of popups
 == Сообщения о входе, версии, правилах и помощи остаются в чате, а не всплывают
+
+Joining Tutorial server
+== Pending russian translation 093a48409d
 
 Jump
 == Прыжок
@@ -3559,6 +3658,9 @@ Last page in console
 Latency
 == Задержка
 
+Latency compensation
+== Pending russian translation 1afdc83889
+
 Latency Jitter
 == Джиттер задержки
 
@@ -3608,7 +3710,7 @@ Lht.
 == Ярк.
 
 LibreTranslate
-== LibreTranslate
+== Pending russian translation eb29578a58
 
 LibreTranslate API Key
 == Ключ API LibreTranslate
@@ -3689,7 +3791,7 @@ Live director
 == Прямой режиссёр
 
 LLM API
-== LLM API
+== Pending russian translation 967c44f271
 
 LLM provider
 == Поставщик LLM
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == Выйти из rcon
 
-Long press on a touch button to select it.
-== Долгое нажатие на кнопку для выбора.
-
 Low to high
 == От низкого к высокому
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == Текст песни
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== HTTP-прокси для текста песни (например, http://127.0.0.1:7890)
-
 Lyrics HTTP timeout
 == Lyrics HTTP timeout setting
-
-Lyrics local media library folders (use | as separator)
-== Папки локальной медиатеки для текста песни (используйте | как разделитель)
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== Ручное смещение временной шкалы текста песни в ms (шаг во время выполнения 500ms)
 
 Lyrics search type
 == Lyrics search type setting
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == Главное меню
-
-Make inactive tee fire
-== Make inactive tee fire
-
-Make inactive tee hook
-== Make inactive tee hook
-
-Make inactive tee jump
-== Make inactive tee jump
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == Убедитесь, что бэкенд поддерживает совместимые с OpenAI параметры размышления.
@@ -4112,16 +4193,10 @@ Modules snap to screen edges, center lines and other HUD modules while dragging
 == Модули привязываются к краям экрана, центральным линиям и другим модулям HUD при перетаскивании
 
 MOTD
-== MOTD
+== Pending russian translation 2526518db0
 
 Mouse
 == Мышь
-
-Move inactive tee left
-== Move inactive tee left
-
-Move inactive tee right
-== Move inactive tee right
 
 Move left
 == Двигаться влево
@@ -4582,6 +4657,9 @@ Online Players
 Only .wv files are supported right now.
 == Сейчас поддерживаются только файлы .wv.
 
+Only affects custom Tee colors.
+== Действует только на пользовательские цвета Tee.
+
 Only Apple Can Do
 == Только Apple может
 
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == Открыть выбор цвета
+
+Open DDNet Wiki
+== Pending russian translation 3209d8b442
 
 Open emote selector
 == Открыть выбор эмоций
@@ -4651,11 +4732,17 @@ Open the folder containing screenshots
 Open the saves file
 == Открыть файл сохранений
 
+Open the selected folder
+== Pending russian translation 92ba6c48b9
+
+Open the selected screenshot
+== Pending russian translation e070f1ee0e
+
 Open the settings file
 == Открыть файл настроек
 
 OpenAI
-== OpenAI
+== Pending russian translation 69f00e9fd7
 
 OpenAI API Key
 == Ключ API OpenAI
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == Открыто
+
+Opens the emoticon selector (this does not work with binds).
+== Pending russian translation 42fa9a69a6
+
+Opens the ingame menu immediately when released.
+== Pending russian translation fcfa3d936c
+
+Opens the spectator menu (this does not work with binds).
+== Pending russian translation e8eb54717b
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == Отказаться от подсчёта наблюдателей и скрыть статус авторизации для неавторизованных игроков (1 = скрыт, 0 = показан)
@@ -4873,6 +4969,9 @@ Play background music
 Play the current demo
 == Воспроизвести текущее демо
 
+Play the selected demo
+== Pending russian translation 02f305e383
+
 Play/Pause
 == Воспроизведение/Пауза
 
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == Индикатор игрока
+
+Player is currently authed in rcon.
+== Pending russian translation 748f7c33f7
+
+Player is ingame, i.e. not spectating.
+== Pending russian translation 89eeb2bf09
 
 Player is on a different team
 == Игрок находится в другой команде
@@ -5026,6 +5131,9 @@ Prediction Margin
 Prediction margin
 == Запас предсказания
 
+Prediction offset
+== Pending russian translation 81f2551c1c
+
 Prediction time
 == Время предсказания
 
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == Предпросмотр выбранного файла
+
+Preview visibilities
+== Pending russian translation 8a2f3bd629
+
+Preview/render only one DDRace team from a full match demo
+== Pending russian translation 80645e8093
+
+Preview/render only this team
+== Pending russian translation 214decff91
 
 Previous
 == Предыдущий
@@ -5174,13 +5291,13 @@ Q 弹 Tee 形变持续时间
 == Длительность деформации упругого Tee
 
 Qm
-== Qm
+== Pending russian translation 2043bdb161
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: индекс должен быть от 1 до %d
 
 QmClient
-== QmClient
+== Pending russian translation f8833a604d
 
 QmClient chat log
 == Лог чата QmClient
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == Настройки QmClient
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== Pending russian translation 8217f54b79
+
+QmLiveClient：启用单队隔离画面过滤
+== Pending russian translation 1bb61ed367
+
+QmLiveClient：启用单队隔离音效过滤
+== Pending russian translation f397774d59
+
+QmLiveClient：完成排名卡片不透明度百分比
+== Pending russian translation 3718bc502b
+
+QmLiveClient：完成排名卡片显示秒数
+== Pending russian translation efccc6efd3
+
+QmLiveClient：完成排名卡片缩放百分比
+== Pending russian translation 8f2c385ae0
+
+QmLiveClient：完整比赛 demo 录制开关
+== Pending russian translation 603bafabf9
+
+QmLiveClient：排名 HUD 队伍范围上限
+== Pending russian translation c883a79a71
+
+QmLiveClient：排名 HUD 队伍范围下限
+== Pending russian translation 69b69c96e2
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== Pending russian translation 26ab1b4b15
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== Pending russian translation b12163096a
+
+QmLiveClient：显示队伍完成排名卡片
+== Pending russian translation 038074f734
+
+QmLiveClient：隐藏非目标队伍完成提示
+== Pending russian translation d792611dd1
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == Интенсивность анимации QmUi: 0=Выкл 1=Пониженная 2=Полная
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== Pending russian translation ad60d972dc
 
 QQ group: 1076765929 (click to copy)
 == QQ-группа: 1076765929 (нажмите, чтобы скопировать)
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == Записать демку
 
+Record match
+== Pending russian translation 79704d1fdb
+
 Record to a file
 == Записать в файл
 
@@ -5352,6 +5514,9 @@ Refresh interval
 
 Refresh Rate
 == Частота обновления
+
+Refresh the demo list
+== Pending russian translation c8fa9f55ab
 
 Regex
 == Регулярное выражение
@@ -5731,6 +5896,9 @@ Restart the client
 Restarting. Please wait…
 == Перезапуск. Пожалуйста, подождите…
 
+Retrying…
+== Pending russian translation a34c098d04
+
 Rifle Laser Inner Color
 == Внутренний цвет лазера винтовки
 
@@ -5800,6 +5968,9 @@ Run server
 SA
 == Южная Америка
 
+Saiko+ 输入量（0.01 tick）
+== Pending russian translation fa3859279f
+
 Same as "vote no"
 == То же, что и "vote no"
 
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == Сохранить последние %d мин
 
-Save power by lowering refresh rate (higher input latency)
-== Экономия энергии за счет снижения частоты обновления (более высокая задержка ввода)
+Save power by lowering update rate (higher input latency)
+== Pending russian translation efa898f599
 
 Save skin
 == Сохранить скин
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == Сказать в чат
 
-Say in chat as inactive tee
-== Say in chat as inactive tee
-
 Say in team chat
 == Сказать в командный чат
-
-Say in team chat as inactive tee
-== Say in team chat as inactive tee
 
 Scanning current server
 == Сканирование текущего сервера
@@ -6036,27 +6201,6 @@ Send
 
 Send & Receive
 == Отправить эмоцию в воде
-
-Send /load as inactive tee
-== Send /load as inactive tee
-
-Send /lock as inactive tee
-== Send /lock as inactive tee
-
-Send /pause as inactive tee
-== Send /pause as inactive tee
-
-Send /rescue as inactive tee
-== Send /rescue as inactive tee
-
-Send /save as inactive tee
-== Send /save as inactive tee
-
-Send /spec as inactive tee
-== Send /spec as inactive tee
-
-Send /team as inactive tee
-== Send /team as inactive tee
 
 Send a moderator alert message to player
 == Отправить предупреждение модератора игроку
@@ -6800,7 +6944,7 @@ Smooth fade
 == Плавное затухание
 
 SMTC
-== SMTC
+== Pending russian translation 2dcf13deff
 
 Snap threshold
 == Порог привязки
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == Начать воспроизведение призраков
 
+Start QmLive full match demo recording
+== Pending russian translation 8baa24225b
+
 Start recording a demo
 == Начать запись демо
 
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == Схема состояния:
 
+Stop match record
+== Pending russian translation 54d17c9268
+
 Stop practice
 == Остановить практику
+
+Stop QmLive full match demo recording
+== Pending russian translation a324d7ddc1
 
 Stop record
 == Остановить запись
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == Обмен недоступен на принудительных соло-серверах.
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Pending russian translation a2dbc9ed04
+
 Switch
 == Переключить
 
 Switch failed
 == Переключение не удалось
-
-Switch inactive tee to grenade
-== Switch inactive tee to grenade
-
-Switch inactive tee to gun
-== Switch inactive tee to gun
-
-Switch inactive tee to hammer
-== Switch inactive tee to hammer
-
-Switch inactive tee to laser
-== Switch inactive tee to laser
-
-Switch inactive tee to next weapon
-== Switch inactive tee to next weapon
-
-Switch inactive tee to previous weapon
-== Switch inactive tee to previous weapon
-
-Switch inactive tee to shotgun
-== Switch inactive tee to shotgun
 
 Switch interval
 == Интервал переключения
@@ -7175,13 +7310,16 @@ Target language ratio
 == Соотношение целевого языка
 
 TClient
-== TClient
+== Pending russian translation 30aa9dfb5a
 
 TClient Developers
 == Разработчики TClient
 
 TClient Links
 == Ссылки TClient
+
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Pending russian translation 062c4a2d3e
 
 Team
 == Команда
@@ -7264,6 +7402,9 @@ Tee
 Tee 0.7
 == Ти 0.7
 
+Tee appearance
+== Внешний вид Tee
+
 Tee hitbox
 == Хитбокс Ти
 
@@ -7343,7 +7484,7 @@ Temporary free camera
 == Временная свободная камера
 
 Tencent Cloud
-== Tencent Cloud
+== Pending russian translation b11b7764b5
 
 Tencent Cloud SecretId
 == Идентификатор секрета Tencent Cloud
@@ -7377,6 +7518,12 @@ The best voice chat, of course!
 
 The Config tab reuses QmClient's client config browser
 == Вкладка «Конфиг» использует браузер конфигов клиента QmClient
+
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== Pending russian translation 2eed4f4a28
+
+The extra menu with the given number is activated.
+== Pending russian translation 95581726c3
 
 The force pause timer is now over, you can exit with /spec
 == Время принудительной паузы истекло, вы можете выйти с помощью /spec
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == Папка тем
+
+There are no Tutorial servers available
+== Pending russian translation d24d7b3763
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == В редакторе сенсорного управления есть несохраненные изменения. Рекомендуется сначала сохранить.
@@ -7771,6 +7921,9 @@ UI opacity
 UI scale
 == Масштаб UI
 
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== Pending russian translation 50e62386d9
+
 UI大小百分比 (UI scale percentage)
 == Процент размера UI
 
@@ -7939,6 +8092,9 @@ Update notice
 Update or add a specific war group
 == Обновить или добавить конкретную вражескую группу
 
+Update Rate
+== Pending russian translation a531d2ba22
+
 Updating feature list...
 == Обновление списка функций...
 
@@ -8026,11 +8182,14 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == Использовать группы списка врагов для индикатора
 
+Uses the active action with the current aiming position.
+== Pending russian translation 4e55f4d0d8
+
 v = Velocity
 == v = Скорость
 
 V-Sync
-== V-Sync
+== Pending russian translation f4dd234aa8
 
 VAD 允许名单（逗号分隔）
 == Белый список VAD (через запятую)
@@ -8076,6 +8235,18 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == Просмотр найденного телепорта (со смещением) с заданным номером
+
+Virtual joystick which always uses fire.
+== Pending russian translation 5c3e3c4cf1
+
+Virtual joystick which always uses hook.
+== Pending russian translation 440a2304a7
+
+Virtual joystick which only aims without using an action.
+== Pending russian translation e1a5e096c0
+
+Virtual joystick which uses the active action.
+== Pending russian translation 2d8633280f
 
 Visibility
 == Видимость
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == Дождитесь окончания текущего голосования, прежде чем начинать новое.
+
+Waiting for local server to start…
+== Pending russian translation a37fdaa19b
+
+Waiting for local server to stop…
+== Pending russian translation 6fcddb9fba
 
 Waiting for snapshot
 == Ожидание снимка
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == Анимация колёсика
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== Если включен радужный Tee TClient, эта функция не действует.
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Когда пересекаешь стартовую линию, показывать призрачного ти, повторяющего движения твоего лучшего времени
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == Вы можете кикнуть только члена своей команды
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== Pending russian translation 0a5a2b1398
+
 You can now jump %s times
 == Теперь вы можете прыгать %s раз
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == Вы можете видеть других игроков. Чтобы отключить это, используйте клиент DDNet и введите /showothers
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== Pending russian translation 78f96d7905
 
 You can shoot others with grenade
 == Вы можете стрелять в других из гранатомёта
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Вы не в команде с включённым /practice. Обратите внимание, что с включённым тренировочным режимом нельзя получить рейтинг.
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== Pending russian translation 58117f629f
+
 You're the last one!
 == Ты последний!
 
@@ -8612,7 +8801,7 @@ Zen mode key
 == Клавиша режима Дзен
 
 Zhipu AI
-== Zhipu AI
+== Pending russian translation 5f618eb1f6
 
 Zhipu API key
 == Ключ API Zhipu
@@ -8628,6 +8817,9 @@ Zoom in
 
 Zoom increase
 == Увеличить масштаб
+
+Zoom is allowed on this server.
+== Pending russian translation 9a27bf8ef8
 
 Zoom out
 == Отдалить
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == Динамическая сила поля зрения (0–200)
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== Pending russian translation 29632b0d77
+
 压缩器攻击时间（毫秒）
 == Время атаки компрессора (мс)
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == Режим фильтрации видимости
+
+同时循环分身自定义 Tee 色调
+== Pending russian translation 0b70d3ec31
 
 同组全图收听
 == Прослушивание всей карты в одной группе
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == Цвет градиента текста сообщений клиента
 
+将 Best input 应用于其他 Tee
+== Pending russian translation 6566867534
+
 将 Q 弹 Tee 形变应用到其他玩家
 == Применять деформацию Q-мяча Tee к другим игрокам
+
+将 Saiko+ 应用于其他 Tee
+== Pending russian translation 6b6e0a1810
 
 将性能调试日志写入专用文件
 == Записывать отладочные логи производительности в отдельный файл
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == Альфа-канал наложения сущностей для переключаемых тайлов (0-100)
+
+循环本体自定义 Tee 色调
+== Pending russian translation 05e18843ca
+
+循环本体自定义 Tee 色调速度（度/秒）
+== Pending russian translation b55e8822f5
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== Pending russian translation 984edc6876
 
 忽略语音距离衰减
 == Игнорировать затухание голоса по расстоянию
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == Конечная точка ZhiPu AI (оставьте пустым для использования по умолчанию)
 
+暂停时隐藏歌词
+== Pending russian translation cf729e09d0
+
 替换方式 0=Regex 1=Full 2=Both
 == Способ замены 0=Regex 1=Full 2=Both
+
+未找到歌词时隐藏（而非显示提示）
+== Pending russian translation d1614229ae
 
 未播放词颜色
 == Unplayed word color
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == Auto fetch lyrics online when a new song is detected
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== Pending russian translation f24a452ba7
+
 歌词 HTTP 请求超时 ms
 == Lyrics HTTP request timeout ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == Цвет текущей строки текста песни
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== Pending russian translation 6bc8bf81eb
 
 歌词描边透明度
 == Прозрачность обводки текста песни
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == Lyrics overall opacity percent
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== Pending russian translation 9c513909e9
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == Lyrics per-source match thresholds
@@ -9597,6 +9825,9 @@ Zoom out
 
 自动获取全图玩家皮肤并作为轮换队列
 == Автоматически получать скины игроков на карте и использовать их для ротации
+
+自动调整预测边距（关闭后固定使用基础预测边距）
+== Pending russian translation 11f077b055
 
 自动跟随好友换服延迟（秒）
 == Задержка автоматического следования за другом при смене сервера (сек)
@@ -10164,7 +10395,7 @@ Play
 
 [Team and size]
 %d\n(%d/%d)
-== %d\n(%d/%d)
+== Pending russian translation 1d7e2fe82e
 
 [Team size]
 maximum

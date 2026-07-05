@@ -20,6 +20,7 @@
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/menu_background.h>
+#include <game/client/components/qmclient/tee_hue_cycle.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
 #include <game/client/skin.h>
@@ -29,6 +30,7 @@
 #include <game/localization.h>
 
 #include <algorithm>
+#include <chrono>
 #include <vector>
 
 using namespace FontIcons;
@@ -158,6 +160,18 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 	{
 		GameClient()->m_Skins7.FindSkinPart(Part, apSkinPartsPtr[Part], false)->ApplyTo(OwnSkinInfo.m_aSixup[g_Config.m_ClDummy]);
 		GameClient()->m_Skins7.ApplyColorTo(OwnSkinInfo.m_aSixup[g_Config.m_ClDummy], aUCCVars[Part], aColorVars[Part], Part);
+	}
+	if(!m_Dummy || g_Config.m_QmCycleTeeHueDummy != 0)
+	{
+		const std::chrono::nanoseconds PreviewNow = time_get_nanoseconds();
+		SQmTeeHueCycleConfig HueCycleConfig;
+		HueCycleConfig.m_Enabled = g_Config.m_QmCycleTeeHue != 0;
+		HueCycleConfig.m_PlayerUsesCustomColors = aUCCVars[protocol7::SKINPART_BODY] || aUCCVars[protocol7::SKINPART_FEET];
+		HueCycleConfig.m_TClientRainbowTees = g_Config.m_TcRainbowTees != 0;
+		HueCycleConfig.m_SpeedDegreesPerSecond = g_Config.m_QmCycleTeeHueSpeed;
+		HueCycleConfig.m_TimeSeconds = PreviewNow.count() / 1000000000.0;
+		HueCycleConfig.m_SixupIndex = g_Config.m_ClDummy;
+		QmApplyTeeHueCycle(OwnSkinInfo, HueCycleConfig);
 	}
 
 	char aBuf[128 + IO_MAX_PATH_LENGTH];

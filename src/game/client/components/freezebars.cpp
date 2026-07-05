@@ -191,7 +191,8 @@ void CFreezeBars::RenderFreezeBarPos(float x, const float y, const float Width, 
 
 inline bool CFreezeBars::IsPlayerInfoAvailable(int ClientId) const
 {
-	return GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
+	return GameClient()->LiveTeamFilterAllowsClient(ClientId) &&
+	       GameClient()->m_Snap.m_aCharacters[ClientId].m_Active &&
 	       GameClient()->m_Snap.m_apPrevPlayerInfos[ClientId] != nullptr &&
 	       GameClient()->m_Snap.m_apPlayerInfos[ClientId] != nullptr;
 }

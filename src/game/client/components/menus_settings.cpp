@@ -29,6 +29,7 @@
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/qmclient/tee_hue_cycle.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
 #include <game/client/skin.h>
@@ -335,71 +336,6 @@ namespace
 	};
 
 	STeeSettingsPageState gs_TeeSettingsPageState;
-
-	struct SSettingsTeeIdentityNameInputState
-	{
-		CLineInput m_aInputs[2];
-		char m_aaBuffers[2][MAX_NAME_LENGTH] = {};
-		char m_aaSyncedNames[2][MAX_NAME_LENGTH] = {};
-		bool m_aDirty[2] = {};
-
-		static int Index(bool Dummy) { return Dummy ? 1 : 0; }
-
-		CLineInput &Input(bool Dummy)
-		{
-			const int InputIndex = Index(Dummy);
-			m_aInputs[InputIndex].SetBuffer(m_aaBuffers[InputIndex], sizeof(m_aaBuffers[InputIndex]));
-			return m_aInputs[InputIndex];
-		}
-
-		bool IsDirty(bool Dummy) const
-		{
-			return m_aDirty[Index(Dummy)];
-		}
-
-		void MarkDirty(bool Dummy)
-		{
-			m_aDirty[Index(Dummy)] = true;
-		}
-
-		void SyncFromConfig(bool Dummy, const char *pConfigName)
-		{
-			const int InputIndex = Index(Dummy);
-			CLineInput &NameInput = Input(Dummy);
-			if(m_aDirty[InputIndex] || NameInput.IsActive() || str_comp(m_aaSyncedNames[InputIndex], pConfigName) == 0)
-				return;
-
-			NameInput.Set(pConfigName);
-			str_copy(m_aaSyncedNames[InputIndex], pConfigName, sizeof(m_aaSyncedNames[InputIndex]));
-		}
-
-		bool CommitToConfig(bool Dummy, char *pConfigName, size_t ConfigNameSize)
-		{
-			const int InputIndex = Index(Dummy);
-			if(!m_aDirty[InputIndex])
-				return false;
-
-			CLineInput &NameInput = Input(Dummy);
-			const bool Changed = str_comp(pConfigName, NameInput.GetString()) != 0;
-			if(Changed)
-				str_copy(pConfigName, NameInput.GetString(), ConfigNameSize);
-			str_copy(m_aaSyncedNames[InputIndex], pConfigName, sizeof(m_aaSyncedNames[InputIndex]));
-			m_aDirty[InputIndex] = false;
-			return Changed;
-		}
-	};
-
-	SSettingsTeeIdentityNameInputState gs_TeeIdentityNameInputState;
-
-	char *SettingsTeeIdentityNameConfig(bool Dummy)
-	{
-		return Dummy ? g_Config.m_ClDummyName : g_Config.m_PlayerName;
-	}
-
-	size_t SettingsTeeIdentityNameConfigSize(bool Dummy)
-	{
-		return Dummy ? sizeof(g_Config.m_ClDummyName) : sizeof(g_Config.m_PlayerName);
-	}
 
 	void BeginTeeListDrainPerfSession(const CSkins &Skins, int64_t NowNs)
 	{
@@ -1030,23 +966,21 @@ CUi::EPopupMenuFunctionResult CMenus::PopupSettingsCountrySelection(void *pConte
 
 void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton)
 {
+	static CLineInput s_NameInput;
 	static CLineInput s_ClanInput;
 	int *pCountry = nullptr;
-	const bool Dummy = m_Dummy;
-	char *pNameConfig = SettingsTeeIdentityNameConfig(Dummy);
-	const size_t NameConfigSize = SettingsTeeIdentityNameConfigSize(Dummy);
-	CLineInput &NameInputLine = gs_TeeIdentityNameInputState.Input(Dummy);
-	gs_TeeIdentityNameInputState.SyncFromConfig(Dummy, pNameConfig);
 	if(!m_Dummy)
 	{
 		pCountry = &g_Config.m_PlayerCountry;
-		NameInputLine.SetEmptyText(Client()->PlayerName());
+		s_NameInput.SetBuffer(g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName));
+		s_NameInput.SetEmptyText(Client()->PlayerName());
 		s_ClanInput.SetBuffer(g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan));
 	}
 	else
 	{
 		pCountry = &g_Config.m_ClDummyCountry;
-		NameInputLine.SetEmptyText(Client()->DummyName());
+		s_NameInput.SetBuffer(g_Config.m_ClDummyName, sizeof(g_Config.m_ClDummyName));
+		s_NameInput.SetEmptyText(Client()->DummyName());
 		s_ClanInput.SetBuffer(g_Config.m_ClDummyClan, sizeof(g_Config.m_ClDummyClan));
 	}
 
@@ -1065,13 +999,8 @@ void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton)
 	DoSettingsLabelStreamed(NameLabelElement, &NameLabel, Localize("Name"), 14.0f, TEXTALIGN_ML);
 	CUIElement &ClanLabelElement = SettingsTextElement(SETTINGS_TEE, -1, "tee-clan-label");
 	DoSettingsLabelStreamed(ClanLabelElement, &ClanLabel, Localize("Clan"), 14.0f, TEXTALIGN_ML);
-	if(Ui()->DoEditBox(&NameInputLine, &NameInputRect, 14.0f) || str_comp(pNameConfig, NameInputLine.GetString()) != 0)
-		gs_TeeIdentityNameInputState.MarkDirty(Dummy);
-	if(gs_TeeIdentityNameInputState.IsDirty(Dummy) && !NameInputLine.IsActive())
-	{
-		if(gs_TeeIdentityNameInputState.CommitToConfig(Dummy, pNameConfig, NameConfigSize))
-			SetNeedSendInfo(Dummy);
-	}
+	if(Ui()->DoEditBox(&s_NameInput, &NameInputRect, 14.0f))
+		SetNeedSendInfo(m_Dummy);
 	if(Ui()->DoEditBox(&s_ClanInput, &ClanInput, 14.0f))
 		SetNeedSendInfo();
 
@@ -1104,54 +1033,6 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	static bool s_PrevDummy = false;
 	static float s_PlayerTabTransitionDirection = 0.0f;
 	const uint64_t PlayerTabSwitchNode = UiAnimNodeKey("settings_player_tab_switch");
-	static CLineInput s_aNameInputs[2];
-	static char s_aaNameBuffers[2][MAX_NAME_LENGTH] = {};
-	static char s_aaNameSync[2][MAX_NAME_LENGTH] = {};
-	static bool s_aNameDirty[2] = {};
-
-	auto NameInputIndex = [](bool Dummy) {
-		return Dummy ? 1 : 0;
-	};
-	auto NameConfig = [](bool Dummy) -> char * {
-		return Dummy ? g_Config.m_ClDummyName : g_Config.m_PlayerName;
-	};
-	auto NameConfigSize = [](bool Dummy) {
-		return Dummy ? sizeof(g_Config.m_ClDummyName) : sizeof(g_Config.m_PlayerName);
-	};
-	auto SyncNameInput = [&](bool Dummy) {
-		const int Index = NameInputIndex(Dummy);
-		CLineInput &NameInput = s_aNameInputs[Index];
-		NameInput.SetBuffer(s_aaNameBuffers[Index], sizeof(s_aaNameBuffers[Index]));
-		const char *pConfigName = NameConfig(Dummy);
-		if(!NameInput.IsActive() && str_comp(s_aaNameSync[Index], pConfigName) != 0)
-		{
-			NameInput.Set(pConfigName);
-			str_copy(s_aaNameSync[Index], pConfigName, sizeof(s_aaNameSync[Index]));
-			s_aNameDirty[Index] = false;
-		}
-	};
-	auto CommitNameInput = [&](bool Dummy) {
-		const int Index = NameInputIndex(Dummy);
-		if(!s_aNameDirty[Index])
-			return;
-
-		CLineInput &NameInput = s_aNameInputs[Index];
-		char *pConfigName = NameConfig(Dummy);
-		if(str_comp(pConfigName, NameInput.GetString()) != 0)
-		{
-			str_copy(pConfigName, NameInput.GetString(), NameConfigSize(Dummy));
-			SetNeedSendInfo(Dummy);
-		}
-		str_copy(s_aaNameSync[Index], pConfigName, sizeof(s_aaNameSync[Index]));
-		s_aNameDirty[Index] = false;
-	};
-
-	SyncNameInput(false);
-	SyncNameInput(true);
-	if(s_aNameDirty[0] && !s_aNameInputs[0].IsActive())
-		CommitNameInput(false);
-	if(s_aNameDirty[1] && !s_aNameInputs[1].IsActive())
-		CommitNameInput(true);
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
 	TabBar.VSplitMid(&TabBar, &ChangeInfo, 20.f);
 	TabBar.VSplitMid(&PlayerTab, &DummyTab);
@@ -1160,14 +1041,12 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	static CButtonContainer s_PlayerTabButton;
 	if(DoButton_MenuTab(&s_PlayerTabButton, Localize("Player"), !m_Dummy, &PlayerTab, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f))
 	{
-		CommitNameInput(m_Dummy);
 		m_Dummy = false;
 	}
 
 	static CButtonContainer s_DummyTabButton;
 	if(DoButton_MenuTab(&s_DummyTabButton, Localize("Dummy"), m_Dummy, &DummyTab, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
 	{
-		CommitNameInput(m_Dummy);
 		m_Dummy = true;
 	}
 
@@ -1207,21 +1086,22 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		}
 	};
 
+	static CLineInput s_NameInput;
 	static CLineInput s_ClanInput;
-	const int CurrentNameInputIndex = NameInputIndex(m_Dummy);
-	CLineInput &NameInput = s_aNameInputs[CurrentNameInputIndex];
 
 	int *pCountry;
 	if(!m_Dummy)
 	{
 		pCountry = &g_Config.m_PlayerCountry;
-		NameInput.SetEmptyText(Client()->PlayerName());
+		s_NameInput.SetBuffer(g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName));
+		s_NameInput.SetEmptyText(Client()->PlayerName());
 		s_ClanInput.SetBuffer(g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan));
 	}
 	else
 	{
 		pCountry = &g_Config.m_ClDummyCountry;
-		NameInput.SetEmptyText(Client()->DummyName());
+		s_NameInput.SetBuffer(g_Config.m_ClDummyName, sizeof(g_Config.m_ClDummyName));
+		s_NameInput.SetEmptyText(Client()->DummyName());
 		s_ClanInput.SetBuffer(g_Config.m_ClDummyClan, sizeof(g_Config.m_ClDummyClan));
 	}
 
@@ -1235,12 +1115,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		Row.VSplitLeft(150.0f, &Row, nullptr);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
 		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
-		if(Ui()->DoEditBox(&NameInput, &Row, 14.0f) || str_comp(NameConfig(m_Dummy), NameInput.GetString()) != 0)
-		{
-			s_aNameDirty[CurrentNameInputIndex] = true;
-		}
-		if(s_aNameDirty[CurrentNameInputIndex] && !NameInput.IsActive())
-			CommitNameInput(m_Dummy);
+		if(Ui()->DoEditBox(&s_NameInput, &Row, 14.0f))
+			SetNeedSendInfo(m_Dummy);
 	});
 
 	// player clan
@@ -1355,8 +1231,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	static CButtonContainer s_PlayerTabButton;
 	if(DoButton_MenuTab(&s_PlayerTabButton, pPlayerTabLabel, s_TeeSubTab == 0, &PlayerTab, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f))
 	{
-		if(gs_TeeIdentityNameInputState.CommitToConfig(m_Dummy, SettingsTeeIdentityNameConfig(m_Dummy), SettingsTeeIdentityNameConfigSize(m_Dummy)))
-			SetNeedSendInfo(m_Dummy);
 		s_TeeSubTab = 0;
 		m_Dummy = false;
 		m_SkinListScrollToSelected = true;
@@ -1366,8 +1240,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	if(DoButton_MenuTab(&s_DummyTabButton, pDummyTabLabel, s_TeeSubTab == 1, &DummyTab,
 		   SeparateProfilesTab ? IGraphics::CORNER_R : IGraphics::CORNER_NONE, nullptr, nullptr, nullptr, nullptr, 4.0f))
 	{
-		if(gs_TeeIdentityNameInputState.CommitToConfig(m_Dummy, SettingsTeeIdentityNameConfig(m_Dummy), SettingsTeeIdentityNameConfigSize(m_Dummy)))
-			SetNeedSendInfo(m_Dummy);
 		s_TeeSubTab = 1;
 		m_Dummy = true;
 		m_SkinListScrollToSelected = true;
@@ -1377,8 +1249,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	if(DoButton_MenuTab(&s_ProfilesTabButton, pProfilesTabLabel, s_TeeSubTab == 2, &ProfilesTab,
 		   SeparateProfilesTab ? IGraphics::CORNER_ALL : IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
 	{
-		if(gs_TeeIdentityNameInputState.CommitToConfig(m_Dummy, SettingsTeeIdentityNameConfig(m_Dummy), SettingsTeeIdentityNameConfigSize(m_Dummy)))
-			SetNeedSendInfo(m_Dummy);
 		s_TeeSubTab = 2;
 	}
 
@@ -1622,13 +1492,27 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	PreviewKey.m_ColorFeet = (int)*pColorFeet;
 	static std::array<SSettingsPreviewSkinTransitionState, NUM_DUMMIES> s_aPreviewTransitionStates;
 	const std::chrono::nanoseconds PreviewNow = time_get_nanoseconds();
+	SQmTeeHueCycleConfig HueCycleConfig;
+	const bool ApplyHueCycleToPreview = !m_Dummy || g_Config.m_QmCycleTeeHueDummy != 0;
+	if(ApplyHueCycleToPreview)
+	{
+		const bool UseCustomColors7 = m_Dummy ? (g_Config.m_ClDummy7UseCustomColorBody != 0 || g_Config.m_ClDummy7UseCustomColorFeet != 0) : (g_Config.m_ClPlayer7UseCustomColorBody != 0 || g_Config.m_ClPlayer7UseCustomColorFeet != 0);
+		HueCycleConfig.m_Enabled = g_Config.m_QmCycleTeeHue != 0;
+		HueCycleConfig.m_PlayerUsesCustomColors = *pUseCustomColor != 0 || UseCustomColors7;
+		HueCycleConfig.m_TClientRainbowTees = g_Config.m_TcRainbowTees != 0;
+		HueCycleConfig.m_SpeedDegreesPerSecond = g_Config.m_QmCycleTeeHueSpeed;
+		HueCycleConfig.m_TimeSeconds = PreviewNow.count() / 1000000000.0;
+		HueCycleConfig.m_SixupIndex = 0;
+	}
+	CTeeRenderInfo PreviewSkinInfo = OwnSkinInfo;
+	const bool PreviewHueCycleApplied = ApplyHueCycleToPreview && QmApplyTeeHueCycle(PreviewSkinInfo, HueCycleConfig);
 	SSettingsPreviewSkinTransitionState &PreviewTransitionState = s_aPreviewTransitionStates[m_Dummy];
 	PreviewTransitionState.Update(PreviewKey, OwnSkinInfo, PreviewNow);
 
 	// Tee
 	{
 		vec2 OffsetToMid;
-		CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &OwnSkinInfo, OffsetToMid);
+		CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &PreviewSkinInfo, OffsetToMid);
 		const vec2 TeeRenderPos = vec2(YourSkin.x + YourSkin.w / 2.0f, YourSkin.y + YourSkin.h / 2.0f + OffsetToMid.y);
 		// tee looking towards cursor, and it is happy when you touch it
 		const vec2 DeltaPosition = Ui()->MousePos() - TeeRenderPos;
@@ -1636,7 +1520,15 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		const float InteractionDistance = 20.0f;
 		const vec2 TeeDirection = Distance < InteractionDistance ? normalize(vec2(DeltaPosition.x, maximum(DeltaPosition.y, 0.5f))) : normalize(DeltaPosition);
 		const int TeeEmote = Distance < InteractionDistance ? EMOTE_HAPPY : *pEmote;
-		RenderTools()->RenderTeeWithSkinChangeTransition(CAnimState::GetIdle(), PreviewTransitionState.PreviousInfo(PreviewNow), &OwnSkinInfo, TeeEmote, TeeDirection, TeeRenderPos, PreviewTransitionState.Progress(PreviewNow));
+		CTeeRenderInfo PreviousPreviewSkinInfo;
+		const CTeeRenderInfo *pPreviousPreviewSkinInfo = PreviewTransitionState.PreviousInfo(PreviewNow);
+		if(PreviewHueCycleApplied && pPreviousPreviewSkinInfo != nullptr)
+		{
+			PreviousPreviewSkinInfo = *pPreviousPreviewSkinInfo;
+			QmApplyTeeHueCycle(PreviousPreviewSkinInfo, HueCycleConfig);
+			pPreviousPreviewSkinInfo = &PreviousPreviewSkinInfo;
+		}
+		RenderTools()->RenderTeeWithSkinChangeTransition(CAnimState::GetIdle(), pPreviousPreviewSkinInfo, &PreviewSkinInfo, TeeEmote, TeeDirection, TeeRenderPos, PreviewTransitionState.Progress(PreviewNow));
 	}
 
 	// Skin loading status

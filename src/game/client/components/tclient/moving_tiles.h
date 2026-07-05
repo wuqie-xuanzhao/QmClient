@@ -42,6 +42,7 @@ public:
 	CMapItemGroup *m_pGroup = nullptr;
 	CMapItemLayerQuads *m_pLayer = nullptr;
 	EQType m_Type = EQType::NONE;
+	bool m_RequiresAxiomOrGores = false;
 	vec2 m_Pos[5] = {vec2(0, 0)};
 	float m_Angle = 0.0f;
 };
@@ -49,7 +50,9 @@ public:
 class CMovingTiles : public CComponent
 {
 	void Reset();
+	bool ShouldRenderMovingWater() const;
 	std::vector<CQuadData> m_vQuads;
+	bool m_HasAxiomOrGoresOnlyQuads = false;
 	bool m_RenderAbove;
 	CEnvelopeState m_EnvEvaluator;
 

@@ -11,10 +11,10 @@
 == "%s"는 pnglite와 호환되지 않으며 이전 버전의 DDNet에서는 로드할 수 없습니다.
 
 %.2f KiB
-== %.2f KiB
+== Pending korean translation 9145a77d5e
 
 %.2f MiB
-== %.2f MiB
+== Pending korean translation bf9f16a981
 
 %c Team %d
 == %c 팀 %d
@@ -65,7 +65,7 @@
 == %d 명의 사용자
 
 %d/%d KiB (%.1f KiB/s)
-== %d/%d KiB (%.1f KiB/s)
+== Pending korean translation 544112df3a
 
 %ds left
 == %d초 남음
@@ -83,7 +83,7 @@
 == %i 초 남음
 
 %s (/%s %s)
-== %s (/%s %s)
+== Pending korean translation 41aae5856c
 
 %s and %s have swapped
 == %s와 %s가 교환했습니다
@@ -273,6 +273,9 @@ A screenshot with this name already exists
 
 A Tee
 == 티
+
+A vote is currently active.
+== Pending korean translation 9cc0d5d539
 
 Abort
 == 중단
@@ -547,6 +550,9 @@ Allows maps to render with more detail
 Alpha
 == 알파
 
+Also apply to dummy
+== 더미에도 적용
+
 Always show
 == 항상 표시
 
@@ -808,6 +814,9 @@ Auto manage IME while typing
 Auto map vote
 == 맵 투표 자동
 
+Auto margin
+== Pending korean translation 6941001a5d
+
 Auto refresh server list
 == 서버 목록 자동 새로고침
 
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 최고
 
+Best input
+== Pending korean translation 72dbdb4b86
+
+Best input others
+== Pending korean translation 2aca00956b
+
+Best input 平滑百分比
+== Pending korean translation d9ea18ae8b
+
+Best input 延迟补偿百分比
+== Pending korean translation 0a0ef56872
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Pending korean translation a48f9d4b4e
+
+Best input 预测偏移（0.01 tick）
+== Pending korean translation 4fdc89c8a8
+
 Best match
 == Best match setting
 
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == 버튼 - 활성화
 
+Button browser
+== Pending korean translation bffbdce371
+
 Button position is outside of the screen.
 == 버튼 위치가 화면 밖에 있습니다.
 
 Buttons
 == 버튼
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Pending korean translation c266c24f9c
+
+Buttons with this behavior execute console commands like regular key binds.
+== Pending korean translation 341ce90ed1
+
+Buttons with this behavior execute some predefined actions.
+== Pending korean translation 8ccaf5dda7
 
 c = Player position
 == c = 플레이어 위치
@@ -1110,6 +1149,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == 교환할 수 없음: 상대가 내 팀에 없습니다
+
+Card Appearance
+== Pending korean translation 35ca73e073
+
+Card background blur (high performance only)
+== Pending korean translation 864b02f4d8
+
+Card background blur and corner rounding
+== Pending korean translation 7555de307d
 
 Category
 == 카테고리
@@ -1323,6 +1371,9 @@ Click to remove this community from favorites
 
 Click to remove this player from your friends list.
 == 친구 목록에서 이 플레이어를 제거하려면 클릭하세요.
+
+Click to restore full match
+== Pending korean translation e1e88bd028
 
 Click to select server. Double click to join your friend.
 == 클릭하여 서버를 선택하세요. 더블 클릭하여 친구가 있는 서버에 접속하세요.
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == 스킨 복사
 
+Corner segments
+== Pending korean translation 00b23fc37f
+
 Could not check for existing player with your name. Check your internet connection.
 == 사용자 이름과 일치하는 기존 플레이어를 확인할 수 없습니다. 인터넷 연결을 확인하세요.
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == 신고 스캔 요청을 생성할 수 없습니다
+
+Could not find a Tutorial server. Check your internet connection.
+== Pending korean translation 26071447f2
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Pending korean translation 48a5238c65
 
 Could not find your Team
 == 팀을 찾을 수 없습니다
@@ -1696,6 +1756,9 @@ Cut segments
 Cute:
 == 귀여움:
 
+Cycle custom Tee hue
+== 사용자 지정 Tee 색조 순환
+
 Cycle through emotes
 == 이모트 순환 표시
 
@@ -1718,22 +1781,22 @@ Days
 == 일
 
 DDmaX
-== DDmaX
+== Pending korean translation 7f4d020355
 
 DDmaX Easy
-== DDmaX Easy
+== Pending korean translation b282429dbd
 
 DDmaX Next
-== DDmaX Next
+== Pending korean translation 3847c1083a
 
 DDmaX Nut
-== DDmaX Nut
+== Pending korean translation cf98ac3e49
 
 DDmaX Pro
-== DDmaX Pro
+== Pending korean translation a07abec26f
 
 DDNet
-== DDNet
+== Pending korean translation bb1c62acbf
 
 DDNet / Total CPU
 == DDNet / 전체 CPU
@@ -1760,7 +1823,7 @@ DDNet/total CPU
 == DDNet / 전체 CPU
 
 DDRace HUD
-== DDRace HUD
+== Pending korean translation 9e7518ee1b
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork는 협동 온라인 게임으로, 당신과 당신의 티 그룹이 맵의 결승선에 도달하는 것이 목표입니다. 초보자라면 가장 쉬운 맵을 제공하는 Novice 서버에서 시작해야 합니다. 핑을 고려하여 가까운 서버를 선택하세요.
@@ -1802,7 +1865,7 @@ Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 == 딥플라이 모드 (0=일반, 1=DF, 2=HDF, 3=사용자 정의)
 
 DeepSeek
-== DeepSeek
+== Pending korean translation 12bbb63557
 
 DeepSeek API Key
 == DeepSeek API 키
@@ -1879,6 +1942,9 @@ Demo effects
 Demo marker added
 == 데모 마커 추가됨
 
+Demo player is currently active.
+== Pending korean translation c434960fc5
+
 Demo target
 == 데모 대상
 
@@ -1922,7 +1988,7 @@ Developers and sponsors
 == 개발자 및 스폰서
 
 DF
-== DF
+== Pending korean translation 181a2538c8
 
 Diamond
 == 다이아몬드
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == 다른 무기를 획득한 후 비활성화
+
+Disable QmLive team preview/render filter
+== Pending korean translation 780a239b2b
 
 Disabled
 == 비활성화
@@ -1973,7 +2042,7 @@ Disconnected
 == 연결 끊김
 
 Discord
-== Discord
+== Pending korean translation d867dfb246
 
 Display mode
 == 디스플레이 모드
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == 더미 후크
+
+Dummy is allowed on this server.
+== Pending korean translation fb26307776
+
+Dummy is currently connected.
+== Pending korean translation 08fadbc75f
 
 Dummy jump
 == 더미 점프
@@ -2420,7 +2495,7 @@ Entity Preview
 == 엔티티 미리보기
 
 entity_bg (Workshop)
-== entity_bg (Workshop)
+== Pending korean translation 8ab990bd3f
 
 Erase items on the in game background
 == 게임 배경 위의 항목 지우기
@@ -2430,6 +2505,9 @@ Error
 
 Error checking player name
 == 플레이어 이름 확인 오류
+
+Error joining Tutorial server
+== Pending korean translation bfc1fc3915
 
 Error loading communities
 == 커뮤니티 로딩 오류
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == 대체 단순 노이즈 감소 강도
 
+Fast input
+== Pending korean translation c1143b4494
+
 Fast input (reduce visual latency)
 == 빠른 입력 (시각적 지연 감소)
 
@@ -2646,6 +2727,15 @@ File already exists, do you want to overwrite it?
 
 Filter connecting players
 == 연결 중인 플레이어 필터링
+
+Filter off
+== Pending korean translation ebb531a9db
+
+Filter Team %d
+== Pending korean translation 195a26a204
+
+Filter: Team %d
+== Pending korean translation fb9ac114bf
 
 Find all ban records for the specified IP address
 == 지정된 IP 주소의 모든 차단 기록 찾기
@@ -2708,10 +2798,10 @@ Found %d modules
 == %d개의 모듈을 찾았습니다
 
 FPM
-== FPM
+== Pending korean translation 389e2eeeda
 
 FPS
-== FPS
+== Pending korean translation c8276a7447
 
 Frags
 == 킬 수
@@ -2789,10 +2879,13 @@ FSAA samples
 == FSAA 샘플
 
 FTAPI
-== FTAPI
+== Pending korean translation ebbc9f6799
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == 과부하 방지를 위해 FTAPI 자동 번역이 비활성화되었습니다. 필요 시 설정에서 활성화하세요.
+
+Full demo + sidecar
+== Pending korean translation 4bdc0c5c13
 
 Full map listen in same room
 == 같은 방에서 전체 맵 듣기
@@ -2861,7 +2954,7 @@ Ghosts directory
 == 고스트 디렉터리
 
 Github
-== Github
+== Pending korean translation 63d2f371cf
 
 Give back right to vote to player with client ID
 == 클라이언트 ID 를 가진 플레이어에게 투표권을 되돌려줍니다
@@ -3020,7 +3113,7 @@ Has save
 == 저장 있음
 
 HDF
-== HDF
+== Pending korean translation 99a83b3a65
 
 Heart
 == 하트
@@ -3078,12 +3171,6 @@ Hide jump effects
 
 Hide kill/finish messages
 == 사망/완료 메시지 숨기기
-
-Hide lyrics when no lyrics are found instead of showing a hint
-== 가사가 없을 때 힌트 대신 숨기기
-
-Hide lyrics while media is paused
-== 미디어 일시정지 시 가사 숨기기
 
 Hide map progress
 == 맵 진행도 숨기기
@@ -3188,19 +3275,19 @@ Hover for tooltip
 == 마우스를 올려 툴팁 보기
 
 https://ddnet.org/discord
-== https://ddnet.org/discord
+== Pending korean translation db36c333d0
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+== Pending korean translation f9871546bb
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
+== Pending korean translation fdf906e3f6
 
 https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls
+== Pending korean translation 23884b363e
 
 HUD
-== HUD
+== Pending korean translation 7e346a6b02
 
 HUD editor preview
 == HUD 편집기 미리보기
@@ -3216,6 +3303,9 @@ HUD 编辑器布局
 
 Hue
 == 색조
+
+Hue speed
+== 색조 속도
 
 i = Receive rate
 == i = 수신 속도
@@ -3331,6 +3421,9 @@ Input overlay
 Input overlay display
 == 입력 오버레이 표시
 
+Input smoothing
+== Pending korean translation 2d93ef23e9
+
 Input switch
 == 입력 전환
 
@@ -3348,6 +3441,9 @@ Internet
 
 Internet (From online source)
 == 인터넷 (온라인 소스에서)
+
+Interpolation
+== Pending korean translation 4441bf1df8
 
 Invalid client id to kick
 == 추방할 클라이언트 ID 가 잘못됨
@@ -3442,6 +3538,9 @@ Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
 == 입장, 버전, 규칙 및 도움말 메시지가 팝업 대신 채팅에 표시됩니다
 
+Joining Tutorial server
+== Pending korean translation 9bab5cbdd8
+
 Jump
 == 점프
 
@@ -3527,7 +3626,7 @@ Label type
 == 레이블 유형
 
 LAN
-== LAN
+== Pending korean translation 89909f0ab3
 
 Language
 == 언어
@@ -3558,6 +3657,9 @@ Last page in console
 
 Latency
 == 지연 시간
+
+Latency compensation
+== Pending korean translation 5ba2541df6
 
 Latency Jitter
 == 지연 시간 지터
@@ -3608,7 +3710,7 @@ Lht.
 == 밝기
 
 LibreTranslate
-== LibreTranslate
+== Pending korean translation 286d9cffa2
 
 LibreTranslate API Key
 == LibreTranslate API 키
@@ -3689,7 +3791,7 @@ Live director
 == 라이브 디렉터
 
 LLM API
-== LLM API
+== Pending korean translation 6765f7d396
 
 LLM provider
 == LLM 제공자
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == rcon 로그아웃
 
-Long press on a touch button to select it.
-== 터치 버튼을 길게 눌러 선택하세요.
-
 Low to high
 == 낮음에서 높음으로
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == 가사
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== 가사 HTTP 프록시 (예: http://127.0.0.1:7890)
-
 Lyrics HTTP timeout
 == Lyrics HTTP timeout setting
-
-Lyrics local media library folders (use | as separator)
-== 가사 로컬 미디어 라이브러리 폴더 (|로 구분)
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== 가사 수동 타임라인 오프셋 (ms, 런타임 단계 500ms)
 
 Lyrics search type
 == Lyrics search type setting
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == 메인 메뉴
-
-Make inactive tee fire
-== Make inactive tee fire
-
-Make inactive tee hook
-== Make inactive tee hook
-
-Make inactive tee jump
-== Make inactive tee jump
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == 백엔드가 OpenAI 호환 사고 매개변수를 지원하는지 확인하세요
@@ -4116,12 +4197,6 @@ MOTD
 
 Mouse
 == 마우스
-
-Move inactive tee left
-== Move inactive tee left
-
-Move inactive tee right
-== Move inactive tee right
 
 Move left
 == 왼쪽으로 이동
@@ -4582,6 +4657,9 @@ Online Players
 Only .wv files are supported right now.
 == 현재 .wv 파일만 지원됩니다.
 
+Only affects custom Tee colors.
+== 사용자 지정 Tee 색상에만 적용됩니다.
+
 Only Apple Can Do
 == 오직 Apple 만이 할 수 있는
 
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == 색상 선택기 열기
+
+Open DDNet Wiki
+== Pending korean translation 3baac9d331
 
 Open emote selector
 == 이모트 선택기 열기
@@ -4651,11 +4732,17 @@ Open the folder containing screenshots
 Open the saves file
 == 저장 파일 열기
 
+Open the selected folder
+== Pending korean translation e17bfd85be
+
+Open the selected screenshot
+== Pending korean translation cffc1f1d7d
+
 Open the settings file
 == 설정 파일 열기
 
 OpenAI
-== OpenAI
+== Pending korean translation e0fc66611f
 
 OpenAI API Key
 == OpenAI API 키
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == 열림
+
+Opens the emoticon selector (this does not work with binds).
+== Pending korean translation f70c069094
+
+Opens the ingame menu immediately when released.
+== Pending korean translation 5d438f446d
+
+Opens the spectator menu (this does not work with binds).
+== Pending korean translation df3ec57cfc
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == 관전자 수에서 제외되고 인증되지 않은 플레이어에게 인증 상태 숨기기 (1 = 숨김, 0 = 표시)
@@ -4873,6 +4969,9 @@ Play background music
 Play the current demo
 == 현재 데모 재생
 
+Play the selected demo
+== Pending korean translation 353cc15332
+
 Play/Pause
 == 재생/일시정지
 
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == 플레이어 표시기
+
+Player is currently authed in rcon.
+== Pending korean translation 86fa74b5c7
+
+Player is ingame, i.e. not spectating.
+== Pending korean translation 1e4dd60acc
 
 Player is on a different team
 == 플레이어가 다른 팀에 있습니다
@@ -5026,6 +5131,9 @@ Prediction Margin
 Prediction margin
 == 예측 여유
 
+Prediction offset
+== Pending korean translation d37ac72522
+
 Prediction time
 == 예측 시간
 
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == 선택한 파일 미리 듣기
+
+Preview visibilities
+== Pending korean translation 072f4afc2b
+
+Preview/render only one DDRace team from a full match demo
+== Pending korean translation 779a527bcd
+
+Preview/render only this team
+== Pending korean translation 37217bf547
 
 Previous
 == 이전
@@ -5174,13 +5291,13 @@ Q 弹 Tee 形变持续时间
 == Q 탄 Tee 변형 지속 시간
 
 Qm
-== Qm
+== Pending korean translation 6e44cf341a
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: 인덱스는 1에서 %d 사이여야 합니다.
 
 QmClient
-== QmClient
+== Pending korean translation c32efdb850
 
 QmClient chat log
 == QmClient 채팅 로그
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == QmClient 설정
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== Pending korean translation 93ce471524
+
+QmLiveClient：启用单队隔离画面过滤
+== Pending korean translation 8db7ac2e12
+
+QmLiveClient：启用单队隔离音效过滤
+== Pending korean translation cd3151a46a
+
+QmLiveClient：完成排名卡片不透明度百分比
+== Pending korean translation f2547ce5c7
+
+QmLiveClient：完成排名卡片显示秒数
+== Pending korean translation a8461b7492
+
+QmLiveClient：完成排名卡片缩放百分比
+== Pending korean translation 231e879afc
+
+QmLiveClient：完整比赛 demo 录制开关
+== Pending korean translation e84784c5b5
+
+QmLiveClient：排名 HUD 队伍范围上限
+== Pending korean translation 255b326be5
+
+QmLiveClient：排名 HUD 队伍范围下限
+== Pending korean translation 0fb85930ed
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== Pending korean translation fe21434003
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== Pending korean translation 2f89c618a1
+
+QmLiveClient：显示队伍完成排名卡片
+== Pending korean translation 5096e72ef3
+
+QmLiveClient：隐藏非目标队伍完成提示
+== Pending korean translation 891946b19a
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == QmUi 애니메이션 강도: 0=끄기 1=낮음 2=전체
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== Pending korean translation d0720a0a2c
 
 QQ group: 1076765929 (click to copy)
 == QQ 그룹: 1076765929 (클릭하여 복사)
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == 데모 녹화
 
+Record match
+== Pending korean translation 2672721025
+
 Record to a file
 == 파일에 기록
 
@@ -5352,6 +5514,9 @@ Refresh interval
 
 Refresh Rate
 == 재생률
+
+Refresh the demo list
+== Pending korean translation 65a9179358
 
 Regex
 == 정규식
@@ -5731,6 +5896,9 @@ Restart the client
 Restarting. Please wait…
 == 재시작 중입니다. 잠시 기다려 주세요…
 
+Retrying…
+== Pending korean translation 62638cbf72
+
 Rifle Laser Inner Color
 == 라이플 레이저 내부 색상
 
@@ -5800,6 +5968,9 @@ Run server
 SA
 == 남미
 
+Saiko+ 输入量（0.01 tick）
+== Pending korean translation 79afe4f784
+
 Same as "vote no"
 == "투표 반대"와 동일
 
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == 마지막 %d분 저장
 
-Save power by lowering refresh rate (higher input latency)
-== 낮은 주사율로 전력 절약 (입력 지연 증가)
+Save power by lowering update rate (higher input latency)
+== Pending korean translation 8bdfd6e624
 
 Save skin
 == 스킨 저장
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == 채팅에 말하기
 
-Say in chat as inactive tee
-== Say in chat as inactive tee
-
 Say in team chat
 == 팀 채팅에 말하기
-
-Say in team chat as inactive tee
-== Say in team chat as inactive tee
 
 Scanning current server
 == 현재 서버 스캔 중
@@ -5984,10 +6149,10 @@ Seconds
 == 초
 
 SecretId
-== SecretId
+== Pending korean translation 6c031903e5
 
 SecretKey
-== SecretKey
+== Pending korean translation 1a5215adeb
 
 See how much you act
 == 당신이 얼마나 연기하는지 확인
@@ -6036,27 +6201,6 @@ Send
 
 Send & Receive
 == 보내기 및 받기
-
-Send /load as inactive tee
-== Send /load as inactive tee
-
-Send /lock as inactive tee
-== Send /lock as inactive tee
-
-Send /pause as inactive tee
-== Send /pause as inactive tee
-
-Send /rescue as inactive tee
-== Send /rescue as inactive tee
-
-Send /save as inactive tee
-== Send /save as inactive tee
-
-Send /spec as inactive tee
-== Send /spec as inactive tee
-
-Send /team as inactive tee
-== Send /team as inactive tee
 
 Send a moderator alert message to player
 == 플레이어에게 중재자 알림 메시지 보내기
@@ -6800,7 +6944,7 @@ Smooth fade
 == 부드러운 페이드
 
 SMTC
-== SMTC
+== Pending korean translation 3af1b79e20
 
 Snap threshold
 == 스냅 임계값
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == 고스트 재생 시작
 
+Start QmLive full match demo recording
+== Pending korean translation 4e7092a300
+
 Start recording a demo
 == 데모 녹화 시작
 
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == 상태 구성：
 
+Stop match record
+== Pending korean translation 67e9bb7bbf
+
 Stop practice
 == 연습 중지
+
+Stop QmLive full match demo recording
+== Pending korean translation 3355c761f6
 
 Stop record
 == 녹화 중지
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == 강제 솔로 서버에서는 교환을 사용할 수 없습니다.
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Pending korean translation e1e6cf2679
+
 Switch
 == 전환
 
 Switch failed
 == 전환 실패
-
-Switch inactive tee to grenade
-== Switch inactive tee to grenade
-
-Switch inactive tee to gun
-== Switch inactive tee to gun
-
-Switch inactive tee to hammer
-== Switch inactive tee to hammer
-
-Switch inactive tee to laser
-== Switch inactive tee to laser
-
-Switch inactive tee to next weapon
-== Switch inactive tee to next weapon
-
-Switch inactive tee to previous weapon
-== Switch inactive tee to previous weapon
-
-Switch inactive tee to shotgun
-== Switch inactive tee to shotgun
 
 Switch interval
 == 전환 간격
@@ -7175,13 +7310,16 @@ Target language ratio
 == 대상 언어 비율
 
 TClient
-== TClient
+== Pending korean translation 33b4810e39
 
 TClient Developers
 == TClient 개발자
 
 TClient Links
 == TClient 링크
+
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Pending korean translation 8c056bb7d2
 
 Team
 == 팀
@@ -7263,6 +7401,9 @@ Tee
 
 Tee 0.7
 == 티 0.7
+
+Tee appearance
+== Tee 외형
 
 Tee hitbox
 == 티 히트박스
@@ -7378,6 +7519,12 @@ The best voice chat, of course!
 The Config tab reuses QmClient's client config browser
 == 설정 탭은 QmClient의 클라이언트 설정 브라우저를 재사용합니다
 
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== Pending korean translation aebb31b043
+
+The extra menu with the given number is activated.
+== Pending korean translation 4f15bfde99
+
 The force pause timer is now over, you can exit with /spec
 == 강제 일시정지 타이머가 종료되었습니다. /spec 으로 나갈 수 있습니다
 
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == 테마 디렉터리
+
+There are no Tutorial servers available
+== Pending korean translation 8633faeb9a
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == 터치 컨트롤 편집기에 저장되지 않은 변경 사항이 있습니다. 먼저 저장하는 것이 좋습니다.
@@ -7771,6 +7921,9 @@ UI opacity
 UI scale
 == UI 크기
 
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== Pending korean translation 5ae7dcfb39
+
 UI大小百分比 (UI scale percentage)
 == UI 크기 백분율
 
@@ -7939,6 +8092,9 @@ Update notice
 Update or add a specific war group
 == 특정 전쟁 그룹 업데이트 또는 추가
 
+Update Rate
+== Pending korean translation 8ec077517b
+
 Updating feature list...
 == 기능 목록 업데이트 중...
 
@@ -8026,11 +8182,14 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == 표시기에 전쟁 목록 그룹 사용
 
+Uses the active action with the current aiming position.
+== Pending korean translation 3af168e7d5
+
 v = Velocity
 == v = 속도
 
 V-Sync
-== V-Sync
+== Pending korean translation 01856491b9
 
 VAD 允许名单（逗号分隔）
 == VAD 허용 목록 (쉼표로 구분)
@@ -8076,6 +8235,18 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == 주어진 번호로 찾은 텔레포트 보기 (오프셋 위치)
+
+Virtual joystick which always uses fire.
+== Pending korean translation af7fffa5df
+
+Virtual joystick which always uses hook.
+== Pending korean translation b052fd3c08
+
+Virtual joystick which only aims without using an action.
+== Pending korean translation 549c20de1b
+
+Virtual joystick which uses the active action.
+== Pending korean translation cb0e501714
 
 Visibility
 == 가시성
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == 새 투표를 요청하기 전에 현재 투표가 끝날 때까지 기다리세요.
+
+Waiting for local server to start…
+== Pending korean translation 40035c0196
+
+Waiting for local server to stop…
+== Pending korean translation 3fead8a9be
 
 Waiting for snapshot
 == 스냅샷 대기 중
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == 휠 애니메이션
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== TClient 무지개 Tee가 켜져 있으면 이 기능은 적용되지 않습니다.
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == 출발선을 넘으면 최고 기록의 움직임을 재현하는 고스트 티를 표시합니다
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == 자신의 팀원만 추방할 수 있습니다
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== Pending korean translation 9b0a4b9aac
+
 You can now jump %s times
 == 이제 %s번 점프할 수 있습니다
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == 다른 플레이어를 볼 수 있습니다. 비활성화하려면 DDNet 클라이언트를 사용하여 /showothers를 입력하세요
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== Pending korean translation a327a580f0
 
 You can shoot others with grenade
 == 다른 플레이어를 수류탄으로 공격할 수 있습니다
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == /practice 가 켜진 팀에 속해 있지 않습니다. 연습 모드가 활성화된 상태에서는 순위를 얻을 수 없습니다
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== Pending korean translation 90dff36c7b
+
 You're the last one!
 == 당신이 마지막이에요!
 
@@ -8629,6 +8818,9 @@ Zoom in
 Zoom increase
 == 확대
 
+Zoom is allowed on this server.
+== Pending korean translation 700da0b590
+
 Zoom out
 == 축소
 
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == 동적 시야 강도 (0 - 200)
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== Pending korean translation 491883a317
+
 压缩器攻击时间（毫秒）
 == 컴프레서 어택 타임 (ms)
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == 가시성 필터 모드
+
+同时循环分身自定义 Tee 色调
+== Pending korean translation 36a8e59c8d
 
 同组全图收听
 == 같은 그룹 전체 맵 듣기
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == 클라이언트 메시지 텍스트 그라데이션 색상
 
+将 Best input 应用于其他 Tee
+== Pending korean translation d756c00278
+
 将 Q 弹 Tee 形变应用到其他玩家
-== Q弹 Tee 변형을 다른 플레이어에게 적용
+== Pending korean translation 1228e44e77
+
+将 Saiko+ 应用于其他 Tee
+== Pending korean translation cd8e773aaf
 
 将性能调试日志写入专用文件
 == 성능 디버그 로그를 전용 파일에 기록
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == 스위치 타일의 오버레이 엔티티 알파 (0-100)
+
+循环本体自定义 Tee 色调
+== Pending korean translation b0ef95b7ac
+
+循环本体自定义 Tee 色调速度（度/秒）
+== Pending korean translation 0df8ce407e
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== Pending korean translation 9c7f0d7cfc
 
 忽略语音距离衰减
 == 음성 거리 감쇠 무시
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == ZhiPu AI 엔드포인트 (비워두면 기본값 사용)
 
+暂停时隐藏歌词
+== Pending korean translation fe2a456ef3
+
 替换方式 0=Regex 1=Full 2=Both
 == 대체 방식 0=Regex 1=Full 2=Both
+
+未找到歌词时隐藏（而非显示提示）
+== Pending korean translation 474375cd61
 
 未播放词颜色
 == Unplayed word color
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == Auto fetch lyrics online when a new song is detected
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== Pending korean translation 42e27e7052
+
 歌词 HTTP 请求超时 ms
 == Lyrics HTTP request timeout ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == 가사 현재 줄 색상
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== Pending korean translation 2aa930d488
 
 歌词描边透明度
 == 가사 외곽선 투명도
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == Lyrics overall opacity percent
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== Pending korean translation 22e9322766
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == Lyrics per-source match thresholds
@@ -9597,6 +9825,9 @@ Zoom out
 
 自动获取全图玩家皮肤并作为轮换队列
 == 맵 전체 플레이어 스킨을 자동으로 가져와 순환 대기열로 사용
+
+自动调整预测边距（关闭后固定使用基础预测边距）
+== Pending korean translation 285a6d347f
 
 自动跟随好友换服延迟（秒）
 == 친구 따라 서버 변경 자동 지연 (초)
@@ -10028,7 +10259,7 @@ Rotate with cursor like gun
 
 [Hertz]
 Hz
-== Hz
+== Pending korean translation fbac442c7e
 
 [Important alert message]
 Press Esc or Tab to dismiss…
@@ -10164,7 +10395,7 @@ Play
 
 [Team and size]
 %d\n(%d/%d)
-== %d\n(%d/%d)
+== Pending korean translation a81660339b
 
 [Team size]
 maximum

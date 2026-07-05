@@ -122,6 +122,7 @@ bool ShouldUseQmNameplateTextEffects(int PlayingScope, int SpectateScope, int De
 
 bool ShouldHideGoresGuide(bool GoresEnabled, bool HideGuidesEnabled, bool ManualGuideVisible);
 bool ShouldRenderGoresDebugRoute(bool Online, bool DebugRouteEnabled, bool GoresMapProgressEnabled);
+bool ShouldEnableQmMovingWaterTiles(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName);
 bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget);
 
 bool ShouldHideFocusHud(bool FocusActive, bool HideHud);

@@ -1,5 +1,5 @@
  min
-==  min
+== Pending polish translation b24c728d9a
 
  seconds
 == sekund
@@ -11,10 +11,10 @@
 == „%s” nie jest kompatybilne z pnglite i nie może być załadowane przez stare wersje DDNet
 
 %.2f KiB
-== %.2f KiB
+== Pending polish translation 9d4f72b217
 
 %.2f MiB
-== %.2f MiB
+== Pending polish translation 0fbd53580f
 
 %c Team %d
 == %c Drużyna %d
@@ -65,7 +65,7 @@
 == %d użytkowników
 
 %d/%d KiB (%.1f KiB/s)
-== %d/%d KiB (%.1f KiB/s)
+== Pending polish translation 224b6370f6
 
 %ds left
 == %ds pozostało
@@ -83,7 +83,7 @@
 == %i sekund pozostało
 
 %s (/%s %s)
-== %s (/%s %s)
+== Pending polish translation cb7666d0f0
 
 %s and %s have swapped
 == %s i %s zamienili się miejscami
@@ -273,6 +273,9 @@ A screenshot with this name already exists
 
 A Tee
 == Inny gracz
+
+A vote is currently active.
+== Pending polish translation 10af7883a9
 
 Abort
 == Anuluj
@@ -503,7 +506,7 @@ Advanced options
 == Opcje zaawansowane
 
 AFR
-== AFR
+== Pending polish translation b1fd54a5b4
 
 After Load
 == Po załadowaniu
@@ -546,6 +549,9 @@ Allows maps to render with more detail
 
 Alpha
 == Alfa
+
+Also apply to dummy
+== Zastosuj także do dummy
 
 Always show
 == Zawsze pokazuj
@@ -698,7 +704,7 @@ Are you sure you want to save your skin? If a skin with this name already exists
 == Czy na pewno chcesz zapisać skórkę? Jeśli skórka o tej nazwie już istnieje, zostanie zastąpiona.
 
 ASI
-== ASI
+== Pending polish translation bb7c052d88
 
 Aspect ratio preset
 == Predefiniowany współczynnik proporcji
@@ -719,7 +725,7 @@ Attempt to change your name when near finish
 == Próba zmiany nazwy w pobliżu mety
 
 Audio
-== Audio
+== Pending polish translation 3a0ac7994e
 
 Audio backend init failed
 == Inicjalizacja backendu audio nie powiodła się
@@ -746,7 +752,7 @@ Audio slots
 == Sloty audio
 
 AUS
-== AUS
+== Pending polish translation e0bab5fe14
 
 Authed name color in scoreboard
 == Kolor nazwy autoryzowanego gracza na tablicy wyników
@@ -807,6 +813,9 @@ Auto manage IME while typing
 
 Auto map vote
 == Auto głosowanie na mapę
+
+Auto margin
+== Pending polish translation b5d5f186e1
 
 Auto refresh server list
 == Automatyczne odświeżanie listy serwerów
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Najlepszy
 
+Best input
+== Pending polish translation 16c52351a7
+
+Best input others
+== Pending polish translation 1fce8de3ed
+
+Best input 平滑百分比
+== Pending polish translation c6fc0ec135
+
+Best input 延迟补偿百分比
+== Pending polish translation bbe578c824
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Pending polish translation 09fcece380
+
+Best input 预测偏移（0.01 tick）
+== Pending polish translation 3b452e9dcd
+
 Best match
 == Best match setting
 
@@ -1031,7 +1058,7 @@ Browser
 == Przeglądaj
 
 Brutal
-== Brutal
+== Pending polish translation 69f6666a89
 
 Bubble opacity
 == Nieprzezroczystość dymka
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == Przycisk - Włączony
 
+Button browser
+== Pending polish translation 37d3f95e48
+
 Button position is outside of the screen.
 == Pozycja przycisku znajduje się poza ekranem.
 
 Buttons
 == Przyciski
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Pending polish translation a1e40fc721
+
+Buttons with this behavior execute console commands like regular key binds.
+== Pending polish translation 9db5cf14a0
+
+Buttons with this behavior execute some predefined actions.
+== Pending polish translation 25fd804526
 
 c = Player position
 == c = Pozycja gracza
@@ -1110,6 +1149,15 @@ Candidate files
 
 Cannot swap: the other player is not in your team
 == Nie można zamienić: drugi gracz nie jest w twojej drużynie
+
+Card Appearance
+== Pending polish translation 76b1c88ae8
+
+Card background blur (high performance only)
+== Pending polish translation 0d799476ac
+
+Card background blur and corner rounding
+== Pending polish translation ae5e6d3265
 
 Category
 == Kategoria
@@ -1205,7 +1253,7 @@ Checking for existing player with your name
 == Sprawdzanie, czy istnieje gracz o Twojej nazwie
 
 CHN
-== CHN
+== Pending polish translation 6097afb8ce
 
 Choose country flag
 == Wybierz flagę kraju
@@ -1323,6 +1371,9 @@ Click to remove this community from favorites
 
 Click to remove this player from your friends list.
 == Kliknij, aby usunąć tego gracza z listy znajomych.
+
+Click to restore full match
+== Pending polish translation 2ffe77000c
 
 Click to select server. Double click to join your friend.
 == Kliknij, aby wybrać serwer. Kliknij dwukrotnie, aby dołączyć do znajomego.
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == Kopiuj skin
 
+Corner segments
+== Pending polish translation 69047a71fd
+
 Could not check for existing player with your name. Check your internet connection.
 == Nie można sprawdzić, czy istnieje gracz o Twojej nazwie. Sprawdź połączenie internetowe.
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == Nie można utworzyć żądania skanowania zgłoszenia
+
+Could not find a Tutorial server. Check your internet connection.
+== Pending polish translation 1159b925d2
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Pending polish translation af2dff5f89
 
 Could not find your Team
 == Nie można znaleźć twojej drużyny
@@ -1696,6 +1756,9 @@ Cut segments
 Cute:
 == Słodkie:
 
+Cycle custom Tee hue
+== Cyklicznie zmieniaj odcień własnego Tee
+
 Cycle through emotes
 == Cykl przez emotki
 
@@ -1718,22 +1781,22 @@ Days
 == Dni
 
 DDmaX
-== DDmaX
+== Pending polish translation af749e63d0
 
 DDmaX Easy
-== DDmaX Easy
+== Pending polish translation 27450428bf
 
 DDmaX Next
-== DDmaX Next
+== Pending polish translation 4e0851269e
 
 DDmaX Nut
-== DDmaX Nut
+== Pending polish translation d37d2ca7e9
 
 DDmaX Pro
-== DDmaX Pro
+== Pending polish translation 09d01a4fdf
 
 DDNet
-== DDNet
+== Pending polish translation 48c3e72a9b
 
 DDNet / Total CPU
 == DDNet / całe CPU
@@ -1760,7 +1823,7 @@ DDNet/total CPU
 == DDNet/łączny CPU
 
 DDRace HUD
-== DDRace HUD
+== Pending polish translation f16b62d11f
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork to kooperacyjna gra online, w której celem jest dotarcie z grupą tee do mety mapy. Jako nowy gracz powinieneś zacząć na serwerach Novice, które hostują najłatwiejsze mapy. Wybierz serwer blisko siebie, biorąc pod uwagę ping.
@@ -1802,7 +1865,7 @@ Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 == Tryb Deepfly (0=normalny, 1=DF, 2=HDF, 3=niestandardowy)
 
 DeepSeek
-== DeepSeek
+== Pending polish translation 62a514019d
 
 DeepSeek API Key
 == Klucz API DeepSeek
@@ -1871,13 +1934,16 @@ Delete this preset
 == Usuń ten preset
 
 Demo
-== Demo
+== Pending polish translation 1a742f2e27
 
 Demo effects
 == Efekty demo
 
 Demo marker added
 == Dodano znacznik dema
+
+Demo player is currently active.
+== Pending polish translation 673ec2a053
 
 Demo target
 == Cel demo
@@ -1922,7 +1988,7 @@ Developers and sponsors
 == Deweloperzy i sponsorzy
 
 DF
-== DF
+== Pending polish translation 2ef3f5b06c
 
 Diamond
 == Diament
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == Wyłącz po podniesieniu innej broni
+
+Disable QmLive team preview/render filter
+== Pending polish translation 8f458e4e52
 
 Disabled
 == Wyłączone
@@ -1973,7 +2042,7 @@ Disconnected
 == Rozłączono
 
 Discord
-== Discord
+== Pending polish translation 3261772ed2
 
 Display mode
 == Tryb wyświetlania
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == Hak kukły
+
+Dummy is allowed on this server.
+== Pending polish translation 85e231f8a8
+
+Dummy is currently connected.
+== Pending polish translation b684f5111b
 
 Dummy jump
 == Skok kukły
@@ -2420,7 +2495,7 @@ Entity Preview
 == Podgląd encji
 
 entity_bg (Workshop)
-== entity_bg (Workshop)
+== Pending polish translation 6095419e34
 
 Erase items on the in game background
 == Usuń elementy z tła gry
@@ -2430,6 +2505,9 @@ Error
 
 Error checking player name
 == Błąd sprawdzania nazwy gracza
+
+Error joining Tutorial server
+== Pending polish translation 8006779d50
 
 Error loading communities
 == Błąd ładowania społeczności
@@ -2456,7 +2534,7 @@ ESC replay minutes
 == Minuty powtórki ESC
 
 EUR
-== EUR
+== Pending polish translation 8c5c855d5b
 
 Evaluate an expression
 == Oblicz wyrażenie
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Siła prostego tłumienia szumów w trybie awaryjnym
 
+Fast input
+== Pending polish translation 1dcc483240
+
 Fast input (reduce visual latency)
 == Szybkie wejście (zmniejsza opóźnienie wizualne)
 
@@ -2647,6 +2728,15 @@ File already exists, do you want to overwrite it?
 Filter connecting players
 == Filtruj łączących się graczy
 
+Filter off
+== Pending polish translation 49a6fdf822
+
+Filter Team %d
+== Pending polish translation f52647de34
+
+Filter: Team %d
+== Pending polish translation d0e20368ae
+
 Find all ban records for the specified IP address
 == Znajdź wszystkie rekordy banów dla określonego adresu IP
 
@@ -2672,7 +2762,7 @@ Flip:
 == Odwróć:
 
 Folder
-== Folder
+== Pending polish translation 63cd52a59a
 
 Folder Link
 == Link do folderu
@@ -2708,10 +2798,10 @@ Found %d modules
 == Znaleziono %d modułów
 
 FPM
-== FPM
+== Pending polish translation 041eb03bd2
 
 FPS
-== FPS
+== Pending polish translation 7b2d719dc0
 
 Frags
 == Zabójstwa
@@ -2789,10 +2879,13 @@ FSAA samples
 == Próbki FSAA
 
 FTAPI
-== FTAPI
+== Pending polish translation 356967efbf
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == Automatyczne tłumaczenie FTAPI jest wyłączone, aby zapobiec przeciążeniu. Włącz w ustawieniach, jeśli potrzebujesz.
+
+Full demo + sidecar
+== Pending polish translation 4d57326dc7
 
 Full map listen in same room
 == Słuchaj całej mapy w tym samym pokoju
@@ -2861,7 +2954,7 @@ Ghosts directory
 == Katalog duchów
 
 Github
-== Github
+== Pending polish translation 0dab129edc
 
 Give back right to vote to player with client ID
 == Przywróć prawo do głosowania graczowi z ID klienta
@@ -2900,7 +2993,7 @@ Gives you infinite jump
 == Daje ci nieskończony skok
 
 Glitch
-== Glitch
+== Pending polish translation ea42511463
 
 Global toggle key
 == Globalny klawisz przełączania
@@ -2969,7 +3062,7 @@ Grabs
 == Złapania
 
 Gradient
-== Gradient
+== Pending polish translation 4f0f071b2e
 
 Gradient color
 == Kolor gradientu
@@ -3020,7 +3113,7 @@ Has save
 == Ma zapis
 
 HDF
-== HDF
+== Pending polish translation 08ac33e0c9
 
 Heart
 == Serce
@@ -3078,12 +3171,6 @@ Hide jump effects
 
 Hide kill/finish messages
 == Ukryj wiadomości o zabiciu/ukończeniu
-
-Hide lyrics when no lyrics are found instead of showing a hint
-== Ukryj tekst utworu, gdy nie znaleziono żadnego, zamiast wyświetlać podpowiedź
-
-Hide lyrics while media is paused
-== Ukryj tekst utworu, gdy multimedia są wstrzymane
 
 Hide map progress
 == Ukryj postęp mapy
@@ -3188,19 +3275,19 @@ Hover for tooltip
 == Najedź, aby zobaczyć podpowiedź
 
 https://ddnet.org/discord
-== https://ddnet.org/discord
+== Pending polish translation c8e9ce7e4a
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+== Pending polish translation e33ceb0207
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
+== Pending polish translation 413bfb2f88
 
 https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls
+== Pending polish translation 4d60814a39
 
 HUD
-== HUD
+== Pending polish translation 07bf34fcf2
 
 HUD editor preview
 == Podgląd edytora HUD
@@ -3216,6 +3303,9 @@ HUD 编辑器布局
 
 Hue
 == Odcień
+
+Hue speed
+== Szybkość odcienia
 
 i = Receive rate
 == i = Szybkość odbioru
@@ -3331,11 +3421,14 @@ Input overlay
 Input overlay display
 == Wyświetlanie nakładki wejścia
 
+Input smoothing
+== Pending polish translation 159865fea6
+
 Input switch
 == Przełącznik wejścia
 
 Insane
-== Insane
+== Pending polish translation b9191fc822
 
 Interface
 == Interfejs
@@ -3344,10 +3437,13 @@ Intermediate
 == Średniozaawansowany
 
 Internet
-== Internet
+== Pending polish translation d6c96a78a0
 
 Internet (From online source)
 == Internet (ze źródła online)
+
+Interpolation
+== Pending polish translation 26208fdb0f
 
 Invalid client id to kick
 == Nieprawidłowe ID klienta do wyrzucenia
@@ -3442,6 +3538,9 @@ Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
 == Komunikaty wejścia, wersji, zasad i pomocy zostają na czacie zamiast w popupach
 
+Joining Tutorial server
+== Pending polish translation 3a423ab0f3
+
 Jump
 == Skok
 
@@ -3452,7 +3551,7 @@ k = Resend loss
 == k = Utrata ponownego wysłania
 
 Kaomoji
-== Kaomoji
+== Pending polish translation d93d6c26cc
 
 Karaoke edge softness
 == Karaoke edge softness setting
@@ -3527,7 +3626,7 @@ Label type
 == Typ etykiety
 
 LAN
-== LAN
+== Pending polish translation 6110aa04f3
 
 Language
 == Język
@@ -3539,7 +3638,7 @@ Large text content
 == Treść dużego tekstu
 
 Laser
-== Laser
+== Pending polish translation b449cff5de
 
 Laser effect enhancement
 == Ulepszenie efektu lasera
@@ -3558,6 +3657,9 @@ Last page in console
 
 Latency
 == Opóźnienie
+
+Latency compensation
+== Pending polish translation d0ac766c49
 
 Latency Jitter
 == Jitter opóźnienia
@@ -3599,7 +3701,7 @@ Length
 == Długość
 
 Lenny:
-== Lenny:
+== Pending polish translation 0e36ac29a9
 
 Lets you join team i (shows your team if left blank)
 == Pozwala dołączyć do drużyny i (pokazuje twoją drużynę, jeśli pozostawione puste)
@@ -3608,7 +3710,7 @@ Lht.
 == Jasn.
 
 LibreTranslate
-== LibreTranslate
+== Pending polish translation e160f272e0
 
 LibreTranslate API Key
 == Klucz API LibreTranslate
@@ -3689,7 +3791,7 @@ Live director
 == Reżyser na żywo
 
 LLM API
-== LLM API
+== Pending polish translation ff794d7021
 
 LLM provider
 == Dostawca LLM
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == Wyloguj z rcon
 
-Long press on a touch button to select it.
-== Długie przytrzymanie przycisku dotykowego, aby go wybrać.
-
 Low to high
 == Od niskiego do wysokiego
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == Tekst utworu
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== Proxy HTTP dla tekstu utworu (np. http://127.0.0.1:7890)
-
 Lyrics HTTP timeout
 == Lyrics HTTP timeout setting
-
-Lyrics local media library folders (use | as separator)
-== Foldery lokalnej biblioteki multimediów dla tekstu utworu (użyj | jako separatora)
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== Ręczne przesunięcie osi czasu tekstu utworu w ms (krok w czasie rzeczywistym 500 ms)
 
 Lyrics search type
 == Lyrics search type setting
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == Menu główne
-
-Make inactive tee fire
-== Make inactive tee fire
-
-Make inactive tee hook
-== Make inactive tee hook
-
-Make inactive tee jump
-== Make inactive tee jump
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == Upewnij się, że backend obsługuje parametry myślenia zgodne z OpenAI
@@ -4097,7 +4178,7 @@ Mode
 == Tryb
 
 Model
-== Model
+== Pending polish translation 4a48ef5b58
 
 Moderate
 == Umiarkowany
@@ -4112,16 +4193,10 @@ Modules snap to screen edges, center lines and other HUD modules while dragging
 == Moduły przyciągają się do krawędzi ekranu, linii środkowych i innych modułów HUD podczas przeciągania
 
 MOTD
-== MOTD
+== Pending polish translation c21af4da81
 
 Mouse
 == Mysz
-
-Move inactive tee left
-== Move inactive tee left
-
-Move inactive tee right
-== Move inactive tee right
 
 Move left
 == Przesuń w lewo
@@ -4193,7 +4268,7 @@ n = Prediction latency
 == n = Opóźnienie przewidywania
 
 NA
-== NA
+== Pending polish translation b63a04b90c
 
 Name
 == Nazwa
@@ -4559,7 +4634,7 @@ Official community links
 == Oficjalne linki społecznościowe
 
 Offline
-== Offline
+== Pending polish translation 916c0c6d60
 
 Ohhhhhhhhhhhhhhhh
 == Ooooooooooooooooooooooooooooooo
@@ -4568,7 +4643,7 @@ Ok
 == OK
 
 Oldschool
-== Oldschool
+== Pending polish translation 6415a01253
 
 On
 == Wł.
@@ -4581,6 +4656,9 @@ Online Players
 
 Only .wv files are supported right now.
 == Obecnie obsługiwane są tylko pliki .wv.
+
+Only affects custom Tee colors.
+== Dotyczy tylko własnych kolorów Tee.
 
 Only Apple Can Do
 == Tylko Apple może to zrobić
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == Otwórz wybór koloru
+
+Open DDNet Wiki
+== Pending polish translation db5d6dc7be
 
 Open emote selector
 == Otwórz selektor emotek
@@ -4651,11 +4732,17 @@ Open the folder containing screenshots
 Open the saves file
 == Otwórz plik zapisów
 
+Open the selected folder
+== Pending polish translation d700ce0d4d
+
+Open the selected screenshot
+== Pending polish translation 7de4fbcb81
+
 Open the settings file
 == Otwórz plik ustawień
 
 OpenAI
-== OpenAI
+== Pending polish translation 7c69307958
 
 OpenAI API Key
 == Klucz API OpenAI
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == Otwarto
+
+Opens the emoticon selector (this does not work with binds).
+== Pending polish translation 34dcb1fc7e
+
+Opens the ingame menu immediately when released.
+== Pending polish translation a38f217aff
+
+Opens the spectator menu (this does not work with binds).
+== Pending polish translation 5d92bc34f6
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == Zrezygnuj z liczenia obserwatorów i ukryj status autoryzacji przed nieautoryzowanymi graczami (1 = ukryty, 0 = widoczny)
@@ -4853,7 +4949,7 @@ Pie menu
 == Menu kołowe
 
 Ping
-== Ping
+== Pending polish translation 889a74da3e
 
 Ping the current server
 == Pinguj bieżący serwer
@@ -4872,6 +4968,9 @@ Play background music
 
 Play the current demo
 == Odtwórz bieżące demo
+
+Play the selected demo
+== Pending polish translation d51471040e
 
 Play/Pause
 == Odtwórz/Wstrzymaj
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == Wskaźnik gracza
+
+Player is currently authed in rcon.
+== Pending polish translation 0442fdf101
+
+Player is ingame, i.e. not spectating.
+== Pending polish translation 2c1beb7b8a
 
 Player is on a different team
 == Gracz jest w innej drużynie
@@ -5026,6 +5131,9 @@ Prediction Margin
 Prediction margin
 == Margines predykcji
 
+Prediction offset
+== Pending polish translation dae846d2cd
+
 Prediction time
 == Czas predykcji
 
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == Odtwórz podgląd wybranego pliku
+
+Preview visibilities
+== Pending polish translation 0016458587
+
+Preview/render only one DDRace team from a full match demo
+== Pending polish translation fa84e09feb
+
+Preview/render only this team
+== Pending polish translation 81ad9c0b5e
 
 Previous
 == Poprzedni
@@ -5174,13 +5291,13 @@ Q 弹 Tee 形变持续时间
 == Czas trwania deformacji sprężystego Tee
 
 Qm
-== Qm
+== Pending polish translation 286d7f2bc4
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: indeks musi być między 1 a %d
 
 QmClient
-== QmClient
+== Pending polish translation a510eaccd9
 
 QmClient chat log
 == Dziennik czatu QmClient
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == Ustawienia QmClient
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== Pending polish translation e843d0d502
+
+QmLiveClient：启用单队隔离画面过滤
+== Pending polish translation d6d5f040cb
+
+QmLiveClient：启用单队隔离音效过滤
+== Pending polish translation 4a74ad5c10
+
+QmLiveClient：完成排名卡片不透明度百分比
+== Pending polish translation 46fcd8b2d6
+
+QmLiveClient：完成排名卡片显示秒数
+== Pending polish translation 90b8128616
+
+QmLiveClient：完成排名卡片缩放百分比
+== Pending polish translation 0ecde6b0a7
+
+QmLiveClient：完整比赛 demo 录制开关
+== Pending polish translation 933b88766f
+
+QmLiveClient：排名 HUD 队伍范围上限
+== Pending polish translation 34b4405c7e
+
+QmLiveClient：排名 HUD 队伍范围下限
+== Pending polish translation 6faf25ee04
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== Pending polish translation 7a76fba988
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== Pending polish translation 4d774e1aa9
+
+QmLiveClient：显示队伍完成排名卡片
+== Pending polish translation f66fb67f48
+
+QmLiveClient：隐藏非目标队伍完成提示
+== Pending polish translation e4a64d7f3d
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == Siła efektów QmUi: 0=Wyłączone 1=Zmniejszone 2=Pełne
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== Pending polish translation ba38216cb0
 
 QQ group: 1076765929 (click to copy)
 == Grupa QQ: 1076765929 (kliknij, aby skopiować)
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == Nagrywaj demo
 
+Record match
+== Pending polish translation 89dc26d7cb
+
 Record to a file
 == Nagraj do pliku
 
@@ -5353,11 +5515,14 @@ Refresh interval
 Refresh Rate
 == Częstotliwość odświeżania
 
+Refresh the demo list
+== Pending polish translation dd525cc73c
+
 Regex
-== Regex
+== Pending polish translation 896b11142f
 
 Region
-== Region
+== Pending polish translation b689f48097
 
 Regular background color
 == Kolor tła zwykłej warstwy
@@ -5720,7 +5885,7 @@ Respawn default weapon
 == Domyślna broń po odrodzeniu
 
 Restart
-== Restart
+== Pending polish translation f3bf5eaa10
 
 Restart in x seconds (0 = abort)
 == Uruchom ponownie za x sekund (0 = przerwij)
@@ -5730,6 +5895,9 @@ Restart the client
 
 Restarting. Please wait…
 == Restartowanie. Proszę czekać…
+
+Retrying…
+== Pending polish translation ca4c8d139e
 
 Rifle Laser Inner Color
 == Kolor wewnętrzny lasera karabinu
@@ -5798,7 +5966,10 @@ Run server
 == Uruchom serwer
 
 SA
-== SA
+== Pending polish translation 6c828d765a
+
+Saiko+ 输入量（0.01 tick）
+== Pending polish translation 4849675258
 
 Same as "vote no"
 == To samo co „głosuj nie”
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == Zapisz ostatnie %d min
 
-Save power by lowering refresh rate (higher input latency)
-== Oszczędzaj energię poprzez obniżenie częstotliwości odświeżania (wyższe opóźnienie wejścia)
+Save power by lowering update rate (higher input latency)
+== Pending polish translation c61c6768fa
 
 Save skin
 == Zapisz skórkę
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == Powiedz na czacie
 
-Say in chat as inactive tee
-== Say in chat as inactive tee
-
 Say in team chat
 == Powiedz na czacie drużyny
-
-Say in team chat as inactive tee
-== Say in team chat as inactive tee
 
 Scanning current server
 == Skanowanie bieżącego serwera
@@ -6036,27 +6201,6 @@ Send
 
 Send & Receive
 == Wyślij i odbierz
-
-Send /load as inactive tee
-== Send /load as inactive tee
-
-Send /lock as inactive tee
-== Send /lock as inactive tee
-
-Send /pause as inactive tee
-== Send /pause as inactive tee
-
-Send /rescue as inactive tee
-== Send /rescue as inactive tee
-
-Send /save as inactive tee
-== Send /save as inactive tee
-
-Send /spec as inactive tee
-== Send /spec as inactive tee
-
-Send /team as inactive tee
-== Send /team as inactive tee
 
 Send a moderator alert message to player
 == Wyślij wiadomość alertu moderatora do gracza
@@ -6800,7 +6944,7 @@ Smooth fade
 == Płynne zanikanie
 
 SMTC
-== SMTC
+== Pending polish translation a583f60d70
 
 Snap threshold
 == Próg przyciągania
@@ -6818,7 +6962,7 @@ Solid tile outline opacity
 == Nieprzezroczystość konturu stałych kafelków
 
 Solo
-== Solo
+== Pending polish translation 59b9969d09
 
 Some fonts could not be loaded. Check the local console for details.
 == Niektóre czcionki nie mogły zostać załadowane. Sprawdź konsolę lokalną, aby uzyskać szczegóły.
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == Rozpocznij odtwarzanie duchów
 
+Start QmLive full match demo recording
+== Pending polish translation 834d67d50b
+
 Start recording a demo
 == Rozpocznij nagrywanie dema
 
@@ -6965,7 +7112,7 @@ Stats notes
 == Uwagi do statystyk
 
 Status
-== Status
+== Pending polish translation 0bbfe24b0c
 
 Status Bar
 == Pasek statusu
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == Schemat statusu:
 
+Stop match record
+== Pending polish translation c2e012ebf3
+
 Stop practice
 == Zatrzymaj praktykę
+
+Stop QmLive full match demo recording
+== Pending polish translation 3a4547a656
 
 Stop record
 == Zatrzymaj nagrywanie
@@ -7046,7 +7199,7 @@ Suicides
 == Samobójstwa
 
 Super
-== Super
+== Pending polish translation 9ad339d6f7
 
 Support ♥
 == Wsparcie ♥
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == Zamiana nie jest dostępna na serwerach wymuszonego solo.
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Pending polish translation 9b88b00d30
+
 Switch
 == Przełącz
 
 Switch failed
 == Przełączenie nie powiodło się
-
-Switch inactive tee to grenade
-== Switch inactive tee to grenade
-
-Switch inactive tee to gun
-== Switch inactive tee to gun
-
-Switch inactive tee to hammer
-== Switch inactive tee to hammer
-
-Switch inactive tee to laser
-== Switch inactive tee to laser
-
-Switch inactive tee to next weapon
-== Switch inactive tee to next weapon
-
-Switch inactive tee to previous weapon
-== Switch inactive tee to previous weapon
-
-Switch inactive tee to shotgun
-== Switch inactive tee to shotgun
 
 Switch interval
 == Interwał przełączania
@@ -7145,7 +7280,7 @@ Sync Workshop Assets
 == Synchronizuj zasoby Warsztatu
 
 System
-== System
+== Pending polish translation 8adc7464a7
 
 System default
 == Domyślny systemowy
@@ -7175,13 +7310,16 @@ Target language ratio
 == Proporcja języka docelowego
 
 TClient
-== TClient
+== Pending polish translation 3b02f11590
 
 TClient Developers
 == Deweloperzy TClient
 
 TClient Links
 == Linki TClient
+
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Pending polish translation 129402ab4e
 
 Team
 == Drużyna
@@ -7259,10 +7397,13 @@ Teams are not available on this server; if the team is locked, any team member d
 == Drużyny nie są dostępne na tym serwerze; jeśli drużyna jest zablokowana, śmierć dowolnego członka zabije całą drużynę
 
 Tee
-== Tee
+== Pending polish translation 6a8f466a6f
 
 Tee 0.7
-== Tee 0.7
+== Pending polish translation 350dd8fc21
+
+Tee appearance
+== Wygląd Tee
 
 Tee hitbox
 == Hitbox Tee
@@ -7343,7 +7484,7 @@ Temporary free camera
 == Tymczasowa swobodna kamera
 
 Tencent Cloud
-== Tencent Cloud
+== Pending polish translation 2a331df870
 
 Tencent Cloud SecretId
 == Identyfikator sekretu Tencent Cloud
@@ -7377,6 +7518,12 @@ The best voice chat, of course!
 
 The Config tab reuses QmClient's client config browser
 == Zakładka Konfiguracja wykorzystuje przeglądarkę konfiguracji klienta QmClient
+
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== Pending polish translation bf37744b9d
+
+The extra menu with the given number is activated.
+== Pending polish translation a647f3d715
 
 The force pause timer is now over, you can exit with /spec
 == Licznik wymuszonej pauzy już minął, możesz wyjść za pomocą /spec
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == Katalog motywów
+
+There are no Tutorial servers available
+== Pending polish translation bb82fe7d88
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == W edytorze sterowania dotykowego są niezapisane zmiany. Zaleca się najpierw zapisać.
@@ -7771,6 +7921,9 @@ UI opacity
 UI scale
 == Skala UI
 
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== Pending polish translation 0683597621
+
 UI大小百分比 (UI scale percentage)
 == Skala rozmiaru UI (procent)
 
@@ -7939,6 +8092,9 @@ Update notice
 Update or add a specific war group
 == Zaktualizuj lub dodaj określoną grupę wojenną
 
+Update Rate
+== Pending polish translation fba88379bf
+
 Updating feature list...
 == Aktualizacja listy funkcji...
 
@@ -8026,11 +8182,14 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == Użyj grup listy wrogów dla wskaźnika
 
+Uses the active action with the current aiming position.
+== Pending polish translation ebc4eb0c9d
+
 v = Velocity
 == v = Prędkość
 
 V-Sync
-== V-Sync
+== Pending polish translation ce1a675a7c
 
 VAD 允许名单（逗号分隔）
 == Lista dozwolonych VAD (oddzielona przecinkami)
@@ -8076,6 +8235,18 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == Wyświetl teleport znaleziony (z offsetem) o podanym numerze
+
+Virtual joystick which always uses fire.
+== Pending polish translation 0178a74ba2
+
+Virtual joystick which always uses hook.
+== Pending polish translation 1a3754fa23
+
+Virtual joystick which only aims without using an action.
+== Pending polish translation 8e230493c9
+
+Virtual joystick which uses the active action.
+== Pending polish translation 97a902ac8a
 
 Visibility
 == Widoczność
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == Poczekaj na zakończenie bieżącego głosowania przed rozpoczęciem nowego.
+
+Waiting for local server to start…
+== Pending polish translation 88c4881562
+
+Waiting for local server to stop…
+== Pending polish translation eb2bb6d388
 
 Waiting for snapshot
 == Oczekiwanie na snapshot
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == Animacja koła
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== Gdy tęczowy Tee TClienta jest włączony, ta funkcja nie działa.
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Gdy przekroczysz linię startu, pokaż ducha odtwarzającego ruchy twojego najlepszego czasu
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == Możesz wyrzucić tylko swojego członka drużyny
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== Pending polish translation ecf7f83116
+
 You can now jump %s times
 == Możesz teraz skakać %s razy
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == Możesz widzieć innych graczy. Aby to wyłączyć, użyj klienta DDNet i wpisz /showothers
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== Pending polish translation 6761723719
 
 You can shoot others with grenade
 == Możesz strzelać do innych granatem
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Nie jesteś w drużynie z włączonym /practice. Pamiętaj, że nie możesz zdobyć rankingu z włączonym trybem treningowym.
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== Pending polish translation 6c739068c1
+
 You're the last one!
 == Jesteś ostatni!
 
@@ -8612,7 +8801,7 @@ Zen mode key
 == Klawisz trybu Zen
 
 Zhipu AI
-== Zhipu AI
+== Pending polish translation 4b6321bf87
 
 Zhipu API key
 == Klucz API Zhipu
@@ -8628,6 +8817,9 @@ Zoom in
 
 Zoom increase
 == Zwiększ zoom
+
+Zoom is allowed on this server.
+== Pending polish translation 4d047f75ab
 
 Zoom out
 == Oddal
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == Siła dynamicznego pola widzenia (0-200)
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== Pending polish translation ad32caf406
+
 压缩器攻击时间（毫秒）
 == Czas ataku kompresora (ms)
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == Tryb filtrowania widoczności
+
+同时循环分身自定义 Tee 色调
+== Pending polish translation 380933e70c
 
 同组全图收听
 == Słuchaj całej mapy w tej samej grupie
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == Kolor gradientu tekstu wiadomości klienta
 
+将 Best input 应用于其他 Tee
+== Pending polish translation af9659f1ae
+
 将 Q 弹 Tee 形变应用到其他玩家
 == Zastosuj deformację Q-Elastycznego Tee do innych graczy
+
+将 Saiko+ 应用于其他 Tee
+== Pending polish translation ec763557a4
 
 将性能调试日志写入专用文件
 == Zapisz dziennik debugowania wydajności do osobnego pliku
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == Przezroczystość nakładki na bloki przełączników (0-100)
+
+循环本体自定义 Tee 色调
+== Pending polish translation a014c6cb9b
+
+循环本体自定义 Tee 色调速度（度/秒）
+== Pending polish translation ca135ee405
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== Pending polish translation aa2a9d7e5c
 
 忽略语音距离衰减
 == Ignoruj tłumienie głosu z odległości
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == Punkt końcowy ZhiPu AI (pozostaw puste, aby użyć domyślnego)
 
+暂停时隐藏歌词
+== Pending polish translation 077d04441d
+
 替换方式 0=Regex 1=Full 2=Both
 == Tryb zastępowania 0=Regex 1=Pełny 2=Oba
+
+未找到歌词时隐藏（而非显示提示）
+== Pending polish translation 4377b30065
 
 未播放词颜色
 == Unplayed word color
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == Auto fetch lyrics online when a new song is detected
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== Pending polish translation 98d7e0465e
+
 歌词 HTTP 请求超时 ms
 == Lyrics HTTP request timeout ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == Kolor bieżącego wiersza tekstu utworu
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== Pending polish translation 7e7347ab01
 
 歌词描边透明度
 == Przezroczystość obrysu tekstu utworu
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == Lyrics overall opacity percent
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== Pending polish translation 771e8f4ab8
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == Lyrics per-source match thresholds
@@ -9598,6 +9826,9 @@ Zoom out
 自动获取全图玩家皮肤并作为轮换队列
 == Automatyczne pobieranie skórek graczy z całej mapy jako kolejka rotacji
 
+自动调整预测边距（关闭后固定使用基础预测边距）
+== Pending polish translation cdc8d93359
+
 自动跟随好友换服延迟（秒）
 == Opóźnienie automatycznego podążania za znajomym przy zmianie serwera (sekundy)
 
@@ -9932,7 +10163,7 @@ Live
 
 [Demo player duration]
 %s min.
-== %s min.
+== Pending polish translation 6bd01a15f7
 
 [Demo player duration]
 %s sec.
@@ -10028,7 +10259,7 @@ Rotate with cursor like gun
 
 [Hertz]
 Hz
-== Hz
+== Pending polish translation ad00fef8b2
 
 [Important alert message]
 Press Esc or Tab to dismiss…
@@ -10152,7 +10383,7 @@ Following %s
 
 [Spectating Camera Mode Icon]
 AUTO
-== AUTO
+== Pending polish translation 7e08fa0642
 
 [Spectators]
 %d others…
@@ -10164,7 +10395,7 @@ Play
 
 [Team and size]
 %d\n(%d/%d)
-== %d\n(%d/%d)
+== Pending polish translation 99aa201dad
 
 [Team size]
 maximum
@@ -10188,7 +10419,7 @@ required
 
 [Team status]
 solo
-== solo
+== Pending polish translation d3f5d286a2
 
 [Touch button behavior]
 Bind

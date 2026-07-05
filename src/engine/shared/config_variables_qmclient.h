@@ -23,14 +23,14 @@ MACRO_CONFIG_INT(QmCardBackdropBlur, qm_card_backdrop_blur, 0, 0, 1, CFGFLAG_CLI
 MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 32, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）")
 MACRO_CONFIG_STR(QmSettingsCardOrder, qm_settings_card_order, 2048, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tclient 设置卡片排序（格式 id:col:order; 分号分隔）")
 MACRO_CONFIG_INT(DbgQmUiDogfood, dbg_qm_ui_dogfood, 0, 0, 1, CFGFLAG_CLIENT, "展示 feat-003 共享 UI 原语 dogfood 页面（接管 QmClient 设置页，用于视觉验证 11 个原语 + spring/easing 动画）")
-MACRO_CONFIG_INT(QmNewUi, qm_new_ui, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用新版设置页面 UI")
+MACRO_CONFIG_INT(QmNewUi, qm_new_ui, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用新版设置页面 UI")
 MACRO_CONFIG_COL(QmUiColor, qm_ui_color, 0x000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "界面颜色")
 MACRO_CONFIG_COL(QmMapBrowserColor, qm_map_browser_color, 0x000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "地图浏览器颜色")
 MACRO_CONFIG_COL(QmScoreboardColor, qm_scoreboard_color, 0x000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "计分板颜色")
 MACRO_CONFIG_INT(QmUiOpacity, qm_ui_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通用界面透明度")
 MACRO_CONFIG_INT(QmMapBrowserOpacity, qm_map_browser_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "地图浏览器透明度")
 MACRO_CONFIG_INT(QmScoreboardOpacity, qm_scoreboard_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "计分板透明度")
-MACRO_CONFIG_INT(QmShowOutdatedVersionWarning, qm_show_outdated_version_warning, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示版本过旧提示")
+MACRO_CONFIG_INT(QmShowOutdatedVersionWarning, qm_show_outdated_version_warning, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示版本过旧提示")
 MACRO_CONFIG_STR(QmNewFeatureMarksRead, qm_new_feature_marks_read, 1024, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "已读的设置界面新功能标识")
 MACRO_CONFIG_INT(QmImeAutoManage, qm_ime_auto_manage, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "根据文本输入焦点自动启用或关闭 IME")
 MACRO_CONFIG_INT(QmNewIme, qm_new_ime, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用新版 IME 候选栏")
@@ -46,7 +46,7 @@ MACRO_CONFIG_STR(QmReportSecret, qm_report_secret, 128, "SsF-7wLdC9dO-RCb5sGieLI
 // Scoreboard / 计分板
 MACRO_CONFIG_INT(QmScoreboardPoints, qm_scoreboard_points, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "计分板查分")
 MACRO_CONFIG_INT(QmScoreboardSortMode, qm_scoreboard_sort_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "记分牌排序模式（0=分数，1=分）")
-MACRO_CONFIG_INT(QmScoreboardOnDeath, qm_scoreboard_on_death, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "死亡后显示记分牌")
+MACRO_CONFIG_INT(QmScoreboardOnDeath, qm_scoreboard_on_death, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "死亡后显示记分牌")
 
 // Chat / 聊天
 MACRO_CONFIG_STR(ClMessageSystemGradient, cl_message_system_gradient, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "系统消息文字渐变颜色")
@@ -58,13 +58,12 @@ MACRO_CONFIG_STR(ClMessageFriendGradient, cl_message_friend_gradient, 128, "", C
 MACRO_CONFIG_INT(QmChatLogAutoSave, qm_chat_log_auto_save, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "自动保存聊天记录")
 MACRO_CONFIG_INT(QmChatLogKeepDays, qm_chat_log_keep_days, 30, 0, 3650, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天记录保留天数")
 
-// Rainbow Name / 彩虹名字
 MACRO_CONFIG_INT(QmNameplateCoordX, qm_nameplate_coord_x, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示坐标X")
 MACRO_CONFIG_INT(QmNameplateCoordXAlignHint, qm_nameplate_coord_x_align_hint, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示与本地玩家X对齐的提示")
 MACRO_CONFIG_INT(QmNameplateCoordXAlignHintStrict, qm_nameplate_coord_x_align_hint_strict, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌X对齐提示严格模式")
 MACRO_CONFIG_INT(QmNameplateCoordXAlignHintWindowMs, qm_nameplate_coord_x_align_hint_window_ms, 1000, 100, 3000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌X对齐提示持续判定窗口（毫秒）")
 MACRO_CONFIG_COL(QmNameplateCoordXAlignHintColor, qm_nameplate_coord_x_align_hint_color, 0x21FF99, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌X对齐提示高亮颜色")
-MACRO_CONFIG_INT(QmNameplateCoordY, qm_nameplate_coord_y, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示坐标Y")
+MACRO_CONFIG_INT(QmNameplateCoordY, qm_nameplate_coord_y, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示坐标Y")
 MACRO_CONFIG_INT(QmNameplateCoordsOwn, qm_nameplate_coords_own, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示自己坐标")
 MACRO_CONFIG_INT(QmNameplateCoords, qm_nameplate_coords, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "名字牌显示他人坐标")
 
@@ -82,10 +81,10 @@ MACRO_CONFIG_INT(QmShowCollisionHitbox, qm_show_collision_hitbox, 0, 0, 1, CFGFL
 MACRO_CONFIG_COL(QmCollisionHitboxColorFreeze, qm_collision_hitbox_color_freeze, 16711935, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Freeze碰撞边框颜色")
 MACRO_CONFIG_INT(QmCollisionHitboxAlpha, qm_collision_hitbox_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞体积线条透明度")
 MACRO_CONFIG_INT(QmHitboxMode, qm_hitbox_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式总开关 (Hitbox mode)")
-MACRO_CONFIG_INT(QmHitboxShowMap, qm_hitbox_show_map, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式显示地图危险边界")
-MACRO_CONFIG_INT(QmHitboxShowTees, qm_hitbox_show_tees, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式显示Tee碰撞体")
-MACRO_CONFIG_INT(QmHitboxShowPickups, qm_hitbox_show_pickups, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式显示拾取物范围")
-MACRO_CONFIG_INT(QmHitboxShowWeapons, qm_hitbox_show_weapons, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式显示武器交互")
+MACRO_CONFIG_INT(QmHitboxShowMap, qm_hitbox_show_map, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式显示地图危险边界")
+MACRO_CONFIG_INT(QmHitboxShowTees, qm_hitbox_show_tees, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式显示Tee碰撞体")
+MACRO_CONFIG_INT(QmHitboxShowPickups, qm_hitbox_show_pickups, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式显示拾取物范围")
+MACRO_CONFIG_INT(QmHitboxShowWeapons, qm_hitbox_show_weapons, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式显示武器交互")
 MACRO_CONFIG_INT(QmHitboxAlpha, qm_hitbox_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式全局透明度")
 MACRO_CONFIG_INT(QmHitboxPlayerScope, qm_hitbox_player_scope, 2, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式玩家范围: 0=本地 1=本地+分身 2=所有玩家")
 MACRO_CONFIG_COL(QmHitboxColorFreeze, qm_hitbox_color_freeze, 16711935, CFGFLAG_CLIENT | CFGFLAG_SAVE, "碰撞箱模式Freeze边界颜色")
@@ -103,8 +102,8 @@ MACRO_CONFIG_INT(QmEntityOverlayTeleCheckpointAlpha, qm_entity_overlay_tele_chec
 MACRO_CONFIG_INT(QmEntityOverlaySwitchAlpha, qm_entity_overlay_switch_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "开关图块的覆盖实体 alpha (0-100)")
 
 // Q1menG Client Recognition / Q1menG客户端识别
-MACRO_CONFIG_INT(QmClientMarkTrail, qm_client_mark_trail, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）")
-MACRO_CONFIG_INT(QmClientShowBadge, qm_client_show_badge, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户")
+MACRO_CONFIG_INT(QmClientMarkTrail, qm_client_mark_trail, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）")
+MACRO_CONFIG_INT(QmClientShowBadge, qm_client_show_badge, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户")
 
 // Fast Input / 快速输入
 MACRO_CONFIG_INT(QmAutoMargin, qm_auto_margin, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "自动调整预测边距（关闭后固定使用基础预测边距）")
@@ -124,7 +123,7 @@ MACRO_CONFIG_STR(QmKeywordReplyRules, qm_keyword_reply_rules, 4096, "", CFGFLAG_
 MACRO_CONFIG_INT(QmAutoReplyCooldown, qm_auto_reply_cooldown, 3, 0, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "自动回复冷却时间（秒）")
 
 // Pie Menu / 饼菜单
-MACRO_CONFIG_INT(QmPieMenuEnabled, qm_pie_menu_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用饼菜单")
+MACRO_CONFIG_INT(QmPieMenuEnabled, qm_pie_menu_enabled, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用饼菜单")
 MACRO_CONFIG_INT(QmPieMenuMaxDistance, qm_pie_menu_max_distance, 400, 100, 2000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "玩家检测最大距离")
 MACRO_CONFIG_INT(QmPieMenuScale, qm_pie_menu_scale, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI大小百分比 (UI scale percentage)")
 MACRO_CONFIG_INT(QmPieMenuOpacity, qm_pie_menu_opacity, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "菜单不透明度 (Menu opacity 0-100)")
@@ -137,7 +136,7 @@ MACRO_CONFIG_INT(QmPieMenuColorSwap, qm_pie_menu_color_swap, 0xCC4D4DBF, 0, 0, C
 MACRO_CONFIG_INT(QmPieMenuColorSpectate, qm_pie_menu_color_spectate, 0x738C99BF, 0, 0, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "观战选项颜色")
 
 // Repeat Message / 复读功能
-MACRO_CONFIG_INT(QmRepeatEnabled, qm_repeat_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用复读功能")
+MACRO_CONFIG_INT(QmRepeatEnabled, qm_repeat_enabled, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用复读功能")
 MACRO_CONFIG_INT(QmSayNoPop, qm_say_nopop, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "输入时不显示打字表情")
 MACRO_CONFIG_INT(QmHammerSwapSkin, qm_hammer_swap_skin, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "锤人换皮肤")
 MACRO_CONFIG_INT(QmSkinChangeTransition, qm_skin_change_transition, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用皮肤切换动画")
@@ -146,13 +145,16 @@ MACRO_CONFIG_INT(QmSkinChangeTransitionType, qm_skin_change_transition_type, 0, 
 MACRO_CONFIG_INT(QmSkinChangeTransitionMs, qm_skin_change_transition_ms, 500, 0, 2000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "皮肤切换动画持续时间（毫秒，0=无动画）")
 MACRO_CONFIG_INT(QmSkinChangeTransitionEasing, qm_skin_change_transition_easing, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "皮肤切换动画缓动模式")
 MACRO_CONFIG_INT(QmSkinChangeTransitionIntensity, qm_skin_change_transition_intensity, 100, 0, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "皮肤切换动画强度百分比")
+MACRO_CONFIG_INT(QmCycleTeeHue, qm_cycle_tee_hue, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "循环本体自定义 Tee 色调")
+MACRO_CONFIG_INT(QmCycleTeeHueDummy, qm_cycle_tee_hue_dummy, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "同时循环分身自定义 Tee 色调")
+MACRO_CONFIG_INT(QmCycleTeeHueSpeed, qm_cycle_tee_hue_speed, 72, 0, 360, CFGFLAG_CLIENT | CFGFLAG_SAVE, "循环本体自定义 Tee 色调速度（度/秒）")
 MACRO_CONFIG_INT(QmRandomEmoteOnHit, qm_random_emote_on_hit, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "被锤/榴弹击中时随机表情")
 MACRO_CONFIG_INT(QmEmoticonShadow, qm_emoticon_shadow, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在表情后绘制阴影")
 MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器弹道辅助线显示模式（0=关闭，1=按键显示，2=始终显示）")
 MACRO_CONFIG_COL(QmWeaponTrajectoryColor, qm_weapon_trajectory_color, 16750899, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器弹道辅助线颜色")
 MACRO_CONFIG_INT(QmWeaponTrajectoryWidth, qm_weapon_trajectory_width, 2, 1, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器弹道辅助线宽度")
 MACRO_CONFIG_INT(QmWeaponTrajectoryAlpha, qm_weapon_trajectory_alpha, 70, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器弹道辅助线透明度")
-MACRO_CONFIG_INT(QmWeaponSwitchAnim, qm_weapon_switch_anim, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "切换武器时播放滑入旋转动画")
+MACRO_CONFIG_INT(QmWeaponSwitchAnim, qm_weapon_switch_anim, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "切换武器时播放滑入旋转动画")
 MACRO_CONFIG_INT(QmWeaponSwitchAnimScope, qm_weapon_switch_anim_scope, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器切换动画范围: 0=仅自己 1=本地+分身 2=所有玩家")
 MACRO_CONFIG_INT(QmWeaponSwitchAnimDurationMs, qm_weapon_switch_anim_duration_ms, 300, 50, 2000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器切换动画持续时间（毫秒）")
 MACRO_CONFIG_INT(QmWeaponSwitchAnimDistance, qm_weapon_switch_anim_distance, 40, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "武器切换动画滑入距离")
@@ -167,7 +169,7 @@ MACRO_CONFIG_INT(QmAutoUnspecOnUnfreeze, qm_auto_unspec_on_unfreeze, 0, 0, 1, CF
 // Auto-Switch on Unfreeze / HJ大佬辅助 - 自动切换到解冻的Tee
 MACRO_CONFIG_INT(QmAutoSwitchOnUnfreeze, qm_auto_switch_on_unfreeze, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "本体和分身都被冻结时，自动切换到先解冻的那个")
 MACRO_CONFIG_INT(QmAutoCloseChatOnUnfreeze, qm_auto_close_chat_on_unfreeze, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "解冻后自动关闭聊天")
-MACRO_CONFIG_INT(QmFreezeWakeupPopup, qm_freeze_wakeup_popup, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示")
+MACRO_CONFIG_INT(QmFreezeWakeupPopup, qm_freeze_wakeup_popup, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "本体或 Dummy 被锤醒时，在对应玩家随机的左上或右上角显示提示")
 MACRO_CONFIG_INT(QmAutoTeamLock, qm_auto_team_lock, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "加入可锁定队伍后自动锁定")
 MACRO_CONFIG_INT(QmAutoTeamLockDelay, qm_auto_team_lock_delay, 5, 0, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "自动锁定延迟（秒）")
 
@@ -179,18 +181,18 @@ MACRO_CONFIG_INT(QmInputOverlayPosX, qm_input_overlay_pos_x, 71, 0, 100, CFGFLAG
 MACRO_CONFIG_INT(QmInputOverlayPosY, qm_input_overlay_pos_y, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "输入叠加 Y 位置（百分比）")
 
 // Notification Bar / 通知栏
-MACRO_CONFIG_INT(QmHudNotificationsSystem, qm_hud_notifications_system, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏接管服务器系统提示（入场版本信息除外）")
+MACRO_CONFIG_INT(QmHudNotificationsSystem, qm_hud_notifications_system, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏接管服务器系统提示（入场版本信息除外）")
 MACRO_CONFIG_INT(QmHudNotificationsEcho, qm_hud_notifications_echo, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏接管 echo 消息")
 MACRO_CONFIG_INT(QmHudNotificationsShowAdvanced, qm_hud_notifications_show_advanced, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示通知栏高级设置")
-MACRO_CONFIG_INT(QmHudNotificationsUseCategoryFilters, qm_hud_notifications_use_category_filters, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "使用通知栏分类过滤")
+MACRO_CONFIG_INT(QmHudNotificationsUseCategoryFilters, qm_hud_notifications_use_category_filters, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "使用通知栏分类过滤")
 MACRO_CONFIG_INT(QmHudNotificationsShowBasicInfo, qm_hud_notifications_show_basic_info, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示基础服务器信息")
 MACRO_CONFIG_INT(QmHudNotificationsShowHelpInfo, qm_hud_notifications_show_help_info, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示服务器帮助说明")
-MACRO_CONFIG_INT(QmHudNotificationsShowPrompts, qm_hud_notifications_show_prompts, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示重要服务器提示")
-MACRO_CONFIG_INT(QmHudNotificationsShowUnknown, qm_hud_notifications_show_unknown, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示未知服务器消息")
+MACRO_CONFIG_INT(QmHudNotificationsShowPrompts, qm_hud_notifications_show_prompts, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示重要服务器提示")
+MACRO_CONFIG_INT(QmHudNotificationsShowUnknown, qm_hud_notifications_show_unknown, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏显示未知服务器消息")
 MACRO_CONFIG_INT(QmHudNotificationsCompatSolo, qm_hud_notifications_compat_solo, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "兼容其他服务器的类似单人区域提示")
 MACRO_CONFIG_COL(QmHudNotificationsBgColor, qm_hud_notifications_bg_color, 0x99000000, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "通知栏背景颜色")
 MACRO_CONFIG_COL(QmHudNotificationsTextColor, qm_hud_notifications_text_color, 0xFFFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "通知栏系统提示文字颜色")
-MACRO_CONFIG_INT(QmHudNotificationsEchoInheritColor, qm_hud_notifications_echo_inherit_color, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏 echo 继承聊天 echo 颜色")
+MACRO_CONFIG_INT(QmHudNotificationsEchoInheritColor, qm_hud_notifications_echo_inherit_color, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏 echo 继承聊天 echo 颜色")
 MACRO_CONFIG_COL(QmHudNotificationsEchoTextColor, qm_hud_notifications_echo_text_color, 0xFF92FFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "通知栏 echo 覆盖文字颜色")
 MACRO_CONFIG_INT(QmHudNotificationsTextSize, qm_hud_notifications_text_size, 8, 1, 24, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏文字大小")
 MACRO_CONFIG_INT(QmHudNotificationsHoldMs, qm_hud_notifications_hold_ms, 2500, 500, 10000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏停留时间（毫秒）")
@@ -198,6 +200,22 @@ MACRO_CONFIG_INT(QmHudNotificationsAnimType, qm_hud_notifications_anim_type, 0, 
 MACRO_CONFIG_INT(QmHudNotificationsAnimMs, qm_hud_notifications_anim_ms, 220, 0, 2000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏动画时间（毫秒）")
 MACRO_CONFIG_INT(QmHudNotificationsMaxVisible, qm_hud_notifications_max_visible, 3, 1, 8, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏最大显示数量")
 MACRO_CONFIG_INT(QmHudNotificationsEdgeMargin, qm_hud_notifications_edge_margin, 8, 0, 32, CFGFLAG_CLIENT | CFGFLAG_SAVE, "通知栏贴边时预留边距")
+
+// QmLive finish ranking HUD / QmLive 完成排名 HUD
+MACRO_CONFIG_INT(QmLiveRankHud, qm_live_rank_hud, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：显示队伍完成排名卡片")
+MACRO_CONFIG_INT(QmLiveRankTeamMin, qm_live_rank_team_min, 1, 1, 63, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：排名 HUD 队伍范围下限")
+MACRO_CONFIG_INT(QmLiveRankTeamMax, qm_live_rank_team_max, 30, 1, 63, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：排名 HUD 队伍范围上限")
+MACRO_CONFIG_INT(QmLiveRankPopupSeconds, qm_live_rank_popup_seconds, 4, 1, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：完成排名卡片显示秒数")
+MACRO_CONFIG_INT(QmLiveRankShowOutOfRange, qm_live_rank_show_out_of_range, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：显示配置范围外队伍的完成卡片")
+MACRO_CONFIG_INT(QmLiveRankScale, qm_live_rank_scale, 100, 50, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：完成排名卡片缩放百分比")
+MACRO_CONFIG_INT(QmLiveRankAlpha, qm_live_rank_alpha, 92, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：完成排名卡片不透明度百分比")
+MACRO_CONFIG_INT(QmLiveMatchRecord, qm_live_match_record, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：完整比赛 demo 录制开关")
+MACRO_CONFIG_INT(QmLiveTeamFilter, qm_live_team_filter, 0, 0, 63, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：单队隔离预览/渲染队伍，0=关闭")
+MACRO_CONFIG_INT(QmLiveTeamFilterPreview, qm_live_team_filter_preview, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：启用单队隔离画面过滤")
+MACRO_CONFIG_INT(QmLiveTeamFilterAudio, qm_live_team_filter_audio, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：启用单队隔离音效过滤")
+MACRO_CONFIG_INT(QmLiveTeamFilterHideExternalFinish, qm_live_team_filter_hide_external_finish, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：隐藏非目标队伍完成提示")
+MACRO_CONFIG_INT(QmLiveTeamFilterStrictUnknownEvents, qm_live_team_filter_strict_unknown_events, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmLiveClient：无法识别来源的玩家型事件默认过滤")
+
 MACRO_CONFIG_INT(QmMonitoringHudOpacity, qm_monitoring_hud_opacity, 66, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "调试图表面板不透明度（百分比）")
 
 // Voice / 语音
@@ -208,13 +226,13 @@ MACRO_CONFIG_STR(QmVoiceServer, qm_voice_server, 128, "42.194.185.210:9987", CFG
 MACRO_CONFIG_STR(QmVoiceAudioBackend, qm_voice_audio_backend, 64, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音音频后端（SDL 驱动名，空为自动）")
 MACRO_CONFIG_STR(QmVoiceInputDevice, qm_voice_input_device, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音输入设备（空为默认）")
 MACRO_CONFIG_STR(QmVoiceOutputDevice, qm_voice_output_device, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音输出设备（空为默认）")
-MACRO_CONFIG_INT(QmVoiceStereo, qm_voice_stereo, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音立体声输出")
+MACRO_CONFIG_INT(QmVoiceStereo, qm_voice_stereo, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音立体声输出")
 MACRO_CONFIG_INT(QmVoiceStereoWidth, qm_voice_stereo_width, 100, 0, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音立体声宽度（百分比）")
 MACRO_CONFIG_STR(QmVoiceToken, qm_voice_token, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音房间 Token（可选）")
 MACRO_CONFIG_INT(QmVoiceGroupMode, qm_voice_group_mode, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音分组模式")
-MACRO_CONFIG_INT(QmVoiceFilterEnable, qm_voice_filter_enable, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用语音滤波（高通/压缩/限幅）")
+MACRO_CONFIG_INT(QmVoiceFilterEnable, qm_voice_filter_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用语音滤波（高通/压缩/限幅）")
 MACRO_CONFIG_INT(QmVoiceBitrateProfile, qm_voice_bitrate_profile, 0, 0, 4, CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音码率档位（0=自动 1=24kbps 2=32kbps 3=48kbps 4=64kbps）")
-MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 2, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "噪声抑制模式（0=关闭 1=简单 2=RNNoise）")
+MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "噪声抑制模式（0=关闭 1=简单 2=RNNoise）")
 MACRO_CONFIG_INT(QmVoiceNoiseSuppressStrength, qm_voice_noise_suppress_strength, 35, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "噪声抑制强度（百分比）")
 MACRO_CONFIG_INT(QmVoiceCompThreshold, qm_voice_comp_threshold, 24, 1, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "压缩器阈值（百分比）")
 MACRO_CONFIG_INT(QmVoiceCompRatio, qm_voice_comp_ratio, 20, 10, 80, CFGFLAG_CLIENT | CFGFLAG_SAVE, "压缩器比率（x10）")
@@ -239,7 +257,7 @@ MACRO_CONFIG_INT(QmVoiceListMode, qm_voice_list_mode, 0, 0, 2, CFGFLAG_CLIENT | 
 MACRO_CONFIG_STR(QmVoiceWhitelist, qm_voice_whitelist, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音白名单（逗号分隔）")
 MACRO_CONFIG_STR(QmVoiceBlacklist, qm_voice_blacklist, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音黑名单（逗号分隔）")
 MACRO_CONFIG_STR(QmVoiceMute, qm_voice_mute, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "语音静音名单（逗号分隔）")
-MACRO_CONFIG_INT(QmVoiceHearVad, qm_voice_hear_vad, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "接收 VAD 讲话者")
+MACRO_CONFIG_INT(QmVoiceHearVad, qm_voice_hear_vad, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "接收 VAD 讲话者")
 MACRO_CONFIG_STR(QmVoiceVadAllow, qm_voice_vad_allow, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "VAD 允许名单（逗号分隔）")
 MACRO_CONFIG_STR(QmVoiceNameVolumes, qm_voice_name_volumes, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "按名字单独音量（name=percent）")
 MACRO_CONFIG_INT(QmVoiceDebug, qm_voice_debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "输出语音调试日志")
@@ -255,7 +273,7 @@ MACRO_CONFIG_INT(QmStreamerScoreboardDefaultFlags, qm_streamer_scoreboard_defaul
 
 // Friend Online Notifications / 好友上线提醒
 MACRO_CONFIG_INT(QmFriendOnlineNotify, qm_friend_online_notify, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "好友上线提醒")
-MACRO_CONFIG_INT(QmFriendOnlineAutoRefresh, qm_friend_online_auto_refresh, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "好友提醒自动刷新服务器列表")
+MACRO_CONFIG_INT(QmFriendOnlineAutoRefresh, qm_friend_online_auto_refresh, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "好友提醒自动刷新服务器列表")
 MACRO_CONFIG_INT(QmFriendOnlineRefreshSeconds, qm_friend_online_refresh_seconds, 30, 5, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "好友提醒刷新间隔(秒)")
 MACRO_CONFIG_INT(QmFriendEnterAutoGreet, qm_friend_enter_auto_greet, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "好友进图自动打招呼")
 MACRO_CONFIG_INT(QmFriendEnterBroadcast, qm_friend_enter_broadcast, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "大字显示好友进服")
@@ -266,7 +284,7 @@ MACRO_CONFIG_STR(QmFriendEnterGreetText, qm_friend_enter_greet_text, 128, "你�
 MACRO_CONFIG_INT(QmBlockWordsEnabled, qm_block_words_enabled, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用屏蔽词列表")
 MACRO_CONFIG_INT(QmBlockWordsShowConsole, qm_block_words_show_console, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "控制台显示被屏蔽词")
 MACRO_CONFIG_COL(QmBlockWordsConsoleColor, qm_block_words_console_color, 0xFFFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "被屏蔽词控制台颜色")
-MACRO_CONFIG_INT(QmBlockWordsMultiReplace, qm_block_words_multi_replace, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "按屏蔽词长度多字符替换")
+MACRO_CONFIG_INT(QmBlockWordsMultiReplace, qm_block_words_multi_replace, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "按屏蔽词长度多字符替换")
 MACRO_CONFIG_INT(QmBlockWordsMode, qm_block_words_mode, 2, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "替换方式 0=Regex 1=Full 2=Both")
 MACRO_CONFIG_STR(QmBlockWordsReplacementChar, qm_block_words_replacement_char, 8, "*", CFGFLAG_CLIENT | CFGFLAG_SAVE, "屏蔽词替换字符")
 MACRO_CONFIG_STR(QmBlockWordsList, qm_block_words_list, 1024, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "屏蔽词列表（用,分隔）")
@@ -348,11 +366,11 @@ MACRO_CONFIG_INT(QmPlayerStatsMapProgressHeight, qm_player_stats_map_progress_he
 MACRO_CONFIG_INT(QmPlayerStatsMapProgressPosX, qm_player_stats_map_progress_pos_x, 50, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "地图进度条水平位置（中心点，占屏幕宽度百分比）")
 MACRO_CONFIG_INT(QmPlayerStatsMapProgressPosY, qm_player_stats_map_progress_pos_y, 97, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "地图进度条垂直位置（顶边，占屏幕高度百分比）")
 MACRO_CONFIG_INT(QmPlayerStatsMapProgressDbgRoute, qm_player_stats_map_progress_dbg_route, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示地图进度调试点路线")
-MACRO_CONFIG_INT(QmPlayerStatsResetOnJoin, qm_player_stats_reset_on_join, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "进入服务器时重置统计（0=累计统计，1=每次进服重置）")
+MACRO_CONFIG_INT(QmPlayerStatsResetOnJoin, qm_player_stats_reset_on_join, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "进入服务器时重置统计（0=累计统计，1=每次进服重置）")
 
 // HUD Dynamic Island - 灵动岛/HUD 编辑器
 MACRO_CONFIG_INT(QmHudIslandUseOriginalStyle, qm_hud_island_use_original_style, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "灵动岛使用原版样式")
-MACRO_CONFIG_INT(QmHudIslandShowTeam, qm_hud_island_show_team, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "HUD 灵动岛显示队伍")
+MACRO_CONFIG_INT(QmHudIslandShowTeam, qm_hud_island_show_team, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "HUD 灵动岛显示队伍")
 MACRO_CONFIG_COL(QmHudIslandBgColor, qm_hud_island_bg_color, 0x9C460E, CFGFLAG_CLIENT | CFGFLAG_SAVE, "灵动岛背景颜色")
 MACRO_CONFIG_INT(QmHudIslandBgOpacity, qm_hud_island_bg_opacity, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "灵动岛背景透明度")
 MACRO_CONFIG_INT(QmHudIslandEdgeMargin, qm_hud_island_edge_margin, 5, 0, 64, CFGFLAG_CLIENT | CFGFLAG_SAVE, "灵动岛 HUD 编辑器贴边外边距 px")
@@ -385,7 +403,7 @@ MACRO_CONFIG_INT(Qm3DParticlesViewMargin, qm_3d_particles_view_margin, 120, 0, 1
 MACRO_CONFIG_INT(Qm3DParticlesAlpha, qm_3d_particles_alpha, 30, 1, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "背景 3D 粒子透明度")
 MACRO_CONFIG_INT(Qm3DParticlesFadeInMs, qm_3d_particles_fade_in_ms, 400, 1, 5000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "背景 3D 粒子淡入时间")
 MACRO_CONFIG_INT(Qm3DParticlesFadeOutMs, qm_3d_particles_fade_out_ms, 400, 1, 5000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "背景 3D 粒子淡出时间")
-MACRO_CONFIG_INT(Qm3DParticlesCollide, qm_3d_particles_collide, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "背景 3D 粒子之间碰撞")
+MACRO_CONFIG_INT(Qm3DParticlesCollide, qm_3d_particles_collide, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "背景 3D 粒子之间碰撞")
 MACRO_CONFIG_INT(Qm3DParticlesPushRadius, qm_3d_particles_push_radius, 120, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "玩家推动背景 3D 粒子的半径")
 MACRO_CONFIG_INT(Qm3DParticlesPushStrength, qm_3d_particles_push_strength, 120, 0, 2000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "玩家推动背景 3D 粒子的强度")
 MACRO_CONFIG_INT(Qm3DParticlesColorMode, qm_3d_particles_color_mode, 1, 1, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "背景 3D 粒子颜色模式：1=自定义，2=随机")
@@ -418,7 +436,7 @@ MACRO_CONFIG_INT(QmDummySkinQueueRotateMap, qm_dummy_skin_queue_rotate_map, 0, 0
 MACRO_CONFIG_INT(QmFootParticles, qm_foot_particles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）")
 
 // Settings performance - 性能
-MACRO_CONFIG_INT(QmSettingsPrewarm, qm_settings_prewarm, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启动和菜单空闲时预热设置页")
+MACRO_CONFIG_INT(QmSettingsPrewarm, qm_settings_prewarm, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启动和菜单空闲时预热设置页")
 
 // Chat Bubble Settings - 聊天气泡
 MACRO_CONFIG_INT(QmChatSaveDraft, qm_chat_save_draft, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "关闭聊天时保留未发送内容")
@@ -427,7 +445,7 @@ MACRO_CONFIG_INT(QmChatAnimSlideOut, qm_chat_anim_slide_out, 0, 0, 1, CFGFLAG_CL
 MACRO_CONFIG_INT(QmChatAnimFadeDurationMs, qm_chat_anim_fade_duration_ms, 300, 0, 2000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天消息淡出平滑时间（毫秒）")
 MACRO_CONFIG_INT(QmChatAnimEasing, qm_chat_anim_easing, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天消息淡出缓动模式")
 MACRO_CONFIG_INT(QmHideChatBubbles, qm_hide_chat_bubbles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）")
-MACRO_CONFIG_INT(QmChatBubble, qm_chat_bubble, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在玩家头顶显示聊天气泡")
+MACRO_CONFIG_INT(QmChatBubble, qm_chat_bubble, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "在玩家头顶显示聊天气泡")
 MACRO_CONFIG_INT(QmChatBubbleDuration, qm_chat_bubble_duration, 10, 1, 30, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡显示时长（秒）")
 MACRO_CONFIG_INT(QmChatBubbleAlpha, qm_chat_bubble_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡透明度（0-100）")
 MACRO_CONFIG_INT(QmChatBubbleFontSize, qm_chat_bubble_font_size, 20, 8, 32, CFGFLAG_CLIENT | CFGFLAG_SAVE, "聊天气泡字体大小")
@@ -470,8 +488,8 @@ MACRO_CONFIG_INT(QmLyricsSearchType, qm_lyrics_search_type, 0, 0, 1, CFGFLAG_CLI
 MACRO_CONFIG_STR(QmLyricsSourceOrder, qm_lyrics_source_order, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）")
 MACRO_CONFIG_STR(QmLyricsProviderThresholds, qm_lyrics_provider_thresholds, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）")
 MACRO_CONFIG_STR(QmLyricsIgnoreCacheProviders, qm_lyrics_ignore_cache_providers, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）")
-MACRO_CONFIG_INT(QmLyricsAutoFetch, qm_lyrics_auto_fetch, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "检测新歌时自动联网拉取歌词")
-MACRO_CONFIG_INT(QmLyricsCacheEnable, qm_lyrics_cache_enable, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用歌词本地缓存")
+MACRO_CONFIG_INT(QmLyricsAutoFetch, qm_lyrics_auto_fetch, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "检测新歌时自动联网拉取歌词")
+MACRO_CONFIG_INT(QmLyricsCacheEnable, qm_lyrics_cache_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用歌词本地缓存")
 MACRO_CONFIG_INT(QmLyricsCacheTtlDays, qm_lyrics_cache_ttl_days, 30, 0, 3650, CFGFLAG_CLIENT | CFGFLAG_SAVE, "歌词缓存过期天数（0=永久）")
 MACRO_CONFIG_INT(QmLyricsMatchThreshold, qm_lyrics_match_threshold, 60, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "歌词模糊匹配评分阈值")
 MACRO_CONFIG_INT(QmLyricsLinesAbove, qm_lyrics_lines_above, 2, 0, 6, CFGFLAG_CLIENT | CFGFLAG_SAVE, "活动行上方显示行数")
@@ -484,9 +502,9 @@ MACRO_CONFIG_INT(QmLyricsInactiveOpacity, qm_lyrics_inactive_opacity, 35, 0, 100
 MACRO_CONFIG_COL(QmLyricsColorPlayed, qm_lyrics_color_played, 0xFFFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "已播放词颜色")
 MACRO_CONFIG_COL(QmLyricsColorUnplayed, qm_lyrics_color_unplayed, 0xFFCCCCCC, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "未播放词颜色")
 MACRO_CONFIG_COL(QmLyricsColorTranslation, qm_lyrics_color_translation, 0xFF888888, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "歌词翻译/音译颜色")
-MACRO_CONFIG_INT(QmLyricsShowTranslation, qm_lyrics_show_translation, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示歌词翻译（若有）")
+MACRO_CONFIG_INT(QmLyricsShowTranslation, qm_lyrics_show_translation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示歌词翻译（若有）")
 MACRO_CONFIG_INT(QmLyricsShowTransliteration, qm_lyrics_show_transliteration, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示歌词音译（若有）")
-MACRO_CONFIG_INT(QmLyricsKaraoke, qm_lyrics_karaoke, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用歌词逐字高亮")
+MACRO_CONFIG_INT(QmLyricsKaraoke, qm_lyrics_karaoke, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用歌词逐字高亮")
 MACRO_CONFIG_INT(QmLyricsHighlightEdgeSoft, qm_lyrics_highlight_edge_soft, 8, 0, 32, CFGFLAG_CLIENT | CFGFLAG_SAVE, "逐字边缘软过渡宽度 px")
 MACRO_CONFIG_INT(QmLyricsScaleActive, qm_lyrics_scale_active, 106, 100, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "活动行缩放百分比")
 MACRO_CONFIG_INT(QmLyricsScaleFalloff, qm_lyrics_scale_falloff, 4, 0, 20, CFGFLAG_CLIENT | CFGFLAG_SAVE, "远离行每行缩小百分比")
@@ -498,11 +516,11 @@ MACRO_CONFIG_INT(QmLyricsHttpTimeoutMs, qm_lyrics_http_timeout_ms, 8000, 500, 30
 MACRO_CONFIG_STR(QmLyricsLrclibBase, qm_lyrics_lrclib_base, 64, "https://lrclib.net", CFGFLAG_CLIENT | CFGFLAG_SAVE, "LRCLIB API 基地址（可改成镜像）")
 MACRO_CONFIG_STR(QmLyricsAmllTtmlDbBase, qm_lyrics_amll_ttml_db_base, 128, "https://raw.githubusercontent.com/amll-dev/amll-ttml-db/refs/heads/main", CFGFLAG_CLIENT | CFGFLAG_SAVE, "AMLL TTML DB API 基地址（可改成镜像）")
 MACRO_CONFIG_STR(QmLyricsAppleMusicMediaUserToken, qm_lyrics_apple_music_media_user_token, 2048, "", CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_INSENSITIVE, "Apple Music media-user-token")
-MACRO_CONFIG_STR(QmLyricsLocalMediaFolders, qm_lyrics_local_media_folders, 4096, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Lyrics local media library folders (use | as separator)")
-MACRO_CONFIG_STR(QmLyricsHttpProxy, qm_lyrics_http_proxy, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)")
-MACRO_CONFIG_INT(QmLyricsOffsetMs, qm_lyrics_offset_ms, 0, -30000, 30000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Lyrics manual timeline offset in ms (runtime step 500ms)")
-MACRO_CONFIG_INT(QmLyricsHideWhenPaused, qm_lyrics_hide_when_paused, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide lyrics while media is paused")
-MACRO_CONFIG_INT(QmLyricsHideNoLyrics, qm_lyrics_hide_no_lyrics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide lyrics when no lyrics are found instead of showing a hint")
+MACRO_CONFIG_STR(QmLyricsLocalMediaFolders, qm_lyrics_local_media_folders, 4096, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "歌词本地媒体库目录（多个目录用 | 分隔）")
+MACRO_CONFIG_STR(QmLyricsHttpProxy, qm_lyrics_http_proxy, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "歌词 HTTP 代理（如 http://127.0.0.1:7890）")
+MACRO_CONFIG_INT(QmLyricsOffsetMs, qm_lyrics_offset_ms, 0, -30000, 30000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "歌词手动时间轴偏移 ms（运行时按 500ms 步进）")
+MACRO_CONFIG_INT(QmLyricsHideWhenPaused, qm_lyrics_hide_when_paused, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "暂停时隐藏歌词")
+MACRO_CONFIG_INT(QmLyricsHideNoLyrics, qm_lyrics_hide_no_lyrics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "未找到歌词时隐藏（而非显示提示）")
 
 // Speedrun Timer - 速通倒计时器
 MACRO_CONFIG_INT(QmSpeedrunTimer, qm_speedrun_timer, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "速通倒计时器")
@@ -554,7 +572,7 @@ MACRO_CONFIG_STR(QmTranslateSource, qm_translate_source, 16, "auto", CFGFLAG_CLI
 
 // Translate - Auto Outgoing - 自动翻译发送消息
 MACRO_CONFIG_INT(QmTranslateAutoOutgoing, qm_translate_auto_outgoing, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "自动翻译发送的消息")
-MACRO_CONFIG_INT(QmTranslateAutoOutgoingMode, qm_translate_auto_outgoing_mode, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "自动翻译模式 (0=仅常见源语言输入时触发, 1=始终翻译)")
+MACRO_CONFIG_INT(QmTranslateAutoOutgoingMode, qm_translate_auto_outgoing_mode, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "自动翻译模式 (0=仅常见源语言输入时触发, 1=始终翻译)")
 MACRO_CONFIG_STR(QmTranslateOutgoingTarget, qm_translate_outgoing_target, 16, "en", CFGFLAG_CLIENT | CFGFLAG_SAVE, "出站翻译目标语言代码")
 
 // Translate - Tencent Cloud - 腾讯云

@@ -2664,6 +2664,8 @@ if(CLIENT)
     components/background.cpp
     components/background.h
     components/binds.cpp
+    components/binds_deepfly_mode.cpp
+    components/binds_deepfly_mode.h
     components/binds.h
     components/broadcast.cpp
     components/broadcast.h
@@ -2812,6 +2814,8 @@ if(CLIENT)
     components/qmclient/settings_resource_preview.h
     components/qmclient/scripting.cpp
     components/qmclient/scripting.h
+    components/qmclient/tee_hue_cycle.cpp
+    components/qmclient/tee_hue_cycle.h
     components/qmclient/scripting/impl.cpp
     components/qmclient/scripting/impl.h
     components/qmclient/translate/translate.cpp
@@ -2914,8 +2918,16 @@ if(CLIENT)
     lineinput.h
     live/live_director.cpp
     live/live_director.h
+    live/live_finish_ranking.cpp
+    live/live_finish_ranking.h
+    live/live_match_replay.cpp
+    live/live_match_replay.h
     live/live_replay_buffer.cpp
     live/live_replay_buffer.h
+    live/live_replay_sidecar.cpp
+    live/live_replay_sidecar.h
+    live/live_team_render_filter.cpp
+    live/live_team_render_filter.h
     pickup_data.cpp
     pickup_data.h
     prediction/entities/character.cpp
@@ -2938,8 +2950,6 @@ if(CLIENT)
     prediction/gameworld.h
     projectile_data.cpp
     projectile_data.h
-    qm_command_router.cpp
-    qm_command_router.h
     qm_icon_manager.cpp
     qm_icon_manager.h
     qm_ime_candidate_popup.cpp
@@ -3072,8 +3082,16 @@ if(CLIENT)
   set(GAME_LIVE_CLIENT
     ${PROJECT_SOURCE_DIR}/src/game/client/live/live_director.cpp
     ${PROJECT_SOURCE_DIR}/src/game/client/live/live_director.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_finish_ranking.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_finish_ranking.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_match_replay.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_match_replay.h
     ${PROJECT_SOURCE_DIR}/src/game/client/live/live_replay_buffer.cpp
     ${PROJECT_SOURCE_DIR}/src/game/client/live/live_replay_buffer.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_replay_sidecar.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_replay_sidecar.h
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_team_render_filter.cpp
+    ${PROJECT_SOURCE_DIR}/src/game/client/live/live_team_render_filter.h
   )
   list(REMOVE_ITEM GAME_CLIENT ${GAME_LIVE_CLIENT})
   set(GAME_GENERATED_CLIENT
@@ -3699,7 +3717,6 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/generated/checksum.cpp
 if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   set_src(TESTS GLOB src/test
     QmAnimTest.cpp
-    QmDummyCommandTest.cpp
     QmIconAtlasTest.cpp
     QmLayoutTest.cpp
     QmUiTokensTest.cpp
@@ -3763,6 +3780,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_lyrics_source_lrclib_test.cpp
     qm_lyrics_song_search_map_test.cpp
     qm_modes_test.cpp
+    qm_tee_hue_cycle_test.cpp
     qmclient_update_version_test.cpp
     QmUiTokensTest.cpp
     qmclient_monitoring_test.cpp
@@ -3823,6 +3841,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/QmUi/QmCardRegistry.cpp
     src/game/client/QmUi/QmModuleLayoutAdapter.cpp
     src/game/client/components/assets_resource_registry.cpp
+    src/game/client/components/binds_deepfly_mode.cpp
     src/generated/client_data.h
     src/generated/client_data7.h
     src/game/client/components/qmclient/hud_notifications/hud_notification_catalog.cpp
@@ -3842,9 +3861,13 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
     src/game/client/components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
     src/game/client/live/live_director.cpp
+    src/game/client/live/live_finish_ranking.cpp
     src/game/client/live/live_replay_buffer.cpp
+    src/game/client/live/live_replay_sidecar.cpp
+    src/game/client/live/live_team_render_filter.cpp
     src/game/client/components/qmclient/modes.cpp
     src/game/client/components/qmclient/settings_resource_preview.cpp
+    src/game/client/components/qmclient/tee_hue_cycle.cpp
     src/game/client/components/qmclient/update_version.cpp
     src/game/client/components/qmclient/qmclient_utils.cpp
     src/game/client/components/qmclient/translate/translate_parse.cpp

@@ -1570,7 +1570,7 @@ TEST(QmMonitoringHelpers, SettingsStaticLabelsUseTextElementCache)
 		Buffer << File.rdbuf();
 		const std::string Source = Buffer.str();
 
-		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle)"), std::string::npos);
+		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle, TitleStyleKey)"), std::string::npos);
 		EXPECT_NE(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, pText)"), std::string::npos);
 		EXPECT_EQ(Source.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pValue)"), std::string::npos);
 	}
@@ -6359,6 +6359,21 @@ TEST(QmMonitoringHelpers, QmUiScrollContainerContentDragIsOptIn)
 	EXPECT_NE(Containers.find("Input.m_ContentDragAllowed = Props.m_ContentDragAllowed;"), std::string::npos);
 	EXPECT_NE(Containers.find("Input.m_ContentDragBlocked = Ctx.m_pUi->ActiveItem() != nullptr;"), std::string::npos);
 	EXPECT_EQ(Dogfood.find("ScrollProps.m_ContentDragAllowed = true;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmClientModuleHeadlinesKeyTextCacheByLayout)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string HeadlineBlock = ExtractSourceBlock(Source, "auto RenderQmModuleHeadline = [&](CUIRect &Content", "auto RenderMenuImage =");
+	ASSERT_FALSE(HeadlineBlock.empty());
+
+	EXPECT_NE(HeadlineBlock.find("TitleLabelProps.m_MaxWidth = TitleRect.w"), std::string::npos);
+	EXPECT_NE(HeadlineBlock.find("BuildMenuTextStyleKey(&TitleRect, LgHeadlineSize, TEXTALIGN_ML, TitleLabelProps)"), std::string::npos);
+	EXPECT_NE(HeadlineBlock.find("BuildMenuTextStyleKey(&TitleRect, LgHeadlineSizeNew, TEXTALIGN_ML, TitleLabelProps)"), std::string::npos);
+	EXPECT_NE(HeadlineBlock.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle, TitleStyleKey)"), std::string::npos);
+	EXPECT_NE(HeadlineBlock.find("DoSettingsLabelStreamed(TitleElement, &TitleRect, pTitle, LgHeadlineSize, TEXTALIGN_ML, TitleLabelProps)"), std::string::npos);
+	EXPECT_NE(HeadlineBlock.find("DoSettingsLabelStreamed(TitleElement, &TitleRect, BuildQmFeatureLabel(pTitle, pNewFeatureId, aTitle, sizeof(aTitle)), LgHeadlineSizeNew, TEXTALIGN_ML, TitleLabelProps)"), std::string::npos);
+	EXPECT_EQ(HeadlineBlock.find("SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, pTitle);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsPagesExposeSectionLevelPerfStages)

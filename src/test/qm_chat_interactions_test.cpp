@@ -165,6 +165,24 @@ TEST(QmChatInteractions, ClickDragThreshold)
 	EXPECT_FALSE(CChat::IsCopyClickDrag(vec2(10.0f, 10.0f), vec2(30.0f, 10.0f)));
 }
 
+TEST(QmChatInteractions, ChatInputClipPaddingDoesNotExpandContentScrollArea)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string Body = SourceFunctionBody(Source, "void CChat::OnRender()");
+
+	EXPECT_NE(Body.find("const float InputContentHeight = 2.25f * InputCursor.m_FontSize;"), std::string::npos);
+	EXPECT_NE(Body.find("const float InputClipPaddingTop = maximum(1.0f, InputCursor.m_FontSize * 0.18f);"), std::string::npos);
+	EXPECT_NE(Body.find("const float InputClipPaddingBottom = maximum(1.0f, InputCursor.m_FontSize * 0.10f);"), std::string::npos);
+	EXPECT_NE(Body.find("const CUIRect InputContentRect"), std::string::npos);
+	EXPECT_NE(Body.find("const CUIRect InputClippingRect"), std::string::npos);
+	EXPECT_NE(Body.find("InputContentRect.y + InputClipPaddingTop - ScrollOffset"), std::string::npos);
+	EXPECT_NE(Body.find("m_Input.GetCaretPosition().y - InputClipPaddingTop - ScrollOffsetChange"), std::string::npos);
+	EXPECT_NE(Body.find("CaretPositionY < InputContentRect.y"), std::string::npos);
+	EXPECT_NE(Body.find("InputContentRect.y + InputContentRect.h"), std::string::npos);
+	EXPECT_NE(Body.find("Graphics()->ClipEnable((int)(InputClippingRect.x * XScale)"), std::string::npos);
+	EXPECT_EQ(Body.find("CaretPositionY < InputClippingRect.y"), std::string::npos);
+}
+
 TEST(QmChatInteractions, LiveDirectorBlocksOnlyPauseCommand)
 {
 	EXPECT_TRUE(CChat::ShouldBlockLiveDirectorChatCommand("/pause"));
@@ -242,7 +260,7 @@ TEST(QmChatInteractions, TranslateButtonSitsBeforeInputAndPopupCanCloseItself)
 	const std::string RenderBody = SourceFunctionBody(Source, "void CChat::OnRender()");
 	const std::string PopupBody = SourceFunctionBody(Source, "CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(");
 
-	EXPECT_NE(RenderBody.find("CUIRect TranslateButtonRect = {x"), std::string::npos);
+	EXPECT_NE(RenderBody.find("CUIRect TranslateButtonRect = {InputContentRect.x + InputContentRect.w + TranslateButtonGap"), std::string::npos);
 	EXPECT_NE(RenderBody.find("InputCursor.SetPosition(vec2(x + TranslateButtonSize + TranslateButtonGap, y));"), std::string::npos);
 	EXPECT_NE(PopupBody.find("FONT_ICON_XMARK"), std::string::npos);
 	EXPECT_NE(PopupBody.find("return CUi::POPUP_CLOSE_CURRENT;"), std::string::npos);

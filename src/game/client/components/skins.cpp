@@ -1342,7 +1342,7 @@ void CSkins::UpdateForSettingsWarmup()
 size_t CSkins::LoadedSkinLimit() const
 {
 #if defined(CONF_QM_LIVE_CLIENT)
-	if(Client()->QmLiveDirectorActive())
+	if(GameClient()->LivePresentationMode() == CGameClient::EQmLivePresentationMode::LIVE_OBSERVER)
 		return minimum((size_t)g_Config.m_ClSkinsLoadedMax, LIVE_OBSERVER_SKINS_LOADED_MAX);
 #endif
 	return (size_t)g_Config.m_ClSkinsLoadedMax;
@@ -2366,10 +2366,22 @@ void CSkins::Refresh(TSkinLoadedCallback &&SkinLoadedCallback)
 	}
 	m_SkinList.m_NeedsUpdate = true;
 
+	const auto LoadSpecialSkinDirect = [&](const char *pName) {
+		LoadSkinDirect(pName);
+		const auto Skin = m_Skins.find(pName);
+		if(Skin != m_Skins.end() && Skin->second->State() == CSkinContainer::EState::LOADED)
+		{
+			GameClient()->OnSkinUpdate(pName);
+		}
+		SkinLoadedCallback();
+	};
+
 	LoadSkinDirect("default");
 	LoadOfficialSkinIndexCache();
 	SkinLoadedCallback();
 	QueueOfficialSkinIndexRequest();
+	LoadSpecialSkinDirect("x_ninja");
+	LoadSpecialSkinDirect("x_spec");
 	QueueSkinDirectoryScanJob();
 }
 

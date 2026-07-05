@@ -11,13 +11,13 @@
 == "%s" ist nicht mit pnglite kompatibel und kann von alten DDNet-Versionen nicht geladen werden
 
 %.2f KiB
-== %.2f KiB
+== Pending german translation 939cb4f0e9
 
 %.2f MiB
-== %.2f MiB
+== Pending german translation 201b4dafc6
 
 %c Team %d
-== %c Team %d
+== Pending german translation 3fe49a3fdb
 
 %d dummies
 == %d Dummys
@@ -65,7 +65,7 @@
 == %d Benutzer
 
 %d/%d KiB (%.1f KiB/s)
-== %d/%d KiB (%.1f KiB/s)
+== Pending german translation 1fc62f9c13
 
 %ds left
 == %ds übrig
@@ -83,7 +83,7 @@
 == %i Sekunden übrig
 
 %s (/%s %s)
-== %s (/%s %s)
+== Pending german translation 2781521df0
 
 %s and %s have swapped
 == %s und %s haben getauscht
@@ -273,6 +273,9 @@ A screenshot with this name already exists
 
 A Tee
 == Ein Tee
+
+A vote is currently active.
+== Pending german translation 656f7895f1
 
 Abort
 == Abbrechen
@@ -503,7 +506,7 @@ Advanced options
 == Erweiterte Optionen
 
 AFR
-== AFR
+== Pending german translation 44c06a70c6
 
 After Load
 == Nach dem Laden
@@ -545,7 +548,10 @@ Allows maps to render with more detail
 == Ermöglicht detailliertere Darstellung von Karten
 
 Alpha
-== Alpha
+== Pending german translation dd63997211
+
+Also apply to dummy
+== Auch auf Dummy anwenden
 
 Always show
 == Immer anzeigen
@@ -578,7 +584,7 @@ Angle:
 == Winkel:
 
 Animation
-== Animation
+== Pending german translation bc110074ce
 
 Animation duration
 == Animationsdauer
@@ -698,7 +704,7 @@ Are you sure you want to save your skin? If a skin with this name already exists
 == Bist du sicher, dass du deinen Skin speichern möchtest? Falls ein Skin mit diesem Namen bereits existiert, wird er ersetzt.
 
 ASI
-== ASI
+== Pending german translation 74a3043190
 
 Aspect ratio preset
 == Seitenverhältnis-Voreinstellung
@@ -719,7 +725,7 @@ Attempt to change your name when near finish
 == Versuche, deinen Namen in der Nähe des Ziels zu ändern
 
 Audio
-== Audio
+== Pending german translation 5538183d22
 
 Audio backend init failed
 == Audio-Backend-Initialisierung fehlgeschlagen
@@ -746,7 +752,7 @@ Audio slots
 == Audio-Slots
 
 AUS
-== AUS
+== Pending german translation f899c9d575
 
 Authed name color in scoreboard
 == Farbe des authentifizierten Namens in der Bestenliste
@@ -761,7 +767,7 @@ Authorized player forced vote '%s'
 == Autorisierter Spieler hat Abstimmung '%s' erzwungen
 
 Auto
-== Auto
+== Pending german translation 7fa405d5ec
 
 auto
 == Auto
@@ -807,6 +813,9 @@ Auto manage IME while typing
 
 Auto map vote
 == Automatische Kartenabstimmung
+
+Auto margin
+== Pending german translation d124e6919d
 
 Auto refresh server list
 == Serverliste automatisch aktualisieren
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Beste
 
+Best input
+== Pending german translation 0410a8dedb
+
+Best input others
+== Pending german translation 786310fd11
+
+Best input 平滑百分比
+== Pending german translation 5cad2866f0
+
+Best input 延迟补偿百分比
+== Pending german translation 658753c19d
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Pending german translation 093f67126e
+
+Best input 预测偏移（0.01 tick）
+== Pending german translation 3b20404d7a
+
 Best match
 == Best match setting
 
@@ -1031,7 +1058,7 @@ Browser
 == Durchsuchen
 
 Brutal
-== Brutal
+== Pending german translation e9d7d6e29f
 
 Bubble opacity
 == Blasendeckkraft
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == Schaltfläche - Aktiviert
 
+Button browser
+== Pending german translation 724e553cbf
+
 Button position is outside of the screen.
 == Die Button-Position befindet sich außerhalb des Bildschirms.
 
 Buttons
 == Tasten
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Pending german translation 429345c733
+
+Buttons with this behavior execute console commands like regular key binds.
+== Pending german translation 753e2d70e6
+
+Buttons with this behavior execute some predefined actions.
+== Pending german translation 4abdad2b17
 
 c = Player position
 == c = Spielerposition
@@ -1111,6 +1150,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == Swap nicht möglich: Der andere Spieler ist nicht in deinem Team
 
+Card Appearance
+== Pending german translation 9fa3d9bd01
+
+Card background blur (high performance only)
+== Pending german translation faab616ab2
+
+Card background blur and corner rounding
+== Pending german translation 975b6af5be
+
 Category
 == Kategorie
 
@@ -1142,7 +1190,7 @@ Changing name to %s near finish
 == Ändere Namen zu %s in der Nähe des Ziels
 
 Chat
-== Chat
+== Pending german translation f9dc4c6d49
 
 Chat background color
 == Chat-Hintergrundfarbe
@@ -1205,7 +1253,7 @@ Checking for existing player with your name
 == Prüfe auf existierenden Spieler mit deinem Namen
 
 CHN
-== CHN
+== Pending german translation 686375684f
 
 Choose country flag
 == Landesflagge auswählen
@@ -1220,7 +1268,7 @@ Choose whether to browse replays or screenshots
 == Wählen Sie, ob Sie Demos oder Screenshots durchsuchen möchten
 
 Clan
-== Clan
+== Pending german translation 9ee0ef48c1
 
 Clan color in friends list
 == Clan-Farbe in der Freundesliste
@@ -1235,31 +1283,31 @@ Clan plates size
 == Größe der Clan-Schilder
 
 Clan: %s
-== Clan: %s
+== Pending german translation ed0a914ecf
 
 Classic
 == Klassisch
 
 Classic Easy
-== Classic Easy
+== Pending german translation 87c4016d3a
 
 Classic easy
 == Klassisch einfach
 
 Classic Next
-== Classic Next
+== Pending german translation e214a24ddb
 
 Classic next
 == Klassisch nächste
 
 Classic Nut
-== Classic Nut
+== Pending german translation bddb620171
 
 Classic nut
 == Klassisch nut
 
 Classic Pro
-== Classic Pro
+== Pending german translation cca27f5e22
 
 Classic pro
 == Klassisch pro
@@ -1324,6 +1372,9 @@ Click to remove this community from favorites
 Click to remove this player from your friends list.
 == Klicke, um diesen Spieler aus deiner Freundesliste zu entfernen.
 
+Click to restore full match
+== Pending german translation 9548d6dd85
+
 Click to select server. Double click to join your friend.
 == Klicke, um den Server auszuwählen. Doppelklicke, um deinem Freund beizutreten.
 
@@ -1331,7 +1382,7 @@ Click to set color
 == Klicke, um Farbe festzulegen
 
 Client
-== Client
+== Pending german translation 6f4e343383
 
 Client CPU usage is high
 == Client-CPU-Auslastung ist hoch
@@ -1382,7 +1433,7 @@ Colors of the hook collision line, in case of a possible collision with:
 == Farben der Haken-Kollisionslinie, bei möglicher Kollision mit:
 
 Combo
-== Combo
+== Pending german translation 7b1cb9b7b5
 
 Command
 == Befehl
@@ -1403,7 +1454,7 @@ Communities
 == Gemeinschaften
 
 Community
-== Community
+== Pending german translation c0940a6eae
 
 Community links, updates, and sponsors moved to the Contributors tab
 == Community-Links, Updates und Sponsoren wurden zum Tab „Mitwirkende“ verschoben
@@ -1520,7 +1571,7 @@ Control dummy
 == Dummy steuern
 
 Controller
-== Controller
+== Pending german translation f3096daea0
 
 Controller jitter tolerance
 == Controller-Jitter-Toleranz
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == Skin kopieren
 
+Corner segments
+== Pending german translation 5b8af158ab
+
 Could not check for existing player with your name. Check your internet connection.
 == Konnte nicht nach einem existierenden Spieler mit deinem Namen suchen. Überprüfe deine Internetverbindung.
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == Meldungs-Scan-Anfrage konnte nicht erstellt werden
+
+Could not find a Tutorial server. Check your internet connection.
+== Pending german translation 22b0cf4040
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Pending german translation cae7b2bf32
 
 Could not find your Team
 == Dein Team wurde nicht gefunden
@@ -1616,7 +1676,7 @@ Created
 == Erstellt
 
 Credits
-== Credits
+== Pending german translation f409584c60
 
 Crescent
 == Mondsichel
@@ -1696,6 +1756,9 @@ Cut segments
 Cute:
 == Süß:
 
+Cycle custom Tee hue
+== Benutzerdefinierten Tee-Farbton wechseln
+
 Cycle through emotes
 == Durch Emotes wechseln
 
@@ -1718,22 +1781,22 @@ Days
 == Tage
 
 DDmaX
-== DDmaX
+== Pending german translation 4af622e816
 
 DDmaX Easy
-== DDmaX Easy
+== Pending german translation 2330ebf61b
 
 DDmaX Next
-== DDmaX Next
+== Pending german translation b37b4621f2
 
 DDmaX Nut
-== DDmaX Nut
+== Pending german translation 36bdeab933
 
 DDmaX Pro
-== DDmaX Pro
+== Pending german translation 725b3fc616
 
 DDNet
-== DDNet
+== Pending german translation 6ea4fd604b
 
 DDNet / Total CPU
 == DDNet / Gesamt-CPU
@@ -1760,7 +1823,7 @@ DDNet/total CPU
 == DDNet/CPU gesamt
 
 DDRace HUD
-== DDRace HUD
+== Pending german translation 2003ad130e
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork ist ein kooperatives Online-Spiel, bei dem du und deine Gruppe von Tees das Ziel der Karte erreichen müsst. Als Neuling solltest du auf Novice-Servern beginnen, die die einfachsten Karten hosten. Wähle einen Server in deiner Nähe basierend auf dem Ping.
@@ -1802,7 +1865,7 @@ Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 == Deepfly-Modus (0=Normal, 1=DF, 2=HDF, 3=Benutzerdefiniert)
 
 DeepSeek
-== DeepSeek
+== Pending german translation 6b5cda2d5c
 
 DeepSeek API Key
 == DeepSeek API-Schlüssel
@@ -1871,13 +1934,16 @@ Delete this preset
 == Dieses Preset löschen
 
 Demo
-== Demo
+== Pending german translation fbd67acaa2
 
 Demo effects
 == Demo-Effekte
 
 Demo marker added
 == Demo-Marker hinzugefügt
+
+Demo player is currently active.
+== Pending german translation 598403831a
 
 Demo target
 == Demo-Ziel
@@ -1922,7 +1988,7 @@ Developers and sponsors
 == Entwickler und Sponsoren
 
 DF
-== DF
+== Pending german translation 724a2ba26c
 
 Diamond
 == Diamant
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == Deaktivieren nach Aufnehmen anderer Waffen
+
+Disable QmLive team preview/render filter
+== Pending german translation a2b4f0520b
 
 Disabled
 == Deaktiviert
@@ -1973,7 +2042,7 @@ Disconnected
 == Getrennt
 
 Discord
-== Discord
+== Pending german translation f959a14060
 
 Display mode
 == Anzeigemodus
@@ -2132,7 +2201,7 @@ Dummies are not allowed on this server
 == Dummies sind auf diesem Server nicht erlaubt
 
 Dummy
-== Dummy
+== Pending german translation ff32d4b2d7
 
 Dummy Control: %s
 == Dummy-Steuerung: %s
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == Dummy-Haken
+
+Dummy is allowed on this server.
+== Pending german translation 47d5fd4c7a
+
+Dummy is currently connected.
+== Pending german translation a59b6170bd
 
 Dummy jump
 == Dummy-Sprung
@@ -2243,7 +2318,7 @@ Edit touch controls
 == Touch-Steuerung bearbeiten
 
 Editor
-== Editor
+== Pending german translation 3b9299fde1
 
 Elastic
 == Elastisch
@@ -2258,7 +2333,7 @@ Emotes are disabled.
 == Emotes sind deaktiviert.
 
 Emoticon
-== Emoticon
+== Pending german translation 927decb607
 
 Emoticon ID
 == Emoticon-ID
@@ -2267,7 +2342,7 @@ Emoticon shadow
 == Emoticon-Schatten
 
 Emoticons
-== Emoticons
+== Pending german translation 331c7c37a4
 
 enable
 == aktivieren
@@ -2420,7 +2495,7 @@ Entity Preview
 == Entitäten-Vorschau
 
 entity_bg (Workshop)
-== entity_bg (Workshop)
+== Pending german translation 803bf8fd79
 
 Erase items on the in game background
 == Elemente auf dem Spielhintergrund löschen
@@ -2430,6 +2505,9 @@ Error
 
 Error checking player name
 == Fehler beim Überprüfen des Spielernamens
+
+Error joining Tutorial server
+== Pending german translation 8d0f79e770
 
 Error loading communities
 == Fehler beim Laden der Communities
@@ -2456,13 +2534,13 @@ ESC replay minutes
 == ESC-Wiederholungsminuten
 
 EUR
-== EUR
+== Pending german translation f74e459af5
 
 Evaluate an expression
 == Einen Ausdruck auswerten
 
 Event
-== Event
+== Pending german translation 08179b706c
 
 Example of usage
 == Anwendungsbeispiel
@@ -2525,7 +2603,7 @@ Exported to %s
 == Exportiert nach %s
 
 Extras
-== Extras
+== Pending german translation 28c21f28cb
 
 f = Frame rate
 == f = Bildrate
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Fallback-Stärke der einfachen Rauschunterdrückung
 
+Fast input
+== Pending german translation 1078213f74
+
 Fast input (reduce visual latency)
 == Schnelleingabe (reduziert visuelle Latenz)
 
@@ -2646,6 +2727,15 @@ File already exists, do you want to overwrite it?
 
 Filter connecting players
 == Verbindende Spieler filtern
+
+Filter off
+== Pending german translation 876a3f9784
+
+Filter Team %d
+== Pending german translation c8e0b01fa0
+
+Filter: Team %d
+== Pending german translation d16ccaac9a
 
 Find all ban records for the specified IP address
 == Alle Bann-Einträge für die angegebene IP-Adresse finden
@@ -2708,10 +2798,10 @@ Found %d modules
 == %d Module gefunden
 
 FPM
-== FPM
+== Pending german translation 95361c8ceb
 
 FPS
-== FPS
+== Pending german translation 9c2076d82c
 
 Frags
 == Kills
@@ -2789,10 +2879,13 @@ FSAA samples
 == FSAA-Samples
 
 FTAPI
-== FTAPI
+== Pending german translation be24382ddf
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == FTAPI-Automatikübersetzung ist deaktiviert, um Überlastung zu vermeiden. Bei Bedarf in den Einstellungen aktivieren.
+
+Full demo + sidecar
+== Pending german translation 5140663921
 
 Full map listen in same room
 == Vollkartenhören im selben Raum
@@ -2861,7 +2954,7 @@ Ghosts directory
 == Geister-Verzeichnis
 
 Github
-== Github
+== Pending german translation 4e25d2b0a7
 
 Give back right to vote to player with client ID
 == Stimmrecht an Spieler mit Client-ID zurückgeben
@@ -2900,7 +2993,7 @@ Gives you infinite jump
 == Gibt dir unendliche Sprünge
 
 Glitch
-== Glitch
+== Pending german translation 00f15076d3
 
 Global toggle key
 == Globaler Umschaltknopf
@@ -3002,7 +3095,7 @@ Gun
 == Pistole
 
 Hammer
-== Hammer
+== Pending german translation 82613479cd
 
 Hammer Mode:
 == Hammer-Modus:
@@ -3011,7 +3104,7 @@ Hammer skin steal
 == Hammer-Skin-Diebstahl
 
 Hammer: %s
-== Hammer: %s
+== Pending german translation 4408b1aa82
 
 Has people playing
 == Hat spielende Personen
@@ -3020,7 +3113,7 @@ Has save
 == Hat Speicherstand
 
 HDF
-== HDF
+== Pending german translation 4f050c461c
 
 Heart
 == Herz
@@ -3078,12 +3171,6 @@ Hide jump effects
 
 Hide kill/finish messages
 == Todes-/Ziel-Nachrichten ausblenden
-
-Hide lyrics when no lyrics are found instead of showing a hint
-== Songtext ausblenden, wenn keiner gefunden wird, anstatt einen Hinweis anzuzeigen
-
-Hide lyrics while media is paused
-== Songtext ausblenden, während die Medien pausiert sind
 
 Hide map progress
 == Kartenfortschritt ausblenden
@@ -3188,19 +3275,19 @@ Hover for tooltip
 == Für Tooltip bewegen
 
 https://ddnet.org/discord
-== https://ddnet.org/discord
+== Pending german translation bc828b478a
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+== Pending german translation 5f7c3d22b5
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
+== Pending german translation b57203cd4d
 
 https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls
+== Pending german translation e992fad53c
 
 HUD
-== HUD
+== Pending german translation afe466ace5
 
 HUD editor preview
 == HUD-Editor-Vorschau
@@ -3216,6 +3303,9 @@ HUD 编辑器布局
 
 Hue
 == Farbton
+
+Hue speed
+== Farbton-Geschwindigkeit
 
 i = Receive rate
 == i = Empfangsrate
@@ -3284,7 +3374,7 @@ Indicator size
 == Indikator-Größe
 
 Info
-== Info
+== Pending german translation 1cf7e0d11e
 
 Info Messages
 == Info-Nachrichten
@@ -3331,6 +3421,9 @@ Input overlay
 Input overlay display
 == Eingabe-Overlay-Anzeige
 
+Input smoothing
+== Pending german translation d3ee4d4c9f
+
 Input switch
 == Eingabeumschaltung
 
@@ -3344,10 +3437,13 @@ Intermediate
 == Mittelstufe
 
 Internet
-== Internet
+== Pending german translation e73a2e3324
 
 Internet (From online source)
 == Internet (Aus Online-Quelle)
+
+Interpolation
+== Pending german translation 55aa679763
 
 Invalid client id to kick
 == Ungültige Client-ID zum Kicken
@@ -3410,7 +3506,7 @@ Jelly strength
 == Jelly-Stärke
 
 Jitter
-== Jitter
+== Pending german translation f24844a256
 
 Join a team to enable practice mode, which means you can use /r, but can't earn a rank.
 == Tritt einem Team bei, um den Übungsmodus zu aktivieren. Das bedeutet, du kannst /r verwenden, aber keine Rangliste erhalten.
@@ -3442,6 +3538,9 @@ Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
 == Beitritt-, Versions-, Regel- und Hilfemeldungen bleiben im Chat statt als Popups
 
+Joining Tutorial server
+== Pending german translation 5d29a77223
+
 Jump
 == Springen
 
@@ -3452,7 +3551,7 @@ k = Resend loss
 == k = Erneuter Sendeverlust
 
 Kaomoji
-== Kaomoji
+== Pending german translation 431c0a6686
 
 Karaoke edge softness
 == Karaoke edge softness setting
@@ -3527,7 +3626,7 @@ Label type
 == Beschriftungstyp
 
 LAN
-== LAN
+== Pending german translation 31d149d146
 
 Language
 == Sprache
@@ -3539,7 +3638,7 @@ Large text content
 == Großer Textinhalt
 
 Laser
-== Laser
+== Pending german translation 57ec8b1919
 
 Laser effect enhancement
 == Laser-Effekt-Verbesserung
@@ -3559,6 +3658,9 @@ Last page in console
 Latency
 == Latenz
 
+Latency compensation
+== Pending german translation c1686e2106
+
 Latency Jitter
 == Latenz-Jitter
 
@@ -3566,7 +3668,7 @@ Latency jitter
 == Latenz-Jitter
 
 Layout
-== Layout
+== Pending german translation d62dfecbf6
 
 Leak IP
 == IP preisgeben
@@ -3599,7 +3701,7 @@ Length
 == Länge
 
 Lenny:
-== Lenny:
+== Pending german translation 431d601695
 
 Lets you join team i (shows your team if left blank)
 == Lässt dich Team i beitreten (zeigt dein Team an, wenn leer gelassen)
@@ -3608,7 +3710,7 @@ Lht.
 == Helligkeit
 
 LibreTranslate
-== LibreTranslate
+== Pending german translation d2a9590bf9
 
 LibreTranslate API Key
 == LibreTranslate API-Schlüssel
@@ -3626,7 +3728,7 @@ Line width
 == Linienbreite
 
 Linear
-== Linear
+== Pending german translation eb936552f2
 
 Lines
 == Zeilen
@@ -3689,7 +3791,7 @@ Live director
 == Live-Regisseur
 
 LLM API
-== LLM API
+== Pending german translation 46bfaa07ce
 
 LLM provider
 == LLM-Anbieter
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == Von Rcon abmelden
 
-Long press on a touch button to select it.
-== Langes Drücken auf einen Touch-Button, um ihn auszuwählen.
-
 Low to high
 == Niedrig zu hoch
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == Songtext
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== Songtext-HTTP-Proxy (z.B. http://127.0.0.1:7890)
-
 Lyrics HTTP timeout
 == Lyrics HTTP timeout setting
-
-Lyrics local media library folders (use | as separator)
-== Songtext-Lokale-Medienbibliothek-Ordner (| als Trennzeichen)
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== Manueller Songtext-Zeitachsen-Offset in ms (Laufzeit-Schritt 500 ms)
 
 Lyrics search type
 == Lyrics search type setting
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == Hauptmenü
-
-Make inactive tee fire
-== Make inactive tee fire
-
-Make inactive tee hook
-== Make inactive tee hook
-
-Make inactive tee jump
-== Make inactive tee jump
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == Stelle sicher, dass das Backend OpenAI-kompatible Denkparameter unterstützt
@@ -4112,16 +4193,10 @@ Modules snap to screen edges, center lines and other HUD modules while dragging
 == Module rasten beim Ziehen an Bildschirmrändern, Mittellinien und anderen HUD-Modulen ein
 
 MOTD
-== MOTD
+== Pending german translation f2120b0ae8
 
 Mouse
 == Maus
-
-Move inactive tee left
-== Move inactive tee left
-
-Move inactive tee right
-== Move inactive tee right
 
 Move left
 == Nach links bewegen
@@ -4193,10 +4268,10 @@ n = Prediction latency
 == n = Vorhersage-Latenz
 
 NA
-== NA
+== Pending german translation e1a64654bb
 
 Name
-== Name
+== Pending german translation b0c264050a
 
 Name Plate
 == Namensschild
@@ -4208,10 +4283,10 @@ Name plates size
 == Namensschild-Größe
 
 Name:
-== Name:
+== Pending german translation 591e03d3ba
 
 Name: %s
-== Name: %s
+== Pending german translation 9257f2b83e
 
 Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)
 == Namensschild-Hakenstärke-Symbolbereich (0=Eigen 1=Andere 2=Starker Haken 3=Schwacher Haken 4=Alle Spieler)
@@ -4481,7 +4556,7 @@ None
 == Keine
 
 Normal
-== Normal
+== Pending german translation 2abc7420aa
 
 Normal Color
 == Normale Farbe
@@ -4559,16 +4634,16 @@ Official community links
 == Offizielle Community-Links
 
 Offline
-== Offline
+== Pending german translation 2820e80b50
 
 Ohhhhhhhhhhhhhhhh
-== Ohhhhhhhhhhhhhhhh
+== Pending german translation 193dcac5e7
 
 Ok
 == OK
 
 Oldschool
-== Oldschool
+== Pending german translation 45ea5ca65e
 
 On
 == Ein
@@ -4581,6 +4656,9 @@ Online Players
 
 Only .wv files are supported right now.
 == Derzeit werden nur .wv-Dateien unterstützt.
+
+Only affects custom Tee colors.
+== Gilt nur für benutzerdefinierte Tee-Farben.
 
 Only Apple Can Do
 == Nur Apple kann das
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == Farbwähler öffnen
+
+Open DDNet Wiki
+== Pending german translation 12d66d5c9c
 
 Open emote selector
 == Emote-Auswahl öffnen
@@ -4651,11 +4732,17 @@ Open the folder containing screenshots
 Open the saves file
 == Öffne die Speicherdatei
 
+Open the selected folder
+== Pending german translation ffb86435cf
+
+Open the selected screenshot
+== Pending german translation 0482216ce3
+
 Open the settings file
 == Öffne die Einstellungsdatei
 
 OpenAI
-== OpenAI
+== Pending german translation 52f34d2292
 
 OpenAI API Key
 == OpenAI API-Schlüssel
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == Geöffnet
+
+Opens the emoticon selector (this does not work with binds).
+== Pending german translation 6a257a6061
+
+Opens the ingame menu immediately when released.
+== Pending german translation 7fe0c60c01
+
+Opens the spectator menu (this does not work with binds).
+== Pending german translation 5dae8de7bf
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == Von der Zuschauerzahl abmelden und Authentifizierungsstatus vor nicht authentifizierten Spielern verbergen (1 = verborgen, 0 = angezeigt)
@@ -4811,7 +4907,7 @@ Password incorrect
 == Passwort falsch
 
 Pause
-== Pause
+== Pending german translation 0022d2656d
 
 Pause the current demo
 == Aktuelle Demo pausieren
@@ -4853,7 +4949,7 @@ Pie menu
 == Kreis-Menü
 
 Ping
-== Ping
+== Pending german translation 3589ef72f8
 
 Ping the current server
 == Den aktuellen Server anpingen
@@ -4872,6 +4968,9 @@ Play background music
 
 Play the current demo
 == Aktuelle Demo abspielen
+
+Play the selected demo
+== Pending german translation 5ac85aafbe
 
 Play/Pause
 == Abspielen/Pause
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == Spieler-Indikator
+
+Player is currently authed in rcon.
+== Pending german translation bd6df8320f
+
+Player is ingame, i.e. not spectating.
+== Pending german translation 1c6674bf82
 
 Player is on a different team
 == Spieler ist in einem anderen Team
@@ -4976,7 +5081,7 @@ Popup animation
 == Popup-Animation
 
 Position
-== Position
+== Pending german translation 0aab73a638
 
 Position jump hint
 == Positions-Sprung-Hinweis
@@ -4985,7 +5090,7 @@ Position jump tip
 == Positionssprung-Tipp
 
 Position:
-== Position:
+== Pending german translation 1f55523550
 
 Practice mode can't be enabled in team 0 mode.
 == Übungsmodus kann im Team-0-Modus nicht aktiviert werden.
@@ -5025,6 +5130,9 @@ Prediction Margin
 
 Prediction margin
 == Vorhersagepuffer
+
+Prediction offset
+== Pending german translation 29c0872c76
 
 Prediction time
 == Vorhersagezeit
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == Ausgewählte Datei vorschauen
+
+Preview visibilities
+== Pending german translation d5c551d940
+
+Preview/render only one DDRace team from a full match demo
+== Pending german translation b0ee49e964
+
+Preview/render only this team
+== Pending german translation 9e0a9fea31
 
 Previous
 == Vorherige
@@ -5174,13 +5291,13 @@ Q 弹 Tee 形变持续时间
 == Federndes Tee-Verformungsdauer
 
 Qm
-== Qm
+== Pending german translation 710cab5f7e
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: Index muss zwischen 1 und %d liegen
 
 QmClient
-== QmClient
+== Pending german translation f50061de3e
 
 QmClient chat log
 == QmClient-Chatprotokoll
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == QmClient-Einstellungen
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== Pending german translation cebea5c5b0
+
+QmLiveClient：启用单队隔离画面过滤
+== Pending german translation efad0be1fa
+
+QmLiveClient：启用单队隔离音效过滤
+== Pending german translation ed587dd98f
+
+QmLiveClient：完成排名卡片不透明度百分比
+== Pending german translation e7a35b8be7
+
+QmLiveClient：完成排名卡片显示秒数
+== Pending german translation aba3877f38
+
+QmLiveClient：完成排名卡片缩放百分比
+== Pending german translation 3e2ce522bd
+
+QmLiveClient：完整比赛 demo 录制开关
+== Pending german translation cd7e74213c
+
+QmLiveClient：排名 HUD 队伍范围上限
+== Pending german translation 015d211933
+
+QmLiveClient：排名 HUD 队伍范围下限
+== Pending german translation 793927aa74
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== Pending german translation 6b9ba6aab1
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== Pending german translation 1589d25d51
+
+QmLiveClient：显示队伍完成排名卡片
+== Pending german translation f21931ff9d
+
+QmLiveClient：隐藏非目标队伍完成提示
+== Pending german translation bc5f5e3dbe
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == QmUi-Animationstärke: 0=Aus 1=Reduziert 2=Voll
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== Pending german translation e4ce5a0d6d
 
 QQ group: 1076765929 (click to copy)
 == QQ-Gruppe: 1076765929 (klicken zum Kopieren)
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == Demo aufnehmen
 
+Record match
+== Pending german translation c6da8158b6
+
 Record to a file
 == In eine Datei aufzeichnen
 
@@ -5353,11 +5515,14 @@ Refresh interval
 Refresh Rate
 == Bildwiederholfrequenz
 
+Refresh the demo list
+== Pending german translation 8049f13c2f
+
 Regex
-== Regex
+== Pending german translation be86e3a0f8
 
 Region
-== Region
+== Pending german translation a704cdebe1
 
 Regular background color
 == Reguläre Hintergrundfarbe
@@ -5731,6 +5896,9 @@ Restart the client
 Restarting. Please wait…
 == Starte neu. Bitte warten…
 
+Retrying…
+== Pending german translation e0ee887e2e
+
 Rifle Laser Inner Color
 == Gewehr-Laser-Innenfarbe
 
@@ -5750,7 +5918,7 @@ Right-click to enable auto-translate
 == Rechtsklick zum Aktivieren der Automatikübersetzung
 
 Ring
-== Ring
+== Pending german translation 540abfe518
 
 RNNoise noise reduction
 == RNNoise-Rauschunterdrückung
@@ -5798,7 +5966,10 @@ Run server
 == Server ausführen
 
 SA
-== SA
+== Pending german translation 412015e1d2
+
+Saiko+ 输入量（0.01 tick）
+== Pending german translation 4b9b678131
 
 Same as "vote no"
 == Gleich wie "vote no"
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == Letzte %d Min. speichern
 
-Save power by lowering refresh rate (higher input latency)
-== Strom sparen durch niedrigere Bildwiederholfrequenz (höhere Eingabeverzögerung)
+Save power by lowering update rate (higher input latency)
+== Pending german translation e5ba2941a3
 
 Save skin
 == Skin speichern
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == Im Chat sagen
 
-Say in chat as inactive tee
-== Say in chat as inactive tee
-
 Say in team chat
 == Im Team-Chat sagen
-
-Say in team chat as inactive tee
-== Say in team chat as inactive tee
 
 Scanning current server
 == Aktueller Server wird gescannt
@@ -5954,7 +6119,7 @@ Screenshot
 == Bildschirmfoto
 
 Screenshots
-== Screenshots
+== Pending german translation ac54ad6292
 
 Screenshots directory
 == Screenshot-Verzeichnis
@@ -6037,27 +6202,6 @@ Send
 Send & Receive
 == Senden & Empfangen
 
-Send /load as inactive tee
-== Send /load as inactive tee
-
-Send /lock as inactive tee
-== Send /lock as inactive tee
-
-Send /pause as inactive tee
-== Send /pause as inactive tee
-
-Send /rescue as inactive tee
-== Send /rescue as inactive tee
-
-Send /save as inactive tee
-== Send /save as inactive tee
-
-Send /spec as inactive tee
-== Send /spec as inactive tee
-
-Send /team as inactive tee
-== Send /team as inactive tee
-
 Send a moderator alert message to player
 == Eine Moderator-Warnmeldung an einen Spieler senden
 
@@ -6113,7 +6257,7 @@ Sequential
 == Sequential setting
 
 Server
-== Server
+== Pending german translation 3d24b192b6
 
 Server address:
 == Serveradresse:
@@ -6728,7 +6872,7 @@ Size of key press icons
 == Größe der Tastendruck-Symbole
 
 Skin
-== Skin
+== Pending german translation c8c1e0185b
 
 Skin could not be found.
 == Skin konnte nicht gefunden werden.
@@ -6770,7 +6914,7 @@ Skin transition type
 == Art des Skin-Übergangs
 
 Skin: %s
-== Skin: %s
+== Pending german translation e80e13210a
 
 Skins directory
 == Skin-Verzeichnis
@@ -6800,7 +6944,7 @@ Smooth fade
 == Sanfter Übergang
 
 SMTC
-== SMTC
+== Pending german translation 561d83153c
 
 Snap threshold
 == Einrastschwellwert
@@ -6818,7 +6962,7 @@ Solid tile outline opacity
 == Feste Kachel-Umriss-Deckkraft
 
 Solo
-== Solo
+== Pending german translation a3c58308fd
 
 Some fonts could not be loaded. Check the local console for details.
 == Einige Schriftarten konnten nicht geladen werden. Überprüfe die lokale Konsole für Details.
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == Wiedergabe von Geistern starten
 
+Start QmLive full match demo recording
+== Pending german translation 76e09cf811
+
 Start recording a demo
 == Aufnahme einer Demo starten
 
@@ -6965,7 +7112,7 @@ Stats notes
 == Statistikhinweise
 
 Status
-== Status
+== Pending german translation a8fbf887e2
 
 Status Bar
 == Statusleiste
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == Status-Schema:
 
+Stop match record
+== Pending german translation b4769fa900
+
 Stop practice
 == Üben beenden
+
+Stop QmLive full match demo recording
+== Pending german translation c2d288d9aa
 
 Stop record
 == Aufnahme beenden
@@ -7046,7 +7199,7 @@ Suicides
 == Selbstmorde
 
 Super
-== Super
+== Pending german translation bc672c70f5
 
 Support ♥
 == Unterstützung ♥
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == Tausch ist auf erzwungenen Solo-Servern nicht verfügbar.
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Pending german translation 768fb7f4be
+
 Switch
 == Wechseln
 
 Switch failed
 == Wechsel fehlgeschlagen
-
-Switch inactive tee to grenade
-== Switch inactive tee to grenade
-
-Switch inactive tee to gun
-== Switch inactive tee to gun
-
-Switch inactive tee to hammer
-== Switch inactive tee to hammer
-
-Switch inactive tee to laser
-== Switch inactive tee to laser
-
-Switch inactive tee to next weapon
-== Switch inactive tee to next weapon
-
-Switch inactive tee to previous weapon
-== Switch inactive tee to previous weapon
-
-Switch inactive tee to shotgun
-== Switch inactive tee to shotgun
 
 Switch interval
 == Wechselintervall
@@ -7145,7 +7280,7 @@ Sync Workshop Assets
 == Workshop-Assets synchronisieren
 
 System
-== System
+== Pending german translation eaa6d55554
 
 System default
 == Systemstandard
@@ -7160,7 +7295,7 @@ System prompt text color
 == Textfarbe des Systemhinweises
 
 Tags
-== Tags
+== Pending german translation 24710f8b6f
 
 Take a screenshot
 == Einen Screenshot machen
@@ -7175,7 +7310,7 @@ Target language ratio
 == Verhältnis der Zielsprache
 
 TClient
-== TClient
+== Pending german translation 60b1825713
 
 TClient Developers
 == TClient-Entwickler
@@ -7183,14 +7318,17 @@ TClient Developers
 TClient Links
 == TClient-Links
 
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Pending german translation 5421a6415e
+
 Team
-== Team
+== Pending german translation d407fe143f
 
 Team %d
-== Team %d
+== Pending german translation efb79d829b
 
 Team %d (%d/%d)
-== Team %d (%d/%d)
+== Pending german translation fb81825e30
 
 Team can't be loaded while in team 0 mode
 == Team kann nicht geladen werden, während im Team-0-Modus
@@ -7247,7 +7385,7 @@ Team successfully saved by %s. The database connection failed, using generated s
 == Team erfolgreich von %s gespeichert. Die Datenbankverbindung ist fehlgeschlagen, stattdessen wird ein generierter Speichercode verwendet, um Kollisionen zu vermeiden. Verwende '/load %s', um fortzufahren
 
 Teams
-== Teams
+== Pending german translation 3a44f3f154
 
 Teams are available on this server; if the team is locked, any team member dying will kill the whole team
 == Teams sind auf diesem Server verfügbar; wenn das Team gesperrt ist, führt der Tod eines Teammitglieds zum Tod des gesamten Teams
@@ -7259,10 +7397,13 @@ Teams are not available on this server; if the team is locked, any team member d
 == Teams sind auf diesem Server nicht verfügbar; wenn das Team gesperrt ist, führt der Tod eines Teammitglieds zum Tod des gesamten Teams
 
 Tee
-== Tee
+== Pending german translation 920c3a45fa
 
 Tee 0.7
-== Tee 0.7
+== Pending german translation f414596f8c
+
+Tee appearance
+== Tee-Aussehen
 
 Tee hitbox
 == Tee-Hitbox
@@ -7283,7 +7424,7 @@ Tee Trails
 == Tee-Spuren
 
 Tele
-== Tele
+== Pending german translation f8320ad341
 
 Teleport free spectator camera between hovered tele-in/out or checkpoint tele and a matching counterpart
 == Teleportiere die freie Zuschauerkamera zwischen einem schwebenden Teleport-Ein/Ausgang oder Checkpoint-Teleport und einem passenden Gegenstück
@@ -7343,7 +7484,7 @@ Temporary free camera
 == Temporäre freie Kamera
 
 Tencent Cloud
-== Tencent Cloud
+== Pending german translation 63534c07cc
 
 Tencent Cloud SecretId
 == Tencent Cloud Secret-ID
@@ -7352,7 +7493,7 @@ Tencent Cloud SecretKey
 == Tencent Cloud Secret-Key
 
 Text
-== Text
+== Pending german translation 30bf3500be
 
 Text alpha
 == Text-Transparenz
@@ -7377,6 +7518,12 @@ The best voice chat, of course!
 
 The Config tab reuses QmClient's client config browser
 == Der Reiter „Konfiguration“ verwendet den Client-Konfigurationsbrowser von QmClient
+
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== Pending german translation 30bf5e084d
+
+The extra menu with the given number is activated.
+== Pending german translation 7682508838
 
 The force pause timer is now over, you can exit with /spec
 == Der erzwungene Pausen-Timer ist jetzt abgelaufen, du kannst mit /spec beenden
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == Themes-Verzeichnis
+
+There are no Tutorial servers available
+== Pending german translation 287c6246d0
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == Es gibt ungespeicherte Änderungen im Touch-Steuerungs-Editor. Es wird empfohlen, zuerst zu speichern.
@@ -7727,7 +7877,7 @@ Tune variable to value or show current value
 == Variable auf Wert tunen oder aktuellen Wert anzeigen
 
 Tutorial
-== Tutorial
+== Pending german translation 26690ba569
 
 Twinkle strength
 == Funkelstärke
@@ -7770,6 +7920,9 @@ UI opacity
 
 UI scale
 == UI-Skalierung
+
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== Pending german translation 5ad99a85f2
 
 UI大小百分比 (UI scale percentage)
 == UI-Größenprozentsatz
@@ -7916,7 +8069,7 @@ Unsaved changes
 == Ungespeicherte Änderungen
 
 Update
-== Update
+== Pending german translation cc5d61a15e
 
 Update a rcon key
 == Einen Rcon-Schlüssel aktualisieren
@@ -7938,6 +8091,9 @@ Update notice
 
 Update or add a specific war group
 == Eine bestimmte Kriegsgruppe aktualisieren oder hinzufügen
+
+Update Rate
+== Pending german translation 0b41885129
 
 Updating feature list...
 == Aktualisiere Funktionsliste...
@@ -8026,11 +8182,14 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == Kriegslistengruppen für Indikator verwenden
 
+Uses the active action with the current aiming position.
+== Pending german translation 2c3b2830c8
+
 v = Velocity
 == v = Geschwindigkeit
 
 V-Sync
-== V-Sync
+== Pending german translation 61ae963b75
 
 VAD 允许名单（逗号分隔）
 == VAD-Whitelist (durch Kommas getrennt)
@@ -8048,7 +8207,7 @@ Velocity
 == Geschwindigkeit
 
 Version
-== Version
+== Pending german translation 98b5c6da22
 
 Vertical position
 == Vertikale Position
@@ -8076,6 +8235,18 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == Gefundenen Teleport (mit Offset) mit angegebener Nummer anzeigen
+
+Virtual joystick which always uses fire.
+== Pending german translation 3cce0f8b53
+
+Virtual joystick which always uses hook.
+== Pending german translation f3e0207743
+
+Virtual joystick which only aims without using an action.
+== Pending german translation 4cc57a139d
+
+Virtual joystick which uses the active action.
+== Pending german translation 47bab0ba10
 
 Visibility
 == Sichtbarkeit
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == Warte, bis die aktuelle Abstimmung beendet ist, bevor du eine neue aufrufst.
+
+Waiting for local server to start…
+== Pending german translation a3969894c6
+
+Waiting for local server to stop…
+== Pending german translation be2f4a2653
 
 Waiting for snapshot
 == Warte auf Snapshot
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == Rad-Animation
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== Wenn TClient-Regenbogen-Tee aktiviert ist, hat diese Funktion keine Wirkung.
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Wenn du die Startlinie überquerst, wird ein Geist-Tee angezeigt, der die Bewegungen deiner Bestzeit wiederholt
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == Du kannst nur deine Teammitglieder kicken
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== Pending german translation 29135584ec
+
 You can now jump %s times
 == Du kannst jetzt %s Mal springen
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == Du kannst andere Spieler sehen. Um dies zu deaktivieren, verwende den DDNet-Client und gib /showothers ein
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== Pending german translation 6f38f9a43d
 
 You can shoot others with grenade
 == Du kannst andere mit Granaten beschießen
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Du bist nicht in einem Team mit aktiviertem /practice. Beachte, dass du mit aktiviertem Übungsmodus keinen Rang erlangen kannst.
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== Pending german translation eb80f22eac
+
 You're the last one!
 == Du bist der Letzte!
 
@@ -8603,7 +8792,7 @@ Your timeout code has been set. 0.7 clients can not reclaim their tees on timeou
 == Dein Timeout-Code wurde gesetzt. 0.7-Clients können ihre Tees bei Timeout nicht zurückfordern; ein 0.6-Client kann jedoch deinen Tee übernehmen
 
 z = Zoom
-== z = Zoom
+== Pending german translation a405a2d5d0
 
 Zen Mode
 == Zen-Modus
@@ -8612,13 +8801,13 @@ Zen mode key
 == Zen-Modus-Taste
 
 Zhipu AI
-== Zhipu AI
+== Pending german translation 1efe0eb4a8
 
 Zhipu API key
 == Zhipu-API-Schlüssel
 
 Zoom
-== Zoom
+== Pending german translation a6f76ee9a9
 
 Zoom decrease
 == Zoom verkleinern
@@ -8628,6 +8817,9 @@ Zoom in
 
 Zoom increase
 == Zoom vergrößern
+
+Zoom is allowed on this server.
+== Pending german translation f2e1da96d8
 
 Zoom out
 == Herauszoomen
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == Dynamische Sichtfeldstärke (0–200)
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== Pending german translation 072c699b44
+
 压缩器攻击时间（毫秒）
 == Kompressor-Angriffszeit (ms)
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == Sichtbarkeitsfilter-Modus
+
+同时循环分身自定义 Tee 色调
+== Pending german translation 35278124d7
 
 同组全图收听
 == Gleiche Gruppe auf ganzer Karte hören
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == Textverlaufsfarbe für Client-Nachrichten
 
+将 Best input 应用于其他 Tee
+== Pending german translation 20a1a352cc
+
 将 Q 弹 Tee 形变应用到其他玩家
 == Q-Bounce-Tee-Verformung auf andere Spieler anwenden
+
+将 Saiko+ 应用于其他 Tee
+== Pending german translation 229bb3a67d
 
 将性能调试日志写入专用文件
 == Leistungsdebug-Logs in eine separate Datei schreiben
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == Alpha der Überdeckungsentitäten von Schaltblöcken (0-100)
+
+循环本体自定义 Tee 色调
+== Pending german translation e64af0defd
+
+循环本体自定义 Tee 色调速度（度/秒）
+== Pending german translation 6ec12bd0b2
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== Pending german translation 7dc0b6db2b
 
 忽略语音距离衰减
 == Sprachdistanzdämpfung ignorieren
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == Zhipu AI Endpunkt (leer lassen für Standard)
 
+暂停时隐藏歌词
+== Pending german translation e5ef3bcbdf
+
 替换方式 0=Regex 1=Full 2=Both
 == Ersetzungsmodus 0=Regex 1=Voll 2=Beide
+
+未找到歌词时隐藏（而非显示提示）
+== Pending german translation 65a50c59b0
 
 未播放词颜色
 == Unplayed word color
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == Auto fetch lyrics online when a new song is detected
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== Pending german translation 243576aae6
+
 歌词 HTTP 请求超时 ms
 == Lyrics HTTP request timeout ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == Farbe der aktuellen Songtextzeile
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== Pending german translation 2ae7935a99
 
 歌词描边透明度
 == Deckkraft der Songtext-Kontur
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == Lyrics overall opacity percent
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== Pending german translation b81cf14c57
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == Lyrics per-source match thresholds
@@ -9598,6 +9826,9 @@ Zoom out
 自动获取全图玩家皮肤并作为轮换队列
 == Automatisch Skins aller Spieler auf der Karte abrufen und als Rotationswarteschlange verwenden
 
+自动调整预测边距（关闭后固定使用基础预测边距）
+== Pending german translation 99ba21ceb5
+
 自动跟随好友换服延迟（秒）
 == Verzögerung beim automatischen Folgen von Freunden beim Serverwechsel (Sekunden)
 
@@ -9880,7 +10111,7 @@ Multiply
 
 [Assets editor blend mode]
 Normal
-== Normal
+== Pending german translation 2abc7420aa
 
 [Assets editor blend mode]
 Overlay
@@ -9928,7 +10159,7 @@ Go to Live
 
 [Demo playback]
 Live
-== Live
+== Pending german translation 5a01b17c51
 
 [Demo player duration]
 %s min.
@@ -10016,7 +10247,7 @@ Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.c
 
 [Hammer Mode]
 Normal
-== Normal
+== Pending german translation 2abc7420aa
 
 [Hammer Mode]
 Rotate with cursor
@@ -10028,7 +10259,7 @@ Rotate with cursor like gun
 
 [Hertz]
 Hz
-== Hz
+== Pending german translation 02e3abfb27
 
 [Important alert message]
 Press Esc or Tab to dismiss…
@@ -10048,7 +10279,7 @@ Width
 
 [Predefined touch button behaviors]
 Emoticon
-== Emoticon
+== Pending german translation 927decb607
 
 [Predefined touch button behaviors]
 Extra Menu
@@ -10152,7 +10383,7 @@ Following %s
 
 [Spectating Camera Mode Icon]
 AUTO
-== AUTO
+== Pending german translation 7c9fe0ff8d
 
 [Spectators]
 %d others…
@@ -10164,7 +10395,7 @@ Play
 
 [Team and size]
 %d\n(%d/%d)
-== %d\n(%d/%d)
+== Pending german translation 4e73e7b8a6
 
 [Team size]
 maximum

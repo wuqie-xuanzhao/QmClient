@@ -1,7 +1,6 @@
 #include "system_media_controls.h"
 
-#if defined(CONF_FAMILY_WINDOWS) && defined(_MSC_VER)
-#define SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED 1
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 #include <base/str.h>
 #include <base/system.h>
 
@@ -22,8 +21,6 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#else
-#define SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED 0
 #endif
 
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
@@ -423,7 +420,7 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 CSystemMediaControls::CSystemMediaControls() = default;
 CSystemMediaControls::~CSystemMediaControls() = default;
 
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 void CSystemMediaControls::ThreadMain()
 {
 	try
@@ -706,7 +703,7 @@ void CSystemMediaControls::ThreadMain()
 
 void CSystemMediaControls::OnInit()
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	m_pWinrt = std::make_unique<SWinrt>();
 	m_pShared = std::make_unique<SShared>();
 	m_StopThread = false;
@@ -716,7 +713,7 @@ void CSystemMediaControls::OnInit()
 
 void CSystemMediaControls::OnShutdown()
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	m_StopThread = true;
 	if(m_Thread.joinable())
 	{
@@ -733,7 +730,7 @@ void CSystemMediaControls::OnShutdown()
 
 void CSystemMediaControls::OnUpdate()
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!m_pWinrt)
 		return;
 
@@ -781,7 +778,7 @@ void CSystemMediaControls::OnUpdate()
 
 bool CSystemMediaControls::GetStateSnapshot(SState &State) const
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!g_Config.m_QmSmtcEnable)
 	{
 		State = SState{};
@@ -800,7 +797,7 @@ bool CSystemMediaControls::GetStateSnapshot(SState &State) const
 
 void CSystemMediaControls::Previous()
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!g_Config.m_QmSmtcEnable)
 		return;
 
@@ -814,7 +811,7 @@ void CSystemMediaControls::Previous()
 
 void CSystemMediaControls::PlayPause()
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!g_Config.m_QmSmtcEnable)
 		return;
 
@@ -828,7 +825,7 @@ void CSystemMediaControls::PlayPause()
 
 void CSystemMediaControls::Next()
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	if(!g_Config.m_QmSmtcEnable)
 		return;
 

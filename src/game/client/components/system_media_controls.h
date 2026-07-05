@@ -10,6 +10,12 @@
 #include <memory>
 #include <thread>
 
+#if defined(CONF_FAMILY_WINDOWS) && defined(_MSC_VER)
+#define SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED 1
+#else
+#define SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED 0
+#endif
+
 class CSystemMediaControls : public CComponent
 {
 public:
@@ -36,7 +42,7 @@ public:
 		int m_AlbumArtHeight = 0;
 	};
 
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	struct SWinrt;
 	struct SShared;
 #endif
@@ -54,7 +60,7 @@ public:
 	void Next();
 
 private:
-#if defined(CONF_FAMILY_WINDOWS)
+#if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	std::unique_ptr<SWinrt> m_pWinrt;
 	std::unique_ptr<SShared> m_pShared;
 	std::thread m_Thread;

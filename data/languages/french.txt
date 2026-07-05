@@ -1,5 +1,5 @@
  min
-==  min
+== Pending french translation 54dcdc30d4
 
  seconds
 == secondes
@@ -20,10 +20,10 @@
 == %c Équipe %d
 
 %d dummies
-== %d dummies
+== Pending french translation 0f3d8f0f9f
 
 %d dummy
-== %d dummy
+== Pending french translation d4d937d80e
 
 %d items selected
 == %d éléments sélectionnés
@@ -83,7 +83,7 @@
 == Il reste %i secondes
 
 %s (/%s %s)
-== %s (/%s %s)
+== Pending french translation 97c251ac8c
 
 %s and %s have swapped
 == %s et %s ont échangé leurs places
@@ -273,6 +273,9 @@ A screenshot with this name already exists
 
 A Tee
 == Un Tee
+
+A vote is currently active.
+== Pending french translation 49d0b4252a
 
 Abort
 == Annuler
@@ -503,7 +506,7 @@ Advanced options
 == Options avancées
 
 AFR
-== AFR
+== Pending french translation d6eec23c3f
 
 After Load
 == Après chargement
@@ -545,7 +548,10 @@ Allows maps to render with more detail
 == Permet aux cartes de s'afficher avec plus de détails
 
 Alpha
-== Alpha
+== Pending french translation 1a03c4ca4c
+
+Also apply to dummy
+== Appliquer aussi au dummy
 
 Always show
 == Toujours afficher
@@ -572,13 +578,13 @@ And pick one randomly
 == Et en choisir une au hasard
 
 Angle
-== Angle
+== Pending french translation 99e2557f80
 
 Angle:
 == Angle :
 
 Animation
-== Animation
+== Pending french translation a5fdaaebbe
 
 Animation duration
 == Durée de l'animation
@@ -698,7 +704,7 @@ Are you sure you want to save your skin? If a skin with this name already exists
 == Êtes-vous sûr de vouloir sauvegarder votre skin ? Si un skin avec ce nom existe déjà, il sera remplacé.
 
 ASI
-== ASI
+== Pending french translation 125f508e8d
 
 Aspect ratio preset
 == Préréglage du rapport hauteur/largeur
@@ -719,7 +725,7 @@ Attempt to change your name when near finish
 == Tenter de changer votre nom près de l'arrivée
 
 Audio
-== Audio
+== Pending french translation 4efdcc4a52
 
 Audio backend init failed
 == Échec de l'initialisation du backend audio
@@ -746,7 +752,7 @@ Audio slots
 == Emplacements audio
 
 AUS
-== AUS
+== Pending french translation 1ddfa7305f
 
 Authed name color in scoreboard
 == Couleur du nom authentifié dans le tableau des scores
@@ -761,7 +767,7 @@ Authorized player forced vote '%s'
 == Le joueur autorisé a forcé le vote '%s'
 
 Auto
-== Auto
+== Pending french translation 47bc4d1125
 
 auto
 == Automatique
@@ -807,6 +813,9 @@ Auto manage IME while typing
 
 Auto map vote
 == Vote de carte automatique
+
+Auto margin
+== Pending french translation eab9aa175d
 
 Auto refresh server list
 == Actualisation automatique de la liste des serveurs
@@ -973,6 +982,24 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Meilleur
 
+Best input
+== Pending french translation ad1c9f04b1
+
+Best input others
+== Pending french translation b7ef11ff75
+
+Best input 平滑百分比
+== Pending french translation 5a79a5638c
+
+Best input 延迟补偿百分比
+== Pending french translation a0b477ffca
+
+Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Pending french translation e0a2851bb4
+
+Best input 预测偏移（0.01 tick）
+== Pending french translation ef82431616
+
 Best match
 == Best match setting
 
@@ -1031,7 +1058,7 @@ Browser
 == Navigateur
 
 Brutal
-== Brutal
+== Pending french translation c7d6faf62c
 
 Bubble opacity
 == Opacité de la bulle
@@ -1048,11 +1075,23 @@ Button - Disabled
 Button - Enabled
 == Bouton - Activé
 
+Button browser
+== Pending french translation 92035256b6
+
 Button position is outside of the screen.
 == La position du bouton est en dehors de l'écran.
 
 Buttons
 == Boutons
+
+Buttons with this behavior cycle between executing one of two or more specified commands.
+== Pending french translation 731c083b8d
+
+Buttons with this behavior execute console commands like regular key binds.
+== Pending french translation 05dcceda26
+
+Buttons with this behavior execute some predefined actions.
+== Pending french translation 5b513353b6
 
 c = Player position
 == c = Position du joueur
@@ -1111,6 +1150,15 @@ Candidate files
 Cannot swap: the other player is not in your team
 == Swap impossible : l'autre joueur n'est pas dans ton équipe
 
+Card Appearance
+== Pending french translation 50f35eb56a
+
+Card background blur (high performance only)
+== Pending french translation 5e90a20304
+
+Card background blur and corner rounding
+== Pending french translation 63d1e63d5a
+
 Category
 == Catégorie
 
@@ -1142,7 +1190,7 @@ Changing name to %s near finish
 == Changement de nom en %s près de l'arrivée
 
 Chat
-== Chat
+== Pending french translation 89fc9e162f
 
 Chat background color
 == Couleur de fond du chat
@@ -1205,7 +1253,7 @@ Checking for existing player with your name
 == Vérification de l'existence d'un joueur avec votre nom
 
 CHN
-== CHN
+== Pending french translation 4bd4335137
 
 Choose country flag
 == Choisir le drapeau du pays
@@ -1220,7 +1268,7 @@ Choose whether to browse replays or screenshots
 == Choisir de parcourir les démos ou les captures d'écran
 
 Clan
-== Clan
+== Pending french translation ad998b7ff7
 
 Clan color in friends list
 == Couleur du clan dans la liste d'amis
@@ -1241,25 +1289,25 @@ Classic
 == Classique
 
 Classic Easy
-== Classic Easy
+== Pending french translation 10f2037837
 
 Classic easy
 == Classique facile
 
 Classic Next
-== Classic Next
+== Pending french translation 270a66e250
 
 Classic next
 == Classique suivant
 
 Classic Nut
-== Classic Nut
+== Pending french translation 6f15c526fb
 
 Classic nut
 == Classique nut
 
 Classic Pro
-== Classic Pro
+== Pending french translation 3a359f46a8
 
 Classic pro
 == Classique pro
@@ -1324,6 +1372,9 @@ Click to remove this community from favorites
 Click to remove this player from your friends list.
 == Cliquez pour retirer ce joueur de votre liste d'amis.
 
+Click to restore full match
+== Pending french translation fe5d122e23
+
 Click to select server. Double click to join your friend.
 == Cliquez pour sélectionner le serveur. Double-cliquez pour rejoindre votre ami.
 
@@ -1331,7 +1382,7 @@ Click to set color
 == Cliquez pour définir la couleur
 
 Client
-== Client
+== Pending french translation 7bb46e9d3b
 
 Client CPU usage is high
 == L'utilisation du CPU du client est élevée
@@ -1382,7 +1433,7 @@ Colors of the hook collision line, in case of a possible collision with:
 == Couleurs de la ligne de collision de crochet, en cas de collision possible avec :
 
 Combo
-== Combo
+== Pending french translation 40302bd169
 
 Command
 == Commande
@@ -1409,7 +1460,7 @@ Community links, updates, and sponsors moved to the Contributors tab
 == Les liens communautaires, les mises à jour et les sponsors ont été déplacés vers l'onglet Contributeurs
 
 Compact
-== Compact
+== Pending french translation 11f045acc7
 
 Concurrency (0 = auto)
 == Concurrence (0 = automatique)
@@ -1502,7 +1553,7 @@ Connection upstream
 == Connexion montante
 
 Console
-== Console
+== Pending french translation c9c9993138
 
 Console color
 == Couleur de la console
@@ -1552,6 +1603,9 @@ Copy name
 Copy skin
 == Copier le skin
 
+Corner segments
+== Pending french translation 710426fd2f
+
 Could not check for existing player with your name. Check your internet connection.
 == Impossible de vérifier l'existence d'un joueur avec votre nom. Vérifiez votre connexion Internet.
 
@@ -1560,6 +1614,12 @@ Could not connect dummy
 
 Could not create report scan request
 == Impossible de créer la demande de scan de signalement
+
+Could not find a Tutorial server. Check your internet connection.
+== Pending french translation c4f6488594
+
+Could not find online Tutorial server.\nStarting and connecting to local server…
+== Pending french translation a190cc96e0
 
 Could not find your Team
 == Impossible de trouver votre équipe
@@ -1622,7 +1682,7 @@ Crescent
 == Croissant
 
 Cube
-== Cube
+== Pending french translation ab6c0e045f
 
 Current
 == Actuel
@@ -1696,6 +1756,9 @@ Cut segments
 Cute:
 == Mignon :
 
+Cycle custom Tee hue
+== Faire tourner la teinte personnalisée du Tee
+
 Cycle through emotes
 == Parcourir les émoticônes
 
@@ -1712,28 +1775,28 @@ Data
 == Données
 
 Date
-== Date
+== Pending french translation 9af6f502c4
 
 Days
 == Jours
 
 DDmaX
-== DDmaX
+== Pending french translation 7ce4f2f00f
 
 DDmaX Easy
-== DDmaX Easy
+== Pending french translation 914f62f755
 
 DDmaX Next
-== DDmaX Next
+== Pending french translation a679d95254
 
 DDmaX Nut
-== DDmaX Nut
+== Pending french translation 9c311ac79b
 
 DDmaX Pro
-== DDmaX Pro
+== Pending french translation c95ceda762
 
 DDNet
-== DDNet
+== Pending french translation dfd6b70f0f
 
 DDNet / Total CPU
 == DDNet / CPU totale
@@ -1802,7 +1865,7 @@ Deepfly模式（0=正常，1=DF，2=HDF，3=自定义）
 == Mode Deepfly (0=Normal, 1=DF, 2=HDF, 3=Personnalisé)
 
 DeepSeek
-== DeepSeek
+== Pending french translation c27ad2f55b
 
 DeepSeek API Key
 == Clé API DeepSeek
@@ -1879,6 +1942,9 @@ Demo effects
 Demo marker added
 == Marqueur de démo ajouté
 
+Demo player is currently active.
+== Pending french translation 109ce6cccd
+
 Demo target
 == Cible de la démo
 
@@ -1922,7 +1988,7 @@ Developers and sponsors
 == Développeurs et sponsors
 
 DF
-== DF
+== Pending french translation 5bc15e1c30
 
 Diamond
 == Diamant
@@ -1947,6 +2013,9 @@ disable
 
 Disable after picking up other weapons
 == Désactiver après avoir ramassé d'autres armes
+
+Disable QmLive team preview/render filter
+== Pending french translation f7621a1ec8
 
 Disabled
 == Désactivé
@@ -1973,7 +2042,7 @@ Disconnected
 == Déconnecté
 
 Discord
-== Discord
+== Pending french translation 553b79ef61
 
 Display mode
 == Mode d'affichage
@@ -2132,7 +2201,7 @@ Dummies are not allowed on this server
 == Les dummies ne sont pas autorisés sur ce serveur
 
 Dummy
-== Dummy
+== Pending french translation 8d6200d733
 
 Dummy Control: %s
 == Contrôle du Dummy : %s
@@ -2148,6 +2217,12 @@ Dummy hammer fly
 
 Dummy hook
 == Crochet du dummy
+
+Dummy is allowed on this server.
+== Pending french translation b48f33207f
+
+Dummy is currently connected.
+== Pending french translation 388b34bb4b
 
 Dummy jump
 == Saut du dummy
@@ -2420,7 +2495,7 @@ Entity Preview
 == Aperçu des entités
 
 entity_bg (Workshop)
-== entity_bg (Workshop)
+== Pending french translation 9a3f687adf
 
 Erase items on the in game background
 == Effacer des éléments sur l'arrière-plan du jeu
@@ -2430,6 +2505,9 @@ Error
 
 Error checking player name
 == Erreur lors de la vérification du nom du joueur
+
+Error joining Tutorial server
+== Pending french translation 8a355a9197
 
 Error loading communities
 == Erreur lors du chargement des communautés
@@ -2456,7 +2534,7 @@ ESC replay minutes
 == Minutes de rediffusion ESC
 
 EUR
-== EUR
+== Pending french translation 121a67a167
 
 Evaluate an expression
 == Évaluer une expression
@@ -2596,6 +2674,9 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Force de réduction de bruit simple de repli
 
+Fast input
+== Pending french translation 118990815b
+
 Fast input (reduce visual latency)
 == Entrée rapide (réduit la latence visuelle)
 
@@ -2646,6 +2727,15 @@ File already exists, do you want to overwrite it?
 
 Filter connecting players
 == Filtrer les joueurs en connexion
+
+Filter off
+== Pending french translation 2db89c9c84
+
+Filter Team %d
+== Pending french translation a5f6f1a30e
+
+Filter: Team %d
+== Pending french translation c4875641bd
 
 Find all ban records for the specified IP address
 == Trouver tous les enregistrements de bannissement pour l'adresse IP spécifiée
@@ -2708,10 +2798,10 @@ Found %d modules
 == %d modules trouvés
 
 FPM
-== FPM
+== Pending french translation 06698c0b75
 
 FPS
-== FPS
+== Pending french translation 35526f2935
 
 Frags
 == Éliminations
@@ -2789,10 +2879,13 @@ FSAA samples
 == Échantillons FSAA
 
 FTAPI
-== FTAPI
+== Pending french translation 9a7645f6a6
 
 FTAPI auto-translate is disabled to prevent overload. Enable in settings if needed.
 == La traduction automatique FTAPI est désactivée pour éviter la surcharge. Activez-la dans les paramètres si nécessaire.
+
+Full demo + sidecar
+== Pending french translation 08a8c0dea2
 
 Full map listen in same room
 == Écouter toute la carte dans la même salle
@@ -2801,7 +2894,7 @@ Fullscreen
 == Plein écran
 
 Fun
-== Fun
+== Pending french translation 398e3165f9
 
 Functions
 == Fonctions
@@ -2861,7 +2954,7 @@ Ghosts directory
 == Répertoire des fantômes
 
 Github
-== Github
+== Pending french translation 7391982ac5
 
 Give back right to vote to player with client ID
 == Redonner le droit de vote au joueur avec l'ID client
@@ -2900,7 +2993,7 @@ Gives you infinite jump
 == Vous donne un saut infini
 
 Glitch
-== Glitch
+== Pending french translation 0c76a0e4bb
 
 Global toggle key
 == Touche de bascule globale
@@ -3020,7 +3113,7 @@ Has save
 == A une sauvegarde
 
 HDF
-== HDF
+== Pending french translation 5dc3fdb45c
 
 Heart
 == Cœur
@@ -3078,12 +3171,6 @@ Hide jump effects
 
 Hide kill/finish messages
 == Cacher les messages de mise à mort/fin
-
-Hide lyrics when no lyrics are found instead of showing a hint
-== Masquer les paroles lorsqu’aucune n’est trouvée au lieu d’afficher un indice
-
-Hide lyrics while media is paused
-== Masquer les paroles lorsque le média est en pause
 
 Hide map progress
 == Cacher la progression de la carte
@@ -3188,19 +3275,19 @@ Hover for tooltip
 == Survoler pour l'infobulle
 
 https://ddnet.org/discord
-== https://ddnet.org/discord
+== Pending french translation f0a5b4da56
 
 https://wiki.ddnet.org/
-== https://wiki.ddnet.org/
+== Pending french translation d242f7526a
 
 https://wiki.ddnet.org/wiki/Mapping
-== https://wiki.ddnet.org/wiki/Mapping
+== Pending french translation 0a1b4e6421
 
 https://wiki.ddnet.org/wiki/Touch_controls
-== https://wiki.ddnet.org/wiki/Touch_controls
+== Pending french translation 59314f6357
 
 HUD
-== HUD
+== Pending french translation 3d87d4a34b
 
 HUD editor preview
 == Aperçu de l'éditeur HUD
@@ -3216,6 +3303,9 @@ HUD 编辑器布局
 
 Hue
 == Teinte
+
+Hue speed
+== Vitesse de teinte
 
 i = Receive rate
 == i = Taux de réception
@@ -3331,23 +3421,29 @@ Input overlay
 Input overlay display
 == Affichage de la superposition de saisie
 
+Input smoothing
+== Pending french translation 2f89c2f32c
+
 Input switch
 == Commutateur d'entrée
 
 Insane
-== Insane
+== Pending french translation a9e8b8b57d
 
 Interface
-== Interface
+== Pending french translation 9124165677
 
 Intermediate
 == Intermédiaire
 
 Internet
-== Internet
+== Pending french translation 03ae8cdfcc
 
 Internet (From online source)
 == Internet (Depuis une source en ligne)
+
+Interpolation
+== Pending french translation f29af28f50
 
 Invalid client id to kick
 == ID client invalide pour exclure
@@ -3442,6 +3538,9 @@ Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
 == Les messages d'arrivée, de version, de règles et d'aide restent dans le chat au lieu des popups
 
+Joining Tutorial server
+== Pending french translation 4fe0c8e965
+
 Jump
 == Sauter
 
@@ -3452,7 +3551,7 @@ k = Resend loss
 == k = Perte de retransmission
 
 Kaomoji
-== Kaomoji
+== Pending french translation 6920888c9a
 
 Karaoke edge softness
 == Karaoke edge softness setting
@@ -3527,7 +3626,7 @@ Label type
 == Type d'étiquette
 
 LAN
-== LAN
+== Pending french translation c65c6f3c42
 
 Language
 == Langue
@@ -3539,7 +3638,7 @@ Large text content
 == Contenu du gros texte
 
 Laser
-== Laser
+== Pending french translation 57cf58d2d3
 
 Laser effect enhancement
 == Amélioration de l'effet laser
@@ -3558,6 +3657,9 @@ Last page in console
 
 Latency
 == Latence
+
+Latency compensation
+== Pending french translation 23a9801a3f
 
 Latency Jitter
 == Gigue de latence
@@ -3608,7 +3710,7 @@ Lht.
 == Lum.
 
 LibreTranslate
-== LibreTranslate
+== Pending french translation 15c418f627
 
 LibreTranslate API Key
 == Clé API LibreTranslate
@@ -3779,7 +3881,7 @@ Local
 == Local
 
 Local + Dummy
-== Local + Dummy
+== Pending french translation 2c28aa2aa2
 
 Local ESLRC file
 == Local ESLRC file setting
@@ -3838,9 +3940,6 @@ Logout of econ
 Logout of rcon
 == Se déconnecter du rcon
 
-Long press on a touch button to select it.
-== Appuyez longuement sur un bouton tactile pour le sélectionner.
-
 Low to high
 == Faible à élevé
 
@@ -3850,17 +3949,8 @@ LRCLIB API 基地址（可改成镜像）
 Lyrics
 == Paroles
 
-Lyrics HTTP proxy (e.g. http://127.0.0.1:7890)
-== Proxy HTTP des paroles (ex. http://127.0.0.1:7890)
-
 Lyrics HTTP timeout
 == Lyrics HTTP timeout setting
-
-Lyrics local media library folders (use | as separator)
-== Dossiers de la bibliothèque multimédia locale des paroles (utilisez | comme séparateur)
-
-Lyrics manual timeline offset in ms (runtime step 500ms)
-== Décalage manuel de la chronologie des paroles en ms (pas de 500 ms en runtime)
 
 Lyrics search type
 == Lyrics search type setting
@@ -3888,15 +3978,6 @@ Main Asset
 
 Main menu
 == Menu principal
-
-Make inactive tee fire
-== Make inactive tee fire
-
-Make inactive tee hook
-== Make inactive tee hook
-
-Make inactive tee jump
-== Make inactive tee jump
 
 Make sure the backend supports OpenAI-compatible thinking parameters
 == Assurez-vous que le backend prend en charge les paramètres de réflexion compatibles OpenAI
@@ -4016,7 +4097,7 @@ Max visible notifications
 == Nombre maximal de notifications visibles
 
 maximum
-== maximum
+== Pending french translation 131fc2ae1c
 
 Maximum rows
 == Lignes maximum
@@ -4028,7 +4109,7 @@ Memory
 == Mémoire
 
 Mention
-== Mention
+== Pending french translation c9e2002747
 
 Menu background
 == Fond du menu
@@ -4046,13 +4127,13 @@ Message to send in chat:
 == Message à envoyer dans le tchat :
 
 Messages
-== Messages
+== Pending french translation e483e0ae88
 
 Messages that already look like the target language will skip auto-translate
 == Les messages qui ressemblent déjà à la langue cible ignoreront la traduction automatique
 
 Microphone
-== Microphone
+== Pending french translation ca26d68f34
 
 Microphone permission denied by system
 == Permission du microphone refusée par le système
@@ -4073,7 +4154,7 @@ Minimize the client
 == Minimiser le client
 
 minimum
-== minimum
+== Pending french translation 5274b94683
 
 Minimum match chars
 == Nombre minimum de caractères correspondants
@@ -4082,7 +4163,7 @@ Minimum time
 == Temps minimum
 
 Minutes
-== Minutes
+== Pending french translation 8d3cd86231
 
 Misc
 == Divers
@@ -4094,7 +4175,7 @@ Mixed
 == Mixte
 
 Mode
-== Mode
+== Pending french translation 82de730c99
 
 Model
 == Modèle
@@ -4112,16 +4193,10 @@ Modules snap to screen edges, center lines and other HUD modules while dragging
 == Les modules s'alignent sur les bords de l'écran, les lignes centrales et les autres modules HUD lors du glissement
 
 MOTD
-== MOTD
+== Pending french translation 65192fe253
 
 Mouse
 == Souris
-
-Move inactive tee left
-== Move inactive tee left
-
-Move inactive tee right
-== Move inactive tee right
 
 Move left
 == Déplacer à gauche
@@ -4151,7 +4226,7 @@ Multi-View
 == Multi-vue
 
 Mute
-== Mute
+== Pending french translation 52be1bc396
 
 Mute death/respawn sounds
 == Couper les sons de mort/résurrection
@@ -4193,7 +4268,7 @@ n = Prediction latency
 == n = Latence de prédiction
 
 NA
-== NA
+== Pending french translation 428ec36a46
 
 Name
 == Nom
@@ -4265,7 +4340,7 @@ Negative stability buffer (for Gores)
 == Tampon de stabilité négative (pour les Gores)
 
 Net
-== Net
+== Pending french translation 56609b0ab8
 
 Netversion
 == Version réseau
@@ -4481,7 +4556,7 @@ None
 == Aucun
 
 Normal
-== Normal
+== Pending french translation 75d779a567
 
 Normal Color
 == Couleur normale
@@ -4514,7 +4589,7 @@ Not open, check output device
 == Non ouvert, vérifiez le périphérique de sortie
 
 Note
-== Note
+== Pending french translation fdced5e660
 
 Note:
 == Note :
@@ -4532,7 +4607,7 @@ Notification text size
 == Taille du texte de notification
 
 Notifications
-== Notifications
+== Pending french translation d375aa2139
 
 Notify when friends come online
 == Notifier quand des amis se connectent
@@ -4541,7 +4616,7 @@ Notify when only one tee is still alive:
 == Notifier quand il ne reste qu'un seul tee en vie :
 
 Novice
-== Novice
+== Pending french translation 1f9b93aaa0
 
 Numeric-only messages will be skipped
 == Les messages uniquement numériques seront ignorés
@@ -4568,7 +4643,7 @@ Ok
 == OK
 
 Oldschool
-== Oldschool
+== Pending french translation cab3d5e1ad
 
 On
 == Activé
@@ -4581,6 +4656,9 @@ Online Players
 
 Only .wv files are supported right now.
 == Seuls les fichiers .wv sont pris en charge pour le moment.
+
+Only affects custom Tee colors.
+== N'affecte que les couleurs personnalisées du Tee.
 
 Only Apple Can Do
 == Seul Apple peut le faire
@@ -4614,6 +4692,9 @@ Open bindwheel selector
 
 Open color picker
 == Ouvrir le sélecteur de couleurs
+
+Open DDNet Wiki
+== Pending french translation 363cd2e586
 
 Open emote selector
 == Ouvrir le sélecteur d'émoticônes
@@ -4651,11 +4732,17 @@ Open the folder containing screenshots
 Open the saves file
 == Ouvrir le fichier de sauvegardes
 
+Open the selected folder
+== Pending french translation a1fc1339c8
+
+Open the selected screenshot
+== Pending french translation 0fa545ae3e
+
 Open the settings file
 == Ouvrir le fichier de paramètres
 
 OpenAI
-== OpenAI
+== Pending french translation f9cdaae455
 
 OpenAI API Key
 == Clé API OpenAI
@@ -4671,6 +4758,15 @@ OpenAI 端点（留空使用默认）
 
 Opened
 == Ouvert
+
+Opens the emoticon selector (this does not work with binds).
+== Pending french translation f223fa507a
+
+Opens the ingame menu immediately when released.
+== Pending french translation 6827387251
+
+Opens the spectator menu (this does not work with binds).
+== Pending french translation c82d863516
 
 Opt out of spectator count and hide auth status to non-authed players (1 = hidden, 0 = shown)
 == Se retirer du comptage des spectateurs et cacher le statut d'authentification aux joueurs non authentifiés (1 = caché, 0 = affiché)
@@ -4811,7 +4907,7 @@ Password incorrect
 == Mot de passe incorrect
 
 Pause
-== Pause
+== Pending french translation c57901c2db
 
 Pause the current demo
 == Mettre en pause la démo actuelle
@@ -4853,7 +4949,7 @@ Pie menu
 == Menu circulaire
 
 Ping
-== Ping
+== Pending french translation 7abc2f9f2c
 
 Ping the current server
 == Pinguer le serveur actuel
@@ -4872,6 +4968,9 @@ Play background music
 
 Play the current demo
 == Lire la démo actuelle
+
+Play the selected demo
+== Pending french translation 569094793f
 
 Play/Pause
 == Lecture/Pause
@@ -4902,6 +5001,12 @@ Player Indicator
 
 Player indicator
 == Indicateur de joueur
+
+Player is currently authed in rcon.
+== Pending french translation eb2fd0fead
+
+Player is ingame, i.e. not spectating.
+== Pending french translation 7299e1a75a
 
 Player is on a different team
 == Le joueur est dans une équipe différente
@@ -4970,13 +5075,13 @@ Please wait…
 == Veuillez patienter…
 
 Points
-== Points
+== Pending french translation 9711fc3217
 
 Popup animation
 == Animation contextuelle
 
 Position
-== Position
+== Pending french translation ea02eda4f5
 
 Position jump hint
 == Indice de saut de position
@@ -5026,6 +5131,9 @@ Prediction Margin
 Prediction margin
 == Marge de prédiction
 
+Prediction offset
+== Pending french translation 59bb2e28ed
+
 Prediction time
 == Temps de prédiction
 
@@ -5073,6 +5181,15 @@ Preview player nameplate
 
 Preview selected file
 == Prévisualiser le fichier sélectionné
+
+Preview visibilities
+== Pending french translation 504c9d4ca9
+
+Preview/render only one DDRace team from a full match demo
+== Pending french translation 77a9269e94
+
+Preview/render only this team
+== Pending french translation ef2aa9ae6d
 
 Previous
 == Précédent
@@ -5174,13 +5291,13 @@ Q 弹 Tee 形变持续时间
 == Durée de déformation du Tee rebondissant
 
 Qm
-== Qm
+== Pending french translation 3ad8a9abea
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue : l'index doit être entre 1 et %d
 
 QmClient
-== QmClient
+== Pending french translation 41e68a74f5
 
 QmClient chat log
 == Journal de chat QmClient
@@ -5197,8 +5314,50 @@ QmClient overview
 QmClient Settings
 == Paramètres QmClient
 
+QmLiveClient：单队隔离预览/渲染队伍，0=关闭
+== Pending french translation b235770c26
+
+QmLiveClient：启用单队隔离画面过滤
+== Pending french translation f8d7fbce96
+
+QmLiveClient：启用单队隔离音效过滤
+== Pending french translation a917c6ddd8
+
+QmLiveClient：完成排名卡片不透明度百分比
+== Pending french translation 78ac844572
+
+QmLiveClient：完成排名卡片显示秒数
+== Pending french translation b0f7126e6d
+
+QmLiveClient：完成排名卡片缩放百分比
+== Pending french translation cde59a6cc0
+
+QmLiveClient：完整比赛 demo 录制开关
+== Pending french translation 5d9776eb23
+
+QmLiveClient：排名 HUD 队伍范围上限
+== Pending french translation fe9d13e340
+
+QmLiveClient：排名 HUD 队伍范围下限
+== Pending french translation 7ef9ccce8a
+
+QmLiveClient：无法识别来源的玩家型事件默认过滤
+== Pending french translation 44045ea8f7
+
+QmLiveClient：显示配置范围外队伍的完成卡片
+== Pending french translation 6fbc41eb46
+
+QmLiveClient：显示队伍完成排名卡片
+== Pending french translation f093fb7bd6
+
+QmLiveClient：隐藏非目标队伍完成提示
+== Pending french translation bfe1176937
+
 QmUi 动效强度：0=关闭 1=降低 2=完整
 == Intensité des animations QmUi : 0=Désactivé 1=Réduit 2=Complet
+
+QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== Pending french translation 8e5705bd3d
 
 QQ group: 1076765929 (click to copy)
 == Groupe QQ : 1076765929 (cliquez pour copier)
@@ -5303,7 +5462,7 @@ Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example
 == Randomiser la couleur du joueur (0 = tout, 1 = corps, 2 = pieds, 3 = skin, 4 = drapeau) exemple : 0011 = randomiser skin et drapeau [le nombre est la position]
 
 Ratio
-== Ratio
+== Pending french translation 99154d967e
 
 Reason
 == Raison
@@ -5332,6 +5491,9 @@ Reconnect in %d sec
 Record demo
 == Enregistrer une démo
 
+Record match
+== Pending french translation 34ec05ff0f
+
 Record to a file
 == Enregistrer dans un fichier
 
@@ -5353,8 +5515,11 @@ Refresh interval
 Refresh Rate
 == Taux de rafraîchissement
 
+Refresh the demo list
+== Pending french translation 246aa450ed
+
 Regex
-== Regex
+== Pending french translation ed235d554d
 
 Region
 == Région
@@ -5731,6 +5896,9 @@ Restart the client
 Restarting. Please wait…
 == Redémarrage en cours. Veuillez patienter…
 
+Retrying…
+== Pending french translation dfa2efc5c9
+
 Rifle Laser Inner Color
 == Couleur intérieure du laser du fusil
 
@@ -5798,7 +5966,10 @@ Run server
 == Lancer le serveur
 
 SA
-== SA
+== Pending french translation 40e1c79ffc
+
+Saiko+ 输入量（0.01 tick）
+== Pending french translation 5c122b9b63
 
 Same as "vote no"
 == Identique à "vote non"
@@ -5851,8 +6022,8 @@ Save ghost
 Save last %d min
 == Sauvegarder les %d dernières min
 
-Save power by lowering refresh rate (higher input latency)
-== Économiser l'énergie en réduisant le taux de rafraîchissement (latence d'entrée plus élevée)
+Save power by lowering update rate (higher input latency)
+== Pending french translation 1e9e2da922
 
 Save skin
 == Sauvegarder le skin
@@ -5899,14 +6070,8 @@ Saves file
 Say in chat
 == Dire dans le chat
 
-Say in chat as inactive tee
-== Say in chat as inactive tee
-
 Say in team chat
 == Dire dans le chat d'équipe
-
-Say in team chat as inactive tee
-== Say in team chat as inactive tee
 
 Scanning current server
 == Scan du serveur actuel
@@ -5915,7 +6080,7 @@ Scanning current server...
 == Scan du serveur actuel...
 
 Score
-== Score
+== Pending french translation b6c73ff76b
 
 Score limit
 == Limite de score
@@ -6036,27 +6201,6 @@ Send
 
 Send & Receive
 == Envoyer et recevoir
-
-Send /load as inactive tee
-== Send /load as inactive tee
-
-Send /lock as inactive tee
-== Send /lock as inactive tee
-
-Send /pause as inactive tee
-== Send /pause as inactive tee
-
-Send /rescue as inactive tee
-== Send /rescue as inactive tee
-
-Send /save as inactive tee
-== Send /save as inactive tee
-
-Send /spec as inactive tee
-== Send /spec as inactive tee
-
-Send /team as inactive tee
-== Send /team as inactive tee
 
 Send a moderator alert message to player
 == Envoyer un message d'alerte modérateur au joueur
@@ -6710,7 +6854,7 @@ Silently disconnect from the current server while keeping Tee timeout protection
 == Se déconnecter silencieusement du serveur actuel tout en conservant la protection contre les timeouts du Tee
 
 Simple
-== Simple
+== Pending french translation 59483b94c7
 
 Simple noise reduction
 == Réduction de bruit simple
@@ -6728,7 +6872,7 @@ Size of key press icons
 == Taille des icônes de pression de touches
 
 Skin
-== Skin
+== Pending french translation fc68c06668
 
 Skin could not be found.
 == Skin introuvable.
@@ -6800,7 +6944,7 @@ Smooth fade
 == Fondu lisse
 
 SMTC
-== SMTC
+== Pending french translation f2a1f77351
 
 Snap threshold
 == Seuil d'aimantation
@@ -6809,7 +6953,7 @@ Snapshot Latency
 == Latence des snapshots
 
 Social
-== Social
+== Pending french translation 8f0f6a7238
 
 Solid
 == Plein
@@ -6818,7 +6962,7 @@ Solid tile outline opacity
 == Opacité du contour des tuiles solides
 
 Solo
-== Solo
+== Pending french translation 76de3bb436
 
 Some fonts could not be loaded. Check the local console for details.
 == Certaines polices n'ont pas pu être chargées. Consultez la console locale pour plus de détails.
@@ -6949,6 +7093,9 @@ Start holding the hook before loading the savegame to keep the hook
 Start playback of ghosts
 == Démarrer la lecture des fantômes
 
+Start QmLive full match demo recording
+== Pending french translation c83a0d7f58
+
 Start recording a demo
 == Commencer l'enregistrement d'une démo
 
@@ -6988,8 +7135,14 @@ Status normal, check details below if still experiencing issues
 Status Scheme:
 == Schéma d'état :
 
+Stop match record
+== Pending french translation b42aca0e7a
+
 Stop practice
 == Arrêter la pratique
+
+Stop QmLive full match demo recording
+== Pending french translation fd9c5c3b4d
 
 Stop record
 == Arrêter l'enregistrement
@@ -7043,10 +7196,10 @@ Sudden Death
 == Mort subite
 
 Suicides
-== Suicides
+== Pending french translation 3d6f3649fa
 
 Super
-== Super
+== Pending french translation b93050a159
 
 Support ♥
 == Soutien ♥
@@ -7063,32 +7216,14 @@ Swap is disabled on this server.
 Swap is not available on forced solo servers.
 == L'échange n'est pas disponible sur les serveurs solo forcés.
 
+Swaps the active action (fire and hook) for direct touch input and virtual joysticks.
+== Pending french translation cf2c22ad0f
+
 Switch
 == Commutateur
 
 Switch failed
 == Échec de la commutation
-
-Switch inactive tee to grenade
-== Switch inactive tee to grenade
-
-Switch inactive tee to gun
-== Switch inactive tee to gun
-
-Switch inactive tee to hammer
-== Switch inactive tee to hammer
-
-Switch inactive tee to laser
-== Switch inactive tee to laser
-
-Switch inactive tee to next weapon
-== Switch inactive tee to next weapon
-
-Switch inactive tee to previous weapon
-== Switch inactive tee to previous weapon
-
-Switch inactive tee to shotgun
-== Switch inactive tee to shotgun
 
 Switch interval
 == Intervalle de changement
@@ -7175,13 +7310,16 @@ Target language ratio
 == Ratio de langue cible
 
 TClient
-== TClient
+== Pending french translation d232953972
 
 TClient Developers
 == Développeurs TClient
 
 TClient Links
 == Liens TClient
+
+Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
+== Pending french translation 5f54356b11
 
 Team
 == Équipe
@@ -7259,10 +7397,13 @@ Teams are not available on this server; if the team is locked, any team member d
 == Les équipes ne sont pas disponibles sur ce serveur ; si l'équipe est verrouillée, la mort d'un membre tue toute l'équipe
 
 Tee
-== Tee
+== Pending french translation c2447c9777
 
 Tee 0.7
-== Tee 0.7
+== Pending french translation 3172310759
+
+Tee appearance
+== Apparence du Tee
 
 Tee hitbox
 == Hitbox du Tee
@@ -7343,7 +7484,7 @@ Temporary free camera
 == Caméra libre temporaire
 
 Tencent Cloud
-== Tencent Cloud
+== Pending french translation 93a199b3c5
 
 Tencent Cloud SecretId
 == ID secret Tencent Cloud
@@ -7377,6 +7518,12 @@ The best voice chat, of course!
 
 The Config tab reuses QmClient's client config browser
 == L'onglet Config réutilise le navigateur de configuration client de QmClient
+
+The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
+== Pending french translation 0eb90d0946
+
+The extra menu with the given number is activated.
+== Pending french translation 31f68f507d
 
 The force pause timer is now over, you can exit with /spec
 == Le minuteur de pause forcée est terminé, vous pouvez quitter avec /spec
@@ -7416,6 +7563,9 @@ Theme
 
 Themes directory
 == Répertoire des thèmes
+
+There are no Tutorial servers available
+== Pending french translation 10cedace00
 
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 == Il y a des modifications non sauvegardées dans l'éditeur de contrôles tactiles. Il est recommandé de sauvegarder d'abord.
@@ -7622,7 +7772,7 @@ Too many translation tasks
 == Trop de tâches de traduction
 
 Total
-== Total
+== Pending french translation 8f9b1365a0
 
 Total friends
 == Total des amis
@@ -7742,7 +7892,7 @@ Type switch vote started automatically
 == Vote de changement de type lancé automatiquement
 
 Types
-== Types
+== Pending french translation 81e43f4b31
 
 u = Snapshot latency
 == u = Latence d'instantané
@@ -7770,6 +7920,9 @@ UI opacity
 
 UI scale
 == Échelle de l'interface utilisateur
+
+UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）
+== Pending french translation 70339a20fe
 
 UI大小百分比 (UI scale percentage)
 == Pourcentage de la taille de l'interface utilisateur
@@ -7939,6 +8092,9 @@ Update notice
 Update or add a specific war group
 == Mettre à jour ou ajouter un groupe ennemi spécifique
 
+Update Rate
+== Pending french translation e8166d92fe
+
 Updating feature list...
 == Mise à jour de la liste des fonctionnalités...
 
@@ -8026,11 +8182,14 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 == Utiliser les groupes de la liste de guerre pour l'indicateur
 
+Uses the active action with the current aiming position.
+== Pending french translation fae7af9c75
+
 v = Velocity
 == v = Vélocité
 
 V-Sync
-== V-Sync
+== Pending french translation c2bc729666
 
 VAD 允许名单（逗号分隔）
 == Liste d'autorisation VAD (séparée par des virgules)
@@ -8048,7 +8207,7 @@ Velocity
 == Vitesse
 
 Version
-== Version
+== Pending french translation b30254adc6
 
 Vertical position
 == Position verticale
@@ -8076,6 +8235,18 @@ View switch found (at offset) with given number
 
 View tele found (at offset) with given number
 == Afficher le téléporteur trouvé (avec décalage) avec le numéro donné
+
+Virtual joystick which always uses fire.
+== Pending french translation e0545a8510
+
+Virtual joystick which always uses hook.
+== Pending french translation 5dcc60c17d
+
+Virtual joystick which only aims without using an action.
+== Pending french translation 2d99f396c7
+
+Virtual joystick which uses the active action.
+== Pending french translation 046086cd26
 
 Visibility
 == Visibilité
@@ -8111,7 +8282,7 @@ Voice distance radius (tiles)
 == Rayon de distance vocale (tuiles)
 
 Volume
-== Volume
+== Pending french translation fe0f833f53
 
 Vote a map by name
 == Voter pour une carte par son nom
@@ -8139,6 +8310,12 @@ Voting
 
 Wait for current vote to end before calling a new one.
 == Attendez la fin du vote actuel avant d'en lancer un nouveau.
+
+Waiting for local server to start…
+== Pending french translation 194a6b667b
+
+Waiting for local server to stop…
+== Pending french translation 4c38a07aca
 
 Waiting for snapshot
 == En attente d'instantané
@@ -8235,6 +8412,9 @@ What's done is done, no use saying more
 
 Wheel animate
 == Animation de la roue
+
+When TClient rainbow Tee is enabled, this feature has no effect.
+== Quand le Tee arc-en-ciel de TClient est activé, cette fonction n'a aucun effet.
 
 When you cross the start line, show a ghost tee replicating the movements of your best time
 == Lorsque tu franchis la ligne de départ, affiche un fantôme reproduisant les mouvements de ton meilleur temps
@@ -8389,6 +8569,9 @@ You can hook others
 You can kick only your team member
 == Vous ne pouvez exclure que les membres de votre équipe
 
+You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki.
+== Pending french translation 3808ef9834
+
 You can now jump %s times
 == Vous pouvez maintenant sauter %s fois
 
@@ -8403,6 +8586,9 @@ You can only vote after logging in.
 
 You can see other players. To disable this use DDNet client and type /showothers
 == Vous pouvez voir les autres joueurs. Pour désactiver cela, utilisez le client DDNet et tapez /showothers
+
+You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch.
+== Pending french translation 6672d2ff62
 
 You can shoot others with grenade
 == Vous pouvez tirer sur les autres avec une grenade
@@ -8548,6 +8734,9 @@ You'll lose unsaved changes after deselecting.
 You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Vous n'êtes pas dans une équipe avec /practice activé. Notez que vous ne pouvez pas obtenir de classement avec l'entraînement activé.
 
+You're playing on a local server because no online Tutorial server could be found.\n\nYour record will only be saved locally.
+== Pending french translation bd86bcf76c
+
 You're the last one!
 == Vous êtes le dernier !
 
@@ -8603,7 +8792,7 @@ Your timeout code has been set. 0.7 clients can not reclaim their tees on timeou
 == Votre code de timeout a été défini. Les clients 0.7 ne peuvent pas récupérer leur tee en cas de timeout ; cependant, un client 0.6 peut réclamer votre tee
 
 z = Zoom
-== z = Zoom
+== Pending french translation 908132c989
 
 Zen Mode
 == Mode Zen
@@ -8612,13 +8801,13 @@ Zen mode key
 == Touche du mode Zen
 
 Zhipu AI
-== Zhipu AI
+== Pending french translation a371ff2677
 
 Zhipu API key
 == Clé API Zhipu
 
 Zoom
-== Zoom
+== Pending french translation 73654f5266
 
 Zoom decrease
 == Réduire le zoom
@@ -8628,6 +8817,9 @@ Zoom in
 
 Zoom increase
 == Augmenter le zoom
+
+Zoom is allowed on this server.
+== Pending french translation d17a32bbde
 
 Zoom out
 == Zoom arrière
@@ -8707,6 +8899,9 @@ Zoom out
 动态视野强度（0-200）
 == Intensité dynamique de la vue (0-200)
 
+卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）
+== Pending french translation 1f9b96f94e
+
 压缩器攻击时间（毫秒）
 == Temps d'attaque du compresseur (ms)
 
@@ -8727,6 +8922,9 @@ Zoom out
 
 可见性过滤模式
 == Mode de filtrage de visibilité
+
+同时循环分身自定义 Tee 色调
+== Pending french translation b86fe6d44f
 
 同组全图收听
 == Écouter tout le groupe sur toute la carte
@@ -8980,8 +9178,14 @@ Zoom out
 客户端消息文字渐变颜色
 == Couleur du dégradé du texte des messages du client
 
+将 Best input 应用于其他 Tee
+== Pending french translation e6086526c3
+
 将 Q 弹 Tee 形变应用到其他玩家
-== Appliquer la déformation Q弹 Tee aux autres joueurs
+== Pending french translation 4fdfce524a
+
+将 Saiko+ 应用于其他 Tee
+== Pending french translation 29b75c9c41
 
 将性能调试日志写入专用文件
 == Écrire les logs de débogage des performances dans un fichier dédié
@@ -9006,6 +9210,15 @@ Zoom out
 
 开关图块的覆盖实体 alpha (0-100)
 == Alpha de l'entité de couverture des interrupteurs (0-100)
+
+循环本体自定义 Tee 色调
+== Pending french translation bbcdf7d9d2
+
+循环本体自定义 Tee 色调速度（度/秒）
+== Pending french translation 8ca346b74b
+
+快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
+== Pending french translation 269b2b748b
 
 忽略语音距离衰减
 == Ignorer l'atténuation de la distance vocale
@@ -9097,8 +9310,14 @@ Zoom out
 智谱AI 端点（留空使用默认）
 == Point d'accès Zhipu AI (laisser vide pour utiliser la valeur par défaut)
 
+暂停时隐藏歌词
+== Pending french translation 496373f926
+
 替换方式 0=Regex 1=Full 2=Both
 == Mode de remplacement 0=Regex 1=Complet 2=Les deux
+
+未找到歌词时隐藏（而非显示提示）
+== Pending french translation 850c549d91
 
 未播放词颜色
 == Unplayed word color
@@ -9136,6 +9355,9 @@ Zoom out
 检测新歌时自动联网拉取歌词
 == Auto fetch lyrics online when a new song is detected
 
+歌词 HTTP 代理（如 http://127.0.0.1:7890）
+== Pending french translation 563f11e410
+
 歌词 HTTP 请求超时 ms
 == Lyrics HTTP request timeout ms
 
@@ -9150,6 +9372,9 @@ Zoom out
 
 歌词当前行颜色
 == Couleur de la ligne actuelle des paroles
+
+歌词手动时间轴偏移 ms（运行时按 500ms 步进）
+== Pending french translation 1a3978dc6c
 
 歌词描边透明度
 == Opacité du contour des paroles
@@ -9168,6 +9393,9 @@ Zoom out
 
 歌词整体不透明度 %
 == Lyrics overall opacity percent
+
+歌词本地媒体库目录（多个目录用 | 分隔）
+== Pending french translation 618ae7b3b5
 
 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
 == Lyrics per-source match thresholds
@@ -9598,6 +9826,9 @@ Zoom out
 自动获取全图玩家皮肤并作为轮换队列
 == Récupérer automatiquement les skins des joueurs de la carte entière et les utiliser comme file d’attente de rotation
 
+自动调整预测边距（关闭后固定使用基础预测边距）
+== Pending french translation aec41ace4f
+
 自动跟随好友换服延迟（秒）
 == Délai de changement de serveur pour suivre automatiquement un ami (secondes)
 
@@ -9880,7 +10111,7 @@ Multiply
 
 [Assets editor blend mode]
 Normal
-== Normal
+== Pending french translation 75d779a567
 
 [Assets editor blend mode]
 Overlay
@@ -9932,7 +10163,7 @@ Live
 
 [Demo player duration]
 %s min.
-== %s min.
+== Pending french translation bd20e386c8
 
 [Demo player duration]
 %s sec.
@@ -10016,7 +10247,7 @@ Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.c
 
 [Hammer Mode]
 Normal
-== Normal
+== Pending french translation 75d779a567
 
 [Hammer Mode]
 Rotate with cursor
@@ -10028,7 +10259,7 @@ Rotate with cursor like gun
 
 [Hertz]
 Hz
-== Hz
+== Pending french translation 95fe105951
 
 [Important alert message]
 Press Esc or Tab to dismiss…
@@ -10152,7 +10383,7 @@ Following %s
 
 [Spectating Camera Mode Icon]
 AUTO
-== AUTO
+== Pending french translation b36ebd7a3c
 
 [Spectators]
 %d others…
@@ -10164,15 +10395,15 @@ Play
 
 [Team and size]
 %d\n(%d/%d)
-== %d\n(%d/%d)
+== Pending french translation b98ebbc583
 
 [Team size]
 maximum
-== maximum
+== Pending french translation 131fc2ae1c
 
 [Team size]
 minimum
-== minimum
+== Pending french translation 5274b94683
 
 [Team status]
 allowed
@@ -10188,7 +10419,7 @@ required
 
 [Team status]
 solo
-== solo
+== Pending french translation 8a7e501073
 
 [Touch button behavior]
 Bind
@@ -10220,7 +10451,7 @@ Circle
 
 [Touch button shape]
 Rectangle
-== Rectangle
+== Pending french translation e4acc4ccd2
 
 [Touch button visibilities]
 Allow dummy
