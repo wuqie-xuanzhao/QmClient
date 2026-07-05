@@ -521,7 +521,8 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 		return Frame;
 
 	SQmScrollConfig ScrollConfig;
-	ScrollConfig.m_WheelScale = 10.0f * UiScale;
+	ScrollConfig.m_WheelScale = 5.0f * UiScale;
+	ScrollConfig.m_Friction = 14.0f;
 	ScrollConfig.m_MaxOverscroll = 0.0f;
 
 	SQmScrollContainerInput ScrollInput;
@@ -3327,7 +3328,8 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				{
 					const CUIRect EffectiveTarget = (s_DropPreview.m_PreviewValid && s_aQmModulePreviewRects[SI].w > 0.0f) ? s_aQmModulePreviewRects[SI] : TargetBeforeRender;
 					const CUIRect AnimEffectiveTarget = QmModuleCardAnimRect(EffectiveTarget);
-					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimEffectiveTarget, ui_token::motion::CARD_REORDER);
+					const bool AnimateCardLayout = !TabTransitionActive;
+					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimEffectiveTarget, ui_token::motion::CARD_REORDER, 1, AnimateCardLayout);
 					DispRect = QmModuleCardScreenRect(DispRect);
 				}
 				if(DispRect.w > 0.0f)

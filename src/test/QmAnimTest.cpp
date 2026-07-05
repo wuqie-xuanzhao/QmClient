@@ -1239,8 +1239,8 @@ TEST(UiV2AnimEasing, CurvePresetsExposed)
 	EXPECT_EQ(ui_curve::BOUNCE_OUT.m_Easing, EEasing::EASE_OUT_BACK);
 	EXPECT_NEAR(ui_spring::SNAPPY.m_Stiffness, 280.0f, 1e-6f);
 	EXPECT_NEAR(ui_spring::GENTLE.m_Damping, 14.0f, 1e-6f);
-	EXPECT_NEAR(ui_token::motion::CARD_REORDER.m_Stiffness, 120.0f, 1e-6f);
-	EXPECT_NEAR(ui_token::motion::CARD_REORDER.m_Damping, 22.0f, 1e-6f);
+	EXPECT_NEAR(ui_token::motion::CARD_REORDER.m_Stiffness, 480.0f, 1e-6f);
+	EXPECT_NEAR(ui_token::motion::CARD_REORDER.m_Damping, 36.0f, 1e-6f);
 }
 
 TEST(UiV2AnimEasing, CustomEasingCanBeRegisteredAndReset)
@@ -1555,19 +1555,24 @@ TEST(UiV2ScrollPhysics, WheelImpulseDecaysAndClampsToRange)
 	EXPECT_NEAR(State.Velocity(), 0.0f, 0.5f);
 }
 
-TEST(UiV2ScrollPhysics, CustomWheelScaleHasModerateStep)
+TEST(UiV2ScrollPhysics, CustomWheelScaleHasSlowSettingsStep)
 {
 	SQmScrollMetrics Metrics;
 	Metrics.m_ViewportSize = 100.0f;
 	Metrics.m_ContentSize = 500.0f;
 	SQmScrollConfig Config;
-	Config.m_WheelScale = 10.0f;
+	Config.m_WheelScale = 5.0f;
+	Config.m_Friction = 14.0f;
 
 	CQmScrollState State;
 	State.AddWheelImpulse(-120.0f, Metrics, Config);
 
-	EXPECT_NEAR(State.Offset(), 20.0f, 0.01f);
+	EXPECT_NEAR(State.Offset(), 10.0f, 0.01f);
 	EXPECT_GT(State.Velocity(), 0.0f);
+
+	State.Advance(1.0f / 60.0f, Metrics, Config);
+	EXPECT_GT(State.Offset(), 10.0f);
+	EXPECT_LT(State.Offset(), 25.0f);
 }
 
 TEST(UiV2ScrollPhysics, OverscrollSpringsBackIntoRange)
