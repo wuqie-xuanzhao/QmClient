@@ -3308,6 +3308,8 @@ bool CGameClient::ShouldRunSkinChangeTransition(int ClientId) const
 {
 	if(ClientId < 0)
 		return false;
+	if(!ShouldRunLiveSkinChangeTransition(Client()->State() == IClient::STATE_DEMOPLAYBACK))
+		return false;
 
 	switch(std::clamp(g_Config.m_QmSkinChangeTransitionScope, QM_SKIN_CHANGE_TRANSITION_SCOPE_OWN, QM_SKIN_CHANGE_TRANSITION_SCOPE_ALL))
 	{

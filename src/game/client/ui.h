@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -342,6 +343,9 @@ class CButtonContainer
 
 struct SValueSelectorProperties
 {
+	typedef void (*FValueSelectorFormatCallback)(int64_t Value, char *pBuf, int BufSize, int Base, int HexPrefix);
+	typedef bool (*FValueSelectorParseCallback)(const char *pText, int64_t &Value, int Base);
+
 	bool m_UseScroll = true;
 	int64_t m_Step = 1;
 	float m_Scale = 1.0f;
@@ -350,6 +354,8 @@ struct SValueSelectorProperties
 	ColorRGBA m_Color = ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f);
 	int m_TextAlign = TEXTALIGN_ML;
 	bool m_SelectAllOnActivate = true;
+	FValueSelectorFormatCallback m_pfnFormatValue = nullptr;
+	FValueSelectorParseCallback m_pfnParseValue = nullptr;
 };
 
 struct SProgressSpinnerProperties

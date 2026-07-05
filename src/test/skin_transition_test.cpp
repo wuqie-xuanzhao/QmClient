@@ -22,6 +22,12 @@ TEST(SkinTransition, ProgressEndsExactlyAtConfiguredDuration)
 	EXPECT_FLOAT_EQ(ResolveSkinChangeTransitionProgress(0.501f, 500), 1.0f);
 }
 
+TEST(SkinTransition, DemoPlaybackDoesNotRunLiveSkinChangeTransition)
+{
+	EXPECT_FALSE(ShouldRunLiveSkinChangeTransition(true));
+	EXPECT_TRUE(ShouldRunLiveSkinChangeTransition(false));
+}
+
 TEST(SkinTransition, BlendAtStartShowsCurrentSkinImmediately)
 {
 	const SSkinChangeTransitionBlend Blend = ComputeSkinChangeTransitionBlend(0.0f, SKIN_CHANGE_TRANSITION_GHOST_POP);

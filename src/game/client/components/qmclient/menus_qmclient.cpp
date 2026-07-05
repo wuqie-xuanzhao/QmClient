@@ -571,7 +571,7 @@ void CMenus::FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer
 		return;
 
 	Ui()->ClipDisable();
-	*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)) + CScrollRegion::HEIGHT_MAGIC_FIX);
+	*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)));
 	Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
 	const float CurrentOffsetY = Frame.m_Frame.m_ScrollbarVisible ? Frame.m_Frame.m_Offset : 0.0f;
 	if(TrackScrollActive)

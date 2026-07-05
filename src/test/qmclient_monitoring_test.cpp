@@ -3904,6 +3904,34 @@ TEST(QmMonitoringHelpers, ValueSelectorDisplayUsesSingleLineShrink)
 	EXPECT_EQ(Body.find("DoLabel(pRect, aBuf, 10.0f, TEXTALIGN_MC);\n"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, ValueSelectorCanFormatAndParseSpecialTextValues)
+{
+	const std::string Header = ReadRepoFile("src/game/client/ui.h");
+	const std::string Source = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRect *pRect, const char *pLabel, int64_t Current, int64_t Min, int64_t Max, const SValueSelectorProperties &Props)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Header.find("FValueSelectorFormatCallback"), std::string::npos);
+	EXPECT_NE(Header.find("FValueSelectorParseCallback"), std::string::npos);
+	EXPECT_NE(Header.find("m_pfnFormatValue"), std::string::npos);
+	EXPECT_NE(Header.find("m_pfnParseValue"), std::string::npos);
+	EXPECT_NE(Body.find("Props.m_pfnFormatValue"), std::string::npos);
+	EXPECT_NE(Body.find("Props.m_pfnParseValue"), std::string::npos);
+	EXPECT_NE(Body.find("m_ActiveValueSelectorState.m_NumberInput.Set(aEditBuf);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, GraphicsRefreshRateInputAcceptsInfinitySymbol)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("FormatInfiniteValueSelector"), std::string::npos);
+	EXPECT_NE(Body.find("ParseInfiniteValueSelector"), std::string::npos);
+	EXPECT_NE(Body.find("Props.m_pfnFormatValue = Infinite ? FormatInfiniteValueSelector : nullptr;"), std::string::npos);
+	EXPECT_NE(Body.find("Props.m_pfnParseValue = Infinite ? ParseInfiniteValueSelector : nullptr;"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -6011,7 +6039,8 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(QmClient.find("Ui()->ClipDisable();"), std::string::npos);
 	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);"), std::string::npos);
 	EXPECT_EQ(QmClient.find("ScrollContainer.PreviewFrame(Frame.m_ClipRect"), std::string::npos);
-	EXPECT_NE(QmClient.find("*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)) + CScrollRegion::HEIGHT_MAGIC_FIX);"), std::string::npos);
+	EXPECT_NE(QmClient.find("*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)));"), std::string::npos);
+	EXPECT_EQ(QmClient.find("CScrollRegion::HEIGHT_MAGIC_FIX"), std::string::npos);
 	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
 	ASSERT_FALSE(QmMainBody.empty());
 	EXPECT_NE(QmMainBody.find("SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);"), std::string::npos);

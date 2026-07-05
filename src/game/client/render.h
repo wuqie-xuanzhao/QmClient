@@ -292,6 +292,11 @@ inline float ResolveSkinChangeTransitionProgress(float ElapsedSeconds, int Durat
 	return ClampSkinChangeTransitionProgress(ElapsedSeconds / DurationSeconds);
 }
 
+inline bool ShouldRunLiveSkinChangeTransition(bool DemoPlayback)
+{
+	return !DemoPlayback;
+}
+
 inline SSkinChangeTransitionBlend ComputeSkinChangeTransitionBlend(float Progress, vec2 BodyScale, vec2 FeetScale, int TransitionType, int Easing, int Intensity)
 {
 	Progress = ClampSkinChangeTransitionProgress(Progress);

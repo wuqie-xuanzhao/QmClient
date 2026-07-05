@@ -9,6 +9,7 @@
 #include <base/perf_timer.h>
 #include <base/system.h>
 
+#include <engine/external/tinyexpr.h>
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 #include <engine/shared/localization.h>
@@ -2988,7 +2989,40 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	CUIRect Button;
 	char aBuf[128];
 	bool CheckSettings = false;
-	auto DoSliderWithValueInput = [this](const void *pId, int *pOption, const CUIRect &Rect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, const char *pSuffix = "", unsigned Flags = 0u, int InputMax = -1) {
+	auto FormatInfiniteValueSelector = [](int64_t Value, char *pBuf, int BufSize, int Base, int HexPrefix) {
+		if(Value == 0)
+		{
+			str_copy(pBuf, "∞", BufSize);
+			return;
+		}
+		if(Base == 16)
+			str_format(pBuf, BufSize, "#%0*" PRIX64, HexPrefix, Value);
+		else
+			str_format(pBuf, BufSize, "%" PRId64, Value);
+	};
+	auto ParseInfiniteValueSelector = [](const char *pText, int64_t &Value, int Base) {
+		const char *pTrimmed = str_utf8_skip_whitespaces(pText);
+		char aTrimmed[32];
+		str_copy(aTrimmed, pTrimmed);
+		str_utf8_trim_right(aTrimmed);
+		if(str_comp(aTrimmed, "∞") == 0 || str_comp_nocase(aTrimmed, "inf") == 0 || str_comp_nocase(aTrimmed, "infinite") == 0)
+		{
+			Value = 0;
+			return true;
+		}
+		if(Base == 10)
+		{
+			double Result = te_interp(aTrimmed, nullptr);
+			if(std::isfinite(Result))
+			{
+				Value = (int64_t)std::round(Result);
+				return true;
+			}
+		}
+		Value = str_toint64_base(aTrimmed, Base);
+		return true;
+	};
+	auto DoSliderWithValueInput = [this, FormatInfiniteValueSelector, ParseInfiniteValueSelector](const void *pId, int *pOption, const CUIRect &Rect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, const char *pSuffix = "", unsigned Flags = 0u, int InputMax = -1) {
 		const bool Infinite = Flags & CUi::SCROLLBAR_OPTION_INFINITE;
 		const bool NoClampValue = Flags & CUi::SCROLLBAR_OPTION_NOCLAMPVALUE;
 		CUIRect Label, Controls, Slider, Input, SuffixRect;
@@ -3024,6 +3058,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Props.m_UseScroll = false;
 		Props.m_TextAlign = TEXTALIGN_MC;
 		Props.m_SelectAllOnActivate = false;
+		Props.m_pfnFormatValue = Infinite ? FormatInfiniteValueSelector : nullptr;
+		Props.m_pfnParseValue = Infinite ? ParseInfiniteValueSelector : nullptr;
 		const int SelectorMin = Infinite ? 0 : Min;
 		const int SelectorMax = InputMax >= 0 ? InputMax : (NoClampValue ? Max : SliderMax);
 		const auto Result = Ui()->DoValueSelectorWithState(reinterpret_cast<const void *>((uintptr_t)pId ^ 0x1), &Input, "", *pOption, SelectorMin, SelectorMax, Props);

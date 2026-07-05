@@ -1447,7 +1447,16 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 	const int Base = Props.m_IsHex ? 16 : 10;
 	auto RenderValueSelectorDisplay = [&]() {
 		char aBuf[128];
-		if(pLabel[0] != '\0')
+		if(Props.m_pfnFormatValue != nullptr)
+		{
+			char aValueBuf[64];
+			Props.m_pfnFormatValue(Current, aValueBuf, sizeof(aValueBuf), Base, Props.m_HexPrefix);
+			if(pLabel[0] != '\0')
+				str_format(aBuf, sizeof(aBuf), "%s %s", pLabel, aValueBuf);
+			else
+				str_copy(aBuf, aValueBuf);
+		}
+		else if(pLabel[0] != '\0')
 		{
 			if(Props.m_IsHex)
 				str_format(aBuf, sizeof(aBuf), "%s #%0*" PRIX64, pLabel, Props.m_HexPrefix, Current);
@@ -1487,7 +1496,16 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 			if(Inside && ((m_ActiveValueSelectorState.m_Button == 0 && !m_ActiveValueSelectorState.m_DidScroll) || m_ActiveValueSelectorState.m_Button == 1))
 			{
 				m_ActiveValueSelectorState.m_pLastTextId = pId;
-				m_ActiveValueSelectorState.m_NumberInput.SetInteger64(Current, Base, Props.m_HexPrefix);
+				if(Props.m_pfnFormatValue != nullptr)
+				{
+					char aEditBuf[64];
+					Props.m_pfnFormatValue(Current, aEditBuf, sizeof(aEditBuf), Base, Props.m_HexPrefix);
+					m_ActiveValueSelectorState.m_NumberInput.Set(aEditBuf);
+				}
+				else
+				{
+					m_ActiveValueSelectorState.m_NumberInput.SetInteger64(Current, Base, Props.m_HexPrefix);
+				}
 				if(Props.m_SelectAllOnActivate)
 				{
 					m_ActiveValueSelectorState.m_NumberInput.SelectAll();
@@ -1512,7 +1530,11 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 
 		if(Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER) || ConsumeHotkey(HOTKEY_ENTER) || ((MouseButtonClicked(1) || MouseButtonClicked(0)) && !Inside))
 		{
-			Current = std::clamp(m_ActiveValueSelectorState.m_NumberInput.GetInteger64(Base), Min, Max);
+			int64_t ParsedValue = 0;
+			if(Props.m_pfnParseValue != nullptr && Props.m_pfnParseValue(m_ActiveValueSelectorState.m_NumberInput.GetString(), ParsedValue, Base))
+				Current = std::clamp(ParsedValue, Min, Max);
+			else
+				Current = std::clamp(m_ActiveValueSelectorState.m_NumberInput.GetInteger64(Base), Min, Max);
 			DisableMouseLock();
 			ReleaseActiveTextInput(&m_ActiveValueSelectorState.m_NumberInput);
 			m_ActiveValueSelectorState.m_pLastTextId = nullptr;
