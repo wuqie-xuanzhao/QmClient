@@ -67,19 +67,19 @@ void CDataFileWriterFinishJob::Run()
 
 	if(!m_pStorage->RemoveFile(m_aRealFilename, IStorage::TYPE_SAVE))
 	{
-		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "Saving failed: Could not remove old map file '%s'.", m_aRealFilename);
+		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "保存失败：无法删除旧地图文件“%s”。", m_aRealFilename);
 		log_error("editor/save", "%s", m_aErrorMessage);
 		return;
 	}
 
 	if(!m_pStorage->RenameFile(m_aTempFilename, m_aRealFilename, IStorage::TYPE_SAVE))
 	{
-		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "Saving failed: Could not move temporary map file '%s' to '%s'.", m_aTempFilename, m_aRealFilename);
+		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "保存失败：无法将临时地图文件“%s”移动到“%s”。", m_aTempFilename, m_aRealFilename);
 		log_error("editor/save", "%s", m_aErrorMessage);
 		return;
 	}
 
-	log_trace("editor/save", "Saved map to '%s'.", m_aRealFilename);
+	log_trace("editor/save", "保存“%s”完成", m_aRealFilename);
 }
 
 CDataFileWriterFinishJob::CDataFileWriterFinishJob(IStorage *pStorage, const char *pRealFilename, const char *pTempFilename, CDataFileWriter &&Writer) :

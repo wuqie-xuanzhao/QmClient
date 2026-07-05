@@ -7129,7 +7129,7 @@ void CEditor::HandleWriterFinishJobs()
 		if(CollabSnapshotJob)
 		{
 			m_CollabSnapshotSavePending = false;
-			SetCollabStatus("同步失败：无法移动地图快照");
+			SetCollabStatus("同步失败：地图快照保存失败");
 		}
 		ShowFileDialogError("%s", pErrorMessage);
 		log_error("editor/save", "%s", pErrorMessage);
@@ -7143,7 +7143,7 @@ void CEditor::HandleWriterFinishJobs()
 		return;
 	}
 
-	log_trace("editor/save", "Saved map to '%s'.", pJob->RealFilename());
+	log_trace("editor/save", "保存“%s”完成", pJob->RealFilename());
 
 	// send rcon.. if we can
 	if(Client()->RconAuthed() && g_Config.m_EdAutoMapReload)

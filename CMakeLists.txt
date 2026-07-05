@@ -3765,6 +3765,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     prng_test.cpp
     qm_chat_interactions_test.cpp
     qm_hud_notifications_test.cpp
+    qm_ime_platform_test.cpp
     qm_new_ui_menu_branch_test.cpp
     qm_live_client_test.cpp
     qm_lyrics_cache_test.cpp

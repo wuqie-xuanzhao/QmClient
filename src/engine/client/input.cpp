@@ -953,16 +953,40 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 			if(ImeContext == nullptr)
 				break;
 
-			DWORD Size = ImmGetCandidateListW(ImeContext, 0, nullptr, 0);
+			const DWORD CandidateListFlags = (DWORD)pMsg->msg.win.lParam;
 			LPCANDIDATELIST pCandidateList = nullptr;
-			if(Size > 0)
+			DWORD Size = 0;
+			const auto LoadCandidateList = [&](DWORD CandidateListIndex) {
+				DWORD CandidateListSize = ImmGetCandidateListW(ImeContext, CandidateListIndex, nullptr, 0);
+				if(CandidateListSize == 0)
+					return false;
+
+				LPCANDIDATELIST pLoadedCandidateList = (LPCANDIDATELIST)malloc(CandidateListSize);
+				if(pLoadedCandidateList == nullptr)
+					return false;
+
+				CandidateListSize = ImmGetCandidateListW(ImeContext, CandidateListIndex, pLoadedCandidateList, CandidateListSize);
+				if(CandidateListSize == 0)
+				{
+					free(pLoadedCandidateList);
+					return false;
+				}
+
+				free(pCandidateList);
+				pCandidateList = pLoadedCandidateList;
+				Size = CandidateListSize;
+				return true;
+			};
+			for(DWORD CandidateListIndex = 0; CandidateListIndex < 32; ++CandidateListIndex)
 			{
-				pCandidateList = (LPCANDIDATELIST)malloc(Size);
-				if(pCandidateList != nullptr)
-					Size = ImmGetCandidateListW(ImeContext, 0, pCandidateList, Size);
-				else
-					Size = 0;
+				if(!QmImeNotifyFlagsIncludeCandidateList(CandidateListFlags, CandidateListIndex))
+					continue;
+				if(LoadCandidateList(CandidateListIndex))
+					break;
 			}
+			if(pCandidateList == nullptr && CandidateListFlags != 0 && !QmImeNotifyFlagsIncludeCandidateList(CandidateListFlags, 0))
+				LoadCandidateList(0);
+
 			m_vCandidates.clear();
 			m_CandidatePageStart = 0;
 			m_CandidatePageSize = 0;
@@ -970,9 +994,10 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 			if(pCandidateList && Size > 0)
 			{
 				const DWORD PageStart = std::min(pCandidateList->dwPageStart, pCandidateList->dwCount);
-				const DWORD PageEnd = std::min(pCandidateList->dwCount, PageStart + pCandidateList->dwPageSize);
+				const DWORD PageSize = (DWORD)QmImeCandidatePageSizeOrCount(pCandidateList->dwPageSize, pCandidateList->dwCount);
+				const DWORD PageEnd = PageStart + std::min(PageSize, pCandidateList->dwCount - PageStart);
 				m_CandidatePageStart = (int)PageStart;
-				m_CandidatePageSize = (int)pCandidateList->dwPageSize;
+				m_CandidatePageSize = (int)PageSize;
 				m_CandidateTotalCount = (int)pCandidateList->dwCount;
 				m_vCandidates.reserve(PageEnd - PageStart);
 				for(DWORD i = PageStart; i < PageEnd; i++)

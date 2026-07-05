@@ -27,6 +27,7 @@
 class CEditor;
 class CEditorImage;
 class CEditorSound;
+class IStorage;
 class CLayerFront;
 class CLayerGroup;
 class CLayerGame;
