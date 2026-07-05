@@ -2,8 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "lineinput.h"
 
-#include "ui.h"
 #include "QmUi/QmTheme.h"
+#include "ui.h"
 
 #include <engine/external/tinyexpr.h>
 #include <engine/keys.h>
@@ -606,7 +606,6 @@ void CLineInput::RenderLegacyCandidates()
 
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
-	Graphics()->BlendNormal();
 
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.8f);
 	IGraphics::CQuadItem Quad(Position.x + 0.75f, Position.y + 0.75f, RectWidth, RectHeight);

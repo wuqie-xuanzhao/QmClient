@@ -9,6 +9,9 @@
 #include <game/team_state.h>
 #include <game/teamscore.h>
 
+#include <memory>
+#include <optional>
+
 class CCharacter;
 class CPlayer;
 struct CScoreSaveResult;
@@ -84,7 +87,7 @@ public:
 
 	CClientMask TeamMask(int Team, int ExceptId = -1, int Asker = -1, int VersionFlags = CGameContext::FLAG_SIX | CGameContext::FLAG_SIXUP);
 
-	int Count(int Team) const;
+	int TeamSize(int Team) const;
 
 	// need to be very careful using this method. SERIOUSLY...
 	void SetForceCharacterTeam(int ClientId, int Team);
@@ -125,6 +128,7 @@ public:
 	bool GetSaving(int TeamId) const;
 	void SetPractice(int Team, bool Enabled);
 	bool IsPractice(int Team);
+	bool IsValidTeamNumber(int Team) const;
 };
 
 #endif

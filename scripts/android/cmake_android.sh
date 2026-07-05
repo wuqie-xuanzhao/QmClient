@@ -142,7 +142,31 @@ fi
 
 export TW_VERSION_NAME=$ANDROID_VERSION_NAME
 
+if [ -z ${SOURCE_DATE_EPOCH+x} ]; then
+	if SOURCE_DATE_EPOCH="$(git log -1 --format=%ct 2> /dev/null)"; then
+		export SOURCE_DATE_EPOCH
+	elif [ -e source_date_epoch ]; then
+		SOURCE_DATE_EPOCH="$(cat source_date_epoch)"
+		export SOURCE_DATE_EPOCH
+	else
+		unset SOURCE_DATE_EPOCH
+		if [ -z ${TW_ALLOW_NON_REPRODUCIBLE_BUILD+x} ]; then
+			log_warn "Building non-reproducibly"
+		else
+			log_error "Cannot build reproducibly: Source directory not in git repository, not from an official source download and \`SOURCE_DATE_EPOCH\` is unset."
+			log_error "Set \`TW_ALLOW_NON_REPRODUCIBLE_BUILD=1\` to build unreproducibly and ignore this check."
+			exit 1
+		fi
+	fi
+fi
+
 function build_for_type() {
+	# Remove absolute build paths from binary
+	build_extra_cflags="-ffile-prefix-map=${ANDROID_TOOLCHAIN_ROOT}=ANDROID_TOOLCHAIN_ROOT"
+	if [[ "${BUILD_TYPE}" == "Release" ]]; then
+		build_extra_cflags="${build_extra_cflags} ${ANDROID_EXTRA_RELEASE_CFLAGS}"
+	fi
+
 	cmake \
 		-H. \
 		-G "Ninja" \
@@ -153,7 +177,8 @@ function build_for_type() {
 		-DANDROID_NDK="$ANDROID_NDK_HOME" \
 		-DANDROID_ABI="${2}" \
 		-DANDROID_ARM_NEON=TRUE \
-		-DANDROID_PACKAGE_NAME="${PACKAGE_NAME//./_}" \
+		-DANDROID_PACKAGE_NAME="${PACKAGE_NAME}" \
+		-DANDROID_PACKAGE_NAME_JNI="${PACKAGE_NAME//./_}" \
 		-DCMAKE_ANDROID_NDK="$ANDROID_NDK_HOME" \
 		-DCMAKE_SYSTEM_NAME=Android \
 		-DCMAKE_SYSTEM_VERSION="$ANDROID_API_LEVEL" \
@@ -163,7 +188,6 @@ function build_for_type() {
 		-B"${BUILD_FOLDER}/$ANDROID_SUB_BUILD_DIR/$1" \
 		-DSERVER=ON \
 		-DTOOLS=OFF \
-		-DDEV=TRUE \
 		-DCMAKE_CROSSCOMPILING=ON \
 		-DVULKAN=ON \
 		-DVIDEORECORDER=OFF

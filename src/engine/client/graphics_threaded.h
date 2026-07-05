@@ -1,8 +1,9 @@
 #ifndef ENGINE_CLIENT_GRAPHICS_THREADED_H
 #define ENGINE_CLIENT_GRAPHICS_THREADED_H
 
+#include <base/dbg.h>
+#include <base/sphore.h>
 #include <base/system.h>
-#include <base/tl/threading.h>
 
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
@@ -766,8 +767,8 @@ public:
 
 	virtual void Minimize() = 0;
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;
-	virtual bool SetWindowScreen(int Index, bool MoveToCenter) = 0;
-	virtual bool UpdateDisplayMode(int Index) = 0;
+	virtual bool SetWindowScreen(int Index, bool MoveToCenter, ivec2 *pDesktopSize) = 0;
+	virtual bool UpdateDisplayMode(int Index, ivec2 *pDesktopSize) = 0;
 	virtual int GetWindowScreen() = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
@@ -807,6 +808,7 @@ public:
 	// be aware that this function should only be called from the graphics thread, and even then you should really know what you are doing
 	virtual TGLBackendReadPresentedImageData &GetReadPresentedImageDataFuncUnsafe() = 0;
 
+	virtual const char *GetFatalError() const = 0;
 	virtual bool GetWarning(std::vector<std::string> &WarningStrings) = 0;
 
 	/**
@@ -1378,9 +1380,6 @@ public:
 	int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen) override;
 	void GetCurrentVideoMode(CVideoMode &CurMode, int Screen) override;
 
-	virtual int GetDesktopScreenWidth() const { return g_Config.m_GfxDesktopWidth; }
-	virtual int GetDesktopScreenHeight() const { return g_Config.m_GfxDesktopHeight; }
-
 	// synchronization
 	void InsertSignal(CSemaphore *pSemaphore) override;
 	bool IsIdle() const override;
@@ -1405,6 +1404,7 @@ public:
 	const char *GetVendorString() override;
 	const char *GetVersionString() override;
 	const char *GetRendererString() override;
+	const char *GetFatalError() const override;
 
 	TGLBackendReadPresentedImageData &GetReadPresentedImageDataFuncUnsafe() override;
 

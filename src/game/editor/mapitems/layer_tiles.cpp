@@ -141,9 +141,18 @@ void CLayerTiles::ExtractTiles(int TilemapItemVersion, const CTile *pSavedTiles,
 {
 	const size_t DestSize = (size_t)m_Width * m_Height;
 	if(TilemapItemVersion >= CMapItemLayerTilemap::VERSION_TEEWORLDS_TILESKIP)
+	{
 		CMap::ExtractTiles(m_pTiles, DestSize, pSavedTiles, SavedTilesSize);
+	}
 	else if(SavedTilesSize >= DestSize)
+	{
 		mem_copy(m_pTiles, pSavedTiles, DestSize * sizeof(CTile));
+		for(size_t TileIndex = 0; TileIndex < DestSize; ++TileIndex)
+		{
+			m_pTiles[TileIndex].m_Skip = 0;
+			m_pTiles[TileIndex].m_Reserved = 0;
+		}
+	}
 }
 
 void CLayerTiles::MakePalette() const
@@ -265,13 +274,10 @@ bool CLayerTiles::IsEmpty() const
 
 void CLayerTiles::BrushSelecting(CUIRect Rect)
 {
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.4f);
 	Snap(&Rect);
-	IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+
+	Rect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.4f), IGraphics::CORNER_NONE, 0.0f);
+
 	char aBuf[16];
 	str_format(aBuf, sizeof(aBuf), "%d⨯%d", ConvertX(Rect.w), ConvertY(Rect.h));
 	TextRender()->Text(Rect.x + 3.0f, Rect.y + 3.0f, Editor()->m_ShowPicker ? 15.0f : Editor()->MapView()->ScaleLength(15.0f), aBuf, -1.0f);
@@ -346,7 +352,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		pGrabbed->m_TeleNumber = Editor()->m_TeleNumber;
 		pGrabbed->m_TeleCheckpointNumber = Editor()->m_TeleCheckpointNumber;
 
-		str_copy(pGrabbed->m_aFilename, Editor()->m_aFilename);
+		str_copy(pGrabbed->m_aFilename, pGrabbed->Map()->m_aFilename);
 	}
 	else if(m_HasSpeedup)
 	{
@@ -390,7 +396,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		pGrabbed->m_SpeedupForce = Editor()->m_SpeedupForce;
 		pGrabbed->m_SpeedupMaxSpeed = Editor()->m_SpeedupMaxSpeed;
 		pGrabbed->m_SpeedupAngle = Editor()->m_SpeedupAngle;
-		str_copy(pGrabbed->m_aFilename, Editor()->m_aFilename);
+		str_copy(pGrabbed->m_aFilename, pGrabbed->Map()->m_aFilename);
 	}
 	else if(m_HasSwitch)
 	{
@@ -432,7 +438,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 
 		pGrabbed->m_SwitchNumber = Editor()->m_SwitchNumber;
 		pGrabbed->m_SwitchDelay = Editor()->m_SwitchDelay;
-		str_copy(pGrabbed->m_aFilename, Editor()->m_aFilename);
+		str_copy(pGrabbed->m_aFilename, pGrabbed->Map()->m_aFilename);
 	}
 
 	else if(m_HasTune)
@@ -470,7 +476,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		}
 
 		pGrabbed->m_TuningNumber = Editor()->m_TuningNumber;
-		str_copy(pGrabbed->m_aFilename, Editor()->m_aFilename);
+		str_copy(pGrabbed->m_aFilename, pGrabbed->Map()->m_aFilename);
 	}
 	else // game, front and tiles layers
 	{
@@ -495,7 +501,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		for(int y = 0; y < r.h; y++)
 			for(int x = 0; x < r.w; x++)
 				pGrabbed->m_pTiles[y * pGrabbed->m_Width + x] = GetTile(r.x + x, r.y + y);
-		str_copy(pGrabbed->m_aFilename, Editor()->m_aFilename);
+		str_copy(pGrabbed->m_aFilename, pGrabbed->Map()->m_aFilename);
 	}
 
 	return 1;
@@ -570,7 +576,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, vec2 WorldPos)
 				continue;
 
 			bool HasTile = GetTile(fx, fy).m_Index;
-			if(pTileLayer->GetTile(x, y).m_Index == TILE_THROUGH_CUT)
+			if(pTileLayer->CLayerTiles::GetTile(x, y).m_Index == TILE_THROUGH_CUT)
 			{
 				if(m_HasGame && Map()->m_pFrontLayer)
 				{
@@ -585,7 +591,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, vec2 WorldPos)
 			if(!Destructive && HasTile)
 				continue;
 
-			SetTile(fx, fy, pTileLayer->GetTile(x, y));
+			SetTile(fx, fy, pTileLayer->CLayerTiles::GetTile(x, y));
 		}
 
 	FlagModified(sx, sy, pTileLayer->m_Width, pTileLayer->m_Height);
@@ -711,7 +717,7 @@ void CLayerTiles::Resize(int NewW, int NewH)
 
 void CLayerTiles::Shift(EShiftDirection Direction)
 {
-	ShiftImpl(m_pTiles, Direction, Editor()->m_ShiftBy);
+	ShiftImpl(m_pTiles, Direction, Map()->m_ShiftBy);
 }
 
 void CLayerTiles::ShowInfo()
@@ -785,7 +791,7 @@ void CLayerTiles::FillGameTiles(EGameTileOp Fill)
 	int Result = GameTileOpToIndex(Fill);
 	if(Result > -1)
 	{
-		std::shared_ptr<CLayerGroup> pGroup = Map()->m_vpGroups[Editor()->m_SelectedGroup];
+		std::shared_ptr<CLayerGroup> pGroup = Map()->m_vpGroups[Map()->m_SelectedGroup];
 		m_FillGameTile = Result;
 		const int OffsetX = -pGroup->m_OffsetX / 32;
 		const int OffsetY = -pGroup->m_OffsetY / 32;
@@ -940,7 +946,7 @@ bool CLayerTiles::CanFillGameTiles() const
 	if(EntitiesLayer)
 		return false;
 
-	std::shared_ptr<CLayerGroup> pGroup = Map()->m_vpGroups[Editor()->m_SelectedGroup];
+	std::shared_ptr<CLayerGroup> pGroup = Map()->m_vpGroups[Map()->m_SelectedGroup];
 
 	// Game tiles can only be constructed if the layer is relative to the game layer
 	return !(pGroup->m_OffsetX % 32) && !(pGroup->m_OffsetY % 32) && pGroup->m_ParallaxX == 100 && pGroup->m_ParallaxY == 100;
@@ -1009,7 +1015,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 					if(!m_TilesHistory.empty()) // Sometimes pressing that button causes the automap to run so we should be able to undo that
 					{
 						// record undo
-						Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->m_SelectedGroup, Editor()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
+						Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
 						ClearHistory();
 					}
 				}
@@ -1020,7 +1026,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			{
 				Map()->m_vpImages[m_Image]->m_AutoMapper.Proceed(this, Map()->m_pGameLayer.get(), m_AutoMapperReference, m_AutoMapperConfig, m_Seed);
 				// record undo
-				Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->m_SelectedGroup, Editor()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
+				Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
 				ClearHistory();
 				return CUi::POPUP_CLOSE_CURRENT;
 			}
@@ -1028,10 +1034,10 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	}
 
 	CProperty aProps[] = {
-		{"宽度", m_Width, PROPTYPE_INT, 1, 100000},
-		{"高度", m_Height, PROPTYPE_INT, 1, 100000},
+		{"宽度", m_Width, PROPTYPE_INT, 2, 100000},
+		{"高度", m_Height, PROPTYPE_INT, 2, 100000},
 		{"平移", 0, PROPTYPE_SHIFT, 0, 0},
-		{"平移量", Editor()->m_ShiftBy, PROPTYPE_INT, 1, 100000},
+		{"平移量", Map()->m_ShiftBy, PROPTYPE_INT, 1, 100000},
 		{"图像", m_Image, PROPTYPE_IMAGE, 0, 0},
 		{"颜色", PackColor(m_Color), PROPTYPE_COLOR, 0, 0},
 		{"颜色包络线", m_ColorEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
@@ -1064,7 +1070,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	Map()->m_LayerTilesPropTracker.Begin(this, Prop, State);
 	Map()->m_EditorHistory.BeginBulk();
 
-	if(Prop == ETilesProp::PROP_WIDTH && NewVal > 1)
+	if(Prop == ETilesProp::PROP_WIDTH)
 	{
 		if(NewVal > 1000 && !Editor()->m_LargeLayerWasWarned)
 		{
@@ -1074,7 +1080,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		}
 		Resize(NewVal, m_Height);
 	}
-	else if(Prop == ETilesProp::PROP_HEIGHT && NewVal > 1)
+	else if(Prop == ETilesProp::PROP_HEIGHT)
 	{
 		if(NewVal > 1000 && !Editor()->m_LargeLayerWasWarned)
 		{
@@ -1090,7 +1096,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	}
 	else if(Prop == ETilesProp::PROP_SHIFT_BY)
 	{
-		Editor()->m_ShiftBy = NewVal;
+		Map()->m_ShiftBy = NewVal;
 	}
 	else if(Prop == ETilesProp::PROP_IMAGE)
 	{
@@ -1166,7 +1172,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		// Record undo if automapper was ran
 		if(m_AutoAutoMap && !m_TilesHistory.empty())
 		{
-			Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->m_SelectedGroup, Editor()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
+			Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionTileChanges>(Map(), Editor()->Map()->m_SelectedGroup, Editor()->Map()->m_vSelectedLayers[0], "自动映射", m_TilesHistory));
 			ClearHistory();
 		}
 	}
@@ -1194,7 +1200,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 
 			std::vector<std::shared_ptr<IEditorAction>> vpActions;
 			int j = 0;
-			int GroupIndex = pEditor->m_SelectedGroup;
+			int GroupIndex = pEditorMap->m_SelectedGroup;
 			for(auto &pLayer : vpLayers)
 			{
 				int LayerIndex = vLayerIndices[j++];
@@ -1280,10 +1286,10 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 	}
 
 	CProperty aProps[] = {
-		{"宽度", State.m_Width, PROPTYPE_INT, 1, 100000},
-		{"高度", State.m_Height, PROPTYPE_INT, 1, 100000},
+		{"宽度", State.m_Width, PROPTYPE_INT, 2, 100000},
+		{"高度", State.m_Height, PROPTYPE_INT, 2, 100000},
 		{"平移", 0, PROPTYPE_SHIFT, 0, 0},
-		{"平移量", pEditor->m_ShiftBy, PROPTYPE_INT, 1, 100000},
+		{"平移量", pEditorMap->m_ShiftBy, PROPTYPE_INT, 1, 100000},
 		{"颜色", State.m_Color, PROPTYPE_COLOR, 0, 0},
 		{nullptr},
 	};
@@ -1297,7 +1303,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 
 	pEditorMap->m_LayerTilesCommonPropTracker.Begin(nullptr, Prop, PropState);
 
-	if(Prop == ETilesCommonProp::PROP_WIDTH && NewVal > 1)
+	if(Prop == ETilesCommonProp::PROP_WIDTH)
 	{
 		if(NewVal > 1000 && !pEditor->m_LargeLayerWasWarned)
 		{
@@ -1307,7 +1313,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 		}
 		State.m_Width = NewVal;
 	}
-	else if(Prop == ETilesCommonProp::PROP_HEIGHT && NewVal > 1)
+	else if(Prop == ETilesCommonProp::PROP_HEIGHT)
 	{
 		if(NewVal > 1000 && !pEditor->m_LargeLayerWasWarned)
 		{
@@ -1324,7 +1330,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderCommonProperties(SCommonPropSta
 	}
 	else if(Prop == ETilesCommonProp::PROP_SHIFT_BY)
 	{
-		pEditor->m_ShiftBy = NewVal;
+		pEditorMap->m_ShiftBy = NewVal;
 	}
 	else if(Prop == ETilesCommonProp::PROP_COLOR)
 	{
@@ -1355,6 +1361,16 @@ void CLayerTiles::FlagModified(int x, int y, int w, int h)
 	{
 		Map()->m_vpImages[m_Image]->m_AutoMapper.ProceedLocalized(this, Map()->m_pGameLayer.get(), m_AutoMapperReference, m_AutoMapperConfig, m_Seed, x, y, w, h);
 	}
+}
+
+bool CLayerTiles::IsEnvelopeUsed(int EnvelopeIndex) const
+{
+	return m_ColorEnv == EnvelopeIndex;
+}
+
+bool CLayerTiles::IsImageUsed(int ImageIndex) const
+{
+	return m_Image == ImageIndex;
 }
 
 void CLayerTiles::ModifyImageIndex(const FIndexModifyFunction &IndexModifyFunction)

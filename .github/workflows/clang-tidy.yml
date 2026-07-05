@@ -43,7 +43,30 @@ jobs:
     - name: Prepare Linux
       run: |
         sudo apt-get update -y
-        sudo apt-get install pkg-config cmake ninja-build python3-pil libfreetype6-dev libnotify-dev libsdl2-dev libsqlite3-dev libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libx264-dev libglew-dev libgl1-mesa-dev libvulkan-dev glslang-tools spirv-tools -y
+        sudo apt-get install \
+          cmake \
+          libavcodec-dev \
+          libavformat-dev \
+          libavutil-dev \
+          libfreetype6-dev \
+          libgl1-mesa-dev \
+          libglew-dev \
+          libmariadb-dev \
+          libminiupnpc-dev \
+          libnotify-dev \
+          libsdl2-dev \
+          libsqlite3-dev \
+          libswresample-dev \
+          libswscale-dev \
+          libvulkan-dev \
+          libwebsockets-dev \
+          libx264-dev \
+          ninja-build \
+          pkg-config \
+          python3-pil \
+          spirv-tools \
+          glslang-tools \
+          -y
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # stable
@@ -58,6 +81,28 @@ jobs:
 
     - name: Run clang-tidy
       run: python3 qmclient_scripts/gate/tools/clang_tidy_build.py
+
+    - name: Build Optional Features
+      run: |
+        mkdir clang-tidy
+        cd clang-tidy
+        cmake -G Ninja \
+          -DCMAKE_CXX_COMPILER=clang++-20 \
+          -DCMAKE_C_COMPILER=clang-20 \
+          -DCMAKE_CXX_CLANG_TIDY="clang-tidy-20;-warnings-as-errors=*" \
+          -DCMAKE_C_CLANG_TIDY="clang-tidy-20;-warnings-as-errors=*" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DANTIBOT=ON \
+          -DAUTOUPDATE=ON \
+          -DDISCORD=ON \
+          -DMYSQL=ON \
+          -DSTEAM=ON \
+          -DUPNP=ON \
+          -DVIDEORECORDER=ON \
+          -DVULKAN=ON \
+          -DWEBSOCKETS=ON \
+          -Werror=dev ..
+        cmake --build . --config Debug --target everything -- -k 0
 
     - name: Upload clang-tidy log
       if: always()

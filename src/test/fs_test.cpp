@@ -1,5 +1,7 @@
 #include "test.h"
 
+#include <base/fs.h>
+#include <base/str.h>
 #include <base/system.h>
 
 #include <gtest/gtest.h>
@@ -63,7 +65,7 @@ TEST(Filesystem, SplitFileExtension)
 
 static void TestNormalizePath(const char *pInput, const char *pExpectedOutput)
 {
-	char aNormalized[256];
+	char aNormalized[IO_MAX_PATH_LENGTH];
 	str_copy(aNormalized, pInput);
 	fs_normalize_path(aNormalized);
 	EXPECT_STREQ(aNormalized, pExpectedOutput);
@@ -89,6 +91,15 @@ TEST(Filesystem, StoragePath)
 	ASSERT_FALSE(fs_storage_path("TestAppName", aStoragePath, sizeof(aStoragePath)));
 	EXPECT_FALSE(fs_is_relative_path(aStoragePath));
 	EXPECT_TRUE(str_endswith_nocase(aStoragePath, "/TestAppName"));
+}
+
+TEST(Filesystem, ExecutablePath)
+{
+	char aExecutablePath[IO_MAX_PATH_LENGTH];
+	ASSERT_FALSE(fs_executable_path(aExecutablePath, sizeof(aExecutablePath)));
+	EXPECT_TRUE(fs_is_file(aExecutablePath));
+	EXPECT_FALSE(fs_parent_dir(aExecutablePath));
+	EXPECT_FALSE(fs_is_relative_path(aExecutablePath));
 }
 
 TEST(Filesystem, CreateCloseDelete)
@@ -327,8 +338,7 @@ TEST(Filesystem, RenameOpenFileDeleteTarget)
 
 	EXPECT_TRUE(fs_is_file(Info.m_aFilename));
 	EXPECT_TRUE(fs_is_file(aNewFilename));
-	EXPECT_FALSE(fs_remove(aNewFilename)); // Target file must be deleted else rename fails on Windows when target file has open handle.
-	EXPECT_FALSE(fs_rename(Info.m_aFilename, aNewFilename));
+	EXPECT_FALSE(fs_rename(Info.m_aFilename, aNewFilename)); // Renaming can overwrite the existing target file even if it has open handles.
 	EXPECT_FALSE(fs_is_file(Info.m_aFilename));
 	EXPECT_TRUE(fs_is_file(aNewFilename));
 

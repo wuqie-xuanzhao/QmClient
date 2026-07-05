@@ -1,15 +1,20 @@
 #include "color.h"
+#include "dbg.h"
 #include "logger.h"
+#include "str.h"
 #include "system.h"
+#include "time.h"
+#include "windows.h"
 
 #include <atomic>
 #include <cstdio>
 #include <memory>
 
 #if defined(CONF_FAMILY_WINDOWS)
+#include <windows.h>
+
 #include <fcntl.h>
 #include <io.h>
-#include <windows.h>
 #else
 #include <unistd.h>
 #endif
@@ -29,7 +34,13 @@ void log_set_global_logger(ILogger *logger)
 	{
 		dbg_assert_failed("global logger has already been set and can only be set once");
 	}
+#if !defined(CONF_PLATFORM_EMSCRIPTEN)
+	// With Emscripten, when atexit calls log_global_logger_finish, which calls GlobalFinish, the
+	// Emscripten runtime has already exited, so we cannot wait for the AIO thread to finish and
+	// calling io_sync in the assertion logger is not possible. We instead finish the global logger
+	// manually in src/engine/client/client.cpp before exit.
 	atexit(log_global_logger_finish);
+#endif
 }
 
 void log_global_logger_finish()
@@ -159,7 +170,10 @@ public:
 		case LEVEL_WARN: AndroidLevel = ANDROID_LOG_WARN; break;
 		case LEVEL_ERROR: AndroidLevel = ANDROID_LOG_ERROR; break;
 		}
-		__android_log_write(AndroidLevel, pMessage->m_aSystem, pMessage->Message());
+		char aTag[64];
+		str_copy(aTag, ANDROID_PACKAGE_NAME "/");
+		str_append(aTag, pMessage->m_aSystem);
+		__android_log_write(AndroidLevel, aTag, pMessage->Message());
 	}
 };
 std::unique_ptr<ILogger> log_logger_android()

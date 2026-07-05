@@ -554,7 +554,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		Ui()->DoLabel(&SeekBar, aSeekBarLabel, SeekBar.h * 0.70f, TEXTALIGN_MC);
 
 		// do the logic
-		const bool Inside = Ui()->MouseInside(&SeekBar);
 		const auto &&SnapToTimelineMarker = [&](float AmountSeek) {
 			if(pInfo->m_NumTimelineMarkers <= 0)
 				return AmountSeek;
@@ -579,30 +578,24 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		{
 			if(!Ui()->MouseButton(0))
 			{
+				if(!m_PausedBeforeSeeking)
+				{
+					DemoPlayer()->Unpause();
+				}
 				Ui()->SetActiveItem(nullptr);
 			}
 			else
 			{
-				static float s_PrevAmount = 0.0f;
-				float AmountSeek = std::clamp((Ui()->MouseX() - SeekBar.x - Rounding) / (SeekBar.w - 2 * Rounding), 0.0f, 1.0f);
+				float SeekAmount = std::clamp((Ui()->MouseX() - SeekBar.x - Rounding) / (SeekBar.w - 2 * Rounding), 0.0f, 1.0f);
 				if(!Input()->ShiftIsPressed())
-					AmountSeek = SnapToTimelineMarker(AmountSeek);
-
+					SeekAmount = SnapToTimelineMarker(SeekAmount);
 				if(Input()->ShiftIsPressed())
 				{
-					AmountSeek = s_PrevAmount + (AmountSeek - s_PrevAmount) * 0.05f;
-					if(AmountSeek >= 0.0f && AmountSeek <= 1.0f && absolute(s_PrevAmount - AmountSeek) >= 0.0001f)
-					{
-						PositionToSeek = AmountSeek;
-					}
+					Ui()->SetMouseSlow(true);
 				}
-				else
+				if(absolute(m_PrevSeekAmount - SeekAmount) >= 0.0001f)
 				{
-					if(AmountSeek >= 0.0f && AmountSeek <= 1.0f && absolute(s_PrevAmount - AmountSeek) >= 0.001f)
-					{
-						s_PrevAmount = AmountSeek;
-						PositionToSeek = AmountSeek;
-					}
+					PositionToSeek = m_PrevSeekAmount = SeekAmount;
 				}
 			}
 		}
@@ -610,11 +603,17 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		{
 			if(Ui()->MouseButton(0))
 			{
+				m_PrevSeekAmount = -1.0f;
+				m_PausedBeforeSeeking = pInfo->m_Paused;
+				if(!pInfo->m_Paused)
+				{
+					DemoPlayer()->Pause();
+				}
 				Ui()->SetActiveItem(&s_SeekBarId);
 			}
 		}
 
-		if(Inside && !Ui()->MouseButton(0))
+		if(Ui()->MouseInside(&SeekBar) && !Ui()->MouseButton(0))
 			Ui()->SetHotItem(&s_SeekBarId);
 
 		if(Ui()->HotItem() == &s_SeekBarId)
@@ -1482,6 +1481,25 @@ void CMenus::DemolistPopulate()
 	{
 		m_DemoPopulateStartTime = time_get_nanoseconds();
 		Storage()->ListDirectory(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
+
+		// Make sure there is a demo item to navigate back to the parent folder, if the folder contents could not be enumerated.
+		if(m_vDemos.empty())
+		{
+			CDemoItem Item;
+			str_copy(Item.m_aFilename, "..");
+			str_copy(Item.m_aName, "../");
+			Item.m_Date = 0;
+			Item.m_DateLoaded = true;
+			Item.m_DateValid = false;
+			Item.m_Size = 0;
+			Item.m_SizeLoaded = true;
+			Item.m_InfosLoaded = false;
+			Item.m_Valid = false;
+			Item.m_IsDir = true;
+			Item.m_IsLink = false;
+			Item.m_StorageType = m_DemolistStorageType;
+			m_vDemos.push_back(Item);
+		}
 
 		std::stable_sort(m_vDemos.begin(), m_vDemos.end());
 	}
@@ -2518,12 +2536,12 @@ void CMenus::RenderDemoBrowserDetails(CUIRect DetailsView)
 	Contents.HSplitTop(4.0f, nullptr, &Contents);
 
 	Contents.HSplitTop(18.0f, &Left, &Contents);
-	if(pItem->m_MapInfo.m_Sha256 != SHA256_ZEROED)
+	if(pItem->m_MapInfo.m_Sha256.has_value())
 	{
 		Ui()->DoLabel(&Left, "SHA256", FontSize, TEXTALIGN_ML);
 		Contents.HSplitTop(18.0f, &Left, &Contents);
 		char aSha[SHA256_MAXSTRSIZE];
-		sha256_str(pItem->m_MapInfo.m_Sha256, aSha, sizeof(aSha));
+		sha256_str(pItem->m_MapInfo.m_Sha256.value(), aSha, sizeof(aSha));
 		SLabelProperties Props;
 		Props.m_MaxWidth = Left.w;
 		Props.m_EllipsisAtEnd = true;
@@ -2576,16 +2594,16 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		const float TightSpacing = 4.0f;
 		const float GroupSpacing = 6.0f;
 
-		const bool HasSingleSelection =
+		bool HasSingleSelection =
 			NumSelectedDemos() == 1 &&
 			m_DemolistSelectedIndex >= 0 &&
 			m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 			IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 		CDemoItem *pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
-		const int NumSelectedDeletable = NumSelectedDeletableDemos();
+		int NumSelectedDeletable = NumSelectedDeletableDemos();
 		CUIRect LeftGroup = MainRow;
 		CUIRect RightGroup;
-		const bool CanRenderDemo =
+		bool CanRenderDemo =
 #if defined(CONF_VIDEORECORDER)
 			!BrowsingScreenshots && HasSingleSelection && !pSelectedItem->m_IsDir && pSelectedItem->IsDemoFile();
 #else
@@ -2748,6 +2766,19 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			SetIconMode(false);
 		}
 
+		HasSingleSelection =
+			NumSelectedDemos() == 1 &&
+			m_DemolistSelectedIndex >= 0 &&
+			m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
+			IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
+		pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+		NumSelectedDeletable = NumSelectedDeletableDemos();
+#if defined(CONF_VIDEORECORDER)
+		CanRenderDemo = !BrowsingScreenshots && HasSingleSelection && !pSelectedItem->m_IsDir && pSelectedItem->IsDemoFile();
+#else
+		CanRenderDemo = false;
+#endif
+
 		if(m_aCurrentDemoFolder[0] != '\0')
 		{
 			if(HasSingleSelection && IsDemoItemDeletable(*pSelectedItem))
@@ -2861,13 +2892,13 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		SelectAllDemos();
 	}
 
-	const bool HasSingleSelection =
+	bool HasSingleSelection =
 		NumSelectedDemos() == 1 &&
 		m_DemolistSelectedIndex >= 0 &&
 		m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 	CDemoItem *pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
-	const int NumSelectedDeletable = NumSelectedDeletableDemos();
+	int NumSelectedDeletable = NumSelectedDeletableDemos();
 
 	// refresh button
 	{
@@ -2883,6 +2914,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			DemolistOnUpdate(false);
 		}
 		SetIconMode(false);
+		GameClient()->m_Tooltips.DoToolTip(&s_RefreshButton, &RefreshButton, Localize("Refresh the demo list"));
 	}
 
 	// fetch info checkbox
@@ -2924,9 +2956,13 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		SetIconMode(true);
 		static CButtonContainer s_PlayButton;
 		const char *pOpenIcon = pSelectedItem->m_IsDir ? FONT_ICON_FOLDER_OPEN : (BrowsingScreenshots ? FONT_ICON_IMAGE : FONT_ICON_PLAY);
-		if(DoButton_Menu(&s_PlayButton, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) || (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
+		const bool ActivateSelectedItem = DoButton_Menu(&s_PlayButton, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated ||
+						  Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) ||
+						  (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive());
+		SetIconMode(false);
+
+		if(ActivateSelectedItem)
 		{
-			SetIconMode(false);
 			if(pSelectedItem->m_IsDir) // folder
 			{
 				m_DemoSearchInput.Clear();
@@ -2983,7 +3019,19 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			}
 		}
 		SetIconMode(false);
+		const char *pPlayTooltip = pSelectedItem->m_IsDir ? Localize("Open the selected folder") : (BrowsingScreenshots ? Localize("Open the selected screenshot") : Localize("Play the selected demo"));
+		GameClient()->m_Tooltips.DoToolTip(&s_PlayButton, &PlayButton, pPlayTooltip);
 	}
+
+	// The selected item can disappear when returning to the parent of a folder
+	// that was deleted externally, so all later controls must re-check it.
+	HasSingleSelection =
+		NumSelectedDemos() == 1 &&
+		m_DemolistSelectedIndex >= 0 &&
+		m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
+		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
+	pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+	NumSelectedDeletable = NumSelectedDeletableDemos();
 
 	if(m_aCurrentDemoFolder[0] != '\0')
 	{
@@ -3012,6 +3060,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				Ui()->SetActiveItem(&m_DemoRenameInput);
 				return;
 			}
+			const char *pRenameTooltip = pSelectedItem->m_IsDir ? Localize("Rename folder") : (BrowsingScreenshots ? Localize("Rename screenshot") : Localize("Rename demo"));
+			GameClient()->m_Tooltips.DoToolTip(&s_RenameButton, &RenameButton, pRenameTooltip);
 			SetIconMode(false);
 		}
 
@@ -3043,6 +3093,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				}
 				return;
 			}
+			const char *pDeleteTooltip = NumSelectedDeletable > 1 ? Localize("Delete selected items") : (pSelectedItem != nullptr && pSelectedItem->m_IsDir ? Localize("Delete folder") : (BrowsingScreenshots ? Localize("Delete screenshot") : Localize("Delete demo")));
+			GameClient()->m_Tooltips.DoToolTip(&s_DeleteButton, &DeleteButton, pDeleteTooltip);
 			SetIconMode(false);
 		}
 
@@ -3067,6 +3119,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				Ui()->SetActiveItem(&m_DemoRenderInput);
 				return;
 			}
+			GameClient()->m_Tooltips.DoToolTip(&s_RenderButton, &RenderButton, Localize("Render demo"));
 			SetIconMode(false);
 		}
 #endif

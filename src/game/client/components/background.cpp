@@ -3,6 +3,7 @@
 #include <base/log.h>
 #include <base/math.h>
 #include <base/system.h>
+#include <base/windows.h>
 
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
@@ -37,13 +38,24 @@
 #undef NTDDI_VERSION
 #define NTDDI_VERSION 0x06010000
 #endif
+#pragma push_macro("NOGDI")
+#undef NOGDI
+#pragma push_macro("NOBITMAP")
+#undef NOBITMAP
 #define IStorage IWICStorage
+#include <windows.h>
+
 #include <mfapi.h>
 #include <mferror.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
 #include <wincodec.h>
 #undef IStorage
+#pragma pop_macro("NOBITMAP")
+#pragma pop_macro("NOGDI")
+#if defined(ERROR)
+#undef ERROR
+#endif
 #endif
 
 #if defined(CONF_VIDEORECORDER)
@@ -1612,7 +1624,7 @@ void CBackground::LoadBackground()
 		else
 		{
 			ResolveBackgroundEntitiesStoragePath(Storage(), pBackgroundEntities, ".map", aBuf, sizeof(aBuf));
-			if(m_pMap->Load(aBuf))
+			if(m_pMap->Load(aBuf, IStorage::TYPE_ALL))
 			{
 				m_pLayers->Init(m_pMap, true);
 				NeedImageLoading = true;

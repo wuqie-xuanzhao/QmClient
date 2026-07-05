@@ -33,7 +33,9 @@ public:
 	void Reset();
 
 	void TryRespawn();
-	void Respawn(bool WeakHook = false); // with WeakHook == true the character will be spawned after all calls of Tick from other Players
+
+	// mark respawning, with weak hook if WeakHook is true and strong otherwise
+	void Respawn(bool WeakHook = false);
 	CCharacter *ForceSpawn(vec2 Pos); // required for loading savegames
 	void SetTeam(int Team, bool DoChatMsg = true);
 	int GetTeam() const { return m_Team; }
@@ -104,7 +106,6 @@ public:
 
 	int m_DieTick;
 	int m_PreviousDieTick;
-	std::optional<int> m_Score;
 	int m_JoinTick;
 	int m_LastActionTick;
 	int m_TeamChangeTick;
@@ -179,7 +180,7 @@ public:
 
 	bool IsPlaying() const;
 	int64_t m_LastKickVote;
-	int64_t m_LastDDRaceTeamChange;
+	std::optional<int64_t> m_LastDDRaceTeamChange;
 	int m_ShowOthers;
 	bool m_ShowAll;
 	bool m_EnableSpectatorCount;

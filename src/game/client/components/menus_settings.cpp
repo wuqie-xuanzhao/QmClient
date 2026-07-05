@@ -844,11 +844,11 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Left.HSplitTop(20.0f, &Button, &Left);
 		str_copy(aBuf, " ");
 		str_append(aBuf, Localize("Hz", "Hertz"));
-		DoSettingsScrollbarOption(SETTINGS_GENERAL, -1, "general-refresh-rate", &g_Config.m_ClRefreshRate, &g_Config.m_ClRefreshRate, &Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE | CUi::SCROLLBAR_OPTION_DELAYUPDATE, aBuf);
+		DoSettingsScrollbarOption(SETTINGS_GENERAL, -1, "general-refresh-rate", &g_Config.m_ClRefreshRate, &g_Config.m_ClRefreshRate, &Button, Localize("Update Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE | CUi::SCROLLBAR_OPTION_DELAYUPDATE, aBuf);
 		Left.HSplitTop(5.0f, nullptr, &Left);
 		Left.HSplitTop(20.0f, &Button, &Left);
 		static int s_LowerRefreshRate;
-		if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &s_LowerRefreshRate, "general-lower-refresh-rate", Localize("Save power by lowering refresh rate (higher input latency)"), g_Config.m_ClRefreshRate <= 480 && g_Config.m_ClRefreshRate != 0, &Button))
+		if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &s_LowerRefreshRate, "general-lower-refresh-rate", Localize("Save power by lowering update rate (higher input latency)"), g_Config.m_ClRefreshRate <= 480 && g_Config.m_ClRefreshRate != 0, &Button))
 			g_Config.m_ClRefreshRate = g_Config.m_ClRefreshRate > 480 || g_Config.m_ClRefreshRate == 0 ? 480 : 0;
 
 		CUIRect SettingsButton;
@@ -1300,7 +1300,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		FlagRect.x += (OldWidth - FlagRect.w) / 2.0f;
 		GameClient()->m_CountryFlags.Render(pEntry->m_CountryCode, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), FlagRect.x, FlagRect.y, FlagRect.w, FlagRect.h);
 
-		if(pEntry->m_Texture.IsValid())
+		if(pEntry->m_Texture.IsValid() || pEntry->m_CountryCode == -1)
 		{
 			Ui()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, TEXTALIGN_MC);
 		}
@@ -1450,7 +1450,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		Checkboxes.VSplitLeft(MainView.w * 0.30f, &Checkboxes, &SkinPrefix);
 		MainView.HSplitTop(5.0f, nullptr, &MainView);
 		MainView.HSplitTop(EyeLineSize, &Eyes, &MainView);
-		Eyes.VSplitRight(EyeLineSize * NUM_EMOTES + 5.0f * (NUM_EMOTES - 1), nullptr, &Eyes);
+		Eyes.VSplitRight(EyeLineSize * (float)NUM_EMOTES + 5.0f * (float)(NUM_EMOTES - 1), nullptr, &Eyes);
 	}
 	else
 	{
@@ -3372,19 +3372,19 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	MainView.HSplitTop(2.0f, nullptr, &MainView);
 	static CButtonContainer s_UiColorResetId;
 	const unsigned OldQmUiColor = g_Config.m_QmUiColor;
-	DoLine_ColorPicker(&s_UiColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmUiColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_UiColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiColor)), false, nullptr, false);
 	if(OldQmUiColor != g_Config.m_QmUiColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	static CButtonContainer s_MapBrowserColorResetId;
 	const unsigned OldQmMapBrowserColor = g_Config.m_QmMapBrowserColor;
-	DoLine_ColorPicker(&s_MapBrowserColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmMapBrowserColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_MapBrowserColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmMapBrowserColor)), false, nullptr, false);
 	if(OldQmMapBrowserColor != g_Config.m_QmMapBrowserColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 	static CButtonContainer s_ScoreboardColorResetId;
 	const unsigned OldQmScoreboardColor = g_Config.m_QmScoreboardColor;
-	DoLine_ColorPicker(&s_ScoreboardColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_QmScoreboardColor)), false, nullptr, false);
+	DoLine_ColorPicker(&s_ScoreboardColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmScoreboardColor)), false, nullptr, false);
 	if(OldQmScoreboardColor != g_Config.m_QmScoreboardColor)
 		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
@@ -3446,7 +3446,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					{
 						Info.m_Found = true;
 						char aTmpBackendName[256];
-						const bool IsDefault = str_comp_nocase(Info.m_pBackendName, CConfig::ms_pGfxBackend) == 0 && Info.m_Major == CConfig::ms_GfxGLMajor && Info.m_Minor == CConfig::ms_GfxGLMinor && Info.m_Patch == CConfig::ms_GfxGLPatch;
+						const bool IsDefault = str_comp_nocase(Info.m_pBackendName, DefaultConfig::GfxBackend) == 0 && Info.m_Major == DefaultConfig::GfxGLMajor && Info.m_Minor == DefaultConfig::GfxGLMinor && Info.m_Patch == DefaultConfig::GfxGLPatch;
 						FormatQmGraphicsBackendDisplayName(aTmpBackendName, sizeof(aTmpBackendName), Info.m_pBackendName, Info.m_Major, Info.m_Minor, Info.m_Patch, IsDefault);
 						s_vSupportedBackendInfos.push_back(Info);
 						s_vSupportedBackendNames.emplace_back(aTmpBackendName);
@@ -4356,7 +4356,6 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		return;
 	}
 
-	static int s_SndEnable = g_Config.m_SndEnable;
 	static bool s_SndPackInit = false;
 	static char s_aSndPack[sizeof(g_Config.m_SndPack)] = "";
 
@@ -4424,11 +4423,11 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		UpdateMusicState();
 	}
 
-	const bool SndEnableChanged = g_Config.m_SndEnable && !s_SndEnable;
+	m_NeedRestartSound = g_Config.m_SndEnable && !Sound()->IsSoundEnabled();
 	if(!g_Config.m_SndEnable)
 	{
 		const bool PackChanged = str_comp(g_Config.m_SndPack, s_aSndPack) != 0;
-		m_NeedRestartSound = SndEnableChanged || PackChanged;
+		m_NeedRestartSound = m_NeedRestartSound || PackChanged;
 		s_SoundToggleCardHeight = maximum(MainView.y + SoundDeck.m_Style.m_Padding - SoundToggleCard.m_Rect.y, 270.0f);
 		EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);
 		return;
@@ -4607,7 +4606,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 
 	const bool PackChanged = str_comp(g_Config.m_SndPack, s_aSndPack) != 0;
-	m_NeedRestartSound = SndEnableChanged || PackChanged;
+	m_NeedRestartSound = m_NeedRestartSound || PackChanged;
 	EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);
 }
 
@@ -4779,7 +4778,7 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 	gs_LanguageScrollToSelected = false;
 	CUIRect ScrollRegion;
 	ScrollRegion.x = MainView.x;
-	ScrollRegion.y = Content.y + CScrollRegion::HEIGHT_MAGIC_FIX;
+	ScrollRegion.y = Content.y;
 	ScrollRegion.w = MainView.w;
 	ScrollRegion.h = 0.0f;
 	FinishSettingsScrollRegion(gs_LanguageScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_LANGUAGE);
@@ -5440,8 +5439,8 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		CUIRect Button, Label;
 		pRect->HSplitTop(SizePerEntry, &Button, pRect);
 		pRect->HSplitTop(MarginPerEntry, nullptr, pRect);
-		Button.VSplitLeft(10.0f, nullptr, &Button);
-		Button.VSplitLeft(100.0f, &Label, &Button);
+		Button.VSplitLeft(140.0f, &Label, &Button);
+		Label.VMargin(10.0f, &Label);
 
 		Button.Draw(ColorRGBA(0.15f, 0.15f, 0.15f, 1.0f), IGraphics::CORNER_ALL, 1.0f);
 
@@ -5449,8 +5448,21 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		Button.Margin(2.0f, &Rail);
 
 		char aBuf[32];
-		str_format(aBuf, sizeof(aBuf), "%s: %03d", apLabels[i], round_to_int(Color[i] * 255.0f));
-		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
+
+		// Hue
+		if(i == 0)
+			str_format(aBuf, sizeof(aBuf), "%s: %.1f° (%03d)", apLabels[i], Color[i] * 360.0f, round_to_int(Color[i] * 255.0f));
+		// Lht
+		else if(i == 2)
+		{
+			// handle internal light clamping, see `UnclampLighting`
+			float Lht = DarkestLight + Color[i] * (1.0f - DarkestLight);
+			str_format(aBuf, sizeof(aBuf), "%s: %.1f%% (%03d)", apLabels[i], Lht * 100.0f, round_to_int(Color[i] * 255.0f));
+		}
+		// Sat and Alpha
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %.1f%% (%03d)", apLabels[i], Color[i] * 100.0f, round_to_int(Color[i] * 255.0f));
+		Ui()->DoLabel(&Label, aBuf, 12.0f, TEXTALIGN_ML);
 
 		ColorRGBA HandleColor;
 		Graphics()->TextureClear();
@@ -5510,7 +5522,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	CUIRect TabBar, LeftView, RightView, Button;
 
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	const float TabWidth = TabBar.w / NUMBER_OF_APPEARANCE_TABS;
+	const float TabWidth = TabBar.w / (float)NUMBER_OF_APPEARANCE_TABS;
 	static CButtonContainer s_aPageTabs[NUMBER_OF_APPEARANCE_TABS] = {};
 	static const char *s_apAppearanceTabNames[NUMBER_OF_APPEARANCE_TABS] = {};
 	static char s_aAppearanceLanguageFile[IO_MAX_PATH_LENGTH] = {};
@@ -5779,7 +5791,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		}
 
 		static CButtonContainer s_BackgroundColor;
-		DoLine_ColorPicker(&s_BackgroundColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Chat background color"), &g_Config.m_ClChatBackgroundColor, color_cast<ColorRGBA>(ColorHSLA(CConfig::ms_ClChatBackgroundColor, true)), false, nullptr, true);
+		DoLine_ColorPicker(&s_BackgroundColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Chat background color"), &g_Config.m_ClChatBackgroundColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::ClChatBackgroundColor, true)), false, nullptr, true);
 
 		// ***** Messages ***** //
 		DoAppearanceHeading(RightView, "appearance-messages-title", Localize("Messages"), HeadlineFontSize, HeadlineHeight);
@@ -6612,7 +6624,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		// Render unhookable tile
 		Graphics()->TextureClear();
 		Graphics()->TextureSet(GameClient()->m_MapImages.GetEntities(MAP_IMAGE_ENTITY_LAYER_TYPE_ALL_EXCEPT_SWITCH));
-		Graphics()->BlendNormal();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderMap()->RenderTile(NoHookTileRect.x, NoHookTileRect.y, TILE_NOHOOK, TileScale, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 
@@ -6631,7 +6642,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		// Render hookable tile
 		Graphics()->TextureClear();
 		Graphics()->TextureSet(GameClient()->m_MapImages.GetEntities(MAP_IMAGE_ENTITY_LAYER_TYPE_ALL_EXCEPT_SWITCH));
-		Graphics()->BlendNormal();
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderMap()->RenderTile(HookTileRect.x, HookTileRect.y, TILE_SOLID, TileScale, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 
@@ -6929,7 +6939,10 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClReplays, "Enable replays", Localize("Enable replays"), g_Config.m_ClReplays, &Button))
 	{
 		g_Config.m_ClReplays ^= 1;
-		Client()->DemoRecorder_UpdateReplayRecorder();
+		if(Client()->State() == IClient::STATE_ONLINE)
+		{
+			Client()->DemoRecorder_UpdateReplayRecorder();
+		}
 	}
 
 	Left.HSplitTop(20.0f, &Button, &Left);
@@ -7285,7 +7298,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupMapPicker(void *pContext, CUIRect Vie
 		{
 			if(!str_comp(SelectedItem.m_aFilename, ".."))
 			{
-				fs_parent_dir(pPopupContext->m_aCurrentMapFolder);
+				dbg_assert(fs_parent_dir(pPopupContext->m_aCurrentMapFolder) == 0, "Parent folder item selected but there is no parent folder");
 			}
 			else
 			{

@@ -3,7 +3,7 @@
 #include "editor.h"
 
 #include <base/log.h>
-#include <base/system.h>
+#include <base/str.h>
 
 #include <engine/keys.h>
 
@@ -34,7 +34,7 @@ void CFontTyper::SetTile(ivec2 Pos, unsigned char Index, const std::shared_ptr<C
 
 bool CFontTyper::OnInput(const IInput::CEvent &Event)
 {
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Editor()->GetSelectedLayerType(0, LAYERTYPE_TILES));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayerType(0, LAYERTYPE_TILES));
 	if(!pLayer)
 	{
 		if(IsActive())
@@ -114,7 +114,7 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 	{
 		m_TextIndex.x--;
 		m_TextLineLen--;
-		if(Editor()->Input()->KeyIsPressed(KEY_LCTRL))
+		if(Input()->KeyIsPressed(KEY_LCTRL))
 		{
 			while(pLayer->GetTile(m_TextIndex.x, m_TextIndex.y).m_Index)
 			{
@@ -129,7 +129,7 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 	{
 		m_TextIndex.x++;
 		m_TextLineLen++;
-		if(Editor()->Input()->KeyIsPressed(KEY_LCTRL))
+		if(Input()->KeyIsPressed(KEY_LCTRL))
 		{
 			while(pLayer->GetTile(m_TextIndex.x, m_TextIndex.y).m_Index)
 			{
@@ -161,7 +161,7 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 
 void CFontTyper::TextModeOn()
 {
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Editor()->GetSelectedLayerType(0, LAYERTYPE_TILES));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayerType(0, LAYERTYPE_TILES));
 	if(!pLayer)
 		return;
 	if(pLayer->m_Image == -1)
@@ -181,7 +181,7 @@ void CFontTyper::TextModeOff()
 	if(Editor()->m_Dialog == DIALOG_PSEUDO_FONT_TYPER)
 		Editor()->m_Dialog = DIALOG_NONE;
 	if(m_TilesPlacedSinceActivate)
-		Editor()->m_Map.m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(&Editor()->m_Map, Editor()->m_SelectedGroup), "文字输入");
+		Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(Map(), Map()->m_SelectedGroup), "文字输入");
 	m_TilesPlacedSinceActivate = 0;
 	m_Active = false;
 	m_pLastLayer = nullptr;
@@ -189,8 +189,8 @@ void CFontTyper::TextModeOff()
 
 void CFontTyper::SetCursor()
 {
-	m_TextIndex.x = (int)(Ui()->MouseWorldX() / 32);
-	m_TextIndex.y = (int)(Ui()->MouseWorldY() / 32);
+	m_TextIndex.x = (int)(Editor()->MapView()->MouseWorldPos().x / 32);
+	m_TextIndex.y = (int)(Editor()->MapView()->MouseWorldPos().y / 32);
 	m_TextLineLen = 0;
 	m_CursorRenderTime = time_get_nanoseconds() - 501ms;
 }
@@ -212,7 +212,7 @@ void CFontTyper::OnRender(CUIRect View)
 		TextModeOff();
 	str_copy(Editor()->m_aTooltip, "在键盘上输入字母和数字以插入图块。按 Escape 结束文字模式。");
 
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Editor()->GetSelectedLayerType(0, LAYERTYPE_TILES));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayerType(0, LAYERTYPE_TILES));
 	if(!pLayer)
 		return;
 
@@ -238,16 +238,16 @@ void CFontTyper::OnRender(CUIRect View)
 		m_CursorRenderTime = time_get_nanoseconds();
 	if((CurTime - m_CursorRenderTime) > 500ms)
 	{
-		std::shared_ptr<CLayerGroup> pGroup = Editor()->GetSelectedGroup();
+		std::shared_ptr<CLayerGroup> pGroup = Map()->SelectedGroup();
 		pGroup->MapScreen();
-		Editor()->Graphics()->WrapClamp();
-		Editor()->Graphics()->TextureSet(m_CursorTextTexture);
-		Editor()->Graphics()->QuadsBegin();
-		Editor()->Graphics()->SetColor(1, 1, 1, 1);
+		Graphics()->WrapClamp();
+		Graphics()->TextureSet(m_CursorTextTexture);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1, 1, 1, 1);
 		IGraphics::CQuadItem QuadItem(m_TextIndex.x * 32, m_TextIndex.y * 32, 32.0f, 32.0f);
-		Editor()->Graphics()->QuadsDrawTL(&QuadItem, 1);
-		Editor()->Graphics()->QuadsEnd();
-		Editor()->Graphics()->WrapNormal();
-		Editor()->Ui()->MapScreen();
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+		Ui()->MapScreen();
 	}
 }

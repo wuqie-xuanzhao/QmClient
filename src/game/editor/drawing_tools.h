@@ -5,8 +5,8 @@
 
 #include <game/client/ui_rect.h>
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <utility>
 #include <vector>
 

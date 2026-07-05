@@ -9,9 +9,9 @@
 
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/important_alert.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 
 CMotd::CMotd()
 {

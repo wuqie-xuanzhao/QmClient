@@ -27,7 +27,6 @@ void CLayerSounds::Render(bool Tileset)
 {
 	// TODO: nice texture
 	Graphics()->TextureClear();
-	Graphics()->BlendNormal();
 	Graphics()->QuadsBegin();
 
 	// draw falloff distance
@@ -153,7 +152,7 @@ void CLayerSounds::BrushPlace(CLayer *pBrush, vec2 WorldPos)
 		m_vSources.push_back(NewSource);
 		vAddedSources.push_back(NewSource);
 	}
-	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionSoundPlace>(Map(), Editor()->m_SelectedGroup, Editor()->m_vSelectedLayers[0], vAddedSources));
+	Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorActionSoundPlace>(Map(), Map()->m_SelectedGroup, Map()->m_vSelectedLayers[0], vAddedSources));
 	Map()->OnModify();
 }
 
@@ -185,6 +184,18 @@ CUi::EPopupMenuFunctionResult CLayerSounds::RenderProperties(CUIRect *pToolBox)
 	Map()->m_LayerSoundsPropTracker.End(Prop, State);
 
 	return CUi::POPUP_KEEP_OPEN;
+}
+
+bool CLayerSounds::IsEnvelopeUsed(int EnvelopeIndex) const
+{
+	return std::any_of(m_vSources.begin(), m_vSources.end(), [&](const auto &Source) {
+		return Source.m_PosEnv == EnvelopeIndex || Source.m_SoundEnv == EnvelopeIndex;
+	});
+}
+
+bool CLayerSounds::IsSoundUsed(int SoundIndex) const
+{
+	return m_Sound == SoundIndex;
 }
 
 void CLayerSounds::ModifySoundIndex(const FIndexModifyFunction &IndexModifyFunction)

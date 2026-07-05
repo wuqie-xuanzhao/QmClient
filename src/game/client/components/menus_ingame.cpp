@@ -11,6 +11,7 @@
 #include <base/perf_timer.h>
 #include <base/system.h>
 
+#include <engine/console.h>
 #include <engine/demo.h>
 #include <engine/favorites.h>
 #include <engine/friends.h>
@@ -847,7 +848,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			static CButtonContainer s_PauseButton;
 			if(DoIngameMenuButton(PAGE_GAME, pPauseButtonTextId, &s_PauseButton, pPauseButtonLabel, 0, &Button))
 			{
-				Console()->ExecuteLine("say /pause");
+				Console()->ExecuteLine("say /pause", IConsole::CLIENT_ID_UNSPECIFIED);
 				SetActive(false);
 			}
 		}
@@ -941,7 +942,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		static CButtonContainer s_RemoveConsoleButton;
 		if(DoIngameMenuButton(PAGE_GAME, "ingame-game-remote-console", &s_RemoveConsoleButton, Localize("Remote console"), 0, &Button))
 		{
-			Console()->ExecuteLine("toggle_remote_console");
+			Console()->ExecuteLine("toggle_remote_console", IConsole::CLIENT_ID_UNSPECIFIED);
 		}
 
 		ButtonBar2.VSplitRight(5.0f, &ButtonBar2, nullptr);
@@ -949,7 +950,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		static CButtonContainer s_LocalConsoleButton;
 		if(DoIngameMenuButton(PAGE_GAME, "ingame-game-console", &s_LocalConsoleButton, Localize("Console"), 0, &Button))
 		{
-			Console()->ExecuteLine("toggle_local_console");
+			Console()->ExecuteLine("toggle_local_console", IConsole::CLIENT_ID_UNSPECIFIED);
 		}
 		// Only when these are all false, the preview page is rendered. Once the page is not rendered, update is needed upon next rendering.
 		if(!GameClient()->m_TouchControls.IsEditingActive() || m_MenusIngameTouchControls.m_CurrentMenu != CMenusIngameTouchControls::EMenuType::MENU_BUTTONS || GameClient()->m_TouchControls.IsButtonEditing())
@@ -1172,6 +1173,11 @@ void CMenus::PopupConfirmTurnOffEditor()
 		GameClient()->m_TouchControls.SetEditingActive(!GameClient()->m_TouchControls.IsEditingActive());
 		m_MenusIngameTouchControls.ResetButtonPointers();
 	}
+}
+
+void CMenus::PopupConfirmOpenWiki()
+{
+	Client()->ViewLink(Localize("https://wiki.ddnet.org/wiki/Touch_controls"));
 }
 
 void CMenus::RenderPlayers(CUIRect MainView)
@@ -1944,11 +1950,11 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		default:
 			dbg_assert_failed("unknown team mode");
 		}
-		if((Config()->m_SvTeam == SV_TEAM_ALLOWED || Config()->m_SvTeam == SV_TEAM_MANDATORY) && (Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize || Config()->m_SvMaxTeamSize != CConfig::ms_SvMaxTeamSize))
+		if((Config()->m_SvTeam == SV_TEAM_ALLOWED || Config()->m_SvTeam == SV_TEAM_MANDATORY) && (Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize || Config()->m_SvMaxTeamSize != DefaultConfig::SvMaxTeamSize))
 		{
-			if(Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize && Config()->m_SvMaxTeamSize != CConfig::ms_SvMaxTeamSize)
+			if(Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize && Config()->m_SvMaxTeamSize != DefaultConfig::SvMaxTeamSize)
 				str_format(aBuf, sizeof(aBuf), "%s (%s %d, %s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
-			else if(Config()->m_SvMinTeamSize != CConfig::ms_SvMinTeamSize)
+			else if(Config()->m_SvMinTeamSize != DefaultConfig::SvMinTeamSize)
 				str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("minimum", "Team size"), Config()->m_SvMinTeamSize);
 			else
 				str_format(aBuf, sizeof(aBuf), "%s (%s %d)", pTeamMode, Localize("maximum", "Team size"), Config()->m_SvMaxTeamSize);
@@ -2789,6 +2795,49 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 
+	int MaxPage = PAGE_FAVORITES + ServerBrowser()->FavoriteCommunities().size();
+	if(
+		!Ui()->IsPopupOpen() &&
+		CLineInput::GetActiveInput() == nullptr &&
+		((g_Config.m_UiPage >= PAGE_INTERNET && g_Config.m_UiPage <= MaxPage) || g_Config.m_UiPage == PAGE_FAVORITE_MAPS) &&
+		((m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITE_COMMUNITY_5) || m_MenuPage == PAGE_FAVORITE_MAPS))
+	{
+		if(Input()->KeyPress(KEY_RIGHT))
+		{
+			if(g_Config.m_UiPage == PAGE_FAVORITES)
+			{
+				NewPage = PAGE_FAVORITE_MAPS;
+			}
+			else if(g_Config.m_UiPage == PAGE_FAVORITE_MAPS)
+			{
+				NewPage = ServerBrowser()->FavoriteCommunities().empty() ? PAGE_INTERNET : PAGE_FAVORITE_COMMUNITY_1;
+			}
+			else
+			{
+				NewPage = g_Config.m_UiPage + 1;
+			}
+			if(NewPage > MaxPage && NewPage != PAGE_FAVORITE_MAPS)
+				NewPage = PAGE_INTERNET;
+		}
+		if(Input()->KeyPress(KEY_LEFT))
+		{
+			if(g_Config.m_UiPage == PAGE_FAVORITE_MAPS)
+			{
+				NewPage = PAGE_FAVORITES;
+			}
+			else if(!ServerBrowser()->FavoriteCommunities().empty() && g_Config.m_UiPage == PAGE_FAVORITE_COMMUNITY_1)
+			{
+				NewPage = PAGE_FAVORITE_MAPS;
+			}
+			else
+			{
+				NewPage = g_Config.m_UiPage - 1;
+			}
+			if(NewPage < PAGE_INTERNET)
+				NewPage = ServerBrowser()->FavoriteCommunities().empty() ? PAGE_FAVORITE_MAPS : MaxPage;
+		}
+	}
+
 	size_t FavoriteCommunityIndex = 0;
 	static CButtonContainer s_aFavoriteCommunityButtons[5];
 	static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)PAGE_FAVORITE_COMMUNITY_5 - PAGE_FAVORITE_COMMUNITY_1 + 1);
@@ -2831,7 +2880,7 @@ int CMenus::GhostlistFetchCallback(const CFsFileInfo *pInfo, int IsDir, int Stor
 	str_format(aFilename, sizeof(aFilename), "%s/%s", pSelf->GameClient()->m_Ghost.GetGhostDir(), pInfo->m_pName);
 
 	CGhostInfo Info;
-	if(!pSelf->GameClient()->m_Ghost.GhostLoader()->GetGhostInfo(aFilename, &Info, pMap, pSelf->Client()->GetCurrentMapSha256(), pSelf->Client()->GetCurrentMapCrc()))
+	if(!pSelf->GameClient()->m_Ghost.GhostLoader()->GetGhostInfo(aFilename, &Info, pMap, pSelf->GameClient()->Map()->Sha256(), pSelf->GameClient()->Map()->Crc()))
 		return 0;
 
 	CGhostItem Item;

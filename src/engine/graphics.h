@@ -194,6 +194,7 @@ protected:
 	int m_ScreenRefreshRate;
 	float m_ScreenHiDPIScale;
 	float m_ScreenAspectOverride = 0.0f;
+	ivec2 m_DesktopSize;
 
 public:
 	enum
@@ -416,6 +417,7 @@ public:
 	virtual const char *GetVendorString() = 0;
 	virtual const char *GetVersionString() = 0;
 	virtual const char *GetRendererString() = 0;
+	virtual const char *GetFatalError() const = 0;
 
 	class CLineItem
 	{

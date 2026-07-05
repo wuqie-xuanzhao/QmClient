@@ -1,8 +1,6 @@
 #ifndef GAME_EDITOR_MAPITEMS_LAYER_H
 #define GAME_EDITOR_MAPITEMS_LAYER_H
 
-#include <base/system.h>
-
 #include <game/client/ui.h>
 #include <game/client/ui_rect.h>
 #include <game/editor/map_object.h>
@@ -33,6 +31,10 @@ public:
 
 	virtual void Render(bool Tileset = false) {}
 	virtual CUi::EPopupMenuFunctionResult RenderProperties(CUIRect *pToolbox) { return CUi::POPUP_KEEP_OPEN; }
+
+	virtual bool IsEnvelopeUsed(int EnvelopeIndex) const { return false; }
+	virtual bool IsImageUsed(int ImageIndex) const { return false; }
+	virtual bool IsSoundUsed(int SoundIndex) const { return false; }
 
 	virtual void ModifyImageIndex(const FIndexModifyFunction &IndexModifyFunction) {}
 	virtual void ModifyEnvelopeIndex(const FIndexModifyFunction &IndexModifyFunction) {}

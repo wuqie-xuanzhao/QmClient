@@ -20,6 +20,9 @@ src/engine/external/* linguist-vendored
 # Rust 源码：仓库 LF，工作区跟随平台
 *.rs text
 
+# Cargo vendor 源码按字节校验，Windows 检出不能改写 vendor 下 Rust 源码换行。
+vendor/**/*.rs text eol=lf
+
 # 脚本和配置：仓库 LF，工作区也固定 LF
 *.py text eol=lf
 *.cmake text eol=lf

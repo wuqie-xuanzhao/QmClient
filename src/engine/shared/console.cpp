@@ -195,152 +195,125 @@ int CConsole::ParseStart(CResult *pResult, const char *pString, int Length)
 	return 0;
 }
 
-int CConsole::ParseArgs(CResult *pResult, const char *pFormat, bool IsColor)
+int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 {
-	char Command = *pFormat;
-	char *pStr;
-	int Optional = 0;
-	int Error = PARSEARGS_OK;
+	char *pStr = pResult->m_pArgsStart;
+	bool Optional = false;
 
 	pResult->ResetVictim();
 
-	pStr = pResult->m_pArgsStart;
-
-	while(true)
+	for(char Command = *pFormat; Command != '\0'; Command = NextParam(pFormat))
 	{
-		if(!Command)
-			break;
-
 		if(Command == '?')
 		{
-			Optional = 1;
+			Optional = true;
+			continue;
+		}
+
+		pStr = str_skip_whitespaces(pStr);
+
+		if(*pStr == '\0') // error, non optional command needs value
+		{
+			if(!Optional)
+			{
+				return PARSEARGS_MISSING_VALUE;
+			}
+
+			while(Command)
+			{
+				if(Command == 'v')
+				{
+					pResult->SetVictim(CResult::VICTIM_ME);
+					break;
+				}
+				Command = NextParam(pFormat);
+			}
+			return PARSEARGS_OK;
+		}
+
+		// add token
+		if(*pStr == '"')
+		{
+			pStr++;
+			pResult->AddArgument(pStr);
+
+			char *pDst = pStr; // we might have to process escape data
+			while(pStr[0] != '"')
+			{
+				if(pStr[0] == '\\')
+				{
+					if(pStr[1] == '\\')
+						pStr++; // skip due to escape
+					else if(pStr[1] == '"')
+						pStr++; // skip due to escape
+				}
+				else if(pStr[0] == '\0')
+				{
+					return PARSEARGS_MISSING_VALUE; // return error
+				}
+
+				*pDst = *pStr;
+				pDst++;
+				pStr++;
+			}
+			*pDst = '\0';
+
+			pStr++;
 		}
 		else
 		{
-			pStr = str_skip_whitespaces(pStr);
+			pResult->AddArgument(pStr);
 
-			if(!(*pStr)) // error, non optional command needs value
+			if(Command == 'r') // rest of the string
 			{
-				if(!Optional)
-				{
-					Error = PARSEARGS_MISSING_VALUE;
-					break;
-				}
-
-				while(Command)
-				{
-					if(Command == 'v')
-					{
-						pResult->SetVictim(CResult::VICTIM_ME);
-						break;
-					}
-					Command = NextParam(pFormat);
-				}
-				break;
+				return PARSEARGS_OK;
 			}
 
-			// add token
-			if(*pStr == '"')
+			pStr = str_skip_to_whitespace(pStr);
+			if(pStr[0] != '\0') // check for end of string
 			{
-				char *pDst;
-				pStr++;
-				pResult->AddArgument(pStr);
-
-				pDst = pStr; // we might have to process escape data
-				while(true)
-				{
-					if(pStr[0] == '"')
-					{
-						break;
-					}
-					else if(pStr[0] == '\\')
-					{
-						if(pStr[1] == '\\')
-							pStr++; // skip due to escape
-						else if(pStr[1] == '"')
-							pStr++; // skip due to escape
-					}
-					else if(pStr[0] == 0)
-					{
-						return PARSEARGS_MISSING_VALUE; // return error
-					}
-
-					*pDst = *pStr;
-					pDst++;
-					pStr++;
-				}
-
-				// write null termination
-				*pDst = 0;
-
+				pStr[0] = '\0';
 				pStr++;
 			}
-			else
+
+			// validate arguments
+			if(Command == 'v')
 			{
-				char *pVictim = nullptr;
-
-				pResult->AddArgument(pStr);
-				if(Command == 'v')
+				pResult->SetVictim(pResult->GetString(pResult->NumArguments() - 1));
+			}
+			else if(Command == 'i')
+			{
+				int Value;
+				if(!str_toint(pResult->GetString(pResult->NumArguments() - 1), &Value) ||
+					Value == std::numeric_limits<int>::max() ||
+					Value == std::numeric_limits<int>::min())
 				{
-					pVictim = pStr;
-				}
-
-				if(Command == 'r') // rest of the string
-					break;
-				else if(Command == 'v' || Command == 'i' || Command == 'f' || Command == 's')
-					pStr = str_skip_to_whitespace(pStr);
-
-				if(pStr[0] != 0) // check for end of string
-				{
-					pStr[0] = 0;
-					pStr++;
-				}
-
-				// validate args
-				if(IsColor)
-				{
-					auto Color = ColorParse(pResult->GetString(pResult->NumArguments() - 1), 0.0f);
-					if(!Color.has_value())
-					{
-						Error = PARSEARGS_INVALID_COLOR;
-						break;
-					}
-				}
-				if(Command == 'i')
-				{
-					if(!IsColor)
-					{
-						int Value;
-						if(!str_toint(pResult->GetString(pResult->NumArguments() - 1), &Value) ||
-							Value == std::numeric_limits<int>::max() || Value == std::numeric_limits<int>::min())
-						{
-							Error = PARSEARGS_INVALID_INTEGER;
-							break;
-						}
-					}
-				}
-				else if(Command == 'f')
-				{
-					float Value;
-					if(!str_tofloat(pResult->GetString(pResult->NumArguments() - 1), &Value) ||
-						Value == std::numeric_limits<float>::max() || Value == std::numeric_limits<float>::min())
-					{
-						Error = PARSEARGS_INVALID_FLOAT;
-						break;
-					}
-				}
-
-				if(pVictim)
-				{
-					pResult->SetVictim(pVictim);
+					return PARSEARGS_INVALID_INTEGER;
 				}
 			}
+			else if(Command == 'c')
+			{
+				auto Color = ColorParse(pResult->GetString(pResult->NumArguments() - 1), 0.0f);
+				if(!Color.has_value())
+				{
+					return PARSEARGS_INVALID_COLOR;
+				}
+			}
+			else if(Command == 'f')
+			{
+				float Value;
+				if(!str_tofloat(pResult->GetString(pResult->NumArguments() - 1), &Value) ||
+					Value == std::numeric_limits<float>::max() ||
+					Value == std::numeric_limits<float>::min())
+				{
+					return PARSEARGS_INVALID_FLOAT;
+				}
+			}
+			// 's' and unknown commands are handled as strings
 		}
-		// fetch next command
-		Command = NextParam(pFormat);
 	}
 
-	return Error;
+	return PARSEARGS_OK;
 }
 
 char CConsole::NextParam(const char *&pFormat)
@@ -599,15 +572,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, int ClientId, bo
 
 				if(Stroke || IsStrokeCommand)
 				{
-					bool IsColor = false;
-					{
-						FCommandCallback pfnCallback = pCommand->m_pfnCallback;
-						void *pUserData = pCommand->m_pUserData;
-						TraverseChain(&pfnCallback, &pUserData);
-						IsColor = pfnCallback == &SColorConfigVariable::CommandCallback;
-					}
-
-					if(int Error = ParseArgs(&Result, pCommand->m_pParams, IsColor))
+					if(int Error = ParseArgs(&Result, pCommand->m_pParams))
 					{
 						char aBuf[CMDLINE_LENGTH + 64];
 						if(Error == PARSEARGS_INVALID_INTEGER)

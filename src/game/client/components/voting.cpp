@@ -9,10 +9,10 @@
 
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
-#include <game/client/QmUi/UiTokens.h>
 #include <game/localization.h>
 
 namespace
@@ -226,7 +226,7 @@ int CVoting::SecondsLeft() const
 CVoting::CVoting()
 {
 	ClearOptions();
-	OnReset();
+	CVoting::OnReset();
 	ClearUnfinishedMapVoteChain();
 }
 

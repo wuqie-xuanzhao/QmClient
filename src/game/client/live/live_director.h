@@ -1,8 +1,8 @@
 #ifndef GAME_CLIENT_LIVE_LIVE_DIRECTOR_H
 #define GAME_CLIENT_LIVE_LIVE_DIRECTOR_H
 
-#include <engine/shared/qm_live_observer_session.h>
 #include <engine/shared/protocol.h>
+#include <engine/shared/qm_live_observer_session.h>
 
 #include <array>
 #include <vector>

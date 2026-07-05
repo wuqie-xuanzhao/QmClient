@@ -2151,7 +2151,7 @@ void CFastPractice::NormalizeCharacterAfterReset(CCharacter *pChar, bool KeepFre
 	pChar->ResetVelocity();
 	if(!KeepFreezeFlags)
 	{
-		pChar->UnFreeze();
+		pChar->Unfreeze();
 		pChar->m_FreezeTime = 0;
 	}
 	pChar->m_CanMoveInFreeze = false;
@@ -2659,7 +2659,7 @@ bool CFastPractice::ExecutePracticeCommand(int Team, int LocalClientId, CCharact
 		{
 			Core.m_DeepFrozen = false;
 			pChar->SetCore(Core);
-			pChar->UnFreeze();
+			pChar->Unfreeze();
 		}
 		NormalizeCharacterAfterReset(pChar, Cmd == "deep");
 		return true;
@@ -2671,7 +2671,7 @@ bool CFastPractice::ExecutePracticeCommand(int Team, int LocalClientId, CCharact
 		Core.m_LiveFrozen = Cmd == "livefreeze";
 		pChar->SetCore(Core);
 		if(Cmd == "unlivefreeze")
-			pChar->UnFreeze();
+			pChar->Unfreeze();
 		NormalizeCharacterAfterReset(pChar, Cmd == "livefreeze");
 		return true;
 	}
@@ -2814,7 +2814,7 @@ bool CFastPractice::ExecutePracticeCommand(int Team, int LocalClientId, CCharact
 				State.m_InvincibleAddedEndlessJump = false;
 			}
 			pChar->SetCore(Core);
-			pChar->UnFreeze();
+			pChar->Unfreeze();
 			pChar->m_FreezeTime = 0;
 		}
 

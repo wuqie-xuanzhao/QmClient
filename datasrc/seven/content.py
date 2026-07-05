@@ -2,283 +2,248 @@ from .datatypes import Array, Float, Int, Pointer, String, Struct, TextureHandle
 
 
 class Sound(Struct):
-    def __init__(self, filename=""):
-        Struct.__init__(self, "CDataSound")
-        self.id = Int(0)
-        self.filename = String(filename)
+	def __init__(self, filename=""):
+		Struct.__init__(self, "CDataSound")
+		self.id = Int(0)
+		self.filename = String(filename)
 
 
 class SoundSet(Struct):
-    def __init__(self, name="", files=()):
-        Struct.__init__(self, "CDataSoundset")
-        self.name = String(name)
-        self.sounds = Array(Sound())
-        self.last = Int(-1)
-        for filename in files:
-            self.sounds.Add(Sound(filename))
+	def __init__(self, name="", files=()):
+		Struct.__init__(self, "CDataSoundset")
+		self.name = String(name)
+		self.sounds = Array(Sound())
+		self.last = Int(-1)
+		for filename in files:
+			self.sounds.Add(Sound(filename))
 
 
 class Image(Struct):
-    def __init__(self, name="", filename="", linear_mapping=0):
-        Struct.__init__(self, "CDataImage")
-        self.name = String(name)
-        self.filename = String(filename)
-        self.flag = Int(linear_mapping)
-        self.id = TextureHandle()
+	def __init__(self, name="", filename="", linear_mapping=0):
+		Struct.__init__(self, "CDataImage")
+		self.name = String(name)
+		self.filename = String(filename)
+		self.flag = Int(linear_mapping)
+		self.id = TextureHandle()
 
 
 class SpriteSet(Struct):
-    def __init__(self, _name="", image=None, gridx=0, gridy=0):
-        Struct.__init__(self, "CDataSpriteset")
-        self.image = Pointer(Image, image)  # TODO
-        self.gridx = Int(gridx)
-        self.gridy = Int(gridy)
+	def __init__(self, _name="", image=None, gridx=0, gridy=0):
+		Struct.__init__(self, "CDataSpriteset")
+		self.image = Pointer(Image, image)  # TODO
+		self.gridx = Int(gridx)
+		self.gridy = Int(gridy)
 
 
 class Sprite(Struct):
-    def __init__(self, name="", Set=None, x=0, y=0, w=0, h=0):
-        Struct.__init__(self, "CDataSprite")
-        self.name = String(name)
-        self.set = Pointer(SpriteSet, Set)  # TODO
-        self.x = Int(x)
-        self.y = Int(y)
-        self.w = Int(w)
-        self.h = Int(h)
+	def __init__(self, name="", Set=None, x=0, y=0, w=0, h=0):
+		Struct.__init__(self, "CDataSprite")
+		self.name = String(name)
+		self.set = Pointer(SpriteSet, Set)  # TODO
+		self.x = Int(x)
+		self.y = Int(y)
+		self.w = Int(w)
+		self.h = Int(h)
 
 
 class Pickup(Struct):
-    def __init__(self, name="", respawntime=15, spawndelay=0):
-        Struct.__init__(self, "CDataPickupspec")
-        self.name = String(name)
-        self.respawntime = Int(respawntime)
-        self.spawndelay = Int(spawndelay)
+	def __init__(self, name="", respawntime=15, spawndelay=0):
+		Struct.__init__(self, "CDataPickupspec")
+		self.name = String(name)
+		self.respawntime = Int(respawntime)
+		self.spawndelay = Int(spawndelay)
 
 
 class AnimKeyframe(Struct):
-    def __init__(self, time=0, x=0, y=0, angle=0):
-        Struct.__init__(self, "CAnimKeyframe")
-        self.time = Float(time)
-        self.x = Float(x)
-        self.y = Float(y)
-        self.angle = Float(angle)
+	def __init__(self, time=0, x=0, y=0, angle=0):
+		Struct.__init__(self, "CAnimKeyframe")
+		self.time = Float(time)
+		self.x = Float(x)
+		self.y = Float(y)
+		self.angle = Float(angle)
 
 
 class AnimSequence(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CAnimSequence")
-        self.frames = Array(AnimKeyframe())
+	def __init__(self):
+		Struct.__init__(self, "CAnimSequence")
+		self.frames = Array(AnimKeyframe())
 
 
 class Animation(Struct):
-    def __init__(self, name=""):
-        Struct.__init__(self, "CAnimation")
-        self.name = String(name)
-        self.body = AnimSequence()
-        self.back_foot = AnimSequence()
-        self.front_foot = AnimSequence()
-        self.attach = AnimSequence()
+	def __init__(self, name=""):
+		Struct.__init__(self, "CAnimation")
+		self.name = String(name)
+		self.body = AnimSequence()
+		self.back_foot = AnimSequence()
+		self.front_foot = AnimSequence()
+		self.attach = AnimSequence()
 
 
 class WeaponSpec(Struct):
-    def __init__(self, cont=None, name=""):
-        Struct.__init__(self, "CDataWeaponspec")
-        self.name = String(name)
-        self.sprite_body = Pointer(Sprite, Sprite())
-        self.sprite_cursor = Pointer(Sprite, Sprite())
-        self.sprite_proj = Pointer(Sprite, Sprite())
-        self.sprite_muzzles = Array(Pointer(Sprite, Sprite()))
-        self.visual_size = Int(96)
+	def __init__(self, cont=None, name=""):
+		Struct.__init__(self, "CDataWeaponspec")
+		self.name = String(name)
+		self.sprite_body = Pointer(Sprite, Sprite())
+		self.sprite_cursor = Pointer(Sprite, Sprite())
+		self.sprite_proj = Pointer(Sprite, Sprite())
+		self.sprite_muzzles = Array(Pointer(Sprite, Sprite()))
+		self.visual_size = Int(96)
 
-        self.firedelay = Int(500)
-        self.maxammo = Int(10)
-        self.ammoregentime = Int(0)
-        self.damage = Int(1)
+		self.firedelay = Int(500)
+		self.maxammo = Int(10)
+		self.ammoregentime = Int(0)
+		self.damage = Int(1)
 
-        self.offsetx = Float(0)
-        self.offsety = Float(0)
-        self.muzzleoffsetx = Float(0)
-        self.muzzleoffsety = Float(0)
-        self.muzzleduration = Float(5)
+		self.offsetx = Float(0)
+		self.offsety = Float(0)
+		self.muzzleoffsetx = Float(0)
+		self.muzzleoffsety = Float(0)
+		self.muzzleduration = Float(5)
 
-        # dig out sprites if we have a container
-        if cont:
-            for sprite in cont.sprites.items:
-                if sprite.name.value == "weapon_" + name + "_body":
-                    self.sprite_body.Set(sprite)
-                elif sprite.name.value == "weapon_" + name + "_cursor":
-                    self.sprite_cursor.Set(sprite)
-                elif sprite.name.value == "weapon_" + name + "_proj":
-                    self.sprite_proj.Set(sprite)
-                elif "weapon_" + name + "_muzzle" in sprite.name.value:
-                    self.sprite_muzzles.Add(Pointer(Sprite, sprite))
+		# dig out sprites if we have a container
+		if cont:
+			for sprite in cont.sprites.items:
+				if sprite.name.value == "weapon_" + name + "_body":
+					self.sprite_body.Set(sprite)
+				elif sprite.name.value == "weapon_" + name + "_cursor":
+					self.sprite_cursor.Set(sprite)
+				elif sprite.name.value == "weapon_" + name + "_proj":
+					self.sprite_proj.Set(sprite)
+				elif "weapon_" + name + "_muzzle" in sprite.name.value:
+					self.sprite_muzzles.Add(Pointer(Sprite, sprite))
 
 
 class Weapon_Hammer(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataWeaponspecHammer")
-        self.base = Pointer(WeaponSpec, WeaponSpec())
+	def __init__(self):
+		Struct.__init__(self, "CDataWeaponspecHammer")
+		self.base = Pointer(WeaponSpec, WeaponSpec())
 
 
 class Weapon_Gun(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataWeaponspecGun")
-        self.base = Pointer(WeaponSpec, WeaponSpec())
-        self.curvature = Float(1.25)
-        self.speed = Float(2200)
-        self.lifetime = Float(2.0)
+	def __init__(self):
+		Struct.__init__(self, "CDataWeaponspecGun")
+		self.base = Pointer(WeaponSpec, WeaponSpec())
+		self.curvature = Float(1.25)
+		self.speed = Float(2200)
+		self.lifetime = Float(2.0)
 
 
 class Weapon_Shotgun(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataWeaponspecShotgun")
-        self.base = Pointer(WeaponSpec, WeaponSpec())
-        self.curvature = Float(1.25)
-        self.speed = Float(2200)
-        self.speeddiff = Float(0.8)
-        self.lifetime = Float(0.25)
+	def __init__(self):
+		Struct.__init__(self, "CDataWeaponspecShotgun")
+		self.base = Pointer(WeaponSpec, WeaponSpec())
+		self.curvature = Float(1.25)
+		self.speed = Float(2200)
+		self.speeddiff = Float(0.8)
+		self.lifetime = Float(0.25)
 
 
 class Weapon_Grenade(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataWeaponspecGrenade")
-        self.base = Pointer(WeaponSpec, WeaponSpec())
-        self.curvature = Float(7.0)
-        self.speed = Float(1000)
-        self.lifetime = Float(2.0)
+	def __init__(self):
+		Struct.__init__(self, "CDataWeaponspecGrenade")
+		self.base = Pointer(WeaponSpec, WeaponSpec())
+		self.curvature = Float(7.0)
+		self.speed = Float(1000)
+		self.lifetime = Float(2.0)
 
 
 class Weapon_Laser(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataWeaponspecLaser")
-        self.base = Pointer(WeaponSpec, WeaponSpec())
-        self.reach = Float(800.0)
-        self.bounce_delay = Int(150)
-        self.bounce_num = Int(1)
-        self.bounce_cost = Float(0)
+	def __init__(self):
+		Struct.__init__(self, "CDataWeaponspecLaser")
+		self.base = Pointer(WeaponSpec, WeaponSpec())
+		self.reach = Float(800.0)
+		self.bounce_delay = Int(150)
+		self.bounce_num = Int(1)
+		self.bounce_cost = Float(0)
 
 
 class Weapon_Ninja(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataWeaponspecNinja")
-        self.base = Pointer(WeaponSpec, WeaponSpec())
-        self.duration = Int(15000)
-        self.movetime = Int(200)
-        self.velocity = Int(50)
+	def __init__(self):
+		Struct.__init__(self, "CDataWeaponspecNinja")
+		self.base = Pointer(WeaponSpec, WeaponSpec())
+		self.duration = Int(15000)
+		self.movetime = Int(200)
+		self.velocity = Int(50)
 
 
 class Weapons(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataWeaponspecs")
-        self.hammer = Weapon_Hammer()
-        self.gun = Weapon_Gun()
-        self.shotgun = Weapon_Shotgun()
-        self.grenade = Weapon_Grenade()
-        self.laser = Weapon_Laser()
-        self.ninja = Weapon_Ninja()
-        self.id = Array(WeaponSpec())
+	def __init__(self):
+		Struct.__init__(self, "CDataWeaponspecs")
+		self.hammer = Weapon_Hammer()
+		self.gun = Weapon_Gun()
+		self.shotgun = Weapon_Shotgun()
+		self.grenade = Weapon_Grenade()
+		self.laser = Weapon_Laser()
+		self.ninja = Weapon_Ninja()
+		self.id = Array(WeaponSpec())
 
 
 class Explosion(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataExplosion")
-        self.radius = Float(135)
-        self.max_force = Float(12)
+	def __init__(self):
+		Struct.__init__(self, "CDataExplosion")
+		self.radius = Float(135)
+		self.max_force = Float(12)
 
 
 class DataContainer(Struct):
-    def __init__(self):
-        Struct.__init__(self, "CDataContainer")
-        self.sounds = Array(SoundSet())
-        self.images = Array(Image())
-        self.pickups = Array(Pickup())
-        self.spritesets = Array(SpriteSet())
-        self.sprites = Array(Sprite())
-        self.animations = Array(Animation())
-        self.weapons = Weapons()
-        # self.explosion = Explosion()
+	def __init__(self):
+		Struct.__init__(self, "CDataContainer")
+		self.sounds = Array(SoundSet())
+		self.images = Array(Image())
+		self.pickups = Array(Pickup())
+		self.spritesets = Array(SpriteSet())
+		self.sprites = Array(Sprite())
+		self.animations = Array(Animation())
+		self.weapons = Weapons()
+		# self.explosion = Explosion()
 
 
 def FileList(fmt, num):
-    return [fmt % (x + 1) for x in range(0, num)]
+	return [fmt % (x + 1) for x in range(0, num)]
 
 
 container = DataContainer()
 container.sounds.Add(SoundSet("gun_fire", FileList("audio/wp_gun_fire-%02d.wv", 3)))
-container.sounds.Add(
-    SoundSet("shotgun_fire", FileList("audio/wp_shotty_fire-%02d.wv", 3))
-)
+container.sounds.Add(SoundSet("shotgun_fire", FileList("audio/wp_shotty_fire-%02d.wv", 3)))
 
-container.sounds.Add(
-    SoundSet("grenade_fire", FileList("audio/wp_flump_launch-%02d.wv", 3))
-)
-container.sounds.Add(
-    SoundSet("hammer_fire", FileList("audio/wp_hammer_swing-%02d.wv", 3))
-)
+container.sounds.Add(SoundSet("grenade_fire", FileList("audio/wp_flump_launch-%02d.wv", 3)))
+container.sounds.Add(SoundSet("hammer_fire", FileList("audio/wp_hammer_swing-%02d.wv", 3)))
 container.sounds.Add(SoundSet("hammer_hit", FileList("audio/wp_hammer_hit-%02d.wv", 3)))
-container.sounds.Add(
-    SoundSet("ninja_fire", FileList("audio/wp_ninja_attack-%02d.wv", 3))
-)
-container.sounds.Add(
-    SoundSet("grenade_explode", FileList("audio/wp_flump_explo-%02d.wv", 3))
-)
+container.sounds.Add(SoundSet("ninja_fire", FileList("audio/wp_ninja_attack-%02d.wv", 3)))
+container.sounds.Add(SoundSet("grenade_explode", FileList("audio/wp_flump_explo-%02d.wv", 3)))
 container.sounds.Add(SoundSet("ninja_hit", FileList("audio/wp_ninja_hit-%02d.wv", 3)))
 container.sounds.Add(SoundSet("laser_fire", FileList("audio/wp_laser_fire-%02d.wv", 3)))
-container.sounds.Add(
-    SoundSet("laser_bounce", FileList("audio/wp_laser_bnce-%02d.wv", 3))
-)
+container.sounds.Add(SoundSet("laser_bounce", FileList("audio/wp_laser_bnce-%02d.wv", 3)))
 container.sounds.Add(SoundSet("weapon_switch", FileList("audio/wp_switch-%02d.wv", 3)))
 
-container.sounds.Add(
-    SoundSet("player_pain_short", FileList("audio/vo_teefault_pain_short-%02d.wv", 12))
-)
-container.sounds.Add(
-    SoundSet("player_pain_long", FileList("audio/vo_teefault_pain_long-%02d.wv", 2))
-)
+container.sounds.Add(SoundSet("player_pain_short", FileList("audio/vo_teefault_pain_short-%02d.wv", 12)))
+container.sounds.Add(SoundSet("player_pain_long", FileList("audio/vo_teefault_pain_long-%02d.wv", 2)))
 
 container.sounds.Add(SoundSet("body_land", FileList("audio/foley_land-%02d.wv", 4)))
+container.sounds.Add(SoundSet("player_airjump", FileList("audio/foley_dbljump-%02d.wv", 3)))
 container.sounds.Add(
-    SoundSet("player_airjump", FileList("audio/foley_dbljump-%02d.wv", 3))
+	SoundSet(
+		"player_jump",
+		FileList("audio/foley_foot_left-%02d.wv", 4) + FileList("audio/foley_foot_right-%02d.wv", 4),
+	)
 )
-container.sounds.Add(
-    SoundSet(
-        "player_jump",
-        FileList("audio/foley_foot_left-%02d.wv", 4)
-        + FileList("audio/foley_foot_right-%02d.wv", 4),
-    )
-)
-container.sounds.Add(
-    SoundSet("player_die", FileList("audio/foley_body_splat-%02d.wv", 3))
-)
-container.sounds.Add(
-    SoundSet("player_spawn", FileList("audio/vo_teefault_spawn-%02d.wv", 7))
-)
+container.sounds.Add(SoundSet("player_die", FileList("audio/foley_body_splat-%02d.wv", 3)))
+container.sounds.Add(SoundSet("player_spawn", FileList("audio/vo_teefault_spawn-%02d.wv", 7)))
 container.sounds.Add(SoundSet("player_skid", FileList("audio/sfx_skid-%02d.wv", 4)))
 container.sounds.Add(SoundSet("tee_cry", FileList("audio/vo_teefault_cry-%02d.wv", 2)))
 
 container.sounds.Add(SoundSet("hook_loop", FileList("audio/hook_loop-%02d.wv", 2)))
 
-container.sounds.Add(
-    SoundSet("hook_attach_ground", FileList("audio/hook_attach-%02d.wv", 3))
-)
-container.sounds.Add(
-    SoundSet("hook_attach_player", FileList("audio/foley_body_impact-%02d.wv", 3))
-)
-container.sounds.Add(
-    SoundSet("hook_noattach", FileList("audio/hook_noattach-%02d.wv", 2))
-)
-container.sounds.Add(
-    SoundSet("pickup_health", FileList("audio/sfx_pickup_hrt-%02d.wv", 2))
-)
-container.sounds.Add(
-    SoundSet("pickup_armor", FileList("audio/sfx_pickup_arm-%02d.wv", 4))
-)
+container.sounds.Add(SoundSet("hook_attach_ground", FileList("audio/hook_attach-%02d.wv", 3)))
+container.sounds.Add(SoundSet("hook_attach_player", FileList("audio/foley_body_impact-%02d.wv", 3)))
+container.sounds.Add(SoundSet("hook_noattach", FileList("audio/hook_noattach-%02d.wv", 2)))
+container.sounds.Add(SoundSet("pickup_health", FileList("audio/sfx_pickup_hrt-%02d.wv", 2)))
+container.sounds.Add(SoundSet("pickup_armor", FileList("audio/sfx_pickup_arm-%02d.wv", 4)))
 
 container.sounds.Add(SoundSet("pickup_grenade", ["audio/sfx_pickup_launcher.wv"]))
 container.sounds.Add(SoundSet("pickup_shotgun", ["audio/sfx_pickup_sg.wv"]))
 container.sounds.Add(SoundSet("pickup_ninja", ["audio/sfx_pickup_ninja.wv"]))
-container.sounds.Add(
-    SoundSet("weapon_spawn", FileList("audio/sfx_spawn_wpn-%02d.wv", 3))
-)
+container.sounds.Add(SoundSet("weapon_spawn", FileList("audio/sfx_spawn_wpn-%02d.wv", 3)))
 container.sounds.Add(SoundSet("weapon_noammo", FileList("audio/wp_noammo-%02d.wv", 5)))
 
 container.sounds.Add(SoundSet("hit", FileList("audio/sfx_hit_weak-%02d.wv", 2)))
@@ -697,9 +662,7 @@ weapon.ammoregentime.Set(500)
 weapon.visual_size.Set(64)
 weapon.offsetx.Set(32)
 weapon.offsety.Set(-4)
-weapon.muzzleoffsetx.Set(
-    50 + 8.8752
-)  # see gun in 0.6 content.py for the number after the plus sign (TODO: also copy the comment from 0.6 content.py, if it gets removed)
+weapon.muzzleoffsetx.Set(50 + 8.8752)  # see gun in 0.6 content.py for the number after the plus sign (TODO: also copy the comment from 0.6 content.py, if it gets removed)
 weapon.muzzleoffsety.Set(6)
 container.weapons.gun.base.Set(weapon)
 container.weapons.id.Add(weapon)
@@ -710,9 +673,7 @@ weapon.damage.Set(1)
 weapon.visual_size.Set(96)
 weapon.offsetx.Set(24)
 weapon.offsety.Set(-2)
-weapon.muzzleoffsetx.Set(
-    70 + 13.3128
-)  # see gun in 0.6 content.py for the number after the plus sign (TODO: also copy the comment from 0.6 content.py, if it gets removed)
+weapon.muzzleoffsetx.Set(70 + 13.3128)  # see gun in 0.6 content.py for the number after the plus sign (TODO: also copy the comment from 0.6 content.py, if it gets removed)
 weapon.muzzleoffsety.Set(6)
 container.weapons.shotgun.base.Set(weapon)
 container.weapons.id.Add(weapon)

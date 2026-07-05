@@ -143,7 +143,7 @@ void CSpectator::ConMultiView(IConsole::IResult *pResult, void *pUserData)
 CSpectator::CSpectator()
 {
 	m_SelectorMouse = vec2(0.0f, 0.0f);
-	OnReset();
+	CSpectator::OnReset();
 }
 
 void CSpectator::OnConsoleInit()
@@ -589,7 +589,6 @@ void CSpectator::OnRender()
 		if(GameClient()->m_Snap.m_pGameInfoObj && (GameClient()->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS) &&
 			GameClient()->m_Snap.m_pGameDataObj && (GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierRed == GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId || GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId))
 		{
-			Graphics()->BlendNormal();
 			if(GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId)
 				Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteFlagBlue);
 			else
@@ -660,7 +659,7 @@ void CSpectator::Spectate(int SpectatorId)
 	{
 		GameClient()->m_DemoSpecId = std::clamp(SpectatorId, (int)SPEC_FOLLOW, MAX_CLIENTS - 1);
 		// The tick must be rendered for the spectator mode to be updated, so we do it manually when demo playback is paused
-		// TODO: https://github.com/ddnet/ddnet/issues/11681
+		// TODO: Update spectator info some other way
 		if(DemoPlayer()->BaseInfo()->m_Paused)
 			GameClient()->m_Menus.DemoSeekTick(IDemoPlayer::TICK_CURRENT);
 		return;
@@ -746,6 +745,3 @@ void CSpectator::SpectateClosest()
 	if(NewSpectatorId > -1)
 		Spectate(NewSpectatorId);
 }
-
-
-

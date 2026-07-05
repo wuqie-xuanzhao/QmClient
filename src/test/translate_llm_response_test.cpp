@@ -1,6 +1,7 @@
 #include "test.h"
 
 #include <base/system.h>
+
 #include <engine/shared/json.h>
 
 #include <gtest/gtest.h>

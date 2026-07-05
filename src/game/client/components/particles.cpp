@@ -13,7 +13,7 @@
 
 CParticles::CParticles()
 {
-	OnReset();
+	CParticles::OnReset();
 	m_RenderTrail.m_pParts = this;
 	m_RenderTrailExtra.m_pParts = this;
 	m_RenderExplosions.m_pParts = this;
@@ -149,21 +149,9 @@ void CParticles::OnRender()
 		return;
 
 	set_new_tick();
-	int64_t t = time();
-
-	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-	{
-		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-		if(!pInfo->m_Paused)
-			Update((float)((t - m_LastRenderTime) / (double)time_freq()) * pInfo->m_Speed);
-	}
-	else
-	{
-		if(GameClient()->m_Snap.m_pGameInfoObj && !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
-			Update((float)((t - m_LastRenderTime) / (double)time_freq()));
-	}
-
-	m_LastRenderTime = t;
+	const int64_t Now = time();
+	Update((float)((Now - m_LastRenderTime) / (double)time_freq()) * GameClient()->GetAnimationPlaybackSpeed());
+	m_LastRenderTime = Now;
 }
 
 void CParticles::OnInit()
@@ -310,7 +298,6 @@ void CParticles::RenderGroup(int Group)
 	{
 		int i = m_aFirstPart[Group];
 
-		Graphics()->BlendNormal();
 		Graphics()->WrapClamp();
 
 		while(i != -1)
@@ -346,6 +333,5 @@ void CParticles::RenderGroup(int Group)
 			i = m_aParticles[i].m_NextPart;
 		}
 		Graphics()->WrapNormal();
-		Graphics()->BlendNormal();
 	}
 }

@@ -2,7 +2,10 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "jobs.h"
 
+#include <base/dbg.h>
 #include <base/log.h>
+#include <base/str.h>
+#include <base/thread.h>
 
 #include <algorithm>
 #include <chrono>

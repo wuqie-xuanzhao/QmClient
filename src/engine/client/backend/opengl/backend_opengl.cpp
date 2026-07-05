@@ -1,6 +1,7 @@
 #include "backend_opengl.h"
 
 #include <base/detect.h>
+#include <base/log.h>
 #include <base/system.h>
 
 #include <engine/client/backend_sdl.h>
@@ -137,24 +138,21 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 				m_vTextures[State.m_Texture].m_LastWrapMode = State.m_WrapMode;
 			}
 		}
+		else if(m_Has2DArrayTextures)
+		{
+			if(!m_HasShaders)
+				glEnable(m_2DArrayTarget);
+			glBindTexture(m_2DArrayTarget, m_vTextures[State.m_Texture].m_Tex2DArray);
+		}
+		else if(m_Has3DTextures)
+		{
+			if(!m_HasShaders)
+				glEnable(GL_TEXTURE_3D);
+			glBindTexture(GL_TEXTURE_3D, m_vTextures[State.m_Texture].m_Tex2DArray);
+		}
 		else
 		{
-			if(m_Has2DArrayTextures)
-			{
-				if(!m_HasShaders)
-					glEnable(m_2DArrayTarget);
-				glBindTexture(m_2DArrayTarget, m_vTextures[State.m_Texture].m_Tex2DArray);
-			}
-			else if(m_Has3DTextures)
-			{
-				if(!m_HasShaders)
-					glEnable(GL_TEXTURE_3D);
-				glBindTexture(GL_TEXTURE_3D, m_vTextures[State.m_Texture].m_Tex2DArray);
-			}
-			else
-			{
-				dbg_msg("opengl", "ERROR: this call should not happen.");
-			}
+			dbg_assert_failed("Should have either 2D, 3D or no texture array support");
 		}
 	}
 
@@ -167,53 +165,65 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 
 static void ParseVersionString(EBackendType BackendType, const char *pStr, int &VersionMajor, int &VersionMinor, int &VersionPatch)
 {
-	if(pStr)
+	// If the backend is GLES, the version string starts with `OpenGL ES ` or `OpenGL ES-CM ` for older contexts, rest is the same.
+	if(BackendType == BACKEND_TYPE_OPENGL_ES)
 	{
-		// if backend is GLES, it starts with "OpenGL ES " or OpenGL ES-CM for older contexts, rest is the same
-		if(BackendType == BACKEND_TYPE_OPENGL_ES)
+		const char *pSkippedPrefix;
+		if((pSkippedPrefix = str_startswith(pStr, "OpenGL ES ")) != nullptr ||
+			(pSkippedPrefix = str_startswith(pStr, "OpenGL ES-CM ")) != nullptr)
 		{
-			int StrLenGLES = str_length("OpenGL ES ");
-			int StrLenGLESCM = str_length("OpenGL ES-CM ");
-			if(str_comp_num(pStr, "OpenGL ES ", StrLenGLES) == 0)
-				pStr += StrLenGLES;
-			else if(str_comp_num(pStr, "OpenGL ES-CM ", StrLenGLESCM) == 0)
-				pStr += StrLenGLESCM;
+			pStr = pSkippedPrefix;
 		}
+	}
 
-		char aCurNumberStr[32];
-		size_t CurNumberStrLen = 0;
-		size_t TotalNumbersPassed = 0;
-		int aNumbers[3] = {0};
-		bool LastWasNumber = false;
-		while(*pStr && TotalNumbersPassed < 3)
+	char aCurNumberStr[10];
+	size_t CurNumberStrLen = 0;
+	size_t TotalNumbersPassed = 0;
+	int aNumbers[3] = {0};
+	bool LastWasNumber = false;
+	bool Error = false;
+	while(true)
+	{
+		if(str_isnum(*pStr))
 		{
-			if(str_isnum(*pStr))
+			if(CurNumberStrLen >= std::size(aCurNumberStr) - 1)
 			{
-				aCurNumberStr[CurNumberStrLen++] = (char)*pStr;
-				LastWasNumber = true;
+				Error = true;
+				break;
 			}
-			else if(LastWasNumber && (*pStr == '.' || *pStr == ' '))
-			{
-				if(CurNumberStrLen > 0)
-				{
-					aCurNumberStr[CurNumberStrLen] = 0;
-					aNumbers[TotalNumbersPassed++] = str_toint(aCurNumberStr);
-					CurNumberStrLen = 0;
-				}
-
-				LastWasNumber = false;
-
-				if(*pStr != '.')
-					break;
-			}
-			else
+			aCurNumberStr[CurNumberStrLen++] = *pStr;
+			LastWasNumber = true;
+		}
+		else if(LastWasNumber && (*pStr == '.' || *pStr == ' ' || *pStr == '\0'))
+		{
+			aCurNumberStr[CurNumberStrLen] = '\0';
+			aNumbers[TotalNumbersPassed] = str_toint(aCurNumberStr);
+			CurNumberStrLen = 0;
+			TotalNumbersPassed++;
+			LastWasNumber = false;
+			if(TotalNumbersPassed == std::size(aNumbers) || *pStr != '.')
 			{
 				break;
 			}
-
-			++pStr;
 		}
+		else
+		{
+			break;
+		}
+		++pStr;
+	}
 
+	if(Error || TotalNumbersPassed == 0)
+	{
+		// Use the newest supported OpenGL version if the version string could not be parsed.
+		// We assume that the format was changed in a future driver that supports all OpenGL
+		// capabilities that we use.
+		VersionMajor = 3;
+		VersionMinor = BackendType == BACKEND_TYPE_OPENGL_ES ? 0 : 3;
+		VersionPatch = 0;
+	}
+	else
+	{
 		VersionMajor = aNumbers[0];
 		VersionMinor = aNumbers[1];
 		VersionPatch = aNumbers[2];
@@ -221,41 +231,49 @@ static void ParseVersionString(EBackendType BackendType, const char *pStr, int &
 }
 
 #ifndef BACKEND_AS_OPENGL_ES
-static const char *GetGLErrorName(GLenum Type)
+static LEVEL GetLogSeverity(GLenum Severity)
 {
-	if(Type == GL_DEBUG_TYPE_ERROR)
-		return "ERROR";
-	else if(Type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR)
-		return "DEPRECATED BEHAVIOR";
-	else if(Type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR)
-		return "UNDEFINED BEHAVIOR";
-	else if(Type == GL_DEBUG_TYPE_PORTABILITY)
-		return "PORTABILITY";
-	else if(Type == GL_DEBUG_TYPE_PERFORMANCE)
-		return "PERFORMANCE";
-	else if(Type == GL_DEBUG_TYPE_OTHER)
-		return "OTHER";
-	else if(Type == GL_DEBUG_TYPE_MARKER)
-		return "MARKER";
-	else if(Type == GL_DEBUG_TYPE_PUSH_GROUP)
-		return "PUSH_GROUP";
-	else if(Type == GL_DEBUG_TYPE_POP_GROUP)
-		return "POP_GROUP";
-	return "UNKNOWN";
+	switch(Severity)
+	{
+	case GL_DEBUG_SEVERITY_HIGH: return LEVEL_ERROR;
+	case GL_DEBUG_SEVERITY_MEDIUM: return LEVEL_WARN;
+	case GL_DEBUG_SEVERITY_LOW: return LEVEL_INFO;
+	case GL_DEBUG_SEVERITY_NOTIFICATION: return LEVEL_DEBUG;
+	default: dbg_assert_failed("Severity invalid: %d", (int)Severity);
+	}
 }
 
-static const char *GetGLSeverity(GLenum Type)
+static const char *GetErrorName(GLenum Type)
 {
-	if(Type == GL_DEBUG_SEVERITY_HIGH)
-		return "high"; // All OpenGL Errors, shader compilation/linking errors, or highly-dangerous undefined behavior
-	else if(Type == GL_DEBUG_SEVERITY_MEDIUM)
-		return "medium"; // Major performance warnings, shader compilation/linking warnings, or the use of deprecated functionality
-	else if(Type == GL_DEBUG_SEVERITY_LOW)
-		return "low"; // Redundant state change performance warning, or unimportant undefined behavior
-	else if(Type == GL_DEBUG_SEVERITY_NOTIFICATION)
-		return "notification"; // Anything that isn't an error or performance issue.
+	switch(Type)
+	{
+	case GL_DEBUG_TYPE_ERROR: return "ERROR";
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED BEHAVIOR";
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "UNDEFINED BEHAVIOR";
+	case GL_DEBUG_TYPE_PORTABILITY: return "PORTABILITY";
+	case GL_DEBUG_TYPE_PERFORMANCE: return "PERFORMANCE";
+	case GL_DEBUG_TYPE_OTHER: return "OTHER";
+	case GL_DEBUG_TYPE_MARKER: return "MARKER";
+	case GL_DEBUG_TYPE_PUSH_GROUP: return "PUSH_GROUP";
+	case GL_DEBUG_TYPE_POP_GROUP: return "POP_GROUP";
+	default: return "UNKNOWN";
+	}
+}
 
-	return "unknown";
+static const char *GetSeverityString(GLenum Severity)
+{
+	switch(Severity)
+	{
+	// All OpenGL Errors, shader compilation/linking errors, or highly-dangerous undefined behavior
+	case GL_DEBUG_SEVERITY_HIGH: return "high";
+	// Major performance warnings, shader compilation/linking warnings, or the use of deprecated functionality
+	case GL_DEBUG_SEVERITY_MEDIUM: return "medium";
+	// Redundant state change performance warning, or unimportant undefined behavior
+	case GL_DEBUG_SEVERITY_LOW: return "low";
+	// Anything that isn't an error or performance issue.
+	case GL_DEBUG_SEVERITY_NOTIFICATION: return "notification";
+	default: dbg_assert_failed("Severity invalid: %d", (int)Severity);
+	}
 }
 
 static void GLAPIENTRY
@@ -267,7 +285,7 @@ GfxOpenGLMessageCallback(GLenum Source,
 	const GLchar *pMsg,
 	const void *pUserParam)
 {
-	dbg_msg("gfx", "[%s] (importance: %s) %s", GetGLErrorName(Type), GetGLSeverity(Severity), pMsg);
+	log_log(GetLogSeverity(Severity), "gfx/opengl", "[%s] (importance: %s) %s", GetErrorName(Type), GetSeverityString(Severity), pMsg);
 }
 #endif
 
@@ -311,13 +329,16 @@ bool CCommandProcessorFragment_OpenGL::InitOpenGL(const SCommand_Init *pCommand)
 	};
 
 	const char *pVendorString = (const char *)glGetString(GL_VENDOR);
-	dbg_msg("opengl", "Vendor string: %s", pVendorString);
+	dbg_assert(pVendorString != nullptr, "glGetString(GL_VENDOR) failure");
+	log_info("gfx/opengl", "Vendor string: %s", pVendorString);
 
 	// check what this context can do
 	const char *pVersionString = (const char *)glGetString(GL_VERSION);
-	dbg_msg("opengl", "Version string: %s", pVersionString);
+	dbg_assert(pVersionString != nullptr, "glGetString(GL_VERSION) failure");
+	log_info("gfx/opengl", "Version string: %s", pVersionString);
 
 	const char *pRendererString = (const char *)glGetString(GL_RENDERER);
+	dbg_assert(pRendererString != nullptr, "glGetString(GL_RENDERER) failure");
 
 	str_copy(pCommand->m_pVendorString, pVendorString, gs_GpuInfoStringSize);
 	str_copy(pCommand->m_pVersionString, pVersionString, gs_GpuInfoStringSize);
@@ -573,11 +594,11 @@ bool CCommandProcessorFragment_OpenGL::InitOpenGL(const SCommand_Init *pCommand)
 					glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 					glDebugMessageCallbackARB((GLDEBUGPROC)GfxOpenGLMessageCallback, 0);
 				}
-				dbg_msg("gfx", "Enabled OpenGL debug mode");
+				log_info("gfx/opengl", "Enabled OpenGL debug mode");
 			}
 			else
 			{
-				dbg_msg("gfx", "Requested OpenGL debug mode, but the driver does not support the required extension");
+				log_warn("gfx/opengl", "Requested OpenGL debug mode, but the driver does not support the required extension");
 			}
 		}
 #endif
@@ -875,17 +896,15 @@ void CCommandProcessorFragment_OpenGL::TextureCreate(int Slot, int Width, int He
 				glBindSampler(0, 0);
 			}
 
-			int Image3DWidth, Image3DHeight;
-
 			int ConvertWidth = Width;
 			int ConvertHeight = Height;
 
 			if(ConvertWidth == 0 || (ConvertWidth % 16) != 0 || ConvertHeight == 0 || (ConvertHeight % 16) != 0)
 			{
-				dbg_msg("gfx", "3D/2D array texture was resized");
 				int NewWidth = maximum<int>(HighestBit(ConvertWidth), 16);
 				int NewHeight = maximum<int>(HighestBit(ConvertHeight), 16);
 				uint8_t *pNewTexData = ResizeImage(pTexData, ConvertWidth, ConvertHeight, NewWidth, NewHeight, GLFormatToPixelSize(GLFormat));
+				log_debug("gfx/opengl", "3D/2D array texture was resized. Slot=%d Size=(%d, %d) Resized=(%d, %d)", Slot, ConvertWidth, ConvertHeight, NewWidth, NewHeight);
 
 				ConvertWidth = NewWidth;
 				ConvertHeight = NewHeight;
@@ -911,11 +930,10 @@ void CCommandProcessorFragment_OpenGL::TextureCreate(int Slot, int Width, int He
 				return;
 			}
 
-			if(Texture2DTo3D(pTexData, ConvertWidth, ConvertHeight, PixelSize, 16, 16, pImageData3D, Image3DWidth, Image3DHeight))
-			{
-				glTexImage3D(Target, 0, GLStoreFormat, Image3DWidth, Image3DHeight, 256, 0, GLFormat, GL_UNSIGNED_BYTE, pImageData3D);
-			}
+			int Image3DWidth, Image3DHeight;
 
+			Texture2DTo3D(pTexData, ConvertWidth, ConvertHeight, PixelSize, 16, 16, pImageData3D, Image3DWidth, Image3DHeight);
+			glTexImage3D(Target, 0, GLStoreFormat, Image3DWidth, Image3DHeight, 256, 0, GLFormat, GL_UNSIGNED_BYTE, pImageData3D);
 			free(pImageData3D);
 		}
 	}

@@ -1,16 +1,20 @@
 #include "image.h"
 #include "sound.h"
 
+#include <base/log.h>
+
 #include <engine/client.h>
-#include <engine/console.h>
+#include <engine/engine.h>
 #include <engine/gfx/image_manipulation.h>
 #include <engine/graphics.h>
-#include <engine/serverbrowser.h>
+#include <engine/shared/config.h>
 #include <engine/shared/datafile.h>
+#include <engine/shared/filecollection.h>
 #include <engine/sound.h>
 #include <engine/storage.h>
 
 #include <game/editor/editor.h>
+#include <game/editor/editor_actions.h>
 #include <game/gamecore.h>
 #include <game/mapitems_ex.h>
 
@@ -60,23 +64,41 @@ static bool CheckedTileLayerCount(int Width, int Height, size_t &TileCount)
 void CDataFileWriterFinishJob::Run()
 {
 	m_Writer.Finish();
+
+	if(!m_pStorage->RemoveFile(m_aRealFilename, IStorage::TYPE_SAVE))
+	{
+		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "Saving failed: Could not remove old map file '%s'.", m_aRealFilename);
+		log_error("editor/save", "%s", m_aErrorMessage);
+		return;
+	}
+
+	if(!m_pStorage->RenameFile(m_aTempFilename, m_aRealFilename, IStorage::TYPE_SAVE))
+	{
+		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "Saving failed: Could not move temporary map file '%s' to '%s'.", m_aTempFilename, m_aRealFilename);
+		log_error("editor/save", "%s", m_aErrorMessage);
+		return;
+	}
+
+	log_trace("editor/save", "Saved map to '%s'.", m_aRealFilename);
 }
 
-CDataFileWriterFinishJob::CDataFileWriterFinishJob(const char *pRealFilename, const char *pTempFilename, CDataFileWriter &&Writer) :
+CDataFileWriterFinishJob::CDataFileWriterFinishJob(IStorage *pStorage, const char *pRealFilename, const char *pTempFilename, CDataFileWriter &&Writer) :
+	m_pStorage(pStorage),
 	m_Writer(std::move(Writer))
 {
 	str_copy(m_aRealFilename, pRealFilename);
 	str_copy(m_aTempFilename, pTempFilename);
+	m_aErrorMessage[0] = '\0';
 }
 
-bool CEditorMap::Save(const char *pFilename, const std::function<void(const char *pErrorMessage)> &ErrorHandler)
+bool CEditorMap::Save(const char *pFilename, const FErrorHandler &ErrorHandler)
 {
 	char aFilenameTmp[IO_MAX_PATH_LENGTH];
 	IStorage::FormatTmpPath(aFilenameTmp, sizeof(aFilenameTmp), pFilename);
 
 	char aBuf[IO_MAX_PATH_LENGTH + 64];
 	str_format(aBuf, sizeof(aBuf), "正在保存到“%s”…", aFilenameTmp);
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
+	log_info("editor/save", "%s", aBuf);
 
 	if(!PerformPreSaveSanityChecks(ErrorHandler))
 	{
@@ -86,7 +108,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 	CDataFileWriter Writer;
 	if(!Writer.Open(m_pEditor->Storage(), aFilenameTmp))
 	{
-	str_format(aBuf, sizeof(aBuf), "错误：无法打开文件“%s”进行写入。", aFilenameTmp);
+		str_format(aBuf, sizeof(aBuf), "错误：无法打开文件“%s”进行写入。", aFilenameTmp);
 		ErrorHandler(aBuf);
 		return false;
 	}
@@ -212,6 +234,8 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 	int AutomapperCount = 0;
 	for(const auto &pGroup : m_vpGroups)
 	{
+		log_trace("editor/save", "Saving group");
+
 		CMapItemGroup GItem;
 		GItem.m_Version = 3;
 
@@ -234,7 +258,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 		{
 			if(pLayer->m_Type == LAYERTYPE_TILES)
 			{
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存图块层");
+				log_trace("editor/save", "Saving tiles layer");
 				std::shared_ptr<CLayerTiles> pLayerTiles = std::static_pointer_cast<CLayerTiles>(pLayer);
 				pLayerTiles->PrepareForSave();
 
@@ -366,7 +390,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 			}
 			else if(pLayer->m_Type == LAYERTYPE_QUADS)
 			{
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存四边形层");
+				log_trace("editor/save", "Saving quads layer");
 				std::shared_ptr<CLayerQuads> pLayerQuads = std::static_pointer_cast<CLayerQuads>(pLayer);
 				CMapItemLayerQuads Item;
 				Item.m_Version = 2;
@@ -405,7 +429,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 			}
 			else if(pLayer->m_Type == LAYERTYPE_SOUNDS)
 			{
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存声音层");
+				log_trace("editor/save", "Saving sounds layer");
 				std::shared_ptr<CLayerSounds> pLayerSounds = std::static_pointer_cast<CLayerSounds>(pLayer);
 				CMapItemLayerSounds Item;
 				Item.m_Version = 2;
@@ -451,7 +475,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 	}
 
 	// save envelopes
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存包络线");
+	log_trace("editor/save", "Saving envelopes");
 	int PointCount = 0;
 	for(size_t e = 0; e < m_vpEnvelopes.size(); e++)
 	{
@@ -474,7 +498,7 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 	}
 
 	// save points
-	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "正在保存包络点");
+	log_trace("editor/save", "Saving envelope points");
 	bool BezierUsed = false;
 	for(const auto &pEnvelope : m_vpEnvelopes)
 	{
@@ -563,14 +587,14 @@ bool CEditorMap::Save(const char *pFilename, const std::function<void(const char
 	}
 
 	// finish the data file
-	std::shared_ptr<CDataFileWriterFinishJob> pWriterFinishJob = std::make_shared<CDataFileWriterFinishJob>(pFilename, aFilenameTmp, std::move(Writer));
+	std::shared_ptr<CDataFileWriterFinishJob> pWriterFinishJob = std::make_shared<CDataFileWriterFinishJob>(m_pEditor->Storage(), pFilename, aFilenameTmp, std::move(Writer));
 	m_pEditor->Engine()->AddJob(pWriterFinishJob);
 	m_pEditor->m_WriterFinishJobs.push_back(pWriterFinishJob);
 
 	return true;
 }
 
-bool CEditorMap::PerformPreSaveSanityChecks(const std::function<void(const char *pErrorMessage)> &ErrorHandler)
+bool CEditorMap::PerformPreSaveSanityChecks(const FErrorHandler &ErrorHandler)
 {
 	bool Success = true;
 	char aErrorMessage[256];
@@ -579,7 +603,7 @@ bool CEditorMap::PerformPreSaveSanityChecks(const std::function<void(const char 
 	{
 		if(!pImage->m_External && pImage->m_pData == nullptr)
 		{
-		str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为图像“%s”未能加载。请移除或替换该图像。", pImage->m_aName);
+			str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为图像“%s”未能加载。请移除或替换该图像。", pImage->m_aName);
 			ErrorHandler(aErrorMessage);
 			Success = false;
 		}
@@ -589,7 +613,7 @@ bool CEditorMap::PerformPreSaveSanityChecks(const std::function<void(const char 
 	{
 		if(pSound->m_pData == nullptr)
 		{
-		str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为声音“%s”未能加载。请移除或替换该声音。", pSound->m_aName);
+			str_format(aErrorMessage, sizeof(aErrorMessage), "错误：无法保存，因为声音“%s”未能加载。请移除或替换该声音。", pSound->m_aName);
 			ErrorHandler(aErrorMessage);
 			Success = false;
 		}
@@ -598,7 +622,7 @@ bool CEditorMap::PerformPreSaveSanityChecks(const std::function<void(const char 
 	return Success;
 }
 
-bool CEditorMap::Load(const char *pFilename, int StorageType, const std::function<void(const char *pErrorMessage)> &ErrorHandler)
+bool CEditorMap::Load(const char *pFilename, int StorageType, const FErrorHandler &ErrorHandler)
 {
 	CDataFileReader DataFile;
 	if(!DataFile.Open(m_pEditor->Storage(), pFilename, StorageType))
@@ -634,7 +658,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 				if(pStr == nullptr)
 				{
 					char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "错误：无法从地图信息中读取%s。", pErrorContext);
+					str_format(aBuf, sizeof(aBuf), "错误：无法从地图信息中读取%s。", pErrorContext);
 					ErrorHandler(aBuf);
 					pBuffer[0] = '\0';
 				}
@@ -644,10 +668,10 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 				}
 			};
 
-		ReadStringInfo(pItem->m_Author, m_MapInfo.m_aAuthor, sizeof(m_MapInfo.m_aAuthor), "作者");
-		ReadStringInfo(pItem->m_MapVersion, m_MapInfo.m_aVersion, sizeof(m_MapInfo.m_aVersion), "版本");
-		ReadStringInfo(pItem->m_Credits, m_MapInfo.m_aCredits, sizeof(m_MapInfo.m_aCredits), "致谢");
-		ReadStringInfo(pItem->m_License, m_MapInfo.m_aLicense, sizeof(m_MapInfo.m_aLicense), "许可");
+			ReadStringInfo(pItem->m_Author, m_MapInfo.m_aAuthor, sizeof(m_MapInfo.m_aAuthor), "作者");
+			ReadStringInfo(pItem->m_MapVersion, m_MapInfo.m_aVersion, sizeof(m_MapInfo.m_aVersion), "版本");
+			ReadStringInfo(pItem->m_Credits, m_MapInfo.m_aCredits, sizeof(m_MapInfo.m_aCredits), "致谢");
+			ReadStringInfo(pItem->m_License, m_MapInfo.m_aLicense, sizeof(m_MapInfo.m_aLicense), "许可");
 
 			if(pItem->m_Version != 1 || ItemSize < (int)sizeof(CMapItemInfoSettings))
 				break;
@@ -683,7 +707,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 			if(pName == nullptr || pName[0] == '\0')
 			{
 				char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "错误：无法读取图像 %d 的名称。", i);
+				str_format(aBuf, sizeof(aBuf), "错误：无法读取图像 %d 的名称。", i);
 				ErrorHandler(aBuf);
 			}
 			else
@@ -692,7 +716,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 			if(pItem->m_Version > 1 && pItem->m_MustBe1 != 1)
 			{
 				char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "错误：图像 %d“%s”的类型不受支持。", i, pImg->m_aName);
+				str_format(aBuf, sizeof(aBuf), "错误：图像 %d“%s”的类型不受支持。", i, pImg->m_aName);
 				ErrorHandler(aBuf);
 			}
 
@@ -724,7 +748,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 				}
 				else
 				{
-				str_format(aBuf, sizeof(aBuf), "错误：无法加载外部图像“%s”。", pImg->m_aName);
+					str_format(aBuf, sizeof(aBuf), "错误：无法加载外部图像“%s”。", pImg->m_aName);
 					ErrorHandler(aBuf);
 				}
 			}
@@ -798,7 +822,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 			if(pName == nullptr || pName[0] == '\0')
 			{
 				char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "错误：无法读取声音 %d 的名称。", i);
+				str_format(aBuf, sizeof(aBuf), "错误：无法读取声音 %d 的名称。", i);
 				ErrorHandler(aBuf);
 			}
 			else
@@ -816,7 +840,7 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 				}
 				else
 				{
-				str_format(aBuf, sizeof(aBuf), "错误：无法加载外部声音“%s”。", pSound->m_aName);
+					str_format(aBuf, sizeof(aBuf), "错误：无法加载外部声音“%s”。", pSound->m_aName);
 					ErrorHandler(aBuf);
 				}
 			}
@@ -1188,11 +1212,11 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 	{
 		const CMapBasedEnvelopePointAccess EnvelopePoints(&DataFile);
 
-		int EnvStart, EnvNum;
-		DataFile.GetType(MAPITEMTYPE_ENVELOPE, &EnvStart, &EnvNum);
-		for(int e = 0; e < EnvNum; e++)
+		int EnvelopeStart, EnvelopeNum;
+		DataFile.GetType(MAPITEMTYPE_ENVELOPE, &EnvelopeStart, &EnvelopeNum);
+		for(int EnvelopeIndex = 0; EnvelopeIndex < EnvelopeNum; EnvelopeIndex++)
 		{
-			CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(EnvStart + e);
+			CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(EnvelopeStart + EnvelopeIndex);
 			int Channels = pItem->m_Channels;
 			if(Channels <= 0 || Channels == 2 || Channels > CEnvPoint::MAX_CHANNELS)
 			{
@@ -1202,26 +1226,26 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 			if(Channels != pItem->m_Channels)
 			{
 				char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "错误：包络线 %d 的通道数 %d 无效，已更正为 %d。", e, pItem->m_Channels, Channels);
+				str_format(aBuf, sizeof(aBuf), "错误：包络线 %d 的通道数 %d 无效，已更正为 %d。", EnvelopeIndex, pItem->m_Channels, Channels);
 				ErrorHandler(aBuf);
 			}
 
-			std::shared_ptr<CEnvelope> pEnv = std::make_shared<CEnvelope>(Channels);
-			pEnv->m_vPoints.resize(pItem->m_NumPoints);
-			for(int p = 0; p < pItem->m_NumPoints; p++)
+			std::shared_ptr<CEnvelope> pEnvelope = std::make_shared<CEnvelope>(Channels);
+			pEnvelope->m_vPoints.resize(pItem->m_NumPoints);
+			for(int PointIndex = 0; PointIndex < pItem->m_NumPoints; PointIndex++)
 			{
-				const CEnvPoint *pPoint = EnvelopePoints.GetPoint(pItem->m_StartPoint + p);
+				const CEnvPoint *pPoint = EnvelopePoints.GetPoint(pItem->m_StartPoint + PointIndex);
 				if(pPoint != nullptr)
-					mem_copy(&pEnv->m_vPoints[p], pPoint, sizeof(CEnvPoint));
-				const CEnvPointBezier *pPointBezier = EnvelopePoints.GetBezier(pItem->m_StartPoint + p);
+					mem_copy(&pEnvelope->m_vPoints[PointIndex], pPoint, sizeof(CEnvPoint));
+				const CEnvPointBezier *pPointBezier = EnvelopePoints.GetBezier(pItem->m_StartPoint + PointIndex);
 				if(pPointBezier != nullptr)
-					mem_copy(&pEnv->m_vPoints[p].m_Bezier, pPointBezier, sizeof(CEnvPointBezier));
+					mem_copy(&pEnvelope->m_vPoints[PointIndex].m_Bezier, pPointBezier, sizeof(CEnvPointBezier));
 			}
 			if(pItem->m_aName[0] != -1) // compatibility with old maps
-				IntsToStr(pItem->m_aName, std::size(pItem->m_aName), pEnv->m_aName, std::size(pEnv->m_aName));
-			m_vpEnvelopes.push_back(pEnv);
+				IntsToStr(pItem->m_aName, std::size(pItem->m_aName), pEnvelope->m_aName, std::size(pEnvelope->m_aName));
+			m_vpEnvelopes.push_back(pEnvelope);
 			if(pItem->m_Version >= 2)
-				pEnv->m_Synchronized = pItem->m_Synchronized;
+				pEnvelope->m_Synchronized = pItem->m_Synchronized;
 		}
 	}
 
@@ -1255,14 +1279,159 @@ bool CEditorMap::Load(const char *pFilename, int StorageType, const std::functio
 		}
 	}
 
+	str_copy(m_aFilename, pFilename);
+
 	CheckIntegrity();
 	PerformSanityChecks(ErrorHandler);
+
+	SortImages();
+	SelectGameLayer();
 
 	ResetModifiedState();
 	return true;
 }
 
-void CEditorMap::PerformSanityChecks(const std::function<void(const char *pErrorMessage)> &ErrorHandler)
+bool CEditorMap::Append(const char *pFilename, int StorageType, bool IgnoreHistory, const FErrorHandler &ErrorHandler)
+{
+	CEditorMap NewMap(Editor());
+	if(!NewMap.Load(pFilename, StorageType, ErrorHandler))
+		return false;
+
+	CEditorActionAppendMap::SPrevInfo Info{
+		(int)m_vpGroups.size(),
+		(int)m_vpImages.size(),
+		(int)m_vpSounds.size(),
+		(int)m_vpEnvelopes.size()};
+
+	// Keep a map to check if specific indices have already been replaced to prevent
+	// replacing those indices again when transferring images
+	std::map<int *, bool> ReplacedIndicesMap;
+	const auto &&ReplaceIndex = [&ReplacedIndicesMap](int ToReplace, int ReplaceWith) {
+		return [&ReplacedIndicesMap, ToReplace, ReplaceWith](int *pIndex) {
+			if(*pIndex == ToReplace && !ReplacedIndicesMap[pIndex])
+			{
+				*pIndex = ReplaceWith;
+				ReplacedIndicesMap[pIndex] = true;
+			}
+		};
+	};
+
+	const auto &&Rename = [&](const std::shared_ptr<CEditorImage> &pImage) {
+		char aRenamed[IO_MAX_PATH_LENGTH];
+		int DuplicateCount = 1;
+		str_copy(aRenamed, pImage->m_aName);
+		while(std::find_if(m_vpImages.begin(), m_vpImages.end(), [aRenamed](const std::shared_ptr<CEditorImage> &OtherImage) { return str_comp(OtherImage->m_aName, aRenamed) == 0; }) != m_vpImages.end())
+			str_format(aRenamed, sizeof(aRenamed), "%s (%d)", pImage->m_aName, DuplicateCount++); // Rename to "图像名（%d）"
+		str_copy(pImage->m_aName, aRenamed);
+	};
+
+	// Transfer non-duplicate images
+	for(auto NewMapIt = NewMap.m_vpImages.begin(); NewMapIt != NewMap.m_vpImages.end(); ++NewMapIt)
+	{
+		const auto &pNewImage = *NewMapIt;
+		auto NameIsTaken = [pNewImage](const std::shared_ptr<CEditorImage> &OtherImage) { return str_comp(pNewImage->m_aName, OtherImage->m_aName) == 0; };
+		auto MatchInCurrentMap = std::find_if(m_vpImages.begin(), m_vpImages.end(), NameIsTaken);
+
+		const bool IsDuplicate = MatchInCurrentMap != m_vpImages.end();
+		const int IndexToReplace = NewMapIt - NewMap.m_vpImages.begin();
+
+		if(IsDuplicate)
+		{
+			// Check for image data
+			const bool ImageDataEquals = (*MatchInCurrentMap)->DataEquals(*pNewImage);
+
+			if(ImageDataEquals)
+			{
+				const int IndexToReplaceWith = MatchInCurrentMap - m_vpImages.begin();
+
+				dbg_msg("editor", "地图已包含图像 %s 且数据相同，移除重复项", pNewImage->m_aName);
+
+				// In the new map, replace the index of the duplicate image to the index of the same in the current map.
+				NewMap.ModifyImageIndex(ReplaceIndex(IndexToReplace, IndexToReplaceWith));
+			}
+			else
+			{
+				// Rename image and add it
+				Rename(pNewImage);
+
+				dbg_msg("editor", "地图已包含图像 %s，但附加图像内容不同，重命名为 %s", (*MatchInCurrentMap)->m_aName, pNewImage->m_aName);
+
+				NewMap.ModifyImageIndex(ReplaceIndex(IndexToReplace, m_vpImages.size()));
+				pNewImage->OnAttach(this);
+				m_vpImages.push_back(pNewImage);
+			}
+		}
+		else
+		{
+			NewMap.ModifyImageIndex(ReplaceIndex(IndexToReplace, m_vpImages.size()));
+			pNewImage->OnAttach(this);
+			m_vpImages.push_back(pNewImage);
+		}
+	}
+	NewMap.m_vpImages.clear();
+
+	// modify indices
+	const auto &&ModifyAddIndex = [](int AddAmount) {
+		return [AddAmount](int *pIndex) {
+			if(*pIndex >= 0)
+				*pIndex += AddAmount;
+		};
+	};
+	NewMap.ModifySoundIndex(ModifyAddIndex(m_vpSounds.size()));
+	NewMap.ModifyEnvelopeIndex(ModifyAddIndex(m_vpEnvelopes.size()));
+
+	// transfer sounds
+	for(const auto &pSound : NewMap.m_vpSounds)
+	{
+		pSound->OnAttach(this);
+		m_vpSounds.push_back(pSound);
+	}
+	NewMap.m_vpSounds.clear();
+
+	// transfer envelopes
+	for(const auto &pEnvelope : NewMap.m_vpEnvelopes)
+		m_vpEnvelopes.push_back(pEnvelope);
+	NewMap.m_vpEnvelopes.clear();
+
+	// transfer groups
+	for(const auto &pGroup : NewMap.m_vpGroups)
+	{
+		if(pGroup != NewMap.m_pGameGroup)
+		{
+			pGroup->OnAttach(this);
+			m_vpGroups.push_back(pGroup);
+		}
+	}
+	NewMap.m_vpGroups.clear();
+
+	// transfer server settings
+	for(const auto &pSetting : NewMap.m_vSettings)
+	{
+		// Check if setting already exists
+		bool AlreadyExists = false;
+		for(const auto &pExistingSetting : m_vSettings)
+		{
+			if(!str_comp(pExistingSetting.m_aCommand, pSetting.m_aCommand))
+				AlreadyExists = true;
+		}
+		if(!AlreadyExists)
+			m_vSettings.push_back(pSetting);
+	}
+	NewMap.m_vSettings.clear();
+
+	auto IndexMap = SortImages();
+
+	if(!IgnoreHistory)
+		m_EditorHistory.RecordAction(std::make_shared<CEditorActionAppendMap>(this, pFilename, Info, IndexMap));
+
+	CheckIntegrity();
+	OnModify();
+
+	// all done \o/
+	return true;
+}
+
+void CEditorMap::PerformSanityChecks(const FErrorHandler &ErrorHandler)
 {
 	// Check if there are any images with a width or height that is not divisible by 16 which are
 	// used in tile layers. Reset the image for these layers, to prevent crashes with some drivers.
@@ -1284,7 +1453,7 @@ void CEditorMap::PerformSanityChecks(const std::function<void(const char *pError
 						{
 							pLayerTiles->m_Image = -1;
 							char aBuf[IO_MAX_PATH_LENGTH + 128];
-			str_format(aBuf, sizeof(aBuf), "错误：图像“%s”（大小 %" PRIzu "x%" PRIzu "）的宽或高不能被 16 整除，因此不能用于图块层。已取消组 #%" PRIzu "“%s”中图层 #%" PRIzu "“%s”的图像。", pImage->m_aName, pImage->m_Width, pImage->m_Height, GroupIndex, pGroup->m_aName, LayerIndex, pLayer->m_aName);
+							str_format(aBuf, sizeof(aBuf), "错误：图像“%s”（大小 %" PRIzu "x%" PRIzu "）的宽或高不能被 16 整除，因此不能用于图块层。已取消组 #%" PRIzu "“%s”中图层 #%" PRIzu "“%s”的图像。", pImage->m_aName, pImage->m_Width, pImage->m_Height, GroupIndex, pGroup->m_aName, LayerIndex, pLayer->m_aName);
 							ErrorHandler(aBuf);
 						}
 					}
@@ -1294,5 +1463,43 @@ void CEditorMap::PerformSanityChecks(const std::function<void(const char *pError
 			}
 		}
 		++ImageIndex;
+	}
+}
+
+bool CEditorMap::PerformAutosave(const std::function<void(const char *pErrorMessage)> &ErrorHandler)
+{
+	char aDate[20];
+	char aAutosavePath[IO_MAX_PATH_LENGTH];
+	str_timestamp(aDate, sizeof(aDate));
+	char aFilenameNoExt[IO_MAX_PATH_LENGTH];
+	if(m_aFilename[0] == '\0')
+	{
+		str_copy(aFilenameNoExt, "unnamed");
+	}
+	else
+	{
+		const char *pFilename = fs_filename(m_aFilename);
+		str_truncate(aFilenameNoExt, sizeof(aFilenameNoExt), pFilename, str_length(pFilename) - str_length(".map"));
+	}
+	str_format(aAutosavePath, sizeof(aAutosavePath), "maps/auto/%s_%s.map", aFilenameNoExt, aDate);
+
+	m_LastSaveTime = Editor()->Client()->GlobalTime();
+	if(Save(aAutosavePath, ErrorHandler))
+	{
+		m_ModifiedAuto = false;
+		// Clean up autosaves
+		if(g_Config.m_EdAutosaveMax)
+		{
+			CFileCollection AutosavedMaps;
+			AutosavedMaps.Init(Editor()->Storage(), "maps/auto", aFilenameNoExt, ".map", g_Config.m_EdAutosaveMax);
+		}
+		return true;
+	}
+	else
+	{
+		char aErrorMessage[IO_MAX_PATH_LENGTH + 128];
+		str_format(aErrorMessage, sizeof(aErrorMessage), "Failed to automatically save map to file '%s'.", aAutosavePath);
+		ErrorHandler(aErrorMessage);
+		return false;
 	}
 }

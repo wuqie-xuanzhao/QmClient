@@ -1935,7 +1935,7 @@ namespace
 		if(!TryGetLocalAssetSourcePath(pStorage, Tab, pLocalName, aPath, sizeof(aPath)))
 			return false;
 
-		SHA256_DIGEST Sha256 = SHA256_ZEROED;
+		SHA256_DIGEST Sha256 = {};
 		if(!pStorage->CalculateHashes(aPath, IStorage::TYPE_SAVE, &Sha256))
 			return false;
 
@@ -4147,7 +4147,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	};
 
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	const float TabWidth = TabBar.w / NUMBER_OF_ASSETS_TABS;
+	const float TabWidth = TabBar.w / (float)NUMBER_OF_ASSETS_TABS;
 	static CButtonContainer s_aPageTabs[NUMBER_OF_ASSETS_TABS] = {};
 	static const char *s_apAssetsTabNames[NUMBER_OF_ASSETS_TABS] = {};
 	static char s_aAssetsLanguageFile[IO_MAX_PATH_LENGTH] = {};
@@ -4443,6 +4443,9 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	case ASSETS_TAB_EXTRAS:
 		if(m_vExtrasList.size() != gs_aCustomListSize[s_CurCustomTab])
 			gs_aInitCustomList[s_CurCustomTab] = true;
+		break;
+	default:
+		dbg_assert_failed("Invalid s_CurCustomTab: %d", s_CurCustomTab);
 		break;
 	}
 

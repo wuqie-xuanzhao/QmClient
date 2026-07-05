@@ -15,11 +15,8 @@
 #include "smooth_value.h"
 
 #include <base/bezier.h>
-#include <base/system.h>
 
-#include <engine/console.h>
 #include <engine/editor.h>
-#include <engine/engine.h>
 #include <engine/graphics.h>
 #include <engine/shared/datafile.h>
 #include <engine/shared/http.h>
@@ -119,7 +116,6 @@ class CEditor : public IEditor, public IEnvelopeEval
 	class IClient *m_pClient = nullptr;
 	class IConfigManager *m_pConfigManager = nullptr;
 	class CConfig *m_pConfig = nullptr;
-	class IConsole *m_pConsole = nullptr;
 	class IEngine *m_pEngine = nullptr;
 	class IGraphics *m_pGraphics = nullptr;
 	class ITextRender *m_pTextRender = nullptr;
@@ -134,6 +130,7 @@ class CEditor : public IEditor, public IEnvelopeEval
 	CFileBrowser m_FileBrowser;
 	CPrompt m_Prompt;
 	CFontTyper m_FontTyper;
+	CQuadKnife m_QuadKnife;
 
 	bool m_EditorWasUsedBefore = false;
 
@@ -162,7 +159,6 @@ public:
 	class IClient *Client() const { return m_pClient; }
 	class IConfigManager *ConfigManager() const { return m_pConfigManager; }
 	class CConfig *Config() const { return m_pConfig; }
-	class IConsole *Console() const { return m_pConsole; }
 	class IEngine *Engine() const { return m_pEngine; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class ISound *Sound() const { return m_pSound; }
@@ -171,12 +167,13 @@ public:
 	CUi *Ui() { return &m_UI; }
 	CRenderMap *RenderMap() { return &m_RenderMap; }
 
+	CEditorMap *Map() { return &m_Map; }
+	const CEditorMap *Map() const { return &m_Map; }
 	CMapView *MapView() { return &m_MapView; }
 	const CMapView *MapView() const { return &m_MapView; }
+	CQuadKnife *QuadKnife() { return &m_QuadKnife; }
+	const CQuadKnife *QuadKnife() const { return &m_QuadKnife; }
 	CLayerSelector *LayerSelector() { return &m_LayerSelector; }
-
-	void SelectNextLayer();
-	void SelectPreviousLayer();
 
 	void FillGameTiles(EGameTileOp FillTile) const;
 	bool CanFillGameTiles() const;
@@ -205,8 +202,8 @@ public:
 #undef REGISTER_QUICK_ACTION
 		m_ZoomEnvelopeX(1.0f, 0.1f, 600.0f),
 		m_ZoomEnvelopeY(640.0f, 0.1f, 32000.0f),
-		m_Map(this),
-		m_MapSettingsCommandContext(m_MapSettingsBackend.NewContext(&m_SettingsCommandInput))
+		m_MapSettingsCommandContext(m_MapSettingsBackend.NewContext(&m_SettingsCommandInput)),
+		m_Map(this)
 	{
 		m_EntitiesTexture.Invalidate();
 		m_FrontTexture.Invalidate();
@@ -220,9 +217,7 @@ public:
 
 		m_BrushColorEnabled = true;
 
-		m_aFilename[0] = '\0';
-		m_aFilenamePending[0] = '\0';
-		m_ValidSaveFilename = false;
+		m_aFilenamePendingLoad[0] = '\0';
 
 		m_PopupEventActivated = false;
 		m_PopupEventWasActivated = false;
@@ -243,22 +238,10 @@ public:
 		m_ShowTileInfo = SHOW_TILE_OFF;
 		m_ShowDetail = true;
 		m_Animate = false;
-		m_AnimateStart = 0;
-		m_AnimateTime = 0;
-		m_AnimateSpeed = 1;
+		m_AnimateStart = 0.0f;
+		m_AnimateTime = 0.0f;
+		m_AnimateSpeed = 1.0f;
 		m_AnimateUpdatePopup = false;
-
-		m_SelectedQuadEnvelope = -1;
-
-		m_vSelectedEnvelopePoints = {};
-		m_UpdateEnvPointInfo = false;
-		m_SelectedTangentInPoint = std::pair(-1, -1);
-		m_SelectedTangentOutPoint = std::pair(-1, -1);
-		m_CurrentQuadIndex = -1;
-
-		m_QuadKnifeActive = false;
-		m_QuadKnifeCount = 0;
-		std::fill(std::begin(m_aQuadKnifePoints), std::end(m_aQuadKnifePoints), vec2(0.0f, 0.0f));
 
 		for(size_t i = 0; i < std::size(m_aSavedColors); ++i)
 		{
@@ -291,27 +274,6 @@ public:
 		m_BrushDrawDestructive = true;
 	}
 
-	class CHoverTile
-	{
-	public:
-		CHoverTile(int Group, int Layer, int x, int y, const CTile Tile) :
-			m_Group(Group),
-			m_Layer(Layer),
-			m_X(x),
-			m_Y(y),
-			m_Tile(Tile)
-		{
-		}
-
-		int m_Group;
-		int m_Layer;
-		int m_X;
-		int m_Y;
-		const CTile m_Tile;
-	};
-	std::vector<CHoverTile> m_vHoverTiles;
-	const std::vector<CHoverTile> &HoverTiles() const { return m_vHoverTiles; }
-
 	void Init() override;
 	void OnUpdate() override;
 	void OnRender() override;
@@ -319,14 +281,14 @@ public:
 	void OnWindowResize() override;
 	void OnClose() override;
 	void OnDialogClose();
-	bool HasUnsavedData() const override { return m_Map.m_Modified; }
+	bool HasUnsavedData() const override { return Map()->m_Modified; }
 	void UpdateMentions() override { m_Mentions++; }
 	void ResetMentions() override { m_Mentions = 0; }
 	void OnIngameMoved() override { m_IngameMoved = true; }
 	void ResetIngameMoved() override { m_IngameMoved = false; }
 
 	void HandleCursorMovement();
-	void OnMouseMove(vec2 MousePos);
+	void OnInput(const IInput::CEvent &Event);
 	void MouseAxisLock(vec2 &CursorRel);
 	vec2 m_MouseAxisInitialPos = vec2(0.0f, 0.0f);
 	enum class EAxisLock
@@ -344,7 +306,6 @@ public:
 	 */
 	float m_LastAutosaveUpdateTime = -1.0f;
 	void HandleAutosave();
-	bool PerformAutosave();
 	void HandleWriterFinishJobs();
 
 	enum class ECollabState
@@ -394,21 +355,18 @@ public:
 
 	// TODO: The name of the ShowFileDialogError function is not accurate anymore, this is used for generic error messages.
 	//       Popups in UI should be shared_ptrs to make this even more generic.
-	struct SStringKeyComparator
+	class CStringKeyComparator
 	{
-		bool operator()(const char *pLhs, const char *pRhs) const
-		{
-			return str_comp(pLhs, pRhs) < 0;
-		}
+	public:
+		bool operator()(const char *pLhs, const char *pRhs) const;
 	};
-	std::map<const char *, CUi::SMessagePopupContext *, SStringKeyComparator> m_PopupMessageContexts;
+	std::map<const char *, CUi::SMessagePopupContext *, CStringKeyComparator> m_PopupMessageContexts;
 	[[gnu::format(printf, 2, 3)]] void ShowFileDialogError(const char *pFormat, ...);
 
 	void Reset(bool CreateDefault = true);
 	bool Save(const char *pFilename) override;
 	bool Load(const char *pFilename, int StorageType) override;
 	bool HandleMapDrop(const char *pFilename, int StorageType) override;
-	bool Append(const char *pFilename, int StorageType, bool IgnoreHistory = false);
 	void LoadCurrentMap();
 	void Render();
 
@@ -419,41 +377,6 @@ public:
 	void RenderMousePointer();
 	void RenderGameEntities(const std::shared_ptr<CLayerTiles> &pTiles);
 	void RenderSwitchEntities(const std::shared_ptr<CLayerTiles> &pTiles);
-
-	std::vector<CQuad *> GetSelectedQuads();
-	std::shared_ptr<CLayer> GetSelectedLayerType(int Index, int Type) const;
-	std::shared_ptr<CLayer> GetSelectedLayer(int Index) const;
-	std::shared_ptr<CLayerGroup> GetSelectedGroup() const;
-	CSoundSource *GetSelectedSource() const;
-	void SelectLayer(int LayerIndex, int GroupIndex = -1);
-	void AddSelectedLayer(int LayerIndex);
-	void SelectQuad(int Index);
-	void ToggleSelectQuad(int Index);
-	void DeselectQuads();
-	void DeselectQuadPoints();
-	void SelectQuadPoint(int QuadIndex, int Index);
-	void ToggleSelectQuadPoint(int QuadIndex, int Index);
-	void DeleteSelectedQuads();
-	bool IsQuadSelected(int Index) const;
-	bool IsQuadCornerSelected(int Index) const;
-	bool IsQuadPointSelected(int QuadIndex, int Index) const;
-	int FindSelectedQuadIndex(int Index) const;
-
-	int FindEnvPointIndex(int Index, int Channel) const;
-	void SelectEnvPoint(int Index);
-	void SelectEnvPoint(int Index, int Channel);
-	void ToggleEnvPoint(int Index, int Channel);
-	bool IsEnvPointSelected(int Index, int Channel) const;
-	bool IsEnvPointSelected(int Index) const;
-	void DeselectEnvPoints();
-	void SelectTangentOutPoint(int Index, int Channel);
-	bool IsTangentOutPointSelected(int Index, int Channel) const;
-	void SelectTangentInPoint(int Index, int Channel);
-	bool IsTangentInPointSelected(int Index, int Channel) const;
-	bool IsTangentInSelected() const;
-	bool IsTangentOutSelected() const;
-	bool IsTangentSelected() const;
-	std::pair<CFixedTime, int> EnvGetSelectedTimeAndValue() const;
 
 	template<typename E>
 	SEditResult<E> DoPropertiesWithState(CUIRect *pToolbox, CProperty *pProps, int *pIds, int *pNewVal, const std::vector<ColorRGBA> &vColors = {});
@@ -469,9 +392,10 @@ public:
 
 	bool m_BrushColorEnabled;
 
-	char m_aFilename[IO_MAX_PATH_LENGTH];
-	char m_aFilenamePending[IO_MAX_PATH_LENGTH];
-	bool m_ValidSaveFilename;
+	/**
+	 * File which is pending to be loaded by @link POPEVENT_LOADDROP @endlink.
+	 */
+	char m_aFilenamePendingLoad[IO_MAX_PATH_LENGTH] = "";
 
 	enum
 	{
@@ -534,13 +458,8 @@ public:
 	bool m_GuiActive;
 
 	bool m_PreviewZoom;
-	float m_MouseWorldScale = 1.0f; // Mouse (i.e. UI) scale relative to the World (selected Group)
-	vec2 m_MouseWorldPos = vec2(0.0f, 0.0f);
-	vec2 m_MouseWorldNoParaPos = vec2(0.0f, 0.0f);
-	vec2 m_MouseDeltaWorld = vec2(0.0f, 0.0f);
 	const void *m_pContainerPanned;
 	const void *m_pContainerPannedLast;
-	char m_MapEditorId; // UI element ID for the main map editor
 
 	enum EShowTile
 	{
@@ -552,7 +471,7 @@ public:
 	bool m_ShowDetail;
 
 	bool m_Animate;
-	int64_t m_AnimateStart;
+	float m_AnimateStart;
 	float m_AnimateTime;
 	float m_AnimateSpeed;
 	bool m_AnimateUpdatePopup;
@@ -587,25 +506,6 @@ public:
 
 	bool m_ShowPicker;
 
-	std::vector<int> m_vSelectedLayers;
-	std::vector<int> m_vSelectedQuads;
-	int m_SelectedQuadPoint;
-	int m_SelectedQuadIndex;
-	int m_SelectedGroup;
-	int m_SelectedQuadPoints;
-	int m_SelectedEnvelope;
-	std::vector<std::pair<int, int>> m_vSelectedEnvelopePoints;
-	int m_SelectedQuadEnvelope;
-	int m_CurrentQuadIndex;
-	int m_SelectedSource;
-	std::pair<int, int> m_SelectedTangentInPoint;
-	std::pair<int, int> m_SelectedTangentOutPoint;
-	bool m_UpdateEnvPointInfo;
-
-	bool m_QuadKnifeActive;
-	int m_QuadKnifeCount;
-	vec2 m_aQuadKnifePoints[4];
-
 	// Color palette and pipette
 	ColorRGBA m_aSavedColors[8];
 	ColorRGBA m_PipetteColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -632,28 +532,20 @@ public:
 
 	const void *m_pUiGotContext = nullptr;
 
-	CEditorMap m_Map;
 	std::deque<std::shared_ptr<CDataFileWriterFinishJob>> m_WriterFinishJobs;
 
-	int m_ShiftBy;
-
-	void EnvelopeEval(int TimeOffsetMillis, int Env, ColorRGBA &Result, size_t Channels) override;
+	void EnvelopeEval(int TimeOffsetMillis, int EnvelopeIndex, ColorRGBA &Result, size_t Channels) override;
 
 	CLineInputBuffered<256> m_SettingsCommandInput;
 	CMapSettingsBackend m_MapSettingsBackend;
 	CMapSettingsBackend::CContext m_MapSettingsCommandContext;
 
 	CImageInfo m_TileartImageInfo;
-	void AddTileart(bool IgnoreHistory = false);
 	char m_aTileartFilename[IO_MAX_PATH_LENGTH];
 	void TileartCheckColors();
 
 	CImageInfo m_QuadArtImageInfo;
 	CQuadArtParameters m_QuadArtParameters;
-	void AddQuadArt(bool IgnoreHistory = false);
-
-	void PlaceBorderTiles();
-
 	// editor_ui.cpp
 	void UpdateTooltip(const void *pId, const CUIRect *pRect, const char *pToolTip);
 	ColorRGBA GetButtonColor(const void *pId, int Checked);
@@ -666,7 +558,7 @@ public:
 	int DoButton_DraggableEx(const void *pId, const char *pText, int Checked, const CUIRect *pRect, bool *pClicked, bool *pAbrupted, int Flags, const char *pToolTip = nullptr, int Corners = IGraphics::CORNER_ALL, float FontSize = 10.0f);
 	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners = IGraphics::CORNER_ALL, const char *pToolTip = nullptr, const std::vector<STextColorSplit> &vColorSplits = {});
 	bool DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners = IGraphics::CORNER_ALL, const char *pToolTip = nullptr, const std::vector<STextColorSplit> &vColorSplits = {});
-	SEditResult<int> UiDoValueSelector(void *pId, CUIRect *pRect, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip, bool IsDegree = false, bool IsHex = false, int Corners = IGraphics::CORNER_ALL, const ColorRGBA *pColor = nullptr, bool ShowValue = true);
+	SEditResult<int> UiDoValueSelector(const void *pId, CUIRect *pRect, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip, bool IsDegree = false, bool IsHex = false, int Corners = IGraphics::CORNER_ALL, const ColorRGBA *pColor = nullptr, bool ShowValue = true);
 	void RenderBackground(CUIRect View, IGraphics::CTextureHandle Texture, float Size, float Brightness) const;
 
 	// editor_server_settings.cpp
@@ -689,8 +581,24 @@ public:
 		CLayerTiles::SCommonPropState m_CommonPropState;
 	};
 	static CUi::EPopupMenuFunctionResult PopupLayer(void *pContext, CUIRect View, bool Active);
+	class CQuadPopupContext : public SPopupMenuId
+	{
+	public:
+		CEditor *m_pEditor;
+		int m_SelectedQuadIndex;
+		int m_Color;
+	};
+	CQuadPopupContext m_QuadPopupContext;
 	static CUi::EPopupMenuFunctionResult PopupQuad(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupSource(void *pContext, CUIRect View, bool Active);
+	class CPointPopupContext : public SPopupMenuId
+	{
+	public:
+		CEditor *m_pEditor;
+		int m_SelectedQuadPoint;
+		int m_SelectedQuadIndex;
+	};
+	CPointPopupContext m_PointPopupContext;
 	static CUi::EPopupMenuFunctionResult PopupPoint(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupEnvPoint(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupEnvPointMulti(void *pContext, CUIRect View, bool Active);
@@ -745,10 +653,6 @@ public:
 	void DoQuadEnvPoint(const CQuad *pQuad, CEnvelope *pEnvelope, int QuadIndex, int PointIndex);
 	void DoQuadPoint(int LayerIndex, const std::shared_ptr<CLayerQuads> &pLayer, CQuad *pQuad, int QuadIndex, int v);
 	void UpdateHotQuadPoint(const CLayerQuads *pLayer);
-
-	float TriangleArea(vec2 A, vec2 B, vec2 C);
-	bool IsInTriangle(vec2 Point, vec2 A, vec2 B, vec2 C);
-	void DoQuadKnife(int QuadIndex);
 
 	void DoSoundSource(int LayerIndex, CSoundSource *pSource, int Index);
 	void UpdateHotSoundSource(const CLayerSounds *pLayer);
@@ -816,9 +720,6 @@ public:
 	static bool AddImage(const char *pFilename, int StorageType, void *pUser);
 	static bool AddSound(const char *pFilename, int StorageType, void *pUser);
 
-	bool IsEnvelopeUsed(int EnvelopeIndex) const;
-	void RemoveUnusedEnvelopes();
-
 	static bool IsVanillaImage(const char *pImage);
 
 	void RenderLayers(CUIRect LayersBox);
@@ -847,11 +748,10 @@ public:
 	};
 	void DoEditorDragBar(CUIRect View, CUIRect *pDragBar, EDragSide Side, float *pValue, float MinValue = 100.0f, float MaxValue = 400.0f);
 
-	void UpdateHotEnvelopePoint(const CUIRect &View, const CEnvelope *pEnvelope, int ActiveChannels);
+	void UpdateHotEnvelopeObject(const CUIRect &View, const CEnvelope *pEnvelope, int ActiveChannels);
 
 	void RenderMenubar(CUIRect Menubar);
-
-	void SelectGameLayer();
+	void ShowHelp();
 
 	void DoAudioPreview(CUIRect View, const void *pPlayPauseButtonId, const void *pStopButtonId, const void *pSeekBarId, int SampleId);
 
@@ -894,9 +794,12 @@ public:
 	unsigned char m_SwitchDelay;
 	unsigned char m_ViewSwitch;
 
-	void AdjustBrushSpecialTiles(bool UseNextFree, int Adjust = 0);
+	// AdjustValue must be -1, 0 or 1
+	void AdjustBrushSpecialTiles(bool UseNextFree, int AdjustModifiers, int AdjustValue);
 
 private:
+	CEditorMap m_Map;
+
 	CEditorHistory &ActiveHistory();
 
 	std::map<int, CPoint[5]> m_QuadDragOriginalPoints;

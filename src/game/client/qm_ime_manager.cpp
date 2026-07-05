@@ -6,8 +6,8 @@
 #include "lineinput.h"
 
 #include <engine/input.h>
-#include <engine/shared/qm_ime_policy.h>
 #include <engine/shared/config.h>
+#include <engine/shared/qm_ime_policy.h>
 
 #include <algorithm>
 

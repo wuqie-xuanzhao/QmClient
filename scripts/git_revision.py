@@ -3,19 +3,12 @@ import subprocess
 
 git_hash = os.environ.get("DDNET_GIT_SHORTREV_HASH")
 try:
-    git_hash = (
-        git_hash
-        or subprocess.check_output(
-            ["git", "rev-parse", "--short=32", "HEAD"], stderr=subprocess.DEVNULL
-        )
-        .decode()
-        .strip()
-    )
+	git_hash = git_hash or subprocess.check_output(["git", "rev-parse", "--short=32", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
-    pass
+	pass
 if git_hash is not None:
-    definition = f'"{git_hash}"'
+	definition = f'"{git_hash}"'
 else:
-    definition = "0"
+	definition = "0"
 print("#include <game/version.h>")
 print(f"const char *GIT_SHORTREV_HASH = {definition};")

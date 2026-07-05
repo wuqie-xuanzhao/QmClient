@@ -65,6 +65,28 @@ constexpr int QmFastInputGammaEffectiveToUiAmount(int EffectiveAmount)
 	return QmFastInputGammaClampUiAmount(EffectiveAmount);
 }
 
+/**
+ * The default values of all config variables in @link CConfig @endlink.
+ */
+namespace DefaultConfig
+{
+#define MACRO_CONFIG_INT(Name, ScriptName, Def, Min, Max, Flags, Desc) \
+	/** Default value of the integer config variable 'ScriptName' (see CConfig::m_##Name). */ \
+	static constexpr int Name = Def;
+#define MACRO_CONFIG_COL(Name, ScriptName, Def, Flags, Desc) \
+	/** Default value of the color config variable 'ScriptName' (see CConfig::m_##Name). */ \
+	static constexpr unsigned Name = Def;
+#define MACRO_CONFIG_STR(Name, ScriptName, Len, Def, Flags, Desc) \
+	/** Default value of the string config variable 'ScriptName' (see CConfig::m_##Name). */ \
+	static constexpr const char *const Name = Def;
+#define SET_CONFIG_DOMAIN(ConfigDomain) ;
+#include "config_includes.h"
+#undef MACRO_CONFIG_INT
+#undef MACRO_CONFIG_COL
+#undef MACRO_CONFIG_STR
+#undef SET_CONFIG_DOMAIN
+}
+
 struct SQmFastInputSettings
 {
 	bool m_Enabled = false;

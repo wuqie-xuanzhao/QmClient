@@ -13,12 +13,12 @@
 
 namespace
 {
-constexpr int TRAIL_HISTORY_SIZE = 200;
+	constexpr int TRAIL_HISTORY_SIZE = 200;
 
-int TrailHistoryIndex(int Tick)
-{
-	return ((Tick % TRAIL_HISTORY_SIZE) + TRAIL_HISTORY_SIZE) % TRAIL_HISTORY_SIZE;
-}
+	int TrailHistoryIndex(int Tick)
+	{
+		return ((Tick % TRAIL_HISTORY_SIZE) + TRAIL_HISTORY_SIZE) % TRAIL_HISTORY_SIZE;
+	}
 } // namespace
 
 bool CTrails::ShouldPredictPlayer(int ClientId)

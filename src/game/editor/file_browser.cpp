@@ -556,7 +556,6 @@ void CFileBrowser::RenderFilePreview(CUIRect Preview)
 			}
 
 			Graphics()->TextureSet(m_PreviewImage);
-			Graphics()->BlendNormal();
 			Graphics()->QuadsBegin();
 			IGraphics::CQuadItem QuadItem(PreviewImage.x, PreviewImage.y, Width, Height);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
@@ -815,13 +814,13 @@ int CFileBrowser::DirectoryListingCallback(const CFsFileInfo *pInfo, int IsDir, 
 
 std::optional<bool> CFileBrowser::CompareCommon(const CFilelistItem *pLhs, const CFilelistItem *pRhs)
 {
-	if(str_comp(pLhs->m_aFilename, "..") == 0)
-	{
-		return true;
-	}
 	if(str_comp(pRhs->m_aFilename, "..") == 0)
 	{
 		return false;
+	}
+	if(str_comp(pLhs->m_aFilename, "..") == 0)
+	{
+		return true;
 	}
 	if(pLhs->m_IsLink != pRhs->m_IsLink)
 	{

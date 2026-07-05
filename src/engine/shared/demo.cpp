@@ -42,7 +42,7 @@ bool CDemoHeader::Valid() const
 	       mem_has_null(m_aTimestamp, sizeof(m_aTimestamp)) && str_utf8_check(m_aTimestamp);
 }
 
-CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta, bool NoMapData)
+CDemoRecorder::CDemoRecorder(CSnapshotDelta *pSnapshotDelta, bool NoMapData)
 {
 	m_File = nullptr;
 	m_aCurrentFilename[0] = '\0';
@@ -340,7 +340,7 @@ void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size, bool K
 		Write(CHUNKTYPE_SNAPSHOT, pData, Size);
 
 		m_LastKeyFrame = Tick;
-		mem_copy(m_aLastSnapshotData, pData, Size);
+		mem_copy(&m_LastSnapshotData, pData, Size);
 	}
 	else
 	{
@@ -348,15 +348,13 @@ void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size, bool K
 		WriteTickMarker(Tick, false);
 
 		// create delta
-		char aDeltaData[CSnapshot::MAX_SIZE + sizeof(int)];
-		m_pSnapshotDelta->SetStaticsize(protocol7::NETEVENTTYPE_SOUNDWORLD, true);
-		m_pSnapshotDelta->SetStaticsize(protocol7::NETEVENTTYPE_DAMAGE, true);
-		const int DeltaSize = m_pSnapshotDelta->CreateDelta((CSnapshot *)m_aLastSnapshotData, (CSnapshot *)pData, &aDeltaData);
+		int32_t aDeltaData[CSnapshot::MAX_SIZE / sizeof(int32_t)];
+		const int DeltaSize = m_pSnapshotDelta->CreateDelta(*m_LastSnapshotData.AsSnapshot(), *(CSnapshot *)pData, rust::Slice(aDeltaData, std::size(aDeltaData)));
 		if(DeltaSize)
 		{
 			// record delta
 			Write(CHUNKTYPE_DELTA, aDeltaData, DeltaSize);
-			mem_copy(m_aLastSnapshotData, pData, Size);
+			mem_copy(&m_LastSnapshotData, pData, Size);
 		}
 	}
 }
@@ -486,35 +484,45 @@ bool CDemoRecorder::AddDemoMarker(int Tick)
 	return true;
 }
 
-CDemoPlayer::CDemoPlayer(class CSnapshotDelta *pSnapshotDelta, bool UseVideo, TUpdateIntraTimesFunc &&UpdateIntraTimesFunc)
+CSnapshotDelta *CDemoPlayer::SnapshotDelta()
 {
-	Construct(pSnapshotDelta, UseVideo);
-
-	m_UpdateIntraTimesFunc = UpdateIntraTimesFunc;
+	if(IsSixup())
+	{
+		return m_pSnapshotDeltaSixup;
+	}
+	return m_pSnapshotDelta;
 }
 
-CDemoPlayer::CDemoPlayer(class CSnapshotDelta *pSnapshotDelta, bool UseVideo)
-{
-	Construct(pSnapshotDelta, UseVideo);
-}
-
-CDemoPlayer::~CDemoPlayer()
-{
-	dbg_assert(m_File == 0, "Demo player not stopped");
-}
-
-void CDemoPlayer::Construct(class CSnapshotDelta *pSnapshotDelta, bool UseVideo)
+void CDemoPlayer::Construct(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo)
 {
 	m_File = nullptr;
 	m_SpeedIndex = DEMO_SPEED_INDEX_DEFAULT;
 
 	m_pSnapshotDelta = pSnapshotDelta;
+	m_pSnapshotDeltaSixup = pSnapshotDeltaSixup;
 	m_LastSnapshotDataSize = -1;
 	m_pListener = nullptr;
 	m_UseVideo = UseVideo;
 
 	m_aFilename[0] = '\0';
 	m_aErrorMessage[0] = '\0';
+}
+
+CDemoPlayer::CDemoPlayer(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo, TUpdateIntraTimesFunc &&UpdateIntraTimesFunc)
+{
+	Construct(pSnapshotDelta, pSnapshotDeltaSixup, UseVideo);
+
+	m_UpdateIntraTimesFunc = UpdateIntraTimesFunc;
+}
+
+CDemoPlayer::CDemoPlayer(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, bool UseVideo)
+{
+	Construct(pSnapshotDelta, pSnapshotDeltaSixup, UseVideo);
+}
+
+CDemoPlayer::~CDemoPlayer()
+{
+	dbg_assert(m_File == 0, "Demo player not stopped");
 }
 
 void CDemoPlayer::SetListener(IListener *pListener)
@@ -729,8 +737,10 @@ void CDemoPlayer::DoTick()
 		if(ChunkType == CHUNKTYPE_DELTA)
 		{
 			// process delta snapshot
-			CSnapshot *pNewsnap = (CSnapshot *)m_aSnapshot;
-			DataSize = m_pSnapshotDelta->UnpackDelta((CSnapshot *)m_aLastSnapshotData, pNewsnap, m_aChunkData, DataSize, IsSixup());
+			// TODO: this needs alignment for `m_aChunkData` of 4,
+			// but this is not guaranteed. This is assumed above,
+			// too, anyway, in `CVariableInt::Decompress`.
+			DataSize = SnapshotDelta()->UnpackDelta(*m_LastSnapshotData.AsSnapshot(), m_Snapshot, rust::Slice<const int32_t>((const int *)m_aChunkData, DataSize / sizeof(int32_t)));
 
 			if(DataSize < 0)
 			{
@@ -741,7 +751,7 @@ void CDemoPlayer::DoTick()
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "demo_player", aBuf);
 				}
 			}
-			else if(!pNewsnap->IsValid(DataSize))
+			else if(!m_Snapshot.AsSnapshot()->IsValid(DataSize))
 			{
 				if(m_pConsole)
 				{
@@ -753,10 +763,10 @@ void CDemoPlayer::DoTick()
 			else
 			{
 				if(m_pListener)
-					m_pListener->OnDemoPlayerSnapshot(m_aSnapshot, DataSize);
+					m_pListener->OnDemoPlayerSnapshot(m_Snapshot.AsSnapshot(), DataSize);
 
 				m_LastSnapshotDataSize = DataSize;
-				mem_copy(m_aLastSnapshotData, m_aSnapshot, DataSize);
+				mem_copy(&m_LastSnapshotData, &m_Snapshot, DataSize);
 				GotSnapshot = true;
 			}
 		}
@@ -778,7 +788,7 @@ void CDemoPlayer::DoTick()
 				GotSnapshot = true;
 
 				m_LastSnapshotDataSize = DataSize;
-				mem_copy(m_aLastSnapshotData, m_aChunkData, DataSize);
+				mem_copy(&m_LastSnapshotData, m_aChunkData, DataSize);
 				if(m_pListener)
 					m_pListener->OnDemoPlayerSnapshot(m_aChunkData, DataSize);
 			}
@@ -789,7 +799,7 @@ void CDemoPlayer::DoTick()
 			if(!GotSnapshot && m_pListener && m_LastSnapshotDataSize != -1)
 			{
 				GotSnapshot = true;
-				m_pListener->OnDemoPlayerSnapshot(m_aLastSnapshotData, m_LastSnapshotDataSize);
+				m_pListener->OnDemoPlayerSnapshot(&m_LastSnapshotData, m_LastSnapshotDataSize);
 			}
 
 			// check the remaining types
@@ -920,10 +930,11 @@ bool CDemoPlayer::ExtractMap(class IStorage *pStorage)
 	}
 
 	// handle sha256
-	SHA256_DIGEST Sha256 = SHA256_ZEROED;
+	std::optional<SHA256_DIGEST> Sha256;
 	if(m_Info.m_Header.m_Version >= gs_Sha256Version)
 	{
 		Sha256 = m_MapInfo.m_Sha256;
+		dbg_assert(Sha256.has_value(), "SHA256 missing for version %d demo", m_Info.m_Header.m_Version);
 	}
 	else
 	{
@@ -933,7 +944,7 @@ bool CDemoPlayer::ExtractMap(class IStorage *pStorage)
 
 	// construct name
 	char aSha[SHA256_MAXSTRSIZE], aMapFilename[IO_MAX_PATH_LENGTH];
-	sha256_str(Sha256, aSha, sizeof(aSha));
+	sha256_str(Sha256.value(), aSha, sizeof(aSha));
 	str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%s.map", m_Info.m_Header.m_aMapName, aSha);
 
 	// save map
@@ -1006,25 +1017,25 @@ void CDemoPlayer::Play()
 	}
 }
 
-int CDemoPlayer::SeekPercent(float Percent)
+bool CDemoPlayer::SeekPercent(float Percent)
 {
 	int WantedTick = m_Info.m_Info.m_FirstTick + round_truncate((m_Info.m_Info.m_LastTick - m_Info.m_Info.m_FirstTick) * Percent);
 	return SetPos(WantedTick);
 }
 
-int CDemoPlayer::SeekTime(float Seconds)
+bool CDemoPlayer::SeekTime(float Seconds)
 {
 	int WantedTick = m_Info.m_Info.m_CurrentTick + round_truncate(Seconds * (float)SERVER_TICK_SPEED);
 	return SetPos(WantedTick);
 }
 
-int CDemoPlayer::SeekTick(ETickOffset TickOffset)
+bool CDemoPlayer::SeekTick(ETickOffset TickOffset)
 {
 	int WantedTick;
 	switch(TickOffset)
 	{
 	case TICK_CURRENT:
-		// TODO: https://github.com/ddnet/ddnet/issues/11681
+		// TODO: WantedTick == m_Info.m_NextTick is used to update spectator info when paused so seeking must be done
 		WantedTick = m_Info.m_Info.m_CurrentTick;
 		break;
 	case TICK_PREVIOUS:
@@ -1042,12 +1053,12 @@ int CDemoPlayer::SeekTick(ETickOffset TickOffset)
 	return SetPos(WantedTick + 1);
 }
 
-int CDemoPlayer::SetPos(int WantedTick)
+bool CDemoPlayer::SetPos(int WantedTick)
 {
 	if(!m_File)
-		return -1;
+		return false;
 
-	// TODO: Early exit when WantedTick > m_Info.m_Info.m_CurrentTick && WantedTick <= m_Info.m_NextTick with https://github.com/ddnet/ddnet/issues/11681
+	// TODO: WantedTick == m_Info.m_NextTick is used to update spectator info when paused so seeking must be done
 
 	int LastSeekableTick = m_Info.m_Info.m_LastTick;
 	if(m_Info.m_Info.m_LiveDemo)
@@ -1067,6 +1078,7 @@ int CDemoPlayer::SetPos(int WantedTick)
 	// Just the next tick
 	if(WantedTick == m_Info.m_NextTick + 1)
 	{
+		// This does handle looping correctly
 		DoTick();
 		Play();
 		return true;
@@ -1082,16 +1094,14 @@ int CDemoPlayer::SetPos(int WantedTick)
 	while(KeyFrame > 0 && m_vKeyFrames[KeyFrame].m_Tick > KeyFrameWantedTick)
 		KeyFrame--;
 
-	// TODO Remove `WantedTick <= m_Info.m_NextTick` with https://github.com/ddnet/ddnet/issues/11681
 	if(WantedTick <= m_Info.m_Info.m_CurrentTick || // if we are seeking backwards (must be <= for high bandwidth demos) OR
-		WantedTick <= m_Info.m_NextTick || // if seeking to current tick OR
 		m_Info.m_Info.m_CurrentTick < m_vKeyFrames[KeyFrame].m_Tick || // we are before the wanted KeyFrame OR
 		(KeyFrame != m_vKeyFrames.size() - 1 && m_Info.m_Info.m_CurrentTick >= m_vKeyFrames[KeyFrame + 1].m_Tick)) // we are after the wanted KeyFrame
 	{
 		if(io_seek(m_File, m_vKeyFrames[KeyFrame].m_Filepos, IOSEEK_START) != 0)
 		{
 			Stop("Error seeking keyframe position");
-			return -1;
+			return false;
 		}
 		m_Info.m_NextTick = -1;
 		m_Info.m_Info.m_CurrentTick = -1;
@@ -1104,13 +1114,13 @@ int CDemoPlayer::SetPos(int WantedTick)
 		DoTick();
 		if(!IsPlaying())
 		{
-			return -1;
+			return false;
 		}
 	}
 
 	Play();
 
-	return 0;
+	return true;
 }
 
 void CDemoPlayer::SetSpeed(float Speed)
@@ -1217,7 +1227,7 @@ void CDemoPlayer::Update(bool RealTime)
 	{
 		if(m_Info.m_Info.m_LiveDemo &&
 			m_Info.m_Info.m_Speed > 1.0f &&
-			m_Info.m_Info.m_LastTick - m_Info.m_Info.m_CurrentTick <= (DeltaTime * (double)m_Info.m_Info.m_Speed / Freq + 2) * SERVER_TICK_SPEED)
+			m_Info.m_Info.m_LastTick - m_Info.m_Info.m_CurrentTick <= (DeltaTime * (double)m_Info.m_Info.m_Speed / Freq + 2) * (float)SERVER_TICK_SPEED)
 		{
 			// Reset to default speed if we are fast-forwarding to the end of a live demo,
 			// to prevent playback error due to final demo chunk data still being written.
@@ -1298,7 +1308,10 @@ bool CDemoPlayer::GetDemoInfo(IStorage *pStorage, IConsole *pConsole, const char
 {
 	mem_zero(pDemoHeader, sizeof(CDemoHeader));
 	mem_zero(pTimelineMarkers, sizeof(CTimelineMarkers));
-	mem_zero(pMapInfo, sizeof(CMapInfo));
+	pMapInfo->m_aName[0] = '\0';
+	pMapInfo->m_Sha256 = std::nullopt;
+	pMapInfo->m_Crc = 0;
+	pMapInfo->m_Size = 0;
 
 	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
 	if(!File)
@@ -1337,14 +1350,15 @@ bool CDemoPlayer::GetDemoInfo(IStorage *pStorage, IConsole *pConsole, const char
 		}
 	}
 
-	SHA256_DIGEST Sha256 = SHA256_ZEROED;
+	std::optional<SHA256_DIGEST> Sha256;
 	if(pDemoHeader->m_Version >= gs_Sha256Version)
 	{
 		CUuid ExtensionUuid = {};
 		const unsigned ExtensionUuidSize = io_read(File, &ExtensionUuid.m_aData, sizeof(ExtensionUuid.m_aData));
 		if(ExtensionUuidSize == sizeof(ExtensionUuid.m_aData) && ExtensionUuid == SHA256_EXTENSION)
 		{
-			if(io_read(File, &Sha256, sizeof(SHA256_DIGEST)) != sizeof(SHA256_DIGEST))
+			SHA256_DIGEST ReadSha256;
+			if(io_read(File, &ReadSha256, sizeof(SHA256_DIGEST)) != sizeof(SHA256_DIGEST))
 			{
 				if(pErrorMessage != nullptr)
 					str_copy(pErrorMessage, "Error reading SHA256", ErrorMessageSize);
@@ -1353,6 +1367,7 @@ bool CDemoPlayer::GetDemoInfo(IStorage *pStorage, IConsole *pConsole, const char
 				io_close(File);
 				return false;
 			}
+			Sha256 = ReadSha256;
 		}
 		else
 		{
@@ -1441,9 +1456,10 @@ namespace
 
 } // namespace
 
-void CDemoEditor::Init(class CSnapshotDelta *pSnapshotDelta, class IConsole *pConsole, class IStorage *pStorage)
+void CDemoEditor::Init(CSnapshotDelta *pSnapshotDelta, CSnapshotDelta *pSnapshotDeltaSixup, class IConsole *pConsole, class IStorage *pStorage)
 {
 	m_pSnapshotDelta = pSnapshotDelta;
+	m_pSnapshotDeltaSixup = pSnapshotDeltaSixup;
 	m_pConsole = pConsole;
 	m_pStorage = pStorage;
 }
@@ -1455,23 +1471,30 @@ bool CDemoEditor::Slice(const char *pDemo, const char *pDst, int StartTick, int 
 
 bool CDemoEditor::Slice(const char *pDemo, const char *pDst, const std::vector<SDemoSliceSegment> &vSegments, DEMOFUNC_FILTER pfnFilter, void *pUser)
 {
-	CDemoPlayer DemoPlayer(m_pSnapshotDelta, false);
+	CDemoPlayer DemoPlayer(m_pSnapshotDelta, m_pSnapshotDeltaSixup, false);
 	if(DemoPlayer.Load(m_pStorage, m_pConsole, pDemo, IStorage::TYPE_ALL_OR_ABSOLUTE) == -1)
 		return false;
 
 	const CMapInfo *pMapInfo = DemoPlayer.GetMapInfo();
 	const CDemoPlayer::CPlaybackInfo *pInfo = DemoPlayer.Info();
 
-	SHA256_DIGEST Sha256 = pMapInfo->m_Sha256;
+	std::optional<SHA256_DIGEST> Sha256 = pMapInfo->m_Sha256;
 	if(pInfo->m_Header.m_Version < gs_Sha256Version)
 	{
 		if(DemoPlayer.ExtractMap(m_pStorage))
+		{
 			Sha256 = pMapInfo->m_Sha256;
+		}
+	}
+	if(!Sha256.has_value())
+	{
+		log_error_color(DEMO_PRINT_COLOR, "demo/slice", "Failed to start demo slicing because map SHA256 could not be determined.");
+		return false;
 	}
 
 	CDemoRecorder DemoRecorder(m_pSnapshotDelta);
 	unsigned char *pMapData = DemoPlayer.GetMapData(m_pStorage);
-	const int Result = DemoRecorder.Start(m_pStorage, m_pConsole, pDst, pInfo->m_Header.m_aNetversion, pMapInfo->m_aName, Sha256, pMapInfo->m_Crc, pInfo->m_Header.m_aType, pMapInfo->m_Size, pMapData, nullptr, pfnFilter, pUser) == -1;
+	const int Result = DemoRecorder.Start(m_pStorage, m_pConsole, pDst, pInfo->m_Header.m_aNetversion, pMapInfo->m_aName, Sha256.value(), pMapInfo->m_Crc, pInfo->m_Header.m_aType, pMapInfo->m_Size, pMapData, nullptr, pfnFilter, pUser) == -1;
 	free(pMapData);
 	if(Result != 0)
 	{

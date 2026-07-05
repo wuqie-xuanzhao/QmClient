@@ -1,8 +1,8 @@
-#include <gtest/gtest.h>
-
 #include <base/system.h>
 
 #include <game/client/components/menus.h>
+
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <set>

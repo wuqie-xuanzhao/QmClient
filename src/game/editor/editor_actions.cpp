@@ -1,6 +1,16 @@
 #include "editor_actions.h"
 
+#include <base/log.h>
+
+#include <game/editor/editor.h>
+#include <game/editor/mapitems.h>
 #include <game/editor/mapitems/image.h>
+#include <game/editor/mapitems/layer.h>
+#include <game/editor/mapitems/layer_front.h>
+#include <game/editor/mapitems/layer_group.h>
+#include <game/editor/mapitems/layer_quads.h>
+#include <game/editor/mapitems/layer_sounds.h>
+#include <game/editor/mapitems/map.h>
 
 static const char *LayerTypeDisplayName(const std::shared_ptr<CLayer> &pLayer)
 {
@@ -349,18 +359,44 @@ CEditorActionEditQuadPoint::CEditorActionEditQuadPoint(CEditorMap *pMap, int Gro
 
 void CEditorActionEditQuadPoint::Undo()
 {
-	std::shared_ptr<CLayerQuads> pLayerQuads = std::static_pointer_cast<CLayerQuads>(m_pLayer);
-	CQuad &Quad = pLayerQuads->m_vQuads[m_QuadIndex];
-	for(int k = 0; k < 5; k++)
-		Quad.m_aPoints[k] = m_vPreviousPoints[k];
+	Apply(m_vPreviousPoints);
 }
 
 void CEditorActionEditQuadPoint::Redo()
 {
+	Apply(m_vCurrentPoints);
+}
+
+void CEditorActionEditQuadPoint::Apply(const std::vector<CPoint> &vValue)
+{
 	std::shared_ptr<CLayerQuads> pLayerQuads = std::static_pointer_cast<CLayerQuads>(m_pLayer);
 	CQuad &Quad = pLayerQuads->m_vQuads[m_QuadIndex];
-	for(int k = 0; k < 5; k++)
-		Quad.m_aPoints[k] = m_vCurrentPoints[k];
+	dbg_assert(std::size(Quad.m_aPoints) == vValue.size(), "Expected %d values, got %d", (int)std::size(Quad.m_aPoints), (int)vValue.size());
+	std::copy_n(vValue.begin(), std::size(Quad.m_aPoints), Quad.m_aPoints);
+}
+
+CEditorActionEditQuadColor::CEditorActionEditQuadColor(CEditorMap *pMap, int GroupIndex, int LayerIndex, int QuadIndex, std::vector<CColor> const &vPreviousColors, std::vector<CColor> const &vCurrentColors) :
+	CEditorActionLayerBase(pMap, GroupIndex, LayerIndex), m_QuadIndex(QuadIndex), m_vPreviousColors(vPreviousColors), m_vCurrentColors(vCurrentColors)
+{
+	str_copy(m_aDisplayText, "Edit quad point colors");
+}
+
+void CEditorActionEditQuadColor::Undo()
+{
+	Apply(m_vPreviousColors);
+}
+
+void CEditorActionEditQuadColor::Redo()
+{
+	Apply(m_vCurrentColors);
+}
+
+void CEditorActionEditQuadColor::Apply(std::vector<CColor> &vValue)
+{
+	std::shared_ptr<CLayerQuads> pLayerQuads = std::static_pointer_cast<CLayerQuads>(m_pLayer);
+	CQuad &Quad = pLayerQuads->m_vQuads[m_QuadIndex];
+	dbg_assert(std::size(Quad.m_aColors) == vValue.size(), "Expected %d values, got %d", (int)std::size(Quad.m_aColors), (int)vValue.size());
+	std::copy_n(vValue.begin(), std::size(Quad.m_aColors), Quad.m_aColors);
 }
 
 CEditorActionEditQuadProp::CEditorActionEditQuadProp(CEditorMap *pMap, int GroupIndex, int LayerIndex, int QuadIndex, EQuadProp Prop, int Previous, int Current) :
@@ -372,9 +408,11 @@ CEditorActionEditQuadProp::CEditorActionEditQuadProp(CEditorMap *pMap, int Group
 		"位置纵",
 		"位置包络线",
 		"位置包络线偏移",
+		nullptr,
 		"颜色包络线",
 		"颜色包络线偏移"};
 	static_assert(std::size(s_apNames) == (size_t)EQuadProp::NUM_PROPS);
+	dbg_assert(Prop != EQuadProp::PROP_COLOR, "Color prop implemented by CEditorActionEditQuadColor");
 	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑四边形 %s 属性（图层 %d，组 %d）", s_apNames[(int)m_Prop], m_LayerIndex, m_GroupIndex);
 }
 
@@ -585,7 +623,7 @@ void CEditorActionAddLayer::Undo()
 
 	Map()->m_vpGroups[m_GroupIndex]->m_Collapse = false;
 	if(m_LayerIndex >= (int)vLayers.size())
-		Editor()->SelectLayer(vLayers.size() - 1, m_GroupIndex);
+		Map()->SelectLayer(vLayers.size() - 1, m_GroupIndex);
 
 	Map()->OnModify();
 }
@@ -613,7 +651,7 @@ void CEditorActionAddLayer::Redo()
 	vLayers.insert(vLayers.begin() + m_LayerIndex, m_pLayer);
 
 	Map()->m_vpGroups[m_GroupIndex]->m_Collapse = false;
-	Editor()->SelectLayer(m_LayerIndex, m_GroupIndex);
+	Map()->SelectLayer(m_LayerIndex, m_GroupIndex);
 	Map()->OnModify();
 }
 
@@ -647,7 +685,7 @@ void CEditorActionDeleteLayer::Redo()
 
 	Map()->m_vpGroups[m_GroupIndex]->m_Collapse = false;
 	if(m_LayerIndex >= (int)vLayers.size())
-		Editor()->SelectLayer(vLayers.size() - 1, m_GroupIndex);
+		Map()->SelectLayer(vLayers.size() - 1, m_GroupIndex);
 
 	Map()->OnModify();
 }
@@ -675,7 +713,7 @@ void CEditorActionDeleteLayer::Undo()
 	vLayers.insert(vLayers.begin() + m_LayerIndex, m_pLayer);
 
 	Map()->m_vpGroups[m_GroupIndex]->m_Collapse = false;
-	Editor()->SelectLayer(m_LayerIndex, m_GroupIndex);
+	Map()->SelectLayer(m_LayerIndex, m_GroupIndex);
 	Map()->OnModify();
 }
 
@@ -695,14 +733,14 @@ void CEditorActionGroup::Undo()
 	{
 		// Undo: add back the group
 		Map()->m_vpGroups.insert(Map()->m_vpGroups.begin() + m_GroupIndex, m_pGroup);
-		Editor()->m_SelectedGroup = m_GroupIndex;
+		Map()->m_SelectedGroup = m_GroupIndex;
 		Map()->OnModify();
 	}
 	else
 	{
 		// Undo: delete the group
 		Map()->DeleteGroup(m_GroupIndex);
-		Editor()->m_SelectedGroup = maximum(0, m_GroupIndex - 1);
+		Map()->m_SelectedGroup = maximum(0, m_GroupIndex - 1);
 	}
 
 	Map()->OnModify();
@@ -714,13 +752,13 @@ void CEditorActionGroup::Redo()
 	{
 		// Redo: add back the group
 		Map()->m_vpGroups.insert(Map()->m_vpGroups.begin() + m_GroupIndex, m_pGroup);
-		Editor()->m_SelectedGroup = m_GroupIndex;
+		Map()->m_SelectedGroup = m_GroupIndex;
 	}
 	else
 	{
 		// Redo: delete the group
 		Map()->DeleteGroup(m_GroupIndex);
-		Editor()->m_SelectedGroup = maximum(0, m_GroupIndex - 1);
+		Map()->m_SelectedGroup = maximum(0, m_GroupIndex - 1);
 	}
 
 	Map()->OnModify();
@@ -751,7 +789,7 @@ void CEditorActionEditGroupProp::Undo()
 
 	if(m_Prop == EGroupProp::PROP_ORDER)
 	{
-		Editor()->m_SelectedGroup = Map()->MoveGroup(m_Current, m_Previous);
+		Map()->m_SelectedGroup = Map()->MoveGroup(m_Current, m_Previous);
 	}
 	else
 	{
@@ -765,7 +803,7 @@ void CEditorActionEditGroupProp::Redo()
 
 	if(m_Prop == EGroupProp::PROP_ORDER)
 	{
-		Editor()->m_SelectedGroup = Map()->MoveGroup(m_Previous, m_Current);
+		Map()->m_SelectedGroup = Map()->MoveGroup(m_Previous, m_Current);
 	}
 	else
 	{
@@ -823,7 +861,7 @@ void CEditorActionEditLayerProp::Undo()
 
 	if(m_Prop == ELayerProp::PROP_ORDER)
 	{
-		Editor()->SelectLayer(pCurrentGroup->MoveLayer(m_Current, m_Previous));
+		Map()->SelectLayer(pCurrentGroup->MoveLayer(m_Current, m_Previous));
 	}
 	else
 	{
@@ -837,7 +875,7 @@ void CEditorActionEditLayerProp::Redo()
 
 	if(m_Prop == ELayerProp::PROP_ORDER)
 	{
-		Editor()->SelectLayer(pCurrentGroup->MoveLayer(m_Previous, m_Current));
+		Map()->SelectLayer(pCurrentGroup->MoveLayer(m_Previous, m_Current));
 	}
 	else
 	{
@@ -856,8 +894,8 @@ void CEditorActionEditLayerProp::Apply(int Value)
 			pPreviousGroup->m_vpLayers.insert(pPreviousGroup->m_vpLayers.begin() + m_LayerIndex, m_pLayer);
 		else
 			pPreviousGroup->m_vpLayers.push_back(m_pLayer);
-		Editor()->m_SelectedGroup = Value;
-		Editor()->SelectLayer(m_LayerIndex);
+		Map()->m_SelectedGroup = Value;
+		Map()->SelectLayer(m_LayerIndex);
 	}
 	else if(m_Prop == ELayerProp::PROP_HQ)
 	{
@@ -928,7 +966,7 @@ void CEditorActionEditLayerTilesProp::Undo()
 	}
 	else if(m_Prop == ETilesProp::PROP_SHIFT_BY)
 	{
-		Editor()->m_ShiftBy = m_Previous;
+		Map()->m_ShiftBy = m_Previous;
 	}
 	else if(m_Prop == ETilesProp::PROP_IMAGE)
 	{
@@ -1012,7 +1050,7 @@ void CEditorActionEditLayerTilesProp::Redo()
 	}
 	else if(m_Prop == ETilesProp::PROP_SHIFT_BY)
 	{
-		Editor()->m_ShiftBy = m_Current;
+		Map()->m_ShiftBy = m_Current;
 	}
 	else if(m_Prop == ETilesProp::PROP_IMAGE)
 	{
@@ -1158,8 +1196,8 @@ void CEditorActionEditLayersGroupAndOrder::Undo()
 		pPreviousGroup->m_vpLayers.insert(pPreviousGroup->m_vpLayers.begin() + m_LayerIndices[k++], pLayer);
 	}
 
-	Editor()->m_vSelectedLayers = m_LayerIndices;
-	Editor()->m_SelectedGroup = m_GroupIndex;
+	Map()->m_vSelectedLayers = m_LayerIndices;
+	Map()->m_SelectedGroup = m_GroupIndex;
 }
 
 void CEditorActionEditLayersGroupAndOrder::Redo()
@@ -1179,8 +1217,8 @@ void CEditorActionEditLayersGroupAndOrder::Redo()
 		pPreviousGroup->m_vpLayers.insert(pPreviousGroup->m_vpLayers.begin() + m_NewLayerIndices[k++], pLayer);
 	}
 
-	Editor()->m_vSelectedLayers = m_NewLayerIndices;
-	Editor()->m_SelectedGroup = m_NewGroupIndex;
+	Map()->m_vSelectedLayers = m_NewLayerIndices;
+	Map()->m_SelectedGroup = m_NewGroupIndex;
 }
 
 // -----------------------------------
@@ -1249,20 +1287,26 @@ void CEditorActionAppendMap::Undo()
 	{
 		Map()->m_vpImages.pop_back();
 	}
+
+	Map()->OnModify();
 }
 
 void CEditorActionAppendMap::Redo()
 {
+	const auto &&ErrorHandler = [this](const char *pErrorMessage) {
+		Editor()->ShowFileDialogError("%s", pErrorMessage);
+		log_error("editor/append", "%s", pErrorMessage);
+	};
 	// Redo is just re-appending the same map
-	Editor()->Append(m_aMapName, IStorage::TYPE_ALL, true);
+	Map()->Append(m_aMapName, IStorage::TYPE_ALL, true, ErrorHandler);
 }
 
 // ---------------------------
 
-CEditorActionTileArt::CEditorActionTileArt(CEditorMap *pMap, int PreviousImageCount, const char *pTileArtFile, std::vector<int> &vImageIndexMap) :
+CEditorActionTileArt::CEditorActionTileArt(CEditorMap *pMap, int PreviousImageCount, const char *pFilename, std::vector<int> &vImageIndexMap) :
 	IEditorAction(pMap), m_PreviousImageCount(PreviousImageCount), m_vImageIndexMap(vImageIndexMap)
 {
-	str_copy(m_aTileArtFile, pTileArtFile);
+	str_copy(m_aFilename, pFilename);
 	str_copy(m_aDisplayText, "图块艺术");
 }
 
@@ -1306,41 +1350,37 @@ void CEditorActionTileArt::Undo()
 
 void CEditorActionTileArt::Redo()
 {
-	if(!Graphics()->LoadPng(Editor()->m_TileartImageInfo, m_aTileArtFile, IStorage::TYPE_ALL))
+	CImageInfo Image;
+	if(!Graphics()->LoadPng(Image, m_aFilename, IStorage::TYPE_ALL))
 	{
-		Editor()->ShowFileDialogError("无法从文件“%s”加载图像。", m_aTileArtFile);
+		Editor()->ShowFileDialogError("无法从文件“%s”加载图像。", m_aFilename);
 		return;
 	}
-
-	IStorage::StripPathAndExtension(m_aTileArtFile, Editor()->m_aTileartFilename, sizeof(Editor()->m_aTileartFilename));
-	Editor()->AddTileart(true);
+	Map()->AddTileArt(std::move(Image), m_aFilename, true);
 }
 
 // ---------------------------
 
-CEditorActionQuadArt::CEditorActionQuadArt(CEditorMap *pMap, CQuadArtParameters Parameters) :
-	IEditorAction(pMap), m_Parameters(Parameters)
+CEditorActionQuadArt::CEditorActionQuadArt(CEditorMap *pMap, const std::shared_ptr<CLayerGroup> &pGroup) :
+	IEditorAction(pMap), m_pGroup(pGroup)
 {
 	str_copy(m_aDisplayText, "创建四边形画");
 }
 
 void CEditorActionQuadArt::Undo()
 {
-	// Delete added group
-	Map()->m_vpGroups.pop_back();
+	// Delete added group (keep pointer for redo)
+	auto &vGroups = Map()->m_vpGroups;
+	auto It = std::find(vGroups.begin(), vGroups.end(), m_pGroup);
+	if(It != vGroups.end())
+		vGroups.erase(It);
 }
 
 void CEditorActionQuadArt::Redo()
 {
-	Editor()->m_QuadArtParameters = m_Parameters;
-	str_copy(Editor()->m_QuadArtParameters.m_aFilename, m_Parameters.m_aFilename, sizeof(Editor()->m_QuadArtParameters.m_aFilename));
-
-	if(!Graphics()->LoadPng(Editor()->m_QuadArtImageInfo, Editor()->m_QuadArtParameters.m_aFilename, IStorage::TYPE_ALL))
-	{
-		Editor()->ShowFileDialogError("无法从文件“%s”加载图像。", Editor()->m_QuadArtParameters.m_aFilename);
-		return;
-	}
-	Editor()->AddQuadArt(true);
+	auto &vGroups = Map()->m_vpGroups;
+	if(std::find(vGroups.begin(), vGroups.end(), m_pGroup) == vGroups.end())
+		vGroups.push_back(m_pGroup);
 }
 
 // ---------------------------------
@@ -1457,7 +1497,7 @@ CEditorActionEnvelopeAdd::CEditorActionEnvelopeAdd(CEditorMap *pMap, CEnvelope::
 	m_EnvelopeType(EnvelopeType)
 {
 	str_format(m_aDisplayText, sizeof(m_aDisplayText), "新增%s包络线", EnvelopeType == CEnvelope::EType::COLOR ? "颜色" : (EnvelopeType == CEnvelope::EType::POSITION ? "位置" : "声音"));
-	m_PreviousSelectedEnvelope = Editor()->m_SelectedEnvelope;
+	m_PreviousSelectedEnvelope = Editor()->Map()->m_SelectedEnvelope;
 }
 
 void CEditorActionEnvelopeAdd::Undo()
@@ -1465,14 +1505,14 @@ void CEditorActionEnvelopeAdd::Undo()
 	// Undo is removing the envelope, which was added at the back of the list
 	Map()->m_vpEnvelopes.pop_back();
 	Map()->OnModify();
-	Editor()->m_SelectedEnvelope = m_PreviousSelectedEnvelope;
+	Map()->m_SelectedEnvelope = m_PreviousSelectedEnvelope;
 }
 
 void CEditorActionEnvelopeAdd::Redo()
 {
 	// Redo is adding a new envelope at the back of the list
 	Map()->NewEnvelope(m_EnvelopeType);
-	Editor()->m_SelectedEnvelope = Map()->m_vpEnvelopes.size() - 1;
+	Map()->m_SelectedEnvelope = Map()->m_vpEnvelopes.size() - 1;
 }
 
 CEditorActionEnvelopeDelete::CEditorActionEnvelopeDelete(CEditorMap *pMap, int EnvelopeIndex, std::vector<std::shared_ptr<IEditorEnvelopeReference>> &vpObjectReferences, std::shared_ptr<CEnvelope> &pEnvelope) :
@@ -1495,7 +1535,7 @@ void CEditorActionEnvelopeDelete::Redo()
 }
 
 CEditorActionEnvelopeEdit::CEditorActionEnvelopeEdit(CEditorMap *pMap, int EnvelopeIndex, EEditType EditType, int Previous, int Current) :
-	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_EditType(EditType), m_Previous(Previous), m_Current(Current), m_pEnv(Map()->m_vpEnvelopes[EnvelopeIndex])
+	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_EditType(EditType), m_Previous(Previous), m_Current(Current)
 {
 	static const char *s_apNames[] = {
 		"同步",
@@ -1514,12 +1554,12 @@ void CEditorActionEnvelopeEdit::Undo()
 	}
 	case EEditType::SYNC:
 	{
-		m_pEnv->m_Synchronized = m_Previous;
+		Map()->m_vpEnvelopes[m_EnvelopeIndex]->m_Synchronized = m_Previous;
 		break;
 	}
 	}
 	Map()->OnModify();
-	Editor()->m_SelectedEnvelope = m_EnvelopeIndex;
+	Map()->m_SelectedEnvelope = m_EnvelopeIndex;
 }
 
 void CEditorActionEnvelopeEdit::Redo()
@@ -1533,16 +1573,16 @@ void CEditorActionEnvelopeEdit::Redo()
 	}
 	case EEditType::SYNC:
 	{
-		m_pEnv->m_Synchronized = m_Current;
+		Map()->m_vpEnvelopes[m_EnvelopeIndex]->m_Synchronized = m_Current;
 		break;
 	}
 	}
 	Map()->OnModify();
-	Editor()->m_SelectedEnvelope = m_EnvelopeIndex;
+	Map()->m_SelectedEnvelope = m_EnvelopeIndex;
 }
 
 CEditorActionEnvelopeEditPointTime::CEditorActionEnvelopeEditPointTime(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, CFixedTime Previous, CFixedTime Current) :
-	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Previous(Previous), m_Current(Current), m_pEnv(Map()->m_vpEnvelopes[EnvelopeIndex])
+	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Previous(Previous), m_Current(Current)
 {
 	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑点 %d 的时间（包络线 %d）", m_PointIndex, m_EnvelopeIndex);
 }
@@ -1559,12 +1599,12 @@ void CEditorActionEnvelopeEditPointTime::Redo()
 
 void CEditorActionEnvelopeEditPointTime::Apply(CFixedTime Value)
 {
-	m_pEnv->m_vPoints[m_PointIndex].m_Time = Value;
+	Map()->m_vpEnvelopes[m_EnvelopeIndex]->m_vPoints[m_PointIndex].m_Time = Value;
 	Map()->OnModify();
 }
 
 CEditorActionEnvelopeEditPoint::CEditorActionEnvelopeEditPoint(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, int Channel, EEditType EditType, int Previous, int Current) :
-	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Channel(Channel), m_EditType(EditType), m_Previous(Previous), m_Current(Current), m_pEnv(Map()->m_vpEnvelopes[EnvelopeIndex])
+	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Channel(Channel), m_EditType(EditType), m_Previous(Previous), m_Current(Current)
 {
 	static const char *s_apNames[] = {
 		"数值",
@@ -1584,20 +1624,22 @@ void CEditorActionEnvelopeEditPoint::Redo()
 
 void CEditorActionEnvelopeEditPoint::Apply(int Value)
 {
+	auto pEnvelope = Map()->m_vpEnvelopes[m_EnvelopeIndex];
+
 	if(m_EditType == EEditType::VALUE)
 	{
-		m_pEnv->m_vPoints[m_PointIndex].m_aValues[m_Channel] = Value;
+		pEnvelope->m_vPoints[m_PointIndex].m_aValues[m_Channel] = Value;
 
-		if(m_pEnv->GetChannels() == 4)
+		if(pEnvelope->GetChannels() == 4)
 		{
-			Editor()->m_ColorPickerPopupContext.m_RgbaColor = m_pEnv->m_vPoints[m_PointIndex].ColorValue();
+			Editor()->m_ColorPickerPopupContext.m_RgbaColor = pEnvelope->m_vPoints[m_PointIndex].ColorValue();
 			Editor()->m_ColorPickerPopupContext.m_HslaColor = color_cast<ColorHSLA>(Editor()->m_ColorPickerPopupContext.m_RgbaColor);
 			Editor()->m_ColorPickerPopupContext.m_HsvaColor = color_cast<ColorHSVA>(Editor()->m_ColorPickerPopupContext.m_HslaColor);
 		}
 	}
 	else if(m_EditType == EEditType::CURVE_TYPE)
 	{
-		m_pEnv->m_vPoints[m_PointIndex].m_Curvetype = Value;
+		pEnvelope->m_vPoints[m_PointIndex].m_Curvetype = Value;
 	}
 
 	Map()->OnModify();
@@ -1605,10 +1647,10 @@ void CEditorActionEnvelopeEditPoint::Apply(int Value)
 
 // ----
 
-CEditorActionEditEnvelopePointValue::CEditorActionEditEnvelopePointValue(CEditorMap *pMap, int EnvIndex, int PointIndex, int Channel, EType Type, CFixedTime OldTime, int OldValue, CFixedTime NewTime, int NewValue) :
-	IEditorAction(pMap), m_EnvIndex(EnvIndex), m_PtIndex(PointIndex), m_Channel(Channel), m_Type(Type), m_OldTime(OldTime), m_OldValue(OldValue), m_NewTime(NewTime), m_NewValue(NewValue)
+CEditorActionEditEnvelopePointValue::CEditorActionEditEnvelopePointValue(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, int Channel, EType Type, CFixedTime OldTime, int OldValue, CFixedTime NewTime, int NewValue) :
+	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Channel(Channel), m_Type(Type), m_OldTime(OldTime), m_OldValue(OldValue), m_NewTime(NewTime), m_NewValue(NewValue)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑点 %d%s 数值（包络线 %d，通道 %d）", PointIndex, m_Type == EType::TANGENT_IN ? "入切线" : (m_Type == EType::TANGENT_OUT ? "出切线" : ""), m_EnvIndex, m_Channel);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), "编辑点 %d%s 数值（包络线 %d，通道 %d）", PointIndex, m_Type == EType::TANGENT_IN ? "入切线" : (m_Type == EType::TANGENT_OUT ? "出切线" : ""), m_EnvelopeIndex, m_Channel);
 }
 
 void CEditorActionEditEnvelopePointValue::Undo()
@@ -1626,106 +1668,62 @@ void CEditorActionEditEnvelopePointValue::Apply(bool Undo)
 	float CurrentValue = fx2f(Undo ? m_OldValue : m_NewValue);
 	CFixedTime CurrentTime = (Undo ? m_OldTime : m_NewTime);
 
-	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvIndex];
+	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvelopeIndex];
 	if(m_Type == EType::TANGENT_IN)
 	{
-		pEnvelope->m_vPoints[m_PtIndex].m_Bezier.m_aInTangentDeltaX[m_Channel] = std::min(CurrentTime - pEnvelope->m_vPoints[m_PtIndex].m_Time, CFixedTime(0));
-		pEnvelope->m_vPoints[m_PtIndex].m_Bezier.m_aInTangentDeltaY[m_Channel] = f2fx(CurrentValue) - pEnvelope->m_vPoints[m_PtIndex].m_aValues[m_Channel];
+		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aInTangentDeltaX[m_Channel] = std::min(CurrentTime - pEnvelope->m_vPoints[m_PointIndex].m_Time, CFixedTime(0));
+		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aInTangentDeltaY[m_Channel] = f2fx(CurrentValue) - pEnvelope->m_vPoints[m_PointIndex].m_aValues[m_Channel];
 	}
 	else if(m_Type == EType::TANGENT_OUT)
 	{
-		pEnvelope->m_vPoints[m_PtIndex].m_Bezier.m_aOutTangentDeltaX[m_Channel] = std::max(CurrentTime - pEnvelope->m_vPoints[m_PtIndex].m_Time, CFixedTime(0));
-		pEnvelope->m_vPoints[m_PtIndex].m_Bezier.m_aOutTangentDeltaY[m_Channel] = f2fx(CurrentValue) - pEnvelope->m_vPoints[m_PtIndex].m_aValues[m_Channel];
+		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aOutTangentDeltaX[m_Channel] = std::max(CurrentTime - pEnvelope->m_vPoints[m_PointIndex].m_Time, CFixedTime(0));
+		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aOutTangentDeltaY[m_Channel] = f2fx(CurrentValue) - pEnvelope->m_vPoints[m_PointIndex].m_aValues[m_Channel];
 	}
 	else
 	{
 		if(pEnvelope->GetChannels() == 1 || pEnvelope->GetChannels() == 4)
 			CurrentValue = std::clamp(CurrentValue, 0.0f, 1.0f);
-		pEnvelope->m_vPoints[m_PtIndex].m_aValues[m_Channel] = f2fx(CurrentValue);
+		pEnvelope->m_vPoints[m_PointIndex].m_aValues[m_Channel] = f2fx(CurrentValue);
 
-		if(m_PtIndex != 0)
+		if(m_PointIndex != 0)
 		{
-			pEnvelope->m_vPoints[m_PtIndex].m_Time = CurrentTime;
+			pEnvelope->m_vPoints[m_PointIndex].m_Time = CurrentTime;
 
-			if(pEnvelope->m_vPoints[m_PtIndex].m_Time < pEnvelope->m_vPoints[m_PtIndex - 1].m_Time)
-				pEnvelope->m_vPoints[m_PtIndex].m_Time = pEnvelope->m_vPoints[m_PtIndex - 1].m_Time + CFixedTime(1);
-			if(static_cast<size_t>(m_PtIndex) + 1 != pEnvelope->m_vPoints.size() && pEnvelope->m_vPoints[m_PtIndex].m_Time > pEnvelope->m_vPoints[m_PtIndex + 1].m_Time)
-				pEnvelope->m_vPoints[m_PtIndex].m_Time = pEnvelope->m_vPoints[m_PtIndex + 1].m_Time - CFixedTime(1);
+			if(pEnvelope->m_vPoints[m_PointIndex].m_Time < pEnvelope->m_vPoints[m_PointIndex - 1].m_Time)
+				pEnvelope->m_vPoints[m_PointIndex].m_Time = pEnvelope->m_vPoints[m_PointIndex - 1].m_Time + CFixedTime(1);
+			if(static_cast<size_t>(m_PointIndex) + 1 != pEnvelope->m_vPoints.size() && pEnvelope->m_vPoints[m_PointIndex].m_Time > pEnvelope->m_vPoints[m_PointIndex + 1].m_Time)
+				pEnvelope->m_vPoints[m_PointIndex].m_Time = pEnvelope->m_vPoints[m_PointIndex + 1].m_Time - CFixedTime(1);
 		}
 		else
 		{
-			pEnvelope->m_vPoints[m_PtIndex].m_Time = CFixedTime(0);
+			pEnvelope->m_vPoints[m_PointIndex].m_Time = CFixedTime(0);
 		}
 	}
 
 	Map()->OnModify();
-	Editor()->m_UpdateEnvPointInfo = true;
+	Map()->m_UpdateEnvPointInfo = true;
 }
 
 // ---------------------
 
-CEditorActionResetEnvelopePointTangent::CEditorActionResetEnvelopePointTangent(CEditorMap *pMap, int EnvIndex, int PointIndex, int Channel, bool In) :
-	IEditorAction(pMap), m_EnvIndex(EnvIndex), m_PointIndex(PointIndex), m_Channel(Channel), m_In(In)
+CEditorActionResetEnvelopePointTangent::CEditorActionResetEnvelopePointTangent(CEditorMap *pMap, int EnvelopeIndex, int PointIndex, int Channel, bool In, CFixedTime OldTime, int OldValue) :
+	CEditorActionEditEnvelopePointValue(pMap, EnvelopeIndex, PointIndex, Channel, In ? EType::TANGENT_IN : EType::TANGENT_OUT, OldTime, OldValue, CFixedTime(0), 0)
 {
-	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[EnvIndex];
-	if(In)
-	{
-		m_OldTime = pEnvelope->m_vPoints[PointIndex].m_Bezier.m_aInTangentDeltaX[Channel];
-		m_OldValue = pEnvelope->m_vPoints[PointIndex].m_Bezier.m_aInTangentDeltaY[Channel];
-	}
-	else
-	{
-		m_OldTime = pEnvelope->m_vPoints[PointIndex].m_Bezier.m_aOutTangentDeltaX[Channel];
-		m_OldValue = pEnvelope->m_vPoints[PointIndex].m_Bezier.m_aOutTangentDeltaY[Channel];
-	}
-
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "重置点 %d（包络线 %d）切线%s", m_PointIndex, m_EnvIndex, m_In ? "入" : "出");
-}
-
-void CEditorActionResetEnvelopePointTangent::Undo()
-{
-	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvIndex];
-	if(m_In)
-	{
-		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aInTangentDeltaX[m_Channel] = m_OldTime;
-		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aInTangentDeltaY[m_Channel] = m_OldValue;
-	}
-	else
-	{
-		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aOutTangentDeltaX[m_Channel] = m_OldTime;
-		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aOutTangentDeltaY[m_Channel] = m_OldValue;
-	}
-	Map()->OnModify();
-}
-
-void CEditorActionResetEnvelopePointTangent::Redo()
-{
-	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvIndex];
-	if(m_In)
-	{
-		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aInTangentDeltaX[m_Channel] = CFixedTime(0);
-		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aInTangentDeltaY[m_Channel] = 0.0f;
-	}
-	else
-	{
-		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aOutTangentDeltaX[m_Channel] = CFixedTime(0);
-		pEnvelope->m_vPoints[m_PointIndex].m_Bezier.m_aOutTangentDeltaY[m_Channel] = 0.0f;
-	}
-	Map()->OnModify();
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), "重置点 %d（包络线 %d）切线%s", PointIndex, EnvelopeIndex, In ? "入" : "出");
 }
 
 // ------------------
 
-CEditorActionAddEnvelopePoint::CEditorActionAddEnvelopePoint(CEditorMap *pMap, int EnvIndex, CFixedTime Time, ColorRGBA Channels) :
-	IEditorAction(pMap), m_EnvIndex(EnvIndex), m_Time(Time), m_Channels(Channels)
+CEditorActionAddEnvelopePoint::CEditorActionAddEnvelopePoint(CEditorMap *pMap, int EnvelopeIndex, CFixedTime Time, ColorRGBA Channels) :
+	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_Time(Time), m_Channels(Channels)
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "在包络线 %d 的时间 %f 处新增点", m_EnvIndex, Time.AsSeconds());
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), "在包络线 %d 的时间 %f 处新增点", m_EnvelopeIndex, Time.AsSeconds());
 }
 
 void CEditorActionAddEnvelopePoint::Undo()
 {
 	// Delete added point
-	auto pEnvelope = Map()->m_vpEnvelopes[m_EnvIndex];
+	auto pEnvelope = Map()->m_vpEnvelopes[m_EnvelopeIndex];
 	auto pIt = std::find_if(pEnvelope->m_vPoints.begin(), pEnvelope->m_vPoints.end(), [this](const CEnvPoint_runtime &Point) {
 		return Point.m_Time == m_Time;
 	});
@@ -1739,21 +1737,21 @@ void CEditorActionAddEnvelopePoint::Undo()
 
 void CEditorActionAddEnvelopePoint::Redo()
 {
-	auto pEnvelope = Map()->m_vpEnvelopes[m_EnvIndex];
+	auto pEnvelope = Map()->m_vpEnvelopes[m_EnvelopeIndex];
 	pEnvelope->AddPoint(m_Time, {f2fx(m_Channels.r), f2fx(m_Channels.g), f2fx(m_Channels.b), f2fx(m_Channels.a)});
 
 	Map()->OnModify();
 }
 
-CEditorActionDeleteEnvelopePoint::CEditorActionDeleteEnvelopePoint(CEditorMap *pMap, int EnvIndex, int PointIndex) :
-	IEditorAction(pMap), m_EnvIndex(EnvIndex), m_PointIndex(PointIndex), m_Point(Map()->m_vpEnvelopes[EnvIndex]->m_vPoints[PointIndex])
+CEditorActionDeleteEnvelopePoint::CEditorActionDeleteEnvelopePoint(CEditorMap *pMap, int EnvelopeIndex, int PointIndex) :
+	IEditorAction(pMap), m_EnvelopeIndex(EnvelopeIndex), m_PointIndex(PointIndex), m_Point(Map()->m_vpEnvelopes[EnvelopeIndex]->m_vPoints[PointIndex])
 {
-	str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除点 %d（包络线 %d）", m_PointIndex, m_EnvIndex);
+	str_format(m_aDisplayText, sizeof(m_aDisplayText), "删除点 %d（包络线 %d）", m_PointIndex, m_EnvelopeIndex);
 }
 
 void CEditorActionDeleteEnvelopePoint::Undo()
 {
-	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvIndex];
+	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvelopeIndex];
 	pEnvelope->m_vPoints.insert(pEnvelope->m_vPoints.begin() + m_PointIndex, m_Point);
 
 	Map()->OnModify();
@@ -1761,15 +1759,15 @@ void CEditorActionDeleteEnvelopePoint::Undo()
 
 void CEditorActionDeleteEnvelopePoint::Redo()
 {
-	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvIndex];
+	std::shared_ptr<CEnvelope> pEnvelope = Map()->m_vpEnvelopes[m_EnvelopeIndex];
 	pEnvelope->m_vPoints.erase(pEnvelope->m_vPoints.begin() + m_PointIndex);
 
-	auto pSelectedPointIt = std::find_if(Editor()->m_vSelectedEnvelopePoints.begin(), Editor()->m_vSelectedEnvelopePoints.end(), [this](const std::pair<int, int> Pair) {
+	auto pSelectedPointIt = std::find_if(Map()->m_vSelectedEnvelopePoints.begin(), Map()->m_vSelectedEnvelopePoints.end(), [this](const std::pair<int, int> &Pair) {
 		return Pair.first == m_PointIndex;
 	});
 
-	if(pSelectedPointIt != Editor()->m_vSelectedEnvelopePoints.end())
-		Editor()->m_vSelectedEnvelopePoints.erase(pSelectedPointIt);
+	if(pSelectedPointIt != Map()->m_vSelectedEnvelopePoints.end())
+		Map()->m_vSelectedEnvelopePoints.erase(pSelectedPointIt);
 
 	Map()->OnModify();
 }
@@ -1824,7 +1822,7 @@ void CEditorActionDeleteSoundSource::Undo()
 {
 	std::shared_ptr<CLayerSounds> pLayerSounds = std::static_pointer_cast<CLayerSounds>(m_pLayer);
 	pLayerSounds->m_vSources.insert(pLayerSounds->m_vSources.begin() + m_SourceIndex, m_Source);
-	Editor()->m_SelectedSource = m_SourceIndex;
+	Map()->m_SelectedSoundSource = m_SourceIndex;
 	Map()->OnModify();
 }
 
@@ -1832,7 +1830,7 @@ void CEditorActionDeleteSoundSource::Redo()
 {
 	std::shared_ptr<CLayerSounds> pLayerSounds = std::static_pointer_cast<CLayerSounds>(m_pLayer);
 	pLayerSounds->m_vSources.erase(pLayerSounds->m_vSources.begin() + m_SourceIndex);
-	Editor()->m_SelectedSource--;
+	Map()->m_SelectedSoundSource--;
 	Map()->OnModify();
 }
 

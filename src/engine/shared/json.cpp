@@ -126,6 +126,7 @@ char *EscapeJson(char *pBuffer, int BufferSize, const char *pString)
 {
 	dbg_assert(str_utf8_check(pString), "invalid UTF-8 in string");
 	dbg_assert(BufferSize > 0, "can't null-terminate the string");
+	dbg_assert(str_utf8_check(pString), "invalid UTF-8 in string");
 	// Subtract the space for null termination early.
 	BufferSize--;
 

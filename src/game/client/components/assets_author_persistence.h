@@ -1,8 +1,8 @@
 #ifndef GAME_CLIENT_COMPONENTS_ASSETS_AUTHOR_PERSISTENCE_H
 #define GAME_CLIENT_COMPONENTS_ASSETS_AUTHOR_PERSISTENCE_H
 
-#include "background.h"
 #include "assets_resource_registry.h"
+#include "background.h"
 
 #include <string>
 

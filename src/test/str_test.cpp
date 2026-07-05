@@ -1,4 +1,6 @@
-#include <base/system.h>
+#include <base/mem.h>
+#include <base/str.h>
+#include <base/windows.h>
 
 #include <engine/server/server.h>
 
@@ -1010,6 +1012,9 @@ TEST(Str, TimeFloat)
 
 	EXPECT_EQ(str_time_float(22.995, TIME_MINS, aBuf, sizeof(aBuf)), 5);
 	EXPECT_STREQ(aBuf, "00:22");
+
+	EXPECT_EQ(str_time_float(36000000.0f, TIME_HOURS_CENTISECS, aBuf, sizeof(aBuf)), 14);
+	EXPECT_STREQ(aBuf, "10000:00:00.00");
 }
 
 TEST(Str, HasCc)

@@ -1,7 +1,6 @@
 #include "test.h"
 
 #include <base/logger.h>
-#include <base/system.h>
 #include <base/types.h>
 
 #include <engine/engine.h>
@@ -109,10 +108,7 @@ public:
 		m_pServer->m_pPersistentData = malloc(GameServer()->PersistentDataSize());
 		EXPECT_NE(m_pServer->LoadMap("coverage"), 0);
 
-		if(!pServer->m_Http.Init(std::chrono::seconds{2}))
-		{
-			log_error("server", "Failed to initialize the HTTP client.");
-		}
+		EXPECT_TRUE(pServer->m_Http.Init(std::chrono::seconds{2})) << "Failed to initialize the HTTP client";
 
 		pServer->m_NetServer.SetCallbacks(
 			CServer::NewClientCallback,
@@ -295,7 +291,7 @@ TEST_F(CTestGameWorld, CharacterEmote)
 
 	// ninja jetpack
 	pPlayer->Pause(CPlayer::PAUSE_NONE, true);
-	pChr->UnFreeze();
+	pChr->Unfreeze();
 	pPlayer->m_NinjaJetpack = true;
 	pChr->m_NinjaJetpack = true;
 	pChr->SetJetpack(true);

@@ -1,10 +1,10 @@
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_QMCLIENT_UTILS_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_QMCLIENT_UTILS_H
 
+#include <engine/shared/client_brand.h>
+
 #include <string>
 #include <vector>
-
-#include <engine/shared/client_brand.h>
 
 typedef struct _json_value json_value;
 

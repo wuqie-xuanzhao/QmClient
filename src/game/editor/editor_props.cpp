@@ -34,17 +34,18 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		if(pProps[i].m_Type == PROPTYPE_INT)
 		{
 			CUIRect Inc, Dec;
-			char aBuf[64];
 
 			Shifter.VSplitRight(10.0f, &Shifter, &Inc);
 			Shifter.VSplitLeft(10.0f, &Dec, &Shifter);
-			str_format(aBuf, sizeof(aBuf), "%d", pProps[i].m_Value);
 			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0, pColor);
 			int NewValue = NewValueRes.m_Value;
 			if(NewValue != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
 				*pNewVal = NewValue;
-				Change = i;
+				if(NewValueRes.m_State != EEditState::NONE)
+				{
+					Change = i;
+				}
 				State = NewValueRes.m_State;
 			}
 			if(DoButton_FontIcon((char *)&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "减小值.", IGraphics::CORNER_L, 7.0f))
@@ -84,28 +85,31 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			Shifter.VSplitLeft(10.0f, &Dec, &Shifter);
 			const bool Shift = Input()->ShiftIsPressed();
 			int Step = Shift ? 1 : 45;
-			int Value = pProps[i].m_Value;
 
-			auto NewValueRes = UiDoValueSelector(&pIds[i], &Shifter, "", Value, pProps[i].m_Min, pProps[i].m_Max, Shift ? 1 : 45, Shift ? 1.0f : 10.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0);
+			auto NewValueRes = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, Shift ? 1 : 45, Shift ? 1.0f : 10.0f, "使用鼠标左键拖动以更改值. 按住shift键更精确. 右键以文本形式编辑.", false, false, 0);
 			int NewValue = NewValueRes.m_Value;
 			if(DoButton_FontIcon(&pIds[i] + 1, FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, "减小值.", IGraphics::CORNER_L, 7.0f))
 			{
 				NewValue = (std::ceil((pProps[i].m_Value / (float)Step)) - 1) * Step;
 				if(NewValue < 0)
 					NewValue += 360;
-				State = EEditState::ONE_GO;
+				NewValueRes.m_State = EEditState::ONE_GO;
 			}
 			if(DoButton_FontIcon(&pIds[i] + 2, FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, "增加值.", IGraphics::CORNER_R, 7.0f))
 			{
 				NewValue = (pProps[i].m_Value + Step) / Step * Step;
-				State = EEditState::ONE_GO;
+				NewValueRes.m_State = EEditState::ONE_GO;
 			}
 
 			if(NewValue != pProps[i].m_Value || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
 				*pNewVal = NewValue % 360;
-				Change = i;
-				State = NewValueRes.m_State;
+				if(NewValueRes.m_State != EEditState::NONE)
+				{
+					Change = i;
+				}
+				if(State != EEditState::ONE_GO)
+					State = NewValueRes.m_State;
 			}
 		}
 		else if(pProps[i].m_Type == PROPTYPE_COLOR)
@@ -115,7 +119,10 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				if(NewValue != pProps[i].m_Value || m_ColorPickerPopupContext.m_State != EEditState::EDITING)
 				{
 					*pNewVal = NewValue;
-					Change = i;
+					if(m_ColorPickerPopupContext.m_State != EEditState::NONE)
+					{
+						Change = i;
+					}
 					State = m_ColorPickerPopupContext.m_State;
 				}
 			};
@@ -127,15 +134,15 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			if(pProps[i].m_Value < 0)
 				pName = "无";
 			else
-				pName = m_Map.m_vpImages[pProps[i].m_Value]->m_aName;
+				pName = Map()->m_vpImages[pProps[i].m_Value]->m_aName;
 
 			if(DoButton_Ex(&pIds[i], pName, 0, &Shifter, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL))
 				PopupSelectImageInvoke(pProps[i].m_Value, Ui()->MouseX(), Ui()->MouseY());
 
-			int r = PopupSelectImageResult();
-			if(r >= -1)
+			int Result = PopupSelectImageResult();
+			if(Result >= -1)
 			{
-				*pNewVal = r;
+				*pNewVal = Result;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
@@ -183,15 +190,15 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			if(pProps[i].m_Value < 0)
 				pName = "无";
 			else
-				pName = m_Map.m_vpSounds[pProps[i].m_Value]->m_aName;
+				pName = Map()->m_vpSounds[pProps[i].m_Value]->m_aName;
 
 			if(DoButton_Ex(&pIds[i], pName, 0, &Shifter, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL))
 				PopupSelectSoundInvoke(pProps[i].m_Value, Ui()->MouseX(), Ui()->MouseY());
 
-			int r = PopupSelectSoundResult();
-			if(r >= -1)
+			int Result = PopupSelectSoundResult();
+			if(Result >= -1)
 			{
-				*pNewVal = r;
+				*pNewVal = Result;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
@@ -199,18 +206,18 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 		else if(pProps[i].m_Type == PROPTYPE_AUTOMAPPER)
 		{
 			const char *pName;
-			if(pProps[i].m_Value < 0 || pProps[i].m_Min < 0 || pProps[i].m_Min >= (int)m_Map.m_vpImages.size())
+			if(pProps[i].m_Value < 0 || pProps[i].m_Min < 0 || pProps[i].m_Min >= (int)Map()->m_vpImages.size())
 				pName = "无";
 			else
-				pName = m_Map.m_vpImages[pProps[i].m_Min]->m_AutoMapper.GetConfigName(pProps[i].m_Value);
+				pName = Map()->m_vpImages[pProps[i].m_Min]->m_AutoMapper.GetConfigName(pProps[i].m_Value);
 
 			if(DoButton_Ex(&pIds[i], pName, 0, &Shifter, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL))
 				PopupSelectConfigAutoMapInvoke(pProps[i].m_Value, Ui()->MouseX(), Ui()->MouseY());
 
-			int r = PopupSelectConfigAutoMapResult();
-			if(r >= -1)
+			int Result = PopupSelectConfigAutoMapResult();
+			if(Result >= -1)
 			{
-				*pNewVal = r;
+				*pNewVal = Result;
 				Change = i;
 				State = EEditState::ONE_GO;
 			}
@@ -243,13 +250,13 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 			Shifter.VSplitRight(10.0f, &Shifter, &Inc);
 			Shifter.VSplitLeft(10.0f, &Dec, &Shifter);
 
-			if(CurValue <= 0 || CurValue > (int)m_Map.m_vpEnvelopes.size())
+			if(CurValue <= 0 || CurValue > (int)Map()->m_vpEnvelopes.size())
 			{
 				str_copy(aBuf, "无:");
 			}
-			else if(m_Map.m_vpEnvelopes[CurValue - 1]->m_aName[0])
+			else if(Map()->m_vpEnvelopes[CurValue - 1]->m_aName[0])
 			{
-				str_format(aBuf, sizeof(aBuf), "%s:", m_Map.m_vpEnvelopes[CurValue - 1]->m_aName);
+				str_format(aBuf, sizeof(aBuf), "%s:", Map()->m_vpEnvelopes[CurValue - 1]->m_aName);
 				if(!str_endswith(aBuf, ":"))
 				{
 					aBuf[sizeof(aBuf) - 2] = ':';
@@ -261,12 +268,15 @@ SEditResult<E> CEditor::DoPropertiesWithState(CUIRect *pToolBox, CProperty *pPro
 				aBuf[0] = '\0';
 			}
 
-			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, aBuf, CurValue, 0, m_Map.m_vpEnvelopes.size(), 1, 1.0f, "选择包络线.", false, false, IGraphics::CORNER_NONE);
+			auto NewValueRes = UiDoValueSelector((char *)&pIds[i], &Shifter, aBuf, CurValue, 0, Map()->m_vpEnvelopes.size(), 1, 1.0f, "选择包络线.", false, false, IGraphics::CORNER_NONE);
 			int NewVal = NewValueRes.m_Value;
 			if(NewVal != CurValue || (NewValueRes.m_State != EEditState::NONE && NewValueRes.m_State != EEditState::EDITING))
 			{
 				*pNewVal = NewVal;
-				Change = i;
+				if(NewValueRes.m_State != EEditState::NONE)
+				{
+					Change = i;
+				}
 				State = NewValueRes.m_State;
 			}
 

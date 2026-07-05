@@ -8,73 +8,74 @@
 
 using namespace std::chrono_literals;
 
-namespace {
-
-void InitNetBase()
+namespace
 {
-	static bool s_Initialized = false;
-	if(!s_Initialized)
+
+	void InitNetBase()
 	{
-		CNetBase::Init();
-		s_Initialized = true;
+		static bool s_Initialized = false;
+		if(!s_Initialized)
+		{
+			CNetBase::Init();
+			s_Initialized = true;
+		}
 	}
-}
 
-unsigned char *PackTestChunk(CNetPacketConstruct *pPacket, int Flags, int DataSize, const unsigned char *pData, bool Sixup)
-{
-	CNetChunkHeader Header;
-	Header.m_Flags = Flags;
-	Header.m_Size = DataSize;
-	Header.m_Sequence = (Flags & NET_CHUNKFLAG_VITAL) ? 17 : -1;
-	unsigned char *pChunkData = Header.Pack(pPacket->m_aChunkData + pPacket->m_DataSize, Sixup ? 6 : 4);
-	mem_copy(pChunkData, pData, DataSize);
-	pPacket->m_DataSize = (int)(pChunkData + DataSize - pPacket->m_aChunkData);
-	pPacket->m_NumChunks++;
-	return pChunkData;
-}
+	unsigned char *PackTestChunk(CNetPacketConstruct *pPacket, int Flags, int DataSize, const unsigned char *pData, bool Sixup, int Sequence = 17)
+	{
+		CNetChunkHeader Header;
+		Header.m_Flags = Flags;
+		Header.m_Size = DataSize;
+		Header.m_Sequence = (Flags & NET_CHUNKFLAG_VITAL) ? Sequence : -1;
+		unsigned char *pChunkData = Header.Pack(pPacket->m_aChunkData + pPacket->m_DataSize, Sixup ? 6 : 4);
+		mem_copy(pChunkData, pData, DataSize);
+		pPacket->m_DataSize = (int)(pChunkData + DataSize - pPacket->m_aChunkData);
+		pPacket->m_NumChunks++;
+		return pChunkData;
+	}
 
-CNetPacketConstruct BuildTestPacket(bool Sixup)
-{
-	CNetPacketConstruct Packet;
-	mem_zero(&Packet, sizeof(Packet));
-	Packet.m_Flags = 0;
-	Packet.m_Ack = 234;
-	const unsigned char aChunk1[] = {'h', 'e', 'l', 'l', 'o'};
-	const unsigned char aChunk2[] = {'s', 'n', 'a', 'p'};
-	PackTestChunk(&Packet, NET_CHUNKFLAG_VITAL, sizeof(aChunk1), aChunk1, Sixup);
-	PackTestChunk(&Packet, 0, sizeof(aChunk2), aChunk2, Sixup);
-	return Packet;
-}
+	CNetPacketConstruct BuildTestPacket(bool Sixup)
+	{
+		CNetPacketConstruct Packet;
+		mem_zero(&Packet, sizeof(Packet));
+		Packet.m_Flags = 0;
+		Packet.m_Ack = 234;
+		const unsigned char aChunk1[] = {'h', 'e', 'l', 'l', 'o'};
+		const unsigned char aChunk2[] = {'s', 'n', 'a', 'p'};
+		PackTestChunk(&Packet, NET_CHUNKFLAG_VITAL, sizeof(aChunk1), aChunk1, Sixup);
+		PackTestChunk(&Packet, 0, sizeof(aChunk2), aChunk2, Sixup);
+		return Packet;
+	}
 
-void ExpectPacketRoundtrip(const CNetPacketConstruct &Original, SECURITY_TOKEN SecurityToken, bool Sixup)
-{
-	CNetPacketConstruct Packet = Original;
-	unsigned char aBuffer[NET_MAX_PACKETSIZE];
-	const int PackedSize = CNetBase::PackPacket(aBuffer, sizeof(aBuffer), &Packet, SecurityToken, Sixup);
-	ASSERT_GT(PackedSize, 0);
+	void ExpectPacketRoundtrip(const CNetPacketConstruct &Original, SECURITY_TOKEN SecurityToken, bool Sixup)
+	{
+		CNetPacketConstruct Packet = Original;
+		unsigned char aBuffer[NET_MAX_PACKETSIZE];
+		const int PackedSize = CNetBase::PackPacket(aBuffer, sizeof(aBuffer), &Packet, SecurityToken, Sixup);
+		ASSERT_GT(PackedSize, 0);
 
-	CNetPacketConstruct Unpacked;
-	bool UnpackedSixup = Sixup;
-	SECURITY_TOKEN UnpackedToken = NET_SECURITY_TOKEN_UNKNOWN;
-	SECURITY_TOKEN ResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
-	ASSERT_EQ(CNetBase::UnpackPacket(aBuffer, PackedSize, &Unpacked, UnpackedSixup, &UnpackedToken, &ResponseToken), 0);
-	EXPECT_EQ(UnpackedSixup, Sixup);
-	EXPECT_EQ(Unpacked.m_Flags & ~NET_PACKETFLAG_COMPRESSION, Original.m_Flags);
-	EXPECT_EQ(Unpacked.m_Ack, Original.m_Ack);
-	EXPECT_EQ(Unpacked.m_NumChunks, Original.m_NumChunks);
-	EXPECT_EQ(Unpacked.m_DataSize, Original.m_DataSize);
-	EXPECT_EQ(mem_comp(Unpacked.m_aChunkData, Original.m_aChunkData, Original.m_DataSize), 0);
-	if(Sixup)
-		EXPECT_EQ(UnpackedToken, SecurityToken);
-}
+		CNetPacketConstruct Unpacked;
+		bool UnpackedSixup = Sixup;
+		SECURITY_TOKEN UnpackedToken = NET_SECURITY_TOKEN_UNKNOWN;
+		SECURITY_TOKEN ResponseToken = NET_SECURITY_TOKEN_UNKNOWN;
+		ASSERT_EQ(CNetBase::UnpackPacket(aBuffer, PackedSize, &Unpacked, UnpackedSixup, &UnpackedToken, &ResponseToken), 0);
+		EXPECT_EQ(UnpackedSixup, Sixup);
+		EXPECT_EQ(Unpacked.m_Flags & ~NET_PACKETFLAG_COMPRESSION, Original.m_Flags);
+		EXPECT_EQ(Unpacked.m_Ack, Original.m_Ack);
+		EXPECT_EQ(Unpacked.m_NumChunks, Original.m_NumChunks);
+		EXPECT_EQ(Unpacked.m_DataSize, Original.m_DataSize);
+		EXPECT_EQ(mem_comp(Unpacked.m_aChunkData, Original.m_aChunkData, Original.m_DataSize), 0);
+		if(Sixup)
+			EXPECT_EQ(UnpackedToken, SecurityToken);
+	}
 
-NETSOCKET BindUdpSocket(int Port)
-{
-	NETADDR BindAddr = {};
-	BindAddr.type = NETTYPE_IPV4;
-	BindAddr.port = Port;
-	return net_udp_create(BindAddr);
-}
+	NETSOCKET BindUdpSocket(int Port)
+	{
+		NETADDR BindAddr = {};
+		BindAddr.type = NETTYPE_IPV4;
+		BindAddr.port = Port;
+		return net_udp_create(BindAddr);
+	}
 
 } // namespace
 
@@ -88,7 +89,7 @@ TEST(Net, Ipv4AndIpv6Work)
 	Socket2 = net_udp_create(Bindaddr);
 	do
 	{
-		Bindaddr.port = secure_rand() % 64511 + 1024;
+		Bindaddr.port = secure_rand_below(65535 - 1024) + 1024;
 	} while(!(Socket1 = net_udp_create(Bindaddr)));
 
 	NETADDR LocalhostV4;
@@ -148,6 +149,53 @@ TEST(Net, PackPacketRejectsTooSmallBuffer)
 	EXPECT_EQ(CNetBase::PackPacket(aBuffer, sizeof(aBuffer), &Packet, NET_SECURITY_TOKEN_UNSUPPORTED), -1);
 }
 
+TEST(Net, PacketChunkUnpackerSkipsOldVitalChunk)
+{
+	CNetPacketConstruct Packet;
+	mem_zero(&Packet, sizeof(Packet));
+	const unsigned char aOldVital[] = {'o', 'l', 'd'};
+	const unsigned char aNextChunk[] = {'n', 'e', 'x', 't'};
+	PackTestChunk(&Packet, NET_CHUNKFLAG_VITAL, sizeof(aOldVital), aOldVital, false, 0);
+	PackTestChunk(&Packet, 0, sizeof(aNextChunk), aNextChunk, false);
+
+	NETADDR Addr = {};
+	Addr.type = NETTYPE_IPV4;
+	CNetConnection Connection;
+	Connection.DirectInit(Addr, NET_SECURITY_TOKEN_UNSUPPORTED, NET_TOKEN_NONE, false);
+
+	CPacketChunkUnpacker Unpacker;
+	Unpacker.FeedPacket(Addr, Packet, &Connection, 0);
+
+	CNetChunk Chunk;
+	ASSERT_TRUE(Unpacker.UnpackNextChunk(&Chunk));
+	EXPECT_EQ(Chunk.m_DataSize, (int)sizeof(aNextChunk));
+	EXPECT_EQ(mem_comp(Chunk.m_pData, aNextChunk, sizeof(aNextChunk)), 0);
+	EXPECT_FALSE(Unpacker.UnpackNextChunk(&Chunk));
+}
+
+TEST(Net, PacketChunkUnpackerRejectsMissingDeclaredChunk)
+{
+	CNetPacketConstruct Packet;
+	mem_zero(&Packet, sizeof(Packet));
+	const unsigned char aChunk[] = {'o', 'n', 'e'};
+	PackTestChunk(&Packet, 0, sizeof(aChunk), aChunk, false);
+	Packet.m_NumChunks++;
+
+	NETADDR Addr = {};
+	Addr.type = NETTYPE_IPV4;
+	CNetConnection Connection;
+	Connection.DirectInit(Addr, NET_SECURITY_TOKEN_UNSUPPORTED, NET_TOKEN_NONE, false);
+
+	CPacketChunkUnpacker Unpacker;
+	Unpacker.FeedPacket(Addr, Packet, &Connection, 0);
+
+	CNetChunk Chunk;
+	ASSERT_TRUE(Unpacker.UnpackNextChunk(&Chunk));
+	EXPECT_EQ(Chunk.m_DataSize, (int)sizeof(aChunk));
+	EXPECT_EQ(mem_comp(Chunk.m_pData, aChunk, sizeof(aChunk)), 0);
+	EXPECT_FALSE(Unpacker.UnpackNextChunk(&Chunk));
+}
+
 TEST(Net, KcpHeaderRejectsInvalidPackets)
 {
 	unsigned char aPacket[NET_KCP_HEADER_SIZE + 1] = {'Q', 'K', 'C', 'P', 1, 0, 0, 0, 1, 0};
@@ -192,8 +240,8 @@ TEST(Net, KcpSessionSendsOverUdpAndRoundtripsPacket)
 			net_udp_close(Socket2);
 			Socket2 = nullptr;
 		}
-		Port1 = secure_rand() % 64511 + 1024;
-		Port2 = secure_rand() % 64511 + 1024;
+		Port1 = secure_rand_below(65535 - 1024) + 1024;
+		Port2 = secure_rand_below(65535 - 1024) + 1024;
 		if(Port1 == Port2)
 			continue;
 		Socket1 = BindUdpSocket(Port1);

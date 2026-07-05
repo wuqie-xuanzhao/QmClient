@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include <game/client/components/menus.h>
+
+#include <gtest/gtest.h>
 
 TEST(AssetsEditorLayout, StrongWeakUsesThreeHorizontalSquareSlots)
 {
@@ -197,8 +197,14 @@ TEST(AssetsEditorCompose, ColorOverrideSkipsFullyTransparentPixels)
 	Image.m_Height = 1;
 	Image.m_Format = CImageInfo::FORMAT_RGBA;
 	uint8_t aPixels[] = {
-		255, 255, 255, 255,
-		12, 34, 56, 0,
+		255,
+		255,
+		255,
+		255,
+		12,
+		34,
+		56,
+		0,
 	};
 	Image.m_pData = aPixels;
 

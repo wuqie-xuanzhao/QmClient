@@ -459,7 +459,7 @@ namespace
 
 	const char *GetEffectiveTranslateTarget(const char *pTarget)
 	{
-		return (pTarget && pTarget[0] != '\0') ? pTarget : CConfig::ms_pQmTranslateTarget;
+		return (pTarget && pTarget[0] != '\0') ? pTarget : DefaultConfig::QmTranslateTarget;
 	}
 
 	// 验证语言代码格式
@@ -615,7 +615,7 @@ static void UrlEncode(const char *pText, char *pOut, size_t Length)
 const char *ITranslateBackend::EncodeTarget(const char *pTarget) const
 {
 	if(!pTarget || pTarget[0] == '\0')
-		return CConfig::ms_pQmTranslateTarget;
+		return DefaultConfig::QmTranslateTarget;
 	return pTarget;
 }
 
@@ -896,7 +896,7 @@ public:
 	const char *EncodeTarget(const char *pTarget) const override
 	{
 		if(!pTarget || pTarget[0] == '\0')
-			return CConfig::ms_pQmTranslateTarget;
+			return DefaultConfig::QmTranslateTarget;
 		if(str_comp_nocase(pTarget, "zh-cn") == 0)
 			return "zh";
 		if(str_comp_nocase(pTarget, "zh-tw") == 0)
@@ -1051,7 +1051,7 @@ public:
 	const char *EncodeTarget(const char *pTarget) const override
 	{
 		if(!pTarget || pTarget[0] == '\0')
-			return CConfig::ms_pQmTranslateTarget;
+			return DefaultConfig::QmTranslateTarget;
 		if(str_comp_nocase(pTarget, "zh") == 0)
 			return "zh-cn";
 		return pTarget;

@@ -6,6 +6,7 @@
 
 #include <base/perf_timer.h>
 #include <base/system.h>
+#include <base/windows.h>
 
 #include <engine/client.h>
 #include <engine/console.h>
@@ -722,6 +723,18 @@ static int TranslateMouseWheelEventKey(const SDL_MouseWheelEvent &MouseWheelEven
 	}
 }
 
+#if defined(CONF_PLATFORM_EMSCRIPTEN)
+extern "C" {
+
+// This will be called from Emscripten JS code
+bool EmscriptenQuit = false;
+void EmscriptenCallbackQuit()
+{
+	EmscriptenQuit = true;
+}
+}
+#endif
+
 int CInput::Update()
 {
 	const int64_t Now = time_get();
@@ -746,6 +759,13 @@ int CInput::Update()
 			AddKeyEvent(Key, Flags);
 		}
 	};
+
+#if defined(CONF_PLATFORM_EMSCRIPTEN)
+	if(EmscriptenQuit)
+	{
+		return 1;
+	}
+#endif
 
 	while(SDL_PollEvent(&Event))
 	{
@@ -981,8 +1001,28 @@ void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
 #endif
 }
 
+#if defined(CONF_PLATFORM_EMSCRIPTEN)
+extern "C" {
+
+// This will be called from Emscripten JS code
+char aEmscriptenDropFile[IO_MAX_PATH_LENGTH] = "";
+void EmscriptenCallbackDropFile(const char *pFile)
+{
+	str_copy(aEmscriptenDropFile, pFile);
+}
+}
+#endif
+
 bool CInput::GetDropFile(char *aBuf, int Len)
 {
+#if defined(CONF_PLATFORM_EMSCRIPTEN)
+	if(aEmscriptenDropFile[0] != '\0')
+	{
+		str_copy(aBuf, aEmscriptenDropFile, Len);
+		aEmscriptenDropFile[0] = '\0';
+		return true;
+	}
+#endif
 	if(m_aDropFile[0] != '\0')
 	{
 		str_copy(aBuf, m_aDropFile, Len);

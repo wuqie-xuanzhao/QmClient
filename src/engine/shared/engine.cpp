@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include <base/logger.h>
+#include <base/rust.h>
 #include <base/system.h>
 
 #include <engine/console.h>
@@ -65,6 +66,8 @@ namespace
 				{
 					log_info("engine", "operating system version: %s", aVersionStr);
 				}
+
+				rust_panic_use_dbg_assert();
 
 				// init the network
 				net_init();

@@ -9,6 +9,14 @@
 #define DEFAULT_BTN []() -> int { return -1; }
 
 REGISTER_QUICK_ACTION(
+	ShowHelp,
+	"Show help",
+	[&]() { ShowHelp(); },
+	ALWAYS_FALSE,
+	ALWAYS_FALSE,
+	DEFAULT_BTN,
+	"[F1] Open the DDNet Wiki page for the map editor in a web browser.")
+REGISTER_QUICK_ACTION(
 	ToggleGrid,
 	"切换网格",
 	[&]() { MapView()->MapGrid()->Toggle(); },
@@ -174,7 +182,7 @@ REGISTER_QUICK_ACTION(
 	AddSwitchLayer,
 	"添加开关层",
 	[&]() { AddSwitchLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pSwitchLayer; },
+	[&]() -> bool { return !Map()->SelectedGroup()->m_GameGroup || Map()->m_pSwitchLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的开关层.")
@@ -182,7 +190,7 @@ REGISTER_QUICK_ACTION(
 	AddTuneLayer,
 	"添加调整层",
 	[&]() { AddTuneLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pTuneLayer; },
+	[&]() -> bool { return !Map()->SelectedGroup()->m_GameGroup || Map()->m_pTuneLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的调整层.")
@@ -190,7 +198,7 @@ REGISTER_QUICK_ACTION(
 	AddSpeedupLayer,
 	"添加加速层",
 	[&]() { AddSpeedupLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pSpeedupLayer; },
+	[&]() -> bool { return !Map()->SelectedGroup()->m_GameGroup || Map()->m_pSpeedupLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的加速层.")
@@ -198,7 +206,7 @@ REGISTER_QUICK_ACTION(
 	AddTeleLayer,
 	"添加传送层",
 	[&]() { AddTeleLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pTeleLayer; },
+	[&]() -> bool { return !Map()->SelectedGroup()->m_GameGroup || Map()->m_pTeleLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的传送层.")
@@ -206,7 +214,7 @@ REGISTER_QUICK_ACTION(
 	AddFrontLayer,
 	"添加前景层",
 	[&]() { AddFrontLayer(); },
-	[&]() -> bool { return !GetSelectedGroup()->m_GameGroup || m_Map.m_pFrontLayer; },
+	[&]() -> bool { return !Map()->SelectedGroup()->m_GameGroup || Map()->m_pFrontLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
 	"创建一个新的项目层.")
@@ -219,7 +227,7 @@ REGISTER_QUICK_ACTION(
 	"另存为",
 	[&]() {
 		char aDefaultName[IO_MAX_PATH_LENGTH];
-		fs_split_file_extension(fs_filename(m_aFilename), aDefaultName, sizeof(aDefaultName));
+		fs_split_file_extension(fs_filename(m_Map.m_aFilename), aDefaultName, sizeof(aDefaultName));
 		m_FileBrowser.ShowFileDialog(IStorage::TYPE_SAVE, CFileBrowser::EFileType::MAP, "保存地图", "另存为", "maps", aDefaultName, CallbackSaveMap, this);
 	},
 	ALWAYS_FALSE,
@@ -333,10 +341,10 @@ REGISTER_QUICK_ACTION(
 	"删除层",
 	[&]() { DeleteSelectedLayer(); },
 	[&]() -> bool {
-		std::shared_ptr<CLayer> pCurrentLayer = GetSelectedLayer(0);
+		std::shared_ptr<CLayer> pCurrentLayer = Map()->SelectedLayer(0);
 		if(!pCurrentLayer)
 			return true;
-		return m_Map.m_pGameLayer == pCurrentLayer;
+		return Map()->m_pGameLayer == pCurrentLayer;
 	},
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
@@ -362,7 +370,7 @@ REGISTER_QUICK_ACTION(
 	"添加四边形",
 	[&]() { AddQuadOrSound(); },
 	[&]() -> bool {
-		std::shared_ptr<CLayer> pLayer = GetSelectedLayer(0);
+		std::shared_ptr<CLayer> pLayer = Map()->SelectedLayer(0);
 		if(!pLayer)
 			return false;
 		return pLayer->m_Type != LAYERTYPE_QUADS;
@@ -375,7 +383,7 @@ REGISTER_QUICK_ACTION(
 	"添加声音源",
 	[&]() { AddQuadOrSound(); },
 	[&]() -> bool {
-		std::shared_ptr<CLayer> pLayer = GetSelectedLayer(0);
+		std::shared_ptr<CLayer> pLayer = Map()->SelectedLayer(0);
 		if(!pLayer)
 			return false;
 		return pLayer->m_Type != LAYERTYPE_SOUNDS;

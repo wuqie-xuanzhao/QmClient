@@ -125,7 +125,7 @@ CGhostCharacter *CGhost::CGhostPath::Get(int Index)
 void CGhost::GetPath(char *pBuf, int Size, const char *pPlayerName, int Time) const
 {
 	const char *pMap = Client()->GetCurrentMap();
-	SHA256_DIGEST Sha256 = Client()->GetCurrentMapSha256();
+	SHA256_DIGEST Sha256 = GameClient()->Map()->Sha256();
 	char aSha256[SHA256_MAXSTRSIZE];
 	sha256_str(Sha256, aSha256, sizeof(aSha256));
 
@@ -150,7 +150,7 @@ void CGhost::AddInfos(const CNetObj_Character *pChar, const CNetObj_DDNetCharact
 	if(g_Config.m_ClRaceSaveGhost && !GhostRecorder()->IsRecording() && NumTicks > 0)
 	{
 		GetPath(m_aTmpFilename, sizeof(m_aTmpFilename), m_CurGhost.m_aPlayer);
-		GhostRecorder()->Start(m_aTmpFilename, Client()->GetCurrentMap(), Client()->GetCurrentMapSha256(), m_CurGhost.m_aPlayer);
+		GhostRecorder()->Start(m_aTmpFilename, Client()->GetCurrentMap(), GameClient()->Map()->Sha256(), m_CurGhost.m_aPlayer);
 
 		GhostRecorder()->WriteData(GHOSTDATA_TYPE_START_TICK, &m_CurGhost.m_StartTick, sizeof(int));
 		GhostRecorder()->WriteData(GHOSTDATA_TYPE_SKIN, &m_CurGhost.m_Skin, sizeof(CGhostSkin));
@@ -457,7 +457,7 @@ int CGhost::Load(const char *pFilename)
 	if(Slot == -1)
 		return -1;
 
-	if(!GhostLoader()->Load(pFilename, Client()->GetCurrentMap(), Client()->GetCurrentMapSha256(), Client()->GetCurrentMapCrc()))
+	if(!GhostLoader()->Load(pFilename, Client()->GetCurrentMap(), GameClient()->Map()->Sha256(), GameClient()->Map()->Crc()))
 		return -1;
 
 	const CGhostInfo *pInfo = GhostLoader()->GetInfo();
@@ -471,52 +471,88 @@ int CGhost::Load(const char *pFilename)
 
 	int Index = 0;
 	bool FoundSkin = false;
-	bool NoTick = false;
+	bool FoundCharacterNoTick = false;
+	bool FoundCharacterTick = false;
 	bool Error = false;
 
 	int Type;
-	while(!Error && GhostLoader()->ReadNextType(&Type))
+	while(GhostLoader()->ReadNextType(&Type))
 	{
 		if(Index == pInfo->m_NumTicks && (Type == GHOSTDATA_TYPE_CHARACTER || Type == GHOSTDATA_TYPE_CHARACTER_NO_TICK))
 		{
+			log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read ghost data: too many ghost characters");
 			Error = true;
 			break;
 		}
 
 		if(Type == GHOSTDATA_TYPE_SKIN && !FoundSkin)
 		{
-			FoundSkin = true;
 			if(!GhostLoader()->ReadData(Type, &pGhost->m_Skin, sizeof(CGhostSkin)))
+			{
+				log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read ghost data: failed to read skin");
 				Error = true;
+				break;
+			}
+			FoundSkin = true;
 		}
 		else if(Type == GHOSTDATA_TYPE_CHARACTER_NO_TICK)
 		{
-			NoTick = true;
-			if(!GhostLoader()->ReadData(Type, pGhost->m_Path.Get(Index++), sizeof(CGhostCharacter_NoTick)))
+			if(FoundCharacterTick)
+			{
+				log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read ghost data: ghost character with and without tick cannot be mixed");
 				Error = true;
+				break;
+			}
+			else if(!GhostLoader()->ReadData(Type, pGhost->m_Path.Get(Index++), sizeof(CGhostCharacter_NoTick)))
+			{
+				log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read ghost data: failed to read ghost character (without tick)");
+				Error = true;
+				break;
+			}
+			FoundCharacterNoTick = true;
 		}
 		else if(Type == GHOSTDATA_TYPE_CHARACTER)
 		{
-			if(!GhostLoader()->ReadData(Type, pGhost->m_Path.Get(Index++), sizeof(CGhostCharacter)))
+			if(FoundCharacterNoTick)
+			{
+				log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read ghost data: ghost character with and without tick cannot be mixed");
 				Error = true;
+				break;
+			}
+			else if(!GhostLoader()->ReadData(Type, pGhost->m_Path.Get(Index++), sizeof(CGhostCharacter)))
+			{
+				log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read ghost data: failed to read ghost character (with tick)");
+				Error = true;
+				break;
+			}
+			FoundCharacterTick = true;
 		}
 		else if(Type == GHOSTDATA_TYPE_START_TICK)
 		{
 			if(!GhostLoader()->ReadData(Type, &pGhost->m_StartTick, sizeof(int)))
+			{
+				log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read ghost data: failed to read start tick");
 				Error = true;
+				break;
+			}
 		}
 	}
 
 	GhostLoader()->Close();
 
-	if(Error || Index != pInfo->m_NumTicks)
+	if(!Error && Index != pInfo->m_NumTicks)
 	{
-		log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read all ghost data (error='%d', got '%d' ticks, wanted '%d' ticks)", Error, Index, pInfo->m_NumTicks);
+		log_error_color(LOG_COLOR_GHOST, "ghost", "Failed to read all ghost data (got '%d' ticks, wanted '%d' ticks)", Index, pInfo->m_NumTicks);
+		Error = true;
+	}
+
+	if(Error)
+	{
 		pGhost->Reset();
 		return -1;
 	}
 
-	if(NoTick)
+	if(FoundCharacterNoTick)
 	{
 		int StartTick = 0;
 		for(int i = 1; i < pInfo->m_NumTicks; i++) // estimate start tick
@@ -559,7 +595,7 @@ void CGhost::SaveGhost(CMenus::CGhostItem *pItem)
 
 	int NumTicks = pGhost->m_Path.Size();
 	GetPath(pItem->m_aFilename, sizeof(pItem->m_aFilename), pItem->m_aPlayer, pItem->m_Time);
-	GhostRecorder()->Start(pItem->m_aFilename, Client()->GetCurrentMap(), Client()->GetCurrentMapSha256(), pItem->m_aPlayer);
+	GhostRecorder()->Start(pItem->m_aFilename, Client()->GetCurrentMap(), GameClient()->Map()->Sha256(), pItem->m_aPlayer);
 
 	GhostRecorder()->WriteData(GHOSTDATA_TYPE_START_TICK, &pGhost->m_StartTick, sizeof(int));
 	GhostRecorder()->WriteData(GHOSTDATA_TYPE_SKIN, &pGhost->m_Skin, sizeof(CGhostSkin));

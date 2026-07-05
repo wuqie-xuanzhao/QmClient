@@ -13,51 +13,51 @@
 
 namespace
 {
-constexpr const char *QM_ICON_MANIFEST_PATTERN = "qmclient/icons/qm_icons_%dx.json";
+	constexpr const char *QM_ICON_MANIFEST_PATTERN = "qmclient/icons/qm_icons_%dx.json";
 
-EQmIcon IconFromName(const char *pName)
-{
-	if(str_comp(pName, "star") == 0)
-		return EQmIcon::STAR;
-	if(str_comp(pName, "search") == 0)
-		return EQmIcon::SEARCH;
-	if(str_comp(pName, "close") == 0)
-		return EQmIcon::CLOSE;
-	if(str_comp(pName, "eye") == 0)
-		return EQmIcon::EYE;
-	if(str_comp(pName, "eye-off") == 0)
-		return EQmIcon::EYE_OFF;
-	if(str_comp(pName, "chevron-down") == 0)
-		return EQmIcon::CHEVRON_DOWN;
-	if(str_comp(pName, "plus") == 0)
-		return EQmIcon::PLUS;
-	if(str_comp(pName, "trash") == 0)
-		return EQmIcon::TRASH;
-	return EQmIcon::COUNT;
-}
+	EQmIcon IconFromName(const char *pName)
+	{
+		if(str_comp(pName, "star") == 0)
+			return EQmIcon::STAR;
+		if(str_comp(pName, "search") == 0)
+			return EQmIcon::SEARCH;
+		if(str_comp(pName, "close") == 0)
+			return EQmIcon::CLOSE;
+		if(str_comp(pName, "eye") == 0)
+			return EQmIcon::EYE;
+		if(str_comp(pName, "eye-off") == 0)
+			return EQmIcon::EYE_OFF;
+		if(str_comp(pName, "chevron-down") == 0)
+			return EQmIcon::CHEVRON_DOWN;
+		if(str_comp(pName, "plus") == 0)
+			return EQmIcon::PLUS;
+		if(str_comp(pName, "trash") == 0)
+			return EQmIcon::TRASH;
+		return EQmIcon::COUNT;
+	}
 
-bool JsonIntField(const json_value *pObject, const char *pName, int &Out)
-{
-	const json_value *pValue = json_object_get(pObject, pName);
-	if(pValue == &json_value_none || pValue->type != json_integer)
-		return false;
-	Out = static_cast<int>(pValue->u.integer);
-	return true;
-}
+	bool JsonIntField(const json_value *pObject, const char *pName, int &Out)
+	{
+		const json_value *pValue = json_object_get(pObject, pName);
+		if(pValue == &json_value_none || pValue->type != json_integer)
+			return false;
+		Out = static_cast<int>(pValue->u.integer);
+		return true;
+	}
 
-const char *JsonStringField(const json_value *pObject, const char *pName)
-{
-	const json_value *pValue = json_object_get(pObject, pName);
-	if(pValue == &json_value_none || pValue->type != json_string)
-		return "";
-	return pValue->u.string.ptr;
-}
+	const char *JsonStringField(const json_value *pObject, const char *pName)
+	{
+		const json_value *pValue = json_object_get(pObject, pName);
+		if(pValue == &json_value_none || pValue->type != json_string)
+			return "";
+		return pValue->u.string.ptr;
+	}
 
-void LogIconAtlas(IConsole *pConsole, const char *pText)
-{
-	if(pConsole != nullptr)
-		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "qm_icons", pText);
-}
+	void LogIconAtlas(IConsole *pConsole, const char *pText)
+	{
+		if(pConsole != nullptr)
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "qm_icons", pText);
+	}
 }
 
 ColorRGBA SQmIconStyle::Color(EQmIconState State) const
