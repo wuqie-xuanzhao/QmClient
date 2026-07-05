@@ -1,6 +1,8 @@
 #include "crashdump.h"
 
 #include "detect.h"
+#include "str.h"
+#include "system.h"
 
 #if defined(CONF_CRASHDUMP)
 #if !defined(CONF_FAMILY_WINDOWS)

@@ -1545,7 +1545,7 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	const std::string MenuSource = ReadTextFile("src/game/client/components/menus.cpp");
 	EXPECT_NE(MenuSource.find("CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const"), std::string::npos);
 	EXPECT_NE(MenuSource.find("Style.m_ScrollbarWidth = std::clamp(28.0f * UiScale, 24.0f, 28.0f);"), std::string::npos);
-	EXPECT_NE(MenuSource.find("Params.m_ScrollbarWidth = Style.m_ScrollbarWidth;"), std::string::npos);
+	EXPECT_NE(MenuSource.find("Params.m_ScrollbarThickness = Style.m_ScrollbarWidth;"), std::string::npos);
 	EXPECT_NE(MenuSource.find("Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;"), std::string::npos);
 	EXPECT_NE(MenuSource.find("void CMenus::RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const"), std::string::npos);
 

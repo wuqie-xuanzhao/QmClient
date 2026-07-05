@@ -673,6 +673,7 @@ public:
 		}
 		return false;
 	}
+	bool IsActiveItem(const void *pId) const { return m_pActiveItem == pId; }
 	void SetHotScrollRegion(CScrollRegion *pId) { m_pBecomingHotScrollRegion = pId; }
 	const void *HotItem() const { return m_pHotItem; }
 	const void *NextHotItem() const { return m_pBecomingHotItem; }

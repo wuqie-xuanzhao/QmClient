@@ -56,6 +56,8 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, const CScrollReg
 		m_Params = *pParams;
 	m_ClipRect = *pClipRect;
 
+	// m_ContentSize 来自上一帧 End/AddRect 的测量结果。Begin 先用这个
+	// 上一帧尺寸预留滚动条空间，随后本帧再重新测量内容尺寸。
 	CUIRect ScrollbarBg = SplitContentArea();
 	DrawBackground(ScrollbarBg);
 
@@ -357,7 +359,11 @@ void CScrollRegion::DoSlider()
 {
 	const float ClipSize = m_Params.m_ScrollHorizontal ? m_ClipRect.w : m_ClipRect.h;
 	const float RailSize = m_Params.m_ScrollHorizontal ? m_RailRect.w : m_RailRect.h;
-	const float SliderSize = maximum(m_Params.m_SliderMinSize, ClipSize / m_ContentSize * RailSize);
+	const float ScrollMax = MaxScroll();
+	const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;
+	const float SliderMaxSize = maximum(0.0f, RailSize);
+	const float SliderMinSize = minimum(m_Params.m_SliderMinSize, SliderMaxSize);
+	const float SliderSize = CanScroll ? std::clamp(ClipSize / m_ContentSize * RailSize, SliderMinSize, SliderMaxSize) : SliderMaxSize;
 
 	CUIRect Slider = m_RailRect;
 	float &SliderPos = m_Params.m_ScrollHorizontal ? Slider.x : Slider.y;
@@ -367,23 +373,34 @@ void CScrollRegion::DoSlider()
 		Slider.h = SliderSize;
 
 	const float MaxSlider = RailSize - SliderSize;
-	const float ScrollMax = MaxScroll();
+	const void *pId = &m_ScrollPos;
 
-	if(ScrollMax <= 0.0f || MaxSlider <= 0.0f)
+	if(!CanScroll || MaxSlider <= 0.0f)
 	{
 		m_ScrollPos = 0.0f;
+		m_AnimInitScrollPos = 0.0f;
+		m_AnimTargetScrollPos = 0.0f;
+		m_AnimTime = 0.0f;
+		m_RequestScrollPos = -1.0f;
 		if(m_Params.m_ScrollHorizontal)
 			m_ContentScrollOff.x = 0.0f;
 		else
 			m_ContentScrollOff.y = 0.0f;
+		const bool WasActive = Ui()->IsActiveItem(pId);
+		const bool Active = ScrollRegionShouldKeepNoScrollSliderActive(WasActive, Ui()->MouseButton(0));
+		if(Active)
+			Ui()->SetActiveItem(pId);
+		else if(WasActive)
+		{
+			Ui()->SetActiveItem(nullptr);
+		}
 		const float Rounding = m_Params.m_ScrollHorizontal ? Slider.h / 2.0f : Slider.w / 2.0f;
-		Slider.Draw(m_Params.SliderColor(Ui()->CheckActiveItem(&m_ScrollPos), Ui()->HotItem() == &m_ScrollPos), IGraphics::CORNER_ALL, Rounding);
+		Slider.Draw(m_Params.SliderColor(Active, Ui()->HotItem() == pId), IGraphics::CORNER_ALL, Rounding);
 		return;
 	}
 
 	SliderPos += m_ScrollPos / ScrollMax * MaxSlider;
 
-	const void *pId = &m_ScrollPos;
 	const float MousePos = m_Params.m_ScrollHorizontal ? Ui()->MouseX() : Ui()->MouseY();
 	const bool WasActive = Ui()->ActiveItem() == pId;
 	Ui()->DoButtonLogic(pId, 0, &m_RailRect, BUTTONFLAG_LEFT); // Result ignored, we only care about the button becoming and being active

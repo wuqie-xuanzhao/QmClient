@@ -48,6 +48,11 @@ struct CScrollRegionParams
 	}
 };
 
+inline bool ScrollRegionShouldKeepNoScrollSliderActive(bool Active, bool MouseDown)
+{
+	return Active && MouseDown;
+}
+
 /*
 Usage example:
 

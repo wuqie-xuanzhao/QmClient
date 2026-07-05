@@ -8,6 +8,7 @@
 #include <game/client/components/settings_resource_jobs.h>
 #include <game/client/frame_scheduler.h>
 #include <game/client/ui.h>
+#include <game/client/ui_scrollregion.h>
 
 #include <gtest/gtest.h>
 #include <test/test.h>
@@ -3662,7 +3663,7 @@ TEST(QmMonitoringHelpers, IngameEscOpenHasConcreteSectionTelemetry)
 	const std::string ButtonColumnLog = "LogIngamePerfStage(Client(), \"ingame_esc_button_column\", ButtonColumnTimer.ElapsedMs(), false, aButtonColumnPerfExtra);";
 	const size_t ButtonColumnTimerPos = GameBody.find("CPerfTimer ButtonColumnTimer;");
 	const size_t ButtonColumnLogPos = GameBody.find(ButtonColumnLog);
-	const size_t LastButtonControlPos = GameBody.find("Console()->ExecuteLine(\"toggle_local_console\");");
+	const size_t LastButtonControlPos = GameBody.find("Console()->ExecuteLine(\"toggle_local_console\", IConsole::CLIENT_ID_UNSPECIFIED);");
 	const size_t TouchEditingBranchPos = GameBody.find("if(GameClient()->m_TouchControls.IsEditingActive())", LastButtonControlPos);
 	const size_t NormalButtonColumnFlushPos = GameBody.find("\n\tLogButtonColumnPerf();", LastButtonControlPos);
 	ASSERT_NE(ButtonColumnTimerPos, std::string::npos);
@@ -5919,6 +5920,7 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string ScrollRegion = ReadRepoFile("src/game/client/ui_scrollregion.cpp");
+	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
 
 	EXPECT_NE(Header.find("struct SSettingsScrollRegionFrame"), std::string::npos);
 	EXPECT_NE(Header.find("BeginSettingsScrollRegion(CScrollRegion &ScrollRegion"), std::string::npos);
@@ -5930,16 +5932,42 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
 	EXPECT_NE(Menus.find("Frame.m_FinalOffsetY = ScrollRegion.ScrollbarShown() ? ScrollRegion.ContentScrollOffsetY() : 0.0f;"), std::string::npos);
 	EXPECT_NE(Menus.find("m_SettingsScrollActive = m_SettingsScrollActive ||"), std::string::npos);
 	EXPECT_NE(Menus.find("m_SettingsRuntimeMetadata.m_LastScrollY = Frame.m_FinalOffsetY;"), std::string::npos);
-	EXPECT_NE(ScrollRegion.find("m_ContentScrollOff.y = -m_ScrollY;"), std::string::npos);
+	EXPECT_NE(ScrollRegion.find("m_ContentScrollOff.y = -m_ScrollPos;"), std::string::npos);
 	const std::string ScrollRegionEnd = ExtractSourceFunctionBody(ScrollRegion, "void CScrollRegion::End()");
 	ASSERT_FALSE(ScrollRegionEnd.empty());
-	const size_t NoOverflowPos = ScrollRegionEnd.find("if(m_ContentH <= m_ClipRect.h)");
-	const size_t ScrollWheelPos = ScrollRegionEnd.find("// scroll wheel");
-	ASSERT_NE(NoOverflowPos, std::string::npos);
-	ASSERT_NE(ScrollWheelPos, std::string::npos);
-	const std::string NoOverflowBranch = ScrollRegionEnd.substr(NoOverflowPos, ScrollWheelPos - NoOverflowPos);
-	EXPECT_EQ(NoOverflowBranch.find("m_ScrollY = 0.0f;"), std::string::npos);
-	EXPECT_EQ(NoOverflowBranch.find("m_AnimTargetScrollY = 0.0f;"), std::string::npos);
+	EXPECT_NE(ScrollRegion.find("bool CScrollRegion::ContentOverflows() const"), std::string::npos);
+	EXPECT_NE(ScrollRegion.find("return ContentOverflows() || m_Params.m_ForceShowScrollbar;"), std::string::npos);
+	EXPECT_NE(ScrollRegion.find("m_ContentSize 来自上一帧 End/AddRect 的测量结果"), std::string::npos);
+	EXPECT_NE(ScrollRegion.find("const float ScrollMax = MaxScroll();"), std::string::npos);
+	EXPECT_NE(ScrollRegion.find("const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("bool IsActiveItem(const void *pId) const"), std::string::npos);
+	EXPECT_EQ(ScrollRegionEnd.find("m_ScrollPos = 0.0f;"), std::string::npos);
+	EXPECT_EQ(ScrollRegionEnd.find("m_AnimTargetScrollPos = 0.0f;"), std::string::npos);
+	const std::string ScrollRegionSlider = ExtractSourceFunctionBody(ScrollRegion, "void CScrollRegion::DoSlider()");
+	ASSERT_FALSE(ScrollRegionSlider.empty());
+	const size_t NoScrollPos = ScrollRegionSlider.find("if(!CanScroll || MaxSlider <= 0.0f)");
+	ASSERT_NE(NoScrollPos, std::string::npos);
+	const size_t SliderReturnPos = ScrollRegionSlider.find("return;", NoScrollPos);
+	ASSERT_NE(SliderReturnPos, std::string::npos);
+	const std::string NoScrollBranch = ScrollRegionSlider.substr(NoScrollPos, SliderReturnPos - NoScrollPos);
+	EXPECT_NE(NoScrollBranch.find("m_ScrollPos = 0.0f;"), std::string::npos);
+	EXPECT_NE(NoScrollBranch.find("m_AnimInitScrollPos = 0.0f;"), std::string::npos);
+	EXPECT_NE(NoScrollBranch.find("m_AnimTargetScrollPos = 0.0f;"), std::string::npos);
+	EXPECT_NE(NoScrollBranch.find("m_AnimTime = 0.0f;"), std::string::npos);
+	EXPECT_NE(NoScrollBranch.find("m_RequestScrollPos = -1.0f;"), std::string::npos);
+	EXPECT_NE(NoScrollBranch.find("Ui()->IsActiveItem(pId)"), std::string::npos);
+	EXPECT_NE(NoScrollBranch.find("ScrollRegionShouldKeepNoScrollSliderActive(WasActive, Ui()->MouseButton(0))"), std::string::npos);
+	EXPECT_NE(NoScrollBranch.find("Ui()->SetActiveItem(pId);"), std::string::npos);
+	EXPECT_NE(NoScrollBranch.find("Ui()->SetActiveItem(nullptr);"), std::string::npos);
+	EXPECT_EQ(NoScrollBranch.find("Ui()->CheckActiveItem(pId)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ScrollRegionNoScrollSliderReleasesActiveAfterMouseUp)
+{
+	EXPECT_FALSE(ScrollRegionShouldKeepNoScrollSliderActive(false, false));
+	EXPECT_FALSE(ScrollRegionShouldKeepNoScrollSliderActive(false, true));
+	EXPECT_FALSE(ScrollRegionShouldKeepNoScrollSliderActive(true, false));
+	EXPECT_TRUE(ScrollRegionShouldKeepNoScrollSliderActive(true, true));
 }
 
 TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)

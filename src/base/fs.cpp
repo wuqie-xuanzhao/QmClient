@@ -587,6 +587,10 @@ int fs_remove(const char *filename)
 int fs_rename(const char *oldname, const char *newname)
 {
 #if defined(CONF_FAMILY_WINDOWS)
+	// Windows 在目标文件仍有打开句柄时无法直接覆盖重命名。
+	// 先走 fs_remove，把目标路径改名并标记删除；即使失败也继续尝试重命名。
+	(void)fs_remove(newname);
+
 	const std::wstring wide_oldname = windows_utf8_to_wide(oldname);
 	const std::wstring wide_newname = windows_utf8_to_wide(newname);
 	if(MoveFileExW(wide_oldname.c_str(), wide_newname.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH) != 0)
