@@ -6433,7 +6433,18 @@ int CClient::PredictionMargin() const
 	if(!m_ServerCapabilities.m_SyncWeaponInput)
 		return 10;
 
-	const int BaseMargin = g_Config.m_ClPredictionMargin;
+	SQmFastInputSettings Settings;
+	Settings.m_Enabled = g_Config.m_TcFastInput != 0;
+	Settings.m_Mode = g_Config.m_QmFastInputMode;
+	Settings.m_FastAmountMs = g_Config.m_TcFastInputAmount;
+	Settings.m_BestOffset = g_Config.m_QmBestInputOffset;
+	Settings.m_BestSmoothing = g_Config.m_QmBestInputSmoothing;
+	Settings.m_BestLatencyComp = g_Config.m_QmBestInputLatencyComp;
+	Settings.m_SaikoPlusAmount = g_Config.m_QmSaikoPlusAmount;
+	Settings.m_BasePredictionMarginMs = g_Config.m_ClPredictionMargin;
+	const int BaseMargin = QmFastInputBasePredictionMarginMs(Settings);
+	if(!g_Config.m_QmAutoMargin)
+		return std::clamp(BaseMargin, 1, 300);
 	const int64_t Now = time_get();
 	const int LivePredictionMs = std::max(0, (int)((m_PredictedTime.Get(Now) - m_aGameTime[g_Config.m_ClDummy].Get(Now)) * 1000 / (float)time_freq()));
 

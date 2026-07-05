@@ -10,6 +10,7 @@
 class CUi;
 class CMenus;
 class CUiV2AnimationRuntime;
+class CUiV2Tree;
 class CQmIconManager;
 class CTooltips;
 class ITextRender;
@@ -23,11 +24,13 @@ struct IUiContext
 {
 	CUi *m_pUi = nullptr;
 	CUiV2AnimationRuntime *m_pAnim = nullptr;
+	CUiV2Tree *m_pTree = nullptr;
 	CQmIconManager *m_pIconManager = nullptr;
 	CMenus *m_pMenus = nullptr;
 	CTooltips *m_pTooltips = nullptr;
 	ITextRender *m_pTextRender = nullptr;
 	uint64_t m_ScopeHash = 0;
+	float m_FrameDt = 1.0f / 60.0f;
 };
 
 // Stable hash of a page identifier, used to seed BuildUiAnimNodeKey so

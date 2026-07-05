@@ -5,6 +5,7 @@
 #include "QmUi/QmAnimResolve.h"
 #include "QmUi/QmMotion.h"
 #include "QmUi/QmTheme.h"
+#include "QmUi/QmTree.h"
 #include "gameclient.h"
 #include "lineinput.h"
 
@@ -140,6 +141,9 @@ void CQmImeCandidatePopup::Reset()
 {
 	m_LastState = {};
 	m_WasVisible = false;
+	++m_PresenceGeneration;
+	if(m_PresenceGeneration == 0)
+		m_PresenceGeneration = 1;
 }
 
 void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupState &State)
@@ -279,24 +283,29 @@ void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupSta
 	Position.y = PixelAlign(Position.y, ScreenHeight / Height);
 
 	CUiV2AnimationRuntime &AnimRuntime = pGameClient->UiRuntimeV2()->AnimRuntime();
-	const uint64_t PopupKey = BuildUiAnimNodeKey(str_quickhash("qm_ime_popup"), 1);
+	CUiV2Tree &Tree = pGameClient->UiRuntimeV2()->Tree();
+	const uint64_t PopupKey = BuildUiAnimNodeKey(str_quickhash("qm_ime_popup"), m_PresenceGeneration);
 	if(TargetVisible && !m_WasVisible && g_Config.m_QmUiMotionLevel != 0)
 	{
-		AnimRuntime.SetValue(PopupKey, EUiAnimProperty::ALPHA, 0.0f);
 		AnimRuntime.SetValue(PopupKey, EUiAnimProperty::POS_Y, 1.4f);
 	}
 
 	const float AlphaDuration = TargetVisible ? POPUP_IN_DURATION : POPUP_OUT_DURATION;
-	const float Alpha = ResolveMotionValue(AnimRuntime, PopupKey, EUiAnimProperty::ALPHA, TargetVisible ? 1.0f : 0.0f, AlphaDuration);
-	const float OffsetY = ResolveMotionValue(AnimRuntime, PopupKey, EUiAnimProperty::POS_Y, TargetVisible ? 0.0f : -0.8f, AlphaDuration);
-	if(!TargetVisible && Alpha <= 0.01f && !AnimRuntime.HasActiveAnimation(PopupKey, EUiAnimProperty::ALPHA))
+	SUiAnimTransition PresenceTransition;
+	PresenceTransition.m_DurationSec = AlphaDuration;
+	PresenceTransition.m_Easing = EEasing::EASE_OUT;
+	PresenceTransition = qm_motion::ApplyMotionLevel(PresenceTransition, g_Config.m_QmUiMotionLevel);
+	const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, PopupKey, TargetVisible, PresenceTransition);
+	if(!Presence.m_Render)
 	{
 		m_WasVisible = false;
 		pTextRender->SetRenderFlags(OldRenderFlags);
 		pGraphics->MapScreen(OldScreenX0, OldScreenY0, OldScreenX1, OldScreenY1);
 		return;
 	}
-	m_WasVisible = TargetVisible || Alpha > 0.01f;
+	const float Alpha = std::clamp(Presence.m_Alpha, 0.0f, 1.0f);
+	const float OffsetY = ResolveMotionValue(AnimRuntime, PopupKey, EUiAnimProperty::POS_Y, TargetVisible ? 0.0f : -0.8f, AlphaDuration);
+	m_WasVisible = true;
 
 	CUIRect Panel = {Position.x, Position.y + OffsetY, PanelWidth, PanelHeight};
 	CUIRect ShadowNear = Panel;

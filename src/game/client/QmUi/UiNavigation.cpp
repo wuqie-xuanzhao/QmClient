@@ -3,6 +3,7 @@
 #include "UiNavigation.h"
 
 #include "QmAnimResolve.h"
+#include "UiMotion.h"
 #include "UiTokens.h"
 
 #include <engine/graphics.h>
@@ -80,10 +81,9 @@ namespace ui_widget
 
 		if(Ctx.m_pAnim != nullptr)
 		{
-			const uint64_t NodeKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash, reinterpret_cast<uint64_t>(pId));
 			const bool HoverPrev = Ctx.m_pUi->HotItem() == pId;
 			const float TargetAlpha = HoverPrev ? 1.0f : 0.0f;
-			const float Alpha = ResolveUiAnimValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE.m_DurationSec, ui_curve::DECELERATE.m_Easing);
+			const float Alpha = AnimateStateValue(Ctx, pId, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);
 			if(Alpha > 0.01f)
 			{
 				ColorRGBA HoverBg = ui_token::color::SURFACE_HIGHLIGHT;

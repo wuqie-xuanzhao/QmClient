@@ -54,6 +54,8 @@ th{background:var(--surface2);font-weight:600;color:var(--text)}
 
 <div class="alert danger"><strong>现状问题</strong>：四套卡片实现并存（栖梦侧栏合批 / 单卡 underlay / Tclient deck / section_loader 通用层），两套拖拽范式（栖梦长按 0.3s / Tclient 已统一长按），两套持久化（QmSidebarCardOrder / qm_settings_card_order），让位动画框架在但效果不对（拖拽中 TargetRect 不变 → 无让位）。本规格定义全局统一架构。</div>
 
+<div class="alert note"><strong>2026-07-02 实现状态</strong>：本规格中的「全局卡片 Model + 跨页面组件编辑器」仍是后续 B1/B2/C1 路线，尚未完成生产迁移。本轮已在栖梦设置页落地卡片拖拽 UX 的阶段性实现：拖拽开始改为当前帧目标 rect 命中，拖拽中不再做视觉占位让位，停留到候选位置后只记录预览候选，松手后提交 order，并通过 QmUi 通用 <code>CUiV2Tree::ResolveLayoutTransition</code> / <code>SyncLayoutTransition</code> 做释放后的 POS_X/POS_Y FLIP 过渡。视觉手感仍需客户端人工验收。</div>
+
 <h2 id="g1">1 · 设计目标</h2>
 <p><strong>iPhone 主屏风拖拽 UX</strong>：长按 → 被拖卡跟手 + 其他卡实时让位（spring lerp）→ 松手归位 + 持久化。<strong>全局卡片管理</strong>：一套 Model 管所有设置页卡片，每页只筛选展示，拖拽改全局 → 跨页保留。</p>
 <div class="alert good"><strong>已确认愿景</strong>（用户 2026-06-29 确认）：全局卡片 = <strong>跨页面组件编辑器</strong>。卡片是 first-class 全局组件，可在任意 tab/列/位置间排布迁移，<strong>tab 是可改的位置维度而非固有归属</strong>。全局单例 Model 是正确架构，不再标记为待验证。stableId 命名规范、默认值系统、稳定持久化模型的完整设计见 <code>docs/superpowers/specs/2026-06-29-全局卡片-组件编辑器与stableId设计.md</code>（含 69 张卡的注册表附录）。</div>
@@ -88,10 +90,12 @@ th{background:var(--surface2);font-weight:600;color:var(--text)}
 
 <h2 id="g3">3 · 让位动画（iPhone 风）</h2>
 
+<div class="alert warn"><strong>当前实现口径（2026-07-02）</strong>：本章 3.1–3.4 记录的是原始「拖拽中实时让位」方案与问题分析。实际代码当前采用更保守的手机主屏替代式策略：拖拽中保持正常卡片间距，不插入额外占位，不移动其他卡；当标题栏锚点停留到目标卡片位置超过 dwell 阈值后形成 drop candidate；松手时提交布局，再由 QmUi FLIP 负责从当前显示 rect 平滑过渡到最终 target rect。这样避免拖拽态间距突变、被拖卡遮蔽和上下闪动问题。若未来重新启用拖拽中实时让位，必须重新评估本章的预览 TargetRect 方案，并以正常卡片间距一致性为硬约束。</div>
+
 <h3>3.1 当前问题</h3>
 <p>让位是 <strong>per-card <code>DisplayRect</code> lerp 追 <code>TargetRect</code></strong>（<code>Disp += (Target - Disp) * LerpT</code>，LerpT=0.25，见 <code>menus_qmclient.cpp:7899</code>），不存在"Column 偏移 offset"变量。拖拽中 <code>UpdateDropPreview</code> 只算落点 <code>DropIndex</code>，<strong>不改 <code>m_OrderInColumn</code>、也不重排布局</strong> → 布局每帧算出的 <code>TargetRect</code> 不含被拖卡的腾位 → 其他卡的 <code>DisplayRect</code> 追一个<strong>静止目标</strong> → 全部停在原位 → 无让位视觉效果。松手 <code>CommitDropPreview</code> 才改 order → <code>TargetRect</code> 突变 → 其他卡从原位开始 lerp 让位、被拖卡从鼠标位置 lerp 到最终落点（松手即收敛无跳变，但让位滞后到松手才发生）。</p>
 
-<h3>3.2 正确实现：拖拽中实时预览布局</h3>
+<h3>3.2 原方案：拖拽中实时预览布局</h3>
 <p><code>UpdateDropPreview</code> 不只算 <code>DropIndex</code>，而是生成一个<strong>预览布局</strong>（PreviewLayout）：</p>
 <ol>
   <li>基于当前全局 Model + 被拖卡的新位置（DropColumn + DropIndex），计算<strong>每张卡片的预览 TargetRect</strong></li>
@@ -101,9 +105,15 @@ th{background:var(--surface2);font-weight:600;color:var(--text)}
 </ol>
 <p>松手 <code>CommitDropPreview</code> → Model.Move（commit 预览到真实数据）+ Serialize 落盘。</p>
 
-<h3>3.3 松手归位</h3>
-<p>松手 <code>CommitDropPreview</code> 后 <code>m_pDragging=nullptr</code>，被拖卡退出"跟鼠标"特殊分支（<code>menus_qmclient.cpp:7882</code>），改为<strong>普通 per-card lerp</strong>：从松手时的鼠标位置自然收敛到 commit 后的新 <code>TargetRect</code>（最终落点）。其他卡因松手帧 order 已变、<code>TargetRect</code> 已更新，从让位中间态收敛到最终位置。整列收敛约 <code>LerpT=0.25</code> × 若干帧（≈0.15–0.2s）。</p>
-<p>实现要点：松手帧<strong>不要</strong>对被拖卡做任何坐标硬切——保持其当前 <code>DisplayRect</code>（鼠标位置），交给现有 lerp 自然滑入最终位置，避免跳变。<code>DisplayRect</code> 首次初始化仍走 <code>:7892-7895</code> 的"直接设 TargetRect"保护。</p>
+<h3>3.3 当前实现：松手提交 + FLIP 归位</h3>
+<p>当前代码不再依赖局部 per-card lerp 手写速度状态，而是使用 QmUi 通用布局过渡层：</p>
+<ol>
+  <li>拖拽中被拖卡通过 <code>SyncLayoutTransition</code> 同步到鼠标/标题栏锚点对应的显示位置，避免 FLIP 与手动拖拽冲突。</li>
+  <li>未拖拽卡片在拖拽过程中保持正常目标布局，不因占位产生额外间距。</li>
+  <li>松手 <code>CommitDropPreview</code> 后更新卡片 order；下一帧每张卡调用 <code>ResolveLayoutTransition(..., ui_token::motion::CARD_REORDER)</code>，由 tree-owned cache 对稳定 <code>NodeKey</code> 的前后 rect 做 POS_X/POS_Y 过渡。</li>
+  <li>被拖卡释放路径从当前显示 rect 过渡到最终 target rect；其他受影响卡从旧显示 rect 过渡到新 target rect。</li>
+</ol>
+<p>实现要点：保持被拖卡当前显示位置，不在松手帧硬切坐标；只动画位置，不动画宽高；正在拖拽的节点跳过自动 FLIP，由拖拽路径手动 sync。</p>
 
 <div class="alert warn"><strong>技术要点</strong>：预览布局计算需要在 <code>UpdateDropPreview</code> 中模拟 "如果被拖卡在 DropIndex 位置，其他卡的 rect 会怎样"。当前栖梦的 <code>ColumnSplitX</code> + 遍历 prev/next 逻辑可以复用，但需要输出每张卡的 TargetRect（不只是落点 line）。</div>
 
@@ -151,6 +161,7 @@ void LerpDisplayRects(cache, targetRects, draggingId, mouseX, mouseY, lerpT);</c
 <p>所有设置页卡片统一到 <code>ui_widget::DrawCard</code>（QmUi/UiContainers.h），消除 <code>RenderQmSettingsGlassCard</code> underlay + 栖梦合批的视觉割裂。<code>SQmSettingsCardStyle</code> 基于 <code>ui_token::</code> 派生。</p>
 
 <h2 id="g6">6 · 实施路线</h2>
+<div class="alert note"><strong>路线状态补充</strong>：A2 的「让位动画重做」已经先在栖梦页面以阶段性形态落地为松手提交 + QmUi FLIP 释放动画；B1/B2/C1/D1/E1 的全局卡片 Model、跨页面持久化、Tclient/deck 迁移仍按本路线推进。</div>
 <table>
 <tr><th>阶段</th><th>内容</th><th>工作量</th><th>依赖</th></tr>
 <tr><td><strong>B1</strong></td><td>全局 Model 扩展（加 page 字段 + CModel API）+ 迁移栖梦侧栏接入 + <strong>为 Tclient 15 / 设置 deck 16 共 31 张卡补显式默认 Placement</strong>（见设计文档注册表 Gap）+ <strong>性能硬约束</strong>：① 建 stableId→连续 index 注册表（与组件注册表合并，保让位 lerp O(1)，否则退化为 O(N²)）；② IsDirty 触发序列化，消除每帧 Serialize 冗余（设计文档 §8）</td><td>1.5–2 天</td><td>CardOrderModel 已建</td></tr>

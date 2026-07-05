@@ -203,25 +203,50 @@ constexpr int QM_SKIN_CHANGE_TRANSITION_SCOPE_ALL = 2;
 
 namespace
 {
+	float QmBestInputInterpolationAmount(float Fraction, float DeltaLength, bool Enable)
+	{
+		if(!Enable)
+			return Fraction;
+		const float T = std::clamp(Fraction, 0.0f, 1.0f);
+		const float T2 = T * T;
+		const float CubicT = 3.0f * T2 - 2.0f * T2 * T;
+		switch(std::clamp(g_Config.m_QmBestInputInterpolation, 1, 3))
+		{
+		case 2:
+			return CubicT;
+		case 3:
+			return mix(T, CubicT, std::clamp(DeltaLength / 1000.0f, 0.0f, 1.0f));
+		default:
+			return T;
+		}
+	}
+
+	vec2 QmBestInputInterpolate(vec2 PrevPos, vec2 CurPos, float Fraction, bool Enable)
+	{
+		return mix(PrevPos, CurPos, QmBestInputInterpolationAmount(Fraction, length(CurPos - PrevPos), Enable));
+	}
+
 	float EffectiveFastInputOffsetTicks(const CGameClient *pGameClient)
 	{
-		if(!pGameClient->TClientComponent().IsFastInputActive())
-			return 0.0f;
-		if(g_Config.m_TcFastInputAmount <= 0)
-			return 0.0f;
-		return g_Config.m_TcFastInputAmount / 20.0f;
+		SQmFastInputSettings Settings;
+		Settings.m_Enabled = pGameClient->TClientComponent().IsFastInputActive();
+		Settings.m_Mode = g_Config.m_QmFastInputMode;
+		Settings.m_FastAmountMs = g_Config.m_TcFastInputAmount;
+		Settings.m_BestOffset = g_Config.m_QmBestInputOffset;
+		Settings.m_BestSmoothing = g_Config.m_QmBestInputSmoothing;
+		Settings.m_BestLatencyComp = g_Config.m_QmBestInputLatencyComp;
+		Settings.m_SaikoPlusAmount = g_Config.m_QmSaikoPlusAmount;
+		return QmEffectiveFastInputOffsetTicks(Settings);
 	}
 
 	int FastInputPredictionTicks(float OffsetTicks)
 	{
-		if(OffsetTicks <= 0.0f)
-			return 0;
-		return (int)std::ceil(OffsetTicks);
+		return QmFastInputPredictionTicks(OffsetTicks, g_Config.m_QmFastInputMode);
 	}
 
 	bool EffectiveFastInputOthers(const CGameClient *pGameClient)
 	{
-		return pGameClient->TClientComponent().IsFastInputOthersActive();
+		return QmEffectiveFastInputOthers(pGameClient->TClientComponent().IsFastInputActive(), g_Config.m_QmFastInputMode, g_Config.m_TcFastInputOthers != 0, g_Config.m_QmBestInputOthers != 0, g_Config.m_QmSaikoPlusOthers != 0);
 	}
 
 } // namespace
@@ -4651,14 +4676,14 @@ void CGameClient::OnPredict()
 	// predict
 	// prediction actually happens here
 
-	const int FastInputTicks = GetFastInputPredictionTicks();
+	const float FastInputOffsetTicks = EffectiveFastInputOffsetTicks(this);
+	const int FastInputTicks = FastInputPredictionTicks(FastInputOffsetTicks);
 	const bool FastInputOthers = EffectiveFastInputOthers(this);
+	const int FastInputTicksOthers = FastInputOthers ? QmFastInputPredictionTicksOthers(FastInputOffsetTicks, g_Config.m_QmFastInputMode) : 0;
 
 	int FinalTickRegular = Client()->PredGameTick(g_Config.m_ClDummy); // The vanilla final tick disregarding fast input
 	int FinalTickSelf = FinalTickRegular + FastInputTicks; // the final tick for just our local tee
-	int FinalTickOthers = FinalTickSelf; // the final tick for all other tees
-	if(!FastInputOthers)
-		FinalTickOthers = FinalTickSelf - FastInputTicks;
+	int FinalTickOthers = FinalTickRegular + FastInputTicksOthers; // the final tick for all other tees
 
 	int LocalTee = g_Config.m_ClDummy ^ m_IsDummySwapping;
 	int DummyTee = LocalTee ^ 1;
@@ -6467,7 +6492,7 @@ void CGameClient::UpdateRenderedCharacters()
 
 			if(IsPracticeParticipant)
 			{
-				if(m_TClient.IsFastInputActive() && (i == m_Snap.m_LocalClientId || m_TClient.IsFastInputOthersActive()))
+				if(m_TClient.IsFastInputActive() && (i == m_Snap.m_LocalClientId || EffectiveFastInputOthers(this)))
 					Pos = GetFastInputPos(i);
 			}
 			else if(g_Config.m_TcRemoveAnti)
@@ -6503,7 +6528,7 @@ void CGameClient::UpdateRenderedCharacters()
 
 				if(g_Config.m_TcRemoveAnti && m_pClient->m_IsLocalFrozen)
 					Pos = GetFreezePos(i);
-				else if(m_TClient.IsFastInputActive() && m_TClient.IsFastInputOthersActive() && !g_Config.m_TcAntiPingImproved)
+				else if(m_TClient.IsFastInputActive() && EffectiveFastInputOthers(this) && !g_Config.m_TcAntiPingImproved)
 					Pos = GetFastInputPos(i);
 
 				if(g_Config.m_TcShowOthersGhosts && g_Config.m_TcSwapGhosts && !(m_aClients[i].m_FreezeEnd > 0 && g_Config.m_TcHideFrozenGhosts))
@@ -6605,7 +6630,20 @@ void CGameClient::DetectStrongHook()
 
 vec2 CGameClient::GetSmoothPos(int ClientId)
 {
-	const int FastInputTicks = m_TClient.IsFastInputActive() ? (g_Config.m_TcFastInputAmount + 19) / 20 : 0;
+	SQmFastInputSettings Settings;
+	Settings.m_Enabled = m_TClient.IsFastInputActive();
+	Settings.m_Mode = g_Config.m_QmFastInputMode;
+	Settings.m_FastAmountMs = g_Config.m_TcFastInputAmount;
+	Settings.m_BestOffset = g_Config.m_QmBestInputOffset;
+	Settings.m_BestSmoothing = g_Config.m_QmBestInputSmoothing;
+	Settings.m_BestLatencyComp = g_Config.m_QmBestInputLatencyComp;
+	Settings.m_SaikoPlusAmount = g_Config.m_QmSaikoPlusAmount;
+	const float FastInputOffsetTicks = QmEffectiveFastInputOffsetTicks(Settings);
+	const int FastInputTicks = QmFastInputPredictionTicks(FastInputOffsetTicks, g_Config.m_QmFastInputMode);
+	const bool FastInputOthers = EffectiveFastInputOthers(this);
+	const bool IsLocal = ClientId == m_Snap.m_LocalClientId || (PredictDummy() && ClientId == m_aLocalIds[!g_Config.m_ClDummy]);
+	const int FastInputTicksClient = IsLocal ? FastInputTicks : (FastInputOthers ? QmFastInputPredictionTicksOthers(FastInputOffsetTicks, g_Config.m_QmFastInputMode) : 0);
+	const bool BestInputInterpolationEnabled = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode) == 3 && FastInputTicksClient > 0;
 	vec2 Pos = mix(m_aClients[ClientId].m_PrevPredicted.m_Pos, m_aClients[ClientId].m_Predicted.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
 	int64_t Now = time_get();
 	for(int i = 0; i < 2; i++)
@@ -6619,13 +6657,13 @@ vec2 CGameClient::GetSmoothPos(int ClientId)
 			float SmoothIntra;
 			Client()->GetSmoothTick(&SmoothTick, &SmoothIntra, MixAmount);
 
-			if(ClientId != m_Snap.m_LocalClientId && m_TClient.IsFastInputOthersActive() && FastInputTicks > 0)
-				SmoothTick += FastInputTicks;
+			if(ClientId != m_Snap.m_LocalClientId && FastInputOthers && FastInputTicksClient > 0)
+				QmApplyFastInputOffset(FastInputOffsetTicks, SmoothTick, SmoothIntra);
 
 			if(SmoothTick > 0 &&
 				m_aClients[ClientId].m_aPredTick[(SmoothTick - 1) % 200] >= Client()->PrevGameTick(g_Config.m_ClDummy) &&
-				m_aClients[ClientId].m_aPredTick[SmoothTick % 200] <= Client()->PredGameTick(g_Config.m_ClDummy) + FastInputTicks)
-				Pos[i] = mix(m_aClients[ClientId].m_aPredPos[(SmoothTick - 1) % 200][i], m_aClients[ClientId].m_aPredPos[SmoothTick % 200][i], SmoothIntra);
+				m_aClients[ClientId].m_aPredTick[SmoothTick % 200] <= Client()->PredGameTick(g_Config.m_ClDummy) + FastInputTicksClient)
+				Pos[i] = QmBestInputInterpolate(m_aClients[ClientId].m_aPredPos[(SmoothTick - 1) % 200], m_aClients[ClientId].m_aPredPos[SmoothTick % 200], SmoothIntra, BestInputInterpolationEnabled)[i];
 		}
 	}
 	return Pos;
@@ -6635,7 +6673,12 @@ int CGameClient::GetFastInputPredictionAmountMs()
 {
 	if(!m_TClient.IsFastInputActive())
 		return 0;
-	return std::max(0, g_Config.m_TcFastInputAmount);
+	const int Mode = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode);
+	if(Mode == 0)
+		return std::max(0, g_Config.m_TcFastInputAmount);
+	if(Mode == 4)
+		return std::max(0, g_Config.m_QmSaikoPlusAmount / 5);
+	return std::max(0, g_Config.m_QmBestInputOffset / 5);
 }
 
 int CGameClient::GetFastInputPredictionTicks()
@@ -6655,24 +6698,26 @@ vec2 CGameClient::GetFastInputPos(int ClientId)
 
 	vec2 Pos = mix(m_aClients[ClientId].m_PrevPredicted.m_Pos, m_aClients[ClientId].m_Predicted.m_Pos, PredIntraTick);
 
-	float FastInputIntra = (g_Config.m_TcFastInputAmount % 20) / 20.0f;
-	int FastInputTicks = g_Config.m_TcFastInputAmount / 20;
+	SQmFastInputSettings Settings;
+	Settings.m_Enabled = m_TClient.IsFastInputActive();
+	Settings.m_Mode = g_Config.m_QmFastInputMode;
+	Settings.m_FastAmountMs = g_Config.m_TcFastInputAmount;
+	Settings.m_BestOffset = g_Config.m_QmBestInputOffset;
+	Settings.m_BestSmoothing = g_Config.m_QmBestInputSmoothing;
+	Settings.m_BestLatencyComp = g_Config.m_QmBestInputLatencyComp;
+	Settings.m_SaikoPlusAmount = g_Config.m_QmSaikoPlusAmount;
+	const float FastInputOffsetTicks = QmEffectiveFastInputOffsetTicks(Settings);
+	const int FastInputTicks = QmFastInputPredictionTicks(FastInputOffsetTicks, g_Config.m_QmFastInputMode);
+	const bool FastInputOthers = EffectiveFastInputOthers(this);
+	const int FastInputTicksClient = ClientId == m_Snap.m_LocalClientId ? FastInputTicks : (FastInputOthers ? QmFastInputPredictionTicksOthers(FastInputOffsetTicks, g_Config.m_QmFastInputMode) : 0);
+	const bool BestInputInterpolationEnabled = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode) == 3 && FastInputTicksClient > 0;
+	QmApplyFastInputOffset(FastInputOffsetTicks, PredTick, PredIntraTick);
 
-	float CombinedIntra = PredIntraTick + FastInputIntra;
-
-	float IntraRemainder = 0.0f;
-	float FinalIntra = std::modf(CombinedIntra, &IntraRemainder);
-	int CarryOverTicks = static_cast<int>(IntraRemainder);
-
-	FastInputTicks += CarryOverTicks;
-
-	int FinalTick = PredTick + FastInputTicks;
-
-	if(FinalTick > 0 &&
-		m_aClients[ClientId].m_aPredTick[(FinalTick - 1) % 200] >= Client()->PrevGameTick(g_Config.m_ClDummy) &&
-		m_aClients[ClientId].m_aPredTick[FinalTick % 200] <= Client()->PredGameTick(g_Config.m_ClDummy) + FastInputTicks)
+	if(PredTick > 0 &&
+		m_aClients[ClientId].m_aPredTick[(PredTick - 1) % 200] >= Client()->PrevGameTick(g_Config.m_ClDummy) &&
+		m_aClients[ClientId].m_aPredTick[PredTick % 200] <= Client()->PredGameTick(g_Config.m_ClDummy) + FastInputTicksClient)
 	{
-		Pos = mix(m_aClients[ClientId].m_aPredPos[(FinalTick - 1) % 200], m_aClients[ClientId].m_aPredPos[FinalTick % 200], FinalIntra);
+		Pos = QmBestInputInterpolate(m_aClients[ClientId].m_aPredPos[(PredTick - 1) % 200], m_aClients[ClientId].m_aPredPos[PredTick % 200], PredIntraTick, BestInputInterpolationEnabled);
 	}
 
 	return Pos;
@@ -6717,32 +6762,32 @@ vec2 CGameClient::GetFreezePos(int ClientId)
 	m_SmoothTick = SmoothTick;
 	m_SmoothIntraTick = SmoothIntra;
 
-	float FastInputIntra = (g_Config.m_TcFastInputAmount % 20) / 20.0f;
-	int FastInputTicks = g_Config.m_TcFastInputAmount / 20;
-
-	float CombinedIntra = SmoothIntra + FastInputIntra;
-
-	float IntraRemainder = 0.0f;
-	float FinalIntra = std::modf(CombinedIntra, &IntraRemainder);
-	int CarryOverTicks = static_cast<int>(IntraRemainder);
-
-	FastInputTicks += CarryOverTicks;
+	SQmFastInputSettings Settings;
+	Settings.m_Enabled = m_TClient.IsFastInputActive();
+	Settings.m_Mode = g_Config.m_QmFastInputMode;
+	Settings.m_FastAmountMs = g_Config.m_TcFastInputAmount;
+	Settings.m_BestOffset = g_Config.m_QmBestInputOffset;
+	Settings.m_BestSmoothing = g_Config.m_QmBestInputSmoothing;
+	Settings.m_BestLatencyComp = g_Config.m_QmBestInputLatencyComp;
+	Settings.m_SaikoPlusAmount = g_Config.m_QmSaikoPlusAmount;
+	const float FastInputOffsetTicks = QmEffectiveFastInputOffsetTicks(Settings);
+	const int FastInputTicks = QmFastInputPredictionTicks(FastInputOffsetTicks, g_Config.m_QmFastInputMode);
+	const bool FastInputOthers = EffectiveFastInputOthers(this);
+	const int FastInputTicksOthers = FastInputOthers ? QmFastInputPredictionTicksOthers(FastInputOffsetTicks, g_Config.m_QmFastInputMode) : 0;
 
 	const bool IsLocal = ClientId == m_Snap.m_LocalClientId || (PredictDummy() && ClientId == m_aLocalIds[!g_Config.m_ClDummy]);
 	if(IsLocal && m_TClient.IsFastInputActive())
 	{
-		SmoothTick += FastInputTicks;
-		SmoothIntra = FinalIntra;
+		QmApplyFastInputOffset(FastInputOffsetTicks, SmoothTick, SmoothIntra);
 	}
-	else if(!IsLocal && m_TClient.IsFastInputOthersActive() && m_TClient.IsFastInputActive())
+	else if(!IsLocal && FastInputOthers)
 	{
-		SmoothTick += FastInputTicks;
-		SmoothIntra = FinalIntra;
+		QmApplyFastInputOffset(FastInputOffsetTicks, SmoothTick, SmoothIntra);
 	}
 
 	if(SmoothTick > 0 &&
 		m_aClients[ClientId].m_aPredTick[(SmoothTick - 1) % 200] >= Client()->PrevGameTick(g_Config.m_ClDummy) &&
-		m_aClients[ClientId].m_aPredTick[SmoothTick % 200] <= Client()->PredGameTick(g_Config.m_ClDummy) + FastInputTicks)
+		m_aClients[ClientId].m_aPredTick[SmoothTick % 200] <= Client()->PredGameTick(g_Config.m_ClDummy) + (IsLocal ? FastInputTicks : FastInputTicksOthers))
 	{
 		Pos = mix(m_aClients[ClientId].m_aPredPos[(SmoothTick - 1) % 200], m_aClients[ClientId].m_aPredPos[SmoothTick % 200], SmoothIntra);
 	}

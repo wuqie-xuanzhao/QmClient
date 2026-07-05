@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import subprocess
 import sys
-import argparse
 
 os.chdir(os.path.dirname(__file__) + "/..")
 
@@ -34,7 +34,7 @@ def main():
     p = argparse.ArgumentParser(description="Generate src/rust-bridge")
     _args = p.parse_args()
 
-    cxxbridge = find_cxxbridge(version="1.0.71")
+    cxxbridge = find_cxxbridge(version="1.0.194")
     for input_, output_prefix in FILES.items():
         subprocess.check_call(
             [

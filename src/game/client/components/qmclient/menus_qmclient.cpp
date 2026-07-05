@@ -18,9 +18,12 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmModuleTypes.h>
+#include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiDogfood.h>
+#include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/chat.h>
@@ -504,6 +507,86 @@ void CMenus::BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &v
 	g_Config.m_UiSettingsPage = PreviousSettingsPage;
 }
 
+CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled)
+{
+	SSettingsQmScrollFrame Frame;
+	Frame.m_ViewRect = *pView;
+	Frame.m_ClipRect = *pView;
+	Frame.m_PreviousOffsetY = PreviousOffsetY;
+	Frame.m_Enabled = Enabled;
+	Frame.m_Style.m_ScrollbarWidth = CardStyle.m_ScrollbarWidth;
+	Frame.m_Style.m_ScrollbarMargin = CardStyle.m_ScrollbarMargin;
+	Frame.m_Style.m_MinThumbHeight = std::clamp(48.0f * UiScale, 36.0f, 48.0f);
+	if(!Enabled)
+		return Frame;
+
+	SQmScrollConfig ScrollConfig;
+	ScrollConfig.m_WheelScale = 30.0f * UiScale;
+
+	SQmScrollContainerInput ScrollInput;
+	ScrollInput.m_Hovered = Ui()->MouseHovered(pView);
+	ScrollInput.m_MouseValid = true;
+	ScrollInput.m_MouseX = Ui()->MouseX();
+	ScrollInput.m_MouseY = Ui()->MouseY();
+	ScrollInput.m_MouseDown = Ui()->MouseButton(0);
+	ScrollInput.m_MousePressed = Ui()->MouseButtonClicked(0);
+	if(ScrollInput.m_Hovered)
+	{
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+			ScrollInput.m_WheelDelta += 120.0f;
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+			ScrollInput.m_WheelDelta -= 120.0f;
+	}
+
+	const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(*pView, ContentHeight, Frame.m_Style);
+	if(ProbeFrame.m_ScrollbarVisible)
+	{
+		const void *pScrollbarId = &ScrollContainer;
+		ScrollInput.m_ThumbHovered = Ui()->MouseHovered(&ProbeFrame.m_ScrollbarThumbRect);
+		ScrollInput.m_TrackHovered = Ui()->MouseHovered(&ProbeFrame.m_ScrollbarTrackRect) && !ScrollInput.m_ThumbHovered;
+		if(ScrollInput.m_ThumbHovered || ScrollInput.m_TrackHovered)
+			Ui()->SetHotItem(pScrollbarId);
+		if((Ui()->HotItem() == pScrollbarId || ScrollInput.m_ThumbHovered || ScrollInput.m_TrackHovered) && ScrollInput.m_MousePressed)
+			Ui()->SetActiveItem(pScrollbarId);
+		if(Ui()->CheckActiveItem(pScrollbarId))
+		{
+			ScrollInput.m_ThumbHovered = ScrollInput.m_ThumbHovered || ScrollContainer.ScrollbarDragActive();
+			ScrollInput.m_TrackHovered = ScrollInput.m_TrackHovered && !ScrollContainer.ScrollbarDragActive();
+			if(!ScrollInput.m_MouseDown)
+				Ui()->SetActiveItem(nullptr);
+		}
+	}
+
+	Frame.m_Frame = ScrollContainer.Update(*pView, ContentHeight, GameClient()->UiRuntimeV2()->FrameDt(), ScrollInput, Frame.m_Style, ScrollConfig);
+	Frame.m_ClipRect = Frame.m_Frame.m_ClipRect;
+	Frame.m_Offset.y = -Frame.m_Frame.m_Offset;
+	*pView = Frame.m_ClipRect;
+	Ui()->ClipEnable(&Frame.m_ClipRect);
+	return Frame;
+}
+
+void CMenus::FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
+{
+	if(!Frame.m_Enabled)
+		return;
+
+	Ui()->ClipDisable();
+	*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)) + CScrollRegion::HEIGHT_MAGIC_FIX);
+	Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
+	const float CurrentOffsetY = Frame.m_Frame.m_ScrollbarVisible ? Frame.m_Frame.m_Offset : 0.0f;
+	if(TrackScrollActive)
+	{
+		m_SettingsScrollActive = m_SettingsScrollActive || absolute(CurrentOffsetY - Frame.m_PreviousOffsetY) > 0.01f;
+		if(pPreviousOffsetY != nullptr)
+			*pPreviousOffsetY = CurrentOffsetY;
+	}
+	if(Frame.m_Frame.m_ScrollbarVisible)
+	{
+		Frame.m_Frame.m_ScrollbarTrackRect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, Frame.m_Frame.m_ScrollbarTrackRect.w * 0.5f);
+		Frame.m_Frame.m_ScrollbarThumbRect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.34f), IGraphics::CORNER_ALL, Frame.m_Frame.m_ScrollbarThumbRect.w * 0.5f);
+	}
+}
+
 void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 {
 	const float ViewWidth = MainView.w;
@@ -518,14 +601,12 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	const float LineHeight = std::clamp(22.0f * UiScale, 18.0f, 22.0f);
 	const ColorRGBA TipColor(1.0f, 1.0f, 1.0f, 0.72f);
 
-	static CScrollRegion s_ScrollRegion;
-	vec2 ScrollOffset(0.0f, 0.0f);
+	static CQmScrollContainer s_QmOverviewScrollContainer;
+	static float s_QmOverviewScrollContentHeight = 0.0f;
 	static float s_PrevOverviewScrollY = 0.0f;
-	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);
-	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, s_PrevOverviewScrollY);
-	ScrollOffset = ScrollFrame.m_BeginOffset;
+	SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer(s_QmOverviewScrollContainer, &MainView, s_QmOverviewScrollContentHeight, QmCardStyle, UiScale, s_PrevOverviewScrollY, !PrewarmOnly);
 
-	MainView.y += ScrollOffset.y;
+	MainView.y += OverviewScrollFrame.m_Offset.y;
 	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
 	MainView.VSplitRight(OuterMargin, &MainView, nullptr);
 	MainView.VSplitLeft(OuterMargin, nullptr, &MainView);
@@ -580,9 +661,7 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	});
 
 	CUIRect EndPad{MainView.x, MainView.y, MainView.w, 5.0f};
-	FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad, -1, !PrewarmOnly && !m_MenuTextPlanCollecting);
-	if(!PrewarmOnly && !m_MenuTextPlanCollecting)
-		s_PrevOverviewScrollY = ScrollFrame.m_FinalOffsetY;
+	FinishSettingsQmScrollContainer(s_QmOverviewScrollContainer, OverviewScrollFrame, EndPad, &s_QmOverviewScrollContentHeight, &s_PrevOverviewScrollY, !m_MenuTextPlanCollecting);
 }
 
 void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)
@@ -595,14 +674,19 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	// of feat-002 (animation runtime) + feat-003 (tokens + 11 widgets).
 	if(g_Config.m_DbgQmUiDogfood != 0)
 	{
+		if(PrewarmOnly)
+			return;
+
 		IUiContext Ctx;
 		Ctx.m_pUi = Ui();
 		Ctx.m_pMenus = this;
 		Ctx.m_pTextRender = TextRender();
 		Ctx.m_pTooltips = &GameClient()->m_Tooltips;
 		Ctx.m_pAnim = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();
+		Ctx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
 		Ctx.m_pIconManager = GameClient()->QmIconManager();
 		Ctx.m_ScopeHash = MakeUiScopeHash("qm_ui_dogfood");
+		Ctx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 		RenderQmUiDogfood(Ctx, MainView);
 		return;
 	}
@@ -863,22 +947,15 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 	CUIRect LeftView, RightView;
 
-	static CScrollRegion s_ScrollRegion;
-	vec2 ScrollOffset(0.0f, 0.0f);
+	static CQmScrollContainer s_QmScrollContainer;
+	static float s_QmScrollContentHeight = 0.0f;
 	static float s_PrevQmScrollY = 0.0f;
-	SSettingsScrollRegionFrame ScrollFrame;
-	if(!PrewarmOnly)
-	{
-		CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);
-		ScrollFrame = BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams, s_PrevQmScrollY);
-		ScrollOffset = ScrollFrame.m_BeginOffset;
-	}
+	SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);
 
 	static std::vector<CUIRect> s_GlassCards;
-	static vec2 s_PrevScrollOffset(0.0f, 0.0f);
 
-	MainView.y += ScrollOffset.y;
-	const CUIRect *pModuleScrollClipRect = PrewarmOnly ? nullptr : s_ScrollRegion.ClipRect();
+	MainView.y += QmScrollFrame.m_Offset.y;
+	const CUIRect *pModuleScrollClipRect = PrewarmOnly ? nullptr : &QmScrollFrame.m_ClipRect;
 	const SSectionCullContext ModuleCullContext{
 		pModuleScrollClipRect != nullptr ? pModuleScrollClipRect->y : MainView.y,
 		pModuleScrollClipRect != nullptr ? pModuleScrollClipRect->y + pModuleScrollClipRect->h : MainView.y + MainView.h,
@@ -892,10 +969,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 	MainView.VSplitMid(&LeftView, &RightView, LgCardSpacing);
 
-	// === 绘制 Liquid Glass 卡片背景（DrawCall 合批：一个 QuadContainer 收集所有可见卡的边框+主体+磨砂，1 drawcall）===
-	{
-		CPerfTimer StageTimer;
-		int VisibleCardCount = 0;
+	// === 绘制 Liquid Glass 卡片背景 ===
+	auto DrawGlassCardBackground = [&](const CUIRect &Card) {
+		if(!IsSectionVisible(Card, ModuleCullContext))
+			return;
 		if(m_QmCardBgQuadContainerIndex == -1)
 			m_QmCardBgQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 		Graphics()->QuadContainerReset(m_QmCardBgQuadContainerIndex);
@@ -943,37 +1020,24 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		};
 
 		const float BorderWidth = 1.5f;
-		for(CUIRect &Card : s_GlassCards)
+		// 边框：Card 全画，HairlineColor（顶点色 = 当前 SetColor）
+		Graphics()->SetColor(QmCardStyle.m_HairlineColor);
+		AddRoundedRectToContainer(Card, QmCardStyle.m_CornerRadius);
+		// 主体：Inner 内缩，GlassColor（去 Draw4 渐变简化合批，明度分层靠 GlassColor vs 背景）
+		CUIRect Inner = Card;
+		Inner.Margin(BorderWidth, &Inner);
+		Graphics()->SetColor(QmCardStyle.m_GlassColor);
+		AddRoundedRectToContainer(Inner, maximum(0.0f, QmCardStyle.m_CornerRadius - BorderWidth));
+		// 磨砂雾感（blur 开时，白色叠加）
+		if(g_Config.m_QmCardBackdropBlur != 0)
 		{
-			Card.y -= s_PrevScrollOffset.y - ScrollOffset.y;
-			if(!IsSectionVisible(Card, ModuleCullContext))
-				continue;
-			++VisibleCardCount;
-			// 边框：Card 全画，HairlineColor（顶点色 = 当前 SetColor）
-			Graphics()->SetColor(QmCardStyle.m_HairlineColor);
-			AddRoundedRectToContainer(Card, QmCardStyle.m_CornerRadius);
-			// 主体：Inner 内缩，GlassColor（去 Draw4 渐变简化合批，明度分层靠 GlassColor vs 背景）
-			CUIRect Inner = Card;
-			Inner.Margin(BorderWidth, &Inner);
-			Graphics()->SetColor(QmCardStyle.m_GlassColor);
+			Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.03f));
 			AddRoundedRectToContainer(Inner, maximum(0.0f, QmCardStyle.m_CornerRadius - BorderWidth));
-			// 磨砂雾感（blur 开时，白色叠加）
-			if(g_Config.m_QmCardBackdropBlur != 0)
-			{
-				Graphics()->SetColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.03f));
-				AddRoundedRectToContainer(Inner, maximum(0.0f, QmCardStyle.m_CornerRadius - BorderWidth));
-			}
 		}
 		Graphics()->QuadContainerUpload(m_QmCardBgQuadContainerIndex);
 		Graphics()->TextureClear();
 		Graphics()->RenderQuadContainer(m_QmCardBgQuadContainerIndex, -1);
-
-		char aGlassExtra[96];
-		str_format(aGlassExtra, sizeof(aGlassExtra), "tab=%s cards=%d/%d batched", QmSettingsTabName(m_QmClientSettingsTab), VisibleCardCount, (int)s_GlassCards.size());
-		LogQmPerfStage(Client(), "glass_cards_draw", StageTimer.ElapsedMs(), false, aGlassExtra);
-	}
-	if(!PrewarmOnly)
-		s_PrevScrollOffset = ScrollOffset;
+	};
 	s_GlassCards.clear();
 
 	// === 动态彩色标题 ===
@@ -2117,34 +2181,12 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	};
 
 	static SQmModuleDragState s_DragState = {nullptr, nullptr, 0.0f, vec2(0.0f, 0.0f), 0.0f, 0.0f, false};
-	const float DragHoldSeconds = 0.3f;
-	const float DragOutlineThickness = std::clamp(2.0f * UiScale, 1.0f, 2.0f);
-	const ColorRGBA DragOutlineColor(1.0f, 0.85f, 0.2f, 0.9f);
-	const ColorRGBA DragGhostColor(0.08f, 0.09f, 0.12f, 0.55f);
-
-	auto DrawDragOutline = [&](const CUIRect &Rect) {
-		CUIRect Line = Rect;
-		Line.HSplitTop(DragOutlineThickness, &Line, nullptr);
-		Line.Draw(DragOutlineColor, IGraphics::CORNER_NONE, 0.0f);
-
-		Line = Rect;
-		Line.HSplitBottom(DragOutlineThickness, nullptr, &Line);
-		Line.Draw(DragOutlineColor, IGraphics::CORNER_NONE, 0.0f);
-
-		Line = Rect;
-		Line.VSplitLeft(DragOutlineThickness, &Line, nullptr);
-		Line.Draw(DragOutlineColor, IGraphics::CORNER_NONE, 0.0f);
-
-		Line = Rect;
-		Line.VSplitRight(DragOutlineThickness, nullptr, &Line);
-		Line.Draw(DragOutlineColor, IGraphics::CORNER_NONE, 0.0f);
-	};
 
 	struct SQmModuleCardInfo
 	{
 		const SQmModuleEntry *m_pModule;
 		EQmModuleColumn m_Column;
-		CUIRect m_Rect; // DisplayRect：当前显示位置（每帧 SPRING lerp 向 m_TargetRect，让位动画）
+		CUIRect m_Rect; // DisplayRect：当前显示位置（由 QmUi FLIP/spring 追赶 m_TargetRect）
 		CUIRect m_TargetRect; // 布局目标位置（布局算法每帧写入，order 变化只改这里）
 	};
 
@@ -2157,13 +2199,21 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		int m_InsertIndex;
 		bool m_Active;
 		bool m_Valid;
-		bool m_PreviewValid; // A2：预览布局（含腾位）是否有效，lerp 据此用预览 TargetRect
+		bool m_PreviewValid; // 预览布局是否有效；当前拖拽态保持 false，松手后才提交布局。
 		CUIRect m_LineRect;
 	};
 
 	static SQmModuleDropPreview s_DropPreview = {nullptr, nullptr, nullptr, EQmModuleColumn::Left, 0, false, false, false, CUIRect()};
+	struct SQmModuleDropPreviewCandidate
+	{
+		SQmModuleDropPreview m_Preview;
+		float m_StartedAt;
+		bool m_Active;
+	};
+
+	static SQmModuleDropPreviewCandidate s_DropPreviewCandidate = {{nullptr, nullptr, nullptr, EQmModuleColumn::Left, 0, false, false, false, CUIRect()}, 0.0f, false};
+	const float DropPreviewDwellSeconds = 0.22f;
 	const float DropPreviewThickness = std::clamp(3.0f * UiScale, 2.0f, 4.0f);
-	const ColorRGBA DropPreviewColor(0.2f, 0.9f, 0.4f, 0.9f);
 	bool SearchSingleColumnMode = false;
 	bool SearchDragBlocked = false;
 	auto ResetModuleDragState = [&]() {
@@ -2180,6 +2230,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		s_DropPreview.m_pPrevVisible = nullptr;
 		s_DropPreview.m_pNextVisible = nullptr;
 		s_DropPreview.m_PreviewValid = false;
+		s_DropPreviewCandidate.m_Active = false;
 	};
 	static std::array<CButtonContainer, QmModuleCount> s_aModuleCollapseButtons;
 	auto GetModuleCollapseButtonRect = [&](const SQmModuleEntry *pModule, const CUIRect &CardRect, CUIRect *pOutRect) -> bool {
@@ -2199,9 +2250,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		return true;
 	};
 
-	auto HandleModuleDragState = [&](const SQmModuleEntry *pModule, const CUIRect &CardRect, bool BlockDrag = false) {
+	auto TryBeginModuleDrag = [&](const SQmModuleEntry *pModule, const CUIRect &CardRect, bool BlockDrag = false) -> bool {
 		if(PrewarmOnly)
-			return;
+			return false;
 		CUIRect CollapseButtonRect;
 		const bool HasCollapseButton = GetModuleCollapseButtonRect(pModule, CardRect, &CollapseButtonRect);
 		const bool OverCollapseButton = HasCollapseButton && Ui()->MouseHovered(&CollapseButtonRect);
@@ -2209,8 +2260,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		HeaderRect.Margin(LgCardPadding, &HeaderRect);
 		HeaderRect.HSplitTop(LgHeadlineSize + LgTipHeight + LgLineSpacing * 0.5f, &HeaderRect, nullptr);
 		const bool OverHeader = Ui()->MouseHovered(&HeaderRect) && !OverCollapseButton;
-		if(Ui()->MouseHovered(&CardRect) && Ui()->MouseButtonClicked(0))
-			RecordQmModuleUsage(pModule->m_Id);
 		const bool ModuleDragActive = s_DragState.m_pPressed == pModule || s_DragState.m_pDragging == pModule;
 		const bool HardInteractionBlocked = SearchDragBlocked || BlockDrag || Ui()->IsPopupOpen() || Ui()->IsPopupHovered();
 		const bool InteractionBlocked = HardInteractionBlocked || (Ui()->ActiveItem() != nullptr && !ModuleDragActive);
@@ -2219,23 +2268,24 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 		if(!InteractionBlocked && Ui()->MouseButtonClicked(0) && OverHeader)
 		{
+			RecordQmModuleUsage(pModule->m_Id);
 			s_DragState.m_pPressed = pModule;
-			s_DragState.m_pDragging = nullptr;
+			s_DragState.m_pDragging = pModule;
 			s_DragState.m_PressStartTime = Client()->GlobalTime();
 			s_DragState.m_GrabOffset = vec2(Ui()->MouseX() - CardRect.x, Ui()->MouseY() - CardRect.y);
 			s_DragState.m_DraggedWidth = CardRect.w;
 			s_DragState.m_DraggedHeight = CardRect.h;
 			s_DragState.m_HasDragAnchor = true;
+			return true;
 		}
 
-		if(!InteractionBlocked && s_DragState.m_pPressed == pModule && Ui()->MouseButton(0) && s_DragState.m_pDragging == nullptr)
-		{
-			if(Client()->GlobalTime() - s_DragState.m_PressStartTime >= DragHoldSeconds)
-			{
-				s_DragState.m_pDragging = pModule;
-			}
-		}
+		return false;
+	};
 
+	auto HandleModuleDragState = [&](const SQmModuleEntry *pModule, const CUIRect &CardRect, bool BlockDrag = false) {
+		if(!PrewarmOnly && Ui()->MouseHovered(&CardRect) && Ui()->MouseButtonClicked(0) && s_DragState.m_pDragging != pModule)
+			RecordQmModuleUsage(pModule->m_Id);
+		TryBeginModuleDrag(pModule, CardRect, BlockDrag);
 		if(s_DragState.m_pDragging != pModule)
 			return;
 		// 被拖卡轮廓（黄框）已移除（扁平化：被拖卡和其他卡同层，无指示框）
@@ -2245,15 +2295,12 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	static std::vector<const SQmModuleCardInfo *> s_vLeftCards;
 	static std::vector<const SQmModuleCardInfo *> s_vRightCards;
 	// 跨帧 DisplayRect cache（让位动画核心）：按 module state index 存上一帧显示位置，
-	// 每帧 lerp 追赶布局 TargetRect。独立于 s_vModuleCards（后者每帧 clear 重建）。
+	// 每帧通过 QmUi FLIP/spring 追赶布局 TargetRect。独立于 s_vModuleCards（后者每帧 clear 重建）。
 	static std::array<CUIRect, QmModuleCount> s_aQmModuleDisplayRects{};
-	static std::array<CUIRect, QmModuleCount> s_aQmModulePreviewRects{}; // A2：预览布局（拖拽中含腾位），lerp 据此实时让位
+	static std::array<CUIRect, QmModuleCount> s_aQmModulePreviewRects{}; // 拖拽预览 rect 保留给后续扩展；当前拖拽态不改写正常间距
 	std::vector<SQmModuleCardInfo> &ModuleCards = s_vModuleCards;
 	std::vector<const SQmModuleCardInfo *> &LeftCards = s_vLeftCards;
 	std::vector<const SQmModuleCardInfo *> &RightCards = s_vRightCards;
-	ModuleCards.clear();
-	LeftCards.clear();
-	RightCards.clear();
 	ModuleCards.reserve(s_aQmModuleLayout.size());
 	LeftCards.reserve(s_aQmModuleLayout.size());
 	RightCards.reserve(s_aQmModuleLayout.size());
@@ -3000,18 +3047,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		}
 	};
 
-	auto SkipOffscreenModule = [&](const SQmModuleEntry *pModule, CUIRect &Column) -> bool {
-		const float EstimatedTotalHeight = maximum(
+	auto EstimateModuleTotalHeight = [&](const SQmModuleEntry *pModule) -> float {
+		return maximum(
 			GetQmModuleEstimatedHeight(pModule),
 			LgCardPadding * 2.0f + LgHeadlineSize + LgTipHeight + LgLineHeight + LgCardSpacing);
-		CUIRect EstimatedCard = Column;
-		EstimatedCard.y += LgCardSpacing;
-		EstimatedCard.h = maximum(EstimatedTotalHeight - LgCardSpacing, LgLineHeight);
-		if(IsSectionVisible(EstimatedCard, ModuleCullContext))
-			return false;
-
-		Column.y += EstimatedTotalHeight;
-		return true;
 	};
 
 	static std::vector<const SQmModuleEntry *> s_vVisibleLeftModules;
@@ -3331,22 +3370,57 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			QmCardOffsetX = 0.0f;
 			QmCardOffsetY = 0.0f;
 
-			if(SkipOffscreenModule(pModule, Column))
-				continue;
-
-			// 让位偏移：只在拖拽态偏移 Column 到 DisplayRect（非拖拽态 offset=0，卡片正常）
-			if(s_DragState.m_pDragging != nullptr)
+			// 布局过渡偏移：DisplayRect 是当前显示位置，Column 保持 TargetRect 布局累加。
+			bool RenderModule = true;
 			{
 				const int SI = GetQmModuleStateIndexById(pModule->m_Id);
-				const CUIRect &DispRect = s_aQmModuleDisplayRects[SI];
+				CUIRect TargetBeforeRender = Column;
+				TargetBeforeRender.y += LgCardSpacing;
+				TargetBeforeRender.h = s_aQmModuleLastHeights[SI] > 0.0f ? s_aQmModuleLastHeights[SI] : GetQmModuleDefaultEstimatedHeight(*pModule);
+				if(s_DragState.m_pDragging == nullptr && Ui()->MouseButtonClicked(0))
+					TryBeginModuleDrag(pModule, TargetBeforeRender);
+				const uint64_t NodeKey = BuildUiAnimNodeKey(str_quickhash("qm_module_card_layout"), static_cast<uint64_t>(pModule->m_Id));
+				CUIRect &DispRect = s_aQmModuleDisplayRects[SI];
+				if(pModule == s_DragState.m_pDragging)
+				{
+					CUIRect DragTarget = TargetBeforeRender;
+					DragTarget.x = Ui()->MouseX() - s_DragState.m_GrabOffset.x;
+					DragTarget.y = Ui()->MouseY() - s_DragState.m_GrabOffset.y;
+					DispRect = GameClient()->UiRuntimeV2()->Tree().SyncLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, DragTarget);
+				}
+				else if(DispRect.w <= 0.0f || DispRect.h <= 0.0f)
+				{
+					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, TargetBeforeRender, ui_token::motion::CARD_REORDER, 1, false);
+				}
+				else
+				{
+					const CUIRect &EffectiveTarget = (s_DropPreview.m_PreviewValid && s_aQmModulePreviewRects[SI].w > 0.0f) ? s_aQmModulePreviewRects[SI] : TargetBeforeRender;
+					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, EffectiveTarget, ui_token::motion::CARD_REORDER);
+				}
 				if(DispRect.w > 0.0f)
 				{
 					QmCardOffsetX = DispRect.x - Column.x;
 					QmCardOffsetY = DispRect.y - (Column.y + LgCardSpacing);
+					CUIRect DisplayBgRect = DispRect;
+					DisplayBgRect.h = s_aQmModuleLastHeights[SI] > 0.0f ? s_aQmModuleLastHeights[SI] : TargetBeforeRender.h;
+					DrawGlassCardBackground(DisplayBgRect);
 					Column.x += QmCardOffsetX;
 					Column.y += QmCardOffsetY;
 				}
+				const bool TargetVisible = IsSectionVisible(TargetBeforeRender, ModuleCullContext);
+				const bool DisplayVisible = DispRect.w > 0.0f && IsSectionVisible(DispRect, ModuleCullContext);
+				if(!TargetVisible && !DisplayVisible)
+				{
+					Column.x -= QmCardOffsetX;
+					Column.y -= QmCardOffsetY;
+					QmCardOffsetX = 0.0f;
+					QmCardOffsetY = 0.0f;
+					Column.y += EstimateModuleTotalHeight(pModule);
+					RenderModule = false;
+				}
 			}
+			if(!RenderModule)
+				continue;
 
 			CPerfTimer ModuleTimer;
 			const SQmModuleHeadlineInfo HeadlineInfo = GetQmModuleHeadlineInfo(pModule->m_Id);
@@ -7564,25 +7638,42 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				QmSettingsTabName(m_QmClientSettingsTab), QmModuleIdName(pModule->m_Id), QmModuleColumnToString(ColumnId), HasModuleSearch ? 1 : 0);
 			LogQmPerfStage(Client(), "模块总计", ModuleTimer.ElapsedMs(), false, aModuleExtra);
 		}
+		// 清理最后一张卡留下的渲染偏移，避免跨列或下一帧的可见性边界沿用旧 DisplayRect 偏移。
+		Column.x -= QmCardOffsetX;
+		Column.y -= QmCardOffsetY;
+		QmCardOffsetX = 0.0f;
+		QmCardOffsetY = 0.0f;
 	};
 
 	auto UpdateDropPreview = [&]() {
-		s_DropPreview.m_Active = false;
-		s_DropPreview.m_Valid = false;
-		s_DropPreview.m_PreviewValid = false;
-		s_DropPreview.m_pDragged = nullptr;
-		s_DropPreview.m_pPrevVisible = nullptr;
-		s_DropPreview.m_pNextVisible = nullptr;
+		auto ClearActiveDropPreview = [&]() {
+			s_DropPreview.m_Active = false;
+			s_DropPreview.m_Valid = false;
+			s_DropPreview.m_PreviewValid = false;
+			s_DropPreview.m_pDragged = nullptr;
+			s_DropPreview.m_pPrevVisible = nullptr;
+			s_DropPreview.m_pNextVisible = nullptr;
+		};
+		auto ClearDropPreview = [&]() {
+			ClearActiveDropPreview();
+			s_DropPreviewCandidate.m_Active = false;
+		};
 
 		if(s_DragState.m_pDragging == nullptr)
+		{
+			ClearDropPreview();
 			return;
+		}
 		if(s_DragState.m_pDragging->m_Column == EQmModuleColumn::Full)
+		{
+			ClearDropPreview();
 			return;
+		}
 
 		EnsureColumnTops();
 
-		const float MouseX = Ui()->MouseX();
-		const float MouseY = Ui()->MouseY();
+		const float DragHeaderX = Ui()->MouseX();
+		const float DragHeaderY = Ui()->MouseY() - s_DragState.m_GrabOffset.y + LgCardPadding + LgHeadlineSize * 0.5f;
 		float ClipTop = minimum(LeftColumnFrame.y, RightColumnFrame.y);
 		float ClipBottom = maximum(LeftColumnFrame.y + LeftColumnFrame.h, RightColumnFrame.y + RightColumnFrame.h);
 		if(Ui()->IsClipped())
@@ -7593,8 +7684,11 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		}
 		const float DropAreaLeft = minimum(LeftColumnFrame.x, RightColumnFrame.x);
 		const float DropAreaRight = maximum(LeftColumnFrame.x + LeftColumnFrame.w, RightColumnFrame.x + RightColumnFrame.w);
-		if(MouseX < DropAreaLeft || MouseX > DropAreaRight || MouseY < ClipTop || MouseY > ClipBottom)
+		if(DragHeaderX < DropAreaLeft || DragHeaderX > DropAreaRight || DragHeaderY < ClipTop || DragHeaderY > ClipBottom)
+		{
+			ClearDropPreview();
 			return;
+		}
 
 		std::vector<const SQmModuleCardInfo *> vMergedCards;
 		const std::vector<const SQmModuleCardInfo *> *pCards = nullptr;
@@ -7617,7 +7711,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		else
 		{
 			const float ColumnSplitX = (LeftColumnFrame.x + LeftColumnFrame.w + RightColumnFrame.x) * 0.5f;
-			TargetColumn = MouseX <= ColumnSplitX ? EQmModuleColumn::Left : EQmModuleColumn::Right;
+			TargetColumn = DragHeaderX <= ColumnSplitX ? EQmModuleColumn::Left : EQmModuleColumn::Right;
 			pCards = (TargetColumn == EQmModuleColumn::Left) ? &LeftCards : &RightCards;
 			ColumnTop = (TargetColumn == EQmModuleColumn::Left) ? LeftColumnTop : RightColumnTop;
 			ColumnFrame = (TargetColumn == EQmModuleColumn::Left) ? LeftColumnFrame : RightColumnFrame;
@@ -7636,8 +7730,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			if(pFirstFilteredCard == nullptr)
 				pFirstFilteredCard = pCard;
 			pLastFilteredCard = pCard;
-			const float MidY = pCard->m_Rect.y + pCard->m_Rect.h * 0.5f;
-			if(MouseY > MidY)
+			const CUIRect &StableRect = pCard->m_TargetRect;
+			const float HeaderAnchorY = StableRect.y + LgCardPadding + LgHeadlineSize * 0.5f;
+			if(DragHeaderY > HeaderAnchorY)
 			{
 				++InsertIndex;
 				pPrevInsertCard = pCard;
@@ -7656,7 +7751,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			else if(pPrevInsertCard != nullptr)
 				TargetColumn = pPrevInsertCard->m_Column;
 		}
-		const float EffectiveMouseY = std::clamp(MouseY, ClipTop, ClipBottom);
+		const float EffectiveMouseY = std::clamp(DragHeaderY, ClipTop, ClipBottom);
 		float LineY = ColumnTop;
 		if(FilteredCardsSize == 0)
 		{
@@ -7664,16 +7759,16 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		}
 		else if(InsertIndex <= 0)
 		{
-			LineY = pFirstFilteredCard->m_Rect.y - LgCardSpacing * 0.5f;
+			LineY = pFirstFilteredCard->m_TargetRect.y - LgCardSpacing * 0.5f;
 			LineY = maximum(LineY, ColumnTop);
 		}
 		else if(InsertIndex >= FilteredCardsSize)
 		{
-			LineY = pLastFilteredCard->m_Rect.y + pLastFilteredCard->m_Rect.h + LgCardSpacing * 0.5f;
+			LineY = pLastFilteredCard->m_TargetRect.y + pLastFilteredCard->m_TargetRect.h + LgCardSpacing * 0.5f;
 		}
 		else
 		{
-			LineY = (pPrevInsertCard->m_Rect.y + pPrevInsertCard->m_Rect.h + pNextInsertCard->m_Rect.y) * 0.5f;
+			LineY = (pPrevInsertCard->m_TargetRect.y + pPrevInsertCard->m_TargetRect.h + pNextInsertCard->m_TargetRect.y) * 0.5f;
 		}
 		const float MinLineY = ColumnTop;
 		const float MaxLineY = maximum(MinLineY, ClipBottom - DropPreviewThickness * 0.5f);
@@ -7698,93 +7793,51 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		LineRect.y = LineY - DropPreviewThickness * 0.5f;
 		LineRect.h = DropPreviewThickness;
 
-		s_DropPreview.m_pDragged = s_DragState.m_pDragging;
-		s_DropPreview.m_pPrevVisible = InsertIndex > 0 && pPrevInsertCard != nullptr ? pPrevInsertCard->m_pModule : nullptr;
-		s_DropPreview.m_pNextVisible = InsertIndex < FilteredCardsSize && pNextInsertCard != nullptr ? pNextInsertCard->m_pModule : nullptr;
-		s_DropPreview.m_TargetColumn = TargetColumn;
-		s_DropPreview.m_InsertIndex = InsertIndex;
-		s_DropPreview.m_Active = true;
-		s_DropPreview.m_Valid = true;
-		s_DropPreview.m_LineRect = LineRect;
+		auto BuildDropPreviewCandidate = [&]() {
+			SQmModuleDropPreview Candidate = {nullptr, nullptr, nullptr, EQmModuleColumn::Left, 0, false, false, false, CUIRect()};
+			Candidate.m_pDragged = s_DragState.m_pDragging;
+			Candidate.m_pPrevVisible = InsertIndex > 0 && pPrevInsertCard != nullptr ? pPrevInsertCard->m_pModule : nullptr;
+			Candidate.m_pNextVisible = InsertIndex < FilteredCardsSize && pNextInsertCard != nullptr ? pNextInsertCard->m_pModule : nullptr;
+			Candidate.m_TargetColumn = TargetColumn;
+			Candidate.m_InsertIndex = InsertIndex;
+			Candidate.m_Active = true;
+			Candidate.m_Valid = true;
+			Candidate.m_LineRect = LineRect;
+			return Candidate;
+		};
+		auto SameDropPreviewCandidate = [](const SQmModuleDropPreview &A, const SQmModuleDropPreview &B) {
+			return A.m_pDragged == B.m_pDragged &&
+			       A.m_pPrevVisible == B.m_pPrevVisible &&
+			       A.m_pNextVisible == B.m_pNextVisible &&
+			       A.m_TargetColumn == B.m_TargetColumn &&
+			       A.m_InsertIndex == B.m_InsertIndex &&
+			       A.m_Active == B.m_Active &&
+			       A.m_Valid == B.m_Valid;
+		};
+
+		const SQmModuleDropPreview Candidate = BuildDropPreviewCandidate();
+		if(!s_DropPreviewCandidate.m_Active || !SameDropPreviewCandidate(s_DropPreviewCandidate.m_Preview, Candidate))
+		{
+			s_DropPreviewCandidate.m_Preview = Candidate;
+			s_DropPreviewCandidate.m_StartedAt = Client()->LocalTime();
+			s_DropPreviewCandidate.m_Active = true;
+			ClearActiveDropPreview();
+			return;
+		}
+		if(Client()->LocalTime() - s_DropPreviewCandidate.m_StartedAt < DropPreviewDwellSeconds)
+		{
+			ClearActiveDropPreview();
+			return;
+		}
+
+		s_DropPreview = s_DropPreviewCandidate.m_Preview;
 	};
 
-	// A2：算预览布局（被拖卡在 s_DropPreview 落点时每卡的 rect，含腾位）。lerp 用此实时让位。
-	// 复用渲染期 HSplitTop 几何（ColumnTop + LgCardSpacing + CardHeight），边界天然正确。
-	// 不写 s_aQmModuleLayout（预览只渲染层；松手 CommitDropPreview 才 commit）。
+	// 拖拽期间不做可视占位：其他卡保持正常 TargetRect 和正常间距，s_DropPreview 只用于松手 commit。
 	auto ComputeDropPreviewLayout = [&]() {
+		// 拖拽期间不做可视占位，避免一进入拖拽态就改变正常卡片间距。
 		s_aQmModulePreviewRects.fill(CUIRect{});
 		s_DropPreview.m_PreviewValid = false;
-		if(!s_DropPreview.m_Active || !s_DropPreview.m_Valid || s_DropPreview.m_pDragged == nullptr)
-			return;
-		if(s_DropPreview.m_pDragged->m_Column == EQmModuleColumn::Full)
-			return;
-
-		const SQmModuleEntry *pDragged = s_DropPreview.m_pDragged;
-		const int DraggedSI = GetQmModuleStateIndexById(pDragged->m_Id);
-		const float LastDraggedH = s_aQmModuleLastHeights[DraggedSI];
-		// 让位高度用被拖卡【当前渲染高度】（s_aQmModuleLastHeights），而非按下时的旧 m_DraggedHeight——
-		// 否则被拖卡展开/折叠后高度变化，让位不够 → 被拖卡覆盖下方卡（"消失"）
-		const float DraggedH = (LastDraggedH > 0.0f) ? LastDraggedH : std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));
-		// 文本环绕模型（pretext 式）：让位 = 被拖卡占位高度（DraggedH），其他卡让出被拖卡占的空间 → 同层环绕，不覆盖（间距 LgCardSpacing 统一）。大卡让位大是物理真实（float 图片占位大，文本让多）
-		const float Yield = DraggedH + LgCardSpacing;
-		// 被拖卡连续插入位置（鼠标 y，实时，无延迟——"文本环绕图片"模型）
-		const float DragY = Ui()->MouseY();
-		auto CardH = [&](const SQmModuleEntry *pE) -> float {
-			const int SI = GetQmModuleStateIndexById(pE->m_Id);
-			const float H = s_aQmModuleLastHeights[SI];
-			return H > 0.0f ? H : GetQmModuleDefaultEstimatedHeight(*pE);
-		};
-		auto MakeRect = [](const CUIRect &CF, float Y, float H) {
-			CUIRect R;
-			R.x = CF.x;
-			R.w = CF.w;
-			R.y = Y;
-			R.h = H;
-			return R;
-		};
-		// 单列连续让位：目标列基于 DragY 连续插入（被拖卡 y 决定插入点，DragY<卡中线则插入），后续卡下滑 Yield 让位；非目标列原位
-		auto LayoutOneColumn = [&](EQmModuleColumn Col, const std::vector<const SQmModuleEntry *> &vCards,
-					       float ColumnTop, const CUIRect &ColFrame) {
-			float Y = ColumnTop;
-			const bool IsTargetCol = (Col == s_DropPreview.m_TargetColumn);
-			bool DraggedInserted = false;
-			for(const SQmModuleEntry *pE : vCards)
-			{
-				if(pE == pDragged)
-					continue;
-				if(IsTargetCol && !DraggedInserted)
-				{
-					const float CardMidY = Y + LgCardSpacing + CardH(pE) * 0.5f;
-					if(DragY < CardMidY)
-					{
-						Y += Yield; // 被拖卡在此卡前插入，后续卡下滑让位（封顶 Yield）
-						DraggedInserted = true;
-					}
-				}
-				Y += LgCardSpacing;
-				s_aQmModulePreviewRects[GetQmModuleStateIndexById(pE->m_Id)] = MakeRect(ColFrame, Y, CardH(pE));
-				Y += CardH(pE);
-			}
-			if(IsTargetCol && !DraggedInserted)
-				Y += Yield; // 列尾插入（含空列）
-		};
-
-		EnsureColumnTops();
-		if(CompactLayout || SearchSingleColumnMode)
-		{
-			std::vector<const SQmModuleEntry *> vMerged;
-			for(const SQmModuleEntry *pE : s_vCachedLeftModules)
-				vMerged.push_back(pE);
-			for(const SQmModuleEntry *pE : s_vCachedRightModules)
-				vMerged.push_back(pE);
-			LayoutOneColumn(EQmModuleColumn::Left, vMerged, LeftColumnTop, LeftColumnFrame);
-		}
-		else
-		{
-			LayoutOneColumn(EQmModuleColumn::Left, s_vCachedLeftModules, LeftColumnTop, LeftColumnFrame);
-			LayoutOneColumn(EQmModuleColumn::Right, s_vCachedRightModules, RightColumnTop, RightColumnFrame);
-		}
-		s_DropPreview.m_PreviewValid = true;
 	};
 
 	auto RenderDragGhost = [&]() {
@@ -7869,48 +7922,42 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		return true;
 	};
 
+	auto UpdateDropPreviewBeforeRender = [&]() {
+		if(HasModuleSearch)
+		{
+			ResetModuleDragState();
+			return;
+		}
+		if(PrewarmOnly)
+			return;
+
+		const bool MouseReleased = !Ui()->MouseButton(0) && Ui()->LastMouseButton(0);
+		UpdateDropPreview();
+		ComputeDropPreviewLayout();
+		if(MouseReleased)
+		{
+			if(s_DragState.m_pDragging != nullptr)
+				CommitDropPreview();
+			ResetModuleDragState();
+		}
+		else if(!Ui()->MouseButton(0) && s_DragState.m_pDragging == nullptr)
+		{
+			ResetModuleDragState();
+		}
+	};
+	UpdateDropPreviewBeforeRender();
+
 	const std::vector<const SQmModuleEntry *> &RenderedLeftModules = HasModuleSearch ? SearchLeftModules : VisibleLeftModules;
 	const std::vector<const SQmModuleEntry *> &RenderedRightModules = HasModuleSearch ? SearchRightModules : VisibleRightModules;
 	{
 		CPerfTimer StageTimer;
 		EnsureColumnTops();
+		ModuleCards.clear();
+		LeftCards.clear();
+		RightCards.clear();
 		RenderColumnModules(RenderedLeftModules, EQmModuleColumn::Left);
 		if(!SearchSingleColumnMode)
 			RenderColumnModules(RenderedRightModules, EQmModuleColumn::Right);
-		// 让位动画：每帧 lerp 跨帧 cache（DisplayRect）→ 布局 TargetRect
-		{
-			const float LerpT = 0.25f;
-			for(const SQmModuleCardInfo &Info : ModuleCards)
-			{
-				dbg_assert(Info.m_pModule != nullptr, "AnimateModuleCardPositions: nullptr module");
-				const int StateIndex = GetQmModuleStateIndexById(Info.m_pModule->m_Id);
-				if(Info.m_pModule == s_DragState.m_pDragging)
-				{
-					s_aQmModuleDisplayRects[StateIndex].x = Ui()->MouseX() - s_DragState.m_GrabOffset.x;
-					s_aQmModuleDisplayRects[StateIndex].y = Ui()->MouseY() - s_DragState.m_GrabOffset.y;
-					s_aQmModuleDisplayRects[StateIndex].w = Info.m_TargetRect.w;
-					s_aQmModuleDisplayRects[StateIndex].h = Info.m_TargetRect.h;
-				}
-				else
-				{
-					CUIRect &Disp = s_aQmModuleDisplayRects[StateIndex];
-					// A2：拖拽中用预览 TargetRect（含腾位）实时让位；否则布局 TargetRect
-					const CUIRect &EffectiveTarget = (s_DropPreview.m_PreviewValid && s_aQmModulePreviewRects[StateIndex].w > 0.0f) ? s_aQmModulePreviewRects[StateIndex] : Info.m_TargetRect;
-					// 首次初始化 = EffectiveTarget（不 lerp 从 {0}，否则卡片偏到 EffectiveTarget*0.25）
-					if(Disp.w <= 0.0f || Disp.h <= 0.0f)
-					{
-						Disp = EffectiveTarget;
-					}
-					else
-					{
-						Disp.x += (EffectiveTarget.x - Disp.x) * LerpT;
-						Disp.y += (EffectiveTarget.y - Disp.y) * LerpT;
-						Disp.w = EffectiveTarget.w;
-						Disp.h = EffectiveTarget.h;
-					}
-				}
-			}
-		}
 		char aRenderExtra[128];
 		str_format(aRenderExtra, sizeof(aRenderExtra), "tab=%s transition=%d search=%d left=%d right=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0, HasModuleSearch ? 1 : 0,
@@ -7918,22 +7965,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		LogQmPerfStage(Client(), "active_tab_total", StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
 		LogQmPerfStage(Client(), QmActiveTabStageName(), StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
 	}
-	if(HasModuleSearch)
+	if(!HasModuleSearch && !PrewarmOnly)
 	{
-		ResetModuleDragState();
-	}
-	else if(!PrewarmOnly)
-	{
-		UpdateDropPreview();
-		ComputeDropPreviewLayout();
 		RenderDragGhost();
-		const bool MouseReleased = !Ui()->MouseButton(0) && Ui()->LastMouseButton(0);
-		if(MouseReleased)
-		{
-			if(s_DragState.m_pDragging != nullptr)
-				CommitDropPreview();
-			ResetModuleDragState();
-		}
 		if(s_DropPreview.m_Active && s_DropPreview.m_Valid)
 		{
 			// 落点绿线已移除（扁平化：被拖卡跟鼠标 + 其他卡环绕让位，无需绿线指示）
@@ -7945,13 +7979,12 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	// === 滚动区域 Manba OUT! ===
 	if(!PrewarmOnly)
 	{
-		CUIRect ScrollRegion;
-		ScrollRegion.x = MainView.x;
-		ScrollRegion.y = maximum(LeftView.y, RightView.y) + LgCardSpacing;
-		ScrollRegion.w = MainView.w;
-		ScrollRegion.h = 0.0f;
-		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion);
-		s_PrevQmScrollY = ScrollFrame.m_FinalOffsetY;
+		CUIRect ScrollEnd;
+		ScrollEnd.x = MainView.x;
+		ScrollEnd.y = maximum(LeftView.y, RightView.y) + LgCardSpacing;
+		ScrollEnd.w = MainView.w;
+		ScrollEnd.h = 0.0f;
+		FinishSettingsQmScrollContainer(s_QmScrollContainer, QmScrollFrame, ScrollEnd, &s_QmScrollContentHeight, &s_PrevQmScrollY, true);
 	}
 	if(TabTransitionActive && TabTransitionAlpha > 0.0f)
 		TabContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TabTransitionAlpha), IGraphics::CORNER_NONE, 0.0f);

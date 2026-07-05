@@ -4,8 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="dcterms.date" content="2026-06-14" />
-  <meta name="status" content="active" />
+  <meta name="status" content="superseded" />
   <meta name="supersedes" content="2026-06-10-设置页性能优化总纲.html; 2026-06-11-设置页性能优化总纲-重组版.html; 2026-06-14-设置页性能优化总纲-统一工作流版.html" />
+  <meta name="superseded-by" content="2026-06-20-长期性能优化路线图-v3.html" />
   <title>设置页性能优化总纲（全局调度版）</title>
   <style>
     :root {
@@ -146,11 +147,14 @@
   <div class="page">
     <header class="hero">
       <div class="meta">
-        <span class="pill ok">active</span>
+        <span class="pill warn">superseded</span>
         <span class="pill secondary">2026-06-14</span>
-        <span class="pill warn">取代三份旧总纲</span>
+        <span class="pill warn">设置页历史参考</span>
       </div>
       <h1>设置页性能优化总纲（全局调度版）</h1>
+      <div class="note warn">
+        <strong>文档已被 2026-06-20 v3 取代。</strong> 本文件仅保留设置页专项历史细节，例如 loading → 计划 → 预构建 → 可见 → 后台 → 报告的工作流、<code>m_MenuTextPool</code>、visible guard 和 settings-only 瓶颈归因。当前性能优化的权威入口、Phase 划分、Runtime/QmRuntime 架构、跨 ESC/monitoring/ingame 的调度口径，以及 Vulkan/SDF/MSDF 等长期路线，统一以 <a href="2026-06-20-长期性能优化路线图-v3.html">2026-06-20 长期性能优化路线图 v3</a> 为准。
+      </div>
       <p class="muted">这份文档从<strong>第一性原理</strong>出发，把设置页性能优化统一成一套<strong>可验证的多阶段全局调度系统</strong>。它不再按"局部补丁 P0/P1/P2"组织，而是按<strong>一条贯穿 loading → 计划 → 预构建 → 可见 → 后台 → 报告的工作流</strong>组织：当前已有的、还差哪些、后续计划、为什么这样设计。所有代码事实按 2026-06-14 分支 <code>codex/axiom-script-governance</code> 的真实状态核对，已落地的标注 <span class="badge ok">已落地</span>，部分落地的标注 <span class="badge warn">部分</span>，未落地的标注 <span class="badge bad">gap</span>。</p>
       <div class="toc">
         <a href="#principles">① 第一性原理</a>
@@ -780,7 +784,7 @@ max: 342.777ms  spike: 464 个  avg: 2.050ms</code></pre>
           <tr><td><code>2026-06-10-设置页性能优化总纲.html</code></td><td>原始总纲：第一性原理、12 个瓶颈、策略 A–F、量化系统设计</td><td><span class="badge warn">superseded</span> 结论被新架构和新 telemetry 收口；第一性原理与策略详述已并入本文件</td></tr>
           <tr><td><code>2026-06-11-设置页性能优化总纲-重组版.html</code></td><td>现状映射 + 路线图中间版</td><td><span class="badge warn">superseded</span> P0/P1/P2.5 大部分已落地</td></tr>
           <tr><td><code>2026-06-14-设置页性能优化总纲-统一工作流版.html</code></td><td>原统一工作流版</td><td><span class="badge warn">superseded</span> 被本文件取代</td></tr>
-          <tr><td><strong>本文件</strong></td><td>当前唯一 active spec</td><td><span class="badge ok">权威入口</span></td></tr>
+          <tr><td><strong>本文件</strong></td><td>设置页专项历史参考</td><td><span class="badge warn">superseded</span> 已被 <code>2026-06-20-长期性能优化路线图-v3.html</code> 取代；只保留 settings 细节参考价值</td></tr>
         </tbody>
       </table>
 

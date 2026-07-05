@@ -40,6 +40,7 @@ namespace
 	std::array<CButtonContainer, COLUMN_COUNT> s_aToastBtn;
 	bool s_ToastVisible = true;
 	ui_widget::SToastState s_ToastState;
+	CQmScrollContainer s_DogfoodScroll;
 } // namespace
 
 void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
@@ -54,114 +55,123 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 
 	const char *apTabLabels[] = {Localize("Overview"), Localize("Forms"), Localize("Data")};
 	const char *pItemLabel = Localize("Item");
+	const float ContentHeight = 520.0f;
+	ui_widget::SScrollContainerProps ScrollProps;
+	ScrollProps.m_Style.m_ScrollbarWidth = 10.0f;
+	ScrollProps.m_Style.m_ScrollbarMargin = 2.0f;
+	ScrollProps.m_Style.m_MinThumbHeight = 36.0f;
 
-	// Two columns: 1x and 0.78x to verify UiScale-style downscale
-	CUIRect ColLeft, ColRight;
-	Body.VSplitMid(&ColLeft, &ColRight);
-	ColLeft.VSplitRight(ui_token::spacing::SM, &ColLeft, nullptr);
-	ColRight.VSplitLeft(ui_token::spacing::SM, nullptr, &ColRight);
+	ui_widget::ScrollContainer(Ctx, s_DogfoodScroll, Body, ContentHeight, ScrollProps, [&](CUIRect BodyContent) {
+		Body = BodyContent;
 
-	auto RenderColumn = [&](const CUIRect &Col, float Scale, int Column) {
-		// Card with all the controls inside
-		ui_widget::SCardProps Card;
-		Card.m_pTitle = Scale > 0.9f ? Localize("Native scale (1.0)") : Localize("Downscaled (0.78)");
-		Card.m_TitleFontSize = ui_token::font::HEADLINE * Scale;
-		Card.m_Padding = ui_token::spacing::MD * Scale;
+		// Two columns: 1x and 0.78x to verify UiScale-style downscale
+		CUIRect ColLeft, ColRight;
+		Body.VSplitMid(&ColLeft, &ColRight);
+		ColLeft.VSplitRight(ui_token::spacing::SM, &ColLeft, nullptr);
+		ColRight.VSplitLeft(ui_token::spacing::SM, nullptr, &ColRight);
 
-		ui_widget::DrawCard(Ctx, Col, Card, [&](CUIRect &Content) {
-			const float RowH = 28.0f * Scale;
-			const float Gap = ui_token::spacing::SM * Scale;
-			CUIRect Row;
+		auto RenderColumn = [&](const CUIRect &Col, float Scale, int Column) {
+			// Card with all the controls inside
+			ui_widget::SCardProps Card;
+			Card.m_pTitle = Scale > 0.9f ? Localize("Native scale (1.0)") : Localize("Downscaled (0.78)");
+			Card.m_TitleFontSize = ui_token::font::HEADLINE * Scale;
+			Card.m_Padding = ui_token::spacing::MD * Scale;
 
-			// Row 1: Primary + Secondary buttons
-			Content.HSplitTop(RowH, &Row, &Content);
-			{
-				CUIRect L, R;
-				Row.VSplitMid(&L, &R);
-				L.VSplitRight(Gap * 0.5f, &L, nullptr);
-				R.VSplitLeft(Gap * 0.5f, nullptr, &R);
-				ui_widget::PrimaryButton(Ctx, &s_aPrimaryBtn[Column], Localize("Primary"), L);
-				ui_widget::SecondaryButton(Ctx, &s_aSecondaryBtn[Column], Localize("Secondary"), R);
-			}
-			Content.HSplitTop(Gap, nullptr, &Content);
+			ui_widget::DrawCard(Ctx, Col, Card, [&](CUIRect &Content) {
+				const float RowH = 28.0f * Scale;
+				const float Gap = ui_token::spacing::SM * Scale;
+				CUIRect Row;
 
-			// Row 2: Disabled + Icon button
-			Content.HSplitTop(RowH, &Row, &Content);
-			{
-				CUIRect L, R;
-				Row.VSplitMid(&L, &R);
-				L.VSplitRight(Gap * 0.5f, &L, nullptr);
-				R.VSplitLeft(Gap * 0.5f, nullptr, &R);
-				ui_widget::PrimaryButton(Ctx, &s_aDisabledBtn[Column], Localize("Disabled"), L, true);
-				ui_widget::IconButton(Ctx, &s_aIconBtn[Column], EQmIcon::STAR, "\xEF\x80\x85", R); // FONT_ICON_STAR fallback
-			}
-			Content.HSplitTop(Gap, nullptr, &Content);
-
-			// Row 3: TextField
-			Content.HSplitTop(RowH, &Row, &Content);
-			ui_widget::TextField(Ctx, &s_aTextField[Column], Row, Localize("Type something..."), ui_token::font::BODY * Scale);
-			Content.HSplitTop(Gap, nullptr, &Content);
-
-			// Row 4: Two toggles
-			Content.HSplitTop(RowH, &Row, &Content);
-			{
-				CUIRect L, R;
-				Row.VSplitMid(&L, &R);
-				L.VSplitRight(Gap * 0.5f, &L, nullptr);
-				R.VSplitLeft(Gap * 0.5f, nullptr, &R);
-				ui_widget::Toggle(Ctx, &s_aToggleOn[Column], &s_aToggleOn[Column], L);
-				ui_widget::Toggle(Ctx, &s_aToggleOff[Column], &s_aToggleOff[Column], R);
-			}
-			Content.HSplitTop(Gap, nullptr, &Content);
-
-			// Row 5: Slider
-			Content.HSplitTop(RowH, &Row, &Content);
-			ui_widget::Slider(Ctx, &s_aSliderValue[Column], &s_aSliderValue[Column], 0.0f, 1.0f, Row, "");
-			Content.HSplitTop(Gap, nullptr, &Content);
-
-			// Row 6: TabBar
-			Content.HSplitTop(RowH, &Row, &Content);
-			ui_widget::TabBar(Ctx, apTabLabels, std::size(apTabLabels), &s_aTabActive[Column], Row);
-			Content.HSplitTop(Gap, nullptr, &Content);
-
-			// Rows 7-9: List items
-			for(int i = 0; i < 3; ++i)
-			{
+				// Row 1: Primary + Secondary buttons
 				Content.HSplitTop(RowH, &Row, &Content);
-				char aLabel[32];
-				str_format(aLabel, sizeof(aLabel), "%s %d", pItemLabel, i + 1);
-				ui_widget::SListItemProps ItemProps;
-				ItemProps.m_Selected = (s_aListSelected[Column] == i);
-				ItemProps.m_pTrailingText = (i == 1) ? Localize("new") : nullptr;
-				if(ui_widget::ListItem(Ctx, (const void *)(uintptr_t)(0x100 + Column * 0x100 + i), aLabel, Row, ItemProps))
-					s_aListSelected[Column] = i;
-				Content.HSplitTop(2.0f, nullptr, &Content);
-			}
-			Content.HSplitTop(Gap, nullptr, &Content);
+				{
+					CUIRect L, R;
+					Row.VSplitMid(&L, &R);
+					L.VSplitRight(Gap * 0.5f, &L, nullptr);
+					R.VSplitLeft(Gap * 0.5f, nullptr, &R);
+					ui_widget::PrimaryButton(Ctx, &s_aPrimaryBtn[Column], Localize("Primary"), L);
+					ui_widget::SecondaryButton(Ctx, &s_aSecondaryBtn[Column], Localize("Secondary"), R);
+				}
+				Content.HSplitTop(Gap, nullptr, &Content);
 
-			// Row 10: Modal trigger + Tooltip target
-			Content.HSplitTop(RowH, &Row, &Content);
-			{
-				CUIRect L, R;
-				Row.VSplitMid(&L, &R);
-				L.VSplitRight(Gap * 0.5f, &L, nullptr);
-				R.VSplitLeft(Gap * 0.5f, nullptr, &R);
-				if(ui_widget::PrimaryButton(Ctx, &s_aModalOpenBtn[Column], Localize("Open modal"), L))
-					s_ModalOpen = true;
-				ui_widget::SecondaryButton(Ctx, &s_aTooltipBtn[Column], Localize("Hover for tooltip"), R);
-				ui_widget::Tooltip(Ctx, &s_aTooltipBtn[Column], R, Localize("This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips."));
-			}
-			Content.HSplitTop(Gap, nullptr, &Content);
+				// Row 2: Disabled + Icon button
+				Content.HSplitTop(RowH, &Row, &Content);
+				{
+					CUIRect L, R;
+					Row.VSplitMid(&L, &R);
+					L.VSplitRight(Gap * 0.5f, &L, nullptr);
+					R.VSplitLeft(Gap * 0.5f, nullptr, &R);
+					ui_widget::PrimaryButton(Ctx, &s_aDisabledBtn[Column], Localize("Disabled"), L, true);
+					ui_widget::IconButton(Ctx, &s_aIconBtn[Column], EQmIcon::STAR, "\xEF\x80\x85", R); // FONT_ICON_STAR fallback
+				}
+				Content.HSplitTop(Gap, nullptr, &Content);
 
-			// Row 11: Toast trigger
-			Content.HSplitTop(RowH, &Row, &Content);
-			if(ui_widget::SecondaryButton(Ctx, &s_aToastBtn[Column], s_ToastVisible ? Localize("Hide toast") : Localize("Show toast"), Row))
-				s_ToastVisible = !s_ToastVisible;
-		});
-	};
+				// Row 3: TextField
+				Content.HSplitTop(RowH, &Row, &Content);
+				ui_widget::TextField(Ctx, &s_aTextField[Column], Row, Localize("Type something..."), ui_token::font::BODY * Scale);
+				Content.HSplitTop(Gap, nullptr, &Content);
 
-	RenderColumn(ColLeft, 1.0f, 0);
-	RenderColumn(ColRight, 0.78f, 1);
+				// Row 4: Two toggles
+				Content.HSplitTop(RowH, &Row, &Content);
+				{
+					CUIRect L, R;
+					Row.VSplitMid(&L, &R);
+					L.VSplitRight(Gap * 0.5f, &L, nullptr);
+					R.VSplitLeft(Gap * 0.5f, nullptr, &R);
+					ui_widget::Toggle(Ctx, &s_aToggleOn[Column], &s_aToggleOn[Column], L);
+					ui_widget::Toggle(Ctx, &s_aToggleOff[Column], &s_aToggleOff[Column], R);
+				}
+				Content.HSplitTop(Gap, nullptr, &Content);
+
+				// Row 5: Slider
+				Content.HSplitTop(RowH, &Row, &Content);
+				ui_widget::Slider(Ctx, &s_aSliderValue[Column], &s_aSliderValue[Column], 0.0f, 1.0f, Row, "");
+				Content.HSplitTop(Gap, nullptr, &Content);
+
+				// Row 6: TabBar
+				Content.HSplitTop(RowH, &Row, &Content);
+				ui_widget::TabBar(Ctx, apTabLabels, std::size(apTabLabels), &s_aTabActive[Column], Row);
+				Content.HSplitTop(Gap, nullptr, &Content);
+
+				// Rows 7-9: List items
+				for(int i = 0; i < 3; ++i)
+				{
+					Content.HSplitTop(RowH, &Row, &Content);
+					char aLabel[32];
+					str_format(aLabel, sizeof(aLabel), "%s %d", pItemLabel, i + 1);
+					ui_widget::SListItemProps ItemProps;
+					ItemProps.m_Selected = (s_aListSelected[Column] == i);
+					ItemProps.m_pTrailingText = (i == 1) ? Localize("new") : nullptr;
+					if(ui_widget::ListItem(Ctx, (const void *)(uintptr_t)(0x100 + Column * 0x100 + i), aLabel, Row, ItemProps))
+						s_aListSelected[Column] = i;
+					Content.HSplitTop(2.0f, nullptr, &Content);
+				}
+				Content.HSplitTop(Gap, nullptr, &Content);
+
+				// Row 10: Modal trigger + Tooltip target
+				Content.HSplitTop(RowH, &Row, &Content);
+				{
+					CUIRect L, R;
+					Row.VSplitMid(&L, &R);
+					L.VSplitRight(Gap * 0.5f, &L, nullptr);
+					R.VSplitLeft(Gap * 0.5f, nullptr, &R);
+					if(ui_widget::PrimaryButton(Ctx, &s_aModalOpenBtn[Column], Localize("Open modal"), L))
+						s_ModalOpen = true;
+					ui_widget::SecondaryButton(Ctx, &s_aTooltipBtn[Column], Localize("Hover for tooltip"), R);
+					ui_widget::Tooltip(Ctx, &s_aTooltipBtn[Column], R, Localize("This tooltip is provided by ui_widget::Tooltip — a thin shim over CTooltips."));
+				}
+				Content.HSplitTop(Gap, nullptr, &Content);
+
+				// Row 11: Toast trigger
+				Content.HSplitTop(RowH, &Row, &Content);
+				if(ui_widget::SecondaryButton(Ctx, &s_aToastBtn[Column], s_ToastVisible ? Localize("Hide toast") : Localize("Show toast"), Row))
+					s_ToastVisible = !s_ToastVisible;
+			});
+		};
+
+		RenderColumn(ColLeft, 1.0f, 0);
+		RenderColumn(ColRight, 0.78f, 1);
+	});
 
 	// Modal — rendered on top of everything
 	ui_widget::SModalProps ModalProps;

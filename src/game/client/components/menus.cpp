@@ -30,6 +30,7 @@
 
 #include <game/client/QmUi/QmAnimCurves.h>
 #include <game/client/QmUi/QmAnimResolve.h>
+#include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
@@ -889,8 +890,13 @@ int CMenus::DoButton_Favorite(const void *pButtonId, const void *pParentId, bool
 	static const uint64_t s_HoverScopeHash = static_cast<uint64_t>(str_quickhash("menu_favorite_hover"));
 	const uint64_t VisibilityNodeKey = BuildUiAnimNodeKey(s_VisibilityScopeHash, reinterpret_cast<uint64_t>(pButtonId));
 	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
-	const float ShowAlpha = std::clamp(ResolveUiAnimValue(AnimRuntime, VisibilityNodeKey, EUiAnimProperty::ALPHA, ShouldShow ? 1.0f : 0.0f, 0.12f, EEasing::EASE_OUT), 0.0f, 1.0f);
-	if(ShowAlpha > MENU_TAB_ANIM_EPSILON)
+	CUiV2Tree &Tree = GameClient()->UiRuntimeV2()->Tree();
+	SUiAnimTransition VisibilityTransition;
+	VisibilityTransition.m_DurationSec = 0.12f;
+	VisibilityTransition.m_Easing = EEasing::EASE_OUT;
+	const SUiPresenceResult Visibility = Tree.ResolvePresence(AnimRuntime, VisibilityNodeKey, ShouldShow, VisibilityTransition);
+	const float ShowAlpha = std::clamp(Visibility.m_Alpha, 0.0f, 1.0f);
+	if(Visibility.m_Render && ShowAlpha > MENU_TAB_ANIM_EPSILON)
 	{
 		const uint64_t HoverNodeKey = BuildUiAnimNodeKey(s_HoverScopeHash, reinterpret_cast<uint64_t>(pButtonId));
 		const float HoverStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, HoverNodeKey, EUiAnimProperty::SCALE, Ui()->HotItem() == pButtonId ? 1.0f : 0.0f, 0.10f, EEasing::EASE_OUT), 0.0f, 1.0f);
@@ -1749,12 +1755,12 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 
 			size_t FavoriteCommunityIndex = 0;
 			static CButtonContainer s_aFavoriteCommunityButtons[5];
-			static uint64_t s_aPrevFavoriteCommunityAnimNodes[5] = {0};
-			static size_t s_PrevFavoriteCommunityAnimNodeCount = 0;
-			uint64_t aCurFavoriteCommunityAnimNodes[5] = {0};
-			size_t CurFavoriteCommunityAnimNodeCount = 0;
 			static const uint64_t s_FavoriteCommunityAppearScopeHash = static_cast<uint64_t>(str_quickhash("menu_favorite_community_tab_appear"));
 			CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
+			CUiV2Tree &Tree = GameClient()->UiRuntimeV2()->Tree();
+			SUiAnimTransition AppearTransition;
+			AppearTransition.m_DurationSec = 0.18f;
+			AppearTransition.m_Easing = EEasing::EASE_OUT;
 			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)PAGE_FAVORITE_COMMUNITY_5 - PAGE_FAVORITE_COMMUNITY_1 + 1);
 			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)BIT_TAB_FAVORITE_COMMUNITY_5 - BIT_TAB_FAVORITE_COMMUNITY_1 + 1);
 			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)IServerBrowser::TYPE_FAVORITE_COMMUNITY_5 - IServerBrowser::TYPE_FAVORITE_COMMUNITY_1 + 1);
@@ -1766,19 +1772,8 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 
 				const uint64_t NodeKey = BuildUiAnimNodeKey(s_FavoriteCommunityAppearScopeHash, static_cast<uint64_t>(str_quickhash(pCommunity->Id())));
-				bool WasVisibleLastFrame = false;
-				for(size_t PrevNodeIndex = 0; PrevNodeIndex < s_PrevFavoriteCommunityAnimNodeCount; ++PrevNodeIndex)
-				{
-					if(s_aPrevFavoriteCommunityAnimNodes[PrevNodeIndex] == NodeKey)
-					{
-						WasVisibleLastFrame = true;
-						break;
-					}
-				}
-				if(!WasVisibleLastFrame)
-					AnimRuntime.SetValue(NodeKey, EUiAnimProperty::ALPHA, 0.0f);
-
-				const float AppearStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA, 1.0f, 0.18f, EEasing::EASE_OUT), 0.0f, 1.0f);
+				const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, NodeKey, true, AppearTransition);
+				const float AppearStrength = std::clamp(Presence.m_Alpha, 0.0f, 1.0f);
 				const float RevealWidth = maximum(2.0f, Button.w * AppearStrength);
 				CUIRect AnimatedButton = Button;
 				AnimatedButton.x += (Button.w - RevealWidth) * 0.5f;
@@ -1799,19 +1794,10 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				MenubarTrackActive(Page, AnimatedButton);
 				GameClient()->m_Tooltips.DoToolTip(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], &AnimatedButton, pCommunity->Name());
 
-				aCurFavoriteCommunityAnimNodes[CurFavoriteCommunityAnimNodeCount++] = NodeKey;
 				++FavoriteCommunityIndex;
 				if(FavoriteCommunityIndex >= std::size(s_aFavoriteCommunityButtons))
 					break;
 			}
-			for(size_t PrevNodeIndex = 0; PrevNodeIndex < std::size(s_aPrevFavoriteCommunityAnimNodes); ++PrevNodeIndex)
-			{
-				if(PrevNodeIndex < CurFavoriteCommunityAnimNodeCount)
-					s_aPrevFavoriteCommunityAnimNodes[PrevNodeIndex] = aCurFavoriteCommunityAnimNodes[PrevNodeIndex];
-				else
-					s_aPrevFavoriteCommunityAnimNodes[PrevNodeIndex] = 0;
-			}
-			s_PrevFavoriteCommunityAnimNodeCount = CurFavoriteCommunityAnimNodeCount;
 
 			TextRender()->SetRenderFlags(0);
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
@@ -2070,12 +2056,12 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 
 			size_t FavoriteCommunityIndex = 0;
 			static CButtonContainer s_aFavoriteCommunityButtons[5];
-			static uint64_t s_aPrevFavoriteCommunityAnimNodes[5] = {0};
-			static size_t s_PrevFavoriteCommunityAnimNodeCount = 0;
-			uint64_t aCurFavoriteCommunityAnimNodes[5] = {0};
-			size_t CurFavoriteCommunityAnimNodeCount = 0;
 			static const uint64_t s_FavoriteCommunityAppearScopeHash = static_cast<uint64_t>(str_quickhash("menu_favorite_community_tab_appear"));
 			CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
+			CUiV2Tree &Tree = GameClient()->UiRuntimeV2()->Tree();
+			SUiAnimTransition AppearTransition;
+			AppearTransition.m_DurationSec = 0.18f;
+			AppearTransition.m_Easing = EEasing::EASE_OUT;
 			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)PAGE_FAVORITE_COMMUNITY_5 - PAGE_FAVORITE_COMMUNITY_1 + 1);
 			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)BIT_TAB_FAVORITE_COMMUNITY_5 - BIT_TAB_FAVORITE_COMMUNITY_1 + 1);
 			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)IServerBrowser::TYPE_FAVORITE_COMMUNITY_5 - IServerBrowser::TYPE_FAVORITE_COMMUNITY_1 + 1);
@@ -2086,19 +2072,8 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 
 				const uint64_t NodeKey = BuildUiAnimNodeKey(s_FavoriteCommunityAppearScopeHash, static_cast<uint64_t>(str_quickhash(pCommunity->Id())));
-				bool WasVisibleLastFrame = false;
-				for(size_t PrevNodeIndex = 0; PrevNodeIndex < s_PrevFavoriteCommunityAnimNodeCount; ++PrevNodeIndex)
-				{
-					if(s_aPrevFavoriteCommunityAnimNodes[PrevNodeIndex] == NodeKey)
-					{
-						WasVisibleLastFrame = true;
-						break;
-					}
-				}
-				if(!WasVisibleLastFrame)
-					AnimRuntime.SetValue(NodeKey, EUiAnimProperty::ALPHA, 0.0f);
-
-				const float AppearStrength = std::clamp(ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA, 1.0f, 0.18f, EEasing::EASE_OUT), 0.0f, 1.0f);
+				const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, NodeKey, true, AppearTransition);
+				const float AppearStrength = std::clamp(Presence.m_Alpha, 0.0f, 1.0f);
 				const float RevealWidth = maximum(2.0f, Button.w * AppearStrength);
 				CUIRect AnimatedButton = Button;
 				AnimatedButton.x += (Button.w - RevealWidth) * 0.5f;
@@ -2118,19 +2093,10 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				}
 				GameClient()->m_Tooltips.DoToolTip(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], &AnimatedButton, pCommunity->Name());
 
-				aCurFavoriteCommunityAnimNodes[CurFavoriteCommunityAnimNodeCount++] = NodeKey;
 				++FavoriteCommunityIndex;
 				if(FavoriteCommunityIndex >= std::size(s_aFavoriteCommunityButtons))
 					break;
 			}
-			for(size_t PrevNodeIndex = 0; PrevNodeIndex < std::size(s_aPrevFavoriteCommunityAnimNodes); ++PrevNodeIndex)
-			{
-				if(PrevNodeIndex < CurFavoriteCommunityAnimNodeCount)
-					s_aPrevFavoriteCommunityAnimNodes[PrevNodeIndex] = aCurFavoriteCommunityAnimNodes[PrevNodeIndex];
-				else
-					s_aPrevFavoriteCommunityAnimNodes[PrevNodeIndex] = 0;
-			}
-			s_PrevFavoriteCommunityAnimNodeCount = CurFavoriteCommunityAnimNodeCount;
 
 			TextRender()->SetRenderFlags(0);
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);

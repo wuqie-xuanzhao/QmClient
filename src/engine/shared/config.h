@@ -65,6 +65,112 @@ constexpr int QmFastInputGammaEffectiveToUiAmount(int EffectiveAmount)
 	return QmFastInputGammaClampUiAmount(EffectiveAmount);
 }
 
+struct SQmFastInputSettings
+{
+	bool m_Enabled = false;
+	int m_Mode = 0;
+	int m_FastAmountMs = 0;
+	int m_BestOffset = 0;
+	int m_BestSmoothing = 0;
+	int m_BestLatencyComp = 0;
+	int m_SaikoPlusAmount = 0;
+	int m_BasePredictionMarginMs = 10;
+};
+
+constexpr int QmFastInputNormalizedMode(int Mode)
+{
+	if(Mode == 1 || Mode == 2)
+		return 3;
+	return Mode;
+}
+
+constexpr float QmEffectiveFastInputOffsetTicks(const SQmFastInputSettings &Settings)
+{
+	if(!Settings.m_Enabled)
+		return 0.0f;
+
+	const int Mode = QmFastInputNormalizedMode(Settings.m_Mode);
+	if(Mode == 0)
+		return Settings.m_FastAmountMs > 0 ? Settings.m_FastAmountMs / 20.0f : 0.0f;
+	if(Mode == 4)
+		return Settings.m_SaikoPlusAmount > 0 ? Settings.m_SaikoPlusAmount / 100.0f : 0.0f;
+
+	if(Settings.m_BestOffset <= 0)
+		return 0.0f;
+
+	float Offset = Settings.m_BestOffset / 100.0f;
+	if(Settings.m_BestSmoothing > 0)
+		Offset *= 1.0f - (Settings.m_BestSmoothing / 200.0f);
+	if(Settings.m_BestLatencyComp > 0)
+		Offset *= 1.0f + (Settings.m_BestLatencyComp / 100.0f);
+	return Offset;
+}
+
+constexpr int QmCeilPositiveFastInputTicks(float OffsetTicks)
+{
+	return OffsetTicks <= 0.0f ? 0 : (int)OffsetTicks + ((float)(int)OffsetTicks < OffsetTicks ? 1 : 0);
+}
+
+constexpr int QmFastInputPredictionTicks(float OffsetTicks, int Mode)
+{
+	if(OffsetTicks <= 0.0f)
+		return 0;
+	if(QmFastInputNormalizedMode(Mode) == 4)
+		return QmCeilPositiveFastInputTicks(OffsetTicks + 1.0f);
+	return QmCeilPositiveFastInputTicks(OffsetTicks);
+}
+
+constexpr int QmFastInputPredictionTicksOthers(float OffsetTicks, int Mode)
+{
+	if(OffsetTicks <= 0.0f)
+		return 0;
+	if(QmFastInputNormalizedMode(Mode) == 4)
+		return QmCeilPositiveFastInputTicks(OffsetTicks);
+	return QmFastInputPredictionTicks(OffsetTicks, Mode);
+}
+
+constexpr void QmApplyFastInputOffset(float OffsetTicks, int &Tick, float &Intra)
+{
+	if(OffsetTicks <= 0.0f)
+		return;
+
+	const int WholeTicks = (int)OffsetTicks;
+	const float OffsetIntra = OffsetTicks - (float)WholeTicks;
+	const float CombinedIntra = Intra + OffsetIntra;
+	const int CarryOverTicks = (int)CombinedIntra;
+
+	Tick += WholeTicks + CarryOverTicks;
+	Intra = CombinedIntra - (float)CarryOverTicks;
+}
+
+constexpr bool QmEffectiveFastInputOthers(bool FastInputEnabled, int Mode, bool FastOthers, bool BestOthers, bool SaikoOthers)
+{
+	if(!FastInputEnabled)
+		return false;
+	const int NormalizedMode = QmFastInputNormalizedMode(Mode);
+	if(NormalizedMode == 0)
+		return FastOthers;
+	if(NormalizedMode == 4)
+		return SaikoOthers;
+	return BestOthers;
+}
+
+constexpr int QmFastInputBasePredictionMarginMs(const SQmFastInputSettings &Settings)
+{
+	int FastInputMargin = 0;
+	const int Mode = QmFastInputNormalizedMode(Settings.m_Mode);
+	if(Settings.m_Enabled)
+	{
+		if(Mode == 0)
+			FastInputMargin = Settings.m_FastAmountMs > 0 ? Settings.m_FastAmountMs : 0;
+		else if(Mode == 4)
+			FastInputMargin = Settings.m_SaikoPlusAmount > 0 ? (Settings.m_SaikoPlusAmount + 2) / 5 : 0;
+		else
+			FastInputMargin = Settings.m_BestOffset > 0 ? (Settings.m_BestOffset + 2) / 5 : 0;
+	}
+	return Settings.m_BasePredictionMarginMs > FastInputMargin ? Settings.m_BasePredictionMarginMs : FastInputMargin;
+}
+
 enum
 {
 	CFGFLAG_SAVE = 1 << 0,

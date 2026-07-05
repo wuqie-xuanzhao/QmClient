@@ -27,9 +27,11 @@ public:
 	bool Enabled() const;
 	void SetPerfContext(const char *pPage, const char *pOperation);
 	void ClearPerfContext();
+	CUiV2Tree &Tree() { return m_Tree; }
+	const CUiV2Tree &Tree() const { return m_Tree; }
 	CUiV2AnimationRuntime &AnimRuntime() { return m_AnimRuntime; }
 	const CUiV2AnimationRuntime &AnimRuntime() const { return m_AnimRuntime; }
-
+	float FrameDt() const { return m_FrameDt; }
 	const SUiV2PerfStats &LastStats() const;
 
 private:
@@ -39,6 +41,7 @@ private:
 	CUiV2AnimationRuntime m_AnimRuntime;
 	CUiV2RenderBridge m_RenderBridge;
 	SUiV2PerfStats m_LastStats;
+	float m_FrameDt = 1.0f / 60.0f;
 	float m_DebugLogAccumulator = 0.0f;
 	char m_aPerfPage[64] = "";
 	char m_aPerfOperation[64] = "";

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="dcterms.date" content="2026-06-20" />
   <meta name="status" content="active" />
-  <meta name="supersedes" content="2026-06-18-long-term-performance-optimization-roadmap.html, 2026-06-19-long-term-performance-optimization-roadmap-v2.html" />
+  <meta name="supersedes" content="2026-06-18-long-term-performance-optimization-roadmap.html, 2026-06-19-long-term-performance-optimization-roadmap-v2.html, 2026-06-14-设置页性能优化总纲-全局调度版.html" />
   <title>QmClient 长期性能优化路线图 v3（合并版 · 2026-06-20 codegraph 验证）</title>
   <style>
     :root {
@@ -170,6 +170,10 @@
 
       <div class="note">
         <strong>v1/v2/v3 关系</strong>：v1（2026-06-18）给出大方向和完整的 PRD/telemetry 规格；v2（2026-06-19）基于四份 SubAgent 调研修正 v1 的 5 个判断；v3（2026-06-20）合并两者并按 codegraph CLI 验证修正行号。v1 和 v2 的原始文件已删除，其有价值的内容全部保留在本文档中。<strong>标注 <code class="verified">codegraph 验证</code> 的代码指针经过 2026-06-20 的 <code>codegraph query</code> + <code>search</code> 双重验证。</strong>
+      </div>
+
+      <div class="note ok">
+        <strong>权威入口</strong>：本文档是当前性能优化架构的唯一执行准则。<a href="2026-06-14-设置页性能优化总纲-全局调度版.html">2026-06-14 设置页性能优化总纲</a> 已降级为 settings 专项历史参考，只用于查看 <code>m_MenuTextPool</code>、visible guard、loading/prebuild 工作流和 settings-only 归因细节；若两者冲突，以本文档的 Phase B/B.5、QmRuntime、scheduler coverage 和长期图形/文本路线为准。
       </div>
 
       <h3 style="margin-top: 18px;">v3 相对 v1/v2 的关键修正</h3>
@@ -458,16 +462,186 @@
       </table>
       <h4>明确不做</h4>
       <ul>
-        <li>❌ SDF/MSDF 字体（解决任意尺寸高质量渲染，不解决 CPU 卡顿）</li>
-        <li>❌ GPU-resident text（Slug、compute-shader raster）—— 当前问题在 CPU 同步路径</li>
+        <li>⏳ SDF/MSDF 字体暂不作为当前首帧卡顿第一刀：它解决任意尺寸/缩放质量和部分 glyph atlas 压力，但不能替代 text container dirty、layout cache、warmup budget 和 visible guard。可在 Phase E 后作为独立 PoC。</li>
+        <li>⏳ GPU-resident text / compute-shader raster 暂列长期研究：它可能减少 CPU 侧 vertex/container 生产和部分 upload，但需要先证明当前卡顿来自 text pipeline 而不是 uncovered immediate UI 调度；PoC 必须覆盖 OpenGL/Vulkan、旧 container UV、fallback 字体、CJK、截图/录制一致性。</li>
         <li>❌ 整体引入 Qt/Unreal 文本栈（工程量大，收益小）</li>
       </ul>
       <div class="ref-block">
         <strong>关键参考</strong>：Hypersect "Improving the Font Pipeline"（<a href="https://blog.hypersect.com/improving-the-font-pipeline/">blog.hypersect.com/improving-the-font-pipeline</a>）—— 业界 CJK 字体工程经验，作者明确承认"自己也没全做对"，业界没有银弹。
       </div>
 
+      <h3>Pillar 3.5：QmRuntime 资源系统（整合方向）</h3>
+      <p><strong>结论</strong>：QmClient 需要一套 runtime resource facade，但不应一次性新增大而全的 <code>QmRuntime/QmScheduler/QmWarmupManager/QmTextCache/QmPoolRegistry/QmJobSystem/QmThreadSystem/QmRuntimeMetrics</code> 平行体系。正确路线是先收敛现有 ad-hoc 调度、文本池、monitoring 和 job 能力，再抽出固定 consumer 的 runtime facade。</p>
+      <h4>核心不变量</h4>
+      <ul>
+        <li><strong>Render/UI 可见路径只消费，不生产重资源</strong>：可见帧不做 glyph 栅格化、atlas 扩容、完整 text container 首建、慢系统指标采样、无预算 job completion。</li>
+        <li><strong>预热是 runtime 调度问题，不是 text.cpp 内部小功能</strong>：启动、ESC、settings、monitoring、语言/字体/UI scale 变化都必须走同一套有状态、有预算、有取消、有 telemetry 的入口。</li>
+        <li><strong>复用 6/14 设置页工作流</strong>：loading/prewarm → plan collection → prebuild → visible guard → background jobs → telemetry → report；不要另起一套绕过 <code>m_MenuTextPool</code> / visible guard 的缓存系统。</li>
+        <li><strong>CPU/GPU 未吃满不等于没有性能问题</strong>：无限制帧率下总体 CPU/GPU 利用率不满、平均 FPS 很高，但仍有瞬时卡顿，通常说明瓶颈在 frame pacing、主线程长尾、同步 fallback、无预算 completion 或 scheduler coverage 缺口，而不是硬件算力不足。</li>
+      </ul>
+      <div class="note warn">
+        <strong>调度器判定原则</strong>：如果 CPU/GPU utilization 都不高、backend/upload 指标也不高，但 <code>frame_ms_p99/max</code> 仍然爆炸，应优先判定为调度失败：重活没有被预算化，或者预算化 work 与 immediate render work 没有进入同一套 frame pressure 模型。此时继续堆 GPU/字体技术通常只会掩盖问题，不能替代 scheduler coverage 收口。
+      </div>
+      <h4>第一版模块边界</h4>
+      <table>
+        <thead><tr><th>模块</th><th>第一版职责</th><th>暂不做</th></tr></thead>
+        <tbody>
+          <tr><td><code>QmRuntimeMetrics</code></td><td>汇总 text snapshot、monitoring snapshot、graphics memory、device perf、warmup/job/pool 计数；monitoring 只读快照</td><td>不让 monitoring 自己成为性能系统</td></tr>
+          <tr><td><code>QmWarmupManager</code></td><td>管理 glyph warmup 和现有 stable text prebuild；按场景预算推进；支持 language/font/ui-scale epoch 失效</td><td>不吞并所有资源页、对象池、线程池和 UI cache</td></tr>
+          <tr><td><code>QmJobSystem</code></td><td>在现有 <code>CJobPool</code> 上补 lane、背压、duplicate merge、owner cancellation、main-thread completion budget</td><td>不重写 DDNet worker pool，不把 GPU/context 工作丢进 worker</td></tr>
+          <tr><td><code>QmPoolRegistry</code></td><td>只登记 QmClient runtime 小对象、warmup work item、monitoring 图表项、layout scratch 的 pool stats</td><td>不动 game world 固定 ID 池，不把所有 vector 都池化</td></tr>
+          <tr><td><code>QmTextCache</code></td><td>先作为菜单/HUD 适配层，复用 stable text pool 和未来 glyph warmup API</td><td>不第一步扩展 <code>ITextRender</code> 大公共接口</td></tr>
+        </tbody>
+      </table>
+      <h4>当前代码依据</h4>
+      <ul>
+        <li>文本同步链路真实存在：<code>CreateTextContainer → AppendTextContainer → GetGlyph → RenderGlyph → IncreaseGlyphMapSize</code>，atlas 扩容会 <code>UnloadTextures()</code> 后 <code>UploadTextures()</code>。</li>
+        <li><code>SQmTextRuntimeBudgetSnapshot</code> 已有 glyph/container 新建、上传和耗时，是 runtime metrics 的种子，不是完整 runtime metrics。</li>
+        <li><code>CJobPool</code> 只有 queued/running/done/aborted + FIFO 队列，缺 lane、背压、completion budget；适合作为底层，不适合作为直接策略层。</li>
+        <li><code>CQmMonitoring::OnRender()</code> 仍每 50ms 采样并更新 history；应改为读 <code>QmRuntimeMetrics</code> 的低频快照。</li>
+      </ul>
+      <h4>Runtime 数据流</h4>
+      <pre><code>UI / Config / Language / Client State
+        ↓
+QmRuntime Facade
+        ↓
+QmWarmupManager  ←  manifest / epoch / trigger / priority
+        ↓
+Budgeted Main Thread Work
+        ↓
+QmTextCache Adapter  →  ITextRender / CUIElement stable text pool
+        ↓
+QmRuntimeMetrics Snapshot
+        ↓
+Monitoring HUD / perf log / quality gate</code></pre>
+      <p>后台 worker 只能产出 <code>manifest</code>、去重后的 glyph/container request、文件/配置/统计结果；GPU upload、text texture update、CUIElement container 创建和任何 graphics context 相关工作都必须回到主线程/graphics 安全路径并受预算控制。</p>
+      <h4>资源状态模型</h4>
+      <table>
+        <thead><tr><th>状态</th><th>含义</th><th>允许的线程/路径</th></tr></thead>
+        <tbody>
+          <tr><td><code>Cold</code></td><td>未进入计划，首次可见会记录 miss，但不应同步生产重资源</td><td>visible guard 只记录，不首建</td></tr>
+          <tr><td><code>Planned</code></td><td>已进入 manifest / queue，等待预算推进</td><td>main thread / worker 可写队列元数据</td></tr>
+          <tr><td><code>Preparing</code></td><td>CPU-only 准备中，例如 UTF-8 解码、去重、manifest 构建、慢指标采样</td><td>worker 可执行，但不能碰 graphics/text container</td></tr>
+          <tr><td><code>GpuPending</code></td><td>需要主线程或 graphics 安全路径提交，例如 glyph upload / text container upload</td><td>main thread budget tick</td></tr>
+          <tr><td><code>Ready</code></td><td>可见路径可直接复用</td><td>render/UI 路径只读</td></tr>
+          <tr><td><code>Failed</code></td><td>本轮失败并记录 reason，避免每帧重复尝试</td><td>metrics/report 可读</td></tr>
+          <tr><td><code>Invalidated</code></td><td>language/font/ui-scale/backend/style epoch 已变化</td><td>visible guard 记录 stale，不现场重建</td></tr>
+        </tbody>
+      </table>
+      <h4>触发器与预算</h4>
+      <table>
+        <thead><tr><th>触发器</th><th>目标</th><th>预算策略</th><th>验收信号</th></tr></thead>
+        <tbody>
+          <tr><td><code>Startup</code></td><td>ASCII、数字、核心 UI glyph、主菜单少量稳定文本</td><td>低预算分帧；不拖慢冷启动</td><td>启动后核心 UI glyph miss 下降</td></tr>
+          <tr><td><code>BeforeOpenMenu</code></td><td>ESC 核心按钮、标题、常用 ingame menu label</td><td>高优先级，小窗口快速推进</td><td><code>ingame_esc_open</code> 首帧 text_new/fallback 接近 0</td></tr>
+          <tr><td><code>BeforeOpenSettings</code></td><td>当前 tab / subtab 的 stable text plan + glyph</td><td>按 visible/near/far 分组，优先 visible</td><td>settings target window 无首建、无 stale 现场重建</td></tr>
+          <tr><td><code>BeforeOpenMonitoring</code></td><td>monitoring 固定 label、图表 legend、低频指标快照</td><td>慢指标独立低频刷新；HUD 只读</td><td>monitoring 打开额外 frametime 接近 0</td></tr>
+          <tr><td><code>Language/Font/UiScaleChanged</code></td><td>epoch 失效并重建对应 manifest</td><td>取消旧任务，按当前可见页面优先</td><td>stale reason 可解释，切换后不全量同步 Clear/rebuild</td></tr>
+        </tbody>
+      </table>
+      <h4>Frame pacing 与调度诊断</h4>
+      <table>
+        <thead><tr><th>现象</th><th>优先判断</th><th>需要的 telemetry</th><th>处理方向</th></tr></thead>
+        <tbody>
+          <tr><td>平均 FPS 高，但 <code>frame_ms_max</code> 偶发 100ms+</td><td>主线程长尾或同步 fallback</td><td><code>immediate_render_ms</code>、<code>scheduler_coverage</code>、text/container new、job completion count</td><td>把首建/重建/completion 移到预算 tick；visible guard 下只复用</td></tr>
+          <tr><td>CPU/GPU 都未满，打开 ESC/settings 瞬时卡</td><td>调度器覆盖不足</td><td>target window 的 budgeted vs uncovered work、fallback_immediate、warmup pending</td><td>扩展 fixed consumer 覆盖；未覆盖路径进入 quality hard fail</td></tr>
+          <tr><td>GPU utilization 不高但 swap/wait 高</td><td>frame pacing / vsync / sleep 抖动</td><td>render CPU、sleep wait、swap/vsync wait、backend frame profiler</td><td>先做 pacing telemetry，再调 cap/vsync 策略</td></tr>
+          <tr><td>text upload/glyph 为 0 仍卡</td><td>layout/container/quad 或 UI immediate 成本</td><td>paragraph/layout ms、TextWidth 次数、container create ms、draw submit ms</td><td>dirty cache、arena、stable text 覆盖和 section 级裁剪</td></tr>
+        </tbody>
+      </table>
+      <h4>第一版文件落点</h4>
+      <ul>
+        <li><code>src/game/client/components/qmclient/runtime/</code>：QmClient 策略层，放 <code>qm_runtime_metrics</code>、<code>qm_warmup_manager</code>、<code>qm_job_system</code>、<code>qm_pool_registry</code> 等 facade。</li>
+        <li><code>src/game/client/components/menus.cpp</code> / settings 相关文件：只做适配，把现有 stable text plan/prebuild 接入 runtime facade，不迁移大块菜单渲染逻辑。</li>
+        <li><code>src/game/client/components/qmclient/monitoring/</code>：改成读取 <code>QmRuntimeMetrics</code> 快照，保留 HUD 布局/绘制职责。</li>
+        <li><code>src/engine/textrender.h</code> / <code>src/engine/client/text.cpp</code>：只放最小 engine 能力和 stats；<code>WarmGlyph</code> 进入公共接口前必须先完成 PoC 和 blast-radius 评估。</li>
+      </ul>
+      <h4>最小接口草案</h4>
+      <pre><code>class CQmRuntime
+{
+public:
+    void Init(...);
+    void Shutdown();
+    void TickMainThread(float BudgetMs);
+    CQmRuntimeMetrics *Metrics();
+    CQmWarmupManager *WarmupManager();
+};
+
+class CQmWarmupManager
+{
+public:
+    void Request(EQmWarmupTrigger Trigger, int Priority);
+    void CancelOwner(const char *pOwnerTag);
+    void TickMainThread(float BudgetMs);
+    SQmWarmupSnapshot Snapshot() const;
+};
+
+class CQmRuntimeMetrics
+{
+public:
+    void PublishFrameSnapshot();
+    SQmRuntimeMetricsSnapshot LatestSnapshot() const;
+};</code></pre>
+      <p>接口保持窄：外部只 request、tick、读 snapshot；具体 queue、dedupe、budget、epoch 和 owner cancellation 留在实现内部。这样可以避免把 runtime facade 变成新的全局 mutable service。</p>
+
+      <h3>Pillar 3.6：SDF/MSDF 与 Vulkan GPU text 调研报告</h3>
+      <p class="muted">2026-07-01 补充。用户提供的 ChatGPT share 链接当前只能访问到登录页，未能读取正文；本节只基于当前仓库代码、CodeGraph 和源码核对。</p>
+      <h4>当前代码事实</h4>
+      <ul>
+        <li><strong>当前文字是 FreeType bitmap atlas</strong>：<code>RenderGlyph</code> 调 <code>FT_Load_Glyph(... FT_LOAD_RENDER ...)</code> 得到灰度 bitmap，CPU 生成 fill/outline，随后 <code>UploadGlyph</code> 更新 text texture。</li>
+        <li><strong>当前 shader 是 bitmap alpha 合成</strong>：<code>data/shader/vulkan/text.frag</code> 采样 <code>gTextSampler</code> 和 <code>gTextOutlineSampler</code> 的 <code>.r</code> 作为 alpha，没有 distance field 计算。</li>
+        <li><strong>当前 Vulkan text 是独立 pipeline</strong>：Vulkan backend 通过 <code>CreateTextGraphicsPipeline("shader/vulkan/text.vert.spv", "shader/vulkan/text.frag.spv")</code> 创建 text pipeline；<code>Cmd_RenderText</code> 绑定 text pipeline、descriptor set、vertex/index buffer 后 draw。</li>
+        <li><strong>当前 text command 只表达 bitmap text</strong>：<code>SCommand_RenderText</code> 只带 buffer container、texture size、fill texture、outline texture、draw count、颜色；没有 render mode、distance range、MSDF median 参数或 glyph instance buffer。</li>
+        <li><strong>当前已有两套 icon 基础</strong>：Font Awesome icon font 走 <code>EFontPreset::ICON_FONT</code> 和普通 text renderer；QmClient 自己的 <code>CQmIconManager</code> 走 build-time SVG→PNG 多倍率 atlas，runtime 直接 PNG UV 绘制。</li>
+        <li><strong>当前仓库没有现成 SDF/MSDF 管线</strong>：源码和资源中未发现 SDF/MSDF shader、distance field atlas manifest 或 runtime SDF icon/text renderer。</li>
+      </ul>
+      <h4>路线拆分</h4>
+      <table>
+        <thead><tr><th>路线</th><th>解决什么</th><th>不解决什么</th><th>推荐位置</th></tr></thead>
+        <tbody>
+          <tr><td>Bitmap atlas + runtime 调度</td><td>首帧卡顿、glyph miss、container 首建、调度覆盖不足</td><td>大缩放文字/图标发糊</td><td>Phase B/B.5 当前主线</td></tr>
+          <tr><td>SDF/MSDF icon atlas</td><td>图标库缩放质量、未来 Tabler/Font Awesome 图标统一渲染</td><td>中文 settings 首帧卡顿、layout/container CPU 长尾</td><td>Phase E 前置 PoC，优先从 <code>CQmIconManager</code> 做</td></tr>
+          <tr><td>SDF/MSDF large-text atlas</td><td>ingame 放大后 HUD/nameplate/大字号 UI 文本发糊</td><td>小字号中文 hinting、CJK 首次 glyph 生成</td><td>Phase E PoC，只覆盖大字号/稳定文本</td></tr>
+          <tr><td>Vulkan-only GPU text</td><td>减少 Vulkan 路径 CPU text container/quad churn，探索长期复杂 UI 文本架构</td><td>OpenGL 兼容路径；未调度的首帧同步任务</td><td>Phase E+，独立 experimental backend</td></tr>
+        </tbody>
+      </table>
+      <h4>Vulkan-only 策略</h4>
+      <p>新鲜文本渲染功能优先只做 Vulkan：OpenGL 保留现有 bitmap atlas 兼容路径，不阻塞 Vulkan-only SDF/MSDF/GPU text 实验。文档和配置上必须把这类能力标成 <code>renderer=vulkan</code>，并提供 bitmap fallback，避免把兼容后端拖进长期架构实验。</p>
+      <h4>推荐 PoC 顺序</h4>
+      <ol>
+        <li><strong>Icon SDF/MSDF PoC</strong>：以 <code>CQmIconManager</code> 为入口，把现有 PNG atlas manifest 扩展为 <code>kind=bitmap|sdf|msdf</code>、<code>px_range</code>、<code>em_size</code>。新增 Vulkan-only icon distance shader；OpenGL/旧 renderer 继续用 PNG atlas。</li>
+        <li><strong>Large-text SDF PoC</strong>：只覆盖 HUD 数字、nameplate 超大字号、缩放后明显发糊的稳定文本。仍由主线程预算 tick 生成/上传 atlas，不允许可见帧同步生成。</li>
+        <li><strong>Vulkan GPU text container PoC</strong>：新增 Vulkan text render mode 和 command，不替换现有 <code>SCommand_RenderText</code>。目标是把稳定文本实例数据常驻 GPU，减少重复 container/quad buffer 生产；layout 仍先保留 CPU 侧。</li>
+      </ol>
+      <h4>验收标准</h4>
+      <ul>
+        <li><strong>质量</strong>：ingame 高缩放下大字号文本/图标边缘明显优于 bitmap；小字号中文不得比现有 FreeType bitmap 更糊。</li>
+        <li><strong>性能</strong>：PoC 不能增加首帧同步工作；所有 atlas 生成、上传、pipeline/descriptor 创建必须受 runtime budget 或 loading 阶段约束。</li>
+        <li><strong>调度</strong>：即使启用 SDF/MSDF/GPU text，<code>scheduler_coverage</code> 仍必须能解释 target window 中的 covered/uncovered work。</li>
+        <li><strong>后端</strong>：Vulkan-only 功能必须有 bitmap fallback；OpenGL 不实现新功能也不能破坏现有渲染。</li>
+        <li><strong>可维护</strong>：不能把 Font Awesome icon font、Qm PNG icon atlas、未来 SDF/MSDF icon atlas 三套入口继续无限分叉；PoC 成功后需要收敛到统一 Qm icon API。</li>
+      </ul>
+
       <h3>Pillar 4：图形后端提前可行性</h3>
       <p class="muted">基于 2026-06-20 完整代码调研（读 <code>backend_vulkan.cpp</code> 9269 行 + <code>backend_opengl.cpp</code> 2344 行 + <code>graphics_threaded.cpp</code> 4000 行 + <code>backend_sdl.cpp</code> graphics 线程）。<strong>方向：Vulkan 是主战场，OpenGL 暂缓。</strong> 详见 ⑧。</p>
+      <h4>4.1 Vulkan pipeline cache 与启动预热</h4>
+      <p class="muted">2026-07-01 codegraph + 源码核对补充。结论：Vulkan shader 已在构建期编译为 SPIR-V，但 QmClient 当前没有自有的持久化 <code>VkPipelineCache</code>；启动/重建 swapchain 时仍需要驱动创建 graphics pipeline。</p>
+      <ul>
+        <li><strong>不是运行时 GLSL 编译问题</strong>：<code>cmake/BuildVulkanShaders.cmake:83</code> 调 <code>glslangValidator</code> 输出 <code>.spv</code>，<code>text.frag/text.vert</code> 也在构建期生成 <code>data/shader/vulkan/text.*.spv</code>（行 115-117）。</li>
+        <li><strong>运行时读取的是 SPIR-V</strong>：<code>backend_vulkan.cpp:5274-5294</code> 的 <code>LoadShader</code> 从 storage 读取 <code>shader/vulkan/*.spv</code>，随后 <code>CreateShaderModule</code> 调 <code>vkCreateShaderModule</code>。</li>
+        <li><strong>当前 pipeline 创建未用 cache</strong>：<code>backend_vulkan.cpp:5484</code> 调 <code>vkCreateGraphicsPipelines(m_VKDevice, VK_NULL_HANDLE, ...)</code>；仓库源码未发现 <code>vkCreatePipelineCache</code> / <code>vkGetPipelineCacheData</code> / <code>vkDestroyPipelineCache</code> 接入。</li>
+        <li><strong>pipeline 创建集中在启动/重建路径</strong>：<code>InitVulkanSwapChain</code>（<code>backend_vulkan.cpp:6911</code>）在 render pass/framebuffer 后连续创建 prim、text、tile、quad、sprite 等 pipeline（行 6940-7000）。</li>
+      </ul>
+      <p><strong>架构方向：</strong>新增 Vulkan-only 的 <code>CQmVulkanPipelineCache</code>，由 Vulkan backend 拥有，不放进 OpenGL 兼容路径。它在 device 创建后、pipeline 创建前读取本机 cache blob；所有 <code>vkCreateGraphicsPipelines</code> 改为传入 cache handle；pipeline 创建后和 shutdown/device destroy 前用 <code>vkGetPipelineCacheData</code> 保存。</p>
+      <pre><code>启动顺序：
+Vulkan device ready
+  -> LoadPipelineCache(qmclient/cache/vulkan_pipeline/*.bin)
+  -> CreateGraphicsPipelines(cache_handle)
+  -> Publish pipeline_create_ms / cache_hit / cache_bytes
+  -> QmRuntime::RequestWarmup(Startup)
+  -> QmWarmupManager 按预算推进 glyph/page/text/icon warmup</code></pre>
+      <p><strong>cache key 必须保守：</strong>至少包含 QmClient build/cache version、renderer backend、<code>vendorID</code>、<code>deviceID</code>、<code>driverVersion</code>、<code>pipelineCacheUUID</code>、SPIR-V manifest/hash、MSAA/render pass format、pipeline layout schema、clip/dynamic mode、相关图形配置。缓存损坏、驱动变更或 key mismatch 时直接丢弃并重建，不能阻塞启动。</p>
+      <p><strong>和预热系统的关系：</strong>pipeline cache 只加速 graphics backend init，不缓存 UI page/glyph/text container 本身。cache miss 时，启动阶段不要同时把页面预热塞满主线程；应先完成 pipeline 创建并记录耗时，再让 <code>QmWarmupManager</code> 用较低 startup budget 推进。cache hit 时，warmup 可以按正常启动预算更早开始。</p>
 
       <h3>Pillar 5：测试深化</h3>
       <h4>现状</h4>
@@ -764,6 +938,7 @@ system=perf/render_backend
   stage=frame_submit backend=OpenGL|Vulkan draw_calls=N texture_binds=N buffer_uploads=N
   stage=graphics_swap vsync=0/1 swap_ms=... wait_ms=...
   stage=gpu_upload kind=glyph|texture|quad_container bytes=N count=N budget=N
+  stage=vulkan_pipeline_cache action=load|create|save enabled=0/1 hit=0/1 valid=0/1 bytes=N pipelines=N ms=...
 
 system=perf/optimizer
   stage=priority windows=1 requested=high previous=normal applied=1 error=0
@@ -1033,10 +1208,10 @@ system=perf/optimizer
           </tr>
           <tr>
             <td><strong>Vulkan Descriptor set / Pipeline cache 优化</strong></td>
-            <td>未量化；pipeline cache 落盘情况未确认</td>
+            <td>已确认当前 <code>vkCreateGraphicsPipelines</code> 传 <code>VK_NULL_HANDLE</code>，无 QmClient 自有持久化 <code>VkPipelineCache</code>；descriptor 仍需 profile</td>
             <td><span class="badge warn">P1</span></td>
             <td>中</td>
-            <td>中-高（需 frame profiler 暴露后定位）</td>
+            <td>中-高（pipeline cache 可先做低风险 PoC；descriptor 需 frame profiler 暴露后定位）</td>
           </tr>
           <tr>
             <td><strong>scissor batching</strong>（合并同 clip draw call）</td>
@@ -1289,6 +1464,40 @@ system=perf/optimizer
         <li>scenarios/ 目录建立，固定 reference hardware + reference scene</li>
       </ul>
 
+      <h3>Phase B.5：Runtime 资源层收敛（与 Phase B 同步）</h3>
+      <p>对应 Pillar 3.5。目标不是另建大框架，而是把现有 text budget snapshot、settings stable text prebuild、monitoring snapshot、job pool 使用点收敛成一个固定 consumer 的 runtime facade。</p>
+      <p><strong>退出条件</strong>：</p>
+      <ul>
+        <li><code>QmRuntimeMetrics</code> 快照层落地，monitoring 改为只读快照；CPU/内存/GPU/磁盘等慢指标按低频刷新，不挂在 HUD 绘制路径主动采样。</li>
+        <li>资源预热和 UI cache/text prebuild 从 <code>PrewarmVisibleSettingsResources</code> 分离为两条独立 telemetry 链路。</li>
+        <li>glyph warmup API 完成小 PoC：不通过"画不可见字符"预热，且不在 worker 线程触碰 graphics context。</li>
+        <li>现有 settings/ingame stable text 的 plan/prebuild 可被统一 warmup budget 推进，visible guard 下不发生首建或 stale 现场重建。</li>
+        <li><code>CJobPool</code> 上层 lane/backpressure/duplicate merge PoC 完成；不改底层 worker pool 语义。</li>
+      </ul>
+      <p><strong>新增 telemetry 合同</strong>：</p>
+      <pre><code>system=perf/qm_runtime
+  stage=snapshot_publish text_frame=N warmup_stage=... jobs_queued=N jobs_running=N pools_used=N cpu_util=... gpu_util=... ms=...
+
+system=perf/frame_pacing
+  stage=headroom frame_ms=... cpu_util=... gpu_util=... render_cpu_ms=... sleep_wait_ms=... swap_wait_ms=... scheduler_coverage=covered|partial|uncovered
+
+system=perf/qm_warmup
+  stage=tick trigger=startup|before_menu|before_settings|monitoring|language|font|ui_scale
+  budget_us=N used_us=N glyph_done=N glyph_pending=N container_done=N container_pending=N dropped=N duplicate=N
+
+system=perf/qm_jobs
+  stage=lane_snapshot high=N normal=N low=N io=N running=N completed=N aborted=N oldest_wait_ms=...
+
+system=perf/qm_pools
+  stage=pool_snapshot name=... used=N peak=N capacity=N alloc_fail=N grow=N bytes=N</code></pre>
+      <p><strong>最小测试合同</strong>：</p>
+      <ul>
+        <li>source-contract：monitoring 不再在 <code>OnRender()</code> 中直接调用 CPU/内存/GPU 慢采样；只读 <code>QmRuntimeMetrics</code> 快照。</li>
+        <li>source-contract：worker warmup 代码不得调用 <code>UploadTextContainer</code>、<code>Graphics()</code> texture update 或 CUIElement container 创建。</li>
+        <li>单元测试：warmup queue duplicate merge、owner cancellation、epoch invalidation、budget 不超限。</li>
+        <li>fresh runtime：打开 ESC、settings、monitoring 三个目标窗口时，<code>glyph_new</code>、<code>text_container_new</code>、<code>warmup_used_us</code>、CPU/GPU utilization、frame pacing wait 和 frame spike 能按同一 frame/window 对齐。</li>
+      </ul>
+
       <h3>Phase C：CUI/QmUI 优化（2-4 个月）</h3>
       <p>对应 Pillar 1。</p>
       <p><strong>退出条件</strong>：</p>
@@ -1300,23 +1509,28 @@ system=perf/optimizer
       </ul>
 
       <h3>Phase D：图形后端提前（4-6 个月，与 Phase C 并行）</h3>
-      <p>对应 Pillar 4。<strong>方向：Vulkan 主战场，OpenGL 暂缓。</strong> Vulkan 5 项基础优化已实现，但仍有具体优化空间（Descriptor cache 等）。<strong>第一件事是建立 telemetry 基线，不预设优化方向</strong>。</p>
+      <p>对应 Pillar 4。<strong>方向：Vulkan 主战场，OpenGL 暂缓。</strong> Vulkan 5 项基础优化已实现，但仍有具体优化空间。<strong>第一件事是建立 telemetry 基线；第二件低风险 PoC 是持久化 <code>VkPipelineCache</code>，用于降低第二次启动/重建 graphics pipeline 的驱动成本</strong>。</p>
       <p><strong>退出条件</strong>：</p>
       <ul>
         <li><strong>暴露 Vulkan <code>m_FrameProfileStats</code>（<code>SFrameProfileStats</code> 结构行 969-1078）全部字段到 perf report</strong>（所有后续优化的前置基线）</li>
+        <li><strong>Vulkan persistent pipeline cache PoC 落地</strong>：cache blob 从用户 storage 读取/保存，key 覆盖 <code>pipelineCacheUUID</code>、vendor/device/driver、SPIR-V manifest/hash 和 pipeline schema；cache miss/corrupt 自动重建。</li>
+        <li><strong>启动预热顺序收敛</strong>：graphics pipeline 创建先完成并发布 <code>vulkan_pipeline_cache</code> telemetry，再启动 <code>QmRuntime</code> 页面/glyph/text warmup；cache miss 时降低 startup warmup budget，避免 pipeline 创建和页面预热争同一段主线程时间。</li>
         <li><strong>UI 渲染路径 telemetry</strong>（QuadsBegin/End vs RenderQuadContainer 调用频次和耗时）落地，能判断"UI QuadContainer 推广"的真实收益</li>
         <li>基于 profile 数据完成 GPU/CPU-bound 判定；具体 Vulkan 优化只在数据证明后作为候选项进入独立计划。</li>
       </ul>
       <p><strong>不做</strong>：Vulkan backend 推倒重写、OpenGL backend 补 staging/PBO、AMD 多线程 fallback（无 AMD 测试环境）、多 backend 统一抽象、render graph、3D 引擎优化。</p>
 
       <h3>Phase E：文本渲染纵深（6-8 个月）</h3>
-      <p>对应 Pillar 3。<strong>按 ImGui 持久 buffer + Unreal dirty-cache 路线</strong>，不是 sparse atlas。</p>
+      <p>对应 Pillar 3 和 Pillar 3.6。<strong>第一目标仍是 ImGui 持久 buffer + Unreal dirty-cache + runtime warmup 调度</strong>，SDF/MSDF/GPU text 作为质量与长期架构 PoC 并行评估，不替代 scheduler coverage 收口。</p>
       <p><strong>退出条件</strong>：</p>
       <ul>
         <li>text container vertex buffer 加 dirty 标记 + (string,font,size,wrap) 缓存</li>
         <li>纯英文场景 fresh log 显示 <code>text_container_create_ms</code> 接近 0</li>
         <li>CJK 动态 glyph atlas PoC 完成：覆盖 atlas 增长、旧 text container UV 失效、跨 backend texture update、frame 内上传预算。</li>
         <li>真实 UI 字频采集落地（反 v1 "通用语料 1500/3500 字"路线）</li>
+        <li>Icon SDF/MSDF Vulkan-only PoC 完成：基于 <code>CQmIconManager</code>，manifest 支持 bitmap/SDF/MSDF，OpenGL 保持 bitmap fallback。</li>
+        <li>Large-text SDF/MSDF PoC 完成：只覆盖 ingame 高缩放大字号文本/图标，证明质量收益且不增加首帧同步工作。</li>
+        <li>Vulkan GPU text container 实验完成设计评审：明确是否继续推进到实现；若推进，必须新增 Vulkan-only command/pipeline，不替换现有 bitmap <code>SCommand_RenderText</code>。</li>
       </ul>
 
       <h3>Phase F：粒子简化 budget + 游戏内 FPS（8-10 个月）</h3>
@@ -1392,6 +1606,9 @@ system=perf/optimizer
           <tr><td><code>vkMapMemory</code>（stream buffer 映射）</td><td><code>backend_vulkan.cpp:7196</code>（另有 1526/1860/1921）</td><td>一次性映射，非每帧 map/unmap<span class="verified">codegraph 验证</span></td></tr>
           <tr><td><code>SFrameProfileStats</code> 结构</td><td><code>backend_vulkan.cpp:969-1078</code></td><td>Vulkan 内置 frame profiler 字段定义<span class="verified">codegraph 验证</span></td></tr>
           <tr><td><code>m_FrameProfileStats</code> 实例</td><td><code>backend_vulkan.cpp:1094</code></td><td>frame profiler 实例<span class="verified">codegraph 验证</span></td></tr>
+          <tr><td>Vulkan SPIR-V 构建</td><td><code>cmake/BuildVulkanShaders.cmake:83</code> / <code>:115-117</code></td><td>构建期用 <code>glslangValidator</code> 生成 <code>shader/vulkan/*.spv</code>，包括 text shader</td></tr>
+          <tr><td><code>CreateGraphicsPipeline</code></td><td><code>backend_vulkan.cpp:5484</code></td><td>当前 <code>vkCreateGraphicsPipelines</code> 第二参数为 <code>VK_NULL_HANDLE</code>，未接入 <code>VkPipelineCache</code><span class="verified">codegraph 验证</span></td></tr>
+          <tr><td><code>InitVulkanSwapChain</code> pipeline 创建</td><td><code>backend_vulkan.cpp:6940-7000</code></td><td>启动/重建 swapchain 时集中创建 prim/text/tile/quad/sprite pipeline<span class="verified">codegraph 验证</span></td></tr>
           <tr><td><code>vkQueueWaitIdle</code> 包装</td><td><code>backend_vulkan.cpp:7653</code></td><td>队列等待（非热路径）<span class="verified">codegraph 验证</span></td></tr>
           <tr><td><code>vkDeviceWaitIdle</code> 包装</td><td><code>backend_vulkan.cpp:7662</code></td><td>设备等待（非热路径）<span class="verified">codegraph 验证</span></td></tr>
           <tr><td><code>DeviceWaitIdle()</code> 调用者</td><td>1791(内存恢复) / 6307(RecreateSwapChain) / 7884(Cmd_Shutdown) / 9079(WindowDestroyNtf)</td><td>全在非帧热路径<span class="verified">codegraph 验证</span></td></tr>
@@ -1474,6 +1691,7 @@ system=perf/optimizer
           <tr><td>粒子/拖尾预算化</td><td>预算算法单测 + 固定场景 visual sanity + perf log 中 dropped/culled/rendered/update-skipped 字段验证</td></tr>
           <tr><td>Windows optimizer priority</td><td>Windows-only source-contract：配置默认关闭、开启记录旧值、关闭恢复、失败日志可见；非 Windows 编译路径不调用 WinAPI</td></tr>
           <tr><td>frame pacing / backend 统计</td><td>report 能拆出 render CPU、sleep wait、swap/vsync wait、GPU upload；OpenGL/Vulkan 字段可缺省但不可伪造</td></tr>
+          <tr><td>Vulkan pipeline cache</td><td>source-contract：启用时 pipeline 创建不能继续传 <code>VK_NULL_HANDLE</code>；运行验证：第二次启动 cache hit 且 <code>pipeline_create_ms</code> 下降；损坏 cache blob 能被丢弃并重建</td></tr>
           <tr><td>文本缓存</td><td>LRU 行为单测 + perf log 中 miss/hit 字段验证</td></tr>
           <tr><td>backend 改动</td><td>渲染正确性 gate + 多 renderer（OpenGL/Vulkan）冒烟测试</td></tr>
         </tbody>
@@ -1486,6 +1704,7 @@ system=perf/optimizer
       <h3>14.1 scheduler 改造边界</h3>
       <ul>
         <li><strong>不要做完全动态注册 microservice</strong>：5-8 个固定 consumer，service 内部硬编码 list。完全动态注册会引入间接调用成本和调试难度。</li>
+        <li><strong>QmRuntime 是 facade，不是平行引擎</strong>：第一版只收敛 metrics、warmup、job wrapper 和 pool stats；不要一次性新增并强行迁移所有线程、资源、文本、对象池所有权。</li>
         <li><strong>方向 B 不是完全 ImGui 化</strong>：保留 CUIElement 跨帧存活（retained-mode），只删除 plan collection 这层。</li>
         <li><strong>魔法数调参风险</strong>：当前 state machine 是手工调参的（threshold 1.35x、1.60x、HealthyFrames=2 等），重构后需要重新调参，可能短期回归。</li>
       </ul>
@@ -1493,6 +1712,8 @@ system=perf/optimizer
       <h3>14.2 图形后端改造边界</h3>
       <ul>
         <li><strong>Vulkan 不要大改</strong>：已有 staging、stream buffer、frame profiler 等基础设施；先暴露 telemetry 和判断 GPU/CPU-bound，再决定是否做 descriptor/scissor/glyph memcpy 等小修。</li>
+        <li><strong>Vulkan pipeline cache 是本机缓存，不是可发布资源</strong>：<code>VkPipelineCache</code> blob 依赖驱动、GPU、pipeline schema 和 shader 内容，只能存在用户 storage；失效、损坏、驱动升级都必须 fail-open 重建。</li>
+        <li><strong>pipeline cache 不替代 runtime warmup</strong>：它只降低 graphics pipeline 创建成本，不能缓存 glyph atlas、text container、页面资源或 UI layout；首帧卡顿仍必须由 scheduler coverage、dirty cache 和 budgeted warmup 收口。</li>
         <li><strong>OpenGL PBO/staging 不是低风险通用升级</strong>：PBO 对上传收益依赖驱动和 workload，persistent mapped 需要 OpenGL 4.4+/扩展；必须绑定最低 GL 版本、驱动矩阵和 OpenGL 用户占比。</li>
         <li><strong>图形后端提前可能与 CPU 侧优化竞争资源</strong>：6/19 log 显示当前卡顿是 CPU 侧，图形后端优化短期内不解决眼前问题，是长期方向。</li>
       </ul>
@@ -1502,7 +1723,9 @@ system=perf/optimizer
         <li><strong>不预设答案</strong>：纯英文卡顿真因必须先 profile 验证（per-label TextWidth 调用次数、text container 每帧 alloc/free、layout/wrap 重算次数）。</li>
         <li><strong>ImGui 1.92 动态字体系统是 CJK 长期可借鉴方案</strong>，但不是可直接搬运的实现；需要 PoC 证明 atlas 增长、旧 container UV、backend texture update、上传预算都可控。</li>
         <li><strong><code>ITextRender</code> 是 engine-wide API</strong>：直接新增公共接口会影响 chat、HUD、demo browser、menus、QmUI、map render、editor。优先在菜单/HUD 适配层验证。</li>
-        <li><strong>不要 SDF/MSDF 或 GPU-resident text</strong>：当前问题在 CPU 同步路径，不解决。</li>
+        <li><strong>SDF/MSDF/GPU text 不是当前 Phase 的主修复</strong>：它们可以作为 Phase E 后的独立技术路线 PoC，但不能绕过当前必须完成的 scheduler coverage、dirty cache、warmup budget 和 runtime metrics。</li>
+        <li><strong>新鲜文本渲染功能优先 Vulkan-only</strong>：OpenGL 是兼容后端，保持 bitmap fallback；不要为了 OpenGL 同步实现而阻塞 Vulkan SDF/MSDF/GPU text PoC。</li>
+        <li><strong>GPU text PoC 必须证明端到端收益</strong>：不仅看 glyph 渲染质量或 GPU 利用率，还要证明 frame tail、fallback 字体、CJK、旧 container UV、OpenGL/Vulkan 行为、截图/录制一致性都可控。</li>
       </ul>
 
       <h3>14.4 QmUI/CUI 改造边界</h3>
@@ -1556,9 +1779,11 @@ system=perf/optimizer
       <ul>
         <li><strong>plan collection 的实际收益未量化</strong>：临时把 <code>BuildVisibleSettingsMenuTextPlan</code> / <code>PrebuildSettingsMenuTextPool</code> 短路（return immediately），跑 perf benchmark 对比 settings 页滚动 FPS。如果差异 &lt;5%，方向 B 可直接执行。</li>
         <li><strong>scheduler token 在 FRAME_PRESSURE 下过度砍半是否合理</strong>：<code>settings_resource_jobs.cpp</code> 把所有 window 砍半，需要 profiling：FRAME_PRESSURE 模式下 visible 路径 fallback 到同步构建的占比是多少。</li>
+        <li><strong>CPU/GPU headroom 下的卡顿归因</strong>：无限制帧率时 CPU/GPU 未吃满但仍有 spike，必须用 <code>frame_pacing</code> + <code>scheduler_coverage</code> 证明到底是 immediate render、job completion、sleep/swap wait 还是 OS 调度抖动。</li>
         <li><strong>Assets / DemoBrowser consumer 已在用</strong>：后续问题不是删死字段，而是确认这些 consumer 的 coverage telemetry 是否能解释实际 work。</li>
         <li><strong>跨场景状态继承</strong>：从 settings 切到 ingame 时，service 内 per-consumer state 的 HealthyFrames/Window 是否应该迁移到新场景？</li>
         <li><strong><code>DoIngameMenuLabel</code> 同步 fallback 阈值</strong>：当前已作为 uncovered immediate fallback 进入 gate；Phase B 需要用 fresh log 确定不同场景的阈值和是否进一步限流。</li>
+        <li><strong>Runtime facade 粒度</strong>：<code>QmWarmupManager</code> 第一版只管 glyph + stable text，还是也接入 assets/demo resource jobs，需要用 <code>PrewarmVisibleSettingsResources</code> 分离后的 telemetry 决定。</li>
       </ul>
 
       <h3>15.2 文本渲染相关</h3>
@@ -1566,6 +1791,10 @@ system=perf/optimizer
         <li><strong>纯英文卡顿真因的 A/B profile</strong>：准备两份 fresh log（纯英文 UI 切换 + 纯中文 UI 切换），对比 <code>text_container_create_ms</code>、<code>glyph_rasterize_ms</code>、<code>glyph_upload_ms</code>、<code>paragraph_layout_ms</code> 在两份 log 里的占比。</li>
         <li><strong>per-label TextWidth 调用次数</strong>：当前是否每个 label 每帧都调？是否随 hash 缓存？</li>
         <li><strong>text container 每帧 alloc/free 次数</strong>：是否走 std::vector 默认分配器？是否可改为 arena？</li>
+        <li><strong><code>WarmGlyph</code> API 边界</strong>：应暴露在 <code>ITextRender</code> 还是仅作为 <code>IEngineTextRender</code> / QmClient 适配层接口，需要先做 blast-radius 评估。</li>
+        <li><strong>layout cache 后台化边界</strong>：当前 text layout 是否能完全脱离 graphics/text renderer state；如果不能，后台线程只能产出 manifest/plan，不能产出最终 layout/container。</li>
+        <li><strong>SDF/MSDF/GPU text 技术路线</strong>：是否值得做取决于 Phase E 前置数据；PoC 至少要比较现有 atlas/container、SDF/MSDF atlas、Vulkan GPU-resident text 三种路线在质量、内存、上传、CPU tail、跨 backend fallback 复杂度上的真实成本。</li>
+        <li><strong>图标库渲染统一</strong>：现有 Font Awesome icon font 与 Qm PNG icon atlas 并存；SDF/MSDF icon PoC 成功后，需要决定是否统一到 <code>CQmIconManager</code>，还是继续保留两套入口。</li>
       </ul>
 
       <h3>15.3 图形后端相关</h3>
@@ -1573,6 +1802,8 @@ system=perf/optimizer
         <li><strong>OpenGL 用户的实际占比和卡顿数据</strong>：DDNet 默认 OpenGL 还是 Vulkan？QmClient 是否改了默认？如果 OpenGL 用户占比小，OpenGL 后端优化收益有限。</li>
         <li><strong>Vulkan StreamBuffer / staging 行为已基本确认</strong>：后续重点是把 frame profiler 暴露到 QmClient perf report，而不是重查是否存在。</li>
         <li><strong><code>m_FrameProfileStats</code> 输出路径</strong>：当前主要是 backend verbose/profile 信息，仍需接入 QmClient perf report 和 gate scenario。</li>
+        <li><strong>Vulkan pipeline cache 收益量化</strong>：需要 fresh profile 对比首次启动、第二次启动、删除 cache 后启动、损坏 cache 启动四种场景，确认 <code>pipeline_create_ms</code> 降幅和 fallback 行为。</li>
+        <li><strong>OpenGL program binary cache 是否值得做</strong>：用户已明确新功能优先 Vulkan；OpenGL 可作为后续兼容优化，但要先看 OpenGL 用户占比和启动耗时，避免为兼容后端扩大维护面。</li>
       </ul>
 
       <h3>15.4 CUI 相关</h3>

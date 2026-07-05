@@ -1574,7 +1574,7 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	EXPECT_EQ(LaserBranch.find("80.0f * UiScale"), std::string::npos);
 
 	EXPECT_NE(RenderSettingsQmClient.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
-	EXPECT_NE(RenderSettingsQmClient.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer("), std::string::npos);
 	EXPECT_EQ(RenderSettingsQmClient.find("CScrollRegionParams NameplateTextScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
 	EXPECT_NE(RenderSettingsQmClient.find("RenderQuadContainer(m_QmCardBgQuadContainerIndex"), std::string::npos); // 栖梦侧栏卡片背景走 DrawCall 合批（QuadContainer，替代逐卡 RenderQmSettingsGlassCard）
 	EXPECT_EQ(RenderSettingsQmClient.find("Card.Draw(LgGlassColor"), std::string::npos);
@@ -1582,7 +1582,7 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	const std::string RenderSettingsQmClientOverview = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(RenderSettingsQmClientOverview.empty());
 	EXPECT_NE(RenderSettingsQmClientOverview.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
-	EXPECT_NE(RenderSettingsQmClientOverview.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClientOverview.find("SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer("), std::string::npos);
 	EXPECT_NE(RenderSettingsQmClientOverview.find("RenderQmSettingsGlassCard(Card, QmCardStyle);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsQmClientOverview.find("auto DrawCardBackground ="), std::string::npos);
 }

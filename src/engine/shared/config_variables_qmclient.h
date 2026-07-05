@@ -18,6 +18,7 @@ MACRO_CONFIG_INT(QmAssetsPreviewBudgetMbOverride, qm_assets_preview_budget_mb_ov
 MACRO_CONFIG_INT(QmAssetsPreviewBudgetPercent, qm_assets_preview_budget_percent, 8, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "资源预览显存预算百分比（基于设备本地显存预算）")
 MACRO_CONFIG_INT(QmUiRuntimeV2Debug, qm_ui_runtime_v2_debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用 UI 运行时 v2 调试日志")
 MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 2, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmUi 动效强度：0=关闭 1=降低 2=完整")
+MACRO_CONFIG_INT(QmUiColorInterpolation, qm_ui_color_interpolation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀")
 MACRO_CONFIG_INT(QmCardBackdropBlur, qm_card_backdrop_blur, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）")
 MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 32, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）")
 MACRO_CONFIG_STR(QmSettingsCardOrder, qm_settings_card_order, 2048, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tclient 设置卡片排序（格式 id:col:order; 分号分隔）")
@@ -104,6 +105,17 @@ MACRO_CONFIG_INT(QmEntityOverlaySwitchAlpha, qm_entity_overlay_switch_alpha, 100
 // Q1menG Client Recognition / Q1menG客户端识别
 MACRO_CONFIG_INT(QmClientMarkTrail, qm_client_mark_trail, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）")
 MACRO_CONFIG_INT(QmClientShowBadge, qm_client_show_badge, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户")
+
+// Fast Input / 快速输入
+MACRO_CONFIG_INT(QmAutoMargin, qm_auto_margin, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "自动调整预测边距（关闭后固定使用基础预测边距）")
+MACRO_CONFIG_INT(QmFastInputMode, qm_fast_input_mode, 0, 0, 4, CFGFLAG_CLIENT | CFGFLAG_SAVE, "快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）")
+MACRO_CONFIG_INT(QmBestInputOffset, qm_best_input_offset, 0, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input 预测偏移（0.01 tick）")
+MACRO_CONFIG_INT(QmBestInputSmoothing, qm_best_input_smoothing, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input 平滑百分比")
+MACRO_CONFIG_INT(QmBestInputLatencyComp, qm_best_input_latency_comp, 0, 0, 50, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input 延迟补偿百分比")
+MACRO_CONFIG_INT(QmBestInputInterpolation, qm_best_input_interpolation, 1, 1, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Best input 插值模式（1=linear 2=cubic 3=smooth）")
+MACRO_CONFIG_INT(QmSaikoPlusAmount, qm_saiko_plus_amount, 0, 0, 500, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Saiko+ 输入量（0.01 tick）")
+MACRO_CONFIG_INT(QmBestInputOthers, qm_best_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "将 Best input 应用于其他 Tee")
+MACRO_CONFIG_INT(QmSaikoPlusOthers, qm_saiko_plus_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "将 Saiko+ 应用于其他 Tee")
 
 // Keyword Reply / 关键词回复
 MACRO_CONFIG_INT(QmKeywordReplyEnabled, qm_keyword_reply_enabled, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用关键词回复")

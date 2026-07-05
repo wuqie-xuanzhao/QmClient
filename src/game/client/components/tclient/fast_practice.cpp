@@ -69,23 +69,25 @@ namespace
 
 	float EffectiveFastInputOffsetTicks(const CGameClient *pGameClient)
 	{
-		if(!pGameClient->TClientComponent().IsFastInputActive())
-			return 0.0f;
-		if(g_Config.m_TcFastInputAmount <= 0)
-			return 0.0f;
-		return g_Config.m_TcFastInputAmount / 20.0f;
+		SQmFastInputSettings Settings;
+		Settings.m_Enabled = pGameClient->TClientComponent().IsFastInputActive();
+		Settings.m_Mode = g_Config.m_QmFastInputMode;
+		Settings.m_FastAmountMs = g_Config.m_TcFastInputAmount;
+		Settings.m_BestOffset = g_Config.m_QmBestInputOffset;
+		Settings.m_BestSmoothing = g_Config.m_QmBestInputSmoothing;
+		Settings.m_BestLatencyComp = g_Config.m_QmBestInputLatencyComp;
+		Settings.m_SaikoPlusAmount = g_Config.m_QmSaikoPlusAmount;
+		return QmEffectiveFastInputOffsetTicks(Settings);
 	}
 
 	int FastInputPredictionTicks(float OffsetTicks)
 	{
-		if(OffsetTicks <= 0.0f)
-			return 0;
-		return (int)std::ceil(OffsetTicks);
+		return QmFastInputPredictionTicks(OffsetTicks, g_Config.m_QmFastInputMode);
 	}
 
 	bool EffectiveFastInputOthers(const CGameClient *pGameClient)
 	{
-		return pGameClient->TClientComponent().IsFastInputOthersActive();
+		return QmEffectiveFastInputOthers(pGameClient->TClientComponent().IsFastInputActive(), g_Config.m_QmFastInputMode, g_Config.m_TcFastInputOthers != 0, g_Config.m_QmBestInputOthers != 0, g_Config.m_QmSaikoPlusOthers != 0);
 	}
 
 	bool IsFrozenState(const CCharacter *pChar)

@@ -65,6 +65,7 @@ void CUiRuntimeV2::OnRender()
 	if(Dt < 0.0f)
 		Dt = 0.0f;
 	Dt = std::min(Dt, 1.0f / 15.0f);
+	m_FrameDt = Dt;
 
 	float TreeBeginMs = 0.0f;
 	float AnimAdvanceMs = 0.0f;
@@ -91,7 +92,7 @@ void CUiRuntimeV2::OnRender()
 	}
 	{
 		CPerfTimer StageTimer;
-		m_Tree.EndFrame();
+		m_Tree.EndFrame(m_AnimRuntime);
 		TreeEndMs = StageTimer.ElapsedMs();
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "dt_ms=%.3f", Dt * 1000.0f);

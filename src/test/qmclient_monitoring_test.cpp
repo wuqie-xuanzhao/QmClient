@@ -1266,20 +1266,16 @@ TEST(QmMonitoringHelpers, QmClientModuleDragGhostUsesPressAnchor)
 
 	const size_t PressBlockPos = Source.find("if(!InteractionBlocked && Ui()->MouseButtonClicked(0) && OverHeader)");
 	ASSERT_NE(PressBlockPos, std::string::npos);
-	const size_t HoldBlockPos = Source.find("if(!InteractionBlocked && s_DragState.m_pPressed == pModule && Ui()->MouseButton(0) && s_DragState.m_pDragging == nullptr)", PressBlockPos);
-	ASSERT_NE(HoldBlockPos, std::string::npos);
-	const std::string PressBlock = Source.substr(PressBlockPos, HoldBlockPos - PressBlockPos);
+	const size_t DragGuardPos = Source.find("if(s_DragState.m_pDragging != pModule)", PressBlockPos);
+	ASSERT_NE(DragGuardPos, std::string::npos);
+	const std::string PressBlock = Source.substr(PressBlockPos, DragGuardPos - PressBlockPos);
 
-	const size_t AfterHoldPos = Source.find("if(s_DragState.m_pDragging != pModule)", HoldBlockPos);
-	ASSERT_NE(AfterHoldPos, std::string::npos);
-	const std::string HoldBlock = Source.substr(HoldBlockPos, AfterHoldPos - HoldBlockPos);
-
+	EXPECT_NE(PressBlock.find("s_DragState.m_pDragging = pModule;"), std::string::npos);
 	EXPECT_NE(PressBlock.find("s_DragState.m_GrabOffset = vec2(Ui()->MouseX() - CardRect.x, Ui()->MouseY() - CardRect.y);"), std::string::npos);
 	EXPECT_NE(PressBlock.find("s_DragState.m_DraggedWidth = CardRect.w;"), std::string::npos);
 	EXPECT_NE(PressBlock.find("s_DragState.m_DraggedHeight = CardRect.h;"), std::string::npos);
 	EXPECT_NE(PressBlock.find("s_DragState.m_HasDragAnchor = true;"), std::string::npos);
-	EXPECT_NE(HoldBlock.find("s_DragState.m_pDragging = pModule;"), std::string::npos);
-	EXPECT_EQ(HoldBlock.find("s_DragState.m_GrabOffset = vec2(Ui()->MouseX() - CardRect.x, Ui()->MouseY() - CardRect.y);"), std::string::npos);
+	EXPECT_EQ(Source.find("if(!InteractionBlocked && s_DragState.m_pPressed == pModule && Ui()->MouseButton(0) && s_DragState.m_pDragging == nullptr)"), std::string::npos);
 	EXPECT_NE(Source.find("if(s_DragState.m_pDragging == nullptr || !s_DragState.m_HasDragAnchor)"), std::string::npos);
 }
 
@@ -1474,6 +1470,27 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 999, "dynamic-value"},
 		{pFile, 1001, "dynamic-value"},
 		{pFile, 1002, "dynamic-value"},
+		{pFile, 984, "dynamic-value"},
+		{pFile, 986, "dynamic-value"},
+		{pFile, 987, "dynamic-value"},
+		{pFile, 989, "dynamic-value"},
+		{pFile, 996, "dynamic-value"},
+		{pFile, 1000, "dynamic-value"},
+		{pFile, 1003, "dynamic-value"},
+		{pFile, 1004, "dynamic-value"},
+		{pFile, 1045, "dynamic-value"},
+		{pFile, 1046, "dynamic-value"},
+		{pFile, 1053, "dynamic-value"},
+		{pFile, 1057, "dynamic-value"},
+		{pFile, 1061, "dynamic-value"},
+		{pFile, 1062, "dynamic-value"},
+		{pFile, 1064, "dynamic-value"},
+		{pFile, 1065, "dynamic-value"},
+		{pFile, 1047, "dynamic-value"},
+		{pFile, 1054, "dynamic-value"},
+		{pFile, 1058, "dynamic-value"},
+		{pFile, 1063, "dynamic-value"},
+		{pFile, 1066, "dynamic-value"},
 	};
 	const std::vector<SStableTextCandidate> vUnexpected = FilterCandidatesNotCoveredByMenuPoolOrAllowlist(pFile, vCandidates, vAllowlist);
 	EXPECT_TRUE(vUnexpected.empty()) << JoinCandidates(vUnexpected);
@@ -2061,6 +2078,13 @@ TEST(QmMonitoringHelpers, SettingsTextPlanCoversHighValueTClientAndQmClientStati
 		EXPECT_EQ(RenderBody.find("return DoQmSettingsCheckbox(pId, pText, pText"), std::string::npos);
 		EXPECT_EQ(RenderBody.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmFootParticles, Localize(\"Local particle effects\")"), std::string::npos);
 		EXPECT_EQ(RenderBody.find("DoButton_CheckBoxAutoVMarginAndSet("), std::string::npos);
+		const size_t DogfoodBranch = RenderBody.find("if(g_Config.m_DbgQmUiDogfood != 0)");
+		ASSERT_NE(DogfoodBranch, std::string::npos);
+		const size_t DogfoodPrewarmGate = RenderBody.find("if(PrewarmOnly)\n\t\t\treturn;", DogfoodBranch);
+		const size_t DogfoodContext = RenderBody.find("IUiContext Ctx;", DogfoodBranch);
+		ASSERT_NE(DogfoodPrewarmGate, std::string::npos);
+		ASSERT_NE(DogfoodContext, std::string::npos);
+		EXPECT_LT(DogfoodPrewarmGate, DogfoodContext);
 		const std::string PlanBody = ExtractSourceFunctionBody(Source, "void CMenus::BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab)");
 		ASSERT_FALSE(PlanBody.empty());
 		EXPECT_NE(PlanBody.find("RenderSettings(MainView);"), std::string::npos);
@@ -5924,14 +5948,47 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Controls = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 
 	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams"), std::string::npos);
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams"), std::string::npos);
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
-	EXPECT_NE(QmClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &MainView, ScrollParams"), std::string::npos);
-	EXPECT_NE(QmClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
-	EXPECT_NE(QmClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion"), std::string::npos);
+	const std::string QmOverviewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(QmOverviewBody.empty());
+	EXPECT_NE(QmOverviewBody.find("static CQmScrollContainer s_QmOverviewScrollContainer;"), std::string::npos);
+	EXPECT_NE(QmOverviewBody.find("SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer(s_QmOverviewScrollContainer, &MainView, s_QmOverviewScrollContentHeight, QmCardStyle, UiScale, s_PrevOverviewScrollY, !PrewarmOnly);"), std::string::npos);
+	EXPECT_NE(QmOverviewBody.find("FinishSettingsQmScrollContainer(s_QmOverviewScrollContainer, OverviewScrollFrame, EndPad, &s_QmOverviewScrollContentHeight, &s_PrevOverviewScrollY, !m_MenuTextPlanCollecting);"), std::string::npos);
+	EXPECT_NE(QmOverviewBody.find("MainView.y += OverviewScrollFrame.m_Offset.y;"), std::string::npos);
+	EXPECT_LT(QmOverviewBody.find("BeginSettingsQmScrollContainer("), QmOverviewBody.find("DrawFullWidthCard("));
+	EXPECT_LT(QmOverviewBody.find("DrawFullWidthCard("), QmOverviewBody.find("FinishSettingsQmScrollContainer("));
+	EXPECT_EQ(QmOverviewBody.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
+	EXPECT_EQ(QmOverviewBody.find("KEY_MOUSE_WHEEL_UP"), std::string::npos);
+	EXPECT_EQ(QmOverviewBody.find("SetHotItem("), std::string::npos);
+	EXPECT_EQ(QmOverviewBody.find("SetActiveItem("), std::string::npos);
+	EXPECT_EQ(QmOverviewBody.find("Ui()->ClipEnable("), std::string::npos);
+	EXPECT_EQ(QmOverviewBody.find("Ui()->ClipDisable();"), std::string::npos);
+	EXPECT_EQ(QmOverviewBody.find("BeginSettingsScrollRegion("), std::string::npos);
+	EXPECT_EQ(QmOverviewBody.find("FinishSettingsScrollRegion("), std::string::npos);
+	EXPECT_NE(QmClient.find("static CQmScrollContainer s_QmScrollContainer;"), std::string::npos);
+	EXPECT_NE(Header.find("struct SSettingsQmScrollFrame"), std::string::npos);
+	EXPECT_NE(Header.find("BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
+	EXPECT_NE(Header.find("FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
+	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
+	EXPECT_NE(QmClient.find("ScrollInput.m_Hovered = Ui()->MouseHovered(pView);"), std::string::npos);
+	EXPECT_NE(QmClient.find("ScrollInput.m_WheelDelta += 120.0f;"), std::string::npos);
+	EXPECT_NE(QmClient.find("const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(*pView, ContentHeight, Frame.m_Style);"), std::string::npos);
+	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.Update(*pView, ContentHeight, GameClient()->UiRuntimeV2()->FrameDt(), ScrollInput, Frame.m_Style, ScrollConfig);"), std::string::npos);
+	EXPECT_NE(QmClient.find("Ui()->ClipEnable(&Frame.m_ClipRect);"), std::string::npos);
+	EXPECT_NE(QmClient.find("Ui()->ClipDisable();"), std::string::npos);
+	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);"), std::string::npos);
+	EXPECT_EQ(QmClient.find("ScrollContainer.PreviewFrame(Frame.m_ClipRect"), std::string::npos);
+	EXPECT_NE(QmClient.find("*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)) + CScrollRegion::HEIGHT_MAGIC_FIX);"), std::string::npos);
+	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(QmMainBody.empty());
+	EXPECT_NE(QmMainBody.find("SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);"), std::string::npos);
+	EXPECT_NE(QmMainBody.find("FinishSettingsQmScrollContainer(s_QmScrollContainer, QmScrollFrame, ScrollEnd, &s_QmScrollContentHeight, &s_PrevQmScrollY, true);"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
 	EXPECT_NE(Controls.find("BeginSettingsScrollRegion(m_SettingsScrollRegion, &MainView, ScrollParams"), std::string::npos);
 	EXPECT_NE(Controls.find("FinishSettingsScrollRegion(m_SettingsScrollRegion, ScrollFrame);"), std::string::npos);
 	EXPECT_EQ(Controls.find("FinishSettingsScrollRegion(m_SettingsScrollRegion, ScrollFrame, &"), std::string::npos);
@@ -6005,6 +6062,275 @@ TEST(QmMonitoringHelpers, QmClientSearchSnapshotSignatureIgnoresVolatileMeasured
 	EXPECT_EQ(SignatureBody.find("GetQmModuleEstimatedHeight"), std::string::npos);
 	EXPECT_EQ(SignatureBody.find("EstimatedHeight"), std::string::npos);
 	EXPECT_NE(EntriesBody.find("SnapshotEntry.m_EstimatedHeight = GetQmModuleEstimatedHeight(&Entry);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmClientFlatDragKeepsPreviewHeightAndVisualsStable)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+
+	const std::string UpdateDropPreview = ExtractSourceBlock(Body, "auto UpdateDropPreview = [&]()", "// 拖拽期间不做可视占位");
+	const std::string ComputeDropPreviewLayout = ExtractSourceBlock(Body, "auto ComputeDropPreviewLayout = [&]()", "auto RenderDragGhost = [&]()");
+	const std::string RenderDragGhost = ExtractSourceBlock(Body, "auto RenderDragGhost = [&]()", "auto CommitDropPreview = [&]()");
+	const std::string RenderColumnModules = ExtractSourceBlock(Body, "auto RenderColumnModules = [&](const std::vector<const SQmModuleEntry *> &Modules, EQmModuleColumn ColumnId)", "if(ShowFooter)");
+	ASSERT_FALSE(UpdateDropPreview.empty());
+	ASSERT_FALSE(ComputeDropPreviewLayout.empty());
+	ASSERT_FALSE(RenderDragGhost.empty());
+	ASSERT_FALSE(RenderColumnModules.empty());
+
+	EXPECT_NE(ComputeDropPreviewLayout.find("拖拽期间不做可视占位"), std::string::npos);
+	EXPECT_NE(ComputeDropPreviewLayout.find("s_DropPreview.m_PreviewValid = false;"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("s_DropPreview.m_PreviewValid = true;"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("const float LastDraggedH = s_aQmModuleLastHeights[DraggedSI];"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("const float DraggedH = (LastDraggedH > 0.0f) ? LastDraggedH : std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("const float DraggedH = std::max(s_DragState.m_DraggedHeight, GetQmModuleDefaultEstimatedHeight(*pDragged));"), std::string::npos);
+	EXPECT_NE(Body.find("const float DropPreviewDwellSeconds = 0.22f;"), std::string::npos);
+	EXPECT_EQ(Body.find("DragHoldSeconds"), std::string::npos);
+	EXPECT_NE(Body.find("struct SQmModuleDropPreviewCandidate"), std::string::npos);
+	EXPECT_NE(Body.find("static SQmModuleDropPreviewCandidate s_DropPreviewCandidate"), std::string::npos);
+	EXPECT_NE(UpdateDropPreview.find("auto BuildDropPreviewCandidate"), std::string::npos);
+	EXPECT_NE(UpdateDropPreview.find("auto SameDropPreviewCandidate"), std::string::npos);
+	EXPECT_NE(UpdateDropPreview.find("auto ClearActiveDropPreview"), std::string::npos);
+	EXPECT_EQ(UpdateDropPreview.find("const float DragCenterX = Ui()->MouseX() - s_DragState.m_GrabOffset.x + s_DragState.m_DraggedWidth * 0.5f;"), std::string::npos);
+	EXPECT_NE(UpdateDropPreview.find("const float DragHeaderX = Ui()->MouseX();"), std::string::npos);
+	EXPECT_NE(UpdateDropPreview.find("const float DragHeaderY = Ui()->MouseY() - s_DragState.m_GrabOffset.y + LgCardPadding + LgHeadlineSize * 0.5f;"), std::string::npos);
+	EXPECT_NE(UpdateDropPreview.find("TargetColumn = DragHeaderX <= ColumnSplitX ? EQmModuleColumn::Left : EQmModuleColumn::Right;"), std::string::npos);
+	EXPECT_NE(UpdateDropPreview.find("const CUIRect &StableRect = pCard->m_TargetRect;"), std::string::npos);
+	EXPECT_NE(UpdateDropPreview.find("const float HeaderAnchorY = StableRect.y + LgCardPadding + LgHeadlineSize * 0.5f;"), std::string::npos);
+	EXPECT_EQ(UpdateDropPreview.find("const float MidY = StableRect.y + StableRect.h * 0.5f;"), std::string::npos);
+	EXPECT_LT(UpdateDropPreview.find("ClearActiveDropPreview();"), UpdateDropPreview.find("return;\n\t\t}\n\t\tif(Client()->LocalTime() - s_DropPreviewCandidate.m_StartedAt < DropPreviewDwellSeconds"));
+	EXPECT_NE(UpdateDropPreview.find("Client()->LocalTime() - s_DropPreviewCandidate.m_StartedAt < DropPreviewDwellSeconds"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("const float Yield = DraggedH + LgCardSpacing;"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("Y += Yield"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("auto LayoutOneColumn"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("auto MakeRect"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("CUIRect DragObstacle"), std::string::npos);
+	EXPECT_EQ(ComputeDropPreviewLayout.find("PackCardsAboveObstacle"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, EffectiveTarget, ui_token::motion::CARD_REORDER);"), std::string::npos);
+	EXPECT_NE(Body.find("BuildUiAnimNodeKey(str_quickhash(\"qm_module_card_layout\"), static_cast<uint64_t>(pModule->m_Id))"), std::string::npos);
+	EXPECT_EQ(Body.find("static std::array<vec2, QmModuleCount> s_aQmModuleDisplayVelocities{};"), std::string::npos);
+	EXPECT_EQ(Body.find("const float SpringDt = std::clamp(Client()->RenderFrameTime(), 0.0f, 1.0f / 30.0f);"), std::string::npos);
+	EXPECT_EQ(Body.find("auto SpringAxis = [&](float &Pos, float &Velocity, float Target)"), std::string::npos);
+	EXPECT_EQ(Body.find("SpringAxis(Disp.x, Velocity.x, EffectiveTarget.x);"), std::string::npos);
+	EXPECT_EQ(Body.find("SpringAxis(Disp.y, Velocity.y, EffectiveTarget.y);"), std::string::npos);
+	EXPECT_EQ(Body.find("const float LerpT = 0.25f;"), std::string::npos);
+	EXPECT_EQ(Body.find("Disp.x += (EffectiveTarget.x - Disp.x) * LerpT;"), std::string::npos);
+	EXPECT_EQ(Body.find("Disp.y += (EffectiveTarget.y - Disp.y) * LerpT;"), std::string::npos);
+
+	EXPECT_NE(RenderDragGhost.find("// A2 修订（扁平化）：被拖卡和其他卡同层渲染"), std::string::npos);
+	EXPECT_EQ(RenderDragGhost.find("Shadow.Draw"), std::string::npos);
+	EXPECT_EQ(RenderDragGhost.find("DragGhostColor"), std::string::npos);
+	EXPECT_EQ(RenderDragGhost.find("DrawDragOutline"), std::string::npos);
+	EXPECT_EQ(Body.find("s_DropPreview.m_LineRect.Draw(DropPreviewColor"), std::string::npos);
+
+	EXPECT_NE(RenderColumnModules.find("QmCardOffsetX = 0.0f;"), std::string::npos);
+	EXPECT_NE(RenderColumnModules.find("QmCardOffsetY = 0.0f;"), std::string::npos);
+	const std::string DisplayRectOffset = ExtractSourceBlock(RenderColumnModules, "// 布局过渡偏移", "CPerfTimer ModuleTimer;");
+	ASSERT_FALSE(DisplayRectOffset.empty());
+	EXPECT_EQ(RenderColumnModules.find("if(SkipOffscreenModule(pModule, Column))"), std::string::npos);
+	EXPECT_NE(Body.find("auto EstimateModuleTotalHeight"), std::string::npos);
+	EXPECT_EQ(DisplayRectOffset.find("if(s_DragState.m_pDragging != nullptr)"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("CUIRect &DispRect = s_aQmModuleDisplayRects[SI];"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, EffectiveTarget, ui_token::motion::CARD_REORDER);"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("SyncLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, DragTarget);"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, TargetBeforeRender, ui_token::motion::CARD_REORDER, 1, false);"), std::string::npos);
+	EXPECT_EQ(DisplayRectOffset.find("GameClient()->UiRuntimeV2()->AnimRuntime().SetValue(NodeKey, EUiAnimProperty::POS_X"), std::string::npos);
+	EXPECT_EQ(DisplayRectOffset.find("GameClient()->UiRuntimeV2()->AnimRuntime().SetValue(NodeKey, EUiAnimProperty::POS_Y"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("QmCardOffsetX = DispRect.x - Column.x;"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("DrawGlassCardBackground(DisplayBgRect);"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("const bool TargetVisible = IsSectionVisible(TargetBeforeRender, ModuleCullContext);"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("const bool DisplayVisible = DispRect.w > 0.0f && IsSectionVisible(DispRect, ModuleCullContext);"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("Column.y += EstimateModuleTotalHeight(pModule);"), std::string::npos);
+
+	const size_t PreRenderDragPos = Body.find("auto UpdateDropPreviewBeforeRender = [&]()");
+	const size_t RenderedModulesPos = Body.find("const std::vector<const SQmModuleEntry *> &RenderedLeftModules");
+	const size_t FirstRenderColumnPos = Body.find("RenderColumnModules(RenderedLeftModules, EQmModuleColumn::Left);");
+	ASSERT_NE(PreRenderDragPos, std::string::npos);
+	ASSERT_NE(RenderedModulesPos, std::string::npos);
+	ASSERT_NE(FirstRenderColumnPos, std::string::npos);
+	EXPECT_LT(PreRenderDragPos, FirstRenderColumnPos);
+	EXPECT_LT(RenderedModulesPos, FirstRenderColumnPos);
+	EXPECT_LT(Body.find("UpdateDropPreviewBeforeRender();"), FirstRenderColumnPos);
+	EXPECT_NE(Body.find("s_DragState.m_pDragging = pModule;"), std::string::npos);
+	const std::string UpdateDropPreviewBeforeRender = ExtractSourceBlock(Body, "auto UpdateDropPreviewBeforeRender = [&]()", "UpdateDropPreviewBeforeRender();");
+	ASSERT_FALSE(UpdateDropPreviewBeforeRender.empty());
+	EXPECT_EQ(UpdateDropPreviewBeforeRender.find("for(const SQmModuleCardInfo &Card : ModuleCards)"), std::string::npos);
+	EXPECT_EQ(UpdateDropPreviewBeforeRender.find("TryBeginModuleDrag(Card.m_pModule, Card.m_Rect)"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("TryBeginModuleDrag(pModule, TargetBeforeRender);"), std::string::npos);
+	EXPECT_LT(DisplayRectOffset.find("TryBeginModuleDrag(pModule, TargetBeforeRender);"), DisplayRectOffset.find("CUIRect &DispRect = s_aQmModuleDisplayRects[SI];"));
+	EXPECT_EQ(UpdateDropPreviewBeforeRender.find("s_DragState.m_pDragging = s_DragState.m_pPressed;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmLayoutTransitionCacheIsOwnedByTree)
+{
+	const std::string AnimHeader = ReadRepoFile("src/game/client/QmUi/QmAnim.h");
+	const std::string TreeHeader = ReadRepoFile("src/game/client/QmUi/QmTree.h");
+	const std::string TreeSource = ReadRepoFile("src/game/client/QmUi/QmTree.cpp");
+	EXPECT_NE(AnimHeader.find("ResolveTargetValue(uint64_t NodeKey, EUiAnimProperty Property, float Target, const SUiAnimTransition &Transition);"), std::string::npos);
+	EXPECT_NE(AnimHeader.find("SResolveTargetState"), std::string::npos);
+	EXPECT_NE(AnimHeader.find("m_LastTargets"), std::string::npos);
+	EXPECT_NE(AnimHeader.find("m_ResolveUseCounter"), std::string::npos);
+	EXPECT_EQ(AnimHeader.find("SFlipRectState"), std::string::npos);
+	EXPECT_EQ(AnimHeader.find("m_FlipRects"), std::string::npos);
+	EXPECT_EQ(AnimHeader.find("m_FlipUseCounter"), std::string::npos);
+	EXPECT_NE(TreeHeader.find("ResolveLayoutTransition(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, const CUIRect &Target, const struct SUiSpringConfig &Spring, int Priority = 1, bool Animate = true);"), std::string::npos);
+	EXPECT_NE(TreeHeader.find("m_LayoutTransitions"), std::string::npos);
+	EXPECT_NE(TreeHeader.find("m_LayoutUseCounter"), std::string::npos);
+	EXPECT_NE(TreeHeader.find("PruneLayoutTransitionCache"), std::string::npos);
+	EXPECT_NE(TreeSource.find("ResolveLayoutTransition(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, const CUIRect &Target, const SUiSpringConfig &Spring, int Priority, bool Animate)"), std::string::npos);
+	EXPECT_NE(TreeSource.find("|| !Animate"), std::string::npos);
+	EXPECT_NE(TreeSource.find("AnimRuntime.ResolveTargetValue("), std::string::npos);
+	EXPECT_NE(TreeSource.find("m_LayoutTransitions"), std::string::npos);
+	EXPECT_NE(TreeSource.find("m_LayoutUseCounter"), std::string::npos);
+	EXPECT_NE(TreeSource.find("PruneLayoutTransitionCache"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmUiAnimatePresenceIsGenericWidgetHelper)
+{
+	const std::string Context = ReadRepoFile("src/game/client/QmUi/UiContext.h");
+	const std::string Overlays = ReadRepoFile("src/game/client/QmUi/UiOverlays.h");
+	const std::string TreeHeader = ReadRepoFile("src/game/client/QmUi/QmTree.h");
+	const std::string TreeSource = ReadRepoFile("src/game/client/QmUi/QmTree.cpp");
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	EXPECT_NE(Context.find("CUiV2Tree *m_pTree = nullptr;"), std::string::npos);
+	EXPECT_NE(Overlays.find("SAnimatePresenceResult"), std::string::npos);
+	EXPECT_NE(Overlays.find("AnimatePresence(const IUiContext &Ctx, const void *pId, bool Visible"), std::string::npos);
+	EXPECT_NE(Overlays.find("Ctx.m_pTree->ResolvePresence(*Ctx.m_pAnim"), std::string::npos);
+	EXPECT_NE(Overlays.find("const SAnimatePresenceResult Presence = AnimatePresence(Ctx, pId, Visible, ui_token::motion::TOAST_SLIDE);"), std::string::npos);
+	EXPECT_NE(Overlays.find("const SAnimatePresenceResult Presence = AnimatePresence(Ctx, pId, *pOpen, ui_token::motion::MODAL_IN);"), std::string::npos);
+	EXPECT_NE(TreeHeader.find("struct SUiPresenceResult"), std::string::npos);
+	EXPECT_NE(TreeHeader.find("ResolvePresence(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, bool Visible"), std::string::npos);
+	EXPECT_NE(TreeSource.find("ResolvePresence(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, bool Visible"), std::string::npos);
+	EXPECT_NE(QmClient.find("Ctx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
+{
+	const std::string Motion = ReadRepoFile("src/game/client/QmUi/UiMotion.h");
+	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string Navigation = ReadRepoFile("src/game/client/QmUi/UiNavigation.cpp");
+	const std::string TextFieldBody = ExtractSourceFunctionBody(Forms, "bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)");
+	const std::string ListItemBody = ExtractSourceFunctionBody(Navigation, "bool ListItem(const IUiContext &Ctx, const void *pId, const char *pText, const CUIRect &Rect, const SListItemProps &Props)");
+	ASSERT_FALSE(TextFieldBody.empty());
+	ASSERT_FALSE(ListItemBody.empty());
+
+	EXPECT_NE(Motion.find("AnimateStateValue(const IUiContext &Ctx, const void *pId, EUiAnimProperty Property, float Target"), std::string::npos);
+	EXPECT_NE(Motion.find("Ctx.m_pAnim->ResolveTargetValue(NodeKey, Property, Target, Transition);"), std::string::npos);
+	EXPECT_NE(Motion.find("return Target;"), std::string::npos);
+	EXPECT_NE(Forms.find("#include \"UiMotion.h\""), std::string::npos);
+	EXPECT_NE(Navigation.find("#include \"UiMotion.h\""), std::string::npos);
+	EXPECT_NE(TextFieldBody.find("AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
+	EXPECT_NE(ListItemBody.find("AnimateStateValue(Ctx, pId, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
+	EXPECT_EQ(TextFieldBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
+	EXPECT_EQ(ListItemBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmUiPresenceBacksFavoriteCommunityTabs)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const auto CountOccurrences = [](const std::string &Haystack, const char *pNeedle) {
+		const std::string Needle = pNeedle;
+		size_t Count = 0;
+		size_t Pos = 0;
+		while((Pos = Haystack.find(Needle, Pos)) != std::string::npos)
+		{
+			++Count;
+			Pos += Needle.size();
+		}
+		return Count;
+	};
+	const auto ExtractFavoriteCommunityBlock = [](const std::string &Source, size_t Occurrence) {
+		const std::string Anchor = "static CButtonContainer s_aFavoriteCommunityButtons[5];";
+		size_t Pos = 0;
+		for(size_t Index = 0; Index <= Occurrence; ++Index)
+		{
+			Pos = Source.find(Anchor, Pos);
+			if(Pos == std::string::npos)
+				return std::string();
+			if(Index < Occurrence)
+				Pos += Anchor.size();
+		}
+		const size_t End = Source.find("TextRender()->SetRenderFlags(0);", Pos);
+		if(End == std::string::npos)
+			return std::string();
+		return Source.substr(Pos, End - Pos);
+	};
+	const std::string NewMenubarCommunityBlock = ExtractFavoriteCommunityBlock(Menus, 0);
+	const std::string LegacyMenubarCommunityBlock = ExtractFavoriteCommunityBlock(Menus, 1);
+	ASSERT_FALSE(NewMenubarCommunityBlock.empty());
+	ASSERT_FALSE(LegacyMenubarCommunityBlock.empty());
+
+	EXPECT_NE(Menus.find("#include <game/client/QmUi/QmTree.h>"), std::string::npos);
+	EXPECT_NE(NewMenubarCommunityBlock.find("CUiV2Tree &Tree = GameClient()->UiRuntimeV2()->Tree();"), std::string::npos);
+	EXPECT_NE(LegacyMenubarCommunityBlock.find("CUiV2Tree &Tree = GameClient()->UiRuntimeV2()->Tree();"), std::string::npos);
+	EXPECT_EQ(CountOccurrences(Menus, "const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, NodeKey, true, AppearTransition);"), 2u);
+	EXPECT_EQ(CountOccurrences(Menus, "const float AppearStrength = std::clamp(Presence.m_Alpha, 0.0f, 1.0f);"), 2u);
+	EXPECT_EQ(CountOccurrences(Menus, "const float RevealWidth = maximum(2.0f, Button.w * AppearStrength);"), 2u);
+	EXPECT_EQ(CountOccurrences(Menus, "InactiveColor.a *= AppearStrength;"), 2u);
+	EXPECT_EQ(CountOccurrences(Menus, "ActiveColor.a *= AppearStrength;"), 2u);
+	EXPECT_EQ(CountOccurrences(Menus, "HoverColor.a *= AppearStrength;"), 2u);
+	EXPECT_EQ(NewMenubarCommunityBlock.find("ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA"), std::string::npos);
+	EXPECT_EQ(LegacyMenubarCommunityBlock.find("ResolveUiAnimValue(AnimRuntime, NodeKey, EUiAnimProperty::ALPHA"), std::string::npos);
+	EXPECT_EQ(NewMenubarCommunityBlock.find("WasVisibleLastFrame"), std::string::npos);
+	EXPECT_EQ(LegacyMenubarCommunityBlock.find("WasVisibleLastFrame"), std::string::npos);
+	EXPECT_EQ(Menus.find("s_aPrevFavoriteCommunityAnimNodes"), std::string::npos);
+	EXPECT_EQ(Menus.find("s_PrevFavoriteCommunityAnimNodeCount"), std::string::npos);
+	EXPECT_EQ(Menus.find("WasVisibleLastFrame"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmUiPresenceBacksImeCandidatePopup)
+{
+	const std::string Source = ReadRepoFile("src/game/client/qm_ime_candidate_popup.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/qm_ime_candidate_popup.h");
+	const std::string RenderBody = ExtractSourceFunctionBody(Source, "void CQmImeCandidatePopup::Render(CGameClient *pGameClient, const SQmImePopupState &State)");
+	const std::string ResetBody = ExtractSourceFunctionBody(Source, "void CQmImeCandidatePopup::Reset()");
+	ASSERT_FALSE(RenderBody.empty());
+	ASSERT_FALSE(ResetBody.empty());
+
+	EXPECT_NE(Source.find("#include \"QmUi/QmTree.h\""), std::string::npos);
+	EXPECT_NE(Header.find("uint64_t m_PresenceGeneration = 1;"), std::string::npos);
+	EXPECT_NE(ResetBody.find("++m_PresenceGeneration;"), std::string::npos);
+	EXPECT_NE(ResetBody.find("if(m_PresenceGeneration == 0)"), std::string::npos);
+	EXPECT_NE(RenderBody.find("CUiV2Tree &Tree = pGameClient->UiRuntimeV2()->Tree();"), std::string::npos);
+	EXPECT_NE(RenderBody.find("const uint64_t PopupKey = BuildUiAnimNodeKey(str_quickhash(\"qm_ime_popup\"), m_PresenceGeneration);"), std::string::npos);
+	EXPECT_NE(RenderBody.find("const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, PopupKey, TargetVisible, PresenceTransition);"), std::string::npos);
+	EXPECT_NE(RenderBody.find("if(!Presence.m_Render)"), std::string::npos);
+	EXPECT_NE(RenderBody.find("const float Alpha = std::clamp(Presence.m_Alpha, 0.0f, 1.0f);"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("AnimRuntime.SetValue(PopupKey, EUiAnimProperty::ALPHA"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("ResolveMotionValue(AnimRuntime, PopupKey, EUiAnimProperty::ALPHA"), std::string::npos);
+	EXPECT_NE(RenderBody.find("ResolveMotionValue(AnimRuntime, PopupKey, EUiAnimProperty::POS_Y"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmUiPresenceBacksFavoriteButtonVisibility)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "int CMenus::DoButton_Favorite(const void *pButtonId, const void *pParentId, bool Checked, const CUIRect *pRect)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("CUiV2Tree &Tree = GameClient()->UiRuntimeV2()->Tree();"), std::string::npos);
+	EXPECT_NE(Body.find("VisibilityTransition.m_DurationSec = 0.12f;"), std::string::npos);
+	EXPECT_NE(Body.find("const SUiPresenceResult Visibility = Tree.ResolvePresence(AnimRuntime, VisibilityNodeKey, ShouldShow, VisibilityTransition);"), std::string::npos);
+	EXPECT_NE(Body.find("const float ShowAlpha = std::clamp(Visibility.m_Alpha, 0.0f, 1.0f);"), std::string::npos);
+	const size_t RenderBranchPos = Body.find("if(Visibility.m_Render && ShowAlpha > MENU_TAB_ANIM_EPSILON)");
+	ASSERT_NE(RenderBranchPos, std::string::npos);
+	const size_t ButtonLogicPos = Body.find("return Ui()->DoButtonLogic(pButtonId, 0, pRect, BUTTONFLAG_LEFT);");
+	ASSERT_NE(ButtonLogicPos, std::string::npos);
+	EXPECT_LT(RenderBranchPos, ButtonLogicPos);
+	EXPECT_EQ(Body.find("ResolveUiAnimValue(AnimRuntime, VisibilityNodeKey, EUiAnimProperty::ALPHA"), std::string::npos);
+	EXPECT_NE(Body.find("ResolveUiAnimValue(AnimRuntime, HoverNodeKey, EUiAnimProperty::SCALE"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmUiScrollContainerContentDragIsOptIn)
+{
+	const std::string Containers = ReadRepoFile("src/game/client/QmUi/UiContainers.h");
+	const std::string Dogfood = ReadRepoFile("src/game/client/QmUi/UiDogfood.cpp");
+
+	EXPECT_NE(Containers.find("bool m_ContentDragAllowed = false;"), std::string::npos);
+	EXPECT_NE(Containers.find("Input.m_ContentDragAllowed = Props.m_ContentDragAllowed;"), std::string::npos);
+	EXPECT_NE(Containers.find("Input.m_ContentDragBlocked = Ctx.m_pUi->ActiveItem() != nullptr;"), std::string::npos);
+	EXPECT_EQ(Dogfood.find("ScrollProps.m_ContentDragAllowed = true;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsPagesExposeSectionLevelPerfStages)

@@ -111,6 +111,8 @@ private:
 	float m_AnimTime;
 	float m_AnimInitScrollY;
 	float m_AnimTargetScrollY;
+	float m_ScrollVelocity;
+	void StartScrollAnimation(float TargetScrollY);
 
 	CUIRect m_ClipRect;
 	CUIRect m_RailRect;

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设置页 UI 性能优化 — 第一性原理分析</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff;
+    --danger: #f85149; --warning: #d2991d; --success: #3fb950; --radius: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.6; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem;
+  }
+  h1 { font-size: 1.8rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+  h2 { font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.75rem; color: var(--accent); }
+  h3 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+  h4 { font-size: 1rem; margin-top: 1rem; margin-bottom: 0.4rem; color: var(--text-muted); }
+  p, li { margin-bottom: 0.5rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  blockquote {
+    border-left: 3px solid var(--accent); padding: 0.5rem 1rem;
+    margin: 1rem 0; background: var(--surface); border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  th, td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); text-align: left; }
+  th { background: var(--surface); font-weight: 600; }
+  tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  code {
+    background: var(--surface); padding: 0.15em 0.4em; border-radius: 3px;
+    font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace; font-size: 0.86em;
+  }
+  pre { background: var(--surface); padding: 1rem; border-radius: var(--radius); overflow-x: auto; margin: 1rem 0; font-size: 0.85rem; }
+  pre code { background: none; padding: 0; }
+  .meta {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.75rem 1rem; margin-bottom: 2rem; font-size: 0.85rem; color: var(--text-muted);
+  }
+  .meta strong { color: var(--text); }
+  .tag {
+    display: inline-block; padding: 0.1em 0.5em; border-radius: 12px;
+    font-size: 0.8em; font-weight: 600; margin-right: 0.3em;
+  }
+  .tag-p0 { background: #f8514933; color: var(--danger); }
+  .tag-p1 { background: #d2991d33; color: var(--warning); }
+  .tag-p2 { background: #58a6ff33; color: var(--accent); }
+  .tag-p3 { background: #8b949e33; color: var(--text-muted); }
+  .highlight-box {
+    border: 1px solid var(--accent); border-radius: var(--radius);
+    padding: 1rem; margin: 1rem 0; background: #58a6ff08;
+  }
+  .strategy-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.75rem 1rem; margin: 0.75rem 0;
+  }
+  .strategy-card h4 { color: var(--accent); margin-top: 0; }
+  .strategy-card .risk-low { color: var(--success); }
+  .strategy-card .risk-med { color: var(--warning); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  .fbo-table td:first-child { white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<h1>设置页 UI 性能优化 — 第一性原理分析</h1>
+
+<div class="meta">
+  <strong>类型：</strong>spike（调研） &nbsp;|&nbsp;
+  <strong>日期：</strong>2026-06-02 &nbsp;|&nbsp;
+  <strong>状态：</strong><span style="color:#3fb950">active</span> &nbsp;|&nbsp;
+  <strong>置信度：</strong>high<br>
+  <strong>关联文档：</strong>
+  <a href="../specs/2026-05-24-设置页虚拟化C方案简述.md" style="color:var(--accent)">C方案</a> ·
+  <a href="../specs/2026-05-23-设置页预热与FBO缓存设计.md" style="color:var(--accent)">FBO设计</a> ·
+  <a href="../specs/2026-05-27-菜单-ui-统一设计.md" style="color:var(--accent)">UI统一设计</a> ·
+  <a href="2026-05-26-上游合并与设置页性能现状探索.md" style="color:var(--accent)">性能现状</a>
+</div>
+
+<div class="highlight-box">
+  <strong>速答：</strong>设置页性能优化的本质不是"加 FBO"或"做预热"，而是对每一帧的 CPU 提交、GPU 绘制、资源创建和布局重算做<strong>精确的预算法与脏区域控制</strong>。当前三个根本问题：预热未真正命中、Section 拆分不完整、资源合并无预算隔离。<br><br>
+  <strong>核心量化目标：</strong>设置页任意交互（切 tab、滚动、打开页面）的帧时间 ≤ 8.33ms（120Hz），最差帧 p99 ≤ 16.67ms（60Hz）。
+</div>
+
+<h2>1. 量化性能目标</h2>
+
+<h3>1.1 帧时间分层目标</h3>
+<table>
+  <tr><th>指标</th><th>目标值</th><th>理由</th></tr>
+  <tr><td>UI 帧时间均值</td><td>≤ 4ms</td><td>为游戏渲染留足 12ms+ 预算（60fps），或 ~4ms 预算（120fps）</td></tr>
+  <tr><td>交互帧（切 tab/滚动）</td><td>≤ 8ms</td><td>不超过 120Hz 刷新周期；低于人眼感知卡顿阈值</td></tr>
+  <tr><td>最差帧 (p99)</td><td>≤ 16ms</td><td>不超过 60Hz 刷新周期；超出即为用户可感知卡顿</td></tr>
+  <tr><td>首帧（冷启动进入设置页）</td><td>≤ 33ms</td><td>允许一次较长帧，但不能连续两帧超标</td></tr>
+</table>
+
+<blockquote>
+<strong>关键洞察：</strong>帧时间的 <strong>p99</strong> 比平均值更重要。一次 50ms 的卡顿远比 10 次 5ms 的微波动更影响体验。优化应优先消灭"尖峰帧"（spike frames）。
+</blockquote>
+
+<h3>1.2 为什么不是"≤ 显示器刷新周期"就够？</h3>
+<ul>
+  <li>显示器刷新周期是<strong>整个游戏循环</strong>的硬上限，UI 只是其中一部分。</li>
+  <li>游戏渲染（世界、实体、特效、HUD）通常吃 8-12ms（60fps 下），UI 必须在此之外运行。</li>
+  <li>DDNet 的菜单渲染发生在 <code>CMenus::OnRender()</code>，与游戏渲染共享帧预算，不是独立线程。</li>
+  <li>因此目标设为 <strong>UI 占用不超过总帧预算的 25-50%</strong>。</li>
+</ul>
+
+<h3>1.3 量化验收标准</h3>
+<table>
+  <tr><th>验收项</th><th>指标</th><th>测量方式</th></tr>
+  <tr><td>打开设置页首次渲染</td><td>≤ 1 帧 > 33ms, 后续帧 ≤ 16ms</td><td><code>qm_perf_debug</code></td></tr>
+  <tr><td>切 tab（如 General → TClient）</td><td>≤ 8ms</td><td><code>qm_perf_debug</code></td></tr>
+  <tr><td>子 tab 切换</td><td>≤ 8ms</td><td><code>qm_perf_debug</code></td></tr>
+  <tr><td>滚动一屏内</td><td>每帧 ≤ 8ms</td><td><code>qm_perf_debug</code></td></tr>
+  <tr><td>滚动中快速翻页</td><td>p99 ≤ 16ms</td><td><code>qm_perf_debug</code></td></tr>
+  <tr><td>打开皮肤列表（100+ 皮肤）</td><td>首帧 ≤ 16ms, 后续 ≤ 8ms</td><td><code>qm_perf_debug</code></td></tr>
+  <tr><td>语言切换</td><td>切换帧 ≤ 16ms</td><td><code>qm_perf_debug</code></td></tr>
+  <tr><td>Draw call 数量</td><td>设置页稳态 ≤ 50</td><td>GPU 调试工具</td></tr>
+</table>
+
+<h2>2. 第一性原理：UI 性能优化是什么</h2>
+
+<h3>2.1 帧时间的构成</h3>
+<pre><code>Frame Time = CPU 提交时间 + GPU 绘制时间 + 同步等待时间
+           = (布局 + 文本 + 输入 + 状态更新 + Draw Call 提交)
+           + (顶点处理 + 光栅化 + 像素着色 + 混合)
+           + (SwapBuffers / v-sync + 驱动同步)</code></pre>
+<p>优化的本质就是<strong>减少上述每一项的工作量</strong>，且<strong>只在变化时做工作</strong>。</p>
+
+<h3>2.2 六个优化维度（按影响力排序）</h3>
+
+<h4>维度 1：少做 — 只处理可见和变化的部分</h4>
+<ul>
+  <li><strong>原则</strong>：不可见的 UI 元素不应消耗 CPU/GPU 时间。</li>
+  <li><strong>当前问题</strong>：CSectionLoader 虽有 viewport priority，但 MEASURING 阶段仍会测量所有 section 高度；列表渲染没有真正的虚拟化。</li>
+</ul>
+
+<h4>维度 2：少提交 — 减少 Draw Call 和状态切换</h4>
+<ul>
+  <li><strong>原则</strong>：每个 Draw Call 都有 CPU 驱动开销。合并提交减少开销。</li>
+  <li><strong>当前问题</strong>：CUI 的 widget 方法直接调用 Graphics，没有统一的批处理层。CUIElement 有批量 Quad 容器但使用不充分。</li>
+</ul>
+
+<h4>维度 3：少画 — 减少 Overdraw 和像素填充</h4>
+<ul>
+  <li><strong>原则</strong>：每个像素被多次绘制（overdraw）浪费 GPU 填充率和带宽。</li>
+  <li><strong>当前问题</strong>：<code>DrawCard()</code> 渲染 4 层；设置页中多个卡片垂直排列。</li>
+</ul>
+
+<h4>维度 4：少重建 — 缓存静态内容</h4>
+<ul>
+  <li><strong>原则</strong>：静态文本、布局、网格每帧重建白白消耗 CPU。</li>
+  <li><strong>当前问题</strong>：DDNet immediate-mode UI 的天生倾向就是每帧重建。<code>CUIElement</code> 和 FBO 缓存覆盖率不足。</li>
+</ul>
+
+<h4>维度 5：少等待 — 异步化重活</h4>
+<ul>
+  <li><strong>原则</strong>：I/O、解码、GPU 上传不应阻塞主线程。</li>
+  <li><strong>当前问题</strong>：资源 Jobs 已有异步框架，但合并阶段没有按帧预算严格控制。</li>
+</ul>
+
+<h4>维度 6：少分配 — 避免每帧内存分配</h4>
+<ul>
+  <li><strong>原则</strong>：<code>malloc/free</code> 在游戏循环中导致不可预测的帧时间尖峰。</li>
+</ul>
+
+<h3>2.3 优化决策树</h3>
+<pre>面对任何 UI 性能问题，按此顺序判断：
+
+1. 能不做吗？        → 裁剪、虚拟化、跳过不可见区域
+2. 能少做吗？        → 脏检测、缓存、只更新变化部分
+3. 能做更快吗？      → 批处理、减少状态切换、合并纹理
+4. 能异步做吗？      → 后台线程/Jobs 池、延迟提交
+5. 能不分配吗？      → 对象池、预分配、零分配热路径</pre>
+
+<h2>3. 当前架构瓶颈分析</h2>
+
+<h3>3.1 渲染路径</h3>
+<pre><code>CMenus::Render()
+  └─ RenderSettings()
+       ├─ CSectionLoader::Begin()          ← 初始化帧
+       ├─ CSectionLoader::Process()         ← 状态机推进
+       │    ├─ UNINITIALIZED → MeasureFn()  ← 测量高度
+       │    ├─ MEASURING → 计算视口优先级
+       │    ├─ COMPACT → RenderCompactFn()
+       │    └─ FULL → TryRenderCachedSection()  ← FBO cache?
+       │         ├─ [hit] DrawRenderTarget() + InteractiveLayer
+       │         └─ [miss] RenderFullFn()  ← 完整实时渲染
+       └─ RenderSettingsXxx(MainView)</code></pre>
+
+<h3>3.2 瓶颈点识别</h3>
+<table>
+  <tr><th>#</th><th>瓶颈</th><th>影响帧时间</th><th>根因</th></tr>
+  <tr><td><strong>B1</strong></td><td>首帧冷启动</td><td>50-200ms</td><td>预热未命中或未覆盖</td></tr>
+  <tr><td><strong>B2</strong></td><td>Section 全量测量</td><td>每多一个 ~0.5ms</td><td>Process() 遍历全部 UNINITIALIZED section</td></tr>
+  <tr><td><strong>B3</strong></td><td>FBO cache miss</td><td>每 section 2-5ms</td><td>大部分 section 未拆分静态层</td></tr>
+  <tr><td><strong>B4</strong></td><td>文本容器每帧重建</td><td>每次 0.1-0.5ms</td><td>CUIElement 文本池使用不充分</td></tr>
+  <tr><td><strong>B5</strong></td><td>皮肤列表全量扫描</td><td>100+ 皮肤 ~10-30ms</td><td>ListDirectory 在主线程同步执行</td></tr>
+  <tr><td><strong>B6</strong></td><td>GPU 上传合并风暴</td><td>每次上传 1-10ms</td><td>Job 完成后主线程集中上传</td></tr>
+  <tr><td><strong>B7</strong></td><td>Draw call 碎片化</td><td>每 50 widgets 0.5-2ms</td><td>无批处理层</td></tr>
+  <tr><td><strong>B8</strong></td><td>卡片 overdraw</td><td>大面积 1-3ms</td><td>DrawCard() 4 层绘制</td></tr>
+</table>
+
+<h3>3.3 为什么现有优化效果"微乎其微"</h3>
+<ol>
+  <li><strong>FBO 缓存 miss 率过高</strong>：大部分 section 没有 <code>RenderStaticLayerFn</code>，覆盖率 &lt; 30%。</li>
+  <li><strong>预热与实际渲染路径不一致</strong>：预热用 <code>RenderCompactFn</code>，首帧用 <code>RenderFullFn</code>。</li>
+  <li><strong>异步资源完成 ≠ 用户感知流畅</strong>：合并阶段集中执行，同一帧创建大量纹理/文本容器。</li>
+  <li><strong>优化方向偏了</strong>：把资源投入在 FBO 而不是先减少源头重建。应该先做脏检测 + 文本池，再考虑 FBO。</li>
+</ol>
+
+<h2>4. 优化维度映射到 DDNet/QmClient</h2>
+
+<h3>4.1 CPU 提交成本</h3>
+<p>CUI 没有批处理层。每个 widget 单独提交 draw call。<code>CUIElement</code> 提供 Quad 容器批处理能力但使用率不高。</p>
+
+<h3>4.2 GPU 绘制成本</h3>
+<p><code>DrawCard()</code> 渲染 4 层 overdraw。典型设置页像素可能被写 6-8 次。</p>
+
+<h3>4.3 文字与网格更新</h3>
+<p><code>CUIElement::SUIElementRect</code> 有文本缓存机制，但很多地方仍直接调 <code>CreateTextContainer()</code>。所有静态 label 应通过 <code>SettingsTextElement()</code> 统一复用。</p>
+
+<h3>4.4 裁剪与列表</h3>
+<p><code>CScrollRegion</code> 做 GPU scissor，但 CPU 端仍遍历所有行。</p>
+
+<h3>4.5 DDNet 的 2D 特性与 FBO 再评估</h3>
+
+<p><strong>DDNet/QmClient 的图形特性：</strong></p>
+<ul>
+  <li>DDNet 是 2D 俯视角平面游戏，所有渲染通过 quad + sprite + texture 完成。</li>
+  <li>皮肤是 2D sprite（PNG 贴图），不是 3D 模型。皮肤预览 = 把多个 sprite layer 叠起来绘制。</li>
+  <li>没有后处理链（bloom、motion blur、SSAO 等）。没有真正的毛玻璃效果。</li>
+  <li>UI 渲染和游戏渲染使用同一个 GL/Vulkan context，共享帧预算。</li>
+</ul>
+
+<table class="fbo-table">
+  <tr><th>FBO 典型用途</th><th>在 DDNet 中的适用性</th><th>评估</th></tr>
+  <tr><td>3D 模型离线渲染到纹理</td><td>❌ 不适用，皮肤是 2D sprite</td><td>无此需求</td></tr>
+  <tr><td>后处理（模糊/毛玻璃）</td><td>❌ 没有后处理链</td><td>无此需求</td></tr>
+  <tr><td>阴影/发光合成</td><td>❌ 当前无此类特效</td><td>无此需求</td></tr>
+  <tr><td>复杂静态 UI 区域缓存</td><td>⚠️ 有但极少，大部分 section 不复杂</td><td>收益低</td></tr>
+  <tr><td>首帧"遮羞"（page FBO）</td><td>✅ 有维护价值</td><td>保留</td></tr>
+  <tr><td>皮肤预览多 layer 合成缓存</td><td>⚠️ 已有独立 skin preview cache 机制</td><td>已有</td></tr>
+</table>
+
+<blockquote>
+<strong>结论：</strong>DDNet 作为 2D sprite 游戏，FBO 的大多数典型应用场景（3D 离线渲染、后处理、特效合成）<strong>根本不存在</strong>。对设置页 UI 而言，FBO 只在一个场景有价值——<strong>Page FBO 做首帧兜底</strong>。Section FBO 的收益-成本比在当前的简单 section 结构下很可能为负。不应将 FBO 作为主要优化方向。
+</blockquote>
+
+<h3>4.6 CUI Immediate-Mode 的小幅优化策略</h3>
+<p>CUI 是经典 immediate-mode GUI，每帧调用链为：<code>widget 函数 → 计算布局 → 读取输入 → 调用 Graphics/TextRender 提交绘制</code>。不改架构的前提下，有 6 个可落地的优化点：</p>
+
+<div class="strategy-card">
+<h4>策略 A：扩大 CUIElement 文本缓存覆盖率 <span class="risk-low">[风险: 低]</span></h4>
+<p><strong>现状：</strong><code>CUIElement</code> 已内置 text container 缓存。但很多地方用不缓存的 <code>DoLabel(pRect, ...)</code> 每帧创建临时 text container。</p>
+<p><strong>优化：</strong>全量 review 设置页所有 <code>DoLabel</code> 调用，将静态文本改为 <code>SettingsTextElement()</code> 缓存版本。改动量极小——替换函数签名即可。</p>
+<pre><code>// 改前（每帧重建 text container）：
+Ui()->DoLabel(&LabelRect, aLabelText, 10.0f, TEXTALIGN_ML);
+
+// 改后（复用 text container，只在文本变化时重建）：
+CUIElement &El = SettingsTextElement(SETTINGS_TCLIENT, TAB_GENERAL, "my_label");
+Ui()->DoLabel(El.Rect(0), &LabelRect, aLabelText, 10.0f, TEXTALIGN_ML);</code></pre>
+</div>
+
+<div class="strategy-card">
+<h4>策略 B：减少 DoButtonLogic 的无谓调用 <span class="risk-low">[风险: 低]</span></h4>
+<p>对纯装饰性元素（分隔线、section 背景、静态图标），用 <code>pRect->Draw(color, corners, rounding)</code> 直接绘制，不调用 <code>DoButtonLogic</code>。审查所有 <code>DoButton_FontIcon</code> 调用，标记仅用于显示而非交互的。</p>
+</div>
+
+<div class="strategy-card">
+<h4>策略 C：减少状态冗余切换 <span class="risk-low">[风险: 低]</span></h4>
+<p><strong>现状：</strong><code>DoButton_Menu()</code> 每次内部执行 <code>SetFontPreset(ICON_FONT)</code> → <code>SetRenderFlags(...)</code> → <code>DoLabel(...)</code> → <code>SetRenderFlags(0)</code> → <code>SetFontPreset(DEFAULT_FONT)</code>，即使 section 没有图标按钮。</p>
+<p><strong>优化：</strong>在 section 渲染函数内集中设置字体/渲染标志，widget 内部只做绘制提交。引入"渲染状态差分" RAII helper（～20 行）。</p>
+</div>
+
+<div class="strategy-card">
+<h4>策略 D：裁剪状态下跳过不可见 widget <span class="risk-med">[风险: 中]</span></h4>
+<p><strong>现状：</strong><code>ClipEnable</code>/<code>ClipDisable</code> 提供 GPU 裁剪，但 CPU 端仍走完所有 widget 函数。</p>
+<p><strong>优化：</strong>利用 <code>CScrollRegion</code> 的可见行范围，只处理可见行 + 预取缓冲。对于非列表 section，如果完全在视口外，跳过所有 widget 调用——只做高度测量。</p>
+<pre><code>// 伪代码
+if(!SectionRect.IsIntersecting(ViewportRect, PrefetchMargin))
+{
+    pSection->SkipRenderHeight = pSection->CachedHeight;
+    return;
+}</code></pre>
+</div>
+
+<div class="strategy-card">
+<h4>策略 E：预计算布局常量 <span class="risk-med">[风险: 中]</span></h4>
+<p>每个 widget 函数内部都做 rect 分割计算（<code>HMargin</code>, <code>VMargin</code>, <code>HSplitMid</code> 等），基于固定尺寸，结果从不变化但每帧重算。Section 初始化时预计算静态布局，渲染时直接使用。</p>
+</div>
+
+<div class="strategy-card">
+<h4>策略 F：合并同材质相邻绘制 <span class="risk-med">[风险: 中]</span></h4>
+<p><strong>现状：</strong>每个 button = <code>RenderQuadContainer</code> + <code>RenderTextContainer</code> = 2 draw calls。一个 section 10 个 button = 20 draw calls。</p>
+<p><strong>优化：</strong>收集 section 内同材质 quad 到 <code>CUIElement</code> 批处理容器（<code>GetNewUIElement(N)</code>），一次性提交。不改 CUI 语义，只在 section 级加薄层逻辑。</p>
+</div>
+
+<h4>CUI 优化总结</h4>
+<table>
+  <tr><th>策略</th><th>改动量</th><th>预期收益</th><th>风险</th></tr>
+  <tr><td>A: 文本缓存覆盖率</td><td>小（~50 行/页面）</td><td>每 section 0.5-2ms</td><td class="risk-low">低，已有基础设施</td></tr>
+  <tr><td>B: 减少 ButtonLogic</td><td>小（~10 行/页面）</td><td>每 section 0.1-0.3ms</td><td class="risk-low">低</td></tr>
+  <tr><td>C: 减少状态切换</td><td>小（~20 行 helper）</td><td>每 section 0.1-0.5ms</td><td class="risk-low">低，需验证 setter 成本</td></tr>
+  <tr><td>D: 裁剪跳过 widget</td><td>中（~30 行/页面）</td><td>视口外 section 节省 80%+</td><td class="risk-med">中，需确保高度测量正确</td></tr>
+  <tr><td>E: 预计算布局</td><td>中（~40 行/页面）</td><td>每 section 0.1-0.5ms</td><td class="risk-med">中，需处理 dirty 更新</td></tr>
+  <tr><td>F: 批处理合并</td><td>中（~100 行 helper）</td><td>每 section 0.3-1ms</td><td class="risk-med">中，需确保顺序和裁剪</td></tr>
+</table>
+
+<h2>5. 优先级路线图</h2>
+<p>按照"先减少源头成本，再加缓存层"的原则，结合 DDNet 2D 特性和 CUI immediate-mode 约束：</p>
+
+<h3>Phase 1：源头降温 <span style="color:var(--text-muted);font-weight:normal;">预计效果：帧时间降低 50-70%</span></h3>
+<table>
+  <tr><th>优先级</th><th>任务</th><th>目标瓶颈</th><th>预期改善</th><th>改动量</th></tr>
+  <tr>
+    <td><span class="tag tag-p0">P0</span></td>
+    <td>补全所有 section 的静态文本缓存（策略 A）</td><td>B4</td><td>每 section 0.5-2ms</td><td>小</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p0">P0</span></td>
+    <td>Section 测量延迟化（策略 D）</td><td>B2</td><td>多 section 页 5-15ms</td><td>中</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p0">P0</span></td>
+    <td>裁剪状态下跳过不可见 widget（策略 D）</td><td>B2</td><td>视口外 section 80%+</td><td>中</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p1">P1</span></td>
+    <td>列表虚拟化：只遍历可见行</td><td>B5</td><td>100+ 项列表 8-20ms</td><td>中</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p1">P1</span></td>
+    <td>Job 结果合并帧预算强制限制</td><td>B6</td><td>消除 10-30ms 尖峰帧</td><td>中</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p1">P1</span></td>
+    <td>减少 widget 内状态冗余切换（策略 C）</td><td>B7</td><td>每 section 0.1-0.5ms</td><td>小</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p1">P1</span></td>
+    <td><code>DrawCard()</code> 层数优化</td><td>B8</td><td>大面积 0.5-2ms</td><td>小</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p2">P2</span></td>
+    <td>减少非交互元素 ButtonLogic（策略 B）</td><td>B7</td><td>每 section 0.1-0.3ms</td><td>小</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p2">P2</span></td>
+    <td>预计算布局常量（策略 E）</td><td>B4</td><td>每 section 0.1-0.5ms</td><td>中</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p2">P2</span></td>
+    <td>Section 内 Quad 批处理（策略 F）</td><td>B7</td><td>每 section 0.3-1ms</td><td>中</td>
+  </tr>
+</table>
+
+<h3>Phase 2：缓存 <span style="color:var(--text-muted);font-weight:normal;">在源头降温完成后</span></h3>
+<table>
+  <tr>
+    <td><span class="tag tag-p1">P1</span></td>
+    <td>预热策略改为"预渲染真路径"而非"compact"</td><td>B1</td><td>首帧命中率 → 80%</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p2">P2</span></td>
+    <td>仅对<strong>静态渲染成本 > 0.5ms</strong> 的 section 启用 Section FBO</td><td>B3</td><td>特定 section 稳态接近 0ms</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p2">P2</span></td>
+    <td>保留 Page FBO 做首帧兜底</td><td>B1</td><td>首帧无白屏</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p3">P3</span></td>
+    <td>脏检测精确化</td><td>-</td><td>减少不必要失效</td>
+  </tr>
+</table>
+
+<h3>Phase 3：锦上添花</h3>
+<table>
+  <tr>
+    <td><span class="tag tag-p3">P3</span></td>
+    <td>UI 图标合并纹理图集</td><td>减少 draw calls</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-p3">P3</span></td>
+    <td>Overdraw 量化分析</td><td>数据驱动优化</td>
+  </tr>
+</table>
+
+<h3>不建议做</h3>
+<ul>
+  <li>❌ <strong>扩大 Section FBO 到所有 section</strong>：大部分 section 渲染成本 &lt; 0.5ms，FBO 创建/录制/blit ≈ 1-3ms，反而是负优化。DDNet 作为 2D 游戏，没有 FBO 的典型使用场景。</li>
+  <li>❌ <strong>引入 retained-mode UI 框架（RmlUI 等）</strong>：与 DDNet 架构冲突。</li>
+  <li>❌ <strong>全局 Draw List 批处理</strong>：改动量巨大。Section 内批处理已够用。</li>
+  <li>❌ <strong>GPU readback 同步操作</strong>：强制 GPU flush，从 2ms 飙升到 16ms+。</li>
+</ul>
+
+<h2>6. 关键架构决策</h2>
+
+<h3>6.1 要不要做全局 Draw List 批处理？</h3>
+<p><strong>结论：不做全局。</strong>DDNet 的 CUI 是 upstream 共享代码。在 <strong>Section 内</strong>做批处理（策略 F），改动量小（～100 行 helper）。即使不做批处理，策略 A（文本缓存）+ 策略 C（减少状态切换）合计已接近 1-2ms/section。</p>
+
+<h3>6.2 Section FBO 还是 Page FBO？</h3>
+<p><strong>更新结论（基于 2D 特性重新评估）：</strong></p>
+<ul>
+  <li><strong>Page FBO</strong>：保留。只做首帧兜底，不扩展用途。</li>
+  <li><strong>Section FBO</strong>：暂停扩展。不再要求"100% section 覆盖"。只在源头降温完成后，对<strong>极少数</strong>渲染成本 &gt; 0.5ms 的 section 按需启用。</li>
+  <li><strong>理由</strong>：Section FBO 创建 + 录制 + blit ≈ 1-3ms，而大部分 section 实时渲染只需 0.3-0.5ms（用上文本缓存后更少）。对大多数 section，FBO 是负优化。</li>
+</ul>
+
+<h3>6.3 预热是用 compact 路径还是真渲染路径？</h3>
+<p><strong>结论：预热用真渲染路径</strong>（文本预热，不做 FBO 预录制），严格限制每帧预算。预热和首帧展示必须走同一套渲染逻辑。但<strong>当前的预热问题不如文本缓存紧急</strong>——先把每帧重建文本容器的成本消掉，首帧成本自然会下降。</p>
+
+<h3>6.4 要不要拆分每个 Section 的静态/交互层？</h3>
+<p><strong>结论：不要为了 FBO 去拆。</strong>拆层的目的是让静态内容可被 FBO 缓存，但前面已论证大部分 section 不需要 FBO。但如果是为了<strong>裁剪优化（策略 D）</strong>——让 section 在视口外时只做高度测量不调 widget——那么静态/交互层的区分是有价值的。</p>
+
+<h2>7. 外部资料对照</h2>
+<table>
+  <tr><th>#</th><th>结论</th><th>外部依据</th><th>对本仓库的含义</th></tr>
+  <tr>
+    <td>1</td>
+    <td>UI 优化核心是少提交、少切换、少画像素、少重建、只更新变化部分</td>
+    <td>Dear ImGui docs — 批处理、零分配、clipper 是基石</td>
+    <td>先做源头降温再考虑 FBO 扩展</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Immediate-mode UI 的关键：每帧只做 O(visible)，静态内容靠缓存</td>
+    <td>ImGui FAQ: "many widgets? you may benefit from using the clipper"</td>
+    <td>列表虚拟化（P1）优先于 FBO 缓存</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>批处理是减少 draw call 的最有效手段</td>
+    <td>LearnOpenGL 批处理；ImGui ImDrawList 设计</td>
+    <td>Section 内 Quad 批处理在全局 draw list 之前</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>60fps = 16.67ms, 120fps = 8.33ms；p99 帧时间更关键</td>
+    <td>Wikipedia Frame Rate；游戏行业标准</td>
+    <td>目标 p99 ≤ 16ms, 均值 ≤ 4ms（UI 部分）</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>FBO readback 是同步阻塞点，强制 GPU flush</td>
+    <td>Khronos OpenGL Wiki: glReadPixels 导致 flush</td>
+    <td>皮肤预览缓存必须在空闲帧执行</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>ImGui 动态字体系统 (v1.92+): 无需预构建全部字形</td>
+    <td>ImGui FONTS.md — atlas 增量构建</td>
+    <td>DDNet 字形 atlas 可考虑懒加载字形</td>
+  </tr>
+</table>
+
+<h2>附录 A：实测帧时间数据</h2>
+
+<p style="color: var(--text-muted); font-size: 0.9rem;">
+  数据来源：2026-05-26 4 次客户端运行 <code>dumps/QmClient_Perf/qm_perf_*.log</code>，阈值 20ms（仅记录 >20ms 的帧）。数据跨 3 次独立运行一致。
+</p>
+
+<h3>A.1 冷启动尖峰帧（首次打开设置页 → General）</h3>
+<table>
+  <tr><th>阶段</th><th>时长</th><th>超标倍数 (vs 16.67ms)</th></tr>
+  <tr><td>General 页面渲染 (<code>general_page_total</code>)</td><td><strong style="color:var(--danger)">107.4ms</strong></td><td>6.4x</td></tr>
+  <tr><td>其中 theme_selection</td><td>4.9ms</td><td>—</td></tr>
+  <tr><td>其中 auto_record_core</td><td>11.5ms</td><td>0.7x</td></tr>
+  <tr><td>其中 auto_record_extended</td><td>5.2ms</td><td>—</td></tr>
+  <tr><td>设置页内容总 (<code>settings_page_content</code>)</td><td><strong style="color:var(--danger)">107.5ms</strong></td><td>6.4x</td></tr>
+  <tr><td>整帧设置页渲染</td><td><strong style="color:var(--danger)">466.2ms</strong></td><td>28x</td></tr>
+  <tr><td>整帧菜单渲染 (<code>menus_render_total</code>)</td><td><strong style="color:var(--danger)">471.5ms</strong></td><td>28x</td></tr>
+</table>
+
+<h3>A.2 Tee 页面切换尖峰</h3>
+<table>
+  <tr><th>阶段</th><th>时长</th><th>超标倍数</th></tr>
+  <tr><td>Tee 页面内容</td><td><strong style="color:var(--danger)">202.3ms</strong></td><td>12x</td></tr>
+  <tr><td>整帧菜单渲染</td><td>202.5ms</td><td>12x</td></tr>
+</table>
+
+<h3>A.3 稳态帧（切换完成后）</h3>
+<table>
+  <tr><th>阶段</th><th>时长</th><th>评估</th></tr>
+  <tr><td>过渡动画帧（连续 ~10 帧）</td><td>0.96ms → 0.22ms → 0.22ms → ...</td><td style="color:var(--success)">优秀</td></tr>
+  <tr><td>Tee 页面稳态内容</td><td><strong>2.0-3.2ms</strong></td><td style="color:var(--success)">优秀（目标 &le;4ms）</td></tr>
+  <tr><td>整帧菜单渲染稳态</td><td>2.0-2.7ms</td><td style="color:var(--success)">优秀</td></tr>
+</table>
+
+<h3>A.4 FBO 缓存状态</h3>
+<p>从 179,462 条 <code>perf/settings-warmup</code> 日志中提取：</p>
+<table>
+  <tr><th>状态</th><th>模式</th></tr>
+  <tr><td><code>page_fbo=miss reason=page_fbo_unsupported</code></td><td>General 页反复出现</td></tr>
+  <tr><td><code>page_fbo=miss reason=page_fbo_not_ready</code></td><td>Tee 页反复出现</td></tr>
+  <tr><td><code>section_fbo=miss reason=section_fbo_not_ready</code></td><td>Tee 页所有 section 反复出现</td></tr>
+</table>
+<p style="color:var(--text-muted)">注意：所有 <code>cost_ms=0.000</code>，非真实渲染计时而是 warmup 状态检查。这证实了 <strong>FBO cache 命中率接近 0%</strong>。</p>
+
+<h3>A.5 关键结论</h3>
+<ol>
+  <li><strong>冷启动是唯一真正的性能问题</strong>：471ms（28x 超标）。稳态只需 2-3ms（达标）。</li>
+  <li><strong>FBO 对稳态无意义</strong>：2ms 的稳态帧时间已足够好，FBO blit 反而可能 &gt;2ms。</li>
+  <li><strong>FBO cache 命中率 &asymp; 0%</strong>：179k 条 warmup 日志全部是 <code>miss</code> 或 <code>not_ready</code>。</li>
+  <li><strong>General 页面自身的 107ms</strong> 是最大贡献者——这正是需要文本缓存 + 延迟测量的地方。</li>
+  <li><strong>单个 section 也可成为尖峰</strong>：<code>auto_record_core</code> 独吃 11.5ms。</li>
+</ol>
+
+<blockquote>
+  这些数据直接验证了本文的核心判断：<strong>先做源头降温（P0 文本缓存 + 延迟测量），暂停 FBO 扩展。</strong>
+</blockquote>
+
+<h3>A.6 数据缺口说明</h3>
+<p>由于阈值设为 20ms，5-19ms 的"灰色尖峰"（120Hz 下可超标但不可见）、每个 section 的独立渲染时间、文本容器创建次数和耗时、draw call 数量均未被记录。建议后续将阈值降到 4ms 以获取完整分布。</p>
+
+<hr>
+<p style="color: var(--text-muted); font-size: 0.85rem;">
+  <strong>修订历史：</strong>2026-06-02 — 初始版本。覆盖量化目标、第一性原理分析、瓶颈识别、优先级路线图。<br>
+  2026-06-02 — 增补 DDNet 2D 特性与 FBO 再评估、CUI Immediate-Mode 小幅优化策略（6 项）。<br>
+  2026-06-02 — 附录 A：从 <code>dumps/QmClient_Perf/</code> 提取 4 次运行实测数据，验证分析结论。
+</p>
+
+</body>
+</html>

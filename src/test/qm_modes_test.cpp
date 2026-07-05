@@ -55,6 +55,81 @@ TEST(QmGoresMode, UnlinkedFastInputConfigIsNotChanged)
 	EXPECT_FALSE(Changed);
 }
 
+TEST(QmFastInputMode, NormalizesLegacyModesToBestInput)
+{
+	EXPECT_EQ(QmFastInputNormalizedMode(0), 0);
+	EXPECT_EQ(QmFastInputNormalizedMode(1), 3);
+	EXPECT_EQ(QmFastInputNormalizedMode(2), 3);
+	EXPECT_EQ(QmFastInputNormalizedMode(3), 3);
+	EXPECT_EQ(QmFastInputNormalizedMode(4), 4);
+}
+
+TEST(QmFastInputMode, ComputesFastBestAndSaikoOffsets)
+{
+	SQmFastInputSettings Settings;
+	Settings.m_Enabled = true;
+
+	Settings.m_Mode = 0;
+	Settings.m_FastAmountMs = 40;
+	EXPECT_FLOAT_EQ(QmEffectiveFastInputOffsetTicks(Settings), 2.0f);
+
+	Settings.m_Mode = 3;
+	Settings.m_BestOffset = 250;
+	Settings.m_BestSmoothing = 50;
+	Settings.m_BestLatencyComp = 20;
+	EXPECT_FLOAT_EQ(QmEffectiveFastInputOffsetTicks(Settings), 2.25f);
+
+	Settings.m_Mode = 4;
+	Settings.m_SaikoPlusAmount = 175;
+	EXPECT_FLOAT_EQ(QmEffectiveFastInputOffsetTicks(Settings), 1.75f);
+}
+
+TEST(QmFastInputMode, PredictionTicksUseSaikoPlusExtraLocalTickOnly)
+{
+	EXPECT_EQ(QmFastInputPredictionTicks(0.01f, 0), 1);
+	EXPECT_EQ(QmFastInputPredictionTicks(1.25f, 3), 2);
+	EXPECT_EQ(QmFastInputPredictionTicks(1.25f, 4), 3);
+	EXPECT_EQ(QmFastInputPredictionTicksOthers(1.25f, 4), 2);
+}
+
+TEST(QmFastInputMode, AppliesOffsetWithoutNegativeIntra)
+{
+	int Tick = 100;
+	float Intra = 0.20f;
+	QmApplyFastInputOffset(1.25f, Tick, Intra);
+	EXPECT_EQ(Tick, 101);
+	EXPECT_FLOAT_EQ(Intra, 0.45f);
+}
+
+TEST(QmFastInputMode, ChoosesOthersToggleByMode)
+{
+	EXPECT_FALSE(QmEffectiveFastInputOthers(false, 0, true, true, true));
+	EXPECT_TRUE(QmEffectiveFastInputOthers(true, 0, true, false, false));
+	EXPECT_TRUE(QmEffectiveFastInputOthers(true, 3, false, true, false));
+	EXPECT_TRUE(QmEffectiveFastInputOthers(true, 4, false, false, true));
+	EXPECT_FALSE(QmEffectiveFastInputOthers(true, 3, true, false, true));
+	EXPECT_FALSE(QmEffectiveFastInputOthers(true, 4, true, true, false));
+}
+
+TEST(QmFastInputMode, MarginUsesLargestFastInputContribution)
+{
+	SQmFastInputSettings Settings;
+	Settings.m_Enabled = true;
+	Settings.m_BasePredictionMarginMs = 10;
+
+	Settings.m_Mode = 0;
+	Settings.m_FastAmountMs = 40;
+	EXPECT_EQ(QmFastInputBasePredictionMarginMs(Settings), 40);
+
+	Settings.m_Mode = 3;
+	Settings.m_BestOffset = 250;
+	EXPECT_EQ(QmFastInputBasePredictionMarginMs(Settings), 50);
+
+	Settings.m_Mode = 4;
+	Settings.m_SaikoPlusAmount = 175;
+	EXPECT_EQ(QmFastInputBasePredictionMarginMs(Settings), 35);
+}
+
 TEST(QmGoresMode, ActiveGoresClearsDummyHammerState)
 {
 	bool Changed = false;

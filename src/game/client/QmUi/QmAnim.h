@@ -3,9 +3,14 @@
 #ifndef GAME_CLIENT_QMUI_QMANIM_H
 #define GAME_CLIENT_QMUI_QMANIM_H
 
+#include <base/color.h>
+
+#include <game/client/ui_rect.h>
+
 #include <cstdint>
 #include <deque>
 #include <unordered_map>
+#include <vector>
 
 enum class EUiAnimProperty
 {
@@ -18,6 +23,7 @@ enum class EUiAnimProperty
 	COLOR_G,
 	COLOR_B,
 	COLOR_A,
+	COLOR_MIX,
 	SCALE,
 };
 
@@ -39,6 +45,7 @@ enum class EEasing
 	EASE_OUT_BACK,
 	EASE_IN_OUT_CUBIC,
 	CUBIC_BEZIER,
+	CUSTOM,
 };
 
 enum class EUiAnimDriver
@@ -74,6 +81,7 @@ struct SUiAnimTransition
 	EUiAnimDriver m_Driver = EUiAnimDriver::TWEEN;
 	SUiSpringConfig m_Spring;
 	SUiBezier m_Bezier;
+	uint32_t m_CustomEasingId = 0;
 };
 
 struct SUiAnimCompleteEvent
@@ -81,6 +89,11 @@ struct SUiAnimCompleteEvent
 	uint64_t m_NodeKey = 0;
 	EUiAnimProperty m_Property = EUiAnimProperty::POS_X;
 	uint32_t m_TrackId = 0;
+};
+
+struct SUiAnimGroupCompleteEvent
+{
+	uint32_t m_GroupId = 0;
 };
 
 struct SUiAnimRequest
@@ -95,6 +108,8 @@ struct SUiAnimRequest
 class CUiV2AnimationRuntime
 {
 public:
+	using FCustomEasing = float (*)(float Progress, void *pUser);
+
 	void Reset();
 	void Advance(float Dt);
 
@@ -105,8 +120,16 @@ public:
 	bool HasActiveAnimation(uint64_t NodeKey, EUiAnimProperty Property) const;
 	int ActiveTrackCount() const;
 	int QueuedTrackCount() const;
+	// pUser 会被已启动轨道快照；注销只影响未来轨道，调用方必须保证 pUser 存活到这些轨道结束。
+	void RegisterCustomEasing(uint32_t EasingId, FCustomEasing pfnEasing, void *pUser = nullptr);
+	void UnregisterCustomEasing(uint32_t EasingId);
+	float ResolveTargetValue(uint64_t NodeKey, EUiAnimProperty Property, float Target, const SUiAnimTransition &Transition);
+	ColorRGBA ResolveColorFromValue(uint64_t NodeKey, const ColorRGBA &Current, const ColorRGBA &Target);
+	float ResolveColorMixValue(uint64_t NodeKey, const ColorRGBA &Target, float DurationSec, EEasing Easing);
 
 	bool PollCompletedEvent(SUiAnimCompleteEvent &EventOut);
+	uint32_t AwaitTracks(const uint32_t *pTrackIds, int NumTrackIds);
+	bool PollGroupCompletedEvent(SUiAnimGroupCompleteEvent &EventOut);
 	float TimeSec() const;
 
 private:
@@ -128,6 +151,11 @@ private:
 			return std::hash<uint64_t>{}(Key.m_NodeKey) ^ (std::hash<int>{}(static_cast<int>(Key.m_Property)) << 1);
 		}
 	};
+	struct SCustomEasing
+	{
+		FCustomEasing m_pfnEasing = nullptr;
+		void *m_pUser = nullptr;
+	};
 
 	struct SActiveTrack
 	{
@@ -139,22 +167,57 @@ private:
 		float m_RestTimerSec = 0.0f;
 		SUiAnimTransition m_Transition;
 		uint32_t m_TrackId = 0;
+		FCustomEasing m_pfnCustomEasing = nullptr;
+		void *m_pCustomEasingUser = nullptr;
 	};
 
 	float ApplyEasing(float t, const SUiAnimTransition &Transition) const;
+	float ApplyTrackEasing(float t, const SActiveTrack &Track) const;
 	float TrackProgress(const SActiveTrack &Track) const;
 	void AdvanceSpring(SActiveTrack &Track, float Dt) const;
 	bool StartTrack(const STrackKey &Key, const SUiAnimRequest &Request, float StartValue);
 	void StartQueuedTracks(const STrackKey &Key, float StartValue);
 	void CompleteTrack(const STrackKey &Key, const SActiveTrack &Track);
+	void CancelAwaitedTrack(uint32_t TrackId);
+	void CancelAwaitGroup(uint32_t GroupId);
+	void CancelQueuedTracksForKey(const STrackKey &Key);
+	void CompleteAwaitedTrack(uint32_t TrackId);
+	bool IsTrackPending(uint32_t TrackId) const;
 	float CurrentValueFor(const STrackKey &Key, float DefaultValue) const;
 
 	float m_TimeSec = 0.0f;
 	std::deque<SUiAnimCompleteEvent> m_CompletedEvents;
+	std::deque<SUiAnimGroupCompleteEvent> m_GroupCompletedEvents;
 	uint32_t m_NextTrackId = 1;
+	uint32_t m_NextGroupId = 1;
 	std::unordered_map<STrackKey, float, STrackKeyHasher> m_Values;
 	std::unordered_map<STrackKey, SActiveTrack, STrackKeyHasher> m_ActiveTracks;
 	std::unordered_map<STrackKey, std::deque<SUiAnimRequest>, STrackKeyHasher> m_QueuedTracks;
+	std::unordered_map<uint32_t, SCustomEasing> m_CustomEasings;
+	struct SResolveTargetState
+	{
+		float m_Target = 0.0f;
+		EUiAnimDriver m_Driver = EUiAnimDriver::TWEEN;
+		uint64_t m_LastUseCounter = 0;
+	};
+	void PruneResolveTargetCache(uint64_t CurrentUseCounter);
+	std::unordered_map<STrackKey, SResolveTargetState, STrackKeyHasher> m_LastTargets;
+	uint64_t m_ResolveUseCounter = 0;
+	struct SColorTargetState
+	{
+		ColorRGBA m_From;
+		ColorRGBA m_Target;
+		uint64_t m_LastUseCounter = 0;
+	};
+	void PruneColorTargetCache(uint64_t CurrentUseCounter);
+	std::unordered_map<uint64_t, SColorTargetState> m_ColorTargets;
+	uint64_t m_ColorUseCounter = 0;
+	struct SAwaitGroup
+	{
+		int m_Remaining = 0;
+	};
+	std::unordered_map<uint32_t, std::vector<uint32_t>> m_TrackAwaitGroups;
+	std::unordered_map<uint32_t, SAwaitGroup> m_AwaitGroups;
 };
 
 #endif

@@ -2607,6 +2607,8 @@ if(CLIENT)
     QmUi/QmRender.h
     QmUi/QmRt.cpp
     QmUi/QmRt.h
+    QmUi/QmScroll.cpp
+    QmUi/QmScroll.h
     QmUi/QmTheme.h
     QmUi/QmTree.cpp
     QmUi/QmTree.h
@@ -3782,8 +3784,11 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/settings_resource_jobs.cpp
     src/game/client/components/settings_warmup.cpp
     src/game/client/QmUi/QmAnim.cpp
+    src/game/client/QmUi/QmAnimResolve.cpp
     src/game/client/QmUi/QmLayout.cpp
     src/game/client/QmUi/QmCardOrderModel.cpp
+    src/game/client/QmUi/QmScroll.cpp
+    src/game/client/QmUi/QmTree.cpp
     src/game/client/QmUi/QmCardRegistry.cpp
     src/game/client/QmUi/QmModuleLayoutAdapter.cpp
     src/game/client/components/assets_resource_registry.cpp

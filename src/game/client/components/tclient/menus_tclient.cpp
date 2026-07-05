@@ -2086,16 +2086,80 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInput, "tclient-fast-input", Localize("Fast input (reduce visual latency)"), &g_Config.m_TcFastInput, &CurrentColumn, LineSize);
 			else
 				CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
+			if(Render)
+				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmAutoMargin, "qm-auto-margin", Localize("Auto margin"), &g_Config.m_QmAutoMargin, &CurrentColumn, LineSize);
+			else
+				CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
 			CurrentColumn.HSplitTop(LineSize, Render ? &Button : &TmpButton, &CurrentColumn);
 			if(Render)
-				DoSliderWithScaledValue(&g_Config.m_TcFastInputAmount, &g_Config.m_TcFastInputAmount, &Button, Localize("Amount"), 1, 40, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+			{
+				static CButtonContainer s_FastInputModeFast;
+				static CButtonContainer s_FastInputModeBest;
+				static CButtonContainer s_FastInputModeSaikoPlus;
+				CUIRect FastButton, BestButton, SaikoButton, ButtonsRest;
+				const float Spacing = 2.0f;
+				const float ButtonWidth = (Button.w - Spacing * 2.0f) / 3.0f;
+				Button.VSplitLeft(ButtonWidth, &FastButton, &ButtonsRest);
+				ButtonsRest.VSplitLeft(Spacing, nullptr, &ButtonsRest);
+				ButtonsRest.VSplitLeft(ButtonWidth, &BestButton, &ButtonsRest);
+				ButtonsRest.VSplitLeft(Spacing, nullptr, &ButtonsRest);
+				SaikoButton = ButtonsRest;
+				FastButton.HMargin(2.0f, &FastButton);
+				BestButton.HMargin(2.0f, &BestButton);
+				SaikoButton.HMargin(2.0f, &SaikoButton);
+				const int UiMode = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode);
+				if(DoButton_Menu(&s_FastInputModeFast, Localize("Fast input"), UiMode == 0, &FastButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_L))
+					g_Config.m_QmFastInputMode = 0;
+				if(DoButton_Menu(&s_FastInputModeBest, Localize("Best input"), UiMode == 3, &BestButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_NONE))
+					g_Config.m_QmFastInputMode = 3;
+				if(DoButton_Menu(&s_FastInputModeSaikoPlus, "Saiko+", UiMode == 4, &SaikoButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_R))
+					g_Config.m_QmFastInputMode = 4;
+			}
+			else
+				CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
+			if(Render)
+			{
+				const int UiMode = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode);
+				if(UiMode == 0)
+				{
+					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
+					DoSliderWithScaledValue(&g_Config.m_TcFastInputAmount, &g_Config.m_TcFastInputAmount, &Button, Localize("Amount"), 1, 40, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+				}
+				else if(UiMode == 3)
+				{
+					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
+					DoSliderWithScaledValue(&g_Config.m_QmBestInputOffset, &g_Config.m_QmBestInputOffset, &Button, Localize("Prediction offset"), 0, 1000, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ticks");
+					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
+					DoSliderWithScaledValue(&g_Config.m_QmBestInputSmoothing, &g_Config.m_QmBestInputSmoothing, &Button, Localize("Input smoothing"), 0, 100, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "%");
+					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
+					DoSliderWithScaledValue(&g_Config.m_QmBestInputLatencyComp, &g_Config.m_QmBestInputLatencyComp, &Button, Localize("Latency compensation"), 0, 50, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "%");
+					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
+					DoSliderWithScaledValue(&g_Config.m_QmBestInputInterpolation, &g_Config.m_QmBestInputInterpolation, &Button, Localize("Interpolation"), 1, 3, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "");
+				}
+				else
+				{
+					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
+					DoSliderWithScaledValue(&g_Config.m_QmSaikoPlusAmount, &g_Config.m_QmSaikoPlusAmount, &Button, "Saiko+", 0, 500, 1, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ticks");
+				}
+			}
+			else
+			{
+				CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
+				CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
+				CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
+				CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
+				CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
+			}
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 			if(Render)
 			{
-				if(g_Config.m_TcFastInput)
+				const int UiMode = QmFastInputNormalizedMode(g_Config.m_QmFastInputMode);
+				if(UiMode == 0)
 					DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInputOthers, "tclient-fast-input-others", Localize("Fast input others"), &g_Config.m_TcFastInputOthers, &CurrentColumn, LineSize);
+				else if(UiMode == 3)
+					DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmBestInputOthers, "qm-best-input-others", Localize("Best input others"), &g_Config.m_QmBestInputOthers, &CurrentColumn, LineSize);
 				else
-					CurrentColumn.HSplitTop(LineSize, nullptr, &CurrentColumn);
+					DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmSaikoPlusOthers, "qm-saiko-plus-others", "Saiko+ others", &g_Config.m_QmSaikoPlusOthers, &CurrentColumn, LineSize);
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClSubTickAiming, "tclient-sub-tick-aiming", Localize("Sub-Tick aiming"), &g_Config.m_ClSubTickAiming, &CurrentColumn, LineSize);
 			}
 			else

@@ -5,6 +5,7 @@
 
 #include <base/vmath.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,7 @@ public:
 private:
 	SQmImePopupState m_LastState;
 	bool m_WasVisible = false;
+	uint64_t m_PresenceGeneration = 1;
 };
 
 #endif
