@@ -36,6 +36,9 @@ namespace QmLyrics
 	float LongWordPulseBrightness(const SLyricsWord &Word, int64_t NowMs);
 	float LineHeight(float PrimaryFontSize, float LineSpacing, float SubtitleFontSize, int SubtitleCount);
 	SLineVisual BuildLineVisual(int LineIndex, int ActiveLineIndex, float PrimaryAnchorY, float DistanceFromActive, float FontActive, float FontOther, float LineSpacing, float Opacity, float InactiveMinOpacity, float ScaleActive, float ScaleFalloff, float FadePerLine, int SubtitleCount, float SubtitleFontSize);
+	using FTextMeasureCallback = float (*)(void *pUser, float FontSize, const char *pText);
+	void UpdateTextWidthCache(STextWidthCache *pCache, const char *pText, float FontSize, size_t ContextHash, void *pUser, FTextMeasureCallback pfnMeasure);
+	void UpdateLineTextWidthCache(SLineTextWidthCache *pCache, const SLyricsLine &Line, float FontSize, size_t ContextHash, void *pUser, FTextMeasureCallback pfnMeasure);
 
 } // namespace QmLyrics
 

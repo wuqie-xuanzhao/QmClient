@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstring>
 #include <utility>
 
 using namespace QmLyrics;
@@ -124,4 +125,66 @@ TEST(QmLyricsRender, LineTransitionDistanceUsesActualBlockHeights)
 {
 	const float Distance = LineTransitionDistance(22.0f, 14.0f, 6.0f, 10.0f, 1);
 	EXPECT_NEAR(Distance, 30.05f, 0.001f);
+}
+
+TEST(QmLyricsRender, LineTextWidthCacheAvoidsRepeatedTextMeasurements)
+{
+	SLyricsLine Line;
+	Line.m_RawText = "hello world";
+	Line.m_vWords.push_back({0, 500, "hello"});
+	Line.m_vWords.push_back({500, 1000, "world"});
+
+	struct SMeasureState
+	{
+		int m_Calls = 0;
+	};
+	SMeasureState State;
+	auto Measure = [](void *pUser, float FontSize, const char *pText) {
+		SMeasureState *pState = static_cast<SMeasureState *>(pUser);
+		++pState->m_Calls;
+		return FontSize + (float)std::strlen(pText);
+	};
+
+	SLineTextWidthCache Cache;
+	UpdateLineTextWidthCache(&Cache, Line, 18.0f, 1, &State, Measure);
+	EXPECT_EQ(State.m_Calls, 4);
+	EXPECT_FLOAT_EQ(Cache.m_RawTextWidth, 29.0f);
+	EXPECT_EQ(Cache.m_vWordWidths.size(), 2u);
+
+	UpdateLineTextWidthCache(&Cache, Line, 18.0f, 1, &State, Measure);
+	EXPECT_EQ(State.m_Calls, 4);
+
+	UpdateLineTextWidthCache(&Cache, Line, 18.0f, 2, &State, Measure);
+	EXPECT_EQ(State.m_Calls, 8);
+
+	UpdateLineTextWidthCache(&Cache, Line, 20.0f, 2, &State, Measure);
+	EXPECT_EQ(State.m_Calls, 12);
+}
+
+TEST(QmLyricsRender, TextWidthCacheAvoidsRepeatedTextMeasurements)
+{
+	struct SMeasureState
+	{
+		int m_Calls = 0;
+	};
+	SMeasureState State;
+	auto Measure = [](void *pUser, float FontSize, const char *pText) {
+		SMeasureState *pState = static_cast<SMeasureState *>(pUser);
+		++pState->m_Calls;
+		return FontSize + (float)std::strlen(pText);
+	};
+
+	STextWidthCache Cache;
+	UpdateTextWidthCache(&Cache, "translated line", 12.0f, 1, &State, Measure);
+	EXPECT_EQ(State.m_Calls, 1);
+	EXPECT_FLOAT_EQ(Cache.m_TextWidth, 27.0f);
+
+	UpdateTextWidthCache(&Cache, "translated line", 12.0f, 1, &State, Measure);
+	EXPECT_EQ(State.m_Calls, 1);
+
+	UpdateTextWidthCache(&Cache, "translated line", 12.0f, 2, &State, Measure);
+	EXPECT_EQ(State.m_Calls, 2);
+
+	UpdateTextWidthCache(&Cache, "other line", 12.0f, 2, &State, Measure);
+	EXPECT_EQ(State.m_Calls, 3);
 }

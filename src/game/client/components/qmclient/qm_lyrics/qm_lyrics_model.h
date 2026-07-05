@@ -1,6 +1,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_QM_LYRICS_QM_LYRICS_MODEL_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_QM_LYRICS_QM_LYRICS_MODEL_H
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -16,6 +17,26 @@ namespace QmLyrics
 		std::string m_Text;
 	};
 
+	struct SLineTextWidthCache
+	{
+		bool m_Valid = false;
+		float m_FontSize = 0.0f;
+		size_t m_ContextHash = 0;
+		size_t m_TextHash = 0;
+		float m_RawTextWidth = 0.0f;
+		float m_SpaceWidth = 0.0f;
+		std::vector<float> m_vWordWidths;
+	};
+
+	struct STextWidthCache
+	{
+		bool m_Valid = false;
+		float m_FontSize = 0.0f;
+		size_t m_ContextHash = 0;
+		size_t m_TextHash = 0;
+		float m_TextWidth = 0.0f;
+	};
+
 	struct SLyricsLine
 	{
 		int64_t m_StartMs = 0;
@@ -24,6 +45,9 @@ namespace QmLyrics
 		std::vector<SLyricsWord> m_vWords; // 行级时间轴时为空
 		std::optional<std::string> m_Translation;
 		std::optional<std::string> m_Transliteration;
+		mutable SLineTextWidthCache m_TextWidthCache;
+		mutable STextWidthCache m_TranslationWidthCache;
+		mutable STextWidthCache m_TransliterationWidthCache;
 	};
 
 	enum class EFormat
