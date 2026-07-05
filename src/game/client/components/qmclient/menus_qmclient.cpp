@@ -522,6 +522,7 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 
 	SQmScrollConfig ScrollConfig;
 	ScrollConfig.m_WheelScale = 30.0f * UiScale;
+	ScrollConfig.m_MaxOverscroll = 0.0f;
 
 	SQmScrollContainerInput ScrollInput;
 	ScrollInput.m_Hovered = Ui()->MouseHovered(pView);
@@ -2225,6 +2226,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	RightCards.reserve(s_aQmModuleLayout.size());
 
 	float QmCardOffsetX = 0.0f, QmCardOffsetY = 0.0f; // 当前模块 DisplayRect→TargetRect 偏移（RenderColumnModules for 循环设，RegisterModuleCard 读）
+	auto QmModuleCardAnimRect = [&](CUIRect Rect) {
+		Rect.y -= QmScrollFrame.m_Offset.y;
+		return Rect;
+	};
+	auto QmModuleCardScreenRect = [&](CUIRect Rect) {
+		Rect.y += QmScrollFrame.m_Offset.y;
+		return Rect;
+	};
 	auto RegisterModuleCard = [&](const SQmModuleEntry *pModule, EQmModuleColumn ColumnId, const CUIRect &DisplayRectParam) {
 		// param 是偏移后的 DisplayRect（Column 偏移时）；TargetRect = param - offset（恢复布局位置）
 		const int StateIndex = GetQmModuleStateIndexById(pModule->m_Id);
@@ -3289,13 +3298,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			QmCardOffsetX = 0.0f;
 			QmCardOffsetY = 0.0f;
 
-			// 布局过渡偏移：DisplayRect 是当前显示位置，Column 保持 TargetRect 布局累加。
+			// 布局过渡偏移：动画只跟踪内容坐标，滚动偏移最后统一叠回屏幕坐标。
 			bool RenderModule = true;
 			{
 				const int SI = GetQmModuleStateIndexById(pModule->m_Id);
 				CUIRect TargetBeforeRender = Column;
 				TargetBeforeRender.y += LgCardSpacing;
 				TargetBeforeRender.h = s_aQmModuleLastHeights[SI] > 0.0f ? s_aQmModuleLastHeights[SI] : GetQmModuleDefaultEstimatedHeight(*pModule);
+				const CUIRect AnimTargetBeforeRender = QmModuleCardAnimRect(TargetBeforeRender);
 				if(s_DragState.m_pDragging == nullptr && Ui()->MouseButtonClicked(0))
 					TryBeginModuleDrag(pModule, TargetBeforeRender);
 				const uint64_t NodeKey = BuildUiAnimNodeKey(str_quickhash("qm_module_card_layout"), static_cast<uint64_t>(pModule->m_Id));
@@ -3305,16 +3315,20 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					CUIRect DragTarget = TargetBeforeRender;
 					DragTarget.x = Ui()->MouseX() - s_DragState.m_GrabOffset.x;
 					DragTarget.y = Ui()->MouseY() - s_DragState.m_GrabOffset.y;
-					DispRect = GameClient()->UiRuntimeV2()->Tree().SyncLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, DragTarget);
+					DispRect = GameClient()->UiRuntimeV2()->Tree().SyncLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, QmModuleCardAnimRect(DragTarget));
+					DispRect = QmModuleCardScreenRect(DispRect);
 				}
 				else if(DispRect.w <= 0.0f || DispRect.h <= 0.0f)
 				{
-					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, TargetBeforeRender, ui_token::motion::CARD_REORDER, 1, false);
+					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimTargetBeforeRender, ui_token::motion::CARD_REORDER, 1, false);
+					DispRect = QmModuleCardScreenRect(DispRect);
 				}
 				else
 				{
-					const CUIRect &EffectiveTarget = (s_DropPreview.m_PreviewValid && s_aQmModulePreviewRects[SI].w > 0.0f) ? s_aQmModulePreviewRects[SI] : TargetBeforeRender;
-					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, EffectiveTarget, ui_token::motion::CARD_REORDER);
+					const CUIRect EffectiveTarget = (s_DropPreview.m_PreviewValid && s_aQmModulePreviewRects[SI].w > 0.0f) ? s_aQmModulePreviewRects[SI] : TargetBeforeRender;
+					const CUIRect AnimEffectiveTarget = QmModuleCardAnimRect(EffectiveTarget);
+					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimEffectiveTarget, ui_token::motion::CARD_REORDER);
+					DispRect = QmModuleCardScreenRect(DispRect);
 				}
 				if(DispRect.w > 0.0f)
 				{

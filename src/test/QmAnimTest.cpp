@@ -716,6 +716,47 @@ TEST(UiV2TreeLayoutTransition, CanSyncTargetWithoutAnimating)
 	EXPECT_FALSE(Runtime.HasActiveAnimation(NodeKey, EUiAnimProperty::POS_Y));
 }
 
+TEST(UiV2TreeLayoutTransition, ScrollOffsetDoesNotDriveCardLayoutSpring)
+{
+	g_Config.m_QmUiMotionLevel = 2;
+	CUiV2Tree Tree;
+	CUiV2AnimationRuntime Runtime;
+	const uint64_t NodeKey = 905;
+
+	auto ToAnimRect = [](CUIRect Rect, float ScrollOffsetY) {
+		Rect.y -= ScrollOffsetY;
+		return Rect;
+	};
+	auto ToScreenRect = [](CUIRect Rect, float ScrollOffsetY) {
+		Rect.y += ScrollOffsetY;
+		return Rect;
+	};
+
+	CUIRect Target;
+	Target.x = 32.0f;
+	Target.y = 96.0f;
+	Target.w = 140.0f;
+	Target.h = 72.0f;
+
+	const CUIRect FirstScreen = ToScreenRect(Tree.ResolveLayoutTransition(Runtime, NodeKey, ToAnimRect(Target, 0.0f), ui_token::motion::CARD_REORDER), 0.0f);
+	EXPECT_NEAR(FirstScreen.y, Target.y, 1e-6f);
+
+	const float ScrollOffsetY = -64.0f;
+	CUIRect ScrolledTarget = Target;
+	ScrolledTarget.y += ScrollOffsetY;
+	const CUIRect ScrolledScreen = ToScreenRect(Tree.ResolveLayoutTransition(Runtime, NodeKey, ToAnimRect(ScrolledTarget, ScrollOffsetY), ui_token::motion::CARD_REORDER), ScrollOffsetY);
+	EXPECT_NEAR(ScrolledScreen.y, ScrolledTarget.y, 1e-6f);
+	EXPECT_FALSE(Runtime.HasActiveAnimation(NodeKey, EUiAnimProperty::POS_Y));
+
+	CUIRect ReorderedTarget = Target;
+	ReorderedTarget.y += 120.0f;
+	CUIRect ReorderedScreenTarget = ReorderedTarget;
+	ReorderedScreenTarget.y += ScrollOffsetY;
+	const CUIRect ReorderedStart = ToScreenRect(Tree.ResolveLayoutTransition(Runtime, NodeKey, ToAnimRect(ReorderedScreenTarget, ScrollOffsetY), ui_token::motion::CARD_REORDER), ScrollOffsetY);
+	EXPECT_LT(ReorderedStart.y, ReorderedScreenTarget.y);
+	EXPECT_TRUE(Runtime.HasActiveAnimation(NodeKey, EUiAnimProperty::POS_Y));
+}
+
 TEST(UiV2TreeLayoutTransition, DragReleaseCanAnimateFromPointerPosition)
 {
 	g_Config.m_QmUiMotionLevel = 2;
@@ -1510,6 +1551,21 @@ TEST(UiV2ScrollPhysics, WheelImpulseDecaysAndClampsToRange)
 	EXPECT_GE(State.Offset(), 0.0f);
 	EXPECT_LE(State.Offset(), Metrics.MaxOffset());
 	EXPECT_NEAR(State.Velocity(), 0.0f, 0.5f);
+}
+
+TEST(UiV2ScrollPhysics, CustomWheelScaleHasVisibleStep)
+{
+	SQmScrollMetrics Metrics;
+	Metrics.m_ViewportSize = 100.0f;
+	Metrics.m_ContentSize = 500.0f;
+	SQmScrollConfig Config;
+	Config.m_WheelScale = 15.0f;
+
+	CQmScrollState State;
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+
+	EXPECT_GE(State.Offset(), 24.0f);
+	EXPECT_GT(State.Velocity(), 0.0f);
 }
 
 TEST(UiV2ScrollPhysics, OverscrollSpringsBackIntoRange)
