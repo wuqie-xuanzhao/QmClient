@@ -34,26 +34,22 @@ def main():
 	p = argparse.ArgumentParser(description="Generate src/rust-bridge")
 	_args = p.parse_args()
 
-    cxxbridge = find_cxxbridge(version="1.0.194")
-    for input_, output_prefix in FILES.items():
-        subprocess.check_call(
-            [
-                cxxbridge,
-                input_,
-                "--output",
-                f"{output_prefix}.cpp",
-                "--output",
-                f"{output_prefix}.h",
-            ]
-        )
-    subprocess.check_call(
-        [
-            cxxbridge,
-            "--header",
-            "--output",
-            "src/rust-bridge/base/cxx.h",
-        ]
-    )
+	cxxbridge = find_cxxbridge(version="1.0.194")
+	for input_, output_prefix in FILES.items():
+		subprocess.check_call([
+			cxxbridge,
+			input_,
+			"--output",
+			f"{output_prefix}.cpp",
+			"--output",
+			f"{output_prefix}.h",
+		])
+	subprocess.check_call([
+		cxxbridge,
+		"--header",
+		"--output",
+		"src/rust-bridge/base/cxx.h",
+	])
 
 
 if __name__ == "__main__":

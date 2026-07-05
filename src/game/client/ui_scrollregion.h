@@ -155,6 +155,9 @@ public:
 	bool ScrollbarShown() const;
 	bool Animating() const;
 	bool Active() const;
+	float ContentAreaPos() const;
+	float ContentAreaSize() const;
+	float MaxScroll() const;
 	const CScrollRegionParams &Params() const { return m_Params; }
 
 private:
