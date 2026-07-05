@@ -2351,6 +2351,22 @@ turkish = "Ses paketini düzenle"
 polish = "Edytuj pakiet audio"
 
 [[message]]
+key = "Audio pack directory"
+[message.translations]
+simplified_chinese = "音频包目录"
+traditional_chinese = "音訊包目錄"
+japanese = "オーディオパックのフォルダー"
+korean = "오디오 팩 폴더"
+russian = "Папка аудиопаков"
+german = "Audio-Paket-Ordner"
+spanish = "Carpeta de paquetes de audio"
+french = "Dossier des packs audio"
+brazilian_portuguese = "Pasta dos pacotes de áudio"
+portuguese = "Pasta dos pacotes de áudio"
+turkish = "Ses paketi klasörü"
+polish = "Folder pakietów audio"
+
+[[message]]
 key = "Edit HUD"
 [message.translations]
 simplified_chinese = "编辑 HUD"

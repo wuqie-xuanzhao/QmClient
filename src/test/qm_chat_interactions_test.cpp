@@ -1,4 +1,6 @@
 #include <game/client/components/chat.h>
+#include <game/client/components/motd.h>
+#include <game/client/components/scoreboard.h>
 #include <game/client/components/tclient/fast_practice.h>
 
 #include <gtest/gtest.h>
@@ -306,6 +308,55 @@ TEST(QmChatInteractions, CommandUsagePreviewUsesLocalizableSourceText)
 	EXPECT_EQ(Body.find("邀请"), std::string::npos);
 	EXPECT_EQ(Body.find("悄悄话"), std::string::npos);
 	EXPECT_EQ(Body.find("用法"), std::string::npos);
+}
+
+TEST(QmChatInteractions, SlashCommandSuggestionsFilterCommonCommands)
+{
+	const auto vSuggestions = CChat::BuildSlashCommandSuggestions("/", 8);
+	ASSERT_GE(vSuggestions.size(), 3u);
+	EXPECT_STREQ(vSuggestions[0].m_pCommand, "/pause");
+	EXPECT_STREQ(vSuggestions[1].m_pCommand, "/spec");
+	EXPECT_STREQ(vSuggestions[2].m_pCommand, "/team");
+
+	const auto vFiltered = CChat::BuildSlashCommandSuggestions("/to", 8);
+	ASSERT_EQ(vFiltered.size(), 2u);
+	EXPECT_STREQ(vFiltered[0].m_pCommand, "/top5");
+	EXPECT_STREQ(vFiltered[1].m_pCommand, "/top");
+
+	EXPECT_TRUE(CChat::BuildSlashCommandSuggestions("/top", 8).empty());
+	EXPECT_TRUE(CChat::BuildSlashCommandSuggestions("/pause", 8).empty());
+	EXPECT_TRUE(CChat::BuildSlashCommandSuggestions("hello /p", 8).empty());
+	EXPECT_TRUE(CChat::BuildSlashCommandSuggestions("/unknown", 8).empty());
+}
+
+TEST(QmChatInteractions, SlashCommandSuggestionAppliesWithTrailingSpace)
+{
+	char aBuf[256];
+	EXPECT_TRUE(CChat::ApplySlashCommandSuggestion(aBuf, sizeof(aBuf), "/p", "/pause"));
+	EXPECT_STREQ(aBuf, "/pause ");
+
+	EXPECT_TRUE(CChat::ApplySlashCommandSuggestion(aBuf, sizeof(aBuf), "/", "/w"));
+	EXPECT_STREQ(aBuf, "/w ");
+
+	EXPECT_FALSE(CChat::ApplySlashCommandSuggestion(aBuf, sizeof(aBuf), "hello", "/pause"));
+}
+
+TEST(QmChatInteractions, MotdPopupRespectsJoinServerInfoToggle)
+{
+	EXPECT_TRUE(CMotd::ShouldActivateMotdPopup("Welcome", 10, false));
+	EXPECT_FALSE(CMotd::ShouldActivateMotdPopup("Welcome", 10, true));
+	EXPECT_FALSE(CMotd::ShouldActivateMotdPopup("", 10, false));
+	EXPECT_FALSE(CMotd::ShouldActivateMotdPopup("Welcome", 0, false));
+}
+
+TEST(QmChatInteractions, ScoreboardOnDeathRespectsUserMode)
+{
+	EXPECT_TRUE(CScoreboard::ShouldAutoShowOnDeath(true, true, false, false, false));
+	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(false, true, false, false, true));
+	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(true, false, false, false, true));
+	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(true, true, true, false, true));
+	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(true, true, false, true, true));
+	EXPECT_FALSE(CScoreboard::ShouldAutoShowOnDeath(true, true, false, false, true));
 }
 
 TEST(QmChatInteractions, ReusesKnownServerMessageClassWithoutReanalysis)

@@ -1891,13 +1891,12 @@ bool CScoreboard::IsActive() const
 		return true;
 
 	const CNetObj_GameInfo *pGameInfoObj = GameClient()->m_Snap.m_pGameInfoObj;
-	if(GameClient()->m_Snap.m_pLocalInfo && !GameClient()->m_Snap.m_SpecInfo.m_Active)
-	{
-		// we are not a spectator, check if we are dead and the game isn't paused
-		if(!GameClient()->m_Snap.m_pLocalCharacter && g_Config.m_QmScoreboardOnDeath &&
-			!(pGameInfoObj && pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
-			return true;
-	}
+	if(ShouldAutoShowOnDeath(g_Config.m_QmScoreboardOnDeath != 0,
+		   GameClient()->m_Snap.m_pLocalInfo != nullptr,
+		   GameClient()->m_Snap.m_SpecInfo.m_Active,
+		   pGameInfoObj && pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED,
+		   GameClient()->m_Snap.m_pLocalCharacter != nullptr))
+		return true;
 
 	// if the game is over
 	if(pGameInfoObj && pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER)

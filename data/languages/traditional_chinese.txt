@@ -742,6 +742,9 @@ Audio init failed, check details below and logs
 Audio issue
 == Pending traditional_chinese translation fed1c7a139
 
+Audio pack directory
+== 音訊包目錄
+
 Audio pack exported.
 == Pending traditional_chinese translation 9722ccb921
 
@@ -3186,6 +3189,9 @@ Hide player messages
 
 Hide scoreboard
 == Pending traditional_chinese translation 4eb88e0525
+
+Hide server information on join
+== 進圖時隱藏伺服器資訊
 
 Hide server prompt notifications
 == Pending traditional_chinese translation 9ef750eba3
@@ -6685,6 +6691,9 @@ Show score
 Show scoreboard
 == Pending traditional_chinese translation e1d580005a
 
+Show scoreboard after death
+== 死亡後顯示計分板
+
 Show seconds on clock
 == Pending traditional_chinese translation 31c885476f
 
@@ -9987,6 +9996,9 @@ Zoom out
 
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == Pending traditional_chinese translation 567544d201
+
+进图时不自动显示服务器信息
+== 進圖時不自動顯示伺服器資訊
 
 远离行每行缩小百分比
 == Pending traditional_chinese translation b3b32bf934

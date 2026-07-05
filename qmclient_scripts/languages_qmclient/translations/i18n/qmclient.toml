@@ -8063,6 +8063,54 @@ turkish = "Skor tablosu puan kontrolü"
 polish = "Sprawdzanie punktów na tablicy wyników"
 
 [[message]]
+key = "Show scoreboard after death"
+[message.translations]
+simplified_chinese = "死亡后显示计分板"
+traditional_chinese = "死亡後顯示計分板"
+japanese = "死亡後にスコアボードを表示"
+korean = "사망 후 점수판 표시"
+russian = "Показывать таблицу счёта после смерти"
+german = "Punktetafel nach dem Tod anzeigen"
+spanish = "Mostrar marcador tras morir"
+french = "Afficher le tableau des scores après la mort"
+brazilian_portuguese = "Mostrar placar após morrer"
+portuguese = "Mostrar placar após morrer"
+turkish = "Ölümden sonra skor tablosunu göster"
+polish = "Pokaż tablicę wyników po śmierci"
+
+[[message]]
+key = "Hide server information on join"
+[message.translations]
+simplified_chinese = "进图时隐藏服务器信息"
+traditional_chinese = "進圖時隱藏伺服器資訊"
+japanese = "参加時にサーバー情報を非表示"
+korean = "입장 시 서버 정보 숨기기"
+russian = "Скрывать информацию сервера при входе"
+german = "Serverinformationen beim Beitreten ausblenden"
+spanish = "Ocultar información del servidor al entrar"
+french = "Masquer les informations du serveur à l'arrivée"
+brazilian_portuguese = "Ocultar informações do servidor ao entrar"
+portuguese = "Ocultar informações do servidor ao entrar"
+turkish = "Girerken sunucu bilgisini gizle"
+polish = "Ukryj informacje o serwerze po wejściu"
+
+[[message]]
+key = "进图时不自动显示服务器信息"
+[message.translations]
+simplified_chinese = "进图时不自动显示服务器信息"
+traditional_chinese = "進圖時不自動顯示伺服器資訊"
+japanese = "参加時にサーバー情報を自動表示しない"
+korean = "입장 시 서버 정보를 자동으로 표시하지 않음"
+russian = "Не показывать информацию сервера автоматически при входе"
+german = "Serverinformationen beim Beitreten nicht automatisch anzeigen"
+spanish = "No mostrar automáticamente la información del servidor al entrar"
+french = "Ne pas afficher automatiquement les informations du serveur à l'arrivée"
+brazilian_portuguese = "Não mostrar automaticamente informações do servidor ao entrar"
+portuguese = "Não mostrar automaticamente informações do servidor ao entrar"
+turkish = "Girerken sunucu bilgisini otomatik gösterme"
+polish = "Nie pokazuj automatycznie informacji o serwerze po wejściu"
+
+[[message]]
 key = "Scores are private on this server"
 [message.translations]
 simplified_chinese = "本服务器的成绩是私密的"

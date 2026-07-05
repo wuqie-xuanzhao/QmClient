@@ -4427,6 +4427,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		CUIRect AudioPackView = AudioPackCard.m_ContentRect;
 		static CButtonContainer s_AudioPackRefreshButton;
 		static CButtonContainer s_AudioPackEditorButton;
+		static CButtonContainer s_AudioPackDirectoryButton;
 		static CListBox s_AudioPackListBox;
 		EnsureSharedAudioPacks(Storage());
 
@@ -4466,7 +4467,9 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 
 		const float RefreshButtonW = 25.0f;
 		const float EditButtonW = minimum(168.0f, maximum(114.0f, TextRender()->TextWidth(12.0f, Localize("Edit audio pack"), -1, -1.0f) + 22.0f));
+		const float DirectoryButtonW = minimum(176.0f, maximum(122.0f, TextRender()->TextWidth(12.0f, Localize("Audio pack directory"), -1, -1.0f) + 22.0f));
 		CUIRect EditButton;
+		CUIRect DirectoryButton;
 		CUIRect RefreshButton;
 		HeaderRow.VSplitRight(RefreshButtonW, &HeaderRow, &RefreshButton);
 		RefreshButton.VMargin(2.0f, &RefreshButton);
@@ -4479,6 +4482,18 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		EditButton.VMargin(2.0f, &EditButton);
 		if(DoSettingsButton_Menu(SETTINGS_SOUND, -1, -1, &s_AudioPackEditorButton, "sound-edit-audio-pack", Localize("Edit audio pack"), 0, &EditButton))
 			AudioPackEditorOpen(g_Config.m_SndPack);
+		HeaderRow.VSplitLeft(6.0f, nullptr, &HeaderRow);
+		HeaderRow.VSplitLeft(DirectoryButtonW, &DirectoryButton, &HeaderRow);
+		DirectoryButton.VMargin(2.0f, &DirectoryButton);
+		if(DoSettingsButton_Menu(SETTINGS_SOUND, -1, -1, &s_AudioPackDirectoryButton, "sound-audio-pack-directory", Localize("Audio pack directory"), 0, &DirectoryButton))
+		{
+			char aBuf[IO_MAX_PATH_LENGTH];
+			if(Storage()->FolderExists("audio", IStorage::TYPE_ALL))
+				Storage()->GetCompletePath(IStorage::TYPE_ALL, "audio", aBuf, sizeof(aBuf));
+			else
+				Storage()->GetCompletePath(IStorage::TYPE_SAVE, "audio", aBuf, sizeof(aBuf));
+			Client()->ViewFile(aBuf);
+		}
 
 		ListRow.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f), IGraphics::CORNER_ALL, 6.0f);
 		ListRow.Margin(6.0f, &ListRow);

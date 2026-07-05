@@ -49,6 +49,9 @@ static constexpr float CHAT_SCROLLBAR_MARGIN = 2.0f;
 static constexpr float CHAT_SCROLLBAR_ALPHA_SCALE = 0.70f;
 static constexpr float CHAT_TRANSLATE_MENU_WIDTH = 260.0f;
 static constexpr float CHAT_TRANSLATE_MENU_FONT_SIZE = 7.5f;
+static constexpr float CHAT_SLASH_COMMAND_MENU_FONT_SIZE = 7.5f;
+static constexpr float CHAT_SLASH_COMMAND_MENU_ROW_HEIGHT = 15.0f;
+static constexpr int CHAT_SLASH_COMMAND_MENU_MAX_VISIBLE = 6;
 
 static int BlockWordsSeparatorLength(const char *pStr)
 {
@@ -1000,6 +1003,79 @@ void CChat::OnInit()
 	Console()->Chain("cl_chat_width", ConchainChatWidth, this);
 }
 
+void CChat::RefreshSlashCommandSuggestions()
+{
+	m_vSlashCommandSuggestions = BuildSlashCommandSuggestions(m_Input.GetString(), CHAT_SLASH_COMMAND_MENU_MAX_VISIBLE);
+	if(m_vSlashCommandSuggestions.empty())
+	{
+		m_SlashCommandSuggestionIndex = 0;
+		m_SlashCommandSuggestionRectValid = false;
+		return;
+	}
+	m_SlashCommandSuggestionIndex = std::clamp(m_SlashCommandSuggestionIndex, 0, (int)m_vSlashCommandSuggestions.size() - 1);
+}
+
+bool CChat::ApplySelectedSlashCommandSuggestion()
+{
+	RefreshSlashCommandSuggestions();
+	if(m_vSlashCommandSuggestions.empty())
+		return false;
+
+	char aBuf[MAX_LINE_LENGTH];
+	if(!ApplySlashCommandSuggestion(aBuf, sizeof(aBuf), m_Input.GetString(), m_vSlashCommandSuggestions[m_SlashCommandSuggestionIndex].m_pCommand))
+		return false;
+	m_Input.Set(aBuf);
+	m_Input.SetCursorOffset(m_Input.GetLength());
+	m_Input.SelectNothing();
+	m_vSlashCommandSuggestions.clear();
+	m_SlashCommandSuggestionRectValid = false;
+	return true;
+}
+
+void CChat::RenderSlashCommandSuggestions(CUIRect InputContentRect, float FontSize)
+{
+	RefreshSlashCommandSuggestions();
+	if(m_vSlashCommandSuggestions.empty())
+		return;
+
+	const float MenuWidth = minimum(250.0f, maximum(160.0f, InputContentRect.w));
+	const float MenuHeight = (float)m_vSlashCommandSuggestions.size() * CHAT_SLASH_COMMAND_MENU_ROW_HEIGHT + 8.0f;
+	CUIRect MenuRect = {InputContentRect.x, InputContentRect.y - MenuHeight - 4.0f, MenuWidth, MenuHeight};
+	if(MenuRect.y < 2.0f)
+		MenuRect.y = InputContentRect.y + InputContentRect.h + 4.0f;
+
+	m_SlashCommandSuggestionRect = MenuRect;
+	m_SlashCommandSuggestionRectValid = true;
+	MenuRect.Draw(ColorRGBA(0.04f, 0.05f, 0.07f, 0.92f), IGraphics::CORNER_ALL, 5.0f);
+	MenuRect.Margin(4.0f, &MenuRect);
+
+	const vec2 MousePos = GetChatMousePos();
+	for(size_t i = 0; i < m_vSlashCommandSuggestions.size(); ++i)
+	{
+		CUIRect Row;
+		MenuRect.HSplitTop(CHAT_SLASH_COMMAND_MENU_ROW_HEIGHT, &Row, &MenuRect);
+		const bool Selected = (int)i == m_SlashCommandSuggestionIndex;
+		const bool Hovered = Row.Inside(MousePos);
+		if(Hovered)
+			m_SlashCommandSuggestionIndex = (int)i;
+		if(Selected || Hovered)
+			Row.Draw(ColorRGBA(0.35f, 0.52f, 0.95f, 0.30f), IGraphics::CORNER_ALL, 4.0f);
+
+		CUIRect CommandRect, HelpRect;
+		Row.VSplitLeft(56.0f, &CommandRect, &HelpRect);
+		CommandRect.VMargin(5.0f, &CommandRect);
+		HelpRect.VMargin(5.0f, &HelpRect);
+		TextRender()->TextColor(0.72f, 0.88f, 1.0f, 1.0f);
+		Ui()->DoLabel(&CommandRect, m_vSlashCommandSuggestions[i].m_pCommand, FontSize, TEXTALIGN_ML);
+		if(m_vSlashCommandSuggestions[i].m_pHelpText != nullptr)
+		{
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.72f);
+			Ui()->DoLabel(&HelpRect, Localize(m_vSlashCommandSuggestions[i].m_pHelpText), FontSize, TEXTALIGN_ML);
+		}
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	}
+}
+
 bool CChat::OnInput(const IInput::CEvent &Event)
 {
 	const bool ChatInputActive = m_Mode != MODE_NONE;
@@ -1099,6 +1175,36 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		if(ChatLineMenuOpen)
 			CloseChatLineMenu();
 		return true;
+	}
+
+	RefreshSlashCommandSuggestions();
+	if(!AnyChatPopupOpen && !m_vSlashCommandSuggestions.empty() && (Event.m_Flags & IInput::FLAG_PRESS))
+	{
+		if(Event.m_Key == KEY_UP || Event.m_Key == KEY_DOWN)
+		{
+			const int Direction = Event.m_Key == KEY_DOWN ? 1 : -1;
+			m_SlashCommandSuggestionIndex = (m_SlashCommandSuggestionIndex + Direction + (int)m_vSlashCommandSuggestions.size()) % (int)m_vSlashCommandSuggestions.size();
+			return true;
+		}
+		if(Event.m_Key == KEY_TAB || Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)
+			return ApplySelectedSlashCommandSuggestion();
+		if(Event.m_Key == KEY_ESCAPE)
+		{
+			m_vSlashCommandSuggestions.clear();
+			m_SlashCommandSuggestionRectValid = false;
+			return true;
+		}
+		if(Event.m_Key == KEY_MOUSE_1 && m_SlashCommandSuggestionRectValid)
+		{
+			const vec2 MousePos = GetChatMousePos();
+			if(m_SlashCommandSuggestionRect.Inside(MousePos))
+			{
+				const float RowY = MousePos.y - m_SlashCommandSuggestionRect.y - 4.0f;
+				const int Index = std::clamp((int)(RowY / CHAT_SLASH_COMMAND_MENU_ROW_HEIGHT), 0, (int)m_vSlashCommandSuggestions.size() - 1);
+				m_SlashCommandSuggestionIndex = Index;
+				return ApplySelectedSlashCommandSuggestion();
+			}
+		}
 	}
 
 	// ESC 键处理：优先关闭弹出菜单
@@ -1390,6 +1496,7 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		}
 	}
 
+	RefreshSlashCommandSuggestions();
 	return true;
 }
 
@@ -2521,6 +2628,8 @@ void CChat::OnRender()
 			ExtendBounds(PreviewCursor.m_StartX, PreviewCursor.m_StartY, MessageMaxWidth, PreviewCursor.Height());
 		}
 
+		RenderSlashCommandSuggestions(InputContentRect, CHAT_SLASH_COMMAND_MENU_FONT_SIZE);
+
 		// 渲染翻译按钮
 		CUIRect TranslateButtonRect = {InputContentRect.x + InputContentRect.w + TranslateButtonGap, InputContentRect.y, TranslateButtonSize, maximum(InputCursor.m_FontSize + 4.0f, 16.0f)};
 		RenderTranslateButton(TranslateButtonRect);
@@ -2528,6 +2637,7 @@ void CChat::OnRender()
 	else
 	{
 		m_TranslateButton.m_RectValid = false;
+		m_SlashCommandSuggestionRectValid = false;
 	}
 
 #if defined(CONF_VIDEORECORDER)

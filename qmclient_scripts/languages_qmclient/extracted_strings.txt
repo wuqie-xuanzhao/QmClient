@@ -246,6 +246,7 @@ Audio backend init failed, try switching devices and check details
 Audio file was exported, but reload failed. Restart sound to apply it.
 Audio init failed, check details below and logs
 Audio issue
+Audio pack directory
 Audio pack exported.
 Audio packs
 Audio slots
@@ -1061,6 +1062,7 @@ Hide nameplates
 Hide names
 Hide player messages
 Hide scoreboard
+Hide server information on join
 Hide server prompt notifications
 Hide Settings Tabs
 Hide sponsor QR code
@@ -2227,6 +2229,7 @@ Show position and angle (mini debug)
 Show Qm badge
 Show score
 Show scoreboard
+Show scoreboard after death
 Show seconds on clock
 Show server help and usage messages
 Show skin date and author
@@ -3328,6 +3331,7 @@ Zoom out
 输出语音调试日志
 进入 Axiom 社区服务器后自动登录
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
+进图时不自动显示服务器信息
 远离行每行缩小百分比
 远离行每行透明度衰减 %
 远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）

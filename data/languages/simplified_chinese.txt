@@ -742,6 +742,9 @@ Audio init failed, check details below and logs
 Audio issue
 == 音频问题
 
+Audio pack directory
+== 音频包目录
+
 Audio pack exported.
 == 音频包已导出
 
@@ -3186,6 +3189,9 @@ Hide player messages
 
 Hide scoreboard
 == 隐藏计分板
+
+Hide server information on join
+== 进图时隐藏服务器信息
 
 Hide server prompt notifications
 == 隐藏服务器提示通知
@@ -6685,6 +6691,9 @@ Show score
 Show scoreboard
 == 显示计分板
 
+Show scoreboard after death
+== 死亡后显示计分板
+
 Show seconds on clock
 == 在时间处显示秒数
 
@@ -9987,6 +9996,9 @@ Zoom out
 
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == 进入服务器时重置统计（0=累计统计，1=每次进服重置）
+
+进图时不自动显示服务器信息
+== 进图时不自动显示服务器信息
 
 远离行每行缩小百分比
 == 远离行每行缩小百分比

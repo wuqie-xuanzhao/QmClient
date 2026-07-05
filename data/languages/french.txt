@@ -742,6 +742,9 @@ Audio init failed, check details below and logs
 Audio issue
 == Problème audio
 
+Audio pack directory
+== Dossier des packs audio
+
 Audio pack exported.
 == Pack audio exporté.
 
@@ -3186,6 +3189,9 @@ Hide player messages
 
 Hide scoreboard
 == Cacher le tableau des scores
+
+Hide server information on join
+== Masquer les informations du serveur à l'arrivée
 
 Hide server prompt notifications
 == Cacher les notifications d'invite du serveur
@@ -6685,6 +6691,9 @@ Show score
 Show scoreboard
 == Afficher le tableau des scores
 
+Show scoreboard after death
+== Afficher le tableau des scores après la mort
+
 Show seconds on clock
 == Afficher les secondes sur l'horloge
 
@@ -9987,6 +9996,9 @@ Zoom out
 
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == Réinitialiser les statistiques en rejoignant un serveur (0 = cumulatif, 1 = réinitialisation à chaque connexion)
+
+进图时不自动显示服务器信息
+== Ne pas afficher automatiquement les informations du serveur à l'arrivée
 
 远离行每行缩小百分比
 == Lyrics scale shrink percent per distance line

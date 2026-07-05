@@ -156,8 +156,70 @@ class CChat : public CComponent
 		bool operator==(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) == 0; }
 	};
 
+public:
+	struct SSlashCommandSuggestion
+	{
+		const char *m_pCommand;
+		const char *m_pHelpText;
+	};
+	static std::vector<SSlashCommandSuggestion> BuildSlashCommandSuggestions(const char *pInput, size_t MaxSuggestions)
+	{
+		static constexpr SSlashCommandSuggestion s_aSuggestions[] = {
+			{"/pause", nullptr},
+			{"/spec", nullptr},
+			{"/team", nullptr},
+			{"/w", nullptr},
+			{"/r", nullptr},
+			{"/rank", nullptr},
+			{"/top5", nullptr},
+			{"/top", nullptr},
+			{"/emote", nullptr},
+			{"/kill", nullptr},
+			{"/save", nullptr},
+			{"/load", nullptr},
+		};
+		std::vector<SSlashCommandSuggestion> vSuggestions;
+		if(pInput == nullptr || pInput[0] != '/' || MaxSuggestions == 0)
+			return vSuggestions;
+		for(const char *pCursor = pInput; *pCursor != '\0'; ++pCursor)
+		{
+			if(str_isspace(*pCursor))
+				return vSuggestions;
+		}
+		for(const SSlashCommandSuggestion &Suggestion : s_aSuggestions)
+		{
+			if(str_comp_nocase(Suggestion.m_pCommand, pInput) == 0)
+				return {};
+			if(str_startswith_nocase(Suggestion.m_pCommand, pInput))
+			{
+				vSuggestions.push_back(Suggestion);
+				if(vSuggestions.size() >= MaxSuggestions)
+					break;
+			}
+		}
+		return vSuggestions;
+	}
+	static bool ApplySlashCommandSuggestion(char *pBuf, size_t BufSize, const char *pInput, const char *pCommand)
+	{
+		if(pBuf == nullptr || BufSize == 0 || pInput == nullptr || pInput[0] != '/' || pCommand == nullptr || pCommand[0] != '/')
+			return false;
+		for(const char *pCursor = pInput; *pCursor != '\0'; ++pCursor)
+		{
+			if(str_isspace(*pCursor))
+				return false;
+		}
+		str_copy(pBuf, pCommand, BufSize);
+		str_append(pBuf, " ", BufSize);
+		return true;
+	}
+
+private:
 	std::vector<CCommand> m_vServerCommands;
 	bool m_ServerCommandsNeedSorting;
+	std::vector<SSlashCommandSuggestion> m_vSlashCommandSuggestions;
+	int m_SlashCommandSuggestionIndex = 0;
+	CUIRect m_SlashCommandSuggestionRect = {};
+	bool m_SlashCommandSuggestionRectValid = false;
 
 	struct CHistoryEntry
 	{
@@ -196,6 +258,9 @@ class CChat : public CComponent
 	const CCommand *FindServerCommand(const char *pName) const;
 	const char *LocalizeCommandPreviewText(const char *pText) const;
 	bool BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const;
+	void RefreshSlashCommandSuggestions();
+	bool ApplySelectedSlashCommandSuggestion();
+	void RenderSlashCommandSuggestions(CUIRect InputContentRect, float FontSize);
 	void SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation);
 	int CountInitializedLines() const;
 	int CountVisibleLinesFrom(int BacklogLine) const;

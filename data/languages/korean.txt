@@ -742,6 +742,9 @@ Audio init failed, check details below and logs
 Audio issue
 == 오디오 문제
 
+Audio pack directory
+== 오디오 팩 폴더
+
 Audio pack exported.
 == 오디오 팩이 내보내졌습니다.
 
@@ -3186,6 +3189,9 @@ Hide player messages
 
 Hide scoreboard
 == 점수판 숨기기
+
+Hide server information on join
+== 입장 시 서버 정보 숨기기
 
 Hide server prompt notifications
 == 서버 알림 숨기기
@@ -6685,6 +6691,9 @@ Show score
 Show scoreboard
 == 점수판 표시
 
+Show scoreboard after death
+== 사망 후 점수판 표시
+
 Show seconds on clock
 == 시계에 초 표시
 
@@ -9987,6 +9996,9 @@ Zoom out
 
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == 서버 입장 시 통계 초기화 (0=누적 통계, 1=입장 시마다 초기화)
+
+进图时不自动显示服务器信息
+== 입장 시 서버 정보를 자동으로 표시하지 않음
 
 远离行每行缩小百分比
 == Lyrics scale shrink percent per distance line

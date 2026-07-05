@@ -3814,6 +3814,14 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", Localize("Show scoreboard after death"), &g_Config.m_QmScoreboardOnDeath, &Row, LgLineHeight);
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
+					DoQmSettingsCheckboxAuto(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", Localize("Hide server information on join"), &g_Config.m_QmHideJoinServerInfo, &Row, LgLineHeight);
+					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+
+					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					DoQmSettingsCheckboxAuto(&g_Config.m_QmNewUi, "New UI", Localize("New UI"), &g_Config.m_QmNewUi, &Row, LgLineHeight);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 

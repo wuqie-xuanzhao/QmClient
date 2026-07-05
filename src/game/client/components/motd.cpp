@@ -138,7 +138,7 @@ void CMotd::OnMessage(int MsgType, void *pRawMsg)
 			GameClient()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "motd", pLast, color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor)));
 
 		m_ServerMotdUpdateTime = time();
-		if(m_aServerMotd[0] && g_Config.m_ClMotdTime)
+		if(ShouldActivateMotdPopup(m_aServerMotd, g_Config.m_ClMotdTime, g_Config.m_QmHideJoinServerInfo != 0))
 			m_ServerMotdTime = m_ServerMotdUpdateTime + time_freq() * g_Config.m_ClMotdTime;
 		else
 			m_ServerMotdTime = 0;

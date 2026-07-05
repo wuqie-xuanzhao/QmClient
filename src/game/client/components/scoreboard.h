@@ -128,6 +128,10 @@ class CScoreboard : public CComponent
 public:
 	CScoreboard();
 	int Sizeof() const override { return sizeof(*this); }
+	static bool ShouldAutoShowOnDeath(bool ConfigEnabled, bool HasLocalInfo, bool Spectating, bool GamePaused, bool HasLocalCharacter)
+	{
+		return ConfigEnabled && HasLocalInfo && !Spectating && !GamePaused && !HasLocalCharacter;
+	}
 	void OnConsoleInit() override;
 	void OnInit() override;
 	void OnReset() override;

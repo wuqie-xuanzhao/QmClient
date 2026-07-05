@@ -742,6 +742,9 @@ Audio init failed, check details below and logs
 Audio issue
 == Проблема с аудио
 
+Audio pack directory
+== Папка аудиопаков
+
 Audio pack exported.
 == Аудиопакет экспортирован.
 
@@ -3186,6 +3189,9 @@ Hide player messages
 
 Hide scoreboard
 == Скрыть таблицу очков
+
+Hide server information on join
+== Скрывать информацию сервера при входе
 
 Hide server prompt notifications
 == Скрыть уведомления-подсказки сервера
@@ -6685,6 +6691,9 @@ Show score
 Show scoreboard
 == Показать таблицу счёта
 
+Show scoreboard after death
+== Показывать таблицу счёта после смерти
+
 Show seconds on clock
 == Показывать секунды на часах
 
@@ -9987,6 +9996,9 @@ Zoom out
 
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == Сброс статистики при входе на сервер (0 = накопительная статистика, 1 = сброс при каждом входе)
+
+进图时不自动显示服务器信息
+== Не показывать информацию сервера автоматически при входе
 
 远离行每行缩小百分比
 == Lyrics scale shrink percent per distance line

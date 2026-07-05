@@ -742,6 +742,9 @@ Audio init failed, check details below and logs
 Audio issue
 == Pending japanese translation 2502fbbfdb
 
+Audio pack directory
+== オーディオパックのフォルダー
+
 Audio pack exported.
 == オーディオパックがエクスポートされました。
 
@@ -3186,6 +3189,9 @@ Hide player messages
 
 Hide scoreboard
 == Pending japanese translation 0f1a32630d
+
+Hide server information on join
+== 参加時にサーバー情報を非表示
 
 Hide server prompt notifications
 == Pending japanese translation 9f3cca8fee
@@ -6685,6 +6691,9 @@ Show score
 Show scoreboard
 == Pending japanese translation 34cb0df2df
 
+Show scoreboard after death
+== 死亡後にスコアボードを表示
+
 Show seconds on clock
 == Pending japanese translation 7b42bb83a0
 
@@ -9987,6 +9996,9 @@ Zoom out
 
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == Pending japanese translation f4a66257be
+
+进图时不自动显示服务器信息
+== 参加時にサーバー情報を自動表示しない
 
 远离行每行缩小百分比
 == Lyrics scale shrink percent per distance line

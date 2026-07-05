@@ -742,6 +742,9 @@ Audio init failed, check details below and logs
 Audio issue
 == Ses sorunu
 
+Audio pack directory
+== Ses paketi klasörü
+
 Audio pack exported.
 == Ses paketi dışa aktarıldı.
 
@@ -3186,6 +3189,9 @@ Hide player messages
 
 Hide scoreboard
 == Skor tablosunu gizle
+
+Hide server information on join
+== Girerken sunucu bilgisini gizle
 
 Hide server prompt notifications
 == Sunucu uyarı bildirimlerini gizle
@@ -6685,6 +6691,9 @@ Show score
 Show scoreboard
 == Skor tablosunu göster
 
+Show scoreboard after death
+== Ölümden sonra skor tablosunu göster
+
 Show seconds on clock
 == Saatte saniyeleri göster
 
@@ -9987,6 +9996,9 @@ Zoom out
 
 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 == Sunucuya girerken istatistikleri sıfırla (0=Kümülatif istatistikler, 1=Her girişte sıfırla)
+
+进图时不自动显示服务器信息
+== Girerken sunucu bilgisini otomatik gösterme
 
 远离行每行缩小百分比
 == Lyrics scale shrink percent per distance line
