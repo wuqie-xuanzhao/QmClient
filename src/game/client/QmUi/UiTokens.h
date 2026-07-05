@@ -163,7 +163,7 @@ namespace ui_token::motion
 	inline constexpr const SUiAnimTransition &TOAST_SLIDE = ui_curve::EMPHASIZED;
 	inline constexpr const SUiAnimTransition &TOOLTIP_FADE = ui_curve::DECELERATE;
 	inline constexpr const SUiSpringConfig &TOGGLE_SPRING = ui_spring::SNAPPY;
-	inline constexpr SUiSpringConfig CARD_REORDER{1.0f, 2.0f, 1.4f, 0.003f, 0.01f};
+	inline constexpr SUiSpringConfig CARD_REORDER{1.0f, 120.0f, 22.0f, 0.01f, 0.05f};
 
 	inline constexpr const SUiAnimTransition &BTN_HOVER = HOVER_FADE;
 	inline constexpr const SUiAnimTransition &BTN_PRESS = PRESS_SCALE;

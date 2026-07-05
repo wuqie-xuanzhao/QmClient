@@ -598,6 +598,24 @@ TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabled)
 	EXPECT_EQ(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 2, 0, 2"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, QmDefaultOffMigrationKeepsExplicitLegacyValues)
+{
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config.cpp");
+	const std::string ClientSource = ReadTextFile("src/engine/client/client.cpp");
+	const std::string DomainSource = ReadTextFile("src/engine/shared/config_domains.h");
+	const std::string IncludeSource = ReadTextFile("src/engine/shared/config_includes.h");
+
+	EXPECT_NE(IncludeSource.find("SET_CONFIG_DOMAIN(ConfigDomain::QMCLIENT)\n#include \"config_variables_qmclient.h\""), std::string::npos);
+	EXPECT_NE(DomainSource.find("CONFIG_DOMAIN(QMCLIENT, \"QmClient/settings_qmclient.cfg\", \"settings_qmclient.cfg\", true)"), std::string::npos);
+	EXPECT_NE(ClientSource.find("pConfigManager->Init();"), std::string::npos);
+	EXPECT_NE(ClientSource.find("if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))"), std::string::npos);
+	EXPECT_LT(ClientSource.find("pConfigManager->Init();"), ClientSource.find("if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))"));
+	EXPECT_NE(ConfigSource.find("pVariable->m_ConfigDomain == ConfigDomain && (pVariable->m_Flags & CFGFLAG_SAVE) != 0 && !pVariable->IsDefault()"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("pVariable->Serialize(aLineBuf, sizeof(aLineBuf));"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("WriteLine(aLineBuf, ConfigDomain);"), std::string::npos);
+	EXPECT_EQ(ConfigSource.find("Reset(\"qm_"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 {
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");

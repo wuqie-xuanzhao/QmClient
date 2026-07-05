@@ -6032,7 +6032,7 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(Header.find("BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
 	EXPECT_NE(Header.find("FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
 	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
-	EXPECT_NE(QmClient.find("ScrollConfig.m_WheelScale = 30.0f * UiScale;"), std::string::npos);
+	EXPECT_NE(QmClient.find("ScrollConfig.m_WheelScale = 10.0f * UiScale;"), std::string::npos);
 	EXPECT_NE(QmClient.find("ScrollConfig.m_MaxOverscroll = 0.0f;"), std::string::npos);
 	EXPECT_NE(QmClient.find("ScrollInput.m_Hovered = Ui()->MouseHovered(pView);"), std::string::npos);
 	EXPECT_NE(QmClient.find("ScrollInput.m_WheelDelta += 120.0f;"), std::string::npos);
