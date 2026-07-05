@@ -4479,11 +4479,12 @@ void CMenus::FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsSc
 CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 {
 	SQmSettingsCardStyle Style;
+	const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);
 	Style.m_Padding = std::clamp(14.0f * UiScale, 10.0f, 14.0f);
 	Style.m_Spacing = std::clamp(16.0f * UiScale, 10.0f, 16.0f);
 	Style.m_CornerRadius = std::clamp(10.0f * UiScale, 7.0f, 10.0f);
-	Style.m_ScrollbarWidth = std::clamp(28.0f * UiScale, 24.0f, 28.0f);
-	Style.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
+	Style.m_ScrollbarWidth = ScrollStyle.m_ScrollbarWidth;
+	Style.m_ScrollbarMargin = ScrollStyle.m_ScrollbarMargin;
 	return Style;
 }
 

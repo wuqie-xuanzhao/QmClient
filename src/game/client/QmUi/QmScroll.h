@@ -49,6 +49,16 @@ struct SQmScrollContainerStyle
 	float m_ContentDragThreshold = 6.0f;
 };
 
+enum class EQmScrollSize
+{
+	SMALL,
+	MEDIUM,
+	LARGE,
+};
+
+SQmScrollContainerStyle QmScrollContainerStyleForSize(EQmScrollSize Size, float UiScale = 1.0f);
+SQmScrollConfig QmNativeWheelScrollConfig(float UiScale, float SmoothScrollTimeSec);
+
 class CQmScrollState
 {
 public:

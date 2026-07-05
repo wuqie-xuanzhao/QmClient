@@ -1585,6 +1585,30 @@ TEST(UiV2ScrollPhysics, NativeWheelStepMatchesDdnetScrollUnit)
 	EXPECT_NEAR(State.Offset(), 120.0f, 0.01f);
 }
 
+TEST(UiV2ScrollPhysics, PresetsExposeSharedSmallMediumLargeGeometry)
+{
+	const SQmScrollContainerStyle Small = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, 1.0f);
+	EXPECT_NEAR(Small.m_ScrollbarWidth, 10.0f, 0.01f);
+	EXPECT_NEAR(Small.m_ScrollbarMargin, 2.0f, 0.01f);
+	EXPECT_NEAR(Small.m_MinThumbHeight, 36.0f, 0.01f);
+
+	const SQmScrollContainerStyle Medium = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);
+	EXPECT_NEAR(Medium.m_ScrollbarWidth, 20.0f, 0.01f);
+	EXPECT_NEAR(Medium.m_ScrollbarMargin, 5.0f, 0.01f);
+	EXPECT_NEAR(Medium.m_MinThumbHeight, 42.0f, 0.01f);
+
+	const SQmScrollContainerStyle Large = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, 1.0f);
+	EXPECT_NEAR(Large.m_ScrollbarWidth, 28.0f, 0.01f);
+	EXPECT_NEAR(Large.m_ScrollbarMargin, 8.0f, 0.01f);
+	EXPECT_NEAR(Large.m_MinThumbHeight, 48.0f, 0.01f);
+
+	const SQmScrollConfig NativeWheel = QmNativeWheelScrollConfig(1.0f, 0.5f);
+	EXPECT_NEAR(NativeWheel.m_WheelScale, 60.0f, 0.01f);
+	EXPECT_TRUE(NativeWheel.m_NativeWheelStep);
+	EXPECT_NEAR(NativeWheel.m_NativeWheelAnimationTime, 0.5f, 0.01f);
+	EXPECT_NEAR(NativeWheel.m_MaxOverscroll, 0.0f, 0.01f);
+}
+
 TEST(UiV2ScrollPhysics, OverscrollSpringsBackIntoRange)
 {
 	SQmScrollMetrics Metrics;

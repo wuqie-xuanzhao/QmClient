@@ -59,6 +59,41 @@ float SQmScrollMetrics::MaxOffset() const
 	return std::max(0.0f, m_ContentSize - m_ViewportSize);
 }
 
+SQmScrollContainerStyle QmScrollContainerStyleForSize(EQmScrollSize Size, float UiScale)
+{
+	SQmScrollContainerStyle Style;
+	switch(Size)
+	{
+	case EQmScrollSize::SMALL:
+		Style.m_ScrollbarWidth = std::clamp(10.0f * UiScale, 8.0f, 10.0f);
+		Style.m_ScrollbarMargin = std::clamp(2.0f * UiScale, 1.0f, 2.0f);
+		Style.m_MinThumbHeight = std::clamp(36.0f * UiScale, 24.0f, 36.0f);
+		break;
+	case EQmScrollSize::MEDIUM:
+		Style.m_ScrollbarWidth = std::clamp(20.0f * UiScale, 18.0f, 20.0f);
+		Style.m_ScrollbarMargin = std::clamp(5.0f * UiScale, 4.0f, 5.0f);
+		Style.m_MinThumbHeight = std::clamp(42.0f * UiScale, 30.0f, 42.0f);
+		break;
+	case EQmScrollSize::LARGE:
+		Style.m_ScrollbarWidth = std::clamp(28.0f * UiScale, 24.0f, 28.0f);
+		Style.m_ScrollbarMargin = std::clamp(8.0f * UiScale, 6.0f, 8.0f);
+		Style.m_MinThumbHeight = std::clamp(48.0f * UiScale, 36.0f, 48.0f);
+		break;
+	}
+	Style.m_ContentDragThreshold = std::clamp(6.0f * UiScale, 4.0f, 6.0f);
+	return Style;
+}
+
+SQmScrollConfig QmNativeWheelScrollConfig(float UiScale, float SmoothScrollTimeSec)
+{
+	SQmScrollConfig Config;
+	Config.m_WheelScale = 60.0f * UiScale;
+	Config.m_NativeWheelStep = true;
+	Config.m_NativeWheelAnimationTime = SmoothScrollTimeSec;
+	Config.m_MaxOverscroll = 0.0f;
+	return Config;
+}
+
 void CQmScrollState::Reset()
 {
 	m_Offset = 0.0f;

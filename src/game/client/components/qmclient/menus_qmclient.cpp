@@ -514,17 +514,13 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 	Frame.m_ClipRect = *pView;
 	Frame.m_PreviousOffsetY = PreviousOffsetY;
 	Frame.m_Enabled = Enabled;
+	Frame.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);
 	Frame.m_Style.m_ScrollbarWidth = CardStyle.m_ScrollbarWidth;
 	Frame.m_Style.m_ScrollbarMargin = CardStyle.m_ScrollbarMargin;
-	Frame.m_Style.m_MinThumbHeight = std::clamp(48.0f * UiScale, 36.0f, 48.0f);
 	if(!Enabled)
 		return Frame;
 
-	SQmScrollConfig ScrollConfig;
-	ScrollConfig.m_WheelScale = 60.0f * UiScale;
-	ScrollConfig.m_NativeWheelStep = true;
-	ScrollConfig.m_NativeWheelAnimationTime = g_Config.m_UiSmoothScrollTime / 1000.0f;
-	ScrollConfig.m_MaxOverscroll = 0.0f;
+	const SQmScrollConfig ScrollConfig = QmNativeWheelScrollConfig(UiScale, g_Config.m_UiSmoothScrollTime / 1000.0f);
 
 	SQmScrollContainerInput ScrollInput;
 	ScrollInput.m_Hovered = Ui()->MouseHovered(pView);

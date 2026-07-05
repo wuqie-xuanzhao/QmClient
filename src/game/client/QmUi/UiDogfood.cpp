@@ -57,9 +57,7 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 	const char *pItemLabel = Localize("Item");
 	const float ContentHeight = 520.0f;
 	ui_widget::SScrollContainerProps ScrollProps;
-	ScrollProps.m_Style.m_ScrollbarWidth = 10.0f;
-	ScrollProps.m_Style.m_ScrollbarMargin = 2.0f;
-	ScrollProps.m_Style.m_MinThumbHeight = 36.0f;
+	ScrollProps.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, 1.0f);
 
 	ui_widget::ScrollContainer(Ctx, s_DogfoodScroll, Body, ContentHeight, ScrollProps, [&](CUIRect BodyContent) {
 		Body = BodyContent;
