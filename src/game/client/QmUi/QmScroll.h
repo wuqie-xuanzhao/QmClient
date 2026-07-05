@@ -16,6 +16,8 @@ struct SQmScrollMetrics
 struct SQmScrollConfig
 {
 	float m_WheelScale = 1.0f;
+	bool m_NativeWheelStep = false;
+	float m_NativeWheelAnimationTime = 0.5f;
 	float m_Friction = 9.0f;
 	float m_OverscrollStiffness = 120.0f;
 	float m_OverscrollDamping = 22.0f;
@@ -62,6 +64,10 @@ private:
 	float m_Offset = 0.0f;
 	float m_Velocity = 0.0f;
 	float m_LastMaxOffset = 0.0f;
+	float m_AnimTime = 0.0f;
+	float m_AnimTimeMax = 0.0f;
+	float m_AnimStartOffset = 0.0f;
+	float m_AnimTargetOffset = 0.0f;
 };
 
 struct SQmScrollContainerFrame

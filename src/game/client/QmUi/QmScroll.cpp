@@ -64,6 +64,10 @@ void CQmScrollState::Reset()
 	m_Offset = 0.0f;
 	m_Velocity = 0.0f;
 	m_LastMaxOffset = 0.0f;
+	m_AnimTime = 0.0f;
+	m_AnimTimeMax = 0.0f;
+	m_AnimStartOffset = 0.0f;
+	m_AnimTargetOffset = 0.0f;
 }
 
 void CQmScrollState::SetOffset(float Offset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config, bool AllowOverscroll)
@@ -80,6 +84,10 @@ void CQmScrollState::SetOffset(float Offset, const SQmScrollMetrics &Metrics, co
 	m_Offset = std::clamp(Offset, MinAllowed, MaxAllowed);
 	m_Velocity = 0.0f;
 	m_LastMaxOffset = MaxOffset;
+	m_AnimTime = 0.0f;
+	m_AnimTimeMax = 0.0f;
+	m_AnimStartOffset = m_Offset;
+	m_AnimTargetOffset = m_Offset;
 }
 
 void CQmScrollState::AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config)
@@ -88,6 +96,26 @@ void CQmScrollState::AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &M
 	if(MaxOffset <= 0.0f)
 	{
 		Reset();
+		return;
+	}
+
+	if(Config.m_NativeWheelStep)
+	{
+		const float WheelSteps = -WheelDelta / 120.0f;
+		const float BaseOffset = m_AnimTime > 0.0f ? m_AnimTargetOffset : m_Offset;
+		const float TargetOffset = std::clamp(BaseOffset + WheelSteps * Config.m_WheelScale, 0.0f, MaxOffset);
+		m_Offset = std::clamp(m_Offset, 0.0f, MaxOffset);
+		m_Velocity = 0.0f;
+		m_AnimStartOffset = m_Offset;
+		m_AnimTargetOffset = TargetOffset;
+		m_AnimTimeMax = std::max(0.0f, Config.m_NativeWheelAnimationTime);
+		m_AnimTime = m_AnimTimeMax;
+		if(m_AnimTimeMax <= 0.0f || std::abs(m_AnimStartOffset - m_AnimTargetOffset) < 0.5f)
+		{
+			m_Offset = m_AnimTargetOffset;
+			m_AnimTime = 0.0f;
+		}
+		m_LastMaxOffset = MaxOffset;
 		return;
 	}
 
@@ -121,6 +149,21 @@ void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQ
 		return;
 
 	const float ClampedDt = std::min(Dt, 1.0f / 15.0f);
+
+	if(Config.m_NativeWheelStep && m_AnimTime > 0.0f)
+	{
+		m_AnimTargetOffset = std::clamp(m_AnimTargetOffset, 0.0f, MaxOffset);
+		m_AnimStartOffset = std::clamp(m_AnimStartOffset, 0.0f, MaxOffset);
+		m_AnimTime -= ClampedDt;
+		if(m_AnimTime < 0.0f)
+			m_AnimTime = 0.0f;
+		const float AnimProgress = m_AnimTimeMax > 0.0f ? 1.0f - std::pow(m_AnimTime / m_AnimTimeMax, 3.0f) : 1.0f;
+		m_Offset = m_AnimStartOffset + (m_AnimTargetOffset - m_AnimStartOffset) * AnimProgress;
+		if(m_AnimTime <= 0.0f)
+			m_Offset = m_AnimTargetOffset;
+		return;
+	}
+
 	const float LowerOverscroll = std::min(0.0f, m_Offset);
 	const float UpperOverscroll = std::max(0.0f, m_Offset - MaxOffset);
 	const float Overscroll = LowerOverscroll != 0.0f ? LowerOverscroll : UpperOverscroll;

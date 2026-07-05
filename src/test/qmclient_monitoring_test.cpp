@@ -1490,6 +1490,7 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 1047, "dynamic-value"},
 		{pFile, 1048, "dynamic-value"},
 		{pFile, 1049, "dynamic-value"},
+		{pFile, 1050, "dynamic-value"},
 		{pFile, 1054, "dynamic-value"},
 		{pFile, 1056, "dynamic-value"},
 		{pFile, 1058, "dynamic-value"},
@@ -1498,6 +1499,7 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 1066, "dynamic-value"},
 		{pFile, 1067, "dynamic-value"},
 		{pFile, 1068, "dynamic-value"},
+		{pFile, 1069, "dynamic-value"},
 	};
 	const std::vector<SStableTextCandidate> vUnexpected = FilterCandidatesNotCoveredByMenuPoolOrAllowlist(pFile, vCandidates, vAllowlist);
 	EXPECT_TRUE(vUnexpected.empty()) << JoinCandidates(vUnexpected);
@@ -6038,8 +6040,9 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(Header.find("BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
 	EXPECT_NE(Header.find("FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
 	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
-	EXPECT_NE(QmClient.find("ScrollConfig.m_WheelScale = 5.0f * UiScale;"), std::string::npos);
-	EXPECT_NE(QmClient.find("ScrollConfig.m_Friction = 14.0f;"), std::string::npos);
+	EXPECT_NE(QmClient.find("ScrollConfig.m_WheelScale = 60.0f * UiScale;"), std::string::npos);
+	EXPECT_NE(QmClient.find("ScrollConfig.m_NativeWheelStep = true;"), std::string::npos);
+	EXPECT_NE(QmClient.find("ScrollConfig.m_NativeWheelAnimationTime = g_Config.m_UiSmoothScrollTime / 1000.0f;"), std::string::npos);
 	EXPECT_NE(QmClient.find("ScrollConfig.m_MaxOverscroll = 0.0f;"), std::string::npos);
 	EXPECT_NE(QmClient.find("ScrollInput.m_Hovered = Ui()->MouseHovered(pView);"), std::string::npos);
 	EXPECT_NE(QmClient.find("ScrollInput.m_WheelDelta += 120.0f;"), std::string::npos);

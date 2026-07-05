@@ -1555,24 +1555,34 @@ TEST(UiV2ScrollPhysics, WheelImpulseDecaysAndClampsToRange)
 	EXPECT_NEAR(State.Velocity(), 0.0f, 0.5f);
 }
 
-TEST(UiV2ScrollPhysics, CustomWheelScaleHasSlowSettingsStep)
+TEST(UiV2ScrollPhysics, NativeWheelStepMatchesDdnetScrollUnit)
 {
 	SQmScrollMetrics Metrics;
 	Metrics.m_ViewportSize = 100.0f;
 	Metrics.m_ContentSize = 500.0f;
 	SQmScrollConfig Config;
-	Config.m_WheelScale = 5.0f;
-	Config.m_Friction = 14.0f;
+	Config.m_WheelScale = 60.0f;
+	Config.m_NativeWheelStep = true;
 
 	CQmScrollState State;
 	State.AddWheelImpulse(-120.0f, Metrics, Config);
 
-	EXPECT_NEAR(State.Offset(), 10.0f, 0.01f);
-	EXPECT_GT(State.Velocity(), 0.0f);
+	EXPECT_NEAR(State.Offset(), 0.0f, 0.01f);
+	EXPECT_NEAR(State.Velocity(), 0.0f, 0.01f);
 
 	State.Advance(1.0f / 60.0f, Metrics, Config);
-	EXPECT_GT(State.Offset(), 10.0f);
-	EXPECT_LT(State.Offset(), 25.0f);
+	EXPECT_GT(State.Offset(), 0.0f);
+	EXPECT_LT(State.Offset(), 60.0f);
+
+	for(int i = 0; i < 40; ++i)
+		State.Advance(1.0f / 60.0f, Metrics, Config);
+	EXPECT_NEAR(State.Offset(), 60.0f, 0.01f);
+	EXPECT_NEAR(State.Velocity(), 0.0f, 0.01f);
+
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+	for(int i = 0; i < 40; ++i)
+		State.Advance(1.0f / 60.0f, Metrics, Config);
+	EXPECT_NEAR(State.Offset(), 120.0f, 0.01f);
 }
 
 TEST(UiV2ScrollPhysics, OverscrollSpringsBackIntoRange)

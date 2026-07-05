@@ -521,8 +521,9 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 		return Frame;
 
 	SQmScrollConfig ScrollConfig;
-	ScrollConfig.m_WheelScale = 5.0f * UiScale;
-	ScrollConfig.m_Friction = 14.0f;
+	ScrollConfig.m_WheelScale = 60.0f * UiScale;
+	ScrollConfig.m_NativeWheelStep = true;
+	ScrollConfig.m_NativeWheelAnimationTime = g_Config.m_UiSmoothScrollTime / 1000.0f;
 	ScrollConfig.m_MaxOverscroll = 0.0f;
 
 	SQmScrollContainerInput ScrollInput;
