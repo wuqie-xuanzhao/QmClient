@@ -6764,6 +6764,25 @@ TEST(QmMonitoringHelpers, TClientWarListSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_PlayerSearchInput, &PlayerSearch"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientWarListTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientWarListTextInputCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("TClientWarListTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_warlist_text_inputs\");"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(TClientWarListTextInputCtx, &s_NameInput, ButtonL, Localize(\"Name\"), 12.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(TClientWarListTextInputCtx, &s_ClanInput, ButtonR, Localize(\"Clan\"), 12.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(TClientWarListTextInputCtx, &s_ReasonInput, Button, Localize(\"Reason\"), 12.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(TClientWarListTextInputCtx, &s_TypeNameInput, Button, Localize(\"Group name\"), 12.0f);"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_NameInput, &ButtonL, 12.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_ClanInput, &ButtonR, 12.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_ReasonInput, &Button, 12.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TypeNameInput, &Button, 12.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, ControlsQuickSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");

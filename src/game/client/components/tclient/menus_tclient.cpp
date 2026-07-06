@@ -4060,6 +4060,12 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 	TClientWarListPlayerSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	TClientWarListPlayerSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_player_search");
 	TClientWarListPlayerSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	IUiContext TClientWarListTextInputCtx;
+	TClientWarListTextInputCtx.m_pUi = Ui();
+	TClientWarListTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientWarListTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientWarListTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_text_inputs");
+	TClientWarListTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 	{
 		CPerfTimer ListTimer;
@@ -4217,7 +4223,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		s_NameInput.SetBuffer(s_aEntryName, sizeof(s_aEntryName));
 		s_NameInput.SetEmptyText(Localize("Name"));
 		if(s_IsName)
-			Ui()->DoEditBox(&s_NameInput, &ButtonL, 12.0f);
+			ui_widget::TextField(TClientWarListTextInputCtx, &s_NameInput, ButtonL, Localize("Name"), 12.0f);
 		else
 		{
 			ButtonL.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 15, 3.0f);
@@ -4231,7 +4237,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		s_ClanInput.SetBuffer(s_aEntryClan, sizeof(s_aEntryClan));
 		s_ClanInput.SetEmptyText(Localize("Clan"));
 		if(s_IsClan)
-			Ui()->DoEditBox(&s_ClanInput, &ButtonR, 12.0f);
+			ui_widget::TextField(TClientWarListTextInputCtx, &s_ClanInput, ButtonR, Localize("Clan"), 12.0f);
 		else
 		{
 			ButtonR.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 15, 3.0f);
@@ -4265,7 +4271,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		static CLineInput s_ReasonInput;
 		s_ReasonInput.SetBuffer(s_aEntryReason, sizeof(s_aEntryReason));
 		s_ReasonInput.SetEmptyText(Localize("Reason"));
-		Ui()->DoEditBox(&s_ReasonInput, &Button, 12.0f);
+		ui_widget::TextField(TClientWarListTextInputCtx, &s_ReasonInput, Button, Localize("Reason"), 12.0f);
 
 		static CButtonContainer s_AddButton, s_OverrideButton;
 		Column2.HSplitTop(MarginSmall, nullptr, &Column2);
@@ -4404,7 +4410,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		Column3.HSplitTop(HeadlineFontSize + MarginSmall, &Button, &Column3);
 		s_TypeNameInput.SetBuffer(s_aTypeName, sizeof(s_aTypeName));
 		s_TypeNameInput.SetEmptyText(Localize("Group name"));
-		Ui()->DoEditBox(&s_TypeNameInput, &Button, 12.0f);
+		ui_widget::TextField(TClientWarListTextInputCtx, &s_TypeNameInput, Button, Localize("Group name"), 12.0f);
 		static CButtonContainer s_AddGroupButton, s_OverrideGroupButton, s_GroupColorPicker;
 
 		Column3.HSplitTop(MarginSmall, nullptr, &Column3);
