@@ -6798,6 +6798,23 @@ TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_BindInput, &Button, EditBoxFontSize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientChatBindsTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(TClientChatBindsTextInputCtx, &BindDefault.m_LineInput, Input, BindDefault.m_Bind.m_aName, EditBoxFontSize)");
+	const size_t ActiveGuardPos = Body.find("&& BindDefault.m_LineInput.IsActive()", TextFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientChatBindsTextInputCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("TClientChatBindsTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_chatbinds_text_inputs\");"), std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_NE(ActiveGuardPos, std::string::npos);
+	EXPECT_LT(TextFieldPos, ActiveGuardPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&BindDefault.m_LineInput, &Input, EditBoxFontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, ControlsQuickSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");

@@ -3922,6 +3922,13 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)
 
 	// ***** All the stuff ***** //
 
+	IUiContext TClientChatBindsTextInputCtx;
+	TClientChatBindsTextInputCtx.m_pUi = Ui();
+	TClientChatBindsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientChatBindsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientChatBindsTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_chatbinds_text_inputs");
+	TClientChatBindsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 	auto DoBindchatDefault = [&](CUIRect &Column, CBindChat::CBindDefault &BindDefault) {
 		Column.HSplitTop(MarginSmall, nullptr, &Column);
 		Column.HSplitTop(LineSize, &Button, &Column);
@@ -3938,7 +3945,7 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)
 		DoSettingsLabelStreamed(TitleElement, &Title, Localize(BindDefault.m_pTitle), FontSize, TEXTALIGN_ML);
 		BindDefault.m_LineInput.SetBuffer(pName, BINDCHAT_MAX_NAME);
 		BindDefault.m_LineInput.SetEmptyText(BindDefault.m_Bind.m_aName);
-		if(Ui()->DoEditBox(&BindDefault.m_LineInput, &Input, EditBoxFontSize) && BindDefault.m_LineInput.IsActive())
+		if(ui_widget::TextField(TClientChatBindsTextInputCtx, &BindDefault.m_LineInput, Input, BindDefault.m_Bind.m_aName, EditBoxFontSize) && BindDefault.m_LineInput.IsActive())
 		{
 			if(!pOldBind && pName[0] != '\0')
 			{
