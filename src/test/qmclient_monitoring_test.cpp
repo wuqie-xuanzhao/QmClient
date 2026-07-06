@@ -1736,6 +1736,13 @@ TEST(QmMonitoringHelpers, TClientSettingsCardDeckDragRuntimeUsesCtrlHeaderGate)
 	EXPECT_NE(Source.find("CommitSettingsCardDeckDragDrop(pOrder, DropIndex);"), std::string::npos);
 	EXPECT_NE(Header.find("bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, int DropIndex);"), std::string::npos);
 	EXPECT_NE(Source.find("m_TClientSettingsCardDeckOrderDirty = true;"), std::string::npos);
+	EXPECT_NE(Source.find("LoadTClientOrderFromGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder)"), std::string::npos);
+	EXPECT_NE(Source.find("LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
+	EXPECT_NE(Source.find("const bool IsTClientMainOrder = pOrder == &m_vTClientLeftCardOrder || pOrder == &m_vTClientRightCardOrder;"), std::string::npos);
+	EXPECT_NE(Source.find("if(IsTClientMainOrder)"), std::string::npos);
+	EXPECT_NE(Source.find("SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder"), std::string::npos);
+	EXPECT_NE(Source.find("str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));"), std::string::npos);
+	EXPECT_EQ(Source.find("str_copy(g_Config.m_QmSettingsCardOrder, aSerialized"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardDeckApplyOrder(vSections, vOrder);"), std::string::npos);
 	EXPECT_NE(Source.find("WrapSettingsCardDeckSections(vLeftSections, ESettingsCardDeckColumn::LEFT, m_vTClientLeftCardOrder);"), std::string::npos);
 	EXPECT_NE(Source.find("WrapSettingsCardDeckSections(vRightSections, ESettingsCardDeckColumn::RIGHT, m_vTClientRightCardOrder);"), std::string::npos);

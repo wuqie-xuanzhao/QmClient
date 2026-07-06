@@ -86,6 +86,159 @@ typedef struct
 
 using namespace FontIcons;
 
+namespace
+{
+	bool ParseTClientGlobalCardColumn(const char *pColumn, ESettingsCardDeckColumn *pOutColumn)
+	{
+		if(pColumn == nullptr || pOutColumn == nullptr)
+			return false;
+		if(str_comp(pColumn, "left") == 0 || str_comp(pColumn, "0") == 0)
+		{
+			*pOutColumn = ESettingsCardDeckColumn::LEFT;
+			return true;
+		}
+		if(str_comp(pColumn, "right") == 0 || str_comp(pColumn, "1") == 0)
+		{
+			*pOutColumn = ESettingsCardDeckColumn::RIGHT;
+			return true;
+		}
+		return false;
+	}
+
+	bool LoadTClientOrderFromGlobalCardOrder(const char *pConfig, std::vector<std::string> &vLeftOrder, std::vector<std::string> &vRightOrder)
+	{
+		if(pConfig == nullptr || pConfig[0] == '\0')
+			return false;
+
+		struct SParsedTClientCard
+		{
+			std::string m_StableId;
+			ESettingsCardDeckColumn m_Column = ESettingsCardDeckColumn::LEFT;
+			int m_Order = 0;
+		};
+		std::vector<SParsedTClientCard> vParsed;
+		const char *pEntry = pConfig;
+		char aToken[160];
+		while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
+		{
+			if(aToken[0] == '\0')
+				continue;
+
+			char aStableId[80];
+			char aTab[48];
+			char aColumn[16];
+			char aOrder[16];
+			const char *pTab = str_next_token(aToken, "|", aStableId, sizeof(aStableId));
+			if(pTab == nullptr || str_startswith(aStableId, "tclient:") == nullptr)
+				continue;
+			const char *pColumn = str_next_token(pTab, "|", aTab, sizeof(aTab));
+			if(pColumn == nullptr)
+				continue;
+			const char *pOrder = str_next_token(pColumn, "|", aColumn, sizeof(aColumn));
+			if(pOrder == nullptr || str_next_token(pOrder, "|", aOrder, sizeof(aOrder)) == nullptr)
+				continue;
+
+			ESettingsCardDeckColumn Column = ESettingsCardDeckColumn::LEFT;
+			int Order = 0;
+			if(!ParseTClientGlobalCardColumn(aColumn, &Column) || !str_toint(aOrder, &Order))
+				continue;
+
+			vParsed.push_back({aStableId, Column, maximum(0, Order)});
+		}
+
+		if(vParsed.empty())
+			return false;
+
+		std::stable_sort(vParsed.begin(), vParsed.end(), [](const SParsedTClientCard &A, const SParsedTClientCard &B) {
+			if(A.m_Column != B.m_Column)
+				return A.m_Column == ESettingsCardDeckColumn::LEFT;
+			return A.m_Order < B.m_Order;
+		});
+
+		vLeftOrder.clear();
+		vRightOrder.clear();
+		for(const SParsedTClientCard &Card : vParsed)
+		{
+			if(Card.m_Column == ESettingsCardDeckColumn::LEFT)
+				vLeftOrder.push_back(Card.m_StableId);
+			else
+				vRightOrder.push_back(Card.m_StableId);
+		}
+		return true;
+	}
+
+	void LoadTClientOrderFromLegacyCardOrder(const char *pConfig, std::vector<std::string> &vLeftOrder, std::vector<std::string> &vRightOrder)
+	{
+		if(pConfig == nullptr || pConfig[0] == '\0')
+			return;
+		vLeftOrder.clear();
+		vRightOrder.clear();
+		const char *p = pConfig;
+		char aToken[128];
+		while((p = str_next_token(p, ";", aToken, sizeof(aToken))) != nullptr)
+		{
+			if(aToken[0] == '\0')
+				continue;
+			char aId[64];
+			const char *pRest = str_next_token(aToken, ":", aId, sizeof(aId));
+			if(pRest == nullptr)
+				continue;
+			char aCol[16];
+			str_next_token(pRest, ":", aCol, sizeof(aCol));
+			int Col = 0;
+			if(!str_toint(aCol, &Col))
+				continue;
+			if(Col == 0)
+				vLeftOrder.push_back(aId);
+			else if(Col == 1)
+				vRightOrder.push_back(aId);
+		}
+	}
+
+	void SerializeMergedTClientGlobalCardOrder(const char *pExistingGlobalOrder, const std::vector<std::string> &vLeftOrder, const std::vector<std::string> &vRightOrder, char *pOut, int OutSize)
+	{
+		if(pOut == nullptr || OutSize <= 0)
+			return;
+		pOut[0] = '\0';
+
+		bool First = true;
+		if(pExistingGlobalOrder != nullptr && pExistingGlobalOrder[0] != '\0')
+		{
+			const char *pEntry = pExistingGlobalOrder;
+			char aToken[160];
+			while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
+			{
+				if(aToken[0] == '\0')
+					continue;
+				char aStableId[80];
+				str_next_token(aToken, "|", aStableId, sizeof(aStableId));
+				if(str_startswith(aStableId, "tclient:") != nullptr)
+					continue;
+				if(!First)
+					str_append(pOut, ";", OutSize);
+				str_append(pOut, aToken, OutSize);
+				First = false;
+			}
+		}
+
+		auto AppendOrder = [&](const std::vector<std::string> &vOrder, const char *pColumn) {
+			for(size_t i = 0; i < vOrder.size(); ++i)
+			{
+				if(!First)
+					str_append(pOut, ";", OutSize);
+				char aEntry[160];
+				str_format(aEntry, sizeof(aEntry), "%s|tclient|%s|%d", vOrder[i].c_str(), pColumn, (int)i);
+				str_append(pOut, aEntry, OutSize);
+				First = false;
+			}
+		};
+		AppendOrder(vLeftOrder, "left");
+		AppendOrder(vRightOrder, "right");
+		if(pOut[0] != '\0')
+			str_append(pOut, ";", OutSize);
+	}
+}
+
 [[maybe_unused]] static float s_Time = 0.0f;
 [[maybe_unused]] static bool s_StartedTime = false;
 
@@ -1103,22 +1256,13 @@ bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, in
 	{
 		m_TClientSettingsCardDeckOrderDirty = true;
 		Moved = true;
-		// 持久化：序列化两列 → config
-		char aSerialized[sizeof(g_Config.m_QmSettingsCardOrder)];
-		aSerialized[0] = '\0';
-		for(size_t i = 0; i < m_vTClientLeftCardOrder.size(); ++i)
+		const bool IsTClientMainOrder = pOrder == &m_vTClientLeftCardOrder || pOrder == &m_vTClientRightCardOrder;
+		if(IsTClientMainOrder)
 		{
-			char aEntry[128];
-			str_format(aEntry, sizeof(aEntry), "%s:0:%d;", m_vTClientLeftCardOrder[i].c_str(), (int)i);
-			str_append(aSerialized, aEntry, sizeof(aSerialized));
+			char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+			SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder));
+			str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		}
-		for(size_t i = 0; i < m_vTClientRightCardOrder.size(); ++i)
-		{
-			char aEntry[128];
-			str_format(aEntry, sizeof(aEntry), "%s:1:%d;", m_vTClientRightCardOrder[i].c_str(), (int)i);
-			str_append(aSerialized, aEntry, sizeof(aSerialized));
-		}
-		str_copy(g_Config.m_QmSettingsCardOrder, aSerialized, sizeof(g_Config.m_QmSettingsCardOrder));
 	}
 	DragState = {};
 	return Moved;
@@ -1600,33 +1744,15 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	// 持久化：从 config 解析卡片顺序（str_comp cache 检测变化，避免每帧覆盖拖拽中的 vOrder）
 	if(!PrewarmOnly)
 	{
-		static char s_TClientCardOrderCache[sizeof(g_Config.m_QmSettingsCardOrder)] = {};
-		if(str_comp(s_TClientCardOrderCache, g_Config.m_QmSettingsCardOrder) != 0)
+		static char s_TClientGlobalCardOrderCache[sizeof(g_Config.m_QmGlobalCardOrder)] = {};
+		static char s_TClientLegacyCardOrderCache[sizeof(g_Config.m_QmSettingsCardOrder)] = {};
+		if(str_comp(s_TClientGlobalCardOrderCache, g_Config.m_QmGlobalCardOrder) != 0 ||
+			str_comp(s_TClientLegacyCardOrderCache, g_Config.m_QmSettingsCardOrder) != 0)
 		{
-			str_copy(s_TClientCardOrderCache, g_Config.m_QmSettingsCardOrder, sizeof(s_TClientCardOrderCache));
-			if(g_Config.m_QmSettingsCardOrder[0] != '\0')
-			{
-				m_vTClientLeftCardOrder.clear();
-				m_vTClientRightCardOrder.clear();
-				const char *p = g_Config.m_QmSettingsCardOrder;
-				char aToken[128];
-				while((p = str_next_token(p, ";", aToken, sizeof(aToken))) != nullptr)
-				{
-					if(aToken[0] == '\0')
-						continue;
-					char aId[64];
-					const char *pRest = str_next_token(aToken, ":", aId, sizeof(aId));
-					if(pRest == nullptr)
-						continue;
-					char aCol[16];
-					str_next_token(pRest, ":", aCol, sizeof(aCol));
-					int Col = atoi(aCol);
-					if(Col == 0)
-						m_vTClientLeftCardOrder.push_back(aId);
-					else if(Col == 1)
-						m_vTClientRightCardOrder.push_back(aId);
-				}
-			}
+			str_copy(s_TClientGlobalCardOrderCache, g_Config.m_QmGlobalCardOrder, sizeof(s_TClientGlobalCardOrderCache));
+			str_copy(s_TClientLegacyCardOrderCache, g_Config.m_QmSettingsCardOrder, sizeof(s_TClientLegacyCardOrderCache));
+			if(!LoadTClientOrderFromGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder))
+				LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);
 		}
 	}
 
