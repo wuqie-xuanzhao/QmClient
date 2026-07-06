@@ -1785,12 +1785,18 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		static CLineInputNumber s_aQueueIntervalInputs[NUM_DUMMIES];
 		CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];
 		const int PrevQueueInterval = QueueInterval;
+		IUiContext TeeSkinQueueIntervalTextInputCtx;
+		TeeSkinQueueIntervalTextInputCtx.m_pUi = Ui();
+		TeeSkinQueueIntervalTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+		TeeSkinQueueIntervalTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+		TeeSkinQueueIntervalTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_queue_interval_text_input");
+		TeeSkinQueueIntervalTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 		if(!QueueIntervalInput.IsActive() && str_comp(QueueIntervalInput.GetString(), std::to_string(QueueInterval).c_str()) != 0)
 		{
 			QueueIntervalInput.SetInteger(QueueInterval);
 			QueueIntervalInput.SelectAll();
 		}
-		const bool QueueIntervalEdited = Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput, 10.0f, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC);
+		const bool QueueIntervalEdited = ui_widget::TextField(TeeSkinQueueIntervalTextInputCtx, &QueueIntervalInput, IntervalInput, nullptr, 10.0f);
 		if(QueueIntervalInput.IsActive())
 		{
 			(void)QueueIntervalEdited;

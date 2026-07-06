@@ -4052,7 +4052,7 @@ TEST(QmMonitoringHelpers, SkinTransitionDurationLabelUsesSingleLineShrink)
 	EXPECT_NE(Body.find("DoQmSettingsLabel(\"qmclient-skin-transition-duration\", &LabelCol, Localize(\"Skin transition duration\"), LgBodySize, TEXTALIGN_ML, SkinTransitionDurationLabelProps);"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesReadableIntervalInput)
+TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesSharedIntervalTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
@@ -4080,7 +4080,28 @@ TEST(QmMonitoringHelpers, TeeSkinQueueOmitsCapacityAndUsesReadableIntervalInput)
 	EXPECT_NE(Body.find("QueueControlLabelProps.m_MinimumFontSize = 6.0f"), std::string::npos);
 	EXPECT_NE(Body.find("static CLineInputNumber s_aQueueIntervalInputs[NUM_DUMMIES];"), std::string::npos);
 	EXPECT_NE(Body.find("CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];"), std::string::npos);
-	EXPECT_NE(Body.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput, 10.0f, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC)"), std::string::npos);
+	const size_t InputCtxPos = Body.find("IUiContext TeeSkinQueueIntervalTextInputCtx;");
+	const size_t InputCtxUiPos = Body.find("TeeSkinQueueIntervalTextInputCtx.m_pUi = Ui();", InputCtxPos);
+	const size_t InputCtxAnimPos = Body.find("TeeSkinQueueIntervalTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", InputCtxUiPos);
+	const size_t InputCtxTreePos = Body.find("TeeSkinQueueIntervalTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", InputCtxAnimPos);
+	const size_t InputCtxScopePos = Body.find("TeeSkinQueueIntervalTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_queue_interval_text_input\");", InputCtxTreePos);
+	const size_t InputCtxFrameDtPos = Body.find("TeeSkinQueueIntervalTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", InputCtxScopePos);
+	const size_t TextFieldPos = Body.find("const bool QueueIntervalEdited = ui_widget::TextField(TeeSkinQueueIntervalTextInputCtx, &QueueIntervalInput, IntervalInput, nullptr, 10.0f);", InputCtxFrameDtPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(InputCtxPos, std::string::npos);
+	EXPECT_NE(InputCtxUiPos, std::string::npos);
+	EXPECT_NE(InputCtxAnimPos, std::string::npos);
+	EXPECT_NE(InputCtxTreePos, std::string::npos);
+	EXPECT_NE(InputCtxScopePos, std::string::npos);
+	EXPECT_NE(InputCtxFrameDtPos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_LT(InputCtxPos, InputCtxUiPos);
+	EXPECT_LT(InputCtxUiPos, InputCtxAnimPos);
+	EXPECT_LT(InputCtxAnimPos, InputCtxTreePos);
+	EXPECT_LT(InputCtxTreePos, InputCtxScopePos);
+	EXPECT_LT(InputCtxScopePos, InputCtxFrameDtPos);
+	EXPECT_LT(InputCtxFrameDtPos, TextFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput, 10.0f, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC)"), std::string::npos);
 	EXPECT_NE(Body.find("Ui()->DoLabel(&IntervalUnit, \"ms\""), std::string::npos);
 	EXPECT_EQ(Body.find("DoValueSelectorWithState(&s_aQueueIntervalInputIds[QueueDummy]"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoScrollbarH(&QueueInterval"), std::string::npos);
