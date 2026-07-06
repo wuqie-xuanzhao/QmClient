@@ -6238,6 +6238,7 @@ TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 	EXPECT_NE(Header.find("SETTINGS_SEARCH"), std::string::npos);
 	EXPECT_EQ(Header.find("QMCLIENT_SETTINGS_TAB_SEARCH"), std::string::npos);
 	EXPECT_NE(Header.find("CLineInputBuffered<128> m_QmClientModuleSearchInput;"), std::string::npos);
+	EXPECT_NE(Header.find("CLineInputBuffered<128> m_GlobalCardSearchInput;"), std::string::npos);
 	EXPECT_EQ(Header.find("m_aQmClientModuleSearchInputs"), std::string::npos);
 	EXPECT_NE(Settings.find("case CMenus::SETTINGS_SEARCH: return \"search\";"), std::string::npos);
 	EXPECT_NE(Menus.find("m_apSettingsTabs[SETTINGS_SEARCH] = Localize(\"Search\");"), std::string::npos);
@@ -6253,7 +6254,8 @@ TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 	EXPECT_EQ(SearchBody.find("RenderSettingsQmClientContent("), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("SETTINGS_SEARCH"), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("SearchTabActive"), std::string::npos);
-	EXPECT_NE(SearchContentBody.find("CLineInputBuffered<128> &ModuleSearchInput = m_QmClientModuleSearchInput;"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("CLineInputBuffered<128> &ModuleSearchInput = m_GlobalCardSearchInput;"), std::string::npos);
+	EXPECT_EQ(SearchContentBody.find("m_QmClientModuleSearchInput"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("RenderGlobalSearchResults(MainView, SearchVisibleGlobalCards, QmCardStyle, UiScale, PrewarmOnly, s_GlassCards);"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("GlobalSearchPage"), std::string::npos);
@@ -6266,6 +6268,7 @@ TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 	EXPECT_NE(SearchContentBody.find("Localize(\"Found %d global cards\")"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("g_Config.m_UiSettingsPage == SETTINGS_SEARCH"), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("m_aQmClientModuleSearchInputs["), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("m_GlobalCardSearchInput"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientSearchTabUsesGlobalCardRegistry)

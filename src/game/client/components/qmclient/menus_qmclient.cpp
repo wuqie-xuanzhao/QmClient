@@ -816,7 +816,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	MainView.VSplitLeft(OuterMargin, nullptr, &MainView);
 	s_GlassCards.clear();
 
-	CLineInputBuffered<128> &ModuleSearchInput = m_QmClientModuleSearchInput;
+	CLineInputBuffered<128> &ModuleSearchInput = m_GlobalCardSearchInput;
 	const char *pModuleSearch = ModuleSearchInput.GetString();
 	SQmGlobalSearchResults GlobalSearchResults;
 	CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);
@@ -890,8 +890,8 @@ void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSear
 			m_QmClientSettingsTab = Navigation.m_QmClientTab;
 		if(Navigation.m_TClientTab >= 0)
 			m_TClientSettingsTab = Navigation.m_TClientTab;
-		Ui()->ReleaseActiveTextInput(&m_QmClientModuleSearchInput);
-		m_QmClientModuleSearchInput.Deactivate();
+		Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
+		m_GlobalCardSearchInput.Deactivate();
 	}
 	CUIRect Content = CardRect;
 	Content.Margin(QmCardStyle.m_Padding, &Content);
