@@ -2427,6 +2427,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect BoxRect;
 			CUIRect TmpRect;
 			CUIRect VoteMessage;
+			IUiContext TClientVotingTextInputCtx;
+			TClientVotingTextInputCtx.m_pUi = Ui();
+			TClientVotingTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientVotingTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientVotingTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_voting_text_inputs");
+			TClientVotingTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			CurrentColumn.HSplitTop(MarginBetweenSections, nullptr, &CurrentColumn);
 			BoxRect = CurrentColumn;
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
@@ -2455,7 +2461,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Message to send in chat:"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_VoteMessage(g_Config.m_TcAutoVoteWhenFarMessage, sizeof(g_Config.m_TcAutoVoteWhenFarMessage));
 				s_VoteMessage.SetEmptyText(Localize("Leave empty to disable"));
-				Ui()->DoEditBox(&s_VoteMessage, &VoteMessage, EditBoxFontSize);
+				ui_widget::TextField(TClientVotingTextInputCtx, &s_VoteMessage, VoteMessage, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
