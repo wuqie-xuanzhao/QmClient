@@ -41,7 +41,7 @@ namespace qm_module
 	// CModel → 栖梦 config：CModel entries 转 SQmModuleEntry（key 用 stableId 去 "qm:" 前缀 = 持久化 key），SerializeLegacyQmLayout 输出。
 	void SerializeQmLayoutFromModel(char *pOut, int OutSize);
 	// CModel → 全局 config：用当前 Qm 子模型更新 qm:* 条目，同时保留已有 tclient:/deck: 等非 Qm 条目。
-	void SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize);
+	bool SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize);
 	bool MigrateQmLayoutToGlobalCardOrder(const std::vector<SQmModuleEntry> &vDefaults);
 	// CModel.Move + Full 保护（目标 Full 拒绝——非 Full 卡不可拖成 Full；源 Full 卡的拒拖由调用方 CommitDropPreview 保证）。返回是否移动。
 	bool MoveQmModuleInModel(EQmModuleId Id, EQmModuleColumn TargetColumn, int TargetOrder);

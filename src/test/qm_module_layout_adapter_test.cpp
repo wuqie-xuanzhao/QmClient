@@ -436,6 +436,28 @@ TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderDropsUnknownQmCards)
 	EXPECT_NE(Result.find("qm:chat_bubble|visual|right|"), std::string::npos);
 }
 
+// 意图：全局合并直接写固定长度 config buffer；容量不足必须显式失败，
+// 不能静默写回截断配置，否则下一次启动会把丢尾部卡片当成用户布局。
+TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderReportsTruncation)
+{
+	auto Defaults = MakeAll37Defaults();
+	LoadQmLayoutIntoModel("chat_bubble:right:0;camera_view:left:0", Defaults);
+
+	char aSmall[32];
+	EXPECT_FALSE(SerializeMergedGlobalCardOrderFromQmModel(
+		"tclient:visual-nameplates|tclient|left|0;",
+		aSmall,
+		sizeof(aSmall)));
+
+	char aFull[4096];
+	EXPECT_TRUE(SerializeMergedGlobalCardOrderFromQmModel(
+		"tclient:visual-nameplates|tclient|left|0;",
+		aFull,
+		sizeof(aFull)));
+	EXPECT_NE(std::string(aFull).find("tclient:visual-nameplates|tclient|left|0;"), std::string::npos);
+	EXPECT_NE(std::string(aFull).find("qm:chat_bubble|visual|right|"), std::string::npos);
+}
+
 // 意图：首次迁移把旧 Qm 排序落到全局 stableId|tab|column|order 格式，并标记完成。
 TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderWritesPipeFormatAndMarksMigrated)
 {
@@ -473,6 +495,24 @@ TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderPreservesRegistryOnlyQmCards)
 	const std::string Result(g_Config.m_QmGlobalCardOrder);
 	EXPECT_NE(Result.find("qm:chat_bubble|visual|right|"), std::string::npos);
 	EXPECT_NE(Result.find("qm:nameplate_text|hud|right|18;"), std::string::npos);
+}
+
+// 意图：迁移只有完整写出全局配置后才能覆盖 config 和标记完成；
+// 如果默认注册表未来超过固定 buffer，不能留下半截 qm_global_card_order。
+TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderDoesNotMarkOrMutateOnSerializeFailure)
+{
+	SConfigBackup Backup;
+	std::vector<SQmModuleEntry> Defaults;
+	for(int i = 0; i < 256; ++i)
+		Defaults.push_back({EQmModuleId::ChatBubble, EQmModuleColumn::Left, i, "chat_bubble"});
+	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0", sizeof(g_Config.m_QmSidebarCardOrder));
+	g_Config.m_QmGlobalCardOrder[0] = '\0';
+	g_Config.m_QmCardOrderMigrated = 0;
+
+	EXPECT_FALSE(MigrateQmLayoutToGlobalCardOrder(Defaults));
+
+	EXPECT_STREQ(g_Config.m_QmGlobalCardOrder, "");
+	EXPECT_EQ(g_Config.m_QmCardOrderMigrated, 0);
 }
 
 // 意图：已有全局排序或已迁移时不覆盖用户当前配置。

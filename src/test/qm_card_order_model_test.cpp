@@ -84,6 +84,21 @@ TEST(QmCardOrderModel, SerializeParseRoundtrip)
 	EXPECT_STREQ(M2.Entry(HudRight[0]).m_pDefaultTab, "hud");
 }
 
+// 意图：全局卡片配置依赖固定长度 config buffer；序列化必须暴露截断状态，
+// 否则新增卡片后可能静默丢尾部 placement，下一次启动再把布局误当成用户配置。
+TEST(QmCardOrderModel, SerializeReportsTruncation)
+{
+	qm_card_order::CModel M;
+	M.SetEntries({{"qm:first", "visual", 1, 0}, {"qm:second", "visual", 1, 1}});
+
+	char aSmallBuf[20];
+	EXPECT_FALSE(M.Serialize(aSmallBuf, sizeof(aSmallBuf)));
+
+	char aFullBuf[128];
+	EXPECT_TRUE(M.Serialize(aFullBuf, sizeof(aFullBuf)));
+	EXPECT_STREQ(aFullBuf, "qm:first|visual|left|0;qm:second|visual|left|1;");
+}
+
 TEST(QmCardOrderModel, ParsePipeFormatKeepsMovableTabPlacement)
 {
 	qm_card_order::CModel M;

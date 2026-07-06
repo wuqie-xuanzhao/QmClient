@@ -215,11 +215,12 @@ namespace qm_card_order
 		return It->second;
 	}
 
-	void CModel::Serialize(char *pBuf, int BufSize) const
+	bool CModel::Serialize(char *pBuf, int BufSize) const
 	{
 		if(pBuf == nullptr || BufSize <= 0)
-			return;
+			return false;
 		pBuf[0] = '\0';
+		bool Complete = true;
 		for(const SEntry &E : m_vEntries)
 		{
 			if(E.m_pStableId == nullptr)
@@ -229,8 +230,14 @@ namespace qm_card_order
 			if(pColumn == nullptr)
 				continue;
 			str_format(aEntry, sizeof(aEntry), "%s|%s|%s|%d;", E.m_pStableId, E.m_pDefaultTab != nullptr ? E.m_pDefaultTab : "", pColumn, E.m_OrderInColumn);
+			if(str_length(pBuf) + str_length(aEntry) >= BufSize)
+			{
+				Complete = false;
+				break;
+			}
 			str_append(pBuf, aEntry, BufSize);
 		}
+		return Complete;
 	}
 
 	bool CModel::Parse(const char *pStr, const std::vector<const char *> &vValidIds)

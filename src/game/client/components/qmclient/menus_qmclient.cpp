@@ -8063,11 +8063,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 
 		char aSerialized[sizeof(g_Config.m_QmSidebarCardOrder)];
 		qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));
+		char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+		if(!qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))
+			return false;
 		if(str_comp(aSerialized, g_Config.m_QmSidebarCardOrder) != 0)
 			str_copy(g_Config.m_QmSidebarCardOrder, aSerialized, sizeof(g_Config.m_QmSidebarCardOrder));
 		str_copy(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder, sizeof(s_aQmModuleLayoutConfigCache));
-		char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
-		qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder));
 		str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));
 		g_Config.m_QmCardOrderMigrated = 1;

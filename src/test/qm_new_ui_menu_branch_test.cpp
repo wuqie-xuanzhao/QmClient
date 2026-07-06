@@ -1597,7 +1597,10 @@ TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
 	ASSERT_FALSE(LaserBranch.empty());
-	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("BeginAppearanceCard(LeftColumn, LaserEnhancedMinCardHeight, s_LaserMeasuredEnhancedCardHeight, &EnhancedCard, \"appearance-laser-enhanced\""), std::string::npos);
+	EXPECT_NE(LaserBranch.find("BeginAppearanceCard(LeftColumn, LaserColorMinCardHeight, s_LaserMeasuredColorCardHeight, &ColorCard, \"appearance-laser-colors\""), std::string::npos);
+	EXPECT_NE(LaserBranch.find("BeginAppearanceCard(RightView, LaserPreviewMinCardHeight, s_LaserMeasuredPreviewCardHeight, &PreviewCard, \"appearance-laser-preview\""), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("RenderQmSettingsGlassCard(EnhancedCard, QmCardStyle);"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("static CScrollRegion s_LaserSettingsScrollRegion;"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("BeginSettingsScrollRegion(s_LaserSettingsScrollRegion, &LaserScrollView, ScrollParams"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);

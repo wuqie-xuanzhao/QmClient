@@ -49,7 +49,7 @@ namespace qm_card_order
 		int StateIndexForStableId(const char *pStableId) const;
 
 		// 持久化：格式 "stableId|tab|column|order;"；兼容旧 "id:col:order" 解析。
-		void Serialize(char *pBuf, int BufSize) const;
+		bool Serialize(char *pBuf, int BufSize) const;
 		// 容错解析：未知/重复/非法 key 跳过（照搬 ParseQmModuleLayout）
 		bool Parse(const char *pStr, const std::vector<const char *> &vValidIds);
 

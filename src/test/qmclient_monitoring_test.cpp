@@ -1508,6 +1508,13 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 1322, "dynamic-value"},
 		{pFile, 1324, "dynamic-value"},
 		{pFile, 1325, "dynamic-value"},
+		{pFile, 1308, "dynamic-value"},
+		{pFile, 1309, "dynamic-value"},
+		{pFile, 1315, "dynamic-value"},
+		{pFile, 1319, "dynamic-value"},
+		{pFile, 1323, "dynamic-value"},
+		{pFile, 1326, "dynamic-value"},
+		{pFile, 1327, "dynamic-value"},
 	};
 	const std::vector<SStableTextCandidate> vUnexpected = FilterCandidatesNotCoveredByMenuPoolOrAllowlist(pFile, vCandidates, vAllowlist);
 	EXPECT_TRUE(vUnexpected.empty()) << JoinCandidates(vUnexpected);
@@ -5014,24 +5021,24 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 	EXPECT_NE(NamePlateBranch.find("const float NamePlatePreviewContentHeight = HeadlineHeight + 2.0f * MarginSmall + 3.0f * LineSize + MarginSmall;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const float NamePlateEstimatedSettingsCardHeight = maximum(NamePlateScrollView.h, NamePlateSettingsContentHeight + 2.0f * NamePlateContentPaddingY);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const float NamePlateEstimatedPreviewCardHeight = maximum(NamePlateScrollView.h, NamePlatePreviewContentHeight + 2.0f * NamePlateContentPaddingY);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlateSettingsCardHeight = maximum(NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const float NamePlatePreviewCardHeight = maximum(NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("BeginAppearanceCard(LeftView, NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight, &NamePlateSettingsCard, \"appearance-name-plate-settings\""), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("BeginAppearanceCard(RightView, NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight, &NamePlatePreviewCard, \"appearance-name-plate-preview\""), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("const float NamePlateCardHeight"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlateSettingsCard.h = NamePlateSettingsCardHeight;"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsCard.h = NamePlateSettingsCardHeight;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("LeftView.HSplitTop(NamePlateContentPaddingY, nullptr, &LeftView);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("LeftView.HSplitBottom(NamePlateContentPaddingY, &LeftView, nullptr);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("CUIRect NamePlatePreviewCard = RightView;"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("LeftView.HSplitTop(NamePlateContentPaddingY, nullptr, &LeftView);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("LeftView.HSplitBottom(NamePlateContentPaddingY, &LeftView, nullptr);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("CUIRect NamePlatePreviewCard;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlateCardHeight;"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlatePreviewCardHeight;"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewCard.h = NamePlatePreviewCardHeight;"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewShadow.Draw(NamePlateSettingsShadowColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewCard.Draw(NamePlateSettingsGlassColor, IGraphics::CORNER_ALL, NamePlateCardCornerRadius);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewTopHighlight.Draw(NamePlateSettingsHighlightColor, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("RightView.HSplitTop(NamePlateContentPaddingY, nullptr, &RightView);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("RightView.HSplitBottom(NamePlateContentPaddingY, &RightView, nullptr);"), std::string::npos);
-	EXPECT_LT(NamePlateBranch.find("CUIRect NamePlatePreviewCard = RightView;"), NamePlateBranch.find("RenderNamePlatePreview"));
+	EXPECT_EQ(NamePlateBranch.find("RightView.HSplitTop(NamePlateContentPaddingY, nullptr, &RightView);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("RightView.HSplitBottom(NamePlateContentPaddingY, &RightView, nullptr);"), std::string::npos);
+	EXPECT_LT(NamePlateBranch.find("BeginAppearanceCard(RightView, NamePlateEstimatedPreviewCardHeight"), NamePlateBranch.find("RenderNamePlatePreview"));
 	EXPECT_NE(NamePlateBranch.find("static CScrollRegion s_NamePlateSettingsScrollRegion;"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateScrollView, ScrollParams"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("BeginSettingsScrollRegion(s_NamePlateSettingsScrollRegion, &NamePlateSettingsView"), std::string::npos);
@@ -6219,18 +6226,22 @@ TEST(QmMonitoringHelpers, QmClientDragPersistsGlobalCardOrder)
 	ASSERT_NE(CommitPos, std::string::npos);
 	const size_t DragPersistPos = QmMainBody.find("qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));", CommitPos);
 	const size_t ModelSyncPos = QmMainBody.find("const std::vector<SQmModuleEntry> vModelEntries = qm_module::SyncModelToLegacyLayout();", CommitPos);
-	const size_t GlobalMergePos = QmMainBody.find("SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder));", CommitPos);
+	const size_t GlobalMergePos = QmMainBody.find("if(!qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))", CommitPos);
+	const size_t GlobalMergeAbortPos = QmMainBody.find("return false;", GlobalMergePos);
 	const size_t GlobalCopyPos = QmMainBody.find("str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));", CommitPos);
 	const size_t GlobalCachePos = QmMainBody.find("str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));", CommitPos);
 	const size_t MigratedPos = QmMainBody.find("g_Config.m_QmCardOrderMigrated = 1;", CommitPos);
 	EXPECT_NE(DragPersistPos, std::string::npos);
 	EXPECT_NE(ModelSyncPos, std::string::npos);
 	EXPECT_NE(GlobalMergePos, std::string::npos);
+	EXPECT_NE(GlobalMergeAbortPos, std::string::npos);
 	EXPECT_NE(GlobalCopyPos, std::string::npos);
 	EXPECT_NE(GlobalCachePos, std::string::npos);
 	EXPECT_NE(MigratedPos, std::string::npos);
 	EXPECT_LT(ModelSyncPos, DragPersistPos);
 	EXPECT_LT(DragPersistPos, GlobalMergePos);
+	EXPECT_LT(GlobalMergePos, GlobalMergeAbortPos);
+	EXPECT_LT(GlobalMergeAbortPos, GlobalCopyPos);
 	EXPECT_LT(GlobalMergePos, GlobalCopyPos);
 	EXPECT_LT(GlobalCopyPos, GlobalCachePos);
 	EXPECT_EQ(QmMainBody.find("QmModuleLayoutModel().Serialize(g_Config.m_QmGlobalCardOrder"), std::string::npos);

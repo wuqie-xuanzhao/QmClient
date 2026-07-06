@@ -365,11 +365,24 @@ namespace qm_module
 		SerializeLegacyQmLayout(vEntries, pOut, OutSize);
 	}
 
-	void SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize)
+	bool SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize)
 	{
 		if(pOut == nullptr || OutSize <= 0)
-			return;
+			return false;
 		pOut[0] = '\0';
+
+		auto AppendToken = [&](const char *pToken, bool *pFirst) {
+			if(pToken == nullptr || pFirst == nullptr)
+				return false;
+			const int Needed = str_length(pOut) + str_length(pToken) + (*pFirst ? 0 : 1);
+			if(Needed >= OutSize)
+				return false;
+			if(!*pFirst)
+				str_append(pOut, ";", OutSize);
+			str_append(pOut, pToken, OutSize);
+			*pFirst = false;
+			return true;
+		};
 
 		qm_card_order::CModel &Model = QmModuleLayoutModel();
 		bool First = true;
@@ -390,28 +403,30 @@ namespace qm_module
 					if(qm_card_registry::FindByStableId(aStableId) == nullptr)
 						continue; // 注册表外旧残留不再带回全局配置
 				}
-				if(!First)
-					str_append(pOut, ";", OutSize);
-				str_append(pOut, aToken, OutSize);
-				First = false;
+				if(!AppendToken(aToken, &First))
+					return false;
 			}
 		}
 
 		char aQmEntries[4096];
-		Model.Serialize(aQmEntries, sizeof(aQmEntries));
+		if(!Model.Serialize(aQmEntries, sizeof(aQmEntries)))
+			return false;
 		char aToken[160];
 		const char *pEntry = aQmEntries;
 		while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
 		{
 			if(aToken[0] == '\0')
 				continue;
-			if(!First)
-				str_append(pOut, ";", OutSize);
-			str_append(pOut, aToken, OutSize);
-			First = false;
+			if(!AppendToken(aToken, &First))
+				return false;
 		}
 		if(pOut[0] != '\0')
+		{
+			if(str_length(pOut) + 1 >= OutSize)
+				return false;
 			str_append(pOut, ";", OutSize);
+		}
+		return true;
 	}
 
 	bool MigrateQmLayoutToGlobalCardOrder(const std::vector<SQmModuleEntry> &vDefaults)
@@ -429,8 +444,12 @@ namespace qm_module
 		DefaultGlobalModel.SetEntries(qm_card_registry::BuildDefaultEntries());
 		DefaultGlobalModel.ClearDirty();
 		char aDefaultGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
-		DefaultGlobalModel.Serialize(aDefaultGlobalOrder, sizeof(aDefaultGlobalOrder));
-		SerializeMergedGlobalCardOrderFromQmModel(aDefaultGlobalOrder, g_Config.m_QmGlobalCardOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+		if(!DefaultGlobalModel.Serialize(aDefaultGlobalOrder, sizeof(aDefaultGlobalOrder)))
+			return false;
+		char aMigratedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+		if(!SerializeMergedGlobalCardOrderFromQmModel(aDefaultGlobalOrder, aMigratedGlobalOrder, sizeof(aMigratedGlobalOrder)))
+			return false;
+		str_copy(g_Config.m_QmGlobalCardOrder, aMigratedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		g_Config.m_QmCardOrderMigrated = 1;
 		return g_Config.m_QmGlobalCardOrder[0] != '\0';
 	}
