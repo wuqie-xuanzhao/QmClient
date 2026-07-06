@@ -11,6 +11,7 @@
 #include <engine/shared/localization.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/key_binder.h>
@@ -178,7 +179,13 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	MainView.HSplitBottom(MARGIN, &MainView, nullptr);
 
 	// Quick search
-	if(Ui()->DoEditBox_Search(&m_FilterInput, &QuickSearch, FONT_SIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && !GameClient()->m_KeyBinder.IsActive()))
+	IUiContext ControlsSearchCtx;
+	ControlsSearchCtx.m_pUi = Ui();
+	ControlsSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	ControlsSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	ControlsSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_controls_search");
+	ControlsSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	if(ui_widget::SearchField(ControlsSearchCtx, &m_FilterInput, QuickSearch, FONT_SIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && !GameClient()->m_KeyBinder.IsActive()))
 	{
 		m_CurrentSearchMatch = 0;
 		UpdateSearchMatches();
