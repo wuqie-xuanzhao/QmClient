@@ -17,7 +17,7 @@ struct SQmScrollConfig
 {
 	float m_WheelScale = 10.0f;
 	bool m_NativeWheelStep = true;
-	float m_NativeWheelAnimationTime = 0.5f;
+	float m_NativeWheelAnimationTime = 0.0f;
 	float m_Friction = 9.0f;
 	float m_OverscrollStiffness = 120.0f;
 	float m_OverscrollDamping = 22.0f;

@@ -1847,19 +1847,35 @@ TEST(UiV2ScrollContainer, DefaultWheelInputUsesDdnetNativeStep)
 
 	Container.ScrollByWheel(-120.0f, View.h, 300.0f);
 	const SQmScrollContainerFrame FirstFrame = Container.Update(View, 300.0f, 0.0f);
+	EXPECT_NEAR(FirstFrame.m_Offset, 10.0f, 0.001f);
+	EXPECT_NEAR(Container.Velocity(), 0.0f, 0.001f);
+}
+
+TEST(UiV2ScrollContainer, ExplicitDdnetSmoothTimeUsesEaseOutStep)
+{
+	CQmScrollContainer Container;
+	CUIRect View;
+	View.x = 10.0f;
+	View.y = 20.0f;
+	View.w = 200.0f;
+	View.h = 100.0f;
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
+
+	Container.ScrollByWheel(-120.0f, View.h, 300.0f, Config);
+	const SQmScrollContainerFrame FirstFrame = Container.Update(View, 300.0f, 0.0f, Config);
 	EXPECT_NEAR(FirstFrame.m_Offset, 0.0f, 0.001f);
 
-	const SQmScrollContainerFrame HalfFrame = Container.Update(View, 300.0f, 0.25f);
+	const SQmScrollContainerFrame HalfFrame = Container.Update(View, 300.0f, 0.25f, Config);
 	EXPECT_NEAR(HalfFrame.m_Offset, 8.75f, 0.001f);
 
-	const SQmScrollContainerFrame DoneFrame = Container.Update(View, 300.0f, 0.25f);
+	const SQmScrollContainerFrame DoneFrame = Container.Update(View, 300.0f, 0.25f, Config);
 	EXPECT_NEAR(DoneFrame.m_Offset, 10.0f, 0.001f);
 
-	Container.ScrollByWheel(-360.0f, View.h, 300.0f);
-	Container.Update(View, 300.0f, 0.5f);
-	Container.Update(View, 300.0f, 0.125f);
-	Container.Update(View, 300.0f, 0.25f);
-	Container.Update(View, 300.0f, 0.25f);
+	Container.ScrollByWheel(-360.0f, View.h, 300.0f, Config);
+	Container.Update(View, 300.0f, 0.5f, Config);
+	Container.Update(View, 300.0f, 0.125f, Config);
+	Container.Update(View, 300.0f, 0.25f, Config);
+	Container.Update(View, 300.0f, 0.25f, Config);
 	EXPECT_NEAR(Container.Offset(), 20.0f, 0.001f);
 	EXPECT_NEAR(Container.Velocity(), 0.0f, 0.001f);
 }
