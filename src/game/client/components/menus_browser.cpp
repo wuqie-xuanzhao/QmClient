@@ -23,6 +23,7 @@
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
+#include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
 #include <game/voting.h>
 
@@ -1507,9 +1508,7 @@ void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,
 	vItemIds.resize(MaxItems);
 
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollbarThickness = 10.0f;
-	ScrollParams.m_ScrollbarMargin = 3.0f;
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::SMALL);
 	ScrollParams.m_ScrollUnit = 2.0f * ItemHeight;
 	ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
@@ -1912,8 +1911,9 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 	static CListBox s_ListBox;
 	View.VSplitLeft(5.0f, nullptr, &View);
 	s_ListBox.DoAutoSpacing(2.0f);
-	s_ListBox.SetScrollbarWidth(16.0f);
-	s_ListBox.SetScrollbarMargin(5.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
+	s_ListBox.SetScrollbarWidth(ScrollParams.m_ScrollbarThickness);
+	s_ListBox.SetScrollbarMargin(ScrollParams.m_ScrollbarMargin);
 	s_ListBox.DoStart(25.0f, pSelectedServer->m_NumReceivedClients, 1, 3, -1, &View, false, IGraphics::CORNER_NONE, true);
 
 	for(int i = 0; i < pSelectedServer->m_NumReceivedClients; i++)
@@ -2171,9 +2171,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	// friends list
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollbarThickness = 16.0f;
-	ScrollParams.m_ScrollbarMargin = 5.0f;
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
 	ScrollParams.m_ScrollUnit = 80.0f;
 	ScrollParams.m_ForceShowScrollbar = true;
 	s_ScrollRegion.Begin(&List, &ScrollOffset, &ScrollParams);
@@ -3359,8 +3357,9 @@ void CMenus::RenderServerbrowserQm(CUIRect View)
 	static std::vector<int> s_vQmServerItemIds;
 	s_vQmServerItemIds.resize(vQmServers.size());
 	s_QmServerListBox.DoAutoSpacing(2.0f);
-	s_QmServerListBox.SetScrollbarWidth(16.0f);
-	s_QmServerListBox.SetScrollbarMargin(5.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
+	s_QmServerListBox.SetScrollbarWidth(ScrollParams.m_ScrollbarThickness);
+	s_QmServerListBox.SetScrollbarMargin(ScrollParams.m_ScrollbarMargin);
 	s_QmServerListBox.DoStart(40.0f, vQmServers.size(), 1, 3, SelectedQmIndex, &List, false, IGraphics::CORNER_NONE, true);
 
 	for(size_t i = 0; i < vQmServers.size(); ++i)

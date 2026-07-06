@@ -8313,6 +8313,43 @@ TEST(QmMonitoringHelpers, ServerBrowserAddFriendInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_ClanInput, &Button, FontSize + 2.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, ServerBrowserScrollRegionsUseSharedQmScrollPresets)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string FilterBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,\n\tIFilterList &Filter,\n\tfloat ItemHeight, int MaxItems, int ItemsPerRow,\n\tCScrollRegion &ScrollRegion, std::vector<unsigned char> &vItemIds,\n\tbool UpdateCommunityCacheOnChange,\n\tconst std::function<const char *(int ItemIndex)> &GetItemName,\n\tconst std::function<void(int ItemIndex, CUIRect Item, const void *pItemId, bool Active)> &RenderItem)");
+	const std::string FriendsBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserFriends(CUIRect View)");
+	const std::string InfoScoreboardBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *pSelectedServer)");
+	const std::string QmBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserQm(CUIRect View)");
+	ASSERT_FALSE(FilterBody.empty());
+	ASSERT_FALSE(FriendsBody.empty());
+	ASSERT_FALSE(InfoScoreboardBody.empty());
+	ASSERT_FALSE(QmBody.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/ui_scrollregion.h>"), std::string::npos);
+	EXPECT_NE(FilterBody.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::SMALL);"), std::string::npos);
+	EXPECT_NE(FilterBody.find("ScrollParams.m_ScrollUnit = 2.0f * ItemHeight;"), std::string::npos);
+	EXPECT_EQ(FilterBody.find("ScrollParams.m_ScrollbarThickness = 10.0f;"), std::string::npos);
+	EXPECT_EQ(FilterBody.find("ScrollParams.m_ScrollbarMargin = 3.0f;"), std::string::npos);
+
+	EXPECT_NE(FriendsBody.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);"), std::string::npos);
+	EXPECT_NE(FriendsBody.find("ScrollParams.m_ScrollUnit = 80.0f;"), std::string::npos);
+	EXPECT_NE(FriendsBody.find("ScrollParams.m_ForceShowScrollbar = true;"), std::string::npos);
+	EXPECT_EQ(FriendsBody.find("ScrollParams.m_ScrollbarThickness = 16.0f;"), std::string::npos);
+	EXPECT_EQ(FriendsBody.find("ScrollParams.m_ScrollbarMargin = 5.0f;"), std::string::npos);
+
+	EXPECT_NE(InfoScoreboardBody.find("const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);"), std::string::npos);
+	EXPECT_NE(InfoScoreboardBody.find("s_ListBox.SetScrollbarWidth(ScrollParams.m_ScrollbarThickness);"), std::string::npos);
+	EXPECT_NE(InfoScoreboardBody.find("s_ListBox.SetScrollbarMargin(ScrollParams.m_ScrollbarMargin);"), std::string::npos);
+	EXPECT_EQ(InfoScoreboardBody.find("s_ListBox.SetScrollbarWidth(16.0f);"), std::string::npos);
+	EXPECT_EQ(InfoScoreboardBody.find("s_ListBox.SetScrollbarMargin(5.0f);"), std::string::npos);
+
+	EXPECT_NE(QmBody.find("const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);"), std::string::npos);
+	EXPECT_NE(QmBody.find("s_QmServerListBox.SetScrollbarWidth(ScrollParams.m_ScrollbarThickness);"), std::string::npos);
+	EXPECT_NE(QmBody.find("s_QmServerListBox.SetScrollbarMargin(ScrollParams.m_ScrollbarMargin);"), std::string::npos);
+	EXPECT_EQ(QmBody.find("s_QmServerListBox.SetScrollbarWidth(16.0f);"), std::string::npos);
+	EXPECT_EQ(QmBody.find("s_QmServerListBox.SetScrollbarMargin(5.0f);"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
