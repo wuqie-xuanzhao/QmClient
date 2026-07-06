@@ -6812,6 +6812,28 @@ TEST(QmMonitoringHelpers, IngameCallvoteSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_FilterInput, &QuickSearch, 14.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, DemoBrowserSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemActivated)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t NewUiSearchPos = Body.find("ui_widget::SearchField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, 13.0f");
+	const size_t NewUiRefreshPos = Body.find("RefreshFilteredDemos();", NewUiSearchPos);
+	const size_t LegacySearchPos = Body.find("ui_widget::SearchField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, 14.0f");
+	const size_t LegacyRefreshPos = Body.find("RefreshFilteredDemos();", LegacySearchPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext DemoBrowserSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("DemoBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash(\"demo_browser_search\");"), std::string::npos);
+	EXPECT_NE(NewUiSearchPos, std::string::npos);
+	EXPECT_NE(NewUiRefreshPos, std::string::npos);
+	EXPECT_LT(NewUiSearchPos, NewUiRefreshPos);
+	EXPECT_NE(LegacySearchPos, std::string::npos);
+	EXPECT_NE(LegacyRefreshPos, std::string::npos);
+	EXPECT_LT(LegacySearchPos, LegacyRefreshPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_DemoSearchInput, &DemoSearch"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 {
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");

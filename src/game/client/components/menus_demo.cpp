@@ -21,6 +21,7 @@
 
 #include <generated/client_data.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/console.h>
 #include <game/client/gameclient.h>
@@ -2563,6 +2564,12 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 	const bool BrowsingScreenshots = DemoBrowserBrowsingScreenshots();
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
 	const char *pBaseFolder = DemoBrowserBaseFolder();
+	IUiContext DemoBrowserSearchCtx;
+	DemoBrowserSearchCtx.m_pUi = Ui();
+	DemoBrowserSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	DemoBrowserSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	DemoBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash("demo_browser_search");
+	DemoBrowserSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 	const auto &&SetIconMode = [&](bool Enable) {
 		if(Enable)
@@ -2634,7 +2641,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			LeftGroup.VSplitLeft(minimum(SearchWidth, LeftGroup.w), &DemoSearch, &LeftGroup);
 			if(LeftGroup.w > TightSpacing)
 				LeftGroup.VSplitLeft(TightSpacing, nullptr, &LeftGroup);
-			if(Ui()->DoEditBox_Search(&m_DemoSearchInput, &DemoSearch, 13.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+			if(ui_widget::SearchField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, 13.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
 			{
 				RefreshFilteredDemos();
 				DemolistOnUpdate(false);
@@ -2880,7 +2887,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		CUIRect DemoSearch;
 		ButtonBarTop.VSplitLeft(ButtonBarBottom.h * 21.0f, &DemoSearch, &ButtonBarTop);
 		ButtonBarTop.VSplitLeft(ButtonBarTop.h / 2.0f, nullptr, &ButtonBarTop);
-		if(Ui()->DoEditBox_Search(&m_DemoSearchInput, &DemoSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+		if(ui_widget::SearchField(DemoBrowserSearchCtx, &m_DemoSearchInput, DemoSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
 		{
 			RefreshFilteredDemos();
 			DemolistOnUpdate(false);
