@@ -6619,7 +6619,9 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(FormsHeader.find("SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("inline SInputFieldResult BuildInputFieldResult(bool WasActive, bool IsActive, bool Changed, bool SubmitPressed, bool WasEmpty, bool IsEmpty, bool Clearable)"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("bool m_Changed = false;"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("bool m_Committed = false;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("bool m_Submitted = false;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("bool m_Deactivated = false;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("bool m_Cleared = false;"), std::string::npos);
@@ -6644,6 +6646,9 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(Forms.find("Ctx.m_pUi->DoEditBox(pInput"), std::string::npos);
 	EXPECT_NE(Forms.find("Ctx.m_pUi->DoClearableEditBox(pInput"), std::string::npos);
 	EXPECT_NE(Forms.find("Ctx.m_pUi->DoEditBox_Search(pInput"), std::string::npos);
+	EXPECT_NE(Forms.find("return ui_widget::BuildInputFieldResult(WasActive, pInput->IsActive(), Changed, SubmitPressed, WasEmpty, pInput->IsEmpty(), Clearable);"), std::string::npos);
+	EXPECT_NE(ClearableExBody.find("return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);"), std::string::npos);
+	EXPECT_NE(SearchExBody.find("return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);"), std::string::npos);
 	EXPECT_NE(ListItemBody.find("AnimateStateValue(Ctx, pId, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
 	EXPECT_EQ(TextFieldPlateBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	EXPECT_EQ(TextFieldExBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);

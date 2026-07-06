@@ -19,13 +19,10 @@ namespace ui_widget
 
 	namespace
 	{
-		SInputFieldResult BuildInputFieldResult(const IUiContext &Ctx, CLineInput *pInput, bool Changed, bool WasActive)
+		SInputFieldResult BuildInputFieldResult(const IUiContext &Ctx, CLineInput *pInput, bool Changed, bool WasActive, bool WasEmpty, bool Clearable)
 		{
-			SInputFieldResult Result;
-			Result.m_Changed = Changed;
-			Result.m_Deactivated = WasActive && !pInput->IsActive();
-			Result.m_Submitted = Result.m_Deactivated && Ctx.m_pUi != nullptr && (Ctx.m_pUi->Input()->KeyPress(KEY_RETURN) || Ctx.m_pUi->Input()->KeyPress(KEY_KP_ENTER));
-			return Result;
+			const bool SubmitPressed = Ctx.m_pUi != nullptr && (Ctx.m_pUi->Input()->KeyPress(KEY_RETURN) || Ctx.m_pUi->Input()->KeyPress(KEY_KP_ENTER));
+			return ui_widget::BuildInputFieldResult(WasActive, pInput->IsActive(), Changed, SubmitPressed, WasEmpty, pInput->IsEmpty(), Clearable);
 		}
 
 		void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect)
@@ -74,7 +71,7 @@ namespace ui_widget
 		const bool Changed = Ctx.m_pUi->DoEditBox(pInput, &Inner, FontSize);
 		DrawTextFieldPlaceholder(Ctx, pInput, Inner, pPlaceholder, FontSize);
 
-		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive);
+		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, false, false);
 	}
 
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
@@ -99,9 +96,7 @@ namespace ui_widget
 		TextRect.VSplitRight(TextRect.h, &TextRect, nullptr);
 		DrawTextFieldPlaceholder(Ctx, pInput, TextRect, pPlaceholder, FontSize);
 
-		SInputFieldResult Result = BuildInputFieldResult(Ctx, pInput, Changed, WasActive);
-		Result.m_Cleared = Changed && !WasEmpty && pInput->IsEmpty();
-		return Result;
+		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);
 	}
 
 	bool ClearableTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
@@ -121,9 +116,7 @@ namespace ui_widget
 		CUIRect Inner;
 		Rect.VMargin(ui_token::spacing::SM, &Inner);
 		const bool Changed = Ctx.m_pUi->DoEditBox_Search(pInput, &Inner, FontSize, HotkeyEnabled);
-		SInputFieldResult Result = BuildInputFieldResult(Ctx, pInput, Changed, WasActive);
-		Result.m_Cleared = Changed && !WasEmpty && pInput->IsEmpty();
-		return Result;
+		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);
 	}
 
 	bool SearchField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)

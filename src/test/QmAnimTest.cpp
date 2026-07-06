@@ -9,6 +9,7 @@
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/UiContext.h>
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiMotion.h>
 #include <game/client/QmUi/UiOverlays.h>
 #include <game/client/QmUi/UiTokens.h>
@@ -2313,6 +2314,27 @@ TEST(UiV2ScrollContainer, BlockedContentDragCancelsPendingCandidate)
 	Frame = Container.Update(View, 400.0f, 0.0f, Input);
 	EXPECT_FALSE(Container.ContentDragActive());
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
+}
+
+TEST(UiV2InputField, BuildsSharedResultForCommitAndClearStates)
+{
+	const ui_widget::SInputFieldResult ClickAwayCommit = ui_widget::BuildInputFieldResult(true, false, false, false, false, false, false);
+	EXPECT_FALSE(ClickAwayCommit.m_Changed);
+	EXPECT_TRUE(ClickAwayCommit.m_Deactivated);
+	EXPECT_TRUE(ClickAwayCommit.m_Committed);
+	EXPECT_FALSE(ClickAwayCommit.m_Submitted);
+	EXPECT_FALSE(ClickAwayCommit.m_Cleared);
+
+	const ui_widget::SInputFieldResult EnterSubmit = ui_widget::BuildInputFieldResult(true, false, false, true, false, false, false);
+	EXPECT_TRUE(EnterSubmit.m_Deactivated);
+	EXPECT_TRUE(EnterSubmit.m_Committed);
+	EXPECT_TRUE(EnterSubmit.m_Submitted);
+
+	const ui_widget::SInputFieldResult ClearButton = ui_widget::BuildInputFieldResult(true, true, true, false, false, true, true);
+	EXPECT_TRUE(ClearButton.m_Changed);
+	EXPECT_FALSE(ClearButton.m_Deactivated);
+	EXPECT_FALSE(ClearButton.m_Committed);
+	EXPECT_TRUE(ClearButton.m_Cleared);
 }
 
 TEST(UiV2DropdownGeometry, PositionsPopupRelativeToScrolledAnchor)

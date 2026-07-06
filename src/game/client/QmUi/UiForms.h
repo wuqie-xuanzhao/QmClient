@@ -45,10 +45,22 @@ namespace ui_widget
 	struct SInputFieldResult
 	{
 		bool m_Changed = false;
+		bool m_Committed = false;
 		bool m_Submitted = false;
 		bool m_Deactivated = false;
 		bool m_Cleared = false;
 	};
+
+	inline SInputFieldResult BuildInputFieldResult(bool WasActive, bool IsActive, bool Changed, bool SubmitPressed, bool WasEmpty, bool IsEmpty, bool Clearable)
+	{
+		SInputFieldResult Result;
+		Result.m_Changed = Changed;
+		Result.m_Deactivated = WasActive && !IsActive;
+		Result.m_Committed = Result.m_Deactivated;
+		Result.m_Submitted = Result.m_Deactivated && SubmitPressed;
+		Result.m_Cleared = Clearable && Changed && !WasEmpty && IsEmpty;
+		return Result;
+	}
 
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
