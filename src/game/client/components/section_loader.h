@@ -53,6 +53,7 @@ struct SSettingsCardDeckDragState
 	SSettingsCardDeckItem m_Item;
 	SSettingsCardDeckItem m_PressedItem;
 	float m_PlaceholderHeight = 0.0f;
+	ESettingsCardDeckColumn m_DropColumn = ESettingsCardDeckColumn::LEFT;
 	int m_DropIndex = -1;
 };
 
@@ -92,6 +93,7 @@ inline bool SettingsCardDeckTryPromotePress(SSettingsCardDeckDragState &DragStat
 	DragState.m_Active = true;
 	DragState.m_Item = DragState.m_PressedItem;
 	DragState.m_PlaceholderHeight = DragState.m_PressedItem.m_CachedHeight;
+	DragState.m_DropColumn = DragState.m_PressedItem.m_Column;
 	DragState.m_DropIndex = DragState.m_PressedItem.m_Order;
 	DragState.m_PressPending = false;
 	DragState.m_PressedItem = {};
@@ -123,6 +125,25 @@ inline bool SettingsCardDeckMoveWithinColumn(std::vector<std::string> &vOrder, c
 	if(DropIndex > (int)vOrder.size())
 		DropIndex = (int)vOrder.size();
 	vOrder.insert(vOrder.begin() + DropIndex, StableId);
+	return true;
+}
+
+inline bool SettingsCardDeckMoveBetweenColumns(std::vector<std::string> &vFromOrder, std::vector<std::string> &vToOrder, const char *pStableId, int DropIndex)
+{
+	if(pStableId == nullptr || pStableId[0] == '\0')
+		return false;
+
+	auto It = std::find(vFromOrder.begin(), vFromOrder.end(), pStableId);
+	if(It == vFromOrder.end())
+		return false;
+
+	const std::string StableId = *It;
+	vFromOrder.erase(It);
+	if(DropIndex < 0)
+		DropIndex = 0;
+	if(DropIndex > (int)vToOrder.size())
+		DropIndex = (int)vToOrder.size();
+	vToOrder.insert(vToOrder.begin() + DropIndex, StableId);
 	return true;
 }
 
@@ -165,6 +186,15 @@ inline int SettingsCardDeckDropIndexForColumnItems(const std::vector<SSettingsCa
 			return Item.m_Order + 1;
 	}
 	return vColumnItems.back().m_Order + 1;
+}
+
+inline ESettingsCardDeckColumn SettingsCardDeckDropColumnForMouseX(const CUIRect &LeftColumn, const CUIRect &RightColumn, float MouseX, ESettingsCardDeckColumn FallbackColumn)
+{
+	if(MouseX >= LeftColumn.x && MouseX <= LeftColumn.x + LeftColumn.w)
+		return ESettingsCardDeckColumn::LEFT;
+	if(MouseX >= RightColumn.x && MouseX <= RightColumn.x + RightColumn.w)
+		return ESettingsCardDeckColumn::RIGHT;
+	return FallbackColumn;
 }
 
 inline bool SettingsCardDeckIsDraggingItem(const SSettingsCardDeckDragState &DragState, const SSettingsCardDeckItem &Item)

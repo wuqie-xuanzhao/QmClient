@@ -1150,18 +1150,20 @@ void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESett
 	{
 		SettingsCardDeckTryPromotePress(DragState);
 	}
-	else if(DragState.m_Active && DragState.m_Item.m_Column == Column && HitRegion != ESettingsCardDragHitRegion::NONE && Ui()->MouseButton(0))
+	else if(DragState.m_Active && HitRegion != ESettingsCardDragHitRegion::NONE && Ui()->MouseButton(0))
 	{
+		DragState.m_DropColumn = Column;
 		DragState.m_DropIndex = SettingsCardDeckDropIndexForHoveredItem(Item, Ui()->MouseY());
 	}
-	else if(DragState.m_Active && DragState.m_Item.m_Column == Column && HitRegion != ESettingsCardDragHitRegion::NONE && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))
+	else if(DragState.m_Active && HitRegion != ESettingsCardDragHitRegion::NONE && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))
 	{
+		DragState.m_DropColumn = Column;
 		const int DropIndex = SettingsCardDeckDropIndexForHoveredItem(Item, Ui()->MouseY());
-		CommitSettingsCardDeckDragDrop(pOrder, DropIndex);
+		CommitSettingsCardDeckDragDrop(pOrder, Column, DropIndex);
 	}
 }
 
-bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, int DropIndex)
+bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex)
 {
 	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
 	if(!DragState.m_Active)
@@ -1169,19 +1171,35 @@ bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, in
 	if(DropIndex < 0)
 		DropIndex = DragState.m_DropIndex;
 	bool Moved = false;
-	if(pOrder != nullptr && SettingsCardDeckMoveWithinColumn(*pOrder, DragState.m_Item.m_pStableId, DropIndex))
+	const bool IsTClientMainOrder = pOrder == &m_vTClientLeftCardOrder || pOrder == &m_vTClientRightCardOrder;
+	if(IsTClientMainOrder)
 	{
-		m_TClientSettingsCardDeckOrderDirty = true;
-		Moved = true;
-		const bool IsTClientMainOrder = pOrder == &m_vTClientLeftCardOrder || pOrder == &m_vTClientRightCardOrder;
-		if(IsTClientMainOrder)
+		std::vector<std::string> &vSourceOrder = DragState.m_Item.m_Column == ESettingsCardDeckColumn::LEFT ? m_vTClientLeftCardOrder : m_vTClientRightCardOrder;
+		std::vector<std::string> &vTargetOrder = DropColumn == ESettingsCardDeckColumn::LEFT ? m_vTClientLeftCardOrder : m_vTClientRightCardOrder;
+		Moved = DragState.m_Item.m_Column == DropColumn ?
+				SettingsCardDeckMoveWithinColumn(vSourceOrder, DragState.m_Item.m_pStableId, DropIndex) :
+				SettingsCardDeckMoveBetweenColumns(vSourceOrder, vTargetOrder, DragState.m_Item.m_pStableId, DropIndex);
+		if(Moved)
 		{
+			m_TClientSettingsCardDeckOrderDirty = true;
 			char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
 			if(SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))
 				str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		}
-		else
-			SerializeMergedSettingsCardDeckOrdersToGlobalConfig();
+	}
+	else if(pOrder != nullptr && SettingsCardDeckMoveWithinColumn(*pOrder, DragState.m_Item.m_pStableId, DropIndex))
+	{
+		Moved = true;
+		for(auto &DeckPrefs : m_SettingsCardDeckColumnPrefs)
+		{
+			const auto PrefIt = DeckPrefs.second.find(DragState.m_Item.m_pStableId);
+			if(PrefIt == DeckPrefs.second.end())
+				continue;
+			// 用户跨列拖拽后，这张卡后续按固定列持久化。
+			PrefIt->second = 0x10 | (DropColumn == ESettingsCardDeckColumn::RIGHT ? 1 : 0);
+			break;
+		}
+		SerializeMergedSettingsCardDeckOrdersToGlobalConfig();
 	}
 	DragState = {};
 	return Moved;
@@ -1718,7 +1736,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 						CardRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, 10.0f);
 					}
 					else if(m_TClientSettingsCardDragState.m_Active &&
-						m_TClientSettingsCardDragState.m_Item.m_Column == ColumnId &&
+						m_TClientSettingsCardDragState.m_DropColumn == ColumnId &&
 						Ui()->MouseHovered(&Item.m_Rect))
 					{
 						CUIRect DropIndicator = SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex, 4.0f);
@@ -3521,9 +3539,11 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			m_TClientSettingsCardDragState = {};
 		if(m_TClientSettingsCardDragState.m_Active && Ui()->MouseButton(0))
 		{
+			m_TClientSettingsCardDragState.m_DropColumn = SettingsCardDeckDropColumnForMouseX(LeftView, RightView, Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn);
+			const ESettingsCardDeckColumn DropColumn = m_TClientSettingsCardDragState.m_DropColumn;
 			m_TClientSettingsCardDragState.m_DropIndex = SettingsCardDeckDropIndexForColumnItems(
 				m_vTClientSettingsCardDeckItems,
-				m_TClientSettingsCardDragState.m_Item.m_Column,
+				DropColumn,
 				Ui()->MouseX(),
 				Ui()->MouseY(),
 				m_TClientSettingsCardDragState.m_DropIndex);
@@ -3536,14 +3556,16 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		}
 		if(m_TClientSettingsCardDragState.m_Active && !Ui()->MouseButton(0) && Ui()->LastMouseButton(0))
 		{
+			m_TClientSettingsCardDragState.m_DropColumn = SettingsCardDeckDropColumnForMouseX(LeftView, RightView, Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn);
+			const ESettingsCardDeckColumn DropColumn = m_TClientSettingsCardDragState.m_DropColumn;
 			std::vector<std::string> *pOrder = m_TClientSettingsCardDragState.m_Item.m_Column == ESettingsCardDeckColumn::LEFT ? &m_vTClientLeftCardOrder : &m_vTClientRightCardOrder;
 			const int DropIndex = SettingsCardDeckDropIndexForColumnItems(
 				m_vTClientSettingsCardDeckItems,
-				m_TClientSettingsCardDragState.m_Item.m_Column,
+				DropColumn,
 				Ui()->MouseX(),
 				Ui()->MouseY(),
 				m_TClientSettingsCardDragState.m_DropIndex);
-			CommitSettingsCardDeckDragDrop(pOrder, DropIndex);
+			CommitSettingsCardDeckDragDrop(pOrder, DropColumn, DropIndex);
 		}
 		FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT);
 		m_SettingsTClientCurrentScrollY = ScrollFrame.m_FinalOffsetY;

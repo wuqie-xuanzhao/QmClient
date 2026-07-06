@@ -4607,6 +4607,21 @@ static const char *SettingsCardDeckStableId(std::deque<std::string> &vStableIds,
 	return vStableIds.back().c_str();
 }
 
+static int SettingsCardDeckColumnPref(const std::unordered_map<std::string, int> *pColumnPrefs, const std::string &StableId)
+{
+	if(pColumnPrefs == nullptr)
+		return 0;
+	const auto PrefIt = pColumnPrefs->find(StableId);
+	return PrefIt == pColumnPrefs->end() ? 0 : PrefIt->second;
+}
+
+static int SettingsCardDeckColumnPref(const std::unordered_map<std::string, int> *pColumnPrefs, const char *pStableId)
+{
+	if(pStableId == nullptr || pStableId[0] == '\0')
+		return 0;
+	return SettingsCardDeckColumnPref(pColumnPrefs, std::string(pStableId));
+}
+
 void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()
 {
 	static char s_aSettingsCardDeckGlobalOrderCache[sizeof(g_Config.m_QmGlobalCardOrder)] = {};
@@ -4741,7 +4756,11 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 	if(pMinHeights != nullptr && pGlobalStableId != nullptr && pGlobalStableId[0] != '\0')
 		(*pMinHeights)[pGlobalStableId] = MinHeight;
 	if(pColumnPrefs != nullptr && pGlobalStableId != nullptr && pGlobalStableId[0] != '\0')
-		(*pColumnPrefs)[pGlobalStableId] = (ForcePreferredColumn ? 0x10 : 0) | (PreferredColumn == ESettingsCardDeckColumn::RIGHT ? 1 : 0);
+	{
+		const auto PrefIt = pColumnPrefs->find(pGlobalStableId);
+		if(PrefIt == pColumnPrefs->end() || (PrefIt->second & 0x10) == 0)
+			(*pColumnPrefs)[pGlobalStableId] = (ForcePreferredColumn ? 0x10 : 0) | (PreferredColumn == ESettingsCardDeckColumn::RIGHT ? 1 : 0);
+	}
 
 	CUIRect aVirtualColumns[2] = {Deck.m_aBaseColumns[0], Deck.m_aBaseColumns[1]};
 	if(Deck.m_pOrder != nullptr)
@@ -4754,13 +4773,7 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 			const float OrderedMinHeight = pMinHeights != nullptr && pMinHeights->find(StableId) != pMinHeights->end() ? (*pMinHeights)[StableId] : MinHeight;
 			const float OrderedMeasuredHeight = pMeasuredHeights != nullptr && pMeasuredHeights->find(StableId) != pMeasuredHeights->end() ? (*pMeasuredHeights)[StableId] : OrderedMinHeight;
 			const float OrderedHeight = maximum(OrderedMinHeight, OrderedMeasuredHeight > 0.0f ? OrderedMeasuredHeight : OrderedMinHeight);
-			int ColumnPref = 0;
-			if(pColumnPrefs != nullptr)
-			{
-				const auto PrefIt = pColumnPrefs->find(StableId);
-				if(PrefIt != pColumnPrefs->end())
-					ColumnPref = PrefIt->second;
-			}
+			const int ColumnPref = SettingsCardDeckColumnPref(pColumnPrefs, StableId);
 			bool OrderedUseRightColumn = Deck.m_TwoColumns && aVirtualColumns[1].y < aVirtualColumns[0].y;
 			if(Deck.m_TwoColumns && (ColumnPref & 0x10) != 0)
 				OrderedUseRightColumn = (ColumnPref & 0x1) != 0;
@@ -4770,7 +4783,10 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 		}
 	}
 	bool UseRightColumn = Deck.m_TwoColumns && aVirtualColumns[1].y < aVirtualColumns[0].y;
-	if(Deck.m_TwoColumns && ForcePreferredColumn)
+	const int CurrentColumnPref = SettingsCardDeckColumnPref(pColumnPrefs, pGlobalStableId);
+	if(Deck.m_TwoColumns && (CurrentColumnPref & 0x10) != 0)
+		UseRightColumn = (CurrentColumnPref & 0x1) != 0;
+	else if(Deck.m_TwoColumns && ForcePreferredColumn)
 		UseRightColumn = PreferredColumn == ESettingsCardDeckColumn::RIGHT;
 	Card.m_Column = UseRightColumn ? ESettingsCardDeckColumn::RIGHT : ESettingsCardDeckColumn::LEFT;
 	const float CardHeight = maximum(MinHeight, LastMeasuredHeight > 0.0f ? LastMeasuredHeight : MinHeight);
@@ -4848,15 +4864,19 @@ void CMenus::RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck)
 		return;
 	if(Ui()->MouseButton(0))
 	{
+		m_TClientSettingsCardDragState.m_DropColumn = Deck.m_TwoColumns ?
+								      SettingsCardDeckDropColumnForMouseX(Deck.m_aBaseColumns[0], Deck.m_aBaseColumns[1], Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn) :
+								      ESettingsCardDeckColumn::LEFT;
+		const ESettingsCardDeckColumn DropColumn = m_TClientSettingsCardDragState.m_DropColumn;
 		m_TClientSettingsCardDragState.m_DropIndex = SettingsCardDeckDropIndexForColumnItems(
 			m_vTClientSettingsCardDeckItems,
-			m_TClientSettingsCardDragState.m_Item.m_Column,
+			DropColumn,
 			Ui()->MouseX(),
 			Ui()->MouseY(),
 			m_TClientSettingsCardDragState.m_DropIndex);
 		for(const SSettingsCardDeckItem &Item : m_vTClientSettingsCardDeckItems)
 		{
-			if(Item.m_Column != m_TClientSettingsCardDragState.m_Item.m_Column)
+			if(Item.m_Column != DropColumn)
 				continue;
 			const CUIRect DropIndicator = SettingsCardDeckDropIndicatorRect(Item, m_TClientSettingsCardDragState.m_DropIndex, 4.0f);
 			if(Ui()->MouseHovered(&Item.m_Rect))
@@ -4871,13 +4891,17 @@ void CMenus::RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck)
 	}
 	else if(Ui()->LastMouseButton(0))
 	{
+		m_TClientSettingsCardDragState.m_DropColumn = Deck.m_TwoColumns ?
+								      SettingsCardDeckDropColumnForMouseX(Deck.m_aBaseColumns[0], Deck.m_aBaseColumns[1], Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn) :
+								      ESettingsCardDeckColumn::LEFT;
+		const ESettingsCardDeckColumn DropColumn = m_TClientSettingsCardDragState.m_DropColumn;
 		const int DropIndex = SettingsCardDeckDropIndexForColumnItems(
 			m_vTClientSettingsCardDeckItems,
-			m_TClientSettingsCardDragState.m_Item.m_Column,
+			DropColumn,
 			Ui()->MouseX(),
 			Ui()->MouseY(),
 			m_TClientSettingsCardDragState.m_DropIndex);
-		CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropIndex);
+		CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropColumn, DropIndex);
 	}
 }
 

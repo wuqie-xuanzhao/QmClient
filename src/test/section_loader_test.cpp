@@ -206,6 +206,24 @@ TEST(SettingsCardDeckDrag, MoveWithinColumnAdjustsDropIndexAfterErase)
 	EXPECT_EQ(vOrder, (std::vector<std::string>{"tclient:auto-reply", "tclient:visual-font-cursor", "tclient:pet"}));
 }
 
+TEST(SettingsCardDeckDrag, MoveBetweenColumnsMovesStableIdToTargetOrder)
+{
+	std::vector<std::string> vLeftOrder = {"tclient:visual-font-cursor", "tclient:auto-reply", "tclient:pet"};
+	std::vector<std::string> vRightOrder = {"tclient:rainbow", "tclient:ghost"};
+
+	EXPECT_TRUE(SettingsCardDeckMoveBetweenColumns(vLeftOrder, vRightOrder, "tclient:auto-reply", 1));
+	EXPECT_EQ(vLeftOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:pet"}));
+	EXPECT_EQ(vRightOrder, (std::vector<std::string>{"tclient:rainbow", "tclient:auto-reply", "tclient:ghost"}));
+
+	EXPECT_FALSE(SettingsCardDeckMoveBetweenColumns(vLeftOrder, vRightOrder, "tclient:missing", 0));
+	EXPECT_EQ(vLeftOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:pet"}));
+	EXPECT_EQ(vRightOrder, (std::vector<std::string>{"tclient:rainbow", "tclient:auto-reply", "tclient:ghost"}));
+
+	EXPECT_FALSE(SettingsCardDeckMoveBetweenColumns(vLeftOrder, vRightOrder, "", 0));
+	EXPECT_EQ(vLeftOrder, (std::vector<std::string>{"tclient:visual-font-cursor", "tclient:pet"}));
+	EXPECT_EQ(vRightOrder, (std::vector<std::string>{"tclient:rainbow", "tclient:auto-reply", "tclient:ghost"}));
+}
+
 TEST(SettingsCardDeckDrag, DropIndexUsesHoveredCardHalf)
 {
 	SSettingsCardDeckItem Item;
@@ -234,6 +252,16 @@ TEST(SettingsCardDeckDrag, ColumnDropIndexSupportsBlankSpaceAndColumnTail)
 	EXPECT_EQ(SettingsCardDeckDropIndexForColumnItems(vItems, ESettingsCardDeckColumn::LEFT, 50.0f, 170.0f, -1), 1);
 	EXPECT_EQ(SettingsCardDeckDropIndexForColumnItems(vItems, ESettingsCardDeckColumn::LEFT, 50.0f, 360.0f, -1), 2);
 	EXPECT_EQ(SettingsCardDeckDropIndexForColumnItems(vItems, ESettingsCardDeckColumn::LEFT, 500.0f, 360.0f, 7), 7);
+}
+
+TEST(SettingsCardDeckDrag, DropColumnUsesColumnBounds)
+{
+	CUIRect LeftColumn{10.0f, 100.0f, 200.0f, 500.0f};
+	CUIRect RightColumn{230.0f, 100.0f, 200.0f, 500.0f};
+
+	EXPECT_EQ(SettingsCardDeckDropColumnForMouseX(LeftColumn, RightColumn, 120.0f, ESettingsCardDeckColumn::RIGHT), ESettingsCardDeckColumn::LEFT);
+	EXPECT_EQ(SettingsCardDeckDropColumnForMouseX(LeftColumn, RightColumn, 350.0f, ESettingsCardDeckColumn::LEFT), ESettingsCardDeckColumn::RIGHT);
+	EXPECT_EQ(SettingsCardDeckDropColumnForMouseX(LeftColumn, RightColumn, 220.0f, ESettingsCardDeckColumn::LEFT), ESettingsCardDeckColumn::LEFT);
 }
 
 TEST(SettingsCardDeckDrag, ApplyOrderKeepsUnknownSectionsAfterOrderedCards)

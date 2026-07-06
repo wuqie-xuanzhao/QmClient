@@ -2749,7 +2749,7 @@ private:
 	SSettingsCardDeckItem SettingsCardDeckItemFromSection(const SSettingsSection &Section, ESettingsCardDeckColumn Column, int Order, const CUIRect &Rect, const CUIRect &HeaderRect) const;
 	void RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item);
 	void HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder);
-	bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, int DropIndex);
+	bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex);
 	float RenderTClientCacheSectionFallback(CUIRect &CurrentColumn, float TopMargin, float (CMenus::*pLayoutSection)(CUIRect &, bool));
 	void ConfigureSplitCachedStaticLayer(SSettingsSection &Section, const char *pTitle, std::function<float(CUIRect &)> MeasureSection, std::function<float(CUIRect &)> RenderInteractiveSection, float TopMargin);
 	void BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);
