@@ -6783,6 +6783,21 @@ TEST(QmMonitoringHelpers, TClientWarListTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TypeNameInput, &Button, 12.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientBindWheelTextInputCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("TClientBindWheelTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_bindwheel_text_inputs\");"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(TClientBindWheelTextInputCtx, &s_NameInput, Button, Localize(\"Name\"), EditBoxFontSize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(TClientBindWheelTextInputCtx, &s_BindInput, Button, Localize(\"Command\"), EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_NameInput, &Button, EditBoxFontSize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_BindInput, &Button, EditBoxFontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, ControlsQuickSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");

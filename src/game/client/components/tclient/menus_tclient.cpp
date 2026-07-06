@@ -3714,6 +3714,12 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
 	SSettingsCardDeckLayout BindWheelDeck = BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion, s_BindWheelSettingsScrollY, 1.0f, "tclient-bind-wheel", SETTINGS_TCLIENT);
 	SSettingsCardDeckCard BindWheelEditorCard = BeginSettingsCardDeckCard(BindWheelDeck, "tclient-bind-wheel-editor", Localize("Bind Wheel"), 320.0f, s_BindWheelEditorCardHeight);
 	SSettingsCardDeckCard BindWheelPreviewCard = BeginSettingsCardDeckCard(BindWheelDeck, "tclient-bind-wheel-preview", Localize("Preview"), 320.0f, s_BindWheelPreviewCardHeight);
+	IUiContext TClientBindWheelTextInputCtx;
+	TClientBindWheelTextInputCtx.m_pUi = Ui();
+	TClientBindWheelTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientBindWheelTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientBindWheelTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_bindwheel_text_inputs");
+	TClientBindWheelTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	LeftView = BindWheelEditorCard.m_ContentRect;
 	RightView = BindWheelPreviewCard.m_ContentRect;
 
@@ -3807,7 +3813,7 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
 		static CLineInput s_NameInput;
 		s_NameInput.SetBuffer(s_aBindName, sizeof(s_aBindName));
 		s_NameInput.SetEmptyText(Localize("Name"));
-		Ui()->DoEditBox(&s_NameInput, &Button, EditBoxFontSize);
+		ui_widget::TextField(TClientBindWheelTextInputCtx, &s_NameInput, Button, Localize("Name"), EditBoxFontSize);
 
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
@@ -3816,7 +3822,7 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
 		static CLineInput s_BindInput;
 		s_BindInput.SetBuffer(s_aBindCommand, sizeof(s_aBindCommand));
 		s_BindInput.SetEmptyText(Localize("Command"));
-		Ui()->DoEditBox(&s_BindInput, &Button, EditBoxFontSize);
+		ui_widget::TextField(TClientBindWheelTextInputCtx, &s_BindInput, Button, Localize("Command"), EditBoxFontSize);
 
 		static CButtonContainer s_AddButton, s_RemoveButton, s_OverrideButton;
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
