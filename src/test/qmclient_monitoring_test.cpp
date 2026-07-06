@@ -7216,6 +7216,87 @@ TEST(QmMonitoringHelpers, ServerBrowserFiltersTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FilterServerAddressInput, &Button, FontSize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string CategoryBody = ExtractSourceFunctionBody(Source, "CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRect View, bool Active)");
+	const std::string NoteBody = ExtractSourceFunctionBody(Source, "CUi::EPopupMenuFunctionResult CMenus::PopupFriendNote(void *pContext, CUIRect View, bool Active)");
+	ASSERT_FALSE(CategoryBody.empty());
+	ASSERT_FALSE(NoteBody.empty());
+
+	const size_t CategoryLabelPos = CategoryBody.find("pMenus->Ui()->DoLabel(&Label, pPopupContext->m_Mode == CFriendsCategoryPopupContext::MODE_ADD ? Localize(\"Category name\") : Localize(\"New category name\"), FontSize, TEXTALIGN_ML);");
+	const size_t CategoryCtxPos = CategoryBody.find("IUiContext FriendsCategoryTextInputCtx;", CategoryLabelPos);
+	const size_t CategoryUiPos = CategoryBody.find("FriendsCategoryTextInputCtx.m_pUi = pMenus->Ui();", CategoryCtxPos);
+	const size_t CategoryScopePos = CategoryBody.find("FriendsCategoryTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_friends_category_text_input\");", CategoryUiPos);
+	const size_t CategoryFieldPos = CategoryBody.find("ui_widget::TextField(FriendsCategoryTextInputCtx, &pPopupContext->m_NameInput, Input, nullptr, FontSize + 1.0f);", CategoryScopePos);
+	const size_t CategoryCancelPos = CategoryBody.find("const bool CancelPressed", CategoryFieldPos);
+	const size_t CategoryEscapePos = CategoryBody.find("pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE)", CategoryCancelPos);
+	const size_t CategoryConfirmPos = CategoryBody.find("const bool ConfirmPressed", CategoryFieldPos);
+	const size_t CategoryEnterPos = CategoryBody.find("pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER)", CategoryConfirmPos);
+	const size_t CategoryTrimPos = CategoryBody.find("str_copy(aCategory, str_utf8_skip_whitespaces(pPopupContext->m_NameInput.GetString()), sizeof(aCategory));", CategoryConfirmPos);
+	const size_t CategoryUpdatePos = CategoryBody.find("pMenus->FriendlistOnUpdate();", CategoryTrimPos);
+	const size_t NoteLabelPos = NoteBody.find("pMenus->Ui()->DoLabel(&Label, Localize(\"Friend note\"), FontSize, TEXTALIGN_ML);");
+	const size_t NoteCtxPos = NoteBody.find("IUiContext FriendNoteTextInputCtx;", NoteLabelPos);
+	const size_t NoteUiPos = NoteBody.find("FriendNoteTextInputCtx.m_pUi = pMenus->Ui();", NoteCtxPos);
+	const size_t NoteScopePos = NoteBody.find("FriendNoteTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_friend_note_text_input\");", NoteUiPos);
+	const size_t NoteFieldPos = NoteBody.find("ui_widget::TextField(FriendNoteTextInputCtx, &pPopupContext->m_NoteInput, Input, nullptr, FontSize + 1.0f);", NoteScopePos);
+	const size_t NoteCancelPos = NoteBody.find("const bool CancelPressed", NoteFieldPos);
+	const size_t NoteEscapePos = NoteBody.find("pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE)", NoteCancelPos);
+	const size_t NoteConfirmPos = NoteBody.find("const bool ConfirmPressed", NoteFieldPos);
+	const size_t NoteEnterPos = NoteBody.find("pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER)", NoteConfirmPos);
+	const size_t NoteCopyPos = NoteBody.find("str_copy(aNote, pPopupContext->m_NoteInput.GetString(), sizeof(aNote));", NoteConfirmPos);
+	const size_t NoteSavePos = NoteBody.find("pMenus->GameClient()->Friends()->SetFriendNote(pPopupContext->m_aName, pPopupContext->m_aClan, aNote);", NoteCopyPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CategoryLabelPos, std::string::npos);
+	EXPECT_NE(CategoryCtxPos, std::string::npos);
+	EXPECT_NE(CategoryUiPos, std::string::npos);
+	EXPECT_NE(CategoryScopePos, std::string::npos);
+	EXPECT_NE(CategoryFieldPos, std::string::npos);
+	EXPECT_NE(CategoryCancelPos, std::string::npos);
+	EXPECT_NE(CategoryEscapePos, std::string::npos);
+	EXPECT_NE(CategoryConfirmPos, std::string::npos);
+	EXPECT_NE(CategoryEnterPos, std::string::npos);
+	EXPECT_NE(CategoryTrimPos, std::string::npos);
+	EXPECT_NE(CategoryUpdatePos, std::string::npos);
+	EXPECT_LT(CategoryLabelPos, CategoryCtxPos);
+	EXPECT_LT(CategoryCtxPos, CategoryUiPos);
+	EXPECT_LT(CategoryUiPos, CategoryScopePos);
+	EXPECT_LT(CategoryScopePos, CategoryFieldPos);
+	EXPECT_LT(CategoryFieldPos, CategoryCancelPos);
+	EXPECT_LT(CategoryCancelPos, CategoryEscapePos);
+	EXPECT_LT(CategoryEscapePos, CategoryConfirmPos);
+	EXPECT_LT(CategoryFieldPos, CategoryConfirmPos);
+	EXPECT_LT(CategoryConfirmPos, CategoryEnterPos);
+	EXPECT_LT(CategoryEnterPos, CategoryTrimPos);
+	EXPECT_LT(CategoryConfirmPos, CategoryTrimPos);
+	EXPECT_LT(CategoryTrimPos, CategoryUpdatePos);
+	EXPECT_NE(NoteLabelPos, std::string::npos);
+	EXPECT_NE(NoteCtxPos, std::string::npos);
+	EXPECT_NE(NoteUiPos, std::string::npos);
+	EXPECT_NE(NoteScopePos, std::string::npos);
+	EXPECT_NE(NoteFieldPos, std::string::npos);
+	EXPECT_NE(NoteCancelPos, std::string::npos);
+	EXPECT_NE(NoteEscapePos, std::string::npos);
+	EXPECT_NE(NoteConfirmPos, std::string::npos);
+	EXPECT_NE(NoteEnterPos, std::string::npos);
+	EXPECT_NE(NoteCopyPos, std::string::npos);
+	EXPECT_NE(NoteSavePos, std::string::npos);
+	EXPECT_LT(NoteLabelPos, NoteCtxPos);
+	EXPECT_LT(NoteCtxPos, NoteUiPos);
+	EXPECT_LT(NoteUiPos, NoteScopePos);
+	EXPECT_LT(NoteScopePos, NoteFieldPos);
+	EXPECT_LT(NoteFieldPos, NoteCancelPos);
+	EXPECT_LT(NoteCancelPos, NoteEscapePos);
+	EXPECT_LT(NoteEscapePos, NoteConfirmPos);
+	EXPECT_LT(NoteFieldPos, NoteConfirmPos);
+	EXPECT_LT(NoteConfirmPos, NoteEnterPos);
+	EXPECT_LT(NoteEnterPos, NoteCopyPos);
+	EXPECT_LT(NoteConfirmPos, NoteCopyPos);
+	EXPECT_LT(NoteCopyPos, NoteSavePos);
+	EXPECT_EQ(CategoryBody.find("pMenus->Ui()->DoEditBox(&pPopupContext->m_NameInput, &Input, FontSize + 1.0f"), std::string::npos);
+	EXPECT_EQ(NoteBody.find("pMenus->Ui()->DoEditBox(&pPopupContext->m_NoteInput, &Input, FontSize + 1.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DemoSliceNameInputUsesSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");

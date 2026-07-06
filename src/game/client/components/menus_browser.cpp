@@ -3069,7 +3069,10 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendsCategory(void *pContext, CUIRe
 
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Input, &View);
-	pMenus->Ui()->DoEditBox(&pPopupContext->m_NameInput, &Input, FontSize + 1.0f);
+	IUiContext FriendsCategoryTextInputCtx;
+	FriendsCategoryTextInputCtx.m_pUi = pMenus->Ui();
+	FriendsCategoryTextInputCtx.m_ScopeHash = MakeUiScopeHash("server_browser_friends_category_text_input");
+	ui_widget::TextField(FriendsCategoryTextInputCtx, &pPopupContext->m_NameInput, Input, nullptr, FontSize + 1.0f);
 
 	View.HSplitTop(6.0f, nullptr, &View);
 	View.HSplitTop(20.0f, &Buttons, &View);
@@ -3125,7 +3128,10 @@ CUi::EPopupMenuFunctionResult CMenus::PopupFriendNote(void *pContext, CUIRect Vi
 
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Input, &View);
-	pMenus->Ui()->DoEditBox(&pPopupContext->m_NoteInput, &Input, FontSize + 1.0f);
+	IUiContext FriendNoteTextInputCtx;
+	FriendNoteTextInputCtx.m_pUi = pMenus->Ui();
+	FriendNoteTextInputCtx.m_ScopeHash = MakeUiScopeHash("server_browser_friend_note_text_input");
+	ui_widget::TextField(FriendNoteTextInputCtx, &pPopupContext->m_NoteInput, Input, nullptr, FontSize + 1.0f);
 
 	View.HSplitTop(4.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Buttons, &View);
