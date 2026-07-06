@@ -8,6 +8,7 @@
 #include <engine/config.h>
 #include <engine/shared/config.h>
 
+#include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
 
 CListBox::CListBox()
@@ -22,8 +23,9 @@ void CListBox::Reset()
 	m_ScrollbarShown = false;
 	m_AutoSpacing = 0.0f;
 	m_ScrollRegion.Reset();
-	m_ScrollbarWidth = 20.0f;
-	m_ScrollbarMargin = 5.0f;
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
+	m_ScrollbarWidth = ScrollParams.m_ScrollbarThickness;
+	m_ScrollbarMargin = ScrollParams.m_ScrollbarMargin;
 	m_HasHeader = false;
 	m_Active = true;
 }

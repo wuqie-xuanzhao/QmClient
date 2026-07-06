@@ -14,6 +14,7 @@
 #include <game/client/QmUi/UiOverlays.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/ui_rect.h>
+#include <game/client/ui_scrollregion.h>
 
 #include <gtest/gtest.h>
 
@@ -1730,6 +1731,27 @@ TEST(UiV2ScrollPhysics, PresetsExposeSharedSmallMediumLargeGeometry)
 
 	const SQmScrollConfig InstantNativeWheel = QmNativeWheelScrollConfig(1.0f, 0.0f);
 	EXPECT_NEAR(InstantNativeWheel.m_NativeWheelAnimationTime, 0.0f, 0.01f);
+}
+
+TEST(UiV2ScrollPhysics, ScrollRegionParamsUseSharedQmScrollPreset)
+{
+	const SQmScrollContainerStyle Medium = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);
+	const CScrollRegionParams Params = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM, 1.0f);
+	const CScrollRegionParams DefaultParams;
+
+	EXPECT_NEAR(Params.m_ScrollbarThickness, Medium.m_ScrollbarWidth, 0.01f);
+	EXPECT_NEAR(Params.m_ScrollbarMargin, Medium.m_ScrollbarMargin, 0.01f);
+	EXPECT_NEAR(Params.m_SliderMinSize, Medium.m_MinThumbHeight, 0.01f);
+	EXPECT_NEAR(Params.m_ScrollUnit, QmNativeWheelScrollConfig(1.0f, 0.0f).m_WheelScale, 0.01f);
+	EXPECT_FALSE(Params.m_ScrollHorizontal);
+	EXPECT_NEAR(DefaultParams.m_ScrollbarThickness, Medium.m_ScrollbarWidth, 0.01f);
+	EXPECT_NEAR(DefaultParams.m_ScrollbarMargin, Medium.m_ScrollbarMargin, 0.01f);
+	EXPECT_NEAR(DefaultParams.m_SliderMinSize, 25.0f, 0.01f);
+	EXPECT_NEAR(DefaultParams.m_ScrollUnit, QmNativeWheelScrollConfig(1.0f, 0.0f).m_WheelScale, 0.01f);
+
+	const CScrollRegionParams Horizontal = QmScrollRegionParamsForSize(EQmScrollSize::SMALL, 1.0f, EQmScrollAxis::HORIZONTAL);
+	EXPECT_TRUE(Horizontal.m_ScrollHorizontal);
+	EXPECT_NEAR(Horizontal.m_ScrollbarThickness, QmScrollContainerStyleForSize(EQmScrollSize::SMALL, 1.0f).m_ScrollbarWidth, 0.01f);
 }
 
 TEST(UiV2ScrollPhysics, OverscrollSpringsBackIntoRange)

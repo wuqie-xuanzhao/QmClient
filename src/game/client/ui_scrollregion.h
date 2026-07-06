@@ -5,6 +5,8 @@
 
 #include "ui.h"
 
+#include <game/client/QmUi/QmScroll.h>
+
 struct CScrollRegionParams
 {
 	float m_ScrollbarThickness;
@@ -21,22 +23,7 @@ struct CScrollRegionParams
 	bool m_ForceShowScrollbar;
 	bool m_ScrollHorizontal;
 
-	CScrollRegionParams()
-	{
-		m_ScrollbarThickness = 20.0f;
-		m_ScrollbarMargin = 5.0f;
-		m_ScrollbarNoOuterMargin = false;
-		m_SliderMinSize = 25.0f;
-		m_ScrollUnit = 10.0f;
-		m_ClipBgColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f);
-		m_ScrollbarBgColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f);
-		m_RailBgColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f);
-		m_SliderColor = ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f);
-		m_SliderColorHover = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-		m_SliderColorGrabbed = ColorRGBA(0.9f, 0.9f, 0.9f, 1.0f);
-		m_ForceShowScrollbar = false;
-		m_ScrollHorizontal = false;
-	}
+	CScrollRegionParams();
 
 	ColorRGBA SliderColor(bool Active, bool Hovered) const
 	{
@@ -47,6 +34,38 @@ struct CScrollRegionParams
 		return m_SliderColor;
 	}
 };
+
+inline CScrollRegionParams QmScrollRegionParamsForSize(EQmScrollSize Size, float UiScale = 1.0f, EQmScrollAxis Axis = EQmScrollAxis::VERTICAL)
+{
+	const SQmScrollContainerStyle Style = QmScrollContainerStyleForSize(Size, UiScale);
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(UiScale, 0.0f);
+	CScrollRegionParams Params;
+	Params.m_ScrollbarThickness = Style.m_ScrollbarWidth;
+	Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;
+	Params.m_SliderMinSize = Style.m_MinThumbHeight;
+	Params.m_ScrollUnit = Config.m_WheelScale;
+	Params.m_ScrollHorizontal = Axis == EQmScrollAxis::HORIZONTAL;
+	return Params;
+}
+
+inline CScrollRegionParams::CScrollRegionParams()
+{
+	const SQmScrollContainerStyle Style = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM);
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.0f);
+	m_ScrollbarThickness = Style.m_ScrollbarWidth;
+	m_ScrollbarMargin = Style.m_ScrollbarMargin;
+	m_ScrollbarNoOuterMargin = false;
+	m_SliderMinSize = 25.0f;
+	m_ScrollUnit = Config.m_WheelScale;
+	m_ClipBgColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f);
+	m_ScrollbarBgColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f);
+	m_RailBgColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f);
+	m_SliderColor = ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f);
+	m_SliderColorHover = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	m_SliderColorGrabbed = ColorRGBA(0.9f, 0.9f, 0.9f, 1.0f);
+	m_ForceShowScrollbar = false;
+	m_ScrollHorizontal = false;
+}
 
 inline bool ScrollRegionShouldKeepNoScrollSliderActive(bool Active, bool MouseDown)
 {
