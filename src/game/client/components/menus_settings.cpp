@@ -22,6 +22,7 @@
 
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/UiContext.h>
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
@@ -2932,7 +2933,13 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		}
 	}
 
-	if(Ui()->DoEditBox_Search(&s_SkinFilterInput, &QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+	IUiContext TeeSkinSearchCtx;
+	TeeSkinSearchCtx.m_pUi = Ui();
+	TeeSkinSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TeeSkinSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TeeSkinSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_search");
+	TeeSkinSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	if(ui_widget::SearchField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
 	{
 		SkinList.ForceRefresh();
 	}

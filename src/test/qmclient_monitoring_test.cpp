@@ -6752,6 +6752,23 @@ TEST(QmMonitoringHelpers, ControlsQuickSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_FilterInput, &QuickSearch, FONT_SIZE"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TeeSkinSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t SearchPos = Body.find("ui_widget::SearchField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f");
+	const size_t RefreshPos = Body.find("SkinList.ForceRefresh();", SearchPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TeeSkinSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("TeeSkinSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_search\");"), std::string::npos);
+	EXPECT_NE(SearchPos, std::string::npos);
+	EXPECT_NE(RefreshPos, std::string::npos);
+	EXPECT_LT(SearchPos, RefreshPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_SkinFilterInput, &QuickSearch, 14.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 {
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
