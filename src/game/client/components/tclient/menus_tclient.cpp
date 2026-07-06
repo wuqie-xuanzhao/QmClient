@@ -3445,6 +3445,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect BoxRect;
 			CUIRect TmpRect;
 			CUIRect FinishNameBox;
+			IUiContext TClientFinishNameTextInputCtx;
+			TClientFinishNameTextInputCtx.m_pUi = Ui();
+			TClientFinishNameTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientFinishNameTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientFinishNameTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_finish_name_text_inputs");
+			TClientFinishNameTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			CurrentColumn.HSplitTop(MarginBetweenSections, nullptr, &CurrentColumn);
 			BoxRect = CurrentColumn;
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
@@ -3462,7 +3468,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				FinishNameBox.VSplitMid(&Label, &Button);
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Finish Name:"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_FinishName(g_Config.m_TcFinishName, sizeof(g_Config.m_TcFinishName));
-				Ui()->DoEditBox(&s_FinishName, &Button, EditBoxFontSize);
+				ui_widget::TextField(TClientFinishNameTextInputCtx, &s_FinishName, Button, nullptr, EditBoxFontSize);
 			}
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;

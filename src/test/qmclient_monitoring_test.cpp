@@ -7168,6 +7168,47 @@ TEST(QmMonitoringHelpers, TClientVotingTextInputUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoteMessage, &VoteMessage, EditBoxFontSize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientFinishNameTextInputUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "auto LayoutFinishNameSection", "std::vector<SSettingsSection> vRightSections");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext TClientFinishNameTextInputCtx;");
+	const size_t UiPos = Body.find("TClientFinishNameTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("TClientFinishNameTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("TClientFinishNameTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("TClientFinishNameTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_finish_name_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("TClientFinishNameTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+	const size_t InputBoxPos = Body.find("CurrentColumn.HSplitTop(LineSize + MarginExtraSmall, Render ? &FinishNameBox : &TmpRect, &CurrentColumn);");
+	const size_t RenderGuardPos = Body.find("if(Render)", InputBoxPos);
+	const size_t LabelPos = Body.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize(\"Finish Name:\"), FontSize, TEXTALIGN_ML);", RenderGuardPos);
+	const size_t InputPos = Body.find("static CLineInput s_FinishName(g_Config.m_TcFinishName, sizeof(g_Config.m_TcFinishName));", LabelPos);
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(TClientFinishNameTextInputCtx, &s_FinishName, Button, nullptr, EditBoxFontSize);", InputPos);
+	EXPECT_NE(InputBoxPos, std::string::npos);
+	EXPECT_NE(RenderGuardPos, std::string::npos);
+	EXPECT_NE(LabelPos, std::string::npos);
+	EXPECT_NE(InputPos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_LT(InputBoxPos, RenderGuardPos);
+	EXPECT_LT(RenderGuardPos, LabelPos);
+	EXPECT_LT(LabelPos, InputPos);
+	EXPECT_LT(InputPos, TextFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FinishName, &Button, EditBoxFontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
