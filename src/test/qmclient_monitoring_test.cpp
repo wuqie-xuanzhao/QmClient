@@ -7223,6 +7223,31 @@ TEST(QmMonitoringHelpers, AudioPackEditorSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_AudioPackEditorState.m_CandidateFilterInput, &CandidateSearchInput"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AssetsEditorSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_assets_editor.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderAssetsEditorScreen(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t DonorSearchPos = Body.find("ui_widget::SearchField(AssetsEditorDonorSearchCtx, &s_aDonorSearchInputs[m_AssetsEditorState.m_Type], DonorSearchBox, EditBoxFontSize, false)");
+	const size_t DonorFilterPos = Body.find("for(size_t Index = 0; Index < vFilteredDonorAssetIndices.size(); ++Index)", DonorSearchPos);
+	const size_t MainSearchPos = Body.find("ui_widget::SearchField(AssetsEditorMainSearchCtx, &s_aMainSearchInputs[m_AssetsEditorState.m_Type], MainSearchBox, EditBoxFontSize, false)");
+	const size_t MainFilterPos = Body.find("for(size_t Index = 0; Index < vFilteredMainAssetIndices.size(); ++Index)", MainSearchPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext AssetsEditorDonorSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsEditorDonorSearchCtx.m_ScopeHash = MakeUiScopeHash(\"assets_editor_donor_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext AssetsEditorMainSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsEditorMainSearchCtx.m_ScopeHash = MakeUiScopeHash(\"assets_editor_main_search\");"), std::string::npos);
+	EXPECT_NE(DonorSearchPos, std::string::npos);
+	EXPECT_NE(DonorFilterPos, std::string::npos);
+	EXPECT_LT(DonorSearchPos, DonorFilterPos);
+	EXPECT_NE(MainSearchPos, std::string::npos);
+	EXPECT_NE(MainFilterPos, std::string::npos);
+	EXPECT_LT(MainSearchPos, MainFilterPos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_aDonorSearchInputs[m_AssetsEditorState.m_Type], &DonorSearchBox"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_aMainSearchInputs[m_AssetsEditorState.m_Type], &MainSearchBox"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, AudioPackEditorTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");

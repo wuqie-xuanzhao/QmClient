@@ -12,6 +12,7 @@
 
 #include <generated/client_data.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/components/assets_resource_registry.h>
 #include <game/client/components/menus.h>
 #include <game/client/gameclient.h>
@@ -2312,7 +2313,10 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	CUIRect DonorSearchLabel, DonorSearchBox;
 	SplitLeftSafe(LeftBottomRow1, SearchLabelWidth, &DonorSearchLabel, &DonorSearchBox);
 	Ui()->DoLabel(&DonorSearchLabel, Localize("Search"), FontSize, TEXTALIGN_ML);
-	Ui()->DoClearableEditBox(&s_aDonorSearchInputs[m_AssetsEditorState.m_Type], &DonorSearchBox, EditBoxFontSize);
+	IUiContext AssetsEditorDonorSearchCtx;
+	AssetsEditorDonorSearchCtx.m_pUi = Ui();
+	AssetsEditorDonorSearchCtx.m_ScopeHash = MakeUiScopeHash("assets_editor_donor_search");
+	ui_widget::SearchField(AssetsEditorDonorSearchCtx, &s_aDonorSearchInputs[m_AssetsEditorState.m_Type], DonorSearchBox, EditBoxFontSize, false);
 
 	CUIRect DonorLabel, DonorDropDown;
 	SplitLeftSafe(LeftBottomRow2, DonorLabelWidth, &DonorLabel, &DonorDropDown);
@@ -2355,7 +2359,10 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	CUIRect MainSearchLabel, MainSearchBox;
 	SplitLeftSafe(RightBottomRow1, MainSearchLabelWidth, &MainSearchLabel, &MainSearchBox);
 	Ui()->DoLabel(&MainSearchLabel, Localize("Search"), FontSize, TEXTALIGN_ML);
-	Ui()->DoClearableEditBox(&s_aMainSearchInputs[m_AssetsEditorState.m_Type], &MainSearchBox, EditBoxFontSize);
+	IUiContext AssetsEditorMainSearchCtx;
+	AssetsEditorMainSearchCtx.m_pUi = Ui();
+	AssetsEditorMainSearchCtx.m_ScopeHash = MakeUiScopeHash("assets_editor_main_search");
+	ui_widget::SearchField(AssetsEditorMainSearchCtx, &s_aMainSearchInputs[m_AssetsEditorState.m_Type], MainSearchBox, EditBoxFontSize, false);
 
 	CUIRect BottomMainRow, ResetAllButton;
 	const float ResetButtonWidth = minimum(140.0f, maximum(90.0f, TextRender()->TextWidth(FontSize, Localize("Reset All"), -1, -1.0f) + 20.0f));
