@@ -7216,6 +7216,52 @@ TEST(QmMonitoringHelpers, ServerBrowserFiltersTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FilterServerAddressInput, &Button, FontSize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, ServerBrowserAddFriendInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserFriends(CUIRect View)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t NameInputPos = Body.find("static CLineInputBuffered<MAX_NAME_LENGTH> s_NameInput;");
+	const size_t TextInputCtxPos = Body.find("IUiContext ServerBrowserAddFriendTextInputCtx;", NameInputPos);
+	const size_t TextInputUiPos = Body.find("ServerBrowserAddFriendTextInputCtx.m_pUi = Ui();", TextInputCtxPos);
+	const size_t TextInputScopePos = Body.find("ServerBrowserAddFriendTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_add_friend_text_inputs\");", TextInputUiPos);
+	const size_t NameFieldPos = Body.find("ui_widget::TextField(ServerBrowserAddFriendTextInputCtx, &s_NameInput, Button, nullptr, FontSize + 2.0f);", TextInputScopePos);
+	const size_t ClanInputPos = Body.find("static CLineInputBuffered<MAX_CLAN_LENGTH> s_ClanInput;", NameFieldPos);
+	const size_t ClanFieldPos = Body.find("ui_widget::TextField(ServerBrowserAddFriendTextInputCtx, &s_ClanInput, Button, nullptr, FontSize + 2.0f);", ClanInputPos);
+	const size_t AddFriendPos = Body.find("GameClient()->Friends()->AddFriend(s_NameInput.GetString(), s_ClanInput.GetString(), pCategory);", ClanFieldPos);
+	const size_t ClearNamePos = Body.find("s_NameInput.Clear();", AddFriendPos);
+	const size_t ClearClanPos = Body.find("s_ClanInput.Clear();", ClearNamePos);
+	const size_t FriendlistUpdatePos = Body.find("FriendlistOnUpdate();", ClearClanPos);
+	const size_t ServerBrowserUpdatePos = Body.find("Client()->ServerBrowserUpdate();", FriendlistUpdatePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(NameInputPos, std::string::npos);
+	EXPECT_NE(TextInputCtxPos, std::string::npos);
+	EXPECT_NE(TextInputUiPos, std::string::npos);
+	EXPECT_NE(TextInputScopePos, std::string::npos);
+	EXPECT_NE(NameFieldPos, std::string::npos);
+	EXPECT_NE(ClanInputPos, std::string::npos);
+	EXPECT_NE(ClanFieldPos, std::string::npos);
+	EXPECT_NE(AddFriendPos, std::string::npos);
+	EXPECT_NE(ClearNamePos, std::string::npos);
+	EXPECT_NE(ClearClanPos, std::string::npos);
+	EXPECT_NE(FriendlistUpdatePos, std::string::npos);
+	EXPECT_NE(ServerBrowserUpdatePos, std::string::npos);
+	EXPECT_LT(NameInputPos, TextInputCtxPos);
+	EXPECT_LT(TextInputCtxPos, TextInputUiPos);
+	EXPECT_LT(TextInputUiPos, TextInputScopePos);
+	EXPECT_LT(TextInputScopePos, NameFieldPos);
+	EXPECT_LT(NameFieldPos, ClanInputPos);
+	EXPECT_LT(ClanInputPos, ClanFieldPos);
+	EXPECT_LT(ClanFieldPos, AddFriendPos);
+	EXPECT_LT(AddFriendPos, ClearNamePos);
+	EXPECT_LT(ClearNamePos, ClearClanPos);
+	EXPECT_LT(ClearClanPos, FriendlistUpdatePos);
+	EXPECT_LT(FriendlistUpdatePos, ServerBrowserUpdatePos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_NameInput, &Button, FontSize + 2.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_ClanInput, &Button, FontSize + 2.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");

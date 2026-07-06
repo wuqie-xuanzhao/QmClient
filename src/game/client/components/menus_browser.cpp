@@ -2916,7 +2916,10 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		Ui()->DoLabel(&Button, aBuf, FontSize + 2.0f, TEXTALIGN_ML);
 		Button.VSplitLeft(80.0f, nullptr, &Button);
 		static CLineInputBuffered<MAX_NAME_LENGTH> s_NameInput;
-		Ui()->DoEditBox(&s_NameInput, &Button, FontSize + 2.0f);
+		IUiContext ServerBrowserAddFriendTextInputCtx;
+		ServerBrowserAddFriendTextInputCtx.m_pUi = Ui();
+		ServerBrowserAddFriendTextInputCtx.m_ScopeHash = MakeUiScopeHash("server_browser_add_friend_text_inputs");
+		ui_widget::TextField(ServerBrowserAddFriendTextInputCtx, &s_NameInput, Button, nullptr, FontSize + 2.0f);
 
 		ServerFriends.HSplitTop(3.0f, nullptr, &ServerFriends);
 		ServerFriends.HSplitTop(18.0f, &Button, &ServerFriends);
@@ -2924,7 +2927,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		Ui()->DoLabel(&Button, aBuf, FontSize + 2.0f, TEXTALIGN_ML);
 		Button.VSplitLeft(80.0f, nullptr, &Button);
 		static CLineInputBuffered<MAX_CLAN_LENGTH> s_ClanInput;
-		Ui()->DoEditBox(&s_ClanInput, &Button, FontSize + 2.0f);
+		ui_widget::TextField(ServerBrowserAddFriendTextInputCtx, &s_ClanInput, Button, nullptr, FontSize + 2.0f);
 
 		ServerFriends.HSplitTop(3.0f, nullptr, &ServerFriends);
 		ServerFriends.HSplitTop(18.0f, &Button, &ServerFriends);
