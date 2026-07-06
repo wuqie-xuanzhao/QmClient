@@ -6216,6 +6216,63 @@ TEST(QmMonitoringHelpers, QmClientLayoutSyncSerializesOnlyWhenConfigOrModelDirty
 	EXPECT_LT(SyncBody.find("if(ConfigChanged || ModelDirty)"), SyncBody.find("qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));"));
 }
 
+TEST(QmMonitoringHelpers, QmClientLayoutSyncPersistsDirtyModelToGlobalOrder)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(QmMainBody.empty());
+	const std::string SyncBody = ExtractSourceBlock(QmMainBody, "auto SyncQmModuleLayout = [&]()", "SyncQmModuleLayout();");
+	ASSERT_FALSE(SyncBody.empty());
+
+	const size_t DirtyBranchPos = SyncBody.find("if(ConfigChanged || ModelDirty)");
+	ASSERT_NE(DirtyBranchPos, std::string::npos);
+	const size_t OldLayoutPersistPos = SyncBody.find("qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));", DirtyBranchPos);
+	const size_t GlobalPersistGuardPos = SyncBody.find("if(g_Config.m_QmGlobalCardOrder[0] != '\\0' || ModelDirty)", DirtyBranchPos);
+	const size_t GlobalMergePos = SyncBody.find("qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder))", DirtyBranchPos);
+	const size_t GlobalCopyPos = SyncBody.find("str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));", DirtyBranchPos);
+	const size_t GlobalCachePos = SyncBody.find("str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));", DirtyBranchPos);
+	const size_t DirtyClearPos = SyncBody.find("qm_module::ClearQmLayoutModelDirty();", DirtyBranchPos);
+
+	EXPECT_NE(OldLayoutPersistPos, std::string::npos);
+	EXPECT_NE(GlobalPersistGuardPos, std::string::npos);
+	EXPECT_NE(GlobalMergePos, std::string::npos);
+	EXPECT_NE(GlobalCopyPos, std::string::npos);
+	EXPECT_NE(GlobalCachePos, std::string::npos);
+	EXPECT_NE(DirtyClearPos, std::string::npos);
+	EXPECT_LT(OldLayoutPersistPos, GlobalPersistGuardPos);
+	EXPECT_LT(GlobalPersistGuardPos, GlobalMergePos);
+	EXPECT_LT(GlobalMergePos, GlobalCopyPos);
+	EXPECT_LT(GlobalCopyPos, GlobalCachePos);
+	EXPECT_LT(GlobalCachePos, DirtyClearPos);
+}
+
+TEST(QmMonitoringHelpers, QmClientLayoutSyncKeepsDirtyWhenGlobalPersistFails)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(QmMainBody.empty());
+	const std::string SyncBody = ExtractSourceBlock(QmMainBody, "auto SyncQmModuleLayout = [&]()", "SyncQmModuleLayout();");
+	ASSERT_FALSE(SyncBody.empty());
+
+	const size_t DirtyBranchPos = SyncBody.find("if(ConfigChanged || ModelDirty)");
+	ASSERT_NE(DirtyBranchPos, std::string::npos);
+	const size_t PersistFlagInitPos = SyncBody.find("bool GlobalOrderPersisted = !ModelDirty;", DirtyBranchPos);
+	const size_t GlobalMergePos = SyncBody.find("qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder))", DirtyBranchPos);
+	const size_t PersistFlagSetPos = SyncBody.find("GlobalOrderPersisted = true;", DirtyBranchPos);
+	const size_t DirtyClearGuardPos = SyncBody.find("if(GlobalOrderPersisted)", DirtyBranchPos);
+	const size_t DirtyClearPos = SyncBody.find("qm_module::ClearQmLayoutModelDirty();", DirtyBranchPos);
+
+	EXPECT_NE(PersistFlagInitPos, std::string::npos);
+	EXPECT_NE(GlobalMergePos, std::string::npos);
+	EXPECT_NE(PersistFlagSetPos, std::string::npos);
+	EXPECT_NE(DirtyClearGuardPos, std::string::npos);
+	EXPECT_NE(DirtyClearPos, std::string::npos);
+	EXPECT_LT(PersistFlagInitPos, GlobalMergePos);
+	EXPECT_LT(GlobalMergePos, PersistFlagSetPos);
+	EXPECT_LT(PersistFlagSetPos, DirtyClearGuardPos);
+	EXPECT_LT(DirtyClearGuardPos, DirtyClearPos);
+}
+
 TEST(QmMonitoringHelpers, QmClientDragPersistsGlobalCardOrder)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -6244,6 +6301,7 @@ TEST(QmMonitoringHelpers, QmClientDragPersistsGlobalCardOrder)
 	EXPECT_LT(GlobalMergeAbortPos, GlobalCopyPos);
 	EXPECT_LT(GlobalMergePos, GlobalCopyPos);
 	EXPECT_LT(GlobalCopyPos, GlobalCachePos);
+	EXPECT_NE(QmMainBody.find("qm_module::ClearQmLayoutModelDirty();", CommitPos), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("QmModuleLayoutModel().Serialize(g_Config.m_QmGlobalCardOrder"), std::string::npos);
 }
 

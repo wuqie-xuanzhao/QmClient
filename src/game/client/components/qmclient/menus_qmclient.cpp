@@ -2178,7 +2178,19 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			if(str_comp(aSerialized, g_Config.m_QmSidebarCardOrder) != 0)
 				str_copy(g_Config.m_QmSidebarCardOrder, aSerialized, sizeof(g_Config.m_QmSidebarCardOrder));
 			str_copy(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder, sizeof(s_aQmModuleLayoutConfigCache));
-			qm_module::ClearQmLayoutModelDirty();
+			bool GlobalOrderPersisted = !ModelDirty;
+			if(g_Config.m_QmGlobalCardOrder[0] != '\0' || ModelDirty)
+			{
+				char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+				if(qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))
+				{
+					str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+					str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));
+					GlobalOrderPersisted = true;
+				}
+			}
+			if(GlobalOrderPersisted)
+				qm_module::ClearQmLayoutModelDirty();
 		}
 		if(g_Config.m_QmCardOrderMigrated == 0 && qm_module::MigrateQmLayoutToGlobalCardOrder(std::vector<SQmModuleEntry>(s_aQmModuleLayout.begin(), s_aQmModuleLayout.end())))
 			str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));
@@ -8071,6 +8083,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		str_copy(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder, sizeof(s_aQmModuleLayoutConfigCache));
 		str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));
+		qm_module::ClearQmLayoutModelDirty();
 		g_Config.m_QmCardOrderMigrated = 1;
 		s_QmModuleColumnCacheDirty = true;
 
