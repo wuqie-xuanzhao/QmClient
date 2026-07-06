@@ -6256,6 +6256,10 @@ TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 	EXPECT_EQ(QmMainBody.find("SearchTabActive"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("CLineInputBuffered<128> &ModuleSearchInput = m_GlobalCardSearchInput;"), std::string::npos);
 	EXPECT_EQ(SearchContentBody.find("m_QmClientModuleSearchInput"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("IUiContext SearchCtx;"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("SearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_global_search\");"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("ui_widget::SearchField(SearchCtx, &ModuleSearchInput, Row, BodySize"), std::string::npos);
+	EXPECT_EQ(SearchContentBody.find("Ui()->DoEditBox_Search(&ModuleSearchInput"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("RenderGlobalSearchResults(MainView, SearchVisibleGlobalCards, QmCardStyle, UiScale, PrewarmOnly, s_GlassCards);"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("GlobalSearchPage"), std::string::npos);

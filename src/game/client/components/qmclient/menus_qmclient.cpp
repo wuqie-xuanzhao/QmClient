@@ -25,6 +25,7 @@
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiDogfood.h>
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
@@ -816,6 +817,17 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	MainView.VSplitLeft(OuterMargin, nullptr, &MainView);
 	s_GlassCards.clear();
 
+	IUiContext SearchCtx;
+	SearchCtx.m_pUi = Ui();
+	SearchCtx.m_pMenus = this;
+	SearchCtx.m_pTextRender = TextRender();
+	SearchCtx.m_pTooltips = &GameClient()->m_Tooltips;
+	SearchCtx.m_pAnim = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();
+	SearchCtx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
+	SearchCtx.m_pIconManager = GameClient()->QmIconManager();
+	SearchCtx.m_ScopeHash = MakeUiScopeHash("settings_global_search");
+	SearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 	CLineInputBuffered<128> &ModuleSearchInput = m_GlobalCardSearchInput;
 	const char *pModuleSearch = ModuleSearchInput.GetString();
 	SQmGlobalSearchResults GlobalSearchResults;
@@ -835,7 +847,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-search-feature-search-title", &Row, Localize("Feature Search"), BodySize + 2.0f, TEXTALIGN_ML, {}, (int)Row.w);
 		SearchContent.HSplitTop(LineSpacing * 0.5f, nullptr, &SearchContent);
 		SearchContent.HSplitTop(LineHeight, &Row, &SearchContent);
-		Ui()->DoEditBox_Search(&ModuleSearchInput, &Row, BodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		ui_widget::SearchField(SearchCtx, &ModuleSearchInput, Row, BodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 		SearchContent.HSplitTop(LineSpacing * 0.65f, nullptr, &SearchContent);
 
 		char aSearchHint[64];
