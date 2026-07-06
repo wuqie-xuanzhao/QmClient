@@ -6602,6 +6602,52 @@ TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)
 	EXPECT_NE(Body.find("LogQmPerfStage(Client(), \"gores_bind_lookup\""), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmClientFriendEnterTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "CUIRect CardFriendNotifyStart = Column;", "case EQmModuleId::BlockWords:");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext QmClientFriendEnterTextInputCtx;");
+	const size_t UiPos = Body.find("QmClientFriendEnterTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("QmClientFriendEnterTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("QmClientFriendEnterTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("QmClientFriendEnterTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_friend_enter_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("QmClientFriendEnterTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+
+	const size_t BroadcastInputPos = Body.find("static CLineInput s_FriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, sizeof(g_Config.m_QmFriendEnterBroadcastText));");
+	const size_t BroadcastEmptyTextPos = Body.find("s_FriendEnterBroadcastText.SetEmptyText(Localize(\"Please use %s as friend name\"));", BroadcastInputPos);
+	const size_t BroadcastTextFieldPos = Body.find("ui_widget::TextField(QmClientFriendEnterTextInputCtx, &s_FriendEnterBroadcastText, ControlCol, Localize(\"Please use %s as friend name\"), LgBodySize);", BroadcastEmptyTextPos);
+	EXPECT_NE(BroadcastInputPos, std::string::npos);
+	EXPECT_NE(BroadcastEmptyTextPos, std::string::npos);
+	EXPECT_NE(BroadcastTextFieldPos, std::string::npos);
+	EXPECT_LT(BroadcastInputPos, BroadcastEmptyTextPos);
+	EXPECT_LT(BroadcastEmptyTextPos, BroadcastTextFieldPos);
+
+	const size_t GreetInputPos = Body.find("static CLineInput s_FriendEnterGreetText(g_Config.m_QmFriendEnterGreetText, sizeof(g_Config.m_QmFriendEnterGreetText));");
+	const size_t GreetEmptyTextPos = Body.find("s_FriendEnterGreetText.SetEmptyText(Localize(\"Leave empty to disable\"));", GreetInputPos);
+	const size_t GreetTextFieldPos = Body.find("ui_widget::TextField(QmClientFriendEnterTextInputCtx, &s_FriendEnterGreetText, ControlCol, Localize(\"Leave empty to disable\"), LgBodySize);", GreetEmptyTextPos);
+	EXPECT_NE(GreetInputPos, std::string::npos);
+	EXPECT_NE(GreetEmptyTextPos, std::string::npos);
+	EXPECT_NE(GreetTextFieldPos, std::string::npos);
+	EXPECT_LT(GreetInputPos, GreetEmptyTextPos);
+	EXPECT_LT(GreetEmptyTextPos, GreetTextFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FriendEnterBroadcastText, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FriendEnterGreetText, &ControlCol, LgBodySize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, LaserPreviewDrawsWeaponBodiesBeforePreviewLaser)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");

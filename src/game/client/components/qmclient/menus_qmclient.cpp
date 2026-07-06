@@ -4123,6 +4123,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 6, Localize("Friend Notifications"), Localize("Friend online and join notifications"));
+				IUiContext QmClientFriendEnterTextInputCtx;
+				QmClientFriendEnterTextInputCtx.m_pUi = Ui();
+				QmClientFriendEnterTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+				QmClientFriendEnterTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+				QmClientFriendEnterTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_friend_enter_text_inputs");
+				QmClientFriendEnterTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmFriendOnlineNotify, "Notify when friends come online", Localize("Notify when friends come online"), &g_Config.m_QmFriendOnlineNotify, &Row, LgLineHeight);
@@ -4164,7 +4170,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-friend-notifications-large-text-content", &LabelCol, Localize("Large text content"), LgBodySize);
 					static CLineInput s_FriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, sizeof(g_Config.m_QmFriendEnterBroadcastText));
 					s_FriendEnterBroadcastText.SetEmptyText(Localize("Please use %s as friend name"));
-					Ui()->DoEditBox(&s_FriendEnterBroadcastText, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientFriendEnterTextInputCtx, &s_FriendEnterBroadcastText, ControlCol, Localize("Please use %s as friend name"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -4175,7 +4181,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-friend-notifications-greeting-text", &LabelCol, Localize("Greeting text"), LgBodySize);
 					static CLineInput s_FriendEnterGreetText(g_Config.m_QmFriendEnterGreetText, sizeof(g_Config.m_QmFriendEnterGreetText));
 					s_FriendEnterGreetText.SetEmptyText(Localize("Leave empty to disable"));
-					Ui()->DoEditBox(&s_FriendEnterGreetText, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientFriendEnterTextInputCtx, &s_FriendEnterGreetText, ControlCol, Localize("Leave empty to disable"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
