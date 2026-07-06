@@ -3532,7 +3532,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				{
 					const CUIRect EffectiveTarget = (s_DropPreview.m_PreviewValid && s_aQmModulePreviewRects[SI].w > 0.0f) ? s_aQmModulePreviewRects[SI] : TargetBeforeRender;
 					const CUIRect AnimEffectiveTarget = QmModuleCardAnimRect(EffectiveTarget);
-					const bool AnimateCardLayout = !TabTransitionActive;
+					const bool AnimateCardLayout = s_DropPreview.m_PreviewValid && !TabTransitionActive;
 					DispRect = GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimEffectiveTarget, ui_token::motion::CARD_REORDER, 1, AnimateCardLayout);
 					DispRect = QmModuleCardScreenRect(DispRect);
 				}

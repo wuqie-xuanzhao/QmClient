@@ -6560,7 +6560,7 @@ TEST(QmMonitoringHelpers, QmClientFlatDragKeepsPreviewHeightAndVisualsStable)
 	EXPECT_NE(Body.find("const CUIRect AnimTargetBeforeRender = QmModuleCardAnimRect(TargetBeforeRender);"), std::string::npos);
 	EXPECT_NE(Body.find("const CUIRect AnimEffectiveTarget = QmModuleCardAnimRect(EffectiveTarget);"), std::string::npos);
 	EXPECT_NE(Body.find("DispRect = QmModuleCardScreenRect(DispRect);"), std::string::npos);
-	EXPECT_NE(Body.find("const bool AnimateCardLayout = !TabTransitionActive;"), std::string::npos);
+	EXPECT_NE(Body.find("const bool AnimateCardLayout = s_DropPreview.m_PreviewValid && !TabTransitionActive;"), std::string::npos);
 	EXPECT_NE(Body.find("GameClient()->UiRuntimeV2()->Tree().ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimEffectiveTarget, ui_token::motion::CARD_REORDER, 1, AnimateCardLayout);"), std::string::npos);
 	EXPECT_NE(Body.find("BuildUiAnimNodeKey(str_quickhash(\"qm_module_card_layout\"), static_cast<uint64_t>(pModule->m_Id))"), std::string::npos);
 	EXPECT_EQ(Body.find("static std::array<vec2, QmModuleCount> s_aQmModuleDisplayVelocities{};"), std::string::npos);
@@ -6588,7 +6588,7 @@ TEST(QmMonitoringHelpers, QmClientFlatDragKeepsPreviewHeightAndVisualsStable)
 	EXPECT_NE(DisplayRectOffset.find("CUIRect &DispRect = s_aQmModuleDisplayRects[SI];"), std::string::npos);
 	EXPECT_NE(DisplayRectOffset.find("SyncLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, QmModuleCardAnimRect(DragTarget));"), std::string::npos);
 	EXPECT_NE(DisplayRectOffset.find("ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimTargetBeforeRender, ui_token::motion::CARD_REORDER, 1, false);"), std::string::npos);
-	EXPECT_NE(DisplayRectOffset.find("const bool AnimateCardLayout = !TabTransitionActive;"), std::string::npos);
+	EXPECT_NE(DisplayRectOffset.find("const bool AnimateCardLayout = s_DropPreview.m_PreviewValid && !TabTransitionActive;"), std::string::npos);
 	EXPECT_NE(DisplayRectOffset.find("ResolveLayoutTransition(GameClient()->UiRuntimeV2()->AnimRuntime(), NodeKey, AnimEffectiveTarget, ui_token::motion::CARD_REORDER, 1, AnimateCardLayout);"), std::string::npos);
 	EXPECT_NE(DisplayRectOffset.find("DispRect = QmModuleCardScreenRect(DispRect);"), std::string::npos);
 	EXPECT_EQ(DisplayRectOffset.find("GameClient()->UiRuntimeV2()->AnimRuntime().SetValue(NodeKey, EUiAnimProperty::POS_X"), std::string::npos);
