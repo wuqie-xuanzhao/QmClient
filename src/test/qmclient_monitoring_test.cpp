@@ -7114,6 +7114,51 @@ TEST(QmMonitoringHelpers, DDNetSettingsTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_RunOnJoinInput, &Button, 14.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TouchControlsLayoutInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame_touch_controls.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext TouchControlsLayoutTextInputCtx;");
+	const size_t UiPos = Body.find("TouchControlsLayoutTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t ScopePos = Body.find("TouchControlsLayoutTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"touch_controls_layout_text_inputs\");", UiPos);
+	const size_t XFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputX, EditBox, nullptr, FONTSIZE)", ScopePos);
+	const size_t XUpdatePos = Body.find("InputPosFunction(&m_InputX);", XFieldPos);
+	const size_t YFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputY, EditBox, nullptr, FONTSIZE)", XUpdatePos);
+	const size_t YUpdatePos = Body.find("InputPosFunction(&m_InputY);", YFieldPos);
+	const size_t WFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputW, EditBox, nullptr, FONTSIZE)", YUpdatePos);
+	const size_t WUpdatePos = Body.find("InputPosFunction(&m_InputW);", WFieldPos);
+	const size_t HFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputH, EditBox, nullptr, FONTSIZE)", WUpdatePos);
+	const size_t HUpdatePos = Body.find("InputPosFunction(&m_InputH);", HFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(XFieldPos, std::string::npos);
+	EXPECT_NE(XUpdatePos, std::string::npos);
+	EXPECT_NE(YFieldPos, std::string::npos);
+	EXPECT_NE(YUpdatePos, std::string::npos);
+	EXPECT_NE(WFieldPos, std::string::npos);
+	EXPECT_NE(WUpdatePos, std::string::npos);
+	EXPECT_NE(HFieldPos, std::string::npos);
+	EXPECT_NE(HUpdatePos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, ScopePos);
+	EXPECT_LT(ScopePos, XFieldPos);
+	EXPECT_LT(XFieldPos, XUpdatePos);
+	EXPECT_LT(XUpdatePos, YFieldPos);
+	EXPECT_LT(YFieldPos, YUpdatePos);
+	EXPECT_LT(YUpdatePos, WFieldPos);
+	EXPECT_LT(WFieldPos, WUpdatePos);
+	EXPECT_LT(WUpdatePos, HFieldPos);
+	EXPECT_LT(HFieldPos, HUpdatePos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_InputX, &EditBox, FONTSIZE"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_InputY, &EditBox, FONTSIZE"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_InputW, &EditBox, FONTSIZE"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_InputH, &EditBox, FONTSIZE"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings7.cpp");

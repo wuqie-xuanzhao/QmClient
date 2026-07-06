@@ -11,6 +11,7 @@
 #include <engine/shared/localization.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/components/touch_controls.h>
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
@@ -238,10 +239,13 @@ bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)
 {
 	bool Changed = false;
 	CUIRect EditBox, LeftButton, RightButton, PosX, PosY, PosW, PosH;
+	IUiContext TouchControlsLayoutTextInputCtx;
+	TouchControlsLayoutTextInputCtx.m_pUi = Ui();
+	TouchControlsLayoutTextInputCtx.m_ScopeHash = MakeUiScopeHash("touch_controls_layout_text_inputs");
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&PosX, &EditBox);
-	if(Ui()->DoClearableEditBox(&m_InputX, &EditBox, FONTSIZE))
+	if(ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputX, EditBox, nullptr, FONTSIZE))
 	{
 		InputPosFunction(&m_InputX);
 		Changed = true;
@@ -251,7 +255,7 @@ bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&PosY, &EditBox);
-	if(Ui()->DoClearableEditBox(&m_InputY, &EditBox, FONTSIZE))
+	if(ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputY, EditBox, nullptr, FONTSIZE))
 	{
 		InputPosFunction(&m_InputY);
 		Changed = true;
@@ -260,7 +264,7 @@ bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&PosW, &EditBox);
-	if(Ui()->DoClearableEditBox(&m_InputW, &EditBox, FONTSIZE))
+	if(ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputW, EditBox, nullptr, FONTSIZE))
 	{
 		InputPosFunction(&m_InputW);
 		Changed = true;
@@ -269,7 +273,7 @@ bool CMenusIngameTouchControls::RenderLayoutSettingBlock(CUIRect Block)
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&PosH, &EditBox);
-	if(Ui()->DoClearableEditBox(&m_InputH, &EditBox, FONTSIZE))
+	if(ui_widget::ClearableTextField(TouchControlsLayoutTextInputCtx, &m_InputH, EditBox, nullptr, FONTSIZE))
 	{
 		InputPosFunction(&m_InputH);
 		Changed = true;
