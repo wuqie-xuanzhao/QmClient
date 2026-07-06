@@ -6726,6 +6726,19 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_EQ(ListItemBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientConfigSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientConfigSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("TClientConfigSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_config_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::SearchField(TClientConfigSearchCtx, &s_SearchInput, SearchEdit, EditBoxFontSize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_SearchInput, &SearchEdit, EditBoxFontSize);"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 {
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");

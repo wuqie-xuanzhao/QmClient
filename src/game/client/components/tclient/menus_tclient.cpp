@@ -17,6 +17,7 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
 #include <game/client/components/chat.h>
@@ -5566,7 +5567,13 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		Row.VSplitLeft(250.0f, &SearchEdit, &Row);
 		Row.VSplitLeft(MarginSmall, nullptr, &Row);
 		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &SearchLabel, Localize("Search"), FontSize, TEXTALIGN_ML);
-		Ui()->DoClearableEditBox(&s_SearchInput, &SearchEdit, EditBoxFontSize);
+		IUiContext TClientConfigSearchCtx;
+		TClientConfigSearchCtx.m_pUi = Ui();
+		TClientConfigSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+		TClientConfigSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+		TClientConfigSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_config_search");
+		TClientConfigSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+		ui_widget::SearchField(TClientConfigSearchCtx, &s_SearchInput, SearchEdit, EditBoxFontSize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 		// 分隔
 		Row.VSplitLeft(MarginSmall, nullptr, &Row);
