@@ -69,6 +69,13 @@ namespace qm_card_order
 			*pOutColumn = Column;
 			return true;
 		}
+
+		bool SameTab(const char *pA, const char *pB)
+		{
+			const char *pSafeA = pA != nullptr ? pA : "";
+			const char *pSafeB = pB != nullptr ? pB : "";
+			return str_comp(pSafeA, pSafeB) == 0;
+		}
 	}
 
 	bool SerializeMergedReplacingPrefix(const char *pExistingGlobalOrder, const char *pStableIdPrefix, const std::vector<SEntry> &vReplacementEntries, char *pOut, int OutSize)
@@ -143,18 +150,39 @@ namespace qm_card_order
 		const int Idx = FindByStableId(pStableId);
 		if(Idx < 0)
 			return;
+		const char *pTab = m_vEntries[Idx].m_pDefaultTab;
+		const int FromColumn = m_vEntries[Idx].m_Column;
 		m_vEntries[Idx].m_Column = ToColumn;
 		// 重建目标列 order（erase + insert 语义）
 		std::vector<int> vOthers;
-		for(int i : ColumnIndices(ToColumn))
+		for(size_t i = 0; i < m_vEntries.size(); ++i)
 		{
-			if(i != Idx)
-				vOthers.push_back(i);
+			if((int)i == Idx || m_vEntries[i].m_Column != ToColumn || !SameTab(m_vEntries[i].m_pDefaultTab, pTab))
+				continue;
+			vOthers.push_back((int)i);
 		}
+		std::stable_sort(vOthers.begin(), vOthers.end(), [&](int a, int b) {
+			return m_vEntries[a].m_OrderInColumn < m_vEntries[b].m_OrderInColumn;
+		});
 		ToOrder = std::clamp(ToOrder, 0, (int)vOthers.size());
 		vOthers.insert(vOthers.begin() + ToOrder, Idx);
 		for(int o = 0; o < (int)vOthers.size(); ++o)
 			m_vEntries[vOthers[o]].m_OrderInColumn = o;
+		if(FromColumn != ToColumn)
+		{
+			std::vector<int> vSource;
+			for(size_t i = 0; i < m_vEntries.size(); ++i)
+			{
+				if((int)i == Idx || m_vEntries[i].m_Column != FromColumn || !SameTab(m_vEntries[i].m_pDefaultTab, pTab))
+					continue;
+				vSource.push_back((int)i);
+			}
+			std::stable_sort(vSource.begin(), vSource.end(), [&](int a, int b) {
+				return m_vEntries[a].m_OrderInColumn < m_vEntries[b].m_OrderInColumn;
+			});
+			for(int o = 0; o < (int)vSource.size(); ++o)
+				m_vEntries[vSource[o]].m_OrderInColumn = o;
+		}
 		m_Dirty = true;
 		// Move 仅改 column/order，不改 stableId 集合与 vector 位置，state index 注册表无需重建
 	}
@@ -164,6 +192,8 @@ namespace qm_card_order
 		const int Idx = FindByStableId(pStableId);
 		if(Idx < 0 || pToTab == nullptr)
 			return;
+		const char *pFromTab = m_vEntries[Idx].m_pDefaultTab;
+		const int FromColumn = m_vEntries[Idx].m_Column;
 		m_vOwnedTabs.emplace_back(pToTab);
 		m_vEntries[Idx].m_pDefaultTab = m_vOwnedTabs.back().c_str();
 		m_vEntries[Idx].m_Column = ToColumn;
@@ -178,6 +208,21 @@ namespace qm_card_order
 		vOthers.insert(vOthers.begin() + ToOrder, Idx);
 		for(int o = 0; o < (int)vOthers.size(); ++o)
 			m_vEntries[vOthers[o]].m_OrderInColumn = o;
+		if(!SameTab(pFromTab, pToTab) || FromColumn != ToColumn)
+		{
+			std::vector<int> vSource;
+			for(size_t i = 0; i < m_vEntries.size(); ++i)
+			{
+				if((int)i == Idx || m_vEntries[i].m_Column != FromColumn || !SameTab(m_vEntries[i].m_pDefaultTab, pFromTab))
+					continue;
+				vSource.push_back((int)i);
+			}
+			std::stable_sort(vSource.begin(), vSource.end(), [&](int a, int b) {
+				return m_vEntries[a].m_OrderInColumn < m_vEntries[b].m_OrderInColumn;
+			});
+			for(int o = 0; o < (int)vSource.size(); ++o)
+				m_vEntries[vSource[o]].m_OrderInColumn = o;
+		}
 		m_Dirty = true;
 		// MoveToTab 仅改 tab/column/order，不改 stableId 集合与 vector 位置，state index 注册表无需重建
 	}

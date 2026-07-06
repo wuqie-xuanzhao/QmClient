@@ -30,6 +30,29 @@ TEST(QmCardOrderModel, MoveReordersWithinColumn)
 	EXPECT_TRUE(M.IsDirty());
 }
 
+TEST(QmCardOrderModel, MoveAcrossColumnsNormalizesSourceColumn)
+{
+	qm_card_order::CModel M;
+	M.SetEntries({{"a", nullptr, 1, 0}, {"b", nullptr, 1, 1}, {"c", nullptr, 1, 2}, {"d", nullptr, 2, 0}});
+	M.ClearDirty();
+
+	M.Move("b", 2, 1);
+
+	auto Left = M.ColumnIndices(1);
+	ASSERT_EQ(Left.size(), 2u);
+	EXPECT_STREQ(M.Entry(Left[0]).m_pStableId, "a");
+	EXPECT_EQ(M.Entry(Left[0]).m_OrderInColumn, 0);
+	EXPECT_STREQ(M.Entry(Left[1]).m_pStableId, "c");
+	EXPECT_EQ(M.Entry(Left[1]).m_OrderInColumn, 1);
+
+	auto Right = M.ColumnIndices(2);
+	ASSERT_EQ(Right.size(), 2u);
+	EXPECT_STREQ(M.Entry(Right[0]).m_pStableId, "d");
+	EXPECT_EQ(M.Entry(Right[0]).m_OrderInColumn, 0);
+	EXPECT_STREQ(M.Entry(Right[1]).m_pStableId, "b");
+	EXPECT_EQ(M.Entry(Right[1]).m_OrderInColumn, 1);
+}
+
 TEST(QmCardOrderModel, MoveToTabChangesPlacementTabAndReordersTargetColumn)
 {
 	qm_card_order::CModel M;
@@ -47,6 +70,29 @@ TEST(QmCardOrderModel, MoveToTabChangesPlacementTabAndReordersTargetColumn)
 	EXPECT_STREQ(M.Entry(HudLeft[1]).m_pDefaultTab, "hud");
 	EXPECT_STREQ(M.Entry(HudLeft[2]).m_pStableId, "qm:c");
 	EXPECT_TRUE(M.IsDirty());
+}
+
+TEST(QmCardOrderModel, MoveToTabNormalizesSourceTabColumn)
+{
+	qm_card_order::CModel M;
+	M.SetEntries({{"qm:a", "visual", 1, 0}, {"qm:b", "visual", 1, 1}, {"qm:c", "visual", 1, 2}, {"qm:d", "hud", 1, 0}});
+	M.ClearDirty();
+
+	M.MoveToTab("qm:b", "hud", 1, 1);
+
+	auto VisualLeft = M.ColumnIndices("visual", 1);
+	ASSERT_EQ(VisualLeft.size(), 2u);
+	EXPECT_STREQ(M.Entry(VisualLeft[0]).m_pStableId, "qm:a");
+	EXPECT_EQ(M.Entry(VisualLeft[0]).m_OrderInColumn, 0);
+	EXPECT_STREQ(M.Entry(VisualLeft[1]).m_pStableId, "qm:c");
+	EXPECT_EQ(M.Entry(VisualLeft[1]).m_OrderInColumn, 1);
+
+	auto HudLeft = M.ColumnIndices("hud", 1);
+	ASSERT_EQ(HudLeft.size(), 2u);
+	EXPECT_STREQ(M.Entry(HudLeft[0]).m_pStableId, "qm:d");
+	EXPECT_EQ(M.Entry(HudLeft[0]).m_OrderInColumn, 0);
+	EXPECT_STREQ(M.Entry(HudLeft[1]).m_pStableId, "qm:b");
+	EXPECT_EQ(M.Entry(HudLeft[1]).m_OrderInColumn, 1);
 }
 
 TEST(QmCardOrderModel, MoveToTabSerializesNewTabPlacement)
