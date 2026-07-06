@@ -29,6 +29,7 @@
 #include <generated/client_data.h>
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/animstate.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/qmclient/perf_logging.h>
@@ -2334,7 +2335,13 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		Ui()->SetActiveItem(&m_FilterInput);
 		m_FilterInput.SelectAll();
 	}
-	bool Searching = Ui()->DoEditBox_Search(&m_FilterInput, &QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	IUiContext CallvoteSearchCtx;
+	CallvoteSearchCtx.m_pUi = Ui();
+	CallvoteSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	CallvoteSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	CallvoteSearchCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_search");
+	CallvoteSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	bool Searching = ui_widget::SearchField(CallvoteSearchCtx, &m_FilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 	if(s_ControlPage == EServerControlTab::SETTINGS)
 	{
