@@ -4256,11 +4256,17 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					s_BlockWordsReplaceInput.Set(g_Config.m_QmBlockWordsReplacementChar);
 				}
 				s_BlockWordsReplaceInput.SetEmptyText("*");
+				IUiContext QmClientBlockWordsTextInputCtx;
+				QmClientBlockWordsTextInputCtx.m_pUi = Ui();
+				QmClientBlockWordsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+				QmClientBlockWordsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+				QmClientBlockWordsTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_block_words_text_inputs");
+				QmClientBlockWordsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
 				DoQmSettingsLabel("qmclient-word-filter-replacement-chars", &LabelCol, Localize("Replacement chars"), LgBodySize);
-				if(Ui()->DoEditBox(&s_BlockWordsReplaceInput, &ControlCol, LgBodySize))
+				if(ui_widget::TextField(QmClientBlockWordsTextInputCtx, &s_BlockWordsReplaceInput, ControlCol, "*", LgBodySize))
 				{
 					char aReplacement[8];
 					str_utf8_truncate(aReplacement, sizeof(aReplacement), s_BlockWordsReplaceInput.GetString(), 1);

@@ -6865,6 +6865,44 @@ TEST(QmMonitoringHelpers, QmClientKeywordReplyRuleInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&pRuleRow->m_ReplyInput, &ReplyCol, LgBodySize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmClientBlockWordsReplacementInputUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "CUIRect CardBlockWordsStart = Column;", "case EQmModuleId::Translate:");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t InputPos = Body.find("static CLineInputBuffered<8> s_BlockWordsReplaceInput;");
+	const size_t EmptyTextPos = Body.find("s_BlockWordsReplaceInput.SetEmptyText(\"*\");", InputPos);
+	const size_t CtxPos = Body.find("IUiContext QmClientBlockWordsTextInputCtx;", EmptyTextPos);
+	const size_t UiPos = Body.find("QmClientBlockWordsTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("QmClientBlockWordsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("QmClientBlockWordsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("QmClientBlockWordsTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_block_words_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("QmClientBlockWordsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	const size_t TextFieldPos = Body.find("if(ui_widget::TextField(QmClientBlockWordsTextInputCtx, &s_BlockWordsReplaceInput, ControlCol, \"*\", LgBodySize))", FrameDtPos);
+	EXPECT_NE(InputPos, std::string::npos);
+	EXPECT_NE(EmptyTextPos, std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_LT(InputPos, EmptyTextPos);
+	EXPECT_LT(EmptyTextPos, CtxPos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+	EXPECT_LT(FrameDtPos, TextFieldPos);
+
+	EXPECT_NE(Body.find("str_utf8_truncate(aReplacement, sizeof(aReplacement), s_BlockWordsReplaceInput.GetString(), 1);"), std::string::npos);
+	EXPECT_NE(Body.find("str_copy(g_Config.m_QmBlockWordsReplacementChar, aReplacement, sizeof(g_Config.m_QmBlockWordsReplacementChar));"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_BlockWordsReplaceInput, &ControlCol, LgBodySize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, LaserPreviewDrawsWeaponBodiesBeforePreviewLaser)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
