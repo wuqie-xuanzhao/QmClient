@@ -3942,6 +3942,19 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 		return;
 	}
 
+	IUiContext AudioPackSlotSearchCtx;
+	AudioPackSlotSearchCtx.m_pUi = Ui();
+	AudioPackSlotSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	AudioPackSlotSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	AudioPackSlotSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_audio_pack_slot_search");
+	AudioPackSlotSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	IUiContext AudioPackCandidateSearchCtx;
+	AudioPackCandidateSearchCtx.m_pUi = Ui();
+	AudioPackCandidateSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	AudioPackCandidateSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	AudioPackCandidateSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_audio_pack_candidate_search");
+	AudioPackCandidateSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 	const auto vAllSlots = BuildAudioPackSlots();
 	if(vAllSlots.empty())
 	{
@@ -4023,7 +4036,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_pack_slot_search_label", &SlotSearchRow, Localize("Search"), 12.0f, TEXTALIGN_ML);
 	CUIRect SlotSearchInput;
 	SlotSearchRow.VSplitLeft(80.0f, nullptr, &SlotSearchInput);
-	Ui()->DoEditBox_Search(&m_AudioPackEditorState.m_FilterInput, &SlotSearchInput, 12.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	ui_widget::SearchField(AudioPackSlotSearchCtx, &m_AudioPackEditorState.m_FilterInput, SlotSearchInput, 12.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 	std::vector<int> vVisibleSlotIndices;
 	vVisibleSlotIndices.reserve(vAllSlots.size());
@@ -4091,7 +4104,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_pack_candidate_search_label", &CandidateSearchRow, Localize("Search"), 12.0f, TEXTALIGN_ML);
 	CUIRect CandidateSearchInput;
 	CandidateSearchRow.VSplitLeft(80.0f, nullptr, &CandidateSearchInput);
-	Ui()->DoEditBox_Search(&m_AudioPackEditorState.m_CandidateFilterInput, &CandidateSearchInput, 12.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	ui_widget::SearchField(AudioPackCandidateSearchCtx, &m_AudioPackEditorState.m_CandidateFilterInput, CandidateSearchInput, 12.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 	std::vector<int> vVisibleCandidateIndices;
 	vVisibleCandidateIndices.reserve(m_AudioPackEditorState.m_vCandidateEntries.size());

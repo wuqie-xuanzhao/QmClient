@@ -6851,6 +6851,31 @@ TEST(QmMonitoringHelpers, AssetsSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_aFilterInputs[s_CurCustomTab], &QuickSearch"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AudioPackEditorSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t SlotSearchPos = Body.find("ui_widget::SearchField(AudioPackSlotSearchCtx, &m_AudioPackEditorState.m_FilterInput, SlotSearchInput, 12.0f");
+	const size_t SlotFilterPos = Body.find("const char *pSlotFilter = m_AudioPackEditorState.m_FilterInput.GetString();", SlotSearchPos);
+	const size_t CandidateSearchPos = Body.find("ui_widget::SearchField(AudioPackCandidateSearchCtx, &m_AudioPackEditorState.m_CandidateFilterInput, CandidateSearchInput, 12.0f");
+	const size_t CandidateFilterPos = Body.find("const char *pCandidateFilter = m_AudioPackEditorState.m_CandidateFilterInput.GetString();", CandidateSearchPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext AudioPackSlotSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("AudioPackSlotSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_audio_pack_slot_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext AudioPackCandidateSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("AudioPackCandidateSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_audio_pack_candidate_search\");"), std::string::npos);
+	EXPECT_NE(SlotSearchPos, std::string::npos);
+	EXPECT_NE(SlotFilterPos, std::string::npos);
+	EXPECT_LT(SlotSearchPos, SlotFilterPos);
+	EXPECT_NE(CandidateSearchPos, std::string::npos);
+	EXPECT_NE(CandidateFilterPos, std::string::npos);
+	EXPECT_LT(CandidateSearchPos, CandidateFilterPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_AudioPackEditorState.m_FilterInput, &SlotSearchInput"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_AudioPackEditorState.m_CandidateFilterInput, &CandidateSearchInput"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 {
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
