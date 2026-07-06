@@ -3334,6 +3334,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 1, Localize("Gores Actor"), Localize("Auto chat in water"));
+				IUiContext QmClientGoresActorTextInputCtx;
+				QmClientGoresActorTextInputCtx.m_pUi = Ui();
+				QmClientGoresActorTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+				QmClientGoresActorTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+				QmClientGoresActorTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_gores_actor_text_inputs");
+				QmClientGoresActorTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEnabled, "qmclient-gores-actor-enable", Localize("Auto chat in water"), &g_Config.m_TcFreezeChatEnabled, &Row, LgLineHeight);
@@ -3357,7 +3363,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-gores-actor-chat-message", &LabelCol, Localize("Chat message"), LgBodySize);
 					static CLineInput s_FreezeChatMessageQmClient(g_Config.m_TcFreezeChatMessage, sizeof(g_Config.m_TcFreezeChatMessage));
 					s_FreezeChatMessageQmClient.SetEmptyText(Localize("Leave empty to disable"));
-					Ui()->DoEditBox(&s_FreezeChatMessageQmClient, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientGoresActorTextInputCtx, &s_FreezeChatMessageQmClient, ControlCol, Localize("Leave empty to disable"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
