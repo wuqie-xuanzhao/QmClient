@@ -2212,7 +2212,6 @@ public:
 	std::array<const char *, SETTINGS_LENGTH> m_apSettingsTabs{};
 	int m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 	int m_TClientSettingsTab = 0;
-	CLineInputBuffered<128> m_QmClientModuleSearchInput;
 	CLineInputBuffered<128> m_GlobalCardSearchInput;
 	void ClearQmClientSettingsSearchInputs();
 

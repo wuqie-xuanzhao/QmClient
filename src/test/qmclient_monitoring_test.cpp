@@ -6256,7 +6256,7 @@ TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 
 	EXPECT_NE(Header.find("SETTINGS_SEARCH"), std::string::npos);
 	EXPECT_EQ(Header.find("QMCLIENT_SETTINGS_TAB_SEARCH"), std::string::npos);
-	EXPECT_NE(Header.find("CLineInputBuffered<128> m_QmClientModuleSearchInput;"), std::string::npos);
+	EXPECT_EQ(Header.find("CLineInputBuffered<128> m_QmClientModuleSearchInput;"), std::string::npos);
 	EXPECT_NE(Header.find("CLineInputBuffered<128> m_GlobalCardSearchInput;"), std::string::npos);
 	EXPECT_EQ(Header.find("m_aQmClientModuleSearchInputs"), std::string::npos);
 	EXPECT_NE(Settings.find("case CMenus::SETTINGS_SEARCH: return \"search\";"), std::string::npos);

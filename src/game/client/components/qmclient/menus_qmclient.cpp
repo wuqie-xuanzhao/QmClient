@@ -1041,15 +1041,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		if(m_QmClientSettingsTab < 0 || m_QmClientSettingsTab >= NUMBER_OF_QMCLIENT_SETTINGS_TABS)
 			m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 
-		auto ReleaseActiveQmClientSearchInput = [&]() {
-			if(Ui()->ActiveItem() == &m_QmClientModuleSearchInput || m_QmClientModuleSearchInput.IsActive())
-			{
-				Ui()->ReleaseActiveTextInput(&m_QmClientModuleSearchInput);
-				return true;
-			}
-			return false;
-		};
-
 		static bool s_QmTabTransitionInitialized = false;
 		static int s_PrevQmTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 		static float s_QmTabTransitionDirection = 0.0f;
@@ -1079,7 +1070,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				const int Corners = Tab == 0                                    ? IGraphics::CORNER_L :
 						    Tab == NUMBER_OF_QMCLIENT_SETTINGS_TABS - 1 ? IGraphics::CORNER_R :
 												  IGraphics::CORNER_NONE;
-				const bool ClickedSearchBlurredTab = !PrewarmOnly && Ui()->MouseButtonClicked(0) && Ui()->MouseHovered(&Button) && ReleaseActiveQmClientSearchInput();
 				const char *pTabName = s_apQmTabNames[Tab];
 				char aVisualTabName[64];
 				if(Tab == QMCLIENT_SETTINGS_TAB_VISUAL)
@@ -1115,7 +1105,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 						DrawQmNewFeatureDot(Button);
 				}
 				const bool ClickedTab = DoButton_MenuTab(&s_aPageTabs[Tab], pTabName, m_QmClientSettingsTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f);
-				if(!PrewarmOnly && (ClickedTab || ClickedSearchBlurredTab))
+				if(!PrewarmOnly && ClickedTab)
 					m_QmClientSettingsTab = Tab;
 				if(!PrewarmOnly && Tab == QMCLIENT_SETTINGS_TAB_VISUAL && (m_QmClientSettingsTab == Tab || Ui()->MouseHovered(&Button)))
 					MarkQmNewFeatureRead("qm_2_62_8_visual_tab");
@@ -8160,13 +8150,13 @@ bool g_CommandBindCacheInitialized = false;
 
 void CMenus::ClearQmClientSettingsSearchInputs()
 {
-	if(Ui()->ActiveItem() == &m_QmClientModuleSearchInput)
+	if(Ui()->ActiveItem() == &m_GlobalCardSearchInput)
 	{
-		Ui()->ReleaseActiveTextInput(&m_QmClientModuleSearchInput);
+		Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
 	}
 	else
 	{
-		m_QmClientModuleSearchInput.Deactivate();
+		m_GlobalCardSearchInput.Deactivate();
 	}
-	m_QmClientModuleSearchInput.Clear();
+	m_GlobalCardSearchInput.Clear();
 }
