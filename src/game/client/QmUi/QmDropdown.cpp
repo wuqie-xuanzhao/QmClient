@@ -43,6 +43,7 @@ SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRe
 	Result.m_Clamped = ClampedX != Result.m_Rect.x || ClampedY != Result.m_Rect.y || Result.m_Rect.w != Config.m_Width || Result.m_Rect.h != Config.m_Height;
 	Result.m_Rect.x = ClampedX;
 	Result.m_Rect.y = ClampedY;
+	Result.m_PopupVisible = Result.m_Rect.w > 0.0f && Result.m_Rect.h > 0.0f && RectsOverlap(Result.m_Rect, ViewportRect);
 	return Result;
 }
 

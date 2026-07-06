@@ -18,6 +18,7 @@ struct SQmDropdownGeometryResult
 {
 	CUIRect m_Rect{};
 	bool m_AnchorVisible = false;
+	bool m_PopupVisible = false;
 	bool m_PlacedBelow = true;
 	bool m_Clamped = false;
 };

@@ -2456,6 +2456,33 @@ TEST(UiV2DropdownGeometry, ClampsOversizedPopupInsideViewportMargins)
 	EXPECT_NEAR(Result.m_Rect.h, Viewport.h - Config.m_Margin * 2.0f, 0.001f);
 }
 
+TEST(UiV2DropdownGeometry, KeepsPopupVisibleWhenAnchorScrolledOut)
+{
+	CUIRect Viewport;
+	Viewport.x = 0.0f;
+	Viewport.y = 0.0f;
+	Viewport.w = 320.0f;
+	Viewport.h = 240.0f;
+	CUIRect Anchor;
+	Anchor.x = 48.0f;
+	Anchor.y = -160.0f;
+	Anchor.w = 120.0f;
+	Anchor.h = 24.0f;
+	SQmDropdownGeometryConfig Config;
+	Config.m_Width = Anchor.w;
+	Config.m_Height = 80.0f;
+	Config.m_Gap = 4.0f;
+	Config.m_Margin = 8.0f;
+
+	const SQmDropdownGeometryResult Result = QmComputeDropdownPopupGeometry(Anchor, Viewport, Config);
+
+	EXPECT_FALSE(Result.m_AnchorVisible);
+	EXPECT_TRUE(Result.m_PopupVisible);
+	EXPECT_TRUE(Result.m_Clamped);
+	EXPECT_GE(Result.m_Rect.y, Viewport.y + Config.m_Margin);
+	EXPECT_LE(Result.m_Rect.y + Result.m_Rect.h, Viewport.y + Viewport.h - Config.m_Margin);
+}
+
 TEST(UiV2DropdownState, OpensWithFirstItemAndClosesOnEscape)
 {
 	CQmDropdownState State;
