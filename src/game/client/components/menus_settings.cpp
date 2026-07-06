@@ -7226,7 +7226,10 @@ CUi::EPopupMenuFunctionResult CMenus::PopupSkinQueuePresetRename(void *pContext,
 
 	View.HSplitTop(3.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Input, &View);
-	pMenus->Ui()->DoEditBox(&pPopupContext->m_NameInput, &Input, FontSize + 1.0f);
+	IUiContext SkinQueuePresetRenameTextInputCtx;
+	SkinQueuePresetRenameTextInputCtx.m_pUi = pMenus->Ui();
+	SkinQueuePresetRenameTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_skin_queue_preset_rename_text_input");
+	ui_widget::TextField(SkinQueuePresetRenameTextInputCtx, &pPopupContext->m_NameInput, Input, nullptr, FontSize + 1.0f);
 
 	View.HSplitTop(4.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Buttons, &View);

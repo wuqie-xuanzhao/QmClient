@@ -7024,6 +7024,45 @@ TEST(QmMonitoringHelpers, TeeSkinClearableInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_SkinInput, &Button, 14.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, SkinQueuePresetRenamePopupUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "CUi::EPopupMenuFunctionResult CMenus::PopupSkinQueuePresetRename(void *pContext, CUIRect View, bool Active)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t LabelPos = Body.find("pMenus->DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee-skin-queue-new-preset-name\", &Label, Localize(\"New preset name\"), FontSize, TEXTALIGN_ML);");
+	const size_t TextInputCtxPos = Body.find("IUiContext SkinQueuePresetRenameTextInputCtx;", LabelPos);
+	const size_t TextInputUiPos = Body.find("SkinQueuePresetRenameTextInputCtx.m_pUi = pMenus->Ui();", TextInputCtxPos);
+	const size_t TextInputScopePos = Body.find("SkinQueuePresetRenameTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_skin_queue_preset_rename_text_input\");", TextInputUiPos);
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(SkinQueuePresetRenameTextInputCtx, &pPopupContext->m_NameInput, Input, nullptr, FontSize + 1.0f);", TextInputScopePos);
+	const size_t CancelPressedPos = Body.find("const bool CancelPressed", TextFieldPos);
+	const size_t EscapeHotkeyPos = Body.find("pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE)", CancelPressedPos);
+	const size_t ConfirmPressedPos = Body.find("const bool ConfirmPressed", TextFieldPos);
+	const size_t EnterHotkeyPos = Body.find("pMenus->Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER)", ConfirmPressedPos);
+	const size_t RenamePos = Body.find("pMenus->GameClient()->m_Skins.RenameSkinQueuePreset((size_t)pPopupContext->m_PresetIndex, pPopupContext->m_NameInput.GetString(), pPopupContext->m_Dummy)", ConfirmPressedPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(LabelPos, std::string::npos);
+	EXPECT_NE(TextInputCtxPos, std::string::npos);
+	EXPECT_NE(TextInputUiPos, std::string::npos);
+	EXPECT_NE(TextInputScopePos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_NE(CancelPressedPos, std::string::npos);
+	EXPECT_NE(EscapeHotkeyPos, std::string::npos);
+	EXPECT_NE(ConfirmPressedPos, std::string::npos);
+	EXPECT_NE(EnterHotkeyPos, std::string::npos);
+	EXPECT_NE(RenamePos, std::string::npos);
+	EXPECT_LT(LabelPos, TextInputCtxPos);
+	EXPECT_LT(TextInputCtxPos, TextInputUiPos);
+	EXPECT_LT(TextInputUiPos, TextInputScopePos);
+	EXPECT_LT(TextInputScopePos, TextFieldPos);
+	EXPECT_LT(TextFieldPos, CancelPressedPos);
+	EXPECT_LT(CancelPressedPos, EscapeHotkeyPos);
+	EXPECT_LT(TextFieldPos, ConfirmPressedPos);
+	EXPECT_LT(ConfirmPressedPos, EnterHotkeyPos);
+	EXPECT_LT(ConfirmPressedPos, RenamePos);
+	EXPECT_EQ(Body.find("pMenus->Ui()->DoEditBox(&pPopupContext->m_NameInput, &Input, FontSize + 1.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings7.cpp");
