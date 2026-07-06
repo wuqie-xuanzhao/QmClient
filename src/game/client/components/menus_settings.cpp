@@ -1003,9 +1003,15 @@ void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton)
 	DoSettingsLabelStreamed(NameLabelElement, &NameLabel, Localize("Name"), 14.0f, TEXTALIGN_ML);
 	CUIElement &ClanLabelElement = SettingsTextElement(SETTINGS_TEE, -1, "tee-clan-label");
 	DoSettingsLabelStreamed(ClanLabelElement, &ClanLabel, Localize("Clan"), 14.0f, TEXTALIGN_ML);
-	if(Ui()->DoEditBox(&s_NameInput, &NameInputRect, 14.0f))
+	IUiContext TeeIdentityTextInputCtx;
+	TeeIdentityTextInputCtx.m_pUi = Ui();
+	TeeIdentityTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TeeIdentityTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TeeIdentityTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_identity_text_inputs");
+	TeeIdentityTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	if(ui_widget::TextField(TeeIdentityTextInputCtx, &s_NameInput, NameInputRect, Client()->PlayerName(), 14.0f))
 		SetNeedSendInfo(m_Dummy);
-	if(Ui()->DoEditBox(&s_ClanInput, &ClanInput, 14.0f))
+	if(ui_widget::TextField(TeeIdentityTextInputCtx, &s_ClanInput, ClanInput, "", 14.0f))
 		SetNeedSendInfo();
 
 	static CButtonContainer s_FlagButton;
@@ -1092,6 +1098,12 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	static CLineInput s_NameInput;
 	static CLineInput s_ClanInput;
+	IUiContext PlayerIdentityTextInputCtx;
+	PlayerIdentityTextInputCtx.m_pUi = Ui();
+	PlayerIdentityTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	PlayerIdentityTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	PlayerIdentityTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_player_identity_text_inputs");
+	PlayerIdentityTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 	int *pCountry;
 	if(!m_Dummy)
@@ -1119,7 +1131,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		Row.VSplitLeft(150.0f, &Row, nullptr);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
 		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
-		if(Ui()->DoEditBox(&s_NameInput, &Row, 14.0f))
+		if(ui_widget::TextField(PlayerIdentityTextInputCtx, &s_NameInput, Row, Client()->PlayerName(), 14.0f))
 			SetNeedSendInfo(m_Dummy);
 	});
 
@@ -1132,7 +1144,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		Row.VSplitLeft(150.0f, &Row, nullptr);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Clan"));
 		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
-		if(Ui()->DoEditBox(&s_ClanInput, &Row, 14.0f))
+		if(ui_widget::TextField(PlayerIdentityTextInputCtx, &s_ClanInput, Row, "", 14.0f))
 		{
 			SetNeedSendInfo();
 		}

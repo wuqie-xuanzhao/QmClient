@@ -6875,6 +6875,30 @@ TEST(QmMonitoringHelpers, PlayerFlagSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_FlagFilterInput, &QuickSearch, 14.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, PlayerIdentityTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string IdentityBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton)");
+	const std::string PlayerBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
+	ASSERT_FALSE(IdentityBody.empty());
+	ASSERT_FALSE(PlayerBody.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(IdentityBody.find("IUiContext TeeIdentityTextInputCtx;"), std::string::npos);
+	EXPECT_NE(IdentityBody.find("TeeIdentityTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_identity_text_inputs\");"), std::string::npos);
+	EXPECT_NE(IdentityBody.find("ui_widget::TextField(TeeIdentityTextInputCtx, &s_NameInput, NameInputRect, Client()->PlayerName(), 14.0f)"), std::string::npos);
+	EXPECT_NE(IdentityBody.find("ui_widget::TextField(TeeIdentityTextInputCtx, &s_ClanInput, ClanInput, \"\", 14.0f)"), std::string::npos);
+	EXPECT_EQ(IdentityBody.find("Ui()->DoEditBox(&s_NameInput, &NameInputRect, 14.0f"), std::string::npos);
+	EXPECT_EQ(IdentityBody.find("Ui()->DoEditBox(&s_ClanInput, &ClanInput, 14.0f"), std::string::npos);
+
+	EXPECT_NE(PlayerBody.find("IUiContext PlayerIdentityTextInputCtx;"), std::string::npos);
+	EXPECT_NE(PlayerBody.find("PlayerIdentityTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_player_identity_text_inputs\");"), std::string::npos);
+	EXPECT_NE(PlayerBody.find("ui_widget::TextField(PlayerIdentityTextInputCtx, &s_NameInput, Row, Client()->PlayerName(), 14.0f)"), std::string::npos);
+	EXPECT_NE(PlayerBody.find("ui_widget::TextField(PlayerIdentityTextInputCtx, &s_ClanInput, Row, \"\", 14.0f)"), std::string::npos);
+	EXPECT_EQ(PlayerBody.find("Ui()->DoEditBox(&s_NameInput, &Row, 14.0f"), std::string::npos);
+	EXPECT_EQ(PlayerBody.find("Ui()->DoEditBox(&s_ClanInput, &Row, 14.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, IngameCallvoteSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
