@@ -624,8 +624,8 @@ TEST(UiV2AnimSpring, CardReorderFlipKeepsReleaseMotionVisible)
 	const CUIRect MidResolved = Tree.ResolveLayoutTransition(Runtime, NodeKey, NextTarget, ui_token::motion::CARD_REORDER);
 	EXPECT_NEAR(MidResolved.w, NextTarget.w, 1e-6f);
 	EXPECT_NEAR(MidResolved.h, NextTarget.h, 1e-6f);
-	EXPECT_LT(std::abs(MidResolved.x - NextTarget.x), 8.0f);
-	EXPECT_LT(std::abs(MidResolved.y - NextTarget.y), 8.0f);
+	EXPECT_LT(std::abs(MidResolved.x - NextTarget.x), 4.0f);
+	EXPECT_LT(std::abs(MidResolved.y - NextTarget.y), 4.0f);
 	EXPECT_NE(MidResolved.x, StartResolved.x);
 	EXPECT_NE(MidResolved.y, StartResolved.y);
 
@@ -1242,8 +1242,8 @@ TEST(UiV2AnimEasing, CurvePresetsExposed)
 	EXPECT_EQ(ui_curve::BOUNCE_OUT.m_Easing, EEasing::EASE_OUT_BACK);
 	EXPECT_NEAR(ui_spring::SNAPPY.m_Stiffness, 280.0f, 1e-6f);
 	EXPECT_NEAR(ui_spring::GENTLE.m_Damping, 14.0f, 1e-6f);
-	EXPECT_NEAR(ui_token::motion::CARD_REORDER.m_Stiffness, 480.0f, 1e-6f);
-	EXPECT_NEAR(ui_token::motion::CARD_REORDER.m_Damping, 36.0f, 1e-6f);
+	EXPECT_NEAR(ui_token::motion::CARD_REORDER.m_Stiffness, 900.0f, 1e-6f);
+	EXPECT_NEAR(ui_token::motion::CARD_REORDER.m_Damping, 48.0f, 1e-6f);
 }
 
 TEST(UiV2AnimEasing, CustomEasingCanBeRegisteredAndReset)
