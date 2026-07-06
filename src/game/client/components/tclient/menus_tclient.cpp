@@ -1753,8 +1753,17 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		{
 			str_copy(s_TClientGlobalCardOrderCache, g_Config.m_QmGlobalCardOrder, sizeof(s_TClientGlobalCardOrderCache));
 			str_copy(s_TClientLegacyCardOrderCache, g_Config.m_QmSettingsCardOrder, sizeof(s_TClientLegacyCardOrderCache));
-			if(!LoadTClientOrderFromGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder))
-				LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);
+			const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);
+			if(!HasGlobalTClientOrder)
+			{
+				if(g_Config.m_QmGlobalCardOrder[0] == '\0')
+					LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);
+				else
+				{
+					m_vTClientLeftCardOrder.clear();
+					m_vTClientRightCardOrder.clear();
+				}
+			}
 		}
 	}
 
