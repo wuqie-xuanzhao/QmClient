@@ -6968,6 +6968,23 @@ TEST(QmMonitoringHelpers, DemoBrowserSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_DemoSearchInput, &DemoSearch"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, DemoSliceNameInputUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(DemoSliceTextInputCtx, &m_DemoSliceInput, NameBox, Localize(\"New name\"), 12.0f);");
+	const size_t OkButtonPos = Body.find("if(DoButton_Menu(&s_ButtonOk", TextFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext DemoSliceTextInputCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("DemoSliceTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"demo_slice_text_input\");"), std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_NE(OkButtonPos, std::string::npos);
+	EXPECT_LT(TextFieldPos, OkButtonPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_DemoSliceInput, &NameBox, 12.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, AssetsSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");

@@ -1036,6 +1036,13 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 		Box.HSplitTop(10.0f, nullptr, &Box);
 	}
 
+	IUiContext DemoSliceTextInputCtx;
+	DemoSliceTextInputCtx.m_pUi = Ui();
+	DemoSliceTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	DemoSliceTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	DemoSliceTextInputCtx.m_ScopeHash = MakeUiScopeHash("demo_slice_text_input");
+	DemoSliceTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 	// file name
 	CUIRect NameLabel, NameBox;
 	Box.HSplitTop(24.0f, &NameLabel, &Box);
@@ -1043,7 +1050,7 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 	NameLabel.VSplitLeft(150.0f, &NameLabel, &NameBox);
 	NameBox.VSplitLeft(20.0f, nullptr, &NameBox);
 	Ui()->DoLabel(&NameLabel, Localize("New name:"), 18.0f, TEXTALIGN_ML);
-	Ui()->DoEditBox(&m_DemoSliceInput, &NameBox, 12.0f);
+	ui_widget::TextField(DemoSliceTextInputCtx, &m_DemoSliceInput, NameBox, Localize("New name"), 12.0f);
 
 	// remove chat checkbox
 	static int s_RemoveChat = 0;
