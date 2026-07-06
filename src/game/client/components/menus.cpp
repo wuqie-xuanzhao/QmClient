@@ -3678,6 +3678,12 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 	else if(m_Popup == POPUP_FIRST_LAUNCH)
 	{
 		CUIRect Label, TextBox, Skip, Join;
+		IUiContext FirstLaunchTextInputCtx;
+		FirstLaunchTextInputCtx.m_pUi = Ui();
+		FirstLaunchTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+		FirstLaunchTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+		FirstLaunchTextInputCtx.m_ScopeHash = MakeUiScopeHash("first_launch_text_input");
+		FirstLaunchTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 		Box.HSplitBottom(20.f, &Box, &Part);
 		Box.HSplitBottom(24.f, &Box, &Part);
@@ -3722,7 +3728,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Ui()->DoLabel(&Label, Localize("Nickname"), 16.0f, TEXTALIGN_ML);
 		static CLineInput s_PlayerNameInput(g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName));
 		s_PlayerNameInput.SetEmptyText(Client()->PlayerName());
-		Ui()->DoEditBox(&s_PlayerNameInput, &TextBox, 12.0f);
+		ui_widget::TextField(FirstLaunchTextInputCtx, &s_PlayerNameInput, TextBox, Client()->PlayerName(), 12.0f);
 	}
 	else if(m_Popup == POPUP_JOIN_TUTORIAL)
 	{

@@ -7040,6 +7040,25 @@ TEST(QmMonitoringHelpers, DemoRenderPopupUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_DemoRenderInput, &TextBox, 12.8f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, FirstLaunchPlayerNameUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderPopupFullscreen(CUIRect Screen)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t FirstLaunchPopupPos = Body.find("else if(m_Popup == POPUP_FIRST_LAUNCH)");
+	const size_t EmptyTextPos = Body.find("s_PlayerNameInput.SetEmptyText(Client()->PlayerName());", FirstLaunchPopupPos);
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(FirstLaunchTextInputCtx, &s_PlayerNameInput, TextBox, Client()->PlayerName(), 12.0f);", EmptyTextPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext FirstLaunchTextInputCtx;", FirstLaunchPopupPos), std::string::npos);
+	EXPECT_NE(Body.find("FirstLaunchTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"first_launch_text_input\");", FirstLaunchPopupPos), std::string::npos);
+	EXPECT_NE(FirstLaunchPopupPos, std::string::npos);
+	EXPECT_NE(EmptyTextPos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_LT(EmptyTextPos, TextFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_PlayerNameInput, &TextBox, 12.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, AssetsSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
