@@ -6436,6 +6436,39 @@ TEST(QmMonitoringHelpers, QmClientSearchTabUsesGlobalCardRegistry)
 	EXPECT_EQ(SharedBody.find("EQmModuleId::Info"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmClientMainPageRemovesLegacyModuleSearchPipeline)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(QmMainBody.empty());
+
+	EXPECT_EQ(QmMainBody.find("HasModuleSearch"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("pModuleSearch"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("ModuleSearchKeywords"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("ModuleMatchesSearch"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("CQmFunctionSnapshotJob"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("SQmFunctionSnapshot"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("SearchVisibleModules"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("SearchLeftModules"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("SearchRightModules"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("SearchSingleColumnMode"), std::string::npos);
+	EXPECT_EQ(QmMainBody.find("SearchDragBlocked"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmClientCompactLayoutStillRendersBothModuleColumns)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(QmMainBody.empty());
+
+	const size_t LeftRenderPos = QmMainBody.find("RenderColumnModules(VisibleLeftModules, EQmModuleColumn::Left);");
+	const size_t RightRenderPos = QmMainBody.find("RenderColumnModules(VisibleRightModules, EQmModuleColumn::Right);");
+	ASSERT_NE(LeftRenderPos, std::string::npos);
+	ASSERT_NE(RightRenderPos, std::string::npos);
+	EXPECT_LT(LeftRenderPos, RightRenderPos);
+	EXPECT_EQ(QmMainBody.find("if(!CompactLayout)\n\t\t\tRenderColumnModules(VisibleRightModules, EQmModuleColumn::Right);"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, QmClientSearchTabRendersAllVisibleGlobalCards)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -6581,17 +6614,17 @@ TEST(QmMonitoringHelpers, LaserRoundCapsRenderedInBothEnhancedAndPlainPaths)
 	EXPECT_GE(Count, 2);
 }
 
-TEST(QmMonitoringHelpers, QmClientSearchSnapshotSignatureIgnoresVolatileMeasuredHeights)
+TEST(QmMonitoringHelpers, QmClientMainPageRemovesSearchSnapshotSignature)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string SignatureBody = ExtractSourceBlock(Source, "auto BuildQmFunctionSnapshotSignature = [&]()", "auto BuildQmFunctionSnapshotEntries = [&]()");
-	const std::string EntriesBody = ExtractSourceBlock(Source, "auto BuildQmFunctionSnapshotEntries = [&]()", "const uint64_t FunctionSnapshotSignature");
-	ASSERT_FALSE(SignatureBody.empty());
-	ASSERT_FALSE(EntriesBody.empty());
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
 
-	EXPECT_EQ(SignatureBody.find("GetQmModuleEstimatedHeight"), std::string::npos);
-	EXPECT_EQ(SignatureBody.find("EstimatedHeight"), std::string::npos);
-	EXPECT_NE(EntriesBody.find("SnapshotEntry.m_EstimatedHeight = GetQmModuleEstimatedHeight(&Entry);"), std::string::npos);
+	EXPECT_EQ(Body.find("BuildQmFunctionSnapshotSignature"), std::string::npos);
+	EXPECT_EQ(Body.find("BuildQmFunctionSnapshotEntries"), std::string::npos);
+	EXPECT_EQ(Body.find("SnapshotEntry.m_EstimatedHeight"), std::string::npos);
+	EXPECT_EQ(Body.find("FunctionSnapshotSignature"), std::string::npos);
+	EXPECT_NE(Body.find("auto GetQmModuleEstimatedHeight = [&](const SQmModuleEntry *pModule) -> float"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientFlatDragKeepsPreviewHeightAndVisualsStable)

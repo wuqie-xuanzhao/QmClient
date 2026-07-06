@@ -2375,6 +2375,31 @@ TEST(UiV2InputField, BuildsSharedResultForCommitAndClearStates)
 	EXPECT_TRUE(ClearButton.m_Cleared);
 }
 
+TEST(UiV2InputField, DeclaresEditingCapabilitiesPerPublicFieldType)
+{
+	const auto HasCapability = [](unsigned Capabilities, ui_widget::EInputFieldCapability Capability) {
+		return (Capabilities & static_cast<unsigned>(Capability)) != 0u;
+	};
+
+	const unsigned TextCaps = ui_widget::InputFieldCapabilities();
+	EXPECT_TRUE(HasCapability(TextCaps, ui_widget::EInputFieldCapability::DOUBLE_CLICK_SELECT_ALL));
+	EXPECT_TRUE(HasCapability(TextCaps, ui_widget::EInputFieldCapability::CLICK_AWAY_COMMIT));
+	EXPECT_TRUE(HasCapability(TextCaps, ui_widget::EInputFieldCapability::CURSOR_INSERTION));
+	EXPECT_TRUE(HasCapability(TextCaps, ui_widget::EInputFieldCapability::MOUSE_DRAG_SELECTION));
+	EXPECT_FALSE(HasCapability(TextCaps, ui_widget::EInputFieldCapability::CLEAR_BUTTON));
+	EXPECT_FALSE(HasCapability(TextCaps, ui_widget::EInputFieldCapability::SEARCH_HOTKEY));
+
+	const unsigned ClearableCaps = ui_widget::ClearableInputFieldCapabilities();
+	EXPECT_TRUE(HasCapability(ClearableCaps, ui_widget::EInputFieldCapability::CLEAR_BUTTON));
+	EXPECT_FALSE(HasCapability(ClearableCaps, ui_widget::EInputFieldCapability::SEARCH_HOTKEY));
+	EXPECT_EQ((ClearableCaps & TextCaps), TextCaps);
+
+	const unsigned SearchCaps = ui_widget::SearchFieldCapabilities();
+	EXPECT_TRUE(HasCapability(SearchCaps, ui_widget::EInputFieldCapability::CLEAR_BUTTON));
+	EXPECT_TRUE(HasCapability(SearchCaps, ui_widget::EInputFieldCapability::SEARCH_HOTKEY));
+	EXPECT_EQ((SearchCaps & ClearableCaps), ClearableCaps);
+}
+
 TEST(UiV2DropdownGeometry, PositionsPopupRelativeToScrolledAnchor)
 {
 	CUIRect Viewport;

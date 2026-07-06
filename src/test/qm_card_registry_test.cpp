@@ -192,6 +192,35 @@ TEST(QmCardRegistry, ProvidesSearchMetadataForGlobalCards)
 	EXPECT_STREQ(TClientInput->m_pTitle, "Input");
 }
 
+// 意图：全局搜索页替代旧 QmClient 模块搜索后，registry 必须承接旧中文/拼音功能词。
+// 否则用户搜索旧入口能搜到的具体功能时，会在新 Search 页漏掉对应 qm:* 卡片。
+TEST(QmCardRegistry, QmCardsPreserveLegacyModuleSearchKeywords)
+{
+	struct SExpectedKeyword
+	{
+		const char *m_pStableId;
+		const char *m_pKeyword;
+	};
+	const SExpectedKeyword aExpected[] = {
+		{"qm:mini_features", "粒子拖尾"},
+		{"qm:mini_features", "候选栏"},
+		{"qm:friend_notify", "自动刷新"},
+		{"qm:block_words", "屏蔽词"},
+		{"qm:speedrun_timer", "速通"},
+		{"qm:voice", "按住说话"},
+		{"qm:background_3d", "月牙"},
+		{"qm:chat_bubble", "消息气泡"},
+	};
+	for(const SExpectedKeyword &Expected : aExpected)
+	{
+		const auto *pDefault = qm_card_registry::FindByStableId(Expected.m_pStableId);
+		ASSERT_NE(pDefault, nullptr) << Expected.m_pStableId;
+		ASSERT_NE(pDefault->m_pSearchKeywords, nullptr) << Expected.m_pStableId;
+		EXPECT_NE(std::string(pDefault->m_pSearchKeywords).find(Expected.m_pKeyword), std::string::npos)
+			<< Expected.m_pStableId << " missing keyword " << Expected.m_pKeyword;
+	}
+}
+
 // 意图：QiaFen 三名分裂（枚举 QiaFen / UI 名 keyword_reply / 持久化 key qiafen）是迁移最大陷阱。
 // 注册表必须以持久化 key 为权威，否则迁移丢用户布局。
 TEST(QmCardRegistry, QiaFenUsesPersistentKeyNotUiName)

@@ -2445,8 +2445,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	static SQmModuleDropPreviewCandidate s_DropPreviewCandidate = {{nullptr, nullptr, nullptr, EQmModuleColumn::Left, 0, false, false, false, CUIRect()}, 0.0f, false};
 	const float DropPreviewDwellSeconds = 0.22f;
 	const float DropPreviewThickness = std::clamp(3.0f * UiScale, 2.0f, 4.0f);
-	bool SearchSingleColumnMode = false;
-	bool SearchDragBlocked = false;
 	auto ResetModuleDragState = [&]() {
 		s_DragState.m_pPressed = nullptr;
 		s_DragState.m_pDragging = nullptr;
@@ -2492,7 +2490,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		HeaderRect.HSplitTop(LgHeadlineSize + LgTipHeight + LgLineSpacing * 0.5f, &HeaderRect, nullptr);
 		const bool OverHeader = Ui()->MouseHovered(&HeaderRect) && !OverCollapseButton;
 		const bool ModuleDragActive = s_DragState.m_pPressed == pModule || s_DragState.m_pDragging == pModule;
-		const bool HardInteractionBlocked = SearchDragBlocked || BlockDrag || Ui()->IsPopupOpen() || Ui()->IsPopupHovered();
+		const bool HardInteractionBlocked = BlockDrag || Ui()->IsPopupOpen() || Ui()->IsPopupHovered();
 		const bool InteractionBlocked = HardInteractionBlocked || (Ui()->ActiveItem() != nullptr && !ModuleDragActive);
 		if(HardInteractionBlocked && ModuleDragActive)
 			ResetModuleDragState();
@@ -2587,7 +2585,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	auto EnsureColumns = [&]() {
 		if(ColumnsReady)
 			return;
-		if(CompactLayout || SearchSingleColumnMode)
+		if(CompactLayout)
 		{
 			LeftView = MainView;
 			RightView = MainView;
@@ -2601,7 +2599,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 
 	auto ResolveColumn = [&](EQmModuleColumn Column) -> CUIRect & {
 		EnsureColumns();
-		if(CompactLayout || SearchSingleColumnMode || Column == EQmModuleColumn::Left)
+		if(CompactLayout || Column == EQmModuleColumn::Left)
 			return LeftView;
 		return RightView;
 	};
@@ -2661,62 +2659,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	const std::vector<const SQmModuleEntry *> &FullModules = s_vCachedFullModules;
 	const std::vector<const SQmModuleEntry *> &LeftModules = s_vCachedLeftModules;
 	const std::vector<const SQmModuleEntry *> &RightModules = s_vCachedRightModules;
-
-	const bool HasModuleSearch = false;
-	SearchDragBlocked = false;
-	const char *pModuleSearch = "";
-
-	auto ModuleSearchKeywords = [](EQmModuleId Id) -> const char * {
-		switch(Id)
-		{
-		case EQmModuleId::ChatBubble: return "消息气泡 liaotian qipao chat bubble typing 预览 yulan 镜头缩放 suofang 持续时间 chixu 透明度 touming 字体大小 ziti 最大宽度 kuandu 垂直偏移 pianyi 圆角 yuanjiao";
-		case EQmModuleId::GoresActor: return "gores 演员 actor 掉水 diaoshui 自动发言 zidong fayan 表情 biaoqing 表情id emoticon 发送概率 gaolv";
-		case EQmModuleId::Gores: return "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang 自动切锤 zidong qiechui gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用 快速输入 kuaisu shuru fast input 快速输入其他玩家";
-		case EQmModuleId::FocusMode: return "禅模式 zhuanzhi moshi focus mode zen mode 隐藏 yincang hud 名字 mingzi 特效 texiao 计分板 jifenban 沉浸 chenjing 无干扰 wuganrao 聊天 liaotian chat 非必要UI";
-		case EQmModuleId::KeyBinds: return "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding 武器辅助线 fuzhuxian 异常断开 yichang duankai timeout disconnect";
-		case EQmModuleId::MiniFeatures: return "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 自动管理 zidong guanli 进程优先级 jincheng youxianji 协作制图 xiezuo zhitu 多人制图 duoren zhitu";
-		case EQmModuleId::JumpHint: return "位置跳跃提示 tiaoyue tishi jump hint position edge jump color yanse 颜色 horizontal position shuiping weizhi vertical position chuizhi weizhi font size ziti";
-		case EQmModuleId::SkinTransition:
-			return "皮肤切换 pifu qiehuan skin transition 换皮 huanpi 动画 donghua 开关 kaiguan 类型 leixing 时长 shichang 强度 qiangdu easing 缓动 huandong 锤中偷皮 chuizhong toupi 故障 guzhang glitch 抖动 doudong 弹性 tanxing elastic Tee外观 tee waiguan 循环色调 xunhuan sediao hue 速度 sudu 分身 fenshen dummy";
-		case EQmModuleId::WeaponTrajectory: return "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi";
-		case EQmModuleId::WeaponAnimation: return "武器动画 wuqi donghua weapon animation 切换武器动画 qiehuan wuqi donghua weapon switch animation 滑入 huaru 旋转 xuanzhuan";
-		case EQmModuleId::CardAppearance: return "卡片外观 kapian waiguan card appearance backdrop blur 毛玻璃 maoboli 圆角 yuanjiao corner segments";
-		case EQmModuleId::CameraView: return "镜头 jingtou camera drift 漂移 piaoyi dynamic fov 动态视野 dongtai shiye 纵横比 zonghengbi aspect ratio preset 预设 yushe 自定义 zidinyi 视野视角 shijiao";
-		case EQmModuleId::DummyMiniView: return "分身小窗 fenshen xiaochuang dummy mini view 预览 yulan 缩放 suofang 小窗大小 daxiao 离开视角 offscreen 自动显示 zidong xianshi";
-		case EQmModuleId::Coords: return "显示坐标 xianshi zuobiao coords position 自己坐标 ziji 他人坐标 taren 显示x xianshi x 显示y xianshi y 对齐提示 duiqi tishi 严格对齐 yange duiqi";
-		case EQmModuleId::Streamer: return "主播模式 zhubo moshi 直播 zhibo 隐私 yinsi 非好友昵称改id feihaoyou nicheng id 非好友皮肤默认 pifu moren 计分板默认国旗 guoqi";
-		case EQmModuleId::FriendNotify: return "好友提醒 haoyou tixing 好友上线 shangxian 自动刷新 zidong shuaxin 服务器列表 fuwuqi liebiao 刷新间隔 jiange 进图打招呼 jintu dazhaohu 大字显示 dazi xianshi";
-		case EQmModuleId::BlockWords: return "屏蔽词 pingbici block words 控制台显示 kongzhitai 启用列表 qiyong liebiao 按词长替换 cichang tihuan 多字符替换 duozifu tihuan";
-		case EQmModuleId::Translate: return "翻译 fanyi translate 腾讯云 tengxunyun 智谱AI zhipuai 大模型 LLM 自动翻译 zidong fanyi 主动翻译 zhudong fanyi [ru] 目标语言 mubiao yuyan 端点 duandian endpoint 地域 diyu region secret id key api key 密钥 秘钥 凭证 glm-4.5-flash glm-4-flash 模型 model 中文跳过 zhongwen tiaoguo 服务器消息跳过";
-		case EQmModuleId::TranslateUi: return "fanyi ui 颜色 yanse color 按钮 anniu button 菜单 caidan menu rgba 自定义 zidingyi custom";
-		case EQmModuleId::QiaFen: return "关键词回复 guanjianci huifu 自动回复 zidong huifu 冷却 lengque dummy 发言 fayan 规则 guize 改名 gaiming 自动改名 zidong gaiming";
-		case EQmModuleId::PieMenu: return "饼菜单 bingcaidan pie menu 启用 qiyong ui大小 daxiao 不透明度 butouming 检测距离 jiance juli 改名名单 gaiming mingdan";
-		case EQmModuleId::EntityOverlay: return "实体层颜色 shiti ceng yanse 实体层 shiti entity overlay 死亡透明度 siwang 冻结透明度 dongjie 解冻透明度 jiedong 深度冻结 shendu dongjie 深度解冻 shendu jiedong 传送透明度 chuansong cp点透明度 cp checkpoint 开关透明度 kaiguan 叠层透明度 dieceng";
-		case EQmModuleId::Laser: return "激光设置 jiguang laser 增强特效 zengqiang texiao 辉光强度 huiguang qiangdu 激光大小 daxiao 半透明 bantouming 圆角端点 yuanjiao duandian 脉冲速度 maichong sudu 脉冲幅度 maichong fudu";
-		case EQmModuleId::PlayerStats: return "玩家统计 wanjia tongji player stats gores hud 显示统计 xianshi tongji 进服重置 jinfu chongzhi";
-		case EQmModuleId::CollisionHitbox: return "碰撞箱模式 pengzhuangxiang moshi 碰撞体积可视化 pengzhuang tiji keshihua collision hitbox hitbox mode 显示碰撞 武器交互 透明度";
-		case EQmModuleId::FavoriteMaps: return "收藏地图 shoucang ditu favorite maps 地图管理 ditu guanli 收藏 shoucang 取消收藏 quxiao shoucang";
-		case EQmModuleId::HJAssist: return "hj辅助 hj fuzhu 解冻辅助 jiedong fuzhu 自动取消旁观 quxiao pangguan 自动切换 qiehuan tee 自动关闭聊天 guanbi liaotian";
-		case EQmModuleId::SpeedrunTimer: return "速通计时器 sutong jishiqi speedrun timer 倒计时 daojishi 倒数 daoshu 小时 xiaoshi 分钟 fenzhong 秒 miao 毫秒 haomiao 自动关闭 zidong guanbi";
-		case EQmModuleId::DebugGraph: return "调试图表 tiaoshi tubiao debug graph monitoring hud 不透明度 touming 透明度 面板 mianban 快捷键 kuaijiejian 按键 anjian";
-		case EQmModuleId::InputOverlay: return "按键显示 anjian xianshi input overlay 按键叠加 anjian diejia 大小 daxiao 不透明度 butouming 水平位置 shuiping weizhi 垂直位置 chuizhi weizhi";
-		case EQmModuleId::HudNotifications: return "通知栏 tongzhi lan notification toast echo 系统提示 xitong tishi 黑名单 heimingdan 右侧 youce 动画 donghua 背景 beijing 文字 wenzi";
-		case EQmModuleId::Voice: return "语音 yuyin voice chat 麦克风 maikefeng mic 静音 jingyin 音量 yinliang 语音激活 vad 阈值 yuzhi 释放延迟 shifang yanchi 服务器 fuwuqi token 叠加层 diejiaceng 按住说话 ptt push to talk 全图收听 quantu 衰减 shuijian 距离 juli 半径 banjing 测试 ceshi 本地 bendi 回环 huihuan 设备 shebei 输入 shuru 左右声道定位 左右 zuoyou 声道 shengdao 立体声 stereo 高级 gaoji advanced";
-		case EQmModuleId::DynamicIsland: return "灵动岛 lld lingdongdao dynamic island hud 顶部 dingbu 背景 beijing 颜色 yanse 透明度 touming 黑底 heidi 原版 yuanban 默认 moren classic old style";
-		case EQmModuleId::SystemMediaControls: return "系统媒体控制 xitong meiti kongzhi smtc media controls 启用系统媒体 qiyong 显示歌曲信息 gequ xinxi 上一个 shangyige 播放暂停 bofang zanting 下一个 xiayige";
-		case EQmModuleId::Lyrics: return "歌词 geci lyrics lyric qrc yrc lrc smtc qq music netease lrclib 灵动岛 lingdongdao hud 吸附 xifu 颜色 yanse 首字 shouzi 放大 fangda 指示器 zhishiqi 预览 yulan 偏移 pianyi";
-		case EQmModuleId::Background3D: return "3d背景 3d beijing background particles 粒子 lizi 方块 fangkuai cube 爱心 aixin heart 球体 qiuti sphere 金字塔 jinzita pyramid 钻石 zuanshi diamond 圆环 yuanhuan ring 星形 xingxing star 月牙 yueya crescent 混合 hunhe mixed 数量 shuliang 速度 sudu 尺寸 chicun 深度 shendu 透明度 touming 颜色 yanse 随机 suiji 自定义 zidingyi 辉光 huiguang 拖尾 tuowei trail 脉冲 maichong pulse 闪烁 shanshuo twinkle 推动 tuidong 碰撞 pengzhuang 淡入 danru 淡出 danchu";
-		case EQmModuleId::Info: return "贡献者 gongxianzhe 社区 shequ qq群 反馈 fankui 更新 gengxin 赞助 zanzhu 支持 zhichi 开发人员 kaifa sponsor supporters team";
-		}
-		return "";
-	};
-
-	auto ModuleMatchesSearch = [&](const SQmModuleEntry *pModule) -> bool {
-		if(!HasModuleSearch)
-			return true;
-		return str_utf8_find_nocase(pModule->m_pKey, pModuleSearch) != nullptr ||
-		       str_utf8_find_nocase(ModuleSearchKeywords(pModule->m_Id), pModuleSearch) != nullptr;
-	};
 
 	auto ModuleMatchesSelectedTab = [&](EQmModuleId Id) -> bool {
 		auto ContainsModule = [&](const auto &vModules) {
@@ -3082,10 +3024,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		return {-1, "", ""};
 	};
 
-	auto GetQmModuleSearchOrder = [&](const SQmModuleEntry *pModule) -> int {
-		return FindQmModuleIndex(pModule->m_pKey);
-	};
-
 	auto GetQmModuleEstimatedHeight = [&](const SQmModuleEntry *pModule) -> float {
 		const int Index = GetQmModuleStateIndexById(pModule->m_Id);
 		if(IsQmModuleCollapsed(pModule->m_Id))
@@ -3123,166 +3061,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		return LgCardPadding * 2.0f + LgHeadlineSize + LgTipHeight + LgLineHeight * 6.0f + LgCardSpacing;
 	};
 
-	struct SQmFunctionSnapshotEntry
-	{
-		int m_LayoutIndex;
-		EQmModuleId m_Id;
-		EQmModuleColumn m_Column;
-		int m_OrderInColumn;
-		int m_SearchOrder;
-		int m_Usage;
-		float m_EstimatedHeight;
-		std::string m_Key;
-		std::string m_SearchKeywords;
-	};
-
-	struct SQmFunctionSnapshotResult
-	{
-		uint64_t m_Signature = 0;
-		bool m_HasSearch = false;
-		bool m_SearchSingleColumnMode = false;
-		std::vector<int> m_VisibleLeftIndices;
-		std::vector<int> m_VisibleRightIndices;
-		std::vector<int> m_SearchVisibleIndices;
-		std::vector<int> m_SearchLeftIndices;
-		std::vector<int> m_SearchRightIndices;
-	};
-
-	class CQmFunctionSnapshotJob : public IJob
-	{
-		uint64_t m_Signature;
-		bool m_HasSearch;
-		bool m_CompactLayout;
-		std::string m_SearchText;
-		std::vector<SQmFunctionSnapshotEntry> m_vEntries;
-		mutable CLock m_Lock;
-		std::shared_ptr<SQmFunctionSnapshotResult> m_pResult;
-		bool m_Completed = false;
-
-		bool Aborted() const
-		{
-			return State() == IJob::STATE_ABORTED;
-		}
-
-	protected:
-		void Run() override REQUIRES(!m_Lock)
-		{
-			auto pResult = std::make_shared<SQmFunctionSnapshotResult>();
-			pResult->m_Signature = m_Signature;
-			pResult->m_HasSearch = m_HasSearch;
-
-			std::vector<const SQmFunctionSnapshotEntry *> vVisibleLeft;
-			std::vector<const SQmFunctionSnapshotEntry *> vVisibleRight;
-			vVisibleLeft.reserve(m_vEntries.size());
-			vVisibleRight.reserve(m_vEntries.size());
-
-			for(const SQmFunctionSnapshotEntry &Entry : m_vEntries)
-			{
-				if(Aborted())
-					return;
-
-				const bool MatchesSearch = !m_HasSearch ||
-							   str_utf8_find_nocase(Entry.m_Key.c_str(), m_SearchText.c_str()) != nullptr ||
-							   str_utf8_find_nocase(Entry.m_SearchKeywords.c_str(), m_SearchText.c_str()) != nullptr;
-				if(!MatchesSearch)
-					continue;
-
-				if(Entry.m_Column == EQmModuleColumn::Left)
-				{
-					vVisibleLeft.push_back(&Entry);
-				}
-				else if(Entry.m_Column == EQmModuleColumn::Right)
-				{
-					vVisibleRight.push_back(&Entry);
-				}
-			}
-
-			auto SortByLayoutOrder = [](const SQmFunctionSnapshotEntry *pA, const SQmFunctionSnapshotEntry *pB) {
-				if(pA->m_OrderInColumn != pB->m_OrderInColumn)
-					return pA->m_OrderInColumn < pB->m_OrderInColumn;
-				return pA->m_SearchOrder < pB->m_SearchOrder;
-			};
-			std::stable_sort(vVisibleLeft.begin(), vVisibleLeft.end(), SortByLayoutOrder);
-			std::stable_sort(vVisibleRight.begin(), vVisibleRight.end(), SortByLayoutOrder);
-			for(const SQmFunctionSnapshotEntry *pEntry : vVisibleLeft)
-				pResult->m_VisibleLeftIndices.push_back(pEntry->m_LayoutIndex);
-			for(const SQmFunctionSnapshotEntry *pEntry : vVisibleRight)
-				pResult->m_VisibleRightIndices.push_back(pEntry->m_LayoutIndex);
-
-			if(m_HasSearch)
-			{
-				std::vector<const SQmFunctionSnapshotEntry *> vSearchVisible;
-				vSearchVisible.reserve(vVisibleLeft.size() + vVisibleRight.size());
-				vSearchVisible.insert(vSearchVisible.end(), vVisibleLeft.begin(), vVisibleLeft.end());
-				vSearchVisible.insert(vSearchVisible.end(), vVisibleRight.begin(), vVisibleRight.end());
-				std::stable_sort(vSearchVisible.begin(), vSearchVisible.end(), [](const SQmFunctionSnapshotEntry *pA, const SQmFunctionSnapshotEntry *pB) {
-					if(pA->m_Usage != pB->m_Usage)
-						return pA->m_Usage > pB->m_Usage;
-					return pA->m_SearchOrder < pB->m_SearchOrder;
-				});
-
-				pResult->m_SearchSingleColumnMode = vSearchVisible.size() == 1;
-				for(const SQmFunctionSnapshotEntry *pEntry : vSearchVisible)
-					pResult->m_SearchVisibleIndices.push_back(pEntry->m_LayoutIndex);
-
-				if(m_CompactLayout || pResult->m_SearchSingleColumnMode)
-				{
-					pResult->m_SearchLeftIndices = pResult->m_SearchVisibleIndices;
-				}
-				else
-				{
-					float LeftEstimatedHeight = 0.0f;
-					float RightEstimatedHeight = 0.0f;
-					for(const SQmFunctionSnapshotEntry *pEntry : vSearchVisible)
-					{
-						if(Aborted())
-							return;
-
-						if(LeftEstimatedHeight <= RightEstimatedHeight)
-						{
-							pResult->m_SearchLeftIndices.push_back(pEntry->m_LayoutIndex);
-							LeftEstimatedHeight += pEntry->m_EstimatedHeight;
-						}
-						else
-						{
-							pResult->m_SearchRightIndices.push_back(pEntry->m_LayoutIndex);
-							RightEstimatedHeight += pEntry->m_EstimatedHeight;
-						}
-					}
-				}
-			}
-
-			const CLockScope Lock(m_Lock);
-			m_pResult = std::move(pResult);
-			m_Completed = true;
-		}
-
-	public:
-		CQmFunctionSnapshotJob(uint64_t Signature, bool HasSearch, bool CompactLayout, std::string SearchText, std::vector<SQmFunctionSnapshotEntry> vEntries) :
-			m_Signature(Signature),
-			m_HasSearch(HasSearch),
-			m_CompactLayout(CompactLayout),
-			m_SearchText(std::move(SearchText)),
-			m_vEntries(std::move(vEntries))
-		{
-			Abortable(true);
-		}
-
-		bool IsCompleted() const REQUIRES(!m_Lock)
-		{
-			const CLockScope Lock(m_Lock);
-			return m_Completed;
-		}
-
-		std::shared_ptr<SQmFunctionSnapshotResult> GetResult() REQUIRES(!m_Lock)
-		{
-			const CLockScope Lock(m_Lock);
-			std::shared_ptr<SQmFunctionSnapshotResult> pResult = std::move(m_pResult);
-			m_pResult.reset();
-			return pResult;
-		}
-	};
-
 	auto EstimateModuleTotalHeight = [&](const SQmModuleEntry *pModule) -> float {
 		return maximum(
 			GetQmModuleEstimatedHeight(pModule),
@@ -3292,147 +3070,19 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	static std::vector<const SQmModuleEntry *> s_vVisibleLeftModules;
 	static std::vector<const SQmModuleEntry *> s_vVisibleRightModules;
 	static std::vector<const SQmModuleEntry *> s_vVisibleFullModules;
-	static std::vector<const SQmModuleEntry *> s_vSearchVisibleModules;
-	static std::vector<const SQmModuleEntry *> s_vSearchLeftModules;
-	static std::vector<const SQmModuleEntry *> s_vSearchRightModules;
 	std::vector<const SQmModuleEntry *> &VisibleLeftModules = s_vVisibleLeftModules;
 	std::vector<const SQmModuleEntry *> &VisibleRightModules = s_vVisibleRightModules;
 	std::vector<const SQmModuleEntry *> &VisibleFullModules = s_vVisibleFullModules;
-	std::vector<const SQmModuleEntry *> &SearchVisibleModules = s_vSearchVisibleModules;
-	std::vector<const SQmModuleEntry *> &SearchLeftModules = s_vSearchLeftModules;
-	std::vector<const SQmModuleEntry *> &SearchRightModules = s_vSearchRightModules;
 	VisibleLeftModules.clear();
 	VisibleRightModules.clear();
 	VisibleFullModules.clear();
-	SearchVisibleModules.clear();
-	SearchLeftModules.clear();
-	SearchRightModules.clear();
-	static std::shared_ptr<CQmFunctionSnapshotJob> s_pQmFunctionSnapshotJob;
-	static std::shared_ptr<SQmFunctionSnapshotResult> s_pQmFunctionSnapshotResult;
-	static uint64_t s_QmFunctionSnapshotPendingSignature = 0;
-	bool FunctionSnapshotPending = false;
-	if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_FUNCTION && HasModuleSearch)
-	{
-		auto BuildQmFunctionSnapshotSignature = [&]() {
-			uint64_t Hash = 1469598103934665603ull;
-			Hash = HashValueFnv1a64(Hash, CompactLayout);
-			Hash = HashValueFnv1a64(Hash, HasModuleSearch);
-			Hash = HashStringFnv1a64(Hash, pModuleSearch);
-			for(size_t i = 0; i < s_aQmModuleLayout.size(); ++i)
-			{
-				const SQmModuleEntry &Entry = s_aQmModuleLayout[i];
-				if(!ModuleMatchesSelectedTab(Entry.m_Id))
-					continue;
-				Hash = HashValueFnv1a64(Hash, i);
-				Hash = HashValueFnv1a64(Hash, Entry.m_Id);
-				Hash = HashValueFnv1a64(Hash, Entry.m_Column);
-				Hash = HashValueFnv1a64(Hash, Entry.m_OrderInColumn);
-				Hash = HashStringFnv1a64(Hash, Entry.m_pKey);
-				Hash = HashValueFnv1a64(Hash, IsQmModuleCollapsed(Entry.m_Id));
-				Hash = HashValueFnv1a64(Hash, GetQmModuleUsage(Entry.m_Id));
-			}
-			return Hash;
-		};
-
-		auto BuildQmFunctionSnapshotEntries = [&]() {
-			std::vector<SQmFunctionSnapshotEntry> vEntries;
-			vEntries.reserve(s_aQmModuleLayout.size());
-			for(size_t i = 0; i < s_aQmModuleLayout.size(); ++i)
-			{
-				const SQmModuleEntry &Entry = s_aQmModuleLayout[i];
-				if(!ModuleMatchesSelectedTab(Entry.m_Id))
-					continue;
-				if(Entry.m_Column == EQmModuleColumn::Full)
-					continue;
-
-				SQmFunctionSnapshotEntry SnapshotEntry;
-				SnapshotEntry.m_LayoutIndex = static_cast<int>(i);
-				SnapshotEntry.m_Id = Entry.m_Id;
-				SnapshotEntry.m_Column = Entry.m_Column;
-				SnapshotEntry.m_OrderInColumn = Entry.m_OrderInColumn;
-				SnapshotEntry.m_SearchOrder = FindQmModuleIndex(Entry.m_pKey);
-				SnapshotEntry.m_Usage = GetQmModuleUsage(Entry.m_Id);
-				SnapshotEntry.m_EstimatedHeight = GetQmModuleEstimatedHeight(&Entry);
-				SnapshotEntry.m_Key = Entry.m_pKey;
-				SnapshotEntry.m_SearchKeywords = ModuleSearchKeywords(Entry.m_Id);
-				vEntries.push_back(std::move(SnapshotEntry));
-			}
-			return vEntries;
-		};
-
-		const uint64_t FunctionSnapshotSignature = BuildQmFunctionSnapshotSignature();
-
-		if(s_pQmFunctionSnapshotJob != nullptr && s_pQmFunctionSnapshotJob->IsCompleted())
-		{
-			if(std::shared_ptr<SQmFunctionSnapshotResult> pCompletedResult = s_pQmFunctionSnapshotJob->GetResult())
-			{
-				if(pCompletedResult->m_Signature == FunctionSnapshotSignature)
-					s_pQmFunctionSnapshotResult = std::move(pCompletedResult);
-			}
-			s_pQmFunctionSnapshotJob.reset();
-			s_QmFunctionSnapshotPendingSignature = 0;
-		}
-
-		if(s_pQmFunctionSnapshotResult != nullptr && s_pQmFunctionSnapshotResult->m_Signature != FunctionSnapshotSignature)
-			s_pQmFunctionSnapshotResult.reset();
-
-		const bool HasFreshFunctionSnapshot = s_pQmFunctionSnapshotResult != nullptr &&
-						      s_pQmFunctionSnapshotResult->m_Signature == FunctionSnapshotSignature;
-		if(!HasFreshFunctionSnapshot && s_QmFunctionSnapshotPendingSignature != FunctionSnapshotSignature)
-		{
-			if(s_pQmFunctionSnapshotJob != nullptr)
-				s_pQmFunctionSnapshotJob->Abort();
-
-			auto pJob = std::make_shared<CQmFunctionSnapshotJob>(
-				FunctionSnapshotSignature,
-				HasModuleSearch,
-				CompactLayout,
-				pModuleSearch,
-				BuildQmFunctionSnapshotEntries());
-			Engine()->AddJob(pJob);
-			s_pQmFunctionSnapshotJob = pJob;
-			s_QmFunctionSnapshotPendingSignature = FunctionSnapshotSignature;
-		}
-
-		FunctionSnapshotPending = !HasFreshFunctionSnapshot;
-		if(HasFreshFunctionSnapshot)
-		{
-			auto AppendSnapshotModules = [&](const std::vector<int> &vIndices, std::vector<const SQmModuleEntry *> &vDst) {
-				vDst.reserve(vIndices.size());
-				for(const int Index : vIndices)
-				{
-					if(Index < 0 || Index >= (int)s_aQmModuleLayout.size())
-						continue;
-					vDst.push_back(&s_aQmModuleLayout[Index]);
-				}
-			};
-
-			AppendSnapshotModules(s_pQmFunctionSnapshotResult->m_VisibleLeftIndices, VisibleLeftModules);
-			AppendSnapshotModules(s_pQmFunctionSnapshotResult->m_VisibleRightIndices, VisibleRightModules);
-			AppendSnapshotModules(s_pQmFunctionSnapshotResult->m_SearchVisibleIndices, SearchVisibleModules);
-			AppendSnapshotModules(s_pQmFunctionSnapshotResult->m_SearchLeftIndices, SearchLeftModules);
-			AppendSnapshotModules(s_pQmFunctionSnapshotResult->m_SearchRightIndices, SearchRightModules);
-			SearchSingleColumnMode = s_pQmFunctionSnapshotResult->m_SearchSingleColumnMode;
-		}
-
-		char aAsyncExtra[160];
-		str_format(aAsyncExtra, sizeof(aAsyncExtra), "tab=%s signature=%llu pending=%d ready=%d search=%d compact=%d",
-			QmSettingsTabName(m_QmClientSettingsTab),
-			(unsigned long long)FunctionSnapshotSignature,
-			FunctionSnapshotPending ? 1 : 0,
-			(!FunctionSnapshotPending) ? 1 : 0,
-			HasModuleSearch ? 1 : 0,
-			CompactLayout ? 1 : 0);
-		LogQmPerfStage(Client(), "function_snapshot_state", 0.0, FunctionSnapshotPending || HasModuleSearch, aAsyncExtra);
-	}
-	else
 	{
 		CPerfTimer StageTimer;
 		VisibleLeftModules.reserve(LeftModules.size());
 		VisibleRightModules.reserve(RightModules.size());
 		VisibleFullModules.reserve(FullModules.size());
 		auto AppendModuleIfVisible = [&](const SQmModuleEntry *pModule) {
-			if(pModule == nullptr || !ModuleMatchesSelectedTab(pModule->m_Id) || !ModuleMatchesSearch(pModule))
+			if(pModule == nullptr || !ModuleMatchesSelectedTab(pModule->m_Id))
 				return;
 			if(pModule->m_Column == EQmModuleColumn::Left)
 				VisibleLeftModules.push_back(pModule);
@@ -3457,10 +3107,10 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				AppendModuleIfVisible(pModule);
 		}
 		char aFilterExtra[160];
-		str_format(aFilterExtra, sizeof(aFilterExtra), "tab=%s search=%d search_text_len=%d compact=%d left=%d right=%d full=%d search_matches=%d",
-			QmSettingsTabName(m_QmClientSettingsTab), HasModuleSearch ? 1 : 0, (int)str_length(pModuleSearch), CompactLayout ? 1 : 0,
-			(int)VisibleLeftModules.size(), (int)VisibleRightModules.size(), (int)VisibleFullModules.size(), (int)SearchVisibleModules.size());
-		LogQmPerfStage(Client(), "模块筛选排序", StageTimer.ElapsedMs(), HasModuleSearch, aFilterExtra);
+		str_format(aFilterExtra, sizeof(aFilterExtra), "tab=%s compact=%d left=%d right=%d full=%d",
+			QmSettingsTabName(m_QmClientSettingsTab), CompactLayout ? 1 : 0,
+			(int)VisibleLeftModules.size(), (int)VisibleRightModules.size(), (int)VisibleFullModules.size());
+		LogQmPerfStage(Client(), "模块筛选排序", StageTimer.ElapsedMs(), false, aFilterExtra);
 	}
 	const int VisibleFullModuleCount = static_cast<int>(VisibleFullModules.size());
 	const int VisibleModuleCount = static_cast<int>(VisibleLeftModules.size() + VisibleRightModules.size()) + VisibleFullModuleCount;
@@ -3485,10 +3135,10 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	}
 	{
 		char aVisibleExtra[128];
-		str_format(aVisibleExtra, sizeof(aVisibleExtra), "tab=%s visible=%d search=%d left=%d right=%d full=%d pending=%d",
-			QmSettingsTabName(m_QmClientSettingsTab), VisibleModuleCount, HasModuleSearch ? 1 : 0,
-			(int)VisibleLeftModules.size(), (int)VisibleRightModules.size(), VisibleFullModuleCount, FunctionSnapshotPending ? 1 : 0);
-		LogQmPerfStage(Client(), "可见模块", 0.0, HasModuleSearch || FunctionSnapshotPending || TabTransitionActive, aVisibleExtra);
+		str_format(aVisibleExtra, sizeof(aVisibleExtra), "tab=%s visible=%d left=%d right=%d full=%d",
+			QmSettingsTabName(m_QmClientSettingsTab), VisibleModuleCount,
+			(int)VisibleLeftModules.size(), (int)VisibleRightModules.size(), VisibleFullModuleCount);
+		LogQmPerfStage(Client(), "可见模块", 0.0, TabTransitionActive, aVisibleExtra);
 	}
 
 	//这是用来测试LXGW字体的汉字
@@ -3602,8 +3252,8 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				HandleModuleDragState(pModule, s_GlassCards.back());
 				HandleSearchCollapseButton(pModule, s_GlassCards.back());
 				char aModuleExtra[160];
-				str_format(aModuleExtra, sizeof(aModuleExtra), "tab=%s module=%s column=%s collapsed=1 search=%d",
-					QmSettingsTabName(m_QmClientSettingsTab), QmModuleIdName(pModule->m_Id), QmModuleColumnToString(ColumnId), HasModuleSearch ? 1 : 0);
+				str_format(aModuleExtra, sizeof(aModuleExtra), "tab=%s module=%s column=%s collapsed=1",
+					QmSettingsTabName(m_QmClientSettingsTab), QmModuleIdName(pModule->m_Id), QmModuleColumnToString(ColumnId));
 				LogQmPerfStage(Client(), "模块总计", ModuleTimer.ElapsedMs(), false, aModuleExtra);
 				continue;
 			}
@@ -7844,8 +7494,8 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			}
 			HandleSearchCollapseButton(pModule, s_GlassCards.back());
 			char aModuleExtra[160];
-			str_format(aModuleExtra, sizeof(aModuleExtra), "tab=%s module=%s column=%s collapsed=0 search=%d",
-				QmSettingsTabName(m_QmClientSettingsTab), QmModuleIdName(pModule->m_Id), QmModuleColumnToString(ColumnId), HasModuleSearch ? 1 : 0);
+			str_format(aModuleExtra, sizeof(aModuleExtra), "tab=%s module=%s column=%s collapsed=0",
+				QmSettingsTabName(m_QmClientSettingsTab), QmModuleIdName(pModule->m_Id), QmModuleColumnToString(ColumnId));
 			LogQmPerfStage(Client(), "模块总计", ModuleTimer.ElapsedMs(), false, aModuleExtra);
 		}
 		// 清理最后一张卡留下的渲染偏移，避免跨列或下一帧的可见性边界沿用旧 DisplayRect 偏移。
@@ -7905,7 +7555,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		EQmModuleColumn TargetColumn = s_DragState.m_pDragging->m_Column;
 		CUIRect ColumnFrame = LeftColumnFrame;
 		float ColumnTop = LeftColumnTop;
-		const bool MergedDropList = CompactLayout || SearchSingleColumnMode;
+		const bool MergedDropList = CompactLayout;
 		if(MergedDropList)
 		{
 			vMergedCards.reserve(LeftCards.size() + RightCards.size());
@@ -8135,12 +7785,11 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		LeftCards.clear();
 		RightCards.clear();
 		RenderColumnModules(VisibleLeftModules, EQmModuleColumn::Left);
-		if(!SearchSingleColumnMode)
-			RenderColumnModules(VisibleRightModules, EQmModuleColumn::Right);
+		RenderColumnModules(VisibleRightModules, EQmModuleColumn::Right);
 		char aRenderExtra[128];
-		str_format(aRenderExtra, sizeof(aRenderExtra), "tab=%s transition=%d search=%d left=%d right=%d",
-			QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0, HasModuleSearch ? 1 : 0,
-			(int)VisibleLeftModules.size(), SearchSingleColumnMode ? 0 : (int)VisibleRightModules.size());
+		str_format(aRenderExtra, sizeof(aRenderExtra), "tab=%s transition=%d left=%d right=%d",
+			QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0,
+			(int)VisibleLeftModules.size(), (int)VisibleRightModules.size());
 		LogQmPerfStage(Client(), "active_tab_total", StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
 		LogQmPerfStage(Client(), QmActiveTabStageName(), StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
 	}
