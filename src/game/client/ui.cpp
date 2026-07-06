@@ -2076,11 +2076,14 @@ void CUi::RenderBackButton()
 
 void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, float Height, void *pContext, FPopupMenuFunction pfnFunc, const SPopupMenuProperties &Props)
 {
-	constexpr float Margin = SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN;
-	if(X + Width > Screen()->w - Margin)
-		X = maximum<float>(X - Width, Margin);
-	if(Y + Height > Screen()->h - Margin)
-		Y = maximum<float>(Y - Height, Margin);
+	if(Props.m_AutoReposition)
+	{
+		constexpr float Margin = SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN;
+		if(X + Width > Screen()->w - Margin)
+			X = maximum<float>(X - Width, Margin);
+		if(Y + Height > Screen()->h - Margin)
+			Y = maximum<float>(Y - Height, Margin);
+	}
 
 	auto ExistingPopupMenu = std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end(), [pId](const SPopupMenu &PopupMenu) { return PopupMenu.m_pId == pId; });
 	if(ExistingPopupMenu != m_vPopupMenus.end())
@@ -2409,6 +2412,7 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 		Y = Geometry.m_Rect.y;
 		PopupWidth = Geometry.m_Rect.w;
 		PopupHeightResolved = Geometry.m_Rect.h;
+		pContext->m_Props.m_AutoReposition = false;
 		pContext->m_Props.m_Corners = Geometry.m_PlacedBelow ? IGraphics::CORNER_B : IGraphics::CORNER_T;
 	}
 	DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);
