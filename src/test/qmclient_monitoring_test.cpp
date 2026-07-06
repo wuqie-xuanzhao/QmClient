@@ -7159,6 +7159,51 @@ TEST(QmMonitoringHelpers, TouchControlsLayoutInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_InputH, &EditBox, FONTSIZE"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TouchControlsBehaviorInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame_touch_controls.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext TouchControlsBehaviorTextInputCtx;");
+	const size_t UiPos = Body.find("TouchControlsBehaviorTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t ScopePos = Body.find("TouchControlsBehaviorTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"touch_controls_behavior_text_inputs\");", UiPos);
+	const size_t BindCommandFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputCommand, MiddleButton, nullptr, 10.0f)", ScopePos);
+	const size_t BindCommandUpdatePos = Body.find("m_vBehaviorElements[0]->UpdateCommand();", BindCommandFieldPos);
+	const size_t BindLabelFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputLabel, MiddleButton, nullptr, 10.0f)", BindCommandUpdatePos);
+	const size_t BindLabelUpdatePos = Body.find("m_vBehaviorElements[0]->UpdateLabel();", BindLabelFieldPos);
+	const size_t ToggleCommandFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputCommand, MiddleButton, nullptr, 10.0f)", BindLabelUpdatePos);
+	const size_t ToggleCommandUpdatePos = Body.find("m_vBehaviorElements[CommandIndex]->UpdateCommand();", ToggleCommandFieldPos);
+	const size_t ToggleLabelFieldPos = Body.find("ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputLabel, MiddleButton, nullptr, 10.0f)", ToggleCommandUpdatePos);
+	const size_t ToggleLabelUpdatePos = Body.find("m_vBehaviorElements[CommandIndex]->UpdateLabel();", ToggleLabelFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(BindCommandFieldPos, std::string::npos);
+	EXPECT_NE(BindCommandUpdatePos, std::string::npos);
+	EXPECT_NE(BindLabelFieldPos, std::string::npos);
+	EXPECT_NE(BindLabelUpdatePos, std::string::npos);
+	EXPECT_NE(ToggleCommandFieldPos, std::string::npos);
+	EXPECT_NE(ToggleCommandUpdatePos, std::string::npos);
+	EXPECT_NE(ToggleLabelFieldPos, std::string::npos);
+	EXPECT_NE(ToggleLabelUpdatePos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, ScopePos);
+	EXPECT_LT(ScopePos, BindCommandFieldPos);
+	EXPECT_LT(BindCommandFieldPos, BindCommandUpdatePos);
+	EXPECT_LT(BindCommandUpdatePos, BindLabelFieldPos);
+	EXPECT_LT(BindLabelFieldPos, BindLabelUpdatePos);
+	EXPECT_LT(BindLabelUpdatePos, ToggleCommandFieldPos);
+	EXPECT_LT(ToggleCommandFieldPos, ToggleCommandUpdatePos);
+	EXPECT_LT(ToggleCommandUpdatePos, ToggleLabelFieldPos);
+	EXPECT_LT(ToggleLabelFieldPos, ToggleLabelUpdatePos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_vBehaviorElements[0]->m_InputCommand, &MiddleButton, 10.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_vBehaviorElements[0]->m_InputLabel, &MiddleButton, 10.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_vBehaviorElements[CommandIndex]->m_InputCommand, &MiddleButton, 10.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_vBehaviorElements[CommandIndex]->m_InputLabel, &MiddleButton, 10.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings7.cpp");

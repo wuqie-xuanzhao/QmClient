@@ -325,6 +325,9 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 	static_assert(std::size(apLabelTypes) == (size_t)CTouchControls::CButtonLabel::EType::NUM_TYPES, "Insufficient label type names");
 	bool Changed = false;
 	CUIRect EditBox, LeftButton, MiddleButton, RightButton;
+	IUiContext TouchControlsBehaviorTextInputCtx;
+	TouchControlsBehaviorTextInputCtx.m_pUi = Ui();
+	TouchControlsBehaviorTextInputCtx.m_ScopeHash = MakeUiScopeHash("touch_controls_behavior_text_inputs");
 	Block.HSplitTop(ROWSIZE, &EditBox, &Block);
 	Block.HSplitTop(ROWGAP, nullptr, &Block);
 	EditBox.VSplitMid(&LeftButton, &MiddleButton);
@@ -363,7 +366,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 		EditBox.VSplitMid(&LeftButton, &MiddleButton);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Command"));
 		Ui()->DoLabel(&LeftButton, aBuf, FONTSIZE, TEXTALIGN_ML);
-		if(Ui()->DoClearableEditBox(&m_vBehaviorElements[0]->m_InputCommand, &MiddleButton, 10.0f))
+		if(ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputCommand, MiddleButton, nullptr, 10.0f))
 		{
 			m_vBehaviorElements[0]->UpdateCommand();
 			SetUnsavedChanges(true);
@@ -375,7 +378,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 		EditBox.VSplitMid(&LeftButton, &MiddleButton);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Label"));
 		Ui()->DoLabel(&LeftButton, aBuf, FONTSIZE, TEXTALIGN_ML);
-		if(Ui()->DoClearableEditBox(&m_vBehaviorElements[0]->m_InputLabel, &MiddleButton, 10.0f))
+		if(ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[0]->m_InputLabel, MiddleButton, nullptr, 10.0f))
 		{
 			m_vBehaviorElements[0]->UpdateLabel();
 			SetUnsavedChanges(true);
@@ -523,7 +526,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 				MiddleButton.VSplitLeft(ScrollParam.m_ScrollbarThickness / 2.0f, nullptr, &MiddleButton);
 				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Command"));
 				Ui()->DoLabel(&LeftButton, aBuf, FONTSIZE, TEXTALIGN_ML);
-				if(Ui()->DoClearableEditBox(&m_vBehaviorElements[CommandIndex]->m_InputCommand, &MiddleButton, 10.0f))
+				if(ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputCommand, MiddleButton, nullptr, 10.0f))
 				{
 					m_vBehaviorElements[CommandIndex]->UpdateCommand();
 					SetUnsavedChanges(true);
@@ -543,7 +546,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 				MiddleButton.VSplitLeft(ScrollParam.m_ScrollbarThickness / 2.0f, nullptr, &MiddleButton);
 				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Label"));
 				Ui()->DoLabel(&LeftButton, aBuf, FONTSIZE, TEXTALIGN_ML);
-				if(Ui()->DoClearableEditBox(&m_vBehaviorElements[CommandIndex]->m_InputLabel, &MiddleButton, 10.0f))
+				if(ui_widget::ClearableTextField(TouchControlsBehaviorTextInputCtx, &m_vBehaviorElements[CommandIndex]->m_InputLabel, MiddleButton, nullptr, 10.0f))
 				{
 					m_vBehaviorElements[CommandIndex]->UpdateLabel();
 					SetUnsavedChanges(true);
