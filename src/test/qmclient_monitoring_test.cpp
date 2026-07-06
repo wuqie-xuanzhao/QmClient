@@ -1515,6 +1515,10 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 1323, "dynamic-value"},
 		{pFile, 1326, "dynamic-value"},
 		{pFile, 1327, "dynamic-value"},
+		{pFile, 1333, "dynamic-value"},
+		{pFile, 1337, "dynamic-value"},
+		{pFile, 1344, "dynamic-value"},
+		{pFile, 1345, "dynamic-value"},
 		{pFile, 1341, "dynamic-value"},
 		{pFile, 1342, "dynamic-value"},
 		{pFile, 1348, "dynamic-value"},
@@ -6469,23 +6473,41 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationTargetsSettingsPages)
 	EXPECT_NE(NavigationBody.find("Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_HUD;"), std::string::npos);
 	EXPECT_NE(NavigationBody.find("Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;"), std::string::npos);
 	EXPECT_NE(NavigationBody.find("Navigation.m_TClientTab = 0;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_SettingsPage = CMenus::SETTINGS_GRAPHICS;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_SettingsPage = CMenus::SETTINGS_SOUND;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_SettingsPage = CMenus::SETTINGS_DDNET;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("str_comp(pTab, \"tclient-bind-wheel\")"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_TClientTab = 1;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("str_comp(pTab, \"tclient-status-bar\")"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_TClientTab = 4;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_HUD;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_CHAT;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_NAME_PLATE;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_HOOK_COLLISION;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_INFO_MESSAGES;"), std::string::npos);
-	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_LASER;"), std::string::npos);
-	EXPECT_GE(CountSubstring(NavigationBody, "Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;"), 6);
+	EXPECT_NE(NavigationBody.find("Navigation.m_SettingsPage = Route.m_SettingsPage;"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("Navigation.m_TClientTab = Route.m_TClientTab;"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = Route.m_AppearanceTab;"), std::string::npos);
 	EXPECT_NE(CardBody.find("if(Navigation.m_AppearanceTab >= 0)"), std::string::npos);
 	EXPECT_NE(CardBody.find("m_AppearanceSettingsTab = Navigation.m_AppearanceTab;"), std::string::npos);
 	EXPECT_NE(MenusHeader.find("int m_AppearanceSettingsTab = APPEARANCE_TAB_HUD;"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmClientSearchNavigationUsesTabRouteTable)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const size_t NavigationPos = QmClient.find("SQmGlobalSearchNavigation ResolveGlobalSearchNavigation");
+	ASSERT_NE(NavigationPos, std::string::npos);
+	const std::string NavigationBody = QmClient.substr(NavigationPos, 3600);
+
+	EXPECT_NE(QmClient.find("struct SQmGlobalSearchTabRoute"), std::string::npos);
+	EXPECT_NE(QmClient.find("s_aGlobalSearchTabRoutes[]"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"graphics\", CMenus::SETTINGS_GRAPHICS"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"sound\", CMenus::SETTINGS_SOUND"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"ddnet\", CMenus::SETTINGS_DDNET"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"tclient-bind-wheel\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"tclient-status-bar\", CMenus::SETTINGS_TCLIENT"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"appearance-hud\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"appearance-chat\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"appearance-name-plate\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"appearance-hook-collision\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"appearance-info-messages\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
+	EXPECT_NE(QmClient.find("{\"appearance-laser\", CMenus::SETTINGS_APPEARANCE"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("for(const SQmGlobalSearchTabRoute &Route : s_aGlobalSearchTabRoutes)"), std::string::npos);
+	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"graphics\")"), std::string::npos);
+	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"sound\")"), std::string::npos);
+	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"ddnet\")"), std::string::npos);
+	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"tclient-bind-wheel\")"), std::string::npos);
+	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"tclient-status-bar\")"), std::string::npos);
+	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"appearance-"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)

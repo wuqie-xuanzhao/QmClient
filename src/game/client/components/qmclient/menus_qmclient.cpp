@@ -104,6 +104,28 @@ struct SQmGlobalSearchNavigation
 	int m_AppearanceTab = -1;
 };
 
+struct SQmGlobalSearchTabRoute
+{
+	const char *m_pTab;
+	int m_SettingsPage;
+	int m_TClientTab = -1;
+	int m_AppearanceTab = -1;
+};
+
+static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
+	{"graphics", CMenus::SETTINGS_GRAPHICS},
+	{"sound", CMenus::SETTINGS_SOUND},
+	{"ddnet", CMenus::SETTINGS_DDNET},
+	{"tclient-bind-wheel", CMenus::SETTINGS_TCLIENT, 1},
+	{"tclient-status-bar", CMenus::SETTINGS_TCLIENT, 4},
+	{"appearance-hud", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HUD},
+	{"appearance-chat", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_CHAT},
+	{"appearance-name-plate", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_NAME_PLATE},
+	{"appearance-hook-collision", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HOOK_COLLISION},
+	{"appearance-info-messages", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_INFO_MESSAGES},
+	{"appearance-laser", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_LASER},
+};
+
 struct SQmGlobalSearchResults
 {
 	std::vector<SQmGlobalSearchCard> m_vCards;
@@ -184,51 +206,14 @@ namespace
 			Navigation.m_TClientTab = 0;
 			return Navigation;
 		}
-		if(str_comp(pTab, "graphics") == 0)
-			Navigation.m_SettingsPage = CMenus::SETTINGS_GRAPHICS;
-		else if(str_comp(pTab, "sound") == 0)
-			Navigation.m_SettingsPage = CMenus::SETTINGS_SOUND;
-		else if(str_comp(pTab, "ddnet") == 0)
-			Navigation.m_SettingsPage = CMenus::SETTINGS_DDNET;
-		else if(str_comp(pTab, "tclient-bind-wheel") == 0)
+		for(const SQmGlobalSearchTabRoute &Route : s_aGlobalSearchTabRoutes)
 		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
-			Navigation.m_TClientTab = 1;
-		}
-		else if(str_comp(pTab, "tclient-status-bar") == 0)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
-			Navigation.m_TClientTab = 4;
-		}
-		else if(str_comp(pTab, "appearance-hud") == 0)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
-			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_HUD;
-		}
-		else if(str_comp(pTab, "appearance-chat") == 0)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
-			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_CHAT;
-		}
-		else if(str_comp(pTab, "appearance-name-plate") == 0)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
-			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_NAME_PLATE;
-		}
-		else if(str_comp(pTab, "appearance-hook-collision") == 0)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
-			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_HOOK_COLLISION;
-		}
-		else if(str_comp(pTab, "appearance-info-messages") == 0)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
-			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_INFO_MESSAGES;
-		}
-		else if(str_comp(pTab, "appearance-laser") == 0)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
-			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_LASER;
+			if(str_comp(pTab, Route.m_pTab) != 0)
+				continue;
+			Navigation.m_SettingsPage = Route.m_SettingsPage;
+			Navigation.m_TClientTab = Route.m_TClientTab;
+			Navigation.m_AppearanceTab = Route.m_AppearanceTab;
+			break;
 		}
 		return Navigation;
 	}
