@@ -687,6 +687,9 @@ bool CMenusIngameTouchControls::RenderVisibilitySettingBlock(CUIRect Block)
 void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)
 {
 	CUIRect LeftButton, MiddleButton, RightButton, EditBox, LabelRect, CommandRect, X, Y, W, H, Row;
+	IUiContext TouchControlsBrowserSearchCtx;
+	TouchControlsBrowserSearchCtx.m_pUi = Ui();
+	TouchControlsBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash("touch_controls_button_browser_search");
 	MainView.h = 600.0f - 40.0f - MainView.y;
 	MainView.Draw(CMenus::ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
 	MainView.Margin(MAINMARGIN, &MainView);
@@ -728,19 +731,12 @@ void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)
 
 	MainView.HSplitBottom(ROWSIZE, &MainView, &EditBox);
 	MainView.HSplitBottom(ROWGAP, &MainView, nullptr);
-	EditBox.VSplitLeft(ROWSIZE, &LeftButton, &EditBox);
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-	Ui()->DoLabel(&LeftButton, FontIcons::FONT_ICON_MAGNIFYING_GLASS, FONTSIZE, TEXTALIGN_ML);
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-	EditBox.VSplitLeft(SUBMARGIN, nullptr, &EditBox);
 	EditBox.VSplitLeft(EditBox.w / 3.0f, &LeftButton, &EditBox);
 	char aBufSearch[64];
 	str_format(aBufSearch, sizeof(aBufSearch), "%s:", Localize("Search"));
 	Ui()->DoLabel(&LeftButton, aBufSearch, FONTSIZE, TEXTALIGN_ML);
 
-	if(Ui()->DoClearableEditBox(&m_FilterInput, &EditBox, FONTSIZE))
+	if(ui_widget::SearchField(TouchControlsBrowserSearchCtx, &m_FilterInput, EditBox, FONTSIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
 		m_NeedFilter = true;
 
 	MainView.HSplitTop(ROWGAP, nullptr, &MainView);

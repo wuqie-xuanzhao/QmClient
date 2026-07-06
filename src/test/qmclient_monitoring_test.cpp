@@ -7204,6 +7204,34 @@ TEST(QmMonitoringHelpers, TouchControlsBehaviorInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_vBehaviorElements[CommandIndex]->m_InputLabel, &MiddleButton, 10.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TouchControlsButtonBrowserSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame_touch_controls.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext TouchControlsBrowserSearchCtx;");
+	const size_t UiPos = Body.find("TouchControlsBrowserSearchCtx.m_pUi = Ui();", CtxPos);
+	const size_t ScopePos = Body.find("TouchControlsBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash(\"touch_controls_button_browser_search\");", UiPos);
+	const size_t SearchFieldPos = Body.find("ui_widget::SearchField(TouchControlsBrowserSearchCtx, &m_FilterInput, EditBox, FONTSIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive())", ScopePos);
+	const size_t NeedFilterPos = Body.find("m_NeedFilter = true;", SearchFieldPos);
+	const size_t SearchLabelPos = Body.find("str_format(aBufSearch, sizeof(aBufSearch), \"%s:\", Localize(\"Search\"));");
+	const size_t ManualSearchIconPos = Body.find("FontIcons::FONT_ICON_MAGNIFYING_GLASS");
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(SearchFieldPos, std::string::npos);
+	EXPECT_NE(NeedFilterPos, std::string::npos);
+	EXPECT_NE(SearchLabelPos, std::string::npos);
+	EXPECT_EQ(ManualSearchIconPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, ScopePos);
+	EXPECT_LT(ScopePos, SearchFieldPos);
+	EXPECT_LT(SearchFieldPos, NeedFilterPos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_FilterInput, &EditBox, FONTSIZE"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings7.cpp");
