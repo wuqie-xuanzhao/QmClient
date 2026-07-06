@@ -7085,6 +7085,44 @@ TEST(QmMonitoringHelpers, TClientWhiteFeetTextInputUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_WhiteFeet, &FeetBox, EditBoxFontSize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientAutoExecuteTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "auto LayoutAutoExecuteSection", "auto LayoutVotingSection");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext TClientAutoExecuteTextInputCtx;");
+	const size_t UiPos = Body.find("TClientAutoExecuteTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("TClientAutoExecuteTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("TClientAutoExecuteTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("TClientAutoExecuteTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_auto_execute_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("TClientAutoExecuteTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+	const size_t BeforeConnectInputPos = Body.find("static CLineInput s_LineInput(g_Config.m_TcExecuteOnConnect, sizeof(g_Config.m_TcExecuteOnConnect));");
+	const size_t BeforeConnectTextFieldPos = Body.find("ui_widget::TextField(TClientAutoExecuteTextInputCtx, &s_LineInput, Button, nullptr, EditBoxFontSize);", BeforeConnectInputPos);
+	const size_t OnConnectInputPos = Body.find("static CLineInput s_LineInput(g_Config.m_TcExecuteOnJoin, sizeof(g_Config.m_TcExecuteOnJoin));", BeforeConnectTextFieldPos);
+	const size_t OnConnectTextFieldPos = Body.find("ui_widget::TextField(TClientAutoExecuteTextInputCtx, &s_LineInput, Button, nullptr, EditBoxFontSize);", OnConnectInputPos);
+	EXPECT_NE(BeforeConnectInputPos, std::string::npos);
+	EXPECT_NE(BeforeConnectTextFieldPos, std::string::npos);
+	EXPECT_NE(OnConnectInputPos, std::string::npos);
+	EXPECT_NE(OnConnectTextFieldPos, std::string::npos);
+	EXPECT_LT(BeforeConnectInputPos, BeforeConnectTextFieldPos);
+	EXPECT_LT(BeforeConnectTextFieldPos, OnConnectInputPos);
+	EXPECT_LT(OnConnectInputPos, OnConnectTextFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_LineInput, &Button, EditBoxFontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");

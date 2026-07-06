@@ -2381,6 +2381,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect BoxRect;
 			CUIRect TmpRect;
 			CUIRect Box;
+			IUiContext TClientAutoExecuteTextInputCtx;
+			TClientAutoExecuteTextInputCtx.m_pUi = Ui();
+			TClientAutoExecuteTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientAutoExecuteTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientAutoExecuteTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_auto_execute_text_inputs");
+			TClientAutoExecuteTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			CurrentColumn.HSplitTop(MarginBetweenSections, nullptr, &CurrentColumn);
 			BoxRect = CurrentColumn;
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
@@ -2395,7 +2401,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				Box.VSplitMid(&Label, &Button);
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Execute before connecting"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_LineInput(g_Config.m_TcExecuteOnConnect, sizeof(g_Config.m_TcExecuteOnConnect));
-				Ui()->DoEditBox(&s_LineInput, &Button, EditBoxFontSize);
+				ui_widget::TextField(TClientAutoExecuteTextInputCtx, &s_LineInput, Button, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 
@@ -2406,7 +2412,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				Box.VSplitMid(&Label, &Button);
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Execute on connect"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_LineInput(g_Config.m_TcExecuteOnJoin, sizeof(g_Config.m_TcExecuteOnJoin));
-				Ui()->DoEditBox(&s_LineInput, &Button, EditBoxFontSize);
+				ui_widget::TextField(TClientAutoExecuteTextInputCtx, &s_LineInput, Button, nullptr, EditBoxFontSize);
 			}
 
 			const bool RenderDelaySlider = Render && ShouldRenderSection(CurrentColumn, 0.0f, LineSize);
