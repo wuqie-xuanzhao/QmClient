@@ -6684,6 +6684,42 @@ TEST(QmMonitoringHelpers, QmClientGoresActorChatInputUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FreezeChatMessageQmClient, &ControlCol, LgBodySize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmClientPieMenuRenameQueueUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "CUIRect Card36Start = Column;", "case EQmModuleId::Voice:");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext QmClientPieMenuTextInputCtx;");
+	const size_t UiPos = Body.find("QmClientPieMenuTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("QmClientPieMenuTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("QmClientPieMenuTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("QmClientPieMenuTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_pie_menu_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("QmClientPieMenuTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+
+	const size_t InputPos = Body.find("static CLineInput s_PieMenuRenameQueue(g_Config.m_QmPieMenuRenameQueue, sizeof(g_Config.m_QmPieMenuRenameQueue));");
+	const size_t EmptyTextPos = Body.find("s_PieMenuRenameQueue.SetEmptyText(Localize(\"Example: name1|name2|name3\"));", InputPos);
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(QmClientPieMenuTextInputCtx, &s_PieMenuRenameQueue, ControlCol, Localize(\"Example: name1|name2|name3\"), LgBodySize);", EmptyTextPos);
+	EXPECT_NE(InputPos, std::string::npos);
+	EXPECT_NE(EmptyTextPos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_LT(InputPos, EmptyTextPos);
+	EXPECT_LT(EmptyTextPos, TextFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_PieMenuRenameQueue, &ControlCol, LgBodySize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, LaserPreviewDrawsWeaponBodiesBeforePreviewLaser)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");

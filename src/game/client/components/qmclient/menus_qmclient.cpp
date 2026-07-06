@@ -5025,6 +5025,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 9, Localize("Pie Menu"), Localize("Drawing a big pie in the sky"));
+				IUiContext QmClientPieMenuTextInputCtx;
+				QmClientPieMenuTextInputCtx.m_pUi = Ui();
+				QmClientPieMenuTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+				QmClientPieMenuTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+				QmClientPieMenuTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_pie_menu_text_inputs");
+				QmClientPieMenuTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 				char aPieMenuLayoutExtra[96];
 				str_format(aPieMenuLayoutExtra, sizeof(aPieMenuLayoutExtra), "tab=%s module=pie_menu light=%d", QmSettingsTabName(m_QmClientSettingsTab), LightFirstFrame ? 1 : 0);
 				LogQmPerfStage(Client(), "pie_menu_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aPieMenuLayoutExtra);
@@ -5070,7 +5076,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-pie-menu-rename-queue", &LabelCol, Localize("Rename queue"), LgBodySize);
 					static CLineInput s_PieMenuRenameQueue(g_Config.m_QmPieMenuRenameQueue, sizeof(g_Config.m_QmPieMenuRenameQueue));
 					s_PieMenuRenameQueue.SetEmptyText(Localize("Example: name1|name2|name3"));
-					Ui()->DoEditBox(&s_PieMenuRenameQueue, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientPieMenuTextInputCtx, &s_PieMenuRenameQueue, ControlCol, Localize("Example: name1|name2|name3"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
