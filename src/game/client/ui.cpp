@@ -2320,6 +2320,8 @@ void CUi::SSelectionPopupContext::Reset()
 	m_Width = 300.0f + (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2;
 	m_AlignmentHeight = -1.0f;
 	m_TransparentButtons = false;
+	m_AnchorVisible = true;
+	m_PopupVisible = true;
 	m_SpecialFontRenderMode = false;
 }
 
@@ -2408,6 +2410,13 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 		GeometryConfig.m_Height = PopupHeight;
 		GeometryConfig.m_Margin = Margin;
 		const SQmDropdownGeometryResult Geometry = QmComputeDropdownPopupGeometry(AnchorRect, *Screen(), GeometryConfig);
+		pContext->m_AnchorVisible = Geometry.m_AnchorVisible;
+		pContext->m_PopupVisible = Geometry.m_PopupVisible;
+		if(!pContext->m_PopupVisible)
+		{
+			ClosePopupMenu(pContext);
+			return;
+		}
 		X = Geometry.m_Rect.x;
 		Y = Geometry.m_Rect.y;
 		PopupWidth = Geometry.m_Rect.w;

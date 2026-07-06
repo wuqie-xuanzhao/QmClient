@@ -903,6 +903,8 @@ public:
 		float m_Width;
 		float m_AlignmentHeight;
 		bool m_TransparentButtons;
+		bool m_AnchorVisible = true;
+		bool m_PopupVisible = true;
 
 		bool m_SpecialFontRenderMode = false; // TClient
 

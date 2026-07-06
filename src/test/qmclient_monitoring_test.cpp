@@ -7197,15 +7197,25 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	const std::string DropdownHeader = ReadRepoFile("src/game/client/QmUi/QmDropdown.h");
 	const std::string DropdownSource = ReadRepoFile("src/game/client/QmUi/QmDropdown.cpp");
 	const std::string PopupBody = ExtractSourceFunctionBody(Ui, "void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, float Height, void *pContext, FPopupMenuFunction pfnFunc, const SPopupMenuProperties &Props)");
+	const std::string SelectionResetBody = ExtractSourceFunctionBody(Ui, "void CUi::SSelectionPopupContext::Reset()");
 	const std::string Body = ExtractSourceFunctionBody(Ui, "void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)");
 	ASSERT_FALSE(PopupBody.empty());
+	ASSERT_FALSE(SelectionResetBody.empty());
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(UiHeader.find("bool m_AutoReposition = true;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("bool m_AnchorVisible = true;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("bool m_PopupVisible = true;"), std::string::npos);
+	EXPECT_NE(SelectionResetBody.find("m_AnchorVisible = true;"), std::string::npos);
+	EXPECT_NE(SelectionResetBody.find("m_PopupVisible = true;"), std::string::npos);
 	EXPECT_NE(PopupBody.find("if(Props.m_AutoReposition)"), std::string::npos);
 	EXPECT_NE(DropdownHeader.find("bool m_PopupVisible = false;"), std::string::npos);
 	EXPECT_NE(DropdownSource.find("Result.m_PopupVisible = Result.m_Rect.w > 0.0f && Result.m_Rect.h > 0.0f && RectsOverlap(Result.m_Rect, ViewportRect);"), std::string::npos);
 	EXPECT_NE(Body.find("const SQmDropdownGeometryResult Geometry = QmComputeDropdownPopupGeometry(AnchorRect, *Screen(), GeometryConfig);"), std::string::npos);
+	EXPECT_NE(Body.find("pContext->m_AnchorVisible = Geometry.m_AnchorVisible;"), std::string::npos);
+	EXPECT_NE(Body.find("pContext->m_PopupVisible = Geometry.m_PopupVisible;"), std::string::npos);
+	EXPECT_NE(Body.find("if(!pContext->m_PopupVisible)"), std::string::npos);
+	EXPECT_NE(Body.find("ClosePopupMenu(pContext);"), std::string::npos);
 	EXPECT_NE(Body.find("float PopupWidth = pContext->m_Width;"), std::string::npos);
 	EXPECT_NE(Body.find("float PopupHeightResolved = PopupHeight;"), std::string::npos);
 	EXPECT_NE(Body.find("pContext->m_Props.m_AutoReposition = false;"), std::string::npos);
