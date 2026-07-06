@@ -1410,6 +1410,12 @@ float CMenus::LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render)
 {
 	CUIRect Label, Button, TmpRect, PetSkinBox;
 	CUIRect BoxRect;
+	IUiContext TClientPetTextInputCtx;
+	TClientPetTextInputCtx.m_pUi = Ui();
+	TClientPetTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientPetTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientPetTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_pet_text_inputs");
+	TClientPetTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	const float SavedY = CurrentColumn.y;
 	CurrentColumn.HSplitTop(MarginBetweenSections, nullptr, &CurrentColumn);
 	BoxRect = CurrentColumn;
@@ -1433,7 +1439,7 @@ float CMenus::LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render)
 		PetSkinBox.VSplitMid(&Label, &Button);
 		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Pet Skin:"), FontSize, TEXTALIGN_ML);
 		static CLineInput s_PetSkin(g_Config.m_TcPetSkin, sizeof(g_Config.m_TcPetSkin));
-		Ui()->DoEditBox(&s_PetSkin, &Button, EditBoxFontSize);
+		ui_widget::TextField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
 	}
 	return CurrentColumn.y - SavedY;
 }
@@ -2441,6 +2447,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect BoxRect;
 			CUIRect TmpRect;
 			CUIRect PetSkinBox;
+			IUiContext TClientPetTextInputCtx;
+			TClientPetTextInputCtx.m_pUi = Ui();
+			TClientPetTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientPetTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientPetTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_pet_text_inputs");
+			TClientPetTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			CurrentColumn.HSplitTop(MarginBetweenSections, nullptr, &CurrentColumn);
 			BoxRect = CurrentColumn;
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
@@ -2464,7 +2476,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				PetSkinBox.VSplitMid(&Label, &Button);
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Pet Skin:"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_PetSkin(g_Config.m_TcPetSkin, sizeof(g_Config.m_TcPetSkin));
-				Ui()->DoEditBox(&s_PetSkin, &Button, EditBoxFontSize);
+				ui_widget::TextField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
 			}
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
@@ -2476,6 +2488,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		};
 		[[maybe_unused]] auto RenderPetInteractiveSection = [&](CUIRect &CurrentColumn) {
 			CUIRect PetSkinBox;
+			IUiContext TClientPetTextInputCtx;
+			TClientPetTextInputCtx.m_pUi = Ui();
+			TClientPetTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientPetTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientPetTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_pet_text_inputs");
+			TClientPetTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcPetShow, "tclient-show-pet", Localize("Show the pet"), &g_Config.m_TcPetShow, &CurrentColumn, LineSize);
 			CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
 			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-pet-size", &g_Config.m_TcPetSize, &g_Config.m_TcPetSize, &Button, Localize("Pet size"), 10, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
@@ -2485,7 +2503,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			PetSkinBox.VSplitMid(&Label, &Button);
 			DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Pet Skin:"), FontSize, TEXTALIGN_ML);
 			static CLineInput s_PetSkin(g_Config.m_TcPetSkin, sizeof(g_Config.m_TcPetSkin));
-			Ui()->DoEditBox(&s_PetSkin, &Button, EditBoxFontSize);
+			ui_widget::TextField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
 		};
 		auto LayoutAutoReplySection = [&](CUIRect &CurrentColumn, bool Render) {
 			CUIRect BoxRect;
