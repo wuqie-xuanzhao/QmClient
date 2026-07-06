@@ -2342,6 +2342,12 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	CallvoteSearchCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_search");
 	CallvoteSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	bool Searching = ui_widget::SearchField(CallvoteSearchCtx, &m_FilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	IUiContext CallvoteTextInputCtx;
+	CallvoteTextInputCtx.m_pUi = Ui();
+	CallvoteTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	CallvoteTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	CallvoteTextInputCtx.m_ScopeHash = MakeUiScopeHash("ingame_callvote_text_inputs");
+	CallvoteTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 	if(s_ControlPage == EServerControlTab::SETTINGS)
 	{
@@ -2442,7 +2448,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		Ui()->SetActiveItem(&m_CallvoteReasonInput);
 		m_CallvoteReasonInput.SelectAll();
 	}
-	Ui()->DoEditBox(&m_CallvoteReasonInput, &Reason, 14.0f);
+	ui_widget::TextField(CallvoteTextInputCtx, &m_CallvoteReasonInput, Reason, Localize("Reason"), 14.0f);
 
 	// vote option loading indicator
 	if(s_ControlPage == EServerControlTab::SETTINGS && GameClient()->m_Voting.IsReceivingOptions())
@@ -2526,10 +2532,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 
 			Bottom.VSplitLeft(5.0f, nullptr, &Bottom);
 			Bottom.VSplitLeft(250.0f, &Button, &Bottom);
-			Ui()->DoEditBox(&s_VoteDescriptionInput, &Button, 14.0f);
+			ui_widget::TextField(CallvoteTextInputCtx, &s_VoteDescriptionInput, Button, Localize("Vote description"), 14.0f);
 
 			Bottom.VMargin(20.0f, &Button);
-			Ui()->DoEditBox(&s_VoteCommandInput, &Button, 14.0f);
+			ui_widget::TextField(CallvoteTextInputCtx, &s_VoteCommandInput, Button, Localize("Vote command"), 14.0f);
 		}
 	}
 }
@@ -2558,7 +2564,13 @@ void CMenus::RenderUnfinishedMaps(CUIRect MainView)
 	static CLineInput s_PlayerNameInput(s_aPlayerName, sizeof(s_aPlayerName));
 	s_PlayerNameInput.SetEmptyText(Client()->PlayerName());
 	static bool s_NameDirty = false;
-	if(Ui()->DoEditBox(&s_PlayerNameInput, &Row, 12.0f))
+	IUiContext UnfinishedMapsTextInputCtx;
+	UnfinishedMapsTextInputCtx.m_pUi = Ui();
+	UnfinishedMapsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	UnfinishedMapsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	UnfinishedMapsTextInputCtx.m_ScopeHash = MakeUiScopeHash("ingame_unfinished_maps_text_inputs");
+	UnfinishedMapsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	if(ui_widget::TextField(UnfinishedMapsTextInputCtx, &s_PlayerNameInput, Row, Client()->PlayerName(), 12.0f))
 		s_NameDirty = true;
 
 	MainView.HSplitTop(6.0f, nullptr, &MainView);

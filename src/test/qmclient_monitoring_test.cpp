@@ -6912,6 +6912,40 @@ TEST(QmMonitoringHelpers, IngameCallvoteSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_FilterInput, &QuickSearch, 14.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, IngameCallvoteTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerControl(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext CallvoteTextInputCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("CallvoteTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"ingame_callvote_text_inputs\");"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(CallvoteTextInputCtx, &m_CallvoteReasonInput, Reason, Localize(\"Reason\"), 14.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(CallvoteTextInputCtx, &s_VoteDescriptionInput, Button, Localize(\"Vote description\"), 14.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(CallvoteTextInputCtx, &s_VoteCommandInput, Button, Localize(\"Vote command\"), 14.0f);"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_CallvoteReasonInput, &Reason, 14.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoteDescriptionInput, &Button, 14.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoteCommandInput, &Button, 14.0f"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, IngameUnfinishedMapsPlayerNameUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderUnfinishedMaps(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t TextFieldPos = Body.find("if(ui_widget::TextField(UnfinishedMapsTextInputCtx, &s_PlayerNameInput, Row, Client()->PlayerName(), 12.0f))");
+	const size_t DirtyPos = Body.find("s_NameDirty = true;", TextFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext UnfinishedMapsTextInputCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("UnfinishedMapsTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"ingame_unfinished_maps_text_inputs\");"), std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_NE(DirtyPos, std::string::npos);
+	EXPECT_LT(TextFieldPos, DirtyPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_PlayerNameInput, &Row, 12.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DemoBrowserSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");
