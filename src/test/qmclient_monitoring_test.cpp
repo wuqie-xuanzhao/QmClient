@@ -7271,6 +7271,74 @@ TEST(QmMonitoringHelpers, DemoRenderPopupUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_DemoRenderInput, &TextBox, 12.8f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, PopupClearableInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderPopupFullscreen(CUIRect Screen)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t PasswordBufferPos = Source.find("m_PasswordInput.SetBuffer(g_Config.m_Password, sizeof(g_Config.m_Password));");
+	const size_t PasswordHiddenPos = Source.find("m_PasswordInput.SetHidden(true);", PasswordBufferPos);
+	const size_t PasswordPopupPos = Body.find("else if(m_Popup == POPUP_PASSWORD)");
+	const size_t ConnectPos = Body.find("Client()->Connect(aAddr, g_Config.m_Password);", PasswordPopupPos);
+	const size_t PasswordLabelPos = Body.find("Ui()->DoLabel(&Label, Localize(\"Password\"), 18.0f, TEXTALIGN_ML);", PasswordPopupPos);
+	const size_t PasswordCtxPos = Body.find("IUiContext PasswordPopupTextInputCtx;", PasswordLabelPos);
+	const size_t PasswordUiPos = Body.find("PasswordPopupTextInputCtx.m_pUi = Ui();", PasswordCtxPos);
+	const size_t PasswordScopePos = Body.find("PasswordPopupTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"password_popup_text_input\");", PasswordUiPos);
+	const size_t PasswordFieldPos = Body.find("ui_widget::ClearableTextField(PasswordPopupTextInputCtx, &m_PasswordInput, TextBox, nullptr, 12.0f);", PasswordScopePos);
+	const size_t AddressLabelPos = Body.find("Ui()->DoLabel(&Label, Localize(\"Address\"), 18.0f, TEXTALIGN_ML);", PasswordFieldPos);
+	const size_t SaveSkinPopupPos = Body.find("else if(m_Popup == POPUP_SAVE_SKIN)");
+	const size_t YesButtonPos = Body.find("if(DoButton_Menu(&s_ButtonYes", SaveSkinPopupPos);
+	const size_t ValidFilenamePos = Body.find("str_valid_filename(m_SkinNameInput.GetString())", YesButtonPos);
+	const size_t SpecialSkinPos = Body.find("CSkins7::IsSpecialSkin(m_SkinNameInput.GetString())", ValidFilenamePos);
+	const size_t SaveSkinFilePos = Body.find("GameClient()->m_Skins7.SaveSkinfile(m_SkinNameInput.GetString(), m_Dummy)", SpecialSkinPos);
+	const size_t SaveSkinLabelPos = Body.find("Ui()->DoLabel(&Label, Localize(\"Name\"), 18.0f, TEXTALIGN_ML);", YesButtonPos);
+	const size_t SaveSkinCtxPos = Body.find("IUiContext SaveSkinTextInputCtx;", SaveSkinLabelPos);
+	const size_t SaveSkinUiPos = Body.find("SaveSkinTextInputCtx.m_pUi = Ui();", SaveSkinCtxPos);
+	const size_t SaveSkinScopePos = Body.find("SaveSkinTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"save_skin_text_input\");", SaveSkinUiPos);
+	const size_t SaveSkinFieldPos = Body.find("ui_widget::ClearableTextField(SaveSkinTextInputCtx, &m_SkinNameInput, TextBox, nullptr, 12.0f);", SaveSkinScopePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(PasswordBufferPos, std::string::npos);
+	EXPECT_NE(PasswordHiddenPos, std::string::npos);
+	EXPECT_LT(PasswordBufferPos, PasswordHiddenPos);
+	EXPECT_NE(PasswordPopupPos, std::string::npos);
+	EXPECT_NE(ConnectPos, std::string::npos);
+	EXPECT_NE(PasswordLabelPos, std::string::npos);
+	EXPECT_NE(PasswordCtxPos, std::string::npos);
+	EXPECT_NE(PasswordUiPos, std::string::npos);
+	EXPECT_NE(PasswordScopePos, std::string::npos);
+	EXPECT_NE(PasswordFieldPos, std::string::npos);
+	EXPECT_NE(AddressLabelPos, std::string::npos);
+	EXPECT_LT(PasswordPopupPos, ConnectPos);
+	EXPECT_LT(ConnectPos, PasswordLabelPos);
+	EXPECT_LT(PasswordLabelPos, PasswordCtxPos);
+	EXPECT_LT(PasswordCtxPos, PasswordUiPos);
+	EXPECT_LT(PasswordUiPos, PasswordScopePos);
+	EXPECT_LT(PasswordScopePos, PasswordFieldPos);
+	EXPECT_LT(PasswordFieldPos, AddressLabelPos);
+	EXPECT_NE(SaveSkinPopupPos, std::string::npos);
+	EXPECT_NE(YesButtonPos, std::string::npos);
+	EXPECT_NE(ValidFilenamePos, std::string::npos);
+	EXPECT_NE(SpecialSkinPos, std::string::npos);
+	EXPECT_NE(SaveSkinFilePos, std::string::npos);
+	EXPECT_NE(SaveSkinLabelPos, std::string::npos);
+	EXPECT_NE(SaveSkinCtxPos, std::string::npos);
+	EXPECT_NE(SaveSkinUiPos, std::string::npos);
+	EXPECT_NE(SaveSkinScopePos, std::string::npos);
+	EXPECT_NE(SaveSkinFieldPos, std::string::npos);
+	EXPECT_LT(YesButtonPos, ValidFilenamePos);
+	EXPECT_LT(ValidFilenamePos, SpecialSkinPos);
+	EXPECT_LT(SpecialSkinPos, SaveSkinFilePos);
+	EXPECT_LT(SaveSkinFilePos, SaveSkinLabelPos);
+	EXPECT_LT(YesButtonPos, SaveSkinLabelPos);
+	EXPECT_LT(SaveSkinLabelPos, SaveSkinCtxPos);
+	EXPECT_LT(SaveSkinCtxPos, SaveSkinUiPos);
+	EXPECT_LT(SaveSkinUiPos, SaveSkinScopePos);
+	EXPECT_LT(SaveSkinScopePos, SaveSkinFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_PasswordInput, &TextBox, 12.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&m_SkinNameInput, &TextBox, 12.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, FirstLaunchPlayerNameUsesSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");

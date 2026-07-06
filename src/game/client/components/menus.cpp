@@ -3377,7 +3377,10 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Part.VSplitLeft(100.0f, &Label, &TextBox);
 		TextBox.VSplitLeft(20.0f, nullptr, &TextBox);
 		Ui()->DoLabel(&Label, Localize("Password"), 18.0f, TEXTALIGN_ML);
-		Ui()->DoClearableEditBox(&m_PasswordInput, &TextBox, 12.0f);
+		IUiContext PasswordPopupTextInputCtx;
+		PasswordPopupTextInputCtx.m_pUi = Ui();
+		PasswordPopupTextInputCtx.m_ScopeHash = MakeUiScopeHash("password_popup_text_input");
+		ui_widget::ClearableTextField(PasswordPopupTextInputCtx, &m_PasswordInput, TextBox, nullptr, 12.0f);
 
 		Box.HSplitBottom(32.0f, &Box, nullptr);
 		Box.HSplitBottom(24.0f, &Box, &Part);
@@ -4018,7 +4021,10 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Label.VSplitLeft(100.0f, &Label, &TextBox);
 		TextBox.VSplitLeft(20.0f, nullptr, &TextBox);
 		Ui()->DoLabel(&Label, Localize("Name"), 18.0f, TEXTALIGN_ML);
-		Ui()->DoClearableEditBox(&m_SkinNameInput, &TextBox, 12.0f);
+		IUiContext SaveSkinTextInputCtx;
+		SaveSkinTextInputCtx.m_pUi = Ui();
+		SaveSkinTextInputCtx.m_ScopeHash = MakeUiScopeHash("save_skin_text_input");
+		ui_widget::ClearableTextField(SaveSkinTextInputCtx, &m_SkinNameInput, TextBox, nullptr, 12.0f);
 	}
 	else
 	{
