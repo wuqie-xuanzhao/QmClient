@@ -4764,6 +4764,12 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 
 	CUIRect StatusScheme, StatusButtons, ItemLabel;
 	static CButtonContainer s_ApplyButton, s_AddButton, s_RemoveButton;
+	IUiContext TClientStatusSchemeTextInputCtx;
+	TClientStatusSchemeTextInputCtx.m_pUi = Ui();
+	TClientStatusSchemeTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientStatusSchemeTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientStatusSchemeTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_status_scheme_text_inputs");
+	TClientStatusSchemeTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	float StatusBarPreviewContentBottom = StatusBar.y + StatusBar.h;
 	StatusBar.HSplitBottom(LineSize + MarginSmall, &StatusBar, &StatusScheme);
 	StatusBar.HSplitTop(LineSize + MarginSmall, &ItemLabel, &StatusBar);
@@ -4784,7 +4790,7 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 	DoSettingsMenuLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-scheme-label", &Label, Localize("Status Scheme:"), FontSize, TEXTALIGN_MR);
 	static CLineInput s_StatusScheme(g_Config.m_TcStatusBarScheme, sizeof(g_Config.m_TcStatusBarScheme));
 	s_StatusScheme.SetEmptyText("");
-	Ui()->DoEditBox(&s_StatusScheme, &StatusScheme, EditBoxFontSize);
+	ui_widget::TextField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, StatusScheme, nullptr, EditBoxFontSize);
 
 	static std::vector<std::string> s_DropDownNameStorage;
 	static std::vector<const char *> s_DropDownNames;
