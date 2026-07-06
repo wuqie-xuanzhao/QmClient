@@ -305,40 +305,22 @@ namespace qm_module
 		if(pConfig == nullptr || pConfig[0] == '\0')
 			return false;
 
-		std::vector<const char *> vValidIds;
-		vValidIds.reserve(vDefaults.size());
+		std::vector<qm_card_order::SEntry> vDefaultEntries;
+		vDefaultEntries.reserve(vDefaults.size());
 		for(const SQmModuleEntry &E : vDefaults)
 		{
 			const char *pStable = QmModuleStableId(E.m_Id);
-			if(pStable != nullptr)
-				vValidIds.push_back(pStable);
-		}
-
-		qm_card_order::CModel ParsedModel;
-		if(!ParsedModel.Parse(pConfig, vValidIds) || ParsedModel.Count() <= 0)
-			return false;
-
-		std::vector<qm_card_order::SEntry> vModelEntries;
-		vModelEntries.reserve(vDefaults.size());
-		for(int i = 0; i < ParsedModel.Count(); ++i)
-			vModelEntries.push_back(ParsedModel.Entry(i));
-
-		for(const SQmModuleEntry &E : vDefaults)
-		{
-			const char *pStable = QmModuleStableId(E.m_Id);
-			if(pStable == nullptr || ParsedModel.FindByStableId(pStable) >= 0)
+			if(pStable == nullptr)
 				continue;
 			const char *pTab = nullptr;
 			const qm_card_registry::SCardDefault *pReg = qm_card_registry::FindByStableId(pStable);
 			if(pReg != nullptr)
 				pTab = pReg->m_pDefaultTab;
-			vModelEntries.push_back({pStable, pTab, QmModuleColumnToInt(E.m_Column), E.m_OrderInColumn});
+			vDefaultEntries.push_back({pStable, pTab, QmModuleColumnToInt(E.m_Column), E.m_OrderInColumn});
 		}
 
 		qm_card_order::CModel &Model = QmModuleLayoutModel();
-		Model.SetEntries(vModelEntries);
-		Model.ClearDirty();
-		return true;
+		return Model.LoadMerged(pConfig, vDefaultEntries);
 	}
 
 	std::vector<SQmModuleEntry> SyncModelToLegacyLayout()

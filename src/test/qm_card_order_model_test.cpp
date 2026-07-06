@@ -99,6 +99,54 @@ TEST(QmCardOrderModel, SerializeReportsTruncation)
 	EXPECT_STREQ(aFullBuf, "qm:first|visual|left|0;qm:second|visual|left|1;");
 }
 
+// 意图：全局卡片加载必须以注册表默认全量为基准，再用用户配置覆盖。
+// 缺失卡补默认、未知/非法残留跳过，这是全局卡片唯一权威模型的核心兼容语义。
+TEST(QmCardOrderModel, LoadMergedPreservesDefaultsAndAppliesValidUserPlacement)
+{
+	qm_card_order::CModel M;
+	std::vector<qm_card_order::SEntry> Defaults = {
+		{"qm:a", "visual", 1, 0},
+		{"qm:b", "visual", 1, 1},
+		{"qm:c", "hud", 2, 0},
+	};
+
+	EXPECT_TRUE(M.LoadMerged("qm:unknown|visual|left|0;qm:b|search|right|0;qm:c|hud|bad|4;", Defaults));
+
+	EXPECT_EQ(M.Count(), 3);
+	EXPECT_GE(M.StateIndexForStableId("qm:a"), 0);
+	EXPECT_GE(M.StateIndexForStableId("qm:b"), 0);
+	EXPECT_GE(M.StateIndexForStableId("qm:c"), 0);
+	EXPECT_EQ(M.StateIndexForStableId("qm:unknown"), -1);
+
+	const auto SearchRight = M.ColumnIndices("search", 2);
+	ASSERT_EQ(SearchRight.size(), 1u);
+	EXPECT_STREQ(M.Entry(SearchRight[0]).m_pStableId, "qm:b");
+	EXPECT_EQ(M.Entry(SearchRight[0]).m_OrderInColumn, 0);
+
+	const auto HudRight = M.ColumnIndices("hud", 2);
+	ASSERT_EQ(HudRight.size(), 1u);
+	EXPECT_STREQ(M.Entry(HudRight[0]).m_pStableId, "qm:c");
+	EXPECT_EQ(M.Entry(HudRight[0]).m_OrderInColumn, 0);
+}
+
+// 意图：旧冒号格式没有 tab 字段；合并加载时必须继承默认 tab，
+// 否则旧用户配置迁入全局模型后会从对应页面消失。
+TEST(QmCardOrderModel, LoadMergedBackfillsDefaultTabForLegacyEntries)
+{
+	qm_card_order::CModel M;
+	std::vector<qm_card_order::SEntry> Defaults = {
+		{"a", "visual", 1, 0},
+		{"b", "hud", 2, 0},
+	};
+
+	EXPECT_TRUE(M.LoadMerged("a:2:0", Defaults));
+
+	const auto VisualRight = M.ColumnIndices("visual", 2);
+	ASSERT_EQ(VisualRight.size(), 1u);
+	EXPECT_STREQ(M.Entry(VisualRight[0]).m_pStableId, "a");
+	EXPECT_STREQ(M.Entry(VisualRight[0]).m_pDefaultTab, "visual");
+}
+
 TEST(QmCardOrderModel, ParsePipeFormatKeepsMovableTabPlacement)
 {
 	qm_card_order::CModel M;

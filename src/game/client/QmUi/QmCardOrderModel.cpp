@@ -318,4 +318,42 @@ namespace qm_card_order
 		BuildStateIndex(); // 解析后重建 stableId→index 注册表
 		return true;
 	}
+
+	bool CModel::LoadMerged(const char *pStr, const std::vector<SEntry> &vDefaults)
+	{
+		std::vector<const char *> vValidIds;
+		vValidIds.reserve(vDefaults.size());
+		for(const SEntry &Default : vDefaults)
+		{
+			if(Default.m_pStableId != nullptr)
+				vValidIds.push_back(Default.m_pStableId);
+		}
+
+		CModel ParsedModel;
+		const bool Parsed = pStr != nullptr && pStr[0] != '\0' && ParsedModel.Parse(pStr, vValidIds) && ParsedModel.Count() > 0;
+
+		std::vector<SEntry> vMerged;
+		vMerged.reserve(vDefaults.size());
+		for(const SEntry &Default : vDefaults)
+		{
+			if(Default.m_pStableId == nullptr)
+				continue;
+			const int ParsedIndex = ParsedModel.FindByStableId(Default.m_pStableId);
+			if(ParsedIndex < 0)
+			{
+				vMerged.push_back(Default);
+				continue;
+			}
+
+			SEntry Entry = ParsedModel.Entry(ParsedIndex);
+			if(Entry.m_pDefaultTab == nullptr)
+				Entry.m_pDefaultTab = Default.m_pDefaultTab;
+			vMerged.push_back(Entry);
+		}
+
+		SetEntries(vMerged);
+		NormalizeColumns();
+		ClearDirty();
+		return Parsed;
+	}
 } // namespace qm_card_order
