@@ -69,7 +69,7 @@ namespace qm_card_registry
 			{"tclient:background-draw", "tclient", ECardColumn::Left, 17, "Background draw", "background draw tclient"},
 			{"tclient:finish-name", "tclient", ECardColumn::Left, 18, "Finish name", "finish name tclient"},
 
-			// === 设置 deck（16）· deck:<page>-<card>（原无持久化；tab=归属页，column/order 按附录序显式化）===
+			// === 设置 deck（24）· deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
 			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, "Graphics display", "graphics display"},
 			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, "Visual", "graphics visual"},
 			{"deck:graphics-backend", "graphics", ECardColumn::Left, 2, "Graphics backend", "graphics backend"},
@@ -86,6 +86,14 @@ namespace qm_card_registry
 			{"deck:tclient-status-bar-settings", "tclient-status-bar", ECardColumn::Left, 0, "Status Bar", "status bar tclient"},
 			{"deck:tclient-status-bar-items", "tclient-status-bar", ECardColumn::Left, 1, "Status Bar Codes", "status bar codes tclient"},
 			{"deck:tclient-status-bar-preview", "tclient-status-bar", ECardColumn::Left, 2, "Preview", "preview status bar tclient"},
+			{"deck:appearance-hud-main", "appearance-hud", ECardColumn::Left, 0, "HUD", "appearance hud main"},
+			{"deck:appearance-hud-ddrace", "appearance-hud", ECardColumn::Right, 0, "DDRace HUD", "appearance ddrace hud"},
+			{"deck:appearance-chat-settings", "appearance-chat", ECardColumn::Left, 0, "Chat", "appearance chat settings"},
+			{"deck:appearance-chat-messages", "appearance-chat", ECardColumn::Right, 0, "Messages", "appearance chat messages"},
+			{"deck:appearance-chat-preview", "appearance-chat", ECardColumn::Left, 1, "Preview", "appearance chat preview"},
+			{"deck:appearance-hook-collision-main", "appearance-hook-collision", ECardColumn::Left, 0, "Hook collision line", "appearance hook collision line"},
+			{"deck:appearance-hook-collision-preview", "appearance-hook-collision", ECardColumn::Right, 0, "Preview", "appearance hook collision preview"},
+			{"deck:appearance-info-messages", "appearance-info-messages", ECardColumn::Left, 0, "Info Messages", "appearance info messages"},
 		};
 		// clang-format on
 		return s_aDefaults;

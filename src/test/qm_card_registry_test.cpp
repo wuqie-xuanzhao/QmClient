@@ -12,8 +12,8 @@
 TEST(QmCardRegistry, CoversAllCardsNoDuplicates)
 {
 	const auto &Reg = qm_card_registry::Defaults();
-	// 栖梦 38 + 当前 Tclient 19 + deck 16 = 73
-	EXPECT_GE(Reg.size(), 73u);
+	// 栖梦 38 + 当前 Tclient 19 + deck 24 = 81
+	EXPECT_EQ(Reg.size(), 81u);
 	std::set<std::string> Ids;
 	for(const auto &E : Reg)
 		EXPECT_TRUE(Ids.insert(E.m_pStableId).second) << "重复 stableId: " << E.m_pStableId;
@@ -73,9 +73,48 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:tclient-status-bar-settings",
 		"deck:tclient-status-bar-items",
 		"deck:tclient-status-bar-preview",
+		"deck:appearance-hud-main",
+		"deck:appearance-hud-ddrace",
+		"deck:appearance-chat-settings",
+		"deck:appearance-chat-messages",
+		"deck:appearance-chat-preview",
+		"deck:appearance-hook-collision-main",
+		"deck:appearance-hook-collision-preview",
+		"deck:appearance-info-messages",
 	};
 	for(const char *pId : apIds)
 		ASSERT_NE(qm_card_registry::FindByStableId(pId), nullptr) << pId;
+}
+
+// 意图：appearance deck 的默认 placement 必须与运行时子页和列顺序对齐。
+// 否则全局默认补位会把不同 appearance 子页混在同一个 tab 下，或留下 order 空洞。
+TEST(QmCardRegistry, AppearanceDeckDefaultsUseSubPagePlacements)
+{
+	struct SExpectedPlacement
+	{
+		const char *m_pStableId;
+		const char *m_pTab;
+		qm_card_registry::ECardColumn m_Column;
+		int m_Order;
+	};
+	const SExpectedPlacement aExpected[] = {
+		{"deck:appearance-hud-main", "appearance-hud", qm_card_registry::ECardColumn::Left, 0},
+		{"deck:appearance-hud-ddrace", "appearance-hud", qm_card_registry::ECardColumn::Right, 0},
+		{"deck:appearance-chat-settings", "appearance-chat", qm_card_registry::ECardColumn::Left, 0},
+		{"deck:appearance-chat-messages", "appearance-chat", qm_card_registry::ECardColumn::Right, 0},
+		{"deck:appearance-chat-preview", "appearance-chat", qm_card_registry::ECardColumn::Left, 1},
+		{"deck:appearance-hook-collision-main", "appearance-hook-collision", qm_card_registry::ECardColumn::Left, 0},
+		{"deck:appearance-hook-collision-preview", "appearance-hook-collision", qm_card_registry::ECardColumn::Right, 0},
+		{"deck:appearance-info-messages", "appearance-info-messages", qm_card_registry::ECardColumn::Left, 0},
+	};
+	for(const SExpectedPlacement &Expected : aExpected)
+	{
+		const auto *pDefault = qm_card_registry::FindByStableId(Expected.m_pStableId);
+		ASSERT_NE(pDefault, nullptr) << Expected.m_pStableId;
+		EXPECT_STREQ(pDefault->m_pDefaultTab, Expected.m_pTab) << Expected.m_pStableId;
+		EXPECT_EQ(pDefault->m_DefaultColumn, Expected.m_Column) << Expected.m_pStableId;
+		EXPECT_EQ(pDefault->m_DefaultOrder, Expected.m_Order) << Expected.m_pStableId;
+	}
 }
 
 // 意图：deck 默认 placement 的 order 是 tab+column 内的局部顺序，不是跨所有设置页的全局序号。
@@ -116,12 +155,14 @@ TEST(QmCardRegistry, BuildDefaultEntriesCoversEveryRegisteredCard)
 	EXPECT_GE(Model.StateIndexForStableId("qm:chat_bubble"), 0);
 	EXPECT_GE(Model.StateIndexForStableId("tclient:auto-reply"), 0);
 	EXPECT_GE(Model.StateIndexForStableId("deck:sound-audio-pack"), 0);
+	EXPECT_GE(Model.StateIndexForStableId("deck:appearance-chat-preview"), 0);
 
 	char aBuf[4096];
 	Model.Serialize(aBuf, sizeof(aBuf));
 	const std::string Serialized(aBuf);
 	EXPECT_NE(Serialized.find("tclient:auto-reply|tclient|left|8;"), std::string::npos);
 	EXPECT_NE(Serialized.find("deck:sound-audio-pack|sound|left|2;"), std::string::npos);
+	EXPECT_NE(Serialized.find("deck:appearance-chat-preview|appearance-chat|left|1;"), std::string::npos);
 }
 
 // 意图：全局搜索页不能只展示 stableId 占位符，注册表要提供可读标题与搜索关键词。

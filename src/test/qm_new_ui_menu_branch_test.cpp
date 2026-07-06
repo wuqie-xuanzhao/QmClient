@@ -1926,6 +1926,18 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(RenderSettingsGraphics.find("\"graphics-renderer-title\""), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("EndSettingsCardDeck(GraphicsDeck, &s_GraphicsSettingsScrollY);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("MainView.VSplitLeft(OptionsBlockWidth"), std::string::npos);
+
+	const std::string RenderSettingsAppearance = FunctionBody(SettingsSource, "void CMenus::RenderSettingsAppearance(CUIRect MainView)");
+	ASSERT_FALSE(RenderSettingsAppearance.empty());
+	EXPECT_NE(RenderSettingsAppearance.find("std::deque<std::string> vAppearanceStableIds;"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("const char *pGlobalStableId = pStableId;"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("str_format(aStableId, sizeof(aStableId), \"deck:%s\", pStableId);"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("*LegacyIt = pGlobalStableId;"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("pOrder->emplace_back(pGlobalStableId);"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("Section.m_pStableCardId = pGlobalStableId;"), std::string::npos);
+	EXPECT_EQ(RenderSettingsAppearance.find("Section.m_pStableCardId = pStableId;"), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("BeginAppearanceCard(LeftView, HudMinCardHeight, s_HudMeasuredLeftCardHeight, &HudLeftCard, \"appearance-hud-main\""), std::string::npos);
+	EXPECT_NE(RenderSettingsAppearance.find("BeginAppearanceCard(PreviewView, ChatPreviewMinCardHeight, s_ChatMeasuredPreviewCardHeight, &ChatPreviewCard, \"appearance-chat-preview\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsCardFeedbackFixesUseStableLayouts)

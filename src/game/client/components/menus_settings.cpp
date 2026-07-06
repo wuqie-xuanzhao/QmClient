@@ -45,6 +45,7 @@
 #include <cinttypes>
 #include <cmath>
 #include <cstdint>
+#include <deque>
 #include <memory>
 #include <numeric>
 #include <set>
@@ -5557,17 +5558,32 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	const SQmSettingsCardStyle AppearanceQmCardStyle = QmSettingsCardStyle(AppearanceUiScale);
 	std::vector<std::string> *pAppearanceOrder = SettingsCardDeckOrder("appearance");
 	m_vTClientSettingsCardDeckItems.clear();
+	std::deque<std::string> vAppearanceStableIds;
 	auto BeginAppearanceCard = [&](CUIRect &View, float MinHeight, float LastMeasuredHeight, CUIRect *pCard, const char *pStableId, ESettingsCardDeckColumn Column, int Order) {
 		std::vector<std::string> *pOrder = pAppearanceOrder;
+		const char *pGlobalStableId = pStableId;
+		if(pStableId != nullptr && pStableId[0] != '\0' && str_startswith(pStableId, "deck:") == nullptr)
+		{
+			char aStableId[128];
+			str_format(aStableId, sizeof(aStableId), "deck:%s", pStableId);
+			vAppearanceStableIds.emplace_back(aStableId);
+			pGlobalStableId = vAppearanceStableIds.back().c_str();
+		}
 		CUIRect Card = View;
 		Card.h = maximum(MinHeight, LastMeasuredHeight);
 		RenderQmSettingsGlassCard(Card, AppearanceQmCardStyle);
 		CUIRect HandleRect;
 		RenderSettingsCardDragHandle(Card, &HandleRect, AppearanceQmCardStyle);
-		if(pOrder != nullptr && pStableId != nullptr && pStableId[0] != '\0' && std::find(pOrder->begin(), pOrder->end(), pStableId) == pOrder->end())
-			pOrder->emplace_back(pStableId);
+		if(pOrder != nullptr && pGlobalStableId != nullptr && pGlobalStableId[0] != '\0' && std::find(pOrder->begin(), pOrder->end(), pGlobalStableId) == pOrder->end())
+		{
+			const auto LegacyIt = pStableId != nullptr ? std::find(pOrder->begin(), pOrder->end(), pStableId) : pOrder->end();
+			if(LegacyIt != pOrder->end())
+				*LegacyIt = pGlobalStableId;
+			else
+				pOrder->emplace_back(pGlobalStableId);
+		}
 		SSettingsSection Section;
-		Section.m_pStableCardId = pStableId;
+		Section.m_pStableCardId = pGlobalStableId;
 		Section.m_pName = "appearance";
 		const SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(Section, Column, Order, Card, HandleRect);
 		RegisterSettingsCardDeckItem(Item);
