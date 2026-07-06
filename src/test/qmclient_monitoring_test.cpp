@@ -1794,7 +1794,9 @@ TEST(QmMonitoringHelpers, SettingsCardDeckGlobalOrderUsesSharedCardModel)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()");
+	const std::string SerializeBody = ExtractSourceFunctionBody(Source, "void CMenus::SerializeMergedSettingsCardDeckOrdersToGlobalConfig()");
 	ASSERT_FALSE(Body.empty());
+	ASSERT_FALSE(SerializeBody.empty());
 
 	EXPECT_NE(Source.find("#include <game/client/QmUi/QmCardRegistry.h>"), std::string::npos);
 	EXPECT_NE(Body.find("qm_card_order::CModel Model;"), std::string::npos);
@@ -1802,6 +1804,10 @@ TEST(QmMonitoringHelpers, SettingsCardDeckGlobalOrderUsesSharedCardModel)
 	EXPECT_NE(Body.find("Model.LoadExplicit(g_Config.m_QmGlobalCardOrder, vDefaults)"), std::string::npos);
 	EXPECT_NE(Body.find("Model.StableIdOrder(\"deck:\", DeckId.c_str(), 1)"), std::string::npos);
 	EXPECT_NE(Body.find("Model.StableIdOrder(\"deck:\", DeckId.c_str(), 2)"), std::string::npos);
+	EXPECT_NE(SerializeBody.find("m_SettingsCardDeckColumnPrefs"), std::string::npos);
+	EXPECT_NE(SerializeBody.find("ColumnOrder[Column]++"), std::string::npos);
+	EXPECT_NE(SerializeBody.find("vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), Column, ColumnOrder[Column]++});"), std::string::npos);
+	EXPECT_EQ(SerializeBody.find("vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), 1, (int)i});"), std::string::npos);
 	EXPECT_EQ(Source.find("SettingsCardDeckParseGlobalColumn"), std::string::npos);
 	EXPECT_EQ(Body.find("const char *pEntry = g_Config.m_QmGlobalCardOrder;\n\tchar aToken[160];\n\twhile((pEntry = str_next_token(pEntry, \";\", aToken"), std::string::npos);
 }

@@ -4655,12 +4655,21 @@ void CMenus::SerializeMergedSettingsCardDeckOrdersToGlobalConfig()
 	for(const std::string &DeckId : vDeckIds)
 	{
 		const std::vector<std::string> &vOrder = m_SettingsCardDeckOrders[DeckId];
+		int ColumnOrder[3] = {};
 		vEntries.reserve(vEntries.size() + vOrder.size());
 		for(size_t i = 0; i < vOrder.size(); ++i)
 		{
 			if(vOrder[i].empty() || str_startswith(vOrder[i].c_str(), "deck:") == nullptr)
 				continue;
-			vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), 1, (int)i});
+			int Column = 1;
+			const auto DeckPrefsIt = m_SettingsCardDeckColumnPrefs.find(DeckId);
+			if(DeckPrefsIt != m_SettingsCardDeckColumnPrefs.end())
+			{
+				const auto PrefIt = DeckPrefsIt->second.find(vOrder[i]);
+				if(PrefIt != DeckPrefsIt->second.end() && (PrefIt->second & 0x1) != 0)
+					Column = 2;
+			}
+			vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), Column, ColumnOrder[Column]++});
 		}
 	}
 	if(qm_card_order::SerializeMergedReplacingPrefix(g_Config.m_QmGlobalCardOrder, "deck:", vEntries, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))
