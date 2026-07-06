@@ -1448,6 +1448,12 @@ float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)
 {
 	CUIRect Label, Button, NotificationConfig, TmpRect;
 	CUIRect BoxRect;
+	IUiContext TClientHudTextInputCtx;
+	TClientHudTextInputCtx.m_pUi = Ui();
+	TClientHudTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientHudTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientHudTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_hud_text_inputs");
+	TClientHudTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	const float SavedY = CurrentColumn.y;
 	CurrentColumn.HSplitTop(Margin, nullptr, &CurrentColumn);
 	BoxRect = CurrentColumn;
@@ -1479,7 +1485,7 @@ float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)
 		static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
 		s_LastInput.SetEmptyText(Localize("You're the last one!"));
 		Button.HSplitTop(MarginSmall, nullptr, &Button);
-		Ui()->DoEditBox(&s_LastInput, &Button, EditBoxFontSize);
+		ui_widget::TextField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 		static CButtonContainer s_ClientNotifyWhenLastColor;
 		DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 		CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
@@ -2901,6 +2907,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		auto LayoutHudSection = [&](CUIRect &CurrentColumn, bool Render) {
 			CUIRect BoxRect;
 			CUIRect TmpRect;
+			IUiContext TClientHudTextInputCtx;
+			TClientHudTextInputCtx.m_pUi = Ui();
+			TClientHudTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientHudTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientHudTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_hud_text_inputs");
+			TClientHudTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			CurrentColumn.HSplitTop(Margin, nullptr, &CurrentColumn);
 			BoxRect = CurrentColumn;
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
@@ -2942,7 +2954,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
 					s_LastInput.SetEmptyText(Localize("You're the last one!"));
 					Button.HSplitTop(MarginSmall, nullptr, &Button);
-					Ui()->DoEditBox(&s_LastInput, &Button, EditBoxFontSize);
+					ui_widget::TextField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 					static CButtonContainer s_ClientNotifyWhenLastColor;
 					DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
@@ -3002,6 +3014,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			return CurrentColumn.y - SavedY;
 		};
 		[[maybe_unused]] auto RenderHudInteractiveSection = [&](CUIRect &CurrentColumn) {
+			IUiContext TClientHudTextInputCtx;
+			TClientHudTextInputCtx.m_pUi = Ui();
+			TClientHudTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientHudTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientHudTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_hud_text_inputs");
+			TClientHudTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniVoteHud, "tclient-mini-vote-hud", Localize("Show compact vote HUD"), &g_Config.m_TcMiniVoteHud, &CurrentColumn, LineSize);
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniDebug, "tclient-mini-debug", Localize("Show position and angle (mini debug)"), &g_Config.m_TcMiniDebug, &CurrentColumn, LineSize);
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRenderCursorSpec, "tclient-render-cursor-spec", Localize("Show the cursor while free spectating"), &g_Config.m_TcRenderCursorSpec, &CurrentColumn, LineSize);
@@ -3018,7 +3036,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
 				s_LastInput.SetEmptyText(Localize("You're the last one!"));
 				Button.HSplitTop(MarginSmall, nullptr, &Button);
-				Ui()->DoEditBox(&s_LastInput, &Button, EditBoxFontSize);
+				ui_widget::TextField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 				static CButtonContainer s_ClientNotifyWhenLastColor;
 				DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
