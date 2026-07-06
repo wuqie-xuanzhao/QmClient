@@ -4047,6 +4047,20 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 	};
 	if(!WarEntryExists(s_pSelectedEntry))
 		s_pSelectedEntry = nullptr;
+
+	IUiContext TClientWarListEntriesSearchCtx;
+	TClientWarListEntriesSearchCtx.m_pUi = Ui();
+	TClientWarListEntriesSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientWarListEntriesSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientWarListEntriesSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_entries_search");
+	TClientWarListEntriesSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	IUiContext TClientWarListPlayerSearchCtx;
+	TClientWarListPlayerSearchCtx.m_pUi = Ui();
+	TClientWarListPlayerSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientWarListPlayerSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientWarListPlayerSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_warlist_player_search");
+	TClientWarListPlayerSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 	{
 		CPerfTimer ListTimer;
 		Column1.HSplitTop(HeadlineHeight, &Label, &Column1);
@@ -4064,6 +4078,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		EntriesSearch.HSplitTop(MarginSmall, nullptr, &EntriesSearch);
 
 		static CLineInputBuffered<128> s_EntriesFilterInput;
+		ui_widget::SearchField(TClientWarListEntriesSearchCtx, &s_EntriesFilterInput, EntriesSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 		static std::vector<CWarEntry *> s_vFilteredEntries;
 		static char s_aCachedEntriesFilter[128] = "";
 		static bool s_CachedReversed = false;
@@ -4184,7 +4199,6 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 			}
 		}
 
-		Ui()->DoEditBox_Search(&s_EntriesFilterInput, &EntriesSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 		char aExtra[96];
 		str_format(aExtra, sizeof(aExtra), "entries=%d filtered=%d", (int)GameClient()->m_WarList.m_vWarEntries.size(), (int)s_vFilteredEntries.size());
 		LogTClientPerfStageEx("tclient_warlist", "list", ETClientSettingsPerfStage::TEXT_CACHE, ListTimer.ElapsedMs(), false, aExtra);
@@ -4433,7 +4447,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		Column4.HSplitBottom(25.0f, &Column4, &PlayerSearch);
 		PlayerSearch.HSplitTop(MarginSmall, nullptr, &PlayerSearch);
 		static CLineInputBuffered<128> s_PlayerSearchInput;
-		Ui()->DoEditBox_Search(&s_PlayerSearchInput, &PlayerSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		ui_widget::SearchField(TClientWarListPlayerSearchCtx, &s_PlayerSearchInput, PlayerSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 		CUIRect PlayerList;
 		Column4.HSplitBottom(0.0f, &PlayerList, &Column4);

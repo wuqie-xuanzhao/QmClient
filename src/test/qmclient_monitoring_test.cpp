@@ -6739,6 +6739,31 @@ TEST(QmMonitoringHelpers, TClientConfigSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_SearchInput, &SearchEdit, EditBoxFontSize);"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientWarListSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTClientWarList(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t EntriesSearchPos = Body.find("ui_widget::SearchField(TClientWarListEntriesSearchCtx, &s_EntriesFilterInput, EntriesSearch, 14.0f");
+	const size_t EntriesFilterPos = Body.find("if(str_comp(s_aCachedEntriesFilter, s_EntriesFilterInput.GetString()) != 0", EntriesSearchPos);
+	const size_t PlayerSearchPos = Body.find("ui_widget::SearchField(TClientWarListPlayerSearchCtx, &s_PlayerSearchInput, PlayerSearch, 14.0f");
+	const size_t PlayerFilterPos = Body.find("if(!str_find_nocase(Client.m_aName, s_PlayerSearchInput.GetString())", PlayerSearchPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientWarListEntriesSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("TClientWarListEntriesSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_warlist_entries_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext TClientWarListPlayerSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("TClientWarListPlayerSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_warlist_player_search\");"), std::string::npos);
+	EXPECT_NE(EntriesSearchPos, std::string::npos);
+	EXPECT_NE(EntriesFilterPos, std::string::npos);
+	EXPECT_LT(EntriesSearchPos, EntriesFilterPos);
+	EXPECT_NE(PlayerSearchPos, std::string::npos);
+	EXPECT_NE(PlayerFilterPos, std::string::npos);
+	EXPECT_LT(PlayerSearchPos, PlayerFilterPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_EntriesFilterInput, &EntriesSearch"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_PlayerSearchInput, &PlayerSearch"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, ControlsQuickSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");
