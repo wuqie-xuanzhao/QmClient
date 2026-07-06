@@ -1345,6 +1345,9 @@ Clear note
 Clear remote console
 == Pending traditional_chinese translation db26753a9d
 
+Clearable text...
+== Pending traditional_chinese translation clearable_text
+
 Clears the voting options
 == Pending traditional_chinese translation 5946fd7e20
 
@@ -2797,8 +2800,8 @@ Force vote
 Forms
 == 表單
 
-Found %d modules
-== Pending traditional_chinese translation a6c6d4a87e
+Found %d global cards
+== Pending traditional_chinese translation 6884b87578
 
 FPM
 == Pending traditional_chinese translation 6a664d9d3d
@@ -2997,6 +3000,9 @@ Gives you infinite jump
 
 Glitch
 == Pending traditional_chinese translation 2bd9b5f88a
+
+Global card
+== Pending traditional_chinese translation global_card
 
 Global toggle key
 == Pending traditional_chinese translation 0ba2b06154
@@ -5406,9 +5412,6 @@ Queue preset: %s
 
 Quick action menu for players
 == Pending traditional_chinese translation b4adf64233
-
-Quickly locate feature modules
-== Pending traditional_chinese translation 66a2234530
 
 Quit
 == Pending traditional_chinese translation 449653f183
@@ -8104,9 +8107,6 @@ Update or add a specific war group
 Update Rate
 == Pending traditional_chinese translation 07b9a92119
 
-Updating feature list...
-== Pending traditional_chinese translation e597ba39a6
-
 Uploading map data to GPU
 == Pending traditional_chinese translation c06537ae6c
 
@@ -8865,6 +8865,12 @@ Zoom out
 
 允许 FTAPI 自动翻译（可能导致过载）
 == Pending traditional_chinese translation 77b1bb8caf
+
+全局卡片排序旧配置迁移完成标记
+== Pending traditional_chinese translation global_card_order_migrated
+
+全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
+== Pending traditional_chinese translation global_card_order
 
 关键词回复使用Dummy
 == Pending traditional_chinese translation 1235715216

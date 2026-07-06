@@ -15,13 +15,13 @@ struct SQmScrollMetrics
 
 struct SQmScrollConfig
 {
-	float m_WheelScale = 1.0f;
-	bool m_NativeWheelStep = false;
+	float m_WheelScale = 10.0f;
+	bool m_NativeWheelStep = true;
 	float m_NativeWheelAnimationTime = 0.5f;
 	float m_Friction = 9.0f;
 	float m_OverscrollStiffness = 120.0f;
 	float m_OverscrollDamping = 22.0f;
-	float m_MaxOverscroll = 72.0f;
+	float m_MaxOverscroll = 0.0f;
 	float m_RestVelocity = 0.25f;
 	float m_RestDistance = 0.25f;
 };
@@ -37,12 +37,20 @@ struct SQmScrollContainerInput
 	bool m_MousePressed = false;
 	bool m_ThumbHovered = false;
 	bool m_TrackHovered = false;
+	bool m_ModifierPressed = false;
 	bool m_ContentDragAllowed = false;
 	bool m_ContentDragBlocked = false;
 };
 
+enum class EQmScrollAxis
+{
+	VERTICAL,
+	HORIZONTAL,
+};
+
 struct SQmScrollContainerStyle
 {
+	EQmScrollAxis m_Axis = EQmScrollAxis::VERTICAL;
 	float m_ScrollbarWidth = 10.0f;
 	float m_ScrollbarMargin = 2.0f;
 	float m_MinThumbHeight = 24.0f;
@@ -65,7 +73,7 @@ public:
 	void Reset();
 	void SetOffset(float Offset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig(), bool AllowOverscroll = false);
 	void AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig());
-	void Advance(float Dt, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig());
+	void Advance(float Dt, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig(), bool PauseNativeWheelAnimation = false);
 
 	float Offset() const { return m_Offset; }
 	float Velocity() const { return m_Velocity; }

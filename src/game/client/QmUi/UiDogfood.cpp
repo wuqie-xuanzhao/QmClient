@@ -29,6 +29,8 @@ namespace
 	std::array<CButtonContainer, COLUMN_COUNT> s_aDisabledBtn;
 	std::array<CButtonContainer, COLUMN_COUNT> s_aIconBtn;
 	std::array<CLineInputBuffered<128>, COLUMN_COUNT> s_aTextField;
+	std::array<CLineInputBuffered<128>, COLUMN_COUNT> s_aClearableTextField;
+	std::array<CLineInputBuffered<128>, COLUMN_COUNT> s_aSearchField;
 	std::array<bool, COLUMN_COUNT> s_aToggleOn = {true, true};
 	std::array<bool, COLUMN_COUNT> s_aToggleOff = {false, false};
 	std::array<float, COLUMN_COUNT> s_aSliderValue = {0.4f, 0.4f};
@@ -109,7 +111,17 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 				ui_widget::TextField(Ctx, &s_aTextField[Column], Row, Localize("Type something..."), ui_token::font::BODY * Scale);
 				Content.HSplitTop(Gap, nullptr, &Content);
 
-				// Row 4: Two toggles
+				// Row 4: 带清除按钮的输入框
+				Content.HSplitTop(RowH, &Row, &Content);
+				ui_widget::ClearableTextField(Ctx, &s_aClearableTextField[Column], Row, Localize("Clearable text..."), ui_token::font::BODY * Scale);
+				Content.HSplitTop(Gap, nullptr, &Content);
+
+				// Row 5: 搜索输入框
+				Content.HSplitTop(RowH, &Row, &Content);
+				ui_widget::SearchField(Ctx, &s_aSearchField[Column], Row, ui_token::font::BODY * Scale, true);
+				Content.HSplitTop(Gap, nullptr, &Content);
+
+				// Row 6: Two toggles
 				Content.HSplitTop(RowH, &Row, &Content);
 				{
 					CUIRect L, R;
@@ -121,17 +133,17 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 				}
 				Content.HSplitTop(Gap, nullptr, &Content);
 
-				// Row 5: Slider
+				// Row 7: Slider
 				Content.HSplitTop(RowH, &Row, &Content);
 				ui_widget::Slider(Ctx, &s_aSliderValue[Column], &s_aSliderValue[Column], 0.0f, 1.0f, Row, "");
 				Content.HSplitTop(Gap, nullptr, &Content);
 
-				// Row 6: TabBar
+				// Row 8: TabBar
 				Content.HSplitTop(RowH, &Row, &Content);
 				ui_widget::TabBar(Ctx, apTabLabels, std::size(apTabLabels), &s_aTabActive[Column], Row);
 				Content.HSplitTop(Gap, nullptr, &Content);
 
-				// Rows 7-9: List items
+				// Rows 9-11: List items
 				for(int i = 0; i < 3; ++i)
 				{
 					Content.HSplitTop(RowH, &Row, &Content);

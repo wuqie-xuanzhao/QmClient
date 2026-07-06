@@ -1345,6 +1345,9 @@ Clear note
 Clear remote console
 == Uzak konsolu temizle
 
+Clearable text...
+== Pending turkish translation clearable_text
+
 Clears the voting options
 == Oylama seçeneklerini temizler
 
@@ -2797,8 +2800,8 @@ Force vote
 Forms
 == Formlar
 
-Found %d modules
-== %d modül bulundu
+Found %d global cards
+== Pending turkish translation 6884b87578
 
 FPM
 == K/D
@@ -2997,6 +3000,9 @@ Gives you infinite jump
 
 Glitch
 == Hata
+
+Global card
+== Pending turkish translation global_card
 
 Global toggle key
 == Genel açma/kapama tuşu
@@ -5406,9 +5412,6 @@ Queue preset: %s
 
 Quick action menu for players
 == Oyuncular için hızlı işlem menüsü
-
-Quickly locate feature modules
-== Özellik modüllerini hızlıca bul
 
 Quit
 == Çıkış
@@ -8104,9 +8107,6 @@ Update or add a specific war group
 Update Rate
 == Pending turkish translation 072386797c
 
-Updating feature list...
-== Özellik listesi güncelleniyor...
-
 Uploading map data to GPU
 == Harita verileri GPU'ya yükleniyor
 
@@ -8865,6 +8865,12 @@ Zoom out
 
 允许 FTAPI 自动翻译（可能导致过载）
 == FTAPI otomatik çevirisine izin ver (aşırı yüklenmeye neden olabilir)
+
+全局卡片排序旧配置迁移完成标记
+== Pending turkish translation global_card_order_migrated
+
+全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
+== Pending turkish translation global_card_order
 
 关键词回复使用Dummy
 == Anahtar kelime yanıtı için Dummy kullan

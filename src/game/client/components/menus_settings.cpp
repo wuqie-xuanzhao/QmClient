@@ -605,6 +605,7 @@ namespace
 		case CMenus::SETTINGS_ASSETS: return "assets";
 		case CMenus::SETTINGS_TCLIENT: return "tclient";
 		case CMenus::SETTINGS_QMCLIENT: return "qmclient";
+		case CMenus::SETTINGS_SEARCH: return "search";
 		case CMenus::SETTINGS_PROFILES: return "profiles";
 		case CMenus::SETTINGS_CONFIGS: return "configs";
 		case CMenus::SETTINGS_CONTRIBUTORS: return "contributors";
@@ -4852,6 +4853,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 			SETTINGS_DDNET,
 			SETTINGS_TCLIENT,
 			SETTINGS_QMCLIENT,
+			SETTINGS_SEARCH,
 		};
 		for(int i : s_aSettingsTabOrder)
 		{
@@ -5031,6 +5033,12 @@ void CMenus::RenderSettings(CUIRect MainView)
 			RenderSettingsQmClient(ContentView, false, CollectingMenuTextPlan);
 			if(!CollectingMenuTextPlan)
 				m_SettingsRuntimeMetadata.m_LastQmTab = m_QmClientSettingsTab;
+		}
+		else if(g_Config.m_UiSettingsPage == SETTINGS_SEARCH)
+		{
+			if(!CollectingMenuTextPlan)
+				GameClient()->m_MenuBackground.ChangePosition(15);
+			RenderSettingsGlobalSearch(ContentView, CollectingMenuTextPlan);
 		}
 		else if(g_Config.m_UiSettingsPage == SETTINGS_PROFILES)
 		{

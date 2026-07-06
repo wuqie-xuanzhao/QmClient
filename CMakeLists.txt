@@ -2619,6 +2619,8 @@ if(CLIENT)
     QmUi/QmAnim.cpp
     QmUi/QmAnim.h
     QmUi/QmAnimCurves.h
+    QmUi/QmDropdown.cpp
+    QmUi/QmDropdown.h
     QmUi/QmAnimResolve.cpp
     QmUi/QmAnimResolve.h
     QmUi/QmLayout.cpp
@@ -3837,6 +3839,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/QmUi/QmAnimResolve.cpp
     src/game/client/QmUi/QmLayout.cpp
     src/game/client/QmUi/QmCardOrderModel.cpp
+    src/game/client/QmUi/QmDropdown.cpp
     src/game/client/QmUi/QmScroll.cpp
     src/game/client/QmUi/QmTree.cpp
     src/game/client/QmUi/QmCardRegistry.cpp

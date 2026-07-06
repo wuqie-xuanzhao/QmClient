@@ -19,6 +19,8 @@
 #include <engine/textrender.h>
 
 #include <game/client/QmUi/QmAnimResolve.h>
+#include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/QmModuleLayoutAdapter.h>
 #include <game/client/QmUi/QmModuleTypes.h>
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/UiContext.h>
@@ -85,8 +87,119 @@ using namespace FontIcons;
 extern std::unordered_map<std::string, CBindSlot> g_CommandBindCache;
 extern bool g_CommandBindCacheInitialized;
 
+struct SQmGlobalSearchCard
+{
+	const char *m_pStableId = nullptr;
+	const char *m_pDefaultTab = nullptr;
+	const char *m_pTitle = nullptr;
+	const char *m_pSearchKeywords = nullptr;
+};
+
+struct SQmGlobalSearchNavigation
+{
+	int m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
+	int m_QmClientTab = -1;
+	int m_TClientTab = -1;
+};
+
+struct SQmGlobalSearchResults
+{
+	std::vector<SQmGlobalSearchCard> m_vCards;
+	std::vector<const SQmGlobalSearchCard *> m_vVisibleCards;
+	std::vector<const SQmGlobalSearchCard *> m_vExternalCards;
+};
+
+static int s_GlobalSearchCardButtonIndex = 0;
+
 namespace
 {
+	void BuildGlobalSearchCards(std::vector<SQmGlobalSearchCard> &vOut)
+	{
+		vOut.clear();
+		const std::vector<qm_card_registry::SCardDefault> &Defaults = qm_card_registry::Defaults();
+		vOut.reserve(Defaults.size());
+		for(const qm_card_registry::SCardDefault &Default : Defaults)
+		{
+			if(Default.m_pStableId == nullptr)
+				continue;
+			vOut.push_back({Default.m_pStableId, Default.m_pDefaultTab, Default.m_pTitle, Default.m_pSearchKeywords});
+		}
+	}
+
+	bool MatchesGlobalSearchCard(const SQmGlobalSearchCard *pCard, const char *pSearch)
+	{
+		if(pCard == nullptr)
+			return false;
+		if(pSearch == nullptr || pSearch[0] == '\0')
+			return true;
+		return (pCard->m_pStableId != nullptr && str_utf8_find_nocase(pCard->m_pStableId, pSearch) != nullptr) ||
+		       (pCard->m_pDefaultTab != nullptr && str_utf8_find_nocase(pCard->m_pDefaultTab, pSearch) != nullptr) ||
+		       (pCard->m_pTitle != nullptr && str_utf8_find_nocase(pCard->m_pTitle, pSearch) != nullptr) ||
+		       (pCard->m_pSearchKeywords != nullptr && str_utf8_find_nocase(pCard->m_pSearchKeywords, pSearch) != nullptr);
+	}
+
+	bool IsQmGlobalSearchCard(const SQmGlobalSearchCard *pCard)
+	{
+		return pCard != nullptr && pCard->m_pStableId != nullptr && str_startswith(pCard->m_pStableId, "qm:") != nullptr;
+	}
+
+	void CollectGlobalSearchResults(const char *pSearch, SQmGlobalSearchResults &Out)
+	{
+		BuildGlobalSearchCards(Out.m_vCards);
+		Out.m_vVisibleCards.clear();
+		Out.m_vExternalCards.clear();
+		Out.m_vVisibleCards.reserve(Out.m_vCards.size());
+		Out.m_vExternalCards.reserve(Out.m_vCards.size());
+		for(const SQmGlobalSearchCard &GlobalSearchCard : Out.m_vCards)
+		{
+			if(!MatchesGlobalSearchCard(&GlobalSearchCard, pSearch))
+				continue;
+			Out.m_vVisibleCards.push_back(&GlobalSearchCard);
+			if(!IsQmGlobalSearchCard(&GlobalSearchCard))
+				Out.m_vExternalCards.push_back(&GlobalSearchCard);
+		}
+	}
+
+	SQmGlobalSearchNavigation ResolveGlobalSearchNavigation(const SQmGlobalSearchCard &Card)
+	{
+		SQmGlobalSearchNavigation Navigation;
+		const char *pStableId = Card.m_pStableId != nullptr ? Card.m_pStableId : "";
+		const char *pTab = Card.m_pDefaultTab != nullptr ? Card.m_pDefaultTab : "";
+		if(str_startswith(pStableId, "qm:") != nullptr)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
+			if(str_comp(pTab, "function") == 0)
+				Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_FUNCTION;
+			else if(str_comp(pTab, "hud") == 0)
+				Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_HUD;
+			else
+				Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_VISUAL;
+			return Navigation;
+		}
+		if(str_startswith(pStableId, "tclient:") != nullptr)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
+			Navigation.m_TClientTab = 0;
+			return Navigation;
+		}
+		if(str_comp(pTab, "graphics") == 0)
+			Navigation.m_SettingsPage = CMenus::SETTINGS_GRAPHICS;
+		else if(str_comp(pTab, "sound") == 0)
+			Navigation.m_SettingsPage = CMenus::SETTINGS_SOUND;
+		else if(str_comp(pTab, "ddnet") == 0)
+			Navigation.m_SettingsPage = CMenus::SETTINGS_DDNET;
+		else if(str_comp(pTab, "tclient-bind-wheel") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
+			Navigation.m_TClientTab = 1;
+		}
+		else if(str_comp(pTab, "tclient-status-bar") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
+			Navigation.m_TClientTab = 4;
+		}
+		return Navigation;
+	}
 
 	bool PerfDebugEnabled()
 	{
@@ -111,11 +224,11 @@ namespace
 	{
 		switch(Tab)
 		{
-		case 0: return "visuals";
-		case 1: return "functions";
-		case 2: return "hud";
-		case 3: return "contributors";
-		case 4: return "config";
+		case CMenus::QMCLIENT_SETTINGS_TAB_VISUAL: return "visuals";
+		case CMenus::QMCLIENT_SETTINGS_TAB_FUNCTION: return "functions";
+		case CMenus::QMCLIENT_SETTINGS_TAB_HUD: return "hud";
+		case CMenus::QMCLIENT_SETTINGS_TAB_CONTRIBUTORS: return "contributors";
+		case CMenus::QMCLIENT_SETTINGS_TAB_CONFIG: return "config";
 		default: return "unknown";
 		}
 	}
@@ -529,7 +642,14 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 	ScrollInput.m_MouseY = Ui()->MouseY();
 	ScrollInput.m_MouseDown = Ui()->MouseButton(0);
 	ScrollInput.m_MousePressed = Ui()->MouseButtonClicked(0);
-	if(ScrollInput.m_Hovered)
+
+	const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(*pView, ContentHeight, Frame.m_Style);
+	CUIRect WheelHotRect = ProbeFrame.m_ClipRect;
+	if(ProbeFrame.m_ScrollbarVisible)
+		WheelHotRect.w += Frame.m_Style.m_ScrollbarWidth;
+	ScrollInput.m_Hovered = Ui()->MouseHovered(&WheelHotRect);
+	ScrollInput.m_ModifierPressed = Input()->ModifierIsPressed();
+	if(ScrollInput.m_Hovered && !ScrollInput.m_ModifierPressed)
 	{
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
 			ScrollInput.m_WheelDelta += 120.0f;
@@ -537,7 +657,6 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 			ScrollInput.m_WheelDelta -= 120.0f;
 	}
 
-	const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(*pView, ContentHeight, Frame.m_Style);
 	if(ProbeFrame.m_ScrollbarVisible)
 	{
 		const void *pScrollbarId = &ScrollContainer;
@@ -663,7 +782,153 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	FinishSettingsQmScrollContainer(s_QmOverviewScrollContainer, OverviewScrollFrame, EndPad, &s_QmOverviewScrollContentHeight, &s_PrevOverviewScrollY, !m_MenuTextPlanCollecting);
 }
 
+void CMenus::RenderSettingsGlobalSearch(CUIRect MainView, bool PrewarmOnly)
+{
+	RenderSettingsGlobalSearchContent(MainView, PrewarmOnly);
+}
+
 void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)
+{
+	RenderSettingsQmClientContent(MainView, ContributorsPage, PrewarmOnly);
+}
+
+void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly)
+{
+	const float ViewWidth = MainView.w;
+	const bool CompactLayout = ViewWidth < 680.0f;
+	const float UiScale = std::clamp(ViewWidth / 1000.0f, CompactLayout ? 0.78f : 0.85f, 1.0f);
+	const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);
+	const float CardPadding = QmCardStyle.m_Padding;
+	const float CardSpacing = QmCardStyle.m_Spacing;
+	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
+	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
+	const float LineSpacing = std::clamp(5.0f * UiScale, 3.0f, 5.0f);
+
+	static CQmScrollContainer s_GlobalSearchScrollContainer;
+	static float s_GlobalSearchScrollContentHeight = 0.0f;
+	static float s_PrevGlobalSearchScrollY = 0.0f;
+	static std::vector<CUIRect> s_GlassCards;
+	SSettingsQmScrollFrame SearchScrollFrame = BeginSettingsQmScrollContainer(s_GlobalSearchScrollContainer, &MainView, s_GlobalSearchScrollContentHeight, QmCardStyle, UiScale, s_PrevGlobalSearchScrollY, !PrewarmOnly);
+
+	MainView.y += SearchScrollFrame.m_Offset.y;
+	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
+	MainView.VSplitRight(OuterMargin, &MainView, nullptr);
+	MainView.VSplitLeft(OuterMargin, nullptr, &MainView);
+	s_GlassCards.clear();
+
+	CLineInputBuffered<128> &ModuleSearchInput = m_QmClientModuleSearchInput;
+	const char *pModuleSearch = ModuleSearchInput.GetString();
+	SQmGlobalSearchResults GlobalSearchResults;
+	CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);
+	const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vVisibleCards;
+	const int SearchMatchedGlobalCardCount = (int)GlobalSearchResults.m_vVisibleCards.size();
+
+	CUIRect Row;
+	{
+		const float SearchCardStartY = MainView.y;
+		CUIRect SearchCard = MainView;
+		CUIRect SearchContent = MainView;
+		SearchContent.VSplitLeft(CardPadding, nullptr, &SearchContent);
+		SearchContent.VSplitRight(CardPadding, &SearchContent, nullptr);
+		SearchContent.HSplitTop(CardPadding, nullptr, &SearchContent);
+		SearchContent.HSplitTop(BodySize + LineSpacing, &Row, &SearchContent);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-search-feature-search-title", &Row, Localize("Feature Search"), BodySize + 2.0f, TEXTALIGN_ML, {}, (int)Row.w);
+		SearchContent.HSplitTop(LineSpacing * 0.5f, nullptr, &SearchContent);
+		SearchContent.HSplitTop(LineHeight, &Row, &SearchContent);
+		Ui()->DoEditBox_Search(&ModuleSearchInput, &Row, BodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		SearchContent.HSplitTop(LineSpacing * 0.65f, nullptr, &SearchContent);
+
+		char aSearchHint[64];
+		str_format(aSearchHint, sizeof(aSearchHint), Localize("Found %d global cards"), SearchMatchedGlobalCardCount);
+		SearchContent.HSplitTop(LineHeight * 0.85f, &Row, &SearchContent);
+		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.82f));
+		if(SearchMatchedGlobalCardCount == 0)
+			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-search-no-matching-features", &Row, Localize("No matching features found. Try other keywords"), BodySize * 0.92f, TEXTALIGN_ML, {}, (int)Row.w);
+		else
+			Ui()->DoLabel(&Row, aSearchHint, BodySize * 0.92f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+		SearchContent.HSplitTop(CardPadding, nullptr, &SearchContent);
+		const float SearchCardHeight = SearchContent.y - SearchCardStartY;
+		SearchCard.y = SearchCardStartY;
+		SearchCard.h = SearchCardHeight;
+		RenderQmSettingsGlassCard(SearchCard, QmCardStyle);
+		if(!PrewarmOnly && Ui()->MouseButtonClicked(0) && !Ui()->MouseHovered(&SearchCard) &&
+			(Ui()->ActiveItem() == &ModuleSearchInput || ModuleSearchInput.IsActive()))
+		{
+			Ui()->ReleaseActiveTextInput(&ModuleSearchInput);
+			ModuleSearchInput.Deactivate();
+		}
+		MainView.HSplitTop(SearchCardHeight, nullptr, &MainView);
+		MainView.HSplitTop(CardSpacing, nullptr, &MainView);
+	}
+
+	RenderGlobalSearchResults(MainView, SearchVisibleGlobalCards, QmCardStyle, UiScale, PrewarmOnly, s_GlassCards);
+	for(const CUIRect &CardRect : s_GlassCards)
+		RenderQmSettingsGlassCard(CardRect, QmCardStyle);
+
+	CUIRect EndPad{MainView.x, MainView.y, MainView.w, 5.0f};
+	FinishSettingsQmScrollContainer(s_GlobalSearchScrollContainer, SearchScrollFrame, EndPad, &s_GlobalSearchScrollContentHeight, &s_PrevGlobalSearchScrollY, !m_MenuTextPlanCollecting);
+}
+
+void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)
+{
+	static CButtonContainer s_aGlobalSearchCardButtons[160];
+	if(s_GlobalSearchCardButtonIndex >= (int)std::size(s_aGlobalSearchCardButtons))
+		s_GlobalSearchCardButtonIndex = 0;
+	MainView.HSplitTop(QmCardStyle.m_Spacing, nullptr, &MainView);
+	const float CardHeight = std::clamp(86.0f * UiScale, 70.0f, 96.0f);
+	CUIRect CardRect = MainView;
+	CardRect.h = CardHeight;
+	const int ButtonIndex = std::clamp(s_GlobalSearchCardButtonIndex++, 0, (int)std::size(s_aGlobalSearchCardButtons) - 1);
+	const int Clicked = Ui()->DoButtonLogic(&s_aGlobalSearchCardButtons[ButtonIndex], 0, &CardRect, BUTTONFLAG_LEFT);
+	if(!PrewarmOnly && Clicked)
+	{
+		const SQmGlobalSearchNavigation Navigation = ResolveGlobalSearchNavigation(Card);
+		g_Config.m_UiSettingsPage = Navigation.m_SettingsPage;
+		if(Navigation.m_QmClientTab >= 0)
+			m_QmClientSettingsTab = Navigation.m_QmClientTab;
+		if(Navigation.m_TClientTab >= 0)
+			m_TClientSettingsTab = Navigation.m_TClientTab;
+		Ui()->ReleaseActiveTextInput(&m_QmClientModuleSearchInput);
+		m_QmClientModuleSearchInput.Deactivate();
+	}
+	CUIRect Content = CardRect;
+	Content.Margin(QmCardStyle.m_Padding, &Content);
+	vGlassCards.push_back(CardRect);
+
+	const float HeadlineSize = std::clamp(14.0f * UiScale, 12.0f, 14.0f);
+	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
+	const float TipSize = std::clamp(BodySize * 0.7f, 8.0f, BodySize);
+	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
+	const float LineSpacing = std::clamp(5.0f * UiScale, 3.0f, 5.0f);
+
+	CUIRect Row;
+	Content.HSplitTop(HeadlineSize, &Row, &Content);
+	const char *pCardTitle = Card.m_pTitle;
+	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-search-global-card-title"), &Row, pCardTitle != nullptr ? Localize(pCardTitle) : Localize("Global card"), HeadlineSize, TEXTALIGN_ML);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	const char *pTab = Card.m_pDefaultTab != nullptr ? Card.m_pDefaultTab : "global";
+	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-search-global-card-tab"), &Row, pTab, BodySize, TEXTALIGN_ML);
+	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-search-global-card-id"), &Row, Card.m_pStableId != nullptr ? Card.m_pStableId : "", TipSize, TEXTALIGN_ML);
+
+	MainView.HSplitTop(CardHeight, nullptr, &MainView);
+}
+
+void CMenus::RenderGlobalSearchResults(CUIRect &MainView, const std::vector<const SQmGlobalSearchCard *> &vCards, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)
+{
+	s_GlobalSearchCardButtonIndex = 0;
+	for(const SQmGlobalSearchCard *pCard : vCards)
+	{
+		if(pCard != nullptr)
+			RenderGlobalSearchResultCard(MainView, *pCard, QmCardStyle, UiScale, PrewarmOnly, vGlassCards);
+	}
+}
+
+void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)
 {
 	using namespace qm_module;
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
@@ -765,13 +1030,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 
 		auto ReleaseActiveQmClientSearchInput = [&]() {
-			for(CLineInputBuffered<128> &SearchInput : m_aQmClientModuleSearchInputs)
+			if(Ui()->ActiveItem() == &m_QmClientModuleSearchInput || m_QmClientModuleSearchInput.IsActive())
 			{
-				if(Ui()->ActiveItem() == &SearchInput || SearchInput.IsActive())
-				{
-					Ui()->ReleaseActiveTextInput(&SearchInput);
-					return true;
-				}
+				Ui()->ReleaseActiveTextInput(&m_QmClientModuleSearchInput);
+				return true;
 			}
 			return false;
 		};
@@ -869,7 +1131,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 				QmPerfLogPayload("perf/qmclient", aPayload, Client(), CurrentQmUiPerfPage());
 			}
 			s_QmTabTransitionDirection = m_QmClientSettingsTab > s_PrevQmTab ? 1.0f : -1.0f;
-			TriggerUiSwitchAnimation(QmClientTabSwitchNode, 0.18f);
+			TriggerUiSwitchAnimation(QmClientTabSwitchNode, 0.0f);
 			s_PrevQmTab = m_QmClientSettingsTab;
 		}
 
@@ -883,7 +1145,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		if(TabTransitionActive)
 		{
 			Ui()->ClipEnable(&TabContentClip);
-			ApplyUiSwitchOffset(ContentView, TransitionStrength, s_QmTabTransitionDirection, false, 0.08f, 24.0f, 120.0f);
 		}
 
 		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_CONFIG)
@@ -1046,7 +1307,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	constexpr int RainbowColorCount = 16;
 
 	const float Time = Client()->GlobalTime();
-	bool ShowSearchModuleControls = true;
 	if(Time - s_LastRainbowUpdateTime > 0.1f) // Update every 100ms
 	{
 		s_LastRainbowUpdateTime = Time;
@@ -1440,6 +1700,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 
 	static std::array<SQmModuleEntry, QmModuleCount> s_aQmModuleLayout = s_aQmModuleDefaults;
 	static char s_aQmModuleLayoutConfigCache[sizeof(g_Config.m_QmSidebarCardOrder)] = {};
+	static char s_aQmGlobalCardOrderConfigCache[sizeof(g_Config.m_QmGlobalCardOrder)] = {};
 	static bool s_QmModuleLayoutInitialized = false;
 	static bool s_QmModuleColumnCacheDirty = true;
 	static std::vector<const SQmModuleEntry *> s_vCachedFullModules;
@@ -1875,12 +2136,10 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		}
 	};
 
-	auto SerializeQmModuleLayout = [&](char *pOut, int OutSize) {
-		SerializeQmModuleLayoutEntries(s_aQmModuleLayout, pOut, OutSize);
-	};
-
 	auto SyncQmModuleLayout = [&]() {
-		const bool ConfigChanged = !s_QmModuleLayoutInitialized || str_comp(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder) != 0;
+		const bool LegacyConfigChanged = str_comp(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder) != 0;
+		const bool GlobalConfigChanged = str_comp(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder) != 0;
+		const bool ConfigChanged = !s_QmModuleLayoutInitialized || LegacyConfigChanged || GlobalConfigChanged;
 		CPerfTimer StageTimer;
 		if(ConfigChanged)
 		{
@@ -1888,18 +2147,40 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			SerializeQmModuleLayoutEntries(s_aQmModuleDefaults, aLegacyDefaults, sizeof(aLegacyDefaults));
 
 			ApplySmartQmModuleLayoutDefaults();
-			const bool UseSmartDefaultsOnly = g_Config.m_QmSidebarCardOrder[0] == '\0' || str_comp(g_Config.m_QmSidebarCardOrder, aLegacyDefaults) == 0;
-			if(!UseSmartDefaultsOnly && !ParseQmModuleLayout(g_Config.m_QmSidebarCardOrder))
-				ApplySmartQmModuleLayoutDefaults();
+			const bool HasGlobalCardOrder = g_Config.m_QmGlobalCardOrder[0] != '\0';
+			if(HasGlobalCardOrder && qm_module::LoadQmLayoutModelFromGlobalOrder(g_Config.m_QmGlobalCardOrder, std::vector<SQmModuleEntry>(s_aQmModuleDefaults.begin(), s_aQmModuleDefaults.end())))
+			{
+				const std::vector<SQmModuleEntry> vModelEntries = qm_module::SyncModelToLegacyLayout();
+				if(vModelEntries.size() == s_aQmModuleLayout.size())
+				{
+					for(size_t i = 0; i < s_aQmModuleLayout.size(); ++i)
+						s_aQmModuleLayout[i] = vModelEntries[i];
+				}
+			}
+			else
+			{
+				const bool UseSmartDefaultsOnly = g_Config.m_QmSidebarCardOrder[0] == '\0' || str_comp(g_Config.m_QmSidebarCardOrder, aLegacyDefaults) == 0;
+				if(!UseSmartDefaultsOnly && !ParseQmModuleLayout(g_Config.m_QmSidebarCardOrder))
+					ApplySmartQmModuleLayoutDefaults();
+				qm_module::LoadQmLayoutIntoModel(g_Config.m_QmSidebarCardOrder, std::vector<SQmModuleEntry>(s_aQmModuleLayout.begin(), s_aQmModuleLayout.end()));
+			}
 			s_QmModuleLayoutInitialized = true;
 			s_QmModuleColumnCacheDirty = true;
 		}
 
-		char aSerialized[sizeof(g_Config.m_QmSidebarCardOrder)];
-		SerializeQmModuleLayout(aSerialized, sizeof(aSerialized));
-		if(str_comp(aSerialized, g_Config.m_QmSidebarCardOrder) != 0)
-			str_copy(g_Config.m_QmSidebarCardOrder, aSerialized, sizeof(g_Config.m_QmSidebarCardOrder));
-		str_copy(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder, sizeof(s_aQmModuleLayoutConfigCache));
+		const bool ModelDirty = qm_module::IsQmLayoutModelDirty();
+		if(ConfigChanged || ModelDirty)
+		{
+			char aSerialized[sizeof(g_Config.m_QmSidebarCardOrder)];
+			qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));
+			if(str_comp(aSerialized, g_Config.m_QmSidebarCardOrder) != 0)
+				str_copy(g_Config.m_QmSidebarCardOrder, aSerialized, sizeof(g_Config.m_QmSidebarCardOrder));
+			str_copy(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder, sizeof(s_aQmModuleLayoutConfigCache));
+			qm_module::ClearQmLayoutModelDirty();
+		}
+		if(g_Config.m_QmCardOrderMigrated == 0 && qm_module::MigrateQmLayoutToGlobalCardOrder(std::vector<SQmModuleEntry>(s_aQmModuleLayout.begin(), s_aQmModuleLayout.end())))
+			str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));
+		str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));
 		char aLayoutExtra[96];
 		str_format(aLayoutExtra, sizeof(aLayoutExtra), "tab=%s changed=%d", QmSettingsTabName(m_QmClientSettingsTab), ConfigChanged ? 1 : 0);
 		LogQmPerfStage(Client(), "layout_sync", StageTimer.ElapsedMs(), ConfigChanged, aLayoutExtra);
@@ -2152,7 +2433,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	};
 	static std::array<CButtonContainer, QmModuleCount> s_aModuleCollapseButtons;
 	auto GetModuleCollapseButtonRect = [&](const SQmModuleEntry *pModule, const CUIRect &CardRect, CUIRect *pOutRect) -> bool {
-		if(!ShowSearchModuleControls || pModule == nullptr || pModule->m_Column == EQmModuleColumn::Full)
+		if(pModule == nullptr || pModule->m_Column == EQmModuleColumn::Full)
 			return false;
 
 		CUIRect Inner = CardRect;
@@ -2349,12 +2630,9 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	const std::vector<const SQmModuleEntry *> &LeftModules = s_vCachedLeftModules;
 	const std::vector<const SQmModuleEntry *> &RightModules = s_vCachedRightModules;
 
-	CLineInputBuffered<128> &ModuleSearchInput = m_aQmClientModuleSearchInputs[m_QmClientSettingsTab];
-	const char *pModuleSearch = ModuleSearchInput.GetString();
-	const bool AllowModuleSearch = m_QmClientSettingsTab != QMCLIENT_SETTINGS_TAB_CONTRIBUTORS;
-	const bool HasModuleSearch = AllowModuleSearch && pModuleSearch[0] != '\0';
-	ShowSearchModuleControls = AllowModuleSearch;
-	SearchDragBlocked = HasModuleSearch;
+	const bool HasModuleSearch = false;
+	SearchDragBlocked = false;
+	const char *pModuleSearch = "";
 
 	auto ModuleSearchKeywords = [](EQmModuleId Id) -> const char * {
 		switch(Id)
@@ -3146,44 +3424,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 			for(const SQmModuleEntry *pModule : RightModules)
 				AppendModuleIfVisible(pModule);
 		}
-		SearchVisibleModules.reserve(VisibleLeftModules.size() + VisibleRightModules.size());
-		if(HasModuleSearch)
-		{
-			SearchVisibleModules.insert(SearchVisibleModules.end(), VisibleLeftModules.begin(), VisibleLeftModules.end());
-			SearchVisibleModules.insert(SearchVisibleModules.end(), VisibleRightModules.begin(), VisibleRightModules.end());
-			std::stable_sort(SearchVisibleModules.begin(), SearchVisibleModules.end(), [&](const SQmModuleEntry *a, const SQmModuleEntry *b) {
-				const int UsageA = GetQmModuleUsage(a->m_Id);
-				const int UsageB = GetQmModuleUsage(b->m_Id);
-				if(UsageA != UsageB)
-					return UsageA > UsageB;
-				return GetQmModuleSearchOrder(a) < GetQmModuleSearchOrder(b);
-			});
-
-			SearchSingleColumnMode = SearchVisibleModules.size() == 1;
-			if(CompactLayout || SearchSingleColumnMode)
-			{
-				SearchLeftModules = SearchVisibleModules;
-			}
-			else
-			{
-				float LeftEstimatedHeight = 0.0f;
-				float RightEstimatedHeight = 0.0f;
-				for(const SQmModuleEntry *pModule : SearchVisibleModules)
-				{
-					const float EstimatedHeight = GetQmModuleEstimatedHeight(pModule);
-					if(LeftEstimatedHeight <= RightEstimatedHeight)
-					{
-						SearchLeftModules.push_back(pModule);
-						LeftEstimatedHeight += EstimatedHeight;
-					}
-					else
-					{
-						SearchRightModules.push_back(pModule);
-						RightEstimatedHeight += EstimatedHeight;
-					}
-				}
-			}
-		}
 		char aFilterExtra[160];
 		str_format(aFilterExtra, sizeof(aFilterExtra), "tab=%s search=%d search_text_len=%d compact=%d left=%d right=%d full=%d search_matches=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), HasModuleSearch ? 1 : 0, (int)str_length(pModuleSearch), CompactLayout ? 1 : 0,
@@ -3191,11 +3431,7 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		LogQmPerfStage(Client(), "模块筛选排序", StageTimer.ElapsedMs(), HasModuleSearch, aFilterExtra);
 	}
 	const int VisibleFullModuleCount = static_cast<int>(VisibleFullModules.size());
-	const int VisibleModuleCount = HasModuleSearch ?
-					       static_cast<int>(SearchVisibleModules.size()) + VisibleFullModuleCount :
-					       static_cast<int>(VisibleLeftModules.size() + VisibleRightModules.size()) + VisibleFullModuleCount;
-	if(HasModuleSearch)
-		ResetModuleDragState();
+	const int VisibleModuleCount = static_cast<int>(VisibleLeftModules.size() + VisibleRightModules.size()) + VisibleFullModuleCount;
 
 	static int s_LastRenderedQmClientTabForLightPath = -1;
 	static uint64_t s_QmFunctionFirstFrameLightFrame = 0;
@@ -3223,49 +3459,6 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		LogQmPerfStage(Client(), "可见模块", 0.0, HasModuleSearch || FunctionSnapshotPending || TabTransitionActive, aVisibleExtra);
 	}
 
-	if(ShowSearchModuleControls)
-	{
-		CPerfTimer StageTimer;
-		const float SearchCardStartY = MainView.y;
-		CUIRect SearchCard = MainView;
-		CUIRect SearchContent = MainView;
-		SearchContent.VSplitLeft(LgCardPadding, nullptr, &SearchContent);
-		SearchContent.VSplitRight(LgCardPadding, &SearchContent, nullptr);
-		SearchContent.HSplitTop(LgCardPadding, nullptr, &SearchContent);
-		RenderQmModuleHeadline(SearchContent, -4, Localize("Feature Search"), Localize("Quickly locate feature modules"));
-		SearchContent.HSplitTop(LgLineHeight, &Row, &SearchContent);
-		Ui()->DoEditBox_Search(&ModuleSearchInput, &Row, LgBodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
-		SearchContent.HSplitTop(LgLineSpacing * 0.65f, nullptr, &SearchContent);
-
-		char aSearchHint[64];
-		str_format(aSearchHint, sizeof(aSearchHint), Localize("Found %d modules"), VisibleModuleCount);
-		SearchContent.HSplitTop(LgLineHeight * 0.85f, &Row, &SearchContent);
-		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.82f));
-		if(FunctionSnapshotPending)
-			DoQmSettingsLabel("qmclient-search-updating-feature-list", &Row, Localize("Updating feature list..."), LgBodySize * 0.92f);
-		else if(HasModuleSearch && VisibleModuleCount == 0)
-			DoQmSettingsLabel("qmclient-search-no-matching-features", &Row, Localize("No matching features found. Try other keywords"), LgBodySize * 0.92f);
-		else
-			Ui()->DoLabel(&Row, aSearchHint, LgBodySize * 0.92f, TEXTALIGN_ML);
-		TextRender()->TextColor(TextRender()->DefaultTextColor());
-
-		SearchContent.HSplitTop(LgCardPadding, nullptr, &SearchContent);
-		const float SearchCardHeight = SearchContent.y - SearchCardStartY;
-		SearchCard.y = SearchCardStartY;
-		SearchCard.h = SearchCardHeight;
-		s_GlassCards.push_back(SearchCard);
-		if(!PrewarmOnly && Ui()->MouseButtonClicked(0) && !Ui()->MouseHovered(&SearchCard) &&
-			(Ui()->ActiveItem() == &ModuleSearchInput || ModuleSearchInput.IsActive()))
-		{
-			Ui()->ReleaseActiveTextInput(&ModuleSearchInput);
-			ModuleSearchInput.Deactivate();
-		}
-		MainView.HSplitTop(SearchCardHeight, nullptr, &MainView);
-		MainView.HSplitTop(LgCardSpacing, nullptr, &MainView);
-		char aSearchExtra[128];
-		str_format(aSearchExtra, sizeof(aSearchExtra), "tab=%s search=%d matched=%d", QmSettingsTabName(m_QmClientSettingsTab), HasModuleSearch ? 1 : 0, VisibleModuleCount);
-		LogQmPerfStage(Client(), "搜索卡片布局", StageTimer.ElapsedMs(), HasModuleSearch, aSearchExtra);
-	}
 	//这是用来测试LXGW字体的汉字
 	{
 		CPerfTimer StageTimer;
@@ -7842,77 +8035,46 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 		if(DraggedIndex < 0)
 			return false;
 
-		std::vector<int> LeftIndices;
-		std::vector<int> RightIndices;
-		LeftIndices.reserve(s_aQmModuleLayout.size());
-		RightIndices.reserve(s_aQmModuleLayout.size());
-
-		auto BuildColumnIndices = [&](EQmModuleColumn Column, std::vector<int> &Out) {
-			Out.clear();
-			for(size_t i = 0; i < s_aQmModuleLayout.size(); ++i)
-			{
-				if(s_aQmModuleLayout[i].m_Column == Column)
-					Out.push_back(static_cast<int>(i));
-			}
-			std::stable_sort(Out.begin(), Out.end(), [&](int a, int b) {
-				if(s_aQmModuleLayout[a].m_OrderInColumn != s_aQmModuleLayout[b].m_OrderInColumn)
-					return s_aQmModuleLayout[a].m_OrderInColumn < s_aQmModuleLayout[b].m_OrderInColumn;
-				return a < b;
-			});
-		};
-
-		BuildColumnIndices(EQmModuleColumn::Left, LeftIndices);
-		BuildColumnIndices(EQmModuleColumn::Right, RightIndices);
-
-		const EQmModuleColumn SourceColumn = s_aQmModuleLayout[DraggedIndex].m_Column;
-		std::vector<int> *pSourceList = (SourceColumn == EQmModuleColumn::Left) ? &LeftIndices : &RightIndices;
-		std::vector<int> *pTargetList = (s_DropPreview.m_TargetColumn == EQmModuleColumn::Left) ? &LeftIndices : &RightIndices;
-
-		auto It = std::find(pSourceList->begin(), pSourceList->end(), DraggedIndex);
-		if(It != pSourceList->end())
-			pSourceList->erase(It);
-
 		int InsertIndex = -1;
 		if(s_DropPreview.m_pNextVisible != nullptr)
 		{
 			const int NextIndex = FindQmModuleLayoutIndexById(s_DropPreview.m_pNextVisible->m_Id);
-			auto NextIt = std::find(pTargetList->begin(), pTargetList->end(), NextIndex);
-			if(NextIt != pTargetList->end())
-				InsertIndex = static_cast<int>(std::distance(pTargetList->begin(), NextIt));
+			if(NextIndex >= 0 && s_aQmModuleLayout[NextIndex].m_Column == s_DropPreview.m_TargetColumn)
+				InsertIndex = s_aQmModuleLayout[NextIndex].m_OrderInColumn;
 		}
 		if(InsertIndex < 0 && s_DropPreview.m_pPrevVisible != nullptr)
 		{
 			const int PrevIndex = FindQmModuleLayoutIndexById(s_DropPreview.m_pPrevVisible->m_Id);
-			auto PrevIt = std::find(pTargetList->begin(), pTargetList->end(), PrevIndex);
-			if(PrevIt != pTargetList->end())
-				InsertIndex = static_cast<int>(std::distance(pTargetList->begin(), PrevIt)) + 1;
+			if(PrevIndex >= 0 && s_aQmModuleLayout[PrevIndex].m_Column == s_DropPreview.m_TargetColumn)
+				InsertIndex = s_aQmModuleLayout[PrevIndex].m_OrderInColumn + 1;
 		}
 		if(InsertIndex < 0)
-			InsertIndex = std::clamp(s_DropPreview.m_InsertIndex, 0, (int)pTargetList->size());
-		pTargetList->insert(pTargetList->begin() + InsertIndex, DraggedIndex);
+			InsertIndex = std::max(0, s_DropPreview.m_InsertIndex);
+		if(!qm_module::MoveQmModuleInModel(s_DropPreview.m_pDragged->m_Id, s_DropPreview.m_TargetColumn, InsertIndex))
+			return false;
 
-		s_aQmModuleLayout[DraggedIndex].m_Column = s_DropPreview.m_TargetColumn;
-		for(size_t i = 0; i < LeftIndices.size(); ++i)
-			s_aQmModuleLayout[LeftIndices[i]].m_OrderInColumn = static_cast<int>(i);
-		for(size_t i = 0; i < RightIndices.size(); ++i)
-			s_aQmModuleLayout[RightIndices[i]].m_OrderInColumn = static_cast<int>(i);
+		const std::vector<SQmModuleEntry> vModelEntries = qm_module::SyncModelToLegacyLayout();
+		if(vModelEntries.size() != s_aQmModuleLayout.size())
+			return false;
+		for(size_t i = 0; i < s_aQmModuleLayout.size(); ++i)
+			s_aQmModuleLayout[i] = vModelEntries[i];
 
 		char aSerialized[sizeof(g_Config.m_QmSidebarCardOrder)];
-		SerializeQmModuleLayout(aSerialized, sizeof(aSerialized));
+		qm_module::SerializeQmLayoutFromModel(aSerialized, sizeof(aSerialized));
 		if(str_comp(aSerialized, g_Config.m_QmSidebarCardOrder) != 0)
 			str_copy(g_Config.m_QmSidebarCardOrder, aSerialized, sizeof(g_Config.m_QmSidebarCardOrder));
 		str_copy(s_aQmModuleLayoutConfigCache, g_Config.m_QmSidebarCardOrder, sizeof(s_aQmModuleLayoutConfigCache));
+		char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+		qm_module::SerializeMergedGlobalCardOrderFromQmModel(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder));
+		str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+		str_copy(s_aQmGlobalCardOrderConfigCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aQmGlobalCardOrderConfigCache));
+		g_Config.m_QmCardOrderMigrated = 1;
 		s_QmModuleColumnCacheDirty = true;
 
 		return true;
 	};
 
 	auto UpdateDropPreviewBeforeRender = [&]() {
-		if(HasModuleSearch)
-		{
-			ResetModuleDragState();
-			return;
-		}
 		if(PrewarmOnly)
 			return;
 
@@ -7932,25 +8094,23 @@ void CMenus::RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage, boo
 	};
 	UpdateDropPreviewBeforeRender();
 
-	const std::vector<const SQmModuleEntry *> &RenderedLeftModules = HasModuleSearch ? SearchLeftModules : VisibleLeftModules;
-	const std::vector<const SQmModuleEntry *> &RenderedRightModules = HasModuleSearch ? SearchRightModules : VisibleRightModules;
 	{
 		CPerfTimer StageTimer;
 		EnsureColumnTops();
 		ModuleCards.clear();
 		LeftCards.clear();
 		RightCards.clear();
-		RenderColumnModules(RenderedLeftModules, EQmModuleColumn::Left);
+		RenderColumnModules(VisibleLeftModules, EQmModuleColumn::Left);
 		if(!SearchSingleColumnMode)
-			RenderColumnModules(RenderedRightModules, EQmModuleColumn::Right);
+			RenderColumnModules(VisibleRightModules, EQmModuleColumn::Right);
 		char aRenderExtra[128];
 		str_format(aRenderExtra, sizeof(aRenderExtra), "tab=%s transition=%d search=%d left=%d right=%d",
 			QmSettingsTabName(m_QmClientSettingsTab), TabTransitionActive ? 1 : 0, HasModuleSearch ? 1 : 0,
-			(int)RenderedLeftModules.size(), SearchSingleColumnMode ? 0 : (int)RenderedRightModules.size());
+			(int)VisibleLeftModules.size(), SearchSingleColumnMode ? 0 : (int)VisibleRightModules.size());
 		LogQmPerfStage(Client(), "active_tab_total", StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
 		LogQmPerfStage(Client(), QmActiveTabStageName(), StageTimer.ElapsedMs(), TabTransitionActive, aRenderExtra);
 	}
-	if(!HasModuleSearch && !PrewarmOnly)
+	if(!PrewarmOnly)
 	{
 		RenderDragGhost();
 		if(s_DropPreview.m_Active && s_DropPreview.m_Valid)
@@ -7988,12 +8148,13 @@ bool g_CommandBindCacheInitialized = false;
 
 void CMenus::ClearQmClientSettingsSearchInputs()
 {
-	for(CLineInputBuffered<128> &SearchInput : m_aQmClientModuleSearchInputs)
+	if(Ui()->ActiveItem() == &m_QmClientModuleSearchInput)
 	{
-		if(Ui()->ActiveItem() == &SearchInput)
-			Ui()->ReleaseActiveTextInput(&SearchInput);
-		else
-			SearchInput.Deactivate();
-		SearchInput.Clear();
+		Ui()->ReleaseActiveTextInput(&m_QmClientModuleSearchInput);
 	}
+	else
+	{
+		m_QmClientModuleSearchInput.Deactivate();
+	}
+	m_QmClientModuleSearchInput.Clear();
 }

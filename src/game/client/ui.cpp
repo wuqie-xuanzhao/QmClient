@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "ui.h"
 
+#include "QmUi/QmDropdown.h"
 #include "ui_scrollregion.h"
 
 #include <base/log.h>
@@ -2386,25 +2387,28 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 	pContext->m_pSelection = nullptr;
 	pContext->m_SelectionIndex = -1;
 	pContext->m_Props.m_Corners = IGraphics::CORNER_ALL;
+	float PopupWidth = pContext->m_Width;
+	float PopupHeightResolved = PopupHeight;
 	if(pContext->m_AlignmentHeight >= 0.0f)
 	{
 		constexpr float Margin = SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN;
-		if(X + pContext->m_Width > Screen()->w - Margin)
-		{
-			X = maximum<float>(X - pContext->m_Width, Margin);
-		}
-		if(Y + pContext->m_AlignmentHeight + PopupHeight > Screen()->h - Margin)
-		{
-			Y -= PopupHeight;
-			pContext->m_Props.m_Corners = IGraphics::CORNER_T;
-		}
-		else
-		{
-			Y += pContext->m_AlignmentHeight;
-			pContext->m_Props.m_Corners = IGraphics::CORNER_B;
-		}
+		CUIRect AnchorRect;
+		AnchorRect.x = X;
+		AnchorRect.y = Y;
+		AnchorRect.w = pContext->m_Width;
+		AnchorRect.h = pContext->m_AlignmentHeight;
+		SQmDropdownGeometryConfig GeometryConfig;
+		GeometryConfig.m_Width = pContext->m_Width;
+		GeometryConfig.m_Height = PopupHeight;
+		GeometryConfig.m_Margin = Margin;
+		const SQmDropdownGeometryResult Geometry = QmComputeDropdownPopupGeometry(AnchorRect, *Screen(), GeometryConfig);
+		X = Geometry.m_Rect.x;
+		Y = Geometry.m_Rect.y;
+		PopupWidth = Geometry.m_Rect.w;
+		PopupHeightResolved = Geometry.m_Rect.h;
+		pContext->m_Props.m_Corners = Geometry.m_PlacedBelow ? IGraphics::CORNER_B : IGraphics::CORNER_T;
 	}
-	DoPopupMenu(pContext, X, Y, pContext->m_Width, PopupHeight, pContext, PopupSelection, pContext->m_Props);
+	DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);
 }
 
 int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)

@@ -447,6 +447,7 @@ Clear friend note
 Clear local console
 Clear note
 Clear remote console
+Clearable text...
 Clears the voting options
 Click to add this community to favorites
 Click to copy map name
@@ -931,7 +932,7 @@ Force high bandwidth mode when spectating (1 = on, 0 = off)
 Force i to pause for i seconds
 Force vote
 Forms
-Found %d modules
+Found %d global cards
 FPM
 FPS
 Frags
@@ -998,6 +999,7 @@ Gives you as many jumps as you specify
 Gives you endless hook
 Gives you infinite jump
 Glitch
+Global card
 Global toggle key
 Glow
 Glow alpha
@@ -1801,7 +1803,6 @@ Query your own team rank
 Queue is empty
 Queue preset: %s
 Quick action menu for players
-Quickly locate feature modules
 Quit
 Quit the client
 Quitting. Please wait…
@@ -2700,7 +2701,6 @@ Update finished. Restarting...
 Update notice
 Update or add a specific war group
 Update Rate
-Updating feature list...
 Uploading map data to GPU
 Usage: %s %s
 Usage: /%s %s
@@ -2954,6 +2954,8 @@ Zoom out
 仅在另一只 tee 离开当前视角时显示分身迷你视图
 使用通知栏分类过滤
 允许 FTAPI 自动翻译（可能导致过载）
+全局卡片排序旧配置迁移完成标记
+全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
 关键词回复使用Dummy
 关键词回复规则（每行: [rename] [regex] 关键词=>回复）
 关闭聊天时保留未发送内容

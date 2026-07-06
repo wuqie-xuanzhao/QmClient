@@ -1345,6 +1345,9 @@ Clear note
 Clear remote console
 == Wyczyść zdalną konsolę
 
+Clearable text...
+== Pending polish translation clearable_text
+
 Clears the voting options
 == Czyści opcje głosowania
 
@@ -2797,8 +2800,8 @@ Force vote
 Forms
 == Formularze
 
-Found %d modules
-== Znaleziono %d modułów
+Found %d global cards
+== Pending polish translation 6884b87578
 
 FPM
 == Pending polish translation 041eb03bd2
@@ -2997,6 +3000,9 @@ Gives you infinite jump
 
 Glitch
 == Pending polish translation ea42511463
+
+Global card
+== Pending polish translation global_card
 
 Global toggle key
 == Globalny klawisz przełączania
@@ -5406,9 +5412,6 @@ Queue preset: %s
 
 Quick action menu for players
 == Menu szybkich akcji dla graczy
-
-Quickly locate feature modules
-== Szybko lokalizuj moduły funkcji
 
 Quit
 == Wyjdź
@@ -8104,9 +8107,6 @@ Update or add a specific war group
 Update Rate
 == Pending polish translation fba88379bf
 
-Updating feature list...
-== Aktualizacja listy funkcji...
-
 Uploading map data to GPU
 == Przesyłanie danych mapy do GPU
 
@@ -8865,6 +8865,12 @@ Zoom out
 
 允许 FTAPI 自动翻译（可能导致过载）
 == Zezwalaj na automatyczne tłumaczenie FTAPI (może spowodować przeciążenie)
+
+全局卡片排序旧配置迁移完成标记
+== Pending polish translation global_card_order_migrated
+
+全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
+== Pending polish translation global_card_order
 
 关键词回复使用Dummy
 == Odpowiedzi na słowa kluczowe używają kukły

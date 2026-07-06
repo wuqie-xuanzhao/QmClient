@@ -24,7 +24,22 @@ namespace ui_widget
 		const char *m_pTitle = nullptr;
 		float m_TitleFontSize = ui_token::font::HEADLINE;
 		bool m_DrawBorder = false;
+		ColorRGBA m_FillColor = ui_token::color::SURFACE_GLASS;
+		ColorRGBA m_HighlightColor = ui_token::color::SURFACE_HIGHLIGHT;
+		ColorRGBA m_BorderColor = ui_token::color::BORDER_SUBTLE;
 	};
+
+	inline SCardProps QmClientCardProps(float UiScale = 1.0f)
+	{
+		SCardProps Props;
+		Props.m_Padding = 14.0f * UiScale;
+		Props.m_Radius = 10.0f * UiScale;
+		Props.m_DrawBorder = true;
+		Props.m_FillColor = ColorRGBA(0.17f, 0.18f, 0.22f, 0.72f);
+		Props.m_HighlightColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.06f);
+		Props.m_BorderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f);
+		return Props;
+	}
 
 	struct SScrollContainerProps
 	{
@@ -54,14 +69,14 @@ namespace ui_widget
 		}
 
 		// 2) Card fill (glass)
-		Rect.Draw(ui_token::color::SURFACE_GLASS, IGraphics::CORNER_ALL, Props.m_Radius);
+		Rect.Draw(Props.m_FillColor, IGraphics::CORNER_ALL, Props.m_Radius);
 
 		// 3) Top 1px highlight (sub-pixel sliver near upper edge for the lift cue)
 		CUIRect Highlight = Rect;
 		Highlight.h = 1.0f;
 		Highlight.x += Props.m_Radius * 0.5f;
 		Highlight.w -= Props.m_Radius;
-		Highlight.Draw(ui_token::color::SURFACE_HIGHLIGHT, IGraphics::CORNER_T, 0.0f);
+		Highlight.Draw(Props.m_HighlightColor, IGraphics::CORNER_T, 0.0f);
 
 		// 4) Optional border
 		if(Props.m_DrawBorder)
@@ -71,7 +86,7 @@ namespace ui_widget
 			// primitive so this is an inexpensive approximation.
 			CUIRect Border = Rect;
 			Border.Margin(0.5f, &Border);
-			Border.Draw(ui_token::color::BORDER_SUBTLE, IGraphics::CORNER_ALL, Props.m_Radius - 0.5f);
+			Border.Draw(Props.m_BorderColor, IGraphics::CORNER_ALL, Props.m_Radius - 0.5f);
 		}
 
 		// 5) Content rect
@@ -101,9 +116,10 @@ namespace ui_widget
 			Input.m_MouseY = Ctx.m_pUi->MouseY();
 			Input.m_MouseDown = Ctx.m_pUi->MouseButton(0);
 			Input.m_MousePressed = Ctx.m_pUi->MouseButtonClicked(0);
+			Input.m_ModifierPressed = Ctx.m_pUi->Input()->ModifierIsPressed();
 			Input.m_ContentDragAllowed = Props.m_ContentDragAllowed;
 			Input.m_ContentDragBlocked = Ctx.m_pUi->ActiveItem() != nullptr;
-			if(Input.m_Hovered)
+			if(Input.m_Hovered && !Input.m_ModifierPressed)
 			{
 				if(Ctx.m_pUi->Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
 					Input.m_WheelDelta += 120.0f;

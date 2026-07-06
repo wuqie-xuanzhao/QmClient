@@ -31,6 +31,7 @@
 #include <game/client/QmUi/QmAnimCurves.h>
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmTree.h>
+#include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
@@ -811,6 +812,7 @@ void CMenus::UpdateSettingsTabLabels()
 	m_apSettingsTabs[SETTINGS_ASSETS] = Localize("Assets");
 	m_apSettingsTabs[SETTINGS_TCLIENT] = Localize("TClient");
 	m_apSettingsTabs[SETTINGS_QMCLIENT] = Localize("QmClient");
+	m_apSettingsTabs[SETTINGS_SEARCH] = Localize("Search");
 	m_apSettingsTabs[SETTINGS_PROFILES] = Localize("Profiles");
 	m_apSettingsTabs[SETTINGS_CONFIGS] = Localize("Configs");
 	m_apSettingsTabs[SETTINGS_CONTRIBUTORS] = Localize("Contributors");
@@ -4383,6 +4385,7 @@ const char *CMenus::CurrentQmUiPerfPage() const
 	case SETTINGS_ASSETS: return "settings:assets";
 	case SETTINGS_TCLIENT: return "settings:tclient";
 	case SETTINGS_QMCLIENT: return "settings:qmclient";
+	case SETTINGS_SEARCH: return "settings:search";
 	default: return "settings:unknown";
 	}
 }
@@ -4404,6 +4407,7 @@ const char *CMenus::CurrentQmUiPerfOperation() const
 	case SETTINGS_ASSETS: return "settings_assets";
 	case SETTINGS_TCLIENT: return "settings_tclient";
 	case SETTINGS_QMCLIENT: return "settings_qmclient";
+	case SETTINGS_SEARCH: return "settings_search";
 	default: return "settings_unknown";
 	}
 }
@@ -4479,12 +4483,16 @@ void CMenus::FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsSc
 CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 {
 	SQmSettingsCardStyle Style;
+	const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale);
 	const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);
-	Style.m_Padding = std::clamp(14.0f * UiScale, 10.0f, 14.0f);
+	Style.m_Padding = CardProps.m_Padding;
 	Style.m_Spacing = std::clamp(16.0f * UiScale, 10.0f, 16.0f);
-	Style.m_CornerRadius = std::clamp(10.0f * UiScale, 7.0f, 10.0f);
+	Style.m_CornerRadius = CardProps.m_Radius;
 	Style.m_ScrollbarWidth = ScrollStyle.m_ScrollbarWidth;
 	Style.m_ScrollbarMargin = ScrollStyle.m_ScrollbarMargin;
+	Style.m_GlassColor = CardProps.m_FillColor;
+	Style.m_HighlightColor = CardProps.m_HighlightColor;
+	Style.m_HairlineColor = CardProps.m_BorderColor;
 	return Style;
 }
 
@@ -4492,7 +4500,7 @@ CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const
 {
 	const SQmSettingsCardStyle Style = QmSettingsCardStyle(UiScale);
 	CScrollRegionParams Params;
-	Params.m_ScrollUnit = 60.0f * UiScale;
+	Params.m_ScrollUnit = 10.0f;
 	Params.m_ScrollbarThickness = Style.m_ScrollbarWidth;
 	Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;
 	Params.m_ForceShowScrollbar = true;
@@ -4537,12 +4545,43 @@ static void SettingsCardDeckEnsureStableId(std::vector<std::string> &vOrder, con
 		vOrder.emplace_back(pStableId);
 }
 
+static void SettingsCardDeckEnsureStableId(std::vector<std::string> &vOrder, const char *pStableId, const char *pLegacyStableId)
+{
+	if(pStableId == nullptr || pStableId[0] == '\0')
+		return;
+	const auto StableIt = std::find(vOrder.begin(), vOrder.end(), pStableId);
+	if(StableIt != vOrder.end())
+		return;
+	if(pLegacyStableId != nullptr && pLegacyStableId[0] != '\0')
+	{
+		const auto LegacyIt = std::find(vOrder.begin(), vOrder.end(), pLegacyStableId);
+		if(LegacyIt != vOrder.end())
+		{
+			*LegacyIt = pStableId;
+			return;
+		}
+	}
+	vOrder.emplace_back(pStableId);
+}
+
 static int SettingsCardDeckOrderIndex(const std::vector<std::string> &vOrder, const char *pStableId, int FallbackIndex)
 {
 	if(pStableId == nullptr || pStableId[0] == '\0')
 		return FallbackIndex;
 	const auto It = std::find(vOrder.begin(), vOrder.end(), pStableId);
 	return It == vOrder.end() ? FallbackIndex : (int)std::distance(vOrder.begin(), It);
+}
+
+static const char *SettingsCardDeckStableId(std::deque<std::string> &vStableIds, const char *pStableId)
+{
+	if(pStableId == nullptr || pStableId[0] == '\0')
+		return pStableId;
+	if(str_startswith(pStableId, "deck:") != nullptr)
+		return pStableId;
+	char aStableId[128];
+	str_format(aStableId, sizeof(aStableId), "deck:%s", pStableId);
+	vStableIds.emplace_back(aStableId);
+	return vStableIds.back().c_str();
 }
 
 bool CMenus::SettingsCardDeckIsActiveStableId(const SSettingsCardDeckLayout &Deck, const std::string &StableId) const
@@ -4559,7 +4598,11 @@ CMenus::SSettingsCardDeckLayout CMenus::BeginSettingsCardDeck(CUIRect MainView, 
 	Deck.m_pScrollRegion = &ScrollRegion;
 	Deck.m_pOrder = pOrder != nullptr ? pOrder : SettingsCardDeckOrder(pDeckId);
 	if(pActiveCardIds != nullptr)
-		Deck.m_vActiveCardIds = *pActiveCardIds;
+	{
+		Deck.m_vActiveCardIds.reserve(pActiveCardIds->size());
+		for(const std::string &ActiveCardId : *pActiveCardIds)
+			Deck.m_vActiveCardIds.emplace_back(SettingsCardDeckStableId(Deck.m_vStableIds, ActiveCardId.c_str()));
+	}
 	Deck.m_Style = QmSettingsCardStyle(UiScale);
 	Deck.m_UiScale = UiScale;
 	Deck.m_Page = Page;
@@ -4588,22 +4631,23 @@ CMenus::SSettingsCardDeckLayout CMenus::BeginSettingsCardDeck(CUIRect MainView, 
 CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDeckLayout &Deck, const char *pStableId, const char *pTitle, float MinHeight, float LastMeasuredHeight, ESettingsCardDeckColumn PreferredColumn, bool ForcePreferredColumn)
 {
 	SSettingsCardDeckCard Card;
-	Card.m_pStableId = pStableId;
+	const char *pGlobalStableId = SettingsCardDeckStableId(Deck.m_vStableIds, pStableId);
+	Card.m_pStableId = pGlobalStableId;
 	Card.m_pTitle = pTitle;
 	if(Deck.m_pOrder != nullptr)
-		SettingsCardDeckEnsureStableId(*Deck.m_pOrder, pStableId);
+		SettingsCardDeckEnsureStableId(*Deck.m_pOrder, pGlobalStableId, pStableId);
 	int OrderIndex = Deck.m_CardCount;
 	if(Deck.m_pOrder != nullptr)
-		OrderIndex = SettingsCardDeckOrderIndex(*Deck.m_pOrder, pStableId, Deck.m_CardCount);
+		OrderIndex = SettingsCardDeckOrderIndex(*Deck.m_pOrder, pGlobalStableId, Deck.m_CardCount);
 	std::unordered_map<std::string, float> *pMeasuredHeights = Deck.m_pDeckId != nullptr ? &m_SettingsCardDeckMeasuredHeights[Deck.m_pDeckId] : nullptr;
 	std::unordered_map<std::string, float> *pMinHeights = Deck.m_pDeckId != nullptr ? &m_SettingsCardDeckMinHeights[Deck.m_pDeckId] : nullptr;
 	std::unordered_map<std::string, int> *pColumnPrefs = Deck.m_pDeckId != nullptr ? &m_SettingsCardDeckColumnPrefs[Deck.m_pDeckId] : nullptr;
-	if(pMeasuredHeights != nullptr && pStableId != nullptr && pStableId[0] != '\0')
-		(*pMeasuredHeights)[pStableId] = LastMeasuredHeight;
-	if(pMinHeights != nullptr && pStableId != nullptr && pStableId[0] != '\0')
-		(*pMinHeights)[pStableId] = MinHeight;
-	if(pColumnPrefs != nullptr && pStableId != nullptr && pStableId[0] != '\0')
-		(*pColumnPrefs)[pStableId] = (ForcePreferredColumn ? 0x10 : 0) | (PreferredColumn == ESettingsCardDeckColumn::RIGHT ? 1 : 0);
+	if(pMeasuredHeights != nullptr && pGlobalStableId != nullptr && pGlobalStableId[0] != '\0')
+		(*pMeasuredHeights)[pGlobalStableId] = LastMeasuredHeight;
+	if(pMinHeights != nullptr && pGlobalStableId != nullptr && pGlobalStableId[0] != '\0')
+		(*pMinHeights)[pGlobalStableId] = MinHeight;
+	if(pColumnPrefs != nullptr && pGlobalStableId != nullptr && pGlobalStableId[0] != '\0')
+		(*pColumnPrefs)[pGlobalStableId] = (ForcePreferredColumn ? 0x10 : 0) | (PreferredColumn == ESettingsCardDeckColumn::RIGHT ? 1 : 0);
 
 	CUIRect aVirtualColumns[2] = {Deck.m_aBaseColumns[0], Deck.m_aBaseColumns[1]};
 	if(Deck.m_pOrder != nullptr)
@@ -4626,7 +4670,7 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 			bool OrderedUseRightColumn = Deck.m_TwoColumns && aVirtualColumns[1].y < aVirtualColumns[0].y;
 			if(Deck.m_TwoColumns && (ColumnPref & 0x10) != 0)
 				OrderedUseRightColumn = (ColumnPref & 0x1) != 0;
-			if(pStableId != nullptr && StableId == pStableId)
+			if(pGlobalStableId != nullptr && StableId == pGlobalStableId)
 				break;
 			aVirtualColumns[OrderedUseRightColumn ? 1 : 0].y += OrderedHeight + Deck.m_Spacing;
 		}
@@ -4652,7 +4696,7 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 	Card.m_ContentRect.HSplitTop(Deck.m_Style.m_Padding * 0.5f, nullptr, &Card.m_ContentRect);
 
 	SSettingsSection Section;
-	Section.m_pStableCardId = pStableId;
+	Section.m_pStableCardId = pGlobalStableId;
 	Section.m_pName = Deck.m_pDeckId;
 	SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(Section, Card.m_Column, OrderIndex, Card.m_Rect, Card.m_HandleRect);
 	Deck.m_CardCount++;

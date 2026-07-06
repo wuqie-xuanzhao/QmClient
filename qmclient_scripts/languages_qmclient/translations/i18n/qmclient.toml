@@ -3615,6 +3615,22 @@ turkish = "%d modül bulundu"
 polish = "Znaleziono %d modułów"
 
 [[message]]
+key = "Found %d global cards"
+[message.translations]
+simplified_chinese = "匹配到 %d 张全局卡片"
+traditional_chinese = "Pending traditional_chinese translation 6884b87578"
+japanese = "Pending japanese translation 6884b87578"
+korean = "Pending korean translation 6884b87578"
+russian = "Pending russian translation 6884b87578"
+german = "Pending german translation 6884b87578"
+spanish = "Pending spanish translation 6884b87578"
+french = "Pending french translation 6884b87578"
+brazilian_portuguese = "Pending brazilian_portuguese translation 6884b87578"
+portuguese = "Pending portuguese translation 6884b87578"
+turkish = "Pending turkish translation 6884b87578"
+polish = "Pending polish translation 6884b87578"
+
+[[message]]
 key = "Frame rate"
 [message.translations]
 simplified_chinese = "帧率"
@@ -24429,6 +24445,36 @@ turkish = "Pending turkish translation 98d5ba2a7a"
 polish = "Pending polish translation 129402ab4e"
 
 [[message]]
+key = "全局卡片排序（格式 stableId|tab|col|order; 分号分隔）"
+[message.translations]
+traditional_chinese = "Pending traditional_chinese translation global_card_order"
+japanese = "Pending japanese translation global_card_order"
+korean = "Pending korean translation global_card_order"
+russian = "Pending russian translation global_card_order"
+german = "Pending german translation global_card_order"
+spanish = "Pending spanish translation global_card_order"
+french = "Pending french translation global_card_order"
+brazilian_portuguese = "Pending brazilian_portuguese translation global_card_order"
+portuguese = "Pending portuguese translation global_card_order"
+turkish = "Pending turkish translation global_card_order"
+polish = "Pending polish translation global_card_order"
+
+[[message]]
+key = "全局卡片排序旧配置迁移完成标记"
+[message.translations]
+traditional_chinese = "Pending traditional_chinese translation global_card_order_migrated"
+japanese = "Pending japanese translation global_card_order_migrated"
+korean = "Pending korean translation global_card_order_migrated"
+russian = "Pending russian translation global_card_order_migrated"
+german = "Pending german translation global_card_order_migrated"
+spanish = "Pending spanish translation global_card_order_migrated"
+french = "Pending french translation global_card_order_migrated"
+brazilian_portuguese = "Pending brazilian_portuguese translation global_card_order_migrated"
+portuguese = "Pending portuguese translation global_card_order_migrated"
+turkish = "Pending turkish translation global_card_order_migrated"
+polish = "Pending polish translation global_card_order_migrated"
+
+[[message]]
 key = "UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）"
 [message.translations]
 traditional_chinese = "Pending traditional_chinese translation e9b2d647b7"
@@ -24652,3 +24698,35 @@ brazilian_portuguese = "Pending brazilian_portuguese translation f894cbfddc"
 portuguese = "Pending portuguese translation 8cb9e4bb68"
 turkish = "Pending turkish translation 5da955e491"
 polish = "Pending polish translation cdc8d93359"
+
+[[message]]
+key = "Clearable text..."
+[message.translations]
+simplified_chinese = "可清除文本..."
+traditional_chinese = "Pending traditional_chinese translation clearable_text"
+japanese = "Pending japanese translation clearable_text"
+korean = "Pending korean translation clearable_text"
+russian = "Pending russian translation clearable_text"
+german = "Pending german translation clearable_text"
+spanish = "Pending spanish translation clearable_text"
+french = "Pending french translation clearable_text"
+brazilian_portuguese = "Pending brazilian_portuguese translation clearable_text"
+portuguese = "Pending portuguese translation clearable_text"
+turkish = "Pending turkish translation clearable_text"
+polish = "Pending polish translation clearable_text"
+
+[[message]]
+key = "Global card"
+[message.translations]
+simplified_chinese = "全局卡片"
+traditional_chinese = "Pending traditional_chinese translation global_card"
+japanese = "Pending japanese translation global_card"
+korean = "Pending korean translation global_card"
+russian = "Pending russian translation global_card"
+german = "Pending german translation global_card"
+spanish = "Pending spanish translation global_card"
+french = "Pending french translation global_card"
+brazilian_portuguese = "Pending brazilian_portuguese translation global_card"
+portuguese = "Pending portuguese translation global_card"
+turkish = "Pending turkish translation global_card"
+polish = "Pending polish translation global_card"

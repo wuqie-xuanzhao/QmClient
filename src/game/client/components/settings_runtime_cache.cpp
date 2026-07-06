@@ -254,6 +254,7 @@ static std::string SettingsRuntimePageName(int Page)
 	case CMenus::SETTINGS_ASSETS: return "assets";
 	case CMenus::SETTINGS_TCLIENT: return "tclient";
 	case CMenus::SETTINGS_QMCLIENT: return "qmclient";
+	case CMenus::SETTINGS_SEARCH: return "search";
 	default: return "unknown";
 	}
 }

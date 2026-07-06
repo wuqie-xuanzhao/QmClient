@@ -1345,6 +1345,9 @@ Clear note
 Clear remote console
 == 원격 콘솔 지우기
 
+Clearable text...
+== Pending korean translation clearable_text
+
 Clears the voting options
 == 투표 옵션을 지웁니다
 
@@ -2797,8 +2800,8 @@ Force vote
 Forms
 == 폼
 
-Found %d modules
-== %d개의 모듈을 찾았습니다
+Found %d global cards
+== Pending korean translation 6884b87578
 
 FPM
 == Pending korean translation 389e2eeeda
@@ -2997,6 +3000,9 @@ Gives you infinite jump
 
 Glitch
 == 글리치
+
+Global card
+== Pending korean translation global_card
 
 Global toggle key
 == 전역 토글 키
@@ -5406,9 +5412,6 @@ Queue preset: %s
 
 Quick action menu for players
 == 플레이어 빠른 작업 메뉴
-
-Quickly locate feature modules
-== 기능 모듈 빠르게 찾기
 
 Quit
 == 종료
@@ -8104,9 +8107,6 @@ Update or add a specific war group
 Update Rate
 == Pending korean translation 8ec077517b
 
-Updating feature list...
-== 기능 목록 업데이트 중...
-
 Uploading map data to GPU
 == 맵 데이터를 GPU 에 업로드 중
 
@@ -8865,6 +8865,12 @@ Zoom out
 
 允许 FTAPI 自动翻译（可能导致过载）
 == FTAPI 자동 번역 허용 (과부하 발생 가능)
+
+全局卡片排序旧配置迁移完成标记
+== Pending korean translation global_card_order_migrated
+
+全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
+== Pending korean translation global_card_order
 
 关键词回复使用Dummy
 == 키워드 응답에 더미 사용

@@ -1345,6 +1345,9 @@ Clear note
 Clear remote console
 == リモートコンソールをクリア
 
+Clearable text...
+== Pending japanese translation clearable_text
+
 Clears the voting options
 == Pending japanese translation ee8be39269
 
@@ -2797,8 +2800,8 @@ Force vote
 Forms
 == フォーム
 
-Found %d modules
-== Pending japanese translation 7c0d6f46cc
+Found %d global cards
+== Pending japanese translation 6884b87578
 
 FPM
 == Pending japanese translation 27c5c366b3
@@ -2997,6 +3000,9 @@ Gives you infinite jump
 
 Glitch
 == グリッチ
+
+Global card
+== Pending japanese translation global_card
 
 Global toggle key
 == グローバルトグルキー
@@ -5406,9 +5412,6 @@ Queue preset: %s
 
 Quick action menu for players
 == Pending japanese translation 40360a47f6
-
-Quickly locate feature modules
-== Pending japanese translation 97c42d8c63
 
 Quit
 == Pending japanese translation 7c07096f6a
@@ -8104,9 +8107,6 @@ Update or add a specific war group
 Update Rate
 == Pending japanese translation 436f173d7b
 
-Updating feature list...
-== Pending japanese translation 09b244a7b1
-
 Uploading map data to GPU
 == Pending japanese translation 36851e007d
 
@@ -8865,6 +8865,12 @@ Zoom out
 
 允许 FTAPI 自动翻译（可能导致过载）
 == Pending japanese translation 09853a3727
+
+全局卡片排序旧配置迁移完成标记
+== Pending japanese translation global_card_order_migrated
+
+全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
+== Pending japanese translation global_card_order
 
 关键词回复使用Dummy
 == Pending japanese translation b71ec769da

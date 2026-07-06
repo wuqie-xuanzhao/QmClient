@@ -5,6 +5,7 @@
 #include "UiMotion.h"
 
 #include <engine/graphics.h>
+#include <engine/keys.h>
 
 #include <game/client/lineinput.h>
 #include <game/client/ui.h>
@@ -16,47 +17,118 @@
 namespace ui_widget
 {
 
-	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
+	namespace
 	{
-		if(Ctx.m_pUi == nullptr || pInput == nullptr)
-			return false;
-
-		// Background plate
-		Rect.Draw(ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::BASE);
-
-		// Animated focus ring as an inset 1px border. DDNet has no stroke
-		// primitive so we paint BORDER_FOCUS at the Rect size and then mask the
-		// inner area with SURFACE_ELEVATED — net effect is a 1px ring sitting
-		// inside the Rect, not protruding.
-		if(Ctx.m_pAnim != nullptr)
+		SInputFieldResult BuildInputFieldResult(const IUiContext &Ctx, CLineInput *pInput, bool Changed, bool WasActive)
 		{
+			SInputFieldResult Result;
+			Result.m_Changed = Changed;
+			Result.m_Deactivated = WasActive && !pInput->IsActive();
+			Result.m_Submitted = Result.m_Deactivated && Ctx.m_pUi != nullptr && (Ctx.m_pUi->Input()->KeyPress(KEY_RETURN) || Ctx.m_pUi->Input()->KeyPress(KEY_KP_ENTER));
+			return Result;
+		}
+
+		void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect)
+		{
+			Rect.Draw(ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::BASE);
+
+			if(Ctx.m_pAnim == nullptr)
+				return;
+
 			const float TargetAlpha = pInput->IsActive() ? 1.0f : 0.0f;
 			const float Alpha = AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);
-			if(Alpha > 0.01f)
-			{
-				ColorRGBA RingColor = ui_token::color::BORDER_FOCUS;
-				RingColor.a *= Alpha;
-				Rect.Draw(RingColor, IGraphics::CORNER_ALL, ui_token::radius::BASE);
-				CUIRect Inside;
-				Rect.Margin(1.0f, &Inside);
-				Inside.Draw(ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::BASE - 1.0f);
-			}
+			if(Alpha <= 0.01f)
+				return;
+
+			ColorRGBA RingColor = ui_token::color::BORDER_FOCUS;
+			RingColor.a *= Alpha;
+			Rect.Draw(RingColor, IGraphics::CORNER_ALL, ui_token::radius::BASE);
+			CUIRect Inside;
+			Rect.Margin(1.0f, &Inside);
+			Inside.Draw(ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::BASE - 1.0f);
 		}
+
+		void DrawTextFieldPlaceholder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
+		{
+			if(pPlaceholder == nullptr || !pInput->IsEmpty() || pInput->IsActive())
+				return;
+
+			SLabelProperties LabelProps;
+			LabelProps.m_EllipsisAtEnd = true;
+			Ctx.m_pUi->DoLabel(&Rect, pPlaceholder, FontSize, TEXTALIGN_ML, LabelProps);
+		}
+	} // namespace
+
+	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
+	{
+		if(Ctx.m_pUi == nullptr || pInput == nullptr)
+			return {};
+
+		const bool WasActive = pInput->IsActive();
+		DrawTextFieldPlate(Ctx, pInput, Rect);
 
 		// Inner padding to keep text off the rounded corners.
 		CUIRect Inner;
 		Rect.VMargin(ui_token::spacing::SM, &Inner);
 
 		const bool Changed = Ctx.m_pUi->DoEditBox(pInput, &Inner, FontSize);
+		DrawTextFieldPlaceholder(Ctx, pInput, Inner, pPlaceholder, FontSize);
 
-		if(pPlaceholder != nullptr && pInput->IsEmpty() && !pInput->IsActive())
-		{
-			SLabelProperties LabelProps;
-			LabelProps.m_EllipsisAtEnd = true;
-			Ctx.m_pUi->DoLabel(&Inner, pPlaceholder, FontSize, TEXTALIGN_ML, LabelProps);
-		}
+		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive);
+	}
 
-		return Changed;
+	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
+	{
+		return TextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;
+	}
+
+	SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
+	{
+		if(Ctx.m_pUi == nullptr || pInput == nullptr)
+			return {};
+
+		const bool WasActive = pInput->IsActive();
+		const bool WasEmpty = pInput->IsEmpty();
+		DrawTextFieldPlate(Ctx, pInput, Rect);
+
+		CUIRect Inner;
+		Rect.VMargin(ui_token::spacing::SM, &Inner);
+
+		const bool Changed = Ctx.m_pUi->DoClearableEditBox(pInput, &Inner, FontSize);
+		CUIRect TextRect = Inner;
+		TextRect.VSplitRight(TextRect.h, &TextRect, nullptr);
+		DrawTextFieldPlaceholder(Ctx, pInput, TextRect, pPlaceholder, FontSize);
+
+		SInputFieldResult Result = BuildInputFieldResult(Ctx, pInput, Changed, WasActive);
+		Result.m_Cleared = Changed && !WasEmpty && pInput->IsEmpty();
+		return Result;
+	}
+
+	bool ClearableTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
+	{
+		return ClearableTextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;
+	}
+
+	SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)
+	{
+		if(Ctx.m_pUi == nullptr || pInput == nullptr)
+			return {};
+
+		const bool WasActive = pInput->IsActive();
+		const bool WasEmpty = pInput->IsEmpty();
+		DrawTextFieldPlate(Ctx, pInput, Rect);
+
+		CUIRect Inner;
+		Rect.VMargin(ui_token::spacing::SM, &Inner);
+		const bool Changed = Ctx.m_pUi->DoEditBox_Search(pInput, &Inner, FontSize, HotkeyEnabled);
+		SInputFieldResult Result = BuildInputFieldResult(Ctx, pInput, Changed, WasActive);
+		Result.m_Cleared = Changed && !WasEmpty && pInput->IsEmpty();
+		return Result;
+	}
+
+	bool SearchField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)
+	{
+		return SearchFieldEx(Ctx, pInput, Rect, FontSize, HotkeyEnabled).m_Changed;
 	}
 
 	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect)

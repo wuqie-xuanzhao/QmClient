@@ -1345,6 +1345,9 @@ Clear note
 Clear remote console
 == 清空远程控制台
 
+Clearable text...
+== 可清除文本……
+
 Clears the voting options
 == 清除投票选项
 
@@ -2797,8 +2800,8 @@ Force vote
 Forms
 == 表单
 
-Found %d modules
-== 匹配到 %d 个模块
+Found %d global cards
+== 匹配到 %d 张全局卡片
 
 FPM
 == 击杀/分
@@ -2997,6 +3000,9 @@ Gives you infinite jump
 
 Glitch
 == 故障
+
+Global card
+== 全局卡片
 
 Global toggle key
 == 全局开关键
@@ -5406,9 +5412,6 @@ Queue preset: %s
 
 Quick action menu for players
 == 对玩家快捷操作菜单
-
-Quickly locate feature modules
-== 快速定位功能模块
 
 Quit
 == 退出
@@ -8104,9 +8107,6 @@ Update or add a specific war group
 Update Rate
 == Update Rate
 
-Updating feature list...
-== 更新功能列表……
-
 Uploading map data to GPU
 == 正在将地图数据传输至显卡
 
@@ -8865,6 +8865,12 @@ Zoom out
 
 允许 FTAPI 自动翻译（可能导致过载）
 == 允许 FTAPI 自动翻译（可能导致过载）
+
+全局卡片排序旧配置迁移完成标记
+== 全局卡片排序旧配置迁移完成标记
+
+全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
+== 全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
 
 关键词回复使用Dummy
 == 关键词回复使用分身

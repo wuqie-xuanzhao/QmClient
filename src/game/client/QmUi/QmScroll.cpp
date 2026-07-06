@@ -7,11 +7,22 @@
 
 namespace
 {
-	SQmScrollContainerFrame BuildScrollContainerFrame(const CUIRect &ViewRect, float ContentHeight, float Offset, const SQmScrollContainerStyle &Style, bool ReserveScrollbarWidth)
+	bool ScrollAxisHorizontal(const SQmScrollContainerStyle &Style)
 	{
+		return Style.m_Axis == EQmScrollAxis::HORIZONTAL;
+	}
+
+	float ScrollAxisViewportSize(const CUIRect &ViewRect, const SQmScrollContainerStyle &Style)
+	{
+		return ScrollAxisHorizontal(Style) ? ViewRect.w : ViewRect.h;
+	}
+
+	SQmScrollContainerFrame BuildScrollContainerFrame(const CUIRect &ViewRect, float ContentSize, float Offset, const SQmScrollContainerStyle &Style, bool ReserveScrollbarWidth)
+	{
+		const bool Horizontal = ScrollAxisHorizontal(Style);
 		SQmScrollMetrics Metrics;
-		Metrics.m_ViewportSize = ViewRect.h;
-		Metrics.m_ContentSize = ContentHeight;
+		Metrics.m_ViewportSize = ScrollAxisViewportSize(ViewRect, Style);
+		Metrics.m_ContentSize = ContentSize;
 
 		const bool ScrollbarVisible = Metrics.MaxOffset() > 0.0f;
 		CUIRect ClipRect = ViewRect;
@@ -19,11 +30,26 @@ namespace
 		if(ScrollbarVisible)
 		{
 			if(ReserveScrollbarWidth)
-				ClipRect.w = std::max(0.0f, ViewRect.w - Style.m_ScrollbarWidth);
-			ScrollbarRect.x = ViewRect.x + ClipRect.w;
-			ScrollbarRect.y = ViewRect.y;
-			ScrollbarRect.w = Style.m_ScrollbarWidth;
-			ScrollbarRect.h = ViewRect.h;
+			{
+				if(Horizontal)
+					ClipRect.h = std::max(0.0f, ViewRect.h - Style.m_ScrollbarWidth);
+				else
+					ClipRect.w = std::max(0.0f, ViewRect.w - Style.m_ScrollbarWidth);
+			}
+			if(Horizontal)
+			{
+				ScrollbarRect.x = ViewRect.x;
+				ScrollbarRect.y = ViewRect.y + ClipRect.h;
+				ScrollbarRect.w = ViewRect.w;
+				ScrollbarRect.h = Style.m_ScrollbarWidth;
+			}
+			else
+			{
+				ScrollbarRect.x = ViewRect.x + ClipRect.w;
+				ScrollbarRect.y = ViewRect.y;
+				ScrollbarRect.w = Style.m_ScrollbarWidth;
+				ScrollbarRect.h = ViewRect.h;
+			}
 		}
 
 		SQmScrollContainerFrame Frame;
@@ -31,8 +57,16 @@ namespace
 		Frame.m_Offset = Offset;
 		Frame.m_ScrollbarVisible = ScrollbarVisible;
 		Frame.m_ContentRect = ClipRect;
-		Frame.m_ContentRect.y -= Frame.m_Offset;
-		Frame.m_ContentRect.h = ContentHeight;
+		if(Horizontal)
+		{
+			Frame.m_ContentRect.x -= Frame.m_Offset;
+			Frame.m_ContentRect.w = ContentSize;
+		}
+		else
+		{
+			Frame.m_ContentRect.y -= Frame.m_Offset;
+			Frame.m_ContentRect.h = ContentSize;
+		}
 		if(ScrollbarVisible)
 		{
 			const float ScrollbarMargin = std::max(0.0f, Style.m_ScrollbarMargin);
@@ -40,15 +74,24 @@ namespace
 			Frame.m_ScrollbarTrackRect.y = ScrollbarRect.y + ScrollbarMargin;
 			Frame.m_ScrollbarTrackRect.w = std::max(0.0f, ScrollbarRect.w - ScrollbarMargin * 2.0f);
 			Frame.m_ScrollbarTrackRect.h = std::max(0.0f, ScrollbarRect.h - ScrollbarMargin * 2.0f);
-			const float TrackHeight = std::max(0.0f, Frame.m_ScrollbarTrackRect.h);
-			const float RawThumbHeight = ContentHeight > 0.0f ? ClipRect.h / ContentHeight * TrackHeight : TrackHeight;
-			const float ThumbHeight = std::min(TrackHeight, std::max(0.0f, std::max(Style.m_MinThumbHeight, RawThumbHeight)));
-			const float MaxThumbTravel = std::max(0.0f, TrackHeight - ThumbHeight);
+			const float TrackSize = std::max(0.0f, Horizontal ? Frame.m_ScrollbarTrackRect.w : Frame.m_ScrollbarTrackRect.h);
+			const float ViewportSize = std::max(0.0f, Horizontal ? ClipRect.w : ClipRect.h);
+			const float RawThumbSize = ContentSize > 0.0f ? ViewportSize / ContentSize * TrackSize : TrackSize;
+			const float ThumbSize = std::min(TrackSize, std::max(0.0f, std::max(Style.m_MinThumbHeight, RawThumbSize)));
+			const float MaxThumbTravel = std::max(0.0f, TrackSize - ThumbSize);
 			const float ScrollbarOffset = std::clamp(Frame.m_Offset, 0.0f, Metrics.MaxOffset());
 			const float ThumbOffset = Metrics.MaxOffset() > 0.0f ? ScrollbarOffset / Metrics.MaxOffset() * MaxThumbTravel : 0.0f;
 			Frame.m_ScrollbarThumbRect = Frame.m_ScrollbarTrackRect;
-			Frame.m_ScrollbarThumbRect.y += ThumbOffset;
-			Frame.m_ScrollbarThumbRect.h = ThumbHeight;
+			if(Horizontal)
+			{
+				Frame.m_ScrollbarThumbRect.x += ThumbOffset;
+				Frame.m_ScrollbarThumbRect.w = ThumbSize;
+			}
+			else
+			{
+				Frame.m_ScrollbarThumbRect.y += ThumbOffset;
+				Frame.m_ScrollbarThumbRect.h = ThumbSize;
+			}
 		}
 		return Frame;
 	}
@@ -87,9 +130,10 @@ SQmScrollContainerStyle QmScrollContainerStyleForSize(EQmScrollSize Size, float 
 SQmScrollConfig QmNativeWheelScrollConfig(float UiScale, float SmoothScrollTimeSec)
 {
 	SQmScrollConfig Config;
-	Config.m_WheelScale = 60.0f * UiScale;
+	(void)UiScale;
+	Config.m_WheelScale = 10.0f;
 	Config.m_NativeWheelStep = true;
-	Config.m_NativeWheelAnimationTime = SmoothScrollTimeSec;
+	Config.m_NativeWheelAnimationTime = std::max(0.0f, SmoothScrollTimeSec);
 	Config.m_MaxOverscroll = 0.0f;
 	return Config;
 }
@@ -136,18 +180,19 @@ void CQmScrollState::AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &M
 
 	if(Config.m_NativeWheelStep)
 	{
-		const float WheelSteps = -WheelDelta / 120.0f;
+		const float WheelSteps = WheelDelta < 0.0f ? 1.0f : -1.0f;
+		const float AnimationTime = std::max(0.0f, Config.m_NativeWheelAnimationTime);
 		const float BaseOffset = m_AnimTime > 0.0f ? m_AnimTargetOffset : m_Offset;
 		const float TargetOffset = std::clamp(BaseOffset + WheelSteps * Config.m_WheelScale, 0.0f, MaxOffset);
-		m_Offset = std::clamp(m_Offset, 0.0f, MaxOffset);
 		m_Velocity = 0.0f;
 		m_AnimStartOffset = m_Offset;
 		m_AnimTargetOffset = TargetOffset;
-		m_AnimTimeMax = std::max(0.0f, Config.m_NativeWheelAnimationTime);
-		m_AnimTime = m_AnimTimeMax;
-		if(m_AnimTimeMax <= 0.0f || std::abs(m_AnimStartOffset - m_AnimTargetOffset) < 0.5f)
+		m_AnimTimeMax = AnimationTime;
+		m_AnimTime = AnimationTime;
+		if(AnimationTime <= 0.0f || std::abs(m_AnimStartOffset - m_AnimTargetOffset) < 0.5f)
 		{
-			m_Offset = m_AnimTargetOffset;
+			m_Offset = TargetOffset;
+			m_AnimTimeMax = 0.0f;
 			m_AnimTime = 0.0f;
 		}
 		m_LastMaxOffset = MaxOffset;
@@ -159,7 +204,7 @@ void CQmScrollState::AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &M
 	m_LastMaxOffset = MaxOffset;
 }
 
-void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config)
+void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config, bool PauseNativeWheelAnimation)
 {
 	const float MaxOffset = Metrics.MaxOffset();
 	if(MaxOffset <= 0.0f)
@@ -189,7 +234,9 @@ void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQ
 	{
 		m_AnimTargetOffset = std::clamp(m_AnimTargetOffset, 0.0f, MaxOffset);
 		m_AnimStartOffset = std::clamp(m_AnimStartOffset, 0.0f, MaxOffset);
-		m_AnimTime -= ClampedDt;
+		if(PauseNativeWheelAnimation)
+			return;
+		m_AnimTime -= Dt;
 		if(m_AnimTime < 0.0f)
 			m_AnimTime = 0.0f;
 		const float AnimProgress = m_AnimTimeMax > 0.0f ? 1.0f - std::pow(m_AnimTime / m_AnimTimeMax, 3.0f) : 1.0f;
@@ -260,33 +307,37 @@ SQmScrollContainerFrame CQmScrollContainer::PreviewFrame(const CUIRect &ViewRect
 
 SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollConfig &Config)
 {
+	SQmScrollContainerStyle Style;
 	SQmScrollMetrics Metrics;
-	Metrics.m_ViewportSize = ViewRect.h;
+	Metrics.m_ViewportSize = ScrollAxisViewportSize(ViewRect, Style);
 	Metrics.m_ContentSize = ContentHeight;
 	m_State.Advance(Dt, Metrics, Config);
 
-	return BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), SQmScrollContainerStyle(), false);
+	return BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, false);
 }
 
 SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style, const SQmScrollConfig &Config)
 {
+	const bool Horizontal = ScrollAxisHorizontal(Style);
 	SQmScrollMetrics Metrics;
-	Metrics.m_ViewportSize = ViewRect.h;
+	Metrics.m_ViewportSize = ScrollAxisViewportSize(ViewRect, Style);
 	Metrics.m_ContentSize = ContentHeight;
-	if(Input.m_Hovered && Input.m_WheelDelta != 0.0f)
+	if(Input.m_Hovered && !Input.m_ModifierPressed && Input.m_WheelDelta != 0.0f)
 		m_State.AddWheelImpulse(Input.m_WheelDelta, Metrics, Config);
-	m_State.Advance(Dt, Metrics, Config);
+	m_State.Advance(Dt, Metrics, Config, Input.m_ModifierPressed);
 
 	SQmScrollContainerFrame Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
 	if(Frame.m_ScrollbarVisible)
 	{
-		const float TrackHeight = std::max(0.0f, Frame.m_ScrollbarTrackRect.h);
-		const float MaxThumbTravel = std::max(0.0f, TrackHeight - Frame.m_ScrollbarThumbRect.h);
+		const float TrackSize = std::max(0.0f, Horizontal ? Frame.m_ScrollbarTrackRect.w : Frame.m_ScrollbarTrackRect.h);
+		const float ThumbSize = std::max(0.0f, Horizontal ? Frame.m_ScrollbarThumbRect.w : Frame.m_ScrollbarThumbRect.h);
+		const float MaxThumbTravel = std::max(0.0f, TrackSize - ThumbSize);
 		const CUIRect ClipRect = Frame.m_ClipRect;
 		bool JustStartedTrackDrag = false;
-		auto SetOffsetFromThumbY = [&](float ThumbY) {
-			const float ThumbTop = std::clamp(ThumbY, Frame.m_ScrollbarTrackRect.y, Frame.m_ScrollbarTrackRect.y + MaxThumbTravel);
-			const float Ratio = MaxThumbTravel > 0.0f ? (ThumbTop - Frame.m_ScrollbarTrackRect.y) / MaxThumbTravel : 0.0f;
+		auto SetOffsetFromThumbPosition = [&](float ThumbPosition) {
+			const float TrackStart = Horizontal ? Frame.m_ScrollbarTrackRect.x : Frame.m_ScrollbarTrackRect.y;
+			const float ThumbStart = std::clamp(ThumbPosition, TrackStart, TrackStart + MaxThumbTravel);
+			const float Ratio = MaxThumbTravel > 0.0f ? (ThumbStart - TrackStart) / MaxThumbTravel : 0.0f;
 			m_State.SetOffset(Ratio * Metrics.MaxOffset(), Metrics, Config);
 		};
 
@@ -298,21 +349,25 @@ SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, floa
 		else if(Input.m_MousePressed && Input.m_ThumbHovered)
 		{
 			m_ScrollbarDragActive = true;
-			m_ScrollbarGrabY = std::clamp(Input.m_MouseY - Frame.m_ScrollbarThumbRect.y, 0.0f, Frame.m_ScrollbarThumbRect.h);
+			const float MousePosition = Horizontal ? Input.m_MouseX : Input.m_MouseY;
+			const float ThumbPosition = Horizontal ? Frame.m_ScrollbarThumbRect.x : Frame.m_ScrollbarThumbRect.y;
+			m_ScrollbarGrabY = std::clamp(MousePosition - ThumbPosition, 0.0f, ThumbSize);
 		}
 		else if(Input.m_MousePressed && Input.m_TrackHovered)
 		{
-			const float PageDirection = Input.m_MouseY < Frame.m_ScrollbarThumbRect.y ? -1.0f : 1.0f;
-			m_State.SetOffset(m_State.Offset() + PageDirection * ClipRect.h, Metrics, Config);
+			const float MousePosition = Horizontal ? Input.m_MouseX : Input.m_MouseY;
+			const float ThumbPosition = Horizontal ? Frame.m_ScrollbarThumbRect.x : Frame.m_ScrollbarThumbRect.y;
+			const float PageDirection = MousePosition < ThumbPosition ? -1.0f : 1.0f;
+			m_State.SetOffset(m_State.Offset() + PageDirection * (Horizontal ? ClipRect.w : ClipRect.h), Metrics, Config);
 			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
 			m_ScrollbarDragActive = true;
-			m_ScrollbarGrabY = Frame.m_ScrollbarThumbRect.h * 0.5f;
+			m_ScrollbarGrabY = (Horizontal ? Frame.m_ScrollbarThumbRect.w : Frame.m_ScrollbarThumbRect.h) * 0.5f;
 			JustStartedTrackDrag = true;
 		}
 
 		if(m_ScrollbarDragActive && Input.m_MouseDown && !JustStartedTrackDrag)
 		{
-			SetOffsetFromThumbY(Input.m_MouseY - m_ScrollbarGrabY);
+			SetOffsetFromThumbPosition((Horizontal ? Input.m_MouseX : Input.m_MouseY) - m_ScrollbarGrabY);
 			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
 		}
 	}

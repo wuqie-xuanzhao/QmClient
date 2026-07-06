@@ -1,6 +1,7 @@
 #ifndef GAME_CLIENT_QMUI_QMCARDORDERMODEL_H
 #define GAME_CLIENT_QMUI_QMCARDORDERMODEL_H
 
+#include <deque>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -15,7 +16,7 @@ namespace qm_card_order
 	{
 		const char *m_pStableId = nullptr; // 稳定 id（栖梦用 m_pKey 如 "chat_bubble"，Tclient 用 stable id）
 		const char *m_pDefaultTab = nullptr; // 该卡当前归属 tab（tab 是可变位置维度而非固有归属；运行时为注册表默认 tab 的快照）
-		int m_Column = 0; // 列号（0=Full/Left, 1=Right，或泛化）
+		int m_Column = 0; // 列号（0=Full, 1=Left, 2=Right，或泛化）
 		int m_OrderInColumn = 0; // 列内排序
 	};
 
@@ -30,6 +31,8 @@ namespace qm_card_order
 
 		// 核心操作：把 pStableId 移到 ToColumn 的 ToOrder 位置
 		void Move(const char *pStableId, int ToColumn, int ToOrder);
+		// 跨 tab/列移动：tab 是可变位置维度，组件编辑器跨页搬卡时使用。
+		void MoveToTab(const char *pStableId, const char *pToTab, int ToColumn, int ToOrder);
 
 		// order 连续化（消除空洞），按列 stable_sort
 		void NormalizeColumns();
@@ -45,7 +48,7 @@ namespace qm_card_order
 		// O(1) 查询 stableId 的 state index（未命中或 nullptr 返回 -1）
 		int StateIndexForStableId(const char *pStableId) const;
 
-		// 持久化：格式 "id:col:order;"（照搬栖梦 QmSidebarCardOrder 格式）
+		// 持久化：格式 "stableId|tab|column|order;"；兼容旧 "id:col:order" 解析。
 		void Serialize(char *pBuf, int BufSize) const;
 		// 容错解析：未知/重复/非法 key 跳过（照搬 ParseQmModuleLayout）
 		bool Parse(const char *pStr, const std::vector<const char *> &vValidIds);
@@ -55,6 +58,7 @@ namespace qm_card_order
 
 	private:
 		std::vector<SEntry> m_vEntries;
+		std::deque<std::string> m_vOwnedTabs;
 		std::unordered_map<std::string, int> m_StableIdToState; // stableId→连续 index 注册表（让位 lerp O(1) 查找）
 		bool m_Dirty = false;
 	};

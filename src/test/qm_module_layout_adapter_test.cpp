@@ -1,3 +1,7 @@
+#include <base/system.h>
+
+#include <engine/shared/config.h>
+
 #include <game/client/QmUi/QmModuleLayoutAdapter.h>
 
 #include <gtest/gtest.h>
@@ -7,6 +11,30 @@
 #include <vector>
 
 using namespace qm_module;
+
+namespace
+{
+	struct SConfigBackup
+	{
+		char m_aGlobalCardOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+		char m_aSidebarCardOrder[sizeof(g_Config.m_QmSidebarCardOrder)];
+		int m_CardOrderMigrated;
+
+		SConfigBackup()
+		{
+			str_copy(m_aGlobalCardOrder, g_Config.m_QmGlobalCardOrder, sizeof(m_aGlobalCardOrder));
+			str_copy(m_aSidebarCardOrder, g_Config.m_QmSidebarCardOrder, sizeof(m_aSidebarCardOrder));
+			m_CardOrderMigrated = g_Config.m_QmCardOrderMigrated;
+		}
+
+		~SConfigBackup()
+		{
+			str_copy(g_Config.m_QmGlobalCardOrder, m_aGlobalCardOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+			str_copy(g_Config.m_QmSidebarCardOrder, m_aSidebarCardOrder, sizeof(g_Config.m_QmSidebarCardOrder));
+			g_Config.m_QmCardOrderMigrated = m_CardOrderMigrated;
+		}
+	};
+} // namespace
 
 // 测试用小规模 defaults（3 卡：Full/Left/Right 各一），复用真实 EQmModuleId 占位。
 // ParseLegacyQmLayout 按 m_pKey 匹配，与 m_Id 数值无关。
@@ -265,6 +293,22 @@ TEST(QmModuleLayoutAdapter, MoveUpdatesModelAndSetsDirty)
 	EXPECT_EQ(Result.find("chat_bubble:left:"), std::string::npos);
 }
 
+TEST(QmModuleLayoutAdapter, MoveToTabUpdatesGlobalPlacementAndSetsDirty)
+{
+	auto Defaults = MakeAll37Defaults();
+	LoadQmLayoutIntoModel("chat_bubble:left:0;camera_view:right:0", Defaults);
+	EXPECT_FALSE(IsQmLayoutModelDirty());
+
+	EXPECT_TRUE(MoveQmModuleToTabInModel(EQmModuleId::ChatBubble, "search", EQmModuleColumn::Right, 0));
+
+	EXPECT_TRUE(IsQmLayoutModelDirty());
+	char aBuf[4096];
+	QmModuleLayoutModel().Serialize(aBuf, sizeof(aBuf));
+	const std::string Result(aBuf);
+	EXPECT_NE(Result.find("qm:chat_bubble|search|right|0;"), std::string::npos);
+	EXPECT_EQ(Result.find("qm:chat_bubble|visual|left|"), std::string::npos);
+}
+
 // 意图：Full 保护——非 Full 卡不可拖成 Full（目标 Full 拒绝）。
 TEST(QmModuleLayoutAdapter, MoveRejectsFullTarget)
 {
@@ -298,4 +342,150 @@ TEST(QmModuleLayoutAdapter, SyncModelToLegacyLayoutPreservesColumns)
 	}
 	EXPECT_TRUE(FoundChatBubble);
 	EXPECT_TRUE(FoundCameraView);
+}
+
+// 意图：全局排序成为权威时，Qm 只读取 qm:* 卡片，忽略其他域卡片，并补齐缺失 Qm defaults。
+TEST(QmModuleLayoutAdapter, LoadGlobalOrderIntoModelKeepsOnlyQmCardsAndFillsDefaults)
+{
+	auto Defaults = MakeAll37Defaults();
+	EXPECT_TRUE(LoadQmLayoutModelFromGlobalOrder(
+		"tc:auto_reply|tclient|1|0;qm:chat_bubble|visual|2|0;qm:camera_view|visual|1|0;",
+		Defaults));
+
+	std::vector<SQmModuleEntry> vEntries = SyncModelToLegacyLayout();
+	ASSERT_EQ(vEntries.size(), Defaults.size());
+	bool FoundChatBubble = false;
+	bool FoundCameraView = false;
+	bool FoundCoords = false;
+	for(const SQmModuleEntry &E : vEntries)
+	{
+		const std::string Key = E.m_pKey != nullptr ? E.m_pKey : "";
+		if(Key == "chat_bubble")
+		{
+			EXPECT_EQ(E.m_Column, EQmModuleColumn::Right);
+			EXPECT_EQ(E.m_OrderInColumn, 0);
+			FoundChatBubble = true;
+		}
+		else if(Key == "camera_view")
+		{
+			EXPECT_EQ(E.m_Column, EQmModuleColumn::Left);
+			EXPECT_EQ(E.m_OrderInColumn, 0);
+			FoundCameraView = true;
+		}
+		else if(Key == "coords")
+		{
+			EXPECT_EQ(E.m_Column, EQmModuleColumn::Left);
+			FoundCoords = true;
+		}
+		EXPECT_FALSE(Key.starts_with("tc:"));
+	}
+	EXPECT_TRUE(FoundChatBubble);
+	EXPECT_TRUE(FoundCameraView);
+	EXPECT_TRUE(FoundCoords);
+}
+
+// 意图：从全局配置加载 Qm 子模型后，用户可变 tab placement 必须保留，
+// 且 tab 指针不能引用解析临时模型的 owned string；后续序列化仍应稳定。
+TEST(QmModuleLayoutAdapter, LoadGlobalOrderKeepsMovableTabsWithStableLifetime)
+{
+	auto Defaults = MakeAll37Defaults();
+	ASSERT_TRUE(LoadQmLayoutModelFromGlobalOrder("qm:chat_bubble|search|2|0;qm:camera_view|search|1|0;", Defaults));
+
+	char aBuf[4096];
+	QmModuleLayoutModel().Serialize(aBuf, sizeof(aBuf));
+	const std::string Result(aBuf);
+	EXPECT_NE(Result.find("qm:chat_bubble|search|right|"), std::string::npos);
+	EXPECT_NE(Result.find("qm:camera_view|search|left|"), std::string::npos);
+}
+
+// 意图：Qm 子模型回写全局排序时，只更新 qm:* 条目，必须保留 tclient/deck 等非 Qm 卡片。
+// 否则 Qm 页面一次拖拽会把全局卡片配置退化成 Qm 子集，破坏全局唯一权威。
+TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderPreservesNonQmCards)
+{
+	auto Defaults = MakeAll37Defaults();
+	LoadQmLayoutIntoModel("chat_bubble:right:0;camera_view:left:0", Defaults);
+	char aMerged[4096];
+	SerializeMergedGlobalCardOrderFromQmModel(
+		"tclient:visual-nameplates|tclient|1|0;qm:chat_bubble|visual|1|5;deck:graphics-display|graphics|2|0;",
+		aMerged,
+		sizeof(aMerged));
+
+	const std::string Result(aMerged);
+	EXPECT_NE(Result.find("tclient:visual-nameplates|tclient|1|0;"), std::string::npos);
+	EXPECT_NE(Result.find("deck:graphics-display|graphics|2|0;"), std::string::npos);
+	EXPECT_NE(Result.find("qm:chat_bubble|visual|right|"), std::string::npos);
+	EXPECT_NE(Result.find("qm:camera_view|visual|left|"), std::string::npos);
+	EXPECT_EQ(Result.find("qm:chat_bubble|visual|1|5;"), std::string::npos);
+}
+
+// 意图：全局合并应丢弃注册表外的旧 qm:* 残留。
+// 删除/未知卡片残留继续写回会让全局配置越来越脏，并可能让搜索/组件编辑器看到幽灵卡。
+TEST(QmModuleLayoutAdapter, SerializeMergedGlobalOrderDropsUnknownQmCards)
+{
+	auto Defaults = MakeAll37Defaults();
+	LoadQmLayoutIntoModel("chat_bubble:right:0", Defaults);
+	char aMerged[4096];
+	SerializeMergedGlobalCardOrderFromQmModel(
+		"qm:removed_card|visual|left|0;tclient:visual-nameplates|tclient|left|0;",
+		aMerged,
+		sizeof(aMerged));
+
+	const std::string Result(aMerged);
+	EXPECT_EQ(Result.find("qm:removed_card"), std::string::npos);
+	EXPECT_NE(Result.find("tclient:visual-nameplates|tclient|left|0;"), std::string::npos);
+	EXPECT_NE(Result.find("qm:chat_bubble|visual|right|"), std::string::npos);
+}
+
+// 意图：首次迁移把旧 Qm 排序落到全局 stableId|tab|column|order 格式，并标记完成。
+TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderWritesPipeFormatAndMarksMigrated)
+{
+	SConfigBackup Backup;
+	auto Defaults = MakeAll37Defaults();
+	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0;camera_view:left:0", sizeof(g_Config.m_QmSidebarCardOrder));
+	g_Config.m_QmGlobalCardOrder[0] = '\0';
+	g_Config.m_QmCardOrderMigrated = 0;
+
+	EXPECT_TRUE(MigrateQmLayoutToGlobalCardOrder(Defaults));
+
+	EXPECT_EQ(g_Config.m_QmCardOrderMigrated, 1);
+	const std::string Result(g_Config.m_QmGlobalCardOrder);
+	EXPECT_NE(Result.find("qm:chat_bubble|visual|right|"), std::string::npos);
+	EXPECT_NE(Result.find("qm:camera_view|visual|left|"), std::string::npos);
+	EXPECT_NE(Result.find("tclient:auto-reply|tclient|left|8;"), std::string::npos);
+	EXPECT_NE(Result.find("deck:sound-audio-pack|sound|left|2;"), std::string::npos);
+	EXPECT_NE(Result.find("|"), std::string::npos);
+	EXPECT_EQ(Result.find("chat_bubble:right"), std::string::npos);
+}
+
+// 意图：首次迁移从全局 registry 默认值出发，再合并 Qm 子模型。
+// registry 里存在 Qm 页面暂未反查到 EQmModuleId 的卡（如 qm:nameplate_text），这些也必须保留，
+// 否则迁移会把全局卡片默认表退化成 Qm 子模型 37 卡，违背"注册表是唯一事实源"。
+TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderPreservesRegistryOnlyQmCards)
+{
+	SConfigBackup Backup;
+	auto Defaults = MakeAll37Defaults();
+	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0", sizeof(g_Config.m_QmSidebarCardOrder));
+	g_Config.m_QmGlobalCardOrder[0] = '\0';
+	g_Config.m_QmCardOrderMigrated = 0;
+
+	EXPECT_TRUE(MigrateQmLayoutToGlobalCardOrder(Defaults));
+
+	const std::string Result(g_Config.m_QmGlobalCardOrder);
+	EXPECT_NE(Result.find("qm:chat_bubble|visual|right|"), std::string::npos);
+	EXPECT_NE(Result.find("qm:nameplate_text|hud|right|18;"), std::string::npos);
+}
+
+// 意图：已有全局排序或已迁移时不覆盖用户当前配置。
+TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderIsIdempotent)
+{
+	SConfigBackup Backup;
+	auto Defaults = MakeAll37Defaults();
+	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0", sizeof(g_Config.m_QmSidebarCardOrder));
+	str_copy(g_Config.m_QmGlobalCardOrder, "qm:chat_bubble|search|1|0;", sizeof(g_Config.m_QmGlobalCardOrder));
+	g_Config.m_QmCardOrderMigrated = 1;
+
+	EXPECT_FALSE(MigrateQmLayoutToGlobalCardOrder(Defaults));
+
+	EXPECT_EQ(g_Config.m_QmCardOrderMigrated, 1);
+	EXPECT_STREQ(g_Config.m_QmGlobalCardOrder, "qm:chat_bubble|search|1|0;");
 }

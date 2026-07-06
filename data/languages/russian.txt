@@ -1345,6 +1345,9 @@ Clear note
 Clear remote console
 == Очистить удалённую консоль
 
+Clearable text...
+== Pending russian translation clearable_text
+
 Clears the voting options
 == Очищает варианты голосования
 
@@ -2797,8 +2800,8 @@ Force vote
 Forms
 == Формы
 
-Found %d modules
-== Найдено %d модулей
+Found %d global cards
+== Pending russian translation 6884b87578
 
 FPM
 == Убийств/мин
@@ -2997,6 +3000,9 @@ Gives you infinite jump
 
 Glitch
 == Глитч
+
+Global card
+== Pending russian translation global_card
 
 Global toggle key
 == Глобальная клавиша переключения
@@ -5406,9 +5412,6 @@ Queue preset: %s
 
 Quick action menu for players
 == Меню быстрых действий для игроков
-
-Quickly locate feature modules
-== Быстрый поиск функциональных модулей
 
 Quit
 == Выйти
@@ -8104,9 +8107,6 @@ Update or add a specific war group
 Update Rate
 == Pending russian translation a531d2ba22
 
-Updating feature list...
-== Обновление списка функций...
-
 Uploading map data to GPU
 == Загрузка данных карты на GPU
 
@@ -8865,6 +8865,12 @@ Zoom out
 
 允许 FTAPI 自动翻译（可能导致过载）
 == Разрешить автоматический перевод FTAPI (может вызвать перегрузку)
+
+全局卡片排序旧配置迁移完成标记
+== Pending russian translation global_card_order_migrated
+
+全局卡片排序（格式 stableId|tab|col|order; 分号分隔）
+== Pending russian translation global_card_order
 
 关键词回复使用Dummy
 == Использовать дамми для ответа по ключевым словам

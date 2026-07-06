@@ -2,6 +2,8 @@
 
 #include <base/system.h>
 
+#include <engine/shared/config.h>
+
 #include <algorithm>
 
 namespace qm_module
@@ -298,6 +300,47 @@ namespace qm_module
 		Model.ClearDirty(); // 加载完成，清除 dirty（后续 Move 才置 dirty 触发序列化）
 	}
 
+	bool LoadQmLayoutModelFromGlobalOrder(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults)
+	{
+		if(pConfig == nullptr || pConfig[0] == '\0')
+			return false;
+
+		std::vector<const char *> vValidIds;
+		vValidIds.reserve(vDefaults.size());
+		for(const SQmModuleEntry &E : vDefaults)
+		{
+			const char *pStable = QmModuleStableId(E.m_Id);
+			if(pStable != nullptr)
+				vValidIds.push_back(pStable);
+		}
+
+		qm_card_order::CModel ParsedModel;
+		if(!ParsedModel.Parse(pConfig, vValidIds) || ParsedModel.Count() <= 0)
+			return false;
+
+		std::vector<qm_card_order::SEntry> vModelEntries;
+		vModelEntries.reserve(vDefaults.size());
+		for(int i = 0; i < ParsedModel.Count(); ++i)
+			vModelEntries.push_back(ParsedModel.Entry(i));
+
+		for(const SQmModuleEntry &E : vDefaults)
+		{
+			const char *pStable = QmModuleStableId(E.m_Id);
+			if(pStable == nullptr || ParsedModel.FindByStableId(pStable) >= 0)
+				continue;
+			const char *pTab = nullptr;
+			const qm_card_registry::SCardDefault *pReg = qm_card_registry::FindByStableId(pStable);
+			if(pReg != nullptr)
+				pTab = pReg->m_pDefaultTab;
+			vModelEntries.push_back({pStable, pTab, QmModuleColumnToInt(E.m_Column), E.m_OrderInColumn});
+		}
+
+		qm_card_order::CModel &Model = QmModuleLayoutModel();
+		Model.SetEntries(vModelEntries);
+		Model.ClearDirty();
+		return true;
+	}
+
 	std::vector<SQmModuleEntry> SyncModelToLegacyLayout()
 	{
 		qm_card_order::CModel &Model = QmModuleLayoutModel();
@@ -322,6 +365,76 @@ namespace qm_module
 		SerializeLegacyQmLayout(vEntries, pOut, OutSize);
 	}
 
+	void SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize)
+	{
+		if(pOut == nullptr || OutSize <= 0)
+			return;
+		pOut[0] = '\0';
+
+		qm_card_order::CModel &Model = QmModuleLayoutModel();
+		bool First = true;
+		if(pExistingGlobalOrder != nullptr && pExistingGlobalOrder[0] != '\0')
+		{
+			char aToken[160];
+			const char *pEntry = pExistingGlobalOrder;
+			while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
+			{
+				if(aToken[0] == '\0')
+					continue;
+				if(str_startswith(aToken, "qm:") != nullptr)
+				{
+					char aStableId[128];
+					str_next_token(aToken, "|", aStableId, sizeof(aStableId));
+					if(Model.FindByStableId(aStableId) >= 0)
+						continue; // Qm 子模型里的卡由后续 Model.Serialize 全量重写
+					if(qm_card_registry::FindByStableId(aStableId) == nullptr)
+						continue; // 注册表外旧残留不再带回全局配置
+				}
+				if(!First)
+					str_append(pOut, ";", OutSize);
+				str_append(pOut, aToken, OutSize);
+				First = false;
+			}
+		}
+
+		char aQmEntries[4096];
+		Model.Serialize(aQmEntries, sizeof(aQmEntries));
+		char aToken[160];
+		const char *pEntry = aQmEntries;
+		while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
+		{
+			if(aToken[0] == '\0')
+				continue;
+			if(!First)
+				str_append(pOut, ";", OutSize);
+			str_append(pOut, aToken, OutSize);
+			First = false;
+		}
+		if(pOut[0] != '\0')
+			str_append(pOut, ";", OutSize);
+	}
+
+	bool MigrateQmLayoutToGlobalCardOrder(const std::vector<SQmModuleEntry> &vDefaults)
+	{
+		if(g_Config.m_QmCardOrderMigrated != 0)
+			return false;
+		if(g_Config.m_QmGlobalCardOrder[0] != '\0')
+		{
+			g_Config.m_QmCardOrderMigrated = 1;
+			return false;
+		}
+
+		LoadQmLayoutIntoModel(g_Config.m_QmSidebarCardOrder, vDefaults);
+		qm_card_order::CModel DefaultGlobalModel;
+		DefaultGlobalModel.SetEntries(qm_card_registry::BuildDefaultEntries());
+		DefaultGlobalModel.ClearDirty();
+		char aDefaultGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+		DefaultGlobalModel.Serialize(aDefaultGlobalOrder, sizeof(aDefaultGlobalOrder));
+		SerializeMergedGlobalCardOrderFromQmModel(aDefaultGlobalOrder, g_Config.m_QmGlobalCardOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+		g_Config.m_QmCardOrderMigrated = 1;
+		return g_Config.m_QmGlobalCardOrder[0] != '\0';
+	}
+
 	bool MoveQmModuleInModel(EQmModuleId Id, EQmModuleColumn TargetColumn, int TargetOrder)
 	{
 		qm_card_order::CModel &Model = QmModuleLayoutModel();
@@ -332,6 +445,19 @@ namespace qm_module
 		if(TargetColumn == EQmModuleColumn::Full)
 			return false;
 		Model.Move(pStable, QmModuleColumnToInt(TargetColumn), TargetOrder);
+		return true;
+	}
+
+	bool MoveQmModuleToTabInModel(EQmModuleId Id, const char *pTargetTab, EQmModuleColumn TargetColumn, int TargetOrder)
+	{
+		qm_card_order::CModel &Model = QmModuleLayoutModel();
+		const char *pStable = QmModuleStableId(Id);
+		if(pStable == nullptr || pTargetTab == nullptr || pTargetTab[0] == '\0')
+			return false;
+		// Full 保护：目标 Full 拒绝（非 Full 卡不可拖成 Full）；源 Full 卡的拒拖由调用方 CommitDropPreview 保证
+		if(TargetColumn == EQmModuleColumn::Full)
+			return false;
+		Model.MoveToTab(pStable, pTargetTab, QmModuleColumnToInt(TargetColumn), TargetOrder);
 		return true;
 	}
 

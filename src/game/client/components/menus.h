@@ -2152,6 +2152,7 @@ public:
 		SETTINGS_ASSETS,
 		SETTINGS_TCLIENT,
 		SETTINGS_QMCLIENT,
+		SETTINGS_SEARCH,
 		SETTINGS_PROFILES,
 		SETTINGS_CONFIGS,
 		SETTINGS_CONTRIBUTORS,
@@ -2211,7 +2212,7 @@ public:
 	std::array<const char *, SETTINGS_LENGTH> m_apSettingsTabs{};
 	int m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 	int m_TClientSettingsTab = 0;
-	CLineInputBuffered<128> m_aQmClientModuleSearchInputs[NUMBER_OF_QMCLIENT_SETTINGS_TABS];
+	CLineInputBuffered<128> m_QmClientModuleSearchInput;
 	void ClearQmClientSettingsSearchInputs();
 
 	// DDRace
@@ -2579,6 +2580,7 @@ private:
 		CUIRect m_EndRect;
 		std::vector<std::string> *m_pOrder = nullptr;
 		std::vector<std::string> m_vActiveCardIds;
+		std::deque<std::string> m_vStableIds;
 		float m_UiScale = 1.0f;
 		float m_Spacing = 16.0f;
 		int m_Page = -1;
@@ -2758,6 +2760,11 @@ private:
 	void RenderSettingsTClientConfigs(CUIRect MainView);
 	void RenderSettingsTClientSidebar(CUIRect MainView);
 	void RenderSettingsQmClient(CUIRect MainView, bool ContributorsPage = false, bool PrewarmOnly = false);
+	void RenderSettingsGlobalSearch(CUIRect MainView, bool PrewarmOnly = false);
+	void RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly = false);
+	void RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly);
+	void RenderGlobalSearchResultCard(CUIRect &MainView, const struct SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);
+	void RenderGlobalSearchResults(CUIRect &MainView, const std::vector<const struct SQmGlobalSearchCard *> &vCards, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);
 	void RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderTeeCute(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, bool CuteEyes, float Alpha = 1.0f);
 
