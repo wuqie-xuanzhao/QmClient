@@ -9,7 +9,7 @@ namespace qm_card_registry
 		// clang-format off
 		static const std::vector<SCardDefault> s_aDefaults = {
 			// === 栖梦侧栏模块（38）· qm:<key>（显式默认值齐全，来源 s_aQmModuleDefaults）===
-			{"qm:info", nullptr, ECardColumn::Full, 0, "QmClient", "qmclient info"},
+			{"qm:info", "visual", ECardColumn::Full, 0, "QmClient", "qmclient info"},
 			{"qm:chat_bubble", "visual", ECardColumn::Left, 0, "Chat bubble", "chat bubble visual"},
 			{"qm:camera_view", "visual", ECardColumn::Right, 0, "Camera view", "camera view visual"},
 			{"qm:skin_transition", "visual", ECardColumn::Left, 1, "Skin transition", "skin transition visual"},

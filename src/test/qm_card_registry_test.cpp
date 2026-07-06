@@ -208,6 +208,17 @@ TEST(QmCardRegistry, DataDebtCardsHaveTabAssignment)
 	EXPECT_NE(qm_card_registry::FindByStableId("qm:nameplate_text")->m_pDefaultTab, nullptr);
 }
 
+// 意图：全局卡片的默认 placement 必须包含 tab，否则搜索结果和按 tab 筛选没有稳定落点。
+TEST(QmCardRegistry, EveryRegisteredCardHasDefaultTabPlacement)
+{
+	for(const auto &E : qm_card_registry::Defaults())
+	{
+		EXPECT_NE(E.m_pDefaultTab, nullptr) << E.m_pStableId;
+		if(E.m_pDefaultTab != nullptr)
+			EXPECT_NE(E.m_pDefaultTab[0], '\0') << E.m_pStableId;
+	}
+}
+
 // 意图：B2 迁移要把栖梦旧 key（chat_bubble）映射到新 stableId（qm:chat_bubble）。
 // 映射函数从注册表派生（DRY）；QiaFen 以持久化 key qiafen 为权威，UI 名 keyword_reply 不映射。
 TEST(QmCardRegistry, MigratesLegacyKeyToNamespaced)
