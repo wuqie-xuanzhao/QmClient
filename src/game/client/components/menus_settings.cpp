@@ -1193,7 +1193,13 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		SetNeedSendInfo();
 	}
 
-	Ui()->DoEditBox_Search(&s_FlagFilterInput, &QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	IUiContext PlayerFlagSearchCtx;
+	PlayerFlagSearchCtx.m_pUi = Ui();
+	PlayerFlagSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	PlayerFlagSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	PlayerFlagSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_player_flag_search");
+	PlayerFlagSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	ui_widget::SearchField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 }
 
 void CMenus::FinalizeTeeListDrainPerfSession()

@@ -6786,6 +6786,19 @@ TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_SkinFilterInput, &QuickSearch, 14.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, PlayerFlagSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext PlayerFlagSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("PlayerFlagSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_player_flag_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::SearchField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, 14.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_FlagFilterInput, &QuickSearch, 14.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 {
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
