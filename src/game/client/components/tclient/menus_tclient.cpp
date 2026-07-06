@@ -116,26 +116,60 @@ namespace
 			return;
 		vLeftOrder.clear();
 		vRightOrder.clear();
+		std::vector<std::pair<int, std::string>> vLeftEntries;
+		std::vector<std::pair<int, std::string>> vRightEntries;
 		const char *p = pConfig;
 		char aToken[128];
 		while((p = str_next_token(p, ";", aToken, sizeof(aToken))) != nullptr)
 		{
 			if(aToken[0] == '\0')
 				continue;
-			char aId[64];
-			const char *pRest = str_next_token(aToken, ":", aId, sizeof(aId));
-			if(pRest == nullptr)
-				continue;
+			char aId[80];
 			char aCol[16];
-			str_next_token(pRest, ":", aCol, sizeof(aCol));
+			char aOrder[16];
+			const char *pLastColon = nullptr;
+			for(const char *pIt = aToken; *pIt != '\0'; ++pIt)
+			{
+				if(*pIt == ':')
+					pLastColon = pIt;
+			}
+			if(pLastColon == nullptr)
+				continue;
+			const char *pSecondLastColon = nullptr;
+			for(const char *pIt = aToken; pIt < pLastColon; ++pIt)
+			{
+				if(*pIt == ':')
+					pSecondLastColon = pIt;
+			}
+			if(pSecondLastColon == nullptr)
+				continue;
+			const int IdLen = (int)(pSecondLastColon - aToken);
+			const int ColumnLen = (int)(pLastColon - pSecondLastColon - 1);
+			if(IdLen <= 0 || IdLen >= (int)sizeof(aId) || ColumnLen <= 0 || ColumnLen >= (int)sizeof(aCol))
+				continue;
+			str_copy(aId, aToken, IdLen + 1);
+			str_copy(aCol, pSecondLastColon + 1, ColumnLen + 1);
+			str_copy(aOrder, pLastColon + 1, sizeof(aOrder));
 			int Col = 0;
 			if(!str_toint(aCol, &Col))
 				continue;
+			int Order = 0;
+			if(!str_toint(aOrder, &Order) || Order < 0)
+				continue;
 			if(Col == 0)
-				vLeftOrder.push_back(aId);
+				vLeftEntries.emplace_back(Order, aId);
 			else if(Col == 1)
-				vRightOrder.push_back(aId);
+				vRightEntries.emplace_back(Order, aId);
 		}
+		const auto OrderLess = [](const auto &a, const auto &b) {
+			return a.first < b.first;
+		};
+		std::stable_sort(vLeftEntries.begin(), vLeftEntries.end(), OrderLess);
+		std::stable_sort(vRightEntries.begin(), vRightEntries.end(), OrderLess);
+		for(const auto &Entry : vLeftEntries)
+			vLeftOrder.push_back(Entry.second);
+		for(const auto &Entry : vRightEntries)
+			vRightOrder.push_back(Entry.second);
 	}
 
 	bool SerializeMergedTClientGlobalCardOrder(const char *pExistingGlobalOrder, const std::vector<std::string> &vLeftOrder, const std::vector<std::string> &vRightOrder, char *pOut, int OutSize)

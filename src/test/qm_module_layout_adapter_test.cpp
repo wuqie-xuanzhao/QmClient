@@ -18,12 +18,14 @@ namespace
 	{
 		char m_aGlobalCardOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
 		char m_aSidebarCardOrder[sizeof(g_Config.m_QmSidebarCardOrder)];
+		char m_aSettingsCardOrder[sizeof(g_Config.m_QmSettingsCardOrder)];
 		int m_CardOrderMigrated;
 
 		SConfigBackup()
 		{
 			str_copy(m_aGlobalCardOrder, g_Config.m_QmGlobalCardOrder, sizeof(m_aGlobalCardOrder));
 			str_copy(m_aSidebarCardOrder, g_Config.m_QmSidebarCardOrder, sizeof(m_aSidebarCardOrder));
+			str_copy(m_aSettingsCardOrder, g_Config.m_QmSettingsCardOrder, sizeof(m_aSettingsCardOrder));
 			m_CardOrderMigrated = g_Config.m_QmCardOrderMigrated;
 		}
 
@@ -31,6 +33,7 @@ namespace
 		{
 			str_copy(g_Config.m_QmGlobalCardOrder, m_aGlobalCardOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 			str_copy(g_Config.m_QmSidebarCardOrder, m_aSidebarCardOrder, sizeof(g_Config.m_QmSidebarCardOrder));
+			str_copy(g_Config.m_QmSettingsCardOrder, m_aSettingsCardOrder, sizeof(g_Config.m_QmSettingsCardOrder));
 			g_Config.m_QmCardOrderMigrated = m_CardOrderMigrated;
 		}
 	};
@@ -495,6 +498,25 @@ TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderPreservesRegistryOnlyQmCards)
 	const std::string Result(g_Config.m_QmGlobalCardOrder);
 	EXPECT_NE(Result.find("qm:chat_bubble|visual|right|"), std::string::npos);
 	EXPECT_NE(Result.find("qm:nameplate_text|hud|right|18;"), std::string::npos);
+}
+
+// 意图：首次迁移不能只把 Qm 旧排序合入全局配置；一旦 registry 默认 Tclient 卡片写入
+// qm_global_card_order，Tclient 页面就会停止读取旧 qm_settings_card_order。必须在同一迁移内保留老用户顺序。
+TEST(QmModuleLayoutAdapter, MigrateGlobalCardOrderPreservesLegacyTClientOrder)
+{
+	SConfigBackup Backup;
+	auto Defaults = MakeAll37Defaults();
+	str_copy(g_Config.m_QmSidebarCardOrder, "chat_bubble:right:0", sizeof(g_Config.m_QmSidebarCardOrder));
+	str_copy(g_Config.m_QmSettingsCardOrder, "tclient:input:1:0;tclient:visual-nameplates:0:0", sizeof(g_Config.m_QmSettingsCardOrder));
+	g_Config.m_QmGlobalCardOrder[0] = '\0';
+	g_Config.m_QmCardOrderMigrated = 0;
+
+	EXPECT_TRUE(MigrateQmLayoutToGlobalCardOrder(Defaults));
+
+	const std::string Result(g_Config.m_QmGlobalCardOrder);
+	EXPECT_NE(Result.find("tclient:visual-nameplates|tclient|left|0;"), std::string::npos);
+	EXPECT_NE(Result.find("tclient:input|tclient|right|0;"), std::string::npos);
+	EXPECT_EQ(Result.find("tclient:input|tclient|left|3;"), std::string::npos);
 }
 
 // 意图：迁移只有完整写出全局配置后才能覆盖 config 和标记完成；

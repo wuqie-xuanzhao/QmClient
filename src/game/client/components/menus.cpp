@@ -4644,14 +4644,21 @@ void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()
 	if(!Model.LoadExplicit(g_Config.m_QmGlobalCardOrder, vDefaults))
 	{
 		m_SettingsCardDeckOrders.clear();
+		m_SettingsCardDeckColumnPrefs.clear();
 		return;
 	}
 
 	m_SettingsCardDeckOrders.clear();
+	m_SettingsCardDeckColumnPrefs.clear();
 	for(const std::string &DeckId : vDeckIds)
 	{
 		std::vector<std::string> vOrder = Model.StableIdOrder("deck:", DeckId.c_str(), 1);
 		std::vector<std::string> vRightOrder = Model.StableIdOrder("deck:", DeckId.c_str(), 2);
+		std::unordered_map<std::string, int> &ColumnPrefs = m_SettingsCardDeckColumnPrefs[DeckId];
+		for(const std::string &StableId : vOrder)
+			ColumnPrefs[StableId] = 0x10;
+		for(const std::string &StableId : vRightOrder)
+			ColumnPrefs[StableId] = 0x10 | 0x1;
 		vOrder.insert(vOrder.end(), vRightOrder.begin(), vRightOrder.end());
 		if(!vOrder.empty())
 			m_SettingsCardDeckOrders[DeckId] = std::move(vOrder);

@@ -347,6 +347,68 @@ namespace qm_module
 		SerializeLegacyQmLayout(vEntries, pOut, OutSize);
 	}
 
+	bool ParseLegacyTClientLayoutEntries(const char *pConfig, std::vector<qm_card_order::SEntry> &vOut)
+	{
+		vOut.clear();
+		if(pConfig == nullptr || pConfig[0] == '\0')
+			return false;
+
+		const char *pEntry = pConfig;
+		char aToken[128];
+		while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
+		{
+			if(aToken[0] == '\0')
+				continue;
+
+			char aId[80];
+			char aColumn[16];
+			char aOrder[16];
+			const char *pLastColon = nullptr;
+			for(const char *pIt = aToken; *pIt != '\0'; ++pIt)
+			{
+				if(*pIt == ':')
+					pLastColon = pIt;
+			}
+			if(pLastColon == nullptr)
+				continue;
+			const char *pSecondLastColon = nullptr;
+			for(const char *pIt = aToken; pIt < pLastColon; ++pIt)
+			{
+				if(*pIt == ':')
+					pSecondLastColon = pIt;
+			}
+			if(pSecondLastColon == nullptr)
+				continue;
+			const int IdLen = (int)(pSecondLastColon - aToken);
+			const int ColumnLen = (int)(pLastColon - pSecondLastColon - 1);
+			if(IdLen <= 0 || IdLen >= (int)sizeof(aId) || ColumnLen <= 0 || ColumnLen >= (int)sizeof(aColumn))
+				continue;
+			str_copy(aId, aToken, IdLen + 1);
+			str_copy(aColumn, pSecondLastColon + 1, ColumnLen + 1);
+			str_copy(aOrder, pLastColon + 1, sizeof(aOrder));
+
+			int LegacyColumn = 0;
+			if(!str_toint(aColumn, &LegacyColumn))
+				continue;
+			int Order = 0;
+			if(!str_toint(aOrder, &Order) || Order < 0)
+				continue;
+			int Column = -1;
+			if(LegacyColumn == 0)
+				Column = 1;
+			else if(LegacyColumn == 1)
+				Column = 2;
+			else
+				continue;
+
+			const qm_card_registry::SCardDefault *pDefault = str_startswith(aId, "tclient:") != nullptr ? qm_card_registry::FindByStableId(aId) : nullptr;
+			if(pDefault == nullptr)
+				continue;
+			vOut.push_back({pDefault->m_pStableId, pDefault->m_pDefaultTab, Column, Order});
+		}
+		return !vOut.empty();
+	}
+
 	bool SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize)
 	{
 		if(pOut == nullptr || OutSize <= 0)
@@ -431,6 +493,14 @@ namespace qm_module
 		char aMigratedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
 		if(!SerializeMergedGlobalCardOrderFromQmModel(aDefaultGlobalOrder, aMigratedGlobalOrder, sizeof(aMigratedGlobalOrder)))
 			return false;
+		std::vector<qm_card_order::SEntry> vLegacyTClientEntries;
+		if(ParseLegacyTClientLayoutEntries(g_Config.m_QmSettingsCardOrder, vLegacyTClientEntries))
+		{
+			char aTClientMigratedOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+			if(!qm_card_order::SerializeMergedReplacingPrefix(aMigratedGlobalOrder, "tclient:", vLegacyTClientEntries, aTClientMigratedOrder, sizeof(aTClientMigratedOrder)))
+				return false;
+			str_copy(aMigratedGlobalOrder, aTClientMigratedOrder, sizeof(aMigratedGlobalOrder));
+		}
 		str_copy(g_Config.m_QmGlobalCardOrder, aMigratedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		g_Config.m_QmCardOrderMigrated = 1;
 		return g_Config.m_QmGlobalCardOrder[0] != '\0';

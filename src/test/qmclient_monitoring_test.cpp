@@ -1808,6 +1808,10 @@ TEST(QmMonitoringHelpers, SettingsCardDeckGlobalOrderUsesSharedCardModel)
 	EXPECT_NE(Body.find("Model.LoadExplicit(g_Config.m_QmGlobalCardOrder, vDefaults)"), std::string::npos);
 	EXPECT_NE(Body.find("Model.StableIdOrder(\"deck:\", DeckId.c_str(), 1)"), std::string::npos);
 	EXPECT_NE(Body.find("Model.StableIdOrder(\"deck:\", DeckId.c_str(), 2)"), std::string::npos);
+	EXPECT_NE(Body.find("m_SettingsCardDeckColumnPrefs.clear();"), std::string::npos);
+	EXPECT_NE(Body.find("std::unordered_map<std::string, int> &ColumnPrefs = m_SettingsCardDeckColumnPrefs[DeckId];"), std::string::npos);
+	EXPECT_NE(Body.find("ColumnPrefs[StableId] = 0x10;"), std::string::npos);
+	EXPECT_NE(Body.find("ColumnPrefs[StableId] = 0x10 | 0x1;"), std::string::npos);
 	EXPECT_NE(SerializeBody.find("m_SettingsCardDeckColumnPrefs"), std::string::npos);
 	EXPECT_NE(SerializeBody.find("ColumnOrder[Column]++"), std::string::npos);
 	EXPECT_NE(SerializeBody.find("vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), Column, ColumnOrder[Column]++});"), std::string::npos);
