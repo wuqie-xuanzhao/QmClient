@@ -3516,6 +3516,13 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 	else if(m_Popup == POPUP_RENDER_DEMO)
 	{
 		CUIRect Row, Ok, Abort;
+		IUiContext DemoRenderTextInputCtx;
+		DemoRenderTextInputCtx.m_pUi = Ui();
+		DemoRenderTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+		DemoRenderTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+		DemoRenderTextInputCtx.m_ScopeHash = MakeUiScopeHash("demo_render_text_input");
+		DemoRenderTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 		Box.VMargin(60.0f, &Box);
 		Box.HMargin(20.0f, &Box);
 		Box.HSplitBottom(24.0f, &Box, &Row);
@@ -3615,7 +3622,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Row.VSplitLeft(110.0f, &Label, &TextBox);
 		TextBox.VSplitLeft(10.0f, nullptr, &TextBox);
 		Ui()->DoLabel(&Label, Localize("Video name:"), 12.8f, TEXTALIGN_ML);
-		Ui()->DoEditBox(&m_DemoRenderInput, &TextBox, 12.8f);
+		ui_widget::TextField(DemoRenderTextInputCtx, &m_DemoRenderInput, TextBox, Localize("Video name"), 12.8f);
 
 		// Warn about disconnect if online
 		if(Client()->State() == IClient::STATE_ONLINE)

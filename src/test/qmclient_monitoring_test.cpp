@@ -7021,6 +7021,25 @@ TEST(QmMonitoringHelpers, DemoRenamePopupUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_DemoRenameInput, &TextBox, 12.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, DemoRenderPopupUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderPopupFullscreen(CUIRect Screen)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t RenderPopupPos = Body.find("else if(m_Popup == POPUP_RENDER_DEMO)");
+	const size_t VideoNameLabelPos = Body.find("Ui()->DoLabel(&Label, Localize(\"Video name:\"), 12.8f, TEXTALIGN_ML);", RenderPopupPos);
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(DemoRenderTextInputCtx, &m_DemoRenderInput, TextBox, Localize(\"Video name\"), 12.8f);", VideoNameLabelPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext DemoRenderTextInputCtx;", RenderPopupPos), std::string::npos);
+	EXPECT_NE(Body.find("DemoRenderTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"demo_render_text_input\");", RenderPopupPos), std::string::npos);
+	EXPECT_NE(RenderPopupPos, std::string::npos);
+	EXPECT_NE(VideoNameLabelPos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_LT(VideoNameLabelPos, TextFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_DemoRenderInput, &TextBox, 12.8f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, AssetsSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
