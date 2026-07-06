@@ -30,6 +30,7 @@
 
 #include <game/client/QmUi/QmAnimCurves.h>
 #include <game/client/QmUi/QmAnimResolve.h>
+#include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
@@ -4605,23 +4606,6 @@ static const char *SettingsCardDeckStableId(std::deque<std::string> &vStableIds,
 	return vStableIds.back().c_str();
 }
 
-static bool SettingsCardDeckParseGlobalColumn(const char *pColumn, ESettingsCardDeckColumn *pOutColumn)
-{
-	if(pColumn == nullptr || pOutColumn == nullptr)
-		return false;
-	if(str_comp(pColumn, "left") == 0 || str_comp(pColumn, "0") == 0)
-	{
-		*pOutColumn = ESettingsCardDeckColumn::LEFT;
-		return true;
-	}
-	if(str_comp(pColumn, "right") == 0 || str_comp(pColumn, "1") == 0)
-	{
-		*pOutColumn = ESettingsCardDeckColumn::RIGHT;
-		return true;
-	}
-	return false;
-}
-
 void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()
 {
 	static char s_aSettingsCardDeckGlobalOrderCache[sizeof(g_Config.m_QmGlobalCardOrder)] = {};
@@ -4629,62 +4613,35 @@ void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()
 		return;
 	str_copy(s_aSettingsCardDeckGlobalOrderCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aSettingsCardDeckGlobalOrderCache));
 
-	struct SParsedDeckCard
+	qm_card_order::CModel Model;
+	const std::vector<qm_card_order::SEntry> vDefaults = qm_card_registry::BuildDefaultEntries();
+	std::vector<const char *> vValidIds;
+	vValidIds.reserve(vDefaults.size());
+	std::vector<std::string> vDeckIds;
+	for(const qm_card_order::SEntry &Default : vDefaults)
 	{
-		std::string m_DeckId;
-		std::string m_StableId;
-		ESettingsCardDeckColumn m_Column = ESettingsCardDeckColumn::LEFT;
-		int m_Order = 0;
-	};
-	std::vector<SParsedDeckCard> vParsed;
-	const char *pEntry = g_Config.m_QmGlobalCardOrder;
-	char aToken[160];
-	while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
-	{
-		if(aToken[0] == '\0')
+		if(Default.m_pStableId == nullptr)
 			continue;
-
-		char aStableId[80];
-		char aDeckId[48];
-		char aColumn[16];
-		char aOrder[16];
-		const char *pDeckId = str_next_token(aToken, "|", aStableId, sizeof(aStableId));
-		if(pDeckId == nullptr || str_startswith(aStableId, "deck:") == nullptr)
+		vValidIds.push_back(Default.m_pStableId);
+		if(Default.m_pDefaultTab == nullptr || str_startswith(Default.m_pStableId, "deck:") == nullptr)
 			continue;
-		const char *pColumn = str_next_token(pDeckId, "|", aDeckId, sizeof(aDeckId));
-		if(pColumn == nullptr || aDeckId[0] == '\0')
-			continue;
-		const char *pOrder = str_next_token(pColumn, "|", aColumn, sizeof(aColumn));
-		if(pOrder == nullptr || str_next_token(pOrder, "|", aOrder, sizeof(aOrder)) == nullptr)
-			continue;
-
-		ESettingsCardDeckColumn Column = ESettingsCardDeckColumn::LEFT;
-		int Order = 0;
-		if(!SettingsCardDeckParseGlobalColumn(aColumn, &Column) || !str_toint(aOrder, &Order))
-			continue;
-		vParsed.push_back({aDeckId, aStableId, Column, maximum(0, Order)});
+		if(std::find(vDeckIds.begin(), vDeckIds.end(), Default.m_pDefaultTab) == vDeckIds.end())
+			vDeckIds.emplace_back(Default.m_pDefaultTab);
 	}
-	if(vParsed.empty())
+	if(!Model.Parse(g_Config.m_QmGlobalCardOrder, vValidIds) || Model.Count() == 0)
 	{
 		m_SettingsCardDeckOrders.clear();
 		return;
 	}
 
-	std::stable_sort(vParsed.begin(), vParsed.end(), [](const SParsedDeckCard &A, const SParsedDeckCard &B) {
-		if(A.m_DeckId != B.m_DeckId)
-			return A.m_DeckId < B.m_DeckId;
-		if(A.m_Column != B.m_Column)
-			return A.m_Column == ESettingsCardDeckColumn::LEFT;
-		return A.m_Order < B.m_Order;
-	});
-
 	m_SettingsCardDeckOrders.clear();
-	std::unordered_set<std::string> vTouchedDecks;
-	for(const SParsedDeckCard &Card : vParsed)
+	for(const std::string &DeckId : vDeckIds)
 	{
-		if(vTouchedDecks.insert(Card.m_DeckId).second)
-			m_SettingsCardDeckOrders[Card.m_DeckId].clear();
-		m_SettingsCardDeckOrders[Card.m_DeckId].push_back(Card.m_StableId);
+		std::vector<std::string> vOrder = Model.StableIdOrder("deck:", DeckId.c_str(), 1);
+		std::vector<std::string> vRightOrder = Model.StableIdOrder("deck:", DeckId.c_str(), 2);
+		vOrder.insert(vOrder.end(), vRightOrder.begin(), vRightOrder.end());
+		if(!vOrder.empty())
+			m_SettingsCardDeckOrders[DeckId] = std::move(vOrder);
 	}
 }
 

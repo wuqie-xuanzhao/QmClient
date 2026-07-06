@@ -343,3 +343,26 @@ TEST(QmCardOrderModel, StableIdOrderFiltersByPrefixTabAndColumn)
 	ASSERT_EQ(TClientRight.size(), 1u);
 	EXPECT_EQ(TClientRight[0], "tclient:input");
 }
+
+// 意图：设置 deck 运行时从全局模型读取顺序时，必须按 deck/tab 隔离，并可由调用方合并左右列。
+TEST(QmCardOrderModel, StableIdOrderSupportsDeckTabColumnProjection)
+{
+	qm_card_order::CModel M;
+	M.SetEntries({
+		{"deck:sound-volume", "sound", 1, 1},
+		{"deck:graphics-display", "graphics", 1, 0},
+		{"deck:sound-toggle", "sound", 1, 0},
+		{"deck:sound-audio-pack", "sound", 2, 0},
+		{"tclient:input", "tclient", 1, 0},
+		{"deck:ddnet-demo", "ddnet", 1, 0},
+	});
+
+	std::vector<std::string> SoundOrder = M.StableIdOrder("deck:", "sound", 1);
+	const std::vector<std::string> SoundRightOrder = M.StableIdOrder("deck:", "sound", 2);
+	SoundOrder.insert(SoundOrder.end(), SoundRightOrder.begin(), SoundRightOrder.end());
+
+	ASSERT_EQ(SoundOrder.size(), 3u);
+	EXPECT_EQ(SoundOrder[0], "deck:sound-toggle");
+	EXPECT_EQ(SoundOrder[1], "deck:sound-volume");
+	EXPECT_EQ(SoundOrder[2], "deck:sound-audio-pack");
+}
