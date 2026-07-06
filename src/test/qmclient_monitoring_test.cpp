@@ -7002,6 +7002,25 @@ TEST(QmMonitoringHelpers, DemoSliceNameInputUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_DemoSliceInput, &NameBox, 12.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, DemoRenamePopupUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderPopupFullscreen(CUIRect Screen)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t RenamePopupPos = Body.find("else if(m_Popup == POPUP_RENAME_DEMO)");
+	const size_t OkButtonPos = Body.find("if(DoButton_Menu(&s_ButtonOk", RenamePopupPos);
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(DemoRenameTextInputCtx, &m_DemoRenameInput, TextBox, Localize(\"New name\"), 12.0f);", OkButtonPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext DemoRenameTextInputCtx;", RenamePopupPos), std::string::npos);
+	EXPECT_NE(Body.find("DemoRenameTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"demo_rename_text_input\");", RenamePopupPos), std::string::npos);
+	EXPECT_NE(RenamePopupPos, std::string::npos);
+	EXPECT_NE(OkButtonPos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_LT(OkButtonPos, TextFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_DemoRenameInput, &TextBox, 12.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, AssetsSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");

@@ -33,6 +33,7 @@
 #include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
@@ -3430,6 +3431,12 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 	else if(m_Popup == POPUP_RENAME_DEMO)
 	{
 		CUIRect Label, TextBox, Ok, Abort;
+		IUiContext DemoRenameTextInputCtx;
+		DemoRenameTextInputCtx.m_pUi = Ui();
+		DemoRenameTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+		DemoRenameTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+		DemoRenameTextInputCtx.m_ScopeHash = MakeUiScopeHash("demo_rename_text_input");
+		DemoRenameTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 		Box.HSplitBottom(20.f, &Box, &Part);
 		Box.HSplitBottom(24.f, &Box, &Part);
@@ -3503,7 +3510,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		TextBox.VSplitLeft(20.0f, nullptr, &TextBox);
 		TextBox.VSplitRight(60.0f, &TextBox, nullptr);
 		Ui()->DoLabel(&Label, Localize("New name:"), 18.0f, TEXTALIGN_ML);
-		Ui()->DoEditBox(&m_DemoRenameInput, &TextBox, 12.0f);
+		ui_widget::TextField(DemoRenameTextInputCtx, &m_DemoRenameInput, TextBox, Localize("New name"), 12.0f);
 	}
 #if defined(CONF_VIDEORECORDER)
 	else if(m_Popup == POPUP_RENDER_DEMO)
