@@ -7169,6 +7169,53 @@ TEST(QmMonitoringHelpers, ServerBrowserStatusInputsUseSharedQmFields)
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_ServerAddressInput, &ServerAddrEditBox"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, ServerBrowserFiltersTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserFilters(CUIRect View)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t GameTypeInputPos = Body.find("static CLineInput s_GametypeInput(g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype));");
+	const size_t GameTypeCtxPos = Body.find("IUiContext ServerBrowserGameTypeCtx;", GameTypeInputPos);
+	const size_t GameTypeUiPos = Body.find("ServerBrowserGameTypeCtx.m_pUi = Ui();", GameTypeCtxPos);
+	const size_t GameTypeScopePos = Body.find("ServerBrowserGameTypeCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_filter_game_type\");", GameTypeCtxPos);
+	const size_t GameTypeFieldPos = Body.find("ui_widget::TextField(ServerBrowserGameTypeCtx, &s_GametypeInput, Button, nullptr, FontSize)", GameTypeScopePos);
+	const size_t GameTypeRefreshPos = Body.find("Client()->ServerBrowserUpdate();", GameTypeFieldPos);
+	const size_t AddressInputPos = Body.find("static CLineInput s_FilterServerAddressInput(g_Config.m_BrFilterServerAddress, sizeof(g_Config.m_BrFilterServerAddress));");
+	const size_t AddressCtxPos = Body.find("IUiContext ServerBrowserFilterAddressCtx;", AddressInputPos);
+	const size_t AddressUiPos = Body.find("ServerBrowserFilterAddressCtx.m_pUi = Ui();", AddressCtxPos);
+	const size_t AddressScopePos = Body.find("ServerBrowserFilterAddressCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_filter_address\");", AddressCtxPos);
+	const size_t AddressFieldPos = Body.find("ui_widget::TextField(ServerBrowserFilterAddressCtx, &s_FilterServerAddressInput, Button, nullptr, FontSize)", AddressScopePos);
+	const size_t AddressRefreshPos = Body.find("Client()->ServerBrowserUpdate();", AddressFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(GameTypeInputPos, std::string::npos);
+	EXPECT_NE(GameTypeCtxPos, std::string::npos);
+	EXPECT_NE(GameTypeUiPos, std::string::npos);
+	EXPECT_NE(GameTypeScopePos, std::string::npos);
+	EXPECT_NE(GameTypeFieldPos, std::string::npos);
+	EXPECT_NE(GameTypeRefreshPos, std::string::npos);
+	EXPECT_LT(GameTypeInputPos, GameTypeCtxPos);
+	EXPECT_LT(GameTypeCtxPos, GameTypeUiPos);
+	EXPECT_LT(GameTypeUiPos, GameTypeScopePos);
+	EXPECT_LT(GameTypeScopePos, GameTypeFieldPos);
+	EXPECT_LT(GameTypeFieldPos, GameTypeRefreshPos);
+	EXPECT_EQ(Body.find(";\n", GameTypeFieldPos), GameTypeRefreshPos + str_length("Client()->ServerBrowserUpdate()"));
+	EXPECT_NE(AddressInputPos, std::string::npos);
+	EXPECT_NE(AddressCtxPos, std::string::npos);
+	EXPECT_NE(AddressUiPos, std::string::npos);
+	EXPECT_NE(AddressScopePos, std::string::npos);
+	EXPECT_NE(AddressFieldPos, std::string::npos);
+	EXPECT_NE(AddressRefreshPos, std::string::npos);
+	EXPECT_LT(AddressInputPos, AddressCtxPos);
+	EXPECT_LT(AddressCtxPos, AddressUiPos);
+	EXPECT_LT(AddressUiPos, AddressScopePos);
+	EXPECT_LT(AddressScopePos, AddressFieldPos);
+	EXPECT_LT(AddressFieldPos, AddressRefreshPos);
+	EXPECT_EQ(Body.find(";\n", AddressFieldPos), AddressRefreshPos + str_length("Client()->ServerBrowserUpdate()"));
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_GametypeInput, &Button, FontSize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_FilterServerAddressInput, &Button, FontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DemoSliceNameInputUsesSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");

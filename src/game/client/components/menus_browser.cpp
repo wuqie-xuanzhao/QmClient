@@ -1317,7 +1317,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	Ui()->DoLabel(&Button, Localize("Game types:"), FontSize, TEXTALIGN_ML);
 	Button.VSplitRight(60.0f, nullptr, &Button);
 	static CLineInput s_GametypeInput(g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype));
-	if(Ui()->DoEditBox(&s_GametypeInput, &Button, FontSize))
+	IUiContext ServerBrowserGameTypeCtx;
+	ServerBrowserGameTypeCtx.m_pUi = Ui();
+	ServerBrowserGameTypeCtx.m_ScopeHash = MakeUiScopeHash("server_browser_filter_game_type");
+	if(ui_widget::TextField(ServerBrowserGameTypeCtx, &s_GametypeInput, Button, nullptr, FontSize))
 		Client()->ServerBrowserUpdate();
 
 	// server address
@@ -1327,7 +1330,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	Ui()->DoLabel(&Button, Localize("Server address:"), FontSize, TEXTALIGN_ML);
 	Button.VSplitRight(60.0f, nullptr, &Button);
 	static CLineInput s_FilterServerAddressInput(g_Config.m_BrFilterServerAddress, sizeof(g_Config.m_BrFilterServerAddress));
-	if(Ui()->DoEditBox(&s_FilterServerAddressInput, &Button, FontSize))
+	IUiContext ServerBrowserFilterAddressCtx;
+	ServerBrowserFilterAddressCtx.m_pUi = Ui();
+	ServerBrowserFilterAddressCtx.m_ScopeHash = MakeUiScopeHash("server_browser_filter_address");
+	if(ui_widget::TextField(ServerBrowserFilterAddressCtx, &s_FilterServerAddressInput, Button, nullptr, FontSize))
 		Client()->ServerBrowserUpdate();
 
 	// player country
