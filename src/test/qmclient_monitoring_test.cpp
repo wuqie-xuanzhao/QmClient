@@ -6967,6 +6967,63 @@ TEST(QmMonitoringHelpers, TeeSkinSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_SkinFilterInput, &QuickSearch, 14.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TeeSkinClearableInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t PrefixInputPos = Body.find("static CLineInput s_SkinPrefixInput(g_Config.m_ClSkinPrefix, sizeof(g_Config.m_ClSkinPrefix));");
+	const size_t PrefixCtxPos = Body.find("IUiContext TeeSkinPrefixTextInputCtx;", PrefixInputPos);
+	const size_t PrefixUiPos = Body.find("TeeSkinPrefixTextInputCtx.m_pUi = Ui();", PrefixCtxPos);
+	const size_t PrefixScopePos = Body.find("TeeSkinPrefixTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_prefix_text_input\");", PrefixUiPos);
+	const size_t PrefixFieldPos = Body.find("ui_widget::ClearableTextField(TeeSkinPrefixTextInputCtx, &s_SkinPrefixInput, Button, nullptr, 14.0f)", PrefixScopePos);
+	const size_t PrefixRefreshPos = Body.find("ShouldRefresh = true;", PrefixFieldPos);
+	const size_t SkinInputPos = Body.find("static CLineInput s_SkinInput;", PrefixRefreshPos);
+	const size_t SkinBufferPos = Body.find("s_SkinInput.SetBuffer(pSkinName, SkinNameSize);", SkinInputPos);
+	const size_t SkinEmptyTextPos = Body.find("s_SkinInput.SetEmptyText(\"default\");", SkinBufferPos);
+	const size_t SkinCtxPos = Body.find("IUiContext TeeSkinNameTextInputCtx;", SkinEmptyTextPos);
+	const size_t SkinUiPos = Body.find("TeeSkinNameTextInputCtx.m_pUi = Ui();", SkinCtxPos);
+	const size_t SkinScopePos = Body.find("TeeSkinNameTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_name_text_input\");", SkinUiPos);
+	const size_t SkinFieldPos = Body.find("ui_widget::ClearableTextField(TeeSkinNameTextInputCtx, &s_SkinInput, Button, nullptr, 14.0f)", SkinScopePos);
+	const size_t NeedSendInfoPos = Body.find("SetNeedSendInfo();", SkinFieldPos);
+	const size_t ScrollSelectedPos = Body.find("m_SkinListScrollToSelected = true;", NeedSendInfoPos);
+	const size_t ForceRefreshPos = Body.find("SkinList.ForceRefresh();", ScrollSelectedPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(PrefixInputPos, std::string::npos);
+	EXPECT_NE(PrefixCtxPos, std::string::npos);
+	EXPECT_NE(PrefixUiPos, std::string::npos);
+	EXPECT_NE(PrefixScopePos, std::string::npos);
+	EXPECT_NE(PrefixFieldPos, std::string::npos);
+	EXPECT_NE(PrefixRefreshPos, std::string::npos);
+	EXPECT_LT(PrefixInputPos, PrefixCtxPos);
+	EXPECT_LT(PrefixCtxPos, PrefixUiPos);
+	EXPECT_LT(PrefixUiPos, PrefixScopePos);
+	EXPECT_LT(PrefixScopePos, PrefixFieldPos);
+	EXPECT_LT(PrefixFieldPos, PrefixRefreshPos);
+	EXPECT_NE(SkinInputPos, std::string::npos);
+	EXPECT_NE(SkinBufferPos, std::string::npos);
+	EXPECT_NE(SkinEmptyTextPos, std::string::npos);
+	EXPECT_NE(SkinCtxPos, std::string::npos);
+	EXPECT_NE(SkinUiPos, std::string::npos);
+	EXPECT_NE(SkinScopePos, std::string::npos);
+	EXPECT_NE(SkinFieldPos, std::string::npos);
+	EXPECT_NE(NeedSendInfoPos, std::string::npos);
+	EXPECT_NE(ScrollSelectedPos, std::string::npos);
+	EXPECT_NE(ForceRefreshPos, std::string::npos);
+	EXPECT_LT(SkinInputPos, SkinBufferPos);
+	EXPECT_LT(SkinBufferPos, SkinEmptyTextPos);
+	EXPECT_LT(SkinEmptyTextPos, SkinCtxPos);
+	EXPECT_LT(SkinCtxPos, SkinUiPos);
+	EXPECT_LT(SkinUiPos, SkinScopePos);
+	EXPECT_LT(SkinScopePos, SkinFieldPos);
+	EXPECT_LT(SkinFieldPos, NeedSendInfoPos);
+	EXPECT_LT(NeedSendInfoPos, ScrollSelectedPos);
+	EXPECT_LT(ScrollSelectedPos, ForceRefreshPos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_SkinPrefixInput, &Button, 14.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_SkinInput, &Button, 14.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings7.cpp");

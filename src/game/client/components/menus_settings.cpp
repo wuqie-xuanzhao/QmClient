@@ -1391,7 +1391,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		SkinPrefix.HSplitTop(20.0f, &Button, &SkinPrefix);
 		static CLineInput s_SkinPrefixInput(g_Config.m_ClSkinPrefix, sizeof(g_Config.m_ClSkinPrefix));
-		if(Ui()->DoClearableEditBox(&s_SkinPrefixInput, &Button, 14.0f))
+		IUiContext TeeSkinPrefixTextInputCtx;
+		TeeSkinPrefixTextInputCtx.m_pUi = Ui();
+		TeeSkinPrefixTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_prefix_text_input");
+		if(ui_widget::ClearableTextField(TeeSkinPrefixTextInputCtx, &s_SkinPrefixInput, Button, nullptr, 14.0f))
 		{
 			ShouldRefresh = true;
 		}
@@ -1606,7 +1609,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	static CLineInput s_SkinInput;
 	s_SkinInput.SetBuffer(pSkinName, SkinNameSize);
 	s_SkinInput.SetEmptyText("default");
-	if(Ui()->DoClearableEditBox(&s_SkinInput, &Button, 14.0f))
+	IUiContext TeeSkinNameTextInputCtx;
+	TeeSkinNameTextInputCtx.m_pUi = Ui();
+	TeeSkinNameTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_name_text_input");
+	if(ui_widget::ClearableTextField(TeeSkinNameTextInputCtx, &s_SkinInput, Button, nullptr, 14.0f))
 	{
 		SetNeedSendInfo();
 		m_SkinListScrollToSelected = true;
