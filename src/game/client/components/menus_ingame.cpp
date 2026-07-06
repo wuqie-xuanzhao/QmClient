@@ -2022,7 +2022,7 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
 	ScrollParams.m_ScrollUnit = 5 * MotdFontSize;
 	s_ScrollRegion.Begin(&Motd, &ScrollOffset, &ScrollParams);
 	Motd.y += ScrollOffset.y;

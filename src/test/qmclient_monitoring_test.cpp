@@ -8352,6 +8352,18 @@ TEST(QmMonitoringHelpers, ServerBrowserScrollRegionsUseSharedQmScrollPresets)
 	EXPECT_EQ(QmBody.find("s_QmServerListBox.SetScrollbarMargin(5.0f);"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, IngameMotdScrollRegionUsesSharedQmScrollPreset)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerInfoMotd(CUIRect Motd)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Source.find("#include <game/client/ui_scrollregion.h>"), std::string::npos);
+	EXPECT_NE(Body.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);"), std::string::npos);
+	EXPECT_NE(Body.find("ScrollParams.m_ScrollUnit = 5 * MotdFontSize;"), std::string::npos);
+	EXPECT_EQ(Body.find("CScrollRegionParams ScrollParams;\n\tScrollParams.m_ScrollUnit"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, ServerBrowserFriendPopupsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
