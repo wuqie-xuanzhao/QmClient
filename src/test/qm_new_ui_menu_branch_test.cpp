@@ -1654,20 +1654,23 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
-	EXPECT_NE(NamePlateBranch.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlateSettingsCard, QmCardStyle);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlatePreviewCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("BeginAppearanceCard(LeftView, NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight, &NamePlateSettingsCard, \"appearance-name-plate-settings\""), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("BeginAppearanceCard(RightView, NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight, &NamePlatePreviewCard, \"appearance-name-plate-preview\""), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("LeftView.HSplitTop(NamePlateContentPaddingY"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("RightView.HSplitTop(NamePlateContentPaddingY"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsShadow.Draw"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewShadow.Draw"), std::string::npos);
 
 	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
 	ASSERT_FALSE(LaserBranch.empty());
-	EXPECT_NE(LaserBranch.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
-	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(EnhancedCard, QmCardStyle);"), std::string::npos);
-	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(ColorCard, QmCardStyle);"), std::string::npos);
-	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(PreviewCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("CUIRect LeftColumn = LeftView;"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("BeginAppearanceCard(LeftColumn, LaserEnhancedMinCardHeight, s_LaserMeasuredEnhancedCardHeight, &EnhancedCard, \"appearance-laser-enhanced\""), std::string::npos);
+	EXPECT_NE(LaserBranch.find("LeftColumn.y = EnhancedCard.y + EnhancedCard.h + MarginBetweenViews;"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("BeginAppearanceCard(LeftColumn, LaserColorMinCardHeight, s_LaserMeasuredColorCardHeight, &ColorCard, \"appearance-laser-colors\""), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("BeginAppearanceCard(LeftView, LaserColorMinCardHeight"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("BeginAppearanceCard(RightView, LaserPreviewMinCardHeight, s_LaserMeasuredPreviewCardHeight, &PreviewCard, \"appearance-laser-preview\""), std::string::npos);
 	EXPECT_EQ(LaserBranch.find("auto RenderQmSettingsGlassCard ="), std::string::npos);
 	EXPECT_EQ(LaserBranch.find("80.0f * UiScale"), std::string::npos);
 
@@ -1744,8 +1747,10 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 
 	const std::string NamePlateBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
-	EXPECT_NE(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlateSettingsCard, QmCardStyle);"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlatePreviewCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("\"appearance-name-plate-settings\""), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("\"appearance-name-plate-preview\""), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlateSettingsCard, QmCardStyle);"), std::string::npos);
+	EXPECT_EQ(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlatePreviewCard, QmCardStyle);"), std::string::npos);
 
 	const std::string HookCollisionBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)");
 	ASSERT_FALSE(HookCollisionBranch.empty());
@@ -1758,9 +1763,12 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 
 	const std::string LaserBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
 	ASSERT_FALSE(LaserBranch.empty());
-	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(EnhancedCard, QmCardStyle);"), std::string::npos);
-	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(ColorCard, QmCardStyle);"), std::string::npos);
-	EXPECT_NE(LaserBranch.find("RenderQmSettingsGlassCard(PreviewCard, QmCardStyle);"), std::string::npos);
+	EXPECT_NE(LaserBranch.find("\"appearance-laser-enhanced\""), std::string::npos);
+	EXPECT_NE(LaserBranch.find("\"appearance-laser-colors\""), std::string::npos);
+	EXPECT_NE(LaserBranch.find("\"appearance-laser-preview\""), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("RenderQmSettingsGlassCard(EnhancedCard, QmCardStyle);"), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("RenderQmSettingsGlassCard(ColorCard, QmCardStyle);"), std::string::npos);
+	EXPECT_EQ(LaserBranch.find("RenderQmSettingsGlassCard(PreviewCard, QmCardStyle);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, TClientSettingsCardsUseSharedQmCardStyle)

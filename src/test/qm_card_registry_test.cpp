@@ -12,8 +12,8 @@
 TEST(QmCardRegistry, CoversAllCardsNoDuplicates)
 {
 	const auto &Reg = qm_card_registry::Defaults();
-	// 栖梦 38 + 当前 Tclient 19 + deck 24 = 81
-	EXPECT_EQ(Reg.size(), 81u);
+	// 栖梦 38 + 当前 Tclient 19 + deck 29 = 86
+	EXPECT_EQ(Reg.size(), 86u);
 	std::set<std::string> Ids;
 	for(const auto &E : Reg)
 		EXPECT_TRUE(Ids.insert(E.m_pStableId).second) << "重复 stableId: " << E.m_pStableId;
@@ -78,9 +78,14 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:appearance-chat-settings",
 		"deck:appearance-chat-messages",
 		"deck:appearance-chat-preview",
+		"deck:appearance-name-plate-settings",
+		"deck:appearance-name-plate-preview",
 		"deck:appearance-hook-collision-main",
 		"deck:appearance-hook-collision-preview",
 		"deck:appearance-info-messages",
+		"deck:appearance-laser-enhanced",
+		"deck:appearance-laser-colors",
+		"deck:appearance-laser-preview",
 	};
 	for(const char *pId : apIds)
 		ASSERT_NE(qm_card_registry::FindByStableId(pId), nullptr) << pId;
@@ -103,9 +108,14 @@ TEST(QmCardRegistry, AppearanceDeckDefaultsUseSubPagePlacements)
 		{"deck:appearance-chat-settings", "appearance-chat", qm_card_registry::ECardColumn::Left, 0},
 		{"deck:appearance-chat-messages", "appearance-chat", qm_card_registry::ECardColumn::Right, 0},
 		{"deck:appearance-chat-preview", "appearance-chat", qm_card_registry::ECardColumn::Left, 1},
+		{"deck:appearance-name-plate-settings", "appearance-name-plate", qm_card_registry::ECardColumn::Left, 0},
+		{"deck:appearance-name-plate-preview", "appearance-name-plate", qm_card_registry::ECardColumn::Right, 0},
 		{"deck:appearance-hook-collision-main", "appearance-hook-collision", qm_card_registry::ECardColumn::Left, 0},
 		{"deck:appearance-hook-collision-preview", "appearance-hook-collision", qm_card_registry::ECardColumn::Right, 0},
 		{"deck:appearance-info-messages", "appearance-info-messages", qm_card_registry::ECardColumn::Left, 0},
+		{"deck:appearance-laser-enhanced", "appearance-laser", qm_card_registry::ECardColumn::Left, 0},
+		{"deck:appearance-laser-colors", "appearance-laser", qm_card_registry::ECardColumn::Left, 1},
+		{"deck:appearance-laser-preview", "appearance-laser", qm_card_registry::ECardColumn::Right, 0},
 	};
 	for(const SExpectedPlacement &Expected : aExpected)
 	{

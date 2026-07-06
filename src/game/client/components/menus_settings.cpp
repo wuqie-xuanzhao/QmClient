@@ -6135,8 +6135,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)
 	{
 		const float UiScale = minimum(1.0f, maximum(0.85f, ContentView.w / 800.0f));
-		const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);
-		const float NamePlateContentPaddingY = QmCardStyle.m_Padding;
+		const float NamePlateContentPaddingY = AppearanceQmCardStyle.m_Padding;
 		static CScrollRegion s_NamePlateSettingsScrollRegion;
 		static float s_PrevNamePlateSettingsScrollY = 0.0f;
 		static float s_NamePlateMeasuredSettingsCardHeight = 0.0f;
@@ -6168,22 +6167,11 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		const float NamePlatePreviewContentHeight = HeadlineHeight + 2.0f * MarginSmall + 3.0f * LineSize + MarginSmall;
 		const float NamePlateEstimatedSettingsCardHeight = maximum(NamePlateScrollView.h, NamePlateSettingsContentHeight + 2.0f * NamePlateContentPaddingY);
 		const float NamePlateEstimatedPreviewCardHeight = maximum(NamePlateScrollView.h, NamePlatePreviewContentHeight + 2.0f * NamePlateContentPaddingY);
-		const float NamePlateSettingsCardHeight = maximum(NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight);
-		const float NamePlatePreviewCardHeight = maximum(NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight);
+		CUIRect NamePlateSettingsCard;
+		BeginAppearanceCard(LeftView, NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight, &NamePlateSettingsCard, "appearance-name-plate-settings", ESettingsCardDeckColumn::LEFT, 0);
 
-		CUIRect NamePlateSettingsCard = LeftView;
-		NamePlateSettingsCard.h = NamePlateSettingsCardHeight;
-		RenderQmSettingsGlassCard(NamePlateSettingsCard, QmCardStyle);
-		InsetTClientCacheSectionContent(LeftView);
-		LeftView.HSplitTop(NamePlateContentPaddingY, nullptr, &LeftView);
-		LeftView.HSplitBottom(NamePlateContentPaddingY, &LeftView, nullptr);
-
-		CUIRect NamePlatePreviewCard = RightView;
-		NamePlatePreviewCard.h = NamePlatePreviewCardHeight;
-		RenderQmSettingsGlassCard(NamePlatePreviewCard, QmCardStyle);
-		InsetTClientCacheSectionContent(RightView);
-		RightView.HSplitTop(NamePlateContentPaddingY, nullptr, &RightView);
-		RightView.HSplitBottom(NamePlateContentPaddingY, &RightView, nullptr);
+		CUIRect NamePlatePreviewCard;
+		BeginAppearanceCard(RightView, NamePlateEstimatedPreviewCardHeight, s_NamePlateMeasuredPreviewCardHeight, &NamePlatePreviewCard, "appearance-name-plate-preview", ESettingsCardDeckColumn::RIGHT, 1);
 
 		// ***** Name Plate ***** //
 		DoAppearanceHeading(LeftView, "appearance-name-plate-title", Localize("Name Plate"), HeadlineFontSize, HeadlineHeight);
@@ -6695,8 +6683,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	else if(s_CurTab == APPEARANCE_TAB_LASER)
 	{
 		const float UiScale = minimum(1.0f, maximum(0.85f, ContentView.w / 800.0f));
-		const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);
-		const float LaserCardPadding = QmCardStyle.m_Padding;
+		const float LaserCardPadding = AppearanceQmCardStyle.m_Padding;
 		const float LaserPreviewHeight = std::clamp(56.0f * UiScale, 40.0f, 56.0f);
 		static CScrollRegion s_LaserSettingsScrollRegion;
 		static float s_PrevLaserSettingsScrollY = 0.0f;
@@ -6713,6 +6700,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		LaserScrollView.y += ScrollFrame.m_BeginOffset.y;
 
 		LaserScrollView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
+		CUIRect LeftColumn = LeftView;
 
 		const float LaserEnhancedMinCardHeight =
 			HeadlineHeight + MarginSmall +
@@ -6726,22 +6714,19 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			2.0f * LaserCardPadding;
 		const float LaserPreviewMinCardHeight = HeadlineHeight + MarginSmall + (LaserPreviewHeight + 2.0f * MarginSmall) * 5.0f + 2.0f * LaserCardPadding;
 
-		CUIRect EnhancedCard = LeftView;
-		EnhancedCard.h = maximum(LaserEnhancedMinCardHeight, s_LaserMeasuredEnhancedCardHeight);
-		RenderQmSettingsGlassCard(EnhancedCard, QmCardStyle);
+		CUIRect EnhancedCard;
+		BeginAppearanceCard(LeftColumn, LaserEnhancedMinCardHeight, s_LaserMeasuredEnhancedCardHeight, &EnhancedCard, "appearance-laser-enhanced", ESettingsCardDeckColumn::LEFT, 0);
 		CUIRect EnhancedCardContent = EnhancedCard;
 		InsetLaserCard(EnhancedCardContent);
-		LeftView.y = EnhancedCard.y + EnhancedCard.h + MarginBetweenViews;
+		LeftColumn.y = EnhancedCard.y + EnhancedCard.h + MarginBetweenViews;
 
-		CUIRect ColorCard = LeftView;
-		ColorCard.h = maximum(LaserColorMinCardHeight, s_LaserMeasuredColorCardHeight);
-		RenderQmSettingsGlassCard(ColorCard, QmCardStyle);
+		CUIRect ColorCard;
+		BeginAppearanceCard(LeftColumn, LaserColorMinCardHeight, s_LaserMeasuredColorCardHeight, &ColorCard, "appearance-laser-colors", ESettingsCardDeckColumn::LEFT, 1);
 		CUIRect ColorCardContent = ColorCard;
 		InsetLaserCard(ColorCardContent);
 
-		CUIRect PreviewCard = RightView;
-		PreviewCard.h = maximum(LaserPreviewMinCardHeight, s_LaserMeasuredPreviewCardHeight);
-		RenderQmSettingsGlassCard(PreviewCard, QmCardStyle);
+		CUIRect PreviewCard;
+		BeginAppearanceCard(RightView, LaserPreviewMinCardHeight, s_LaserMeasuredPreviewCardHeight, &PreviewCard, "appearance-laser-preview", ESettingsCardDeckColumn::RIGHT, 2);
 		CUIRect PreviewCardContent = PreviewCard;
 		InsetLaserCard(PreviewCardContent);
 

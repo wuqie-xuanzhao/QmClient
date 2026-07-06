@@ -69,7 +69,7 @@ namespace qm_card_registry
 			{"tclient:background-draw", "tclient", ECardColumn::Left, 17, "Background draw", "background draw tclient"},
 			{"tclient:finish-name", "tclient", ECardColumn::Left, 18, "Finish name", "finish name tclient"},
 
-			// === 设置 deck（24）· deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
+			// === 设置 deck（29）· deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
 			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, "Graphics display", "graphics display"},
 			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, "Visual", "graphics visual"},
 			{"deck:graphics-backend", "graphics", ECardColumn::Left, 2, "Graphics backend", "graphics backend"},
@@ -91,9 +91,14 @@ namespace qm_card_registry
 			{"deck:appearance-chat-settings", "appearance-chat", ECardColumn::Left, 0, "Chat", "appearance chat settings"},
 			{"deck:appearance-chat-messages", "appearance-chat", ECardColumn::Right, 0, "Messages", "appearance chat messages"},
 			{"deck:appearance-chat-preview", "appearance-chat", ECardColumn::Left, 1, "Preview", "appearance chat preview"},
+			{"deck:appearance-name-plate-settings", "appearance-name-plate", ECardColumn::Left, 0, "Name Plate", "appearance name plate settings"},
+			{"deck:appearance-name-plate-preview", "appearance-name-plate", ECardColumn::Right, 0, "Preview", "appearance name plate preview"},
 			{"deck:appearance-hook-collision-main", "appearance-hook-collision", ECardColumn::Left, 0, "Hook collision line", "appearance hook collision line"},
 			{"deck:appearance-hook-collision-preview", "appearance-hook-collision", ECardColumn::Right, 0, "Preview", "appearance hook collision preview"},
 			{"deck:appearance-info-messages", "appearance-info-messages", ECardColumn::Left, 0, "Info Messages", "appearance info messages"},
+			{"deck:appearance-laser-enhanced", "appearance-laser", ECardColumn::Left, 0, "Laser settings", "appearance laser enhanced settings"},
+			{"deck:appearance-laser-colors", "appearance-laser", ECardColumn::Left, 1, "Laser colors", "appearance laser colors weapons entities"},
+			{"deck:appearance-laser-preview", "appearance-laser", ECardColumn::Right, 0, "Preview", "appearance laser preview"},
 		};
 		// clang-format on
 		return s_aDefaults;
