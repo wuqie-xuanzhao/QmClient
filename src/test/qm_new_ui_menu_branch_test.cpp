@@ -1700,13 +1700,16 @@ TEST(QmNewUiMenuBranches, GlassCardUsesFlatHairlineWithoutDropShadow)
 
 	// 扁平极简：去掉外投影（深色背景下黑投影无效且粗糙）
 	EXPECT_EQ(Body.find("Shadow.Draw"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::DrawCard"), std::string::npos);
+	EXPECT_NE(Body.find("CardProps.m_Elevation = 0;"), std::string::npos);
 
-	// 边框：underlay 外扩圆角 fill 范式（BorderBg 外扩 + 主体盖上露描边）
-	EXPECT_NE(Body.find("BorderBg.Margin(-1.0f, &BorderBg)"), std::string::npos);
-	EXPECT_NE(Body.find("Style.m_HairlineColor"), std::string::npos);
+	// 边框：走共享 QmUi 卡片组件，避免设置页和 QmClient 卡片各画一套
+	EXPECT_NE(Body.find("CardProps.m_BorderColor = Style.m_HairlineColor;"), std::string::npos);
+	EXPECT_EQ(Body.find("BorderBg.Margin(-1.0f, &BorderBg)"), std::string::npos);
 
-	// 明度分层主体仍在
-	EXPECT_NE(Body.find("m_GlassColor"), std::string::npos);
+	// 主体颜色和毛玻璃覆盖层仍由设置页样式控制
+	EXPECT_NE(Body.find("CardProps.m_FillColor = Style.m_GlassColor;"), std::string::npos);
+	EXPECT_NE(Body.find("qm_card_backdrop_blur"), std::string::npos);
 
 	// struct 新增 m_HairlineColor 字段，m_ShadowColor 保留（置透明，为以后内嵌阴影留口子）
 	const std::string HeaderSource = ReadTextFile("src/game/client/components/menus.h");

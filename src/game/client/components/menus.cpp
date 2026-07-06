@@ -4531,19 +4531,17 @@ CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const
 
 void CMenus::RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const
 {
-	// 外边框：underlay 外扩半透明圆角 fill，由主体盖上露出 ~1px 描边
-	// （栖梦侧栏用 QuadContainer 合批不走这里；其他设置页 clip 宽松不裁剪）
-	CUIRect BorderBg = Card;
-	BorderBg.Margin(-1.0f, &BorderBg);
-	BorderBg.Draw(Style.m_HairlineColor, IGraphics::CORNER_ALL, Style.m_CornerRadius + 1.0f);
-
-	// 主体（顶部略亮渐变）
-	const ColorRGBA TopFill(
-		Style.m_GlassColor.r * 1.08f,
-		Style.m_GlassColor.g * 1.08f,
-		Style.m_GlassColor.b * 1.10f,
-		Style.m_GlassColor.a);
-	Card.Draw4(TopFill, TopFill, Style.m_GlassColor, Style.m_GlassColor, IGraphics::CORNER_ALL, Style.m_CornerRadius);
+	ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(Style.m_Padding / 14.0f);
+	CardProps.m_Padding = Style.m_Padding;
+	CardProps.m_Radius = Style.m_CornerRadius;
+	CardProps.m_Elevation = 0;
+	CardProps.m_DrawBorder = true;
+	CardProps.m_FillColor = Style.m_GlassColor;
+	CardProps.m_HighlightColor = Style.m_HighlightColor;
+	CardProps.m_BorderColor = Style.m_HairlineColor;
+	IUiContext CardCtx;
+	CardCtx.m_pUi = Ui();
+	ui_widget::DrawCard(CardCtx, Card, CardProps, [](CUIRect &) {});
 
 	// 毛玻璃背景模糊（qm_card_backdrop_blur 开启时）：真背景降采样模糊待实现，现阶段为磨砂雾感占位
 	if(g_Config.m_QmCardBackdropBlur != 0)

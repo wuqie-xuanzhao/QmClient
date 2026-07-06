@@ -7295,7 +7295,9 @@ TEST(QmMonitoringHelpers, QmUiCardPresetCarriesQmClientSettingsStyle)
 	EXPECT_NE(Containers.find("Props.m_BorderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f);"), std::string::npos);
 	EXPECT_NE(Containers.find("Rect.Draw(Props.m_FillColor"), std::string::npos);
 	EXPECT_NE(Containers.find("Highlight.Draw(Props.m_HighlightColor"), std::string::npos);
-	EXPECT_NE(Containers.find("Border.Draw(Props.m_BorderColor"), std::string::npos);
+	EXPECT_NE(Containers.find("BorderBg.Margin(-1.0f, &BorderBg);"), std::string::npos);
+	EXPECT_NE(Containers.find("BorderBg.Draw(Props.m_BorderColor"), std::string::npos);
+	EXPECT_EQ(Containers.find("Border.Margin(0.5f, &Border);"), std::string::npos);
 	EXPECT_NE(Menus.find("#include <game/client/QmUi/UiContainers.h>"), std::string::npos);
 	EXPECT_NE(StyleBody.find("const ui_widget::SCardProps CardProps = ui_widget::QmClientCardProps(UiScale);"), std::string::npos);
 	EXPECT_NE(StyleBody.find("Style.m_Padding = CardProps.m_Padding;"), std::string::npos);

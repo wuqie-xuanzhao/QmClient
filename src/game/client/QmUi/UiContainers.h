@@ -68,26 +68,23 @@ namespace ui_widget
 			Shadow.Draw(ui_token::color::SURFACE_SHADOW, IGraphics::CORNER_ALL, Props.m_Radius);
 		}
 
-		// 2) Card fill (glass)
+		// 2) 可选外扩描边底层：先画在主体下面，只露出外圈 hairline，避免整卡被染色。
+		if(Props.m_DrawBorder)
+		{
+			CUIRect BorderBg = Rect;
+			BorderBg.Margin(-1.0f, &BorderBg);
+			BorderBg.Draw(Props.m_BorderColor, IGraphics::CORNER_ALL, Props.m_Radius + 1.0f);
+		}
+
+		// 3) Card fill (glass)
 		Rect.Draw(Props.m_FillColor, IGraphics::CORNER_ALL, Props.m_Radius);
 
-		// 3) Top 1px highlight (sub-pixel sliver near upper edge for the lift cue)
+		// 4) Top 1px highlight (sub-pixel sliver near upper edge for the lift cue)
 		CUIRect Highlight = Rect;
 		Highlight.h = 1.0f;
 		Highlight.x += Props.m_Radius * 0.5f;
 		Highlight.w -= Props.m_Radius;
 		Highlight.Draw(Props.m_HighlightColor, IGraphics::CORNER_T, 0.0f);
-
-		// 4) Optional border
-		if(Props.m_DrawBorder)
-		{
-			// Simulate a 1px border by drawing a slightly inset transparent fill on
-			// top of the card using BORDER_SUBTLE alpha — DDNet has no stroke
-			// primitive so this is an inexpensive approximation.
-			CUIRect Border = Rect;
-			Border.Margin(0.5f, &Border);
-			Border.Draw(Props.m_BorderColor, IGraphics::CORNER_ALL, Props.m_Radius - 0.5f);
-		}
 
 		// 5) Content rect
 		CUIRect Content = Rect;
