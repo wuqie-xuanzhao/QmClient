@@ -20,6 +20,9 @@ namespace qm_card_order
 		int m_OrderInColumn = 0; // 列内排序
 	};
 
+	// 保留既有全局配置中不匹配 pStableIdPrefix 的 token，并用 vReplacementEntries 替换该命名空间。
+	bool SerializeMergedReplacingPrefix(const char *pExistingGlobalOrder, const char *pStableIdPrefix, const std::vector<SEntry> &vReplacementEntries, char *pOut, int OutSize);
+
 	class CModel
 	{
 	public:

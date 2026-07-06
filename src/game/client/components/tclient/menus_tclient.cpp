@@ -17,6 +17,7 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/animstate.h>
@@ -137,47 +138,21 @@ namespace
 		}
 	}
 
-	void SerializeMergedTClientGlobalCardOrder(const char *pExistingGlobalOrder, const std::vector<std::string> &vLeftOrder, const std::vector<std::string> &vRightOrder, char *pOut, int OutSize)
+	bool SerializeMergedTClientGlobalCardOrder(const char *pExistingGlobalOrder, const std::vector<std::string> &vLeftOrder, const std::vector<std::string> &vRightOrder, char *pOut, int OutSize)
 	{
-		if(pOut == nullptr || OutSize <= 0)
-			return;
-		pOut[0] = '\0';
-
-		bool First = true;
-		if(pExistingGlobalOrder != nullptr && pExistingGlobalOrder[0] != '\0')
-		{
-			const char *pEntry = pExistingGlobalOrder;
-			char aToken[160];
-			while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
-			{
-				if(aToken[0] == '\0')
-					continue;
-				char aStableId[80];
-				str_next_token(aToken, "|", aStableId, sizeof(aStableId));
-				if(str_startswith(aStableId, "tclient:") != nullptr)
-					continue;
-				if(!First)
-					str_append(pOut, ";", OutSize);
-				str_append(pOut, aToken, OutSize);
-				First = false;
-			}
-		}
-
-		auto AppendOrder = [&](const std::vector<std::string> &vOrder, const char *pColumn) {
+		std::vector<qm_card_order::SEntry> vEntries;
+		vEntries.reserve(vLeftOrder.size() + vRightOrder.size());
+		auto AppendOrder = [&](const std::vector<std::string> &vOrder, int Column) {
 			for(size_t i = 0; i < vOrder.size(); ++i)
 			{
-				if(!First)
-					str_append(pOut, ";", OutSize);
-				char aEntry[160];
-				str_format(aEntry, sizeof(aEntry), "%s|tclient|%s|%d", vOrder[i].c_str(), pColumn, (int)i);
-				str_append(pOut, aEntry, OutSize);
-				First = false;
+				if(vOrder[i].empty())
+					continue;
+				vEntries.push_back({vOrder[i].c_str(), "tclient", Column, (int)i});
 			}
 		};
-		AppendOrder(vLeftOrder, "left");
-		AppendOrder(vRightOrder, "right");
-		if(pOut[0] != '\0')
-			str_append(pOut, ";", OutSize);
+		AppendOrder(vLeftOrder, 1);
+		AppendOrder(vRightOrder, 2);
+		return qm_card_order::SerializeMergedReplacingPrefix(pExistingGlobalOrder, "tclient:", vEntries, pOut, OutSize);
 	}
 }
 
@@ -1202,8 +1177,8 @@ bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, in
 		if(IsTClientMainOrder)
 		{
 			char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
-			SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder));
-			str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+			if(SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))
+				str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		}
 		else
 			SerializeMergedSettingsCardDeckOrdersToGlobalConfig();

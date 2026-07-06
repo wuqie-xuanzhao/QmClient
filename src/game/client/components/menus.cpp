@@ -30,6 +30,7 @@
 
 #include <game/client/QmUi/QmAnimCurves.h>
 #include <game/client/QmUi/QmAnimResolve.h>
+#include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/UiContainers.h>
@@ -4645,23 +4646,7 @@ void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()
 void CMenus::SerializeMergedSettingsCardDeckOrdersToGlobalConfig()
 {
 	char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
-	aMergedGlobalOrder[0] = '\0';
-	bool First = true;
-	if(g_Config.m_QmGlobalCardOrder[0] != '\0')
-	{
-		const char *pEntry = g_Config.m_QmGlobalCardOrder;
-		char aToken[160];
-		while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
-		{
-			if(aToken[0] == '\0' || str_startswith(aToken, "deck:") != nullptr)
-				continue;
-			if(!First)
-				str_append(aMergedGlobalOrder, ";", sizeof(aMergedGlobalOrder));
-			str_append(aMergedGlobalOrder, aToken, sizeof(aMergedGlobalOrder));
-			First = false;
-		}
-	}
-
+	std::vector<qm_card_order::SEntry> vEntries;
 	std::vector<std::string> vDeckIds;
 	vDeckIds.reserve(m_SettingsCardDeckOrders.size());
 	for(const auto &DeckOrder : m_SettingsCardDeckOrders)
@@ -4670,21 +4655,16 @@ void CMenus::SerializeMergedSettingsCardDeckOrdersToGlobalConfig()
 	for(const std::string &DeckId : vDeckIds)
 	{
 		const std::vector<std::string> &vOrder = m_SettingsCardDeckOrders[DeckId];
+		vEntries.reserve(vEntries.size() + vOrder.size());
 		for(size_t i = 0; i < vOrder.size(); ++i)
 		{
 			if(vOrder[i].empty() || str_startswith(vOrder[i].c_str(), "deck:") == nullptr)
 				continue;
-			if(!First)
-				str_append(aMergedGlobalOrder, ";", sizeof(aMergedGlobalOrder));
-			char aEntry[160];
-			str_format(aEntry, sizeof(aEntry), "%s|%s|left|%d", vOrder[i].c_str(), DeckId.c_str(), (int)i);
-			str_append(aMergedGlobalOrder, aEntry, sizeof(aMergedGlobalOrder));
-			First = false;
+			vEntries.push_back({vOrder[i].c_str(), DeckId.c_str(), 1, (int)i});
 		}
 	}
-	if(aMergedGlobalOrder[0] != '\0')
-		str_append(aMergedGlobalOrder, ";", sizeof(aMergedGlobalOrder));
-	str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+	if(qm_card_order::SerializeMergedReplacingPrefix(g_Config.m_QmGlobalCardOrder, "deck:", vEntries, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))
+		str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 }
 
 bool CMenus::SettingsCardDeckIsActiveStableId(const SSettingsCardDeckLayout &Deck, const std::string &StableId) const

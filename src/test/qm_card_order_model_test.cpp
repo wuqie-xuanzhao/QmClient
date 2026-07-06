@@ -99,6 +99,35 @@ TEST(QmCardOrderModel, SerializeReportsTruncation)
 	EXPECT_STREQ(aFullBuf, "qm:first|visual|left|0;qm:second|visual|left|1;");
 }
 
+// 意图：各页面写回全局顺序时不应各自手写字符串拼接。
+// 共享合并逻辑必须只替换指定 stableId 命名空间，并保留其它命名空间的原始 token。
+TEST(QmCardOrderModel, SerializeMergedReplacingPrefixPreservesOtherNamespaces)
+{
+	const std::vector<qm_card_order::SEntry> ReplacementEntries = {
+		{"tclient:new-left", "tclient", 1, 0},
+		{"tclient:new-right", "tclient", 2, 0},
+	};
+
+	char aBuf[512];
+	EXPECT_TRUE(qm_card_order::SerializeMergedReplacingPrefix(
+		"qm:a|visual|left|0;tclient:old|tclient|left|0;deck:sound|sound|left|0;",
+		"tclient:", ReplacementEntries, aBuf, sizeof(aBuf)));
+
+	EXPECT_STREQ(aBuf, "qm:a|visual|left|0;deck:sound|sound|left|0;tclient:new-left|tclient|left|0;tclient:new-right|tclient|right|0;");
+}
+
+// 意图：全局配置 buffer 有固定长度；合并写回也必须暴露截断状态，避免静默写入半条布局。
+TEST(QmCardOrderModel, SerializeMergedReplacingPrefixReportsTruncation)
+{
+	const std::vector<qm_card_order::SEntry> ReplacementEntries = {
+		{"tclient:new-left", "tclient", 1, 0},
+	};
+
+	char aSmallBuf[24];
+	EXPECT_FALSE(qm_card_order::SerializeMergedReplacingPrefix(
+		"qm:a|visual|left|0;", "tclient:", ReplacementEntries, aSmallBuf, sizeof(aSmallBuf)));
+}
+
 // 意图：全局卡片加载必须以注册表默认全量为基准，再用用户配置覆盖。
 // 缺失卡补默认、未知/非法残留跳过，这是全局卡片唯一权威模型的核心兼容语义。
 TEST(QmCardOrderModel, LoadMergedPreservesDefaultsAndAppliesValidUserPlacement)

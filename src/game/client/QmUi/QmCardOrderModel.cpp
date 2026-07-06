@@ -8,6 +8,23 @@ namespace qm_card_order
 {
 	namespace
 	{
+		bool AppendGlobalOrderToken(char *pOut, int OutSize, const char *pToken, bool *pFirst)
+		{
+			if(pOut == nullptr || OutSize <= 0 || pToken == nullptr || pFirst == nullptr)
+				return false;
+			if(pToken[0] == '\0')
+				return true;
+
+			const int SepLen = *pFirst ? 0 : 1;
+			if(str_length(pOut) + SepLen + str_length(pToken) >= OutSize)
+				return false;
+			if(!*pFirst)
+				str_append(pOut, ";", OutSize);
+			str_append(pOut, pToken, OutSize);
+			*pFirst = false;
+			return true;
+		}
+
 		const char *ColumnToString(int Column)
 		{
 			switch(Column)
@@ -52,6 +69,50 @@ namespace qm_card_order
 			*pOutColumn = Column;
 			return true;
 		}
+	}
+
+	bool SerializeMergedReplacingPrefix(const char *pExistingGlobalOrder, const char *pStableIdPrefix, const std::vector<SEntry> &vReplacementEntries, char *pOut, int OutSize)
+	{
+		if(pOut == nullptr || OutSize <= 0 || pStableIdPrefix == nullptr)
+			return false;
+		pOut[0] = '\0';
+
+		bool First = true;
+		if(pExistingGlobalOrder != nullptr && pExistingGlobalOrder[0] != '\0')
+		{
+			const char *pEntry = pExistingGlobalOrder;
+			char aToken[160];
+			while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
+			{
+				if(aToken[0] == '\0')
+					continue;
+				char aStableId[80];
+				str_next_token(aToken, "|", aStableId, sizeof(aStableId));
+				if(str_startswith(aStableId, pStableIdPrefix) != nullptr)
+					continue;
+				if(!AppendGlobalOrderToken(pOut, OutSize, aToken, &First))
+					return false;
+			}
+		}
+
+		for(const SEntry &Entry : vReplacementEntries)
+		{
+			const char *pColumn = ColumnToString(Entry.m_Column);
+			if(Entry.m_pStableId == nullptr || pColumn == nullptr)
+				continue;
+			char aEntry[160];
+			str_format(aEntry, sizeof(aEntry), "%s|%s|%s|%d", Entry.m_pStableId, Entry.m_pDefaultTab != nullptr ? Entry.m_pDefaultTab : "", pColumn, Entry.m_OrderInColumn);
+			if(!AppendGlobalOrderToken(pOut, OutSize, aEntry, &First))
+				return false;
+		}
+
+		if(pOut[0] != '\0')
+		{
+			if(str_length(pOut) + 1 >= OutSize)
+				return false;
+			str_append(pOut, ";", OutSize);
+		}
+		return true;
 	}
 
 	void CModel::SetEntries(std::vector<SEntry> Entries)
