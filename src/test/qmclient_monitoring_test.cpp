@@ -6775,6 +6775,55 @@ TEST(QmMonitoringHelpers, QmClientTranslateSettingsInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_CustomPrompt, &ControlCol, LgBodySize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmClientVoiceTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "CUIRect CardVoiceStart = Column;", "case EQmModuleId::Appearance:");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext QmClientVoiceTextInputCtx;");
+	const size_t UiPos = Body.find("QmClientVoiceTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("QmClientVoiceTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("QmClientVoiceTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("QmClientVoiceTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_voice_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("QmClientVoiceTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+
+	const size_t TokenInputPos = Body.find("static CLineInput s_VoiceToken(g_Config.m_QmVoiceToken, sizeof(g_Config.m_QmVoiceToken));");
+	const size_t TokenEmptyTextPos = Body.find("s_VoiceToken.SetEmptyText(Localize(\"Leave empty to join public room\"));", TokenInputPos);
+	const size_t TokenHiddenPos = Body.find("s_VoiceToken.SetHidden(true);", TokenEmptyTextPos);
+	const size_t TokenTextFieldPos = Body.find("ui_widget::TextField(QmClientVoiceTextInputCtx, &s_VoiceToken, ControlCol, Localize(\"Leave empty to join public room\"), LgBodySize);", TokenHiddenPos);
+	EXPECT_NE(TokenInputPos, std::string::npos);
+	EXPECT_NE(TokenEmptyTextPos, std::string::npos);
+	EXPECT_NE(TokenHiddenPos, std::string::npos);
+	EXPECT_NE(TokenTextFieldPos, std::string::npos);
+	EXPECT_LT(TokenInputPos, TokenEmptyTextPos);
+	EXPECT_LT(TokenEmptyTextPos, TokenHiddenPos);
+	EXPECT_LT(TokenHiddenPos, TokenTextFieldPos);
+
+	const size_t ServerInputPos = Body.find("static CLineInput s_VoiceServer(g_Config.m_QmVoiceServer, sizeof(g_Config.m_QmVoiceServer));");
+	const size_t ServerEmptyTextPos = Body.find("s_VoiceServer.SetEmptyText(\"42.194.185.210:9987\");", ServerInputPos);
+	const size_t ServerTextFieldPos = Body.find("ui_widget::TextField(QmClientVoiceTextInputCtx, &s_VoiceServer, ControlCol, \"42.194.185.210:9987\", LgBodySize);", ServerEmptyTextPos);
+	EXPECT_NE(ServerInputPos, std::string::npos);
+	EXPECT_NE(ServerEmptyTextPos, std::string::npos);
+	EXPECT_NE(ServerTextFieldPos, std::string::npos);
+	EXPECT_LT(ServerInputPos, ServerEmptyTextPos);
+	EXPECT_LT(ServerEmptyTextPos, ServerTextFieldPos);
+
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoiceToken, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoiceServer, &ControlCol, LgBodySize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, LaserPreviewDrawsWeaponBodiesBeforePreviewLaser)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");

@@ -6318,6 +6318,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 12, Localize("Voice"), Localize("Ohhhhhhhhhhhhhhhh"));
+				IUiContext QmClientVoiceTextInputCtx;
+				QmClientVoiceTextInputCtx.m_pUi = Ui();
+				QmClientVoiceTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+				QmClientVoiceTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+				QmClientVoiceTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_voice_text_inputs");
+				QmClientVoiceTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceEnable, "Enable voice", Localize("Enable voice"), &g_Config.m_QmVoiceEnable, &Row, LgLineHeight);
@@ -6542,7 +6548,8 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-voice-room-password", &LabelCol, Localize("Room password"), LgBodySize);
 					static CLineInput s_VoiceToken(g_Config.m_QmVoiceToken, sizeof(g_Config.m_QmVoiceToken));
 					s_VoiceToken.SetEmptyText(Localize("Leave empty to join public room"));
-					Ui()->DoEditBox(&s_VoiceToken, &ControlCol, LgBodySize);
+					s_VoiceToken.SetHidden(true);
+					ui_widget::TextField(QmClientVoiceTextInputCtx, &s_VoiceToken, ControlCol, Localize("Leave empty to join public room"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -6595,7 +6602,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 						DoQmSettingsLabel("qmclient-voice-server-ip", &LabelCol, Localize("Server IP"), LgBodySize);
 						static CLineInput s_VoiceServer(g_Config.m_QmVoiceServer, sizeof(g_Config.m_QmVoiceServer));
 						s_VoiceServer.SetEmptyText("42.194.185.210:9987");
-						Ui()->DoEditBox(&s_VoiceServer, &ControlCol, LgBodySize);
+						ui_widget::TextField(QmClientVoiceTextInputCtx, &s_VoiceServer, ControlCol, "42.194.185.210:9987", LgBodySize);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
