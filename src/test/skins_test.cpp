@@ -502,7 +502,7 @@ TEST(Skins, SettingsAssetsListVirtualizationKeepsTotalListLength)
 	const size_t WorkshopListPos = Source.find("if(const SAssetResourceCategory *pCategory = AssetResourceCategoryByTab(s_CurCustomTab); UsesCombinedAssetList(pCategory) && WorkshopHudView.h > 0.0f)", LocalListPos);
 	ASSERT_NE(WorkshopListPos, std::string::npos);
 	const std::string LocalListBody = Source.substr(LocalListPos, WorkshopListPos - LocalListPos);
-	const size_t WorkshopListEnd = Source.find("if(Ui()->DoEditBox_Search", WorkshopListPos);
+	const size_t WorkshopListEnd = Source.find("if(ui_widget::SearchField(AssetsSearchCtx", WorkshopListPos);
 	ASSERT_NE(WorkshopListEnd, std::string::npos);
 	const std::string WorkshopListBody = Source.substr(WorkshopListPos, WorkshopListEnd - WorkshopListPos);
 

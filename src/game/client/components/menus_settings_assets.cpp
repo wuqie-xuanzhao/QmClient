@@ -22,6 +22,7 @@
 
 #include <generated/client_data.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui_listbox.h>
@@ -4142,6 +4143,12 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	}
 
 	CUIRect TabBar, CustomList, QuickSearch, DirectoryButton, ReloadButton, WorkshopHudView;
+	IUiContext AssetsSearchCtx;
+	AssetsSearchCtx.m_pUi = Ui();
+	AssetsSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	AssetsSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	AssetsSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_assets_search");
+	AssetsSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	static bool s_AssetsTransitionInitialized = false;
 	static int s_PrevAssetsTab = ASSETS_TAB_ENTITIES;
 	static int s_AssetsTabSwitchFirstFrame = 0;
@@ -7419,7 +7426,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	CUIRect AssetsEditorButton;
 	QuickSearch.VSplitLeft(220.0f, &QuickSearch, &DirectoryButton);
 	QuickSearch.HSplitTop(5.0f, nullptr, &QuickSearch);
-	if(Ui()->DoEditBox_Search(&s_aFilterInputs[s_CurCustomTab], &QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+	if(ui_widget::SearchField(AssetsSearchCtx, &s_aFilterInputs[s_CurCustomTab], QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
 	{
 		gs_aInitCustomList[s_CurCustomTab] = true;
 	}

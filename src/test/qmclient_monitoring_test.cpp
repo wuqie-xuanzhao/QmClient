@@ -6834,6 +6834,23 @@ TEST(QmMonitoringHelpers, DemoBrowserSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_DemoSearchInput, &DemoSearch"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AssetsSearchUsesSharedQmSearchField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsCustom(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t SearchPos = Body.find("ui_widget::SearchField(AssetsSearchCtx, &s_aFilterInputs[s_CurCustomTab], QuickSearch, 14.0f");
+	const size_t RefreshPos = Body.find("gs_aInitCustomList[s_CurCustomTab] = true;", SearchPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext AssetsSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("AssetsSearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_assets_search\");"), std::string::npos);
+	EXPECT_NE(SearchPos, std::string::npos);
+	EXPECT_NE(RefreshPos, std::string::npos);
+	EXPECT_LT(SearchPos, RefreshPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&s_aFilterInputs[s_CurCustomTab], &QuickSearch"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 {
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
