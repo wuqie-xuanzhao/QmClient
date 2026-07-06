@@ -1361,6 +1361,12 @@ float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Re
 {
 	CUIRect Label, ReplyRect, TmpRect;
 	CUIRect BoxRect;
+	IUiContext TClientAutoReplyTextInputCtx;
+	TClientAutoReplyTextInputCtx.m_pUi = Ui();
+	TClientAutoReplyTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	TClientAutoReplyTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	TClientAutoReplyTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_auto_reply_text_inputs");
+	TClientAutoReplyTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	const float SavedY = CurrentColumn.y;
 	CurrentColumn.HSplitTop(MarginBetweenSections, nullptr, &CurrentColumn);
 	BoxRect = CurrentColumn;
@@ -1381,7 +1387,7 @@ float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Re
 		ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 		static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
 		s_MutedReply.SetEmptyText(Localize("I muted you"));
-		Ui()->DoEditBox(&s_MutedReply, &ReplyRect, EditBoxFontSize);
+		ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
 	}
 	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 	if(Render)
@@ -1394,7 +1400,7 @@ float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Re
 		ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 		static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
 		s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
-		Ui()->DoEditBox(&s_MinimizedReply, &ReplyRect, EditBoxFontSize);
+		ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
 	}
 	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 	return CurrentColumn.y - SavedY;
@@ -2485,6 +2491,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect BoxRect;
 			CUIRect TmpRect;
 			CUIRect ReplyRect;
+			IUiContext TClientAutoReplyTextInputCtx;
+			TClientAutoReplyTextInputCtx.m_pUi = Ui();
+			TClientAutoReplyTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientAutoReplyTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientAutoReplyTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_auto_reply_text_inputs");
+			TClientAutoReplyTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			CurrentColumn.HSplitTop(MarginBetweenSections, nullptr, &CurrentColumn);
 			BoxRect = CurrentColumn;
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpRect, &CurrentColumn);
@@ -2504,7 +2516,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 					static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
 					s_MutedReply.SetEmptyText(Localize("I muted you"));
-					Ui()->DoEditBox(&s_MutedReply, &ReplyRect, EditBoxFontSize);
+					ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
 				}
 				LogSettingsStage("tclient_settings_left_auto_reply_muted", MutedTimer);
 			}
@@ -2525,7 +2537,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 					static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
 					s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
-					Ui()->DoEditBox(&s_MinimizedReply, &ReplyRect, EditBoxFontSize);
+					ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
 				}
 				LogSettingsStage("tclient_settings_left_auto_reply_minimized", MinimizedTimer);
 			}
@@ -2546,6 +2558,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		};
 		[[maybe_unused]] auto RenderAutoReplyInteractiveSection = [&](CUIRect &CurrentColumn) {
 			CUIRect ReplyRect;
+			IUiContext TClientAutoReplyTextInputCtx;
+			TClientAutoReplyTextInputCtx.m_pUi = Ui();
+			TClientAutoReplyTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientAutoReplyTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientAutoReplyTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_auto_reply_text_inputs");
+			TClientAutoReplyTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAutoReplyMuted, "tclient-auto-reply-muted", Localize("Automatically reply to muted players"), &g_Config.m_TcAutoReplyMuted, &CurrentColumn, LineSize);
 			CurrentColumn.HSplitTop(LineSize + MarginExtraSmall, &ReplyRect, &CurrentColumn);
 			if(g_Config.m_TcAutoReplyMuted)
@@ -2553,7 +2571,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 				static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
 				s_MutedReply.SetEmptyText(Localize("I muted you"));
-				Ui()->DoEditBox(&s_MutedReply, &ReplyRect, EditBoxFontSize);
+				ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 
@@ -2564,7 +2582,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 				static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
 				s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
-				Ui()->DoEditBox(&s_MinimizedReply, &ReplyRect, EditBoxFontSize);
+				ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 		};

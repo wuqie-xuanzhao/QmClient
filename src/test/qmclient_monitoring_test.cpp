@@ -6905,6 +6905,66 @@ TEST(QmMonitoringHelpers, TClientWarListTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TypeNameInput, &Button, 12.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientAutoReplyTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string CacheBody = ExtractSourceFunctionBody(Source, "float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Render)");
+	const std::string LegacyLayoutBody = ExtractSourceBlock(Source, "auto LayoutAutoReplySection", "auto MeasureAutoReplySection");
+	const std::string LegacyInteractiveBody = ExtractSourceBlock(Source, "auto RenderAutoReplyInteractiveSection", "auto LayoutPlayerIndicatorSection");
+	ASSERT_FALSE(CacheBody.empty());
+	ASSERT_FALSE(LegacyLayoutBody.empty());
+	ASSERT_FALSE(LegacyInteractiveBody.empty());
+
+	const auto ExpectAutoReplyCtx = [](const std::string &Body) {
+		const size_t CtxPos = Body.find("IUiContext TClientAutoReplyTextInputCtx;");
+		const size_t UiPos = Body.find("TClientAutoReplyTextInputCtx.m_pUi = Ui();", CtxPos);
+		const size_t AnimPos = Body.find("TClientAutoReplyTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+		const size_t TreePos = Body.find("TClientAutoReplyTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+		const size_t ScopePos = Body.find("TClientAutoReplyTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_auto_reply_text_inputs\");", TreePos);
+		const size_t FrameDtPos = Body.find("TClientAutoReplyTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+		EXPECT_NE(CtxPos, std::string::npos);
+		EXPECT_NE(UiPos, std::string::npos);
+		EXPECT_NE(AnimPos, std::string::npos);
+		EXPECT_NE(TreePos, std::string::npos);
+		EXPECT_NE(ScopePos, std::string::npos);
+		EXPECT_NE(FrameDtPos, std::string::npos);
+		EXPECT_LT(CtxPos, UiPos);
+		EXPECT_LT(UiPos, AnimPos);
+		EXPECT_LT(AnimPos, TreePos);
+		EXPECT_LT(TreePos, ScopePos);
+		EXPECT_LT(ScopePos, FrameDtPos);
+	};
+
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	ExpectAutoReplyCtx(CacheBody);
+	EXPECT_NE(CacheBody.find("s_MutedReply.SetEmptyText(Localize(\"I muted you\"));"), std::string::npos);
+	EXPECT_NE(CacheBody.find("s_MinimizedReply.SetEmptyText(Localize(\"I am away from the game window\"));"), std::string::npos);
+	EXPECT_NE(CacheBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);"), std::string::npos);
+	EXPECT_NE(CacheBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);"), std::string::npos);
+	ExpectAutoReplyCtx(LegacyLayoutBody);
+	EXPECT_NE(LegacyLayoutBody.find("s_MutedReply.SetEmptyText(Localize(\"I muted you\"));"), std::string::npos);
+	EXPECT_NE(LegacyLayoutBody.find("s_MinimizedReply.SetEmptyText(Localize(\"I am away from the game window\"));"), std::string::npos);
+	EXPECT_NE(LegacyLayoutBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);"), std::string::npos);
+	EXPECT_NE(LegacyLayoutBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);"), std::string::npos);
+	ExpectAutoReplyCtx(LegacyInteractiveBody);
+	EXPECT_NE(LegacyInteractiveBody.find("s_MutedReply.SetEmptyText(Localize(\"I muted you\"));"), std::string::npos);
+	EXPECT_NE(LegacyInteractiveBody.find("s_MinimizedReply.SetEmptyText(Localize(\"I am away from the game window\"));"), std::string::npos);
+	EXPECT_NE(LegacyInteractiveBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);"), std::string::npos);
+	EXPECT_NE(LegacyInteractiveBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(CacheBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, Localize(\"I muted you\"), EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(CacheBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, Localize(\"I am away from the game window\"), EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(LegacyLayoutBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, Localize(\"I muted you\"), EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(LegacyLayoutBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, Localize(\"I am away from the game window\"), EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(LegacyInteractiveBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, Localize(\"I muted you\"), EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(LegacyInteractiveBody.find("ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, Localize(\"I am away from the game window\"), EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(CacheBody.find("Ui()->DoEditBox(&s_MutedReply, &ReplyRect, EditBoxFontSize"), std::string::npos);
+	EXPECT_EQ(CacheBody.find("Ui()->DoEditBox(&s_MinimizedReply, &ReplyRect, EditBoxFontSize"), std::string::npos);
+	EXPECT_EQ(LegacyLayoutBody.find("Ui()->DoEditBox(&s_MutedReply, &ReplyRect, EditBoxFontSize"), std::string::npos);
+	EXPECT_EQ(LegacyLayoutBody.find("Ui()->DoEditBox(&s_MinimizedReply, &ReplyRect, EditBoxFontSize"), std::string::npos);
+	EXPECT_EQ(LegacyInteractiveBody.find("Ui()->DoEditBox(&s_MutedReply, &ReplyRect, EditBoxFontSize"), std::string::npos);
+	EXPECT_EQ(LegacyInteractiveBody.find("Ui()->DoEditBox(&s_MinimizedReply, &ReplyRect, EditBoxFontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
