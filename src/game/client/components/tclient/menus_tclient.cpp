@@ -2065,6 +2065,12 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		auto LayoutVisualNameplateSection = [&](CUIRect &CurrentColumn, bool Render) {
 			CUIRect BoxRect = CurrentColumn;
 			CUIRect TmpLabel;
+			IUiContext TClientWhiteFeetTextInputCtx;
+			TClientWhiteFeetTextInputCtx.m_pUi = Ui();
+			TClientWhiteFeetTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TClientWhiteFeetTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TClientWhiteFeetTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_white_feet_text_inputs");
+			TClientWhiteFeetTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 			auto ShouldRenderVisualBlock = [&](float Height) {
 				return Render && ShouldRenderSection(CurrentColumn, 0.0f, Height);
 			};
@@ -2103,7 +2109,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				FeetBox.VSplitMid(&FeetBox, nullptr);
 				static CLineInput s_WhiteFeet(g_Config.m_TcWhiteFeetSkin, sizeof(g_Config.m_TcWhiteFeetSkin));
 				s_WhiteFeet.SetEmptyText("x_ninja");
-				Ui()->DoEditBox(&s_WhiteFeet, &FeetBox, EditBoxFontSize);
+				ui_widget::TextField(TClientWhiteFeetTextInputCtx, &s_WhiteFeet, FeetBox, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 			BoxRect.h = CurrentColumn.y - BoxRect.y;

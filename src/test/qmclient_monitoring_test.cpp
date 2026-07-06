@@ -7055,6 +7055,36 @@ TEST(QmMonitoringHelpers, TClientHudTextInputsUseSharedQmTextField)
 	EXPECT_EQ(LegacyInteractiveBody.find("Ui()->DoEditBox(&s_LastInput, &Button, EditBoxFontSize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientWhiteFeetTextInputUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "auto LayoutVisualNameplateSection", "auto LayoutVisualEffectsSection");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext TClientWhiteFeetTextInputCtx;");
+	const size_t UiPos = Body.find("TClientWhiteFeetTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("TClientWhiteFeetTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("TClientWhiteFeetTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("TClientWhiteFeetTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_white_feet_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("TClientWhiteFeetTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+	EXPECT_NE(Body.find("s_WhiteFeet.SetEmptyText(\"x_ninja\");"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(TClientWhiteFeetTextInputCtx, &s_WhiteFeet, FeetBox, nullptr, EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(Body.find("ui_widget::TextField(TClientWhiteFeetTextInputCtx, &s_WhiteFeet, FeetBox, \"x_ninja\", EditBoxFontSize);"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_WhiteFeet, &FeetBox, EditBoxFontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
