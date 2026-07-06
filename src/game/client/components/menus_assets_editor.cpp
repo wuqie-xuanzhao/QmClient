@@ -1967,7 +1967,10 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	char aExportPlaceholder[64];
 	str_format(aExportPlaceholder, sizeof(aExportPlaceholder), Localize("my_%s"), AssetsEditorTypeName(m_AssetsEditorState.m_Type));
 	s_ExportNameInput.SetEmptyText(aExportPlaceholder);
-	if(Ui()->DoEditBox(&s_ExportNameInput, &ExportRow, EditBoxFontSize))
+	IUiContext AssetsEditorExportNameCtx;
+	AssetsEditorExportNameCtx.m_pUi = Ui();
+	AssetsEditorExportNameCtx.m_ScopeHash = MakeUiScopeHash("assets_editor_export_name");
+	if(ui_widget::TextField(AssetsEditorExportNameCtx, &s_ExportNameInput, ExportRow, nullptr, EditBoxFontSize))
 		AssetsEditorCommitExportNameForType();
 
 	static CUi::SDropDownState s_BlendModeDropDownState;

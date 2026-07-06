@@ -7310,6 +7310,31 @@ TEST(QmMonitoringHelpers, AssetsEditorSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_aMainSearchInputs[m_AssetsEditorState.m_Type], &MainSearchBox"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AssetsEditorExportNameUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_assets_editor.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderAssetsEditorScreen(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t SetPlaceholderPos = Body.find("s_ExportNameInput.SetEmptyText(aExportPlaceholder);");
+	const size_t TextInputCtxPos = Body.find("IUiContext AssetsEditorExportNameCtx;", SetPlaceholderPos);
+	const size_t ScopeHashPos = Body.find("AssetsEditorExportNameCtx.m_ScopeHash = MakeUiScopeHash(\"assets_editor_export_name\");", TextInputCtxPos);
+	const size_t TextFieldPos = Body.find("ui_widget::TextField(AssetsEditorExportNameCtx, &s_ExportNameInput, ExportRow, nullptr, EditBoxFontSize)", ScopeHashPos);
+	const size_t CommitPos = Body.find("AssetsEditorCommitExportNameForType();", TextFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(SetPlaceholderPos, std::string::npos);
+	EXPECT_NE(TextInputCtxPos, std::string::npos);
+	EXPECT_NE(ScopeHashPos, std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_NE(CommitPos, std::string::npos);
+	EXPECT_LT(SetPlaceholderPos, TextInputCtxPos);
+	EXPECT_LT(TextInputCtxPos, ScopeHashPos);
+	EXPECT_LT(ScopeHashPos, TextFieldPos);
+	EXPECT_LT(TextFieldPos, CommitPos);
+	EXPECT_EQ(Body.find(";\n", TextFieldPos), CommitPos + str_length("AssetsEditorCommitExportNameForType()"));
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_ExportNameInput, &ExportRow, EditBoxFontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, AudioPackEditorTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
