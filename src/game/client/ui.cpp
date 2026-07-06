@@ -1426,7 +1426,7 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 
 int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding, bool TransparentInactive, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
 {
-	if(!TransparentInactive || CheckActiveItem(pButtonContainer) || HotItem() == pButtonContainer)
+	if(ButtonColor.has_value() || !TransparentInactive || CheckActiveItem(pButtonContainer) || HotItem() == pButtonContainer)
 		pRect->Draw(ScaleBackgroundAlpha(ButtonColor.value_or(Enabled ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ButtonColorMul(pButtonContainer)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f))), IGraphics::CORNER_ALL, 5.0f);
 
 	CUIRect Label;
@@ -2311,6 +2311,7 @@ void CUi::SSelectionPopupContext::Reset()
 	m_aMessage[0] = '\0';
 	m_pSelection = nullptr;
 	m_SelectionIndex = -1;
+	m_ActiveIndex = -1;
 	m_vEntries.clear();
 	m_vButtonContainers.clear();
 	m_EntryHeight = 12.0f;
@@ -2370,7 +2371,9 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 		View.HSplitTop(pSelectionPopup->m_EntryHeight, &Slot, &View);
 		if(pScrollRegion->AddRect(Slot))
 		{
-			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons))
+			const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);
+			const std::optional<ColorRGBA> ButtonColor = ActiveEntry ? std::optional<ColorRGBA>(ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f)) : std::nullopt;
+			if(pUI->DoButton_PopupMenu(&pSelectionPopup->m_vButtonContainers[Index], Entry.c_str(), &Slot, pSelectionPopup->m_FontSize, TEXTALIGN_ML, pSelectionPopup->m_EntryPadding, pSelectionPopup->m_TransparentButtons, true, ButtonColor))
 			{
 				pSelectionPopup->m_pSelection = &Entry;
 				pSelectionPopup->m_SelectionIndex = Index;
@@ -2452,16 +2455,12 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	if(PopupOpen)
 	{
 		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
-		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
-		PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
-		if(State.m_DropDownState.IsOpen() && !PopupOpen)
-			State.m_DropDownState.Reset();
 	}
 	const bool TogglePressed = DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props);
 
 	SQmDropdownInput DropDownInput;
 	DropDownInput.m_TogglePressed = TogglePressed;
-	if(PopupOpen)
+	if(PopupOpen && State.m_SelectionPopupContext.m_SelectionIndex < 0)
 	{
 		DropDownInput.m_KeyUp = ConsumeHotkey(HOTKEY_UP);
 		DropDownInput.m_KeyDown = ConsumeHotkey(HOTKEY_DOWN);
@@ -2469,6 +2468,14 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		DropDownInput.m_KeyEscape = ConsumeHotkey(HOTKEY_ESCAPE);
 	}
 	const SQmDropdownUpdateResult DropDownResult = State.m_DropDownState.Update(DropDownInput, Num);
+	State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
+	if(PopupOpen)
+	{
+		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
+		PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
+		if(State.m_DropDownState.IsOpen() && !PopupOpen)
+			State.m_DropDownState.Reset();
+	}
 	if(DropDownResult.m_Opened)
 	{
 		CScrollRegion *pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion;
@@ -2486,6 +2493,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		State.m_SelectionPopupContext.m_Width = pRect->w;
 		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
 		State.m_SelectionPopupContext.m_TransparentButtons = true;
+		State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
 	}
 	if(DropDownResult.m_Selected)

@@ -2241,6 +2241,7 @@ TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyDown = ConsumeHotkey(HOTKEY_DOWN);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyEnter = ConsumeHotkey(HOTKEY_ENTER);"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyEscape = ConsumeHotkey(HOTKEY_ESCAPE);"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();"), std::string::npos);
 	const size_t SelectedBranch = DoDropDown.find("if(DropDownResult.m_Selected)");
 	const size_t ClosedBranch = DoDropDown.find("else if(DropDownResult.m_Closed)");
 	ASSERT_NE(SelectedBranch, std::string::npos);
@@ -2249,4 +2250,33 @@ TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 	EXPECT_NE(DoPopupMenu.find("std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end()"), std::string::npos);
 	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.x = X;"), std::string::npos);
 	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.y = Y;"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, DropDownKeyboardActiveIndexIsRendered)
+{
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
+	const std::string SelectionReset = FunctionBody(UiSource, "void CUi::SSelectionPopupContext::Reset()");
+	const std::string PopupSelection = FunctionBody(UiSource, "CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, bool Active)");
+	const std::string PopupButton = FunctionBody(UiSource, "int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer");
+	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Num, SDropDownState &State)");
+
+	ASSERT_FALSE(SelectionReset.empty());
+	ASSERT_FALSE(PopupSelection.empty());
+	ASSERT_FALSE(PopupButton.empty());
+	ASSERT_FALSE(DoDropDown.empty());
+	EXPECT_NE(UiHeader.find("int m_ActiveIndex;"), std::string::npos);
+	EXPECT_NE(SelectionReset.find("m_ActiveIndex = -1;"), std::string::npos);
+	EXPECT_NE(PopupButton.find("ButtonColor.has_value() || !TransparentInactive"), std::string::npos);
+	EXPECT_NE(PopupSelection.find("const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);"), std::string::npos);
+	EXPECT_NE(PopupSelection.find("ActiveEntry ? std::optional<ColorRGBA>(ColorRGBA(1.0f, 1.0f, 1.0f, 0.18f)) : std::nullopt"), std::string::npos);
+	EXPECT_NE(PopupSelection.find("pSelectionPopup->m_TransparentButtons, true, ButtonColor"), std::string::npos);
+	const size_t UpdateResult = DoDropDown.find("const SQmDropdownUpdateResult DropDownResult = State.m_DropDownState.Update(DropDownInput, Num);");
+	const size_t ActiveIndexSync = DoDropDown.find("State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();");
+	const size_t PopupRender = DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);");
+	ASSERT_NE(UpdateResult, std::string::npos);
+	ASSERT_NE(ActiveIndexSync, std::string::npos);
+	ASSERT_NE(PopupRender, std::string::npos);
+	EXPECT_LT(UpdateResult, ActiveIndexSync);
+	EXPECT_LT(ActiveIndexSync, PopupRender);
 }

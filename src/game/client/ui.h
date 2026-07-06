@@ -897,6 +897,7 @@ public:
 		std::vector<CButtonContainer> m_vButtonContainers;
 		const std::string *m_pSelection;
 		int m_SelectionIndex;
+		int m_ActiveIndex;
 		float m_EntryHeight;
 		float m_EntryPadding;
 		float m_EntrySpacing;
