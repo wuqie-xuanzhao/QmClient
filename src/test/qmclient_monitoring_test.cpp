@@ -7248,6 +7248,52 @@ TEST(QmMonitoringHelpers, TClientStatusSchemeTextInputUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_StatusScheme, &StatusScheme, EditBoxFontSize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TClientConfigEditorTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "CUIRect TopLine, Below;", "else if(pVar->m_Type == SConfigVariable::VAR_COLOR)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext TClientConfigTextInputCtx;");
+	const size_t UiPos = Body.find("TClientConfigTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("TClientConfigTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("TClientConfigTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("TClientConfigTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tclient_config_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("TClientConfigTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+
+	const size_t IntInputBoxPos = Body.find("Controls.VSplitLeft(60.0f, &InputBox, &Dummy);");
+	const size_t IntTextFieldPos = Body.find("if(ui_widget::TextField(TClientConfigTextInputCtx, &State.m_Input, InputBox, nullptr, EditBoxFontSize))", IntInputBoxPos);
+	const size_t IntReadPos = Body.find("int NewVal = State.m_Input.GetInteger();", IntTextFieldPos);
+	EXPECT_NE(IntInputBoxPos, std::string::npos);
+	EXPECT_NE(IntTextFieldPos, std::string::npos);
+	EXPECT_NE(IntReadPos, std::string::npos);
+	EXPECT_LT(IntInputBoxPos, IntTextFieldPos);
+	EXPECT_LT(IntTextFieldPos, IntReadPos);
+
+	const size_t StrTypePos = Body.find("else if(pVar->m_Type == SConfigVariable::VAR_STRING)");
+	const size_t StrTextFieldPos = Body.find("if(ui_widget::TextField(TClientConfigTextInputCtx, &State.m_Input, Controls, nullptr, EditBoxFontSize))", StrTypePos);
+	const size_t StrReadPos = Body.find("const char *NewVal = State.m_Input.GetString();", StrTextFieldPos);
+	EXPECT_NE(StrTypePos, std::string::npos);
+	EXPECT_NE(StrTextFieldPos, std::string::npos);
+	EXPECT_NE(StrReadPos, std::string::npos);
+	EXPECT_LT(StrTypePos, StrTextFieldPos);
+	EXPECT_LT(StrTextFieldPos, StrReadPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&State.m_Input, &InputBox, EditBoxFontSize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&State.m_Input, &Controls, EditBoxFontSize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, TClientBindWheelTextInputsUseSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");

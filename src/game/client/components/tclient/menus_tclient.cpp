@@ -6029,6 +6029,12 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		RowItem.Margin(5.0f, &RowContent);
 
 		CUIRect TopLine, Below;
+		IUiContext TClientConfigTextInputCtx;
+		TClientConfigTextInputCtx.m_pUi = Ui();
+		TClientConfigTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+		TClientConfigTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+		TClientConfigTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_config_text_inputs");
+		TClientConfigTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 		if(g_Config.m_TcUiCompactList)
 		{
 			const float UsedHeight = (pVar->m_Type == SConfigVariable::VAR_COLOR) ? ColorPickerLineSize : LineSize;
@@ -6121,7 +6127,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 				CUIRect InputBox, Dummy;
 				Controls.VSplitLeft(60.0f, &InputBox, &Dummy);
 
-				if(Ui()->DoEditBox(&State.m_Input, &InputBox, EditBoxFontSize))
+				if(ui_widget::TextField(TClientConfigTextInputCtx, &State.m_Input, InputBox, nullptr, EditBoxFontSize))
 				{
 					int NewVal = State.m_Input.GetInteger();
 					bool InRange = true;
@@ -6160,7 +6166,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 					State.m_Input.Set(Effective);
 			}
 
-			if(Ui()->DoEditBox(&State.m_Input, &Controls, EditBoxFontSize))
+			if(ui_widget::TextField(TClientConfigTextInputCtx, &State.m_Input, Controls, nullptr, EditBoxFontSize))
 			{
 				const char *NewVal = State.m_Input.GetString();
 				if(str_comp(NewVal, pStr->m_pStr) == 0)
