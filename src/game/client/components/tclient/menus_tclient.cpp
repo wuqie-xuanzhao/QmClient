@@ -17,6 +17,7 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
@@ -89,82 +90,30 @@ using namespace FontIcons;
 
 namespace
 {
-	bool ParseTClientGlobalCardColumn(const char *pColumn, ESettingsCardDeckColumn *pOutColumn)
-	{
-		if(pColumn == nullptr || pOutColumn == nullptr)
-			return false;
-		if(str_comp(pColumn, "left") == 0 || str_comp(pColumn, "0") == 0)
-		{
-			*pOutColumn = ESettingsCardDeckColumn::LEFT;
-			return true;
-		}
-		if(str_comp(pColumn, "right") == 0 || str_comp(pColumn, "1") == 0)
-		{
-			*pOutColumn = ESettingsCardDeckColumn::RIGHT;
-			return true;
-		}
-		return false;
-	}
-
-	bool LoadTClientOrderFromGlobalCardOrder(const char *pConfig, std::vector<std::string> &vLeftOrder, std::vector<std::string> &vRightOrder)
+	bool LoadTClientOrderFromGlobalCardModel(const char *pConfig, std::vector<std::string> &vLeftOrder, std::vector<std::string> &vRightOrder)
 	{
 		if(pConfig == nullptr || pConfig[0] == '\0')
 			return false;
 
-		struct SParsedTClientCard
+		qm_card_order::CModel Model;
+		const std::vector<qm_card_order::SEntry> vDefaults = qm_card_registry::BuildDefaultEntries();
+		std::vector<const char *> vValidIds;
+		vValidIds.reserve(vDefaults.size());
+		for(const qm_card_order::SEntry &Default : vDefaults)
 		{
-			std::string m_StableId;
-			ESettingsCardDeckColumn m_Column = ESettingsCardDeckColumn::LEFT;
-			int m_Order = 0;
-		};
-		std::vector<SParsedTClientCard> vParsed;
-		const char *pEntry = pConfig;
-		char aToken[160];
-		while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
-		{
-			if(aToken[0] == '\0')
-				continue;
-
-			char aStableId[80];
-			char aTab[48];
-			char aColumn[16];
-			char aOrder[16];
-			const char *pTab = str_next_token(aToken, "|", aStableId, sizeof(aStableId));
-			if(pTab == nullptr || str_startswith(aStableId, "tclient:") == nullptr)
-				continue;
-			const char *pColumn = str_next_token(pTab, "|", aTab, sizeof(aTab));
-			if(pColumn == nullptr)
-				continue;
-			const char *pOrder = str_next_token(pColumn, "|", aColumn, sizeof(aColumn));
-			if(pOrder == nullptr || str_next_token(pOrder, "|", aOrder, sizeof(aOrder)) == nullptr)
-				continue;
-
-			ESettingsCardDeckColumn Column = ESettingsCardDeckColumn::LEFT;
-			int Order = 0;
-			if(!ParseTClientGlobalCardColumn(aColumn, &Column) || !str_toint(aOrder, &Order))
-				continue;
-
-			vParsed.push_back({aStableId, Column, maximum(0, Order)});
+			if(Default.m_pStableId != nullptr)
+				vValidIds.push_back(Default.m_pStableId);
 		}
-
-		if(vParsed.empty())
+		if(!Model.Parse(pConfig, vValidIds) || Model.Count() == 0)
 			return false;
 
-		std::stable_sort(vParsed.begin(), vParsed.end(), [](const SParsedTClientCard &A, const SParsedTClientCard &B) {
-			if(A.m_Column != B.m_Column)
-				return A.m_Column == ESettingsCardDeckColumn::LEFT;
-			return A.m_Order < B.m_Order;
-		});
+		std::vector<std::string> vParsedLeftOrder = Model.StableIdOrder("tclient:", "tclient", 1);
+		std::vector<std::string> vParsedRightOrder = Model.StableIdOrder("tclient:", "tclient", 2);
+		if(vParsedLeftOrder.empty() && vParsedRightOrder.empty())
+			return false;
 
-		vLeftOrder.clear();
-		vRightOrder.clear();
-		for(const SParsedTClientCard &Card : vParsed)
-		{
-			if(Card.m_Column == ESettingsCardDeckColumn::LEFT)
-				vLeftOrder.push_back(Card.m_StableId);
-			else
-				vRightOrder.push_back(Card.m_StableId);
-		}
+		vLeftOrder = std::move(vParsedLeftOrder);
+		vRightOrder = std::move(vParsedRightOrder);
 		return true;
 	}
 
@@ -1754,7 +1703,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		{
 			str_copy(s_TClientGlobalCardOrderCache, g_Config.m_QmGlobalCardOrder, sizeof(s_TClientGlobalCardOrderCache));
 			str_copy(s_TClientLegacyCardOrderCache, g_Config.m_QmSettingsCardOrder, sizeof(s_TClientLegacyCardOrderCache));
-			const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);
+			const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);
 			if(!HasGlobalTClientOrder)
 			{
 				if(g_Config.m_QmGlobalCardOrder[0] == '\0')

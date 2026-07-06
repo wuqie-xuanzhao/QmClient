@@ -319,3 +319,27 @@ TEST(QmCardOrderModel, StateIndexIsOLookupByStableId)
 	// 未知 id 返回 -1（容错，不崩溃）
 	EXPECT_EQ(M.StateIndexForStableId("qm:unknown"), -1);
 }
+
+// 意图：页面运行时不应该各自手写解析 qm_global_card_order。
+// 公共模型需要能按 stableId 命名空间 + tab + column 导出顺序，供 Tclient/deck 等页面复用。
+TEST(QmCardOrderModel, StableIdOrderFiltersByPrefixTabAndColumn)
+{
+	qm_card_order::CModel M;
+	M.SetEntries({
+		{"tclient:visual-effects", "tclient", 1, 2},
+		{"qm:chat_bubble", "visual", 1, 0},
+		{"tclient:visual-nameplates", "tclient", 1, 0},
+		{"deck:graphics-display", "graphics", 1, 0},
+		{"tclient:input", "tclient", 2, 0},
+		{"tclient:anti-latency-tools", "search", 1, 0},
+	});
+
+	const std::vector<std::string> TClientLeft = M.StableIdOrder("tclient:", "tclient", 1);
+	ASSERT_EQ(TClientLeft.size(), 2u);
+	EXPECT_EQ(TClientLeft[0], "tclient:visual-nameplates");
+	EXPECT_EQ(TClientLeft[1], "tclient:visual-effects");
+
+	const std::vector<std::string> TClientRight = M.StableIdOrder("tclient:", "tclient", 2);
+	ASSERT_EQ(TClientRight.size(), 1u);
+	EXPECT_EQ(TClientRight[0], "tclient:input");
+}

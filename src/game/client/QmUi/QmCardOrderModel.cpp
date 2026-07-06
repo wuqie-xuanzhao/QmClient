@@ -193,6 +193,21 @@ namespace qm_card_order
 		return v;
 	}
 
+	std::vector<std::string> CModel::StableIdOrder(const char *pStableIdPrefix, const char *pTab, int Column) const
+	{
+		std::vector<std::string> vOrder;
+		for(int Index : ColumnIndices(pTab, Column))
+		{
+			const SEntry &Entry = m_vEntries[Index];
+			if(Entry.m_pStableId == nullptr)
+				continue;
+			if(pStableIdPrefix != nullptr && pStableIdPrefix[0] != '\0' && str_startswith(Entry.m_pStableId, pStableIdPrefix) == nullptr)
+				continue;
+			vOrder.emplace_back(Entry.m_pStableId);
+		}
+		return vOrder;
+	}
+
 	void CModel::BuildStateIndex()
 	{
 		m_StableIdToState.clear();

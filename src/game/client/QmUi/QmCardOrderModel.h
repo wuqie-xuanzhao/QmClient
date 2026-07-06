@@ -42,6 +42,8 @@ namespace qm_card_order
 
 		// 按序返回某 tab 某 column 的 entry index（组件编辑器按"页是展示层"筛选：tab=页/画布，column=列）
 		std::vector<int> ColumnIndices(const char *pTab, int Column) const;
+		// 按 stableId 前缀 + tab + column 导出顺序，供页面运行时复用全局模型解析结果。
+		std::vector<std::string> StableIdOrder(const char *pStableIdPrefix, const char *pTab, int Column) const;
 
 		// 构建 stableId→连续 index 注册表（让位 lerp 保持 O(1) 查找的性能地基；SetEntries/Parse 后自动维护）
 		void BuildStateIndex();

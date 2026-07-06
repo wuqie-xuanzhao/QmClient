@@ -1751,9 +1751,11 @@ TEST(QmMonitoringHelpers, TClientSettingsCardDeckDragRuntimeUsesCtrlHeaderGate)
 	EXPECT_NE(Source.find("CommitSettingsCardDeckDragDrop(pOrder, DropIndex);"), std::string::npos);
 	EXPECT_NE(Header.find("bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, int DropIndex);"), std::string::npos);
 	EXPECT_NE(Source.find("m_TClientSettingsCardDeckOrderDirty = true;"), std::string::npos);
-	EXPECT_NE(Source.find("LoadTClientOrderFromGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder)"), std::string::npos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/QmCardRegistry.h>"), std::string::npos);
+	EXPECT_NE(Source.find("LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder)"), std::string::npos);
+	EXPECT_EQ(Source.find("const char *pEntry = pConfig;\n\t\tchar aToken[160];\n\t\twhile((pEntry = str_next_token(pEntry, \";\", aToken"), std::string::npos);
 	EXPECT_NE(Source.find("LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
-	EXPECT_NE(Source.find("const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
+	EXPECT_NE(Source.find("const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
 	EXPECT_NE(Source.find("if(!HasGlobalTClientOrder)"), std::string::npos);
 	EXPECT_NE(Source.find("if(g_Config.m_QmGlobalCardOrder[0] == '\\0')"), std::string::npos);
 	EXPECT_NE(Source.find("else\n\t\t\t\t{\n\t\t\t\t\tm_vTClientLeftCardOrder.clear();\n\t\t\t\t\tm_vTClientRightCardOrder.clear();\n\t\t\t\t}"), std::string::npos);
