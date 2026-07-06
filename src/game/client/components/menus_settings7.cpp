@@ -17,6 +17,8 @@
 
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/UiContext.h>
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/menu_background.h>
@@ -256,7 +258,13 @@ void CMenus::RenderSettingsTee7(CUIRect MainView)
 		AssetsEditorOpen(ASSETS_EDITOR_TYPE_SKIN);
 
 	static CLineInput s_SkinFilterInput(g_Config.m_ClSkinFilterString, sizeof(g_Config.m_ClSkinFilterString));
-	if(Ui()->DoEditBox_Search(&s_SkinFilterInput, &QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+	IUiContext Tee7SkinSearchCtx;
+	Tee7SkinSearchCtx.m_pUi = Ui();
+	Tee7SkinSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	Tee7SkinSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	Tee7SkinSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tee7_skin_search");
+	Tee7SkinSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	if(ui_widget::SearchField(Tee7SkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
 	{
 		m_SkinList7LastRefreshTime = std::nullopt;
 		m_SkinPartsList7LastRefreshTime = std::nullopt;
