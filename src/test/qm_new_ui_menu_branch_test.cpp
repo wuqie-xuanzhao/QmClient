@@ -232,7 +232,7 @@ TEST(QmNewUiMenuBranches, BrowserInteriorBackgroundsUseMapBrowserOpacity)
 TEST(QmNewUiMenuBranches, AppearanceNamePlateContainsNameplateTextControlsWithoutInternalScrollRegion)
 {
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 
 	const size_t NamePlateTitlePos = NamePlateBranch.find("Localize(\"Name Plate\")");
@@ -1543,7 +1543,7 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_EQ(NameplatesSource.find("Rainbow name for local player"), std::string::npos);
 
 	const std::string AppearanceSettings = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string NamePlateBranch = BlockBodyAfter(AppearanceSettings, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	const std::string NamePlateBranch = BlockBodyAfter(AppearanceSettings, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 	EXPECT_EQ(QmMenusSource.find("RenderNameplateTextSettings(CardContent);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("Nameplate text"), std::string::npos);
@@ -1595,7 +1595,7 @@ TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 	EXPECT_EQ(RenderSettingsQmClient.find("RenderQmModuleHeadline(CardContent, 5, Localize(\"Laser settings\"), Localize(\"Laser style\"));"), std::string::npos);
 
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
+	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_LASER)");
 	ASSERT_FALSE(LaserBranch.empty());
 	EXPECT_NE(LaserBranch.find("BeginAppearanceCard(LeftColumn, LaserEnhancedMinCardHeight, s_LaserMeasuredEnhancedCardHeight, &EnhancedCard, \"appearance-laser-enhanced\""), std::string::npos);
 	EXPECT_NE(LaserBranch.find("BeginAppearanceCard(LeftColumn, LaserColorMinCardHeight, s_LaserMeasuredColorCardHeight, &ColorCard, \"appearance-laser-colors\""), std::string::npos);
@@ -1655,7 +1655,7 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	ASSERT_FALSE(RenderSettingsQmClient.empty());
 
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 	EXPECT_NE(NamePlateBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("BeginAppearanceCard(LeftView, NamePlateEstimatedSettingsCardHeight, s_NamePlateMeasuredSettingsCardHeight, &NamePlateSettingsCard, \"appearance-name-plate-settings\""), std::string::npos);
@@ -1665,7 +1665,7 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsShadow.Draw"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewShadow.Draw"), std::string::npos);
 
-	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
+	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_LASER)");
 	ASSERT_FALSE(LaserBranch.empty());
 	EXPECT_NE(LaserBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("CUIRect LeftColumn = LeftView;"), std::string::npos);
@@ -1726,14 +1726,14 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 	EXPECT_NE(RenderSettingsAppearance.find("HandleSettingsCardDeckDrag(Item, Column, pOrder);"), std::string::npos);
 	EXPECT_NE(RenderSettingsAppearance.find("RenderSettingsCardDeckDragOverlay(AppearanceDeckOverlay);"), std::string::npos);
 
-	const std::string HudBranch = BlockBodyAfter(RenderSettingsAppearance, "if(s_CurTab == APPEARANCE_TAB_HUD)");
+	const std::string HudBranch = BlockBodyAfter(RenderSettingsAppearance, "if(m_AppearanceSettingsTab == APPEARANCE_TAB_HUD)");
 	ASSERT_FALSE(HudBranch.empty());
 	EXPECT_NE(HudBranch.find("BeginAppearanceCard(LeftView, HudMinCardHeight"), std::string::npos);
 	EXPECT_NE(HudBranch.find("\"appearance-hud-main\""), std::string::npos);
 	EXPECT_NE(HudBranch.find("\"appearance-hud-ddrace\""), std::string::npos);
 	EXPECT_NE(HudBranch.find("s_HudMeasuredLeftCardHeight = MeasureAppearanceCardHeight"), std::string::npos);
 
-	const std::string ChatBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_CHAT)");
+	const std::string ChatBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_CHAT)");
 	ASSERT_FALSE(ChatBranch.empty());
 	EXPECT_NE(ChatBranch.find("static CScrollRegion s_ChatSettingsScrollRegion;"), std::string::npos);
 	EXPECT_NE(ChatBranch.find("CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(AppearanceUiScale);"), std::string::npos);
@@ -1748,23 +1748,23 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 	EXPECT_NE(ChatBranch.find("\"appearance-chat-messages\""), std::string::npos);
 	EXPECT_NE(ChatBranch.find("\"appearance-chat-preview\""), std::string::npos);
 
-	const std::string NamePlateBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	const std::string NamePlateBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 	EXPECT_NE(NamePlateBranch.find("\"appearance-name-plate-settings\""), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("\"appearance-name-plate-preview\""), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlateSettingsCard, QmCardStyle);"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("RenderQmSettingsGlassCard(NamePlatePreviewCard, QmCardStyle);"), std::string::npos);
 
-	const std::string HookCollisionBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)");
+	const std::string HookCollisionBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION)");
 	ASSERT_FALSE(HookCollisionBranch.empty());
 	EXPECT_NE(HookCollisionBranch.find("\"appearance-hook-collision-main\""), std::string::npos);
 	EXPECT_NE(HookCollisionBranch.find("\"appearance-hook-collision-preview\""), std::string::npos);
 
-	const std::string InfoMessagesBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_INFO_MESSAGES)");
+	const std::string InfoMessagesBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_INFO_MESSAGES)");
 	ASSERT_FALSE(InfoMessagesBranch.empty());
 	EXPECT_NE(InfoMessagesBranch.find("\"appearance-info-messages\""), std::string::npos);
 
-	const std::string LaserBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(s_CurTab == APPEARANCE_TAB_LASER)");
+	const std::string LaserBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_LASER)");
 	ASSERT_FALSE(LaserBranch.empty());
 	EXPECT_NE(LaserBranch.find("\"appearance-laser-enhanced\""), std::string::npos);
 	EXPECT_NE(LaserBranch.find("\"appearance-laser-colors\""), std::string::npos);
@@ -1963,7 +1963,7 @@ TEST(QmNewUiMenuBranches, SettingsCardFeedbackFixesUseStableLayouts)
 	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-miscellaneous\", Localize(\"Miscellaneous\"),"), std::string::npos);
 	EXPECT_EQ(RenderSettingsDDNet.find("BeginDDNetCard(MainView"), std::string::npos);
 
-	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
+	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 	EXPECT_EQ(NamePlateBranch.find("BeginSettingsScrollRegion(s_NameplateTextCardScrollRegion"), std::string::npos);
 	EXPECT_EQ(NamePlateBranch.find("FinishSettingsScrollRegion(s_NameplateTextCardScrollRegion"), std::string::npos);

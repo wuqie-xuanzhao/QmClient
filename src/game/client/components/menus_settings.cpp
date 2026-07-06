@@ -5513,21 +5513,9 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 	return PrevPackedColor != *pColor;
 }
 
-enum
-{
-	APPEARANCE_TAB_HUD = 0,
-	APPEARANCE_TAB_CHAT = 1,
-	APPEARANCE_TAB_NAME_PLATE = 2,
-	APPEARANCE_TAB_HOOK_COLLISION = 3,
-	APPEARANCE_TAB_INFO_MESSAGES = 4,
-	APPEARANCE_TAB_LASER = 5,
-	NUMBER_OF_APPEARANCE_TABS = 6,
-};
-
 void CMenus::RenderSettingsAppearance(CUIRect MainView)
 {
 	char aBuf[128];
-	static int s_CurTab = 0;
 	static bool s_AppearanceTransitionInitialized = false;
 	static int s_PrevAppearanceTab = 0;
 	static float s_AppearanceTransitionDirection = 0.0f;
@@ -5557,9 +5545,9 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	{
 		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
 		const int Corners = Tab == APPEARANCE_TAB_HUD ? IGraphics::CORNER_L : (Tab == NUMBER_OF_APPEARANCE_TABS - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
-		if(DoButton_MenuTab(&s_aPageTabs[Tab], s_apAppearanceTabNames[Tab], s_CurTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+		if(DoButton_MenuTab(&s_aPageTabs[Tab], s_apAppearanceTabNames[Tab], m_AppearanceSettingsTab == Tab, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
 		{
-			s_CurTab = Tab;
+			m_AppearanceSettingsTab = Tab;
 		}
 	}
 
@@ -5577,14 +5565,14 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 	if(!s_AppearanceTransitionInitialized)
 	{
-		s_PrevAppearanceTab = s_CurTab;
+		s_PrevAppearanceTab = m_AppearanceSettingsTab;
 		s_AppearanceTransitionInitialized = true;
 	}
-	else if(s_CurTab != s_PrevAppearanceTab)
+	else if(m_AppearanceSettingsTab != s_PrevAppearanceTab)
 	{
-		s_AppearanceTransitionDirection = s_CurTab > s_PrevAppearanceTab ? 1.0f : -1.0f;
+		s_AppearanceTransitionDirection = m_AppearanceSettingsTab > s_PrevAppearanceTab ? 1.0f : -1.0f;
 		TriggerUiSwitchAnimation(AppearanceTabSwitchNode, 0.18f);
-		s_PrevAppearanceTab = s_CurTab;
+		s_PrevAppearanceTab = m_AppearanceSettingsTab;
 	}
 
 	CUIRect ContentView = MainView;
@@ -5595,7 +5583,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 	auto DoAppearanceHeading = [this](CUIRect &View, const char *pTextId, const char *pText, float FontSize, float LineHeight) {
 		CUIRect Heading;
 		View.HSplitTop(LineHeight, &Heading, &View);
-		CUIElement &HeadingElement = SettingsTextElement(SETTINGS_APPEARANCE, s_CurTab, pTextId);
+		CUIElement &HeadingElement = SettingsTextElement(SETTINGS_APPEARANCE, m_AppearanceSettingsTab, pTextId);
 		DoSettingsLabelStreamed(HeadingElement, &Heading, pText, FontSize, TEXTALIGN_ML);
 	};
 	const float AppearanceUiScale = minimum(1.0f, maximum(0.85f, ContentView.w / 800.0f));
@@ -5645,7 +5633,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		ApplyUiSwitchOffset(ContentView, TransitionStrength, s_AppearanceTransitionDirection, false, 0.08f, 24.0f, 120.0f);
 	}
 
-	if(s_CurTab == APPEARANCE_TAB_HUD)
+	if(m_AppearanceSettingsTab == APPEARANCE_TAB_HUD)
 	{
 		static float s_HudMeasuredLeftCardHeight = 0.0f;
 		static float s_HudMeasuredRightCardHeight = 0.0f;
@@ -5745,7 +5733,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		s_HudMeasuredLeftCardHeight = MeasureAppearanceCardHeight(HudLeftCard, LeftView, HudMinCardHeight);
 		s_HudMeasuredRightCardHeight = MeasureAppearanceCardHeight(HudRightCard, RightView, HudMinCardHeight);
 	}
-	else if(s_CurTab == APPEARANCE_TAB_CHAT)
+	else if(m_AppearanceSettingsTab == APPEARANCE_TAB_CHAT)
 	{
 		static float s_ChatMeasuredLeftCardHeight = 0.0f;
 		static float s_ChatMeasuredRightCardHeight = 0.0f;
@@ -6176,7 +6164,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		FinishSettingsScrollRegion(s_ChatSettingsScrollRegion, ScrollFrame, &ChatScrollEnd, SETTINGS_APPEARANCE);
 		s_PrevChatSettingsScrollY = ScrollFrame.m_FinalOffsetY;
 	}
-	else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)
+	else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)
 	{
 		const float UiScale = minimum(1.0f, maximum(0.85f, ContentView.w / 800.0f));
 		const float NamePlateContentPaddingY = AppearanceQmCardStyle.m_Padding;
@@ -6492,7 +6480,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		FinishSettingsScrollRegion(s_NamePlateSettingsScrollRegion, ScrollFrame, &NamePlateScrollEnd, SETTINGS_APPEARANCE);
 		s_PrevNamePlateSettingsScrollY = ScrollFrame.m_FinalOffsetY;
 	}
-	else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)
+	else if(m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION)
 	{
 		static float s_HookCollisionMeasuredLeftCardHeight = 0.0f;
 		static float s_HookCollisionMeasuredRightCardHeight = 0.0f;
@@ -6694,7 +6682,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		s_HookCollisionMeasuredLeftCardHeight = MeasureAppearanceCardHeight(HookCollisionLeftCard, LeftView, HookCollisionLeftMinCardHeight);
 		s_HookCollisionMeasuredRightCardHeight = MeasureAppearanceCardHeight(HookCollisionRightCard, RightView, HookCollisionRightMinCardHeight);
 	}
-	else if(s_CurTab == APPEARANCE_TAB_INFO_MESSAGES)
+	else if(m_AppearanceSettingsTab == APPEARANCE_TAB_INFO_MESSAGES)
 	{
 		static float s_InfoMessagesMeasuredCardHeight = 0.0f;
 		ContentView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
@@ -6724,7 +6712,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		DoLine_ColorPicker(&s_KillMessageHighlightColorId, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &LeftView, Localize("Highlight Color"), &g_Config.m_ClKillMessageHighlightColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 		s_InfoMessagesMeasuredCardHeight = MeasureAppearanceCardHeight(InfoMessagesCard, LeftView, InfoMessagesMinCardHeight);
 	}
-	else if(s_CurTab == APPEARANCE_TAB_LASER)
+	else if(m_AppearanceSettingsTab == APPEARANCE_TAB_LASER)
 	{
 		const float UiScale = minimum(1.0f, maximum(0.85f, ContentView.w / 800.0f));
 		const float LaserCardPadding = AppearanceQmCardStyle.m_Padding;

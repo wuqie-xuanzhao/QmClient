@@ -101,6 +101,7 @@ struct SQmGlobalSearchNavigation
 	int m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
 	int m_QmClientTab = -1;
 	int m_TClientTab = -1;
+	int m_AppearanceTab = -1;
 };
 
 struct SQmGlobalSearchResults
@@ -198,6 +199,36 @@ namespace
 		{
 			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
 			Navigation.m_TClientTab = 4;
+		}
+		else if(str_comp(pTab, "appearance-hud") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
+			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_HUD;
+		}
+		else if(str_comp(pTab, "appearance-chat") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
+			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_CHAT;
+		}
+		else if(str_comp(pTab, "appearance-name-plate") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
+			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_NAME_PLATE;
+		}
+		else if(str_comp(pTab, "appearance-hook-collision") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
+			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_HOOK_COLLISION;
+		}
+		else if(str_comp(pTab, "appearance-info-messages") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
+			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_INFO_MESSAGES;
+		}
+		else if(str_comp(pTab, "appearance-laser") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;
+			Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_LASER;
 		}
 		return Navigation;
 	}
@@ -902,6 +933,8 @@ void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSear
 			m_QmClientSettingsTab = Navigation.m_QmClientTab;
 		if(Navigation.m_TClientTab >= 0)
 			m_TClientSettingsTab = Navigation.m_TClientTab;
+		if(Navigation.m_AppearanceTab >= 0)
+			m_AppearanceSettingsTab = Navigation.m_AppearanceTab;
 		Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
 		m_GlobalCardSearchInput.Deactivate();
 	}

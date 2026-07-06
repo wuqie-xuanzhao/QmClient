@@ -1515,6 +1515,14 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 1323, "dynamic-value"},
 		{pFile, 1326, "dynamic-value"},
 		{pFile, 1327, "dynamic-value"},
+		{pFile, 1341, "dynamic-value"},
+		{pFile, 1342, "dynamic-value"},
+		{pFile, 1348, "dynamic-value"},
+		{pFile, 1352, "dynamic-value"},
+		{pFile, 1356, "dynamic-value"},
+		{pFile, 1357, "dynamic-value"},
+		{pFile, 1359, "dynamic-value"},
+		{pFile, 1360, "dynamic-value"},
 	};
 	const std::vector<SStableTextCandidate> vUnexpected = FilterCandidatesNotCoveredByMenuPoolOrAllowlist(pFile, vCandidates, vAllowlist);
 	EXPECT_TRUE(vUnexpected.empty()) << JoinCandidates(vUnexpected);
@@ -4941,7 +4949,7 @@ TEST(QmMonitoringHelpers, HudSettingsTextHydratesUnderBudget)
 {
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string HudBranch = ExtractSourceBlock(Settings, "if(s_CurTab == APPEARANCE_TAB_HUD)", "else if(s_CurTab == APPEARANCE_TAB_CHAT)");
+	const std::string HudBranch = ExtractSourceBlock(Settings, "if(m_AppearanceSettingsTab == APPEARANCE_TAB_HUD)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_CHAT)");
 	ASSERT_FALSE(HudBranch.empty());
 
 	EXPECT_NE(Settings.find("APPEARANCE_TAB_HUD"), std::string::npos);
@@ -4959,11 +4967,11 @@ TEST(QmMonitoringHelpers, HudSettingsTextHydratesUnderBudget)
 TEST(QmMonitoringHelpers, AppearanceHudChatNamePlateCheckboxesUseBudgetedTextPipeline)
 {
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
-	const std::string HudBranch = ExtractSourceBlock(Settings, "if(s_CurTab == APPEARANCE_TAB_HUD)", "else if(s_CurTab == APPEARANCE_TAB_CHAT)");
-	const std::string ChatBranch = ExtractSourceBlock(Settings, "else if(s_CurTab == APPEARANCE_TAB_CHAT)", "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)");
-	const std::string NamePlateBranch = ExtractSourceBlock(Settings, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)", "else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)");
-	const std::string HookCollisionBranch = ExtractSourceBlock(Settings, "else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)", "else if(s_CurTab == APPEARANCE_TAB_INFO_MESSAGES)");
-	const std::string InfoMessagesBranch = ExtractSourceBlock(Settings, "else if(s_CurTab == APPEARANCE_TAB_INFO_MESSAGES)", "else if(s_CurTab == APPEARANCE_TAB_LASER)");
+	const std::string HudBranch = ExtractSourceBlock(Settings, "if(m_AppearanceSettingsTab == APPEARANCE_TAB_HUD)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_CHAT)");
+	const std::string ChatBranch = ExtractSourceBlock(Settings, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_CHAT)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
+	const std::string NamePlateBranch = ExtractSourceBlock(Settings, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION)");
+	const std::string HookCollisionBranch = ExtractSourceBlock(Settings, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_INFO_MESSAGES)");
+	const std::string InfoMessagesBranch = ExtractSourceBlock(Settings, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_INFO_MESSAGES)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_LASER)");
 	ASSERT_FALSE(HudBranch.empty());
 	ASSERT_FALSE(ChatBranch.empty());
 	ASSERT_FALSE(NamePlateBranch.empty());
@@ -4991,7 +4999,7 @@ TEST(QmMonitoringHelpers, AppearanceHudChatNamePlateCheckboxesUseBudgetedTextPip
 TEST(QmMonitoringHelpers, AppearanceNamePlateHookStrengthSizeUsesSingleLineSlider)
 {
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
-	const std::string NamePlateBranch = ExtractSourceBlock(Settings, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)", "else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)");
+	const std::string NamePlateBranch = ExtractSourceBlock(Settings, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 
 	EXPECT_NE(NamePlateBranch.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, \"appearance-hook-strength-size\", &g_Config.m_ClNamePlatesStrongSize, &g_Config.m_ClNamePlatesStrongSize, &Button, Localize(\"Size of hook strength icon and number indicator\"), -50, 100);"), std::string::npos);
@@ -5003,7 +5011,7 @@ TEST(QmMonitoringHelpers, AppearanceNamePlateHookStrengthSizeUsesSingleLineSlide
 TEST(QmMonitoringHelpers, AppearanceNamePlateTabUsesCardBackedScrollRegion)
 {
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
-	const std::string NamePlateBranch = ExtractSourceBlock(Settings, "else if(s_CurTab == APPEARANCE_TAB_NAME_PLATE)", "else if(s_CurTab == APPEARANCE_TAB_HOOK_COLLISION)");
+	const std::string NamePlateBranch = ExtractSourceBlock(Settings, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)", "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION)");
 	ASSERT_FALSE(NamePlateBranch.empty());
 
 	EXPECT_EQ(NamePlateBranch.find("DrawTClientCacheSectionBox("), std::string::npos);
@@ -5069,7 +5077,7 @@ TEST(QmMonitoringHelpers, AppearanceSettingsHeadingsUseBudgetedTextPipeline)
 	// through the settings text cache/drain path instead of direct UI labels,
 	// otherwise first-entry HUD/Appearance tabs can create containers in render.
 	EXPECT_NE(Body.find("auto DoAppearanceHeading"), std::string::npos);
-	EXPECT_NE(Body.find("SettingsTextElement(SETTINGS_APPEARANCE, s_CurTab"), std::string::npos);
+	EXPECT_NE(Body.find("SettingsTextElement(SETTINGS_APPEARANCE, m_AppearanceSettingsTab"), std::string::npos);
 	EXPECT_NE(Body.find("DoSettingsLabelStreamed(HeadingElement"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoLabel_AutoLineSize"), std::string::npos);
 }
@@ -6429,9 +6437,12 @@ TEST(QmMonitoringHelpers, QmClientSearchTabRendersAllVisibleGlobalCards)
 TEST(QmMonitoringHelpers, QmClientSearchNavigationTargetsSettingsPages)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
 	const size_t NavigationPos = QmClient.find("SQmGlobalSearchNavigation ResolveGlobalSearchNavigation");
 	ASSERT_NE(NavigationPos, std::string::npos);
-	const std::string NavigationBody = QmClient.substr(NavigationPos, 2400);
+	const std::string NavigationBody = QmClient.substr(NavigationPos, 4200);
+	const std::string CardBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)");
+	ASSERT_FALSE(CardBody.empty());
 
 	EXPECT_NE(NavigationBody.find("str_startswith(pStableId, \"qm:\")"), std::string::npos);
 	EXPECT_NE(NavigationBody.find("Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;"), std::string::npos);
@@ -6446,6 +6457,16 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationTargetsSettingsPages)
 	EXPECT_NE(NavigationBody.find("Navigation.m_TClientTab = 1;"), std::string::npos);
 	EXPECT_NE(NavigationBody.find("str_comp(pTab, \"tclient-status-bar\")"), std::string::npos);
 	EXPECT_NE(NavigationBody.find("Navigation.m_TClientTab = 4;"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_HUD;"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_CHAT;"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_NAME_PLATE;"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_HOOK_COLLISION;"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_INFO_MESSAGES;"), std::string::npos);
+	EXPECT_NE(NavigationBody.find("Navigation.m_AppearanceTab = CMenus::APPEARANCE_TAB_LASER;"), std::string::npos);
+	EXPECT_GE(CountSubstring(NavigationBody, "Navigation.m_SettingsPage = CMenus::SETTINGS_APPEARANCE;"), 6);
+	EXPECT_NE(CardBody.find("if(Navigation.m_AppearanceTab >= 0)"), std::string::npos);
+	EXPECT_NE(CardBody.find("m_AppearanceSettingsTab = Navigation.m_AppearanceTab;"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("int m_AppearanceSettingsTab = APPEARANCE_TAB_HUD;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)

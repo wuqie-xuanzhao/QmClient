@@ -2204,6 +2204,17 @@ public:
 		SMALL_TAB_LENGTH,
 	};
 
+	enum
+	{
+		APPEARANCE_TAB_HUD = 0,
+		APPEARANCE_TAB_CHAT = 1,
+		APPEARANCE_TAB_NAME_PLATE = 2,
+		APPEARANCE_TAB_HOOK_COLLISION = 3,
+		APPEARANCE_TAB_INFO_MESSAGES = 4,
+		APPEARANCE_TAB_LASER = 5,
+		NUMBER_OF_APPEARANCE_TABS = 6,
+	};
+
 	SUIAnimator m_aAnimatorsBigPage[BIG_TAB_LENGTH];
 	SUIAnimator m_aAnimatorsSmallPage[SMALL_TAB_LENGTH];
 	SUIAnimator m_aAnimatorsSettingsTab[SETTINGS_LENGTH];
@@ -2212,6 +2223,7 @@ public:
 	std::array<const char *, SETTINGS_LENGTH> m_apSettingsTabs{};
 	int m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
 	int m_TClientSettingsTab = 0;
+	int m_AppearanceSettingsTab = APPEARANCE_TAB_HUD;
 	CLineInputBuffered<128> m_GlobalCardSearchInput;
 	void ClearQmClientSettingsSearchInputs();
 
