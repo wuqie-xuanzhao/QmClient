@@ -6946,6 +6946,23 @@ TEST(QmMonitoringHelpers, IngameUnfinishedMapsPlayerNameUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_PlayerNameInput, &Row, 12.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, IngameMapNoteUsesSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_ingame.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerInfo(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t TextFieldPos = Body.find("if(ui_widget::TextField(ServerInfoTextInputCtx, &s_MapNoteInput, NoteInput, Localize(\"Note\"), FontSizeBody * 0.85f))");
+	const size_t SaveNotePos = Body.find("GameClient()->m_TClient.SetMapNote(CurrentServerInfo.m_aMap, s_MapNoteInput.GetString());", TextFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext ServerInfoTextInputCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("ServerInfoTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"ingame_server_info_text_inputs\");"), std::string::npos);
+	EXPECT_NE(TextFieldPos, std::string::npos);
+	EXPECT_NE(SaveNotePos, std::string::npos);
+	EXPECT_LT(TextFieldPos, SaveNotePos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_MapNoteInput, &NoteInput, FontSizeBody * 0.85f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DemoBrowserSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");

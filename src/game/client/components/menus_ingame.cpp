@@ -1972,6 +1972,13 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	str_format(aBuf, sizeof(aBuf), "%d/%d", GameClient()->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients);
 	DoServerInfoField("ingame-game-info-players-label", "ingame-game-info-players-value", m_IngameServerInfoTextSnapshot.m_PlayersHash, &Label, Localize("Players"), aBuf);
 
+	IUiContext ServerInfoTextInputCtx;
+	ServerInfoTextInputCtx.m_pUi = Ui();
+	ServerInfoTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	ServerInfoTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	ServerInfoTextInputCtx.m_ScopeHash = MakeUiScopeHash("ingame_server_info_text_inputs");
+	ServerInfoTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 	if(CurrentServerInfo.m_aMap[0] != '\0' && GameInfo.h >= 34.0f)
 	{
 		static CLineInputBuffered<256> s_MapNoteInput;
@@ -1989,7 +1996,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		NoteRow.VSplitLeft(72.0f, &NoteLabel, &NoteInput);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Note"));
 		DoIngameMenuLabel(PAGE_SERVER_INFO, "ingame-game-info-note", &NoteLabel, aBuf, FontSizeBody, TEXTALIGN_ML);
-		if(Ui()->DoEditBox(&s_MapNoteInput, &NoteInput, FontSizeBody * 0.85f))
+		if(ui_widget::TextField(ServerInfoTextInputCtx, &s_MapNoteInput, NoteInput, Localize("Note"), FontSizeBody * 0.85f))
 			GameClient()->m_TClient.SetMapNote(CurrentServerInfo.m_aMap, s_MapNoteInput.GetString());
 	}
 
