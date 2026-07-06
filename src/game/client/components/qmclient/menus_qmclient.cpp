@@ -129,6 +129,7 @@ static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
 struct SQmGlobalSearchResults
 {
 	std::vector<SQmGlobalSearchCard> m_vCards;
+	std::vector<const SQmGlobalSearchCard *> m_vAllVisibleCards;
 	std::vector<const SQmGlobalSearchCard *> m_vVisibleCards;
 	std::vector<const SQmGlobalSearchCard *> m_vExternalCards;
 };
@@ -170,16 +171,20 @@ namespace
 	void CollectGlobalSearchResults(const char *pSearch, SQmGlobalSearchResults &Out)
 	{
 		BuildGlobalSearchCards(Out.m_vCards);
+		Out.m_vAllVisibleCards.clear();
 		Out.m_vVisibleCards.clear();
 		Out.m_vExternalCards.clear();
+		Out.m_vAllVisibleCards.reserve(Out.m_vCards.size());
 		Out.m_vVisibleCards.reserve(Out.m_vCards.size());
 		Out.m_vExternalCards.reserve(Out.m_vCards.size());
 		for(const SQmGlobalSearchCard &GlobalSearchCard : Out.m_vCards)
 		{
 			if(!MatchesGlobalSearchCard(&GlobalSearchCard, pSearch))
 				continue;
-			Out.m_vVisibleCards.push_back(&GlobalSearchCard);
-			if(!IsQmGlobalSearchCard(&GlobalSearchCard))
+			Out.m_vAllVisibleCards.push_back(&GlobalSearchCard);
+			if(IsQmGlobalSearchCard(&GlobalSearchCard))
+				Out.m_vVisibleCards.push_back(&GlobalSearchCard);
+			else
 				Out.m_vExternalCards.push_back(&GlobalSearchCard);
 		}
 	}
@@ -848,8 +853,8 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	const char *pModuleSearch = ModuleSearchInput.GetString();
 	SQmGlobalSearchResults GlobalSearchResults;
 	CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);
-	const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vVisibleCards;
-	const int SearchMatchedGlobalCardCount = (int)GlobalSearchResults.m_vVisibleCards.size();
+	const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vAllVisibleCards;
+	const int SearchMatchedGlobalCardCount = (int)GlobalSearchResults.m_vAllVisibleCards.size();
 
 	CUIRect Row;
 	{

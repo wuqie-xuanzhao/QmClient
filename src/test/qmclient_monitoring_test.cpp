@@ -1515,13 +1515,20 @@ TEST(QmMonitoringHelpers, QmClientStableTextCandidateAuditIsEmptyExceptAllowlist
 		{pFile, 1323, "dynamic-value"},
 		{pFile, 1326, "dynamic-value"},
 		{pFile, 1327, "dynamic-value"},
+		{pFile, 1331, "dynamic-value"},
+		{pFile, 1332, "dynamic-value"},
 		{pFile, 1333, "dynamic-value"},
 		{pFile, 1337, "dynamic-value"},
+		{pFile, 1338, "dynamic-value"},
 		{pFile, 1344, "dynamic-value"},
 		{pFile, 1345, "dynamic-value"},
+		{pFile, 1346, "dynamic-value"},
+		{pFile, 1347, "dynamic-value"},
 		{pFile, 1341, "dynamic-value"},
 		{pFile, 1342, "dynamic-value"},
 		{pFile, 1348, "dynamic-value"},
+		{pFile, 1349, "dynamic-value"},
+		{pFile, 1350, "dynamic-value"},
 		{pFile, 1352, "dynamic-value"},
 		{pFile, 1356, "dynamic-value"},
 		{pFile, 1357, "dynamic-value"},
@@ -6430,10 +6437,10 @@ TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 	EXPECT_EQ(SharedBody.find("GlobalSearchPage"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("SearchTabActive"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("ShowSearchModuleControls"), std::string::npos);
-	EXPECT_NE(SearchContentBody.find("const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vVisibleCards;"), std::string::npos);
-	EXPECT_EQ(SearchContentBody.find("SearchVisibleExternalCards"), std::string::npos);
+	EXPECT_EQ(SearchContentBody.find("const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vVisibleCards;"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("SearchVisibleGlobalCards"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("SearchVisibleExternalCards"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vAllVisibleCards;"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("Localize(\"Found %d global cards\")"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("g_Config.m_UiSettingsPage == SETTINGS_SEARCH"), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("m_aQmClientModuleSearchInputs["), std::string::npos);
@@ -6457,7 +6464,7 @@ TEST(QmMonitoringHelpers, QmClientSearchTabUsesGlobalCardRegistry)
 	EXPECT_NE(QmClient.find("pCard->m_pSearchKeywords != nullptr && str_utf8_find_nocase(pCard->m_pSearchKeywords, pSearch)"), std::string::npos);
 	EXPECT_NE(SharedBody.find("SQmGlobalSearchResults GlobalSearchResults;"), std::string::npos);
 	EXPECT_NE(SharedBody.find("CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);"), std::string::npos);
-	EXPECT_NE(SharedBody.find("GlobalSearchResults.m_vVisibleCards"), std::string::npos);
+	EXPECT_NE(SharedBody.find("GlobalSearchResults.m_vAllVisibleCards"), std::string::npos);
 	EXPECT_NE(QmClient.find("const std::vector<qm_card_registry::SCardDefault> &Defaults = qm_card_registry::Defaults();"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("qm_card_registry::Defaults()"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("EQmModuleId::Info"), std::string::npos);
@@ -6503,6 +6510,7 @@ TEST(QmMonitoringHelpers, QmClientSearchTabRendersAllVisibleGlobalCards)
 	ASSERT_FALSE(SharedBody.empty());
 
 	EXPECT_NE(QmClient.find("std::vector<SQmGlobalSearchCard> m_vCards;"), std::string::npos);
+	EXPECT_NE(QmClient.find("std::vector<const SQmGlobalSearchCard *> m_vAllVisibleCards;"), std::string::npos);
 	EXPECT_NE(QmClient.find("std::vector<const SQmGlobalSearchCard *> m_vVisibleCards;"), std::string::npos);
 	EXPECT_NE(QmClient.find("std::vector<const SQmGlobalSearchCard *> m_vExternalCards;"), std::string::npos);
 	EXPECT_NE(QmClient.find("IsQmGlobalSearchCard("), std::string::npos);
@@ -6510,7 +6518,8 @@ TEST(QmMonitoringHelpers, QmClientSearchTabRendersAllVisibleGlobalCards)
 	EXPECT_NE(QmClient.find("void CMenus::RenderGlobalSearchResultCard("), std::string::npos);
 	EXPECT_NE(QmClient.find("void CMenus::RenderGlobalSearchResults("), std::string::npos);
 	EXPECT_NE(SharedBody.find("RenderGlobalSearchResults(MainView, SearchVisibleGlobalCards, QmCardStyle, UiScale, PrewarmOnly, s_GlassCards);"), std::string::npos);
-	EXPECT_NE(SharedBody.find("const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vVisibleCards;"), std::string::npos);
+	EXPECT_NE(SharedBody.find("const std::vector<const SQmGlobalSearchCard *> &SearchVisibleGlobalCards = GlobalSearchResults.m_vAllVisibleCards;"), std::string::npos);
+	EXPECT_NE(QmClient.find("Out.m_vAllVisibleCards.push_back(&GlobalSearchCard);"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("RenderGlobalSearchResults(MainView, SearchVisibleExternalCards"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("auto RenderGlobalSearchCard = [&]"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("s_aGlobalSearchCardButtons"), std::string::npos);
