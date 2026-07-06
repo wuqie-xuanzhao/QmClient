@@ -7367,6 +7367,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					else
 						*pValue = StepValue * 500;
 				};
+				IUiContext QmClientLyricsTextInputCtx;
+				QmClientLyricsTextInputCtx.m_pUi = Ui();
+				QmClientLyricsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+				QmClientLyricsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+				QmClientLyricsTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_lyrics_text_inputs");
+				QmClientLyricsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 				auto RenderLyricTextInput = [&](CLineInput *pLineInput, const char *pTextId, const char *pLabel, char *pValue, size_t ValueSize, const char *pEmptyText) {
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					CUIRect LabelColValue, ControlColValue;
@@ -7375,7 +7381,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					if(!pLineInput->IsActive() && str_comp(pLineInput->GetString(), pValue) != 0)
 						pLineInput->Set(pValue);
 					pLineInput->SetEmptyText(pEmptyText);
-					if(Ui()->DoEditBox(pLineInput, &ControlColValue, LgBodySize))
+					if(ui_widget::TextField(QmClientLyricsTextInputCtx, pLineInput, ControlColValue, pEmptyText, LgBodySize))
 						str_copy(pValue, pLineInput->GetString(), ValueSize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				};
