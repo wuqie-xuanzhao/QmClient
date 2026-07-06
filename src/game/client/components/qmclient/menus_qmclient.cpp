@@ -4413,7 +4413,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
-				auto RenderLanguageDropDownWithCustomInput = [this, LgBodySize, PrewarmOnly](const CUIRect &ControlColumn, const char **apNames, const char **apCodes, int Count, CUi::SDropDownState &DropDownState, char *pConfigValue, size_t ConfigValueSize, CLineInput &LineInput, const char *pEmptyText) {
+				auto RenderLanguageDropDownWithCustomInput = [this, LgBodySize, PrewarmOnly, &QmClientTranslateTextInputCtx](const CUIRect &ControlColumn, const char **apNames, const char **apCodes, int Count, CUi::SDropDownState &DropDownState, char *pConfigValue, size_t ConfigValueSize, CLineInput &LineInput, const char *pEmptyText) {
 					CUIRect DropRect, EditRect;
 					ControlColumn.VSplitMid(&DropRect, &EditRect);
 					DropRect.VMargin(1.0f, &DropRect);
@@ -4440,7 +4440,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					const bool WasActive = LineInput.IsActive();
 					const bool SubmitPressed = !PrewarmOnly && (Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER) || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
 					const bool ClickedOutside = !PrewarmOnly && (Ui()->MouseButtonClicked(0) || Ui()->MouseButtonClicked(1)) && !Ui()->MouseHovered(&EditRect);
-					Ui()->DoEditBox(&LineInput, &EditRect, LgBodySize, IGraphics::CORNER_ALL, {}, TEXTALIGN_MC);
+					ui_widget::STextFieldOptions LanguageInputOptions;
+					LanguageInputOptions.m_pPlaceholder = pEmptyText;
+					LanguageInputOptions.m_FontSize = LgBodySize;
+					LanguageInputOptions.m_Corners = IGraphics::CORNER_ALL;
+					LanguageInputOptions.m_TextAlign = TEXTALIGN_MC;
+					ui_widget::TextField(QmClientTranslateTextInputCtx, &LineInput, EditRect, LanguageInputOptions);
 					if(WasActive && (SubmitPressed || ClickedOutside))
 					{
 						str_copy(pConfigValue, LineInput.GetString(), ConfigValueSize);

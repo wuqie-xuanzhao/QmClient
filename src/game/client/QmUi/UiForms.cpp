@@ -25,9 +25,9 @@ namespace ui_widget
 			return ui_widget::BuildInputFieldResult(WasActive, pInput->IsActive(), Changed, SubmitPressed, WasEmpty, pInput->IsEmpty(), Clearable);
 		}
 
-		void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect)
+		void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
 		{
-			Rect.Draw(ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::BASE);
+			Rect.Draw(ui_token::color::SURFACE_ELEVATED, Options.m_Corners, Options.m_CornerRadius);
 
 			if(Ctx.m_pAnim == nullptr)
 				return;
@@ -39,37 +39,45 @@ namespace ui_widget
 
 			ColorRGBA RingColor = ui_token::color::BORDER_FOCUS;
 			RingColor.a *= Alpha;
-			Rect.Draw(RingColor, IGraphics::CORNER_ALL, ui_token::radius::BASE);
+			Rect.Draw(RingColor, Options.m_Corners, Options.m_CornerRadius);
 			CUIRect Inside;
 			Rect.Margin(1.0f, &Inside);
-			Inside.Draw(ui_token::color::SURFACE_ELEVATED, IGraphics::CORNER_ALL, ui_token::radius::BASE - 1.0f);
+			Inside.Draw(ui_token::color::SURFACE_ELEVATED, Options.m_Corners, maximum(Options.m_CornerRadius - 1.0f, 0.0f));
 		}
 
-		void DrawTextFieldPlaceholder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
+		void DrawTextFieldPlaceholder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize, int TextAlign)
 		{
 			if(pPlaceholder == nullptr || !pInput->IsEmpty() || pInput->IsActive())
 				return;
 
 			SLabelProperties LabelProps;
 			LabelProps.m_EllipsisAtEnd = true;
-			Ctx.m_pUi->DoLabel(&Rect, pPlaceholder, FontSize, TEXTALIGN_ML, LabelProps);
+			Ctx.m_pUi->DoLabel(&Rect, pPlaceholder, FontSize, TextAlign, LabelProps);
 		}
 	} // namespace
 
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
+		STextFieldOptions Options;
+		Options.m_pPlaceholder = pPlaceholder;
+		Options.m_FontSize = FontSize;
+		return TextFieldEx(Ctx, pInput, Rect, Options);
+	}
+
+	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
+	{
 		if(Ctx.m_pUi == nullptr || pInput == nullptr)
 			return {};
 
 		const bool WasActive = pInput->IsActive();
-		DrawTextFieldPlate(Ctx, pInput, Rect);
+		DrawTextFieldPlate(Ctx, pInput, Rect, Options);
 
 		// Inner padding to keep text off the rounded corners.
 		CUIRect Inner;
 		Rect.VMargin(ui_token::spacing::SM, &Inner);
 
-		const bool Changed = Ctx.m_pUi->DoEditBox(pInput, &Inner, FontSize);
-		DrawTextFieldPlaceholder(Ctx, pInput, Inner, pPlaceholder, FontSize);
+		const bool Changed = Ctx.m_pUi->DoEditBox(pInput, &Inner, Options.m_FontSize, Options.m_Corners, {}, Options.m_TextAlign);
+		DrawTextFieldPlaceholder(Ctx, pInput, Inner, Options.m_pPlaceholder, Options.m_FontSize, Options.m_TextAlign);
 
 		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, false, false);
 	}
@@ -79,6 +87,11 @@ namespace ui_widget
 		return TextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;
 	}
 
+	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
+	{
+		return TextFieldEx(Ctx, pInput, Rect, Options).m_Changed;
+	}
+
 	SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
 		if(Ctx.m_pUi == nullptr || pInput == nullptr)
@@ -86,7 +99,8 @@ namespace ui_widget
 
 		const bool WasActive = pInput->IsActive();
 		const bool WasEmpty = pInput->IsEmpty();
-		DrawTextFieldPlate(Ctx, pInput, Rect);
+		STextFieldOptions Options;
+		DrawTextFieldPlate(Ctx, pInput, Rect, Options);
 
 		CUIRect Inner;
 		Rect.VMargin(ui_token::spacing::SM, &Inner);
@@ -94,7 +108,7 @@ namespace ui_widget
 		const bool Changed = Ctx.m_pUi->DoClearableEditBox(pInput, &Inner, FontSize);
 		CUIRect TextRect = Inner;
 		TextRect.VSplitRight(TextRect.h, &TextRect, nullptr);
-		DrawTextFieldPlaceholder(Ctx, pInput, TextRect, pPlaceholder, FontSize);
+		DrawTextFieldPlaceholder(Ctx, pInput, TextRect, pPlaceholder, FontSize, TEXTALIGN_ML);
 
 		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);
 	}
@@ -111,7 +125,8 @@ namespace ui_widget
 
 		const bool WasActive = pInput->IsActive();
 		const bool WasEmpty = pInput->IsEmpty();
-		DrawTextFieldPlate(Ctx, pInput, Rect);
+		STextFieldOptions Options;
+		DrawTextFieldPlate(Ctx, pInput, Rect, Options);
 
 		CUIRect Inner;
 		Rect.VMargin(ui_token::spacing::SM, &Inner);

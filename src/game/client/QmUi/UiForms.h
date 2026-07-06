@@ -6,6 +6,10 @@
 #include "UiContext.h"
 #include "UiTokens.h"
 
+#include <engine/graphics.h>
+
+#include <game/client/ui.h>
+
 class CLineInput;
 class CUIRect;
 
@@ -62,13 +66,24 @@ namespace ui_widget
 		return Result;
 	}
 
+	struct STextFieldOptions
+	{
+		const char *m_pPlaceholder = nullptr;
+		float m_FontSize = ui_token::font::BODY;
+		int m_Corners = IGraphics::CORNER_ALL;
+		float m_CornerRadius = ui_token::radius::BASE;
+		int m_TextAlign = TEXTALIGN_ML;
+	};
+
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
+	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
 	SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize = ui_token::font::BODY, bool HotkeyEnabled = true);
 
 	// Single-line text input with placeholder and animated focus ring.
 	// Returns true when the input value changed this frame.
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
+	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
 
 	// 带清除按钮的单行输入框。编辑行为委托给 CLineInput/CUi，保持光标、
 	// 选择、双击全选、IME、提交和外部点击保存行为与 DDNet 一致。
