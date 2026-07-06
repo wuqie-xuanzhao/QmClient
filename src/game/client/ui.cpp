@@ -2437,6 +2437,10 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		State.m_Init = true;
 	}
 
+	bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
+	if(State.m_DropDownState.IsOpen() && !PopupOpen)
+		State.m_DropDownState.Reset();
+
 	const auto LabelFunc = [CurSelection, pStrs]() {
 		return CurSelection > -1 ? pStrs[CurSelection] : "";
 	};
@@ -2445,12 +2449,27 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	Props.m_HintRequiresStringCheck = true;
 	Props.m_HintCanChangePositionOrSize = true;
 	Props.m_ShowDropDownIcon = true;
-	if(IsPopupOpen(&State.m_SelectionPopupContext))
+	if(PopupOpen)
 	{
 		Props.m_Corners = IGraphics::CORNER_ALL & (~State.m_SelectionPopupContext.m_Props.m_Corners);
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
+		PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
+		if(State.m_DropDownState.IsOpen() && !PopupOpen)
+			State.m_DropDownState.Reset();
 	}
-	if(DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props))
+	const bool TogglePressed = DoButton_Menu(State.m_UiElement, &State.m_ButtonContainer, LabelFunc, pRect, Props);
+
+	SQmDropdownInput DropDownInput;
+	DropDownInput.m_TogglePressed = TogglePressed;
+	if(PopupOpen)
+	{
+		DropDownInput.m_KeyUp = ConsumeHotkey(HOTKEY_UP);
+		DropDownInput.m_KeyDown = ConsumeHotkey(HOTKEY_DOWN);
+		DropDownInput.m_KeyEnter = ConsumeHotkey(HOTKEY_ENTER);
+		DropDownInput.m_KeyEscape = ConsumeHotkey(HOTKEY_ESCAPE);
+	}
+	const SQmDropdownUpdateResult DropDownResult = State.m_DropDownState.Update(DropDownInput, Num);
+	if(DropDownResult.m_Opened)
 	{
 		CScrollRegion *pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion;
 		const bool SpecialFontRenderMode = State.m_SelectionPopupContext.m_SpecialFontRenderMode;
@@ -2469,10 +2488,21 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		State.m_SelectionPopupContext.m_TransparentButtons = true;
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
 	}
-
-	if(State.m_SelectionPopupContext.m_SelectionIndex >= 0)
+	if(DropDownResult.m_Selected)
+	{
+		ClosePopupMenu(&State.m_SelectionPopupContext);
+		State.m_SelectionPopupContext.Reset();
+		return DropDownResult.m_SelectedIndex;
+	}
+	else if(DropDownResult.m_Closed)
+	{
+		ClosePopupMenu(&State.m_SelectionPopupContext);
+		State.m_SelectionPopupContext.Reset();
+	}
+	else if(State.m_SelectionPopupContext.m_SelectionIndex >= 0)
 	{
 		const int NewSelection = State.m_SelectionPopupContext.m_SelectionIndex;
+		State.m_DropDownState.Reset();
 		State.m_SelectionPopupContext.Reset();
 		return NewSelection;
 	}

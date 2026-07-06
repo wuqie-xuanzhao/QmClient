@@ -2230,8 +2230,22 @@ TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 
 	ASSERT_FALSE(DoDropDown.empty());
 	ASSERT_FALSE(DoPopupMenu.empty());
-	EXPECT_NE(DoDropDown.find("if(IsPopupOpen(&State.m_SelectionPopupContext))"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("if(PopupOpen)"), std::string::npos);
 	EXPECT_NE(DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("if(State.m_DropDownState.IsOpen() && !PopupOpen)"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("SQmDropdownInput DropDownInput;"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("State.m_DropDownState.Update(DropDownInput, Num);"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyUp = ConsumeHotkey(HOTKEY_UP);"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyDown = ConsumeHotkey(HOTKEY_DOWN);"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyEnter = ConsumeHotkey(HOTKEY_ENTER);"), std::string::npos);
+	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyEscape = ConsumeHotkey(HOTKEY_ESCAPE);"), std::string::npos);
+	const size_t SelectedBranch = DoDropDown.find("if(DropDownResult.m_Selected)");
+	const size_t ClosedBranch = DoDropDown.find("else if(DropDownResult.m_Closed)");
+	ASSERT_NE(SelectedBranch, std::string::npos);
+	ASSERT_NE(ClosedBranch, std::string::npos);
+	EXPECT_LT(SelectedBranch, ClosedBranch);
 	EXPECT_NE(DoPopupMenu.find("std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end()"), std::string::npos);
 	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.x = X;"), std::string::npos);
 	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.y = Y;"), std::string::npos);
