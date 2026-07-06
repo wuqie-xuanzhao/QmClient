@@ -844,7 +844,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		SearchContent.VSplitRight(CardPadding, &SearchContent, nullptr);
 		SearchContent.HSplitTop(CardPadding, nullptr, &SearchContent);
 		SearchContent.HSplitTop(BodySize + LineSpacing, &Row, &SearchContent);
-		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-search-feature-search-title", &Row, Localize("Feature Search"), BodySize + 2.0f, TEXTALIGN_ML, {}, (int)Row.w);
+		DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-feature-search-title", &Row, Localize("Feature Search"), BodySize + 2.0f, TEXTALIGN_ML, {}, (int)Row.w);
 		SearchContent.HSplitTop(LineSpacing * 0.5f, nullptr, &SearchContent);
 		SearchContent.HSplitTop(LineHeight, &Row, &SearchContent);
 		ui_widget::SearchField(SearchCtx, &ModuleSearchInput, Row, BodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
@@ -855,7 +855,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		SearchContent.HSplitTop(LineHeight * 0.85f, &Row, &SearchContent);
 		TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.82f));
 		if(SearchMatchedGlobalCardCount == 0)
-			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-search-no-matching-features", &Row, Localize("No matching features found. Try other keywords"), BodySize * 0.92f, TEXTALIGN_ML, {}, (int)Row.w);
+			DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-no-matching-features", &Row, Localize("No matching features found. Try other keywords"), BodySize * 0.92f, TEXTALIGN_ML, {}, (int)Row.w);
 		else
 			Ui()->DoLabel(&Row, aSearchHint, BodySize * 0.92f, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -918,14 +918,14 @@ void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSear
 	CUIRect Row;
 	Content.HSplitTop(HeadlineSize, &Row, &Content);
 	const char *pCardTitle = Card.m_pTitle;
-	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-search-global-card-title"), &Row, pCardTitle != nullptr ? Localize(pCardTitle) : Localize("Global card"), HeadlineSize, TEXTALIGN_ML);
+	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-title"), &Row, pCardTitle != nullptr ? Localize(pCardTitle) : Localize("Global card"), HeadlineSize, TEXTALIGN_ML);
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	const char *pTab = Card.m_pDefaultTab != nullptr ? Card.m_pDefaultTab : "global";
-	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-search-global-card-tab"), &Row, pTab, BodySize, TEXTALIGN_ML);
+	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-tab"), &Row, pTab, BodySize, TEXTALIGN_ML);
 	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
 	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-search-global-card-id"), &Row, Card.m_pStableId != nullptr ? Card.m_pStableId : "", TipSize, TEXTALIGN_ML);
+	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-id"), &Row, Card.m_pStableId != nullptr ? Card.m_pStableId : "", TipSize, TEXTALIGN_ML);
 
 	MainView.HSplitTop(CardHeight, nullptr, &MainView);
 }

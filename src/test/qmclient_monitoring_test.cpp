@@ -6348,6 +6348,9 @@ TEST(QmMonitoringHelpers, GlobalSearchUsesDedicatedSettingsPage)
 	EXPECT_NE(SearchContentBody.find("SearchCtx.m_ScopeHash = MakeUiScopeHash(\"settings_global_search\");"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("ui_widget::SearchField(SearchCtx, &ModuleSearchInput, Row, BodySize"), std::string::npos);
 	EXPECT_EQ(SearchContentBody.find("Ui()->DoEditBox_Search(&ModuleSearchInput"), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, \"qmclient-search-feature-search-title\""), std::string::npos);
+	EXPECT_NE(SearchContentBody.find("DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, \"qmclient-search-no-matching-features\""), std::string::npos);
+	EXPECT_EQ(SearchContentBody.find("DoSettingsMenuLabel(SETTINGS_QMCLIENT"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("CollectGlobalSearchResults(pModuleSearch, GlobalSearchResults);"), std::string::npos);
 	EXPECT_NE(SearchContentBody.find("RenderGlobalSearchResults(MainView, SearchVisibleGlobalCards, QmCardStyle, UiScale, PrewarmOnly, s_GlassCards);"), std::string::npos);
 	EXPECT_EQ(SharedBody.find("GlobalSearchPage"), std::string::npos);
@@ -6415,6 +6418,10 @@ TEST(QmMonitoringHelpers, QmClientSearchTabRendersAllVisibleGlobalCards)
 	EXPECT_NE(CardBody.find("const SQmGlobalSearchNavigation Navigation = ResolveGlobalSearchNavigation(Card);"), std::string::npos);
 	EXPECT_NE(CardBody.find("pCardTitle != nullptr ? Localize(pCardTitle) : Localize(\"Global card\")"), std::string::npos);
 	EXPECT_LT(CardBody.find("qmclient-search-global-card-title"), CardBody.find("qmclient-search-global-card-id"));
+	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-title\")"), std::string::npos);
+	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-tab\")"), std::string::npos);
+	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-id\")"), std::string::npos);
+	EXPECT_EQ(CardBody.find("SettingsTextElement(SETTINGS_QMCLIENT"), std::string::npos);
 	EXPECT_NE(CardBody.find("Card.m_pStableId"), std::string::npos);
 	EXPECT_NE(CardBody.find("Card.m_pDefaultTab"), std::string::npos);
 }
