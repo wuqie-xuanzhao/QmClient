@@ -287,9 +287,9 @@ void CQmScrollContainer::Reset()
 	m_ScrollbarGrabY = 0.0f;
 	m_ContentDragActive = false;
 	m_ContentDragCandidate = false;
-	m_ContentDragPressMouseY = 0.0f;
+	m_ContentDragPressMousePos = 0.0f;
 	m_ContentDragPressOffset = 0.0f;
-	m_ContentDragLastMouseY = 0.0f;
+	m_ContentDragLastMousePos = 0.0f;
 }
 
 void CQmScrollContainer::ScrollByWheel(float WheelDelta, float ViewportHeight, float ContentHeight, const SQmScrollConfig &Config)
@@ -380,28 +380,30 @@ SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, floa
 	{
 		m_ContentDragActive = false;
 		m_ContentDragCandidate = false;
-		m_ContentDragPressMouseY = 0.0f;
+		m_ContentDragPressMousePos = 0.0f;
 		m_ContentDragPressOffset = 0.0f;
-		m_ContentDragLastMouseY = 0.0f;
+		m_ContentDragLastMousePos = 0.0f;
 	}
 	else if(Input.m_ContentDragBlocked)
 	{
 		m_ContentDragActive = false;
 		m_ContentDragCandidate = false;
-		m_ContentDragPressMouseY = 0.0f;
+		m_ContentDragPressMousePos = 0.0f;
 		m_ContentDragPressOffset = 0.0f;
-		m_ContentDragLastMouseY = 0.0f;
+		m_ContentDragLastMousePos = 0.0f;
 	}
 	else if(Input.m_ContentDragAllowed && !Input.m_ContentDragBlocked && Input.m_Hovered && Input.m_MousePressed && !Input.m_ThumbHovered && !Input.m_TrackHovered)
 	{
+		const float MousePosition = Horizontal ? Input.m_MouseX : Input.m_MouseY;
 		m_ContentDragCandidate = true;
-		m_ContentDragPressMouseY = Input.m_MouseY;
+		m_ContentDragPressMousePos = MousePosition;
 		m_ContentDragPressOffset = m_State.Offset();
-		m_ContentDragLastMouseY = Input.m_MouseY;
+		m_ContentDragLastMousePos = MousePosition;
 	}
 	else if((m_ContentDragCandidate || m_ContentDragActive) && Input.m_MouseDown)
 	{
-		const float DragDistance = Input.m_MouseY - m_ContentDragPressMouseY;
+		const float MousePosition = Horizontal ? Input.m_MouseX : Input.m_MouseY;
+		const float DragDistance = MousePosition - m_ContentDragPressMousePos;
 		if(!m_ContentDragActive && std::abs(DragDistance) >= std::max(0.0f, Style.m_ContentDragThreshold))
 			m_ContentDragActive = true;
 		if(m_ContentDragActive)
@@ -409,7 +411,7 @@ SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, floa
 			m_State.SetOffset(m_ContentDragPressOffset - DragDistance, Metrics, Config, true);
 			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
 		}
-		m_ContentDragLastMouseY = Input.m_MouseY;
+		m_ContentDragLastMousePos = MousePosition;
 	}
 	return Frame;
 }

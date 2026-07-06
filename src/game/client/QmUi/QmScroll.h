@@ -118,9 +118,9 @@ private:
 	float m_ScrollbarGrabY = 0.0f;
 	bool m_ContentDragActive = false;
 	bool m_ContentDragCandidate = false;
-	float m_ContentDragPressMouseY = 0.0f;
+	float m_ContentDragPressMousePos = 0.0f;
 	float m_ContentDragPressOffset = 0.0f;
-	float m_ContentDragLastMouseY = 0.0f;
+	float m_ContentDragLastMousePos = 0.0f;
 };
 
 #endif

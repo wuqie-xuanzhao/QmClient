@@ -2182,6 +2182,48 @@ TEST(UiV2ScrollContainer, DraggingContentMovesOffsetWithPointer)
 	EXPECT_FALSE(Container.ContentDragActive());
 }
 
+TEST(UiV2ScrollContainer, DraggingHorizontalContentUsesPointerX)
+{
+	CQmScrollContainer Container;
+	CUIRect View;
+	View.x = 10.0f;
+	View.y = 20.0f;
+	View.w = 200.0f;
+	View.h = 100.0f;
+
+	SQmScrollContainerStyle Style;
+	Style.m_Axis = EQmScrollAxis::HORIZONTAL;
+
+	SQmScrollContainerInput Input;
+	Input.m_Hovered = true;
+	Input.m_MouseX = 80.0f;
+	Input.m_MouseY = 70.0f;
+	Input.m_MousePressed = true;
+	Input.m_MouseDown = true;
+	Input.m_ContentDragAllowed = true;
+	SQmScrollContainerFrame Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
+	EXPECT_FALSE(Container.ContentDragActive());
+	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
+
+	Input.m_MousePressed = false;
+	Input.m_MouseX = 76.0f;
+	Input.m_MouseY = 30.0f;
+	Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
+	EXPECT_FALSE(Container.ContentDragActive());
+	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
+
+	Input.m_MouseX = 40.0f;
+	Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
+	EXPECT_NEAR(Frame.m_Offset, 40.0f, 1e-6f);
+	EXPECT_TRUE(Container.ContentDragActive());
+	EXPECT_LT(Frame.m_ContentRect.x, View.x);
+	EXPECT_NEAR(Frame.m_ContentRect.y, View.y, 1e-6f);
+
+	Input.m_MouseDown = false;
+	Container.Update(View, 500.0f, 0.0f, Input, Style);
+	EXPECT_FALSE(Container.ContentDragActive());
+}
+
 TEST(UiV2ScrollContainer, ScrollbarDragDoesNotStartContentDrag)
 {
 	CQmScrollContainer Container;
