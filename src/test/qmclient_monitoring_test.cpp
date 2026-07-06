@@ -6824,6 +6824,47 @@ TEST(QmMonitoringHelpers, QmClientVoiceTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoiceServer, &ControlCol, LgBodySize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmClientKeywordReplyRuleInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "CUIRect Card35Start = Column;", "case EQmModuleId::PieMenu:");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext QmClientKeywordReplyTextInputCtx;");
+	const size_t UiPos = Body.find("QmClientKeywordReplyTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("QmClientKeywordReplyTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("QmClientKeywordReplyTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("QmClientKeywordReplyTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_keyword_reply_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("QmClientKeywordReplyTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+
+	const size_t TriggerEmptyTextPos = Body.find("pRuleRow->m_TriggerInput.SetEmptyText(\"\");");
+	const size_t ReplyEmptyTextPos = Body.find("pRuleRow->m_ReplyInput.SetEmptyText(\"\");", TriggerEmptyTextPos);
+	const size_t TriggerTextFieldPos = Body.find("ui_widget::TextField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_TriggerInput, TriggerCol, \"\", LgBodySize);", ReplyEmptyTextPos);
+	const size_t ReplyTextFieldPos = Body.find("ui_widget::TextField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_ReplyInput, ReplyCol, \"\", LgBodySize);", TriggerTextFieldPos);
+	EXPECT_NE(TriggerEmptyTextPos, std::string::npos);
+	EXPECT_NE(ReplyEmptyTextPos, std::string::npos);
+	EXPECT_NE(TriggerTextFieldPos, std::string::npos);
+	EXPECT_NE(ReplyTextFieldPos, std::string::npos);
+	EXPECT_LT(TriggerEmptyTextPos, ReplyEmptyTextPos);
+	EXPECT_LT(ReplyEmptyTextPos, TriggerTextFieldPos);
+	EXPECT_LT(TriggerTextFieldPos, ReplyTextFieldPos);
+
+	EXPECT_NE(Body.find("BuildAutoReplyRulesFromRows(s_vKeywordRuleRows, aKeywordRules, sizeof(aKeywordRules));"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&pRuleRow->m_TriggerInput, &TriggerCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&pRuleRow->m_ReplyInput, &ReplyCol, LgBodySize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, LaserPreviewDrawsWeaponBodiesBeforePreviewLaser)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");

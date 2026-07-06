@@ -4884,6 +4884,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 8, Localize("Keyword Reply"), Localize("I am a robot"));
+				IUiContext QmClientKeywordReplyTextInputCtx;
+				QmClientKeywordReplyTextInputCtx.m_pUi = Ui();
+				QmClientKeywordReplyTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+				QmClientKeywordReplyTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+				QmClientKeywordReplyTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_keyword_reply_text_inputs");
+				QmClientKeywordReplyTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
@@ -4974,9 +4980,9 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					OptionsCol.VSplitLeft(maximum(54.0f, 54.0f * UiScale), &RegexCol, &OptionsCol);
 					DoQmSettingsCheckboxAuto(&pRuleRow->m_AutoRename, "Rename", Localize("Rename"), &pRuleRow->m_AutoRename, &RenameCol, LgLineHeight);
 					DoQmSettingsCheckboxAuto(&pRuleRow->m_Regex, "Regex", Localize("Regex"), &pRuleRow->m_Regex, &RegexCol, LgLineHeight);
-					Ui()->DoEditBox(&pRuleRow->m_TriggerInput, &TriggerCol, LgBodySize);
+					ui_widget::TextField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_TriggerInput, TriggerCol, "", LgBodySize);
 					DoQmSettingsLabel("qmclient-keyword-reply-send-label", &SendCol, Localize("Send"), LgBodySize, TEXTALIGN_MC);
-					Ui()->DoEditBox(&pRuleRow->m_ReplyInput, &ReplyCol, LgBodySize);
+					ui_widget::TextField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_ReplyInput, ReplyCol, "", LgBodySize);
 					const bool RemoveClicked = DoButton_Menu(&s_vKeywordRemoveRuleButtons[i], "-", 0, &RemoveButtonRect);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
