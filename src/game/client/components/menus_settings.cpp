@@ -7117,7 +7117,10 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		static CLineInput s_BackgroundEntitiesInput(g_Config.m_ClBackgroundEntities, sizeof(g_Config.m_ClBackgroundEntities));
 		static char s_aBackgroundEntitiesSync[sizeof(g_Config.m_ClBackgroundEntities)] = "";
 		const bool WasInputActive = s_BackgroundEntitiesInput.IsActive();
-		const bool InputCommitted = Ui()->DoEditBox(&s_BackgroundEntitiesInput, &EditBox, 14.0f);
+		IUiContext DDNetBackgroundEntitiesTextInputCtx;
+		DDNetBackgroundEntitiesTextInputCtx.m_pUi = Ui();
+		DDNetBackgroundEntitiesTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_ddnet_background_entities_text_input");
+		const bool InputCommitted = ui_widget::TextField(DDNetBackgroundEntitiesTextInputCtx, &s_BackgroundEntitiesInput, EditBox, nullptr, 14.0f);
 		bool BackgroundChanged = false;
 		if(InputCommitted)
 			BackgroundChanged = ApplyBackgroundEntitiesInputValue(s_BackgroundEntitiesInput);
@@ -7186,7 +7189,10 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		Miscellaneous.HSplitTop(20.0f, &Button, &Miscellaneous);
 		static CLineInput s_RunOnJoinInput(g_Config.m_ClRunOnJoin, sizeof(g_Config.m_ClRunOnJoin));
 		s_RunOnJoinInput.SetEmptyText(Localize("Chat command (e.g. showall 1)"));
-		Ui()->DoEditBox(&s_RunOnJoinInput, &Button, 14.0f);
+		IUiContext DDNetRunOnJoinTextInputCtx;
+		DDNetRunOnJoinTextInputCtx.m_pUi = Ui();
+		DDNetRunOnJoinTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_ddnet_run_on_join_text_input");
+		ui_widget::TextField(DDNetRunOnJoinTextInputCtx, &s_RunOnJoinInput, Button, nullptr, 14.0f);
 
 #if defined(CONF_FAMILY_WINDOWS)
 		static CButtonContainer s_ButtonUnregisterShell;

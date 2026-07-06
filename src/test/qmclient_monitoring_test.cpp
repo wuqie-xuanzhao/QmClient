@@ -7063,6 +7063,57 @@ TEST(QmMonitoringHelpers, SkinQueuePresetRenamePopupUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("pMenus->Ui()->DoEditBox(&pPopupContext->m_NameInput, &Input, FontSize + 1.0f"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, DDNetSettingsTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsDDNet(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t BackgroundInputPos = Body.find("static CLineInput s_BackgroundEntitiesInput(g_Config.m_ClBackgroundEntities, sizeof(g_Config.m_ClBackgroundEntities));");
+	const size_t BackgroundWasActivePos = Body.find("const bool WasInputActive = s_BackgroundEntitiesInput.IsActive();", BackgroundInputPos);
+	const size_t BackgroundCtxPos = Body.find("IUiContext DDNetBackgroundEntitiesTextInputCtx;", BackgroundWasActivePos);
+	const size_t BackgroundUiPos = Body.find("DDNetBackgroundEntitiesTextInputCtx.m_pUi = Ui();", BackgroundCtxPos);
+	const size_t BackgroundScopePos = Body.find("DDNetBackgroundEntitiesTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_ddnet_background_entities_text_input\");", BackgroundUiPos);
+	const size_t BackgroundFieldPos = Body.find("const bool InputCommitted = ui_widget::TextField(DDNetBackgroundEntitiesTextInputCtx, &s_BackgroundEntitiesInput, EditBox, nullptr, 14.0f);", BackgroundScopePos);
+	const size_t BackgroundApplyPos = Body.find("BackgroundChanged = ApplyBackgroundEntitiesInputValue(s_BackgroundEntitiesInput);", BackgroundFieldPos);
+	const size_t BackgroundBlurPos = Body.find("ShouldCommitBackgroundEntitiesInputOnBlur(WasInputActive, s_BackgroundEntitiesInput.IsActive(), s_BackgroundEntitiesInput.GetString(), s_aBackgroundEntitiesSync)", BackgroundApplyPos);
+	const size_t RunOnJoinInputPos = Body.find("static CLineInput s_RunOnJoinInput(g_Config.m_ClRunOnJoin, sizeof(g_Config.m_ClRunOnJoin));");
+	const size_t RunOnJoinEmptyTextPos = Body.find("s_RunOnJoinInput.SetEmptyText(Localize(\"Chat command (e.g. showall 1)\"));", RunOnJoinInputPos);
+	const size_t RunOnJoinCtxPos = Body.find("IUiContext DDNetRunOnJoinTextInputCtx;", RunOnJoinEmptyTextPos);
+	const size_t RunOnJoinUiPos = Body.find("DDNetRunOnJoinTextInputCtx.m_pUi = Ui();", RunOnJoinCtxPos);
+	const size_t RunOnJoinScopePos = Body.find("DDNetRunOnJoinTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_ddnet_run_on_join_text_input\");", RunOnJoinUiPos);
+	const size_t RunOnJoinFieldPos = Body.find("ui_widget::TextField(DDNetRunOnJoinTextInputCtx, &s_RunOnJoinInput, Button, nullptr, 14.0f);", RunOnJoinScopePos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(BackgroundInputPos, std::string::npos);
+	EXPECT_NE(BackgroundWasActivePos, std::string::npos);
+	EXPECT_NE(BackgroundCtxPos, std::string::npos);
+	EXPECT_NE(BackgroundUiPos, std::string::npos);
+	EXPECT_NE(BackgroundScopePos, std::string::npos);
+	EXPECT_NE(BackgroundFieldPos, std::string::npos);
+	EXPECT_NE(BackgroundApplyPos, std::string::npos);
+	EXPECT_NE(BackgroundBlurPos, std::string::npos);
+	EXPECT_LT(BackgroundInputPos, BackgroundWasActivePos);
+	EXPECT_LT(BackgroundWasActivePos, BackgroundCtxPos);
+	EXPECT_LT(BackgroundCtxPos, BackgroundUiPos);
+	EXPECT_LT(BackgroundUiPos, BackgroundScopePos);
+	EXPECT_LT(BackgroundScopePos, BackgroundFieldPos);
+	EXPECT_LT(BackgroundFieldPos, BackgroundApplyPos);
+	EXPECT_LT(BackgroundApplyPos, BackgroundBlurPos);
+	EXPECT_NE(RunOnJoinInputPos, std::string::npos);
+	EXPECT_NE(RunOnJoinEmptyTextPos, std::string::npos);
+	EXPECT_NE(RunOnJoinCtxPos, std::string::npos);
+	EXPECT_NE(RunOnJoinUiPos, std::string::npos);
+	EXPECT_NE(RunOnJoinScopePos, std::string::npos);
+	EXPECT_NE(RunOnJoinFieldPos, std::string::npos);
+	EXPECT_LT(RunOnJoinInputPos, RunOnJoinEmptyTextPos);
+	EXPECT_LT(RunOnJoinEmptyTextPos, RunOnJoinCtxPos);
+	EXPECT_LT(RunOnJoinCtxPos, RunOnJoinUiPos);
+	EXPECT_LT(RunOnJoinUiPos, RunOnJoinScopePos);
+	EXPECT_LT(RunOnJoinScopePos, RunOnJoinFieldPos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_BackgroundEntitiesInput, &EditBox, 14.0f"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_RunOnJoinInput, &Button, 14.0f"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, Tee7SkinSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings7.cpp");
