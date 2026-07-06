@@ -3945,6 +3945,9 @@ TEST(QmMonitoringHelpers, ValueSelectorCanFormatAndParseSpecialTextValues)
 	EXPECT_NE(Body.find("Props.m_pfnFormatValue"), std::string::npos);
 	EXPECT_NE(Body.find("Props.m_pfnParseValue"), std::string::npos);
 	EXPECT_NE(Body.find("m_ActiveValueSelectorState.m_NumberInput.Set(aEditBuf);"), std::string::npos);
+	EXPECT_NE(Body.find("if(Props.m_pfnParseValue != nullptr)\n\t\t\t{"), std::string::npos);
+	EXPECT_NE(Body.find("if(Props.m_pfnParseValue(m_ActiveValueSelectorState.m_NumberInput.GetString(), ParsedValue, Base))"), std::string::npos);
+	EXPECT_NE(Body.find("else\n\t\t\t\tCurrent = std::clamp(m_ActiveValueSelectorState.m_NumberInput.GetInteger64(Base), Min, Max);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, GraphicsRefreshRateInputAcceptsInfinitySymbol)
@@ -3957,6 +3960,11 @@ TEST(QmMonitoringHelpers, GraphicsRefreshRateInputAcceptsInfinitySymbol)
 	EXPECT_NE(Body.find("ParseInfiniteValueSelector"), std::string::npos);
 	EXPECT_NE(Body.find("Props.m_pfnFormatValue = Infinite ? FormatInfiniteValueSelector : nullptr;"), std::string::npos);
 	EXPECT_NE(Body.find("Props.m_pfnParseValue = Infinite ? ParseInfiniteValueSelector : nullptr;"), std::string::npos);
+	EXPECT_NE(Body.find("if(aTrimmed[0] == '\\0')"), std::string::npos);
+	EXPECT_NE(Body.find("int Error = 0;"), std::string::npos);
+	EXPECT_NE(Body.find("te_interp(aTrimmed, &Error)"), std::string::npos);
+	EXPECT_NE(Body.find("if(Error == 0 && std::isfinite(Result))"), std::string::npos);
+	EXPECT_NE(Body.find("return false;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)

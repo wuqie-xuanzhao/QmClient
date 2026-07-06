@@ -1532,8 +1532,11 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 		if(Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER) || ConsumeHotkey(HOTKEY_ENTER) || ((MouseButtonClicked(1) || MouseButtonClicked(0)) && !Inside))
 		{
 			int64_t ParsedValue = 0;
-			if(Props.m_pfnParseValue != nullptr && Props.m_pfnParseValue(m_ActiveValueSelectorState.m_NumberInput.GetString(), ParsedValue, Base))
-				Current = std::clamp(ParsedValue, Min, Max);
+			if(Props.m_pfnParseValue != nullptr)
+			{
+				if(Props.m_pfnParseValue(m_ActiveValueSelectorState.m_NumberInput.GetString(), ParsedValue, Base))
+					Current = std::clamp(ParsedValue, Min, Max);
+			}
 			else
 				Current = std::clamp(m_ActiveValueSelectorState.m_NumberInput.GetInteger64(Base), Min, Max);
 			DisableMouseLock();

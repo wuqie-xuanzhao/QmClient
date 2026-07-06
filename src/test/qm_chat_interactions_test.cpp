@@ -341,6 +341,25 @@ TEST(QmChatInteractions, SlashCommandSuggestionAppliesWithTrailingSpace)
 	EXPECT_FALSE(CChat::ApplySlashCommandSuggestion(aBuf, sizeof(aBuf), "hello", "/pause"));
 }
 
+TEST(QmChatInteractions, SlashCommandSuggestionDismissSticksUntilInputChanges)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/chat.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string RefreshBody = SourceFunctionBody(Source, "void CChat::RefreshSlashCommandSuggestions()");
+	const std::string InputBody = SourceFunctionBody(Source, "bool CChat::OnInput(const IInput::CEvent &Event)");
+	ASSERT_FALSE(RefreshBody.empty());
+	ASSERT_FALSE(InputBody.empty());
+
+	EXPECT_NE(Header.find("m_SlashCommandSuggestionsDismissed"), std::string::npos);
+	EXPECT_NE(Header.find("m_aSlashCommandSuggestionsDismissedInput"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("str_comp(pInput, m_aSlashCommandSuggestionsDismissedInput) == 0"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("m_vSlashCommandSuggestions.clear();"), std::string::npos);
+	EXPECT_NE(RefreshBody.find("m_SlashCommandSuggestionsDismissed = false;"), std::string::npos);
+	EXPECT_NE(InputBody.find("Event.m_Key == KEY_ESCAPE"), std::string::npos);
+	EXPECT_NE(InputBody.find("m_SlashCommandSuggestionsDismissed = true;"), std::string::npos);
+	EXPECT_NE(InputBody.find("str_copy(m_aSlashCommandSuggestionsDismissedInput, m_Input.GetString(), sizeof(m_aSlashCommandSuggestionsDismissedInput));"), std::string::npos);
+}
+
 TEST(QmChatInteractions, MotdPopupRespectsJoinServerInfoToggle)
 {
 	EXPECT_TRUE(CMotd::ShouldActivateMotdPopup("Welcome", 10, false));

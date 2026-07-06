@@ -220,6 +220,8 @@ private:
 	int m_SlashCommandSuggestionIndex = 0;
 	CUIRect m_SlashCommandSuggestionRect = {};
 	bool m_SlashCommandSuggestionRectValid = false;
+	bool m_SlashCommandSuggestionsDismissed = false;
+	char m_aSlashCommandSuggestionsDismissedInput[MAX_LINE_LENGTH] = {};
 
 	struct CHistoryEntry
 	{

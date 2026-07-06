@@ -836,6 +836,8 @@ void CChat::Reset()
 	m_SavedInputPending = false;
 	m_ServerSupportsCommandInfo = false;
 	m_ServerCommandsNeedSorting = false;
+	m_SlashCommandSuggestionsDismissed = false;
+	m_aSlashCommandSuggestionsDismissedInput[0] = '\0';
 	m_aCurrentInputText[0] = '\0';
 	DisableMode();
 	m_vServerCommands.clear();
@@ -1005,7 +1007,20 @@ void CChat::OnInit()
 
 void CChat::RefreshSlashCommandSuggestions()
 {
-	m_vSlashCommandSuggestions = BuildSlashCommandSuggestions(m_Input.GetString(), CHAT_SLASH_COMMAND_MENU_MAX_VISIBLE);
+	const char *pInput = m_Input.GetString();
+	if(m_SlashCommandSuggestionsDismissed && str_comp(pInput, m_aSlashCommandSuggestionsDismissedInput) == 0)
+	{
+		m_vSlashCommandSuggestions.clear();
+		m_SlashCommandSuggestionIndex = 0;
+		m_SlashCommandSuggestionRectValid = false;
+		return;
+	}
+	if(m_SlashCommandSuggestionsDismissed)
+	{
+		m_SlashCommandSuggestionsDismissed = false;
+		m_aSlashCommandSuggestionsDismissedInput[0] = '\0';
+	}
+	m_vSlashCommandSuggestions = BuildSlashCommandSuggestions(pInput, CHAT_SLASH_COMMAND_MENU_MAX_VISIBLE);
 	if(m_vSlashCommandSuggestions.empty())
 	{
 		m_SlashCommandSuggestionIndex = 0;
@@ -1029,6 +1044,8 @@ bool CChat::ApplySelectedSlashCommandSuggestion()
 	m_Input.SelectNothing();
 	m_vSlashCommandSuggestions.clear();
 	m_SlashCommandSuggestionRectValid = false;
+	m_SlashCommandSuggestionsDismissed = false;
+	m_aSlashCommandSuggestionsDismissedInput[0] = '\0';
 	return true;
 }
 
@@ -1192,6 +1209,8 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		{
 			m_vSlashCommandSuggestions.clear();
 			m_SlashCommandSuggestionRectValid = false;
+			m_SlashCommandSuggestionsDismissed = true;
+			str_copy(m_aSlashCommandSuggestionsDismissedInput, m_Input.GetString(), sizeof(m_aSlashCommandSuggestionsDismissedInput));
 			return true;
 		}
 		if(Event.m_Key == KEY_MOUSE_1 && m_SlashCommandSuggestionRectValid)
@@ -1515,6 +1534,8 @@ void CChat::EnableMode(int Team)
 		m_CompletionChosen = -1;
 		m_CompletionUsed = false;
 		m_Input.Activate(EInputPriority::CHAT);
+		m_SlashCommandSuggestionsDismissed = false;
+		m_aSlashCommandSuggestionsDismissedInput[0] = '\0';
 	}
 }
 
@@ -1527,6 +1548,10 @@ void CChat::DisableMode()
 	{
 		m_Mode = MODE_NONE;
 		m_Input.Deactivate();
+		m_vSlashCommandSuggestions.clear();
+		m_SlashCommandSuggestionRectValid = false;
+		m_SlashCommandSuggestionsDismissed = false;
+		m_aSlashCommandSuggestionsDismissedInput[0] = '\0';
 	}
 }
 

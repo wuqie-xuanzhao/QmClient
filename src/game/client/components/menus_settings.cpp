@@ -3006,6 +3006,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		char aTrimmed[32];
 		str_copy(aTrimmed, pTrimmed);
 		str_utf8_trim_right(aTrimmed);
+		if(aTrimmed[0] == '\0')
+			return false;
 		if(str_comp(aTrimmed, "∞") == 0 || str_comp_nocase(aTrimmed, "inf") == 0 || str_comp_nocase(aTrimmed, "infinite") == 0)
 		{
 			Value = 0;
@@ -3013,14 +3015,30 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		}
 		if(Base == 10)
 		{
-			double Result = te_interp(aTrimmed, nullptr);
-			if(std::isfinite(Result))
+			int Error = 0;
+			double Result = te_interp(aTrimmed, &Error);
+			if(Error == 0 && std::isfinite(Result))
 			{
 				Value = (int64_t)std::round(Result);
 				return true;
 			}
+			return false;
 		}
-		Value = str_toint64_base(aTrimmed, Base);
+		const char *pNumber = aTrimmed;
+		if(Base == 16 && pNumber[0] == '#')
+			++pNumber;
+		if(pNumber[0] == '\0')
+			return false;
+		for(const char *pCursor = pNumber; *pCursor != '\0'; ++pCursor)
+		{
+			const int Digit = *pCursor >= '0' && *pCursor <= '9' ? *pCursor - '0' :
+					  *pCursor >= 'a' && *pCursor <= 'f' ? *pCursor - 'a' + 10 :
+					  *pCursor >= 'A' && *pCursor <= 'F' ? *pCursor - 'A' + 10 :
+									       -1;
+			if(Digit < 0 || Digit >= Base)
+				return false;
+		}
+		Value = str_toint64_base(pNumber, Base);
 		return true;
 	};
 	auto DoSliderWithValueInput = [this, FormatInfiniteValueSelector, ParseInfiniteValueSelector](const void *pId, int *pOption, const CUIRect &Rect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, const char *pSuffix = "", unsigned Flags = 0u, int InputMax = -1) {
