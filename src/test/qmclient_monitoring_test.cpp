@@ -6125,6 +6125,8 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams"), std::string::npos);
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
+	EXPECT_NE(Controls.find("CScrollRegionParams ScrollParams = GameClient()->m_Menus.QmSettingsScrollRegionParams(1.0f);"), std::string::npos);
+	EXPECT_EQ(Controls.find("CScrollRegionParams ScrollParams;\n\tScrollParams.m_ScrollUnit"), std::string::npos);
 	const std::string QmOverviewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(QmOverviewBody.empty());
 	EXPECT_NE(QmOverviewBody.find("static CQmScrollContainer s_QmOverviewScrollContainer;"), std::string::npos);
