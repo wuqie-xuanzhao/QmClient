@@ -54,6 +54,8 @@ namespace qm_card_order
 		bool Serialize(char *pBuf, int BufSize) const;
 		// 容错解析：未知/重复/非法 key 跳过（照搬 ParseQmModuleLayout）
 		bool Parse(const char *pStr, const std::vector<const char *> &vValidIds);
+		// 仅加载用户显式配置：vDefaults 只提供合法 stableId 集合，不补齐缺失卡。
+		bool LoadExplicit(const char *pStr, const std::vector<SEntry> &vDefaults);
 		// 默认全集 + 用户配置覆盖：缺失卡保留默认，未知/非法残留跳过；返回是否至少解析到一条有效用户配置。
 		bool LoadMerged(const char *pStr, const std::vector<SEntry> &vDefaults);
 

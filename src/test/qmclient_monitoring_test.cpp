@@ -1753,6 +1753,7 @@ TEST(QmMonitoringHelpers, TClientSettingsCardDeckDragRuntimeUsesCtrlHeaderGate)
 	EXPECT_NE(Source.find("m_TClientSettingsCardDeckOrderDirty = true;"), std::string::npos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/QmCardRegistry.h>"), std::string::npos);
 	EXPECT_NE(Source.find("LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder)"), std::string::npos);
+	EXPECT_NE(Source.find("Model.LoadExplicit(pConfig, qm_card_registry::BuildDefaultEntries())"), std::string::npos);
 	EXPECT_EQ(Source.find("const char *pEntry = pConfig;\n\t\tchar aToken[160];\n\t\twhile((pEntry = str_next_token(pEntry, \";\", aToken"), std::string::npos);
 	EXPECT_NE(Source.find("LoadTClientOrderFromLegacyCardOrder(g_Config.m_QmSettingsCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
 	EXPECT_NE(Source.find("const bool HasGlobalTClientOrder = LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder);"), std::string::npos);
@@ -1794,7 +1795,7 @@ TEST(QmMonitoringHelpers, SettingsCardDeckGlobalOrderUsesSharedCardModel)
 	EXPECT_NE(Source.find("#include <game/client/QmUi/QmCardRegistry.h>"), std::string::npos);
 	EXPECT_NE(Body.find("qm_card_order::CModel Model;"), std::string::npos);
 	EXPECT_NE(Body.find("qm_card_registry::BuildDefaultEntries()"), std::string::npos);
-	EXPECT_NE(Body.find("Model.Parse(g_Config.m_QmGlobalCardOrder, vValidIds)"), std::string::npos);
+	EXPECT_NE(Body.find("Model.LoadExplicit(g_Config.m_QmGlobalCardOrder, vDefaults)"), std::string::npos);
 	EXPECT_NE(Body.find("Model.StableIdOrder(\"deck:\", DeckId.c_str(), 1)"), std::string::npos);
 	EXPECT_NE(Body.find("Model.StableIdOrder(\"deck:\", DeckId.c_str(), 2)"), std::string::npos);
 	EXPECT_EQ(Source.find("SettingsCardDeckParseGlobalColumn"), std::string::npos);

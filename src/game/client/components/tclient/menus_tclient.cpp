@@ -96,15 +96,7 @@ namespace
 			return false;
 
 		qm_card_order::CModel Model;
-		const std::vector<qm_card_order::SEntry> vDefaults = qm_card_registry::BuildDefaultEntries();
-		std::vector<const char *> vValidIds;
-		vValidIds.reserve(vDefaults.size());
-		for(const qm_card_order::SEntry &Default : vDefaults)
-		{
-			if(Default.m_pStableId != nullptr)
-				vValidIds.push_back(Default.m_pStableId);
-		}
-		if(!Model.Parse(pConfig, vValidIds) || Model.Count() == 0)
+		if(!Model.LoadExplicit(pConfig, qm_card_registry::BuildDefaultEntries()))
 			return false;
 
 		std::vector<std::string> vParsedLeftOrder = Model.StableIdOrder("tclient:", "tclient", 1);

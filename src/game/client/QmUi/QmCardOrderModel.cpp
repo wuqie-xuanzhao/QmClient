@@ -334,7 +334,7 @@ namespace qm_card_order
 		return true;
 	}
 
-	bool CModel::LoadMerged(const char *pStr, const std::vector<SEntry> &vDefaults)
+	bool CModel::LoadExplicit(const char *pStr, const std::vector<SEntry> &vDefaults)
 	{
 		std::vector<const char *> vValidIds;
 		vValidIds.reserve(vDefaults.size());
@@ -343,9 +343,13 @@ namespace qm_card_order
 			if(Default.m_pStableId != nullptr)
 				vValidIds.push_back(Default.m_pStableId);
 		}
+		return pStr != nullptr && pStr[0] != '\0' && Parse(pStr, vValidIds) && Count() > 0;
+	}
 
+	bool CModel::LoadMerged(const char *pStr, const std::vector<SEntry> &vDefaults)
+	{
 		CModel ParsedModel;
-		const bool Parsed = pStr != nullptr && pStr[0] != '\0' && ParsedModel.Parse(pStr, vValidIds) && ParsedModel.Count() > 0;
+		const bool Parsed = ParsedModel.LoadExplicit(pStr, vDefaults);
 
 		std::vector<SEntry> vMerged;
 		vMerged.reserve(vDefaults.size());

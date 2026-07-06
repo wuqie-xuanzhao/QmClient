@@ -147,6 +147,28 @@ TEST(QmCardOrderModel, LoadMergedBackfillsDefaultTabForLegacyEntries)
 	EXPECT_STREQ(M.Entry(VisualRight[0]).m_pDefaultTab, "visual");
 }
 
+// 意图：Tclient/deck 运行时读取全局配置时只需要用户显式写入的条目，
+// 不能用 LoadMerged 补全默认全集，否则会把"没有配置"误判成"用户已有顺序"。
+TEST(QmCardOrderModel, LoadExplicitUsesDefaultsAsValidIdsWithoutBackfillingMissingCards)
+{
+	qm_card_order::CModel M;
+	std::vector<qm_card_order::SEntry> Defaults = {
+		{"tclient:a", "tclient", 1, 0},
+		{"tclient:b", "tclient", 1, 1},
+		{"deck:sound", "sound", 1, 0},
+	};
+
+	EXPECT_TRUE(M.LoadExplicit("tclient:b|tclient|right|0;unknown|tclient|left|0;", Defaults));
+
+	EXPECT_EQ(M.Count(), 1);
+	EXPECT_GE(M.StateIndexForStableId("tclient:b"), 0);
+	EXPECT_EQ(M.StateIndexForStableId("tclient:a"), -1);
+	EXPECT_EQ(M.StateIndexForStableId("deck:sound"), -1);
+	const auto TClientRight = M.ColumnIndices("tclient", 2);
+	ASSERT_EQ(TClientRight.size(), 1u);
+	EXPECT_STREQ(M.Entry(TClientRight[0]).m_pStableId, "tclient:b");
+}
+
 TEST(QmCardOrderModel, ParsePipeFormatKeepsMovableTabPlacement)
 {
 	qm_card_order::CModel M;

@@ -4615,20 +4615,17 @@ void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()
 
 	qm_card_order::CModel Model;
 	const std::vector<qm_card_order::SEntry> vDefaults = qm_card_registry::BuildDefaultEntries();
-	std::vector<const char *> vValidIds;
-	vValidIds.reserve(vDefaults.size());
 	std::vector<std::string> vDeckIds;
 	for(const qm_card_order::SEntry &Default : vDefaults)
 	{
 		if(Default.m_pStableId == nullptr)
 			continue;
-		vValidIds.push_back(Default.m_pStableId);
 		if(Default.m_pDefaultTab == nullptr || str_startswith(Default.m_pStableId, "deck:") == nullptr)
 			continue;
 		if(std::find(vDeckIds.begin(), vDeckIds.end(), Default.m_pDefaultTab) == vDeckIds.end())
 			vDeckIds.emplace_back(Default.m_pDefaultTab);
 	}
-	if(!Model.Parse(g_Config.m_QmGlobalCardOrder, vValidIds) || Model.Count() == 0)
+	if(!Model.LoadExplicit(g_Config.m_QmGlobalCardOrder, vDefaults))
 	{
 		m_SettingsCardDeckOrders.clear();
 		return;
