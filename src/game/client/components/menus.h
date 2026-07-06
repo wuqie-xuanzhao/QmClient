@@ -2617,6 +2617,8 @@ private:
 	void RenderSettingsCardDragHandle(const CUIRect &Card, CUIRect *pHandleRect, const SQmSettingsCardStyle &Style);
 	void RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck);
 	std::vector<std::string> *SettingsCardDeckOrder(const char *pDeckId);
+	void LoadSettingsCardDeckOrdersFromGlobalConfig();
+	void SerializeMergedSettingsCardDeckOrdersToGlobalConfig();
 	bool SettingsCardDeckIsActiveStableId(const SSettingsCardDeckLayout &Deck, const std::string &StableId) const;
 	void PrepareSettingsAdaptiveBudgetInput(SSettingsAdaptiveBudgetInput &Input);
 	SSettingsAdaptiveBudgetOutput BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer Consumer, const char *pSource, SSettingsAdaptiveBudgetInput Input);

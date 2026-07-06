@@ -1263,6 +1263,8 @@ bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, in
 			SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder));
 			str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		}
+		else
+			SerializeMergedSettingsCardDeckOrdersToGlobalConfig();
 	}
 	DragState = {};
 	return Moved;

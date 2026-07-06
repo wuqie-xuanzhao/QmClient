@@ -4534,6 +4534,7 @@ std::vector<std::string> *CMenus::SettingsCardDeckOrder(const char *pDeckId)
 {
 	if(pDeckId == nullptr || pDeckId[0] == '\0')
 		return nullptr;
+	LoadSettingsCardDeckOrdersFromGlobalConfig();
 	return &m_SettingsCardDeckOrders[pDeckId];
 }
 
@@ -4584,6 +4585,134 @@ static const char *SettingsCardDeckStableId(std::deque<std::string> &vStableIds,
 	return vStableIds.back().c_str();
 }
 
+static bool SettingsCardDeckParseGlobalColumn(const char *pColumn, ESettingsCardDeckColumn *pOutColumn)
+{
+	if(pColumn == nullptr || pOutColumn == nullptr)
+		return false;
+	if(str_comp(pColumn, "left") == 0 || str_comp(pColumn, "0") == 0)
+	{
+		*pOutColumn = ESettingsCardDeckColumn::LEFT;
+		return true;
+	}
+	if(str_comp(pColumn, "right") == 0 || str_comp(pColumn, "1") == 0)
+	{
+		*pOutColumn = ESettingsCardDeckColumn::RIGHT;
+		return true;
+	}
+	return false;
+}
+
+void CMenus::LoadSettingsCardDeckOrdersFromGlobalConfig()
+{
+	static char s_aSettingsCardDeckGlobalOrderCache[sizeof(g_Config.m_QmGlobalCardOrder)] = {};
+	if(str_comp(s_aSettingsCardDeckGlobalOrderCache, g_Config.m_QmGlobalCardOrder) == 0)
+		return;
+	str_copy(s_aSettingsCardDeckGlobalOrderCache, g_Config.m_QmGlobalCardOrder, sizeof(s_aSettingsCardDeckGlobalOrderCache));
+
+	struct SParsedDeckCard
+	{
+		std::string m_DeckId;
+		std::string m_StableId;
+		ESettingsCardDeckColumn m_Column = ESettingsCardDeckColumn::LEFT;
+		int m_Order = 0;
+	};
+	std::vector<SParsedDeckCard> vParsed;
+	const char *pEntry = g_Config.m_QmGlobalCardOrder;
+	char aToken[160];
+	while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
+	{
+		if(aToken[0] == '\0')
+			continue;
+
+		char aStableId[80];
+		char aDeckId[48];
+		char aColumn[16];
+		char aOrder[16];
+		const char *pDeckId = str_next_token(aToken, "|", aStableId, sizeof(aStableId));
+		if(pDeckId == nullptr || str_startswith(aStableId, "deck:") == nullptr)
+			continue;
+		const char *pColumn = str_next_token(pDeckId, "|", aDeckId, sizeof(aDeckId));
+		if(pColumn == nullptr || aDeckId[0] == '\0')
+			continue;
+		const char *pOrder = str_next_token(pColumn, "|", aColumn, sizeof(aColumn));
+		if(pOrder == nullptr || str_next_token(pOrder, "|", aOrder, sizeof(aOrder)) == nullptr)
+			continue;
+
+		ESettingsCardDeckColumn Column = ESettingsCardDeckColumn::LEFT;
+		int Order = 0;
+		if(!SettingsCardDeckParseGlobalColumn(aColumn, &Column) || !str_toint(aOrder, &Order))
+			continue;
+		vParsed.push_back({aDeckId, aStableId, Column, maximum(0, Order)});
+	}
+	if(vParsed.empty())
+	{
+		m_SettingsCardDeckOrders.clear();
+		return;
+	}
+
+	std::stable_sort(vParsed.begin(), vParsed.end(), [](const SParsedDeckCard &A, const SParsedDeckCard &B) {
+		if(A.m_DeckId != B.m_DeckId)
+			return A.m_DeckId < B.m_DeckId;
+		if(A.m_Column != B.m_Column)
+			return A.m_Column == ESettingsCardDeckColumn::LEFT;
+		return A.m_Order < B.m_Order;
+	});
+
+	m_SettingsCardDeckOrders.clear();
+	std::unordered_set<std::string> vTouchedDecks;
+	for(const SParsedDeckCard &Card : vParsed)
+	{
+		if(vTouchedDecks.insert(Card.m_DeckId).second)
+			m_SettingsCardDeckOrders[Card.m_DeckId].clear();
+		m_SettingsCardDeckOrders[Card.m_DeckId].push_back(Card.m_StableId);
+	}
+}
+
+void CMenus::SerializeMergedSettingsCardDeckOrdersToGlobalConfig()
+{
+	char aMergedGlobalOrder[sizeof(g_Config.m_QmGlobalCardOrder)];
+	aMergedGlobalOrder[0] = '\0';
+	bool First = true;
+	if(g_Config.m_QmGlobalCardOrder[0] != '\0')
+	{
+		const char *pEntry = g_Config.m_QmGlobalCardOrder;
+		char aToken[160];
+		while((pEntry = str_next_token(pEntry, ";", aToken, sizeof(aToken))) != nullptr)
+		{
+			if(aToken[0] == '\0' || str_startswith(aToken, "deck:") != nullptr)
+				continue;
+			if(!First)
+				str_append(aMergedGlobalOrder, ";", sizeof(aMergedGlobalOrder));
+			str_append(aMergedGlobalOrder, aToken, sizeof(aMergedGlobalOrder));
+			First = false;
+		}
+	}
+
+	std::vector<std::string> vDeckIds;
+	vDeckIds.reserve(m_SettingsCardDeckOrders.size());
+	for(const auto &DeckOrder : m_SettingsCardDeckOrders)
+		vDeckIds.push_back(DeckOrder.first);
+	std::sort(vDeckIds.begin(), vDeckIds.end());
+	for(const std::string &DeckId : vDeckIds)
+	{
+		const std::vector<std::string> &vOrder = m_SettingsCardDeckOrders[DeckId];
+		for(size_t i = 0; i < vOrder.size(); ++i)
+		{
+			if(vOrder[i].empty() || str_startswith(vOrder[i].c_str(), "deck:") == nullptr)
+				continue;
+			if(!First)
+				str_append(aMergedGlobalOrder, ";", sizeof(aMergedGlobalOrder));
+			char aEntry[160];
+			str_format(aEntry, sizeof(aEntry), "%s|%s|left|%d", vOrder[i].c_str(), DeckId.c_str(), (int)i);
+			str_append(aMergedGlobalOrder, aEntry, sizeof(aMergedGlobalOrder));
+			First = false;
+		}
+	}
+	if(aMergedGlobalOrder[0] != '\0')
+		str_append(aMergedGlobalOrder, ";", sizeof(aMergedGlobalOrder));
+	str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+}
+
 bool CMenus::SettingsCardDeckIsActiveStableId(const SSettingsCardDeckLayout &Deck, const std::string &StableId) const
 {
 	if(Deck.m_vActiveCardIds.empty())
@@ -4593,6 +4722,8 @@ bool CMenus::SettingsCardDeckIsActiveStableId(const SSettingsCardDeckLayout &Dec
 
 CMenus::SSettingsCardDeckLayout CMenus::BeginSettingsCardDeck(CUIRect MainView, CScrollRegion &ScrollRegion, float PreviousScrollY, float UiScale, const char *pDeckId, int Page, std::vector<std::string> *pOrder, const std::vector<std::string> *pActiveCardIds)
 {
+	LoadSettingsCardDeckOrdersFromGlobalConfig();
+
 	SSettingsCardDeckLayout Deck;
 	Deck.m_pDeckId = pDeckId;
 	Deck.m_pScrollRegion = &ScrollRegion;

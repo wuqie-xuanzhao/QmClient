@@ -1816,16 +1816,22 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(HeaderSource.find("void RenderSettingsCardDeckDragOverlay("), std::string::npos);
 	EXPECT_NE(HeaderSource.find("std::unordered_map<std::string, std::vector<std::string>> m_SettingsCardDeckOrders;"), std::string::npos);
 	EXPECT_NE(HeaderSource.find("std::vector<std::string> *SettingsCardDeckOrder("), std::string::npos);
+	EXPECT_NE(HeaderSource.find("void LoadSettingsCardDeckOrdersFromGlobalConfig();"), std::string::npos);
+	EXPECT_NE(HeaderSource.find("void SerializeMergedSettingsCardDeckOrdersToGlobalConfig();"), std::string::npos);
 	EXPECT_NE(HeaderSource.find("std::vector<std::string> m_vActiveCardIds;"), std::string::npos);
 
 	const std::string MenuSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string BeginDeck = FunctionBody(MenuSource, "CMenus::SSettingsCardDeckLayout CMenus::BeginSettingsCardDeck(");
 	const std::string BeginCard = FunctionBody(MenuSource, "CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(");
 	const std::string EndDeck = FunctionBody(MenuSource, "void CMenus::EndSettingsCardDeck(");
 	const std::string DeckOrder = FunctionBody(MenuSource, "std::vector<std::string> *CMenus::SettingsCardDeckOrder(");
+	const std::string CommitDrop = FunctionBody(TClientSource, "bool CMenus::CommitSettingsCardDeckDragDrop(");
 	const std::string RenderHandle = FunctionBody(MenuSource, "void CMenus::RenderSettingsCardDragHandle(");
 	EXPECT_NE(BeginDeck.find("QmSettingsScrollRegionParams(UiScale)"), std::string::npos);
 	EXPECT_NE(BeginDeck.find("Deck.m_pOrder = pOrder != nullptr ? pOrder : SettingsCardDeckOrder(pDeckId);"), std::string::npos);
+	EXPECT_NE(BeginDeck.find("LoadSettingsCardDeckOrdersFromGlobalConfig();"), std::string::npos);
+	EXPECT_NE(DeckOrder.find("LoadSettingsCardDeckOrdersFromGlobalConfig();"), std::string::npos);
 	EXPECT_NE(HeaderSource.find("std::deque<std::string> m_vStableIds;"), std::string::npos);
 	EXPECT_NE(BeginDeck.find("Deck.m_vActiveCardIds.emplace_back(SettingsCardDeckStableId(Deck.m_vStableIds, ActiveCardId.c_str()));"), std::string::npos);
 	EXPECT_NE(DeckOrder.find("m_SettingsCardDeckOrders[pDeckId]"), std::string::npos);
@@ -1842,6 +1848,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(BeginCard.find("Section.m_pStableCardId = pGlobalStableId;"), std::string::npos);
 	EXPECT_EQ(BeginCard.find("Section.m_pStableCardId = pStableId;"), std::string::npos);
 	EXPECT_NE(EndDeck.find("RenderSettingsCardDeckDragOverlay(Deck);"), std::string::npos);
+	EXPECT_NE(CommitDrop.find("SerializeMergedSettingsCardDeckOrdersToGlobalConfig();"), std::string::npos);
 	EXPECT_NE(RenderHandle.find("Input()->ModifierIsPressed()"), std::string::npos);
 	EXPECT_NE(RenderHandle.find("Card.VSplitRight(HandleSize"), std::string::npos);
 	EXPECT_EQ(RenderHandle.find("pHandleRect->Draw(HandleBg"), std::string::npos);
@@ -1873,7 +1880,6 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(RenderSettingsSound.find("EndSettingsCardDeck(SoundDeck, &s_SoundSettingsScrollY);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsSound.find("AudioPackView.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f)"), std::string::npos);
 
-	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string RenderSettingsTClientSettings = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
 	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)");
 	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)");
