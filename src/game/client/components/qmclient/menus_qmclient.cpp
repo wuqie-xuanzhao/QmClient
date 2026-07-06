@@ -4328,6 +4328,12 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 8, Localize("Translate"), Localize("Chat translation settings"));
+				IUiContext QmClientTranslateTextInputCtx;
+				QmClientTranslateTextInputCtx.m_pUi = Ui();
+				QmClientTranslateTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+				QmClientTranslateTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+				QmClientTranslateTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_translate_text_inputs");
+				QmClientTranslateTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateAuto, "Auto translate received messages", Localize("Auto translate received messages"), &g_Config.m_QmTranslateAuto, &Row, LgLineHeight);
@@ -4488,7 +4494,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-tencent-endpoint", &LabelCol, Localize("Endpoint"), LgBodySize);
 					static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateTcEndpoint, sizeof(g_Config.m_QmTranslateTcEndpoint));
 					s_TranslateEndpoint.SetEmptyText("https://tmt.tencentcloudapi.com/");
-					Ui()->DoEditBox(&s_TranslateEndpoint, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, "https://tmt.tencentcloudapi.com/", LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 				else if(IsLibreTranslateBackend)
@@ -4498,7 +4504,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-aliyun-endpoint", &LabelCol, Localize("Endpoint"), LgBodySize);
 					static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateLibreEndpoint, sizeof(g_Config.m_QmTranslateLibreEndpoint));
 					s_TranslateEndpoint.SetEmptyText("http://localhost:5000");
-					Ui()->DoEditBox(&s_TranslateEndpoint, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, "http://localhost:5000", LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 				// LLM 后端的端点配置在 Provider 选择区域显示
@@ -4510,7 +4516,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-region", &LabelCol, Localize("Region"), LgBodySize);
 					static CLineInput s_TranslateRegion(g_Config.m_QmTranslateTcRegion, sizeof(g_Config.m_QmTranslateTcRegion));
 					s_TranslateRegion.SetEmptyText("ap-guangzhou");
-					Ui()->DoEditBox(&s_TranslateRegion, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateRegion, ControlCol, "ap-guangzhou", LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -4518,7 +4524,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-secret-id", &LabelCol, Localize("SecretId"), LgBodySize);
 					static CLineInput s_TranslateSecretId(g_Config.m_QmTranslateTcSecretId, sizeof(g_Config.m_QmTranslateTcSecretId));
 					s_TranslateSecretId.SetEmptyText(Localize("Tencent Cloud SecretId"));
-					Ui()->DoEditBox(&s_TranslateSecretId, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateSecretId, ControlCol, Localize("Tencent Cloud SecretId"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -4527,7 +4533,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					static CLineInput s_TranslateSecretKey(g_Config.m_QmTranslateTcSecretKey, sizeof(g_Config.m_QmTranslateTcSecretKey));
 					s_TranslateSecretKey.SetEmptyText(Localize("Tencent Cloud SecretKey"));
 					s_TranslateSecretKey.SetHidden(true);
-					Ui()->DoEditBox(&s_TranslateSecretKey, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateSecretKey, ControlCol, Localize("Tencent Cloud SecretKey"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 				else if(IsLibreTranslateBackend)
@@ -4537,7 +4543,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-api-key", &LabelCol, Localize("API key"), LgBodySize);
 					static CLineInput s_TranslateKey(g_Config.m_QmTranslateLibreKey, sizeof(g_Config.m_QmTranslateLibreKey));
 					s_TranslateKey.SetHidden(true);
-					Ui()->DoEditBox(&s_TranslateKey, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateKey, ControlCol, "", LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -4607,7 +4613,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 
 					Ui()->DoLabel(&LabelCol, pKeyLabel, LgBodySize, TEXTALIGN_ML);
 					if(pActiveKeyInput)
-						Ui()->DoEditBox(pActiveKeyInput, &ControlCol, LgBodySize);
+						ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveKeyInput, ControlCol, pActiveKeyInput->GetEmptyText(), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					// 各 Provider 的端点配置（允许覆盖默认）
@@ -4642,7 +4648,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 						break;
 					}
 					if(pActiveEndpointInput)
-						Ui()->DoEditBox(pActiveEndpointInput, &ControlCol, LgBodySize);
+						ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveEndpointInput, ControlCol, pActiveEndpointInput->GetEmptyText(), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					// 各 Provider 的模型配置
@@ -4681,7 +4687,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 						break;
 					}
 					if(pActiveModelInput)
-						Ui()->DoEditBox(pActiveModelInput, &ControlCol, LgBodySize);
+						ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveModelInput, ControlCol, pActiveModelInput->GetEmptyText(), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					// LLM 并发数配置
@@ -4769,7 +4775,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-custom-prompt-template", &LabelCol, Localize("Custom prompt template"), LgBodySize);
 					static CLineInput s_CustomPrompt(g_Config.m_QmTranslateSystemPrompt, sizeof(g_Config.m_QmTranslateSystemPrompt));
 					s_CustomPrompt.SetEmptyText(Localize("Leave empty to use default prompt"));
-					Ui()->DoEditBox(&s_CustomPrompt, &ControlCol, LgBodySize);
+					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_CustomPrompt, ControlCol, Localize("Leave empty to use default prompt"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing * 0.5f, nullptr, &CardContent);
 				}
 

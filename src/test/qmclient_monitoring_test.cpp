@@ -6720,6 +6720,61 @@ TEST(QmMonitoringHelpers, QmClientPieMenuRenameQueueUsesSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_PieMenuRenameQueue, &ControlCol, LgBodySize"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmClientTranslateSettingsInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = ExtractSourceBlock(Source, "CUIRect CardTranslateStart = Column;", "case EQmModuleId::LiveTools:");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t CtxPos = Body.find("IUiContext QmClientTranslateTextInputCtx;");
+	const size_t UiPos = Body.find("QmClientTranslateTextInputCtx.m_pUi = Ui();", CtxPos);
+	const size_t AnimPos = Body.find("QmClientTranslateTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
+	const size_t TreePos = Body.find("QmClientTranslateTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
+	const size_t ScopePos = Body.find("QmClientTranslateTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_translate_text_inputs\");", TreePos);
+	const size_t FrameDtPos = Body.find("QmClientTranslateTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
+	EXPECT_NE(CtxPos, std::string::npos);
+	EXPECT_NE(UiPos, std::string::npos);
+	EXPECT_NE(AnimPos, std::string::npos);
+	EXPECT_NE(TreePos, std::string::npos);
+	EXPECT_NE(ScopePos, std::string::npos);
+	EXPECT_NE(FrameDtPos, std::string::npos);
+	EXPECT_LT(CtxPos, UiPos);
+	EXPECT_LT(UiPos, AnimPos);
+	EXPECT_LT(AnimPos, TreePos);
+	EXPECT_LT(TreePos, ScopePos);
+	EXPECT_LT(ScopePos, FrameDtPos);
+
+	EXPECT_NE(Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, \"https://tmt.tencentcloudapi.com/\", LgBodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, \"http://localhost:5000\", LgBodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateRegion, ControlCol, \"ap-guangzhou\", LgBodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateSecretId, ControlCol, Localize(\"Tencent Cloud SecretId\"), LgBodySize);"), std::string::npos);
+	const size_t TcSecretKeyHiddenPos = Body.find("s_TranslateSecretKey.SetHidden(true);");
+	const size_t TcSecretKeyTextFieldPos = Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateSecretKey, ControlCol, Localize(\"Tencent Cloud SecretKey\"), LgBodySize);", TcSecretKeyHiddenPos);
+	EXPECT_NE(TcSecretKeyHiddenPos, std::string::npos);
+	EXPECT_NE(TcSecretKeyTextFieldPos, std::string::npos);
+	EXPECT_LT(TcSecretKeyHiddenPos, TcSecretKeyTextFieldPos);
+	const size_t LibreKeyHiddenPos = Body.find("s_TranslateKey.SetHidden(true);");
+	const size_t LibreKeyTextFieldPos = Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateKey, ControlCol, \"\", LgBodySize);", LibreKeyHiddenPos);
+	EXPECT_NE(LibreKeyHiddenPos, std::string::npos);
+	EXPECT_NE(LibreKeyTextFieldPos, std::string::npos);
+	EXPECT_LT(LibreKeyHiddenPos, LibreKeyTextFieldPos);
+
+	EXPECT_NE(Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveKeyInput, ControlCol, pActiveKeyInput->GetEmptyText(), LgBodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveEndpointInput, ControlCol, pActiveEndpointInput->GetEmptyText(), LgBodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveModelInput, ControlCol, pActiveModelInput->GetEmptyText(), LgBodySize);"), std::string::npos);
+	EXPECT_NE(Body.find("ui_widget::TextField(QmClientTranslateTextInputCtx, &s_CustomPrompt, ControlCol, Localize(\"Leave empty to use default prompt\"), LgBodySize);"), std::string::npos);
+
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateEndpoint, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateRegion, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateSecretId, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateSecretKey, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_TranslateKey, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveKeyInput, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveEndpointInput, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(pActiveModelInput, &ControlCol, LgBodySize"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_CustomPrompt, &ControlCol, LgBodySize"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, LaserPreviewDrawsWeaponBodiesBeforePreviewLaser)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
