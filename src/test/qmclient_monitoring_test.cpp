@@ -6976,6 +6976,26 @@ TEST(QmMonitoringHelpers, AudioPackEditorSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_AudioPackEditorState.m_CandidateFilterInput, &CandidateSearchInput"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AudioPackEditorTextInputsUseSharedQmTextField)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t PackNamePos = Body.find("ui_widget::TextField(AudioPackEditorTextInputCtx, &m_AudioPackEditorState.m_PackNameInput, PackInput, Localize(\"Pack name\"), EditorEditBoxFontSize)");
+	const size_t RefreshPos = Body.find("AudioPackEditorRefreshCandidates();", PackNamePos);
+	const size_t ManualPathPos = Body.find("ui_widget::TextField(AudioPackEditorTextInputCtx, &m_AudioPackEditorState.m_SourcePathInput, ManualInput, Localize(\"Manual source file\"), 12.0f);");
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext AudioPackEditorTextInputCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("AudioPackEditorTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_audio_pack_text_inputs\");"), std::string::npos);
+	EXPECT_NE(PackNamePos, std::string::npos);
+	EXPECT_NE(RefreshPos, std::string::npos);
+	EXPECT_LT(PackNamePos, RefreshPos);
+	EXPECT_NE(ManualPathPos, std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_AudioPackEditorState.m_PackNameInput, &PackInput"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoEditBox(&m_AudioPackEditorState.m_SourcePathInput, &ManualInput"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 {
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");

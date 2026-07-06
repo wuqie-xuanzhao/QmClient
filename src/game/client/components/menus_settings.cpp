@@ -3966,6 +3966,12 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	AudioPackCandidateSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	AudioPackCandidateSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_audio_pack_candidate_search");
 	AudioPackCandidateSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	IUiContext AudioPackEditorTextInputCtx;
+	AudioPackEditorTextInputCtx.m_pUi = Ui();
+	AudioPackEditorTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	AudioPackEditorTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	AudioPackEditorTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_audio_pack_text_inputs");
+	AudioPackEditorTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
 	const auto vAllSlots = BuildAudioPackSlots();
 	if(vAllSlots.empty())
@@ -4025,7 +4031,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	CUIRect PackLabel, PackInput;
 	PackRow.VSplitLeft(90.0f, &PackLabel, &PackInput);
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_pack_name_label", &PackLabel, Localize("Pack name"), EditorFontSize, TEXTALIGN_ML);
-	if(Ui()->DoEditBox(&m_AudioPackEditorState.m_PackNameInput, &PackInput, EditorEditBoxFontSize))
+	if(ui_widget::TextField(AudioPackEditorTextInputCtx, &m_AudioPackEditorState.m_PackNameInput, PackInput, Localize("Pack name"), EditorEditBoxFontSize))
 		AudioPackEditorRefreshCandidates();
 
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_pack_edit_title", &TitleRow, Localize("Edit audio pack"), EditorFontSize, TEXTALIGN_ML);
@@ -4221,7 +4227,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_manual_source_label", &ManualRow, Localize("Manual source file"), 12.0f, TEXTALIGN_ML);
 	CUIRect ManualInput;
 	ManualRow.VSplitLeft(120.0f, nullptr, &ManualInput);
-	Ui()->DoEditBox(&m_AudioPackEditorState.m_SourcePathInput, &ManualInput, 12.0f);
+	ui_widget::TextField(AudioPackEditorTextInputCtx, &m_AudioPackEditorState.m_SourcePathInput, ManualInput, Localize("Manual source file"), 12.0f);
 
 	DetailColumn.HSplitTop(8.0f, nullptr, &DetailColumn);
 	CUIRect ActionRowTop, ActionRowBottom;
