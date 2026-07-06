@@ -7107,6 +7107,68 @@ TEST(QmMonitoringHelpers, DemoBrowserSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_DemoSearchInput, &DemoSearch"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, ServerBrowserStatusInputsUseSharedQmFields)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItemActivated)");
+	ASSERT_FALSE(Body.empty());
+
+	const size_t SearchHotkeyPos = Body.find("Input()->KeyPress(KEY_F) && Input()->ModifierIsPressed()");
+	const size_t SearchPopupGuardPos = Body.find("!Ui()->IsPopupOpen()", SearchHotkeyPos > 40 ? SearchHotkeyPos - 40 : 0);
+	const size_t SearchSetActivePos = Body.find("Ui()->SetActiveItem(&s_FilterInput)", SearchHotkeyPos);
+	const size_t SearchSelectAllPos = Body.find("s_FilterInput.SelectAll();", SearchHotkeyPos);
+	const size_t SearchFieldPos = Body.find("ui_widget::SearchField(ServerBrowserSearchCtx, &s_FilterInput, QuickSearch, 12.0f, false)");
+	const size_t SearchRefreshPos = Body.find("Client()->ServerBrowserUpdate();", SearchFieldPos);
+	const size_t ExcludeHotkeyPos = Body.find("Input()->KeyPress(KEY_X) && Input()->ShiftIsPressed() && Input()->ModifierIsPressed()");
+	const size_t ExcludePopupGuardPos = Body.find("!Ui()->IsPopupOpen()", ExcludeHotkeyPos > 40 ? ExcludeHotkeyPos - 40 : 0);
+	const size_t ExcludeSetActivePos = Body.find("Ui()->SetActiveItem(&s_ExcludeInput)", ExcludeHotkeyPos);
+	const size_t ExcludeSelectAllPos = Body.find("s_ExcludeInput.SelectAll();", ExcludeHotkeyPos);
+	const size_t ExcludeFieldPos = Body.find("ui_widget::SearchField(ServerBrowserExcludeCtx, &s_ExcludeInput, QuickExclude, 12.0f, false)");
+	const size_t ExcludeRefreshPos = Body.find("Client()->ServerBrowserUpdate();", ExcludeFieldPos);
+	const size_t AddressFieldPos = Body.find("ui_widget::ClearableTextField(ServerBrowserAddressCtx, &s_ServerAddressInput, ServerAddrEditBox, nullptr, 12.0f)");
+	const size_t RevealPos = Body.find("m_ServerBrowserShouldRevealSelection = true;", AddressFieldPos);
+	EXPECT_NE(Source.find("#include <game/client/QmUi/UiForms.h>"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext ServerBrowserSearchCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("ServerBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_search\");"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext ServerBrowserExcludeCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("ServerBrowserExcludeCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_exclude\");"), std::string::npos);
+	EXPECT_NE(Body.find("IUiContext ServerBrowserAddressCtx;"), std::string::npos);
+	EXPECT_NE(Body.find("ServerBrowserAddressCtx.m_ScopeHash = MakeUiScopeHash(\"server_browser_address\");"), std::string::npos);
+	EXPECT_NE(SearchHotkeyPos, std::string::npos);
+	EXPECT_NE(SearchPopupGuardPos, std::string::npos);
+	EXPECT_NE(SearchSetActivePos, std::string::npos);
+	EXPECT_NE(SearchSelectAllPos, std::string::npos);
+	EXPECT_NE(SearchFieldPos, std::string::npos);
+	EXPECT_NE(SearchRefreshPos, std::string::npos);
+	EXPECT_LT(SearchPopupGuardPos, SearchHotkeyPos);
+	EXPECT_LT(SearchHotkeyPos, SearchFieldPos);
+	EXPECT_LT(SearchHotkeyPos, SearchSetActivePos);
+	EXPECT_LT(SearchSetActivePos, SearchSelectAllPos);
+	EXPECT_LT(SearchSelectAllPos, SearchFieldPos);
+	EXPECT_LT(SearchFieldPos, SearchRefreshPos);
+	EXPECT_EQ(Body.find(";\n", SearchFieldPos), SearchRefreshPos + str_length("Client()->ServerBrowserUpdate()"));
+	EXPECT_NE(ExcludeHotkeyPos, std::string::npos);
+	EXPECT_NE(ExcludePopupGuardPos, std::string::npos);
+	EXPECT_NE(ExcludeSetActivePos, std::string::npos);
+	EXPECT_NE(ExcludeSelectAllPos, std::string::npos);
+	EXPECT_NE(ExcludeFieldPos, std::string::npos);
+	EXPECT_NE(ExcludeRefreshPos, std::string::npos);
+	EXPECT_LT(ExcludePopupGuardPos, ExcludeHotkeyPos);
+	EXPECT_LT(ExcludeHotkeyPos, ExcludeFieldPos);
+	EXPECT_LT(ExcludeHotkeyPos, ExcludeSetActivePos);
+	EXPECT_LT(ExcludeSetActivePos, ExcludeSelectAllPos);
+	EXPECT_LT(ExcludeSelectAllPos, ExcludeFieldPos);
+	EXPECT_LT(ExcludeFieldPos, ExcludeRefreshPos);
+	EXPECT_EQ(Body.find(";\n", ExcludeFieldPos), ExcludeRefreshPos + str_length("Client()->ServerBrowserUpdate()"));
+	EXPECT_NE(AddressFieldPos, std::string::npos);
+	EXPECT_NE(RevealPos, std::string::npos);
+	EXPECT_LT(AddressFieldPos, RevealPos);
+	EXPECT_EQ(Body.find(";\n", AddressFieldPos), RevealPos + str_length("m_ServerBrowserShouldRevealSelection = true"));
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_FilterInput, &QuickSearch"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_ExcludeInput, &QuickExclude"), std::string::npos);
+	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_ServerAddressInput, &ServerAddrEditBox"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, DemoSliceNameInputUsesSharedQmTextField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_demo.cpp");

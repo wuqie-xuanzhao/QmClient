@@ -15,6 +15,7 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
@@ -1110,7 +1111,10 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 			Ui()->SetActiveItem(&s_FilterInput);
 			s_FilterInput.SelectAll();
 		}
-		if(Ui()->DoClearableEditBox(&s_FilterInput, &QuickSearch, 12.0f))
+		IUiContext ServerBrowserSearchCtx;
+		ServerBrowserSearchCtx.m_pUi = Ui();
+		ServerBrowserSearchCtx.m_ScopeHash = MakeUiScopeHash("server_browser_search");
+		if(ui_widget::SearchField(ServerBrowserSearchCtx, &s_FilterInput, QuickSearch, 12.0f, false))
 			Client()->ServerBrowserUpdate();
 	}
 
@@ -1139,7 +1143,10 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 			Ui()->SetActiveItem(&s_ExcludeInput);
 			s_ExcludeInput.SelectAll();
 		}
-		if(Ui()->DoClearableEditBox(&s_ExcludeInput, &QuickExclude, 12.0f))
+		IUiContext ServerBrowserExcludeCtx;
+		ServerBrowserExcludeCtx.m_pUi = Ui();
+		ServerBrowserExcludeCtx.m_ScopeHash = MakeUiScopeHash("server_browser_exclude");
+		if(ui_widget::SearchField(ServerBrowserExcludeCtx, &s_ExcludeInput, QuickExclude, 12.0f, false))
 			Client()->ServerBrowserUpdate();
 	}
 
@@ -1193,7 +1200,10 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 
 		Ui()->DoLabel(&ServerAddrLabel, Localize("Server address:"), 14.0f, TEXTALIGN_ML);
 		static CLineInput s_ServerAddressInput(g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress));
-		if(Ui()->DoClearableEditBox(&s_ServerAddressInput, &ServerAddrEditBox, 12.0f))
+		IUiContext ServerBrowserAddressCtx;
+		ServerBrowserAddressCtx.m_pUi = Ui();
+		ServerBrowserAddressCtx.m_ScopeHash = MakeUiScopeHash("server_browser_address");
+		if(ui_widget::ClearableTextField(ServerBrowserAddressCtx, &s_ServerAddressInput, ServerAddrEditBox, nullptr, 12.0f))
 			m_ServerBrowserShouldRevealSelection = true;
 	}
 
