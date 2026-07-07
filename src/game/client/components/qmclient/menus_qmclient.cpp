@@ -223,6 +223,44 @@ namespace
 		return Navigation;
 	}
 
+	const char *GlobalSearchNavigationLabel(const SQmGlobalSearchNavigation &Navigation)
+	{
+		switch(Navigation.m_SettingsPage)
+		{
+		case CMenus::SETTINGS_QMCLIENT:
+			if(Navigation.m_QmClientTab == CMenus::QMCLIENT_SETTINGS_TAB_FUNCTION)
+				return Localize("QmClient / Function");
+			if(Navigation.m_QmClientTab == CMenus::QMCLIENT_SETTINGS_TAB_HUD)
+				return Localize("QmClient / HUD");
+			return Localize("QmClient / Visual");
+		case CMenus::SETTINGS_TCLIENT:
+			if(Navigation.m_TClientTab == 1)
+				return Localize("TClient / Bind Wheel");
+			if(Navigation.m_TClientTab == 4)
+				return Localize("TClient / Status Bar");
+			return Localize("TClient");
+		case CMenus::SETTINGS_GRAPHICS:
+			return Localize("Graphics");
+		case CMenus::SETTINGS_SOUND:
+			return Localize("Sound");
+		case CMenus::SETTINGS_DDNET:
+			return Localize("DDNet");
+		case CMenus::SETTINGS_APPEARANCE:
+			switch(Navigation.m_AppearanceTab)
+			{
+			case CMenus::APPEARANCE_TAB_CHAT: return Localize("Appearance / Chat");
+			case CMenus::APPEARANCE_TAB_NAME_PLATE: return Localize("Appearance / Name Plate");
+			case CMenus::APPEARANCE_TAB_HOOK_COLLISION: return Localize("Appearance / Hook Collision");
+			case CMenus::APPEARANCE_TAB_INFO_MESSAGES: return Localize("Appearance / Info Messages");
+			case CMenus::APPEARANCE_TAB_LASER: return Localize("Appearance / Laser");
+			case CMenus::APPEARANCE_TAB_HUD:
+			default: return Localize("Appearance / HUD");
+			}
+		default:
+			return Localize("QmClient / Visual");
+		}
+	}
+
 	bool PerfDebugEnabled()
 	{
 		return g_Config.m_QmPerfDebug != 0;
@@ -910,14 +948,14 @@ void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSear
 	if(s_GlobalSearchCardButtonIndex >= (int)std::size(s_aGlobalSearchCardButtons))
 		s_GlobalSearchCardButtonIndex = 0;
 	MainView.HSplitTop(QmCardStyle.m_Spacing, nullptr, &MainView);
-	const float CardHeight = std::clamp(86.0f * UiScale, 70.0f, 96.0f);
+	const float CardHeight = std::clamp(108.0f * UiScale, 92.0f, 120.0f);
 	CUIRect CardRect = MainView;
 	CardRect.h = CardHeight;
 	const int ButtonIndex = std::clamp(s_GlobalSearchCardButtonIndex++, 0, (int)std::size(s_aGlobalSearchCardButtons) - 1);
+	const SQmGlobalSearchNavigation Navigation = ResolveGlobalSearchNavigation(Card);
 	const int Clicked = Ui()->DoButtonLogic(&s_aGlobalSearchCardButtons[ButtonIndex], 0, &CardRect, BUTTONFLAG_LEFT);
 	if(!PrewarmOnly && Clicked)
 	{
-		const SQmGlobalSearchNavigation Navigation = ResolveGlobalSearchNavigation(Card);
 		g_Config.m_UiSettingsPage = Navigation.m_SettingsPage;
 		if(Navigation.m_QmClientTab >= 0)
 			m_QmClientSettingsTab = Navigation.m_QmClientTab;
@@ -946,6 +984,9 @@ void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSear
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	const char *pTab = Card.m_pDefaultTab != nullptr ? Card.m_pDefaultTab : "global";
 	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-tab"), &Row, pTab, BodySize, TEXTALIGN_ML);
+	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-destination"), &Row, GlobalSearchNavigationLabel(Navigation), BodySize, TEXTALIGN_ML);
 	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-id"), &Row, Card.m_pStableId != nullptr ? Card.m_pStableId : "", TipSize, TEXTALIGN_ML);

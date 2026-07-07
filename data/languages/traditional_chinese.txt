@@ -616,6 +616,24 @@ API key
 Appearance
 == Pending traditional_chinese translation 60544b0e45
 
+Appearance / Chat
+== Pending traditional_chinese translation appearance_chat_destination
+
+Appearance / Hook Collision
+== Pending traditional_chinese translation appearance_hook_collision_destination
+
+Appearance / HUD
+== Pending traditional_chinese translation appearance_hud_destination
+
+Appearance / Info Messages
+== Pending traditional_chinese translation appearance_info_messages_destination
+
+Appearance / Laser
+== Pending traditional_chinese translation appearance_laser_destination
+
+Appearance / Name Plate
+== Pending traditional_chinese translation appearance_name_plate_destination
+
 Apple Music media-user-token
 == Pending traditional_chinese translation c72d112ffd
 
@@ -4372,6 +4390,9 @@ New category name
 New IME
 == Pending traditional_chinese translation e30ce401d6
 
+New name
+== Pending traditional_chinese translation new_name_placeholder
+
 New name:
 == Pending traditional_chinese translation 526e149206
 
@@ -5310,6 +5331,15 @@ qm_profile_queue: index must be between 1 and %d
 
 QmClient
 == Pending traditional_chinese translation e356bfbab1
+
+QmClient / Function
+== Pending traditional_chinese translation qmclient_function_destination
+
+QmClient / HUD
+== Pending traditional_chinese translation qmclient_hud_destination
+
+QmClient / Visual
+== Pending traditional_chinese translation qmclient_visual_destination
 
 QmClient chat log
 == Pending traditional_chinese translation 95d2d8d69e
@@ -7324,6 +7354,12 @@ Target language ratio
 TClient
 == Pending traditional_chinese translation 371b9ab0dd
 
+TClient / Bind Wheel
+== Pending traditional_chinese translation tclient_bind_wheel_destination
+
+TClient / Status Bar
+== Pending traditional_chinese translation tclient_status_bar_destination
+
 TClient Developers
 == Pending traditional_chinese translation cc1261e0ff
 
@@ -8224,6 +8260,9 @@ Vertical position
 Video Background
 == Pending traditional_chinese translation 9aac4435d2
 
+Video name
+== Pending traditional_chinese translation video_name_placeholder
+
 Video name:
 == Pending traditional_chinese translation 5129ed3fe9
 
@@ -8296,8 +8335,14 @@ Volume
 Vote a map by name
 == Pending traditional_chinese translation 0ccd3e9586
 
+Vote command
+== Pending traditional_chinese translation vote_command_placeholder
+
 Vote command:
 == Pending traditional_chinese translation 50bf07ff71
+
+Vote description
+== Pending traditional_chinese translation vote_description_placeholder
 
 Vote description:
 == Pending traditional_chinese translation 7461fb2b30

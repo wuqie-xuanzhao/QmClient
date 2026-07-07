@@ -616,6 +616,24 @@ API key
 Appearance
 == Görünüm
 
+Appearance / Chat
+== Pending turkish translation appearance_chat_destination
+
+Appearance / Hook Collision
+== Pending turkish translation appearance_hook_collision_destination
+
+Appearance / HUD
+== Pending turkish translation appearance_hud_destination
+
+Appearance / Info Messages
+== Pending turkish translation appearance_info_messages_destination
+
+Appearance / Laser
+== Pending turkish translation appearance_laser_destination
+
+Appearance / Name Plate
+== Pending turkish translation appearance_name_plate_destination
+
 Apple Music media-user-token
 == Apple Media kullanıcı-medya-belirteci
 
@@ -4372,6 +4390,9 @@ New category name
 New IME
 == Yeni IME
 
+New name
+== Yeni isim
+
 New name:
 == Yeni isim:
 
@@ -5310,6 +5331,15 @@ qm_profile_queue: index must be between 1 and %d
 
 QmClient
 == Pending turkish translation 56bc9dc2fb
+
+QmClient / Function
+== Pending turkish translation qmclient_function_destination
+
+QmClient / HUD
+== Pending turkish translation qmclient_hud_destination
+
+QmClient / Visual
+== Pending turkish translation qmclient_visual_destination
 
 QmClient chat log
 == QmClient sohbet günlüğü
@@ -7324,6 +7354,12 @@ Target language ratio
 TClient
 == Pending turkish translation 78ee2bc757
 
+TClient / Bind Wheel
+== Pending turkish translation tclient_bind_wheel_destination
+
+TClient / Status Bar
+== Pending turkish translation tclient_status_bar_destination
+
 TClient Developers
 == TClient Geliştiricileri
 
@@ -8224,6 +8260,9 @@ Vertical position
 Video Background
 == Video Arkaplanı
 
+Video name
+== Video adı
+
 Video name:
 == Video adı:
 
@@ -8296,8 +8335,14 @@ Volume
 Vote a map by name
 == Bir haritayı adına göre oyla
 
+Vote command
+== Oylama komutu
+
 Vote command:
 == Oylama komutu:
+
+Vote description
+== Oylama açıklaması
 
 Vote description:
 == Oylama açıklaması:

@@ -616,6 +616,24 @@ API key
 Appearance
 == Pending japanese translation 4f78fcdb1b
 
+Appearance / Chat
+== Pending japanese translation appearance_chat_destination
+
+Appearance / Hook Collision
+== Pending japanese translation appearance_hook_collision_destination
+
+Appearance / HUD
+== Pending japanese translation appearance_hud_destination
+
+Appearance / Info Messages
+== Pending japanese translation appearance_info_messages_destination
+
+Appearance / Laser
+== Pending japanese translation appearance_laser_destination
+
+Appearance / Name Plate
+== Pending japanese translation appearance_name_plate_destination
+
 Apple Music media-user-token
 == Apple Music メディアユーザートークン
 
@@ -4372,6 +4390,9 @@ New category name
 New IME
 == Pending japanese translation c51be3e27e
 
+New name
+== Pending japanese translation new_name_placeholder
+
 New name:
 == Pending japanese translation 03140374d4
 
@@ -5310,6 +5331,15 @@ qm_profile_queue: index must be between 1 and %d
 
 QmClient
 == Pending japanese translation c790b80cca
+
+QmClient / Function
+== Pending japanese translation qmclient_function_destination
+
+QmClient / HUD
+== Pending japanese translation qmclient_hud_destination
+
+QmClient / Visual
+== Pending japanese translation qmclient_visual_destination
 
 QmClient chat log
 == QmClient チャットログ
@@ -7324,6 +7354,12 @@ Target language ratio
 TClient
 == Pending japanese translation 8c8f389022
 
+TClient / Bind Wheel
+== Pending japanese translation tclient_bind_wheel_destination
+
+TClient / Status Bar
+== Pending japanese translation tclient_status_bar_destination
+
 TClient Developers
 == Pending japanese translation 5fc9b1940c
 
@@ -8224,6 +8260,9 @@ Vertical position
 Video Background
 == Pending japanese translation 8791b9ccba
 
+Video name
+== Pending japanese translation video_name_placeholder
+
 Video name:
 == Pending japanese translation cb069355f3
 
@@ -8296,8 +8335,14 @@ Volume
 Vote a map by name
 == Pending japanese translation bc3b2152b4
 
+Vote command
+== Pending japanese translation vote_command_placeholder
+
 Vote command:
 == Pending japanese translation fafcf4d7ff
+
+Vote description
+== Pending japanese translation vote_description_placeholder
 
 Vote description:
 == Pending japanese translation e33654a9df

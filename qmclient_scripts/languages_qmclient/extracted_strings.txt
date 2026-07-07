@@ -204,6 +204,12 @@ AntiPing: predict other players
 AntiPing: predict weapons
 API key
 Appearance
+Appearance / Chat
+Appearance / Hook Collision
+Appearance / HUD
+Appearance / Info Messages
+Appearance / Laser
+Appearance / Name Plate
 Apple Music media-user-token
 Applied to %d same-family part(s).
 Apply
@@ -1456,6 +1462,7 @@ new
 New button
 New category name
 New IME
+New name
 New name:
 New preset name
 New random timeout code
@@ -1769,6 +1776,9 @@ Q 弹 Tee 形变持续时间
 Qm
 qm_profile_queue: index must be between 1 and %d
 QmClient
+QmClient / Function
+QmClient / HUD
+QmClient / Visual
 QmClient chat log
 QmClient Community
 QmClient online distribution
@@ -2440,6 +2450,8 @@ Taper trail width
 Target language
 Target language ratio
 TClient
+TClient / Bind Wheel
+TClient / Status Bar
 TClient Developers
 TClient Links
 Tclient 设置卡片排序（格式 id:col:order; 分号分隔）
@@ -2740,6 +2752,7 @@ Velocity
 Version
 Vertical position
 Video Background
+Video name
 Video name:
 Video was saved to '%s'
 Videos directory
@@ -2764,7 +2777,9 @@ Voice chat
 Voice distance radius (tiles)
 Volume
 Vote a map by name
+Vote command
 Vote command:
+Vote description
 Vote description:
 Vote no
 Vote started automatically

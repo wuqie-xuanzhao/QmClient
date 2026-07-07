@@ -8411,6 +8411,22 @@ turkish = "Oylama komutu:"
 polish = "Polecenie głosowania:"
 
 [[message]]
+key = "Vote command"
+[message.translations]
+simplified_chinese = "投票命令"
+traditional_chinese = "Pending traditional_chinese translation vote_command_placeholder"
+japanese = "Pending japanese translation vote_command_placeholder"
+korean = "투표 명령"
+russian = "Команда голосования"
+german = "Abstimmungsbefehl"
+spanish = "Comando de votación"
+french = "Commande de vote"
+brazilian_portuguese = "Comando de votação"
+portuguese = "Comando de votação"
+turkish = "Oylama komutu"
+polish = "Polecenie głosowania"
+
+[[message]]
 key = "Vote description:"
 [message.translations]
 simplified_chinese = "投票描述："
@@ -8425,6 +8441,22 @@ brazilian_portuguese = "Descrição da votação:"
 portuguese = "Descrição da votação:"
 turkish = "Oylama açıklaması:"
 polish = "Opis głosowania:"
+
+[[message]]
+key = "Vote description"
+[message.translations]
+simplified_chinese = "投票描述"
+traditional_chinese = "Pending traditional_chinese translation vote_description_placeholder"
+japanese = "Pending japanese translation vote_description_placeholder"
+korean = "투표 설명"
+russian = "Описание голосования"
+german = "Abstimmungsbeschreibung"
+spanish = "Descripción de la votación"
+french = "Description du vote"
+brazilian_portuguese = "Descrição da votação"
+portuguese = "Descrição da votação"
+turkish = "Oylama açıklaması"
+polish = "Opis głosowania"
 
 [[message]]
 key = "Vote no"

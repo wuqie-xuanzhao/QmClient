@@ -616,6 +616,24 @@ API key
 Appearance
 == 외형
 
+Appearance / Chat
+== Pending korean translation appearance_chat_destination
+
+Appearance / Hook Collision
+== Pending korean translation appearance_hook_collision_destination
+
+Appearance / HUD
+== Pending korean translation appearance_hud_destination
+
+Appearance / Info Messages
+== Pending korean translation appearance_info_messages_destination
+
+Appearance / Laser
+== Pending korean translation appearance_laser_destination
+
+Appearance / Name Plate
+== Pending korean translation appearance_name_plate_destination
+
 Apple Music media-user-token
 == Apple Music 미디어 사용자 토큰
 
@@ -4372,6 +4390,9 @@ New category name
 New IME
 == 새 IME
 
+New name
+== 새 이름
+
 New name:
 == 새 이름:
 
@@ -5310,6 +5331,15 @@ qm_profile_queue: index must be between 1 and %d
 
 QmClient
 == Pending korean translation c32efdb850
+
+QmClient / Function
+== Pending korean translation qmclient_function_destination
+
+QmClient / HUD
+== Pending korean translation qmclient_hud_destination
+
+QmClient / Visual
+== Pending korean translation qmclient_visual_destination
 
 QmClient chat log
 == QmClient 채팅 로그
@@ -7324,6 +7354,12 @@ Target language ratio
 TClient
 == Pending korean translation 33b4810e39
 
+TClient / Bind Wheel
+== Pending korean translation tclient_bind_wheel_destination
+
+TClient / Status Bar
+== Pending korean translation tclient_status_bar_destination
+
 TClient Developers
 == TClient 개발자
 
@@ -8224,6 +8260,9 @@ Vertical position
 Video Background
 == 비디오 배경
 
+Video name
+== 비디오 이름
+
 Video name:
 == 비디오 이름:
 
@@ -8296,8 +8335,14 @@ Volume
 Vote a map by name
 == 이름으로 맵 투표
 
+Vote command
+== 투표 명령
+
 Vote command:
 == 투표 명령:
+
+Vote description
+== 투표 설명
 
 Vote description:
 == 투표 설명:

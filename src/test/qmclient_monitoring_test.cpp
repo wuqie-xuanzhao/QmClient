@@ -1,6 +1,7 @@
 #define CONF_TEST 1
 #include <engine/client/gpu_upload_limiter.h>
 
+#include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/components/qmclient/monitoring/monitoring.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/settings_perf_windows.h>
@@ -19,6 +20,7 @@
 #include <fstream>
 #include <initializer_list>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <thread>
 #include <vector>
@@ -233,7 +235,7 @@ namespace
 
 	bool IsStableTextCandidatePayloadIgnored(const std::string &Text)
 	{
-		return Text == "%" || Text == "ms" || Text == "ms (off)" || Text == "s" || Text == " min" || Text == " seconds" || Text == " seconds (never)" || Text == "X";
+		return Text == "%" || Text == "ms" || Text == "ms (off)" || Text == "s" || Text == " min" || Text == " seconds" || Text == " seconds (never)" || Text == "X" || Text == "RainbowColor";
 	}
 
 	bool IsPooledStableTextLine(const std::string &Line)
@@ -6536,6 +6538,8 @@ TEST(QmMonitoringHelpers, QmClientSearchTabRendersAllVisibleGlobalCards)
 	EXPECT_LT(CardBody.find("qmclient-search-global-card-title"), CardBody.find("qmclient-search-global-card-id"));
 	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-title\")"), std::string::npos);
 	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-tab\")"), std::string::npos);
+	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-destination\")"), std::string::npos);
+	EXPECT_NE(CardBody.find("GlobalSearchNavigationLabel(Navigation)"), std::string::npos);
 	EXPECT_NE(CardBody.find("SettingsTextElement(SETTINGS_SEARCH, -1, \"qmclient-search-global-card-id\")"), std::string::npos);
 	EXPECT_EQ(CardBody.find("SettingsTextElement(SETTINGS_QMCLIENT"), std::string::npos);
 	EXPECT_NE(CardBody.find("Card.m_pStableId"), std::string::npos);
@@ -6593,6 +6597,32 @@ TEST(QmMonitoringHelpers, QmClientSearchNavigationUsesTabRouteTable)
 	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"tclient-bind-wheel\")"), std::string::npos);
 	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"tclient-status-bar\")"), std::string::npos);
 	EXPECT_EQ(NavigationBody.find("str_comp(pTab, \"appearance-"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, QmClientSearchNavigationRouteTableCoversRegistryDeckTabs)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const size_t RouteTablePos = QmClient.find("static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[]");
+	ASSERT_NE(RouteTablePos, std::string::npos);
+	const size_t RouteTableEnd = QmClient.find("};", RouteTablePos);
+	ASSERT_NE(RouteTableEnd, std::string::npos);
+	const std::string RouteTable = QmClient.substr(RouteTablePos, RouteTableEnd - RouteTablePos);
+
+	std::set<std::string> DeckTabs;
+	for(const qm_card_registry::SCardDefault &Default : qm_card_registry::Defaults())
+	{
+		if(Default.m_pStableId == nullptr || Default.m_pDefaultTab == nullptr)
+			continue;
+		if(str_startswith(Default.m_pStableId, "deck:") == nullptr)
+			continue;
+		DeckTabs.insert(Default.m_pDefaultTab);
+	}
+	ASSERT_FALSE(DeckTabs.empty());
+	for(const std::string &Tab : DeckTabs)
+	{
+		const std::string Needle = "{\"" + Tab + "\",";
+		EXPECT_NE(RouteTable.find(Needle), std::string::npos) << Tab;
+	}
 }
 
 TEST(QmMonitoringHelpers, QmClientFunctionHotspotModulesHaveFirstFrameStages)

@@ -616,6 +616,24 @@ API key
 Appearance
 == Apparence
 
+Appearance / Chat
+== Pending french translation appearance_chat_destination
+
+Appearance / Hook Collision
+== Pending french translation appearance_hook_collision_destination
+
+Appearance / HUD
+== Pending french translation appearance_hud_destination
+
+Appearance / Info Messages
+== Pending french translation appearance_info_messages_destination
+
+Appearance / Laser
+== Pending french translation appearance_laser_destination
+
+Appearance / Name Plate
+== Pending french translation appearance_name_plate_destination
+
 Apple Music media-user-token
 == Jeton utilisateur multimédia Apple Music
 
@@ -4372,6 +4390,9 @@ New category name
 New IME
 == Nouvel IME
 
+New name
+== Nouveau nom
+
 New name:
 == Nouveau nom :
 
@@ -5310,6 +5331,15 @@ qm_profile_queue: index must be between 1 and %d
 
 QmClient
 == Pending french translation 41e68a74f5
+
+QmClient / Function
+== Pending french translation qmclient_function_destination
+
+QmClient / HUD
+== Pending french translation qmclient_hud_destination
+
+QmClient / Visual
+== Pending french translation qmclient_visual_destination
 
 QmClient chat log
 == Journal de chat QmClient
@@ -7324,6 +7354,12 @@ Target language ratio
 TClient
 == Pending french translation d232953972
 
+TClient / Bind Wheel
+== Pending french translation tclient_bind_wheel_destination
+
+TClient / Status Bar
+== Pending french translation tclient_status_bar_destination
+
 TClient Developers
 == Développeurs TClient
 
@@ -8224,6 +8260,9 @@ Vertical position
 Video Background
 == Fond vidéo
 
+Video name
+== Nom de la vidéo
+
 Video name:
 == Nom de la vidéo :
 
@@ -8296,8 +8335,14 @@ Volume
 Vote a map by name
 == Voter pour une carte par son nom
 
+Vote command
+== Commande de vote
+
 Vote command:
 == Commande de vote :
+
+Vote description
+== Description du vote
 
 Vote description:
 == Description du vote :

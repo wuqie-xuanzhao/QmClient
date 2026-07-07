@@ -616,6 +616,24 @@ API key
 Appearance
 == Aparência
 
+Appearance / Chat
+== Pending brazilian_portuguese translation appearance_chat_destination
+
+Appearance / Hook Collision
+== Pending brazilian_portuguese translation appearance_hook_collision_destination
+
+Appearance / HUD
+== Pending brazilian_portuguese translation appearance_hud_destination
+
+Appearance / Info Messages
+== Pending brazilian_portuguese translation appearance_info_messages_destination
+
+Appearance / Laser
+== Pending brazilian_portuguese translation appearance_laser_destination
+
+Appearance / Name Plate
+== Pending brazilian_portuguese translation appearance_name_plate_destination
+
 Apple Music media-user-token
 == Token de usuário de mídia do Apple Music
 
@@ -4372,6 +4390,9 @@ New category name
 New IME
 == Novo IME
 
+New name
+== Novo nome
+
 New name:
 == Novo nome:
 
@@ -5310,6 +5331,15 @@ qm_profile_queue: index must be between 1 and %d
 
 QmClient
 == Pending brazilian_portuguese translation 20fab20101
+
+QmClient / Function
+== Pending brazilian_portuguese translation qmclient_function_destination
+
+QmClient / HUD
+== Pending brazilian_portuguese translation qmclient_hud_destination
+
+QmClient / Visual
+== Pending brazilian_portuguese translation qmclient_visual_destination
 
 QmClient chat log
 == Registro de chat do QmClient
@@ -7324,6 +7354,12 @@ Target language ratio
 TClient
 == Pending brazilian_portuguese translation 92f9151dfc
 
+TClient / Bind Wheel
+== Pending brazilian_portuguese translation tclient_bind_wheel_destination
+
+TClient / Status Bar
+== Pending brazilian_portuguese translation tclient_status_bar_destination
+
 TClient Developers
 == Desenvolvedores do TClient
 
@@ -8224,6 +8260,9 @@ Vertical position
 Video Background
 == Fundo de vídeo
 
+Video name
+== Nome do vídeo
+
 Video name:
 == Nome do vídeo:
 
@@ -8296,8 +8335,14 @@ Volume
 Vote a map by name
 == Votar em um mapa pelo nome
 
+Vote command
+== Comando de votação
+
 Vote command:
 == Comando de votação:
+
+Vote description
+== Descrição da votação
 
 Vote description:
 == Descrição da votação:

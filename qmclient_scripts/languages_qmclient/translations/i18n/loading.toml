@@ -991,6 +991,22 @@ turkish = "Yeni isim:"
 polish = "Nowa nazwa:"
 
 [[message]]
+key = "New name"
+[message.translations]
+simplified_chinese = "新文件名"
+traditional_chinese = "Pending traditional_chinese translation new_name_placeholder"
+japanese = "Pending japanese translation new_name_placeholder"
+korean = "새 이름"
+russian = "Новое имя"
+german = "Neuer Name"
+spanish = "Nuevo nombre"
+french = "Nouveau nom"
+brazilian_portuguese = "Novo nome"
+portuguese = "Novo nome"
+turkish = "Yeni isim"
+polish = "Nowa nazwa"
+
+[[message]]
 key = "Nickname"
 [message.translations]
 simplified_chinese = "昵称"
@@ -1933,6 +1949,22 @@ brazilian_portuguese = "Nome do vídeo:"
 portuguese = "Nome do vídeo:"
 turkish = "Video adı:"
 polish = "Nazwa wideo:"
+
+[[message]]
+key = "Video name"
+[message.translations]
+simplified_chinese = "视频名称"
+traditional_chinese = "Pending traditional_chinese translation video_name_placeholder"
+japanese = "Pending japanese translation video_name_placeholder"
+korean = "비디오 이름"
+russian = "Имя видео"
+german = "Videotitel"
+spanish = "Nombre del video"
+french = "Nom de la vidéo"
+brazilian_portuguese = "Nome do vídeo"
+portuguese = "Nome do vídeo"
+turkish = "Video adı"
+polish = "Nazwa wideo"
 
 [[message]]
 key = "Video was saved to '%s'"

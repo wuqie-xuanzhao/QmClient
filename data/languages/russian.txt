@@ -616,6 +616,24 @@ API key
 Appearance
 == Внешний вид
 
+Appearance / Chat
+== Pending russian translation appearance_chat_destination
+
+Appearance / Hook Collision
+== Pending russian translation appearance_hook_collision_destination
+
+Appearance / HUD
+== Pending russian translation appearance_hud_destination
+
+Appearance / Info Messages
+== Pending russian translation appearance_info_messages_destination
+
+Appearance / Laser
+== Pending russian translation appearance_laser_destination
+
+Appearance / Name Plate
+== Pending russian translation appearance_name_plate_destination
+
 Apple Music media-user-token
 == Медиа-токен пользователя Apple Music
 
@@ -4372,6 +4390,9 @@ New category name
 New IME
 == Новый IME
 
+New name
+== Новое имя
+
 New name:
 == Новое имя:
 
@@ -5310,6 +5331,15 @@ qm_profile_queue: index must be between 1 and %d
 
 QmClient
 == Pending russian translation f8833a604d
+
+QmClient / Function
+== Pending russian translation qmclient_function_destination
+
+QmClient / HUD
+== Pending russian translation qmclient_hud_destination
+
+QmClient / Visual
+== Pending russian translation qmclient_visual_destination
 
 QmClient chat log
 == Лог чата QmClient
@@ -7324,6 +7354,12 @@ Target language ratio
 TClient
 == Pending russian translation 30aa9dfb5a
 
+TClient / Bind Wheel
+== Pending russian translation tclient_bind_wheel_destination
+
+TClient / Status Bar
+== Pending russian translation tclient_status_bar_destination
+
 TClient Developers
 == Разработчики TClient
 
@@ -8224,6 +8260,9 @@ Vertical position
 Video Background
 == Фоновое видео
 
+Video name
+== Имя видео
+
 Video name:
 == Имя видео:
 
@@ -8296,8 +8335,14 @@ Volume
 Vote a map by name
 == Проголосовать за карту по имени
 
+Vote command
+== Команда голосования
+
 Vote command:
 == Команда голосования:
+
+Vote description
+== Описание голосования
 
 Vote description:
 == Описание голосования:

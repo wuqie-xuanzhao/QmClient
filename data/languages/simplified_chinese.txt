@@ -616,6 +616,24 @@ API key
 Appearance
 == 游戏界面
 
+Appearance / Chat
+== 外观/聊天
+
+Appearance / Hook Collision
+== 外观/钩子碰撞线
+
+Appearance / HUD
+== 外观 /HUD
+
+Appearance / Info Messages
+== 外观/信息消息
+
+Appearance / Laser
+== 外观/激光
+
+Appearance / Name Plate
+== 外观/名牌
+
 Apple Music media-user-token
 == Apple Music 媒体用户令牌
 
@@ -4372,6 +4390,9 @@ New category name
 New IME
 == 新版 IME
 
+New name
+== 新文件名
+
 New name:
 == 新文件名：
 
@@ -5310,6 +5331,15 @@ qm_profile_queue: index must be between 1 and %d
 
 QmClient
 == 栖梦
+
+QmClient / Function
+== QmClient / 功能
+
+QmClient / HUD
+== QmClient / HUD
+
+QmClient / Visual
+== QmClient / 视觉
 
 QmClient chat log
 == QmClient 聊天记录
@@ -7324,6 +7354,12 @@ Target language ratio
 TClient
 == TClient
 
+TClient / Bind Wheel
+== TClient / 绑定轮盘
+
+TClient / Status Bar
+== TClient / 状态栏
+
 TClient Developers
 == TClient 开发人员
 
@@ -8224,6 +8260,9 @@ Vertical position
 Video Background
 == 视频背景
 
+Video name
+== 视频名称
+
 Video name:
 == 视频名称：
 
@@ -8296,8 +8335,14 @@ Volume
 Vote a map by name
 == 按名称对地图进行投票
 
+Vote command
+== 投票命令
+
 Vote command:
 == 投票命令：
+
+Vote description
+== 投票描述
 
 Vote description:
 == 投票描述：
