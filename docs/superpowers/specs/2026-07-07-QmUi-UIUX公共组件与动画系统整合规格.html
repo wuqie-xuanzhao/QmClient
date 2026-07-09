@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="date" content="2026-07-07">
+	<meta name="status" content="active">
+	<title>QmClient UI/UX 公共组件与动画系统整合规格</title>
+	<style>
+		:root {
+			--bg: #0f1117;
+			--panel: #171b24;
+			--panel-2: #1e2430;
+			--text: #edf1f7;
+			--muted: #aab3c2;
+			--subtle: #768195;
+			--line: #31394a;
+			--accent: #e4a046;
+			--green: #69c587;
+			--red: #ef7d7d;
+			--blue: #7bb7ff;
+			--yellow: #e6c15f;
+			--code: #11151d;
+			--radius: 8px;
+		}
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			background: var(--bg);
+			color: var(--text);
+			font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+		}
+		main {
+			max-width: 1180px;
+			margin: 0 auto;
+			padding: 36px 28px 72px;
+		}
+		header {
+			border: 1px solid var(--line);
+			background: var(--panel);
+			border-radius: var(--radius);
+			padding: 26px 28px;
+			margin-bottom: 24px;
+		}
+		h1 {
+			margin: 0 0 10px;
+			font-size: 30px;
+			line-height: 1.25;
+			letter-spacing: 0;
+		}
+		.subtitle {
+			margin: 0;
+			color: var(--muted);
+			font-size: 15px;
+		}
+		.meta {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 18px;
+		}
+		.pill {
+			display: inline-flex;
+			align-items: center;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			padding: 2px 10px;
+			color: var(--muted);
+			background: var(--panel-2);
+			font-size: 12px;
+		}
+		nav {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+			gap: 8px;
+			margin: 0 0 24px;
+		}
+		nav a {
+			color: var(--text);
+			text-decoration: none;
+			border: 1px solid var(--line);
+			background: var(--panel);
+			border-radius: var(--radius);
+			padding: 9px 12px;
+		}
+		section {
+			border: 1px solid var(--line);
+			background: var(--panel);
+			border-radius: var(--radius);
+			padding: 24px 26px;
+			margin: 18px 0;
+		}
+		h2 {
+			margin: 0 0 14px;
+			font-size: 22px;
+			line-height: 1.35;
+			letter-spacing: 0;
+		}
+		h3 {
+			margin: 22px 0 8px;
+			font-size: 17px;
+			letter-spacing: 0;
+		}
+		p { margin: 8px 0; }
+		ul { margin: 8px 0 8px 22px; padding: 0; }
+		li { margin: 4px 0; }
+		code {
+			background: var(--code);
+			border: 1px solid #262d3a;
+			border-radius: 5px;
+			padding: 1px 5px;
+			color: #f5d59b;
+			font-family: "Cascadia Mono", Consolas, monospace;
+			font-size: .92em;
+		}
+		pre {
+			background: var(--code);
+			border: 1px solid #262d3a;
+			border-radius: var(--radius);
+			padding: 14px 16px;
+			overflow: auto;
+		}
+		pre code {
+			background: none;
+			border: 0;
+			padding: 0;
+			color: #d9e4f2;
+		}
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 12px 0;
+			font-size: 14px;
+		}
+		th, td {
+			border: 1px solid var(--line);
+			padding: 8px 10px;
+			vertical-align: top;
+		}
+		th {
+			background: var(--panel-2);
+			text-align: left;
+			color: var(--text);
+		}
+		.note, .warn, .done, .risk {
+			border-radius: var(--radius);
+			padding: 12px 14px;
+			margin: 12px 0;
+			border: 1px solid var(--line);
+			background: var(--panel-2);
+		}
+		.note { border-color: rgba(123, 183, 255, .45); }
+		.warn { border-color: rgba(230, 193, 95, .55); }
+		.done { border-color: rgba(105, 197, 135, .55); }
+		.risk { border-color: rgba(239, 125, 125, .55); }
+		.status-ok { color: var(--green); font-weight: 600; }
+		.status-partial { color: var(--yellow); font-weight: 600; }
+		.status-gap { color: var(--red); font-weight: 600; }
+		a { color: var(--blue); }
+	</style>
+</head>
+<body>
+<main>
+	<header>
+		<h1>QmClient UI/UX 公共组件与动画系统整合规格</h1>
+		<p class="subtitle">以当前全局卡片、公共控件和 QmUi 动画系统收口为中心，重整旧 UI/UX 规格与动画评估结论。</p>
+		<div class="meta">
+			<span class="pill">date: 2026-07-07</span>
+			<span class="pill">status: active</span>
+			<span class="pill">scope: Settings / QmClient / TClient / QmUi</span>
+			<span class="pill">authority: 当前代码 + 本规格 + 当前计划</span>
+		</div>
+	</header>
+
+	<nav>
+		<a href="#s0">0 · 来源与取舍</a>
+		<a href="#s1">1 · 成功口径</a>
+		<a href="#s1a">1.1 · 目标模式</a>
+		<a href="#s2">2 · 系统层级</a>
+		<a href="#s3">3 · 公共组件契约</a>
+		<a href="#s4">4 · 动画系统契约</a>
+		<a href="#s5">5 · 页面集成</a>
+		<a href="#s6">6 · 当前状态矩阵</a>
+		<a href="#s7">7 · 验收证据</a>
+		<a href="#s8">8 · 后续路线</a>
+		<a href="#a1">附录 · 旧文档映射</a>
+	</nav>
+
+	<section id="s0">
+		<h2>0 · 来源与取舍</h2>
+		<p>本规格替代旧 UI/UX 总纲作为当前公共组件与动画系统收口的引用入口。旧文档仍保留为历史资料，但不能再单独作为实现依据。</p>
+		<table>
+			<tr><th>来源</th><th>本规格中的处理</th></tr>
+			<tr>
+				<td><code>docs/superpowers/specs/2026-06-27-uiux重构整合规格.html</code></td>
+				<td>保留主题、组件库、搜索、图标、画质、动画方向；将 11 tab 重组、L0/L1/L2 根面板、MSDF/SDF 通道等尚未重新确认的内容降为路线候选。</td>
+			</tr>
+			<tr>
+				<td><code>docs/superpowers/explore/2026-06-29-QmUi动画系统评估与改进路线.md</code></td>
+				<td>吸收已实现的 QmScroll、FLIP、AnimatePresence、runtime cache 实例化、OKLAB、AwaitTracks、自定义 easing 和 widget state animation；保留手感验收缺口。</td>
+			</tr>
+			<tr>
+				<td><code>docs/superpowers/plans/2026-07-07-全局卡片与公共控件收口计划.md</code></td>
+				<td>作为当前执行台账和验证证据来源；本规格抽象出稳定目标，不替代该计划的任务状态记录。</td>
+			</tr>
+		</table>
+		<div class="warn">
+			<b>取舍原则：</b>当前代码、当前全局卡片收口计划和本规格优先。旧文档中的“唯一权威源”“11 tab 重组”“MSDF 图标立即落地”“SDF 圆角立即落地”等表述视为历史阶段判断，不直接驱动本轮实现。
+		</div>
+		<div class="note">
+			<b>权威层级：</b>稳定目标看本规格；执行任务、勾选状态和验证证据看 <code>docs/superpowers/plans/2026-07-07-全局卡片与公共控件收口计划.md</code>；旧 UI/UX 总纲和动画 explore 只作历史输入。若旧文档与本规格冲突，按本规格处理。
+		</div>
+	</section>
+
+	<section id="s1">
+		<h2>1 · 成功口径</h2>
+		<p>本轮 UI/UX 收口的成功标准不是“新增一批看起来相似的控件”，而是设置页里的卡片、输入框、滚动条、dropdown 和动画状态都只剩一套可复用路径。</p>
+		<ul>
+			<li>QmClient/栖梦页面当前卡片样式是设置页卡片视觉权威。</li>
+			<li>Settings、QmClient、TClient、Search 等页面复用同一组 card shell/layout、scroll preset、input shell、dropdown policy。</li>
+			<li>页面业务代码只负责内容和配置项，不再手写卡片 chrome、padding、滚动条宽度、popup 裁剪或输入框外壳。</li>
+			<li>动画系统基于现有 QmUi runtime 增量接入，不引入外部 UI 或动画库。</li>
+			<li>结构测试、默认 gate 和人工视觉/行为检查共同达成后，才能把目标标为完成。</li>
+		</ul>
+		<div class="risk">
+			<b>不能接受的完成口径：</b>只靠源码字符串测试通过、局部页面看起来接近、或保留旧 helper 给部分页面继续调用，都不能算完成。
+		</div>
+	</section>
+
+	<section id="s1a">
+		<h2>1.1 · 目标模式</h2>
+		<p>目标模式是“单一设置页 UI 组件体系”，不是“每页复制一份相似样式”。任何新迁移页面必须能回答它消费的是哪一个公共 primitive，以及旧路径是否已经不可再被生产页面调用。</p>
+		<table>
+			<tr><th>对象</th><th>目标模式</th><th>完成判定</th></tr>
+			<tr>
+				<td>卡片</td>
+				<td>QmClient 页面卡片参数是视觉权威；所有设置页通过 <code>QmSettingsCardStyle</code>、<code>QmSettingsCardLayout</code>、<code>RenderQmSettingsCardShell</code> 获得外壳和内容区。</td>
+				<td>Graphics、Sound、DDNet、Appearance、QmClient、Search、TClient 的卡片入口不再手写外壳、padding、强制单列或旧 drag wrapper。</td>
+			</tr>
+			<tr>
+				<td>全局卡片 Model</td>
+				<td>卡片是 first-class 全局组件；<code>stableId</code> 不编码 tab，当前位置由 <code>(tab, column, order)</code> 决定。</td>
+				<td>搜索、拖拽、顺序持久化、reset/defaults、新增卡补位都从同一注册表和同一 Model 派生。</td>
+			</tr>
+			<tr>
+				<td>Search 页面</td>
+				<td><code>Search - 搜索</code> 是独立设置页，搜索所有可见全局卡片；QmClient 页面不再保留局部搜索。</td>
+				<td>搜索结果包含 <code>qm:</code>、<code>tclient:</code>、<code>deck:</code> 等命名空间，结果卡片样式与 QmClient 卡片一致。</td>
+			</tr>
+			<tr>
+				<td>滚动条</td>
+				<td>页面竖向滚动条、dropdown 内部滚动条和横向滚动条使用共享 large/medium/small preset。</td>
+				<td>业务页面不再手写与 QmClient 冲突的 thickness/margin；真实滚轮速度接近 DDNet 原本手感。</td>
+			</tr>
+			<tr>
+				<td>输入框</td>
+				<td>搜索框、普通文本框、清除文本框共用 visual shell 和基础 editbox 行为。</td>
+				<td>无双层深色 plate、无左右短一截、无 placeholder 重影；点击光标、拖选、选中替换和失焦保存均通过真实操作验收。</td>
+			</tr>
+			<tr>
+				<td>Dropdown</td>
+				<td>长列表和短选项共享定位、裁剪、hit-test、wheel policy；只在滚动归属和高度约束上分策略。</td>
+				<td>滚轮不关闭 popup；短选项保持页面滚动路径，长列表内部滚动；父容器 clip 后不可见区域不能绘制或响应鼠标。</td>
+			</tr>
+			<tr>
+				<td>动画</td>
+				<td>已有 QmUi runtime 是唯一动画基础；页面入场、hover、press、拖拽释放和滚动缓动使用命名 token。</td>
+				<td>每页节奏一致，首次入场不漂移，拖拽让位/释放动画可见且不抖，Motion Level 0/1/2 行为明确。</td>
+			</tr>
+		</table>
+		<div class="warn">
+			<b>当前计划状态：</b><code>docs/superpowers/plans/2026-07-07-全局卡片与公共控件收口计划.md</code> 不能标记为全部完成。它已有部分红绿灯、结构测试、<code>run_cxx_tests</code> 和 default gate 记录，但仍缺跨页面人工视觉验收、dropdown clip/hit-test 实机验证、输入框鼠标行为验收和最终代码审查。
+		</div>
+	</section>
+
+	<section id="s2">
+		<h2>2 · 系统层级</h2>
+		<table>
+			<tr><th>层级</th><th>职责</th><th>当前落点</th><th>约束</th></tr>
+			<tr>
+				<td>Theme / Token</td>
+				<td>颜色、圆角、间距、字体、motion token。</td>
+				<td><code>src/game/client/QmUi/UiTokens.h</code>、既有菜单色彩管线。</td>
+				<td>主题运行时改造必须先核对当前配置链，不把旧 <code>QmThemeRuntime</code> 方案直接照搬。</td>
+			</tr>
+			<tr>
+				<td>Motion Runtime</td>
+				<td>tween/spring、Motion Level、interrupt policy、target resolve、presence、layout transition。</td>
+				<td><code>QmAnim.*</code>、<code>QmAnimResolve.*</code>、<code>QmMotion.h</code>、<code>QmTree.*</code>。</td>
+				<td>不引入第三方动画库；手感参数必须靠真实客户端验证。</td>
+			</tr>
+			<tr>
+				<td>Primitive</td>
+				<td>卡片、输入框、滚动容器、dropdown、button、toggle、modal、toast。</td>
+				<td><code>QmUi/Ui*.h/.cpp</code>、<code>ui.cpp</code>、<code>menus.cpp</code>。</td>
+				<td>公共 primitive 承担外观和交互策略，页面不得复制实现。</td>
+			</tr>
+			<tr>
+				<td>Settings Integration</td>
+				<td>Settings/QmClient/TClient/Search 页面渲染、全局卡片注册、拖拽、持久化。</td>
+				<td><code>menus_settings.cpp</code>、<code>menus_qmclient.cpp</code>、<code>menus_tclient.cpp</code>。</td>
+				<td>页面只组合公共组件，不定义另一套视觉和拖拽模型。</td>
+			</tr>
+			<tr>
+				<td>Verification</td>
+				<td>结构测试、行为测试、gate、人工视觉检查。</td>
+				<td><code>src/test/*</code>、<code>qmclient_scripts/gate/check_gate.py</code>。</td>
+				<td>视觉和鼠标行为不能只用源码监控测试替代。</td>
+			</tr>
+		</table>
+	</section>
+
+	<section id="s3">
+		<h2>3 · 公共组件契约</h2>
+
+		<h3>3.1 卡片</h3>
+		<p>设置页卡片唯一视觉参数链路如下：</p>
+		<pre><code>ui_widget::QmClientCardProps()
+  -> CMenus::QmSettingsCardStyle(float UiScale)
+  -> CMenus::QmSettingsCardLayout(...)
+  -> CMenus::RenderQmSettingsCardShell(...)</code></pre>
+		<ul>
+			<li><code>QmSettingsCardLayout(...)</code> 只负责几何：外框、内容区、标题区、拖拽把手区。</li>
+			<li><code>RenderQmSettingsCardShell(...)</code> 只负责公共外壳：背景、边框、highlight、标题预留、拖拽把手。</li>
+			<li>业务页面只能在 <code>m_ContentRect</code> 内绘制内容，不允许再 <code>RenderQmSettingsGlassCard + Margin</code> 手写内容区。</li>
+			<li>双列布局、列间距、卡片间距和 shared deck 的 card width 由公共 deck/card layout 决定。</li>
+			<li>拖拽代理、drop indicator、让位动画、释放动画和顺序持久化使用同一套 card item 注册信息。</li>
+		</ul>
+
+		<h3>3.2 输入框</h3>
+		<p>搜索框、纯文本输入框、带清除按钮输入框共享同一个 visual shell 和基础 editbox 行为。</p>
+		<table>
+			<tr><th>组件</th><th>目标</th><th>验收点</th></tr>
+			<tr><td><code>TextFieldEx</code></td><td>普通文本输入。</td><td>点击定位光标、拖选、双击全选、选中替换、失焦保留值。</td></tr>
+			<tr><td><code>ClearableTextFieldEx</code></td><td>文本输入 + 清除按钮。</td><td>清除后焦点和 placeholder 状态正确，不出现残影。</td></tr>
+			<tr><td><code>SearchFieldEx</code></td><td>搜索输入 + 搜索语义。</td><td>不重复绘制外层 plate，placeholder 不和真实文本重影。</td></tr>
+		</table>
+		<ul>
+			<li>输入框内部不能出现双层深色 plate、左右短一截或 placeholder 文本重影。</li>
+			<li>普通 <code>DoEditBox()</code> 的基础编辑能力属于公共能力，QmUi 封装不得只覆盖搜索框特例。</li>
+			<li>如果未来加入输入框组合控件，输入框仍接受数字和无限符号，滑块只负责有限范围或最右无限状态。</li>
+		</ul>
+
+		<h3>3.3 滚动条与滚动容器</h3>
+		<ul>
+			<li>设置页竖向滚动条宽度、边距、轨道和 thumb 基础参数以 QmClient 页面为准。</li>
+			<li>公共滚动条提供 large/medium/small preset；业务页面按语义选择 preset，只允许覆盖滚动单位等行为参数。</li>
+			<li>横向和竖向滚动都通过公共参数结构表达。</li>
+			<li>滚轮速度必须对齐 DDNet 原有手感和 <code>g_Config.m_UiSmoothScrollTime</code>，不得凭主观 review 随意调慢或调快。</li>
+			<li>滚动容器可使用 <code>CQmScrollContainer</code> / <code>QmScrollContainerStyleForSize</code>，但真实手感以客户端验证为准。</li>
+		</ul>
+
+		<h3>3.4 Dropdown</h3>
+		<p>Dropdown 明确分为长列表型和短选项型，但两者共享状态、定位、裁剪和滚轮策略。</p>
+		<table>
+			<tr><th>类型</th><th>例子</th><th>滚轮策略</th><th>高度策略</th></tr>
+			<tr>
+				<td>长列表型</td>
+				<td>Tee 国旗、设备列表、字体列表。</td>
+				<td>popup 内部优先滚动，显示内部滚动条。</td>
+				<td>使用最大可见项数或可见区域约束。</td>
+			</tr>
+			<tr>
+				<td>短选项型</td>
+				<td>Graphics 窗口模式、二三项枚举。</td>
+				<td>默认页面滚动路径继续工作，popup 保持打开。</td>
+				<td>默认无内部滚动条；超过高度上限或被裁剪时切换内部滚动。</td>
+			</tr>
+		</table>
+		<ul>
+			<li>Dropdown 打开期间，滚轮不能关闭 popup。关闭只允许由选择、Esc、外部点击或既有明确关闭路径触发。</li>
+			<li>Popup 位置以触发控件当前 rect 为锚点，滚动后重新跟随控件真实位置。</li>
+			<li>Popup 的绘制、hit-test、wheel hot region 必须尊重父 clip/遮挡关系。</li>
+			<li>被父容器裁掉的 popup 区域不能覆盖上方内容，也不能响应鼠标。</li>
+		</ul>
+
+		<h3>3.5 其他组件</h3>
+		<ul>
+			<li>Button、segmented control、toggle、slider、color picker、modal、toast 和 icon library 仍属于公共组件目标，但本轮优先级低于卡片、输入框、滚动条和 dropdown。</li>
+			<li>旧 UI/UX 文档中的 Phosphor/MSDF 图标、SDF 圆角、SDF 文本属于后续画质路线，不进入当前全局卡片收口的完成条件。</li>
+			<li>组件新增前必须先检查 QmUi 现有组件，不得为单页需求复制一个外观相近的新控件。</li>
+		</ul>
+	</section>
+
+	<section id="s4">
+		<h2>4 · 动画系统契约</h2>
+		<p>QmUi 动画系统当前不需要外部库。规格目标是把已有 runtime 能力稳定接入公共组件，并用视觉验收校准手感。</p>
+		<table>
+			<tr><th>能力</th><th>当前状态</th><th>目标契约</th></tr>
+			<tr><td>Motion Level</td><td class="status-ok">已存在</td><td>所有新增动画必须支持 0=关闭、1=减少、2=完整。</td></tr>
+			<tr><td>Spring / Tween / interrupt policy</td><td class="status-ok">已存在</td><td>hover、press、drag release、presence 使用命名 token，不在页面散写参数。</td></tr>
+			<tr><td>Scroll physics / ScrollContainer</td><td class="status-ok">已实现并接入部分设置页</td><td>手感靠真实客户端校准，速度优先接近 DDNet 原本滚动。</td></tr>
+			<tr><td>Layout transition / FLIP</td><td class="status-partial">部分实现</td><td>shared deck 已接入卡片拖拽让位和释放动画；TClient 主设置页 wrapper 仍需把业务内容渲染迁到 animated display rect，不能只注册 shared card item。</td></tr>
+			<tr><td>AnimatePresence</td><td class="status-ok">已实现</td><td>用于 toast、modal、候选框、页面局部出现消失；避免节点直接消失。</td></tr>
+			<tr><td>Runtime target cache 实例化</td><td class="status-ok">已实现</td><td>缓存生命周期跟随 runtime，不回退到全局 static。</td></tr>
+			<tr><td>OKLAB color interpolation</td><td class="status-ok">已实现</td><td>作为颜色动画能力保留，具体 UI 使用需逐项验收。</td></tr>
+			<tr><td>AwaitTracks / custom easing</td><td class="status-ok">已实现</td><td>复杂组合动画可等待多轨道完成；自定义 easing 生命周期必须明确。</td></tr>
+			<tr><td>真实视觉手感</td><td class="status-gap">未完全验收</td><td>卡片拖拽释放、滚动速度、页面入场动画必须人工看客户端。</td></tr>
+		</table>
+		<div class="warn">
+			<b>动画准则：</b>首次进场动画要短而克制，不能像缓慢漂移；页面之间不能各自有不同入场节奏；滚动速度和缓动必须接近 DDNet 原本手感，只有明确验证更好时才调整。
+		</div>
+	</section>
+
+	<section id="s5">
+		<h2>5 · 页面与全局卡片集成</h2>
+		<h3>5.1 页面目标</h3>
+		<table>
+			<tr><th>页面</th><th>目标</th><th>不得保留</th></tr>
+			<tr>
+				<td>QmClient</td>
+				<td>作为当前卡片样式基准，但自身也走公共 card shell、scroll container 和公共输入框。</td>
+				<td>本地搜索栏、本地 card chrome、本地滚动参数。</td>
+			</tr>
+			<tr>
+				<td>Search</td>
+				<td><code>Search - 搜索</code> 是独立设置页，展示所有可搜索全局卡片。</td>
+				<td>只搜 QmClient 本地卡片；灰蒙蒙且与 QmClient 卡片不一致的结果卡片。</td>
+			</tr>
+			<tr>
+				<td>TClient</td>
+				<td>主设置页、ChatBinds、BindWheel、StatusBar 等迁移到公共 shell/deck。</td>
+				<td><code>TClientCacheSectionBoxRect</code>、<code>InsetTClientCacheSectionContent</code>、<code>DrawTClientCacheSectionBox</code> 等旧路径；主页面不得保留内容不随 layout transition 运动的本地 wrapper。</td>
+			</tr>
+			<tr>
+				<td>Settings 常规页</td>
+				<td>Graphics、Sound、DDNet、Appearance 等逐步清空手写卡片和滚动条分叉。</td>
+				<td>私有 card width、强制单列、私有 scrollbar thickness/margin。</td>
+			</tr>
+		</table>
+
+		<h3>5.2 全局卡片 Model</h3>
+		<ul>
+			<li>全局卡片注册、搜索、拖拽顺序和持久化继续对齐 <code>2026-06-29-全局卡片架构-统一拖拽与持久化.html</code>。</li>
+			<li>跨页面组件编辑器、stableId、reset/defaults 行为继续对齐 <code>2026-06-29-全局卡片-组件编辑器与stableId设计.md</code>。</li>
+			<li>本规格不重复定义 B1/B2 Model 细节，只规定 UI primitive 和页面集成必须消费同一 Model。</li>
+		</ul>
+	</section>
+
+	<section id="s6">
+		<h2>6 · 当前实现状态矩阵</h2>
+		<table>
+			<tr><th>目标</th><th>当前判定</th><th>证据</th><th>缺口</th></tr>
+			<tr>
+				<td>公共 card shell/layout</td>
+				<td class="status-partial">结构完成，视觉待验收</td>
+				<td><code>QmSettingsCardLayout(...)</code>、<code>RenderQmSettingsCardShell(...)</code> 已存在，相关结构测试已通过。</td>
+				<td>还需逐页确认 QmClient/Search/Graphics/Appearance/TClient 卡片宽度、双列、上下间距、拖拽代理完全一致；当前截图反馈显示仍有左列堆积、右列空置和 TClient 间距错误。</td>
+			</tr>
+			<tr>
+				<td>TClient 旧卡片路径清理</td>
+				<td class="status-partial">结构清理完成，客户端待验收</td>
+				<td>旧 helper 名称在当前计划路径中已清理，TClient cached sections 使用共享布局；Appearance/TClient 主页面列间距已接公共 card spacing；TClient 主页面 wrapper 已改为 section 测量和渲染分离，并使用 <code>ResolveLayoutTransition</code> display rect。</td>
+				<td>最新截图显示 TClient 仍可能存在两套卡片/重叠渲染、宽度和上下间距错误、标题距顶部距离不一致、卡片高度未按内容自适应；主页和子页的真实拖拽、让位、释放动画仍需客户端人工检查。</td>
+			</tr>
+			<tr>
+				<td>滚动条 preset / QmScrollContainer</td>
+				<td class="status-partial">部分完成</td>
+				<td><code>QmSettingsScrollRegionParams</code>、<code>QmScrollContainerStyleForSize</code>、<code>CQmScrollContainer</code> 已存在。</td>
+				<td>不同页面滚动条宽度一致性、滚轮速度、缓动手感仍需客户端验证；当前人工反馈认为滚动速度偏慢，必须回查 DDNet 官方原始参数。</td>
+			</tr>
+			<tr>
+				<td>Dropdown 长短策略</td>
+				<td class="status-partial">结构部分完成</td>
+				<td><code>EWHEEL_AUTO</code>、<code>ShouldUsePopupWheel()</code>、popup 跟随 scrolled control rect 等测试存在。</td>
+				<td>真实父容器 clip、hit-test、滚轮 hot region 和短列表不显示内部滚动条仍需实机确认；当前截图反馈显示短 dropdown 在滚动整页时右侧内部滚动条仍会闪烁。</td>
+			</tr>
+			<tr>
+				<td>输入框公共 shell 与编辑行为</td>
+				<td class="status-partial">结构完成，行为待验收</td>
+				<td><code>TextFieldEx</code>、<code>ClearableTextFieldEx</code>、<code>SearchFieldEx</code> 共用路径；普通 <code>DoEditBox()</code> 已接入双击全选结构。</td>
+				<td>当前截图确认带提示文本的输入框仍有 placeholder / 提示文本重影，且激活态、滑动条+输入框组合、数字和光标位置仍未统一；点击定位、拖选、选中替换、失焦保存也需要真实鼠标操作验证。</td>
+			</tr>
+			<tr>
+				<td>Search 独立页</td>
+				<td class="status-partial">结构完成，视觉待验收</td>
+				<td><code>SETTINGS_SEARCH</code>、全局可见卡片结果、公共 search card shell 已有结构测试。</td>
+				<td>搜索结果卡片是否与 QmClient 页面完全一致仍需截图/客户端确认。</td>
+			</tr>
+			<tr>
+				<td>QmUi 动画能力</td>
+				<td class="status-ok">核心能力已补齐</td>
+				<td>QmScroll、FLIP、AnimatePresence、OKLAB、AwaitTracks、自定义 easing、state animation helper 已实现并有测试记录。</td>
+				<td>最终仍以卡片拖拽释放、页面入场和滚动手感的人工验收为准。</td>
+			</tr>
+		</table>
+	</section>
+
+	<section id="s7">
+		<h2>7 · 验收证据</h2>
+		<h3>7.1 自动验证</h3>
+		<p>文档或实现变更完成后，按范围选择验证。当前公共 UI 收口实现提交前至少需要 default gate。</p>
+		<pre><code>python qmclient_scripts/gate/check_docs.py
+git diff --check
+cmd /c qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target run_cxx_tests -j 14
+python qmclient_scripts/gate/check_gate.py --mode default</code></pre>
+		<ul>
+			<li>只改 specs/plans 文档时，至少跑 <code>check_docs.py</code> 和 <code>git diff --check</code>。</li>
+			<li>改 C++ UI 行为时，必须跑相关 focused tests，再跑 <code>run_cxx_tests</code>。</li>
+			<li>提交或交付实现前优先跑 <code>check_gate.py --mode default</code>。</li>
+		</ul>
+
+		<h3>7.2 人工视觉与行为检查</h3>
+		<p>当前人工审验入口是 <code>cmake-build-release\DDNet.exe</code>。如该进程正在运行，后续重建前需要先关闭同一路径客户端；不要用其他构建目录的产物替代本轮验收。</p>
+		<table>
+			<tr><th>场景</th><th>必须检查</th></tr>
+			<tr><td>QmClient 页面</td><td>双列布局、卡片宽度、卡片间距、滚动条宽度、拖拽让位动画。</td></tr>
+			<tr><td>Search 页面</td><td>结果卡片样式、全局搜索范围、双列布局、滚动手感。</td></tr>
+			<tr><td>Graphics 页面</td><td>窗口模式 dropdown、输入框样式、短列表 popup 裁剪和滚轮路径；滚动整页时短 popup 右侧不得闪烁内部滚动条。</td></tr>
+			<tr><td>Tee 国旗 dropdown</td><td>长列表内部滚动条、鼠标滚轮归属、父容器裁剪。</td></tr>
+			<tr><td>TClient 页面</td><td>卡片样式与 QmClient 完全一致，双列占位合理，上下间距正确，拖拽代理/drop indicator/释放动画不分叉。</td></tr>
+			<tr><td>顶部子 tab</td><td>子 tab 栏使用当前内容区全宽，不被单列卡片宽度、二次 inset 或旧 wrapper 缩窄。</td></tr>
+			<tr><td>输入框</td><td>点击光标、拖选、双击全选、选中替换、点击外部保存、placeholder / 提示文本不重影。</td></tr>
+			<tr><td>滑动条+输入框</td><td>输入框使用公共 QmUi field，支持数字和 <code>∞</code>，focus ring 与普通输入框一致，数字和光标位置对齐。</td></tr>
+			<tr><td>动画与滚动</td><td>首次入场不漂移、每页节奏一致、滚动速度接近 DDNet 原本手感；必须记录与官方 DDNet 参数的对比结论。</td></tr>
+		</table>
+	</section>
+
+	<section id="s8">
+		<h2>8 · 后续路线</h2>
+		<table>
+			<tr><th>阶段</th><th>目标</th><th>完成条件</th></tr>
+			<tr>
+				<td>A · 当前收口</td>
+				<td>卡片、输入框、滚动条、dropdown 的公共路径完全落地。</td>
+				<td>旧 helper 清理、结构测试、default gate、人工视觉验收通过。</td>
+			</tr>
+			<tr>
+				<td>B · 组件覆盖</td>
+				<td>Button、segmented control、toggle、slider、color picker、modal、toast、icon 规范继续收口。</td>
+				<td>每类组件有公共 API、dogfood/真实页面接入和行为测试。</td>
+			</tr>
+			<tr>
+				<td>C · 动画调参</td>
+				<td>统一页面入场、hover、press、拖拽释放和滚动手感。</td>
+				<td>Motion Level 0/1/2 可验证，真实客户端手感记录进入计划文档。</td>
+			</tr>
+			<tr>
+				<td>D · 画质路线</td>
+				<td>重新评估 MSDF 图标、SDF 文本、SDF 圆角和 shader 通道。</td>
+				<td>单独规格和计划批准后再做，不混入当前公共组件收口。</td>
+			</tr>
+			<tr>
+				<td>E · 旧文档清理</td>
+				<td>给旧 UI/UX 总纲和动画 explore 补充过时/被替代说明。</td>
+				<td>引用方迁移到本规格或当前计划，旧文档只作历史资料。</td>
+			</tr>
+		</table>
+	</section>
+
+	<section id="a1">
+		<h2>附录 · 旧文档映射</h2>
+		<table>
+			<tr><th>旧主题</th><th>当前状态</th><th>本规格处理</th></tr>
+			<tr>
+				<td>QmThemeRuntime</td>
+				<td class="status-partial">候选</td>
+				<td>保留“运行时主题派生”方向，但实现前必须重新核对当前 token 和菜单主题链。</td>
+			</tr>
+			<tr>
+				<td>L0/L1/L2 卡片体系</td>
+				<td class="status-partial">重解释</td>
+				<td>当前优先统一设置页公共 card shell/layout；Root Panel 和完整 L0/L1/L2 视觉重组不作为本轮完成条件。</td>
+			</tr>
+			<tr>
+				<td>设置页 11 tab 重组</td>
+				<td class="status-gap">暂不执行</td>
+				<td>需要重新确认信息架构，不混入当前全局卡片和公共控件收口。</td>
+			</tr>
+			<tr>
+				<td>SearchField / ClearableTextField / Dropdown</td>
+				<td class="status-partial">当前重点</td>
+				<td>按公共输入框 shell、dropdown 长短策略、真实编辑行为验收推进。</td>
+			</tr>
+			<tr>
+				<td>SegmentedControl / ColorPicker / Toggle / Button</td>
+				<td class="status-partial">后续组件覆盖</td>
+				<td>不抢当前卡片/dropdown/input/scroll 收口优先级。</td>
+			</tr>
+			<tr>
+				<td>Phosphor/MSDF 图标</td>
+				<td class="status-gap">画质路线候选</td>
+				<td>需要 shader/资产管线单独规格，不作为当前 UI primitive 完成条件。</td>
+			</tr>
+			<tr>
+				<td>SDF 圆角 / SDF 文本</td>
+				<td class="status-gap">画质路线候选</td>
+				<td>涉及引擎渲染通道和文本管线，必须单独评审风险。</td>
+			</tr>
+			<tr>
+				<td>动画系统 P0/P1/P2/P3</td>
+				<td class="status-ok">核心已实现</td>
+				<td>当前重点从“补能力”转为“统一接入 + 调参 + 视觉验收”。</td>
+			</tr>
+			<tr>
+				<td>Dogfood 动画实验室</td>
+				<td class="status-partial">后续增强</td>
+				<td>可作为调参工具，但不阻塞当前设置页公共组件收口。</td>
+			</tr>
+		</table>
+	</section>
+</main>
+</body>
+</html>

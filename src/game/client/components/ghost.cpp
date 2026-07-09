@@ -398,10 +398,18 @@ void CGhost::StartRecord(int Tick)
 
 void CGhost::StopRecord(int Time)
 {
+	const bool WasRecording = m_Recording;
 	m_Recording = false;
-	bool RecordingToFile = GhostRecorder()->IsRecording();
+	const bool RecordingToFile = GhostRecorder() != nullptr && GhostRecorder()->IsRecording();
+	if(!WasRecording && !RecordingToFile && m_aTmpFilename[0] == '\0')
+	{
+		m_CurGhost.Reset();
+		return;
+	}
 
-	CMenus::CGhostItem *pOwnGhost = GameClient()->m_Menus.GetOwnGhost();
+	CMenus::CGhostItem *pOwnGhost = nullptr;
+	if(Time > 0)
+		pOwnGhost = GameClient()->m_Menus.GetOwnGhost();
 	const bool StoreGhost = Time > 0 && (!pOwnGhost || Time < pOwnGhost->m_Time || !g_Config.m_ClRaceGhostSaveBest);
 
 	if(RecordingToFile)

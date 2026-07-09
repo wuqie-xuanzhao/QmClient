@@ -323,28 +323,28 @@ private:
 	// Global GPU texture upload limiter
 	CGpuUploadLimiter m_GpuUploadLimiter;
 
-	class IEngine *m_pEngine;
-	class IInput *m_pInput;
-	class IGraphics *m_pGraphics;
-	class ITextRender *m_pTextRender;
-	class IClient *m_pClient;
-	class ISound *m_pSound;
-	class IConfigManager *m_pConfigManager;
-	class CConfig *m_pConfig;
-	class IConsole *m_pConsole;
-	class IStorage *m_pStorage;
-	class IDemoPlayer *m_pDemoPlayer;
-	class IFavorites *m_pFavorites;
-	class IServerBrowser *m_pServerBrowser;
-	class IEditor *m_pEditor;
-	class IFriends *m_pFriends;
-	class IFriends *m_pFoes;
-	class IDiscord *m_pDiscord;
-	class IFrameScheduler *m_pFrameScheduler;
+	class IEngine *m_pEngine = nullptr;
+	class IInput *m_pInput = nullptr;
+	class IGraphics *m_pGraphics = nullptr;
+	class ITextRender *m_pTextRender = nullptr;
+	class IClient *m_pClient = nullptr;
+	class ISound *m_pSound = nullptr;
+	class IConfigManager *m_pConfigManager = nullptr;
+	class CConfig *m_pConfig = nullptr;
+	class IConsole *m_pConsole = nullptr;
+	class IStorage *m_pStorage = nullptr;
+	class IDemoPlayer *m_pDemoPlayer = nullptr;
+	class IFavorites *m_pFavorites = nullptr;
+	class IServerBrowser *m_pServerBrowser = nullptr;
+	class IEditor *m_pEditor = nullptr;
+	class IFriends *m_pFriends = nullptr;
+	class IFriends *m_pFoes = nullptr;
+	class IDiscord *m_pDiscord = nullptr;
+	class IFrameScheduler *m_pFrameScheduler = nullptr;
 #if defined(CONF_AUTOUPDATE)
-	class IUpdater *m_pUpdater;
+	class IUpdater *m_pUpdater = nullptr;
 #endif
-	class IHttp *m_pHttp;
+	class IHttp *m_pHttp = nullptr;
 
 	CLayers m_Layers;
 	CCollision m_Collision;
@@ -369,6 +369,7 @@ private:
 	bool LivePresentationUsesLiveObserverOverlay() const;
 	bool LivePresentationUsesQmLiveDemo() const;
 	bool LivePresentationUsesOnlineDirector() const;
+	bool CanRunRuntimeConfigConchainEffects() const;
 #if defined(CONF_QM_LIVE_CLIENT)
 	void ResetQmLiveDemoPlaybackState();
 	void SaveLiveObserverStateForQmLiveDemo();
@@ -509,6 +510,16 @@ public:
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
 	class IFriends *Foes() { return m_pFoes; }
+	float GlobalTimeOrZero() const { return m_pClient != nullptr ? m_pClient->GlobalTime() : 0.0f; }
+	uint64_t PerfFrameOrOne() const { return m_pClient != nullptr && m_pClient->PerfFrame() > 0 ? m_pClient->PerfFrame() : 1; }
+	bool ClientStateOnline() const;
+	bool ClientStateAtLeastOnline() const;
+	void StopRaceRecordIfRecording() const;
+	void UpdateAndSwapClient() const
+	{
+		if(m_pClient != nullptr)
+			m_pClient->UpdateAndSwap();
+	}
 	CQmJelly *JellyTee() const { return m_pJellyTee.get(); }
 #if defined(CONF_AUTOUPDATE)
 	class IUpdater *Updater()

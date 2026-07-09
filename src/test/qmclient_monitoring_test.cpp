@@ -2357,11 +2357,13 @@ TEST(QmMonitoringHelpers, SettingsStableTextPlanKeysMatchVisibleWrappers)
 
 	const std::string ScrollbarBody = ExtractSourceFunctionBody(Menus, "CMenus::SMenuTextPlanItem CMenus::AddStableTextScrollbar(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect &Rect, unsigned Flags, const char *pSourceTag) const");
 	ASSERT_FALSE(ScrollbarBody.empty());
-	EXPECT_NE(ScrollbarBody.find("BuildSettingsScrollbarTextStyle("), std::string::npos);
+	EXPECT_NE(ScrollbarBody.find("ui_widget::SliderInputFieldLabelRect("), std::string::npos);
+	EXPECT_NE(ScrollbarBody.find("BuildMenuTextStyleKey("), std::string::npos);
 
 	const std::string ScrollbarOptionBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
 	ASSERT_FALSE(ScrollbarOptionBody.empty());
-	EXPECT_NE(ScrollbarOptionBody.find("BuildSettingsScrollbarTextStyle("), std::string::npos);
+	EXPECT_NE(ScrollbarOptionBody.find("ui_widget::SliderInputFieldLabelRect("), std::string::npos);
+	EXPECT_NE(ScrollbarOptionBody.find("BuildMenuTextStyleKey("), std::string::npos);
 	EXPECT_EQ(ScrollbarOptionBody.find("DoSettingsMenuLabel(Page, Tab, Subtab, pTextId, &Label, pStr, FontSize, TEXTALIGN_ML, {}, (int)Label.w);"), std::string::npos);
 	const std::string SplitScrollbarBody = ExtractSourceFunctionBody(Menus, "void CMenus::SplitSettingsScrollbarRects(const CUIRect &Rect, unsigned Flags, CUIRect *pLabelRect, CUIRect *pValueRect, CUIRect *pScrollBarRect) const");
 	ASSERT_FALSE(SplitScrollbarBody.empty());
@@ -2370,7 +2372,7 @@ TEST(QmMonitoringHelpers, SettingsStableTextPlanKeysMatchVisibleWrappers)
 	EXPECT_NE(SplitScrollbarBody.find("Controls.VSplitRight(ValueWidth, &ScrollBar, &ValueText);"), std::string::npos);
 	EXPECT_NE(SplitScrollbarBody.find("ScrollBar.VMargin(minimum(10.0f, Rect.w * 0.025f), &ScrollBar);"), std::string::npos);
 
-	EXPECT_NE(Header.find("SMenuTextStyleKey BuildSettingsScrollbarTextStyle(const CUIRect &Rect, unsigned Flags, CUIRect *pOutLabel = nullptr) const;"), std::string::npos);
+	EXPECT_EQ(Header.find("BuildSettingsScrollbarTextStyle("), std::string::npos);
 	EXPECT_NE(Settings.find("DoSettingsScrollbarOption(SETTINGS_APPEARANCE, APPEARANCE_TAB_HUD, \"appearance-freeze-bars-alpha-inside-freeze\""), std::string::npos);
 	EXPECT_NE(Header.find("SMenuTextStyleKey BuildSettingsShellTitleTextStyle(const CUIRect &Rect, CUIRect *pOutLabel = nullptr) const;"), std::string::npos);
 	EXPECT_NE(Menus.find("BuildSettingsShellTitleTextStyle("), std::string::npos);
@@ -2415,7 +2417,8 @@ TEST(QmMonitoringHelpers, IngameEscStableTextRegistryCoversMenubar)
 	EXPECT_NE(Header.find("void PrebuildIngameEscTextPoolBeforeOpen(int Budget);"), std::string::npos);
 	EXPECT_NE(Menus.find("PrebuildIngameEscTextPoolBeforeOpen("), std::string::npos);
 	EXPECT_EQ(Menus.find("PrebuildIngameEscTextPoolBeforeOpen(96);"), std::string::npos);
-	EXPECT_EQ(CollectionBody.find("str_comp(pOperation, \"ingame_esc_open\") == 0"), std::string::npos);
+	EXPECT_NE(CollectionBody.find("const bool IngameEscOperation = str_comp(pOperation, \"ingame_esc_open\") == 0;"), std::string::npos);
+	EXPECT_NE(CollectionBody.find("if(IngameEscOperation)"), std::string::npos);
 	EXPECT_NE(Menus.find("BuildIngameMenuTextPlan(m_vSettingsMenuTextPrebuildPlan, Screen);"), std::string::npos);
 	EXPECT_NE(PrebuildBody.find("AdvanceSettingsMenuTextPlanCollection("), std::string::npos);
 	for(const char *pId : {
@@ -2432,7 +2435,7 @@ TEST(QmMonitoringHelpers, IngameEscStableTextRegistryCoversMenubar)
 	EXPECT_EQ(Menus.find("plan_status\":\"missing_descriptor\""), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, StartupTextPrewarmCollectsIngamePlanIncrementally)
+TEST(QmMonitoringHelpers, SettingsOpenSkipsIngamePlanWhileEscCollectsIncrementally)
 {
 	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string PrebuildBody = ExtractSourceFunctionBody(Menus, "int CMenus::PrebuildSettingsTextPoolForLoading(int Budget, const char *pOperationOverride)");
@@ -2440,12 +2443,12 @@ TEST(QmMonitoringHelpers, StartupTextPrewarmCollectsIngamePlanIncrementally)
 	ASSERT_FALSE(PrebuildBody.empty());
 	ASSERT_FALSE(CollectionBody.empty());
 
-	EXPECT_EQ(CollectionBody.find("const bool IngameEscOperation = str_comp(pOperation, \"ingame_esc_open\") == 0;"), std::string::npos);
-	EXPECT_EQ(CollectionBody.find("if(IngameEscOperation)"), std::string::npos);
+	EXPECT_NE(CollectionBody.find("const bool IngameEscOperation = str_comp(pOperation, \"ingame_esc_open\") == 0;"), std::string::npos);
+	EXPECT_NE(CollectionBody.find("if(IngameEscOperation)"), std::string::npos);
 	EXPECT_NE(CollectionBody.find("MENU_TEXT_PLAN_UNIT_INGAME_ESC"), std::string::npos);
 	EXPECT_NE(PrebuildBody.find("AdvanceSettingsMenuTextPlanCollection("), std::string::npos);
 	EXPECT_EQ(PrebuildBody.find("BuildSettingsMenuTextPlan(vItems, SettingsMainView);"), std::string::npos);
-	EXPECT_EQ(PrebuildBody.find("str_comp(pOperation, \"ingame_esc_open\") != 0"), std::string::npos);
+	EXPECT_EQ(PrebuildBody.find("MENU_TEXT_PLAN_UNIT_INGAME_ESC"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, LoadingAndEscPrebuildDoNotSynchronouslyBuildFullSettingsPlan)
@@ -7214,6 +7217,7 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
 	const std::string Motion = ReadRepoFile("src/game/client/QmUi/UiMotion.h");
 	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
 	const std::string Navigation = ReadRepoFile("src/game/client/QmUi/UiNavigation.cpp");
 	const std::string TextFieldPlateBody = ExtractSourceFunctionBody(Forms, "void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)");
 	const std::string TextFieldBody = ExtractSourceFunctionBody(Forms, "bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)");
@@ -7265,10 +7269,23 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(TextFieldPlateBody.find("AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
 	EXPECT_NE(TextFieldPlateBody.find("Rect.Draw(ui_token::color::SURFACE_ELEVATED, Options.m_Corners, Options.m_CornerRadius);"), std::string::npos);
 	EXPECT_NE(TextFieldExBody.find("DrawTextFieldPlate(Ctx, pInput, Rect, Options);"), std::string::npos);
-	EXPECT_NE(TextFieldExBody.find("Ctx.m_pUi->DoEditBox(pInput, &Inner, Options.m_FontSize, Options.m_Corners, {}, Options.m_TextAlign);"), std::string::npos);
-	EXPECT_NE(TextFieldExBody.find("DrawTextFieldPlaceholder(Ctx, pInput, Inner, Options.m_pPlaceholder, Options.m_FontSize, Options.m_TextAlign);"), std::string::npos);
+	EXPECT_NE(TextFieldExBody.find("pInput->SetEmptyText(Options.m_pPlaceholder);"), std::string::npos);
+	EXPECT_NE(TextFieldExBody.find("RenderOptions.m_DrawBackground = false;"), std::string::npos);
+	EXPECT_NE(TextFieldExBody.find("Ctx.m_pUi->DoEditBox(pInput, &Rect, Options.m_FontSize, Options.m_Corners, {}, Options.m_TextAlign, RenderOptions);"), std::string::npos);
+	EXPECT_EQ(TextFieldExBody.find("DrawTextFieldPlaceholder("), std::string::npos);
+	EXPECT_EQ(TextFieldExBody.find("VMargin("), std::string::npos);
 	EXPECT_NE(ClearableExBody.find("DrawTextFieldPlate(Ctx, pInput, Rect, Options);"), std::string::npos);
+	EXPECT_NE(ClearableExBody.find("pInput->SetEmptyText(pPlaceholder);"), std::string::npos);
+	EXPECT_NE(ClearableExBody.find("RenderOptions.m_DrawBackground = false;"), std::string::npos);
+	EXPECT_NE(ClearableExBody.find("Ctx.m_pUi->DoClearableEditBox(pInput, &Rect, FontSize, IGraphics::CORNER_ALL, {}, RenderOptions);"), std::string::npos);
+	EXPECT_EQ(ClearableExBody.find("DrawTextFieldPlaceholder("), std::string::npos);
+	EXPECT_EQ(ClearableExBody.find("VMargin("), std::string::npos);
 	EXPECT_NE(SearchExBody.find("DrawTextFieldPlate(Ctx, pInput, Rect, Options);"), std::string::npos);
+	EXPECT_NE(SearchExBody.find("RenderOptions.m_DrawBackground = false;"), std::string::npos);
+	EXPECT_NE(SearchExBody.find("Ctx.m_pUi->DoEditBox_Search(pInput, &Rect, FontSize, HotkeyEnabled, RenderOptions);"), std::string::npos);
+	EXPECT_EQ(SearchExBody.find("VMargin("), std::string::npos);
+	EXPECT_NE(Ui.find("bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
+	EXPECT_NE(Ui.find("bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
 	EXPECT_NE(TextFieldBody.find("return TextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;"), std::string::npos);
 	EXPECT_NE(ClearableBody.find("return ClearableTextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;"), std::string::npos);
 	EXPECT_NE(SearchBody.find("return SearchFieldEx(Ctx, pInput, Rect, FontSize, HotkeyEnabled).m_Changed;"), std::string::npos);
@@ -7284,6 +7301,11 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_EQ(ClearableExBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	EXPECT_EQ(SearchBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	EXPECT_EQ(ListItemBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
+	const std::string SliderInputBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
+	ASSERT_FALSE(SliderInputBody.empty());
+	EXPECT_NE(SliderInputBody.find("const bool MultiLine = Options.m_Flags & CUi::SCROLLBAR_OPTION_MULTILINE;"), std::string::npos);
+	EXPECT_NE(SliderInputBody.find("if(MultiLine)"), std::string::npos);
+	EXPECT_NE(SliderInputBody.find("SliderInputWheelStoredValue("), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, TClientConfigSearchUsesSharedQmSearchField)
@@ -9253,7 +9275,7 @@ TEST(QmMonitoringHelpers, OnRenderHooksFrameSchedulerBeginAndEndFrame)
 	ASSERT_FALSE(GameClientHeader.empty());
 	ASSERT_FALSE(GameClientSource.empty());
 
-	EXPECT_NE(GameClientHeader.find("class IFrameScheduler *m_pFrameScheduler;"), std::string::npos);
+	EXPECT_NE(GameClientHeader.find("class IFrameScheduler *m_pFrameScheduler = nullptr;"), std::string::npos);
 
 	EXPECT_NE(GameClientSource.find("#include <game/client/frame_scheduler.h>"), std::string::npos);
 	EXPECT_NE(GameClientSource.find("m_pFrameScheduler = Kernel()->RequestInterface<IFrameScheduler>();"), std::string::npos);

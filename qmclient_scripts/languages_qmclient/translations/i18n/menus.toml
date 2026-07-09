@@ -4735,6 +4735,22 @@ turkish = "Şu anda yalnızca .wv dosyaları desteklenmektedir."
 polish = "Obecnie obsługiwane są tylko pliki .wv."
 
 [[message]]
+key = "Only .wv and .opus files are supported right now."
+[message.translations]
+simplified_chinese = "当前仅支持 .wv 和 .opus 文件"
+traditional_chinese = "目前僅支援 .wv 和 .opus 檔案"
+japanese = "現在サポートされているのは .wv と .opus ファイルのみです。"
+korean = "현재 .wv 및 .opus 파일만 지원됩니다."
+russian = "Сейчас поддерживаются только файлы .wv и .opus."
+german = "Derzeit werden nur .wv- und .opus-Dateien unterstützt."
+spanish = "Solo se admiten archivos .wv y .opus por ahora."
+french = "Seuls les fichiers .wv et .opus sont pris en charge pour le moment."
+brazilian_portuguese = "Apenas arquivos .wv e .opus são suportados no momento."
+portuguese = "Apenas ficheiros .wv e .opus são suportados de momento."
+turkish = "Şu anda yalnızca .wv ve .opus dosyaları desteklenmektedir."
+polish = "Obecnie obsługiwane są tylko pliki .wv i .opus."
+
+[[message]]
 key = "Only save improvements"
 [message.translations]
 simplified_chinese = "只保存更佳记录"

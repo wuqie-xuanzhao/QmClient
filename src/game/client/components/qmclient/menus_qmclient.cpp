@@ -662,7 +662,9 @@ void CMenus::BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &v
 	const bool PreviousCollecting = m_MenuTextPlanCollecting;
 	std::vector<SMenuTextPlanItem> *pPreviousCollection = m_pMenuTextPlanCollection;
 	const bool PreviousPendingActive = m_MenuTextPlanPendingActive;
-	const SMenuTextPlanItem PreviousPendingItem = m_MenuTextPlanPendingItem;
+	SMenuTextPlanItem PreviousPendingItem;
+	if(PreviousPendingActive)
+		PreviousPendingItem = m_MenuTextPlanPendingItem;
 
 	g_Config.m_UiSettingsPage = SETTINGS_QMCLIENT;
 	m_QmClientSettingsTab = Tab;
@@ -672,8 +674,9 @@ void CMenus::BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &v
 	Ui()->BeginRenderOnly();
 	RenderSettings(MainView);
 	Ui()->EndRenderOnly();
+	if(PreviousPendingActive)
+		m_MenuTextPlanPendingItem = PreviousPendingItem;
 	m_MenuTextPlanPendingActive = PreviousPendingActive;
-	m_MenuTextPlanPendingItem = PreviousPendingItem;
 	m_pMenuTextPlanCollection = pPreviousCollection;
 	m_MenuTextPlanCollecting = PreviousCollecting;
 	m_QmClientSettingsTab = PreviousTab;

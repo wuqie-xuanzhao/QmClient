@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="date" content="2026-06-27">
-<meta name="status" content="active">
+<meta name="status" content="superseded">
 <meta name="source" content="合并自 2026-06-13-uiux重构规格-macOS桌面参考v4.html (v4) + 2026-06-22-uiux重构设计规格-待办21.md (#21) + 2026-06-27 图形画质调研">
 <title>QmClient UI/UX 重构整合规格（合并版）</title>
 <style>
@@ -84,7 +84,7 @@ h2[id],h3[id]{scroll-margin-top:1rem}
 <p style="margin-top:1.2rem">
 <span class="badge">✨ 合并版 v1</span>
 <span class="badge">2026-06-27</span>
-<span class="badge">单一权威源</span>
+<span class="badge">历史资料</span>
 </p>
 <div class="wrap">
 <div class="toc">
@@ -115,8 +115,12 @@ h2[id],h3[id]{scroll-margin-top:1rem}
 
 <div class="wrap">
 
+<div class="alert warn">
+<b>文档已过时</b>：本文件保留为 2026-06-27 阶段的 UI/UX 历史合并稿，不再作为当前实现的单一权威源。当前公共卡片、公共控件与 QmUi 动画系统收口请优先参考 <code>docs/superpowers/specs/2026-07-07-QmUi-UIUX公共组件与动画系统整合规格.html</code>；执行台账请参考 <code>docs/superpowers/plans/2026-07-07-全局卡片与公共控件收口计划.md</code>。
+</div>
+
 <div class="alert note">
-<b>关于本文件</b>：本规格由 <code>2026-06-13-uiux重构规格-macOS桌面参考v4.html</code>（v4 设计基础）与 <code>2026-06-22-uiux重构设计规格-待办21.md</code>（#21 结构扩展）于 2026-06-27 合并而成，并新增第 9 章「图形与文本画质」。原两份文档已重命名，本文件为 UI/UX 重构的<strong>唯一权威源</strong>。v4 中已降级的 Toggle/Button/Slider 视觉重绘移至附录 A（待办）。
+<b>关于本文件</b>：本规格由 <code>2026-06-13-uiux重构规格-macOS桌面参考v4.html</code>（v4 设计基础）与 <code>2026-06-22-uiux重构设计规格-待办21.md</code>（#21 结构扩展）于 2026-06-27 合并而成，并新增第 9 章「图形与文本画质」。原两份文档已重命名，本文件曾作为 UI/UX 重构的权威源；2026-07-07 后仅作历史输入。v4 中已降级的 Toggle/Button/Slider 视觉重绘移至附录 A（待办）。
 </div>
 <div class="alert good">
 <b>全量展开（2026-06-27 review）</b>：经 git 恢复原文逐节比对，v4 与 #21 的所有章节与子节内容已<strong>无压缩全量并入</strong>——含 1.4 主题色选择器、1.5 material 透明度、3 章原子组件 macOS 规格（List/TabBar/DrawCard/Modal）、4.3 设置页布局图、7.6 Phosphor 视觉风格规范、7.7 降级方案、10.6 dogfood 实验室、12 性能治理、13.3 验收标准、附录 D 文件影响 / E 决策记录 / F 风险调研。所有视觉 demo 所需 CSS + Phosphor 图标字库已补入 head。
@@ -965,7 +969,7 @@ MACRO_CONFIG_FLOAT(QmUiAnimSpringDamping, qm_ui_anim_spring_damping, 1.0f, 0.3f,
 
 <div style="padding:2rem 1.5rem 4rem;text-align:center">
 <p class="meta">QmClient UI/UX 重构整合规格 · 合并版 v1 · 2026-06-27<br>
-合并自 2026-06-13-uiux重构规格-macOS桌面参考v4.html (v4) + 2026-06-22-uiux重构设计规格-待办21.md (#21)，新增第 9 章图形与文本画质（基于 codegraph 代码级调研）。原两份文档已重命名，本文件为唯一权威源。</p>
+合并自 2026-06-13-uiux重构规格-macOS桌面参考v4.html (v4) + 2026-06-22-uiux重构设计规格-待办21.md (#21)，新增第 9 章图形与文本画质（基于 codegraph 代码级调研）。原两份文档已重命名；本文件自 2026-07-07 起仅作为历史资料。</p>
 </div>
 
 </body>

@@ -34,7 +34,10 @@ struct CDemoListParam
 };
 
 CRaceDemo::CRaceDemo() :
-	m_RaceState(RACE_NONE), m_RaceStartTick(-1), m_RecordStopTick(-1), m_Time(0) {}
+	m_RaceState(RACE_NONE), m_RaceStartTick(-1), m_RecordStopTick(-1), m_Time(0)
+{
+	m_aTmpFilename[0] = '\0';
+}
 
 void CRaceDemo::GetPath(char *pBuf, int Size, int Time) const
 {
@@ -179,8 +182,7 @@ void CRaceDemo::OnMapLoad()
 
 void CRaceDemo::StopRecord(int Time)
 {
-	if(Client()->RaceRecord_IsRecording())
-		Client()->RaceRecord_Stop();
+	GameClient()->StopRaceRecordIfRecording();
 
 	if(m_aTmpFilename[0] != '\0')
 	{

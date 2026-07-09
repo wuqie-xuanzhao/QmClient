@@ -131,6 +131,330 @@ TEST(QmLivePresentationMode, LiveObserverKeepsCompatDirectorPresentation)
 	EXPECT_NE(Body.find("Client()->QmLiveDirectorActive()"), std::string::npos);
 }
 
+TEST(QmClientStartup, OnConsoleInitAvoidsAccessorsForCoreInterfaceSetup)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const size_t InitStart = Source.find("void CGameClient::OnConsoleInit()");
+	ASSERT_NE(InitStart, std::string::npos);
+	const size_t InitEnd = Source.find("// One-shot migration", InitStart);
+	ASSERT_NE(InitEnd, std::string::npos);
+	const std::string Body = Source.substr(InitStart, InitEnd - InitStart);
+
+	EXPECT_EQ(Body.find("Client()->Foes()"), std::string::npos);
+	EXPECT_EQ(Body.find("Console()->Register("), std::string::npos);
+	EXPECT_EQ(Body.find("Console()->Chain("), std::string::npos);
+	EXPECT_NE(Body.find("m_pClient->Foes()"), std::string::npos);
+	EXPECT_NE(Body.find("IConsole *pConsole = m_pConsole;"), std::string::npos);
+}
+
+TEST(QmClientStartup, LanguageConchainDefersClientTimeUntilAfterConfigCallback)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const size_t ChainStart = Source.find("void CGameClient::ConchainLanguageUpdate(");
+	ASSERT_NE(ChainStart, std::string::npos);
+	const size_t ChainEnd = Source.find("void CGameClient::ConchainSpecialInfoupdate(", ChainStart);
+	ASSERT_NE(ChainEnd, std::string::npos);
+	const std::string Body = Source.substr(ChainStart, ChainEnd - ChainStart);
+
+	const size_t CallbackPos = Body.find("pfnCallback(pResult, pCallbackUserData);");
+	const size_t RuntimeGuardPos = Body.find("CanRunRuntimeConfigConchainEffects()");
+	ASSERT_NE(CallbackPos, std::string::npos);
+	ASSERT_NE(RuntimeGuardPos, std::string::npos);
+	EXPECT_LT(CallbackPos, RuntimeGuardPos);
+	EXPECT_EQ(Body.find("pThis->Client()->GlobalTime()"), std::string::npos);
+	EXPECT_NE(Source.find("bool CGameClient::CanRunRuntimeConfigConchainEffects() const"), std::string::npos);
+}
+
+TEST(QmClientStartup, InfoConchainsSkipNetworkSideEffectsBeforeClientRuntime)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const size_t ChainStart = Source.find("void CGameClient::ConchainSpecialInfoupdate(");
+	ASSERT_NE(ChainStart, std::string::npos);
+	const size_t ChainEnd = Source.find("IGameClient *CreateGameClient()", ChainStart);
+	ASSERT_NE(ChainEnd, std::string::npos);
+	const std::string Body = Source.substr(ChainStart, ChainEnd - ChainStart);
+
+	EXPECT_NE(Source.find("bool CGameClient::CanRunRuntimeConfigConchainEffects() const"), std::string::npos);
+	EXPECT_NE(Body.find("CanRunRuntimeConfigConchainEffects()"), std::string::npos);
+	EXPECT_EQ(Body.find(")->Client()->DummyConnected()"), std::string::npos);
+	EXPECT_EQ(Body.find(")->SendInfo(false);"), std::string::npos);
+	EXPECT_EQ(Body.find(")->SendDummyInfo(false);"), std::string::npos);
+}
+
+TEST(QmClientStartup, OnInitUsesCachedClientForEarlyStartupSetup)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const size_t InitStart = Source.find("void CGameClient::OnInit()");
+	ASSERT_NE(InitStart, std::string::npos);
+	const size_t InitEnd = Source.find("void CGameClient::OnWindowResize()", InitStart);
+	ASSERT_NE(InitEnd, std::string::npos);
+	const std::string Body = Source.substr(InitStart, InitEnd - InitStart);
+
+	EXPECT_NE(Body.find("IClient *pClient = m_pClient;"), std::string::npos);
+	EXPECT_NE(Body.find("pClient->SetLoadingCallback("), std::string::npos);
+	EXPECT_EQ(Body.find("Client()->SetLoadingCallback("), std::string::npos);
+	EXPECT_EQ(Body.find("Client()->SnapSetStaticsize("), std::string::npos);
+	EXPECT_EQ(Body.find("Client()->UpdateAndSwap("), std::string::npos);
+}
+
+TEST(QmClientStartup, MenuLoadingBackgroundDoesNotRequireComponentClientAccessor)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const size_t LoadingStart = Source.find("void CMenus::RenderLoading(");
+	ASSERT_NE(LoadingStart, std::string::npos);
+	const size_t LoadingEnd = Source.find("void CMenus::FinishLoading()", LoadingStart);
+	ASSERT_NE(LoadingEnd, std::string::npos);
+	const std::string LoadingBody = Source.substr(LoadingStart, LoadingEnd - LoadingStart);
+	const size_t RenderStart = Source.find("void CMenus::RenderBackground()");
+	ASSERT_NE(RenderStart, std::string::npos);
+	const size_t RenderEnd = Source.find("int CMenus::DoButton_CheckBox_Tristate(", RenderStart);
+	ASSERT_NE(RenderEnd, std::string::npos);
+	const std::string Body = Source.substr(RenderStart, RenderEnd - RenderStart);
+
+	EXPECT_EQ(LoadingBody.find("Client()->UpdateAndSwap()"), std::string::npos);
+	EXPECT_NE(LoadingBody.find("GameClient()->UpdateAndSwapClient()"), std::string::npos);
+	EXPECT_EQ(Body.find("Client()->GlobalTime()"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->GlobalTimeOrZero()"), std::string::npos);
+}
+
+TEST(QmClientStartup, SkinInitializationDoesNotRenderLoadingInsideStorageScanCallbacks)
+{
+	const std::string SkinsSource = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const size_t SkinsInitStart = SkinsSource.find("void CSkins::OnInit()");
+	ASSERT_NE(SkinsInitStart, std::string::npos);
+	const size_t SkinsInitEnd = SkinsSource.find("void CSkins::OnShutdown()", SkinsInitStart);
+	ASSERT_NE(SkinsInitEnd, std::string::npos);
+	const std::string SkinsInitBody = SkinsSource.substr(SkinsInitStart, SkinsInitEnd - SkinsInitStart);
+
+	const std::string Skins7Source = ReadTestSourceFile("src/game/client/components/skins7.cpp");
+	const size_t Skins7InitStart = Skins7Source.find("void CSkins7::OnInit()");
+	ASSERT_NE(Skins7InitStart, std::string::npos);
+	const size_t Skins7InitEnd = Skins7Source.find("void CSkins7::OnReset()", Skins7InitStart);
+	ASSERT_NE(Skins7InitEnd, std::string::npos);
+	const std::string Skins7InitBody = Skins7Source.substr(Skins7InitStart, Skins7InitEnd - Skins7InitStart);
+
+	EXPECT_EQ(SkinsInitBody.find("RenderLoading("), std::string::npos);
+	EXPECT_EQ(Skins7InitBody.find("RenderLoading("), std::string::npos);
+	EXPECT_NE(SkinsInitBody.find("Refresh([]() {});"), std::string::npos);
+	EXPECT_NE(Skins7InitBody.find("Refresh([]() {});"), std::string::npos);
+}
+
+TEST(QmClientStartup, InitialResetDoesNotCollectSnapshotEntitiesBeforeSnapshotRuntime)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const size_t InvalidateStart = Source.find("void CGameClient::InvalidateSnapshot()");
+	ASSERT_NE(InvalidateStart, std::string::npos);
+	const size_t InvalidateEnd = Source.find("void CGameClient::OnNewSnapshot()", InvalidateStart);
+	ASSERT_NE(InvalidateEnd, std::string::npos);
+	const std::string Body = Source.substr(InvalidateStart, InvalidateEnd - InvalidateStart);
+
+	EXPECT_NE(Body.find("m_vSnapEntities.clear();"), std::string::npos);
+	EXPECT_NE(Body.find("m_pClient != nullptr"), std::string::npos);
+	EXPECT_NE(Body.find("IClient::STATE_ONLINE"), std::string::npos);
+	EXPECT_NE(Body.find("IClient::STATE_DEMOPLAYBACK"), std::string::npos);
+	EXPECT_NE(Body.find("SnapCollectEntities();"), std::string::npos);
+}
+
+TEST(QmClientStartup, SoundResetDoesNotRequireComponentClientAccessorBeforeRuntime)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/sounds.cpp");
+	const size_t ResetStart = Source.find("void CSounds::OnReset()");
+	ASSERT_NE(ResetStart, std::string::npos);
+	const size_t ResetEnd = Source.find("void CSounds::OnStateChange(", ResetStart);
+	ASSERT_NE(ResetEnd, std::string::npos);
+	const std::string Body = Source.substr(ResetStart, ResetEnd - ResetStart);
+
+	EXPECT_EQ(Body.find("Client()->State()"), std::string::npos);
+	EXPECT_EQ(Body.find("GameClient()->Client()"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->ClientStateAtLeastOnline()"), std::string::npos);
+	EXPECT_NE(Body.find("Sound()->StopAll();"), std::string::npos);
+	EXPECT_NE(Body.find("ClearQueue();"), std::string::npos);
+
+	const std::string GameClientHeader = ReadTestSourceFile("src/game/client/gameclient.h");
+	EXPECT_NE(GameClientHeader.find("bool ClientStateAtLeastOnline() const;"), std::string::npos);
+	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	EXPECT_NE(GameClientSource.find("bool CGameClient::ClientStateAtLeastOnline() const"), std::string::npos);
+}
+
+TEST(QmClientStartup, VotingResetDoesNotRequireComponentClientAccessorBeforeRuntime)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/voting.cpp");
+	const size_t ResetStart = Source.find("void CVoting::OnReset()");
+	ASSERT_NE(ResetStart, std::string::npos);
+	const size_t ResetEnd = Source.find("void CVoting::OnConsoleInit()", ResetStart);
+	ASSERT_NE(ResetEnd, std::string::npos);
+	const std::string Body = Source.substr(ResetStart, ResetEnd - ResetStart);
+
+	EXPECT_EQ(Body.find("Client()->State()"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->ClientStateOnline()"), std::string::npos);
+	EXPECT_NE(Body.find("ClearUnfinishedMapVoteChain();"), std::string::npos);
+
+	const std::string GameClientHeader = ReadTestSourceFile("src/game/client/gameclient.h");
+	EXPECT_NE(GameClientHeader.find("bool ClientStateOnline() const;"), std::string::npos);
+	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	EXPECT_NE(GameClientSource.find("bool CGameClient::ClientStateOnline() const"), std::string::npos);
+}
+
+TEST(QmClientStartup, RaceDemoResetDoesNotRequireComponentClientAccessorBeforeRuntime)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/race_demo.cpp");
+	const size_t ConstructorStart = Source.find("CRaceDemo::CRaceDemo() :");
+	ASSERT_NE(ConstructorStart, std::string::npos);
+	const size_t ConstructorEnd = Source.find("void CRaceDemo::GetPath(", ConstructorStart);
+	ASSERT_NE(ConstructorEnd, std::string::npos);
+	const std::string ConstructorBody = Source.substr(ConstructorStart, ConstructorEnd - ConstructorStart);
+	EXPECT_NE(ConstructorBody.find("m_aTmpFilename[0] = '\\0';"), std::string::npos);
+
+	const size_t StopStart = Source.find("void CRaceDemo::StopRecord(");
+	ASSERT_NE(StopStart, std::string::npos);
+	const size_t StopEnd = Source.find("struct SRaceDemoFetchUser", StopStart);
+	ASSERT_NE(StopEnd, std::string::npos);
+	const std::string Body = Source.substr(StopStart, StopEnd - StopStart);
+
+	EXPECT_EQ(Body.find("Client()->RaceRecord_IsRecording()"), std::string::npos);
+	EXPECT_EQ(Body.find("Client()->RaceRecord_Stop()"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->StopRaceRecordIfRecording()"), std::string::npos);
+
+	const std::string GameClientHeader = ReadTestSourceFile("src/game/client/gameclient.h");
+	EXPECT_NE(GameClientHeader.find("void StopRaceRecordIfRecording() const;"), std::string::npos);
+	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	EXPECT_NE(GameClientSource.find("void CGameClient::StopRaceRecordIfRecording() const"), std::string::npos);
+}
+
+TEST(QmClientStartup, GhostResetDoesNotTouchMenusWhenNoRecordingExists)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/ghost.h");
+	EXPECT_NE(Header.find("class IGhostLoader *m_pGhostLoader = nullptr;"), std::string::npos);
+	EXPECT_NE(Header.find("class IGhostRecorder *m_pGhostRecorder = nullptr;"), std::string::npos);
+	EXPECT_NE(Header.find("char m_aTmpFilename[IO_MAX_PATH_LENGTH] = \"\";"), std::string::npos);
+
+	const std::string Source = ReadTestSourceFile("src/game/client/components/ghost.cpp");
+	const size_t StopStart = Source.find("void CGhost::StopRecord(");
+	ASSERT_NE(StopStart, std::string::npos);
+	const size_t StopEnd = Source.find("void CGhost::StartRender(", StopStart);
+	ASSERT_NE(StopEnd, std::string::npos);
+	const std::string Body = Source.substr(StopStart, StopEnd - StopStart);
+
+	const size_t EmptyGuardPos = Body.find("if(!WasRecording && !RecordingToFile && m_aTmpFilename[0] == '\\0')");
+	const size_t OwnGhostPos = Body.find("GetOwnGhost()");
+	ASSERT_NE(EmptyGuardPos, std::string::npos);
+	ASSERT_NE(OwnGhostPos, std::string::npos);
+	EXPECT_LT(EmptyGuardPos, OwnGhostPos);
+	EXPECT_NE(Body.find("CMenus::CGhostItem *pOwnGhost = nullptr;"), std::string::npos);
+	EXPECT_NE(Body.find("if(Time > 0)"), std::string::npos);
+}
+
+TEST(QmClientStartup, CoreInterfacePointersAreNullInitializedBeforeConsoleInit)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/gameclient.h");
+	const size_t FieldsStart = Source.find("class IEngine *m_pEngine");
+	ASSERT_NE(FieldsStart, std::string::npos);
+	const size_t FieldsEnd = Source.find("CLayers m_Layers;", FieldsStart);
+	ASSERT_NE(FieldsEnd, std::string::npos);
+	const std::string Fields = Source.substr(FieldsStart, FieldsEnd - FieldsStart);
+
+	EXPECT_NE(Fields.find("class IClient *m_pClient = nullptr;"), std::string::npos);
+	EXPECT_NE(Fields.find("class IConsole *m_pConsole = nullptr;"), std::string::npos);
+	EXPECT_NE(Fields.find("class IStorage *m_pStorage = nullptr;"), std::string::npos);
+	EXPECT_NE(Fields.find("class ISound *m_pSound = nullptr;"), std::string::npos);
+	EXPECT_NE(Fields.find("class ITextRender *m_pTextRender = nullptr;"), std::string::npos);
+}
+
+TEST(QmClientStartup, InitialResetDoesNotRequireEditorAccessorBeforeRuntime)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const size_t ResetStart = Source.find("void CGameClient::OnReset()");
+	ASSERT_NE(ResetStart, std::string::npos);
+	const size_t ResetEnd = Source.find("bool CGameClient::LivePresentationUsesLiveObserverOverlay() const", ResetStart);
+	ASSERT_NE(ResetEnd, std::string::npos);
+	const std::string Body = Source.substr(ResetStart, ResetEnd - ResetStart);
+
+	EXPECT_EQ(Body.find("Editor()->ResetMentions()"), std::string::npos);
+	EXPECT_EQ(Body.find("Editor()->ResetIngameMoved()"), std::string::npos);
+	EXPECT_NE(Body.find("if(m_pEditor != nullptr)"), std::string::npos);
+	EXPECT_NE(Body.find("m_pEditor->ResetMentions();"), std::string::npos);
+	EXPECT_NE(Body.find("m_pEditor->ResetIngameMoved();"), std::string::npos);
+}
+
+TEST(QmClientStartup, LoadingSettingsTextPrewarmDoesNotRequireComponentClientAccessor)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const size_t PrewarmStart = Source.find("int CMenus::PrebuildSettingsTextPoolForLoading(");
+	ASSERT_NE(PrewarmStart, std::string::npos);
+	const size_t PrewarmEnd = Source.find("void CMenus::LogSettingsAdaptiveBudget(", PrewarmStart);
+	ASSERT_NE(PrewarmEnd, std::string::npos);
+	const std::string Body = Source.substr(PrewarmStart, PrewarmEnd - PrewarmStart);
+
+	EXPECT_EQ(Body.find("Client()->PerfFrame()"), std::string::npos);
+	EXPECT_EQ(Body.find("CurrentQmUiPerfPage()"), std::string::npos);
+	EXPECT_EQ(Body.find("SettingsPerfContextName()"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->PerfFrameOrOne()"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->ClientStateOnline() ? \"online\" : \"offline\""), std::string::npos);
+
+	const std::string GameClientHeader = ReadTestSourceFile("src/game/client/gameclient.h");
+	EXPECT_NE(GameClientHeader.find("uint64_t PerfFrameOrOne() const"), std::string::npos);
+}
+
+TEST(QmClientStartup, RenderOnlyMenuTabsDoNotResolveAnimationRuntime)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const size_t TabStart = Source.find("int CMenus::DoMenuTabV2(");
+	ASSERT_NE(TabStart, std::string::npos);
+	const size_t TabEnd = Source.find("void CMenus::RenderMenubar(", TabStart);
+	ASSERT_NE(TabEnd, std::string::npos);
+	const std::string Body = Source.substr(TabStart, TabEnd - TabStart);
+
+	const size_t RenderOnlyGuard = Body.find("if(!Ui()->RenderOnly())");
+	const size_t AnimationResolve = Body.find("ResolveUiAnimValueColor(");
+	ASSERT_NE(RenderOnlyGuard, std::string::npos);
+	ASSERT_NE(AnimationResolve, std::string::npos);
+	EXPECT_LT(RenderOnlyGuard, AnimationResolve);
+
+	const size_t MenubarStart = Source.find("void CMenus::RenderMenubar(");
+	ASSERT_NE(MenubarStart, std::string::npos);
+	const size_t MenubarEnd = Source.find("void CMenus::RenderNews(", MenubarStart);
+	ASSERT_NE(MenubarEnd, std::string::npos);
+	const std::string MenubarBody = Source.substr(MenubarStart, MenubarEnd - MenubarStart);
+	const size_t IndicatorGuard = MenubarBody.find("if(UseNewUi && MenubarHaveActive && !Ui()->RenderOnly())");
+	const size_t IndicatorResolve = MenubarBody.find("ResolveUiAnimValueRect(");
+	ASSERT_NE(IndicatorGuard, std::string::npos);
+	ASSERT_NE(IndicatorResolve, std::string::npos);
+	EXPECT_LT(IndicatorGuard, IndicatorResolve);
+}
+
+TEST(QmClientStartup, StartupSettingsPrewarmDoesNotCollectIngameEscPlan)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const size_t CollectionStart = Source.find("void CMenus::PrepareSettingsMenuTextPlanCollectionUnits(const char *pOperationOverride)");
+	ASSERT_NE(CollectionStart, std::string::npos);
+	const size_t CollectionEnd = Source.find("void CMenus::CollectSettingsMenuTextPlanUnit(", CollectionStart);
+	ASSERT_NE(CollectionEnd, std::string::npos);
+	const std::string Body = Source.substr(CollectionStart, CollectionEnd - CollectionStart);
+
+	const size_t OperationFlag = Body.find("const bool IngameEscOperation = str_comp(pOperation, \"ingame_esc_open\") == 0;");
+	const size_t IngameUnit = Body.find("m_vSettingsMenuTextPlanCollectionUnits.push_back({MENU_TEXT_PLAN_UNIT_INGAME_ESC, -1, -1});");
+	ASSERT_NE(OperationFlag, std::string::npos);
+	ASSERT_NE(IngameUnit, std::string::npos);
+	EXPECT_LT(OperationFlag, IngameUnit);
+	EXPECT_NE(Body.find("if(IngameEscOperation)"), std::string::npos);
+}
+
+TEST(QmClientStartup, SettingsTextPlanWrappersDoNotCopyInactivePendingItem)
+{
+	const std::string MenusSource = ReadTestSourceFile("src/game/client/components/menus.cpp");
+	const std::string TClientSource = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string QmClientSource = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+
+	const std::string DirectCopy = "const SMenuTextPlanItem PreviousPendingItem = m_MenuTextPlanPendingItem;";
+	EXPECT_EQ(MenusSource.find(DirectCopy), std::string::npos);
+	EXPECT_EQ(TClientSource.find(DirectCopy), std::string::npos);
+	EXPECT_EQ(QmClientSource.find(DirectCopy), std::string::npos);
+
+	EXPECT_NE(MenusSource.find("if(PreviousPendingActive)\n\t\tPreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
+	EXPECT_NE(TClientSource.find("if(PreviousPendingActive)\n\t\tPreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("if(PreviousPendingActive)\n\t\tPreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
+}
+
 TEST(QmLiveMatchReplay, StartKeepsOrdinaryDDNetRecordingCompatible)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/live/live_match_replay.cpp");

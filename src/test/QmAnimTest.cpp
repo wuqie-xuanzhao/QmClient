@@ -2597,3 +2597,16 @@ TEST(UiV2DropdownState, MouseHoverAndClickSelectsHoveredItem)
 	EXPECT_EQ(Result.m_SelectedIndex, 2);
 	EXPECT_FALSE(State.IsOpen());
 }
+
+TEST(UiForms, SliderInputValueMappingPreservesStoredScaleAndInfiniteSentinel)
+{
+	EXPECT_EQ(ui_widget::SliderInputStoredMinimum(100, 20), 5);
+	EXPECT_EQ(ui_widget::SliderInputStoredMaximum(300, 20), 15);
+	EXPECT_EQ(ui_widget::SliderInputDisplayValue(5, 20), 100);
+	EXPECT_EQ(ui_widget::SliderInputStoredValue(200, 20), 10);
+	EXPECT_EQ(ui_widget::SliderInputStoredValue(201, 20), 10);
+	EXPECT_TRUE(ui_widget::SliderInputIsInfiniteValue(0, true));
+	EXPECT_FALSE(ui_widget::SliderInputIsInfiniteValue(1, true));
+	EXPECT_EQ(ui_widget::SliderInputWheelStoredValue(0, 1, 1001, true, -28), 973);
+	EXPECT_EQ(ui_widget::SliderInputWheelStoredValue(0, 1, 1001, true, 28), 0);
+}

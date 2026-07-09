@@ -382,7 +382,9 @@ void CMenus::BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vI
 	const bool PreviousCollecting = m_MenuTextPlanCollecting;
 	std::vector<SMenuTextPlanItem> *pPreviousCollection = m_pMenuTextPlanCollection;
 	const bool PreviousPendingActive = m_MenuTextPlanPendingActive;
-	const SMenuTextPlanItem PreviousPendingItem = m_MenuTextPlanPendingItem;
+	SMenuTextPlanItem PreviousPendingItem;
+	if(PreviousPendingActive)
+		PreviousPendingItem = m_MenuTextPlanPendingItem;
 
 	g_Config.m_UiSettingsPage = SETTINGS_TCLIENT;
 	m_TClientSettingsTab = Tab;
@@ -392,8 +394,9 @@ void CMenus::BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vI
 	Ui()->BeginRenderOnly();
 	RenderSettings(MainView);
 	Ui()->EndRenderOnly();
+	if(PreviousPendingActive)
+		m_MenuTextPlanPendingItem = PreviousPendingItem;
 	m_MenuTextPlanPendingActive = PreviousPendingActive;
-	m_MenuTextPlanPendingItem = PreviousPendingItem;
 	m_pMenuTextPlanCollection = pPreviousCollection;
 	m_MenuTextPlanCollecting = PreviousCollecting;
 	m_TClientSettingsTab = PreviousTab;
@@ -760,51 +763,25 @@ bool CMenus::DoLine_KeyReader(CUIRect &View, CButtonContainer &ReaderButton, CBu
 
 bool CMenus::DoSliderWithScaledValue(const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, int Scale, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix)
 {
-	const bool NoClampValue = Flags & CUi::SCROLLBAR_OPTION_NOCLAMPVALUE;
+	CLineInputNumber *pInput = GetSettingsSliderInput(pId);
 
-	int Value = *pOption;
-	Min /= Scale;
-	Max /= Scale;
-	// Allow adjustment of slider options when ctrl is pressed (to avoid scrolling, or accidentally adjusting the value)
-	int Increment = std::max(1, (Max - Min) / 35);
-	if(Input()->ModifierIsPressed() && Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && Ui()->MouseInside(pRect))
-	{
-		Value += Increment;
-		Value = std::clamp(Value, Min, Max);
-	}
-	if(Input()->ModifierIsPressed() && Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && Ui()->MouseInside(pRect))
-	{
-		Value -= Increment;
-		Value = std::clamp(Value, Min, Max);
-	}
+	ui_widget::SSliderInputFieldOptions Options;
+	Options.m_pLabel = pStr;
+	Options.m_pSuffix = pSuffix;
+	Options.m_pScale = pScale;
+	Options.m_Flags = Flags;
+	Options.m_FontSize = pRect->h * CUi::ms_FontmodHeight * 0.8f;
+	Options.m_LabelAlign = TEXTALIGN_ML;
+	Options.m_ValueMultiplier = Scale;
 
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "%s: %i%s", pStr, Value * Scale, pSuffix);
+	IUiContext InputCtx;
+	InputCtx.m_pUi = Ui();
+	InputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	InputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	InputCtx.m_ScopeHash = MakeUiScopeHash("tclient_slider_input");
+	InputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
-	if(NoClampValue)
-	{
-		// Clamp the value internally for the scrollbar
-		Value = std::clamp(Value, Min, Max);
-	}
-
-	CUIRect Label, ScrollBar;
-	pRect->VSplitMid(&Label, &ScrollBar, minimum(10.0f, pRect->w * 0.05f));
-
-	const float LabelFontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
-	Ui()->DoLabel(&Label, aBuf, LabelFontSize, TEXTALIGN_ML);
-
-	Value = pScale->ToAbsolute(Ui()->DoScrollbarH(pId, &ScrollBar, pScale->ToRelative(Value, Min, Max)), Min, Max);
-	if(NoClampValue && ((Value == Min && *pOption < Min) || (Value == Max && *pOption > Max)))
-	{
-		Value = *pOption;
-	}
-
-	if(*pOption != Value)
-	{
-		*pOption = Value;
-		return true;
-	}
-	return false;
+	return ui_widget::SliderInputField(InputCtx, pInput, pId, pOption, Min, Max, *pRect, Options);
 }
 
 bool CMenus::DoEditBoxWithLabel(CLineInput *LineInput, const CUIRect *pRect, const char *pLabel, const char *pDefault, char *pBuf, size_t BufSize)

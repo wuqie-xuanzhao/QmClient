@@ -1118,105 +1118,72 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, c
 
 bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
 {
-	const bool Infinite = Flags & CUi::SCROLLBAR_OPTION_INFINITE;
-	const bool NoClampValue = Flags & CUi::SCROLLBAR_OPTION_NOCLAMPVALUE;
 	const bool DelayUpdate = Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE;
 	if(DelayUpdate)
 	{
-		CUIRect Label, ScrollBar;
-		SplitSettingsScrollbarRects(*pRect, Flags, &Label, nullptr, &ScrollBar);
-		const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
-		if(pTextId != nullptr)
-		{
-			SLabelProperties Props;
-			Props.m_MaxWidth = Label.w;
-			const SMenuTextStyleKey StyleKey = BuildSettingsScrollbarTextStyle(*pRect, Flags, &Label);
-			if(m_MenuTextPlanCollecting)
-			{
-				CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pStr, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
-				return false;
-			}
-			CUIElement &Element = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-			DoSettingsLabelStreamed(Element, &Label, pStr, FontSize, TEXTALIGN_ML, Props, -1, nullptr, true);
-		}
+		// 颜色选择器等延迟更新场景保持旧版滑动条，避免输入框提前绑定
 		return Ui()->DoScrollbarOption(pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
 	}
 
-	int PrevValue = *pOption;
-	int Value = PrevValue;
-	if(Infinite)
-	{
-		Max += 1;
-		if(Value == 0)
-			Value = Max;
-	}
-
-	const int Increment = std::max(1, (Max - Min) / 35);
-	if(Input()->ModifierIsPressed() && Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && Ui()->MouseInside(pRect))
-	{
-		Value += Increment;
-		Value = std::clamp(Value, Min, Max);
-	}
-	if(Input()->ModifierIsPressed() && Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && Ui()->MouseInside(pRect))
-	{
-		Value -= Increment;
-		Value = std::clamp(Value, Min, Max);
-	}
-
-	char aValueBuf[128];
-	if(!Infinite || Value != Max)
-	{
-		if(pMaxText != nullptr && Value == Max)
-			str_format(aValueBuf, sizeof(aValueBuf), "%s", pMaxText);
-		else
-			str_format(aValueBuf, sizeof(aValueBuf), "%i%s", Value, pSuffix);
-	}
-	else
-	{
-		str_copy(aValueBuf, "\xe2\x88\x9e", sizeof(aValueBuf));
-	}
-
-	if(NoClampValue)
-		Value = std::clamp(Value, Min, Max);
-
-	CUIRect Label, ValueRect, ScrollBar;
-	SplitSettingsScrollbarRects(*pRect, Flags, &Label, &ValueRect, &ScrollBar);
-	const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
+	// 文本预收集：只收集 label，不在收集时绘制输入框
 	if(pTextId != nullptr)
 	{
+		const CUIRect Label = ui_widget::SliderInputFieldLabelRect(*pRect, pStr != nullptr && pStr[0] != '\0', Flags);
+		const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
 		SLabelProperties Props;
 		Props.m_MaxWidth = Label.w;
-		const SMenuTextStyleKey StyleKey = BuildSettingsScrollbarTextStyle(*pRect, Flags, &Label);
+		const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
 		if(m_MenuTextPlanCollecting)
 		{
 			CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, pStr, &Label, FontSize, TEXTALIGN_ML, Props, StyleKey);
 			return false;
 		}
-		CUIElement &Element = MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
-		DoSettingsLabelStreamed(Element, &Label, pStr, FontSize, TEXTALIGN_ML, Props, -1, nullptr, true);
-	}
-	SLabelProperties ValueProps;
-	ValueProps.m_MaxWidth = ValueRect.w;
-	ValueProps.m_MinimumFontSize = FontSize * 0.7f;
-	Ui()->DoLabel(&ValueRect, aValueBuf, FontSize, TEXTALIGN_MR, ValueProps);
-
-	Value = pScale->ToAbsolute(Ui()->DoScrollbarH(pId, &ScrollBar, pScale->ToRelative(Value, Min, Max)), Min, Max);
-	if(NoClampValue && ((Value == Min && PrevValue < Min) || (Value == Max && PrevValue > Max)))
-	{
-		Value = PrevValue;
-	}
-	else if(Infinite)
-	{
-		if(Value == Max)
-			Value = 0;
 	}
 
-	if(*pOption != Value)
+	return DoSettingsSliderInputField(Page, Tab, Subtab, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
+}
+
+CLineInputNumber *CMenus::GetSettingsSliderInput(const void *pId)
+{
+	auto &pInput = m_vpSettingsSliderInputs[pId];
+	if(!pInput)
+		pInput = std::make_unique<CLineInputNumber>();
+	return pInput.get();
+}
+
+bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
+{
+	const bool DelayUpdate = Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE;
+	if(DelayUpdate)
+		return Ui()->DoScrollbarOption(pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
+
+	CLineInputNumber *pInput = GetSettingsSliderInput(pId);
+
+	ui_widget::SSliderInputFieldOptions Options;
+	Options.m_pLabel = pStr;
+	Options.m_pSuffix = pSuffix;
+	Options.m_pScale = pScale;
+	Options.m_Flags = Flags;
+	Options.m_pMaxText = pMaxText;
+	Options.m_FontSize = pRect->h * CUi::ms_FontmodHeight * 0.8f;
+	Options.m_LabelAlign = TEXTALIGN_ML;
+	if(pTextId != nullptr && pTextId[0] != '\0')
 	{
-		*pOption = Value;
-		return true;
+		const CUIRect Label = ui_widget::SliderInputFieldLabelRect(*pRect, pStr != nullptr && pStr[0] != '\0', Flags);
+		SLabelProperties Props;
+		Props.m_MaxWidth = Label.w;
+		const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, Options.m_FontSize, Options.m_LabelAlign, Props);
+		Options.m_pLabelElement = &MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
 	}
-	return false;
+
+	IUiContext InputCtx;
+	InputCtx.m_pUi = Ui();
+	InputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	InputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	InputCtx.m_ScopeHash = MakeUiScopeHash("settings_slider_input");
+	InputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
+	return ui_widget::SliderInputField(InputCtx, pInput, pId, pOption, Min, Max, *pRect, Options);
 }
 
 void CMenus::DoLaserPreview(const CUIRect *pRect, const ColorHSLA LaserOutlineColor, const ColorHSLA LaserInnerColor, const int LaserType)
@@ -1468,9 +1435,13 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 	else
 		Target = pCustomDefault != nullptr ? *pCustomDefault : DefaultColor;
 
-	const uint64_t NodeKey = BuildUiAnimNodeKey(MakeUiScopeHash("menubar_v2_tab"), reinterpret_cast<uint64_t>(pButtonContainer));
-	CUiV2AnimationRuntime &AnimRt = GameClient()->UiRuntimeV2()->AnimRuntime();
-	const ColorRGBA Resolved = ResolveUiAnimValueColor(AnimRt, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
+	ColorRGBA Resolved = Target;
+	if(!Ui()->RenderOnly())
+	{
+		const uint64_t NodeKey = BuildUiAnimNodeKey(MakeUiScopeHash("menubar_v2_tab"), reinterpret_cast<uint64_t>(pButtonContainer));
+		CUiV2AnimationRuntime &AnimRt = GameClient()->UiRuntimeV2()->AnimRuntime();
+		Resolved = ResolveUiAnimValueColor(AnimRt, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
+	}
 	pRect->Draw(Resolved, Corners, UseNewUi ? 7.0f : 10.0f);
 
 	if(pCommunityIcon != nullptr)
@@ -2181,7 +2152,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 	// feat-004: draw a 2px ACCENT_PRIMARY underline below the active page tab.
 	// This includes page-shaped icon buttons such as Settings/Demos, but still
 	// excludes pure action buttons like Quit/Editor.
-	if(UseNewUi && MenubarHaveActive)
+	if(UseNewUi && MenubarHaveActive && !Ui()->RenderOnly())
 	{
 		CUIRect IndicatorTarget;
 		IndicatorTarget.x = MenubarActiveRect.x + MenubarActiveRect.w * 0.15f;
@@ -2199,7 +2170,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 	// Draw a 2px ui_color underline below the active tab. The X/W position
 	// eases between tabs via the v2 runtime so changing pages glides instead of
 	// snapping. Indicator is omitted when there is no determinable active tab.
-	if(!UseNewUi && MenubarHaveActive)
+	if(!UseNewUi && MenubarHaveActive && !Ui()->RenderOnly())
 	{
 		CUIRect IndicatorTarget;
 		IndicatorTarget.x = MenubarActiveRect.x + MenubarActiveRect.w * 0.15f;
@@ -2287,7 +2258,7 @@ void CMenus::RenderLoading(const char *pCaption, const char *pContent, int Incre
 
 	Graphics()->SetColor(1.0, 1.0, 1.0, 1.0);
 
-	Client()->UpdateAndSwap();
+	GameClient()->UpdateAndSwapClient();
 }
 
 void CMenus::FinishLoading()
@@ -5092,18 +5063,6 @@ CMenus::SMenuTextPlanItem CMenus::AddStableTextDefault(int Page, int Tab, int Su
 	return Item;
 }
 
-CMenus::SMenuTextStyleKey CMenus::BuildSettingsScrollbarTextStyle(const CUIRect &Rect, unsigned Flags, CUIRect *pOutLabel) const
-{
-	CUIRect Label;
-	SplitSettingsScrollbarRects(Rect, Flags, &Label, nullptr, nullptr);
-	if(pOutLabel != nullptr)
-		*pOutLabel = Label;
-	const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
-	SLabelProperties Props;
-	Props.m_MaxWidth = Label.w;
-	return BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
-}
-
 CMenus::SMenuTextStyleKey CMenus::BuildSettingsShellTitleTextStyle(const CUIRect &Rect, CUIRect *pOutLabel) const
 {
 	CUIRect Label = Rect;
@@ -5128,11 +5087,12 @@ CMenus::SMenuTextPlanItem CMenus::AddStableTextCheckbox(int Page, int Tab, int S
 
 CMenus::SMenuTextPlanItem CMenus::AddStableTextScrollbar(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect &Rect, unsigned Flags, const char *pSourceTag) const
 {
-	CUIRect Label;
-	const SMenuTextStyleKey StyleKey = BuildSettingsScrollbarTextStyle(Rect, Flags, &Label);
+	const CUIRect Label = ui_widget::SliderInputFieldLabelRect(Rect, pText != nullptr && pText[0] != '\0', Flags);
 	SLabelProperties Props;
 	Props.m_MaxWidth = Label.w;
-	SMenuTextPlanItem Item = AddStableTextLabel(Page, Tab, Subtab, pTextId, pText, Label, Label.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML, Props, pSourceTag != nullptr ? pSourceTag : "scrollbar");
+	const float FontSize = Label.h * CUi::ms_FontmodHeight * 0.8f;
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Label, FontSize, TEXTALIGN_ML, Props);
+	SMenuTextPlanItem Item = AddStableTextLabel(Page, Tab, Subtab, pTextId, pText, Label, FontSize, TEXTALIGN_ML, Props, pSourceTag != nullptr ? pSourceTag : "scrollbar");
 	Item.m_StyleMode = MENU_TEXT_STYLE_EXACT;
 	Item.m_StyleKey = StyleKey;
 	return Item;
@@ -5702,7 +5662,9 @@ void CMenus::BuildBaseSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItem
 	const bool PreviousCollecting = m_MenuTextPlanCollecting;
 	std::vector<SMenuTextPlanItem> *pPreviousCollection = m_pMenuTextPlanCollection;
 	const bool PreviousPendingActive = m_MenuTextPlanPendingActive;
-	const SMenuTextPlanItem PreviousPendingItem = m_MenuTextPlanPendingItem;
+	SMenuTextPlanItem PreviousPendingItem;
+	if(PreviousPendingActive)
+		PreviousPendingItem = m_MenuTextPlanPendingItem;
 	const int PreviousTextContextPage = m_SettingsTextContextPage;
 	const int PreviousTextContextTab = m_SettingsTextContextTab;
 	const int PreviousTextContextSubtab = m_SettingsTextContextSubtab;
@@ -5721,7 +5683,8 @@ void CMenus::BuildBaseSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItem
 	m_SettingsTextContextSubtab = PreviousTextContextSubtab;
 	m_SettingsTextContextTab = PreviousTextContextTab;
 	m_SettingsTextContextPage = PreviousTextContextPage;
-	m_MenuTextPlanPendingItem = PreviousPendingItem;
+	if(PreviousPendingActive)
+		m_MenuTextPlanPendingItem = PreviousPendingItem;
 	m_MenuTextPlanPendingActive = PreviousPendingActive;
 	m_pMenuTextPlanCollection = pPreviousCollection;
 	m_MenuTextPlanCollecting = PreviousCollecting;
@@ -5744,7 +5707,9 @@ void CMenus::BuildIngameMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUI
 	const bool PreviousCollecting = m_MenuTextPlanCollecting;
 	std::vector<SMenuTextPlanItem> *pPreviousCollection = m_pMenuTextPlanCollection;
 	const bool PreviousPendingActive = m_MenuTextPlanPendingActive;
-	const SMenuTextPlanItem PreviousPendingItem = m_MenuTextPlanPendingItem;
+	SMenuTextPlanItem PreviousPendingItem;
+	if(PreviousPendingActive)
+		PreviousPendingItem = m_MenuTextPlanPendingItem;
 
 	CUIRect TabBar, ContentView;
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
@@ -5763,7 +5728,8 @@ void CMenus::BuildIngameMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUI
 	RenderServerInfo(ContentView);
 
 	Ui()->EndRenderOnly();
-	m_MenuTextPlanPendingItem = PreviousPendingItem;
+	if(PreviousPendingActive)
+		m_MenuTextPlanPendingItem = PreviousPendingItem;
 	m_MenuTextPlanPendingActive = PreviousPendingActive;
 	m_pMenuTextPlanCollection = pPreviousCollection;
 	m_MenuTextPlanCollecting = PreviousCollecting;
@@ -5811,6 +5777,7 @@ void CMenus::PrepareSettingsMenuTextPlanCollectionUnits(const char *pOperationOv
 {
 	const char *pOperation = pOperationOverride != nullptr ? pOperationOverride : SettingsPerfActiveOperation();
 	const std::string Operation = pOperation != nullptr ? pOperation : "";
+	const bool IngameEscOperation = str_comp(pOperation, "ingame_esc_open") == 0;
 	if(!m_SettingsMenuTextPlanCollectionDirty &&
 		m_SettingsMenuTextPlanCollectionGeneration == m_MenuTextPoolGeneration &&
 		m_SettingsMenuTextPlanCollectionOperation == Operation &&
@@ -5830,7 +5797,8 @@ void CMenus::PrepareSettingsMenuTextPlanCollectionUnits(const char *pOperationOv
 	m_SettingsMenuTextPlanCollectionDirty = false;
 	m_SettingsMenuTextPlanCollectionComplete = false;
 
-	m_vSettingsMenuTextPlanCollectionUnits.push_back({MENU_TEXT_PLAN_UNIT_INGAME_ESC, -1, -1});
+	if(IngameEscOperation)
+		m_vSettingsMenuTextPlanCollectionUnits.push_back({MENU_TEXT_PLAN_UNIT_INGAME_ESC, -1, -1});
 
 	const int CurrentPage = SettingsCanonicalPage(g_Config.m_UiSettingsPage);
 	int CurrentTab = -1;
@@ -5899,7 +5867,9 @@ void CMenus::CollectSettingsMenuTextPlanUnit(const SSettingsMenuTextPlanCollecti
 		const bool PreviousCollecting = m_MenuTextPlanCollecting;
 		std::vector<SMenuTextPlanItem> *pPreviousCollection = m_pMenuTextPlanCollection;
 		const bool PreviousPendingActive = m_MenuTextPlanPendingActive;
-		const SMenuTextPlanItem PreviousPendingItem = m_MenuTextPlanPendingItem;
+		SMenuTextPlanItem PreviousPendingItem;
+		if(PreviousPendingActive)
+			PreviousPendingItem = m_MenuTextPlanPendingItem;
 		g_Config.m_UiSettingsPage = Unit.m_Page;
 		m_MenuTextPlanCollecting = true;
 		m_pMenuTextPlanCollection = &m_vSettingsMenuTextPrebuildPlan;
@@ -5907,8 +5877,9 @@ void CMenus::CollectSettingsMenuTextPlanUnit(const SSettingsMenuTextPlanCollecti
 		Ui()->BeginRenderOnly();
 		RenderSettings(SettingsMainView);
 		Ui()->EndRenderOnly();
+		if(PreviousPendingActive)
+			m_MenuTextPlanPendingItem = PreviousPendingItem;
 		m_MenuTextPlanPendingActive = PreviousPendingActive;
-		m_MenuTextPlanPendingItem = PreviousPendingItem;
 		m_pMenuTextPlanCollection = pPreviousCollection;
 		m_MenuTextPlanCollecting = PreviousCollecting;
 		g_Config.m_UiSettingsPage = PreviousSettingsPage;
@@ -5987,7 +5958,9 @@ void CMenus::BuildVisibleSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vI
 	const bool PreviousCollecting = m_MenuTextPlanCollecting;
 	std::vector<SMenuTextPlanItem> *pPreviousCollection = m_pMenuTextPlanCollection;
 	const bool PreviousPendingActive = m_MenuTextPlanPendingActive;
-	const SMenuTextPlanItem PreviousPendingItem = m_MenuTextPlanPendingItem;
+	SMenuTextPlanItem PreviousPendingItem;
+	if(PreviousPendingActive)
+		PreviousPendingItem = m_MenuTextPlanPendingItem;
 	g_Config.m_UiSettingsPage = Page;
 	m_MenuTextPlanCollecting = true;
 	m_pMenuTextPlanCollection = &vItems;
@@ -5995,8 +5968,9 @@ void CMenus::BuildVisibleSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vI
 	Ui()->BeginRenderOnly();
 	RenderSettings(MainView);
 	Ui()->EndRenderOnly();
+	if(PreviousPendingActive)
+		m_MenuTextPlanPendingItem = PreviousPendingItem;
 	m_MenuTextPlanPendingActive = PreviousPendingActive;
-	m_MenuTextPlanPendingItem = PreviousPendingItem;
 	m_pMenuTextPlanCollection = pPreviousCollection;
 	m_MenuTextPlanCollecting = PreviousCollecting;
 	g_Config.m_UiSettingsPage = PreviousSettingsPage;
@@ -6075,7 +6049,7 @@ void CMenus::PrebuildIngameEscTextPoolBeforeOpen(int Budget)
 	if(Budget <= 0)
 		return;
 	SSettingsAdaptiveBudgetInput Input;
-	Input.m_FrameId = Client()->PerfFrame();
+	Input.m_FrameId = GameClient()->PerfFrameOrOne();
 	str_copy(Input.m_aOperation, SettingsPerfActiveOperation(), sizeof(Input.m_aOperation));
 	str_copy(Input.m_aPage, "settings", sizeof(Input.m_aPage));
 	str_copy(Input.m_aTab, "ingame_esc", sizeof(Input.m_aTab));
@@ -6097,11 +6071,11 @@ int CMenus::PrebuildSettingsTextPoolForLoading(int Budget, const char *pOperatio
 		return maximum(Budget, 0);
 
 	SSettingsAdaptiveBudgetInput Input;
-	Input.m_FrameId = Client()->PerfFrame();
+	Input.m_FrameId = GameClient()->PerfFrameOrOne();
 	str_copy(Input.m_aOperation, pOperationOverride != nullptr ? pOperationOverride : SettingsPerfActiveOperation(), sizeof(Input.m_aOperation));
-	str_copy(Input.m_aPage, CurrentQmUiPerfPage() != nullptr ? CurrentQmUiPerfPage() : "settings", sizeof(Input.m_aPage));
+	str_copy(Input.m_aPage, "settings", sizeof(Input.m_aPage));
 	str_copy(Input.m_aTab, "stable_text", sizeof(Input.m_aTab));
-	str_copy(Input.m_aContext, SettingsPerfContextName(), sizeof(Input.m_aContext));
+	str_copy(Input.m_aContext, GameClient()->ClientStateOnline() ? "online" : "offline", sizeof(Input.m_aContext));
 	Input.m_FrameMsAverage = (float)GameClient()->m_QmMonitoring.Snapshot().m_Performance.m_FrameTimeMs;
 	Input.m_FrameMsP95 = Input.m_FrameMsAverage;
 	Input.m_TargetFrameMs = 8.333f;
@@ -6660,7 +6634,7 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.045f);
 	const float Size = 15.0f;
-	const float OffsetTime = std::fmod(Client()->GlobalTime() * 0.15f, 2.0f);
+	const float OffsetTime = std::fmod(GameClient()->GlobalTimeOrZero() * 0.15f, 2.0f);
 	IGraphics::CQuadItem aCheckerItems[64];
 	size_t NumCheckerItems = 0;
 	const int NumItemsWidth = std::ceil(ScreenWidth / Size);

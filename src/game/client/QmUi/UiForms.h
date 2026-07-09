@@ -7,11 +7,17 @@
 #include "UiTokens.h"
 
 #include <engine/graphics.h>
+#include <engine/textrender.h>
 
 #include <game/client/ui.h>
 
+#include <algorithm>
+#include <cmath>
+
 class CLineInput;
+class CLineInputNumber;
 class CUIRect;
+class IScrollbarScale;
 
 namespace ui_widget
 {
@@ -75,23 +81,64 @@ namespace ui_widget
 		int m_TextAlign = TEXTALIGN_ML;
 	};
 
+	// 基础输入框（使用新材质背景 SURFACE_ELEVATED）。
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
-	SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
-	SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize = ui_token::font::BODY, bool HotkeyEnabled = true);
-
-	// Single-line text input with placeholder and animated focus ring.
-	// Returns true when the input value changed this frame.
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
 
+	// 传统 DDNet 按钮风格输入框（保持旧版背景颜色）。
+	SInputFieldResult LegacyTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
+	bool LegacyTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
+
+	// 只读输入框（不接收输入，仅渲染文本）。
+	void ReadOnlyTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
+
 	// 带清除按钮的单行输入框。编辑行为委托给 CLineInput/CUi，保持光标、
 	// 选择、双击全选、IME、提交和外部点击保存行为与 DDNet 一致。
+	SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	bool ClearableTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
+
+	// 带左侧图标和可选右侧清除按钮的输入框。图标默认使用搜索图标。
+	SInputFieldResult IconTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options, const char *pIcon = nullptr, bool Clearable = true);
+	bool IconTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY, const char *pIcon = nullptr, bool Clearable = true);
 
 	// 搜索输入框，包含搜索图标和清除按钮。HotkeyEnabled 为 true 时 Ctrl+F
 	// 会聚焦并全选。
+	SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize = ui_token::font::BODY, bool HotkeyEnabled = true);
 	bool SearchField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize = ui_token::font::BODY, bool HotkeyEnabled = true);
+
+	// 整数输入框，自动与外部 int 同步。
+	SInputFieldResult IntegerField(const IUiContext &Ctx, CLineInputNumber *pInput, int *pValue, int Min, int Max, const CUIRect &Rect, const STextFieldOptions &Options);
+
+	inline int SliderInputStoredMinimum(int DisplayMin, int ValueMultiplier) { return DisplayMin / std::max(1, ValueMultiplier); }
+	inline int SliderInputStoredMaximum(int DisplayMax, int ValueMultiplier) { return DisplayMax / std::max(1, ValueMultiplier); }
+	inline int SliderInputDisplayValue(int StoredValue, int ValueMultiplier) { return StoredValue * std::max(1, ValueMultiplier); }
+	inline int SliderInputStoredValue(int DisplayValue, int ValueMultiplier) { return (int)std::round(DisplayValue / (float)std::max(1, ValueMultiplier)); }
+	inline bool SliderInputIsInfiniteValue(int StoredValue, bool Infinite) { return Infinite && StoredValue == 0; }
+	inline int SliderInputWheelStoredValue(int StoredValue, int SliderMin, int SliderMax, bool Infinite, int Increment)
+	{
+		const int SliderValue = SliderInputIsInfiniteValue(StoredValue, Infinite) ? SliderMax : std::clamp(StoredValue, SliderMin, SliderMax);
+		const int NewSliderValue = std::clamp(SliderValue + Increment, SliderMin, SliderMax);
+		return Infinite && NewSliderValue == SliderMax ? 0 : NewSliderValue;
+	}
+	CUIRect SliderInputFieldLabelRect(const CUIRect &Rect, bool HasLabel, unsigned Flags = 0u);
+
+	// 横向滚动条 + 输入框 + 单位组合。支持整数/浮点、线性/对数刻度、
+	// ♾️ 无限符号和最大值文本。
+	struct SSliderInputFieldOptions
+	{
+		const char *m_pLabel = nullptr;
+		const char *m_pSuffix = nullptr;
+		const IScrollbarScale *m_pScale = nullptr; // nullptr = 线性
+		unsigned m_Flags = 0; // CUi::SCROLLBAR_OPTION_* 标志
+		const char *m_pMaxText = nullptr; // 当值为 Max 且非 Infinite 时显示
+		float m_FontSize = ui_token::font::BODY;
+		int m_LabelAlign = TEXTALIGN_ML;
+		int m_ValueMultiplier = 1; // 滑动条以 Min/Multiplier..Max/Multiplier 为单位，显示/编辑真实值
+		CUIElement *m_pLabelElement = nullptr;
+	};
+	bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);
 
 	// Boolean switch. Slider position animates with a spring driver between left
 	// (off) and right (on). Returns true on click.

@@ -293,6 +293,27 @@ CGameClient::EQmLivePresentationMode CGameClient::LivePresentationMode() const
 	return EQmLivePresentationMode::NORMAL;
 }
 
+bool CGameClient::CanRunRuntimeConfigConchainEffects() const
+{
+	return m_pClient != nullptr && m_pClient->GlobalTime();
+}
+
+bool CGameClient::ClientStateOnline() const
+{
+	return m_pClient != nullptr && m_pClient->State() == IClient::STATE_ONLINE;
+}
+
+bool CGameClient::ClientStateAtLeastOnline() const
+{
+	return m_pClient != nullptr && m_pClient->State() >= IClient::STATE_ONLINE;
+}
+
+void CGameClient::StopRaceRecordIfRecording() const
+{
+	if(m_pClient != nullptr && m_pClient->RaceRecord_IsRecording())
+		m_pClient->RaceRecord_Stop();
+}
+
 void CGameClient::OnConsoleInit()
 {
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
@@ -309,7 +330,7 @@ void CGameClient::OnConsoleInit()
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFavorites = Kernel()->RequestInterface<IFavorites>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
-	m_pFoes = Client()->Foes();
+	m_pFoes = m_pClient->Foes();
 	m_pDiscord = Kernel()->RequestInterface<IDiscord>();
 	m_pFrameScheduler = Kernel()->RequestInterface<IFrameScheduler>();
 #if defined(CONF_AUTOUPDATE)
@@ -428,20 +449,21 @@ void CGameClient::OnConsoleInit()
 	}
 
 	// add basic console commands
-	Console()->Register("team", "i[team-id]", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
-	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself to restart");
-	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange7, this, "Change ready state (0.7 only)");
+	IConsole *pConsole = m_pConsole;
+	pConsole->Register("team", "i[team-id]", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
+	pConsole->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself to restart");
+	pConsole->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange7, this, "Change ready state (0.7 only)");
 #if defined(CONF_QM_LIVE_CLIENT)
-	Console()->Register("qm_live_match_record_start", "", CFGFLAG_CLIENT, ConQmLiveMatchRecordStart, this, "Start QmLive full match demo recording");
-	Console()->Register("qm_live_match_record_stop", "", CFGFLAG_CLIENT, ConQmLiveMatchRecordStop, this, "Stop QmLive full match demo recording");
-	Console()->Register("qm_live_team_filter", "i[team]", CFGFLAG_CLIENT, ConQmLiveTeamFilter, this, "Preview/render only one DDRace team from a full match demo");
-	Console()->Register("qm_live_team_filter_off", "", CFGFLAG_CLIENT, ConQmLiveTeamFilterOff, this, "Disable QmLive team preview/render filter");
+	pConsole->Register("qm_live_match_record_start", "", CFGFLAG_CLIENT, ConQmLiveMatchRecordStart, this, "Start QmLive full match demo recording");
+	pConsole->Register("qm_live_match_record_stop", "", CFGFLAG_CLIENT, ConQmLiveMatchRecordStop, this, "Stop QmLive full match demo recording");
+	pConsole->Register("qm_live_team_filter", "i[team]", CFGFLAG_CLIENT, ConQmLiveTeamFilter, this, "Preview/render only one DDRace team from a full match demo");
+	pConsole->Register("qm_live_team_filter_off", "", CFGFLAG_CLIENT, ConQmLiveTeamFilterOff, this, "Disable QmLive team preview/render filter");
 #endif
 
 	// register game commands to allow the client prediction to load settings from the map
-	Console()->Register("tune", "s[tuning] ?f[value]", CFGFLAG_GAME, ConTuneParam, this, "Tune variable to value");
-	Console()->Register("tune_zone", "i[zone] s[tuning] f[value]", CFGFLAG_GAME, ConTuneZone, this, "Tune in zone a variable to value");
-	Console()->Register("mapbug", "s[mapbug]", CFGFLAG_GAME, ConMapbug, this, "Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)");
+	pConsole->Register("tune", "s[tuning] ?f[value]", CFGFLAG_GAME, ConTuneParam, this, "Tune variable to value");
+	pConsole->Register("tune_zone", "i[zone] s[tuning] f[value]", CFGFLAG_GAME, ConTuneZone, this, "Tune in zone a variable to value");
+	pConsole->Register("mapbug", "s[mapbug]", CFGFLAG_GAME, ConMapbug, this, "Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)");
 
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnInterfacesInit(this);
@@ -452,75 +474,75 @@ void CGameClient::OnConsoleInit()
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnConsoleInit();
 
-	Console()->Chain("cl_languagefile", ConchainLanguageUpdate, this);
+	pConsole->Chain("cl_languagefile", ConchainLanguageUpdate, this);
 
-	Console()->Chain("player_name", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_clan", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_country", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_use_custom_color", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_color_body", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_color_feet", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player_skin", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player_name", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player_clan", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player_country", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player_use_custom_color", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player_color_body", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player_color_feet", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player_skin", ConchainSpecialInfoupdate, this);
 
-	Console()->Chain("player7_skin", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_skin_body", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_skin_marking", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_skin_decoration", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_skin_hands", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_skin_feet", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_skin_eyes", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_color_body", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_color_marking", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_color_decoration", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_color_hands", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_color_feet", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_color_eyes", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_use_custom_color_body", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_use_custom_color_marking", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_use_custom_color_decoration", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_use_custom_color_hands", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_use_custom_color_feet", ConchainSpecialInfoupdate, this);
-	Console()->Chain("player7_use_custom_color_eyes", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_skin", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_skin_body", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_skin_marking", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_skin_decoration", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_skin_hands", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_skin_feet", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_skin_eyes", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_color_body", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_color_marking", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_color_decoration", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_color_hands", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_color_feet", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_color_eyes", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_use_custom_color_body", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_use_custom_color_marking", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_use_custom_color_decoration", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_use_custom_color_hands", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_use_custom_color_feet", ConchainSpecialInfoupdate, this);
+	pConsole->Chain("player7_use_custom_color_eyes", ConchainSpecialInfoupdate, this);
 
-	Console()->Chain("dummy_name", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy_clan", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy_country", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy_use_custom_color", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy_color_body", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy_color_feet", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy_skin", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy_name", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy_clan", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy_country", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy_use_custom_color", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy_color_body", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy_color_feet", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy_skin", ConchainSpecialDummyInfoupdate, this);
 
-	Console()->Chain("dummy7_skin", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_skin_body", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_skin_marking", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_skin_decoration", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_skin_hands", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_skin_feet", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_skin_eyes", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_color_body", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_color_marking", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_color_decoration", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_color_hands", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_color_feet", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_color_eyes", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_use_custom_color_body", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_use_custom_color_marking", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_use_custom_color_decoration", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_use_custom_color_hands", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_use_custom_color_feet", ConchainSpecialDummyInfoupdate, this);
-	Console()->Chain("dummy7_use_custom_color_eyes", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_skin", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_skin_body", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_skin_marking", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_skin_decoration", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_skin_hands", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_skin_feet", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_skin_eyes", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_color_body", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_color_marking", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_color_decoration", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_color_hands", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_color_feet", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_color_eyes", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_use_custom_color_body", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_use_custom_color_marking", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_use_custom_color_decoration", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_use_custom_color_hands", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_use_custom_color_feet", ConchainSpecialDummyInfoupdate, this);
+	pConsole->Chain("dummy7_use_custom_color_eyes", ConchainSpecialDummyInfoupdate, this);
 
-	Console()->Chain("cl_skin_download_url", ConchainRefreshSkins, this);
-	Console()->Chain("cl_skin_community_download_url", ConchainRefreshSkins, this);
-	Console()->Chain("cl_skin_prefix", ConchainRefreshSkins, this);
-	Console()->Chain("cl_download_skins", ConchainRefreshSkins, this);
-	Console()->Chain("cl_download_community_skins", ConchainRefreshSkins, this);
-	Console()->Chain("cl_vanilla_skins_only", ConchainRefreshSkins, this);
-	Console()->Chain("events", ConchainRefreshEventSkins, this);
+	pConsole->Chain("cl_skin_download_url", ConchainRefreshSkins, this);
+	pConsole->Chain("cl_skin_community_download_url", ConchainRefreshSkins, this);
+	pConsole->Chain("cl_skin_prefix", ConchainRefreshSkins, this);
+	pConsole->Chain("cl_download_skins", ConchainRefreshSkins, this);
+	pConsole->Chain("cl_download_community_skins", ConchainRefreshSkins, this);
+	pConsole->Chain("cl_vanilla_skins_only", ConchainRefreshSkins, this);
+	pConsole->Chain("events", ConchainRefreshEventSkins, this);
 
-	Console()->Chain("cl_dummy", ConchainSpecialDummy, this);
+	pConsole->Chain("cl_dummy", ConchainSpecialDummy, this);
 
-	Console()->Chain("cl_menu_map", ConchainMenuMap, this);
+	pConsole->Chain("cl_menu_map", ConchainMenuMap, this);
 }
 
 // One-shot migration of legacy tc_jump_hint* settings into qm_jump_hint*.
@@ -579,6 +601,7 @@ void CGameClient::ForceUpdateConsoleRemoteCompletionSuggestions()
 void CGameClient::OnInit()
 {
 	const int64_t OnInitStart = time_get();
+	IClient *pClient = m_pClient;
 
 	// Migrate legacy tc_jump_hint_text into qm_jump_hint_text before any HUD use.
 	MigrateJumpHintConfig();
@@ -586,7 +609,7 @@ void CGameClient::OnInit()
 	// Initialize config tags system
 	InitConfigTags();
 
-	Client()->SetLoadingCallback([this](IClient::ELoadingCallbackDetail Detail) {
+	pClient->SetLoadingCallback([this](IClient::ELoadingCallbackDetail Detail) {
 		const char *pTitle;
 		if(Detail == IClient::LOADING_CALLBACK_DETAIL_DEMO || DemoPlayer()->IsPlaying())
 		{
@@ -647,21 +670,21 @@ void CGameClient::OnInit()
 	// TODO: this should be different
 	// setup item sizes
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
-		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
+		pClient->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 	// HACK: only set static size for items, which were available in the first 0.7 release
 	// so new items don't break the snapshot delta
 	static const int OLD_NUM_NETOBJTYPES = 23;
 	for(int i = 0; i < OLD_NUM_NETOBJTYPES; i++)
-		Client()->SnapSetStaticsize7(i, m_NetObjHandler7.GetObjSize(i));
+		pClient->SnapSetStaticsize7(i, m_NetObjHandler7.GetObjSize(i));
 
 	if(!TextRender()->LoadFonts())
 	{
-		Client()->AddWarning(SWarning(Localize("Some fonts could not be loaded. Check the local console for details.")));
+		pClient->AddWarning(SWarning(Localize("Some fonts could not be loaded. Check the local console for details.")));
 	}
 	TextRender()->SetFontLanguageVariant(g_Config.m_ClLanguagefile);
 
 	// update and swap after font loading, they are quite huge
-	Client()->UpdateAndSwap();
+	pClient->UpdateAndSwap();
 
 	const char *pLoadingDDNetCaption = Localize("Loading DDNet Client");
 	const char *pLoadingMessageComponents = Localize("Initializing components");
@@ -1349,8 +1372,11 @@ void CGameClient::OnReset()
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnReset();
 
-	Editor()->ResetMentions();
-	Editor()->ResetIngameMoved();
+	if(m_pEditor != nullptr)
+	{
+		m_pEditor->ResetMentions();
+		m_pEditor->ResetIngameMoved();
+	}
 
 	Collision()->Unload();
 	Layers()->Unload();
@@ -4443,7 +4469,9 @@ void CGameClient::InvalidateSnapshot()
 	mem_zero(&m_Snap, sizeof(m_Snap));
 	m_Snap.m_SpecInfo.m_Zoom = 1.0f;
 	m_Snap.m_LocalClientId = -1;
-	SnapCollectEntities();
+	m_vSnapEntities.clear();
+	if(m_pClient != nullptr && (m_pClient->State() == IClient::STATE_ONLINE || m_pClient->State() == IClient::STATE_DEMOPLAYBACK))
+		SnapCollectEntities();
 }
 
 void CGameClient::OnNewSnapshot()
@@ -7185,8 +7213,14 @@ void CGameClient::ConQmLiveTeamFilterOff(IConsole::IResult *pResult, void *pUser
 void CGameClient::ConchainLanguageUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	CGameClient *pThis = static_cast<CGameClient *>(pUserData);
-	const bool Changed = pThis->Client()->GlobalTime() && pResult->NumArguments() && str_comp(pResult->GetString(0), g_Config.m_ClLanguagefile) != 0;
+	const bool HasArgument = pResult->NumArguments() != 0;
+	char aRequestedLanguage[IO_MAX_PATH_LENGTH];
+	char aPreviousLanguage[IO_MAX_PATH_LENGTH];
+	str_copy(aPreviousLanguage, g_Config.m_ClLanguagefile, sizeof(aPreviousLanguage));
+	if(HasArgument)
+		str_copy(aRequestedLanguage, pResult->GetString(0), sizeof(aRequestedLanguage));
 	pfnCallback(pResult, pCallbackUserData);
+	const bool Changed = pThis->CanRunRuntimeConfigConchainEffects() && HasArgument && str_comp(aRequestedLanguage, aPreviousLanguage) != 0;
 	if(Changed)
 	{
 		pThis->OnLanguageChange();
@@ -7195,24 +7229,27 @@ void CGameClient::ConchainLanguageUpdate(IConsole::IResult *pResult, void *pUser
 
 void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
+	CGameClient *pThis = static_cast<CGameClient *>(pUserData);
 	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments())
-		((CGameClient *)pUserData)->SendInfo(false);
+	if(pResult->NumArguments() && pThis->CanRunRuntimeConfigConchainEffects())
+		pThis->SendInfo(false);
 }
 
 void CGameClient::ConchainSpecialDummyInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
+	CGameClient *pThis = static_cast<CGameClient *>(pUserData);
 	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments())
-		((CGameClient *)pUserData)->SendDummyInfo(false);
+	if(pResult->NumArguments() && pThis->CanRunRuntimeConfigConchainEffects())
+		pThis->SendDummyInfo(false);
 }
 
 void CGameClient::ConchainSpecialDummy(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
+	CGameClient *pThis = static_cast<CGameClient *>(pUserData);
 	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments())
+	if(pResult->NumArguments() && pThis->CanRunRuntimeConfigConchainEffects())
 	{
-		if(g_Config.m_ClDummy && !((CGameClient *)pUserData)->Client()->DummyConnected())
+		if(g_Config.m_ClDummy && !pThis->m_pClient->DummyConnected())
 			g_Config.m_ClDummy = 0;
 	}
 }

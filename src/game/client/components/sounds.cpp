@@ -261,7 +261,7 @@ bool CSounds::Reload()
 
 void CSounds::OnReset()
 {
-	if(Client()->State() >= IClient::STATE_ONLINE)
+	if(GameClient()->ClientStateAtLeastOnline())
 	{
 		Sound()->StopAll();
 		ClearQueue();

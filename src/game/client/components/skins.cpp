@@ -1274,9 +1274,7 @@ void CSkins::OnInit()
 	RefreshEventSkins();
 
 	// load skins
-	Refresh([this]() {
-		GameClient()->m_Menus.RenderLoading(Localize("Loading DDNet Client"), Localize("Loading skin files"), 0);
-	});
+	Refresh([]() {});
 }
 
 void CSkins::OnShutdown()
