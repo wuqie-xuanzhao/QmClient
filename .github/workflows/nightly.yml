@@ -330,7 +330,7 @@ jobs:
       ANDROID_APP_NAME: QmClient
       ANDROID_PACKAGE_NAME: org.ddnet.client
       ANDROID_BUILD_DIR: build-android-release
-      ANDROID_NDK_VERSION: "26.1.10909125"
+      ANDROID_NDK_VERSION: "29.0.14206865"
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       SCCACHE_GHA_ENABLED: "true"
       TW_KEY_NAME: /home/runner/.android/debug.keystore
@@ -415,8 +415,8 @@ jobs:
         run: |
           sdkmanager --install \
             "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;34.0.0" \
+            "platforms;android-36" \
+            "build-tools;36.1.0" \
             "ndk;${{ env.ANDROID_NDK_VERSION }}"
           yes | sdkmanager --licenses
 
