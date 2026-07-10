@@ -149,20 +149,20 @@ is_bundled(FFMPEG_BUNDLED "${AVCODEC_LIBRARY}")
 set(FFMPEG_COPY_FILES)
 if(FFMPEG_BUNDLED)
   if(TARGET_OS STREQUAL "windows")
-    set(FFMPEG_COPY_FILES
-      "${EXTRA_FFMPEG_LIBDIR}/avcodec-61.dll"
-      "${EXTRA_FFMPEG_LIBDIR}/avformat-61.dll"
-      "${EXTRA_FFMPEG_LIBDIR}/avutil-59.dll"
-      "${EXTRA_FFMPEG_LIBDIR}/swresample-5.dll"
-      "${EXTRA_FFMPEG_LIBDIR}/swscale-8.dll"
+    file(GLOB FFMPEG_COPY_FILES
+      "${PROJECT_SOURCE_DIR}/${EXTRA_FFMPEG_LIBDIR}/avcodec-*.dll"
+      "${PROJECT_SOURCE_DIR}/${EXTRA_FFMPEG_LIBDIR}/avformat-*.dll"
+      "${PROJECT_SOURCE_DIR}/${EXTRA_FFMPEG_LIBDIR}/avutil-*.dll"
+      "${PROJECT_SOURCE_DIR}/${EXTRA_FFMPEG_LIBDIR}/swresample-*.dll"
+      "${PROJECT_SOURCE_DIR}/${EXTRA_FFMPEG_LIBDIR}/swscale-*.dll"
     )
   elseif(TARGET_OS STREQUAL "mac")
     set(FFMPEG_COPY_FILES
-      "${EXTRA_FFMPEG_LIBDIR}/libavcodec.61.dylib"
-      "${EXTRA_FFMPEG_LIBDIR}/libavformat.61.dylib"
-      "${EXTRA_FFMPEG_LIBDIR}/libavutil.59.dylib"
-      "${EXTRA_FFMPEG_LIBDIR}/libswresample.5.dylib"
-      "${EXTRA_FFMPEG_LIBDIR}/libswscale.8.dylib"
+      "${AVCODEC_LIBRARY}"
+      "${AVFORMAT_LIBRARY}"
+      "${AVUTIL_LIBRARY}"
+      "${SWRESAMPLE_LIBRARY}"
+      "${SWSCALE_LIBRARY}"
     )
   endif()
 endif()
