@@ -4449,7 +4449,7 @@ int CMenus::IdleRenderFrameRate() const
 	if(time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME)
 		return 0;
 
-	return MENU_IDLE_REFRESH_RATE;
+	return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);
 }
 
 CMenus::SSettingsScrollRegionFrame CMenus::BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY)
@@ -4497,12 +4497,8 @@ CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const
 
 CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const
 {
-	const SQmSettingsCardStyle Style = QmSettingsCardStyle(UiScale);
-	CScrollRegionParams Params;
-	Params.m_ScrollUnit = 10.0f;
-	Params.m_ScrollbarThickness = Style.m_ScrollbarWidth;
-	Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;
-	Params.m_ForceShowScrollbar = true;
+	CScrollRegionParams Params = QmScrollRegionParamsForSize(EQmScrollSize::LARGE, UiScale);
+	Params.m_ScrollUnit = QmSettingsScrollConfig(UiScale, 0.0f).m_WheelScale;
 	return Params;
 }
 

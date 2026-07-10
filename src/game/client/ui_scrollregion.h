@@ -7,6 +7,11 @@
 
 #include <game/client/QmUi/QmScroll.h>
 
+constexpr bool QmScrollRegionCanConsumeWheel(bool HotFromPreviousFrame, bool HotInPopupThisFrame, bool UnderlyingScrollBlocked, bool RenderingPopup)
+{
+	return (HotFromPreviousFrame || HotInPopupThisFrame) && (!UnderlyingScrollBlocked || RenderingPopup);
+}
+
 struct CScrollRegionParams
 {
 	float m_ScrollbarThickness;
@@ -20,7 +25,7 @@ struct CScrollRegionParams
 	ColorRGBA m_SliderColor;
 	ColorRGBA m_SliderColorHover;
 	ColorRGBA m_SliderColorGrabbed;
-	bool m_ForceShowScrollbar;
+	bool m_HideScrollbar;
 	bool m_ScrollHorizontal;
 
 	CScrollRegionParams();
@@ -48,6 +53,18 @@ inline CScrollRegionParams QmScrollRegionParamsForSize(EQmScrollSize Size, float
 	return Params;
 }
 
+inline CScrollRegionParams QmScrollRegionParamsFromPolicy(const SQmResolvedScrollPolicy &Policy)
+{
+	CScrollRegionParams Params;
+	Params.m_ScrollbarThickness = Policy.m_Style.m_ScrollbarWidth;
+	Params.m_ScrollbarMargin = Policy.m_Style.m_ScrollbarMargin;
+	Params.m_SliderMinSize = Policy.m_Style.m_MinThumbHeight;
+	Params.m_ScrollUnit = Policy.m_Config.m_WheelScale;
+	Params.m_HideScrollbar = Policy.m_RailVisibility == EQmScrollRailVisibility::HIDDEN;
+	Params.m_ScrollHorizontal = Policy.m_Style.m_Axis == EQmScrollAxis::HORIZONTAL;
+	return Params;
+}
+
 inline CScrollRegionParams::CScrollRegionParams()
 {
 	const SQmScrollContainerStyle Style = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM);
@@ -63,7 +80,7 @@ inline CScrollRegionParams::CScrollRegionParams()
 	m_SliderColor = ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f);
 	m_SliderColorHover = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	m_SliderColorGrabbed = ColorRGBA(0.9f, 0.9f, 0.9f, 1.0f);
-	m_ForceShowScrollbar = false;
+	m_HideScrollbar = false;
 	m_ScrollHorizontal = false;
 }
 
@@ -177,6 +194,7 @@ public:
 	bool RectClipped(const CUIRect &Rect) const;
 	bool ContentOverflows() const;
 	bool ScrollbarShown() const;
+	bool ScrollbarVisible() const { return ScrollbarShown(); }
 	bool Animating() const;
 	bool Active() const;
 	float ContentAreaPos() const;

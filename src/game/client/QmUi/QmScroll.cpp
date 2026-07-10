@@ -17,25 +17,23 @@ namespace
 		return ScrollAxisHorizontal(Style) ? ViewRect.w : ViewRect.h;
 	}
 
-	SQmScrollContainerFrame BuildScrollContainerFrame(const CUIRect &ViewRect, float ContentSize, float Offset, const SQmScrollContainerStyle &Style, bool ReserveScrollbarWidth)
+	SQmScrollContainerFrame BuildScrollContainerFrame(const CUIRect &ViewRect, float ContentSize, float Offset, const SQmScrollContainerStyle &Style, bool RenderRail)
 	{
 		const bool Horizontal = ScrollAxisHorizontal(Style);
 		SQmScrollMetrics Metrics;
 		Metrics.m_ViewportSize = ScrollAxisViewportSize(ViewRect, Style);
 		Metrics.m_ContentSize = ContentSize;
 
-		const bool ScrollbarVisible = Metrics.MaxOffset() > 0.0f;
+		const bool Scrollable = Metrics.MaxOffset() > 0.0f;
+		const bool ScrollbarVisible = Scrollable && RenderRail;
 		CUIRect ClipRect = ViewRect;
 		CUIRect ScrollbarRect;
 		if(ScrollbarVisible)
 		{
-			if(ReserveScrollbarWidth)
-			{
-				if(Horizontal)
-					ClipRect.h = std::max(0.0f, ViewRect.h - Style.m_ScrollbarWidth);
-				else
-					ClipRect.w = std::max(0.0f, ViewRect.w - Style.m_ScrollbarWidth);
-			}
+			if(Horizontal)
+				ClipRect.h = std::max(0.0f, ViewRect.h - Style.m_ScrollbarWidth);
+			else
+				ClipRect.w = std::max(0.0f, ViewRect.w - Style.m_ScrollbarWidth);
 			if(Horizontal)
 			{
 				ScrollbarRect.x = ViewRect.x;
@@ -55,6 +53,7 @@ namespace
 		SQmScrollContainerFrame Frame;
 		Frame.m_ClipRect = ClipRect;
 		Frame.m_Offset = Offset;
+		Frame.m_Scrollable = Scrollable;
 		Frame.m_ScrollbarVisible = ScrollbarVisible;
 		Frame.m_ContentRect = ClipRect;
 		if(Horizontal)
@@ -136,6 +135,48 @@ SQmScrollConfig QmNativeWheelScrollConfig(float UiScale, float SmoothScrollTimeS
 	Config.m_NativeWheelAnimationTime = std::max(0.0f, SmoothScrollTimeSec);
 	Config.m_MaxOverscroll = 0.0f;
 	return Config;
+}
+
+SQmScrollConfig QmSettingsScrollConfig(float UiScale, float SmoothScrollTimeSec)
+{
+	SQmScrollConfig Config = QmNativeWheelScrollConfig(UiScale, SmoothScrollTimeSec);
+	Config.m_WheelScale = 120.0f;
+	return Config;
+}
+
+SQmResolvedScrollPolicy QmResolveScrollPolicy(const SQmScrollRequest &Request, float UiScale, float SmoothScrollTimeSec)
+{
+	SQmResolvedScrollPolicy Policy;
+	Policy.m_Style.m_Axis = Request.m_Axis;
+	Policy.m_Config = QmNativeWheelScrollConfig(UiScale, SmoothScrollTimeSec);
+	const float RowExtent = std::max(0.0f, Request.m_RowExtent);
+	const int RowsPerStep = std::max(1, Request.m_RowsPerStep);
+
+	switch(Request.m_Profile)
+	{
+	case EQmScrollProfile::SETTINGS_PAGE:
+		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);
+		Policy.m_Config = QmSettingsScrollConfig(UiScale, SmoothScrollTimeSec);
+		break;
+	case EQmScrollProfile::MENU_LIST:
+		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, UiScale);
+		if(RowExtent > 0.0f)
+			Policy.m_Config.m_WheelScale = RowExtent * RowsPerStep;
+		break;
+	case EQmScrollProfile::POPUP_LIST:
+		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, UiScale);
+		Policy.m_Config.m_WheelScale = RowExtent > 0.0f ? RowExtent * 3.0f : Policy.m_Config.m_WheelScale;
+		Policy.m_MaxVisibleItems = 8;
+		break;
+	case EQmScrollProfile::FILTER_GRID:
+		Policy.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, UiScale);
+		Policy.m_Config.m_WheelScale = RowExtent > 0.0f ? RowExtent * 2.0f : Policy.m_Config.m_WheelScale;
+		Policy.m_RailVisibility = EQmScrollRailVisibility::HIDDEN;
+		Policy.m_ContentDragAllowed = false;
+		break;
+	}
+	Policy.m_Style.m_Axis = Request.m_Axis;
+	return Policy;
 }
 
 void CQmScrollState::Reset()
@@ -280,7 +321,7 @@ void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQ
 	}
 }
 
-void CQmScrollContainer::Reset()
+void CQmScrollController::Reset()
 {
 	m_State.Reset();
 	m_ScrollbarDragActive = false;
@@ -292,7 +333,7 @@ void CQmScrollContainer::Reset()
 	m_ContentDragLastMousePos = 0.0f;
 }
 
-void CQmScrollContainer::ScrollByWheel(float WheelDelta, float ViewportHeight, float ContentHeight, const SQmScrollConfig &Config)
+void CQmScrollController::ScrollByWheel(float WheelDelta, float ViewportHeight, float ContentHeight, const SQmScrollConfig &Config)
 {
 	SQmScrollMetrics Metrics;
 	Metrics.m_ViewportSize = ViewportHeight;
@@ -300,12 +341,12 @@ void CQmScrollContainer::ScrollByWheel(float WheelDelta, float ViewportHeight, f
 	m_State.AddWheelImpulse(WheelDelta, Metrics, Config);
 }
 
-SQmScrollContainerFrame CQmScrollContainer::PreviewFrame(const CUIRect &ViewRect, float ContentHeight, const SQmScrollContainerStyle &Style) const
+SQmScrollContainerFrame CQmScrollController::PreviewFrame(const CUIRect &ViewRect, float ContentHeight, const SQmScrollContainerStyle &Style) const
 {
 	return BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
 }
 
-SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollConfig &Config)
+SQmScrollContainerFrame CQmScrollController::Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollConfig &Config)
 {
 	SQmScrollContainerStyle Style;
 	SQmScrollMetrics Metrics;
@@ -313,20 +354,36 @@ SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, floa
 	Metrics.m_ContentSize = ContentHeight;
 	m_State.Advance(Dt, Metrics, Config);
 
-	return BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, false);
+	return BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
 }
 
-SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style, const SQmScrollConfig &Config)
+SQmScrollContainerFrame CQmScrollController::Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style, const SQmScrollConfig &Config)
+{
+	return UpdateInternal(ViewRect, ContentHeight, Dt, Input, Style, Config, true);
+}
+
+SQmScrollContainerFrame CQmScrollController::Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollRequest &Request, float UiScale, float SmoothScrollTimeSec)
+{
+	const SQmResolvedScrollPolicy Policy = QmResolveScrollPolicy(Request, UiScale, SmoothScrollTimeSec);
+	SQmScrollContainerInput PolicyInput = Input;
+	PolicyInput.m_ContentDragAllowed = PolicyInput.m_ContentDragAllowed && Policy.m_ContentDragAllowed;
+	return UpdateInternal(ViewRect, ContentHeight, Dt, PolicyInput, Policy.m_Style, Policy.m_Config, Policy.m_RailVisibility == EQmScrollRailVisibility::AUTO);
+}
+
+SQmScrollContainerFrame CQmScrollController::UpdateInternal(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style, const SQmScrollConfig &Config, bool RenderRail)
 {
 	const bool Horizontal = ScrollAxisHorizontal(Style);
 	SQmScrollMetrics Metrics;
 	Metrics.m_ViewportSize = ScrollAxisViewportSize(ViewRect, Style);
 	Metrics.m_ContentSize = ContentHeight;
-	if(Input.m_Hovered && !Input.m_ModifierPressed && Input.m_WheelDelta != 0.0f)
-		m_State.AddWheelImpulse(Input.m_WheelDelta, Metrics, Config);
-	m_State.Advance(Dt, Metrics, Config, Input.m_ModifierPressed);
+	SQmScrollConfig EffectiveConfig = Config;
+	if(Input.m_AltPressed)
+		EffectiveConfig.m_WheelScale *= QmScrollAltMultiplier();
+	if(Input.m_Hovered && Input.m_WheelDelta != 0.0f)
+		m_State.AddWheelImpulse(Input.m_WheelDelta, Metrics, EffectiveConfig);
+	m_State.Advance(Dt, Metrics, EffectiveConfig);
 
-	SQmScrollContainerFrame Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
+	SQmScrollContainerFrame Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, RenderRail);
 	if(Frame.m_ScrollbarVisible)
 	{
 		const float TrackSize = std::max(0.0f, Horizontal ? Frame.m_ScrollbarTrackRect.w : Frame.m_ScrollbarTrackRect.h);
@@ -338,7 +395,7 @@ SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, floa
 			const float TrackStart = Horizontal ? Frame.m_ScrollbarTrackRect.x : Frame.m_ScrollbarTrackRect.y;
 			const float ThumbStart = std::clamp(ThumbPosition, TrackStart, TrackStart + MaxThumbTravel);
 			const float Ratio = MaxThumbTravel > 0.0f ? (ThumbStart - TrackStart) / MaxThumbTravel : 0.0f;
-			m_State.SetOffset(Ratio * Metrics.MaxOffset(), Metrics, Config);
+			m_State.SetOffset(Ratio * Metrics.MaxOffset(), Metrics, EffectiveConfig);
 		};
 
 		if(!Input.m_MouseDown)
@@ -358,8 +415,8 @@ SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, floa
 			const float MousePosition = Horizontal ? Input.m_MouseX : Input.m_MouseY;
 			const float ThumbPosition = Horizontal ? Frame.m_ScrollbarThumbRect.x : Frame.m_ScrollbarThumbRect.y;
 			const float PageDirection = MousePosition < ThumbPosition ? -1.0f : 1.0f;
-			m_State.SetOffset(m_State.Offset() + PageDirection * (Horizontal ? ClipRect.w : ClipRect.h), Metrics, Config);
-			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
+			m_State.SetOffset(m_State.Offset() + PageDirection * (Horizontal ? ClipRect.w : ClipRect.h), Metrics, EffectiveConfig);
+			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, RenderRail);
 			m_ScrollbarDragActive = true;
 			m_ScrollbarGrabY = (Horizontal ? Frame.m_ScrollbarThumbRect.w : Frame.m_ScrollbarThumbRect.h) * 0.5f;
 			JustStartedTrackDrag = true;
@@ -368,7 +425,7 @@ SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, floa
 		if(m_ScrollbarDragActive && Input.m_MouseDown && !JustStartedTrackDrag)
 		{
 			SetOffsetFromThumbPosition((Horizontal ? Input.m_MouseX : Input.m_MouseY) - m_ScrollbarGrabY);
-			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
+			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, RenderRail);
 		}
 	}
 	else
@@ -408,8 +465,8 @@ SQmScrollContainerFrame CQmScrollContainer::Update(const CUIRect &ViewRect, floa
 			m_ContentDragActive = true;
 		if(m_ContentDragActive)
 		{
-			m_State.SetOffset(m_ContentDragPressOffset - DragDistance, Metrics, Config, true);
-			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, true);
+			m_State.SetOffset(m_ContentDragPressOffset - DragDistance, Metrics, EffectiveConfig, true);
+			Frame = BuildScrollContainerFrame(ViewRect, ContentHeight, m_State.Offset(), Style, RenderRail);
 		}
 		m_ContentDragLastMousePos = MousePosition;
 	}

@@ -528,7 +528,7 @@ void CMenus::RenderSkinPartSelection7(CUIRect MainView)
 			break;
 		}
 	}
-	s_ListBox.DoStart(72.0f, s_avpList[m_TeePartSelected].size(), 4, 1, OldSelected, &MainView, false, IGraphics::CORNER_NONE, true);
+	s_ListBox.DoStart(72.0f, s_avpList[m_TeePartSelected].size(), 4, 1, OldSelected, &MainView, false, IGraphics::CORNER_NONE);
 
 	for(const CSkins7::CSkinPart *pPart : s_avpList[m_TeePartSelected])
 	{

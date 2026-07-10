@@ -81,7 +81,7 @@ namespace ui_widget
 		int m_TextAlign = TEXTALIGN_ML;
 	};
 
-	// 基础输入框（使用新材质背景 SURFACE_ELEVATED）。
+	// 基础输入框（沿用设置页灰色按钮背景）。
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);

@@ -696,7 +696,7 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 	if(!Enabled)
 		return Frame;
 
-	const SQmScrollConfig ScrollConfig = QmNativeWheelScrollConfig(UiScale, g_Config.m_UiSmoothScrollTime / 1000.0f);
+	const SQmScrollConfig ScrollConfig = QmSettingsScrollConfig(UiScale, g_Config.m_UiSmoothScrollTime / 1000.0f);
 
 	SQmScrollContainerInput ScrollInput;
 	ScrollInput.m_Hovered = Ui()->MouseHovered(pView);
@@ -712,13 +712,7 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 		WheelHotRect.w += Frame.m_Style.m_ScrollbarWidth;
 	ScrollInput.m_Hovered = Ui()->MouseHovered(&WheelHotRect);
 	ScrollInput.m_ModifierPressed = Input()->ModifierIsPressed();
-	if(ScrollInput.m_Hovered && !ScrollInput.m_ModifierPressed)
-	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-			ScrollInput.m_WheelDelta += 120.0f;
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-			ScrollInput.m_WheelDelta -= 120.0f;
-	}
+	ScrollInput.m_AltPressed = Input()->AltIsPressed();
 
 	if(ProbeFrame.m_ScrollbarVisible)
 	{
@@ -754,6 +748,25 @@ void CMenus::FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer
 	Ui()->ClipDisable();
 	*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)));
 	Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
+	CUIRect WheelHotRect = Frame.m_Frame.m_ClipRect;
+	if(Frame.m_Frame.m_ScrollbarVisible)
+		WheelHotRect.w += Frame.m_Style.m_ScrollbarWidth;
+	if(Frame.m_Frame.m_ScrollbarVisible && !Ui()->UnderlyingScrollBlocked() && Ui()->MouseHovered(&WheelHotRect))
+	{
+		float WheelDelta = 0.0f;
+		if(Ui()->ConsumeHotkey(CUi::HOTKEY_SCROLL_UP))
+			WheelDelta += 120.0f;
+		if(Ui()->ConsumeHotkey(CUi::HOTKEY_SCROLL_DOWN))
+			WheelDelta -= 120.0f;
+		if(WheelDelta != 0.0f)
+		{
+			SQmScrollConfig ScrollConfig = QmSettingsScrollConfig(1.0f, g_Config.m_UiSmoothScrollTime / 1000.0f);
+			if(Input()->AltIsPressed())
+				ScrollConfig.m_WheelScale *= QmScrollAltMultiplier();
+			ScrollContainer.ScrollByWheel(WheelDelta, Frame.m_ViewRect.h, *pContentHeight, ScrollConfig);
+			Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
+		}
+	}
 	const float CurrentOffsetY = Frame.m_Frame.m_ScrollbarVisible ? Frame.m_Frame.m_Offset : 0.0f;
 	if(TrackScrollActive)
 	{
@@ -2271,52 +2284,22 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	SyncQmModuleCollapsed();
 	SyncQmModuleUsage();
 
-	auto RenderSliderWithValueInput = [this, UiScale, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+	auto RenderSliderWithValueInput = [this, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		const int OriginalValue = *pValue;
-		CUIRect SliderRect, InputRect, SuffixRect;
-		const float InputWidth = std::clamp(72.0f * UiScale, 56.0f, 72.0f);
-		const float GapWidth = std::clamp(6.0f * UiScale, 3.0f, 6.0f);
-		const float SuffixWidth = pSuffix[0] != '\0' ? std::clamp(22.0f * UiScale, 18.0f, 24.0f) : 0.0f;
-		const float MinSliderWidth = std::clamp(54.0f * UiScale, 42.0f, 54.0f);
-		bool HasSuffixRect = false;
-		if(ControlColumn.w > InputWidth + GapWidth + SuffixWidth + MinSliderWidth)
-		{
-			if(SuffixWidth > 0.0f)
-			{
-				ControlColumn.VSplitRight(InputWidth + GapWidth + SuffixWidth, &SliderRect, &InputRect);
-				InputRect.VSplitRight(SuffixWidth, &InputRect, &SuffixRect);
-				InputRect.VSplitRight(GapWidth, &InputRect, nullptr);
-				HasSuffixRect = true;
-			}
-			else
-			{
-				ControlColumn.VSplitRight(InputWidth, &SliderRect, &InputRect);
-			}
-			SliderRect.VSplitRight(GapWidth, &SliderRect, nullptr);
-			SliderRect.VMargin(1.0f, &SliderRect);
+		CLineInputNumber *pInput = GetSettingsSliderInput(pId);
+		ui_widget::SSliderInputFieldOptions Options;
+		Options.m_pSuffix = pSuffix;
+		Options.m_FontSize = ControlColumn.h * CUi::ms_FontmodHeight * 0.8f;
 
-			const float Relative = CUi::ms_LinearScrollbarScale.ToRelative(*pValue, MinValue, MaxValue);
-			const int SliderValue = CUi::ms_LinearScrollbarScale.ToAbsolute(Ui()->DoScrollbarH(pValue, &SliderRect, Relative), MinValue, MaxValue);
-			if(!PrewarmOnly && !Ui()->RenderOnly())
-				*pValue = SliderValue;
-		}
-		else
-		{
-			InputRect = ControlColumn;
-		}
-		InputRect.VMargin(1.0f, &InputRect);
-
-		SValueSelectorProperties Props;
-		Props.m_UseScroll = false;
-		Props.m_TextAlign = TEXTALIGN_MC;
-		Props.m_SelectAllOnActivate = false;
-		const auto Result = Ui()->DoValueSelectorWithState(pId, &InputRect, "", *pValue, MinValue, MaxValue, Props);
+		IUiContext QmInputCtx;
+		QmInputCtx.m_pUi = Ui();
+		QmInputCtx.m_pAnim = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();
+		QmInputCtx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
+		QmInputCtx.m_ScopeHash = MakeUiScopeHash("qmclient_slider_input");
+		QmInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+		ui_widget::SliderInputField(QmInputCtx, pInput, pId, pValue, MinValue, MaxValue, ControlColumn, Options);
 		if(PrewarmOnly || Ui()->RenderOnly())
 			*pValue = OriginalValue;
-		else
-			*pValue = (int)Result.m_Value;
-		if(HasSuffixRect)
-			Ui()->DoLabel(&SuffixRect, pSuffix, SuffixRect.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
 	};
 	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int TextAlign = TEXTALIGN_ML, const SLabelProperties &LabelProps = {}) {
 		DoSettingsMenuLabel(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, pTextId, pRect, pText, FontSize, TextAlign, LabelProps, (int)pRect->w);

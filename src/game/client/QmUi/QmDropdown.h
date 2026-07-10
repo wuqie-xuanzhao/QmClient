@@ -23,6 +23,13 @@ struct SQmDropdownGeometryResult
 	bool m_Clamped = false;
 };
 
+struct SQmDropdownPopupPolicy
+{
+	int m_MaxVisibleItems = 8;
+	float m_ContentHeight = 0.0f;
+	float m_PreferredHeight = 0.0f;
+};
+
 struct SQmDropdownInput
 {
 	bool m_TogglePressed = false;
@@ -44,6 +51,8 @@ struct SQmDropdownUpdateResult
 };
 
 SQmDropdownGeometryResult QmComputeDropdownPopupGeometry(const CUIRect &AnchorRect, const CUIRect &ViewportRect, const SQmDropdownGeometryConfig &Config);
+SQmDropdownPopupPolicy QmResolveDropdownPopupPolicy(int ItemCount, float EntryHeight, float EntrySpacing, bool HasMessage, float MessageHeight, float OuterHeight);
+bool QmDropdownPopupOwnsWheel(const SQmDropdownPopupPolicy &Policy, float PopupHeight);
 
 class CQmDropdownState
 {

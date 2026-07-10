@@ -1501,15 +1501,19 @@ void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,
 	IFilterList &Filter,
 	float ItemHeight, int MaxItems, int ItemsPerRow,
 	CScrollRegion &ScrollRegion, std::vector<unsigned char> &vItemIds,
-	bool UpdateCommunityCacheOnChange,
+	bool UpdateCommunityCacheOnChange, bool HideScrollbar,
 	const std::function<const char *(int ItemIndex)> &GetItemName,
 	const std::function<void(int ItemIndex, CUIRect Item, const void *pItemId, bool Active)> &RenderItem)
 {
 	vItemIds.resize(MaxItems);
 
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::SMALL);
-	ScrollParams.m_ScrollUnit = 2.0f * ItemHeight;
+	SQmScrollRequest ScrollRequest;
+	ScrollRequest.m_Profile = EQmScrollProfile::FILTER_GRID;
+	ScrollRequest.m_RowExtent = ItemHeight;
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	ScrollParams.m_HideScrollbar = HideScrollbar;
 	ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
@@ -1693,7 +1697,7 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 	};
 
 	s_vFavoriteButtonIds.resize(MaxEntries);
-	RenderServerbrowserDDNetFilter(View, ServerBrowser()->CommunitiesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, true, GetItemName, RenderItem);
+	RenderServerbrowserDDNetFilter(View, ServerBrowser()->CommunitiesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, true, false, GetItemName, RenderItem);
 }
 
 void CMenus::RenderServerbrowserCountriesFilter(CUIRect View)
@@ -1718,7 +1722,7 @@ void CMenus::RenderServerbrowserCountriesFilter(CUIRect View)
 		GameClient()->m_CountryFlags.Render(ServerBrowser()->CommunityCache().SelectableCountries()[ItemIndex]->FlagId(), ColorRGBA(1.0f, 1.0f, 1.0f, (Active ? 0.9f : 0.2f) + (Ui()->HotItem() == pItemId ? 0.1f : 0.0f)), Item.x, Item.y, Item.w, Item.h);
 	};
 
-	RenderServerbrowserDDNetFilter(View, ServerBrowser()->CountriesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, false, GetItemName, RenderItem);
+	RenderServerbrowserDDNetFilter(View, ServerBrowser()->CountriesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, false, true, GetItemName, RenderItem);
 }
 
 void CMenus::RenderServerbrowserTypesFilter(CUIRect View)
@@ -1742,7 +1746,7 @@ void CMenus::RenderServerbrowserTypesFilter(CUIRect View)
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	};
 
-	RenderServerbrowserDDNetFilter(View, ServerBrowser()->TypesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, false, GetItemName, RenderItem);
+	RenderServerbrowserDDNetFilter(View, ServerBrowser()->TypesFilter(), ItemHeight + 2.0f * Spacing, MaxEntries, EntriesPerRow, s_ScrollRegion, s_vItemIds, false, false, GetItemName, RenderItem);
 }
 
 CUi::EPopupMenuFunctionResult CMenus::PopupCountrySelection(void *pContext, CUIRect View, bool Active)
@@ -1911,10 +1915,7 @@ void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *
 	static CListBox s_ListBox;
 	View.VSplitLeft(5.0f, nullptr, &View);
 	s_ListBox.DoAutoSpacing(2.0f);
-	const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
-	s_ListBox.SetScrollbarWidth(ScrollParams.m_ScrollbarThickness);
-	s_ListBox.SetScrollbarMargin(ScrollParams.m_ScrollbarMargin);
-	s_ListBox.DoStart(25.0f, pSelectedServer->m_NumReceivedClients, 1, 3, -1, &View, false, IGraphics::CORNER_NONE, true);
+	s_ListBox.DoStart(25.0f, pSelectedServer->m_NumReceivedClients, 1, 3, -1, &View, false, IGraphics::CORNER_NONE);
 
 	for(int i = 0; i < pSelectedServer->m_NumReceivedClients; i++)
 	{
@@ -2173,7 +2174,6 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	vec2 ScrollOffset(0.0f, 0.0f);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
 	ScrollParams.m_ScrollUnit = 80.0f;
-	ScrollParams.m_ForceShowScrollbar = true;
 	s_ScrollRegion.Begin(&List, &ScrollOffset, &ScrollParams);
 	List.y += ScrollOffset.y;
 
@@ -3357,10 +3357,7 @@ void CMenus::RenderServerbrowserQm(CUIRect View)
 	static std::vector<int> s_vQmServerItemIds;
 	s_vQmServerItemIds.resize(vQmServers.size());
 	s_QmServerListBox.DoAutoSpacing(2.0f);
-	const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
-	s_QmServerListBox.SetScrollbarWidth(ScrollParams.m_ScrollbarThickness);
-	s_QmServerListBox.SetScrollbarMargin(ScrollParams.m_ScrollbarMargin);
-	s_QmServerListBox.DoStart(40.0f, vQmServers.size(), 1, 3, SelectedQmIndex, &List, false, IGraphics::CORNER_NONE, true);
+	s_QmServerListBox.DoStart(40.0f, vQmServers.size(), 1, 3, SelectedQmIndex, &List, false, IGraphics::CORNER_NONE);
 
 	for(size_t i = 0; i < vQmServers.size(); ++i)
 	{
@@ -3624,7 +3621,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			static CListBox s_FavoriteMapsListBox;
 			static std::vector<int> s_vFavoriteMapItemIds;
 			s_vFavoriteMapItemIds.resize(NumFavoriteMaps);
-			s_FavoriteMapsListBox.DoStart(34.0f, NumFavoriteMaps, 1, 3, -1, &FavoritePanel, false, IGraphics::CORNER_NONE, true);
+			s_FavoriteMapsListBox.DoStart(34.0f, NumFavoriteMaps, 1, 3, -1, &FavoritePanel, false, IGraphics::CORNER_NONE);
 
 			size_t FavoriteMapIndex = 0;
 			for(const std::string &MapName : FavoriteMaps)
@@ -3676,7 +3673,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 	static CListBox s_SavesListBox;
 	static std::vector<int> s_vSaveItemIds;
 	s_vSaveItemIds.resize(NumSaveEntries);
-	s_SavesListBox.DoStart(42.0f, NumSaveEntries, 1, 3, -1, &SavesPanel, false, IGraphics::CORNER_NONE, true);
+	s_SavesListBox.DoStart(42.0f, NumSaveEntries, 1, 3, -1, &SavesPanel, false, IGraphics::CORNER_NONE);
 
 	for(size_t SaveIndex = 0; SaveIndex < s_vSaveEntries.size(); ++SaveIndex)
 	{

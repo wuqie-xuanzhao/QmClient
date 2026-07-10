@@ -19,6 +19,9 @@ namespace ui_widget
 
 	namespace
 	{
+		void DrawTextFieldFocusBorder(const IUiContext &Ctx, const CUIRect &Rect, float Alpha);
+		void DrawTextFieldFocusBorder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect);
+
 		SInputFieldResult BuildInputFieldResult(const IUiContext &Ctx, CLineInput *pInput, bool Changed, bool WasActive, bool WasEmpty, bool Clearable)
 		{
 			const bool SubmitPressed = Ctx.m_pUi != nullptr && (Ctx.m_pUi->Input()->KeyPress(KEY_RETURN) || Ctx.m_pUi->Input()->KeyPress(KEY_KP_ENTER));
@@ -27,22 +30,14 @@ namespace ui_widget
 
 		void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
 		{
-			Rect.Draw(ui_token::color::SURFACE_ELEVATED, Options.m_Corners, Options.m_CornerRadius);
-
+			const ColorRGBA PlateColor = CUi::ms_LightButtonColorFunction.GetColor(false, Ctx.m_pUi->HotItem() == pInput);
+			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(PlateColor), Options.m_Corners, Options.m_CornerRadius);
 			if(Ctx.m_pAnim == nullptr)
 				return;
 
 			const float TargetAlpha = pInput->IsActive() ? 1.0f : 0.0f;
 			const float Alpha = AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);
-			if(Alpha <= 0.01f)
-				return;
-
-			ColorRGBA RingColor = ui_token::color::BORDER_FOCUS;
-			RingColor.a *= Alpha;
-			Rect.Draw(RingColor, Options.m_Corners, Options.m_CornerRadius);
-			CUIRect Inside;
-			Rect.Margin(1.0f, &Inside);
-			Inside.Draw(ui_token::color::SURFACE_ELEVATED, Options.m_Corners, maximum(Options.m_CornerRadius - 1.0f, 0.0f));
+			DrawTextFieldFocusBorder(Ctx, Rect, Alpha);
 		}
 
 		void DrawLegacyTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, int Corners)
@@ -54,13 +49,8 @@ namespace ui_widget
 			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(CUi::ms_LightButtonColorFunction.GetColor(Active, Hovered)), Corners, ui_token::radius::BASE);
 		}
 
-		void DrawTextFieldFocusBorder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect)
+		void DrawTextFieldFocusBorder(const IUiContext &Ctx, const CUIRect &Rect, float Alpha)
 		{
-			if(Ctx.m_pAnim == nullptr)
-				return;
-
-			const float TargetAlpha = pInput->IsActive() ? 1.0f : 0.0f;
-			const float Alpha = AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);
 			if(Alpha <= 0.01f)
 				return;
 
@@ -75,6 +65,15 @@ namespace ui_widget
 			CUIRect InnerRing = Rect;
 			InnerRing.Margin(1.5f, &InnerRing);
 			InnerRing.DrawOutline(InnerRingColor);
+		}
+
+		void DrawTextFieldFocusBorder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect)
+		{
+			if(Ctx.m_pAnim == nullptr)
+				return;
+			const float TargetAlpha = pInput->IsActive() ? 1.0f : 0.0f;
+			const float Alpha = AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);
+			DrawTextFieldFocusBorder(Ctx, Rect, Alpha);
 		}
 
 		void DrawTextFieldPlaceholder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize, int TextAlign)
@@ -329,6 +328,7 @@ namespace ui_widget
 		const int SliderMin = SliderInputStoredMinimum(Min, Multiplier);
 		const int SliderMax = SliderInputStoredMaximum(Max, Multiplier) + (Infinite ? 1 : 0);
 		const bool HasLabel = Options.m_pLabel != nullptr && Options.m_pLabel[0] != '\0';
+		const bool RenderOnly = Ctx.m_pUi->RenderOnly();
 		// 布局：label | scrollbar | input | suffix
 		CUIRect Label, Controls, ValueRect, SuffixRect, ScrollBar, InputField;
 		if(MultiLine)
@@ -350,38 +350,41 @@ namespace ui_widget
 
 		const float ValueWidth = std::clamp((MultiLine ? ValueRect.w : Controls.w) * 0.18f, 42.0f, 80.0f);
 		const float SuffixWidth = Options.m_pSuffix != nullptr && Options.m_pSuffix[0] != '\0' ? ValueWidth * 0.5f : 0.0f;
-		if(!MultiLine)
+		const bool HasSlider = MultiLine || Controls.w > ValueWidth + SuffixWidth + 42.0f;
+		bool HasSuffixRect = false;
+		if(!MultiLine && HasSlider)
 			Controls.VSplitRight(ValueWidth + SuffixWidth, &ScrollBar, &ValueRect);
-		if(SuffixWidth > 0.0f)
+		else if(!MultiLine)
+			InputField = Controls;
+		if(InputField.w <= 0.0f && SuffixWidth > 0.0f)
 			ValueRect.VSplitRight(SuffixWidth, &InputField, &SuffixRect);
-		else
+		else if(InputField.w <= 0.0f)
 			InputField = ValueRect;
+		HasSuffixRect = SuffixRect.w > 0.0f;
 		InputField.VMargin(std::min(5.0f, ValueWidth * 0.1f), &InputField);
 
 		if(HasLabel)
 		{
+			const float LabelFontSize = MultiLine ? std::min(Options.m_FontSize, Label.h * CUi::ms_FontmodHeight * 0.8f) : Options.m_FontSize;
 			if(Options.m_pLabelElement != nullptr)
 			{
 				SLabelProperties Props;
 				Props.m_MaxWidth = Label.w;
-				Ctx.m_pUi->DoLabelStreamed(*Options.m_pLabelElement->Rect(0), &Label, Options.m_pLabel, Options.m_FontSize, Options.m_LabelAlign, Props, -1, nullptr, !Ctx.m_pUi->RenderOnly());
+				Ctx.m_pUi->DoLabelStreamed(*Options.m_pLabelElement->Rect(0), &Label, Options.m_pLabel, LabelFontSize, Options.m_LabelAlign, Props, -1, nullptr, !Ctx.m_pUi->RenderOnly());
 			}
 			else
-				Ctx.m_pUi->DoLabel(&Label, Options.m_pLabel, Options.m_FontSize, Options.m_LabelAlign);
+				Ctx.m_pUi->DoLabel(&Label, Options.m_pLabel, LabelFontSize, Options.m_LabelAlign);
 		}
-
-		if(Ctx.m_pUi->RenderOnly())
-			return false;
 
 		bool Changed = false;
 		const int Increment = std::max(1, (SliderMax - SliderMin) / 35);
-		if(Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && Ctx.m_pUi->MouseInside(&Rect))
+		if(!RenderOnly && Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->MouseInside(&Rect) && Ctx.m_pUi->ConsumeHotkey(CUi::HOTKEY_SCROLL_UP))
 		{
 			const int NewValue = SliderInputWheelStoredValue(*pValue, SliderMin, SliderMax, Infinite, Increment);
 			Changed = NewValue != *pValue;
 			*pValue = NewValue;
 		}
-		if(Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && Ctx.m_pUi->MouseInside(&Rect))
+		if(!RenderOnly && Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->MouseInside(&Rect) && Ctx.m_pUi->ConsumeHotkey(CUi::HOTKEY_SCROLL_DOWN))
 		{
 			const int NewValue = SliderInputWheelStoredValue(*pValue, SliderMin, SliderMax, Infinite, -Increment);
 			Changed = Changed || NewValue != *pValue;
@@ -412,10 +415,9 @@ namespace ui_widget
 		int SliderValue = IsInfinite ? SliderMax : StoredValue;
 
 		const float Normalized = std::clamp(pScale->ToRelative(SliderValue, SliderMin, SliderMax), 0.0f, 1.0f);
-		const ColorRGBA Inner = ui_token::color::ACCENT_PRIMARY;
-		if(!pInput->IsActive())
+		if(HasSlider && !RenderOnly && !pInput->IsActive())
 		{
-			const float NewNormalized = Ctx.m_pUi->DoScrollbarH(pId, &ScrollBar, Normalized, &Inner);
+			const float NewNormalized = Ctx.m_pUi->DoScrollbarH(pId, &ScrollBar, Normalized);
 			int NewSliderValue = pScale->ToAbsolute(NewNormalized, SliderMin, SliderMax);
 			if(NewSliderValue != SliderValue)
 			{
@@ -440,19 +442,16 @@ namespace ui_widget
 				}
 			}
 		}
-		else
+		else if(HasSlider)
 		{
-			// 静态绘制与 DoScrollbarH(pColorInner) 的非激活状态一致
-			CUIRect Rail = ScrollBar;
+			// 编辑数值时保留 DDNet 横向滑条的视觉，但不接管文本输入焦点。
+			CUIRect Rail;
+			ScrollBar.HMargin(5.0f, &Rail);
 			CUIRect Handle;
-			Rail.VSplitLeft(8.0f, &Handle, nullptr);
+			Rail.VSplitLeft(std::clamp(33.0f, Rail.h, Rail.w / 3.0f), &Handle, nullptr);
 			Handle.x += (Rail.w - Handle.w) * Normalized;
-			CUIRect Slider;
-			Handle.VMargin(-2.0f, &Slider);
-			Slider.HMargin(-3.0f, &Slider);
-			Slider.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(0.15f, 0.15f, 0.15f, 1.0f)), IGraphics::CORNER_ALL, 5.0f);
-			Slider.Margin(2.0f, &Slider);
-			Slider.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(Inner), IGraphics::CORNER_ALL, 3.0f);
+			Rail.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), IGraphics::CORNER_ALL, Rail.h / 2.0f);
+			Handle.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(CUi::ms_ScrollBarColorFunction.GetColor(false, false)), IGraphics::CORNER_ALL, Rail.h / 2.0f);
 		}
 
 		// 输入框：特殊值（♾️ 或 pMaxText）在非编辑状态下显示为文本
@@ -465,14 +464,15 @@ namespace ui_widget
 		}
 
 		STextFieldOptions FieldOptions;
-		FieldOptions.m_FontSize = Options.m_FontSize;
+		const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);
+		FieldOptions.m_FontSize = FieldFontSize;
 		FieldOptions.m_TextAlign = TEXTALIGN_MC;
 		SInputFieldResult Result = TextFieldEx(Ctx, pInput, InputField, FieldOptions);
 
 		if(bShowMaxText)
 			pInput->Set(aSavedInput);
 
-		if(Result.m_Deactivated || Result.m_Submitted)
+		if(!RenderOnly && (Result.m_Deactivated || Result.m_Submitted))
 		{
 			const bool ParsedInfinite = Infinite && str_comp(pInput->GetString(), "\xe2\x88\x9e") == 0;
 			int Parsed = ParsedInfinite ? 0 : SliderInputStoredValue(pInput->GetInteger(), Multiplier);
@@ -495,7 +495,7 @@ namespace ui_widget
 			pInput->SelectAll();
 		}
 
-		if(Options.m_pSuffix != nullptr && Options.m_pSuffix[0] != '\0')
+		if(HasSuffixRect)
 			Ctx.m_pUi->DoLabel(&SuffixRect, Options.m_pSuffix, Options.m_FontSize, TEXTALIGN_ML);
 
 		return Result.m_Changed || Changed;

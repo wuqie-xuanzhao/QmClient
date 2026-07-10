@@ -4388,7 +4388,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		m_pRemoveWarType = nullptr;
 		int SelectedOldType = -1;
 		static CListBox s_WarTypeListBox;
-		s_WarTypeListBox.DoStart(25.0f, GameClient()->m_WarList.m_WarTypes.size(), 1, 2, SelectedOldType, &WarTypeList, true, IGraphics::CORNER_ALL, true);
+		s_WarTypeListBox.DoStart(25.0f, GameClient()->m_WarList.m_WarTypes.size(), 1, 2, SelectedOldType, &WarTypeList, true, IGraphics::CORNER_ALL);
 
 		static std::vector<unsigned char> s_vTypeItemIds;
 		static std::vector<CButtonContainer> s_vTypeDeleteButtons;
@@ -4498,7 +4498,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		CUIRect PlayerList;
 		Column4.HSplitBottom(0.0f, &PlayerList, &Column4);
 		static CListBox s_PlayerListBox;
-		s_PlayerListBox.DoStart(30.0f, MAX_CLIENTS, 1, 2, -1, &PlayerList, true, IGraphics::CORNER_ALL, true);
+		s_PlayerListBox.DoStart(30.0f, MAX_CLIENTS, 1, 2, -1, &PlayerList, true, IGraphics::CORNER_ALL);
 
 		static std::vector<unsigned char> s_vPlayerItemIds;
 		static std::vector<CButtonContainer> s_vNameButtons;
@@ -5440,7 +5440,7 @@ void CMenus::RenderSettingsTClientProfiles(CUIRect MainView)
 	static CListBox s_ListBox;
 	CPerfTimer ListTimer;
 	const int ProfilesPerRow = maximum(1, (int)(MainView.w / 200.0f));
-	s_ListBox.DoStart(50.0f, vProfiles.size(), ProfilesPerRow, 3, s_SelectedProfile, &MainView, true, IGraphics::CORNER_ALL, true);
+	s_ListBox.DoStart(50.0f, vProfiles.size(), ProfilesPerRow, 3, s_SelectedProfile, &MainView, true, IGraphics::CORNER_ALL);
 
 	static std::vector<int> s_vProfileItemIds;
 	if(s_vProfileItemIds.size() != vProfiles.size())

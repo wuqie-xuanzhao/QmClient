@@ -307,6 +307,15 @@ void CUi::Update()
 	m_pBecomingHotItem = nullptr;
 	m_pHotScrollRegion = m_pBecomingHotScrollRegion;
 	m_pBecomingHotScrollRegion = nullptr;
+	m_UnderlyingScrollBlocked = false;
+	for(const SPopupMenu &PopupMenu : m_vPopupMenus)
+	{
+		if(PopupMenu.m_Props.m_BlockUnderlyingScroll && MouseInside(&PopupMenu.m_Rect) && (!PopupMenu.m_Props.m_ClipToViewport || MouseInside(&PopupMenu.m_Props.m_Viewport)))
+		{
+			m_UnderlyingScrollBlocked = true;
+			break;
+		}
+	}
 
 	if(Enabled())
 	{
@@ -2129,12 +2138,14 @@ void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, fl
 
 void CUi::RenderPopupMenus()
 {
+	m_RenderingPopupMenus = true;
 	for(size_t i = 0; i < m_vPopupMenus.size(); ++i)
 	{
 		const SPopupMenu &PopupMenu = m_vPopupMenus[i];
 		const SPopupMenuId *pId = PopupMenu.m_pId;
-		const bool Inside = MouseInside(&PopupMenu.m_Rect);
+		const bool Inside = MouseInside(&PopupMenu.m_Rect) && (!PopupMenu.m_Props.m_ClipToViewport || MouseInside(&PopupMenu.m_Props.m_Viewport));
 		const bool Active = i == m_vPopupMenus.size() - 1;
+		const bool ClipToViewport = PopupMenu.m_Props.m_ClipToViewport;
 
 		if(Active)
 		{
@@ -2161,11 +2172,13 @@ void CUi::RenderPopupMenus()
 				SetActiveItem(pId);
 		}
 
-		if(Inside)
+		if(Inside && PopupMenu.m_Props.m_BlockUnderlyingScroll)
 		{
 			// Prevent scroll regions directly behind popup menus from using the mouse scroll events.
 			SetHotScrollRegion(nullptr);
 		}
+		if(ClipToViewport)
+			ClipEnable(&PopupMenu.m_Props.m_Viewport);
 
 		CUIRect PopupRect = PopupMenu.m_Rect;
 		PopupRect.Draw(PopupMenu.m_Props.m_BorderColor, PopupMenu.m_Props.m_Corners, 3.0f);
@@ -2176,9 +2189,12 @@ void CUi::RenderPopupMenus()
 		// The popup render function can open/close popups, which may resize the vector and thus
 		// invalidate the variable PopupMenu. We therefore store pId in a separate variable.
 		EPopupMenuFunctionResult Result = PopupMenu.m_pfnFunc(PopupMenu.m_pContext, PopupRect, Active);
+		if(ClipToViewport)
+			ClipDisable();
 		if(Result != POPUP_KEEP_OPEN || (Active && ConsumeHotkey(HOTKEY_ESCAPE)))
 			ClosePopupMenu(pId, Result == POPUP_CLOSE_CURRENT_AND_DESCENDANTS);
 	}
+	m_RenderingPopupMenus = false;
 }
 
 void CUi::ClosePopupMenu(const SPopupMenuId *pId, bool IncludeDescendants)
@@ -2340,6 +2356,9 @@ void CUi::SSelectionPopupContext::Reset()
 	m_TransparentButtons = false;
 	m_AnchorVisible = true;
 	m_PopupVisible = true;
+	m_BlockUnderlyingScroll = false;
+	m_Viewport = {};
+	m_PopupPolicy = {};
 	m_SpecialFontRenderMode = false;
 }
 
@@ -2355,11 +2374,12 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 	}
 
 	vec2 ScrollOffset(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollbarThickness = 10.0f;
-	ScrollParams.m_ScrollbarMargin = SPopupMenu::POPUP_MARGIN;
+	SQmScrollRequest ScrollRequest;
+	ScrollRequest.m_Profile = EQmScrollProfile::POPUP_LIST;
+	ScrollRequest.m_RowExtent = pSelectionPopup->m_EntryHeight + pSelectionPopup->m_EntrySpacing;
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
 	ScrollParams.m_ScrollbarNoOuterMargin = true;
-	ScrollParams.m_ScrollUnit = 3 * (pSelectionPopup->m_EntryHeight + pSelectionPopup->m_EntrySpacing);
 	pScrollRegion->Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
@@ -2409,8 +2429,14 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 
 void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 {
+	const bool HasMessage = pContext->m_aMessage[0] != '\0';
 	const STextBoundingBox TextBoundingBox = TextRender()->TextBoundingBox(pContext->m_FontSize, pContext->m_aMessage, -1, pContext->m_Width);
-	const float PopupHeight = minimum((pContext->m_aMessage[0] == '\0' ? -pContext->m_EntrySpacing : TextBoundingBox.m_H) + pContext->m_vEntries.size() * (pContext->m_EntryHeight + pContext->m_EntrySpacing) + (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2, Screen()->h * 0.4f);
+	const float OuterHeight = (SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN) * 2;
+	pContext->m_PopupPolicy = QmResolveDropdownPopupPolicy(pContext->m_vEntries.size(), pContext->m_EntryHeight, pContext->m_EntrySpacing, HasMessage, TextBoundingBox.m_H, OuterHeight);
+	const float PopupHeight = pContext->m_PopupPolicy.m_PreferredHeight;
+	if(pContext->m_Viewport.w <= 0.0f || pContext->m_Viewport.h <= 0.0f)
+		pContext->m_Viewport = *Screen();
+	const CUIRect &Viewport = pContext->m_Viewport;
 	pContext->m_pUI = this;
 	pContext->m_pSelection = nullptr;
 	pContext->m_SelectionIndex = -1;
@@ -2429,10 +2455,10 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 		GeometryConfig.m_Width = pContext->m_Width;
 		GeometryConfig.m_Height = PopupHeight;
 		GeometryConfig.m_Margin = Margin;
-		const SQmDropdownGeometryResult Geometry = QmComputeDropdownPopupGeometry(AnchorRect, *Screen(), GeometryConfig);
+		const SQmDropdownGeometryResult Geometry = QmComputeDropdownPopupGeometry(AnchorRect, Viewport, GeometryConfig);
 		pContext->m_AnchorVisible = Geometry.m_AnchorVisible;
 		pContext->m_PopupVisible = Geometry.m_PopupVisible;
-		if(!pContext->m_PopupVisible)
+		if(!pContext->m_AnchorVisible || !pContext->m_PopupVisible)
 		{
 			ClosePopupMenu(pContext);
 			return;
@@ -2444,6 +2470,10 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 		pContext->m_Props.m_AutoReposition = false;
 		pContext->m_Props.m_Corners = Geometry.m_PlacedBelow ? IGraphics::CORNER_B : IGraphics::CORNER_T;
 	}
+	pContext->m_BlockUnderlyingScroll = QmDropdownPopupOwnsWheel(pContext->m_PopupPolicy, PopupHeightResolved);
+	pContext->m_Props.m_ClipToViewport = true;
+	pContext->m_Props.m_BlockUnderlyingScroll = pContext->m_BlockUnderlyingScroll;
+	pContext->m_Props.m_Viewport = Viewport;
 	DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);
 }
 
@@ -2458,6 +2488,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	}
 
 	bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
+	const CUIRect Viewport = IsClipped() ? *ClipArea() : *Screen();
 	if(State.m_DropDownState.IsOpen() && !PopupOpen)
 		State.m_DropDownState.Reset();
 
@@ -2488,6 +2519,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 	State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
 	if(PopupOpen)
 	{
+		State.m_SelectionPopupContext.m_Viewport = Viewport;
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
 		PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);
 		if(State.m_DropDownState.IsOpen() && !PopupOpen)
@@ -2511,6 +2543,7 @@ int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char **pStrs, int Nu
 		State.m_SelectionPopupContext.m_AlignmentHeight = pRect->h;
 		State.m_SelectionPopupContext.m_TransparentButtons = true;
 		State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();
+		State.m_SelectionPopupContext.m_Viewport = Viewport;
 		ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);
 	}
 	if(DropDownResult.m_Selected)

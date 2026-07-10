@@ -5,6 +5,11 @@
 
 #include <game/client/ui_rect.h>
 
+constexpr float QmScrollAltMultiplier()
+{
+	return 3.0f;
+}
+
 struct SQmScrollMetrics
 {
 	float m_ViewportSize = 0.0f;
@@ -38,6 +43,7 @@ struct SQmScrollContainerInput
 	bool m_ThumbHovered = false;
 	bool m_TrackHovered = false;
 	bool m_ModifierPressed = false;
+	bool m_AltPressed = false;
 	bool m_ContentDragAllowed = false;
 	bool m_ContentDragBlocked = false;
 };
@@ -64,8 +70,42 @@ enum class EQmScrollSize
 	LARGE,
 };
 
+enum class EQmScrollProfile
+{
+	SETTINGS_PAGE,
+	MENU_LIST,
+	POPUP_LIST,
+	FILTER_GRID,
+};
+
+enum class EQmScrollRailVisibility
+{
+	AUTO,
+	HIDDEN,
+};
+
+struct SQmScrollRequest
+{
+	EQmScrollProfile m_Profile = EQmScrollProfile::MENU_LIST;
+	EQmScrollAxis m_Axis = EQmScrollAxis::VERTICAL;
+	float m_RowExtent = 0.0f;
+	int m_RowsPerStep = 0;
+};
+
+struct SQmResolvedScrollPolicy
+{
+	SQmScrollContainerStyle m_Style;
+	SQmScrollConfig m_Config;
+	EQmScrollRailVisibility m_RailVisibility = EQmScrollRailVisibility::AUTO;
+	float m_AltMultiplier = QmScrollAltMultiplier();
+	int m_MaxVisibleItems = 0;
+	bool m_ContentDragAllowed = true;
+};
+
 SQmScrollContainerStyle QmScrollContainerStyleForSize(EQmScrollSize Size, float UiScale = 1.0f);
 SQmScrollConfig QmNativeWheelScrollConfig(float UiScale, float SmoothScrollTimeSec);
+SQmScrollConfig QmSettingsScrollConfig(float UiScale, float SmoothScrollTimeSec);
+SQmResolvedScrollPolicy QmResolveScrollPolicy(const SQmScrollRequest &Request, float UiScale = 1.0f, float SmoothScrollTimeSec = 0.0f);
 
 class CQmScrollState
 {
@@ -95,10 +135,11 @@ struct SQmScrollContainerFrame
 	CUIRect m_ScrollbarTrackRect{};
 	CUIRect m_ScrollbarThumbRect{};
 	float m_Offset = 0.0f;
+	bool m_Scrollable = false;
 	bool m_ScrollbarVisible = false;
 };
 
-class CQmScrollContainer
+class CQmScrollController
 {
 public:
 	void Reset();
@@ -106,6 +147,7 @@ public:
 	SQmScrollContainerFrame PreviewFrame(const CUIRect &ViewRect, float ContentHeight, const SQmScrollContainerStyle &Style = SQmScrollContainerStyle()) const;
 	SQmScrollContainerFrame Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollConfig &Config = SQmScrollConfig());
 	SQmScrollContainerFrame Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style = SQmScrollContainerStyle(), const SQmScrollConfig &Config = SQmScrollConfig());
+	SQmScrollContainerFrame Update(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollRequest &Request, float UiScale, float SmoothScrollTimeSec);
 
 	float Offset() const { return m_State.Offset(); }
 	float Velocity() const { return m_State.Velocity(); }
@@ -113,6 +155,7 @@ public:
 	bool ContentDragActive() const { return m_ContentDragActive; }
 
 private:
+	SQmScrollContainerFrame UpdateInternal(const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style, const SQmScrollConfig &Config, bool RenderRail);
 	CQmScrollState m_State;
 	bool m_ScrollbarDragActive = false;
 	float m_ScrollbarGrabY = 0.0f;
@@ -122,5 +165,7 @@ private:
 	float m_ContentDragPressOffset = 0.0f;
 	float m_ContentDragLastMousePos = 0.0f;
 };
+
+using CQmScrollContainer = CQmScrollController;
 
 #endif

@@ -4015,6 +4015,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	static CButtonContainer s_AudioPackEditorImportPreviewButton;
 	static CListBox s_AudioPackEditorSlotListBox;
 	static CListBox s_AudioPackEditorCandidateListBox;
+	static std::vector<int> s_vAudioPackEditorSlotItemIds;
 
 	auto SplitLeftSafe = [](CUIRect &Source, float Wanted, CUIRect *pLeft, CUIRect *pRight) {
 		const float Cut = minimum(Wanted, Source.w);
@@ -4104,12 +4105,13 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 		}
 	}
 	const int OldSelectedVisibleSlot = SelectedVisibleSlot;
+	s_vAudioPackEditorSlotItemIds.resize(vAllSlots.size());
 	s_AudioPackEditorSlotListBox.DoStart(18.0f, vVisibleSlotIndices.size(), 1, 6, SelectedVisibleSlot);
 	for(int VisibleIndex = 0; VisibleIndex < (int)vVisibleSlotIndices.size(); ++VisibleIndex)
 	{
 		const int SlotIndex = vVisibleSlotIndices[VisibleIndex];
 		const auto &Slot = vAllSlots[SlotIndex];
-		const CListboxItem Item = s_AudioPackEditorSlotListBox.DoNextItem(&Slot, SelectedVisibleSlot == VisibleIndex);
+		const CListboxItem Item = s_AudioPackEditorSlotListBox.DoNextItem(&s_vAudioPackEditorSlotItemIds[SlotIndex], SelectedVisibleSlot == VisibleIndex);
 		if(!Item.m_Visible)
 			continue;
 
@@ -4564,10 +4566,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		if(DoSettingsButton_Menu(SETTINGS_SOUND, -1, -1, &s_AudioPackDirectoryButton, "sound-audio-pack-directory", Localize("Audio pack directory"), 0, &DirectoryButton))
 		{
 			char aBuf[IO_MAX_PATH_LENGTH];
-			if(Storage()->FolderExists("audio", IStorage::TYPE_ALL))
-				Storage()->GetCompletePath(IStorage::TYPE_ALL, "audio", aBuf, sizeof(aBuf));
-			else
-				Storage()->GetCompletePath(IStorage::TYPE_SAVE, "audio", aBuf, sizeof(aBuf));
+			Storage()->GetCompletePath(IStorage::TYPE_SAVE, "audio", aBuf, sizeof(aBuf));
 			Client()->ViewFile(aBuf);
 		}
 
@@ -4752,7 +4751,6 @@ bool CMenus::RenderLanguageSelection(CUIRect MainView)
 	vec2 ScrollOffset(0.0f, 0.0f);
 	static float s_PrevLanguageScrollY = 0.0f;
 	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(1.0f);
-	ScrollParams.m_ScrollUnit = LANGUAGE_ROW_HEIGHT;
 	SSettingsScrollRegionFrame ScrollFrame = BeginSettingsScrollRegion(gs_LanguageScrollRegion, &MainView, ScrollParams, s_PrevLanguageScrollY);
 	ScrollOffset = ScrollFrame.m_BeginOffset;
 
@@ -5010,8 +5008,9 @@ void CMenus::RenderSettings(CUIRect MainView)
 			}
 			if(m_SettingsPerfLastPage != -1)
 				StartSettingsPerfFixedWindow("settings_tab_switch", SettingsPerfContextName(), CurrentQmUiPerfPage(), pWindowTab, 30);
-			s_SettingsTransitionDirection = UseNewSettingsUi ? (g_Config.m_UiSettingsPage > s_PrevSettingsPage ? 1.0f : -1.0f) : 0.0f;
-			if(UseNewSettingsUi)
+			const bool AnimateSettingsPageSwitch = UseNewSettingsUi && g_Config.m_UiSettingsPage != SETTINGS_SOUND;
+			s_SettingsTransitionDirection = AnimateSettingsPageSwitch ? (g_Config.m_UiSettingsPage > s_PrevSettingsPage ? 1.0f : -1.0f) : 0.0f;
+			if(AnimateSettingsPageSwitch)
 				TriggerUiSwitchAnimation(SettingsPageSwitchNode, 0.18f);
 			s_PrevSettingsPage = g_Config.m_UiSettingsPage;
 		}

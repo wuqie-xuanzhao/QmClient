@@ -81,11 +81,11 @@ void CScrollRegion::End()
 {
 	Ui()->ClipDisable();
 
-	if(!ScrollbarShown())
+	if(!ContentOverflows())
 		return;
 
-	DoScrollInput();
 	UpdateHotScrollRegion();
+	DoScrollInput();
 	AdvanceAnimation();
 	DoSlider();
 }
@@ -196,7 +196,7 @@ bool CScrollRegion::ContentOverflows() const
 
 bool CScrollRegion::ScrollbarShown() const
 {
-	return ContentOverflows() || m_Params.m_ForceShowScrollbar;
+	return !m_Params.m_HideScrollbar && ContentOverflows();
 }
 
 bool CScrollRegion::Animating() const
@@ -277,9 +277,9 @@ void CScrollRegion::DrawBackground(const CUIRect &ScrollbarBg)
 
 void CScrollRegion::DoScrollInput()
 {
-	const float ClipSize = m_Params.m_ScrollHorizontal ? m_ClipRect.w : m_ClipRect.h;
-
-	if(m_ScrollDirection != SCROLLRELATIVE_NONE || Ui()->HotScrollRegion() == this)
+	const bool HotFromPreviousFrame = Ui()->HotScrollRegion() == this;
+	const bool HotInPopupThisFrame = Ui()->RenderingPopupMenus() && Ui()->NextHotScrollRegion() == this;
+	if(m_ScrollDirection != SCROLLRELATIVE_NONE || QmScrollRegionCanConsumeWheel(HotFromPreviousFrame, HotInPopupThisFrame, Ui()->UnderlyingScrollBlocked(), Ui()->RenderingPopupMenus()))
 	{
 		bool ProgrammaticScroll = false;
 		if(Ui()->ConsumeHotkey(CUi::HOTKEY_SCROLL_UP))
@@ -292,13 +292,9 @@ void CScrollRegion::DoScrollInput()
 		if(!ProgrammaticScroll)
 			m_ScrollSpeedMultiplier = 1.0f;
 
-		if(Input()->ModifierIsPressed())
-			m_ScrollDirection = SCROLLRELATIVE_NONE;
-
 		if(m_ScrollDirection != SCROLLRELATIVE_NONE)
 		{
-			const bool IsPageScroll = Input()->AltIsPressed();
-			const float ScrollUnit = IsPageScroll && !ProgrammaticScroll ? ClipSize : m_Params.m_ScrollUnit;
+			const float ScrollUnit = m_Params.m_ScrollUnit * (Input()->AltIsPressed() ? QmScrollAltMultiplier() : 1.0f);
 
 			m_AnimTimeMax = g_Config.m_UiSmoothScrollTime / 1000.0f;
 			m_AnimTime = m_AnimTimeMax;
@@ -313,10 +309,13 @@ void CScrollRegion::DoScrollInput()
 void CScrollRegion::UpdateHotScrollRegion()
 {
 	CUIRect RegionRect = m_ClipRect;
-	if(m_Params.m_ScrollHorizontal)
-		RegionRect.h += m_Params.m_ScrollbarThickness;
-	else
-		RegionRect.w += m_Params.m_ScrollbarThickness;
+	if(ScrollbarShown())
+	{
+		if(m_Params.m_ScrollHorizontal)
+			RegionRect.h += m_Params.m_ScrollbarThickness;
+		else
+			RegionRect.w += m_Params.m_ScrollbarThickness;
+	}
 
 	if(Ui()->Enabled() && Ui()->MouseHovered(&RegionRect))
 	{
@@ -339,7 +338,7 @@ void CScrollRegion::AdvanceAnimation()
 	if(absolute(m_AnimInitScrollPos - m_AnimTargetScrollPos) < 0.5f)
 		m_AnimTime = 0.0f;
 
-	if(m_AnimTime > 0.0f && !Input()->ModifierIsPressed())
+	if(m_AnimTime > 0.0f)
 	{
 		m_AnimTime -= Client()->RenderFrameTime();
 		if(m_AnimTime < 0.0f)
@@ -357,9 +356,19 @@ void CScrollRegion::AdvanceAnimation()
 
 void CScrollRegion::DoSlider()
 {
+	const float ScrollMax = MaxScroll();
+	if(m_Params.m_HideScrollbar)
+	{
+		m_ScrollPos = std::clamp(m_ScrollPos, 0.0f, ScrollMax);
+		if(m_Params.m_ScrollHorizontal)
+			m_ContentScrollOff.x = -m_ScrollPos;
+		else
+			m_ContentScrollOff.y = -m_ScrollPos;
+		return;
+	}
+
 	const float ClipSize = m_Params.m_ScrollHorizontal ? m_ClipRect.w : m_ClipRect.h;
 	const float RailSize = m_Params.m_ScrollHorizontal ? m_RailRect.w : m_RailRect.h;
-	const float ScrollMax = MaxScroll();
 	const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;
 	const float SliderMaxSize = maximum(0.0f, RailSize);
 	const float SliderMinSize = minimum(m_Params.m_SliderMinSize, SliderMaxSize);

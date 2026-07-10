@@ -250,7 +250,7 @@ void CFileBrowser::OnRender(CUIRect _)
 	}
 
 	// File list
-	m_ListBox.DoStart(15.0f, m_vpFilteredFileList.size(), 1, 5, m_SelectedFileIndex, &View, false, IGraphics::CORNER_ALL, true);
+	m_ListBox.DoStart(15.0f, m_vpFilteredFileList.size(), 1, 5, m_SelectedFileIndex, &View, false, IGraphics::CORNER_ALL);
 
 	for(size_t i = 0; i < m_vpFilteredFileList.size(); i++)
 	{

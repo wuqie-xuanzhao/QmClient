@@ -23,9 +23,12 @@ void CListBox::Reset()
 	m_ScrollbarShown = false;
 	m_AutoSpacing = 0.0f;
 	m_ScrollRegion.Reset();
+	m_ScrollProfile = EQmScrollProfile::MENU_LIST;
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
 	m_ScrollbarWidth = ScrollParams.m_ScrollbarThickness;
 	m_ScrollbarMargin = ScrollParams.m_ScrollbarMargin;
+	m_ScrollbarWidthOverridden = false;
+	m_ScrollbarMarginOverridden = false;
 	m_HasHeader = false;
 	m_Active = true;
 }
@@ -57,7 +60,7 @@ void CListBox::DoSpacing(float Spacing)
 	m_ListBoxView = View;
 }
 
-void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect, bool Background, int BackgroundCorners, bool ForceShowScrollbar)
+void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect, bool Background, int BackgroundCorners)
 {
 	CUIRect View;
 	if(pRect)
@@ -106,11 +109,16 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 
 	// setup the scrollbar
 	vec2 ScrollOffset = vec2(0.0f, 0.0f);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ScrollbarThickness = ScrollbarWidthMax();
-	ScrollParams.m_ScrollbarMargin = ScrollbarMargin();
-	ScrollParams.m_ScrollUnit = (m_ListBoxRowHeight + m_AutoSpacing) * RowsPerScroll;
-	ScrollParams.m_ForceShowScrollbar = ForceShowScrollbar;
+	SQmScrollRequest ScrollRequest;
+	ScrollRequest.m_Profile = m_ScrollProfile;
+	ScrollRequest.m_RowExtent = m_ListBoxRowHeight + m_AutoSpacing;
+	ScrollRequest.m_RowsPerStep = RowsPerScroll;
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	m_ScrollbarWidth = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarThickness, m_ScrollbarWidth, m_ScrollbarWidthOverridden);
+	m_ScrollbarMargin = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarMargin, m_ScrollbarMargin, m_ScrollbarMarginOverridden);
+	ScrollParams.m_ScrollbarThickness = m_ScrollbarWidth;
+	ScrollParams.m_ScrollbarMargin = m_ScrollbarMargin;
 	m_ScrollRegion.Begin(&m_ListBoxView, &ScrollOffset, &ScrollParams);
 	m_ListBoxView.y += ScrollOffset.y;
 }

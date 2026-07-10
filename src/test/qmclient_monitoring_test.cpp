@@ -4039,14 +4039,13 @@ TEST(QmMonitoringHelpers, GraphicsRefreshRateInputAcceptsInfinitySymbol)
 
 TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)
 {
-	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	const std::string Source = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
 	ASSERT_FALSE(Body.empty());
 
-	EXPECT_NE(Body.find("auto RenderSliderWithValueInput = "), std::string::npos);
-	EXPECT_NE(Body.find("const float InputWidth = std::clamp(72.0f * UiScale, 56.0f, 72.0f);"), std::string::npos);
-	EXPECT_NE(Body.find("const float SuffixWidth = pSuffix[0] != '\\0' ? std::clamp(22.0f * UiScale, 18.0f, 24.0f) : 0.0f;"), std::string::npos);
-	EXPECT_NE(Body.find("const float MinSliderWidth = std::clamp(54.0f * UiScale, 42.0f, 54.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("const float ValueWidth = std::clamp((MultiLine ? ValueRect.w : Controls.w) * 0.18f, 42.0f, 80.0f);"), std::string::npos);
+	EXPECT_NE(Body.find("const bool HasSlider = MultiLine || Controls.w > ValueWidth + SuffixWidth + 42.0f;"), std::string::npos);
+	EXPECT_NE(Body.find("InputField.VMargin(std::min(5.0f, ValueWidth * 0.1f), &InputField);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SkinTransitionDurationLabelUsesSingleLineShrink)
@@ -4851,7 +4850,7 @@ TEST(QmMonitoringHelpers, StartMenuHasConcretePerfStagesAndNoPerFrameV2LayoutAll
 	EXPECT_EQ(StartMenuSource.find("CPerfTimer"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, MenuIdleRenderThrottleWaitsForRealIdleState)
+TEST(QmMonitoringHelpers, MenuIdleRenderThrottleWaitsForRealIdleStateAndRespectsScreenRefreshRate)
 {
 	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
@@ -4871,7 +4870,7 @@ TEST(QmMonitoringHelpers, MenuIdleRenderThrottleWaitsForRealIdleState)
 	EXPECT_NE(Body.find("SettingsTextPlanCollectionRemaining() > 0"), std::string::npos);
 	EXPECT_NE(Body.find("CountMissingSettingsMenuTextPlanItems() > 0"), std::string::npos);
 	EXPECT_NE(Body.find("time_get_nanoseconds() - m_LastMenuInteractionTime < MENU_IDLE_INTERACTION_GRACE_TIME"), std::string::npos);
-	EXPECT_NE(Body.find("return MENU_IDLE_REFRESH_RATE;"), std::string::npos);
+	EXPECT_NE(Body.find("return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ClientRenderLoopUsesGameClientIdleThrottleWithOneFrameRatePath)
@@ -5906,7 +5905,7 @@ TEST(QmMonitoringHelpers, AssetsCardInitialEntryUsesStableShellGeometry)
 	EXPECT_NE(Body.find("const bool ShowAuthorRow = AssetsCardShellShowsAuthorRow(s_CurCustomTab, true"), std::string::npos);
 	EXPECT_NE(Body.find("const bool ShowAuthorRow = AssetsCardShellShowsAuthorRow(s_CurCustomTab, false"), std::string::npos);
 	EXPECT_NE(Body.find("AssetsCardListAreaWithStableScrollbar(WorkshopListArea, s_WorkshopAssetsListBox.ScrollbarWidthMax(), s_WorkshopAssetsListBox.ScrollbarMargin())"), std::string::npos);
-	EXPECT_NE(Body.find("s_WorkshopAssetsListBox.DoStart(WorkshopRowHeight, CombinedCount, Columns, 1, OldCombinedSelected, &WorkshopListArea, false, IGraphics::CORNER_ALL, true);"), std::string::npos);
+	EXPECT_NE(Body.find("s_WorkshopAssetsListBox.DoStart(WorkshopRowHeight, CombinedCount, Columns, 1, OldCombinedSelected, &WorkshopListArea, false, IGraphics::CORNER_ALL);"), std::string::npos);
 	EXPECT_NE(Body.find("RenderAssetsCardLoadingShells("), std::string::npos);
 	EXPECT_NE(Body.find("const bool AssetsInitialEntryLoading = m_aAssetLoadStates[s_CurCustomTab] == ASSET_LOAD_STATE_LOADING || WorkshopState.m_pListTask != nullptr;"), std::string::npos);
 	EXPECT_NE(Body.find("stage=assets_card_geometry"), std::string::npos);
@@ -6090,7 +6089,7 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
 	const std::string ScrollRegionEnd = ExtractSourceFunctionBody(ScrollRegion, "void CScrollRegion::End()");
 	ASSERT_FALSE(ScrollRegionEnd.empty());
 	EXPECT_NE(ScrollRegion.find("bool CScrollRegion::ContentOverflows() const"), std::string::npos);
-	EXPECT_NE(ScrollRegion.find("return ContentOverflows() || m_Params.m_ForceShowScrollbar;"), std::string::npos);
+	EXPECT_NE(ScrollRegion.find("return !m_Params.m_HideScrollbar && ContentOverflows();"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("m_ContentSize 来自上一帧 End/AddRect 的测量结果"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("const float ScrollMax = MaxScroll();"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;"), std::string::npos);
@@ -6129,6 +6128,8 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	const std::string TClient = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string QmScroll = ReadRepoFile("src/game/client/QmUi/QmScroll.cpp");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
 	const std::string Controls = ReadRepoFile("src/game/client/components/menus_settings_controls.cpp");
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
@@ -6138,7 +6139,9 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams"), std::string::npos);
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
 	EXPECT_NE(Controls.find("CScrollRegionParams ScrollParams = GameClient()->m_Menus.QmSettingsScrollRegionParams(1.0f);"), std::string::npos);
-	EXPECT_EQ(Controls.find("CScrollRegionParams ScrollParams;\n\tScrollParams.m_ScrollUnit"), std::string::npos);
+	EXPECT_EQ(Controls.find("ScrollParams.m_ScrollUnit = 6.0f * BUTTON_HEIGHT;"), std::string::npos);
+	EXPECT_EQ(Controls.find("ScrollParams.m_ForceShowScrollbar = true;"), std::string::npos);
+	EXPECT_EQ(Settings.find("ScrollParams.m_ScrollUnit = LANGUAGE_ROW_HEIGHT;"), std::string::npos);
 	const std::string QmOverviewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(QmOverviewBody.empty());
 	EXPECT_NE(QmOverviewBody.find("static CQmScrollContainer s_QmOverviewScrollContainer;"), std::string::npos);
@@ -6162,12 +6165,26 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(Header.find("FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
 	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
 	EXPECT_NE(QmClient.find("Frame.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);"), std::string::npos);
-	EXPECT_NE(QmClient.find("const SQmScrollConfig ScrollConfig = QmNativeWheelScrollConfig(UiScale, g_Config.m_UiSmoothScrollTime / 1000.0f);"), std::string::npos);
+	EXPECT_NE(QmClient.find("const SQmScrollConfig ScrollConfig = QmSettingsScrollConfig(UiScale, g_Config.m_UiSmoothScrollTime / 1000.0f);"), std::string::npos);
 	EXPECT_NE(QmClient.find("ScrollInput.m_Hovered = Ui()->MouseHovered(pView);"), std::string::npos);
-	EXPECT_NE(QmClient.find("ScrollInput.m_WheelDelta += 120.0f;"), std::string::npos);
 	EXPECT_NE(QmClient.find("const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(*pView, ContentHeight, Frame.m_Style);"), std::string::npos);
 	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.Update(*pView, ContentHeight, GameClient()->UiRuntimeV2()->FrameDt(), ScrollInput, Frame.m_Style, ScrollConfig);"), std::string::npos);
+	const std::string BeginScrollBody = ExtractSourceFunctionBody(QmClient, "CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled)");
+	const std::string FinishScrollBody = ExtractSourceFunctionBody(QmClient, "void CMenus::FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)");
+	ASSERT_FALSE(BeginScrollBody.empty());
+	ASSERT_FALSE(FinishScrollBody.empty());
+	EXPECT_EQ(BeginScrollBody.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_"), std::string::npos);
+	EXPECT_NE(FinishScrollBody.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_UP)"), std::string::npos);
+	EXPECT_NE(FinishScrollBody.find("WheelDelta += 120.0f;"), std::string::npos);
+	EXPECT_NE(FinishScrollBody.find("!Ui()->UnderlyingScrollBlocked()"), std::string::npos);
 	EXPECT_NE(QmScroll.find("Config.m_WheelScale = 10.0f;"), std::string::npos);
+	EXPECT_NE(QmScroll.find("SQmScrollConfig QmSettingsScrollConfig(float UiScale, float SmoothScrollTimeSec)"), std::string::npos);
+	EXPECT_NE(QmScroll.find("Config.m_WheelScale = 120.0f;"), std::string::npos);
+	const std::string QmSettingsParamsBody = ExtractSourceFunctionBody(Menus, "CScrollRegionParams CMenus::QmSettingsScrollRegionParams(float UiScale) const");
+	ASSERT_FALSE(QmSettingsParamsBody.empty());
+	EXPECT_NE(QmSettingsParamsBody.find("QmScrollRegionParamsForSize(EQmScrollSize::LARGE, UiScale)"), std::string::npos);
+	EXPECT_NE(QmSettingsParamsBody.find("QmSettingsScrollConfig(UiScale, 0.0f).m_WheelScale"), std::string::npos);
+	EXPECT_EQ(QmSettingsParamsBody.find("m_ForceShowScrollbar = true"), std::string::npos);
 	EXPECT_EQ(QmScroll.find("Config.m_WheelScale = 10.0f * UiScale;"), std::string::npos);
 	EXPECT_EQ(QmScroll.find("Config.m_WheelScale = 60.0f * UiScale;"), std::string::npos);
 	EXPECT_EQ(QmClient.find("m_ScrollOffsetChanged"), std::string::npos);
@@ -7217,6 +7234,7 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
 	const std::string Motion = ReadRepoFile("src/game/client/QmUi/UiMotion.h");
 	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string QmMenus = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
 	const std::string Navigation = ReadRepoFile("src/game/client/QmUi/UiNavigation.cpp");
 	const std::string TextFieldPlateBody = ExtractSourceFunctionBody(Forms, "void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)");
@@ -7267,7 +7285,8 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(Forms.find("#include <game/client/ui.h>"), std::string::npos);
 	EXPECT_NE(Navigation.find("#include \"UiMotion.h\""), std::string::npos);
 	EXPECT_NE(TextFieldPlateBody.find("AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
-	EXPECT_NE(TextFieldPlateBody.find("Rect.Draw(ui_token::color::SURFACE_ELEVATED, Options.m_Corners, Options.m_CornerRadius);"), std::string::npos);
+	EXPECT_NE(TextFieldPlateBody.find("CUi::ms_LightButtonColorFunction.GetColor(false, Ctx.m_pUi->HotItem() == pInput)"), std::string::npos);
+	EXPECT_EQ(TextFieldPlateBody.find("ui_token::color::SURFACE_ELEVATED"), std::string::npos);
 	EXPECT_NE(TextFieldExBody.find("DrawTextFieldPlate(Ctx, pInput, Rect, Options);"), std::string::npos);
 	EXPECT_NE(TextFieldExBody.find("pInput->SetEmptyText(Options.m_pPlaceholder);"), std::string::npos);
 	EXPECT_NE(TextFieldExBody.find("RenderOptions.m_DrawBackground = false;"), std::string::npos);
@@ -7305,7 +7324,13 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	ASSERT_FALSE(SliderInputBody.empty());
 	EXPECT_NE(SliderInputBody.find("const bool MultiLine = Options.m_Flags & CUi::SCROLLBAR_OPTION_MULTILINE;"), std::string::npos);
 	EXPECT_NE(SliderInputBody.find("if(MultiLine)"), std::string::npos);
+	EXPECT_NE(SliderInputBody.find("const float LabelFontSize = MultiLine ? std::min(Options.m_FontSize, Label.h * CUi::ms_FontmodHeight * 0.8f) : Options.m_FontSize;"), std::string::npos);
+	EXPECT_NE(SliderInputBody.find("const float FieldFontSize = std::min(Options.m_FontSize, InputField.h * CUi::ms_FontmodHeight * 0.8f);"), std::string::npos);
 	EXPECT_NE(SliderInputBody.find("SliderInputWheelStoredValue("), std::string::npos);
+	EXPECT_NE(SliderInputBody.find("DoScrollbarH(pId, &ScrollBar, Normalized)"), std::string::npos);
+	EXPECT_EQ(SliderInputBody.find("DoScrollbarH(pId, &ScrollBar, Normalized, &Inner)"), std::string::npos);
+	EXPECT_NE(QmMenus.find("ui_widget::SliderInputField(QmInputCtx, pInput, pId, pValue, MinValue, MaxValue, ControlColumn, Options);"), std::string::npos);
+	EXPECT_EQ(QmMenus.find("Ui()->DoValueSelectorWithState(pId, &InputRect"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, TClientConfigSearchUsesSharedQmSearchField)
@@ -8379,7 +8404,7 @@ TEST(QmMonitoringHelpers, ServerBrowserAddFriendInputsUseSharedQmTextField)
 TEST(QmMonitoringHelpers, ServerBrowserScrollRegionsUseSharedQmScrollPresets)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
-	const std::string FilterBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,\n\tIFilterList &Filter,\n\tfloat ItemHeight, int MaxItems, int ItemsPerRow,\n\tCScrollRegion &ScrollRegion, std::vector<unsigned char> &vItemIds,\n\tbool UpdateCommunityCacheOnChange,\n\tconst std::function<const char *(int ItemIndex)> &GetItemName,\n\tconst std::function<void(int ItemIndex, CUIRect Item, const void *pItemId, bool Active)> &RenderItem)");
+	const std::string FilterBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,\n\tIFilterList &Filter,\n\tfloat ItemHeight, int MaxItems, int ItemsPerRow,\n\tCScrollRegion &ScrollRegion, std::vector<unsigned char> &vItemIds,\n\tbool UpdateCommunityCacheOnChange, bool HideScrollbar,\n\tconst std::function<const char *(int ItemIndex)> &GetItemName,\n\tconst std::function<void(int ItemIndex, CUIRect Item, const void *pItemId, bool Active)> &RenderItem)");
 	const std::string FriendsBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserFriends(CUIRect View)");
 	const std::string InfoScoreboardBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *pSelectedServer)");
 	const std::string QmBody = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserQm(CUIRect View)");
@@ -8389,28 +8414,42 @@ TEST(QmMonitoringHelpers, ServerBrowserScrollRegionsUseSharedQmScrollPresets)
 	ASSERT_FALSE(QmBody.empty());
 
 	EXPECT_NE(Source.find("#include <game/client/ui_scrollregion.h>"), std::string::npos);
-	EXPECT_NE(FilterBody.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::SMALL);"), std::string::npos);
-	EXPECT_NE(FilterBody.find("ScrollParams.m_ScrollUnit = 2.0f * ItemHeight;"), std::string::npos);
+	EXPECT_NE(FilterBody.find("ScrollRequest.m_Profile = EQmScrollProfile::FILTER_GRID;"), std::string::npos);
+	EXPECT_NE(FilterBody.find("ScrollRequest.m_RowExtent = ItemHeight;"), std::string::npos);
+	EXPECT_NE(FilterBody.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);"), std::string::npos);
+	EXPECT_NE(FilterBody.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);"), std::string::npos);
+	EXPECT_EQ(FilterBody.find("m_ScrollUnit = 2.0f * ItemHeight"), std::string::npos);
 	EXPECT_EQ(FilterBody.find("ScrollParams.m_ScrollbarThickness = 10.0f;"), std::string::npos);
 	EXPECT_EQ(FilterBody.find("ScrollParams.m_ScrollbarMargin = 3.0f;"), std::string::npos);
 
 	EXPECT_NE(FriendsBody.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);"), std::string::npos);
 	EXPECT_NE(FriendsBody.find("ScrollParams.m_ScrollUnit = 80.0f;"), std::string::npos);
-	EXPECT_NE(FriendsBody.find("ScrollParams.m_ForceShowScrollbar = true;"), std::string::npos);
+	EXPECT_EQ(FriendsBody.find("m_ForceShowScrollbar"), std::string::npos);
 	EXPECT_EQ(FriendsBody.find("ScrollParams.m_ScrollbarThickness = 16.0f;"), std::string::npos);
 	EXPECT_EQ(FriendsBody.find("ScrollParams.m_ScrollbarMargin = 5.0f;"), std::string::npos);
 
-	EXPECT_NE(InfoScoreboardBody.find("const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);"), std::string::npos);
-	EXPECT_NE(InfoScoreboardBody.find("s_ListBox.SetScrollbarWidth(ScrollParams.m_ScrollbarThickness);"), std::string::npos);
-	EXPECT_NE(InfoScoreboardBody.find("s_ListBox.SetScrollbarMargin(ScrollParams.m_ScrollbarMargin);"), std::string::npos);
+	EXPECT_EQ(InfoScoreboardBody.find("QmScrollRegionParamsForSize"), std::string::npos);
+	EXPECT_EQ(InfoScoreboardBody.find("SetScrollbarWidth"), std::string::npos);
+	EXPECT_EQ(InfoScoreboardBody.find("SetScrollbarMargin"), std::string::npos);
 	EXPECT_EQ(InfoScoreboardBody.find("s_ListBox.SetScrollbarWidth(16.0f);"), std::string::npos);
 	EXPECT_EQ(InfoScoreboardBody.find("s_ListBox.SetScrollbarMargin(5.0f);"), std::string::npos);
 
-	EXPECT_NE(QmBody.find("const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);"), std::string::npos);
-	EXPECT_NE(QmBody.find("s_QmServerListBox.SetScrollbarWidth(ScrollParams.m_ScrollbarThickness);"), std::string::npos);
-	EXPECT_NE(QmBody.find("s_QmServerListBox.SetScrollbarMargin(ScrollParams.m_ScrollbarMargin);"), std::string::npos);
+	EXPECT_EQ(QmBody.find("QmScrollRegionParamsForSize"), std::string::npos);
+	EXPECT_EQ(QmBody.find("SetScrollbarWidth"), std::string::npos);
+	EXPECT_EQ(QmBody.find("SetScrollbarMargin"), std::string::npos);
 	EXPECT_EQ(QmBody.find("s_QmServerListBox.SetScrollbarWidth(16.0f);"), std::string::npos);
 	EXPECT_EQ(QmBody.find("s_QmServerListBox.SetScrollbarMargin(5.0f);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, CountryFilterUsesHiddenRailScrollPolicy)
+{
+	const std::string Browser = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string CountryFilterBody = ExtractSourceFunctionBody(Browser, "void CMenus::RenderServerbrowserCountriesFilter(CUIRect View)");
+	ASSERT_FALSE(CountryFilterBody.empty());
+	EXPECT_NE(CountryFilterBody.find("true, GetItemName, RenderItem"), std::string::npos);
+	const std::string FilterBody = ExtractSourceFunctionBody(Browser, "void CMenus::RenderServerbrowserDDNetFilter(CUIRect View,");
+	ASSERT_FALSE(FilterBody.empty());
+	EXPECT_NE(FilterBody.find("ScrollParams.m_HideScrollbar = HideScrollbar;"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, IngameMotdScrollRegionUsesSharedQmScrollPreset)
@@ -8690,6 +8729,39 @@ TEST(QmMonitoringHelpers, AudioPackEditorSearchUsesSharedQmSearchField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox_Search(&m_AudioPackEditorState.m_CandidateFilterInput, &CandidateSearchInput"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, AudioPackEditorUsesStableSlotItemIds)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("static std::vector<int> s_vAudioPackEditorSlotItemIds;"), std::string::npos);
+	EXPECT_NE(Body.find("s_vAudioPackEditorSlotItemIds.resize(vAllSlots.size());"), std::string::npos);
+	EXPECT_NE(Body.find("s_AudioPackEditorSlotListBox.DoNextItem(&s_vAudioPackEditorSlotItemIds[SlotIndex], SelectedVisibleSlot == VisibleIndex)"), std::string::npos);
+	EXPECT_EQ(Body.find("s_AudioPackEditorSlotListBox.DoNextItem(&Slot, SelectedVisibleSlot == VisibleIndex)"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, AudioPackDirectoryOpensWritableSaveFolder)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsSound(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("Storage()->GetCompletePath(IStorage::TYPE_SAVE, \"audio\", aBuf, sizeof(aBuf));"), std::string::npos);
+	EXPECT_EQ(Body.find("Storage()->GetCompletePath(IStorage::TYPE_ALL, \"audio\""), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, SoundPageSwitchSkipsWholePageOffsetAnimation)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettings(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("const bool AnimateSettingsPageSwitch = UseNewSettingsUi && g_Config.m_UiSettingsPage != SETTINGS_SOUND;"), std::string::npos);
+	EXPECT_NE(Body.find("s_SettingsTransitionDirection = AnimateSettingsPageSwitch ? (g_Config.m_UiSettingsPage > s_PrevSettingsPage ? 1.0f : -1.0f) : 0.0f;"), std::string::npos);
+	EXPECT_NE(Body.find("if(AnimateSettingsPageSwitch)\n\t\t\t\tTriggerUiSwitchAnimation(SettingsPageSwitchNode, 0.18f);"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, AssetsEditorSearchUsesSharedQmSearchField)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_assets_editor.cpp");
@@ -8769,9 +8841,13 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	const std::string PopupBody = ExtractSourceFunctionBody(Ui, "void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, float Height, void *pContext, FPopupMenuFunction pfnFunc, const SPopupMenuProperties &Props)");
 	const std::string SelectionResetBody = ExtractSourceFunctionBody(Ui, "void CUi::SSelectionPopupContext::Reset()");
 	const std::string Body = ExtractSourceFunctionBody(Ui, "void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)");
+	const std::string PopupSelectionBody = ExtractSourceFunctionBody(Ui, "CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, bool Active)");
+	const std::string RenderPopupsBody = ExtractSourceFunctionBody(Ui, "void CUi::RenderPopupMenus()");
 	ASSERT_FALSE(PopupBody.empty());
 	ASSERT_FALSE(SelectionResetBody.empty());
 	ASSERT_FALSE(Body.empty());
+	ASSERT_FALSE(PopupSelectionBody.empty());
+	ASSERT_FALSE(RenderPopupsBody.empty());
 
 	EXPECT_NE(UiHeader.find("bool m_AutoReposition = true;"), std::string::npos);
 	EXPECT_NE(UiHeader.find("bool m_AnchorVisible = true;"), std::string::npos);
@@ -8781,10 +8857,24 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(PopupBody.find("if(Props.m_AutoReposition)"), std::string::npos);
 	EXPECT_NE(DropdownHeader.find("bool m_PopupVisible = false;"), std::string::npos);
 	EXPECT_NE(DropdownSource.find("Result.m_PopupVisible = Result.m_Rect.w > 0.0f && Result.m_Rect.h > 0.0f && RectsOverlap(Result.m_Rect, ViewportRect);"), std::string::npos);
-	EXPECT_NE(Body.find("const SQmDropdownGeometryResult Geometry = QmComputeDropdownPopupGeometry(AnchorRect, *Screen(), GeometryConfig);"), std::string::npos);
+	EXPECT_NE(UiHeader.find("bool m_ClipToViewport = false;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("bool m_BlockUnderlyingScroll = false;"), std::string::npos);
+	EXPECT_NE(UiHeader.find("CUIRect m_Viewport{};"), std::string::npos);
+	EXPECT_NE(UiHeader.find("SQmDropdownPopupPolicy m_PopupPolicy;"), std::string::npos);
+	EXPECT_NE(SelectionResetBody.find("m_BlockUnderlyingScroll = false;"), std::string::npos);
+	EXPECT_NE(SelectionResetBody.find("m_Viewport = {};"), std::string::npos);
+	EXPECT_NE(Body.find("QmResolveDropdownPopupPolicy("), std::string::npos);
+	EXPECT_NE(Body.find("const CUIRect &Viewport = pContext->m_Viewport;"), std::string::npos);
+	EXPECT_NE(Body.find("QmComputeDropdownPopupGeometry(AnchorRect, Viewport, GeometryConfig);"), std::string::npos);
+	EXPECT_NE(Body.find("pContext->m_BlockUnderlyingScroll = QmDropdownPopupOwnsWheel("), std::string::npos);
+	EXPECT_NE(PopupSelectionBody.find("QmResolveScrollPolicy(ScrollRequest)"), std::string::npos);
+	EXPECT_EQ(PopupSelectionBody.find("m_ScrollbarThickness = 10.0f"), std::string::npos);
+	EXPECT_EQ(PopupSelectionBody.find("m_ScrollUnit = 3 *"), std::string::npos);
+	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_BlockUnderlyingScroll"), std::string::npos);
+	EXPECT_NE(RenderPopupsBody.find("PopupMenu.m_Props.m_ClipToViewport"), std::string::npos);
 	EXPECT_NE(Body.find("pContext->m_AnchorVisible = Geometry.m_AnchorVisible;"), std::string::npos);
 	EXPECT_NE(Body.find("pContext->m_PopupVisible = Geometry.m_PopupVisible;"), std::string::npos);
-	EXPECT_NE(Body.find("if(!pContext->m_PopupVisible)"), std::string::npos);
+	EXPECT_NE(Body.find("if(!pContext->m_AnchorVisible || !pContext->m_PopupVisible)"), std::string::npos);
 	EXPECT_NE(Body.find("ClosePopupMenu(pContext);"), std::string::npos);
 	EXPECT_NE(Body.find("float PopupWidth = pContext->m_Width;"), std::string::npos);
 	EXPECT_NE(Body.find("float PopupHeightResolved = PopupHeight;"), std::string::npos);
@@ -8793,6 +8883,45 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(Body.find("PopupHeightResolved = Geometry.m_Rect.h;"), std::string::npos);
 	EXPECT_NE(Body.find("DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);"), std::string::npos);
 	EXPECT_EQ(Body.find("DoPopupMenu(pContext, X, Y, pContext->m_Width, PopupHeight, pContext, PopupSelection, pContext->m_Props);"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ListBoxResolvesMenuScrollPolicyFromRowSemantics)
+{
+	const std::string Header = ReadRepoFile("src/game/client/ui_listbox.h");
+	const std::string Source = ReadRepoFile("src/game/client/ui_listbox.cpp");
+	const std::string DoStartBody = ExtractSourceFunctionBody(Source, "void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect, bool Background, int BackgroundCorners)");
+	ASSERT_FALSE(DoStartBody.empty());
+
+	EXPECT_NE(Header.find("EQmScrollProfile m_ScrollProfile = EQmScrollProfile::MENU_LIST;"), std::string::npos);
+	EXPECT_NE(Header.find("void SetScrollProfile(EQmScrollProfile Profile)"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("ScrollRequest.m_Profile = m_ScrollProfile;"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("ScrollRequest.m_RowExtent = m_ListBoxRowHeight + m_AutoSpacing;"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("ScrollRequest.m_RowsPerStep = RowsPerScroll;"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarThickness, m_ScrollbarWidth, m_ScrollbarWidthOverridden)"), std::string::npos);
+	EXPECT_NE(DoStartBody.find("ScrollParams.m_ScrollbarThickness = m_ScrollbarWidth;"), std::string::npos);
+	EXPECT_EQ(DoStartBody.find("m_ScrollbarThickness = ScrollbarWidthMax()"), std::string::npos);
+	EXPECT_EQ(DoStartBody.find("m_ScrollbarMargin = ScrollbarMargin()"), std::string::npos);
+	EXPECT_EQ(DoStartBody.find("m_ForceShowScrollbar = ForceShowScrollbar"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ScrollRegionsOnlyReserveRailsForRealOverflow)
+{
+	const std::string Header = ReadRepoFile("src/game/client/ui_scrollregion.h");
+	const std::string Source = ReadRepoFile("src/game/client/ui_scrollregion.cpp");
+	const std::string EndBody = ExtractSourceFunctionBody(Source, "void CScrollRegion::End()");
+	const std::string ScrollbarShownBody = ExtractSourceFunctionBody(Source, "bool CScrollRegion::ScrollbarShown() const");
+	const std::string UpdateHotScrollRegionBody = ExtractSourceFunctionBody(Source, "void CScrollRegion::UpdateHotScrollRegion()");
+	ASSERT_FALSE(EndBody.empty());
+	ASSERT_FALSE(ScrollbarShownBody.empty());
+	ASSERT_FALSE(UpdateHotScrollRegionBody.empty());
+
+	EXPECT_EQ(Header.find("m_ForceShowScrollbar"), std::string::npos);
+	EXPECT_NE(EndBody.find("if(!ContentOverflows())"), std::string::npos);
+	EXPECT_EQ(EndBody.find("m_ForceShowScrollbar"), std::string::npos);
+	EXPECT_NE(ScrollbarShownBody.find("return !m_Params.m_HideScrollbar && ContentOverflows();"), std::string::npos);
+	EXPECT_NE(UpdateHotScrollRegionBody.find("if(ScrollbarShown())"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmUiCardPresetCarriesQmClientSettingsStyle)
@@ -9346,4 +9475,15 @@ TEST(QmMonitoringHelpers, FrameSchedulerResetClearsConsumerStateAndFrameScope)
 		EXPECT_EQ(Scheduler->LastOutput(Consumer).m_VisibleTokens, 0);
 		EXPECT_EQ(Scheduler->LastOutput(Consumer).m_TextContainerTokens, 0);
 	}
+}
+
+TEST(QmMonitoringHelpers, AndroidBundledCryptoUsesBoringSslAndSystemCertificates)
+{
+	const std::string FindCrypto = ReadRepoFile("cmake/FindCrypto.cmake");
+	const std::string Http = ReadRepoFile("src/engine/shared/http.cpp");
+
+	EXPECT_NE(FindCrypto.find("set_extra_dirs_lib(CRYPTO boringssl)"), std::string::npos);
+	EXPECT_EQ(FindCrypto.find("set_extra_dirs_lib(CRYPTO openssl)"), std::string::npos);
+	EXPECT_NE(Http.find("curl_easy_setopt(pH, CURLOPT_CAPATH, \"/system/etc/security/cacerts\");"), std::string::npos);
+	EXPECT_EQ(Http.find("curl_easy_setopt(pH, CURLOPT_CAINFO, \"data/cacert.pem\");"), std::string::npos);
 }

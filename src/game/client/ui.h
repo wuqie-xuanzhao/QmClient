@@ -379,6 +379,9 @@ struct SPopupMenuProperties
 	ColorRGBA m_BorderColor = ColorRGBA(0.5f, 0.5f, 0.5f, 0.75f);
 	ColorRGBA m_BackgroundColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.75f);
 	bool m_AutoReposition = true;
+	bool m_ClipToViewport = false;
+	bool m_BlockUnderlyingScroll = false;
+	CUIRect m_Viewport{};
 };
 
 class CUi
@@ -466,6 +469,8 @@ private:
 	const void *m_pBecomingHotItem = nullptr;
 	CScrollRegion *m_pHotScrollRegion = nullptr;
 	CScrollRegion *m_pBecomingHotScrollRegion = nullptr;
+	bool m_UnderlyingScrollBlocked = false;
+	bool m_RenderingPopupMenus = false;
 	bool m_ActiveItemValid = false;
 
 	int m_ActiveButtonLogicButton = -1;
@@ -687,6 +692,9 @@ public:
 	const void *NextHotItem() const { return m_pBecomingHotItem; }
 	const void *ActiveItem() const { return m_pActiveItem; }
 	const CScrollRegion *HotScrollRegion() const { return m_pHotScrollRegion; }
+	const CScrollRegion *NextHotScrollRegion() const { return m_pBecomingHotScrollRegion; }
+	bool UnderlyingScrollBlocked() const { return m_UnderlyingScrollBlocked; }
+	bool RenderingPopupMenus() const { return m_RenderingPopupMenus; }
 
 	void StartCheck() { m_ActiveItemValid = false; }
 	void FinishCheck()
@@ -915,6 +923,9 @@ public:
 		bool m_TransparentButtons;
 		bool m_AnchorVisible = true;
 		bool m_PopupVisible = true;
+		bool m_BlockUnderlyingScroll = false;
+		CUIRect m_Viewport{};
+		SQmDropdownPopupPolicy m_PopupPolicy;
 
 		bool m_SpecialFontRenderMode = false; // TClient
 

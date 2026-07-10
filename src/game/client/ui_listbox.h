@@ -5,6 +5,11 @@
 
 #include "ui_scrollregion.h"
 
+constexpr float QmListBoxScrollbarMetric(float PolicyValue, float CurrentValue, bool Overridden)
+{
+	return Overridden ? CurrentValue : PolicyValue;
+}
+
 struct CListboxItem
 {
 	bool m_Visible;
@@ -31,9 +36,12 @@ private:
 	bool m_ScrollbarShown;
 	float m_AutoSpacing;
 	CScrollRegion m_ScrollRegion;
+	EQmScrollProfile m_ScrollProfile = EQmScrollProfile::MENU_LIST;
 	int m_BackgroundCorners;
 	float m_ScrollbarWidth;
 	float m_ScrollbarMargin;
+	bool m_ScrollbarWidthOverridden;
+	bool m_ScrollbarMarginOverridden;
 	bool m_HasHeader;
 	bool m_Active;
 
@@ -47,7 +55,7 @@ public:
 	void DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight = 20.0f, float Spacing = 2.0f);
 	void DoAutoSpacing(float Spacing = 20.0f) { m_AutoSpacing = Spacing; }
 	void DoSpacing(float Spacing = 20.0f);
-	void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect = nullptr, bool Background = true, int BackgroundCorners = IGraphics::CORNER_ALL, bool ForceShowScrollbar = false);
+	void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex, const CUIRect *pRect = nullptr, bool Background = true, int BackgroundCorners = IGraphics::CORNER_ALL);
 	int ItemIndex() const { return m_ListBoxItemIndex; }
 	int ItemsPerRow() const { return m_ListBoxItemsPerRow; }
 	float RowHeight() const { return m_ListBoxRowHeight; }
@@ -64,6 +72,7 @@ public:
 	// Active state must be set before calling DoStart.
 	bool Active() const { return m_Active; }
 	void SetActive(bool Active) { m_Active = Active; }
+	void SetScrollProfile(EQmScrollProfile Profile) { m_ScrollProfile = Profile; }
 
 	bool WasItemSelected() const { return m_ListBoxItemSelected; }
 	bool WasItemActivated() const { return m_ListBoxItemActivated; }
@@ -73,9 +82,17 @@ public:
 	bool ScrollbarActive() const { return m_ScrollRegion.Active(); }
 	bool ScrollbarAnimating() const { return m_ScrollRegion.Animating(); }
 	float ScrollbarWidthMax() const { return m_ScrollbarWidth; }
-	void SetScrollbarWidth(float Width) { m_ScrollbarWidth = Width; }
+	void SetScrollbarWidth(float Width)
+	{
+		m_ScrollbarWidth = Width;
+		m_ScrollbarWidthOverridden = true;
+	}
 	float ScrollbarMargin() const { return m_ScrollbarMargin; }
-	void SetScrollbarMargin(float Margin) { m_ScrollbarMargin = Margin; }
+	void SetScrollbarMargin(float Margin)
+	{
+		m_ScrollbarMargin = Margin;
+		m_ScrollbarMarginOverridden = true;
+	}
 };
 
 #endif

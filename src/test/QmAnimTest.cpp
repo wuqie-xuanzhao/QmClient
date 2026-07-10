@@ -13,6 +13,7 @@
 #include <game/client/QmUi/UiMotion.h>
 #include <game/client/QmUi/UiOverlays.h>
 #include <game/client/QmUi/UiTokens.h>
+#include <game/client/ui_listbox.h>
 #include <game/client/ui_rect.h>
 #include <game/client/ui_scrollregion.h>
 
@@ -1678,7 +1679,7 @@ TEST(UiV2ScrollPhysics, NativeWheelAnimationConsumesLargeFrameDeltaLikeScrollReg
 	EXPECT_NEAR(State.Velocity(), 0.0f, 0.01f);
 }
 
-TEST(UiV2ScrollContainer, ModifierSuppressesNativeWheelInputLikeDdnetScrollRegion)
+TEST(UiV2ScrollContainer, ModifierDoesNotGloballySuppressWheelAndAltAcceleratesIt)
 {
 	CQmScrollContainer Container;
 	CUIRect View;
@@ -1692,15 +1693,72 @@ TEST(UiV2ScrollContainer, ModifierSuppressesNativeWheelInputLikeDdnetScrollRegio
 	Input.m_ModifierPressed = true;
 	Input.m_WheelDelta = -120.0f;
 	const SQmScrollContainerFrame ModifierFrame = Container.Update(View, 300.0f, 1.0f / 60.0f, Input);
-	EXPECT_NEAR(ModifierFrame.m_Offset, 0.0f, 0.001f);
+	EXPECT_NEAR(ModifierFrame.m_Offset, 10.0f, 0.001f);
 
 	Input.m_ModifierPressed = false;
+	Input.m_AltPressed = true;
 	const SQmScrollContainerFrame WheelFrame = Container.Update(View, 300.0f, 0.5f, Input);
-	EXPECT_NEAR(WheelFrame.m_Offset, 10.0f, 0.001f);
+	EXPECT_NEAR(WheelFrame.m_Offset, 40.0f, 0.001f);
 
 	Input.m_WheelDelta = 0.0f;
 	const SQmScrollContainerFrame DoneFrame = Container.Update(View, 300.0f, 0.5f, Input);
-	EXPECT_NEAR(DoneFrame.m_Offset, 10.0f, 0.001f);
+	EXPECT_NEAR(DoneFrame.m_Offset, 40.0f, 0.001f);
+}
+
+TEST(UiV2ScrollOwnership, PopupConsumesWheelWithoutLeakingToUnderlyingRegion)
+{
+	EXPECT_FALSE(QmScrollRegionCanConsumeWheel(true, false, true, false));
+	EXPECT_TRUE(QmScrollRegionCanConsumeWheel(false, true, true, true));
+	EXPECT_TRUE(QmScrollRegionCanConsumeWheel(true, false, false, false));
+}
+
+TEST(UiV2ScrollPolicy, ListBoxExplicitScrollbarMetricsOverridePolicyDefaults)
+{
+	EXPECT_NEAR(QmListBoxScrollbarMetric(20.0f, 15.0f, false), 20.0f, 0.001f);
+	EXPECT_NEAR(QmListBoxScrollbarMetric(20.0f, 15.0f, true), 15.0f, 0.001f);
+}
+
+TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)
+{
+	SQmScrollRequest Settings;
+	Settings.m_Profile = EQmScrollProfile::SETTINGS_PAGE;
+	const SQmResolvedScrollPolicy SettingsPolicy = QmResolveScrollPolicy(Settings, 1.0f, 0.5f);
+	EXPECT_NEAR(SettingsPolicy.m_Style.m_ScrollbarWidth, 28.0f, 0.01f);
+	EXPECT_NEAR(SettingsPolicy.m_Config.m_WheelScale, 120.0f, 0.01f);
+	EXPECT_NEAR(SettingsPolicy.m_AltMultiplier, 3.0f, 0.01f);
+	EXPECT_EQ(SettingsPolicy.m_RailVisibility, EQmScrollRailVisibility::AUTO);
+
+	SQmScrollRequest FilterGrid;
+	FilterGrid.m_Profile = EQmScrollProfile::FILTER_GRID;
+	FilterGrid.m_RowExtent = 18.0f;
+	const SQmResolvedScrollPolicy FilterPolicy = QmResolveScrollPolicy(FilterGrid, 1.0f, 0.0f);
+	EXPECT_EQ(FilterPolicy.m_RailVisibility, EQmScrollRailVisibility::HIDDEN);
+	EXPECT_NEAR(FilterPolicy.m_Config.m_WheelScale, 36.0f, 0.01f);
+	EXPECT_FALSE(FilterPolicy.m_ContentDragAllowed);
+
+	SQmScrollRequest Popup;
+	Popup.m_Profile = EQmScrollProfile::POPUP_LIST;
+	Popup.m_RowExtent = 20.0f;
+	const SQmResolvedScrollPolicy PopupPolicy = QmResolveScrollPolicy(Popup, 1.0f, 0.0f);
+	EXPECT_EQ(PopupPolicy.m_MaxVisibleItems, 8);
+	EXPECT_NEAR(PopupPolicy.m_Config.m_WheelScale, 60.0f, 0.01f);
+}
+
+TEST(UiV2ScrollController, HiddenRailKeepsScrollableContentAtFullWidth)
+{
+	CQmScrollController Controller;
+	SQmScrollRequest Request;
+	Request.m_Profile = EQmScrollProfile::FILTER_GRID;
+	Request.m_RowExtent = 20.0f;
+	CUIRect View{10.0f, 20.0f, 200.0f, 100.0f};
+	SQmScrollContainerInput Input;
+	Input.m_Hovered = true;
+	Input.m_WheelDelta = -120.0f;
+	const SQmScrollContainerFrame Frame = Controller.Update(View, 300.0f, 0.0f, Input, Request, 1.0f, 0.0f);
+	EXPECT_TRUE(Frame.m_Scrollable);
+	EXPECT_FALSE(Frame.m_ScrollbarVisible);
+	EXPECT_NEAR(Frame.m_ClipRect.w, View.w, 0.001f);
+	EXPECT_GT(Frame.m_Offset, 0.0f);
 }
 
 TEST(UiV2ScrollPhysics, PresetsExposeSharedSmallMediumLargeGeometry)
@@ -1731,6 +1789,11 @@ TEST(UiV2ScrollPhysics, PresetsExposeSharedSmallMediumLargeGeometry)
 
 	const SQmScrollConfig InstantNativeWheel = QmNativeWheelScrollConfig(1.0f, 0.0f);
 	EXPECT_NEAR(InstantNativeWheel.m_NativeWheelAnimationTime, 0.0f, 0.01f);
+
+	const SQmScrollConfig SettingsWheel = QmSettingsScrollConfig(1.0f, 0.5f);
+	EXPECT_NEAR(SettingsWheel.m_WheelScale, 120.0f, 0.01f);
+	EXPECT_TRUE(SettingsWheel.m_NativeWheelStep);
+	EXPECT_NEAR(SettingsWheel.m_NativeWheelAnimationTime, 0.5f, 0.01f);
 }
 
 TEST(UiV2ScrollPhysics, ScrollRegionParamsUseSharedQmScrollPreset)
@@ -1849,13 +1912,18 @@ TEST(UiV2ScrollContainer, ComputesContentRectAndScrollbarVisibility)
 	EXPECT_TRUE(Frame.m_ScrollbarVisible);
 	EXPECT_NEAR(Frame.m_ClipRect.x, View.x, 1e-6f);
 	EXPECT_NEAR(Frame.m_ClipRect.y, View.y, 1e-6f);
-	EXPECT_NEAR(Frame.m_ClipRect.w, View.w, 1e-6f);
+	EXPECT_NEAR(Frame.m_ClipRect.w, View.w - SQmScrollContainerStyle().m_ScrollbarWidth, 1e-6f);
 	EXPECT_NEAR(Frame.m_ClipRect.h, View.h, 1e-6f);
 	EXPECT_NEAR(Frame.m_ContentRect.x, View.x, 1e-6f);
 	EXPECT_LT(Frame.m_ContentRect.y, View.y);
-	EXPECT_NEAR(Frame.m_ContentRect.w, View.w, 1e-6f);
+	EXPECT_NEAR(Frame.m_ContentRect.w, View.w - SQmScrollContainerStyle().m_ScrollbarWidth, 1e-6f);
 	EXPECT_NEAR(Frame.m_ContentRect.h, 300.0f, 1e-6f);
 	EXPECT_GT(Frame.m_Offset, 0.0f);
+
+	Container.Reset();
+	const SQmScrollContainerFrame NonOverflowFrame = Container.Update(View, 80.0f, 0.0f);
+	EXPECT_FALSE(NonOverflowFrame.m_ScrollbarVisible);
+	EXPECT_NEAR(NonOverflowFrame.m_ClipRect.w, View.w, 1e-6f);
 }
 
 TEST(UiV2ScrollContainer, DefaultWheelInputUsesDdnetNativeStep)
@@ -2530,6 +2598,21 @@ TEST(UiV2DropdownGeometry, MarksPopupInvisibleWhenViewportHasNoUsableArea)
 	EXPECT_FALSE(Result.m_PopupVisible);
 	EXPECT_NEAR(Result.m_Rect.w, 0.0f, 0.001f);
 	EXPECT_NEAR(Result.m_Rect.h, 0.0f, 0.001f);
+}
+
+TEST(UiV2DropdownPolicy, CapsLongPopupAndOnlyLetsOverflowOwnWheel)
+{
+	const SQmDropdownPopupPolicy ShortPolicy = QmResolveDropdownPopupPolicy(4, 20.0f, 5.0f, false, 0.0f, 10.0f);
+	EXPECT_EQ(ShortPolicy.m_MaxVisibleItems, 8);
+	EXPECT_NEAR(ShortPolicy.m_ContentHeight, ShortPolicy.m_PreferredHeight, 0.001f);
+	EXPECT_FALSE(QmDropdownPopupOwnsWheel(ShortPolicy, ShortPolicy.m_PreferredHeight));
+
+	const SQmDropdownPopupPolicy LongPolicy = QmResolveDropdownPopupPolicy(12, 20.0f, 5.0f, false, 0.0f, 10.0f);
+	EXPECT_EQ(LongPolicy.m_MaxVisibleItems, 8);
+	EXPECT_GT(LongPolicy.m_ContentHeight, LongPolicy.m_PreferredHeight);
+	EXPECT_TRUE(QmDropdownPopupOwnsWheel(LongPolicy, LongPolicy.m_PreferredHeight));
+
+	EXPECT_TRUE(QmDropdownPopupOwnsWheel(ShortPolicy, ShortPolicy.m_PreferredHeight - 1.0f));
 }
 
 TEST(UiV2DropdownState, OpensWithFirstItemAndClosesOnEscape)

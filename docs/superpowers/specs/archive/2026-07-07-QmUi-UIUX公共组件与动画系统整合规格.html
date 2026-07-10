@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="date" content="2026-07-07">
-	<meta name="status" content="active">
+	<meta name="status" content="archived">
 	<title>QmClient UI/UX 公共组件与动画系统整合规格</title>
 	<style>
 		:root {
@@ -161,6 +161,7 @@
 </head>
 <body>
 <main>
+	<p><strong>已归档，禁止作为实现依据。</strong> 当前权威规格：<a href="../2026-07-10-QmClient-设置页UI统一与滚动体系规格.md">2026-07-10-QmClient-设置页UI统一与滚动体系规格.md</a>。</p>
 	<header>
 		<h1>QmClient UI/UX 公共组件与动画系统整合规格</h1>
 		<p class="subtitle">以当前全局卡片、公共控件和 QmUi 动画系统收口为中心，重整旧 UI/UX 规格与动画评估结论。</p>
@@ -598,6 +599,18 @@ python qmclient_scripts/gate/check_gate.py --mode default</code></pre>
 				<td>可作为调参工具，但不阻塞当前设置页公共组件收口。</td>
 			</tr>
 		</table>
+	</section>
+
+	<section id="s9">
+		<h2>9 · 2026-07-10 滚动体系补充</h2>
+		<p>滚动条统一的完成口径是公共行为内核，而不是多处复刻相同宽度。菜单容器通过 <code>SQmScrollRequest</code> 解析视觉预设、滚动语义和轨道可见性；不得再由页面直接写 thickness、margin、wheel scale 或 force-show。</p>
+		<ul>
+			<li><strong>Alt + 滚轮</strong>统一为 3 倍加速；Ctrl/GUI 数值控件显式消费滚轮，其余区域保持滚动；不再保留 Alt 整页跳转。</li>
+			<li>设置页用 large/120；虚拟菜单列表保留行高乘行数的 DDNet 语义；popup 最多显示 8 个选项。</li>
+			<li>国旗等筛选网格可滚动但使用 hidden rail：不绘制、不预留宽度、不允许内容拖拽，wheel/键盘路径仍有效。</li>
+			<li>短 dropdown 保持打开并把滚轮交回页面；长列表或父 clip 限高时 popup 自行消费滚轮且显示 small rail。</li>
+		</ul>
+		<p>输入框、slider+input、卡片/拖拽/字体、Search 与 TClient 的既有人工反馈仍是同一轮阻断项。自动测试通过不替代客户端截图和实际交互验收。</p>
 	</section>
 </main>
 </body>
