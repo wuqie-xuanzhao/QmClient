@@ -8,6 +8,7 @@
 #include <game/client/QmUi/QmDropdown.h>
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/QmTree.h>
+#include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiMotion.h>
@@ -24,6 +25,34 @@
 
 namespace
 {
+	TEST(SettingsPageLayout, WideViewportUsesEqualColumnsBelowFullWidthTabs)
+	{
+		const SSettingsPageLayoutFrame Frame = ResolveSettingsPageLayout({0.0f, 0.0f, 1000.0f, 700.0f}, true, 1.0f);
+		EXPECT_TRUE(Frame.m_TwoColumns);
+		EXPECT_FLOAT_EQ(Frame.m_SubTabRect.w, Frame.m_PageRect.w);
+		EXPECT_LT(Frame.m_SubTabRect.y, Frame.m_aColumns[0].y);
+		EXPECT_FLOAT_EQ(Frame.m_aColumns[0].w, Frame.m_aColumns[1].w);
+		EXPECT_GT(Frame.m_aColumns[1].x, Frame.m_aColumns[0].x + Frame.m_aColumns[0].w);
+	}
+
+	TEST(SettingsPageLayout, NarrowViewportUsesOneColumnWithoutPhantomRightColumn)
+	{
+		const SSettingsPageLayoutFrame Frame = ResolveSettingsPageLayout({0.0f, 0.0f, 620.0f, 700.0f}, false, 1.0f);
+		EXPECT_FALSE(Frame.m_TwoColumns);
+		EXPECT_FLOAT_EQ(Frame.m_aColumns[0].w, Frame.m_ContentViewport.w);
+		EXPECT_FLOAT_EQ(Frame.m_aColumns[1].w, 0.0f);
+		EXPECT_FLOAT_EQ(Frame.m_SubTabRect.h, 0.0f);
+	}
+
+	TEST(SettingsPageLayout, NonPositiveScaleUsesBaseGeometry)
+	{
+		const SSettingsPageLayoutFrame Base = ResolveSettingsPageLayout({0.0f, 0.0f, 620.0f, 700.0f}, false, 1.0f);
+		const SSettingsPageLayoutFrame Zero = ResolveSettingsPageLayout({0.0f, 0.0f, 620.0f, 700.0f}, false, 0.0f);
+		EXPECT_FLOAT_EQ(Zero.m_CardGap, Base.m_CardGap);
+		EXPECT_FLOAT_EQ(Zero.m_ContentViewport.w, Base.m_ContentViewport.w);
+		EXPECT_FLOAT_EQ(Zero.m_aColumns[0].w, Base.m_aColumns[0].w);
+	}
+
 	TEST(UiTheme, RuntimeThemeTracksBaseColorAndOpacity)
 	{
 		const SUiTheme Blue = ResolveUiTheme(ColorHSLA(0.60f, 0.75f, 0.45f, 1.0f), 1.0f);

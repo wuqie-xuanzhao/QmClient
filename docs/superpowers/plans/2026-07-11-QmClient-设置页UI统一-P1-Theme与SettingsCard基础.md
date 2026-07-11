@@ -213,7 +213,7 @@ git commit -m "feat(settings-ui): 建立运行时主题链" -m "feat: 统一卡�
 - Consumes: 页面 content rect、是否有全宽子 tab、UI scale。
 - Produces: `SSettingsPageLayoutFrame ResolveSettingsPageLayout(const CUIRect &PageRect, bool HasSubTabs, float UiScale = 1.0f)`。
 
-- [ ] **Step 1: Write failing layout tests**
+- [x] **Step 1: Write failing layout tests**
 
 ```cpp
 TEST(SettingsPageLayout, WideViewportUsesEqualColumnsBelowFullWidthTabs)
@@ -236,7 +236,7 @@ TEST(SettingsPageLayout, NarrowViewportUsesOneColumnWithoutPhantomRightColumn)
 }
 ```
 
-- [ ] **Step 2: Run tests to verify red**
+- [x] **Step 2: Run tests to verify red**
 
 Run:
 
@@ -247,50 +247,15 @@ cmake-build-release/testrunner.exe --gtest_filter=SettingsPageLayout.*
 
 Expected: compile FAIL because layout types and resolver do not exist.
 
-- [ ] **Step 3: Implement the exact layout contract**
+- [x] **Step 3: Implement the exact layout contract**
 
-```cpp
-struct SSettingsPageLayoutFrame
-{
-	CUIRect m_PageRect;
-	CUIRect m_ScrollViewport;
-	CUIRect m_ContentViewport;
-	CUIRect m_SubTabRect;
-	CUIRect m_aColumns[2];
-	float m_CardGap = 0.0f;
-	bool m_TwoColumns = false;
-};
+实现边界：
 
-inline SSettingsPageLayoutFrame ResolveSettingsPageLayout(const CUIRect &PageRect, bool HasSubTabs, float UiScale)
-{
-	SSettingsPageLayoutFrame Frame{};
-	Frame.m_PageRect = PageRect;
-	Frame.m_ScrollViewport = PageRect;
-	Frame.m_ScrollViewport.Margin(16.0f * UiScale, &Frame.m_ScrollViewport);
-	Frame.m_ContentViewport = Frame.m_ScrollViewport;
-	if(HasSubTabs)
-	{
-		Frame.m_ContentViewport.HSplitTop(40.0f * UiScale, &Frame.m_SubTabRect, &Frame.m_ContentViewport);
-		Frame.m_ContentViewport.HSplitTop(12.0f * UiScale, nullptr, &Frame.m_ContentViewport);
-	}
-	Frame.m_CardGap = 16.0f * UiScale;
-	Frame.m_TwoColumns = Frame.m_ContentViewport.w >= 760.0f * UiScale;
-	if(Frame.m_TwoColumns)
-		Frame.m_ContentViewport.VSplitMid(&Frame.m_aColumns[0], &Frame.m_aColumns[1], Frame.m_CardGap);
-	else
-	{
-		Frame.m_aColumns[0] = Frame.m_ContentViewport;
-		Frame.m_aColumns[1] = {};
-	}
-	if(!HasSubTabs)
-		Frame.m_SubTabRect = {};
-	return Frame;
-}
-```
-
-把 `16`、`40`、`12`、`760` 分别命名为 `ui_token::settings::PAGE_INSET`、`SUB_TAB_HEIGHT`、`SUB_TAB_GAP`、`TWO_COLUMN_MIN_WIDTH`，测试使用 resolver 行为而不是重复常量。
-
-- [ ] **Step 4: Run tests to verify green**
+- `m_SubTabRect` 在有子 tab 时使用 `PageRect` 全宽；卡片/滚动 viewport 在 tab 下方再应用 inset，避免 tab 被卡片列宽限制。
+- 宽屏两列仅从同一份 `m_ContentViewport` 派生，两列等宽并由 `m_CardGap` 分隔；窄屏右列保持零 rect。
+- `UiScale <= 0` 回退为基础比例；过小 viewport 通过非负宽高收敛。
+- resolver 只读写 `CUIRect` 值字段，不调用需要 UI renderer 链接的成员函数，因此可直接由 `testrunner` 验证。
+- [x] **Step 4: Run tests to verify green**
 
 Run:
 
@@ -301,7 +266,7 @@ cmake-build-release/testrunner.exe --gtest_filter=SettingsPageLayout.*
 
 Expected: `2 tests` PASS。
 
-- [ ] **Step 5: Commit page layout**
+- [x] **Step 5: Commit page layout**
 
 ```powershell
 git add src/game/client/QmUi/SettingsPageLayout.h src/game/client/QmUi/UiTokens.h src/test/QmAnimTest.cpp
