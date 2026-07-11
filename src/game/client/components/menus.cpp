@@ -1206,7 +1206,7 @@ bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const cha
 
 	IUiContext InputCtx = SettingsUiContext("settings_slider_input");
 
-	return ui_widget::SliderInputField(InputCtx, &pState->m_Input, pId, pOption, Min, Max, *pRect, Options);
+	return ui_widget::NumericField(InputCtx, pState, pId, pOption, Min, Max, *pRect, Options);
 }
 
 void CMenus::DoLaserPreview(const CUIRect *pRect, const ColorHSLA LaserOutlineColor, const ColorHSLA LaserInnerColor, const int LaserType)

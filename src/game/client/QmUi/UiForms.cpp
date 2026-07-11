@@ -512,6 +512,13 @@ namespace ui_widget
 		return Result.m_Changed || Changed;
 	}
 
+	bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)
+	{
+		if(pState == nullptr)
+			return false;
+		return SliderInputField(Ctx, &pState->m_Input, pId, pValue, Min, Max, Rect, Options);
+	}
+
 	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect)
 	{
 		if(Ctx.m_pUi == nullptr || pValue == nullptr)

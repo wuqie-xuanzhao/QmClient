@@ -192,6 +192,7 @@ namespace ui_widget
 		CUIElement *m_pLabelElement = nullptr;
 	};
 	bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);
+	bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);
 
 	// Boolean switch. Slider position animates with a spring driver between left
 	// (off) and right (on). Returns true on click.

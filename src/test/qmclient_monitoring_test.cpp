@@ -7329,7 +7329,7 @@ TEST(QmMonitoringHelpers, DelayUpdateStaysOnUnifiedSliderInputPath)
 
 	EXPECT_NE(ScrollbarBody.find("DoSettingsSliderInputField(Page, Tab, Subtab"), std::string::npos);
 	EXPECT_EQ(ScrollbarBody.find("Ui()->DoScrollbarOption("), std::string::npos);
-	EXPECT_NE(SliderBody.find("ui_widget::SliderInputField("), std::string::npos);
+	EXPECT_NE(SliderBody.find("ui_widget::NumericField("), std::string::npos);
 	EXPECT_EQ(SliderBody.find("Ui()->DoScrollbarOption("), std::string::npos);
 	EXPECT_NE(SliderBody.find("Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ?"), std::string::npos);
 
@@ -7340,12 +7340,14 @@ TEST(QmMonitoringHelpers, DelayUpdateStaysOnUnifiedSliderInputPath)
 	ASSERT_FALSE(SharedSliderBody.empty());
 	EXPECT_NE(FormsHeader.find("enum class EInputCommitPolicy"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("struct SNumericFieldState"), std::string::npos);
+
+	EXPECT_NE(FormsHeader.find("bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("CLineInputNumber m_Input;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;"), std::string::npos);
 	EXPECT_NE(MenusHeader.find("std::unordered_map<const void *, std::unique_ptr<ui_widget::SNumericFieldState>> m_vpSettingsNumericFieldStates;"), std::string::npos);
 	EXPECT_EQ(MenusHeader.find("m_vpSettingsSliderInputs"), std::string::npos);
 	EXPECT_NE(SliderBody.find("ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);"), std::string::npos);
-	EXPECT_NE(SliderBody.find("&pState->m_Input"), std::string::npos);
+	EXPECT_NE(SliderBody.find("ui_widget::NumericField(InputCtx, pState"), std::string::npos);
 	EXPECT_EQ(SliderBody.find("GetSettingsSliderInput("), std::string::npos);
 	EXPECT_NE(SharedSliderBody.find("const bool SliderReleased = SliderWasActive && !Ctx.m_pUi->CheckActiveItem(pId);"), std::string::npos);
 	EXPECT_NE(SharedSliderBody.find("Options.m_CommitPolicy == EInputCommitPolicy::LIVE || SliderReleased"), std::string::npos);
@@ -7479,7 +7481,7 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(SliderInputBody.find("DoScrollbarH(pId, &ScrollBar, Normalized)"), std::string::npos);
 	EXPECT_EQ(SliderInputBody.find("DoScrollbarH(pId, &ScrollBar, Normalized, &Inner)"), std::string::npos);
 	EXPECT_NE(QmMenus.find("ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);"), std::string::npos);
-	EXPECT_NE(QmMenus.find("ui_widget::SliderInputField(QmInputCtx, &pState->m_Input, pId, pValue, MinValue, MaxValue, ControlColumn, Options);"), std::string::npos);
+	EXPECT_NE(QmMenus.find("ui_widget::NumericField(QmInputCtx, pState, pId, pValue, MinValue, MaxValue, ControlColumn, Options);"), std::string::npos);
 	EXPECT_EQ(QmMenus.find("GetSettingsSliderInput("), std::string::npos);
 	EXPECT_EQ(QmMenus.find("Ui()->DoValueSelectorWithState(pId, &InputRect"), std::string::npos);
 }

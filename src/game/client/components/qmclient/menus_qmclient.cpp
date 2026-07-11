@@ -2300,7 +2300,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		QmInputCtx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
 		QmInputCtx.m_ScopeHash = MakeUiScopeHash("qmclient_slider_input");
 		QmInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-		ui_widget::SliderInputField(QmInputCtx, &pState->m_Input, pId, pValue, MinValue, MaxValue, ControlColumn, Options);
+		ui_widget::NumericField(QmInputCtx, pState, pId, pValue, MinValue, MaxValue, ControlColumn, Options);
 		if(PrewarmOnly || Ui()->RenderOnly())
 			*pValue = OriginalValue;
 	};
