@@ -1171,22 +1171,9 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char
 		}
 	}
 
-	return DoSettingsSliderInputField(Page, Tab, Subtab, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
-}
-
-ui_widget::SNumericFieldState *CMenus::GetSettingsNumericFieldState(const void *pId)
-{
-	auto &pState = m_vpSettingsNumericFieldStates[pId];
-	if(!pState)
-		pState = std::make_unique<ui_widget::SNumericFieldState>();
-	return pState.get();
-}
-
-bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
-{
 	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
 
-	ui_widget::SSliderInputFieldOptions Options;
+	ui_widget::SNumericFieldOptions Options;
 	Options.m_pLabel = pStr;
 	Options.m_pSuffix = pSuffix;
 	Options.m_pScale = pScale;
@@ -1205,8 +1192,15 @@ bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const cha
 	}
 
 	IUiContext InputCtx = SettingsUiContext("settings_slider_input");
-
 	return ui_widget::NumericField(InputCtx, pState, pId, pOption, Min, Max, *pRect, Options);
+}
+
+ui_widget::SNumericFieldState *CMenus::GetSettingsNumericFieldState(const void *pId)
+{
+	auto &pState = m_vpSettingsNumericFieldStates[pId];
+	if(!pState)
+		pState = std::make_unique<ui_widget::SNumericFieldState>();
+	return pState.get();
 }
 
 void CMenus::DoLaserPreview(const CUIRect *pRect, const ColorHSLA LaserOutlineColor, const ColorHSLA LaserInnerColor, const int LaserType)

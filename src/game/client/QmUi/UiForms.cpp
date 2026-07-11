@@ -322,7 +322,7 @@ namespace ui_widget
 		return Label;
 	}
 
-	bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)
+	bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options)
 	{
 		if(Ctx.m_pUi == nullptr || pState == nullptr || pValue == nullptr || Max <= Min)
 			return false;
@@ -525,13 +525,6 @@ namespace ui_widget
 			Ctx.m_pUi->DoLabel(&SuffixRect, Options.m_pSuffix, Options.m_FontSize, TEXTALIGN_ML);
 
 		return Result.m_Changed || Changed;
-	}
-
-	bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)
-	{
-		if(pState == nullptr)
-			return false;
-		return SliderInputField(Ctx, pState, pId, pValue, Min, Max, Rect, Options);
 	}
 
 	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect)

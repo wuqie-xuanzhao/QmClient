@@ -182,7 +182,7 @@ namespace ui_widget
 
 	// 横向滚动条 + 输入框 + 单位组合。支持整数/浮点、线性/对数刻度、
 	// ♾️ 无限符号和最大值文本。
-	struct SSliderInputFieldOptions
+	struct SNumericFieldOptions
 	{
 		const char *m_pLabel = nullptr;
 		const char *m_pSuffix = nullptr;
@@ -195,8 +195,7 @@ namespace ui_widget
 		EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;
 		CUIElement *m_pLabelElement = nullptr;
 	};
-	bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);
-	bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);
+	bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options);
 
 	// Boolean switch. Slider position animates with a spring driver between left
 	// (off) and right (on). Returns true on click.

@@ -2212,7 +2212,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	auto RenderSliderWithValueInput = [this, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		const int OriginalValue = *pValue;
 		ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
-		ui_widget::SSliderInputFieldOptions Options;
+		ui_widget::SNumericFieldOptions Options;
 		Options.m_pSuffix = pSuffix;
 		Options.m_FontSize = ControlColumn.h * CUi::ms_FontmodHeight * 0.8f;
 

@@ -4040,7 +4040,7 @@ TEST(QmMonitoringHelpers, GraphicsRefreshRateInputAcceptsInfinitySymbol)
 TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)
 {
 	const std::string Source = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Body.find("const float ValueWidth = std::clamp((MultiLine ? ValueRect.w : Controls.w) * 0.18f, 42.0f, 80.0f);"), std::string::npos);
@@ -7323,36 +7323,52 @@ TEST(QmMonitoringHelpers, DelayUpdateStaysOnUnifiedSliderInputPath)
 {
 	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string ScrollbarBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
-	const std::string SliderBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
-	ASSERT_FALSE(ScrollbarBody.empty());
-	ASSERT_FALSE(SliderBody.empty());
-
-	EXPECT_NE(ScrollbarBody.find("DoSettingsSliderInputField(Page, Tab, Subtab"), std::string::npos);
-	EXPECT_EQ(ScrollbarBody.find("Ui()->DoScrollbarOption("), std::string::npos);
-	EXPECT_NE(SliderBody.find("ui_widget::NumericField("), std::string::npos);
-	EXPECT_EQ(SliderBody.find("Ui()->DoScrollbarOption("), std::string::npos);
-	EXPECT_NE(SliderBody.find("Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ?"), std::string::npos);
-
 	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
 	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string SharedSliderBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
-	ASSERT_FALSE(SharedSliderBody.empty());
-	EXPECT_NE(FormsHeader.find("enum class EInputCommitPolicy"), std::string::npos);
-	EXPECT_NE(FormsHeader.find("struct SNumericFieldState"), std::string::npos);
+	const std::string NumericBody = ExtractSourceFunctionBody(Forms, "bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options)");
+	ASSERT_FALSE(ScrollbarBody.empty());
+	ASSERT_FALSE(NumericBody.empty());
 
+	EXPECT_EQ(ScrollbarBody.find("Ui()->DoScrollbarOption("), std::string::npos);
+	EXPECT_NE(ScrollbarBody.find("ui_widget::NumericField(InputCtx, pState"), std::string::npos);
+	EXPECT_NE(ScrollbarBody.find("Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ?"), std::string::npos);
+	EXPECT_EQ(Menus.find("DoSettingsSliderInputField"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("enum class EInputCommitPolicy"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("struct SNumericFieldOptions"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("struct SNumericFieldState"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("CLineInputNumber m_Input;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;"), std::string::npos);
+	EXPECT_EQ(FormsHeader.find("SSliderInputFieldOptions"), std::string::npos);
+	EXPECT_EQ(FormsHeader.find("bool SliderInputField("), std::string::npos);
 	EXPECT_NE(MenusHeader.find("std::unordered_map<const void *, std::unique_ptr<ui_widget::SNumericFieldState>> m_vpSettingsNumericFieldStates;"), std::string::npos);
+	EXPECT_EQ(MenusHeader.find("DoSettingsSliderInputField"), std::string::npos);
 	EXPECT_EQ(MenusHeader.find("m_vpSettingsSliderInputs"), std::string::npos);
-	EXPECT_NE(SliderBody.find("ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);"), std::string::npos);
-	EXPECT_NE(SliderBody.find("ui_widget::NumericField(InputCtx, pState"), std::string::npos);
-	EXPECT_EQ(SliderBody.find("GetSettingsSliderInput("), std::string::npos);
-	EXPECT_NE(SharedSliderBody.find("const bool SliderWasActive = pState->m_SliderWasActive;"), std::string::npos);
-	EXPECT_NE(SharedSliderBody.find("UpdateNumericFieldSliderCommit(*pState, Options.m_CommitPolicy, SliderActive, SliderReleased, CandidateStored, pValue)"), std::string::npos);
-	EXPECT_NE(SharedSliderBody.find("const int VisibleStoredValue = pState->m_HasPendingValue ? pState->m_PendingStoredValue : *pValue;"), std::string::npos);
+	EXPECT_EQ(ScrollbarBody.find("GetSettingsSliderInput("), std::string::npos);
+	EXPECT_NE(NumericBody.find("const bool SliderWasActive = pState->m_SliderWasActive;"), std::string::npos);
+	EXPECT_NE(NumericBody.find("UpdateNumericFieldSliderCommit(*pState, Options.m_CommitPolicy, SliderActive, SliderReleased, CandidateStored, pValue)"), std::string::npos);
+	EXPECT_NE(NumericBody.find("const int VisibleStoredValue = pState->m_HasPendingValue ? pState->m_PendingStoredValue : *pValue;"), std::string::npos);
 }
+TEST(QmMonitoringHelpers, SettingsNumericFieldsRemoveLegacySliderForwarding)
+{
+	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
+	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string ScrollbarBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
+	ASSERT_FALSE(ScrollbarBody.empty());
+
+	EXPECT_NE(FormsHeader.find("struct SNumericFieldOptions"), std::string::npos);
+	EXPECT_EQ(FormsHeader.find("SSliderInputFieldOptions"), std::string::npos);
+	EXPECT_EQ(FormsHeader.find("bool SliderInputField("), std::string::npos);
+	EXPECT_NE(Forms.find("bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState"), std::string::npos);
+	EXPECT_EQ(Forms.find("bool SliderInputField("), std::string::npos);
+	EXPECT_EQ(MenusHeader.find("DoSettingsSliderInputField"), std::string::npos);
+	EXPECT_EQ(Menus.find("DoSettingsSliderInputField"), std::string::npos);
+	EXPECT_NE(ScrollbarBody.find("ui_widget::NumericField(InputCtx, pState"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 {
 	const std::string Theme = ReadRepoFile("src/game/client/QmUi/UiTheme.h");
@@ -7361,7 +7377,7 @@ TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string ContextBody = ExtractSourceFunctionBody(Menus, "IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)");
-	const std::string SliderBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
+	const std::string SliderBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
 	ASSERT_FALSE(ContextBody.empty());
 	ASSERT_FALSE(SliderBody.empty());
 
@@ -7477,7 +7493,7 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_EQ(ClearableExBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	EXPECT_EQ(SearchBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	EXPECT_EQ(ListItemBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
-	const std::string SliderInputBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
+	const std::string SliderInputBody = ExtractSourceFunctionBody(Forms, "bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options)");
 	ASSERT_FALSE(SliderInputBody.empty());
 	EXPECT_NE(SliderInputBody.find("const bool MultiLine = Options.m_Flags & CUi::SCROLLBAR_OPTION_MULTILINE;"), std::string::npos);
 	EXPECT_NE(SliderInputBody.find("if(MultiLine)"), std::string::npos);

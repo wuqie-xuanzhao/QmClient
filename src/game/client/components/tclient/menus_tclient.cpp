@@ -687,7 +687,7 @@ bool CMenus::DoSliderWithScaledValue(const void *pId, int *pOption, const CUIRec
 {
 	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
 
-	ui_widget::SSliderInputFieldOptions Options;
+	ui_widget::SNumericFieldOptions Options;
 	Options.m_pLabel = pStr;
 	Options.m_pSuffix = pSuffix;
 	Options.m_pScale = pScale;
