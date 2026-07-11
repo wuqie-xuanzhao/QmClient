@@ -31,8 +31,13 @@ namespace qm_module
 	// === CModel 接入（Step 2）：栖梦布局由 qm_card_order::CModel 持有，IsDirty 触发序列化 ===
 	// 栖梦布局的 CModel 单例（B1 Task 5 的布局权威，替代 s_aQmModuleLayout 的序列化职责）。
 	qm_card_order::CModel &QmModuleLayoutModel();
-	// 栖梦 config → CModel：ParseLegacyQmLayout 解析（defaults 基准 + Full 保护 + 容错 + Normalize）
-	// → 转 CModel::SEntry（stableId + tab 从注册表查 + column int + order）→ SetEntries；加载后 ClearDirty。
+	// 调用方拥有的全局模型导入入口：只覆盖 qm:* 或 tclient:* 的 legacy placement，不创建平行 model。
+	bool LoadLegacyQmLayoutIntoModel(qm_card_order::CModel &Model, const char *pConfig);
+	bool LoadLegacyTClientLayoutIntoModel(qm_card_order::CModel &Model, const char *pConfig);
+	bool MoveQmModuleInModel(qm_card_order::CModel &Model, EQmModuleId Id, EQmModuleColumn TargetColumn, int TargetOrder);
+	bool MoveQmModuleToTabInModel(qm_card_order::CModel &Model, EQmModuleId Id, const char *pTargetTab, EQmModuleColumn TargetColumn, int TargetOrder);
+	bool SerializeLegacyQmLayoutFromModel(const qm_card_order::CModel &Model, char *pOut, int OutSize);
+	// 栖梦 config → 过渡 singleton CModel：P6 前旧 renderer 保留该 wrapper。
 	void LoadQmLayoutIntoModel(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults);
 	bool LoadQmLayoutModelFromGlobalOrder(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults);
 	// CModel → SQmModuleEntry[]（按 stableId 反查 EQmModuleId，column int→枚举，key=stableId 去 "qm:" 前缀 = 持久化 key）。
@@ -43,9 +48,8 @@ namespace qm_module
 	// CModel → 全局 config：用当前 Qm 子模型更新 qm:* 条目，同时保留已有 tclient:/deck: 等非 Qm 条目。
 	bool SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize);
 	bool MigrateQmLayoutToGlobalCardOrder(const std::vector<SQmModuleEntry> &vDefaults);
-	// CModel.Move + Full 保护（目标 Full 拒绝——非 Full 卡不可拖成 Full；源 Full 卡的拒拖由调用方 CommitDropPreview 保证）。返回是否移动。
+	// 过渡 singleton wrapper：P6 前旧 renderer 使用；新路径必须传入调用方拥有的 model。
 	bool MoveQmModuleInModel(EQmModuleId Id, EQmModuleColumn TargetColumn, int TargetOrder);
-	// CModel.MoveToTab + Full 保护。组件编辑器跨页移动 Qm 卡时使用，tab 写入全局 placement。
 	bool MoveQmModuleToTabInModel(EQmModuleId Id, const char *pTargetTab, EQmModuleColumn TargetColumn, int TargetOrder);
 	bool IsQmLayoutModelDirty();
 	void ClearQmLayoutModelDirty();

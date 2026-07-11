@@ -271,6 +271,107 @@ namespace qm_module
 		}
 	}
 
+	namespace
+	{
+		std::vector<SQmModuleEntry> BuildLegacyQmDefaultsFromRegistry()
+		{
+			std::vector<SQmModuleEntry> vDefaults;
+			vDefaults.reserve(QmModuleCount);
+			for(size_t Index = 0; Index < QmModuleCount; ++Index)
+			{
+				const EQmModuleId Id = static_cast<EQmModuleId>(Index);
+				const char *pStableId = QmModuleStableId(Id);
+				const qm_card_registry::SCardDefault *pDefault = qm_card_registry::FindByStableId(pStableId);
+				if(pStableId == nullptr || pDefault == nullptr)
+					continue;
+				EQmModuleColumn Column = EQmModuleColumn::Left;
+				if(pDefault->m_DefaultColumn == qm_card_registry::ECardColumn::Full)
+					Column = EQmModuleColumn::Full;
+				else if(pDefault->m_DefaultColumn == qm_card_registry::ECardColumn::Right)
+					Column = EQmModuleColumn::Right;
+				vDefaults.push_back({Id, Column, pDefault->m_DefaultOrder, pStableId + 3});
+			}
+			return vDefaults;
+		}
+
+		bool ApplyLegacyPlacements(qm_card_order::CModel &Model, const std::vector<qm_card_order::SEntry> &vEntries)
+		{
+			bool Applied = false;
+			for(const qm_card_order::SEntry &Entry : vEntries)
+			{
+				if(Entry.m_pStableId == nullptr || Model.FindByStableId(Entry.m_pStableId) < 0)
+					continue;
+				Model.Move(Entry.m_pStableId, Entry.m_Column, Entry.m_OrderInColumn);
+				Applied = true;
+			}
+			return Applied;
+		}
+	}
+
+	bool LoadLegacyQmLayoutIntoModel(qm_card_order::CModel &Model, const char *pConfig)
+	{
+		const std::vector<SQmModuleEntry> vDefaults = BuildLegacyQmDefaultsFromRegistry();
+		std::vector<SQmModuleEntry> vParsed;
+		if(!ParseLegacyQmLayout(pConfig, vDefaults, vParsed))
+			return false;
+
+		std::vector<qm_card_order::SEntry> vEntries;
+		vEntries.reserve(vParsed.size());
+		for(const SQmModuleEntry &Entry : vParsed)
+		{
+			const char *pStableId = QmModuleStableId(Entry.m_Id);
+			if(pStableId == nullptr)
+				continue;
+			vEntries.push_back({pStableId, nullptr, QmModuleColumnToInt(Entry.m_Column), Entry.m_OrderInColumn});
+		}
+		return ApplyLegacyPlacements(Model, vEntries);
+	}
+
+	bool MoveQmModuleInModel(qm_card_order::CModel &Model, EQmModuleId Id, EQmModuleColumn TargetColumn, int TargetOrder)
+	{
+		const char *pStableId = QmModuleStableId(Id);
+		const qm_card_registry::SCardDefault *pDefault = pStableId != nullptr ? qm_card_registry::FindByStableId(pStableId) : nullptr;
+		if(pDefault == nullptr || Model.FindByStableId(pStableId) < 0 || pDefault->m_DefaultColumn == qm_card_registry::ECardColumn::Full || TargetColumn == EQmModuleColumn::Full)
+			return false;
+		Model.Move(pStableId, QmModuleColumnToInt(TargetColumn), TargetOrder);
+		return true;
+	}
+
+	bool MoveQmModuleToTabInModel(qm_card_order::CModel &Model, EQmModuleId Id, const char *pTargetTab, EQmModuleColumn TargetColumn, int TargetOrder)
+	{
+		const char *pStableId = QmModuleStableId(Id);
+		const qm_card_registry::SCardDefault *pDefault = pStableId != nullptr ? qm_card_registry::FindByStableId(pStableId) : nullptr;
+		if(pDefault == nullptr || pTargetTab == nullptr || pTargetTab[0] == '\0' || Model.FindByStableId(pStableId) < 0 || pDefault->m_DefaultColumn == qm_card_registry::ECardColumn::Full || TargetColumn == EQmModuleColumn::Full)
+			return false;
+		Model.MoveToTab(pStableId, pTargetTab, QmModuleColumnToInt(TargetColumn), TargetOrder);
+		return true;
+	}
+
+	bool SerializeLegacyQmLayoutFromModel(const qm_card_order::CModel &Model, char *pOut, int OutSize)
+	{
+		if(pOut == nullptr || OutSize <= 0)
+			return false;
+		pOut[0] = '\0';
+		bool First = true;
+		for(int Index = 0; Index < Model.Count(); ++Index)
+		{
+			const qm_card_order::SEntry &Entry = Model.Entry(Index);
+			EQmModuleId Id;
+			if(!QmModuleIdFromStableId(Entry.m_pStableId, &Id))
+				continue;
+			char aEntry[128];
+			str_format(aEntry, sizeof(aEntry), "%s:%s:%d", Entry.m_pStableId + 3, QmModuleColumnToString(QmModuleColumnFromInt(Entry.m_Column)), Entry.m_OrderInColumn);
+			const int Needed = str_length(pOut) + str_length(aEntry) + (First ? 0 : 1);
+			if(Needed >= OutSize)
+				return false;
+			if(!First)
+				str_append(pOut, ";", OutSize);
+			str_append(pOut, aEntry, OutSize);
+			First = false;
+		}
+		return true;
+	}
+
 	qm_card_order::CModel &QmModuleLayoutModel()
 	{
 		static qm_card_order::CModel s_QmLayoutModel;
@@ -343,8 +444,7 @@ namespace qm_module
 
 	void SerializeQmLayoutFromModel(char *pOut, int OutSize)
 	{
-		std::vector<SQmModuleEntry> vEntries = SyncModelToLegacyLayout();
-		SerializeLegacyQmLayout(vEntries, pOut, OutSize);
+		SerializeLegacyQmLayoutFromModel(QmModuleLayoutModel(), pOut, OutSize);
 	}
 
 	bool ParseLegacyTClientLayoutEntries(const char *pConfig, std::vector<qm_card_order::SEntry> &vOut)
@@ -407,6 +507,12 @@ namespace qm_module
 			vOut.push_back({pDefault->m_pStableId, pDefault->m_pDefaultTab, Column, Order});
 		}
 		return !vOut.empty();
+	}
+
+	bool LoadLegacyTClientLayoutIntoModel(qm_card_order::CModel &Model, const char *pConfig)
+	{
+		std::vector<qm_card_order::SEntry> vEntries;
+		return ParseLegacyTClientLayoutEntries(pConfig, vEntries) && ApplyLegacyPlacements(Model, vEntries);
 	}
 
 	bool SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize)
@@ -508,28 +614,12 @@ namespace qm_module
 
 	bool MoveQmModuleInModel(EQmModuleId Id, EQmModuleColumn TargetColumn, int TargetOrder)
 	{
-		qm_card_order::CModel &Model = QmModuleLayoutModel();
-		const char *pStable = QmModuleStableId(Id);
-		if(pStable == nullptr)
-			return false;
-		// Full 保护：目标 Full 拒绝（非 Full 卡不可拖成 Full）；源 Full 卡的拒拖由调用方 CommitDropPreview 保证
-		if(TargetColumn == EQmModuleColumn::Full)
-			return false;
-		Model.Move(pStable, QmModuleColumnToInt(TargetColumn), TargetOrder);
-		return true;
+		return MoveQmModuleInModel(QmModuleLayoutModel(), Id, TargetColumn, TargetOrder);
 	}
 
 	bool MoveQmModuleToTabInModel(EQmModuleId Id, const char *pTargetTab, EQmModuleColumn TargetColumn, int TargetOrder)
 	{
-		qm_card_order::CModel &Model = QmModuleLayoutModel();
-		const char *pStable = QmModuleStableId(Id);
-		if(pStable == nullptr || pTargetTab == nullptr || pTargetTab[0] == '\0')
-			return false;
-		// Full 保护：目标 Full 拒绝（非 Full 卡不可拖成 Full）；源 Full 卡的拒拖由调用方 CommitDropPreview 保证
-		if(TargetColumn == EQmModuleColumn::Full)
-			return false;
-		Model.MoveToTab(pStable, pTargetTab, QmModuleColumnToInt(TargetColumn), TargetOrder);
-		return true;
+		return MoveQmModuleToTabInModel(QmModuleLayoutModel(), Id, pTargetTab, TargetColumn, TargetOrder);
 	}
 
 	bool IsQmLayoutModelDirty() { return QmModuleLayoutModel().IsDirty(); }

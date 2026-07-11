@@ -6371,6 +6371,44 @@ TEST(QmMonitoringHelpers, QmClientLayoutSyncKeepsDirtyWhenGlobalPersistFails)
 	EXPECT_LT(DirtyClearGuardPos, DirtyClearPos);
 }
 
+TEST(QmMonitoringHelpers, SettingsCardOrderPersistenceCommitsGlobalConfigAtomically)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string LoadBody = ExtractSourceFunctionBody(Menus, "void CMenus::LoadSettingsCardOrderModel()");
+	const std::string SaveBody = ExtractSourceFunctionBody(Menus, "bool CMenus::SaveSettingsCardOrderModel()");
+	ASSERT_FALSE(LoadBody.empty());
+	ASSERT_FALSE(SaveBody.empty());
+
+	const char *pTempBuffer = "char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)]";
+	const char *pSerialize = "m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized))";
+	const char *pCopy = "str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));";
+	const size_t LoadTempPos = LoadBody.find(pTempBuffer);
+	const size_t LoadSerializePos = LoadBody.find(pSerialize);
+	const size_t LoadCopyPos = LoadBody.find(pCopy);
+	const size_t LoadDirtyClearPos = LoadBody.find("m_SettingsCardOrderModel.ClearDirty();");
+	const size_t LoadMigratedPos = LoadBody.find("g_Config.m_QmCardOrderMigrated = 1;");
+	EXPECT_NE(LoadTempPos, std::string::npos);
+	EXPECT_NE(LoadSerializePos, std::string::npos);
+	EXPECT_NE(LoadCopyPos, std::string::npos);
+	EXPECT_NE(LoadDirtyClearPos, std::string::npos);
+	EXPECT_NE(LoadMigratedPos, std::string::npos);
+	EXPECT_LT(LoadTempPos, LoadSerializePos);
+	EXPECT_LT(LoadSerializePos, LoadCopyPos);
+	EXPECT_LT(LoadCopyPos, LoadDirtyClearPos);
+	EXPECT_LT(LoadDirtyClearPos, LoadMigratedPos);
+
+	const size_t SaveTempPos = SaveBody.find(pTempBuffer);
+	const size_t SaveSerializePos = SaveBody.find(pSerialize);
+	const size_t SaveCopyPos = SaveBody.find(pCopy);
+	const size_t SaveDirtyClearPos = SaveBody.find("m_SettingsCardOrderModel.ClearDirty();");
+	EXPECT_NE(SaveTempPos, std::string::npos);
+	EXPECT_NE(SaveSerializePos, std::string::npos);
+	EXPECT_NE(SaveCopyPos, std::string::npos);
+	EXPECT_NE(SaveDirtyClearPos, std::string::npos);
+	EXPECT_LT(SaveTempPos, SaveSerializePos);
+	EXPECT_LT(SaveSerializePos, SaveCopyPos);
+	EXPECT_LT(SaveCopyPos, SaveDirtyClearPos);
+}
 TEST(QmMonitoringHelpers, QmClientDragPersistsGlobalCardOrder)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");

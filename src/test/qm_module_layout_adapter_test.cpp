@@ -95,6 +95,34 @@ static std::vector<SQmModuleEntry> MakeAll37Defaults()
 	};
 }
 
+TEST(QmModuleLayoutAdapter, LegacyMigrationWritesIntoProvidedGlobalModel)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+
+	ASSERT_TRUE(LoadLegacyQmLayoutIntoModel(Model, "chat_bubble:right:0"));
+	const int Index = Model.FindByStableId("qm:chat_bubble");
+	ASSERT_GE(Index, 0);
+	EXPECT_EQ(Model.Entry(Index).m_Column, 2);
+	EXPECT_EQ(Model.Entry(Index).m_OrderInColumn, 0);
+}
+
+TEST(QmModuleLayoutAdapter, ExplicitModelMoveAndSerializeUsesProvidedModel)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+	Model.ClearDirty();
+
+	ASSERT_TRUE(MoveQmModuleInModel(Model, EQmModuleId::ChatBubble, EQmModuleColumn::Right, 0));
+	EXPECT_TRUE(Model.IsDirty());
+	char aLayout[4096];
+	ASSERT_TRUE(SerializeLegacyQmLayoutFromModel(Model, aLayout, sizeof(aLayout)));
+	EXPECT_NE(std::string(aLayout).find("chat_bubble:right:0"), std::string::npos);
+	EXPECT_FALSE(MoveQmModuleInModel(Model, EQmModuleId::ChatBubble, EQmModuleColumn::Full, 0));
+	EXPECT_FALSE(MoveQmModuleInModel(Model, EQmModuleId::Info, EQmModuleColumn::Left, 0));
+	EXPECT_FALSE(MoveQmModuleToTabInModel(Model, EQmModuleId::Info, "search", EQmModuleColumn::Left, 0));
+}
+
 TEST(QmModuleLayoutAdapter, ColumnIntRoundtrip)
 {
 	EXPECT_EQ(QmModuleColumnToInt(EQmModuleColumn::Full), 0);

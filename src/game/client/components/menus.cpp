@@ -32,6 +32,7 @@
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/QmModuleLayoutAdapter.h>
 #include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/SettingsCard.h>
 #include <game/client/QmUi/UiContainers.h>
@@ -548,6 +549,48 @@ SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
 	Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 && g_Config.m_QmExtraAnimations != 0;
 	return Options;
 }
+
+qm_card_order::CModel &CMenus::SettingsCardOrderModel()
+{
+	if(!m_SettingsCardOrderLoaded)
+		LoadSettingsCardOrderModel();
+	return m_SettingsCardOrderModel;
+}
+
+void CMenus::LoadSettingsCardOrderModel()
+{
+	if(m_SettingsCardOrderLoaded)
+		return;
+
+	const std::vector<qm_card_order::SEntry> Defaults = qm_card_registry::BuildDefaultEntries();
+	m_SettingsCardOrderModel.LoadMerged(g_Config.m_QmGlobalCardOrder, Defaults);
+	if(g_Config.m_QmGlobalCardOrder[0] == '\0' && g_Config.m_QmCardOrderMigrated == 0)
+	{
+		qm_module::LoadLegacyQmLayoutIntoModel(m_SettingsCardOrderModel, g_Config.m_QmSidebarCardOrder);
+		qm_module::LoadLegacyTClientLayoutIntoModel(m_SettingsCardOrderModel, g_Config.m_QmSettingsCardOrder);
+		char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+		if(m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+		{
+			str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+			m_SettingsCardOrderModel.ClearDirty();
+			g_Config.m_QmCardOrderMigrated = 1;
+		}
+	}
+	m_SettingsCardOrderLoaded = true;
+}
+
+bool CMenus::SaveSettingsCardOrderModel()
+{
+	if(!m_SettingsCardOrderLoaded || !m_SettingsCardOrderModel.IsDirty())
+		return false;
+	char aSerialized[sizeof(g_Config.m_QmGlobalCardOrder)];
+	if(!m_SettingsCardOrderModel.Serialize(aSerialized, sizeof(aSerialized)))
+		return false;
+	str_copy(g_Config.m_QmGlobalCardOrder, aSerialized, sizeof(g_Config.m_QmGlobalCardOrder));
+	m_SettingsCardOrderModel.ClearDirty();
+	return true;
+}
+
 uint64_t CMenus::UiAnimNodeKey(const char *pScope, const uint64_t Id) const
 {
 	const uint64_t ScopeHash = static_cast<uint64_t>(str_quickhash(pScope));
