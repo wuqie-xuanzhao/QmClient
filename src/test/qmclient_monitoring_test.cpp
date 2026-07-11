@@ -7319,6 +7319,29 @@ TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
 	EXPECT_NE(DeckCardBody.find("if(Deck.m_UseCanonicalCardShell"), std::string::npos);
 	EXPECT_NE(DeckCardBody.find("SettingsCard("), std::string::npos);
 }
+TEST(QmMonitoringHelpers, DelayUpdateStaysOnUnifiedSliderInputPath)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string ScrollbarBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
+	const std::string SliderBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
+	ASSERT_FALSE(ScrollbarBody.empty());
+	ASSERT_FALSE(SliderBody.empty());
+
+	EXPECT_NE(ScrollbarBody.find("DoSettingsSliderInputField(Page, Tab, Subtab"), std::string::npos);
+	EXPECT_EQ(ScrollbarBody.find("Ui()->DoScrollbarOption("), std::string::npos);
+	EXPECT_NE(SliderBody.find("ui_widget::SliderInputField("), std::string::npos);
+	EXPECT_EQ(SliderBody.find("Ui()->DoScrollbarOption("), std::string::npos);
+	EXPECT_NE(SliderBody.find("Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ?"), std::string::npos);
+
+	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
+	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string SharedSliderBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
+	ASSERT_FALSE(SharedSliderBody.empty());
+	EXPECT_NE(FormsHeader.find("enum class EInputCommitPolicy"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;"), std::string::npos);
+	EXPECT_NE(SharedSliderBody.find("const bool SliderReleased = SliderWasActive && !Ctx.m_pUi->CheckActiveItem(pId);"), std::string::npos);
+	EXPECT_NE(SharedSliderBody.find("Options.m_CommitPolicy == EInputCommitPolicy::LIVE || SliderReleased"), std::string::npos);
+}
 TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 {
 	const std::string Theme = ReadRepoFile("src/game/client/QmUi/UiTheme.h");

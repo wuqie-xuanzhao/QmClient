@@ -160,6 +160,12 @@ namespace ui_widget
 	}
 	CUIRect SliderInputFieldLabelRect(const CUIRect &Rect, bool HasLabel, unsigned Flags = 0u);
 
+	enum class EInputCommitPolicy
+	{
+		LIVE,
+		ON_RELEASE_OR_SUBMIT,
+	};
+
 	// 横向滚动条 + 输入框 + 单位组合。支持整数/浮点、线性/对数刻度、
 	// ♾️ 无限符号和最大值文本。
 	struct SSliderInputFieldOptions
@@ -172,6 +178,7 @@ namespace ui_widget
 		float m_FontSize = ui_token::font::BODY;
 		int m_LabelAlign = TEXTALIGN_ML;
 		int m_ValueMultiplier = 1; // 滑动条以 Min/Multiplier..Max/Multiplier 为单位，显示/编辑真实值
+		EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;
 		CUIElement *m_pLabelElement = nullptr;
 	};
 	bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);

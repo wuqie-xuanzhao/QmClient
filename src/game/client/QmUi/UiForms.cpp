@@ -421,9 +421,11 @@ namespace ui_widget
 		int SliderValue = IsInfinite ? SliderMax : StoredValue;
 
 		const float Normalized = std::clamp(pScale->ToRelative(SliderValue, SliderMin, SliderMax), 0.0f, 1.0f);
+		const bool SliderWasActive = Ctx.m_pUi->CheckActiveItem(pId);
 		if(HasSlider && !RenderOnly && !pInput->IsActive())
 		{
 			const float NewNormalized = Ctx.m_pUi->DoScrollbarH(pId, &ScrollBar, Normalized);
+			const bool SliderReleased = SliderWasActive && !Ctx.m_pUi->CheckActiveItem(pId);
 			int NewSliderValue = pScale->ToAbsolute(NewNormalized, SliderMin, SliderMax);
 			if(NewSliderValue != SliderValue)
 			{
@@ -440,8 +442,11 @@ namespace ui_widget
 				}
 				else
 				{
-					*pValue = CandidateStored;
-					Changed = true;
+					if(Options.m_CommitPolicy == EInputCommitPolicy::LIVE || SliderReleased)
+					{
+						*pValue = CandidateStored;
+						Changed = true;
+					}
 					DisplayValue = SliderInputIsInfiniteValue(CandidateStored, Infinite) ? Max : SliderInputDisplayValue(CandidateStored, Multiplier);
 					pInput->SetInteger(DisplayValue);
 					pInput->SelectAll();

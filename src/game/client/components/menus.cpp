@@ -1156,13 +1156,6 @@ bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, c
 
 bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
 {
-	const bool DelayUpdate = Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE;
-	if(DelayUpdate)
-	{
-		// 颜色选择器等延迟更新场景保持旧版滑动条，避免输入框提前绑定
-		return Ui()->DoScrollbarOption(pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
-	}
-
 	// 文本预收集：只收集 label，不在收集时绘制输入框
 	if(pTextId != nullptr)
 	{
@@ -1191,10 +1184,6 @@ CLineInputNumber *CMenus::GetSettingsSliderInput(const void *pId)
 
 bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
 {
-	const bool DelayUpdate = Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE;
-	if(DelayUpdate)
-		return Ui()->DoScrollbarOption(pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
-
 	CLineInputNumber *pInput = GetSettingsSliderInput(pId);
 
 	ui_widget::SSliderInputFieldOptions Options;
@@ -1205,6 +1194,7 @@ bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const cha
 	Options.m_pMaxText = pMaxText;
 	Options.m_FontSize = pRect->h * CUi::ms_FontmodHeight * 0.8f;
 	Options.m_LabelAlign = TEXTALIGN_ML;
+	Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
 	if(pTextId != nullptr && pTextId[0] != '\0')
 	{
 		const CUIRect Label = ui_widget::SliderInputFieldLabelRect(*pRect, pStr != nullptr && pStr[0] != '\0', Flags);

@@ -10,12 +10,6 @@
 
 namespace ui_widget
 {
-	enum class EInputCommitPolicy
-	{
-		LIVE,
-		ON_RELEASE_OR_SUBMIT,
-	};
-
 	struct SNumericValueFormat
 	{
 		int m_DisplayDivisor = 1;
