@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == %s(으)로 내보냄
 
+Extra animations
+== 추가 애니메이션
+
 Extras
 == 기타
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == 무지개
 
+Rainbow card titles
+== 카드 제목 무지개 효과
+
 Rainbow hook
 == 무지개 갈고리
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == 게임 참가 요청 중
+
+Requires extra animations
+== 추가 애니메이션이 필요합니다
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == 이 서버에서 Rescue 가 활성화되어 있지 않으며 /practice 가 켜진 팀에도 속해 있지 않습니다. 연습 모드에서는 순위를 얻을 수 없습니다.
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == UI 컨트롤러 감도
+
+UI motion level
+== UI 애니메이션 강도
 
 UI mouse sens.
 == UI 마우스 감도

@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == Экспортировано в %s
 
+Extra animations
+== Дополнительные анимации
+
 Extras
 == Дополнительно
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == Радуга
 
+Rainbow card titles
+== Радужные заголовки карточек
+
 Rainbow hook
 == Радужный крюк
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == Запрос на присоединение к игре
+
+Requires extra animations
+== Требуются дополнительные анимации
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Rescue не включён на этом сервере, и вы не в команде с включённым /practice. Обратите внимание, что с включённым тренировочным режимом нельзя получить рейтинг.
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == Чувствительность контроллера (интерфейс)
+
+UI motion level
+== Интенсивность анимации интерфейса
 
 UI mouse sens.
 == Чувствительность мыши (интерфейс)

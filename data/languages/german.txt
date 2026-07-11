@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == Exportiert nach %s
 
+Extra animations
+== Zusätzliche Animationen
+
 Extras
 == Pending german translation 28c21f28cb
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == Regenbogen
 
+Rainbow card titles
+== Regenbogen-Kartentitel
+
 Rainbow hook
 == Regenbogen-Haken
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == Fordere Beitritt zum Spiel an
+
+Requires extra animations
+== Erfordert zusätzliche Animationen
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Rescue ist auf diesem Server nicht aktiviert und du bist in keinem Team mit /practice. Beachte, dass du mit aktiviertem Übungsmodus keine Rangliste erhalten kannst.
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == Controller-Empfindlichkeit (UI)
+
+UI motion level
+== UI-Animationsstärke
 
 UI mouse sens.
 == Maus-Empfindlichkeit (UI)

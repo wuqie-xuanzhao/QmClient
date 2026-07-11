@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == %s にエクスポートしました
 
+Extra animations
+== 追加アニメーション
+
 Extras
 == Pending japanese translation 7869a44c88
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == レインボー
 
+Rainbow card titles
+== カードタイトルの虹色
+
 Rainbow hook
 == レインボーフック
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == Pending japanese translation 4f2e82a3b1
+
+Requires extra animations
+== 追加アニメーションが必要です
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Pending japanese translation c9d06fc563
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == Pending japanese translation 3ebab99fa0
+
+UI motion level
+== UIアニメーションの強度
 
 UI mouse sens.
 == Pending japanese translation 634f5c5718

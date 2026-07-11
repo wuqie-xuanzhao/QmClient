@@ -1890,7 +1890,8 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_NE(DeckOrder.find("m_SettingsCardDeckOrders[pDeckId]"), std::string::npos);
 	EXPECT_NE(MenuSource.find("static const char *SettingsCardDeckStableId(std::deque<std::string> &vStableIds"), std::string::npos);
 	EXPECT_NE(BeginCard.find("const char *pGlobalStableId = SettingsCardDeckStableId(Deck.m_vStableIds, pStableId);"), std::string::npos);
-	EXPECT_NE(BeginCard.find("SettingsCardDeckEnsureStableId(*Deck.m_pOrder, pGlobalStableId, pStableId);"), std::string::npos);
+	EXPECT_NE(BeginCard.find("const char *pLegacyStableId = str_startswith(pStableId, \"deck:\") != nullptr ? pStableId + str_length(\"deck:\") : pStableId;"), std::string::npos);
+	EXPECT_NE(BeginCard.find("SettingsCardDeckEnsureStableId(*Deck.m_pOrder, pGlobalStableId, pLegacyStableId);"), std::string::npos);
 	EXPECT_NE(BeginCard.find("SettingsCardDeckOrderIndex(*Deck.m_pOrder, pGlobalStableId, Deck.m_CardCount);"), std::string::npos);
 	EXPECT_NE(BeginCard.find("SettingsCardDeckIsActiveStableId(Deck, StableId)"), std::string::npos);
 	EXPECT_NE(BeginCard.find("if(pGlobalStableId != nullptr && StableId == pGlobalStableId)"), std::string::npos);
@@ -1966,12 +1967,17 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 
 	const std::string RenderSettingsGraphics = FunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsGraphics.empty());
-	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeck(MainView, s_GraphicsSettingsScrollRegion"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"graphics-display\", Localize(\"Graphics display\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"graphics-visual\", Localize(\"Visual\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"graphics-backend\", Localize(\"Graphics backend\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"graphics-modes\", Localize(\"Display modes\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsModesMinCardHeight = maximum(420.0f * UiScale, GraphicsDeck.m_View.h - GraphicsDeck.m_Style.m_Spacing);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const SSettingsPageLayoutFrame GraphicsPage = ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeck(GraphicsPage.m_ScrollViewport, s_GraphicsSettingsScrollRegion"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("GraphicsDeck.m_UseCanonicalCardShell = true;"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmExtraAnimations, \"extra-animations\", Localize(\"Extra animations\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardRainbowTitles, \"rainbow-card-titles\", Localize(\"Rainbow card titles\")"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiMotionLevel, &g_Config.m_QmUiMotionLevel, Button, Localize(\"UI motion level\"), 0, 2"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"deck:graphics-display\", Localize(\"Graphics display\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"deck:graphics-visual\", Localize(\"Visual\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"deck:graphics-backend\", Localize(\"Graphics backend\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("BeginSettingsCardDeckCard(GraphicsDeck, \"deck:graphics-modes\", Localize(\"Display modes\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsModesMinCardHeight = maximum(420.0f * UiScale, GraphicsDeck.m_View.h - GraphicsDeck.m_Spacing);"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_GraphicsDisplayCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - DisplayCard.m_Rect.y, GraphicsDisplayMinCardHeight);"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_GraphicsVisualCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - VisualCard.m_Rect.y, GraphicsVisualMinCardHeight);"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_GraphicsBackendCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - BackendCard.m_Rect.y, GraphicsBackendMinCardHeight);"), std::string::npos);

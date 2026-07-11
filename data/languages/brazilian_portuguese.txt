@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == Exportado para %s
 
+Extra animations
+== Animações extras
+
 Extras
 == Pending brazilian_portuguese translation 55817260f2
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == Arco-íris
 
+Rainbow card titles
+== Títulos de cartões em arco-íris
+
 Rainbow hook
 == Gancho arco-íris
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == Solicitando entrada no jogo
+
+Requires extra animations
+== Requer animações extras
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == O resgate não está ativado neste servidor e você não está em um time com /practice ativado. Note que você não pode ganhar um rank com a prática ativada.
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == Sensibilidade do controle na interface
+
+UI motion level
+== Intensidade das animações da interface
 
 UI mouse sens.
 == Sensibilidade do mouse na interface

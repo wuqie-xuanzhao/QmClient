@@ -3401,6 +3401,21 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	MainView.HSplitTop(2.0f, nullptr, &MainView);
 	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &Button))
+		g_Config.m_QmExtraAnimations ^= 1;
+
+	MainView.HSplitTop(2.0f, nullptr, &MainView);
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardRainbowTitles, "rainbow-card-titles", Localize("Rainbow card titles"), g_Config.m_QmUiCardRainbowTitles, &Button))
+		g_Config.m_QmUiCardRainbowTitles ^= 1;
+	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiCardRainbowTitles, &Button, Localize("Requires extra animations"));
+
+	MainView.HSplitTop(2.0f, nullptr, &MainView);
+	MainView.HSplitTop(20.0f, &Button, &MainView);
+	DoSliderWithValueInput(&g_Config.m_QmUiMotionLevel, &g_Config.m_QmUiMotionLevel, Button, Localize("UI motion level"), 0, 2);
+
+	MainView.HSplitTop(2.0f, nullptr, &MainView);
+	MainView.HSplitTop(20.0f, &Button, &MainView);
 	const int OldQmMapBrowserOpacity = g_Config.m_QmMapBrowserOpacity;
 	DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize("Map browser opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
 	if(OldQmMapBrowserOpacity != g_Config.m_QmMapBrowserOpacity)

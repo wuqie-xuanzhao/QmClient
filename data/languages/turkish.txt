@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == %s konumuna dışa aktarıldı
 
+Extra animations
+== Ek animasyonlar
+
 Extras
 == Ekstralar
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == Gökkuşağı
 
+Rainbow card titles
+== Gökkuşağı kart başlıkları
+
 Rainbow hook
 == Gökkuşağı kancası
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == Oyuna katılma isteği gönderiliyor
+
+Requires extra animations
+== Ek animasyonlar gerekir
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Kurtarma bu sunucuda etkin değil ve /practice açık bir takımda değilsiniz. Antrenman açıkken sıralama kazanamayacağınızı unutmayın.
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == Arayüz kumanda hassasiyeti
+
+UI motion level
+== Arayüz animasyon yoğunluğu
 
 UI mouse sens.
 == Arayüz fare hassasiyeti

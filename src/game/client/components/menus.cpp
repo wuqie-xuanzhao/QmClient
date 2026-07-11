@@ -4750,10 +4750,11 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 {
 	SSettingsCardDeckCard Card;
 	const char *pGlobalStableId = SettingsCardDeckStableId(Deck.m_vStableIds, pStableId);
+	const char *pLegacyStableId = str_startswith(pStableId, "deck:") != nullptr ? pStableId + str_length("deck:") : pStableId;
 	Card.m_pStableId = pGlobalStableId;
 	Card.m_pTitle = pTitle;
 	if(Deck.m_pOrder != nullptr)
-		SettingsCardDeckEnsureStableId(*Deck.m_pOrder, pGlobalStableId, pStableId);
+		SettingsCardDeckEnsureStableId(*Deck.m_pOrder, pGlobalStableId, pLegacyStableId);
 	int OrderIndex = Deck.m_CardCount;
 	if(Deck.m_pOrder != nullptr)
 		OrderIndex = SettingsCardDeckOrderIndex(*Deck.m_pOrder, pGlobalStableId, Deck.m_CardCount);

@@ -24954,3 +24954,67 @@ brazilian_portuguese = "Usar cores de arco-íris nos títulos dos cartões de co
 portuguese = "Usar cores arco-íris nos títulos dos cartões de definições (requer animações extra)"
 turkish = "Ayar kartı başlıklarında gökkuşağı renklerini kullan (ek animasyonlar gerekir)"
 polish = "Używaj tęczowych kolorów w tytułach kart ustawień (wymaga dodatkowych animacji)"
+
+[[message]]
+key = "Extra animations"
+[message.translations]
+simplified_chinese = "额外动画"
+traditional_chinese = "額外動畫"
+japanese = "追加アニメーション"
+korean = "추가 애니메이션"
+russian = "Дополнительные анимации"
+german = "Zusätzliche Animationen"
+spanish = "Animaciones adicionales"
+french = "Animations supplémentaires"
+brazilian_portuguese = "Animações extras"
+portuguese = "Animações adicionais"
+turkish = "Ek animasyonlar"
+polish = "Dodatkowe animacje"
+
+[[message]]
+key = "Rainbow card titles"
+[message.translations]
+simplified_chinese = "卡片标题彩虹流动"
+traditional_chinese = "卡片標題彩虹流動"
+japanese = "カードタイトルの虹色"
+korean = "카드 제목 무지개 효과"
+russian = "Радужные заголовки карточек"
+german = "Regenbogen-Kartentitel"
+spanish = "Títulos de tarjetas arcoíris"
+french = "Titres de carte arc-en-ciel"
+brazilian_portuguese = "Títulos de cartões em arco-íris"
+portuguese = "Títulos de cartões em arco-íris"
+turkish = "Gökkuşağı kart başlıkları"
+polish = "Tęczowe tytuły kart"
+
+[[message]]
+key = "Requires extra animations"
+[message.translations]
+simplified_chinese = "需要启用额外动画"
+traditional_chinese = "需要啟用額外動畫"
+japanese = "追加アニメーションが必要です"
+korean = "추가 애니메이션이 필요합니다"
+russian = "Требуются дополнительные анимации"
+german = "Erfordert zusätzliche Animationen"
+spanish = "Requiere animaciones adicionales"
+french = "Nécessite des animations supplémentaires"
+brazilian_portuguese = "Requer animações extras"
+portuguese = "Requer animações adicionais"
+turkish = "Ek animasyonlar gerekir"
+polish = "Wymaga dodatkowych animacji"
+
+[[message]]
+key = "UI motion level"
+[message.translations]
+simplified_chinese = "界面动效强度"
+traditional_chinese = "介面動效強度"
+japanese = "UIアニメーションの強度"
+korean = "UI 애니메이션 강도"
+russian = "Интенсивность анимации интерфейса"
+german = "UI-Animationsstärke"
+spanish = "Intensidad de animación de la interfaz"
+french = "Intensité des animations de l'interface"
+brazilian_portuguese = "Intensidade das animações da interface"
+portuguese = "Intensidade das animações da interface"
+turkish = "Arayüz animasyon yoğunluğu"
+polish = "Intensywność animacji interfejsu"

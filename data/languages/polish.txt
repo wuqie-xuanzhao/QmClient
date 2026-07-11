@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == Wyeksportowano do %s
 
+Extra animations
+== Dodatkowe animacje
+
 Extras
 == Dodatki
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == Tęcza
 
+Rainbow card titles
+== Tęczowe tytuły kart
+
 Rainbow hook
 == Tęczowy hak
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == Żądanie dołączenia do gry
+
+Requires extra animations
+== Wymaga dodatkowych animacji
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Ratowanie nie jest włączone na tym serwerze i nie jesteś w drużynie z włączonym /practice. Pamiętaj, że nie możesz zdobyć rankingu z włączonym trybem treningowym.
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == Czułość kontrolera (interfejs)
+
+UI motion level
+== Intensywność animacji interfejsu
 
 UI mouse sens.
 == Czułość myszy (interfejs)

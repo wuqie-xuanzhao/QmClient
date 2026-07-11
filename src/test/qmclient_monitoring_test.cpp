@@ -7341,7 +7341,8 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(Forms.find("#include <game/client/ui.h>"), std::string::npos);
 	EXPECT_NE(Navigation.find("#include \"UiMotion.h\""), std::string::npos);
 	EXPECT_NE(TextFieldPlateBody.find("AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);"), std::string::npos);
-	EXPECT_NE(TextFieldPlateBody.find("CUi::ms_LightButtonColorFunction.GetColor(false, Ctx.m_pUi->HotItem() == pInput)"), std::string::npos);
+	EXPECT_NE(TextFieldPlateBody.find("const SUiTheme &Theme = ThemeFor(Ctx);"), std::string::npos);
+	EXPECT_NE(TextFieldPlateBody.find("const ColorRGBA PlateColor = Active ? Theme.m_InputSurfaceFocused : (Hovered ? Theme.m_SurfaceHovered : Theme.m_InputSurface);"), std::string::npos);
 	EXPECT_EQ(TextFieldPlateBody.find("ui_token::color::SURFACE_ELEVATED"), std::string::npos);
 	EXPECT_NE(TextFieldExBody.find("DrawTextFieldPlate(Ctx, pInput, Rect, Options);"), std::string::npos);
 	EXPECT_NE(TextFieldExBody.find("pInput->SetEmptyText(Options.m_pPlaceholder);"), std::string::npos);

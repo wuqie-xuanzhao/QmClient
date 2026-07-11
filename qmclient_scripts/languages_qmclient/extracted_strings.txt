@@ -878,6 +878,7 @@ Export selected file
 Export to clipboard
 Exported %d chat messages
 Exported to %s
+Extra animations
 Extras
 f = Frame rate
 Fade and slide
@@ -1824,6 +1825,7 @@ r = Race time
 Race
 Race Time
 Rainbow
+Rainbow card titles
 Rainbow hook
 Rainbow others
 Rainbow speed
@@ -1956,6 +1958,7 @@ Request a position swap
 Request to swap positions with %s
 Request to swap your tee with another team member
 Requesting to join the game
+Requires extra animations
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 Rescue mode switched to %s
 Rescue to a nearby air tile
@@ -2656,6 +2659,7 @@ UDP seems to be filtered.
 UDP socket not open
 UI color
 UI controller sens.
+UI motion level
 UI mouse sens.
 UI opacity
 UI scale

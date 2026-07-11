@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == 已导出到 %s
 
+Extra animations
+== 额外动画
+
 Extras
 == 其他
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == 彩虹
 
+Rainbow card titles
+== 卡片标题彩虹流动
+
 Rainbow hook
 == 彩虹色钩索
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == 正在请求加入游戏
+
+Requires extra animations
+== 需要启用额外动画
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == 本服未开启 rescue，且你所在队伍也没有开启 /practice。注意：练习模式下无法获得排名
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == 摇杆灵敏度（界面）
+
+UI motion level
+== 界面动效强度
 
 UI mouse sens.
 == 鼠标灵敏度（界面）

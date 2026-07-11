@@ -2638,6 +2638,9 @@ Exported %d chat messages
 Exported to %s
 == Pending traditional_chinese translation 321adc20b7
 
+Extra animations
+== 額外動畫
+
 Extras
 == Pending traditional_chinese translation e67c7211cd
 
@@ -5476,6 +5479,9 @@ Race Time
 Rainbow
 == Pending traditional_chinese translation 081f63fcde
 
+Rainbow card titles
+== 卡片標題彩虹流動
+
 Rainbow hook
 == Pending traditional_chinese translation dd976ef0b9
 
@@ -5871,6 +5877,9 @@ Request to swap your tee with another team member
 
 Requesting to join the game
 == Pending traditional_chinese translation 661d7eedde
+
+Requires extra animations
+== 需要啟用額外動畫
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == Pending traditional_chinese translation e4d9a35fe3
@@ -7971,6 +7980,9 @@ UI color
 
 UI controller sens.
 == Pending traditional_chinese translation 8a9b72b206
+
+UI motion level
+== 介面動效強度
 
 UI mouse sens.
 == Pending traditional_chinese translation cfe65a55f6
