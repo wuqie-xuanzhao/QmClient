@@ -1,10 +1,26 @@
 #include <game/client/components/tclient/map_history.h>
+#include <game/client/components/qmclient/map_history_ui.h>
 
 #include <gtest/gtest.h>
 
 #include <limits>
 
 using namespace QmMapHistory;
+
+TEST(MapHistoryUi, ResponsiveGridUsesOneTwoOrThreeColumns)
+{
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(507.0f), 1);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(508.0f), 2);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(765.0f), 2);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(766.0f), 3);
+	EXPECT_EQ(QmMapHistoryUi::GridColumns(2000.0f), 3);
+}
+
+TEST(MapHistoryUi, NarrowControlsStackBeforeCardGridBecomesCramped)
+{
+	EXPECT_TRUE(QmMapHistoryUi::StackControls(599.0f));
+	EXPECT_FALSE(QmMapHistoryUi::StackControls(600.0f));
+}
 
 TEST(MapHistory, RepeatedVisitsAggregateByStableMapId)
 {

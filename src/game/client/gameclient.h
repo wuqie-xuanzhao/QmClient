@@ -72,6 +72,7 @@
 #include "components/qmclient/axiom_auto_login.h"
 #include "components/qmclient/collision_hitbox.h"
 #include "components/qmclient/data_version.h"
+#include "components/qmclient/hammer_hit_detection.h"
 #include "components/qmclient/hud_notifications/hud_notifications.h"
 #include "components/qmclient/input_overlay.h"
 #include "components/qmclient/monitoring/monitoring.h"
@@ -353,8 +354,19 @@ private:
 	CQmIconManager m_QmIconManager;
 	CQmImeManager m_QmImeManager;
 	CRaceHelper m_RaceHelper;
+	CQmHammerHitTracker m_HammerHitTracker;
+	struct SPendingHammerHitEvent
+	{
+		vec2 m_Pos;
+		int m_SnapshotTick;
+		int m_Connection;
+		int m_EventOrdinal;
+		bool m_RenderEffect;
+	};
+	std::vector<SPendingHammerHitEvent> m_vPendingHammerHitEvents;
 
 	void ProcessEvents();
+	void FinalizeHammerHitEvents();
 	void UpdatePositions();
 	void RecordDemoHudState(bool Force);
 	void RecordDemoInputState(bool Force);
@@ -364,8 +376,9 @@ private:
 
 	int m_EditorMovementDelay = 5;
 	void UpdateEditorIngameMoved();
-	void HandleHammerSkinSwap(CCharacter *pChar);
-	void HandleRandomEmoteOnHit(CCharacter *pLocalChar, int DummyIndex);
+	void HandleHammerSkinSwap(const SQmHammerHitRecord &Hit);
+	void HandleRandomGrenadeEmoteOnHit(CCharacter *pLocalChar, int DummyIndex);
+	void HandleConfirmedHammerHit(const SQmHammerHitRecord &Hit);
 	bool LivePresentationUsesLiveObserverOverlay() const;
 	bool LivePresentationUsesQmLiveDemo() const;
 	bool LivePresentationUsesOnlineDirector() const;
@@ -425,8 +438,8 @@ private:
 	int m_PredictedTick;
 	int m_aLastNewPredictedTick[NUM_DUMMIES];
 	int m_aLastPredictedAirJumpTick[NUM_DUMMIES];
-	int m_aLastHammerSkinSwapAttackTick[NUM_DUMMIES];
-	int m_aaLastRandomEmoteAttackTick[NUM_DUMMIES][MAX_CLIENTS];
+	int m_aLastHammerSkinSwapHitTick[NUM_DUMMIES];
+	int m_aLastRandomEmoteHammerHitTick[NUM_DUMMIES];
 	int m_aLastRandomEmoteDamageTick[NUM_DUMMIES];
 
 	int m_LastRoundStartTick;
@@ -552,7 +565,7 @@ public:
 	bool m_RenderingDummyMiniMap = false;
 	bool m_NewTick;
 	bool m_NewPredictedTick;
-	bool m_aPredictedHammerHitEvent[NUM_DUMMIES];
+	bool m_aConfirmedHammerHitEvent[NUM_DUMMIES];
 	int m_aFlagDropTick[2];
 
 	enum
@@ -1010,8 +1023,10 @@ public:
 	bool IsRenderingDummyMiniMap() const { return m_RenderingDummyMiniMap; }
 	void SetRenderingDummyMiniMap(bool Rendering) { m_RenderingDummyMiniMap = Rendering; }
 	const CTuningParams *GetTuning(int i) const { return &m_aTuningList[i]; }
-	bool GetPredictedHammerHitbox(CCharacter *pChar, vec2 &HitPos, float &HitRadius);
-	int FindPredictedHammerHitTargets(CCharacter *pChar, vec2 HitPos, float HitRadius, int *pTargetIds, int MaxTargetIds);
+	bool GetPotentialHammerHitArea(CCharacter *pChar, vec2 &HitPos, float &HitRadius);
+	int FindPotentialHammerHitTargets(CCharacter *pChar, vec2 HitPos, float HitRadius, int *pTargetIds, int MaxTargetIds);
+	int HammerHitConnectionFilter() const;
+	const CQmHammerHitTracker &HammerHitTracker() const { return m_HammerHitTracker; }
 	ColorRGBA GetDDTeamColor(int DDTeam, float Lightness = 0.5f) const;
 	void FormatClientId(int ClientId, char (&aClientId)[16], EClientIdFormat Format) const;
 	bool IsLocalClientId(int ClientId) const;

@@ -6,7 +6,9 @@
 #include <base/system.h>
 
 #include <engine/graphics.h>
+#include <game/client/ui_rect.h>
 
+#include <algorithm>
 #include <cstdint>
 
 struct SHudMediaIslandTrackInput
@@ -60,6 +62,21 @@ enum class EHudMediaIslandTrackUpdate
 	FIRST_IDENTITY,
 	TRACK_CHANGED,
 };
+
+inline float QmHudTopEffectY(float DefaultY, float EffectHeight, float EffectLeft, float EffectRight, const CUIRect &IslandRect, bool IslandRectValid, float Gap = 3.0f)
+{
+	if(!IslandRectValid)
+		return DefaultY;
+
+	const float IslandRight = IslandRect.x + IslandRect.w;
+	const float IslandBottom = IslandRect.y + IslandRect.h;
+	const bool HorizontallyOverlaps = EffectRight > IslandRect.x && EffectLeft < IslandRight;
+	const bool VerticallyOverlaps = DefaultY + EffectHeight > IslandRect.y && DefaultY < IslandBottom;
+	if(!HorizontallyOverlaps || !VerticallyOverlaps)
+		return DefaultY;
+
+	return std::max(DefaultY, IslandBottom + Gap);
+}
 
 inline bool QmHudMediaIslandTrackChanged(const SHudMediaIslandTrackSnapshot &Current, const SHudMediaIslandTrackInput &Next)
 {

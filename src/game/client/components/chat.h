@@ -56,12 +56,13 @@ public:
 		float m_RenderAlpha = 0.0f;
 		float m_RenderScale = 1.0f;
 		bool m_RenderYInitialized = false;
+		bool m_AnimationsSuppressed = false;
 		EPresentationState m_State = EPresentationState::COLLAPSED;
 	};
 
 	static void ResetPresentationState(SPresentationState &Presentation);
 	static void BeginLinePresentation(SPresentationState &Presentation, int64_t Now, bool GentleRefresh);
-	static void UpdateLinePresentation(SPresentationState &Presentation, int64_t LineTime, int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ForceVisible, int64_t LargeAreaOpenTick, float RecallDelaySeconds);
+	static void UpdateLinePresentation(SPresentationState &Presentation, int64_t LineTime, int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ForceVisible, int64_t LargeAreaOpenTick, float RecallDelaySeconds, bool ExtraAnimations = true);
 	static float SmoothPresentationY(float CurrentY, float TargetY, float DeltaSeconds);
 
 private:
@@ -250,7 +251,7 @@ private:
 	void SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation);
 	int CountInitializedLines() const;
 	int CountVisibleLinesFrom(int BacklogLine) const;
-	void UpdatePresentationStates(int64_t Now, float DeltaSeconds, bool ShowLargeArea);
+	void UpdatePresentationStates(int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ExtraAnimations);
 
 	friend class CBindChat;
 	friend class CTranslate;
@@ -615,6 +616,7 @@ inline void CChat::ResetPresentationState(SPresentationState &Presentation)
 	Presentation.m_RenderAlpha = 0.0f;
 	Presentation.m_RenderScale = 1.0f;
 	Presentation.m_RenderYInitialized = false;
+	Presentation.m_AnimationsSuppressed = false;
 	Presentation.m_State = EPresentationState::COLLAPSED;
 }
 
@@ -625,6 +627,7 @@ inline void CChat::BeginLinePresentation(SPresentationState &Presentation, int64
 	Presentation.m_LayoutVisibility = 1.0f;
 	Presentation.m_RenderOffsetY = 0.0f;
 	Presentation.m_RenderYInitialized = false;
+	Presentation.m_AnimationsSuppressed = false;
 	Presentation.m_State = EPresentationState::ENTERING;
 	Presentation.m_EntryProgress = StartProgress;
 	const float EntryEase = ChatPresentationEaseOut(Presentation.m_EntryProgress);
@@ -641,7 +644,8 @@ inline void CChat::UpdateLinePresentation(
 	bool ShowLargeArea,
 	bool ForceVisible,
 	int64_t LargeAreaOpenTick,
-	float RecallDelaySeconds)
+	float RecallDelaySeconds,
+	bool ExtraAnimations)
 {
 	DeltaSeconds = std::clamp(DeltaSeconds, 0.0f, CHAT_PRESENTATION_MAX_DELTA_SECONDS);
 	(void)DeltaSeconds;
@@ -649,6 +653,33 @@ inline void CChat::UpdateLinePresentation(
 	// 系统时间回拨时，避免动画年龄变成异常值。
 	if(Now < Presentation.m_PresentationBirthTick || Now < LineTime)
 		Presentation.m_PresentationBirthTick = Now;
+
+	const float LineAge = ChatPresentationTicksToSeconds(Now - LineTime);
+	const bool VisibleWithoutAnimations = ForceVisible || ShowLargeArea || LineAge <= CHAT_MESSAGE_VISIBLE_DURATION;
+	const auto ApplySettledState = [&] {
+		Presentation.m_EntryProgress = 1.0f;
+		Presentation.m_LayoutVisibility = VisibleWithoutAnimations ? 1.0f : 0.0f;
+		Presentation.m_RenderOffsetX = 0.0f;
+		Presentation.m_RenderOffsetY = 0.0f;
+		Presentation.m_RenderAlpha = VisibleWithoutAnimations ? 1.0f : 0.0f;
+		Presentation.m_RenderScale = 1.0f;
+		Presentation.m_State = VisibleWithoutAnimations ? EPresentationState::VISIBLE : EPresentationState::COLLAPSED;
+	};
+	if(!ExtraAnimations)
+	{
+		Presentation.m_AnimationsSuppressed = true;
+		ApplySettledState();
+		return;
+	}
+	if(Presentation.m_AnimationsSuppressed)
+	{
+		Presentation.m_PresentationBirthTick = Now - (int64_t)(CHAT_ENTRY_DURATION * time_freq());
+		const bool HistoricalRecallPending = ShowLargeArea && !ForceVisible && LargeAreaOpenTick > 0 && LineTime < LargeAreaOpenTick;
+		ApplySettledState();
+		if((VisibleWithoutAnimations && !HistoricalRecallPending) || (!VisibleWithoutAnimations && LineAge >= CHAT_MESSAGE_VISIBLE_DURATION + CHAT_EXIT_DURATION))
+			Presentation.m_AnimationsSuppressed = false;
+		return;
+	}
 
 	const float EntryAge = ChatPresentationTicksToSeconds(Now - Presentation.m_PresentationBirthTick);
 	Presentation.m_EntryProgress = ChatPresentationClamp(EntryAge / CHAT_ENTRY_DURATION);
@@ -711,7 +742,6 @@ inline void CChat::UpdateLinePresentation(
 	// 0~14 秒：完全显示。
 	// 14 秒后：整条消息横向滑出。
 	// 滑出后：折叠，不再参与正常 HUD 绘制。
-	const float LineAge = ChatPresentationTicksToSeconds(Now - LineTime);
 	const float FadeProgress = ChatPresentationClamp(
 		(LineAge - CHAT_MESSAGE_VISIBLE_DURATION) / CHAT_EXIT_DURATION);
 

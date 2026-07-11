@@ -36,6 +36,7 @@ public:
 		int64_t m_PositionMs = 0;
 		int64_t m_DurationMs = 0;
 		int64_t m_PositionUpdatedTick = 0;
+		uint64_t m_TimelineGeneration = 0;
 		double m_PlaybackRate = 1.0;
 		IGraphics::CTextureHandle m_AlbumArt;
 		int m_AlbumArtWidth = 0;

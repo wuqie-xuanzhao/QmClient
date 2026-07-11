@@ -1,5 +1,7 @@
 #include "system_media_controls.h"
 
+#include "system_media_controls_timeline.h"
+
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 #include <base/str.h>
 #include <base/system.h>
@@ -50,6 +52,7 @@ struct SPlainState
 	int64_t m_PositionMs = 0;
 	int64_t m_DurationMs = 0;
 	int64_t m_PositionUpdatedTick = 0;
+	uint64_t m_TimelineGeneration = 0;
 	double m_PlaybackRate = 1.0;
 };
 
@@ -439,6 +442,7 @@ void CSystemMediaControls::ThreadMain()
 		SPlainState State{};
 		bool HasMedia = false;
 		std::string AlbumArtKey;
+		SystemMediaControls::CTimelineGenerationTracker TimelineGenerationTracker;
 		auto LastPropsUpdate = std::chrono::steady_clock::now() - std::chrono::seconds(2);
 
 		while(!m_StopThread)
@@ -511,9 +515,7 @@ void CSystemMediaControls::ThreadMain()
 				State.m_CanNext = Controls.IsNextEnabled();
 				State.m_Playing = PlaybackInfo.PlaybackStatus() == GlobalSystemMediaTransportControlsSessionPlaybackStatus::Playing;
 				const auto PlaybackRate = PlaybackInfo.PlaybackRate();
-				State.m_PlaybackRate = PlaybackRate ? PlaybackRate.Value() : 1.0;
-				if(State.m_PlaybackRate <= 0.0)
-					State.m_PlaybackRate = 1.0;
+				State.m_PlaybackRate = PlaybackRate ? std::max(0.0, PlaybackRate.Value()) : 1.0;
 				const std::string SourceAppId = winrt::to_string(Session.SourceAppUserModelId());
 				str_copy(State.m_aSourceAppId, SourceAppId.c_str(), sizeof(State.m_aSourceAppId));
 
@@ -525,21 +527,22 @@ void CSystemMediaControls::ThreadMain()
 					std::this_thread::sleep_for(std::chrono::milliseconds(200));
 					continue;
 				}
-				const int64_t TimelineReadTick = time_get();
-				int64_t PositionUpdatedTick = TimelineReadTick;
-				const auto TimelineLastUpdated = Timeline.LastUpdatedTime();
-				const auto TimelineAge = winrt::clock::now() - TimelineLastUpdated;
-				const int64_t TimelineAgeMs = std::chrono::duration_cast<std::chrono::milliseconds>(TimelineAge).count();
-				if(TimelineAgeMs >= 0 && TimelineAgeMs <= 24 * 60 * 60 * 1000)
-					PositionUpdatedTick = TimelineReadTick - TimelineAgeMs * time_freq() / 1000;
-				const int64_t Start100ns = Timeline.StartTime().count();
-				const int64_t End100ns = Timeline.EndTime().count();
-				const int64_t Position100ns = Timeline.Position().count();
-				const int64_t Duration100ns = End100ns - Start100ns;
-				const int64_t PositionRel100ns = Position100ns - Start100ns;
-				State.m_DurationMs = Duration100ns > 0 ? Duration100ns / 10000 : 0;
-				State.m_PositionMs = PositionRel100ns > 0 ? PositionRel100ns / 10000 : 0;
-				State.m_PositionUpdatedTick = PositionUpdatedTick;
+				const int64_t TimelineReadTick = time_get_impl();
+				const auto TimelineObservedUtc = winrt::clock::now();
+				SystemMediaControls::STimelineProperties TimelineProperties;
+				TimelineProperties.m_Start100ns = Timeline.StartTime().count();
+				TimelineProperties.m_End100ns = Timeline.EndTime().count();
+				TimelineProperties.m_Position100ns = Timeline.Position().count();
+				TimelineProperties.m_LastUpdatedUtc100ns = Timeline.LastUpdatedTime().time_since_epoch().count();
+				const SystemMediaControls::STimelineSnapshot TimelineSnapshot = SystemMediaControls::NormalizeTimelineProperties(
+					TimelineProperties,
+					TimelineObservedUtc.time_since_epoch().count(),
+					TimelineReadTick,
+					time_freq());
+				State.m_PositionMs = TimelineSnapshot.m_PositionMs;
+				State.m_DurationMs = TimelineSnapshot.m_DurationMs;
+				State.m_PositionUpdatedTick = TimelineSnapshot.m_PositionUpdatedTick;
+				State.m_TimelineGeneration = TimelineGenerationTracker.Update(TimelineProperties);
 				HasMedia = true;
 
 				const auto Now = std::chrono::steady_clock::now();
@@ -769,6 +772,7 @@ void CSystemMediaControls::OnUpdate()
 		m_pWinrt->m_State.m_PositionMs = SharedState.m_PositionMs;
 		m_pWinrt->m_State.m_DurationMs = SharedState.m_DurationMs;
 		m_pWinrt->m_State.m_PositionUpdatedTick = SharedState.m_PositionUpdatedTick;
+		m_pWinrt->m_State.m_TimelineGeneration = SharedState.m_TimelineGeneration;
 		m_pWinrt->m_State.m_PlaybackRate = SharedState.m_PlaybackRate;
 	}
 

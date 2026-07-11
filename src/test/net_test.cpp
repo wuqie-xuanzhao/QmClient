@@ -1,10 +1,14 @@
 #include <base/system.h>
 
+#include <engine/shared/config.h>
 #include <engine/shared/network.h>
 
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <string>
+#include <thread>
+#include <vector>
 
 using namespace std::chrono_literals;
 

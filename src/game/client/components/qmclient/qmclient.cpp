@@ -29,7 +29,6 @@
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/gameclient.h>
-#include <game/client/prediction/entities/character.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
 #include <game/layers.h>
@@ -126,7 +125,6 @@ static constexpr const char *QMCLIENT_FREEZE_WAKEUP_TEXT = "快醒醒!";
 	}
 	return false;
 }
-static constexpr float QMCLIENT_FREEZE_WAKEUP_POPUP_DURATION = 2.0f;
 [[maybe_unused]] static constexpr float QMCLIENT_TEXT_POPUP_FONT_SIZE = 30.0f;
 [[maybe_unused]] static constexpr vec2 QMCLIENT_FREEZE_WAKEUP_POPUP_OFFSET = vec2(34.0f, -78.0f);
 [[maybe_unused]] static constexpr vec2 QMCLIENT_FREEZE_WAKEUP_POPUP_DRIFT = vec2(18.0f, -16.0f);
@@ -394,47 +392,6 @@ namespace
 		}
 	};
 
-	enum class EFreezeWakeupType
-	{
-		NONE,
-		LOCAL_HAMMER,
-		EXTERNAL_HAMMER,
-	};
-
-	[[maybe_unused]] float TextPopupDuration(int TextType)
-	{
-		(void)TextType;
-		return QMCLIENT_FREEZE_WAKEUP_POPUP_DURATION;
-	}
-
-	[[maybe_unused]] EFreezeWakeupType DetectFreezeWakeupType(CGameClient *pGameClient, int ClientId)
-	{
-		const CCharacter *pPredictedChar = pGameClient->m_PredictedWorld.GetCharacterById(ClientId);
-		if(pPredictedChar == nullptr)
-			return EFreezeWakeupType::NONE;
-
-		const int LastDamageTick = pPredictedChar->GetLastDamageTick();
-		const int DamageTickDelta = pGameClient->m_PredictedWorld.GameTick() - LastDamageTick;
-		const int DamageTickWindow = maximum(2, pGameClient->m_PredictedWorld.GameTickSpeed() / 6);
-		const int DamageFrom = pPredictedChar->GetLastDamageFrom();
-		if(LastDamageTick <= 0 ||
-			DamageTickDelta < 0 ||
-			DamageTickDelta > DamageTickWindow ||
-			pPredictedChar->GetLastDamageWeapon() != WEAPON_HAMMER ||
-			DamageFrom < 0)
-		{
-			return EFreezeWakeupType::NONE;
-		}
-
-		if(DamageFrom == ClientId ||
-			DamageFrom == pGameClient->m_aLocalIds[0] ||
-			DamageFrom == pGameClient->m_aLocalIds[1])
-		{
-			return EFreezeWakeupType::LOCAL_HAMMER;
-		}
-
-		return EFreezeWakeupType::EXTERNAL_HAMMER;
-	}
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)

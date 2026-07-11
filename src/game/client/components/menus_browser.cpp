@@ -20,6 +20,7 @@
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
+#include <game/client/components/qmclient/map_history_ui.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
@@ -3468,63 +3469,6 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 {
 	View.Margin(10.0f, &View);
 
-	static bool s_FavoriteMapsExpanded = true;
-	static bool s_MapHistoryExpanded = true;
-	static bool s_LocalSavesExpanded = true;
-	static CButtonContainer s_FavoriteMapsHeaderButton;
-	static CButtonContainer s_MapHistoryHeaderButton;
-	static CButtonContainer s_LocalSavesHeaderButton;
-	constexpr float PanelSpacing = 10.0f;
-	constexpr float CollapsedPanelHeight = 58.0f;
-
-	CUIRect FavoritePanel, HistoryPanel, SavesPanel;
-	const int ExpandedPanelCount = (s_FavoriteMapsExpanded ? 1 : 0) + (s_MapHistoryExpanded ? 1 : 0) + (s_LocalSavesExpanded ? 1 : 0);
-	const float CollapsedHeight = (3 - ExpandedPanelCount) * CollapsedPanelHeight;
-	const float AvailableExpandedHeight = maximum(CollapsedPanelHeight, View.h - 2.0f * PanelSpacing - CollapsedHeight);
-	const float ExpandedPanelHeight = ExpandedPanelCount > 0 ? AvailableExpandedHeight / (float)ExpandedPanelCount : CollapsedPanelHeight;
-	auto SplitHistoryPanel = [&](bool Expanded, CUIRect *pPanel) {
-		const float Height = Expanded ? ExpandedPanelHeight : CollapsedPanelHeight;
-		View.HSplitTop(Height, pPanel, &View);
-		View.HSplitTop(PanelSpacing, nullptr, &View);
-	};
-	SplitHistoryPanel(s_FavoriteMapsExpanded, &FavoritePanel);
-	SplitHistoryPanel(s_MapHistoryExpanded, &HistoryPanel);
-	SplitHistoryPanel(s_LocalSavesExpanded, &SavesPanel);
-
-	auto RenderPanelHeader = [this](CUIRect &Panel, const char *pTitle, const char *pSubTitle, bool &Expanded, CButtonContainer &HeaderButton) {
-		Panel.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.22f)), IGraphics::CORNER_ALL, 8.0f);
-		Panel.Margin(10.0f, &Panel);
-
-		CUIRect Header;
-		Panel.HSplitTop(38.0f, &Header, &Panel);
-		if(Ui()->MouseHovered(&Header))
-			Header.Draw(BrowserOpacityColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f)), IGraphics::CORNER_ALL, 5.0f);
-		if(Ui()->DoButtonLogic(&HeaderButton, Expanded ? 1 : 0, &Header, BUTTONFLAG_LEFT))
-			Expanded = !Expanded;
-
-		CUIRect Title;
-		Header.HSplitTop(22.0f, &Title, &Header);
-		Title.VMargin(4.0f, &Title);
-		char aTitle[128];
-		str_format(aTitle, sizeof(aTitle), "%s %s", Expanded ? "▾" : "▸", pTitle);
-		Ui()->DoLabel(&Title, aTitle, 16.0f, TEXTALIGN_ML);
-
-		if(pSubTitle && pSubTitle[0] != '\0')
-		{
-			CUIRect SubTitle = Header;
-			SubTitle.VMargin(4.0f, &SubTitle);
-			Ui()->DoLabel(&SubTitle, pSubTitle, 10.0f, TEXTALIGN_ML);
-		}
-		Panel.HSplitTop(6.0f, nullptr, &Panel);
-	};
-
-	char aSavesPath[IO_MAX_PATH_LENGTH];
-	Storage()->GetCompletePath(IStorage::TYPE_SAVE, SAVES_FILE, aSavesPath, sizeof(aSavesPath));
-
-	RenderPanelHeader(FavoritePanel, Localize("Favorite map"), Localize("Your favorite maps appear here"), s_FavoriteMapsExpanded, s_FavoriteMapsHeaderButton);
-	RenderPanelHeader(HistoryPanel, Localize("Map play history"), Localize("Unfinished maps are shown first"), s_MapHistoryExpanded, s_MapHistoryHeaderButton);
-	RenderPanelHeader(SavesPanel, Localize("Local saves"), aSavesPath, s_LocalSavesExpanded, s_LocalSavesHeaderButton);
-
 	static std::vector<SLocalSaveDisplayEntry> s_vSaveEntries;
 	static int64_t s_LastSaveReloadTick = 0;
 	static bool s_SaveFileExists = false;
@@ -3534,6 +3478,62 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		s_vSaveEntries = LoadLocalSaveDisplayEntries(Storage(), s_SaveFileExists);
 		s_LastSaveReloadTick = Now;
 	}
+
+	char aSavesPath[IO_MAX_PATH_LENGTH];
+	Storage()->GetCompletePath(IStorage::TYPE_SAVE, SAVES_FILE, aSavesPath, sizeof(aSavesPath));
+	const std::set<std::string> &FavoriteMaps = GameClient()->m_TClient.GetFavoriteMaps();
+	const std::vector<QmMapHistory::SMapHistoryRecord> &HistoryEntries = GameClient()->m_TClient.GetMapHistory().Entries();
+
+	static int s_FavoriteMapsWorkspaceTab = 0;
+	static CButtonContainer s_aFavoriteMapsWorkspaceTabButtons[3];
+	char aaWorkspaceTabLabels[3][128];
+	str_format(aaWorkspaceTabLabels[0], sizeof(aaWorkspaceTabLabels[0]), "%s (%d)", Localize("Favorite map"), (int)FavoriteMaps.size());
+	str_format(aaWorkspaceTabLabels[1], sizeof(aaWorkspaceTabLabels[1]), "%s (%d)", Localize("Map play history"), (int)HistoryEntries.size());
+	str_format(aaWorkspaceTabLabels[2], sizeof(aaWorkspaceTabLabels[2]), "%s (%d)", Localize("Local saves"), (int)s_vSaveEntries.size());
+
+	CUIRect WorkspaceTabs;
+	View.HSplitTop(32.0f, &WorkspaceTabs, &View);
+	const ColorRGBA TabActiveColor = BrowserPanelElevatedColor(0.98f);
+	const ColorRGBA TabInactiveColor = BrowserPanelColor(0.68f);
+	const ColorRGBA TabHoverColor = BrowserPanelElevatedColor(0.84f);
+	for(int TabIndex = 0; TabIndex < 3; ++TabIndex)
+	{
+		CUIRect TabButton;
+		WorkspaceTabs.VSplitLeft(WorkspaceTabs.w / (float)(3 - TabIndex), &TabButton, &WorkspaceTabs);
+		const int Corners = TabIndex == 0 ? IGraphics::CORNER_L : (TabIndex == 2 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
+		if(DoButton_MenuTab(&s_aFavoriteMapsWorkspaceTabButtons[TabIndex], aaWorkspaceTabLabels[TabIndex], s_FavoriteMapsWorkspaceTab == TabIndex, &TabButton, Corners, nullptr, &TabInactiveColor, &TabActiveColor, &TabHoverColor, 6.0f))
+			s_FavoriteMapsWorkspaceTab = TabIndex;
+	}
+	View.HSplitTop(8.0f, nullptr, &View);
+
+	View.Draw(BrowserPanelColor(0.82f), IGraphics::CORNER_ALL, 8.0f);
+	View.Margin(10.0f, &View);
+	const char *apWorkspaceTitles[] = {
+		Localize("Favorite map"),
+		Localize("Map play history"),
+		Localize("Local saves"),
+	};
+	const char *apWorkspaceSubTitles[] = {
+		Localize("Your favorite maps appear here"),
+		Localize("Unfinished maps are shown first"),
+		aSavesPath,
+	};
+	CUIRect WorkspaceHeader, WorkspaceTitle, WorkspaceSubTitle;
+	View.HSplitTop(38.0f, &WorkspaceHeader, &View);
+	WorkspaceHeader.HSplitTop(22.0f, &WorkspaceTitle, &WorkspaceSubTitle);
+	WorkspaceTitle.VMargin(4.0f, &WorkspaceTitle);
+	WorkspaceSubTitle.VMargin(4.0f, &WorkspaceSubTitle);
+	Ui()->DoLabel(&WorkspaceTitle, apWorkspaceTitles[s_FavoriteMapsWorkspaceTab], 16.0f, TEXTALIGN_ML);
+	Ui()->DoLabel(&WorkspaceSubTitle, apWorkspaceSubTitles[s_FavoriteMapsWorkspaceTab], 10.0f, TEXTALIGN_ML);
+	View.HSplitTop(8.0f, nullptr, &View);
+
+	CUIRect FavoritePanel, HistoryPanel, SavesPanel;
+	if(s_FavoriteMapsWorkspaceTab == 0)
+		FavoritePanel = View;
+	else if(s_FavoriteMapsWorkspaceTab == 1)
+		HistoryPanel = View;
+	else
+		SavesPanel = View;
 
 	static std::unordered_map<std::string, std::string> s_MapCategories;
 	static int s_MapCategoryScanIndex = 0;
@@ -3548,7 +3548,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		s_NextFullScan = 0.0f;
 	}
 	const float LocalNow = Client()->LocalTime();
-	if(NumServers > 0 && (LocalNow >= s_NextFullScan || s_MapCategoryScanIndex > 0))
+	if(s_FavoriteMapsWorkspaceTab == 0 && NumServers > 0 && (LocalNow >= s_NextFullScan || s_MapCategoryScanIndex > 0))
 	{
 		if(s_MapCategoryScanIndex == 0)
 		{
@@ -3634,9 +3634,8 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		Row.VSplitRight(SavedWidth, pNote, pSaved);
 	};
 
-	if(s_FavoriteMapsExpanded)
+	if(s_FavoriteMapsWorkspaceTab == 0)
 	{
-		const std::set<std::string> &FavoriteMaps = GameClient()->m_TClient.GetFavoriteMaps();
 		if(FavoriteMaps.empty())
 		{
 			Ui()->DoLabel(&FavoritePanel, Localize("No favorite maps yet"), 13.0f, TEXTALIGN_MC);
@@ -3691,9 +3690,10 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			}
 			s_FavoriteMapsListBox.DoEnd();
 		}
+		return;
 	}
 
-	if(s_MapHistoryExpanded)
+	if(s_FavoriteMapsWorkspaceTab == 1)
 	{
 		static int s_MapHistoryFilter = 0;
 		static CButtonContainer s_aMapHistoryFilterButtons[3];
@@ -3705,22 +3705,43 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		if(s_ClearHistoryConfirmMode != 0 && Client()->LocalTime() > s_ClearHistoryConfirmUntil)
 			s_ClearHistoryConfirmMode = 0;
 
-		CUIRect ControlsRow;
-		HistoryPanel.HSplitTop(24.0f, &ControlsRow, &HistoryPanel);
 		CUIRect FilterArea, ClearArea;
-		ControlsRow.VSplitRight(230.0f, &FilterArea, &ClearArea);
+		if(QmMapHistoryUi::StackControls(HistoryPanel.w))
+		{
+			CUIRect ControlsArea;
+			HistoryPanel.HSplitTop(52.0f, &ControlsArea, &HistoryPanel);
+			ControlsArea.HSplitTop(24.0f, &FilterArea, &ControlsArea);
+			ControlsArea.HSplitTop(4.0f, nullptr, &ControlsArea);
+			ControlsArea.HSplitTop(24.0f, &ClearArea, nullptr);
+		}
+		else
+		{
+			CUIRect ControlsRow;
+			HistoryPanel.HSplitTop(24.0f, &ControlsRow, &HistoryPanel);
+			const float ClearAreaWidth = std::clamp(ControlsRow.w * 0.38f, 250.0f, 300.0f);
+			ControlsRow.VSplitRight(ClearAreaWidth, &FilterArea, &ClearArea);
+			FilterArea.VSplitRight(8.0f, &FilterArea, nullptr);
+		}
 
-		const char *apFilterLabels[] = {
-			Localize("Unfinished"),
-			Localize("Finished"),
-			Localize("Recent"),
-		};
+		int UnfinishedCount = 0;
+		int FinishedCount = 0;
+		for(const QmMapHistory::SMapHistoryRecord &Record : HistoryEntries)
+		{
+			if(Record.m_Finished)
+				++FinishedCount;
+			else
+				++UnfinishedCount;
+		}
+		char aaFilterLabels[3][64];
+		str_format(aaFilterLabels[0], sizeof(aaFilterLabels[0]), "%s (%d)", Localize("Unfinished"), UnfinishedCount);
+		str_format(aaFilterLabels[1], sizeof(aaFilterLabels[1]), "%s (%d)", Localize("Finished"), FinishedCount);
+		str_format(aaFilterLabels[2], sizeof(aaFilterLabels[2]), "%s (%d)", Localize("Recent"), (int)HistoryEntries.size());
 		for(int i = 0; i < 3; ++i)
 		{
 			CUIRect Button;
 			FilterArea.VSplitLeft(FilterArea.w / (float)(3 - i), &Button, &FilterArea);
-			Button.Margin(2.0f, &Button);
-			if(DoButton_Menu(&s_aMapHistoryFilterButtons[i], apFilterLabels[i], s_MapHistoryFilter == i, &Button))
+			const int Corners = i == 0 ? IGraphics::CORNER_L : (i == 2 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
+			if(DoButton_MenuTab(&s_aMapHistoryFilterButtons[i], aaFilterLabels[i], s_MapHistoryFilter == i, &Button, Corners, nullptr, &TabInactiveColor, &TabActiveColor, &TabHoverColor, 5.0f))
 				s_MapHistoryFilter = i;
 		}
 
@@ -3758,7 +3779,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			}
 		}
 
-		HistoryPanel.HSplitTop(6.0f, nullptr, &HistoryPanel);
+		HistoryPanel.HSplitTop(8.0f, nullptr, &HistoryPanel);
 
 		QmMapHistory::EMapHistoryFilter Filter = QmMapHistory::EMapHistoryFilter::UNFINISHED;
 		if(s_MapHistoryFilter == 1)
@@ -3768,41 +3789,25 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		const std::vector<QmMapHistory::SMapHistoryRecord> vRecords = GameClient()->m_TClient.GetMapHistoryRecords(Filter);
 		if(vRecords.empty())
 		{
-			Ui()->DoLabel(&HistoryPanel, Localize("No map play history yet"), 13.0f, TEXTALIGN_MC);
+			Ui()->DoLabel(&HistoryPanel, HistoryEntries.empty() ? Localize("No map play history yet") : Localize("No results"), 13.0f, TEXTALIGN_MC);
 		}
 		else
 		{
-			CUIRect HeaderRow;
-			HistoryPanel.HSplitTop(20.0f, &HeaderRow, &HistoryPanel);
-			CUIRect MapColumn, StatusColumn, DeathColumn, LastColumn, TimeColumn, RemoveColumn;
-			auto SplitHistoryColumns = [](CUIRect Row, CUIRect *pMap, CUIRect *pStatus, CUIRect *pDeath, CUIRect *pLast, CUIRect *pTime, CUIRect *pRemove) {
-				const float RemoveWidth = 28.0f;
-				const float StatusWidth = std::clamp(Row.w * 0.12f, 70.0f, 96.0f);
-				const float DeathWidth = std::clamp(Row.w * 0.10f, 58.0f, 76.0f);
-				const float TimeWidth = std::clamp(Row.w * 0.14f, 80.0f, 112.0f);
-				const float LastWidth = std::clamp(Row.w * 0.24f, 135.0f, 190.0f);
-				Row.VSplitRight(RemoveWidth, &Row, pRemove);
-				Row.VSplitRight(TimeWidth, &Row, pTime);
-				Row.VSplitRight(LastWidth, &Row, pLast);
-				Row.VSplitRight(DeathWidth, &Row, pDeath);
-				Row.VSplitRight(StatusWidth, pMap, pStatus);
-			};
-
-			SplitHistoryColumns(HeaderRow, &MapColumn, &StatusColumn, &DeathColumn, &LastColumn, &TimeColumn, &RemoveColumn);
-			TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1.0f);
-			DoFavoriteMapColumnLabel(MapColumn, Localize("Map"), 10.0f);
-			DoFavoriteMapColumnLabel(StatusColumn, Localize("Status"), 10.0f);
-			DoFavoriteMapColumnLabel(DeathColumn, Localize("Deaths"), 10.0f);
-			DoFavoriteMapColumnLabel(LastColumn, Localize("Last entered"), 10.0f);
-			DoFavoriteMapColumnLabel(TimeColumn, Localize("Time"), 10.0f, TEXTALIGN_MR);
-			TextRender()->TextColor(TextRender()->DefaultTextColor());
-
 			static CListBox s_MapHistoryListBox;
 			static std::vector<int> s_vMapHistoryItemIds;
 			static std::vector<CButtonContainer> s_vMapHistoryRemoveButtons;
 			s_vMapHistoryItemIds.resize(vRecords.size());
 			s_vMapHistoryRemoveButtons.resize(vRecords.size());
-			s_MapHistoryListBox.DoStart(42.0f, (int)vRecords.size(), 1, 3, -1, &HistoryPanel, false, IGraphics::CORNER_NONE);
+			const int HistoryGridColumns = QmMapHistoryUi::GridColumns(HistoryPanel.w - QmMapHistoryUi::LIST_SCROLLBAR_WIDTH);
+			s_MapHistoryListBox.DoStart(QmMapHistoryUi::CARD_ROW_HEIGHT, (int)vRecords.size(), HistoryGridColumns, 1, -1, &HistoryPanel, false, IGraphics::CORNER_NONE, true);
+
+			auto DoHistoryCardLabel = [this](CUIRect Rect, const char *pText, float FontSize, int Align) {
+				SLabelProperties Props;
+				Props.m_MaxWidth = Rect.w;
+				Props.m_StopAtEnd = true;
+				Props.m_EllipsisAtEnd = true;
+				Ui()->DoLabel(&Rect, pText, FontSize, Align, Props);
+			};
 
 			std::string RemoveMapId;
 			for(size_t HistoryIndex = 0; HistoryIndex < vRecords.size(); ++HistoryIndex)
@@ -3811,13 +3816,6 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 				const CListboxItem Item = s_MapHistoryListBox.DoNextItem(&s_vMapHistoryItemIds[HistoryIndex], false);
 				if(!Item.m_Visible)
 					continue;
-
-				CUIRect Row = Item.m_Rect;
-				Row.Margin(4.0f, &Row);
-				const ColorRGBA RowColor = Record.m_Finished ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.04f) : ColorRGBA(1.0f, 0.85f, 0.0f, 0.10f);
-				Row.Draw(BrowserOpacityColor(RowColor), IGraphics::CORNER_ALL, 5.0f);
-				Row.Margin(6.0f, &Row);
-				SplitHistoryColumns(Row, &MapColumn, &StatusColumn, &DeathColumn, &LastColumn, &TimeColumn, &RemoveColumn);
 
 				char aDeaths[32];
 				str_format(aDeaths, sizeof(aDeaths), "%d", Record.m_DeathCount);
@@ -3833,28 +3831,63 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 				const int64_t TimeMs = Record.m_Finished ? Record.m_FinishTimeMs : Record.m_PlayTimeMs;
 				str_time(TimeMs / 10, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
 
-				TextRender()->TextColor(Record.m_Finished ? ColorRGBA(0.78f, 0.78f, 0.78f, 1.0f) : ColorRGBA(1.0f, 0.85f, 0.0f, 1.0f));
-				DoFavoriteMapColumnLabel(MapColumn, Record.m_MapName.c_str(), 12.0f);
-				TextRender()->TextColor(TextRender()->DefaultTextColor());
-				DoFavoriteMapColumnLabel(StatusColumn, Record.m_Finished ? Localize("Finished") : Localize("Unfinished"), 11.0f);
-				DoFavoriteMapColumnLabel(DeathColumn, aDeaths, 11.0f);
-				DoFavoriteMapColumnLabel(LastColumn, aLastEntered, 11.0f);
-				DoFavoriteMapColumnLabel(TimeColumn, aTime, 11.0f, TEXTALIGN_MR);
+				const ColorRGBA StatusColor = Record.m_Finished ? ColorRGBA(0.36f, 0.80f, 0.55f, 1.0f) : ColorRGBA(1.0f, 0.78f, 0.18f, 1.0f);
+				const ColorRGBA CardColor = Record.m_Finished ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.055f) : ColorRGBA(1.0f, 0.78f, 0.18f, 0.09f);
+				CUIRect Card = Item.m_Rect;
+				Card.Margin(QmMapHistoryUi::CARD_GAP * 0.5f, &Card);
+				Card.Draw(BrowserOpacityColor(CardColor), IGraphics::CORNER_ALL, 5.0f);
 
-				RemoveColumn.Margin(4.0f, &RemoveColumn);
-				if(Ui()->DoButton_FontIcon(&s_vMapHistoryRemoveButtons[HistoryIndex], FONT_ICON_XMARK, 0, &RemoveColumn, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
+				CUIRect Accent, CardContent;
+				Card.VSplitLeft(3.0f, &Accent, &CardContent);
+				Accent.Draw(BrowserOpacityColor(StatusColor, 2.0f), IGraphics::CORNER_L, 5.0f);
+				CardContent.Margin(8.0f, &CardContent);
+				CUIRect CardHeader, StatsRow, LastEnteredRow;
+				CardContent.HSplitTop(20.0f, &CardHeader, &CardContent);
+				CardContent.HSplitTop(4.0f, nullptr, &CardContent);
+				CardContent.HSplitTop(26.0f, &StatsRow, &CardContent);
+				CardContent.HSplitTop(4.0f, nullptr, &CardContent);
+				CardContent.HSplitTop(18.0f, &LastEnteredRow, nullptr);
+
+				CUIRect MapName, Status, RemoveButton;
+				CardHeader.VSplitRight(20.0f, &CardHeader, &RemoveButton);
+				CardHeader.VSplitRight(76.0f, &MapName, &Status);
+				MapName.VSplitRight(4.0f, &MapName, nullptr);
+				DoHistoryCardLabel(MapName, Record.m_MapName.c_str(), 13.0f, TEXTALIGN_ML);
+				TextRender()->TextColor(StatusColor);
+				DoHistoryCardLabel(Status, Record.m_Finished ? Localize("Finished") : Localize("Unfinished"), 10.0f, TEXTALIGN_MR);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+				CUIRect TimeMetric, DeathMetric;
+				StatsRow.VSplitMid(&TimeMetric, &DeathMetric, 8.0f);
+				auto RenderMetric = [&](CUIRect Metric, const char *pLabel, const char *pValue, int Align) {
+					CUIRect Label, Value;
+					Metric.HSplitTop(10.0f, &Label, &Value);
+					TextRender()->TextColor(0.68f, 0.68f, 0.68f, 1.0f);
+					DoHistoryCardLabel(Label, pLabel, 8.5f, Align);
+					TextRender()->TextColor(TextRender()->DefaultTextColor());
+					DoHistoryCardLabel(Value, pValue, 11.5f, Align);
+				};
+				RenderMetric(TimeMetric, Localize("Time"), aTime, TEXTALIGN_ML);
+				RenderMetric(DeathMetric, Localize("Deaths"), aDeaths, TEXTALIGN_MR);
+
+				CUIRect LastEnteredLabel, LastEnteredValue;
+				LastEnteredRow.VSplitLeft(74.0f, &LastEnteredLabel, &LastEnteredValue);
+				TextRender()->TextColor(0.68f, 0.68f, 0.68f, 1.0f);
+				DoHistoryCardLabel(LastEnteredLabel, Localize("Last entered"), 9.0f, TEXTALIGN_ML);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				DoHistoryCardLabel(LastEnteredValue, aLastEntered, 9.5f, TEXTALIGN_MR);
+
+				if(Ui()->DoButton_FontIcon(&s_vMapHistoryRemoveButtons[HistoryIndex], FONT_ICON_XMARK, 0, &RemoveButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
 					RemoveMapId = Record.m_MapId;
 				if(Ui()->HotItem() == &s_vMapHistoryRemoveButtons[HistoryIndex])
-					GameClient()->m_Tooltips.DoToolTip(&s_vMapHistoryRemoveButtons[HistoryIndex], &RemoveColumn, Localize("Remove from history"));
+					GameClient()->m_Tooltips.DoToolTip(&s_vMapHistoryRemoveButtons[HistoryIndex], &RemoveButton, Localize("Remove from history"));
 			}
 			s_MapHistoryListBox.DoEnd();
 			if(!RemoveMapId.empty())
 				GameClient()->m_TClient.RemoveMapHistoryRecord(RemoveMapId.c_str());
 		}
-	}
-
-	if(!s_LocalSavesExpanded)
 		return;
+	}
 
 	if(!s_SaveFileExists)
 	{

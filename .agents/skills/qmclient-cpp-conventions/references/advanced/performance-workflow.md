@@ -27,6 +27,20 @@ qm_perf_debug_threshold_ms 4
 - 样本可信度：是否存在采样偏差、是否同一操作路径、是否有官方 DDNet baseline。
 - 指标：p50、p95、p99、max、spike count、归因类别。
 
+## 固定场景
+
+不同操作路径的日志只能用于趋势参考，不能作为严格回归结论。性能改动优先复用以下场景，并保持采集环境和操作签名一致。
+
+| ID | 操作路径 | 主要归因 | 失败信号 |
+| --- | --- | --- | --- |
+| `PERF-SETTINGS-TEE-SWITCH` | 打开 Settings，切到 Tee 页，等待首屏稳定 | page switch、section、work drain | p99 > 16ms 或连续长帧 |
+| `PERF-DEMO-FIRST-ENTER` | 首次进入 Demo Browser，打开含大量 demo 的目录 | page switch、list frame | 单帧 > 33ms 或 list frame 无 `rows_skipped` |
+| `PERF-SERVER-SCROLL` | 进入 Server Browser，滚动一屏 | list frame | `rows_iterated` 明显大于 `rows_rendered`，或 `rows_rendered` 明显大于 `rows_visible` |
+| `PERF-ASSETS-DRAIN` | 进入 Assets / Workshop，等待缩略图和资源完成 | work drain、device | 交互帧出现无 stop reason 的集中 publish |
+| `PERF-TEE-SCROLL` | Tee 页快速滚动一屏 | list frame、work drain | 已显示 preview 回退到 loading，或 drain 无预算原因 |
+
+报告需保存 HTML、同名 `*_summary.json` 和固定名 `perf_summary.json`，并记录客户端版本、renderer、窗口模式、刷新率和 UI scale。与官方 DDNet 或上一轮 QmClient 对比时，必须说明 operation signature 是否一致。
+
 ## 归因分类
 
 长帧优先归到以下类别之一：

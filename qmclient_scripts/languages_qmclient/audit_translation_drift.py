@@ -36,7 +36,7 @@ def main() -> None:
     parser.add_argument("--git-ref", default="HEAD")
     parser.add_argument(
         "--output",
-        default="qmclient_scripts/languages_qmclient/translation_drift_report.txt",
+        default="tmp/translation_drift_report.txt",
     )
     args = parser.parse_args()
 

@@ -1096,7 +1096,27 @@ int CNetServer::SendClient(CNetChunk *pChunk)
 		}
 		if((pChunk->m_Flags & NETSENDFLAG_VITAL) == 0)
 		{
-			return SendLegacyBypass(pChunk);
+			if((pChunk->m_Flags & NETSENDFLAG_FLUSH) == 0 || !Slot.m_Connection.HasPendingPacketData())
+				return SendLegacyBypass(pChunk);
+			if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
+				return SendLegacyBypass(pChunk);
+			if(Slot.m_Kcp.PendingSegments() >= NET_KCP_MAX_PENDING_SEGMENTS)
+			{
+				if(g_Config.m_SvKcpDebug)
+					dbg_msg("netserver", "kcp queue full for client %d", pChunk->m_ClientId);
+				return -1;
+			}
+
+			int Result = Slot.m_Connection.QueueChunk(0, pChunk->m_DataSize, pChunk->m_pData);
+			if(Result == 0)
+			{
+				Result = Slot.m_Connection.Flush();
+				Slot.m_Kcp.Flush();
+				if(Result >= 0)
+					Result = 0;
+			}
+			Slot.m_TransportStats = Slot.m_Kcp.Stats();
+			return Result;
 		}
 		if(Slot.m_Kcp.PendingSegments() >= NET_KCP_MAX_PENDING_SEGMENTS)
 		{
@@ -1108,11 +1128,13 @@ int CNetServer::SendClient(CNetChunk *pChunk)
 		int Flags = 0;
 		if(pChunk->m_Flags & NETSENDFLAG_VITAL)
 			Flags = NET_CHUNKFLAG_VITAL;
-		const int Result = Slot.m_Connection.QueueChunk(Flags, pChunk->m_DataSize, pChunk->m_pData);
+		int Result = Slot.m_Connection.QueueChunk(Flags, pChunk->m_DataSize, pChunk->m_pData);
 		if(Result == 0 && (pChunk->m_Flags & NETSENDFLAG_FLUSH))
 		{
-			Slot.m_Connection.Flush();
+			Result = Slot.m_Connection.Flush();
 			Slot.m_Kcp.Flush();
+			if(Result >= 0)
+				Result = 0;
 		}
 		Slot.m_TransportStats = Slot.m_Kcp.Stats();
 		return Result;

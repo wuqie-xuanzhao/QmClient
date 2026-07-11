@@ -5,6 +5,12 @@
 #include <gtest/gtest.h>
 #include <test/test.h>
 
+#include <game/client/components/camera.h>
+#include <game/client/ui.h>
+#include <game/localization.h>
+
+#include <engine/storage.h>
+
 #include <algorithm>
 #include <regex>
 #include <sstream>
@@ -221,6 +227,171 @@ TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_EQ(OldUiBlock.find("DoMenuTabV2(&s_InternetButton"), std::string::npos);
 }
 
+TEST(QmCameraEffects, DynamicFovRemovalKeepsBaseZoomStable)
+{
+	EXPECT_FLOAT_EQ(QmCameraEffects::ZoomWithoutDynamicFov(2.0f, 1.25f), 1.6f);
+	EXPECT_FLOAT_EQ(QmCameraEffects::ZoomWithoutDynamicFov(1.6f, 1.0f), 1.6f);
+	EXPECT_FLOAT_EQ(QmCameraEffects::ZoomWithoutDynamicFov(1.6f, 0.0f), 1.6f);
+}
+
+TEST(QmCameraEffects, CinematicFreeviewSmoothingIsFrameRateIndependent)
+{
+	const vec2 Start(10.0f, 20.0f);
+	const vec2 Target(30.0f, 60.0f);
+	vec2 At30Fps = Start;
+	vec2 At60Fps = Start;
+	for(int Frame = 0; Frame < 30; ++Frame)
+		At30Fps = QmCameraEffects::SmoothCinematicPosition(At30Fps, Target, 1.0f / 30.0f);
+	for(int Frame = 0; Frame < 60; ++Frame)
+		At60Fps = QmCameraEffects::SmoothCinematicPosition(At60Fps, Target, 1.0f / 60.0f);
+
+	EXPECT_FLOAT_EQ(QmCameraEffects::SmoothCinematicPosition(Start, Target, 0.0f).x, Start.x);
+	EXPECT_NEAR(At30Fps.x, At60Fps.x, 0.0001f);
+	EXPECT_NEAR(At30Fps.y, At60Fps.y, 0.0001f);
+	EXPECT_GT(At30Fps.x, Start.x);
+	EXPECT_LT(At30Fps.x, Target.x);
+}
+
+TEST(QmCameraEffectsSource, CinematicCameraAndDynamicFovKeepScopedState)
+{
+	const std::string Config = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string Header = ReadTextFile("src/game/client/components/camera.h");
+	const std::string Source = ReadTextFile("src/game/client/components/camera.cpp");
+	const std::string OnRender = FunctionBody(Source, "void CCamera::OnRender()");
+	const std::string ScaleZoom = FunctionBody(Source, "void CCamera::ScaleZoom(");
+	const std::string ChangeZoom = FunctionBody(Source, "void CCamera::ChangeZoom(");
+	const std::string UpdateCamera = FunctionBody(Source, "void CCamera::UpdateCamera()");
+	const std::string OnReset = FunctionBody(Source, "void CCamera::OnReset()");
+	const std::string GameClient = ReadTextFile("src/game/client/gameclient.cpp");
+
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmCinematicCamera, qm_cinematic_camera"), std::string::npos);
+	EXPECT_NE(Header.find("m_CinematicCameraSmoothing"), std::string::npos);
+	EXPECT_NE(OnRender.find("GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_Snap.m_SpecInfo.m_UsePosition"), std::string::npos);
+	EXPECT_NE(OnRender.find("if(g_Config.m_QmCinematicCamera)"), std::string::npos);
+	EXPECT_NE(OnRender.find("m_CinematicCameraSmoothing = false;"), std::string::npos);
+	EXPECT_NE(ScaleZoom.find("RemoveDynamicFovZoom();"), std::string::npos);
+	EXPECT_NE(ChangeZoom.find("RemoveDynamicFovZoom();"), std::string::npos);
+	EXPECT_NE(UpdateCamera.find("RemoveDynamicFovZoom();"), std::string::npos);
+	EXPECT_NE(OnReset.find("m_DynamicFovAppliedFactor = 1.0f;"), std::string::npos);
+	EXPECT_EQ(UpdateCamera.find("m_aDyncamCurrentCameraOffset[g_Config.m_ClDummy] += m_DriftCurrentOffset;"), std::string::npos);
+	EXPECT_NE(OnRender.find("m_aDyncamCurrentCameraOffset[g_Config.m_ClDummy] + m_DriftCurrentOffset"), std::string::npos);
+	EXPECT_NE(Header.find("float BaseZoom() const"), std::string::npos);
+	EXPECT_NE(GameClient.find("m_Camera.BaseZoom()"), std::string::npos);
+	EXPECT_EQ(GameClient.find("float ShowDistanceZoom = m_Camera.m_Zoom;"), std::string::npos);
+}
+
+TEST(QmStoragePath, BuildsCandidatesRelativeToExecutable)
+{
+	char aPath[IO_MAX_PATH_LENGTH];
+	EXPECT_TRUE(StoragePathFromExecutable("C:\\QmClient\\DDNet.exe", "data/mapres", aPath, sizeof(aPath)));
+	EXPECT_STREQ(aPath, "C:\\QmClient/data/mapres");
+	EXPECT_TRUE(StoragePathFromExecutable("/opt/qmclient/DDNet", "storage.cfg", aPath, sizeof(aPath)));
+	EXPECT_STREQ(aPath, "/opt/qmclient/storage.cfg");
+	EXPECT_FALSE(StoragePathFromExecutable("DDNet.exe", "data", aPath, sizeof(aPath)));
+}
+
+TEST(QmStoragePathSource, ExecutableCandidatesPrecedeCurrentDirectoryFallbacks)
+{
+	const std::string Source = ReadTextFile("src/engine/shared/storage.cpp");
+	const std::string LoadPaths = FunctionBody(Source, "bool LoadPathsFromFile(");
+	const std::string FindData = FunctionBody(Source, "void FindDataDirectory(");
+
+	const size_t ExecutableStorage = LoadPaths.find("StoragePathFromExecutable");
+	const size_t CurrentDirectoryStorage = LoadPaths.find("io_open(\"storage.cfg\"");
+	const size_t ExecutableData = FindData.find("StoragePathFromExecutable");
+	const size_t CurrentDirectoryData = FindData.find("fs_is_dir(\"data/mapres\"");
+	ASSERT_NE(ExecutableStorage, std::string::npos);
+	ASSERT_NE(CurrentDirectoryStorage, std::string::npos);
+	ASSERT_NE(ExecutableData, std::string::npos);
+	ASSERT_NE(CurrentDirectoryData, std::string::npos);
+	EXPECT_LT(ExecutableStorage, CurrentDirectoryStorage);
+	EXPECT_LT(ExecutableData, CurrentDirectoryData);
+}
+
+TEST(QmLocalization, ContextRequiresOpeningAndClosingBrackets)
+{
+	EXPECT_TRUE(LocalizationIsContextLine("[menu]"));
+	EXPECT_FALSE(LocalizationIsContextLine("[%s] %s (Map: %s, Time: %s)"));
+	EXPECT_FALSE(LocalizationIsContextLine("[broken"));
+	EXPECT_FALSE(LocalizationIsContextLine("plain"));
+}
+
+TEST(QmLocalizationSource, LocalizedDropdownNamesAreNotStaticHeapPointers)
+{
+	const std::string Chat = ReadTextFile("src/game/client/components/chat.cpp");
+	const std::string Menus = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Localization = ReadTextFile("src/game/localization.cpp");
+
+	EXPECT_EQ(Chat.find("static const char *s_apBackendNames[] = {Localize"), std::string::npos);
+	EXPECT_EQ(Menus.find("static std::vector<const char *> s_LlmProviderDropDownNames ="), std::string::npos);
+	EXPECT_EQ(Menus.find("static const char *s_apSourceNames[] ="), std::string::npos);
+	EXPECT_EQ(Menus.find("static const char *s_apOutgoingModeNames[] ="), std::string::npos);
+	EXPECT_NE(Localization.find("if(LocalizationIsContextLine(pLine))"), std::string::npos);
+	EXPECT_NE(Localization.find("Couldn't open language file '%s'"), std::string::npos);
+}
+
+TEST(QmUiScaleSource, ScaleChangesResetContainersAndInvalidateScaleKeys)
+{
+	const std::string Config = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string TClientMenusSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string QmMenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Update = FunctionBody(UiSource, "void CUi::Update(");
+	const std::string Screen = FunctionBody(UiSource, "const CUIRect *CUi::Screen()");
+
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmUiScale, qm_ui_scale, 100, 50, 200"), std::string::npos);
+	EXPECT_NE(Update.find("Client()->OnWindowResize();"), std::string::npos);
+	EXPECT_NE(Screen.find("QmUiVirtualScreenHeight(g_Config.m_QmUiScale)"), std::string::npos);
+	EXPECT_NE(MenusSource.find("StyleKey.m_UiScaleBucket = std::clamp(g_Config.m_QmUiScale, 50, 200);"), std::string::npos);
+	EXPECT_NE(TClientMenusSource.find("std::clamp(g_Config.m_QmUiScale, 50, 200)"), std::string::npos);
+	EXPECT_NE(QmMenusSource.find("CUi::SCROLLBAR_OPTION_DELAYUPDATE"), std::string::npos);
+}
+
+TEST(QmUiScale, VirtualHeightUsesClampedPercentage)
+{
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(50), 1200.0f);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(100), 600.0f);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(200), 300.0f);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(0), 1200.0f);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(300), 300.0f);
+}
+
+TEST(QmUiScale, CenteredPopupMarginKeepsUsableContentAtTwoHundredPercent)
+{
+	const CUIRect DefaultScreen = {0.0f, 0.0f, 1066.0f, 600.0f};
+	const CUIRect ScaledScreen = {0.0f, 0.0f, 533.0f, 300.0f};
+	const CUIRect NarrowScaledScreen = {0.0f, 0.0f, 375.0f, 300.0f};
+
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin(DefaultScreen, 150.0f, 300.0f, 180.0f), 150.0f);
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin(ScaledScreen, 150.0f, 300.0f, 180.0f), 60.0f);
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin(NarrowScaledScreen, 150.0f, 300.0f, 180.0f), 37.5f);
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin({0.0f, 0.0f, 200.0f, 120.0f}, 150.0f, 300.0f, 180.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin(ScaledScreen, 150.0f, 300.0f, 300.0f), 0.0f);
+	EXPECT_EQ(QmUiVisibleRows(52.0f, 20.0f, 20.0f, 4, 4), 1);
+	EXPECT_EQ(QmUiVisibleRows(126.0f, 20.0f, 20.0f, 8, 4), 4);
+	EXPECT_EQ(QmUiVisibleRows(19.0f, 20.0f, 20.0f, 4, 4), 0);
+}
+
+TEST(QmUiScaleSource, TouchMenusRespectCallerProvidedScaledHeight)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_ingame_touch_controls.cpp");
+	EXPECT_EQ(Source.find("MainView.h = 600.0f - 40.0f - MainView.y;"), std::string::npos);
+	EXPECT_NE(Source.find("void CMenusIngameTouchControls::RenderTouchButtonEditor(CUIRect MainView)"), std::string::npos);
+	EXPECT_NE(Source.find("void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)"), std::string::npos);
+	EXPECT_NE(Source.find("void CMenusIngameTouchControls::RenderPreviewSettings(CUIRect MainView)"), std::string::npos);
+}
+
+TEST(QmUiScaleSource, BlockingPopupsAndDemoRowsFitScaledScreen)
+{
+	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string DemoMenus = ReadTextFile("src/game/client/components/menus_demo.cpp");
+	EXPECT_NE(Menus.find("QmUiCenteredMargin(Box, 150.0f, 300.0f, 300.0f)"), std::string::npos);
+	EXPECT_NE(Menus.find("QmUiCenteredMargin(Screen, 150.0f, 300.0f, 300.0f)"), std::string::npos);
+	EXPECT_NE(DemoMenus.find("QmUiVisibleRows(SegmentsArea.h"), std::string::npos);
+	EXPECT_NE(DemoMenus.find("VerticalExpansion = std::min(60.0f, PopupMargin)"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, BrowserUsesExplicitQmNewUiShellBranch)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
@@ -274,7 +445,7 @@ TEST(QmNewUiMenuBranches, BrowserInteriorBackgroundsUseMapBrowserOpacity)
 	EXPECT_NE(Source.find("g_Config.m_QmMapBrowserOpacity / 100.0f"), std::string::npos);
 	EXPECT_NE(Source.find("Headers.Draw(BrowserOpacityColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f))"), std::string::npos);
 	EXPECT_NE(Source.find("View.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f))"), std::string::npos);
-	EXPECT_NE(Source.find("Panel.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.22f))"), std::string::npos);
+	EXPECT_NE(Source.find("View.Draw(BrowserPanelColor(0.82f)"), std::string::npos);
 	EXPECT_NE(Source.find("Tab.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.3f))"), std::string::npos);
 	EXPECT_EQ(Source.find("BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.3f))"), std::string::npos);
 }
@@ -382,6 +553,20 @@ TEST(QmNewUiMenuBranches, BrowserFavoriteMapsEarlyReturnAvoidsLegacyDoubleInset)
 	EXPECT_NE(RenderServerbrowser.find("View.Margin(6.0f, &View);\n\t\t\tRenderServerbrowserFavoriteMaps(View);"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, MapHistoryUsesFullHeightTabbedResponsiveCardGrid)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const std::string RenderFavoriteMaps = FunctionBody(Source, "void CMenus::RenderServerbrowserFavoriteMaps(");
+
+	EXPECT_EQ(RenderFavoriteMaps.find("SplitHistoryPanel"), std::string::npos);
+	EXPECT_EQ(RenderFavoriteMaps.find("SplitHistoryColumns"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("s_aFavoriteMapsWorkspaceTabButtons"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::GridColumns(HistoryPanel.w - QmMapHistoryUi::LIST_SCROLLBAR_WIDTH)"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("QmMapHistoryUi::StackControls(HistoryPanel.w)"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("s_MapHistoryListBox.DoStart(QmMapHistoryUi::CARD_ROW_HEIGHT"), std::string::npos);
+	EXPECT_NE(RenderFavoriteMaps.find("CUIRect CardHeader, StatsRow, LastEnteredRow"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, QmLocalizationEnglishOverlayUsesExplicitEnglishFile)
 {
 	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
@@ -395,6 +580,21 @@ TEST(QmNewUiMenuBranches, QmLocalizationEnglishOverlayUsesExplicitEnglishFile)
 	EXPECT_EQ(Source.find("str_format(aBuf, sizeof(aBuf), \"qmclient/%s\", pQmLanguageFile);"), std::string::npos);
 	EXPECT_EQ(Source.find("LoadQmClientLanguageOverlay(g_Localization, g_Config.m_ClLanguagefile, Storage(), Console());"), std::string::npos);
 	EXPECT_NE(Source.find("g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, QmClientTabLabelsDoNotCacheLocalizedPointers)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string RenderSettingsQmClient = FunctionBody(Source, "void CMenus::RenderSettingsQmClient(");
+
+	EXPECT_EQ(RenderSettingsQmClient.find("static const char *s_apQmTabNames"), std::string::npos);
+	EXPECT_EQ(RenderSettingsQmClient.find("s_aQmLanguageFile"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("const char *apQmTabNames[NUMBER_OF_QMCLIENT_SETTINGS_TABS] = {};"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("apQmTabNames[QMCLIENT_SETTINGS_TAB_VISUAL] = Localize(\"Visuals\");"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("apQmTabNames[QMCLIENT_SETTINGS_TAB_FUNCTION] = Localize(\"Functions\");"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("apQmTabNames[QMCLIENT_SETTINGS_TAB_HUD] = Localize(\"HUD\");"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("apQmTabNames[QMCLIENT_SETTINGS_TAB_CONTRIBUTORS] = Localize(\"Contributors\");"), std::string::npos);
+	EXPECT_NE(RenderSettingsQmClient.find("apQmTabNames[QMCLIENT_SETTINGS_TAB_CONFIG] = Localize(\"Config\");"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, QmClientUpdateFlowUsesQmClientNamingAndComparisonHelper)
@@ -612,7 +812,7 @@ TEST(QmNewUiMenuBranches, DefaultUiSurfacesUseBlackThirtyPercent)
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(ClSettingsTabbarOpacity, cl_settings_tabbar_opacity, 30"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabled)
+TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredLyricsDefaults)
 {
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	const std::regex BinaryQmDefaultOn(R"(MACRO_CONFIG_INT\([^,]+,\s*qm_[^,]+,\s*1,\s*0,\s*1,)");
@@ -1027,16 +1227,72 @@ TEST(QmNewUiMenuBranches, WeaponImpactEventsUseInferredOwnerAlpha)
 {
 	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
 	const std::string ProcessEvents = FunctionBody(Source, "void CGameClient::ProcessEvents()");
+	const std::string FinalizeHammerHitEvents = FunctionBody(Source, "void CGameClient::FinalizeHammerHitEvents()");
 
 	EXPECT_NE(Source.find("float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)"), std::string::npos);
 	EXPECT_NE(Source.find("int QmInferExplosionOwner(CGameClient *pGameClient, vec2 Pos)"), std::string::npos);
-	EXPECT_NE(Source.find("int QmInferHammerHitOwner(CGameClient *pGameClient, vec2 Pos)"), std::string::npos);
+	EXPECT_NE(Source.find("SQmHammerHitMatch QmInferHammerHit(CGameClient *pGameClient, vec2 Pos, int EventTick)"), std::string::npos);
 	EXPECT_NE(ProcessEvents.find("const float ExplosionAlpha = QmKnownOwnerEventAlpha(this, QmInferExplosionOwner(this, ExplosionPos));"), std::string::npos);
 	EXPECT_NE(ProcessEvents.find("m_Effects.Explosion(ExplosionPos, ExplosionAlpha);"), std::string::npos);
-	EXPECT_NE(ProcessEvents.find("const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, QmInferHammerHitOwner(this, HammerHitPos));"), std::string::npos);
-	EXPECT_NE(ProcessEvents.find("m_Effects.HammerHit(HammerHitPos, HammerHitAlpha, Volume);"), std::string::npos);
+	EXPECT_NE(ProcessEvents.find("m_vPendingHammerHitEvents.push_back({"), std::string::npos);
+	EXPECT_EQ(ProcessEvents.find("QmInferHammerHit(this"), std::string::npos);
+	EXPECT_EQ(ProcessEvents.find("m_HammerHitTracker.Record(Hit)"), std::string::npos);
+	EXPECT_EQ(ProcessEvents.find("m_Effects.HammerHit("), std::string::npos);
+	EXPECT_NE(FinalizeHammerHitEvents.find("const SQmHammerHitMatch Match = QmInferHammerHit(this, Event.m_Pos, Event.m_SnapshotTick);"), std::string::npos);
+	EXPECT_NE(FinalizeHammerHitEvents.find("m_HammerHitTracker.Record(Hit)"), std::string::npos);
+	EXPECT_NE(FinalizeHammerHitEvents.find("const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);"), std::string::npos);
+	EXPECT_NE(FinalizeHammerHitEvents.find("m_Effects.HammerHit(Event.m_Pos, HammerHitAlpha, 1.0f);"), std::string::npos);
 	EXPECT_EQ(ProcessEvents.find("m_Effects.Explosion(vec2(pEvent->m_X, pEvent->m_Y), Alpha);"), std::string::npos);
-	EXPECT_EQ(ProcessEvents.find("m_Effects.HammerHit(HammerHitPos, Alpha, Volume);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, HammerHitConsumersUseDeferredServerEvidenceOnly)
+{
+	const std::string CharacterSource = ReadTextFile("src/game/client/prediction/entities/character.cpp");
+	const std::string GameClientSource = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string GameWorldSource = ReadTextFile("src/game/client/prediction/gameworld.cpp");
+	const std::string FastPracticeSource = ReadTextFile("src/game/client/components/tclient/fast_practice.cpp");
+	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string InferHammerHit = FunctionBody(GameClientSource, "SQmHammerHitMatch QmInferHammerHit(");
+	const std::string FinalizeHammerHitEvents = FunctionBody(GameClientSource, "void CGameClient::FinalizeHammerHitEvents()");
+	const std::string OnNewSnapshot = FunctionBody(GameClientSource, "void CGameClient::OnNewSnapshot()");
+	const std::string WakeupActions = FunctionBody(TClientSource, "void CTClient::CheckHammerWakeupActions()");
+
+	EXPECT_EQ(CharacterSource.find("CreateHammerHitEvent"), std::string::npos);
+	EXPECT_EQ(GameWorldSource.find("HammerHitEvents"), std::string::npos);
+	EXPECT_EQ(GameWorldSource.find("BeginHammerHitEventBatch"), std::string::npos);
+	EXPECT_EQ(GameClientSource.find("RecordPredictedHammerHits"), std::string::npos);
+	EXPECT_EQ(GameClientSource.find("ConfirmPredictedEvent"), std::string::npos);
+	EXPECT_EQ(GameClientSource.find("MatchPredictedEvent"), std::string::npos);
+	EXPECT_EQ(InferHammerHit.find("m_PredictedWorld"), std::string::npos);
+	EXPECT_NE(InferHammerHit.find("QmIsHammerSuperTeam(DDTeam, pGameClient->m_Teams.m_IsDDRace16)"), std::string::npos);
+	EXPECT_NE(FinalizeHammerHitEvents.find("m_HammerHitTracker.Record(Hit)"), std::string::npos);
+	EXPECT_NE(FinalizeHammerHitEvents.find("QmIsHammerWakeupTransition("), std::string::npos);
+	EXPECT_NE(FinalizeHammerHitEvents.find("HandleConfirmedHammerHit(Hit);"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("const bool Online = Client()->State() == IClient::STATE_ONLINE;"), std::string::npos);
+	EXPECT_NE(GameClientSource.find("if(Online)\n\t\tHandleHammerSkinSwap(Hit);"), std::string::npos);
+	EXPECT_NE(FastPracticeSource.find("void CFastPractice::MaybePlayHammerHitEffect(CCharacter *pChar)"), std::string::npos);
+	EXPECT_NE(FastPracticeSource.find("closest_point_on_line(StartPos, EndPos"), std::string::npos);
+	EXPECT_EQ(FastPracticeSource.find("HammerHitTracker"), std::string::npos);
+	EXPECT_NE(TClientSource.find("FindTargetHitsAtTick("), std::string::npos);
+	EXPECT_NE(TClientSource.find("if(!Hit.m_TargetWoke)"), std::string::npos);
+	EXPECT_NE(TClientSource.find("CheckHammerWakeupActions();"), std::string::npos);
+	EXPECT_NE(TClientSource.find("m_aaComboLastHammerHitSnapshotTick[Dummy][TargetId]"), std::string::npos);
+	EXPECT_EQ(GameClientSource.find("QmJellyHammerHitRadius"), std::string::npos);
+
+	const size_t FinalizePos = OnNewSnapshot.find("FinalizeHammerHitEvents();");
+	const size_t ComponentSnapshotPos = OnNewSnapshot.find("pComponent->OnNewSnapshot();");
+	ASSERT_NE(FinalizePos, std::string::npos);
+	ASSERT_NE(ComponentSnapshotPos, std::string::npos);
+	EXPECT_LT(FinalizePos, ComponentSnapshotPos);
+
+	const size_t UnspecPos = WakeupActions.find("Client()->SendPackMsg(Input.m_ActiveConnection");
+	const size_t CloseChatPos = WakeupActions.find("GameClient()->m_Chat.DisableMode();");
+	const size_t SwitchPos = WakeupActions.find("Console()->ExecuteLine(aCommand);");
+	ASSERT_NE(UnspecPos, std::string::npos);
+	ASSERT_NE(CloseChatPos, std::string::npos);
+	ASSERT_NE(SwitchPos, std::string::npos);
+	EXPECT_LT(UnspecPos, CloseChatPos);
+	EXPECT_LT(CloseChatPos, SwitchPos);
 }
 
 TEST(QmNewUiMenuBranches, NewOpacityControlsDoNotChainLegacyPanelOpacity)

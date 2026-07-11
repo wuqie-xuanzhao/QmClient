@@ -3808,14 +3808,14 @@ void CHud::RenderMediaIsland()
 	const float EditorWidth = std::max(0.0f, EditorRight - EditorX);
 	const CUIRect EditorTransformRect = {EditorX, IslandY, EditorWidth, AnimatedIslandHeight};
 	const CUIRect EditorVisibleRect = {IslandX, IslandY, UnifiedWidth, AnimatedIslandHeight};
-	m_MediaIslandLastVisibleRect = EditorVisibleRect;
-	m_MediaIslandLastVisibleRectValid = true;
 	const bool RenderLeftSection = ShowCover || ShowTeam || ShowSpectator || ShowLocalTime;
 	const float TimerTextY = TimerCapsule.m_TextY;
 	ColorRGBA IslandBackgroundColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmHudIslandBgColor));
 	IslandBackgroundColor.a = std::clamp(g_Config.m_QmHudIslandBgOpacity / 100.0f, 0.0f, 1.0f);
 	const QmHudEditor::SEdgeMargin IslandEdgeMargin = QmHudEditor::SEdgeMargin::Uniform((float)g_Config.m_QmHudIslandEdgeMargin);
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::MediaIsland, EditorTransformRect, EditorVisibleRect, IslandEdgeMargin);
+	m_MediaIslandLastVisibleRect = HudEditorScope.m_VisibleRect;
+	m_MediaIslandLastVisibleRectValid = true;
 
 	DrawSmoothRoundedRect(Graphics(), IslandX, IslandY, UnifiedWidth, AnimatedIslandHeight, Radius, IslandBackgroundColor, HudEditorScope.m_Corners);
 
@@ -5937,9 +5937,12 @@ void CHud::OnRender()
 		MainHudVisible,
 		g_Config.m_QmFocusMode != 0,
 		g_Config.m_QmFocusModeHideHud != 0);
+	const bool LocalCharacterHudVisible = GameClient()->m_Snap.m_pLocalCharacter &&
+		!GameClient()->m_Snap.m_SpecInfo.m_Active &&
+		!(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER);
 	if(MainHudVisible)
 	{
-		if(GameClient()->m_Snap.m_pLocalCharacter && !GameClient()->m_Snap.m_SpecInfo.m_Active && !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER))
+		if(LocalCharacterHudVisible)
 		{
 			if(g_Config.m_ClShowhudHealthAmmo)
 			{
@@ -5970,7 +5973,6 @@ void CHud::OnRender()
 				RenderMovementInformation();
 			}
 			RenderJumpHint();
-			RenderDDRaceEffects();
 		}
 		else if(GameClient()->m_Snap.m_SpecInfo.m_Active)
 		{
@@ -6021,6 +6023,8 @@ void CHud::OnRender()
 			RenderLocalTime((m_Width / 7) * 3);
 			RenderLegacyMediaInfo();
 		}
+		if(LocalCharacterHudVisible)
+			RenderDDRaceEffects();
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 			RenderConnectionWarning();
 		RenderTeambalanceWarning();
@@ -6102,8 +6106,12 @@ void CHud::RenderDDRaceEffects()
 			}
 
 			TextRender()->TextColor(1, 1, 1, Alpha);
+			const float EffectWidth = TextRender()->TextWidth(12, aBuf);
+			const float EffectX = 150 * Graphics()->ScreenAspect() - EffectWidth / 2;
+			const float EffectHeight = m_FinishTimeDiff != 0.0f ? 24.0f : 12.0f;
+			const float EffectY = QmHudTopEffectY(20.0f, EffectHeight, EffectX, EffectX + EffectWidth, m_MediaIslandLastVisibleRect, m_MediaIslandLastVisibleRectValid);
 			CTextCursor Cursor;
-			Cursor.SetPosition(vec2(150 * Graphics()->ScreenAspect() - TextRender()->TextWidth(12, aBuf) / 2, 20));
+			Cursor.SetPosition(vec2(EffectX, EffectY));
 			Cursor.m_FontSize = 12.0f;
 			TextRender()->RecreateTextContainer(m_DDRaceEffectsTextContainerIndex, &Cursor, aBuf);
 			if(m_FinishTimeDiff != 0.0f && m_DDRaceEffectsTextContainerIndex.Valid())
@@ -6121,7 +6129,7 @@ void CHud::RenderDDRaceEffects()
 					TextRender()->TextColor(1.0f, 0.5f, 0.5f, Alpha); // red
 				}
 				CTextCursor DiffCursor;
-				DiffCursor.SetPosition(vec2(150 * Graphics()->ScreenAspect() - TextRender()->TextWidth(10, aBuf) / 2, 34));
+				DiffCursor.SetPosition(vec2(150 * Graphics()->ScreenAspect() - TextRender()->TextWidth(10, aBuf) / 2, EffectY + 14.0f));
 				DiffCursor.m_FontSize = 10.0f;
 				TextRender()->AppendTextContainer(m_DDRaceEffectsTextContainerIndex, &DiffCursor, aBuf);
 			}
@@ -6161,8 +6169,11 @@ void CHud::RenderDDRaceEffects()
 			else if(!m_TimeCpDiff)
 				TextRender()->TextColor(1, 1, 1, Alpha); // white
 
+			const float EffectWidth = TextRender()->TextWidth(10, aBuf);
+			const float EffectX = 150 * Graphics()->ScreenAspect() - EffectWidth / 2;
+			const float EffectY = QmHudTopEffectY(20.0f, 10.0f, EffectX, EffectX + EffectWidth, m_MediaIslandLastVisibleRect, m_MediaIslandLastVisibleRectValid);
 			CTextCursor Cursor;
-			Cursor.SetPosition(vec2(150 * Graphics()->ScreenAspect() - TextRender()->TextWidth(10, aBuf) / 2, 20));
+			Cursor.SetPosition(vec2(EffectX, EffectY));
 			Cursor.m_FontSize = 10.0f;
 			TextRender()->RecreateTextContainer(m_DDRaceEffectsTextContainerIndex, &Cursor, aBuf);
 

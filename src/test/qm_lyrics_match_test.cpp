@@ -198,3 +198,23 @@ TEST(QmLyricsCandidateApplyRank, SortsByScoreSourceConfidenceAndStableOrder)
 	EXPECT_EQ(vRanks[2].m_Index, 0u);
 	EXPECT_EQ(vRanks[3].m_Index, 1u);
 }
+
+TEST(QmLyricsCandidateApplyRank, SourceOrderBreaksConcurrentTiesDeterministically)
+{
+	std::vector<SCandidateApplyRank> vRanks = {
+		{0, 90.0f, 0.0f, 3},
+		{1, 90.0f, 0.0f, 0},
+	};
+	SortCandidateApplyRanks(&vRanks);
+	ASSERT_EQ(vRanks.size(), 2u);
+	EXPECT_EQ(vRanks[0].m_Index, 1u);
+}
+
+TEST(QmLyricsConcurrentSearch, PublishesWhenAllSourcesFinishOrGraceExpires)
+{
+	constexpr int64_t TickFreq = 1000;
+	EXPECT_TRUE(ShouldPublishConcurrentSearch(0, 0, 1000, TickFreq, 200));
+	EXPECT_FALSE(ShouldPublishConcurrentSearch(2, 0, 1000, TickFreq, 200));
+	EXPECT_FALSE(ShouldPublishConcurrentSearch(2, 1000, 1199, TickFreq, 200));
+	EXPECT_TRUE(ShouldPublishConcurrentSearch(2, 1000, 1200, TickFreq, 200));
+}

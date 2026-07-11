@@ -12,7 +12,6 @@
 
 namespace QmLyrics
 {
-
 	namespace
 	{
 
@@ -563,8 +562,21 @@ namespace QmLyrics
 	void SortCandidateApplyRanks(std::vector<SCandidateApplyRank> *pvRanks)
 	{
 		std::stable_sort(pvRanks->begin(), pvRanks->end(), [](const SCandidateApplyRank &A, const SCandidateApplyRank &B) {
-			return CandidateApplyRankScore(A) > CandidateApplyRankScore(B);
+			const float AScore = CandidateApplyRankScore(A);
+			const float BScore = CandidateApplyRankScore(B);
+			if(AScore != BScore)
+				return AScore > BScore;
+			return A.m_SourceOrder < B.m_SourceOrder;
 		});
+	}
+
+	bool ShouldPublishConcurrentSearch(int PendingSources, int64_t FirstCandidateTick, int64_t NowTick, int64_t TickFreq, int GraceMs)
+	{
+		if(PendingSources <= 0)
+			return true;
+		if(FirstCandidateTick <= 0 || TickFreq <= 0 || GraceMs < 0)
+			return false;
+		return NowTick - FirstCandidateTick >= (int64_t)GraceMs * TickFreq / 1000;
 	}
 
 } // namespace QmLyrics

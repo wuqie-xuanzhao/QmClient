@@ -1,7 +1,7 @@
 # QmClient Qm客户端
 
 <p align="center">
-   <img src="data\qmclient\gui_logo.png" alt="Q1menG 客户端标志" style="width:60%; max-width:760px;" />
+   <img src="data/qmclient/gui_logo.png" alt="Q1menG 客户端标志" style="width:60%; max-width:760px;" />
 </p>
 
 <p align="center">
@@ -28,7 +28,7 @@ QmClient客户端是基于 DDNet 和 TaterClient 构建的定制版本。
 
 感谢所有为该项目提交代码、报告问题和提出改进建议的贡献者。
 
-[![贡献者](https://contrib.rocks/image?repo=wxj881027/Q1menG_Client)](https://github.com/wxj881027/Q1menG_Client/graphs/contributors)
+[![贡献者](https://contrib.rocks/image?repo=wxj881027/QmClient)](https://github.com/wxj881027/QmClient/graphs/contributors)
 
 ## 🚀 构建
 
@@ -37,8 +37,8 @@ QmClient客户端是基于 DDNet 和 TaterClient 构建的定制版本。
 使用仓库包装脚本，`cmake` 始终在配置的 MSVC 开发环境中运行，即使从普通的 PowerShell 或 `cmd.exe` 会话：
 
 ```bat
-qmclient_scripts\cmake-windows.cmd -S . -B cmake-build-release
-qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target game-client -j 14
+qmclient_scripts/cmake-windows.cmd -S . -B cmake-build-release
+qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14
 ```
 
 ### macOS / Linux / 已初始化的开发人员环境
@@ -53,9 +53,9 @@ cmake --build cmake-build-release --target game-client -j 14
 ### Windows
 
 ```bat
-qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target run_cxx_tests
-qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target run_rust_tests
-qmclient_scripts\cmake-windows.cmd --build cmake-build-release --target run_tests
+qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_tests
+qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests
+qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_tests
 ```
 
 ### macOS / Linux / 已初始化的开发人员环境

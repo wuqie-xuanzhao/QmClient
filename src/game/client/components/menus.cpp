@@ -271,7 +271,7 @@ CMenus::SMenuTextStyleKey CMenus::BuildMenuTextStyleKey(const CUIRect *pRect, fl
 	StyleKey.m_Align = Align;
 	const float MaxWidth = LabelProps.m_MaxWidth >= 0.0f ? LabelProps.m_MaxWidth : (pRect != nullptr ? pRect->w : -1.0f);
 	StyleKey.m_MaxWidthBucket = MaxWidth >= 0.0f && std::isfinite(MaxWidth) ? (round_to_int(MaxWidth / 4.0f) * 4) : -1;
-	StyleKey.m_UiScaleBucket = MenuTextBucket(CUi::ms_FontmodHeight);
+	StyleKey.m_UiScaleBucket = std::clamp(g_Config.m_QmUiScale, 50, 200);
 	const float HiDpiScale = Graphics() != nullptr ? Graphics()->ScreenHiDPIScale() : 1.0f;
 	StyleKey.m_HiDpiScaleBucket = HiDpiScale >= 0.0f && std::isfinite(HiDpiScale) ? round_to_int(HiDpiScale * 100.0f) : 100;
 	StyleKey.m_CompactMode = g_Config.m_QmNewUi ? 1 : 0;
@@ -2490,7 +2490,8 @@ void CMenus::RenderLoading(const char *pCaption, const char *pContent, int Incre
 	m_LoadingState.m_LastRender = Now;
 
 	CUIRect Box;
-	Ui()->Screen()->Margin(160.0f, &Box);
+	const CUIRect Screen = *Ui()->Screen();
+	Screen.Margin(QmUiCenteredMargin(Screen, 160.0f, 320.0f, 180.0f), &Box);
 
 	Graphics()->TextureClear();
 	Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, 15.0f);
@@ -3653,7 +3654,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 	else if(m_Popup == POPUP_LANGUAGE)
 	{
 		CUIRect Button;
-		Screen.Margin(150.0f, &Box);
+		Screen.Margin(QmUiCenteredMargin(Screen, 150.0f, 300.0f, 300.0f), &Box);
 		Box.HSplitTop(20.0f, nullptr, &Box);
 		Box.HSplitBottom(20.0f, &Box, nullptr);
 		Box.HSplitBottom(24.0f, &Box, &Button);
@@ -4295,7 +4296,7 @@ void CMenus::RenderPopupConnecting(CUIRect Screen)
 	const float FontSize = 20.0f;
 
 	CUIRect Box, Label;
-	Screen.Margin(150.0f, &Box);
+	Screen.Margin(QmUiCenteredMargin(Screen, 150.0f, 300.0f, 300.0f), &Box);
 	Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, 15.0f);
 	Box.Margin(20.0f, &Box);
 
@@ -4426,7 +4427,7 @@ void CMenus::RenderPopupLoading(CUIRect Screen)
 	const float FontSize = 20.0f;
 
 	CUIRect Box, Label;
-	Screen.Margin(150.0f, &Box);
+	Screen.Margin(QmUiCenteredMargin(Screen, 150.0f, 300.0f, 300.0f), &Box);
 	Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, 15.0f);
 	Box.Margin(20.0f, &Box);
 

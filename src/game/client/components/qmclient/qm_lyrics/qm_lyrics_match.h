@@ -9,7 +9,6 @@
 
 namespace QmLyrics
 {
-
 	// 候选歌词来源对照查询的元数据。
 	struct SMatchCandidate
 	{
@@ -76,10 +75,12 @@ namespace QmLyrics
 		size_t m_Index = 0;
 		float m_Score = 0.0f;
 		float m_SourceScore = 0.0f;
+		int m_SourceOrder = 0x7fffffff;
 	};
 
 	float CandidateApplyRankScore(const SCandidateApplyRank &Rank);
 	void SortCandidateApplyRanks(std::vector<SCandidateApplyRank> *pvRanks);
+	bool ShouldPublishConcurrentSearch(int PendingSources, int64_t FirstCandidateTick, int64_t NowTick, int64_t TickFreq, int GraceMs);
 
 } // namespace QmLyrics
 

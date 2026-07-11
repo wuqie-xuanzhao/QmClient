@@ -27,6 +27,11 @@ enum class EHttpState
 	ABORTED,
 };
 
+constexpr bool HttpShouldLogFailure(EHttpState State, bool AbortTriggeredByProgressCallback)
+{
+	return State == EHttpState::ERROR || (State == EHttpState::ABORTED && !AbortTriggeredByProgressCallback);
+}
+
 enum class HTTPLOG
 {
 	NONE,
@@ -79,7 +84,8 @@ class CHttpRequest : public IHttpRequest
 		return nullptr;
 	}
 
-	char m_aUrl[256] = {0};
+	char m_aUrl[2048] = {0};
+	char m_aProxy[256] = {0};
 
 	void *m_pHeaders = nullptr;
 	unsigned char *m_pBody = nullptr;
@@ -125,6 +131,7 @@ class CHttpRequest : public IHttpRequest
 	char m_aErr[256]; // 256 == CURL_ERROR_SIZE
 	std::atomic<EHttpState> m_State{EHttpState::QUEUED};
 	std::atomic<bool> m_Abort{false};
+	std::atomic<bool> m_AbortTriggeredByProgressCallback{false};
 	std::mutex m_WaitMutex;
 	std::condition_variable m_WaitCondition;
 
@@ -160,13 +167,19 @@ public:
 	CHttpRequest(const char *pUrl);
 	virtual ~CHttpRequest();
 
+	const char *Url() const { return m_aUrl; }
 	void Timeout(CTimeout Timeout) { m_Timeout = Timeout; }
+	long RequestTimeoutMs() const { return m_Timeout.m_TimeoutMs; }
+	// Optional per-request proxy. The value is copied so callers may pass temporary config storage.
+	void Proxy(const char *pProxy) { str_copy(m_aProxy, pProxy != nullptr ? pProxy : ""); }
+	const char *ProxyUrl() const { return m_aProxy; }
 	// Skip the download if the local file is newer or as new as the remote file.
 	void SkipByFileTime(bool SkipByFileTime) { m_SkipByFileTime = SkipByFileTime; }
 	void MaxResponseSize(int64_t MaxResponseSize) { m_MaxResponseSize = MaxResponseSize; }
 	void LogProgress(HTTPLOG LogProgress) { m_LogProgress = LogProgress; }
 	void IpResolve(IPRESOLVE IpResolve) { m_IpResolve = IpResolve; }
 	void FailOnErrorStatus(bool FailOnErrorStatus) { m_FailOnErrorStatus = FailOnErrorStatus; }
+	bool FailOnErrorStatusEnabled() const { return m_FailOnErrorStatus; }
 	// Allow plain HTTP in addition to HTTPS for this request only.
 	void AllowInsecureProtocol(bool AllowInsecureProtocol = true) { m_AllowInsecureProtocol = AllowInsecureProtocol; }
 	// Download to memory only. Get the result via `Result*`.

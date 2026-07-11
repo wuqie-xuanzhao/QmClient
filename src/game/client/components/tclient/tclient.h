@@ -156,10 +156,6 @@ class CTClient : public CComponent
 	int64_t m_aLastFreezeMessageTime[NUM_DUMMIES] = {0, 0};
 	void CheckFreeze();
 
-	// Auto Unspec on Unfreeze
-	bool m_aWasInFreezeForUnspec[NUM_DUMMIES] = {false, false};
-	void CheckAutoUnspecOnUnfreeze();
-
 	struct SFreezeWakeupPopup
 	{
 		bool m_Active = false;
@@ -178,11 +174,10 @@ class CTClient : public CComponent
 		STextContainerIndex m_TextContainerIndex;
 		vec2 m_TextSize = vec2(0.0f, 0.0f);
 	};
-	bool m_aWasInFreezeForWakeupPopup[NUM_DUMMIES] = {false, false};
 	SFreezeWakeupPopup m_aFreezeWakeupPopups[FREEZE_WAKEUP_POPUP_MAX];
 	STextPopupCache m_aTextPopupCaches[TEXT_POPUP_TEXTURE_MAX];
 	char m_aTextPopupFont[256] = "";
-	void CheckFreezeWakeupPopup();
+	void CheckHammerWakeupActions();
 	void CheckComboPopup();
 	void AddFreezeWakeupPopup(int WokenDummy);
 	bool EnsureTextPopupCache(int TextType);
@@ -192,6 +187,7 @@ class CTClient : public CComponent
 	void ResetComboState(int Dummy = -1);
 	int m_aComboPopupCount[NUM_DUMMIES] = {0, 0};
 	int m_aComboLastEventTick[NUM_DUMMIES] = {-1, -1};
+	int m_aaComboLastHammerHitSnapshotTick[NUM_DUMMIES][MAX_CLIENTS] = {};
 	int m_aComboLastHookedPlayer[NUM_DUMMIES] = {-1, -1};
 
 	// Auto Switch on Unfreeze (HJ大佬辅助)

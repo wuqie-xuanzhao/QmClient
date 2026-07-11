@@ -13285,6 +13285,9 @@ Plain
 == 普通
 
 [Touch button shape]
+Cinematic camera
+== 电影镜头
+
 Circle
 == 圆形
 

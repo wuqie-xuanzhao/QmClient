@@ -1307,10 +1307,11 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	else if(Flags & (IGraphicsBackend::INITFLAG_DESKTOP_FULLSCREEN))
 		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
-	bool IsFullscreen = (SdlFlags & SDL_WINDOW_FULLSCREEN) != 0 || g_Config.m_GfxFullscreen == 3;
+	const bool IsWindowedFullscreen = g_Config.m_GfxFullscreen == 3;
+	bool IsFullscreen = (SdlFlags & SDL_WINDOW_FULLSCREEN) != 0 || IsWindowedFullscreen;
 	// use desktop resolution as default resolution, clamp resolution if users's display is smaller than we remembered
 	// if the user starts in fullscreen, and the resolution was not found use the desktop one
-	if((IsFullscreen && !SupportedResolution) || *pWidth == 0 || *pHeight == 0 || (IsDesktopChanged && (!SupportedResolution || !IsFullscreen) && (*pWidth > *pDesktopWidth || *pHeight > *pDesktopHeight)))
+	if(IsWindowedFullscreen || (IsFullscreen && !SupportedResolution) || *pWidth == 0 || *pHeight == 0 || (IsDesktopChanged && (!SupportedResolution || !IsFullscreen) && (*pWidth > *pDesktopWidth || *pHeight > *pDesktopHeight)))
 	{
 		*pWidth = *pDesktopWidth;
 		*pHeight = *pDesktopHeight;

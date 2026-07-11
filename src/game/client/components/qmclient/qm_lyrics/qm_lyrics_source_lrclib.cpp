@@ -6,6 +6,7 @@
 #include <engine/http.h>
 #include <engine/shared/http.h>
 
+#include <algorithm>
 #include <cstring>
 
 namespace QmLyrics
@@ -44,6 +45,15 @@ namespace QmLyrics
 			pOut->append(Key);
 			pOut->push_back('=');
 			UrlEncode(Value, pOut);
+		}
+
+		std::string BuildLrclibEndpoint(const char *pBaseUrl, const char *pEndpoint)
+		{
+			std::string Url = (pBaseUrl != nullptr && pBaseUrl[0] != '\0') ? pBaseUrl : "https://lrclib.net";
+			while(!Url.empty() && Url.back() == '/')
+				Url.pop_back();
+			Url.append(pEndpoint);
+			return Url;
 		}
 
 		const char *JsonString(const json_value *pVal, const char *pDefault = "")
@@ -111,41 +121,67 @@ namespace QmLyrics
 
 	} // anonymous namespace
 
-	std::string BuildLrclibGetUrl(const SSourceQuery &Query)
+	namespace
 	{
-		std::string Url = "https://lrclib.net/api/get";
-		bool First = true;
-		if(!Query.m_Title.empty())
+		std::string BuildLrclibSignatureUrl(const SSourceQuery &Query, const char *pBaseUrl, const char *pEndpoint)
 		{
-			AppendQueryParam(&Url, "track_name", Query.m_Title, First);
-			First = false;
+			std::string Url = BuildLrclibEndpoint(pBaseUrl, pEndpoint);
+			bool First = true;
+			if(!Query.m_Title.empty())
+			{
+				AppendQueryParam(&Url, "track_name", Query.m_Title, First);
+				First = false;
+			}
+			if(!Query.m_Artist.empty())
+			{
+				AppendQueryParam(&Url, "artist_name", Query.m_Artist, First);
+				First = false;
+			}
+			if(!Query.m_Album.empty())
+			{
+				AppendQueryParam(&Url, "album_name", Query.m_Album, First);
+				First = false;
+			}
+			if(Query.m_DurationSec > 0)
+			{
+				char aBuf[16];
+				str_format(aBuf, sizeof(aBuf), "%d", Query.m_DurationSec);
+				AppendQueryParam(&Url, "duration", aBuf, First);
+			}
+			return Url;
 		}
-		if(!Query.m_Artist.empty())
-		{
-			AppendQueryParam(&Url, "artist_name", Query.m_Artist, First);
-			First = false;
-		}
-		if(!Query.m_Album.empty())
-		{
-			AppendQueryParam(&Url, "album_name", Query.m_Album, First);
-			First = false;
-		}
-		if(Query.m_DurationSec > 0)
-		{
-			char aBuf[16];
-			str_format(aBuf, sizeof(aBuf), "%d", Query.m_DurationSec);
-			AppendQueryParam(&Url, "duration", aBuf, First);
-			First = false;
-		}
-		return Url;
+	}
+
+	std::string BuildLrclibGetUrl(const SSourceQuery &Query, const char *pBaseUrl)
+	{
+		return BuildLrclibSignatureUrl(Query, pBaseUrl, "/api/get");
+	}
+
+	bool CanUseLrclibGet(const SSourceQuery &Query)
+	{
+		return !Query.m_Title.empty() && !Query.m_Artist.empty();
+	}
+
+	bool ShouldFallbackLrclibGet(int StatusCode, bool HasParsedCandidate)
+	{
+		return StatusCode == 404 || (StatusCode >= 200 && StatusCode < 300 && !HasParsedCandidate);
+	}
+
+	int EffectiveLrclibHttpTimeoutMs(int TimeoutMs, const char *pProxy)
+	{
+		const int ConfiguredTimeoutMs = TimeoutMs > 0 ? TimeoutMs : 8000;
+		return pProxy != nullptr && pProxy[0] != '\0' ? std::max(ConfiguredTimeoutMs, 15000) : ConfiguredTimeoutMs;
+	}
+
+	bool LrclibHttpOptionsChanged(int PreviousTimeoutMs, const char *pPreviousProxy, int TimeoutMs, const char *pProxy)
+	{
+		return PreviousTimeoutMs != TimeoutMs ||
+		       str_comp(pPreviousProxy != nullptr ? pPreviousProxy : "", pProxy != nullptr ? pProxy : "") != 0;
 	}
 
 	std::string BuildLrclibSearchUrl(const SSourceQuery &Query, const char *pBaseUrl)
 	{
-		std::string Url = (pBaseUrl != nullptr && pBaseUrl[0] != '\0') ? pBaseUrl : "https://lrclib.net";
-		while(!Url.empty() && Url.back() == '/')
-			Url.pop_back();
-		Url.append("/api/search");
+		std::string Url = BuildLrclibEndpoint(pBaseUrl, "/api/search");
 		bool First = true;
 		if(!Query.m_Title.empty())
 		{
@@ -160,13 +196,6 @@ namespace QmLyrics
 		if(!Query.m_Album.empty())
 		{
 			AppendQueryParam(&Url, "album_name", Query.m_Album, First);
-			First = false;
-		}
-		if(Query.m_DurationSec > 0)
-		{
-			char aBuf[32];
-			str_format(aBuf, sizeof(aBuf), "%d", Query.m_DurationSec * 1000);
-			AppendQueryParam(&Url, "durationMs", aBuf, First);
 			First = false;
 		}
 		return Url;
@@ -223,6 +252,7 @@ namespace QmLyrics
 		IHttp *m_pHttp = nullptr;
 		int m_TimeoutMs = 8000;
 		std::string m_BaseUrl = "https://lrclib.net";
+		std::string m_Proxy;
 		std::shared_ptr<CHttpRequest> m_pRequest;
 		FSourceDoneCallback m_Done;
 		FSourceErrorCallback m_Error;
@@ -230,17 +260,18 @@ namespace QmLyrics
 		enum class EStage
 		{
 			IDLE,
+			GET,
 			SEARCH,
 		} m_Stage = EStage::IDLE;
 	};
 
-	CLyricsSourceLrclib::CLyricsSourceLrclib(IHttp *pHttp, int TimeoutMs, const char *pBaseUrl) :
+	CLyricsSourceLrclib::CLyricsSourceLrclib(IHttp *pHttp, int TimeoutMs, const char *pBaseUrl, const char *pProxy) :
 		m_pImpl(std::make_unique<SImpl>())
 	{
 		m_pImpl->m_pHttp = pHttp;
-		m_pImpl->m_TimeoutMs = TimeoutMs > 0 ? TimeoutMs : 8000;
 		if(pBaseUrl != nullptr && pBaseUrl[0] != '\0')
 			m_pImpl->m_BaseUrl = pBaseUrl;
+		UpdateHttpOptions(TimeoutMs, pProxy);
 	}
 
 	CLyricsSourceLrclib::~CLyricsSourceLrclib()
@@ -251,6 +282,17 @@ namespace QmLyrics
 	bool CLyricsSourceLrclib::BusyForTests() const
 	{
 		return m_pImpl->m_Stage != SImpl::EStage::IDLE;
+	}
+
+	void CLyricsSourceLrclib::UpdateHttpOptions(int TimeoutMs, const char *pProxy)
+	{
+		m_pImpl->m_TimeoutMs = TimeoutMs > 0 ? TimeoutMs : 8000;
+		m_pImpl->m_Proxy = pProxy != nullptr ? pProxy : "";
+	}
+
+	int CLyricsSourceLrclib::EffectiveTimeoutMsForTests() const
+	{
+		return EffectiveLrclibHttpTimeoutMs(m_pImpl->m_TimeoutMs, m_pImpl->m_Proxy.c_str());
 	}
 
 	void CLyricsSourceLrclib::Cancel()
@@ -268,13 +310,20 @@ namespace QmLyrics
 	namespace
 	{
 
-		void DispatchRequest(CLyricsSourceLrclib::SImpl *pImpl, const std::string &Url)
+		void DispatchRequest(CLyricsSourceLrclib::SImpl *pImpl, const std::string &Url, CLyricsSourceLrclib::SImpl::EStage Stage)
 		{
 			pImpl->m_pRequest = std::make_shared<CHttpRequest>(Url.c_str());
 			// 连接 5s，整体超时 m_TimeoutMs；关闭低速检测（小 API 响应易误触发）。
-			pImpl->m_pRequest->Timeout(CTimeout{5000, pImpl->m_TimeoutMs, 0, 0});
+			const int TimeoutMs = EffectiveLrclibHttpTimeoutMs(pImpl->m_TimeoutMs, pImpl->m_Proxy.c_str());
+			pImpl->m_pRequest->Timeout(CTimeout{5000, TimeoutMs, 0, 0});
 			pImpl->m_pRequest->LogProgress(HTTPLOG::FAILURE);
+			// LRCLIB uses 404 as the expected exact-match miss signal. Keep the body/status
+			// available so Tick can fall back to /api/search.
+			pImpl->m_pRequest->FailOnErrorStatus(false);
 			pImpl->m_pRequest->HeaderString("User-Agent", "QmClient (https://github.com/Q1menG)");
+			if(!pImpl->m_Proxy.empty())
+				pImpl->m_pRequest->Proxy(pImpl->m_Proxy.c_str());
+			pImpl->m_Stage = Stage;
 			pImpl->m_pHttp->Run(pImpl->m_pRequest);
 		}
 
@@ -292,8 +341,10 @@ namespace QmLyrics
 		m_pImpl->m_Done = std::move(Done);
 		m_pImpl->m_Error = std::move(Error);
 		m_pImpl->m_PendingQuery = Query;
-		m_pImpl->m_Stage = SImpl::EStage::SEARCH;
-		DispatchRequest(m_pImpl.get(), BuildLrclibSearchUrl(Query, m_pImpl->m_BaseUrl.c_str()));
+		if(CanUseLrclibGet(Query))
+			DispatchRequest(m_pImpl.get(), BuildLrclibGetUrl(Query, m_pImpl->m_BaseUrl.c_str()), SImpl::EStage::GET);
+		else
+			DispatchRequest(m_pImpl.get(), BuildLrclibSearchUrl(Query, m_pImpl->m_BaseUrl.c_str()), SImpl::EStage::SEARCH);
 	}
 
 	void CLyricsSourceLrclib::Tick()
@@ -301,21 +352,31 @@ namespace QmLyrics
 		if(m_pImpl->m_Stage == SImpl::EStage::IDLE || !m_pImpl->m_pRequest || !m_pImpl->m_pRequest->Done())
 			return;
 
+		const SImpl::EStage CompletedStage = m_pImpl->m_Stage;
 		std::shared_ptr<CHttpRequest> pRequest = m_pImpl->m_pRequest;
 		m_pImpl->m_pRequest.reset();
+
+		if(pRequest->State() != EHttpState::DONE)
+		{
+			FSourceErrorCallback Error = std::move(m_pImpl->m_Error);
+			m_pImpl->m_Done = nullptr;
+			m_pImpl->m_Stage = SImpl::EStage::IDLE;
+			if(Error)
+				Error("request failed");
+			return;
+		}
+
+		if(CompletedStage == SImpl::EStage::GET && pRequest->StatusCode() == 404)
+		{
+			DispatchRequest(m_pImpl.get(), BuildLrclibSearchUrl(m_pImpl->m_PendingQuery, m_pImpl->m_BaseUrl.c_str()), SImpl::EStage::SEARCH);
+			return;
+		}
 
 		FSourceDoneCallback Done = std::move(m_pImpl->m_Done);
 		FSourceErrorCallback Error = std::move(m_pImpl->m_Error);
 		m_pImpl->m_Done = nullptr;
 		m_pImpl->m_Error = nullptr;
 		m_pImpl->m_Stage = SImpl::EStage::IDLE;
-
-		if(pRequest->State() != EHttpState::DONE)
-		{
-			if(Error)
-				Error("request failed");
-			return;
-		}
 
 		if(pRequest->StatusCode() < 200 || pRequest->StatusCode() >= 300)
 		{
@@ -329,13 +390,29 @@ namespace QmLyrics
 		pRequest->Result(&pBody, &BodyLen);
 		if(pBody == nullptr || BodyLen == 0)
 		{
+			if(CompletedStage == SImpl::EStage::GET)
+			{
+				m_pImpl->m_Done = std::move(Done);
+				m_pImpl->m_Error = std::move(Error);
+				DispatchRequest(m_pImpl.get(), BuildLrclibSearchUrl(m_pImpl->m_PendingQuery, m_pImpl->m_BaseUrl.c_str()), SImpl::EStage::SEARCH);
+				return;
+			}
 			if(Done)
 				Done({});
 			return;
 		}
 
 		char aErr[128];
-		std::vector<SSourceCandidate> vCandidates = ParseLrclibSearchResponse((const char *)pBody, BodyLen, aErr, sizeof(aErr));
+		std::vector<SSourceCandidate> vCandidates = CompletedStage == SImpl::EStage::GET ?
+			ParseLrclibGetResponse((const char *)pBody, BodyLen, aErr, sizeof(aErr)) :
+			ParseLrclibSearchResponse((const char *)pBody, BodyLen, aErr, sizeof(aErr));
+		if(CompletedStage == SImpl::EStage::GET && ShouldFallbackLrclibGet(pRequest->StatusCode(), !vCandidates.empty()))
+		{
+			m_pImpl->m_Done = std::move(Done);
+			m_pImpl->m_Error = std::move(Error);
+			DispatchRequest(m_pImpl.get(), BuildLrclibSearchUrl(m_pImpl->m_PendingQuery, m_pImpl->m_BaseUrl.c_str()), SImpl::EStage::SEARCH);
+			return;
+		}
 		if(Done)
 			Done(std::move(vCandidates));
 	}

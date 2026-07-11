@@ -35,6 +35,7 @@ namespace QmLyrics
 
 		// 查找；命中时更新 m_LastUsedAt 为 NowUnixSec 并返回条目指针；未命中返回 nullptr。
 		const SCacheEntry *Lookup(std::string_view Key, int64_t NowUnixSec);
+		const SCacheEntry *Find(std::string_view Key) const;
 
 		// 按 key 删除条目；如果需要清理 payload，pFileName 接收原文件名。
 		bool Remove(std::string_view Key, std::string *pFileName = nullptr);
@@ -59,9 +60,12 @@ namespace QmLyrics
 
 	// 由 (title, artist, album, duration) 算缓存 key 和文件名。
 	// Key：归一化后的字段用 '|' 拼接。
-	// FileName：sha256(Key) 取前 16 hex 字符 + ".json"。
+	// FileNameForKey 是旧版 sha256 JSON payload 文件名，仅用于向后兼容。
 	std::string BuildCacheKey(std::string_view Title, std::string_view Artist, std::string_view Album, int DurationSec);
 	std::string FileNameForKey(std::string_view Key);
+	// 新版缓存为真实 LRC 正文 + 同名 .meta.json。只在 Collision 时附加短 hash。
+	std::string FileNameForTrack(std::string_view Title, std::string_view Artist, std::string_view Key, bool Collision = false);
+	std::string ChooseCachePayloadFileName(const CCacheIndex &Index, std::string_view Title, std::string_view Artist, std::string_view Key, std::string_view IgnoreKey = {});
 	bool IsValidCachePayloadFileName(std::string_view FileName);
 
 	struct SCachePayload
@@ -79,6 +83,8 @@ namespace QmLyrics
 	bool LoadCachePayload(IStorage *pStorage, const char *pFileName, SCachePayload *pOut);
 	bool SaveCachePayload(IStorage *pStorage, const char *pFileName, const SCachePayload &Payload);
 	void RemoveCachePayload(IStorage *pStorage, const char *pFileName);
+	bool CommitCacheEntry(IStorage *pStorage, CCacheIndex *pIndex, const SCacheEntry &Entry, const SCachePayload &Payload, int MaxEntries);
+	bool MigrateLegacyCacheEntry(IStorage *pStorage, CCacheIndex *pIndex, std::string_view LegacyKey, std::string_view TrackKey, std::string_view Title, std::string_view Artist, int MaxEntries);
 
 } // namespace QmLyrics
 

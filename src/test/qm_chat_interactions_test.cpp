@@ -94,6 +94,77 @@ TEST(QmChatPresentation, InactiveExpiredLineFadesAndCollapses)
 	EXPECT_NEAR(Presentation.m_LayoutVisibility, 0.0f, 0.001f);
 }
 
+TEST(QmChatPresentation, DisabledExtraAnimationsUseImmediateVisibilityStates)
+{
+	CChat::SPresentationState Presentation;
+	const int64_t Start = TestTicks(35.0f);
+	CChat::BeginLinePresentation(Presentation, Start, false);
+
+	CChat::UpdateLinePresentation(Presentation, Start, Start + TestTicks(0.01f), 0.01f, false, false, 0, 0.0f, false);
+	EXPECT_EQ(Presentation.m_State, CChat::EPresentationState::VISIBLE);
+	EXPECT_FLOAT_EQ(Presentation.m_EntryProgress, 1.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_LayoutVisibility, 1.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderOffsetX, 0.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderAlpha, 1.0f);
+
+	CChat::UpdateLinePresentation(Presentation, Start, Start + TestTicks(14.1f), 0.20f, false, false, 0, 0.0f, false);
+	EXPECT_EQ(Presentation.m_State, CChat::EPresentationState::COLLAPSED);
+	EXPECT_FLOAT_EQ(Presentation.m_LayoutVisibility, 0.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderOffsetX, 0.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderAlpha, 0.0f);
+}
+
+TEST(QmChatPresentation, DisabledExtraAnimationsRecallHistoryImmediately)
+{
+	CChat::SPresentationState Presentation;
+	const int64_t Start = TestTicks(38.0f);
+	CChat::BeginLinePresentation(Presentation, Start, false);
+
+	CChat::UpdateLinePresentation(Presentation, Start, Start + TestTicks(30.0f), 0.10f, true, false, Start + TestTicks(30.0f), 0.2f, false);
+	EXPECT_EQ(Presentation.m_State, CChat::EPresentationState::VISIBLE);
+	EXPECT_FLOAT_EQ(Presentation.m_LayoutVisibility, 1.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderOffsetX, 0.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderAlpha, 1.0f);
+}
+
+TEST(QmChatPresentation, ReenablingExtraAnimationsDoesNotReplaySettledStates)
+{
+	CChat::SPresentationState Presentation;
+	const int64_t Start = TestTicks(39.0f);
+	CChat::BeginLinePresentation(Presentation, Start, false);
+
+	CChat::UpdateLinePresentation(Presentation, Start, Start + TestTicks(0.01f), 0.01f, false, false, 0, 0.0f, false);
+	ASSERT_TRUE(Presentation.m_AnimationsSuppressed);
+	CChat::UpdateLinePresentation(Presentation, Start, Start + TestTicks(0.02f), 0.01f, false, false, 0, 0.0f, true);
+	EXPECT_FALSE(Presentation.m_AnimationsSuppressed);
+	EXPECT_EQ(Presentation.m_State, CChat::EPresentationState::VISIBLE);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderOffsetX, 0.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderAlpha, 1.0f);
+
+	CChat::UpdateLinePresentation(Presentation, Start, Start + TestTicks(14.1f), 0.20f, false, false, 0, 0.0f, false);
+	ASSERT_TRUE(Presentation.m_AnimationsSuppressed);
+	CChat::UpdateLinePresentation(Presentation, Start, Start + TestTicks(14.11f), 0.01f, false, false, 0, 0.0f, true);
+	EXPECT_TRUE(Presentation.m_AnimationsSuppressed);
+	EXPECT_EQ(Presentation.m_State, CChat::EPresentationState::COLLAPSED);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderAlpha, 0.0f);
+}
+
+TEST(QmChatPresentation, ReenablingExtraAnimationsDoesNotReplayExpandedHistory)
+{
+	CChat::SPresentationState Presentation;
+	const int64_t Start = TestTicks(39.0f);
+	const int64_t OpenTick = Start + TestTicks(30.0f);
+	CChat::BeginLinePresentation(Presentation, Start, false);
+
+	CChat::UpdateLinePresentation(Presentation, Start, OpenTick, 0.10f, true, false, OpenTick, 0.2f, false);
+	ASSERT_TRUE(Presentation.m_AnimationsSuppressed);
+	CChat::UpdateLinePresentation(Presentation, Start, OpenTick + TestTicks(0.01f), 0.01f, true, false, OpenTick, 0.2f, true);
+	EXPECT_TRUE(Presentation.m_AnimationsSuppressed);
+	EXPECT_EQ(Presentation.m_State, CChat::EPresentationState::VISIBLE);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderOffsetX, 0.0f);
+	EXPECT_FLOAT_EQ(Presentation.m_RenderAlpha, 1.0f);
+}
+
 TEST(QmChatPresentation, InputKeepsOldLineOpaque)
 {
 	CChat::SPresentationState Presentation;
@@ -173,6 +244,47 @@ TEST(QmChatPresentation, SmoothYApproachesTargetWithoutOvershoot)
 		EXPECT_LE(NextY, 180.0f);
 		Y = NextY;
 	}
+}
+
+TEST(QmWindowModes, WindowedFullscreenRemainsARegularBorderedWindow)
+{
+	const std::string Backend = ReadTestSourceFile("src/engine/client/backend_sdl.cpp");
+	const std::string SetWindowParams = SourceFunctionBody(Backend, "void CGraphicsBackend_SDL_GL::SetWindowParams(");
+	const size_t WindowedFullscreenStart = SetWindowParams.find("else // Windowed fullscreen");
+	const size_t WindowedStart = SetWindowParams.find("else // Windowed", WindowedFullscreenStart + 1);
+	ASSERT_NE(WindowedFullscreenStart, std::string::npos);
+	ASSERT_NE(WindowedStart, std::string::npos);
+	const std::string WindowedFullscreen = SetWindowParams.substr(WindowedFullscreenStart, WindowedStart - WindowedFullscreenStart);
+
+	EXPECT_NE(WindowedFullscreen.find("SDL_SetWindowFullscreen(m_pWindow, 0);"), std::string::npos);
+	EXPECT_NE(WindowedFullscreen.find("SDL_SetWindowBordered(m_pWindow, SDL_TRUE);"), std::string::npos);
+	EXPECT_NE(WindowedFullscreen.find("SDL_SetWindowResizable(m_pWindow, SDL_FALSE);"), std::string::npos);
+}
+
+TEST(QmWindowModes, StartupDoesNotMarkWindowedFullscreenAsBorderless)
+{
+	const std::string Backend = ReadTestSourceFile("src/engine/client/backend_sdl.cpp");
+	const std::string Graphics = ReadTestSourceFile("src/engine/client/graphics_threaded.cpp");
+	const std::string IssueInit = SourceFunctionBody(Graphics, "int CGraphics_Threaded::IssueInit()");
+
+	EXPECT_EQ(IssueInit.find("else // Windowed fullscreen"), std::string::npos);
+	EXPECT_NE(IssueInit.find("if(IsExclusiveFullscreen)"), std::string::npos);
+	EXPECT_NE(IssueInit.find("else if(IsDesktopFullscreen)"), std::string::npos);
+	EXPECT_NE(IssueInit.find("else if(IsPurelyWindowed)"), std::string::npos);
+	EXPECT_NE(Backend.find("const bool IsWindowedFullscreen = g_Config.m_GfxFullscreen == 3;"), std::string::npos);
+	EXPECT_NE(Backend.find("if(IsWindowedFullscreen || (IsFullscreen && !SupportedResolution)"), std::string::npos);
+}
+
+TEST(QmWindowModes, GraphicsMenuMapsAllFiveModesToDistinctBackendStates)
+{
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+	const std::string RenderSettingsGraphics = SourceFunctionBody(Menus, "void CMenus::RenderSettingsGraphics(");
+
+	EXPECT_NE(RenderSettingsGraphics.find("Graphics()->SetWindowParams(0, false);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("Graphics()->SetWindowParams(0, true);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("Graphics()->SetWindowParams(3, false);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("Graphics()->SetWindowParams(2, false);"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("Graphics()->SetWindowParams(1, false);"), std::string::npos);
 }
 
 TEST(QmChatInteractions, ClampBacklogLine)

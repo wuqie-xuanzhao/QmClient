@@ -78,7 +78,7 @@ constexpr int QM_WEAPON_SWITCH_ANIM_SCOPE_ALL = 2;
 static bool HasQmJellyHammerImpact(const CGameClient *pGameClient, int ClientId)
 {
 	const int LocalDummy = LocalDummyIndexForClient(pGameClient, ClientId);
-	return LocalDummy >= 0 && pGameClient->m_aPredictedHammerHitEvent[LocalDummy];
+	return LocalDummy >= 0 && pGameClient->m_aConfirmedHammerHitEvent[LocalDummy];
 }
 
 static bool IsSolidAt(const CCollision *pCollision, vec2 Pos)

@@ -588,9 +588,9 @@ void CCollisionHitbox::RenderHammerHitboxes()
 		const vec2 RenderDelta = Player.m_RenderPos - pChar->GetPos();
 		vec2 HitPosition;
 		float HitRadius = 0.0f;
-		if(!GameClient()->GetPredictedHammerHitbox(pChar, HitPosition, HitRadius))
+		if(!GameClient()->GetPotentialHammerHitArea(pChar, HitPosition, HitRadius))
 			continue;
-		HitPosition += RenderDelta;
+		const vec2 RenderHitPosition = HitPosition + RenderDelta;
 
 		float PlayerAlpha = Alpha * GameClient()->LiveObserverClientAlpha(ClientId);
 		if(PlayerAlpha >= Alpha && GameClient()->IsOtherTeam(ClientId))
@@ -599,14 +599,14 @@ void CCollisionHitbox::RenderHammerHitboxes()
 			continue;
 
 		const ColorRGBA HammerColor = WeaponColor(PlayerAlpha);
-		const IGraphics::CLineItem AimLine(Player.m_RenderPos, HitPosition);
+		const IGraphics::CLineItem AimLine(Player.m_RenderPos, RenderHitPosition);
 		Graphics()->SetColor(HammerColor.WithMultipliedAlpha(0.6f));
 		Graphics()->LinesDraw(&AimLine, 1);
-		DrawCircleOutline(HitPosition, HitRadius, HammerColor, 28);
-		DrawCross(HitPosition, 4.0f, HammerColor);
+		DrawCircleOutline(RenderHitPosition, HitRadius, HammerColor, 28);
+		DrawCross(RenderHitPosition, 4.0f, HammerColor);
 
 		int aTargetIds[MAX_CLIENTS];
-		const int NumTargets = GameClient()->FindPredictedHammerHitTargets(pChar, HitPosition, HitRadius, aTargetIds, MAX_CLIENTS);
+		const int NumTargets = GameClient()->FindPotentialHammerHitTargets(pChar, HitPosition, HitRadius, aTargetIds, MAX_CLIENTS);
 		for(int TargetIndex = 0; TargetIndex < NumTargets; ++TargetIndex)
 		{
 			const int TargetId = aTargetIds[TargetIndex];

@@ -10,6 +10,26 @@
 
 #include <game/client/component.h>
 
+#include <algorithm>
+#include <cmath>
+
+namespace QmCameraEffects
+{
+inline float ZoomWithoutDynamicFov(float EffectiveZoom, float AppliedFactor)
+{
+	return AppliedFactor > 0.0f ? EffectiveZoom / AppliedFactor : EffectiveZoom;
+}
+
+inline vec2 SmoothCinematicPosition(vec2 Current, vec2 Target, float FrameTime)
+{
+	constexpr float HalfLife = 0.09f;
+	if(!std::isfinite(FrameTime) || FrameTime <= 0.0f)
+		return Current;
+	const float Step = 1.0f - std::exp2(-FrameTime / HalfLife);
+	return Current + (Target - Current) * Step;
+}
+}
+
 class CCamera : public CComponent
 {
 	friend class CMenuBackground;
@@ -64,6 +84,10 @@ private:
 	float m_DynamicFovTarget;
 	float m_DynamicFovCurrent;
 	float m_DynamicFovAppliedFactor;
+	bool m_CinematicCameraSmoothing;
+	vec2 m_CinematicCameraPosition;
+
+	void RemoveDynamicFovZoom();
 
 public:
 	static constexpr float ZOOM_STEP = 0.866025f;
@@ -105,6 +129,7 @@ public:
 	void SpectatorTeleportToHoveredTele();
 
 	void SetZoom(float Target, int Smoothness, bool IsUser);
+	float BaseZoom() const { return QmCameraEffects::ZoomWithoutDynamicFov(m_Zoom, m_DynamicFovAppliedFactor); }
 	bool ZoomAllowed() const;
 
 	int Deadzone() const;

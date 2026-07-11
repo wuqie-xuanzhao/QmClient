@@ -197,6 +197,7 @@ namespace
 			    "dynamic-value",
 			    "user-generated",
 			    "localized-list-data",
+			    "localized-setting-label",
 			    "stateful-new-label",
 			    "animated-style",
 			    "icon-only",

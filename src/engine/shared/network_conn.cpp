@@ -141,12 +141,18 @@ int CNetConnection::Flush()
 		return 0;
 	}
 
-	// send of the packets
-	m_Construct.m_Ack = m_Ack;
+	// Packet output may modify the packet while packing it. Keep the queued
+	// construct unchanged until the output accepts it.
+	CNetPacketConstruct Packet = m_Construct;
+	Packet.m_Ack = m_Ack;
 	if(m_pfnPacketOutput)
-		m_pfnPacketOutput(m_pPacketOutputUser, &m_Construct, m_SecurityToken, m_Sixup);
+	{
+		const int Result = m_pfnPacketOutput(m_pPacketOutputUser, &Packet, m_SecurityToken, m_Sixup);
+		if(Result < 0)
+			return Result;
+	}
 	else
-		CNetBase::SendPacket(m_Socket, &m_PeerAddr, &m_Construct, m_SecurityToken, m_Sixup);
+		CNetBase::SendPacket(m_Socket, &m_PeerAddr, &Packet, m_SecurityToken, m_Sixup);
 
 	// update send times
 	m_LastSendTime = time_get();
@@ -173,7 +179,16 @@ int CNetConnection::QueueChunkEx(int Flags, int DataSize, const void *pData, int
 	if(m_Construct.m_DataSize + DataSize + NET_MAX_CHUNKHEADERSIZE > (int)sizeof(m_Construct.m_aChunkData) - (int)sizeof(SECURITY_TOKEN) ||
 		m_Construct.m_NumChunks == NET_MAX_PACKET_CHUNKS)
 	{
-		Flush();
+		if(Flush() < 0)
+			return -1;
+	}
+
+	CNetChunkResend *pResend = nullptr;
+	if(Flags & NET_CHUNKFLAG_VITAL && !(Flags & NET_CHUNKFLAG_RESEND))
+	{
+		pResend = m_Buffer.Allocate(sizeof(CNetChunkResend) + DataSize);
+		if(!pResend)
+			return -1;
 	}
 
 	// pack all the data
@@ -195,22 +210,13 @@ int CNetConnection::QueueChunkEx(int Flags, int DataSize, const void *pData, int
 	if(Flags & NET_CHUNKFLAG_VITAL && !(Flags & NET_CHUNKFLAG_RESEND))
 	{
 		// save packet if we need to resend
-		CNetChunkResend *pResend = m_Buffer.Allocate(sizeof(CNetChunkResend) + DataSize);
-		if(pResend)
-		{
-			pResend->m_Sequence = Sequence;
-			pResend->m_Flags = Flags;
-			pResend->m_DataSize = DataSize;
-			pResend->m_pData = (unsigned char *)(pResend + 1);
-			pResend->m_FirstSendTime = time_get();
-			pResend->m_LastSendTime = pResend->m_FirstSendTime;
-			mem_copy(pResend->m_pData, pData, DataSize);
-		}
-		else
-		{
-			// out of buffer, don't save the packet and hope nobody will ask for resend
-			return -1;
-		}
+		pResend->m_Sequence = Sequence;
+		pResend->m_Flags = Flags;
+		pResend->m_DataSize = DataSize;
+		pResend->m_pData = (unsigned char *)(pResend + 1);
+		pResend->m_FirstSendTime = time_get();
+		pResend->m_LastSendTime = pResend->m_FirstSendTime;
+		mem_copy(pResend->m_pData, pData, DataSize);
 	}
 
 	return 0;
@@ -218,9 +224,11 @@ int CNetConnection::QueueChunkEx(int Flags, int DataSize, const void *pData, int
 
 int CNetConnection::QueueChunk(int Flags, int DataSize, const void *pData)
 {
-	if(Flags & NET_CHUNKFLAG_VITAL)
-		m_Sequence = (m_Sequence + 1) % NET_MAX_SEQUENCE;
-	return QueueChunkEx(Flags, DataSize, pData, m_Sequence);
+	const int Sequence = Flags & NET_CHUNKFLAG_VITAL ? (m_Sequence + 1) % NET_MAX_SEQUENCE : m_Sequence;
+	const int Result = QueueChunkEx(Flags, DataSize, pData, Sequence);
+	if(Result == 0 && (Flags & NET_CHUNKFLAG_VITAL))
+		m_Sequence = Sequence;
+	return Result;
 }
 
 void CNetConnection::SendConnect()
@@ -262,8 +270,8 @@ void CNetConnection::SendControl(int ControlMsg, const void *pExtra, int ExtraSi
 
 void CNetConnection::ResendChunk(CNetChunkResend *pResend)
 {
-	QueueChunkEx(pResend->m_Flags | NET_CHUNKFLAG_RESEND, pResend->m_DataSize, pResend->m_pData, pResend->m_Sequence);
-	pResend->m_LastSendTime = time_get();
+	if(QueueChunkEx(pResend->m_Flags | NET_CHUNKFLAG_RESEND, pResend->m_DataSize, pResend->m_pData, pResend->m_Sequence) == 0)
+		pResend->m_LastSendTime = time_get();
 }
 
 void CNetConnection::Resend()
@@ -662,7 +670,7 @@ int CNetConnection::Update()
 		if(time_get() - m_LastSendTime > time_freq() / 2) // flush connection after 500ms if needed
 		{
 			int NumFlushedChunks = Flush();
-			if(NumFlushedChunks && g_Config.m_Debug)
+			if(NumFlushedChunks > 0 && g_Config.m_Debug)
 				dbg_msg("connection", "flushed connection due to timeout. %d chunks.", NumFlushedChunks);
 		}
 

@@ -1232,6 +1232,9 @@ void CMenus::RenderQmVisualCameraViewContent(CUIRect &Content, float LineHeight,
 		RenderValue("qmclient-camera-dynamic-fov-intensity", "Dynamic FOV intensity", &s_QmDynamicFovAmountInputId, &g_Config.m_QmDynamicFovAmount, 0, 200);
 		RenderValue("qmclient-camera-dynamic-fov-smoothness", "Dynamic FOV smoothness", &s_QmDynamicFovSmoothnessInputId, &g_Config.m_QmDynamicFovSmoothness, 0, 100, "%");
 	}
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCinematicCamera, "Cinematic camera", Localize("Cinematic camera"), &g_Config.m_QmCinematicCamera);
+	static int s_QmUiScaleInputId;
+	RenderValue("qmclient-ui-scale", "UI scale", &s_QmUiScaleInputId, &g_Config.m_QmUiScale, 50, 200, "%");
 	const char *apAspectPresetNames[] = {Localize("Off"), "5:4", "4:3", "3:2", "16:9", "21:9", Localize("Custom")};
 	static CUi::SDropDownState s_AspectPresetDropDownState;
 	static CScrollRegion s_AspectPresetDropDownScrollRegion;
@@ -5136,7 +5139,7 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		case EQmModuleId::ChatBubble:
 			return g_Config.m_QmChatBubble ? Rows(5.0f) + 2.0f * Metrics.m_LineHeight + 2.0f * Metrics.m_LineSpacing : Rows(1.0f);
 		case EQmModuleId::CameraView:
-			return Rows(3.0f + (g_Config.m_QmCameraDrift ? 3.0f : 0.0f) + (g_Config.m_QmDynamicFov ? 2.0f : 0.0f) + (g_Config.m_QmAspectPreset == 6 ? 1.0f : 0.0f)) + Metrics.m_BodySize;
+			return Rows(5.0f + (g_Config.m_QmCameraDrift ? 3.0f : 0.0f) + (g_Config.m_QmDynamicFov ? 2.0f : 0.0f) + (g_Config.m_QmAspectPreset == 6 ? 1.0f : 0.0f)) + Metrics.m_BodySize;
 		case EQmModuleId::SkinTransition:
 			return ResolveQmVisualSkinTransitionHeight(Metrics, g_Config.m_QmSkinChangeTransition != 0);
 		case EQmModuleId::FocusMode:
@@ -5190,6 +5193,12 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 					ConsumeVisualRow(Content);
 				}
 				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmDynamicFov, &g_Config.m_QmDynamicFov) || Changed;
+				if(g_Config.m_QmDynamicFov)
+				{
+					ConsumeVisualRow(Content);
+					ConsumeVisualRow(Content);
+				}
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmCinematicCamera, &g_Config.m_QmCinematicCamera) || Changed;
 				return Changed;
 			};
 		case EQmModuleId::SkinTransition:

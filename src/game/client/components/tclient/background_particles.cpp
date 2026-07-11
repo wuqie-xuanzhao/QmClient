@@ -16,7 +16,6 @@ namespace
 	constexpr int MAX_BACKGROUND_PARTICLES = 200;
 	constexpr float MIN_VIEW_SIZE = 1.0f;
 	constexpr float MAX_EFFECTIVE_SIZE = 24.0f;
-	constexpr float PROJ_DIST = 600.0f;
 	constexpr int SHAPE_CUBE = 1;
 	constexpr int SHAPE_HEART = 2;
 	constexpr int SHAPE_MIXED = 3;
@@ -29,86 +28,11 @@ namespace
 	constexpr int SHAPE_FIRST = SHAPE_CUBE;
 	constexpr int SHAPE_LAST = SHAPE_CRESCENT;
 	constexpr int REAL_SHAPE_COUNT = 8;
-	constexpr int SPHERE_SEGMENTS = 24;
-	constexpr int RING_SEGMENTS = 32;
-	constexpr int RING_RADIALS = 8;
-	constexpr int CRESCENT_SEGMENTS = 28;
+	constexpr int MAX_MESH_VERTICES = 128;
+	constexpr int MAX_RENDER_LINES = 512;
+	constexpr int HEART_POINTS = 24;
 	constexpr int STAR_POINTS = 10;
-	constexpr int STAR_VERTICES = STAR_POINTS * 2;
-	constexpr int STAR_EDGES = STAR_POINTS * 3;
-	constexpr int HEART_POINTS = 96;
-	constexpr int HEART_LOW_POINTS = 24;
-	constexpr int HEART_LAYERS = 5;
-	constexpr float HEART_THICKNESS = 0.35f;
-
-	const std::array<vec3, 8> s_aCubeVertices = {{
-		vec3(-1.0f, -1.0f, -1.0f),
-		vec3(1.0f, -1.0f, -1.0f),
-		vec3(1.0f, 1.0f, -1.0f),
-		vec3(-1.0f, 1.0f, -1.0f),
-		vec3(-1.0f, -1.0f, 1.0f),
-		vec3(1.0f, -1.0f, 1.0f),
-		vec3(1.0f, 1.0f, 1.0f),
-		vec3(-1.0f, 1.0f, 1.0f),
-	}};
-
-	const std::array<std::array<int, 2>, 12> s_aCubeEdges = {{
-		{{0, 1}},
-		{{1, 2}},
-		{{2, 3}},
-		{{3, 0}},
-		{{4, 5}},
-		{{5, 6}},
-		{{6, 7}},
-		{{7, 4}},
-		{{0, 4}},
-		{{1, 5}},
-		{{2, 6}},
-		{{3, 7}},
-	}};
-
-	const std::array<vec3, 5> s_aPyramidVertices = {{
-		vec3(-1.0f, -1.0f, -0.65f),
-		vec3(1.0f, -1.0f, -0.65f),
-		vec3(1.0f, 1.0f, -0.65f),
-		vec3(-1.0f, 1.0f, -0.65f),
-		vec3(0.0f, 0.0f, 1.15f),
-	}};
-
-	const std::array<std::array<int, 2>, 8> s_aPyramidEdges = {{
-		{{0, 1}},
-		{{1, 2}},
-		{{2, 3}},
-		{{3, 0}},
-		{{0, 4}},
-		{{1, 4}},
-		{{2, 4}},
-		{{3, 4}},
-	}};
-
-	const std::array<vec3, 6> s_aDiamondVertices = {{
-		vec3(0.0f, -1.25f, 0.0f),
-		vec3(1.0f, 0.0f, 0.0f),
-		vec3(0.0f, 0.0f, 1.0f),
-		vec3(-1.0f, 0.0f, 0.0f),
-		vec3(0.0f, 0.0f, -1.0f),
-		vec3(0.0f, 1.25f, 0.0f),
-	}};
-
-	const std::array<std::array<int, 2>, 12> s_aDiamondEdges = {{
-		{{0, 1}},
-		{{0, 2}},
-		{{0, 3}},
-		{{0, 4}},
-		{{5, 1}},
-		{{5, 2}},
-		{{5, 3}},
-		{{5, 4}},
-		{{1, 2}},
-		{{2, 3}},
-		{{3, 4}},
-		{{4, 1}},
-	}};
+	constexpr int CRESCENT_SEGMENTS = 28;
 
 	float ClampDelta(float Delta)
 	{
@@ -132,144 +56,115 @@ namespace
 		return (float)SizeMax;
 	}
 
-	vec3 RotateVec3(const vec3 &V, const vec3 &Rot)
+	const SBackgroundParticleMesh &HeartMesh()
 	{
-		vec3 Result = V;
-
-		const float Cz = std::cos(Rot.z);
-		const float Sz = std::sin(Rot.z);
-		Result = vec3(Result.x * Cz - Result.y * Sz, Result.x * Sz + Result.y * Cz, Result.z);
-
-		const float Cx = std::cos(Rot.x);
-		const float Sx = std::sin(Rot.x);
-		Result = vec3(Result.x, Result.y * Cx - Result.z * Sx, Result.y * Sx + Result.z * Cx);
-
-		const float Cy = std::cos(Rot.y);
-		const float Sy = std::sin(Rot.y);
-		Result = vec3(Result.x * Cy + Result.z * Sy, Result.y, -Result.x * Sy + Result.z * Cy);
-
-		return Result;
-	}
-
-	vec2 ProjectPoint(const vec3 &Pos, const vec2 &Center)
-	{
-		const float Scale = std::clamp(PROJ_DIST / (PROJ_DIST + Pos.z), 0.5f, 1.6f);
-		const vec2 Rel = vec2(Pos.x - Center.x, Pos.y - Center.y);
-		return Center + Rel * Scale;
-	}
-
-	const std::array<vec3, HEART_POINTS> &HeartVertices()
-	{
-		static std::array<vec3, HEART_POINTS> s_aVerts;
-		static bool s_Initialized = false;
-		if(!s_Initialized)
-		{
-			for(int i = 0; i < HEART_POINTS; i++)
+		static const SBackgroundParticleMesh s_Mesh = [] {
+			constexpr float Thickness = 0.18f;
+			SBackgroundParticleMesh Mesh;
+			Mesh.m_vVertices.reserve(HEART_POINTS * 2);
+			Mesh.m_vEdges.reserve(HEART_POINTS * 2 + HEART_POINTS / 4);
+			Mesh.m_vFaces.reserve(HEART_POINTS * 2);
+			for(int Layer = 0; Layer < 2; ++Layer)
 			{
-				const float T = 2.0f * pi * (float)i / (float)HEART_POINTS;
-				const float X = 16.0f * std::pow(std::sin(T), 3.0f);
-				const float Y = 13.0f * std::cos(T) - 5.0f * std::cos(2.0f * T) - 2.0f * std::cos(3.0f * T) - std::cos(4.0f * T);
-				s_aVerts[i] = vec3(X, -Y, 0.0f);
+				const float Z = Layer == 0 ? -Thickness : Thickness;
+				for(int Point = 0; Point < HEART_POINTS; ++Point)
+				{
+					const float T = 2.0f * pi * (float)Point / (float)HEART_POINTS;
+					const float X = 16.0f * std::pow(std::sin(T), 3.0f) * 0.055f;
+					const float Y = -(13.0f * std::cos(T) - 5.0f * std::cos(2.0f * T) - 2.0f * std::cos(3.0f * T) - std::cos(4.0f * T)) * 0.055f;
+					Mesh.m_vVertices.emplace_back(X, Y, Z);
+				}
 			}
-			s_Initialized = true;
-		}
-		return s_aVerts;
-	}
-
-	const std::array<vec3, HEART_LOW_POINTS> &HeartLowVertices()
-	{
-		static std::array<vec3, HEART_LOW_POINTS> s_aVerts;
-		static bool s_Initialized = false;
-		if(!s_Initialized)
-		{
-			const auto &HighRes = HeartVertices();
-			for(int i = 0; i < HEART_LOW_POINTS; i++)
+			for(int Point = 0; Point < HEART_POINTS; ++Point)
 			{
-				const int Src = std::clamp((i * HEART_POINTS) / HEART_LOW_POINTS, 0, HEART_POINTS - 1);
-				s_aVerts[i] = HighRes[Src];
+				const int Next = (Point + 1) % HEART_POINTS;
+				Mesh.m_vEdges.push_back({Point, Next});
+				Mesh.m_vEdges.push_back({Point + HEART_POINTS, Next + HEART_POINTS});
+				if(Point % 4 == 0)
+					Mesh.m_vEdges.push_back({Point, Point + HEART_POINTS});
+				Mesh.m_vFaces.push_back({Point, Next, Next + HEART_POINTS});
+				Mesh.m_vFaces.push_back({Point, Next + HEART_POINTS, Point + HEART_POINTS});
 			}
-			s_Initialized = true;
-		}
-		return s_aVerts;
+			return Mesh;
+		}();
+		return s_Mesh;
 	}
 
-	const std::array<vec3, STAR_VERTICES> &StarVertices()
+	const SBackgroundParticleMesh &StarMesh()
 	{
-		static std::array<vec3, STAR_VERTICES> s_aVerts;
-		static bool s_Initialized = false;
-		if(!s_Initialized)
-		{
-			for(int i = 0; i < STAR_POINTS; i++)
+		static const SBackgroundParticleMesh s_Mesh = [] {
+			SBackgroundParticleMesh Mesh;
+			Mesh.m_vVertices.reserve(STAR_POINTS * 2);
+			Mesh.m_vEdges.reserve(STAR_POINTS * 2 + STAR_POINTS / 2);
+			Mesh.m_vFaces.reserve(STAR_POINTS * 2);
+			for(int Point = 0; Point < STAR_POINTS; ++Point)
 			{
-				const float T = -0.5f * pi + 2.0f * pi * (float)i / (float)STAR_POINTS;
-				const float Radius = (i % 2) == 0 ? 1.18f : 0.48f;
-				const vec3 Front(std::cos(T) * Radius, std::sin(T) * Radius, -0.26f);
-				const vec3 Back(Front.x, Front.y, 0.26f);
-				s_aVerts[i] = Front;
-				s_aVerts[i + STAR_POINTS] = Back;
+				const float T = -0.5f * pi + 2.0f * pi * (float)Point / (float)STAR_POINTS;
+				const float Radius = (Point % 2) == 0 ? 1.18f : 0.48f;
+				Mesh.m_vVertices.emplace_back(std::cos(T) * Radius, std::sin(T) * Radius, -0.26f);
+				Mesh.m_vVertices.emplace_back(std::cos(T) * Radius, std::sin(T) * Radius, 0.26f);
 			}
-			s_Initialized = true;
-		}
-		return s_aVerts;
-	}
-
-	const std::array<std::array<int, 2>, STAR_EDGES> &StarEdges()
-	{
-		static std::array<std::array<int, 2>, STAR_EDGES> s_aEdges;
-		static bool s_Initialized = false;
-		if(!s_Initialized)
-		{
-			for(int i = 0; i < STAR_POINTS; i++)
+			for(int Point = 0; Point < STAR_POINTS; ++Point)
 			{
-				const int Next = (i + 1) % STAR_POINTS;
-				s_aEdges[i] = {{i, Next}};
-				s_aEdges[i + STAR_POINTS] = {{i + STAR_POINTS, Next + STAR_POINTS}};
-				s_aEdges[i + STAR_POINTS * 2] = {{i, i + STAR_POINTS}};
+				const int Next = (Point + 1) % STAR_POINTS;
+				const int Front = Point * 2;
+				const int Back = Front + 1;
+				const int NextFront = Next * 2;
+				const int NextBack = NextFront + 1;
+				Mesh.m_vEdges.push_back({Front, NextFront});
+				Mesh.m_vEdges.push_back({Back, NextBack});
+				if(Point % 2 == 0)
+					Mesh.m_vEdges.push_back({Front, Back});
+				Mesh.m_vFaces.push_back({Front, NextFront, NextBack});
+				Mesh.m_vFaces.push_back({Front, NextBack, Back});
 			}
-			s_Initialized = true;
-		}
-		return s_aEdges;
+			return Mesh;
+		}();
+		return s_Mesh;
 	}
 
-	template<size_t NumVertices, size_t NumEdges>
-	void RenderWireShape(IGraphics *pGraphics, vec2 CameraCenter, const std::array<vec3, NumVertices> &aVertices, const std::array<std::array<int, 2>, NumEdges> &aEdges, vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color)
+	const SBackgroundParticleMesh &CrescentMesh()
 	{
-		pGraphics->SetColor(Color);
+		static const SBackgroundParticleMesh s_Mesh = [] {
+			constexpr int BoundaryPoints = CRESCENT_SEGMENTS * 2;
+			constexpr float Start = -0.78f * pi;
+			constexpr float End = 0.78f * pi;
+			constexpr float Thickness = 0.12f;
+			std::array<vec2, BoundaryPoints> aBoundary;
+			for(int Point = 0; Point < CRESCENT_SEGMENTS; ++Point)
+			{
+				const float T = Start + (End - Start) * (float)Point / (float)(CRESCENT_SEGMENTS - 1);
+				aBoundary[Point] = vec2(std::cos(T), std::sin(T));
+			}
+			for(int Point = 0; Point < CRESCENT_SEGMENTS; ++Point)
+			{
+				const float T = End - (End - Start) * (float)Point / (float)(CRESCENT_SEGMENTS - 1);
+				aBoundary[Point + CRESCENT_SEGMENTS] = vec2(std::cos(T) * 0.58f + 0.36f, std::sin(T) * 0.58f);
+			}
 
-		const vec3 RenderPos(Pos.x, Pos.y, 0.0f);
-		std::array<vec2, NumVertices> aProjected;
-		for(size_t i = 0; i < NumVertices; i++)
-		{
-			const vec3 Vertex = RotateVec3(aVertices[i] * Size, Rotation) + RenderPos;
-			aProjected[i] = ProjectPoint(Vertex, CameraCenter);
-		}
-
-		std::array<IGraphics::CLineItem, NumEdges> aLines;
-		for(size_t i = 0; i < NumEdges; i++)
-		{
-			const auto &Edge = aEdges[i];
-			aLines[i] = IGraphics::CLineItem(aProjected[Edge[0]], aProjected[Edge[1]]);
-		}
-		pGraphics->LinesDraw(aLines.data(), aLines.size());
-	}
-
-	template<size_t NumVertices>
-	void RenderWireLoop(IGraphics *pGraphics, vec2 CameraCenter, const std::array<vec3, NumVertices> &aVertices, vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color)
-	{
-		pGraphics->SetColor(Color);
-
-		const vec3 RenderPos(Pos.x, Pos.y, 0.0f);
-		std::array<vec2, NumVertices> aProjected;
-		for(size_t i = 0; i < NumVertices; i++)
-		{
-			const vec3 Vertex = RotateVec3(aVertices[i] * Size, Rotation) + RenderPos;
-			aProjected[i] = ProjectPoint(Vertex, CameraCenter);
-		}
-
-		std::array<IGraphics::CLineItem, NumVertices> aLines;
-		for(size_t i = 0; i < NumVertices; i++)
-			aLines[i] = IGraphics::CLineItem(aProjected[i], aProjected[(i + 1) % NumVertices]);
-		pGraphics->LinesDraw(aLines.data(), aLines.size());
+			SBackgroundParticleMesh Mesh;
+			Mesh.m_vVertices.reserve(BoundaryPoints * 2);
+			Mesh.m_vEdges.reserve(BoundaryPoints * 2 + 8);
+			Mesh.m_vFaces.reserve(BoundaryPoints * 2);
+			for(int Layer = 0; Layer < 2; ++Layer)
+			{
+				const float Z = Layer == 0 ? -Thickness : Thickness;
+				for(const vec2 &Point : aBoundary)
+					Mesh.m_vVertices.emplace_back(Point.x, Point.y, Z);
+			}
+			for(int Point = 0; Point < BoundaryPoints; ++Point)
+			{
+				const int Next = (Point + 1) % BoundaryPoints;
+				Mesh.m_vEdges.push_back({Point, Next});
+				Mesh.m_vEdges.push_back({Point + BoundaryPoints, Next + BoundaryPoints});
+				if(Point % 7 == 0)
+					Mesh.m_vEdges.push_back({Point, Point + BoundaryPoints});
+				Mesh.m_vFaces.push_back({Point, Next, Next + BoundaryPoints});
+				Mesh.m_vFaces.push_back({Point, Next + BoundaryPoints, Point + BoundaryPoints});
+			}
+			return Mesh;
+		}();
+		return s_Mesh;
 	}
 }
 
@@ -508,196 +403,84 @@ float CBackgroundParticles::ParticleAlpha(const SParticle &Particle) const
 	return ConfigAlpha() * minimum(In, Out);
 }
 
-void CBackgroundParticles::RenderCube(vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
+void CBackgroundParticles::RenderMesh(const SBackgroundParticleMesh &Mesh, vec2 WorldPos, float Depth, float Size, const vec3 &Rotation, ColorRGBA Color, const SBackgroundParticleProjection &Projection, vec2 ScreenOffset) const
 {
-	RenderWireShape(Graphics(), GameClient()->m_Camera.m_Center, s_aCubeVertices, s_aCubeEdges, Pos, Size, Rotation, Color);
-}
+	if(Mesh.m_vVertices.empty() || Mesh.m_vVertices.size() > MAX_MESH_VERTICES)
+		return;
 
-void CBackgroundParticles::RenderHeart(vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
-{
+	const float DepthRange = (float)std::clamp(g_Config.m_Qm3DParticlesDepth, 10, 1000);
+	std::array<vec2, MAX_MESH_VERTICES> aProjected;
+	for(size_t VertexIndex = 0; VertexIndex < Mesh.m_vVertices.size(); ++VertexIndex)
+	{
+		const vec3 RotatedVertex = BackgroundParticleRotateVertex(Mesh.m_vVertices[VertexIndex] * Size, Rotation);
+		aProjected[VertexIndex] = BackgroundParticleProjectVertex(Projection, WorldPos, RotatedVertex, Depth, DepthRange) + ScreenOffset;
+	}
+
 	Graphics()->SetColor(Color);
+	std::array<IGraphics::CLineItem, MAX_RENDER_LINES> aLines;
+	int LineCount = 0;
+	auto FlushLines = [&] {
+		if(LineCount == 0)
+			return;
+		Graphics()->LinesDraw(aLines.data(), LineCount);
+		LineCount = 0;
+	};
+	auto AddLine = [&](vec2 Start, vec2 End) {
+		if(LineCount == MAX_RENDER_LINES)
+			FlushLines();
+		aLines[LineCount++] = IGraphics::CLineItem(Start, End);
+	};
 
-	const auto &aVerts = HeartLowVertices();
-	const float Scale = Size * 0.055f;
-	const float LayerStep = HEART_LAYERS > 1 ? 2.0f / (float)(HEART_LAYERS - 1) : 0.0f;
-	const vec3 RenderPos(Pos.x, Pos.y, 0.0f);
-	std::array<std::array<vec2, HEART_LOW_POINTS>, HEART_LAYERS> aProjected;
-	std::array<float, HEART_LAYERS> aLayerZ;
-
-	for(int Layer = 0; Layer < HEART_LAYERS; Layer++)
+	for(const auto &Edge : Mesh.m_vEdges)
 	{
-		const float LayerT = -1.0f + LayerStep * (float)Layer;
-		const float Z = LayerT * (Size * HEART_THICKNESS);
-		aLayerZ[Layer] = Z;
-		const float LayerScale = 1.0f - std::abs(LayerT) * 0.08f;
-		for(int i = 0; i < HEART_LOW_POINTS; i++)
-		{
-			const vec3 Local(aVerts[i].x * Scale * LayerScale, aVerts[i].y * Scale * LayerScale, Z);
-			const vec3 Vertex = RotateVec3(Local, Rotation) + RenderPos;
-			aProjected[Layer][i] = ProjectPoint(Vertex, GameClient()->m_Camera.m_Center);
-		}
+		if(Edge[0] < 0 || Edge[1] < 0 || Edge[0] >= (int)Mesh.m_vVertices.size() || Edge[1] >= (int)Mesh.m_vVertices.size())
+			continue;
+		AddLine(aProjected[Edge[0]], aProjected[Edge[1]]);
 	}
 
-	for(int Layer = 0; Layer < HEART_LAYERS; Layer++)
+	const float PointRadius = std::clamp(Size * 0.035f, 0.45f, 0.9f);
+	for(size_t VertexIndex = 0; VertexIndex < Mesh.m_vVertices.size(); ++VertexIndex)
 	{
-		std::array<IGraphics::CLineItem, HEART_LOW_POINTS> aRingLines;
-		for(int i = 0; i < HEART_LOW_POINTS; i++)
-		{
-			const int Next = (i + 1) % HEART_LOW_POINTS;
-			aRingLines[i] = IGraphics::CLineItem(aProjected[Layer][i], aProjected[Layer][Next]);
-		}
-		Graphics()->LinesDraw(aRingLines.data(), aRingLines.size());
+		const vec2 Point = aProjected[VertexIndex];
+		AddLine(Point - vec2(PointRadius, 0.0f), Point + vec2(PointRadius, 0.0f));
+		AddLine(Point - vec2(0.0f, PointRadius), Point + vec2(0.0f, PointRadius));
 	}
-
-	for(int Layer = 0; Layer < HEART_LAYERS - 1; Layer++)
-	{
-		std::array<IGraphics::CLineItem, HEART_LOW_POINTS> aVertical;
-		std::array<IGraphics::CLineItem, HEART_LOW_POINTS> aDiagonal;
-		for(int i = 0; i < HEART_LOW_POINTS; i++)
-		{
-			const int Next = (i + 1) % HEART_LOW_POINTS;
-			aVertical[i] = IGraphics::CLineItem(aProjected[Layer][i], aProjected[Layer + 1][i]);
-			aDiagonal[i] = IGraphics::CLineItem(aProjected[Layer][i], aProjected[Layer + 1][Next]);
-		}
-		Graphics()->LinesDraw(aVertical.data(), aVertical.size());
-		Graphics()->LinesDraw(aDiagonal.data(), aDiagonal.size());
-	}
-
-	if(HEART_LAYERS >= 2)
-	{
-		const int Front = 0;
-		const int Back = HEART_LAYERS - 1;
-		const vec2 CenterFront = ProjectPoint(RotateVec3(vec3(0.0f, 0.0f, aLayerZ[Front]), Rotation) + RenderPos, GameClient()->m_Camera.m_Center);
-		const vec2 CenterBack = ProjectPoint(RotateVec3(vec3(0.0f, 0.0f, aLayerZ[Back]), Rotation) + RenderPos, GameClient()->m_Camera.m_Center);
-		std::array<IGraphics::CLineItem, HEART_LOW_POINTS> aFront;
-		std::array<IGraphics::CLineItem, HEART_LOW_POINTS> aBack;
-		for(int i = 0; i < HEART_LOW_POINTS; i++)
-		{
-			aFront[i] = IGraphics::CLineItem(CenterFront, aProjected[Front][i]);
-			aBack[i] = IGraphics::CLineItem(CenterBack, aProjected[Back][i]);
-		}
-		Graphics()->LinesDraw(aFront.data(), aFront.size());
-		Graphics()->LinesDraw(aBack.data(), aBack.size());
-	}
+	FlushLines();
 }
 
-void CBackgroundParticles::RenderSphere(vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
+void CBackgroundParticles::RenderShape(int Type, vec2 WorldPos, float Depth, float Size, const vec3 &Rotation, ColorRGBA Color, const SBackgroundParticleProjection &Projection, vec2 ScreenOffset) const
 {
-	std::array<vec3, SPHERE_SEGMENTS> aCircle;
-
-	for(int Axis = 0; Axis < 3; Axis++)
-	{
-		for(int i = 0; i < SPHERE_SEGMENTS; i++)
-		{
-			const float T = 2.0f * pi * (float)i / (float)SPHERE_SEGMENTS;
-			const float C = std::cos(T);
-			const float S = std::sin(T);
-			switch(Axis)
-			{
-			case 0: aCircle[i] = vec3(C, S, 0.0f); break;
-			case 1: aCircle[i] = vec3(C, 0.0f, S); break;
-			default: aCircle[i] = vec3(0.0f, C, S); break;
-			}
-		}
-		RenderWireLoop(Graphics(), GameClient()->m_Camera.m_Center, aCircle, Pos, Size, Rotation, Color);
-	}
-}
-
-void CBackgroundParticles::RenderPyramid(vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
-{
-	RenderWireShape(Graphics(), GameClient()->m_Camera.m_Center, s_aPyramidVertices, s_aPyramidEdges, Pos, Size, Rotation, Color);
-}
-
-void CBackgroundParticles::RenderDiamond(vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
-{
-	RenderWireShape(Graphics(), GameClient()->m_Camera.m_Center, s_aDiamondVertices, s_aDiamondEdges, Pos, Size, Rotation, Color);
-}
-
-void CBackgroundParticles::RenderRing(vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
-{
-	constexpr int RingVertices = RING_SEGMENTS * 2;
-	constexpr int RingEdges = RING_SEGMENTS * 2 + RING_RADIALS;
-	std::array<vec3, RingVertices> aVertices;
-	std::array<std::array<int, 2>, RingEdges> aEdges;
-
-	for(int i = 0; i < RING_SEGMENTS; i++)
-	{
-		const float T = 2.0f * pi * (float)i / (float)RING_SEGMENTS;
-		const float C = std::cos(T);
-		const float S = std::sin(T);
-		aVertices[i] = vec3(C * 1.15f, S * 1.15f, 0.0f);
-		aVertices[i + RING_SEGMENTS] = vec3(C * 0.64f, S * 0.64f, 0.0f);
-		aEdges[i] = {{i, (i + 1) % RING_SEGMENTS}};
-		aEdges[i + RING_SEGMENTS] = {{i + RING_SEGMENTS, ((i + 1) % RING_SEGMENTS) + RING_SEGMENTS}};
-	}
-
-	for(int i = 0; i < RING_RADIALS; i++)
-	{
-		const int VertexIndex = (i * RING_SEGMENTS) / RING_RADIALS;
-		aEdges[RING_SEGMENTS * 2 + i] = {{VertexIndex, VertexIndex + RING_SEGMENTS}};
-	}
-
-	RenderWireShape(Graphics(), GameClient()->m_Camera.m_Center, aVertices, aEdges, Pos, Size, Rotation, Color);
-}
-
-void CBackgroundParticles::RenderStar(vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
-{
-	RenderWireShape(Graphics(), GameClient()->m_Camera.m_Center, StarVertices(), StarEdges(), Pos, Size, Rotation, Color);
-}
-
-void CBackgroundParticles::RenderCrescent(vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
-{
-	constexpr int CrescentVertices = CRESCENT_SEGMENTS * 2;
-	std::array<vec3, CrescentVertices> aVertices;
-	constexpr float Start = -0.78f * pi;
-	constexpr float End = 0.78f * pi;
-
-	for(int i = 0; i < CRESCENT_SEGMENTS; i++)
-	{
-		const float T = Start + (End - Start) * (float)i / (float)(CRESCENT_SEGMENTS - 1);
-		aVertices[i] = vec3(std::cos(T), std::sin(T), 0.0f);
-	}
-	for(int i = 0; i < CRESCENT_SEGMENTS; i++)
-	{
-		const float T = End - (End - Start) * (float)i / (float)(CRESCENT_SEGMENTS - 1);
-		aVertices[i + CRESCENT_SEGMENTS] = vec3(std::cos(T) * 0.58f + 0.36f, std::sin(T) * 0.58f, 0.18f);
-	}
-
-	RenderWireLoop(Graphics(), GameClient()->m_Camera.m_Center, aVertices, Pos, Size, Rotation, Color);
-}
-
-void CBackgroundParticles::RenderShape(int Type, vec2 Pos, float Size, const vec3 &Rotation, ColorRGBA Color) const
-{
+	const SBackgroundParticleMesh *pMesh = &BackgroundParticleCubeMesh();
 	switch(Type)
 	{
 	case SHAPE_HEART:
-		RenderHeart(Pos, Size, Rotation, Color);
+		pMesh = &HeartMesh();
 		break;
 	case SHAPE_SPHERE:
-		RenderSphere(Pos, Size, Rotation, Color);
+		pMesh = &BackgroundParticleSphereMesh();
 		break;
 	case SHAPE_PYRAMID:
-		RenderPyramid(Pos, Size, Rotation, Color);
+		pMesh = &BackgroundParticlePyramidMesh();
 		break;
 	case SHAPE_DIAMOND:
-		RenderDiamond(Pos, Size, Rotation, Color);
+		pMesh = &BackgroundParticleOctahedronMesh();
 		break;
 	case SHAPE_RING:
-		RenderRing(Pos, Size, Rotation, Color);
+		pMesh = &BackgroundParticleTorusMesh();
 		break;
 	case SHAPE_STAR:
-		RenderStar(Pos, Size, Rotation, Color);
+		pMesh = &StarMesh();
 		break;
 	case SHAPE_CRESCENT:
-		RenderCrescent(Pos, Size, Rotation, Color);
+		pMesh = &CrescentMesh();
 		break;
 	default:
-		RenderCube(Pos, Size, Rotation, Color);
 		break;
 	}
+	RenderMesh(*pMesh, WorldPos, Depth, Size, Rotation, Color, Projection, ScreenOffset);
 }
 
-void CBackgroundParticles::RenderParticleTrail(const SParticle &Particle, vec2 Center, float Parallax, float Size, ColorRGBA Color) const
+void CBackgroundParticles::RenderParticleTrail(const SParticle &Particle, float Size, ColorRGBA Color, const SBackgroundParticleProjection &Projection) const
 {
 	if(!g_Config.m_Qm3DParticlesTrail || Particle.m_TrailCount <= 1)
 		return;
@@ -709,19 +492,16 @@ void CBackgroundParticles::RenderParticleTrail(const SParticle &Particle, vec2 C
 	for(int TrailIndex = TrailCount - 1; TrailIndex >= 1; --TrailIndex)
 	{
 		const float Fade = (float)(TrailCount - TrailIndex) / (float)TrailCount;
-		const vec2 Pos = Center + (Particle.m_aTrailPos[TrailIndex] - Center) * Parallax;
 		const float TrailSize = Size * (0.82f + 0.18f * Fade);
-		RenderShape(Particle.m_Type, Pos, TrailSize, Particle.m_Rotation, Color.WithMultipliedAlpha(TrailAlpha * Fade));
+		RenderShape(Particle.m_Type, Particle.m_aTrailPos[TrailIndex], Particle.m_Depth, TrailSize, Particle.m_Rotation, Color.WithMultipliedAlpha(TrailAlpha * Fade), Projection);
 	}
 }
 
-void CBackgroundParticles::RenderParticle(const SParticle &Particle, vec2 Center) const
+void CBackgroundParticles::RenderParticle(const SParticle &Particle, const SBackgroundParticleProjection &Projection) const
 {
 	const float DepthRange = (float)std::clamp(g_Config.m_Qm3DParticlesDepth, 10, 1000);
 	const float DepthFactor = std::clamp(Particle.m_Depth / DepthRange, 0.0f, 1.0f);
-	const float Parallax = 1.0f - DepthFactor * 0.72f;
-	const vec2 Pos = Center + (Particle.m_Pos - Center) * Parallax;
-	float Size = minimum(Particle.m_Size, MAX_EFFECTIVE_SIZE) * (0.72f - DepthFactor * 0.25f);
+	float Size = minimum(Particle.m_Size, MAX_EFFECTIVE_SIZE);
 	if(g_Config.m_Qm3DParticlesPulse)
 	{
 		const float PulseStrength = std::clamp(g_Config.m_Qm3DParticlesPulseStrength, 0, 50) / 100.0f;
@@ -741,18 +521,17 @@ void CBackgroundParticles::RenderParticle(const SParticle &Particle, vec2 Center
 		return;
 
 	const ColorRGBA Color = Particle.m_Color.WithMultipliedAlpha(Alpha);
-	RenderParticleTrail(Particle, Center, Parallax, Size, Color);
+	RenderParticleTrail(Particle, Size, Color, Projection);
 
 	if(g_Config.m_Qm3DParticlesGlow)
 	{
 		const float GlowAlpha = std::clamp(g_Config.m_Qm3DParticlesGlowAlpha, 1, 100) / 100.0f;
 		const float GlowOffset = (float)std::clamp(g_Config.m_Qm3DParticlesGlowOffset, 1, 20);
-		const vec2 GlowPos = Pos - vec2(GlowOffset, GlowOffset);
 		const ColorRGBA GlowColor = Color.WithMultipliedAlpha(GlowAlpha);
-		RenderShape(Particle.m_Type, GlowPos, Size, Particle.m_Rotation, GlowColor);
+		RenderShape(Particle.m_Type, Particle.m_Pos, Particle.m_Depth, Size, Particle.m_Rotation, GlowColor, Projection, -vec2(GlowOffset, GlowOffset));
 	}
 
-	RenderShape(Particle.m_Type, Pos, Size, Particle.m_Rotation, Color);
+	RenderShape(Particle.m_Type, Particle.m_Pos, Particle.m_Depth, Size, Particle.m_Rotation, Color, Projection);
 }
 
 void CBackgroundParticles::OnRender()
@@ -796,12 +575,20 @@ void CBackgroundParticles::OnRender()
 		return m_vParticles[LeftIndex].m_Depth > m_vParticles[RightIndex].m_Depth;
 	});
 
-	Graphics()->MapScreen(Left, Top, Right, Bottom);
+	SBackgroundParticleProjection Projection;
+	Projection.m_CameraCenter = GameClient()->m_Camera.m_Center;
+	Projection.m_WorldLeft = Left;
+	Projection.m_WorldTop = Top;
+	Projection.m_WorldRight = Right;
+	Projection.m_WorldBottom = Bottom;
+	Projection.m_ViewportWidth = (float)Graphics()->ScreenWidth();
+	Projection.m_ViewportHeight = (float)Graphics()->ScreenHeight();
+
+	Graphics()->MapScreen(0.0f, 0.0f, Projection.m_ViewportWidth, Projection.m_ViewportHeight);
 	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
-	const vec2 Center = GameClient()->m_Camera.m_Center;
 	for(const int ParticleIndex : m_vRenderOrder)
-		RenderParticle(m_vParticles[ParticleIndex], Center);
+		RenderParticle(m_vParticles[ParticleIndex], Projection);
 	Graphics()->LinesEnd();
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }

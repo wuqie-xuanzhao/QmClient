@@ -937,9 +937,11 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 	const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 
 	CUIRect Box;
-	MainView.Margin(150.0f, &Box);
-	Box.y -= 60.0f;
-	Box.h += 120.0f;
+	const float PopupMargin = QmUiCenteredMargin(MainView, 150.0f, 300.0f, 300.0f);
+	MainView.Margin(PopupMargin, &Box);
+	const float VerticalExpansion = std::min(60.0f, PopupMargin);
+	Box.y -= VerticalExpansion;
+	Box.h += VerticalExpansion * 2.0f;
 
 	// background
 	Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), IGraphics::CORNER_ALL, 15.0f);
@@ -999,16 +1001,27 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 	if(!m_vDemoCutSegments.empty())
 	{
 		CUIRect SegmentsHeader, SegmentsList;
-		Box.HSplitTop(20.0f, &SegmentsHeader, &Box);
+		constexpr float RemainingControlsHeight = 112.0f;
+		constexpr float SegmentsHeaderHeight = 20.0f;
+		constexpr float SegmentRowHeight = 20.0f;
+		constexpr float MoreSegmentsHeight = 16.0f;
+		constexpr float SegmentSpacing = 10.0f;
+		const int DesiredVisibleSegments = minimum<int>((int)m_vDemoCutSegments.size(), 4);
+		const float DesiredSegmentsHeight = SegmentsHeaderHeight + DesiredVisibleSegments * SegmentRowHeight +
+						    ((int)m_vDemoCutSegments.size() > DesiredVisibleSegments ? MoreSegmentsHeight : 0.0f) + SegmentSpacing;
+		const float SegmentsAreaHeight = std::clamp(Box.h - RemainingControlsHeight, 0.0f, DesiredSegmentsHeight);
+		CUIRect SegmentsArea;
+		Box.HSplitTop(SegmentsAreaHeight, &SegmentsArea, &Box);
+		SegmentsArea.HSplitTop(std::min(SegmentsHeaderHeight, SegmentsArea.h), &SegmentsHeader, &SegmentsArea);
 		str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Cut segments"), (int)m_vDemoCutSegments.size());
 		Ui()->DoLabel(&SegmentsHeader, aBuf, 14.0f, TEXTALIGN_ML);
 
-		const int NumVisibleSegments = minimum<int>((int)m_vDemoCutSegments.size(), 4);
-		Box.HSplitTop(NumVisibleSegments * 20.0f, &SegmentsList, &Box);
+		const int NumVisibleSegments = QmUiVisibleRows(SegmentsArea.h, 0.0f, SegmentRowHeight, (int)m_vDemoCutSegments.size(), 4);
+		SegmentsArea.HSplitTop(NumVisibleSegments * SegmentRowHeight, &SegmentsList, &SegmentsArea);
 		for(int SegmentIndex = 0; SegmentIndex < NumVisibleSegments; ++SegmentIndex)
 		{
 			CUIRect SegmentRow, SegmentLabel, DeleteButton;
-			SegmentsList.HSplitTop(20.0f, &SegmentRow, &SegmentsList);
+			SegmentsList.HSplitTop(SegmentRowHeight, &SegmentRow, &SegmentsList);
 			SegmentRow.VSplitRight(20.0f, &SegmentLabel, &DeleteButton);
 			const SDemoCutSegment &Segment = m_vDemoCutSegments[SegmentIndex];
 			char aSliceBegin[32];
@@ -1026,14 +1039,13 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 			}
 		}
 
-		if((int)m_vDemoCutSegments.size() > NumVisibleSegments)
+		if((int)m_vDemoCutSegments.size() > NumVisibleSegments && SegmentsArea.h >= MoreSegmentsHeight)
 		{
 			CUIRect MoreSegments;
-			Box.HSplitTop(16.0f, &MoreSegments, &Box);
+			SegmentsArea.HSplitTop(MoreSegmentsHeight, &MoreSegments, &SegmentsArea);
 			str_format(aBuf, sizeof(aBuf), Localize("%d more cut segments"), (int)m_vDemoCutSegments.size() - NumVisibleSegments);
 			Ui()->DoLabel(&MoreSegments, aBuf, 12.0f, TEXTALIGN_ML);
 		}
-		Box.HSplitTop(10.0f, nullptr, &Box);
 	}
 
 	IUiContext DemoSliceTextInputCtx;

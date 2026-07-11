@@ -176,7 +176,10 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 
 	CLineReader LineReader;
 	if(!LineReader.OpenFile(pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL)))
+	{
+		log_error("localization", "Couldn't open language file '%s'", pFilename);
 		return false;
+	}
 
 	log_info("localization", "loaded '%s'", pFilename);
 	if(Clear)
@@ -196,14 +199,9 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		if(pLine[0] == '#') // skip comments
 			continue;
 
-		if(pLine[0] == '[') // context
+		if(LocalizationIsContextLine(pLine)) // context
 		{
 			size_t Len = str_length(pLine);
-			if(Len < 1 || pLine[Len - 1] != ']')
-			{
-				log_error("localization", "malformed context '%s' on line %d", pLine, Line);
-				continue;
-			}
 			str_truncate(aContext, sizeof(aContext), pLine + 1, Len - 2);
 			pLine = LineReader.Get();
 			if(!pLine)

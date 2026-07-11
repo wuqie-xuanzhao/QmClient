@@ -6,7 +6,16 @@
 #include <engine/shared/memheap.h>
 
 #include <string>
+#include <string_view>
 #include <vector>
+
+inline bool LocalizationIsContextLine(const char *pLine)
+{
+	if(pLine == nullptr)
+		return false;
+	const std::string_view Line(pLine);
+	return Line.size() >= 2 && Line.front() == '[' && Line.back() == ']';
+}
 
 class CLanguage
 {

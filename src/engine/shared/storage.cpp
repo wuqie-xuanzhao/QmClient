@@ -17,6 +17,31 @@
 
 #include <zlib.h>
 
+bool StoragePathFromExecutable(const char *pExecutablePath, const char *pRelativePath, char *pBuffer, unsigned BufferSize)
+{
+	if(pExecutablePath == nullptr || pRelativePath == nullptr || pBuffer == nullptr || BufferSize == 0)
+		return false;
+
+	const char *pLastSeparator = nullptr;
+	for(const char *pIter = pExecutablePath; *pIter != '\0'; ++pIter)
+	{
+		if(*pIter == '/' || *pIter == '\\')
+			pLastSeparator = pIter;
+	}
+	if(pLastSeparator == nullptr)
+	{
+		pBuffer[0] = '\0';
+		return false;
+	}
+
+	const int DirectoryLength = (int)(pLastSeparator - pExecutablePath);
+	if(DirectoryLength == 0)
+		str_format(pBuffer, BufferSize, "/%s", pRelativePath);
+	else
+		str_format(pBuffer, BufferSize, "%.*s/%s", DirectoryLength, pExecutablePath, pRelativePath);
+	return true;
+}
+
 namespace
 {
 
@@ -128,23 +153,12 @@ namespace
 
 		bool LoadPathsFromFile(const char *pArgv0)
 		{
-			// check current directory
-			IOHANDLE File = io_open("storage.cfg", IOFLAG_READ);
+			char aExecutableStoragePath[IO_MAX_PATH_LENGTH];
+			IOHANDLE File = nullptr;
+			if(StoragePathFromExecutable(pArgv0, "storage.cfg", aExecutableStoragePath, sizeof(aExecutableStoragePath)))
+				File = io_open(aExecutableStoragePath, IOFLAG_READ);
 			if(!File)
-			{
-				// check usable path in argv[0]
-				unsigned int Pos = ~0U;
-				for(unsigned i = 0; pArgv0[i]; i++)
-					if(pArgv0[i] == '/' || pArgv0[i] == '\\')
-						Pos = i;
-				if(Pos < IO_MAX_PATH_LENGTH)
-				{
-					char aBuffer[IO_MAX_PATH_LENGTH];
-					str_copy(aBuffer, pArgv0, Pos + 1);
-					str_append(aBuffer, "/storage.cfg");
-					File = io_open(aBuffer, IOFLAG_READ);
-				}
-			}
+				File = io_open("storage.cfg", IOFLAG_READ);
 
 			CLineReader LineReader;
 			if(!LineReader.OpenFile(File))
@@ -280,10 +294,24 @@ namespace
 
 		void FindDataDirectory(const char *pArgv0)
 		{
-			// 1) use data-dir in PWD if present
-			if(fs_is_dir("data/mapres"))
+			// 1) prefer data next to the executable so shortcut working directories cannot shadow it
+			const char *pExecutablePath = pArgv0;
+#ifdef CONF_PLATFORM_HAIKU
+			char *pResolvedExecutablePath = realpath(pArgv0, nullptr);
+			if(pResolvedExecutablePath != nullptr)
+				pExecutablePath = pResolvedExecutablePath;
+#endif
+			char aExecutableMapresPath[IO_MAX_PATH_LENGTH];
+			char aExecutableDataPath[IO_MAX_PATH_LENGTH];
+			const bool HasExecutableDataPaths =
+				StoragePathFromExecutable(pExecutablePath, "data/mapres", aExecutableMapresPath, sizeof(aExecutableMapresPath)) &&
+				StoragePathFromExecutable(pExecutablePath, "data", aExecutableDataPath, sizeof(aExecutableDataPath));
+#ifdef CONF_PLATFORM_HAIKU
+			free(pResolvedExecutablePath);
+#endif
+			if(HasExecutableDataPaths && fs_is_dir(aExecutableMapresPath))
 			{
-				str_copy(m_aDatadir, "data");
+				str_copy(m_aDatadir, aExecutableDataPath, sizeof(m_aDatadir));
 				return;
 			}
 
@@ -296,32 +324,12 @@ namespace
 			}
 #endif
 
-			// 3) check for usable path in argv[0]
+			// 3) retain the current-directory fallback for development and portable layouts
+			if(fs_is_dir("data/mapres"))
 			{
-#ifdef CONF_PLATFORM_HAIKU
-				pArgv0 = realpath(pArgv0, NULL);
-#endif
-				unsigned int Pos = ~0U;
-				for(unsigned i = 0; pArgv0[i]; i++)
-					if(pArgv0[i] == '/' || pArgv0[i] == '\\')
-						Pos = i;
-
-				if(Pos < IO_MAX_PATH_LENGTH)
-				{
-					char aBuf[IO_MAX_PATH_LENGTH];
-					char aDir[IO_MAX_PATH_LENGTH];
-					str_copy(aDir, pArgv0, Pos + 1);
-					str_format(aBuf, sizeof(aBuf), "%s/data/mapres", aDir);
-					if(fs_is_dir(aBuf))
-					{
-						str_format(m_aDatadir, sizeof(m_aDatadir), "%s/data", aDir);
-						return;
-					}
-				}
+				str_copy(m_aDatadir, "data");
+				return;
 			}
-#ifdef CONF_PLATFORM_HAIKU
-			free((void *)pArgv0);
-#endif
 
 #if defined(CONF_FAMILY_UNIX)
 			// 4) check for all default locations

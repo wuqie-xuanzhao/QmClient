@@ -160,6 +160,29 @@ TEST(QmHudMediaIslandLogic, Utf8TitlesStayNulTerminatedInFixedSnapshot)
 	EXPECT_STREQ(Current.m_aArtist, "艺术家");
 }
 
+TEST(QmHudMediaIslandLogic, TopEffectMovesBelowOverlappingIsland)
+{
+	const CUIRect Island = {120.0f, 1.0f, 80.0f, 38.0f};
+
+	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, Island, true), 42.0f);
+}
+
+TEST(QmHudMediaIslandLogic, TopEffectDoesNotMoveForHorizontalSeparationOrHiddenIsland)
+{
+	const CUIRect SideIsland = {20.0f, 1.0f, 60.0f, 38.0f};
+	const CUIRect CenterIsland = {120.0f, 1.0f, 80.0f, 38.0f};
+
+	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, SideIsland, true), 20.0f);
+	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, CenterIsland, false), 20.0f);
+}
+
+TEST(QmHudMediaIslandLogic, TopEffectDoesNotMoveForIslandBelowIt)
+{
+	const CUIRect LowerIsland = {120.0f, 100.0f, 80.0f, 38.0f};
+
+	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 24.0f, 140.0f, 180.0f, LowerIsland, true), 20.0f);
+}
+
 TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
@@ -182,8 +205,24 @@ TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
 	EXPECT_NE(AnimResolveSource.find("Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("EUiAnimInterruptPolicy::QUEUE"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("m_CoverRotation"), std::string::npos);
-	EXPECT_NE(RenderBody.find("m_MediaIslandLastVisibleRect = EditorVisibleRect;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("m_MediaIslandLastVisibleRect = HudEditorScope.m_VisibleRect;"), std::string::npos);
 	EXPECT_NE(RenderBody.find("BeginTransform(EHudEditorElement::MediaIsland, EditorTransformRect, EditorVisibleRect"), std::string::npos);
+}
+
+TEST(QmHudMediaIslandSource, IslandRendersBeforeCheckpointAndFinishEffects)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const size_t OnRenderBegin = Source.find("void CHud::OnRender()");
+	ASSERT_NE(OnRenderBegin, std::string::npos);
+	const size_t OnRenderEnd = Source.find("void CHud::OnMessage", OnRenderBegin);
+	ASSERT_NE(OnRenderEnd, std::string::npos);
+	const std::string OnRenderBody = Source.substr(OnRenderBegin, OnRenderEnd - OnRenderBegin);
+
+	const size_t IslandRender = OnRenderBody.find("RenderMediaIsland();");
+	const size_t EffectsRender = OnRenderBody.find("RenderDDRaceEffects();");
+	ASSERT_NE(IslandRender, std::string::npos);
+	ASSERT_NE(EffectsRender, std::string::npos);
+	EXPECT_LT(IslandRender, EffectsRender);
 }
 
 TEST(QmHudPresentationSource, MediaIslandAndWeaponHudUseContinuousPresentationState)
