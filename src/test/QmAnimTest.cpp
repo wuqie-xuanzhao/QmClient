@@ -11,6 +11,7 @@
 #include <game/client/QmUi/SettingsCardGeometry.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiContext.h>
+#include <game/client/QmUi/UiFormLogic.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiMotion.h>
 #include <game/client/QmUi/UiOverlays.h>
@@ -2797,6 +2798,50 @@ TEST(UiV2DropdownState, MouseHoverAndClickSelectsHoveredItem)
 	EXPECT_FALSE(State.IsOpen());
 }
 
+TEST(NumericField, FormatsAndParsesIntegerDecimalAndInfinity)
+{
+	ui_widget::SNumericValueFormat Integer;
+	Integer.m_DisplayDivisor = 1;
+	Integer.m_Precision = 0;
+	EXPECT_EQ(ui_widget::FormatNumericFieldValue(42, Integer), "42");
+
+	ui_widget::SNumericValueFormat Decimal;
+	Decimal.m_DisplayDivisor = 100;
+	Decimal.m_Precision = 2;
+	EXPECT_EQ(ui_widget::FormatNumericFieldValue(125, Decimal), "1.25");
+	int Stored = 0;
+	EXPECT_TRUE(ui_widget::ParseNumericFieldValue("-3.50", Decimal, -1000, 1000, &Stored));
+	EXPECT_EQ(Stored, -350);
+
+	Decimal.m_AllowInfinite = true;
+	Decimal.m_InfiniteStoredValue = 0;
+	EXPECT_TRUE(ui_widget::ParseNumericFieldValue("∞", Decimal, -1000, 1000, &Stored));
+	EXPECT_EQ(Stored, 0);
+	EXPECT_EQ(ui_widget::FormatNumericFieldValue(0, Decimal), "∞");
+}
+
+TEST(NumericField, DelayPolicyCommitsOnlyOnReleaseSubmitOrBlur)
+{
+	ui_widget::SInputFieldResult Editing;
+	Editing.m_Changed = true;
+	EXPECT_FALSE(ui_widget::NumericFieldShouldCommit(ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT, false, Editing));
+	Editing.m_Submitted = true;
+	EXPECT_TRUE(ui_widget::NumericFieldShouldCommit(ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT, false, Editing));
+	Editing.m_Submitted = false;
+	Editing.m_Deactivated = true;
+	EXPECT_TRUE(ui_widget::NumericFieldShouldCommit(ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT, false, Editing));
+	EXPECT_TRUE(ui_widget::NumericFieldShouldCommit(ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT, true, {}));
+}
+
+TEST(NumericField, FallsBackToTwoRowsBeforeCollapsingSliderTrack)
+{
+	const ui_widget::SNumericFieldLayout Wide = ui_widget::ResolveNumericFieldLayout({0.0f, 0.0f, 500.0f, 36.0f}, true, true, 1.0f);
+	const ui_widget::SNumericFieldLayout Narrow = ui_widget::ResolveNumericFieldLayout({0.0f, 0.0f, 260.0f, 36.0f}, true, true, 1.0f);
+	EXPECT_FALSE(Wide.m_TwoRows);
+	EXPECT_GE(Wide.m_SliderRect.w, 96.0f);
+	EXPECT_TRUE(Narrow.m_TwoRows);
+	EXPECT_GE(Narrow.m_SliderRect.w, 96.0f);
+}
 TEST(UiForms, SliderInputValueMappingPreservesStoredScaleAndInfiniteSentinel)
 {
 	EXPECT_EQ(ui_widget::SliderInputStoredMinimum(100, 20), 5);

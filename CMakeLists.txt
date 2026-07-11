@@ -2649,6 +2649,8 @@ if(CLIENT)
     QmUi/UiContext.h
     QmUi/UiDogfood.cpp
     QmUi/UiDogfood.h
+    QmUi/UiFormLogic.cpp
+    QmUi/UiFormLogic.h
     QmUi/UiForms.cpp
     QmUi/UiForms.h
     QmUi/UiNavigation.cpp
@@ -3856,6 +3858,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/QmUi/QmAnim.cpp
     src/game/client/QmUi/QmAnimResolve.cpp
     src/game/client/QmUi/QmLayout.cpp
+    src/game/client/QmUi/UiFormLogic.cpp
     src/game/client/QmUi/QmCardOrderModel.cpp
     src/game/client/QmUi/QmDropdown.cpp
     src/game/client/QmUi/QmScroll.cpp
