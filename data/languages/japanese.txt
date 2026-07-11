@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == Pending japanese translation e6fe6fff95
 
+a player
+== Pending japanese translation 93256fc2f5
+
 A screenshot with this name already exists
 == Pending japanese translation f881d3125a
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == Pending japanese translation f9a177fbbe
 
+Clear all history
+== Pending japanese translation b7958ecd33
+
 Clear Changes
 == Pending japanese translation 96e1626feb
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == Pending japanese translation 8906e439aa
+
+Clear finished
+== Pending japanese translation db7b1b65ac
 
 Clear friend note
 == フレンドメモをクリア
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == Pending japanese translation 0a51240a7c
 
+Confirm clear all
+== Pending japanese translation 2f0e86dfed
+
+Confirm clear finished
+== Pending japanese translation c7452649b7
+
 Connect address error
 == Pending japanese translation 7d2500a2e2
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == Pending japanese translation 5f2f578780
-
-Continue whispering to the last whisper target
-== Pending japanese translation b9c264a61e
 
 Contributors
 == コントリビューター
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == フィニッシュネーム:
 
+Finished
+== Pending japanese translation 67c687a4b2
+
 Finished maps
 == Pending japanese translation f2e9370fe4
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == Pending japanese translation 82c64e8fda
 
-Invite a player to the locked team
-== Pending japanese translation 94b1dfdfc0
-
 Invites are disabled
 == Pending japanese translation a24cff253f
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == レーザーサイズ
+
+Last entered
+== Pending japanese translation 0996e4828c
 
 Last page in console
 == Pending japanese translation 2ff887d7e1
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == Pending japanese translation 5ae7201d07
+
+Map play history
+== Pending japanese translation 794dfcf1a2
 
 Map Preview TODO
 == マッププレビュー TODO
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == Pending japanese translation a0bce45501
+
+No map play history yet
+== Pending japanese translation 9aa76dd7a1
 
 No matching assets.
 == Pending japanese translation 5c4ad72c1f
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == Pending japanese translation a9bfbe4911
 
-Query information for map %s
-== Pending japanese translation a5c45f0d97
+Query current map info
+== Pending japanese translation 928f08553d
 
-Query information for the current map
-== Pending japanese translation 6746745a6d
+Query map info for %s
+== Pending japanese translation 0bc0a801ac
 
 Query points for %s
 == Pending japanese translation b80d5ae3a6
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == Pending japanese translation 665a309d64
-
-Query your own points
-== Pending japanese translation 2e94275abf
-
-Query your own rank
-== Pending japanese translation ee7066d15b
-
-Query your own team rank
-== Pending japanese translation 6e0badbf0a
 
 Queue is empty
 == Pending japanese translation 0a94a06071
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == Pending japanese translation 8efefb910e
+
+Recent
+== Pending japanese translation dbd5765bf1
 
 Reconnect in %d sec
 == Pending japanese translation 9db6da060b
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == Pending japanese translation dd17561f2d
 
+Remove from history
+== Pending japanese translation d36d2fb7c4
+
 Remove from queue
 == Pending japanese translation 92ef9a3870
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == Pending japanese translation 52cf2edefd
 
+Reply to the last whisper target
+== Pending japanese translation 47e1416512
+
 Reply to the last whisper target: %s
 == Pending japanese translation b5f906a720
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Pending japanese translation 37d8e4c6cc
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== Pending japanese translation 283942db2c
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending japanese translation 806d4a6739
 
 Resend Loss
 == Pending japanese translation a6e91f3895
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == Pending japanese translation 7bc5f71133
 
-Send a whisper: /w player message
-== Pending japanese translation d1df732df6
-
 Send emoticon in water
 == Pending japanese translation f802e4518f
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Pending japanese translation f92e805245
 
-Show command help
-== Pending japanese translation 37c630bc45
-
 Show compact vote HUD
 == Pending japanese translation e07af28cfe
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == Pending japanese translation 7b45bee6b4
-
-Show help for /%s
-== Pending japanese translation 7fc5b37386
 
 Show hitbox mode
 == Pending japanese translation e3460cbad9
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == Pending japanese translation 648a0da56f
 
+Show server settings
+== Pending japanese translation ef3a33fb56
+
 Show skin date and author
 == Pending japanese translation 606deeb62d
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == Pending japanese translation ddcba4155f
-
-Show the server settings list
-== Pending japanese translation 10bf49919b
 
 Show tiles layers from BG map
 == Pending japanese translation c3aeee3152
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == Pending japanese translation 9bc118a538
 
+Unfinished
+== Pending japanese translation 71fbc7880e
+
 Unfinished map
 == Pending japanese translation 2072c2922b
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Pending japanese translation e29c58ec1c
+
+Unfinished maps are shown first
+== Pending japanese translation b52afae6b9
 
 Unflip:
 == Pending japanese translation c0a0c0022d
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == Pending japanese translation 36851e007d
+
+Usage
+== Pending japanese translation 55f84cc7a9
 
 Usage: %s %s
 == Pending japanese translation 0d9bfc9c07
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == %s にささやく: %s
 
+Whisper: /w player message
+== Pending japanese translation b1563bb5aa
+
 Who stuffed OBS in here
 == Pending japanese translation 5bfdd4f130
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Pending japanese translation 3d8d49eaea
+
+yourself
+== Pending japanese translation 85eeda77b5
 
 z = Zoom
 == z = ズーム
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == Pending japanese translation 3749ac34b6
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending japanese translation cca8d65fa1
+
 自动保存聊天记录
 == Pending japanese translation c70abe9988
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Inactive lyrics line minimum opacity percent
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending japanese translation b48b7a4e61
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Pending japanese translation a4324a0ac5

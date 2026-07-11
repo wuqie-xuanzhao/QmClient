@@ -92,6 +92,13 @@ bool CSkinDescriptor::CSixup::operator==(const CSixup &Other) const
 	       m_XmasHat == Other.m_XmasHat;
 }
 
+static ColorRGBA TeeOutlineRenderColor(const CTeeRenderInfo *pInfo, ColorRGBA DefaultColor, float Alpha)
+{
+	if(pInfo->m_TeeRenderFlags & TEE_CUSTOM_OUTLINE_COLOR)
+		return pInfo->m_OutlineColor.WithAlpha(Alpha);
+	return DefaultColor.WithAlpha(Alpha);
+}
+
 void CRenderTools::Init(IGraphics *pGraphics, ITextRender *pTextRender, CGameClient *pGameClient)
 {
 	m_pGraphics = pGraphics;
@@ -428,7 +435,8 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 					Graphics()->TextureSet(DecorationTexture);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2 + BodyAngle);
-					Graphics()->SetColor(pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_DECORATION].WithAlpha(Alpha));
+					const ColorRGBA DecorationColor = pInfo->m_aSixup[g_Config.m_ClDummy].m_aColors[protocol7::SKINPART_DECORATION];
+					Graphics()->SetColor(OutLine ? TeeOutlineRenderColor(pInfo, DecorationColor, Alpha) : DecorationColor.WithAlpha(Alpha));
 					Graphics()->SelectSprite7(OutLine ? client_data7::SPRITE_TEE_DECORATION_OUTLINE : client_data7::SPRITE_TEE_DECORATION);
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
@@ -444,7 +452,7 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2 + BodyAngle);
 					if(OutLine)
 					{
-						Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
+						Graphics()->SetColor(TeeOutlineRenderColor(pInfo, ColorRGBA(1.0f, 1.0f, 1.0f), Alpha));
 						Graphics()->SelectSprite7(client_data7::SPRITE_TEE_BODY_OUTLINE);
 					}
 					else
@@ -575,7 +583,7 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 
 			if(OutLine)
 			{
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
+				Graphics()->SetColor(TeeOutlineRenderColor(pInfo, ColorRGBA(1.0f, 1.0f, 1.0f), Alpha));
 				Graphics()->SelectSprite7(client_data7::SPRITE_TEE_FOOT_OUTLINE);
 			}
 			else
@@ -642,7 +650,7 @@ void CRenderTools::RenderTee6(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2 + BodyAngle);
 
 					// draw body
-					Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, Alpha);
+					Graphics()->SetColor(OutLine ? TeeOutlineRenderColor(pInfo, pInfo->m_ColorBody, Alpha) : pInfo->m_ColorBody.WithAlpha(Alpha));
 					Graphics()->TextureSet(OutLine == 1 ? pSkinTextures->m_BodyOutline : pSkinTextures->m_Body);
 					Graphics()->RenderQuadContainerAsSprite(m_TeeQuadContainerIndex, OutLine, BodyPos.x, BodyPos.y, RenderBodyScale * BodyScale.x, RenderBodyScale * BodyScale.y);
 				}
@@ -730,7 +738,9 @@ void CRenderTools::RenderTee6(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 					ColorScale = 0.5f;
 			}
 
-			Graphics()->SetColor(pInfo->m_ColorFeet.r * ColorScale, pInfo->m_ColorFeet.g * ColorScale, pInfo->m_ColorFeet.b * ColorScale, Alpha);
+			Graphics()->SetColor(OutLine ?
+						     TeeOutlineRenderColor(pInfo, pInfo->m_ColorFeet, Alpha) :
+						     ColorRGBA(pInfo->m_ColorFeet.r * ColorScale, pInfo->m_ColorFeet.g * ColorScale, pInfo->m_ColorFeet.b * ColorScale, Alpha));
 
 			if(g_Config.m_TcWhiteFeet && pInfo->m_CustomColoredSkin)
 			{

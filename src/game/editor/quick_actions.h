@@ -177,7 +177,7 @@ REGISTER_QUICK_ACTION(
 	DEFAULT_BTN,
 	"切换验证边框. 这些边框代表玩家在默认缩放下可以看到的区域.")
 REGISTER_QUICK_ACTION(
-	AddTileLayer, "添加图块层", [&]() { AddTileLayer(); }, ALWAYS_FALSE, ALWAYS_FALSE, DEFAULT_BTN, "创建一个新的图块层.")
+	AddTileLayer, "添加图块", [&]() { AddTileLayer(); }, ALWAYS_FALSE, ALWAYS_FALSE, DEFAULT_BTN, "创建一个新的图块层.")
 REGISTER_QUICK_ACTION(
 	AddSwitchLayer,
 	"添加开关层",
@@ -188,12 +188,12 @@ REGISTER_QUICK_ACTION(
 	"创建一个新的开关层.")
 REGISTER_QUICK_ACTION(
 	AddTuneLayer,
-	"添加调整层",
+	"添加物理层",
 	[&]() { AddTuneLayer(); },
 	[&]() -> bool { return !Map()->SelectedGroup()->m_GameGroup || Map()->m_pTuneLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
-	"创建一个新的调整层.")
+	"创建一个新的物理层.")
 REGISTER_QUICK_ACTION(
 	AddSpeedupLayer,
 	"添加加速层",
@@ -217,11 +217,11 @@ REGISTER_QUICK_ACTION(
 	[&]() -> bool { return !Map()->SelectedGroup()->m_GameGroup || Map()->m_pFrontLayer; },
 	ALWAYS_FALSE,
 	DEFAULT_BTN,
-	"创建一个新的项目层.")
+	"创建一个新的前景层.")
 REGISTER_QUICK_ACTION(
-	AddQuadsLayer, "添加四边形层", [&]() { AddQuadsLayer(); }, ALWAYS_FALSE, ALWAYS_FALSE, DEFAULT_BTN, "创建一个新的四边形层.")
+	AddQuadsLayer, "添加四边形", [&]() { AddQuadsLayer(); }, ALWAYS_FALSE, ALWAYS_FALSE, DEFAULT_BTN, "创建一个新的四边形层.")
 REGISTER_QUICK_ACTION(
-	AddSoundLayer, "添加声音层", [&]() { AddSoundLayer(); }, ALWAYS_FALSE, ALWAYS_FALSE, DEFAULT_BTN, "创建一个新的声音层.")
+	AddSoundLayer, "添加声音", [&]() { AddSoundLayer(); }, ALWAYS_FALSE, ALWAYS_FALSE, DEFAULT_BTN, "创建一个新的声音层.")
 REGISTER_QUICK_ACTION(
 	SaveAs,
 	"另存为",
@@ -257,12 +257,12 @@ REGISTER_QUICK_ACTION(
 	"[Ctrl+Shift+L] 打开当前游戏中的地图进行编辑.")
 REGISTER_QUICK_ACTION(
 	Envelopes,
-	"包络线",
+	"动画",
 	[&]() { m_ActiveExtraEditor = m_ActiveExtraEditor == EXTRAEDITOR_ENVELOPES ? EXTRAEDITOR_NONE : EXTRAEDITOR_ENVELOPES; },
 	ALWAYS_FALSE,
 	ALWAYS_FALSE,
 	[&]() -> int { return m_ShowPicker ? -1 : m_ActiveExtraEditor == EXTRAEDITOR_ENVELOPES; },
-	"切换包络线编辑器.")
+	"切换动画编辑器.")
 REGISTER_QUICK_ACTION(
 	ServerSettings,
 	"服务器设置",
@@ -297,37 +297,37 @@ REGISTER_QUICK_ACTION(
 	"为当前选中的层选择mapres图像.")
 REGISTER_QUICK_ACTION(
 	ShowInfoOff,
-	"显示信息: 关闭",
+	"显示图块编号: 关闭",
 	[&]() {
 		m_ShowTileInfo = SHOW_TILE_OFF;
 	},
 	ALWAYS_FALSE,
 	[&]() -> bool { return m_ShowTileInfo == SHOW_TILE_OFF; },
 	DEFAULT_BTN,
-	"不显示图块信息.")
+	"不显示图块编号.")
 REGISTER_QUICK_ACTION(
 	ShowInfoDec,
-	"显示信息: 十进制",
+	"显示图块编号: 十进制",
 	[&]() {
 		m_ShowTileInfo = SHOW_TILE_DECIMAL;
 	},
 	ALWAYS_FALSE,
 	[&]() -> bool { return m_ShowTileInfo == SHOW_TILE_DECIMAL; },
 	DEFAULT_BTN,
-	"[Ctrl+I] 显示图块信息.")
+	"[Ctrl+I] 显示图块编号.")
 REGISTER_QUICK_ACTION(
 	ShowInfoHex,
-	"显示信息: 十六进制",
+	"显示图块编号: 十六进制",
 	[&]() {
 		m_ShowTileInfo = SHOW_TILE_HEXADECIMAL;
 	},
 	ALWAYS_FALSE,
 	[&]() -> bool { return m_ShowTileInfo == SHOW_TILE_HEXADECIMAL; },
 	DEFAULT_BTN,
-	"[Ctrl+Shift+I] 以十六进制显示图块信息.")
+	"[Ctrl+Shift+I] 以十六进制显示图块编号.")
 REGISTER_QUICK_ACTION(
 	PreviewQuadEnvelopes,
-	"预览四边形包络线",
+	"预览四边形动画",
 	[&]() {
 		m_ShowEnvelopePreview = !m_ShowEnvelopePreview;
 		m_ActiveEnvelopePreview = EEnvelopePreview::NONE;
@@ -335,7 +335,7 @@ REGISTER_QUICK_ACTION(
 	ALWAYS_FALSE,
 	[&]() -> bool { return m_ShowEnvelopePreview; },
 	DEFAULT_BTN,
-	"当选中四边形层时,切换预览带有位置包络线的四边形路径.")
+	"当选中四边形层时,切换预览带有位置动画的四边形路径.")
 REGISTER_QUICK_ACTION(
 	DeleteLayer,
 	"删除层",

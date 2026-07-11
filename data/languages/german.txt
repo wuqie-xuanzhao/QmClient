@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == Ein Ordner mit diesem Namen existiert bereits
 
+a player
+== Pending german translation e24d31b39e
+
 A screenshot with this name already exists
 == Ein Screenshot mit diesem Namen existiert bereits
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == Alle Favoriten-Karten löschen
 
+Clear all history
+== Pending german translation 0b7decc741
+
 Clear Changes
 == Änderungen verwerfen
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == Aktuelle Warteschlange leeren
+
+Clear finished
+== Pending german translation 33cb31af36
 
 Clear friend note
 == Freundesnotiz löschen
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == Bestätige, dass beide auf demselben Server, im selben Raum sind und Sprachchat unterstützen
 
+Confirm clear all
+== Pending german translation ca0e0df3b6
+
+Confirm clear finished
+== Pending german translation d36074599d
+
 Connect address error
 == Verbindungsadressfehler
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == Trotzdem fortfahren?
-
-Continue whispering to the last whisper target
-== Weiter an das letzte Flüsterziel schreiben
 
 Contributors
 == Mitwirkende
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == Ziel-Name:
 
+Finished
+== Pending german translation 76f63156da
+
 Finished maps
 == Abgeschlossene Karten
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == Eine Person zu einem gesperrten Team einladen
 
-Invite a player to the locked team
-== Einen Spieler in das gesperrte Team einladen
-
 Invites are disabled
 == Einladungen sind deaktiviert
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == Lasergröße
+
+Last entered
+== Pending german translation 59a19904a4
 
 Last page in console
 == Letzte Seite in der Konsole
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == Karten-Gefahrengrenze
+
+Map play history
+== Pending german translation 2197708c18
 
 Map Preview TODO
 == Kartenvorschau ausstehend
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == Kein Login erforderlich
+
+No map play history yet
+== Pending german translation 5ee0ec93a3
 
 No matching assets.
 == Keine passenden Assets.
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == Quads werden für Hintergrunddekoration verwendet
 
-Query information for map %s
-== Informationen zur Karte %s abfragen
+Query current map info
+== Pending german translation c367fae5b5
 
-Query information for the current map
-== Informationen zur aktuellen Karte abfragen
+Query map info for %s
+== Pending german translation 0adb0598a6
 
 Query points for %s
 == Punkte für %s abfragen
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == Teamrang für %s abfragen
-
-Query your own points
-== Eigene Punkte abfragen
-
-Query your own rank
-== Eigenen Rang abfragen
-
-Query your own team rank
-== Rang des eigenen Teams abfragen
 
 Queue is empty
 == Warteschlange ist leer
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == Empfange
+
+Recent
+== Pending german translation 59b64b95f8
 
 Reconnect in %d sec
 == Erneute Verbindung in %d Sek.
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == Aus Favoriten entfernen
 
+Remove from history
+== Pending german translation b5e0e2c5c9
+
 Remove from queue
 == Aus Warteschlange entfernen
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == Antworten
 
+Reply to the last whisper target
+== Pending german translation ce0eee0298
+
 Reply to the last whisper target: %s
 == Dem letzten Flüsterziel antworten: %s
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Rettung/Freeze: %d/%d
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== Rettung: Automodus teleportiert aus Freeze heraus; manueller Modus speichert beim Landen einen Rettungspunkt und teleportiert im Freeze dorthin
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending german translation b804c503c4
 
 Resend Loss
 == Resend-Verlust
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == Eine Server-Warnmeldung an alle Spieler senden
 
-Send a whisper: /w player message
-== Flüstern senden: /w Spieler Nachricht
-
 Send emoticon in water
 == Emoticon im Wasser senden
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Farben in der Zuschauerauswahl anzeigen
 
-Show command help
-== Befehlshilfe anzeigen
-
 Show compact vote HUD
 == Kompaktes Abstimmungs-HUD anzeigen
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == Leben, Schilde und Munition anzeigen
-
-Show help for /%s
-== Hilfe für /%s anzeigen
 
 Show hitbox mode
 == Hitbox-Modus anzeigen
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == Server-Hilfe und Nutzungshinweise anzeigen
 
+Show server settings
+== Pending german translation 743b1a6338
+
 Show skin date and author
 == Skin-Datum und Autor anzeigen
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == Die Serverregeln anzeigen
-
-Show the server settings list
-== Liste der Servereinstellungen anzeigen
 
 Show tiles layers from BG map
 == Kachelebenen aus der Hintergrundkarte anzeigen
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == Nicht klassifiziertes Audio-Problem
 
+Unfinished
+== Pending german translation 5f4331fd4d
+
 Unfinished map
 == Unvollendete Karte
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Unfertige Karten
+
+Unfinished maps are shown first
+== Pending german translation 0afa5a9bd4
 
 Unflip:
 == Entspiegeln:
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == Kartendaten werden auf die GPU hochgeladen
+
+Usage
+== Pending german translation a31a811425
 
 Usage: %s %s
 == Verwendung: %s %s
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == %s anflüstern: %s
 
+Whisper: /w player message
+== Pending german translation 77be346676
+
 Who stuffed OBS in here
 == Wer hat hier OBS reingesteckt
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Dein Timeout-Code wurde gesetzt. 0.7-Clients können ihre Tees bei Timeout nicht zurückfordern; ein 0.6-Client kann jedoch deinen Tee übernehmen
+
+yourself
+== Pending german translation 18c5c23e3f
 
 z = Zoom
 == Pending german translation a405a2d5d0
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == Tencent Cloud Übersetzungsendpunkt
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending german translation 50c8732951
+
 自动保存聊天记录
 == Chatverlauf automatisch speichern
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Inactive lyrics line minimum opacity percent
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending german translation 11cce61e24
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Pie-Menü-Umbenennungsliste (mit | trennen, z.B. Xuanmeng1|Xuanmeng2)

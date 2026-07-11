@@ -43,6 +43,18 @@ TEST(QmGoresMode, MovingWaterTilesRequireAxiomOrGoresContext)
 	EXPECT_FALSE(ShouldEnableQmMovingWaterTiles(nullptr, nullptr, nullptr, nullptr));
 }
 
+TEST(QmInfectionMode, UsesServerControlledLocalSkinForKnownGameTypes)
+{
+	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("InfClass"));
+	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("infc"));
+	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("Infection"));
+	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("Infected"));
+
+	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("DDRaceNetwork"));
+	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("Gores"));
+	EXPECT_FALSE(ShouldUseServerControlledLocalSkin(nullptr));
+}
+
 TEST(QmGoresMode, LinkedFastInputDirectlyFollowsGoresMode)
 {
 	bool Changed = false;

@@ -28,6 +28,13 @@ namespace
 	}
 } // namespace
 
+bool QmShouldApplyLocalTeeHueCycle(const SQmLocalTeeHueCycleEligibility &Eligibility)
+{
+	return Eligibility.m_IsLocal &&
+	       (!Eligibility.m_IsDummy || Eligibility.m_DummyEnabled) &&
+	       (Eligibility.m_UseCustomColors || Eligibility.m_UseCustomColors7);
+}
+
 float QmTeeHueCyclePhase(double TimeSeconds, int SpeedDegreesPerSecond)
 {
 	const int ClampedSpeed = std::clamp(SpeedDegreesPerSecond, 0, 360);

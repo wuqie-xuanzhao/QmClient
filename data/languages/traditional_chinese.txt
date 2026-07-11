@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == Pending traditional_chinese translation cec29e695b
 
+a player
+== Pending traditional_chinese translation 711ff0907a
+
 A screenshot with this name already exists
 == Pending traditional_chinese translation dd5ad2ca01
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == Pending traditional_chinese translation fc3ecd6be6
 
+Clear all history
+== Pending traditional_chinese translation 219a18926c
+
 Clear Changes
 == Pending traditional_chinese translation 5eaa0bd1f4
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == Pending traditional_chinese translation 84aa548458
+
+Clear finished
+== Pending traditional_chinese translation ba8d60b3c3
 
 Clear friend note
 == Pending traditional_chinese translation 7f4f3fcf63
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == Pending traditional_chinese translation 190dbaad58
 
+Confirm clear all
+== Pending traditional_chinese translation 6366895cce
+
+Confirm clear finished
+== Pending traditional_chinese translation 0ac92cb010
+
 Connect address error
 == Pending traditional_chinese translation 3f470a6d12
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == Pending traditional_chinese translation 54d89b7517
-
-Continue whispering to the last whisper target
-== Pending traditional_chinese translation 40126c392e
 
 Contributors
 == Pending traditional_chinese translation a60ff879a4
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == Pending traditional_chinese translation 662eed5942
 
+Finished
+== Pending traditional_chinese translation 60d13608de
+
 Finished maps
 == Pending traditional_chinese translation eda546da77
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == Pending traditional_chinese translation 83547e636b
 
-Invite a player to the locked team
-== Pending traditional_chinese translation a4ec0ffb9a
-
 Invites are disabled
 == Pending traditional_chinese translation cba0f484ec
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == Pending traditional_chinese translation 885148bafc
+
+Last entered
+== Pending traditional_chinese translation 5d28749162
 
 Last page in console
 == Pending traditional_chinese translation 88504108ea
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == Pending traditional_chinese translation 254a96230a
+
+Map play history
+== Pending traditional_chinese translation 30b9a7bc6d
 
 Map Preview TODO
 == Pending traditional_chinese translation 41411a3f21
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == Pending traditional_chinese translation 1a9b02498b
+
+No map play history yet
+== Pending traditional_chinese translation 5c2175defc
 
 No matching assets.
 == Pending traditional_chinese translation 4a8ffdccb6
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == Pending traditional_chinese translation 76dccc884c
 
-Query information for map %s
-== Pending traditional_chinese translation 16c69fe645
+Query current map info
+== Pending traditional_chinese translation dce7e681ff
 
-Query information for the current map
-== Pending traditional_chinese translation 425585486e
+Query map info for %s
+== Pending traditional_chinese translation e150dbf20a
 
 Query points for %s
 == Pending traditional_chinese translation 7dba6acd78
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == Pending traditional_chinese translation 578b3e9548
-
-Query your own points
-== Pending traditional_chinese translation 1f3f6c88bc
-
-Query your own rank
-== Pending traditional_chinese translation b0fd745f9e
-
-Query your own team rank
-== Pending traditional_chinese translation a1c9b18d27
 
 Queue is empty
 == Pending traditional_chinese translation ee2f6077b3
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == Pending traditional_chinese translation 3b057c5c06
+
+Recent
+== Pending traditional_chinese translation 76b0ff2826
 
 Reconnect in %d sec
 == Pending traditional_chinese translation 068c035a8b
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == Pending traditional_chinese translation cce6265b06
 
+Remove from history
+== Pending traditional_chinese translation 0a829f97cb
+
 Remove from queue
 == Pending traditional_chinese translation 3f5eac6e66
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == Pending traditional_chinese translation 548104ed6c
 
+Reply to the last whisper target
+== Pending traditional_chinese translation e7e3505d3f
+
 Reply to the last whisper target: %s
 == Pending traditional_chinese translation 3fd8827236
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Pending traditional_chinese translation b9d22c5b82
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== Pending traditional_chinese translation 12553fc2c5
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending traditional_chinese translation bfc8e5436c
 
 Resend Loss
 == Pending traditional_chinese translation 29d3a7e862
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == Pending traditional_chinese translation 9353ef8d37
 
-Send a whisper: /w player message
-== Pending traditional_chinese translation c35e1c1390
-
 Send emoticon in water
 == Pending traditional_chinese translation 89c6bc8dbe
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Pending traditional_chinese translation 4e6535057e
 
-Show command help
-== Pending traditional_chinese translation d6491c5b65
-
 Show compact vote HUD
 == Pending traditional_chinese translation c7496f37a9
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == Pending traditional_chinese translation 98c2e604f9
-
-Show help for /%s
-== Pending traditional_chinese translation 9b92d0f658
 
 Show hitbox mode
 == Pending traditional_chinese translation 176be8de95
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == Pending traditional_chinese translation 0767de19d2
 
+Show server settings
+== Pending traditional_chinese translation ade0767b4c
+
 Show skin date and author
 == Pending traditional_chinese translation 6b54b93770
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == Pending traditional_chinese translation 1227620d06
-
-Show the server settings list
-== Pending traditional_chinese translation d52b917adb
 
 Show tiles layers from BG map
 == Pending traditional_chinese translation 7369bf4e0e
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == Pending traditional_chinese translation 7ad76927d3
 
+Unfinished
+== Pending traditional_chinese translation d5196581dd
+
 Unfinished map
 == Pending traditional_chinese translation fd861c7278
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Pending traditional_chinese translation f74949fc83
+
+Unfinished maps are shown first
+== Pending traditional_chinese translation fb0d0be914
 
 Unflip:
 == Pending traditional_chinese translation 69238b8eb5
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == Pending traditional_chinese translation c06537ae6c
+
+Usage
+== Pending traditional_chinese translation 8c1e34c187
 
 Usage: %s %s
 == Pending traditional_chinese translation cdc60834c3
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == Pending traditional_chinese translation 3810cd5e38
 
+Whisper: /w player message
+== Pending traditional_chinese translation bf22a2cb59
+
 Who stuffed OBS in here
 == Pending traditional_chinese translation e818a32bb4
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Pending traditional_chinese translation f21301519f
+
+yourself
+== Pending traditional_chinese translation 44c3e5c290
 
 z = Zoom
 == Pending traditional_chinese translation 01a7f86702
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == Pending traditional_chinese translation a30650b645
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending traditional_chinese translation 2e91c64d81
+
 自动保存聊天记录
 == Pending traditional_chinese translation 943f9b5aa8
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Pending traditional_chinese translation 9c6e725e27
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending traditional_chinese translation 5dd68b40a4
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Pending traditional_chinese translation 4e1b8bffaf

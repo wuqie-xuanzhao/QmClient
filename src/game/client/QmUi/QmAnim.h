@@ -82,6 +82,7 @@ struct SUiAnimTransition
 	SUiSpringConfig m_Spring;
 	SUiBezier m_Bezier;
 	uint32_t m_CustomEasingId = 0;
+	bool m_RespectMotionLevel = true;
 };
 
 struct SUiAnimCompleteEvent

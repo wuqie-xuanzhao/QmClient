@@ -1040,7 +1040,7 @@ CUi::EPopupMenuFunctionResult CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{"平移量", Map()->m_ShiftBy, PROPTYPE_INT, 1, 100000},
 		{"图像", m_Image, PROPTYPE_IMAGE, 0, 0},
 		{"颜色", PackColor(m_Color), PROPTYPE_COLOR, 0, 0},
-		{"颜色包络线", m_ColorEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
+		{"颜色动画", m_ColorEnv + 1, PROPTYPE_ENVELOPE, 0, 0},
 		{"颜色偏移", m_ColorEnvOffset, PROPTYPE_INT, -1000000, 1000000},
 		{"自动规则", m_AutoMapperConfig, PROPTYPE_AUTOMAPPER, m_Image, 0},
 		{"参考", m_AutoMapperReference, PROPTYPE_AUTOMAPPER_REFERENCE, 0, 0},

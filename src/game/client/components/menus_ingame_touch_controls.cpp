@@ -11,6 +11,7 @@
 #include <engine/shared/localization.h>
 #include <engine/textrender.h>
 
+#include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/components/touch_controls.h>
 #include <game/client/gameclient.h>
@@ -94,17 +95,8 @@ void CMenusIngameTouchControls::RenderTouchButtonEditor(CUIRect MainView)
 	{
 		s_EditElementTransitionDirection = static_cast<int>(m_EditElement) > static_cast<int>(s_PrevEditElement) ? 1.0f : -1.0f;
 		CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
-		AnimRuntime.SetValue(s_EditElementSwitchNode, EUiAnimProperty::POS_X, 1.0f);
-		SUiAnimRequest Request;
-		Request.m_NodeKey = s_EditElementSwitchNode;
-		Request.m_Property = EUiAnimProperty::POS_X;
-		Request.m_Target = 0.0f;
-		Request.m_Transition.m_DurationSec = 0.18f;
-		Request.m_Transition.m_DelaySec = 0.0f;
-		Request.m_Transition.m_Priority = 1;
-		Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
-		Request.m_Transition.m_Easing = EEasing::EASE_OUT;
-		AnimRuntime.RequestAnimation(Request);
+		SetUiPresentationStateValue(AnimRuntime, s_EditElementSwitchNode, EUiAnimProperty::POS_X, 1.0f);
+		ResolveUiAnimValue(AnimRuntime, s_EditElementSwitchNode, EUiAnimProperty::POS_X, 0.0f, 0.18f, EEasing::EASE_OUT);
 		s_PrevEditElement = m_EditElement;
 	}
 	const CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();

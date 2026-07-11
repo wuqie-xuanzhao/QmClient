@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == 이 이름의 폴더가 이미 존재합니다.
 
+a player
+== Pending korean translation 0edc43d675
+
 A screenshot with this name already exists
 == 이 이름의 스크린샷이 이미 존재합니다.
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == 모든 즐겨찾기 맵 지우기
 
+Clear all history
+== Pending korean translation 9f83f25f1f
+
 Clear Changes
 == 변경 사항 지우기
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == 현재 큐 비우기
+
+Clear finished
+== Pending korean translation e5f3354c35
 
 Clear friend note
 == 친구 메모 지우기
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == 둘 다 같은 서버, 같은 방에 있으며 음성을 지원하는지 확인
 
+Confirm clear all
+== Pending korean translation bc7488e16f
+
+Confirm clear finished
+== Pending korean translation e7d4042c50
+
 Connect address error
 == 연결 주소 오류
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == 그래도 계속하시겠습니까?
-
-Continue whispering to the last whisper target
-== 마지막 귓속말 대상에게 계속 귓속말하기
 
 Contributors
 == 기여자
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == 결승선 이름:
 
+Finished
+== Pending korean translation 1299422be0
+
 Finished maps
 == 완료한 맵
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == 잠긴 팀에 사람 초대
 
-Invite a player to the locked team
-== 잠긴 팀에 플레이어 초대
-
 Invites are disabled
 == 초대가 비활성화되었습니다
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == 레이저 크기
+
+Last entered
+== Pending korean translation fb59bb3fee
 
 Last page in console
 == 콘솔의 마지막 페이지
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == 맵 위험 경계
+
+Map play history
+== Pending korean translation 715f926501
 
 Map Preview TODO
 == 맵 미리보기 할 일
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == 로그인 불필요
+
+No map play history yet
+== Pending korean translation 6e14e16711
 
 No matching assets.
 == 일치하는 에셋이 없습니다.
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == 배경 장식에 사용되는 쿼드 표시
 
-Query information for map %s
-== 맵 %s 정보 조회
+Query current map info
+== Pending korean translation da09a84e62
 
-Query information for the current map
-== 현재 맵 정보 조회
+Query map info for %s
+== Pending korean translation 93ed34045c
 
 Query points for %s
 == %s의 점수 조회
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == %s의 팀 순위 조회
-
-Query your own points
-== 자신의 점수 조회
-
-Query your own rank
-== 자신의 순위 조회
-
-Query your own team rank
-== 자신의 팀 순위 조회
 
 Queue is empty
 == 대기열이 비어 있습니다
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == 받는 중
+
+Recent
+== Pending korean translation 446ee0954a
 
 Reconnect in %d sec
 == %d 초 후 재접속
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == 즐겨찾기에서 제거
 
+Remove from history
+== Pending korean translation c4903ea6ec
+
 Remove from queue
 == 대기열에서 제거
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == 답장
 
+Reply to the last whisper target
+== Pending korean translation f32da09ffc
+
 Reply to the last whisper target: %s
 == 마지막 귓속말 대상에게 답장: %s
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == 구조/얼음: %d/%d
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== 구조: 자동 모드는 프리즈에서 텔레포트로 탈출; 수동 모드는 착지 시 구조 지점을 기록하고 프리즈 상태에서 그곳으로 텔레포트
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending korean translation d6d669bc15
 
 Resend Loss
 == 손실 재전송
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == 모든 플레이어에게 서버 알림 메시지 보내기
 
-Send a whisper: /w player message
-== 귓속말 보내기: /w 플레이어명 내용
-
 Send emoticon in water
 == 물 속에서 이모티콘 보내기
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == 관전 선택에서 색상 표시
 
-Show command help
-== 명령 도움말 표시
-
 Show compact vote HUD
 == 소형 투표 HUD 표시
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == 체력, 방어력 및 탄약 표시
-
-Show help for /%s
-== /%s 도움말 보기
 
 Show hitbox mode
 == 히트박스 모드 표시
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == 서버 도움말 및 사용법 메시지 표시
 
+Show server settings
+== Pending korean translation aab9be0f43
+
 Show skin date and author
 == 스킨 날짜와 제작자 표시
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == 서버 규칙 표시
-
-Show the server settings list
-== 서버 설정 목록 보기
 
 Show tiles layers from BG map
 == 배경 맵의 타일 레이어 표시
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == 분류되지 않은 오디오 문제
 
+Unfinished
+== Pending korean translation 352f62aaf5
+
 Unfinished map
 == 미완료 맵
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == 미완료 맵
+
+Unfinished maps are shown first
+== Pending korean translation a71d0549ad
 
 Unflip:
 == 뒤집기 취소：
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == 맵 데이터를 GPU 에 업로드 중
+
+Usage
+== Pending korean translation b479edfbdd
 
 Usage: %s %s
 == 사용법: %s %s
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == %s 님에게 귓속말: %s
 
+Whisper: /w player message
+== Pending korean translation 89ff9a73c9
+
 Who stuffed OBS in here
 == 누가 여기에 OBS를 넣었어
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == 타임아웃 코드가 설정되었습니다. 0.7 클라이언트는 타임아웃 시 티를 되찾을 수 없지만, 0.6 클라이언트는 당신의 티를 차지할 수 있습니다
+
+yourself
+== Pending korean translation 3aca6e4e7c
 
 z = Zoom
 == z = 확대/축소
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == 텐센트 클라우드 번역 엔드포인트
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending korean translation 21e440ff7e
+
 自动保存聊天记录
 == 채팅 기록 자동 저장
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Inactive lyrics line minimum opacity percent
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending korean translation 1620279894
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == 파이 메뉴 이름 변경 목록 (|로 구분, 예: 현몽1|현몽2)

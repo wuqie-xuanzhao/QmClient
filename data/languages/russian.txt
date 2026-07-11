@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == Папка с таким именем уже существует
 
+a player
+== Pending russian translation 6ca94c0cfb
+
 A screenshot with this name already exists
 == Скриншот с таким именем уже существует
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == Очистить все избранные карты
 
+Clear all history
+== Pending russian translation e71b9751c2
+
 Clear Changes
 == Очистить изменения
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == Очистить текущую очередь
+
+Clear finished
+== Pending russian translation 546654aecb
 
 Clear friend note
 == Очистить заметку друга
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == Убедитесь, что оба находятся на одном сервере, в одной комнате и поддерживают голос.
 
+Confirm clear all
+== Pending russian translation df1ef77355
+
+Confirm clear finished
+== Pending russian translation c6ebc0496d
+
 Connect address error
 == Ошибка адреса подключения
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == Всё равно продолжить?
-
-Continue whispering to the last whisper target
-== Продолжить шептать последнему адресату
 
 Contributors
 == Авторы
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == Имя на финише:
 
+Finished
+== Pending russian translation a72eac2ab2
+
 Finished maps
 == Завершенные карты
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == Пригласить человека в заблокированную команду
 
-Invite a player to the locked team
-== Пригласить игрока в закрытую команду
-
 Invites are disabled
 == Приглашения отключены
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == Размер лазера
+
+Last entered
+== Pending russian translation 35c067a910
 
 Last page in console
 == Последняя страница в консоли
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == Опасная граница карты
+
+Map play history
+== Pending russian translation b1c4382a86
 
 Map Preview TODO
 == Предпросмотр карты в работе
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == Вход не требуется
+
+No map play history yet
+== Pending russian translation e7a67839a3
 
 No matching assets.
 == Нет подходящих ресурсов.
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == Квады используются для фонового декора
 
-Query information for map %s
-== Запросить информацию о карте %s
+Query current map info
+== Pending russian translation 67b708a246
 
-Query information for the current map
-== Запросить информацию о текущей карте
+Query map info for %s
+== Pending russian translation e3fce07544
 
 Query points for %s
 == Запросить очки игрока %s
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == Запросить ранг команды игрока %s
-
-Query your own points
-== Запросить свои очки
-
-Query your own rank
-== Запросить свой ранг
-
-Query your own team rank
-== Запросить ранг своей команды
 
 Queue is empty
 == Очередь пуста
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == Приём
+
+Recent
+== Pending russian translation 65000720fb
 
 Reconnect in %d sec
 == Переподключение через %d сек
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == Очередь переименования
 
+Remove from history
+== Pending russian translation 8ee10a40f6
+
 Remove from queue
 == Удалить из очереди
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == Ответить
 
+Reply to the last whisper target
+== Pending russian translation 060de46688
+
 Reply to the last whisper target: %s
 == Ответить последнему адресату шепота: %s
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Спасение/Заморозка: %d/%d
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== Спасение: авто-режим телепортирует из заморозки; ручной режим записывает точку спасения при приземлении и телепортирует туда во время заморозки
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending russian translation d07866dc9e
 
 Resend Loss
 == Потери по повторам
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == Отправить предупреждение сервера всем игрокам
 
-Send a whisper: /w player message
-== Отправить шепот: /w игрок сообщение
-
 Send emoticon in water
 == Вероятность отправки
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Показывать цвета в выборе наблюдателя
 
-Show command help
-== Показать справку по командам
-
 Show compact vote HUD
 == Показать компактный HUD голосования
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == Показывать здоровье, щиты и патроны
-
-Show help for /%s
-== Показать справку для /%s
 
 Show hitbox mode
 == Показывать режим хитбоксов
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == Показывать справку и сообщения об использовании сервера
 
+Show server settings
+== Pending russian translation a23fc6f8e9
+
 Show skin date and author
 == Показывать дату и автора скина
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == Показать правила сервера
-
-Show the server settings list
-== Показать список настроек сервера
 
 Show tiles layers from BG map
 == Показывать слои тайлов с фоновой карты сущностей
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == Неклассифицированная аудио-проблема
 
+Unfinished
+== Pending russian translation 5688298e51
+
 Unfinished map
 == Незавершённая карта
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Незавершенные карты
+
+Unfinished maps are shown first
+== Pending russian translation 634aa7098f
 
 Unflip:
 == Отменить отражение:
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == Загрузка данных карты на GPU
+
+Usage
+== Pending russian translation c7555e353c
 
 Usage: %s %s
 == Использование: %s %s
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == Шепнуть %s: %s
 
+Whisper: /w player message
+== Pending russian translation 1bf15c6f95
+
 Who stuffed OBS in here
 == Кто засунул сюда OBS
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Ваш код тайм-аута установлен. Клиенты 0.7 не могут вернуть своих ти после тайм-аута; однако клиент 0.6 может завладеть вашим ти
+
+yourself
+== Pending russian translation 212328878d
 
 z = Zoom
 == z = Масштаб
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == Конечная точка перевода Tencent Cloud
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending russian translation d6fd224c48
+
 自动保存聊天记录
 == Автосохранение истории чата
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Inactive lyrics line minimum opacity percent
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending russian translation 79bb73fb79
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Список переименований в меню-пироге (разделитель |, напр.: Сюаньмэн1|Сюаньмэн2)

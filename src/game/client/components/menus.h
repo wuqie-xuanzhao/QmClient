@@ -1160,6 +1160,7 @@ private:
 		char m_aStatusMessage[256] = {0};
 		bool m_StatusIsError = false;
 		int m_PreviewSampleId = -1;
+		std::vector<std::string> m_vCandidatePaths;
 		std::vector<SAudioPackCandidateEntry> m_vCandidateEntries;
 	};
 
@@ -1212,6 +1213,7 @@ private:
 	void AudioPackEditorClose();
 	void AudioPackEditorSetStatus(const char *pMessage, bool IsError);
 	void AudioPackEditorRefreshCandidates();
+	void AudioPackEditorRebuildCandidates();
 	void AudioPackEditorStopPreview();
 	bool AudioPackEditorPlayPreview(const char *pFilename, int StorageType);
 	bool AudioPackEditorEnsureStorageDirectories(const char *pStoragePath);

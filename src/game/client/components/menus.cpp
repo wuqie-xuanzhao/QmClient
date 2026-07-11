@@ -58,6 +58,14 @@ extern bool gs_SettingsAssetsEntityGamePreview;
 
 namespace
 {
+	constexpr float MENU_MENUBAR_HEIGHT_NEW = 24.0f;
+	constexpr float MENU_MENUBAR_HEIGHT_LEGACY = 30.0f;
+
+	constexpr float MenuMenubarHeight(bool UseNewUi)
+	{
+		return UseNewUi ? MENU_MENUBAR_HEIGHT_NEW : MENU_MENUBAR_HEIGHT_LEGACY;
+	}
+
 	class CUiRenderOnlyScope
 	{
 	public:
@@ -289,8 +297,7 @@ namespace
 	{
 		CUIRect TabBar, MainView;
 		const bool UseNewUi = g_Config.m_QmNewUi != 0;
-		const float MenubarHeight = UseNewUi ? 24.0f : 34.0f;
-		Screen.HSplitTop(MenubarHeight, &TabBar, &MainView);
+		Screen.HSplitTop(MenuMenubarHeight(UseNewUi), &TabBar, &MainView);
 		if(UseNewUi)
 			MainView.HSplitTop(6.0f, nullptr, &MainView);
 		return MainView;
@@ -2805,8 +2812,7 @@ void CMenus::Render()
 			CPerfTimer ShellTimer;
 			CUIRect TabBar, MainView;
 			const bool UseNewUi = g_Config.m_QmNewUi != 0;
-			const float MenubarHeight = UseNewUi ? 24.0f : 34.0f;
-			Screen.HSplitTop(MenubarHeight, &TabBar, &MainView);
+			Screen.HSplitTop(MenuMenubarHeight(UseNewUi), &TabBar, &MainView);
 			if(UseNewUi)
 				MainView.HSplitTop(6.0f, nullptr, &MainView);
 			const CUIRect MainViewClip = MainView;
@@ -2909,8 +2915,7 @@ void CMenus::Render()
 			CPerfTimer ShellTimer;
 			CUIRect TabBar, MainView;
 			const bool UseNewUi = g_Config.m_QmNewUi != 0;
-			const float MenubarHeight = UseNewUi ? 24.0f : 34.0f;
-			Screen.HSplitTop(MenubarHeight, &TabBar, &MainView);
+			Screen.HSplitTop(MenuMenubarHeight(UseNewUi), &TabBar, &MainView);
 			if(UseNewUi)
 				MainView.HSplitTop(6.0f, nullptr, &MainView);
 			const CUIRect MainViewClip = MainView;
@@ -5709,8 +5714,7 @@ void CMenus::BuildIngameMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUI
 
 	CUIRect TabBar, ContentView;
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
-	const float MenubarHeight = UseNewUi ? 24.0f : 34.0f;
-	MainView.HSplitTop(MenubarHeight, &TabBar, &ContentView);
+	MainView.HSplitTop(MenuMenubarHeight(UseNewUi), &TabBar, &ContentView);
 	if(UseNewUi)
 		ContentView.HSplitTop(6.0f, nullptr, &ContentView);
 

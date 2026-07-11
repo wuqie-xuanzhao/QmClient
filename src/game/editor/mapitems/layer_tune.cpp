@@ -5,7 +5,7 @@
 CLayerTune::CLayerTune(CEditorMap *pMap, int w, int h) :
 	CLayerTiles(pMap, w, h)
 {
-	str_copy(m_aName, "调整");
+	str_copy(m_aName, "物理");
 	m_HasTune = true;
 
 	m_pTuneTile = new CTuneTile[w * h];
@@ -18,7 +18,7 @@ CLayerTune::CLayerTune(CEditorMap *pMap, int w, int h) :
 CLayerTune::CLayerTune(const CLayerTune &Other) :
 	CLayerTiles(Other)
 {
-	str_copy(m_aName, "调整 副本");
+	str_copy(m_aName, "物理 副本");
 	m_HasTune = true;
 
 	m_pTuneTile = new CTuneTile[m_Width * m_Height];

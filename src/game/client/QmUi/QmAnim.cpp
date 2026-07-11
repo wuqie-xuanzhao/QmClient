@@ -326,7 +326,8 @@ float CUiV2AnimationRuntime::GetValue(uint64_t NodeKey, EUiAnimProperty Property
 bool CUiV2AnimationRuntime::RequestAnimation(const SUiAnimRequest &Request)
 {
 	SUiAnimRequest EffectiveRequest = Request;
-	EffectiveRequest.m_Transition = qm_motion::ApplyMotionLevel(Request.m_Transition, g_Config.m_QmUiMotionLevel);
+	if(Request.m_Transition.m_RespectMotionLevel)
+		EffectiveRequest.m_Transition = qm_motion::ApplyMotionLevel(Request.m_Transition, g_Config.m_QmUiMotionLevel);
 
 	const STrackKey Key{EffectiveRequest.m_NodeKey, EffectiveRequest.m_Property};
 	const float BaseValue = CurrentValueFor(Key, 0.0f);

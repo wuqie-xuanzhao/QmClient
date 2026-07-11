@@ -2,6 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_CHAT_H
 #define GAME_CLIENT_COMPONENTS_CHAT_H
+#include <base/system.h>
+
 #include <engine/console.h>
 #include <engine/shared/config.h>
 #include <engine/shared/protocol.h>
@@ -18,6 +20,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 class CTranslateResponse
@@ -32,12 +35,48 @@ constexpr auto SAVES_FILE = "ddnet-saves.txt";
 
 class CChat : public CComponent
 {
+public:
+	enum class EPresentationState
+	{
+		ENTERING,
+		VISIBLE,
+		EXITING,
+		COLLAPSED,
+	};
+
+	struct SPresentationState
+	{
+		int64_t m_PresentationBirthTick = 0;
+		float m_EntryProgress = 0.0f;
+		float m_LayoutVisibility = 0.0f;
+		float m_RenderY = 0.0f;
+		float m_TargetY = 0.0f;
+		float m_RenderOffsetX = 0.0f;
+		float m_RenderOffsetY = 0.0f;
+		float m_RenderAlpha = 0.0f;
+		float m_RenderScale = 1.0f;
+		bool m_RenderYInitialized = false;
+		EPresentationState m_State = EPresentationState::COLLAPSED;
+	};
+
+	static void ResetPresentationState(SPresentationState &Presentation);
+	static void BeginLinePresentation(SPresentationState &Presentation, int64_t Now, bool GentleRefresh);
+	static void UpdateLinePresentation(SPresentationState &Presentation, int64_t LineTime, int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ForceVisible, int64_t LargeAreaOpenTick, float RecallDelaySeconds);
+	static float SmoothPresentationY(float CurrentY, float TargetY, float DeltaSeconds);
+
+private:
 	static constexpr float CHAT_HEIGHT_FULL = 200.0f;
 	static constexpr float CHAT_HEIGHT_MIN = 50.0f;
 	static constexpr float CHAT_FONTSIZE_WIDTH_RATIO = 2.5f;
 
-	static constexpr float CHAT_ANIM_SLIDE_OUT_OFFSET = 60.0f; // 被挤出可见区域时的水平偏移量
-	static constexpr float CHAT_VISIBLE_SECONDS_NO_FOCUS = 16.0f; // 聊天折叠时保留消息时长（秒）
+	static constexpr float CHAT_ENTRY_DURATION = 0.22f;
+	static constexpr float CHAT_ENTRY_OFFSET_X = -24.0f;
+	static constexpr float CHAT_RECALL_DURATION = 0.12f;
+	static constexpr float CHAT_RECALL_STAGGER_SECONDS = 0.022f;
+	static constexpr float CHAT_EXIT_DURATION = 0.20f;
+	static constexpr float CHAT_MESSAGE_VISIBLE_DURATION = 14.0f;
+	static constexpr float CHAT_PRESENTATION_MAX_DELTA_SECONDS = 0.20f;
+	static constexpr float CHAT_RENDER_Y_SMOOTHING = 24.0f;
 
 	enum
 	{
@@ -75,6 +114,7 @@ class CChat : public CComponent
 
 		float m_TextYOffset;
 		float m_CutOffProgress;
+		SPresentationState m_Presentation;
 
 		int m_TimesRepeated;
 
@@ -86,7 +126,9 @@ class CChat : public CComponent
 
 	bool m_PrevScoreBoardShowed;
 	bool m_PrevShowChat;
-	int64_t m_LastAnimUpdateTime;
+	int64_t m_LastPresentationUpdateTime;
+	int64_t m_LargeAreaOpenTick;
+	bool m_LastPresentationShowLargeArea;
 
 	CLine m_aLines[MAX_LINES];
 	int m_CurrentLine;
@@ -156,72 +198,16 @@ class CChat : public CComponent
 		bool operator==(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) == 0; }
 	};
 
-public:
 	struct SSlashCommandSuggestion
 	{
 		const char *m_pCommand;
-		const char *m_pHelpText;
 	};
-	static std::vector<SSlashCommandSuggestion> BuildSlashCommandSuggestions(const char *pInput, size_t MaxSuggestions)
-	{
-		static constexpr SSlashCommandSuggestion s_aSuggestions[] = {
-			{"/pause", nullptr},
-			{"/spec", nullptr},
-			{"/team", nullptr},
-			{"/w", nullptr},
-			{"/r", nullptr},
-			{"/rank", nullptr},
-			{"/top5", nullptr},
-			{"/top", nullptr},
-			{"/emote", nullptr},
-			{"/kill", nullptr},
-			{"/save", nullptr},
-			{"/load", nullptr},
-		};
-		std::vector<SSlashCommandSuggestion> vSuggestions;
-		if(pInput == nullptr || pInput[0] != '/' || MaxSuggestions == 0)
-			return vSuggestions;
-		for(const char *pCursor = pInput; *pCursor != '\0'; ++pCursor)
-		{
-			if(str_isspace(*pCursor))
-				return vSuggestions;
-		}
-		for(const SSlashCommandSuggestion &Suggestion : s_aSuggestions)
-		{
-			if(str_comp_nocase(Suggestion.m_pCommand, pInput) == 0)
-				return {};
-			if(str_startswith_nocase(Suggestion.m_pCommand, pInput))
-			{
-				vSuggestions.push_back(Suggestion);
-				if(vSuggestions.size() >= MaxSuggestions)
-					break;
-			}
-		}
-		return vSuggestions;
-	}
-	static bool ApplySlashCommandSuggestion(char *pBuf, size_t BufSize, const char *pInput, const char *pCommand)
-	{
-		if(pBuf == nullptr || BufSize == 0 || pInput == nullptr || pInput[0] != '/' || pCommand == nullptr || pCommand[0] != '/')
-			return false;
-		for(const char *pCursor = pInput; *pCursor != '\0'; ++pCursor)
-		{
-			if(str_isspace(*pCursor))
-				return false;
-		}
-		str_copy(pBuf, pCommand, BufSize);
-		str_append(pBuf, " ", BufSize);
-		return true;
-	}
 
-private:
 	std::vector<CCommand> m_vServerCommands;
-	bool m_ServerCommandsNeedSorting;
 	std::vector<SSlashCommandSuggestion> m_vSlashCommandSuggestions;
-	int m_SlashCommandSuggestionIndex = 0;
-	CUIRect m_SlashCommandSuggestionRect = {};
-	bool m_SlashCommandSuggestionRectValid = false;
 	bool m_SlashCommandSuggestionsDismissed = false;
-	char m_aSlashCommandSuggestionsDismissedInput[MAX_LINE_LENGTH] = {};
+	char m_aSlashCommandSuggestionsDismissedInput[MAX_LINE_LENGTH] = "";
+	bool m_ServerCommandsNeedSorting;
 
 	struct CHistoryEntry
 	{
@@ -261,15 +247,10 @@ private:
 	const char *LocalizeCommandPreviewText(const char *pText) const;
 	bool BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const;
 	void RefreshSlashCommandSuggestions();
-	bool ApplySelectedSlashCommandSuggestion();
-	void RenderSlashCommandSuggestions(CUIRect InputContentRect, float FontSize);
 	void SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation);
 	int CountInitializedLines() const;
 	int CountVisibleLinesFrom(int BacklogLine) const;
-
-	static float EaseInQuad(float t);
-	static float CalculateCutOffAlpha(float CutOffT);
-	static float CalculateCutOffOffsetX(float CutOffT);
+	void UpdatePresentationStates(int64_t Now, float DeltaSeconds, bool ShowLargeArea);
 
 	friend class CBindChat;
 	friend class CTranslate;
@@ -389,6 +370,7 @@ public:
 	{
 		return length(Release - Press) <= 5.0f;
 	}
+	static float CalculateCutOffOffsetX(float Progress);
 	static bool ShouldBlockLiveDirectorChatCommand(const char *pLine)
 	{
 		if(pLine == nullptr)
@@ -444,9 +426,48 @@ public:
 	}
 	static const char *MessageNamePrefixForClientId(int ClientId)
 	{
+		if(ClientId == SERVER_MSG)
+			return "";
 		if(ClientId == CLIENT_MSG)
 			return "— ";
 		return "";
+	}
+	static std::vector<SSlashCommandSuggestion> BuildSlashCommandSuggestions(std::string_view Input, size_t MaxSuggestions)
+	{
+		static constexpr const char *s_apCommonCommands[] = {
+			"/pause",
+			"/spec",
+			"/team",
+			"/w",
+			"/top5",
+			"/top",
+		};
+		std::vector<SSlashCommandSuggestion> vSuggestions;
+		if(Input.empty() || Input[0] != '/' || Input.find(' ') != std::string_view::npos)
+			return vSuggestions;
+
+		char aInput[MAX_LINE_LENGTH];
+		str_truncate(aInput, sizeof(aInput), Input.data(), (int)Input.size());
+		for(const char *pCommand : s_apCommonCommands)
+		{
+			if(str_comp_nocase(aInput, pCommand) == 0)
+				return {};
+			if(str_startswith_nocase(pCommand, aInput))
+			{
+				vSuggestions.push_back({pCommand});
+				if(vSuggestions.size() >= MaxSuggestions)
+					break;
+			}
+		}
+		return vSuggestions;
+	}
+	static bool ApplySlashCommandSuggestion(char *pBuf, size_t BufSize, const char *pInput, const char *pCommand)
+	{
+		if(pBuf == nullptr || pInput == nullptr || pCommand == nullptr || BufSize == 0 || pInput[0] != '/' || str_find(pInput, " ") != nullptr || !str_startswith_nocase(pCommand, pInput))
+			return false;
+		str_copy(pBuf, pCommand, BufSize);
+		str_append(pBuf, " ", BufSize);
+		return true;
 	}
 	static QmHudNotifications::EServerMessageClass ResolveLineServerMessageClass(int ClientId, const char *pLine, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass = std::nullopt)
 	{
@@ -547,4 +568,192 @@ public:
 	// It uses team or public chat depending on m_Mode.
 	void SendChatQueued(const char *pLine);
 };
+
+static inline float ChatPresentationClamp(float Value)
+{
+	return std::clamp(Value, 0.0f, 1.0f);
+}
+
+static inline float ChatPresentationCubicBezierSample(float A, float B, float T)
+{
+	const float InvT = 1.0f - T;
+	return 3.0f * InvT * InvT * T * A + 3.0f * InvT * T * T * B + T * T * T;
+}
+
+static inline float ChatPresentationEaseOut(float Progress)
+{
+	const float X = ChatPresentationClamp(Progress);
+	float Low = 0.0f;
+	float High = 1.0f;
+	float T = X;
+	for(int i = 0; i < 8; ++i)
+	{
+		T = (Low + High) * 0.5f;
+		const float SampleX = ChatPresentationCubicBezierSample(0.16f, 0.30f, T);
+		if(SampleX < X)
+			Low = T;
+		else
+			High = T;
+	}
+	return ChatPresentationClamp(ChatPresentationCubicBezierSample(1.0f, 1.0f, T));
+}
+
+static inline float ChatPresentationTicksToSeconds(int64_t Ticks)
+{
+	return Ticks <= 0 ? 0.0f : Ticks / (float)time_freq();
+}
+
+inline void CChat::ResetPresentationState(SPresentationState &Presentation)
+{
+	Presentation.m_PresentationBirthTick = 0;
+	Presentation.m_EntryProgress = 0.0f;
+	Presentation.m_LayoutVisibility = 0.0f;
+	Presentation.m_RenderY = 0.0f;
+	Presentation.m_TargetY = 0.0f;
+	Presentation.m_RenderOffsetX = 0.0f;
+	Presentation.m_RenderOffsetY = 0.0f;
+	Presentation.m_RenderAlpha = 0.0f;
+	Presentation.m_RenderScale = 1.0f;
+	Presentation.m_RenderYInitialized = false;
+	Presentation.m_State = EPresentationState::COLLAPSED;
+}
+
+inline void CChat::BeginLinePresentation(SPresentationState &Presentation, int64_t Now, bool GentleRefresh)
+{
+	const float StartProgress = GentleRefresh ? std::max(Presentation.m_EntryProgress, 0.72f) : 0.0f;
+	Presentation.m_PresentationBirthTick = Now - (int64_t)(StartProgress * CHAT_ENTRY_DURATION * time_freq());
+	Presentation.m_LayoutVisibility = 1.0f;
+	Presentation.m_RenderOffsetY = 0.0f;
+	Presentation.m_RenderYInitialized = false;
+	Presentation.m_State = EPresentationState::ENTERING;
+	Presentation.m_EntryProgress = StartProgress;
+	const float EntryEase = ChatPresentationEaseOut(Presentation.m_EntryProgress);
+	Presentation.m_RenderOffsetX = CHAT_ENTRY_OFFSET_X * (1.0f - EntryEase);
+	Presentation.m_RenderAlpha = EntryEase;
+	Presentation.m_RenderScale = 1.0f;
+}
+
+inline void CChat::UpdateLinePresentation(
+	SPresentationState &Presentation,
+	int64_t LineTime,
+	int64_t Now,
+	float DeltaSeconds,
+	bool ShowLargeArea,
+	bool ForceVisible,
+	int64_t LargeAreaOpenTick,
+	float RecallDelaySeconds)
+{
+	DeltaSeconds = std::clamp(DeltaSeconds, 0.0f, CHAT_PRESENTATION_MAX_DELTA_SECONDS);
+	(void)DeltaSeconds;
+
+	// 系统时间回拨时，避免动画年龄变成异常值。
+	if(Now < Presentation.m_PresentationBirthTick || Now < LineTime)
+		Presentation.m_PresentationBirthTick = Now;
+
+	const float EntryAge = ChatPresentationTicksToSeconds(Now - Presentation.m_PresentationBirthTick);
+	Presentation.m_EntryProgress = ChatPresentationClamp(EntryAge / CHAT_ENTRY_DURATION);
+
+	const float EntryEase = ChatPresentationEaseOut(Presentation.m_EntryProgress);
+	Presentation.m_RenderOffsetX = CHAT_ENTRY_OFFSET_X * (1.0f - EntryEase);
+	Presentation.m_RenderOffsetY = 0.0f;
+	Presentation.m_RenderScale = 1.0f;
+
+	if(ShowLargeArea && !ForceVisible && LargeAreaOpenTick > 0 && LineTime < LargeAreaOpenTick)
+	{
+		const float RecallAge = ChatPresentationTicksToSeconds(Now - LargeAreaOpenTick) - std::max(0.0f, RecallDelaySeconds);
+		const float RecallProgress = ChatPresentationClamp(RecallAge / CHAT_RECALL_DURATION);
+		const float RecallEase = ChatPresentationEaseOut(RecallProgress);
+		Presentation.m_LayoutVisibility = RecallProgress > 0.0f ? 1.0f : 0.0f;
+		Presentation.m_RenderOffsetX = CHAT_ENTRY_OFFSET_X * (1.0f - RecallEase);
+		Presentation.m_RenderOffsetY = 0.0f;
+		Presentation.m_RenderAlpha = RecallEase;
+		Presentation.m_RenderScale = 1.0f;
+		Presentation.m_State = RecallProgress >= 1.0f ? EPresentationState::VISIBLE : EPresentationState::ENTERING;
+		return;
+	}
+
+	// 入场阶段优先级最高，避免刚出现的消息直接进入退场状态。
+	if(Presentation.m_EntryProgress < 1.0f)
+	{
+		Presentation.m_LayoutVisibility = 1.0f;
+		Presentation.m_RenderOffsetX = CHAT_ENTRY_OFFSET_X * (1.0f - EntryEase);
+		Presentation.m_RenderOffsetY = 0.0f;
+		Presentation.m_RenderAlpha = EntryEase;
+		Presentation.m_State = EPresentationState::ENTERING;
+		return;
+	}
+
+	// 强制显示消息不参与普通聊天超时逻辑。
+	if(ForceVisible)
+	{
+		Presentation.m_LayoutVisibility = 1.0f;
+		Presentation.m_RenderOffsetX = 0.0f;
+		Presentation.m_RenderOffsetY = 0.0f;
+		Presentation.m_RenderAlpha = 1.0f;
+		Presentation.m_RenderScale = 1.0f;
+		Presentation.m_State = EPresentationState::VISIBLE;
+		return;
+	}
+
+	// 展开聊天历史时，恢复所有历史消息，不让它们按普通 HUD 生命周期消失。
+	if(ShowLargeArea)
+	{
+		Presentation.m_LayoutVisibility = 1.0f;
+		Presentation.m_RenderOffsetX = 0.0f;
+		Presentation.m_RenderOffsetY = 0.0f;
+		Presentation.m_RenderAlpha = 1.0f;
+		Presentation.m_RenderScale = 1.0f;
+		Presentation.m_State = EPresentationState::VISIBLE;
+		return;
+	}
+
+	// 对齐官方语义：
+	// 0~14 秒：完全显示。
+	// 14 秒后：整条消息横向滑出。
+	// 滑出后：折叠，不再参与正常 HUD 绘制。
+	const float LineAge = ChatPresentationTicksToSeconds(Now - LineTime);
+	const float FadeProgress = ChatPresentationClamp(
+		(LineAge - CHAT_MESSAGE_VISIBLE_DURATION) / CHAT_EXIT_DURATION);
+
+	if(FadeProgress > 0.0f)
+	{
+		const float FadeEase =
+			FadeProgress * FadeProgress * (3.0f - 2.0f * FadeProgress);
+
+		if(FadeProgress >= 1.0f)
+		{
+			Presentation.m_LayoutVisibility = 0.0f;
+			Presentation.m_RenderOffsetX = CHAT_ENTRY_OFFSET_X;
+			Presentation.m_RenderOffsetY = 0.0f;
+			Presentation.m_RenderAlpha = 0.0f;
+			Presentation.m_RenderScale = 1.0f;
+			Presentation.m_State = EPresentationState::COLLAPSED;
+			return;
+		}
+
+		Presentation.m_LayoutVisibility = 1.0f;
+		Presentation.m_RenderOffsetX = CHAT_ENTRY_OFFSET_X * FadeEase;
+		Presentation.m_RenderOffsetY = 0.0f;
+		Presentation.m_RenderAlpha = 1.0f - FadeEase;
+		Presentation.m_RenderScale = 1.0f;
+		Presentation.m_State = EPresentationState::EXITING;
+		return;
+	}
+
+	Presentation.m_LayoutVisibility = 1.0f;
+	Presentation.m_RenderOffsetX = 0.0f;
+	Presentation.m_RenderOffsetY = 0.0f;
+	Presentation.m_RenderAlpha = 1.0f;
+	Presentation.m_RenderScale = 1.0f;
+	Presentation.m_State = EPresentationState::VISIBLE;
+}
+
+inline float CChat::SmoothPresentationY(float CurrentY, float TargetY, float DeltaSeconds)
+{
+	DeltaSeconds = std::clamp(DeltaSeconds, 0.0f, CHAT_PRESENTATION_MAX_DELTA_SECONDS);
+	if(!std::isfinite(CurrentY) || !std::isfinite(TargetY))
+		return TargetY;
+	const float Blend = 1.0f - std::exp(-CHAT_RENDER_Y_SMOOTHING * DeltaSeconds);
+	return CurrentY + (TargetY - CurrentY) * std::clamp(Blend, 0.0f, 1.0f);
+}
 #endif

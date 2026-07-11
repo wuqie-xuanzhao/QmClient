@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+
 // Compile-time invariants. Catching token regressions at compile time keeps
 // downstream QmUi widgets stable. NOTE: color4_base uses anonymous unions
 // (x/r/h share storage); constexpr evaluation can only read the active union
@@ -49,12 +51,27 @@ TEST(QmUiTokens, SurfaceGlassPreservesAlpha)
 	EXPECT_NEAR(ui_token::color::SURFACE_GLASS.g, 0.09f, 0.001f);
 	EXPECT_NEAR(ui_token::color::SURFACE_GLASS.b, 0.12f, 0.001f);
 	EXPECT_EQ(ui_token::color::SURFACE_GLASS.a, 0.70f);
-	EXPECT_FLOAT_EQ(ui_token::ime::SCALE, 0.75f);
-	EXPECT_FLOAT_EQ(ui_token::ime::PANEL_BG_LIGHT.a, 0.45f);
-	EXPECT_FLOAT_EQ(ui_token::ime::PANEL_BG_DARK.a, 0.45f);
+	EXPECT_FLOAT_EQ(ui_token::ime::SCALE, 0.68f);
+	EXPECT_FLOAT_EQ(ui_token::ime::PANEL_BG_LIGHT.a, 0.96f);
+	EXPECT_FLOAT_EQ(ui_token::ime::PANEL_BG_DARK.a, 0.96f);
 	EXPECT_FLOAT_EQ(ui_token::ime::COMPOSITION_SELECTION.a, 0.18f);
 	EXPECT_GT(ui_token::ime::TEXT_SAFE_PADDING_X, 0.0f);
 	EXPECT_GT(ui_token::ime::TEXT_SAFE_PADDING_Y, 0.0f);
+}
+
+TEST(QmUiTokens, ImeDynamicIslandMatchesReferenceHtmlStyle)
+{
+	EXPECT_NEAR(ui_token::ime::PANEL_BG_DARK.r, 0.110f, 0.001f);
+	EXPECT_NEAR(ui_token::ime::PANEL_BG_DARK.g, 0.110f, 0.001f);
+	EXPECT_NEAR(ui_token::ime::PANEL_BG_DARK.b, 0.118f, 0.001f);
+	EXPECT_NEAR(ui_token::ime::TEXT_DARK.r, 1.0f, 0.001f);
+	EXPECT_NEAR(ui_token::ime::TEXT_MUTED_DARK.r, 0.557f, 0.001f);
+	EXPECT_NEAR(ui_token::ime::TEXT_SELECTED_DARK.r, 0.184f, 0.001f);
+	EXPECT_NEAR(ui_token::ime::TEXT_SELECTED_DARK.g, 0.502f, 0.001f);
+	EXPECT_NEAR(ui_token::ime::TEXT_SELECTED_DARK.b, 0.929f, 0.001f);
+	EXPECT_FLOAT_EQ(ui_token::ime::PANEL_SHADOW_DARK.a, 0.0f);
+	EXPECT_LT(ui_token::ime::MAX_WIDTH, 300.0f);
+	EXPECT_GT(ui_token::ime::RADIUS, ui_token::ime::ROW_HEIGHT * 0.5f);
 }
 
 TEST(QmUiTokens, QmThemeMirrorsSharedTokens)
@@ -79,6 +96,87 @@ TEST(QmImeOverlay, InvalidSelectionHighlightsFirstCandidate)
 	EXPECT_EQ(qm_ime_overlay::NormalizeSelectedCandidateIndex(-1, 8), 0);
 	EXPECT_EQ(qm_ime_overlay::NormalizeSelectedCandidateIndex(8, 8), 0);
 	EXPECT_EQ(qm_ime_overlay::NormalizeSelectedCandidateIndex(3, 8), 3);
+}
+
+TEST(QmImeOverlay, CandidateViewportKeepsSevenItemsWhenPageHasEnoughCandidates)
+{
+	const qm_ime_overlay::SQmImeCandidateViewport First = qm_ime_overlay::BuildCandidateViewport(9, 0, 0);
+	EXPECT_EQ(First.m_Start, 0);
+	EXPECT_EQ(First.m_Count, 7);
+
+	const qm_ime_overlay::SQmImeCandidateViewport StillVisible = qm_ime_overlay::BuildCandidateViewport(9, 6, First.m_Start);
+	EXPECT_EQ(StillVisible.m_Start, 0);
+	EXPECT_EQ(StillVisible.m_Count, 7);
+
+	const qm_ime_overlay::SQmImeCandidateViewport Shifted = qm_ime_overlay::BuildCandidateViewport(9, 7, StillVisible.m_Start);
+	EXPECT_EQ(Shifted.m_Start, 1);
+	EXPECT_EQ(Shifted.m_Count, 7);
+}
+
+TEST(QmImeOverlay, CandidateViewportShowsOnlyActualCandidatesOnShortPages)
+{
+	const qm_ime_overlay::SQmImeCandidateViewport ShortPage = qm_ime_overlay::BuildCandidateViewport(5, 4, 3);
+	EXPECT_EQ(ShortPage.m_Start, 0);
+	EXPECT_EQ(ShortPage.m_Count, 5);
+}
+
+TEST(QmImeOverlay, CandidateViewportKeepsStableStartWhileSelectionStaysVisible)
+{
+	const qm_ime_overlay::SQmImeCandidateViewport Stable = qm_ime_overlay::BuildCandidateViewport(12, 5, 2);
+	EXPECT_EQ(Stable.m_Start, 2);
+	EXPECT_EQ(Stable.m_Count, 7);
+
+	const qm_ime_overlay::SQmImeCandidateViewport ShiftLeft = qm_ime_overlay::BuildCandidateViewport(12, 1, Stable.m_Start);
+	EXPECT_EQ(ShiftLeft.m_Start, 1);
+	EXPECT_EQ(ShiftLeft.m_Count, 7);
+}
+
+TEST(QmImePresentationSource, PopupUsesContinuousRedirectablePresentationState)
+{
+	const std::string ManagerSource = ReadTestSourceFile("src/game/client/qm_ime_manager.cpp");
+	const std::string PopupSource = ReadTestSourceFile("src/game/client/qm_ime_candidate_popup.cpp");
+	const std::string PopupHeader = ReadTestSourceFile("src/game/client/qm_ime_candidate_popup.h");
+
+	EXPECT_NE(ManagerSource.find("State.m_Visible = HasComposition;"), std::string::npos);
+	EXPECT_NE(PopupHeader.find("SPresentationTargets"), std::string::npos);
+	EXPECT_NE(PopupSource.find("SImePresentationTarget"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ResolveImePresentationStateValue"), std::string::npos);
+	EXPECT_NE(PopupSource.find("ResolveUiPresentationStateValue"), std::string::npos);
+	EXPECT_NE(PopupSource.find("SetUiPresentationStateValue"), std::string::npos);
+	EXPECT_NE(PopupSource.find("TargetPresentation.m_TypingAlpha"), std::string::npos);
+	EXPECT_NE(PopupSource.find("TargetPresentation.m_CandidateAlpha"), std::string::npos);
+	EXPECT_NE(PopupSource.find("Presence.m_FreshEnter"), std::string::npos);
+	EXPECT_NE(PopupSource.find("const float Alpha = minimum(Presence.m_Alpha, PresentationAlpha);"), std::string::npos);
+	EXPECT_NE(PopupSource.find("const float CandidateDrawAlpha = Alpha * CandidateAlpha;"), std::string::npos);
+	EXPECT_NE(PopupSource.find("WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha)"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("(void)PresentationAlpha;"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("(void)CandidateAlpha;"), std::string::npos);
+	EXPECT_NE(PopupSource.find("IME_CONTENT_TIME_SCALE = 0.40f"), std::string::npos);
+	EXPECT_NE(PopupSource.find("BuildCandidateViewport"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ResolveMotionValue"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ResolveMotionRect"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("FitCandidates"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("CandidateFitPanelWidth"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("SingleLongCandidate"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("--CandidateDisplayCount"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("TEXTFLAG_ELLIPSIS_AT_END"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("TextWidthBudget"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("m_TextMaxWidth"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("m_MaxCandidateTextWidth"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ShadowNear"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ShadowFar"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("TopGlow"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("PanelInner"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("EUiAnimInterruptPolicy::QUEUE"), std::string::npos);
+}
+
+TEST(QmUiPresentationSource, OverlaysUsePresentationState)
+{
+	const std::string OverlaySource = ReadTestSourceFile("src/game/client/QmUi/UiOverlays.h");
+
+	EXPECT_NE(OverlaySource.find("ResolveUiPresentationStateValue"), std::string::npos);
+	EXPECT_NE(OverlaySource.find("SetUiPresentationStateValue"), std::string::npos);
+	EXPECT_EQ(OverlaySource.find("->SetValue("), std::string::npos);
 }
 
 TEST(QmUiTokens, MotionRefsBindToAnimCurves)

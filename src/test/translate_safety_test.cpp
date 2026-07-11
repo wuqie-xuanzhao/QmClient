@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <climits>
 #include <memory>
 #include <vector>
 

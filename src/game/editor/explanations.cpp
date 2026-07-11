@@ -263,7 +263,7 @@ const char *CExplanations::ExplainDDNet(int Tile, int Layer)
 		break;
 	case TILE_TUNE:
 		if(Layer == LAYER_TUNE)
-			return "调整区域: 定义的调整生效的区域.";
+			return "物理区域: 定义的物理参数生效的区域.";
 		break;
 	case TILE_OLDLASER:
 		if(Layer == LAYER_GAME || Layer == LAYER_FRONT)

@@ -45,12 +45,14 @@ class CScoreboard : public CComponent
 	float m_Visibility;
 	float m_OpenTime;
 	float m_AnimContentAlpha;
+	bool m_PresentationInitialized;
 	static constexpr int SOUND_MUTE_BUTTON_COUNT = 9;
 
 	IGraphics::CTextureHandle m_DeadTeeTexture;
 
 	std::optional<vec2> m_LastMousePos;
 	bool m_MouseUnlocked = false;
+	bool m_RenderInteractions = false;
 
 	struct SSoundMuteButtonAnimState
 	{

@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == Un dossier avec ce nom existe déjà
 
+a player
+== Pending french translation 79c08e3281
+
 A screenshot with this name already exists
 == Une capture d'écran avec ce nom existe déjà
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == Effacer toutes les cartes favorites
 
+Clear all history
+== Pending french translation 496065309b
+
 Clear Changes
 == Effacer les modifications
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == Vider la file actuelle
+
+Clear finished
+== Pending french translation 5343eb7f48
 
 Clear friend note
 == Effacer la note d'ami
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == Confirmez que les deux sont sur le même serveur, la même salle et prennent en charge la voix
 
+Confirm clear all
+== Pending french translation 35eec2753d
+
+Confirm clear finished
+== Pending french translation ec8139f54c
+
 Connect address error
 == Erreur d'adresse de connexion
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == Continuer quand même ?
-
-Continue whispering to the last whisper target
-== Continuer à chuchoter au dernier destinataire
 
 Contributors
 == Contributeurs
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == Nom à l'arrivée :
 
+Finished
+== Pending french translation 708107aa96
+
 Finished maps
 == Cartes terminées
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == Inviter une personne dans une équipe verrouillée
 
-Invite a player to the locked team
-== Inviter un joueur dans l’équipe verrouillée
-
 Invites are disabled
 == Les invitations sont désactivées
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == Taille du laser
+
+Last entered
+== Pending french translation 85f2209c90
 
 Last page in console
 == Dernière page dans la console
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == Bordure de danger de la carte
+
+Map play history
+== Pending french translation 99af63e223
 
 Map Preview TODO
 == Aperçu de la carte à faire
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == Aucune connexion requise
+
+No map play history yet
+== Pending french translation 9840effa97
 
 No matching assets.
 == Aucun élément correspondant.
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == Les quads sont utilisés pour la décoration de fond
 
-Query information for map %s
-== Consulter les informations de la carte %s
+Query current map info
+== Pending french translation 2c54b34dd4
 
-Query information for the current map
-== Consulter les informations de la carte actuelle
+Query map info for %s
+== Pending french translation 67cda30913
 
 Query points for %s
 == Consulter les points de %s
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == Consulter le rang de l’équipe de %s
-
-Query your own points
-== Consulter vos points
-
-Query your own rank
-== Consulter votre rang
-
-Query your own team rank
-== Consulter le rang de votre équipe
 
 Queue is empty
 == La file est vide
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == Réception en cours
+
+Recent
+== Pending french translation 1d8cf193d9
 
 Reconnect in %d sec
 == Reconnexion dans %d s
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == Retirer des favoris
 
+Remove from history
+== Pending french translation 5eaaa1a3e5
+
 Remove from queue
 == Retirer de la file
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == Répondre
 
+Reply to the last whisper target
+== Pending french translation 1346ea4cc3
+
 Reply to the last whisper target: %s
 == Répondre au dernier destinataire du chuchotement : %s
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Sauvetage/Gel : %d/%d
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== Rescue : le mode auto téléporte hors du freeze ; le mode manuel enregistre un point de secours à l’atterrissage et y téléporte pendant le freeze
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending french translation 20f47454b6
 
 Resend Loss
 == Perte par renvoi
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == Envoyer un message d'alerte serveur à tous les joueurs
 
-Send a whisper: /w player message
-== Envoyer un chuchotement : /w joueur message
-
 Send emoticon in water
 == Envoyer une émoticône dans l'eau
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Afficher les couleurs dans la sélection de spectateur
 
-Show command help
-== Afficher l’aide des commandes
-
 Show compact vote HUD
 == Afficher le HUD de vote compact
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == Afficher la vie, les boucliers et les munitions
-
-Show help for /%s
-== Afficher l’aide pour /%s
 
 Show hitbox mode
 == Afficher le mode hitbox
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == Afficher l'aide et les messages d'utilisation du serveur
 
+Show server settings
+== Pending french translation 3a02ea4c43
+
 Show skin date and author
 == Afficher la date et l'auteur du skin
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == Afficher les règles du serveur
-
-Show the server settings list
-== Afficher la liste des réglages serveur
 
 Show tiles layers from BG map
 == Afficher les couches de tuiles de la carte de fond
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == Problème audio non classifié
 
+Unfinished
+== Pending french translation de59f7a8fb
+
 Unfinished map
 == Carte non terminée
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Cartes non terminées
+
+Unfinished maps are shown first
+== Pending french translation 7e363fd64a
 
 Unflip:
 == Dé-retourner :
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == Téléchargement des données de la carte vers le GPU
+
+Usage
+== Pending french translation aa8827f669
 
 Usage: %s %s
 == Utilisation : %s %s
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == Chuchoter à %s : %s
 
+Whisper: /w player message
+== Pending french translation c89e90f7ed
+
 Who stuffed OBS in here
 == Qui a fourré OBS ici
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Votre code de timeout a été défini. Les clients 0.7 ne peuvent pas récupérer leur tee en cas de timeout ; cependant, un client 0.6 peut réclamer votre tee
+
+yourself
+== Pending french translation a935dbbf5e
 
 z = Zoom
 == Pending french translation 908132c989
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == Point de terminaison Tencent Cloud de traduction
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending french translation bc5f33560a
+
 自动保存聊天记录
 == Sauvegarder automatiquement l’historique des discussions
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Inactive lyrics line minimum opacity percent
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending french translation 64679238fc
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Liste des pseudos modifiés du menu radial (séparés par |, ex : Xuanmeng1|Xuanmeng2)

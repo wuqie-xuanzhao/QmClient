@@ -568,14 +568,14 @@ bool CLineInput::ValidateActiveInputRenderedThisFrame()
 	return false;
 }
 
-void CLineInput::RenderLegacyCandidates()
+bool CLineInput::RenderLegacyCandidates()
 {
 	if(!ValidateActiveInputRenderedThisFrame())
-		return;
+		return false;
 
 	const int CandidateCount = Input()->GetCandidateCount();
 	if(!Input()->HasComposition() || CandidateCount <= 0)
-		return;
+		return true;
 
 	const float FontSize = 7.0f;
 	const float Padding = 1.0f;
@@ -637,6 +637,7 @@ void CLineInput::RenderLegacyCandidates()
 		TextRender()->Text(PosX + NumOffset, PosY, FontSize, Input()->GetCandidate(i));
 	}
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	return true;
 }
 
 void CLineInput::SetCompositionWindowPosition(vec2 Anchor, float LineHeight)

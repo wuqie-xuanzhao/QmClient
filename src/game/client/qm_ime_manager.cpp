@@ -111,13 +111,13 @@ SQmImePopupState CQmImeManager::BuildPopupState() const
 
 	const bool HasComposition = pInput->HasComposition();
 	const int CandidateCount = pInput->GetCandidateCount();
-	State.m_Visible = HasComposition && CandidateCount > 0;
+	State.m_Visible = HasComposition;
 	if(!State.m_Visible)
 		return State;
 
 	State.m_Composition = pInput->GetComposition();
 
-	const int CopyCount = std::min(CandidateCount, 16);
+	const int CopyCount = std::max(CandidateCount, 0);
 	State.m_vCandidates.reserve(CopyCount);
 	for(int i = 0; i < CopyCount; ++i)
 		State.m_vCandidates.emplace_back(pInput->GetCandidate(i));

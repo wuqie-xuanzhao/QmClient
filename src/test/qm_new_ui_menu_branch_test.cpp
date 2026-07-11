@@ -466,9 +466,13 @@ TEST(QmNewUiMenuBranches, SettingsShellKeepsExplicitQmNewUiContainerBranch)
 TEST(QmNewUiMenuBranches, LegacyMenusKeepTabAndPanelShellConnected)
 {
 	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
-	EXPECT_NE(MenusSource.find("const bool UseNewUi = g_Config.m_QmNewUi != 0;\n\t\t\tconst float MenubarHeight = UseNewUi ? 24.0f : 34.0f;\n\t\t\tScreen.HSplitTop(MenubarHeight, &TabBar, &MainView);\n\t\t\tif(UseNewUi)\n\t\t\t\tMainView.HSplitTop(6.0f, nullptr, &MainView);"), std::string::npos);
+	const std::string MenuShellSplit = "const bool UseNewUi = g_Config.m_QmNewUi != 0;\n\t\t\tScreen.HSplitTop(MenuMenubarHeight(UseNewUi), &TabBar, &MainView);\n\t\t\tif(UseNewUi)\n\t\t\t\tMainView.HSplitTop(6.0f, nullptr, &MainView);";
+	EXPECT_NE(MenusSource.find("constexpr float MENU_MENUBAR_HEIGHT_NEW = 24.0f;"), std::string::npos);
+	EXPECT_NE(MenusSource.find("constexpr float MENU_MENUBAR_HEIGHT_LEGACY = 30.0f;"), std::string::npos);
+	EXPECT_NE(MenusSource.find("constexpr float MenuMenubarHeight(bool UseNewUi)"), std::string::npos);
+	EXPECT_NE(MenusSource.find(MenuShellSplit), std::string::npos);
 	EXPECT_NE(MenusSource.find("case IClient::STATE_ONLINE:"), std::string::npos);
-	EXPECT_NE(MenusSource.find("const bool UseNewUi = g_Config.m_QmNewUi != 0;\n\t\t\tconst float MenubarHeight = UseNewUi ? 24.0f : 34.0f;\n\t\t\tScreen.HSplitTop(MenubarHeight, &TabBar, &MainView);\n\t\t\tif(UseNewUi)\n\t\t\t\tMainView.HSplitTop(6.0f, nullptr, &MainView);"), std::string::npos);
+	EXPECT_NE(MenusSource.find(MenuShellSplit, MenusSource.find("case IClient::STATE_ONLINE:")), std::string::npos);
 
 	const std::string QmClientSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	EXPECT_NE(QmClientSource.find("const bool UseNewUi = g_Config.m_QmNewUi != 0;"), std::string::npos);
@@ -963,6 +967,22 @@ TEST(QmNewUiMenuBranches, SpectatorSpecTeeDoesNotFallbackToMissingSkin)
 	EXPECT_NE(Render.find("continue;\n\t\tRenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo()"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, WeaponImpactEventsUseInferredOwnerAlpha)
+{
+	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string ProcessEvents = FunctionBody(Source, "void CGameClient::ProcessEvents()");
+
+	EXPECT_NE(Source.find("float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)"), std::string::npos);
+	EXPECT_NE(Source.find("int QmInferExplosionOwner(CGameClient *pGameClient, vec2 Pos)"), std::string::npos);
+	EXPECT_NE(Source.find("int QmInferHammerHitOwner(CGameClient *pGameClient, vec2 Pos)"), std::string::npos);
+	EXPECT_NE(ProcessEvents.find("const float ExplosionAlpha = QmKnownOwnerEventAlpha(this, QmInferExplosionOwner(this, ExplosionPos));"), std::string::npos);
+	EXPECT_NE(ProcessEvents.find("m_Effects.Explosion(ExplosionPos, ExplosionAlpha);"), std::string::npos);
+	EXPECT_NE(ProcessEvents.find("const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, QmInferHammerHitOwner(this, HammerHitPos));"), std::string::npos);
+	EXPECT_NE(ProcessEvents.find("m_Effects.HammerHit(HammerHitPos, HammerHitAlpha, Volume);"), std::string::npos);
+	EXPECT_EQ(ProcessEvents.find("m_Effects.Explosion(vec2(pEvent->m_X, pEvent->m_Y), Alpha);"), std::string::npos);
+	EXPECT_EQ(ProcessEvents.find("m_Effects.HammerHit(HammerHitPos, Alpha, Volume);"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, NewOpacityControlsDoNotChainLegacyPanelOpacity)
 {
 	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
@@ -1001,6 +1021,23 @@ TEST(QmNewUiMenuBranches, ScoreboardBackgroundsUseScoreboardOpacity)
 	EXPECT_NE(Source.find("ScoreboardDecorationColor(GameClient()->GetDDTeamColor(DDTeam).WithAlpha(0.5f * ItemAlpha))"), std::string::npos);
 	EXPECT_NE(Source.find("Row.Draw(ScoreboardDecorationColor(ui_token::color::ACCENT_PRIMARY_DIM.WithMultipliedAlpha(ItemAlpha * 1.45f))"), std::string::npos);
 	EXPECT_NE(Source.find("Row.Draw(ScoreboardDecorationColor(ColorRGBA(0.7f, 0.7f, 0.7f, 0.7f * ItemAlpha))"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ScoreboardMediaButtonSymbolsFollowContentAlpha)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/scoreboard.cpp");
+	const std::string Helper = FunctionBody(Source, "int DoScoreboardMediaIconButton(");
+
+	EXPECT_NE(Helper.find("const float IconAlpha = std::clamp(ContentAlpha"), std::string::npos);
+	EXPECT_NE(Helper.find("DefaultTextColor().WithMultipliedAlpha(IconAlpha)"), std::string::npos);
+	EXPECT_NE(Helper.find("ColorRGBA(1.0f, 0.0f, 0.0f, IconAlpha)"), std::string::npos);
+	EXPECT_NE(Helper.find("FontIcons::FONT_ICON_SLASH"), std::string::npos);
+	EXPECT_NE(Source.find("DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPrevButton"), std::string::npos);
+	EXPECT_NE(Source.find("DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPlayButton"), std::string::npos);
+	EXPECT_NE(Source.find("DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcNextButton"), std::string::npos);
+	EXPECT_EQ(Source.find("Ui()->DoButton_FontIcon(&s_SmtcPrevButton"), std::string::npos);
+	EXPECT_EQ(Source.find("Ui()->DoButton_FontIcon(&s_SmtcPlayButton"), std::string::npos);
+	EXPECT_EQ(Source.find("Ui()->DoButton_FontIcon(&s_SmtcNextButton"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, IngameMenuPrimaryActionLabelsUseEnglishKeys)
@@ -2085,6 +2122,31 @@ TEST(QmNewUiMenuBranches, SettingsListSelectionsClampBeforeIndexing)
 	EXPECT_NE(PopupMapPicker.find("ItemIndex == pPopupContext->m_Selection"), std::string::npos);
 	EXPECT_NE(PopupMapPicker.find("NewSelected >= 0 && NewSelected < (int)pPopupContext->m_vMaps.size()"), std::string::npos);
 	EXPECT_NE(PopupMapPicker.find("pPopupContext->m_Selection >= 0"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, BackgroundMapPickerUsesMapsRootAndSupportedFiles)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string RenderSettingsDDNet = FunctionBody(Source, "void CMenus::RenderSettingsDDNet(CUIRect MainView)");
+	const std::string MapListPopulate = FunctionBody(Source, "void CMenus::CPopupMapPickerContext::MapListPopulate()");
+	const std::string MapListFetchCallback = FunctionBody(Source, "int CMenus::CPopupMapPickerContext::MapListFetchCallback");
+
+	EXPECT_NE(RenderSettingsDDNet.find("str_copy(s_PopupMapPickerContext.m_aRootPath, \"maps\""), std::string::npos);
+	EXPECT_NE(MapListPopulate.find("ListRoot(m_aRootPath[0] != '\\0' ? m_aRootPath : \"maps\", m_aValuePrefix);"), std::string::npos);
+	EXPECT_EQ(MapListPopulate.find("m_aFallbackRootPath"), std::string::npos);
+	EXPECT_EQ(MapListPopulate.find("m_aFallbackValuePrefix"), std::string::npos);
+	EXPECT_NE(MapListFetchCallback.find("FindBackgroundFileExtension(pInfo->m_pName)"), std::string::npos);
+	EXPECT_EQ(MapListFetchCallback.find("str_endswith(pInfo->m_pName, \".map\")"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, EditorSaveFileDialogKeepsFilenameInputInControl)
+{
+	const std::string Source = ReadTextFile("src/game/editor/file_browser.cpp");
+	const std::string OnRender = FunctionBody(Source, "void CFileBrowser::OnRender(CUIRect _)");
+
+	EXPECT_NE(OnRender.find("m_ListBox.SetActive(!Ui()->IsPopupOpen() && (!m_SaveAction || !m_FilenameInput.IsActive()))"), std::string::npos);
+	EXPECT_NE(OnRender.find("const bool ListChoseItem = m_ListBox.WasItemSelected() || m_ListBox.WasItemActivated();"), std::string::npos);
+	EXPECT_NE(OnRender.find("const bool SyncFilenameInput = !m_SaveAction || (ListChoseItem && m_SelectedFileIndex >= 0);"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, QmClientLanguageReadmeDescribesChineseSourceKeys)

@@ -4,7 +4,7 @@
 - 审查范围：`4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3^..8ee4fa22ba0172a66605b2c5033f0736d66ced34`
 - 范围规模：12 个对象（11 个普通提交、1 个 merge 路由提交），89 个文件，18,161 行新增、5,881 行删除。
 - 依据：当前有效规格、逐提交 patch、CodeGraph 调用链和独立只读深度审查。
-- 总体结论：**需要修复；不得原样 merge。** P1、P2 都在本次 no-ff merge 内收口。
+- 总体结论：**可以 merge。** 原始范围的 2 个 P1、2 个 P2，以及独立审查追加的 1 个 P1、1 个 P2 均已在本次 no-ff merge 内收口。
 
 ## Findings
 
@@ -44,6 +44,17 @@
 
 合并决策：验证固定头、offset 表长度、候选 offset 和有界 UTF-16 终止；跳过不合法候选。增加越界 offset、无终止串和极端分页元数据测试。
 
+## Merge 收口证据
+
+| Finding | 收口方式 | 覆盖 |
+|---|---|---|
+| 地图保存替换丢失旧图 | `IStorage::ReplaceFileSafely(...)` 统一完成临时文件替换；地图保存和地图历史共用该路径。 | `storage_replace_test.cpp` 覆盖替换失败后仍保留可读版本。 |
+| teamplay 本体色相循环回退 | 本体与 dummy 的可用性拆分，dummy 专属开关仅影响 dummy。 | `qm_tee_hue_cycle_test.cpp` 覆盖 teamplay、本体/dummy 与自定义色组合。 |
+| 地图历史截断写 | 历史 JSON 写入完成并关闭后，再调用安全替换。 | `map_history_test.cpp` 覆盖历史标识与持久化边界。 |
+| Windows IME 越界解析 | 对候选列表头、offset 表、单项 offset 与 UTF-16 终止做有界校验；非法项跳过。 | `qm_ime_platform_test.cpp` 覆盖越界 offset 与无终止候选。 |
+
+审查修复后已重新完成 `check_gate.py --mode default`：11 项通过、1 项既有配置变量 warning、0 项失败；其中 C++ 全量为 2,072 tests / 178 suites，Rust 单测与 doctest 通过。`n`n独立只读深度审查没有 P0，追加发现并已修复 1 个 P1、1 个 P2：翻译语言弹窗的关闭热区从整列限制到标题栏；IME 候选面板的 presentation alpha / scale 不再只写入状态，而是连续参与面板、候选行、选中背景与分页绘制。对应的 `QmChatInteractions.TranslateButtonSitsBeforeInputAndPopupCanCloseItself`、`QmImePresentationSource.PopupUsesContinuousRedirectablePresentationState` 已在修复后定向通过。
+
 ## Commit decisions
 
 | Commit | UI 相关路径 | 非 UI 路径 | 版本影响 | 决定与冲突规则 |
@@ -63,6 +74,6 @@
 
 ## Range conclusion
 
-11 个普通提交已审查，1 个 merge 路由关系已记录。可用一次 `git merge --no-ff --no-commit 8ee4fa22ba0172a66605b2c5033f0736d66ced34` 进入当前 `dyl_dev`，但须在 merge commit 中收口上述 2 个 P1 与 2 个 P2。
+11 个普通提交已审查，1 个 merge 路由关系已记录。当前 `dyl_dev` 已以 `git merge --no-ff --no-commit 8ee4fa22ba0172a66605b2c5033f0736d66ced34` 进入 merge，并已收口上述 2 个 P1、2 个 P2 和独立审查追加的 1 个 P1、1 个 P2；独立审查无 P0，merge commit 可在最终 staged diff 与 gate 复核后创建。
 
 设置卡片、公共输入、滚动、dropdown、动效 runtime 和性能基础设施仍由 active spec 约束；地图保存、地图历史、IME 平台边界、Gores、编辑器术语、聊天与 server-controlled skin 的业务改变不因规格自动进入 P1–P7，除本报告列出的合并安全修复外均保持范围隔离。

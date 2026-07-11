@@ -10,6 +10,7 @@
 
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/component.h>
+#include <game/client/components/hud_media_island_logic.h>
 #include <game/client/ui_rect.h>
 #include <game/teamscore.h>
 
@@ -145,7 +146,6 @@ class CHud : public CComponent
 
 		EVisualState m_VisualState = EVisualState::MINIMIZED;
 		int64_t m_ExpandUntilTick = 0;
-		int64_t m_LastTrackDurationMs = 0;
 		float m_TargetX = 0.0f;
 		float m_TargetWidth = 0.0f;
 		float m_TargetHeight = 0.0f;
@@ -153,19 +153,45 @@ class CHud : public CComponent
 		float m_TargetTitleOffset = 0.0f;
 		float m_TargetSpectatorAlpha = 0.0f;
 		float m_TargetBottomAlpha = 0.0f;
-		float m_CoverRotation = 0.0f;
-		int64_t m_LastCoverRotationTick = 0;
+		float m_TargetCoverInAlpha = 1.0f;
+		float m_TargetCoverOutAlpha = 0.0f;
+		float m_TargetCoverInScale = 1.0f;
+		float m_TargetCoverOutScale = 1.0f;
+		float m_TargetTrackTitleInAlpha = 1.0f;
+		float m_TargetTrackTitleOutAlpha = 0.0f;
+		float m_TargetTrackTitleInOffset = 0.0f;
+		float m_TargetTrackTitleOutOffset = 0.0f;
+		float m_TargetTrackMetaInAlpha = 1.0f;
+		float m_TargetTrackMetaOutAlpha = 0.0f;
+		float m_TargetTrackMetaInOffset = 0.0f;
+		float m_TargetTrackMetaOutOffset = 0.0f;
 		bool m_LayoutInitialized = false;
 		bool m_HasTrackIdentity = false;
-		char m_aLastTrackTitle[128] = {};
-		char m_aLastTrackArtist[128] = {};
-		char m_aLastTrackAlbum[128] = {};
+		SHudMediaIslandTrackSnapshot m_CurrentTrack;
+		SHudMediaIslandTrackSnapshot m_OutgoingTrack;
+		bool m_TrackTransitionActive = false;
+		bool m_TrackTransitionNeedsNodeReset = false;
+		int64_t m_TrackTransitionStartTick = 0;
+		float m_OldTrackExitProgress = 1.0f;
+		float m_NewTrackEnterProgress = 1.0f;
+		bool m_CapsuleMorphActive = false;
+		bool m_CapsuleMorphNeedsCapture = false;
+		int64_t m_CapsuleMorphStartTick = 0;
+		float m_CapsuleMorphFromX = 0.0f;
+		float m_CapsuleMorphFromWidth = 0.0f;
+		float m_CapsuleMorphFromHeight = 0.0f;
+
+		void StartCapsuleMorph(int64_t Now)
+		{
+			m_CapsuleMorphActive = true;
+			m_CapsuleMorphNeedsCapture = true;
+			m_CapsuleMorphStartTick = Now;
+		}
 
 		void Reset()
 		{
 			m_VisualState = EVisualState::MINIMIZED;
 			m_ExpandUntilTick = 0;
-			m_LastTrackDurationMs = 0;
 			m_TargetX = 0.0f;
 			m_TargetWidth = 0.0f;
 			m_TargetHeight = 0.0f;
@@ -173,16 +199,60 @@ class CHud : public CComponent
 			m_TargetTitleOffset = 0.0f;
 			m_TargetSpectatorAlpha = 0.0f;
 			m_TargetBottomAlpha = 0.0f;
-			m_CoverRotation = 0.0f;
-			m_LastCoverRotationTick = 0;
+			m_TargetCoverInAlpha = 1.0f;
+			m_TargetCoverOutAlpha = 0.0f;
+			m_TargetCoverInScale = 1.0f;
+			m_TargetCoverOutScale = 1.0f;
+			m_TargetTrackTitleInAlpha = 1.0f;
+			m_TargetTrackTitleOutAlpha = 0.0f;
+			m_TargetTrackTitleInOffset = 0.0f;
+			m_TargetTrackTitleOutOffset = 0.0f;
+			m_TargetTrackMetaInAlpha = 1.0f;
+			m_TargetTrackMetaOutAlpha = 0.0f;
+			m_TargetTrackMetaInOffset = 0.0f;
+			m_TargetTrackMetaOutOffset = 0.0f;
 			m_LayoutInitialized = false;
 			m_HasTrackIdentity = false;
-			m_aLastTrackTitle[0] = '\0';
-			m_aLastTrackArtist[0] = '\0';
-			m_aLastTrackAlbum[0] = '\0';
+			m_CurrentTrack.Reset();
+			m_OutgoingTrack.Reset();
+			m_TrackTransitionActive = false;
+			m_TrackTransitionNeedsNodeReset = false;
+			m_TrackTransitionStartTick = 0;
+			m_OldTrackExitProgress = 1.0f;
+			m_NewTrackEnterProgress = 1.0f;
+			m_CapsuleMorphActive = false;
+			m_CapsuleMorphNeedsCapture = false;
+			m_CapsuleMorphStartTick = 0;
+			m_CapsuleMorphFromX = 0.0f;
+			m_CapsuleMorphFromWidth = 0.0f;
+			m_CapsuleMorphFromHeight = 0.0f;
 		}
 	};
 	SHudMediaIslandAnimState m_MediaIslandAnimState;
+	struct SHudWeaponPresentationState
+	{
+		bool m_aClientInitialized[MAX_CLIENTS] = {};
+		float m_aaTargetX[MAX_CLIENTS][NUM_WEAPONS] = {};
+		float m_aaTargetY[MAX_CLIENTS][NUM_WEAPONS] = {};
+		float m_aaTargetAlpha[MAX_CLIENTS][NUM_WEAPONS] = {};
+		float m_aaTargetScale[MAX_CLIENTS][NUM_WEAPONS] = {};
+
+		void Reset()
+		{
+			for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+			{
+				m_aClientInitialized[ClientId] = false;
+				for(int Weapon = 0; Weapon < NUM_WEAPONS; ++Weapon)
+				{
+					m_aaTargetX[ClientId][Weapon] = 0.0f;
+					m_aaTargetY[ClientId][Weapon] = 0.0f;
+					m_aaTargetAlpha[ClientId][Weapon] = 0.0f;
+					m_aaTargetScale[ClientId][Weapon] = 1.0f;
+				}
+			}
+		}
+	};
+	SHudWeaponPresentationState m_WeaponPresentationState;
 	struct SHudRecordingStatusAnimState
 	{
 		float m_TargetWidth = 0.0f;
@@ -335,9 +405,6 @@ private:
 	int m_TimeCpLastReceivedTick;
 	bool m_ShowFinishTime;
 	int m_SpeedrunTimerExpiredTick = 0;
-	int m_aHudWeaponSwitchLastWeapons[MAX_CLIENTS];
-	int m_aHudWeaponSwitchPrevWeapons[MAX_CLIENTS];
-	double m_aHudWeaponSwitchStartTimes[MAX_CLIENTS];
 
 	inline float GetMovementInformationBoxHeight();
 	inline int GetDigitsIndex(int Value, int Max);

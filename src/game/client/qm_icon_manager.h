@@ -89,6 +89,7 @@ public:
 	int AtlasScale() const { return m_Atlas.AtlasScale(); }
 
 	bool RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color) const;
+	bool RenderIconRotated(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color, float Rotation) const;
 	bool RenderIcon(EQmIcon Icon, const CUIRect &Rect, EQmIconState State, const SQmIconStyle &Style = SQmIconStyle()) const;
 
 	static const char *IconName(EQmIcon Icon)

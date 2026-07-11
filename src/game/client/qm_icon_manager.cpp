@@ -275,6 +275,30 @@ bool CQmIconManager::RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRG
 	return true;
 }
 
+bool CQmIconManager::RenderIconRotated(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color, float Rotation) const
+{
+	const size_t IconIndex = static_cast<size_t>(Icon);
+	if(!IsReady() || IconIndex >= m_Atlas.m_aEntries.size() || !m_Atlas.m_aEntries[IconIndex].m_Valid || Color.a <= 0.0f)
+		return false;
+
+	const CQmIconAtlas::SEntry &Entry = m_Atlas.m_aEntries[IconIndex];
+	const CUIRect Aligned = PixelAlignedRect(Rect);
+
+	m_pGraphics->WrapClamp();
+	m_pGraphics->TextureSet(m_Atlas.m_Texture);
+	m_pGraphics->QuadsBegin();
+	m_pGraphics->SetColor(Color.r, Color.g, Color.b, Color.a);
+	m_pGraphics->QuadsSetSubset(Entry.m_U0, Entry.m_V0, Entry.m_U1, Entry.m_V1);
+	m_pGraphics->QuadsSetRotation(Rotation);
+	IGraphics::CQuadItem Quad(Aligned.x, Aligned.y, Aligned.w, Aligned.h);
+	m_pGraphics->QuadsDrawTL(&Quad, 1);
+	m_pGraphics->QuadsSetRotation(0.0f);
+	m_pGraphics->QuadsEnd();
+	m_pGraphics->QuadsSetSubset(0.0f, 0.0f, 1.0f, 1.0f);
+	m_pGraphics->WrapNormal();
+	return true;
+}
+
 bool CQmIconManager::RenderIcon(EQmIcon Icon, const CUIRect &Rect, EQmIconState State, const SQmIconStyle &Style) const
 {
 	return RenderIcon(Icon, Rect, Style.Color(State));

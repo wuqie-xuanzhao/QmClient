@@ -385,7 +385,7 @@ void CEnvelopeEditorOperationTracker::HandlePointDragEnd(bool Switch)
 
 	if(!vpActions.empty())
 	{
-		Map()->m_EnvelopeEditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(Map(), vpActions, "拖动包络点"));
+		Map()->m_EnvelopeEditorHistory.RecordAction(std::make_shared<CEditorActionBulk>(Map(), vpActions, "拖动动画点"));
 	}
 
 	m_SavedValues.clear();

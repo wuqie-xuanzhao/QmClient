@@ -65,23 +65,19 @@ void CDataFileWriterFinishJob::Run()
 {
 	m_Writer.Finish();
 
-	if(!m_pStorage->RemoveFile(m_aRealFilename, IStorage::TYPE_SAVE))
+	char aBackupFilename[2 * IO_MAX_PATH_LENGTH];
+	if(IStorage::ReplaceFileSafely(m_pStorage, m_aTempFilename, m_aRealFilename, aBackupFilename, sizeof(aBackupFilename)))
 	{
-		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "保存失败：无法删除旧地图文件“%s”。", m_aRealFilename);
-		log_error("editor/save", "%s", m_aErrorMessage);
+		log_trace("editor/save", "保存“%s”完成", m_aRealFilename);
 		return;
 	}
 
-	if(!m_pStorage->RenameFile(m_aTempFilename, m_aRealFilename, IStorage::TYPE_SAVE))
-	{
+	if(aBackupFilename[0] != '\0')
+		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "保存失败：无法替换地图文件“%s”；旧版本已恢复或保留在“%s”。", m_aRealFilename, aBackupFilename);
+	else
 		str_format(m_aErrorMessage, sizeof(m_aErrorMessage), "保存失败：无法将临时地图文件“%s”移动到“%s”。", m_aTempFilename, m_aRealFilename);
-		log_error("editor/save", "%s", m_aErrorMessage);
-		return;
-	}
-
-	log_trace("editor/save", "保存“%s”完成", m_aRealFilename);
+	log_error("editor/save", "%s", m_aErrorMessage);
 }
-
 CDataFileWriterFinishJob::CDataFileWriterFinishJob(IStorage *pStorage, const char *pRealFilename, const char *pTempFilename, CDataFileWriter &&Writer) :
 	m_pStorage(pStorage),
 	m_Writer(std::move(Writer))

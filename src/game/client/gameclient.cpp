@@ -126,6 +126,57 @@ namespace
 {
 	constexpr int DEMO_INPUT_KEY_STATE_SIZE = KEY_LAST / 8;
 
+	float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)
+	{
+		if(pGameClient == nullptr || Owner < 0 || Owner >= MAX_CLIENTS)
+			return 1.0f;
+		return pGameClient->LiveObserverClientAlpha(Owner);
+	}
+
+	int QmInferExplosionOwner(CGameClient *pGameClient, vec2 Pos)
+	{
+		if(pGameClient == nullptr)
+			return -1;
+		constexpr float OwnerRadius = 96.0f;
+		int BestClient = -1;
+		float BestDistance = OwnerRadius;
+		for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+		{
+			if(pGameClient->m_Snap.m_aCharacters[ClientId].m_Active == 0)
+				continue;
+			const vec2 ClientPos = vec2(pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
+			const float Dist = distance(ClientPos, Pos);
+			if(Dist < BestDistance)
+			{
+				BestDistance = Dist;
+				BestClient = ClientId;
+			}
+		}
+		return BestClient;
+	}
+
+	int QmInferHammerHitOwner(CGameClient *pGameClient, vec2 Pos)
+	{
+		if(pGameClient == nullptr)
+			return -1;
+		constexpr float OwnerRadius = 120.0f;
+		int BestClient = -1;
+		float BestDistance = OwnerRadius;
+		for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+		{
+			if(pGameClient->m_Snap.m_aCharacters[ClientId].m_Active == 0)
+				continue;
+			const vec2 ClientPos = vec2(pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, pGameClient->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
+			const float Dist = distance(ClientPos, Pos);
+			if(Dist < BestDistance)
+			{
+				BestDistance = Dist;
+				BestClient = ClientId;
+			}
+		}
+		return BestClient;
+	}
+
 #if defined(CONF_QM_LIVE_CLIENT)
 	constexpr float LIVE_OBSERVER_UI_HEIGHT = 1200.0f;
 	constexpr float LIVE_OBSERVER_PANEL_WIDTH = 230.0f;
@@ -4174,7 +4225,8 @@ void CGameClient::ProcessEvents()
 			vec2 ExplosionPos = vec2(pEvent->m_X, pEvent->m_Y);
 			if(!m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, ExplosionPos, -1, Client()->GameTick(g_Config.m_ClDummy))))
 			{
-				m_Effects.Explosion(ExplosionPos, Alpha);
+				const float ExplosionAlpha = QmKnownOwnerEventAlpha(this, QmInferExplosionOwner(this, ExplosionPos));
+				m_Effects.Explosion(ExplosionPos, ExplosionAlpha);
 			}
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
@@ -4187,7 +4239,8 @@ void CGameClient::ProcessEvents()
 			const vec2 HammerHitPos = vec2(pEvent->m_X, pEvent->m_Y);
 			if(!m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, HammerHitPos, -1, Client()->GameTick(g_Config.m_ClDummy))))
 			{
-				m_Effects.HammerHit(HammerHitPos, Alpha, Volume);
+				const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, QmInferHammerHitOwner(this, HammerHitPos));
+				m_Effects.HammerHit(HammerHitPos, HammerHitAlpha, Volume);
 			}
 
 			constexpr float QmJellyHammerHitRadius = 120.0f;

@@ -15,6 +15,17 @@ struct SQmTeeHueCycleConfig
 	int m_SixupIndex = 0;
 };
 
+struct SQmLocalTeeHueCycleEligibility
+{
+	bool m_IsLocal = false;
+	bool m_IsDummy = false;
+	bool m_DummyEnabled = false;
+	bool m_UseCustomColors = false;
+	bool m_UseCustomColors7 = false;
+};
+
+bool QmShouldApplyLocalTeeHueCycle(const SQmLocalTeeHueCycleEligibility &Eligibility);
+
 float QmTeeHueCyclePhase(double TimeSeconds, int SpeedDegreesPerSecond);
 ColorRGBA QmCycleTeeHueColor(ColorRGBA Color, float Phase);
 bool QmShouldCycleTeeHue(const CTeeRenderInfo &Info, const SQmTeeHueCycleConfig &Config);

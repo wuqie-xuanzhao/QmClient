@@ -81,6 +81,7 @@ public:
 		m_BloodColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		m_ColorBody = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		m_ColorFeet = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		m_OutlineColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		m_Size = 1.0f;
 		m_GotAirJump = true;
 		m_TeeRenderFlags = 0;
@@ -147,6 +148,7 @@ public:
 
 	ColorRGBA m_ColorBody;
 	ColorRGBA m_ColorFeet;
+	ColorRGBA m_OutlineColor;
 	float m_Size;
 	bool m_GotAirJump;
 	int m_TeeRenderFlags;
@@ -468,6 +470,7 @@ enum
 	TEE_EFFECT_FROZEN = 1,
 	TEE_NO_WEAPON = 2,
 	TEE_EFFECT_SPARKLE = 4,
+	TEE_CUSTOM_OUTLINE_COLOR = 8,
 	TEE_PREVIEW_LAYER_BODY_OUTLINE = 1 << 8,
 	TEE_PREVIEW_LAYER_BACK_FEET_OUTLINE = 1 << 9,
 	TEE_PREVIEW_LAYER_FRONT_FEET_OUTLINE = 1 << 10,

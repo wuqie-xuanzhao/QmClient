@@ -38,3 +38,29 @@ TEST(QmImePlatform, CandidatePageSizeFallsBackToCount)
 	EXPECT_EQ(QmImeCandidatePageSizeOrCount(0, 9), 9u);
 	EXPECT_EQ(QmImeCandidatePageSizeOrCount(5, 9), 5u);
 }
+TEST(QmImePlatform, CandidateOffsetCapacityClampsMalformedCount)
+{
+	EXPECT_EQ(QmImeCandidateOffsetCapacity(20, 12), 2u);
+	EXPECT_EQ(QmImeCandidateOffsetCapacity(11, 12), 0u);
+}
+
+TEST(QmImePlatform, BoundedUtf16LengthRejectsMalformedCandidateRanges)
+{
+	const unsigned char aBuffer[] = {
+		0x41,
+		0x00,
+		0x42,
+		0x00,
+		0x00,
+		0x00,
+		0x43,
+		0x00,
+	};
+
+	ASSERT_TRUE(QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), 0).has_value());
+	EXPECT_EQ(*QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), 0), 2u);
+	EXPECT_FALSE(QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), 1).has_value());
+	EXPECT_FALSE(QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), 6).has_value());
+	EXPECT_FALSE(QmImeBoundedUtf16Length(aBuffer, sizeof(aBuffer), sizeof(aBuffer)).has_value());
+	EXPECT_FALSE(QmImeBoundedUtf16Length(nullptr, sizeof(aBuffer), 0).has_value());
+}

@@ -208,6 +208,13 @@ bool ShouldEnableQmMovingWaterTiles(const char *pGameInfoGameType, const char *p
 	       QmTextContainsNoCase(pCommunityName, "axiom");
 }
 
+bool ShouldUseServerControlledLocalSkin(const char *pGameType)
+{
+	return QmTextContainsNoCase(pGameType, "infclass") ||
+	       QmTextContainsNoCase(pGameType, "infc") ||
+	       QmTextContainsNoCase(pGameType, "infect");
+}
+
 bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget)
 {
 	if(Cursor >= Total)

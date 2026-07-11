@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == Folder o tej nazwie już istnieje
 
+a player
+== Pending polish translation 2befff44b8
+
 A screenshot with this name already exists
 == Zrzut ekranu o tej nazwie już istnieje
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == Wyczyść wszystkie ulubione mapy
 
+Clear all history
+== Pending polish translation bf2db655f3
+
 Clear Changes
 == Wyczyść zmiany
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == Wyczyść bieżącą kolejkę
+
+Clear finished
+== Pending polish translation 9d5d700e86
 
 Clear friend note
 == Wyczyść notatkę znajomego
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == Potwierdź, że oboje jesteście na tym samym serwerze, w tym samym pokoju i obsługujecie głos
 
+Confirm clear all
+== Pending polish translation 1ec1f60e30
+
+Confirm clear finished
+== Pending polish translation c271506921
+
 Connect address error
 == Błąd adresu połączenia
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == Mimo to kontynuować?
-
-Continue whispering to the last whisper target
-== Kontynuuj szept do ostatniego odbiorcy
 
 Contributors
 == Współtwórcy
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == Nazwa na mecie:
 
+Finished
+== Pending polish translation f8271d705d
+
 Finished maps
 == Ukończone mapy
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == Zaproś osobę do zablokowanej drużyny
 
-Invite a player to the locked team
-== Zaproś gracza do zablokowanej drużyny
-
 Invites are disabled
 == Zaproszenia są wyłączone
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == Rozmiar lasera
+
+Last entered
+== Pending polish translation f7e21ffab8
 
 Last page in console
 == Ostatnia strona w konsoli
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == Niebezpieczna granica mapy
+
+Map play history
+== Pending polish translation af344e7e20
 
 Map Preview TODO
 == Podgląd mapy do zrobienia
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == Logowanie nie jest wymagane
+
+No map play history yet
+== Pending polish translation 0e9cac82f7
 
 No matching assets.
 == Brak pasujących zasobów.
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == Quady są używane do dekoracji tła
 
-Query information for map %s
-== Sprawdź informacje o mapie %s
+Query current map info
+== Pending polish translation 240d7bb1e3
 
-Query information for the current map
-== Sprawdź informacje o bieżącej mapie
+Query map info for %s
+== Pending polish translation 2054183f76
 
 Query points for %s
 == Sprawdź punkty gracza %s
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == Sprawdź rangę drużyny gracza %s
-
-Query your own points
-== Sprawdź swoje punkty
-
-Query your own rank
-== Sprawdź swoją rangę
-
-Query your own team rank
-== Sprawdź rangę swojej drużyny
 
 Queue is empty
 == Kolejka jest pusta
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == Odbieranie
+
+Recent
+== Pending polish translation d0676aa1a7
 
 Reconnect in %d sec
 == Ponowne połączenie za %d s
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == Usuń z ulubionych
 
+Remove from history
+== Pending polish translation 005e1f2b6a
+
 Remove from queue
 == Usuń z kolejki
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == Odpowiedz
 
+Reply to the last whisper target
+== Pending polish translation 95c02e3779
+
 Reply to the last whisper target: %s
 == Odpowiedz ostatniemu odbiorcy szeptu: %s
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Ratunek/Zamrożenie: %d/%d
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== Rescue: tryb automatyczny teleportuje z freeze; tryb ręczny zapisuje punkt ratunku przy lądowaniu i teleportuje tam podczas freeze
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending polish translation 24d57f975a
 
 Resend Loss
 == Straty retransmisji
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == Wyślij wiadomość alertu serwera do wszystkich graczy
 
-Send a whisper: /w player message
-== Wyślij szept: /w gracz wiadomość
-
 Send emoticon in water
 == Wyślij emotkę w wodzie
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Pokaż kolory w selekcji obserwatora
 
-Show command help
-== Pokaż pomoc poleceń
-
 Show compact vote HUD
 == Pokaż kompaktowy HUD głosowania
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == Pokaż zdrowie, tarcze i amunicję
-
-Show help for /%s
-== Pokaż pomoc dla /%s
 
 Show hitbox mode
 == Pokaż tryb hitboxów
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == Pokazuj pomoc serwera i komunikaty użycia
 
+Show server settings
+== Pending polish translation 2044ecc380
+
 Show skin date and author
 == Pokaż datę i autora skina
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == Pokaż zasady serwera
-
-Show the server settings list
-== Pokaż listę ustawień serwera
 
 Show tiles layers from BG map
 == Pokaż warstwy kafelków z mapy tła encji
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == Niesklasyfikowany problem audio
 
+Unfinished
+== Pending polish translation d69ed44034
+
 Unfinished map
 == Niedokończona mapa
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Niedokończone mapy
+
+Unfinished maps are shown first
+== Pending polish translation debd1afc80
 
 Unflip:
 == Odwróć:
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == Przesyłanie danych mapy do GPU
+
+Usage
+== Pending polish translation 6d61dbebbc
 
 Usage: %s %s
 == Użycie: %s %s
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == Szepnij do %s: %s
 
+Whisper: /w player message
+== Pending polish translation 4030f457a5
+
 Who stuffed OBS in here
 == Kto tu wepchnął OBS
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Twój kod timeout został ustawiony. Klienci 0.7 nie mogą odzyskać swoich Tee po timeout; jednak klient 0.6 może przejąć twoje Tee
+
+yourself
+== Pending polish translation 0ee9066ece
 
 z = Zoom
 == z = Zoom (przybliżenie)
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == Punkt końcowy Tencent Cloud tłumaczenia
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending polish translation 47b6323b70
+
 自动保存聊天记录
 == Automatyczne zapisywanie historii czatu
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Inactive lyrics line minimum opacity percent
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending polish translation b3146cd4c8
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Lista zmienionych nazw w menu kołowym (oddzielone |, np. Gracz1|Gracz2)

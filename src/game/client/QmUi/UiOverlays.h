@@ -94,9 +94,9 @@ namespace ui_widget
 		{
 			if(Visible && pState != nullptr && !pState->m_WasVisible)
 			{
-				Ctx.m_pAnim->SetValue(Presence.m_NodeKey, EUiAnimProperty::POS_Y, HiddenY);
+				SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::POS_Y, HiddenY);
 			}
-			CurrentY = ResolveUiAnimValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::POS_Y, Visible ? Target.y : HiddenY, ui_token::motion::TOAST_SLIDE.m_DurationSec, ui_token::motion::TOAST_SLIDE.m_Easing);
+			CurrentY = ResolveUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::POS_Y, Visible ? Target.y : HiddenY, ui_token::motion::TOAST_SLIDE.m_Spring, 2, 0.004f);
 		}
 		else if(!Visible)
 		{
@@ -167,14 +167,14 @@ namespace ui_widget
 		if(Ctx.m_pAnim != nullptr)
 		{
 			if(*pOpen && Presence.m_FreshEnter && g_Config.m_QmUiMotionLevel != 0)
-				Ctx.m_pAnim->SetValue(Presence.m_NodeKey, EUiAnimProperty::SCALE, 0.92f);
-			Scale = ResolveUiAnimValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, *pOpen ? 1.0f : 0.96f, ui_token::motion::MODAL_IN.m_DurationSec, ui_token::motion::MODAL_IN.m_Easing);
+				SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, 0.92f);
+			Scale = ResolveUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, *pOpen ? 1.0f : 0.96f, ui_token::motion::MODAL_IN.m_Spring, 2, 0.004f);
 			// First frame after open we need to seed Scale at 0.92 so the spring
 			// has somewhere to travel from. Done by snapping if very close to 1
 			// without prior history.
 			if(*pOpen && !Presence.m_FreshEnter && g_Config.m_QmUiMotionLevel != 0 && Scale > 0.99f && !Ctx.m_pAnim->HasActiveAnimation(Presence.m_NodeKey, EUiAnimProperty::SCALE))
 			{
-				Ctx.m_pAnim->SetValue(Presence.m_NodeKey, EUiAnimProperty::SCALE, 0.92f);
+				SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, 0.92f);
 				Scale = 0.92f;
 			}
 		}

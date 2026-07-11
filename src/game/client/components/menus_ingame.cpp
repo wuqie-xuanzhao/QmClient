@@ -1434,7 +1434,7 @@ void CMenus::PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView)
 	{
 		CUIRect Screen = *Ui()->Screen();
 		CUIRect TabBar;
-		const float MenubarHeight = g_Config.m_QmNewUi ? 24.0f : 34.0f;
+		const float MenubarHeight = g_Config.m_QmNewUi ? 24.0f : 30.0f;
 		Screen.HSplitTop(MenubarHeight, &TabBar, &MainView);
 		if(g_Config.m_QmNewUi)
 			MainView.HSplitTop(6.0f, nullptr, &MainView);

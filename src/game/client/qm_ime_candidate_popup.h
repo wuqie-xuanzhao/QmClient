@@ -31,7 +31,28 @@ public:
 	void Render(CGameClient *pGameClient, const SQmImePopupState &State);
 
 private:
+	struct SPresentationTargets
+	{
+		bool m_Initialized = false;
+		float m_TargetX = 0.0f;
+		float m_TargetY = 0.0f;
+		float m_TargetWidth = 0.0f;
+		float m_TargetHeight = 0.0f;
+		float m_TargetRadius = 0.0f;
+		float m_TargetAlpha = 0.0f;
+		float m_TargetTypingAlpha = 0.0f;
+		float m_TargetTypingScale = 1.0f;
+		float m_TargetCandidateAlpha = 0.0f;
+		float m_TargetCandidateScale = 1.0f;
+		float m_TargetSelectedX = 0.0f;
+		float m_TargetSelectedY = 0.0f;
+		float m_TargetSelectedWidth = 0.0f;
+		float m_TargetSelectedHeight = 0.0f;
+	};
+
 	SQmImePopupState m_LastState;
+	SPresentationTargets m_Presentation;
+	int m_CandidateStart = 0;
 	bool m_WasVisible = false;
 	uint64_t m_PresenceGeneration = 1;
 };

@@ -96,13 +96,13 @@ namespace ui_token::font
 
 namespace ui_token::ime
 {
-	inline constexpr float SCALE = 0.75f;
-	inline constexpr ColorRGBA PANEL_BG_LIGHT{1.0f, 1.0f, 1.0f, 0.45f};
-	inline constexpr ColorRGBA PANEL_BG_DARK{0.118f, 0.118f, 0.126f, 0.45f};
+	inline constexpr float SCALE = 0.68f;
+	inline constexpr ColorRGBA PANEL_BG_LIGHT{1.0f, 1.0f, 1.0f, 0.96f};
+	inline constexpr ColorRGBA PANEL_BG_DARK{0.110f, 0.110f, 0.118f, 0.96f};
 	inline constexpr ColorRGBA PANEL_BORDER_LIGHT{0.0f, 0.0f, 0.0f, 0.08f};
 	inline constexpr ColorRGBA PANEL_BORDER_DARK{1.0f, 1.0f, 1.0f, 0.10f};
 	inline constexpr ColorRGBA PANEL_SHADOW_LIGHT{0.0f, 0.0f, 0.0f, 0.16f};
-	inline constexpr ColorRGBA PANEL_SHADOW_DARK{0.0f, 0.0f, 0.0f, 0.32f};
+	inline constexpr ColorRGBA PANEL_SHADOW_DARK{0.0f, 0.0f, 0.0f, 0.0f};
 	inline constexpr ColorRGBA COMPOSITION_BG_LIGHT{1.0f, 1.0f, 1.0f, 0.18f};
 	inline constexpr ColorRGBA COMPOSITION_BG_DARK{1.0f, 1.0f, 1.0f, 0.03f};
 	inline constexpr ColorRGBA COMPOSITION_SELECTION{0.0f, 0.478f, 1.0f, 0.18f};
@@ -111,11 +111,11 @@ namespace ui_token::ime
 	inline constexpr ColorRGBA SELECTED_BG_LIGHT{0.0f, 0.478f, 1.0f, 0.22f};
 	inline constexpr ColorRGBA SELECTED_BG_DARK{0.26f, 0.55f, 1.0f, 0.28f};
 	inline constexpr ColorRGBA TEXT_LIGHT{0.055f, 0.065f, 0.08f, 0.98f};
-	inline constexpr ColorRGBA TEXT_DARK{0.965f, 0.975f, 1.0f, 0.96f};
+	inline constexpr ColorRGBA TEXT_DARK{1.0f, 1.0f, 1.0f, 0.96f};
 	inline constexpr ColorRGBA TEXT_MUTED_LIGHT{0.08f, 0.09f, 0.11f, 0.52f};
-	inline constexpr ColorRGBA TEXT_MUTED_DARK{0.94f, 0.96f, 1.0f, 0.56f};
+	inline constexpr ColorRGBA TEXT_MUTED_DARK{0.557f, 0.557f, 0.580f, 0.56f};
 	inline constexpr ColorRGBA TEXT_SELECTED_LIGHT{0.0f, 0.32f, 0.74f, 1.0f};
-	inline constexpr ColorRGBA TEXT_SELECTED_DARK{0.78f, 0.90f, 1.0f, 1.0f};
+	inline constexpr ColorRGBA TEXT_SELECTED_DARK{0.184f, 0.502f, 0.929f, 1.0f};
 	inline constexpr ColorRGBA PANEL_BG = PANEL_BG_LIGHT;
 	inline constexpr ColorRGBA PANEL_BORDER = PANEL_BORDER_LIGHT;
 	inline constexpr ColorRGBA PANEL_SHADOW = PANEL_SHADOW_LIGHT;
@@ -134,8 +134,8 @@ namespace ui_token::ime
 	inline constexpr float COMPOSITION_ROW_HEIGHT = 11.8f * SCALE;
 	inline constexpr float NUM_WIDTH = 5.5f * SCALE;
 	inline constexpr float MIN_WIDTH = 72.0f * SCALE;
-	inline constexpr float MAX_WIDTH = 420.0f * SCALE;
-	inline constexpr float RADIUS = 5.2f * SCALE;
+	inline constexpr float MAX_WIDTH = 360.0f * SCALE;
+	inline constexpr float RADIUS = 8.2f * SCALE;
 	inline constexpr float SCREEN_HEIGHT = 300.0f;
 	inline constexpr float SCREEN_MARGIN = 4.0f;
 	inline constexpr float SHADOW_X = 0.0f;

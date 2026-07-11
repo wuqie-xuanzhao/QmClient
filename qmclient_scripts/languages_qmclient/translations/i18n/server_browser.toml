@@ -1948,3 +1948,35 @@ simplified_chinese = "添加"
 key = "Rename"
 [message.translations]
 simplified_chinese = "重命名"
+
+[[message]]
+key = "Unfinished"
+[message.translations]
+simplified_chinese = "未完成"
+traditional_chinese = "Pending traditional_chinese translation d5196581dd"
+japanese = "Pending japanese translation 71fbc7880e"
+korean = "Pending korean translation 352f62aaf5"
+russian = "Pending russian translation 5688298e51"
+german = "Pending german translation 5f4331fd4d"
+spanish = "Pending spanish translation 29ca9ecbcf"
+french = "Pending french translation de59f7a8fb"
+brazilian_portuguese = "Pending brazilian_portuguese translation 0e93e04f5b"
+portuguese = "Pending portuguese translation d9c9b22965"
+turkish = "Pending turkish translation 27f54e0e49"
+polish = "Pending polish translation d69ed44034"
+
+[[message]]
+key = "Unfinished maps are shown first"
+[message.translations]
+simplified_chinese = "未完成地图优先显示"
+traditional_chinese = "Pending traditional_chinese translation fb0d0be914"
+japanese = "Pending japanese translation b52afae6b9"
+korean = "Pending korean translation a71d0549ad"
+russian = "Pending russian translation 634aa7098f"
+german = "Pending german translation 0afa5a9bd4"
+spanish = "Pending spanish translation 7c8f88b5d4"
+french = "Pending french translation 7e363fd64a"
+brazilian_portuguese = "Pending brazilian_portuguese translation d14ada9b2c"
+portuguese = "Pending portuguese translation 327374c542"
+turkish = "Pending turkish translation d1bacd281d"
+polish = "Pending polish translation debd1afc80"

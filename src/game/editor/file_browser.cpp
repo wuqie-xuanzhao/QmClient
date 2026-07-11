@@ -180,7 +180,7 @@ void CFileBrowser::OnRender(CUIRect _)
 		Ui()->DoLabel(&PathBox, aPathLabel, 10.0f, TEXTALIGN_ML, {.m_MaxWidth = PathBox.w, .m_EllipsisAtEnd = true});
 	}
 
-	m_ListBox.SetActive(!Ui()->IsPopupOpen());
+	m_ListBox.SetActive(!Ui()->IsPopupOpen() && (!m_SaveAction || !m_FilenameInput.IsActive()));
 
 	// Filename/filter input
 	if(m_SaveAction)
@@ -284,15 +284,20 @@ void CFileBrowser::OnRender(CUIRect _)
 	}
 
 	const int NewSelection = m_ListBox.DoEnd();
-	if(NewSelection != m_SelectedFileIndex)
+	const bool ListChoseItem = m_ListBox.WasItemSelected() || m_ListBox.WasItemActivated();
+	if(NewSelection != m_SelectedFileIndex || (m_SaveAction && ListChoseItem && NewSelection >= 0))
 	{
 		m_SelectedFileIndex = NewSelection;
 		str_copy(m_aSelectedFileDisplayName, m_SelectedFileIndex >= 0 ? m_vpFilteredFileList[m_SelectedFileIndex]->m_aDisplayName : "");
-		const bool WasChanged = m_FilenameInput.WasChanged();
-		UpdateFilenameInput();
-		if(!WasChanged) // ensure that changed flag is not set if it wasn't previously set, as this would reset the selection after DoEditBox is called
+		const bool SyncFilenameInput = !m_SaveAction || (ListChoseItem && m_SelectedFileIndex >= 0);
+		if(SyncFilenameInput)
 		{
-			m_FilenameInput.WasChanged(); // this clears the changed flag
+			const bool WasChanged = m_FilenameInput.WasChanged();
+			UpdateFilenameInput();
+			if(!WasChanged) // ensure that changed flag is not set if it wasn't previously set, as this would reset the selection after DoEditBox is called
+			{
+				m_FilenameInput.WasChanged(); // this clears the changed flag
+			}
 		}
 		m_PreviewState = EPreviewState::UNLOADED;
 	}

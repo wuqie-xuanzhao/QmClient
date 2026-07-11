@@ -88,6 +88,7 @@ _ or ' ' = blank spacer
 a = View angle
 A demo with this name already exists
 A folder with this name already exists
+a player
 A screenshot with this name already exists
 A Tee
 A vote is currently active.
@@ -445,10 +446,12 @@ Classic Pro
 Classic pro
 Clear
 Clear all favorite maps
+Clear all history
 Clear Changes
 Clear chat messages
 Clear current cut (right click to clear all cuts)
 Clear current queue
+Clear finished
 Clear friend note
 Clear local console
 Clear note
@@ -504,6 +507,8 @@ Configure background 3D particle effects
 Configure hammer skin steal and skin transition animations
 Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
+Confirm clear all
+Confirm clear finished
 Connect address error
 Connect dummy
 Connect dummy to enable
@@ -527,7 +532,6 @@ Connection upstream
 Console
 Console color
 Continue anyway?
-Continue whispering to the last whisper target
 Contributors
 Control dummy
 Controller
@@ -923,6 +927,7 @@ Find all ban records for the specified IP address
 Finish data source
 Finish Name
 Finish Name:
+Finished
 Finished maps
 Fire
 First page in console
@@ -1168,7 +1173,6 @@ Invalid X coordinate.
 Invalid Y coordinate.
 Invite %s to the locked team
 Invite a person to a locked team
-Invite a player to the locked team
 Invites are disabled
 Is your dummy being bullied while you control the main tee?
 It's recommended that you check the settings to adjust them to your liking before joining a server.
@@ -1226,6 +1230,7 @@ Laser effect enhancement
 Laser Enhancement
 Laser settings
 Laser size
+Last entered
 Last page in console
 Latency
 Latency compensation
@@ -1353,6 +1358,7 @@ Map
 Map browser color
 Map browser opacity
 Map danger border
+Map play history
 Map Preview TODO
 Map progress bar
 Map Progress: %.1f%%
@@ -1503,6 +1509,7 @@ No items to write
 No local saves file found (ddnet-saves.txt)
 No local servers found (ports %d-%d)
 No login required
+No map play history yet
 No matching assets.
 No matching features found. Try other keywords
 No more blocking entity layers in the world of TeeWorlds
@@ -1801,15 +1808,12 @@ QmUi 动效强度：0=关闭 1=降低 2=完整
 QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
 QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
-Query information for map %s
-Query information for the current map
+Query current map info
+Query map info for %s
 Query points for %s
 Query rank for %s
 Query server setting: %s
 Query team rank for %s
-Query your own points
-Query your own rank
-Query your own team rank
 Queue is empty
 Queue preset: %s
 Quick action menu for players
@@ -1840,6 +1844,7 @@ Receive
 Receive Rate
 Receive rate
 Receiving
+Recent
 Reconnect in %d sec
 Record demo
 Record match
@@ -1889,6 +1894,7 @@ Remove Bind
 Remove chat
 Remove friend
 Remove from favorites
+Remove from history
 Remove from queue
 Remove Item
 Remove prediction & antiping in freeze
@@ -1936,6 +1942,7 @@ Replacement chars
 Replay
 Replay feature is disabled!
 Reply
+Reply to the last whisper target
 Reply to the last whisper target: %s
 Reply with dummy
 Report
@@ -1953,7 +1960,7 @@ Rescue is not enabled on this server and you're not in a team with /practice tur
 Rescue mode switched to %s
 Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 Resend Loss
 Resend loss
 Resend signs detected, connection quality is suspicious
@@ -2081,7 +2088,6 @@ Send
 Send & Receive
 Send a moderator alert message to player
 Send a server alert message to all players
-Send a whisper: /w player message
 Send emoticon in water
 Send probability
 Send Rate
@@ -2164,7 +2170,6 @@ Show client IDs in name plates
 Show client IDs on a separate line
 Show collision and weapon interaction
 Show colors in spectator selection
-Show command help
 Show compact vote HUD
 Show Coordinates
 Show coordinates above players
@@ -2190,7 +2195,6 @@ Show grenade and laser trajectory preview
 Show Grid
 Show hammer status
 Show health, shields and ammo
-Show help for /%s
 Show hitbox mode
 Show Hook Collision
 Show hook strength icon indicator
@@ -2243,6 +2247,7 @@ Show scoreboard
 Show scoreboard after death
 Show seconds on clock
 Show server help and usage messages
+Show server settings
 Show skin date and author
 Show skin names in nameplate
 Show song info in top-left corner
@@ -2260,7 +2265,6 @@ Show the number of tees still alive
 Show the pet
 Show the screen center line
 Show the server rules
-Show the server settings list
 Show tiles layers from BG map
 Show toast
 Show translation
@@ -2676,12 +2680,14 @@ Unbind all keys
 Unbind key
 Uncertainty duration
 Unclassified audio issue
+Unfinished
 Unfinished map
 Unfinished map count: %d
 Unfinished map data is refreshing, please try again later
 Unfinished map data not fetched
 Unfinished map data refreshing
 Unfinished maps
+Unfinished maps are shown first
 Unflip:
 Unfreeze
 Unfreeze automation helpers
@@ -2714,6 +2720,7 @@ Update notice
 Update or add a specific war group
 Update Rate
 Uploading map data to GPU
+Usage
 Usage: %s %s
 Usage: /%s %s
 Use 12 hour clock
@@ -2834,6 +2841,7 @@ Whisper
 Whisper something to someone (private message)
 Whisper to %s
 Whisper to %s: %s
+Whisper: /w player message
 Who stuffed OBS in here
 Why are you slowmo replaying to read this?
 Width
@@ -2947,6 +2955,7 @@ Your team is currently saving
 Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
 Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
+yourself
 z = Zoom
 Zen Mode
 Zen mode key
@@ -3286,6 +3295,7 @@ Zoom out
 腾讯云翻译 SecretKey
 腾讯云翻译地域
 腾讯云翻译端点
+自动保存历史数量（0=禁用自动过图历史记录）
 自动保存聊天记录
 自动回复冷却时间（秒）
 自动增益控制（0=关闭 1=开启）
@@ -3386,6 +3396,7 @@ Zoom out
 非好友使用默认皮肤
 非活动行字号 px
 非活动行最小不透明度 %
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 麦克风音量（百分比）
 [Assets editor blend mode]	Multiply

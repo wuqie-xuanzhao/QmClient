@@ -9024,10 +9024,10 @@ TEST(QmMonitoringHelpers, QmUiPresenceBacksImeCandidatePopup)
 	EXPECT_NE(RenderBody.find("const uint64_t PopupKey = BuildUiAnimNodeKey(str_quickhash(\"qm_ime_popup\"), m_PresenceGeneration);"), std::string::npos);
 	EXPECT_NE(RenderBody.find("const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, PopupKey, TargetVisible, PresenceTransition);"), std::string::npos);
 	EXPECT_NE(RenderBody.find("if(!Presence.m_Render)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("const float Alpha = std::clamp(Presence.m_Alpha, 0.0f, 1.0f);"), std::string::npos);
+	EXPECT_NE(RenderBody.find("const float Alpha = minimum(Presence.m_Alpha, PresentationAlpha);"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("AnimRuntime.SetValue(PopupKey, EUiAnimProperty::ALPHA"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("ResolveMotionValue(AnimRuntime, PopupKey, EUiAnimProperty::ALPHA"), std::string::npos);
-	EXPECT_NE(RenderBody.find("ResolveMotionValue(AnimRuntime, PopupKey, EUiAnimProperty::POS_Y"), std::string::npos);
+	EXPECT_NE(RenderBody.find("ResolveImePopupPresentationValue(AnimRuntime, PopupKey, EUiAnimProperty::POS_Y"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmUiPresenceBacksFavoriteButtonVisibility)

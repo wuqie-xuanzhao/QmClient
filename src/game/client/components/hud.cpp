@@ -18,6 +18,7 @@
 #include <generated/client_data.h>
 #include <generated/protocol.h>
 
+#include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
@@ -38,24 +39,6 @@
 namespace
 {
 	constexpr float HUD_CURRENT_WEAPON_SCALE = 1.2f;
-	constexpr float HUD_CURRENT_WEAPON_SWITCH_DURATION = 0.14f;
-	constexpr float HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS = 0.45f;
-	constexpr float HUD_CURRENT_WEAPON_SWITCH_PEAK_SCALE = 1.32f;
-
-	float HudWeaponSwitchEase(float Progress)
-	{
-		const float ClampedProgress = std::clamp(Progress, 0.0f, 1.0f);
-		const float InvProgress = 1.0f - ClampedProgress;
-		return 1.0f - InvProgress * InvProgress * InvProgress;
-	}
-
-	float HudActiveWeaponSwitchScale(float Progress)
-	{
-		if(Progress < HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS)
-			return mix(1.0f, HUD_CURRENT_WEAPON_SWITCH_PEAK_SCALE, HudWeaponSwitchEase(Progress / HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS));
-
-		return mix(HUD_CURRENT_WEAPON_SWITCH_PEAK_SCALE, HUD_CURRENT_WEAPON_SCALE, HudWeaponSwitchEase((Progress - HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS) / (1.0f - HUD_CURRENT_WEAPON_SWITCH_PEAK_PROGRESS)));
-	}
 
 	bool IsVulkanAmdBackend(IGraphics *pGraphics)
 	{
@@ -209,6 +192,12 @@ namespace
 	{
 		static const uint64_t s_BaseKey = static_cast<uint64_t>(str_quickhash("hud_media_island"));
 		return (s_BaseKey << 32) | static_cast<uint64_t>(str_quickhash(pScope));
+	}
+
+	uint64_t HudWeaponPresentationNodeKey(int ClientId, int Weapon)
+	{
+		static const uint64_t s_BaseKey = static_cast<uint64_t>(str_quickhash("hud_weapon_presentation"));
+		return (s_BaseKey << 32) | static_cast<uint64_t>((ClientId & 0xff) << 8) | static_cast<uint64_t>(Weapon & 0xff);
 	}
 
 	uint64_t HudRecordingStatusNodeKey(const char *pScope)
@@ -742,27 +731,10 @@ namespace
 
 	float ResolveAnimatedLayoutValueEx(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, EUiAnimProperty Property, float Target, float &LastTarget, float DurationSec, float DelaySec, EEasing Easing)
 	{
-		constexpr float Epsilon = 0.01f;
-		const float Current = AnimRuntime.GetValue(NodeKey, Property, Target);
-		const bool TargetChanged = std::abs(Target - LastTarget) > Epsilon;
-		const bool NeedsSync = !AnimRuntime.HasActiveAnimation(NodeKey, Property) && std::abs(Target - Current) > Epsilon;
-
-		if(TargetChanged || NeedsSync)
-		{
-			SUiAnimRequest Request;
-			Request.m_NodeKey = NodeKey;
-			Request.m_Property = Property;
-			Request.m_Target = Target;
-			Request.m_Transition.m_DurationSec = DurationSec;
-			Request.m_Transition.m_DelaySec = DelaySec;
-			Request.m_Transition.m_Priority = 1;
-			Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
-			Request.m_Transition.m_Easing = Easing;
-			AnimRuntime.RequestAnimation(Request);
-			LastTarget = Target;
-		}
-
-		return AnimRuntime.GetValue(NodeKey, Property, Target);
+		LastTarget = Target;
+		if(DelaySec > 0.0f)
+			return ResolveUiAnimValue(AnimRuntime, NodeKey, Property, Target, DurationSec + DelaySec, Easing);
+		return ResolveUiAnimValue(AnimRuntime, NodeKey, Property, Target, DurationSec, Easing);
 	}
 
 	float ResolveAnimatedLayoutValue(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, EUiAnimProperty Property, float Target, float &LastTarget)
@@ -814,6 +786,7 @@ CHud::CHud()
 	m_TextInfoV2AnimState.Reset();
 	m_LocalTimeV2AnimState.Reset();
 	m_MediaIslandAnimState.Reset();
+	m_WeaponPresentationState.Reset();
 	m_RecordingStatusAnimState.Reset();
 	m_SwitchCountdownAnimState.Reset();
 	m_SwitchCountdownTracker.Reset();
@@ -856,6 +829,7 @@ void CHud::ResetHudContainers()
 	m_TextInfoV2AnimState.Reset();
 	m_LocalTimeV2AnimState.Reset();
 	m_MediaIslandAnimState.Reset();
+	m_WeaponPresentationState.Reset();
 	m_RecordingStatusAnimState.Reset();
 	m_SwitchCountdownAnimState.Reset();
 	m_SwitchCountdownTracker.Reset();
@@ -885,10 +859,8 @@ void CHud::OnReset()
 	m_aMapProgressInitialized[0] = false;
 	m_aMapProgressInitialized[1] = false;
 	m_MediaIslandAnimState.Reset();
+	m_WeaponPresentationState.Reset();
 	m_RecordingStatusAnimState.Reset();
-	std::fill(std::begin(m_aHudWeaponSwitchLastWeapons), std::end(m_aHudWeaponSwitchLastWeapons), -1);
-	std::fill(std::begin(m_aHudWeaponSwitchPrevWeapons), std::end(m_aHudWeaponSwitchPrevWeapons), -1);
-	std::fill(std::begin(m_aHudWeaponSwitchStartTimes), std::end(m_aHudWeaponSwitchStartTimes), 0.0);
 
 	ResetHudContainers();
 }
@@ -1080,9 +1052,9 @@ void CHud::RenderGameTimer()
 		m_RecordingStatusAnimState.m_TargetWidth = TargetStatusWidth;
 		m_RecordingStatusAnimState.m_TargetAlpha = TargetStatusAlpha;
 		m_RecordingStatusAnimState.m_TargetTextAlpha = TargetTextAlpha;
-		AnimRuntime.SetValue(StatusBoxNode, EUiAnimProperty::WIDTH, TargetStatusWidth);
-		AnimRuntime.SetValue(StatusBoxNode, EUiAnimProperty::ALPHA, TargetStatusAlpha);
-		AnimRuntime.SetValue(StatusTextNode, EUiAnimProperty::ALPHA, TargetTextAlpha);
+		SetUiPresentationStateValue(AnimRuntime, StatusBoxNode, EUiAnimProperty::WIDTH, TargetStatusWidth);
+		SetUiPresentationStateValue(AnimRuntime, StatusBoxNode, EUiAnimProperty::ALPHA, TargetStatusAlpha);
+		SetUiPresentationStateValue(AnimRuntime, StatusTextNode, EUiAnimProperty::ALPHA, TargetTextAlpha);
 		m_RecordingStatusAnimState.m_Initialized = true;
 	}
 
@@ -1825,6 +1797,9 @@ void CHud::RenderDummyMiniMap()
 			Graphics()->FlushVertices();
 			Graphics()->ClipDisable();
 			Graphics()->UpdateViewport(ClampedX, ClampedY, ClampedW, ClampedH, false);
+			Graphics()->MapScreen(0.0f, 0.0f, 100.0f, 100.0f);
+			const ColorRGBA MiniClearColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClOverlayEntities ? g_Config.m_ClBackgroundEntitiesColor : g_Config.m_ClBackgroundColor));
+			Graphics()->DrawRect(0.0f, 0.0f, 100.0f, 100.0f, MiniClearColor, IGraphics::CORNER_NONE, 0.0f);
 
 			const CGameClient::CClientData &MiniClient = GameClient()->m_aClients[MiniViewClientId];
 			vec2 MiniPos(0.0f, 0.0f);
@@ -1957,9 +1932,9 @@ void CHud::RenderTextInfo()
 		AnimState.m_FpsTargetAlpha = Showfps ? 1.0f : 0.0f;
 		AnimState.m_PredTargetAlpha = Showpred ? 1.0f : 0.0f;
 		AnimState.m_LossTargetAlpha = ShowLoss ? 1.0f : 0.0f;
-		pAnimRuntime->SetValue(FpsNode, EUiAnimProperty::ALPHA, AnimState.m_FpsTargetAlpha);
-		pAnimRuntime->SetValue(PredNode, EUiAnimProperty::ALPHA, AnimState.m_PredTargetAlpha);
-		pAnimRuntime->SetValue(LossNode, EUiAnimProperty::ALPHA, AnimState.m_LossTargetAlpha);
+		SetUiPresentationStateValue(*pAnimRuntime, FpsNode, EUiAnimProperty::ALPHA, AnimState.m_FpsTargetAlpha);
+		SetUiPresentationStateValue(*pAnimRuntime, PredNode, EUiAnimProperty::ALPHA, AnimState.m_PredTargetAlpha);
+		SetUiPresentationStateValue(*pAnimRuntime, LossNode, EUiAnimProperty::ALPHA, AnimState.m_LossTargetAlpha);
 		AnimState.m_AlphaInitialized = true;
 	}
 
@@ -2038,24 +2013,24 @@ void CHud::RenderTextInfo()
 		{
 			AnimState.m_FpsTargetX = V2Layout.m_FpsX;
 			AnimState.m_FpsTargetY = V2Layout.m_FpsY;
-			pAnimRuntime->SetValue(FpsNode, EUiAnimProperty::POS_X, AnimState.m_FpsTargetX);
-			pAnimRuntime->SetValue(FpsNode, EUiAnimProperty::POS_Y, AnimState.m_FpsTargetY);
+			SetUiPresentationStateValue(*pAnimRuntime, FpsNode, EUiAnimProperty::POS_X, AnimState.m_FpsTargetX);
+			SetUiPresentationStateValue(*pAnimRuntime, FpsNode, EUiAnimProperty::POS_Y, AnimState.m_FpsTargetY);
 			AnimState.m_FpsPositionInitialized = true;
 		}
 		if(RenderPred && !AnimState.m_PredPositionInitialized)
 		{
 			AnimState.m_PredTargetX = V2Layout.m_PredX;
 			AnimState.m_PredTargetY = V2Layout.m_PredY;
-			pAnimRuntime->SetValue(PredNode, EUiAnimProperty::POS_X, AnimState.m_PredTargetX);
-			pAnimRuntime->SetValue(PredNode, EUiAnimProperty::POS_Y, AnimState.m_PredTargetY);
+			SetUiPresentationStateValue(*pAnimRuntime, PredNode, EUiAnimProperty::POS_X, AnimState.m_PredTargetX);
+			SetUiPresentationStateValue(*pAnimRuntime, PredNode, EUiAnimProperty::POS_Y, AnimState.m_PredTargetY);
 			AnimState.m_PredPositionInitialized = true;
 		}
 		if(RenderLoss && !AnimState.m_LossPositionInitialized)
 		{
 			AnimState.m_LossTargetX = V2Layout.m_LossX;
 			AnimState.m_LossTargetY = V2Layout.m_LossY;
-			pAnimRuntime->SetValue(LossNode, EUiAnimProperty::POS_X, AnimState.m_LossTargetX);
-			pAnimRuntime->SetValue(LossNode, EUiAnimProperty::POS_Y, AnimState.m_LossTargetY);
+			SetUiPresentationStateValue(*pAnimRuntime, LossNode, EUiAnimProperty::POS_X, AnimState.m_LossTargetX);
+			SetUiPresentationStateValue(*pAnimRuntime, LossNode, EUiAnimProperty::POS_Y, AnimState.m_LossTargetY);
 			AnimState.m_LossPositionInitialized = true;
 		}
 	}
@@ -2767,24 +2742,24 @@ void CHud::RenderSwitchCountdowns()
 			const uint64_t NodeKey = HudSwitchCountdownNodeKey(i);
 			if(!AnimState.m_aPositionInitialized[i])
 			{
-				pAnimRuntime->SetValue(NodeKey, EUiAnimProperty::POS_X, TargetX);
-				pAnimRuntime->SetValue(NodeKey, EUiAnimProperty::POS_Y, TargetY);
+				SetUiPresentationStateValue(*pAnimRuntime, NodeKey, EUiAnimProperty::POS_X, TargetX);
+				SetUiPresentationStateValue(*pAnimRuntime, NodeKey, EUiAnimProperty::POS_Y, TargetY);
 				AnimState.m_aTargetX[i] = TargetX;
 				AnimState.m_aTargetY[i] = TargetY;
 				AnimState.m_aPositionInitialized[i] = true;
 			}
 			if(!AnimState.m_aAlphaInitialized[i])
 			{
-				pAnimRuntime->SetValue(NodeKey, EUiAnimProperty::ALPHA, TargetAlpha);
+				SetUiPresentationStateValue(*pAnimRuntime, NodeKey, EUiAnimProperty::ALPHA, TargetAlpha);
 				AnimState.m_aTargetAlpha[i] = TargetAlpha;
 				AnimState.m_aAlphaInitialized[i] = true;
 			}
 
 			if(IsNewEntry)
 			{
-				pAnimRuntime->SetValue(NodeKey, EUiAnimProperty::POS_X, TargetX);
-				pAnimRuntime->SetValue(NodeKey, EUiAnimProperty::POS_Y, BaseY - SlideOffsetY);
-				pAnimRuntime->SetValue(NodeKey, EUiAnimProperty::ALPHA, 0.0f);
+				SetUiPresentationStateValue(*pAnimRuntime, NodeKey, EUiAnimProperty::POS_X, TargetX);
+				SetUiPresentationStateValue(*pAnimRuntime, NodeKey, EUiAnimProperty::POS_Y, BaseY - SlideOffsetY);
+				SetUiPresentationStateValue(*pAnimRuntime, NodeKey, EUiAnimProperty::ALPHA, 0.0f);
 				AnimState.m_aTargetX[i] = TargetX;
 				AnimState.m_aTargetY[i] = BaseY - SlideOffsetY;
 				AnimState.m_aTargetAlpha[i] = 0.0f;
@@ -2796,8 +2771,8 @@ void CHud::RenderSwitchCountdowns()
 				if(ExistingReflow)
 				{
 					// Existing items also replay declarative animation: slide in from left and fade in.
-					pAnimRuntime->SetValue(NodeKey, EUiAnimProperty::POS_X, TargetX - SlideOffsetX);
-					pAnimRuntime->SetValue(NodeKey, EUiAnimProperty::ALPHA, 0.0f);
+					SetUiPresentationStateValue(*pAnimRuntime, NodeKey, EUiAnimProperty::POS_X, TargetX - SlideOffsetX);
+					SetUiPresentationStateValue(*pAnimRuntime, NodeKey, EUiAnimProperty::ALPHA, 0.0f);
 					AnimState.m_aTargetX[i] = TargetX - SlideOffsetX;
 					AnimState.m_aTargetAlpha[i] = 0.0f;
 				}
@@ -3258,8 +3233,25 @@ float CHud::GetTopIslandAvoidanceRight() const
 					     std::max(BaseWidth, TimerBoxX - GapToTimer - RightSlotGap - RightSlotWidth - ScreenPadding) :
 					     BaseWidth + (ShowCover ? (Gap + MaxTitleWidth) : 0.0f);
 	const float MaxExpandedTitleWidth = std::max(0.0f, MaxIslandWidth - BaseWidth - Gap);
-	const char *pDisplayTitle = HasMediaState && MediaState.m_aTitle[0] != '\0' ? MediaState.m_aTitle : "";
-	const float NaturalTitleWidth = std::round(TextRender()->TextBoundingBox(TitleFontSize, pDisplayTitle).m_W);
+	const char *pDisplayTitle = "";
+	if(HasMediaState)
+	{
+		if(MediaState.m_aTitle[0] != '\0')
+			pDisplayTitle = MediaState.m_aTitle;
+		else if(MediaState.m_aArtist[0] != '\0')
+			pDisplayTitle = MediaState.m_aArtist;
+		else if(MediaState.m_aAlbum[0] != '\0')
+			pDisplayTitle = MediaState.m_aAlbum;
+	}
+	char aAvoidanceTrackMeta[256];
+	aAvoidanceTrackMeta[0] = '\0';
+	if(HasMediaState && MediaState.m_aArtist[0] != '\0' && MediaState.m_aAlbum[0] != '\0')
+		str_format(aAvoidanceTrackMeta, sizeof(aAvoidanceTrackMeta), "%s - %s", MediaState.m_aArtist, MediaState.m_aAlbum);
+	else if(HasMediaState && MediaState.m_aArtist[0] != '\0')
+		str_copy(aAvoidanceTrackMeta, MediaState.m_aArtist, sizeof(aAvoidanceTrackMeta));
+	else if(HasMediaState && MediaState.m_aAlbum[0] != '\0')
+		str_copy(aAvoidanceTrackMeta, MediaState.m_aAlbum, sizeof(aAvoidanceTrackMeta));
+	const float NaturalTitleWidth = std::round(std::max(TextRender()->TextBoundingBox(TitleFontSize, pDisplayTitle).m_W, aAvoidanceTrackMeta[0] != '\0' ? TextRender()->TextBoundingBox(MetaFontSize, aAvoidanceTrackMeta).m_W : 0.0f));
 	const float TitleWidth = (Expanded && ShowCover) ? std::clamp(NaturalTitleWidth, 0.0f, std::min(MaxTitleWidth, MaxExpandedTitleWidth)) : 0.0f;
 
 	float TargetWidth = BaseWidth;
@@ -3325,43 +3317,65 @@ void CHud::RenderMediaIsland()
 	}
 
 	auto &AnimState = m_MediaIslandAnimState;
-	const char *pDisplayTitle = HasMediaState && MediaState.m_aTitle[0] != '\0' ? MediaState.m_aTitle : "";
 	const int64_t Now = time_get();
 	const int64_t AutoCollapseTicks = std::max<int64_t>(1, (int64_t)3000 * time_freq() / 1000);
 
 	if(HasMediaState)
 	{
-		const bool TitleChanged = str_comp(AnimState.m_aLastTrackTitle, MediaState.m_aTitle) != 0;
-		const bool ArtistChanged = str_comp(AnimState.m_aLastTrackArtist, MediaState.m_aArtist) != 0;
-		const bool AlbumChanged = str_comp(AnimState.m_aLastTrackAlbum, MediaState.m_aAlbum) != 0;
-		const bool HadMeaningfulIdentity = AnimState.m_aLastTrackTitle[0] != '\0';
-		const bool HasStableArtistIdentity = AnimState.m_aLastTrackArtist[0] != '\0' && MediaState.m_aArtist[0] != '\0';
-		const bool HasStableAlbumIdentity = AnimState.m_aLastTrackAlbum[0] != '\0' && MediaState.m_aAlbum[0] != '\0';
-		const bool TrackChanged = AnimState.m_HasTrackIdentity && HadMeaningfulIdentity &&
-					  (TitleChanged || (HasStableArtistIdentity && ArtistChanged) || (HasStableAlbumIdentity && AlbumChanged));
+		SHudMediaIslandTrackInput TrackInput;
+		TrackInput.m_pTitle = MediaState.m_aTitle;
+		TrackInput.m_pArtist = MediaState.m_aArtist;
+		TrackInput.m_pAlbum = MediaState.m_aAlbum;
+		TrackInput.m_Cover = MediaState.m_AlbumArt;
+		TrackInput.m_HasCover = MediaState.m_AlbumArt.IsValid() && !MediaState.m_AlbumArt.IsNullTexture();
+		TrackInput.m_DurationMs = MediaState.m_DurationMs;
+		const EHudMediaIslandTrackUpdate TrackUpdate = QmHudMediaIslandUpdateTrackSnapshots(
+			AnimState.m_CurrentTrack,
+			AnimState.m_OutgoingTrack,
+			AnimState.m_HasTrackIdentity,
+			AnimState.m_TrackTransitionActive,
+			AnimState.m_TrackTransitionNeedsNodeReset,
+			AnimState.m_TrackTransitionStartTick,
+			Now,
+			TrackInput);
 
-		if(!AnimState.m_HasTrackIdentity)
+		if(TrackUpdate == EHudMediaIslandTrackUpdate::TRACK_CHANGED)
 		{
-			str_copy(AnimState.m_aLastTrackTitle, MediaState.m_aTitle, sizeof(AnimState.m_aLastTrackTitle));
-			str_copy(AnimState.m_aLastTrackArtist, MediaState.m_aArtist, sizeof(AnimState.m_aLastTrackArtist));
-			str_copy(AnimState.m_aLastTrackAlbum, MediaState.m_aAlbum, sizeof(AnimState.m_aLastTrackAlbum));
-			AnimState.m_LastTrackDurationMs = MediaState.m_DurationMs;
-			AnimState.m_HasTrackIdentity = true;
-		}
-		else if(TrackChanged)
-		{
-			str_copy(AnimState.m_aLastTrackTitle, MediaState.m_aTitle, sizeof(AnimState.m_aLastTrackTitle));
-			str_copy(AnimState.m_aLastTrackArtist, MediaState.m_aArtist, sizeof(AnimState.m_aLastTrackArtist));
-			str_copy(AnimState.m_aLastTrackAlbum, MediaState.m_aAlbum, sizeof(AnimState.m_aLastTrackAlbum));
-			AnimState.m_LastTrackDurationMs = MediaState.m_DurationMs;
 			AnimState.m_VisualState = SHudMediaIslandAnimState::EVisualState::EXPANDED;
 			AnimState.m_ExpandUntilTick = Now + AutoCollapseTicks;
+			AnimState.StartCapsuleMorph(Now);
 		}
+	}
+	else if(AnimState.m_HasTrackIdentity)
+	{
+		AnimState.m_VisualState = SHudMediaIslandAnimState::EVisualState::MINIMIZED;
+		AnimState.m_ExpandUntilTick = 0;
+		AnimState.m_HasTrackIdentity = false;
+		AnimState.m_CurrentTrack.Reset();
+		AnimState.m_OutgoingTrack.Reset();
+		AnimState.m_TrackTransitionActive = false;
+		AnimState.m_TrackTransitionNeedsNodeReset = false;
+		AnimState.m_TrackTransitionStartTick = 0;
+		AnimState.m_OldTrackExitProgress = 1.0f;
+		AnimState.m_NewTrackEnterProgress = 1.0f;
 	}
 
 	if(AnimState.m_VisualState == SHudMediaIslandAnimState::EVisualState::EXPANDED && Now >= AnimState.m_ExpandUntilTick)
+	{
 		AnimState.m_VisualState = SHudMediaIslandAnimState::EVisualState::MINIMIZED;
+		AnimState.StartCapsuleMorph(Now);
+	}
 	const bool Expanded = HasMediaState && AnimState.m_VisualState == SHudMediaIslandAnimState::EVisualState::EXPANDED;
+	const char *pDisplayTitle = "";
+	if(HasMediaState)
+	{
+		if(AnimState.m_CurrentTrack.m_aTitle[0] != '\0')
+			pDisplayTitle = AnimState.m_CurrentTrack.m_aTitle;
+		else if(AnimState.m_CurrentTrack.m_aArtist[0] != '\0')
+			pDisplayTitle = AnimState.m_CurrentTrack.m_aArtist;
+		else if(AnimState.m_CurrentTrack.m_aAlbum[0] != '\0')
+			pDisplayTitle = AnimState.m_CurrentTrack.m_aAlbum;
+	}
 
 	char aSpectatorBuf[16];
 	str_format(aSpectatorBuf, sizeof(aSpectatorBuf), "%d", SpectatorCount);
@@ -3407,8 +3421,6 @@ void CHud::RenderMediaIsland()
 	constexpr float BottomRowLineHeight = 7.0f;
 	constexpr float BottomRowPaddingY = 2.5f;
 	constexpr float BottomRowDividerInset = 10.0f;
-	constexpr float CoverRotationSpeed = 0.75f;
-	constexpr float Tau = 6.28318530718f;
 	const float MaxUnifiedWidth = std::max(0.0f, m_Width - ScreenPadding * 2.0f);
 
 	const float TimeSlotWidth = std::round(TextRender()->TextBoundingBox(MetaFontSize, aTimeSlotBuf).m_W);
@@ -3487,7 +3499,15 @@ void CHud::RenderMediaIsland()
 					     std::max(BaseWidth, TimerBoxX - GapToTimer - ScreenPadding) :
 					     BaseWidth + (ShowCover ? (Gap + MaxTitleWidth) : 0.0f);
 	const float MaxExpandedTitleWidth = std::max(0.0f, MaxIslandWidth - BaseWidth - Gap);
-	const float NaturalTitleWidth = std::round(TextRender()->TextBoundingBox(TitleFontSize, pDisplayTitle).m_W);
+	char aLayoutTrackMeta[256];
+	aLayoutTrackMeta[0] = '\0';
+	if(AnimState.m_CurrentTrack.m_aArtist[0] != '\0' && AnimState.m_CurrentTrack.m_aAlbum[0] != '\0')
+		str_format(aLayoutTrackMeta, sizeof(aLayoutTrackMeta), "%s - %s", AnimState.m_CurrentTrack.m_aArtist, AnimState.m_CurrentTrack.m_aAlbum);
+	else if(AnimState.m_CurrentTrack.m_aArtist[0] != '\0')
+		str_copy(aLayoutTrackMeta, AnimState.m_CurrentTrack.m_aArtist, sizeof(aLayoutTrackMeta));
+	else if(AnimState.m_CurrentTrack.m_aAlbum[0] != '\0')
+		str_copy(aLayoutTrackMeta, AnimState.m_CurrentTrack.m_aAlbum, sizeof(aLayoutTrackMeta));
+	const float NaturalTitleWidth = std::round(std::max(TextRender()->TextBoundingBox(TitleFontSize, pDisplayTitle).m_W, aLayoutTrackMeta[0] != '\0' ? TextRender()->TextBoundingBox(MetaFontSize, aLayoutTrackMeta).m_W : 0.0f));
 	const float TitleWidth = (Expanded && ShowCover) ? std::clamp(NaturalTitleWidth, 0.0f, std::min(MaxTitleWidth, MaxExpandedTitleWidth)) : 0.0f;
 	const float PlannedStatusWidth = ShowFrozenSummaryInStatus ? FrozenSummaryStatusWidth :
 								     (ShowRecordingStatus ? (ScoreboardExpanded ? RawExpandedStatusWidth : RawCollapsedStatusWidth) : 0.0f);
@@ -3517,12 +3537,63 @@ void CHud::RenderMediaIsland()
 	const float TitleOffsetTarget = Expanded ? 0.0f : 4.0f;
 	const float SpectatorAlphaTarget = ShowSpectator ? 1.0f : 0.0f;
 	const float BottomAlphaTarget = ShowBottomRow ? 1.0f : 0.0f;
+	const int MotionLevel = std::clamp(g_Config.m_QmUiMotionLevel, 0, 2);
+	const bool FullTrackMotion = MotionLevel >= 2;
+	const float TrackTextOffset = FullTrackMotion ? 5.0f : 0.0f;
+	const float CoverEnterScale = FullTrackMotion ? 0.95f : 1.0f;
+	const float CoverExitScale = FullTrackMotion ? 0.96f : 1.0f;
+	SUiSpringConfig CapsuleSpring;
+	CapsuleSpring.m_Stiffness = FullTrackMotion ? 430.0f : 520.0f;
+	CapsuleSpring.m_Damping = FullTrackMotion ? 38.0f : 48.0f;
+	CapsuleSpring.m_RestEpsilon = 0.025f;
+	CapsuleSpring.m_RestVelocity = 0.16f;
+	const auto BuildContentSpring = [FullTrackMotion](bool Entering) {
+		SUiSpringConfig Spring;
+		Spring.m_Stiffness = FullTrackMotion ? 360.0f : 520.0f;
+		Spring.m_Damping = FullTrackMotion ? 34.0f : 52.0f;
+		Spring.m_RestEpsilon = 0.008f;
+		Spring.m_RestVelocity = 0.08f;
+		if(!Entering)
+		{
+			constexpr float ExitTimeScale = 0.34f;
+			Spring.m_Stiffness /= ExitTimeScale * ExitTimeScale;
+			Spring.m_Damping /= ExitTimeScale;
+			Spring.m_RestVelocity /= ExitTimeScale;
+		}
+		return Spring;
+	};
+	SUiSpringConfig ContentSpring = BuildContentSpring(true);
+	SUiSpringConfig ContentExitSpring = BuildContentSpring(false);
+	const SUiSpringConfig TitleSpring = TitleAlphaTarget > 0.0f ? ContentSpring : ContentExitSpring;
+	const SUiSpringConfig SpectatorSpring = SpectatorAlphaTarget > 0.0f ? ContentSpring : ContentExitSpring;
+	const SUiSpringConfig BottomSpring = BottomAlphaTarget > 0.0f ? ContentSpring : ContentExitSpring;
+	SUiSpringConfig TrackSpring;
+	TrackSpring.m_Stiffness = FullTrackMotion ? 520.0f : 650.0f;
+	TrackSpring.m_Damping = FullTrackMotion ? 38.0f : 58.0f;
+	TrackSpring.m_RestEpsilon = 0.008f;
+	TrackSpring.m_RestVelocity = 0.10f;
+	SUiSpringConfig TrackExitSpring = TrackSpring;
+	{
+		constexpr float ExitTimeScale = 0.42f;
+		TrackExitSpring.m_Stiffness /= ExitTimeScale * ExitTimeScale;
+		TrackExitSpring.m_Damping /= ExitTimeScale;
+		TrackExitSpring.m_RestVelocity /= ExitTimeScale;
+	}
+	float EffectiveTargetX = TargetX;
+	float EffectiveTargetWidth = TargetWidth;
+	float EffectiveTargetHeight = TargetHeight;
 
 	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
 	const uint64_t CapsuleNode = HudMediaIslandNodeKey("capsule");
 	const uint64_t TitleNode = HudMediaIslandNodeKey("title");
 	const uint64_t SpectatorNode = HudMediaIslandNodeKey("spectator");
 	const uint64_t BottomNode = HudMediaIslandNodeKey("bottom");
+	const uint64_t CoverInNode = HudMediaIslandNodeKey("cover_in");
+	const uint64_t CoverOutNode = HudMediaIslandNodeKey("cover_out");
+	const uint64_t TrackTitleInNode = HudMediaIslandNodeKey("track_title_in");
+	const uint64_t TrackTitleOutNode = HudMediaIslandNodeKey("track_title_out");
+	const uint64_t TrackMetaInNode = HudMediaIslandNodeKey("track_meta_in");
+	const uint64_t TrackMetaOutNode = HudMediaIslandNodeKey("track_meta_out");
 	if(!AnimState.m_LayoutInitialized)
 	{
 		AnimState.m_TargetX = TargetX;
@@ -3532,23 +3603,150 @@ void CHud::RenderMediaIsland()
 		AnimState.m_TargetTitleOffset = TitleOffsetTarget;
 		AnimState.m_TargetSpectatorAlpha = SpectatorAlphaTarget;
 		AnimState.m_TargetBottomAlpha = BottomAlphaTarget;
-		AnimRuntime.SetValue(CapsuleNode, EUiAnimProperty::POS_X, TargetX);
-		AnimRuntime.SetValue(CapsuleNode, EUiAnimProperty::WIDTH, TargetWidth);
-		AnimRuntime.SetValue(CapsuleNode, EUiAnimProperty::HEIGHT, TargetHeight);
-		AnimRuntime.SetValue(TitleNode, EUiAnimProperty::ALPHA, TitleAlphaTarget);
-		AnimRuntime.SetValue(TitleNode, EUiAnimProperty::POS_X, TitleOffsetTarget);
-		AnimRuntime.SetValue(SpectatorNode, EUiAnimProperty::ALPHA, SpectatorAlphaTarget);
-		AnimRuntime.SetValue(BottomNode, EUiAnimProperty::ALPHA, BottomAlphaTarget);
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::POS_X, TargetX);
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::WIDTH, TargetWidth);
+		SetUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::HEIGHT, TargetHeight);
+		SetUiPresentationStateValue(AnimRuntime, TitleNode, EUiAnimProperty::ALPHA, TitleAlphaTarget);
+		SetUiPresentationStateValue(AnimRuntime, TitleNode, EUiAnimProperty::POS_X, TitleOffsetTarget);
+		SetUiPresentationStateValue(AnimRuntime, SpectatorNode, EUiAnimProperty::ALPHA, SpectatorAlphaTarget);
+		SetUiPresentationStateValue(AnimRuntime, BottomNode, EUiAnimProperty::ALPHA, BottomAlphaTarget);
+		SetUiPresentationStateValue(AnimRuntime, CoverInNode, EUiAnimProperty::ALPHA, 1.0f);
+		SetUiPresentationStateValue(AnimRuntime, CoverOutNode, EUiAnimProperty::ALPHA, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, CoverInNode, EUiAnimProperty::SCALE, 1.0f);
+		SetUiPresentationStateValue(AnimRuntime, CoverOutNode, EUiAnimProperty::SCALE, 1.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackTitleInNode, EUiAnimProperty::ALPHA, 1.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackTitleOutNode, EUiAnimProperty::ALPHA, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackTitleInNode, EUiAnimProperty::POS_X, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackTitleOutNode, EUiAnimProperty::POS_X, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackMetaInNode, EUiAnimProperty::ALPHA, 1.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackMetaOutNode, EUiAnimProperty::ALPHA, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackMetaInNode, EUiAnimProperty::POS_X, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackMetaOutNode, EUiAnimProperty::POS_X, 0.0f);
 		AnimState.m_LayoutInitialized = true;
 	}
 
-	const float IslandX = ResolveAnimatedLayoutValueEx(AnimRuntime, CapsuleNode, EUiAnimProperty::POS_X, TargetX, AnimState.m_TargetX, 0.18f, 0.0f, EEasing::EASE_OUT);
-	const float IslandWidth = ResolveAnimatedLayoutValueEx(AnimRuntime, CapsuleNode, EUiAnimProperty::WIDTH, TargetWidth, AnimState.m_TargetWidth, 0.18f, 0.0f, EEasing::EASE_OUT);
-	const float AnimatedIslandHeight = ResolveAnimatedLayoutValueEx(AnimRuntime, CapsuleNode, EUiAnimProperty::HEIGHT, TargetHeight, AnimState.m_TargetHeight, 0.18f, 0.0f, EEasing::EASE_OUT);
-	const float TitleAlpha = std::clamp(ResolveAnimatedLayoutValueEx(AnimRuntime, TitleNode, EUiAnimProperty::ALPHA, TitleAlphaTarget, AnimState.m_TargetTitleAlpha, 0.12f, 0.0f, EEasing::EASE_OUT), 0.0f, 1.0f);
-	const float TitleOffset = ResolveAnimatedLayoutValueEx(AnimRuntime, TitleNode, EUiAnimProperty::POS_X, TitleOffsetTarget, AnimState.m_TargetTitleOffset, 0.12f, 0.0f, EEasing::EASE_OUT);
-	const float SpectatorAlpha = std::clamp(ResolveAnimatedLayoutValueEx(AnimRuntime, SpectatorNode, EUiAnimProperty::ALPHA, SpectatorAlphaTarget, AnimState.m_TargetSpectatorAlpha, 0.08f, 0.0f, EEasing::EASE_OUT), 0.0f, 1.0f);
-	const float BottomAlpha = std::clamp(ResolveAnimatedLayoutValueEx(AnimRuntime, BottomNode, EUiAnimProperty::ALPHA, BottomAlphaTarget, AnimState.m_TargetBottomAlpha, 0.12f, 0.0f, EEasing::EASE_OUT), 0.0f, 1.0f);
+	if(AnimState.m_TrackTransitionNeedsNodeReset)
+	{
+		const float CurrentCoverAlpha = AnimRuntime.GetValue(CoverInNode, EUiAnimProperty::ALPHA, 1.0f);
+		const float CurrentCoverScale = AnimRuntime.GetValue(CoverInNode, EUiAnimProperty::SCALE, 1.0f);
+		const float CurrentTitleAlpha = AnimRuntime.GetValue(TrackTitleInNode, EUiAnimProperty::ALPHA, 1.0f);
+		const float CurrentTitleOffset = AnimRuntime.GetValue(TrackTitleInNode, EUiAnimProperty::POS_X, 0.0f);
+		const float CurrentMetaAlpha = AnimRuntime.GetValue(TrackMetaInNode, EUiAnimProperty::ALPHA, 1.0f);
+		const float CurrentMetaOffset = AnimRuntime.GetValue(TrackMetaInNode, EUiAnimProperty::POS_X, 0.0f);
+
+		SetUiPresentationStateValue(AnimRuntime, CoverOutNode, EUiAnimProperty::ALPHA, CurrentCoverAlpha);
+		SetUiPresentationStateValue(AnimRuntime, CoverOutNode, EUiAnimProperty::SCALE, CurrentCoverScale);
+		SetUiPresentationStateValue(AnimRuntime, TrackTitleOutNode, EUiAnimProperty::ALPHA, CurrentTitleAlpha);
+		SetUiPresentationStateValue(AnimRuntime, TrackTitleOutNode, EUiAnimProperty::POS_X, CurrentTitleOffset);
+		SetUiPresentationStateValue(AnimRuntime, TrackMetaOutNode, EUiAnimProperty::ALPHA, CurrentMetaAlpha);
+		SetUiPresentationStateValue(AnimRuntime, TrackMetaOutNode, EUiAnimProperty::POS_X, CurrentMetaOffset);
+		SetUiPresentationStateValue(AnimRuntime, CoverInNode, EUiAnimProperty::ALPHA, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, CoverInNode, EUiAnimProperty::SCALE, CoverEnterScale);
+		SetUiPresentationStateValue(AnimRuntime, TrackTitleInNode, EUiAnimProperty::ALPHA, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackTitleInNode, EUiAnimProperty::POS_X, TrackTextOffset);
+		SetUiPresentationStateValue(AnimRuntime, TrackMetaInNode, EUiAnimProperty::ALPHA, 0.0f);
+		SetUiPresentationStateValue(AnimRuntime, TrackMetaInNode, EUiAnimProperty::POS_X, TrackTextOffset);
+
+		AnimState.m_TargetCoverOutAlpha = CurrentCoverAlpha;
+		AnimState.m_TargetCoverOutScale = CurrentCoverScale;
+		AnimState.m_TargetTrackTitleOutAlpha = CurrentTitleAlpha;
+		AnimState.m_TargetTrackTitleOutOffset = CurrentTitleOffset;
+		AnimState.m_TargetTrackMetaOutAlpha = CurrentMetaAlpha;
+		AnimState.m_TargetTrackMetaOutOffset = CurrentMetaOffset;
+		AnimState.m_TargetCoverInAlpha = 0.0f;
+		AnimState.m_TargetCoverInScale = CoverEnterScale;
+		AnimState.m_TargetTrackTitleInAlpha = 0.0f;
+		AnimState.m_TargetTrackTitleInOffset = TrackTextOffset;
+		AnimState.m_TargetTrackMetaInAlpha = 0.0f;
+		AnimState.m_TargetTrackMetaInOffset = TrackTextOffset;
+		AnimState.m_TrackTransitionNeedsNodeReset = false;
+	}
+
+	if(MotionLevel <= 0)
+	{
+		AnimState.m_CapsuleMorphActive = false;
+		AnimState.m_CapsuleMorphNeedsCapture = false;
+	}
+	else if(AnimState.m_CapsuleMorphActive)
+	{
+		if(AnimState.m_CapsuleMorphNeedsCapture)
+		{
+			AnimState.m_CapsuleMorphFromX = AnimRuntime.GetValue(CapsuleNode, EUiAnimProperty::POS_X, AnimState.m_TargetX);
+			AnimState.m_CapsuleMorphFromWidth = std::max(0.0f, AnimRuntime.GetValue(CapsuleNode, EUiAnimProperty::WIDTH, AnimState.m_TargetWidth));
+			AnimState.m_CapsuleMorphFromHeight = std::max(0.0f, AnimRuntime.GetValue(CapsuleNode, EUiAnimProperty::HEIGHT, AnimState.m_TargetHeight));
+			if(AnimState.m_CapsuleMorphFromWidth <= 0.01f)
+				AnimState.m_CapsuleMorphFromWidth = TargetWidth;
+			if(AnimState.m_CapsuleMorphFromHeight <= 0.01f)
+				AnimState.m_CapsuleMorphFromHeight = TargetHeight;
+			AnimState.m_CapsuleMorphNeedsCapture = false;
+		}
+
+		const float MorphElapsedSec = (Now - AnimState.m_CapsuleMorphStartTick) / (float)time_freq();
+		constexpr float MorphCompressSec = 0.085f;
+		constexpr float MorphMaxSec = 0.75f;
+		if(FullTrackMotion && MorphElapsedSec < MorphCompressSec)
+		{
+			const float FromCenterX = AnimState.m_CapsuleMorphFromX + AnimState.m_CapsuleMorphFromWidth * 0.5f;
+			const float WidthSqueeze = std::clamp(AnimState.m_CapsuleMorphFromWidth * 0.08f, 2.0f, 7.0f);
+			const float HeightSqueeze = std::clamp(AnimState.m_CapsuleMorphFromHeight * 0.10f, 1.0f, 2.4f);
+			EffectiveTargetWidth = std::max(PaddingX * 2.0f + 4.0f, AnimState.m_CapsuleMorphFromWidth - WidthSqueeze);
+			EffectiveTargetHeight = std::max(BaseIslandHeight - 2.0f, AnimState.m_CapsuleMorphFromHeight - HeightSqueeze);
+			EffectiveTargetX = std::clamp(FromCenterX - EffectiveTargetWidth * 0.5f, ScreenPadding, std::max(ScreenPadding, m_Width - ScreenPadding - EffectiveTargetWidth));
+		}
+		else if(MorphElapsedSec > MorphMaxSec)
+		{
+			AnimState.m_CapsuleMorphActive = false;
+		}
+	}
+
+	AnimState.m_TargetX = EffectiveTargetX;
+	AnimState.m_TargetWidth = EffectiveTargetWidth;
+	AnimState.m_TargetHeight = EffectiveTargetHeight;
+	AnimState.m_TargetTitleAlpha = TitleAlphaTarget;
+	AnimState.m_TargetTitleOffset = TitleOffsetTarget;
+	AnimState.m_TargetSpectatorAlpha = SpectatorAlphaTarget;
+	AnimState.m_TargetBottomAlpha = BottomAlphaTarget;
+	AnimState.m_TargetCoverInAlpha = 1.0f;
+	AnimState.m_TargetCoverOutAlpha = 0.0f;
+	AnimState.m_TargetCoverInScale = 1.0f;
+	AnimState.m_TargetCoverOutScale = CoverExitScale;
+	AnimState.m_TargetTrackTitleInAlpha = 1.0f;
+	AnimState.m_TargetTrackTitleOutAlpha = 0.0f;
+	AnimState.m_TargetTrackTitleInOffset = 0.0f;
+	AnimState.m_TargetTrackTitleOutOffset = -TrackTextOffset;
+	AnimState.m_TargetTrackMetaInAlpha = 1.0f;
+	AnimState.m_TargetTrackMetaOutAlpha = 0.0f;
+	AnimState.m_TargetTrackMetaInOffset = 0.0f;
+	AnimState.m_TargetTrackMetaOutOffset = -TrackTextOffset;
+
+	const float IslandX = ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::POS_X, AnimState.m_TargetX, CapsuleSpring, 3, 0.01f);
+	const float IslandWidth = ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::WIDTH, AnimState.m_TargetWidth, CapsuleSpring, 3, 0.01f);
+	const float AnimatedIslandHeight = ResolveUiPresentationStateValue(AnimRuntime, CapsuleNode, EUiAnimProperty::HEIGHT, AnimState.m_TargetHeight, CapsuleSpring, 3, 0.01f);
+	const float TitleAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, TitleNode, EUiAnimProperty::ALPHA, AnimState.m_TargetTitleAlpha, TitleSpring, 2, 0.004f), 0.0f, 1.0f);
+	const float TitleOffset = ResolveUiPresentationStateValue(AnimRuntime, TitleNode, EUiAnimProperty::POS_X, AnimState.m_TargetTitleOffset, TitleSpring, 2, 0.01f);
+	const float SpectatorAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, SpectatorNode, EUiAnimProperty::ALPHA, AnimState.m_TargetSpectatorAlpha, SpectatorSpring, 2, 0.004f), 0.0f, 1.0f);
+	const float BottomAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, BottomNode, EUiAnimProperty::ALPHA, AnimState.m_TargetBottomAlpha, BottomSpring, 2, 0.004f), 0.0f, 1.0f);
+	const float CoverInAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, CoverInNode, EUiAnimProperty::ALPHA, AnimState.m_TargetCoverInAlpha, TrackSpring, 2, 0.003f), 0.0f, 1.0f);
+	const float CoverOutAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, CoverOutNode, EUiAnimProperty::ALPHA, AnimState.m_TargetCoverOutAlpha, TrackExitSpring, 2, 0.003f), 0.0f, 1.0f);
+	const float CoverInScale = ResolveUiPresentationStateValue(AnimRuntime, CoverInNode, EUiAnimProperty::SCALE, AnimState.m_TargetCoverInScale, TrackSpring, 2, 0.004f);
+	const float CoverOutScale = ResolveUiPresentationStateValue(AnimRuntime, CoverOutNode, EUiAnimProperty::SCALE, AnimState.m_TargetCoverOutScale, TrackExitSpring, 2, 0.004f);
+	const float TrackTitleInAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, TrackTitleInNode, EUiAnimProperty::ALPHA, AnimState.m_TargetTrackTitleInAlpha, TrackSpring, 2, 0.003f), 0.0f, 1.0f);
+	const float TrackTitleOutAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, TrackTitleOutNode, EUiAnimProperty::ALPHA, AnimState.m_TargetTrackTitleOutAlpha, TrackExitSpring, 2, 0.003f), 0.0f, 1.0f);
+	const float TrackTitleInOffset = ResolveUiPresentationStateValue(AnimRuntime, TrackTitleInNode, EUiAnimProperty::POS_X, AnimState.m_TargetTrackTitleInOffset, TrackSpring, 2, 0.01f);
+	const float TrackTitleOutOffset = ResolveUiPresentationStateValue(AnimRuntime, TrackTitleOutNode, EUiAnimProperty::POS_X, AnimState.m_TargetTrackTitleOutOffset, TrackExitSpring, 2, 0.01f);
+	const float TrackMetaInAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, TrackMetaInNode, EUiAnimProperty::ALPHA, AnimState.m_TargetTrackMetaInAlpha, TrackSpring, 2, 0.003f), 0.0f, 1.0f);
+	const float TrackMetaOutAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, TrackMetaOutNode, EUiAnimProperty::ALPHA, AnimState.m_TargetTrackMetaOutAlpha, TrackExitSpring, 2, 0.003f), 0.0f, 1.0f);
+	const float TrackMetaInOffset = ResolveUiPresentationStateValue(AnimRuntime, TrackMetaInNode, EUiAnimProperty::POS_X, AnimState.m_TargetTrackMetaInOffset, TrackSpring, 2, 0.01f);
+	const float TrackMetaOutOffset = ResolveUiPresentationStateValue(AnimRuntime, TrackMetaOutNode, EUiAnimProperty::POS_X, AnimState.m_TargetTrackMetaOutOffset, TrackExitSpring, 2, 0.01f);
+	AnimState.m_OldTrackExitProgress = 1.0f - CoverOutAlpha;
+	AnimState.m_NewTrackEnterProgress = CoverInAlpha;
+	if(AnimState.m_TrackTransitionActive && CoverOutAlpha <= 0.01f && TrackTitleOutAlpha <= 0.01f && CoverInAlpha >= 0.99f && TrackTitleInAlpha >= 0.99f)
+	{
+		AnimState.m_TrackTransitionActive = false;
+		AnimState.m_OutgoingTrack.Reset();
+		AnimState.m_OldTrackExitProgress = 1.0f;
+		AnimState.m_NewTrackEnterProgress = 1.0f;
+	}
 
 	const float Radius = BaseIslandHeight * 0.5f;
 	const float CoverX = IslandX + PaddingX;
@@ -3569,15 +3767,6 @@ void CHud::RenderMediaIsland()
 	const float TitleAvailableWidth = std::max(0.0f, TitleRight - TitleX);
 	const float TitleY = IslandY + (BaseIslandHeight - TitleFontSize) * 0.5f - 0.5f;
 
-	if(AnimState.m_LastCoverRotationTick == 0)
-		AnimState.m_LastCoverRotationTick = Now;
-	if(MediaState.m_Playing)
-	{
-		const float DeltaSec = (Now - AnimState.m_LastCoverRotationTick) / (float)time_freq();
-		AnimState.m_CoverRotation = std::fmod(AnimState.m_CoverRotation + DeltaSec * CoverRotationSpeed, Tau);
-	}
-	AnimState.m_LastCoverRotationTick = Now;
-
 	const unsigned int PrevFlags = TextRender()->GetRenderFlags();
 	const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
 	const ColorRGBA PrevOutlineColor = TextRender()->GetTextOutlineColor();
@@ -3596,15 +3785,19 @@ void CHud::RenderMediaIsland()
 		m_RecordingStatusAnimState.m_TargetWidth = TargetStatusWidth;
 		m_RecordingStatusAnimState.m_TargetAlpha = TargetStatusAlpha;
 		m_RecordingStatusAnimState.m_TargetTextAlpha = TargetTextAlpha;
-		AnimRuntime.SetValue(StatusBoxNode, EUiAnimProperty::WIDTH, TargetStatusWidth);
-		AnimRuntime.SetValue(StatusBoxNode, EUiAnimProperty::ALPHA, TargetStatusAlpha);
-		AnimRuntime.SetValue(StatusTextNode, EUiAnimProperty::ALPHA, TargetTextAlpha);
+		SetUiPresentationStateValue(AnimRuntime, StatusBoxNode, EUiAnimProperty::WIDTH, TargetStatusWidth);
+		SetUiPresentationStateValue(AnimRuntime, StatusBoxNode, EUiAnimProperty::ALPHA, TargetStatusAlpha);
+		SetUiPresentationStateValue(AnimRuntime, StatusTextNode, EUiAnimProperty::ALPHA, TargetTextAlpha);
 		m_RecordingStatusAnimState.m_Initialized = true;
 	}
 
-	const float StatusWidth = ResolveAnimatedLayoutValueEx(AnimRuntime, StatusBoxNode, EUiAnimProperty::WIDTH, TargetStatusWidth, m_RecordingStatusAnimState.m_TargetWidth, 0.16f, 0.0f, EEasing::EASE_OUT);
-	const float StatusAlpha = std::clamp(ResolveAnimatedLayoutValueEx(AnimRuntime, StatusBoxNode, EUiAnimProperty::ALPHA, TargetStatusAlpha, m_RecordingStatusAnimState.m_TargetAlpha, 0.10f, 0.0f, EEasing::EASE_OUT), 0.0f, 1.0f);
-	const float StatusTextAlpha = std::clamp(ResolveAnimatedLayoutValueEx(AnimRuntime, StatusTextNode, EUiAnimProperty::ALPHA, TargetTextAlpha, m_RecordingStatusAnimState.m_TargetTextAlpha, 0.08f, 0.0f, EEasing::EASE_OUT), 0.0f, 1.0f);
+	m_RecordingStatusAnimState.m_TargetWidth = TargetStatusWidth;
+	m_RecordingStatusAnimState.m_TargetAlpha = TargetStatusAlpha;
+	m_RecordingStatusAnimState.m_TargetTextAlpha = TargetTextAlpha;
+	const SUiSpringConfig StatusSpring = TargetStatusAlpha > 0.0f ? ContentSpring : ContentExitSpring;
+	const float StatusWidth = ResolveUiPresentationStateValue(AnimRuntime, StatusBoxNode, EUiAnimProperty::WIDTH, m_RecordingStatusAnimState.m_TargetWidth, StatusSpring, 2, 0.01f);
+	const float StatusAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, StatusBoxNode, EUiAnimProperty::ALPHA, m_RecordingStatusAnimState.m_TargetAlpha, StatusSpring, 2, 0.004f), 0.0f, 1.0f);
+	const float StatusTextAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, StatusTextNode, EUiAnimProperty::ALPHA, m_RecordingStatusAnimState.m_TargetTextAlpha, StatusSpring, 2, 0.004f), 0.0f, 1.0f);
 	const bool RenderStatusSection = StatusWidth > 1.0f && StatusAlpha > 0.01f;
 	const float UnifiedRight = TimerCapsule.m_Visible ?
 					   (TimerBoxRight + (RenderStatusSection ? (TimerToStatusGap + StatusWidth) : 0.0f)) :
@@ -3626,19 +3819,80 @@ void CHud::RenderMediaIsland()
 
 	DrawSmoothRoundedRect(Graphics(), IslandX, IslandY, UnifiedWidth, AnimatedIslandHeight, Radius, IslandBackgroundColor, HudEditorScope.m_Corners);
 
-	if(ShowCover && !MediaState.m_AlbumArt.IsValid())
-	{
-		DrawSmoothCircle(Graphics(), CoverCenter, CoverRadius, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f));
-		const float PlaceholderFontSize = MetaFontSize;
+	const auto BuildTrackMetaText = [](const SHudMediaIslandTrackSnapshot &Track, char *pBuf, size_t BufSize) {
+		pBuf[0] = '\0';
+		if(Track.m_aArtist[0] != '\0' && Track.m_aAlbum[0] != '\0')
+			str_format(pBuf, BufSize, "%s - %s", Track.m_aArtist, Track.m_aAlbum);
+		else if(Track.m_aArtist[0] != '\0')
+			str_copy(pBuf, Track.m_aArtist, BufSize);
+		else if(Track.m_aAlbum[0] != '\0')
+			str_copy(pBuf, Track.m_aAlbum, BufSize);
+		return pBuf[0] != '\0';
+	};
+	const auto TrackDisplayTitle = [](const SHudMediaIslandTrackSnapshot &Track) {
+		if(Track.m_aTitle[0] != '\0')
+			return Track.m_aTitle;
+		if(Track.m_aArtist[0] != '\0')
+			return Track.m_aArtist;
+		if(Track.m_aAlbum[0] != '\0')
+			return Track.m_aAlbum;
+		return "";
+	};
+	char aCurrentTrackMeta[256];
+	char aOutgoingTrackMeta[256];
+	const bool HasCurrentTrackMeta = BuildTrackMetaText(AnimState.m_CurrentTrack, aCurrentTrackMeta, sizeof(aCurrentTrackMeta));
+	const bool HasOutgoingTrackMeta = BuildTrackMetaText(AnimState.m_OutgoingTrack, aOutgoingTrackMeta, sizeof(aOutgoingTrackMeta));
+	const auto RenderTrackCover = [&](const SHudMediaIslandTrackSnapshot &Track, float Alpha, float Scale) {
+		if(!ShowCover || Alpha <= 0.001f)
+			return;
+
+		const float CoverDrawRadius = CoverRadius * std::max(0.01f, Scale);
+		if(Track.m_HasCover && Track.m_Cover.IsValid())
+		{
+			DrawTexturedCircle(Graphics(), Track.m_Cover, CoverCenter, CoverDrawRadius, 0.0f, Alpha);
+			return;
+		}
+
+		DrawSmoothCircle(Graphics(), CoverCenter, CoverDrawRadius, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f * Alpha));
+		const float PlaceholderFontSize = MetaFontSize * Scale;
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.35f);
-		TextRender()->Text(CoverX + (CoverSize - PlaceholderWidth) * 0.5f, CoverY + (CoverSize - PlaceholderFontSize) * 0.5f - 0.5f, PlaceholderFontSize, FontIcons::FONT_ICON_MUSIC, -1.0f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.35f * Alpha);
+		TextRender()->Text(CoverCenter.x - PlaceholderWidth * Scale * 0.5f, CoverCenter.y - PlaceholderFontSize * 0.5f - 0.5f, PlaceholderFontSize, FontIcons::FONT_ICON_MUSIC, -1.0f);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-	}
-	else if(ShowCover)
-	{
-		DrawTexturedCircle(Graphics(), MediaState.m_AlbumArt, CoverCenter, CoverRadius, AnimState.m_CoverRotation);
-	}
+	};
+	const auto RenderTrackText = [&](const SHudMediaIslandTrackSnapshot &Track, const char *pMeta, bool HasMeta, float TitleLayerAlpha, float MetaLayerAlpha, float TitleLayerOffset, float MetaLayerOffset) {
+		if(!ShowCover || TitleAlpha <= 0.001f || TitleAvailableWidth <= 2.0f)
+			return;
+
+		const char *pTitle = TrackDisplayTitle(Track);
+		const float EffectiveTitleAlpha = TitleAlpha * TitleLayerAlpha;
+		const float EffectiveMetaAlpha = TitleAlpha * MetaLayerAlpha;
+		const bool RenderMeta = HasMeta && EffectiveMetaAlpha > 0.001f && TitleAvailableWidth > 12.0f;
+		const float TitleDrawY = RenderMeta ? (IslandY + 2.0f) : TitleY;
+		if(pTitle[0] != '\0' && EffectiveTitleAlpha > 0.001f)
+		{
+			CTextCursor Cursor;
+			Cursor.m_FontSize = TitleFontSize;
+			Cursor.m_LineWidth = TitleAvailableWidth;
+			Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
+			Cursor.SetPosition(vec2(TitleX + TitleLayerOffset, TitleDrawY));
+			TextRender()->TextColor(0.97f, 0.98f, 1.0f, 0.94f * EffectiveTitleAlpha);
+			TextRender()->TextEx(&Cursor, pTitle);
+		}
+		if(RenderMeta)
+		{
+			CTextCursor Cursor;
+			Cursor.m_FontSize = MetaFontSize;
+			Cursor.m_LineWidth = TitleAvailableWidth;
+			Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
+			Cursor.SetPosition(vec2(TitleX + MetaLayerOffset, IslandY + 8.3f));
+			TextRender()->TextColor(0.85f, 0.88f, 0.94f, 0.68f * EffectiveMetaAlpha);
+			TextRender()->TextEx(&Cursor, pMeta);
+		}
+	};
+
+	RenderTrackCover(AnimState.m_OutgoingTrack, CoverOutAlpha, CoverOutScale);
+	RenderTrackCover(AnimState.m_CurrentTrack, CoverInAlpha, CoverInScale);
 
 	if(ShowTeam)
 	{
@@ -3660,16 +3914,8 @@ void CHud::RenderMediaIsland()
 		TextRender()->Text(SpectatorX + SpectatorIconWidth + SpectatorGap, TimeY, MetaFontSize, aSpectatorBuf, -1.0f);
 	}
 
-	if(ShowCover && TitleAlpha > 0.001f && TitleAvailableWidth > 2.0f)
-	{
-		CTextCursor Cursor;
-		Cursor.m_FontSize = TitleFontSize;
-		Cursor.m_LineWidth = TitleAvailableWidth;
-		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
-		Cursor.SetPosition(vec2(TitleX, TitleY));
-		TextRender()->TextColor(0.97f, 0.98f, 1.0f, 0.94f * TitleAlpha);
-		TextRender()->TextEx(&Cursor, pDisplayTitle);
-	}
+	RenderTrackText(AnimState.m_OutgoingTrack, aOutgoingTrackMeta, HasOutgoingTrackMeta, TrackTitleOutAlpha, TrackMetaOutAlpha * 0.88f, TrackTitleOutOffset, TrackMetaOutOffset);
+	RenderTrackText(AnimState.m_CurrentTrack, aCurrentTrackMeta, HasCurrentTrackMeta, TrackTitleInAlpha, TrackMetaInAlpha, TrackTitleInOffset, TrackMetaInOffset);
 
 	if(ShowLocalTime)
 	{
@@ -3936,30 +4182,13 @@ void CHud::RenderPlayerState(const int ClientId)
 	float y = (5 + 12 + (GameClient()->m_GameInfo.m_HudHealthArmor && g_Config.m_ClShowhudHealthAmmo ? 24 : 0) +
 		   (GameClient()->m_GameInfo.m_HudAmmo && g_Config.m_ClShowhudHealthAmmo ? 12 : 0));
 
-	float WeaponSwitchProgress = 1.0f;
-	bool WeaponSwitchAnimating = false;
-	if(ClientId >= 0 && ClientId < MAX_CLIENTS)
-	{
-		if(m_aHudWeaponSwitchLastWeapons[ClientId] != pPlayer->m_Weapon)
-		{
-			m_aHudWeaponSwitchPrevWeapons[ClientId] = m_aHudWeaponSwitchLastWeapons[ClientId];
-			if(m_aHudWeaponSwitchLastWeapons[ClientId] != -1)
-				m_aHudWeaponSwitchStartTimes[ClientId] = Client()->LocalTime();
-			m_aHudWeaponSwitchLastWeapons[ClientId] = pPlayer->m_Weapon;
-		}
-
-		const float TimeSinceSwitch = (float)(Client()->LocalTime() - m_aHudWeaponSwitchStartTimes[ClientId]);
-		if(TimeSinceSwitch >= 0.0f && TimeSinceSwitch < HUD_CURRENT_WEAPON_SWITCH_DURATION)
-		{
-			WeaponSwitchProgress = TimeSinceSwitch / HUD_CURRENT_WEAPON_SWITCH_DURATION;
-			WeaponSwitchAnimating = true;
-		}
-	}
-
 	// render weapons
 	{
 		constexpr float aWeaponWidth[NUM_WEAPONS] = {16, 12, 12, 12, 12, 12};
 		constexpr float aWeaponInitialOffset[NUM_WEAPONS] = {-3, -4, -1, -1, -2, -4};
+		float aWeaponTargetX[NUM_WEAPONS] = {};
+		bool aWeaponVisible[NUM_WEAPONS] = {};
+		float WeaponLayoutX = x;
 		bool InitialOffsetAdded = false;
 		for(int Weapon = 0; Weapon < NUM_WEAPONS; ++Weapon)
 		{
@@ -3967,33 +4196,90 @@ void CHud::RenderPlayerState(const int ClientId)
 				continue;
 			if(!InitialOffsetAdded)
 			{
-				x += aWeaponInitialOffset[Weapon];
+				WeaponLayoutX += aWeaponInitialOffset[Weapon];
 				InitialOffsetAdded = true;
 			}
-			const bool ActiveWeapon = pPlayer->m_Weapon == Weapon;
-			const bool PrevWeapon = WeaponSwitchAnimating && m_aHudWeaponSwitchPrevWeapons[ClientId] == Weapon;
-			float WeaponAlpha = ActiveWeapon ? 1.0f : 0.4f;
-			float WeaponScale = ActiveWeapon ? HUD_CURRENT_WEAPON_SCALE : 1.0f;
-			if(WeaponSwitchAnimating)
-			{
-				const float Ease = HudWeaponSwitchEase(WeaponSwitchProgress);
-				if(ActiveWeapon)
-					WeaponScale = HudActiveWeaponSwitchScale(WeaponSwitchProgress);
-				else if(PrevWeapon)
-				{
-					WeaponScale = mix(HUD_CURRENT_WEAPON_SCALE, 1.0f, Ease);
-					WeaponAlpha = mix(1.0f, 0.4f, Ease);
-				}
-			}
-			if(WeaponAlpha != 1.0f)
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, WeaponAlpha);
-			Graphics()->QuadsSetRotation(pi * 7 / 4);
-			Graphics()->TextureSet(GameClient()->m_GameSkin.m_aSpritePickupWeapons[Weapon]);
-			Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_aWeaponOffset[Weapon], x, y, WeaponScale, WeaponScale);
-			Graphics()->QuadsSetRotation(0);
-			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-			x += aWeaponWidth[Weapon];
+			aWeaponVisible[Weapon] = true;
+			aWeaponTargetX[Weapon] = WeaponLayoutX;
+			WeaponLayoutX += aWeaponWidth[Weapon];
 		}
+
+		const float WeaponLayoutEndX = WeaponLayoutX;
+		SUiSpringConfig WeaponSpring;
+		WeaponSpring.m_Stiffness = 420.0f;
+		WeaponSpring.m_Damping = 40.0f;
+		WeaponSpring.m_RestEpsilon = 0.008f;
+		WeaponSpring.m_RestVelocity = 0.05f;
+
+		if(ClientId >= 0 && ClientId < MAX_CLIENTS)
+		{
+			CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
+			SHudWeaponPresentationState &Presentation = m_WeaponPresentationState;
+			if(!Presentation.m_aClientInitialized[ClientId])
+			{
+				for(int Weapon = 0; Weapon < NUM_WEAPONS; ++Weapon)
+				{
+					const bool ActiveWeapon = pPlayer->m_Weapon == Weapon;
+					const float TargetX = aWeaponVisible[Weapon] ? aWeaponTargetX[Weapon] : WeaponLayoutEndX;
+					const float TargetAlpha = aWeaponVisible[Weapon] ? (ActiveWeapon ? 1.0f : 0.4f) : 0.0f;
+					const float TargetScale = aWeaponVisible[Weapon] ? (ActiveWeapon ? HUD_CURRENT_WEAPON_SCALE : 1.0f) : 0.92f;
+					const uint64_t WeaponNode = HudWeaponPresentationNodeKey(ClientId, Weapon);
+					Presentation.m_aaTargetX[ClientId][Weapon] = TargetX;
+					Presentation.m_aaTargetY[ClientId][Weapon] = y;
+					Presentation.m_aaTargetAlpha[ClientId][Weapon] = TargetAlpha;
+					Presentation.m_aaTargetScale[ClientId][Weapon] = TargetScale;
+					SetUiPresentationStateValue(AnimRuntime, WeaponNode, EUiAnimProperty::POS_X, TargetX);
+					SetUiPresentationStateValue(AnimRuntime, WeaponNode, EUiAnimProperty::POS_Y, y);
+					SetUiPresentationStateValue(AnimRuntime, WeaponNode, EUiAnimProperty::ALPHA, TargetAlpha);
+					SetUiPresentationStateValue(AnimRuntime, WeaponNode, EUiAnimProperty::SCALE, TargetScale);
+				}
+				Presentation.m_aClientInitialized[ClientId] = true;
+			}
+
+			for(int Weapon = 0; Weapon < NUM_WEAPONS; ++Weapon)
+			{
+				const bool ActiveWeapon = pPlayer->m_Weapon == Weapon;
+				const float TargetX = aWeaponVisible[Weapon] ? aWeaponTargetX[Weapon] : Presentation.m_aaTargetX[ClientId][Weapon];
+				const float TargetAlpha = aWeaponVisible[Weapon] ? (ActiveWeapon ? 1.0f : 0.4f) : 0.0f;
+				const float TargetScale = aWeaponVisible[Weapon] ? (ActiveWeapon ? HUD_CURRENT_WEAPON_SCALE : 1.0f) : 0.92f;
+				const uint64_t WeaponNode = HudWeaponPresentationNodeKey(ClientId, Weapon);
+				Presentation.m_aaTargetX[ClientId][Weapon] = TargetX;
+				Presentation.m_aaTargetY[ClientId][Weapon] = y;
+				Presentation.m_aaTargetAlpha[ClientId][Weapon] = TargetAlpha;
+				Presentation.m_aaTargetScale[ClientId][Weapon] = TargetScale;
+				const float WeaponX = ResolveUiPresentationStateValue(AnimRuntime, WeaponNode, EUiAnimProperty::POS_X, Presentation.m_aaTargetX[ClientId][Weapon], WeaponSpring, 2, 0.01f);
+				const float WeaponY = ResolveUiPresentationStateValue(AnimRuntime, WeaponNode, EUiAnimProperty::POS_Y, Presentation.m_aaTargetY[ClientId][Weapon], WeaponSpring, 2, 0.01f);
+				const float WeaponAlpha = std::clamp(ResolveUiPresentationStateValue(AnimRuntime, WeaponNode, EUiAnimProperty::ALPHA, Presentation.m_aaTargetAlpha[ClientId][Weapon], WeaponSpring, 2, 0.004f), 0.0f, 1.0f);
+				const float WeaponScale = std::max(0.01f, ResolveUiPresentationStateValue(AnimRuntime, WeaponNode, EUiAnimProperty::SCALE, Presentation.m_aaTargetScale[ClientId][Weapon], WeaponSpring, 2, 0.004f));
+				if(!aWeaponVisible[Weapon] && WeaponAlpha <= 0.01f && !AnimRuntime.HasActiveAnimation(WeaponNode, EUiAnimProperty::ALPHA))
+					continue;
+
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, WeaponAlpha);
+				Graphics()->QuadsSetRotation(pi * 7 / 4);
+				Graphics()->TextureSet(GameClient()->m_GameSkin.m_aSpritePickupWeapons[Weapon]);
+				Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_aWeaponOffset[Weapon], WeaponX, WeaponY, WeaponScale, WeaponScale);
+				Graphics()->QuadsSetRotation(0);
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+		}
+		else
+		{
+			for(int Weapon = 0; Weapon < NUM_WEAPONS; ++Weapon)
+			{
+				if(!aWeaponVisible[Weapon])
+					continue;
+				const bool ActiveWeapon = pPlayer->m_Weapon == Weapon;
+				const float WeaponScale = ActiveWeapon ? HUD_CURRENT_WEAPON_SCALE : 1.0f;
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, ActiveWeapon ? 1.0f : 0.4f);
+				Graphics()->QuadsSetRotation(pi * 7 / 4);
+				Graphics()->TextureSet(GameClient()->m_GameSkin.m_aSpritePickupWeapons[Weapon]);
+				Graphics()->RenderQuadContainerAsSprite(m_HudQuadContainerIndex, m_aWeaponOffset[Weapon], aWeaponTargetX[Weapon], y, WeaponScale, WeaponScale);
+				Graphics()->QuadsSetRotation(0);
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+		}
+		x = WeaponLayoutEndX;
+
 		if(pCharacter->m_aWeapons[WEAPON_NINJA].m_Got)
 		{
 			const int Max = g_pData->m_Weapons.m_Ninja.m_Duration * Client()->GameTickSpeed() / 1000;
@@ -5387,9 +5673,9 @@ void CHud::RenderLocalTime(float x)
 			m_LocalTimeV2AnimState.m_TargetBoxX = BoxX;
 			m_LocalTimeV2AnimState.m_TargetBoxW = BoxW;
 			m_LocalTimeV2AnimState.m_TargetTextX = TextX;
-			pAnimRuntime->SetValue(BoxNode, EUiAnimProperty::POS_X, BoxX);
-			pAnimRuntime->SetValue(BoxNode, EUiAnimProperty::WIDTH, BoxW);
-			pAnimRuntime->SetValue(TextNode, EUiAnimProperty::POS_X, TextX);
+			SetUiPresentationStateValue(*pAnimRuntime, BoxNode, EUiAnimProperty::POS_X, BoxX);
+			SetUiPresentationStateValue(*pAnimRuntime, BoxNode, EUiAnimProperty::WIDTH, BoxW);
+			SetUiPresentationStateValue(*pAnimRuntime, TextNode, EUiAnimProperty::POS_X, TextX);
 			m_LocalTimeV2AnimState.m_Initialized = true;
 		}
 

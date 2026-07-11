@@ -953,6 +953,31 @@ const char *IStorage::FormatTmpPath(char *aBuf, unsigned BufSize, const char *pP
 	return aBuf;
 }
 
+bool IStorage::ReplaceFileSafely(IStorage *pStorage, const char *pTempFilename, const char *pRealFilename, char *pBackupFilename, unsigned BackupFilenameSize)
+{
+	if(pStorage == nullptr || pTempFilename == nullptr || pRealFilename == nullptr || pBackupFilename == nullptr || BackupFilenameSize == 0)
+		return false;
+	pBackupFilename[0] = '\0';
+
+	const bool HadPreviousFile = pStorage->FileExists(pRealFilename, IStorage::TYPE_SAVE);
+	if(HadPreviousFile)
+	{
+		str_format(pBackupFilename, BackupFilenameSize, "%s.backup", pTempFilename);
+		if(pStorage->FileExists(pBackupFilename, IStorage::TYPE_SAVE) || !pStorage->RenameFile(pRealFilename, pBackupFilename, IStorage::TYPE_SAVE))
+			return false;
+	}
+
+	if(pStorage->RenameFile(pTempFilename, pRealFilename, IStorage::TYPE_SAVE))
+	{
+		if(HadPreviousFile && !pStorage->RemoveFile(pBackupFilename, IStorage::TYPE_SAVE))
+			log_error("storage", "failed to delete replaced-file backup: %s", pBackupFilename);
+		return true;
+	}
+
+	if(HadPreviousFile)
+		pStorage->RenameFile(pBackupFilename, pRealFilename, IStorage::TYPE_SAVE);
+	return false;
+}
 IStorage *CreateStorage(IStorage::EInitializationType InitializationType, int NumArgs, const char **ppArguments)
 {
 	return CStorage::Create(InitializationType, NumArgs, ppArguments);

@@ -22,6 +22,14 @@ enum class EInputPriority
 
 namespace qm_ime_overlay
 {
+	inline constexpr int FIXED_CANDIDATE_VIEWPORT_SIZE = 7;
+
+	struct SQmImeCandidateViewport
+	{
+		int m_Start = 0;
+		int m_Count = 0;
+	};
+
 	inline int NormalizeSelectedCandidateIndex(int SelectedIndex, int CandidateCount)
 	{
 		if(CandidateCount <= 0)
@@ -29,6 +37,23 @@ namespace qm_ime_overlay
 		if(SelectedIndex < 0 || SelectedIndex >= CandidateCount)
 			return 0;
 		return SelectedIndex;
+	}
+	inline SQmImeCandidateViewport BuildCandidateViewport(int CandidateCount, int SelectedIndex, int PreviousStart)
+	{
+		SQmImeCandidateViewport Viewport;
+		if(CandidateCount <= 0)
+			return Viewport;
+
+		Viewport.m_Count = minimum(CandidateCount, FIXED_CANDIDATE_VIEWPORT_SIZE);
+		const int MaxStart = maximum(0, CandidateCount - Viewport.m_Count);
+		const int Selected = NormalizeSelectedCandidateIndex(SelectedIndex, CandidateCount);
+		int Start = std::clamp(PreviousStart, 0, MaxStart);
+		if(Selected < Start)
+			Start = Selected;
+		else if(Selected >= Start + Viewport.m_Count)
+			Start = Selected - Viewport.m_Count + 1;
+		Viewport.m_Start = std::clamp(Start, 0, MaxStart);
+		return Viewport;
 	}
 } // namespace qm_ime_overlay
 
@@ -115,7 +140,7 @@ public:
 		ms_pInput = pInput;
 		ms_pTextRender = pTextRender;
 	}
-	static void RenderLegacyCandidates();
+	static bool RenderLegacyCandidates();
 	static bool ValidateActiveInputRenderedThisFrame();
 
 	static CLineInput *GetActiveInput() { return ms_pActiveInput; }

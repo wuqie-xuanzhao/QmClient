@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == Ya existe una carpeta con este nombre
 
+a player
+== Pending spanish translation c3d8956106
+
 A screenshot with this name already exists
 == Ya existe una captura de pantalla con este nombre
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == Limpiar todos los mapas favoritos
 
+Clear all history
+== Pending spanish translation bdcfac4a8a
+
 Clear Changes
 == Limpiar Cambios
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == Vaciar la cola actual
+
+Clear finished
+== Pending spanish translation 7159ee631e
 
 Clear friend note
 == Borrar nota de amigo
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == Confirma que ambos están en el mismo servidor, misma sala y son compatibles con voz
 
+Confirm clear all
+== Pending spanish translation 0a5de8e54c
+
+Confirm clear finished
+== Pending spanish translation 52c3ff73e3
+
 Connect address error
 == Error de dirección de conexión
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == ¿Continuar de todas formas?
-
-Continue whispering to the last whisper target
-== Seguir susurrando al último destinatario
 
 Contributors
 == Contribuidores
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == Nombre de Meta:
 
+Finished
+== Pending spanish translation 3af7bf0000
+
 Finished maps
 == Mapas completados
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == Invitar a una persona a un equipo bloqueado
 
-Invite a player to the locked team
-== Invitar a un jugador al equipo bloqueado
-
 Invites are disabled
 == Las invitaciones están desactivadas
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == Tamaño del láser
+
+Last entered
+== Pending spanish translation c6ac11c373
 
 Last page in console
 == Última página en la consola
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == Borde de peligro del mapa
+
+Map play history
+== Pending spanish translation cdc72e14d2
 
 Map Preview TODO
 == Vista previa del mapa pendiente
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == No requiere inicio de sesión
+
+No map play history yet
+== Pending spanish translation 8471afc5a7
 
 No matching assets.
 == No hay activos coincidentes.
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == Los quads se usan para decoración de fondo
 
-Query information for map %s
-== Consultar información del mapa %s
+Query current map info
+== Pending spanish translation f89c7c6b2e
 
-Query information for the current map
-== Consultar información del mapa actual
+Query map info for %s
+== Pending spanish translation fc51e7284e
 
 Query points for %s
 == Consultar puntos de %s
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == Consultar rango del equipo de %s
-
-Query your own points
-== Consultar tus puntos
-
-Query your own rank
-== Consultar tu rango
-
-Query your own team rank
-== Consultar el rango de tu equipo
 
 Queue is empty
 == La cola está vacía
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == Recibiendo
+
+Recent
+== Pending spanish translation bdd06c8e6d
 
 Reconnect in %d sec
 == Reconectar en %d seg
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == Eliminar de favoritos
 
+Remove from history
+== Pending spanish translation 09730fde3b
+
 Remove from queue
 == Eliminar de la cola
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == Responder
 
+Reply to the last whisper target
+== Pending spanish translation e39587e293
+
 Reply to the last whisper target: %s
 == Responder al último destinatario del susurro: %s
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Rescate/Congelación: %d/%d
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== Rescate: el modo automático teletransporta fuera del freeze; el modo manual guarda un punto de rescate al aterrizar y teletransporta allí durante el freeze
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending spanish translation ee8d0fb365
 
 Resend Loss
 == Pérdida por reenvío
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == Enviar un mensaje de alerta del servidor a todos los jugadores
 
-Send a whisper: /w player message
-== Enviar susurro: /w jugador mensaje
-
 Send emoticon in water
 == Enviar emoticono en el agua
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Mostrar colores en la selección de espectador
 
-Show command help
-== Mostrar ayuda de comandos
-
 Show compact vote HUD
 == Mostrar HUD de votación compacto
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == Mostrar salud, escudos y munición
-
-Show help for /%s
-== Mostrar ayuda de /%s
 
 Show hitbox mode
 == Mostrar modo de hitbox
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == Mostrar ayuda y mensajes de uso del servidor
 
+Show server settings
+== Pending spanish translation 18ba2beda3
+
 Show skin date and author
 == Mostrar fecha y autor del skin
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == Mostrar las reglas del servidor
-
-Show the server settings list
-== Mostrar la lista de ajustes del servidor
 
 Show tiles layers from BG map
 == Mostrar capas de mosaicos del mapa de fondo
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == Problema de audio no clasificado
 
+Unfinished
+== Pending spanish translation 29ca9ecbcf
+
 Unfinished map
 == Mapa sin completar
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Mapas no terminados
+
+Unfinished maps are shown first
+== Pending spanish translation 7c8f88b5d4
 
 Unflip:
 == Desvoltear:
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == Subiendo datos del mapa a la GPU
+
+Usage
+== Pending spanish translation a3777f97ff
 
 Usage: %s %s
 == Uso: %s %s
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == Susurrar a %s: %s
 
+Whisper: /w player message
+== Pending spanish translation 1d7ac9b1ca
+
 Who stuffed OBS in here
 == Quién metió OBS aquí
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Tu código de timeout ha sido configurado. Los clientes 0.7 no pueden recuperar sus tees al hacer timeout; sin embargo, un cliente 0.6 puede reclamar tu tee
+
+yourself
+== Pending spanish translation ac923c58b4
 
 z = Zoom
 == Pending spanish translation 032df950bf
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == Endpoint de Tencent Cloud de traducción
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending spanish translation 7b1ae0d7bf
+
 自动保存聊天记录
 == Guardar automáticamente el historial del chat
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Inactive lyrics line minimum opacity percent
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending spanish translation 553e5678ec
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Lista de nombres alternativos del menú de empanadas (separados por |, ej: Xuanmeng1|Xuanmeng2)

@@ -268,6 +268,9 @@ A demo with this name already exists
 A folder with this name already exists
 == Bu isimde bir klasör zaten mevcut
 
+a player
+== Pending turkish translation 57a1b955b5
+
 A screenshot with this name already exists
 == Bu isimde bir ekran görüntüsü zaten mevcut
 
@@ -1339,6 +1342,9 @@ Clear
 Clear all favorite maps
 == Tüm favori haritaları temizle
 
+Clear all history
+== Pending turkish translation 5482f049d9
+
 Clear Changes
 == Değişiklikleri Temizle
 
@@ -1350,6 +1356,9 @@ Clear current cut (right click to clear all cuts)
 
 Clear current queue
 == Geçerli kuyruğu temizle
+
+Clear finished
+== Pending turkish translation 0a7d16314b
 
 Clear friend note
 == Arkadaş notunu temizle
@@ -1516,6 +1525,12 @@ Configure qm_report_app_id and qm_report_secret first
 Confirm both are on same server, same room, and support voice
 == Her ikisinin de aynı sunucuda, aynı odada olduğunu ve sesi desteklediğini onaylayın
 
+Confirm clear all
+== Pending turkish translation c1e539e956
+
+Confirm clear finished
+== Pending turkish translation bc91108a68
+
 Connect address error
 == Bağlantı adresi hatası
 
@@ -1584,9 +1599,6 @@ Console color
 
 Continue anyway?
 == Yine de devam edilsin mi?
-
-Continue whispering to the last whisper target
-== Son fısıltı hedefiyle fısıltıya devam et
 
 Contributors
 == Katkıda Bulunanlar
@@ -2773,6 +2785,9 @@ Finish Name
 Finish Name:
 == Bitiş İsmi:
 
+Finished
+== Pending turkish translation 981acac68c
+
 Finished maps
 == Bitirilen haritalar
 
@@ -3508,9 +3523,6 @@ Invite %s to the locked team
 Invite a person to a locked team
 == Bir kişiyi kilitli bir takıma davet et
 
-Invite a player to the locked team
-== Bir oyuncuyu kilitli takıma davet et
-
 Invites are disabled
 == Davetiyeler devre dışı
 
@@ -3681,6 +3693,9 @@ Laser settings
 
 Laser size
 == Lazer boyutu
+
+Last entered
+== Pending turkish translation b5417c81fa
 
 Last page in console
 == Konsolda son sayfa
@@ -4062,6 +4077,9 @@ Map browser opacity
 
 Map danger border
 == Harita tehlike sınırı
+
+Map play history
+== Pending turkish translation cbc7af9fdc
 
 Map Preview TODO
 == Harita önizlemesi yapılacak
@@ -4512,6 +4530,9 @@ No local servers found (ports %d-%d)
 
 No login required
 == Giriş gerekmez
+
+No map play history yet
+== Pending turkish translation 7685ab632f
 
 No matching assets.
 == Eşleşen varlık yok.
@@ -5407,11 +5428,11 @@ QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
 == Dörtgenler arka plan dekorasyonu için kullanılır
 
-Query information for map %s
-== %s haritası bilgisini sorgula
+Query current map info
+== Pending turkish translation b81d9d8574
 
-Query information for the current map
-== Geçerli harita bilgisini sorgula
+Query map info for %s
+== Pending turkish translation db1c1eae62
 
 Query points for %s
 == %s oyuncusunun puanını sorgula
@@ -5424,15 +5445,6 @@ Query server setting: %s
 
 Query team rank for %s
 == %s oyuncusunun takım sıralamasını sorgula
-
-Query your own points
-== Kendi puanını sorgula
-
-Query your own rank
-== Kendi sıralamanı sorgula
-
-Query your own team rank
-== Kendi takım sıralamanı sorgula
 
 Queue is empty
 == Sıra boş
@@ -5523,6 +5535,9 @@ Receive rate
 
 Receiving
 == Alınıyor
+
+Recent
+== Pending turkish translation 2efda359ef
 
 Reconnect in %d sec
 == %d sn sonra yeniden bağlan
@@ -5671,6 +5686,9 @@ Remove friend
 Remove from favorites
 == Favorilerden kaldır
 
+Remove from history
+== Pending turkish translation 6904c3c9ae
+
 Remove from queue
 == Sıradan kaldır
 
@@ -5812,6 +5830,9 @@ Replay feature is disabled!
 Reply
 == Yanıtla
 
+Reply to the last whisper target
+== Pending turkish translation 32c01fa7a8
+
 Reply to the last whisper target: %s
 == Son fısıltı hedefine yanıt ver: %s
 
@@ -5863,8 +5884,8 @@ Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
 == Kurtarma/Donma: %d/%d
 
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports there while frozen
-== Kurtarma: otomatik mod freeze içinden ışınlar; manuel mod inişte bir kurtarma noktası kaydeder ve freeze sırasında oraya ışınlar
+Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
+== Pending turkish translation f9380bf7ce
 
 Resend Loss
 == Yeniden gönderim kaybı
@@ -6247,9 +6268,6 @@ Send a moderator alert message to player
 Send a server alert message to all players
 == Tüm oyunculara bir sunucu uyarı mesajı gönder
 
-Send a whisper: /w player message
-== Fısıltı gönder: /w oyuncu mesaj
-
 Send emoticon in water
 == Suda ifade gönder
 
@@ -6496,9 +6514,6 @@ Show collision and weapon interaction
 Show colors in spectator selection
 == Seyirci seçiminde renkleri göster
 
-Show command help
-== Komut yardımını göster
-
 Show compact vote HUD
 == Kompakt oylama HUD'sunu göster
 
@@ -6573,9 +6588,6 @@ Show hammer status
 
 Show health, shields and ammo
 == Can, kalkan ve mermiyi göster
-
-Show help for /%s
-== /%s için yardımı göster
 
 Show hitbox mode
 == Hitbox modunu göster
@@ -6733,6 +6745,9 @@ Show seconds on clock
 Show server help and usage messages
 == Sunucu yardım ve kullanım mesajlarını göster
 
+Show server settings
+== Pending turkish translation bd69b0d486
+
 Show skin date and author
 == Skin tarihini ve yazarını göster
 
@@ -6783,9 +6798,6 @@ Show the screen center line
 
 Show the server rules
 == Sunucu kurallarını göster
-
-Show the server settings list
-== Sunucu ayarları listesini göster
 
 Show tiles layers from BG map
 == BG haritasından döşeme katmanlarını göster
@@ -8032,6 +8044,9 @@ Uncertainty duration
 Unclassified audio issue
 == Sınıflandırılmamış ses sorunu
 
+Unfinished
+== Pending turkish translation 27f54e0e49
+
 Unfinished map
 == Tamamlanmamış harita
 
@@ -8049,6 +8064,9 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Bitmemiş haritalar
+
+Unfinished maps are shown first
+== Pending turkish translation d1bacd281d
 
 Unflip:
 == Çevirmeyi Geri Al:
@@ -8145,6 +8163,9 @@ Update Rate
 
 Uploading map data to GPU
 == Harita verileri GPU'ya yükleniyor
+
+Usage
+== Pending turkish translation dd59228af2
 
 Usage: %s %s
 == Kullanım: %s %s
@@ -8506,6 +8527,9 @@ Whisper to %s
 Whisper to %s: %s
 == %s kişisine fısılda: %s
 
+Whisper: /w player message
+== Pending turkish translation 1322adad97
+
 Who stuffed OBS in here
 == Buraya OBS'yi kim sıkıştırdı
 
@@ -8844,6 +8868,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Zaman aşımı kodunuz ayarlandı. 0.7 istemcileri zaman aşımında teelerini geri alamaz; ancak bir 0.6 istemcisi teenizi alabilir
+
+yourself
+== Pending turkish translation 5be7ae5c4c
 
 z = Zoom
 == z = Yakınlaştırma
@@ -9862,6 +9889,9 @@ Zoom out
 腾讯云翻译端点
 == Tencent Cloud Çeviri Uç Noktası
 
+自动保存历史数量（0=禁用自动过图历史记录）
+== Pending turkish translation d0df9a2335
+
 自动保存聊天记录
 == Sohbet Geçmişini Otomatik Kaydet
 
@@ -10161,6 +10191,9 @@ Zoom out
 
 非活动行最小不透明度 %
 == Inactive lyrics line minimum opacity percent
+
+额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画
+== Pending turkish translation 84043682f4
 
 饼菜单改名名单（使用|分隔，如：璇梦1|璇梦2）
 == Pasta menüsü yeniden adlandırma listesi (| ile ayırın, örn: Xuanmeng1|Xuanmeng2)

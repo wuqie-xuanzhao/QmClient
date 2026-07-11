@@ -183,3 +183,30 @@ TEST(QmTeeHueCycle, AppliesToCustomSevenBodyAndFeetOnly)
 	ExpectHueNear(Info.m_aSixup[0].m_aColors[protocol7::SKINPART_FEET], 0.50f);
 	ExpectColorNear(Info.m_aSixup[0].m_aColors[protocol7::SKINPART_HANDS], OriginalHands);
 }
+
+TEST(QmTeeHueCycle, LocalEligibilityKeepsMainTeamplaySemanticsAndGatesDummySeparately)
+{
+	SQmLocalTeeHueCycleEligibility Main;
+	Main.m_IsLocal = true;
+	Main.m_UseCustomColors = true;
+	EXPECT_TRUE(QmShouldApplyLocalTeeHueCycle(Main));
+
+	SQmLocalTeeHueCycleEligibility MainSeven = Main;
+	MainSeven.m_UseCustomColors = false;
+	MainSeven.m_UseCustomColors7 = true;
+	EXPECT_TRUE(QmShouldApplyLocalTeeHueCycle(MainSeven));
+
+	SQmLocalTeeHueCycleEligibility Dummy = Main;
+	Dummy.m_IsDummy = true;
+	EXPECT_FALSE(QmShouldApplyLocalTeeHueCycle(Dummy));
+	Dummy.m_DummyEnabled = true;
+	EXPECT_TRUE(QmShouldApplyLocalTeeHueCycle(Dummy));
+
+	Dummy.m_UseCustomColors = false;
+	Dummy.m_UseCustomColors7 = false;
+	EXPECT_FALSE(QmShouldApplyLocalTeeHueCycle(Dummy));
+
+	Dummy.m_IsLocal = false;
+	Dummy.m_UseCustomColors = true;
+	EXPECT_FALSE(QmShouldApplyLocalTeeHueCycle(Dummy));
+}

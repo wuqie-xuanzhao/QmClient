@@ -7371,7 +7371,6 @@ void CMenus::CPopupMapPickerContext::MapListPopulate()
 	};
 
 	ListRoot(m_aRootPath[0] != '\0' ? m_aRootPath : "maps", m_aValuePrefix);
-	ListRoot(m_aFallbackRootPath, m_aFallbackValuePrefix);
 	m_aListingValuePrefix[0] = '\0';
 	std::stable_sort(m_vMaps.begin(), m_vMaps.end(), CompareFilenameAscending);
 	m_Selection = -1;

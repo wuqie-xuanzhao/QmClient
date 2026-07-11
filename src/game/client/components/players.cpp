@@ -134,6 +134,17 @@ static void BuildQmJellyExtraImpulse(const CGameClient *pGameClient, const CColl
 	}
 }
 
+static bool GetWarListTeeGlowColor(CGameClient *pGameClient, int ClientId, ColorRGBA &Color)
+{
+	if(!g_Config.m_TcWarList || ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return false;
+	if(!pGameClient->m_aClients[ClientId].m_Active || !pGameClient->m_WarList.GetAnyWar(ClientId))
+		return false;
+
+	Color = pGameClient->m_WarList.GetPriorityColor(ClientId);
+	return Color.a > 0.0f;
+}
+
 void CPlayers::RenderHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset, float Alpha)
 {
 	const vec2 HandPos = CalculateHandPosition(CenterPos, Dir, PostRotOffset);
@@ -1153,21 +1164,24 @@ void CPlayers::RenderPlayer(
 	const CTeeRenderInfo *pPreviousSkinInfo = ClientId >= 0 ? GameClient()->m_aClients[ClientId].SkinChangePreviousRenderInfo(Now) : nullptr;
 	const float SkinTransitionProgress = ClientId >= 0 ? GameClient()->m_aClients[ClientId].SkinChangeTransitionProgress(Now) : 1.0f;
 	CTeeRenderInfo PreviousSkinInfoHueCycle;
-	int LocalDummy = -1;
-	if(ClientId >= 0)
+	const int LocalDummy = LocalDummyIndexForClient(GameClient(), ClientId);
+	const bool IsDummy = LocalDummy == 1;
+	const bool LocalDummyHueAllowed = LocalDummy == 0 || g_Config.m_QmCycleTeeHueDummy != 0;
+	const bool LocalDummyCustomColorEnabled = LocalDummy != 0 ? g_Config.m_ClDummyUseCustomColor != 0 : g_Config.m_ClPlayerUseCustomColor != 0;
+	const bool UseCustomColors = LocalDummyCustomColorEnabled;
+	const bool UseCustomColors7 = IsDummy ? (g_Config.m_ClDummy7UseCustomColorBody != 0 || g_Config.m_ClDummy7UseCustomColorFeet != 0) : (g_Config.m_ClPlayer7UseCustomColorBody != 0 || g_Config.m_ClPlayer7UseCustomColorFeet != 0);
+	const SQmLocalTeeHueCycleEligibility HueEligibility{
+		LocalDummy >= 0,
+		IsDummy,
+		LocalDummyHueAllowed,
+		UseCustomColors,
+		UseCustomColors7,
+	};
+	if(QmShouldApplyLocalTeeHueCycle(HueEligibility))
 	{
-		if(ClientId == GameClient()->m_aLocalIds[0])
-			LocalDummy = 0;
-		else if(ClientId == GameClient()->m_aLocalIds[1])
-			LocalDummy = 1;
-	}
-	if(LocalDummy >= 0 && (LocalDummy == 0 || g_Config.m_QmCycleTeeHueDummy != 0))
-	{
-		const bool UseCustomColors = LocalDummy != 0 ? g_Config.m_ClDummyUseCustomColor != 0 : g_Config.m_ClPlayerUseCustomColor != 0;
-		const bool UseCustomColors7 = LocalDummy != 0 ? (g_Config.m_ClDummy7UseCustomColorBody != 0 || g_Config.m_ClDummy7UseCustomColorFeet != 0) : (g_Config.m_ClPlayer7UseCustomColorBody != 0 || g_Config.m_ClPlayer7UseCustomColorFeet != 0);
 		SQmTeeHueCycleConfig HueCycleConfig;
 		HueCycleConfig.m_Enabled = g_Config.m_QmCycleTeeHue != 0;
-		HueCycleConfig.m_PlayerUsesCustomColors = !GameClient()->IsTeamPlay() && (UseCustomColors || UseCustomColors7);
+		HueCycleConfig.m_PlayerUsesCustomColors = true;
 		HueCycleConfig.m_TClientRainbowTees = g_Config.m_TcRainbowTees != 0;
 		HueCycleConfig.m_SpeedDegreesPerSecond = g_Config.m_QmCycleTeeHueSpeed;
 		HueCycleConfig.m_TimeSeconds = Now.count() / 1000000000.0;
@@ -1179,6 +1193,26 @@ void CPlayers::RenderPlayer(
 			pPreviousSkinInfo = &PreviousSkinInfoHueCycle;
 		}
 	}
+
+	ColorRGBA WarListGlowColor;
+	if(GetWarListTeeGlowColor(GameClient(), ClientId, WarListGlowColor))
+	{
+		CTeeRenderInfo GlowRenderInfo = RenderInfo;
+		GlowRenderInfo.m_TeeRenderFlags = (GlowRenderInfo.m_TeeRenderFlags & ~TEE_PREVIEW_LAYER_ALL) | TEE_PREVIEW_LAYER_OUTLINE | TEE_CUSTOM_OUTLINE_COLOR;
+		GlowRenderInfo.m_OutlineColor = WarListGlowColor;
+
+		static constexpr float s_aGlowScales[] = {1.13f, 1.08f, 1.035f};
+		static constexpr float s_aGlowAlphas[] = {0.10f, 0.18f, 0.30f};
+		for(size_t i = 0; i < std::size(s_aGlowScales); ++i)
+		{
+			RenderTools()->RenderTee(&State, &GlowRenderInfo, Player.m_Emote, Direction, Position,
+				Alpha * s_aGlowAlphas[i] * WarListGlowColor.a,
+				JellyDeform.m_BodyScale * s_aGlowScales[i],
+				JellyDeform.m_FeetScale * s_aGlowScales[i],
+				JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle);
+		}
+	}
+
 	RenderTools()->RenderTeeWithSkinChangeTransition(&State, pPreviousSkinInfo, &RenderInfo, Player.m_Emote, Direction, Position, SkinTransitionProgress, Alpha, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle);
 
 	float TeeAnimScale, TeeBaseSize;

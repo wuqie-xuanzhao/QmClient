@@ -24906,3 +24906,35 @@ brazilian_portuguese = "Pending brazilian_portuguese translation appearance_lase
 portuguese = "Pending portuguese translation appearance_laser_destination"
 turkish = "Pending turkish translation appearance_laser_destination"
 polish = "Pending polish translation appearance_laser_destination"
+
+[[message]]
+key = "自动保存历史数量（0=禁用自动过图历史记录）"
+[message.translations]
+simplified_chinese = "自动保存历史数量（0=禁用自动过图历史记录）"
+traditional_chinese = "Pending traditional_chinese translation 2e91c64d81"
+japanese = "Pending japanese translation cca8d65fa1"
+korean = "Pending korean translation 21e440ff7e"
+russian = "Pending russian translation d6fd224c48"
+german = "Pending german translation 50c8732951"
+spanish = "Pending spanish translation 7b1ae0d7bf"
+french = "Pending french translation bc5f33560a"
+brazilian_portuguese = "Pending brazilian_portuguese translation 0c4277eee4"
+portuguese = "Pending portuguese translation 033c214882"
+turkish = "Pending turkish translation d0df9a2335"
+polish = "Pending polish translation 47b6323b70"
+
+[[message]]
+key = "额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画"
+[message.translations]
+simplified_chinese = "额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画"
+traditional_chinese = "Pending traditional_chinese translation 5dd68b40a4"
+japanese = "Pending japanese translation b48b7a4e61"
+korean = "Pending korean translation 1620279894"
+russian = "Pending russian translation 79bb73fb79"
+german = "Pending german translation 11cce61e24"
+spanish = "Pending spanish translation 553e5678ec"
+french = "Pending french translation 64679238fc"
+brazilian_portuguese = "Pending brazilian_portuguese translation 6054039a39"
+portuguese = "Pending portuguese translation 44618cce2a"
+turkish = "Pending turkish translation 84043682f4"
+polish = "Pending polish translation b3146cd4c8"

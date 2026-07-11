@@ -17,6 +17,7 @@
 
 #include <game/client/component.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/tclient/map_history.h>
 
 #include <deque>
 #include <queue>
@@ -299,6 +300,27 @@ class CTClient : public CComponent
 	void SaveMapNotes();
 	void MaybeSaveMapNotes();
 
+	// Map play history
+	QmMapHistory::CMapHistory m_MapHistory;
+	bool m_MapHistoryDirty = false;
+	bool m_MapHistorySessionActive = false;
+	int64_t m_MapHistorySessionStart = 0;
+	std::string m_MapHistoryActiveMapId;
+	std::string m_MapHistoryActiveMapName;
+	std::string m_MapHistorySuppressedMapId;
+	void LoadMapHistory();
+	void SaveMapHistory();
+	void MarkMapHistoryDirty();
+	void StartMapHistorySession();
+	void EndMapHistorySession(bool SaveNow);
+	void UpdateMapHistorySession();
+	void TouchMapHistoryPlayTime();
+	std::string CurrentMapHistoryId() const;
+	int64_t CurrentMapHistoryPlayTimeMs() const;
+	void HandleMapHistoryDeath(int ClientId);
+	void HandleMapHistoryTeamDeath(int Team);
+	void HandleMapHistoryFinish(int ClientId, int FinishTimeMs);
+
 	// 本地存档列表
 	struct SLocalSaveEntry
 	{
@@ -423,6 +445,11 @@ public:
 	void UpdateMapCategoryCache(const char *pMapName, const char *pCategoryKey);
 	const char *GetMapNote(const char *pMapName) const;
 	void SetMapNote(const char *pMapName, const char *pNote);
+	const QmMapHistory::CMapHistory &GetMapHistory() const { return m_MapHistory; }
+	std::vector<QmMapHistory::SMapHistoryRecord> GetMapHistoryRecords(QmMapHistory::EMapHistoryFilter Filter) const { return m_MapHistory.Sorted(Filter); }
+	void RemoveMapHistoryRecord(const char *pMapId);
+	void ClearFinishedMapHistory();
+	void ClearAllMapHistory();
 	bool TryRemoveLocalSaveForLoadCommand(const char *pLine);
 	bool IsGoresMapProgressEnabled() const;
 	bool ShouldHideGoresGuides(bool ManualGuideVisible = false) const;
