@@ -111,14 +111,20 @@ class CQmScrollState
 {
 public:
 	void Reset();
+	void ResetForNonScrollableContent(bool PreserveThumbDrag);
 	void SetOffset(float Offset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig(), bool AllowOverscroll = false);
 	void ScrollTo(float TargetOffset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig());
+	void RequestScrollTo(float TargetOffset);
 	void AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig());
 	void Advance(float Dt, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig(), bool PauseNativeWheelAnimation = false);
+	void BeginThumbDrag(float GrabOffset);
+	void EndThumbDrag();
 
 	float Offset() const { return m_Offset; }
 	float Velocity() const { return m_Velocity; }
 	bool Animating() const { return m_AnimTime > 0.0f; }
+	bool ThumbDragActive() const { return m_ThumbDragActive; }
+	float ThumbDragGrabOffset() const { return m_ThumbDragGrabOffset; }
 
 private:
 	float m_Offset = 0.0f;
@@ -128,6 +134,10 @@ private:
 	float m_AnimTimeMax = 0.0f;
 	float m_AnimStartOffset = 0.0f;
 	float m_AnimTargetOffset = 0.0f;
+	bool m_HasPendingScrollTarget = false;
+	float m_PendingScrollTarget = 0.0f;
+	bool m_ThumbDragActive = false;
+	float m_ThumbDragGrabOffset = 0.0f;
 };
 
 struct SQmScrollContainerFrame

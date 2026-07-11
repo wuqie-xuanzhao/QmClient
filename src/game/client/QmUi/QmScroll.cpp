@@ -188,6 +188,22 @@ void CQmScrollState::Reset()
 	m_AnimTimeMax = 0.0f;
 	m_AnimStartOffset = 0.0f;
 	m_AnimTargetOffset = 0.0f;
+	m_HasPendingScrollTarget = false;
+	m_PendingScrollTarget = 0.0f;
+	m_ThumbDragActive = false;
+	m_ThumbDragGrabOffset = 0.0f;
+}
+
+void CQmScrollState::ResetForNonScrollableContent(bool PreserveThumbDrag)
+{
+	const bool ThumbDragActive = PreserveThumbDrag && m_ThumbDragActive;
+	const float ThumbDragGrabOffset = m_ThumbDragGrabOffset;
+	Reset();
+	if(ThumbDragActive)
+	{
+		m_ThumbDragActive = true;
+		m_ThumbDragGrabOffset = ThumbDragGrabOffset;
+	}
 }
 
 void CQmScrollState::ScrollTo(float TargetOffset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config)
@@ -214,6 +230,13 @@ void CQmScrollState::ScrollTo(float TargetOffset, const SQmScrollMetrics &Metric
 	}
 	m_LastMaxOffset = MaxOffset;
 }
+
+void CQmScrollState::RequestScrollTo(float TargetOffset)
+{
+	m_HasPendingScrollTarget = true;
+	m_PendingScrollTarget = TargetOffset;
+}
+
 void CQmScrollState::SetOffset(float Offset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config, bool AllowOverscroll)
 {
 	const float MaxOffset = Metrics.MaxOffset();
@@ -276,6 +299,12 @@ void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQ
 	{
 		Reset();
 		return;
+	}
+	if(m_HasPendingScrollTarget)
+	{
+		const float PendingScrollTarget = m_PendingScrollTarget;
+		m_HasPendingScrollTarget = false;
+		ScrollTo(PendingScrollTarget, Metrics, Config);
 	}
 	if(m_LastMaxOffset > MaxOffset && m_Offset > MaxOffset)
 	{
@@ -350,6 +379,18 @@ void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQ
 		m_Offset = MaxOffset;
 		m_Velocity = 0.0f;
 	}
+}
+
+void CQmScrollState::BeginThumbDrag(float GrabOffset)
+{
+	m_ThumbDragActive = true;
+	m_ThumbDragGrabOffset = std::max(0.0f, GrabOffset);
+}
+
+void CQmScrollState::EndThumbDrag()
+{
+	m_ThumbDragActive = false;
+	m_ThumbDragGrabOffset = 0.0f;
 }
 
 void CQmScrollController::Reset()

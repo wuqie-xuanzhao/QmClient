@@ -6072,6 +6072,7 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string ScrollRegionHeader = ReadRepoFile("src/game/client/ui_scrollregion.h");
 	const std::string ScrollRegion = ReadRepoFile("src/game/client/ui_scrollregion.cpp");
 	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
 
@@ -6085,34 +6086,27 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionHelperExists)
 	EXPECT_NE(Menus.find("Frame.m_FinalOffsetY = ScrollRegion.ScrollbarShown() ? ScrollRegion.ContentScrollOffsetY() : 0.0f;"), std::string::npos);
 	EXPECT_NE(Menus.find("m_SettingsScrollActive = m_SettingsScrollActive ||"), std::string::npos);
 	EXPECT_NE(Menus.find("m_SettingsRuntimeMetadata.m_LastScrollY = Frame.m_FinalOffsetY;"), std::string::npos);
-	EXPECT_NE(ScrollRegion.find("m_ContentScrollOff.y = -m_ScrollPos;"), std::string::npos);
+	EXPECT_NE(ScrollRegionHeader.find("float ContentScrollOffsetY() const { return m_Params.m_ScrollHorizontal ? 0.0f : -m_ScrollState.Offset(); }"), std::string::npos);
 	const std::string ScrollRegionEnd = ExtractSourceFunctionBody(ScrollRegion, "void CScrollRegion::End()");
+	const std::string NoScrollBody = ExtractSourceFunctionBody(ScrollRegion, "void CScrollRegion::MaintainNoScrollSliderActive()");
+	const std::string ScrollRegionSlider = ExtractSourceFunctionBody(ScrollRegion, "void CScrollRegion::DoSlider()");
 	ASSERT_FALSE(ScrollRegionEnd.empty());
+	ASSERT_FALSE(NoScrollBody.empty());
+	ASSERT_FALSE(ScrollRegionSlider.empty());
 	EXPECT_NE(ScrollRegion.find("bool CScrollRegion::ContentOverflows() const"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("return !m_Params.m_HideScrollbar && ContentOverflows();"), std::string::npos);
 	EXPECT_NE(ScrollRegion.find("m_ContentSize 来自上一帧 End/AddRect 的测量结果"), std::string::npos);
-	EXPECT_NE(ScrollRegion.find("const float ScrollMax = MaxScroll();"), std::string::npos);
-	EXPECT_NE(ScrollRegion.find("const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;"), std::string::npos);
+	EXPECT_NE(ScrollRegionSlider.find("const float ScrollMax = Metrics.MaxOffset();"), std::string::npos);
+	EXPECT_NE(ScrollRegionSlider.find("const bool CanScroll = m_ContentSize > 0.0f && ScrollMax > 0.0f && RailSize > 0.0f;"), std::string::npos);
 	EXPECT_NE(UiHeader.find("bool IsActiveItem(const void *pId) const"), std::string::npos);
-	EXPECT_EQ(ScrollRegionEnd.find("m_ScrollPos = 0.0f;"), std::string::npos);
-	EXPECT_EQ(ScrollRegionEnd.find("m_AnimTargetScrollPos = 0.0f;"), std::string::npos);
-	const std::string ScrollRegionSlider = ExtractSourceFunctionBody(ScrollRegion, "void CScrollRegion::DoSlider()");
-	ASSERT_FALSE(ScrollRegionSlider.empty());
-	const size_t NoScrollPos = ScrollRegionSlider.find("if(!CanScroll || MaxSlider <= 0.0f)");
-	ASSERT_NE(NoScrollPos, std::string::npos);
-	const size_t SliderReturnPos = ScrollRegionSlider.find("return;", NoScrollPos);
-	ASSERT_NE(SliderReturnPos, std::string::npos);
-	const std::string NoScrollBranch = ScrollRegionSlider.substr(NoScrollPos, SliderReturnPos - NoScrollPos);
-	EXPECT_NE(NoScrollBranch.find("m_ScrollPos = 0.0f;"), std::string::npos);
-	EXPECT_NE(NoScrollBranch.find("m_AnimInitScrollPos = 0.0f;"), std::string::npos);
-	EXPECT_NE(NoScrollBranch.find("m_AnimTargetScrollPos = 0.0f;"), std::string::npos);
-	EXPECT_NE(NoScrollBranch.find("m_AnimTime = 0.0f;"), std::string::npos);
-	EXPECT_NE(NoScrollBranch.find("m_RequestScrollPos = -1.0f;"), std::string::npos);
-	EXPECT_NE(NoScrollBranch.find("Ui()->IsActiveItem(pId)"), std::string::npos);
-	EXPECT_NE(NoScrollBranch.find("ScrollRegionShouldKeepNoScrollSliderActive(WasActive, Ui()->MouseButton(0))"), std::string::npos);
-	EXPECT_NE(NoScrollBranch.find("Ui()->SetActiveItem(pId);"), std::string::npos);
-	EXPECT_NE(NoScrollBranch.find("Ui()->SetActiveItem(nullptr);"), std::string::npos);
-	EXPECT_EQ(NoScrollBranch.find("Ui()->CheckActiveItem(pId)"), std::string::npos);
+	EXPECT_NE(ScrollRegionEnd.find("MaintainNoScrollSliderActive();"), std::string::npos);
+	EXPECT_NE(NoScrollBody.find("m_ScrollState.ResetForNonScrollableContent(Active);"), std::string::npos);
+	EXPECT_EQ(NoScrollBody.find("m_ScrollState.EndThumbDrag();"), std::string::npos);
+	EXPECT_NE(NoScrollBody.find("Ui()->IsActiveItem(pId)"), std::string::npos);
+	EXPECT_NE(NoScrollBody.find("ScrollRegionShouldKeepNoScrollSliderActive(WasActive, Ui()->MouseButton(0))"), std::string::npos);
+	EXPECT_NE(NoScrollBody.find("Ui()->SetActiveItem(pId);"), std::string::npos);
+	EXPECT_NE(NoScrollBody.find("Ui()->SetActiveItem(nullptr);"), std::string::npos);
+	EXPECT_NE(ScrollRegionSlider.find("MaintainNoScrollSliderActive();"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ScrollRegionNoScrollSliderReleasesActiveAfterMouseUp)
@@ -9118,6 +9112,26 @@ TEST(QmMonitoringHelpers, ScrollRegionsOnlyReserveRailsForRealOverflow)
 	EXPECT_EQ(EndBody.find("m_ForceShowScrollbar"), std::string::npos);
 	EXPECT_NE(ScrollbarShownBody.find("return !m_Params.m_HideScrollbar && ContentOverflows();"), std::string::npos);
 	EXPECT_NE(UpdateHotScrollRegionBody.find("if(ScrollbarShown())"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ScrollRegionDelegatesMutableScrollStateToQmScrollState)
+{
+	const std::string Header = ReadRepoFile("src/game/client/ui_scrollregion.h");
+	const std::string Source = ReadRepoFile("src/game/client/ui_scrollregion.cpp");
+	const std::string AnimationBody = ExtractSourceFunctionBody(Source, "void CScrollRegion::AdvanceAnimation()");
+	const std::string SliderBody = ExtractSourceFunctionBody(Source, "void CScrollRegion::DoSlider()");
+	ASSERT_FALSE(AnimationBody.empty());
+	ASSERT_FALSE(SliderBody.empty());
+
+	EXPECT_NE(Header.find("CQmScrollState m_ScrollState;"), std::string::npos);
+	EXPECT_EQ(Header.find("float m_ScrollPos;"), std::string::npos);
+	EXPECT_EQ(Header.find("float m_AnimTimeMax;"), std::string::npos);
+	EXPECT_EQ(Header.find("float m_AnimTime;"), std::string::npos);
+	EXPECT_EQ(Header.find("float m_AnimInitScrollPos;"), std::string::npos);
+	EXPECT_EQ(Header.find("float m_AnimTargetScrollPos;"), std::string::npos);
+	EXPECT_EQ(Header.find("float m_SliderGrabPos;"), std::string::npos);
+	EXPECT_NE(AnimationBody.find("m_ScrollState.Advance("), std::string::npos);
+	EXPECT_NE(SliderBody.find("m_ScrollState.SetOffset("), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmUiCardPresetCarriesQmClientSettingsStyle)

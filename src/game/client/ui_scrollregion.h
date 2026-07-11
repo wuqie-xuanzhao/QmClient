@@ -149,23 +149,15 @@ public:
 	};
 
 private:
-	float m_ScrollPos;
+	CQmScrollState m_ScrollState;
 	float m_ContentSize;
-	float m_RequestScrollPos; // [0, ContentSize]
 	EScrollRelative m_ScrollDirection;
 	float m_ScrollSpeedMultiplier;
-
-	float m_AnimTimeMax;
-	float m_AnimTime;
-	float m_AnimInitScrollPos;
-	float m_AnimTargetScrollPos;
-	void StartScrollAnimation(float TargetScrollPos);
 
 	CUIRect m_ClipRect;
 	CUIRect m_RailRect;
 	CUIRect m_LastAddedRect; // saved for ScrollHere()
-	float m_SliderGrabPos; // where did user grab the slider
-	vec2 m_ContentScrollOff;
+	char m_SliderId = 0;
 	CScrollRegionParams m_Params;
 
 public:
@@ -189,7 +181,7 @@ public:
 	void SetScrollOffsetY(float OffsetY);
 	void SetContentHeightForNextFrame(float ContentHeight);
 	const CUIRect *ClipRect() const { return &m_ClipRect; }
-	float ContentScrollOffsetY() const { return m_ContentScrollOff.y; }
+	float ContentScrollOffsetY() const { return m_Params.m_ScrollHorizontal ? 0.0f : -m_ScrollState.Offset(); }
 	void DoEdgeScrolling();
 	bool RectClipped(const CUIRect &Rect) const;
 	bool ContentOverflows() const;
@@ -205,9 +197,13 @@ public:
 private:
 	CUIRect SplitContentArea();
 	void DrawBackground(const CUIRect &ScrollbarBg);
+	SQmScrollMetrics ScrollMetrics() const;
+	SQmScrollConfig ScrollConfig() const;
+	vec2 ContentScrollOffset() const;
 	void DoScrollInput();
 	void UpdateHotScrollRegion();
 	void AdvanceAnimation();
+	void MaintainNoScrollSliderActive();
 	void DoSlider();
 };
 

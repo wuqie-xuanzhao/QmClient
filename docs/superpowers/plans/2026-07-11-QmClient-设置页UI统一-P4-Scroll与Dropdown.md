@@ -21,6 +21,11 @@
 - 聊天/控制台文本滚动语义不在本计划；P7 才迁全部非卡片菜单 adapter。
 - 同一 `cmake-build-release` 目标串行；版本更新留给 P7。
 
+## Progress
+
+- [x] 2026-07-12：CScrollRegion 已接入 CQmScrollState，清退本地 offset、动画和 thumb-grab 状态；保留稳定 rail ID、内容临时不溢出时的拖拽连续性，以及 ScrollHere/热键/边缘滚动语义。
+- [ ] CQmScrollController 与 UiContainers 的 state 注入、同帧 wheel owner、dropdown 迁移仍按下列任务继续。
+
 ---
 
 ## File Structure

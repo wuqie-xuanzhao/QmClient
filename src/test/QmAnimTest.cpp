@@ -2371,6 +2371,46 @@ TEST(UiV2ScrollState, ProgrammaticTargetSharesNativeAnimationAndClampsAfterConte
 	EXPECT_NEAR(State.Offset(), ShortMetrics.MaxOffset(), 1e-6f);
 	EXPECT_FALSE(State.Animating());
 }
+
+TEST(UiV2ScrollState, DeferredProgrammaticTargetUsesFinalContentMetrics)
+{
+	SQmScrollMetrics TallMetrics;
+	TallMetrics.m_ViewportSize = 100.0f;
+	TallMetrics.m_ContentSize = 600.0f;
+	SQmScrollMetrics FinalMetrics;
+	FinalMetrics.m_ViewportSize = 100.0f;
+	FinalMetrics.m_ContentSize = 300.0f;
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
+
+	CQmScrollState State;
+	State.SetOffset(40.0f, TallMetrics, Config);
+	State.RequestScrollTo(900.0f);
+	State.Advance(0.0f, FinalMetrics, Config);
+
+	EXPECT_TRUE(State.Animating());
+	State.Advance(0.5f, FinalMetrics, Config);
+	EXPECT_NEAR(State.Offset(), FinalMetrics.MaxOffset(), 1e-6f);
+}
+
+TEST(UiV2ScrollState, NonScrollableResetPreservesActiveThumbGrabUntilRelease)
+{
+	SQmScrollMetrics Metrics;
+	Metrics.m_ViewportSize = 100.0f;
+	Metrics.m_ContentSize = 500.0f;
+
+	CQmScrollState State;
+	State.SetOffset(80.0f, Metrics);
+	State.BeginThumbDrag(12.0f);
+	State.ResetForNonScrollableContent(true);
+	EXPECT_NEAR(State.Offset(), 0.0f, 1e-6f);
+	EXPECT_TRUE(State.ThumbDragActive());
+	EXPECT_NEAR(State.ThumbDragGrabOffset(), 12.0f, 1e-6f);
+
+	State.ResetForNonScrollableContent(false);
+	EXPECT_FALSE(State.ThumbDragActive());
+	EXPECT_NEAR(State.ThumbDragGrabOffset(), 0.0f, 1e-6f);
+}
+
 TEST(UiV2ScrollContainer, PreviewFrameDoesNotCancelActiveScrollbarDrag)
 {
 	CQmScrollContainer Container;
