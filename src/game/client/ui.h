@@ -775,6 +775,7 @@ public:
 	 */
 	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners = IGraphics::CORNER_ALL, const std::vector<STextColorSplit> &vColorSplits = {}, int Align = TEXTALIGN_ML);
 	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align, const SEditBoxRenderOptions &RenderOptions);
+	bool DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, float LineSpacing, int TextAlign = TEXTALIGN_TL, const SEditBoxRenderOptions &RenderOptions = {});
 
 	/**
 	 * Creates an input field with a clear [x] button attached to it.

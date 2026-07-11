@@ -562,84 +562,6 @@ static float CalcQiaFenInputHeight(ITextRender *pTextRender, const char *pText, 
 	return maximum(MinHeight, Box.m_H + VPadding * 2.0f);
 }
 
-static bool DoEditBoxMultiLine(CUi *pUi, CLineInput *pLineInput, const CUIRect *pRect, float TextFontSize, float LineSpacing)
-{
-	const bool Inside = pUi->MouseHovered(pRect);
-	const bool Active = pUi->ActiveItem() == pLineInput || pLineInput->IsActive();
-	const bool Changed = pLineInput->WasChanged();
-	const bool CursorChanged = pLineInput->WasCursorChanged();
-
-	const float VSpacing = 2.0f;
-	CUIRect Textbox;
-	pRect->VMargin(VSpacing, &Textbox);
-	const float LineWidth = Textbox.w;
-
-	bool JustGotActive = false;
-	if(pUi->CheckActiveItem(pLineInput))
-	{
-		if(pUi->MouseButton(0))
-		{
-			if(pLineInput->IsActive() && (pUi->Input()->HasComposition() || pUi->Input()->GetCandidateCount()))
-			{
-				pUi->Input()->StopTextInput();
-				pUi->Input()->StartTextInput();
-			}
-		}
-		else
-		{
-			pUi->SetActiveItem(nullptr);
-		}
-	}
-	else if(pUi->HotItem() == pLineInput)
-	{
-		if(pUi->MouseButton(0))
-		{
-			if(!Active)
-				JustGotActive = true;
-			pUi->SetActiveItem(pLineInput);
-		}
-	}
-
-	if(Inside && !pUi->MouseButton(0))
-		pUi->SetHotItem(pLineInput);
-
-	if(pUi->Enabled() && Active && !JustGotActive)
-		pLineInput->Activate(EInputPriority::UI);
-	else
-		pLineInput->Deactivate();
-
-	CLineInput::SMouseSelection *pMouseSelection = pLineInput->GetMouseSelection();
-	if(Inside)
-	{
-		if(!pMouseSelection->m_Selecting && pUi->MouseButtonClicked(0))
-		{
-			pMouseSelection->m_Selecting = true;
-			pMouseSelection->m_PressMouse = pUi->MousePos();
-			pMouseSelection->m_Offset = vec2(0.0f, 0.0f);
-		}
-	}
-	if(pMouseSelection->m_Selecting)
-	{
-		pMouseSelection->m_ReleaseMouse = pUi->MousePos();
-		if(!pUi->MouseButton(0))
-		{
-			pMouseSelection->m_Selecting = false;
-			if(Active)
-				pUi->Input()->EnsureScreenKeyboardShown();
-		}
-	}
-
-	pRect->Draw(CUi::ms_LightButtonColorFunction.GetColor(Active, pUi->HotItem() == pLineInput), IGraphics::CORNER_ALL, 3.0f);
-	pUi->ClipEnable(pRect);
-	pLineInput->Render(&Textbox, TextFontSize, TEXTALIGN_TL, Changed || CursorChanged, LineWidth, LineSpacing);
-	pUi->ClipDisable();
-
-	pLineInput->SetScrollOffset(0.0f);
-	pLineInput->SetScrollOffsetChange(0.0f);
-
-	return Changed;
-}
-
 [[maybe_unused]] static void SetFlag(int32_t &Flags, int n, bool Value)
 {
 	if(Value)
@@ -4347,7 +4269,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.HSplitTop(BlockInputHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
 				DoQmSettingsLabel("qmclient-word-filter-label", &LabelCol, Localize("Word Filter"), LgBodySize);
-				if(DoEditBoxMultiLine(Ui(), &s_BlockWordsInput, &ControlCol, LgBodySize, BlockInputLineSpacing))
+				if(Ui()->DoEditBoxMultiLine(&s_BlockWordsInput, &ControlCol, LgBodySize, BlockInputLineSpacing))
 					str_copy(g_Config.m_QmBlockWordsList, s_BlockWordsInput.GetString(), sizeof(g_Config.m_QmBlockWordsList));
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);

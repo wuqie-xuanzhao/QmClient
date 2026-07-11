@@ -7385,6 +7385,7 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	const std::string Motion = ReadRepoFile("src/game/client/QmUi/UiMotion.h");
 	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
 	const std::string QmMenus = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string TClientMenus = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
 	const std::string Navigation = ReadRepoFile("src/game/client/QmUi/UiNavigation.cpp");
 	const std::string TextFieldPlateBody = ExtractSourceFunctionBody(Forms, "void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)");
@@ -7456,6 +7457,10 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_EQ(SearchExBody.find("VMargin("), std::string::npos);
 	EXPECT_NE(Ui.find("bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
 	EXPECT_NE(Ui.find("bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
+	EXPECT_NE(Ui.find("bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, float LineSpacing, int TextAlign, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
+	EXPECT_EQ(QmMenus.find("static bool DoEditBoxMultiLine("), std::string::npos);
+	EXPECT_EQ(TClientMenus.find("static bool DoEditBoxMultiLine("), std::string::npos);
+	EXPECT_NE(QmMenus.find("Ui()->DoEditBoxMultiLine(&s_BlockWordsInput, &ControlCol, LgBodySize, BlockInputLineSpacing)"), std::string::npos);
 	EXPECT_NE(TextFieldBody.find("return TextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;"), std::string::npos);
 	EXPECT_NE(ClearableBody.find("return ClearableTextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;"), std::string::npos);
 	EXPECT_NE(SearchBody.find("return SearchFieldEx(Ctx, pInput, Rect, FontSize, HotkeyEnabled).m_Changed;"), std::string::npos);

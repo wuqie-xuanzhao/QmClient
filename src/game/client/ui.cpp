@@ -1255,6 +1255,88 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	return Changed;
 }
 
+bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, float LineSpacing, int TextAlign, const SEditBoxRenderOptions &RenderOptions)
+{
+	if(pLineInput == nullptr || pRect == nullptr)
+		return false;
+
+	const bool Inside = MouseHovered(pRect);
+	const bool Active = ActiveItem() == pLineInput || pLineInput->IsActive();
+	const bool Changed = pLineInput->WasChanged();
+	const bool CursorChanged = pLineInput->WasCursorChanged();
+
+	constexpr float VSpacing = 2.0f;
+	CUIRect Textbox;
+	pRect->VMargin(VSpacing, &Textbox);
+	const float LineWidth = Textbox.w;
+
+	bool JustGotActive = false;
+	if(CheckActiveItem(pLineInput))
+	{
+		if(MouseButton(0))
+		{
+			if(pLineInput->IsActive() && (Input()->HasComposition() || Input()->GetCandidateCount()))
+			{
+				Input()->StopTextInput();
+				Input()->StartTextInput();
+			}
+		}
+		else
+		{
+			SetActiveItem(nullptr);
+		}
+	}
+	else if(HotItem() == pLineInput)
+	{
+		if(MouseButton(0))
+		{
+			if(!Active)
+				JustGotActive = true;
+			SetActiveItem(pLineInput);
+		}
+	}
+
+	if(Inside && !MouseButton(0))
+		SetHotItem(pLineInput);
+
+	if(Enabled() && Active && !JustGotActive)
+		pLineInput->Activate(EInputPriority::UI);
+	else
+		pLineInput->Deactivate();
+
+	CLineInput::SMouseSelection *pMouseSelection = pLineInput->GetMouseSelection();
+	if(Inside)
+	{
+		if(!pMouseSelection->m_Selecting && MouseButtonClicked(0))
+		{
+			pMouseSelection->m_Selecting = true;
+			pMouseSelection->m_PressMouse = MousePos();
+			pMouseSelection->m_Offset = vec2(0.0f, 0.0f);
+		}
+	}
+	if(pMouseSelection->m_Selecting)
+	{
+		pMouseSelection->m_ReleaseMouse = MousePos();
+		if(!MouseButton(0))
+		{
+			pMouseSelection->m_Selecting = false;
+			if(Active)
+				Input()->EnsureScreenKeyboardShown();
+		}
+	}
+
+	if(RenderOptions.m_DrawBackground)
+		pRect->Draw(ms_LightButtonColorFunction.GetColor(Active, HotItem() == pLineInput), IGraphics::CORNER_ALL, 3.0f);
+	ClipEnable(pRect);
+	pLineInput->Render(&Textbox, FontSize, TextAlign, Changed || CursorChanged, LineWidth, LineSpacing);
+	ClipDisable();
+
+	pLineInput->SetScrollOffset(0.0f);
+	pLineInput->SetScrollOffsetChange(0.0f);
+
+	return Changed;
+}
+
 bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits)
 {
 	return DoClearableEditBox(pLineInput, pRect, FontSize, Corners, vColorSplits, {});
