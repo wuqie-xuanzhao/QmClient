@@ -102,6 +102,34 @@ namespace
 		EXPECT_FLOAT_EQ(RedHalf.m_InputSurface.a, RedHalf.m_Surface.a);
 	}
 
+	TEST(InputField, AffordanceSlotsOnlyExistWhenRequested)
+	{
+		const CUIRect Rect{10.0f, 20.0f, 240.0f, 32.0f};
+		const ui_widget::SInputFieldLayout Plain = ui_widget::ResolveInputFieldLayout(Rect, false, false, 1.0f);
+		const ui_widget::SInputFieldLayout Both = ui_widget::ResolveInputFieldLayout(Rect, true, true, 1.0f);
+
+		EXPECT_FLOAT_EQ(Plain.m_IconRect.w, 0.0f);
+		EXPECT_FLOAT_EQ(Plain.m_ClearRect.w, 0.0f);
+		EXPECT_GT(Plain.m_ContentRect.w, Both.m_ContentRect.w);
+		EXPECT_GT(Both.m_IconRect.w, 0.0f);
+		EXPECT_GT(Both.m_ClearRect.w, 0.0f);
+		EXPECT_FLOAT_EQ(Both.m_ShellRect.x, Rect.x);
+		EXPECT_FLOAT_EQ(Both.m_ShellRect.w, Rect.w);
+	}
+
+	TEST(InputField, ContentRectStaysInsideOuterShell)
+	{
+		const CUIRect Rect{4.0f, 8.0f, 96.0f, 24.0f};
+		const ui_widget::SInputFieldLayout Layout = ui_widget::ResolveInputFieldLayout(Rect, true, true, 1.25f);
+
+		EXPECT_GE(Layout.m_ContentRect.x, Rect.x);
+		EXPECT_LE(Layout.m_ContentRect.x + Layout.m_ContentRect.w, Rect.x + Rect.w);
+		EXPECT_FLOAT_EQ(Layout.m_ContentRect.y, Rect.y);
+		EXPECT_FLOAT_EQ(Layout.m_ContentRect.h, Rect.h);
+		EXPECT_LE(Layout.m_IconRect.x + Layout.m_IconRect.w, Layout.m_ContentRect.x);
+		EXPECT_GE(Layout.m_ClearRect.x, Layout.m_ContentRect.x + Layout.m_ContentRect.w);
+	}
+
 	TEST(UiTheme, FocusRingKeepsInputFillStable)
 	{
 		const SUiTheme Theme = ResolveUiTheme(ColorHSLA(0.58f, 0.35f, 0.48f, 1.0f), 1.0f);

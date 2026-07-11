@@ -72,6 +72,42 @@ namespace ui_widget
 		return Result;
 	}
 
+	struct SInputFieldLayout
+	{
+		CUIRect m_ShellRect;
+		CUIRect m_ContentRect;
+		CUIRect m_IconRect;
+		CUIRect m_ClearRect;
+	};
+
+	inline SInputFieldLayout ResolveInputFieldLayout(const CUIRect &Rect, bool HasIcon, bool Clearable, float UiScale = 1.0f)
+	{
+		SInputFieldLayout Layout{};
+		Layout.m_ShellRect = Rect;
+		Layout.m_ContentRect = Rect;
+		const float Scale = std::max(UiScale, 0.1f);
+		const float SlotWidth = std::max(Rect.h, 18.0f * Scale);
+		const float Gap = 6.0f * Scale;
+		Layout.m_ContentRect.x += Gap;
+		Layout.m_ContentRect.w = std::max(0.0f, Layout.m_ContentRect.w - Gap * 2.0f);
+		if(HasIcon)
+		{
+			Layout.m_IconRect = Layout.m_ContentRect;
+			Layout.m_IconRect.w = std::min(SlotWidth, Layout.m_ContentRect.w);
+			const float Consumed = std::min(Layout.m_ContentRect.w, SlotWidth + Gap);
+			Layout.m_ContentRect.x += Consumed;
+			Layout.m_ContentRect.w = std::max(0.0f, Layout.m_ContentRect.w - Consumed);
+		}
+		if(Clearable)
+		{
+			Layout.m_ClearRect = Layout.m_ContentRect;
+			Layout.m_ClearRect.w = std::min(SlotWidth, Layout.m_ContentRect.w);
+			Layout.m_ClearRect.x = Layout.m_ContentRect.x + std::max(0.0f, Layout.m_ContentRect.w - Layout.m_ClearRect.w);
+			const float Consumed = std::min(Layout.m_ContentRect.w, SlotWidth + Gap);
+			Layout.m_ContentRect.w = std::max(0.0f, Layout.m_ContentRect.w - Consumed);
+		}
+		return Layout;
+	}
 	struct STextFieldOptions
 	{
 		const char *m_pPlaceholder = nullptr;
