@@ -673,21 +673,15 @@ void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScr
 	CUIRect WheelHotRect = Frame.m_Frame.m_ClipRect;
 	if(Frame.m_Frame.m_ScrollbarVisible)
 		WheelHotRect.w += Frame.m_Style.m_ScrollbarWidth;
-	if(Frame.m_Frame.m_ScrollbarVisible && !Ui()->UnderlyingScrollBlocked() && Ui()->MouseHovered(&WheelHotRect))
+	const void *pWheelOwnerId = &ScrollContainer;
+	const bool WheelEligible = Frame.m_Frame.m_ScrollbarVisible && !Ui()->UnderlyingScrollBlocked() && Ui()->MouseHovered(&WheelHotRect);
+	Ui()->RegisterWheelOwner(pWheelOwnerId, EUiWheelOwnerPriority::PAGE, WheelHotRect, WheelEligible);
+	float WheelDelta = 0.0f;
+	if(Ui()->TryConsumeWheel(pWheelOwnerId, &WheelDelta))
 	{
-		float WheelDelta = 0.0f;
-		if(Ui()->ConsumeHotkey(CUi::HOTKEY_SCROLL_UP))
-			WheelDelta += 120.0f;
-		if(Ui()->ConsumeHotkey(CUi::HOTKEY_SCROLL_DOWN))
-			WheelDelta -= 120.0f;
-		if(WheelDelta != 0.0f)
-		{
-			SQmScrollConfig ScrollConfig = QmSettingsScrollConfig(1.0f, g_Config.m_UiSmoothScrollTime / 1000.0f);
-			if(Input()->AltIsPressed())
-				ScrollConfig.m_WheelScale *= QmScrollAltMultiplier();
-			ScrollContainer.ScrollByWheel(ScrollState, WheelDelta, Frame.m_ViewRect.h, *pContentHeight, ScrollConfig);
-			Frame.m_Frame = ScrollContainer.PreviewFrame(ScrollState, Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
-		}
+		const SQmScrollConfig ScrollConfig = QmSettingsScrollConfig(1.0f, g_Config.m_UiSmoothScrollTime / 1000.0f);
+		ScrollContainer.ScrollByWheel(ScrollState, WheelDelta, Frame.m_ViewRect.h, *pContentHeight, ScrollConfig);
+		Frame.m_Frame = ScrollContainer.PreviewFrame(ScrollState, Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
 	}
 	const float CurrentOffsetY = Frame.m_Frame.m_ScrollbarVisible ? Frame.m_Frame.m_Offset : 0.0f;
 	if(TrackScrollActive)

@@ -267,33 +267,26 @@ void CScrollRegion::DrawBackground(const CUIRect &ScrollbarBg)
 
 void CScrollRegion::DoScrollInput()
 {
+	if(m_ScrollDirection != SCROLLRELATIVE_NONE)
+	{
+		SQmScrollConfig Config = ScrollConfig();
+		Config.m_WheelScale *= m_ScrollSpeedMultiplier;
+		m_ScrollState.ScrollTo(m_ScrollState.Offset() + (int)m_ScrollDirection * Config.m_WheelScale, ScrollMetrics(), Config);
+		m_ScrollDirection = SCROLLRELATIVE_NONE;
+		m_ScrollSpeedMultiplier = 1.0f;
+	}
+
 	const bool HotFromPreviousFrame = Ui()->HotScrollRegion() == this;
 	const bool HotInPopupThisFrame = Ui()->RenderingPopupMenus() && Ui()->NextHotScrollRegion() == this;
-	if(m_ScrollDirection != SCROLLRELATIVE_NONE || QmScrollRegionCanConsumeWheel(HotFromPreviousFrame, HotInPopupThisFrame, Ui()->UnderlyingScrollBlocked(), Ui()->RenderingPopupMenus()))
-	{
-		bool ProgrammaticScroll = false;
-		if(Ui()->ConsumeHotkey(CUi::HOTKEY_SCROLL_UP))
-			m_ScrollDirection = SCROLLRELATIVE_UP;
-		else if(Ui()->ConsumeHotkey(CUi::HOTKEY_SCROLL_DOWN))
-			m_ScrollDirection = SCROLLRELATIVE_DOWN;
-		else
-			ProgrammaticScroll = true;
+	const bool WheelEligible = QmScrollRegionCanConsumeWheel(HotFromPreviousFrame, HotInPopupThisFrame, Ui()->UnderlyingScrollBlocked(), Ui()->RenderingPopupMenus());
+	const void *pWheelOwnerId = m_Params.m_pWheelOwnerId != nullptr ? m_Params.m_pWheelOwnerId : this;
+	if(!m_Params.m_WheelOwnerPreRegistered)
+		Ui()->RegisterWheelOwner(pWheelOwnerId, EUiWheelOwnerPriority::PAGE, m_ClipRect, ContentOverflows() && WheelEligible);
 
-		if(!ProgrammaticScroll)
-			m_ScrollSpeedMultiplier = 1.0f;
-
-		if(m_ScrollDirection != SCROLLRELATIVE_NONE)
-		{
-			SQmScrollConfig Config = ScrollConfig();
-			Config.m_WheelScale *= (Input()->AltIsPressed() ? QmScrollAltMultiplier() : 1.0f) * m_ScrollSpeedMultiplier;
-			if(ProgrammaticScroll)
-				m_ScrollState.ScrollTo(m_ScrollState.Offset() + (int)m_ScrollDirection * Config.m_WheelScale, ScrollMetrics(), Config);
-			else
-				m_ScrollState.AddWheelImpulse(-(int)m_ScrollDirection, ScrollMetrics(), Config);
-			m_ScrollDirection = SCROLLRELATIVE_NONE;
-			m_ScrollSpeedMultiplier = 1.0f;
-		}
-	}
+	float WheelDelta = 0.0f;
+	if(!Ui()->TryConsumeWheel(pWheelOwnerId, &WheelDelta))
+		return;
+	m_ScrollState.AddWheelImpulse(WheelDelta, ScrollMetrics(), ScrollConfig());
 }
 
 void CScrollRegion::UpdateHotScrollRegion()

@@ -376,16 +376,13 @@ namespace ui_widget
 
 		bool Changed = false;
 		const int Increment = std::max(1, (SliderMax - SliderMin) / 35);
-		if(!RenderOnly && Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->MouseInside(&Rect) && Ctx.m_pUi->ConsumeHotkey(CUi::HOTKEY_SCROLL_UP))
+		const bool WheelEligible = !RenderOnly && Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->MouseInside(&Rect);
+		Ctx.m_pUi->RegisterWheelOwner(pState, EUiWheelOwnerPriority::COMPOSITE_CONTROL, Rect, WheelEligible);
+		float WheelDelta = 0.0f;
+		if(Ctx.m_pUi->TryConsumeWheel(pState, &WheelDelta))
 		{
-			const int NewValue = SliderInputWheelStoredValue(*pValue, SliderMin, SliderMax, Infinite, Increment);
+			const int NewValue = SliderInputWheelStoredValue(*pValue, SliderMin, SliderMax, Infinite, WheelDelta > 0.0f ? Increment : -Increment);
 			Changed = NewValue != *pValue;
-			*pValue = NewValue;
-		}
-		if(!RenderOnly && Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->MouseInside(&Rect) && Ctx.m_pUi->ConsumeHotkey(CUi::HOTKEY_SCROLL_DOWN))
-		{
-			const int NewValue = SliderInputWheelStoredValue(*pValue, SliderMin, SliderMax, Infinite, -Increment);
-			Changed = Changed || NewValue != *pValue;
 			*pValue = NewValue;
 		}
 

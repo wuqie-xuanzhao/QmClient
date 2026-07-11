@@ -242,8 +242,32 @@ void CUi::OnCursorMove(float X, float Y)
 	m_UpdatedMouseDelta += vec2(X, Y);
 }
 
+void CUi::BeginWheelOwnershipFrame()
+{
+	const uint64_t FrameId = Client()->PerfFrame();
+	if(m_WheelOwnership.FrameStarted(FrameId))
+		return;
+	float RawDelta = 0.0f;
+	if(ConsumeHotkey(HOTKEY_SCROLL_UP))
+		RawDelta += 120.0f;
+	if(ConsumeHotkey(HOTKEY_SCROLL_DOWN))
+		RawDelta -= 120.0f;
+	m_WheelOwnership.BeginFrame(FrameId, RawDelta, Input() != nullptr && Input()->AltIsPressed());
+}
+
+void CUi::RegisterWheelOwner(const void *pOwnerId, EUiWheelOwnerPriority Priority, const CUIRect &HotRect, bool Eligible)
+{
+	QmRegisterWheelOwnerCandidate(m_WheelOwnership, {pOwnerId, Priority, HotRect, Eligible}, MousePos(), Enabled());
+}
+
+bool CUi::TryConsumeWheel(const void *pOwnerId, float *pDelta)
+{
+	return QmTryConsumeWheel(m_WheelOwnership, pOwnerId, pDelta);
+}
+
 void CUi::Update()
 {
+	BeginWheelOwnershipFrame();
 	const vec2 WindowSize = vec2(Graphics()->WindowWidth(), Graphics()->WindowHeight());
 	const CUIRect *pScreen = Screen();
 
@@ -2462,6 +2486,8 @@ CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
 	ScrollParams.m_ScrollbarNoOuterMargin = true;
+	ScrollParams.m_pWheelOwnerId = pSelectionPopup;
+	ScrollParams.m_WheelOwnerPreRegistered = true;
 	pScrollRegion->Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
@@ -2552,9 +2578,12 @@ void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)
 		pContext->m_Props.m_AutoReposition = false;
 		pContext->m_Props.m_Corners = Geometry.m_PlacedBelow ? IGraphics::CORNER_B : IGraphics::CORNER_T;
 	}
-	pContext->m_BlockUnderlyingScroll = QmDropdownPopupOwnsWheel(pContext->m_PopupPolicy, PopupHeightResolved);
+	const CUIRect PopupRect{X, Y, PopupWidth, PopupHeightResolved};
+	const bool OwnsWheel = pContext->m_PopupVisible && QmDropdownPopupOwnsWheel(pContext->m_PopupPolicy, PopupHeightResolved);
+	RegisterWheelOwner(pContext, EUiWheelOwnerPriority::POPUP, PopupRect, OwnsWheel);
+	pContext->m_BlockUnderlyingScroll = OwnsWheel;
 	pContext->m_Props.m_ClipToViewport = true;
-	pContext->m_Props.m_BlockUnderlyingScroll = pContext->m_BlockUnderlyingScroll;
+	pContext->m_Props.m_BlockUnderlyingScroll = OwnsWheel;
 	pContext->m_Props.m_Viewport = Viewport;
 	DoPopupMenu(pContext, X, Y, PopupWidth, PopupHeightResolved, pContext, PopupSelection, pContext->m_Props);
 }

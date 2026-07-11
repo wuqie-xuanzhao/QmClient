@@ -27,6 +27,8 @@ struct CScrollRegionParams
 	ColorRGBA m_SliderColorGrabbed;
 	bool m_HideScrollbar;
 	bool m_ScrollHorizontal;
+	const void *m_pWheelOwnerId;
+	bool m_WheelOwnerPreRegistered;
 
 	CScrollRegionParams();
 
@@ -82,6 +84,8 @@ inline CScrollRegionParams::CScrollRegionParams()
 	m_SliderColorGrabbed = ColorRGBA(0.9f, 0.9f, 0.9f, 1.0f);
 	m_HideScrollbar = false;
 	m_ScrollHorizontal = false;
+	m_pWheelOwnerId = nullptr;
+	m_WheelOwnerPreRegistered = false;
 }
 
 inline bool ScrollRegionShouldKeepNoScrollSliderActive(bool Active, bool MouseDown)

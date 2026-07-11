@@ -25,7 +25,8 @@
 
 - [x] 2026-07-12：CScrollRegion 已接入 CQmScrollState，清退本地 offset、动画和 thumb-grab 状态；保留稳定 rail ID、内容临时不溢出时的拖拽连续性，以及 ScrollHere/热键/边缘滚动语义。
 - [x] 2026-07-12：CQmScrollController 与 UiContainers 已完成外部 state 注入；controller 不再保存 offset、动画或任一 drag 状态，设置页和 dogfood 各自显式持有 CQmScrollState。
-- [ ] 同帧 wheel owner 与 dropdown 迁移仍按下列任务继续。
+- [x] 2026-07-12：CUi 已按帧仲裁 raw wheel；长 dropdown 在父滚动结束前以 popup 优先级登记并独占首轮滚轮，短 dropdown 不参与仲裁而由父页面继续滚动。
+- [ ] P4 仅剩真实客户端的视觉与交互矩阵验收，保留给用户反馈。
 
 ---
 

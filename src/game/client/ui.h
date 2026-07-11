@@ -384,6 +384,105 @@ struct SPopupMenuProperties
 	CUIRect m_Viewport{};
 };
 
+enum class EUiWheelOwnerPriority
+{
+	PAGE = 0,
+	COMPOSITE_CONTROL = 1,
+	POPUP = 2,
+};
+
+class CScrollWheelOwnership
+{
+public:
+	bool BeginFrame(uint64_t FrameId, float RawDelta, bool AltPressed)
+	{
+		if(FrameStarted(FrameId))
+			return false;
+		m_vOwners.clear();
+		m_FrameId = FrameId;
+		m_RawDelta = RawDelta * (AltPressed ? 3.0f : 1.0f);
+		m_NextOrder = 0;
+		m_HasFrame = true;
+		m_Consumed = false;
+		return true;
+	}
+
+	bool FrameStarted(uint64_t FrameId) const { return m_HasFrame && m_FrameId == FrameId; }
+
+	void Register(const void *pOwnerId, EUiWheelOwnerPriority Priority, bool Eligible)
+	{
+		if(pOwnerId == nullptr)
+			return;
+		const auto It = std::find_if(m_vOwners.begin(), m_vOwners.end(), [pOwnerId](const SOwner &Owner) { return Owner.m_pId == pOwnerId; });
+		if(It != m_vOwners.end())
+		{
+			It->m_Priority = Priority;
+			It->m_Eligible = Eligible;
+			It->m_Order = ++m_NextOrder;
+			return;
+		}
+		m_vOwners.push_back({pOwnerId, Priority, ++m_NextOrder, Eligible});
+	}
+
+	bool TryConsume(const void *pOwnerId, float *pDelta)
+	{
+		if(pOwnerId == nullptr || pDelta == nullptr || m_Consumed || m_RawDelta == 0.0f)
+			return false;
+		const SOwner *pWinner = nullptr;
+		for(const SOwner &Owner : m_vOwners)
+		{
+			if(!Owner.m_Eligible)
+				continue;
+			if(pWinner == nullptr || static_cast<int>(Owner.m_Priority) > static_cast<int>(pWinner->m_Priority) ||
+				(Owner.m_Priority == pWinner->m_Priority && Owner.m_Order > pWinner->m_Order))
+				pWinner = &Owner;
+		}
+		if(pWinner == nullptr || pWinner->m_pId != pOwnerId)
+			return false;
+		*pDelta = m_RawDelta;
+		m_Consumed = true;
+		return true;
+	}
+
+private:
+	struct SOwner
+	{
+		const void *m_pId = nullptr;
+		EUiWheelOwnerPriority m_Priority = EUiWheelOwnerPriority::PAGE;
+		uint64_t m_Order = 0;
+		bool m_Eligible = false;
+	};
+
+	std::vector<SOwner> m_vOwners;
+	uint64_t m_FrameId = 0;
+	float m_RawDelta = 0.0f;
+	uint64_t m_NextOrder = 0;
+	bool m_HasFrame = false;
+	bool m_Consumed = false;
+};
+
+struct SQmWheelOwnerCandidate
+{
+	const void *m_pOwnerId = nullptr;
+	EUiWheelOwnerPriority m_Priority = EUiWheelOwnerPriority::PAGE;
+	CUIRect m_HotRect{};
+	bool m_Eligible = false;
+};
+
+inline void QmRegisterWheelOwnerCandidate(CScrollWheelOwnership &Ownership, const SQmWheelOwnerCandidate &Candidate, const vec2 &PointerPosition, bool UiEnabled)
+{
+	const bool PointerInside =
+		PointerPosition.x >= Candidate.m_HotRect.x &&
+		PointerPosition.x <= Candidate.m_HotRect.x + Candidate.m_HotRect.w &&
+		PointerPosition.y >= Candidate.m_HotRect.y &&
+		PointerPosition.y <= Candidate.m_HotRect.y + Candidate.m_HotRect.h;
+	Ownership.Register(Candidate.m_pOwnerId, Candidate.m_Priority, Candidate.m_Eligible && UiEnabled && PointerInside);
+}
+
+inline bool QmTryConsumeWheel(CScrollWheelOwnership &Ownership, const void *pOwnerId, float *pDelta)
+{
+	return Ownership.TryConsume(pOwnerId, pDelta);
+}
 class CUi
 {
 public:
@@ -471,6 +570,7 @@ private:
 	CScrollRegion *m_pBecomingHotScrollRegion = nullptr;
 	bool m_UnderlyingScrollBlocked = false;
 	bool m_RenderingPopupMenus = false;
+	CScrollWheelOwnership m_WheelOwnership;
 	bool m_ActiveItemValid = false;
 
 	int m_ActiveButtonLogicButton = -1;
@@ -695,6 +795,9 @@ public:
 	const CScrollRegion *NextHotScrollRegion() const { return m_pBecomingHotScrollRegion; }
 	bool UnderlyingScrollBlocked() const { return m_UnderlyingScrollBlocked; }
 	bool RenderingPopupMenus() const { return m_RenderingPopupMenus; }
+	void BeginWheelOwnershipFrame();
+	void RegisterWheelOwner(const void *pOwnerId, EUiWheelOwnerPriority Priority, const CUIRect &HotRect, bool Eligible);
+	bool TryConsumeWheel(const void *pOwnerId, float *pDelta);
 
 	void StartCheck() { m_ActiveItemValid = false; }
 	void FinishCheck()

@@ -1846,6 +1846,67 @@ TEST(UiV2ScrollOwnership, PopupConsumesWheelWithoutLeakingToUnderlyingRegion)
 	EXPECT_TRUE(QmScrollRegionCanConsumeWheel(true, false, false, false));
 }
 
+TEST(UiV2WheelOwnership, HighestEligibleOwnerConsumesRawWheelOnce)
+{
+	CScrollWheelOwnership Router;
+	ASSERT_TRUE(Router.BeginFrame(41, -120.0f, false));
+	Router.Register(reinterpret_cast<void *>(1), EUiWheelOwnerPriority::PAGE, true);
+	Router.Register(reinterpret_cast<void *>(2), EUiWheelOwnerPriority::POPUP, true);
+	float Delta = 0.0f;
+	EXPECT_FALSE(Router.TryConsume(reinterpret_cast<void *>(1), &Delta));
+	EXPECT_TRUE(Router.TryConsume(reinterpret_cast<void *>(2), &Delta));
+	EXPECT_FLOAT_EQ(Delta, -120.0f);
+	EXPECT_FALSE(Router.TryConsume(reinterpret_cast<void *>(2), &Delta));
+}
+
+TEST(UiV2WheelOwnership, AltAcceleratesButOtherModifiersDoNotDiscardWheel)
+{
+	CScrollWheelOwnership Router;
+	ASSERT_TRUE(Router.BeginFrame(41, -120.0f, true));
+	Router.Register(reinterpret_cast<void *>(1), EUiWheelOwnerPriority::PAGE, true);
+	float Delta = 0.0f;
+	ASSERT_TRUE(Router.TryConsume(reinterpret_cast<void *>(1), &Delta));
+	EXPECT_FLOAT_EQ(Delta, -360.0f);
+}
+
+TEST(UiV2WheelOwnership, LaterEqualPriorityOwnerWinsAndIneligibleOwnerCannotWin)
+{
+	CScrollWheelOwnership Router;
+	int Outer = 0;
+	int Inner = 0;
+	int Disabled = 0;
+	ASSERT_TRUE(Router.BeginFrame(41, 120.0f, false));
+	Router.Register(&Outer, EUiWheelOwnerPriority::COMPOSITE_CONTROL, true);
+	Router.Register(&Disabled, EUiWheelOwnerPriority::POPUP, false);
+	Router.Register(&Inner, EUiWheelOwnerPriority::COMPOSITE_CONTROL, true);
+	float Delta = 0.0f;
+	EXPECT_FALSE(Router.TryConsume(&Outer, &Delta));
+	EXPECT_FALSE(Router.TryConsume(&Disabled, &Delta));
+	EXPECT_TRUE(Router.TryConsume(&Inner, &Delta));
+}
+
+TEST(UiV2WheelOwnership, BeginFrameIsIdempotentForOneProductionFrame)
+{
+	CScrollWheelOwnership Router;
+	int Popup = 0;
+	ASSERT_TRUE(Router.BeginFrame(41, -120.0f, false));
+	Router.Register(&Popup, EUiWheelOwnerPriority::POPUP, true);
+	EXPECT_FALSE(Router.BeginFrame(41, 120.0f, true));
+	float Delta = 0.0f;
+	ASSERT_TRUE(Router.TryConsume(&Popup, &Delta));
+	EXPECT_FLOAT_EQ(Delta, -120.0f);
+	EXPECT_TRUE(Router.BeginFrame(42, 120.0f, false));
+	EXPECT_FALSE(Router.TryConsume(&Popup, &Delta));
+}
+TEST(UiV2WheelOwnership, CandidateOutsideHotRectCannotConsumeWheel)
+{
+	CScrollWheelOwnership Router;
+	int Owner = 0;
+	ASSERT_TRUE(Router.BeginFrame(41, -120.0f, false));
+	QmRegisterWheelOwnerCandidate(Router, {&Owner, EUiWheelOwnerPriority::PAGE, {10.0f, 10.0f, 30.0f, 30.0f}, true}, {50.0f, 50.0f}, true);
+	float Delta = 0.0f;
+	EXPECT_FALSE(QmTryConsumeWheel(Router, &Owner, &Delta));
+}
 TEST(UiV2ScrollPolicy, ListBoxExplicitScrollbarMetricsOverridePolicyDefaults)
 {
 	EXPECT_NEAR(QmListBoxScrollbarMetric(20.0f, 15.0f, false), 20.0f, 0.001f);
@@ -2828,6 +2889,49 @@ TEST(UiV2DropdownPolicy, CapsLongPopupAndOnlyLetsOverflowOwnWheel)
 	EXPECT_TRUE(QmDropdownPopupOwnsWheel(ShortPolicy, ShortPolicy.m_PreferredHeight - 1.0f));
 }
 
+TEST(UiV2DropdownIntegration, LongPopupConsumesWheelBeforeParent)
+{
+	CScrollWheelOwnership Ownership;
+	int ParentRegion = 0;
+	int SelectionPopupContext = 0;
+	CQmScrollState ParentState;
+	CQmScrollState PopupState;
+	const SQmScrollMetrics ParentMetrics{300.0f, 900.0f};
+	const SQmScrollMetrics PopupMetrics{160.0f, 320.0f};
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.0f);
+	const CUIRect ParentRect{0.0f, 0.0f, 300.0f, 300.0f};
+	const CUIRect PopupRect{20.0f, 40.0f, 160.0f, 160.0f};
+	const vec2 Pointer{50.0f, 80.0f};
+	ASSERT_TRUE(Ownership.BeginFrame(41, -120.0f, false));
+	QmRegisterWheelOwnerCandidate(Ownership, {&SelectionPopupContext, EUiWheelOwnerPriority::POPUP, PopupRect, true}, Pointer, true);
+	QmRegisterWheelOwnerCandidate(Ownership, {&ParentRegion, EUiWheelOwnerPriority::PAGE, ParentRect, true}, Pointer, true);
+	float Delta = 0.0f;
+	EXPECT_FALSE(QmTryConsumeWheel(Ownership, &ParentRegion, &Delta));
+	ASSERT_TRUE(QmTryConsumeWheel(Ownership, &SelectionPopupContext, &Delta));
+	PopupState.AddWheelImpulse(Delta, PopupMetrics, Config);
+	ParentState.Advance(1.0f / 60.0f, ParentMetrics, Config);
+	PopupState.Advance(1.0f / 60.0f, PopupMetrics, Config);
+	EXPECT_FLOAT_EQ(ParentState.Offset(), 0.0f);
+	EXPECT_GT(PopupState.Offset(), 0.0f);
+}
+
+TEST(UiV2DropdownIntegration, ShortPopupKeepsOpenAndLetsParentConsumeWheel)
+{
+	const SQmDropdownPopupPolicy Policy = QmResolveDropdownPopupPolicy(4, 20.0f, 5.0f, false, 0.0f, 10.0f);
+	EXPECT_FALSE(QmDropdownPopupOwnsWheel(Policy, Policy.m_PreferredHeight));
+	CScrollWheelOwnership Ownership;
+	int ParentRegion = 0;
+	int SelectionPopupContext = 0;
+	const CUIRect ParentRect{0.0f, 0.0f, 300.0f, 300.0f};
+	const CUIRect PopupRect{20.0f, 40.0f, 160.0f, Policy.m_PreferredHeight};
+	const vec2 Pointer{50.0f, 80.0f};
+	ASSERT_TRUE(Ownership.BeginFrame(41, -120.0f, false));
+	QmRegisterWheelOwnerCandidate(Ownership, {&SelectionPopupContext, EUiWheelOwnerPriority::POPUP, PopupRect, false}, Pointer, true);
+	QmRegisterWheelOwnerCandidate(Ownership, {&ParentRegion, EUiWheelOwnerPriority::PAGE, ParentRect, true}, Pointer, true);
+	float Delta = 0.0f;
+	EXPECT_TRUE(QmTryConsumeWheel(Ownership, &ParentRegion, &Delta));
+	EXPECT_FLOAT_EQ(Delta, -120.0f);
+}
 TEST(UiV2DropdownState, OpensWithFirstItemAndClosesOnEscape)
 {
 	CQmDropdownState State;

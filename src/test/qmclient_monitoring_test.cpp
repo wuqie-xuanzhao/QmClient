@@ -6168,8 +6168,9 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	ASSERT_FALSE(BeginScrollBody.empty());
 	ASSERT_FALSE(FinishScrollBody.empty());
 	EXPECT_EQ(BeginScrollBody.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_"), std::string::npos);
-	EXPECT_NE(FinishScrollBody.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_UP)"), std::string::npos);
-	EXPECT_NE(FinishScrollBody.find("WheelDelta += 120.0f;"), std::string::npos);
+	EXPECT_EQ(FinishScrollBody.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_"), std::string::npos);
+	EXPECT_NE(FinishScrollBody.find("Ui()->RegisterWheelOwner(pWheelOwnerId, EUiWheelOwnerPriority::PAGE, WheelHotRect, WheelEligible);"), std::string::npos);
+	EXPECT_NE(FinishScrollBody.find("Ui()->TryConsumeWheel(pWheelOwnerId, &WheelDelta)"), std::string::npos);
 	EXPECT_NE(FinishScrollBody.find("!Ui()->UnderlyingScrollBlocked()"), std::string::npos);
 	EXPECT_NE(QmScroll.find("Config.m_WheelScale = 10.0f;"), std::string::npos);
 	EXPECT_NE(QmScroll.find("SQmScrollConfig QmSettingsScrollConfig(float UiScale, float SmoothScrollTimeSec)"), std::string::npos);
@@ -9056,7 +9057,9 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 	EXPECT_NE(Body.find("QmResolveDropdownPopupPolicy("), std::string::npos);
 	EXPECT_NE(Body.find("const CUIRect &Viewport = pContext->m_Viewport;"), std::string::npos);
 	EXPECT_NE(Body.find("QmComputeDropdownPopupGeometry(AnchorRect, Viewport, GeometryConfig);"), std::string::npos);
-	EXPECT_NE(Body.find("pContext->m_BlockUnderlyingScroll = QmDropdownPopupOwnsWheel("), std::string::npos);
+	EXPECT_NE(Body.find("const bool OwnsWheel = pContext->m_PopupVisible && QmDropdownPopupOwnsWheel("), std::string::npos);
+	EXPECT_NE(Body.find("RegisterWheelOwner(pContext, EUiWheelOwnerPriority::POPUP, PopupRect, OwnsWheel);"), std::string::npos);
+	EXPECT_NE(Body.find("pContext->m_BlockUnderlyingScroll = OwnsWheel;"), std::string::npos);
 	EXPECT_NE(PopupSelectionBody.find("QmResolveScrollPolicy(ScrollRequest)"), std::string::npos);
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollbarThickness = 10.0f"), std::string::npos);
 	EXPECT_EQ(PopupSelectionBody.find("m_ScrollUnit = 3 *"), std::string::npos);
@@ -9165,6 +9168,42 @@ TEST(QmMonitoringHelpers, QmScrollControllerReceivesExternalMutableState)
 	EXPECT_NE(QmClient.find("CQmScrollState s_QmOverviewScrollState;"), std::string::npos);
 	EXPECT_NE(QmClient.find("CQmScrollState s_GlobalSearchScrollState;"), std::string::npos);
 	EXPECT_NE(QmClient.find("CQmScrollState s_QmScrollState;"), std::string::npos);
+}
+TEST(QmMonitoringHelpers, WheelOwnershipFrameBeginsOnlyFromUiUpdate)
+{
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Update = ExtractSourceFunctionBody(Ui, "void CUi::Update()");
+	const std::string Begin = ExtractSourceFunctionBody(Ui, "void CUi::BeginWheelOwnershipFrame()");
+	ASSERT_FALSE(Update.empty());
+	ASSERT_FALSE(Begin.empty());
+	EXPECT_EQ(CountSubstring(Ui, "BeginWheelOwnershipFrame();"), 1u);
+	EXPECT_LT(Update.find("BeginWheelOwnershipFrame();"), Update.find("const vec2 WindowSize"));
+	EXPECT_NE(Begin.find("const uint64_t FrameId = Client()->PerfFrame();"), std::string::npos);
+	EXPECT_NE(Begin.find("m_WheelOwnership.FrameStarted(FrameId)"), std::string::npos);
+	EXPECT_NE(Begin.find("m_WheelOwnership.BeginFrame(FrameId, RawDelta"), std::string::npos);
+}
+TEST(QmMonitoringHelpers, DropdownRegistersWheelOwnerBeforeParentCanConsume)
+{
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string ShowPopup = ExtractSourceFunctionBody(Ui, "void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)");
+	const std::string Register = ExtractSourceFunctionBody(Ui, "void CUi::RegisterWheelOwner(const void *pOwnerId, EUiWheelOwnerPriority Priority, const CUIRect &HotRect, bool Eligible)");
+	const std::string Consume = ExtractSourceFunctionBody(Ui, "bool CUi::TryConsumeWheel(const void *pOwnerId, float *pDelta)");
+	const std::string Popup = ExtractSourceFunctionBody(Ui, "CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, bool Active)");
+	const std::string Region = ReadRepoFile("src/game/client/ui_scrollregion.cpp");
+	const std::string Input = ExtractSourceFunctionBody(Region, "void CScrollRegion::DoScrollInput()");
+	ASSERT_FALSE(ShowPopup.empty());
+	ASSERT_FALSE(Register.empty());
+	ASSERT_FALSE(Consume.empty());
+	ASSERT_FALSE(Popup.empty());
+	ASSERT_FALSE(Input.empty());
+	EXPECT_NE(ShowPopup.find("RegisterWheelOwner(pContext"), std::string::npos);
+	EXPECT_LT(ShowPopup.find("RegisterWheelOwner(pContext"), ShowPopup.find("DoPopupMenu("));
+	EXPECT_NE(Register.find("QmRegisterWheelOwnerCandidate(m_WheelOwnership"), std::string::npos);
+	EXPECT_NE(Consume.find("QmTryConsumeWheel(m_WheelOwnership, pOwnerId, pDelta)"), std::string::npos);
+	EXPECT_NE(Popup.find("ScrollParams.m_pWheelOwnerId = pSelectionPopup"), std::string::npos);
+	EXPECT_NE(Popup.find("ScrollParams.m_WheelOwnerPreRegistered = true"), std::string::npos);
+	EXPECT_NE(Input.find("TryConsumeWheel(pWheelOwnerId"), std::string::npos);
+	EXPECT_EQ(Input.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, QmUiCardPresetCarriesQmClientSettingsStyle)
 {
