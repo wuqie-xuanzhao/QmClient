@@ -3377,6 +3377,13 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 
 				if(g_Config.m_QmAxiomAutoLogin)
 				{
+					IUiContext QmClientGoresTextInputCtx;
+					QmClientGoresTextInputCtx.m_pUi = Ui();
+					QmClientGoresTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+					QmClientGoresTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+					QmClientGoresTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_gores_text_inputs");
+					QmClientGoresTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 					auto DoPasswordToggleButton = [&](CButtonContainer *pButton, bool Visible, const CUIRect &ButtonRect) {
 						const EQmIcon Icon = Visible ? EQmIcon::EYE_OFF : EQmIcon::EYE;
@@ -3402,7 +3409,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					ControlCol.VSplitRight(ControlCol.h, &PasswordEditRect, &PasswordToggleRect);
 					static CLineInput s_AxiomLoginPassword(g_Config.m_QmAxiomLoginPassword, sizeof(g_Config.m_QmAxiomLoginPassword));
 					s_AxiomLoginPassword.SetHidden(!s_ShowAxiomPassword);
-					Ui()->DoEditBox(&s_AxiomLoginPassword, &PasswordEditRect, LgBodySize);
+					ui_widget::TextField(QmClientGoresTextInputCtx, &s_AxiomLoginPassword, PasswordEditRect, nullptr, LgBodySize);
 					if(DoPasswordToggleButton(&s_AxiomPasswordToggleButton, s_ShowAxiomPassword, PasswordToggleRect))
 						s_ShowAxiomPassword = !s_ShowAxiomPassword;
 					CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
@@ -3413,7 +3420,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					ControlCol.VSplitRight(ControlCol.h, &PasswordEditRect, &PasswordToggleRect);
 					static CLineInput s_AxiomDummyLoginPassword(g_Config.m_QmAxiomDummyLoginPassword, sizeof(g_Config.m_QmAxiomDummyLoginPassword));
 					s_AxiomDummyLoginPassword.SetHidden(!s_ShowAxiomDummyPassword);
-					Ui()->DoEditBox(&s_AxiomDummyLoginPassword, &PasswordEditRect, LgBodySize);
+					ui_widget::TextField(QmClientGoresTextInputCtx, &s_AxiomDummyLoginPassword, PasswordEditRect, nullptr, LgBodySize);
 					if(DoPasswordToggleButton(&s_AxiomDummyPasswordToggleButton, s_ShowAxiomDummyPassword, PasswordToggleRect))
 						s_ShowAxiomDummyPassword = !s_ShowAxiomDummyPassword;
 					CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);

@@ -7369,6 +7369,23 @@ TEST(QmMonitoringHelpers, SettingsNumericFieldsRemoveLegacySliderForwarding)
 	EXPECT_NE(ScrollbarBody.find("ui_widget::NumericField(InputCtx, pState"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, SettingsPasswordFieldsUseSharedTextPrimitive)
+{
+	const std::string QmMenus = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string TClientMenus = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string QmSettings = ExtractSourceFunctionBody(QmMenus, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(QmSettings.empty());
+
+	EXPECT_NE(QmSettings.find("IUiContext QmClientGoresTextInputCtx;"), std::string::npos);
+	EXPECT_NE(QmSettings.find("ui_widget::TextField(QmClientGoresTextInputCtx, &s_AxiomLoginPassword, PasswordEditRect"), std::string::npos);
+	EXPECT_NE(QmSettings.find("ui_widget::TextField(QmClientGoresTextInputCtx, &s_AxiomDummyLoginPassword, PasswordEditRect"), std::string::npos);
+	EXPECT_EQ(QmSettings.find("Ui()->DoEditBox(&s_AxiomLoginPassword"), std::string::npos);
+	EXPECT_EQ(QmSettings.find("Ui()->DoEditBox(&s_AxiomDummyLoginPassword"), std::string::npos);
+	EXPECT_EQ(MenusHeader.find("DoEditBoxWithLabel"), std::string::npos);
+	EXPECT_EQ(TClientMenus.find("bool CMenus::DoEditBoxWithLabel("), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 {
 	const std::string Theme = ReadRepoFile("src/game/client/QmUi/UiTheme.h");

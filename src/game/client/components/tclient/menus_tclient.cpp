@@ -706,16 +706,6 @@ bool CMenus::DoSliderWithScaledValue(const void *pId, int *pOption, const CUIRec
 	return ui_widget::NumericField(InputCtx, pState, pId, pOption, Min, Max, *pRect, Options);
 }
 
-bool CMenus::DoEditBoxWithLabel(CLineInput *LineInput, const CUIRect *pRect, const char *pLabel, const char *pDefault, char *pBuf, size_t BufSize)
-{
-	CUIRect Button, Label;
-	pRect->VSplitLeft(210.0f, &Label, &Button);
-	Ui()->DoLabel(&Label, pLabel, FontSize, TEXTALIGN_ML);
-	LineInput->SetBuffer(pBuf, BufSize);
-	LineInput->SetEmptyText(pDefault);
-	return Ui()->DoEditBox(LineInput, &Button, EditBoxFontSize);
-}
-
 int CMenus::DoButtonLineSize_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, float ButtonLineSize, bool Fake, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color)
 {
 	CUIRect Text = *pRect;
