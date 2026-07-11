@@ -1,7 +1,8 @@
 ---
 type: design-specification
 date: 2026-07-10
-status: draft
+updated: 2026-07-11
+status: active
 scope:
   - 全部设置页、QmClient、TClient 和设置搜索
   - 所有菜单对公共输入、滚动、dropdown、动效和性能基础设施的复用
@@ -29,7 +30,7 @@ authority: 本规格、当前代码审计、GitHub 合并前审查、人工验�
 
 ### 2.1 设置卡片平台
 
-卡片是全部设置页的基本信息和交互单位，覆盖 General、Graphics、Sound、DDNet、Appearance、Controls、QmClient、TClient 及其子页。每张设置卡片均可拖拽、跨列移动、重新排序和持久化；Search 通过同一张全局卡片注册表索引和跳转。
+卡片是全部设置页的基本信息和交互单位，覆盖 General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls、QmClient、TClient 及其子页。每张设置卡片均可拖拽、跨列移动、重新排序和持久化；Search 通过同一张全局卡片注册表索引和跳转。
 
 宽屏默认双列，窄屏自动单列。拖拽可跨列，持久化顺序以最终视觉阅读顺序为准。页面顶部子 tab 始终占内容区全宽，不属于卡片网格，也不可拖拽。
 
@@ -74,7 +75,7 @@ authority: 本规格、当前代码审计、GitHub 合并前审查、人工验�
 
 ### 4.3 Header
 
-全部设置卡片具有统一 header：标题、可选副标题和统一 drag handle。副标题只在 hover/focus 时出现；没有副标题时不预留空白。标题默认持续彩虹流动，`qm_ui_card_rainbow_titles` 关闭后使用静态高可读颜色，不改变 header 尺寸或层级。
+全部设置卡片具有统一 header：标题、可选副标题和由 `SettingsCard` shell 绘制的唯一 drag handle。有副标题时其 rect 始终保留布局高度，文字只在 hover/focus 时显示，不因显隐引起 reflow；没有副标题时不预留空白。标题默认持续彩虹流动，`qm_ui_card_rainbow_titles` 关闭后使用静态高可读颜色，不改变 header 尺寸或层级。
 
 ## 5. Settings Card Platform
 
@@ -84,18 +85,18 @@ authority: 本规格、当前代码审计、GitHub 合并前审查、人工验�
 
 ### 5.2 `SettingsCard`
 
-`SettingsCard` 是唯一 card shell。输入为 stable ID、标题、副标题、内容测量回调、页面 slot、drag model 和 token；输出不可分裂的 `SSettingsCardFrame`：
+`SettingsCard` 是唯一 card shell。输入为 stable ID、标题、副标题、内容测量/绘制回调、页面 slot、visual state/options 和 token；输出不可分裂的 `SSettingsCardFrame`。drag model 由 `SettingsCardDeck` 消费，不进入 shell：
 
 ```text
 display rect == hit-test rect == drag item rect == proxy source rect
 frame -> header rect + title rect + subtitle rect + handle rect + content rect
 ```
 
-shell 负责 surface、border、hover/focus、标题、副标题、handle、entry transform、drag proxy 和 drop indicator。业务页面只能在 `content rect` 中绘制实际内容。卡片高度由最终内容测量结果产生，不允许使用上一帧缓存高度先绘一层 card、再用另一层内容覆盖。
+`SettingsCardGeometry` 是 canonical frame 与 motion policy 的无 renderer 依赖纯 owner；client-only `SettingsCard` shell 负责 surface、border、hover/focus、标题、副标题、handle 和 visual feedback。Deck 负责产生 entry/drag/drop/reflow 状态并传给 shell。业务页面只能在 `content rect` 中绘制实际内容。卡片高度由最终内容测量结果产生，不允许使用上一帧缓存高度先绘一层 card、再用另一层内容覆盖。
 
 ### 5.3 `SettingsCardDeck` 与搜索
 
-`SettingsCardDeck` 是唯一排序、跨列拖拽、自动滚动、让位和顺序持久化协调器。它使用全局 stable ID 和现有卡片顺序模型，但必须消除 QmClient、TClient 与页面私有的并行拖拽状态。
+`SettingsCardDeckLogic` 是 order/drop/auto-scroll 的无 renderer 依赖纯 owner；client-only `SettingsCardDeck` 是唯一排序、跨列拖拽、自动滚动、让位和顺序持久化协调器。P2 建立公共 model/registry/Search/deck 并只完成 Graphics pilot；QmClient/TClient 在 P2 最多迁 legacy order data，不调用 `CSettingsCardDeck::Render(...)`。P6 再完整接入两页并删除其私有 drag/drop/order/shell/cache/Search 路径。
 
 Search 仅索引 `SettingsCard` 注册的 stable ID、标题、描述和导航目标；Search 不拥有第二套 card 视觉、尺寸、拖拽或排序模型。
 
@@ -118,11 +119,11 @@ Search 仅索引 `SettingsCard` 注册的 stable ID、标题、描述和导航�
 
 ### 6.2 必要与装饰动效
 
-必要动效始终保留：hover/focus 边框反馈、drag proxy、让位重排、drop/释放、dropdown 状态变化。即使全局动效减弱，也不能改变 hit-test、布局、持久化或交互完成时机。
+必要动效始终保留：hover/focus 边框反馈、drag proxy、drop/释放和 reflow-complete 完成反馈、dropdown 状态变化。motion level `0` 可取消让位 tween，但仍必须立即显示 proxy 并在 drop/reflow 完成时给出必要的短反馈；不能改变 hit-test、布局、持久化或交互完成时机。
 
 首次进入设置页、切换子 tab 或 card 首次插入当前 deck 时，可播放统一的短距离漂移加透明度 entry 动效。entry 必须在最终布局完成后仅作为绘制 transform/alpha 应用；它不改变命中或拖拽 rect。同一 `page/tab/card stable ID` 在一次展示周期只播放一次，滚动、重排、文本刷新不得重复触发。
 
-持续彩虹标题和表面微光属于装饰动效，由 `qm_extra_animations` 控制。`qm_ui_motion_level` 统一缩短或关闭非必要 tween/spring。公开 UI 配置至少包含：额外动画、卡片标题彩虹流动和动效强度。页面不得自行读取这些配置并产生不同解释。
+持续彩虹标题和表面微光属于装饰动效，由 `qm_extra_animations` 控制。`qm_ui_motion_level` 统一缩短或关闭非必要 tween/spring。公开 UI 配置至少包含：额外动画、卡片标题彩虹流动和动效强度。`CMenus` 统一解释它们并把 `SSettingsCardDeckVisualOptions`/`SCardMotionSpec` 显式传给 Deck，页面不得自行读配置。
 
 ## 7. 公共输入与数值控件
 
@@ -206,27 +207,68 @@ popup 若接管滚轮，必须在同一帧、底层页面 scroll region 消费�
 | B1 | `RenderQmSettingsGlassCard`、旧 deck 和 6-dot handle 仍在生产路径。 | 迁移页面时删除旧 shell/handle。 |
 | B2 | TClient 仍有 cache box、私有 inset、私有 section rect 与 drag state。 | 使用 `SettingsCard` 最终 frame，删除双层绘制。 |
 | B3 | `SCROLLBAR_OPTION_DELAYUPDATE` 会绕过公共 slider+input，导致轨道存在但输入消失。 | commit policy 下沉到 `NumericField`。 |
-| B4 | 输入 shell/legacy/icon/numeric 路径多套，focus、placeholder、光标和 inset 不同源。 | 统一 `InputField` 与 content rect。 |
-| B5 | `CScrollRegion` 与 `CQmScrollController` 两套状态机并存，`CListBox` 仍有静默忽略的 `ForceShowScrollbar`。 | 统一 policy，删除无效 API。 |
-| B6 | popup 在页面滚动输入之后渲染，长 popup 首个 wheel 可泄漏给父页面。 | 增加同帧 wheel owner。 |
+| B4 | `TextFieldEx`、`SearchField`、`ClearableTextField` 和 `SliderInputField` 已存在，但 legacy/icon/direct `DoEditBox` 路径仍并存，focus、placeholder、光标和 inset 尚未同源。 | 统一 `InputField` 与 content rect，删除设置页旧入口。 |
+| B5 | `QmResolveScrollPolicy`、`AUTO/HIDDEN`、ListBox profile 和 Alt 三倍加速已落地，`ForceShowScrollbar` 已删除；但 `CScrollRegion` 与 `CQmScrollController` 仍分别维护滚动位置、动画和输入状态。 | 保留 policy 成果，统一状态内核并删除适配层私有交互状态。 |
+| B6 | dropdown 长短列表 policy、viewport geometry 和 `m_BlockUnderlyingScroll` 已落地；现有测试主要验证 policy/helper，尚未证明真实菜单渲染顺序下首个 wheel 不泄漏。 | 增加真实 popup + 父 scroll region 集成测试，再按结果修正同帧 owner。 |
 | B7 | 卡片文本、间距、宽度、TClient 高度与拖拽在各页割裂。 | layout/token/card shell 同源后逐页验收。 |
 | B8 | 历史文档与结构测试曾把局部 wrapper 当成完成。 | 测试必须断言生产路径删除和真实交互。 |
 
-## 12. 迁移与删除顺序
+## 12. 旧文档主题去向与阶段边界
 
-1. 合并并审查远端 10 个提交，恢复可构建的单一基线。
-2. 建立 token、`SettingsPageLayout`、card motion runtime 与公共输入/scroll API；先写红灯结构和行为测试。
-3. 实现唯一 `SettingsCard` / `SettingsCardDeck` / Search 注册，迁移 TClient 并删除其 private cache box、drag 和旧 glass。
-4. 收口 `InputField`、`NumericField`、`∞`、delay commit 和 Controls action row；清点所有设置页直接 `DoEditBox` / `DoScrollbarH`。
-5. 收口滚动内核、popup 同帧所有权、overflow 和 preset；迁移设置页、列表页和 filter grid 适配器。
-6. 逐页迁移全部设置页，完成每页截图验收后删除该页旧 layout/card/drag/input/scroll 路径。
-7. 最后复审性能、Search、跨列持久化、入口动效和全菜单公共组件使用情况，删除临时兼容别名。
+归档规格 `docs/superpowers/specs/archive/2026-07-07-QmUi-UIUX公共组件与动画系统整合规格.html` 中的主题不得继续作为隐含待办。每个主题必须进入本规格 P0–P7、进入明确的后续专项，或被明确排除；“候选”本身不是计划。
+
+### 12.1 P0–P7 实施阶段
+
+| 阶段 | 目标 | 独立完成条件 |
+|---|---|---|
+| P0 · 基线与规格收敛 | 更新远端引用，逐提交审查并显式 merge 约定的远端提交；确认版本、构建和测试基线；把本规格当前事实同步到合并后代码。 | 远端提交清单与取舍可追溯，合并基线可构建，基线验证结果和保留 gap 已记录。 |
+| P1 · Theme、token、layout 与 card shell | 核对 `g_Config.m_QmUiColor` 菜单主题链和 QmUi 静态 token，建立运行时 theme/token 解析；实现 `SettingsPageLayout`、唯一 `SettingsCard`/`SSettingsCardFrame` 和公共 card motion contract；以已使用 shared deck 的 Graphics 为试点。 | 改主题配置能同步影响公共 card/input/focus token；card 的 display/hit/drag/proxy rect 同源；Graphics 卡片不再调用旧 shell。 |
+| P2 · Deck、注册表、Search 与持久化 | 复用现有 `QmCardRegistry` 和全局顺序模型，建立公共 deck/Search 并只完成 Graphics pilot；QmClient/TClient 最多迁 legacy order data。 | 公共 registry/model/deck/Search 稳定；Graphics 跨列拖拽与重启持久化有行为/集成测试；试点卡片可从搜索跳转；QmClient/TClient 未半迁移。 |
+| P3 · InputField 与 NumericField | 收口普通、搜索、清除、icon、整数、小数、`∞`、单位和 delay commit；Controls destructive action 保持独立。 | 设置页不再直接走 legacy/icon/direct edit 路径；`SCROLLBAR_OPTION_DELAYUPDATE` 不再使数值控件回退旧绘制。 |
+| P4 · Scroll 与 Dropdown | 统一 `CScrollRegion`/`CQmScrollController` 的状态内核、overflow、rail、步长和 ownership；完成短/长 dropdown 的 viewport 与首轮 wheel 规则。 | policy 与状态只各有一个真相源；真实 popup + 父滚动集成测试证明首轮 wheel 不泄漏。 |
+| P5 · 标准设置页迁移 | 迁移 General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls；每页同步删除旧 card/layout/input/scroll 路径。 | 每个页面切片均有行为测试、结构删除检查和人工矩阵记录，不留下“公共 wrapper + 旧实现”双路径。 |
+| P6 · QmClient 与 TClient 迁移 | 让 QmClient/TClient 完整调用公共 Deck，迁移本地 Search，并删除 QmClient `s_GlassCards`/module drag/order 和 TClient cache box/private drag/height 路径。 | `RenderQmSettingsGlassCard`、TClient cache box、QmClient/TClient 私有 coordinator 与本地 Search 从设置页生产路径清退；复杂子页完成视觉与交互验收。 |
+| P7 · 非卡片菜单、性能与最终收口 | 迁移列表/网格页面的公共 token、input、scroll、dropdown 适配；复审缓存、预算、Dogfood 调参、旧别名和全局完成证据。 | 全量自动验证、独立只读 review、性能场景和人工矩阵收口；只允许明确记录的视觉 gap。 |
+
+P0–P7 按依赖顺序实施；同一 build 目录的验证目标保持串行。P1–P4 的公共契约稳定后才能开始 P5/P6 页面批量迁移，避免页面先行再次产生私有 wrapper。
+
+### 12.2 旧主题映射
+
+| 旧主题 | 当前代码事实 | 规划去向 | 是否属于 P0–P7 完成条件 |
+|---|---|---|---|
+| `QmThemeRuntime` | 当前没有该符号；菜单侧已有 `MenuUiColorSurface`/`MenuUiColorAccent` 运行时派生，QmUi `UiTokens.h` 的 surface/accent/focus 仍为静态常量。 | P1 重新核对并建立运行时 theme/token 解析；不预设必须复刻旧文档中的文件名或 API。 | 是。 |
+| L0/L1/L2 卡片体系 | `DrawCard`/`SCardProps` 已存在，但没有完成 Root Panel + Section + Inset Group 的统一层级；当前设置页仍有多套 shell。 | P1 只实现设置页 page/card shell 与内容 rect；P5/P6 完成页面迁移。完整 Root Panel/L0/L1/L2 信息层级进入 R2。 | card shell/layout 是；完整三级视觉重组否。 |
+| 设置页 11 tab 重组 | 当前设置枚举仍是既有多页结构，QmClient 另有 5 个子 tab；重组会改变导航、配置值和信息架构。 | R2 · 信息架构专项，重新盘点全部设置项、旧枚举迁移和搜索跳转后单独批准。 | 否。 |
+| SearchField / ClearableTextField / Dropdown | QmUi 已有输入 primitive 和 dropdown policy，但 icon/legacy/direct edit 与真实 popup ownership 仍未收口。 | P3 负责输入 shell，P4 负责 dropdown/scroll ownership，P5/P6 负责页面清退。 | 是。 |
+| SegmentedControl / ColorPicker / Toggle / Button | QmUi 已有 Button/Toggle，原生 UI 已有 ColorPicker；`SegmentedControl` 不存在，现有组件尚未全部使用统一运行时 token。 | P1 只保证 token 契约；完整 API/视觉/行为收口进入 R1 · 公共组件覆盖。 | token 接入是；完整组件重做否。 |
+| Phosphor/MSDF 图标 | 当前没有 Phosphor/MSDF 资产与渲染管线。 | R3 · 画质与渲染管线专项，与 SDF 共用的 shader/asset/GL/Vulkan 风险统一评审。 | 否。 |
+| SDF 圆角 / SDF 文本 | 当前没有对应 SDF shader；短期圆角段数路径已提升为可配置、默认 32、上限 48。 | R3 重新评估 SDF 的实际收益、跨后端接口、文本图集迁移和 fallback；不得以旧文档估算直接开工。 | 否。 |
+| 动画系统 P0/P1/P2/P3 | `CUiV2AnimationRuntime`、`ResolveTargetValue`、Motion Level 和 presence/layout 能力已存在并有测试。 | P1 定义 card motion，P2 接入 deck，P7 完成统一调参和真实客户端验收；不重造动画引擎。 | 是，以“统一接入与验收”为口径。 |
+| Dogfood 动画实验室 | `RenderQmUiDogfood` 和 `dbg_qm_ui_dogfood` 已存在。 | P1–P4 作为 primitive 验证台，P7 用于调参证据；扩展控件覆盖归 R1。 | 作为验证工具，不单独阻塞。 |
+
+### 12.3 后续专项
+
+- **R1 · 公共组件覆盖：** SegmentedControl、ColorPicker shell、Toggle、Button、slider、modal、toast 和现有 font icon API。每类必须同时有公共接口、Dogfood、真实页面接入和行为测试。
+- **R2 · 信息架构与完整层级：** 设置页 tab 数量/分组、Root Panel、完整 L0/L1/L2、导航配置迁移和 Search 跳转语义。该专项会改变用户导航行为，必须重新设计并单独批准。
+- **R3 · 画质与渲染管线：** Phosphor/MSDF 图标、SDF 圆角、SDF 文本及共用 shader command/GL/Vulkan 管线。该专项涉及上游引擎核心和跨平台后端，必须单独规格、风险审查和明确授权。
+
+R1–R3 是可追踪路线，不是 P0–P7 的隐含完成条件。除非用户另行批准，不得为了“顺手补齐旧文档”扩大当前设置页统一任务。
+
+## 13. 迁移与删除顺序
+
+1. P0 先整合并审查远端提交，建立可构建、可测试且版本正确的单一基线，并再次校准本规格的当前事实。
+2. P1 建立运行时 theme/token、`SettingsPageLayout`、`SettingsCard`/`SSettingsCardFrame` 和 card motion contract，以 Graphics 为首个无旧 shell 的完整切片。
+3. P2 在现有注册表和全局顺序模型上建立 `SettingsCardDeck`/Search，只迁 Graphics pilot；QmClient/TClient 仅可迁 legacy order data，完整 Deck/私有 coordinator/shell/cache/Search 清退在 P6。
+4. P3 收口 `InputField`、`NumericField`、`∞`、delay commit 和 Controls action row，清点设置页直接 `DoEditBox` / `DoScrollbarH`。
+5. P4 收口滚动状态内核、popup 同帧所有权、overflow 和 preset，并用真实父子滚动场景验证首轮 wheel。
+6. P5 迁移标准设置页，P6 再迁移 QmClient/TClient；每完成一页就删除该页旧 layout/card/drag/input/scroll 路径并记录人工验收。
+7. P7 迁移非卡片菜单适配器，复审性能、Search、跨列持久化、入口动效和公共组件使用情况，最后删除临时兼容别名。
 
 不允许以“先套公共 wrapper，旧路径以后再删”结束任一页面切片。
 
-## 13. 验证与人工验收
+## 14. 验证与人工验收
 
-### 13.1 自动验证
+### 14.1 自动验证
 
 每个迁移切片先增加失败测试，再实现最小路径。测试至少覆盖：
 
@@ -239,7 +281,7 @@ popup 若接管滚轮，必须在同一帧、底层页面 scroll region 消费�
 
 最终验证使用仓库规定的 `cmake-windows.cmd` 构建入口，串行运行全量 C++ tests、docs check、`git diff --check` 和适用的 default gate。核心逻辑改动完成后必须有独立只读 review；review finding 收口前不得提交。
 
-### 13.2 人工矩阵
+### 14.2 人工矩阵
 
 | 页面/场景 | 验收重点 |
 |---|---|
@@ -253,7 +295,7 @@ popup 若接管滚轮，必须在同一帧、底层页面 scroll region 消费�
 
 每项记录页面、viewport/UI scale、操作、截图或结果，以及未验证项。未人工验收的项目必须以 gap 交接。
 
-## 14. 规格自审
+## 15. 规格自审
 
 - 无 `TODO`、`TBD` 或“以后决定”的实施占位。
 - 卡片仅限设置页与设置搜索；列表页不被错误卡片化。
