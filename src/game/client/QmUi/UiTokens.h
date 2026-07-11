@@ -73,6 +73,12 @@ namespace ui_token::settings
 	inline constexpr float SUB_TAB_GAP = 12.0f;
 	inline constexpr float CARD_GAP = 16.0f;
 	inline constexpr float TWO_COLUMN_MIN_WIDTH = 760.0f;
+	inline constexpr float CARD_PADDING = 14.0f;
+	inline constexpr float CARD_HEADER_TITLE_HEIGHT = 18.0f;
+	inline constexpr float CARD_HEADER_SUBTITLE_HEIGHT = 12.0f;
+	inline constexpr float CARD_HEADER_GAP = 6.0f;
+	inline constexpr float CARD_HANDLE_SIZE = 24.0f;
+	inline constexpr float CARD_RADIUS = 12.0f;
 } // namespace ui_token::settings
 
 namespace ui_token::radius
@@ -98,7 +104,9 @@ namespace ui_token::font
 {
 	inline constexpr float HEADLINE_LG = 16.0f;
 	inline constexpr float HEADLINE = 14.0f;
+	inline constexpr float TITLE = 18.0f;
 	inline constexpr float BODY = 12.0f;
+	inline constexpr float SMALL = 10.0f;
 	inline constexpr float CAPTION = 10.0f;
 	inline constexpr float TIP = 9.0f;
 } // namespace ui_token::font

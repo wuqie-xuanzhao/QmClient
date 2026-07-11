@@ -17,7 +17,7 @@
 - `SSettingsCardFrame::m_Rect` 同时是 display、hit-test、drag item 和 proxy source rect；entry transform 仅影响绘制，不改变这些 rect。
 - P1 只提供 page/card shell，不实现完整 Root Panel/L0/L1/L2；完整层级属于 R2。
 - 不新建渲染或动画 runtime；复用 `CUiV2AnimationRuntime`、`ResolveTargetValue(...)` 和 P0 合入并验证的 presentation-state 能力。
-- P1 复用现有 `qm_extra_animations`（不改变其默认值或既有语义），并在 Task 3 的 card title shell 消费时新增 `qm_ui_card_rainbow_titles`；保留既有 `qm_ui_motion_level` 的 `0..2` 语义，页面不得自行解释这些配置。
+- P1 复用现有 `qm_extra_animations`（不改变其默认值或既有语义），保留既有 `qm_ui_motion_level` 的 `0..2` 语义；`qm_ui_card_rainbow_titles` 只在 Task 4 有真实 card title shell 消费者时新增，页面不得自行解释这些配置。
 - 本阶段不迁移 QmClient/TClient 私有 deck，不实现 Search/持久化；它们分别属于 P2/P6。
 - 同一 `cmake-build-release` 目标串行；P1 不更新功能版本，版本只在 P7 最终收口时更新一次。
 
@@ -290,7 +290,7 @@ git commit -m "feat(settings-ui): 统一设置页布局解析" -m "feat: 固化�
 - Consumes: `IUiContext`、slot rect、`SSettingsCardSpec`、measure/render callbacks、`SSettingsCardVisualState`。
 - Produces: `SSettingsCardFrame BuildSettingsCardFrame(...)`、`SSettingsCardFrame SettingsCard(...)`、`SCardMotionSpec ResolveCardMotionSpec(int MotionLevel, bool ExtraAnimations)`。
 
-- [ ] **Step 1: Write failing frame and motion tests**
+- [x] **Step 1: Write failing frame and motion tests**
 
 ```cpp
 TEST(SettingsCard, CanonicalRectOwnsDisplayHitDragAndProxyGeometry)
@@ -303,7 +303,10 @@ TEST(SettingsCard, CanonicalRectOwnsDisplayHitDragAndProxyGeometry)
 	EXPECT_EQ(&Frame.DisplayRect(), &Frame.HitRect());
 	EXPECT_EQ(&Frame.DisplayRect(), &Frame.DragRect());
 	EXPECT_EQ(&Frame.DisplayRect(), &Frame.ProxySourceRect());
-	EXPECT_TRUE(Frame.m_Rect.Inside({Frame.m_ContentRect.x, Frame.m_ContentRect.y}));
+	EXPECT_GE(Frame.m_ContentRect.x, Frame.m_Rect.x);
+	EXPECT_GE(Frame.m_ContentRect.y, Frame.m_Rect.y);
+	EXPECT_LE(Frame.m_ContentRect.x + Frame.m_ContentRect.w, Frame.m_Rect.x + Frame.m_Rect.w);
+	EXPECT_LE(Frame.m_ContentRect.y + Frame.m_ContentRect.h, Frame.m_Rect.y + Frame.m_Rect.h);
 	EXPECT_GT(Frame.m_SubtitleRect.h, 0.0f);
 }
 
@@ -330,7 +333,7 @@ TEST(SettingsCard, MotionPolicyKeepsRequiredFeedbackAtLevelZero)
 }
 ```
 
-- [ ] **Step 2: Run tests to verify red**
+- [x] **Step 2: Run tests to verify red**
 
 Run:
 
@@ -341,7 +344,7 @@ cmake-build-release/testrunner.exe --gtest_filter=SettingsCard.*
 
 Expected: compile FAIL because `SettingsCardGeometry.h/.cpp` and the card contract are absent.
 
-- [ ] **Step 3: Implement exact public structs**
+- [x] **Step 3: Implement exact public structs**
 
 `SettingsCardGeometry.h` owns only renderer-free value types and pure functions:
 
@@ -559,27 +562,21 @@ src/game/client/QmUi/SettingsCardGeometry.cpp
 
 `QmAnimTest.cpp` 只 include `SettingsCardGeometry.h`。禁止把 `SettingsCard.cpp`、`UiForms.cpp` 或整个 UI renderer 加入 `TESTS_EXTRA`；client shell 由 Task 4 的 production structure test 与 `game-client` build 覆盖。
 
-- [ ] **Step 4: Centralize motion configuration**
+- [x] **Step 4: Centralize motion configuration**
 
-`CMenus` 只通过一个 helper 解释配置：
+`CMenus` 只通过一个 helper 解释现有动画配置：
 
 ```cpp
 SCardMotionSpec CMenus::SettingsCardMotionSpec() const
 {
 	return ResolveCardMotionSpec(g_Config.m_QmUiMotionLevel, g_Config.m_QmExtraAnimations != 0);
 }
-
-SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
-{
-	SSettingsCardDeckVisualOptions Options;
-	Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 && g_Config.m_QmExtraAnimations != 0;
-	return Options;
-}
 ```
 
-`CMenus` 是这些动效/视觉配置的唯一解释 owner，它把 `SSettingsCardDeckVisualOptions` 显式传给 Graphics，P2 再透传给 Deck/`SettingsCard(...)`；页面不读 `g_Config.m_QmExtraAnimations`、`m_QmUiCardRainbowTitles` 或 `m_QmUiMotionLevel`。Motion level `0` 仅关闭 entry 的 Y/alpha tween 与装饰 tween；drag proxy 立即跟随，drop 和 reflow-complete 保留 `0.08s` 的必要 border/alpha 反馈，不改变 canonical rect 或持久化完成时机。
+Motion level `0` 仅关闭 entry 的 Y/alpha tween 与装饰 tween；drag proxy 立即跟随，drop 和 reflow-complete 保留 `0.08s` 的必要 border/alpha 反馈，不改变 canonical rect 或持久化完成时机。`qm_ui_card_rainbow_titles` 与 `SettingsCardDeckVisualOptions()` 延后到 Task 4：届时它会有 Graphics card title shell 的真实消费者，避免新增未使用配置。
 
-- [ ] **Step 5: Run tests to verify green**
+`testrunner` 不链接 `ui_rect.cpp`，因此 frame 测试使用 rect 值域比较代替 `CUIRect::Inside(...)`；geometry owner 仍不依赖 UI renderer。
+- [x] **Step 5: Run tests to verify green**
 
 Run:
 
@@ -590,10 +587,10 @@ cmake-build-release/testrunner.exe --gtest_filter=SettingsCard.*
 
 Expected: `2 tests` PASS；本命令只是 release focused 证据，不声称已运行 sanitizer。
 
-- [ ] **Step 6: Commit card shell**
+- [x] **Step 6: Commit card shell**
 
 ```powershell
-git add CMakeLists.txt src/game/client/QmUi/SettingsCardGeometry.h src/game/client/QmUi/SettingsCardGeometry.cpp src/game/client/QmUi/SettingsCard.h src/game/client/QmUi/SettingsCard.cpp src/game/client/QmUi/UiTokens.h src/game/client/components/menus.h src/game/client/components/menus.cpp src/test/QmAnimTest.cpp
+git add CMakeLists.txt src/game/client/QmUi/SettingsCardGeometry.h src/game/client/QmUi/SettingsCardGeometry.cpp src/game/client/QmUi/SettingsCard.h src/game/client/QmUi/SettingsCard.cpp src/game/client/QmUi/UiTokens.h src/game/client/components/menus.h src/game/client/components/menus.cpp src/test/QmAnimTest.cpp docs/superpowers/plans/2026-07-11-QmClient-设置页UI统一-P1-Theme与SettingsCard基础.md
 git commit -m "feat(settings-ui): 建立唯一设置卡片 frame" -m "feat: 统一标题、内容、命中与拖拽几何" -m "test: 覆盖 canonical rect 与 motion level"
 ```
 

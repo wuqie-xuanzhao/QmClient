@@ -8,6 +8,7 @@
 #include <game/client/QmUi/QmDropdown.h>
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/QmTree.h>
+#include <game/client/QmUi/SettingsCardGeometry.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
@@ -25,6 +26,44 @@
 
 namespace
 {
+	TEST(SettingsCard, CanonicalRectOwnsDisplayHitDragAndProxyGeometry)
+	{
+		SSettingsCardSpec Spec;
+		Spec.m_pStableId = "deck:graphics-display";
+		Spec.m_pTitle = "Graphics display";
+		Spec.m_pSubtitle = "Window and monitor";
+		const SSettingsCardFrame Frame = BuildSettingsCardFrame({10.0f, 20.0f, 400.0f, 0.0f}, Spec, 180.0f, 1.0f);
+		EXPECT_EQ(&Frame.DisplayRect(), &Frame.HitRect());
+		EXPECT_EQ(&Frame.DisplayRect(), &Frame.DragRect());
+		EXPECT_EQ(&Frame.DisplayRect(), &Frame.ProxySourceRect());
+		EXPECT_GE(Frame.m_ContentRect.x, Frame.m_Rect.x);
+		EXPECT_GE(Frame.m_ContentRect.y, Frame.m_Rect.y);
+		EXPECT_LE(Frame.m_ContentRect.x + Frame.m_ContentRect.w, Frame.m_Rect.x + Frame.m_Rect.w);
+		EXPECT_LE(Frame.m_ContentRect.y + Frame.m_ContentRect.h, Frame.m_Rect.y + Frame.m_Rect.h);
+		EXPECT_GT(Frame.m_SubtitleRect.h, 0.0f);
+	}
+
+	TEST(SettingsCard, MotionPolicyKeepsRequiredFeedbackAtLevelZero)
+	{
+		const SCardMotionSpec Full = ResolveCardMotionSpec(2, true);
+		const SCardMotionSpec Reduced = ResolveCardMotionSpec(1, true);
+		const SCardMotionSpec Off = ResolveCardMotionSpec(0, true);
+		EXPECT_GT(Full.m_EntryDistance, Reduced.m_EntryDistance);
+		EXPECT_FLOAT_EQ(Full.m_EntryDuration, 0.16f);
+		EXPECT_FLOAT_EQ(Reduced.m_ReflowDuration, 0.12f);
+		EXPECT_TRUE(Full.m_DecorativeMotion);
+		EXPECT_FALSE(ResolveCardMotionSpec(2, false).m_DecorativeMotion);
+		EXPECT_FLOAT_EQ(Off.m_EntryDistance, 0.0f);
+		EXPECT_FLOAT_EQ(Off.m_EntryDuration, 0.0f);
+		EXPECT_FLOAT_EQ(Off.m_ReflowDuration, 0.0f);
+		EXPECT_GT(Off.m_DropFeedbackDuration, 0.0f);
+		EXPECT_GT(Off.m_ReflowCompleteFeedbackDuration, 0.0f);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(-1, true).m_EntryDistance, 0.0f);
+		EXPECT_FLOAT_EQ(ResolveCardMotionSpec(99, true).m_EntryDistance, Full.m_EntryDistance);
+		EXPECT_TRUE(Off.m_KeepDragProxy);
+		EXPECT_TRUE(Off.m_KeepDropFeedback);
+		EXPECT_TRUE(Off.m_KeepReflowCompleteFeedback);
+	}
 	TEST(SettingsPageLayout, WideViewportUsesEqualColumnsBelowFullWidthTabs)
 	{
 		const SSettingsPageLayoutFrame Frame = ResolveSettingsPageLayout({0.0f, 0.0f, 1000.0f, 700.0f}, true, 1.0f);

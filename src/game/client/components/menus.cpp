@@ -33,6 +33,7 @@
 #include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/QmTree.h>
+#include <game/client/QmUi/SettingsCardGeometry.h>
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
@@ -534,6 +535,11 @@ IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
 	Context.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	Context.m_UiScale = UiScale;
 	return Context;
+}
+
+SCardMotionSpec CMenus::SettingsCardMotionSpec() const
+{
+	return ResolveCardMotionSpec(g_Config.m_QmUiMotionLevel, g_Config.m_QmExtraAnimations != 0);
 }
 
 uint64_t CMenus::UiAnimNodeKey(const char *pScope, const uint64_t Id) const

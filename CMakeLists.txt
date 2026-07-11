@@ -2639,6 +2639,10 @@ if(CLIENT)
     QmUi/QmTheme.h
     QmUi/QmTree.cpp
     QmUi/QmTree.h
+    QmUi/SettingsCard.cpp
+    QmUi/SettingsCard.h
+    QmUi/SettingsCardGeometry.cpp
+    QmUi/SettingsCardGeometry.h
     QmUi/UiButtons.cpp
     QmUi/UiButtons.h
     QmUi/UiContainers.h
@@ -3853,6 +3857,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/QmUi/QmTree.cpp
     src/game/client/QmUi/QmCardRegistry.cpp
     src/game/client/QmUi/QmModuleLayoutAdapter.cpp
+    src/game/client/QmUi/SettingsCardGeometry.cpp
     src/game/client/components/assets_resource_registry.cpp
     src/game/client/components/binds_deepfly_mode.cpp
     src/generated/client_data.h

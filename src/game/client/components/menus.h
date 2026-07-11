@@ -72,6 +72,7 @@ enum
 
 class CUIRect;
 struct IUiContext;
+struct SCardMotionSpec;
 class CMenus;
 
 namespace NTranslateUiSettings
@@ -118,6 +119,7 @@ public:
 
 private:
 	IUiContext SettingsUiContext(const char *pScope, float UiScale = 1.0f);
+	SCardMotionSpec SettingsCardMotionSpec() const;
 	uint64_t UiAnimNodeKey(const char *pScope, uint64_t Id = 0) const;
 	void TriggerUiSwitchAnimation(uint64_t NodeKey, float DurationSec = 0.18f);
 	float ReadUiSwitchAnimation(uint64_t NodeKey) const;
