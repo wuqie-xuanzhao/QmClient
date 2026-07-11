@@ -6138,9 +6138,9 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_EQ(Settings.find("ScrollParams.m_ScrollUnit = LANGUAGE_ROW_HEIGHT;"), std::string::npos);
 	const std::string QmOverviewBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)");
 	ASSERT_FALSE(QmOverviewBody.empty());
-	EXPECT_NE(QmOverviewBody.find("static CQmScrollContainer s_QmOverviewScrollContainer;"), std::string::npos);
-	EXPECT_NE(QmOverviewBody.find("SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer(s_QmOverviewScrollContainer, &MainView, s_QmOverviewScrollContentHeight, QmCardStyle, UiScale, s_PrevOverviewScrollY, !PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(QmOverviewBody.find("FinishSettingsQmScrollContainer(s_QmOverviewScrollContainer, OverviewScrollFrame, EndPad, &s_QmOverviewScrollContentHeight, &s_PrevOverviewScrollY, !m_MenuTextPlanCollecting);"), std::string::npos);
+	EXPECT_NE(QmOverviewBody.find("static CQmScrollState s_QmOverviewScrollState;"), std::string::npos);
+	EXPECT_NE(QmOverviewBody.find("SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer(s_QmOverviewScrollState, s_QmOverviewScrollContainer, &MainView, s_QmOverviewScrollContentHeight, QmCardStyle, UiScale, s_PrevOverviewScrollY, !PrewarmOnly);"), std::string::npos);
+	EXPECT_NE(QmOverviewBody.find("FinishSettingsQmScrollContainer(s_QmOverviewScrollState, s_QmOverviewScrollContainer, OverviewScrollFrame, EndPad, &s_QmOverviewScrollContentHeight, &s_PrevOverviewScrollY, !m_MenuTextPlanCollecting);"), std::string::npos);
 	EXPECT_NE(QmOverviewBody.find("MainView.y += OverviewScrollFrame.m_Offset.y;"), std::string::npos);
 	EXPECT_LT(QmOverviewBody.find("BeginSettingsQmScrollContainer("), QmOverviewBody.find("DrawFullWidthCard("));
 	EXPECT_LT(QmOverviewBody.find("DrawFullWidthCard("), QmOverviewBody.find("FinishSettingsQmScrollContainer("));
@@ -6152,19 +6152,19 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_EQ(QmOverviewBody.find("Ui()->ClipDisable();"), std::string::npos);
 	EXPECT_EQ(QmOverviewBody.find("BeginSettingsScrollRegion("), std::string::npos);
 	EXPECT_EQ(QmOverviewBody.find("FinishSettingsScrollRegion("), std::string::npos);
-	EXPECT_NE(QmClient.find("static CQmScrollContainer s_QmScrollContainer;"), std::string::npos);
+	EXPECT_NE(QmClient.find("static CQmScrollState s_QmScrollState;"), std::string::npos);
 	EXPECT_NE(Header.find("struct SSettingsQmScrollFrame"), std::string::npos);
 	EXPECT_EQ(Header.find("m_ScrollOffsetChanged"), std::string::npos);
-	EXPECT_NE(Header.find("BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
-	EXPECT_NE(Header.find("FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer"), std::string::npos);
+	EXPECT_NE(Header.find("BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer"), std::string::npos);
+	EXPECT_NE(Header.find("FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer"), std::string::npos);
 	EXPECT_NE(QmClient.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
 	EXPECT_NE(QmClient.find("Frame.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::LARGE, UiScale);"), std::string::npos);
 	EXPECT_NE(QmClient.find("const SQmScrollConfig ScrollConfig = QmSettingsScrollConfig(UiScale, g_Config.m_UiSmoothScrollTime / 1000.0f);"), std::string::npos);
 	EXPECT_NE(QmClient.find("ScrollInput.m_Hovered = Ui()->MouseHovered(pView);"), std::string::npos);
-	EXPECT_NE(QmClient.find("const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(*pView, ContentHeight, Frame.m_Style);"), std::string::npos);
-	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.Update(*pView, ContentHeight, GameClient()->UiRuntimeV2()->FrameDt(), ScrollInput, Frame.m_Style, ScrollConfig);"), std::string::npos);
-	const std::string BeginScrollBody = ExtractSourceFunctionBody(QmClient, "CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled)");
-	const std::string FinishScrollBody = ExtractSourceFunctionBody(QmClient, "void CMenus::FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)");
+	EXPECT_NE(QmClient.find("const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(ScrollState, *pView, ContentHeight, Frame.m_Style);"), std::string::npos);
+	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.Update(ScrollState, *pView, ContentHeight, GameClient()->UiRuntimeV2()->FrameDt(), ScrollInput, Frame.m_Style, ScrollConfig);"), std::string::npos);
+	const std::string BeginScrollBody = ExtractSourceFunctionBody(QmClient, "CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled)");
+	const std::string FinishScrollBody = ExtractSourceFunctionBody(QmClient, "void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)");
 	ASSERT_FALSE(BeginScrollBody.empty());
 	ASSERT_FALSE(FinishScrollBody.empty());
 	EXPECT_EQ(BeginScrollBody.find("ConsumeHotkey(CUi::HOTKEY_SCROLL_"), std::string::npos);
@@ -6184,7 +6184,7 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_EQ(QmClient.find("m_ScrollOffsetChanged"), std::string::npos);
 	EXPECT_NE(QmClient.find("Ui()->ClipEnable(&Frame.m_ClipRect);"), std::string::npos);
 	EXPECT_NE(QmClient.find("Ui()->ClipDisable();"), std::string::npos);
-	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);"), std::string::npos);
+	EXPECT_NE(QmClient.find("Frame.m_Frame = ScrollContainer.PreviewFrame(ScrollState, Frame.m_ViewRect, *pContentHeight, Frame.m_Style);"), std::string::npos);
 	EXPECT_EQ(QmClient.find("ScrollContainer.PreviewFrame(Frame.m_ClipRect"), std::string::npos);
 	EXPECT_NE(QmClient.find("*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)));"), std::string::npos);
 	EXPECT_EQ(QmClient.find("CScrollRegion::HEIGHT_MAGIC_FIX"), std::string::npos);
@@ -6192,8 +6192,8 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	const std::string QmMainBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
 	ASSERT_FALSE(QmWrapperBody.empty());
 	ASSERT_FALSE(QmMainBody.empty());
-	EXPECT_NE(QmMainBody.find("SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(QmMainBody.find("FinishSettingsQmScrollContainer(s_QmScrollContainer, QmScrollFrame, ScrollEnd, &s_QmScrollContentHeight, &s_PrevQmScrollY, true);"), std::string::npos);
+	EXPECT_NE(QmMainBody.find("SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollState, s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);"), std::string::npos);
+	EXPECT_NE(QmMainBody.find("FinishSettingsQmScrollContainer(s_QmScrollState, s_QmScrollContainer, QmScrollFrame, ScrollEnd, &s_QmScrollContentHeight, &s_PrevQmScrollY, true);"), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("SQmScrollContainerInput ScrollInput;"), std::string::npos);
 	EXPECT_NE(QmMainBody.find("TriggerUiSwitchAnimation(QmClientTabSwitchNode, 0.0f);"), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("ApplyUiSwitchOffset(ContentView, TransitionStrength, s_QmTabTransitionDirection, false,"), std::string::npos);
@@ -9134,6 +9134,38 @@ TEST(QmMonitoringHelpers, ScrollRegionDelegatesMutableScrollStateToQmScrollState
 	EXPECT_NE(SliderBody.find("m_ScrollState.SetOffset("), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, QmScrollControllerReceivesExternalMutableState)
+{
+	const std::string Header = ReadRepoFile("src/game/client/QmUi/QmScroll.h");
+	const std::string Source = ReadRepoFile("src/game/client/QmUi/QmScroll.cpp");
+	const std::string Containers = ReadRepoFile("src/game/client/QmUi/UiContainers.h");
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string UpdateBody = ExtractSourceFunctionBody(Source, "SQmScrollContainerFrame CQmScrollController::UpdateInternal(CQmScrollState &State, const CUIRect &ViewRect, float ContentHeight, float Dt, const SQmScrollContainerInput &Input, const SQmScrollContainerStyle &Style, const SQmScrollConfig &Config, bool RenderRail) const");
+	ASSERT_FALSE(UpdateBody.empty());
+
+	EXPECT_NE(Header.find("SQmScrollContentDragState m_ContentDragState;"), std::string::npos);
+	EXPECT_NE(Header.find("void ScrollByWheel(CQmScrollState &State,"), std::string::npos);
+	EXPECT_NE(Header.find("PreviewFrame(const CQmScrollState &State,"), std::string::npos);
+	EXPECT_NE(Header.find("UpdateInternal(CQmScrollState &State,"), std::string::npos);
+	EXPECT_EQ(Header.find("CQmScrollState m_State;"), std::string::npos);
+	EXPECT_EQ(Header.find("m_ScrollbarDragActive"), std::string::npos);
+	EXPECT_EQ(Header.find("m_ScrollbarGrabY"), std::string::npos);
+	EXPECT_EQ(Header.find("m_ContentDragActive"), std::string::npos);
+	EXPECT_EQ(Header.find("m_ContentDragCandidate"), std::string::npos);
+	EXPECT_EQ(Header.find("m_ContentDragPressMousePos"), std::string::npos);
+	EXPECT_EQ(Header.find("m_ContentDragPressOffset"), std::string::npos);
+	EXPECT_EQ(Header.find("m_ContentDragLastMousePos"), std::string::npos);
+	EXPECT_NE(UpdateBody.find("State.BeginThumbDrag("), std::string::npos);
+	EXPECT_NE(UpdateBody.find("SQmScrollContentDragState &ContentDrag = State.ContentDragState();"), std::string::npos);
+	EXPECT_NE(Containers.find("ScrollContainer(const IUiContext &Ctx, CQmScrollState &State, CQmScrollContainer &Controller,"), std::string::npos);
+	EXPECT_NE(Containers.find("Controller.Update(State, ViewRect, ContentHeight,"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer,"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer,"), std::string::npos);
+	EXPECT_NE(QmClient.find("CQmScrollState s_QmOverviewScrollState;"), std::string::npos);
+	EXPECT_NE(QmClient.find("CQmScrollState s_GlobalSearchScrollState;"), std::string::npos);
+	EXPECT_NE(QmClient.find("CQmScrollState s_QmScrollState;"), std::string::npos);
+}
 TEST(QmMonitoringHelpers, QmUiCardPresetCarriesQmClientSettingsStyle)
 {
 	const std::string Containers = ReadRepoFile("src/game/client/QmUi/UiContainers.h");

@@ -1814,6 +1814,7 @@ TEST(UiV2ScrollPhysics, NativeWheelAnimationConsumesLargeFrameDeltaLikeScrollReg
 
 TEST(UiV2ScrollContainer, ModifierDoesNotGloballySuppressWheelAndAltAcceleratesIt)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -1825,16 +1826,16 @@ TEST(UiV2ScrollContainer, ModifierDoesNotGloballySuppressWheelAndAltAcceleratesI
 	Input.m_Hovered = true;
 	Input.m_ModifierPressed = true;
 	Input.m_WheelDelta = -120.0f;
-	const SQmScrollContainerFrame ModifierFrame = Container.Update(View, 300.0f, 1.0f / 60.0f, Input);
+	const SQmScrollContainerFrame ModifierFrame = Container.Update(State, View, 300.0f, 1.0f / 60.0f, Input);
 	EXPECT_NEAR(ModifierFrame.m_Offset, 10.0f, 0.001f);
 
 	Input.m_ModifierPressed = false;
 	Input.m_AltPressed = true;
-	const SQmScrollContainerFrame WheelFrame = Container.Update(View, 300.0f, 0.5f, Input);
+	const SQmScrollContainerFrame WheelFrame = Container.Update(State, View, 300.0f, 0.5f, Input);
 	EXPECT_NEAR(WheelFrame.m_Offset, 40.0f, 0.001f);
 
 	Input.m_WheelDelta = 0.0f;
-	const SQmScrollContainerFrame DoneFrame = Container.Update(View, 300.0f, 0.5f, Input);
+	const SQmScrollContainerFrame DoneFrame = Container.Update(State, View, 300.0f, 0.5f, Input);
 	EXPECT_NEAR(DoneFrame.m_Offset, 40.0f, 0.001f);
 }
 
@@ -1879,6 +1880,7 @@ TEST(UiV2ScrollPolicy, ResolvesSharedVisualAndInteractionProfiles)
 
 TEST(UiV2ScrollController, HiddenRailKeepsScrollableContentAtFullWidth)
 {
+	CQmScrollState State;
 	CQmScrollController Controller;
 	SQmScrollRequest Request;
 	Request.m_Profile = EQmScrollProfile::FILTER_GRID;
@@ -1887,7 +1889,7 @@ TEST(UiV2ScrollController, HiddenRailKeepsScrollableContentAtFullWidth)
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = true;
 	Input.m_WheelDelta = -120.0f;
-	const SQmScrollContainerFrame Frame = Controller.Update(View, 300.0f, 0.0f, Input, Request, 1.0f, 0.0f);
+	const SQmScrollContainerFrame Frame = Controller.Update(State, View, 300.0f, 0.0f, Input, Request, 1.0f, 0.0f);
 	EXPECT_TRUE(Frame.m_Scrollable);
 	EXPECT_FALSE(Frame.m_ScrollbarVisible);
 	EXPECT_NEAR(Frame.m_ClipRect.w, View.w, 0.001f);
@@ -2032,6 +2034,7 @@ TEST(UiV2ScrollPhysics, ShrinkingScrollableContentClampsOffsetToNewRange)
 
 TEST(UiV2ScrollContainer, ComputesContentRectAndScrollbarVisibility)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2039,8 +2042,8 @@ TEST(UiV2ScrollContainer, ComputesContentRectAndScrollbarVisibility)
 	View.w = 200.0f;
 	View.h = 100.0f;
 
-	Container.ScrollByWheel(-120.0f, View.h, 300.0f);
-	const SQmScrollContainerFrame Frame = Container.Update(View, 300.0f, 1.0f / 60.0f);
+	Container.ScrollByWheel(State, -120.0f, View.h, 300.0f);
+	const SQmScrollContainerFrame Frame = Container.Update(State, View, 300.0f, 1.0f / 60.0f);
 
 	EXPECT_TRUE(Frame.m_ScrollbarVisible);
 	EXPECT_NEAR(Frame.m_ClipRect.x, View.x, 1e-6f);
@@ -2053,14 +2056,15 @@ TEST(UiV2ScrollContainer, ComputesContentRectAndScrollbarVisibility)
 	EXPECT_NEAR(Frame.m_ContentRect.h, 300.0f, 1e-6f);
 	EXPECT_GT(Frame.m_Offset, 0.0f);
 
-	Container.Reset();
-	const SQmScrollContainerFrame NonOverflowFrame = Container.Update(View, 80.0f, 0.0f);
+	State.Reset();
+	const SQmScrollContainerFrame NonOverflowFrame = Container.Update(State, View, 80.0f, 0.0f);
 	EXPECT_FALSE(NonOverflowFrame.m_ScrollbarVisible);
 	EXPECT_NEAR(NonOverflowFrame.m_ClipRect.w, View.w, 1e-6f);
 }
 
 TEST(UiV2ScrollContainer, DefaultWheelInputUsesDdnetNativeStep)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2068,14 +2072,15 @@ TEST(UiV2ScrollContainer, DefaultWheelInputUsesDdnetNativeStep)
 	View.w = 200.0f;
 	View.h = 100.0f;
 
-	Container.ScrollByWheel(-120.0f, View.h, 300.0f);
-	const SQmScrollContainerFrame FirstFrame = Container.Update(View, 300.0f, 0.0f);
+	Container.ScrollByWheel(State, -120.0f, View.h, 300.0f);
+	const SQmScrollContainerFrame FirstFrame = Container.Update(State, View, 300.0f, 0.0f);
 	EXPECT_NEAR(FirstFrame.m_Offset, 10.0f, 0.001f);
-	EXPECT_NEAR(Container.Velocity(), 0.0f, 0.001f);
+	EXPECT_NEAR(State.Velocity(), 0.0f, 0.001f);
 }
 
 TEST(UiV2ScrollContainer, ExplicitDdnetSmoothTimeUsesEaseOutStep)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2084,27 +2089,28 @@ TEST(UiV2ScrollContainer, ExplicitDdnetSmoothTimeUsesEaseOutStep)
 	View.h = 100.0f;
 	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
 
-	Container.ScrollByWheel(-120.0f, View.h, 300.0f, Config);
-	const SQmScrollContainerFrame FirstFrame = Container.Update(View, 300.0f, 0.0f, Config);
+	Container.ScrollByWheel(State, -120.0f, View.h, 300.0f, Config);
+	const SQmScrollContainerFrame FirstFrame = Container.Update(State, View, 300.0f, 0.0f, Config);
 	EXPECT_NEAR(FirstFrame.m_Offset, 0.0f, 0.001f);
 
-	const SQmScrollContainerFrame HalfFrame = Container.Update(View, 300.0f, 0.25f, Config);
+	const SQmScrollContainerFrame HalfFrame = Container.Update(State, View, 300.0f, 0.25f, Config);
 	EXPECT_NEAR(HalfFrame.m_Offset, 8.75f, 0.001f);
 
-	const SQmScrollContainerFrame DoneFrame = Container.Update(View, 300.0f, 0.25f, Config);
+	const SQmScrollContainerFrame DoneFrame = Container.Update(State, View, 300.0f, 0.25f, Config);
 	EXPECT_NEAR(DoneFrame.m_Offset, 10.0f, 0.001f);
 
-	Container.ScrollByWheel(-360.0f, View.h, 300.0f, Config);
-	Container.Update(View, 300.0f, 0.5f, Config);
-	Container.Update(View, 300.0f, 0.125f, Config);
-	Container.Update(View, 300.0f, 0.25f, Config);
-	Container.Update(View, 300.0f, 0.25f, Config);
-	EXPECT_NEAR(Container.Offset(), 20.0f, 0.001f);
-	EXPECT_NEAR(Container.Velocity(), 0.0f, 0.001f);
+	Container.ScrollByWheel(State, -360.0f, View.h, 300.0f, Config);
+	Container.Update(State, View, 300.0f, 0.5f, Config);
+	Container.Update(State, View, 300.0f, 0.125f, Config);
+	Container.Update(State, View, 300.0f, 0.25f, Config);
+	Container.Update(State, View, 300.0f, 0.25f, Config);
+	EXPECT_NEAR(State.Offset(), 20.0f, 0.001f);
+	EXPECT_NEAR(State.Velocity(), 0.0f, 0.001f);
 }
 
 TEST(UiV2ScrollContainer, NonScrollableContentKeepsContentAtViewOrigin)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 4.0f;
@@ -2113,21 +2119,22 @@ TEST(UiV2ScrollContainer, NonScrollableContentKeepsContentAtViewOrigin)
 	View.h = 120.0f;
 
 	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.0f);
-	Container.ScrollByWheel(-120.0f, View.h, 400.0f, Config);
-	EXPECT_GT(Container.Offset(), 0.0f);
+	Container.ScrollByWheel(State, -120.0f, View.h, 400.0f, Config);
+	EXPECT_GT(State.Offset(), 0.0f);
 
-	const SQmScrollContainerFrame Frame = Container.Update(View, 80.0f, 0.0f, Config);
+	const SQmScrollContainerFrame Frame = Container.Update(State, View, 80.0f, 0.0f, Config);
 	EXPECT_FALSE(Frame.m_ScrollbarVisible);
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 	EXPECT_NEAR(Frame.m_ContentRect.x, View.x, 1e-6f);
 	EXPECT_NEAR(Frame.m_ContentRect.y, View.y, 1e-6f);
 	EXPECT_NEAR(Frame.m_ContentRect.w, View.w, 1e-6f);
 	EXPECT_NEAR(Frame.m_ContentRect.h, 80.0f, 1e-6f);
-	EXPECT_NEAR(Container.Offset(), 0.0f, 1e-6f);
+	EXPECT_NEAR(State.Offset(), 0.0f, 1e-6f);
 }
 
 TEST(UiV2ScrollContainer, WheelInputOnlyMovesWhenHovered)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2138,17 +2145,18 @@ TEST(UiV2ScrollContainer, WheelInputOnlyMovesWhenHovered)
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = false;
 	Input.m_WheelDelta = -120.0f;
-	SQmScrollContainerFrame Frame = Container.Update(View, 300.0f, 1.0f / 60.0f, Input);
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 300.0f, 1.0f / 60.0f, Input);
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 
 	Input.m_Hovered = true;
-	Frame = Container.Update(View, 300.0f, 1.0f / 60.0f, Input);
+	Frame = Container.Update(State, View, 300.0f, 1.0f / 60.0f, Input);
 	EXPECT_GT(Frame.m_Offset, 0.0f);
 	EXPECT_LT(Frame.m_ContentRect.y, View.y);
 }
 
 TEST(UiV2ScrollContainer, ComputesScrollbarTrackAndThumbGeometry)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2164,7 +2172,7 @@ TEST(UiV2ScrollContainer, ComputesScrollbarTrackAndThumbGeometry)
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = true;
 	Input.m_WheelDelta = -120.0f;
-	const SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 1.0f / 60.0f, Input, Style);
+	const SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 1.0f / 60.0f, Input, Style);
 
 	EXPECT_TRUE(Frame.m_ScrollbarVisible);
 	EXPECT_NEAR(Frame.m_ClipRect.w, View.w - Style.m_ScrollbarWidth, 1e-6f);
@@ -2179,6 +2187,7 @@ TEST(UiV2ScrollContainer, ComputesScrollbarTrackAndThumbGeometry)
 
 TEST(UiV2ScrollContainer, ComputesHorizontalContentRectAndScrollbarGeometry)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2195,7 +2204,7 @@ TEST(UiV2ScrollContainer, ComputesHorizontalContentRectAndScrollbarGeometry)
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = true;
 	Input.m_WheelDelta = -120.0f;
-	const SQmScrollContainerFrame Frame = Container.Update(View, 500.0f, 1.0f / 60.0f, Input, Style);
+	const SQmScrollContainerFrame Frame = Container.Update(State, View, 500.0f, 1.0f / 60.0f, Input, Style);
 
 	EXPECT_TRUE(Frame.m_ScrollbarVisible);
 	EXPECT_NEAR(Frame.m_ClipRect.x, View.x, 1e-6f);
@@ -2217,6 +2226,7 @@ TEST(UiV2ScrollContainer, ComputesHorizontalContentRectAndScrollbarGeometry)
 
 TEST(UiV2ScrollContainer, OverscrollKeepsScrollbarThumbInsideTrack)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2236,19 +2246,20 @@ TEST(UiV2ScrollContainer, OverscrollKeepsScrollbarThumbInsideTrack)
 	Config.m_WheelScale = 1.0f;
 	Config.m_NativeWheelStep = false;
 	Config.m_MaxOverscroll = 72.0f;
-	SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 1.0f / 60.0f, Input, Style, Config);
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 1.0f / 60.0f, Input, Style, Config);
 	EXPECT_LT(Frame.m_Offset, 0.0f);
 	EXPECT_GE(Frame.m_ScrollbarThumbRect.y, Frame.m_ScrollbarTrackRect.y);
 
-	Container.Reset();
+	State.Reset();
 	Input.m_WheelDelta = -100000.0f;
-	Frame = Container.Update(View, 400.0f, 1.0f / 60.0f, Input, Style, Config);
+	Frame = Container.Update(State, View, 400.0f, 1.0f / 60.0f, Input, Style, Config);
 	EXPECT_GT(Frame.m_Offset, 300.0f);
 	EXPECT_LE(Frame.m_ScrollbarThumbRect.y + Frame.m_ScrollbarThumbRect.h, Frame.m_ScrollbarTrackRect.y + Frame.m_ScrollbarTrackRect.h);
 }
 
 TEST(UiV2ScrollContainer, DraggingScrollbarThumbMapsMouseToOffset)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2263,28 +2274,29 @@ TEST(UiV2ScrollContainer, DraggingScrollbarThumbMapsMouseToOffset)
 
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
 	ASSERT_TRUE(Frame.m_ScrollbarVisible);
 
 	Input.m_MouseY = Frame.m_ScrollbarThumbRect.y + Frame.m_ScrollbarThumbRect.h * 0.5f;
 	Input.m_MousePressed = true;
 	Input.m_MouseDown = true;
 	Input.m_ThumbHovered = true;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
-	EXPECT_TRUE(Container.ScrollbarDragActive());
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
+	EXPECT_TRUE(Container.ScrollbarDragActive(State));
 
 	Input.m_MousePressed = false;
 	Input.m_MouseY = Frame.m_ScrollbarTrackRect.y + Frame.m_ScrollbarTrackRect.h - Frame.m_ScrollbarThumbRect.h * 0.5f;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
 	EXPECT_NEAR(Frame.m_Offset, 300.0f, 1.0f);
 
 	Input.m_MouseDown = false;
-	Container.Update(View, 400.0f, 0.0f, Input, Style);
-	EXPECT_FALSE(Container.ScrollbarDragActive());
+	Container.Update(State, View, 400.0f, 0.0f, Input, Style);
+	EXPECT_FALSE(Container.ScrollbarDragActive(State));
 }
 
 TEST(UiV2ScrollContainer, DraggingHorizontalScrollbarThumbMapsMouseToOffset)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2300,7 +2312,7 @@ TEST(UiV2ScrollContainer, DraggingHorizontalScrollbarThumbMapsMouseToOffset)
 
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 500.0f, 0.0f, Input, Style);
 	ASSERT_TRUE(Frame.m_ScrollbarVisible);
 
 	Input.m_MouseX = Frame.m_ScrollbarThumbRect.x + Frame.m_ScrollbarThumbRect.w * 0.5f;
@@ -2308,21 +2320,22 @@ TEST(UiV2ScrollContainer, DraggingHorizontalScrollbarThumbMapsMouseToOffset)
 	Input.m_MousePressed = true;
 	Input.m_MouseDown = true;
 	Input.m_ThumbHovered = true;
-	Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
-	EXPECT_TRUE(Container.ScrollbarDragActive());
+	Frame = Container.Update(State, View, 500.0f, 0.0f, Input, Style);
+	EXPECT_TRUE(Container.ScrollbarDragActive(State));
 
 	Input.m_MousePressed = false;
 	Input.m_MouseX = Frame.m_ScrollbarTrackRect.x + Frame.m_ScrollbarTrackRect.w - Frame.m_ScrollbarThumbRect.w * 0.5f;
-	Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
+	Frame = Container.Update(State, View, 500.0f, 0.0f, Input, Style);
 	EXPECT_NEAR(Frame.m_Offset, 300.0f, 1.0f);
 
 	Input.m_MouseDown = false;
-	Container.Update(View, 500.0f, 0.0f, Input, Style);
-	EXPECT_FALSE(Container.ScrollbarDragActive());
+	Container.Update(State, View, 500.0f, 0.0f, Input, Style);
+	EXPECT_FALSE(Container.ScrollbarDragActive(State));
 }
 
 TEST(UiV2ScrollContainer, ClickingScrollbarTrackPagesTowardMouse)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2337,17 +2350,17 @@ TEST(UiV2ScrollContainer, ClickingScrollbarTrackPagesTowardMouse)
 
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
 	ASSERT_TRUE(Frame.m_ScrollbarVisible);
 
 	Input.m_MouseY = Frame.m_ScrollbarTrackRect.y + Frame.m_ScrollbarTrackRect.h - 2.0f;
 	Input.m_MousePressed = true;
 	Input.m_MouseDown = true;
 	Input.m_TrackHovered = true;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
 
 	EXPECT_NEAR(Frame.m_Offset, 100.0f, 1e-6f);
-	EXPECT_TRUE(Container.ScrollbarDragActive());
+	EXPECT_TRUE(Container.ScrollbarDragActive(State));
 }
 
 TEST(UiV2ScrollState, ProgrammaticTargetSharesNativeAnimationAndClampsAfterContentShrink)
@@ -2413,6 +2426,7 @@ TEST(UiV2ScrollState, NonScrollableResetPreservesActiveThumbGrabUntilRelease)
 
 TEST(UiV2ScrollContainer, PreviewFrameDoesNotCancelActiveScrollbarDrag)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2427,29 +2441,30 @@ TEST(UiV2ScrollContainer, PreviewFrameDoesNotCancelActiveScrollbarDrag)
 
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
 	ASSERT_TRUE(Frame.m_ScrollbarVisible);
 
 	Input.m_MouseY = Frame.m_ScrollbarThumbRect.y + Frame.m_ScrollbarThumbRect.h * 0.5f;
 	Input.m_MousePressed = true;
 	Input.m_MouseDown = true;
 	Input.m_ThumbHovered = true;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
-	ASSERT_TRUE(Container.ScrollbarDragActive());
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
+	ASSERT_TRUE(Container.ScrollbarDragActive(State));
 
-	const SQmScrollContainerFrame Preview = Container.PreviewFrame(View, 400.0f, Style);
+	const SQmScrollContainerFrame Preview = Container.PreviewFrame(State, View, 400.0f, Style);
 	EXPECT_TRUE(Preview.m_ScrollbarVisible);
-	EXPECT_TRUE(Container.ScrollbarDragActive());
+	EXPECT_TRUE(Container.ScrollbarDragActive(State));
 
 	Input.m_MousePressed = false;
 	Input.m_ThumbHovered = false;
 	Input.m_MouseY = Frame.m_ScrollbarTrackRect.y + Frame.m_ScrollbarTrackRect.h - Frame.m_ScrollbarThumbRect.h * 0.5f;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
 	EXPECT_NEAR(Frame.m_Offset, 300.0f, 1.0f);
 }
 
 TEST(UiV2ScrollContainer, DraggingContentMovesOffsetWithPointer)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2463,28 +2478,29 @@ TEST(UiV2ScrollContainer, DraggingContentMovesOffsetWithPointer)
 	Input.m_MousePressed = true;
 	Input.m_MouseDown = true;
 	Input.m_ContentDragAllowed = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 0.0f, Input);
-	EXPECT_FALSE(Container.ContentDragActive());
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 0.0f, Input);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 
 	Input.m_MousePressed = false;
 	Input.m_MouseY = 67.0f;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input);
-	EXPECT_FALSE(Container.ContentDragActive());
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 
 	Input.m_MouseY = 40.0f;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input);
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input);
 	EXPECT_NEAR(Frame.m_Offset, 30.0f, 1e-6f);
-	EXPECT_TRUE(Container.ContentDragActive());
+	EXPECT_TRUE(Container.ContentDragActive(State));
 
 	Input.m_MouseDown = false;
-	Container.Update(View, 400.0f, 0.0f, Input);
-	EXPECT_FALSE(Container.ContentDragActive());
+	Container.Update(State, View, 400.0f, 0.0f, Input);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 }
 
 TEST(UiV2ScrollContainer, DraggingHorizontalContentUsesPointerX)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2502,31 +2518,32 @@ TEST(UiV2ScrollContainer, DraggingHorizontalContentUsesPointerX)
 	Input.m_MousePressed = true;
 	Input.m_MouseDown = true;
 	Input.m_ContentDragAllowed = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
-	EXPECT_FALSE(Container.ContentDragActive());
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 500.0f, 0.0f, Input, Style);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 
 	Input.m_MousePressed = false;
 	Input.m_MouseX = 76.0f;
 	Input.m_MouseY = 30.0f;
-	Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
-	EXPECT_FALSE(Container.ContentDragActive());
+	Frame = Container.Update(State, View, 500.0f, 0.0f, Input, Style);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 
 	Input.m_MouseX = 40.0f;
-	Frame = Container.Update(View, 500.0f, 0.0f, Input, Style);
+	Frame = Container.Update(State, View, 500.0f, 0.0f, Input, Style);
 	EXPECT_NEAR(Frame.m_Offset, 40.0f, 1e-6f);
-	EXPECT_TRUE(Container.ContentDragActive());
+	EXPECT_TRUE(Container.ContentDragActive(State));
 	EXPECT_LT(Frame.m_ContentRect.x, View.x);
 	EXPECT_NEAR(Frame.m_ContentRect.y, View.y, 1e-6f);
 
 	Input.m_MouseDown = false;
-	Container.Update(View, 500.0f, 0.0f, Input, Style);
-	EXPECT_FALSE(Container.ContentDragActive());
+	Container.Update(State, View, 500.0f, 0.0f, Input, Style);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 }
 
 TEST(UiV2ScrollContainer, ScrollbarDragDoesNotStartContentDrag)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2542,21 +2559,22 @@ TEST(UiV2ScrollContainer, ScrollbarDragDoesNotStartContentDrag)
 	SQmScrollContainerInput Input;
 	Input.m_Hovered = true;
 	Input.m_ContentDragAllowed = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 0.0f, Input, Style);
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 0.0f, Input, Style);
 	ASSERT_TRUE(Frame.m_ScrollbarVisible);
 
 	Input.m_MouseY = Frame.m_ScrollbarThumbRect.y + Frame.m_ScrollbarThumbRect.h * 0.5f;
 	Input.m_MousePressed = true;
 	Input.m_MouseDown = true;
 	Input.m_ThumbHovered = true;
-	Container.Update(View, 400.0f, 0.0f, Input, Style);
+	Container.Update(State, View, 400.0f, 0.0f, Input, Style);
 
-	EXPECT_TRUE(Container.ScrollbarDragActive());
-	EXPECT_FALSE(Container.ContentDragActive());
+	EXPECT_TRUE(Container.ScrollbarDragActive(State));
+	EXPECT_FALSE(Container.ContentDragActive(State));
 }
 
 TEST(UiV2ScrollContainer, BlockedContentDragDoesNotMoveOffset)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2571,20 +2589,21 @@ TEST(UiV2ScrollContainer, BlockedContentDragDoesNotMoveOffset)
 	Input.m_MouseDown = true;
 	Input.m_ContentDragAllowed = true;
 	Input.m_ContentDragBlocked = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 0.0f, Input);
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 0.0f, Input);
 
-	EXPECT_FALSE(Container.ContentDragActive());
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 
 	Input.m_MousePressed = false;
 	Input.m_MouseY = 40.0f;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input);
-	EXPECT_FALSE(Container.ContentDragActive());
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 }
 
 TEST(UiV2ScrollContainer, BlockedContentDragCancelsPendingCandidate)
 {
+	CQmScrollState State;
 	CQmScrollContainer Container;
 	CUIRect View;
 	View.x = 10.0f;
@@ -2598,21 +2617,21 @@ TEST(UiV2ScrollContainer, BlockedContentDragCancelsPendingCandidate)
 	Input.m_MousePressed = true;
 	Input.m_MouseDown = true;
 	Input.m_ContentDragAllowed = true;
-	SQmScrollContainerFrame Frame = Container.Update(View, 400.0f, 0.0f, Input);
-	EXPECT_FALSE(Container.ContentDragActive());
+	SQmScrollContainerFrame Frame = Container.Update(State, View, 400.0f, 0.0f, Input);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 
 	Input.m_MousePressed = false;
 	Input.m_ContentDragBlocked = true;
 	Input.m_MouseY = 40.0f;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input);
-	EXPECT_FALSE(Container.ContentDragActive());
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 
 	Input.m_ContentDragBlocked = false;
 	Input.m_MouseY = 20.0f;
-	Frame = Container.Update(View, 400.0f, 0.0f, Input);
-	EXPECT_FALSE(Container.ContentDragActive());
+	Frame = Container.Update(State, View, 400.0f, 0.0f, Input);
+	EXPECT_FALSE(Container.ContentDragActive(State));
 	EXPECT_NEAR(Frame.m_Offset, 0.0f, 1e-6f);
 }
 

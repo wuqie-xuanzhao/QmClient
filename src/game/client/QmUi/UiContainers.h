@@ -102,7 +102,7 @@ namespace ui_widget
 	}
 
 	template<typename BodyFn>
-	SQmScrollContainerFrame ScrollContainer(const IUiContext &Ctx, CQmScrollContainer &State, const CUIRect &ViewRect, float ContentHeight, const SScrollContainerProps &Props, BodyFn &&Body)
+	SQmScrollContainerFrame ScrollContainer(const IUiContext &Ctx, CQmScrollState &State, CQmScrollContainer &Controller, const CUIRect &ViewRect, float ContentHeight, const SScrollContainerProps &Props, BodyFn &&Body)
 	{
 		SQmScrollContainerInput Input;
 		if(Ctx.m_pUi != nullptr)
@@ -125,10 +125,10 @@ namespace ui_widget
 			}
 		}
 
-		const SQmScrollContainerFrame ProbeFrame = State.PreviewFrame(ViewRect, ContentHeight, Props.m_Style);
+		const SQmScrollContainerFrame ProbeFrame = Controller.PreviewFrame(State, ViewRect, ContentHeight, Props.m_Style);
 		if(Ctx.m_pUi != nullptr && ProbeFrame.m_ScrollbarVisible)
 		{
-			const void *pScrollbarId = &State;
+			const void *pScrollbarId = &Controller;
 			Input.m_ThumbHovered = Ctx.m_pUi->MouseHovered(&ProbeFrame.m_ScrollbarThumbRect);
 			Input.m_TrackHovered = Ctx.m_pUi->MouseHovered(&ProbeFrame.m_ScrollbarTrackRect) && !Input.m_ThumbHovered;
 			if(Input.m_ThumbHovered || Input.m_TrackHovered)
@@ -137,14 +137,14 @@ namespace ui_widget
 				Ctx.m_pUi->SetActiveItem(pScrollbarId);
 			if(Ctx.m_pUi->CheckActiveItem(pScrollbarId))
 			{
-				Input.m_ThumbHovered = Input.m_ThumbHovered || State.ScrollbarDragActive();
-				Input.m_TrackHovered = Input.m_TrackHovered && !State.ScrollbarDragActive();
+				Input.m_ThumbHovered = Input.m_ThumbHovered || Controller.ScrollbarDragActive(State);
+				Input.m_TrackHovered = Input.m_TrackHovered && !Controller.ScrollbarDragActive(State);
 				if(!Input.m_MouseDown)
 					Ctx.m_pUi->SetActiveItem(nullptr);
 			}
 		}
 
-		const SQmScrollContainerFrame Frame = State.Update(ViewRect, ContentHeight, Ctx.m_FrameDt, Input, Props.m_Style, Props.m_Config);
+		const SQmScrollContainerFrame Frame = Controller.Update(State, ViewRect, ContentHeight, Ctx.m_FrameDt, Input, Props.m_Style, Props.m_Config);
 		if(Ctx.m_pUi == nullptr)
 		{
 			Body(Frame.m_ContentRect);

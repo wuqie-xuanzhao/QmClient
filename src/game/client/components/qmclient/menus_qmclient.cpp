@@ -605,7 +605,7 @@ void CMenus::BuildQmClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &v
 	g_Config.m_UiSettingsPage = PreviousSettingsPage;
 }
 
-CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled)
+CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled)
 {
 	SSettingsQmScrollFrame Frame;
 	Frame.m_ViewRect = *pView;
@@ -628,7 +628,7 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 	ScrollInput.m_MouseDown = Ui()->MouseButton(0);
 	ScrollInput.m_MousePressed = Ui()->MouseButtonClicked(0);
 
-	const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(*pView, ContentHeight, Frame.m_Style);
+	const SQmScrollContainerFrame ProbeFrame = ScrollContainer.PreviewFrame(ScrollState, *pView, ContentHeight, Frame.m_Style);
 	CUIRect WheelHotRect = ProbeFrame.m_ClipRect;
 	if(ProbeFrame.m_ScrollbarVisible)
 		WheelHotRect.w += Frame.m_Style.m_ScrollbarWidth;
@@ -647,14 +647,14 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 			Ui()->SetActiveItem(pScrollbarId);
 		if(Ui()->CheckActiveItem(pScrollbarId))
 		{
-			ScrollInput.m_ThumbHovered = ScrollInput.m_ThumbHovered || ScrollContainer.ScrollbarDragActive();
-			ScrollInput.m_TrackHovered = ScrollInput.m_TrackHovered && !ScrollContainer.ScrollbarDragActive();
+			ScrollInput.m_ThumbHovered = ScrollInput.m_ThumbHovered || ScrollContainer.ScrollbarDragActive(ScrollState);
+			ScrollInput.m_TrackHovered = ScrollInput.m_TrackHovered && !ScrollContainer.ScrollbarDragActive(ScrollState);
 			if(!ScrollInput.m_MouseDown)
 				Ui()->SetActiveItem(nullptr);
 		}
 	}
 
-	Frame.m_Frame = ScrollContainer.Update(*pView, ContentHeight, GameClient()->UiRuntimeV2()->FrameDt(), ScrollInput, Frame.m_Style, ScrollConfig);
+	Frame.m_Frame = ScrollContainer.Update(ScrollState, *pView, ContentHeight, GameClient()->UiRuntimeV2()->FrameDt(), ScrollInput, Frame.m_Style, ScrollConfig);
 	Frame.m_ClipRect = Frame.m_Frame.m_ClipRect;
 	Frame.m_Offset.y = -Frame.m_Frame.m_Offset;
 	*pView = Frame.m_ClipRect;
@@ -662,14 +662,14 @@ CMenus::SSettingsQmScrollFrame CMenus::BeginSettingsQmScrollContainer(CQmScrollC
 	return Frame;
 }
 
-void CMenus::FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
+void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
 {
 	if(!Frame.m_Enabled)
 		return;
 
 	Ui()->ClipDisable();
 	*pContentHeight = maximum(0.0f, std::ceil(EndRect.y + EndRect.h - (Frame.m_ClipRect.y + Frame.m_Offset.y)));
-	Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
+	Frame.m_Frame = ScrollContainer.PreviewFrame(ScrollState, Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
 	CUIRect WheelHotRect = Frame.m_Frame.m_ClipRect;
 	if(Frame.m_Frame.m_ScrollbarVisible)
 		WheelHotRect.w += Frame.m_Style.m_ScrollbarWidth;
@@ -685,8 +685,8 @@ void CMenus::FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer
 			SQmScrollConfig ScrollConfig = QmSettingsScrollConfig(1.0f, g_Config.m_UiSmoothScrollTime / 1000.0f);
 			if(Input()->AltIsPressed())
 				ScrollConfig.m_WheelScale *= QmScrollAltMultiplier();
-			ScrollContainer.ScrollByWheel(WheelDelta, Frame.m_ViewRect.h, *pContentHeight, ScrollConfig);
-			Frame.m_Frame = ScrollContainer.PreviewFrame(Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
+			ScrollContainer.ScrollByWheel(ScrollState, WheelDelta, Frame.m_ViewRect.h, *pContentHeight, ScrollConfig);
+			Frame.m_Frame = ScrollContainer.PreviewFrame(ScrollState, Frame.m_ViewRect, *pContentHeight, Frame.m_Style);
 		}
 	}
 	const float CurrentOffsetY = Frame.m_Frame.m_ScrollbarVisible ? Frame.m_Frame.m_Offset : 0.0f;
@@ -717,10 +717,11 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	const float LineHeight = std::clamp(22.0f * UiScale, 18.0f, 22.0f);
 	const ColorRGBA TipColor(1.0f, 1.0f, 1.0f, 0.72f);
 
+	static CQmScrollState s_QmOverviewScrollState;
 	static CQmScrollContainer s_QmOverviewScrollContainer;
 	static float s_QmOverviewScrollContentHeight = 0.0f;
 	static float s_PrevOverviewScrollY = 0.0f;
-	SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer(s_QmOverviewScrollContainer, &MainView, s_QmOverviewScrollContentHeight, QmCardStyle, UiScale, s_PrevOverviewScrollY, !PrewarmOnly);
+	SSettingsQmScrollFrame OverviewScrollFrame = BeginSettingsQmScrollContainer(s_QmOverviewScrollState, s_QmOverviewScrollContainer, &MainView, s_QmOverviewScrollContentHeight, QmCardStyle, UiScale, s_PrevOverviewScrollY, !PrewarmOnly);
 
 	MainView.y += OverviewScrollFrame.m_Offset.y;
 	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
@@ -777,7 +778,7 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	});
 
 	CUIRect EndPad{MainView.x, MainView.y, MainView.w, 5.0f};
-	FinishSettingsQmScrollContainer(s_QmOverviewScrollContainer, OverviewScrollFrame, EndPad, &s_QmOverviewScrollContentHeight, &s_PrevOverviewScrollY, !m_MenuTextPlanCollecting);
+	FinishSettingsQmScrollContainer(s_QmOverviewScrollState, s_QmOverviewScrollContainer, OverviewScrollFrame, EndPad, &s_QmOverviewScrollContentHeight, &s_PrevOverviewScrollY, !m_MenuTextPlanCollecting);
 }
 
 void CMenus::RenderSettingsGlobalSearch(CUIRect MainView, bool PrewarmOnly)
@@ -802,11 +803,12 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
 	const float LineSpacing = std::clamp(5.0f * UiScale, 3.0f, 5.0f);
 
+	static CQmScrollState s_GlobalSearchScrollState;
 	static CQmScrollContainer s_GlobalSearchScrollContainer;
 	static float s_GlobalSearchScrollContentHeight = 0.0f;
 	static float s_PrevGlobalSearchScrollY = 0.0f;
 	static std::vector<CUIRect> s_GlassCards;
-	SSettingsQmScrollFrame SearchScrollFrame = BeginSettingsQmScrollContainer(s_GlobalSearchScrollContainer, &MainView, s_GlobalSearchScrollContentHeight, QmCardStyle, UiScale, s_PrevGlobalSearchScrollY, !PrewarmOnly);
+	SSettingsQmScrollFrame SearchScrollFrame = BeginSettingsQmScrollContainer(s_GlobalSearchScrollState, s_GlobalSearchScrollContainer, &MainView, s_GlobalSearchScrollContentHeight, QmCardStyle, UiScale, s_PrevGlobalSearchScrollY, !PrewarmOnly);
 
 	MainView.y += SearchScrollFrame.m_Offset.y;
 	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
@@ -877,7 +879,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		RenderQmSettingsGlassCard(CardRect, QmCardStyle);
 
 	CUIRect EndPad{MainView.x, MainView.y, MainView.w, 5.0f};
-	FinishSettingsQmScrollContainer(s_GlobalSearchScrollContainer, SearchScrollFrame, EndPad, &s_GlobalSearchScrollContentHeight, &s_PrevGlobalSearchScrollY, !m_MenuTextPlanCollecting);
+	FinishSettingsQmScrollContainer(s_GlobalSearchScrollState, s_GlobalSearchScrollContainer, SearchScrollFrame, EndPad, &s_GlobalSearchScrollContentHeight, &s_PrevGlobalSearchScrollY, !m_MenuTextPlanCollecting);
 }
 
 void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards)
@@ -1214,10 +1216,11 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 
 	CUIRect LeftView, RightView;
 
+	static CQmScrollState s_QmScrollState;
 	static CQmScrollContainer s_QmScrollContainer;
 	static float s_QmScrollContentHeight = 0.0f;
 	static float s_PrevQmScrollY = 0.0f;
-	SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);
+	SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollState, s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);
 
 	static std::vector<CUIRect> s_GlassCards;
 
@@ -7838,7 +7841,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		ScrollEnd.y = maximum(LeftView.y, RightView.y) + LgCardSpacing;
 		ScrollEnd.w = MainView.w;
 		ScrollEnd.h = 0.0f;
-		FinishSettingsQmScrollContainer(s_QmScrollContainer, QmScrollFrame, ScrollEnd, &s_QmScrollContentHeight, &s_PrevQmScrollY, true);
+		FinishSettingsQmScrollContainer(s_QmScrollState, s_QmScrollContainer, QmScrollFrame, ScrollEnd, &s_QmScrollContentHeight, &s_PrevQmScrollY, true);
 	}
 	if(TabTransitionActive && TabTransitionAlpha > 0.0f)
 		TabContentClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TabTransitionAlpha), IGraphics::CORNER_NONE, 0.0f);

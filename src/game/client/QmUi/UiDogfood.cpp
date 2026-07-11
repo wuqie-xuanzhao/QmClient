@@ -42,6 +42,7 @@ namespace
 	std::array<CButtonContainer, COLUMN_COUNT> s_aToastBtn;
 	bool s_ToastVisible = true;
 	ui_widget::SToastState s_ToastState;
+	CQmScrollState s_DogfoodScrollState;
 	CQmScrollContainer s_DogfoodScroll;
 } // namespace
 
@@ -61,7 +62,7 @@ void RenderQmUiDogfood(const IUiContext &Ctx, const CUIRect &Rect)
 	ui_widget::SScrollContainerProps ScrollProps;
 	ScrollProps.m_Style = QmScrollContainerStyleForSize(EQmScrollSize::SMALL, 1.0f);
 
-	ui_widget::ScrollContainer(Ctx, s_DogfoodScroll, Body, ContentHeight, ScrollProps, [&](CUIRect BodyContent) {
+	ui_widget::ScrollContainer(Ctx, s_DogfoodScrollState, s_DogfoodScroll, Body, ContentHeight, ScrollProps, [&](CUIRect BodyContent) {
 		Body = BodyContent;
 
 		// Two columns: 1x and 0.78x to verify UiScale-style downscale

@@ -2634,8 +2634,8 @@ private:
 
 	SSettingsScrollRegionFrame BeginSettingsScrollRegion(CScrollRegion &ScrollRegion, CUIRect *pView, const CScrollRegionParams &Params, float PreviousOffsetY);
 	void FinishSettingsScrollRegion(CScrollRegion &ScrollRegion, SSettingsScrollRegionFrame &Frame, const CUIRect *pEndRect = nullptr, int Page = -1, bool TrackScrollActive = true);
-	SSettingsQmScrollFrame BeginSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled);
-	void FinishSettingsQmScrollContainer(CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive = true);
+	SSettingsQmScrollFrame BeginSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, CUIRect *pView, float ContentHeight, const SQmSettingsCardStyle &CardStyle, float UiScale, float PreviousOffsetY, bool Enabled);
+	void FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive = true);
 	SQmSettingsCardStyle QmSettingsCardStyle(float UiScale) const;
 	CScrollRegionParams QmSettingsScrollRegionParams(float UiScale) const;
 	void RenderQmSettingsGlassCard(const CUIRect &Card, const SQmSettingsCardStyle &Style) const;
