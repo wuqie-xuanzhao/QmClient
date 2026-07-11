@@ -8,6 +8,8 @@
 
 **Tech Stack:** C++、QmUi `UiForms`、DDNet `CLineInput`/`CUi`、GoogleTest、CMake/MSVC。
 
+> **执行状态（2026-07-12）：** 自动化实现、独立只读审查和 `default` gate 已完成；真实客户端的视觉与交互矩阵（IME、不同 UI scale、窄卡片、长本地化、拖动 release）待人工验收反馈。P3 在该反馈收口前保持进行中。
+
 ## Global Constraints
 
 - P1 theme/card 和 P2 deck/registry/model 必须完成；本计划不得创建页面私有 input shell、focus ring 或数值状态 map。
@@ -784,7 +786,7 @@ git commit -m "refactor(settings-ui): 清退设置页旧输入路径" -m "refact
 - Consumes: Tasks 1–4。
 - Produces: P5/P6 可直接使用的稳定 input/numeric contract。
 
-- [ ] **Step 1: Run serial automated verification**
+- [x] **Step 1: Run serial automated verification**
 
 Run:
 
@@ -813,7 +815,7 @@ Controls：清除搜索只清文本，垃圾桶只删除绑定
 
 Expected: 每项记录页面、viewport、UI scale、语言和结果；`TWO_ROWS`/`TRACK_AT_MINIMUM` feedback 与具体 stable ID 一起记录。
 
-- [ ] **Step 3: Dispatch independent read-only review**
+- [x] **Step 3: Dispatch independent read-only review**
 
 review 重点：`CLineInput` 生命周期、IME/selection 未破坏、invalid parse 不写配置、divisor 溢出、`∞` 映射、delay pending state、NoClamp 语义、focus 不双绘、settings 文件 direct-call 删除。等待完整 findings-first 报告。
 
