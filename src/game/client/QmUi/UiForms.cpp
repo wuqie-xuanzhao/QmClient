@@ -90,6 +90,17 @@ namespace ui_widget
 			DrawTextFieldFocusBorder(Ctx, Rect, Alpha);
 		}
 
+		void DrawInputFieldIcon(const IUiContext &Ctx, const CUIRect &Rect, const char *pIcon)
+		{
+			if(pIcon == nullptr || Rect.w <= 0.0f || Rect.h <= 0.0f)
+				return;
+			Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+			Ctx.m_pUi->TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f, TEXTALIGN_MC);
+			Ctx.m_pUi->TextRender()->SetRenderFlags(0);
+			Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		}
+
 		void DrawTextFieldPlaceholder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize, int TextAlign)
 		{
 			if(pPlaceholder == nullptr || !pInput->IsEmpty() || pInput->IsActive())
@@ -101,6 +112,54 @@ namespace ui_widget
 		}
 	} // namespace
 
+	SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options)
+	{
+		if(Ctx.m_pUi == nullptr || pInput == nullptr)
+			return {};
+
+		const bool WasActive = pInput->IsActive();
+		const bool WasEmpty = pInput->IsEmpty();
+		const bool Search = Options.m_Mode == EInputFieldMode::SEARCH;
+		const bool HasIcon = Options.m_pLeadingIcon != nullptr || Search;
+		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, HasIcon, Options.m_Clearable, Ctx.m_UiScale);
+		const SUiTheme &Theme = ThemeFor(Ctx);
+		const bool Hovered = Ctx.m_pUi->HotItem() == pInput;
+		const ColorRGBA PlateColor = pInput->IsActive() ? Theme.m_InputSurfaceFocused : (Hovered ? Theme.m_SurfaceHovered : Theme.m_InputSurface);
+		Layout.m_ShellRect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(PlateColor), Options.m_Corners, ui_token::radius::BASE);
+		pInput->SetEmptyText(Options.m_pPlaceholder != nullptr ? Options.m_pPlaceholder : (Search ? Localize("Search") : nullptr));
+
+		if(Options.m_SearchHotkeyEnabled && Search && Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->Input()->KeyPress(KEY_F))
+		{
+			Ctx.m_pUi->SetActiveItem(pInput);
+			pInput->SelectAll();
+		}
+
+		DrawInputFieldIcon(Ctx, Layout.m_IconRect, Options.m_pLeadingIcon != nullptr ? Options.m_pLeadingIcon : (Search ? FontIcons::FONT_ICON_MAGNIFYING_GLASS : nullptr));
+		CUi::SEditBoxRenderOptions RenderOptions;
+		RenderOptions.m_DrawBackground = false;
+		bool Changed = false;
+		if(Options.m_Mode == EInputFieldMode::MULTILINE)
+			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &Layout.m_ContentRect, Options.m_FontSize, 1.0f, ResolveInputFieldTextAlign(Options), RenderOptions);
+		else
+			Changed = Ctx.m_pUi->DoEditBox(pInput, &Layout.m_ContentRect, Options.m_FontSize, Options.m_Corners, {}, ResolveInputFieldTextAlign(Options), RenderOptions);
+
+		if(Options.m_Clearable)
+		{
+			const CUIRect &ClearRect = Layout.m_ClearRect;
+			const ColorRGBA ClearColor = Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f * Ctx.m_pUi->ButtonColorMul(pInput->GetClearButtonId())));
+			ClearRect.Draw(ClearColor, IGraphics::CORNER_R, ui_token::radius::BASE);
+			DrawInputFieldIcon(Ctx, ClearRect, FontIcons::FONT_ICON_XMARK);
+			if(Ctx.m_pUi->DoButtonLogic(pInput->GetClearButtonId(), 0, &ClearRect, BUTTONFLAG_LEFT))
+			{
+				pInput->Clear();
+				Ctx.m_pUi->SetActiveItem(pInput);
+				Changed = true;
+			}
+		}
+
+		DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect);
+		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, Options.m_Clearable);
+	}
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
 		STextFieldOptions Options;

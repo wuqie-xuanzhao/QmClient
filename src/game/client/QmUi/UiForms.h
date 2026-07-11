@@ -75,6 +75,7 @@ namespace ui_widget
 	struct SInputFieldLayout
 	{
 		CUIRect m_ShellRect;
+		CUIRect m_FocusRingRect;
 		CUIRect m_ContentRect;
 		CUIRect m_IconRect;
 		CUIRect m_ClearRect;
@@ -84,8 +85,14 @@ namespace ui_widget
 	{
 		SInputFieldLayout Layout{};
 		Layout.m_ShellRect = Rect;
-		Layout.m_ContentRect = Rect;
 		const float Scale = std::max(UiScale, 0.1f);
+		Layout.m_FocusRingRect = Rect;
+		const float FocusOutset = std::max(1.0f, 2.0f * Scale);
+		Layout.m_FocusRingRect.x -= FocusOutset;
+		Layout.m_FocusRingRect.y -= FocusOutset;
+		Layout.m_FocusRingRect.w += FocusOutset * 2.0f;
+		Layout.m_FocusRingRect.h += FocusOutset * 2.0f;
+		Layout.m_ContentRect = Rect;
 		const float SlotWidth = std::max(Rect.h, 18.0f * Scale);
 		const float Gap = 6.0f * Scale;
 		Layout.m_ContentRect.x += Gap;
@@ -117,6 +124,40 @@ namespace ui_widget
 		int m_TextAlign = TEXTALIGN_ML;
 	};
 
+	enum class EInputFieldMode
+	{
+		TEXT,
+		SEARCH,
+		MULTILINE,
+	};
+
+	enum class EInputTextStyle
+	{
+		SMALL,
+		BODY,
+	};
+
+	struct SInputFieldOptions
+	{
+		const char *m_pPlaceholder = nullptr;
+		const char *m_pLeadingIcon = nullptr;
+		EInputFieldMode m_Mode = EInputFieldMode::TEXT;
+		EInputTextStyle m_TextStyle = EInputTextStyle::BODY;
+		bool m_Clearable = false;
+		bool m_SearchHotkeyEnabled = false;
+		int m_Corners = IGraphics::CORNER_ALL;
+		int m_TextAlign = -1;
+		float m_FontSize = ui_token::font::BODY;
+	};
+
+	inline int ResolveInputFieldTextAlign(const SInputFieldOptions &Options)
+	{
+		if(Options.m_TextAlign >= 0)
+			return Options.m_TextAlign;
+		return Options.m_Mode == EInputFieldMode::MULTILINE ? TEXTALIGN_TL : TEXTALIGN_ML;
+	}
+
+	SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options);
 	// 基础输入框（沿用设置页灰色按钮背景）。
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);

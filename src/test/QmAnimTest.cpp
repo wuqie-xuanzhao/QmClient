@@ -131,7 +131,23 @@ namespace
 		EXPECT_GE(Layout.m_ClearRect.x, Layout.m_ContentRect.x + Layout.m_ContentRect.w);
 	}
 
-	TEST(UiTheme, FocusRingKeepsInputFillStable)
+	TEST(InputField, FocusRingExpandsShellAndMultilineDefaultsToTopLeft)
+{
+	const CUIRect Rect{10.0f, 20.0f, 240.0f, 32.0f};
+	const ui_widget::SInputFieldLayout Layout = ui_widget::ResolveInputFieldLayout(Rect, true, true, 1.0f);
+	EXPECT_LT(Layout.m_FocusRingRect.x, Rect.x);
+	EXPECT_LT(Layout.m_FocusRingRect.y, Rect.y);
+	EXPECT_GT(Layout.m_FocusRingRect.w, Rect.w);
+	EXPECT_GT(Layout.m_FocusRingRect.h, Rect.h);
+
+	ui_widget::SInputFieldOptions Options;
+	EXPECT_EQ(ui_widget::ResolveInputFieldTextAlign(Options), TEXTALIGN_ML);
+	Options.m_Mode = ui_widget::EInputFieldMode::MULTILINE;
+	EXPECT_EQ(ui_widget::ResolveInputFieldTextAlign(Options), TEXTALIGN_TL);
+	Options.m_TextAlign = TEXTALIGN_MC;
+	EXPECT_EQ(ui_widget::ResolveInputFieldTextAlign(Options), TEXTALIGN_MC);
+}
+TEST(UiTheme, FocusRingKeepsInputFillStable)
 	{
 		const SUiTheme Theme = ResolveUiTheme(ColorHSLA(0.58f, 0.35f, 0.48f, 1.0f), 1.0f);
 		EXPECT_FLOAT_EQ(Theme.m_InputSurface.r, Theme.m_InputSurfaceFocused.r);
