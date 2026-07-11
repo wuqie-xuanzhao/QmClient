@@ -21,6 +21,8 @@
 #include <generated/protocol.h>
 
 #include <game/client/QmUi/QmAnimResolve.h>
+#include <game/client/QmUi/SettingsCard.h>
+#include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTokens.h>
@@ -3161,15 +3163,32 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static float s_GraphicsVisualCardHeight = 0.0f;
 	static float s_GraphicsBackendCardHeight = 0.0f;
 	static float s_GraphicsModesCardHeight = 0.0f;
-	SSettingsCardDeckLayout GraphicsDeck = BeginSettingsCardDeck(MainView, s_GraphicsSettingsScrollRegion, s_GraphicsSettingsScrollY, UiScale, "graphics", SETTINGS_GRAPHICS);
+	const SSettingsPageLayoutFrame GraphicsPage = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const IUiContext GraphicsCardCtx = SettingsUiContext("settings_graphics", UiScale);
+	const SSettingsCardDeckVisualOptions GraphicsVisualOptions = SettingsCardDeckVisualOptions();
+	SSettingsCardDeckLayout GraphicsDeck = BeginSettingsCardDeck(GraphicsPage.m_ScrollViewport, s_GraphicsSettingsScrollRegion, s_GraphicsSettingsScrollY, UiScale, "graphics", SETTINGS_GRAPHICS);
+	GraphicsDeck.m_Spacing = GraphicsPage.m_CardGap;
+	GraphicsDeck.m_TwoColumns = GraphicsPage.m_TwoColumns;
+	GraphicsDeck.m_UseCanonicalCardShell = true;
+	GraphicsDeck.m_pCardContext = &GraphicsCardCtx;
+	GraphicsDeck.m_RainbowTitles = GraphicsVisualOptions.m_RainbowTitles;
+	if(GraphicsDeck.m_TwoColumns)
+		GraphicsDeck.m_View.VSplitMid(&GraphicsDeck.m_aColumns[0], &GraphicsDeck.m_aColumns[1], GraphicsDeck.m_Spacing);
+	else
+	{
+		GraphicsDeck.m_aColumns[0] = GraphicsDeck.m_View;
+		GraphicsDeck.m_aColumns[1] = {};
+	}
+	GraphicsDeck.m_aBaseColumns[0] = GraphicsDeck.m_aColumns[0];
+	GraphicsDeck.m_aBaseColumns[1] = GraphicsDeck.m_aColumns[1];
 	const float GraphicsDisplayMinCardHeight = 260.0f * UiScale;
 	const float GraphicsVisualMinCardHeight = 220.0f * UiScale;
 	const float GraphicsBackendMinCardHeight = 104.0f * UiScale;
-	const float GraphicsModesMinCardHeight = maximum(420.0f * UiScale, GraphicsDeck.m_View.h - GraphicsDeck.m_Style.m_Spacing);
-	SSettingsCardDeckCard DisplayCard = BeginSettingsCardDeckCard(GraphicsDeck, "graphics-display", Localize("Graphics display"), GraphicsDisplayMinCardHeight, s_GraphicsDisplayCardHeight, ESettingsCardDeckColumn::LEFT, true);
-	SSettingsCardDeckCard VisualCard = BeginSettingsCardDeckCard(GraphicsDeck, "graphics-visual", Localize("Visual"), GraphicsVisualMinCardHeight, s_GraphicsVisualCardHeight, ESettingsCardDeckColumn::LEFT, true);
-	SSettingsCardDeckCard BackendCard = BeginSettingsCardDeckCard(GraphicsDeck, "graphics-backend", Localize("Graphics backend"), GraphicsBackendMinCardHeight, s_GraphicsBackendCardHeight, ESettingsCardDeckColumn::LEFT, true);
-	SSettingsCardDeckCard ModesCard = BeginSettingsCardDeckCard(GraphicsDeck, "graphics-modes", Localize("Display modes"), GraphicsModesMinCardHeight, s_GraphicsModesCardHeight, ESettingsCardDeckColumn::RIGHT, true);
+	const float GraphicsModesMinCardHeight = maximum(420.0f * UiScale, GraphicsDeck.m_View.h - GraphicsDeck.m_Spacing);
+	SSettingsCardDeckCard DisplayCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-display", Localize("Graphics display"), GraphicsDisplayMinCardHeight, s_GraphicsDisplayCardHeight, ESettingsCardDeckColumn::LEFT, true);
+	SSettingsCardDeckCard VisualCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-visual", Localize("Visual"), GraphicsVisualMinCardHeight, s_GraphicsVisualCardHeight, ESettingsCardDeckColumn::LEFT, true);
+	SSettingsCardDeckCard BackendCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-backend", Localize("Graphics backend"), GraphicsBackendMinCardHeight, s_GraphicsBackendCardHeight, ESettingsCardDeckColumn::LEFT, true);
+	SSettingsCardDeckCard ModesCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-modes", Localize("Display modes"), GraphicsModesMinCardHeight, s_GraphicsModesCardHeight, ESettingsCardDeckColumn::RIGHT, true);
 
 	CUIRect ModeList = ModesCard.m_ContentRect;
 	CUIRect ModeLabel;

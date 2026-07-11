@@ -19,6 +19,7 @@ MACRO_CONFIG_INT(QmAssetsPreviewBudgetPercent, qm_assets_preview_budget_percent,
 MACRO_CONFIG_INT(QmUiRuntimeV2Debug, qm_ui_runtime_v2_debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "启用 UI 运行时 v2 调试日志")
 MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 2, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmUi 动效强度：0=关闭 1=降低 2=完整")
 MACRO_CONFIG_INT(QmExtraAnimations, qm_extra_animations, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "额外的动画：聊天框、表情选择框、计分板和观战选择页使用 Presentation State 动画")
+MACRO_CONFIG_INT(QmUiCardRainbowTitles, qm_ui_card_rainbow_titles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "设置卡片标题使用彩虹色（需要额外动画）")
 MACRO_CONFIG_INT(QmUiColorInterpolation, qm_ui_color_interpolation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀")
 MACRO_CONFIG_INT(QmCardBackdropBlur, qm_card_backdrop_blur, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "卡片毛玻璃背景模糊（0=关 1=开；仅高性能电脑建议开启）")
 MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 32, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI 圆角段数（建议偶数 8/16/32/48；奇数自动规整为偶数，因 i+=2 绘制要求）")

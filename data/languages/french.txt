@@ -9982,6 +9982,9 @@ Zoom out
 记分牌排序模式（0=分数，1=分）
 == Mode de tri du tableau des scores (0=score, 1=points)
 
+设置卡片标题使用彩虹色（需要额外动画）
+== Utiliser des couleurs arc-en-ciel pour les titres des cartes de paramètres (nécessite des animations supplémentaires)
+
 语音分组模式
 == Mode de groupement vocal
 

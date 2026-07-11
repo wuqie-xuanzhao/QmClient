@@ -607,34 +607,21 @@ git commit -m "feat(settings-ui): 建立唯一设置卡片 frame" -m "feat: 统�
 - Consumes: Tasks 1–3 的 `SettingsUiContext(...)`、`ResolveSettingsPageLayout(...)`、`SettingsCard(...)`；暂时复用现有 `BeginSettingsCardDeck(...)` 排序入口。
 - Produces: Graphics 四张注册卡使用 canonical shell；P2 可直接替换 deck coordinator，不再迁 shell。
 
-- [ ] **Step 1: Write failing production-path test**
+- [x] **Step 1: Write failing production-path test**
 
 ```cpp
-TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
-{
-	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCard.cpp");
-	EXPECT_NE(Source.find("State.m_DrawOffsetY"), std::string::npos);
-	EXPECT_NE(Source.find("DrawState.m_DrawAlpha"), std::string::npos);
-	EXPECT_NE(Source.find("DrawState.m_DropFeedback"), std::string::npos);
-	EXPECT_NE(Source.find("DrawState.m_ReflowCompleteFeedback"), std::string::npos);
-	EXPECT_NE(Source.find("DrawState.m_Hovered || DrawState.m_Focused"), std::string::npos);
-	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
-	EXPECT_NE(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
 {
-	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
-	ASSERT_FALSE(Body.empty());
-	EXPECT_NE(Body.find("ResolveSettingsPageLayout("), std::string::npos);
-	EXPECT_NE(Body.find("SettingsCard("), std::string::npos);
-	EXPECT_NE(Body.find("deck:graphics-display"), std::string::npos);
-	EXPECT_EQ(Body.find("RenderQmSettingsGlassCard("), std::string::npos);
+	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	const std::string DeckCardBody = ExtractSourceFunctionBody(MenusSource, "CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard");
+	EXPECT_NE(GraphicsBody.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("m_UseCanonicalCardShell"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("deck:graphics-display"), std::string::npos);
+	EXPECT_NE(DeckCardBody.find("SettingsCard("), std::string::npos);
 }
 ```
 
-- [ ] **Step 2: Run test to verify red**
+- [x] **Step 2: Run test to verify red**
 
 Run:
 
@@ -645,44 +632,14 @@ cmake-build-release/testrunner.exe --gtest_filter=QmMonitoringHelpers.GraphicsUs
 
 Expected: FAIL because Graphics still invokes the old shell/deck card rendering path.
 
-- [ ] **Step 3: Migrate each Graphics card without changing settings behavior**
+- [x] **Step 3: Migrate each Graphics card without changing settings behavior**
 
-四个 stable ID 固定为：
+四个 stable ID 固定为：`deck:graphics-display`、`deck:graphics-visual`、`deck:graphics-backend`、`deck:graphics-modes`。
 
-```cpp
-"deck:graphics-display"
-"deck:graphics-visual"
-"deck:graphics-backend"
-"deck:graphics-modes"
-```
+Graphics 先用 `ResolveSettingsPageLayout(...)` 决定 viewport、列数和 card gap，再继续使用现有 deck 的顺序、滚动和拖拽注册。该 deck 仅在 `m_UseCanonicalCardShell` 为真时进入 bridge：它将已确定的 slot height 换算为 `SettingsCard` 的 content height，使用 `SettingsCard(...)` 绘制唯一 shell，并把返回 frame 的 `m_Rect` 与 `m_HandleRect` 原样注册给现有 drag item。未迁移页面继续保留旧 shell。
 
-每张卡遵循同一调用形状。Graphics 依现有 model order 遍历四张卡，用局部 `aColumnY[2]` 从 `Page.m_aColumns` 取下一个 slot；`SettingsCard(...)` 返回 frame 后才以 `Frame.m_Rect.h + Page.m_CardGap` 推进该列，因此 measure 仍只发生一次。`VisualState` 只由当前 hover/focus/drag 状态构造；页面不得使用 cached height 重建 rect：
-
-```cpp
-const IUiContext CardCtx = SettingsUiContext("settings_graphics");
-const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, 1.0f);
-const int LayoutColumn = 0; // P1 桥接期由现有 placement 将 model column 1/2 映射为 0/1
-CUIRect Slot = Page.m_aColumns[LayoutColumn];
-Slot.y = aColumnY[LayoutColumn];
-SSettingsCardVisualState VisualState{};
-const SSettingsCardDeckVisualOptions VisualOptions = SettingsCardDeckVisualOptions();
-const SSettingsCardSpec Spec{"deck:graphics-display", Localize("Graphics display"), Localize("Window and monitor")};
-const SSettingsCardFrame Frame = SettingsCard(CardCtx, Slot, Spec, VisualState, VisualOptions,
-	[&](float ContentWidth) { return MeasureGraphicsDisplayCard(ContentWidth); },
-	[&](CUIRect ContentRect) { RenderGraphicsDisplayCard(ContentRect); });
-aColumnY[LayoutColumn] = Frame.m_Rect.y + Frame.m_Rect.h + Page.m_CardGap;
-RegisterSettingsCardDeckItemFromFrame(Frame, Spec.m_pStableId);
-```
-
-`RegisterSettingsCardDeckItemFromFrame(...)` 是 `CMenus` 的 P1 临时 bridge，在 `menus.h/.cpp` 给出唯一签名：
-
-```cpp
-void CMenus::RegisterSettingsCardDeckItemFromFrame(const SSettingsCardFrame &Frame, const char *pStableId);
-```
-
-该 helper 只把 `Frame.m_Rect`/`Frame.m_HandleRect` 原样注册给现有 drag item，不绘制 shell。P2 的第一个生产迁移提交必须删除它与 P1 局部列游标。
-
-- [ ] **Step 4: Run focused tests and build**
+`qm_ui_card_rainbow_titles` 现在有 Graphics card title 的真实消费者，并且只在 `qm_extra_animations=1` 时生效。翻译服务本轮返回 `401 Authorization Required`，因此只为这一个 key 人工补齐 11 种维护库翻译后重新生成并校验运行时语言文件。
+- [x] **Step 4: Run focused tests and build**
 
 Run:
 
@@ -710,10 +667,10 @@ qm_ui_motion_level=0 时拖拽反馈仍可用
 
 Expected: 每项有截图或文字结果；未执行项明确记为 gap，不写“视觉通过”。
 
-- [ ] **Step 6: Commit Graphics slice**
+- [x] **Step 6: Commit Graphics slice**
 
 ```powershell
-git add src/game/client/components/menus_settings.cpp src/game/client/components/menus.h src/game/client/components/menus.cpp src/test/qmclient_monitoring_test.cpp
+git add src/engine/shared/config_variables_qmclient.h src/game/client/components/menus_settings.cpp src/game/client/components/menus.h src/game/client/components/menus.cpp src/test/qmclient_monitoring_test.cpp qmclient_scripts/languages_qmclient/translations/i18n/qmclient.toml data/languages/*.txt qmclient_scripts/languages_qmclient/extracted_strings.txt qmclient_scripts/languages_qmclient/extracted_audit_report.json qmclient_scripts/languages_qmclient/extracted_records_cache.json docs/superpowers/plans/2026-07-11-QmClient-设置页UI统一-P1-Theme与SettingsCard基础.md
 git commit -m "refactor(settings-ui): 迁移 Graphics 卡片外壳" -m "refactor: 使用统一 theme、page layout 与 canonical card frame" -m "test: 禁止 Graphics 回退旧 glass shell"
 ```
 

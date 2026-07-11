@@ -33,7 +33,7 @@
 #include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/QmTree.h>
-#include <game/client/QmUi/SettingsCardGeometry.h>
+#include <game/client/QmUi/SettingsCard.h>
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
@@ -542,6 +542,12 @@ SCardMotionSpec CMenus::SettingsCardMotionSpec() const
 	return ResolveCardMotionSpec(g_Config.m_QmUiMotionLevel, g_Config.m_QmExtraAnimations != 0);
 }
 
+SSettingsCardDeckVisualOptions CMenus::SettingsCardDeckVisualOptions() const
+{
+	SSettingsCardDeckVisualOptions Options;
+	Options.m_RainbowTitles = g_Config.m_QmUiCardRainbowTitles != 0 && g_Config.m_QmExtraAnimations != 0;
+	return Options;
+}
 uint64_t CMenus::UiAnimNodeKey(const char *pScope, const uint64_t Id) const
 {
 	const uint64_t ScopeHash = static_cast<uint64_t>(str_quickhash(pScope));
@@ -4799,14 +4805,31 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 	Deck.m_aColumns[1].y = maximum(Deck.m_aColumns[1].y, aVirtualColumns[1].y);
 	Deck.m_aColumns[UseRightColumn ? 1 : 0].y = maximum(Deck.m_aColumns[UseRightColumn ? 1 : 0].y, Card.m_Rect.y + CardHeight + Deck.m_Spacing);
 
-	RenderQmSettingsGlassCard(Card.m_Rect, Deck.m_Style);
-	RenderSettingsCardDragHandle(Card.m_Rect, &Card.m_HandleRect, Deck.m_Style);
-	Card.m_Rect.Margin(Deck.m_Style.m_Padding, &Card.m_ContentRect);
-	Card.m_ContentRect.HSplitTop(28.0f * Deck.m_UiScale, &Card.m_TitleRect, &Card.m_ContentRect);
-	if(Card.m_HandleRect.w > 0.0f)
-		Card.m_TitleRect.VSplitRight(Card.m_HandleRect.w + Deck.m_Style.m_Padding, &Card.m_TitleRect, nullptr);
-	DoSettingsLabel(Deck.m_Page, -1, Card.m_pStableId, &Card.m_TitleRect, pTitle, 18.0f * Deck.m_UiScale, TEXTALIGN_ML);
-	Card.m_ContentRect.HSplitTop(Deck.m_Style.m_Padding * 0.5f, nullptr, &Card.m_ContentRect);
+	if(Deck.m_UseCanonicalCardShell && Deck.m_pCardContext != nullptr)
+	{
+		const SSettingsCardSpec Spec{pGlobalStableId, pTitle, nullptr};
+		const SSettingsCardFrame HeaderFrame = BuildSettingsCardFrame(Card.m_Rect, Spec, 0.0f, Deck.m_UiScale);
+		const float ContentHeight = maximum(0.0f, Card.m_Rect.h - HeaderFrame.m_Rect.h);
+		SSettingsCardDeckVisualOptions VisualOptions;
+		VisualOptions.m_RainbowTitles = Deck.m_RainbowTitles;
+		const SSettingsCardFrame Frame = SettingsCard(*Deck.m_pCardContext, Card.m_Rect, Spec, {}, VisualOptions,
+			[ContentHeight](float) { return ContentHeight; }, {});
+		Card.m_Rect = Frame.m_Rect;
+		Card.m_TitleRect = Frame.m_TitleRect;
+		Card.m_HandleRect = Frame.m_HandleRect;
+		Card.m_ContentRect = Frame.m_ContentRect;
+	}
+	else
+	{
+		RenderQmSettingsGlassCard(Card.m_Rect, Deck.m_Style);
+		RenderSettingsCardDragHandle(Card.m_Rect, &Card.m_HandleRect, Deck.m_Style);
+		Card.m_Rect.Margin(Deck.m_Style.m_Padding, &Card.m_ContentRect);
+		Card.m_ContentRect.HSplitTop(28.0f * Deck.m_UiScale, &Card.m_TitleRect, &Card.m_ContentRect);
+		if(Card.m_HandleRect.w > 0.0f)
+			Card.m_TitleRect.VSplitRight(Card.m_HandleRect.w + Deck.m_Style.m_Padding, &Card.m_TitleRect, nullptr);
+		DoSettingsLabel(Deck.m_Page, -1, Card.m_pStableId, &Card.m_TitleRect, pTitle, 18.0f * Deck.m_UiScale, TEXTALIGN_ML);
+		Card.m_ContentRect.HSplitTop(Deck.m_Style.m_Padding * 0.5f, nullptr, &Card.m_ContentRect);
+	}
 
 	SSettingsSection Section;
 	Section.m_pStableCardId = pGlobalStableId;

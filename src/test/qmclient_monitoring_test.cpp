@@ -7229,6 +7229,35 @@ TEST(QmMonitoringHelpers, QmUiAnimatePresenceIsGenericWidgetHelper)
 	EXPECT_NE(QmClient.find("Ctx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
+{
+	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCard.cpp");
+
+	EXPECT_NE(Source.find("State.m_DrawOffsetY"), std::string::npos);
+	EXPECT_NE(Source.find("DrawState.m_DrawAlpha"), std::string::npos);
+	EXPECT_NE(Source.find("DrawState.m_DropFeedback"), std::string::npos);
+	EXPECT_NE(Source.find("DrawState.m_ReflowCompleteFeedback"), std::string::npos);
+	EXPECT_NE(Source.find("DrawState.m_Hovered || DrawState.m_Focused"), std::string::npos);
+	EXPECT_NE(Source.find("VisualOptions.m_RainbowTitles"), std::string::npos);
+	EXPECT_NE(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
+{
+	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	const std::string DeckCardBody = ExtractSourceFunctionBody(MenusSource, "CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard");
+	ASSERT_FALSE(GraphicsBody.empty());
+	ASSERT_FALSE(DeckCardBody.empty());
+
+	EXPECT_NE(GraphicsBody.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("m_UseCanonicalCardShell"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("deck:graphics-display"), std::string::npos);
+	EXPECT_EQ(GraphicsBody.find("RenderQmSettingsGlassCard("), std::string::npos);
+	EXPECT_NE(DeckCardBody.find("if(Deck.m_UseCanonicalCardShell"), std::string::npos);
+	EXPECT_NE(DeckCardBody.find("SettingsCard("), std::string::npos);
+}
 TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 {
 	const std::string Theme = ReadRepoFile("src/game/client/QmUi/UiTheme.h");

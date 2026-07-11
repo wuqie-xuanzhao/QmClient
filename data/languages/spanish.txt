@@ -9982,6 +9982,9 @@ Zoom out
 记分牌排序模式（0=分数，1=分）
 == Modo de ordenación de la tabla de clasificación (0=puntuación, 1=puntos)
 
+设置卡片标题使用彩虹色（需要额外动画）
+== Usar colores arcoíris en los títulos de las tarjetas de configuración (requiere animaciones adicionales)
+
 语音分组模式
 == Modo de agrupación de voz
 

@@ -73,6 +73,7 @@ enum
 class CUIRect;
 struct IUiContext;
 struct SCardMotionSpec;
+struct SSettingsCardDeckVisualOptions;
 class CMenus;
 
 namespace NTranslateUiSettings
@@ -120,6 +121,7 @@ public:
 private:
 	IUiContext SettingsUiContext(const char *pScope, float UiScale = 1.0f);
 	SCardMotionSpec SettingsCardMotionSpec() const;
+	SSettingsCardDeckVisualOptions SettingsCardDeckVisualOptions() const;
 	uint64_t UiAnimNodeKey(const char *pScope, uint64_t Id = 0) const;
 	void TriggerUiSwitchAnimation(uint64_t NodeKey, float DurationSec = 0.18f);
 	float ReadUiSwitchAnimation(uint64_t NodeKey) const;
@@ -2605,8 +2607,11 @@ private:
 		std::deque<std::string> m_vStableIds;
 		float m_UiScale = 1.0f;
 		float m_Spacing = 16.0f;
+		const IUiContext *m_pCardContext = nullptr;
 		int m_Page = -1;
 		bool m_TwoColumns = false;
+		bool m_UseCanonicalCardShell = false;
+		bool m_RainbowTitles = false;
 		int m_CardCount = 0;
 	};
 

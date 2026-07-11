@@ -9982,6 +9982,9 @@ Zoom out
 记分牌排序模式（0=分数，1=分）
 == Tryb sortowania tablicy wyników (0=wynik, 1=punkty)
 
+设置卡片标题使用彩虹色（需要额外动画）
+== Używaj tęczowych kolorów w tytułach kart ustawień (wymaga dodatkowych animacji)
+
 语音分组模式
 == Tryb grupowania głosowego
 
