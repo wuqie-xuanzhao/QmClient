@@ -26,6 +26,7 @@
 | `qmclient_scripts/gate/check_gate.py` | Python 版仓库级门禁总入口 |
 | `checks/strict_build` | 严格构建与静态分析（`check_gate.py` 调度模块） |
 | `qmclient_scripts/gate/check_docs.py` | 治理文档一致性检查（可带 `--sync-only`） |
+| `qmclient_scripts/gate/check_settings_ui_migration.py` | P5 标准设置页统一 UI 迁移结构清单（按页面或全量） |
 | `qmclient_scripts/gate/baseline_debt_allowlist.json` | 基线白名单数据 |
 
 适用：
@@ -115,6 +116,15 @@ python qmclient_scripts/gate/check_gate.py --mode full
 python qmclient_scripts/gate/check_docs.py
 python qmclient_scripts/gate/check_docs.py --sync-only --prefer agents
 ```
+
+### P5 设置页迁移结构清单
+
+```bash
+python qmclient_scripts/gate/check_settings_ui_migration.py --page general
+python qmclient_scripts/gate/check_settings_ui_migration.py --all
+```
+
+该清单只核对 P5 的页面结构契约：统一 layout/card/deck/scroll/input 路径、旧路径删除，以及 card registry 和搜索导航目标。页面尚未迁移时 `--all` 预期失败；每个页面切片完成后先跑对应 `--page`，P5 收口时再跑 `--all`。
 
 ### GitHub Release 说明
 
