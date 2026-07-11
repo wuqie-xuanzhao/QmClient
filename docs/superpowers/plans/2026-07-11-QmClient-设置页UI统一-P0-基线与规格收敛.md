@@ -54,6 +54,18 @@ git status --short
 
 Expected: `--show-toplevel` 等于 `$WorktreePath`，分支为 `codex/settings-ui-p0-baseline`，状态为空，`HEAD == $StartCommit`。若原生工具已创建隔离目录，也必须运行后三条只读校验。
 
+- [ ] **Step 1.1: 在隔离 worktree 初始化构建依赖**
+
+所有构建、测试和 gate 之前，必须在隔离目录递归初始化子模块；不得复用主 checkout 的子模块状态。
+
+```powershell
+git submodule update --init --recursive
+git submodule status --recursive
+if($LASTEXITCODE -ne 0) { throw 'submodule initialization failed' }
+```
+
+Expected: 命令退出码为 `0`，`git submodule status --recursive` 的每个已登记路径均不以 `-`（未初始化）开头。若网络或权限导致失败，停止在构建前并记录为环境阻断，禁止将缺失子模块误报为 C++ 回归。
+
 - [ ] **Step 2: 更新目标远端引用**
 
 Run:
