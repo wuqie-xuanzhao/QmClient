@@ -763,7 +763,7 @@ bool CMenus::DoLine_KeyReader(CUIRect &View, CButtonContainer &ReaderButton, CBu
 
 bool CMenus::DoSliderWithScaledValue(const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, int Scale, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix)
 {
-	CLineInputNumber *pInput = GetSettingsSliderInput(pId);
+	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
 
 	ui_widget::SSliderInputFieldOptions Options;
 	Options.m_pLabel = pStr;
@@ -781,7 +781,7 @@ bool CMenus::DoSliderWithScaledValue(const void *pId, int *pOption, const CUIRec
 	InputCtx.m_ScopeHash = MakeUiScopeHash("tclient_slider_input");
 	InputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
-	return ui_widget::SliderInputField(InputCtx, pInput, pId, pOption, Min, Max, *pRect, Options);
+	return ui_widget::SliderInputField(InputCtx, &pState->m_Input, pId, pOption, Min, Max, *pRect, Options);
 }
 
 bool CMenus::DoEditBoxWithLabel(CLineInput *LineInput, const CUIRect *pRect, const char *pLabel, const char *pDefault, char *pBuf, size_t BufSize)

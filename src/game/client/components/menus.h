@@ -22,6 +22,7 @@
 
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/SettingsCardDeck.h>
+#include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiTheme.h>
 #include <game/client/component.h>
 #include <game/client/components/assets_resource_registry.h>
@@ -150,7 +151,7 @@ private:
 	bool m_SkinListScrollToSelected = false;
 	std::optional<std::chrono::nanoseconds> m_SkinList7LastRefreshTime;
 	std::optional<std::chrono::nanoseconds> m_SkinPartsList7LastRefreshTime;
-	std::unordered_map<const void *, std::unique_ptr<CLineInputNumber>> m_vpSettingsSliderInputs;
+	std::unordered_map<const void *, std::unique_ptr<ui_widget::SNumericFieldState>> m_vpSettingsNumericFieldStates;
 	SUiTheme m_SettingsUiTheme;
 
 	int m_DirectionQuadContainerIndex;
@@ -2414,7 +2415,7 @@ public:
 	bool DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr);
 	bool DoSettingsScrollbarOption(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr);
 	bool DoSettingsSliderInputField(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr);
-	CLineInputNumber *GetSettingsSliderInput(const void *pId);
+	ui_widget::SNumericFieldState *GetSettingsNumericFieldState(const void *pId);
 	bool DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value);
 	void BuildBaseSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView);
 	void BuildIngameMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView);

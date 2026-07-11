@@ -166,6 +166,16 @@ namespace ui_widget
 		ON_RELEASE_OR_SUBMIT,
 	};
 
+	struct SNumericFieldState
+	{
+		CLineInputNumber m_Input;
+		int m_PendingStoredValue = 0;
+		int m_LastSyncedStoredValue = 0;
+		bool m_HasPendingValue = false;
+		bool m_HasSyncedValue = false;
+		bool m_SliderWasActive = false;
+	};
+
 	// 横向滚动条 + 输入框 + 单位组合。支持整数/浮点、线性/对数刻度、
 	// ♾️ 无限符号和最大值文本。
 	struct SSliderInputFieldOptions

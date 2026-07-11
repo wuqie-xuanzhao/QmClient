@@ -7334,11 +7334,19 @@ TEST(QmMonitoringHelpers, DelayUpdateStaysOnUnifiedSliderInputPath)
 	EXPECT_NE(SliderBody.find("Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ?"), std::string::npos);
 
 	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
 	const std::string SharedSliderBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
 	ASSERT_FALSE(SharedSliderBody.empty());
 	EXPECT_NE(FormsHeader.find("enum class EInputCommitPolicy"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("struct SNumericFieldState"), std::string::npos);
+	EXPECT_NE(FormsHeader.find("CLineInputNumber m_Input;"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("std::unordered_map<const void *, std::unique_ptr<ui_widget::SNumericFieldState>> m_vpSettingsNumericFieldStates;"), std::string::npos);
+	EXPECT_EQ(MenusHeader.find("m_vpSettingsSliderInputs"), std::string::npos);
+	EXPECT_NE(SliderBody.find("ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);"), std::string::npos);
+	EXPECT_NE(SliderBody.find("&pState->m_Input"), std::string::npos);
+	EXPECT_EQ(SliderBody.find("GetSettingsSliderInput("), std::string::npos);
 	EXPECT_NE(SharedSliderBody.find("const bool SliderReleased = SliderWasActive && !Ctx.m_pUi->CheckActiveItem(pId);"), std::string::npos);
 	EXPECT_NE(SharedSliderBody.find("Options.m_CommitPolicy == EInputCommitPolicy::LIVE || SliderReleased"), std::string::npos);
 }
@@ -7434,15 +7442,15 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(TextFieldExBody.find("Ctx.m_pUi->DoEditBox(pInput, &Rect, Options.m_FontSize, Options.m_Corners, {}, Options.m_TextAlign, RenderOptions);"), std::string::npos);
 	EXPECT_EQ(TextFieldExBody.find("DrawTextFieldPlaceholder("), std::string::npos);
 	EXPECT_EQ(TextFieldExBody.find("VMargin("), std::string::npos);
-	EXPECT_NE(ClearableExBody.find("DrawTextFieldPlate(Ctx, pInput, Rect, Options);"), std::string::npos);
+	EXPECT_NE(ClearableExBody.find("DrawTextFieldPlate(Ctx, pInput, Layout.m_ShellRect, Options);"), std::string::npos);
 	EXPECT_NE(ClearableExBody.find("pInput->SetEmptyText(pPlaceholder);"), std::string::npos);
 	EXPECT_NE(ClearableExBody.find("RenderOptions.m_DrawBackground = false;"), std::string::npos);
-	EXPECT_NE(ClearableExBody.find("Ctx.m_pUi->DoClearableEditBox(pInput, &Rect, FontSize, IGraphics::CORNER_ALL, {}, RenderOptions);"), std::string::npos);
+	EXPECT_NE(ClearableExBody.find("Ctx.m_pUi->DoClearableEditBox(pInput, &Layout.m_ShellRect, FontSize, IGraphics::CORNER_ALL, {}, RenderOptions);"), std::string::npos);
 	EXPECT_EQ(ClearableExBody.find("DrawTextFieldPlaceholder("), std::string::npos);
 	EXPECT_EQ(ClearableExBody.find("VMargin("), std::string::npos);
-	EXPECT_NE(SearchExBody.find("DrawTextFieldPlate(Ctx, pInput, Rect, Options);"), std::string::npos);
+	EXPECT_NE(SearchExBody.find("DrawTextFieldPlate(Ctx, pInput, Layout.m_ShellRect, Options);"), std::string::npos);
 	EXPECT_NE(SearchExBody.find("RenderOptions.m_DrawBackground = false;"), std::string::npos);
-	EXPECT_NE(SearchExBody.find("Ctx.m_pUi->DoEditBox_Search(pInput, &Rect, FontSize, HotkeyEnabled, RenderOptions);"), std::string::npos);
+	EXPECT_NE(SearchExBody.find("Ctx.m_pUi->DoEditBox_Search(pInput, &Layout.m_ShellRect, FontSize, HotkeyEnabled, RenderOptions);"), std::string::npos);
 	EXPECT_EQ(SearchExBody.find("VMargin("), std::string::npos);
 	EXPECT_NE(Ui.find("bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
 	EXPECT_NE(Ui.find("bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool HotkeyEnabled, const SEditBoxRenderOptions &RenderOptions)"), std::string::npos);
@@ -7470,7 +7478,9 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_NE(SliderInputBody.find("SliderInputWheelStoredValue("), std::string::npos);
 	EXPECT_NE(SliderInputBody.find("DoScrollbarH(pId, &ScrollBar, Normalized)"), std::string::npos);
 	EXPECT_EQ(SliderInputBody.find("DoScrollbarH(pId, &ScrollBar, Normalized, &Inner)"), std::string::npos);
-	EXPECT_NE(QmMenus.find("ui_widget::SliderInputField(QmInputCtx, pInput, pId, pValue, MinValue, MaxValue, ControlColumn, Options);"), std::string::npos);
+	EXPECT_NE(QmMenus.find("ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);"), std::string::npos);
+	EXPECT_NE(QmMenus.find("ui_widget::SliderInputField(QmInputCtx, &pState->m_Input, pId, pValue, MinValue, MaxValue, ControlColumn, Options);"), std::string::npos);
+	EXPECT_EQ(QmMenus.find("GetSettingsSliderInput("), std::string::npos);
 	EXPECT_EQ(QmMenus.find("Ui()->DoValueSelectorWithState(pId, &InputRect"), std::string::npos);
 }
 

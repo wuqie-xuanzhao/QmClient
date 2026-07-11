@@ -2289,7 +2289,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 
 	auto RenderSliderWithValueInput = [this, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		const int OriginalValue = *pValue;
-		CLineInputNumber *pInput = GetSettingsSliderInput(pId);
+		ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);
 		ui_widget::SSliderInputFieldOptions Options;
 		Options.m_pSuffix = pSuffix;
 		Options.m_FontSize = ControlColumn.h * CUi::ms_FontmodHeight * 0.8f;
@@ -2300,7 +2300,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		QmInputCtx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
 		QmInputCtx.m_ScopeHash = MakeUiScopeHash("qmclient_slider_input");
 		QmInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-		ui_widget::SliderInputField(QmInputCtx, pInput, pId, pValue, MinValue, MaxValue, ControlColumn, Options);
+		ui_widget::SliderInputField(QmInputCtx, &pState->m_Input, pId, pValue, MinValue, MaxValue, ControlColumn, Options);
 		if(PrewarmOnly || Ui()->RenderOnly())
 			*pValue = OriginalValue;
 	};
