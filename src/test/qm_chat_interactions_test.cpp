@@ -203,6 +203,19 @@ TEST(QmChatPresentation, ForceVisibleLineDoesNotAutoDecay)
 	EXPECT_NEAR(Presentation.m_RenderAlpha, 1.0f, 0.001f);
 }
 
+TEST(QmLocalSaveJoinHint, UsesExpiringEchoMessages)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string Body = SourceFunctionBody(Source, "void CTClient::MaybeShowLocalSaveJoinHint()");
+
+	EXPECT_NE(Body.find("GameClient()->Echo(aMessage);"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->Echo(PlayersLine.c_str());"), std::string::npos);
+	EXPECT_NE(Body.find("GameClient()->Echo(CodesLine.c_str());"), std::string::npos);
+	EXPECT_EQ(Body.find("GameClient()->Echo(aMessage, true);"), std::string::npos);
+	EXPECT_EQ(Body.find("GameClient()->Echo(PlayersLine.c_str(), true);"), std::string::npos);
+	EXPECT_EQ(Body.find("GameClient()->Echo(CodesLine.c_str(), true);"), std::string::npos);
+}
+
 TEST(QmChatPresentation, ResetAndTimeRollbackKeepFiniteFreshState)
 {
 	CChat::SPresentationState Presentation;

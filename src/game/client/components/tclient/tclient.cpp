@@ -5364,7 +5364,7 @@ void CTClient::MaybeShowLocalSaveJoinHint()
 
 	char aMessage[1024];
 	str_format(aMessage, sizeof(aMessage), Localize("- You have %d saves on this map!"), (int)vMatchedEntries.size());
-	GameClient()->Echo(aMessage, true);
+	GameClient()->Echo(aMessage);
 
 	std::string PlayersLine = Localize("- Save owners in order:");
 	std::string CodesLine = Localize("- Save codes in order:");
@@ -5385,8 +5385,8 @@ void CTClient::MaybeShowLocalSaveJoinHint()
 		PlayersLine += ",...";
 		CodesLine += ",...";
 	}
-	GameClient()->Echo(PlayersLine.c_str(), true);
-	GameClient()->Echo(CodesLine.c_str(), true);
+	GameClient()->Echo(PlayersLine.c_str());
+	GameClient()->Echo(CodesLine.c_str());
 
 	str_copy(m_aLastLocalSaveHintMap, pCurrentMap, sizeof(m_aLastLocalSaveHintMap));
 }
