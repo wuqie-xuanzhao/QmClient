@@ -1,8 +1,11 @@
 #include <base/system.h>
 
+#include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/SettingsCardDeckLogic.h>
 
 #include <gtest/gtest.h>
+
+#include <array>
 
 TEST(SettingsCardDeckLogic, MovesGraphicsAcrossColumnsWithoutOverwritingOtherDecks)
 {
@@ -57,4 +60,59 @@ TEST(SettingsCardDeckLogic, CommitFailureKeepsProjectionConsistentWithGlobalOrde
 	Reloaded.Load("graphics", pGlobalOrder);
 	EXPECT_EQ(Reloaded.ColumnForStableId("deck:graphics-visual"), 1);
 	EXPECT_EQ(Reloaded.StableIdOrder(1), (std::vector<std::string>{"deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend"}));
+}
+TEST(SettingsCardDeck, CrossColumnDropMovesOnlyTheGlobalModel)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+
+	ASSERT_TRUE(CommitSettingsCardDeckDrop(Model, "graphics", "deck:graphics-display", 2, 0));
+	const int Index = Model.FindByStableId("deck:graphics-display");
+	ASSERT_GE(Index, 0);
+	EXPECT_EQ(Model.Entry(Index).m_Column, 2);
+	EXPECT_EQ(Model.Entry(Index).m_OrderInColumn, 0);
+	EXPECT_STREQ(Model.Entry(Index).m_pDefaultTab, "graphics");
+	EXPECT_TRUE(Model.IsDirty());
+}
+
+TEST(SettingsCardDeck, EdgeDragRequestsBoundedAutoScroll)
+{
+	const CUIRect Viewport{0.0f, 100.0f, 600.0f, 400.0f};
+	EXPECT_LT(SettingsCardDeckAutoScrollDelta(101.0f, Viewport, 1.0f), 0.0f);
+	EXPECT_GT(SettingsCardDeckAutoScrollDelta(499.0f, Viewport, 1.0f), 0.0f);
+	EXPECT_FLOAT_EQ(SettingsCardDeckAutoScrollDelta(300.0f, Viewport, 1.0f), 0.0f);
+}
+
+TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)
+{
+	std::array<std::vector<int>, 3> aColumns{
+		std::vector<int>{},
+		std::vector<int>{4, 7},
+		std::vector<int>{9},
+	};
+	ApplySettingsCardDeckDragPlacement(aColumns, 7, 2, 1);
+	EXPECT_EQ(aColumns[1], (std::vector<int>{4}));
+	EXPECT_EQ(aColumns[2], (std::vector<int>{9, 7}));
+
+	// 意图：layout 已按每列视觉顺序收集 geometry，热路径无需再排序或分配。
+	const std::vector<SSettingsCardDeckItemGeometry> vItems{
+		{9, 2, {500.0f, 100.0f, 300.0f, 120.0f}},
+		{7, 2, {500.0f, 168.0f, 300.0f, 52.0f}},
+		{8, 2, {500.0f, 236.0f, 300.0f, 120.0f}},
+	};
+	EXPECT_EQ(ResolveSettingsCardDeckDropOrder(200.0f, 2, vItems, 7), 1);
+}
+
+TEST(SettingsCardDeck, ColumnProjectionExcludesInactiveDefinitions)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+	const std::vector<int> vActiveStateIndices{
+		Model.StateIndexForStableId("deck:graphics-visual"),
+		Model.StateIndexForStableId("deck:graphics-modes"),
+	};
+	const auto aColumns = BuildSettingsCardDeckColumnOrder(Model, "graphics", vActiveStateIndices);
+	EXPECT_EQ(aColumns[0], (std::vector<int>{}));
+	EXPECT_EQ(aColumns[1], (std::vector<int>{Model.StateIndexForStableId("deck:graphics-visual")}));
+	EXPECT_EQ(aColumns[2], (std::vector<int>{Model.StateIndexForStableId("deck:graphics-modes")}));
 }
