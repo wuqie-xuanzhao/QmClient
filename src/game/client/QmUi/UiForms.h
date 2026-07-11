@@ -166,14 +166,18 @@ namespace ui_widget
 		ON_RELEASE_OR_SUBMIT,
 	};
 
-	struct SNumericFieldState
+	struct SNumericFieldCommitState
+	{
+		int m_PendingStoredValue = 0;
+		bool m_HasPendingValue = false;
+		bool m_SliderWasActive = false;
+	};
+
+	struct SNumericFieldState : public SNumericFieldCommitState
 	{
 		CLineInputNumber m_Input;
-		int m_PendingStoredValue = 0;
 		int m_LastSyncedStoredValue = 0;
-		bool m_HasPendingValue = false;
 		bool m_HasSyncedValue = false;
-		bool m_SliderWasActive = false;
 	};
 
 	// 横向滚动条 + 输入框 + 单位组合。支持整数/浮点、线性/对数刻度、
@@ -191,7 +195,7 @@ namespace ui_widget
 		EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;
 		CUIElement *m_pLabelElement = nullptr;
 	};
-	bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);
+	bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);
 	bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options);
 
 	// Boolean switch. Slider position animates with a spring driver between left

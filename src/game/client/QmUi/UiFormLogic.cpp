@@ -53,6 +53,38 @@ namespace ui_widget
 		return SliderReleased || InputResult.m_Submitted || InputResult.m_Deactivated;
 	}
 
+	bool UpdateNumericFieldSliderCommit(SNumericFieldCommitState &State, EInputCommitPolicy Policy, bool SliderActive, bool SliderReleased, int CandidateStoredValue, int *pStoredValue)
+	{
+		if(pStoredValue == nullptr)
+			return false;
+
+		State.m_SliderWasActive = SliderActive;
+		if(Policy == EInputCommitPolicy::LIVE)
+		{
+			State.m_HasPendingValue = false;
+			if(*pStoredValue == CandidateStoredValue)
+				return false;
+			*pStoredValue = CandidateStoredValue;
+			return true;
+		}
+
+		if(SliderActive)
+		{
+			State.m_PendingStoredValue = CandidateStoredValue;
+			State.m_HasPendingValue = true;
+			return false;
+		}
+
+		if(!SliderReleased || !State.m_HasPendingValue)
+			return false;
+
+		State.m_HasPendingValue = false;
+		if(*pStoredValue == State.m_PendingStoredValue)
+			return false;
+		*pStoredValue = State.m_PendingStoredValue;
+		return true;
+	}
+
 	SNumericFieldLayout ResolveNumericFieldLayout(const CUIRect &Rect, bool HasLabel, bool HasUnit, float UiScale)
 	{
 		SNumericFieldLayout Layout;

@@ -38,6 +38,7 @@ namespace ui_widget
 	std::string FormatNumericFieldValue(int StoredValue, const SNumericValueFormat &Format);
 	bool ParseNumericFieldValue(const char *pText, const SNumericValueFormat &Format, int StoredMin, int StoredMax, int *pStoredValue);
 	bool NumericFieldShouldCommit(EInputCommitPolicy Policy, bool SliderReleased, const SInputFieldResult &InputResult);
+	bool UpdateNumericFieldSliderCommit(SNumericFieldCommitState &State, EInputCommitPolicy Policy, bool SliderActive, bool SliderReleased, int CandidateStoredValue, int *pStoredValue);
 	SNumericFieldLayout ResolveNumericFieldLayout(const CUIRect &Rect, bool HasLabel, bool HasUnit, float UiScale = 1.0f);
 } // namespace ui_widget
 

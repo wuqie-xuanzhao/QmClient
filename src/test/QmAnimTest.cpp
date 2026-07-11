@@ -2833,6 +2833,21 @@ TEST(NumericField, DelayPolicyCommitsOnlyOnReleaseSubmitOrBlur)
 	EXPECT_TRUE(ui_widget::NumericFieldShouldCommit(ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT, true, {}));
 }
 
+TEST(NumericField, DelayPolicyStagesSliderValueUntilRelease)
+{
+	ui_widget::SNumericFieldCommitState State;
+	int StoredValue = 10;
+
+	EXPECT_FALSE(ui_widget::UpdateNumericFieldSliderCommit(State, ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT, true, false, 25, &StoredValue));
+	EXPECT_EQ(StoredValue, 10);
+	EXPECT_TRUE(State.m_HasPendingValue);
+	EXPECT_EQ(State.m_PendingStoredValue, 25);
+
+	EXPECT_TRUE(ui_widget::UpdateNumericFieldSliderCommit(State, ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT, false, true, 10, &StoredValue));
+	EXPECT_EQ(StoredValue, 25);
+	EXPECT_FALSE(State.m_HasPendingValue);
+}
+
 TEST(NumericField, FallsBackToTwoRowsBeforeCollapsingSliderTrack)
 {
 	const ui_widget::SNumericFieldLayout Wide = ui_widget::ResolveNumericFieldLayout({0.0f, 0.0f, 500.0f, 36.0f}, true, true, 1.0f);

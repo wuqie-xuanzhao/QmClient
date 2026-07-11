@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "UiForms.h"
 
+#include "UiFormLogic.h"
 #include "UiMotion.h"
 #include "UiTheme.h"
 
@@ -321,11 +322,12 @@ namespace ui_widget
 		return Label;
 	}
 
-	bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)
+	bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)
 	{
-		if(Ctx.m_pUi == nullptr || pInput == nullptr || pValue == nullptr || Max <= Min)
+		if(Ctx.m_pUi == nullptr || pState == nullptr || pValue == nullptr || Max <= Min)
 			return false;
 
+		CLineInputNumber *pInput = &pState->m_Input;
 		const IScrollbarScale *pScale = Options.m_pScale != nullptr ? Options.m_pScale : &CUi::ms_LinearScrollbarScale;
 		const bool Infinite = Options.m_Flags & CUi::SCROLLBAR_OPTION_INFINITE;
 		const bool NoClampValue = Options.m_Flags & CUi::SCROLLBAR_OPTION_NOCLAMPVALUE;
@@ -397,8 +399,15 @@ namespace ui_widget
 			*pValue = NewValue;
 		}
 
-		const bool IsInfinite = SliderInputIsInfiniteValue(*pValue, Infinite);
-		int StoredValue = *pValue;
+		if(!pState->m_HasSyncedValue || (!pState->m_HasPendingValue && pState->m_LastSyncedStoredValue != *pValue))
+		{
+			pState->m_LastSyncedStoredValue = *pValue;
+			pState->m_HasSyncedValue = true;
+		}
+
+		const int PreviewStoredValue = pState->m_HasPendingValue ? pState->m_PendingStoredValue : *pValue;
+		const bool IsInfinite = SliderInputIsInfiniteValue(PreviewStoredValue, Infinite);
+		int StoredValue = PreviewStoredValue;
 		if(!IsInfinite && !NoClampValue)
 			StoredValue = std::clamp(StoredValue, SliderMin, SliderInputStoredMaximum(Max, Multiplier));
 
@@ -421,13 +430,14 @@ namespace ui_widget
 		int SliderValue = IsInfinite ? SliderMax : StoredValue;
 
 		const float Normalized = std::clamp(pScale->ToRelative(SliderValue, SliderMin, SliderMax), 0.0f, 1.0f);
-		const bool SliderWasActive = Ctx.m_pUi->CheckActiveItem(pId);
+		const bool SliderWasActive = pState->m_SliderWasActive;
 		if(HasSlider && !RenderOnly && !pInput->IsActive())
 		{
 			const float NewNormalized = Ctx.m_pUi->DoScrollbarH(pId, &ScrollBar, Normalized);
-			const bool SliderReleased = SliderWasActive && !Ctx.m_pUi->CheckActiveItem(pId);
-			int NewSliderValue = pScale->ToAbsolute(NewNormalized, SliderMin, SliderMax);
-			if(NewSliderValue != SliderValue)
+			const bool SliderActive = Ctx.m_pUi->CheckActiveItem(pId);
+			const bool SliderReleased = SliderWasActive && !SliderActive;
+			const int NewSliderValue = pScale->ToAbsolute(NewNormalized, SliderMin, SliderMax);
+			if(NewSliderValue != SliderValue || SliderReleased)
 			{
 				int CandidateStored = NewSliderValue;
 				if(Infinite && NewSliderValue == SliderMax)
@@ -439,19 +449,21 @@ namespace ui_widget
 					DisplayValue = SliderInputIsInfiniteValue(*pValue, Infinite) ? Max : SliderInputDisplayValue(*pValue, Multiplier);
 					pInput->SetInteger(DisplayValue);
 					pInput->SelectAll();
+					pState->m_SliderWasActive = SliderActive;
 				}
 				else
 				{
-					if(Options.m_CommitPolicy == EInputCommitPolicy::LIVE || SliderReleased)
-					{
-						*pValue = CandidateStored;
-						Changed = true;
-					}
-					DisplayValue = SliderInputIsInfiniteValue(CandidateStored, Infinite) ? Max : SliderInputDisplayValue(CandidateStored, Multiplier);
+					Changed = UpdateNumericFieldSliderCommit(*pState, Options.m_CommitPolicy, SliderActive, SliderReleased, CandidateStored, pValue) || Changed;
+					const int VisibleStoredValue = pState->m_HasPendingValue ? pState->m_PendingStoredValue : *pValue;
+					DisplayValue = SliderInputIsInfiniteValue(VisibleStoredValue, Infinite) ? Max : SliderInputDisplayValue(VisibleStoredValue, Multiplier);
 					pInput->SetInteger(DisplayValue);
 					pInput->SelectAll();
+					pState->m_LastSyncedStoredValue = *pValue;
+					pState->m_HasSyncedValue = true;
 				}
 			}
+			else
+				pState->m_SliderWasActive = SliderActive;
 		}
 		else if(HasSlider)
 		{
@@ -501,6 +513,9 @@ namespace ui_widget
 				Result.m_Changed = true;
 				Changed = true;
 			}
+			pState->m_HasPendingValue = false;
+			pState->m_LastSyncedStoredValue = *pValue;
+			pState->m_HasSyncedValue = true;
 			DisplayValue = SliderInputIsInfiniteValue(*pValue, Infinite) ? Max : SliderInputDisplayValue(*pValue, Multiplier);
 			pInput->SetInteger(DisplayValue);
 			pInput->SelectAll();
@@ -516,7 +531,7 @@ namespace ui_widget
 	{
 		if(pState == nullptr)
 			return false;
-		return SliderInputField(Ctx, &pState->m_Input, pId, pValue, Min, Max, Rect, Options);
+		return SliderInputField(Ctx, pState, pId, pValue, Min, Max, Rect, Options);
 	}
 
 	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect)

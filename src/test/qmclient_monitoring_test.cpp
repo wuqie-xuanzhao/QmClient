@@ -4040,7 +4040,7 @@ TEST(QmMonitoringHelpers, GraphicsRefreshRateInputAcceptsInfinitySymbol)
 TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)
 {
 	const std::string Source = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Body.find("const float ValueWidth = std::clamp((MultiLine ? ValueRect.w : Controls.w) * 0.18f, 42.0f, 80.0f);"), std::string::npos);
@@ -7336,7 +7336,7 @@ TEST(QmMonitoringHelpers, DelayUpdateStaysOnUnifiedSliderInputPath)
 	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");
 	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string SharedSliderBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
+	const std::string SharedSliderBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
 	ASSERT_FALSE(SharedSliderBody.empty());
 	EXPECT_NE(FormsHeader.find("enum class EInputCommitPolicy"), std::string::npos);
 	EXPECT_NE(FormsHeader.find("struct SNumericFieldState"), std::string::npos);
@@ -7349,8 +7349,9 @@ TEST(QmMonitoringHelpers, DelayUpdateStaysOnUnifiedSliderInputPath)
 	EXPECT_NE(SliderBody.find("ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(pId);"), std::string::npos);
 	EXPECT_NE(SliderBody.find("ui_widget::NumericField(InputCtx, pState"), std::string::npos);
 	EXPECT_EQ(SliderBody.find("GetSettingsSliderInput("), std::string::npos);
-	EXPECT_NE(SharedSliderBody.find("const bool SliderReleased = SliderWasActive && !Ctx.m_pUi->CheckActiveItem(pId);"), std::string::npos);
-	EXPECT_NE(SharedSliderBody.find("Options.m_CommitPolicy == EInputCommitPolicy::LIVE || SliderReleased"), std::string::npos);
+	EXPECT_NE(SharedSliderBody.find("const bool SliderWasActive = pState->m_SliderWasActive;"), std::string::npos);
+	EXPECT_NE(SharedSliderBody.find("UpdateNumericFieldSliderCommit(*pState, Options.m_CommitPolicy, SliderActive, SliderReleased, CandidateStored, pValue)"), std::string::npos);
+	EXPECT_NE(SharedSliderBody.find("const int VisibleStoredValue = pState->m_HasPendingValue ? pState->m_PendingStoredValue : *pValue;"), std::string::npos);
 }
 TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
 {
@@ -7476,7 +7477,7 @@ TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 	EXPECT_EQ(ClearableExBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	EXPECT_EQ(SearchBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
 	EXPECT_EQ(ListItemBody.find("ResolveUiAnimValue(*Ctx.m_pAnim"), std::string::npos);
-	const std::string SliderInputBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, CLineInputNumber *pInput, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
+	const std::string SliderInputBody = ExtractSourceFunctionBody(Forms, "bool SliderInputField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SSliderInputFieldOptions &Options)");
 	ASSERT_FALSE(SliderInputBody.empty());
 	EXPECT_NE(SliderInputBody.find("const bool MultiLine = Options.m_Flags & CUi::SCROLLBAR_OPTION_MULTILINE;"), std::string::npos);
 	EXPECT_NE(SliderInputBody.find("if(MultiLine)"), std::string::npos);
