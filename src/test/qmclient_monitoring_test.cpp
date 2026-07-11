@@ -7294,6 +7294,45 @@ TEST(QmMonitoringHelpers, GraphicsDeckUsesPublicCoordinator)
 	EXPECT_NE(OverlayBody.find("CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropColumn, DropIndex, Deck.m_pDeckCoordinator);"), std::string::npos);
 	EXPECT_NE(CommitBody.find("pDeckCoordinator->CommitDrop("), std::string::npos);
 }
+TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
+{
+	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
+	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.cpp");
+
+	EXPECT_NE(Header.find("struct SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(Header.find("struct SSettingsCardDeckInput"), std::string::npos);
+	EXPECT_NE(Header.find("struct SSettingsCardDeckResult"), std::string::npos);
+	EXPECT_NE(Header.find("class CSettingsCardDeck"), std::string::npos);
+	EXPECT_NE(Header.find("SSettingsCardDeckResult Render("), std::string::npos);
+	EXPECT_NE(Header.find("void RequestReveal("), std::string::npos);
+	EXPECT_NE(Header.find("void BeginDisplayCycle("), std::string::npos);
+	EXPECT_NE(Source.find("BuildSettingsCardDeckColumnOrder("), std::string::npos);
+	EXPECT_NE(Source.find("ApplySettingsCardDeckDragPlacement("), std::string::npos);
+	EXPECT_NE(Source.find("ResolveSettingsCardDeckDropOrder("), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardDeckAutoScrollDelta("), std::string::npos);
+	EXPECT_NE(Source.find("CommitSettingsCardDeckDrop("), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCard("), std::string::npos);
+	EXPECT_NE(Header.find("std::string m_PendingRevealStableId"), std::string::npos);
+	EXPECT_NE(Header.find("m_ReflowCompleteFeedbackRemaining"), std::string::npos);
+	EXPECT_NE(Header.find("m_vContentHeights"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardEntryNodeKey"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCardReflowNodeKey"), std::string::npos);
+	EXPECT_NE(Source.find("EUiAnimProperty::ALPHA"), std::string::npos);
+	EXPECT_NE(Source.find("m_DisplayCycle"), std::string::npos);
+	EXPECT_NE(Source.find("SettingsCard(Ctx, Card.m_Frame"), std::string::npos);
+	EXPECT_NE(Source.find("ResolveSettingsPageLayoutForScrollViewport"), std::string::npos);
+	EXPECT_NE(Source.find("MouseInScrollViewport"), std::string::npos);
+	EXPECT_NE(Source.find("Input.m_MouseX >= DrawLayout.m_aColumns[0].x"), std::string::npos);
+	EXPECT_NE(Source.find("m_vContentHeights[StateIndex]"), std::string::npos);
+	EXPECT_NE(Source.find("Model.Entry(Card.m_StateIndex).m_pStableId"), std::string::npos);
+	EXPECT_EQ(Source.find("m_Drag.m_pStableId"), std::string::npos);
+
+	const size_t AddRect = Source.find("pScrollRegion->AddRect(Card.m_Frame.m_Rect, Reveal)");
+	const size_t Render = Source.find("SettingsCard(Ctx, Card.m_Frame");
+	ASSERT_NE(AddRect, std::string::npos);
+	ASSERT_NE(Render, std::string::npos);
+	EXPECT_LT(AddRect, Render);
+}
 TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
 {
 	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");

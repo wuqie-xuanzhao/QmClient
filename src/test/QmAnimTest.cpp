@@ -84,6 +84,17 @@ namespace
 		EXPECT_FLOAT_EQ(Frame.m_SubTabRect.h, 0.0f);
 	}
 
+	TEST(SettingsPageLayout, ScrollViewportReflowsColumnsAroundScrollbar)
+	{
+		const SSettingsPageLayoutFrame Original = ResolveSettingsPageLayout({0.0f, 0.0f, 800.0f, 700.0f}, false, 1.0f);
+		ASSERT_TRUE(Original.m_TwoColumns);
+		const SSettingsPageLayoutFrame Shrunk = ResolveSettingsPageLayoutForScrollViewport(Original, {Original.m_ScrollViewport.x, Original.m_ScrollViewport.y, 740.0f, Original.m_ScrollViewport.h}, 1.0f);
+		EXPECT_FALSE(Shrunk.m_TwoColumns);
+		EXPECT_FLOAT_EQ(Shrunk.m_ContentViewport.w, 740.0f);
+		EXPECT_FLOAT_EQ(Shrunk.m_aColumns[0].w, 740.0f);
+		EXPECT_FLOAT_EQ(Shrunk.m_aColumns[1].w, 0.0f);
+	}
+
 	TEST(SettingsPageLayout, NonPositiveScaleUsesBaseGeometry)
 	{
 		const SSettingsPageLayoutFrame Base = ResolveSettingsPageLayout({0.0f, 0.0f, 620.0f, 700.0f}, false, 1.0f);

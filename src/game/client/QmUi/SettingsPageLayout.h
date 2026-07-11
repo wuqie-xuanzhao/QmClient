@@ -56,4 +56,25 @@ inline SSettingsPageLayoutFrame ResolveSettingsPageLayout(const CUIRect &PageRec
 	return Frame;
 }
 
+// 滚动条占用空间后，基于有效 viewport 重新计算内容列，避免卡片落入滚动条轨道。
+inline SSettingsPageLayoutFrame ResolveSettingsPageLayoutForScrollViewport(const SSettingsPageLayoutFrame &Layout, const CUIRect &ScrollViewport, const float UiScale = 1.0f)
+{
+	const float Scale = UiScale > 0.0f ? UiScale : 1.0f;
+	SSettingsPageLayoutFrame Frame = Layout;
+	Frame.m_ScrollViewport = ScrollViewport;
+	Frame.m_ContentViewport = ScrollViewport;
+	Frame.m_TwoColumns = Frame.m_ContentViewport.w >= ui_token::settings::TWO_COLUMN_MIN_WIDTH * Scale;
+	Frame.m_aColumns[0] = {};
+	Frame.m_aColumns[1] = {};
+	if(Frame.m_TwoColumns)
+	{
+		const float ColumnWidth = std::max(0.0f, (Frame.m_ContentViewport.w - Frame.m_CardGap) * 0.5f);
+		Frame.m_aColumns[0] = {Frame.m_ContentViewport.x, Frame.m_ContentViewport.y, ColumnWidth, Frame.m_ContentViewport.h};
+		Frame.m_aColumns[1] = {Frame.m_aColumns[0].x + ColumnWidth + Frame.m_CardGap, Frame.m_ContentViewport.y, ColumnWidth, Frame.m_ContentViewport.h};
+	}
+	else
+		Frame.m_aColumns[0] = Frame.m_ContentViewport;
+	return Frame;
+}
+
 #endif

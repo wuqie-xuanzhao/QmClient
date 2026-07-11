@@ -55,7 +55,12 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const CUIRect &Slot, cons
 	const float ContentWidth = std::max(0.0f, Slot.w - 2.0f * ui_token::settings::CARD_PADDING * UiScale);
 	const float ContentHeight = Measure ? std::max(0.0f, Measure(ContentWidth)) : 0.0f;
 	const SSettingsCardFrame Frame = BuildSettingsCardFrame(Slot, Spec, ContentHeight, UiScale);
+	return SettingsCard(Ctx, Frame, Spec, State, VisualOptions, Render);
+}
 
+SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame &Frame, const SSettingsCardSpec &Spec, const SSettingsCardVisualState &State, const SSettingsCardDeckVisualOptions &VisualOptions, const FSettingsCardRender &Render)
+{
+	const float UiScale = Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f;
 	SSettingsCardVisualState DrawState = State;
 	DrawState.m_Hovered = Ctx.m_pUi != nullptr && Ctx.m_pUi->MouseHovered(&Frame.m_Rect);
 	SSettingsCardFrame DrawFrame = Frame;
