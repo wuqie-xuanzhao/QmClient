@@ -3189,6 +3189,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	SSettingsCardDeckCard VisualCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-visual", Localize("Visual"), GraphicsVisualMinCardHeight, s_GraphicsVisualCardHeight, ESettingsCardDeckColumn::LEFT, true);
 	SSettingsCardDeckCard BackendCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-backend", Localize("Graphics backend"), GraphicsBackendMinCardHeight, s_GraphicsBackendCardHeight, ESettingsCardDeckColumn::LEFT, true);
 	SSettingsCardDeckCard ModesCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-modes", Localize("Display modes"), GraphicsModesMinCardHeight, s_GraphicsModesCardHeight, ESettingsCardDeckColumn::RIGHT, true);
+	ConsumeSettingsCardFocus(GraphicsDeck, DisplayCard);
+	ConsumeSettingsCardFocus(GraphicsDeck, VisualCard);
+	ConsumeSettingsCardFocus(GraphicsDeck, BackendCard);
+	ConsumeSettingsCardFocus(GraphicsDeck, ModesCard);
 
 	CUIRect ModeList = ModesCard.m_ContentRect;
 	CUIRect ModeLabel;

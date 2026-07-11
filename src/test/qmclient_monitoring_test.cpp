@@ -7242,6 +7242,27 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 	EXPECT_NE(Source.find("RenderCanonicalSettingsCardHandle("), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, GlobalSearchTargetsGraphicsCanonicalCard)
+{
+	const std::string SearchSource = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string SearchCardBody = ExtractSourceFunctionBody(SearchSource, "void CMenus::RenderGlobalSearchResultCard");
+	const std::string FocusBody = ExtractSourceFunctionBody(MenusSource, "bool CMenus::ConsumeSettingsCardFocus");
+	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(SearchCardBody.empty());
+	ASSERT_FALSE(FocusBody.empty());
+	ASSERT_FALSE(GraphicsBody.empty());
+
+	EXPECT_NE(SearchCardBody.find("Navigation.m_SettingsPage == SETTINGS_GRAPHICS"), std::string::npos);
+	EXPECT_NE(SearchCardBody.find("RequestSettingsCardFocus(Card.m_pStableId);"), std::string::npos);
+	EXPECT_NE(FocusBody.find("if(m_MenuTextPlanCollecting || Ui()->RenderOnly())"), std::string::npos);
+	EXPECT_NE(FocusBody.find("Deck.m_pScrollRegion->AddRect(Card.m_Rect, true);"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, DisplayCard);"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, VisualCard);"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, BackendCard);"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, ModesCard);"), std::string::npos);
+}
 TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
 {
 	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");

@@ -979,6 +979,9 @@ void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSear
 			m_TClientSettingsTab = Navigation.m_TClientTab;
 		if(Navigation.m_AppearanceTab >= 0)
 			m_AppearanceSettingsTab = Navigation.m_AppearanceTab;
+		if(Navigation.m_SettingsPage == SETTINGS_GRAPHICS &&
+			Card.m_pStableId != nullptr && str_startswith(Card.m_pStableId, "deck:") != nullptr)
+			RequestSettingsCardFocus(Card.m_pStableId);
 		Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
 		m_GlobalCardSearchInput.Deactivate();
 	}

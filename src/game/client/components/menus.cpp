@@ -4842,6 +4842,25 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 	return Card;
 }
 
+void CMenus::RequestSettingsCardFocus(const char *pStableId)
+{
+	if(pStableId == nullptr || pStableId[0] == '\0')
+		return;
+	m_SettingsCardFocusStableId = pStableId;
+}
+
+bool CMenus::ConsumeSettingsCardFocus(SSettingsCardDeckLayout &Deck, const SSettingsCardDeckCard &Card)
+{
+	if(m_MenuTextPlanCollecting || Ui()->RenderOnly())
+		return false;
+	if(m_SettingsCardFocusStableId.empty() || Card.m_pStableId == nullptr ||
+		str_comp(m_SettingsCardFocusStableId.c_str(), Card.m_pStableId) != 0 || Deck.m_pScrollRegion == nullptr)
+		return false;
+	Deck.m_pScrollRegion->AddRect(Card.m_Rect, true);
+	m_SettingsCardFocusStableId.clear();
+	return true;
+}
+
 void CMenus::EndSettingsCardDeck(SSettingsCardDeckLayout &Deck, float *pPreviousScrollY)
 {
 	const float LeftBottom = Deck.m_aColumns[0].y;

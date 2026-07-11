@@ -2640,6 +2640,8 @@ private:
 	SSettingsCardDeckLayout BeginSettingsCardDeck(CUIRect MainView, CScrollRegion &ScrollRegion, float PreviousScrollY, float UiScale, const char *pDeckId, int Page, std::vector<std::string> *pOrder = nullptr, const std::vector<std::string> *pActiveCardIds = nullptr);
 	SSettingsCardDeckCard BeginSettingsCardDeckCard(SSettingsCardDeckLayout &Deck, const char *pStableId, const char *pTitle, float MinHeight, float LastMeasuredHeight, ESettingsCardDeckColumn PreferredColumn = ESettingsCardDeckColumn::LEFT, bool ForcePreferredColumn = false);
 	void EndSettingsCardDeck(SSettingsCardDeckLayout &Deck, float *pPreviousScrollY);
+	void RequestSettingsCardFocus(const char *pStableId);
+	bool ConsumeSettingsCardFocus(SSettingsCardDeckLayout &Deck, const SSettingsCardDeckCard &Card);
 	void RenderSettingsCardDragHandle(const CUIRect &Card, CUIRect *pHandleRect, const SQmSettingsCardStyle &Style);
 	void RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck);
 	std::vector<std::string> *SettingsCardDeckOrder(const char *pDeckId);
@@ -2726,6 +2728,7 @@ private:
 	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMeasuredHeights;
 	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMinHeights;
 	std::unordered_map<std::string, std::unordered_map<std::string, int>> m_SettingsCardDeckColumnPrefs;
+	std::string m_SettingsCardFocusStableId;
 	std::vector<SSettingsCardDeckItem> m_vTClientSettingsCardDeckItems;
 	SSettingsCardDeckDragState m_TClientSettingsCardDragState;
 	bool m_TClientSettingsCardDeckOrderDirty = false;
