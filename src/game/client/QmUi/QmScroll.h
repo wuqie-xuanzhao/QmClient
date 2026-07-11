@@ -112,11 +112,13 @@ class CQmScrollState
 public:
 	void Reset();
 	void SetOffset(float Offset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig(), bool AllowOverscroll = false);
+	void ScrollTo(float TargetOffset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig());
 	void AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig());
 	void Advance(float Dt, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config = SQmScrollConfig(), bool PauseNativeWheelAnimation = false);
 
 	float Offset() const { return m_Offset; }
 	float Velocity() const { return m_Velocity; }
+	bool Animating() const { return m_AnimTime > 0.0f; }
 
 private:
 	float m_Offset = 0.0f;

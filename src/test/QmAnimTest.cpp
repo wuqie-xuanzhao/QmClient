@@ -2350,6 +2350,27 @@ TEST(UiV2ScrollContainer, ClickingScrollbarTrackPagesTowardMouse)
 	EXPECT_TRUE(Container.ScrollbarDragActive());
 }
 
+TEST(UiV2ScrollState, ProgrammaticTargetSharesNativeAnimationAndClampsAfterContentShrink)
+{
+	SQmScrollMetrics TallMetrics;
+	TallMetrics.m_ViewportSize = 100.0f;
+	TallMetrics.m_ContentSize = 600.0f;
+	SQmScrollMetrics ShortMetrics;
+	ShortMetrics.m_ViewportSize = 100.0f;
+	ShortMetrics.m_ContentSize = 180.0f;
+	SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
+
+	CQmScrollState State;
+	State.ScrollTo(300.0f, TallMetrics, Config);
+	EXPECT_TRUE(State.Animating());
+	State.Advance(0.25f, TallMetrics, Config);
+	EXPECT_GT(State.Offset(), 0.0f);
+	EXPECT_LT(State.Offset(), 300.0f);
+
+	State.Advance(0.0f, ShortMetrics, Config);
+	EXPECT_NEAR(State.Offset(), ShortMetrics.MaxOffset(), 1e-6f);
+	EXPECT_FALSE(State.Animating());
+}
 TEST(UiV2ScrollContainer, PreviewFrameDoesNotCancelActiveScrollbarDrag)
 {
 	CQmScrollContainer Container;

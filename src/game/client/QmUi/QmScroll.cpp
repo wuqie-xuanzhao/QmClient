@@ -190,6 +190,30 @@ void CQmScrollState::Reset()
 	m_AnimTargetOffset = 0.0f;
 }
 
+void CQmScrollState::ScrollTo(float TargetOffset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config)
+{
+	const float MaxOffset = Metrics.MaxOffset();
+	if(MaxOffset <= 0.0f)
+	{
+		Reset();
+		return;
+	}
+
+	const float Target = std::clamp(TargetOffset, 0.0f, MaxOffset);
+	m_Offset = std::clamp(m_Offset, 0.0f, MaxOffset);
+	m_Velocity = 0.0f;
+	m_AnimStartOffset = m_Offset;
+	m_AnimTargetOffset = Target;
+	m_AnimTimeMax = std::max(0.0f, Config.m_NativeWheelAnimationTime);
+	m_AnimTime = m_AnimTimeMax;
+	if(m_AnimTimeMax <= 0.0f || std::abs(m_AnimStartOffset - m_AnimTargetOffset) < 0.5f)
+	{
+		m_Offset = m_AnimTargetOffset;
+		m_AnimTimeMax = 0.0f;
+		m_AnimTime = 0.0f;
+	}
+	m_LastMaxOffset = MaxOffset;
+}
 void CQmScrollState::SetOffset(float Offset, const SQmScrollMetrics &Metrics, const SQmScrollConfig &Config, bool AllowOverscroll)
 {
 	const float MaxOffset = Metrics.MaxOffset();
@@ -258,6 +282,13 @@ void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQ
 		m_Offset = MaxOffset;
 		if(m_Velocity > 0.0f)
 			m_Velocity = 0.0f;
+		if(m_AnimTargetOffset > MaxOffset)
+		{
+			m_AnimStartOffset = MaxOffset;
+			m_AnimTargetOffset = MaxOffset;
+			m_AnimTime = 0.0f;
+			m_AnimTimeMax = 0.0f;
+		}
 	}
 	else if(m_LastMaxOffset > MaxOffset && m_Offset < 0.0f)
 	{
