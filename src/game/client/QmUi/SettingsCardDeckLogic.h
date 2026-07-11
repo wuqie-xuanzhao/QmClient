@@ -14,6 +14,7 @@ namespace settings_card_deck_logic
 	public:
 		void Load(const char *pDeckId, const char *pGlobalOrder);
 		bool Move(const char *pStableId, int Column, int Order);
+		int ColumnForStableId(const char *pStableId) const;
 		std::vector<std::string> StableIdOrder(int Column) const;
 		bool SerializeMerged(const char *pExistingGlobalOrder, char *pOut, int OutSize) const;
 

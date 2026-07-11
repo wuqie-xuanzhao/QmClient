@@ -4838,7 +4838,7 @@ CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard(SSettingsCardDec
 	SSettingsCardDeckItem Item = SettingsCardDeckItemFromSection(Section, Card.m_Column, OrderIndex, Card.m_Rect, Card.m_HandleRect);
 	Deck.m_CardCount++;
 	RegisterSettingsCardDeckItem(Item);
-	HandleSettingsCardDeckDrag(Item, Card.m_Column, Deck.m_pOrder);
+	HandleSettingsCardDeckDrag(Item, Card.m_Column, Deck.m_pOrder, Deck.m_pDeckCoordinator);
 	return Card;
 }
 
@@ -4947,7 +4947,7 @@ void CMenus::RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck)
 			Ui()->MouseX(),
 			Ui()->MouseY(),
 			m_TClientSettingsCardDragState.m_DropIndex);
-		CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropColumn, DropIndex);
+		CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropColumn, DropIndex, Deck.m_pDeckCoordinator);
 	}
 }
 

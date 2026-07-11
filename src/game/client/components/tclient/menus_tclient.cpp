@@ -1137,7 +1137,7 @@ void CMenus::RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item)
 	m_vTClientSettingsCardDeckItems.push_back(Item);
 }
 
-void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder)
+void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder, settings_card_deck::CDeck *pDeckCoordinator)
 {
 	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
 	if((DragState.m_Active || DragState.m_PressPending) && false)
@@ -1170,11 +1170,11 @@ void CMenus::HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESett
 	{
 		DragState.m_DropColumn = Column;
 		const int DropIndex = SettingsCardDeckDropIndexForHoveredItem(Item, Ui()->MouseY());
-		CommitSettingsCardDeckDragDrop(pOrder, Column, DropIndex);
+		CommitSettingsCardDeckDragDrop(pOrder, Column, DropIndex, pDeckCoordinator);
 	}
 }
 
-bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex)
+bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator)
 {
 	SSettingsCardDeckDragState &DragState = m_TClientSettingsCardDragState;
 	if(!DragState.m_Active)
@@ -1197,6 +1197,10 @@ bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ES
 			if(SerializeMergedTClientGlobalCardOrder(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder, aMergedGlobalOrder, sizeof(aMergedGlobalOrder)))
 				str_copy(g_Config.m_QmGlobalCardOrder, aMergedGlobalOrder, sizeof(g_Config.m_QmGlobalCardOrder));
 		}
+	}
+	else if(pDeckCoordinator != nullptr && pDeckCoordinator->CommitDrop(DragState.m_Item.m_pStableId, DropColumn == ESettingsCardDeckColumn::RIGHT ? 2 : 1, DropIndex))
+	{
+		Moved = true;
 	}
 	else if(pOrder != nullptr && SettingsCardDeckMoveWithinColumn(*pOrder, DragState.m_Item.m_pStableId, DropIndex))
 	{

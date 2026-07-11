@@ -33,7 +33,13 @@ namespace settings_card_deck_logic
 		return true;
 	}
 
+	int CLogic::ColumnForStableId(const char *pStableId) const
+	{
+		const int Index = m_Model.FindByStableId(pStableId);
+		return Index >= 0 ? m_Model.Entry(Index).m_Column : -1;
+	}
 	std::vector<std::string> CLogic::StableIdOrder(int Column) const
+
 	{
 		return m_Model.StableIdOrder("deck:", m_DeckId.c_str(), Column);
 	}

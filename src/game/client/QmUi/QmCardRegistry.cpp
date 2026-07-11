@@ -73,7 +73,7 @@ namespace qm_card_registry
 			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, "Graphics display", "graphics display"},
 			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, "Visual", "graphics visual"},
 			{"deck:graphics-backend", "graphics", ECardColumn::Left, 2, "Graphics backend", "graphics backend"},
-			{"deck:graphics-modes", "graphics", ECardColumn::Left, 3, "Display modes", "display modes graphics"},
+			{"deck:graphics-modes", "graphics", ECardColumn::Right, 0, "Display modes", "display modes graphics"},
 			{"deck:sound-toggle", "sound", ECardColumn::Left, 0, "Sound", "sound toggle audio"},
 			{"deck:sound-volume", "sound", ECardColumn::Left, 1, "Volume", "volume sound audio"},
 			{"deck:sound-audio-pack", "sound", ECardColumn::Left, 2, "Audio packs", "audio pack audio packs sound"},

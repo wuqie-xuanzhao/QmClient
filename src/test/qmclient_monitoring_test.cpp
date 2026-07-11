@@ -1763,8 +1763,8 @@ TEST(QmMonitoringHelpers, TClientSettingsCardDeckDragRuntimeUsesCtrlHeaderGate)
 	EXPECT_NE(Source.find("DragState.m_DropColumn = Column;"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardDeckDropColumnForMouseX(LeftView, RightView, Ui()->MouseX(), m_TClientSettingsCardDragState.m_DropColumn)"), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardDeckMoveBetweenColumns(vSourceOrder, vTargetOrder, DragState.m_Item.m_pStableId, DropIndex)"), std::string::npos);
-	EXPECT_NE(Source.find("CommitSettingsCardDeckDragDrop(pOrder, Column, DropIndex);"), std::string::npos);
-	EXPECT_NE(Header.find("bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex);"), std::string::npos);
+	EXPECT_NE(Source.find("CommitSettingsCardDeckDragDrop(pOrder, Column, DropIndex, pDeckCoordinator);"), std::string::npos);
+	EXPECT_NE(Header.find("bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator = nullptr);"), std::string::npos);
 	EXPECT_NE(Source.find("m_TClientSettingsCardDeckOrderDirty = true;"), std::string::npos);
 	EXPECT_NE(Source.find("#include <game/client/QmUi/QmCardRegistry.h>"), std::string::npos);
 	EXPECT_NE(Source.find("LoadTClientOrderFromGlobalCardModel(g_Config.m_QmGlobalCardOrder, m_vTClientLeftCardOrder, m_vTClientRightCardOrder)"), std::string::npos);
@@ -7262,6 +7262,27 @@ TEST(QmMonitoringHelpers, GlobalSearchTargetsGraphicsCanonicalCard)
 	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, VisualCard);"), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, BackendCard);"), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, ModesCard);"), std::string::npos);
+}
+TEST(QmMonitoringHelpers, GraphicsDeckUsesPublicCoordinator)
+{
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string TClientSource = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	const std::string OverlayBody = ExtractSourceFunctionBody(MenusSource, "void CMenus::RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck)");
+	const std::string CommitBody = ExtractSourceFunctionBody(TClientSource, "bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator)");
+	ASSERT_FALSE(GraphicsBody.empty());
+	ASSERT_FALSE(OverlayBody.empty());
+	ASSERT_FALSE(CommitBody.empty());
+
+	EXPECT_NE(MenusHeader.find("#include <game/client/QmUi/SettingsCardDeck.h>"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("m_GraphicsSettingsCardDeck"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("m_GraphicsSettingsCardDeck.Load(\"graphics\""), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("m_GraphicsSettingsCardDeck.OrderedStableIds()"), std::string::npos);
+	EXPECT_NE(MenusSource.find("HandleSettingsCardDeckDrag(Item, Card.m_Column, Deck.m_pOrder, Deck.m_pDeckCoordinator);"), std::string::npos);
+	EXPECT_NE(OverlayBody.find("CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropColumn, DropIndex, Deck.m_pDeckCoordinator);"), std::string::npos);
+	EXPECT_NE(CommitBody.find("pDeckCoordinator->CommitDrop("), std::string::npos);
 }
 TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
 {

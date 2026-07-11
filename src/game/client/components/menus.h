@@ -21,6 +21,7 @@
 #include <generated/client_data.h>
 
 #include <game/client/QmUi/QmScroll.h>
+#include <game/client/QmUi/SettingsCardDeck.h>
 #include <game/client/QmUi/UiTheme.h>
 #include <game/client/component.h>
 #include <game/client/components/assets_resource_registry.h>
@@ -2612,6 +2613,7 @@ private:
 		bool m_TwoColumns = false;
 		bool m_UseCanonicalCardShell = false;
 		bool m_RainbowTitles = false;
+		settings_card_deck::CDeck *m_pDeckCoordinator = nullptr;
 		int m_CardCount = 0;
 	};
 
@@ -2729,6 +2731,7 @@ private:
 	std::unordered_map<std::string, std::unordered_map<std::string, float>> m_SettingsCardDeckMinHeights;
 	std::unordered_map<std::string, std::unordered_map<std::string, int>> m_SettingsCardDeckColumnPrefs;
 	std::string m_SettingsCardFocusStableId;
+	settings_card_deck::CDeck m_GraphicsSettingsCardDeck;
 	std::vector<SSettingsCardDeckItem> m_vTClientSettingsCardDeckItems;
 	SSettingsCardDeckDragState m_TClientSettingsCardDragState;
 	bool m_TClientSettingsCardDeckOrderDirty = false;
@@ -2766,8 +2769,8 @@ private:
 	void ConfigureSettingsCardSection(SSettingsSection &Section, const char *pTitle, const char *pStableCardId, std::function<float(CUIRect &, bool)> LayoutSection, float TopMargin);
 	SSettingsCardDeckItem SettingsCardDeckItemFromSection(const SSettingsSection &Section, ESettingsCardDeckColumn Column, int Order, const CUIRect &Rect, const CUIRect &HeaderRect) const;
 	void RegisterSettingsCardDeckItem(const SSettingsCardDeckItem &Item);
-	void HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder);
-	bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex);
+	void HandleSettingsCardDeckDrag(const SSettingsCardDeckItem &Item, ESettingsCardDeckColumn Column, std::vector<std::string> *pOrder, settings_card_deck::CDeck *pDeckCoordinator = nullptr);
+	bool CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator = nullptr);
 	float RenderTClientCacheSectionFallback(CUIRect &CurrentColumn, float TopMargin, float (CMenus::*pLayoutSection)(CUIRect &, bool));
 	void ConfigureSplitCachedStaticLayer(SSettingsSection &Section, const char *pTitle, std::function<float(CUIRect &)> MeasureSection, std::function<float(CUIRect &)> RenderInteractiveSection, float TopMargin);
 	void BuildTClientSettingsMenuTextPlan(std::vector<SMenuTextPlanItem> &vItems, CUIRect MainView, int Tab);

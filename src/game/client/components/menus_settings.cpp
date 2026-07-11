@@ -3166,12 +3166,15 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const SSettingsPageLayoutFrame GraphicsPage = ResolveSettingsPageLayout(MainView, false, UiScale);
 	const IUiContext GraphicsCardCtx = SettingsUiContext("settings_graphics", UiScale);
 	const SSettingsCardDeckVisualOptions GraphicsVisualOptions = SettingsCardDeckVisualOptions();
-	SSettingsCardDeckLayout GraphicsDeck = BeginSettingsCardDeck(GraphicsPage.m_ScrollViewport, s_GraphicsSettingsScrollRegion, s_GraphicsSettingsScrollY, UiScale, "graphics", SETTINGS_GRAPHICS);
+	m_GraphicsSettingsCardDeck.Load("graphics", g_Config.m_QmGlobalCardOrder, sizeof(g_Config.m_QmGlobalCardOrder));
+	std::vector<std::string> vGraphicsDeckOrder = m_GraphicsSettingsCardDeck.OrderedStableIds();
+	SSettingsCardDeckLayout GraphicsDeck = BeginSettingsCardDeck(GraphicsPage.m_ScrollViewport, s_GraphicsSettingsScrollRegion, s_GraphicsSettingsScrollY, UiScale, "graphics", SETTINGS_GRAPHICS, &vGraphicsDeckOrder);
 	GraphicsDeck.m_Spacing = GraphicsPage.m_CardGap;
 	GraphicsDeck.m_TwoColumns = GraphicsPage.m_TwoColumns;
 	GraphicsDeck.m_UseCanonicalCardShell = true;
 	GraphicsDeck.m_pCardContext = &GraphicsCardCtx;
 	GraphicsDeck.m_RainbowTitles = GraphicsVisualOptions.m_RainbowTitles;
+	GraphicsDeck.m_pDeckCoordinator = &m_GraphicsSettingsCardDeck;
 	if(GraphicsDeck.m_TwoColumns)
 		GraphicsDeck.m_View.VSplitMid(&GraphicsDeck.m_aColumns[0], &GraphicsDeck.m_aColumns[1], GraphicsDeck.m_Spacing);
 	else
