@@ -7229,6 +7229,25 @@ TEST(QmMonitoringHelpers, QmUiAnimatePresenceIsGenericWidgetHelper)
 	EXPECT_NE(QmClient.find("Ctx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, InputFieldsConsumeSharedLayoutHelper)
+{
+	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/QmUi/UiForms.h");
+	const std::string IconBody = ExtractSourceFunctionBody(Forms, "SInputFieldResult IconTextFieldEx");
+	const std::string ClearableBody = ExtractSourceFunctionBody(Forms, "SInputFieldResult ClearableTextFieldEx");
+	const std::string SearchBody = ExtractSourceFunctionBody(Forms, "SInputFieldResult SearchFieldEx");
+	ASSERT_FALSE(IconBody.empty());
+	ASSERT_FALSE(ClearableBody.empty());
+	ASSERT_FALSE(SearchBody.empty());
+
+	EXPECT_NE(Header.find("struct SInputFieldLayout"), std::string::npos);
+	EXPECT_NE(Header.find("ResolveInputFieldLayout("), std::string::npos);
+	EXPECT_NE(IconBody.find("ResolveInputFieldLayout(Rect, true, Clearable)"), std::string::npos);
+	EXPECT_NE(IconBody.find("Layout.m_ContentRect"), std::string::npos);
+	EXPECT_NE(IconBody.find("Layout.m_ClearRect"), std::string::npos);
+	EXPECT_NE(ClearableBody.find("ResolveInputFieldLayout(Rect, false, true)"), std::string::npos);
+	EXPECT_NE(SearchBody.find("ResolveInputFieldLayout(Rect, true, true)"), std::string::npos);
+}
 TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 {
 	const std::string Source = ReadRepoFile("src/game/client/QmUi/SettingsCard.cpp");

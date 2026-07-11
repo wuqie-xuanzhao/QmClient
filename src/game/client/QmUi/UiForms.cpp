@@ -183,20 +183,11 @@ namespace ui_widget
 		pInput->SetEmptyText(Options.m_pPlaceholder);
 		DrawLegacyTextFieldPlate(Ctx, pInput, Rect, Options.m_Corners);
 
+		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, true, Clearable);
 		const float IconSize = Rect.h * 0.65f;
-		const float IconMargin = ui_token::spacing::XS;
-		const float IconAreaWidth = IconSize + 2.0f * IconMargin;
-		const float ClearButtonWidth = Clearable ? Rect.h : 0.0f;
-
-		CUIRect IconRect, InputRect, ClearRect;
-		Rect.VSplitLeft(IconAreaWidth, &IconRect, &InputRect);
-		if(Clearable)
-		{
-			InputRect.VSplitRight(ClearButtonWidth, &InputRect, &ClearRect);
-			InputRect.VMargin(ui_token::spacing::XS, &InputRect);
-		}
-		else
-			InputRect.VMargin(ui_token::spacing::XS, &InputRect);
+		const CUIRect &IconRect = Layout.m_IconRect;
+		const CUIRect &InputRect = Layout.m_ContentRect;
+		const CUIRect &ClearRect = Layout.m_ClearRect;
 
 		const char *pIconToUse = pIcon != nullptr ? pIcon : FontIcons::FONT_ICON_MAGNIFYING_GLASS;
 		Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
@@ -244,12 +235,13 @@ namespace ui_widget
 		const bool WasActive = pInput->IsActive();
 		const bool WasEmpty = pInput->IsEmpty();
 		STextFieldOptions Options;
+		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, false, true);
 		pInput->SetEmptyText(pPlaceholder);
-		DrawTextFieldPlate(Ctx, pInput, Rect, Options);
+		DrawTextFieldPlate(Ctx, pInput, Layout.m_ShellRect, Options);
 
 		CUi::SEditBoxRenderOptions RenderOptions;
 		RenderOptions.m_DrawBackground = false;
-		const bool Changed = Ctx.m_pUi->DoClearableEditBox(pInput, &Rect, FontSize, IGraphics::CORNER_ALL, {}, RenderOptions);
+		const bool Changed = Ctx.m_pUi->DoClearableEditBox(pInput, &Layout.m_ShellRect, FontSize, IGraphics::CORNER_ALL, {}, RenderOptions);
 
 		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);
 	}
@@ -267,11 +259,12 @@ namespace ui_widget
 		const bool WasActive = pInput->IsActive();
 		const bool WasEmpty = pInput->IsEmpty();
 		STextFieldOptions Options;
-		DrawTextFieldPlate(Ctx, pInput, Rect, Options);
+		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, true, true);
+		DrawTextFieldPlate(Ctx, pInput, Layout.m_ShellRect, Options);
 
 		CUi::SEditBoxRenderOptions RenderOptions;
 		RenderOptions.m_DrawBackground = false;
-		const bool Changed = Ctx.m_pUi->DoEditBox_Search(pInput, &Rect, FontSize, HotkeyEnabled, RenderOptions);
+		const bool Changed = Ctx.m_pUi->DoEditBox_Search(pInput, &Layout.m_ShellRect, FontSize, HotkeyEnabled, RenderOptions);
 		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);
 	}
 
