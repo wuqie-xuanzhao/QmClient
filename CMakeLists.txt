@@ -2659,6 +2659,8 @@ if(CLIENT)
     QmUi/QmCardOrderModel.h
     QmUi/QmCardRegistry.cpp
     QmUi/QmCardRegistry.h
+    QmUi/SettingsCardDeckLogic.cpp
+    QmUi/SettingsCardDeckLogic.h
     QmUi/QmModuleLayoutAdapter.cpp
     QmUi/QmModuleLayoutAdapter.h
     QmUi/QmModuleTypes.h
@@ -3807,6 +3809,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     server_test.cpp
     serverbrowser_test.cpp
     serverinfo_test.cpp
+    settings_card_deck_logic_test.cpp
     settings_warmup_test.cpp
     skin_transition_test.cpp
     skins_test.cpp
@@ -3856,6 +3859,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/QmUi/QmScroll.cpp
     src/game/client/QmUi/QmTree.cpp
     src/game/client/QmUi/QmCardRegistry.cpp
+    src/game/client/QmUi/SettingsCardDeckLogic.cpp
     src/game/client/QmUi/QmModuleLayoutAdapter.cpp
     src/game/client/QmUi/SettingsCardGeometry.cpp
     src/game/client/components/assets_resource_registry.cpp
