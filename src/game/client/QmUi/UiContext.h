@@ -14,6 +14,7 @@ class CUiV2Tree;
 class CQmIconManager;
 class CTooltips;
 class ITextRender;
+struct SUiTheme;
 
 // Lightweight dependency-injection bundle for ui_widget primitives. Constructed
 // once at the start of a page render (CMenus has access to the protected
@@ -29,8 +30,10 @@ struct IUiContext
 	CMenus *m_pMenus = nullptr;
 	CTooltips *m_pTooltips = nullptr;
 	ITextRender *m_pTextRender = nullptr;
+	const SUiTheme *m_pTheme = nullptr;
 	uint64_t m_ScopeHash = 0;
 	float m_FrameDt = 1.0f / 60.0f;
+	float m_UiScale = 1.0f;
 };
 
 // Stable hash of a page identifier, used to seed BuildUiAnimNodeKey so

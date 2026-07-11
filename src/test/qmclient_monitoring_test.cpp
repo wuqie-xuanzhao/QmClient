@@ -7229,6 +7229,33 @@ TEST(QmMonitoringHelpers, QmUiAnimatePresenceIsGenericWidgetHelper)
 	EXPECT_NE(QmClient.find("Ctx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, SettingsUiThemeIsInjectedIntoSharedInputPrimitives)
+{
+	const std::string Theme = ReadRepoFile("src/game/client/QmUi/UiTheme.h");
+	const std::string Context = ReadRepoFile("src/game/client/QmUi/UiContext.h");
+	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string ContextBody = ExtractSourceFunctionBody(Menus, "IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)");
+	const std::string SliderBody = ExtractSourceFunctionBody(Menus, "bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)");
+	ASSERT_FALSE(ContextBody.empty());
+	ASSERT_FALSE(SliderBody.empty());
+
+	EXPECT_NE(Theme.find("struct SUiTheme"), std::string::npos);
+	EXPECT_NE(Theme.find("SUiTheme ResolveUiTheme"), std::string::npos);
+	EXPECT_NE(Context.find("const SUiTheme *m_pTheme = nullptr;"), std::string::npos);
+	EXPECT_NE(Context.find("float m_UiScale = 1.0f;"), std::string::npos);
+	EXPECT_NE(Forms.find("const SUiTheme &ThemeFor(const IUiContext &Ctx)"), std::string::npos);
+	EXPECT_NE(Forms.find("ResolveUiTheme(ColorHSLA(0.0f, 0.0f, 0.29f, 1.0f), 1.0f)"), std::string::npos);
+	EXPECT_EQ(Forms.find("CUi::ms_LightButtonColorFunction"), std::string::npos);
+	EXPECT_EQ(Forms.find("ui_token::color::BORDER_FOCUS"), std::string::npos);
+	EXPECT_NE(ContextBody.find("m_SettingsUiTheme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f);"), std::string::npos);
+	EXPECT_NE(ContextBody.find("Context.m_pIconManager = GameClient()->QmIconManager();"), std::string::npos);
+	EXPECT_NE(ContextBody.find("Context.m_pTooltips = &GameClient()->m_Tooltips;"), std::string::npos);
+	EXPECT_NE(ContextBody.find("Context.m_pTheme = &m_SettingsUiTheme;"), std::string::npos);
+	EXPECT_NE(SliderBody.find("IUiContext InputCtx = SettingsUiContext(\"settings_slider_input\");"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("SUiTheme m_SettingsUiTheme;"), std::string::npos);
+}
 TEST(QmMonitoringHelpers, QmUiStateAnimationBacksWidgetFocusAndHover)
 {
 	const std::string FormsHeader = ReadRepoFile("src/game/client/QmUi/UiForms.h");

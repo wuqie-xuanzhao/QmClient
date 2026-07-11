@@ -21,6 +21,7 @@
 #include <generated/client_data.h>
 
 #include <game/client/QmUi/QmScroll.h>
+#include <game/client/QmUi/UiTheme.h>
 #include <game/client/component.h>
 #include <game/client/components/assets_resource_registry.h>
 #include <game/client/components/community_icons.h>
@@ -70,6 +71,7 @@ enum
 };
 
 class CUIRect;
+struct IUiContext;
 class CMenus;
 
 namespace NTranslateUiSettings
@@ -115,6 +117,7 @@ public:
 	bool DoLine_KeyReader(CUIRect &View, CButtonContainer &ReaderButton, CButtonContainer &ClearButton, const char *pName, const char *pCommand);
 
 private:
+	IUiContext SettingsUiContext(const char *pScope, float UiScale = 1.0f);
 	uint64_t UiAnimNodeKey(const char *pScope, uint64_t Id = 0) const;
 	void TriggerUiSwitchAnimation(uint64_t NodeKey, float DurationSec = 0.18f);
 	float ReadUiSwitchAnimation(uint64_t NodeKey) const;
@@ -143,6 +146,7 @@ private:
 	std::optional<std::chrono::nanoseconds> m_SkinList7LastRefreshTime;
 	std::optional<std::chrono::nanoseconds> m_SkinPartsList7LastRefreshTime;
 	std::unordered_map<const void *, std::unique_ptr<CLineInputNumber>> m_vpSettingsSliderInputs;
+	SUiTheme m_SettingsUiTheme;
 
 	int m_DirectionQuadContainerIndex;
 	int m_QmCardBgQuadContainerIndex = -1; // 栖梦侧栏卡片背景合批容器（DrawCall 合批：每帧 Reset+AddQuaps+Upload+RenderQuadContainer）

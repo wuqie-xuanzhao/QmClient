@@ -3,6 +3,7 @@
 #include "UiForms.h"
 
 #include "UiMotion.h"
+#include "UiTheme.h"
 
 #include <engine/graphics.h>
 #include <engine/keys.h>
@@ -22,6 +23,12 @@ namespace ui_widget
 		void DrawTextFieldFocusBorder(const IUiContext &Ctx, const CUIRect &Rect, float Alpha);
 		void DrawTextFieldFocusBorder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect);
 
+		const SUiTheme &ThemeFor(const IUiContext &Ctx)
+		{
+			static const SUiTheme s_FallbackTheme = ResolveUiTheme(ColorHSLA(0.0f, 0.0f, 0.29f, 1.0f), 1.0f);
+			return Ctx.m_pTheme != nullptr ? *Ctx.m_pTheme : s_FallbackTheme;
+		}
+
 		SInputFieldResult BuildInputFieldResult(const IUiContext &Ctx, CLineInput *pInput, bool Changed, bool WasActive, bool WasEmpty, bool Clearable)
 		{
 			const bool SubmitPressed = Ctx.m_pUi != nullptr && (Ctx.m_pUi->Input()->KeyPress(KEY_RETURN) || Ctx.m_pUi->Input()->KeyPress(KEY_KP_ENTER));
@@ -30,7 +37,10 @@ namespace ui_widget
 
 		void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
 		{
-			const ColorRGBA PlateColor = CUi::ms_LightButtonColorFunction.GetColor(false, Ctx.m_pUi->HotItem() == pInput);
+			const SUiTheme &Theme = ThemeFor(Ctx);
+			const bool Active = pInput->IsActive();
+			const bool Hovered = Ctx.m_pUi->HotItem() == pInput;
+			const ColorRGBA PlateColor = Active ? Theme.m_InputSurfaceFocused : (Hovered ? Theme.m_SurfaceHovered : Theme.m_InputSurface);
 			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(PlateColor), Options.m_Corners, Options.m_CornerRadius);
 			if(Ctx.m_pAnim == nullptr)
 				return;
@@ -44,9 +54,11 @@ namespace ui_widget
 		{
 			if(Ctx.m_pUi == nullptr)
 				return;
+			const SUiTheme &Theme = ThemeFor(Ctx);
 			const bool Active = pInput != nullptr && pInput->IsActive();
 			const bool Hovered = pInput != nullptr && Ctx.m_pUi->HotItem() == pInput;
-			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(CUi::ms_LightButtonColorFunction.GetColor(Active, Hovered)), Corners, ui_token::radius::BASE);
+			const ColorRGBA PlateColor = Active ? Theme.m_InputSurfaceFocused : (Hovered ? Theme.m_SurfaceHovered : Theme.m_InputSurface);
+			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(PlateColor), Corners, ui_token::radius::BASE);
 		}
 
 		void DrawTextFieldFocusBorder(const IUiContext &Ctx, const CUIRect &Rect, float Alpha)
@@ -54,10 +66,11 @@ namespace ui_widget
 			if(Alpha <= 0.01f)
 				return;
 
-			ColorRGBA RingColor = ui_token::color::BORDER_FOCUS;
+			const SUiTheme &Theme = ThemeFor(Ctx);
+			ColorRGBA RingColor = Theme.m_FocusRing;
 			RingColor.a *= Alpha;
 			CUIRect OuterRing = Rect;
-			OuterRing.Margin(0.5f, &OuterRing);
+			OuterRing.Margin(Theme.m_FocusRingInset * 0.5f, &OuterRing);
 			OuterRing.DrawOutline(RingColor);
 
 			ColorRGBA InnerRingColor = RingColor;

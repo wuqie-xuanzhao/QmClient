@@ -36,6 +36,7 @@
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiTheme.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
@@ -515,6 +516,24 @@ CMenus::CMenus()
 
 	m_PasswordInput.SetBuffer(g_Config.m_Password, sizeof(g_Config.m_Password));
 	m_PasswordInput.SetHidden(true);
+}
+
+IUiContext CMenus::SettingsUiContext(const char *pScope, const float UiScale)
+{
+	m_SettingsUiTheme = ResolveUiTheme(ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f);
+	IUiContext Context;
+	Context.m_pUi = Ui();
+	Context.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	Context.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	Context.m_pIconManager = GameClient()->QmIconManager();
+	Context.m_pMenus = this;
+	Context.m_pTooltips = &GameClient()->m_Tooltips;
+	Context.m_pTextRender = TextRender();
+	Context.m_pTheme = &m_SettingsUiTheme;
+	Context.m_ScopeHash = MakeUiScopeHash(pScope);
+	Context.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	Context.m_UiScale = UiScale;
+	return Context;
 }
 
 uint64_t CMenus::UiAnimNodeKey(const char *pScope, const uint64_t Id) const
@@ -1183,12 +1202,7 @@ bool CMenus::DoSettingsSliderInputField(int Page, int Tab, int Subtab, const cha
 		Options.m_pLabelElement = &MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pTextId, StyleKey);
 	}
 
-	IUiContext InputCtx;
-	InputCtx.m_pUi = Ui();
-	InputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	InputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	InputCtx.m_ScopeHash = MakeUiScopeHash("settings_slider_input");
-	InputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	IUiContext InputCtx = SettingsUiContext("settings_slider_input");
 
 	return ui_widget::SliderInputField(InputCtx, pInput, pId, pOption, Min, Max, *pRect, Options);
 }

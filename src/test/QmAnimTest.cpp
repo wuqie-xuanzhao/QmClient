@@ -12,6 +12,7 @@
 #include <game/client/QmUi/UiForms.h>
 #include <game/client/QmUi/UiMotion.h>
 #include <game/client/QmUi/UiOverlays.h>
+#include <game/client/QmUi/UiTheme.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/ui_listbox.h>
 #include <game/client/ui_rect.h>
@@ -23,6 +24,25 @@
 
 namespace
 {
+	TEST(UiTheme, RuntimeThemeTracksBaseColorAndOpacity)
+	{
+		const SUiTheme Blue = ResolveUiTheme(ColorHSLA(0.60f, 0.75f, 0.45f, 1.0f), 1.0f);
+		const SUiTheme RedHalf = ResolveUiTheme(ColorHSLA(0.00f, 0.75f, 0.45f, 1.0f), 0.5f);
+		EXPECT_NE(Blue.m_Accent.r, RedHalf.m_Accent.r);
+		EXPECT_NE(Blue.m_Accent.b, RedHalf.m_Accent.b);
+		EXPECT_LT(RedHalf.m_Surface.a, Blue.m_Surface.a);
+		EXPECT_FLOAT_EQ(RedHalf.m_InputSurface.a, RedHalf.m_Surface.a);
+	}
+
+	TEST(UiTheme, FocusRingKeepsInputFillStable)
+	{
+		const SUiTheme Theme = ResolveUiTheme(ColorHSLA(0.58f, 0.35f, 0.48f, 1.0f), 1.0f);
+		EXPECT_FLOAT_EQ(Theme.m_InputSurface.r, Theme.m_InputSurfaceFocused.r);
+		EXPECT_FLOAT_EQ(Theme.m_InputSurface.g, Theme.m_InputSurfaceFocused.g);
+		EXPECT_FLOAT_EQ(Theme.m_InputSurface.b, Theme.m_InputSurfaceFocused.b);
+		EXPECT_GE(Theme.m_FocusRingWidth, 2.0f);
+		EXPECT_GT(Theme.m_FocusRing.a, Theme.m_Border.a);
+	}
 	void AdvanceFor(CUiV2AnimationRuntime &Runtime, float Seconds)
 	{
 		g_Config.m_QmUiMotionLevel = 2;

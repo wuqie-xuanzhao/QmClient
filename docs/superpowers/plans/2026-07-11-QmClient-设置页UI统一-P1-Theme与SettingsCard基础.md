@@ -17,7 +17,7 @@
 - `SSettingsCardFrame::m_Rect` 同时是 display、hit-test、drag item 和 proxy source rect；entry transform 仅影响绘制，不改变这些 rect。
 - P1 只提供 page/card shell，不实现完整 Root Panel/L0/L1/L2；完整层级属于 R2。
 - 不新建渲染或动画 runtime；复用 `CUiV2AnimationRuntime`、`ResolveTargetValue(...)` 和 P0 合入并验证的 presentation-state 能力。
-- P1 新增 `qm_extra_animations`、`qm_ui_card_rainbow_titles`，保留既有 `qm_ui_motion_level` 的 `0..2` 语义；页面不得自行解释这三个配置。
+- P1 复用现有 `qm_extra_animations`（不改变其默认值或既有语义），并在 Task 3 的 card title shell 消费时新增 `qm_ui_card_rainbow_titles`；保留既有 `qm_ui_motion_level` 的 `0..2` 语义，页面不得自行解释这些配置。
 - 本阶段不迁移 QmClient/TClient 私有 deck，不实现 Search/持久化；它们分别属于 P2/P6。
 - 同一 `cmake-build-release` 目标串行；P1 不更新功能版本，版本只在 P7 最终收口时更新一次。
 
@@ -33,7 +33,6 @@
 - Modify: `src/game/client/QmUi/UiContext.h` — 注入 `const SUiTheme *m_pTheme`。
 - Modify: `src/game/client/QmUi/UiTokens.h` — 只保留/补齐可缩放的 geometry/typography token，清退静态 theme 色。
 - Modify: `src/game/client/QmUi/UiForms.cpp` — card/input/focus 从 `Ctx.m_pTheme` 取色。
-- Modify: `src/engine/shared/config_variables_qmclient.h` — 增加额外动画与卡片彩虹标题开关。
 - Modify: `src/game/client/components/menus.h`、`src/game/client/components/menus.cpp` — 每帧构造并持有 `SUiTheme`，统一生成 `IUiContext` 与 `SCardMotionSpec`。
 - Modify: `src/game/client/components/menus_settings.cpp` — Graphics 试点使用新 page/card shell。
 - Modify: `CMakeLists.txt` — client source list 登记四个 card 文件；`TESTS_EXTRA` 只登记 `SettingsCardGeometry.cpp`。
@@ -57,7 +56,7 @@
 - Consumes: `ColorHSLA(g_Config.m_QmUiColor)`、`g_Config.m_QmUiOpacity / 100.0f`。
 - Produces: `SUiTheme ResolveUiTheme(ColorHSLA BaseColor, float Opacity)`、`IUiContext::m_pTheme`、`IUiContext::m_UiScale`、`CMenus::SettingsUiContext(const char *pScope, float UiScale = 1.0f)`。
 
-- [ ] **Step 1: Write the failing theme tests**
+- [x] **Step 1: Write the failing theme tests**
 
 ```cpp
 TEST(UiTheme, RuntimeThemeTracksBaseColorAndOpacity)
@@ -81,7 +80,7 @@ TEST(UiTheme, FocusRingKeepsInputFillStable)
 }
 ```
 
-- [ ] **Step 2: Run tests to verify red**
+- [x] **Step 2: Run tests to verify red**
 
 Run:
 
@@ -92,7 +91,7 @@ cmake-build-release/testrunner.exe --gtest_filter=UiTheme.*
 
 Expected: compile FAIL because `SUiTheme` and `ResolveUiTheme(...)` do not exist.
 
-- [ ] **Step 3: Add the minimal runtime theme contract**
+- [x] **Step 3: Add the minimal runtime theme contract**
 
 `src/game/client/QmUi/UiTheme.h`:
 
@@ -158,14 +157,8 @@ const SUiTheme *m_pTheme = nullptr;
 float m_UiScale = 1.0f;
 ```
 
-在 `config_variables_qmclient.h` 中加入：
 
-```cpp
-MACRO_CONFIG_INT(QmExtraAnimations, qm_extra_animations, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "额外装饰动效")
-MACRO_CONFIG_INT(QmUiCardRainbowTitles, qm_ui_card_rainbow_titles, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "设置卡片标题彩虹流动")
-```
-
-- [ ] **Step 4: Route menus and primitives through the theme pointer**
+- [x] **Step 4: Route menus and primitives through the theme pointer**
 
 `CMenus` 持有本帧 theme，并只通过一个 helper 构造设置页 context：
 
@@ -191,7 +184,7 @@ IUiContext CMenus::SettingsUiContext(const char *pScope, float UiScale)
 
 `UiForms.cpp` 的 field fill 与 focus ring 改为读取 `Ctx.m_pTheme`；`m_pTheme == nullptr` 时只允许使用 `ResolveUiTheme(ColorHSLA(0.0f, 0.0f, 0.29f, 1.0f), 1.0f)` 这一公共 fallback，不回到静态 `CUi::ms_LightButtonColorFunction`。
 
-- [ ] **Step 5: Run tests to verify green**
+- [x] **Step 5: Run tests to verify green**
 
 Run:
 
@@ -202,10 +195,10 @@ cmake-build-release/testrunner.exe --gtest_filter=UiTheme.*
 
 Expected: `2 tests` PASS。
 
-- [ ] **Step 6: Commit runtime theme**
+- [x] **Step 6: Commit runtime theme**
 
 ```powershell
-git add src/game/client/QmUi/UiTheme.h src/game/client/QmUi/UiContext.h src/game/client/QmUi/UiTokens.h src/game/client/QmUi/UiForms.cpp src/engine/shared/config_variables_qmclient.h src/game/client/components/menus.h src/game/client/components/menus.cpp src/test/QmAnimTest.cpp
+git add docs/superpowers/plans/2026-07-11-QmClient-设置页UI统一-P1-Theme与SettingsCard基础.md src/game/client/QmUi/UiTheme.h src/game/client/QmUi/UiContext.h src/game/client/QmUi/UiForms.cpp src/game/client/components/menus.h src/game/client/components/menus.cpp src/test/QmAnimTest.cpp src/test/qmclient_monitoring_test.cpp
 git commit -m "feat(settings-ui): 建立运行时主题链" -m "feat: 统一卡片、输入与焦点颜色解析" -m "test: 覆盖主题色与透明度实时派生"
 ```
 
