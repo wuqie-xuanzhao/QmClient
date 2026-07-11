@@ -9,6 +9,7 @@
 #include <base/sphore.h>
 #include <base/thread.h>
 
+#include <engine/client/plausible_sizes.h>
 #include <engine/shared/config.h>
 #include <engine/shared/localization.h>
 
@@ -17,7 +18,6 @@
 #include <SDL_vulkan.h>
 
 #if defined(CONF_VIDEORECORDER)
-#include <engine/client/plausible_sizes.h>
 #include <engine/shared/video.h>
 #endif
 
