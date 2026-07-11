@@ -1712,7 +1712,7 @@ TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_NE(Menus.find("CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];"), std::string::npos);
 	EXPECT_NE(Menus.find("IUiContext TeeSkinQueueIntervalTextInputCtx;"), std::string::npos);
 	EXPECT_NE(Menus.find("TeeSkinQueueIntervalTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_queue_interval_text_input\");"), std::string::npos);
-	EXPECT_NE(Menus.find("const bool QueueIntervalEdited = ui_widget::TextField(TeeSkinQueueIntervalTextInputCtx, &QueueIntervalInput, IntervalInput, nullptr, 10.0f);"), std::string::npos);
+	EXPECT_NE(Menus.find("const bool QueueIntervalEdited = ui_widget::InputField(TeeSkinQueueIntervalTextInputCtx, &QueueIntervalInput, IntervalInput, nullptr, 10.0f);"), std::string::npos);
 	EXPECT_EQ(Menus.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput"), std::string::npos);
 	EXPECT_NE(Source.find("m_vSkinQueuePresets.push_back({\"Server preset\", {}, CSkinQueuePreset::EKind::SERVER});"), std::string::npos);
 	// Removed UI: Apply/Save-current buttons, the select/cancel-select calls, and the
