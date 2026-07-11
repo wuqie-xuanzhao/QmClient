@@ -2,61 +2,52 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在不污染当前并行工作区的前提下，逐提交审查并显式合并 GitHub `wxj881027/QmClient` 的 10 个目标提交，建立后续 P1–P7 唯一可构建、可测试、可追溯的基线。
+**Goal:** 在当前 `dyl_dev` checkout 保留用户既有改动边界的前提下，逐提交审查并显式合并 GitHub `wxj881027/QmClient` 的固定远端范围，建立后续 P1–P7 唯一可构建、可测试、可追溯的基线。
 
-**Architecture:** 执行时先用独立 worktree 固定 `dyl_dev` 起点，再更新 `origin/master` 与 `origin/dyl_dev`，用不可变 commit range 建立审查台账。合并只使用 `--no-ff`，不 rebase；冲突按当前权威规格选择单一路径，完成后以基线报告、全量 C++ 测试、docs check 和 default gate 固化检查点。
+**Architecture:** 执行时在当前 `dyl_dev` checkout 更新 `origin/master` 与 `origin/dyl_dev`，用不可变 commit range 建立审查台账。先提交本计划前的文档状态；其后只暂存本任务明确列出的文件，绝不处理用户既有改动。合并只使用 `--no-ff`，不 rebase；冲突按当前权威规格选择单一路径，完成后以基线报告、全量 C++ 测试、docs check 和 default gate 固化检查点。
 
 **Tech Stack:** Git、PowerShell、CMake/MSVC、GoogleTest、Python gate、Markdown。
 
 ## Global Constraints
 
 - 权威规格：`docs/superpowers/specs/2026-07-10-QmClient-设置页UI统一与滚动体系规格.md`。
-- 目标 range 固定为 `4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3^..8ee4fa22ba0172a66605b2c5033f0736d66ced34`，预期恰好 10 个普通提交。
+- 目标 range 固定为 `4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3^..8ee4fa22ba0172a66605b2c5033f0736d66ced34`，预期为 11 个普通提交和 1 个 merge 路由提交；`1ea8259dc3dd894d02fe5c69a0046fccec20dff4` 仅路由 `4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3`，不重复作为功能提交处理。
 - 目标分支为 `dyl_dev`；禁止 rebase，使用显式 `--no-ff` merge。
-- 当前 checkout 中不属于本计划的图标、`src/engine/client/backend_sdl.cpp`、`ddnet-libs` 或用户并行改动不得 stash、回退、覆盖或混入提交。
+- 当前 checkout 中不属于本计划的图标、`src/engine/client/backend_sdl.cpp`、`ddnet-libs` 或用户并行改动不得 stash、回退、覆盖或混入提交；任何阶段只可暂存任务清单明确列出的路径。
 - `d161bd10adffdff42a9b85d09f7336a64a708f60` 的动画、输入、token、菜单和配置改动逐文件审查；`8f2446b` 的编辑器术语重命名只做兼容审查，不扩大为设置页功能。
 - 协议、物理、预测、snapshot、Demo/地图/skin 格式、服务端玩法和编辑器业务行为不因本合并自动进入 P1–P7。
 - 同一 `cmake-build-release` 的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests` 和 `package_default` 始终串行。
-- P0 不更新 QmClient 功能版本；P1–P7 全部收口后由 P7 执行一次 MMP 版本更新。
+- P0 不额外更新 QmClient 功能版本；远端 merge 的 `2.74.23` 仅在版本审查确认后随 tip 进入基线。P1–P7 全部收口后由 P7 从 P0 实际版本顺序执行一次 MMP 版本更新。
 
 ---
 
-### Task 1: 建立隔离 worktree 与不可变提交清单
+### Task 1: 确认当前 checkout、子模块与不可变提交清单
 
 **Files:**
 - Modify: none
 
 **Interfaces:**
 - Consumes: 本地 `dyl_dev`、远端 `origin/master`、远端 `origin/dyl_dev`。
-- Produces: 以 `dyl_dev` 为起点的隔离 worktree，以及按时间正序排列的 10 个 full hash 清单。
+- Produces: 当前 `dyl_dev` checkout 的已记录改动边界、已初始化子模块，以及按时间正序排列的 full hash 清单。
 
-- [ ] **Step 1: 用隔离 worktree 固定起点**
+- [ ] **Step 1: 记录当前分支与既有改动边界**
 
-先调用 `superpowers:using-git-worktrees`。若执行环境已提供原生 worktree，使用原生入口创建 `codex/settings-ui-p0-baseline` 并从本地 `dyl_dev` 启动；否则按下面的 PowerShell fallback 执行。不得在当前 dirty checkout 中 merge。
-
-Run（无原生 worktree 工具时）:
+用户已要求直接在当前分支实施，且已在所有迁移前提交本计划状态。禁止创建或使用本轮隔离 worktree。先记录 `dyl_dev`、`HEAD` 和既有 dirty 路径；这些路径不是 P0 输入，不能 `stash`、回退、覆盖或暂存。每次提交前都必须复核 staged path 仅含本任务文件。
 
 ```powershell
-$RepoRoot = (git rev-parse --show-toplevel).Trim()
-$StartCommit = (git rev-parse dyl_dev).Trim()
-$WorktreeRoot = Join-Path $env:USERPROFILE '.config/superpowers/worktrees/QmClient'
-$WorktreePath = Join-Path $WorktreeRoot 'codex-settings-ui-p0-baseline'
-if(Test-Path $WorktreePath) { throw "worktree path already exists: $WorktreePath" }
-New-Item -ItemType Directory -Force -Path $WorktreeRoot | Out-Null
-git show-ref --verify --quiet refs/heads/codex/settings-ui-p0-baseline
-if($LASTEXITCODE -eq 0) { throw 'branch codex/settings-ui-p0-baseline already exists' }
-git worktree add $WorktreePath -b codex/settings-ui-p0-baseline $StartCommit
-Set-Location $WorktreePath
 git rev-parse --show-toplevel
 git branch --show-current
+git rev-parse HEAD
 git status --short
+$PreexistingStagedPaths = @(git diff --cached --name-only)
+if($PreexistingStagedPaths.Count -ne 0) { throw "index is not empty: $($PreexistingStagedPaths -join ', ')" }
 ```
 
-Expected: `--show-toplevel` 等于 `$WorktreePath`，分支为 `codex/settings-ui-p0-baseline`，状态为空，`HEAD == $StartCommit`。若原生工具已创建隔离目录，也必须运行后三条只读校验。
+Expected: 当前分支为 `dyl_dev`；输出完整记录既有用户改动；index 为空。既有用户改动可存在，不要求 clean checkout。
 
-- [ ] **Step 1.1: 在隔离 worktree 初始化构建依赖**
+- [ ] **Step 1.1: 在当前 checkout 初始化构建依赖**
 
-所有构建、测试和 gate 之前，必须在隔离目录递归初始化子模块；不得复用主 checkout 的子模块状态。
+所有构建、测试和 gate 之前，必须在当前 checkout 递归初始化子模块。
 
 ```powershell
 git submodule update --init --recursive
@@ -90,7 +81,7 @@ git rev-parse dyl_dev
 git merge-base --is-ancestor 4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3 8ee4fa22ba0172a66605b2c5033f0736d66ced34
 ```
 
-Expected: count 为 `10`，`merge-base --is-ancestor` 退出码为 `0`。
+Expected: 全部对象数为 `12`，其中普通提交数为 `11`、merge commit 数为 `1`；`merge-base --is-ancestor` 退出码为 `0`。审查台账把 `1ea8259dc3dd894d02fe5c69a0046fccec20dff4` 标为路由提交，并关联已单独审查的 `4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3`。
 
 - [ ] **Step 4: 证明目标 tip 尚未进入基线**
 
@@ -102,7 +93,7 @@ git merge-base --is-ancestor 8ee4fa22ba0172a66605b2c5033f0736d66ced34 HEAD
 
 Expected: 合并前退出码为 `1`；若为 `0`，停止执行并把 P0 标记为已被其他工作覆盖，不再创建重复 merge。
 
-### Task 2: 逐提交审查 10 个远端提交
+### Task 2: 逐提交审查固定远端范围
 
 **Files:**
 - Create: `docs/superpowers/reviews/2026-07-11-settings-ui-p0-remote-review.md`
@@ -121,7 +112,7 @@ $Commits = @(git rev-list --reverse 4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3^..8
 $Commits | ForEach-Object { git show --no-ext-diff --stat --summary $_; git diff --no-ext-diff "$($_)^!" -- }
 ```
 
-Expected: 依次输出 10 个 commit 的完整 patch；没有 `bad object`、浅克隆缺失或被截断的 hash。
+Expected: 依次输出 12 个对象的完整 patch；没有 `bad object`、浅克隆缺失或被截断的 hash。merge `1ea8259dc3dd894d02fe5c69a0046fccec20dff4` 只记录路由与覆盖关系，不重复判断 `4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3` 的功能正确性。
 
 - [ ] **Step 2: 写逐提交 findings-first 审查文档**
 
@@ -138,7 +129,7 @@ Expected: 依次输出 10 个 commit 的完整 patch；没有 `bad object`、浅
 
 ## Range conclusion
 
-记录 10/10 已审查、允许进入 merge 的范围，以及明确排除在 P1–P7 之外的非 UI 行为。
+记录 11 个普通提交已审查、1 个 merge 路由关系已记录、允许进入 merge 的范围，以及明确排除在 P1–P7 之外的非 UI 行为。
 ```
 
 Expected: `d161bd10adffdff42a9b85d09f7336a64a708f60` 有独立小节；`git rev-parse 8f2446b^{commit}` 的 full hash 有独立小节；findings 位于总体结论之前。
@@ -158,7 +149,7 @@ Expected: review 文档明确写出版本是否前进、倒退或重复；不根
 
 ```powershell
 git add docs/superpowers/reviews/2026-07-11-settings-ui-p0-remote-review.md
-git commit -m "docs(settings-ui): 记录远端基线逐提交审查" -m "docs: 固化 10 个目标提交的范围、findings 与冲突处理结论"
+git commit -m "docs(settings-ui): 记录远端基线逐提交审查" -m "docs: 固化 11 个普通提交、1 个路由 merge 的范围、findings 与冲突处理结论"
 ```
 
 Expected: commit 只包含 review 文档。
@@ -170,7 +161,7 @@ Expected: commit 只包含 review 文档。
 - Test: existing build and gate targets
 
 **Interfaces:**
-- Consumes: 未合并的 `dyl_dev` worktree。
+- Consumes: 未合并的当前 `dyl_dev` checkout。
 - Produces: 可与 merge 后结果逐项比较的构建、测试、gate 基线。
 
 - [ ] **Step 1: 串行运行合并前基线**
@@ -194,7 +185,7 @@ Expected: 每条命令的退出码和失败测试名被原样记录；已有失�
 
 **Start commit:** `git rev-parse dyl_dev` 的实际 40 位 hash。
 **Target range:** `4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3^..8ee4fa22ba0172a66605b2c5033f0736d66ced34`
-**Commit count:** 10
+**Commit count:** 12 objects（11 个普通提交 + 1 个 merge 路由提交）
 
 | Check | Command | Before merge evidence |
 |---|---|---|
@@ -549,7 +540,7 @@ if($LASTEXITCODE -ne 0) { throw 'cached P0 evidence failed diff --check' }
 git commit -m "docs(settings-ui): 收口 P0 合并基线" -m "docs: 同步 merge 后代码事实、验证证据与保留 gap"
 ```
 
-Expected: P0 报告明确记录 10/10 审查、merge commit、所有验证结果、interface delta matrix 和剩余 gap。无签名变化时 commit 不包含实施索引或 P1–P7；有签名变化时，commit 包含实施索引、owner 和全部受影响计划，且 cached path list 与 matrix 精确一致。P1 只从该 merge commit 开始。
+Expected: P0 报告明确记录 11 个普通提交的审查、1 个 merge 路由关系、merge commit、所有验证结果、interface delta matrix 和剩余 gap。无签名变化时 commit 不包含实施索引或 P1–P7；有签名变化时，commit 包含实施索引、owner 和全部受影响计划，且 cached path list 与 matrix 精确一致。P1 只从该 merge commit 开始。
 
 ---
 
@@ -558,4 +549,4 @@ Expected: P0 报告明确记录 10/10 审查、merge commit、所有验证结果
 - Spec coverage: 覆盖远端更新、逐提交审查、显式 merge、d161 动画测试、8f2446b 范围边界、版本检查、基线验证和 merge 后条件性规格/实施索引/P1–P7 契约校准。
 - Marker scan: 未发现未决占位、虚构版本号或未定义命令参数。
 - Type consistency: P0 不引入 P1–P4 公共 API；唯一新增测试直接绑定 merge 后的 `ResolveUiPresentationStateValue(...)`。只有 interface delta matrix 证明签名变化时，才同步 active spec、实施索引、owner 和所有受影响的 P1–P7 计划。
-- Exit gate: 10 个 commit 可追溯、merge 为双 parent、default gate 通过、独立 review 返回且无未收口 P0/P1 finding。
+- Exit gate: 11 个普通提交和 1 个 merge 路由提交可追溯、merge 为双 parent、default gate 通过、独立 review 返回且无未收口 P0/P1 finding。

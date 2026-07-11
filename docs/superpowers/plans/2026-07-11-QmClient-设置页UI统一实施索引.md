@@ -4,7 +4,7 @@
 
 **Goal:** 把 active 设置页 UI 规格拆成 P0–P7 八个可独立验证、按依赖串行交付的实施阶段，并给执行者一份唯一入口、公共接口锁和验收路由。
 
-**Architecture:** P0 先合并并验证远端基线；P1–P4 依次稳定 theme/card、deck/registry、input/numeric、scroll/dropdown 四组公共契约；P5/P6 只做页面迁移；P7 才扩展到非卡片菜单、性能和最终删除门槛。阶段之间通过本索引列出的 exact interfaces 交接，不允许下游自造兼容 wrapper。
+**Architecture:** P0 在当前 `dyl_dev` checkout 合并并验证远端基线；P1–P4 依次稳定 theme/card、deck/registry、input/numeric、scroll/dropdown 四组公共契约；P5/P6 只做页面迁移；P7 才扩展到非卡片菜单、性能和最终删除门槛。阶段之间通过本索引列出的 exact interfaces 交接，不允许下游自造兼容 wrapper。
 
 **Tech Stack:** C++、QmUi、DDNet menu/UI、CMake/MSVC、GoogleTest、Python gate、Git。
 
@@ -12,6 +12,7 @@
 
 - 唯一权威规格：`docs/superpowers/specs/2026-07-10-QmClient-设置页UI统一与滚动体系规格.md`，当前 `status: active`。
 - P0–P7 严格串行；只有同一阶段内明确独立的文档/测试工作可并行，P5/P6 不得早于 P1–P4 全部 exit gate。
+- P0 的远端范围固定为 `4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3^..8ee4fa22ba0172a66605b2c5033f0736d66ced34`：11 个普通提交逐项审查，1 个 merge commit 仅记录路由与覆盖关系。当前 checkout 的用户图标改动及其他既有改动只作边界记录，绝不暂存、回退或混入 P0 提交。
 - 每个阶段都采用 TDD：先增加会因缺失目标行为而失败的测试，再最小实现，再 focused green，最后全量验证。
 - 生产路径同一职责只保留一个实现；页面切片不得以“公共 wrapper + 旧实现”作为完成状态。
 - 当前工作区可能有用户/其他 AI 并行改动；每阶段只暂存其计划明确列出的文件，不 stash、回退或覆盖无关文件。
@@ -38,13 +39,13 @@
 | QmClient/TClient | registry/model 可复用，QmClient `s_GlassCards` 与 TClient cache box/private shell 仍在 | P6 |
 | 非卡片菜单/性能 | 部分列表已用 policy，尚无全菜单删除门槛与最终 runtime evidence | P7 |
 
-P0 是唯一开工入口。P0 未证明目标 10 commits、merge baseline、版本与 default gate 时，不得根据当前行号直接开始 P1；merge 可能改变接口与阻断事实。
+P0 是唯一开工入口。P0 未证明目标 11 个普通提交、1 个 merge 路由提交、merge baseline、版本与 default gate 时，不得根据当前行号直接开始 P1；merge 可能改变接口与阻断事实。
 
 ## 2. 阶段依赖与计划文件
 
 | 阶段 | 计划 | 进入条件 | 退出条件摘要 |
 |---|---|---|---|
-| P0 | `docs/superpowers/plans/2026-07-11-QmClient-设置页UI统一-P0-基线与规格收敛.md` | active spec | 10/10 逐提交审查、显式 merge、基线报告、default gate、独立 review |
+| P0 | `docs/superpowers/plans/2026-07-11-QmClient-设置页UI统一-P0-基线与规格收敛.md` | active spec | 11 个普通提交逐项审查、1 个 merge 路由记录、显式 merge、基线报告、default gate、独立 review |
 | P1 | `docs/superpowers/plans/2026-07-11-QmClient-设置页UI统一-P1-Theme与SettingsCard基础.md` | P0 exit gate | runtime theme/page/card frame 稳定，Graphics 无旧 shell |
 | P2 | `docs/superpowers/plans/2026-07-11-QmClient-设置页UI统一-P2-Deck注册表Search与持久化.md` | P1 exit gate | 公共 registry/model/deck/Search 稳定，Graphics 跨列重启持久化 |
 | P3 | `docs/superpowers/plans/2026-07-11-QmClient-设置页UI统一-P3-InputField与NumericField.md` | P2 exit gate | 设置页无 legacy/direct input，delay 不回退旧 slider |

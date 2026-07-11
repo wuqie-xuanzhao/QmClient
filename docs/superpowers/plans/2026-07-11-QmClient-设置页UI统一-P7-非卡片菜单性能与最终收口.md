@@ -26,7 +26,7 @@
 - P7 不改变协议、物理、预测、碰撞、地图、Demo/skin/配置格式、回放、服务端玩法或 rank 语义。
 - 临时日志、截图和生成的 perf report 全部写入 `tmp/`；版本化证据只写 `docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md`。
 - 同一 `cmake-build-release` 的 `testrunner`、`game-client`、`run_cxx_tests`、`run_rust_tests` 和 `package_default` 始终串行；filtered test 只作红绿灯，不能替代全量入口。
-- P7 版本目标以 P0 报告确认的 `2.74.14` 为前置，结束时按 MMP 更新为 `2.74.15`；若 P0 因已发布 tag 证明基线不是 `2.74.14`，必须先同步更新 active spec、本索引与本计划的 exact version test，再开始 P1，不能在 P7 临时猜版本。不创建 tag、不发布 Release。
+- P7 版本目标以 P0 报告确认的 `2.74.23` 为前置，结束时按 MMP 更新为 `2.74.24`；若 P0 因版本审查证明基线不是 `2.74.23`，必须先同步更新 active spec、本索引与本计划的 exact version test，再开始 P1，不能在 P7 临时猜版本。不创建 tag、不发布 Release。
 - C++ 注释使用中文；保持文件现有 UTF-8/BOM、CRLF/LF 与 Tab/空格风格；不回退或混入用户/其他代理的并行改动。
 
 ## File Structure
@@ -917,7 +917,7 @@ Expected: focused evidence test passes；staging 时若 Dogfood 源码未调整�
 
 **Interfaces:**
 - Consumes: Tasks 1–7 commits and acceptance evidence.
-- Produces: QmClient `2.74.15`、串行全量验证记录、独立 findings-first review 返回结果，以及仅含明确视觉 gap 的 P0–P7 handoff。
+- Produces: QmClient `2.74.24`、串行全量验证记录、独立 findings-first review 返回结果，以及仅含明确视觉 gap 的 P0–P7 handoff。
 
 - [ ] **Step 1: Write the failing final-closure test**
 
@@ -926,8 +926,8 @@ TEST(QmMonitoringHelpers, P7FinalVersionIsSynchronized)
 {
 	const std::string Version = ReadRepoFile("src/game/version.h");
 	const std::string Info = ReadRepoFile("docs/info.json");
-	EXPECT_NE(Version.find("QMCLIENT_VERSION \"2.74.15\""), std::string::npos);
-	EXPECT_NE(Info.find("\"version\": \"2.74.15\""), std::string::npos);
+	EXPECT_NE(Version.find("QMCLIENT_VERSION \"2.74.24\""), std::string::npos);
+	EXPECT_NE(Info.find("\"version\": \"2.74.24\""), std::string::npos);
 }
 ```
 
@@ -940,18 +940,18 @@ cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target t
 cmake-build-release/testrunner.exe --gtest_filter=QmMonitoringHelpers.P7FinalVersionIsSynchronized
 ```
 
-Expected: FAIL on version `2.74.14`; review status remains a process/readback gate and is not faked by a source-string test.
+Expected: FAIL on version `2.74.23`; review status remains a process/readback gate and is not faked by a source-string test.
 
 - [ ] **Step 3: Apply the single MMP version update**
 
 Run:
 
 ```powershell
-python qmclient_scripts/bump_version.py --tag v2.74.15
+python qmclient_scripts/bump_version.py --tag v2.74.24
 rg -n "2\.74\.15" src/game/version.h docs/info.json
 ```
 
-Expected: both files contain `2.74.15`; no other version or release file changes.
+Expected: both files contain `2.74.24`; no other version or release file changes.
 
 - [ ] **Step 4: Dispatch and wait for an independent read-only review**
 
@@ -961,7 +961,7 @@ Expected: review report returns. For every finding, apply the smallest fix and r
 
 - [ ] **Step 5: Close the report markers and verify the TDD gate is green**
 
-Update the acceptance report with review findings/resolutions and version `2.74.15`. Set `**Independent review status:** correct` only after the returned report has no unresolved finding; do not set the overall P7 status complete before the full serial gates finish.
+Update the acceptance report with review findings/resolutions and version `2.74.24`. Set `**Independent review status:** correct` only after the returned report has no unresolved finding; do not set the overall P7 status complete before the full serial gates finish.
 
 Run:
 
@@ -1016,7 +1016,7 @@ git diff -- CMakeLists.txt src/game/version.h docs/info.json docs/superpowers/re
 git add -p -- CMakeLists.txt src/game/version.h docs/info.json docs/superpowers/reports/2026-07-11-settings-ui-p7-acceptance.md src/game/client/QmUi/UiForms.h src/game/client/QmUi/UiForms.cpp src/game/client/QmUi/QmUiPerf.h src/game/client/QmUi/QmUiPerf.cpp src/game/client/components/menus.h src/game/client/components/menus.cpp src/game/client/components/menus_browser.cpp src/game/client/components/menus_demo.cpp src/game/client/components/menus_ingame.cpp src/game/client/components/menus_ingame_touch_controls.cpp src/game/client/components/menus_assets_editor.cpp src/game/client/components/menus_settings.cpp src/game/client/components/menus_settings7.cpp src/game/client/components/menus_settings_assets.cpp src/game/client/components/qmclient/menus_qmclient.cpp src/test/QmAnimTest.cpp src/test/qmclient_monitoring_test.cpp src/test/settings_warmup_test.cpp src/test/skins_test.cpp qmclient_scripts/perf/analyze.ts qmclient_scripts/perf/test.ts qmclient_scripts/perf/lib/stats.ts qmclient_scripts/perf/lib/quality.ts qmclient_scripts/perf/lib/report.ts
 git diff --cached --name-only
 git diff --cached --check
-git commit -m "feat(settings-ui): 收口非卡片菜单与性能体系" -m "fix: 统一列表网格的 theme、input、scroll 与 dropdown ownership" -m "perf: 固化有界缓存和八个菜单场景预算" -m "test: 完成 C++/Rust/perf/default/full、人工矩阵与独立审查" -m "chore: 更新 QmClient 版本至 2.74.15"
+git commit -m "feat(settings-ui): 收口非卡片菜单与性能体系" -m "fix: 统一列表网格的 theme、input、scroll 与 dropdown ownership" -m "perf: 固化有界缓存和八个菜单场景预算" -m "test: 完成 C++/Rust/perf/default/full、人工矩阵与独立审查" -m "chore: 更新 QmClient 版本至 2.74.24"
 ```
 
 Expected: inspect the displayed diff before staging, accept only P7/review hunks, then verify the cached path list contains no unrelated concurrent file or hunk. The commit contains only P7 closure/review files. The acceptance report proves all automated checks, non-visual behavior and review findings are closed; remaining items are evidence-backed visual gaps and the explicitly out-of-P7 R1–R3 tracks.

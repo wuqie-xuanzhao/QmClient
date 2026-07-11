@@ -194,9 +194,9 @@ popup 若接管滚轮，必须在同一帧、底层页面 scroll region 消费�
 
 ## 10. GitHub 远端整合前置条件
 
-实现本规格前，必须先整合 GitHub `wxj881027/QmClient` 的 `master` 相对 `dyl_dev` 的 10 个未合并提交：`4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3..8ee4fa22ba0172a66605b2c5033f0736d66ced34`。
+实现本规格前，必须先整合 GitHub `wxj881027/QmClient` 的 `master` 相对 `dyl_dev` 的固定范围：`4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3^..8ee4fa22ba0172a66605b2c5033f0736d66ced34`。截至 2026-07-11，该范围包含 11 个普通提交和 1 个 merge 路由提交（`1ea8259dc3dd894d02fe5c69a0046fccec20dff4`）；后者只路由已在 `4f76dcb4e7b5bc86bba9a271b563a8b6a34d53f3` 单独审查的 Linux ESC 修复，不重复计为独立功能。
 
-流程为：更新远端引用，逐提交审查，建立当前工作区的可验证检查点，然后显式 merge 到 `dyl_dev`。禁止 rebase。冲突按本规格解决，不能为了通过 merge 同时保留远端能力和本地旧 UI wrapper。版本号文件需独立检查，避免倒退或重复。`d161bd1` 的动画、输入、token、菜单和配置改动必须按实际 diff 审查；`8f2446b` 的编辑器术语重命名不属于本规格功能范围。
+流程为：更新远端引用，逐提交审查，建立当前 `dyl_dev` checkout 的可验证检查点，然后显式 merge 到 `dyl_dev`。禁止 rebase。用户已要求直接在本分支执行：所有既有用户改动必须原样保留且不得暂存；本任务只暂存明确列出的路径。任何构建、测试或 gate 前，先在当前 checkout 运行 `git submodule update --init --recursive` 并确认状态。冲突按本规格解决，不能为了通过 merge 同时保留远端能力和本地旧 UI wrapper。版本号文件需独立检查：远端 tip 为已存在 tag 的 `2.74.23`，P0 只接受 merge 结果、不额外 bump；最终 P7 版本从 P0 实际基线顺序递增。`d161bd1` 的动画、输入、token、菜单和配置改动必须按实际 diff 审查；`8f2446b` 的编辑器术语重命名不属于本规格功能范围。
 
 ## 11. 当前代码基线与阻断项
 
