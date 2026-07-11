@@ -119,6 +119,7 @@ namespace ui_widget
 	{
 		const char *m_pPlaceholder = nullptr;
 		float m_FontSize = ui_token::font::BODY;
+		float m_LineSpacing = 1.0f;
 		int m_Corners = IGraphics::CORNER_ALL;
 		float m_CornerRadius = ui_token::radius::BASE;
 		int m_TextAlign = TEXTALIGN_ML;
@@ -148,6 +149,7 @@ namespace ui_widget
 		int m_Corners = IGraphics::CORNER_ALL;
 		int m_TextAlign = -1;
 		float m_FontSize = ui_token::font::BODY;
+		float m_LineSpacing = 1.0f;
 	};
 
 	inline int ResolveInputFieldTextAlign(const SInputFieldOptions &Options)
@@ -158,15 +160,15 @@ namespace ui_widget
 	}
 
 	SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options);
+	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize);
+	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool SearchHotkeyEnabled);
+	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize, const char *pIcon, bool Clearable);
+	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
 	// 基础输入框（沿用设置页灰色按钮背景）。
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
-
-	// 传统 DDNet 按钮风格输入框（保持旧版背景颜色）。
-	SInputFieldResult LegacyTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options);
-	bool LegacyTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
 
 	// 只读输入框（不接收输入，仅渲染文本）。
 	void ReadOnlyTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder = nullptr, float FontSize = ui_token::font::BODY);
@@ -231,6 +233,7 @@ namespace ui_widget
 		unsigned m_Flags = 0; // CUi::SCROLLBAR_OPTION_* 标志
 		const char *m_pMaxText = nullptr; // 当值为 Max 且非 Infinite 时显示
 		float m_FontSize = ui_token::font::BODY;
+		float m_LineSpacing = 1.0f;
 		int m_LabelAlign = TEXTALIGN_ML;
 		int m_ValueMultiplier = 1; // 滑动条以 Min/Multiplier..Max/Multiplier 为单位，显示/编辑真实值
 		EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;

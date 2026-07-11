@@ -1011,9 +1011,9 @@ void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton)
 	TeeIdentityTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	TeeIdentityTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_identity_text_inputs");
 	TeeIdentityTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	if(ui_widget::TextField(TeeIdentityTextInputCtx, &s_NameInput, NameInputRect, Client()->PlayerName(), 14.0f))
+	if(ui_widget::InputField(TeeIdentityTextInputCtx, &s_NameInput, NameInputRect, Client()->PlayerName(), 14.0f))
 		SetNeedSendInfo(m_Dummy);
-	if(ui_widget::TextField(TeeIdentityTextInputCtx, &s_ClanInput, ClanInput, "", 14.0f))
+	if(ui_widget::InputField(TeeIdentityTextInputCtx, &s_ClanInput, ClanInput, "", 14.0f))
 		SetNeedSendInfo();
 
 	static CButtonContainer s_FlagButton;
@@ -1133,7 +1133,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		Row.VSplitLeft(150.0f, &Row, nullptr);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
 		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
-		if(ui_widget::TextField(PlayerIdentityTextInputCtx, &s_NameInput, Row, Client()->PlayerName(), 14.0f))
+		if(ui_widget::InputField(PlayerIdentityTextInputCtx, &s_NameInput, Row, Client()->PlayerName(), 14.0f))
 			SetNeedSendInfo(m_Dummy);
 	});
 
@@ -1146,7 +1146,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		Row.VSplitLeft(150.0f, &Row, nullptr);
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Clan"));
 		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
-		if(ui_widget::TextField(PlayerIdentityTextInputCtx, &s_ClanInput, Row, "", 14.0f))
+		if(ui_widget::InputField(PlayerIdentityTextInputCtx, &s_ClanInput, Row, "", 14.0f))
 		{
 			SetNeedSendInfo();
 		}
@@ -1213,7 +1213,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	PlayerFlagSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	PlayerFlagSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_player_flag_search");
 	PlayerFlagSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	ui_widget::SearchField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	ui_widget::InputField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 }
 
 void CMenus::FinalizeTeeListDrainPerfSession()
@@ -1396,7 +1396,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		IUiContext TeeSkinPrefixTextInputCtx;
 		TeeSkinPrefixTextInputCtx.m_pUi = Ui();
 		TeeSkinPrefixTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_prefix_text_input");
-		if(ui_widget::ClearableTextField(TeeSkinPrefixTextInputCtx, &s_SkinPrefixInput, Button, nullptr, 14.0f))
+		ui_widget::SInputFieldOptions SkinPrefixInputOptions;
+		SkinPrefixInputOptions.m_Clearable = true;
+		SkinPrefixInputOptions.m_FontSize = 14.0f;
+		if(ui_widget::InputField(TeeSkinPrefixTextInputCtx, &s_SkinPrefixInput, Button, SkinPrefixInputOptions).m_Changed)
 		{
 			ShouldRefresh = true;
 		}
@@ -1614,7 +1617,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	IUiContext TeeSkinNameTextInputCtx;
 	TeeSkinNameTextInputCtx.m_pUi = Ui();
 	TeeSkinNameTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_name_text_input");
-	if(ui_widget::ClearableTextField(TeeSkinNameTextInputCtx, &s_SkinInput, Button, nullptr, 14.0f))
+	ui_widget::SInputFieldOptions SkinNameInputOptions;
+	SkinNameInputOptions.m_Clearable = true;
+	SkinNameInputOptions.m_FontSize = 14.0f;
+	if(ui_widget::InputField(TeeSkinNameTextInputCtx, &s_SkinInput, Button, SkinNameInputOptions).m_Changed)
 	{
 		SetNeedSendInfo();
 		m_SkinListScrollToSelected = true;
@@ -1798,7 +1804,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			QueueIntervalInput.SetInteger(QueueInterval);
 			QueueIntervalInput.SelectAll();
 		}
-		const bool QueueIntervalEdited = ui_widget::TextField(TeeSkinQueueIntervalTextInputCtx, &QueueIntervalInput, IntervalInput, nullptr, 10.0f);
+		const bool QueueIntervalEdited = ui_widget::InputField(TeeSkinQueueIntervalTextInputCtx, &QueueIntervalInput, IntervalInput, nullptr, 10.0f);
 		if(QueueIntervalInput.IsActive())
 		{
 			(void)QueueIntervalEdited;
@@ -2971,7 +2977,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	TeeSkinSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	TeeSkinSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_search");
 	TeeSkinSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	if(ui_widget::SearchField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+	if(ui_widget::InputField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
 	{
 		SkinList.ForceRefresh();
 	}
@@ -4085,7 +4091,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	CUIRect PackLabel, PackInput;
 	PackRow.VSplitLeft(90.0f, &PackLabel, &PackInput);
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_pack_name_label", &PackLabel, Localize("Pack name"), EditorFontSize, TEXTALIGN_ML);
-	if(ui_widget::TextField(AudioPackEditorTextInputCtx, &m_AudioPackEditorState.m_PackNameInput, PackInput, Localize("Pack name"), EditorEditBoxFontSize))
+	if(ui_widget::InputField(AudioPackEditorTextInputCtx, &m_AudioPackEditorState.m_PackNameInput, PackInput, Localize("Pack name"), EditorEditBoxFontSize))
 		AudioPackEditorRefreshCandidates();
 
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_pack_edit_title", &TitleRow, Localize("Edit audio pack"), EditorFontSize, TEXTALIGN_ML);
@@ -4108,7 +4114,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_pack_slot_search_label", &SlotSearchRow, Localize("Search"), 12.0f, TEXTALIGN_ML);
 	CUIRect SlotSearchInput;
 	SlotSearchRow.VSplitLeft(80.0f, nullptr, &SlotSearchInput);
-	ui_widget::SearchField(AudioPackSlotSearchCtx, &m_AudioPackEditorState.m_FilterInput, SlotSearchInput, 12.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	ui_widget::InputField(AudioPackSlotSearchCtx, &m_AudioPackEditorState.m_FilterInput, SlotSearchInput, 12.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 	std::vector<int> vVisibleSlotIndices;
 	vVisibleSlotIndices.reserve(vAllSlots.size());
@@ -4177,7 +4183,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_pack_candidate_search_label", &CandidateSearchRow, Localize("Search"), 12.0f, TEXTALIGN_ML);
 	CUIRect CandidateSearchInput;
 	CandidateSearchRow.VSplitLeft(80.0f, nullptr, &CandidateSearchInput);
-	ui_widget::SearchField(AudioPackCandidateSearchCtx, &m_AudioPackEditorState.m_CandidateFilterInput, CandidateSearchInput, 12.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	ui_widget::InputField(AudioPackCandidateSearchCtx, &m_AudioPackEditorState.m_CandidateFilterInput, CandidateSearchInput, 12.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 	std::vector<int> vVisibleCandidateIndices;
 	vVisibleCandidateIndices.reserve(m_AudioPackEditorState.m_vCandidateEntries.size());
@@ -4282,7 +4288,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	DoSettingsMenuLabel(SETTINGS_SOUND, -1, -1, "audio_manual_source_label", &ManualRow, Localize("Manual source file"), 12.0f, TEXTALIGN_ML);
 	CUIRect ManualInput;
 	ManualRow.VSplitLeft(120.0f, nullptr, &ManualInput);
-	ui_widget::TextField(AudioPackEditorTextInputCtx, &m_AudioPackEditorState.m_SourcePathInput, ManualInput, Localize("Manual source file"), 12.0f);
+	ui_widget::InputField(AudioPackEditorTextInputCtx, &m_AudioPackEditorState.m_SourcePathInput, ManualInput, Localize("Manual source file"), 12.0f);
 
 	DetailColumn.HSplitTop(8.0f, nullptr, &DetailColumn);
 	CUIRect ActionRowTop, ActionRowBottom;
@@ -7166,7 +7172,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		IUiContext DDNetBackgroundEntitiesTextInputCtx;
 		DDNetBackgroundEntitiesTextInputCtx.m_pUi = Ui();
 		DDNetBackgroundEntitiesTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_ddnet_background_entities_text_input");
-		const bool InputCommitted = ui_widget::TextField(DDNetBackgroundEntitiesTextInputCtx, &s_BackgroundEntitiesInput, EditBox, nullptr, 14.0f);
+		const bool InputCommitted = ui_widget::InputField(DDNetBackgroundEntitiesTextInputCtx, &s_BackgroundEntitiesInput, EditBox, nullptr, 14.0f);
 		bool BackgroundChanged = false;
 		if(InputCommitted)
 			BackgroundChanged = ApplyBackgroundEntitiesInputValue(s_BackgroundEntitiesInput);
@@ -7238,7 +7244,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		IUiContext DDNetRunOnJoinTextInputCtx;
 		DDNetRunOnJoinTextInputCtx.m_pUi = Ui();
 		DDNetRunOnJoinTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_ddnet_run_on_join_text_input");
-		ui_widget::TextField(DDNetRunOnJoinTextInputCtx, &s_RunOnJoinInput, Button, nullptr, 14.0f);
+		ui_widget::InputField(DDNetRunOnJoinTextInputCtx, &s_RunOnJoinInput, Button, nullptr, 14.0f);
 
 #if defined(CONF_FAMILY_WINDOWS)
 		static CButtonContainer s_ButtonUnregisterShell;
@@ -7281,7 +7287,7 @@ CUi::EPopupMenuFunctionResult CMenus::PopupSkinQueuePresetRename(void *pContext,
 	IUiContext SkinQueuePresetRenameTextInputCtx;
 	SkinQueuePresetRenameTextInputCtx.m_pUi = pMenus->Ui();
 	SkinQueuePresetRenameTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_skin_queue_preset_rename_text_input");
-	ui_widget::TextField(SkinQueuePresetRenameTextInputCtx, &pPopupContext->m_NameInput, Input, nullptr, FontSize + 1.0f);
+	ui_widget::InputField(SkinQueuePresetRenameTextInputCtx, &pPopupContext->m_NameInput, Input, nullptr, FontSize + 1.0f);
 
 	View.HSplitTop(4.0f, nullptr, &View);
 	View.HSplitTop(18.0f, &Buttons, &View);

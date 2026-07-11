@@ -844,7 +844,7 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-feature-search-title", &Row, Localize("Feature Search"), BodySize + 2.0f, TEXTALIGN_ML, {}, (int)Row.w);
 		SearchContent.HSplitTop(LineSpacing * 0.5f, nullptr, &SearchContent);
 		SearchContent.HSplitTop(LineHeight, &Row, &SearchContent);
-		ui_widget::SearchField(SearchCtx, &ModuleSearchInput, Row, BodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		ui_widget::InputField(SearchCtx, &ModuleSearchInput, Row, BodySize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 		SearchContent.HSplitTop(LineSpacing * 0.65f, nullptr, &SearchContent);
 
 		char aSearchHint[64];
@@ -3320,7 +3320,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-gores-actor-chat-message", &LabelCol, Localize("Chat message"), LgBodySize);
 					static CLineInput s_FreezeChatMessageQmClient(g_Config.m_TcFreezeChatMessage, sizeof(g_Config.m_TcFreezeChatMessage));
 					s_FreezeChatMessageQmClient.SetEmptyText(Localize("Leave empty to disable"));
-					ui_widget::TextField(QmClientGoresActorTextInputCtx, &s_FreezeChatMessageQmClient, ControlCol, Localize("Leave empty to disable"), LgBodySize);
+					ui_widget::InputField(QmClientGoresActorTextInputCtx, &s_FreezeChatMessageQmClient, ControlCol, Localize("Leave empty to disable"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -3409,7 +3409,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					ControlCol.VSplitRight(ControlCol.h, &PasswordEditRect, &PasswordToggleRect);
 					static CLineInput s_AxiomLoginPassword(g_Config.m_QmAxiomLoginPassword, sizeof(g_Config.m_QmAxiomLoginPassword));
 					s_AxiomLoginPassword.SetHidden(!s_ShowAxiomPassword);
-					ui_widget::TextField(QmClientGoresTextInputCtx, &s_AxiomLoginPassword, PasswordEditRect, nullptr, LgBodySize);
+					ui_widget::InputField(QmClientGoresTextInputCtx, &s_AxiomLoginPassword, PasswordEditRect, nullptr, LgBodySize);
 					if(DoPasswordToggleButton(&s_AxiomPasswordToggleButton, s_ShowAxiomPassword, PasswordToggleRect))
 						s_ShowAxiomPassword = !s_ShowAxiomPassword;
 					CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
@@ -3420,7 +3420,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					ControlCol.VSplitRight(ControlCol.h, &PasswordEditRect, &PasswordToggleRect);
 					static CLineInput s_AxiomDummyLoginPassword(g_Config.m_QmAxiomDummyLoginPassword, sizeof(g_Config.m_QmAxiomDummyLoginPassword));
 					s_AxiomDummyLoginPassword.SetHidden(!s_ShowAxiomDummyPassword);
-					ui_widget::TextField(QmClientGoresTextInputCtx, &s_AxiomDummyLoginPassword, PasswordEditRect, nullptr, LgBodySize);
+					ui_widget::InputField(QmClientGoresTextInputCtx, &s_AxiomDummyLoginPassword, PasswordEditRect, nullptr, LgBodySize);
 					if(DoPasswordToggleButton(&s_AxiomDummyPasswordToggleButton, s_ShowAxiomDummyPassword, PasswordToggleRect))
 						s_ShowAxiomDummyPassword = !s_ShowAxiomDummyPassword;
 					CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
@@ -4140,7 +4140,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-friend-notifications-large-text-content", &LabelCol, Localize("Large text content"), LgBodySize);
 					static CLineInput s_FriendEnterBroadcastText(g_Config.m_QmFriendEnterBroadcastText, sizeof(g_Config.m_QmFriendEnterBroadcastText));
 					s_FriendEnterBroadcastText.SetEmptyText(Localize("Please use %s as friend name"));
-					ui_widget::TextField(QmClientFriendEnterTextInputCtx, &s_FriendEnterBroadcastText, ControlCol, Localize("Please use %s as friend name"), LgBodySize);
+					ui_widget::InputField(QmClientFriendEnterTextInputCtx, &s_FriendEnterBroadcastText, ControlCol, Localize("Please use %s as friend name"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -4151,7 +4151,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-friend-notifications-greeting-text", &LabelCol, Localize("Greeting text"), LgBodySize);
 					static CLineInput s_FriendEnterGreetText(g_Config.m_QmFriendEnterGreetText, sizeof(g_Config.m_QmFriendEnterGreetText));
 					s_FriendEnterGreetText.SetEmptyText(Localize("Leave empty to disable"));
-					ui_widget::TextField(QmClientFriendEnterTextInputCtx, &s_FriendEnterGreetText, ControlCol, Localize("Leave empty to disable"), LgBodySize);
+					ui_widget::InputField(QmClientFriendEnterTextInputCtx, &s_FriendEnterGreetText, ControlCol, Localize("Leave empty to disable"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -4230,7 +4230,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
 				DoQmSettingsLabel("qmclient-word-filter-replacement-chars", &LabelCol, Localize("Replacement chars"), LgBodySize);
-				if(ui_widget::TextField(QmClientBlockWordsTextInputCtx, &s_BlockWordsReplaceInput, ControlCol, "*", LgBodySize))
+				if(ui_widget::InputField(QmClientBlockWordsTextInputCtx, &s_BlockWordsReplaceInput, ControlCol, "*", LgBodySize))
 				{
 					char aReplacement[8];
 					str_utf8_truncate(aReplacement, sizeof(aReplacement), s_BlockWordsReplaceInput.GetString(), 1);
@@ -4276,7 +4276,15 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.HSplitTop(BlockInputHeight, &Row, &CardContent);
 				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
 				DoQmSettingsLabel("qmclient-word-filter-label", &LabelCol, Localize("Word Filter"), LgBodySize);
-				if(Ui()->DoEditBoxMultiLine(&s_BlockWordsInput, &ControlCol, LgBodySize, BlockInputLineSpacing))
+				IUiContext QmClientBlockWordsInputCtx;
+				QmClientBlockWordsInputCtx.m_pUi = Ui();
+				QmClientBlockWordsInputCtx.m_ScopeHash = MakeUiScopeHash("qmclient_block_words_input");
+				ui_widget::SInputFieldOptions BlockWordsInputOptions;
+				BlockWordsInputOptions.m_Mode = ui_widget::EInputFieldMode::MULTILINE;
+				BlockWordsInputOptions.m_pPlaceholder = Localize("Separate with commas");
+				BlockWordsInputOptions.m_FontSize = LgBodySize;
+				BlockWordsInputOptions.m_LineSpacing = BlockInputLineSpacing;
+				if(ui_widget::InputField(QmClientBlockWordsInputCtx, &s_BlockWordsInput, ControlCol, BlockWordsInputOptions).m_Changed)
 					str_copy(g_Config.m_QmBlockWordsList, s_BlockWordsInput.GetString(), sizeof(g_Config.m_QmBlockWordsList));
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
@@ -4409,7 +4417,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					LanguageInputOptions.m_FontSize = LgBodySize;
 					LanguageInputOptions.m_Corners = IGraphics::CORNER_ALL;
 					LanguageInputOptions.m_TextAlign = TEXTALIGN_MC;
-					ui_widget::TextField(QmClientTranslateTextInputCtx, &LineInput, EditRect, LanguageInputOptions);
+					ui_widget::InputField(QmClientTranslateTextInputCtx, &LineInput, EditRect, LanguageInputOptions);
 					if(WasActive && (SubmitPressed || ClickedOutside))
 					{
 						str_copy(pConfigValue, LineInput.GetString(), ConfigValueSize);
@@ -4469,7 +4477,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-tencent-endpoint", &LabelCol, Localize("Endpoint"), LgBodySize);
 					static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateTcEndpoint, sizeof(g_Config.m_QmTranslateTcEndpoint));
 					s_TranslateEndpoint.SetEmptyText("https://tmt.tencentcloudapi.com/");
-					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, "https://tmt.tencentcloudapi.com/", LgBodySize);
+					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, "https://tmt.tencentcloudapi.com/", LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 				else if(IsLibreTranslateBackend)
@@ -4479,7 +4487,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-aliyun-endpoint", &LabelCol, Localize("Endpoint"), LgBodySize);
 					static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateLibreEndpoint, sizeof(g_Config.m_QmTranslateLibreEndpoint));
 					s_TranslateEndpoint.SetEmptyText("http://localhost:5000");
-					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, "http://localhost:5000", LgBodySize);
+					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, "http://localhost:5000", LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 				// LLM 后端的端点配置在 Provider 选择区域显示
@@ -4491,7 +4499,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-region", &LabelCol, Localize("Region"), LgBodySize);
 					static CLineInput s_TranslateRegion(g_Config.m_QmTranslateTcRegion, sizeof(g_Config.m_QmTranslateTcRegion));
 					s_TranslateRegion.SetEmptyText("ap-guangzhou");
-					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateRegion, ControlCol, "ap-guangzhou", LgBodySize);
+					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateRegion, ControlCol, "ap-guangzhou", LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -4499,7 +4507,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-secret-id", &LabelCol, Localize("SecretId"), LgBodySize);
 					static CLineInput s_TranslateSecretId(g_Config.m_QmTranslateTcSecretId, sizeof(g_Config.m_QmTranslateTcSecretId));
 					s_TranslateSecretId.SetEmptyText(Localize("Tencent Cloud SecretId"));
-					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateSecretId, ControlCol, Localize("Tencent Cloud SecretId"), LgBodySize);
+					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateSecretId, ControlCol, Localize("Tencent Cloud SecretId"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -4508,7 +4516,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					static CLineInput s_TranslateSecretKey(g_Config.m_QmTranslateTcSecretKey, sizeof(g_Config.m_QmTranslateTcSecretKey));
 					s_TranslateSecretKey.SetEmptyText(Localize("Tencent Cloud SecretKey"));
 					s_TranslateSecretKey.SetHidden(true);
-					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateSecretKey, ControlCol, Localize("Tencent Cloud SecretKey"), LgBodySize);
+					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateSecretKey, ControlCol, Localize("Tencent Cloud SecretKey"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 				else if(IsLibreTranslateBackend)
@@ -4518,7 +4526,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-api-key", &LabelCol, Localize("API key"), LgBodySize);
 					static CLineInput s_TranslateKey(g_Config.m_QmTranslateLibreKey, sizeof(g_Config.m_QmTranslateLibreKey));
 					s_TranslateKey.SetHidden(true);
-					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_TranslateKey, ControlCol, "", LgBodySize);
+					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateKey, ControlCol, "", LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				}
 
@@ -4588,7 +4596,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 
 					Ui()->DoLabel(&LabelCol, pKeyLabel, LgBodySize, TEXTALIGN_ML);
 					if(pActiveKeyInput)
-						ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveKeyInput, ControlCol, pActiveKeyInput->GetEmptyText(), LgBodySize);
+						ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveKeyInput, ControlCol, pActiveKeyInput->GetEmptyText(), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					// 各 Provider 的端点配置（允许覆盖默认）
@@ -4623,7 +4631,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 						break;
 					}
 					if(pActiveEndpointInput)
-						ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveEndpointInput, ControlCol, pActiveEndpointInput->GetEmptyText(), LgBodySize);
+						ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveEndpointInput, ControlCol, pActiveEndpointInput->GetEmptyText(), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					// 各 Provider 的模型配置
@@ -4662,7 +4670,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 						break;
 					}
 					if(pActiveModelInput)
-						ui_widget::TextField(QmClientTranslateTextInputCtx, pActiveModelInput, ControlCol, pActiveModelInput->GetEmptyText(), LgBodySize);
+						ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveModelInput, ControlCol, pActiveModelInput->GetEmptyText(), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					// LLM 并发数配置
@@ -4750,7 +4758,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-translate-custom-prompt-template", &LabelCol, Localize("Custom prompt template"), LgBodySize);
 					static CLineInput s_CustomPrompt(g_Config.m_QmTranslateSystemPrompt, sizeof(g_Config.m_QmTranslateSystemPrompt));
 					s_CustomPrompt.SetEmptyText(Localize("Leave empty to use default prompt"));
-					ui_widget::TextField(QmClientTranslateTextInputCtx, &s_CustomPrompt, ControlCol, Localize("Leave empty to use default prompt"), LgBodySize);
+					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_CustomPrompt, ControlCol, Localize("Leave empty to use default prompt"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing * 0.5f, nullptr, &CardContent);
 				}
 
@@ -4955,9 +4963,9 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					OptionsCol.VSplitLeft(maximum(54.0f, 54.0f * UiScale), &RegexCol, &OptionsCol);
 					DoQmSettingsCheckboxAuto(&pRuleRow->m_AutoRename, "Rename", Localize("Rename"), &pRuleRow->m_AutoRename, &RenameCol, LgLineHeight);
 					DoQmSettingsCheckboxAuto(&pRuleRow->m_Regex, "Regex", Localize("Regex"), &pRuleRow->m_Regex, &RegexCol, LgLineHeight);
-					ui_widget::TextField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_TriggerInput, TriggerCol, "", LgBodySize);
+					ui_widget::InputField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_TriggerInput, TriggerCol, "", LgBodySize);
 					DoQmSettingsLabel("qmclient-keyword-reply-send-label", &SendCol, Localize("Send"), LgBodySize, TEXTALIGN_MC);
-					ui_widget::TextField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_ReplyInput, ReplyCol, "", LgBodySize);
+					ui_widget::InputField(QmClientKeywordReplyTextInputCtx, &pRuleRow->m_ReplyInput, ReplyCol, "", LgBodySize);
 					const bool RemoveClicked = DoButton_Menu(&s_vKeywordRemoveRuleButtons[i], "-", 0, &RemoveButtonRect);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
@@ -5063,7 +5071,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					DoQmSettingsLabel("qmclient-pie-menu-rename-queue", &LabelCol, Localize("Rename queue"), LgBodySize);
 					static CLineInput s_PieMenuRenameQueue(g_Config.m_QmPieMenuRenameQueue, sizeof(g_Config.m_QmPieMenuRenameQueue));
 					s_PieMenuRenameQueue.SetEmptyText(Localize("Example: name1|name2|name3"));
-					ui_widget::TextField(QmClientPieMenuTextInputCtx, &s_PieMenuRenameQueue, ControlCol, Localize("Example: name1|name2|name3"), LgBodySize);
+					ui_widget::InputField(QmClientPieMenuTextInputCtx, &s_PieMenuRenameQueue, ControlCol, Localize("Example: name1|name2|name3"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
@@ -6530,7 +6538,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					static CLineInput s_VoiceToken(g_Config.m_QmVoiceToken, sizeof(g_Config.m_QmVoiceToken));
 					s_VoiceToken.SetEmptyText(Localize("Leave empty to join public room"));
 					s_VoiceToken.SetHidden(true);
-					ui_widget::TextField(QmClientVoiceTextInputCtx, &s_VoiceToken, ControlCol, Localize("Leave empty to join public room"), LgBodySize);
+					ui_widget::InputField(QmClientVoiceTextInputCtx, &s_VoiceToken, ControlCol, Localize("Leave empty to join public room"), LgBodySize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -6583,7 +6591,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 						DoQmSettingsLabel("qmclient-voice-server-ip", &LabelCol, Localize("Server IP"), LgBodySize);
 						static CLineInput s_VoiceServer(g_Config.m_QmVoiceServer, sizeof(g_Config.m_QmVoiceServer));
 						s_VoiceServer.SetEmptyText("42.194.185.210:9987");
-						ui_widget::TextField(QmClientVoiceTextInputCtx, &s_VoiceServer, ControlCol, "42.194.185.210:9987", LgBodySize);
+						ui_widget::InputField(QmClientVoiceTextInputCtx, &s_VoiceServer, ControlCol, "42.194.185.210:9987", LgBodySize);
 						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 
 						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
@@ -7350,7 +7358,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 					if(!pLineInput->IsActive() && str_comp(pLineInput->GetString(), pValue) != 0)
 						pLineInput->Set(pValue);
 					pLineInput->SetEmptyText(pEmptyText);
-					if(ui_widget::TextField(QmClientLyricsTextInputCtx, pLineInput, ControlColValue, pEmptyText, LgBodySize))
+					if(ui_widget::InputField(QmClientLyricsTextInputCtx, pLineInput, ControlColValue, pEmptyText, LgBodySize))
 						str_copy(pValue, pLineInput->GetString(), ValueSize);
 					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
 				};

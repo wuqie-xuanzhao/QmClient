@@ -1280,7 +1280,7 @@ float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Re
 		ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 		static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
 		s_MutedReply.SetEmptyText(Localize("I muted you"));
-		ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
+		ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
 	}
 	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 	if(Render)
@@ -1293,7 +1293,7 @@ float CMenus::LayoutTClientAutoReplyCacheSection(CUIRect &CurrentColumn, bool Re
 		ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 		static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
 		s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
-		ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
+		ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
 	}
 	CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 	return CurrentColumn.y - SavedY;
@@ -1332,7 +1332,7 @@ float CMenus::LayoutTClientPetCacheSection(CUIRect &CurrentColumn, bool Render)
 		PetSkinBox.VSplitMid(&Label, &Button);
 		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Pet Skin:"), FontSize, TEXTALIGN_ML);
 		static CLineInput s_PetSkin(g_Config.m_TcPetSkin, sizeof(g_Config.m_TcPetSkin));
-		ui_widget::TextField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
+		ui_widget::InputField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
 	}
 	return CurrentColumn.y - SavedY;
 }
@@ -1378,7 +1378,7 @@ float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)
 		static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
 		s_LastInput.SetEmptyText(Localize("You're the last one!"));
 		Button.HSplitTop(MarginSmall, nullptr, &Button);
-		ui_widget::TextField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
+		ui_widget::InputField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 		static CButtonContainer s_ClientNotifyWhenLastColor;
 		DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 		CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
@@ -2002,7 +2002,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				FeetBox.VSplitMid(&FeetBox, nullptr);
 				static CLineInput s_WhiteFeet(g_Config.m_TcWhiteFeetSkin, sizeof(g_Config.m_TcWhiteFeetSkin));
 				s_WhiteFeet.SetEmptyText("x_ninja");
-				ui_widget::TextField(TClientWhiteFeetTextInputCtx, &s_WhiteFeet, FeetBox, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientWhiteFeetTextInputCtx, &s_WhiteFeet, FeetBox, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
@@ -2294,7 +2294,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				Box.VSplitMid(&Label, &Button);
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Execute before connecting"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_LineInput(g_Config.m_TcExecuteOnConnect, sizeof(g_Config.m_TcExecuteOnConnect));
-				ui_widget::TextField(TClientAutoExecuteTextInputCtx, &s_LineInput, Button, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientAutoExecuteTextInputCtx, &s_LineInput, Button, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 
@@ -2305,7 +2305,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				Box.VSplitMid(&Label, &Button);
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Execute on connect"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_LineInput(g_Config.m_TcExecuteOnJoin, sizeof(g_Config.m_TcExecuteOnJoin));
-				ui_widget::TextField(TClientAutoExecuteTextInputCtx, &s_LineInput, Button, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientAutoExecuteTextInputCtx, &s_LineInput, Button, nullptr, EditBoxFontSize);
 			}
 
 			const bool RenderDelaySlider = Render && ShouldRenderSection(CurrentColumn, 0.0f, LineSize);
@@ -2354,7 +2354,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Message to send in chat:"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_VoteMessage(g_Config.m_TcAutoVoteWhenFarMessage, sizeof(g_Config.m_TcAutoVoteWhenFarMessage));
 				s_VoteMessage.SetEmptyText(Localize("Leave empty to disable"));
-				ui_widget::TextField(TClientVotingTextInputCtx, &s_VoteMessage, VoteMessage, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientVotingTextInputCtx, &s_VoteMessage, VoteMessage, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
@@ -2393,7 +2393,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				PetSkinBox.VSplitMid(&Label, &Button);
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Pet Skin:"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_PetSkin(g_Config.m_TcPetSkin, sizeof(g_Config.m_TcPetSkin));
-				ui_widget::TextField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
 			}
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
@@ -2420,7 +2420,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			PetSkinBox.VSplitMid(&Label, &Button);
 			DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Pet Skin:"), FontSize, TEXTALIGN_ML);
 			static CLineInput s_PetSkin(g_Config.m_TcPetSkin, sizeof(g_Config.m_TcPetSkin));
-			ui_widget::TextField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
+			ui_widget::InputField(TClientPetTextInputCtx, &s_PetSkin, Button, nullptr, EditBoxFontSize);
 		};
 		auto LayoutAutoReplySection = [&](CUIRect &CurrentColumn, bool Render) {
 			CUIRect BoxRect;
@@ -2451,7 +2451,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 					static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
 					s_MutedReply.SetEmptyText(Localize("I muted you"));
-					ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
+					ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
 				}
 				LogSettingsStage("tclient_settings_left_auto_reply_muted", MutedTimer);
 			}
@@ -2472,7 +2472,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 					static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
 					s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
-					ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
+					ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
 				}
 				LogSettingsStage("tclient_settings_left_auto_reply_minimized", MinimizedTimer);
 			}
@@ -2506,7 +2506,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 				static CLineInput s_MutedReply(g_Config.m_TcAutoReplyMutedMessage, sizeof(g_Config.m_TcAutoReplyMutedMessage));
 				s_MutedReply.SetEmptyText(Localize("I muted you"));
-				ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MutedReply, ReplyRect, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 
@@ -2517,7 +2517,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				ReplyRect.HSplitTop(MarginExtraSmall, nullptr, &ReplyRect);
 				static CLineInput s_MinimizedReply(g_Config.m_TcAutoReplyMinimizedMessage, sizeof(g_Config.m_TcAutoReplyMinimizedMessage));
 				s_MinimizedReply.SetEmptyText(Localize("I am away from the game window"));
-				ui_widget::TextField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientAutoReplyTextInputCtx, &s_MinimizedReply, ReplyRect, nullptr, EditBoxFontSize);
 			}
 			CurrentColumn.HSplitTop(MarginExtraSmall, nullptr, &CurrentColumn);
 		};
@@ -2865,7 +2865,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
 					s_LastInput.SetEmptyText(Localize("You're the last one!"));
 					Button.HSplitTop(MarginSmall, nullptr, &Button);
-					ui_widget::TextField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
+					ui_widget::InputField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 					static CButtonContainer s_ClientNotifyWhenLastColor;
 					DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 					CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
@@ -2947,7 +2947,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				static CLineInput s_LastInput(g_Config.m_TcNotifyWhenLastText, sizeof(g_Config.m_TcNotifyWhenLastText));
 				s_LastInput.SetEmptyText(Localize("You're the last one!"));
 				Button.HSplitTop(MarginSmall, nullptr, &Button);
-				ui_widget::TextField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientHudTextInputCtx, &s_LastInput, Button, nullptr, EditBoxFontSize);
 				static CButtonContainer s_ClientNotifyWhenLastColor;
 				DoLine_ColorPicker(&s_ClientNotifyWhenLastColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &NotificationConfig, "", &g_Config.m_TcNotifyWhenLastColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
 				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
@@ -3361,7 +3361,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				FinishNameBox.VSplitMid(&Label, &Button);
 				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Finish Name:"), FontSize, TEXTALIGN_ML);
 				static CLineInput s_FinishName(g_Config.m_TcFinishName, sizeof(g_Config.m_TcFinishName));
-				ui_widget::TextField(TClientFinishNameTextInputCtx, &s_FinishName, Button, nullptr, EditBoxFontSize);
+				ui_widget::InputField(TClientFinishNameTextInputCtx, &s_FinishName, Button, nullptr, EditBoxFontSize);
 			}
 			BoxRect.h = CurrentColumn.y - BoxRect.y;
 			return BoxRect;
@@ -3756,7 +3756,7 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
 		static CLineInput s_NameInput;
 		s_NameInput.SetBuffer(s_aBindName, sizeof(s_aBindName));
 		s_NameInput.SetEmptyText(Localize("Name"));
-		ui_widget::TextField(TClientBindWheelTextInputCtx, &s_NameInput, Button, Localize("Name"), EditBoxFontSize);
+		ui_widget::InputField(TClientBindWheelTextInputCtx, &s_NameInput, Button, Localize("Name"), EditBoxFontSize);
 
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 		LeftView.HSplitTop(LineSize, &Button, &LeftView);
@@ -3765,7 +3765,7 @@ void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView)
 		static CLineInput s_BindInput;
 		s_BindInput.SetBuffer(s_aBindCommand, sizeof(s_aBindCommand));
 		s_BindInput.SetEmptyText(Localize("Command"));
-		ui_widget::TextField(TClientBindWheelTextInputCtx, &s_BindInput, Button, Localize("Command"), EditBoxFontSize);
+		ui_widget::InputField(TClientBindWheelTextInputCtx, &s_BindInput, Button, Localize("Command"), EditBoxFontSize);
 
 		static CButtonContainer s_AddButton, s_RemoveButton, s_OverrideButton;
 		LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
@@ -3888,7 +3888,7 @@ void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView)
 		DoSettingsLabelStreamed(TitleElement, &Title, Localize(BindDefault.m_pTitle), FontSize, TEXTALIGN_ML);
 		BindDefault.m_LineInput.SetBuffer(pName, BINDCHAT_MAX_NAME);
 		BindDefault.m_LineInput.SetEmptyText(BindDefault.m_Bind.m_aName);
-		if(ui_widget::TextField(TClientChatBindsTextInputCtx, &BindDefault.m_LineInput, Input, BindDefault.m_Bind.m_aName, EditBoxFontSize) && BindDefault.m_LineInput.IsActive())
+		if(ui_widget::InputField(TClientChatBindsTextInputCtx, &BindDefault.m_LineInput, Input, BindDefault.m_Bind.m_aName, EditBoxFontSize) && BindDefault.m_LineInput.IsActive())
 		{
 			if(!pOldBind && pName[0] != '\0')
 			{
@@ -4040,7 +4040,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		EntriesSearch.HSplitTop(MarginSmall, nullptr, &EntriesSearch);
 
 		static CLineInputBuffered<128> s_EntriesFilterInput;
-		ui_widget::SearchField(TClientWarListEntriesSearchCtx, &s_EntriesFilterInput, EntriesSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		ui_widget::InputField(TClientWarListEntriesSearchCtx, &s_EntriesFilterInput, EntriesSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 		static std::vector<CWarEntry *> s_vFilteredEntries;
 		static char s_aCachedEntriesFilter[128] = "";
 		static bool s_CachedReversed = false;
@@ -4179,7 +4179,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		s_NameInput.SetBuffer(s_aEntryName, sizeof(s_aEntryName));
 		s_NameInput.SetEmptyText(Localize("Name"));
 		if(s_IsName)
-			ui_widget::TextField(TClientWarListTextInputCtx, &s_NameInput, ButtonL, Localize("Name"), 12.0f);
+			ui_widget::InputField(TClientWarListTextInputCtx, &s_NameInput, ButtonL, Localize("Name"), 12.0f);
 		else
 		{
 			ButtonL.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 15, 3.0f);
@@ -4193,7 +4193,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		s_ClanInput.SetBuffer(s_aEntryClan, sizeof(s_aEntryClan));
 		s_ClanInput.SetEmptyText(Localize("Clan"));
 		if(s_IsClan)
-			ui_widget::TextField(TClientWarListTextInputCtx, &s_ClanInput, ButtonR, Localize("Clan"), 12.0f);
+			ui_widget::InputField(TClientWarListTextInputCtx, &s_ClanInput, ButtonR, Localize("Clan"), 12.0f);
 		else
 		{
 			ButtonR.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), 15, 3.0f);
@@ -4227,7 +4227,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		static CLineInput s_ReasonInput;
 		s_ReasonInput.SetBuffer(s_aEntryReason, sizeof(s_aEntryReason));
 		s_ReasonInput.SetEmptyText(Localize("Reason"));
-		ui_widget::TextField(TClientWarListTextInputCtx, &s_ReasonInput, Button, Localize("Reason"), 12.0f);
+		ui_widget::InputField(TClientWarListTextInputCtx, &s_ReasonInput, Button, Localize("Reason"), 12.0f);
 
 		static CButtonContainer s_AddButton, s_OverrideButton;
 		Column2.HSplitTop(MarginSmall, nullptr, &Column2);
@@ -4366,7 +4366,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		Column3.HSplitTop(HeadlineFontSize + MarginSmall, &Button, &Column3);
 		s_TypeNameInput.SetBuffer(s_aTypeName, sizeof(s_aTypeName));
 		s_TypeNameInput.SetEmptyText(Localize("Group name"));
-		ui_widget::TextField(TClientWarListTextInputCtx, &s_TypeNameInput, Button, Localize("Group name"), 12.0f);
+		ui_widget::InputField(TClientWarListTextInputCtx, &s_TypeNameInput, Button, Localize("Group name"), 12.0f);
 		static CButtonContainer s_AddGroupButton, s_OverrideGroupButton, s_GroupColorPicker;
 
 		Column3.HSplitTop(MarginSmall, nullptr, &Column3);
@@ -4409,7 +4409,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 		Column4.HSplitBottom(25.0f, &Column4, &PlayerSearch);
 		PlayerSearch.HSplitTop(MarginSmall, nullptr, &PlayerSearch);
 		static CLineInputBuffered<128> s_PlayerSearchInput;
-		ui_widget::SearchField(TClientWarListPlayerSearchCtx, &s_PlayerSearchInput, PlayerSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		ui_widget::InputField(TClientWarListPlayerSearchCtx, &s_PlayerSearchInput, PlayerSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 		CUIRect PlayerList;
 		Column4.HSplitBottom(0.0f, &PlayerList, &Column4);
@@ -4683,7 +4683,7 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView)
 	DoSettingsMenuLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-scheme-label", &Label, Localize("Status Scheme:"), FontSize, TEXTALIGN_MR);
 	static CLineInput s_StatusScheme(g_Config.m_TcStatusBarScheme, sizeof(g_Config.m_TcStatusBarScheme));
 	s_StatusScheme.SetEmptyText("");
-	ui_widget::TextField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, StatusScheme, nullptr, EditBoxFontSize);
+	ui_widget::InputField(TClientStatusSchemeTextInputCtx, &s_StatusScheme, StatusScheme, nullptr, EditBoxFontSize);
 
 	static std::vector<std::string> s_DropDownNameStorage;
 	static std::vector<const char *> s_DropDownNames;
@@ -5555,7 +5555,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 		TClientConfigSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 		TClientConfigSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tclient_config_search");
 		TClientConfigSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-		ui_widget::SearchField(TClientConfigSearchCtx, &s_SearchInput, SearchEdit, EditBoxFontSize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+		ui_widget::InputField(TClientConfigSearchCtx, &s_SearchInput, SearchEdit, EditBoxFontSize, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
 
 		// 分隔
 		Row.VSplitLeft(MarginSmall, nullptr, &Row);
@@ -6020,7 +6020,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 				CUIRect InputBox, Dummy;
 				Controls.VSplitLeft(60.0f, &InputBox, &Dummy);
 
-				if(ui_widget::TextField(TClientConfigTextInputCtx, &State.m_Input, InputBox, nullptr, EditBoxFontSize))
+				if(ui_widget::InputField(TClientConfigTextInputCtx, &State.m_Input, InputBox, nullptr, EditBoxFontSize))
 				{
 					int NewVal = State.m_Input.GetInteger();
 					bool InRange = true;
@@ -6059,7 +6059,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 					State.m_Input.Set(Effective);
 			}
 
-			if(ui_widget::TextField(TClientConfigTextInputCtx, &State.m_Input, Controls, nullptr, EditBoxFontSize))
+			if(ui_widget::InputField(TClientConfigTextInputCtx, &State.m_Input, Controls, nullptr, EditBoxFontSize))
 			{
 				const char *NewVal = State.m_Input.GetString();
 				if(str_comp(NewVal, pStr->m_pStr) == 0)

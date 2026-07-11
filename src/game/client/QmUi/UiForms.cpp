@@ -12,6 +12,7 @@
 #include <game/client/lineinput.h>
 #include <game/client/ui.h>
 #include <game/client/ui_rect.h>
+#include <game/localization.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -49,17 +50,6 @@ namespace ui_widget
 			const float TargetAlpha = pInput->IsActive() ? 1.0f : 0.0f;
 			const float Alpha = AnimateStateValue(Ctx, pInput, EUiAnimProperty::ALPHA, TargetAlpha, ui_curve::DECELERATE);
 			DrawTextFieldFocusBorder(Ctx, Rect, Alpha);
-		}
-
-		void DrawLegacyTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, int Corners)
-		{
-			if(Ctx.m_pUi == nullptr)
-				return;
-			const SUiTheme &Theme = ThemeFor(Ctx);
-			const bool Active = pInput != nullptr && pInput->IsActive();
-			const bool Hovered = pInput != nullptr && Ctx.m_pUi->HotItem() == pInput;
-			const ColorRGBA PlateColor = Active ? Theme.m_InputSurfaceFocused : (Hovered ? Theme.m_SurfaceHovered : Theme.m_InputSurface);
-			Rect.Draw(Ctx.m_pUi->ScaleBackgroundAlpha(PlateColor), Corners, ui_token::radius::BASE);
 		}
 
 		void DrawTextFieldFocusBorder(const IUiContext &Ctx, const CUIRect &Rect, float Alpha)
@@ -101,15 +91,6 @@ namespace ui_widget
 			Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		}
 
-		void DrawTextFieldPlaceholder(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize, int TextAlign)
-		{
-			if(pPlaceholder == nullptr || !pInput->IsEmpty() || pInput->IsActive())
-				return;
-
-			SLabelProperties LabelProps;
-			LabelProps.m_EllipsisAtEnd = true;
-			Ctx.m_pUi->DoLabel(&Rect, pPlaceholder, FontSize, TextAlign, LabelProps);
-		}
 	} // namespace
 
 	SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options)
@@ -139,7 +120,7 @@ namespace ui_widget
 		RenderOptions.m_DrawBackground = false;
 		bool Changed = false;
 		if(Options.m_Mode == EInputFieldMode::MULTILINE)
-			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &Layout.m_ContentRect, Options.m_FontSize, 1.0f, ResolveInputFieldTextAlign(Options), RenderOptions);
+			Changed = Ctx.m_pUi->DoEditBoxMultiLine(pInput, &Layout.m_ContentRect, Options.m_FontSize, Options.m_LineSpacing, ResolveInputFieldTextAlign(Options), RenderOptions);
 		else
 			Changed = Ctx.m_pUi->DoEditBox(pInput, &Layout.m_ContentRect, Options.m_FontSize, Options.m_Corners, {}, ResolveInputFieldTextAlign(Options), RenderOptions);
 
@@ -160,6 +141,42 @@ namespace ui_widget
 		DrawTextFieldFocusBorder(Ctx, pInput, Layout.m_FocusRingRect);
 		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, Options.m_Clearable);
 	}
+	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
+	{
+		SInputFieldOptions Options;
+		Options.m_pPlaceholder = pPlaceholder;
+		Options.m_FontSize = FontSize;
+		return InputField(Ctx, pInput, Rect, Options).m_Changed;
+	}
+
+	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool SearchHotkeyEnabled)
+	{
+		SInputFieldOptions Options;
+		Options.m_Mode = EInputFieldMode::SEARCH;
+		Options.m_Clearable = true;
+		Options.m_SearchHotkeyEnabled = SearchHotkeyEnabled;
+		Options.m_FontSize = FontSize;
+		return InputField(Ctx, pInput, Rect, Options).m_Changed;
+	}
+
+	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize, const char *pIcon, bool Clearable)
+	{
+		SInputFieldOptions Options;
+		Options.m_pPlaceholder = pPlaceholder;
+		Options.m_pLeadingIcon = pIcon;
+		Options.m_Clearable = Clearable;
+		Options.m_FontSize = FontSize;
+		return InputField(Ctx, pInput, Rect, Options).m_Changed;
+	}
+	bool InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
+	{
+		SInputFieldOptions InputOptions;
+		InputOptions.m_pPlaceholder = Options.m_pPlaceholder;
+		InputOptions.m_FontSize = Options.m_FontSize;
+		InputOptions.m_Corners = Options.m_Corners;
+		InputOptions.m_TextAlign = Options.m_TextAlign;
+		return InputField(Ctx, pInput, Rect, InputOptions).m_Changed;
+	}
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
 		STextFieldOptions Options;
@@ -170,20 +187,13 @@ namespace ui_widget
 
 	SInputFieldResult TextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
 	{
-		if(Ctx.m_pUi == nullptr || pInput == nullptr)
-			return {};
-
-		const bool WasActive = pInput->IsActive();
-		pInput->SetEmptyText(Options.m_pPlaceholder);
-		DrawTextFieldPlate(Ctx, pInput, Rect, Options);
-
-		CUi::SEditBoxRenderOptions RenderOptions;
-		RenderOptions.m_DrawBackground = false;
-		const bool Changed = Ctx.m_pUi->DoEditBox(pInput, &Rect, Options.m_FontSize, Options.m_Corners, {}, Options.m_TextAlign, RenderOptions);
-
-		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, false, false);
+		SInputFieldOptions InputOptions;
+		InputOptions.m_pPlaceholder = Options.m_pPlaceholder;
+		InputOptions.m_FontSize = Options.m_FontSize;
+		InputOptions.m_Corners = Options.m_Corners;
+		InputOptions.m_TextAlign = Options.m_TextAlign;
+		return InputField(Ctx, pInput, Rect, InputOptions);
 	}
-
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
 		return TextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;
@@ -192,30 +202,6 @@ namespace ui_widget
 	bool TextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
 	{
 		return TextFieldEx(Ctx, pInput, Rect, Options).m_Changed;
-	}
-
-	SInputFieldResult LegacyTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
-	{
-		if(Ctx.m_pUi == nullptr || pInput == nullptr)
-			return {};
-
-		const bool WasActive = pInput->IsActive();
-		pInput->SetEmptyText(Options.m_pPlaceholder);
-		DrawLegacyTextFieldPlate(Ctx, pInput, Rect, Options.m_Corners);
-		CUi::SEditBoxRenderOptions RenderOptions;
-		RenderOptions.m_DrawBackground = false;
-		const bool Changed = Ctx.m_pUi->DoEditBox(pInput, &Rect, Options.m_FontSize, Options.m_Corners, {}, Options.m_TextAlign, RenderOptions);
-		DrawTextFieldFocusBorder(Ctx, pInput, Rect);
-
-		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, false, false);
-	}
-
-	bool LegacyTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
-	{
-		STextFieldOptions Options;
-		Options.m_pPlaceholder = pPlaceholder;
-		Options.m_FontSize = FontSize;
-		return LegacyTextFieldEx(Ctx, pInput, Rect, Options).m_Changed;
 	}
 
 	void ReadOnlyTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
@@ -234,51 +220,15 @@ namespace ui_widget
 
 	SInputFieldResult IconTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options, const char *pIcon, bool Clearable)
 	{
-		if(Ctx.m_pUi == nullptr || pInput == nullptr)
-			return {};
-
-		const bool WasActive = pInput->IsActive();
-		const bool WasEmpty = pInput->IsEmpty();
-
-		pInput->SetEmptyText(Options.m_pPlaceholder);
-		DrawLegacyTextFieldPlate(Ctx, pInput, Rect, Options.m_Corners);
-
-		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, true, Clearable);
-		const float IconSize = Rect.h * 0.65f;
-		const CUIRect &IconRect = Layout.m_IconRect;
-		const CUIRect &InputRect = Layout.m_ContentRect;
-		const CUIRect &ClearRect = Layout.m_ClearRect;
-
-		const char *pIconToUse = pIcon != nullptr ? pIcon : FontIcons::FONT_ICON_MAGNIFYING_GLASS;
-		Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		Ctx.m_pUi->TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		Ctx.m_pUi->DoLabel(&IconRect, pIconToUse, IconSize, TEXTALIGN_MC);
-		Ctx.m_pUi->TextRender()->SetRenderFlags(0);
-		Ctx.m_pUi->TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-
-		CUi::SEditBoxRenderOptions RenderOptions;
-		RenderOptions.m_DrawBackground = false;
-		bool Changed = Ctx.m_pUi->DoEditBox(pInput, &InputRect, Options.m_FontSize, Options.m_Corners & ~IGraphics::CORNER_R, {}, Options.m_TextAlign, RenderOptions);
-		DrawTextFieldFocusBorder(Ctx, pInput, Rect);
-
-		if(Clearable)
-		{
-			const ColorRGBA ClearColor = Ctx.m_pUi->ScaleBackgroundAlpha(ColorRGBA(1.0f, 1.0f, 1.0f, 0.33f * Ctx.m_pUi->ButtonColorMul(pInput->GetClearButtonId())));
-			ClearRect.Draw(ClearColor, IGraphics::CORNER_R, ui_token::radius::BASE);
-			Ctx.m_pUi->TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-			Ctx.m_pUi->DoLabel(&ClearRect, FontIcons::FONT_ICON_XMARK, ClearRect.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
-			Ctx.m_pUi->TextRender()->SetRenderFlags(0);
-			if(Ctx.m_pUi->DoButtonLogic(pInput->GetClearButtonId(), 0, &ClearRect, BUTTONFLAG_LEFT))
-			{
-				pInput->Clear();
-				Ctx.m_pUi->SetActiveItem(pInput);
-				Changed = true;
-			}
-		}
-
-		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, Clearable);
+		SInputFieldOptions InputOptions;
+		InputOptions.m_pPlaceholder = Options.m_pPlaceholder;
+		InputOptions.m_pLeadingIcon = pIcon != nullptr ? pIcon : FontIcons::FONT_ICON_MAGNIFYING_GLASS;
+		InputOptions.m_Clearable = Clearable;
+		InputOptions.m_FontSize = Options.m_FontSize;
+		InputOptions.m_Corners = Options.m_Corners;
+		InputOptions.m_TextAlign = Options.m_TextAlign;
+		return InputField(Ctx, pInput, Rect, InputOptions);
 	}
-
 	bool IconTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize, const char *pIcon, bool Clearable)
 	{
 		STextFieldOptions Options;
@@ -289,23 +239,12 @@ namespace ui_widget
 
 	SInputFieldResult ClearableTextFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
-		if(Ctx.m_pUi == nullptr || pInput == nullptr)
-			return {};
-
-		const bool WasActive = pInput->IsActive();
-		const bool WasEmpty = pInput->IsEmpty();
-		STextFieldOptions Options;
-		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, false, true);
-		pInput->SetEmptyText(pPlaceholder);
-		DrawTextFieldPlate(Ctx, pInput, Layout.m_ShellRect, Options);
-
-		CUi::SEditBoxRenderOptions RenderOptions;
-		RenderOptions.m_DrawBackground = false;
-		const bool Changed = Ctx.m_pUi->DoClearableEditBox(pInput, &Layout.m_ShellRect, FontSize, IGraphics::CORNER_ALL, {}, RenderOptions);
-
-		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);
+		SInputFieldOptions InputOptions;
+		InputOptions.m_pPlaceholder = pPlaceholder;
+		InputOptions.m_Clearable = true;
+		InputOptions.m_FontSize = FontSize;
+		return InputField(Ctx, pInput, Rect, InputOptions);
 	}
-
 	bool ClearableTextField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const char *pPlaceholder, float FontSize)
 	{
 		return ClearableTextFieldEx(Ctx, pInput, Rect, pPlaceholder, FontSize).m_Changed;
@@ -313,21 +252,13 @@ namespace ui_widget
 
 	SInputFieldResult SearchFieldEx(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)
 	{
-		if(Ctx.m_pUi == nullptr || pInput == nullptr)
-			return {};
-
-		const bool WasActive = pInput->IsActive();
-		const bool WasEmpty = pInput->IsEmpty();
-		STextFieldOptions Options;
-		const SInputFieldLayout Layout = ResolveInputFieldLayout(Rect, true, true);
-		DrawTextFieldPlate(Ctx, pInput, Layout.m_ShellRect, Options);
-
-		CUi::SEditBoxRenderOptions RenderOptions;
-		RenderOptions.m_DrawBackground = false;
-		const bool Changed = Ctx.m_pUi->DoEditBox_Search(pInput, &Layout.m_ShellRect, FontSize, HotkeyEnabled, RenderOptions);
-		return BuildInputFieldResult(Ctx, pInput, Changed, WasActive, WasEmpty, true);
+		SInputFieldOptions InputOptions;
+		InputOptions.m_Mode = EInputFieldMode::SEARCH;
+		InputOptions.m_Clearable = true;
+		InputOptions.m_SearchHotkeyEnabled = HotkeyEnabled;
+		InputOptions.m_FontSize = FontSize;
+		return InputField(Ctx, pInput, Rect, InputOptions);
 	}
-
 	bool SearchField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, float FontSize, bool HotkeyEnabled)
 	{
 		return SearchFieldEx(Ctx, pInput, Rect, FontSize, HotkeyEnabled).m_Changed;

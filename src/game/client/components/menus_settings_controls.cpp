@@ -185,7 +185,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	ControlsSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	ControlsSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_controls_search");
 	ControlsSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	if(ui_widget::SearchField(ControlsSearchCtx, &m_FilterInput, QuickSearch, FONT_SIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && !GameClient()->m_KeyBinder.IsActive()))
+	if(ui_widget::InputField(ControlsSearchCtx, &m_FilterInput, QuickSearch, FONT_SIZE, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && !GameClient()->m_KeyBinder.IsActive()))
 	{
 		m_CurrentSearchMatch = 0;
 		UpdateSearchMatches();
