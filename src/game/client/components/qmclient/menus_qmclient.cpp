@@ -1938,6 +1938,97 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	RenderCheckbox(&g_Config.m_QmSayNoPop, "Hide input emoticon", &g_Config.m_QmSayNoPop);
 }
 
+void CMenus::RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly, bool LightFirstFrame)
+{
+	CUIRect Row, LabelColumn, ControlColumn;
+	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing, PrewarmOnly](const void *pId, const char *pText, int *pValue) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		RenderQmFunctionCheckbox(pId, pText, Localize(pText), pValue, &Row, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	RenderCheckbox(&g_Config.m_QmBlockWordsShowConsole, "Show blocked words in console", &g_Config.m_QmBlockWordsShowConsole);
+	if(LightFirstFrame)
+	{
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		RenderQmFunctionCheckbox(&g_Config.m_QmBlockWordsEnabled, "Enable word filter list", Localize("Enable word filter list"), &g_Config.m_QmBlockWordsEnabled, &Row, PrewarmOnly);
+		return;
+	}
+
+	static CButtonContainer s_BlockWordsConsoleColorId;
+	DoLine_ColorPicker(&s_BlockWordsConsoleColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Console color"), &g_Config.m_QmBlockWordsConsoleColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
+	RenderCheckbox(&g_Config.m_QmBlockWordsEnabled, "Enable word filter list", &g_Config.m_QmBlockWordsEnabled);
+	RenderCheckbox(&g_Config.m_QmBlockWordsMultiReplace, "Use multi-char replacement based on word length", &g_Config.m_QmBlockWordsMultiReplace);
+
+	static CLineInputBuffered<8> s_BlockWordsReplaceInput;
+	static bool s_BlockWordsReplaceInited = false;
+	if(!s_BlockWordsReplaceInited)
+	{
+		s_BlockWordsReplaceInput.Set(g_Config.m_QmBlockWordsReplacementChar);
+		s_BlockWordsReplaceInited = true;
+	}
+	else if(!s_BlockWordsReplaceInput.IsActive() && str_comp(s_BlockWordsReplaceInput.GetString(), g_Config.m_QmBlockWordsReplacementChar) != 0)
+	{
+		s_BlockWordsReplaceInput.Set(g_Config.m_QmBlockWordsReplacementChar);
+	}
+	s_BlockWordsReplaceInput.SetEmptyText("*");
+	IUiContext ReplacementInputCtx = SettingsUiContext("settings_qmclient_block_words_text_inputs", 1.0f);
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-word-filter-replacement-chars", &LabelColumn, Localize("Replacement chars"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+	if(ui_widget::InputField(ReplacementInputCtx, &s_BlockWordsReplaceInput, ControlColumn, "*", BodySize))
+	{
+		char aReplacement[8];
+		str_utf8_truncate(aReplacement, sizeof(aReplacement), s_BlockWordsReplaceInput.GetString(), 1);
+		if(aReplacement[0] == '\0')
+			str_copy(aReplacement, "*", sizeof(aReplacement));
+		str_copy(g_Config.m_QmBlockWordsReplacementChar, aReplacement, sizeof(g_Config.m_QmBlockWordsReplacementChar));
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-word-filter-replace-mode", &LabelColumn, Localize("Replace mode"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+	CUIRect ModeRow = ControlColumn;
+	CUIRect ModeButton;
+	static CButtonContainer s_BlockWordsModeRegex, s_BlockWordsModeFull, s_BlockWordsModeBoth;
+	const float ModeWidth = ModeRow.w / 3.0f;
+	ModeRow.VSplitLeft(ModeWidth, &ModeButton, &ModeRow);
+	if(DoButtonLineSize_Menu(&s_BlockWordsModeRegex, Localize("Regular expression"), g_Config.m_QmBlockWordsMode == 0, &ModeButton, LineHeight, false, 0, IGraphics::CORNER_L, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		g_Config.m_QmBlockWordsMode = 0;
+	ModeRow.VSplitLeft(ModeWidth, &ModeButton, &ModeRow);
+	if(DoButtonLineSize_Menu(&s_BlockWordsModeFull, Localize("Literal"), g_Config.m_QmBlockWordsMode == 1, &ModeButton, LineHeight, false, 0, IGraphics::CORNER_NONE, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		g_Config.m_QmBlockWordsMode = 1;
+	if(DoButtonLineSize_Menu(&s_BlockWordsModeBoth, Localize("Both"), g_Config.m_QmBlockWordsMode == 2, &ModeRow, LineHeight, false, 0, IGraphics::CORNER_R, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
+		g_Config.m_QmBlockWordsMode = 2;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	static CLineInputBuffered<1024> s_BlockWordsInput;
+	static bool s_BlockWordsInited = false;
+	if(!s_BlockWordsInited)
+	{
+		s_BlockWordsInput.Set(g_Config.m_QmBlockWordsList);
+		s_BlockWordsInited = true;
+	}
+	else if(!s_BlockWordsInput.IsActive() && str_comp(s_BlockWordsInput.GetString(), g_Config.m_QmBlockWordsList) != 0)
+	{
+		s_BlockWordsInput.Set(g_Config.m_QmBlockWordsList);
+	}
+	s_BlockWordsInput.SetEmptyText(Localize("Separate with commas"));
+	const float InputLineSpacing = std::clamp(2.0f * UiScale, 1.0f, 2.0f);
+	const float InputHeight = CalcQiaFenInputHeight(TextRender(), s_BlockWordsInput.GetString(), Content.w - LabelWidth, BodySize, InputLineSpacing, LineHeight);
+	Content.HSplitTop(InputHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-word-filter-label", &LabelColumn, Localize("Word Filter"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+	IUiContext ListInputCtx = SettingsUiContext("qmclient_block_words_input", 1.0f);
+	ui_widget::SInputFieldOptions InputOptions;
+	InputOptions.m_Mode = ui_widget::EInputFieldMode::MULTILINE;
+	InputOptions.m_pPlaceholder = Localize("Separate with commas");
+	InputOptions.m_FontSize = BodySize;
+	InputOptions.m_LineSpacing = InputLineSpacing;
+	if(ui_widget::InputField(ListInputCtx, &s_BlockWordsInput, ControlColumn, InputOptions).m_Changed)
+		str_copy(g_Config.m_QmBlockWordsList, s_BlockWordsInput.GetString(), sizeof(g_Config.m_QmBlockWordsList));
+}
+
 void CMenus::RenderQmFunctionHJAssistContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;

@@ -7628,6 +7628,22 @@ TEST(QmMonitoringHelpers, P6FunctionGoresContentExtractionPreservesTheLightPathA
 	EXPECT_EQ(GoresBody.find("RegisterModuleCard"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionBlockWordsContentExtractionPreservesItsLightPathAndInputContracts)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string BlockWordsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly, bool LightFirstFrame)");
+	ASSERT_FALSE(BlockWordsBody.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionBlockWordsContent"), std::string::npos);
+	EXPECT_NE(BlockWordsBody.find("if(LightFirstFrame)"), std::string::npos);
+	EXPECT_NE(BlockWordsBody.find("str_utf8_truncate"), std::string::npos);
+	EXPECT_NE(BlockWordsBody.find("EInputFieldMode::MULTILINE"), std::string::npos);
+	EXPECT_NE(BlockWordsBody.find("CalcQiaFenInputHeight"), std::string::npos);
+	EXPECT_NE(BlockWordsBody.find("RenderQmFunctionCheckbox"), std::string::npos);
+	EXPECT_EQ(BlockWordsBody.find("RegisterModuleCard"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
