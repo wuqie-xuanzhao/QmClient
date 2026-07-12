@@ -136,7 +136,15 @@ TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)
 	EXPECT_EQ(Body.find("RenderQmSettingsGlassCard("), std::string::npos);
 	const std::string Dispatch = FunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
 	ASSERT_FALSE(Dispatch.empty());
-	EXPECT_NE(Dispatch.find("RenderSettingsQmClientContributors(MainView, PrewarmOnly)"), std::string::npos);
+	EXPECT_NE(Dispatch.find("RenderSettingsQmClientContributors(CanonicalQmClientContentView, PrewarmOnly)"), std::string::npos);
+	EXPECT_NE(Source.find("str_comp(pTab, \"qmclient-contributors\") == 0"), std::string::npos);
+	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string SetPageBody = FunctionBody(MenusSource, "bool CMenus::SetSettingsPageFromCardTab(const char *pTab)");
+	EXPECT_NE(SetPageBody.find("str_comp(pTab, \"qmclient-contributors\") == 0"), std::string::npos);
+	EXPECT_NE(Body.find("qmclient-community-thanks"), std::string::npos);
+	EXPECT_NE(Body.find("BuildSponsorLines"), std::string::npos);
+	EXPECT_NE(Body.find("!PrewarmOnly && g_QmClientEnsureSponsorQrTexture"), std::string::npos);
+	EXPECT_NE(Source.find("Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS"), std::string::npos);
 }
 
 

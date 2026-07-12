@@ -222,6 +222,12 @@ namespace
 			Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_OVERVIEW;
 			return Navigation;
 		}
+		if(str_comp(pTab, "qmclient-contributors") == 0)
+		{
+			Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
+			Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_CONTRIBUTORS;
+			return Navigation;
+		}
 		if(str_startswith(pStableId, "tclient:") != nullptr)
 		{
 			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
@@ -862,16 +868,52 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 
 	SSettingsCardDefinition Sponsors;
 	Sponsors.m_Spec = {"deck:qmclient-contributors-sponsors", Localize("Sponsor support"), Localize("Thanks for supporting QmClient")};
-	Sponsors.m_Measure = [this, BodySize, LineHeight, CardGap, UiScale, PrewarmOnly](float ContentWidth) {
-		const float SponsorRows = 5.0f;
-		const float QrHeight = s_ShowSponsorQrCode ? std::clamp(ContentWidth, LineHeight * 8.0f, LineHeight * 12.0f) + LineHeight : 0.0f;
-		return LineHeight * SponsorRows + CardGap * (SponsorRows - 1.0f) + QrHeight + 30.0f * UiScale;
+	static const char *const s_apSponsors[] = {
+		"喵不一", "久桃", "芽芽", "碳烤綿芽", "骨头", "陌浅羽", "树羽小朋友", "望舒", "松子", "平凡..", "cixin", "洗点",
+		"秀色", "朱朱", "Twen", "大恐龙", ":luv:", "小左", "Blue°F", "怯修", "yezeen", "鹑", "枫香°", "没问题啊", "·蓝蓝蓝蓝",
+		"临渊捕鱼", "?hook?", "放肆zero", "Q币", "洛天依", "spider", "贝塔塔塔", "见月", "咩子的银耳", "Cancer", "少女`",
+		"长亭寂寞独自愁", "fantuan", "无言鱼", "胖人老许", "夏日", "张宁我儿", "拌饭", "shengyan", "修勾在修沟", "taffy",
+		"杀意没爱意", "DYL", "小信", "哆啦梦", "菜菜羊", "吃了吗chilem", "你就是我的", "xiaopang", "星星🌙", "軽い猫",
+		"oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡"};
+	const auto BuildSponsorLines = [this, TipSize](float MaxLineWidth) {
+		std::vector<std::string> Lines;
+		Lines.emplace_back();
+		const char *pSeparator = ", ";
+		const float SeparatorWidth = TextRender()->TextWidth(TipSize, pSeparator);
+		float LineWidth = 0.0f;
+		for(const char *pName : s_apSponsors)
+		{
+			const float NameWidth = TextRender()->TextWidth(TipSize, pName);
+			if(Lines.back().empty())
+			{
+				Lines.back() = pName;
+				LineWidth = NameWidth;
+			}
+			else if(LineWidth + SeparatorWidth + NameWidth > MaxLineWidth)
+			{
+				Lines.emplace_back(pName);
+				LineWidth = NameWidth;
+			}
+			else
+			{
+				Lines.back().append(pSeparator);
+				Lines.back().append(pName);
+				LineWidth += SeparatorWidth + NameWidth;
+			}
+		}
+		return Lines;
+	};
+	Sponsors.m_Measure = [this, LineHeight, CardGap, UiScale, BuildSponsorLines](float ContentWidth) {
+		const float ImageHeight = FindMenuImage("sponsor") != nullptr ? std::clamp(ContentWidth * 0.18f, LineHeight * 2.0f, LineHeight * 4.0f) : 0.0f;
+		const float QrHeight = s_ShowSponsorQrCode ? LineHeight * 0.5f + std::clamp(ContentWidth, LineHeight * 8.0f, LineHeight * 12.0f) : 0.0f;
+		const float SponsorLinesHeight = (float)BuildSponsorLines(ContentWidth).size() * LineHeight * 0.96f;
+		const float FixedHeight = ImageHeight + LineHeight * 3.0f + LineHeight * 0.5f + LineHeight * 0.55f + LineHeight * 0.9f;
+		return FixedHeight + SponsorLinesHeight + QrHeight + CardGap * 2.0f + 30.0f * UiScale;
 	};
 	Sponsors.m_MeasureEachFrame = true;
-	Sponsors.m_Render = [this, BodySize, LineHeight, TipSize, UiScale, PrewarmOnly, &DoContributorsSettingsLabel](CUIRect Content) {
+	Sponsors.m_Render = [this, BodySize, LineHeight, TipSize, UiScale, PrewarmOnly, &DoContributorsSettingsLabel, BuildSponsorLines](CUIRect Content) {
 		CUIRect Row;
 		static CButtonContainer s_SponsorButton;
-		static const char *const s_apSponsors[] = {"喵不一", "久桃", "芽芽", "碳烤綿芽", "骨头", "陌浅羽", "树羽小朋友", "望舒", "松子", "DYL", "夏日", "小信", "哆啦梦", "吃了吗chilem"};
 
 		if(const CMenuImage *pSponsorImage = FindMenuImage("sponsor"))
 		{
@@ -890,7 +932,7 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 		if(s_ShowSponsorQrCode)
 		{
 			Content.HSplitTop(LineHeight * 0.5f, nullptr, &Content);
-			if(g_QmClientEnsureSponsorQrTexture && g_QmClientEnsureSponsorQrTexture() && g_QmClientRenderTexture)
+			if(!PrewarmOnly && g_QmClientEnsureSponsorQrTexture && g_QmClientEnsureSponsorQrTexture() && g_QmClientRenderTexture)
 			{
 				const float QrSide = std::clamp(Content.w, LineHeight * 8.0f, LineHeight * 12.0f);
 				Content.HSplitTop(QrSide, &Row, &Content);
@@ -912,7 +954,7 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 				}
 				g_QmClientRenderTexture(QrRect, 1.0f);
 			}
-			else
+			else if(!PrewarmOnly)
 			{
 				Content.HSplitTop(LineHeight * 1.4f, &Row, &Content);
 				DoContributorsSettingsLabel("qmclient-community-sponsor-qr-decode-failed", &Row, Localize("Could not load sponsor QR code. Check the Base64 data"), TipSize * 0.92f);
@@ -922,17 +964,19 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		DoContributorsSettingsLabel("qmclient-community-developers-names", &Row, "栖梦(璇梦),夏日,DYL", BodySize + 1.0f);
 		Content.HSplitTop(LineHeight * 0.5f, nullptr, &Content);
-		DoContributorsSettingsLabel("qmclient-community-sponsors-label", &Content, Localize("Sponsors:"), TipSize);
+		Content.HSplitTop(LineHeight * 0.9f, &Row, &Content);
+		DoContributorsSettingsLabel("qmclient-community-sponsors-label", &Row, Localize("Sponsors:"), TipSize);
+		Content.HSplitTop(LineHeight * 0.35f, nullptr, &Content);
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		TextRender()->TextColor(ColorRGBA(0.95f, 0.8f, 0.2f, 1.0f));
-		std::string SponsorText;
-		for(const char *pSponsor : s_apSponsors)
+		for(const std::string &Line : BuildSponsorLines(Row.w))
 		{
-			if(!SponsorText.empty())
-				SponsorText.append(", ");
-			SponsorText.append(pSponsor);
+			Ui()->DoLabel(&Row, Line.c_str(), TipSize, TEXTALIGN_ML);
+			Content.HSplitTop(LineHeight * 0.96f, &Row, &Content);
 		}
-		Ui()->DoLabel(&Row, SponsorText.c_str(), TipSize, TEXTALIGN_ML);
+		Content.HSplitTop(LineHeight * 0.55f, nullptr, &Content);
+		Content.HSplitTop(LineHeight * 0.9f, &Row, &Content);
+		DoContributorsSettingsLabel("qmclient-community-thanks", &Row, Localize("Thank you for your company and trust. This is what gives me the courage to keep going."), BodySize * 0.93f);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	};
 	vCards.push_back(std::move(Sponsors));
@@ -1082,7 +1126,8 @@ void CMenus::RenderGlobalSearchResultCard(CUIRect &MainView, const SQmGlobalSear
 		{
 			if(Navigation.m_SettingsPage == SETTINGS_GRAPHICS)
 				RequestSettingsCardFocus(Card.m_pStableId);
-			else if(Navigation.m_SettingsPage == SETTINGS_QMCLIENT && Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_OVERVIEW)
+			else if(Navigation.m_SettingsPage == SETTINGS_QMCLIENT &&
+				(Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_OVERVIEW || Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS))
 				m_SettingsCardDeck.RequestReveal(Card.m_pStableId);
 		}
 		Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
