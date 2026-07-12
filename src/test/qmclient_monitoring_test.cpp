@@ -7885,6 +7885,29 @@ TEST(QmMonitoringHelpers, P6HudQmClientMigrationUsesThePublicDeckOnly)
 	EXPECT_LT(HudDispatch, LegacyScroll);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionFavoriteMapsKeepsItsIndependentContentOwner)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string OwnerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionFavoriteMapsContent(");
+	const std::string FunctionPageBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	const size_t FavoriteMapsStart = FunctionPageBody.rfind("case EQmModuleId::FavoriteMaps:");
+	const size_t FavoriteMapsEnd = FunctionPageBody.find("case EQmModuleId::HJAssist:", FavoriteMapsStart);
+	const std::string FavoriteMapsCase = FavoriteMapsStart != std::string::npos && FavoriteMapsEnd != std::string::npos ? FunctionPageBody.substr(FavoriteMapsStart, FavoriteMapsEnd - FavoriteMapsStart) : std::string();
+	ASSERT_FALSE(OwnerBody.empty());
+	ASSERT_FALSE(FavoriteMapsCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionFavoriteMapsContent"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("constexpr int ServersPerFrame = 64"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("UpdateMapCategoryCache"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("GetCachedMapCategoryKey"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("SetClipboardText"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("RemoveFavoriteMap"), std::string::npos);
+	EXPECT_NE(FavoriteMapsCase.find("RenderQmFunctionFavoriteMapsContent"), std::string::npos);
+	EXPECT_EQ(FavoriteMapsCase.find("ServersPerFrame"), std::string::npos);
+	EXPECT_EQ(FavoriteMapsCase.find("GetCachedMapCategoryKey"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
