@@ -1,7 +1,7 @@
 # QmClient 设置页 UI 统一 P5 标准设置页迁移 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-> **状态（2026-07-12）：阻断，暂不可进入 Task 2。** 当前源码没有本计划依赖的 `CSettingsCardDeck::Render(...)`、`SSettingsCardDefinition`、`SSettingsCardDeckResult` 或 `m_SettingsCardDeck`；现有实现仍是 `BeginSettingsCardDeck*` 和 `settings_card_deck::CDeck`。这属于 P1/P2 共享 primitive 缺口，不是 General 的页面适配问题。先单独补齐并验证公共 deck 契约，再从本计划 Task 2 重启；在此之前不得以页面 wrapper 或复制旧 deck 路径绕过。
+> **状态（2026-07-12）：可进入 Task 2。** P2 已提供并验证 `CSettingsCardDeck::Render(...)`、`SSettingsCardDefinition`、`SSettingsCardDeckResult` 和 `m_SettingsCardDeck`；P3/P4 的自动化实现也已完成。P2–P4 的真实客户端视觉与交互矩阵仍待人工反馈，但不再构成公共 primitive 阻断。后续页面迁移仍不得以 wrapper 或复制旧 deck 路径绕过现有契约。
 
 **Goal:** 在不重做 P1–P4 公共 primitive 的前提下，将 General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 八个标准设置页完整迁移到统一 page layout、card、deck、input、numeric 与 scroll 契约，并逐页删除旧实现路径。
 
