@@ -1892,6 +1892,1241 @@ void CMenus::RenderQmHudPlayerStatsContent(CUIRect &Content, float LineHeight, f
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsResetOnJoin, "Reset stats when joining a server", Localize("Reset stats when joining a server"), &g_Config.m_QmPlayerStatsResetOnJoin);
 }
 
+void CMenus::RenderQmHudCoordsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelCol, ControlCol;
+	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
+		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
+		if(Changed)
+			*pValue ^= 1;
+		return Changed;
+	};
+	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize) {
+		RenderQmHudLabel(pTextId, pRect, pText, FontSize);
+	};
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordsOwn, "Show own coordinates", Localize("Show own coordinates"), &g_Config.m_QmNameplateCoordsOwn, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoords, "Show other players' coordinates", Localize("Show other players' coordinates"), &g_Config.m_QmNameplateCoords, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordX, "Show X", Localize("Show X"), &g_Config.m_QmNameplateCoordX, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordY, "Show Y", Localize("Show Y"), &g_Config.m_QmNameplateCoordY, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordXAlignHint, "X alignment hint with me", Localize("X alignment hint with me"), &g_Config.m_QmNameplateCoordXAlignHint, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordXAlignHintStrict, "Strict mode", Localize("Strict mode"), &g_Config.m_QmNameplateCoordXAlignHintStrict, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+	DoQmSettingsLabel("qmclient-show-coordinates-detection-time", &LabelCol, Localize("Detection time"), BodySize);
+	static int s_CoordXAlignHintWindowSliderId;
+	ui_widget::SNumericFieldState *pState = GetSettingsNumericFieldState(&s_CoordXAlignHintWindowSliderId);
+	ui_widget::SNumericFieldOptions Options;
+	Options.m_pSuffix = "ms";
+	Options.m_FontSize = ControlCol.h * CUi::ms_FontmodHeight * 0.8f;
+	Options.m_ValueStep = 100;
+	IUiContext InputCtx;
+	InputCtx.m_pUi = Ui();
+	InputCtx.m_pAnim = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();
+	InputCtx.m_pTree = PrewarmOnly ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
+	InputCtx.m_ScopeHash = MakeUiScopeHash("qmclient_coord_x_align_hint_window");
+	InputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	const int OriginalValue = g_Config.m_QmNameplateCoordXAlignHintWindowMs;
+	ui_widget::NumericField(InputCtx, pState, &s_CoordXAlignHintWindowSliderId, &g_Config.m_QmNameplateCoordXAlignHintWindowMs, 100, 3000, ControlCol, Options);
+	if(PrewarmOnly || Ui()->RenderOnly())
+		g_Config.m_QmNameplateCoordXAlignHintWindowMs = OriginalValue;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	static CButtonContainer s_CoordXAlignHintColorId;
+	DoLine_ColorPicker(&s_CoordXAlignHintColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("X alignment color"), &g_Config.m_QmNameplateCoordXAlignHintColor, ColorRGBA(1.0f, 0.82f, 0.2f, 1.0f), false);
+}
+
+void CMenus::RenderQmHudVoiceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float UiScale, bool PrewarmOnly)
+{
+	CUIRect Row, LabelCol, ControlCol;
+	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
+		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
+		if(Changed)
+			*pValue ^= 1;
+		return Changed;
+	};
+	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize) {
+		RenderQmHudLabel(pTextId, pRect, pText, FontSize);
+	};
+	auto DoQmSettingsMenuButton = [this](CButtonContainer *pButton, const char *pTextId, const char *pText, const CUIRect *pRect) {
+		return DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pButton, pTextId, pText, 0, pRect);
+	};
+	auto RenderSliderWithValueInput = [this, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+	};
+	IUiContext QmClientVoiceTextInputCtx;
+	QmClientVoiceTextInputCtx.m_pUi = Ui();
+	QmClientVoiceTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	QmClientVoiceTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	QmClientVoiceTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_voice_text_inputs");
+	QmClientVoiceTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceEnable, "Enable voice", Localize("Enable voice"), &g_Config.m_QmVoiceEnable, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	if(g_Config.m_QmVoiceEnable)
+	{
+		[[maybe_unused]] auto AddVoiceSectionLabel = [&](const char *pTitle, const char *pHint) {
+			Content.HSplitTop(LineHeight * 0.78f, &Row, &Content);
+			Ui()->DoLabel(&Row, pTitle, BodySize * 0.96f, TEXTALIGN_ML);
+			if(pHint != nullptr && pHint[0] != '\0')
+			{
+				Content.HSplitTop(LineHeight * 0.68f, &Row, &Content);
+				Ui()->DoLabel(&Row, pHint, BodySize * 0.72f, TEXTALIGN_ML);
+			}
+			Content.HSplitTop(LineSpacing * 0.75f, nullptr, &Content);
+		};
+
+		VoiceUtils::SVoiceUiStatus VoiceUiStatus;
+		GameClient()->m_Voice.Voice().ExportUiStatus(VoiceUiStatus);
+		auto LocalizeVoiceUiMicStatus = [&](const VoiceUtils::SVoiceUiStatus &Status) {
+			const char *pState = VoiceUtils::VoiceUiMicStatus(Status);
+			if(str_comp(pState, "muted") == 0)
+				return Localize("Muted");
+			if(str_comp(pState, "unavailable") == 0)
+				return Localize("Not open, check input device or mic permission");
+			if(str_comp(pState, "ready") == 0)
+				return Localize("Opened");
+			if(str_comp(pState, "waiting") == 0)
+				return Localize("Waiting to open");
+			return Localize("Not enabled");
+		};
+		auto LocalizeVoiceUiOutputStatus = [&](const VoiceUtils::SVoiceUiStatus &Status) {
+			const char *pState = VoiceUtils::VoiceUiOutputStatus(Status);
+			if(str_comp(pState, "unavailable") == 0)
+				return Localize("Not open, check output device");
+			if(str_comp(pState, "ready") == 0)
+				return Localize("Opened");
+			if(str_comp(pState, "waiting") == 0)
+				return Localize("Waiting to open");
+			return Localize("Not enabled");
+		};
+		auto LocalizeVoiceUiServerStatus = [&](const VoiceUtils::SVoiceUiStatus &Status, char *pBuf, size_t BufSize) {
+			const char *pState = VoiceUtils::VoiceUiServerStatus(Status);
+			if(str_comp(pState, "local_test") == 0)
+				str_copy(pBuf, Localize("Local test mode, no server needed"), BufSize);
+			else if(str_comp(pState, "offline") == 0)
+				str_copy(pBuf, Localize("Not connected to server"), BufSize);
+			else if(str_comp(pState, "resolving") == 0)
+				str_copy(pBuf, Localize("Parsing voice server address"), BufSize);
+			else if(str_comp(pState, "socket_error") == 0)
+				str_copy(pBuf, Localize("UDP socket not open"), BufSize);
+			else if(str_comp(pState, "connected") == 0)
+				str_format(pBuf, BufSize, "%s (%d ms)", Localize("Connected"), maximum(Status.m_PingMs, 0));
+			else if(str_comp(pState, "connected_no_ping") == 0)
+				str_copy(pBuf, Localize("Connected, waiting for first ping"), BufSize);
+			else
+				str_copy(pBuf, Localize("Unknown status"), BufSize);
+		};
+		auto LocalizeVoiceUiRoomStatus = [&](const VoiceUtils::SVoiceUiStatus &Status, char *pBuf, size_t BufSize) {
+			const char *pState = VoiceUtils::VoiceUiRoomStatus(Status);
+			if(str_comp(pState, "local_test") == 0)
+				str_copy(pBuf, Localize("Local test mode"), BufSize);
+			else if(str_comp(pState, "offline") == 0)
+				str_copy(pBuf, Localize("Not connected to server"), BufSize);
+			else if(str_comp(pState, "matched") == 0)
+				str_format(pBuf, BufSize, "%s (%d)", Localize("Matched with callable peer"), Status.m_ActivePeerCount);
+			else if(str_comp(pState, "waiting_peer") == 0)
+				str_copy(pBuf, Localize("No callable peer found"), BufSize);
+			else
+				str_copy(pBuf, Localize("Unknown status"), BufSize);
+		};
+		auto LocalizeVoiceUiTransportStatus = [&](const VoiceUtils::SVoiceUiStatus &Status) {
+			const char *pState = VoiceUtils::VoiceUiTransportStatus(Status);
+			if(str_comp(pState, "tx_rx_active") == 0)
+				return Localize("Sending and receiving");
+			if(str_comp(pState, "tx_active") == 0)
+				return Localize("Sending, waiting for peer echo");
+			if(str_comp(pState, "rx_active") == 0)
+				return Localize("Receiving");
+			if(str_comp(pState, "idle_with_peer") == 0)
+				return Localize("Connected, no one is speaking");
+			if(str_comp(pState, "idle_no_peer") == 0)
+				return Localize("No peer");
+			return Localize("Not enabled");
+		};
+		auto LocalizeVoiceUiInputRouteStatus = [&](const VoiceUtils::SVoiceUiStatus &Status, char *pBuf, size_t BufSize) {
+			const char *pState = VoiceUtils::VoiceUiInputRouteStatus(Status);
+			const char *pRequested = Status.m_aRequestedInputDevice[0] != '\0' ? Status.m_aRequestedInputDevice : Localize("Default");
+			const char *pResolved = Status.m_aResolvedInputDevice[0] != '\0' ? Status.m_aResolvedInputDevice : Localize("System default");
+			if(str_comp(pState, "using_selected") == 0)
+				str_format(pBuf, BufSize, "%s: %s", Localize("Switched to"), pRequested);
+			else if(str_comp(pState, "using_default") == 0)
+				str_format(pBuf, BufSize, "%s (%s)", Localize("Use default input"), pResolved);
+			else if(str_comp(pState, "switching_selected") == 0)
+				str_format(pBuf, BufSize, "%s: %s", Localize("Switching"), pRequested);
+			else if(str_comp(pState, "switching_default") == 0)
+				str_copy(pBuf, Localize("Switching back to default input"), BufSize);
+			else if(str_comp(pState, "permission_denied") == 0)
+				str_copy(pBuf, Localize("Microphone permission denied by system"), BufSize);
+			else if(str_comp(pState, "selected_failed") == 0)
+				str_format(pBuf, BufSize, "%s: %s", Localize("Switch failed"), pRequested);
+			else if(str_comp(pState, "default_failed") == 0)
+				str_copy(pBuf, Localize("Default input open failed"), BufSize);
+			else if(str_comp(pState, "waiting") == 0)
+				str_copy(pBuf, Localize("Waiting to open input device"), BufSize);
+			else
+				str_copy(pBuf, Localize("Not enabled"), BufSize);
+		};
+		auto LocalizeVoiceUiOutputRouteStatus = [&](const VoiceUtils::SVoiceUiStatus &Status, char *pBuf, size_t BufSize) {
+			const char *pState = VoiceUtils::VoiceUiOutputRouteStatus(Status);
+			const char *pRequested = Status.m_aRequestedOutputDevice[0] != '\0' ? Status.m_aRequestedOutputDevice : Localize("Default");
+			const char *pResolved = Status.m_aResolvedOutputDevice[0] != '\0' ? Status.m_aResolvedOutputDevice : Localize("System default");
+			if(str_comp(pState, "using_selected") == 0)
+				str_format(pBuf, BufSize, "%s: %s", Localize("Switched to"), pRequested);
+			else if(str_comp(pState, "using_default") == 0)
+				str_format(pBuf, BufSize, "%s (%s)", Localize("Use default output"), pResolved);
+			else if(str_comp(pState, "switching_selected") == 0)
+				str_format(pBuf, BufSize, "%s: %s", Localize("Switching"), pRequested);
+			else if(str_comp(pState, "switching_default") == 0)
+				str_copy(pBuf, Localize("Switching back to default output"), BufSize);
+			else if(str_comp(pState, "selected_failed") == 0)
+				str_format(pBuf, BufSize, "%s: %s", Localize("Switch failed"), pRequested);
+			else if(str_comp(pState, "default_failed") == 0)
+				str_copy(pBuf, Localize("Default output open failed"), BufSize);
+			else if(str_comp(pState, "waiting") == 0)
+				str_copy(pBuf, Localize("Waiting to open output device"), BufSize);
+			else
+				str_copy(pBuf, Localize("Not enabled"), BufSize);
+		};
+		auto LocalizeVoiceUiAudioIssue = [&](const VoiceUtils::SVoiceUiStatus &Status) {
+			const char *pIssue = VoiceUtils::VoiceUiAudioIssueKey(Status);
+			if(str_comp(pIssue, "none") == 0)
+				return Localize("No audio issues detected");
+			if(str_comp(pIssue, "input_device_not_found") == 0)
+				return Localize("Input device not found");
+			if(str_comp(pIssue, "output_device_not_found") == 0)
+				return Localize("Output device not found");
+			if(str_comp(pIssue, "no_capture_devices") == 0)
+				return Localize("No input device available");
+			if(str_comp(pIssue, "no_output_devices") == 0)
+				return Localize("No output device available");
+			if(str_comp(pIssue, "open_capture_failed") == 0)
+				return Localize("Input device open failed");
+			if(str_comp(pIssue, "open_output_failed") == 0)
+				return Localize("Output device open failed");
+			if(str_comp(pIssue, "permission_denied") == 0)
+				return Localize("Microphone permission denied by system");
+			if(str_comp(pIssue, "backend_init_failed") == 0)
+				return Localize("Audio backend init failed");
+			return Localize("Unclassified audio issue");
+		};
+		auto RenderVoiceStatusRow = [&](const char *pTitle, const char *pValue) {
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			CUIRect StatusLabel, StatusValue;
+			Row.VSplitLeft(LabelWidth, &StatusLabel, &StatusValue);
+			Ui()->DoLabel(&StatusLabel, pTitle, BodySize, TEXTALIGN_ML);
+			Ui()->DoLabel(&StatusValue, pValue, BodySize * 0.92f, TEXTALIGN_ML);
+			Content.HSplitTop(LineSpacing * 0.75f, nullptr, &Content);
+		};
+		auto LocalizeVoiceUiActionHint = [&](const VoiceUtils::SVoiceUiStatus &Status) {
+			const char *pHint = VoiceUtils::VoiceUiActionHint(Status);
+			if(str_comp(pHint, "select_input_device") == 0)
+				return Localize("Try reselecting input device, confirm default mic or headset mic is online");
+			if(str_comp(pHint, "select_output_device") == 0)
+				return Localize("Try reselecting output device, confirm headphones/speakers are online");
+			if(str_comp(pHint, "retry_input_open") == 0)
+				return Localize("Input device open failed, try reconnecting headset/mic or reselecting input device");
+			if(str_comp(pHint, "retry_output_open") == 0)
+				return Localize("Output device open failed, try reconnecting speakers/headphones or reselecting output device");
+			if(str_comp(pHint, "grant_mic_permission") == 0)
+				return Localize("Allow mic permission in system settings, then reopen voice");
+			if(str_comp(pHint, "check_audio_backend") == 0)
+				return Localize("Audio backend init failed, try switching devices and check details");
+			if(str_comp(pHint, "inspect_audio_log") == 0)
+				return Localize("Audio init failed, check details below and logs");
+			if(str_comp(pHint, "check_input") == 0)
+				return Localize("Check input device, system default mic, and mic permission first");
+			if(str_comp(pHint, "check_output") == 0)
+				return Localize("Check output device, confirm headphones/speakers are still online");
+			if(str_comp(pHint, "join_server") == 0)
+				return Localize("Connect to server first to establish voice network link");
+			if(str_comp(pHint, "check_server") == 0)
+				return Localize("Check if voice server address is reachable");
+			if(str_comp(pHint, "retry_socket") == 0)
+				return Localize("Try toggling voice or reconnecting to server");
+			if(str_comp(pHint, "check_room") == 0)
+				return Localize("Confirm both are on same server, same room, and support voice");
+			if(str_comp(pHint, "wait_peer") == 0)
+				return Localize("Sending locally, suggest the other party unmute or confirm they can receive");
+			if(str_comp(pHint, "enable_voice") == 0)
+				return Localize("Please enable voice first");
+			return Localize("Status normal, check details below if still experiencing issues");
+		};
+
+		char aVoiceServerStatus[128];
+		char aVoiceRoomStatus[128];
+		char aVoiceTransportStatus[128];
+		char aVoiceTransportDetail[160];
+		char aVoiceInputRouteStatus[160];
+		char aVoiceOutputRouteStatus[160];
+		LocalizeVoiceUiServerStatus(VoiceUiStatus, aVoiceServerStatus, sizeof(aVoiceServerStatus));
+		LocalizeVoiceUiRoomStatus(VoiceUiStatus, aVoiceRoomStatus, sizeof(aVoiceRoomStatus));
+		LocalizeVoiceUiInputRouteStatus(VoiceUiStatus, aVoiceInputRouteStatus, sizeof(aVoiceInputRouteStatus));
+		LocalizeVoiceUiOutputRouteStatus(VoiceUiStatus, aVoiceOutputRouteStatus, sizeof(aVoiceOutputRouteStatus));
+		str_copy(aVoiceTransportStatus, LocalizeVoiceUiTransportStatus(VoiceUiStatus), sizeof(aVoiceTransportStatus));
+		if(VoiceUiStatus.m_TxAgeMs >= 0 || VoiceUiStatus.m_RxAgeMs >= 0)
+		{
+			str_format(aVoiceTransportDetail, sizeof(aVoiceTransportDetail), "%s: tx=%dms rx=%dms mic=%.0f%%",
+				aVoiceTransportStatus,
+				VoiceUiStatus.m_TxAgeMs,
+				VoiceUiStatus.m_RxAgeMs,
+				(double)std::clamp(VoiceUiStatus.m_MicLevel * 100.0f, 0.0f, 100.0f));
+		}
+		else
+		{
+			str_copy(aVoiceTransportDetail, aVoiceTransportStatus, sizeof(aVoiceTransportDetail));
+		}
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		DoQmSettingsLabel("qmclient-voice-room-password", &LabelCol, Localize("Room password"), BodySize);
+		static CLineInput s_VoiceToken(g_Config.m_QmVoiceToken, sizeof(g_Config.m_QmVoiceToken));
+		s_VoiceToken.SetEmptyText(Localize("Leave empty to join public room"));
+		s_VoiceToken.SetHidden(true);
+		ui_widget::InputField(QmClientVoiceTextInputCtx, &s_VoiceToken, ControlCol, Localize("Leave empty to join public room"), BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceMicMute, "Mute microphone", Localize("Mute microphone"), &g_Config.m_QmVoiceMicMute, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		{
+			CUIRect LabelColValue, ControlColValue;
+			Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+			DoQmSettingsLabel("qmclient-voice-microphone-volume", &LabelColValue, Localize("Microphone volume"), BodySize);
+			static int s_QmVoiceMicVolumeInputId;
+			RenderSliderWithValueInput(&s_QmVoiceMicVolumeInputId, ControlColValue, &g_Config.m_QmVoiceMicVolume, 0, 300, "%");
+		}
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceVadEnable, "Auto unmute when speaking", Localize("Auto unmute when speaking"), &g_Config.m_QmVoiceVadEnable, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceShowAdvanced, "Advanced options", Localize("Advanced options"), &g_Config.m_QmVoiceShowAdvanced, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		if(g_Config.m_QmVoiceShowAdvanced)
+		{
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceShowConnectionStatus, "Show voice connection status", Localize("Show voice connection status"), &g_Config.m_QmVoiceShowConnectionStatus, &Row, LineHeight);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			if(g_Config.m_QmVoiceShowConnectionStatus)
+			{
+				AddVoiceSectionLabel(Localize("Current status"), Localize("Start here to quickly diagnose if the issue is with device, server, or room"));
+				RenderVoiceStatusRow(Localize("Microphone"), LocalizeVoiceUiMicStatus(VoiceUiStatus));
+				RenderVoiceStatusRow(Localize("Speaker"), LocalizeVoiceUiOutputStatus(VoiceUiStatus));
+				RenderVoiceStatusRow(Localize("Input switch"), aVoiceInputRouteStatus);
+				RenderVoiceStatusRow(Localize("Output switch"), aVoiceOutputRouteStatus);
+				RenderVoiceStatusRow(Localize("Server"), aVoiceServerStatus);
+				RenderVoiceStatusRow(Localize("Room"), aVoiceRoomStatus);
+				RenderVoiceStatusRow(Localize("Send & Receive"), aVoiceTransportDetail);
+				RenderVoiceStatusRow(Localize("Troubleshooting suggestions"), LocalizeVoiceUiActionHint(VoiceUiStatus));
+				RenderVoiceStatusRow(Localize("Audio issue"), LocalizeVoiceUiAudioIssue(VoiceUiStatus));
+				if(VoiceUtils::VoiceUiPrimaryError(VoiceUiStatus)[0] != '\0')
+					RenderVoiceStatusRow(Localize("Detailed reason"), VoiceUtils::VoiceUiPrimaryError(VoiceUiStatus));
+				Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
+			}
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+			DoQmSettingsLabel("qmclient-voice-server-ip", &LabelCol, Localize("Server IP"), BodySize);
+			static CLineInput s_VoiceServer(g_Config.m_QmVoiceServer, sizeof(g_Config.m_QmVoiceServer));
+			s_VoiceServer.SetEmptyText("42.194.185.210:9987");
+			ui_widget::InputField(QmClientVoiceTextInputCtx, &s_VoiceServer, ControlCol, "42.194.185.210:9987", BodySize);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+			DoQmSettingsLabel("qmclient-voice-input-device", &LabelCol, Localize("Input device"), BodySize);
+			static std::vector<std::string> s_VoiceInputDeviceDisplayNames;
+			static std::vector<std::string> s_VoiceInputDeviceConfigValues;
+			static std::vector<const char *> s_VoiceInputDeviceDropDownNames;
+			static std::vector<VoiceUtils::SVoiceDeviceDropdownEntry> s_VoiceInputDeviceEntries;
+			static CUi::SDropDownState s_VoiceInputDeviceDropDownState;
+			static CScrollRegion s_VoiceInputDeviceDropDownScrollRegion;
+			static bool s_VoiceInputDevicesInitialized = false;
+			s_VoiceInputDeviceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceInputDeviceDropDownScrollRegion;
+			auto RefreshVoiceInputDeviceList = [&]() {
+				CPerfTimer StageTimer;
+				s_VoiceInputDeviceDisplayNames.clear();
+				s_VoiceInputDeviceConfigValues.clear();
+				s_VoiceInputDeviceDropDownNames.clear();
+				std::vector<std::string> vDetectedDeviceNames;
+				const int NumInputs = SDL_GetNumAudioDevices(1);
+				for(int i = 0; i < NumInputs; i++)
+				{
+					const char *pName = SDL_GetAudioDeviceName(i, 1);
+					if(!pName || pName[0] == '\0')
+						continue;
+					vDetectedDeviceNames.emplace_back(pName);
+				}
+
+				VoiceUtils::BuildVoiceDeviceDropdownEntries(
+					vDetectedDeviceNames,
+					g_Config.m_QmVoiceInputDevice,
+					Localize("Default"),
+					Localize("Disconnected"),
+					s_VoiceInputDeviceEntries);
+
+				s_VoiceInputDeviceDisplayNames.reserve(s_VoiceInputDeviceEntries.size());
+				s_VoiceInputDeviceConfigValues.reserve(s_VoiceInputDeviceEntries.size());
+				s_VoiceInputDeviceDropDownNames.reserve(s_VoiceInputDeviceDisplayNames.size());
+				for(const auto &Entry : s_VoiceInputDeviceEntries)
+				{
+					s_VoiceInputDeviceDisplayNames.push_back(Entry.m_DisplayName);
+					s_VoiceInputDeviceConfigValues.push_back(Entry.m_ConfigValue);
+					s_VoiceInputDeviceDropDownNames.push_back(s_VoiceInputDeviceDisplayNames.back().c_str());
+				}
+
+				char aVoiceExtra[96];
+				str_format(aVoiceExtra, sizeof(aVoiceExtra), "devices=%d", (int)s_VoiceInputDeviceDisplayNames.size());
+				LogQmPerfStage(Client(), "voice_device_enum", StageTimer.ElapsedMs(), false, aVoiceExtra);
+			};
+			if(!s_VoiceInputDevicesInitialized)
+			{
+				RefreshVoiceInputDeviceList();
+				s_VoiceInputDevicesInitialized = true;
+			}
+
+			CUIRect VoiceInputDropDownRect;
+			CUIRect VoiceInputRefreshButton;
+			ControlCol.VSplitRight(maximum(68.0f, 68.0f * UiScale), &VoiceInputDropDownRect, &VoiceInputRefreshButton);
+
+			const int VoiceInputSelectedOld = VoiceUtils::VoiceFindSelectedDeviceIndex(s_VoiceInputDeviceEntries, g_Config.m_QmVoiceInputDevice);
+
+			const int VoiceInputSelectedNew = Ui()->DoDropDown(&VoiceInputDropDownRect, VoiceInputSelectedOld, s_VoiceInputDeviceDropDownNames.data(), s_VoiceInputDeviceDropDownNames.size(), s_VoiceInputDeviceDropDownState);
+			if(VoiceInputSelectedNew >= 0 && VoiceInputSelectedNew != VoiceInputSelectedOld && (size_t)VoiceInputSelectedNew < s_VoiceInputDeviceConfigValues.size())
+				str_copy(g_Config.m_QmVoiceInputDevice, s_VoiceInputDeviceConfigValues[VoiceInputSelectedNew].c_str(), sizeof(g_Config.m_QmVoiceInputDevice));
+
+			static CButtonContainer s_VoiceInputRefreshButton;
+			if(DoQmSettingsMenuButton(&s_VoiceInputRefreshButton, "qmclient-voice-input-refresh", Localize("Refresh"), &VoiceInputRefreshButton))
+				RefreshVoiceInputDeviceList();
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+			DoQmSettingsLabel("qmclient-voice-output-device", &LabelCol, Localize("Output device"), BodySize);
+			static std::vector<std::string> s_VoiceOutputDeviceDisplayNames;
+			static std::vector<std::string> s_VoiceOutputDeviceConfigValues;
+			static std::vector<const char *> s_VoiceOutputDeviceDropDownNames;
+			static std::vector<VoiceUtils::SVoiceDeviceDropdownEntry> s_VoiceOutputDeviceEntries;
+			static CUi::SDropDownState s_VoiceOutputDeviceDropDownState;
+			static CScrollRegion s_VoiceOutputDeviceDropDownScrollRegion;
+			static bool s_VoiceOutputDevicesInitialized = false;
+			s_VoiceOutputDeviceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceOutputDeviceDropDownScrollRegion;
+			auto RefreshVoiceOutputDeviceList = [&]() {
+				CPerfTimer StageTimer;
+				s_VoiceOutputDeviceDisplayNames.clear();
+				s_VoiceOutputDeviceConfigValues.clear();
+				s_VoiceOutputDeviceDropDownNames.clear();
+				std::vector<std::string> vDetectedDeviceNames;
+				const int NumOutputs = SDL_GetNumAudioDevices(0);
+				for(int i = 0; i < NumOutputs; i++)
+				{
+					const char *pName = SDL_GetAudioDeviceName(i, 0);
+					if(!pName || pName[0] == '\0')
+						continue;
+					vDetectedDeviceNames.emplace_back(pName);
+				}
+
+				VoiceUtils::BuildVoiceDeviceDropdownEntries(
+					vDetectedDeviceNames,
+					g_Config.m_QmVoiceOutputDevice,
+					Localize("Default"),
+					Localize("Disconnected"),
+					s_VoiceOutputDeviceEntries);
+
+				s_VoiceOutputDeviceDisplayNames.reserve(s_VoiceOutputDeviceEntries.size());
+				s_VoiceOutputDeviceConfigValues.reserve(s_VoiceOutputDeviceEntries.size());
+				s_VoiceOutputDeviceDropDownNames.reserve(s_VoiceOutputDeviceDisplayNames.size());
+				for(const auto &Entry : s_VoiceOutputDeviceEntries)
+				{
+					s_VoiceOutputDeviceDisplayNames.push_back(Entry.m_DisplayName);
+					s_VoiceOutputDeviceConfigValues.push_back(Entry.m_ConfigValue);
+					s_VoiceOutputDeviceDropDownNames.push_back(s_VoiceOutputDeviceDisplayNames.back().c_str());
+				}
+
+				char aVoiceExtra[96];
+				str_format(aVoiceExtra, sizeof(aVoiceExtra), "devices=%d", (int)s_VoiceOutputDeviceDisplayNames.size());
+				LogQmPerfStage(Client(), "voice_output_device_enum", StageTimer.ElapsedMs(), false, aVoiceExtra);
+			};
+			if(!s_VoiceOutputDevicesInitialized)
+			{
+				RefreshVoiceOutputDeviceList();
+				s_VoiceOutputDevicesInitialized = true;
+			}
+
+			CUIRect VoiceOutputDropDownRect;
+			CUIRect VoiceOutputRefreshButton;
+			ControlCol.VSplitRight(maximum(68.0f, 68.0f * UiScale), &VoiceOutputDropDownRect, &VoiceOutputRefreshButton);
+
+			const int VoiceOutputSelectedOld = VoiceUtils::VoiceFindSelectedDeviceIndex(s_VoiceOutputDeviceEntries, g_Config.m_QmVoiceOutputDevice);
+
+			const int VoiceOutputSelectedNew = Ui()->DoDropDown(&VoiceOutputDropDownRect, VoiceOutputSelectedOld, s_VoiceOutputDeviceDropDownNames.data(), s_VoiceOutputDeviceDropDownNames.size(), s_VoiceOutputDeviceDropDownState);
+			if(VoiceOutputSelectedNew >= 0 && VoiceOutputSelectedNew != VoiceOutputSelectedOld && (size_t)VoiceOutputSelectedNew < s_VoiceOutputDeviceConfigValues.size())
+				str_copy(g_Config.m_QmVoiceOutputDevice, s_VoiceOutputDeviceConfigValues[VoiceOutputSelectedNew].c_str(), sizeof(g_Config.m_QmVoiceOutputDevice));
+
+			static CButtonContainer s_VoiceOutputRefreshButton;
+			if(DoQmSettingsMenuButton(&s_VoiceOutputRefreshButton, "qmclient-voice-output-refresh", Localize("Refresh"), &VoiceOutputRefreshButton))
+				RefreshVoiceOutputDeviceList();
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			{
+				static std::vector<const char *> s_VoiceBitrateProfileDropDownNames;
+				s_VoiceBitrateProfileDropDownNames = {
+					Localize("Auto"),
+					"24 kbps",
+					"32 kbps",
+					"48 kbps",
+					"64 kbps",
+				};
+				static CUi::SDropDownState s_VoiceBitrateProfileDropDownState;
+				static CScrollRegion s_VoiceBitrateProfileDropDownScrollRegion;
+				s_VoiceBitrateProfileDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceBitrateProfileDropDownScrollRegion;
+
+				Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-voice-bitrate", &LabelCol, Localize("Voice bitrate"), BodySize);
+				const int CurrentBitrateProfile = std::clamp(g_Config.m_QmVoiceBitrateProfile, 0, 4);
+				const int NewBitrateProfile = Ui()->DoDropDown(&ControlCol, CurrentBitrateProfile, s_VoiceBitrateProfileDropDownNames.data(), s_VoiceBitrateProfileDropDownNames.size(), s_VoiceBitrateProfileDropDownState);
+				if(CurrentBitrateProfile != NewBitrateProfile)
+					g_Config.m_QmVoiceBitrateProfile = NewBitrateProfile;
+			}
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			{
+				static std::vector<const char *> s_VoiceNoiseSuppressModeDropDownNames;
+				s_VoiceNoiseSuppressModeDropDownNames = {
+					Localize("No noise reduction"),
+					Localize("Simple noise reduction"),
+#if defined(CONF_RNNOISE)
+					Localize("RNNoise noise reduction"),
+#else
+					Localize("RNNoise noise reduction (unavailable in this build)"),
+#endif
+				};
+				static CUi::SDropDownState s_VoiceNoiseSuppressModeDropDownState;
+				static CScrollRegion s_VoiceNoiseSuppressModeDropDownScrollRegion;
+				s_VoiceNoiseSuppressModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceNoiseSuppressModeDropDownScrollRegion;
+
+				Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+				DoQmSettingsLabel("qmclient-voice-noise-reduction-mode", &LabelCol, Localize("Noise reduction mode"), BodySize);
+				const int CurrentNoiseSuppressMode = std::clamp(g_Config.m_QmVoiceNoiseSuppressEnable, 0, 2);
+				const int NewNoiseSuppressMode = Ui()->DoDropDown(&ControlCol, CurrentNoiseSuppressMode, s_VoiceNoiseSuppressModeDropDownNames.data(), s_VoiceNoiseSuppressModeDropDownNames.size(), s_VoiceNoiseSuppressModeDropDownState);
+				if(CurrentNoiseSuppressMode != NewNoiseSuppressMode)
+					g_Config.m_QmVoiceNoiseSuppressEnable = NewNoiseSuppressMode;
+			}
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			if(g_Config.m_QmVoiceNoiseSuppressEnable != 0)
+			{
+#if !defined(CONF_RNNOISE)
+				if(g_Config.m_QmVoiceNoiseSuppressEnable == 2)
+				{
+					Content.HSplitTop(LineHeight * 0.78f, &Row, &Content);
+					DoQmSettingsLabel("qmclient-voice-rnnoise-fallback-warning", &Row, Localize("RNNoise not integrated in current build, will fallback to simple noise reduction"), BodySize * 0.72f);
+					Content.HSplitTop(LineSpacing * 0.75f, nullptr, &Content);
+				}
+#endif
+				Content.HSplitTop(LineHeight, &Row, &Content);
+				{
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+#if !defined(CONF_RNNOISE)
+					const bool RnnoiseFallbackActive = g_Config.m_QmVoiceNoiseSuppressEnable == 2;
+#endif
+					const char *pNoiseSuppressStrengthLabel = g_Config.m_QmVoiceNoiseSuppressEnable == 2 ?
+#if !defined(CONF_RNNOISE)
+											  (RnnoiseFallbackActive ? Localize("Fallback simple noise reduction strength") : Localize("RNNoise noise reduction strength")) :
+#else
+											  Localize("RNNoise noise reduction strength") :
+#endif
+											  Localize("Simple noise reduction strength");
+					Ui()->DoLabel(&LabelColValue, pNoiseSuppressStrengthLabel, BodySize, TEXTALIGN_ML);
+					static int s_QmVoiceNoiseSuppressStrengthInputId;
+					RenderSliderWithValueInput(&s_QmVoiceNoiseSuppressStrengthInputId, ControlColValue, &g_Config.m_QmVoiceNoiseSuppressStrength, 0, 100, "%");
+				}
+				Content.HSplitTop(LineSpacing, nullptr, &Content);
+			}
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceAgcEnable, "Auto gain control for mic (AGC, experimental)", Localize("Auto gain control for mic (AGC, experimental)"), &g_Config.m_QmVoiceAgcEnable, &Row, LineHeight);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			if(g_Config.m_QmVoiceVadEnable)
+			{
+				Content.HSplitTop(LineHeight, &Row, &Content);
+				{
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+					DoQmSettingsLabel("qmclient-voice-speech-trigger-threshold", &LabelColValue, Localize("Speech trigger threshold"), BodySize);
+					static int s_QmVoiceVadThresholdInputId;
+					RenderSliderWithValueInput(&s_QmVoiceVadThresholdInputId, ControlColValue, &g_Config.m_QmVoiceVadThreshold, 0, 100, "%");
+				}
+				Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+				Content.HSplitTop(LineHeight, &Row, &Content);
+				{
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+					DoQmSettingsLabel("qmclient-voice-activation-release-delay", &LabelColValue, Localize("Voice activation release delay"), BodySize);
+					static int s_QmVoiceVadReleaseDelayMsInputId;
+					RenderSliderWithValueInput(&s_QmVoiceVadReleaseDelayMsInputId, ControlColValue, &g_Config.m_QmVoiceVadReleaseDelayMs, 0, 1000, "ms");
+				}
+				Content.HSplitTop(LineSpacing, nullptr, &Content);
+			}
+
+			Content.HSplitTop(LineSpacing * 1.15f, nullptr, &Content);
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			{
+				CUIRect LabelColValue, ControlColValue;
+				Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+				DoQmSettingsLabel("qmclient-voice-playback-volume", &LabelColValue, Localize("Playback volume"), BodySize);
+				static int s_QmVoiceVolumeInputId;
+				RenderSliderWithValueInput(&s_QmVoiceVolumeInputId, ControlColValue, &g_Config.m_QmVoiceVolume, 0, 400, "%");
+			}
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceStereo, "Enable stereo positioning", Localize("Enable stereo positioning"), &g_Config.m_QmVoiceStereo, &Row, LineHeight);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			if(g_Config.m_QmVoiceStereo)
+			{
+				Content.HSplitTop(LineHeight, &Row, &Content);
+				{
+					CUIRect LabelColValue, ControlColValue;
+					Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+					DoQmSettingsLabel("qmclient-voice-left-right-channel-width", &LabelColValue, Localize("Left/right channel width"), BodySize);
+					static int s_QmVoiceStereoWidthInputId;
+					RenderSliderWithValueInput(&s_QmVoiceStereoWidthInputId, ControlColValue, &g_Config.m_QmVoiceStereoWidth, 0, 200, "%");
+				}
+				Content.HSplitTop(LineSpacing, nullptr, &Content);
+			}
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			{
+				CUIRect LabelColValue, ControlColValue;
+				Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+				DoQmSettingsLabel("qmclient-voice-distance-radius-tiles", &LabelColValue, Localize("Voice distance radius (tiles)"), BodySize);
+				static int s_QmVoiceRadiusInputId;
+				RenderSliderWithValueInput(&s_QmVoiceRadiusInputId, ControlColValue, &g_Config.m_QmVoiceRadius, 1, 400);
+			}
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceGroupGlobal, "Full map listen in same room", Localize("Full map listen in same room"), &g_Config.m_QmVoiceGroupGlobal, &Row, LineHeight);
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+		}
+	}
+}
+
+void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelCol, ControlCol;
+	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
+		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
+		if(Changed)
+			*pValue ^= 1;
+		return Changed;
+	};
+	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize) {
+		RenderQmHudLabel(pTextId, pRect, pText, FontSize);
+	};
+	auto RenderSliderWithValueInput = [this, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+	};
+
+	auto RenderIntOption = [&](const void *pId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		Ui()->DoLabel(&LabelCol, pLabel, BodySize, TEXTALIGN_ML);
+		RenderSliderWithValueInput(pId, ControlCol, pValue, MinValue, MaxValue, pSuffix);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticles, "Enable 3D background particles", Localize("Enable 3D background particles"), &g_Config.m_Qm3DParticles, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	if(g_Config.m_Qm3DParticles)
+	{
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		DoQmSettingsLabel("qmclient-3d-background-particle-type", &LabelCol, Localize("Particle type"), BodySize);
+		std::array<const char *, 9> apQm3DParticleTypeNames = {
+			Localize("Cube"),
+			Localize("Heart"),
+			Localize("Sphere"),
+			Localize("Pyramid"),
+			Localize("Diamond"),
+			Localize("Ring"),
+			Localize("Star"),
+			Localize("Crescent"),
+			Localize("Mixed"),
+		};
+		const std::array<int, 9> aQm3DParticleTypeValues = {1, 2, 4, 5, 6, 7, 8, 9, 3};
+		int TypeIndex = 0;
+		for(size_t TypeValueIndex = 0; TypeValueIndex < aQm3DParticleTypeValues.size(); ++TypeValueIndex)
+		{
+			if(aQm3DParticleTypeValues[TypeValueIndex] == g_Config.m_Qm3DParticlesType)
+			{
+				TypeIndex = (int)TypeValueIndex;
+				break;
+			}
+		}
+		static CUi::SDropDownState s_Qm3DParticleTypeDropDownState;
+		static CScrollRegion s_Qm3DParticleTypeDropDownScrollRegion;
+		s_Qm3DParticleTypeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_Qm3DParticleTypeDropDownScrollRegion;
+		const int NewTypeIndex = Ui()->DoDropDown(&ControlCol, TypeIndex, apQm3DParticleTypeNames.data(), static_cast<int>(apQm3DParticleTypeNames.size()), s_Qm3DParticleTypeDropDownState);
+		if(NewTypeIndex >= 0 && NewTypeIndex < static_cast<int>(aQm3DParticleTypeValues.size()) && NewTypeIndex != TypeIndex)
+			g_Config.m_Qm3DParticlesType = aQm3DParticleTypeValues[NewTypeIndex];
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		static int s_Qm3DParticleCountInputId;
+		RenderIntOption(&s_Qm3DParticleCountInputId, Localize("Particle count"), &g_Config.m_Qm3DParticlesCount, 1, 200);
+		static int s_Qm3DParticleAlphaInputId;
+		RenderIntOption(&s_Qm3DParticleAlphaInputId, Localize("Particle alpha"), &g_Config.m_Qm3DParticlesAlpha, 1, 100, "%");
+		static int s_Qm3DParticleMinSizeInputId;
+		RenderIntOption(&s_Qm3DParticleMinSizeInputId, Localize("Min size"), &g_Config.m_Qm3DParticlesSizeMin, 2, 64);
+		if(g_Config.m_Qm3DParticlesSizeMax < g_Config.m_Qm3DParticlesSizeMin)
+			g_Config.m_Qm3DParticlesSizeMax = g_Config.m_Qm3DParticlesSizeMin;
+		static int s_Qm3DParticleMaxSizeInputId;
+		RenderIntOption(&s_Qm3DParticleMaxSizeInputId, Localize("Max size"), &g_Config.m_Qm3DParticlesSizeMax, g_Config.m_Qm3DParticlesSizeMin, 64);
+		static int s_Qm3DParticleSpeedInputId;
+		RenderIntOption(&s_Qm3DParticleSpeedInputId, Localize("Particle speed"), &g_Config.m_Qm3DParticlesSpeed, 1, 500);
+		static int s_Qm3DParticleDepthInputId;
+		RenderIntOption(&s_Qm3DParticleDepthInputId, Localize("Particle depth"), &g_Config.m_Qm3DParticlesDepth, 10, 1000);
+		static int s_Qm3DParticleViewMarginInputId;
+		RenderIntOption(&s_Qm3DParticleViewMarginInputId, Localize("View margin"), &g_Config.m_Qm3DParticlesViewMargin, 0, 1000);
+		static int s_Qm3DParticleFadeInInputId;
+		RenderIntOption(&s_Qm3DParticleFadeInInputId, Localize("Fade in"), &g_Config.m_Qm3DParticlesFadeInMs, 1, 5000, "ms");
+		static int s_Qm3DParticleFadeOutInputId;
+		RenderIntOption(&s_Qm3DParticleFadeOutInputId, Localize("Fade out"), &g_Config.m_Qm3DParticlesFadeOutMs, 1, 5000, "ms");
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesCollide, "Particle collision", Localize("Particle collision"), &g_Config.m_Qm3DParticlesCollide, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		static int s_Qm3DParticlePushRadiusInputId;
+		RenderIntOption(&s_Qm3DParticlePushRadiusInputId, Localize("Push radius"), &g_Config.m_Qm3DParticlesPushRadius, 0, 1000);
+		static int s_Qm3DParticlePushStrengthInputId;
+		RenderIntOption(&s_Qm3DParticlePushStrengthInputId, Localize("Push strength"), &g_Config.m_Qm3DParticlesPushStrength, 0, 2000);
+
+		static std::vector<CButtonContainer> s_vQm3DParticleColorModeButtons = {{}, {}};
+		int ColorMode = g_Config.m_Qm3DParticlesColorMode;
+		if(DoSettingsLine_RadioMenu(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, Content, "qmclient-3d-particle-color-mode-label", Localize("Particle color"), s_vQm3DParticleColorModeButtons, {"qmclient-3d-particle-color-custom", "qmclient-3d-particle-color-random"}, {Localize("Custom"), Localize("Random")}, {1, 2}, ColorMode))
+			g_Config.m_Qm3DParticlesColorMode = ColorMode;
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		if(g_Config.m_Qm3DParticlesColorMode == 1)
+		{
+			static CButtonContainer s_Qm3DParticleColorId;
+			DoLine_ColorPicker(&s_Qm3DParticleColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Particle color"), &g_Config.m_Qm3DParticlesColor, ColorRGBA(0.56f, 0.72f, 0.62f, 1.0f), false, nullptr, true);
+		}
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesGlow, "Particle glow", Localize("Particle glow"), &g_Config.m_Qm3DParticlesGlow, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		if(g_Config.m_Qm3DParticlesGlow)
+		{
+			static int s_Qm3DParticleGlowAlphaInputId;
+			RenderIntOption(&s_Qm3DParticleGlowAlphaInputId, Localize("Glow alpha"), &g_Config.m_Qm3DParticlesGlowAlpha, 1, 100, "%");
+			static int s_Qm3DParticleGlowOffsetInputId;
+			RenderIntOption(&s_Qm3DParticleGlowOffsetInputId, Localize("Glow offset"), &g_Config.m_Qm3DParticlesGlowOffset, 1, 20);
+		}
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesTrail, "Particle trail", Localize("Particle trail"), &g_Config.m_Qm3DParticlesTrail, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		if(g_Config.m_Qm3DParticlesTrail)
+		{
+			static int s_Qm3DParticleTrailLengthInputId;
+			RenderIntOption(&s_Qm3DParticleTrailLengthInputId, Localize("Trail length"), &g_Config.m_Qm3DParticlesTrailLength, 2, 6);
+			static int s_Qm3DParticleTrailAlphaInputId;
+			RenderIntOption(&s_Qm3DParticleTrailAlphaInputId, Localize("Trail alpha"), &g_Config.m_Qm3DParticlesTrailAlpha, 1, 100, "%");
+		}
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesPulse, "Particle pulse", Localize("Particle pulse"), &g_Config.m_Qm3DParticlesPulse, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		if(g_Config.m_Qm3DParticlesPulse)
+		{
+			static int s_Qm3DParticlePulseStrengthInputId;
+			RenderIntOption(&s_Qm3DParticlePulseStrengthInputId, Localize("Pulse strength"), &g_Config.m_Qm3DParticlesPulseStrength, 0, 50, "%");
+			static int s_Qm3DParticlePulseSpeedInputId;
+			RenderIntOption(&s_Qm3DParticlePulseSpeedInputId, Localize("Pulse speed"), &g_Config.m_Qm3DParticlesPulseSpeed, 10, 300, "%");
+		}
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesTwinkle, "Particle twinkle", Localize("Particle twinkle"), &g_Config.m_Qm3DParticlesTwinkle, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		if(g_Config.m_Qm3DParticlesTwinkle)
+		{
+			static int s_Qm3DParticleTwinkleStrengthInputId;
+			RenderIntOption(&s_Qm3DParticleTwinkleStrengthInputId, Localize("Twinkle strength"), &g_Config.m_Qm3DParticlesTwinkleStrength, 0, 100, "%");
+		}
+	}
+}
+
+void CMenus::RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelCol, ControlCol;
+	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
+		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
+		if(Changed)
+			*pValue ^= 1;
+		return Changed;
+	};
+	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize) {
+		RenderQmHudLabel(pTextId, pRect, pText, FontSize);
+	};
+	auto RenderSliderWithValueInput = [this, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+	};
+	if(!PrewarmOnly)
+		MarkQmNewFeatureRead("qm_lyrics_phase1");
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmSmtcLyricsEnable, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmSmtcLyricsEnable, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsMarquee, "Scroll long lines", Localize("Scroll long lines"), &g_Config.m_QmLyricsMarquee, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoHideNoSmtc, "Hide without media state", Localize("Hide without media state"), &g_Config.m_QmLyricsAutoHideNoSmtc, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	auto RenderLyricsSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		CUIRect LabelColValue, ControlColValue;
+		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+		DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, BodySize);
+		RenderSliderWithValueInput(pId, ControlColValue, pValue, MinValue, MaxValue, pSuffix);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+
+	static int s_QmSmtcLyricsOffsetInputId;
+	RenderLyricsSlider(&s_QmSmtcLyricsOffsetInputId, "qmclient-lyrics-time-offset", Localize("Time offset"), &g_Config.m_QmSmtcLyricsOffsetMs, -10000, 10000, "ms");
+	static int s_QmSmtcLyricsLinesInputId;
+	RenderLyricsSlider(&s_QmSmtcLyricsLinesInputId, "qmclient-lyrics-lines", Localize("Lines"), &g_Config.m_QmSmtcLyricsLines, 1, 2);
+	static int s_QmSmtcLyricsFontSizeInputId;
+	RenderLyricsSlider(&s_QmSmtcLyricsFontSizeInputId, "qmclient-lyrics-font-size", Localize("Font size"), &g_Config.m_QmSmtcLyricsFontSize, 4, 16);
+	static int s_QmLyricsBgOpacityInputId;
+	RenderLyricsSlider(&s_QmLyricsBgOpacityInputId, "qmclient-lyrics-background-opacity", Localize("Background opacity"), &g_Config.m_QmLyricsBgOpacity, 0, 100, "%");
+	static int s_QmLyricsOutlineOpacityInputId;
+	RenderLyricsSlider(&s_QmLyricsOutlineOpacityInputId, "qmclient-lyrics-outline-opacity", Localize("Outline opacity"), &g_Config.m_QmLyricsOutlineOpacity, 0, 100, "%");
+	static int s_QmLyricsFadeDurationInputId;
+	RenderLyricsSlider(&s_QmLyricsFadeDurationInputId, "qmclient-lyrics-fade-duration", Localize("Fade duration"), &g_Config.m_QmLyricsFadeDurationMs, 0, 2000, "ms");
+	static int s_QmLyricsMarqueeSpeedInputId;
+	RenderLyricsSlider(&s_QmLyricsMarqueeSpeedInputId, "qmclient-lyrics-scroll-speed", Localize("Scroll speed"), &g_Config.m_QmLyricsMarqueeSpeed, 1, 24);
+	static int s_QmLyricsSnapThresholdInputId;
+	RenderLyricsSlider(&s_QmLyricsSnapThresholdInputId, "qmclient-lyrics-snap-threshold", Localize("Snap threshold"), &g_Config.m_QmLyricsSnapThreshold, 0, 40);
+
+	static CButtonContainer s_LyricsCurrentColorId;
+	DoLine_ColorPicker(&s_LyricsCurrentColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Current line color"), &g_Config.m_QmLyricsColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+	static CButtonContainer s_LyricsNextColorId;
+	DoLine_ColorPicker(&s_LyricsNextColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Next line color"), &g_Config.m_QmLyricsNextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 0.54f), false, nullptr, true);
+	static CButtonContainer s_LyricsBgColorId;
+	DoLine_ColorPicker(&s_LyricsBgColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Background color"), &g_Config.m_QmLyricsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
+	static CButtonContainer s_LyricsOutlineColorId;
+	DoLine_ColorPicker(&s_LyricsOutlineColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Outline color"), &g_Config.m_QmLyricsOutlineColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoFetch, "Auto fetch lyrics", Localize("Auto fetch lyrics"), &g_Config.m_QmLyricsAutoFetch, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsInMediaIsland, "Show in Dynamic Island", Localize("Show in Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsKaraoke, "Per-word highlight (karaoke)", Localize("Per-word highlight (karaoke)"), &g_Config.m_QmLyricsKaraoke, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsHideWhenPaused, "Hide when paused", Localize("Hide when paused"), &g_Config.m_QmLyricsHideWhenPaused, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsShowTranslation, "Show translation", Localize("Show translation"), &g_Config.m_QmLyricsShowTranslation, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	{
+		CUIRect LabelColValue, ControlColValue;
+		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+		DoQmSettingsLabel("qmclient-lyrics-source", &LabelColValue, Localize("Lyrics source"), BodySize);
+		const char *apLyricsSourceNames[] = {
+			Localize("Auto"),
+			"LRCLIB",
+			"Kugou",
+			"QQ",
+			"Netease",
+			"AMLL TTML DB",
+			"Apple Music",
+			Localize("Local music file"),
+			Localize("Local LRC file"),
+			Localize("Local ESLRC file"),
+			Localize("Local TTML file"),
+		};
+		static CUi::SDropDownState s_QmLyricsSourceDropDownState;
+		static CScrollRegion s_QmLyricsSourceDropDownScrollRegion;
+		s_QmLyricsSourceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_QmLyricsSourceDropDownScrollRegion;
+		const int SourceSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSource, 0, 10), apLyricsSourceNames, std::size(apLyricsSourceNames), s_QmLyricsSourceDropDownState);
+		if(SourceSelectedNew != g_Config.m_QmLyricsSource)
+			g_Config.m_QmLyricsSource = SourceSelectedNew;
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	{
+		CUIRect LabelColValue, ControlColValue;
+		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+		DoQmSettingsLabel("qmclient-lyrics-search-type", &LabelColValue, Localize("Lyrics search type"), BodySize);
+		const char *apLyricsSearchTypeNames[] = {
+			Localize("Sequential"),
+			Localize("Best match"),
+		};
+		static CUi::SDropDownState s_QmLyricsSearchTypeDropDownState;
+		const int SearchTypeSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSearchType, 0, 1), apLyricsSearchTypeNames, std::size(apLyricsSearchTypeNames), s_QmLyricsSearchTypeDropDownState);
+		if(SearchTypeSelectedNew != g_Config.m_QmLyricsSearchType)
+			g_Config.m_QmLyricsSearchType = SearchTypeSelectedNew;
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	auto RenderLyricSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		CUIRect LabelColValue, ControlColValue;
+		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+		DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, BodySize);
+		RenderSliderWithValueInput(pId, ControlColValue, pValue, MinValue, MaxValue, pSuffix);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	auto RenderLyricHalfSecondOffsetSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue) {
+		const int OriginalValue = *pValue;
+		const int AbsOffset = std::abs(*pValue);
+		const int SnappedAbs = ((AbsOffset + 250) / 500) * 500;
+		int StepValue = std::clamp((*pValue < 0 ? -SnappedAbs : SnappedAbs) / 500, -60, 60);
+		RenderLyricSlider(pId, pTextId, pLabel, &StepValue, -60, 60, "x0.5s");
+		if(PrewarmOnly || Ui()->RenderOnly())
+			*pValue = OriginalValue;
+		else
+			*pValue = StepValue * 500;
+	};
+	IUiContext QmClientLyricsTextInputCtx;
+	QmClientLyricsTextInputCtx.m_pUi = Ui();
+	QmClientLyricsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	QmClientLyricsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+	QmClientLyricsTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_lyrics_text_inputs");
+	QmClientLyricsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	auto RenderLyricTextInput = [&](CLineInput *pLineInput, const char *pTextId, const char *pLabel, char *pValue, size_t ValueSize, const char *pEmptyText) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		CUIRect LabelColValue, ControlColValue;
+		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
+		DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, BodySize);
+		if(!pLineInput->IsActive() && str_comp(pLineInput->GetString(), pValue) != 0)
+			pLineInput->Set(pValue);
+		pLineInput->SetEmptyText(pEmptyText);
+		if(ui_widget::InputField(QmClientLyricsTextInputCtx, pLineInput, ControlColValue, pEmptyText, BodySize))
+			str_copy(pValue, pLineInput->GetString(), ValueSize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+
+	static CLineInput s_QmLyricsSourceOrder(g_Config.m_QmLyricsSourceOrder, sizeof(g_Config.m_QmLyricsSourceOrder));
+	RenderLyricTextInput(&s_QmLyricsSourceOrder, "qmclient-lyrics-source-order", Localize("Lyrics source order"), g_Config.m_QmLyricsSourceOrder, sizeof(g_Config.m_QmLyricsSourceOrder), "QQ|Kugou|Netease|LrcLib|AmllTtmlDb|LocalMusicFile|LocalLrcFile|LocalEslrcFile|LocalTtmlFile|AppleMusic");
+	static CLineInput s_QmLyricsProviderThresholds(g_Config.m_QmLyricsProviderThresholds, sizeof(g_Config.m_QmLyricsProviderThresholds));
+	RenderLyricTextInput(&s_QmLyricsProviderThresholds, "qmclient-lyrics-provider-thresholds", Localize("Provider thresholds"), g_Config.m_QmLyricsProviderThresholds, sizeof(g_Config.m_QmLyricsProviderThresholds), "QQ=60|LrcLib=70");
+	static CLineInput s_QmLyricsIgnoreCacheProviders(g_Config.m_QmLyricsIgnoreCacheProviders, sizeof(g_Config.m_QmLyricsIgnoreCacheProviders));
+	RenderLyricTextInput(&s_QmLyricsIgnoreCacheProviders, "qmclient-lyrics-ignore-cache-providers", Localize("Ignore cache providers"), g_Config.m_QmLyricsIgnoreCacheProviders, sizeof(g_Config.m_QmLyricsIgnoreCacheProviders), "QQ|Kugou");
+	static CLineInput s_QmLyricsAppleMusicMediaUserToken(g_Config.m_QmLyricsAppleMusicMediaUserToken, sizeof(g_Config.m_QmLyricsAppleMusicMediaUserToken));
+	RenderLyricTextInput(&s_QmLyricsAppleMusicMediaUserToken, "qmclient-lyrics-apple-music-token", Localize("Apple Music media-user-token"), g_Config.m_QmLyricsAppleMusicMediaUserToken, sizeof(g_Config.m_QmLyricsAppleMusicMediaUserToken), "media-user-token");
+	static CLineInput s_QmLyricsLocalMediaFolders(g_Config.m_QmLyricsLocalMediaFolders, sizeof(g_Config.m_QmLyricsLocalMediaFolders));
+	RenderLyricTextInput(&s_QmLyricsLocalMediaFolders, "qmclient-lyrics-local-media-folders", Localize("Local media folders"), g_Config.m_QmLyricsLocalMediaFolders, sizeof(g_Config.m_QmLyricsLocalMediaFolders), "D:/Music|E:/Music");
+
+	static int s_QmLyricsLinesAbove;
+	RenderLyricSlider(&s_QmLyricsLinesAbove, "qmclient-lyrics-lines-above", Localize("Lines above active"), &g_Config.m_QmLyricsLinesAbove, 0, 6);
+	static int s_QmLyricsLinesBelow;
+	RenderLyricSlider(&s_QmLyricsLinesBelow, "qmclient-lyrics-lines-below", Localize("Lines below active"), &g_Config.m_QmLyricsLinesBelow, 0, 6);
+	static int s_QmLyricsFontSize;
+	RenderLyricSlider(&s_QmLyricsFontSize, "qmclient-lyrics-font-size", Localize("Active line font size"), &g_Config.m_QmLyricsFontSize, 8, 48);
+	static int s_QmLyricsFontSizeOther;
+	RenderLyricSlider(&s_QmLyricsFontSizeOther, "qmclient-lyrics-font-size-other", Localize("Other lines font size"), &g_Config.m_QmLyricsFontSizeOther, 6, 40);
+	static int s_QmLyricsLineSpacing;
+	RenderLyricSlider(&s_QmLyricsLineSpacing, "qmclient-lyrics-line-spacing", Localize("Line spacing"), &g_Config.m_QmLyricsLineSpacing, 0, 40, "px");
+	static int s_QmLyricsOpacity;
+	RenderLyricSlider(&s_QmLyricsOpacity, "qmclient-lyrics-opacity", Localize("Opacity"), &g_Config.m_QmLyricsOpacity, 0, 100, "%");
+	static int s_QmLyricsInactiveOpacity;
+	RenderLyricSlider(&s_QmLyricsInactiveOpacity, "qmclient-lyrics-inactive-opacity", Localize("Inactive line opacity"), &g_Config.m_QmLyricsInactiveOpacity, 0, 100, "%");
+	static int s_QmLyricsScaleActive;
+	RenderLyricSlider(&s_QmLyricsScaleActive, "qmclient-lyrics-scale-active", Localize("Active line scale"), &g_Config.m_QmLyricsScaleActive, 100, 200, "%");
+	static int s_QmLyricsScaleFalloff;
+	RenderLyricSlider(&s_QmLyricsScaleFalloff, "qmclient-lyrics-scale-falloff", Localize("Distance scale falloff"), &g_Config.m_QmLyricsScaleFalloff, 0, 20, "%");
+	static int s_QmLyricsFadePerLine;
+	RenderLyricSlider(&s_QmLyricsFadePerLine, "qmclient-lyrics-fade-per-line", Localize("Distance fade per line"), &g_Config.m_QmLyricsFadePerLine, 0, 40, "%");
+	static int s_QmLyricsHighlightEdgeSoft;
+	RenderLyricSlider(&s_QmLyricsHighlightEdgeSoft, "qmclient-lyrics-highlight-edge-soft", Localize("Karaoke edge softness"), &g_Config.m_QmLyricsHighlightEdgeSoft, 0, 32, "px");
+	static int s_QmLyricsScrollMs;
+	RenderLyricSlider(&s_QmLyricsScrollMs, "qmclient-lyrics-scroll-ms", Localize("Line scroll duration"), &g_Config.m_QmLyricsScrollMs, 0, 1000, "ms");
+	static int s_QmLyricsMatchThreshold;
+	RenderLyricSlider(&s_QmLyricsMatchThreshold, "qmclient-lyrics-match-threshold", Localize("Match score threshold"), &g_Config.m_QmLyricsMatchThreshold, 0, 100);
+	static int s_QmLyricsOffsetMs;
+	RenderLyricHalfSecondOffsetSlider(&s_QmLyricsOffsetMs, "qmclient-lyrics-offset-ms", Localize("Time offset"), &g_Config.m_QmLyricsOffsetMs);
+	static int s_QmLyricsDriftCorrectMs;
+	RenderLyricSlider(&s_QmLyricsDriftCorrectMs, "qmclient-lyrics-drift-correct-ms", Localize("Clock drift hard-snap"), &g_Config.m_QmLyricsDriftCorrectMs, 100, 5000, "ms");
+	static int s_QmLyricsEdgeMargin;
+	RenderLyricSlider(&s_QmLyricsEdgeMargin, "qmclient-lyrics-edge-margin", Localize("Edge margin"), &g_Config.m_QmLyricsEdgeMargin, 0, 64, "px");
+	static int s_QmLyricsHttpTimeoutMs;
+	RenderLyricSlider(&s_QmLyricsHttpTimeoutMs, "qmclient-lyrics-http-timeout-ms", Localize("Lyrics HTTP timeout"), &g_Config.m_QmLyricsHttpTimeoutMs, 500, 30000, "ms");
+	static int s_QmLyricsCacheTtlDays;
+	RenderLyricSlider(&s_QmLyricsCacheTtlDays, "qmclient-lyrics-cache-ttl-days", Localize("Cache TTL"), &g_Config.m_QmLyricsCacheTtlDays, 0, 3650, " d");
+
+	static CButtonContainer s_LyricsColorPlayedId;
+	DoLine_ColorPicker(&s_LyricsColorPlayedId, LineHeight, BodySize, LineSpacing, &Content, Localize("Played word color"), &g_Config.m_QmLyricsColorPlayed, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
+	static CButtonContainer s_LyricsColorUnplayedId;
+	DoLine_ColorPicker(&s_LyricsColorUnplayedId, LineHeight, BodySize, LineSpacing, &Content, Localize("Unplayed word color"), &g_Config.m_QmLyricsColorUnplayed, ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f), false, nullptr, true);
+	static CButtonContainer s_LyricsColorTranslationId;
+	DoLine_ColorPicker(&s_LyricsColorTranslationId, LineHeight, BodySize, LineSpacing, &Content, Localize("Translation color"), &g_Config.m_QmLyricsColorTranslation, ColorRGBA(0.55f, 0.55f, 0.55f, 1.0f), false, nullptr, true);
+	CUIRect Preview;
+	const float PreviewFont = (float)g_Config.m_QmSmtcLyricsFontSize;
+	const float PreviewPaddingX = 10.0f;
+	const float PreviewPaddingY = 7.0f;
+	const float PreviewLineGap = 5.0f;
+	const float PreviewLineStep = PreviewFont + PreviewLineGap;
+	const int PreviewLineCount = std::clamp(g_Config.m_QmSmtcLyricsLines, 1, 2);
+	const float PreviewHeight = std::max(42.0f, PreviewPaddingY * 2.0f + PreviewFont * PreviewLineCount + PreviewLineGap * (PreviewLineCount - 1));
+	Content.HSplitTop(PreviewHeight, &Preview, &Content);
+	ColorRGBA PreviewBg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsBgColor, true));
+	PreviewBg.a = std::clamp(g_Config.m_QmLyricsBgOpacity / 100.0f, 0.0f, 1.0f);
+	Preview.Draw(PreviewBg, IGraphics::CORNER_ALL, 5.0f);
+	const unsigned int PrevFlags = TextRender()->GetRenderFlags();
+	const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
+	const ColorRGBA PrevOutlineColor = TextRender()->GetTextOutlineColor();
+	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
+	ColorRGBA PreviewOutline = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsOutlineColor, true));
+	PreviewOutline.a = std::clamp(g_Config.m_QmLyricsOutlineOpacity / 100.0f, 0.0f, 1.0f);
+	TextRender()->TextOutlineColor(PreviewOutline);
+
+	static constexpr std::array<const char *, 3> s_apLyricsPreviewLines = {
+		"Stop and stare",
+		"I think I'm moving but I go nowhere",
+		"Yeah I know that everyone gets scared"};
+	static constexpr int64_t s_LyricsPreviewLineDurationMs = 2400;
+	static constexpr int64_t s_LyricsPreviewDurationMs = s_LyricsPreviewLineDurationMs * (int64_t)s_apLyricsPreviewLines.size();
+	const int64_t NowTick = time_get();
+	const int64_t NowMs = (NowTick / time_freq()) * 1000 + (NowTick % time_freq()) * 1000 / time_freq();
+	int64_t PreviewPositionMs = (NowMs + g_Config.m_QmSmtcLyricsOffsetMs) % s_LyricsPreviewDurationMs;
+	if(PreviewPositionMs < 0)
+		PreviewPositionMs += s_LyricsPreviewDurationMs;
+	const int PreviewCurrentLine = (int)(PreviewPositionMs / s_LyricsPreviewLineDurationMs);
+	const int64_t PreviewLineElapsedMs = PreviewPositionMs % s_LyricsPreviewLineDurationMs;
+	const int64_t PreviewTransitionMs = std::clamp<int64_t>(g_Config.m_QmLyricsFadeDurationMs, 0, s_LyricsPreviewLineDurationMs - 1);
+	float PreviewScroll = 0.0f;
+	if(PreviewTransitionMs > 0 && PreviewLineElapsedMs >= s_LyricsPreviewLineDurationMs - PreviewTransitionMs)
+	{
+		const float Progress = (float)(PreviewLineElapsedMs - (s_LyricsPreviewLineDurationMs - PreviewTransitionMs)) / (float)PreviewTransitionMs;
+		const float SmoothProgress = Progress * Progress * (3.0f - 2.0f * Progress);
+		PreviewScroll = PreviewLineStep * SmoothProgress;
+	}
+
+	CUIRect PreviewClip = Preview;
+	PreviewClip.Margin(1.0f, &PreviewClip);
+	Ui()->ClipEnable(&PreviewClip);
+
+	const float PreviewX = Preview.x + PreviewPaddingX;
+	const float PreviewY = Preview.y + PreviewPaddingY - PreviewScroll;
+	const float PreviewTextWidth = std::max(1.0f, Preview.w - PreviewPaddingX * 2.0f);
+	const int RenderLineCount = std::min<int>(PreviewLineCount + 1, (int)s_apLyricsPreviewLines.size());
+	const int PreviewScrollSeed = g_Config.m_QmLyricsMarqueeSpeed > 0 ? (int)(PreviewPositionMs / maximum(1, 1000 / g_Config.m_QmLyricsMarqueeSpeed)) : 0;
+	auto RenderPreviewLine = [&](const char *pText, float Y, const ColorRGBA &Color) {
+		const char *pRenderText = pText;
+		char aMarqueeText[256];
+		if(g_Config.m_QmLyricsMarquee && pText[0] != '\0' && TextRender()->TextWidth(PreviewFont, pText) > PreviewTextWidth)
+		{
+			const int TextLen = str_length(pText);
+			size_t TextBytes = 0;
+			size_t TextCount = 0;
+			str_utf8_stats(pText, (size_t)TextLen + 1, (size_t)TextLen + 1, &TextBytes, &TextCount);
+			(void)TextBytes;
+			const int OffsetChars = TextCount > 0 ? PreviewScrollSeed % (int)TextCount : 0;
+			int Offset = 0;
+			for(int i = 0; i < OffsetChars; ++i)
+				Offset = str_utf8_forward(pText, Offset);
+			str_format(aMarqueeText, sizeof(aMarqueeText), "%s   %s", pText + Offset, pText);
+			pRenderText = aMarqueeText;
+		}
+		TextRender()->TextColor(Color);
+		CTextCursor Cursor;
+		Cursor.m_FontSize = PreviewFont;
+		Cursor.m_LineWidth = PreviewTextWidth;
+		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
+		Cursor.SetPosition(vec2(PreviewX, Y));
+		TextRender()->TextEx(&Cursor, pRenderText);
+	};
+
+	ColorRGBA PreviewCurrentColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColor, true));
+	ColorRGBA PreviewNextColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsNextColor, true));
+	for(int i = 0; i < RenderLineCount; ++i)
+	{
+		const int LineIndex = (PreviewCurrentLine + i) % (int)s_apLyricsPreviewLines.size();
+		RenderPreviewLine(s_apLyricsPreviewLines[LineIndex], PreviewY + PreviewLineStep * i, i == 0 ? PreviewCurrentColor : PreviewNextColor);
+	}
+
+	Ui()->ClipDisable();
+	TextRender()->TextColor(PrevTextColor);
+	TextRender()->TextOutlineColor(PrevOutlineColor);
+	TextRender()->SetRenderFlags(PrevFlags);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
+{
+	using namespace qm_module;
+	const float UiScale = std::clamp(MainView.w / 1000.0f, MainView.w < 680.0f ? 0.78f : 0.85f, 1.0f);
+	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
+	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
+	const float LineSpacing = std::clamp(5.0f * UiScale, 3.0f, 5.0f);
+	const float LabelMaxWidth = std::max(MainView.w < 680.0f ? 96.0f : 120.0f, MainView.w * (MainView.w < 680.0f ? 0.38f : 0.45f));
+	const float LabelWidth = std::clamp((MainView.w < 680.0f ? 148.0f : 170.0f) * UiScale, MainView.w < 680.0f ? 96.0f : 120.0f, LabelMaxWidth);
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	IUiContext CardCtx = SettingsUiContext("settings_qmclient_hud", UiScale);
+	if(PrewarmOnly)
+	{
+		CardCtx.m_pAnim = nullptr;
+		CardCtx.m_pTree = nullptr;
+	}
+	static CScrollRegion s_ScrollRegion;
+	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
+	static bool s_CollapsedInitialized = false;
+	if(!s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
+	{
+		ParseLegacyQmCollapsed(g_Config.m_QmSidebarCardCollapsed, s_aQmModuleDefaults, s_aCollapsed);
+		s_CollapsedInitialized = true;
+	}
+	char aNormalizedCollapsed[sizeof(g_Config.m_QmSidebarCardCollapsed)];
+	SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, aNormalizedCollapsed, sizeof(aNormalizedCollapsed));
+	if(str_comp(aNormalizedCollapsed, g_Config.m_QmSidebarCardCollapsed) != 0)
+		str_copy(g_Config.m_QmSidebarCardCollapsed, aNormalizedCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
+	str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
+
+	auto ModuleStateIndex = [](EQmModuleId Id) { return std::clamp((int)Id, 0, (int)QmModuleCount - 1); };
+	auto ToggleCollapsed = [&](EQmModuleId Id) {
+		s_aCollapsed[ModuleStateIndex(Id)] = !s_aCollapsed[ModuleStateIndex(Id)];
+		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
+		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
+	};
+	static std::array<float, QmModuleCount> s_aContentHeights = {};
+	auto EstimateContentHeight = [LineHeight, LineSpacing](EQmModuleId Id) {
+		const auto Rows = [LineHeight, LineSpacing](float Count) { return Count * LineHeight + std::max(0.0f, Count - 1.0f) * LineSpacing; };
+		switch(Id)
+		{
+		case EQmModuleId::DummyMiniView: return g_Config.m_QmDummyMiniView ? Rows(4.0f) : Rows(1.0f);
+		case EQmModuleId::Coords: return Rows(8.0f) + LineHeight;
+		case EQmModuleId::PlayerStats: return g_Config.m_QmPlayerStatsMapProgress ? Rows(10.0f) + LineHeight * 2.0f : Rows(3.0f);
+		case EQmModuleId::SpeedrunTimer: return g_Config.m_QmSpeedrunTimer ? Rows(6.0f) : Rows(1.0f);
+		case EQmModuleId::DebugGraph: return Rows(2.0f);
+		case EQmModuleId::InputOverlay: return g_Config.m_QmInputOverlay ? Rows(7.0f) : Rows(1.0f);
+		case EQmModuleId::HudNotifications: return g_Config.m_QmHudNotificationsShowAdvanced ? Rows(15.0f) + LineHeight * 3.0f : Rows(4.0f);
+		case EQmModuleId::Voice: return g_Config.m_QmVoiceEnable ? (g_Config.m_QmVoiceShowAdvanced ? Rows(38.0f) : Rows(8.0f)) : Rows(1.0f);
+		case EQmModuleId::DynamicIsland: return g_Config.m_QmHudIslandUseOriginalStyle ? Rows(3.0f) : Rows(5.0f) + LineHeight;
+		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(3.0f) : Rows(1.0f);
+		case EQmModuleId::Lyrics: return Rows(42.0f) + LineHeight * 3.0f;
+		case EQmModuleId::Background3D: return g_Config.m_Qm3DParticles ? Rows(10.0f) : Rows(1.0f);
+		default: return Rows(1.0f);
+		}
+	};
+
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(12);
+	const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = {pStableId, Localize(pTitle), Localize(pSubtitle)};
+		Definition.m_Measure = [Id, &ContentHeight = s_aContentHeights[ModuleStateIndex(Id)], EstimateContentHeight](float) { return ContentHeight > 0.0f ? ContentHeight : EstimateContentHeight(Id); };
+		Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
+		Definition.m_RenderMeasured = [Render, &ContentHeight = s_aContentHeights[ModuleStateIndex(Id)]](CUIRect &Content) {
+			const float StartY = Content.y;
+			Render(Content);
+			ContentHeight = std::max(0.0f, Content.y - StartY);
+		};
+		Definition.m_IsCollapsed = [Id, &Collapsed = s_aCollapsed, ModuleStateIndex] { return Collapsed[ModuleStateIndex(Id)]; };
+		Definition.m_HeaderAction = [this, Id, ToggleCollapsed, PrewarmOnly, ModuleStateIndex](const SSettingsCardFrame &Frame, bool Collapsed) {
+			static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
+			const int Index = ModuleStateIndex(Id);
+			if(!PrewarmOnly && DoButton_Menu(&s_aCollapseButtons[Index], Collapsed ? "+" : "-", 0, &Frame.m_HandleRect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f))
+				ToggleCollapsed(Id);
+			if(!PrewarmOnly && Ui()->MouseHovered(&Frame.m_HandleRect))
+				GameClient()->m_Tooltips.DoToolTip(&s_aCollapseButtons[Index], &Frame.m_HandleRect, Collapsed ? Localize("Expand module") : Localize("Collapse module"));
+		};
+		Definition.m_MeasureEachFrame = true;
+		vCards.push_back(std::move(Definition));
+	};
+
+	AddCard(EQmModuleId::DummyMiniView, "qm:dummy_miniview", "Dummy Window", "Show a small view of the dummy", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudDummyMiniViewContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::Coords, "qm:coords", "Show Coordinates", "Show coordinates above players", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudCoordsContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::PlayerStats, "qm:player_stats", "Player data", "Player stats and info display", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudPlayerStatsContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::SpeedrunTimer, "qm:speedrun_timer", "Speedrun Timer", "Speedrun countdown timer", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudSpeedrunTimerContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::DebugGraph, "qm:debug_graph", "Debug graph", "Debug performance graph panel", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudDebugGraphContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::InputOverlay, "qm:input_overlay", "Input overlay", "Input overlay display", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudInputOverlayContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::HudNotifications, "qm:hud_notifications", "Notifications", "Show important server prompts and Echo messages as popups", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) {
+		RenderQmHudNotificationsBasicContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly);
+		if(g_Config.m_QmHudNotificationsShowAdvanced)
+			RenderQmHudNotificationsAdvancedContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly);
+	});
+	AddCard(EQmModuleId::Voice, "qm:voice", "Voice", "Voice chat settings and diagnostics", [this, LineHeight, BodySize, LineSpacing, LabelWidth, UiScale, PrewarmOnly](CUIRect &Content) { RenderQmHudVoiceContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, UiScale, PrewarmOnly); });
+	AddCard(EQmModuleId::DynamicIsland, "qm:dynamic_island", "Dynamic Island", "HUD island appearance settings", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudDynamicIslandContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::SystemMediaControls, "qm:system_media_controls", "SMTC", "System media control", [this, LineHeight, BodySize, LineSpacing, PrewarmOnly](CUIRect &Content) { RenderQmHudSystemMediaControlsContent(Content, LineHeight, BodySize, LineSpacing, PrewarmOnly); });
+	AddCard(EQmModuleId::Lyrics, "qm:lyrics", "Lyrics", "Show current and next lyric lines on HUD", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudLyricsContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+	AddCard(EQmModuleId::Background3D, "qm:background_3d", "3D Background", "Configure background 3D particle effects", [this, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](CUIRect &Content) { RenderQmHudBackground3DContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly); });
+
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_PAGE}, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = PrewarmOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = PrewarmOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !PrewarmOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !PrewarmOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !PrewarmOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !PrewarmOnly && Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = PrewarmOnly ? nullptr : &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(CardCtx, Page, "hud", vCards, SettingsCardOrderModel(), PrewarmOnly ? nullptr : &s_ScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
+	if(!PrewarmOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+}
+
 void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)
 {
 	using namespace qm_module;
@@ -2415,6 +3650,13 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_VISUAL)
 		{
 			RenderSettingsQmClientVisualDeck(ContentView, PrewarmOnly);
+			if(TabTransitionActive)
+				Ui()->ClipDisable();
+			return;
+		}
+		if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_HUD)
+		{
+			RenderSettingsQmClientHudDeck(ContentView, PrewarmOnly);
 			if(TabTransitionActive)
 				Ui()->ClipDisable();
 			return;
@@ -4791,51 +6033,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 4, Localize("Show Coordinates"), Localize("Show coordinates above players"));
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordsOwn, "Show own coordinates", Localize("Show own coordinates"), &g_Config.m_QmNameplateCoordsOwn, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoords, "Show other players' coordinates", Localize("Show other players' coordinates"), &g_Config.m_QmNameplateCoords, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordX, "Show X", Localize("Show X"), &g_Config.m_QmNameplateCoordX, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordY, "Show Y", Localize("Show Y"), &g_Config.m_QmNameplateCoordY, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordXAlignHint, "X alignment hint with me", Localize("X alignment hint with me"), &g_Config.m_QmNameplateCoordXAlignHint, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmNameplateCoordXAlignHintStrict, "Strict mode", Localize("Strict mode"), &g_Config.m_QmNameplateCoordXAlignHintStrict, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-show-coordinates-detection-time", &LabelCol, Localize("Detection time"), LgBodySize);
-				static int s_CoordXAlignHintWindowSliderId;
-				CUIRect WindowSliderRect, WindowValueRect;
-				ControlCol.VSplitRight(maximum(46.0f, 46.0f * UiScale), &WindowSliderRect, &WindowValueRect);
-				WindowSliderRect.VSplitRight(std::clamp(6.0f * UiScale, 3.0f, 6.0f), &WindowSliderRect, nullptr);
-				WindowSliderRect.VMargin(1.0f, &WindowSliderRect);
-				int WindowMs = std::clamp(g_Config.m_QmNameplateCoordXAlignHintWindowMs, 100, 3000);
-				const float WindowRelative = CUi::ms_LinearScrollbarScale.ToRelative(WindowMs, 100, 3000);
-				WindowMs = CUi::ms_LinearScrollbarScale.ToAbsolute(Ui()->DoScrollbarH(&s_CoordXAlignHintWindowSliderId, &WindowSliderRect, WindowRelative), 100, 3000);
-				g_Config.m_QmNameplateCoordXAlignHintWindowMs = std::clamp(round_to_int(WindowMs / 100.0f) * 100, 100, 3000);
-				char aCoordXAlignHintWindow[16];
-				str_format(aCoordXAlignHintWindow, sizeof(aCoordXAlignHintWindow), "%.1fs", g_Config.m_QmNameplateCoordXAlignHintWindowMs / 1000.0f);
-				Ui()->DoLabel(&WindowValueRect, aCoordXAlignHintWindow, LgBodySize, TEXTALIGN_MR);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				static CButtonContainer s_CoordXAlignHintColorId;
-				DoLine_ColorPicker(&s_CoordXAlignHintColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("X alignment color"), &g_Config.m_QmNameplateCoordXAlignHintColor, ColorRGBA(1.0f, 0.82f, 0.2f, 1.0f), false);
-
+				RenderQmHudCoordsContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
@@ -6606,580 +7804,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 12, Localize("Voice"), Localize("Ohhhhhhhhhhhhhhhh"));
-				IUiContext QmClientVoiceTextInputCtx;
-				QmClientVoiceTextInputCtx.m_pUi = Ui();
-				QmClientVoiceTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-				QmClientVoiceTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-				QmClientVoiceTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_voice_text_inputs");
-				QmClientVoiceTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceEnable, "Enable voice", Localize("Enable voice"), &g_Config.m_QmVoiceEnable, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmVoiceEnable)
-				{
-					[[maybe_unused]] auto AddVoiceSectionLabel = [&](const char *pTitle, const char *pHint) {
-						CardContent.HSplitTop(LgLineHeight * 0.78f, &Row, &CardContent);
-						Ui()->DoLabel(&Row, pTitle, LgBodySize * 0.96f, TEXTALIGN_ML);
-						if(pHint != nullptr && pHint[0] != '\0')
-						{
-							CardContent.HSplitTop(LgLineHeight * 0.68f, &Row, &CardContent);
-							Ui()->DoLabel(&Row, pHint, LgBodySize * 0.72f, TEXTALIGN_ML);
-						}
-						CardContent.HSplitTop(LgLineSpacing * 0.75f, nullptr, &CardContent);
-					};
-
-					VoiceUtils::SVoiceUiStatus VoiceUiStatus;
-					GameClient()->m_Voice.Voice().ExportUiStatus(VoiceUiStatus);
-					auto LocalizeVoiceUiMicStatus = [&](const VoiceUtils::SVoiceUiStatus &Status) {
-						const char *pState = VoiceUtils::VoiceUiMicStatus(Status);
-						if(str_comp(pState, "muted") == 0)
-							return Localize("Muted");
-						if(str_comp(pState, "unavailable") == 0)
-							return Localize("Not open, check input device or mic permission");
-						if(str_comp(pState, "ready") == 0)
-							return Localize("Opened");
-						if(str_comp(pState, "waiting") == 0)
-							return Localize("Waiting to open");
-						return Localize("Not enabled");
-					};
-					auto LocalizeVoiceUiOutputStatus = [&](const VoiceUtils::SVoiceUiStatus &Status) {
-						const char *pState = VoiceUtils::VoiceUiOutputStatus(Status);
-						if(str_comp(pState, "unavailable") == 0)
-							return Localize("Not open, check output device");
-						if(str_comp(pState, "ready") == 0)
-							return Localize("Opened");
-						if(str_comp(pState, "waiting") == 0)
-							return Localize("Waiting to open");
-						return Localize("Not enabled");
-					};
-					auto LocalizeVoiceUiServerStatus = [&](const VoiceUtils::SVoiceUiStatus &Status, char *pBuf, size_t BufSize) {
-						const char *pState = VoiceUtils::VoiceUiServerStatus(Status);
-						if(str_comp(pState, "local_test") == 0)
-							str_copy(pBuf, Localize("Local test mode, no server needed"), BufSize);
-						else if(str_comp(pState, "offline") == 0)
-							str_copy(pBuf, Localize("Not connected to server"), BufSize);
-						else if(str_comp(pState, "resolving") == 0)
-							str_copy(pBuf, Localize("Parsing voice server address"), BufSize);
-						else if(str_comp(pState, "socket_error") == 0)
-							str_copy(pBuf, Localize("UDP socket not open"), BufSize);
-						else if(str_comp(pState, "connected") == 0)
-							str_format(pBuf, BufSize, "%s (%d ms)", Localize("Connected"), maximum(Status.m_PingMs, 0));
-						else if(str_comp(pState, "connected_no_ping") == 0)
-							str_copy(pBuf, Localize("Connected, waiting for first ping"), BufSize);
-						else
-							str_copy(pBuf, Localize("Unknown status"), BufSize);
-					};
-					auto LocalizeVoiceUiRoomStatus = [&](const VoiceUtils::SVoiceUiStatus &Status, char *pBuf, size_t BufSize) {
-						const char *pState = VoiceUtils::VoiceUiRoomStatus(Status);
-						if(str_comp(pState, "local_test") == 0)
-							str_copy(pBuf, Localize("Local test mode"), BufSize);
-						else if(str_comp(pState, "offline") == 0)
-							str_copy(pBuf, Localize("Not connected to server"), BufSize);
-						else if(str_comp(pState, "matched") == 0)
-							str_format(pBuf, BufSize, "%s (%d)", Localize("Matched with callable peer"), Status.m_ActivePeerCount);
-						else if(str_comp(pState, "waiting_peer") == 0)
-							str_copy(pBuf, Localize("No callable peer found"), BufSize);
-						else
-							str_copy(pBuf, Localize("Unknown status"), BufSize);
-					};
-					auto LocalizeVoiceUiTransportStatus = [&](const VoiceUtils::SVoiceUiStatus &Status) {
-						const char *pState = VoiceUtils::VoiceUiTransportStatus(Status);
-						if(str_comp(pState, "tx_rx_active") == 0)
-							return Localize("Sending and receiving");
-						if(str_comp(pState, "tx_active") == 0)
-							return Localize("Sending, waiting for peer echo");
-						if(str_comp(pState, "rx_active") == 0)
-							return Localize("Receiving");
-						if(str_comp(pState, "idle_with_peer") == 0)
-							return Localize("Connected, no one is speaking");
-						if(str_comp(pState, "idle_no_peer") == 0)
-							return Localize("No peer");
-						return Localize("Not enabled");
-					};
-					auto LocalizeVoiceUiInputRouteStatus = [&](const VoiceUtils::SVoiceUiStatus &Status, char *pBuf, size_t BufSize) {
-						const char *pState = VoiceUtils::VoiceUiInputRouteStatus(Status);
-						const char *pRequested = Status.m_aRequestedInputDevice[0] != '\0' ? Status.m_aRequestedInputDevice : Localize("Default");
-						const char *pResolved = Status.m_aResolvedInputDevice[0] != '\0' ? Status.m_aResolvedInputDevice : Localize("System default");
-						if(str_comp(pState, "using_selected") == 0)
-							str_format(pBuf, BufSize, "%s: %s", Localize("Switched to"), pRequested);
-						else if(str_comp(pState, "using_default") == 0)
-							str_format(pBuf, BufSize, "%s (%s)", Localize("Use default input"), pResolved);
-						else if(str_comp(pState, "switching_selected") == 0)
-							str_format(pBuf, BufSize, "%s: %s", Localize("Switching"), pRequested);
-						else if(str_comp(pState, "switching_default") == 0)
-							str_copy(pBuf, Localize("Switching back to default input"), BufSize);
-						else if(str_comp(pState, "permission_denied") == 0)
-							str_copy(pBuf, Localize("Microphone permission denied by system"), BufSize);
-						else if(str_comp(pState, "selected_failed") == 0)
-							str_format(pBuf, BufSize, "%s: %s", Localize("Switch failed"), pRequested);
-						else if(str_comp(pState, "default_failed") == 0)
-							str_copy(pBuf, Localize("Default input open failed"), BufSize);
-						else if(str_comp(pState, "waiting") == 0)
-							str_copy(pBuf, Localize("Waiting to open input device"), BufSize);
-						else
-							str_copy(pBuf, Localize("Not enabled"), BufSize);
-					};
-					auto LocalizeVoiceUiOutputRouteStatus = [&](const VoiceUtils::SVoiceUiStatus &Status, char *pBuf, size_t BufSize) {
-						const char *pState = VoiceUtils::VoiceUiOutputRouteStatus(Status);
-						const char *pRequested = Status.m_aRequestedOutputDevice[0] != '\0' ? Status.m_aRequestedOutputDevice : Localize("Default");
-						const char *pResolved = Status.m_aResolvedOutputDevice[0] != '\0' ? Status.m_aResolvedOutputDevice : Localize("System default");
-						if(str_comp(pState, "using_selected") == 0)
-							str_format(pBuf, BufSize, "%s: %s", Localize("Switched to"), pRequested);
-						else if(str_comp(pState, "using_default") == 0)
-							str_format(pBuf, BufSize, "%s (%s)", Localize("Use default output"), pResolved);
-						else if(str_comp(pState, "switching_selected") == 0)
-							str_format(pBuf, BufSize, "%s: %s", Localize("Switching"), pRequested);
-						else if(str_comp(pState, "switching_default") == 0)
-							str_copy(pBuf, Localize("Switching back to default output"), BufSize);
-						else if(str_comp(pState, "selected_failed") == 0)
-							str_format(pBuf, BufSize, "%s: %s", Localize("Switch failed"), pRequested);
-						else if(str_comp(pState, "default_failed") == 0)
-							str_copy(pBuf, Localize("Default output open failed"), BufSize);
-						else if(str_comp(pState, "waiting") == 0)
-							str_copy(pBuf, Localize("Waiting to open output device"), BufSize);
-						else
-							str_copy(pBuf, Localize("Not enabled"), BufSize);
-					};
-					auto LocalizeVoiceUiAudioIssue = [&](const VoiceUtils::SVoiceUiStatus &Status) {
-						const char *pIssue = VoiceUtils::VoiceUiAudioIssueKey(Status);
-						if(str_comp(pIssue, "none") == 0)
-							return Localize("No audio issues detected");
-						if(str_comp(pIssue, "input_device_not_found") == 0)
-							return Localize("Input device not found");
-						if(str_comp(pIssue, "output_device_not_found") == 0)
-							return Localize("Output device not found");
-						if(str_comp(pIssue, "no_capture_devices") == 0)
-							return Localize("No input device available");
-						if(str_comp(pIssue, "no_output_devices") == 0)
-							return Localize("No output device available");
-						if(str_comp(pIssue, "open_capture_failed") == 0)
-							return Localize("Input device open failed");
-						if(str_comp(pIssue, "open_output_failed") == 0)
-							return Localize("Output device open failed");
-						if(str_comp(pIssue, "permission_denied") == 0)
-							return Localize("Microphone permission denied by system");
-						if(str_comp(pIssue, "backend_init_failed") == 0)
-							return Localize("Audio backend init failed");
-						return Localize("Unclassified audio issue");
-					};
-					auto RenderVoiceStatusRow = [&](const char *pTitle, const char *pValue) {
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						CUIRect StatusLabel, StatusValue;
-						Row.VSplitLeft(LgLabelWidth, &StatusLabel, &StatusValue);
-						Ui()->DoLabel(&StatusLabel, pTitle, LgBodySize, TEXTALIGN_ML);
-						Ui()->DoLabel(&StatusValue, pValue, LgBodySize * 0.92f, TEXTALIGN_ML);
-						CardContent.HSplitTop(LgLineSpacing * 0.75f, nullptr, &CardContent);
-					};
-					auto LocalizeVoiceUiActionHint = [&](const VoiceUtils::SVoiceUiStatus &Status) {
-						const char *pHint = VoiceUtils::VoiceUiActionHint(Status);
-						if(str_comp(pHint, "select_input_device") == 0)
-							return Localize("Try reselecting input device, confirm default mic or headset mic is online");
-						if(str_comp(pHint, "select_output_device") == 0)
-							return Localize("Try reselecting output device, confirm headphones/speakers are online");
-						if(str_comp(pHint, "retry_input_open") == 0)
-							return Localize("Input device open failed, try reconnecting headset/mic or reselecting input device");
-						if(str_comp(pHint, "retry_output_open") == 0)
-							return Localize("Output device open failed, try reconnecting speakers/headphones or reselecting output device");
-						if(str_comp(pHint, "grant_mic_permission") == 0)
-							return Localize("Allow mic permission in system settings, then reopen voice");
-						if(str_comp(pHint, "check_audio_backend") == 0)
-							return Localize("Audio backend init failed, try switching devices and check details");
-						if(str_comp(pHint, "inspect_audio_log") == 0)
-							return Localize("Audio init failed, check details below and logs");
-						if(str_comp(pHint, "check_input") == 0)
-							return Localize("Check input device, system default mic, and mic permission first");
-						if(str_comp(pHint, "check_output") == 0)
-							return Localize("Check output device, confirm headphones/speakers are still online");
-						if(str_comp(pHint, "join_server") == 0)
-							return Localize("Connect to server first to establish voice network link");
-						if(str_comp(pHint, "check_server") == 0)
-							return Localize("Check if voice server address is reachable");
-						if(str_comp(pHint, "retry_socket") == 0)
-							return Localize("Try toggling voice or reconnecting to server");
-						if(str_comp(pHint, "check_room") == 0)
-							return Localize("Confirm both are on same server, same room, and support voice");
-						if(str_comp(pHint, "wait_peer") == 0)
-							return Localize("Sending locally, suggest the other party unmute or confirm they can receive");
-						if(str_comp(pHint, "enable_voice") == 0)
-							return Localize("Please enable voice first");
-						return Localize("Status normal, check details below if still experiencing issues");
-					};
-
-					char aVoiceServerStatus[128];
-					char aVoiceRoomStatus[128];
-					char aVoiceTransportStatus[128];
-					char aVoiceTransportDetail[160];
-					char aVoiceInputRouteStatus[160];
-					char aVoiceOutputRouteStatus[160];
-					LocalizeVoiceUiServerStatus(VoiceUiStatus, aVoiceServerStatus, sizeof(aVoiceServerStatus));
-					LocalizeVoiceUiRoomStatus(VoiceUiStatus, aVoiceRoomStatus, sizeof(aVoiceRoomStatus));
-					LocalizeVoiceUiInputRouteStatus(VoiceUiStatus, aVoiceInputRouteStatus, sizeof(aVoiceInputRouteStatus));
-					LocalizeVoiceUiOutputRouteStatus(VoiceUiStatus, aVoiceOutputRouteStatus, sizeof(aVoiceOutputRouteStatus));
-					str_copy(aVoiceTransportStatus, LocalizeVoiceUiTransportStatus(VoiceUiStatus), sizeof(aVoiceTransportStatus));
-					if(VoiceUiStatus.m_TxAgeMs >= 0 || VoiceUiStatus.m_RxAgeMs >= 0)
-					{
-						str_format(aVoiceTransportDetail, sizeof(aVoiceTransportDetail), "%s: tx=%dms rx=%dms mic=%.0f%%",
-							aVoiceTransportStatus,
-							VoiceUiStatus.m_TxAgeMs,
-							VoiceUiStatus.m_RxAgeMs,
-							(double)std::clamp(VoiceUiStatus.m_MicLevel * 100.0f, 0.0f, 100.0f));
-					}
-					else
-					{
-						str_copy(aVoiceTransportDetail, aVoiceTransportStatus, sizeof(aVoiceTransportDetail));
-					}
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-voice-room-password", &LabelCol, Localize("Room password"), LgBodySize);
-					static CLineInput s_VoiceToken(g_Config.m_QmVoiceToken, sizeof(g_Config.m_QmVoiceToken));
-					s_VoiceToken.SetEmptyText(Localize("Leave empty to join public room"));
-					s_VoiceToken.SetHidden(true);
-					ui_widget::InputField(QmClientVoiceTextInputCtx, &s_VoiceToken, ControlCol, Localize("Leave empty to join public room"), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceMicMute, "Mute microphone", Localize("Mute microphone"), &g_Config.m_QmVoiceMicMute, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-voice-microphone-volume", &LabelColValue, Localize("Microphone volume"), LgBodySize);
-						static int s_QmVoiceMicVolumeInputId;
-						RenderSliderWithValueInput(&s_QmVoiceMicVolumeInputId, ControlColValue, &g_Config.m_QmVoiceMicVolume, 0, 300, "%");
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceVadEnable, "Auto unmute when speaking", Localize("Auto unmute when speaking"), &g_Config.m_QmVoiceVadEnable, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceShowAdvanced, "Advanced options", Localize("Advanced options"), &g_Config.m_QmVoiceShowAdvanced, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					if(g_Config.m_QmVoiceShowAdvanced)
-					{
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceShowConnectionStatus, "Show voice connection status", Localize("Show voice connection status"), &g_Config.m_QmVoiceShowConnectionStatus, &Row, LgLineHeight);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						if(g_Config.m_QmVoiceShowConnectionStatus)
-						{
-							AddVoiceSectionLabel(Localize("Current status"), Localize("Start here to quickly diagnose if the issue is with device, server, or room"));
-							RenderVoiceStatusRow(Localize("Microphone"), LocalizeVoiceUiMicStatus(VoiceUiStatus));
-							RenderVoiceStatusRow(Localize("Speaker"), LocalizeVoiceUiOutputStatus(VoiceUiStatus));
-							RenderVoiceStatusRow(Localize("Input switch"), aVoiceInputRouteStatus);
-							RenderVoiceStatusRow(Localize("Output switch"), aVoiceOutputRouteStatus);
-							RenderVoiceStatusRow(Localize("Server"), aVoiceServerStatus);
-							RenderVoiceStatusRow(Localize("Room"), aVoiceRoomStatus);
-							RenderVoiceStatusRow(Localize("Send & Receive"), aVoiceTransportDetail);
-							RenderVoiceStatusRow(Localize("Troubleshooting suggestions"), LocalizeVoiceUiActionHint(VoiceUiStatus));
-							RenderVoiceStatusRow(Localize("Audio issue"), LocalizeVoiceUiAudioIssue(VoiceUiStatus));
-							if(VoiceUtils::VoiceUiPrimaryError(VoiceUiStatus)[0] != '\0')
-								RenderVoiceStatusRow(Localize("Detailed reason"), VoiceUtils::VoiceUiPrimaryError(VoiceUiStatus));
-							CardContent.HSplitTop(LgLineSpacing * 0.5f, nullptr, &CardContent);
-						}
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-						DoQmSettingsLabel("qmclient-voice-server-ip", &LabelCol, Localize("Server IP"), LgBodySize);
-						static CLineInput s_VoiceServer(g_Config.m_QmVoiceServer, sizeof(g_Config.m_QmVoiceServer));
-						s_VoiceServer.SetEmptyText("42.194.185.210:9987");
-						ui_widget::InputField(QmClientVoiceTextInputCtx, &s_VoiceServer, ControlCol, "42.194.185.210:9987", LgBodySize);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-						DoQmSettingsLabel("qmclient-voice-input-device", &LabelCol, Localize("Input device"), LgBodySize);
-						static std::vector<std::string> s_VoiceInputDeviceDisplayNames;
-						static std::vector<std::string> s_VoiceInputDeviceConfigValues;
-						static std::vector<const char *> s_VoiceInputDeviceDropDownNames;
-						static std::vector<VoiceUtils::SVoiceDeviceDropdownEntry> s_VoiceInputDeviceEntries;
-						static CUi::SDropDownState s_VoiceInputDeviceDropDownState;
-						static CScrollRegion s_VoiceInputDeviceDropDownScrollRegion;
-						static bool s_VoiceInputDevicesInitialized = false;
-						s_VoiceInputDeviceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceInputDeviceDropDownScrollRegion;
-						auto RefreshVoiceInputDeviceList = [&]() {
-							CPerfTimer StageTimer;
-							s_VoiceInputDeviceDisplayNames.clear();
-							s_VoiceInputDeviceConfigValues.clear();
-							s_VoiceInputDeviceDropDownNames.clear();
-							std::vector<std::string> vDetectedDeviceNames;
-							const int NumInputs = SDL_GetNumAudioDevices(1);
-							for(int i = 0; i < NumInputs; i++)
-							{
-								const char *pName = SDL_GetAudioDeviceName(i, 1);
-								if(!pName || pName[0] == '\0')
-									continue;
-								vDetectedDeviceNames.emplace_back(pName);
-							}
-
-							VoiceUtils::BuildVoiceDeviceDropdownEntries(
-								vDetectedDeviceNames,
-								g_Config.m_QmVoiceInputDevice,
-								Localize("Default"),
-								Localize("Disconnected"),
-								s_VoiceInputDeviceEntries);
-
-							s_VoiceInputDeviceDisplayNames.reserve(s_VoiceInputDeviceEntries.size());
-							s_VoiceInputDeviceConfigValues.reserve(s_VoiceInputDeviceEntries.size());
-							s_VoiceInputDeviceDropDownNames.reserve(s_VoiceInputDeviceDisplayNames.size());
-							for(const auto &Entry : s_VoiceInputDeviceEntries)
-							{
-								s_VoiceInputDeviceDisplayNames.push_back(Entry.m_DisplayName);
-								s_VoiceInputDeviceConfigValues.push_back(Entry.m_ConfigValue);
-								s_VoiceInputDeviceDropDownNames.push_back(s_VoiceInputDeviceDisplayNames.back().c_str());
-							}
-
-							char aVoiceExtra[96];
-							str_format(aVoiceExtra, sizeof(aVoiceExtra), "devices=%d", (int)s_VoiceInputDeviceDisplayNames.size());
-							LogQmPerfStage(Client(), "voice_device_enum", StageTimer.ElapsedMs(), false, aVoiceExtra);
-						};
-						if(!s_VoiceInputDevicesInitialized)
-						{
-							RefreshVoiceInputDeviceList();
-							s_VoiceInputDevicesInitialized = true;
-						}
-
-						CUIRect VoiceInputDropDownRect;
-						CUIRect VoiceInputRefreshButton;
-						ControlCol.VSplitRight(maximum(68.0f, 68.0f * UiScale), &VoiceInputDropDownRect, &VoiceInputRefreshButton);
-
-						const int VoiceInputSelectedOld = VoiceUtils::VoiceFindSelectedDeviceIndex(s_VoiceInputDeviceEntries, g_Config.m_QmVoiceInputDevice);
-
-						const int VoiceInputSelectedNew = Ui()->DoDropDown(&VoiceInputDropDownRect, VoiceInputSelectedOld, s_VoiceInputDeviceDropDownNames.data(), s_VoiceInputDeviceDropDownNames.size(), s_VoiceInputDeviceDropDownState);
-						if(VoiceInputSelectedNew >= 0 && VoiceInputSelectedNew != VoiceInputSelectedOld && (size_t)VoiceInputSelectedNew < s_VoiceInputDeviceConfigValues.size())
-							str_copy(g_Config.m_QmVoiceInputDevice, s_VoiceInputDeviceConfigValues[VoiceInputSelectedNew].c_str(), sizeof(g_Config.m_QmVoiceInputDevice));
-
-						static CButtonContainer s_VoiceInputRefreshButton;
-						if(DoQmSettingsMenuButton(&s_VoiceInputRefreshButton, "qmclient-voice-input-refresh", Localize("Refresh"), &VoiceInputRefreshButton))
-							RefreshVoiceInputDeviceList();
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-						DoQmSettingsLabel("qmclient-voice-output-device", &LabelCol, Localize("Output device"), LgBodySize);
-						static std::vector<std::string> s_VoiceOutputDeviceDisplayNames;
-						static std::vector<std::string> s_VoiceOutputDeviceConfigValues;
-						static std::vector<const char *> s_VoiceOutputDeviceDropDownNames;
-						static std::vector<VoiceUtils::SVoiceDeviceDropdownEntry> s_VoiceOutputDeviceEntries;
-						static CUi::SDropDownState s_VoiceOutputDeviceDropDownState;
-						static CScrollRegion s_VoiceOutputDeviceDropDownScrollRegion;
-						static bool s_VoiceOutputDevicesInitialized = false;
-						s_VoiceOutputDeviceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceOutputDeviceDropDownScrollRegion;
-						auto RefreshVoiceOutputDeviceList = [&]() {
-							CPerfTimer StageTimer;
-							s_VoiceOutputDeviceDisplayNames.clear();
-							s_VoiceOutputDeviceConfigValues.clear();
-							s_VoiceOutputDeviceDropDownNames.clear();
-							std::vector<std::string> vDetectedDeviceNames;
-							const int NumOutputs = SDL_GetNumAudioDevices(0);
-							for(int i = 0; i < NumOutputs; i++)
-							{
-								const char *pName = SDL_GetAudioDeviceName(i, 0);
-								if(!pName || pName[0] == '\0')
-									continue;
-								vDetectedDeviceNames.emplace_back(pName);
-							}
-
-							VoiceUtils::BuildVoiceDeviceDropdownEntries(
-								vDetectedDeviceNames,
-								g_Config.m_QmVoiceOutputDevice,
-								Localize("Default"),
-								Localize("Disconnected"),
-								s_VoiceOutputDeviceEntries);
-
-							s_VoiceOutputDeviceDisplayNames.reserve(s_VoiceOutputDeviceEntries.size());
-							s_VoiceOutputDeviceConfigValues.reserve(s_VoiceOutputDeviceEntries.size());
-							s_VoiceOutputDeviceDropDownNames.reserve(s_VoiceOutputDeviceDisplayNames.size());
-							for(const auto &Entry : s_VoiceOutputDeviceEntries)
-							{
-								s_VoiceOutputDeviceDisplayNames.push_back(Entry.m_DisplayName);
-								s_VoiceOutputDeviceConfigValues.push_back(Entry.m_ConfigValue);
-								s_VoiceOutputDeviceDropDownNames.push_back(s_VoiceOutputDeviceDisplayNames.back().c_str());
-							}
-
-							char aVoiceExtra[96];
-							str_format(aVoiceExtra, sizeof(aVoiceExtra), "devices=%d", (int)s_VoiceOutputDeviceDisplayNames.size());
-							LogQmPerfStage(Client(), "voice_output_device_enum", StageTimer.ElapsedMs(), false, aVoiceExtra);
-						};
-						if(!s_VoiceOutputDevicesInitialized)
-						{
-							RefreshVoiceOutputDeviceList();
-							s_VoiceOutputDevicesInitialized = true;
-						}
-
-						CUIRect VoiceOutputDropDownRect;
-						CUIRect VoiceOutputRefreshButton;
-						ControlCol.VSplitRight(maximum(68.0f, 68.0f * UiScale), &VoiceOutputDropDownRect, &VoiceOutputRefreshButton);
-
-						const int VoiceOutputSelectedOld = VoiceUtils::VoiceFindSelectedDeviceIndex(s_VoiceOutputDeviceEntries, g_Config.m_QmVoiceOutputDevice);
-
-						const int VoiceOutputSelectedNew = Ui()->DoDropDown(&VoiceOutputDropDownRect, VoiceOutputSelectedOld, s_VoiceOutputDeviceDropDownNames.data(), s_VoiceOutputDeviceDropDownNames.size(), s_VoiceOutputDeviceDropDownState);
-						if(VoiceOutputSelectedNew >= 0 && VoiceOutputSelectedNew != VoiceOutputSelectedOld && (size_t)VoiceOutputSelectedNew < s_VoiceOutputDeviceConfigValues.size())
-							str_copy(g_Config.m_QmVoiceOutputDevice, s_VoiceOutputDeviceConfigValues[VoiceOutputSelectedNew].c_str(), sizeof(g_Config.m_QmVoiceOutputDevice));
-
-						static CButtonContainer s_VoiceOutputRefreshButton;
-						if(DoQmSettingsMenuButton(&s_VoiceOutputRefreshButton, "qmclient-voice-output-refresh", Localize("Refresh"), &VoiceOutputRefreshButton))
-							RefreshVoiceOutputDeviceList();
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						{
-							static std::vector<const char *> s_VoiceBitrateProfileDropDownNames;
-							s_VoiceBitrateProfileDropDownNames = {
-								Localize("Auto"),
-								"24 kbps",
-								"32 kbps",
-								"48 kbps",
-								"64 kbps",
-							};
-							static CUi::SDropDownState s_VoiceBitrateProfileDropDownState;
-							static CScrollRegion s_VoiceBitrateProfileDropDownScrollRegion;
-							s_VoiceBitrateProfileDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceBitrateProfileDropDownScrollRegion;
-
-							Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-							DoQmSettingsLabel("qmclient-voice-bitrate", &LabelCol, Localize("Voice bitrate"), LgBodySize);
-							const int CurrentBitrateProfile = std::clamp(g_Config.m_QmVoiceBitrateProfile, 0, 4);
-							const int NewBitrateProfile = Ui()->DoDropDown(&ControlCol, CurrentBitrateProfile, s_VoiceBitrateProfileDropDownNames.data(), s_VoiceBitrateProfileDropDownNames.size(), s_VoiceBitrateProfileDropDownState);
-							if(CurrentBitrateProfile != NewBitrateProfile)
-								g_Config.m_QmVoiceBitrateProfile = NewBitrateProfile;
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						{
-							static std::vector<const char *> s_VoiceNoiseSuppressModeDropDownNames;
-							s_VoiceNoiseSuppressModeDropDownNames = {
-								Localize("No noise reduction"),
-								Localize("Simple noise reduction"),
-#if defined(CONF_RNNOISE)
-								Localize("RNNoise noise reduction"),
-#else
-								Localize("RNNoise noise reduction (unavailable in this build)"),
-#endif
-							};
-							static CUi::SDropDownState s_VoiceNoiseSuppressModeDropDownState;
-							static CScrollRegion s_VoiceNoiseSuppressModeDropDownScrollRegion;
-							s_VoiceNoiseSuppressModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_VoiceNoiseSuppressModeDropDownScrollRegion;
-
-							Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-							DoQmSettingsLabel("qmclient-voice-noise-reduction-mode", &LabelCol, Localize("Noise reduction mode"), LgBodySize);
-							const int CurrentNoiseSuppressMode = std::clamp(g_Config.m_QmVoiceNoiseSuppressEnable, 0, 2);
-							const int NewNoiseSuppressMode = Ui()->DoDropDown(&ControlCol, CurrentNoiseSuppressMode, s_VoiceNoiseSuppressModeDropDownNames.data(), s_VoiceNoiseSuppressModeDropDownNames.size(), s_VoiceNoiseSuppressModeDropDownState);
-							if(CurrentNoiseSuppressMode != NewNoiseSuppressMode)
-								g_Config.m_QmVoiceNoiseSuppressEnable = NewNoiseSuppressMode;
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						if(g_Config.m_QmVoiceNoiseSuppressEnable != 0)
-						{
-#if !defined(CONF_RNNOISE)
-							if(g_Config.m_QmVoiceNoiseSuppressEnable == 2)
-							{
-								CardContent.HSplitTop(LgLineHeight * 0.78f, &Row, &CardContent);
-								DoQmSettingsLabel("qmclient-voice-rnnoise-fallback-warning", &Row, Localize("RNNoise not integrated in current build, will fallback to simple noise reduction"), LgBodySize * 0.72f);
-								CardContent.HSplitTop(LgLineSpacing * 0.75f, nullptr, &CardContent);
-							}
-#endif
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							{
-								CUIRect LabelColValue, ControlColValue;
-								Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-#if !defined(CONF_RNNOISE)
-								const bool RnnoiseFallbackActive = g_Config.m_QmVoiceNoiseSuppressEnable == 2;
-#endif
-								const char *pNoiseSuppressStrengthLabel = g_Config.m_QmVoiceNoiseSuppressEnable == 2 ?
-#if !defined(CONF_RNNOISE)
-														  (RnnoiseFallbackActive ? Localize("Fallback simple noise reduction strength") : Localize("RNNoise noise reduction strength")) :
-#else
-														  Localize("RNNoise noise reduction strength") :
-#endif
-														  Localize("Simple noise reduction strength");
-								Ui()->DoLabel(&LabelColValue, pNoiseSuppressStrengthLabel, LgBodySize, TEXTALIGN_ML);
-								static int s_QmVoiceNoiseSuppressStrengthInputId;
-								RenderSliderWithValueInput(&s_QmVoiceNoiseSuppressStrengthInputId, ControlColValue, &g_Config.m_QmVoiceNoiseSuppressStrength, 0, 100, "%");
-							}
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						}
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceAgcEnable, "Auto gain control for mic (AGC, experimental)", Localize("Auto gain control for mic (AGC, experimental)"), &g_Config.m_QmVoiceAgcEnable, &Row, LgLineHeight);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						if(g_Config.m_QmVoiceVadEnable)
-						{
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							{
-								CUIRect LabelColValue, ControlColValue;
-								Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-								DoQmSettingsLabel("qmclient-voice-speech-trigger-threshold", &LabelColValue, Localize("Speech trigger threshold"), LgBodySize);
-								static int s_QmVoiceVadThresholdInputId;
-								RenderSliderWithValueInput(&s_QmVoiceVadThresholdInputId, ControlColValue, &g_Config.m_QmVoiceVadThreshold, 0, 100, "%");
-							}
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							{
-								CUIRect LabelColValue, ControlColValue;
-								Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-								DoQmSettingsLabel("qmclient-voice-activation-release-delay", &LabelColValue, Localize("Voice activation release delay"), LgBodySize);
-								static int s_QmVoiceVadReleaseDelayMsInputId;
-								RenderSliderWithValueInput(&s_QmVoiceVadReleaseDelayMsInputId, ControlColValue, &g_Config.m_QmVoiceVadReleaseDelayMs, 0, 1000, "ms");
-							}
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						}
-
-						CardContent.HSplitTop(LgLineSpacing * 1.15f, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						{
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-voice-playback-volume", &LabelColValue, Localize("Playback volume"), LgBodySize);
-							static int s_QmVoiceVolumeInputId;
-							RenderSliderWithValueInput(&s_QmVoiceVolumeInputId, ControlColValue, &g_Config.m_QmVoiceVolume, 0, 400, "%");
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceStereo, "Enable stereo positioning", Localize("Enable stereo positioning"), &g_Config.m_QmVoiceStereo, &Row, LgLineHeight);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						if(g_Config.m_QmVoiceStereo)
-						{
-							CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-							{
-								CUIRect LabelColValue, ControlColValue;
-								Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-								DoQmSettingsLabel("qmclient-voice-left-right-channel-width", &LabelColValue, Localize("Left/right channel width"), LgBodySize);
-								static int s_QmVoiceStereoWidthInputId;
-								RenderSliderWithValueInput(&s_QmVoiceStereoWidthInputId, ControlColValue, &g_Config.m_QmVoiceStereoWidth, 0, 200, "%");
-							}
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						}
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						{
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-voice-distance-radius-tiles", &LabelColValue, Localize("Voice distance radius (tiles)"), LgBodySize);
-							static int s_QmVoiceRadiusInputId;
-							RenderSliderWithValueInput(&s_QmVoiceRadiusInputId, ControlColValue, &g_Config.m_QmVoiceRadius, 1, 400);
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoQmSettingsCheckboxAuto(&g_Config.m_QmVoiceGroupGlobal, "Full map listen in same room", Localize("Full map listen in same room"), &g_Config.m_QmVoiceGroupGlobal, &Row, LgLineHeight);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					}
-				}
-
+				RenderQmHudVoiceContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, UiScale, PrewarmOnly);
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
@@ -7218,142 +7843,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 15, Localize("3D Background"), Localize("Configure background 3D particle effects"));
-
-				auto RenderIntOption = [&](const void *pId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					Ui()->DoLabel(&LabelCol, pLabel, LgBodySize, TEXTALIGN_ML);
-					RenderSliderWithValueInput(pId, ControlCol, pValue, MinValue, MaxValue, pSuffix);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				};
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticles, "Enable 3D background particles", Localize("Enable 3D background particles"), &g_Config.m_Qm3DParticles, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_Qm3DParticles)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-3d-background-particle-type", &LabelCol, Localize("Particle type"), LgBodySize);
-					std::array<const char *, 9> apQm3DParticleTypeNames = {
-						Localize("Cube"),
-						Localize("Heart"),
-						Localize("Sphere"),
-						Localize("Pyramid"),
-						Localize("Diamond"),
-						Localize("Ring"),
-						Localize("Star"),
-						Localize("Crescent"),
-						Localize("Mixed"),
-					};
-					const std::array<int, 9> aQm3DParticleTypeValues = {1, 2, 4, 5, 6, 7, 8, 9, 3};
-					int TypeIndex = 0;
-					for(size_t TypeValueIndex = 0; TypeValueIndex < aQm3DParticleTypeValues.size(); ++TypeValueIndex)
-					{
-						if(aQm3DParticleTypeValues[TypeValueIndex] == g_Config.m_Qm3DParticlesType)
-						{
-							TypeIndex = (int)TypeValueIndex;
-							break;
-						}
-					}
-					static CUi::SDropDownState s_Qm3DParticleTypeDropDownState;
-					static CScrollRegion s_Qm3DParticleTypeDropDownScrollRegion;
-					s_Qm3DParticleTypeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_Qm3DParticleTypeDropDownScrollRegion;
-					const int NewTypeIndex = Ui()->DoDropDown(&ControlCol, TypeIndex, apQm3DParticleTypeNames.data(), static_cast<int>(apQm3DParticleTypeNames.size()), s_Qm3DParticleTypeDropDownState);
-					if(NewTypeIndex >= 0 && NewTypeIndex < static_cast<int>(aQm3DParticleTypeValues.size()) && NewTypeIndex != TypeIndex)
-						g_Config.m_Qm3DParticlesType = aQm3DParticleTypeValues[NewTypeIndex];
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					static int s_Qm3DParticleCountInputId;
-					RenderIntOption(&s_Qm3DParticleCountInputId, Localize("Particle count"), &g_Config.m_Qm3DParticlesCount, 1, 200);
-					static int s_Qm3DParticleAlphaInputId;
-					RenderIntOption(&s_Qm3DParticleAlphaInputId, Localize("Particle alpha"), &g_Config.m_Qm3DParticlesAlpha, 1, 100, "%");
-					static int s_Qm3DParticleMinSizeInputId;
-					RenderIntOption(&s_Qm3DParticleMinSizeInputId, Localize("Min size"), &g_Config.m_Qm3DParticlesSizeMin, 2, 64);
-					if(g_Config.m_Qm3DParticlesSizeMax < g_Config.m_Qm3DParticlesSizeMin)
-						g_Config.m_Qm3DParticlesSizeMax = g_Config.m_Qm3DParticlesSizeMin;
-					static int s_Qm3DParticleMaxSizeInputId;
-					RenderIntOption(&s_Qm3DParticleMaxSizeInputId, Localize("Max size"), &g_Config.m_Qm3DParticlesSizeMax, g_Config.m_Qm3DParticlesSizeMin, 64);
-					static int s_Qm3DParticleSpeedInputId;
-					RenderIntOption(&s_Qm3DParticleSpeedInputId, Localize("Particle speed"), &g_Config.m_Qm3DParticlesSpeed, 1, 500);
-					static int s_Qm3DParticleDepthInputId;
-					RenderIntOption(&s_Qm3DParticleDepthInputId, Localize("Particle depth"), &g_Config.m_Qm3DParticlesDepth, 10, 1000);
-					static int s_Qm3DParticleViewMarginInputId;
-					RenderIntOption(&s_Qm3DParticleViewMarginInputId, Localize("View margin"), &g_Config.m_Qm3DParticlesViewMargin, 0, 1000);
-					static int s_Qm3DParticleFadeInInputId;
-					RenderIntOption(&s_Qm3DParticleFadeInInputId, Localize("Fade in"), &g_Config.m_Qm3DParticlesFadeInMs, 1, 5000, "ms");
-					static int s_Qm3DParticleFadeOutInputId;
-					RenderIntOption(&s_Qm3DParticleFadeOutInputId, Localize("Fade out"), &g_Config.m_Qm3DParticlesFadeOutMs, 1, 5000, "ms");
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesCollide, "Particle collision", Localize("Particle collision"), &g_Config.m_Qm3DParticlesCollide, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					static int s_Qm3DParticlePushRadiusInputId;
-					RenderIntOption(&s_Qm3DParticlePushRadiusInputId, Localize("Push radius"), &g_Config.m_Qm3DParticlesPushRadius, 0, 1000);
-					static int s_Qm3DParticlePushStrengthInputId;
-					RenderIntOption(&s_Qm3DParticlePushStrengthInputId, Localize("Push strength"), &g_Config.m_Qm3DParticlesPushStrength, 0, 2000);
-
-					static std::vector<CButtonContainer> s_vQm3DParticleColorModeButtons = {{}, {}};
-					int ColorMode = g_Config.m_Qm3DParticlesColorMode;
-					if(DoSettingsLine_RadioMenu(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, CardContent, "qmclient-3d-particle-color-mode-label", Localize("Particle color"), s_vQm3DParticleColorModeButtons, {"qmclient-3d-particle-color-custom", "qmclient-3d-particle-color-random"}, {Localize("Custom"), Localize("Random")}, {1, 2}, ColorMode))
-						g_Config.m_Qm3DParticlesColorMode = ColorMode;
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					if(g_Config.m_Qm3DParticlesColorMode == 1)
-					{
-						static CButtonContainer s_Qm3DParticleColorId;
-						DoLine_ColorPicker(&s_Qm3DParticleColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Particle color"), &g_Config.m_Qm3DParticlesColor, ColorRGBA(0.56f, 0.72f, 0.62f, 1.0f), false, nullptr, true);
-					}
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesGlow, "Particle glow", Localize("Particle glow"), &g_Config.m_Qm3DParticlesGlow, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					if(g_Config.m_Qm3DParticlesGlow)
-					{
-						static int s_Qm3DParticleGlowAlphaInputId;
-						RenderIntOption(&s_Qm3DParticleGlowAlphaInputId, Localize("Glow alpha"), &g_Config.m_Qm3DParticlesGlowAlpha, 1, 100, "%");
-						static int s_Qm3DParticleGlowOffsetInputId;
-						RenderIntOption(&s_Qm3DParticleGlowOffsetInputId, Localize("Glow offset"), &g_Config.m_Qm3DParticlesGlowOffset, 1, 20);
-					}
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesTrail, "Particle trail", Localize("Particle trail"), &g_Config.m_Qm3DParticlesTrail, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					if(g_Config.m_Qm3DParticlesTrail)
-					{
-						static int s_Qm3DParticleTrailLengthInputId;
-						RenderIntOption(&s_Qm3DParticleTrailLengthInputId, Localize("Trail length"), &g_Config.m_Qm3DParticlesTrailLength, 2, 6);
-						static int s_Qm3DParticleTrailAlphaInputId;
-						RenderIntOption(&s_Qm3DParticleTrailAlphaInputId, Localize("Trail alpha"), &g_Config.m_Qm3DParticlesTrailAlpha, 1, 100, "%");
-					}
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesPulse, "Particle pulse", Localize("Particle pulse"), &g_Config.m_Qm3DParticlesPulse, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					if(g_Config.m_Qm3DParticlesPulse)
-					{
-						static int s_Qm3DParticlePulseStrengthInputId;
-						RenderIntOption(&s_Qm3DParticlePulseStrengthInputId, Localize("Pulse strength"), &g_Config.m_Qm3DParticlesPulseStrength, 0, 50, "%");
-						static int s_Qm3DParticlePulseSpeedInputId;
-						RenderIntOption(&s_Qm3DParticlePulseSpeedInputId, Localize("Pulse speed"), &g_Config.m_Qm3DParticlesPulseSpeed, 10, 300, "%");
-					}
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_Qm3DParticlesTwinkle, "Particle twinkle", Localize("Particle twinkle"), &g_Config.m_Qm3DParticlesTwinkle, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					if(g_Config.m_Qm3DParticlesTwinkle)
-					{
-						static int s_Qm3DParticleTwinkleStrengthInputId;
-						RenderIntOption(&s_Qm3DParticleTwinkleStrengthInputId, Localize("Twinkle strength"), &g_Config.m_Qm3DParticlesTwinkleStrength, 0, 100, "%");
-					}
-				}
-
+				RenderQmHudBackground3DContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
@@ -7414,302 +7904,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadlineNew(CardContent, 13, Localize("Lyrics"), Localize("Show current and next lyric lines on HUD"), "qm_lyrics_phase1");
-				if(!PrewarmOnly)
-					MarkQmNewFeatureRead("qm_lyrics_phase1");
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmSmtcLyricsEnable, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmSmtcLyricsEnable, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsMarquee, "Scroll long lines", Localize("Scroll long lines"), &g_Config.m_QmLyricsMarquee, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoHideNoSmtc, "Hide without media state", Localize("Hide without media state"), &g_Config.m_QmLyricsAutoHideNoSmtc, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				auto RenderLyricsSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, LgBodySize);
-					RenderSliderWithValueInput(pId, ControlColValue, pValue, MinValue, MaxValue, pSuffix);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				};
-
-				static int s_QmSmtcLyricsOffsetInputId;
-				RenderLyricsSlider(&s_QmSmtcLyricsOffsetInputId, "qmclient-lyrics-time-offset", Localize("Time offset"), &g_Config.m_QmSmtcLyricsOffsetMs, -10000, 10000, "ms");
-				static int s_QmSmtcLyricsLinesInputId;
-				RenderLyricsSlider(&s_QmSmtcLyricsLinesInputId, "qmclient-lyrics-lines", Localize("Lines"), &g_Config.m_QmSmtcLyricsLines, 1, 2);
-				static int s_QmSmtcLyricsFontSizeInputId;
-				RenderLyricsSlider(&s_QmSmtcLyricsFontSizeInputId, "qmclient-lyrics-font-size", Localize("Font size"), &g_Config.m_QmSmtcLyricsFontSize, 4, 16);
-				static int s_QmLyricsBgOpacityInputId;
-				RenderLyricsSlider(&s_QmLyricsBgOpacityInputId, "qmclient-lyrics-background-opacity", Localize("Background opacity"), &g_Config.m_QmLyricsBgOpacity, 0, 100, "%");
-				static int s_QmLyricsOutlineOpacityInputId;
-				RenderLyricsSlider(&s_QmLyricsOutlineOpacityInputId, "qmclient-lyrics-outline-opacity", Localize("Outline opacity"), &g_Config.m_QmLyricsOutlineOpacity, 0, 100, "%");
-				static int s_QmLyricsFadeDurationInputId;
-				RenderLyricsSlider(&s_QmLyricsFadeDurationInputId, "qmclient-lyrics-fade-duration", Localize("Fade duration"), &g_Config.m_QmLyricsFadeDurationMs, 0, 2000, "ms");
-				static int s_QmLyricsMarqueeSpeedInputId;
-				RenderLyricsSlider(&s_QmLyricsMarqueeSpeedInputId, "qmclient-lyrics-scroll-speed", Localize("Scroll speed"), &g_Config.m_QmLyricsMarqueeSpeed, 1, 24);
-				static int s_QmLyricsSnapThresholdInputId;
-				RenderLyricsSlider(&s_QmLyricsSnapThresholdInputId, "qmclient-lyrics-snap-threshold", Localize("Snap threshold"), &g_Config.m_QmLyricsSnapThreshold, 0, 40);
-
-				static CButtonContainer s_LyricsCurrentColorId;
-				DoLine_ColorPicker(&s_LyricsCurrentColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Current line color"), &g_Config.m_QmLyricsColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
-				static CButtonContainer s_LyricsNextColorId;
-				DoLine_ColorPicker(&s_LyricsNextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Next line color"), &g_Config.m_QmLyricsNextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 0.54f), false, nullptr, true);
-				static CButtonContainer s_LyricsBgColorId;
-				DoLine_ColorPicker(&s_LyricsBgColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Background color"), &g_Config.m_QmLyricsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
-				static CButtonContainer s_LyricsOutlineColorId;
-				DoLine_ColorPicker(&s_LyricsOutlineColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Outline color"), &g_Config.m_QmLyricsOutlineColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoFetch, "Auto fetch lyrics", Localize("Auto fetch lyrics"), &g_Config.m_QmLyricsAutoFetch, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsInMediaIsland, "Show in Dynamic Island", Localize("Show in Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsKaraoke, "Per-word highlight (karaoke)", Localize("Per-word highlight (karaoke)"), &g_Config.m_QmLyricsKaraoke, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsHideWhenPaused, "Hide when paused", Localize("Hide when paused"), &g_Config.m_QmLyricsHideWhenPaused, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsShowTranslation, "Show translation", Localize("Show translation"), &g_Config.m_QmLyricsShowTranslation, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-lyrics-source", &LabelColValue, Localize("Lyrics source"), LgBodySize);
-					const char *apLyricsSourceNames[] = {
-						Localize("Auto"),
-						"LRCLIB",
-						"Kugou",
-						"QQ",
-						"Netease",
-						"AMLL TTML DB",
-						"Apple Music",
-						Localize("Local music file"),
-						Localize("Local LRC file"),
-						Localize("Local ESLRC file"),
-						Localize("Local TTML file"),
-					};
-					static CUi::SDropDownState s_QmLyricsSourceDropDownState;
-					static CScrollRegion s_QmLyricsSourceDropDownScrollRegion;
-					s_QmLyricsSourceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_QmLyricsSourceDropDownScrollRegion;
-					const int SourceSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSource, 0, 10), apLyricsSourceNames, std::size(apLyricsSourceNames), s_QmLyricsSourceDropDownState);
-					if(SourceSelectedNew != g_Config.m_QmLyricsSource)
-						g_Config.m_QmLyricsSource = SourceSelectedNew;
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-lyrics-search-type", &LabelColValue, Localize("Lyrics search type"), LgBodySize);
-					const char *apLyricsSearchTypeNames[] = {
-						Localize("Sequential"),
-						Localize("Best match"),
-					};
-					static CUi::SDropDownState s_QmLyricsSearchTypeDropDownState;
-					const int SearchTypeSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSearchType, 0, 1), apLyricsSearchTypeNames, std::size(apLyricsSearchTypeNames), s_QmLyricsSearchTypeDropDownState);
-					if(SearchTypeSelectedNew != g_Config.m_QmLyricsSearchType)
-						g_Config.m_QmLyricsSearchType = SearchTypeSelectedNew;
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				auto RenderLyricSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, LgBodySize);
-					RenderSliderWithValueInput(pId, ControlColValue, pValue, MinValue, MaxValue, pSuffix);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				};
-				auto RenderLyricHalfSecondOffsetSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue) {
-					const int OriginalValue = *pValue;
-					const int AbsOffset = std::abs(*pValue);
-					const int SnappedAbs = ((AbsOffset + 250) / 500) * 500;
-					int StepValue = std::clamp((*pValue < 0 ? -SnappedAbs : SnappedAbs) / 500, -60, 60);
-					RenderLyricSlider(pId, pTextId, pLabel, &StepValue, -60, 60, "x0.5s");
-					if(PrewarmOnly || Ui()->RenderOnly())
-						*pValue = OriginalValue;
-					else
-						*pValue = StepValue * 500;
-				};
-				IUiContext QmClientLyricsTextInputCtx;
-				QmClientLyricsTextInputCtx.m_pUi = Ui();
-				QmClientLyricsTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-				QmClientLyricsTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-				QmClientLyricsTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_lyrics_text_inputs");
-				QmClientLyricsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-				auto RenderLyricTextInput = [&](CLineInput *pLineInput, const char *pTextId, const char *pLabel, char *pValue, size_t ValueSize, const char *pEmptyText) {
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, LgBodySize);
-					if(!pLineInput->IsActive() && str_comp(pLineInput->GetString(), pValue) != 0)
-						pLineInput->Set(pValue);
-					pLineInput->SetEmptyText(pEmptyText);
-					if(ui_widget::InputField(QmClientLyricsTextInputCtx, pLineInput, ControlColValue, pEmptyText, LgBodySize))
-						str_copy(pValue, pLineInput->GetString(), ValueSize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				};
-
-				static CLineInput s_QmLyricsSourceOrder(g_Config.m_QmLyricsSourceOrder, sizeof(g_Config.m_QmLyricsSourceOrder));
-				RenderLyricTextInput(&s_QmLyricsSourceOrder, "qmclient-lyrics-source-order", Localize("Lyrics source order"), g_Config.m_QmLyricsSourceOrder, sizeof(g_Config.m_QmLyricsSourceOrder), "QQ|Kugou|Netease|LrcLib|AmllTtmlDb|LocalMusicFile|LocalLrcFile|LocalEslrcFile|LocalTtmlFile|AppleMusic");
-				static CLineInput s_QmLyricsProviderThresholds(g_Config.m_QmLyricsProviderThresholds, sizeof(g_Config.m_QmLyricsProviderThresholds));
-				RenderLyricTextInput(&s_QmLyricsProviderThresholds, "qmclient-lyrics-provider-thresholds", Localize("Provider thresholds"), g_Config.m_QmLyricsProviderThresholds, sizeof(g_Config.m_QmLyricsProviderThresholds), "QQ=60|LrcLib=70");
-				static CLineInput s_QmLyricsIgnoreCacheProviders(g_Config.m_QmLyricsIgnoreCacheProviders, sizeof(g_Config.m_QmLyricsIgnoreCacheProviders));
-				RenderLyricTextInput(&s_QmLyricsIgnoreCacheProviders, "qmclient-lyrics-ignore-cache-providers", Localize("Ignore cache providers"), g_Config.m_QmLyricsIgnoreCacheProviders, sizeof(g_Config.m_QmLyricsIgnoreCacheProviders), "QQ|Kugou");
-				static CLineInput s_QmLyricsAppleMusicMediaUserToken(g_Config.m_QmLyricsAppleMusicMediaUserToken, sizeof(g_Config.m_QmLyricsAppleMusicMediaUserToken));
-				RenderLyricTextInput(&s_QmLyricsAppleMusicMediaUserToken, "qmclient-lyrics-apple-music-token", Localize("Apple Music media-user-token"), g_Config.m_QmLyricsAppleMusicMediaUserToken, sizeof(g_Config.m_QmLyricsAppleMusicMediaUserToken), "media-user-token");
-				static CLineInput s_QmLyricsLocalMediaFolders(g_Config.m_QmLyricsLocalMediaFolders, sizeof(g_Config.m_QmLyricsLocalMediaFolders));
-				RenderLyricTextInput(&s_QmLyricsLocalMediaFolders, "qmclient-lyrics-local-media-folders", Localize("Local media folders"), g_Config.m_QmLyricsLocalMediaFolders, sizeof(g_Config.m_QmLyricsLocalMediaFolders), "D:/Music|E:/Music");
-
-				static int s_QmLyricsLinesAbove;
-				RenderLyricSlider(&s_QmLyricsLinesAbove, "qmclient-lyrics-lines-above", Localize("Lines above active"), &g_Config.m_QmLyricsLinesAbove, 0, 6);
-				static int s_QmLyricsLinesBelow;
-				RenderLyricSlider(&s_QmLyricsLinesBelow, "qmclient-lyrics-lines-below", Localize("Lines below active"), &g_Config.m_QmLyricsLinesBelow, 0, 6);
-				static int s_QmLyricsFontSize;
-				RenderLyricSlider(&s_QmLyricsFontSize, "qmclient-lyrics-font-size", Localize("Active line font size"), &g_Config.m_QmLyricsFontSize, 8, 48);
-				static int s_QmLyricsFontSizeOther;
-				RenderLyricSlider(&s_QmLyricsFontSizeOther, "qmclient-lyrics-font-size-other", Localize("Other lines font size"), &g_Config.m_QmLyricsFontSizeOther, 6, 40);
-				static int s_QmLyricsLineSpacing;
-				RenderLyricSlider(&s_QmLyricsLineSpacing, "qmclient-lyrics-line-spacing", Localize("Line spacing"), &g_Config.m_QmLyricsLineSpacing, 0, 40, "px");
-				static int s_QmLyricsOpacity;
-				RenderLyricSlider(&s_QmLyricsOpacity, "qmclient-lyrics-opacity", Localize("Opacity"), &g_Config.m_QmLyricsOpacity, 0, 100, "%");
-				static int s_QmLyricsInactiveOpacity;
-				RenderLyricSlider(&s_QmLyricsInactiveOpacity, "qmclient-lyrics-inactive-opacity", Localize("Inactive line opacity"), &g_Config.m_QmLyricsInactiveOpacity, 0, 100, "%");
-				static int s_QmLyricsScaleActive;
-				RenderLyricSlider(&s_QmLyricsScaleActive, "qmclient-lyrics-scale-active", Localize("Active line scale"), &g_Config.m_QmLyricsScaleActive, 100, 200, "%");
-				static int s_QmLyricsScaleFalloff;
-				RenderLyricSlider(&s_QmLyricsScaleFalloff, "qmclient-lyrics-scale-falloff", Localize("Distance scale falloff"), &g_Config.m_QmLyricsScaleFalloff, 0, 20, "%");
-				static int s_QmLyricsFadePerLine;
-				RenderLyricSlider(&s_QmLyricsFadePerLine, "qmclient-lyrics-fade-per-line", Localize("Distance fade per line"), &g_Config.m_QmLyricsFadePerLine, 0, 40, "%");
-				static int s_QmLyricsHighlightEdgeSoft;
-				RenderLyricSlider(&s_QmLyricsHighlightEdgeSoft, "qmclient-lyrics-highlight-edge-soft", Localize("Karaoke edge softness"), &g_Config.m_QmLyricsHighlightEdgeSoft, 0, 32, "px");
-				static int s_QmLyricsScrollMs;
-				RenderLyricSlider(&s_QmLyricsScrollMs, "qmclient-lyrics-scroll-ms", Localize("Line scroll duration"), &g_Config.m_QmLyricsScrollMs, 0, 1000, "ms");
-				static int s_QmLyricsMatchThreshold;
-				RenderLyricSlider(&s_QmLyricsMatchThreshold, "qmclient-lyrics-match-threshold", Localize("Match score threshold"), &g_Config.m_QmLyricsMatchThreshold, 0, 100);
-				static int s_QmLyricsOffsetMs;
-				RenderLyricHalfSecondOffsetSlider(&s_QmLyricsOffsetMs, "qmclient-lyrics-offset-ms", Localize("Time offset"), &g_Config.m_QmLyricsOffsetMs);
-				static int s_QmLyricsDriftCorrectMs;
-				RenderLyricSlider(&s_QmLyricsDriftCorrectMs, "qmclient-lyrics-drift-correct-ms", Localize("Clock drift hard-snap"), &g_Config.m_QmLyricsDriftCorrectMs, 100, 5000, "ms");
-				static int s_QmLyricsEdgeMargin;
-				RenderLyricSlider(&s_QmLyricsEdgeMargin, "qmclient-lyrics-edge-margin", Localize("Edge margin"), &g_Config.m_QmLyricsEdgeMargin, 0, 64, "px");
-				static int s_QmLyricsHttpTimeoutMs;
-				RenderLyricSlider(&s_QmLyricsHttpTimeoutMs, "qmclient-lyrics-http-timeout-ms", Localize("Lyrics HTTP timeout"), &g_Config.m_QmLyricsHttpTimeoutMs, 500, 30000, "ms");
-				static int s_QmLyricsCacheTtlDays;
-				RenderLyricSlider(&s_QmLyricsCacheTtlDays, "qmclient-lyrics-cache-ttl-days", Localize("Cache TTL"), &g_Config.m_QmLyricsCacheTtlDays, 0, 3650, " d");
-
-				static CButtonContainer s_LyricsColorPlayedId;
-				DoLine_ColorPicker(&s_LyricsColorPlayedId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Played word color"), &g_Config.m_QmLyricsColorPlayed, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
-				static CButtonContainer s_LyricsColorUnplayedId;
-				DoLine_ColorPicker(&s_LyricsColorUnplayedId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Unplayed word color"), &g_Config.m_QmLyricsColorUnplayed, ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f), false, nullptr, true);
-				static CButtonContainer s_LyricsColorTranslationId;
-				DoLine_ColorPicker(&s_LyricsColorTranslationId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Translation color"), &g_Config.m_QmLyricsColorTranslation, ColorRGBA(0.55f, 0.55f, 0.55f, 1.0f), false, nullptr, true);
-				CUIRect Preview;
-				const float PreviewFont = (float)g_Config.m_QmSmtcLyricsFontSize;
-				const float PreviewPaddingX = 10.0f;
-				const float PreviewPaddingY = 7.0f;
-				const float PreviewLineGap = 5.0f;
-				const float PreviewLineStep = PreviewFont + PreviewLineGap;
-				const int PreviewLineCount = std::clamp(g_Config.m_QmSmtcLyricsLines, 1, 2);
-				const float PreviewHeight = std::max(42.0f, PreviewPaddingY * 2.0f + PreviewFont * PreviewLineCount + PreviewLineGap * (PreviewLineCount - 1));
-				CardContent.HSplitTop(PreviewHeight, &Preview, &CardContent);
-				ColorRGBA PreviewBg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsBgColor, true));
-				PreviewBg.a = std::clamp(g_Config.m_QmLyricsBgOpacity / 100.0f, 0.0f, 1.0f);
-				Preview.Draw(PreviewBg, IGraphics::CORNER_ALL, 5.0f);
-				const unsigned int PrevFlags = TextRender()->GetRenderFlags();
-				const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
-				const ColorRGBA PrevOutlineColor = TextRender()->GetTextOutlineColor();
-				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
-				ColorRGBA PreviewOutline = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsOutlineColor, true));
-				PreviewOutline.a = std::clamp(g_Config.m_QmLyricsOutlineOpacity / 100.0f, 0.0f, 1.0f);
-				TextRender()->TextOutlineColor(PreviewOutline);
-
-				static constexpr std::array<const char *, 3> s_apLyricsPreviewLines = {
-					"Stop and stare",
-					"I think I'm moving but I go nowhere",
-					"Yeah I know that everyone gets scared"};
-				static constexpr int64_t s_LyricsPreviewLineDurationMs = 2400;
-				static constexpr int64_t s_LyricsPreviewDurationMs = s_LyricsPreviewLineDurationMs * (int64_t)s_apLyricsPreviewLines.size();
-				const int64_t NowTick = time_get();
-				const int64_t NowMs = (NowTick / time_freq()) * 1000 + (NowTick % time_freq()) * 1000 / time_freq();
-				int64_t PreviewPositionMs = (NowMs + g_Config.m_QmSmtcLyricsOffsetMs) % s_LyricsPreviewDurationMs;
-				if(PreviewPositionMs < 0)
-					PreviewPositionMs += s_LyricsPreviewDurationMs;
-				const int PreviewCurrentLine = (int)(PreviewPositionMs / s_LyricsPreviewLineDurationMs);
-				const int64_t PreviewLineElapsedMs = PreviewPositionMs % s_LyricsPreviewLineDurationMs;
-				const int64_t PreviewTransitionMs = std::clamp<int64_t>(g_Config.m_QmLyricsFadeDurationMs, 0, s_LyricsPreviewLineDurationMs - 1);
-				float PreviewScroll = 0.0f;
-				if(PreviewTransitionMs > 0 && PreviewLineElapsedMs >= s_LyricsPreviewLineDurationMs - PreviewTransitionMs)
-				{
-					const float Progress = (float)(PreviewLineElapsedMs - (s_LyricsPreviewLineDurationMs - PreviewTransitionMs)) / (float)PreviewTransitionMs;
-					const float SmoothProgress = Progress * Progress * (3.0f - 2.0f * Progress);
-					PreviewScroll = PreviewLineStep * SmoothProgress;
-				}
-
-				CUIRect PreviewClip = Preview;
-				PreviewClip.Margin(1.0f, &PreviewClip);
-				Ui()->ClipEnable(&PreviewClip);
-
-				const float PreviewX = Preview.x + PreviewPaddingX;
-				const float PreviewY = Preview.y + PreviewPaddingY - PreviewScroll;
-				const float PreviewTextWidth = std::max(1.0f, Preview.w - PreviewPaddingX * 2.0f);
-				const int RenderLineCount = std::min<int>(PreviewLineCount + 1, (int)s_apLyricsPreviewLines.size());
-				const int PreviewScrollSeed = g_Config.m_QmLyricsMarqueeSpeed > 0 ? (int)(PreviewPositionMs / maximum(1, 1000 / g_Config.m_QmLyricsMarqueeSpeed)) : 0;
-				auto RenderPreviewLine = [&](const char *pText, float Y, const ColorRGBA &Color) {
-					const char *pRenderText = pText;
-					char aMarqueeText[256];
-					if(g_Config.m_QmLyricsMarquee && pText[0] != '\0' && TextRender()->TextWidth(PreviewFont, pText) > PreviewTextWidth)
-					{
-						const int TextLen = str_length(pText);
-						size_t TextBytes = 0;
-						size_t TextCount = 0;
-						str_utf8_stats(pText, (size_t)TextLen + 1, (size_t)TextLen + 1, &TextBytes, &TextCount);
-						(void)TextBytes;
-						const int OffsetChars = TextCount > 0 ? PreviewScrollSeed % (int)TextCount : 0;
-						int Offset = 0;
-						for(int i = 0; i < OffsetChars; ++i)
-							Offset = str_utf8_forward(pText, Offset);
-						str_format(aMarqueeText, sizeof(aMarqueeText), "%s   %s", pText + Offset, pText);
-						pRenderText = aMarqueeText;
-					}
-					TextRender()->TextColor(Color);
-					CTextCursor Cursor;
-					Cursor.m_FontSize = PreviewFont;
-					Cursor.m_LineWidth = PreviewTextWidth;
-					Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
-					Cursor.SetPosition(vec2(PreviewX, Y));
-					TextRender()->TextEx(&Cursor, pRenderText);
-				};
-
-				ColorRGBA PreviewCurrentColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColor, true));
-				ColorRGBA PreviewNextColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsNextColor, true));
-				for(int i = 0; i < RenderLineCount; ++i)
-				{
-					const int LineIndex = (PreviewCurrentLine + i) % (int)s_apLyricsPreviewLines.size();
-					RenderPreviewLine(s_apLyricsPreviewLines[LineIndex], PreviewY + PreviewLineStep * i, i == 0 ? PreviewCurrentColor : PreviewNextColor);
-				}
-
-				Ui()->ClipDisable();
-				TextRender()->TextColor(PrevTextColor);
-				TextRender()->TextOutlineColor(PrevOutlineColor);
-				TextRender()->SetRenderFlags(PrevFlags);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
+				RenderQmHudLyricsContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;

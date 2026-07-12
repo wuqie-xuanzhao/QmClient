@@ -332,8 +332,12 @@ namespace ui_widget
 		const bool NoClampValue = Options.m_Flags & CUi::SCROLLBAR_OPTION_NOCLAMPVALUE;
 		const bool MultiLine = Options.m_Flags & CUi::SCROLLBAR_OPTION_MULTILINE;
 		const int Multiplier = std::max(1, Options.m_ValueMultiplier);
+		const int ValueStep = std::max(1, Options.m_ValueStep);
 		const int SliderMin = SliderInputStoredMinimum(Min, Multiplier);
 		const int SliderMax = SliderInputStoredMaximum(Max, Multiplier) + (Infinite ? 1 : 0);
+		const int FiniteSliderMax = SliderInputStoredMaximum(Max, Multiplier);
+		const int InputMin = Options.m_InputMin >= 0 ? Options.m_InputMin : SliderMin;
+		const int InputMax = Options.m_InputMax >= 0 ? std::max(InputMin, Options.m_InputMax) : FiniteSliderMax;
 		const bool HasLabel = Options.m_pLabel != nullptr && Options.m_pLabel[0] != '\0';
 		const bool RenderOnly = Ctx.m_pUi->RenderOnly();
 		// 布局：label | scrollbar | input | suffix
@@ -384,13 +388,16 @@ namespace ui_widget
 		}
 
 		bool Changed = false;
-		const int Increment = std::max(1, (SliderMax - SliderMin) / 35);
+		const int Increment = std::max(ValueStep, (SliderMax - SliderMin) / 35 / ValueStep * ValueStep);
+		if(!RenderOnly && ValueStep > 1 && (!Infinite || *pValue != 0))
+			*pValue = QuantizeNumericFieldStoredValue(*pValue, InputMin, InputMax, ValueStep);
 		const bool WheelEligible = !RenderOnly && Ctx.m_pUi->Input()->ModifierIsPressed() && Ctx.m_pUi->MouseInside(&Rect);
 		Ctx.m_pUi->RegisterWheelOwner(pState, EUiWheelOwnerPriority::COMPOSITE_CONTROL, Rect, WheelEligible);
 		float WheelDelta = 0.0f;
 		if(Ctx.m_pUi->TryConsumeWheel(pState, &WheelDelta))
 		{
-			const int NewValue = SliderInputWheelStoredValue(*pValue, SliderMin, SliderMax, Infinite, WheelDelta > 0.0f ? Increment : -Increment);
+			const int CurrentValue = !Infinite || *pValue != 0 ? QuantizeNumericFieldStoredValue(*pValue, SliderMin, FiniteSliderMax, ValueStep) : *pValue;
+			const int NewValue = SliderInputWheelStoredValue(CurrentValue, SliderMin, SliderMax, Infinite, WheelDelta > 0.0f ? Increment : -Increment);
 			Changed = NewValue != *pValue;
 			*pValue = NewValue;
 		}
@@ -435,7 +442,7 @@ namespace ui_widget
 			const int NewSliderValue = pScale->ToAbsolute(NewNormalized, SliderMin, SliderMax);
 			if(NewSliderValue != SliderValue || SliderReleased)
 			{
-				int CandidateStored = NewSliderValue;
+				int CandidateStored = QuantizeNumericFieldStoredValue(NewSliderValue, SliderMin, FiniteSliderMax, ValueStep);
 				if(Infinite && NewSliderValue == SliderMax)
 					CandidateStored = 0;
 
@@ -497,8 +504,8 @@ namespace ui_widget
 			int Parsed = ParsedInfinite ? 0 : SliderInputStoredValue(pInput->GetInteger(), Multiplier);
 			if(!ParsedInfinite && (Options.m_InputMin >= 0 || Options.m_InputMax >= 0))
 			{
-				const int InputMin = Options.m_InputMin >= 0 ? Options.m_InputMin : SliderMin;
-				Parsed = NumericFieldTextInputStoredValue(pInput->GetInteger(), Multiplier, InputMin, SliderInputStoredMaximum(Max, Multiplier), Options.m_InputMax, false);
+				Parsed = NumericFieldTextInputStoredValue(pInput->GetInteger(), Multiplier, InputMin, FiniteSliderMax, InputMax, false);
+				Parsed = QuantizeNumericFieldStoredValue(Parsed, InputMin, InputMax, ValueStep);
 			}
 			else if(!ParsedInfinite && NoClampValue && ((Parsed <= SliderMin && *pValue < SliderMin) || (Parsed >= SliderInputStoredMaximum(Max, Multiplier) && *pValue > SliderInputStoredMaximum(Max, Multiplier))))
 			{
@@ -506,7 +513,7 @@ namespace ui_widget
 			}
 			else if(!ParsedInfinite)
 			{
-				Parsed = std::clamp(Parsed, SliderMin, SliderInputStoredMaximum(Max, Multiplier));
+				Parsed = QuantizeNumericFieldStoredValue(Parsed, SliderMin, FiniteSliderMax, ValueStep);
 			}
 			if(*pValue != Parsed)
 			{

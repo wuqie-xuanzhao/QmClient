@@ -3041,6 +3041,14 @@ TEST(NumericField, TextInputUsesIndependentBoundAndPreservesInfinity)
 	EXPECT_EQ(ui_widget::NumericFieldTextInputStoredValue(1000, 1, 0, 1000, 10000, true), 0);
 }
 
+TEST(NumericField, QuantizedValuesRespectSliderAndExtendedInputBounds)
+{
+	EXPECT_EQ(ui_widget::QuantizeNumericFieldStoredValue(149, 100, 3000, 100), 100);
+	EXPECT_EQ(ui_widget::QuantizeNumericFieldStoredValue(151, 100, 3000, 100), 200);
+	EXPECT_EQ(ui_widget::QuantizeNumericFieldStoredValue(5001, 0, 10000, 100), 5000);
+	EXPECT_EQ(ui_widget::QuantizeNumericFieldStoredValue(10001, 0, 10000, 100), 10000);
+}
+
 TEST(NumericField, DelayPolicyCommitsOnlyOnReleaseSubmitOrBlur)
 {
 	ui_widget::SInputFieldResult Editing;

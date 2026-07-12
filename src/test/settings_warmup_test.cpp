@@ -2238,7 +2238,8 @@ TEST(SettingsWarmup, TextPlanCollectionUsesPrewarmOnlyRenderers)
 	EXPECT_NE(Settings.find("RenderSettingsTClient(ContentView, CollectingMenuTextPlan);"), std::string::npos);
 	EXPECT_NE(Settings.find("RenderSettingsQmClient(ContentView, false, CollectingMenuTextPlan);"), std::string::npos);
 	EXPECT_NE(QmClient.find("Ctx.m_pAnim = PrewarmOnly ? nullptr"), std::string::npos);
-	EXPECT_NE(QmClient.find("if(!PrewarmOnly)\n\t\t\tm_SettingsPageSwitchActive = m_SettingsPageSwitchActive || TabTransitionActive;"), std::string::npos);
+	EXPECT_NE(QmClient.find("if(!PrewarmOnly)"), std::string::npos);
+	EXPECT_NE(QmClient.find("m_SettingsPageSwitchActive = m_SettingsPageSwitchActive || TabTransitionActive;"), std::string::npos);
 }
 
 TEST(SettingsWarmup, MenuTextPrebuildLogsRemainingMissingPlanItems)

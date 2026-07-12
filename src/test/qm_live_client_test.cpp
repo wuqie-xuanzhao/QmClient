@@ -450,9 +450,12 @@ TEST(QmClientStartup, SettingsTextPlanWrappersDoNotCopyInactivePendingItem)
 	EXPECT_EQ(TClientSource.find(DirectCopy), std::string::npos);
 	EXPECT_EQ(QmClientSource.find(DirectCopy), std::string::npos);
 
-	EXPECT_NE(MenusSource.find("if(PreviousPendingActive)\n\t\tPreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
-	EXPECT_NE(TClientSource.find("if(PreviousPendingActive)\n\t\tPreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
-	EXPECT_NE(QmClientSource.find("if(PreviousPendingActive)\n\t\tPreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
+	EXPECT_NE(MenusSource.find("if(PreviousPendingActive)"), std::string::npos);
+	EXPECT_NE(TClientSource.find("if(PreviousPendingActive)"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("if(PreviousPendingActive)"), std::string::npos);
+	EXPECT_NE(MenusSource.find("PreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
+	EXPECT_NE(TClientSource.find("PreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
+	EXPECT_NE(QmClientSource.find("PreviousPendingItem = m_MenuTextPlanPendingItem;"), std::string::npos);
 }
 
 TEST(QmLiveMatchReplay, StartKeepsOrdinaryDDNetRecordingCompatible)

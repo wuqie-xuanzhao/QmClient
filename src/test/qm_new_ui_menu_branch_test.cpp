@@ -147,7 +147,6 @@ TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)
 	EXPECT_NE(Source.find("Navigation.m_QmClientTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
@@ -678,6 +677,7 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	const std::string PlayersSource = ReadTextFile("src/game/client/components/players.cpp");
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string LanguageSource = ReadTextFile("data/languages/simplified_chinese.txt");
+	const std::string SkinTransitionContent = FunctionBody(MenusSource, "void CMenus::RenderQmVisualSkinTransitionContent(");
 
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransition, qm_skin_change_transition, 1, 0, 1"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionScope, qm_skin_change_transition_scope, 1, 0, 2"), std::string::npos);
@@ -687,7 +687,7 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId = \"qm_2_72_0_skin_transition_animation_toggle\""), std::string::npos);
 	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId,\n						\"qm_2_62_8_weapon_animation\""), std::string::npos);
 	EXPECT_NE(CardRegistrySource.find("\"qm:skin_transition\", \"visual\", ECardColumn::Left, 1, \"Skin transition\", \"皮肤切换 pifu qiehuan skin transition"), std::string::npos);
-	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmCycleTeeHueDummy, \"Also apply to dummy\""), std::string::npos);
+	EXPECT_NE(SkinTransitionContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCycleTeeHueDummy, \"Also apply to dummy\""), std::string::npos);
 	EXPECT_NE(PlayersSource.find("LocalDummy == 0 || g_Config.m_QmCycleTeeHueDummy != 0"), std::string::npos);
 	EXPECT_NE(PlayersSource.find("LocalDummy != 0 ? g_Config.m_ClDummyUseCustomColor != 0 : g_Config.m_ClPlayerUseCustomColor != 0"), std::string::npos);
 
@@ -707,14 +707,14 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	EXPECT_EQ(SkinTransitionCard.find("QmSkinQueueInterval"), std::string::npos);
 	EXPECT_EQ(SkinTransitionCard.find("QmDummySkinQueueInterval"), std::string::npos);
 
-	const size_t Toggle = MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmSkinChangeTransition");
+	const size_t Toggle = SkinTransitionContent.find("DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmSkinChangeTransition");
 	ASSERT_NE(Toggle, std::string::npos);
-	const size_t AdvancedIf = MenusSource.find("if(g_Config.m_QmSkinChangeTransition)", Toggle);
-	const size_t TypeLabel = MenusSource.find("Localize(\"Skin transition type\")", Toggle);
-	const size_t ScopeLabel = MenusSource.find("Localize(\"Animation range\")", Toggle);
-	const size_t DurationLabel = MenusSource.find("Localize(\"Skin transition duration\")", Toggle);
-	const size_t EasingLabel = MenusSource.find("Localize(\"Skin transition easing\")", Toggle);
-	const size_t IntensityLabel = MenusSource.find("Localize(\"Skin transition intensity\")", Toggle);
+	const size_t AdvancedIf = SkinTransitionContent.find("if(!g_Config.m_QmSkinChangeTransition)\n\t\treturn;", Toggle);
+	const size_t TypeLabel = SkinTransitionContent.find("RenderDropDown(\"qmclient-skin-transition-type\", \"Skin transition type\"", Toggle);
+	const size_t ScopeLabel = SkinTransitionContent.find("RenderDropDown(\"qmclient-skin-transition-range\", \"Animation range\"", Toggle);
+	const size_t DurationLabel = SkinTransitionContent.find("Localize(\"Skin transition duration\")", Toggle);
+	const size_t EasingLabel = SkinTransitionContent.find("RenderDropDown(\"qmclient-skin-transition-easing\", \"Skin transition easing\"", Toggle);
+	const size_t IntensityLabel = SkinTransitionContent.find("Localize(\"Skin transition intensity\")", Toggle);
 	ASSERT_NE(AdvancedIf, std::string::npos);
 	ASSERT_NE(TypeLabel, std::string::npos);
 	ASSERT_NE(ScopeLabel, std::string::npos);
@@ -727,9 +727,8 @@ TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
 	EXPECT_LT(ScopeLabel, DurationLabel);
 	EXPECT_LT(DurationLabel, EasingLabel);
 	EXPECT_LT(EasingLabel, IntensityLabel);
-	EXPECT_NE(SkinTransitionCard.find("s_SkinTransitionScopeDropDownNames = {Localize(\"Self only\"), Localize(\"Local\"), Localize(\"All players\")};"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("std::clamp(g_Config.m_QmSkinChangeTransitionScope, 0, 2)"), std::string::npos);
-	EXPECT_NE(SkinTransitionCard.find("g_Config.m_QmSkinChangeTransitionScope = SkinTransitionScopeNew;"), std::string::npos);
+	EXPECT_NE(SkinTransitionContent.find("s_SkinTransitionScopeDropDownNames = {Localize(\"Self only\"), Localize(\"Local\"), Localize(\"All players\")};"), std::string::npos);
+	EXPECT_NE(SkinTransitionContent.find("RenderDropDown(\"qmclient-skin-transition-range\", \"Animation range\", &g_Config.m_QmSkinChangeTransitionScope, 2"), std::string::npos);
 
 	EXPECT_NE(GameClientSource.find("QM_SKIN_CHANGE_TRANSITION_SCOPE_OWN"), std::string::npos);
 	EXPECT_NE(GameClientSource.find("bool CGameClient::ShouldRunSkinChangeTransition(int ClientId) const"), std::string::npos);
@@ -757,12 +756,13 @@ TEST(QmNewUiMenuBranches, WeaponAnimationAdvancedControlsAreConfigurable)
 	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimRotation"), std::string::npos);
 	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimEasing"), std::string::npos);
 
-	const size_t Toggle = MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmWeaponSwitchAnim");
+	const std::string WeaponAnimationContent = FunctionBody(MenusSource, "void CMenus::RenderQmVisualWeaponAnimationContent(");
+	const size_t Toggle = WeaponAnimationContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim");
 	ASSERT_NE(Toggle, std::string::npos);
-	EXPECT_NE(MenusSource.find("Localize(\"Weapon switch duration\")", Toggle), std::string::npos);
-	EXPECT_NE(MenusSource.find("Localize(\"Weapon switch distance\")", Toggle), std::string::npos);
-	EXPECT_NE(MenusSource.find("Localize(\"Weapon switch rotation\")", Toggle), std::string::npos);
-	EXPECT_NE(MenusSource.find("Localize(\"Weapon switch easing\")", Toggle), std::string::npos);
+	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-duration\", \"Weapon switch duration\"", Toggle), std::string::npos);
+	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-distance\", \"Weapon switch distance\"", Toggle), std::string::npos);
+	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-rotation\", \"Weapon switch rotation\"", Toggle), std::string::npos);
+	EXPECT_NE(WeaponAnimationContent.find("Localize(\"Weapon switch easing\")", Toggle), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ProcessPriorityAndImeHaveVisibleSettings)
@@ -829,7 +829,8 @@ TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
 	EXPECT_NE(EmoticonRenderBody.find("if(g_Config.m_QmEmoticonShadow)"), std::string::npos);
 	EXPECT_NE(EmoticonRenderBody.find("Graphics()->SetColor(0.0f, 0.0f, 0.0f, EmoticonSelectorShadowOpacity);"), std::string::npos);
 	EXPECT_NE(EmoticonRenderBody.find("ScreenCenter.x + Nudge.x + EmoticonSelectorShadowOffsetX"), std::string::npos);
-	EXPECT_NE(MenusSource.find("DoQmSettingsCheckboxAuto(&g_Config.m_QmEmoticonShadow"), std::string::npos);
+	const std::string SkinTransitionContent = FunctionBody(MenusSource, "void CMenus::RenderQmVisualSkinTransitionContent(");
+	EXPECT_NE(SkinTransitionContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmEmoticonShadow"), std::string::npos);
 	EXPECT_NE(MenusSource.find("Localize(\"Emoticon shadow\")"), std::string::npos);
 }
 
@@ -1486,7 +1487,7 @@ TEST(QmNewUiMenuBranches, ClientSourceDoesNotUseChineseLocalizeKeys)
 	EXPECT_NE(IngameSource.find("Localize(\"Dummies are not allowed on this server\")"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("Localize(\"Show spectator cursor\")"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("Localize(\"Auto save chat log\")"), std::string::npos);
-	EXPECT_NE(SettingsControlsSource.find("Localize(\"Dummy\")"), std::string::npos);
+	EXPECT_NE(Settings7Source.find("Localize(\"Dummy\")"), std::string::npos);
 	EXPECT_NE(Settings7Source.find("Localize(\"Dummy\")"), std::string::npos);
 	EXPECT_NE(StartSource.find("Localize(\"(Update required)\")"), std::string::npos);
 	EXPECT_NE(PieMenuSource.find("Localize(\"Spectate\")"), std::string::npos);

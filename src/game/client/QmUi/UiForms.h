@@ -194,6 +194,12 @@ namespace ui_widget
 	inline int SliderInputStoredMaximum(int DisplayMax, int ValueMultiplier) { return DisplayMax / std::max(1, ValueMultiplier); }
 	inline int SliderInputDisplayValue(int StoredValue, int ValueMultiplier) { return StoredValue * std::max(1, ValueMultiplier); }
 	inline int SliderInputStoredValue(int DisplayValue, int ValueMultiplier) { return (int)std::round(DisplayValue / (float)std::max(1, ValueMultiplier)); }
+	inline int QuantizeNumericFieldStoredValue(int Value, int Minimum, int Maximum, int Step)
+	{
+		const int ClampedValue = std::clamp(Value, Minimum, Maximum);
+		const int ValueStep = std::max(1, Step);
+		return std::clamp(Minimum + (int)std::round((ClampedValue - Minimum) / (float)ValueStep) * ValueStep, Minimum, Maximum);
+	}
 	// 文本输入可拥有与滑条不同的上限；无限值始终使用 0 这个存储哨兵。
 	inline int NumericFieldTextInputStoredValue(int DisplayValue, int ValueMultiplier, int InputMin, int SliderMax, int InputMax, bool ParsedInfinite)
 	{
@@ -244,6 +250,7 @@ namespace ui_widget
 		float m_LineSpacing = 1.0f;
 		int m_LabelAlign = TEXTALIGN_ML;
 		int m_ValueMultiplier = 1; // 滑动条以 Min/Multiplier..Max/Multiplier 为单位，显示/编辑真实值
+		int m_ValueStep = 1; // 滑动条、滚轮和提交值按该 stored-value 步进量化
 		int m_InputMin = -1; // -1 沿用滑动条下限；其他值为文本输入的 stored-value 下限
 		int m_InputMax = -1; // -1 沿用滑动条上限；其他值为文本输入的 stored-value 上限
 		EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;
