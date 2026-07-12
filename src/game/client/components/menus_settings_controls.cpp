@@ -241,6 +241,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 			Localize("Reset"), Localize("Cancel"), &CMenus::ResetSettingsControls);
 	}
 	LogControlsPerfStage(GameClient()->Client(), "controls_interactive_layer", InteractiveTimer.ElapsedMs(), false, "page=controls section=interactive");
+	LogControlsPerfStage(GameClient()->Client(), "controls_text_cache", ShellTimer.ElapsedMs(), false, "page=controls section=text_cache");
 
 	CQmScrollState &ScrollState = m_SettingsScrollRegion.State();
 	(void)ScrollState;
@@ -248,10 +249,11 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
 	const IUiContext CardCtx = GameClient()->m_Menus.SettingsUiContext("settings_controls", UiScale);
 	const SSettingsCardDeckVisualOptions VisualOptions = GameClient()->m_Menus.SettingsCardDeckVisualOptions();
+	CPerfTimer BindListTimer;
 	const auto FindCard = [](const char *pId) { return qm_card_registry::FindByStableId(pId); };
 	std::vector<SSettingsCardDefinition> vCards;
 	vCards.reserve(9);
-	const auto AddCard = [&](const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}) {
+	const auto AddCard = [&](const char *pId, float MinHeight, FSettingsCardMeasure Measure, FSettingsCardRender Render, std::function<bool()> IsVisible = {}, bool RenderWhenClipped = false) {
 		const qm_card_registry::SCardDefault *pDefault = FindCard(pId);
 		if(pDefault == nullptr)
 			return;
@@ -261,6 +263,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 		Definition.m_Render = std::move(Render);
 		Definition.m_IsVisible = std::move(IsVisible);
 		Definition.m_MeasureEachFrame = true;
+		Definition.m_RenderWhenClipped = RenderWhenClipped;
 		vCards.push_back(std::move(Definition));
 	};
 	const auto BindHeight = [this](EBindOptionGroup Group, float) {
@@ -284,7 +287,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	for(const auto &[Group, pId] : aBindCards)
 	{
 		const bool IsCustom = Group == EBindOptionGroup::CUSTOM;
-		AddCard(pId, HEADER_FONT_SIZE + MARGIN, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group](CUIRect Rect) { RenderSettingsBindCard(Group, Rect); }, IsCustom ? std::function<bool()>([this] { return std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }); }) : std::function<bool()>());
+		AddCard(pId, HEADER_FONT_SIZE + MARGIN, [BindHeight, Group](float Width) { return BindHeight(Group, Width); }, [this, Group](CUIRect Rect) { RenderSettingsBindCard(Group, Rect); }, IsCustom ? std::function<bool()>([this] { return std::any_of(m_vBindOptions.begin(), m_vBindOptions.end(), [](const CBindOption &Option) { return Option.m_Group == EBindOptionGroup::CUSTOM; }); }) : std::function<bool()>(), true);
 	}
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
@@ -301,6 +304,7 @@ void CMenusSettingsControls::Render(CUIRect MainView)
 	const SSettingsCardDeckResult DeckResult = GameClient()->m_Menus.m_SettingsCardDeck.Render(CardCtx, Page, "controls", vCards, GameClient()->m_Menus.SettingsCardOrderModel(), &m_SettingsScrollRegion, InputState, GameClient()->m_Menus.SettingsCardMotionSpec(), VisualOptions);
 	if(DeckResult.m_OrderChanged)
 		GameClient()->m_Menus.SaveSettingsCardOrderModel();
+	LogControlsPerfStage(GameClient()->Client(), "controls_bind_list", BindListTimer.ElapsedMs(), false, "page=controls section=bind_list");
 }
 
 void CMenusSettingsControls::UpdateBindOptions()
@@ -478,8 +482,7 @@ void CMenusSettingsControls::RenderSettingsBindCard(EBindOptionGroup Group, CUIR
 	const int GroupIndex = (int)Group;
 	CUIRect Header;
 	View.HSplitTop(HEADER_FONT_SIZE, &Header, &View);
-	const char *pTitle = GroupIndex >= 0 && GroupIndex < (int)EBindOptionGroup::NUM ? Localize(apTitles[GroupIndex]) : "";
-	DoSettingsControlsMenuLabel(apTitles[GroupIndex], &Header, pTitle, HEADER_FONT_SIZE, TEXTALIGN_ML);
+	// 卡片标题由 canonical SettingsCard 绘制；这里仅保留展开操作，避免依赖未提供的 header action hook。
 	CUIRect ExpandButton;
 	Header.VSplitRight(20.0f, &Header, &ExpandButton);
 	if(Ui()->DoButtonLogic(&m_aBindGroupExpandButtons[GroupIndex], 0, &ExpandButton, BUTTONFLAG_LEFT))

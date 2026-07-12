@@ -2559,13 +2559,20 @@ TEST(QmNewUiMenuBranches, ControlsStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(Source.find("ui_widget::InputField("), std::string::npos);
 	EXPECT_NE(Source.find("ui_widget::NumericField("), std::string::npos);
 	EXPECT_NE(Source.find("m_SettingsScrollRegion.State()"), std::string::npos);
+	EXPECT_NE(Source.find("m_RenderWhenClipped = RenderWhenClipped"), std::string::npos);
 	EXPECT_NE(Source.find("QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_NE(Source.find("controls_text_cache"), std::string::npos);
+	EXPECT_NE(Source.find("controls_bind_list"), std::string::npos);
 	EXPECT_NE(Source.find("DoKeyReader"), std::string::npos);
 	EXPECT_EQ(Source.find("RenderSettingsBlock"), std::string::npos);
+	EXPECT_EQ(Source.find("BeginSettingsScrollRegion"), std::string::npos);
+	EXPECT_EQ(Source.find("FinishSettingsScrollRegion"), std::string::npos);
 	EXPECT_EQ(Source.find("DoScrollbarH"), std::string::npos);
 	EXPECT_EQ(Source.find("DoValueSelector"), std::string::npos);
 	EXPECT_EQ(Header.find("DoSettingsControlsScrollbarOption"), std::string::npos);
 	EXPECT_NE(Source.find("deck:controls-mouse"), std::string::npos);
 	EXPECT_NE(Source.find("deck:controls-custom"), std::string::npos);
 	EXPECT_NE(Navigation.find("{\"controls\", CMenus::SETTINGS_CONTROLS}"), std::string::npos);
+	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
+	EXPECT_NE(Menus.find("str_comp(pTab, \"controls\")"), std::string::npos);
 }

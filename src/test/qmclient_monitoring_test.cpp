@@ -5159,10 +5159,9 @@ TEST(QmMonitoringHelpers, ControlsSettingsChromeUsesBudgetedTextPipeline)
 	// option labels, controller labels and bind labels all sit above the fold.
 	// They must use the shared settings text cache/drain path so first entry
 	// cannot synchronously create a large batch of text containers in render.
-	EXPECT_NE(Controls.find("DoSettingsControlsMenuLabel("), std::string::npos);
 	EXPECT_NE(Controls.find("DoSettingsControlsLabel("), std::string::npos);
 	EXPECT_NE(Controls.find("DoSettingsControlsCheckBox("), std::string::npos);
-	EXPECT_NE(Controls.find("DoSettingsControlsScrollbarOption("), std::string::npos);
+	EXPECT_NE(Controls.find("ui_widget::NumericField("), std::string::npos);
 	EXPECT_NE(Controls.find("DoSettingsButton_Menu(CMenus::SETTINGS_CONTROLS"), std::string::npos);
 	EXPECT_EQ(Controls.find("Ui()->DoLabel("), std::string::npos);
 	EXPECT_EQ(Controls.find("Ui()->DoLabel_AutoLineSize"), std::string::npos);
@@ -6126,7 +6125,7 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_TCLIENT"), std::string::npos);
 	EXPECT_NE(TClient.find("BeginSettingsScrollRegion(s_ScrollRegion, &ListArea, ScrollParams"), std::string::npos);
 	EXPECT_NE(TClient.find("FinishSettingsScrollRegion(s_ScrollRegion, ScrollFrame, &EndPad"), std::string::npos);
-	EXPECT_NE(Controls.find("CScrollRegionParams ScrollParams = GameClient()->m_Menus.QmSettingsScrollRegionParams(1.0f);"), std::string::npos);
+	EXPECT_NE(Controls.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);"), std::string::npos);
 	EXPECT_EQ(Controls.find("ScrollParams.m_ScrollUnit = 6.0f * BUTTON_HEIGHT;"), std::string::npos);
 	EXPECT_EQ(Controls.find("ScrollParams.m_ForceShowScrollbar = true;"), std::string::npos);
 	EXPECT_EQ(Settings.find("ScrollParams.m_ScrollUnit = LANGUAGE_ROW_HEIGHT;"), std::string::npos);
@@ -6193,9 +6192,10 @@ TEST(QmMonitoringHelpers, SettingsScrollRegionPagesUseUnifiedHelper)
 	EXPECT_NE(QmMainBody.find("TriggerUiSwitchAnimation(QmClientTabSwitchNode, 0.0f);"), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("ApplyUiSwitchOffset(ContentView, TransitionStrength, s_QmTabTransitionDirection, false,"), std::string::npos);
 	EXPECT_EQ(QmMainBody.find("ApplyUiSwitchOffset(ContentView, TransitionStrength, s_QmTabTransitionDirection, false, 0.08f, 24.0f, 120.0f);"), std::string::npos);
-	EXPECT_NE(Controls.find("BeginSettingsScrollRegion(m_SettingsScrollRegion, &MainView, ScrollParams"), std::string::npos);
-	EXPECT_NE(Controls.find("FinishSettingsScrollRegion(m_SettingsScrollRegion, ScrollFrame);"), std::string::npos);
-	EXPECT_EQ(Controls.find("FinishSettingsScrollRegion(m_SettingsScrollRegion, ScrollFrame, &"), std::string::npos);
+	EXPECT_NE(Controls.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(Controls.find("&m_SettingsScrollRegion"), std::string::npos);
+	EXPECT_EQ(Controls.find("BeginSettingsScrollRegion(m_SettingsScrollRegion"), std::string::npos);
+	EXPECT_EQ(Controls.find("FinishSettingsScrollRegion(m_SettingsScrollRegion"), std::string::npos);
 	EXPECT_NE(Settings.find("BeginSettingsScrollRegion(gs_LanguageScrollRegion, &MainView, ScrollParams"), std::string::npos);
 	EXPECT_NE(Settings.find("FinishSettingsScrollRegion(gs_LanguageScrollRegion, ScrollFrame, &ScrollRegion, SETTINGS_LANGUAGE"), std::string::npos);
 }

@@ -4915,6 +4915,8 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 		g_Config.m_UiSettingsPage = SETTINGS_SOUND;
 	else if(str_comp(pTab, "ddnet") == 0)
 		g_Config.m_UiSettingsPage = SETTINGS_DDNET;
+	else if(str_comp(pTab, "controls") == 0)
+		g_Config.m_UiSettingsPage = SETTINGS_CONTROLS;
 	else if(str_comp(pTab, "appearance-hud") == 0)
 	{
 		g_Config.m_UiSettingsPage = SETTINGS_APPEARANCE;
