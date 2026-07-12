@@ -37,6 +37,15 @@ namespace ui_widget
 			return ui_widget::BuildInputFieldResult(WasActive, pInput->IsActive(), Changed, SubmitPressed, WasEmpty, pInput->IsEmpty(), Clearable);
 		}
 
+		bool NumericFieldTextIsInfinite(const char *pText)
+		{
+			const char *pTrimmed = str_utf8_skip_whitespaces(pText);
+			char aTrimmed[32];
+			str_copy(aTrimmed, pTrimmed);
+			str_utf8_trim_right(aTrimmed);
+			return str_comp(aTrimmed, "∞") == 0 || str_comp_nocase(aTrimmed, "inf") == 0 || str_comp_nocase(aTrimmed, "infinite") == 0;
+		}
+
 		void DrawTextFieldPlate(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const STextFieldOptions &Options)
 		{
 			const SUiTheme &Theme = ThemeFor(Ctx);
@@ -484,13 +493,18 @@ namespace ui_widget
 
 		if(!RenderOnly && (Result.m_Deactivated || Result.m_Submitted))
 		{
-			const bool ParsedInfinite = Infinite && str_comp(pInput->GetString(), "\xe2\x88\x9e") == 0;
+			const bool ParsedInfinite = Infinite && NumericFieldTextIsInfinite(pInput->GetString());
 			int Parsed = ParsedInfinite ? 0 : SliderInputStoredValue(pInput->GetInteger(), Multiplier);
-			if(NoClampValue && ((Parsed <= SliderMin && *pValue < SliderMin) || (Parsed >= SliderInputStoredMaximum(Max, Multiplier) && *pValue > SliderInputStoredMaximum(Max, Multiplier))))
+			if(!ParsedInfinite && (Options.m_InputMin >= 0 || Options.m_InputMax >= 0))
+			{
+				const int InputMin = Options.m_InputMin >= 0 ? Options.m_InputMin : SliderMin;
+				Parsed = NumericFieldTextInputStoredValue(pInput->GetInteger(), Multiplier, InputMin, SliderInputStoredMaximum(Max, Multiplier), Options.m_InputMax, false);
+			}
+			else if(!ParsedInfinite && NoClampValue && ((Parsed <= SliderMin && *pValue < SliderMin) || (Parsed >= SliderInputStoredMaximum(Max, Multiplier) && *pValue > SliderInputStoredMaximum(Max, Multiplier))))
 			{
 				// 保留越界值
 			}
-			else
+			else if(!ParsedInfinite)
 			{
 				Parsed = std::clamp(Parsed, SliderMin, SliderInputStoredMaximum(Max, Multiplier));
 			}

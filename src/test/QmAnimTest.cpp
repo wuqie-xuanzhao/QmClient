@@ -3031,6 +3031,16 @@ TEST(NumericField, FormatsAndParsesIntegerDecimalAndInfinity)
 	EXPECT_EQ(ui_widget::FormatNumericFieldValue(0, Decimal), "∞");
 }
 
+TEST(NumericField, TextInputUsesIndependentBoundAndPreservesInfinity)
+{
+	EXPECT_EQ(ui_widget::NumericFieldTextInputStoredValue(0, 1, 0, 1000, 10000, false), 0);
+	EXPECT_EQ(ui_widget::NumericFieldTextInputStoredValue(5, 1, 0, 1000, 10000, false), 5);
+	EXPECT_EQ(ui_widget::NumericFieldTextInputStoredValue(5000, 1, 0, 1000, 10000, false), 5000);
+	EXPECT_EQ(ui_widget::NumericFieldTextInputStoredValue(10001, 1, 0, 1000, 10000, false), 10000);
+	EXPECT_EQ(ui_widget::NumericFieldTextInputStoredValue(10001, 1, 10, 1000, -1, false), 1000);
+	EXPECT_EQ(ui_widget::NumericFieldTextInputStoredValue(1000, 1, 0, 1000, 10000, true), 0);
+}
+
 TEST(NumericField, DelayPolicyCommitsOnlyOnReleaseSubmitOrBlur)
 {
 	ui_widget::SInputFieldResult Editing;

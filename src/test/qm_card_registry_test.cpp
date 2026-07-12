@@ -142,6 +142,16 @@ TEST(QmCardRegistry, TeeStandardPageCardsPersistInVisualOrder)
 		(std::vector<std::string>{"deck:tee-skin-options"}));
 }
 
+// 意图：Graphics 试点卡片的 placement 已是公共 registry 的事实源；补齐滚动时不得破坏序列化后的列顺序。
+TEST(QmCardRegistry, GraphicsPilotPlacementSurvivesSerialization)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "graphics", 1),
+		(std::vector<std::string>{"deck:graphics-display", "deck:graphics-visual", "deck:graphics-backend"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "graphics", 2),
+		(std::vector<std::string>{"deck:graphics-modes"}));
+}
+
 // 否则全局默认补位会把不同 appearance 子页混在同一个 tab 下，或留下 order 空洞。
 TEST(QmCardRegistry, AppearanceDeckDefaultsUseSubPagePlacements)
 {

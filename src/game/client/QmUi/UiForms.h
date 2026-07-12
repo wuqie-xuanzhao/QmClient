@@ -194,6 +194,14 @@ namespace ui_widget
 	inline int SliderInputStoredMaximum(int DisplayMax, int ValueMultiplier) { return DisplayMax / std::max(1, ValueMultiplier); }
 	inline int SliderInputDisplayValue(int StoredValue, int ValueMultiplier) { return StoredValue * std::max(1, ValueMultiplier); }
 	inline int SliderInputStoredValue(int DisplayValue, int ValueMultiplier) { return (int)std::round(DisplayValue / (float)std::max(1, ValueMultiplier)); }
+	// 文本输入可拥有与滑条不同的上限；无限值始终使用 0 这个存储哨兵。
+	inline int NumericFieldTextInputStoredValue(int DisplayValue, int ValueMultiplier, int InputMin, int SliderMax, int InputMax, bool ParsedInfinite)
+	{
+		if(ParsedInfinite)
+			return 0;
+		const int TextInputMax = InputMax >= 0 ? std::max(InputMin, InputMax) : SliderMax;
+		return std::clamp(SliderInputStoredValue(DisplayValue, ValueMultiplier), InputMin, TextInputMax);
+	}
 	inline bool SliderInputIsInfiniteValue(int StoredValue, bool Infinite) { return Infinite && StoredValue == 0; }
 	inline int SliderInputWheelStoredValue(int StoredValue, int SliderMin, int SliderMax, bool Infinite, int Increment)
 	{
@@ -236,6 +244,8 @@ namespace ui_widget
 		float m_LineSpacing = 1.0f;
 		int m_LabelAlign = TEXTALIGN_ML;
 		int m_ValueMultiplier = 1; // 滑动条以 Min/Multiplier..Max/Multiplier 为单位，显示/编辑真实值
+		int m_InputMin = -1; // -1 沿用滑动条下限；其他值为文本输入的 stored-value 下限
+		int m_InputMax = -1; // -1 沿用滑动条上限；其他值为文本输入的 stored-value 上限
 		EInputCommitPolicy m_CommitPolicy = EInputCommitPolicy::LIVE;
 		CUIElement *m_pLabelElement = nullptr;
 	};

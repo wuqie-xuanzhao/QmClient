@@ -533,10 +533,13 @@ TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 TEST(QmNewUiMenuBranches, SettingsGraphicsOpacitySlidersExposeIndependentUiDomains)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(Graphics.empty());
 
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize(\"UI opacity\")"), std::string::npos);
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize(\"Map browser opacity\")"), std::string::npos);
-	EXPECT_NE(Source.find("DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize(\"Scoreboard opacity\")"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoGraphicsNumericField(\"graphics-ui-opacity\", &g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize(\"UI opacity\"), 0, 100, &CUi::ms_LinearScrollbarScale, \"%\")"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoGraphicsNumericField(\"graphics-map-browser-opacity\", &g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize(\"Map browser opacity\"), 0, 100, &CUi::ms_LinearScrollbarScale, \"%\")"), std::string::npos);
+	EXPECT_NE(Graphics.find("DoGraphicsNumericField(\"graphics-scoreboard-opacity\", &g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize(\"Scoreboard opacity\"), 0, 100, &CUi::ms_LinearScrollbarScale, \"%\")"), std::string::npos);
+	EXPECT_EQ(Graphics.find("DoSliderWithValueInput("), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, DefaultUiSurfacesUseBlackThirtyPercent)
@@ -2466,6 +2469,27 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	EXPECT_EQ(Tee.find("Ui()->DoScrollbarH("), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, GraphicsPilotHasNoRemainingLegacyInputOrScrollPath)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(Graphics.empty());
+	EXPECT_NE(Graphics.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Graphics.find("SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(Graphics.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(Graphics.find("ui_widget::NumericField("), std::string::npos);
+	EXPECT_NE(Graphics.find("QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_NE(Graphics.find("CQmScrollState"), std::string::npos);
+	EXPECT_NE(Graphics.find("deck:graphics-display"), std::string::npos);
+	EXPECT_NE(Graphics.find("deck:graphics-visual"), std::string::npos);
+	EXPECT_NE(Graphics.find("deck:graphics-backend"), std::string::npos);
+	EXPECT_NE(Graphics.find("deck:graphics-modes"), std::string::npos);
+	EXPECT_EQ(Graphics.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(Graphics.find("DoSliderWithValueInput("), std::string::npos);
+	EXPECT_EQ(Graphics.find("Ui()->DoScrollbarH("), std::string::npos);
+	EXPECT_EQ(Graphics.find("Ui()->DoValueSelectorWithState("), std::string::npos);
+	EXPECT_EQ(Graphics.find("s_GraphicsSettingsScrollRegion"), std::string::npos);
+}
 TEST(QmNewUiMenuBranches, NestedLanguageListWheelOwnerOutranksGeneralPage)
 {
 	EXPECT_TRUE(QmHotScrollRegionPriorityWins(EUiWheelOwnerPriority::PAGE, EUiWheelOwnerPriority::COMPOSITE_CONTROL));

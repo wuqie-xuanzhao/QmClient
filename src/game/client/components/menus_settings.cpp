@@ -3085,103 +3085,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	CUIRect Button;
 	char aBuf[128];
 	bool CheckSettings = false;
-	auto FormatInfiniteValueSelector = [](int64_t Value, char *pBuf, int BufSize, int Base, int HexPrefix) {
-		if(Value == 0)
-		{
-			str_copy(pBuf, "∞", BufSize);
-			return;
-		}
-		if(Base == 16)
-			str_format(pBuf, BufSize, "#%0*" PRIX64, HexPrefix, Value);
-		else
-			str_format(pBuf, BufSize, "%" PRId64, Value);
-	};
-	auto ParseInfiniteValueSelector = [](const char *pText, int64_t &Value, int Base) {
-		const char *pTrimmed = str_utf8_skip_whitespaces(pText);
-		char aTrimmed[32];
-		str_copy(aTrimmed, pTrimmed);
-		str_utf8_trim_right(aTrimmed);
-		if(aTrimmed[0] == '\0')
-			return false;
-		if(str_comp(aTrimmed, "∞") == 0 || str_comp_nocase(aTrimmed, "inf") == 0 || str_comp_nocase(aTrimmed, "infinite") == 0)
-		{
-			Value = 0;
-			return true;
-		}
-		if(Base == 10)
-		{
-			int Error = 0;
-			double Result = te_interp(aTrimmed, &Error);
-			if(Error == 0 && std::isfinite(Result))
-			{
-				Value = (int64_t)std::round(Result);
-				return true;
-			}
-			return false;
-		}
-		const char *pNumber = aTrimmed;
-		if(Base == 16 && pNumber[0] == '#')
-			++pNumber;
-		if(pNumber[0] == '\0')
-			return false;
-		for(const char *pCursor = pNumber; *pCursor != '\0'; ++pCursor)
-		{
-			const int Digit = *pCursor >= '0' && *pCursor <= '9' ? *pCursor - '0' :
-					  *pCursor >= 'a' && *pCursor <= 'f' ? *pCursor - 'a' + 10 :
-					  *pCursor >= 'A' && *pCursor <= 'F' ? *pCursor - 'A' + 10 :
-									       -1;
-			if(Digit < 0 || Digit >= Base)
-				return false;
-		}
-		Value = str_toint64_base(pNumber, Base);
-		return true;
-	};
-	auto DoSliderWithValueInput = [this, FormatInfiniteValueSelector, ParseInfiniteValueSelector](const void *pId, int *pOption, const CUIRect &Rect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, const char *pSuffix = "", unsigned Flags = 0u, int InputMax = -1) {
-		const bool Infinite = Flags & CUi::SCROLLBAR_OPTION_INFINITE;
-		const bool NoClampValue = Flags & CUi::SCROLLBAR_OPTION_NOCLAMPVALUE;
-		CUIRect Label, Controls, Slider, Input, SuffixRect;
-		const float InputWidth = 58.0f;
-		const float GapWidth = 6.0f;
-		const float SuffixWidth = pSuffix[0] != '\0' ? 18.0f : 0.0f;
-		Rect.VSplitLeft(minimum(180.0f, Rect.w * 0.42f), &Label, &Controls);
-		if(SuffixWidth > 0.0f)
-		{
-			Controls.VSplitRight(InputWidth + GapWidth + SuffixWidth, &Slider, &Input);
-			Input.VSplitRight(SuffixWidth, &Input, &SuffixRect);
-			Input.VSplitRight(GapWidth, &Input, nullptr);
-		}
-		else
-		{
-			Controls.VSplitRight(InputWidth, &Slider, &Input);
-			SuffixRect = {};
-		}
-		Slider.VSplitRight(GapWidth, &Slider, nullptr);
-		Slider.VMargin(1.0f, &Slider);
-		Input.VMargin(1.0f, &Input);
-		Ui()->DoLabel(&Label, pStr, Label.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML);
-		int SliderMax = Infinite ? Max + 1 : Max;
-		int SliderValue = *pOption;
-		if(Infinite && SliderValue == 0)
-			SliderValue = SliderMax;
-		SliderValue = std::clamp(SliderValue, Min, SliderMax);
-		SliderValue = pScale->ToAbsolute(Ui()->DoScrollbarH(pId, &Slider, pScale->ToRelative(SliderValue, Min, SliderMax)), Min, SliderMax);
-		if(Infinite && SliderValue == SliderMax)
-			SliderValue = 0;
-		*pOption = SliderValue;
-		SValueSelectorProperties Props;
-		Props.m_UseScroll = false;
-		Props.m_TextAlign = TEXTALIGN_MC;
-		Props.m_SelectAllOnActivate = false;
-		Props.m_pfnFormatValue = Infinite ? FormatInfiniteValueSelector : nullptr;
-		Props.m_pfnParseValue = Infinite ? ParseInfiniteValueSelector : nullptr;
-		const int SelectorMin = Infinite ? 0 : Min;
-		const int SelectorMax = InputMax >= 0 ? InputMax : (NoClampValue ? Max : SliderMax);
-		const auto Result = Ui()->DoValueSelectorWithState(reinterpret_cast<const void *>((uintptr_t)pId ^ 0x1), &Input, "", *pOption, SelectorMin, SelectorMax, Props);
-		*pOption = (int)Result.m_Value;
-		if(SuffixWidth > 0.0f)
-			Ui()->DoLabel(&SuffixRect, pSuffix, SuffixRect.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_MC);
-	};
-
 	static const int MAX_RESOLUTIONS = 256;
 	static CVideoMode s_aModes[MAX_RESOLUTIONS];
 	static int s_NumNodes = Graphics()->GetVideoModes(s_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
@@ -3212,7 +3115,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float ViewWidth = MainView.w;
 	const float UiScale = minimum(1.0f, maximum(0.85f, ViewWidth / 800.0f));
 
-	static CScrollRegion s_GraphicsSettingsScrollRegion;
+	static CScrollRegion s_GraphicsScrollRegion;
 	static float s_GraphicsDisplayCardHeight = 0.0f;
 	static float s_GraphicsVisualCardHeight = 0.0f;
 	static float s_GraphicsBackendCardHeight = 0.0f;
@@ -3221,7 +3124,21 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const SSettingsPageLayoutFrame GraphicsPage = ResolveSettingsPageLayout(MainView, false, UiScale);
 	const IUiContext GraphicsCardCtx = SettingsUiContext("settings_graphics", UiScale);
 	const SSettingsCardDeckVisualOptions GraphicsVisualOptions = SettingsCardDeckVisualOptions();
-
+	const auto DoGraphicsNumericField = [this, &GraphicsCardCtx](const char *pTextId, const void *pId, int *pOption, const CUIRect &Rect, const char *pLabel, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, const char *pSuffix = "", unsigned Flags = 0u, int InputMin = -1, int InputMax = -1) {
+		ui_widget::SNumericFieldOptions Options;
+		Options.m_pLabel = pLabel;
+		Options.m_pSuffix = pSuffix;
+		Options.m_pScale = pScale;
+		Options.m_Flags = Flags;
+		Options.m_InputMin = InputMin;
+		Options.m_InputMax = InputMax;
+		Options.m_FontSize = Rect.h * CUi::ms_FontmodHeight * 0.8f;
+		Options.m_LabelAlign = TEXTALIGN_ML;
+		Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
+		if(PrepareSettingsNumericFieldLabel(SETTINGS_GRAPHICS, -1, -1, pTextId, Rect, pLabel, Flags, Options))
+			return false;
+		return ui_widget::NumericField(GraphicsCardCtx, GetSettingsNumericFieldState(pId), pId, pOption, Min, Max, Rect, Options);
+	};
 	const qm_card_registry::SCardDefault *pDisplayDefault = qm_card_registry::FindByStableId("deck:graphics-display");
 	const qm_card_registry::SCardDefault *pVisualDefault = qm_card_registry::FindByStableId("deck:graphics-visual");
 	const qm_card_registry::SCardDefault *pBackendDefault = qm_card_registry::FindByStableId("deck:graphics-backend");
@@ -3440,7 +3357,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CardView.HSplitTop(20.0f, &Button, &CardView);
 		str_copy(aBuf, " ");
 		str_append(aBuf, Localize("Hz", "Hertz"));
-		DoSliderWithValueInput(&g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 10000);
+		DoGraphicsNumericField("graphics-refresh-rate", &g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000);
 
 		UpdateMeasuredCardHeight(s_GraphicsDisplayCardHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, ContentRect, CardView);
 	});
@@ -3468,7 +3385,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CardView.HSplitTop(2.0f, nullptr, &CardView);
 		CardView.HSplitTop(20.0f, &Button, &CardView);
 		const int OldQmUiOpacity = g_Config.m_QmUiOpacity;
-		DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize("UI opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+		DoGraphicsNumericField("graphics-ui-opacity", &g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize("UI opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
 		if(OldQmUiOpacity != g_Config.m_QmUiOpacity)
 			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
@@ -3485,19 +3402,19 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		CardView.HSplitTop(2.0f, nullptr, &CardView);
 		CardView.HSplitTop(20.0f, &Button, &CardView);
-		DoSliderWithValueInput(&g_Config.m_QmUiMotionLevel, &g_Config.m_QmUiMotionLevel, Button, Localize("UI motion level"), 0, 2);
+		DoGraphicsNumericField("graphics-ui-motion-level", &g_Config.m_QmUiMotionLevel, &g_Config.m_QmUiMotionLevel, Button, Localize("UI motion level"), 0, 2);
 
 		CardView.HSplitTop(2.0f, nullptr, &CardView);
 		CardView.HSplitTop(20.0f, &Button, &CardView);
 		const int OldQmMapBrowserOpacity = g_Config.m_QmMapBrowserOpacity;
-		DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize("Map browser opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+		DoGraphicsNumericField("graphics-map-browser-opacity", &g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize("Map browser opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
 		if(OldQmMapBrowserOpacity != g_Config.m_QmMapBrowserOpacity)
 			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 		CardView.HSplitTop(2.0f, nullptr, &CardView);
 		CardView.HSplitTop(20.0f, &Button, &CardView);
 		const int OldQmScoreboardOpacity = g_Config.m_QmScoreboardOpacity;
-		DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize("Scoreboard opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+		DoGraphicsNumericField("graphics-scoreboard-opacity", &g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize("Scoreboard opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
 		if(OldQmScoreboardOpacity != g_Config.m_QmScoreboardOpacity)
 			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
@@ -3702,7 +3619,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		m_SettingsCardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
 		m_SettingsCardFocusStableId.clear();
 	}
-	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	CQmScrollState &ScrollState = s_GraphicsScrollRegion.State();
+	// Deck 通过同一个 region 消费该状态；显式取得它以固定页面唯一的滚动状态所有权。
+	(void)ScrollState;
 	SSettingsCardDeckInput InputState;
 	InputState.m_MouseX = Ui()->MouseX();
 	InputState.m_MouseY = Ui()->MouseY();
@@ -3712,7 +3634,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	InputState.m_pScrollParams = &ScrollParams;
-	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(GraphicsCardCtx, GraphicsPage, pDeckTab, vCards, SettingsCardOrderModel(), &s_GraphicsSettingsScrollRegion, InputState, SettingsCardMotionSpec(), GraphicsVisualOptions);
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(GraphicsCardCtx, GraphicsPage, pDeckTab, vCards, SettingsCardOrderModel(), &s_GraphicsScrollRegion, InputState, SettingsCardMotionSpec(), GraphicsVisualOptions);
 	if(DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 

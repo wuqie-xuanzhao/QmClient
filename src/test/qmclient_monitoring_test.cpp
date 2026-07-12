@@ -4028,17 +4028,20 @@ TEST(QmMonitoringHelpers, GraphicsRefreshRateInputAcceptsInfinitySymbol)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	const std::string UiFormsSource = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
+	const std::string NumericFieldBody = ExtractSourceFunctionBody(UiFormsSource, "bool NumericField(const IUiContext &Ctx, SNumericFieldState *pState, const void *pId, int *pValue, int Min, int Max, const CUIRect &Rect, const SNumericFieldOptions &Options)");
 	ASSERT_FALSE(Body.empty());
+	ASSERT_FALSE(NumericFieldBody.empty());
 
-	EXPECT_NE(Body.find("FormatInfiniteValueSelector"), std::string::npos);
-	EXPECT_NE(Body.find("ParseInfiniteValueSelector"), std::string::npos);
-	EXPECT_NE(Body.find("Props.m_pfnFormatValue = Infinite ? FormatInfiniteValueSelector : nullptr;"), std::string::npos);
-	EXPECT_NE(Body.find("Props.m_pfnParseValue = Infinite ? ParseInfiniteValueSelector : nullptr;"), std::string::npos);
-	EXPECT_NE(Body.find("if(aTrimmed[0] == '\\0')"), std::string::npos);
-	EXPECT_NE(Body.find("int Error = 0;"), std::string::npos);
-	EXPECT_NE(Body.find("te_interp(aTrimmed, &Error)"), std::string::npos);
-	EXPECT_NE(Body.find("if(Error == 0 && std::isfinite(Result))"), std::string::npos);
-	EXPECT_NE(Body.find("return false;"), std::string::npos);
+	EXPECT_NE(Body.find("int InputMin = -1, int InputMax = -1"), std::string::npos);
+	EXPECT_NE(Body.find("Options.m_InputMin = InputMin;"), std::string::npos);
+	EXPECT_NE(Body.find("Options.m_InputMax = InputMax;"), std::string::npos);
+	EXPECT_NE(Body.find("CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 0, 10000"), std::string::npos);
+	EXPECT_NE(NumericFieldBody.find("NumericFieldTextIsInfinite(pInput->GetString())"), std::string::npos);
+	EXPECT_NE(NumericFieldBody.find("if(!ParsedInfinite && (Options.m_InputMin >= 0 || Options.m_InputMax >= 0))"), std::string::npos);
+	EXPECT_NE(NumericFieldBody.find("Parsed = NumericFieldTextInputStoredValue("), std::string::npos);
+	EXPECT_EQ(Body.find("FormatInfiniteValueSelector"), std::string::npos);
+	EXPECT_EQ(Body.find("ParseInfiniteValueSelector"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, QmClientSliderValueInputReservesReadableValueWidth)
