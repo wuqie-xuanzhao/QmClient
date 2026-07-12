@@ -7506,7 +7506,7 @@ TEST(QmMonitoringHelpers, P6FunctionGoresActorContentExtractionKeepsInputAndCond
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string GoresActorBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)");
+	const std::string GoresActorBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
 	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::GoresActor:");
 	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::Gores:", LegacyCaseStart);
 	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
@@ -7520,7 +7520,8 @@ TEST(QmMonitoringHelpers, P6FunctionGoresActorContentExtractionKeepsInputAndCond
 	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatEmoticon"), std::string::npos);
 	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatEmoticonId"), std::string::npos);
 	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatChance"), std::string::npos);
-	EXPECT_NE(LegacyCase.find("RenderQmFunctionGoresActorContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth);"), std::string::npos);
+	EXPECT_NE(LegacyCase.find("RenderQmFunctionGoresActorContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
+	EXPECT_NE(GoresActorBody.find("RenderQmFunctionCheckbox"), std::string::npos);
 	EXPECT_EQ(GoresActorBody.find("RegisterModuleCard"), std::string::npos);
 }
 
@@ -7600,12 +7601,31 @@ TEST(QmMonitoringHelpers, P6FunctionMiniFeaturesAndHJAssistContentExtractionKeep
 	EXPECT_NE(MiniFeaturesBody.find("m_QmNewIme"), std::string::npos);
 	EXPECT_NE(MiniFeaturesBody.find("qm_2_63_0_new_ime"), std::string::npos);
 	EXPECT_NE(MiniFeaturesBody.find("MarkQmNewFeatureHovered"), std::string::npos);
+	EXPECT_NE(MiniFeaturesBody.find("RenderQmFunctionCheckbox"), std::string::npos);
 	EXPECT_NE(HJAssistBody.find("m_QmAutoTeamLock"), std::string::npos);
 	EXPECT_NE(HJAssistBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(HJAssistBody.find("RenderQmFunctionCheckbox"), std::string::npos);
 	EXPECT_NE(MiniFeaturesCase.find("RenderQmFunctionMiniFeaturesContent(CardContent, LgLineHeight, LgLineSpacing, PrewarmOnly);"), std::string::npos);
 	EXPECT_NE(HJAssistCase.find("RenderQmFunctionHJAssistContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
 	EXPECT_EQ(MiniFeaturesBody.find("RegisterModuleCard"), std::string::npos);
 	EXPECT_EQ(HJAssistBody.find("RegisterModuleCard"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, P6FunctionGoresContentExtractionPreservesTheLightPathAndInputState)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string GoresBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly, bool LightFirstFrame)");
+	ASSERT_FALSE(GoresBody.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionGoresContent"), std::string::npos);
+	EXPECT_NE(GoresBody.find("if(LightFirstFrame)"), std::string::npos);
+	EXPECT_NE(GoresBody.find("settings_qmclient_gores_text_inputs"), std::string::npos);
+	EXPECT_NE(GoresBody.find("s_AxiomLoginPassword"), std::string::npos);
+	EXPECT_NE(GoresBody.find("s_AxiomDummyLoginPassword"), std::string::npos);
+	EXPECT_NE(GoresBody.find("RenderQmFunctionCheckbox"), std::string::npos);
+	EXPECT_NE(GoresBody.find("toggle qm_gores 0 1"), std::string::npos);
+	EXPECT_EQ(GoresBody.find("RegisterModuleCard"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)

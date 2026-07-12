@@ -746,6 +746,17 @@ void CMenus::RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect
 		*pValue = OriginalValue;
 }
 
+bool CMenus::RenderQmFunctionCheckbox(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, bool PrewarmOnly)
+{
+	const int OriginalValue = *pValue;
+	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pId, pTextId, pText, *pValue, pRect) != 0;
+	if(Changed)
+		*pValue ^= 1;
+	if(PrewarmOnly || Ui()->RenderOnly())
+		*pValue = OriginalValue;
+	return Changed;
+}
+
 bool CMenus::IsQmNewFeatureRead(const char *pId) const
 {
 	if(pId == nullptr || pId[0] == '\0')
@@ -1661,18 +1672,18 @@ void CMenus::RenderQmFunctionKeyBindsContent(CUIRect &Content, float LineHeight,
 		Localize("Active disconnect"), "qm_timeout_disconnect", LineHeight, BodySize, LineSpacing, LabelWidth);
 }
 
-void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)
+void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_gores_actor_text_inputs", 1.0f);
 	CUIRect Row, LabelColumn, ControlColumn;
 	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEnabled, "qmclient-gores-actor-enable", Localize("Auto chat in water"), &g_Config.m_TcFreezeChatEnabled, &Row, LineHeight);
+	RenderQmFunctionCheckbox(&g_Config.m_TcFreezeChatEnabled, "qmclient-gores-actor-enable", Localize("Auto chat in water"), &g_Config.m_TcFreezeChatEnabled, &Row, PrewarmOnly);
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	if(!g_Config.m_TcFreezeChatEnabled)
 		return;
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEmoticon, "qmclient-gores-actor-emoticon", Localize("Send emoticon in water"), &g_Config.m_TcFreezeChatEmoticon, &Row, LineHeight);
+	RenderQmFunctionCheckbox(&g_Config.m_TcFreezeChatEmoticon, "qmclient-gores-actor-emoticon", Localize("Send emoticon in water"), &g_Config.m_TcFreezeChatEmoticon, &Row, PrewarmOnly);
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	if(g_Config.m_TcFreezeChatEmoticon)
 	{
@@ -1683,7 +1694,7 @@ void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeigh
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	DoQmSettingsLabel("qmclient-gores-actor-chat-message", &LabelColumn, Localize("Chat message"), BodySize);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-gores-actor-chat-message", &LabelColumn, Localize("Chat message"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
 	static CLineInput s_FreezeChatMessageQmClient(g_Config.m_TcFreezeChatMessage, sizeof(g_Config.m_TcFreezeChatMessage));
 	s_FreezeChatMessageQmClient.SetEmptyText(Localize("Leave empty to disable"));
 	ui_widget::InputField(TextInputCtx, &s_FreezeChatMessageQmClient, ControlColumn, Localize("Leave empty to disable"), BodySize);
@@ -1694,11 +1705,103 @@ void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeigh
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
+void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly, bool LightFirstFrame)
+{
+	if(LightFirstFrame)
+	{
+		Content.HSplitTop(LineHeight, nullptr, &Content);
+		return;
+	}
+
+	static CButtonContainer s_ReaderButtonGoresToggle, s_ClearButtonGoresToggle;
+	static CButtonContainer s_AxiomPasswordToggleButton, s_AxiomDummyPasswordToggleButton;
+	static bool s_ShowAxiomPassword = false;
+	static bool s_ShowAxiomDummyPassword = false;
+	CUIRect Row, LabelColumn, ControlColumn;
+	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing, PrewarmOnly](const void *pId, const char *pTextId, const char *pText, int *pValue, float Spacing = 1.0f) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		RenderQmFunctionCheckbox(pId, pTextId, Localize(pText), pValue, &Row, PrewarmOnly);
+		Content.HSplitTop(LineSpacing * Spacing, nullptr, &Content);
+	};
+	RenderCheckbox(&g_Config.m_QmGores, "qmclient-gores-enable", "Enable Gores mode", &g_Config.m_QmGores);
+	RenderCheckbox(&g_Config.m_QmAxiomAutoLogin, "qmclient-gores-axiom-auto-login", "Auto login Axiom server", &g_Config.m_QmAxiomAutoLogin, 0.0f);
+
+	if(g_Config.m_QmAxiomAutoLogin)
+	{
+		IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_gores_text_inputs", 1.0f);
+		auto DoPasswordToggleButton = [this](CButtonContainer *pButton, bool Visible, const CUIRect &ButtonRect) {
+			const EQmIcon Icon = Visible ? EQmIcon::EYE_OFF : EQmIcon::EYE;
+			const char *pFallbackIcon = Visible ? FONT_ICON_EYE_SLASH : FONT_ICON_EYE;
+			CQmIconManager *pIconManager = GameClient()->QmIconManager();
+			if(pIconManager == nullptr || !pIconManager->IsReady())
+				return Ui()->DoButton_FontIcon(pButton, pFallbackIcon, 0, &ButtonRect, BUTTONFLAG_LEFT) != 0;
+			ButtonRect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * Ui()->ButtonColorMul(pButton)), IGraphics::CORNER_ALL, 5.0f);
+			CUIRect IconRect;
+			ButtonRect.HMargin(2.0f, &IconRect);
+			IconRect.Margin(IconRect.h * 0.20f, &IconRect);
+			const EQmIconState IconState = Ui()->HotItem() == pButton ? EQmIconState::HOVER : EQmIconState::NORMAL;
+			if(!pIconManager->RenderIcon(Icon, IconRect, IconState))
+				return Ui()->DoButton_FontIcon(pButton, pFallbackIcon, 0, &ButtonRect, BUTTONFLAG_LEFT) != 0;
+			return Ui()->DoButtonLogic(pButton, 0, &ButtonRect, BUTTONFLAG_LEFT) != 0;
+		};
+		auto RenderPassword = [&](const char *pTextId, const char *pText, CLineInput &Input, CButtonContainer &ToggleButton, bool &Visible) {
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+			DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+			CUIRect PasswordEditRect, PasswordToggleRect;
+			ControlColumn.VSplitRight(ControlColumn.h, &PasswordEditRect, &PasswordToggleRect);
+			Input.SetHidden(!Visible);
+			ui_widget::InputField(TextInputCtx, &Input, PasswordEditRect, nullptr, BodySize);
+			if(DoPasswordToggleButton(&ToggleButton, Visible, PasswordToggleRect))
+				Visible = !Visible;
+			Content.HSplitTop(LineSpacing * 0.35f, nullptr, &Content);
+		};
+		static CLineInput s_AxiomLoginPassword(g_Config.m_QmAxiomLoginPassword, sizeof(g_Config.m_QmAxiomLoginPassword));
+		static CLineInput s_AxiomDummyLoginPassword(g_Config.m_QmAxiomDummyLoginPassword, sizeof(g_Config.m_QmAxiomDummyLoginPassword));
+		RenderPassword("qmclient-gores-axiom-main-password", "Axiom main account password", s_AxiomLoginPassword, s_AxiomPasswordToggleButton, s_ShowAxiomPassword);
+		RenderPassword("qmclient-gores-axiom-dummy-password", "Axiom dummy password", s_AxiomDummyLoginPassword, s_AxiomDummyPasswordToggleButton, s_ShowAxiomDummyPassword);
+	}
+
+	RenderCheckbox(&g_Config.m_QmGoresAutoEnable, "qmclient-gores-auto-enable", "Auto enable in Gores mode", &g_Config.m_QmGoresAutoEnable, 0.35f);
+	if(g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable)
+	{
+		RenderCheckbox(&g_Config.m_QmGoresAutoWeaponSwitch, "qmclient-gores-auto-weapon-switch", "Auto weapon switch", &g_Config.m_QmGoresAutoWeaponSwitch);
+		RenderCheckbox(&g_Config.m_QmGoresFastInput, "qmclient-gores-fast-input", "Auto-toggle fast input", &g_Config.m_QmGoresFastInput);
+		RenderCheckbox(&g_Config.m_QmGoresFastInputOthers, "qmclient-gores-fast-input-others", "Auto-toggle fast input others", &g_Config.m_QmGoresFastInputOthers);
+		RenderCheckbox(&g_Config.m_QmGoresDisableIfWeapons, "qmclient-gores-disable-if-weapons", "Disable after picking up other weapons", &g_Config.m_QmGoresDisableIfWeapons);
+		RenderCheckbox(&g_Config.m_QmGoresHideGuides, "qmclient-gores-hide-guides", "Hide guide lines", &g_Config.m_QmGoresHideGuides, 0.35f);
+	}
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	CUIRect BindLabel, BindKey;
+	Row.VSplitLeft(LabelWidth, &BindLabel, &BindKey);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-gores-mode-key", &BindLabel, Localize("Gores mode key"), BodySize, TEXTALIGN_ML, {}, (int)BindLabel.w);
+	CBindSlot GoresBind(KEY_UNKNOWN, KeyModifier::NONE);
+	const auto GoresIt = g_CommandBindCache.find("toggle qm_gores 0 1");
+	if(GoresIt != g_CommandBindCache.end())
+		GoresBind = GoresIt->second;
+	const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&s_ReaderButtonGoresToggle, &s_ClearButtonGoresToggle, &BindKey, GoresBind, false);
+	if(Result.m_Bind == GoresBind)
+		return;
+	if(GoresBind.m_Key != KEY_UNKNOWN)
+		GameClient()->m_Binds.Bind(GoresBind.m_Key, "", false, GoresBind.m_ModifierMask);
+	if(Result.m_Bind.m_Key != KEY_UNKNOWN)
+	{
+		GameClient()->m_Binds.Bind(Result.m_Bind.m_Key, "toggle qm_gores 0 1", false, Result.m_Bind.m_ModifierMask);
+		g_CommandBindCache.insert_or_assign("toggle qm_gores 0 1", Result.m_Bind);
+	}
+	else
+	{
+		g_CommandBindCache.erase("toggle qm_gores 0 1");
+	}
+	(void)PrewarmOnly;
+}
+
 void CMenus::RenderQmFunctionJumpHintContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;
 	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmJumpHint, "Position jump hint", Localize("Position jump hint"), &g_Config.m_QmJumpHint, &Row, LineHeight);
+	RenderQmFunctionCheckbox(&g_Config.m_QmJumpHint, "Position jump hint", Localize("Position jump hint"), &g_Config.m_QmJumpHint, &Row, PrewarmOnly);
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	static CButtonContainer s_QmJumpHintColorId;
@@ -1707,7 +1810,7 @@ void CMenus::RenderQmFunctionJumpHintContent(CUIRect &Content, float LineHeight,
 	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-		DoQmSettingsLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
 		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
@@ -1743,7 +1846,7 @@ void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float Lin
 	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-		DoQmSettingsLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
 		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
@@ -1759,20 +1862,20 @@ void CMenus::RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHei
 	CUIRect Row, LabelColumn, ControlColumn;
 	auto RenderCheckbox = [&](const void *pId, const char *pTextId, const char *pText, int *pValue) {
 		Content.HSplitTop(LineHeight, &Row, &Content);
-		DoQmSettingsCheckboxAuto(pId, pTextId, Localize(pText), pValue, &Row, LineHeight);
+		RenderQmFunctionCheckbox(pId, pTextId, Localize(pText), pValue, &Row, PrewarmOnly);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
 	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-		DoQmSettingsLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
 		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
 	auto RenderText = [&](const char *pTextId, const char *pText, CLineInput *pInput, const char *pPlaceholder) {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-		DoQmSettingsLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
 		pInput->SetEmptyText(Localize(pPlaceholder));
 		ui_widget::InputField(TextInputCtx, pInput, ControlColumn, Localize(pPlaceholder), BodySize);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -1802,10 +1905,9 @@ void CMenus::RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHei
 void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)
 {
 	CUIRect Row;
-	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing](const void *pId, const char *pText, int *pValue) {
+	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing, PrewarmOnly](const void *pId, const char *pText, int *pValue) {
 		Content.HSplitTop(LineHeight, &Row, &Content);
-		if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pId, pText, Localize(pText), *pValue, &Row))
-			*pValue ^= 1;
+		RenderQmFunctionCheckbox(pId, pText, Localize(pText), pValue, &Row, PrewarmOnly);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
 	RenderCheckbox(&g_Config.m_QmFootParticles, "Local particle effects", &g_Config.m_QmFootParticles);
@@ -1819,8 +1921,7 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	RenderCheckbox(&g_Config.m_QmShortServerNames, "Short server names", &g_Config.m_QmShortServerNames);
 	RenderCheckbox(&g_Config.m_QmImeAutoManage, "Auto manage IME while typing", &g_Config.m_QmImeAutoManage);
 	Content.HSplitTop(LineHeight, &Row, &Content);
-	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, &g_Config.m_QmNewIme, "New IME", Localize("New IME"), g_Config.m_QmNewIme, &Row))
-		g_Config.m_QmNewIme ^= 1;
+	RenderQmFunctionCheckbox(&g_Config.m_QmNewIme, "New IME", Localize("New IME"), &g_Config.m_QmNewIme, &Row, PrewarmOnly);
 	if(!IsQmNewFeatureRead("qm_2_63_0_new_ime"))
 	{
 		CUIRect Dot;
@@ -1840,10 +1941,9 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 void CMenus::RenderQmFunctionHJAssistContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;
-	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing](const void *pId, const char *pText, int *pValue) {
+	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing, PrewarmOnly](const void *pId, const char *pText, int *pValue) {
 		Content.HSplitTop(LineHeight, &Row, &Content);
-		if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pId, pText, Localize(pText), *pValue, &Row))
-			*pValue ^= 1;
+		RenderQmFunctionCheckbox(pId, pText, Localize(pText), pValue, &Row, PrewarmOnly);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
 	RenderCheckbox(&g_Config.m_QmAutoUnspecOnUnfreeze, "Auto unspec on unfreeze", &g_Config.m_QmAutoUnspecOnUnfreeze);
@@ -5776,7 +5876,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 1, Localize("Gores Actor"), Localize("Auto chat in water"));
-				RenderQmFunctionGoresActorContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth);
+				RenderQmFunctionGoresActorContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
