@@ -7502,6 +7502,28 @@ TEST(QmMonitoringHelpers, P6FunctionKeyBindsContentExtractionKeepsTheLegacyShell
 	EXPECT_EQ(KeyBindsBody.find("RegisterModuleCard"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionGoresActorContentExtractionKeepsInputAndConditionalControls)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string GoresActorBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)");
+	const size_t LegacyCaseStart = QmClient.rfind("case EQmModuleId::GoresActor:");
+	const size_t LegacyCaseEnd = QmClient.find("case EQmModuleId::Gores:", LegacyCaseStart);
+	const std::string LegacyCase = LegacyCaseStart != std::string::npos && LegacyCaseEnd != std::string::npos ? QmClient.substr(LegacyCaseStart, LegacyCaseEnd - LegacyCaseStart) : "";
+	ASSERT_FALSE(GoresActorBody.empty());
+	ASSERT_FALSE(LegacyCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionGoresActorContent"), std::string::npos);
+	EXPECT_NE(GoresActorBody.find("settings_qmclient_gores_actor_text_inputs"), std::string::npos);
+	EXPECT_NE(GoresActorBody.find("ui_widget::InputField"), std::string::npos);
+	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatEnabled"), std::string::npos);
+	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatEmoticon"), std::string::npos);
+	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatEmoticonId"), std::string::npos);
+	EXPECT_NE(GoresActorBody.find("m_TcFreezeChatChance"), std::string::npos);
+	EXPECT_NE(LegacyCase.find("RenderQmFunctionGoresActorContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth);"), std::string::npos);
+	EXPECT_EQ(GoresActorBody.find("RegisterModuleCard"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");

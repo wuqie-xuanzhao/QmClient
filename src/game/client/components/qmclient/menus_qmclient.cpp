@@ -1661,6 +1661,39 @@ void CMenus::RenderQmFunctionKeyBindsContent(CUIRect &Content, float LineHeight,
 		Localize("Active disconnect"), "qm_timeout_disconnect", LineHeight, BodySize, LineSpacing, LabelWidth);
 }
 
+void CMenus::RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)
+{
+	IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_gores_actor_text_inputs", 1.0f);
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEnabled, "qmclient-gores-actor-enable", Localize("Auto chat in water"), &g_Config.m_TcFreezeChatEnabled, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(!g_Config.m_TcFreezeChatEnabled)
+		return;
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEmoticon, "qmclient-gores-actor-emoticon", Localize("Send emoticon in water"), &g_Config.m_TcFreezeChatEmoticon, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(g_Config.m_TcFreezeChatEmoticon)
+	{
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoSettingsScrollbarOption(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, "qmclient-gores-actor-emoticon-id", &g_Config.m_TcFreezeChatEmoticonId, &g_Config.m_TcFreezeChatEmoticonId, &Row, Localize("Emoticon ID"), 0, 15);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoQmSettingsLabel("qmclient-gores-actor-chat-message", &LabelColumn, Localize("Chat message"), BodySize);
+	static CLineInput s_FreezeChatMessageQmClient(g_Config.m_TcFreezeChatMessage, sizeof(g_Config.m_TcFreezeChatMessage));
+	s_FreezeChatMessageQmClient.SetEmptyText(Localize("Leave empty to disable"));
+	ui_widget::InputField(TextInputCtx, &s_FreezeChatMessageQmClient, ControlColumn, Localize("Leave empty to disable"), BodySize);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	DoSettingsScrollbarOption(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, "qmclient-gores-actor-send-probability", &g_Config.m_TcFreezeChatChance, &g_Config.m_TcFreezeChatChance, &Row, Localize("Send probability"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
 void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;
@@ -5576,42 +5609,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 1, Localize("Gores Actor"), Localize("Auto chat in water"));
-				IUiContext QmClientGoresActorTextInputCtx;
-				QmClientGoresActorTextInputCtx.m_pUi = Ui();
-				QmClientGoresActorTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-				QmClientGoresActorTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-				QmClientGoresActorTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_gores_actor_text_inputs");
-				QmClientGoresActorTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEnabled, "qmclient-gores-actor-enable", Localize("Auto chat in water"), &g_Config.m_TcFreezeChatEnabled, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_TcFreezeChatEnabled)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckbox(&g_Config.m_TcFreezeChatEmoticon, "qmclient-gores-actor-emoticon", Localize("Send emoticon in water"), &g_Config.m_TcFreezeChatEmoticon, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					if(g_Config.m_TcFreezeChatEmoticon)
-					{
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						DoSettingsScrollbarOption(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, "qmclient-gores-actor-emoticon-id", &g_Config.m_TcFreezeChatEmoticonId, &g_Config.m_TcFreezeChatEmoticonId, &Row, Localize("Emoticon ID"), 0, 15);
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					}
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-gores-actor-chat-message", &LabelCol, Localize("Chat message"), LgBodySize);
-					static CLineInput s_FreezeChatMessageQmClient(g_Config.m_TcFreezeChatMessage, sizeof(g_Config.m_TcFreezeChatMessage));
-					s_FreezeChatMessageQmClient.SetEmptyText(Localize("Leave empty to disable"));
-					ui_widget::InputField(QmClientGoresActorTextInputCtx, &s_FreezeChatMessageQmClient, ControlCol, Localize("Leave empty to disable"), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoSettingsScrollbarOption(SETTINGS_QMCLIENT, m_QmClientSettingsTab, m_QmClientSettingsTab, "qmclient-gores-actor-send-probability", &g_Config.m_TcFreezeChatChance, &g_Config.m_TcFreezeChatChance, &Row, Localize("Send probability"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmFunctionGoresActorContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
