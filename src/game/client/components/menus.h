@@ -2736,7 +2736,10 @@ private:
 	std::string m_SettingsCardFocusStableId;
 	qm_card_order::CModel m_SettingsCardOrderModel;
 	bool m_SettingsCardOrderLoaded = false;
-	settings_card_deck::CDeck m_GraphicsSettingsCardDeck;
+	CSettingsCardDeck m_SettingsCardDeck;
+	uint64_t m_SettingsCardDeckDisplayKey = 0;
+	uint64_t m_SettingsCardDeckDisplayCycle = 0;
+	bool m_HasSettingsCardDeckDisplayKey = false;
 	std::vector<SSettingsCardDeckItem> m_vTClientSettingsCardDeckItems;
 	SSettingsCardDeckDragState m_TClientSettingsCardDragState;
 	bool m_TClientSettingsCardDeckOrderDirty = false;

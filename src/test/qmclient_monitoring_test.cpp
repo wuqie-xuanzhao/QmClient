@@ -7293,44 +7293,63 @@ TEST(QmMonitoringHelpers, SettingsCardShellConsumesCanonicalVisualContract)
 TEST(QmMonitoringHelpers, GlobalSearchTargetsGraphicsCanonicalCard)
 {
 	const std::string SearchSource = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string SearchCardBody = ExtractSourceFunctionBody(SearchSource, "void CMenus::RenderGlobalSearchResultCard");
-	const std::string FocusBody = ExtractSourceFunctionBody(MenusSource, "bool CMenus::ConsumeSettingsCardFocus");
 	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(SearchCardBody.empty());
-	ASSERT_FALSE(FocusBody.empty());
 	ASSERT_FALSE(GraphicsBody.empty());
 
 	EXPECT_NE(SearchCardBody.find("Navigation.m_SettingsPage == SETTINGS_GRAPHICS"), std::string::npos);
 	EXPECT_NE(SearchCardBody.find("RequestSettingsCardFocus(Card.m_pStableId);"), std::string::npos);
-	EXPECT_NE(FocusBody.find("if(m_MenuTextPlanCollecting || Ui()->RenderOnly())"), std::string::npos);
-	EXPECT_NE(FocusBody.find("Deck.m_pScrollRegion->AddRect(Card.m_Rect, true);"), std::string::npos);
-	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, DisplayCard);"), std::string::npos);
-	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, VisualCard);"), std::string::npos);
-	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, BackendCard);"), std::string::npos);
-	EXPECT_NE(GraphicsBody.find("ConsumeSettingsCardFocus(GraphicsDeck, ModesCard);"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.Render("), std::string::npos);
 }
 TEST(QmMonitoringHelpers, GraphicsDeckUsesPublicCoordinator)
 {
 	const std::string MenusHeader = ReadRepoFile("src/game/client/components/menus.h");
-	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string TClientSource = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string SettingsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettings(CUIRect MainView)");
 	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
-	const std::string OverlayBody = ExtractSourceFunctionBody(MenusSource, "void CMenus::RenderSettingsCardDeckDragOverlay(SSettingsCardDeckLayout &Deck)");
-	const std::string CommitBody = ExtractSourceFunctionBody(TClientSource, "bool CMenus::CommitSettingsCardDeckDragDrop(std::vector<std::string> *pOrder, ESettingsCardDeckColumn DropColumn, int DropIndex, settings_card_deck::CDeck *pDeckCoordinator)");
+	ASSERT_FALSE(SettingsBody.empty());
 	ASSERT_FALSE(GraphicsBody.empty());
-	ASSERT_FALSE(OverlayBody.empty());
-	ASSERT_FALSE(CommitBody.empty());
 
-	EXPECT_NE(MenusHeader.find("#include <game/client/QmUi/SettingsCardDeck.h>"), std::string::npos);
-	EXPECT_NE(MenusHeader.find("m_GraphicsSettingsCardDeck"), std::string::npos);
-	EXPECT_NE(GraphicsBody.find("m_GraphicsSettingsCardDeck.Load(\"graphics\""), std::string::npos);
-	EXPECT_NE(GraphicsBody.find("m_GraphicsSettingsCardDeck.OrderedStableIds()"), std::string::npos);
-	EXPECT_NE(MenusSource.find("HandleSettingsCardDeckDrag(Item, Card.m_Column, Deck.m_pOrder, Deck.m_pDeckCoordinator);"), std::string::npos);
-	EXPECT_NE(OverlayBody.find("CommitSettingsCardDeckDragDrop(Deck.m_pOrder, DropColumn, DropIndex, Deck.m_pDeckCoordinator);"), std::string::npos);
-	EXPECT_NE(CommitBody.find("pDeckCoordinator->CommitDrop("), std::string::npos);
+	EXPECT_NE(MenusHeader.find("CSettingsCardDeck m_SettingsCardDeck;"), std::string::npos);
+	EXPECT_NE(MenusHeader.find("m_SettingsCardDeckDisplayCycle"), std::string::npos);
+	EXPECT_EQ(MenusHeader.find("m_GraphicsSettingsCardDeck"), std::string::npos);
+	const size_t DisplayKey = SettingsBody.find("const uint64_t DisplayKey");
+	ASSERT_NE(DisplayKey, std::string::npos);
+	const size_t CycleGuard = SettingsBody.find("if(!CollectingMenuTextPlan &&", DisplayKey);
+	const size_t BeginDisplayCycle = SettingsBody.find("m_SettingsCardDeck.BeginDisplayCycle", DisplayKey);
+	ASSERT_NE(CycleGuard, std::string::npos);
+	ASSERT_NE(BeginDisplayCycle, std::string::npos);
+	EXPECT_LT(CycleGuard, BeginDisplayCycle);
+	EXPECT_NE(SettingsBody.find("m_SettingsCardDeckDisplayKey != DisplayKey"), std::string::npos);
+	EXPECT_EQ(GraphicsBody.find("m_SettingsCardDeck.BeginDisplayCycle"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("SettingsCardOrderModel()"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("SaveSettingsCardOrderModel()"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, GraphicsDeckRemovesOnlyThePublicBridge)
+{
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_settings.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_EQ(Header.find("m_GraphicsSettingsCardDeck"), std::string::npos);
+	EXPECT_EQ(Body.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(Body.find("BeginSettingsCardDeckCard("), std::string::npos);
+	EXPECT_EQ(Body.find("EndSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(Body.find("RenderSettingsCardDeckDragOverlay("), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, P2DoesNotHalfMigrateQmClientOrTClientRenderers)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string TClient = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
+	EXPECT_EQ(QmClient.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_EQ(TClient.find("m_SettingsCardDeck.Render("), std::string::npos);
 }
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
@@ -7344,7 +7363,8 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 	EXPECT_NE(Header.find("SSettingsCardDeckResult Render("), std::string::npos);
 	EXPECT_NE(Header.find("void RequestReveal("), std::string::npos);
 	EXPECT_NE(Header.find("void BeginDisplayCycle("), std::string::npos);
-	EXPECT_NE(Source.find("BuildSettingsCardDeckColumnOrder("), std::string::npos);
+	EXPECT_NE(Header.find("CProjectionCache m_ProjectionCache"), std::string::npos);
+	EXPECT_NE(Source.find("m_ProjectionCache.Resolve("), std::string::npos);
 	EXPECT_NE(Source.find("ApplySettingsCardDeckDragPlacement("), std::string::npos);
 	EXPECT_NE(Source.find("ResolveSettingsCardDeckDropOrder("), std::string::npos);
 	EXPECT_NE(Source.find("SettingsCardDeckAutoScrollDelta("), std::string::npos);
@@ -7374,18 +7394,14 @@ TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 TEST(QmMonitoringHelpers, GraphicsUsesCanonicalSettingsCardShell)
 {
 	const std::string SettingsSource = ReadRepoFile("src/game/client/components/menus_settings.cpp");
-	const std::string MenusSource = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string GraphicsBody = ExtractSourceFunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
-	const std::string DeckCardBody = ExtractSourceFunctionBody(MenusSource, "CMenus::SSettingsCardDeckCard CMenus::BeginSettingsCardDeckCard");
 	ASSERT_FALSE(GraphicsBody.empty());
-	ASSERT_FALSE(DeckCardBody.empty());
 
 	EXPECT_NE(GraphicsBody.find("ResolveSettingsPageLayout("), std::string::npos);
-	EXPECT_NE(GraphicsBody.find("m_UseCanonicalCardShell"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(GraphicsBody.find("m_SettingsCardDeck.Render("), std::string::npos);
 	EXPECT_NE(GraphicsBody.find("deck:graphics-display"), std::string::npos);
 	EXPECT_EQ(GraphicsBody.find("RenderQmSettingsGlassCard("), std::string::npos);
-	EXPECT_NE(DeckCardBody.find("if(Deck.m_UseCanonicalCardShell"), std::string::npos);
-	EXPECT_NE(DeckCardBody.find("SettingsCard("), std::string::npos);
 }
 TEST(QmMonitoringHelpers, DelayUpdateStaysOnUnifiedSliderInputPath)
 {

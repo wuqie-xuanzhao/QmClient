@@ -79,14 +79,14 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		return Result;
 
 	PrepareDefinitions(vCards, Model);
-	std::vector<int> vActiveStateIndices;
-	vActiveStateIndices.reserve(vCards.size());
+	m_vActiveStateIndices.clear();
+	m_vActiveStateIndices.reserve(vCards.size());
 	for(int StateIndex = 0; StateIndex < (int)m_vDefinitionsByState.size(); ++StateIndex)
 	{
 		if(m_vDefinitionsByState[StateIndex] != nullptr)
-			vActiveStateIndices.push_back(StateIndex);
+			m_vActiveStateIndices.push_back(StateIndex);
 	}
-	std::array<std::vector<int>, 3> aColumns = BuildSettingsCardDeckColumnOrder(Model, pTab, vActiveStateIndices);
+	const std::array<std::vector<int>, 3> &aColumns = m_ProjectionCache.Resolve(Model, pTab, m_vActiveStateIndices);
 
 	CUIRect ScrollViewport = Layout.m_ScrollViewport;
 	vec2 ScrollOffset(0.0f, 0.0f);
@@ -100,7 +100,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 
 	auto BuildPreparedCards = [&](const std::array<std::vector<int>, 3> &aDisplayColumns) {
 		std::vector<SPreparedSettingsCard> vPrepared;
-		vPrepared.reserve(vActiveStateIndices.size());
+		vPrepared.reserve(m_vActiveStateIndices.size());
 		auto AppendColumn = [&](const std::vector<int> &vStateIndices, int Column, CUIRect ColumnRect, float &CursorY) {
 			for(const int StateIndex : vStateIndices)
 			{

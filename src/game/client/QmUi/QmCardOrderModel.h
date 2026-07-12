@@ -1,6 +1,7 @@
 #ifndef GAME_CLIENT_QMUI_QMCARDORDERMODEL_H
 #define GAME_CLIENT_QMUI_QMCARDORDERMODEL_H
 
+#include <cstdint>
 #include <deque>
 #include <string>
 #include <unordered_map>
@@ -29,6 +30,8 @@ namespace qm_card_order
 		void SetEntries(std::vector<SEntry> Entries);
 		int Count() const { return (int)m_vEntries.size(); }
 		const SEntry &Entry(int Index) const { return m_vEntries[Index]; }
+		// 单调布局版本：仅在 tab/column/order 或 entry 集合改变时递增，供渲染投影缓存失效。
+		uint64_t LayoutRevision() const { return m_LayoutRevision; }
 
 		int FindByStableId(const char *pStableId) const;
 
@@ -69,6 +72,7 @@ namespace qm_card_order
 		std::vector<SEntry> m_vEntries;
 		std::deque<std::string> m_vOwnedTabs;
 		std::unordered_map<std::string, int> m_StableIdToState; // stableId→连续 index 注册表（让位 lerp O(1) 查找）
+		uint64_t m_LayoutRevision = 0;
 		bool m_Dirty = false;
 	};
 } // namespace qm_card_order

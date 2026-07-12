@@ -137,6 +137,7 @@ namespace qm_card_order
 			m_vEntries.push_back(Entry);
 		}
 		m_Dirty = true;
+		++m_LayoutRevision;
 		BuildStateIndex(); // 维护 stableId→index 注册表（让位 lerp O(1) 地基）
 	}
 
@@ -184,6 +185,7 @@ namespace qm_card_order
 				m_vEntries[vSource[o]].m_OrderInColumn = o;
 		}
 		m_Dirty = true;
+		++m_LayoutRevision;
 		// Move 仅改 column/order，不改 stableId 集合与 vector 位置，state index 注册表无需重建
 	}
 
@@ -224,6 +226,7 @@ namespace qm_card_order
 				m_vEntries[vSource[o]].m_OrderInColumn = o;
 		}
 		m_Dirty = true;
+		++m_LayoutRevision;
 		// MoveToTab 仅改 tab/column/order，不改 stableId 集合与 vector 位置，state index 注册表无需重建
 	}
 
@@ -263,7 +266,10 @@ namespace qm_card_order
 			CurOrder++;
 		}
 		if(Changed)
+		{
 			m_Dirty = true;
+			++m_LayoutRevision;
+		}
 	}
 
 	std::vector<int> CModel::ColumnIndices(int Column) const
@@ -436,6 +442,7 @@ namespace qm_card_order
 			m_vEntries.push_back(E);
 		}
 		m_Dirty = true;
+		++m_LayoutRevision;
 		BuildStateIndex(); // 解析后重建 stableId→index 注册表
 		return true;
 	}

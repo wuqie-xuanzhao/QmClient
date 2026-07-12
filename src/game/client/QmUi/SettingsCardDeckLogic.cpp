@@ -22,6 +22,23 @@ std::array<std::vector<int>, 3> BuildSettingsCardDeckColumnOrder(const qm_card_o
 	return aColumns;
 }
 
+namespace settings_card_deck_logic
+{
+	const std::array<std::vector<int>, 3> &CProjectionCache::Resolve(const qm_card_order::CModel &Model, const char *pTab, const std::vector<int> &vActiveStateIndices)
+	{
+		const char *pResolvedTab = pTab != nullptr ? pTab : "";
+		if(m_LayoutRevision == Model.LayoutRevision() && str_comp(m_Tab.c_str(), pResolvedTab) == 0 && m_vActiveStateIndices == vActiveStateIndices)
+			return m_aColumns;
+
+		m_aColumns = BuildSettingsCardDeckColumnOrder(Model, pResolvedTab, vActiveStateIndices);
+		m_LayoutRevision = Model.LayoutRevision();
+		m_Tab = pResolvedTab;
+		m_vActiveStateIndices = vActiveStateIndices;
+		++m_RebuildCount;
+		return m_aColumns;
+	}
+} // namespace settings_card_deck_logic
+
 void ApplySettingsCardDeckDragPlacement(std::array<std::vector<int>, 3> &aColumns, int ActiveStateIndex, int TargetColumn, int TargetOrder)
 {
 	if(ActiveStateIndex < 0 || TargetColumn < 0 || TargetColumn >= (int)aColumns.size())

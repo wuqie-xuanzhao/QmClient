@@ -21,6 +21,7 @@
 #include <generated/protocol.h>
 
 #include <game/client/QmUi/QmAnimResolve.h>
+#include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/SettingsCard.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiContext.h>
@@ -3164,486 +3165,515 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float UiScale = minimum(1.0f, maximum(0.85f, ViewWidth / 800.0f));
 
 	static CScrollRegion s_GraphicsSettingsScrollRegion;
-	static float s_GraphicsSettingsScrollY = 0.0f;
 	static float s_GraphicsDisplayCardHeight = 0.0f;
 	static float s_GraphicsVisualCardHeight = 0.0f;
 	static float s_GraphicsBackendCardHeight = 0.0f;
 	static float s_GraphicsModesCardHeight = 0.0f;
+	const char *pDeckTab = "graphics";
 	const SSettingsPageLayoutFrame GraphicsPage = ResolveSettingsPageLayout(MainView, false, UiScale);
 	const IUiContext GraphicsCardCtx = SettingsUiContext("settings_graphics", UiScale);
 	const SSettingsCardDeckVisualOptions GraphicsVisualOptions = SettingsCardDeckVisualOptions();
-	m_GraphicsSettingsCardDeck.Load("graphics", g_Config.m_QmGlobalCardOrder, sizeof(g_Config.m_QmGlobalCardOrder));
-	std::vector<std::string> vGraphicsDeckOrder = m_GraphicsSettingsCardDeck.OrderedStableIds();
-	SSettingsCardDeckLayout GraphicsDeck = BeginSettingsCardDeck(GraphicsPage.m_ScrollViewport, s_GraphicsSettingsScrollRegion, s_GraphicsSettingsScrollY, UiScale, "graphics", SETTINGS_GRAPHICS, &vGraphicsDeckOrder);
-	GraphicsDeck.m_Spacing = GraphicsPage.m_CardGap;
-	GraphicsDeck.m_TwoColumns = GraphicsPage.m_TwoColumns;
-	GraphicsDeck.m_UseCanonicalCardShell = true;
-	GraphicsDeck.m_pCardContext = &GraphicsCardCtx;
-	GraphicsDeck.m_RainbowTitles = GraphicsVisualOptions.m_RainbowTitles;
-	GraphicsDeck.m_pDeckCoordinator = &m_GraphicsSettingsCardDeck;
-	if(GraphicsDeck.m_TwoColumns)
-		GraphicsDeck.m_View.VSplitMid(&GraphicsDeck.m_aColumns[0], &GraphicsDeck.m_aColumns[1], GraphicsDeck.m_Spacing);
-	else
-	{
-		GraphicsDeck.m_aColumns[0] = GraphicsDeck.m_View;
-		GraphicsDeck.m_aColumns[1] = {};
-	}
-	GraphicsDeck.m_aBaseColumns[0] = GraphicsDeck.m_aColumns[0];
-	GraphicsDeck.m_aBaseColumns[1] = GraphicsDeck.m_aColumns[1];
+
+	const qm_card_registry::SCardDefault *pDisplayDefault = qm_card_registry::FindByStableId("deck:graphics-display");
+	const qm_card_registry::SCardDefault *pVisualDefault = qm_card_registry::FindByStableId("deck:graphics-visual");
+	const qm_card_registry::SCardDefault *pBackendDefault = qm_card_registry::FindByStableId("deck:graphics-backend");
+	const qm_card_registry::SCardDefault *pModesDefault = qm_card_registry::FindByStableId("deck:graphics-modes");
+	dbg_assert(pDisplayDefault != nullptr && pVisualDefault != nullptr && pBackendDefault != nullptr && pModesDefault != nullptr, "graphics settings cards must be registered");
+	if(pDisplayDefault == nullptr || pVisualDefault == nullptr || pBackendDefault == nullptr || pModesDefault == nullptr)
+		return;
+
+	const SSettingsCardSpec DisplaySpec{pDisplayDefault->m_pStableId, Localize(pDisplayDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec VisualSpec{pVisualDefault->m_pStableId, Localize(pVisualDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec BackendSpec{pBackendDefault->m_pStableId, Localize(pBackendDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec ModesSpec{pModesDefault->m_pStableId, Localize(pModesDefault->m_pTitle), nullptr};
+	const auto CardChromeHeight = [UiScale](const SSettingsCardSpec &Spec) {
+		return BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, Spec, 0.0f, UiScale).m_Rect.h;
+	};
 	const float GraphicsDisplayMinCardHeight = 260.0f * UiScale;
 	const float GraphicsVisualMinCardHeight = 220.0f * UiScale;
 	const float GraphicsBackendMinCardHeight = 104.0f * UiScale;
-	const float GraphicsModesMinCardHeight = maximum(420.0f * UiScale, GraphicsDeck.m_View.h - GraphicsDeck.m_Spacing);
-	SSettingsCardDeckCard DisplayCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-display", Localize("Graphics display"), GraphicsDisplayMinCardHeight, s_GraphicsDisplayCardHeight, ESettingsCardDeckColumn::LEFT, true);
-	SSettingsCardDeckCard VisualCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-visual", Localize("Visual"), GraphicsVisualMinCardHeight, s_GraphicsVisualCardHeight, ESettingsCardDeckColumn::LEFT, true);
-	SSettingsCardDeckCard BackendCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-backend", Localize("Graphics backend"), GraphicsBackendMinCardHeight, s_GraphicsBackendCardHeight, ESettingsCardDeckColumn::LEFT, true);
-	SSettingsCardDeckCard ModesCard = BeginSettingsCardDeckCard(GraphicsDeck, "deck:graphics-modes", Localize("Display modes"), GraphicsModesMinCardHeight, s_GraphicsModesCardHeight, ESettingsCardDeckColumn::RIGHT, true);
-	ConsumeSettingsCardFocus(GraphicsDeck, DisplayCard);
-	ConsumeSettingsCardFocus(GraphicsDeck, VisualCard);
-	ConsumeSettingsCardFocus(GraphicsDeck, BackendCard);
-	ConsumeSettingsCardFocus(GraphicsDeck, ModesCard);
-
-	CUIRect ModeList = ModesCard.m_ContentRect;
-	CUIRect ModeLabel;
-	ModeList.HSplitTop(24.0f * UiScale, &ModeLabel, &ModeList);
-	MainView = DisplayCard.m_ContentRect;
-
-	// display mode list
-	static CListBox s_ListBox;
-	const float RowHeightResList = 22.0f * UiScale;
-	const float FontSizeResListHeader = 12.0f * UiScale;
-	const float FontSizeResList = 10.0f * UiScale;
-
-	{
-		int G = std::gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-		const int AspectGcd = G > 0 ? G : 1;
-		const float RawHiDPIScale = Graphics()->ScreenHiDPIScale();
-		const float HiDPIScale = std::isfinite(RawHiDPIScale) && RawHiDPIScale > 0.0f ? RawHiDPIScale : 1.0f;
-		str_format(aBuf, sizeof(aBuf), "%s: %dx%d @%dhz %d bit (%d:%d)", Localize("Current"), (int)(g_Config.m_GfxScreenWidth * HiDPIScale), (int)(g_Config.m_GfxScreenHeight * HiDPIScale), g_Config.m_GfxScreenRefreshRate, g_Config.m_GfxColorDepth, g_Config.m_GfxScreenWidth / AspectGcd, g_Config.m_GfxScreenHeight / AspectGcd);
-		Ui()->DoLabel(&ModeLabel, aBuf, FontSizeResListHeader, TEXTALIGN_MC);
-	}
-
-	{
-		int SelectedOld = -1;
-		s_ListBox.SetActive(!Ui()->IsPopupOpen());
-		s_ListBox.DoStart(RowHeightResList, s_NumNodes, 1, 3, SelectedOld, &ModeList);
-
-		for(int i = 0; i < s_NumNodes; ++i)
-		{
-			const int Depth = s_aModes[i].m_Red + s_aModes[i].m_Green + s_aModes[i].m_Blue > 16 ? 24 : 16;
-			if(g_Config.m_GfxColorDepth == Depth &&
-				g_Config.m_GfxScreenWidth == s_aModes[i].m_WindowWidth &&
-				g_Config.m_GfxScreenHeight == s_aModes[i].m_WindowHeight &&
-				g_Config.m_GfxScreenRefreshRate == s_aModes[i].m_RefreshRate)
-			{
-				SelectedOld = i;
-			}
-
-			const CListboxItem Item = s_ListBox.DoNextItem(&s_aModes[i], SelectedOld == i);
-			if(!Item.m_Visible)
-				continue;
-
-			int G = std::gcd(s_aModes[i].m_WindowWidth, s_aModes[i].m_WindowHeight);
-			str_format(aBuf, sizeof(aBuf), " %dx%d @%dhz %d bit (%d:%d)", s_aModes[i].m_CanvasWidth, s_aModes[i].m_CanvasHeight, s_aModes[i].m_RefreshRate, Depth, s_aModes[i].m_WindowWidth / G, s_aModes[i].m_WindowHeight / G);
-			Ui()->DoLabel(&Item.m_Rect, aBuf, FontSizeResList, TEXTALIGN_ML);
-		}
-
-		const int NewSelected = s_ListBox.DoEnd();
-		if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < s_NumNodes)
-		{
-			const int Depth = s_aModes[NewSelected].m_Red + s_aModes[NewSelected].m_Green + s_aModes[NewSelected].m_Blue > 16 ? 24 : 16;
-			g_Config.m_GfxColorDepth = Depth;
-			g_Config.m_GfxScreenWidth = s_aModes[NewSelected].m_WindowWidth;
-			g_Config.m_GfxScreenHeight = s_aModes[NewSelected].m_WindowHeight;
-			g_Config.m_GfxScreenRefreshRate = s_aModes[NewSelected].m_RefreshRate;
-			Graphics()->ResizeToScreen();
-		}
-	}
-
-	// switches
-	CUIRect WindowModeDropDown;
-	MainView.HSplitTop(20.0f, &WindowModeDropDown, &MainView);
-
-	const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
-	static const int s_NumWindowMode = std::size(apWindowModes);
-
-	const int OldWindowMode = (g_Config.m_GfxFullscreen ? (g_Config.m_GfxFullscreen == 1 ? 4 : (g_Config.m_GfxFullscreen == 2 ? 3 : 2)) : (g_Config.m_GfxBorderless ? 1 : 0));
-
-	static CUi::SDropDownState s_WindowModeDropDownState;
-	static CScrollRegion s_WindowModeDropDownScrollRegion;
-	s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
-	const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
-	if(OldWindowMode != NewWindowMode)
-	{
-		if(NewWindowMode == 0)
-			Graphics()->SetWindowParams(0, false);
-		else if(NewWindowMode == 1)
-			Graphics()->SetWindowParams(0, true);
-		else if(NewWindowMode == 2)
-			Graphics()->SetWindowParams(3, false);
-		else if(NewWindowMode == 3)
-			Graphics()->SetWindowParams(2, false);
-		else if(NewWindowMode == 4)
-			Graphics()->SetWindowParams(1, false);
-	}
-
-	if(Graphics()->GetNumScreens() > 1)
-	{
-		CUIRect ScreenDropDown;
-		MainView.HSplitTop(2.0f, nullptr, &MainView);
-		MainView.HSplitTop(20.0f, &ScreenDropDown, &MainView);
-
-		const int NumScreens = Graphics()->GetNumScreens();
-		static std::vector<std::string> s_vScreenNames;
-		static std::vector<const char *> s_vpScreenNames;
-		static char s_aScreenNamesCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
-		const bool RefreshScreenNames = s_vScreenNames.size() != (size_t)NumScreens || str_comp(s_aScreenNamesCacheLanguage, g_Config.m_ClLanguagefile) != 0;
-		if(RefreshScreenNames)
-		{
-			s_vScreenNames.resize(NumScreens);
-			for(int i = 0; i < NumScreens; ++i)
-			{
-				str_format(aBuf, sizeof(aBuf), "%s %d: %s", Localize("Screen"), i, Graphics()->GetScreenName(i));
-				s_vScreenNames[i] = aBuf;
-			}
-			str_copy(s_aScreenNamesCacheLanguage, g_Config.m_ClLanguagefile);
-		}
-		s_vpScreenNames.resize(NumScreens);
-		for(int i = 0; i < NumScreens; ++i)
-			s_vpScreenNames[i] = s_vScreenNames[i].c_str();
-
-		static CUi::SDropDownState s_ScreenDropDownState;
-		static CScrollRegion s_ScreenDropDownScrollRegion;
-		s_ScreenDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_ScreenDropDownScrollRegion;
-		const int NewScreen = Ui()->DoDropDown(&ScreenDropDown, g_Config.m_GfxScreen, s_vpScreenNames.data(), s_vpScreenNames.size(), s_ScreenDropDownState);
-		if(NewScreen != g_Config.m_GfxScreen)
-			Graphics()->SwitchWindowScreen(NewScreen, true);
-	}
-
-	MainView.HSplitTop(2.0f, nullptr, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	str_format(aBuf, sizeof(aBuf), "%s (%s)", Localize("V-Sync"), Localize("may cause delay"));
-	if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_GfxVsync, "graphics-vsync-delay-warning", aBuf, g_Config.m_GfxVsync, &Button))
-	{
-		Graphics()->SetVSync(!g_Config.m_GfxVsync);
-	}
-
-	bool MultiSamplingChanged = false;
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	str_format(aBuf, sizeof(aBuf), "%s (%s)", Localize("FSAA samples"), Localize("may cause delay"));
-	int GfxFsaaSamplesMouseButton = DoButton_CheckBox_Number(&g_Config.m_GfxFsaaSamples, aBuf, g_Config.m_GfxFsaaSamples, &Button);
-	int CurFSAA = g_Config.m_GfxFsaaSamples == 0 ? 1 : g_Config.m_GfxFsaaSamples;
-	if(GfxFsaaSamplesMouseButton == 1) // inc
-	{
-		g_Config.m_GfxFsaaSamples = std::pow(2, (int)std::log2(CurFSAA) + 1);
-		if(g_Config.m_GfxFsaaSamples > 64)
-			g_Config.m_GfxFsaaSamples = 0;
-		MultiSamplingChanged = true;
-	}
-	else if(GfxFsaaSamplesMouseButton == 2) // dec
-	{
-		if(CurFSAA == 1)
-			g_Config.m_GfxFsaaSamples = 64;
-		else if(CurFSAA == 2)
-			g_Config.m_GfxFsaaSamples = 0;
-		else
-			g_Config.m_GfxFsaaSamples = std::pow(2, (int)std::log2(CurFSAA) - 1);
-		MultiSamplingChanged = true;
-	}
-
-	uint32_t MultiSamplingCountBackend = 0;
-	if(MultiSamplingChanged)
-	{
-		if(Graphics()->SetMultiSampling(g_Config.m_GfxFsaaSamples, MultiSamplingCountBackend))
-		{
-			// try again with 0 if mouse click was increasing multi sampling
-			// else just accept the current value as is
-			if((uint32_t)g_Config.m_GfxFsaaSamples > MultiSamplingCountBackend && GfxFsaaSamplesMouseButton == 1)
-				Graphics()->SetMultiSampling(0, MultiSamplingCountBackend);
-			g_Config.m_GfxFsaaSamples = (int)MultiSamplingCountBackend;
-		}
-		else
-		{
-			CheckSettings = true;
-		}
-	}
-
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_GfxHighDetail, "High Detail", Localize("High Detail"), g_Config.m_GfxHighDetail, &Button))
-		g_Config.m_GfxHighDetail ^= 1;
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_GfxHighDetail, &Button, Localize("Allows maps to render with more detail"));
-
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_ClShowfps, "Show FPS", Localize("Show FPS"), g_Config.m_ClShowfps, &Button))
-		g_Config.m_ClShowfps ^= 1;
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ClShowfps, &Button, Localize("Renders your frame rate in the top right"));
-
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	str_copy(aBuf, " ");
-	str_append(aBuf, Localize("Hz", "Hertz"));
-	DoSliderWithValueInput(&g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 10000);
-	s_GraphicsDisplayCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - DisplayCard.m_Rect.y, GraphicsDisplayMinCardHeight);
-
-	MainView = VisualCard.m_ContentRect;
-
-	MainView.HSplitTop(2.0f, nullptr, &MainView);
-	static CButtonContainer s_UiColorResetId;
-	const unsigned OldQmUiColor = g_Config.m_QmUiColor;
-	DoLine_ColorPicker(&s_UiColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiColor)), false, nullptr, false);
-	if(OldQmUiColor != g_Config.m_QmUiColor)
-		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
-
-	static CButtonContainer s_MapBrowserColorResetId;
-	const unsigned OldQmMapBrowserColor = g_Config.m_QmMapBrowserColor;
-	DoLine_ColorPicker(&s_MapBrowserColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmMapBrowserColor)), false, nullptr, false);
-	if(OldQmMapBrowserColor != g_Config.m_QmMapBrowserColor)
-		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
-
-	static CButtonContainer s_ScoreboardColorResetId;
-	const unsigned OldQmScoreboardColor = g_Config.m_QmScoreboardColor;
-	DoLine_ColorPicker(&s_ScoreboardColorResetId, 25.0f, 13.0f, 2.0f, &MainView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmScoreboardColor)), false, nullptr, false);
-	if(OldQmScoreboardColor != g_Config.m_QmScoreboardColor)
-		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
-
-	MainView.HSplitTop(2.0f, nullptr, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	const int OldQmUiOpacity = g_Config.m_QmUiOpacity;
-	DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize("UI opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
-	if(OldQmUiOpacity != g_Config.m_QmUiOpacity)
-		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
-
-	MainView.HSplitTop(2.0f, nullptr, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &Button))
-		g_Config.m_QmExtraAnimations ^= 1;
-
-	MainView.HSplitTop(2.0f, nullptr, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardRainbowTitles, "rainbow-card-titles", Localize("Rainbow card titles"), g_Config.m_QmUiCardRainbowTitles, &Button))
-		g_Config.m_QmUiCardRainbowTitles ^= 1;
-	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiCardRainbowTitles, &Button, Localize("Requires extra animations"));
-
-	MainView.HSplitTop(2.0f, nullptr, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	DoSliderWithValueInput(&g_Config.m_QmUiMotionLevel, &g_Config.m_QmUiMotionLevel, Button, Localize("UI motion level"), 0, 2);
-
-	MainView.HSplitTop(2.0f, nullptr, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	const int OldQmMapBrowserOpacity = g_Config.m_QmMapBrowserOpacity;
-	DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize("Map browser opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
-	if(OldQmMapBrowserOpacity != g_Config.m_QmMapBrowserOpacity)
-		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
-
-	MainView.HSplitTop(2.0f, nullptr, &MainView);
-	MainView.HSplitTop(20.0f, &Button, &MainView);
-	const int OldQmScoreboardOpacity = g_Config.m_QmScoreboardOpacity;
-	DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize("Scoreboard opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
-	if(OldQmScoreboardOpacity != g_Config.m_QmScoreboardOpacity)
-		InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
-	s_GraphicsVisualCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - VisualCard.m_Rect.y, GraphicsVisualMinCardHeight);
-
-	MainView = BackendCard.m_ContentRect;
-
-	// Backend list
-	struct SMenuBackendInfo
-	{
-		int m_Major = 0;
-		int m_Minor = 0;
-		int m_Patch = 0;
-		const char *m_pBackendName = "";
-		bool m_Found = false;
+	const float GraphicsModesMinCardHeight = maximum(420.0f * UiScale, GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap);
+	const float DisplayChromeHeight = CardChromeHeight(DisplaySpec);
+	const float VisualChromeHeight = CardChromeHeight(VisualSpec);
+	const float BackendChromeHeight = CardChromeHeight(BackendSpec);
+	const float ModesChromeHeight = CardChromeHeight(ModesSpec);
+	const auto UpdateMeasuredCardHeight = [](float &LastHeight, float MinHeight, float ChromeHeight, const CUIRect &InitialContent, const CUIRect &RemainingContent) {
+		LastHeight = maximum(MinHeight, ChromeHeight + maximum(0.0f, RemainingContent.y - InitialContent.y));
 	};
-	static std::vector<SMenuBackendInfo> s_vSupportedBackendInfos;
-	static std::vector<std::string> s_vSupportedBackendNames;
-	static bool s_BackendListCacheValid = false;
-	static int s_BackendListCacheDriverBlocked = -1;
-	static char s_aBackendListCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
-	if(!s_BackendListCacheValid ||
-		s_BackendListCacheDriverBlocked != g_Config.m_GfxDriverIsBlocked ||
-		str_comp(s_aBackendListCacheLanguage, g_Config.m_ClLanguagefile) != 0)
-	{
-		s_vSupportedBackendInfos.clear();
-		s_vSupportedBackendNames.clear();
-		for(uint32_t i = 0; i < BACKEND_TYPE_COUNT; ++i)
+
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(4);
+	const auto AddCard = [&](const SSettingsCardSpec &Spec, float MinHeight, float &LastHeight, float ChromeHeight, FSettingsCardRender Render) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = Spec;
+		Definition.m_Measure = [MinHeight, &LastHeight, ChromeHeight](float) {
+			return maximum(0.0f, maximum(MinHeight, LastHeight) - ChromeHeight);
+		};
+		Definition.m_Render = Render;
+		vCards.push_back(Definition);
+	};
+
+	AddCard(ModesSpec, GraphicsModesMinCardHeight, s_GraphicsModesCardHeight, ModesChromeHeight, [&](CUIRect ContentRect) {
+		CUIRect ModeList = ContentRect;
+		CUIRect ModeLabel;
+		ModeList.HSplitTop(24.0f * UiScale, &ModeLabel, &ModeList); // display mode list
+		static CListBox s_ListBox;
+		const float RowHeightResList = 22.0f * UiScale;
+		const float FontSizeResListHeader = 12.0f * UiScale;
+		const float FontSizeResList = 10.0f * UiScale;
+
 		{
-			if(EBackendType(i) == BACKEND_TYPE_AUTO)
-				continue;
-			for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
+			int G = std::gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+			const int AspectGcd = G > 0 ? G : 1;
+			const float RawHiDPIScale = Graphics()->ScreenHiDPIScale();
+			const float HiDPIScale = std::isfinite(RawHiDPIScale) && RawHiDPIScale > 0.0f ? RawHiDPIScale : 1.0f;
+			str_format(aBuf, sizeof(aBuf), "%s: %dx%d @%dhz %d bit (%d:%d)", Localize("Current"), (int)(g_Config.m_GfxScreenWidth * HiDPIScale), (int)(g_Config.m_GfxScreenHeight * HiDPIScale), g_Config.m_GfxScreenRefreshRate, g_Config.m_GfxColorDepth, g_Config.m_GfxScreenWidth / AspectGcd, g_Config.m_GfxScreenHeight / AspectGcd);
+			Ui()->DoLabel(&ModeLabel, aBuf, FontSizeResListHeader, TEXTALIGN_MC);
+		}
+
+		{
+			int SelectedOld = -1;
+			s_ListBox.SetActive(!Ui()->IsPopupOpen());
+			s_ListBox.DoStart(RowHeightResList, s_NumNodes, 1, 3, SelectedOld, &ModeList);
+
+			for(int i = 0; i < s_NumNodes; ++i)
 			{
-				SMenuBackendInfo Info;
-				if(Graphics()->GetDriverVersion(EGraphicsDriverAgeType(n), Info.m_Major, Info.m_Minor, Info.m_Patch, Info.m_pBackendName, EBackendType(i)))
+				const int Depth = s_aModes[i].m_Red + s_aModes[i].m_Green + s_aModes[i].m_Blue > 16 ? 24 : 16;
+				if(g_Config.m_GfxColorDepth == Depth &&
+					g_Config.m_GfxScreenWidth == s_aModes[i].m_WindowWidth &&
+					g_Config.m_GfxScreenHeight == s_aModes[i].m_WindowHeight &&
+					g_Config.m_GfxScreenRefreshRate == s_aModes[i].m_RefreshRate)
 				{
-					// don't count blocked opengl drivers
-					if(EBackendType(i) != BACKEND_TYPE_OPENGL || EGraphicsDriverAgeType(n) == GRAPHICS_DRIVER_AGE_TYPE_LEGACY || g_Config.m_GfxDriverIsBlocked == 0)
+					SelectedOld = i;
+				}
+
+				const CListboxItem Item = s_ListBox.DoNextItem(&s_aModes[i], SelectedOld == i);
+				if(!Item.m_Visible)
+					continue;
+
+				int G = std::gcd(s_aModes[i].m_WindowWidth, s_aModes[i].m_WindowHeight);
+				str_format(aBuf, sizeof(aBuf), " %dx%d @%dhz %d bit (%d:%d)", s_aModes[i].m_CanvasWidth, s_aModes[i].m_CanvasHeight, s_aModes[i].m_RefreshRate, Depth, s_aModes[i].m_WindowWidth / G, s_aModes[i].m_WindowHeight / G);
+				Ui()->DoLabel(&Item.m_Rect, aBuf, FontSizeResList, TEXTALIGN_ML);
+			}
+
+			const int NewSelected = s_ListBox.DoEnd();
+			if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < s_NumNodes)
+			{
+				const int Depth = s_aModes[NewSelected].m_Red + s_aModes[NewSelected].m_Green + s_aModes[NewSelected].m_Blue > 16 ? 24 : 16;
+				g_Config.m_GfxColorDepth = Depth;
+				g_Config.m_GfxScreenWidth = s_aModes[NewSelected].m_WindowWidth;
+				g_Config.m_GfxScreenHeight = s_aModes[NewSelected].m_WindowHeight;
+				g_Config.m_GfxScreenRefreshRate = s_aModes[NewSelected].m_RefreshRate;
+				Graphics()->ResizeToScreen();
+			}
+		}
+
+		s_GraphicsModesCardHeight = maximum(GraphicsModesMinCardHeight, s_GraphicsModesCardHeight);
+	});
+	AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, s_GraphicsDisplayCardHeight, DisplayChromeHeight, [&](CUIRect ContentRect) {
+		CUIRect CardView = ContentRect; // switches
+		CUIRect WindowModeDropDown;
+		CardView.HSplitTop(20.0f, &WindowModeDropDown, &CardView);
+
+		const char *apWindowModes[] = {Localize("Windowed"), Localize("Windowed borderless"), Localize("Windowed fullscreen"), Localize("Desktop fullscreen"), Localize("Fullscreen")};
+		static const int s_NumWindowMode = std::size(apWindowModes);
+
+		const int OldWindowMode = (g_Config.m_GfxFullscreen ? (g_Config.m_GfxFullscreen == 1 ? 4 : (g_Config.m_GfxFullscreen == 2 ? 3 : 2)) : (g_Config.m_GfxBorderless ? 1 : 0));
+
+		static CUi::SDropDownState s_WindowModeDropDownState;
+		static CScrollRegion s_WindowModeDropDownScrollRegion;
+		s_WindowModeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WindowModeDropDownScrollRegion;
+		const int NewWindowMode = Ui()->DoDropDown(&WindowModeDropDown, OldWindowMode, apWindowModes, s_NumWindowMode, s_WindowModeDropDownState);
+		if(OldWindowMode != NewWindowMode)
+		{
+			if(NewWindowMode == 0)
+				Graphics()->SetWindowParams(0, false);
+			else if(NewWindowMode == 1)
+				Graphics()->SetWindowParams(0, true);
+			else if(NewWindowMode == 2)
+				Graphics()->SetWindowParams(3, false);
+			else if(NewWindowMode == 3)
+				Graphics()->SetWindowParams(2, false);
+			else if(NewWindowMode == 4)
+				Graphics()->SetWindowParams(1, false);
+		}
+
+		if(Graphics()->GetNumScreens() > 1)
+		{
+			CUIRect ScreenDropDown;
+			CardView.HSplitTop(2.0f, nullptr, &CardView);
+			CardView.HSplitTop(20.0f, &ScreenDropDown, &CardView);
+
+			const int NumScreens = Graphics()->GetNumScreens();
+			static std::vector<std::string> s_vScreenNames;
+			static std::vector<const char *> s_vpScreenNames;
+			static char s_aScreenNamesCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
+			const bool RefreshScreenNames = s_vScreenNames.size() != (size_t)NumScreens || str_comp(s_aScreenNamesCacheLanguage, g_Config.m_ClLanguagefile) != 0;
+			if(RefreshScreenNames)
+			{
+				s_vScreenNames.resize(NumScreens);
+				for(int i = 0; i < NumScreens; ++i)
+				{
+					str_format(aBuf, sizeof(aBuf), "%s %d: %s", Localize("Screen"), i, Graphics()->GetScreenName(i));
+					s_vScreenNames[i] = aBuf;
+				}
+				str_copy(s_aScreenNamesCacheLanguage, g_Config.m_ClLanguagefile);
+			}
+			s_vpScreenNames.resize(NumScreens);
+			for(int i = 0; i < NumScreens; ++i)
+				s_vpScreenNames[i] = s_vScreenNames[i].c_str();
+
+			static CUi::SDropDownState s_ScreenDropDownState;
+			static CScrollRegion s_ScreenDropDownScrollRegion;
+			s_ScreenDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_ScreenDropDownScrollRegion;
+			const int NewScreen = Ui()->DoDropDown(&ScreenDropDown, g_Config.m_GfxScreen, s_vpScreenNames.data(), s_vpScreenNames.size(), s_ScreenDropDownState);
+			if(NewScreen != g_Config.m_GfxScreen)
+				Graphics()->SwitchWindowScreen(NewScreen, true);
+		}
+
+		CardView.HSplitTop(2.0f, nullptr, &CardView);
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		str_format(aBuf, sizeof(aBuf), "%s (%s)", Localize("V-Sync"), Localize("may cause delay"));
+		if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_GfxVsync, "graphics-vsync-delay-warning", aBuf, g_Config.m_GfxVsync, &Button))
+		{
+			Graphics()->SetVSync(!g_Config.m_GfxVsync);
+		}
+
+		bool MultiSamplingChanged = false;
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		str_format(aBuf, sizeof(aBuf), "%s (%s)", Localize("FSAA samples"), Localize("may cause delay"));
+		int GfxFsaaSamplesMouseButton = DoButton_CheckBox_Number(&g_Config.m_GfxFsaaSamples, aBuf, g_Config.m_GfxFsaaSamples, &Button);
+		int CurFSAA = g_Config.m_GfxFsaaSamples == 0 ? 1 : g_Config.m_GfxFsaaSamples;
+		if(GfxFsaaSamplesMouseButton == 1) // inc
+		{
+			g_Config.m_GfxFsaaSamples = std::pow(2, (int)std::log2(CurFSAA) + 1);
+			if(g_Config.m_GfxFsaaSamples > 64)
+				g_Config.m_GfxFsaaSamples = 0;
+			MultiSamplingChanged = true;
+		}
+		else if(GfxFsaaSamplesMouseButton == 2) // dec
+		{
+			if(CurFSAA == 1)
+				g_Config.m_GfxFsaaSamples = 64;
+			else if(CurFSAA == 2)
+				g_Config.m_GfxFsaaSamples = 0;
+			else
+				g_Config.m_GfxFsaaSamples = std::pow(2, (int)std::log2(CurFSAA) - 1);
+			MultiSamplingChanged = true;
+		}
+
+		uint32_t MultiSamplingCountBackend = 0;
+		if(MultiSamplingChanged)
+		{
+			if(Graphics()->SetMultiSampling(g_Config.m_GfxFsaaSamples, MultiSamplingCountBackend))
+			{
+				// try again with 0 if mouse click was increasing multi sampling
+				// else just accept the current value as is
+				if((uint32_t)g_Config.m_GfxFsaaSamples > MultiSamplingCountBackend && GfxFsaaSamplesMouseButton == 1)
+					Graphics()->SetMultiSampling(0, MultiSamplingCountBackend);
+				g_Config.m_GfxFsaaSamples = (int)MultiSamplingCountBackend;
+			}
+			else
+			{
+				CheckSettings = true;
+			}
+		}
+
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_GfxHighDetail, "High Detail", Localize("High Detail"), g_Config.m_GfxHighDetail, &Button))
+			g_Config.m_GfxHighDetail ^= 1;
+		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_GfxHighDetail, &Button, Localize("Allows maps to render with more detail"));
+
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_ClShowfps, "Show FPS", Localize("Show FPS"), g_Config.m_ClShowfps, &Button))
+			g_Config.m_ClShowfps ^= 1;
+		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ClShowfps, &Button, Localize("Renders your frame rate in the top right"));
+
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		str_copy(aBuf, " ");
+		str_append(aBuf, Localize("Hz", "Hertz"));
+		DoSliderWithValueInput(&g_Config.m_GfxRefreshRate, &g_Config.m_GfxRefreshRate, Button, Localize("Refresh Rate"), 10, 1000, &CUi::ms_LinearScrollbarScale, aBuf, CUi::SCROLLBAR_OPTION_INFINITE | CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, 10000);
+
+		UpdateMeasuredCardHeight(s_GraphicsDisplayCardHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, ContentRect, CardView);
+	});
+	AddCard(VisualSpec, GraphicsVisualMinCardHeight, s_GraphicsVisualCardHeight, VisualChromeHeight, [&](CUIRect ContentRect) {
+		CUIRect CardView = ContentRect;
+		CardView.HSplitTop(2.0f, nullptr, &CardView);
+		static CButtonContainer s_UiColorResetId;
+		const unsigned OldQmUiColor = g_Config.m_QmUiColor;
+		DoLine_ColorPicker(&s_UiColorResetId, 25.0f, 13.0f, 2.0f, &CardView, Localize("UI color"), &g_Config.m_QmUiColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmUiColor)), false, nullptr, false);
+		if(OldQmUiColor != g_Config.m_QmUiColor)
+			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+		static CButtonContainer s_MapBrowserColorResetId;
+		const unsigned OldQmMapBrowserColor = g_Config.m_QmMapBrowserColor;
+		DoLine_ColorPicker(&s_MapBrowserColorResetId, 25.0f, 13.0f, 2.0f, &CardView, Localize("Map browser color"), &g_Config.m_QmMapBrowserColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmMapBrowserColor)), false, nullptr, false);
+		if(OldQmMapBrowserColor != g_Config.m_QmMapBrowserColor)
+			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+		static CButtonContainer s_ScoreboardColorResetId;
+		const unsigned OldQmScoreboardColor = g_Config.m_QmScoreboardColor;
+		DoLine_ColorPicker(&s_ScoreboardColorResetId, 25.0f, 13.0f, 2.0f, &CardView, Localize("Scoreboard color"), &g_Config.m_QmScoreboardColor, color_cast<ColorRGBA>(ColorHSLA(DefaultConfig::QmScoreboardColor)), false, nullptr, false);
+		if(OldQmScoreboardColor != g_Config.m_QmScoreboardColor)
+			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+		CardView.HSplitTop(2.0f, nullptr, &CardView);
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		const int OldQmUiOpacity = g_Config.m_QmUiOpacity;
+		DoSliderWithValueInput(&g_Config.m_QmUiOpacity, &g_Config.m_QmUiOpacity, Button, Localize("UI opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+		if(OldQmUiOpacity != g_Config.m_QmUiOpacity)
+			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+		CardView.HSplitTop(2.0f, nullptr, &CardView);
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmExtraAnimations, "extra-animations", Localize("Extra animations"), g_Config.m_QmExtraAnimations, &Button))
+			g_Config.m_QmExtraAnimations ^= 1;
+
+		CardView.HSplitTop(2.0f, nullptr, &CardView);
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardRainbowTitles, "rainbow-card-titles", Localize("Rainbow card titles"), g_Config.m_QmUiCardRainbowTitles, &Button))
+			g_Config.m_QmUiCardRainbowTitles ^= 1;
+		GameClient()->m_Tooltips.DoToolTip(&g_Config.m_QmUiCardRainbowTitles, &Button, Localize("Requires extra animations"));
+
+		CardView.HSplitTop(2.0f, nullptr, &CardView);
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		DoSliderWithValueInput(&g_Config.m_QmUiMotionLevel, &g_Config.m_QmUiMotionLevel, Button, Localize("UI motion level"), 0, 2);
+
+		CardView.HSplitTop(2.0f, nullptr, &CardView);
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		const int OldQmMapBrowserOpacity = g_Config.m_QmMapBrowserOpacity;
+		DoSliderWithValueInput(&g_Config.m_QmMapBrowserOpacity, &g_Config.m_QmMapBrowserOpacity, Button, Localize("Map browser opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+		if(OldQmMapBrowserOpacity != g_Config.m_QmMapBrowserOpacity)
+			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+		CardView.HSplitTop(2.0f, nullptr, &CardView);
+		CardView.HSplitTop(20.0f, &Button, &CardView);
+		const int OldQmScoreboardOpacity = g_Config.m_QmScoreboardOpacity;
+		DoSliderWithValueInput(&g_Config.m_QmScoreboardOpacity, &g_Config.m_QmScoreboardOpacity, Button, Localize("Scoreboard opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, "%");
+		if(OldQmScoreboardOpacity != g_Config.m_QmScoreboardOpacity)
+			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
+
+		UpdateMeasuredCardHeight(s_GraphicsVisualCardHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, ContentRect, CardView);
+	});
+	AddCard(BackendSpec, GraphicsBackendMinCardHeight, s_GraphicsBackendCardHeight, BackendChromeHeight, [&](CUIRect ContentRect) {
+		CUIRect CardView = ContentRect; // Backend list
+		struct SMenuBackendInfo
+		{
+			int m_Major = 0;
+			int m_Minor = 0;
+			int m_Patch = 0;
+			const char *m_pBackendName = "";
+			bool m_Found = false;
+		};
+		static std::vector<SMenuBackendInfo> s_vSupportedBackendInfos;
+		static std::vector<std::string> s_vSupportedBackendNames;
+		static bool s_BackendListCacheValid = false;
+		static int s_BackendListCacheDriverBlocked = -1;
+		static char s_aBackendListCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
+		if(!s_BackendListCacheValid ||
+			s_BackendListCacheDriverBlocked != g_Config.m_GfxDriverIsBlocked ||
+			str_comp(s_aBackendListCacheLanguage, g_Config.m_ClLanguagefile) != 0)
+		{
+			s_vSupportedBackendInfos.clear();
+			s_vSupportedBackendNames.clear();
+			for(uint32_t i = 0; i < BACKEND_TYPE_COUNT; ++i)
+			{
+				if(EBackendType(i) == BACKEND_TYPE_AUTO)
+					continue;
+				for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
+				{
+					SMenuBackendInfo Info;
+					if(Graphics()->GetDriverVersion(EGraphicsDriverAgeType(n), Info.m_Major, Info.m_Minor, Info.m_Patch, Info.m_pBackendName, EBackendType(i)))
 					{
-						Info.m_Found = true;
-						char aTmpBackendName[256];
-						const bool IsDefault = str_comp_nocase(Info.m_pBackendName, DefaultConfig::GfxBackend) == 0 && Info.m_Major == DefaultConfig::GfxGLMajor && Info.m_Minor == DefaultConfig::GfxGLMinor && Info.m_Patch == DefaultConfig::GfxGLPatch;
-						FormatQmGraphicsBackendDisplayName(aTmpBackendName, sizeof(aTmpBackendName), Info.m_pBackendName, Info.m_Major, Info.m_Minor, Info.m_Patch, IsDefault);
-						s_vSupportedBackendInfos.push_back(Info);
-						s_vSupportedBackendNames.emplace_back(aTmpBackendName);
+						// don't count blocked opengl drivers
+						if(EBackendType(i) != BACKEND_TYPE_OPENGL || EGraphicsDriverAgeType(n) == GRAPHICS_DRIVER_AGE_TYPE_LEGACY || g_Config.m_GfxDriverIsBlocked == 0)
+						{
+							Info.m_Found = true;
+							char aTmpBackendName[256];
+							const bool IsDefault = str_comp_nocase(Info.m_pBackendName, DefaultConfig::GfxBackend) == 0 && Info.m_Major == DefaultConfig::GfxGLMajor && Info.m_Minor == DefaultConfig::GfxGLMinor && Info.m_Patch == DefaultConfig::GfxGLPatch;
+							FormatQmGraphicsBackendDisplayName(aTmpBackendName, sizeof(aTmpBackendName), Info.m_pBackendName, Info.m_Major, Info.m_Minor, Info.m_Patch, IsDefault);
+							s_vSupportedBackendInfos.push_back(Info);
+							s_vSupportedBackendNames.emplace_back(aTmpBackendName);
+						}
 					}
 				}
 			}
+			s_BackendListCacheValid = true;
+			s_BackendListCacheDriverBlocked = g_Config.m_GfxDriverIsBlocked;
+			str_copy(s_aBackendListCacheLanguage, g_Config.m_ClLanguagefile);
 		}
-		s_BackendListCacheValid = true;
-		s_BackendListCacheDriverBlocked = g_Config.m_GfxDriverIsBlocked;
-		str_copy(s_aBackendListCacheLanguage, g_Config.m_ClLanguagefile);
-	}
-	const uint32_t FoundBackendCount = (uint32_t)s_vSupportedBackendInfos.size();
+		const uint32_t FoundBackendCount = (uint32_t)s_vSupportedBackendInfos.size();
 
-	if(FoundBackendCount > 1)
-	{
-		CUIRect BackendDropDown;
-		MainView.HSplitTop(20.0f, &BackendDropDown, &MainView);
-
-		static std::vector<const char *> s_vpBackendIdNamesCStr;
-		static std::vector<SMenuBackendInfo> s_vBackendInfos;
-		static std::string s_CustomBackendName;
-
-		size_t BackendCount = FoundBackendCount;
-		s_vpBackendIdNamesCStr.resize(BackendCount);
-		s_vBackendInfos.resize(BackendCount);
-
-		int SelectedOldBackend = -1;
-		for(size_t i = 0; i < BackendCount; ++i)
+		if(FoundBackendCount > 1)
 		{
-			const SMenuBackendInfo &Info = s_vSupportedBackendInfos[i];
-			s_vpBackendIdNamesCStr[i] = s_vSupportedBackendNames[i].c_str();
-			s_vBackendInfos[i] = Info;
-			if(str_comp_nocase(Info.m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == Info.m_Major && g_Config.m_GfxGLMinor == Info.m_Minor && g_Config.m_GfxGLPatch == Info.m_Patch)
+			CUIRect BackendDropDown;
+			CardView.HSplitTop(20.0f, &BackendDropDown, &CardView);
+
+			static std::vector<const char *> s_vpBackendIdNamesCStr;
+			static std::vector<SMenuBackendInfo> s_vBackendInfos;
+			static std::string s_CustomBackendName;
+
+			size_t BackendCount = FoundBackendCount;
+			s_vpBackendIdNamesCStr.resize(BackendCount);
+			s_vBackendInfos.resize(BackendCount);
+
+			int SelectedOldBackend = -1;
+			for(size_t i = 0; i < BackendCount; ++i)
 			{
-				SelectedOldBackend = (int)i;
-			}
-		}
-
-		if(SelectedOldBackend == -1)
-		{
-			// custom selected one
-			char aCustomBackendName[128];
-			char aTmpBackendName[256];
-			FormatQmGraphicsBackendDisplayName(aCustomBackendName, sizeof(aCustomBackendName), g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch, false);
-			str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s (%s)", Localize("custom"), aCustomBackendName);
-			s_CustomBackendName = aTmpBackendName;
-			s_vpBackendIdNamesCStr.push_back(s_CustomBackendName.c_str());
-
-			SMenuBackendInfo CustomInfo;
-			CustomInfo.m_pBackendName = "custom";
-			CustomInfo.m_Major = g_Config.m_GfxGLMajor;
-			CustomInfo.m_Minor = g_Config.m_GfxGLMinor;
-			CustomInfo.m_Patch = g_Config.m_GfxGLPatch;
-			s_vBackendInfos.push_back(CustomInfo);
-
-			SelectedOldBackend = (int)BackendCount;
-			++BackendCount;
-		}
-
-		static int s_SelectedOldBackend = -1;
-		if(s_SelectedOldBackend == -1)
-			s_SelectedOldBackend = SelectedOldBackend;
-
-		static CUi::SDropDownState s_BackendDropDownState;
-		static CScrollRegion s_BackendDropDownScrollRegion;
-		s_BackendDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_BackendDropDownScrollRegion;
-		const int NewBackend = Ui()->DoDropDown(&BackendDropDown, SelectedOldBackend, s_vpBackendIdNamesCStr.data(), BackendCount, s_BackendDropDownState);
-		if(SelectedOldBackend != NewBackend)
-		{
-			str_copy(g_Config.m_GfxBackend, s_vBackendInfos[NewBackend].m_pBackendName);
-			g_Config.m_GfxGLMajor = s_vBackendInfos[NewBackend].m_Major;
-			g_Config.m_GfxGLMinor = s_vBackendInfos[NewBackend].m_Minor;
-			g_Config.m_GfxGLPatch = s_vBackendInfos[NewBackend].m_Patch;
-
-			CheckSettings = true;
-			s_GfxBackendChanged = s_SelectedOldBackend != NewBackend;
-			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::BACKEND_CHANGED);
-		}
-	}
-
-	// GPU list
-	const auto &GpuList = Graphics()->GetGpus();
-	if(GpuList.m_vGpus.size() > 1)
-	{
-		CUIRect Text, GpuDropDown;
-		MainView.HSplitTop(10.0f, nullptr, &MainView);
-		MainView.HSplitTop(20.0f, &Text, &MainView);
-		MainView.HSplitTop(2.0f, nullptr, &MainView);
-		MainView.HSplitTop(20.0f, &GpuDropDown, &MainView);
-		DoSettingsMenuLabel(SETTINGS_GRAPHICS, -1, -1, "graphics-card-title", &Text, Localize("Graphics card"), 16.0f, TEXTALIGN_MC);
-
-		static std::vector<std::string> s_vGpuIdNames;
-		static std::vector<const char *> s_vpGpuIdNames;
-		static char s_aGpuListCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
-
-		size_t GpuCount = GpuList.m_vGpus.size() + 1;
-		char aCurDeviceName[256 + 4];
-		str_format(aCurDeviceName, sizeof(aCurDeviceName), "%s (%s)", Localize("auto"), GpuList.m_AutoGpu.m_aName);
-		bool GpuNameCacheDirty = s_vGpuIdNames.size() != GpuCount || str_comp(s_aGpuListCacheLanguage, g_Config.m_ClLanguagefile) != 0;
-		if(!GpuNameCacheDirty)
-		{
-			GpuNameCacheDirty = s_vGpuIdNames[0] != aCurDeviceName;
-			for(size_t i = 1; !GpuNameCacheDirty && i < GpuCount; ++i)
-				GpuNameCacheDirty = s_vGpuIdNames[i] != GpuList.m_vGpus[i - 1].m_aName;
-		}
-		if(GpuNameCacheDirty)
-		{
-			s_vGpuIdNames.resize(GpuCount);
-			s_vGpuIdNames[0] = aCurDeviceName;
-			for(size_t i = 1; i < GpuCount; ++i)
-				s_vGpuIdNames[i] = GpuList.m_vGpus[i - 1].m_aName;
-			str_copy(s_aGpuListCacheLanguage, g_Config.m_ClLanguagefile);
-		}
-		s_vpGpuIdNames.resize(GpuCount);
-		for(size_t i = 0; i < GpuCount; ++i)
-			s_vpGpuIdNames[i] = s_vGpuIdNames[i].c_str();
-
-		int OldSelectedGpu = -1;
-		for(size_t i = 0; i < GpuCount; ++i)
-		{
-			if(i == 0)
-			{
-				if(str_comp("auto", g_Config.m_GfxGpuName) == 0)
+				const SMenuBackendInfo &Info = s_vSupportedBackendInfos[i];
+				s_vpBackendIdNamesCStr[i] = s_vSupportedBackendNames[i].c_str();
+				s_vBackendInfos[i] = Info;
+				if(str_comp_nocase(Info.m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == Info.m_Major && g_Config.m_GfxGLMinor == Info.m_Minor && g_Config.m_GfxGLPatch == Info.m_Patch)
 				{
-					OldSelectedGpu = 0;
+					SelectedOldBackend = (int)i;
 				}
 			}
-			else
+
+			if(SelectedOldBackend == -1)
 			{
-				if(str_comp(GpuList.m_vGpus[i - 1].m_aName, g_Config.m_GfxGpuName) == 0)
-				{
-					OldSelectedGpu = i;
-				}
+				// custom selected one
+				char aCustomBackendName[128];
+				char aTmpBackendName[256];
+				FormatQmGraphicsBackendDisplayName(aCustomBackendName, sizeof(aCustomBackendName), g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch, false);
+				str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s (%s)", Localize("custom"), aCustomBackendName);
+				s_CustomBackendName = aTmpBackendName;
+				s_vpBackendIdNamesCStr.push_back(s_CustomBackendName.c_str());
+
+				SMenuBackendInfo CustomInfo;
+				CustomInfo.m_pBackendName = "custom";
+				CustomInfo.m_Major = g_Config.m_GfxGLMajor;
+				CustomInfo.m_Minor = g_Config.m_GfxGLMinor;
+				CustomInfo.m_Patch = g_Config.m_GfxGLPatch;
+				s_vBackendInfos.push_back(CustomInfo);
+
+				SelectedOldBackend = (int)BackendCount;
+				++BackendCount;
+			}
+
+			static int s_SelectedOldBackend = -1;
+			if(s_SelectedOldBackend == -1)
+				s_SelectedOldBackend = SelectedOldBackend;
+
+			static CUi::SDropDownState s_BackendDropDownState;
+			static CScrollRegion s_BackendDropDownScrollRegion;
+			s_BackendDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_BackendDropDownScrollRegion;
+			const int NewBackend = Ui()->DoDropDown(&BackendDropDown, SelectedOldBackend, s_vpBackendIdNamesCStr.data(), BackendCount, s_BackendDropDownState);
+			if(SelectedOldBackend != NewBackend)
+			{
+				str_copy(g_Config.m_GfxBackend, s_vBackendInfos[NewBackend].m_pBackendName);
+				g_Config.m_GfxGLMajor = s_vBackendInfos[NewBackend].m_Major;
+				g_Config.m_GfxGLMinor = s_vBackendInfos[NewBackend].m_Minor;
+				g_Config.m_GfxGLPatch = s_vBackendInfos[NewBackend].m_Patch;
+
+				CheckSettings = true;
+				s_GfxBackendChanged = s_SelectedOldBackend != NewBackend;
+				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::BACKEND_CHANGED);
 			}
 		}
 
-		static int s_OldSelectedGpu = -1;
-		if(s_OldSelectedGpu == -1)
-			s_OldSelectedGpu = OldSelectedGpu;
-
-		static CUi::SDropDownState s_GpuDropDownState;
-		static CScrollRegion s_GpuDropDownScrollRegion;
-		s_GpuDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_GpuDropDownScrollRegion;
-		const int NewGpu = Ui()->DoDropDown(&GpuDropDown, OldSelectedGpu, s_vpGpuIdNames.data(), GpuCount, s_GpuDropDownState);
-		if(OldSelectedGpu != NewGpu)
+		// GPU list
+		const auto &GpuList = Graphics()->GetGpus();
+		if(GpuList.m_vGpus.size() > 1)
 		{
-			if(NewGpu == 0)
-				str_copy(g_Config.m_GfxGpuName, "auto");
-			else
-				str_copy(g_Config.m_GfxGpuName, GpuList.m_vGpus[NewGpu - 1].m_aName);
-			CheckSettings = true;
-			s_GfxGpuChanged = NewGpu != s_OldSelectedGpu;
-		}
-	}
+			CUIRect Text, GpuDropDown;
+			CardView.HSplitTop(10.0f, nullptr, &CardView);
+			CardView.HSplitTop(20.0f, &Text, &CardView);
+			CardView.HSplitTop(2.0f, nullptr, &CardView);
+			CardView.HSplitTop(20.0f, &GpuDropDown, &CardView);
+			DoSettingsMenuLabel(SETTINGS_GRAPHICS, -1, -1, "graphics-card-title", &Text, Localize("Graphics card"), 16.0f, TEXTALIGN_MC);
 
-	// check if the new settings require a restart
+			static std::vector<std::string> s_vGpuIdNames;
+			static std::vector<const char *> s_vpGpuIdNames;
+			static char s_aGpuListCacheLanguage[sizeof(g_Config.m_ClLanguagefile)] = {};
+
+			size_t GpuCount = GpuList.m_vGpus.size() + 1;
+			char aCurDeviceName[256 + 4];
+			str_format(aCurDeviceName, sizeof(aCurDeviceName), "%s (%s)", Localize("auto"), GpuList.m_AutoGpu.m_aName);
+			bool GpuNameCacheDirty = s_vGpuIdNames.size() != GpuCount || str_comp(s_aGpuListCacheLanguage, g_Config.m_ClLanguagefile) != 0;
+			if(!GpuNameCacheDirty)
+			{
+				GpuNameCacheDirty = s_vGpuIdNames[0] != aCurDeviceName;
+				for(size_t i = 1; !GpuNameCacheDirty && i < GpuCount; ++i)
+					GpuNameCacheDirty = s_vGpuIdNames[i] != GpuList.m_vGpus[i - 1].m_aName;
+			}
+			if(GpuNameCacheDirty)
+			{
+				s_vGpuIdNames.resize(GpuCount);
+				s_vGpuIdNames[0] = aCurDeviceName;
+				for(size_t i = 1; i < GpuCount; ++i)
+					s_vGpuIdNames[i] = GpuList.m_vGpus[i - 1].m_aName;
+				str_copy(s_aGpuListCacheLanguage, g_Config.m_ClLanguagefile);
+			}
+			s_vpGpuIdNames.resize(GpuCount);
+			for(size_t i = 0; i < GpuCount; ++i)
+				s_vpGpuIdNames[i] = s_vGpuIdNames[i].c_str();
+
+			int OldSelectedGpu = -1;
+			for(size_t i = 0; i < GpuCount; ++i)
+			{
+				if(i == 0)
+				{
+					if(str_comp("auto", g_Config.m_GfxGpuName) == 0)
+					{
+						OldSelectedGpu = 0;
+					}
+				}
+				else
+				{
+					if(str_comp(GpuList.m_vGpus[i - 1].m_aName, g_Config.m_GfxGpuName) == 0)
+					{
+						OldSelectedGpu = i;
+					}
+				}
+			}
+
+			static int s_OldSelectedGpu = -1;
+			if(s_OldSelectedGpu == -1)
+				s_OldSelectedGpu = OldSelectedGpu;
+
+			static CUi::SDropDownState s_GpuDropDownState;
+			static CScrollRegion s_GpuDropDownScrollRegion;
+			s_GpuDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_GpuDropDownScrollRegion;
+			const int NewGpu = Ui()->DoDropDown(&GpuDropDown, OldSelectedGpu, s_vpGpuIdNames.data(), GpuCount, s_GpuDropDownState);
+			if(OldSelectedGpu != NewGpu)
+			{
+				if(NewGpu == 0)
+					str_copy(g_Config.m_GfxGpuName, "auto");
+				else
+					str_copy(g_Config.m_GfxGpuName, GpuList.m_vGpus[NewGpu - 1].m_aName);
+				CheckSettings = true;
+				s_GfxGpuChanged = NewGpu != s_OldSelectedGpu;
+			}
+		}
+
+		UpdateMeasuredCardHeight(s_GraphicsBackendCardHeight, GraphicsBackendMinCardHeight, BackendChromeHeight, ContentRect, CardView);
+	});
+
+	if(!m_MenuTextPlanCollecting && !Ui()->RenderOnly() && !m_SettingsCardFocusStableId.empty())
+	{
+		m_SettingsCardDeck.RequestReveal(m_SettingsCardFocusStableId.c_str());
+		m_SettingsCardFocusStableId.clear();
+	}
+	CScrollRegionParams ScrollParams = QmSettingsScrollRegionParams(UiScale);
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = Ui()->MouseX();
+	InputState.m_MouseY = Ui()->MouseY();
+	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(GraphicsCardCtx, GraphicsPage, pDeckTab, vCards, SettingsCardOrderModel(), &s_GraphicsSettingsScrollRegion, InputState, SettingsCardMotionSpec(), GraphicsVisualOptions);
+	if(DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+
 	if(CheckSettings)
 	{
 		m_NeedRestartGraphics = !(s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
 					  !s_GfxBackendChanged &&
 					  !s_GfxGpuChanged);
 	}
-	s_GraphicsBackendCardHeight = maximum(MainView.y + GraphicsDeck.m_Style.m_Padding - BackendCard.m_Rect.y, GraphicsBackendMinCardHeight);
-	s_GraphicsModesCardHeight = maximum(ModeList.y + GraphicsDeck.m_Style.m_Padding - ModesCard.m_Rect.y, GraphicsModesMinCardHeight);
-	EndSettingsCardDeck(GraphicsDeck, &s_GraphicsSettingsScrollY);
 }
 
 namespace
@@ -4885,6 +4915,14 @@ void CMenus::RenderSettings(CUIRect MainView)
 	else
 	{
 		g_Config.m_UiSettingsPage = SettingsCanonicalPage(g_Config.m_UiSettingsPage);
+	}
+	const uint64_t DisplayKey = (uint64_t)(unsigned)g_Config.m_UiSettingsPage;
+	if(!CollectingMenuTextPlan &&
+		(!m_HasSettingsCardDeckDisplayKey || m_SettingsCardDeckDisplayKey != DisplayKey))
+	{
+		m_HasSettingsCardDeckDisplayKey = true;
+		m_SettingsCardDeckDisplayKey = DisplayKey;
+		m_SettingsCardDeck.BeginDisplayCycle(++m_SettingsCardDeckDisplayCycle);
 	}
 	if(!CollectingMenuTextPlan && g_Config.m_UiSettingsPage == SETTINGS_TEE && m_SettingsScrollActive)
 		StartSettingsPerfScrollWindow(SettingsPerfContextName(), CurrentQmUiPerfPage(), "none");

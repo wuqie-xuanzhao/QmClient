@@ -83,6 +83,8 @@ private:
 	std::vector<SRuntimeState> m_vRuntimeStates;
 	std::vector<float> m_vContentHeights;
 	std::vector<const SSettingsCardDefinition *> m_vDefinitionsByState;
+	std::vector<int> m_vActiveStateIndices;
+	settings_card_deck_logic::CProjectionCache m_ProjectionCache;
 };
 
 // 过渡适配器：尚未迁移到 CSettingsCardDeck 的页面继续通过它读写既有全局配置。

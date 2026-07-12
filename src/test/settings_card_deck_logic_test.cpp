@@ -116,3 +116,31 @@ TEST(SettingsCardDeck, ColumnProjectionExcludesInactiveDefinitions)
 	EXPECT_EQ(aColumns[1], (std::vector<int>{Model.StateIndexForStableId("deck:graphics-visual")}));
 	EXPECT_EQ(aColumns[2], (std::vector<int>{Model.StateIndexForStableId("deck:graphics-modes")}));
 }
+
+TEST(SettingsCardDeck, ColumnProjectionCacheRebuildsOnlyForLayoutOrActiveDefinitionChanges)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+	const int Visual = Model.StateIndexForStableId("deck:graphics-visual");
+	const int Modes = Model.StateIndexForStableId("deck:graphics-modes");
+	const std::vector<int> vActiveStateIndices{Visual, Modes};
+	settings_card_deck_logic::CProjectionCache Cache;
+
+	const auto &aInitialColumns = Cache.Resolve(Model, "graphics", vActiveStateIndices);
+	EXPECT_EQ(Cache.RebuildCount(), 1u);
+	EXPECT_EQ(aInitialColumns[1], (std::vector<int>{Visual}));
+	EXPECT_EQ(aInitialColumns[2], (std::vector<int>{Modes}));
+
+	Cache.Resolve(Model, "graphics", vActiveStateIndices);
+	EXPECT_EQ(Cache.RebuildCount(), 1u);
+
+	const std::vector<int> vVisualOnly{Visual};
+	const auto &aFilteredColumns = Cache.Resolve(Model, "graphics", vVisualOnly);
+	EXPECT_EQ(Cache.RebuildCount(), 2u);
+	EXPECT_EQ(aFilteredColumns[2], (std::vector<int>{}));
+
+	ASSERT_TRUE(CommitSettingsCardDeckDrop(Model, "graphics", "deck:graphics-visual", 2, 0));
+	const auto &aMovedColumns = Cache.Resolve(Model, "graphics", vActiveStateIndices);
+	EXPECT_EQ(Cache.RebuildCount(), 3u);
+	EXPECT_EQ(aMovedColumns[2], (std::vector<int>{Visual, Modes}));
+}
