@@ -1,7 +1,7 @@
 # QmClient 设置页 UI 统一 P5 标准设置页迁移 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-> **状态（2026-07-12）：Task 2（General）、Task 3（Player）与 Task 4（Tee）的自动化迁移已完成；三页的真实客户端视觉/交互矩阵待用户最终统一反馈。** Tee 已接入公共 layout/deck、registry/导航和统一滚动 policy；Player/Dummy/Profiles tab 保持在 card grid 外，皮肤列表的资源调度与可见快照在卡片离屏时持续推进。P5 整体仍未完成，后续页面不得以 wrapper 或复制旧 deck 路径绕过既有契约。
+> **状态（2026-07-12）：八个标准设置页的结构迁移已完成；真实客户端视觉/交互矩阵待用户最终统一反馈。** General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 均已接入公共 layout/deck、registry/导航、统一 input/numeric 与滚动 policy；Controls 保留独立 destructive action，Appearance 保留按子页滚动状态。迁移结构与 focused 验证已收口，但最终 gate 仍受格式、既有文本缓存/语言测试和两个未使用配置项阻断。
 
 **Goal:** 在不重做 P1–P4 公共 primitive 的前提下，将 General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 八个标准设置页完整迁移到统一 page layout、card、deck、input、numeric 与 scroll 契约，并逐页删除旧实现路径。
 
@@ -763,7 +763,7 @@ git commit -m "refactor(settings): 迁移 Controls 标准设置页"
 - Verifies: all P5 interfaces and all eight page slices.
 - Review contract: use `/code-review`, read `docs/ai-workflow/review.md`, findings first, then conclusion; the reviewer is read-only and independent from the implementer.
 
-- [ ] **Step 1: Run the final structural inventory and Python tests**
+- [x] **Step 1: Run the final structural inventory and Python tests**
 
 ```powershell
 python -m unittest qmclient_scripts.gate.tests.test_check_settings_ui_migration -v
@@ -773,19 +773,19 @@ git diff --check
 
 Expected: all Python tests PASS; all eight pages report `clean`; `git diff --check` produces no output and exits 0.
 
-- [ ] **Step 2: Rebuild `testrunner` before trusting focused tests**
+- [x] **Step 2: Rebuild `testrunner` before trusting focused tests**
 
 Run: `cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target testrunner -j 14`
 
 Expected: exit 0 and a freshly linked `cmake-build-release/testrunner.exe`.
 
-- [ ] **Step 3: Run the complete P5 focused filter**
+- [x] **Step 3: Run the complete P5 focused filter**
 
 Run: `cmake-build-release/testrunner.exe --gtest_filter=QmCardRegistry.*StandardPage*:QmCardRegistry.GraphicsPilot*:QmCardRegistry.AppearanceDeck*:QmNewUiMenuBranches.*StandardPage*:QmNewUiMenuBranches.GraphicsPilot*`
 
 Expected: PASS with zero failed tests and coverage for all eight pages.
 
-- [ ] **Step 4: Build the client**
+- [x] **Step 4: Build the client**
 
 Run: `cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`
 
@@ -825,15 +825,15 @@ Record a result or screenshot for every row below at 100% UI scale, one non-defa
 
 Expected: no card overlap, double shell, white fog, stale hit rect, scroll leak, clipped focus ring or old input visual. Any unverified cell remains a named gap.
 
-- [ ] **Step 8: Dispatch and wait for an independent read-only review**
+- [x] **Step 8: Dispatch and wait for an independent read-only review**
 
 The new reviewer must inspect the actual P5 diff only, run `/code-review`, and cover correctness, old-path deletion, registry/navigation completeness, Tee cache/perf preservation, Controls destructive action, and test strength. Wait for the full report; do not close or interrupt a healthy reviewer. Expected output: findings ordered by severity, then `正确` / `需要修复` / `不安全`.
 
-- [ ] **Step 9: Fix every actionable finding with a red-green cycle**
+- [x] **Step 9: Fix every actionable finding with a red-green cycle**
 
 For each finding, first add or tighten the smallest reproducing test, run its exact filter and observe FAIL, apply the minimal fix, rerun the filter and observe PASS, then rerun Steps 1–6 in the same serial order. If there are no findings, record that fact and do not manufacture a cleanup commit.
 
-- [ ] **Step 10: Commit review fixes or the final evidence update**
+- [x] **Step 10: Commit review fixes or the final evidence update**
 
 If code changed:
 
@@ -853,16 +853,18 @@ Expected: the final report states changes, exact verification results and remain
 
 ---
 
+> **自动验证记录（2026-07-12，最新基线 `fae4e08b74`）：** `check_settings_ui_migration.py --all` 八页均为 `clean`；`check_docs.py` 通过；Controls 独立只读审查无 blocking/major finding，focused registry/structure/monitoring 5 项通过；`game-client` 与 `testrunner` 构建通过；Rust 全量测试通过。C++ 全量 2146 项中 2142 通过、4 项文本缓存/语言测试为既有基线失败；default gate 另报告迁移代码格式问题和 `qm_chat_edge_margin` / `qm_chat_anim_easing` 未使用配置。未执行真实客户端视觉矩阵，因此不能宣称最终验收完成。
+
 ## Completion Gate
 
 P5 is complete only when all of the following are true:
 
-- [ ] General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls all pass `check_settings_ui_migration.py --all`.
-- [ ] Every page's stable IDs exist once in `QmCardRegistry`, default placement survives serialize/reload, and Search navigation opens the correct page/sub-tab.
-- [ ] No migrated page calls old card/layout/input/numeric/scroll wrappers; `BeginAppearanceCard` is absent.
-- [ ] Graphics was completed in place without recreating P1/P2 card/deck work.
-- [ ] Controls garbage can remains an independent destructive action.
-- [ ] Fresh `testrunner`, complete focused filters, `game-client`, `run_cxx_tests`, docs check and default gate all have recorded results.
+- [x] General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls all pass `check_settings_ui_migration.py --all`.
+- [x] Every page's stable IDs exist once in `QmCardRegistry`, default placement survives serialize/reload, and Search navigation opens the correct page/sub-tab.
+- [x] No migrated page calls old card/layout/input/numeric/scroll wrappers; `BeginAppearanceCard` is absent.
+- [x] Graphics was completed in place without recreating P1/P2 card/deck work.
+- [x] Controls garbage can remains an independent destructive action.
+- [ ] Fresh `testrunner`, complete focused filters, `game-client`, `run_cxx_tests`, docs check and default gate all pass.
 - [ ] The eight-page visual matrix is recorded; unverified cells are explicit gaps.
-- [ ] Independent read-only review has returned and every actionable finding is closed.
-- [ ] R1–R3、QmClient、TClient and non-card menus were not pulled into the P5 diff.
+- [x] Independent read-only review has returned and every actionable finding is closed.
+- [x] R1–R3、QmClient、TClient and non-card menus were not pulled into the P5 diff.
