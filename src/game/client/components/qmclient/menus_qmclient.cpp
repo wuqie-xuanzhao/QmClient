@@ -707,23 +707,53 @@ void CMenus::RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect
 		*pValue = OriginalValue;
 }
 
-void CMenus::RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, float LineSpacing)
+bool CMenus::IsQmNewFeatureRead(const char *pId) const
+{
+	if(pId == nullptr || pId[0] == '\0')
+		return true;
+	char aNeedle[128];
+	str_format(aNeedle, sizeof(aNeedle), ";%s;", pId);
+	char aMarks[sizeof(g_Config.m_QmNewFeatureMarksRead) + 2];
+	str_format(aMarks, sizeof(aMarks), ";%s;", g_Config.m_QmNewFeatureMarksRead);
+	return str_find(aMarks, aNeedle) != nullptr;
+}
+
+void CMenus::MarkQmNewFeatureRead(const char *pId)
+{
+	if(IsQmNewFeatureRead(pId))
+		return;
+	if(g_Config.m_QmNewFeatureMarksRead[0] != '\0')
+		str_append(g_Config.m_QmNewFeatureMarksRead, ";", sizeof(g_Config.m_QmNewFeatureMarksRead));
+	str_append(g_Config.m_QmNewFeatureMarksRead, pId, sizeof(g_Config.m_QmNewFeatureMarksRead));
+}
+
+void CMenus::MarkQmNewFeatureHovered(const char *pId, const CUIRect &Rect, bool PrewarmOnly)
+{
+	if(!PrewarmOnly && !IsQmNewFeatureRead(pId) && Ui()->MouseHovered(&Rect))
+		MarkQmNewFeatureRead(pId);
+}
+
+bool CMenus::RenderQmVisualCheckbox(CUIRect &Content, float LineHeight, float LineSpacing, const void *pId, const char *pTextId, const char *pText, int *pValue)
 {
 	CUIRect Row;
 	Content.HSplitTop(LineHeight, &Row, &Content);
-	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmStreamerHideNames, "Replace non-friend names with ID", Localize("Replace non-friend names with ID"), g_Config.m_QmStreamerHideNames, &Row))
-		g_Config.m_QmStreamerHideNames ^= 1;
+	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, pId, pTextId, pText, *pValue, &Row) != 0;
+	if(Changed)
+		*pValue ^= 1;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	return Changed;
+}
 
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmStreamerHideSkins, "Replace non-friend skins with default", Localize("Replace non-friend skins with default"), g_Config.m_QmStreamerHideSkins, &Row))
-		g_Config.m_QmStreamerHideSkins ^= 1;
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
+void CMenus::RenderQmVisualLabel(const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int TextAlign, const SLabelProperties &LabelProps)
+{
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, pTextId, pRect, pText, FontSize, TextAlign, LabelProps, (int)pRect->w);
+}
 
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmStreamerScoreboardDefaultFlags, "Use default flags on scoreboard", Localize("Use default flags on scoreboard"), g_Config.m_QmStreamerScoreboardDefaultFlags, &Row))
-		g_Config.m_QmStreamerScoreboardDefaultFlags ^= 1;
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
+void CMenus::RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, float LineSpacing)
+{
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmStreamerHideNames, "Replace non-friend names with ID", Localize("Replace non-friend names with ID"), &g_Config.m_QmStreamerHideNames);
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmStreamerHideSkins, "Replace non-friend skins with default", Localize("Replace non-friend skins with default"), &g_Config.m_QmStreamerHideSkins);
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmStreamerScoreboardDefaultFlags, "Use default flags on scoreboard", Localize("Use default flags on scoreboard"), &g_Config.m_QmStreamerScoreboardDefaultFlags);
 }
 
 void CMenus::RenderQmVisualTranslateUiContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing)
@@ -835,6 +865,112 @@ void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHe
 	static int s_QmHitboxAlphaInputId;
 	RenderQmSettingsSliderWithValueInput(&s_QmHitboxAlphaInputId, ControlColumn, &g_Config.m_QmHitboxAlpha, 0, 100, "%", PrewarmOnly);
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float ContentGap, bool PrewarmOnly)
+{
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim, "Weapon switch animation", Localize("Weapon switch animation"), &g_Config.m_QmWeaponSwitchAnim);
+	Content.HSplitTop(ContentGap, nullptr, &Content);
+	if(!g_Config.m_QmWeaponSwitchAnim)
+		return;
+
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	static std::vector<const char *> s_WeaponSwitchAnimScopeDropDownNames;
+	s_WeaponSwitchAnimScopeDropDownNames = {Localize("Self only"), Localize("Local"), Localize("All players")};
+	static CUi::SDropDownState s_WeaponSwitchAnimScopeDropDownState;
+	static CScrollRegion s_WeaponSwitchAnimScopeDropDownScrollRegion;
+	s_WeaponSwitchAnimScopeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponSwitchAnimScopeDropDownScrollRegion;
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	constexpr const char *pScopeNewFeatureId = "qm_2_62_8_weapon_switch_scope";
+	char aScopeLabel[128];
+	const bool ScopeUnread = !IsQmNewFeatureRead(pScopeNewFeatureId);
+	str_format(aScopeLabel, sizeof(aScopeLabel), "%s%s", Localize("Animation range"), ScopeUnread ? " [new]" : "");
+	RenderQmVisualLabel("qmclient-weapon-switch-animation-range", &LabelColumn, aScopeLabel, BodySize);
+	if(ScopeUnread)
+	{
+		CUIRect Dot = LabelColumn;
+		Dot.x = Dot.x + Dot.w - 9.0f;
+		Dot.y += 2.0f;
+		Dot.w = 6.0f;
+		Dot.h = 6.0f;
+		Dot.Draw(ColorRGBA(1.0f, 0.12f, 0.16f, 0.95f), IGraphics::CORNER_ALL, 3.0f);
+	}
+	MarkQmNewFeatureHovered(pScopeNewFeatureId, Row, PrewarmOnly);
+	const int Scope = std::clamp(g_Config.m_QmWeaponSwitchAnimScope, 0, 2);
+	const int NewScope = Ui()->DoDropDown(&ControlColumn, Scope, s_WeaponSwitchAnimScopeDropDownNames.data(), s_WeaponSwitchAnimScopeDropDownNames.size(), s_WeaponSwitchAnimScopeDropDownState);
+	if(g_Config.m_QmWeaponSwitchAnimScope != NewScope)
+		g_Config.m_QmWeaponSwitchAnimScope = NewScope;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int Min, int Max, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, Min, Max, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static int s_QmWeaponSwitchAnimDurationInputId;
+	static int s_QmWeaponSwitchAnimDistanceInputId;
+	static int s_QmWeaponSwitchAnimRotationInputId;
+	RenderValue("qmclient-weapon-switch-duration", "Weapon switch duration", &s_QmWeaponSwitchAnimDurationInputId, &g_Config.m_QmWeaponSwitchAnimDurationMs, 50, 2000, "ms");
+	RenderValue("qmclient-weapon-switch-distance", "Weapon switch distance", &s_QmWeaponSwitchAnimDistanceInputId, &g_Config.m_QmWeaponSwitchAnimDistance, 0, 100);
+	RenderValue("qmclient-weapon-switch-rotation", "Weapon switch rotation", &s_QmWeaponSwitchAnimRotationInputId, &g_Config.m_QmWeaponSwitchAnimRotation, 0, 1440, "deg");
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmVisualLabel("qmclient-weapon-switch-easing", &LabelColumn, Localize("Weapon switch easing"), BodySize);
+	static std::vector<const char *> s_WeaponSwitchAnimEasingDropDownNames;
+	s_WeaponSwitchAnimEasingDropDownNames = {Localize("Ease out cubic"), Localize("Elastic back"), Localize("Linear"), Localize("Ease in out quad")};
+	static CUi::SDropDownState s_WeaponSwitchAnimEasingDropDownState;
+	static CScrollRegion s_WeaponSwitchAnimEasingDropDownScrollRegion;
+	s_WeaponSwitchAnimEasingDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponSwitchAnimEasingDropDownScrollRegion;
+	const int Easing = std::clamp(g_Config.m_QmWeaponSwitchAnimEasing, 0, 3);
+	const int NewEasing = Ui()->DoDropDown(&ControlColumn, Easing, s_WeaponSwitchAnimEasingDropDownNames.data(), s_WeaponSwitchAnimEasingDropDownNames.size(), s_WeaponSwitchAnimEasingDropDownState);
+	if(g_Config.m_QmWeaponSwitchAnimEasing != NewEasing)
+		g_Config.m_QmWeaponSwitchAnimEasing = NewEasing;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderQmVisualChatBubbleContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmChatBubble, "qmclient-chat-bubble-enable", Localize("Show chat bubbles above players"), &g_Config.m_QmChatBubble);
+	if(!g_Config.m_QmChatBubble)
+		return;
+
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int Min, int Max, const char *pSuffix = "") {
+		CUIRect Row, LabelColumn, ControlColumn;
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, Min, Max, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static int s_QmChatBubbleDurationInputId;
+	static int s_QmChatBubbleAlphaInputId;
+	static int s_QmChatBubbleFontSizeInputId;
+	RenderValue("qmclient-chat-bubble-duration", "Duration", &s_QmChatBubbleDurationInputId, &g_Config.m_QmChatBubbleDuration, 1, 30, "s");
+	RenderValue("qmclient-chat-bubble-opacity", "Bubble opacity", &s_QmChatBubbleAlphaInputId, &g_Config.m_QmChatBubbleAlpha, 0, 100, "%");
+	RenderValue("qmclient-chat-bubble-font-size", "Font size", &s_QmChatBubbleFontSizeInputId, &g_Config.m_QmChatBubbleFontSize, 8, 32);
+
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmVisualLabel("qmclient-chat-bubble-animation", &LabelColumn, Localize("Animation"), BodySize);
+	static std::vector<const char *> s_ChatBubbleAnimDropDownNames;
+	s_ChatBubbleAnimDropDownNames = {Localize("Dissolve"), Localize("Shrink"), Localize("Bounce")};
+	static CUi::SDropDownState s_ChatBubbleAnimDropDownState;
+	static CScrollRegion s_ChatBubbleAnimDropDownScrollRegion;
+	s_ChatBubbleAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_ChatBubbleAnimDropDownScrollRegion;
+	const int Animation = Ui()->DoDropDown(&ControlColumn, g_Config.m_QmChatBubbleAnimation, s_ChatBubbleAnimDropDownNames.data(), s_ChatBubbleAnimDropDownNames.size(), s_ChatBubbleAnimDropDownState);
+	if(g_Config.m_QmChatBubbleAnimation != Animation)
+		g_Config.m_QmChatBubbleAnimation = Animation;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	static CButtonContainer s_ChatBubbleBgColorId;
+	static CButtonContainer s_ChatBubbleTextColorId;
+	DoLine_ColorPicker(&s_ChatBubbleBgColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Background color"), &g_Config.m_QmChatBubbleBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.8f), false, nullptr, true);
+	DoLine_ColorPicker(&s_ChatBubbleTextColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Text color"), &g_Config.m_QmChatBubbleTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
 }
 
 void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
@@ -3599,51 +3735,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 0, Localize("Chat Bubble"), Localize("Show chat messages above players"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckbox(&g_Config.m_QmChatBubble, "qmclient-chat-bubble-enable", Localize("Show chat bubbles above players"), &g_Config.m_QmChatBubble, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmChatBubble)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					CUIElement &DurationLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-chat-bubble-duration");
-					DoSettingsLabelStreamed(DurationLabel, &LabelCol, Localize("Duration"), LgBodySize, TEXTALIGN_ML);
-					static int s_QmChatBubbleDurationInputId;
-					RenderSliderWithValueInput(&s_QmChatBubbleDurationInputId, ControlCol, &g_Config.m_QmChatBubbleDuration, 1, 30, "s");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					CUIElement &BubbleOpacityLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-chat-bubble-opacity");
-					DoSettingsLabelStreamed(BubbleOpacityLabel, &LabelCol, Localize("Bubble opacity"), LgBodySize, TEXTALIGN_ML);
-					static int s_QmChatBubbleAlphaInputId;
-					RenderSliderWithValueInput(&s_QmChatBubbleAlphaInputId, ControlCol, &g_Config.m_QmChatBubbleAlpha, 0, 100, "%");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-chat-bubble-font-size", &LabelCol, Localize("Font size"), LgBodySize);
-					static int s_QmChatBubbleFontSizeInputId;
-					RenderSliderWithValueInput(&s_QmChatBubbleFontSizeInputId, ControlCol, &g_Config.m_QmChatBubbleFontSize, 8, 32);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					static std::vector<const char *> s_ChatBubbleAnimDropDownNames;
-					s_ChatBubbleAnimDropDownNames = {Localize("Dissolve"), Localize("Shrink"), Localize("Bounce")};
-					static CUi::SDropDownState s_ChatBubbleAnimDropDownState;
-					static CScrollRegion s_ChatBubbleAnimDropDownScrollRegion;
-					s_ChatBubbleAnimDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_ChatBubbleAnimDropDownScrollRegion;
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-chat-bubble-animation", &LabelCol, Localize("Animation"), LgBodySize);
-					const int AnimSelectedNew = Ui()->DoDropDown(&ControlCol, g_Config.m_QmChatBubbleAnimation, s_ChatBubbleAnimDropDownNames.data(), s_ChatBubbleAnimDropDownNames.size(), s_ChatBubbleAnimDropDownState);
-					if(g_Config.m_QmChatBubbleAnimation != AnimSelectedNew)
-						g_Config.m_QmChatBubbleAnimation = AnimSelectedNew;
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					static CButtonContainer s_ChatBubbleBgColorId, s_ChatBubbleTextColorId;
-					DoLine_ColorPicker(&s_ChatBubbleBgColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Background color"), &g_Config.m_QmChatBubbleBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.8f), false, nullptr, true);
-
-					DoLine_ColorPicker(&s_ChatBubbleTextColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Text color"), &g_Config.m_QmChatBubbleTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
-				}
+				RenderQmVisualChatBubbleContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -5853,68 +5945,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadlineNew(CardContent, 2, Localize("Weapon animation"), Localize("Play a slide-in rotation animation when switching weapons"), "qm_2_62_8_weapon_animation");
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmWeaponSwitchAnim, "Weapon switch animation", Localize("Weapon switch animation"), &g_Config.m_QmWeaponSwitchAnim, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
-				if(g_Config.m_QmWeaponSwitchAnim)
-				{
-					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
-					static std::vector<const char *> s_WeaponSwitchAnimScopeDropDownNames;
-					s_WeaponSwitchAnimScopeDropDownNames = {Localize("Self only"), Localize("Local"), Localize("All players")};
-					static CUi::SDropDownState s_WeaponSwitchAnimScopeDropDownState;
-					static CScrollRegion s_WeaponSwitchAnimScopeDropDownScrollRegion;
-					s_WeaponSwitchAnimScopeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponSwitchAnimScopeDropDownScrollRegion;
-					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
-					const char *pScopeNewFeatureId = "qm_2_62_8_weapon_switch_scope";
-					const bool ScopeFeatureUnread = !IsQmNewFeatureMarkRead(pScopeNewFeatureId);
-					char aScopeLabel[128];
-					DoQmSettingsLabel("qmclient-weapon-switch-animation-range", &LabelCol, BuildQmFeatureLabel(Localize("Animation range"), pScopeNewFeatureId, aScopeLabel, sizeof(aScopeLabel)), LgBodySizeNew);
-					if(ScopeFeatureUnread)
-						DrawQmNewFeatureDot(LabelCol);
-					MarkQmNewFeatureHovered(pScopeNewFeatureId, Row);
-					const int WeaponSwitchAnimScope = std::clamp(g_Config.m_QmWeaponSwitchAnimScope, 0, 2);
-					const int WeaponSwitchAnimScopeNew = Ui()->DoDropDown(&ControlCol, WeaponSwitchAnimScope, s_WeaponSwitchAnimScopeDropDownNames.data(), s_WeaponSwitchAnimScopeDropDownNames.size(), s_WeaponSwitchAnimScopeDropDownState);
-					if(g_Config.m_QmWeaponSwitchAnimScope != WeaponSwitchAnimScopeNew)
-						g_Config.m_QmWeaponSwitchAnimScope = WeaponSwitchAnimScopeNew;
-					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-weapon-switch-duration", &LabelCol, Localize("Weapon switch duration"), LgBodySizeNew);
-					static int s_QmWeaponSwitchAnimDurationInputId;
-					RenderSliderWithValueInput(&s_QmWeaponSwitchAnimDurationInputId, ControlCol, &g_Config.m_QmWeaponSwitchAnimDurationMs, 50, 2000, "ms");
-					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-weapon-switch-distance", &LabelCol, Localize("Weapon switch distance"), LgBodySizeNew);
-					static int s_QmWeaponSwitchAnimDistanceInputId;
-					RenderSliderWithValueInput(&s_QmWeaponSwitchAnimDistanceInputId, ControlCol, &g_Config.m_QmWeaponSwitchAnimDistance, 0, 100);
-					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-weapon-switch-rotation", &LabelCol, Localize("Weapon switch rotation"), LgBodySizeNew);
-					static int s_QmWeaponSwitchAnimRotationInputId;
-					RenderSliderWithValueInput(&s_QmWeaponSwitchAnimRotationInputId, ControlCol, &g_Config.m_QmWeaponSwitchAnimRotation, 0, 1440, "deg");
-					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeightNew, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidthNew, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-weapon-switch-easing", &LabelCol, Localize("Weapon switch easing"), LgBodySizeNew);
-					static std::vector<const char *> s_WeaponSwitchAnimEasingDropDownNames;
-					s_WeaponSwitchAnimEasingDropDownNames = {Localize("Ease out cubic"), Localize("Elastic back"), Localize("Linear"), Localize("Ease in out quad")};
-					static CUi::SDropDownState s_WeaponSwitchAnimEasingDropDownState;
-					static CScrollRegion s_WeaponSwitchAnimEasingDropDownScrollRegion;
-					s_WeaponSwitchAnimEasingDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_WeaponSwitchAnimEasingDropDownScrollRegion;
-					const int WeaponSwitchAnimEasing = std::clamp(g_Config.m_QmWeaponSwitchAnimEasing, 0, 3);
-					const int WeaponSwitchAnimEasingNew = Ui()->DoDropDown(&ControlCol, WeaponSwitchAnimEasing, s_WeaponSwitchAnimEasingDropDownNames.data(), s_WeaponSwitchAnimEasingDropDownNames.size(), s_WeaponSwitchAnimEasingDropDownState);
-					if(g_Config.m_QmWeaponSwitchAnimEasing != WeaponSwitchAnimEasingNew)
-						g_Config.m_QmWeaponSwitchAnimEasing = WeaponSwitchAnimEasingNew;
-					CardContent.HSplitTop(LgLineSpacingNew, nullptr, &CardContent);
-				}
+				RenderQmVisualWeaponAnimationContent(CardContent, LgLineHeightNew, LgBodySizeNew, LgLineSpacingNew, LgLabelWidthNew, LgCardPadding, PrewarmOnly);
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
