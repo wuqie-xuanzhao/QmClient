@@ -2815,6 +2815,7 @@ private:
 	void RenderSettingsGlobalSearch(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly);
+	void RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderGlobalSearchResultCard(CUIRect &MainView, const struct SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);
 	void RenderGlobalSearchResults(CUIRect &MainView, const std::vector<const struct SQmGlobalSearchCard *> &vCards, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);
