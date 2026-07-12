@@ -155,15 +155,32 @@ TEST(QmModuleLayoutAdapter, ColumnStringRoundtrip)
 TEST(QmModuleLayoutAdapter, LegacyCollapsedConfigAcceptsSuffixAndNormalizes)
 {
 	const auto Defaults = MakeTestDefaults();
-	std::array<bool, 3> aCollapsed = {};
+	std::array<bool, QmModuleCount> aCollapsed = {};
 	EXPECT_TRUE(ParseLegacyQmCollapsed("chat_bubble:legacy;unknown;camera_view", Defaults, aCollapsed));
-	EXPECT_FALSE(aCollapsed[0]);
-	EXPECT_TRUE(aCollapsed[1]);
-	EXPECT_TRUE(aCollapsed[2]);
+	EXPECT_FALSE(aCollapsed[static_cast<size_t>(EQmModuleId::Info)]);
+	EXPECT_TRUE(aCollapsed[static_cast<size_t>(EQmModuleId::ChatBubble)]);
+	EXPECT_TRUE(aCollapsed[static_cast<size_t>(EQmModuleId::CameraView)]);
 
 	char aSerialized[128];
 	SerializeLegacyQmCollapsed(Defaults, aCollapsed, aSerialized, sizeof(aSerialized));
 	EXPECT_STREQ(aSerialized, "chat_bubble;camera_view");
+}
+
+// 意图：旧 defaults 的排列不是 EQmModuleId 顺序，折叠状态仍必须按模块状态数组读写。
+TEST(QmModuleLayoutAdapter, LegacyCollapsedConfigUsesModuleStateIndices)
+{
+	const std::array<SQmModuleEntry, 2> aDefaults = {
+		SQmModuleEntry{EQmModuleId::SkinTransition, EQmModuleColumn::Left, 0, "skin_transition"},
+		SQmModuleEntry{EQmModuleId::GoresActor, EQmModuleColumn::Right, 0, "gores_actor"},
+	};
+	std::array<bool, QmModuleCount> aCollapsed = {};
+	ASSERT_TRUE(ParseLegacyQmCollapsed("skin_transition", aDefaults, aCollapsed));
+	EXPECT_TRUE(aCollapsed[static_cast<size_t>(EQmModuleId::SkinTransition)]);
+	EXPECT_FALSE(aCollapsed[static_cast<size_t>(EQmModuleId::GoresActor)]);
+
+	char aSerialized[128];
+	SerializeLegacyQmCollapsed(aDefaults, aCollapsed, aSerialized, sizeof(aSerialized));
+	EXPECT_STREQ(aSerialized, "skin_transition");
 }
 
 // 意图：ParseQmModuleColumnString 必须与栖梦 ParseQmModuleColumn 等价——

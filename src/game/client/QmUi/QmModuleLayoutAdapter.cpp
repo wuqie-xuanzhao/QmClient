@@ -288,11 +288,12 @@ namespace qm_module
 			str_next_token(aEntry, ":", aKey, sizeof(aKey));
 			if(aKey[0] == '\0')
 				continue;
-			for(size_t Index = 0; Index < Entries.size() && Index < Collapsed.size(); ++Index)
+			for(const SQmModuleEntry &Entry : Entries)
 			{
-				if(Entries[Index].m_pKey != nullptr && str_comp(Entries[Index].m_pKey, aKey) == 0)
+				const size_t StateIndex = static_cast<size_t>(Entry.m_Id);
+				if(Entry.m_pKey != nullptr && StateIndex < Collapsed.size() && str_comp(Entry.m_pKey, aKey) == 0)
 				{
-					Collapsed[Index] = true;
+					Collapsed[StateIndex] = true;
 					AnyParsed = true;
 					break;
 				}
@@ -307,13 +308,14 @@ namespace qm_module
 			return;
 		pOut[0] = '\0';
 		bool First = true;
-		for(size_t Index = 0; Index < Entries.size() && Index < Collapsed.size(); ++Index)
+		for(const SQmModuleEntry &Entry : Entries)
 		{
-			if(!Collapsed[Index] || Entries[Index].m_pKey == nullptr)
+			const size_t StateIndex = static_cast<size_t>(Entry.m_Id);
+			if(StateIndex >= Collapsed.size() || !Collapsed[StateIndex] || Entry.m_pKey == nullptr)
 				continue;
 			if(!First)
 				str_append(pOut, ";", OutSize);
-			str_append(pOut, Entries[Index].m_pKey, OutSize);
+			str_append(pOut, Entry.m_pKey, OutSize);
 			First = false;
 		}
 	}
