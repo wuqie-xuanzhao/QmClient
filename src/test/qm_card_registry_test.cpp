@@ -71,6 +71,9 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:general-language",
 		"deck:general-client",
 		"deck:general-recording",
+		"deck:tee-identity",
+		"deck:tee-skin-options",
+		"deck:tee-skin-list",
 		"deck:graphics-display",
 		"deck:player-identity",
 		"deck:player-country",
@@ -127,6 +130,18 @@ TEST(QmCardRegistry, PlayerStandardPageCardsPersistInVisualOrder)
 	EXPECT_EQ(Model.StableIdOrder("deck:", "player", 2),
 		(std::vector<std::string>{"deck:player-country"}));
 }
+
+// 意图：Tee 页的身份、选项和皮肤列表必须在重启后保持全宽/左列 placement，
+// 否则全局 Search 或自定义排序会丢失皮肤列表的目标卡片。
+TEST(QmCardRegistry, TeeStandardPageCardsPersistInVisualOrder)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 0),
+		(std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-list"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 1),
+		(std::vector<std::string>{"deck:tee-skin-options"}));
+}
+
 // 否则全局默认补位会把不同 appearance 子页混在同一个 tab 下，或留下 order 空洞。
 TEST(QmCardRegistry, AppearanceDeckDefaultsUseSubPagePlacements)
 {

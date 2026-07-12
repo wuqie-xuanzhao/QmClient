@@ -101,33 +101,50 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 	auto BuildPreparedCards = [&](const std::array<std::vector<int>, 3> &aDisplayColumns) {
 		std::vector<SPreparedSettingsCard> vPrepared;
 		vPrepared.reserve(m_vActiveStateIndices.size());
+		auto AppendCard = [&](int StateIndex, int Column, CUIRect ColumnRect, float &CursorY) {
+			if(StateIndex < 0 || StateIndex >= (int)m_vDefinitionsByState.size())
+				return;
+			const SSettingsCardDefinition *pDefinition = m_vDefinitionsByState[StateIndex];
+			if(pDefinition == nullptr)
+				return;
+			CUIRect Slot{ColumnRect.x, CursorY, ColumnRect.w, 0.0f};
+			float &ContentHeight = m_vContentHeights[StateIndex];
+			if(ContentHeight < 0.0f)
+			{
+				const float ContentWidth = std::max(0.0f, Slot.w - 28.0f * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
+				ContentHeight = pDefinition->m_Measure ? std::max(0.0f, pDefinition->m_Measure(ContentWidth)) : 0.0f;
+			}
+			const SSettingsCardFrame Frame = BuildSettingsCardFrame(Slot, pDefinition->m_Spec, ContentHeight, Ctx.m_UiScale);
+			vPrepared.push_back({pDefinition, StateIndex, Column, Frame});
+			CursorY = Frame.m_Rect.y + Frame.m_Rect.h + DrawLayout.m_CardGap;
+		};
 		auto AppendColumn = [&](const std::vector<int> &vStateIndices, int Column, CUIRect ColumnRect, float &CursorY) {
 			for(const int StateIndex : vStateIndices)
-			{
-				if(StateIndex < 0 || StateIndex >= (int)m_vDefinitionsByState.size())
-					continue;
-				const SSettingsCardDefinition *pDefinition = m_vDefinitionsByState[StateIndex];
-				if(pDefinition == nullptr)
-					continue;
-				CUIRect Slot{ColumnRect.x, CursorY, ColumnRect.w, 0.0f};
-				float &ContentHeight = m_vContentHeights[StateIndex];
-				if(ContentHeight < 0.0f)
-				{
-					const float ContentWidth = std::max(0.0f, Slot.w - 28.0f * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
-					ContentHeight = pDefinition->m_Measure ? std::max(0.0f, pDefinition->m_Measure(ContentWidth)) : 0.0f;
-				}
-				const SSettingsCardFrame Frame = BuildSettingsCardFrame(Slot, pDefinition->m_Spec, ContentHeight, Ctx.m_UiScale);
-				vPrepared.push_back({pDefinition, StateIndex, Column, Frame});
-				CursorY = Frame.m_Rect.y + Frame.m_Rect.h + DrawLayout.m_CardGap;
-			}
+				AppendCard(StateIndex, Column, ColumnRect, CursorY);
 		};
 
-		if(DrawLayout.m_TwoColumns)
+		if(DrawLayout.m_TwoColumns && !aDisplayColumns[0].empty())
 		{
-			float FullY = DrawLayout.m_ContentViewport.y;
-			AppendColumn(aDisplayColumns[0], 0, DrawLayout.m_ContentViewport, FullY);
-			float LeftY = std::max(DrawLayout.m_aColumns[0].y, FullY);
-			float RightY = std::max(DrawLayout.m_aColumns[1].y, FullY);
+			const size_t NumLayers = std::max({aDisplayColumns[0].size(), aDisplayColumns[1].size(), aDisplayColumns[2].size()});
+			float CursorY = DrawLayout.m_ContentViewport.y;
+			for(size_t Layer = 0; Layer < NumLayers; ++Layer)
+			{
+				if(Layer < aDisplayColumns[0].size())
+					AppendCard(aDisplayColumns[0][Layer], 0, DrawLayout.m_ContentViewport, CursorY);
+
+				float LeftY = std::max(DrawLayout.m_aColumns[0].y, CursorY);
+				float RightY = std::max(DrawLayout.m_aColumns[1].y, CursorY);
+				if(Layer < aDisplayColumns[1].size())
+					AppendCard(aDisplayColumns[1][Layer], 1, DrawLayout.m_aColumns[0], LeftY);
+				if(Layer < aDisplayColumns[2].size())
+					AppendCard(aDisplayColumns[2][Layer], 2, DrawLayout.m_aColumns[1], RightY);
+				CursorY = std::max(LeftY, RightY);
+			}
+		}
+		else if(DrawLayout.m_TwoColumns)
+		{
+			float LeftY = DrawLayout.m_aColumns[0].y;
+			float RightY = DrawLayout.m_aColumns[1].y;
 			AppendColumn(aDisplayColumns[1], 1, DrawLayout.m_aColumns[0], LeftY);
 			AppendColumn(aDisplayColumns[2], 2, DrawLayout.m_aColumns[1], RightY);
 		}
@@ -274,7 +291,7 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 			Result.m_pRevealedStableId = Model.Entry(Card.m_StateIndex).m_pStableId;
 			m_PendingRevealStableId.clear();
 		}
-		if(Visible)
+		if(Visible || Card.m_pDefinition->m_RenderWhenClipped)
 			SettingsCard(Ctx, Card.m_Frame, Card.m_pDefinition->m_Spec, State, VisualOptions, Card.m_pDefinition->m_Render);
 		Result.m_vFrames.push_back(Card.m_Frame);
 	}

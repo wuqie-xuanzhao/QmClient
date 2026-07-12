@@ -2420,6 +2420,52 @@ TEST(QmNewUiMenuBranches, PlayerStandardPageUsesUnifiedSettingsStack)
 	EXPECT_EQ(Player.find("Ui()->DoEditBox("), std::string::npos);
 	EXPECT_EQ(Player.find("Ui()->DoScrollbarH("), std::string::npos);
 }
+
+TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string DeckSource = ReadTextFile("src/game/client/QmUi/SettingsCardDeck.cpp");
+	const std::string Navigation = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Tee = FunctionBody(Source, "void CMenus::RenderSettingsTee(CUIRect MainView)");
+	ASSERT_FALSE(Tee.empty());
+	EXPECT_NE(Tee.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Tee.find("SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(Tee.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(Tee.find("CQmScrollState"), std::string::npos);
+	EXPECT_NE(Tee.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_NE(Tee.find("QmScrollRegionParamsFromPolicy(ScrollPolicy)"), std::string::npos);
+	EXPECT_NE(Tee.find("ui_widget::InputField("), std::string::npos);
+	EXPECT_NE(Tee.find("ui_widget::NumericField("), std::string::npos);
+	EXPECT_NE(Tee.find("SetSettingsTeeVisibleSnapshot("), std::string::npos);
+	const size_t SkinListPriority = Tee.find("s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);");
+	const size_t SkinListStart = Tee.find("s_ListBox.DoStart(TeeSkinListRowHeight", SkinListPriority);
+	const size_t DeckRender = Tee.find("m_SettingsCardDeck.Render(");
+	const size_t RefreshAfterDeck = Tee.find("if(ShouldRefresh)", DeckRender);
+	ASSERT_NE(SkinListPriority, std::string::npos);
+	ASSERT_NE(SkinListStart, std::string::npos);
+	ASSERT_NE(DeckRender, std::string::npos);
+	ASSERT_NE(RefreshAfterDeck, std::string::npos);
+	EXPECT_LT(SkinListPriority, SkinListStart);
+	EXPECT_LT(DeckRender, RefreshAfterDeck);
+	const size_t ListCardStart = Tee.find("AddCard(ListSpec, 760.0f * UiScale");
+	const size_t ListCardEnd = Tee.find("const SSettingsPageLayoutFrame TeePage", ListCardStart);
+	ASSERT_NE(ListCardStart, std::string::npos);
+	ASSERT_NE(ListCardEnd, std::string::npos);
+	EXPECT_NE(Tee.substr(ListCardStart, ListCardEnd - ListCardStart).find("}, true);"), std::string::npos);
+	EXPECT_NE(DeckSource.find("if(DrawLayout.m_TwoColumns && !aDisplayColumns[0].empty())"), std::string::npos);
+	EXPECT_NE(DeckSource.find("const size_t NumLayers = std::max({aDisplayColumns[0].size(), aDisplayColumns[1].size(), aDisplayColumns[2].size()});"), std::string::npos);
+	EXPECT_NE(DeckSource.find("AppendColumn(aDisplayColumns[1], 1, DrawLayout.m_aColumns[0], LeftY);"), std::string::npos);
+	EXPECT_NE(DeckSource.find("if(Visible || Card.m_pDefinition->m_RenderWhenClipped)"), std::string::npos);
+	EXPECT_NE(Tee.find("deck:tee-identity"), std::string::npos);
+	EXPECT_NE(Tee.find("deck:tee-skin-options"), std::string::npos);
+	EXPECT_NE(Tee.find("deck:tee-skin-list"), std::string::npos);
+	EXPECT_NE(Navigation.find("{\"tee\", CMenus::SETTINGS_TEE}"), std::string::npos);
+	EXPECT_EQ(Tee.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(Tee.find("DoSettingsScrollbarOption("), std::string::npos);
+	EXPECT_EQ(Tee.find("Ui()->DoEditBox("), std::string::npos);
+	EXPECT_EQ(Tee.find("Ui()->DoScrollbarH("), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, NestedLanguageListWheelOwnerOutranksGeneralPage)
 {
 	EXPECT_TRUE(QmHotScrollRegionPriorityWins(EUiWheelOwnerPriority::PAGE, EUiWheelOwnerPriority::COMPOSITE_CONTROL));

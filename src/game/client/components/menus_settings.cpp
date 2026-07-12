@@ -1197,6 +1197,18 @@ void CMenus::FinalizeTeeListDrainPerfSession()
 
 void CMenus::RenderSettingsTee(CUIRect MainView)
 {
+	CPerfTimer RenderTimer;
+	CScopedSettingsTextPerfStats TextStats(this);
+	const float UiScale = minimum(1.0f, maximum(0.85f, MainView.w / 800.0f));
+	const IUiContext TeeCardCtx = SettingsUiContext("settings_tee", UiScale);
+	const SSettingsCardDeckVisualOptions TeeVisualOptions = SettingsCardDeckVisualOptions();
+	static CScrollRegion s_TeeSettingsScrollRegion;
+	const qm_card_registry::SCardDefault *pIdentityDefault = qm_card_registry::FindByStableId("deck:tee-identity");
+	const qm_card_registry::SCardDefault *pOptionsDefault = qm_card_registry::FindByStableId("deck:tee-skin-options");
+	const qm_card_registry::SCardDefault *pListDefault = qm_card_registry::FindByStableId("deck:tee-skin-list");
+	dbg_assert(pIdentityDefault != nullptr && pOptionsDefault != nullptr && pListDefault != nullptr, "tee settings cards must be registered");
+	if(pIdentityDefault == nullptr || pOptionsDefault == nullptr || pListDefault == nullptr)
+		return;
 	static int s_TeeSubTab = 0; // 0=Player, 1=Dummy, 2=Profiles
 	CUIRect TabBar, PlayerTab, DummyTab, ProfilesTab, ChangeInfo;
 	static bool s_TeeTabTransitionInitialized = false;
@@ -1307,149 +1319,10 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	}
 
 	const float EyeLineSize = 40.0f;
-	const bool RenderEyesBelow = MainView.w < 750.0f;
-	CUIRect YourSkin, Checkboxes, SkinPrefix, Eyes, Button, Label, SortModeControl;
-	MainView.HSplitTop(130.0f, &YourSkin, &MainView);
-	if(RenderEyesBelow)
-	{
-		YourSkin.VSplitLeft(MainView.w * 0.52f, &YourSkin, &Checkboxes);
-		Checkboxes.VSplitLeft(MainView.w * 0.30f, &Checkboxes, &SkinPrefix);
-		MainView.HSplitTop(5.0f, nullptr, &MainView);
-		MainView.HSplitTop(EyeLineSize, &Eyes, &MainView);
-		Eyes.VSplitRight(EyeLineSize * (float)NUM_EMOTES + 5.0f * (float)(NUM_EMOTES - 1), nullptr, &Eyes);
-	}
-	else
-	{
-		YourSkin.VSplitRight(3 * EyeLineSize + 2 * 5.0f, &YourSkin, &Eyes);
-		const float RemainderWidth = YourSkin.w;
-		YourSkin.VSplitLeft(RemainderWidth * 0.46f, &YourSkin, &Checkboxes);
-		Checkboxes.VSplitLeft(RemainderWidth * 0.30f, &Checkboxes, &SkinPrefix);
-		SkinPrefix.VSplitRight(20.0f, &SkinPrefix, nullptr);
-	}
-	YourSkin.VSplitRight(20.0f, &YourSkin, nullptr);
-	Checkboxes.VSplitRight(20.0f, &Checkboxes, nullptr);
-
-	// Checkboxes
 	bool ShouldRefresh = false;
-	Checkboxes.HSplitTop(20.0f, &Button, &Checkboxes);
-	if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_ClDownloadSkins, "tee-download-skins", Localize("Download skins"), g_Config.m_ClDownloadSkins, &Button))
-	{
-		g_Config.m_ClDownloadSkins ^= 1;
-		ShouldRefresh = true;
-	}
-
-	Checkboxes.HSplitTop(20.0f, &Button, &Checkboxes);
-	if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_ClDownloadCommunitySkins, "tee-download-community-skins", Localize("Download community skins"), g_Config.m_ClDownloadCommunitySkins, &Button))
-	{
-		g_Config.m_ClDownloadCommunitySkins ^= 1;
-		ShouldRefresh = true;
-	}
-
-	Checkboxes.HSplitTop(20.0f, &Button, &Checkboxes);
-	if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_ClVanillaSkinsOnly, "tee-vanilla-skins-only", Localize("Vanilla skins only"), g_Config.m_ClVanillaSkinsOnly, &Button))
-	{
-		g_Config.m_ClVanillaSkinsOnly ^= 1;
-		ShouldRefresh = true;
-	}
-
-	Checkboxes.HSplitTop(20.0f, &Button, &Checkboxes);
-	if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_ClFatSkins, "tee-fat-skins", Localize("Fat skins (DDFat)"), g_Config.m_ClFatSkins, &Button))
-	{
-		g_Config.m_ClFatSkins ^= 1;
-	}
-
-	// Skin prefix
-	{
-		SkinPrefix.HSplitTop(20.0f, &Label, &SkinPrefix);
-		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_skin_prefix_label", &Label, Localize("Skin prefix"), 14.0f, TEXTALIGN_ML);
-
-		SkinPrefix.HSplitTop(20.0f, &Button, &SkinPrefix);
-		static CLineInput s_SkinPrefixInput(g_Config.m_ClSkinPrefix, sizeof(g_Config.m_ClSkinPrefix));
-		IUiContext TeeSkinPrefixTextInputCtx;
-		TeeSkinPrefixTextInputCtx.m_pUi = Ui();
-		TeeSkinPrefixTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_prefix_text_input");
-		ui_widget::SInputFieldOptions SkinPrefixInputOptions;
-		SkinPrefixInputOptions.m_Clearable = true;
-		SkinPrefixInputOptions.m_FontSize = 14.0f;
-		if(ui_widget::InputField(TeeSkinPrefixTextInputCtx, &s_SkinPrefixInput, Button, SkinPrefixInputOptions).m_Changed)
-		{
-			ShouldRefresh = true;
-		}
-
-		SkinPrefix.HSplitTop(2.0f, nullptr, &SkinPrefix);
-
-		static const char *s_apSkinPrefixes[] = {"kitty", "santa"};
-		static CButtonContainer s_aPrefixButtons[std::size(s_apSkinPrefixes)];
-		for(size_t i = 0; i < std::size(s_apSkinPrefixes); i++)
-		{
-			SkinPrefix.HSplitTop(20.0f, &Button, &SkinPrefix);
-			Button.HMargin(2.0f, &Button);
-			if(DoButton_Menu(&s_aPrefixButtons[i], s_apSkinPrefixes[i], 0, &Button))
-			{
-				str_copy(g_Config.m_ClSkinPrefix, s_apSkinPrefixes[i]);
-				ShouldRefresh = true;
-			}
-		}
-
-		SkinPrefix.HSplitTop(4.0f, nullptr, &SkinPrefix);
-		SkinPrefix.HSplitTop(20.0f, &SortModeControl, &SkinPrefix);
-		static CUi::SDropDownState s_SkinSortModeDropDownState;
-		const char *apSkinSortModeNames[] = {
-			Localize("Name"),
-			Localize("Time"),
-		};
-		CUIRect SortLabel, SortDropDown;
-		SortModeControl.VSplitLeft(42.0f, &SortLabel, &SortDropDown);
-		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_skin_sort_label", &SortLabel, Localize("Skin sort"), 10.0f, TEXTALIGN_ML);
-		const int SkinSortMode = std::clamp(g_Config.m_QmSkinSortMode, 0, 1);
-		const int SkinSortModeNew = Ui()->DoDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState);
-		if(g_Config.m_QmSkinSortMode != SkinSortModeNew)
-		{
-			g_Config.m_QmSkinSortMode = SkinSortModeNew;
-			GameClient()->m_Skins.RebuildSkinListPlan();
-		}
-
-		SkinPrefix.HSplitTop(4.0f, nullptr, &SkinPrefix);
-		SkinPrefix.HSplitTop(20.0f, &Button, &SkinPrefix);
-		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_QmSkinShowMetadata, "tee-show-skin-metadata", Localize("Show skin date and author"), g_Config.m_QmSkinShowMetadata, &Button))
-		{
-			g_Config.m_QmSkinShowMetadata ^= 1;
-		}
-	}
-	CUIRect RandomColorsButton;
-
-	CUIRect YourSkinClip = YourSkin;
-	if(TransitionActive)
-	{
-		TransitionOffset = TransitionStrength * std::clamp(YourSkin.w * 0.08f, 24.0f, 120.0f) * s_TeeTabTransitionDirection;
-		Ui()->ClipEnable(&YourSkinClip);
-		YourSkin.x += TransitionOffset;
-	}
-
-	// Player skin area
-	CUIRect CustomColorsButton, RandomSkinButton;
-	CUIRect IdentityRow;
-	YourSkin.HSplitTop(28.0f, &IdentityRow, &YourSkin);
-	CUIRect FlagButton;
-	RenderSettingsTeeIdentity(IdentityRow, &FlagButton);
-	YourSkin.HSplitTop(8.0f, nullptr, &YourSkin);
-	YourSkin.HSplitTop(20.0f, &Label, &YourSkin);
-	YourSkin.HSplitBottom(20.0f, &YourSkin, &CustomColorsButton);
-
-	CustomColorsButton.VSplitRight(30.0f, &CustomColorsButton, &RandomSkinButton);
-	CustomColorsButton.VSplitRight(3.0f, &CustomColorsButton, 0);
-
-	CustomColorsButton.VSplitRight(110.0f, &CustomColorsButton, &RandomColorsButton);
-
-	CustomColorsButton.VSplitRight(5.0f, &CustomColorsButton, nullptr);
-	YourSkin.VSplitLeft(65.0f, &YourSkin, &Button);
-	Button.VSplitLeft(5.0f, nullptr, &Button);
-	Button.HMargin((Button.h - 20.0f) / 2.0f, &Button);
-
+	int RefreshVisibleRows = 0;
+	char aRefreshFirstVisibleSkin[MAX_SKIN_LENGTH] = "";
 	char aBuf[128 + IO_MAX_PATH_LENGTH];
-	str_format(aBuf, sizeof(aBuf), "%s:", Localize("Your skin"));
-	Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
-
 	const int QueueDummy = m_Dummy;
 	CSkins::CSkinList &SkinList = GameClient()->m_Skins.SkinList(QueueDummy);
 	int &QueueEnabled = m_Dummy ? g_Config.m_QmDummySkinQueueEnabled : g_Config.m_QmSkinQueueEnabled;
@@ -1511,1478 +1384,1678 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	SSettingsPreviewSkinTransitionState &PreviewTransitionState = s_aPreviewTransitionStates[m_Dummy];
 	PreviewTransitionState.Update(PreviewKey, OwnSkinInfo, PreviewNow);
 
-	// Tee
-	{
-		vec2 OffsetToMid;
-		CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &PreviewSkinInfo, OffsetToMid);
-		const vec2 TeeRenderPos = vec2(YourSkin.x + YourSkin.w / 2.0f, YourSkin.y + YourSkin.h / 2.0f + OffsetToMid.y);
-		// tee looking towards cursor, and it is happy when you touch it
-		const vec2 DeltaPosition = Ui()->MousePos() - TeeRenderPos;
-		const float Distance = length(DeltaPosition);
-		const float InteractionDistance = 20.0f;
-		const vec2 TeeDirection = Distance < InteractionDistance ? normalize(vec2(DeltaPosition.x, maximum(DeltaPosition.y, 0.5f))) : normalize(DeltaPosition);
-		const int TeeEmote = Distance < InteractionDistance ? EMOTE_HAPPY : *pEmote;
-		CTeeRenderInfo PreviousPreviewSkinInfo;
-		const CTeeRenderInfo *pPreviousPreviewSkinInfo = PreviewTransitionState.PreviousInfo(PreviewNow);
-		if(PreviewHueCycleApplied && pPreviousPreviewSkinInfo != nullptr)
-		{
-			PreviousPreviewSkinInfo = *pPreviousPreviewSkinInfo;
-			QmApplyTeeHueCycle(PreviousPreviewSkinInfo, HueCycleConfig);
-			pPreviousPreviewSkinInfo = &PreviousPreviewSkinInfo;
-		}
-		RenderTools()->RenderTeeWithSkinChangeTransition(CAnimState::GetIdle(), pPreviousPreviewSkinInfo, &PreviewSkinInfo, TeeEmote, TeeDirection, TeeRenderPos, PreviewTransitionState.Progress(PreviewNow));
-	}
-
-	// Skin loading status
-	const auto &&RenderSkinStatus = [&](CUIRect Parent, const CSkins::CSkinContainer *pSkinContainer, const void *pStatusTooltipId, bool PreviewCacheReady = false) {
-		if(pSkinContainer != nullptr && (pSkinContainer->State() == CSkins::CSkinContainer::EState::LOADED || PreviewCacheReady))
-		{
-			return;
-		}
-
-		CUIRect StatusIcon;
-		Parent.HSplitTop(20.0f, &StatusIcon, nullptr);
-		StatusIcon.VSplitLeft(20.0f, &StatusIcon, nullptr);
-
-		const CSkins::CSkinContainer::EStatusIndicator Indicator =
-			pSkinContainer == nullptr ?
-				CSkins::CSkinContainer::EStatusIndicator::ERROR :
-				CSkins::CSkinContainer::StatusIndicator(pSkinContainer->State());
-		Ui()->RegisterPassiveHotItem(pStatusTooltipId, &StatusIcon);
-		if(Indicator == CSkins::CSkinContainer::EStatusIndicator::LOADING)
-		{
-			Ui()->RenderProgressSpinner(StatusIcon.Center(), 5.0f);
-			GameClient()->m_Tooltips.DoToolTip(pStatusTooltipId, &StatusIcon, Localize("Skin is loading."));
-		}
-		else
-		{
-			TextRender()->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
-			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-			Ui()->DoLabel(&StatusIcon, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? FONT_ICON_QUESTION : FONT_ICON_TRIANGLE_EXCLAMATION, 12.0f, TEXTALIGN_MC);
-			TextRender()->SetRenderFlags(0);
-			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-			TextRender()->TextColor(TextRender()->DefaultTextColor());
-			const char *pErrorTooltip;
-			if(pSkinContainer == nullptr)
-			{
-				pErrorTooltip = Localize("This skin name cannot be used.");
-			}
-			else if(Indicator == CSkins::CSkinContainer::EStatusIndicator::ERROR)
-			{
-				pErrorTooltip = Localize("Skin could not be loaded due to an error. Check the local console for details.");
-			}
-			else
-			{
-				pErrorTooltip = Localize("Skin could not be found.");
-			}
-			GameClient()->m_Tooltips.DoToolTip(pStatusTooltipId, &StatusIcon, pErrorTooltip);
-		}
+	const SSettingsCardSpec IdentitySpec{pIdentityDefault->m_pStableId, Localize(pIdentityDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec OptionsSpec{pOptionsDefault->m_pStableId, Localize(pOptionsDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec ListSpec{pListDefault->m_pStableId, Localize(pListDefault->m_pTitle), nullptr};
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(3);
+	const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float ContentHeight, FSettingsCardRender Render, bool RenderWhenClipped = false) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = Spec;
+		Definition.m_Measure = [ContentHeight](float) { return ContentHeight; };
+		Definition.m_Render = Render;
+		Definition.m_RenderWhenClipped = RenderWhenClipped;
+		vCards.push_back(Definition);
 	};
-	static char s_StatusTooltipId;
-	RenderSkinStatus(YourSkin, pOwnSkinContainer, &s_StatusTooltipId);
-
-	// Skin name
-	static CLineInput s_SkinInput;
-	s_SkinInput.SetBuffer(pSkinName, SkinNameSize);
-	s_SkinInput.SetEmptyText("default");
-	IUiContext TeeSkinNameTextInputCtx;
-	TeeSkinNameTextInputCtx.m_pUi = Ui();
-	TeeSkinNameTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_name_text_input");
-	ui_widget::SInputFieldOptions SkinNameInputOptions;
-	SkinNameInputOptions.m_Clearable = true;
-	SkinNameInputOptions.m_FontSize = 14.0f;
-	if(ui_widget::InputField(TeeSkinNameTextInputCtx, &s_SkinInput, Button, SkinNameInputOptions).m_Changed)
-	{
-		SetNeedSendInfo();
-		m_SkinListScrollToSelected = true;
-		SkinList.ForceRefresh();
-	}
-
-	// Random skin button
-	static CButtonContainer s_RandomSkinButton;
-	static const char *s_apDice[] = {FONT_ICON_DICE_ONE, FONT_ICON_DICE_TWO, FONT_ICON_DICE_THREE, FONT_ICON_DICE_FOUR, FONT_ICON_DICE_FIVE, FONT_ICON_DICE_SIX};
-	static int s_CurrentDie = rand() % std::size(s_apDice);
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-	if(DoButton_Menu(&s_RandomSkinButton, s_apDice[s_CurrentDie], 0, &RandomSkinButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, -0.2f))
-	{
-		GameClient()->m_Skins.RandomizeSkin(m_Dummy);
-		SetNeedSendInfo();
-		m_SkinListScrollToSelected = true;
-		s_CurrentDie = rand() % std::size(s_apDice);
-	}
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-	GameClient()->m_Tooltips.DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
-
-	static CButtonContainer s_RandomizeColors;
-	if(*pUseCustomColor)
-	{
-		// RandomColorsButton.VSplitLeft(120.0f, &RandomColorsButton, 0);
-		if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RandomizeColors, "tee-random-colors", Localize("Random Colors"), 0, &RandomColorsButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f)))
+	AddCard(OptionsSpec, 480.0f * UiScale, [&](CUIRect Content) {
+		CUIRect MainView = Content;
+		CUIRect OptionsTop, Checkboxes, SkinPrefix, Eyes, Button, Label, SortModeControl;
+		MainView.HSplitTop(minimum(155.0f * UiScale, MainView.h), &OptionsTop, &MainView);
+		OptionsTop.VSplitLeft(OptionsTop.w * 0.42f, &Checkboxes, &SkinPrefix);
+		Checkboxes.VSplitRight(12.0f * UiScale, &Checkboxes, nullptr);
+		SkinPrefix.VSplitLeft(12.0f * UiScale, nullptr, &SkinPrefix);
+		const bool RenderEyesBelow = false;
+		MainView.HSplitTop(EyeLineSize * 3.0f + 10.0f, &Eyes, &MainView);
+		// Checkboxes
+		Checkboxes.HSplitTop(20.0f, &Button, &Checkboxes);
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_ClDownloadSkins, "tee-download-skins", Localize("Download skins"), g_Config.m_ClDownloadSkins, &Button))
 		{
-			if(m_Dummy)
+			g_Config.m_ClDownloadSkins ^= 1;
+			ShouldRefresh = true;
+		}
+
+		Checkboxes.HSplitTop(20.0f, &Button, &Checkboxes);
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_ClDownloadCommunitySkins, "tee-download-community-skins", Localize("Download community skins"), g_Config.m_ClDownloadCommunitySkins, &Button))
+		{
+			g_Config.m_ClDownloadCommunitySkins ^= 1;
+			ShouldRefresh = true;
+		}
+
+		Checkboxes.HSplitTop(20.0f, &Button, &Checkboxes);
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_ClVanillaSkinsOnly, "tee-vanilla-skins-only", Localize("Vanilla skins only"), g_Config.m_ClVanillaSkinsOnly, &Button))
+		{
+			g_Config.m_ClVanillaSkinsOnly ^= 1;
+			ShouldRefresh = true;
+		}
+
+		Checkboxes.HSplitTop(20.0f, &Button, &Checkboxes);
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_ClFatSkins, "tee-fat-skins", Localize("Fat skins (DDFat)"), g_Config.m_ClFatSkins, &Button))
+		{
+			g_Config.m_ClFatSkins ^= 1;
+		}
+
+		// Skin prefix
+		{
+			SkinPrefix.HSplitTop(20.0f, &Label, &SkinPrefix);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_skin_prefix_label", &Label, Localize("Skin prefix"), 14.0f, TEXTALIGN_ML);
+
+			SkinPrefix.HSplitTop(20.0f, &Button, &SkinPrefix);
+			static CLineInput s_SkinPrefixInput(g_Config.m_ClSkinPrefix, sizeof(g_Config.m_ClSkinPrefix));
+			IUiContext TeeSkinPrefixTextInputCtx;
+			TeeSkinPrefixTextInputCtx.m_pUi = Ui();
+			TeeSkinPrefixTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_prefix_text_input");
+			ui_widget::SInputFieldOptions SkinPrefixInputOptions;
+			SkinPrefixInputOptions.m_Clearable = true;
+			SkinPrefixInputOptions.m_FontSize = 14.0f;
+			if(ui_widget::InputField(TeeSkinPrefixTextInputCtx, &s_SkinPrefixInput, Button, SkinPrefixInputOptions).m_Changed)
 			{
-				g_Config.m_ClDummyColorBody = ColorHSLA((std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, 1).Pack(false);
-				g_Config.m_ClDummyColorFeet = ColorHSLA((std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, 1).Pack(false);
+				ShouldRefresh = true;
+			}
+
+			SkinPrefix.HSplitTop(2.0f, nullptr, &SkinPrefix);
+
+			static const char *s_apSkinPrefixes[] = {"kitty", "santa"};
+			static CButtonContainer s_aPrefixButtons[std::size(s_apSkinPrefixes)];
+			for(size_t i = 0; i < std::size(s_apSkinPrefixes); i++)
+			{
+				SkinPrefix.HSplitTop(20.0f, &Button, &SkinPrefix);
+				Button.HMargin(2.0f, &Button);
+				if(DoButton_Menu(&s_aPrefixButtons[i], s_apSkinPrefixes[i], 0, &Button))
+				{
+					str_copy(g_Config.m_ClSkinPrefix, s_apSkinPrefixes[i]);
+					ShouldRefresh = true;
+				}
+			}
+
+			SkinPrefix.HSplitTop(4.0f, nullptr, &SkinPrefix);
+			SkinPrefix.HSplitTop(20.0f, &SortModeControl, &SkinPrefix);
+			static CUi::SDropDownState s_SkinSortModeDropDownState;
+			const char *apSkinSortModeNames[] = {
+				Localize("Name"),
+				Localize("Time"),
+			};
+			CUIRect SortLabel, SortDropDown;
+			SortModeControl.VSplitLeft(42.0f, &SortLabel, &SortDropDown);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_skin_sort_label", &SortLabel, Localize("Skin sort"), 10.0f, TEXTALIGN_ML);
+			const int SkinSortMode = std::clamp(g_Config.m_QmSkinSortMode, 0, 1);
+			const int SkinSortModeNew = Ui()->DoDropDown(&SortDropDown, SkinSortMode, apSkinSortModeNames, std::size(apSkinSortModeNames), s_SkinSortModeDropDownState);
+			if(g_Config.m_QmSkinSortMode != SkinSortModeNew)
+			{
+				g_Config.m_QmSkinSortMode = SkinSortModeNew;
+				GameClient()->m_Skins.RebuildSkinListPlan();
+			}
+
+			SkinPrefix.HSplitTop(4.0f, nullptr, &SkinPrefix);
+			SkinPrefix.HSplitTop(20.0f, &Button, &SkinPrefix);
+			if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_QmSkinShowMetadata, "tee-show-skin-metadata", Localize("Show skin date and author"), g_Config.m_QmSkinShowMetadata, &Button))
+			{
+				g_Config.m_QmSkinShowMetadata ^= 1;
+			}
+		}
+		// Default eyes
+		{
+			CTeeRenderInfo EyeSkinInfo = OwnSkinInfo;
+			EyeSkinInfo.m_Size = EyeLineSize;
+			vec2 OffsetToMid;
+			CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &EyeSkinInfo, OffsetToMid);
+
+			CUIRect EyesRow;
+			Eyes.HSplitTop(EyeLineSize, &EyesRow, &Eyes);
+			static CButtonContainer s_aEyeButtons[NUM_EMOTES];
+			for(int CurrentEyeEmote = 0; CurrentEyeEmote < NUM_EMOTES; CurrentEyeEmote++)
+			{
+				EyesRow.VSplitLeft(EyeLineSize, &Button, &EyesRow);
+				EyesRow.VSplitLeft(5.0f, nullptr, &EyesRow);
+				if(!RenderEyesBelow && (CurrentEyeEmote + 1) % 3 == 0)
+				{
+					Eyes.HSplitTop(5.0f, nullptr, &Eyes);
+					Eyes.HSplitTop(EyeLineSize, &EyesRow, &Eyes);
+				}
+
+				const ColorRGBA EyeButtonColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f + (*pEmote == CurrentEyeEmote ? 0.25f : 0.0f));
+				if(DoButton_Menu(&s_aEyeButtons[CurrentEyeEmote], "", 0, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, EyeButtonColor))
+				{
+					*pEmote = CurrentEyeEmote;
+					if((int)m_Dummy == g_Config.m_ClDummy)
+						GameClient()->m_Emoticon.EyeEmote(CurrentEyeEmote);
+				}
+				GameClient()->m_Tooltips.DoToolTip(&s_aEyeButtons[CurrentEyeEmote], &Button, Localize("Choose default eyes when joining a server"));
+				RenderTools()->RenderTee(CAnimState::GetIdle(), &EyeSkinInfo, CurrentEyeEmote, vec2(1.0f, 0.0f), vec2(Button.x + Button.w / 2.0f, Button.y + Button.h / 2.0f + OffsetToMid.y));
+			}
+		}
+
+		// Custom color pickers
+		MainView.HSplitTop(5.0f, nullptr, &MainView);
+		if(*pUseCustomColor)
+		{
+			CUIRect CustomColors;
+			MainView.HSplitTop(95.0f, &CustomColors, &MainView);
+			CUIRect aRects[2];
+			CustomColors.VSplitMid(&aRects[0], &aRects[1], 20.0f);
+
+			unsigned *apColors[] = {pColorBody, pColorFeet};
+			const char *apParts[] = {Localize("Body"), Localize("Feet")};
+
+			for(int i = 0; i < 2; i++)
+			{
+				aRects[i].HSplitTop(20.0f, &Label, &aRects[i]);
+				Ui()->DoLabel(&Label, apParts[i], 14.0f, TEXTALIGN_ML);
+				if(RenderHslaScrollbars(&aRects[i], apColors[i], false, ColorHSLA::DARKEST_LGT))
+				{
+					SetNeedSendInfo();
+				}
+			}
+		}
+		MainView.HSplitTop(5.0f, nullptr, &MainView);
+	});
+	AddCard(IdentitySpec, 180.0f * UiScale, [&](CUIRect Content) {
+		CUIRect MainView = Content;
+		CUIRect YourSkin = Content;
+		CUIRect Button, Label;
+		CUIRect RandomColorsButton;
+
+		CUIRect YourSkinClip = YourSkin;
+		if(TransitionActive)
+		{
+			TransitionOffset = TransitionStrength * std::clamp(YourSkin.w * 0.08f, 24.0f, 120.0f) * s_TeeTabTransitionDirection;
+			Ui()->ClipEnable(&YourSkinClip);
+			YourSkin.x += TransitionOffset;
+		}
+
+		// Player skin area
+		CUIRect CustomColorsButton, RandomSkinButton;
+		CUIRect IdentityRow;
+		YourSkin.HSplitTop(28.0f, &IdentityRow, &YourSkin);
+		CUIRect FlagButton;
+		RenderSettingsTeeIdentity(IdentityRow, &FlagButton);
+		YourSkin.HSplitTop(8.0f, nullptr, &YourSkin);
+		YourSkin.HSplitTop(20.0f, &Label, &YourSkin);
+		YourSkin.HSplitBottom(20.0f, &YourSkin, &CustomColorsButton);
+
+		CustomColorsButton.VSplitRight(30.0f, &CustomColorsButton, &RandomSkinButton);
+		CustomColorsButton.VSplitRight(3.0f, &CustomColorsButton, 0);
+
+		CustomColorsButton.VSplitRight(110.0f, &CustomColorsButton, &RandomColorsButton);
+
+		CustomColorsButton.VSplitRight(5.0f, &CustomColorsButton, nullptr);
+		YourSkin.VSplitLeft(65.0f, &YourSkin, &Button);
+		Button.VSplitLeft(5.0f, nullptr, &Button);
+		Button.HMargin((Button.h - 20.0f) / 2.0f, &Button);
+
+		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Your skin"));
+		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
+
+		// Tee
+		{
+			vec2 OffsetToMid;
+			CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &PreviewSkinInfo, OffsetToMid);
+			const vec2 TeeRenderPos = vec2(YourSkin.x + YourSkin.w / 2.0f, YourSkin.y + YourSkin.h / 2.0f + OffsetToMid.y);
+			// tee looking towards cursor, and it is happy when you touch it
+			const vec2 DeltaPosition = Ui()->MousePos() - TeeRenderPos;
+			const float Distance = length(DeltaPosition);
+			const float InteractionDistance = 20.0f;
+			const vec2 TeeDirection = Distance < InteractionDistance ? normalize(vec2(DeltaPosition.x, maximum(DeltaPosition.y, 0.5f))) : normalize(DeltaPosition);
+			const int TeeEmote = Distance < InteractionDistance ? EMOTE_HAPPY : *pEmote;
+			CTeeRenderInfo PreviousPreviewSkinInfo;
+			const CTeeRenderInfo *pPreviousPreviewSkinInfo = PreviewTransitionState.PreviousInfo(PreviewNow);
+			if(PreviewHueCycleApplied && pPreviousPreviewSkinInfo != nullptr)
+			{
+				PreviousPreviewSkinInfo = *pPreviousPreviewSkinInfo;
+				QmApplyTeeHueCycle(PreviousPreviewSkinInfo, HueCycleConfig);
+				pPreviousPreviewSkinInfo = &PreviousPreviewSkinInfo;
+			}
+			RenderTools()->RenderTeeWithSkinChangeTransition(CAnimState::GetIdle(), pPreviousPreviewSkinInfo, &PreviewSkinInfo, TeeEmote, TeeDirection, TeeRenderPos, PreviewTransitionState.Progress(PreviewNow));
+		}
+
+		// Skin loading status
+		const auto &&RenderSkinStatus = [&](CUIRect Parent, const CSkins::CSkinContainer *pSkinContainer, const void *pStatusTooltipId, bool PreviewCacheReady = false) {
+			if(pSkinContainer != nullptr && (pSkinContainer->State() == CSkins::CSkinContainer::EState::LOADED || PreviewCacheReady))
+			{
+				return;
+			}
+
+			CUIRect StatusIcon;
+			Parent.HSplitTop(20.0f, &StatusIcon, nullptr);
+			StatusIcon.VSplitLeft(20.0f, &StatusIcon, nullptr);
+
+			const CSkins::CSkinContainer::EStatusIndicator Indicator =
+				pSkinContainer == nullptr ?
+					CSkins::CSkinContainer::EStatusIndicator::ERROR :
+					CSkins::CSkinContainer::StatusIndicator(pSkinContainer->State());
+			Ui()->RegisterPassiveHotItem(pStatusTooltipId, &StatusIcon);
+			if(Indicator == CSkins::CSkinContainer::EStatusIndicator::LOADING)
+			{
+				Ui()->RenderProgressSpinner(StatusIcon.Center(), 5.0f);
+				GameClient()->m_Tooltips.DoToolTip(pStatusTooltipId, &StatusIcon, Localize("Skin is loading."));
 			}
 			else
 			{
-				g_Config.m_ClPlayerColorBody = ColorHSLA((std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, 1).Pack(false);
-				g_Config.m_ClPlayerColorFeet = ColorHSLA((std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, 1).Pack(false);
+				TextRender()->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
+				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+				Ui()->DoLabel(&StatusIcon, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? FONT_ICON_QUESTION : FONT_ICON_TRIANGLE_EXCLAMATION, 12.0f, TEXTALIGN_MC);
+				TextRender()->SetRenderFlags(0);
+				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				const char *pErrorTooltip;
+				if(pSkinContainer == nullptr)
+				{
+					pErrorTooltip = Localize("This skin name cannot be used.");
+				}
+				else if(Indicator == CSkins::CSkinContainer::EStatusIndicator::ERROR)
+				{
+					pErrorTooltip = Localize("Skin could not be loaded due to an error. Check the local console for details.");
+				}
+				else
+				{
+					pErrorTooltip = Localize("Skin could not be found.");
+				}
+				GameClient()->m_Tooltips.DoToolTip(pStatusTooltipId, &StatusIcon, pErrorTooltip);
 			}
+		};
+		static char s_StatusTooltipId;
+		RenderSkinStatus(YourSkin, pOwnSkinContainer, &s_StatusTooltipId);
+
+		// Skin name
+		static CLineInput s_SkinInput;
+		s_SkinInput.SetBuffer(pSkinName, SkinNameSize);
+		s_SkinInput.SetEmptyText("default");
+		IUiContext TeeSkinNameTextInputCtx;
+		TeeSkinNameTextInputCtx.m_pUi = Ui();
+		TeeSkinNameTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_name_text_input");
+		ui_widget::SInputFieldOptions SkinNameInputOptions;
+		SkinNameInputOptions.m_Clearable = true;
+		SkinNameInputOptions.m_FontSize = 14.0f;
+		if(ui_widget::InputField(TeeSkinNameTextInputCtx, &s_SkinInput, Button, SkinNameInputOptions).m_Changed)
+		{
 			SetNeedSendInfo();
+			m_SkinListScrollToSelected = true;
+			SkinList.ForceRefresh();
 		}
-	}
-	MainView.HSplitTop(5.0f, 0, &MainView);
 
-	// Custom colors button
-	if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, pUseCustomColor, m_Dummy ? "tee-dummy-custom-colors" : "tee-player-custom-colors", Localize("Custom colors"), *pUseCustomColor, &CustomColorsButton))
-	{
-		*pUseCustomColor = *pUseCustomColor ? 0 : 1;
-		SetNeedSendInfo();
-	}
-
-	if(TransitionActive)
-	{
-		if(TransitionAlpha > 0.0f)
+		// Random skin button
+		static CButtonContainer s_RandomSkinButton;
+		static const char *s_apDice[] = {FONT_ICON_DICE_ONE, FONT_ICON_DICE_TWO, FONT_ICON_DICE_THREE, FONT_ICON_DICE_FOUR, FONT_ICON_DICE_FIVE, FONT_ICON_DICE_SIX};
+		static int s_CurrentDie = rand() % std::size(s_apDice);
+		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+		if(DoButton_Menu(&s_RandomSkinButton, s_apDice[s_CurrentDie], 0, &RandomSkinButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, -0.2f))
 		{
-			YourSkinClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+			GameClient()->m_Skins.RandomizeSkin(m_Dummy);
+			SetNeedSendInfo();
+			m_SkinListScrollToSelected = true;
+			s_CurrentDie = rand() % std::size(s_apDice);
 		}
-		Ui()->ClipDisable();
-	}
+		TextRender()->SetRenderFlags(0);
+		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		GameClient()->m_Tooltips.DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
 
-	// Default eyes
-	{
-		CTeeRenderInfo EyeSkinInfo = OwnSkinInfo;
-		EyeSkinInfo.m_Size = EyeLineSize;
-		vec2 OffsetToMid;
-		CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &EyeSkinInfo, OffsetToMid);
-
-		CUIRect EyesRow;
-		Eyes.HSplitTop(EyeLineSize, &EyesRow, &Eyes);
-		static CButtonContainer s_aEyeButtons[NUM_EMOTES];
-		for(int CurrentEyeEmote = 0; CurrentEyeEmote < NUM_EMOTES; CurrentEyeEmote++)
+		static CButtonContainer s_RandomizeColors;
+		if(*pUseCustomColor)
 		{
-			EyesRow.VSplitLeft(EyeLineSize, &Button, &EyesRow);
-			EyesRow.VSplitLeft(5.0f, nullptr, &EyesRow);
-			if(!RenderEyesBelow && (CurrentEyeEmote + 1) % 3 == 0)
+			// RandomColorsButton.VSplitLeft(120.0f, &RandomColorsButton, 0);
+			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RandomizeColors, "tee-random-colors", Localize("Random Colors"), 0, &RandomColorsButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f)))
 			{
-				Eyes.HSplitTop(5.0f, nullptr, &Eyes);
-				Eyes.HSplitTop(EyeLineSize, &EyesRow, &Eyes);
-			}
-
-			const ColorRGBA EyeButtonColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f + (*pEmote == CurrentEyeEmote ? 0.25f : 0.0f));
-			if(DoButton_Menu(&s_aEyeButtons[CurrentEyeEmote], "", 0, &Button, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, 0.0f, EyeButtonColor))
-			{
-				*pEmote = CurrentEyeEmote;
-				if((int)m_Dummy == g_Config.m_ClDummy)
-					GameClient()->m_Emoticon.EyeEmote(CurrentEyeEmote);
-			}
-			GameClient()->m_Tooltips.DoToolTip(&s_aEyeButtons[CurrentEyeEmote], &Button, Localize("Choose default eyes when joining a server"));
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &EyeSkinInfo, CurrentEyeEmote, vec2(1.0f, 0.0f), vec2(Button.x + Button.w / 2.0f, Button.y + Button.h / 2.0f + OffsetToMid.y));
-		}
-	}
-
-	// Custom color pickers
-	MainView.HSplitTop(5.0f, nullptr, &MainView);
-	if(*pUseCustomColor)
-	{
-		CUIRect CustomColors;
-		MainView.HSplitTop(95.0f, &CustomColors, &MainView);
-		CUIRect aRects[2];
-		CustomColors.VSplitMid(&aRects[0], &aRects[1], 20.0f);
-
-		unsigned *apColors[] = {pColorBody, pColorFeet};
-		const char *apParts[] = {Localize("Body"), Localize("Feet")};
-
-		for(int i = 0; i < 2; i++)
-		{
-			aRects[i].HSplitTop(20.0f, &Label, &aRects[i]);
-			Ui()->DoLabel(&Label, apParts[i], 14.0f, TEXTALIGN_ML);
-			if(RenderHslaScrollbars(&aRects[i], apColors[i], false, ColorHSLA::DARKEST_LGT))
-			{
+				if(m_Dummy)
+				{
+					g_Config.m_ClDummyColorBody = ColorHSLA((std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, 1).Pack(false);
+					g_Config.m_ClDummyColorFeet = ColorHSLA((std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, 1).Pack(false);
+				}
+				else
+				{
+					g_Config.m_ClPlayerColorBody = ColorHSLA((std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, 1).Pack(false);
+					g_Config.m_ClPlayerColorFeet = ColorHSLA((std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, (std::rand() % 100) / 100.0f, 1).Pack(false);
+				}
 				SetNeedSendInfo();
 			}
 		}
-	}
-	MainView.HSplitTop(5.0f, nullptr, &MainView);
+		MainView.HSplitTop(5.0f, 0, &MainView);
 
-	CUIRect QueuePanel;
-	float QueuePanelWidth = MainView.w * 0.24f;
-	QueuePanelWidth = std::clamp(QueuePanelWidth, 160.0f, 250.0f);
-	QueuePanelWidth = std::min(QueuePanelWidth, MainView.w * 0.38f);
-	MainView.VSplitRight(QueuePanelWidth, &MainView, &QueuePanel);
-	QueuePanel.VSplitLeft(10.0f, nullptr, &QueuePanel);
+		// Custom colors button
+		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, pUseCustomColor, m_Dummy ? "tee-dummy-custom-colors" : "tee-player-custom-colors", Localize("Custom colors"), *pUseCustomColor, &CustomColorsButton))
+		{
+			*pUseCustomColor = *pUseCustomColor ? 0 : 1;
+			SetNeedSendInfo();
+		}
 
-	{
-		CUIRect QueueSection = QueuePanel;
-		CUIRect QueueHeader, QueueControls, QueueList, QueuePresets;
-		QueueSection.HSplitTop(22.0f, &QueueHeader, &QueueSection);
-		char aQueueLabel[64];
-		str_format(aQueueLabel, sizeof(aQueueLabel), "%s (%d)", Localize("Skin queue"), (int)SkinQueue.size());
-		SLabelProperties QueueTitleLabelProps;
-		QueueTitleLabelProps.m_DisallowNewline = true;
-		QueueTitleLabelProps.m_StopAtEnd = true;
-		QueueTitleLabelProps.m_MinimumFontSize = 6.0f;
-		if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? "tee-dummy-skin-queue-enabled" : "tee-player-skin-queue-enabled", aQueueLabel, QueueEnabled, &QueueHeader, QueueTitleLabelProps))
+		if(TransitionActive)
 		{
-			QueueEnabled ^= 1;
-		}
-		GameClient()->m_Tooltips.DoToolTip(&QueueEnabled, &QueueHeader, Localize("Enable skin queue rotation"));
-		char aCurrentQueueLabel[128];
-		if(AppliedPresetIndex >= 0 && (size_t)AppliedPresetIndex < vQueuePresets.size())
-		{
-			str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Queue preset: %s"), PresetDisplayName((size_t)AppliedPresetIndex));
-		}
-		else
-		{
-			str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Queue preset: %s"), Localize("Custom"));
-		}
-		SLabelProperties CurrentQueueLabelProps;
-		CurrentQueueLabelProps.m_DisallowNewline = true;
-		CurrentQueueLabelProps.m_StopAtEnd = true;
-		CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
-		QueueSection.HSplitTop(8.0f, nullptr, &QueueSection);
-
-		CUIRect IntervalRow, IntervalLabel, IntervalControls;
-		QueueSection.HSplitTop(20.0f, &IntervalRow, &QueueSection);
-		CUIRect IntervalInputGroup, IntervalInput, IntervalUnit;
-		const float QueueControlLabelWidth = 82.0f;
-		const float QueueValueInputWidth = 58.0f;
-		const float QueueValueUnitWidth = 18.0f;
-		IntervalRow.VSplitLeft(QueueControlLabelWidth, &IntervalLabel, &IntervalControls);
-		IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);
-		IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);
-		IntervalInput.VMargin(1.0f, &IntervalInput);
-		SLabelProperties QueueControlLabelProps;
-		QueueControlLabelProps.m_MaxWidth = IntervalLabel.w;
-		QueueControlLabelProps.m_DisallowNewline = true;
-		QueueControlLabelProps.m_StopAtEnd = true;
-		QueueControlLabelProps.m_MinimumFontSize = 6.0f;
-		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &IntervalLabel, Localize("Switch interval"), IntervalLabel.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);
-		static CLineInputNumber s_aQueueIntervalInputs[NUM_DUMMIES];
-		CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];
-		const int PrevQueueInterval = QueueInterval;
-		IUiContext TeeSkinQueueIntervalTextInputCtx;
-		TeeSkinQueueIntervalTextInputCtx.m_pUi = Ui();
-		TeeSkinQueueIntervalTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-		TeeSkinQueueIntervalTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-		TeeSkinQueueIntervalTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_queue_interval_text_input");
-		TeeSkinQueueIntervalTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-		if(!QueueIntervalInput.IsActive() && str_comp(QueueIntervalInput.GetString(), std::to_string(QueueInterval).c_str()) != 0)
-		{
-			QueueIntervalInput.SetInteger(QueueInterval);
-			QueueIntervalInput.SelectAll();
-		}
-		const bool QueueIntervalEdited = ui_widget::InputField(TeeSkinQueueIntervalTextInputCtx, &QueueIntervalInput, IntervalInput, nullptr, 10.0f);
-		if(QueueIntervalInput.IsActive())
-		{
-			(void)QueueIntervalEdited;
-		}
-		else
-		{
-			if(QueueIntervalInput.GetLength() > 0 && (QueueIntervalEdited || PrevQueueInterval != QueueInterval || QueueIntervalInput.GetInteger() != QueueInterval))
+			if(TransitionAlpha > 0.0f)
 			{
-				QueueInterval = maximum(QueueIntervalInput.GetInteger(), 1);
+				YourSkinClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
 			}
-			QueueIntervalInput.SetInteger(QueueInterval);
-			QueueIntervalInput.SelectAll();
+			Ui()->ClipDisable();
 		}
-		Ui()->DoLabel(&IntervalUnit, "ms", IntervalUnit.h * CUi::ms_FontmodHeight * 0.75f, TEXTALIGN_MC);
-
-		QueueSection.HSplitTop(3.0f, nullptr, &QueueSection);
-		QueueSection.HSplitTop(QueueSection.h * 0.62f, &QueueList, &QueuePresets);
-		QueuePresets.HSplitTop(6.0f, nullptr, &QueuePresets);
-
-		CUIRect QueueListHeader, QueueListBody;
-		QueueList.HSplitTop(18.0f, &QueueListHeader, &QueueListBody);
-		CUIRect QueueListHeaderLabel, ClearQueueRect;
-		QueueListHeader.VSplitRight(18.0f, &QueueListHeaderLabel, &ClearQueueRect);
-		CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;
-		Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel, 10.0f, TEXTALIGN_ML, CurrentQueueLabelProps);
-		static CButtonContainer s_TeeClearCurrentSkinQueueButton;
-		if(Ui()->DoButton_FontIcon(&s_TeeClearCurrentSkinQueueButton, FONT_ICON_TRASH, 0, &ClearQueueRect, BUTTONFLAG_LEFT))
-		{
-			GameClient()->m_Skins.ClearSkinQueue(QueueDummy);
-		}
-		GameClient()->m_Tooltips.DoToolTip(&s_TeeClearCurrentSkinQueueButton, &ClearQueueRect, Localize("Clear current queue"));
-
-		static CListBox s_QueueListBox;
-		static std::vector<char> s_QueueItemIds;
-		static std::vector<char> s_QueueRemoveIds;
-		static int s_QueueDragIndex = -1;
-		static bool s_QueueDragging = false;
-		static vec2 s_QueueDragStart = vec2(0.0f, 0.0f);
-		static vec2 s_QueueDragGrabOffset = vec2(0.0f, 0.0f);
-		static CUIRect s_QueueDraggedRect;
-		static int s_QueueLastDummy = -1;
-
-		if(s_QueueLastDummy != QueueDummy)
-		{
-			s_QueueLastDummy = QueueDummy;
-			s_QueueDragIndex = -1;
-			s_QueueDragging = false;
-		}
-
-		if(s_QueueDragIndex >= (int)SkinQueue.size())
-		{
-			s_QueueDragIndex = -1;
-			s_QueueDragging = false;
-		}
-
-		if(SkinQueue.empty())
-		{
-			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_queue_empty_label", &QueueListBody, Localize("Queue is empty"), 12.0f, TEXTALIGN_MC);
-		}
-		else
-		{
-			s_QueueItemIds.resize(SkinQueue.size());
-			s_QueueRemoveIds.resize(SkinQueue.size());
-
-			int DragTarget = s_QueueDragIndex;
-			int LastVisible = -1;
-			CUIRect LastVisibleRect;
-			int RemoveIndex = -1;
-			int ApplyQueueIndex = -1;
-			bool HasQueueDropLine = false;
-			CUIRect QueueDropLine;
-			if(s_QueueDragging)
+	});
+	AddCard(ListSpec, 760.0f * UiScale, [&](CUIRect Content) {
+		CUIRect MainView = Content;
+		CUIRect Button, Label;
+		// Skin loading status
+		const auto &&RenderSkinStatus = [&](CUIRect Parent, const CSkins::CSkinContainer *pSkinContainer, const void *pStatusTooltipId, bool PreviewCacheReady = false) {
+			if(pSkinContainer != nullptr && (pSkinContainer->State() == CSkins::CSkinContainer::EState::LOADED || PreviewCacheReady))
 			{
-				DragTarget = -1;
+				return;
 			}
 
-			s_QueueListBox.DoStart(20.0f, (int)SkinQueue.size(), 1, 1, -1, &QueueListBody, true, IGraphics::CORNER_ALL);
-			for(size_t i = 0; i < SkinQueue.size(); ++i)
+			CUIRect StatusIcon;
+			Parent.HSplitTop(20.0f, &StatusIcon, nullptr);
+			StatusIcon.VSplitLeft(20.0f, &StatusIcon, nullptr);
+
+			const CSkins::CSkinContainer::EStatusIndicator Indicator =
+				pSkinContainer == nullptr ?
+					CSkins::CSkinContainer::EStatusIndicator::ERROR :
+					CSkins::CSkinContainer::StatusIndicator(pSkinContainer->State());
+			Ui()->RegisterPassiveHotItem(pStatusTooltipId, &StatusIcon);
+			if(Indicator == CSkins::CSkinContainer::EStatusIndicator::LOADING)
 			{
-				const CListboxItem Item = s_QueueListBox.DoNextItem(&s_QueueItemIds[i], false, 3.0f);
-				if(!Item.m_Visible)
+				Ui()->RenderProgressSpinner(StatusIcon.Center(), 5.0f);
+				GameClient()->m_Tooltips.DoToolTip(pStatusTooltipId, &StatusIcon, Localize("Skin is loading."));
+			}
+			else
+			{
+				TextRender()->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
+				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+				Ui()->DoLabel(&StatusIcon, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? FONT_ICON_QUESTION : FONT_ICON_TRIANGLE_EXCLAMATION, 12.0f, TEXTALIGN_MC);
+				TextRender()->SetRenderFlags(0);
+				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				const char *pErrorTooltip;
+				if(pSkinContainer == nullptr)
 				{
-					continue;
+					pErrorTooltip = Localize("This skin name cannot be used.");
+				}
+				else if(Indicator == CSkins::CSkinContainer::EStatusIndicator::ERROR)
+				{
+					pErrorTooltip = Localize("Skin could not be loaded due to an error. Check the local console for details.");
+				}
+				else
+				{
+					pErrorTooltip = Localize("Skin could not be found.");
+				}
+				GameClient()->m_Tooltips.DoToolTip(pStatusTooltipId, &StatusIcon, pErrorTooltip);
+			}
+		};
+		CUIRect QueuePanel;
+		float QueuePanelWidth = MainView.w * 0.24f;
+		QueuePanelWidth = std::clamp(QueuePanelWidth, 160.0f, 250.0f);
+		QueuePanelWidth = std::min(QueuePanelWidth, MainView.w * 0.38f);
+		MainView.VSplitRight(QueuePanelWidth, &MainView, &QueuePanel);
+		QueuePanel.VSplitLeft(10.0f, nullptr, &QueuePanel);
+
+		{
+			CUIRect QueueSection = QueuePanel;
+			CUIRect QueueHeader, QueueControls, QueueList, QueuePresets;
+			QueueSection.HSplitTop(22.0f, &QueueHeader, &QueueSection);
+			char aQueueLabel[64];
+			str_format(aQueueLabel, sizeof(aQueueLabel), "%s (%d)", Localize("Skin queue"), (int)SkinQueue.size());
+			SLabelProperties QueueTitleLabelProps;
+			QueueTitleLabelProps.m_DisallowNewline = true;
+			QueueTitleLabelProps.m_StopAtEnd = true;
+			QueueTitleLabelProps.m_MinimumFontSize = 6.0f;
+			if(DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? "tee-dummy-skin-queue-enabled" : "tee-player-skin-queue-enabled", aQueueLabel, QueueEnabled, &QueueHeader, QueueTitleLabelProps))
+			{
+				QueueEnabled ^= 1;
+			}
+			GameClient()->m_Tooltips.DoToolTip(&QueueEnabled, &QueueHeader, Localize("Enable skin queue rotation"));
+			char aCurrentQueueLabel[128];
+			if(AppliedPresetIndex >= 0 && (size_t)AppliedPresetIndex < vQueuePresets.size())
+			{
+				str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Queue preset: %s"), PresetDisplayName((size_t)AppliedPresetIndex));
+			}
+			else
+			{
+				str_format(aCurrentQueueLabel, sizeof(aCurrentQueueLabel), Localize("Queue preset: %s"), Localize("Custom"));
+			}
+			SLabelProperties CurrentQueueLabelProps;
+			CurrentQueueLabelProps.m_DisallowNewline = true;
+			CurrentQueueLabelProps.m_StopAtEnd = true;
+			CurrentQueueLabelProps.m_MinimumFontSize = 6.0f;
+			QueueSection.HSplitTop(8.0f, nullptr, &QueueSection);
+
+			CUIRect IntervalRow, IntervalLabel, IntervalControls;
+			QueueSection.HSplitTop(20.0f, &IntervalRow, &QueueSection);
+			CUIRect IntervalInputGroup, IntervalInput, IntervalUnit;
+			const float QueueControlLabelWidth = 82.0f;
+			const float QueueValueInputWidth = 58.0f;
+			const float QueueValueUnitWidth = 18.0f;
+			IntervalRow.VSplitLeft(QueueControlLabelWidth, &IntervalLabel, &IntervalControls);
+			IntervalControls.VSplitRight(QueueValueInputWidth + QueueValueUnitWidth, nullptr, &IntervalInputGroup);
+			IntervalInputGroup.VSplitRight(QueueValueUnitWidth, &IntervalInput, &IntervalUnit);
+			IntervalInput.VMargin(1.0f, &IntervalInput);
+			SLabelProperties QueueControlLabelProps;
+			QueueControlLabelProps.m_MaxWidth = IntervalLabel.w;
+			QueueControlLabelProps.m_DisallowNewline = true;
+			QueueControlLabelProps.m_StopAtEnd = true;
+			QueueControlLabelProps.m_MinimumFontSize = 6.0f;
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee-skin-queue-switch-interval", &IntervalLabel, Localize("Switch interval"), IntervalLabel.h * CUi::ms_FontmodHeight * 0.8f, TEXTALIGN_ML, QueueControlLabelProps, (int)IntervalLabel.w);
+			static ui_widget::SNumericFieldState s_aQueueIntervalStates[NUM_DUMMIES];
+			IUiContext TeeSkinQueueIntervalCtx;
+			TeeSkinQueueIntervalCtx.m_pUi = Ui();
+			TeeSkinQueueIntervalCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+			TeeSkinQueueIntervalCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+			TeeSkinQueueIntervalCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_queue_interval_text_input");
+			TeeSkinQueueIntervalCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+			ui_widget::SNumericFieldOptions QueueIntervalOptions;
+			QueueIntervalOptions.m_FontSize = 10.0f;
+			QueueIntervalOptions.m_CommitPolicy = ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT;
+			ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInput, QueueIntervalOptions);
+			Ui()->DoLabel(&IntervalUnit, "ms", IntervalUnit.h * CUi::ms_FontmodHeight * 0.75f, TEXTALIGN_MC);
+
+			QueueSection.HSplitTop(3.0f, nullptr, &QueueSection);
+			QueueSection.HSplitTop(QueueSection.h * 0.62f, &QueueList, &QueuePresets);
+			QueuePresets.HSplitTop(6.0f, nullptr, &QueuePresets);
+
+			CUIRect QueueListHeader, QueueListBody;
+			QueueList.HSplitTop(18.0f, &QueueListHeader, &QueueListBody);
+			CUIRect QueueListHeaderLabel, ClearQueueRect;
+			QueueListHeader.VSplitRight(18.0f, &QueueListHeaderLabel, &ClearQueueRect);
+			CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;
+			Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel, 10.0f, TEXTALIGN_ML, CurrentQueueLabelProps);
+			static CButtonContainer s_TeeClearCurrentSkinQueueButton;
+			if(Ui()->DoButton_FontIcon(&s_TeeClearCurrentSkinQueueButton, FONT_ICON_TRASH, 0, &ClearQueueRect, BUTTONFLAG_LEFT))
+			{
+				GameClient()->m_Skins.ClearSkinQueue(QueueDummy);
+			}
+			GameClient()->m_Tooltips.DoToolTip(&s_TeeClearCurrentSkinQueueButton, &ClearQueueRect, Localize("Clear current queue"));
+
+			static CListBox s_QueueListBox;
+			static std::vector<char> s_QueueItemIds;
+			static std::vector<char> s_QueueRemoveIds;
+			static int s_QueueDragIndex = -1;
+			static bool s_QueueDragging = false;
+			static vec2 s_QueueDragStart = vec2(0.0f, 0.0f);
+			static vec2 s_QueueDragGrabOffset = vec2(0.0f, 0.0f);
+			static CUIRect s_QueueDraggedRect;
+			static int s_QueueLastDummy = -1;
+
+			if(s_QueueLastDummy != QueueDummy)
+			{
+				s_QueueLastDummy = QueueDummy;
+				s_QueueDragIndex = -1;
+				s_QueueDragging = false;
+			}
+
+			if(s_QueueDragIndex >= (int)SkinQueue.size())
+			{
+				s_QueueDragIndex = -1;
+				s_QueueDragging = false;
+			}
+
+			if(SkinQueue.empty())
+			{
+				DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_queue_empty_label", &QueueListBody, Localize("Queue is empty"), 12.0f, TEXTALIGN_MC);
+			}
+			else
+			{
+				s_QueueItemIds.resize(SkinQueue.size());
+				s_QueueRemoveIds.resize(SkinQueue.size());
+
+				int DragTarget = s_QueueDragIndex;
+				int LastVisible = -1;
+				CUIRect LastVisibleRect;
+				int RemoveIndex = -1;
+				int ApplyQueueIndex = -1;
+				bool HasQueueDropLine = false;
+				CUIRect QueueDropLine;
+				if(s_QueueDragging)
+				{
+					DragTarget = -1;
 				}
 
-				LastVisible = (int)i;
-				LastVisibleRect = Item.m_Rect;
-				if(s_QueueDragging && DragTarget == -1 && Ui()->MouseY() < Item.m_Rect.y + Item.m_Rect.h * 0.5f)
+				s_QueueListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+				s_QueueListBox.DoStart(20.0f, (int)SkinQueue.size(), 1, 1, -1, &QueueListBody, true, IGraphics::CORNER_ALL);
+				for(size_t i = 0; i < SkinQueue.size(); ++i)
 				{
-					DragTarget = (int)i;
-				}
+					const CListboxItem Item = s_QueueListBox.DoNextItem(&s_QueueItemIds[i], false, 3.0f);
+					if(!Item.m_Visible)
+					{
+						continue;
+					}
 
-				if((int)i == QueueIndex)
-				{
-					Item.m_Rect.Draw(ColorRGBA(0.2f, 0.6f, 0.3f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
+					LastVisible = (int)i;
+					LastVisibleRect = Item.m_Rect;
+					if(s_QueueDragging && DragTarget == -1 && Ui()->MouseY() < Item.m_Rect.y + Item.m_Rect.h * 0.5f)
+					{
+						DragTarget = (int)i;
+					}
+
+					if((int)i == QueueIndex)
+					{
+						Item.m_Rect.Draw(ColorRGBA(0.2f, 0.6f, 0.3f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
+					}
+					else if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
+					{
+						Item.m_Rect.Draw(ColorRGBA(0.4f, 0.4f, 1.0f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
+					}
+					if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
+					{
+						QueueDropLine = Item.m_Rect;
+						QueueDropLine.x += 4.0f;
+						QueueDropLine.w = maximum(0.0f, QueueDropLine.w - 8.0f);
+						QueueDropLine.y += DragTarget > s_QueueDragIndex ? QueueDropLine.h - 1.0f : 0.0f;
+						QueueDropLine.h = 2.0f;
+						HasQueueDropLine = true;
+					}
+
+					CUIRect DragRect = Item.m_Rect;
+					CUIRect RemoveRect;
+					DragRect.VSplitRight(20.0f, &DragRect, &RemoveRect);
+					CUIRect DragArea = DragRect;
+
+					const float TeeSize = 16.0f;
+					CUIRect TeeRect, LabelRect;
+					DragRect.VSplitLeft(TeeSize + 6.0f, &TeeRect, &LabelRect);
+					TeeRect.VSplitLeft(3.0f, nullptr, &TeeRect);
+
+					char aEntryLabel[64];
+					str_format(aEntryLabel, sizeof(aEntryLabel), "%d. %s", (int)i + 1, SkinQueue[i].m_SkinName.c_str());
+					LabelRect.VSplitLeft(4.0f, nullptr, &LabelRect);
+					Ui()->DoLabel(&LabelRect, aEntryLabel, 12.0f, TEXTALIGN_ML);
+
+					const CSkins::CSkinQueueEntry &QueueEntry = SkinQueue[i];
+					const CSkin *pQueueSkin = GameClient()->m_Skins.Find(QueueEntry.m_SkinName.c_str());
+					CTeeRenderInfo QueueInfo = OwnSkinInfo;
+					QueueInfo.Apply(pQueueSkin);
+					QueueInfo.ApplyColors(QueueEntry.m_UseCustomColor, QueueEntry.m_ColorBody, QueueEntry.m_ColorFeet);
+					QueueInfo.m_Size = TeeSize;
+					vec2 OffsetToMid;
+					CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &QueueInfo, OffsetToMid);
+					const vec2 TeeRenderPos = vec2(TeeRect.x + TeeRect.w / 2.0f, TeeRect.y + TeeRect.h / 2.0f + OffsetToMid.y);
+					RenderTools()->RenderTee(CAnimState::GetIdle(), &QueueInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
+
+					TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+					TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+					const float RemoveAlpha = Ui()->HotItem() == &s_QueueRemoveIds[i] ? 0.2f : 0.0f;
+					TextRender()->TextColor(ColorRGBA(0.9f, 0.3f, 0.3f, 0.7f + RemoveAlpha));
+					Ui()->DoLabel(&RemoveRect, FONT_ICON_TRASH, 12.0f, TEXTALIGN_MC);
+					TextRender()->TextColor(TextRender()->DefaultTextColor());
+					TextRender()->SetRenderFlags(0);
+					TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+					if(Ui()->DoButtonLogic(&s_QueueRemoveIds[i], 0, &RemoveRect, BUTTONFLAG_LEFT))
+					{
+						RemoveIndex = (int)i;
+					}
+					GameClient()->m_Tooltips.DoToolTip(&s_QueueRemoveIds[i], &RemoveRect, Localize("Remove from queue"));
+
+					if(s_QueueDragIndex == -1 && Ui()->MouseButtonClicked(0) && Ui()->MouseHovered(&DragArea))
+					{
+						s_QueueDragIndex = (int)i;
+						s_QueueDragStart = Ui()->MousePos();
+						s_QueueDragGrabOffset = Ui()->MousePos() - vec2(Item.m_Rect.x, Item.m_Rect.y);
+						s_QueueDraggedRect = Item.m_Rect;
+						s_QueueDragging = false;
+					}
 				}
-				else if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
+				s_QueueListBox.DoEnd();
+
+				if(s_QueueDragging && DragTarget == -1)
 				{
-					Item.m_Rect.Draw(ColorRGBA(0.4f, 0.4f, 1.0f, 0.2f), IGraphics::CORNER_ALL, 3.0f);
+					DragTarget = LastVisible >= 0 ? LastVisible : s_QueueDragIndex;
 				}
-				if(s_QueueDragging && DragTarget == (int)i && (int)i != s_QueueDragIndex)
+				if(s_QueueDragging && !HasQueueDropLine && DragTarget >= 0 && DragTarget != s_QueueDragIndex && LastVisible >= 0)
 				{
-					QueueDropLine = Item.m_Rect;
-					QueueDropLine.x += 4.0f;
-					QueueDropLine.w = maximum(0.0f, QueueDropLine.w - 8.0f);
-					QueueDropLine.y += DragTarget > s_QueueDragIndex ? QueueDropLine.h - 1.0f : 0.0f;
+					QueueDropLine = LastVisibleRect;
+					QueueDropLine.x = QueueList.x + 6.0f;
+					QueueDropLine.w = maximum(0.0f, QueueList.w - 12.0f);
+					QueueDropLine.y = LastVisibleRect.y + LastVisibleRect.h - 1.0f;
 					QueueDropLine.h = 2.0f;
 					HasQueueDropLine = true;
 				}
-
-				CUIRect DragRect = Item.m_Rect;
-				CUIRect RemoveRect;
-				DragRect.VSplitRight(20.0f, &DragRect, &RemoveRect);
-				CUIRect DragArea = DragRect;
-
-				const float TeeSize = 16.0f;
-				CUIRect TeeRect, LabelRect;
-				DragRect.VSplitLeft(TeeSize + 6.0f, &TeeRect, &LabelRect);
-				TeeRect.VSplitLeft(3.0f, nullptr, &TeeRect);
-
-				char aEntryLabel[64];
-				str_format(aEntryLabel, sizeof(aEntryLabel), "%d. %s", (int)i + 1, SkinQueue[i].m_SkinName.c_str());
-				LabelRect.VSplitLeft(4.0f, nullptr, &LabelRect);
-				Ui()->DoLabel(&LabelRect, aEntryLabel, 12.0f, TEXTALIGN_ML);
-
-				const CSkins::CSkinQueueEntry &QueueEntry = SkinQueue[i];
-				const CSkin *pQueueSkin = GameClient()->m_Skins.Find(QueueEntry.m_SkinName.c_str());
-				CTeeRenderInfo QueueInfo = OwnSkinInfo;
-				QueueInfo.Apply(pQueueSkin);
-				QueueInfo.ApplyColors(QueueEntry.m_UseCustomColor, QueueEntry.m_ColorBody, QueueEntry.m_ColorFeet);
-				QueueInfo.m_Size = TeeSize;
-				vec2 OffsetToMid;
-				CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &QueueInfo, OffsetToMid);
-				const vec2 TeeRenderPos = vec2(TeeRect.x + TeeRect.w / 2.0f, TeeRect.y + TeeRect.h / 2.0f + OffsetToMid.y);
-				RenderTools()->RenderTee(CAnimState::GetIdle(), &QueueInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
-
-				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-				const float RemoveAlpha = Ui()->HotItem() == &s_QueueRemoveIds[i] ? 0.2f : 0.0f;
-				TextRender()->TextColor(ColorRGBA(0.9f, 0.3f, 0.3f, 0.7f + RemoveAlpha));
-				Ui()->DoLabel(&RemoveRect, FONT_ICON_TRASH, 12.0f, TEXTALIGN_MC);
-				TextRender()->TextColor(TextRender()->DefaultTextColor());
-				TextRender()->SetRenderFlags(0);
-				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-				if(Ui()->DoButtonLogic(&s_QueueRemoveIds[i], 0, &RemoveRect, BUTTONFLAG_LEFT))
+				if(s_QueueDragging && HasQueueDropLine)
 				{
-					RemoveIndex = (int)i;
+					QueueDropLine.Draw(ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), IGraphics::CORNER_ALL, 1.0f);
 				}
-				GameClient()->m_Tooltips.DoToolTip(&s_QueueRemoveIds[i], &RemoveRect, Localize("Remove from queue"));
-
-				if(s_QueueDragIndex == -1 && Ui()->MouseButtonClicked(0) && Ui()->MouseHovered(&DragArea))
+				if(s_QueueDragging && s_QueueDragIndex >= 0 && s_QueueDragIndex < (int)SkinQueue.size())
 				{
-					s_QueueDragIndex = (int)i;
-					s_QueueDragStart = Ui()->MousePos();
-					s_QueueDragGrabOffset = Ui()->MousePos() - vec2(Item.m_Rect.x, Item.m_Rect.y);
-					s_QueueDraggedRect = Item.m_Rect;
+					CUIRect QueueDragGhost = s_QueueDraggedRect;
+					QueueDragGhost.x = Ui()->MouseX() - s_QueueDragGrabOffset.x;
+					QueueDragGhost.y = Ui()->MouseY() - s_QueueDragGrabOffset.y;
+					CUIRect QueueDragGhostShadow = QueueDragGhost;
+					QueueDragGhostShadow.x += 1.5f;
+					QueueDragGhostShadow.y += 2.0f;
+					QueueDragGhostShadow.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.38f), IGraphics::CORNER_ALL, 4.0f);
+					QueueDragGhost.Draw(ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), IGraphics::CORNER_ALL, 4.0f);
+					CUIRect QueueDragGhostLabel = QueueDragGhost;
+					QueueDragGhostLabel.VMargin(8.0f, &QueueDragGhostLabel);
+					char aGhostLabel[64];
+					str_format(aGhostLabel, sizeof(aGhostLabel), "%d. %s", s_QueueDragIndex + 1, SkinQueue[s_QueueDragIndex].m_SkinName.c_str());
+					SLabelProperties QueueDragGhostLabelProps;
+					QueueDragGhostLabelProps.m_MaxWidth = QueueDragGhostLabel.w;
+					QueueDragGhostLabelProps.m_DisallowNewline = true;
+					QueueDragGhostLabelProps.m_StopAtEnd = true;
+					QueueDragGhostLabelProps.m_MinimumFontSize = 6.0f;
+					Ui()->DoLabel(&QueueDragGhostLabel, aGhostLabel, 12.0f, TEXTALIGN_ML, QueueDragGhostLabelProps);
+				}
+
+				if(s_QueueDragIndex >= 0 && Ui()->MouseButton(0))
+				{
+					if(!s_QueueDragging && distance(Ui()->MousePos(), s_QueueDragStart) > 5.0f)
+					{
+						s_QueueDragging = true;
+					}
+				}
+				else if(s_QueueDragIndex >= 0 && !Ui()->MouseButton(0))
+				{
+					if(s_QueueDragging && DragTarget >= 0 && DragTarget != s_QueueDragIndex)
+					{
+						GameClient()->m_Skins.MoveActiveSkinQueueItem((size_t)s_QueueDragIndex, (size_t)DragTarget, QueueDummy);
+					}
+					else if(!s_QueueDragging)
+					{
+						ApplyQueueIndex = s_QueueDragIndex;
+					}
+					s_QueueDragIndex = -1;
 					s_QueueDragging = false;
 				}
-			}
-			s_QueueListBox.DoEnd();
 
-			if(s_QueueDragging && DragTarget == -1)
-			{
-				DragTarget = LastVisible >= 0 ? LastVisible : s_QueueDragIndex;
-			}
-			if(s_QueueDragging && !HasQueueDropLine && DragTarget >= 0 && DragTarget != s_QueueDragIndex && LastVisible >= 0)
-			{
-				QueueDropLine = LastVisibleRect;
-				QueueDropLine.x = QueueList.x + 6.0f;
-				QueueDropLine.w = maximum(0.0f, QueueList.w - 12.0f);
-				QueueDropLine.y = LastVisibleRect.y + LastVisibleRect.h - 1.0f;
-				QueueDropLine.h = 2.0f;
-				HasQueueDropLine = true;
-			}
-			if(s_QueueDragging && HasQueueDropLine)
-			{
-				QueueDropLine.Draw(ColorRGBA(0.45f, 0.7f, 1.0f, 0.9f), IGraphics::CORNER_ALL, 1.0f);
-			}
-			if(s_QueueDragging && s_QueueDragIndex >= 0 && s_QueueDragIndex < (int)SkinQueue.size())
-			{
-				CUIRect QueueDragGhost = s_QueueDraggedRect;
-				QueueDragGhost.x = Ui()->MouseX() - s_QueueDragGrabOffset.x;
-				QueueDragGhost.y = Ui()->MouseY() - s_QueueDragGrabOffset.y;
-				CUIRect QueueDragGhostShadow = QueueDragGhost;
-				QueueDragGhostShadow.x += 1.5f;
-				QueueDragGhostShadow.y += 2.0f;
-				QueueDragGhostShadow.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.38f), IGraphics::CORNER_ALL, 4.0f);
-				QueueDragGhost.Draw(ColorRGBA(0.18f, 0.2f, 0.24f, 0.92f), IGraphics::CORNER_ALL, 4.0f);
-				CUIRect QueueDragGhostLabel = QueueDragGhost;
-				QueueDragGhostLabel.VMargin(8.0f, &QueueDragGhostLabel);
-				char aGhostLabel[64];
-				str_format(aGhostLabel, sizeof(aGhostLabel), "%d. %s", s_QueueDragIndex + 1, SkinQueue[s_QueueDragIndex].m_SkinName.c_str());
-				SLabelProperties QueueDragGhostLabelProps;
-				QueueDragGhostLabelProps.m_MaxWidth = QueueDragGhostLabel.w;
-				QueueDragGhostLabelProps.m_DisallowNewline = true;
-				QueueDragGhostLabelProps.m_StopAtEnd = true;
-				QueueDragGhostLabelProps.m_MinimumFontSize = 6.0f;
-				Ui()->DoLabel(&QueueDragGhostLabel, aGhostLabel, 12.0f, TEXTALIGN_ML, QueueDragGhostLabelProps);
-			}
-
-			if(s_QueueDragIndex >= 0 && Ui()->MouseButton(0))
-			{
-				if(!s_QueueDragging && distance(Ui()->MousePos(), s_QueueDragStart) > 5.0f)
+				if(RemoveIndex >= 0 && RemoveIndex < (int)SkinQueue.size())
 				{
-					s_QueueDragging = true;
+					GameClient()->m_Skins.RemoveActiveSkinQueue(SkinQueue[RemoveIndex], QueueDummy);
+					s_QueueDragIndex = -1;
+					s_QueueDragging = false;
+				}
+				else if(ApplyQueueIndex >= 0 && ApplyQueueIndex < (int)SkinQueue.size())
+				{
+					GameClient()->m_Skins.ApplySkinQueueIndex((size_t)ApplyQueueIndex, QueueDummy);
 				}
 			}
-			else if(s_QueueDragIndex >= 0 && !Ui()->MouseButton(0))
+
+			if(QueuePresets.h > 0.0f)
 			{
-				if(s_QueueDragging && DragTarget >= 0 && DragTarget != s_QueueDragIndex)
+				QueuePresets.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f), IGraphics::CORNER_ALL, 4.0f);
+				CUIRect PresetHeader, PresetControls, PresetList;
+				QueuePresets.HSplitTop(18.0f, &PresetHeader, &QueuePresets);
+				char aPresetLabel[64];
+				str_format(aPresetLabel, sizeof(aPresetLabel), "%s (%d)", Localize("Preset bar"), (int)vQueuePresets.size());
+				PresetHeader.VSplitLeft(6.0f, nullptr, &PresetHeader);
+				Ui()->DoLabel(&PresetHeader, aPresetLabel, 12.0f, TEXTALIGN_ML);
+
+				QueuePresets.HSplitTop(3.0f, nullptr, &QueuePresets);
+				QueuePresets.HSplitTop(20.0f, &PresetControls, &QueuePresets);
+				CUIRect PresetControlsTop = PresetControls;
+				CUIRect SaveButton, SaveAsButton, RenamePresetButton, RemovePresetButton;
+				const float ActionGapWidth = 4.0f;
+				const float ActionButtonWidth = (PresetControlsTop.w - ActionGapWidth * 3.0f) / 4.0f;
+				PresetControlsTop.VSplitLeft(ActionButtonWidth, &SaveButton, &PresetControlsTop);
+				PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &PresetControlsTop);
+				PresetControlsTop.VSplitLeft(ActionButtonWidth, &SaveAsButton, &PresetControlsTop);
+				PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &PresetControlsTop);
+				PresetControlsTop.VSplitLeft(ActionButtonWidth, &RenamePresetButton, &PresetControlsTop);
+				PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &RemovePresetButton);
+				const bool HasAppliedPreset = ActivePresetIndex >= 0 && (size_t)ActivePresetIndex < vQueuePresets.size();
+				const bool CanSavePreset = HasAppliedPreset && ActivePresetIndex != (int)CSkins::SKIN_QUEUE_SERVER_PRESET && QueueDirty;
+				const bool CanSaveAsPreset = !SkinQueue.empty();
+				const bool CanRenamePreset = HasAppliedPreset && ActivePresetIndex != (int)CSkins::SKIN_QUEUE_SERVER_PRESET;
+				const bool CanRemovePreset = HasAppliedPreset && (size_t)ActivePresetIndex >= 2;
+				static CButtonContainer s_SavePresetButton;
+				if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_SavePresetButton, "tee-save-skin-queue-preset", Localize("Save"), CanSavePreset ? 0 : -1, &SaveButton) && CanSavePreset)
 				{
-					GameClient()->m_Skins.MoveActiveSkinQueueItem((size_t)s_QueueDragIndex, (size_t)DragTarget, QueueDummy);
+					GameClient()->m_Skins.SaveSkinQueueToAppliedPreset(QueueDummy);
 				}
-				else if(!s_QueueDragging)
+				GameClient()->m_Tooltips.DoToolTip(&s_SavePresetButton, &SaveButton, CanSavePreset ? Localize("Save changes back to this preset") : Localize("Apply a writable preset and edit first"));
+				static CButtonContainer s_SaveAsPresetButton;
+				if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_SaveAsPresetButton, "tee-save-as-skin-queue-preset", Localize("Save as"), CanSaveAsPreset ? 0 : -1, &SaveAsButton) && CanSaveAsPreset)
 				{
-					ApplyQueueIndex = s_QueueDragIndex;
+					GameClient()->m_Skins.AddSkinQueuePresetFromCurrent(QueueDummy);
 				}
-				s_QueueDragIndex = -1;
-				s_QueueDragging = false;
+				GameClient()->m_Tooltips.DoToolTip(&s_SaveAsPresetButton, &SaveAsButton, CanSaveAsPreset ? Localize("Save current queue as a new preset") : Localize("Queue is empty"));
+				static CButtonContainer s_RenameSelectedPresetButton;
+				static CButtonContainer s_RemoveSelectedPresetButton;
+				int RenamePresetIndex = -1;
+				int RemovePresetIndex = -1;
+				if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RenameSelectedPresetButton, "tee-rename-selected-skin-queue-preset", Localize("Rename"), CanRenamePreset ? 0 : -1, &RenamePresetButton) && CanRenamePreset)
+				{
+					RenamePresetIndex = ActivePresetIndex;
+				}
+				GameClient()->m_Tooltips.DoToolTip(&s_RenameSelectedPresetButton, &RenamePresetButton, CanRenamePreset ? Localize("Open rename dialog") : Localize("Apply a preset first"));
+				if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RemoveSelectedPresetButton, "tee-delete-selected-skin-queue-preset", Localize("Delete"), CanRemovePreset ? 0 : -1, &RemovePresetButton) && CanRemovePreset)
+				{
+					RemovePresetIndex = ActivePresetIndex;
+				}
+				GameClient()->m_Tooltips.DoToolTip(&s_RemoveSelectedPresetButton, &RemovePresetButton, CanRemovePreset ? Localize("Delete this preset") : Localize("Apply a preset first"));
+
+				QueuePresets.HSplitTop(3.0f, nullptr, &QueuePresets);
+				PresetList = QueuePresets;
+				if(vQueuePresets.empty())
+				{
+					DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_no_presets_label", &PresetList, Localize("No presets yet"), 11.0f, TEXTALIGN_MC);
+				}
+				else
+				{
+					static CListBox s_PresetListBox;
+					static std::vector<char> s_vPresetItemIds;
+					s_vPresetItemIds.resize(vQueuePresets.size());
+
+					int SelectPresetIndex = -1;
+					const int PresetSelectedOld = ActivePresetIndex >= 0 ? ActivePresetIndex : -1;
+					s_PresetListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+					s_PresetListBox.DoStart(20.0f, (int)vQueuePresets.size(), 1, 1, PresetSelectedOld, &PresetList, true, IGraphics::CORNER_ALL);
+					for(size_t i = 0; i < vQueuePresets.size(); ++i)
+					{
+						const CListboxItem Item = s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, 3.0f);
+						if(!Item.m_Visible)
+							continue;
+
+						CUIRect SelectRect = Item.m_Rect;
+						CUIRect NameRect = SelectRect;
+						NameRect.VSplitLeft(4.0f, nullptr, &NameRect);
+
+						if(ActivePresetIndex == (int)i)
+						{
+							Item.m_Rect.Draw(ColorRGBA(0.25f, 0.6f, 0.35f, 0.22f), IGraphics::CORNER_ALL, 3.0f);
+						}
+						else if(Ui()->HotItem() == &s_vPresetItemIds[i])
+						{
+							Item.m_Rect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 3.0f);
+						}
+						char aEntryLabel[96];
+						if(GameClient()->m_Skins.IsBuiltInSkinQueuePreset(i))
+						{
+							str_format(aEntryLabel, sizeof(aEntryLabel), "%s (%d)", PresetDisplayName(i), (int)vQueuePresets[i].m_Queue.size());
+						}
+						else
+						{
+							str_format(aEntryLabel, sizeof(aEntryLabel), "%s (%d)", vQueuePresets[i].m_Name.c_str(), (int)vQueuePresets[i].m_Queue.size());
+						}
+						SLabelProperties PresetNameProps;
+						PresetNameProps.m_MaxWidth = NameRect.w;
+						PresetNameProps.m_DisallowNewline = true;
+						PresetNameProps.m_StopAtEnd = true;
+						PresetNameProps.m_MinimumFontSize = 6.0f;
+						Ui()->DoLabel(&NameRect, aEntryLabel, 11.0f, TEXTALIGN_ML, PresetNameProps);
+
+						const char *pPresetTooltip = nullptr;
+						if(i == CSkins::SKIN_QUEUE_SERVER_PRESET)
+						{
+							pPresetTooltip = Localize("Rotate all server player skins");
+						}
+						else if(GameClient()->m_Skins.IsBuiltInSkinQueuePreset(i))
+						{
+							pPresetTooltip = Localize("Default preset");
+						}
+						else
+						{
+							pPresetTooltip = Localize("Apply this preset");
+						}
+						GameClient()->m_Tooltips.DoToolTip(&s_vPresetItemIds[i], &SelectRect, pPresetTooltip);
+					}
+					const int PresetListSelectedIndex = s_PresetListBox.DoEnd();
+					if(s_PresetListBox.WasItemSelected())
+					{
+						SelectPresetIndex = PresetListSelectedIndex;
+					}
+
+					if(RenamePresetIndex >= 0 && (size_t)RenamePresetIndex < vQueuePresets.size())
+					{
+						m_SkinQueuePresetRenamePopupContext.m_pMenus = this;
+						m_SkinQueuePresetRenamePopupContext.m_Dummy = QueueDummy;
+						m_SkinQueuePresetRenamePopupContext.m_PresetIndex = RenamePresetIndex;
+						m_SkinQueuePresetRenamePopupContext.m_NameInput.Set(vQueuePresets[RenamePresetIndex].m_Name.c_str());
+						m_SkinQueuePresetRenamePopupContext.m_NameInput.SelectAll();
+						Ui()->DoPopupMenu(&m_SkinQueuePresetRenamePopupContext, Ui()->MouseX(), Ui()->MouseY(), 260.0f, 72.0f, &m_SkinQueuePresetRenamePopupContext, PopupSkinQueuePresetRename);
+					}
+					else if(SelectPresetIndex >= 0)
+					{
+						GameClient()->m_Skins.ApplySkinQueuePreset((size_t)SelectPresetIndex, QueueDummy);
+					}
+					else if(RemovePresetIndex >= 0)
+					{
+						GameClient()->m_Skins.RemoveSkinQueuePreset((size_t)RemovePresetIndex, QueueDummy);
+					}
+				}
 			}
 
-			if(RemoveIndex >= 0 && RemoveIndex < (int)SkinQueue.size())
-			{
-				GameClient()->m_Skins.RemoveActiveSkinQueue(SkinQueue[RemoveIndex], QueueDummy);
-				s_QueueDragIndex = -1;
-				s_QueueDragging = false;
-			}
-			else if(ApplyQueueIndex >= 0 && ApplyQueueIndex < (int)SkinQueue.size())
-			{
-				GameClient()->m_Skins.ApplySkinQueueIndex((size_t)ApplyQueueIndex, QueueDummy);
-			}
+			MainView.HSplitTop(5.0f, nullptr, &MainView);
 		}
 
-		if(QueuePresets.h > 0.0f)
+		// Layout bottom controls and use remainder for skin selector
+		CUIRect QuickSearch, DatabaseButton, EditTextureButton, DirectoryButton, RefreshButton;
+		constexpr float SkinControlGap = 10.0f;
+		constexpr float SkinControlLineHeight = 20.0f;
+		constexpr float SkinControlLabelFontSize = 14.0f;
+		constexpr float SkinControlLabelPadding = 14.0f;
+		constexpr float SkinRefreshButtonWidth = 25.0f;
+		constexpr float SkinSearchPreferredWidth = 220.0f;
+		const char *pSkinDatabaseLabel = Localize("Skin Database");
+		const char *pSkinDirectoryLabel = Localize("Skins directory");
+		const char *pEditSkinTextureLabel = Localize("Edit skin texture");
+		const float DesiredDatabaseButtonWidth = maximum(110.0f, TextRender()->TextWidth(SkinControlLabelFontSize, pSkinDatabaseLabel, -1, -1.0f) + SkinControlLabelPadding);
+		const float DesiredDirectoryButtonWidth = maximum(110.0f, TextRender()->TextWidth(SkinControlLabelFontSize, pSkinDirectoryLabel, -1, -1.0f) + SkinControlLabelPadding);
+		const float DesiredEditTextureButtonWidth = maximum(125.0f, TextRender()->TextWidth(SkinControlLabelFontSize, pEditSkinTextureLabel, -1, -1.0f) + SkinControlLabelPadding);
+		const float DesiredLabelButtonWidth = DesiredDatabaseButtonWidth + DesiredDirectoryButtonWidth + DesiredEditTextureButtonWidth;
+		const float DesiredControlsWidth = DesiredLabelButtonWidth + SkinRefreshButtonWidth + SkinControlGap * 3.0f;
+		const bool SplitToolbarRows = MainView.w < SkinSearchPreferredWidth + SkinControlGap + DesiredControlsWidth;
+		CUIRect Toolbar, ControlsArea;
+		MainView.HSplitBottom(SplitToolbarRows ? SkinControlLineHeight * 2.0f + 5.0f : SkinControlLineHeight, &MainView, &Toolbar);
+		MainView.HSplitBottom(5.0f, &MainView, nullptr);
+		if(SplitToolbarRows)
 		{
-			QueuePresets.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f), IGraphics::CORNER_ALL, 4.0f);
-			CUIRect PresetHeader, PresetControls, PresetList;
-			QueuePresets.HSplitTop(18.0f, &PresetHeader, &QueuePresets);
-			char aPresetLabel[64];
-			str_format(aPresetLabel, sizeof(aPresetLabel), "%s (%d)", Localize("Preset bar"), (int)vQueuePresets.size());
-			PresetHeader.VSplitLeft(6.0f, nullptr, &PresetHeader);
-			Ui()->DoLabel(&PresetHeader, aPresetLabel, 12.0f, TEXTALIGN_ML);
-
-			QueuePresets.HSplitTop(3.0f, nullptr, &QueuePresets);
-			QueuePresets.HSplitTop(20.0f, &PresetControls, &QueuePresets);
-			CUIRect PresetControlsTop = PresetControls;
-			CUIRect SaveButton, SaveAsButton, RenamePresetButton, RemovePresetButton;
-			const float ActionGapWidth = 4.0f;
-			const float ActionButtonWidth = (PresetControlsTop.w - ActionGapWidth * 3.0f) / 4.0f;
-			PresetControlsTop.VSplitLeft(ActionButtonWidth, &SaveButton, &PresetControlsTop);
-			PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &PresetControlsTop);
-			PresetControlsTop.VSplitLeft(ActionButtonWidth, &SaveAsButton, &PresetControlsTop);
-			PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &PresetControlsTop);
-			PresetControlsTop.VSplitLeft(ActionButtonWidth, &RenamePresetButton, &PresetControlsTop);
-			PresetControlsTop.VSplitLeft(ActionGapWidth, nullptr, &RemovePresetButton);
-			const bool HasAppliedPreset = ActivePresetIndex >= 0 && (size_t)ActivePresetIndex < vQueuePresets.size();
-			const bool CanSavePreset = HasAppliedPreset && ActivePresetIndex != (int)CSkins::SKIN_QUEUE_SERVER_PRESET && QueueDirty;
-			const bool CanSaveAsPreset = !SkinQueue.empty();
-			const bool CanRenamePreset = HasAppliedPreset && ActivePresetIndex != (int)CSkins::SKIN_QUEUE_SERVER_PRESET;
-			const bool CanRemovePreset = HasAppliedPreset && (size_t)ActivePresetIndex >= 2;
-			static CButtonContainer s_SavePresetButton;
-			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_SavePresetButton, "tee-save-skin-queue-preset", Localize("Save"), CanSavePreset ? 0 : -1, &SaveButton) && CanSavePreset)
-			{
-				GameClient()->m_Skins.SaveSkinQueueToAppliedPreset(QueueDummy);
-			}
-			GameClient()->m_Tooltips.DoToolTip(&s_SavePresetButton, &SaveButton, CanSavePreset ? Localize("Save changes back to this preset") : Localize("Apply a writable preset and edit first"));
-			static CButtonContainer s_SaveAsPresetButton;
-			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_SaveAsPresetButton, "tee-save-as-skin-queue-preset", Localize("Save as"), CanSaveAsPreset ? 0 : -1, &SaveAsButton) && CanSaveAsPreset)
-			{
-				GameClient()->m_Skins.AddSkinQueuePresetFromCurrent(QueueDummy);
-			}
-			GameClient()->m_Tooltips.DoToolTip(&s_SaveAsPresetButton, &SaveAsButton, CanSaveAsPreset ? Localize("Save current queue as a new preset") : Localize("Queue is empty"));
-			static CButtonContainer s_RenameSelectedPresetButton;
-			static CButtonContainer s_RemoveSelectedPresetButton;
-			int RenamePresetIndex = -1;
-			int RemovePresetIndex = -1;
-			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RenameSelectedPresetButton, "tee-rename-selected-skin-queue-preset", Localize("Rename"), CanRenamePreset ? 0 : -1, &RenamePresetButton) && CanRenamePreset)
-			{
-				RenamePresetIndex = ActivePresetIndex;
-			}
-			GameClient()->m_Tooltips.DoToolTip(&s_RenameSelectedPresetButton, &RenamePresetButton, CanRenamePreset ? Localize("Open rename dialog") : Localize("Apply a preset first"));
-			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_RemoveSelectedPresetButton, "tee-delete-selected-skin-queue-preset", Localize("Delete"), CanRemovePreset ? 0 : -1, &RemovePresetButton) && CanRemovePreset)
-			{
-				RemovePresetIndex = ActivePresetIndex;
-			}
-			GameClient()->m_Tooltips.DoToolTip(&s_RemoveSelectedPresetButton, &RemovePresetButton, CanRemovePreset ? Localize("Delete this preset") : Localize("Apply a preset first"));
-
-			QueuePresets.HSplitTop(3.0f, nullptr, &QueuePresets);
-			PresetList = QueuePresets;
-			if(vQueuePresets.empty())
-			{
-				DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_no_presets_label", &PresetList, Localize("No presets yet"), 11.0f, TEXTALIGN_MC);
-			}
-			else
-			{
-				static CListBox s_PresetListBox;
-				static std::vector<char> s_vPresetItemIds;
-				s_vPresetItemIds.resize(vQueuePresets.size());
-
-				int SelectPresetIndex = -1;
-				const int PresetSelectedOld = ActivePresetIndex >= 0 ? ActivePresetIndex : -1;
-				s_PresetListBox.DoStart(20.0f, (int)vQueuePresets.size(), 1, 1, PresetSelectedOld, &PresetList, true, IGraphics::CORNER_ALL);
-				for(size_t i = 0; i < vQueuePresets.size(); ++i)
-				{
-					const CListboxItem Item = s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, 3.0f);
-					if(!Item.m_Visible)
-						continue;
-
-					CUIRect SelectRect = Item.m_Rect;
-					CUIRect NameRect = SelectRect;
-					NameRect.VSplitLeft(4.0f, nullptr, &NameRect);
-
-					if(ActivePresetIndex == (int)i)
-					{
-						Item.m_Rect.Draw(ColorRGBA(0.25f, 0.6f, 0.35f, 0.22f), IGraphics::CORNER_ALL, 3.0f);
-					}
-					else if(Ui()->HotItem() == &s_vPresetItemIds[i])
-					{
-						Item.m_Rect.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), IGraphics::CORNER_ALL, 3.0f);
-					}
-					char aEntryLabel[96];
-					if(GameClient()->m_Skins.IsBuiltInSkinQueuePreset(i))
-					{
-						str_format(aEntryLabel, sizeof(aEntryLabel), "%s (%d)", PresetDisplayName(i), (int)vQueuePresets[i].m_Queue.size());
-					}
-					else
-					{
-						str_format(aEntryLabel, sizeof(aEntryLabel), "%s (%d)", vQueuePresets[i].m_Name.c_str(), (int)vQueuePresets[i].m_Queue.size());
-					}
-					SLabelProperties PresetNameProps;
-					PresetNameProps.m_MaxWidth = NameRect.w;
-					PresetNameProps.m_DisallowNewline = true;
-					PresetNameProps.m_StopAtEnd = true;
-					PresetNameProps.m_MinimumFontSize = 6.0f;
-					Ui()->DoLabel(&NameRect, aEntryLabel, 11.0f, TEXTALIGN_ML, PresetNameProps);
-
-					const char *pPresetTooltip = nullptr;
-					if(i == CSkins::SKIN_QUEUE_SERVER_PRESET)
-					{
-						pPresetTooltip = Localize("Rotate all server player skins");
-					}
-					else if(GameClient()->m_Skins.IsBuiltInSkinQueuePreset(i))
-					{
-						pPresetTooltip = Localize("Default preset");
-					}
-					else
-					{
-						pPresetTooltip = Localize("Apply this preset");
-					}
-					GameClient()->m_Tooltips.DoToolTip(&s_vPresetItemIds[i], &SelectRect, pPresetTooltip);
-				}
-				const int PresetListSelectedIndex = s_PresetListBox.DoEnd();
-				if(s_PresetListBox.WasItemSelected())
-				{
-					SelectPresetIndex = PresetListSelectedIndex;
-				}
-
-				if(RenamePresetIndex >= 0 && (size_t)RenamePresetIndex < vQueuePresets.size())
-				{
-					m_SkinQueuePresetRenamePopupContext.m_pMenus = this;
-					m_SkinQueuePresetRenamePopupContext.m_Dummy = QueueDummy;
-					m_SkinQueuePresetRenamePopupContext.m_PresetIndex = RenamePresetIndex;
-					m_SkinQueuePresetRenamePopupContext.m_NameInput.Set(vQueuePresets[RenamePresetIndex].m_Name.c_str());
-					m_SkinQueuePresetRenamePopupContext.m_NameInput.SelectAll();
-					Ui()->DoPopupMenu(&m_SkinQueuePresetRenamePopupContext, Ui()->MouseX(), Ui()->MouseY(), 260.0f, 72.0f, &m_SkinQueuePresetRenamePopupContext, PopupSkinQueuePresetRename);
-				}
-				else if(SelectPresetIndex >= 0)
-				{
-					GameClient()->m_Skins.ApplySkinQueuePreset((size_t)SelectPresetIndex, QueueDummy);
-				}
-				else if(RemovePresetIndex >= 0)
-				{
-					GameClient()->m_Skins.RemoveSkinQueuePreset((size_t)RemovePresetIndex, QueueDummy);
-				}
-			}
-		}
-
-		MainView.HSplitTop(5.0f, nullptr, &MainView);
-	}
-
-	// Layout bottom controls and use remainder for skin selector
-	CUIRect QuickSearch, DatabaseButton, EditTextureButton, DirectoryButton, RefreshButton;
-	constexpr float SkinControlGap = 10.0f;
-	constexpr float SkinControlLineHeight = 20.0f;
-	constexpr float SkinControlLabelFontSize = 14.0f;
-	constexpr float SkinControlLabelPadding = 14.0f;
-	constexpr float SkinRefreshButtonWidth = 25.0f;
-	constexpr float SkinSearchPreferredWidth = 220.0f;
-	const char *pSkinDatabaseLabel = Localize("Skin Database");
-	const char *pSkinDirectoryLabel = Localize("Skins directory");
-	const char *pEditSkinTextureLabel = Localize("Edit skin texture");
-	const float DesiredDatabaseButtonWidth = maximum(110.0f, TextRender()->TextWidth(SkinControlLabelFontSize, pSkinDatabaseLabel, -1, -1.0f) + SkinControlLabelPadding);
-	const float DesiredDirectoryButtonWidth = maximum(110.0f, TextRender()->TextWidth(SkinControlLabelFontSize, pSkinDirectoryLabel, -1, -1.0f) + SkinControlLabelPadding);
-	const float DesiredEditTextureButtonWidth = maximum(125.0f, TextRender()->TextWidth(SkinControlLabelFontSize, pEditSkinTextureLabel, -1, -1.0f) + SkinControlLabelPadding);
-	const float DesiredLabelButtonWidth = DesiredDatabaseButtonWidth + DesiredDirectoryButtonWidth + DesiredEditTextureButtonWidth;
-	const float DesiredControlsWidth = DesiredLabelButtonWidth + SkinRefreshButtonWidth + SkinControlGap * 3.0f;
-	const bool SplitToolbarRows = MainView.w < SkinSearchPreferredWidth + SkinControlGap + DesiredControlsWidth;
-	CUIRect Toolbar, ControlsArea;
-	MainView.HSplitBottom(SplitToolbarRows ? SkinControlLineHeight * 2.0f + 5.0f : SkinControlLineHeight, &MainView, &Toolbar);
-	MainView.HSplitBottom(5.0f, &MainView, nullptr);
-	if(SplitToolbarRows)
-	{
-		Toolbar.HSplitTop(SkinControlLineHeight, &QuickSearch, &ControlsArea);
-		ControlsArea.HSplitTop(5.0f, nullptr, &ControlsArea);
-		ControlsArea.HSplitTop(SkinControlLineHeight, &ControlsArea, nullptr);
-	}
-	else
-	{
-		const float ControlsWidth = minimum(Toolbar.w, DesiredControlsWidth);
-		Toolbar.VSplitRight(ControlsWidth, &QuickSearch, &ControlsArea);
-		if(QuickSearch.w > SkinSearchPreferredWidth)
-		{
-			QuickSearch.VSplitLeft(SkinSearchPreferredWidth, &QuickSearch, nullptr);
-		}
-	}
-	const float AvailableLabelButtonWidth = maximum(0.0f, ControlsArea.w - SkinControlGap * 3.0f - SkinRefreshButtonWidth);
-	const float LabelButtonWidthScale = DesiredLabelButtonWidth > 0.0f ? minimum(1.0f, AvailableLabelButtonWidth / DesiredLabelButtonWidth) : 1.0f;
-	const float DatabaseButtonWidth = DesiredDatabaseButtonWidth * LabelButtonWidthScale;
-	const float DirectoryButtonWidth = DesiredDirectoryButtonWidth * LabelButtonWidthScale;
-	const float EditTextureButtonWidth = DesiredEditTextureButtonWidth * LabelButtonWidthScale;
-	auto SplitSkinToolbarLeft = [](CUIRect &Rect, float Width, CUIRect *pLeft) {
-		Rect.VSplitLeft(std::clamp(Width, 0.0f, Rect.w), pLeft, &Rect);
-	};
-	auto SplitSkinToolbarGap = [&](CUIRect &Rect) {
-		SplitSkinToolbarLeft(Rect, SkinControlGap, nullptr);
-	};
-	ControlsArea.VSplitRight(SkinRefreshButtonWidth, &ControlsArea, &RefreshButton);
-	ControlsArea.VSplitRight(SkinControlGap, &ControlsArea, nullptr);
-	SplitSkinToolbarLeft(ControlsArea, DatabaseButtonWidth, &DatabaseButton);
-	SplitSkinToolbarGap(ControlsArea);
-	SplitSkinToolbarLeft(ControlsArea, DirectoryButtonWidth, &DirectoryButton);
-	SplitSkinToolbarGap(ControlsArea);
-	SplitSkinToolbarLeft(ControlsArea, EditTextureButtonWidth, &EditTextureButton);
-
-	// Skin selector
-	static CListBox s_ListBox;
-	static std::vector<char> s_vQueueButtonIds;
-	static CLineInput s_SkinFilterInput(g_Config.m_ClSkinFilterString, sizeof(g_Config.m_ClSkinFilterString));
-	bool &s_SkinListScrollActiveLastFrame = gs_TeeSettingsPageState.m_SkinListScrollActiveLastFrame;
-	int &s_SkinListScrollCooldownFrames = gs_TeeSettingsPageState.m_SkinListScrollCooldownFrames;
-	int &s_SkinListPostScrollRecoveryFrames = gs_TeeSettingsPageState.m_SkinListPostScrollRecoveryFrames;
-	size_t &s_BackgroundRequestCursor = gs_TeeSettingsPageState.m_BackgroundRequestCursor;
-	if(m_SettingsRuntimeMetadata.m_LastPage != SETTINGS_TEE)
-	{
-		gs_TeeListDrainPerfSession.m_Active = false;
-		ResetTeeSettingsPageState();
-		m_SettingsHighPrioritySettled = false;
-	}
-	std::vector<CSkins::CSkinListEntry> &vSkinList = SkinList.Skins();
-	static std::vector<size_t> s_vVisibleSkinIndices;
-	++gs_TeeListPreviewCache.m_Frame;
-	s_vVisibleSkinIndices.clear();
-	if(s_vVisibleSkinIndices.capacity() < 32)
-		s_vVisibleSkinIndices.reserve(32);
-	std::vector<size_t> &vVisibleSkinIndices = s_vVisibleSkinIndices;
-	const SQmPerformanceMetrics &PerfSnapshot = GameClient()->m_QmMonitoring.Snapshot().m_Performance;
-	SSettingsAdaptiveBudgetInput TeeBudgetInput;
-	TeeBudgetInput.m_FrameId = Client()->PerfFrame();
-	str_copy(TeeBudgetInput.m_aOperation, SettingsPerfActiveOperation(), sizeof(TeeBudgetInput.m_aOperation));
-	str_copy(TeeBudgetInput.m_aPage, "settings:tee", sizeof(TeeBudgetInput.m_aPage));
-	str_copy(TeeBudgetInput.m_aTab, "none", sizeof(TeeBudgetInput.m_aTab));
-	str_copy(TeeBudgetInput.m_aContext, SettingsPerfContextName(), sizeof(TeeBudgetInput.m_aContext));
-	TeeBudgetInput.m_FrameMsAverage = PerfSnapshot.m_FrameTimeMs;
-	TeeBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeSpikeMs > 0.0f ? PerfSnapshot.m_FrameTimeSpikeMs : PerfSnapshot.m_FrameTimeMs;
-	TeeBudgetInput.m_TargetFrameMs = 8.333f;
-	TeeBudgetInput.m_ScrollActive = m_SettingsScrollActive || s_SkinListScrollCooldownFrames > 0;
-	TeeBudgetInput.m_JumpScrollActive = false;
-	TeeBudgetInput.m_PostScrollRecoveryFrames = s_SkinListPostScrollRecoveryFrames;
-	TeeBudgetInput.m_BackgroundBacklog = (int)vSkinList.size();
-	TeeBudgetInput.m_WindowActive = true;
-	const SSettingsAdaptiveBudgetOutput TeeSettingsFrameBudget = BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, "tee", TeeBudgetInput);
-	int VisibleVisualReadyCount = 0;
-	int VisibleSourceSettledCount = 0;
-	int VisibleBackgroundRequestedCount = 0;
-	int VisibleNonTerminalWaitingCount = 0;
-	int TotalSourceSettledCount = 0;
-	SResourcePreviewTelemetry TeePreviewTelemetry;
-	const int TeeTextureUploadTokens = TeeSettingsFrameBudget.m_TextureUploadTokens;
-	(void)TeeTextureUploadTokens;
-	int OldSelected = -1;
-	const auto PrescanStartTime = time_get_nanoseconds();
-	int PrescanItemsScanned = 0;
-	for(size_t i = 0; i < vSkinList.size(); ++i)
-	{
-		CSkins::CSkinListEntry &SkinListEntry = vSkinList[i];
-		if(!m_Dummy ? SkinListEntry.IsSelectedMain() : SkinListEntry.IsSelectedDummy())
-			OldSelected = (int)i;
-
-		const CSkins::CSkinContainer *pSkinContainer = SkinListEntry.SkinContainer();
-		if(pSkinContainer == nullptr)
-			continue;
-		++PrescanItemsScanned;
-
-		const auto State = pSkinContainer->State();
-		const bool SourceReady = State == CSkins::CSkinContainer::EState::LOADED;
-		const bool TerminalFailure = State == CSkins::CSkinContainer::EState::ERROR || State == CSkins::CSkinContainer::EState::NOT_FOUND;
-		if(SettingsSkinListEntrySourceSettled(SourceReady, TerminalFailure))
-			++TotalSourceSettledCount;
-	}
-	if(PerfDebugEnabled())
-	{
-		const double PrescanDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - PrescanStartTime).count();
-		if(QmPerfShouldLogDuration(PrescanDurationMs, false))
-		{
-			char aPayload[256];
-			str_format(aPayload, sizeof(aPayload),
-				"event=tee_skin_list_prescan items_total=%d items_scanned=%d selected_scan=%d ready_scan=%d dur_ms=%.3f full_list_ready=%d source_settled_count=%d",
-				(int)vSkinList.size(), PrescanItemsScanned, 1, 1, PrescanDurationMs,
-				!vSkinList.empty() && TotalSourceSettledCount == (int)vSkinList.size() ? 1 : 0,
-				TotalSourceSettledCount);
-			QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
-		}
-	}
-	s_vQueueButtonIds.resize(vSkinList.size());
-	const auto ListFrameStartTime = time_get_nanoseconds();
-	constexpr float TeeSkinListRowHeight = 50.0f;
-	constexpr int TeeSkinListItemsPerRow = 4;
-	s_ListBox.DoStart(TeeSkinListRowHeight, vSkinList.size(), TeeSkinListItemsPerRow, 2, OldSelected, &MainView);
-	if(m_SkinListScrollToSelected && OldSelected >= 0)
-	{
-		s_ListBox.ScrollToSelected();
-		m_SkinListScrollToSelected = false;
-	}
-	const SSettingsSkinListVisibleRange VisibleRange = SettingsSkinListVisibleRangeForScroll(
-		s_ListBox.ScrollOffsetY(),
-		s_ListBox.ViewHeight(),
-		TeeSkinListRowHeight,
-		TeeSkinListItemsPerRow,
-		(int)vSkinList.size(),
-		1);
-	int RowsIterated = 0;
-	int RowsRendered = 0;
-	const bool ShowSkinMetadata = g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata;
-	auto DoButtonSkinQueue = [&](const void *pButtonId, const void *pParentId, bool InQueue, bool Disabled, const CUIRect *pRect) {
-		if(InQueue || (pParentId != nullptr && Ui()->HotItem() == pParentId) || Ui()->HotItem() == pButtonId)
-		{
-			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-			const float Alpha = Ui()->HotItem() == pButtonId ? 0.2f : 0.0f;
-			ColorRGBA Color = InQueue ? ColorRGBA(0.2f, 0.8f, 0.4f, 0.8f + Alpha) : ColorRGBA(0.5f, 0.5f, 0.5f, 0.8f + Alpha);
-			if(Disabled && !InQueue)
-			{
-				Color = ColorRGBA(0.9f, 0.3f, 0.3f, 0.6f + Alpha);
-			}
-			TextRender()->TextColor(Color);
-			SLabelProperties Props;
-			Props.m_MaxWidth = pRect->w;
-			Ui()->DoLabel(pRect, InQueue ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, 12.0f, TEXTALIGN_MC, Props);
-			TextRender()->TextColor(TextRender()->DefaultTextColor());
-			TextRender()->SetRenderFlags(0);
-			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-		}
-		const bool Clicked = Ui()->DoButtonLogic(pButtonId, 0, pRect, BUTTONFLAG_LEFT);
-		return Clicked && !Disabled;
-	};
-	if(VisibleRange.m_FirstItem > 0)
-		s_ListBox.SkipItems(VisibleRange.m_FirstItem);
-	for(size_t i = (size_t)VisibleRange.m_FirstItem; i < (size_t)VisibleRange.m_EndItem; ++i)
-	{
-		CSkins::CSkinListEntry &SkinListEntry = vSkinList[i];
-		const bool RowStart = s_ListBox.ItemIndex() % s_ListBox.ItemsPerRow() == 0;
-		if(RowStart)
-			++RowsIterated;
-
-		const CSkins::CSkinContainer *pSkinContainer = vSkinList[i].SkinContainer();
-		if(pSkinContainer == nullptr)
-		{
-			s_ListBox.SkipItems(1);
-			continue;
-		}
-
-		const auto State = pSkinContainer->State();
-		const auto &EntryColorKey = SkinListEntry.ColorKey();
-		const bool EntryUseCustomColor = EntryColorKey.has_value() ? EntryColorKey->m_UseCustomColor : *pUseCustomColor != 0;
-		const int EntryColorBody = EntryColorKey.has_value() ? EntryColorKey->m_ColorBody : (int)*pColorBody;
-		const int EntryColorFeet = EntryColorKey.has_value() ? EntryColorKey->m_ColorFeet : (int)*pColorFeet;
-		const std::string PreviewCacheKey = SSettingsTeeListPreviewCache::Key(pSkinContainer->Name(), m_Dummy, EntryUseCustomColor, EntryColorBody, EntryColorFeet, *pEmote);
-		CManagedTeeRenderInfo *pCachedPreview = gs_TeeListPreviewCache.Find(PreviewCacheKey);
-		const bool SourceReady = State == CSkins::CSkinContainer::EState::LOADED;
-		const bool TerminalFailure = State == CSkins::CSkinContainer::EState::ERROR || State == CSkins::CSkinContainer::EState::NOT_FOUND;
-		const bool PreviewCacheReady = pCachedPreview != nullptr;
-		const bool EntryVisualReady = SettingsSkinListEntryVisualReady(SourceReady, TerminalFailure, PreviewCacheReady);
-		const bool EntrySourceSettled = SettingsSkinListEntrySourceSettled(SourceReady, TerminalFailure);
-		SResourcePreviewState TeeResourcePreviewState;
-		TeeResourcePreviewState.m_TextureReady = EntryVisualReady;
-		TeeResourcePreviewState.m_Failed = TerminalFailure;
-		const ESettingsResourcePreviewDrawResult TeePreviewDrawResult = SettingsResourcePreviewDrawResult(TeeResourcePreviewState);
-
-		const CListboxItem Item = s_ListBox.DoNextItem(SkinListEntry.ListItemId(), OldSelected >= 0 && (size_t)OldSelected == i);
-		if(!Item.m_Visible)
-		{
-			continue;
-		}
-		if(RowStart)
-			++RowsRendered;
-
-		vVisibleSkinIndices.push_back(i);
-		const bool EntryNonTerminalWaiting =
-			State == CSkins::CSkinContainer::EState::UNLOADED ||
-			State == CSkins::CSkinContainer::EState::BACKGROUND_REQUESTED ||
-			State == CSkins::CSkinContainer::EState::PENDING ||
-			State == CSkins::CSkinContainer::EState::LOADING;
-		if(EntryVisualReady)
-		{
-			++VisibleVisualReadyCount;
-			++TeePreviewTelemetry.m_ReadyTextureCount;
+			Toolbar.HSplitTop(SkinControlLineHeight, &QuickSearch, &ControlsArea);
+			ControlsArea.HSplitTop(5.0f, nullptr, &ControlsArea);
+			ControlsArea.HSplitTop(SkinControlLineHeight, &ControlsArea, nullptr);
 		}
 		else
 		{
-			++TeePreviewTelemetry.m_PlaceholderCount;
-			if(TeePreviewDrawResult == ESettingsResourcePreviewDrawResult::PLACEHOLDER)
-				++TeePreviewTelemetry.m_PreviewAdmissions;
+			const float ControlsWidth = minimum(Toolbar.w, DesiredControlsWidth);
+			Toolbar.VSplitRight(ControlsWidth, &QuickSearch, &ControlsArea);
+			if(QuickSearch.w > SkinSearchPreferredWidth)
+			{
+				QuickSearch.VSplitLeft(SkinSearchPreferredWidth, &QuickSearch, nullptr);
+			}
 		}
-		if(EntrySourceSettled)
-			++VisibleSourceSettledCount;
-		if(State == CSkins::CSkinContainer::EState::BACKGROUND_REQUESTED)
-			++VisibleBackgroundRequestedCount;
-		if(EntryNonTerminalWaiting)
-			++VisibleNonTerminalWaitingCount;
-		const CSkin *pSkin = State == CSkins::CSkinContainer::EState::LOADED ? pSkinContainer->Skin().get() : pDefaultSkin;
-		Item.m_Rect.VSplitLeft(60.0f, &Button, &Label);
+		const float AvailableLabelButtonWidth = maximum(0.0f, ControlsArea.w - SkinControlGap * 3.0f - SkinRefreshButtonWidth);
+		const float LabelButtonWidthScale = DesiredLabelButtonWidth > 0.0f ? minimum(1.0f, AvailableLabelButtonWidth / DesiredLabelButtonWidth) : 1.0f;
+		const float DatabaseButtonWidth = DesiredDatabaseButtonWidth * LabelButtonWidthScale;
+		const float DirectoryButtonWidth = DesiredDirectoryButtonWidth * LabelButtonWidthScale;
+		const float EditTextureButtonWidth = DesiredEditTextureButtonWidth * LabelButtonWidthScale;
+		auto SplitSkinToolbarLeft = [](CUIRect &Rect, float Width, CUIRect *pLeft) {
+			Rect.VSplitLeft(std::clamp(Width, 0.0f, Rect.w), pLeft, &Rect);
+		};
+		auto SplitSkinToolbarGap = [&](CUIRect &Rect) {
+			SplitSkinToolbarLeft(Rect, SkinControlGap, nullptr);
+		};
+		ControlsArea.VSplitRight(SkinRefreshButtonWidth, &ControlsArea, &RefreshButton);
+		ControlsArea.VSplitRight(SkinControlGap, &ControlsArea, nullptr);
+		SplitSkinToolbarLeft(ControlsArea, DatabaseButtonWidth, &DatabaseButton);
+		SplitSkinToolbarGap(ControlsArea);
+		SplitSkinToolbarLeft(ControlsArea, DirectoryButtonWidth, &DirectoryButton);
+		SplitSkinToolbarGap(ControlsArea);
+		SplitSkinToolbarLeft(ControlsArea, EditTextureButtonWidth, &EditTextureButton);
 
+		// Skin selector
+		static CListBox s_ListBox;
+		static std::vector<char> s_vQueueButtonIds;
+		static CLineInput s_SkinFilterInput(g_Config.m_ClSkinFilterString, sizeof(g_Config.m_ClSkinFilterString));
+		bool &s_SkinListScrollActiveLastFrame = gs_TeeSettingsPageState.m_SkinListScrollActiveLastFrame;
+		int &s_SkinListScrollCooldownFrames = gs_TeeSettingsPageState.m_SkinListScrollCooldownFrames;
+		int &s_SkinListPostScrollRecoveryFrames = gs_TeeSettingsPageState.m_SkinListPostScrollRecoveryFrames;
+		size_t &s_BackgroundRequestCursor = gs_TeeSettingsPageState.m_BackgroundRequestCursor;
+		if(m_SettingsRuntimeMetadata.m_LastPage != SETTINGS_TEE)
 		{
-			CTeeRenderInfo Info = pCachedPreview != nullptr ? pCachedPreview->TeeRenderInfo() : OwnSkinInfo;
-			if(pCachedPreview == nullptr)
+			gs_TeeListDrainPerfSession.m_Active = false;
+			ResetTeeSettingsPageState();
+			m_SettingsHighPrioritySettled = false;
+		}
+		std::vector<CSkins::CSkinListEntry> &vSkinList = SkinList.Skins();
+		static std::vector<size_t> s_vVisibleSkinIndices;
+		++gs_TeeListPreviewCache.m_Frame;
+		s_vVisibleSkinIndices.clear();
+		if(s_vVisibleSkinIndices.capacity() < 32)
+			s_vVisibleSkinIndices.reserve(32);
+		std::vector<size_t> &vVisibleSkinIndices = s_vVisibleSkinIndices;
+		const SQmPerformanceMetrics &PerfSnapshot = GameClient()->m_QmMonitoring.Snapshot().m_Performance;
+		SSettingsAdaptiveBudgetInput TeeBudgetInput;
+		TeeBudgetInput.m_FrameId = Client()->PerfFrame();
+		str_copy(TeeBudgetInput.m_aOperation, SettingsPerfActiveOperation(), sizeof(TeeBudgetInput.m_aOperation));
+		str_copy(TeeBudgetInput.m_aPage, "settings:tee", sizeof(TeeBudgetInput.m_aPage));
+		str_copy(TeeBudgetInput.m_aTab, "none", sizeof(TeeBudgetInput.m_aTab));
+		str_copy(TeeBudgetInput.m_aContext, SettingsPerfContextName(), sizeof(TeeBudgetInput.m_aContext));
+		TeeBudgetInput.m_FrameMsAverage = PerfSnapshot.m_FrameTimeMs;
+		TeeBudgetInput.m_FrameMsP95 = PerfSnapshot.m_FrameTimeSpikeMs > 0.0f ? PerfSnapshot.m_FrameTimeSpikeMs : PerfSnapshot.m_FrameTimeMs;
+		TeeBudgetInput.m_TargetFrameMs = 8.333f;
+		TeeBudgetInput.m_ScrollActive = m_SettingsScrollActive || s_SkinListScrollCooldownFrames > 0;
+		TeeBudgetInput.m_JumpScrollActive = false;
+		TeeBudgetInput.m_PostScrollRecoveryFrames = s_SkinListPostScrollRecoveryFrames;
+		TeeBudgetInput.m_BackgroundBacklog = (int)vSkinList.size();
+		TeeBudgetInput.m_WindowActive = true;
+		const SSettingsAdaptiveBudgetOutput TeeSettingsFrameBudget = BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer::SettingsText, "tee", TeeBudgetInput);
+		int VisibleVisualReadyCount = 0;
+		int VisibleSourceSettledCount = 0;
+		int VisibleBackgroundRequestedCount = 0;
+		int VisibleNonTerminalWaitingCount = 0;
+		int TotalSourceSettledCount = 0;
+		SResourcePreviewTelemetry TeePreviewTelemetry;
+		const int TeeTextureUploadTokens = TeeSettingsFrameBudget.m_TextureUploadTokens;
+		(void)TeeTextureUploadTokens;
+		int OldSelected = -1;
+		const auto PrescanStartTime = time_get_nanoseconds();
+		int PrescanItemsScanned = 0;
+		for(size_t i = 0; i < vSkinList.size(); ++i)
+		{
+			CSkins::CSkinListEntry &SkinListEntry = vSkinList[i];
+			if(!m_Dummy ? SkinListEntry.IsSelectedMain() : SkinListEntry.IsSelectedDummy())
+				OldSelected = (int)i;
+
+			const CSkins::CSkinContainer *pSkinContainer = SkinListEntry.SkinContainer();
+			if(pSkinContainer == nullptr)
+				continue;
+			++PrescanItemsScanned;
+
+			const auto State = pSkinContainer->State();
+			const bool SourceReady = State == CSkins::CSkinContainer::EState::LOADED;
+			const bool TerminalFailure = State == CSkins::CSkinContainer::EState::ERROR || State == CSkins::CSkinContainer::EState::NOT_FOUND;
+			if(SettingsSkinListEntrySourceSettled(SourceReady, TerminalFailure))
+				++TotalSourceSettledCount;
+		}
+		if(PerfDebugEnabled())
+		{
+			const double PrescanDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - PrescanStartTime).count();
+			if(QmPerfShouldLogDuration(PrescanDurationMs, false))
 			{
-				Info.Apply(pSkin);
-				Info.ApplyColors(EntryUseCustomColor, EntryColorBody, EntryColorFeet);
-			}
-			Info.m_Size = 50.0f;
-			float PreviewMinX, PreviewMinY, PreviewMaxX, PreviewMaxY;
-			GetSettingsTeePreviewBounds(CAnimState::GetIdle(), Info, PreviewMinX, PreviewMinY, PreviewMaxX, PreviewMaxY);
-			Info.m_Size = SettingsSkinPreviewSize(Item.m_Rect.h, Button.w, 50.0f, PreviewMaxX - PreviewMinX, PreviewMaxY - PreviewMinY);
-			vec2 OffsetToMid;
-			CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &Info, OffsetToMid);
-			const float PreviewScale = Info.m_Size / 50.0f;
-			const float PreviewCenterOffsetX = SettingsSkinPreviewCenterOffset(PreviewMinX, PreviewMaxX) * PreviewScale;
-			CUIRect TeeClip = Button;
-			TeeClip.Margin(3.0f, &TeeClip);
-			const vec2 TeeRenderPos = vec2(TeeClip.x + TeeClip.w / 2.0f + PreviewCenterOffsetX, TeeClip.y + TeeClip.h / 2.0f + OffsetToMid.y);
-			Ui()->ClipEnable(&TeeClip);
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, *pEmote, vec2(1.0f, 0.0f), TeeRenderPos);
-			Ui()->ClipDisable();
-			if(SourceReady && pCachedPreview == nullptr)
-			{
-				CSkinDescriptor SkinDescriptor;
-				SkinDescriptor.m_Flags = CSkinDescriptor::FLAG_SIX;
-				str_copy(SkinDescriptor.m_aSkinName, pSkinContainer->Name(), sizeof(SkinDescriptor.m_aSkinName));
-				std::shared_ptr<CManagedTeeRenderInfo> pManagedPreview = GameClient()->CreateManagedTeeRenderInfo(Info, SkinDescriptor);
-				pManagedPreview->TeeRenderInfo().ApplyColors(EntryUseCustomColor, EntryColorBody, EntryColorFeet);
-				gs_TeeListPreviewCache.Remember(PreviewCacheKey, pManagedPreview);
+				char aPayload[256];
+				str_format(aPayload, sizeof(aPayload),
+					"event=tee_skin_list_prescan items_total=%d items_scanned=%d selected_scan=%d ready_scan=%d dur_ms=%.3f full_list_ready=%d source_settled_count=%d",
+					(int)vSkinList.size(), PrescanItemsScanned, 1, 1, PrescanDurationMs,
+					!vSkinList.empty() && TotalSourceSettledCount == (int)vSkinList.size() ? 1 : 0,
+					TotalSourceSettledCount);
+				QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
 			}
 		}
+		s_vQueueButtonIds.resize(vSkinList.size());
+		const auto ListFrameStartTime = time_get_nanoseconds();
+		constexpr float TeeSkinListRowHeight = 50.0f;
+		constexpr int TeeSkinListItemsPerRow = 4;
+		s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+		s_ListBox.DoStart(TeeSkinListRowHeight, vSkinList.size(), TeeSkinListItemsPerRow, 2, OldSelected, &MainView);
+		if(m_SkinListScrollToSelected && OldSelected >= 0)
 		{
-			CUIRect LabelContent = Label;
-			if(EntryColorKey.has_value())
+			s_ListBox.ScrollToSelected();
+			m_SkinListScrollToSelected = false;
+		}
+		const SSettingsSkinListVisibleRange VisibleRange = SettingsSkinListVisibleRangeForScroll(
+			s_ListBox.ScrollOffsetY(),
+			s_ListBox.ViewHeight(),
+			TeeSkinListRowHeight,
+			TeeSkinListItemsPerRow,
+			(int)vSkinList.size(),
+			1);
+		int RowsIterated = 0;
+		int RowsRendered = 0;
+		const bool ShowSkinMetadata = g_Config.m_QmSkinSortMode == 1 && g_Config.m_QmSkinShowMetadata;
+		auto DoButtonSkinQueue = [&](const void *pButtonId, const void *pParentId, bool InQueue, bool Disabled, const CUIRect *pRect) {
+			if(InQueue || (pParentId != nullptr && Ui()->HotItem() == pParentId) || Ui()->HotItem() == pButtonId)
 			{
-				CUIRect Swatches, BodySwatch, FeetSwatch;
-				LabelContent.VSplitLeft(20.0f, &Swatches, &LabelContent);
-				Swatches.HMargin((Swatches.h - 16.0f) / 2.0f, &Swatches);
-				Swatches.VSplitLeft(8.0f, &BodySwatch, &Swatches);
-				Swatches.VSplitLeft(2.0f, nullptr, &Swatches);
-				Swatches.VSplitLeft(8.0f, &FeetSwatch, nullptr);
-				const ColorRGBA BodyColor = EntryUseCustomColor ? color_cast<ColorRGBA>(ColorHSLA(EntryColorBody).UnclampLighting(ColorHSLA::DARKEST_LGT)) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f);
-				const ColorRGBA FeetColor = EntryUseCustomColor ? color_cast<ColorRGBA>(ColorHSLA(EntryColorFeet).UnclampLighting(ColorHSLA::DARKEST_LGT)) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f);
-				BodySwatch.Draw(BodyColor, IGraphics::CORNER_ALL, 2.0f);
-				FeetSwatch.Draw(FeetColor, IGraphics::CORNER_ALL, 2.0f);
-			}
-			SLabelProperties Props;
-			Props.m_MaxWidth = LabelContent.w - 5.0f;
-			const auto &NameMatch = SkinListEntry.NameMatch();
-			if(NameMatch.has_value())
-			{
-				const auto [MatchStart, MatchLength] = NameMatch.value();
-				Props.m_vColorSplits.emplace_back(MatchStart, MatchLength, ColorRGBA(0.4f, 0.4f, 1.0f, 1.0f));
-			}
-			char aSkinMetadata[96] = "";
-			const int OfficialReleaseDate = pSkinContainer->OfficialReleaseDate();
-			const char *pOfficialCreator = pSkinContainer->OfficialCreator();
-			if(ShowSkinMetadata && (OfficialReleaseDate > 0 || pOfficialCreator[0] != '\0'))
-			{
-				char aDate[16] = "";
-				if(OfficialReleaseDate > 0)
+				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+				const float Alpha = Ui()->HotItem() == pButtonId ? 0.2f : 0.0f;
+				ColorRGBA Color = InQueue ? ColorRGBA(0.2f, 0.8f, 0.4f, 0.8f + Alpha) : ColorRGBA(0.5f, 0.5f, 0.5f, 0.8f + Alpha);
+				if(Disabled && !InQueue)
 				{
-					str_format(aDate, sizeof(aDate), "%04d-%02d-%02d", OfficialReleaseDate / 10000, (OfficialReleaseDate / 100) % 100, OfficialReleaseDate % 100);
+					Color = ColorRGBA(0.9f, 0.3f, 0.3f, 0.6f + Alpha);
 				}
-				if(aDate[0] != '\0' && pOfficialCreator[0] != '\0')
-					str_format(aSkinMetadata, sizeof(aSkinMetadata), "%s - %s", aDate, pOfficialCreator);
-				else if(aDate[0] != '\0')
-					str_copy(aSkinMetadata, aDate, sizeof(aSkinMetadata));
-				else
-					str_copy(aSkinMetadata, pOfficialCreator, sizeof(aSkinMetadata));
-			}
-			if(aSkinMetadata[0] != '\0')
-			{
-				CUIRect NameLine, MetadataLine;
-				LabelContent.HSplitTop(25.0f, &NameLine, &MetadataLine);
-				Ui()->DoLabel(&NameLine, pSkinContainer->Name(), 12.0f, TEXTALIGN_ML, Props);
-				MetadataLine.HSplitTop(16.0f, &MetadataLine, nullptr);
-				SLabelProperties MetadataProps;
-				MetadataProps.m_MaxWidth = MetadataLine.w - 5.0f;
-				MetadataProps.m_DisallowNewline = true;
-				MetadataProps.m_StopAtEnd = true;
-				TextRender()->TextColor(ColorRGBA(0.8f, 0.8f, 0.8f, 0.8f));
-				Ui()->DoLabel(&MetadataLine, aSkinMetadata, 9.0f, TEXTALIGN_ML, MetadataProps);
+				TextRender()->TextColor(Color);
+				SLabelProperties Props;
+				Props.m_MaxWidth = pRect->w;
+				Ui()->DoLabel(pRect, InQueue ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, 12.0f, TEXTALIGN_MC, Props);
 				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				TextRender()->SetRenderFlags(0);
+				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+			}
+			const bool Clicked = Ui()->DoButtonLogic(pButtonId, 0, pRect, BUTTONFLAG_LEFT);
+			return Clicked && !Disabled;
+		};
+		if(VisibleRange.m_FirstItem > 0)
+			s_ListBox.SkipItems(VisibleRange.m_FirstItem);
+		for(size_t i = (size_t)VisibleRange.m_FirstItem; i < (size_t)VisibleRange.m_EndItem; ++i)
+		{
+			CSkins::CSkinListEntry &SkinListEntry = vSkinList[i];
+			const bool RowStart = s_ListBox.ItemIndex() % s_ListBox.ItemsPerRow() == 0;
+			if(RowStart)
+				++RowsIterated;
+
+			const CSkins::CSkinContainer *pSkinContainer = vSkinList[i].SkinContainer();
+			if(pSkinContainer == nullptr)
+			{
+				s_ListBox.SkipItems(1);
+				continue;
+			}
+
+			const auto State = pSkinContainer->State();
+			const auto &EntryColorKey = SkinListEntry.ColorKey();
+			const bool EntryUseCustomColor = EntryColorKey.has_value() ? EntryColorKey->m_UseCustomColor : *pUseCustomColor != 0;
+			const int EntryColorBody = EntryColorKey.has_value() ? EntryColorKey->m_ColorBody : (int)*pColorBody;
+			const int EntryColorFeet = EntryColorKey.has_value() ? EntryColorKey->m_ColorFeet : (int)*pColorFeet;
+			const std::string PreviewCacheKey = SSettingsTeeListPreviewCache::Key(pSkinContainer->Name(), m_Dummy, EntryUseCustomColor, EntryColorBody, EntryColorFeet, *pEmote);
+			CManagedTeeRenderInfo *pCachedPreview = gs_TeeListPreviewCache.Find(PreviewCacheKey);
+			const bool SourceReady = State == CSkins::CSkinContainer::EState::LOADED;
+			const bool TerminalFailure = State == CSkins::CSkinContainer::EState::ERROR || State == CSkins::CSkinContainer::EState::NOT_FOUND;
+			const bool PreviewCacheReady = pCachedPreview != nullptr;
+			const bool EntryVisualReady = SettingsSkinListEntryVisualReady(SourceReady, TerminalFailure, PreviewCacheReady);
+			const bool EntrySourceSettled = SettingsSkinListEntrySourceSettled(SourceReady, TerminalFailure);
+			SResourcePreviewState TeeResourcePreviewState;
+			TeeResourcePreviewState.m_TextureReady = EntryVisualReady;
+			TeeResourcePreviewState.m_Failed = TerminalFailure;
+			const ESettingsResourcePreviewDrawResult TeePreviewDrawResult = SettingsResourcePreviewDrawResult(TeeResourcePreviewState);
+
+			const CListboxItem Item = s_ListBox.DoNextItem(SkinListEntry.ListItemId(), OldSelected >= 0 && (size_t)OldSelected == i);
+			if(!Item.m_Visible)
+			{
+				continue;
+			}
+			if(RowStart)
+				++RowsRendered;
+
+			vVisibleSkinIndices.push_back(i);
+			const bool EntryNonTerminalWaiting =
+				State == CSkins::CSkinContainer::EState::UNLOADED ||
+				State == CSkins::CSkinContainer::EState::BACKGROUND_REQUESTED ||
+				State == CSkins::CSkinContainer::EState::PENDING ||
+				State == CSkins::CSkinContainer::EState::LOADING;
+			if(EntryVisualReady)
+			{
+				++VisibleVisualReadyCount;
+				++TeePreviewTelemetry.m_ReadyTextureCount;
 			}
 			else
 			{
-				Ui()->DoLabel(&LabelContent, pSkinContainer->Name(), 12.0f, TEXTALIGN_ML, Props);
+				++TeePreviewTelemetry.m_PlaceholderCount;
+				if(TeePreviewDrawResult == ESettingsResourcePreviewDrawResult::PLACEHOLDER)
+					++TeePreviewTelemetry.m_PreviewAdmissions;
 			}
-		}
+			if(EntrySourceSettled)
+				++VisibleSourceSettledCount;
+			if(State == CSkins::CSkinContainer::EState::BACKGROUND_REQUESTED)
+				++VisibleBackgroundRequestedCount;
+			if(EntryNonTerminalWaiting)
+				++VisibleNonTerminalWaitingCount;
+			const CSkin *pSkin = State == CSkins::CSkinContainer::EState::LOADED ? pSkinContainer->Skin().get() : pDefaultSkin;
+			Item.m_Rect.VSplitLeft(60.0f, &Button, &Label);
 
-		if(g_Config.m_Debug)
-		{
-			Graphics()->TextureClear();
-			Graphics()->QuadsBegin();
-			Graphics()->SetColor(EntryUseCustomColor ? color_cast<ColorRGBA>(ColorHSLA(EntryColorBody).UnclampLighting(ColorHSLA::DARKEST_LGT)) : pSkin->m_BloodColor);
-			IGraphics::CQuadItem QuadItem(Label.x, Label.y, 12.0f, 12.0f);
-			Graphics()->QuadsDrawTL(&QuadItem, 1);
-			Graphics()->QuadsEnd();
-		}
-
-		// render skin favorite icon + queue icon
-		{
-			CUIRect IconRow, FavIcon, QueueIcon;
-			Item.m_Rect.HSplitTop(20.0f, &IconRow, nullptr);
-			IconRow.VSplitRight(20.0f, &IconRow, &FavIcon);
-			IconRow.VSplitRight(2.0f, &IconRow, nullptr);
-			IconRow.VSplitRight(20.0f, &IconRow, &QueueIcon);
-			const bool InQueue = GameClient()->m_Skins.IsInSkinQueue(pSkinContainer->Name(), EntryUseCustomColor, EntryColorBody, EntryColorFeet, QueueDummy);
-			if(DoButtonSkinQueue(&s_vQueueButtonIds[i], SkinListEntry.ListItemId(), InQueue, false, &QueueIcon))
 			{
-				if(InQueue)
+				CTeeRenderInfo Info = pCachedPreview != nullptr ? pCachedPreview->TeeRenderInfo() : OwnSkinInfo;
+				if(pCachedPreview == nullptr)
 				{
-					GameClient()->m_Skins.RemoveActiveSkinQueue(pSkinContainer->Name(), EntryUseCustomColor, EntryColorBody, EntryColorFeet, QueueDummy);
+					Info.Apply(pSkin);
+					Info.ApplyColors(EntryUseCustomColor, EntryColorBody, EntryColorFeet);
+				}
+				Info.m_Size = 50.0f;
+				float PreviewMinX, PreviewMinY, PreviewMaxX, PreviewMaxY;
+				GetSettingsTeePreviewBounds(CAnimState::GetIdle(), Info, PreviewMinX, PreviewMinY, PreviewMaxX, PreviewMaxY);
+				Info.m_Size = SettingsSkinPreviewSize(Item.m_Rect.h, Button.w, 50.0f, PreviewMaxX - PreviewMinX, PreviewMaxY - PreviewMinY);
+				vec2 OffsetToMid;
+				CRenderTools::GetRenderTeeOffsetToRenderedTee(CAnimState::GetIdle(), &Info, OffsetToMid);
+				const float PreviewScale = Info.m_Size / 50.0f;
+				const float PreviewCenterOffsetX = SettingsSkinPreviewCenterOffset(PreviewMinX, PreviewMaxX) * PreviewScale;
+				CUIRect TeeClip = Button;
+				TeeClip.Margin(3.0f, &TeeClip);
+				const vec2 TeeRenderPos = vec2(TeeClip.x + TeeClip.w / 2.0f + PreviewCenterOffsetX, TeeClip.y + TeeClip.h / 2.0f + OffsetToMid.y);
+				Ui()->ClipEnable(&TeeClip);
+				RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, *pEmote, vec2(1.0f, 0.0f), TeeRenderPos);
+				Ui()->ClipDisable();
+				if(SourceReady && pCachedPreview == nullptr)
+				{
+					CSkinDescriptor SkinDescriptor;
+					SkinDescriptor.m_Flags = CSkinDescriptor::FLAG_SIX;
+					str_copy(SkinDescriptor.m_aSkinName, pSkinContainer->Name(), sizeof(SkinDescriptor.m_aSkinName));
+					std::shared_ptr<CManagedTeeRenderInfo> pManagedPreview = GameClient()->CreateManagedTeeRenderInfo(Info, SkinDescriptor);
+					pManagedPreview->TeeRenderInfo().ApplyColors(EntryUseCustomColor, EntryColorBody, EntryColorFeet);
+					gs_TeeListPreviewCache.Remember(PreviewCacheKey, pManagedPreview);
+				}
+			}
+			{
+				CUIRect LabelContent = Label;
+				if(EntryColorKey.has_value())
+				{
+					CUIRect Swatches, BodySwatch, FeetSwatch;
+					LabelContent.VSplitLeft(20.0f, &Swatches, &LabelContent);
+					Swatches.HMargin((Swatches.h - 16.0f) / 2.0f, &Swatches);
+					Swatches.VSplitLeft(8.0f, &BodySwatch, &Swatches);
+					Swatches.VSplitLeft(2.0f, nullptr, &Swatches);
+					Swatches.VSplitLeft(8.0f, &FeetSwatch, nullptr);
+					const ColorRGBA BodyColor = EntryUseCustomColor ? color_cast<ColorRGBA>(ColorHSLA(EntryColorBody).UnclampLighting(ColorHSLA::DARKEST_LGT)) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f);
+					const ColorRGBA FeetColor = EntryUseCustomColor ? color_cast<ColorRGBA>(ColorHSLA(EntryColorFeet).UnclampLighting(ColorHSLA::DARKEST_LGT)) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.45f);
+					BodySwatch.Draw(BodyColor, IGraphics::CORNER_ALL, 2.0f);
+					FeetSwatch.Draw(FeetColor, IGraphics::CORNER_ALL, 2.0f);
+				}
+				SLabelProperties Props;
+				Props.m_MaxWidth = LabelContent.w - 5.0f;
+				const auto &NameMatch = SkinListEntry.NameMatch();
+				if(NameMatch.has_value())
+				{
+					const auto [MatchStart, MatchLength] = NameMatch.value();
+					Props.m_vColorSplits.emplace_back(MatchStart, MatchLength, ColorRGBA(0.4f, 0.4f, 1.0f, 1.0f));
+				}
+				char aSkinMetadata[96] = "";
+				const int OfficialReleaseDate = pSkinContainer->OfficialReleaseDate();
+				const char *pOfficialCreator = pSkinContainer->OfficialCreator();
+				if(ShowSkinMetadata && (OfficialReleaseDate > 0 || pOfficialCreator[0] != '\0'))
+				{
+					char aDate[16] = "";
+					if(OfficialReleaseDate > 0)
+					{
+						str_format(aDate, sizeof(aDate), "%04d-%02d-%02d", OfficialReleaseDate / 10000, (OfficialReleaseDate / 100) % 100, OfficialReleaseDate % 100);
+					}
+					if(aDate[0] != '\0' && pOfficialCreator[0] != '\0')
+						str_format(aSkinMetadata, sizeof(aSkinMetadata), "%s - %s", aDate, pOfficialCreator);
+					else if(aDate[0] != '\0')
+						str_copy(aSkinMetadata, aDate, sizeof(aSkinMetadata));
+					else
+						str_copy(aSkinMetadata, pOfficialCreator, sizeof(aSkinMetadata));
+				}
+				if(aSkinMetadata[0] != '\0')
+				{
+					CUIRect NameLine, MetadataLine;
+					LabelContent.HSplitTop(25.0f, &NameLine, &MetadataLine);
+					Ui()->DoLabel(&NameLine, pSkinContainer->Name(), 12.0f, TEXTALIGN_ML, Props);
+					MetadataLine.HSplitTop(16.0f, &MetadataLine, nullptr);
+					SLabelProperties MetadataProps;
+					MetadataProps.m_MaxWidth = MetadataLine.w - 5.0f;
+					MetadataProps.m_DisallowNewline = true;
+					MetadataProps.m_StopAtEnd = true;
+					TextRender()->TextColor(ColorRGBA(0.8f, 0.8f, 0.8f, 0.8f));
+					Ui()->DoLabel(&MetadataLine, aSkinMetadata, 9.0f, TEXTALIGN_ML, MetadataProps);
+					TextRender()->TextColor(TextRender()->DefaultTextColor());
 				}
 				else
 				{
-					GameClient()->m_Skins.AddActiveSkinQueue(pSkinContainer->Name(), EntryUseCustomColor, EntryColorBody, EntryColorFeet, QueueDummy);
+					Ui()->DoLabel(&LabelContent, pSkinContainer->Name(), 12.0f, TEXTALIGN_ML, Props);
 				}
 			}
-			const char *pQueueTooltip = InQueue ? Localize("Remove from queue") : Localize("Add to queue");
-			GameClient()->m_Tooltips.DoToolTip(&s_vQueueButtonIds[i], &QueueIcon, pQueueTooltip);
 
-			if(DoButton_Favorite(SkinListEntry.FavoriteButtonId(), SkinListEntry.ListItemId(), SkinListEntry.IsFavorite(), &FavIcon))
+			if(g_Config.m_Debug)
 			{
-				if(SkinListEntry.IsFavorite())
-				{
-					GameClient()->m_Skins.RemoveFavorite(pSkinContainer->Name());
-				}
-				else
-				{
-					GameClient()->m_Skins.AddFavorite(pSkinContainer->Name());
-				}
+				Graphics()->TextureClear();
+				Graphics()->QuadsBegin();
+				Graphics()->SetColor(EntryUseCustomColor ? color_cast<ColorRGBA>(ColorHSLA(EntryColorBody).UnclampLighting(ColorHSLA::DARKEST_LGT)) : pSkin->m_BloodColor);
+				IGraphics::CQuadItem QuadItem(Label.x, Label.y, 12.0f, 12.0f);
+				Graphics()->QuadsDrawTL(&QuadItem, 1);
+				Graphics()->QuadsEnd();
 			}
-		}
 
-		RenderSkinStatus(Item.m_Rect, pSkinContainer, SkinListEntry.ErrorTooltipId(), PreviewCacheReady);
-	}
-	const int TailItems = (int)vSkinList.size() - VisibleRange.m_EndItem;
-	if(TailItems > 0)
-		s_ListBox.SkipItems(TailItems);
-	for(auto It = vVisibleSkinIndices.rbegin(); It != vVisibleSkinIndices.rend(); ++It)
-	{
-		vSkinList[*It].RequestLoad(ESettingsResourcePriority::VISIBLE);
-	}
-	const bool SkinListScrollInteraction = m_SettingsScrollActive || s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating() || s_SkinListScrollActiveLastFrame;
-	const int PreviousSkinListScrollCooldownFrames = s_SkinListScrollCooldownFrames;
-	s_SkinListScrollCooldownFrames = SettingsScrollInteractionCooldown(SkinListScrollInteraction, s_SkinListScrollCooldownFrames, 3);
-	s_SkinListPostScrollRecoveryFrames = SettingsScrollInteractionRecovery(
-		SkinListScrollInteraction, PreviousSkinListScrollCooldownFrames, s_SkinListScrollCooldownFrames, s_SkinListPostScrollRecoveryFrames, 2);
-	m_SettingsPostScrollRecoveryFrames = s_SkinListPostScrollRecoveryFrames;
-	const bool RequestWindowScrollBlocked = SkinListScrollInteraction || s_SkinListScrollCooldownFrames > 0;
-	SSettingsResourceFrameContext FrameContext = SettingsBuildFrameContext(RequestWindowScrollBlocked, false, s_SkinListPostScrollRecoveryFrames);
-	const bool VisibleSourceSettled = VisibleSourceSettledCount == (int)vVisibleSkinIndices.size();
-	m_SettingsHighPrioritySettled = VisibleSourceSettled;
-	FrameContext.m_HighPrioritySettled = VisibleSourceSettled;
-	const auto &Throughput = GameClient()->m_Skins.SettingsThroughputControllerOutput();
-	const bool BackgroundDrainActive = Throughput.m_BackgroundDrainActive;
-	const int CountFuseLimit = Throughput.m_CountFuseLimit;
-	const auto AdmissionTelemetry = GameClient()->m_Skins.SettingsSourceAdmissionTelemetry();
-	const auto SkinStatsBeforeBackgroundRequest = GameClient()->m_Skins.LoadingStats();
-	const int DefaultBackgroundRequestBudget = Throughput.m_BackgroundRequestBudget;
-	const int RecentLoadedDelta = gs_TeeListDrainPerfSession.m_Active ? (int)(GameClient()->m_Skins.SettingsSourceLoadsCompleted() - gs_TeeListDrainPerfSession.m_LastLoads) : 0;
-	const auto BackgroundBudgetDecision = SettingsSkinBackgroundRequestBudgetDecision({
-		DefaultBackgroundRequestBudget,
-		(int)SkinStatsBeforeBackgroundRequest.m_NumPending,
-		(int)SkinStatsBeforeBackgroundRequest.m_NumLoading,
-		(int)SkinStatsBeforeBackgroundRequest.m_NumBackgroundRequested,
-		CountFuseLimit,
-		Throughput.m_VisibleReserve,
-		RecentLoadedDelta,
-		AdmissionTelemetry.m_AdmittedDelta,
-		BackgroundDrainActive,
-	});
-	const int BackgroundRequestBudget = BackgroundBudgetDecision.m_RequestBudget;
-	gs_TeeSettingsPageState.m_LastRequestBudgetActual = BackgroundRequestBudget;
-	gs_TeeSettingsPageState.m_LastRequestBudgetBlockReason = BackgroundBudgetDecision.m_BlockReason;
-	int BackgroundRequestsIssued = 0;
-	int BackgroundScanItemsScanned = 0;
-	int BackgroundScanSkippedVisible = 0;
-	const char *pBackgroundScanBlockReason = "none";
-	const auto BackgroundScanStartTime = time_get_nanoseconds();
-	if(gs_TeeSettingsPageState.m_BackgroundRequestScanListSize != (int)vSkinList.size() || !VisibleSourceSettled)
-	{
-		gs_TeeSettingsPageState.m_BackgroundRequestScanComplete = false;
-		gs_TeeSettingsPageState.m_BackgroundRequestScanListSize = (int)vSkinList.size();
-	}
-	if(!VisibleSourceSettled)
-	{
-		pBackgroundScanBlockReason = "visible_source_unsettled";
-	}
-	else if(BackgroundRequestBudget <= 0)
-	{
-		pBackgroundScanBlockReason = SettingsSkinBackgroundRequestBlockReasonName(BackgroundBudgetDecision.m_BlockReason);
-	}
-	else if(gs_TeeSettingsPageState.m_BackgroundRequestScanComplete)
-	{
-		pBackgroundScanBlockReason = "scan_complete";
-	}
-	if(VisibleSourceSettled && BackgroundRequestBudget > 0 && !vSkinList.empty() && !gs_TeeSettingsPageState.m_BackgroundRequestScanComplete)
-	{
-		s_BackgroundRequestCursor %= vSkinList.size();
-		for(size_t Attempts = 0; Attempts < vSkinList.size() && BackgroundRequestsIssued < BackgroundRequestBudget; ++Attempts)
-		{
-			const size_t BackgroundIndex = (s_BackgroundRequestCursor + Attempts) % vSkinList.size();
-			++BackgroundScanItemsScanned;
-			if(std::binary_search(vVisibleSkinIndices.begin(), vVisibleSkinIndices.end(), BackgroundIndex))
+			// render skin favorite icon + queue icon
 			{
-				++BackgroundScanSkippedVisible;
-				continue;
+				CUIRect IconRow, FavIcon, QueueIcon;
+				Item.m_Rect.HSplitTop(20.0f, &IconRow, nullptr);
+				IconRow.VSplitRight(20.0f, &IconRow, &FavIcon);
+				IconRow.VSplitRight(2.0f, &IconRow, nullptr);
+				IconRow.VSplitRight(20.0f, &IconRow, &QueueIcon);
+				const bool InQueue = GameClient()->m_Skins.IsInSkinQueue(pSkinContainer->Name(), EntryUseCustomColor, EntryColorBody, EntryColorFeet, QueueDummy);
+				if(DoButtonSkinQueue(&s_vQueueButtonIds[i], SkinListEntry.ListItemId(), InQueue, false, &QueueIcon))
+				{
+					if(InQueue)
+					{
+						GameClient()->m_Skins.RemoveActiveSkinQueue(pSkinContainer->Name(), EntryUseCustomColor, EntryColorBody, EntryColorFeet, QueueDummy);
+					}
+					else
+					{
+						GameClient()->m_Skins.AddActiveSkinQueue(pSkinContainer->Name(), EntryUseCustomColor, EntryColorBody, EntryColorFeet, QueueDummy);
+					}
+				}
+				const char *pQueueTooltip = InQueue ? Localize("Remove from queue") : Localize("Add to queue");
+				GameClient()->m_Tooltips.DoToolTip(&s_vQueueButtonIds[i], &QueueIcon, pQueueTooltip);
+
+				if(DoButton_Favorite(SkinListEntry.FavoriteButtonId(), SkinListEntry.ListItemId(), SkinListEntry.IsFavorite(), &FavIcon))
+				{
+					if(SkinListEntry.IsFavorite())
+					{
+						GameClient()->m_Skins.RemoveFavorite(pSkinContainer->Name());
+					}
+					else
+					{
+						GameClient()->m_Skins.AddFavorite(pSkinContainer->Name());
+					}
+				}
 			}
 
-			const CSkins::CSkinContainer *pBackgroundContainer = vSkinList[BackgroundIndex].SkinContainer();
-			if(pBackgroundContainer == nullptr || pBackgroundContainer->State() != CSkins::CSkinContainer::EState::UNLOADED)
-				continue;
-
-			vSkinList[BackgroundIndex].RequestLoad(ESettingsResourcePriority::BACKGROUND);
-			++BackgroundRequestsIssued;
-			s_BackgroundRequestCursor = (BackgroundIndex + 1) % vSkinList.size();
+			RenderSkinStatus(Item.m_Rect, pSkinContainer, SkinListEntry.ErrorTooltipId(), PreviewCacheReady);
 		}
-		if(BackgroundScanItemsScanned >= (int)vSkinList.size())
+		const int TailItems = (int)vSkinList.size() - VisibleRange.m_EndItem;
+		if(TailItems > 0)
+			s_ListBox.SkipItems(TailItems);
+		for(auto It = vVisibleSkinIndices.rbegin(); It != vVisibleSkinIndices.rend(); ++It)
 		{
-			gs_TeeSettingsPageState.m_BackgroundRequestScanComplete = true;
+			vSkinList[*It].RequestLoad(ESettingsResourcePriority::VISIBLE);
+		}
+		const bool SkinListScrollInteraction = m_SettingsScrollActive || s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating() || s_SkinListScrollActiveLastFrame;
+		const int PreviousSkinListScrollCooldownFrames = s_SkinListScrollCooldownFrames;
+		s_SkinListScrollCooldownFrames = SettingsScrollInteractionCooldown(SkinListScrollInteraction, s_SkinListScrollCooldownFrames, 3);
+		s_SkinListPostScrollRecoveryFrames = SettingsScrollInteractionRecovery(
+			SkinListScrollInteraction, PreviousSkinListScrollCooldownFrames, s_SkinListScrollCooldownFrames, s_SkinListPostScrollRecoveryFrames, 2);
+		m_SettingsPostScrollRecoveryFrames = s_SkinListPostScrollRecoveryFrames;
+		const bool RequestWindowScrollBlocked = SkinListScrollInteraction || s_SkinListScrollCooldownFrames > 0;
+		SSettingsResourceFrameContext FrameContext = SettingsBuildFrameContext(RequestWindowScrollBlocked, false, s_SkinListPostScrollRecoveryFrames);
+		const bool VisibleSourceSettled = VisibleSourceSettledCount == (int)vVisibleSkinIndices.size();
+		m_SettingsHighPrioritySettled = VisibleSourceSettled;
+		FrameContext.m_HighPrioritySettled = VisibleSourceSettled;
+		const auto &Throughput = GameClient()->m_Skins.SettingsThroughputControllerOutput();
+		const bool BackgroundDrainActive = Throughput.m_BackgroundDrainActive;
+		const int CountFuseLimit = Throughput.m_CountFuseLimit;
+		const auto AdmissionTelemetry = GameClient()->m_Skins.SettingsSourceAdmissionTelemetry();
+		const auto SkinStatsBeforeBackgroundRequest = GameClient()->m_Skins.LoadingStats();
+		const int DefaultBackgroundRequestBudget = Throughput.m_BackgroundRequestBudget;
+		const int RecentLoadedDelta = gs_TeeListDrainPerfSession.m_Active ? (int)(GameClient()->m_Skins.SettingsSourceLoadsCompleted() - gs_TeeListDrainPerfSession.m_LastLoads) : 0;
+		const auto BackgroundBudgetDecision = SettingsSkinBackgroundRequestBudgetDecision({
+			DefaultBackgroundRequestBudget,
+			(int)SkinStatsBeforeBackgroundRequest.m_NumPending,
+			(int)SkinStatsBeforeBackgroundRequest.m_NumLoading,
+			(int)SkinStatsBeforeBackgroundRequest.m_NumBackgroundRequested,
+			CountFuseLimit,
+			Throughput.m_VisibleReserve,
+			RecentLoadedDelta,
+			AdmissionTelemetry.m_AdmittedDelta,
+			BackgroundDrainActive,
+		});
+		const int BackgroundRequestBudget = BackgroundBudgetDecision.m_RequestBudget;
+		gs_TeeSettingsPageState.m_LastRequestBudgetActual = BackgroundRequestBudget;
+		gs_TeeSettingsPageState.m_LastRequestBudgetBlockReason = BackgroundBudgetDecision.m_BlockReason;
+		int BackgroundRequestsIssued = 0;
+		int BackgroundScanItemsScanned = 0;
+		int BackgroundScanSkippedVisible = 0;
+		const char *pBackgroundScanBlockReason = "none";
+		const auto BackgroundScanStartTime = time_get_nanoseconds();
+		if(gs_TeeSettingsPageState.m_BackgroundRequestScanListSize != (int)vSkinList.size() || !VisibleSourceSettled)
+		{
+			gs_TeeSettingsPageState.m_BackgroundRequestScanComplete = false;
+			gs_TeeSettingsPageState.m_BackgroundRequestScanListSize = (int)vSkinList.size();
+		}
+		if(!VisibleSourceSettled)
+		{
+			pBackgroundScanBlockReason = "visible_source_unsettled";
+		}
+		else if(BackgroundRequestBudget <= 0)
+		{
+			pBackgroundScanBlockReason = SettingsSkinBackgroundRequestBlockReasonName(BackgroundBudgetDecision.m_BlockReason);
+		}
+		else if(gs_TeeSettingsPageState.m_BackgroundRequestScanComplete)
+		{
 			pBackgroundScanBlockReason = "scan_complete";
 		}
-	}
-	if(PerfDebugEnabled())
-	{
-		const double BackgroundScanDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - BackgroundScanStartTime).count();
-		if(BackgroundScanItemsScanned > 0 || BackgroundRequestsIssued > 0 || gs_TeeSettingsPageState.m_BackgroundRequestScanComplete)
+		if(VisibleSourceSettled && BackgroundRequestBudget > 0 && !vSkinList.empty() && !gs_TeeSettingsPageState.m_BackgroundRequestScanComplete)
+		{
+			s_BackgroundRequestCursor %= vSkinList.size();
+			for(size_t Attempts = 0; Attempts < vSkinList.size() && BackgroundRequestsIssued < BackgroundRequestBudget; ++Attempts)
+			{
+				const size_t BackgroundIndex = (s_BackgroundRequestCursor + Attempts) % vSkinList.size();
+				++BackgroundScanItemsScanned;
+				if(std::binary_search(vVisibleSkinIndices.begin(), vVisibleSkinIndices.end(), BackgroundIndex))
+				{
+					++BackgroundScanSkippedVisible;
+					continue;
+				}
+
+				const CSkins::CSkinContainer *pBackgroundContainer = vSkinList[BackgroundIndex].SkinContainer();
+				if(pBackgroundContainer == nullptr || pBackgroundContainer->State() != CSkins::CSkinContainer::EState::UNLOADED)
+					continue;
+
+				vSkinList[BackgroundIndex].RequestLoad(ESettingsResourcePriority::BACKGROUND);
+				++BackgroundRequestsIssued;
+				s_BackgroundRequestCursor = (BackgroundIndex + 1) % vSkinList.size();
+			}
+			if(BackgroundScanItemsScanned >= (int)vSkinList.size())
+			{
+				gs_TeeSettingsPageState.m_BackgroundRequestScanComplete = true;
+				pBackgroundScanBlockReason = "scan_complete";
+			}
+		}
+		if(PerfDebugEnabled())
+		{
+			const double BackgroundScanDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - BackgroundScanStartTime).count();
+			if(BackgroundScanItemsScanned > 0 || BackgroundRequestsIssued > 0 || gs_TeeSettingsPageState.m_BackgroundRequestScanComplete)
+			{
+				char aPayload[256];
+				str_format(aPayload, sizeof(aPayload),
+					"event=tee_skin_background_scan items_total=%d items_scanned=%d items_skipped_visible=%d requests_issued=%d complete=%d budget=%d dur_ms=%.3f block_reason=%s",
+					(int)vSkinList.size(), BackgroundScanItemsScanned, BackgroundScanSkippedVisible, BackgroundRequestsIssued,
+					gs_TeeSettingsPageState.m_BackgroundRequestScanComplete ? 1 : 0, BackgroundRequestBudget,
+					BackgroundScanDurationMs, pBackgroundScanBlockReason);
+				QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
+			}
+			char aPreviewPayload[192];
+			str_format(aPreviewPayload, sizeof(aPreviewPayload),
+				"event=tee_preview_pipeline page=settings:tee tee_preview_admissions=%d tee_ready_textures=%d tee_placeholders=%d visible_ready_ratio=%.3f",
+				TeePreviewTelemetry.m_PreviewAdmissions, TeePreviewTelemetry.m_ReadyTextureCount, TeePreviewTelemetry.m_PlaceholderCount,
+				SettingsResourcePreviewVisibleReadyRatio(TeePreviewTelemetry.m_ReadyTextureCount, (int)vVisibleSkinIndices.size()));
+			QmPerfLogPayload("perf/settings-skin-source", aPreviewPayload, Client(), "settings:tee");
+		}
+		const auto SkinStats = GameClient()->m_Skins.LoadingStats();
+		CSkins::SSettingsTeeVisibleSnapshot VisibleSnapshot;
+		VisibleSnapshot.m_VisibleTotal = (int)vVisibleSkinIndices.size();
+		VisibleSnapshot.m_VisibleReady = VisibleSourceSettledCount;
+		VisibleSnapshot.m_VisibleWaiting = maximum(0, (int)vVisibleSkinIndices.size() - VisibleSourceSettledCount);
+		VisibleSnapshot.m_VisibleBackgroundRequested = VisibleBackgroundRequestedCount;
+		VisibleSnapshot.m_VisibleNonterminalWaiting = VisibleNonTerminalWaitingCount;
+		str_copy(VisibleSnapshot.m_aRequestBudgetBlockReason,
+			SettingsSkinBackgroundRequestBlockReasonName(BackgroundBudgetDecision.m_BlockReason),
+			sizeof(VisibleSnapshot.m_aRequestBudgetBlockReason));
+		GameClient()->m_Skins.SetSettingsTeeVisibleSnapshot(VisibleSnapshot);
+		const char *pFirstVisibleSkin = !vVisibleSkinIndices.empty() ? vSkinList[vVisibleSkinIndices.front()].SkinContainer()->Name() : "";
+		const int FirstVisibleIndex = !vVisibleSkinIndices.empty() ? (int)vVisibleSkinIndices.front() : -1;
+		const int LastVisibleIndex = !vVisibleSkinIndices.empty() ? (int)vVisibleSkinIndices.back() : -1;
+		const auto SkinEntryHasPreviewCache = [&](const CSkins::CSkinListEntry &Entry) {
+			const auto &ColorKey = Entry.ColorKey();
+			return gs_TeeListPreviewCache.Find(SSettingsTeeListPreviewCache::Key(
+				       Entry.SkinContainer()->Name(),
+				       m_Dummy,
+				       ColorKey.has_value() ? ColorKey->m_UseCustomColor : *pUseCustomColor != 0,
+				       ColorKey.has_value() ? ColorKey->m_ColorBody : (int)*pColorBody,
+				       ColorKey.has_value() ? ColorKey->m_ColorFeet : (int)*pColorFeet,
+				       *pEmote)) != nullptr;
+		};
+		const bool FirstVisibleReady = !vVisibleSkinIndices.empty() &&
+					       SettingsSkinListEntryVisualReady(
+						       vSkinList[vVisibleSkinIndices.front()].SkinContainer()->State() == CSkins::CSkinContainer::EState::LOADED,
+						       vSkinList[vVisibleSkinIndices.front()].SkinContainer()->State() == CSkins::CSkinContainer::EState::ERROR ||
+							       vSkinList[vVisibleSkinIndices.front()].SkinContainer()->State() == CSkins::CSkinContainer::EState::NOT_FOUND,
+						       SkinEntryHasPreviewCache(vSkinList[vVisibleSkinIndices.front()]));
+		const bool FullListReady = !vSkinList.empty() && TotalSourceSettledCount == (int)vSkinList.size();
+		const int64_t NowNs = time_get_nanoseconds().count();
+		if(!gs_TeeSettingsPageState.m_TeePageActiveLastFrame)
+		{
+			gs_TeeSettingsPageState.m_TeePageActiveLastFrame = true;
+			gs_TeeSettingsPageState.m_TeeEnterStartNs = NowNs;
+			BeginTeeListDrainPerfSession(GameClient()->m_Skins, NowNs);
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=tee_enter visible_rows=%d first_visible_index=%d first_visible_skin=%s",
+				(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
+		}
+		const bool ClickActive = Input()->KeyIsPressed(KEY_MOUSE_1) != 0;
+		if(ClickActive && !gs_TeeSettingsPageState.m_TeeClickActiveLastFrame)
 		{
 			char aPayload[256];
-			str_format(aPayload, sizeof(aPayload),
-				"event=tee_skin_background_scan items_total=%d items_scanned=%d items_skipped_visible=%d requests_issued=%d complete=%d budget=%d dur_ms=%.3f block_reason=%s",
-				(int)vSkinList.size(), BackgroundScanItemsScanned, BackgroundScanSkippedVisible, BackgroundRequestsIssued,
-				gs_TeeSettingsPageState.m_BackgroundRequestScanComplete ? 1 : 0, BackgroundRequestBudget,
-				BackgroundScanDurationMs, pBackgroundScanBlockReason);
-			QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
+			str_format(aPayload, sizeof(aPayload), "event=click_begin visible_rows=%d first_visible_index=%d first_visible_skin=%s",
+				(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
 		}
-		char aPreviewPayload[192];
-		str_format(aPreviewPayload, sizeof(aPreviewPayload),
-			"event=tee_preview_pipeline page=settings:tee tee_preview_admissions=%d tee_ready_textures=%d tee_placeholders=%d visible_ready_ratio=%.3f",
-			TeePreviewTelemetry.m_PreviewAdmissions, TeePreviewTelemetry.m_ReadyTextureCount, TeePreviewTelemetry.m_PlaceholderCount,
-			SettingsResourcePreviewVisibleReadyRatio(TeePreviewTelemetry.m_ReadyTextureCount, (int)vVisibleSkinIndices.size()));
-		QmPerfLogPayload("perf/settings-skin-source", aPreviewPayload, Client(), "settings:tee");
-	}
-	const auto SkinStats = GameClient()->m_Skins.LoadingStats();
-	CSkins::SSettingsTeeVisibleSnapshot VisibleSnapshot;
-	VisibleSnapshot.m_VisibleTotal = (int)vVisibleSkinIndices.size();
-	VisibleSnapshot.m_VisibleReady = VisibleSourceSettledCount;
-	VisibleSnapshot.m_VisibleWaiting = maximum(0, (int)vVisibleSkinIndices.size() - VisibleSourceSettledCount);
-	VisibleSnapshot.m_VisibleBackgroundRequested = VisibleBackgroundRequestedCount;
-	VisibleSnapshot.m_VisibleNonterminalWaiting = VisibleNonTerminalWaitingCount;
-	str_copy(VisibleSnapshot.m_aRequestBudgetBlockReason,
-		SettingsSkinBackgroundRequestBlockReasonName(BackgroundBudgetDecision.m_BlockReason),
-		sizeof(VisibleSnapshot.m_aRequestBudgetBlockReason));
-	GameClient()->m_Skins.SetSettingsTeeVisibleSnapshot(VisibleSnapshot);
-	const char *pFirstVisibleSkin = !vVisibleSkinIndices.empty() ? vSkinList[vVisibleSkinIndices.front()].SkinContainer()->Name() : "";
-	const int FirstVisibleIndex = !vVisibleSkinIndices.empty() ? (int)vVisibleSkinIndices.front() : -1;
-	const int LastVisibleIndex = !vVisibleSkinIndices.empty() ? (int)vVisibleSkinIndices.back() : -1;
-	const auto SkinEntryHasPreviewCache = [&](const CSkins::CSkinListEntry &Entry) {
-		const auto &ColorKey = Entry.ColorKey();
-		return gs_TeeListPreviewCache.Find(SSettingsTeeListPreviewCache::Key(
-			       Entry.SkinContainer()->Name(),
-			       m_Dummy,
-			       ColorKey.has_value() ? ColorKey->m_UseCustomColor : *pUseCustomColor != 0,
-			       ColorKey.has_value() ? ColorKey->m_ColorBody : (int)*pColorBody,
-			       ColorKey.has_value() ? ColorKey->m_ColorFeet : (int)*pColorFeet,
-			       *pEmote)) != nullptr;
-	};
-	const bool FirstVisibleReady = !vVisibleSkinIndices.empty() &&
-				       SettingsSkinListEntryVisualReady(
-					       vSkinList[vVisibleSkinIndices.front()].SkinContainer()->State() == CSkins::CSkinContainer::EState::LOADED,
-					       vSkinList[vVisibleSkinIndices.front()].SkinContainer()->State() == CSkins::CSkinContainer::EState::ERROR ||
-						       vSkinList[vVisibleSkinIndices.front()].SkinContainer()->State() == CSkins::CSkinContainer::EState::NOT_FOUND,
-					       SkinEntryHasPreviewCache(vSkinList[vVisibleSkinIndices.front()]));
-	const bool FullListReady = !vSkinList.empty() && TotalSourceSettledCount == (int)vSkinList.size();
-	const int64_t NowNs = time_get_nanoseconds().count();
-	if(!gs_TeeSettingsPageState.m_TeePageActiveLastFrame)
-	{
-		gs_TeeSettingsPageState.m_TeePageActiveLastFrame = true;
-		gs_TeeSettingsPageState.m_TeeEnterStartNs = NowNs;
-		BeginTeeListDrainPerfSession(GameClient()->m_Skins, NowNs);
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "event=tee_enter visible_rows=%d first_visible_index=%d first_visible_skin=%s",
-			(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
-		QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
-	}
-	const bool ClickActive = Input()->KeyIsPressed(KEY_MOUSE_1) != 0;
-	if(ClickActive && !gs_TeeSettingsPageState.m_TeeClickActiveLastFrame)
-	{
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "event=click_begin visible_rows=%d first_visible_index=%d first_visible_skin=%s",
-			(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
-		QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
-	}
-	else if(!ClickActive && gs_TeeSettingsPageState.m_TeeClickActiveLastFrame)
-	{
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "event=click_end visible_rows=%d first_visible_index=%d first_visible_skin=%s",
-			(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
-		QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
-	}
-	gs_TeeSettingsPageState.m_TeeClickActiveLastFrame = ClickActive;
-	if(SkinListScrollInteraction && !gs_TeeSettingsPageState.m_TeeScrollInteractionLastFrame)
-	{
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "event=scroll_begin visible_rows=%d first_visible_index=%d first_visible_skin=%s",
-			(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
-		QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
-	}
-	else if(!SkinListScrollInteraction && gs_TeeSettingsPageState.m_TeeScrollInteractionLastFrame)
-	{
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "event=scroll_end visible_rows=%d first_visible_index=%d first_visible_skin=%s",
-			(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
-		QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
-	}
-	gs_TeeSettingsPageState.m_TeeScrollInteractionLastFrame = SkinListScrollInteraction;
-	if(FirstVisibleReady && !gs_TeeSettingsPageState.m_TeeFirstVisibleReadyLogged)
-	{
-		gs_TeeSettingsPageState.m_TeeFirstVisibleReadyLogged = true;
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "event=first_visible_ready dur_ms=%.3f visible_rows=%d first_visible_index=%d first_visible_skin=%s",
-			gs_TeeSettingsPageState.m_TeeEnterStartNs > 0 ? (NowNs - gs_TeeSettingsPageState.m_TeeEnterStartNs) / 1000000.0 : 0.0,
-			(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
-		QmPerfLogPayload("perf/skin-ux", aPayload, Client(), "settings:tee");
-	}
-	if(SettingsSkinListShouldLogAllVisibleReady(
-		   VisibleSourceSettled,
-		   gs_TeeSettingsPageState.m_TeeAllVisibleReadyLogged,
-		   (int)vVisibleSkinIndices.size()))
-	{
-		gs_TeeSettingsPageState.m_TeeAllVisibleReadyLogged = true;
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "event=all_visible_ready dur_ms=%.3f visible_rows=%d first_visible_index=%d last_visible_index=%d first_visible_skin=%s",
-			gs_TeeSettingsPageState.m_TeeEnterStartNs > 0 ? (NowNs - gs_TeeSettingsPageState.m_TeeEnterStartNs) / 1000000.0 : 0.0,
-			(int)vVisibleSkinIndices.size(), FirstVisibleIndex, LastVisibleIndex, pFirstVisibleSkin);
-		QmPerfLogPayload("perf/skin-ux", aPayload, Client(), "settings:tee");
-	}
-	if(FullListReady && !gs_TeeSettingsPageState.m_TeeFullListReadyLogged)
-	{
-		gs_TeeSettingsPageState.m_TeeFullListReadyLogged = true;
-		char aPayload[256];
-		str_format(aPayload, sizeof(aPayload), "event=full_list_ready dur_ms=%.3f total=%d visible_rows=%d first_visible_skin=%s",
-			gs_TeeSettingsPageState.m_TeeEnterStartNs > 0 ? (NowNs - gs_TeeSettingsPageState.m_TeeEnterStartNs) / 1000000.0 : 0.0,
-			(int)vSkinList.size(), (int)vVisibleSkinIndices.size(), pFirstVisibleSkin);
-		QmPerfLogPayload("perf/skin-ux", aPayload, Client(), "settings:tee");
-		LogTeeListDrainSummary(Client(), GameClient()->m_Skins, GameClient()->m_Skins.LoadingStats(), true, NowNs);
-		if(gs_TeeSettingsPageState.m_TeeRefreshInProgress)
+		else if(!ClickActive && gs_TeeSettingsPageState.m_TeeClickActiveLastFrame)
 		{
-			char aRefreshPayload[256];
-			str_format(aRefreshPayload, sizeof(aRefreshPayload), "event=tee_refresh_end dur_ms=%.3f visible_rows=%d first_visible_skin=%s",
-				gs_TeeSettingsPageState.m_TeeRefreshStartNs > 0 ? (NowNs - gs_TeeSettingsPageState.m_TeeRefreshStartNs) / 1000000.0 : 0.0,
-				(int)vVisibleSkinIndices.size(), pFirstVisibleSkin);
-			QmPerfLogPayload("perf/interaction", aRefreshPayload, Client(), "settings:tee");
-			gs_TeeSettingsPageState.m_TeeRefreshInProgress = false;
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=click_end visible_rows=%d first_visible_index=%d first_visible_skin=%s",
+				(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
 		}
-	}
-	if(PerfDebugEnabled() &&
-		(BackgroundRequestsIssued > 0 ||
-			gs_TeeSettingsPageState.m_LastLoggedVisibleCount != (int)vVisibleSkinIndices.size() ||
-			gs_TeeSettingsPageState.m_LastLoggedVisibleReadyCount != VisibleSourceSettledCount ||
-			gs_TeeSettingsPageState.m_LastLoggedScrollActive != FrameContext.m_ScrollActive ||
-			gs_TeeSettingsPageState.m_LastLoggedRecoveryFrames != FrameContext.m_PostScrollRecoveryFrames ||
-			str_comp(gs_TeeSettingsPageState.m_aLastLoggedFirstVisibleSkin, pFirstVisibleSkin) != 0))
-	{
-		const int GpuUploadLimitUnits = GameClient()->GpuUploadLimiter()->MaxUploadsPerFrame();
-		const int GpuUploadRemainingUnits = GameClient()->GpuUploadLimiter()->RemainingUploads();
-		const int FinalizeBudgetLimit = Throughput.m_FinalizeBudgetLimit;
-		const char *pEffectiveFrameContext = SettingsSkinThroughputControllerModeName(Throughput.m_Mode);
-		char aPayload[768];
-		str_format(aPayload, sizeof(aPayload),
-			"event=request_window visible=%d visible_ready=%d visible_waiting=%d visible_background_requested=%d visible_nonterminal_waiting=%d background_budget=%d background_issued=%d requested=%d idle=%d scroll=%d recovery=%d pending=%zu loading=%zu loaded=%zu total=%d first_visible_index=%d first_visible_skin=%s count_fuse_limit=%d real_inflight=%d visible_reserve=%d request_budget_default=%d request_budget_actual=%d request_budget_block_reason=%s gpu_upload_limit_units=%d gpu_upload_remaining_units=%d finalize_budget_limit=%d effective_frame_context=%s controller_reason=%s frame_time_avg_ms=%.3f render_frame_time_ms=%.3f admission_underfed=%d underfed_streak=%d",
-			(int)vVisibleSkinIndices.size(), VisibleSourceSettledCount, maximum(0, (int)vVisibleSkinIndices.size() - VisibleSourceSettledCount), VisibleBackgroundRequestedCount, VisibleNonTerminalWaitingCount, DefaultBackgroundRequestBudget, BackgroundRequestsIssued,
-			(int)SkinStats.m_NumBackgroundRequested,
-			!FrameContext.m_ScrollActive && FrameContext.m_PostScrollRecoveryFrames == 0 ? 1 : 0,
-			FrameContext.m_ScrollActive ? 1 : 0, FrameContext.m_PostScrollRecoveryFrames,
-			SkinStats.m_NumPending, SkinStats.m_NumLoading, SkinStats.m_NumLoaded, (int)vSkinList.size(), FirstVisibleIndex, pFirstVisibleSkin,
-			CountFuseLimit, AdmissionTelemetry.m_RealInflight, Throughput.m_VisibleReserve, DefaultBackgroundRequestBudget, BackgroundRequestBudget,
-			SettingsSkinBackgroundRequestBlockReasonName(BackgroundBudgetDecision.m_BlockReason),
-			GpuUploadLimitUnits, GpuUploadRemainingUnits, FinalizeBudgetLimit, pEffectiveFrameContext,
-			SettingsSkinThroughputControllerReasonName(Throughput.m_Reason),
-			AdmissionTelemetry.m_FrameTimeAverageMs,
-			AdmissionTelemetry.m_RenderFrameTimeMs,
-			AdmissionTelemetry.m_AdmissionUnderfed ? 1 : 0,
-			AdmissionTelemetry.m_UnderfedStreak);
-		QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
-		gs_TeeSettingsPageState.m_LastLoggedVisibleCount = (int)vVisibleSkinIndices.size();
-		gs_TeeSettingsPageState.m_LastLoggedVisibleReadyCount = VisibleSourceSettledCount;
-		gs_TeeSettingsPageState.m_LastLoggedScrollActive = FrameContext.m_ScrollActive;
-		gs_TeeSettingsPageState.m_LastLoggedRecoveryFrames = FrameContext.m_PostScrollRecoveryFrames;
-		str_copy(gs_TeeSettingsPageState.m_aLastLoggedFirstVisibleSkin, pFirstVisibleSkin, sizeof(gs_TeeSettingsPageState.m_aLastLoggedFirstVisibleSkin));
-	}
-	if(PerfDebugEnabled() && gs_TeeListDrainPerfSession.m_Active)
-	{
-		const uint64_t UploadsDoneNow = GameClient()->m_Skins.SettingsSourceUploadsCompleted();
-		const uint64_t LoadedNow = GameClient()->m_Skins.SettingsSourceLoadsCompleted();
-		const uint64_t UploadsDoneDelta = UploadsDoneNow - gs_TeeListDrainPerfSession.m_LastUploads;
-		const uint64_t LoadedDelta = LoadedNow - gs_TeeListDrainPerfSession.m_LastLoads;
-		const int RequestedDelta = gs_TeeListDrainPerfSession.m_LastRequested >= 0 ? (int)SkinStats.m_NumBackgroundRequested - gs_TeeListDrainPerfSession.m_LastRequested : (int)SkinStats.m_NumBackgroundRequested;
-		const auto &Telemetry = GameClient()->m_Skins.SettingsSourceAdmissionTelemetry();
-		if(UploadsDoneDelta > 0 ||
-			LoadedDelta > 0 ||
-			Telemetry.m_AdmittedDelta > 0 ||
-			Telemetry.m_StartedDelta > 0 ||
-			gs_TeeListDrainPerfSession.m_LastBackgroundDrain != BackgroundDrainActive ||
-			gs_TeeListDrainPerfSession.m_LastVisibleReady != VisibleSourceSettledCount ||
-			gs_TeeListDrainPerfSession.m_LastVisibleTotal != (int)vVisibleSkinIndices.size() ||
-			gs_TeeListDrainPerfSession.m_LastRequested != (int)SkinStats.m_NumBackgroundRequested ||
-			gs_TeeListDrainPerfSession.m_LastPending != (int)SkinStats.m_NumPending ||
-			gs_TeeListDrainPerfSession.m_LastLoading != (int)SkinStats.m_NumLoading ||
-			gs_TeeListDrainPerfSession.m_LastLoaded != (int)SkinStats.m_NumLoaded)
+		gs_TeeSettingsPageState.m_TeeClickActiveLastFrame = ClickActive;
+		if(SkinListScrollInteraction && !gs_TeeSettingsPageState.m_TeeScrollInteractionLastFrame)
+		{
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=scroll_begin visible_rows=%d first_visible_index=%d first_visible_skin=%s",
+				(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
+		}
+		else if(!SkinListScrollInteraction && gs_TeeSettingsPageState.m_TeeScrollInteractionLastFrame)
+		{
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=scroll_end visible_rows=%d first_visible_index=%d first_visible_skin=%s",
+				(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
+			QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
+		}
+		gs_TeeSettingsPageState.m_TeeScrollInteractionLastFrame = SkinListScrollInteraction;
+		if(FirstVisibleReady && !gs_TeeSettingsPageState.m_TeeFirstVisibleReadyLogged)
+		{
+			gs_TeeSettingsPageState.m_TeeFirstVisibleReadyLogged = true;
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=first_visible_ready dur_ms=%.3f visible_rows=%d first_visible_index=%d first_visible_skin=%s",
+				gs_TeeSettingsPageState.m_TeeEnterStartNs > 0 ? (NowNs - gs_TeeSettingsPageState.m_TeeEnterStartNs) / 1000000.0 : 0.0,
+				(int)vVisibleSkinIndices.size(), FirstVisibleIndex, pFirstVisibleSkin);
+			QmPerfLogPayload("perf/skin-ux", aPayload, Client(), "settings:tee");
+		}
+		if(SettingsSkinListShouldLogAllVisibleReady(
+			   VisibleSourceSettled,
+			   gs_TeeSettingsPageState.m_TeeAllVisibleReadyLogged,
+			   (int)vVisibleSkinIndices.size()))
+		{
+			gs_TeeSettingsPageState.m_TeeAllVisibleReadyLogged = true;
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=all_visible_ready dur_ms=%.3f visible_rows=%d first_visible_index=%d last_visible_index=%d first_visible_skin=%s",
+				gs_TeeSettingsPageState.m_TeeEnterStartNs > 0 ? (NowNs - gs_TeeSettingsPageState.m_TeeEnterStartNs) / 1000000.0 : 0.0,
+				(int)vVisibleSkinIndices.size(), FirstVisibleIndex, LastVisibleIndex, pFirstVisibleSkin);
+			QmPerfLogPayload("perf/skin-ux", aPayload, Client(), "settings:tee");
+		}
+		if(FullListReady && !gs_TeeSettingsPageState.m_TeeFullListReadyLogged)
+		{
+			gs_TeeSettingsPageState.m_TeeFullListReadyLogged = true;
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=full_list_ready dur_ms=%.3f total=%d visible_rows=%d first_visible_skin=%s",
+				gs_TeeSettingsPageState.m_TeeEnterStartNs > 0 ? (NowNs - gs_TeeSettingsPageState.m_TeeEnterStartNs) / 1000000.0 : 0.0,
+				(int)vSkinList.size(), (int)vVisibleSkinIndices.size(), pFirstVisibleSkin);
+			QmPerfLogPayload("perf/skin-ux", aPayload, Client(), "settings:tee");
+			LogTeeListDrainSummary(Client(), GameClient()->m_Skins, GameClient()->m_Skins.LoadingStats(), true, NowNs);
+			if(gs_TeeSettingsPageState.m_TeeRefreshInProgress)
+			{
+				char aRefreshPayload[256];
+				str_format(aRefreshPayload, sizeof(aRefreshPayload), "event=tee_refresh_end dur_ms=%.3f visible_rows=%d first_visible_skin=%s",
+					gs_TeeSettingsPageState.m_TeeRefreshStartNs > 0 ? (NowNs - gs_TeeSettingsPageState.m_TeeRefreshStartNs) / 1000000.0 : 0.0,
+					(int)vVisibleSkinIndices.size(), pFirstVisibleSkin);
+				QmPerfLogPayload("perf/interaction", aRefreshPayload, Client(), "settings:tee");
+				gs_TeeSettingsPageState.m_TeeRefreshInProgress = false;
+			}
+		}
+		if(PerfDebugEnabled() &&
+			(BackgroundRequestsIssued > 0 ||
+				gs_TeeSettingsPageState.m_LastLoggedVisibleCount != (int)vVisibleSkinIndices.size() ||
+				gs_TeeSettingsPageState.m_LastLoggedVisibleReadyCount != VisibleSourceSettledCount ||
+				gs_TeeSettingsPageState.m_LastLoggedScrollActive != FrameContext.m_ScrollActive ||
+				gs_TeeSettingsPageState.m_LastLoggedRecoveryFrames != FrameContext.m_PostScrollRecoveryFrames ||
+				str_comp(gs_TeeSettingsPageState.m_aLastLoggedFirstVisibleSkin, pFirstVisibleSkin) != 0))
 		{
 			const int GpuUploadLimitUnits = GameClient()->GpuUploadLimiter()->MaxUploadsPerFrame();
 			const int GpuUploadRemainingUnits = GameClient()->GpuUploadLimiter()->RemainingUploads();
 			const int FinalizeBudgetLimit = Throughput.m_FinalizeBudgetLimit;
 			const char *pEffectiveFrameContext = SettingsSkinThroughputControllerModeName(Throughput.m_Mode);
-			char aPayload[1024];
-			str_format(aPayload, sizeof(aPayload), "event=list_drain_tick mode=%s visible_ready=%d visible_total=%d visible_waiting=%d visible_background_requested=%d visible_nonterminal_waiting=%d requested=%d pending=%d loading=%d loaded=%d uploads_done_delta=%llu loaded_delta=%llu requested_delta=%d admitted_delta=%d started_delta=%d real_inflight=%d loading_window_limit=%d loading_window_used=%d dynamic_decision=%s request_budget_block_reason=%s last_wait_reason=%s gpu_upload_limit_units=%d gpu_upload_remaining_units=%d finalize_budget_limit=%d effective_frame_context=%s controller_reason=%s visible_reserve_effective=%d frame_time_avg_ms=%.3f render_frame_time_ms=%.3f admission_underfed=%d underfed_streak=%d",
-				BackgroundDrainActive ? "background_drain" : "visible",
-				VisibleSourceSettledCount,
-				(int)vVisibleSkinIndices.size(),
-				maximum(0, (int)vVisibleSkinIndices.size() - VisibleSourceSettledCount),
-				VisibleBackgroundRequestedCount,
-				VisibleNonTerminalWaitingCount,
-				(int)SkinStats.m_NumBackgroundRequested,
-				(int)SkinStats.m_NumPending,
-				(int)SkinStats.m_NumLoading,
-				(int)SkinStats.m_NumLoaded,
-				(unsigned long long)UploadsDoneDelta,
-				(unsigned long long)LoadedDelta,
-				RequestedDelta,
-				Telemetry.m_AdmittedDelta,
-				Telemetry.m_StartedDelta,
-				Telemetry.m_RealInflight,
-				Telemetry.m_LoadingWindowLimit,
-				Telemetry.m_LoadingWindowUsed,
-				Telemetry.m_aDynamicDecision,
-				SettingsSkinBackgroundRequestBlockReasonName(BackgroundBudgetDecision.m_BlockReason),
-				Telemetry.m_aLastWaitReason,
-				GpuUploadLimitUnits,
-				GpuUploadRemainingUnits,
-				FinalizeBudgetLimit,
-				pEffectiveFrameContext,
-				Telemetry.m_aControllerReason,
-				Telemetry.m_VisibleReserve,
-				Telemetry.m_FrameTimeAverageMs,
-				Telemetry.m_RenderFrameTimeMs,
-				Telemetry.m_AdmissionUnderfed ? 1 : 0,
-				Telemetry.m_UnderfedStreak);
-			QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
-			gs_TeeListDrainPerfSession.m_TotalRequested += (uint64_t)maximum(0, RequestedDelta);
-			gs_TeeListDrainPerfSession.m_TotalAdmitted += (uint64_t)maximum(0, Telemetry.m_AdmittedDelta);
-			gs_TeeListDrainPerfSession.m_TotalStarted += (uint64_t)maximum(0, Telemetry.m_StartedDelta);
-			gs_TeeListDrainPerfSession.m_MaxRequested = maximum(gs_TeeListDrainPerfSession.m_MaxRequested, (int)SkinStats.m_NumBackgroundRequested);
-			gs_TeeListDrainPerfSession.m_MaxPending = maximum(gs_TeeListDrainPerfSession.m_MaxPending, (int)SkinStats.m_NumPending);
-			gs_TeeListDrainPerfSession.m_MaxLoading = maximum(gs_TeeListDrainPerfSession.m_MaxLoading, (int)SkinStats.m_NumLoading);
-			gs_TeeListDrainPerfSession.m_MaxRealInflight = maximum(gs_TeeListDrainPerfSession.m_MaxRealInflight, Telemetry.m_RealInflight);
-			gs_TeeListDrainPerfSession.m_CountFuseLimit = CountFuseLimit;
-			if(str_comp(Telemetry.m_aLastWaitReason, "loading_window") == 0)
-				gs_TeeListDrainPerfSession.m_NumLoadingWindowWaits++;
-			else if(str_comp(Telemetry.m_aLastWaitReason, "gpu_upload_budget") == 0)
-				gs_TeeListDrainPerfSession.m_NumGpuBudgetWaits++;
-			else if(str_comp(Telemetry.m_aLastWaitReason, "queue_fuse") == 0)
-				gs_TeeListDrainPerfSession.m_NumQueueFuseWaits++;
-			gs_TeeListDrainPerfSession.m_LastUploads = UploadsDoneNow;
-			gs_TeeListDrainPerfSession.m_LastLoads = LoadedNow;
-			gs_TeeListDrainPerfSession.m_LastBackgroundDrain = BackgroundDrainActive;
-			gs_TeeListDrainPerfSession.m_LastVisibleReady = VisibleSourceSettledCount;
-			gs_TeeListDrainPerfSession.m_LastVisibleTotal = (int)vVisibleSkinIndices.size();
-			gs_TeeListDrainPerfSession.m_LastRequested = (int)SkinStats.m_NumBackgroundRequested;
-			gs_TeeListDrainPerfSession.m_LastPending = (int)SkinStats.m_NumPending;
-			gs_TeeListDrainPerfSession.m_LastLoading = (int)SkinStats.m_NumLoading;
-			gs_TeeListDrainPerfSession.m_LastLoaded = (int)SkinStats.m_NumLoaded;
-			gs_TeeListDrainPerfSession.m_LastAdmittedDelta = Telemetry.m_AdmittedDelta;
-			gs_TeeListDrainPerfSession.m_LastStartedDelta = Telemetry.m_StartedDelta;
-		}
-		if(Telemetry.m_AdmissionInvariantViolated)
-		{
-			char aPayload[256];
-			str_format(aPayload, sizeof(aPayload), "event=admission_invariant_violation pending=%d loading=%d real_inflight=%d count_fuse_limit=%d",
-				(int)SkinStats.m_NumPending,
-				(int)SkinStats.m_NumLoading,
-				Telemetry.m_RealInflight,
-				CountFuseLimit);
-			QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
-		}
-	}
-	const int NewSelected = s_ListBox.DoEnd();
-	if(PerfDebugEnabled())
-	{
-		const double ListFrameDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count();
-		if(QmPerfShouldLogDuration(ListFrameDurationMs, false))
-		{
-			const int RowsSkipped = maximum(0, VisibleRange.m_TotalRows - RowsRendered);
-			char aPayload[256];
+			char aPayload[768];
 			str_format(aPayload, sizeof(aPayload),
-				"event=list_frame page=settings:tee rows_total=%d rows_visible=%d rows_rendered=%d rows_iterated=%d rows_skipped=%d first_visible_index=%d last_visible_index=%d dur_ms=%.3f source=settings_tee",
-				VisibleRange.m_TotalRows, VisibleRange.m_VisibleRows, RowsRendered, RowsIterated, RowsSkipped, FirstVisibleIndex, LastVisibleIndex, ListFrameDurationMs);
-			QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
+				"event=request_window visible=%d visible_ready=%d visible_waiting=%d visible_background_requested=%d visible_nonterminal_waiting=%d background_budget=%d background_issued=%d requested=%d idle=%d scroll=%d recovery=%d pending=%zu loading=%zu loaded=%zu total=%d first_visible_index=%d first_visible_skin=%s count_fuse_limit=%d real_inflight=%d visible_reserve=%d request_budget_default=%d request_budget_actual=%d request_budget_block_reason=%s gpu_upload_limit_units=%d gpu_upload_remaining_units=%d finalize_budget_limit=%d effective_frame_context=%s controller_reason=%s frame_time_avg_ms=%.3f render_frame_time_ms=%.3f admission_underfed=%d underfed_streak=%d",
+				(int)vVisibleSkinIndices.size(), VisibleSourceSettledCount, maximum(0, (int)vVisibleSkinIndices.size() - VisibleSourceSettledCount), VisibleBackgroundRequestedCount, VisibleNonTerminalWaitingCount, DefaultBackgroundRequestBudget, BackgroundRequestsIssued,
+				(int)SkinStats.m_NumBackgroundRequested,
+				!FrameContext.m_ScrollActive && FrameContext.m_PostScrollRecoveryFrames == 0 ? 1 : 0,
+				FrameContext.m_ScrollActive ? 1 : 0, FrameContext.m_PostScrollRecoveryFrames,
+				SkinStats.m_NumPending, SkinStats.m_NumLoading, SkinStats.m_NumLoaded, (int)vSkinList.size(), FirstVisibleIndex, pFirstVisibleSkin,
+				CountFuseLimit, AdmissionTelemetry.m_RealInflight, Throughput.m_VisibleReserve, DefaultBackgroundRequestBudget, BackgroundRequestBudget,
+				SettingsSkinBackgroundRequestBlockReasonName(BackgroundBudgetDecision.m_BlockReason),
+				GpuUploadLimitUnits, GpuUploadRemainingUnits, FinalizeBudgetLimit, pEffectiveFrameContext,
+				SettingsSkinThroughputControllerReasonName(Throughput.m_Reason),
+				AdmissionTelemetry.m_FrameTimeAverageMs,
+				AdmissionTelemetry.m_RenderFrameTimeMs,
+				AdmissionTelemetry.m_AdmissionUnderfed ? 1 : 0,
+				AdmissionTelemetry.m_UnderfedStreak);
+			QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
+			gs_TeeSettingsPageState.m_LastLoggedVisibleCount = (int)vVisibleSkinIndices.size();
+			gs_TeeSettingsPageState.m_LastLoggedVisibleReadyCount = VisibleSourceSettledCount;
+			gs_TeeSettingsPageState.m_LastLoggedScrollActive = FrameContext.m_ScrollActive;
+			gs_TeeSettingsPageState.m_LastLoggedRecoveryFrames = FrameContext.m_PostScrollRecoveryFrames;
+			str_copy(gs_TeeSettingsPageState.m_aLastLoggedFirstVisibleSkin, pFirstVisibleSkin, sizeof(gs_TeeSettingsPageState.m_aLastLoggedFirstVisibleSkin));
 		}
-	}
-
-	const bool SkinListScrollActive = s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating();
-	m_SettingsScrollActive = m_SettingsScrollActive || SkinListScrollActive;
-	gs_TeeSettingsPageState.m_SkinListScrollActiveLastFrame = SkinListScrollActive;
-	if(OldSelected != NewSelected)
-	{
-		if(NewSelected >= 0 && NewSelected < (int)vSkinList.size())
+		if(PerfDebugEnabled() && gs_TeeListDrainPerfSession.m_Active)
 		{
-			const CSkins::CSkinListEntry &SelectedSkinEntry = vSkinList[NewSelected];
-			str_copy(pSkinName, SelectedSkinEntry.SkinContainer()->Name(), SkinNameSize);
-			if(SelectedSkinEntry.ColorKey().has_value())
+			const uint64_t UploadsDoneNow = GameClient()->m_Skins.SettingsSourceUploadsCompleted();
+			const uint64_t LoadedNow = GameClient()->m_Skins.SettingsSourceLoadsCompleted();
+			const uint64_t UploadsDoneDelta = UploadsDoneNow - gs_TeeListDrainPerfSession.m_LastUploads;
+			const uint64_t LoadedDelta = LoadedNow - gs_TeeListDrainPerfSession.m_LastLoads;
+			const int RequestedDelta = gs_TeeListDrainPerfSession.m_LastRequested >= 0 ? (int)SkinStats.m_NumBackgroundRequested - gs_TeeListDrainPerfSession.m_LastRequested : (int)SkinStats.m_NumBackgroundRequested;
+			const auto &Telemetry = GameClient()->m_Skins.SettingsSourceAdmissionTelemetry();
+			if(UploadsDoneDelta > 0 ||
+				LoadedDelta > 0 ||
+				Telemetry.m_AdmittedDelta > 0 ||
+				Telemetry.m_StartedDelta > 0 ||
+				gs_TeeListDrainPerfSession.m_LastBackgroundDrain != BackgroundDrainActive ||
+				gs_TeeListDrainPerfSession.m_LastVisibleReady != VisibleSourceSettledCount ||
+				gs_TeeListDrainPerfSession.m_LastVisibleTotal != (int)vVisibleSkinIndices.size() ||
+				gs_TeeListDrainPerfSession.m_LastRequested != (int)SkinStats.m_NumBackgroundRequested ||
+				gs_TeeListDrainPerfSession.m_LastPending != (int)SkinStats.m_NumPending ||
+				gs_TeeListDrainPerfSession.m_LastLoading != (int)SkinStats.m_NumLoading ||
+				gs_TeeListDrainPerfSession.m_LastLoaded != (int)SkinStats.m_NumLoaded)
 			{
-				const auto &SelectedColorKey = SelectedSkinEntry.ColorKey().value();
-				*pUseCustomColor = SelectedColorKey.m_UseCustomColor ? 1 : 0;
-				if(SelectedColorKey.m_UseCustomColor)
-				{
-					*pColorBody = SelectedColorKey.m_ColorBody;
-					*pColorFeet = SelectedColorKey.m_ColorFeet;
-				}
+				const int GpuUploadLimitUnits = GameClient()->GpuUploadLimiter()->MaxUploadsPerFrame();
+				const int GpuUploadRemainingUnits = GameClient()->GpuUploadLimiter()->RemainingUploads();
+				const int FinalizeBudgetLimit = Throughput.m_FinalizeBudgetLimit;
+				const char *pEffectiveFrameContext = SettingsSkinThroughputControllerModeName(Throughput.m_Mode);
+				char aPayload[1024];
+				str_format(aPayload, sizeof(aPayload), "event=list_drain_tick mode=%s visible_ready=%d visible_total=%d visible_waiting=%d visible_background_requested=%d visible_nonterminal_waiting=%d requested=%d pending=%d loading=%d loaded=%d uploads_done_delta=%llu loaded_delta=%llu requested_delta=%d admitted_delta=%d started_delta=%d real_inflight=%d loading_window_limit=%d loading_window_used=%d dynamic_decision=%s request_budget_block_reason=%s last_wait_reason=%s gpu_upload_limit_units=%d gpu_upload_remaining_units=%d finalize_budget_limit=%d effective_frame_context=%s controller_reason=%s visible_reserve_effective=%d frame_time_avg_ms=%.3f render_frame_time_ms=%.3f admission_underfed=%d underfed_streak=%d",
+					BackgroundDrainActive ? "background_drain" : "visible",
+					VisibleSourceSettledCount,
+					(int)vVisibleSkinIndices.size(),
+					maximum(0, (int)vVisibleSkinIndices.size() - VisibleSourceSettledCount),
+					VisibleBackgroundRequestedCount,
+					VisibleNonTerminalWaitingCount,
+					(int)SkinStats.m_NumBackgroundRequested,
+					(int)SkinStats.m_NumPending,
+					(int)SkinStats.m_NumLoading,
+					(int)SkinStats.m_NumLoaded,
+					(unsigned long long)UploadsDoneDelta,
+					(unsigned long long)LoadedDelta,
+					RequestedDelta,
+					Telemetry.m_AdmittedDelta,
+					Telemetry.m_StartedDelta,
+					Telemetry.m_RealInflight,
+					Telemetry.m_LoadingWindowLimit,
+					Telemetry.m_LoadingWindowUsed,
+					Telemetry.m_aDynamicDecision,
+					SettingsSkinBackgroundRequestBlockReasonName(BackgroundBudgetDecision.m_BlockReason),
+					Telemetry.m_aLastWaitReason,
+					GpuUploadLimitUnits,
+					GpuUploadRemainingUnits,
+					FinalizeBudgetLimit,
+					pEffectiveFrameContext,
+					Telemetry.m_aControllerReason,
+					Telemetry.m_VisibleReserve,
+					Telemetry.m_FrameTimeAverageMs,
+					Telemetry.m_RenderFrameTimeMs,
+					Telemetry.m_AdmissionUnderfed ? 1 : 0,
+					Telemetry.m_UnderfedStreak);
+				QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
+				gs_TeeListDrainPerfSession.m_TotalRequested += (uint64_t)maximum(0, RequestedDelta);
+				gs_TeeListDrainPerfSession.m_TotalAdmitted += (uint64_t)maximum(0, Telemetry.m_AdmittedDelta);
+				gs_TeeListDrainPerfSession.m_TotalStarted += (uint64_t)maximum(0, Telemetry.m_StartedDelta);
+				gs_TeeListDrainPerfSession.m_MaxRequested = maximum(gs_TeeListDrainPerfSession.m_MaxRequested, (int)SkinStats.m_NumBackgroundRequested);
+				gs_TeeListDrainPerfSession.m_MaxPending = maximum(gs_TeeListDrainPerfSession.m_MaxPending, (int)SkinStats.m_NumPending);
+				gs_TeeListDrainPerfSession.m_MaxLoading = maximum(gs_TeeListDrainPerfSession.m_MaxLoading, (int)SkinStats.m_NumLoading);
+				gs_TeeListDrainPerfSession.m_MaxRealInflight = maximum(gs_TeeListDrainPerfSession.m_MaxRealInflight, Telemetry.m_RealInflight);
+				gs_TeeListDrainPerfSession.m_CountFuseLimit = CountFuseLimit;
+				if(str_comp(Telemetry.m_aLastWaitReason, "loading_window") == 0)
+					gs_TeeListDrainPerfSession.m_NumLoadingWindowWaits++;
+				else if(str_comp(Telemetry.m_aLastWaitReason, "gpu_upload_budget") == 0)
+					gs_TeeListDrainPerfSession.m_NumGpuBudgetWaits++;
+				else if(str_comp(Telemetry.m_aLastWaitReason, "queue_fuse") == 0)
+					gs_TeeListDrainPerfSession.m_NumQueueFuseWaits++;
+				gs_TeeListDrainPerfSession.m_LastUploads = UploadsDoneNow;
+				gs_TeeListDrainPerfSession.m_LastLoads = LoadedNow;
+				gs_TeeListDrainPerfSession.m_LastBackgroundDrain = BackgroundDrainActive;
+				gs_TeeListDrainPerfSession.m_LastVisibleReady = VisibleSourceSettledCount;
+				gs_TeeListDrainPerfSession.m_LastVisibleTotal = (int)vVisibleSkinIndices.size();
+				gs_TeeListDrainPerfSession.m_LastRequested = (int)SkinStats.m_NumBackgroundRequested;
+				gs_TeeListDrainPerfSession.m_LastPending = (int)SkinStats.m_NumPending;
+				gs_TeeListDrainPerfSession.m_LastLoading = (int)SkinStats.m_NumLoading;
+				gs_TeeListDrainPerfSession.m_LastLoaded = (int)SkinStats.m_NumLoaded;
+				gs_TeeListDrainPerfSession.m_LastAdmittedDelta = Telemetry.m_AdmittedDelta;
+				gs_TeeListDrainPerfSession.m_LastStartedDelta = Telemetry.m_StartedDelta;
 			}
-			SkinList.ForceRefresh();
-			SetNeedSendInfo();
+			if(Telemetry.m_AdmissionInvariantViolated)
+			{
+				char aPayload[256];
+				str_format(aPayload, sizeof(aPayload), "event=admission_invariant_violation pending=%d loading=%d real_inflight=%d count_fuse_limit=%d",
+					(int)SkinStats.m_NumPending,
+					(int)SkinStats.m_NumLoading,
+					Telemetry.m_RealInflight,
+					CountFuseLimit);
+				QmPerfLogPayload("perf/settings-skin-source", aPayload, Client(), "settings:tee");
+			}
 		}
-	}
-
-	if(SkinList.UnfilteredCount() > 0 && vSkinList.empty())
-	{
-		CUIRect FilterLabel, ResetButton;
-		MainView.HMargin((MainView.h - (16.0f + 18.0f + 8.0f)) / 2.0f, &FilterLabel);
-		FilterLabel.HSplitTop(16.0f, &FilterLabel, &ResetButton);
-		ResetButton.HSplitTop(8.0f, nullptr, &ResetButton);
-		ResetButton.VMargin((ResetButton.w - 200.0f) / 2.0f, &ResetButton);
-		DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_no_skins_match_label", &FilterLabel, Localize("No skins match your filter criteria"), 16.0f, TEXTALIGN_MC);
-		static CButtonContainer s_ResetButton;
-		if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_ResetButton, "tee-reset-filter", Localize("Reset filter"), 0, &ResetButton))
+		const int NewSelected = s_ListBox.DoEnd();
+		if(PerfDebugEnabled())
 		{
-			s_SkinFilterInput.Clear();
+			const double ListFrameDurationMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - ListFrameStartTime).count();
+			if(QmPerfShouldLogDuration(ListFrameDurationMs, false))
+			{
+				const int RowsSkipped = maximum(0, VisibleRange.m_TotalRows - RowsRendered);
+				char aPayload[256];
+				str_format(aPayload, sizeof(aPayload),
+					"event=list_frame page=settings:tee rows_total=%d rows_visible=%d rows_rendered=%d rows_iterated=%d rows_skipped=%d first_visible_index=%d last_visible_index=%d dur_ms=%.3f source=settings_tee",
+					VisibleRange.m_TotalRows, VisibleRange.m_VisibleRows, RowsRendered, RowsIterated, RowsSkipped, FirstVisibleIndex, LastVisibleIndex, ListFrameDurationMs);
+				QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
+			}
+		}
+
+		const bool SkinListScrollActive = s_ListBox.ScrollbarActive() || s_ListBox.ScrollbarAnimating();
+		m_SettingsScrollActive = m_SettingsScrollActive || SkinListScrollActive;
+		gs_TeeSettingsPageState.m_SkinListScrollActiveLastFrame = SkinListScrollActive;
+		if(OldSelected != NewSelected)
+		{
+			if(NewSelected >= 0 && NewSelected < (int)vSkinList.size())
+			{
+				const CSkins::CSkinListEntry &SelectedSkinEntry = vSkinList[NewSelected];
+				str_copy(pSkinName, SelectedSkinEntry.SkinContainer()->Name(), SkinNameSize);
+				if(SelectedSkinEntry.ColorKey().has_value())
+				{
+					const auto &SelectedColorKey = SelectedSkinEntry.ColorKey().value();
+					*pUseCustomColor = SelectedColorKey.m_UseCustomColor ? 1 : 0;
+					if(SelectedColorKey.m_UseCustomColor)
+					{
+						*pColorBody = SelectedColorKey.m_ColorBody;
+						*pColorFeet = SelectedColorKey.m_ColorFeet;
+					}
+				}
+				SkinList.ForceRefresh();
+				SetNeedSendInfo();
+			}
+		}
+
+		if(SkinList.UnfilteredCount() > 0 && vSkinList.empty())
+		{
+			CUIRect FilterLabel, ResetButton;
+			MainView.HMargin((MainView.h - (16.0f + 18.0f + 8.0f)) / 2.0f, &FilterLabel);
+			FilterLabel.HSplitTop(16.0f, &FilterLabel, &ResetButton);
+			ResetButton.HSplitTop(8.0f, nullptr, &ResetButton);
+			ResetButton.VMargin((ResetButton.w - 200.0f) / 2.0f, &ResetButton);
+			DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, "tee_no_skins_match_label", &FilterLabel, Localize("No skins match your filter criteria"), 16.0f, TEXTALIGN_MC);
+			static CButtonContainer s_ResetButton;
+			if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_ResetButton, "tee-reset-filter", Localize("Reset filter"), 0, &ResetButton))
+			{
+				s_SkinFilterInput.Clear();
+				SkinList.ForceRefresh();
+			}
+		}
+
+		IUiContext TeeSkinSearchCtx;
+		TeeSkinSearchCtx.m_pUi = Ui();
+		TeeSkinSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+		TeeSkinSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
+		TeeSkinSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_search");
+		TeeSkinSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+		if(ui_widget::InputField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
+		{
 			SkinList.ForceRefresh();
 		}
-	}
 
-	IUiContext TeeSkinSearchCtx;
-	TeeSkinSearchCtx.m_pUi = Ui();
-	TeeSkinSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-	TeeSkinSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-	TeeSkinSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_tee_skin_search");
-	TeeSkinSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	if(ui_widget::InputField(TeeSkinSearchCtx, &s_SkinFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive()))
-	{
-		SkinList.ForceRefresh();
-	}
+		static CButtonContainer s_SkinDatabaseButton;
+		if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_SkinDatabaseButton, "tee-skin-database", pSkinDatabaseLabel, 0, &DatabaseButton))
+		{
+			Client()->ViewLink("https://ddnet.org/skins/");
+		}
 
-	static CButtonContainer s_SkinDatabaseButton;
-	if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_SkinDatabaseButton, "tee-skin-database", pSkinDatabaseLabel, 0, &DatabaseButton))
-	{
-		Client()->ViewLink("https://ddnet.org/skins/");
-	}
+		static CButtonContainer s_EditSkinTextureButton;
+		if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_EditSkinTextureButton, "tee-edit-skin-texture", pEditSkinTextureLabel, 0, &EditTextureButton))
+			AssetsEditorOpen(ASSETS_EDITOR_TYPE_SKIN);
 
-	static CButtonContainer s_EditSkinTextureButton;
-	if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_EditSkinTextureButton, "tee-edit-skin-texture", pEditSkinTextureLabel, 0, &EditTextureButton))
-		AssetsEditorOpen(ASSETS_EDITOR_TYPE_SKIN);
+		static CButtonContainer s_DirectoryButton;
+		if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_DirectoryButton, "tee-skins-directory", pSkinDirectoryLabel, 0, &DirectoryButton))
+		{
+			Storage()->GetCompletePath(IStorage::TYPE_SAVE, "skins", aBuf, sizeof(aBuf));
+			Storage()->CreateFolder("skins", IStorage::TYPE_SAVE);
+			Client()->ViewFile(aBuf);
+		}
+		GameClient()->m_Tooltips.DoToolTip(&s_DirectoryButton, &DirectoryButton, Localize("Open the directory to add custom skins"));
 
-	static CButtonContainer s_DirectoryButton;
-	if(DoSettingsButton_Menu(SETTINGS_TEE, -1, -1, &s_DirectoryButton, "tee-skins-directory", pSkinDirectoryLabel, 0, &DirectoryButton))
-	{
-		Storage()->GetCompletePath(IStorage::TYPE_SAVE, "skins", aBuf, sizeof(aBuf));
-		Storage()->CreateFolder("skins", IStorage::TYPE_SAVE);
-		Client()->ViewFile(aBuf);
-	}
-	GameClient()->m_Tooltips.DoToolTip(&s_DirectoryButton, &DirectoryButton, Localize("Open the directory to add custom skins"));
+		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+		static CButtonContainer s_SkinRefreshButton;
+		if(DoButton_Menu(&s_SkinRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
+		{
+			ShouldRefresh = true;
+		}
+		TextRender()->SetRenderFlags(0);
+		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-	static CButtonContainer s_SkinRefreshButton;
-	if(DoButton_Menu(&s_SkinRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
-	{
-		ShouldRefresh = true;
-	}
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		RefreshVisibleRows = (int)vVisibleSkinIndices.size();
+		str_copy(aRefreshFirstVisibleSkin, pFirstVisibleSkin, sizeof(aRefreshFirstVisibleSkin)); }, true);
 
+	const SSettingsPageLayoutFrame TeePage = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	CQmScrollState &ScrollState = s_TeeSettingsScrollRegion.State();
+	// Deck 通过同一个 region 消费该状态；显式取得它以固定页面唯一的滚动状态所有权。
+	(void)ScrollState;
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = Ui()->MouseX();
+	InputState.m_MouseY = Ui()->MouseY();
+	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(TeeCardCtx, TeePage, "tee", vCards, SettingsCardOrderModel(), &s_TeeSettingsScrollRegion, InputState, SettingsCardMotionSpec(), TeeVisualOptions);
 	if(ShouldRefresh)
 	{
 		const int64_t RefreshNowNs = time_get_nanoseconds().count();
@@ -2996,13 +3069,17 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		gs_TeeSettingsPageState.m_TeeRefreshStartNs = RefreshNowNs;
 		char aPayload[192];
 		str_format(aPayload, sizeof(aPayload), "event=tee_refresh_begin visible_rows=%d first_visible_skin=%s",
-			(int)vVisibleSkinIndices.size(), pFirstVisibleSkin);
+			RefreshVisibleRows, aRefreshFirstVisibleSkin);
 		QmPerfLogPayload("perf/interaction", aPayload, Client(), "settings:tee");
 		ClearSettingsTeeListPreviewCache();
 		GameClient()->RefreshSkins(CSkinDescriptor::FLAG_SIX);
 	}
-}
 
+	if(DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+	LogSettingsSectionPerf(Client(), SETTINGS_TEE, -1, "tee_page", RenderTimer.ElapsedMs(), "static_text", TextStats.Stats().m_New, TextStats.Stats().m_Reused);
+	LogPerfStage(Client(), "tee_page_total", RenderTimer.ElapsedMs(), false, "page=tee");
+}
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
 	CUIRect Button;

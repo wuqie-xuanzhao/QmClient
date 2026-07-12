@@ -1,7 +1,7 @@
 # QmClient 设置页 UI 统一 P5 标准设置页迁移 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-> **状态（2026-07-12）：Task 2（General）与 Task 3（Player）自动化迁移已完成，Task 4 尚未开始。** Player 已接入公共 layout/deck、registry/导航和统一滚动 policy；Player/Dummy tab 保持在 card grid 外，身份输入与国家列表复用既有 InputField/CListBox 行为。General 与 Player 的真实客户端视觉/交互矩阵仍待用户最终统一反馈，P5 整体仍未完成。后续页面迁移不得以 wrapper 或复制旧 deck 路径绕过既有契约。
+> **状态（2026-07-12）：Task 2（General）、Task 3（Player）与 Task 4（Tee）的自动化迁移已完成；三页的真实客户端视觉/交互矩阵待用户最终统一反馈。** Tee 已接入公共 layout/deck、registry/导航和统一滚动 policy；Player/Dummy/Profiles tab 保持在 card grid 外，皮肤列表的资源调度与可见快照在卡片离屏时持续推进。P5 整体仍未完成，后续页面不得以 wrapper 或复制旧 deck 路径绕过既有契约。
 
 **Goal:** 在不重做 P1–P4 公共 primitive 的前提下，将 General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 八个标准设置页完整迁移到统一 page layout、card、deck、input、numeric 与 scroll 契约，并逐页删除旧实现路径。
 
@@ -404,15 +404,18 @@ git commit -m "refactor(settings): 迁移 Player 标准设置页"
 **Files:**
 - Modify: `src/game/client/components/menus_settings.cpp:1224-3025`
 - Modify: `src/game/client/QmUi/QmCardRegistry.cpp:72-108`
+- Modify: `src/game/client/QmUi/SettingsCardDeck.cpp`、`src/game/client/QmUi/SettingsCardDeck.h`（支持 Full/side 分层与离屏状态回调）
 - Modify: `src/game/client/components/qmclient/menus_qmclient.cpp:115-134`
+- Modify: `qmclient_scripts/gate/check_settings_ui_migration.py`
 - Modify: `src/test/qm_card_registry_test.cpp`
 - Modify: `src/test/qm_new_ui_menu_branch_test.cpp`
+- Modify: `src/test/qmclient_monitoring_test.cpp`、`src/test/skins_test.cpp`（迁移旧源码契约至 NumericField 与 callback 布局）
 
 **Interfaces:**
 - Consumes: shared layout/card/deck/input/numeric/scroll interfaces; Tee skin list continues to consume existing cache/resource scheduling APIs unchanged.
 - Produces: `deck:tee-identity` (Full/0), `deck:tee-skin-options` (Left/0), `deck:tee-skin-list` (Full/1); navigation tab `tee -> CMenus::SETTINGS_TEE`.
 
-- [ ] **Step 1: Write failing Tee behavior and deletion tests**
+- [x] **Step 1: Write failing Tee behavior and deletion tests**
 
 ```cpp
 const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
@@ -424,7 +427,7 @@ EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 1),
 
 Append all three Tee IDs to `CoversCurrentSettingsDeckIds`. Add a source test requiring the three IDs, unified stack, `ui_widget::InputField(...)` and `ui_widget::NumericField(...)`, while preserving calls that update visible skin/resource telemetry. Check the IDs and uniqueness semantically; do not introduce a fixed total.
 
-- [ ] **Step 2: Verify the focused red state**
+- [x] **Step 2: Verify the focused red state**
 
 ```powershell
 cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target testrunner -j 14
@@ -433,7 +436,7 @@ cmake-build-release/testrunner.exe --gtest_filter=QmCardRegistry.TeeStandardPage
 
 Expected: FAIL on missing Tee registry/route and legacy skin-prefix/search input.
 
-- [ ] **Step 3: Implement the minimal Tee migration**
+- [x] **Step 3: Implement the minimal Tee migration**
 
 Keep Player/Dummy/Profiles tabs full width; Profiles continues to dispatch to its existing page and is not card-wrapped by P5. Use the identity definition for preview/identity, the options definition for download/custom-color/eyes controls, and the full-width list definition for skin filter/list. Preserve the P3 `ui_widget::InputField(...)` / `ui_widget::NumericField(...)` paths while moving them into content callbacks; retain current list virtualization, background request budgets, preview cache, `SetSettingsTeeVisibleSnapshot` and perf logging exactly.
 
@@ -446,7 +449,7 @@ Add these exact registry/navigation rows:
 {"tee", CMenus::SETTINGS_TEE},
 ```
 
-- [ ] **Step 4: Run green tests and Tee regression filters**
+- [x] **Step 4: Run green tests and Tee regression filters**
 
 ```powershell
 cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target testrunner -j 14
@@ -456,7 +459,7 @@ python qmclient_scripts/gate/check_settings_ui_migration.py --page tee
 
 Expected: PASS; no cache/resource behavior regression and inventory reports `tee: clean`.
 
-- [ ] **Step 5: Commit the Tee slice**
+- [x] **Step 5: Commit the Tee slice**
 
 ```powershell
 git add src/game/client/components/menus_settings.cpp src/game/client/QmUi/QmCardRegistry.cpp src/game/client/components/qmclient/menus_qmclient.cpp src/test/qm_card_registry_test.cpp src/test/qm_new_ui_menu_branch_test.cpp

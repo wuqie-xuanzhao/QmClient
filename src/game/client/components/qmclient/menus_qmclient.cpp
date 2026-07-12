@@ -115,6 +115,7 @@ struct SQmGlobalSearchTabRoute
 static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
 	{"general", CMenus::SETTINGS_GENERAL},
 	{"player", CMenus::SETTINGS_PLAYER},
+	{"tee", CMenus::SETTINGS_TEE},
 	{"graphics", CMenus::SETTINGS_GRAPHICS},
 	{"sound", CMenus::SETTINGS_SOUND},
 	{"ddnet", CMenus::SETTINGS_DDNET},

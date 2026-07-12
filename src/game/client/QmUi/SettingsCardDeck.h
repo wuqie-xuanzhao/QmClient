@@ -19,6 +19,7 @@ struct SSettingsCardDefinition
 	SSettingsCardSpec m_Spec;
 	FSettingsCardMeasure m_Measure;
 	FSettingsCardRender m_Render;
+	bool m_RenderWhenClipped = false;
 };
 
 struct SSettingsCardDeckInput

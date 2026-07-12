@@ -265,7 +265,9 @@ TEST(Skins, TeeSkinListVirtualizationKeepsTotalListLength)
 	EXPECT_NE(RenderTeeBody.find("SettingsSkinListVisibleRangeForScroll("), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("s_ListBox.SkipItems("), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("int RowsRendered = 0;"), std::string::npos);
-	EXPECT_NE(RenderTeeBody.find("if(RowStart)\n\t\t\t++RowsRendered;"), std::string::npos);
+	const size_t RowsRendered = RenderTeeBody.find("++RowsRendered;");
+	EXPECT_NE(RowsRendered, std::string::npos);
+	EXPECT_LT(RenderTeeBody.find("if(RowStart)"), RowsRendered);
 	EXPECT_EQ(RenderTeeBody.find("const int RowsRendered = RowsIterated;"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("event=list_frame page=settings:tee"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("rows_total=%d rows_visible=%d rows_rendered=%d rows_iterated=%d rows_skipped=%d"), std::string::npos);
@@ -283,7 +285,28 @@ TEST(Skins, TeeSkinListVirtualizationUsesFourColumnContract)
 
 	EXPECT_NE(RenderTeeBody.find("constexpr int TeeSkinListItemsPerRow = 4;"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("s_ListBox.DoStart(TeeSkinListRowHeight, vSkinList.size(), TeeSkinListItemsPerRow"), std::string::npos);
-	EXPECT_NE(RenderTeeBody.find("SettingsSkinListVisibleRangeForScroll(\n\t\ts_ListBox.ScrollOffsetY(),\n\t\ts_ListBox.ViewHeight(),\n\t\tTeeSkinListRowHeight,\n\t\tTeeSkinListItemsPerRow"), std::string::npos);
+	const size_t VisibleRange = RenderTeeBody.find("SettingsSkinListVisibleRangeForScroll(");
+	ASSERT_NE(VisibleRange, std::string::npos);
+	const size_t VisibleRangeEnd = RenderTeeBody.find(");", VisibleRange);
+	ASSERT_NE(VisibleRangeEnd, std::string::npos);
+	const std::string VisibleRangeCall = RenderTeeBody.substr(VisibleRange, VisibleRangeEnd - VisibleRange);
+	const size_t ScrollOffset = VisibleRangeCall.find("s_ListBox.ScrollOffsetY()");
+	const size_t ViewHeight = VisibleRangeCall.find("s_ListBox.ViewHeight()");
+	const size_t RowHeight = VisibleRangeCall.find("TeeSkinListRowHeight");
+	const size_t ItemsPerRow = VisibleRangeCall.find("TeeSkinListItemsPerRow");
+	const size_t ListSize = VisibleRangeCall.find("(int)vSkinList.size()");
+	const size_t OverscanRows = VisibleRangeCall.find("1");
+	ASSERT_NE(ScrollOffset, std::string::npos);
+	ASSERT_NE(ViewHeight, std::string::npos);
+	ASSERT_NE(RowHeight, std::string::npos);
+	ASSERT_NE(ItemsPerRow, std::string::npos);
+	ASSERT_NE(ListSize, std::string::npos);
+	ASSERT_NE(OverscanRows, std::string::npos);
+	EXPECT_LT(ScrollOffset, ViewHeight);
+	EXPECT_LT(ViewHeight, RowHeight);
+	EXPECT_LT(RowHeight, ItemsPerRow);
+	EXPECT_LT(ItemsPerRow, ListSize);
+	EXPECT_LT(ListSize, OverscanRows);
 	EXPECT_NE(JobsSource.find("constexpr int TeeSkinListItemsPerRow = 4;"), std::string::npos);
 }
 
@@ -825,9 +848,9 @@ TEST(Skins, SkinQueueIntervalUsesMilliseconds)
 	EXPECT_EQ(ClientSource.find("g_Config.m_QmDummySkinQueueInterval *= 10"), std::string::npos);
 }
 
-TEST(Skins, SkinQueueRotationUsesExplicitEnableSwitchAndUnboundedInterval)
+TEST(Skins, SkinQueueRotationUsesExplicitEnableSwitchAndBoundedInterval)
 {
-	// Intent only: rotation has an explicit enable switch, an unbounded (>=1ms)
+	// Intent only: rotation has an explicit enable switch and a bounded (1..120000ms)
 	// interval, and Update gates on the enable flag. Widget/layout details are
 	// intentionally not asserted here.
 	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
@@ -844,8 +867,8 @@ TEST(Skins, SkinQueueRotationUsesExplicitEnableSwitchAndUnboundedInterval)
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueLength, qm_skin_queue_length, 20, 0, 1024"), std::string::npos);
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueLength, qm_dummy_skin_queue_length, 20, 0, 1024"), std::string::npos);
 	EXPECT_NE(Menus.find("Localize(\"Enable skin queue rotation\")"), std::string::npos);
-	EXPECT_NE(Menus.find("QueueInterval = maximum(QueueIntervalInput.GetInteger(), 1);"), std::string::npos);
-	EXPECT_EQ(Menus.find("QueueInterval = std::clamp(QueueIntervalInput.GetInteger(), 0,"), std::string::npos);
+	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInput, QueueIntervalOptions);"), std::string::npos);
+	EXPECT_EQ(Menus.find("QueueInterval = maximum(QueueIntervalInput.GetInteger(), 1);"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("!SkinQueueEnabledVar(Dummy)"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("m_aSkinQueueLastUpdate[Dummy].reset();"), std::string::npos);
 	EXPECT_EQ(UpdateBody.find("QueueInterval <= 0"), std::string::npos);
@@ -1709,10 +1732,11 @@ TEST(Skins, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_NE(Menus.find("Localize(\"Default preset\")"), std::string::npos);
 	EXPECT_NE(Menus.find("Localize(\"Rotate all server player skins\")"), std::string::npos);
 	EXPECT_NE(Menus.find("Localize(\"Clear current queue\")"), std::string::npos);
-	EXPECT_NE(Menus.find("CLineInputNumber &QueueIntervalInput = s_aQueueIntervalInputs[QueueDummy];"), std::string::npos);
-	EXPECT_NE(Menus.find("IUiContext TeeSkinQueueIntervalTextInputCtx;"), std::string::npos);
-	EXPECT_NE(Menus.find("TeeSkinQueueIntervalTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_queue_interval_text_input\");"), std::string::npos);
-	EXPECT_NE(Menus.find("const bool QueueIntervalEdited = ui_widget::InputField(TeeSkinQueueIntervalTextInputCtx, &QueueIntervalInput, IntervalInput, nullptr, 10.0f);"), std::string::npos);
+	EXPECT_NE(Menus.find("static ui_widget::SNumericFieldState s_aQueueIntervalStates[NUM_DUMMIES];"), std::string::npos);
+	EXPECT_NE(Menus.find("IUiContext TeeSkinQueueIntervalCtx;"), std::string::npos);
+	EXPECT_NE(Menus.find("TeeSkinQueueIntervalCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_queue_interval_text_input\");"), std::string::npos);
+	EXPECT_NE(Menus.find("QueueIntervalOptions.m_CommitPolicy = ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT;"), std::string::npos);
+	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInput, QueueIntervalOptions);"), std::string::npos);
 	EXPECT_EQ(Menus.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput"), std::string::npos);
 	EXPECT_NE(Source.find("m_vSkinQueuePresets.push_back({\"Server preset\", {}, CSkinQueuePreset::EKind::SERVER});"), std::string::npos);
 	// Removed UI: Apply/Save-current buttons, the select/cancel-select calls, and the

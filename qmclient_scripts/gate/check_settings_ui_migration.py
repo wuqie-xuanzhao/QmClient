@@ -33,7 +33,7 @@ PAGE_STABLE_IDS = {
 PAGE_FUNCTIONS = {
     "general": ("CMenus::RenderSettingsGeneral",),
     "player": ("CMenus::RenderSettingsTeeIdentity", "CMenus::RenderSettingsPlayer"),
-    "tee": ("CMenus::RenderSettingsTee",),
+    "tee": ("CMenus::RenderSettingsTee(CUIRect MainView)",),
     "graphics": ("CMenus::RenderSettingsGraphics",),
     "sound": ("CMenus::RenderSettingsSound",),
     "ddnet": ("CMenus::RenderSettingsDDNet",),
