@@ -42,6 +42,19 @@ TEST(QmCardRegistry, P6RegistersQmClientOverviewCards)
 	EXPECT_LT(pIntro->m_DefaultOrder, pGuide->m_DefaultOrder);
 }
 
+TEST(QmCardRegistry, P6QmClientContributorsCards)
+{
+	const auto *pCommunity = qm_card_registry::FindByStableId("deck:qmclient-contributors-community");
+	const auto *pSponsors = qm_card_registry::FindByStableId("deck:qmclient-contributors-sponsors");
+	ASSERT_NE(pCommunity, nullptr);
+	ASSERT_NE(pSponsors, nullptr);
+	EXPECT_STREQ(pCommunity->m_pDefaultTab, "qmclient-contributors");
+	EXPECT_STREQ(pSponsors->m_pDefaultTab, "qmclient-contributors");
+	EXPECT_EQ(pCommunity->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
+	EXPECT_EQ(pSponsors->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
+	EXPECT_LT(pCommunity->m_DefaultOrder, pSponsors->m_DefaultOrder);
+}
+
 // 意图：注册表必须覆盖当前 Tclient 运行时 section 的 stable card id。
 // 这些 id 是全局 Search/迁移/默认补位的事实来源，漏掉会让对应卡片从全局卡片系统消失。
 TEST(QmCardRegistry, CoversCurrentTClientSectionIds)

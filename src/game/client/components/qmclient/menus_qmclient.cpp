@@ -88,6 +88,12 @@ using namespace FontIcons;
 extern std::unordered_map<std::string, CBindSlot> g_CommandBindCache;
 extern bool g_CommandBindCacheInitialized;
 
+namespace
+{
+	std::function<bool()> g_QmClientEnsureSponsorQrTexture;
+	std::function<void(const CUIRect &, float)> g_QmClientRenderTexture;
+}
+
 struct SQmGlobalSearchCard
 {
 	const char *m_pStableId = nullptr;
@@ -722,7 +728,12 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	const float LineHeight = std::clamp(22.0f * UiScale, 18.0f, 22.0f);
 	const ColorRGBA TipColor = ui_token::color::TEXT_SECONDARY;
 	const SSettingsPageLayoutFrame OverviewPage = ResolveSettingsPageLayout(MainView, false, UiScale);
-	const IUiContext OverviewCardCtx = SettingsUiContext("settings_qmclient_overview", UiScale);
+	IUiContext OverviewCardCtx = SettingsUiContext("settings_qmclient_overview", UiScale);
+	if(PrewarmOnly)
+	{
+		OverviewCardCtx.m_pAnim = nullptr;
+		OverviewCardCtx.m_pTree = nullptr;
+	}
 	const SSettingsCardDeckVisualOptions OverviewVisualOptions = SettingsCardDeckVisualOptions();
 	static CScrollRegion s_QmOverviewSettingsScrollRegion;
 
@@ -731,7 +742,7 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		if(pColor != nullptr)
 			TextRender()->TextColor(*pColor);
-		CUIElement &TextElement = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, pText);
+		CUIElement &TextElement = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_OVERVIEW, pText);
 		DoSettingsLabelStreamed(TextElement, &Row, pText, Size > 0.0f ? Size : BodySize, TEXTALIGN_ML);
 		if(pColor != nullptr)
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -777,8 +788,170 @@ void CMenus::RenderSettingsQmClientOverview(CUIRect MainView, bool PrewarmOnly)
 	InputState.m_MouseReleased = !PrewarmOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
 	InputState.m_CtrlPressed = !PrewarmOnly && Input()->ModifierIsPressed();
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	InputState.m_pScrollParams = &ScrollParams;
-	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(OverviewCardCtx, OverviewPage, "qmclient-overview", vCards, SettingsCardOrderModel(), &s_QmOverviewSettingsScrollRegion, InputState, SettingsCardMotionSpec(), OverviewVisualOptions);
+	InputState.m_pScrollParams = PrewarmOnly ? nullptr : &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(OverviewCardCtx, OverviewPage, "qmclient-overview", vCards, SettingsCardOrderModel(), PrewarmOnly ? nullptr : &s_QmOverviewSettingsScrollRegion, InputState, SettingsCardMotionSpec(), OverviewVisualOptions);
+	if(!PrewarmOnly && DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+}
+
+void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly)
+{
+	const float UiScale = std::clamp(MainView.w / 1000.0f, 0.78f, 1.0f);
+	const float BodySize = std::clamp(12.0f * UiScale, 10.0f, 12.0f);
+	const float LineHeight = std::clamp(20.0f * UiScale, 16.0f, 20.0f);
+	const float CardGap = ui_token::settings::CARD_GAP * UiScale;
+	const float TipSize = std::clamp(BodySize * 0.82f, 9.0f, BodySize);
+	const SSettingsPageLayoutFrame Page = ResolveSettingsPageLayout(MainView, false, UiScale);
+	IUiContext CardCtx = SettingsUiContext("settings_qmclient_contributors", UiScale);
+	if(PrewarmOnly)
+	{
+		CardCtx.m_pAnim = nullptr;
+		CardCtx.m_pTree = nullptr;
+	}
+	const SSettingsCardDeckVisualOptions VisualOptions = SettingsCardDeckVisualOptions();
+	static CScrollRegion s_ScrollRegion;
+	static bool s_ShowSponsorQrCode = false;
+	auto DoContributorsSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int TextAlign = TEXTALIGN_ML, const SLabelProperties &LabelProps = {}) {
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, pTextId, pRect, pText, FontSize, TextAlign, LabelProps, (int)pRect->w);
+	};
+	auto DoContributorsSettingsMenuButton = [this](CButtonContainer *pButton, const char *pTextId, const char *pText, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f) {
+		return DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, pButton, pTextId, pText, 0, pRect, Flags, Corners, Rounding);
+	};
+
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(2);
+
+	SSettingsCardDefinition Community;
+	Community.m_Spec = {"deck:qmclient-contributors-community", Localize("QmClient Community"), Localize("Official community links")};
+	Community.m_Measure = [LineHeight, CardGap](float) { return LineHeight * 4.0f + CardGap * 2.0f; };
+	Community.m_Render = [this, BodySize, LineHeight, TipSize, PrewarmOnly, &DoContributorsSettingsLabel, &DoContributorsSettingsMenuButton](CUIRect Content) {
+		CUIRect Row;
+		static int s_QQGroupButtonId;
+		static bool s_QQCopied = false;
+		static float s_QQCopiedTime = 0.0f;
+		static CButtonContainer s_JoinQqGroupButton;
+		static CButtonContainer s_RecentUpdateButton;
+		static constexpr const char *pQmClientQqGroupLink = "https://qm.qq.com/cgi-bin/qm/qr?k=ntqdhb9_nB5GeWBo8IVMZoypYmbMwCQ1&jump_from=webapi&authKey=e4HiooMF/hxk8UZhTv8qDu7/8bZ9e3xc7rZYaLlyeifWglGT9KDchsQ7zjpinDr7";
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		if(!PrewarmOnly && Ui()->MouseInside(&Row))
+		{
+			Ui()->SetHotItem(&s_QQGroupButtonId);
+			if(Ui()->MouseButtonClicked(0))
+			{
+				Input()->SetClipboardText("1076765929");
+				s_QQCopied = true;
+				s_QQCopiedTime = Client()->LocalTime();
+			}
+		}
+		if(s_QQCopied && Client()->LocalTime() - s_QQCopiedTime > 1.5f)
+			s_QQCopied = false;
+		DoContributorsSettingsLabel("qmclient-community-qq-group-copy", &Row, s_QQCopied ? Localize("Copied") : Localize("QQ group: 1076765929 (click to copy)"), TipSize);
+		Content.HSplitTop(LineHeight * 0.25f, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		if(DoContributorsSettingsMenuButton(&s_JoinQqGroupButton, "qmclient-community-join-qq-group", Localize("Join QQ group"), &Row))
+			Client()->ViewLink(pQmClientQqGroupLink);
+		Content.HSplitTop(LineHeight * 0.25f, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		if(DoContributorsSettingsMenuButton(&s_RecentUpdateButton, "qmclient-community-view-latest-updates", Localize("View latest updates"), &Row))
+			Client()->ViewLink("https://qmclient.icu");
+	};
+	vCards.push_back(std::move(Community));
+
+	SSettingsCardDefinition Sponsors;
+	Sponsors.m_Spec = {"deck:qmclient-contributors-sponsors", Localize("Sponsor support"), Localize("Thanks for supporting QmClient")};
+	Sponsors.m_Measure = [this, BodySize, LineHeight, CardGap, UiScale, PrewarmOnly](float ContentWidth) {
+		const float SponsorRows = 5.0f;
+		const float QrHeight = s_ShowSponsorQrCode ? std::clamp(ContentWidth, LineHeight * 8.0f, LineHeight * 12.0f) + LineHeight : 0.0f;
+		return LineHeight * SponsorRows + CardGap * (SponsorRows - 1.0f) + QrHeight + 30.0f * UiScale;
+	};
+	Sponsors.m_MeasureEachFrame = true;
+	Sponsors.m_Render = [this, BodySize, LineHeight, TipSize, UiScale, PrewarmOnly, &DoContributorsSettingsLabel](CUIRect Content) {
+		CUIRect Row;
+		static CButtonContainer s_SponsorButton;
+		static const char *const s_apSponsors[] = {"喵不一", "久桃", "芽芽", "碳烤綿芽", "骨头", "陌浅羽", "树羽小朋友", "望舒", "松子", "DYL", "夏日", "小信", "哆啦梦", "吃了吗chilem"};
+
+		if(const CMenuImage *pSponsorImage = FindMenuImage("sponsor"))
+		{
+			Content.HSplitTop(std::clamp(Content.w * 0.18f, LineHeight * 2.0f, LineHeight * 4.0f), &Row, &Content);
+			Graphics()->TextureSet(pSponsorImage->m_OrgTexture);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			IGraphics::CQuadItem Image(Row.x, Row.y, Row.w, Row.h);
+			Graphics()->QuadsDrawTL(&Image, 1);
+			Graphics()->QuadsEnd();
+		}
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		if(DoButton_Menu(&s_SponsorButton, s_ShowSponsorQrCode ? Localize("Hide sponsor QR code") : Localize("Show sponsor QR code"), 0, &Row))
+			s_ShowSponsorQrCode = !s_ShowSponsorQrCode;
+		if(s_ShowSponsorQrCode)
+		{
+			Content.HSplitTop(LineHeight * 0.5f, nullptr, &Content);
+			if(g_QmClientEnsureSponsorQrTexture && g_QmClientEnsureSponsorQrTexture() && g_QmClientRenderTexture)
+			{
+				const float QrSide = std::clamp(Content.w, LineHeight * 8.0f, LineHeight * 12.0f);
+				Content.HSplitTop(QrSide, &Row, &Content);
+				CUIRect QrRect = Row;
+				QrRect.Margin(LineHeight * 0.35f, &QrRect);
+				QrRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 5.0f);
+				QrRect.Margin(LineHeight * 0.5f, &QrRect);
+				if(QrRect.w > QrRect.h)
+				{
+					const float Pad = (QrRect.w - QrRect.h) * 0.5f;
+					QrRect.VSplitLeft(Pad, nullptr, &QrRect);
+					QrRect.VSplitRight(Pad, &QrRect, nullptr);
+				}
+				else if(QrRect.h > QrRect.w)
+				{
+					const float Pad = (QrRect.h - QrRect.w) * 0.5f;
+					QrRect.HSplitTop(Pad, nullptr, &QrRect);
+					QrRect.HSplitBottom(Pad, &QrRect, nullptr);
+				}
+				g_QmClientRenderTexture(QrRect, 1.0f);
+			}
+			else
+			{
+				Content.HSplitTop(LineHeight * 1.4f, &Row, &Content);
+				DoContributorsSettingsLabel("qmclient-community-sponsor-qr-decode-failed", &Row, Localize("Could not load sponsor QR code. Check the Base64 data"), TipSize * 0.92f);
+			}
+		}
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		DoContributorsSettingsLabel("qmclient-community-developers-names", &Row, "栖梦(璇梦),夏日,DYL", BodySize + 1.0f);
+		Content.HSplitTop(LineHeight * 0.5f, nullptr, &Content);
+		DoContributorsSettingsLabel("qmclient-community-sponsors-label", &Content, Localize("Sponsors:"), TipSize);
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		TextRender()->TextColor(ColorRGBA(0.95f, 0.8f, 0.2f, 1.0f));
+		std::string SponsorText;
+		for(const char *pSponsor : s_apSponsors)
+		{
+			if(!SponsorText.empty())
+				SponsorText.append(", ");
+			SponsorText.append(pSponsor);
+		}
+		Ui()->DoLabel(&Row, SponsorText.c_str(), TipSize, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	};
+	vCards.push_back(std::move(Sponsors));
+
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	const CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	CQmScrollState &ScrollState = s_ScrollRegion.State();
+	(void)ScrollState;
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = PrewarmOnly ? 0.0f : Ui()->MouseX();
+	InputState.m_MouseY = PrewarmOnly ? 0.0f : Ui()->MouseY();
+	InputState.m_MousePressed = !PrewarmOnly && Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = !PrewarmOnly && Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !PrewarmOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = !PrewarmOnly && Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = PrewarmOnly ? nullptr : &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(CardCtx, Page, "qmclient-contributors", vCards, SettingsCardOrderModel(), PrewarmOnly ? nullptr : &s_ScrollRegion, InputState, SettingsCardMotionSpec(), VisualOptions);
 	if(!PrewarmOnly && DeckResult.m_OrderChanged)
 		SaveSettingsCardOrderModel();
 }
@@ -1187,9 +1360,9 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Ui()->ClipDisable();
 			return;
 		}
-
 		MainView = ContentView;
 	}
+	const CUIRect CanonicalQmClientContentView = MainView;
 
 	// ============================================
 	// Liquid Glass UI - 稳定布局系统
@@ -1236,17 +1409,8 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	static CQmScrollContainer s_QmScrollContainer;
 	static float s_QmScrollContentHeight = 0.0f;
 	static float s_PrevQmScrollY = 0.0f;
-	SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollState, s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);
-
 	static std::vector<CUIRect> s_GlassCards;
-
-	MainView.y += QmScrollFrame.m_Offset.y;
-	const CUIRect *pModuleScrollClipRect = PrewarmOnly ? nullptr : &QmScrollFrame.m_ClipRect;
-	const SSectionCullContext ModuleCullContext{
-		pModuleScrollClipRect != nullptr ? pModuleScrollClipRect->y : MainView.y,
-		pModuleScrollClipRect != nullptr ? pModuleScrollClipRect->y + pModuleScrollClipRect->h : MainView.y + MainView.h,
-		maximum(LgLineHeight * 6.0f, 220.0f * UiScale),
-	};
+	SSectionCullContext ModuleCullContext{};
 
 	// 外边距
 	const float OuterMargin = CompactLayout ? std::clamp(7.0f * UiScale, 4.0f, 7.0f) : std::clamp(10.0f * UiScale, 6.0f, 10.0f);
@@ -1583,6 +1747,37 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 		s_SponsorQrTextureReady = s_SponsorQrTexture.IsValid();
 		s_SponsorQrDecodeFailed = !s_SponsorQrTextureReady;
 		return s_SponsorQrTextureReady;
+	};
+	if(m_QmClientSettingsTab == QMCLIENT_SETTINGS_TAB_CONTRIBUTORS)
+	{
+		g_QmClientEnsureSponsorQrTexture = EnsureSponsorQrTexture;
+		g_QmClientRenderTexture = [&, this](const CUIRect &Rect, float Alpha) {
+			if(!s_SponsorQrTexture.IsValid())
+				return;
+			Graphics()->TextureSet(s_SponsorQrTexture);
+			Graphics()->WrapClamp();
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
+			IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+			Graphics()->WrapNormal();
+		};
+		RenderSettingsQmClientContributors(CanonicalQmClientContentView, PrewarmOnly);
+		g_QmClientEnsureSponsorQrTexture = {};
+		g_QmClientRenderTexture = {};
+		if(TabTransitionActive)
+			Ui()->ClipDisable();
+		return;
+	}
+
+	SSettingsQmScrollFrame QmScrollFrame = BeginSettingsQmScrollContainer(s_QmScrollState, s_QmScrollContainer, &MainView, s_QmScrollContentHeight, QmCardStyle, UiScale, s_PrevQmScrollY, !PrewarmOnly);
+	MainView.y += QmScrollFrame.m_Offset.y;
+	const CUIRect *pModuleScrollClipRect = PrewarmOnly ? nullptr : &QmScrollFrame.m_ClipRect;
+	ModuleCullContext = SSectionCullContext{
+		pModuleScrollClipRect != nullptr ? pModuleScrollClipRect->y : MainView.y,
+		pModuleScrollClipRect != nullptr ? pModuleScrollClipRect->y + pModuleScrollClipRect->h : MainView.y + MainView.h,
+		maximum(LgLineHeight * 6.0f, 220.0f * UiScale),
 	};
 	auto DoKeyBindRow = [&](CUIRect &Content, CButtonContainer &ReaderButton, CButtonContainer &ClearButton, const char *pLabel, const char *pCommand) {
 		CBindSlot Bind(KEY_UNKNOWN, KeyModifier::NONE);

@@ -78,6 +78,8 @@ namespace qm_card_registry
 			// === 设置 deck · deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
 			{"deck:qmclient-overview-intro", "qmclient-overview", ECardColumn::Full, 0, "QmClient overview", "qmclient overview guide"},
 			{"deck:qmclient-overview-guide", "qmclient-overview", ECardColumn::Full, 1, "Page guide", "qmclient page guide tabs"},
+			{"deck:qmclient-contributors-community", "qmclient-contributors", ECardColumn::Full, 0, "QmClient Community", "community links qmclient"},
+			{"deck:qmclient-contributors-sponsors", "qmclient-contributors", ECardColumn::Full, 1, "Sponsor support", "sponsor support qmclient"},
 			{"deck:general-game", "general", ECardColumn::Left, 0, Localizable("Game"), "general game camera weapon"},
 			{"deck:general-language", "general", ECardColumn::Right, 0, Localizable("Language"), "general language localization"},
 			{"deck:general-client", "general", ECardColumn::Left, 1, Localizable("Client"), "general client theme files"},

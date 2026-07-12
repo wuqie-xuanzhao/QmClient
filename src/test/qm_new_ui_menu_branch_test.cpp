@@ -121,6 +121,25 @@ TEST(QmNewUiMenuBranches, P6QmClientOverviewUsesCanonicalPageCardAndScroll)
 	EXPECT_NE(Source.find("m_SettingsCardDeck.RequestReveal(Card.m_pStableId);"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly)");
+	ASSERT_FALSE(Body.empty());
+	EXPECT_NE(Body.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Body.find("SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(Body.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(Body.find("deck:qmclient-contributors-community"), std::string::npos);
+	EXPECT_NE(Body.find("deck:qmclient-contributors-sponsors"), std::string::npos);
+	EXPECT_NE(Body.find("QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_EQ(Body.find("BeginSettingsQmScrollContainer("), std::string::npos);
+	EXPECT_EQ(Body.find("RenderQmSettingsGlassCard("), std::string::npos);
+	const std::string Dispatch = FunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	ASSERT_FALSE(Dispatch.empty());
+	EXPECT_NE(Dispatch.find("RenderSettingsQmClientContributors(MainView, PrewarmOnly)"), std::string::npos);
+}
+
+
 TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
