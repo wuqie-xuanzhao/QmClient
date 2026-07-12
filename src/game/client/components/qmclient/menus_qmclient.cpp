@@ -973,6 +973,112 @@ void CMenus::RenderQmVisualChatBubbleContent(CUIRect &Content, float LineHeight,
 	DoLine_ColorPicker(&s_ChatBubbleTextColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Text color"), &g_Config.m_QmChatBubbleTextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false);
 }
 
+void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.9f));
+	RenderQmVisualLabel("qmclient-tee-appearance-title", &Row, Localize("Tee appearance"), BodySize * 0.9f);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCycleTeeHue, "Cycle custom Tee hue", Localize("Cycle custom Tee hue"), &g_Config.m_QmCycleTeeHue);
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCycleTeeHueDummy, "Also apply to dummy", Localize("Also apply to dummy"), &g_Config.m_QmCycleTeeHueDummy);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	SLabelProperties CycleHueSpeedLabelProps;
+	CycleHueSpeedLabelProps.m_DisallowNewline = true;
+	CycleHueSpeedLabelProps.m_StopAtEnd = true;
+	CycleHueSpeedLabelProps.m_MinimumFontSize = 6.0f;
+	if(!g_Config.m_QmCycleTeeHue)
+		TextRender()->TextColor(ColorRGBA(0.8f, 0.8f, 0.8f, 0.55f));
+	RenderQmVisualLabel("qmclient-cycle-tee-hue-speed", &LabelColumn, Localize("Hue speed"), BodySize, TEXTALIGN_ML, CycleHueSpeedLabelProps);
+	static int s_QmCycleTeeHueSpeedInputId;
+	int DisabledSpeedPreview = g_Config.m_QmCycleTeeHueSpeed;
+	RenderQmSettingsSliderWithValueInput(&s_QmCycleTeeHueSpeedInputId, ControlColumn, g_Config.m_QmCycleTeeHue ? &g_Config.m_QmCycleTeeHueSpeed : &DisabledSpeedPreview, 0, 360, "°/s", PrewarmOnly);
+	if(!g_Config.m_QmCycleTeeHue)
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(BodySize, &Row, &Content);
+	TextRender()->TextColor(ColorRGBA(0.85f, 0.85f, 0.85f, 0.72f));
+	RenderQmVisualLabel("qmclient-cycle-tee-hue-custom-note", &Row, Localize("Only affects custom Tee colors."), BodySize * 0.82f);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(BodySize, &Row, &Content);
+	TextRender()->TextColor(g_Config.m_TcRainbowTees ? ColorRGBA(1.0f, 0.78f, 0.45f, 0.9f) : ColorRGBA(0.85f, 0.85f, 0.85f, 0.72f));
+	RenderQmVisualLabel("qmclient-cycle-tee-hue-tclient-note", &Row, Localize("When TClient rainbow Tee is enabled, this feature has no effect."), BodySize * 0.82f);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHammerSwapSkin, "Hammer skin steal", Localize("Hammer skin steal"), &g_Config.m_QmHammerSwapSkin);
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmEmoticonShadow, "Emoticon shadow", Localize("Emoticon shadow"), &g_Config.m_QmEmoticonShadow);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	const char *pAnimationFeatureId = "qm_2_72_0_skin_transition_animation_toggle";
+	const bool AnimationUnread = !IsQmNewFeatureRead(pAnimationFeatureId);
+	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmSkinChangeTransition, "Skin transition animation", Localize("Skin transition animation"), g_Config.m_QmSkinChangeTransition, &Row))
+		g_Config.m_QmSkinChangeTransition ^= 1;
+	if(AnimationUnread)
+	{
+		CUIRect Dot = Row;
+		Dot.x = Dot.x + Dot.w - 9.0f;
+		Dot.y += 2.0f;
+		Dot.w = 6.0f;
+		Dot.h = 6.0f;
+		Dot.Draw(ColorRGBA(1.0f, 0.12f, 0.16f, 0.95f), IGraphics::CORNER_ALL, 3.0f);
+	}
+	MarkQmNewFeatureHovered(pAnimationFeatureId, Row, PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(!g_Config.m_QmSkinChangeTransition)
+		return;
+
+	auto RenderDropDown = [&](const char *pTextId, const char *pText, int *pValue, int MaxValue, const char *const *ppNames, int NumNames, CUi::SDropDownState &State, CScrollRegion &ScrollRegion) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		State.m_SelectionPopupContext.m_pScrollRegion = &ScrollRegion;
+		const int NewValue = Ui()->DoDropDown(&ControlColumn, std::clamp(*pValue, 0, MaxValue), ppNames, NumNames, State);
+		if(*pValue != NewValue)
+			*pValue = NewValue;
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static CUi::SDropDownState s_SkinTransitionTypeDropDownState;
+	static CScrollRegion s_SkinTransitionTypeDropDownScrollRegion;
+	const char *apSkinTransitionTypeNames[] = {Localize("Afterimage pop"), Localize("Smooth fade"), Localize("Slide left"), Localize("Spin pop"), Localize("Brightness shift"), Localize("Glitch"), Localize("Elastic")};
+	RenderDropDown("qmclient-skin-transition-type", "Skin transition type", &g_Config.m_QmSkinChangeTransitionType, 6, apSkinTransitionTypeNames, std::size(apSkinTransitionTypeNames), s_SkinTransitionTypeDropDownState, s_SkinTransitionTypeDropDownScrollRegion);
+	static CUi::SDropDownState s_SkinTransitionScopeDropDownState;
+	static CScrollRegion s_SkinTransitionScopeDropDownScrollRegion;
+	static std::vector<const char *> s_SkinTransitionScopeDropDownNames;
+	s_SkinTransitionScopeDropDownNames = {Localize("Self only"), Localize("Local"), Localize("All players")};
+	RenderDropDown("qmclient-skin-transition-range", "Animation range", &g_Config.m_QmSkinChangeTransitionScope, 2, s_SkinTransitionScopeDropDownNames.data(), (int)s_SkinTransitionScopeDropDownNames.size(), s_SkinTransitionScopeDropDownState, s_SkinTransitionScopeDropDownScrollRegion);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	SLabelProperties DurationLabelProps;
+	DurationLabelProps.m_DisallowNewline = true;
+	DurationLabelProps.m_StopAtEnd = true;
+	DurationLabelProps.m_MinimumFontSize = 6.0f;
+	RenderQmVisualLabel("qmclient-skin-transition-duration", &LabelColumn, Localize("Skin transition duration"), BodySize, TEXTALIGN_ML, DurationLabelProps);
+	static int s_QmSkinChangeTransitionMsInputId;
+	RenderQmSettingsSliderWithValueInput(&s_QmSkinChangeTransitionMsInputId, ControlColumn, &g_Config.m_QmSkinChangeTransitionMs, 0, 2000, "ms", PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	static CUi::SDropDownState s_SkinTransitionEasingDropDownState;
+	static CScrollRegion s_SkinTransitionEasingDropDownScrollRegion;
+	const char *apSkinTransitionEasingNames[] = {Localize("Ease out cubic"), Localize("Elastic back"), Localize("Linear"), Localize("Ease in out quad")};
+	RenderDropDown("qmclient-skin-transition-easing", "Skin transition easing", &g_Config.m_QmSkinChangeTransitionEasing, 3, apSkinTransitionEasingNames, std::size(apSkinTransitionEasingNames), s_SkinTransitionEasingDropDownState, s_SkinTransitionEasingDropDownScrollRegion);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmVisualLabel("qmclient-skin-transition-intensity", &LabelColumn, Localize("Skin transition intensity"), BodySize);
+	static int s_QmSkinChangeTransitionIntensityInputId;
+	RenderQmSettingsSliderWithValueInput(&s_QmSkinChangeTransitionIntensityInputId, ControlColumn, &g_Config.m_QmSkinChangeTransitionIntensity, 0, 300, "%", PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
 void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
 {
 	if(!Frame.m_Enabled)
@@ -4303,147 +4409,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 5, Localize("Skin transition"), Localize("Configure hammer skin steal and skin transition animations"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.9f));
-				DoQmSettingsLabel("qmclient-tee-appearance-title", &Row, Localize("Tee appearance"), LgBodySize * 0.9f);
-				TextRender()->TextColor(TextRender()->DefaultTextColor());
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmCycleTeeHue, "Cycle custom Tee hue", Localize("Cycle custom Tee hue"), &g_Config.m_QmCycleTeeHue, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmCycleTeeHueDummy, "Also apply to dummy", Localize("Also apply to dummy"), &g_Config.m_QmCycleTeeHueDummy, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					SLabelProperties CycleHueSpeedLabelProps;
-					CycleHueSpeedLabelProps.m_DisallowNewline = true;
-					CycleHueSpeedLabelProps.m_StopAtEnd = true;
-					CycleHueSpeedLabelProps.m_MinimumFontSize = 6.0f;
-					if(!g_Config.m_QmCycleTeeHue)
-						TextRender()->TextColor(ColorRGBA(0.8f, 0.8f, 0.8f, 0.55f));
-					DoQmSettingsLabel("qmclient-cycle-tee-hue-speed", &LabelColValue, Localize("Hue speed"), LgBodySize, TEXTALIGN_ML, CycleHueSpeedLabelProps);
-					static int s_QmCycleTeeHueSpeedInputId;
-					int DisabledSpeedPreview = g_Config.m_QmCycleTeeHueSpeed;
-					RenderSliderWithValueInput(&s_QmCycleTeeHueSpeedInputId, ControlColValue, g_Config.m_QmCycleTeeHue ? &g_Config.m_QmCycleTeeHueSpeed : &DisabledSpeedPreview, 0, 360, "°/s");
-					if(!g_Config.m_QmCycleTeeHue)
-						TextRender()->TextColor(TextRender()->DefaultTextColor());
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
-				TextRender()->TextColor(ColorRGBA(0.85f, 0.85f, 0.85f, 0.72f));
-				DoQmSettingsLabel("qmclient-cycle-tee-hue-custom-note", &Row, Localize("Only affects custom Tee colors."), LgBodySize * 0.82f);
-				TextRender()->TextColor(TextRender()->DefaultTextColor());
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
-				TextRender()->TextColor(g_Config.m_TcRainbowTees ? ColorRGBA(1.0f, 0.78f, 0.45f, 0.9f) : ColorRGBA(0.85f, 0.85f, 0.85f, 0.72f));
-				DoQmSettingsLabel("qmclient-cycle-tee-hue-tclient-note", &Row, Localize("When TClient rainbow Tee is enabled, this feature has no effect."), LgBodySize * 0.82f);
-				TextRender()->TextColor(TextRender()->DefaultTextColor());
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmHammerSwapSkin, "Hammer skin steal", Localize("Hammer skin steal"), &g_Config.m_QmHammerSwapSkin, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmEmoticonShadow, "Emoticon shadow", Localize("Emoticon shadow"), &g_Config.m_QmEmoticonShadow, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				CUIRect AnimationToggleRow = Row;
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmSkinChangeTransition, "Skin transition animation", Localize("Skin transition animation"), &g_Config.m_QmSkinChangeTransition, &Row, LgLineHeight);
-				if(!IsQmNewFeatureMarkRead(pSkinTransitionAnimationFeatureId))
-					DrawQmNewFeatureDot(AnimationToggleRow);
-				MarkQmNewFeatureHovered(pSkinTransitionAnimationFeatureId, AnimationToggleRow);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmSkinChangeTransition)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-skin-transition-type", &LabelColValue, Localize("Skin transition type"), LgBodySize);
-						const char *apSkinTransitionDropDownNames[] = {
-							Localize("Afterimage pop"),
-							Localize("Smooth fade"),
-							Localize("Slide left"),
-							Localize("Spin pop"),
-							Localize("Brightness shift"),
-							Localize("Glitch"),
-							Localize("Elastic"),
-						};
-						static CUi::SDropDownState s_SkinTransitionDropDownState;
-						static CScrollRegion s_SkinTransitionDropDownScrollRegion;
-						s_SkinTransitionDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_SkinTransitionDropDownScrollRegion;
-						const int TransitionTypeSelectedNew = Ui()->DoDropDown(&ControlColValue, g_Config.m_QmSkinChangeTransitionType, apSkinTransitionDropDownNames, std::size(apSkinTransitionDropDownNames), s_SkinTransitionDropDownState);
-						if(g_Config.m_QmSkinChangeTransitionType != TransitionTypeSelectedNew)
-							g_Config.m_QmSkinChangeTransitionType = TransitionTypeSelectedNew;
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-skin-transition-range", &LabelColValue, Localize("Animation range"), LgBodySize);
-						static std::vector<const char *> s_SkinTransitionScopeDropDownNames;
-						s_SkinTransitionScopeDropDownNames = {Localize("Self only"), Localize("Local"), Localize("All players")};
-						static CUi::SDropDownState s_SkinTransitionScopeDropDownState;
-						static CScrollRegion s_SkinTransitionScopeDropDownScrollRegion;
-						s_SkinTransitionScopeDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_SkinTransitionScopeDropDownScrollRegion;
-						const int SkinTransitionScope = std::clamp(g_Config.m_QmSkinChangeTransitionScope, 0, 2);
-						const int SkinTransitionScopeNew = Ui()->DoDropDown(&ControlColValue, SkinTransitionScope, s_SkinTransitionScopeDropDownNames.data(), s_SkinTransitionScopeDropDownNames.size(), s_SkinTransitionScopeDropDownState);
-						if(g_Config.m_QmSkinChangeTransitionScope != SkinTransitionScopeNew)
-							g_Config.m_QmSkinChangeTransitionScope = SkinTransitionScopeNew;
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					SLabelProperties SkinTransitionDurationLabelProps;
-					SkinTransitionDurationLabelProps.m_DisallowNewline = true;
-					SkinTransitionDurationLabelProps.m_StopAtEnd = true;
-					SkinTransitionDurationLabelProps.m_MinimumFontSize = 6.0f;
-					DoQmSettingsLabel("qmclient-skin-transition-duration", &LabelCol, Localize("Skin transition duration"), LgBodySize, TEXTALIGN_ML, SkinTransitionDurationLabelProps);
-					static int s_QmSkinChangeTransitionMsInputId;
-					RenderSliderWithValueInput(&s_QmSkinChangeTransitionMsInputId, ControlCol, &g_Config.m_QmSkinChangeTransitionMs, 0, 2000, "ms");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-skin-transition-easing", &LabelColValue, Localize("Skin transition easing"), LgBodySize);
-						const char *apSkinTransitionEasingNames[] = {
-							Localize("Ease out cubic"),
-							Localize("Elastic back"),
-							Localize("Linear"),
-							Localize("Ease in out quad"),
-						};
-						static CUi::SDropDownState s_SkinTransitionEasingDropDownState;
-						static CScrollRegion s_SkinTransitionEasingDropDownScrollRegion;
-						s_SkinTransitionEasingDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_SkinTransitionEasingDropDownScrollRegion;
-						const int EasingSelectedNew = Ui()->DoDropDown(&ControlColValue, std::clamp(g_Config.m_QmSkinChangeTransitionEasing, 0, 3), apSkinTransitionEasingNames, std::size(apSkinTransitionEasingNames), s_SkinTransitionEasingDropDownState);
-						if(g_Config.m_QmSkinChangeTransitionEasing != EasingSelectedNew)
-							g_Config.m_QmSkinChangeTransitionEasing = EasingSelectedNew;
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-skin-transition-intensity", &LabelCol, Localize("Skin transition intensity"), LgBodySize);
-					static int s_QmSkinChangeTransitionIntensityInputId;
-					RenderSliderWithValueInput(&s_QmSkinChangeTransitionIntensityInputId, ControlCol, &g_Config.m_QmSkinChangeTransitionIntensity, 0, 300, "%");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmVisualSkinTransitionContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
