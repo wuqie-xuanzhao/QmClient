@@ -1799,6 +1799,68 @@ void CMenus::RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHei
 	}
 }
 
+void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)
+{
+	CUIRect Row;
+	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing](const void *pId, const char *pText, int *pValue) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pId, pText, Localize(pText), *pValue, &Row))
+			*pValue ^= 1;
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	RenderCheckbox(&g_Config.m_QmFootParticles, "Local particle effects", &g_Config.m_QmFootParticles);
+	RenderCheckbox(&g_Config.m_QmClientMarkTrail, "Remote particle effects", &g_Config.m_QmClientMarkTrail);
+	RenderCheckbox(&g_Config.m_QmClientShowBadge, "Show Qm badge", &g_Config.m_QmClientShowBadge);
+	RenderCheckbox(&g_Config.m_QmShowOutdatedVersionWarning, "Show outdated version warning", &g_Config.m_QmShowOutdatedVersionWarning);
+	RenderCheckbox(&g_Config.m_QmScoreboardPoints, "Scoreboard point check", &g_Config.m_QmScoreboardPoints);
+	RenderCheckbox(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", &g_Config.m_QmScoreboardOnDeath);
+	RenderCheckbox(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", &g_Config.m_QmHideJoinServerInfo);
+	RenderCheckbox(&g_Config.m_QmNewUi, "New UI", &g_Config.m_QmNewUi);
+	RenderCheckbox(&g_Config.m_QmShortServerNames, "Short server names", &g_Config.m_QmShortServerNames);
+	RenderCheckbox(&g_Config.m_QmImeAutoManage, "Auto manage IME while typing", &g_Config.m_QmImeAutoManage);
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, &g_Config.m_QmNewIme, "New IME", Localize("New IME"), g_Config.m_QmNewIme, &Row))
+		g_Config.m_QmNewIme ^= 1;
+	if(!IsQmNewFeatureRead("qm_2_63_0_new_ime"))
+	{
+		CUIRect Dot;
+		constexpr float DotSize = 6.0f;
+		Dot = {Row.x + Row.w - DotSize - 3.0f, Row.y + 3.0f, DotSize, DotSize};
+		Dot.Draw(ColorRGBA(1.0f, 0.12f, 0.16f, 0.95f), IGraphics::CORNER_ALL, DotSize * 0.5f);
+	}
+	MarkQmNewFeatureHovered("qm_2_63_0_new_ime", Row, PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	RenderCheckbox(&g_Config.m_QmProcessHighPriority, "High process priority", &g_Config.m_QmProcessHighPriority);
+	RenderCheckbox(&g_Config.m_QmRepeatEnabled, "Enable repeat", &g_Config.m_QmRepeatEnabled);
+	RenderCheckbox(&g_Config.m_QmRandomEmoteOnHit, "Random emoticon", &g_Config.m_QmRandomEmoteOnHit);
+	RenderCheckbox(&g_Config.m_QmComboPopup, "Combo", &g_Config.m_QmComboPopup);
+	RenderCheckbox(&g_Config.m_QmSayNoPop, "Hide input emoticon", &g_Config.m_QmSayNoPop);
+}
+
+void CMenus::RenderQmFunctionHJAssistContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	CUIRect Row, LabelColumn, ControlColumn;
+	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing](const void *pId, const char *pText, int *pValue) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pId, pText, Localize(pText), *pValue, &Row))
+			*pValue ^= 1;
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	RenderCheckbox(&g_Config.m_QmAutoUnspecOnUnfreeze, "Auto unspec on unfreeze", &g_Config.m_QmAutoUnspecOnUnfreeze);
+	RenderCheckbox(&g_Config.m_QmAutoSwitchOnUnfreeze, "Auto switch to the tee that got unfrozen", &g_Config.m_QmAutoSwitchOnUnfreeze);
+	RenderCheckbox(&g_Config.m_QmAutoCloseChatOnUnfreeze, "Automatically close the current chat after waking from freeze", &g_Config.m_QmAutoCloseChatOnUnfreeze);
+	RenderCheckbox(&g_Config.m_QmFreezeWakeupPopup, "Show wake-up popup on the other tee", &g_Config.m_QmFreezeWakeupPopup);
+	RenderCheckbox(&g_Config.m_QmAutoTeamLock, "Auto team lock", &g_Config.m_QmAutoTeamLock);
+	if(!g_Config.m_QmAutoTeamLock)
+		return;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-hj-assist-lock-delay", &LabelColumn, Localize("Lock delay"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+	static int s_QmAutoTeamLockDelayInputId;
+	RenderQmSettingsSliderWithValueInput(&s_QmAutoTeamLockDelayInputId, ControlColumn, &g_Config.m_QmAutoTeamLockDelay, 0, 30, "s", PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
 void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row, LabelColumn, ControlColumn;
@@ -5931,76 +5993,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				const char *pMiniFeaturesNewFeatureId = MiniFeaturesNewFeatureId();
 				RenderQmModuleHeadlineNew(CardContent, 2, Localize("Dream Features"), Localize("Only what you can't imagine, nothing Dream can't do!"), pMiniFeaturesNewFeatureId);
-
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmFootParticles, "Local particle effects", Localize("Local particle effects"), &g_Config.m_QmFootParticles, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmClientMarkTrail, "Remote particle effects", Localize("Remote particle effects"), &g_Config.m_QmClientMarkTrail, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmClientShowBadge, "Show Qm badge", Localize("Show Qm badge"), &g_Config.m_QmClientShowBadge, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmShowOutdatedVersionWarning, "Show outdated version warning", Localize("Show outdated version warning"), &g_Config.m_QmShowOutdatedVersionWarning, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmScoreboardPoints, "Scoreboard point check", Localize("Scoreboard point check"), &g_Config.m_QmScoreboardPoints, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", Localize("Show scoreboard after death"), &g_Config.m_QmScoreboardOnDeath, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", Localize("Hide server information on join"), &g_Config.m_QmHideJoinServerInfo, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmNewUi, "New UI", Localize("New UI"), &g_Config.m_QmNewUi, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmShortServerNames, "Short server names", Localize("Short server names"), &g_Config.m_QmShortServerNames, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmImeAutoManage, "Auto manage IME while typing", Localize("Auto manage IME while typing"), &g_Config.m_QmImeAutoManage, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					const CUIRect NewImeRow = Row;
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmNewIme, "New IME", Localize("New IME"), &g_Config.m_QmNewIme, &Row, LgLineHeight);
-					if(!IsQmNewFeatureMarkRead("qm_2_63_0_new_ime"))
-						DrawQmNewFeatureDot(NewImeRow);
-					MarkQmNewFeatureHovered("qm_2_63_0_new_ime", NewImeRow);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmProcessHighPriority, "High process priority", Localize("High process priority"), &g_Config.m_QmProcessHighPriority, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmRepeatEnabled, "Enable repeat", Localize("Enable repeat"), &g_Config.m_QmRepeatEnabled, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmRandomEmoteOnHit, "Random emoticon", Localize("Random emoticon"), &g_Config.m_QmRandomEmoteOnHit, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmComboPopup, "Combo", Localize("Combo"), &g_Config.m_QmComboPopup, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmSayNoPop, "Hide input emoticon", Localize("Hide input emoticon"), &g_Config.m_QmSayNoPop, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmFunctionMiniFeaturesContent(CardContent, LgLineHeight, LgLineSpacing, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -7668,32 +7661,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 11, Localize("HJ assist"), Localize("Unfreeze automation helpers"));
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoUnspecOnUnfreeze, "Auto unspec on unfreeze", Localize("Auto unspec on unfreeze"), &g_Config.m_QmAutoUnspecOnUnfreeze, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoSwitchOnUnfreeze, "Auto switch to the tee that got unfrozen", Localize("Auto switch to the tee that got unfrozen"), &g_Config.m_QmAutoSwitchOnUnfreeze, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoCloseChatOnUnfreeze, "Automatically close the current chat after waking from freeze", Localize("Automatically close the current chat after waking from freeze"), &g_Config.m_QmAutoCloseChatOnUnfreeze, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmFreezeWakeupPopup, "Show wake-up popup on the other tee", Localize("Show wake-up popup on the other tee"), &g_Config.m_QmFreezeWakeupPopup, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmAutoTeamLock, "Auto team lock", Localize("Auto team lock"), &g_Config.m_QmAutoTeamLock, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				if(g_Config.m_QmAutoTeamLock)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-hj-assist-lock-delay", &LabelCol, Localize("Lock delay"), LgBodySize);
-					static int s_QmAutoTeamLockDelayInputId;
-					RenderSliderWithValueInput(&s_QmAutoTeamLockDelayInputId, ControlCol, &g_Config.m_QmAutoTeamLockDelay, 0, 30, "s");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmFunctionHJAssistContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;

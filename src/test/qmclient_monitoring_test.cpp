@@ -7578,6 +7578,36 @@ TEST(QmMonitoringHelpers, P6FunctionFriendNotifyContentExtractionKeepsDynamicInp
 	EXPECT_EQ(FriendNotifyBody.find("RegisterModuleCard"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionMiniFeaturesAndHJAssistContentExtractionKeepsInteractionState)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string MiniFeaturesBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)");
+	const std::string HJAssistBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionHJAssistContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const size_t MiniFeaturesStart = QmClient.rfind("case EQmModuleId::MiniFeatures:");
+	const size_t MiniFeaturesEnd = QmClient.find("case EQmModuleId::JumpHint:", MiniFeaturesStart);
+	const size_t HJAssistStart = QmClient.rfind("case EQmModuleId::HJAssist:");
+	const size_t HJAssistEnd = QmClient.find("case EQmModuleId::SpeedrunTimer:", HJAssistStart);
+	const std::string MiniFeaturesCase = MiniFeaturesStart != std::string::npos && MiniFeaturesEnd != std::string::npos ? QmClient.substr(MiniFeaturesStart, MiniFeaturesEnd - MiniFeaturesStart) : "";
+	const std::string HJAssistCase = HJAssistStart != std::string::npos && HJAssistEnd != std::string::npos ? QmClient.substr(HJAssistStart, HJAssistEnd - HJAssistStart) : "";
+	ASSERT_FALSE(MiniFeaturesBody.empty());
+	ASSERT_FALSE(HJAssistBody.empty());
+	ASSERT_FALSE(MiniFeaturesCase.empty());
+	ASSERT_FALSE(HJAssistCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionMiniFeaturesContent"), std::string::npos);
+	EXPECT_NE(Header.find("RenderQmFunctionHJAssistContent"), std::string::npos);
+	EXPECT_NE(MiniFeaturesBody.find("m_QmNewIme"), std::string::npos);
+	EXPECT_NE(MiniFeaturesBody.find("qm_2_63_0_new_ime"), std::string::npos);
+	EXPECT_NE(MiniFeaturesBody.find("MarkQmNewFeatureHovered"), std::string::npos);
+	EXPECT_NE(HJAssistBody.find("m_QmAutoTeamLock"), std::string::npos);
+	EXPECT_NE(HJAssistBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_NE(MiniFeaturesCase.find("RenderQmFunctionMiniFeaturesContent(CardContent, LgLineHeight, LgLineSpacing, PrewarmOnly);"), std::string::npos);
+	EXPECT_NE(HJAssistCase.find("RenderQmFunctionHJAssistContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);"), std::string::npos);
+	EXPECT_EQ(MiniFeaturesBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(HJAssistBody.find("RegisterModuleCard"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, P6HudSpeedrunContentExtractionKeepsLegacyRendererAsTheOnlyShellOwner)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
