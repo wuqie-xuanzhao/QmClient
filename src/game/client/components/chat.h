@@ -198,6 +198,7 @@ private:
 	QmChatCompletion::SContext m_ArgumentCompletionContext;
 	SArgumentCandidatePopup m_ArgumentCandidatePopup;
 	std::optional<vec2> m_ArgumentCandidateLastMousePos;
+	bool m_ArgumentCandidatesRequestedByTab = false;
 	int64_t m_ArgumentCompletionNextSourceCheck = 0;
 	std::string m_ArgumentCompletionCachedInput;
 	size_t m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();

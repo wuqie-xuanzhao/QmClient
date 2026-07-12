@@ -9,6 +9,7 @@
 #include <engine/external/regex.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
+#include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
 #include <engine/shared/csv.h>
 #include <engine/textrender.h>
@@ -711,6 +712,7 @@ void CChat::HideArgumentCandidates()
 	m_ArgumentCandidatePopup.m_RectValid = false;
 	m_ArgumentCandidatePopup.m_PressedIndex = -1;
 	m_ArgumentCandidateLastMousePos.reset();
+	m_ArgumentCandidatesRequestedByTab = false;
 	m_ArgumentCompletionNextSourceCheck = 0;
 	m_ArgumentCompletionSelected = 0;
 	m_ArgumentCompletionScroll = 0;
@@ -727,7 +729,8 @@ void CChat::RefreshArgumentCandidates()
 	QmChatCompletion::SContext Context;
 	const char *pInput = m_Input.GetString();
 	const size_t CursorOffset = m_Input.GetCursorOffset();
-	if(!QmChatCompletion::ParseContext(pInput, CursorOffset, Context))
+	if(!QmChatCompletion::ParseContext(pInput, CursorOffset, Context) &&
+		(!m_ArgumentCandidatesRequestedByTab || !QmChatCompletion::ParsePlayerTabContext(pInput, CursorOffset, Context)))
 	{
 		m_ArgumentCompletionCachedInput = pInput;
 		m_ArgumentCompletionCachedCursor = CursorOffset;
@@ -753,6 +756,7 @@ void CChat::RefreshArgumentCandidates()
 	}
 	else if(Context.m_Provider == QmChatCompletion::EProvider::MAP)
 	{
+		SourceSignature = ServerBrowser() != nullptr ? ((uint64_t)ServerBrowser()->NumServers() << 32) ^ ServerBrowser()->LoadingProgression() : 0;
 		for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption != nullptr; pOption = pOption->m_pNext)
 			SourceSignature = SourceSignature * 1099511628211ULL ^ str_quickhash(pOption->m_aDescription);
 		for(const std::string &MapName : Client()->MaplistEntries())
@@ -779,14 +783,28 @@ void CChat::RefreshArgumentCandidates()
 	}
 	else if(Context.m_Provider == QmChatCompletion::EProvider::MAP)
 	{
+		if(ServerBrowser() != nullptr)
+		{
+			for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumServers(); ++ServerIndex)
+			{
+				const CServerInfo *pInfo = ServerBrowser()->Get(ServerIndex);
+				if(pInfo == nullptr || pInfo->m_aMap[0] == '\0')
+					continue;
+				const char *pType = pInfo->m_aCommunityType[0] != '\0' && str_comp(pInfo->m_aCommunityType, IServerBrowser::COMMUNITY_TYPE_NONE) != 0 ? pInfo->m_aCommunityType : pInfo->m_aGameType;
+				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, pInfo->m_aMap, Context.m_Query.c_str(), false, pType);
+			}
+		}
+		CServerInfo CurrentServerInfo;
+		Client()->GetServerInfo(&CurrentServerInfo);
+		const char *pCurrentType = CurrentServerInfo.m_aCommunityType[0] != '\0' && str_comp(CurrentServerInfo.m_aCommunityType, IServerBrowser::COMMUNITY_TYPE_NONE) != 0 ? CurrentServerInfo.m_aCommunityType : CurrentServerInfo.m_aGameType;
 		for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption != nullptr; pOption = pOption->m_pNext)
 		{
 			std::string MapName;
 			if(QmChatCompletion::ExtractMapNameFromVoteOption(pOption->m_aDescription, MapName))
-				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str());
+				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str(), false, pCurrentType);
 		}
 		for(const std::string &MapName : Client()->MaplistEntries())
-			QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str());
+			QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str(), false, pCurrentType);
 	}
 	QmChatCompletion::SortCandidates(m_vArgumentCandidates);
 	m_vArgumentCandidates.erase(std::unique(m_vArgumentCandidates.begin(), m_vArgumentCandidates.end(), [](const auto &Left, const auto &Right) {
@@ -887,7 +905,19 @@ void CChat::RenderArgumentCandidates(const CUIRect &InputRect, float Width)
 		CTextCursor Cursor;
 		Cursor.SetPosition(vec2(RowRect.x + 5.0f, RowRect.y + 2.5f));
 		Cursor.m_FontSize = FontSize;
-		Cursor.m_LineWidth = RowRect.w - 10.0f;
+		float DetailWidth = 0.0f;
+		if(!Candidate.m_Detail.empty())
+		{
+			DetailWidth = minimum(TextRender()->TextWidth(FontSize, Candidate.m_Detail.c_str()), RowRect.w * 0.4f);
+			CTextCursor DetailCursor;
+			DetailCursor.SetPosition(vec2(RowRect.x + RowRect.w - 5.0f - DetailWidth, RowRect.y + 2.5f));
+			DetailCursor.m_FontSize = FontSize;
+			DetailCursor.m_LineWidth = DetailWidth;
+			DetailCursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END;
+			TextRender()->TextColor(0.62f, 0.68f, 0.78f, 0.9f);
+			TextRender()->TextEx(&DetailCursor, Candidate.m_Detail.c_str());
+		}
+		Cursor.m_LineWidth = RowRect.w - 10.0f - (DetailWidth > 0.0f ? DetailWidth + 8.0f : 0.0f);
 		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END;
 		TextRender()->TextColor(0.90f, 0.93f, 1.0f, 0.96f);
 		if(Candidate.m_MatchOffset >= 0 && Candidate.m_MatchLength > 0)
@@ -1326,6 +1356,21 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 				m_Input.Activate(EInputPriority::CHAT);
 				return true;
 			}
+		}
+	}
+	if(!AnyChatPopupOpen && (Event.m_Flags & IInput::FLAG_PRESS) && Event.m_Key == KEY_TAB && !m_ArgumentCandidatePopup.m_RectValid)
+	{
+		if(!m_vArgumentCandidates.empty())
+			return true;
+		QmChatCompletion::SContext TabContext;
+		if(QmChatCompletion::ParsePlayerTabContext(m_Input.GetString(), m_Input.GetCursorOffset(), TabContext))
+		{
+			m_ArgumentCandidatesRequestedByTab = true;
+			m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
+			RefreshArgumentCandidates();
+			if(!m_vArgumentCandidates.empty())
+				return true;
+			m_ArgumentCandidatesRequestedByTab = false;
 		}
 	}
 	if(!AnyChatPopupOpen && (Event.m_Flags & IInput::FLAG_PRESS) && IsWheelEvent)

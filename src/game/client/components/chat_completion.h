@@ -22,20 +22,24 @@ namespace QmChatCompletion
 		size_t m_ReplaceStart = 0;
 		size_t m_ReplaceEnd = 0;
 		bool m_NeedsArgumentSeparator = false;
+		bool m_AppendColon = false;
+		bool m_QuoteCandidate = true;
 	};
 
 	struct SCandidate
 	{
 		std::string m_Value;
+		std::string m_Detail;
 		int m_Rank = 0;
 		int m_MatchOffset = -1;
 		int m_MatchLength = 0;
 	};
 
 	bool ParseContext(const char *pInput, size_t CursorOffset, SContext &Context);
+	bool ParsePlayerTabContext(const char *pInput, size_t CursorOffset, SContext &Context);
 	bool ApplyCandidate(const char *pInput, const SContext &Context, const char *pCandidate, char *pOutput, size_t OutputSize, size_t &CursorOffset);
 	bool ExtractMapNameFromVoteOption(const char *pDescription, std::string &MapName);
-	void AddMatchingCandidate(std::vector<SCandidate> &vCandidates, const char *pValue, const char *pQuery, bool MatchPinyin = false);
+	void AddMatchingCandidate(std::vector<SCandidate> &vCandidates, const char *pValue, const char *pQuery, bool MatchPinyin = false, const char *pDetail = nullptr);
 	void SortCandidates(std::vector<SCandidate> &vCandidates);
 }
 

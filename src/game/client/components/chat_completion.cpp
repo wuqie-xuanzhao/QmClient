@@ -150,12 +150,12 @@ namespace QmChatCompletion
 		std::string Result(pInput, Context.m_ReplaceStart);
 		if(Context.m_NeedsArgumentSeparator)
 			Result.push_back(' ');
-		const bool Quote = str_find(pCandidate, " ") != nullptr || str_find(pCandidate, "\"") != nullptr || str_find(pCandidate, "\\") != nullptr;
+		const bool Quote = Context.m_QuoteCandidate && (str_find(pCandidate, " ") != nullptr || str_find(pCandidate, "\"") != nullptr || str_find(pCandidate, "\\") != nullptr);
 		if(Quote)
 			Result.push_back('"');
 		for(const char *pCharacter = pCandidate; *pCharacter != '\0'; ++pCharacter)
 		{
-			if(*pCharacter == '"' || *pCharacter == '\\')
+			if(Quote && (*pCharacter == '"' || *pCharacter == '\\'))
 				Result.push_back('\\');
 			Result.push_back(*pCharacter);
 		}
@@ -164,7 +164,14 @@ namespace QmChatCompletion
 
 		const char *pSuffix = pInput + Context.m_ReplaceEnd;
 		CursorOffset = Result.size();
-		if(pSuffix[0] == '\0')
+		if(Context.m_AppendColon)
+		{
+			Result.push_back(':');
+			if(pSuffix[0] == '\0' || pSuffix[0] != ' ')
+				Result.push_back(' ');
+			CursorOffset = Result.size();
+		}
+		else if(pSuffix[0] == '\0')
 		{
 			Result.push_back(' ');
 			CursorOffset = Result.size();
@@ -173,6 +180,28 @@ namespace QmChatCompletion
 		if(Result.size() >= OutputSize)
 			return false;
 		str_copy(pOutput, Result.c_str(), OutputSize);
+		return true;
+	}
+
+	bool ParsePlayerTabContext(const char *pInput, size_t CursorOffset, SContext &Context)
+	{
+		Context = {};
+		if(pInput == nullptr || pInput[0] == '/')
+			return false;
+		const size_t InputLength = str_length(pInput);
+		CursorOffset = std::min(CursorOffset, InputLength);
+		size_t Start = CursorOffset;
+		while(Start > 0 && pInput[Start - 1] != ' ' && pInput[Start - 1] != '\t')
+			--Start;
+		size_t End = CursorOffset;
+		while(End < InputLength && pInput[End] != ' ' && pInput[End] != '\t')
+			++End;
+		Context.m_Provider = EProvider::PLAYER;
+		Context.m_Query.assign(pInput + Start, CursorOffset - Start);
+		Context.m_ReplaceStart = Start;
+		Context.m_ReplaceEnd = End;
+		Context.m_AppendColon = Start == 0;
+		Context.m_QuoteCandidate = false;
 		return true;
 	}
 
@@ -199,13 +228,15 @@ namespace QmChatCompletion
 		return false;
 	}
 
-	void AddMatchingCandidate(std::vector<SCandidate> &vCandidates, const char *pValue, const char *pQuery, bool MatchPinyin)
+	void AddMatchingCandidate(std::vector<SCandidate> &vCandidates, const char *pValue, const char *pQuery, bool MatchPinyin, const char *pDetail)
 	{
 		if(pValue == nullptr || pValue[0] == '\0' || pQuery == nullptr)
 			return;
 
 		SCandidate Candidate;
 		Candidate.m_Value = pValue;
+		if(pDetail != nullptr)
+			Candidate.m_Detail = pDetail;
 		Candidate.m_MatchLength = str_length(pQuery);
 		const char *pDirectMatch = pQuery[0] == '\0' ? nullptr : str_utf8_find_nocase(pValue, pQuery);
 		if(pQuery[0] == '\0' || pDirectMatch != nullptr)

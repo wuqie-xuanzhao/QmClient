@@ -330,6 +330,24 @@ TEST(QmChatCompletion, ParsesSupportedFirstArguments)
 	EXPECT_TRUE(Context.m_Query.empty());
 }
 
+TEST(QmChatCompletion, ParsesPlayerCandidatesRequestedByTab)
+{
+	QmChatCompletion::SContext Context;
+	EXPECT_TRUE(QmChatCompletion::ParsePlayerTabContext("qi", 2, Context));
+	EXPECT_EQ(Context.m_Provider, QmChatCompletion::EProvider::PLAYER);
+	EXPECT_EQ(Context.m_Query, "qi");
+	EXPECT_EQ(Context.m_ReplaceStart, 0u);
+	EXPECT_EQ(Context.m_ReplaceEnd, 2u);
+	EXPECT_TRUE(Context.m_AppendColon);
+
+	EXPECT_TRUE(QmChatCompletion::ParsePlayerTabContext("hello qi", 8, Context));
+	EXPECT_EQ(Context.m_Query, "qi");
+	EXPECT_EQ(Context.m_ReplaceStart, 6u);
+	EXPECT_EQ(Context.m_ReplaceEnd, 8u);
+	EXPECT_FALSE(Context.m_AppendColon);
+	EXPECT_FALSE(QmChatCompletion::ParsePlayerTabContext("/unknown", 8, Context));
+}
+
 TEST(QmChatCompletion, HidesAfterFirstArgumentIsComplete)
 {
 	QmChatCompletion::SContext Context;
@@ -360,6 +378,19 @@ TEST(QmChatCompletion, CompletesAndQuotesCandidateWithoutSubmitting)
 	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/w foo", Context, "foo\\bar", aOutput, sizeof(aOutput), CursorOffset));
 	EXPECT_STREQ(aOutput, "/w \"foo\\\\bar\" ");
 	EXPECT_EQ(CursorOffset, str_length(aOutput));
+
+	ASSERT_TRUE(QmChatCompletion::ParsePlayerTabContext("qi", 2, Context));
+	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("qi", Context, "Qi Men", aOutput, sizeof(aOutput), CursorOffset));
+	EXPECT_STREQ(aOutput, "Qi Men: ");
+	EXPECT_EQ(CursorOffset, str_length(aOutput));
+
+	ASSERT_TRUE(QmChatCompletion::ParsePlayerTabContext("qi hello", 2, Context));
+	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("qi hello", Context, "Qi Men", aOutput, sizeof(aOutput), CursorOffset));
+	EXPECT_STREQ(aOutput, "Qi Men: hello");
+
+	ASSERT_TRUE(QmChatCompletion::ParsePlayerTabContext("foo", 3, Context));
+	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("foo", Context, "foo\\bar", aOutput, sizeof(aOutput), CursorOffset));
+	EXPECT_STREQ(aOutput, "foo\\bar: ");
 }
 
 TEST(QmChatCompletion, RanksPrefixBeforeContains)
@@ -384,6 +415,25 @@ TEST(QmChatCompletion, MatchesChinesePlayerNamesByFullPinyinAndInitials)
 	ASSERT_EQ(vCandidates.size(), 2u);
 	EXPECT_EQ(vCandidates[0].m_MatchOffset, -1);
 	EXPECT_EQ(vCandidates[1].m_MatchOffset, -1);
+}
+
+TEST(QmChatCompletion, KeepsMapTypeAsDisplayOnlyMetadata)
+{
+	std::vector<QmChatCompletion::SCandidate> vCandidates;
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "Kobra 3", "kob", false, "Moderate");
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "Aip-Gores", "", false, "Brutal");
+	ASSERT_EQ(vCandidates.size(), 2u);
+	EXPECT_EQ(vCandidates[0].m_Value, "Kobra 3");
+	EXPECT_EQ(vCandidates[0].m_Detail, "Moderate");
+	EXPECT_EQ(vCandidates[1].m_Value, "Aip-Gores");
+	EXPECT_EQ(vCandidates[1].m_Detail, "Brutal");
+
+	QmChatCompletion::SContext Context;
+	ASSERT_TRUE(QmChatCompletion::ParseContext("/map kob", 8, Context));
+	char aOutput[256];
+	size_t CursorOffset = 0;
+	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/map kob", Context, vCandidates[0].m_Value.c_str(), aOutput, sizeof(aOutput), CursorOffset));
+	EXPECT_STREQ(aOutput, "/map \"Kobra 3\" ");
 }
 
 TEST(QmChatCompletion, ExtractsOrdinaryPlayerMapVoteNames)
