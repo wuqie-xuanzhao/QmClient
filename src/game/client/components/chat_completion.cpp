@@ -79,6 +79,29 @@ namespace QmChatCompletion
 			}
 			return EProvider::NONE;
 		}
+
+		const char *MapCategoryKeyFromText(const char *pText)
+		{
+			if(pText == nullptr || pText[0] == '\0')
+				return nullptr;
+			if(str_find_nocase(pText, "DDmaX"))
+			{
+				if(str_find_nocase(pText, "Easy"))
+					return "DDmaX Easy";
+				if(str_find_nocase(pText, "Next"))
+					return "DDmaX Next";
+				if(str_find_nocase(pText, "Pro"))
+					return "DDmaX Pro";
+				if(str_find_nocase(pText, "Nut"))
+					return "DDmaX Nut";
+				return "DDmaX";
+			}
+			static constexpr const char *s_apCategories[] = {"Oldschool", "Novice", "Moderate", "Brutal", "Insane", "Dummy", "Solo", "Race", "Fun", "Event"};
+			for(const char *pCategory : s_apCategories)
+				if(str_find_nocase(pText, pCategory))
+					return pCategory;
+			return nullptr;
+		}
 	}
 
 	bool ParseContext(const char *pInput, size_t CursorOffset, SContext &Context)
@@ -228,6 +251,18 @@ namespace QmChatCompletion
 		return false;
 	}
 
+	bool ExtractMapCategory(const char *pCommunityType, const char *pServerName, std::string &Category)
+	{
+		Category.clear();
+		const char *pCategory = MapCategoryKeyFromText(pCommunityType);
+		if(pCategory == nullptr)
+			pCategory = MapCategoryKeyFromText(pServerName);
+		if(pCategory == nullptr)
+			return false;
+		Category = pCategory;
+		return true;
+	}
+
 	void AddMatchingCandidate(std::vector<SCandidate> &vCandidates, const char *pValue, const char *pQuery, bool MatchPinyin, const char *pDetail)
 	{
 		if(pValue == nullptr || pValue[0] == '\0' || pQuery == nullptr)
@@ -267,7 +302,10 @@ namespace QmChatCompletion
 		std::stable_sort(vCandidates.begin(), vCandidates.end(), [](const SCandidate &Left, const SCandidate &Right) {
 			if(Left.m_Rank != Right.m_Rank)
 				return Left.m_Rank < Right.m_Rank;
-			return str_comp_nocase(Left.m_Value.c_str(), Right.m_Value.c_str()) < 0;
+			const int ValueComparison = str_comp_nocase(Left.m_Value.c_str(), Right.m_Value.c_str());
+			if(ValueComparison != 0)
+				return ValueComparison < 0;
+			return !Left.m_Detail.empty() && Right.m_Detail.empty();
 		});
 	}
 }

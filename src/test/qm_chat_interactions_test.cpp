@@ -436,6 +436,29 @@ TEST(QmChatCompletion, KeepsMapTypeAsDisplayOnlyMetadata)
 	EXPECT_STREQ(aOutput, "/map \"Kobra 3\" ");
 }
 
+TEST(QmChatCompletion, ExtractsDifficultyCategoryInsteadOfGameType)
+{
+	std::string Category;
+	EXPECT_TRUE(QmChatCompletion::ExtractMapCategory("Moderate", "DDNet GER", Category));
+	EXPECT_EQ(Category, "Moderate");
+	EXPECT_TRUE(QmChatCompletion::ExtractMapCategory("None", "DDNet GER - Brutal", Category));
+	EXPECT_EQ(Category, "Brutal");
+	EXPECT_TRUE(QmChatCompletion::ExtractMapCategory("", "DDNet CHN - Novice", Category));
+	EXPECT_EQ(Category, "Novice");
+	EXPECT_FALSE(QmChatCompletion::ExtractMapCategory("None", "DDNet GER", Category));
+	EXPECT_TRUE(Category.empty());
+}
+
+TEST(QmChatCompletion, PrefersKnownCategoryForDuplicateMaps)
+{
+	std::vector<QmChatCompletion::SCandidate> vCandidates;
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "Kobra 3", "", false);
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "Kobra 3", "", false, "Moderate");
+	QmChatCompletion::SortCandidates(vCandidates);
+	ASSERT_EQ(vCandidates.size(), 2u);
+	EXPECT_EQ(vCandidates[0].m_Detail, "Moderate");
+}
+
 TEST(QmChatCompletion, ExtractsOrdinaryPlayerMapVoteNames)
 {
 	std::string MapName;

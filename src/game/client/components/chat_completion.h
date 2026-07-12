@@ -39,6 +39,7 @@ namespace QmChatCompletion
 	bool ParsePlayerTabContext(const char *pInput, size_t CursorOffset, SContext &Context);
 	bool ApplyCandidate(const char *pInput, const SContext &Context, const char *pCandidate, char *pOutput, size_t OutputSize, size_t &CursorOffset);
 	bool ExtractMapNameFromVoteOption(const char *pDescription, std::string &MapName);
+	bool ExtractMapCategory(const char *pCommunityType, const char *pServerName, std::string &Category);
 	void AddMatchingCandidate(std::vector<SCandidate> &vCandidates, const char *pValue, const char *pQuery, bool MatchPinyin = false, const char *pDetail = nullptr);
 	void SortCandidates(std::vector<SCandidate> &vCandidates);
 }

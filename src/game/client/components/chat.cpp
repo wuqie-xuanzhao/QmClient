@@ -790,21 +790,23 @@ void CChat::RefreshArgumentCandidates()
 				const CServerInfo *pInfo = ServerBrowser()->Get(ServerIndex);
 				if(pInfo == nullptr || pInfo->m_aMap[0] == '\0')
 					continue;
-				const char *pType = pInfo->m_aCommunityType[0] != '\0' && str_comp(pInfo->m_aCommunityType, IServerBrowser::COMMUNITY_TYPE_NONE) != 0 ? pInfo->m_aCommunityType : pInfo->m_aGameType;
-				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, pInfo->m_aMap, Context.m_Query.c_str(), false, pType);
+				std::string Category;
+				QmChatCompletion::ExtractMapCategory(pInfo->m_aCommunityType, pInfo->m_aName, Category);
+				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, pInfo->m_aMap, Context.m_Query.c_str(), false, Category.c_str());
 			}
 		}
 		CServerInfo CurrentServerInfo;
 		Client()->GetServerInfo(&CurrentServerInfo);
-		const char *pCurrentType = CurrentServerInfo.m_aCommunityType[0] != '\0' && str_comp(CurrentServerInfo.m_aCommunityType, IServerBrowser::COMMUNITY_TYPE_NONE) != 0 ? CurrentServerInfo.m_aCommunityType : CurrentServerInfo.m_aGameType;
+		std::string CurrentCategory;
+		QmChatCompletion::ExtractMapCategory(CurrentServerInfo.m_aCommunityType, CurrentServerInfo.m_aName, CurrentCategory);
 		for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption != nullptr; pOption = pOption->m_pNext)
 		{
 			std::string MapName;
 			if(QmChatCompletion::ExtractMapNameFromVoteOption(pOption->m_aDescription, MapName))
-				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str(), false, pCurrentType);
+				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str(), false, CurrentCategory.c_str());
 		}
 		for(const std::string &MapName : Client()->MaplistEntries())
-			QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str(), false, pCurrentType);
+			QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str(), false, CurrentCategory.c_str());
 	}
 	QmChatCompletion::SortCandidates(m_vArgumentCandidates);
 	m_vArgumentCandidates.erase(std::unique(m_vArgumentCandidates.begin(), m_vArgumentCandidates.end(), [](const auto &Left, const auto &Right) {
@@ -908,14 +910,15 @@ void CChat::RenderArgumentCandidates(const CUIRect &InputRect, float Width)
 		float DetailWidth = 0.0f;
 		if(!Candidate.m_Detail.empty())
 		{
-			DetailWidth = minimum(TextRender()->TextWidth(FontSize, Candidate.m_Detail.c_str()), RowRect.w * 0.4f);
+			const char *pDetail = Localize(Candidate.m_Detail.c_str());
+			DetailWidth = minimum(TextRender()->TextWidth(FontSize, pDetail), RowRect.w * 0.4f);
 			CTextCursor DetailCursor;
 			DetailCursor.SetPosition(vec2(RowRect.x + RowRect.w - 5.0f - DetailWidth, RowRect.y + 2.5f));
 			DetailCursor.m_FontSize = FontSize;
 			DetailCursor.m_LineWidth = DetailWidth;
 			DetailCursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END;
 			TextRender()->TextColor(0.62f, 0.68f, 0.78f, 0.9f);
-			TextRender()->TextEx(&DetailCursor, Candidate.m_Detail.c_str());
+			TextRender()->TextEx(&DetailCursor, pDetail);
 		}
 		Cursor.m_LineWidth = RowRect.w - 10.0f - (DetailWidth > 0.0f ? DetailWidth + 8.0f : 0.0f);
 		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END;
