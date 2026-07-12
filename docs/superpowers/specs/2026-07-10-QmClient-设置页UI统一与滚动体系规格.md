@@ -204,14 +204,14 @@ popup 若接管滚轮，必须在同一帧、底层页面 scroll region 消费�
 
 | 编号 | 当前事实 | 阻断要求 |
 |---|---|---|
-| B1 | `RenderQmSettingsGlassCard`、旧 deck 和 6-dot handle 仍在生产路径。 | 迁移页面时删除旧 shell/handle。 |
+| B1 | 标准页以及 QmClient Overview/Contributors 已使用公共 deck；QmClient module/全局搜索和 TClient 仍保留 `RenderQmSettingsGlassCard`、旧 deck 或 6-dot handle。 | P6 按切片删除旧 shell/handle；未迁移页面不得复用“公共 wrapper + 旧实现”。 |
 | B2 | TClient 仍有 cache box、私有 inset、私有 section rect 与 drag state。 | 使用 `SettingsCard` 最终 frame，删除双层绘制。 |
 | B3 | `SCROLLBAR_OPTION_DELAYUPDATE` 会绕过公共 slider+input，导致轨道存在但输入消失。 | commit policy 下沉到 `NumericField`。 |
 | B4 | `TextFieldEx`、`SearchField`、`ClearableTextField` 和 `SliderInputField` 已存在，但 legacy/icon/direct `DoEditBox` 路径仍并存，focus、placeholder、光标和 inset 尚未同源。 | 统一 `InputField` 与 content rect，删除设置页旧入口。 |
 | B5 | `QmResolveScrollPolicy`、`AUTO/HIDDEN`、ListBox profile 和 Alt 三倍加速已落地，`ForceShowScrollbar` 已删除；但 `CScrollRegion` 与 `CQmScrollController` 仍分别维护滚动位置、动画和输入状态。 | 保留 policy 成果，统一状态内核并删除适配层私有交互状态。 |
 | B6 | dropdown 长短列表 policy、viewport geometry 和 `m_BlockUnderlyingScroll` 已落地；现有测试主要验证 policy/helper，尚未证明真实菜单渲染顺序下首个 wheel 不泄漏。 | 增加真实 popup + 父 scroll region 集成测试，再按结果修正同帧 owner。 |
 | B7 | 卡片文本、间距、宽度、TClient 高度与拖拽在各页割裂。 | layout/token/card shell 同源后逐页验收。 |
-| B8 | 历史文档与结构测试曾把局部 wrapper 当成完成。 | 测试必须断言生产路径删除和真实交互。 |
+| B8 | 历史文档与结构测试曾把局部 wrapper 当成完成；当前 Overview/Contributors 已有结构测试，但 QmClient module/TClient 旧路径仍命中。 | 测试必须按页面切片断言生产路径删除和真实交互，不能以两个已迁移切片代表 P6 完成。 |
 
 ## 12. 旧文档主题去向与阶段边界
 

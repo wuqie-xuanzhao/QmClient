@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**当前状态（2026-07-12，基于 `646dc4f20e`）：** Overview 与 Contributors 已接入公共 page/layout/deck/scroll，并有注册表与结构测试；Visual、Functions、HUD、Config 搜索以及 TClient 主页面和复杂子页仍未迁移。以下任务从 Task 2 继续，不能把已完成切片扩展解释为 P6 完成。
+
 **Goal:** 在不重造 P1–P4 primitive 的前提下，把 QmClient 与 TClient 主页面及复杂子页迁到唯一 page/card/scroll 平台，保持 P3 已收口的 input/numeric 路径，并从生产路径删除 QmClient glass/cached-height 与 TClient cache box/inset/cached-height 双路径。
 
 **Architecture:** 页面外壳只通过 `ResolveSettingsPageLayout(...)` 和 P4 `CScrollRegion::State()` 中的 `CQmScrollState` 取得 viewport/列/滚动状态；页面提交 `SSettingsCardDefinition`，P2 `CSettingsCardDeck::Render(...)` 内部唯一调用 `SettingsCard(...)` 并返回 canonical `SSettingsCardFrame`。QmClient 继续以 `QmCardRegistry`、`CMenus::SettingsCardOrderModel()` 中的 `qm_card_order::CModel` 和 `QmModuleLayoutAdapter` 为唯一注册/顺序/兼容层；TClient 的 `CSectionLoader` 只测量、缓存并返回 content height，placeholder/compact/full 共用该值，完整 card frame 高度只由 Deck/`SettingsCard(...)` 组合 header、padding 与 shell 得出。
@@ -143,6 +145,13 @@ if(DeckResult.m_OrderChanged)
 ```
 
 ## P6 Entry Gate
+
+### 当前执行边界
+
+- 已完成：`RenderSettingsQmClientOverview`、`RenderSettingsQmClientContributors`，以及对应 stable ID、导航/结构测试。
+- 本轮继续：QmClient Visual/Functions/HUD module 卡片、QmClient Config 搜索入口、TClient Settings 主页面和未迁移复杂子页。
+- 明确保留到后续切片：P7 非卡片菜单；R1/R2/R3 公共组件扩面、信息架构重组和渲染管线改造。
+- 不能作为完成条件：只新增 shared wrapper、只通过结构字符串测试、只完成 `game-client` build，或保留旧 shell/私有 coordinator 再称“迁移完成”。
 
 - [ ] **Verify P1–P4 contracts and the P2 Graphics-only boundary before Task 1**
 

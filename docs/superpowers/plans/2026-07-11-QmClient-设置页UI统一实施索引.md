@@ -25,21 +25,37 @@
 
 ## 1. 当前接手结论
 
-本规格现在可以接手，但“可接手”表示可以从 P0 开始执行，不表示当前代码已具备 P5/P6 批量迁移条件。
+本规格可以继续执行。当前 checkout 已完成 P0 的显式 merge，P5 的八个标准设置页结构清单全量通过；下一工作面是 P6，不能跳到 P7。
 
 | 区域 | 当前代码起点 | 第一责任阶段 |
 |---|---|---|
-| Theme/token | 菜单有 `MenuUiColorSurface`/`MenuUiColorAccent`，QmUi color token 仍静态 | P1 |
-| Card shell | `RenderQmSettingsGlassCard`、shared deck 与页面私有 shell 并存 | P1/P2 |
-| Registry/order | `QmCardRegistry`、`qm_card_order::CModel` 已存在，但 deck order map/Qm/TClient adapter 仍并行 | P2 |
-| Search | QmClient 有基于 registry defaults 的局部搜索，未成为全设置页 navigation | P2 |
-| Input | `TextFieldEx`/Search/Clear/Integer/SliderInput 已有，legacy/icon/direct edit 和 delay fallback 仍存在 | P3 |
-| Scroll | policy、AUTO/HIDDEN、Alt 三倍、dropdown geometry 已有，`CScrollRegion`/controller 状态双轨 | P4 |
-| 标准页 | Graphics/Sound/DDNet/部分 Appearance/TClient 子页使用 shared deck，仍有旧 shell/input/scroll | P5 |
-| QmClient/TClient | registry/model 可复用，QmClient `s_GlassCards` 与 TClient cache box/private shell 仍在 | P6 |
-| 非卡片菜单/性能 | 部分列表已用 policy，尚无全菜单删除门槛与最终 runtime evidence | P7 |
+| Theme/token | 菜单有 `MenuUiColorSurface`/`MenuUiColorAccent`，QmUi color token 仍静态 | P1：已落地，待最终验收 |
+| Card shell | 标准页和 QmClient Overview/Contributors 已调用 shared deck；QmClient module、全局搜索、TClient 仍有旧 shell | P6：进行中 |
+| Registry/order | `QmCardRegistry`、`qm_card_order::CModel` 与 shared deck 已用于标准页和两个 QmClient 切片；TClient legacy coordinator 仍在 | P2：基础已落地，P6 清退 |
+| Search | registry Search API 已存在；QmClient 全局搜索仍维护 `SQmGlobalSearchCard` 和旧结果卡片 | P6：未完成 |
+| Input | 设置页结构清单已禁止 direct/legacy input；非卡片菜单 alias 仍由 P7 处理 | P3/P7：设置页已收口 |
+| Scroll | policy、AUTO/HIDDEN、Alt 三倍、dropdown ownership 已有；旧页面 adapter 仍需按 P6/P7 边界清退 | P4：基础已落地 |
+| 标准页 | General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 结构审计全量 `clean` | P5：结构完成，视觉矩阵待补 |
+| QmClient/TClient | Overview、Contributors 已迁移；Visual/Functions/HUD、Config 搜索和 TClient 主页/复杂子页仍未迁移 | P6：进行中 |
+| 非卡片菜单/性能 | 仍未进入执行；不能以现有局部 policy 视为 P7 完成 | P7：未开始 |
 
-P0 是唯一开工入口。P0 未证明目标 11 个普通提交、1 个 merge 路由提交、merge baseline、版本与 default gate 时，不得根据当前行号直接开始 P1；merge 可能改变接口与阻断事实。
+P0 merge commit 为 `01948ba392`，版本基线为 `2.74.23`；这轮不重复执行远端整合，也不 bump 版本。P6 只从已迁移的两个 QmClient 切片继续，任何未完成的测试、人工矩阵或 gate 都保持为 gap，不能把“结构清单通过”写成阶段完成。
+
+### 当前下一步
+
+1. P6 Task 2：把 QmClient Visual、Functions、HUD 的 module 列表改为 `SSettingsCardDefinition` + `CSettingsCardDeck::Render(...)`，同一切片删除 `s_GlassCards`、module 私有 drag/order/search collapse 的生产路径。
+2. P6 Task 3：迁移 TClient 主页面和 `CSectionLoader` 高度契约；先覆盖主 Settings，再覆盖 BindWheel/StatusBar 以外的复杂子页。
+3. 每个切片先补结构/行为测试，再串行重建 `testrunner`；P6 全量完成前不启动 P7。
+
+### 阶段状态口径
+
+| 阶段 | 当前状态 | 可继续动作 | 不能宣称 |
+|---|---|---|---|
+| P0 | 基线 merge 已存在，完整验收证据仍需按计划补齐 | 只在需要校准接口时回补证据 | “所有 P0 gate 已通过” |
+| P1–P4 | 公共契约已被当前页面消费，计划中的最终全量证据未统一收口 | 作为 P5/P6 的既有依赖使用 | “所有公共双路径已删除” |
+| P5 | 八页结构审计通过，视觉/全量 gate 仍是 gap | 不回退标准页；只修复发现的非视觉问题 | “P5 全部验收完成” |
+| P6 | Overview、Contributors 完成，其余 QmClient/TClient 未完成 | 按上述 Task 2/3 继续 | “QmClient/TClient 已迁移” |
+| P7 | 未开始 | 等 P6 exit gate | “最终收口完成” |
 
 ## 2. 阶段依赖与计划文件
 
