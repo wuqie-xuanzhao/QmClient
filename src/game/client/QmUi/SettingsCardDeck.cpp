@@ -185,11 +185,13 @@ SSettingsCardDeckResult CSettingsCardDeck::Render(const IUiContext &Ctx, const S
 		m_Drag.Reset();
 	if(m_Drag.Active() && !Input.m_MouseDown && !Input.m_MouseReleased)
 		m_Drag.Reset();
-	if(!m_Drag.Active() && DrawLayout.m_TwoColumns && Input.m_CtrlPressed && Input.m_MousePressed)
+	if(!m_Drag.Active() && DrawLayout.m_TwoColumns && (Input.m_CtrlPressed || Input.m_AllowHeaderDrag) && Input.m_MousePressed)
 	{
 		for(const SPreparedSettingsCard &Card : vPrepared)
 		{
-			if((Card.m_Column == 1 || Card.m_Column == 2) && PointInRect(Card.m_Frame.m_HeaderRect, Input.m_MouseX, Input.m_MouseY))
+			const bool InHeader = PointInRect(Card.m_Frame.m_HeaderRect, Input.m_MouseX, Input.m_MouseY);
+			const bool InHeaderAction = Card.m_pDefinition->m_HeaderAction && PointInRect(Card.m_Frame.m_HandleRect, Input.m_MouseX, Input.m_MouseY);
+			if((Card.m_Column == 1 || Card.m_Column == 2) && InHeader && !InHeaderAction)
 			{
 				m_Drag.m_StateIndex = Card.m_StateIndex;
 				m_Drag.m_SourceColumn = Card.m_Column;
