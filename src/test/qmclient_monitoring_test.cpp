@@ -7931,6 +7931,32 @@ TEST(QmMonitoringHelpers, P6FunctionPieMenuKeepsPopupPreviewInItsContentOwner)
 	EXPECT_EQ(PieMenuCase.find("BlockPieMenuCardDrag"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionTranslateKeepsProviderControlsInItsContentOwner)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string OwnerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionTranslateContent(");
+	const std::string FunctionPageBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	const size_t TranslateStart = FunctionPageBody.rfind("case EQmModuleId::Translate:");
+	const size_t TranslateEnd = FunctionPageBody.find("case EQmModuleId::TranslateUi:", TranslateStart);
+	const std::string TranslateCase = TranslateStart != std::string::npos && TranslateEnd != std::string::npos ? FunctionPageBody.substr(TranslateStart, TranslateEnd - TranslateStart) : std::string();
+	ASSERT_FALSE(OwnerBody.empty());
+	ASSERT_FALSE(TranslateCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionTranslateContent"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("tencentcloud"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("libretranslate"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("ftapi"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("\"llm\""), std::string::npos);
+	EXPECT_NE(OwnerBody.find("RenderLanguageDropDownWithCustomInput"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("m_SelectionPopupContext.m_pScrollRegion"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("m_QmTranslateLlmConcurrency"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("m_QmTranslateLlmEnableThinking"), std::string::npos);
+	EXPECT_NE(TranslateCase.find("RenderQmFunctionTranslateContent"), std::string::npos);
+	EXPECT_EQ(TranslateCase.find("RenderLanguageDropDownWithCustomInput"), std::string::npos);
+	EXPECT_EQ(TranslateCase.find("m_QmTranslateLlmEnableThinking"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");

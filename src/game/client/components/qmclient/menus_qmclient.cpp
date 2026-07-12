@@ -2136,6 +2136,538 @@ void CMenus::RenderQmFunctionKeywordReplyContent(CUIRect &Content, float UiScale
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
+void CMenus::RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_translate_text_inputs", 1.0f);
+	auto RenderCheckbox = [this, PrewarmOnly](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin) {
+		CUIRect CheckBoxRect;
+		pRect->HSplitTop(VMargin, &CheckBoxRect, pRect);
+		return RenderQmFunctionCheckbox(pId, pTextId, pText, pValue, &CheckBoxRect, PrewarmOnly);
+	};
+	auto RenderLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int TextAlign = TEXTALIGN_ML, const SLabelProperties &LabelProps = {}) {
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, pRect, pText, FontSize, TextAlign, LabelProps, (int)pRect->w);
+	};
+	auto RenderSliderWithValueInput = [this, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+	};
+	CUIRect Row, LabelCol, ControlCol;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	RenderCheckbox(&g_Config.m_QmTranslateAuto, "Auto translate received messages", Localize("Auto translate received messages"), &g_Config.m_QmTranslateAuto, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	RenderCheckbox(&g_Config.m_QmTranslateAutoOutgoing, "Auto translate sent messages", Localize("Auto translate sent messages"), &g_Config.m_QmTranslateAutoOutgoing, &Row, LineHeight);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	static std::vector<const char *> s_TranslateBackendDropDownNames;
+	s_TranslateBackendDropDownNames = {Localize("Tencent Cloud"), "LibreTranslate", "FTAPI", "LLM API"};
+	static CUi::SDropDownState s_TranslateBackendDropDownState;
+	static CScrollRegion s_TranslateBackendDropDownScrollRegion;
+	s_TranslateBackendDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_TranslateBackendDropDownScrollRegion;
+
+	int BackendSelectedOld = 0;
+	if(str_comp_nocase(g_Config.m_QmTranslateBackend, "libretranslate") == 0)
+		BackendSelectedOld = 1;
+	else if(str_comp_nocase(g_Config.m_QmTranslateBackend, "ftapi") == 0)
+		BackendSelectedOld = 2;
+	else if(str_comp_nocase(g_Config.m_QmTranslateBackend, "llm") == 0)
+		BackendSelectedOld = 3;
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+	CUIElement &TranslationServiceLabel = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-translation-service");
+	DoSettingsLabelStreamed(TranslationServiceLabel, &LabelCol, Localize("Translation service"), BodySize, TEXTALIGN_ML);
+	const int BackendSelectedNew = Ui()->DoDropDown(&ControlCol, BackendSelectedOld, s_TranslateBackendDropDownNames.data(), s_TranslateBackendDropDownNames.size(), s_TranslateBackendDropDownState);
+	if(BackendSelectedNew != BackendSelectedOld)
+	{
+		if(BackendSelectedNew == 1)
+		{
+			str_copy(g_Config.m_QmTranslateBackend, "libretranslate", sizeof(g_Config.m_QmTranslateBackend));
+			str_copy(g_Config.m_QmTranslateLibreEndpoint, "", sizeof(g_Config.m_QmTranslateLibreEndpoint)); // Use default localhost:5000
+		}
+		else if(BackendSelectedNew == 2)
+		{
+			str_copy(g_Config.m_QmTranslateBackend, "ftapi", sizeof(g_Config.m_QmTranslateBackend));
+			str_copy(g_Config.m_QmTranslateTcEndpoint, "", sizeof(g_Config.m_QmTranslateTcEndpoint)); // Use default ftapi.pythonanywhere.com
+		}
+		else if(BackendSelectedNew == 3)
+		{
+			// LLM API - 默认使用智谱AI预设
+			str_copy(g_Config.m_QmTranslateBackend, "llm", sizeof(g_Config.m_QmTranslateBackend));
+			// LLM API - 清空自定义端点，使用默认
+			str_copy(g_Config.m_QmTranslateLlmEndpointCustom, "", sizeof(g_Config.m_QmTranslateLlmEndpointCustom));
+		}
+		else
+		{
+			str_copy(g_Config.m_QmTranslateBackend, "腾讯云", sizeof(g_Config.m_QmTranslateBackend));
+			str_copy(g_Config.m_QmTranslateTcEndpoint, "", sizeof(g_Config.m_QmTranslateTcEndpoint)); // Use default tencent endpoint
+		}
+	}
+	const bool IsTencentCloudBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "tencentcloud") == 0;
+	const bool IsLibreTranslateBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "libretranslate") == 0;
+	const bool IsLlmBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "llm") == 0;
+	const bool IsFtapiBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "ftapi") == 0;
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	// FTAPI 自动翻译开关（仅在 FTAPI 后端时显示）
+	if(IsFtapiBackend)
+	{
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		RenderCheckbox(&g_Config.m_QmTranslateFtapiAutoEnable, "Enable FTAPI auto-translate (may overload the service)", Localize("Enable FTAPI auto-translate (may overload the service)"), &g_Config.m_QmTranslateFtapiAutoEnable, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		// FTAPI 警告提示
+		Content.HSplitTop(LineHeight * 0.8f, &Row, &Content);
+		Row.VMargin(LabelWidth, &Row);
+		RenderLabel("qmclient-translate-ftapi-warning", &Row, Localize("⚠️ FTAPI is a free service. Excessive use may cause service suspension."), BodySize * 0.8f);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
+
+	auto RenderLanguageDropDownWithCustomInput = [this, BodySize, PrewarmOnly, &TextInputCtx](const CUIRect &ControlColumn, const char **apNames, const char **apCodes, int Count, CUi::SDropDownState &DropDownState, char *pConfigValue, size_t ConfigValueSize, CLineInput &LineInput, const char *pEmptyText) {
+		CUIRect DropRect, EditRect;
+		ControlColumn.VSplitMid(&DropRect, &EditRect);
+		DropRect.VMargin(1.0f, &DropRect);
+		EditRect.VMargin(1.0f, &EditRect);
+
+		auto FindIndex = [](const char *pValue, const char **apConfigCodes, int ConfigCodeCount) -> int {
+			for(int i = 0; i < ConfigCodeCount; ++i)
+			{
+				if(str_comp(pValue, apConfigCodes[i]) == 0)
+					return i;
+			}
+			return -1;
+		};
+
+		const int OldSel = FindIndex(pConfigValue, apCodes, Count);
+		const int SelectedIndex = maximum(OldSel, 0);
+		const int NewSel = Ui()->DoDropDown(&DropRect, SelectedIndex, apNames, Count, DropDownState);
+		if(NewSel >= 0 && NewSel != OldSel)
+			str_copy(pConfigValue, apCodes[NewSel], ConfigValueSize);
+
+		if(!LineInput.IsActive() && str_comp(LineInput.GetString(), pConfigValue) != 0)
+			LineInput.Set(pConfigValue);
+		LineInput.SetEmptyText(pEmptyText);
+		const bool WasActive = LineInput.IsActive();
+		const bool SubmitPressed = !PrewarmOnly && (Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER) || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
+		const bool ClickedOutside = !PrewarmOnly && (Ui()->MouseButtonClicked(0) || Ui()->MouseButtonClicked(1)) && !Ui()->MouseHovered(&EditRect);
+		ui_widget::STextFieldOptions LanguageInputOptions;
+		LanguageInputOptions.m_pPlaceholder = pEmptyText;
+		LanguageInputOptions.m_FontSize = BodySize;
+		LanguageInputOptions.m_Corners = IGraphics::CORNER_ALL;
+		LanguageInputOptions.m_TextAlign = TEXTALIGN_MC;
+		ui_widget::InputField(TextInputCtx, &LineInput, EditRect, LanguageInputOptions);
+		if(WasActive && (SubmitPressed || ClickedOutside))
+		{
+			str_copy(pConfigValue, LineInput.GetString(), ConfigValueSize);
+		}
+	};
+	auto RenderSliderWithNumberInput = [&RenderSliderWithValueInput](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		RenderSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix);
+	};
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+	CUIElement &TargetLanguageLabel = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-target-language");
+	DoSettingsLabelStreamed(TargetLanguageLabel, &LabelCol, Localize("Target language"), BodySize, TEXTALIGN_ML);
+
+	// 下拉框 + 输入框组合
+	{
+		static const char *s_apLangNames[] = {"中文", "English", "日本語", "한국어", "繁體中文", "Русский", "Deutsch", "Français", "Español", "Português"};
+		static const char *s_apLangCodes[] = {"zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
+		static CUi::SDropDownState s_TargetLangDropDown;
+
+		static CLineInput s_TranslateTarget(g_Config.m_QmTranslateTarget, sizeof(g_Config.m_QmTranslateTarget));
+		RenderLanguageDropDownWithCustomInput(ControlCol, s_apLangNames, s_apLangCodes, std::size(s_apLangCodes), s_TargetLangDropDown, g_Config.m_QmTranslateTarget, sizeof(g_Config.m_QmTranslateTarget), s_TranslateTarget, "zh");
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+	RenderLabel("qmclient-translate-minimum-match-chars", &LabelCol, Localize("Minimum match chars"), BodySize);
+	{
+		static int s_LocalDetectMinCharsSelectorId;
+		RenderSliderWithNumberInput(&s_LocalDetectMinCharsSelectorId, ControlCol, &g_Config.m_QmTranslateLocalDetectMinChars, 1, 12);
+	}
+	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+	RenderLabel("qmclient-translate-target-language-ratio", &LabelCol, Localize("Target language ratio"), BodySize);
+	{
+		static int s_LocalDetectRatioSelectorId;
+		RenderSliderWithNumberInput(&s_LocalDetectRatioSelectorId, ControlCol, &g_Config.m_QmTranslateLocalDetectRatio, 50, 100);
+	}
+	Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight * 0.8f, &Row, &Content);
+	Row.VMargin(LabelWidth, &Row);
+	RenderLabel("qmclient-translate-skip-target-language-note", &Row, Localize("Messages that already look like the target language will skip auto-translate"), BodySize * 0.8f);
+	Content.HSplitTop(LineSpacing * 0.35f, nullptr, &Content);
+	Content.HSplitTop(LineHeight * 0.8f, &Row, &Content);
+	Row.VMargin(LabelWidth, &Row);
+	RenderLabel("qmclient-translate-skip-numeric-note", &Row, Localize("Numeric-only messages will be skipped"), BodySize * 0.8f);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	// Endpoint 配置 - 根据后端类型显示不同的端点输入
+	if(IsTencentCloudBackend)
+	{
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-tencent-endpoint", &LabelCol, Localize("Endpoint"), BodySize);
+		static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateTcEndpoint, sizeof(g_Config.m_QmTranslateTcEndpoint));
+		s_TranslateEndpoint.SetEmptyText("https://tmt.tencentcloudapi.com/");
+		ui_widget::InputField(TextInputCtx, &s_TranslateEndpoint, ControlCol, "https://tmt.tencentcloudapi.com/", BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
+	else if(IsLibreTranslateBackend)
+	{
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-aliyun-endpoint", &LabelCol, Localize("Endpoint"), BodySize);
+		static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateLibreEndpoint, sizeof(g_Config.m_QmTranslateLibreEndpoint));
+		s_TranslateEndpoint.SetEmptyText("http://localhost:5000");
+		ui_widget::InputField(TextInputCtx, &s_TranslateEndpoint, ControlCol, "http://localhost:5000", BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
+	// LLM 后端的端点配置在 Provider 选择区域显示
+
+	if(IsTencentCloudBackend)
+	{
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-region", &LabelCol, Localize("Region"), BodySize);
+		static CLineInput s_TranslateRegion(g_Config.m_QmTranslateTcRegion, sizeof(g_Config.m_QmTranslateTcRegion));
+		s_TranslateRegion.SetEmptyText("ap-guangzhou");
+		ui_widget::InputField(TextInputCtx, &s_TranslateRegion, ControlCol, "ap-guangzhou", BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-secret-id", &LabelCol, Localize("SecretId"), BodySize);
+		static CLineInput s_TranslateSecretId(g_Config.m_QmTranslateTcSecretId, sizeof(g_Config.m_QmTranslateTcSecretId));
+		s_TranslateSecretId.SetEmptyText(Localize("Tencent Cloud SecretId"));
+		ui_widget::InputField(TextInputCtx, &s_TranslateSecretId, ControlCol, Localize("Tencent Cloud SecretId"), BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-secret-key", &LabelCol, Localize("SecretKey"), BodySize);
+		static CLineInput s_TranslateSecretKey(g_Config.m_QmTranslateTcSecretKey, sizeof(g_Config.m_QmTranslateTcSecretKey));
+		s_TranslateSecretKey.SetEmptyText(Localize("Tencent Cloud SecretKey"));
+		s_TranslateSecretKey.SetHidden(true);
+		ui_widget::InputField(TextInputCtx, &s_TranslateSecretKey, ControlCol, Localize("Tencent Cloud SecretKey"), BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
+	else if(IsLibreTranslateBackend)
+	{
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-api-key", &LabelCol, Localize("API key"), BodySize);
+		static CLineInput s_TranslateKey(g_Config.m_QmTranslateLibreKey, sizeof(g_Config.m_QmTranslateLibreKey));
+		s_TranslateKey.SetHidden(true);
+		ui_widget::InputField(TextInputCtx, &s_TranslateKey, ControlCol, "", BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
+
+	if(IsLlmBackend)
+	{
+		// LLM Provider 选择
+		static std::vector<const char *> s_LlmProviderDropDownNames = {
+			Localize("Zhipu AI"),
+			Localize("DeepSeek"),
+			Localize("OpenAI"),
+			Localize("Custom")};
+		static CUi::SDropDownState s_LlmProviderDropDownState;
+		static CScrollRegion s_LlmProviderDropDownScrollRegion;
+		s_LlmProviderDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_LlmProviderDropDownScrollRegion;
+
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		CUIElement &LlmProviderLabel = SettingsTextElement(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-llm-provider");
+		DoSettingsLabelStreamed(LlmProviderLabel, &LabelCol, Localize("LLM provider"), BodySize, TEXTALIGN_ML);
+		const int NewProvider = Ui()->DoDropDown(&ControlCol, g_Config.m_QmTranslateLlmProvider, s_LlmProviderDropDownNames.data(), s_LlmProviderDropDownNames.size(), s_LlmProviderDropDownState);
+		if(NewProvider != g_Config.m_QmTranslateLlmProvider)
+		{
+			g_Config.m_QmTranslateLlmProvider = NewProvider;
+		}
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		// 各 Provider 的 API Key 输入框（静态变量，分别绑定到不同配置）
+		static CLineInput s_LlmApiKeyZhipu(g_Config.m_QmTranslateLlmKeyZhipu, sizeof(g_Config.m_QmTranslateLlmKeyZhipu));
+		static CLineInput s_LlmApiKeyDeepseek(g_Config.m_QmTranslateLlmKeyDeepseek, sizeof(g_Config.m_QmTranslateLlmKeyDeepseek));
+		static CLineInput s_LlmApiKeyOpenai(g_Config.m_QmTranslateLlmKeyOpenai, sizeof(g_Config.m_QmTranslateLlmKeyOpenai));
+		static CLineInput s_LlmApiKeyCustom(g_Config.m_QmTranslateLlmKeyCustom, sizeof(g_Config.m_QmTranslateLlmKeyCustom));
+
+		// 根据 Provider 显示对应的 API Key 输入框
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+
+		CLineInput *pActiveKeyInput = nullptr;
+		const char *pKeyLabel = Localize("API key");
+		switch(g_Config.m_QmTranslateLlmProvider)
+		{
+		case 0: // Zhipu AI
+			pKeyLabel = Localize("Zhipu API key");
+			s_LlmApiKeyZhipu.SetEmptyText("ZHIPU_API_KEY");
+			s_LlmApiKeyZhipu.SetHidden(true);
+			pActiveKeyInput = &s_LlmApiKeyZhipu;
+			break;
+		case 1: // DeepSeek
+			pKeyLabel = Localize("DeepSeek API key");
+			s_LlmApiKeyDeepseek.SetEmptyText("DEEPSEEK_API_KEY");
+			s_LlmApiKeyDeepseek.SetHidden(true);
+			pActiveKeyInput = &s_LlmApiKeyDeepseek;
+			break;
+		case 2: // OpenAI
+			pKeyLabel = Localize("OpenAI API key");
+			s_LlmApiKeyOpenai.SetEmptyText("OPENAI_API_KEY");
+			s_LlmApiKeyOpenai.SetHidden(true);
+			pActiveKeyInput = &s_LlmApiKeyOpenai;
+			break;
+		case 3: // Custom
+		default:
+			pKeyLabel = Localize("Custom API key");
+			s_LlmApiKeyCustom.SetEmptyText("API_KEY");
+			s_LlmApiKeyCustom.SetHidden(true);
+			pActiveKeyInput = &s_LlmApiKeyCustom;
+			break;
+		}
+
+		Ui()->DoLabel(&LabelCol, pKeyLabel, BodySize, TEXTALIGN_ML);
+		if(pActiveKeyInput)
+			ui_widget::InputField(TextInputCtx, pActiveKeyInput, ControlCol, pActiveKeyInput->GetEmptyText(), BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		// 各 Provider 的端点配置（允许覆盖默认）
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-llm-endpoint-optional", &LabelCol, Localize("Endpoint (optional)"), BodySize);
+
+		static CLineInput s_LlmEndpointZhipu(g_Config.m_QmTranslateLlmEndpointZhipu, sizeof(g_Config.m_QmTranslateLlmEndpointZhipu));
+		static CLineInput s_LlmEndpointDeepseek(g_Config.m_QmTranslateLlmEndpointDeepseek, sizeof(g_Config.m_QmTranslateLlmEndpointDeepseek));
+		static CLineInput s_LlmEndpointOpenai(g_Config.m_QmTranslateLlmEndpointOpenai, sizeof(g_Config.m_QmTranslateLlmEndpointOpenai));
+		static CLineInput s_LlmEndpointCustom(g_Config.m_QmTranslateLlmEndpointCustom, sizeof(g_Config.m_QmTranslateLlmEndpointCustom));
+
+		CLineInput *pActiveEndpointInput = nullptr;
+		switch(g_Config.m_QmTranslateLlmProvider)
+		{
+		case 0: // Zhipu AI
+			s_LlmEndpointZhipu.SetEmptyText("https://open.bigmodel.cn/api/paas/v4/chat/completions");
+			pActiveEndpointInput = &s_LlmEndpointZhipu;
+			break;
+		case 1: // DeepSeek
+			s_LlmEndpointDeepseek.SetEmptyText("https://api.deepseek.com/chat/completions");
+			pActiveEndpointInput = &s_LlmEndpointDeepseek;
+			break;
+		case 2: // OpenAI
+			s_LlmEndpointOpenai.SetEmptyText("https://api.openai.com/v1/chat/completions");
+			pActiveEndpointInput = &s_LlmEndpointOpenai;
+			break;
+		case 3: // Custom
+		default:
+			s_LlmEndpointCustom.SetEmptyText("https://api.example.com/v1/chat/completions");
+			pActiveEndpointInput = &s_LlmEndpointCustom;
+			break;
+		}
+		if(pActiveEndpointInput)
+			ui_widget::InputField(TextInputCtx, pActiveEndpointInput, ControlCol, pActiveEndpointInput->GetEmptyText(), BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		// 各 Provider 的模型配置
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-llm-model", &LabelCol, Localize("Model"), BodySize);
+
+		static CLineInput s_LlmModelZhipu(g_Config.m_QmTranslateLlmModelZhipu, sizeof(g_Config.m_QmTranslateLlmModelZhipu));
+		static CLineInput s_LlmModelDeepseek(g_Config.m_QmTranslateLlmModelDeepseek, sizeof(g_Config.m_QmTranslateLlmModelDeepseek));
+		static CLineInput s_LlmModelOpenai(g_Config.m_QmTranslateLlmModelOpenai, sizeof(g_Config.m_QmTranslateLlmModelOpenai));
+		static CLineInput s_LlmModelCustom(g_Config.m_QmTranslateLlmModelCustom, sizeof(g_Config.m_QmTranslateLlmModelCustom));
+
+		CLineInput *pActiveModelInput = nullptr;
+		const char *pModelEmptyText = "model-name";
+		switch(g_Config.m_QmTranslateLlmProvider)
+		{
+		case 0: // Zhipu AI
+			pModelEmptyText = "glm-4.5-flash";
+			s_LlmModelZhipu.SetEmptyText(pModelEmptyText);
+			pActiveModelInput = &s_LlmModelZhipu;
+			break;
+		case 1: // DeepSeek
+			pModelEmptyText = "deepseek-chat";
+			s_LlmModelDeepseek.SetEmptyText(pModelEmptyText);
+			pActiveModelInput = &s_LlmModelDeepseek;
+			break;
+		case 2: // OpenAI
+			pModelEmptyText = "gpt-4o-mini";
+			s_LlmModelOpenai.SetEmptyText(pModelEmptyText);
+			pActiveModelInput = &s_LlmModelOpenai;
+			break;
+		case 3: // Custom
+		default:
+			s_LlmModelCustom.SetEmptyText(pModelEmptyText);
+			pActiveModelInput = &s_LlmModelCustom;
+			break;
+		}
+		if(pActiveModelInput)
+			ui_widget::InputField(TextInputCtx, pActiveModelInput, ControlCol, pActiveModelInput->GetEmptyText(), BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		// LLM 并发数配置
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-llm-concurrency", &LabelCol, Localize("Concurrency (0 = auto)"), BodySize);
+		static int s_LlmConcurrencySelectorId;
+		RenderSliderWithNumberInput(&s_LlmConcurrencySelectorId, ControlCol, &g_Config.m_QmTranslateLlmConcurrency, 0, 20);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		// 显示当前有效并发数
+		{
+			// 计算智能默认值（与 GetEffectiveConcurrency 逻辑一致）
+			int EffectiveConcurrency = 3; // 默认值
+			if(g_Config.m_QmTranslateLlmConcurrency != 0)
+			{
+				// 用户手动设置
+				EffectiveConcurrency = g_Config.m_QmTranslateLlmConcurrency;
+			}
+			else
+			{
+				// 根据 Provider 类型提供智能默认值
+				switch(g_Config.m_QmTranslateLlmProvider)
+				{
+				case 0: // Zhipu AI
+				case 1: // DeepSeek
+					EffectiveConcurrency = 3;
+					break;
+				case 2: // OpenAI
+					EffectiveConcurrency = 2;
+					break;
+				case 3: // Custom
+				default:
+					EffectiveConcurrency = g_Config.m_QmTranslateLlmConcurrencyDefault;
+					break;
+				}
+			}
+
+			// 显示有效并发数
+			char aBuf[64];
+			if(g_Config.m_QmTranslateLlmConcurrency == 0)
+			{
+				str_format(aBuf, sizeof(aBuf), Localize("Auto concurrency: %d (smart default)"), EffectiveConcurrency);
+			}
+			else
+			{
+				str_format(aBuf, sizeof(aBuf), Localize("Manual concurrency: %d"), EffectiveConcurrency);
+			}
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			Row.VSplitLeft(LabelWidth, nullptr, &ControlCol);
+			Ui()->DoLabel(&ControlCol, aBuf, BodySize * 0.85f, TEXTALIGN_ML);
+		}
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		// 思考模式开关
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		RenderCheckbox(&g_Config.m_QmTranslateLlmEnableThinking, "Enable thinking mode (slower)", Localize("Enable thinking mode (slower)"), &g_Config.m_QmTranslateLlmEnableThinking, &Row, LineHeight);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+		// 思考模式提示
+		if(g_Config.m_QmTranslateLlmEnableThinking)
+		{
+			const char *pHint = nullptr;
+			if(g_Config.m_QmTranslateLlmProvider == 2) // OpenAI
+			{
+				pHint = Localize("Thinking mode requires a reasoning model");
+			}
+			else if(g_Config.m_QmTranslateLlmProvider == 3) // Custom
+			{
+				pHint = Localize("Make sure the backend supports OpenAI-compatible thinking parameters");
+			}
+
+			if(pHint)
+			{
+				Content.HSplitTop(LineHeight * 0.8f, &Row, &Content);
+				Row.VMargin(LabelWidth, &Row);
+				Ui()->DoLabel(&Row, pHint, BodySize * 0.8f, TEXTALIGN_ML);
+				Content.HSplitTop(LineSpacing, nullptr, &Content);
+			}
+		}
+
+		// 自定义提示词配置
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+		RenderLabel("qmclient-translate-custom-prompt-template", &LabelCol, Localize("Custom prompt template"), BodySize);
+		static CLineInput s_CustomPrompt(g_Config.m_QmTranslateSystemPrompt, sizeof(g_Config.m_QmTranslateSystemPrompt));
+		s_CustomPrompt.SetEmptyText(Localize("Leave empty to use default prompt"));
+		ui_widget::InputField(TextInputCtx, &s_CustomPrompt, ControlCol, Localize("Leave empty to use default prompt"), BodySize);
+		Content.HSplitTop(LineSpacing * 0.5f, nullptr, &Content);
+	}
+
+	// 入站语言和出站语言配置
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+	RenderLabel("qmclient-translate-send-source-language", &LabelCol, Localize("Send source language"), BodySize);
+
+	// 下拉框 + 输入框组合
+	{
+		static const char *s_apSourceNames[] = {
+			Localize("Auto"),
+			"中文",
+			"English",
+			"日本語",
+			"한국어",
+			"繁體中文",
+			"Русский",
+			"Deutsch",
+			"Français",
+			"Español",
+			"Português",
+		};
+		static const char *s_apSourceCodes[] = {"auto", "zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
+		static CUi::SDropDownState s_SourceLangDropDown;
+
+		static CLineInput s_SourceLang(g_Config.m_QmTranslateSource, sizeof(g_Config.m_QmTranslateSource));
+		RenderLanguageDropDownWithCustomInput(ControlCol, s_apSourceNames, s_apSourceCodes, std::size(s_apSourceCodes), s_SourceLangDropDown, g_Config.m_QmTranslateSource, sizeof(g_Config.m_QmTranslateSource), s_SourceLang, "auto");
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+	RenderLabel("qmclient-translate-send-target-language", &LabelCol, Localize("Send target language"), BodySize);
+
+	// 下拉框 + 输入框组合
+	{
+		static const char *s_apOutTargetNames[] = {"中文", "English", "日本語", "한국어", "繁體中文", "Русский", "Deutsch", "Français", "Español", "Português"};
+		static const char *s_apOutTargetCodes[] = {"zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
+		static CUi::SDropDownState s_OutTargetLangDropDown;
+
+		static CLineInput s_TargetLang(g_Config.m_QmTranslateOutgoingTarget, sizeof(g_Config.m_QmTranslateOutgoingTarget));
+		RenderLanguageDropDownWithCustomInput(ControlCol, s_apOutTargetNames, s_apOutTargetCodes, std::size(s_apOutTargetCodes), s_OutTargetLangDropDown, g_Config.m_QmTranslateOutgoingTarget, sizeof(g_Config.m_QmTranslateOutgoingTarget), s_TargetLang, "en");
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelCol, &ControlCol);
+	RenderLabel("qmclient-translate-send-method", &LabelCol, Localize("Send translation method"), BodySize);
+	{
+		static const char *s_apOutgoingModeNames[] = {
+			Localize("Translate only when needed"),
+			Localize("Always translate"),
+		};
+		static CUi::SDropDownState s_OutgoingModeDropDown;
+		const int OldMode = std::clamp(g_Config.m_QmTranslateAutoOutgoingMode, 0, 1);
+		const int NewMode = Ui()->DoDropDown(&ControlCol, OldMode, s_apOutgoingModeNames, std::size(s_apOutgoingModeNames), s_OutgoingModeDropDown);
+		if(NewMode != OldMode)
+			g_Config.m_QmTranslateAutoOutgoingMode = NewMode;
+	}
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	// Content.HSplitTop(LineHeight, &Row, &Content);
+	// Ui()->DoLabel(&Row, Localize("Auto-translate will skip simplified Chinese, traditional Chinese, and server messages"), BodySize * 0.8f, TEXTALIGN_ML);
+	// Content.HSplitTop(LineSpacing / 2.0f, nullptr, &Content);
+	//
+	// Content.HSplitTop(LineHeight, &Row, &Content);
+	// Ui()->DoLabel(&Row, Localize("Append language codes like [ru], [en], [ja] at the end when sending"), BodySize * 0.8f, TEXTALIGN_ML);
+	// Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
 void CMenus::RenderQmFunctionPieMenuContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float CardPadding, float CornerRadius, bool PrewarmOnly, bool LightFirstFrame)
 {
 	CPerfTimer LayoutTimer;
@@ -6989,7 +7521,6 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			break;
 			case EQmModuleId::Translate:
 			{
-				// ========== 模块: 翻译 ==========
 				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
 				CUIRect CardTranslateStart = Column;
 				s_GlassCards.push_back(CardTranslateStart);
@@ -6998,528 +7529,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 8, Localize("Translate"), Localize("Chat translation settings"));
-				IUiContext QmClientTranslateTextInputCtx;
-				QmClientTranslateTextInputCtx.m_pUi = Ui();
-				QmClientTranslateTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-				QmClientTranslateTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-				QmClientTranslateTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_translate_text_inputs");
-				QmClientTranslateTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateAuto, "Auto translate received messages", Localize("Auto translate received messages"), &g_Config.m_QmTranslateAuto, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateAutoOutgoing, "Auto translate sent messages", Localize("Auto translate sent messages"), &g_Config.m_QmTranslateAutoOutgoing, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				static std::vector<const char *> s_TranslateBackendDropDownNames;
-				s_TranslateBackendDropDownNames = {Localize("Tencent Cloud"), "LibreTranslate", "FTAPI", "LLM API"};
-				static CUi::SDropDownState s_TranslateBackendDropDownState;
-				static CScrollRegion s_TranslateBackendDropDownScrollRegion;
-				s_TranslateBackendDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_TranslateBackendDropDownScrollRegion;
-
-				int BackendSelectedOld = 0;
-				if(str_comp_nocase(g_Config.m_QmTranslateBackend, "libretranslate") == 0)
-					BackendSelectedOld = 1;
-				else if(str_comp_nocase(g_Config.m_QmTranslateBackend, "ftapi") == 0)
-					BackendSelectedOld = 2;
-				else if(str_comp_nocase(g_Config.m_QmTranslateBackend, "llm") == 0)
-					BackendSelectedOld = 3;
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				CUIElement &TranslationServiceLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-translation-service");
-				DoSettingsLabelStreamed(TranslationServiceLabel, &LabelCol, Localize("Translation service"), LgBodySize, TEXTALIGN_ML);
-				const int BackendSelectedNew = Ui()->DoDropDown(&ControlCol, BackendSelectedOld, s_TranslateBackendDropDownNames.data(), s_TranslateBackendDropDownNames.size(), s_TranslateBackendDropDownState);
-				if(BackendSelectedNew != BackendSelectedOld)
-				{
-					if(BackendSelectedNew == 1)
-					{
-						str_copy(g_Config.m_QmTranslateBackend, "libretranslate", sizeof(g_Config.m_QmTranslateBackend));
-						str_copy(g_Config.m_QmTranslateLibreEndpoint, "", sizeof(g_Config.m_QmTranslateLibreEndpoint)); // Use default localhost:5000
-					}
-					else if(BackendSelectedNew == 2)
-					{
-						str_copy(g_Config.m_QmTranslateBackend, "ftapi", sizeof(g_Config.m_QmTranslateBackend));
-						str_copy(g_Config.m_QmTranslateTcEndpoint, "", sizeof(g_Config.m_QmTranslateTcEndpoint)); // Use default ftapi.pythonanywhere.com
-					}
-					else if(BackendSelectedNew == 3)
-					{
-						// LLM API - 默认使用智谱AI预设
-						str_copy(g_Config.m_QmTranslateBackend, "llm", sizeof(g_Config.m_QmTranslateBackend));
-						// LLM API - 清空自定义端点，使用默认
-						str_copy(g_Config.m_QmTranslateLlmEndpointCustom, "", sizeof(g_Config.m_QmTranslateLlmEndpointCustom));
-					}
-					else
-					{
-						str_copy(g_Config.m_QmTranslateBackend, "腾讯云", sizeof(g_Config.m_QmTranslateBackend));
-						str_copy(g_Config.m_QmTranslateTcEndpoint, "", sizeof(g_Config.m_QmTranslateTcEndpoint)); // Use default tencent endpoint
-					}
-				}
-				const bool IsTencentCloudBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "tencentcloud") == 0;
-				const bool IsLibreTranslateBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "libretranslate") == 0;
-				const bool IsLlmBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "llm") == 0;
-				const bool IsFtapiBackend = str_comp_nocase(g_Config.m_QmTranslateBackend, "ftapi") == 0;
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				// FTAPI 自动翻译开关（仅在 FTAPI 后端时显示）
-				if(IsFtapiBackend)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateFtapiAutoEnable, "Enable FTAPI auto-translate (may overload the service)", Localize("Enable FTAPI auto-translate (may overload the service)"), &g_Config.m_QmTranslateFtapiAutoEnable, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					// FTAPI 警告提示
-					CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
-					Row.VMargin(LgLabelWidth, &Row);
-					DoQmSettingsLabel("qmclient-translate-ftapi-warning", &Row, Localize("⚠️ FTAPI is a free service. Excessive use may cause service suspension."), LgBodySize * 0.8f);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
-
-				auto RenderLanguageDropDownWithCustomInput = [this, LgBodySize, PrewarmOnly, &QmClientTranslateTextInputCtx](const CUIRect &ControlColumn, const char **apNames, const char **apCodes, int Count, CUi::SDropDownState &DropDownState, char *pConfigValue, size_t ConfigValueSize, CLineInput &LineInput, const char *pEmptyText) {
-					CUIRect DropRect, EditRect;
-					ControlColumn.VSplitMid(&DropRect, &EditRect);
-					DropRect.VMargin(1.0f, &DropRect);
-					EditRect.VMargin(1.0f, &EditRect);
-
-					auto FindIndex = [](const char *pValue, const char **apConfigCodes, int ConfigCodeCount) -> int {
-						for(int i = 0; i < ConfigCodeCount; ++i)
-						{
-							if(str_comp(pValue, apConfigCodes[i]) == 0)
-								return i;
-						}
-						return -1;
-					};
-
-					const int OldSel = FindIndex(pConfigValue, apCodes, Count);
-					const int SelectedIndex = maximum(OldSel, 0);
-					const int NewSel = Ui()->DoDropDown(&DropRect, SelectedIndex, apNames, Count, DropDownState);
-					if(NewSel >= 0 && NewSel != OldSel)
-						str_copy(pConfigValue, apCodes[NewSel], ConfigValueSize);
-
-					if(!LineInput.IsActive() && str_comp(LineInput.GetString(), pConfigValue) != 0)
-						LineInput.Set(pConfigValue);
-					LineInput.SetEmptyText(pEmptyText);
-					const bool WasActive = LineInput.IsActive();
-					const bool SubmitPressed = !PrewarmOnly && (Input()->KeyPress(KEY_RETURN) || Input()->KeyPress(KEY_KP_ENTER) || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER));
-					const bool ClickedOutside = !PrewarmOnly && (Ui()->MouseButtonClicked(0) || Ui()->MouseButtonClicked(1)) && !Ui()->MouseHovered(&EditRect);
-					ui_widget::STextFieldOptions LanguageInputOptions;
-					LanguageInputOptions.m_pPlaceholder = pEmptyText;
-					LanguageInputOptions.m_FontSize = LgBodySize;
-					LanguageInputOptions.m_Corners = IGraphics::CORNER_ALL;
-					LanguageInputOptions.m_TextAlign = TEXTALIGN_MC;
-					ui_widget::InputField(QmClientTranslateTextInputCtx, &LineInput, EditRect, LanguageInputOptions);
-					if(WasActive && (SubmitPressed || ClickedOutside))
-					{
-						str_copy(pConfigValue, LineInput.GetString(), ConfigValueSize);
-					}
-				};
-				auto RenderSliderWithNumberInput = [&RenderSliderWithValueInput](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
-					RenderSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix);
-				};
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				CUIElement &TargetLanguageLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-target-language");
-				DoSettingsLabelStreamed(TargetLanguageLabel, &LabelCol, Localize("Target language"), LgBodySize, TEXTALIGN_ML);
-
-				// 下拉框 + 输入框组合
-				{
-					static const char *s_apLangNames[] = {"中文", "English", "日本語", "한국어", "繁體中文", "Русский", "Deutsch", "Français", "Español", "Português"};
-					static const char *s_apLangCodes[] = {"zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
-					static CUi::SDropDownState s_TargetLangDropDown;
-
-					static CLineInput s_TranslateTarget(g_Config.m_QmTranslateTarget, sizeof(g_Config.m_QmTranslateTarget));
-					RenderLanguageDropDownWithCustomInput(ControlCol, s_apLangNames, s_apLangCodes, std::size(s_apLangCodes), s_TargetLangDropDown, g_Config.m_QmTranslateTarget, sizeof(g_Config.m_QmTranslateTarget), s_TranslateTarget, "zh");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-translate-minimum-match-chars", &LabelCol, Localize("Minimum match chars"), LgBodySize);
-				{
-					static int s_LocalDetectMinCharsSelectorId;
-					RenderSliderWithNumberInput(&s_LocalDetectMinCharsSelectorId, ControlCol, &g_Config.m_QmTranslateLocalDetectMinChars, 1, 12);
-				}
-				CardContent.HSplitTop(LgLineSpacing * 0.5f, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-translate-target-language-ratio", &LabelCol, Localize("Target language ratio"), LgBodySize);
-				{
-					static int s_LocalDetectRatioSelectorId;
-					RenderSliderWithNumberInput(&s_LocalDetectRatioSelectorId, ControlCol, &g_Config.m_QmTranslateLocalDetectRatio, 50, 100);
-				}
-				CardContent.HSplitTop(LgLineSpacing * 0.5f, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
-				Row.VMargin(LgLabelWidth, &Row);
-				DoQmSettingsLabel("qmclient-translate-skip-target-language-note", &Row, Localize("Messages that already look like the target language will skip auto-translate"), LgBodySize * 0.8f);
-				CardContent.HSplitTop(LgLineSpacing * 0.35f, nullptr, &CardContent);
-				CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
-				Row.VMargin(LgLabelWidth, &Row);
-				DoQmSettingsLabel("qmclient-translate-skip-numeric-note", &Row, Localize("Numeric-only messages will be skipped"), LgBodySize * 0.8f);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				// Endpoint 配置 - 根据后端类型显示不同的端点输入
-				if(IsTencentCloudBackend)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-tencent-endpoint", &LabelCol, Localize("Endpoint"), LgBodySize);
-					static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateTcEndpoint, sizeof(g_Config.m_QmTranslateTcEndpoint));
-					s_TranslateEndpoint.SetEmptyText("https://tmt.tencentcloudapi.com/");
-					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, "https://tmt.tencentcloudapi.com/", LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
-				else if(IsLibreTranslateBackend)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-aliyun-endpoint", &LabelCol, Localize("Endpoint"), LgBodySize);
-					static CLineInput s_TranslateEndpoint(g_Config.m_QmTranslateLibreEndpoint, sizeof(g_Config.m_QmTranslateLibreEndpoint));
-					s_TranslateEndpoint.SetEmptyText("http://localhost:5000");
-					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateEndpoint, ControlCol, "http://localhost:5000", LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
-				// LLM 后端的端点配置在 Provider 选择区域显示
-
-				if(IsTencentCloudBackend)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-region", &LabelCol, Localize("Region"), LgBodySize);
-					static CLineInput s_TranslateRegion(g_Config.m_QmTranslateTcRegion, sizeof(g_Config.m_QmTranslateTcRegion));
-					s_TranslateRegion.SetEmptyText("ap-guangzhou");
-					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateRegion, ControlCol, "ap-guangzhou", LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-secret-id", &LabelCol, Localize("SecretId"), LgBodySize);
-					static CLineInput s_TranslateSecretId(g_Config.m_QmTranslateTcSecretId, sizeof(g_Config.m_QmTranslateTcSecretId));
-					s_TranslateSecretId.SetEmptyText(Localize("Tencent Cloud SecretId"));
-					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateSecretId, ControlCol, Localize("Tencent Cloud SecretId"), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-secret-key", &LabelCol, Localize("SecretKey"), LgBodySize);
-					static CLineInput s_TranslateSecretKey(g_Config.m_QmTranslateTcSecretKey, sizeof(g_Config.m_QmTranslateTcSecretKey));
-					s_TranslateSecretKey.SetEmptyText(Localize("Tencent Cloud SecretKey"));
-					s_TranslateSecretKey.SetHidden(true);
-					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateSecretKey, ControlCol, Localize("Tencent Cloud SecretKey"), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
-				else if(IsLibreTranslateBackend)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-api-key", &LabelCol, Localize("API key"), LgBodySize);
-					static CLineInput s_TranslateKey(g_Config.m_QmTranslateLibreKey, sizeof(g_Config.m_QmTranslateLibreKey));
-					s_TranslateKey.SetHidden(true);
-					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_TranslateKey, ControlCol, "", LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
-
-				if(IsLlmBackend)
-				{
-					// LLM Provider 选择
-					static std::vector<const char *> s_LlmProviderDropDownNames = {
-						Localize("Zhipu AI"),
-						Localize("DeepSeek"),
-						Localize("OpenAI"),
-						Localize("Custom")};
-					static CUi::SDropDownState s_LlmProviderDropDownState;
-					static CScrollRegion s_LlmProviderDropDownScrollRegion;
-					s_LlmProviderDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_LlmProviderDropDownScrollRegion;
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					CUIElement &LlmProviderLabel = SettingsTextElement(SETTINGS_QMCLIENT, m_QmClientSettingsTab, "qmclient-llm-provider");
-					DoSettingsLabelStreamed(LlmProviderLabel, &LabelCol, Localize("LLM provider"), LgBodySize, TEXTALIGN_ML);
-					const int NewProvider = Ui()->DoDropDown(&ControlCol, g_Config.m_QmTranslateLlmProvider, s_LlmProviderDropDownNames.data(), s_LlmProviderDropDownNames.size(), s_LlmProviderDropDownState);
-					if(NewProvider != g_Config.m_QmTranslateLlmProvider)
-					{
-						g_Config.m_QmTranslateLlmProvider = NewProvider;
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					// 各 Provider 的 API Key 输入框（静态变量，分别绑定到不同配置）
-					static CLineInput s_LlmApiKeyZhipu(g_Config.m_QmTranslateLlmKeyZhipu, sizeof(g_Config.m_QmTranslateLlmKeyZhipu));
-					static CLineInput s_LlmApiKeyDeepseek(g_Config.m_QmTranslateLlmKeyDeepseek, sizeof(g_Config.m_QmTranslateLlmKeyDeepseek));
-					static CLineInput s_LlmApiKeyOpenai(g_Config.m_QmTranslateLlmKeyOpenai, sizeof(g_Config.m_QmTranslateLlmKeyOpenai));
-					static CLineInput s_LlmApiKeyCustom(g_Config.m_QmTranslateLlmKeyCustom, sizeof(g_Config.m_QmTranslateLlmKeyCustom));
-
-					// 根据 Provider 显示对应的 API Key 输入框
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-
-					CLineInput *pActiveKeyInput = nullptr;
-					const char *pKeyLabel = Localize("API key");
-					switch(g_Config.m_QmTranslateLlmProvider)
-					{
-					case 0: // Zhipu AI
-						pKeyLabel = Localize("Zhipu API key");
-						s_LlmApiKeyZhipu.SetEmptyText("ZHIPU_API_KEY");
-						s_LlmApiKeyZhipu.SetHidden(true);
-						pActiveKeyInput = &s_LlmApiKeyZhipu;
-						break;
-					case 1: // DeepSeek
-						pKeyLabel = Localize("DeepSeek API key");
-						s_LlmApiKeyDeepseek.SetEmptyText("DEEPSEEK_API_KEY");
-						s_LlmApiKeyDeepseek.SetHidden(true);
-						pActiveKeyInput = &s_LlmApiKeyDeepseek;
-						break;
-					case 2: // OpenAI
-						pKeyLabel = Localize("OpenAI API key");
-						s_LlmApiKeyOpenai.SetEmptyText("OPENAI_API_KEY");
-						s_LlmApiKeyOpenai.SetHidden(true);
-						pActiveKeyInput = &s_LlmApiKeyOpenai;
-						break;
-					case 3: // Custom
-					default:
-						pKeyLabel = Localize("Custom API key");
-						s_LlmApiKeyCustom.SetEmptyText("API_KEY");
-						s_LlmApiKeyCustom.SetHidden(true);
-						pActiveKeyInput = &s_LlmApiKeyCustom;
-						break;
-					}
-
-					Ui()->DoLabel(&LabelCol, pKeyLabel, LgBodySize, TEXTALIGN_ML);
-					if(pActiveKeyInput)
-						ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveKeyInput, ControlCol, pActiveKeyInput->GetEmptyText(), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					// 各 Provider 的端点配置（允许覆盖默认）
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-llm-endpoint-optional", &LabelCol, Localize("Endpoint (optional)"), LgBodySize);
-
-					static CLineInput s_LlmEndpointZhipu(g_Config.m_QmTranslateLlmEndpointZhipu, sizeof(g_Config.m_QmTranslateLlmEndpointZhipu));
-					static CLineInput s_LlmEndpointDeepseek(g_Config.m_QmTranslateLlmEndpointDeepseek, sizeof(g_Config.m_QmTranslateLlmEndpointDeepseek));
-					static CLineInput s_LlmEndpointOpenai(g_Config.m_QmTranslateLlmEndpointOpenai, sizeof(g_Config.m_QmTranslateLlmEndpointOpenai));
-					static CLineInput s_LlmEndpointCustom(g_Config.m_QmTranslateLlmEndpointCustom, sizeof(g_Config.m_QmTranslateLlmEndpointCustom));
-
-					CLineInput *pActiveEndpointInput = nullptr;
-					switch(g_Config.m_QmTranslateLlmProvider)
-					{
-					case 0: // Zhipu AI
-						s_LlmEndpointZhipu.SetEmptyText("https://open.bigmodel.cn/api/paas/v4/chat/completions");
-						pActiveEndpointInput = &s_LlmEndpointZhipu;
-						break;
-					case 1: // DeepSeek
-						s_LlmEndpointDeepseek.SetEmptyText("https://api.deepseek.com/chat/completions");
-						pActiveEndpointInput = &s_LlmEndpointDeepseek;
-						break;
-					case 2: // OpenAI
-						s_LlmEndpointOpenai.SetEmptyText("https://api.openai.com/v1/chat/completions");
-						pActiveEndpointInput = &s_LlmEndpointOpenai;
-						break;
-					case 3: // Custom
-					default:
-						s_LlmEndpointCustom.SetEmptyText("https://api.example.com/v1/chat/completions");
-						pActiveEndpointInput = &s_LlmEndpointCustom;
-						break;
-					}
-					if(pActiveEndpointInput)
-						ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveEndpointInput, ControlCol, pActiveEndpointInput->GetEmptyText(), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					// 各 Provider 的模型配置
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-llm-model", &LabelCol, Localize("Model"), LgBodySize);
-
-					static CLineInput s_LlmModelZhipu(g_Config.m_QmTranslateLlmModelZhipu, sizeof(g_Config.m_QmTranslateLlmModelZhipu));
-					static CLineInput s_LlmModelDeepseek(g_Config.m_QmTranslateLlmModelDeepseek, sizeof(g_Config.m_QmTranslateLlmModelDeepseek));
-					static CLineInput s_LlmModelOpenai(g_Config.m_QmTranslateLlmModelOpenai, sizeof(g_Config.m_QmTranslateLlmModelOpenai));
-					static CLineInput s_LlmModelCustom(g_Config.m_QmTranslateLlmModelCustom, sizeof(g_Config.m_QmTranslateLlmModelCustom));
-
-					CLineInput *pActiveModelInput = nullptr;
-					const char *pModelEmptyText = "model-name";
-					switch(g_Config.m_QmTranslateLlmProvider)
-					{
-					case 0: // Zhipu AI
-						pModelEmptyText = "glm-4.5-flash";
-						s_LlmModelZhipu.SetEmptyText(pModelEmptyText);
-						pActiveModelInput = &s_LlmModelZhipu;
-						break;
-					case 1: // DeepSeek
-						pModelEmptyText = "deepseek-chat";
-						s_LlmModelDeepseek.SetEmptyText(pModelEmptyText);
-						pActiveModelInput = &s_LlmModelDeepseek;
-						break;
-					case 2: // OpenAI
-						pModelEmptyText = "gpt-4o-mini";
-						s_LlmModelOpenai.SetEmptyText(pModelEmptyText);
-						pActiveModelInput = &s_LlmModelOpenai;
-						break;
-					case 3: // Custom
-					default:
-						s_LlmModelCustom.SetEmptyText(pModelEmptyText);
-						pActiveModelInput = &s_LlmModelCustom;
-						break;
-					}
-					if(pActiveModelInput)
-						ui_widget::InputField(QmClientTranslateTextInputCtx, pActiveModelInput, ControlCol, pActiveModelInput->GetEmptyText(), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					// LLM 并发数配置
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-llm-concurrency", &LabelCol, Localize("Concurrency (0 = auto)"), LgBodySize);
-					static int s_LlmConcurrencySelectorId;
-					RenderSliderWithNumberInput(&s_LlmConcurrencySelectorId, ControlCol, &g_Config.m_QmTranslateLlmConcurrency, 0, 20);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					// 显示当前有效并发数
-					{
-						// 计算智能默认值（与 GetEffectiveConcurrency 逻辑一致）
-						int EffectiveConcurrency = 3; // 默认值
-						if(g_Config.m_QmTranslateLlmConcurrency != 0)
-						{
-							// 用户手动设置
-							EffectiveConcurrency = g_Config.m_QmTranslateLlmConcurrency;
-						}
-						else
-						{
-							// 根据 Provider 类型提供智能默认值
-							switch(g_Config.m_QmTranslateLlmProvider)
-							{
-							case 0: // Zhipu AI
-							case 1: // DeepSeek
-								EffectiveConcurrency = 3;
-								break;
-							case 2: // OpenAI
-								EffectiveConcurrency = 2;
-								break;
-							case 3: // Custom
-							default:
-								EffectiveConcurrency = g_Config.m_QmTranslateLlmConcurrencyDefault;
-								break;
-							}
-						}
-
-						// 显示有效并发数
-						char aBuf[64];
-						if(g_Config.m_QmTranslateLlmConcurrency == 0)
-						{
-							str_format(aBuf, sizeof(aBuf), Localize("Auto concurrency: %d (smart default)"), EffectiveConcurrency);
-						}
-						else
-						{
-							str_format(aBuf, sizeof(aBuf), Localize("Manual concurrency: %d"), EffectiveConcurrency);
-						}
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						Row.VSplitLeft(LgLabelWidth, nullptr, &ControlCol);
-						Ui()->DoLabel(&ControlCol, aBuf, LgBodySize * 0.85f, TEXTALIGN_ML);
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					// 思考模式开关
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmTranslateLlmEnableThinking, "Enable thinking mode (slower)", Localize("Enable thinking mode (slower)"), &g_Config.m_QmTranslateLlmEnableThinking, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					// 思考模式提示
-					if(g_Config.m_QmTranslateLlmEnableThinking)
-					{
-						const char *pHint = nullptr;
-						if(g_Config.m_QmTranslateLlmProvider == 2) // OpenAI
-						{
-							pHint = Localize("Thinking mode requires a reasoning model");
-						}
-						else if(g_Config.m_QmTranslateLlmProvider == 3) // Custom
-						{
-							pHint = Localize("Make sure the backend supports OpenAI-compatible thinking parameters");
-						}
-
-						if(pHint)
-						{
-							CardContent.HSplitTop(LgLineHeight * 0.8f, &Row, &CardContent);
-							Row.VMargin(LgLabelWidth, &Row);
-							Ui()->DoLabel(&Row, pHint, LgBodySize * 0.8f, TEXTALIGN_ML);
-							CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-						}
-					}
-
-					// 自定义提示词配置
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-translate-custom-prompt-template", &LabelCol, Localize("Custom prompt template"), LgBodySize);
-					static CLineInput s_CustomPrompt(g_Config.m_QmTranslateSystemPrompt, sizeof(g_Config.m_QmTranslateSystemPrompt));
-					s_CustomPrompt.SetEmptyText(Localize("Leave empty to use default prompt"));
-					ui_widget::InputField(QmClientTranslateTextInputCtx, &s_CustomPrompt, ControlCol, Localize("Leave empty to use default prompt"), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing * 0.5f, nullptr, &CardContent);
-				}
-
-				// 入站语言和出站语言配置
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-translate-send-source-language", &LabelCol, Localize("Send source language"), LgBodySize);
-
-				// 下拉框 + 输入框组合
-				{
-					static const char *s_apSourceNames[] = {
-						Localize("Auto"),
-						"中文",
-						"English",
-						"日本語",
-						"한국어",
-						"繁體中文",
-						"Русский",
-						"Deutsch",
-						"Français",
-						"Español",
-						"Português",
-					};
-					static const char *s_apSourceCodes[] = {"auto", "zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
-					static CUi::SDropDownState s_SourceLangDropDown;
-
-					static CLineInput s_SourceLang(g_Config.m_QmTranslateSource, sizeof(g_Config.m_QmTranslateSource));
-					RenderLanguageDropDownWithCustomInput(ControlCol, s_apSourceNames, s_apSourceCodes, std::size(s_apSourceCodes), s_SourceLangDropDown, g_Config.m_QmTranslateSource, sizeof(g_Config.m_QmTranslateSource), s_SourceLang, "auto");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-translate-send-target-language", &LabelCol, Localize("Send target language"), LgBodySize);
-
-				// 下拉框 + 输入框组合
-				{
-					static const char *s_apOutTargetNames[] = {"中文", "English", "日本語", "한국어", "繁體中文", "Русский", "Deutsch", "Français", "Español", "Português"};
-					static const char *s_apOutTargetCodes[] = {"zh", "en", "ja", "ko", "zh-TW", "ru", "de", "fr", "es", "pt"};
-					static CUi::SDropDownState s_OutTargetLangDropDown;
-
-					static CLineInput s_TargetLang(g_Config.m_QmTranslateOutgoingTarget, sizeof(g_Config.m_QmTranslateOutgoingTarget));
-					RenderLanguageDropDownWithCustomInput(ControlCol, s_apOutTargetNames, s_apOutTargetCodes, std::size(s_apOutTargetCodes), s_OutTargetLangDropDown, g_Config.m_QmTranslateOutgoingTarget, sizeof(g_Config.m_QmTranslateOutgoingTarget), s_TargetLang, "en");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-				DoQmSettingsLabel("qmclient-translate-send-method", &LabelCol, Localize("Send translation method"), LgBodySize);
-				{
-					static const char *s_apOutgoingModeNames[] = {
-						Localize("Translate only when needed"),
-						Localize("Always translate"),
-					};
-					static CUi::SDropDownState s_OutgoingModeDropDown;
-					const int OldMode = std::clamp(g_Config.m_QmTranslateAutoOutgoingMode, 0, 1);
-					const int NewMode = Ui()->DoDropDown(&ControlCol, OldMode, s_apOutgoingModeNames, std::size(s_apOutgoingModeNames), s_OutgoingModeDropDown);
-					if(NewMode != OldMode)
-						g_Config.m_QmTranslateAutoOutgoingMode = NewMode;
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				// CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				// Ui()->DoLabel(&Row, Localize("Auto-translate will skip simplified Chinese, traditional Chinese, and server messages"), LgBodySize * 0.8f, TEXTALIGN_ML);
-				// CardContent.HSplitTop(LgLineSpacing / 2.0f, nullptr, &CardContent);
-				//
-				// CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				// Ui()->DoLabel(&Row, Localize("Append language codes like [ru], [en], [ja] at the end when sending"), LgBodySize * 0.8f, TEXTALIGN_ML);
-				// CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderQmFunctionTranslateContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
