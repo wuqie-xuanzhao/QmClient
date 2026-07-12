@@ -7544,6 +7544,32 @@ TEST(QmMonitoringHelpers, P6HudBasicContentExtractionsKeepLegacyRendererAsTheOnl
 	EXPECT_EQ(DummyMiniViewCase.find("RenderSliderWithValueInput"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6HudMediaContentExtractionsKeepLegacyRendererAsTheOnlyShellOwner)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string DynamicIslandBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const std::string SmtcBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly)");
+	const size_t DynamicIslandStart = QmClient.rfind("case EQmModuleId::DynamicIsland:");
+	const size_t DynamicIslandEnd = QmClient.find("case EQmModuleId::SystemMediaControls:", DynamicIslandStart);
+	const size_t SmtcStart = QmClient.rfind("case EQmModuleId::SystemMediaControls:");
+	const size_t SmtcEnd = QmClient.find("case EQmModuleId::Lyrics:", SmtcStart);
+	const std::string DynamicIslandCase = DynamicIslandStart != std::string::npos && DynamicIslandEnd != std::string::npos ? QmClient.substr(DynamicIslandStart, DynamicIslandEnd - DynamicIslandStart) : "";
+	const std::string SmtcCase = SmtcStart != std::string::npos && SmtcEnd != std::string::npos ? QmClient.substr(SmtcStart, SmtcEnd - SmtcStart) : "";
+	ASSERT_FALSE(DynamicIslandBody.empty());
+	ASSERT_FALSE(SmtcBody.empty());
+	ASSERT_FALSE(DynamicIslandCase.empty());
+	ASSERT_FALSE(SmtcCase.empty());
+
+	EXPECT_NE(DynamicIslandBody.find("DoLine_ColorPicker"), std::string::npos);
+	EXPECT_NE(SmtcBody.find("m_SystemMediaControls.PlayPause"), std::string::npos);
+	EXPECT_EQ(DynamicIslandBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(SmtcBody.find("HandleModuleDragState"), std::string::npos);
+	EXPECT_NE(DynamicIslandCase.find("RenderQmHudDynamicIslandContent"), std::string::npos);
+	EXPECT_NE(SmtcCase.find("RenderQmHudSystemMediaControlsContent"), std::string::npos);
+	EXPECT_EQ(DynamicIslandCase.find("RenderSliderWithValueInput"), std::string::npos);
+	EXPECT_EQ(SmtcCase.find("DoQmSettingsMenuButton"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");

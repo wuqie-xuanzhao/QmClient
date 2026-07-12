@@ -1735,6 +1735,58 @@ void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight,
 	RenderValue("qmclient-dummy-window-zoom", "Dummy window zoom", &s_QmDummyMiniViewZoomInputId, &g_Config.m_QmDummyMiniViewZoom, 10, 300);
 }
 
+void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandUseOriginalStyle, "Use original style", Localize("Use original style"), &g_Config.m_QmHudIslandUseOriginalStyle);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTeam, "Show team", Localize("Show team"), &g_Config.m_QmHudIslandShowTeam);
+
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmHudLabel("qmclient-dynamic-island-edge-margin", &LabelColumn, Localize("Edge margin"), BodySize);
+	static int s_QmHudIslandEdgeMarginInputId;
+	RenderQmSettingsSliderWithValueInput(&s_QmHudIslandEdgeMarginInputId, ControlColumn, &g_Config.m_QmHudIslandEdgeMargin, 0, 64, "px", PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(g_Config.m_QmHudIslandUseOriginalStyle)
+		return;
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmHudLabel("qmclient-dynamic-island-opacity", &LabelColumn, Localize("Opacity"), BodySize);
+	static int s_QmHudIslandBgOpacityInputId;
+	RenderQmSettingsSliderWithValueInput(&s_QmHudIslandBgOpacityInputId, ControlColumn, &g_Config.m_QmHudIslandBgOpacity, 0, 100, "%", PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	static CButtonContainer s_DynamicIslandBgColorId;
+	DoLine_ColorPicker(&s_DynamicIslandBgColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Background color"), &g_Config.m_QmHudIslandBgColor, ColorRGBA(0.04f, 0.05f, 0.07f, 1.0f), false);
+}
+
+void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly)
+{
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcEnable, "Enable system media control", Localize("Enable system media control"), &g_Config.m_QmSmtcEnable);
+	if(!g_Config.m_QmSmtcEnable)
+		return;
+
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcShowHud, "Show song info in top-left corner", Localize("Show song info in top-left corner"), &g_Config.m_QmSmtcShowHud);
+	CUIRect MediaButtons, PrevButton, PlayButton, NextButton;
+	Content.HSplitTop(LineHeight, &MediaButtons, &Content);
+	MediaButtons.VSplitLeft((MediaButtons.w - LineSpacing * 2.0f) / 3.0f, &PrevButton, &MediaButtons);
+	MediaButtons.VSplitLeft(LineSpacing, nullptr, &MediaButtons);
+	MediaButtons.VSplitLeft((MediaButtons.w - LineSpacing) / 2.0f, &PlayButton, &MediaButtons);
+	MediaButtons.VSplitLeft(LineSpacing, nullptr, &MediaButtons);
+	NextButton = MediaButtons;
+
+	static CButtonContainer s_SmtcPrev;
+	if(DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &s_SmtcPrev, "qmclient-smtc-previous", Localize("Previous"), 0, &PrevButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
+		GameClient()->m_SystemMediaControls.Previous();
+	static CButtonContainer s_SmtcPlayPause;
+	if(DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &s_SmtcPlayPause, "qmclient-smtc-play-pause", Localize("Play/Pause"), 0, &PlayButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
+		GameClient()->m_SystemMediaControls.PlayPause();
+	static CButtonContainer s_SmtcNext;
+	if(DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &s_SmtcNext, "qmclient-smtc-next", Localize("Next"), 0, &NextButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
+		GameClient()->m_SystemMediaControls.Next();
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
 void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)
 {
 	using namespace qm_module;
@@ -7400,42 +7452,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 14, Localize("Dynamic Island"), Localize("Only Apple Can Do"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudIslandUseOriginalStyle, "Use original style", Localize("Use original style"), &g_Config.m_QmHudIslandUseOriginalStyle, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmHudIslandShowTeam, "Show team", Localize("Show team"), &g_Config.m_QmHudIslandShowTeam, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect LabelColValue, ControlColValue;
-					Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-					DoQmSettingsLabel("qmclient-dynamic-island-edge-margin", &LabelColValue, Localize("Edge margin"), LgBodySize);
-					static int s_QmHudIslandEdgeMarginInputId;
-					RenderSliderWithValueInput(&s_QmHudIslandEdgeMarginInputId, ControlColValue, &g_Config.m_QmHudIslandEdgeMargin, 0, 64, "px");
-				}
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmHudIslandUseOriginalStyle)
-				{
-				}
-				else
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					{
-						CUIRect LabelColValue, ControlColValue;
-						Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-						DoQmSettingsLabel("qmclient-dynamic-island-opacity", &LabelColValue, Localize("Opacity"), LgBodySize);
-						static int s_QmHudIslandBgOpacityInputId;
-						RenderSliderWithValueInput(&s_QmHudIslandBgOpacityInputId, ControlColValue, &g_Config.m_QmHudIslandBgOpacity, 0, 100, "%");
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					static CButtonContainer s_DynamicIslandBgColorId;
-					DoLine_ColorPicker(&s_DynamicIslandBgColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Background color"), &g_Config.m_QmHudIslandBgColor, ColorRGBA(0.04f, 0.05f, 0.07f, 1.0f), false);
-				}
+				RenderQmHudDynamicIslandContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
@@ -7456,38 +7473,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 13, Localize("SMTC"), Localize("System media control"));
 
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmSmtcEnable, "Enable system media control", Localize("Enable system media control"), &g_Config.m_QmSmtcEnable, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmSmtcEnable)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmSmtcShowHud, "Show song info in top-left corner", Localize("Show song info in top-left corner"), &g_Config.m_QmSmtcShowHud, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CUIRect MediaButtons, PrevButton, PlayButton, NextButton;
-					CardContent.HSplitTop(LgLineHeight, &MediaButtons, &CardContent);
-					MediaButtons.VSplitLeft((MediaButtons.w - LgLineSpacing * 2.0f) / 3.0f, &PrevButton, &MediaButtons);
-					MediaButtons.VSplitLeft(LgLineSpacing, nullptr, &MediaButtons);
-					MediaButtons.VSplitLeft((MediaButtons.w - LgLineSpacing) / 2.0f, &PlayButton, &MediaButtons);
-					MediaButtons.VSplitLeft(LgLineSpacing, nullptr, &MediaButtons);
-					NextButton = MediaButtons;
-
-					static CButtonContainer s_SmtcPrev;
-					if(DoQmSettingsMenuButton(&s_SmtcPrev, "qmclient-smtc-previous", Localize("Previous"), &PrevButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
-						GameClient()->m_SystemMediaControls.Previous();
-
-					static CButtonContainer s_SmtcPlayPause;
-					if(DoQmSettingsMenuButton(&s_SmtcPlayPause, "qmclient-smtc-play-pause", Localize("Play/Pause"), &PlayButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
-						GameClient()->m_SystemMediaControls.PlayPause();
-
-					static CButtonContainer s_SmtcNext;
-					if(DoQmSettingsMenuButton(&s_SmtcNext, "qmclient-smtc-next", Localize("Next"), &NextButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
-						GameClient()->m_SystemMediaControls.Next();
-
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmHudSystemMediaControlsContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
