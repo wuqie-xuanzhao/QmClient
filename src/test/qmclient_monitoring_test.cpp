@@ -7373,11 +7373,11 @@ TEST(QmMonitoringHelpers, GraphicsDeckRemovesOnlyThePublicBridge)
 	EXPECT_EQ(Body.find("RenderSettingsCardDeckDragOverlay("), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, P2DoesNotHalfMigrateQmClientOrTClientRenderers)
+TEST(QmMonitoringHelpers, P6KeepsTClientOnTheLegacyRendererUntilItsMigration)
 {
 	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string TClient = ReadRepoFile("src/game/client/components/tclient/menus_tclient.cpp");
-	EXPECT_EQ(QmClient.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(QmClient.find("m_SettingsCardDeck.Render("), std::string::npos);
 	EXPECT_EQ(TClient.find("m_SettingsCardDeck.Render("), std::string::npos);
 }
 
