@@ -2841,6 +2841,8 @@ private:
 	void RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly);
+	void RenderQmHudNotificationsBasicContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
+	void RenderQmHudNotificationsAdvancedContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderGlobalSearchResultCard(CUIRect &MainView, const struct SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);
 	void RenderGlobalSearchResults(CUIRect &MainView, const std::vector<const struct SQmGlobalSearchCard *> &vCards, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);

@@ -7570,6 +7570,31 @@ TEST(QmMonitoringHelpers, P6HudMediaContentExtractionsKeepLegacyRendererAsTheOnl
 	EXPECT_EQ(SmtcCase.find("DoQmSettingsMenuButton"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6HudNotificationsContentExtractionKeepsDynamicOptionsMeasured)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string BasicBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudNotificationsBasicContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const std::string AdvancedBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudNotificationsAdvancedContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const size_t CaseStart = QmClient.rfind("case EQmModuleId::HudNotifications:");
+	const size_t CaseEnd = QmClient.find("case EQmModuleId::Voice:", CaseStart);
+	const std::string LegacyCase = CaseStart != std::string::npos && CaseEnd != std::string::npos ? QmClient.substr(CaseStart, CaseEnd - CaseStart) : "";
+	ASSERT_FALSE(BasicBody.empty());
+	ASSERT_FALSE(AdvancedBody.empty());
+	ASSERT_FALSE(LegacyCase.empty());
+
+	EXPECT_NE(BasicBody.find("m_QmHudNotificationsShowAdvanced"), std::string::npos);
+	EXPECT_NE(AdvancedBody.find("m_QmHudNotificationsUseCategoryFilters"), std::string::npos);
+	EXPECT_NE(AdvancedBody.find("DoLine_ColorPicker"), std::string::npos);
+	EXPECT_NE(AdvancedBody.find("DoDropDown"), std::string::npos);
+	EXPECT_NE(AdvancedBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_EQ(BasicBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(AdvancedBody.find("HandleModuleDragState"), std::string::npos);
+	EXPECT_NE(LegacyCase.find("RenderQmHudNotificationsBasicContent"), std::string::npos);
+	EXPECT_NE(LegacyCase.find("RenderQmHudNotificationsAdvancedContent"), std::string::npos);
+	EXPECT_EQ(QmClient.find("RenderHudNotificationsBasicSettings"), std::string::npos);
+	EXPECT_EQ(QmClient.find("RenderHudNotificationsAdvancedSettings"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
