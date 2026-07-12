@@ -271,6 +271,53 @@ namespace qm_module
 		}
 	}
 
+	bool ParseLegacyQmCollapsed(const char *pConfig, std::span<const SQmModuleEntry> Entries, std::span<bool> Collapsed)
+	{
+		std::fill(Collapsed.begin(), Collapsed.end(), false);
+		if(pConfig == nullptr || pConfig[0] == '\0')
+			return false;
+
+		bool AnyParsed = false;
+		char aEntry[128];
+		const char *pEntry = pConfig;
+		while((pEntry = str_next_token(pEntry, ";", aEntry, sizeof(aEntry))) != nullptr)
+		{
+			if(aEntry[0] == '\0')
+				continue;
+			char aKey[64];
+			str_next_token(aEntry, ":", aKey, sizeof(aKey));
+			if(aKey[0] == '\0')
+				continue;
+			for(size_t Index = 0; Index < Entries.size() && Index < Collapsed.size(); ++Index)
+			{
+				if(Entries[Index].m_pKey != nullptr && str_comp(Entries[Index].m_pKey, aKey) == 0)
+				{
+					Collapsed[Index] = true;
+					AnyParsed = true;
+					break;
+				}
+			}
+		}
+		return AnyParsed;
+	}
+
+	void SerializeLegacyQmCollapsed(std::span<const SQmModuleEntry> Entries, std::span<const bool> Collapsed, char *pOut, int OutSize)
+	{
+		if(pOut == nullptr || OutSize <= 0)
+			return;
+		pOut[0] = '\0';
+		bool First = true;
+		for(size_t Index = 0; Index < Entries.size() && Index < Collapsed.size(); ++Index)
+		{
+			if(!Collapsed[Index] || Entries[Index].m_pKey == nullptr)
+				continue;
+			if(!First)
+				str_append(pOut, ";", OutSize);
+			str_append(pOut, Entries[Index].m_pKey, OutSize);
+			First = false;
+		}
+	}
+
 	namespace
 	{
 		std::vector<SQmModuleEntry> BuildLegacyQmDefaultsFromRegistry()

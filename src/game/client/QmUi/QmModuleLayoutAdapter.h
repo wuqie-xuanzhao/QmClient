@@ -5,6 +5,7 @@
 #include <game/client/QmUi/QmCardRegistry.h>
 #include <game/client/QmUi/QmModuleTypes.h>
 
+#include <span>
 #include <vector>
 
 namespace qm_module
@@ -27,6 +28,11 @@ namespace qm_module
 	bool ParseLegacyQmLayout(const char *pConfig, const std::vector<SQmModuleEntry> &vDefaults, std::vector<SQmModuleEntry> &vOut);
 	void SerializeLegacyQmLayout(const std::vector<SQmModuleEntry> &vEntries, char *pOut, int OutSize);
 	void NormalizeQmLayoutColumns(std::vector<SQmModuleEntry> &vEntries);
+
+	// 栖梦折叠状态兼容历史 key[:...];key 格式，写回时仅保留已注册 key 并规范化为 key;key。
+	// pEntries 的顺序与 pCollapsed 的索引必须一致；未知和重复条目均忽略。
+	bool ParseLegacyQmCollapsed(const char *pConfig, std::span<const SQmModuleEntry> Entries, std::span<bool> Collapsed);
+	void SerializeLegacyQmCollapsed(std::span<const SQmModuleEntry> Entries, std::span<const bool> Collapsed, char *pOut, int OutSize);
 
 	// === CModel 接入（Step 2）：栖梦布局由 qm_card_order::CModel 持有，IsDirty 触发序列化 ===
 	// 栖梦布局的 CModel 单例（B1 Task 5 的布局权威，替代 s_aQmModuleLayout 的序列化职责）。

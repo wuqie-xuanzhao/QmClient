@@ -2142,47 +2142,11 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 	};
 
 	auto ParseQmModuleCollapsed = [&](const char *pConfig) -> bool {
-		if(!pConfig || pConfig[0] == '\0')
-			return false;
-
-		bool AnyParsed = false;
-		char aEntry[128];
-		const char *pEntry = pConfig;
-		while((pEntry = str_next_token(pEntry, ";", aEntry, sizeof(aEntry))))
-		{
-			if(aEntry[0] == '\0')
-				continue;
-
-			char aKey[64];
-			str_next_token(aEntry, ":", aKey, sizeof(aKey));
-			if(aKey[0] == '\0')
-				continue;
-
-			const int Index = FindQmModuleIndex(aKey);
-			if(Index < 0)
-				continue;
-
-			s_aQmModuleCollapsed[GetQmModuleStateIndexById(s_aQmModuleDefaults[Index].m_Id)] = true;
-			AnyParsed = true;
-		}
-
-		return AnyParsed;
+		return qm_module::ParseLegacyQmCollapsed(pConfig, s_aQmModuleDefaults, s_aQmModuleCollapsed);
 	};
 
 	auto SerializeQmModuleCollapsed = [&](char *pOut, int OutSize) {
-		pOut[0] = '\0';
-		bool First = true;
-		for(const auto &Entry : s_aQmModuleDefaults)
-		{
-			const int Index = GetQmModuleStateIndexById(Entry.m_Id);
-			if(!s_aQmModuleCollapsed[Index])
-				continue;
-
-			if(!First)
-				str_append(pOut, ";", OutSize);
-			str_append(pOut, Entry.m_pKey, OutSize);
-			First = false;
-		}
+		qm_module::SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aQmModuleCollapsed, pOut, OutSize);
 	};
 
 	auto PersistQmModuleCollapsed = [&]() {

@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <set>
 #include <string>
 #include <vector>
@@ -147,6 +148,22 @@ TEST(QmModuleLayoutAdapter, ColumnStringRoundtrip)
 	EXPECT_EQ(Col, EQmModuleColumn::Full);
 	EXPECT_FALSE(ParseQmModuleColumnString("invalid", &Col));
 	EXPECT_FALSE(ParseQmModuleColumnString(nullptr, &Col));
+}
+
+// 意图：折叠配置必须继续接受历史 key[:...] 条目，写回时只保留注册 key，
+// 不能退化成依赖分号包围的子串匹配，避免 key 前后缀或附加字段破坏状态。
+TEST(QmModuleLayoutAdapter, LegacyCollapsedConfigAcceptsSuffixAndNormalizes)
+{
+	const auto Defaults = MakeTestDefaults();
+	std::array<bool, 3> aCollapsed = {};
+	EXPECT_TRUE(ParseLegacyQmCollapsed("chat_bubble:legacy;unknown;camera_view", Defaults, aCollapsed));
+	EXPECT_FALSE(aCollapsed[0]);
+	EXPECT_TRUE(aCollapsed[1]);
+	EXPECT_TRUE(aCollapsed[2]);
+
+	char aSerialized[128];
+	SerializeLegacyQmCollapsed(Defaults, aCollapsed, aSerialized, sizeof(aSerialized));
+	EXPECT_STREQ(aSerialized, "chat_bubble;camera_view");
 }
 
 // 意图：ParseQmModuleColumnString 必须与栖梦 ParseQmModuleColumn 等价——
