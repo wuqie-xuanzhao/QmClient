@@ -1,7 +1,7 @@
 # QmClient 设置页 UI 统一 P5 标准设置页迁移 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-> **状态（2026-07-12）：Task 2（General）自动化迁移已完成，Task 3 尚未开始。** General 已接入公共 layout/deck、registry/导航、统一滚动 policy 与 NumericField 文本预热桥接；`run_cxx_tests`（2131 项）已通过。General 的真实客户端视觉/交互矩阵仍待用户反馈，P5 整体仍未完成。后续页面迁移不得以 wrapper 或复制旧 deck 路径绕过既有契约。
+> **状态（2026-07-12）：Task 2（General）与 Task 3（Player）自动化迁移已完成，Task 4 尚未开始。** Player 已接入公共 layout/deck、registry/导航和统一滚动 policy；Player/Dummy tab 保持在 card grid 外，身份输入与国家列表复用既有 InputField/CListBox 行为。General 与 Player 的真实客户端视觉/交互矩阵仍待用户最终统一反馈，P5 整体仍未完成。后续页面迁移不得以 wrapper 或复制旧 deck 路径绕过既有契约。
 
 **Goal:** 在不重做 P1–P4 公共 primitive 的前提下，将 General、Player、Tee、Graphics、Sound、DDNet、Appearance、Controls 八个标准设置页完整迁移到统一 page layout、card、deck、input、numeric 与 scroll 契约，并逐页删除旧实现路径。
 
@@ -347,7 +347,7 @@ git commit -m "refactor(settings): 迁移 General 标准设置页"
 - Consumes: `ResolveSettingsPageLayout(...)`, `SSettingsCardDefinition`, `CSettingsCardDeck::Render(...)`, `ui_widget::InputField(...)`, `CQmScrollState`, `QmResolveScrollPolicy(...)`.
 - Produces: `deck:player-identity` (Left/0), `deck:player-country` (Right/0); navigation tab `player -> CMenus::SETTINGS_PLAYER`.
 
-- [ ] **Step 1: Write failing Player behavior and deletion tests**
+- [x] **Step 1: Write failing Player behavior and deletion tests**
 
 ```cpp
 const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
@@ -359,7 +359,7 @@ EXPECT_EQ(Model.StableIdOrder("deck:", "player", 2),
 
 Append both Player IDs to `CoversCurrentSettingsDeckIds`. The structure test must cover both `RenderSettingsTeeIdentity` and `RenderSettingsPlayer`, require `ui_widget::InputField(...)`, require route `player`, and reject `ui_widget::TextField(...)` / `ui_widget::SearchField(...)`. Check the two IDs and uniqueness semantically; do not update or introduce a fixed total.
 
-- [ ] **Step 2: Verify the focused red state**
+- [x] **Step 2: Verify the focused red state**
 
 ```powershell
 cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target testrunner -j 14
@@ -368,7 +368,7 @@ cmake-build-release/testrunner.exe --gtest_filter=QmCardRegistry.PlayerStandardP
 
 Expected: FAIL on missing Player registry/route and legacy text/search fields.
 
-- [ ] **Step 3: Implement the minimal Player migration**
+- [x] **Step 3: Implement the minimal Player migration**
 
 Keep Player/Dummy tabs full width and outside the card grid. Move name/clan/country controls into the identity definition and the filter/grid into the country definition. Preserve the P3 `ui_widget::InputField(...)` calls for name, clan and flag search; retain `CListBox` only as the P4 list adapter inside the card viewport. Entry animation must not change card hit or drag rects.
 
@@ -380,7 +380,7 @@ Add these exact registry/navigation rows:
 {"player", CMenus::SETTINGS_PLAYER},
 ```
 
-- [ ] **Step 4: Run green tests and inventory**
+- [x] **Step 4: Run green tests and inventory**
 
 ```powershell
 cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target testrunner -j 14
@@ -390,7 +390,7 @@ python qmclient_scripts/gate/check_settings_ui_migration.py --page player
 
 Expected: PASS; Player/Dummy selection and `SetNeedSendInfo(...)` behavior remain covered.
 
-- [ ] **Step 5: Commit the Player slice**
+- [x] **Step 5: Commit the Player slice**
 
 ```powershell
 git add src/game/client/components/menus_settings.cpp src/game/client/QmUi/QmCardRegistry.cpp src/game/client/components/qmclient/menus_qmclient.cpp src/test/qm_card_registry_test.cpp src/test/qm_new_ui_menu_branch_test.cpp

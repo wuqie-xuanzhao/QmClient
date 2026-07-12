@@ -2387,6 +2387,39 @@ TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 	EXPECT_EQ(General.find("Ui()->DoEditBox("), std::string::npos);
 	EXPECT_EQ(General.find("Ui()->DoScrollbarH("), std::string::npos);
 }
+TEST(QmNewUiMenuBranches, PlayerStandardPageUsesUnifiedSettingsStack)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string Navigation = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Identity = FunctionBody(Source, "void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton)");
+	const std::string Player = FunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
+	ASSERT_FALSE(Identity.empty());
+	ASSERT_FALSE(Player.empty());
+	EXPECT_NE(Identity.find("ui_widget::InputField("), std::string::npos);
+	EXPECT_NE(Player.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(Player.find("SSettingsCardDefinition"), std::string::npos);
+	EXPECT_NE(Player.find("m_SettingsCardDeck.Render("), std::string::npos);
+	EXPECT_NE(Player.find("CQmScrollState"), std::string::npos);
+	EXPECT_NE(Player.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_NE(Player.find("QmScrollRegionParamsFromPolicy(ScrollPolicy)"), std::string::npos);
+	EXPECT_NE(Player.find("ui_widget::InputField("), std::string::npos);
+	const std::string ListBox = ReadTextFile("src/game/client/ui_listbox.cpp");
+	const size_t PlayerListPriority = Player.find("s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);");
+	const size_t PlayerListStart = Player.find("s_ListBox.DoStart(");
+	ASSERT_NE(PlayerListPriority, std::string::npos);
+	ASSERT_NE(PlayerListStart, std::string::npos);
+	EXPECT_LT(PlayerListPriority, PlayerListStart);
+	EXPECT_NE(ListBox.find("ScrollParams.m_WheelOwnerPriority = m_WheelOwnerPriority;"), std::string::npos);
+	EXPECT_NE(ListBox.find("m_WheelOwnerPriority = EUiWheelOwnerPriority::PAGE;"), std::string::npos);
+	EXPECT_NE(Player.find("deck:player-identity"), std::string::npos);
+	EXPECT_NE(Player.find("deck:player-country"), std::string::npos);
+	EXPECT_NE(Navigation.find("{\"player\", CMenus::SETTINGS_PLAYER}"), std::string::npos);
+	EXPECT_EQ(Player.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(Player.find("ui_widget::TextField("), std::string::npos);
+	EXPECT_EQ(Player.find("ui_widget::SearchField("), std::string::npos);
+	EXPECT_EQ(Player.find("Ui()->DoEditBox("), std::string::npos);
+	EXPECT_EQ(Player.find("Ui()->DoScrollbarH("), std::string::npos);
+}
 TEST(QmNewUiMenuBranches, NestedLanguageListWheelOwnerOutranksGeneralPage)
 {
 	EXPECT_TRUE(QmHotScrollRegionPriorityWins(EUiWheelOwnerPriority::PAGE, EUiWheelOwnerPriority::COMPOSITE_CONTROL));

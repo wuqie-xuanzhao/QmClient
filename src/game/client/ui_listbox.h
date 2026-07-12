@@ -31,6 +31,7 @@ private:
 	bool m_ListBoxUpdateScroll;
 	int m_ListBoxNumItems;
 	int m_ListBoxItemsPerRow;
+	EUiWheelOwnerPriority m_WheelOwnerPriority;
 	bool m_ListBoxItemSelected;
 	bool m_ListBoxItemActivated;
 	bool m_ScrollbarShown;
@@ -71,6 +72,7 @@ public:
 
 	// Active state must be set before calling DoStart.
 	bool Active() const { return m_Active; }
+	void SetWheelOwnerPriority(EUiWheelOwnerPriority Priority) { m_WheelOwnerPriority = Priority; }
 	void SetActive(bool Active) { m_Active = Active; }
 	void SetScrollProfile(EQmScrollProfile Profile) { m_ScrollProfile = Profile; }
 

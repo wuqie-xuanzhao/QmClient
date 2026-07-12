@@ -72,6 +72,8 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:general-client",
 		"deck:general-recording",
 		"deck:graphics-display",
+		"deck:player-identity",
+		"deck:player-country",
 		"deck:graphics-visual",
 		"deck:graphics-backend",
 		"deck:graphics-modes",
@@ -114,6 +116,17 @@ TEST(QmCardRegistry, GeneralStandardPageCardsPersistInVisualOrder)
 	EXPECT_EQ(Model.StableIdOrder("deck:", "general", 2),
 		(std::vector<std::string>{"deck:general-language", "deck:general-recording"}));
 } // 意图：appearance deck 的默认 placement 必须与运行时子页和列顺序对齐。
+
+// 意图：Player 页的身份和国家选择必须在重启后保持左右两列的默认 placement，
+// 否则全局 Search 或自定义排序会丢失目标卡片。
+TEST(QmCardRegistry, PlayerStandardPageCardsPersistInVisualOrder)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "player", 1),
+		(std::vector<std::string>{"deck:player-identity"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "player", 2),
+		(std::vector<std::string>{"deck:player-country"}));
+}
 // 否则全局默认补位会把不同 appearance 子页混在同一个 tab 下，或留下 order 空洞。
 TEST(QmCardRegistry, AppearanceDeckDefaultsUseSubPagePlacements)
 {

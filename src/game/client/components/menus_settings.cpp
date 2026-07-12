@@ -998,28 +998,33 @@ void CMenus::RenderSettingsTeeIdentity(CUIRect MainView, CUIRect *pFlagButton)
 
 void CMenus::RenderSettingsPlayer(CUIRect MainView)
 {
-	CUIRect TabBar, PlayerTab, DummyTab, ChangeInfo, QuickSearch;
+	CPerfTimer RenderTimer;
+	CScopedSettingsTextPerfStats TextStats(this);
+	const float UiScale = minimum(1.0f, maximum(0.85f, MainView.w / 800.0f));
+	const IUiContext PlayerCardCtx = SettingsUiContext("settings_player", UiScale);
+	const SSettingsCardDeckVisualOptions PlayerVisualOptions = SettingsCardDeckVisualOptions();
+	static CScrollRegion s_PlayerSettingsScrollRegion;
+	const qm_card_registry::SCardDefault *pIdentityDefault = qm_card_registry::FindByStableId("deck:player-identity");
+	const qm_card_registry::SCardDefault *pCountryDefault = qm_card_registry::FindByStableId("deck:player-country");
+	dbg_assert(pIdentityDefault != nullptr && pCountryDefault != nullptr, "player settings cards must be registered");
+	if(pIdentityDefault == nullptr || pCountryDefault == nullptr)
+		return;
+
+	CUIRect TabBar, PlayerTab, DummyTab, ChangeInfo;
 	static bool s_PlayerTabTransitionInitialized = false;
 	static bool s_PrevDummy = false;
 	static float s_PlayerTabTransitionDirection = 0.0f;
 	const uint64_t PlayerTabSwitchNode = UiAnimNodeKey("settings_player_tab_switch");
 	MainView.HSplitTop(20.0f, &TabBar, &MainView);
-	TabBar.VSplitMid(&TabBar, &ChangeInfo, 20.f);
+	TabBar.VSplitMid(&TabBar, &ChangeInfo, 20.0f);
 	TabBar.VSplitMid(&PlayerTab, &DummyTab);
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
-
 	static CButtonContainer s_PlayerTabButton;
 	if(DoButton_MenuTab(&s_PlayerTabButton, Localize("Player"), !m_Dummy, &PlayerTab, IGraphics::CORNER_L, nullptr, nullptr, nullptr, nullptr, 4.0f))
-	{
 		m_Dummy = false;
-	}
-
 	static CButtonContainer s_DummyTabButton;
 	if(DoButton_MenuTab(&s_DummyTabButton, Localize("Dummy"), m_Dummy, &DummyTab, IGraphics::CORNER_R, nullptr, nullptr, nullptr, nullptr, 4.0f))
-	{
 		m_Dummy = true;
-	}
-
 	if(!s_PlayerTabTransitionInitialized)
 	{
 		s_PrevDummy = m_Dummy;
@@ -1031,31 +1036,26 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		TriggerUiSwitchAnimation(PlayerTabSwitchNode, 0.18f);
 		s_PrevDummy = m_Dummy;
 	}
-
 	const float TransitionStrength = ReadUiSwitchAnimation(PlayerTabSwitchNode);
 	const bool TransitionActive = TransitionStrength > 0.0f && s_PlayerTabTransitionDirection != 0.0f;
 	const float TransitionAlpha = UiSwitchAnimationAlpha(TransitionStrength);
 	const float TransitionOffset = TransitionActive ? TransitionStrength * std::clamp(MainView.w * 0.08f, 24.0f, 120.0f) * s_PlayerTabTransitionDirection : 0.0f;
-
-	auto DrawAnimatedRow = [&](CUIRect Row, auto &&DrawRow) {
-		if(TransitionActive)
+	const auto DrawAnimatedContent = [this, TransitionActive, TransitionAlpha, TransitionOffset](CUIRect Content, auto &&DrawContent) {
+		if(!TransitionActive)
 		{
-			CUIRect ClipRect = Row;
-			Ui()->ClipEnable(&ClipRect);
-			Row.x += TransitionOffset;
-			DrawRow(Row);
-			if(TransitionAlpha > 0.0f)
-			{
-				ClipRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
-			}
-			Ui()->ClipDisable();
+			DrawContent(Content);
+			return;
 		}
-		else
-		{
-			DrawRow(Row);
-		}
+		CUIRect ClipRect = Content;
+		Ui()->ClipEnable(&ClipRect);
+		Content.x += TransitionOffset;
+		DrawContent(Content);
+		if(TransitionAlpha > 0.0f)
+			ClipRect.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha), IGraphics::CORNER_NONE, 0.0f);
+		Ui()->ClipDisable();
 	};
 
+	int *pCountry = m_Dummy ? &g_Config.m_ClDummyCountry : &g_Config.m_PlayerCountry;
 	static CLineInput s_NameInput;
 	static CLineInput s_ClanInput;
 	IUiContext PlayerIdentityTextInputCtx;
@@ -1064,114 +1064,128 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	PlayerIdentityTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	PlayerIdentityTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_player_identity_text_inputs");
 	PlayerIdentityTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-
-	int *pCountry;
 	if(!m_Dummy)
 	{
-		pCountry = &g_Config.m_PlayerCountry;
 		s_NameInput.SetBuffer(g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName));
 		s_NameInput.SetEmptyText(Client()->PlayerName());
 		s_ClanInput.SetBuffer(g_Config.m_PlayerClan, sizeof(g_Config.m_PlayerClan));
 	}
 	else
 	{
-		pCountry = &g_Config.m_ClDummyCountry;
 		s_NameInput.SetBuffer(g_Config.m_ClDummyName, sizeof(g_Config.m_ClDummyName));
 		s_NameInput.SetEmptyText(Client()->DummyName());
 		s_ClanInput.SetBuffer(g_Config.m_ClDummyClan, sizeof(g_Config.m_ClDummyClan));
 	}
 
-	// player name
-	CUIRect Label;
-	CUIRect NameRow;
-	MainView.HSplitTop(20.0f, &NameRow, &MainView);
-	char aBuf[128];
-	DrawAnimatedRow(NameRow, [&](CUIRect Row) {
-		Row.VSplitLeft(80.0f, &Label, &Row);
-		Row.VSplitLeft(150.0f, &Row, nullptr);
-		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
-		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
-		if(ui_widget::InputField(PlayerIdentityTextInputCtx, &s_NameInput, Row, Client()->PlayerName(), 14.0f))
-			SetNeedSendInfo(m_Dummy);
-	});
-
-	// player clan
-	MainView.HSplitTop(5.0f, nullptr, &MainView);
-	CUIRect ClanRow;
-	MainView.HSplitTop(20.0f, &ClanRow, &MainView);
-	DrawAnimatedRow(ClanRow, [&](CUIRect Row) {
-		Row.VSplitLeft(80.0f, &Label, &Row);
-		Row.VSplitLeft(150.0f, &Row, nullptr);
-		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Clan"));
-		Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
-		if(ui_widget::InputField(PlayerIdentityTextInputCtx, &s_ClanInput, Row, "", 14.0f))
-		{
-			SetNeedSendInfo();
-		}
-	});
-
-	// country flag selector
 	static CLineInputBuffered<25> s_FlagFilterInput;
-
 	static std::vector<const CCountryFlags::CCountryFlag *> s_vpFilteredFlags;
 	s_vpFilteredFlags.clear();
 	s_vpFilteredFlags.reserve(GameClient()->m_CountryFlags.Num());
 	for(size_t i = 0; i < GameClient()->m_CountryFlags.Num(); ++i)
 	{
 		const CCountryFlags::CCountryFlag &Entry = GameClient()->m_CountryFlags.GetByIndex(i);
-		if(!str_find_nocase(Entry.m_aCountryCodeString, s_FlagFilterInput.GetString()))
-			continue;
-		s_vpFilteredFlags.push_back(&Entry);
+		if(str_find_nocase(Entry.m_aCountryCodeString, s_FlagFilterInput.GetString()))
+			s_vpFilteredFlags.push_back(&Entry);
 	}
-	MainView.HSplitTop(10.0f, nullptr, &MainView);
-	MainView.HSplitBottom(20.0f, &MainView, &QuickSearch);
-	MainView.HSplitBottom(5.0f, &MainView, nullptr);
-	QuickSearch.VSplitLeft(220.0f, &QuickSearch, nullptr);
-
-	int SelectedOld = -1;
-	static CListBox s_ListBox;
-	s_ListBox.DoStart(48.0f, s_vpFilteredFlags.size(), 10, 3, SelectedOld, &MainView);
-
-	for(size_t i = 0; i < s_vpFilteredFlags.size(); i++)
-	{
-		const CCountryFlags::CCountryFlag *pEntry = s_vpFilteredFlags[i];
-
-		if(pEntry->m_CountryCode == *pCountry)
-			SelectedOld = i;
-
-		const CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, SelectedOld >= 0 && (size_t)SelectedOld == i);
-		if(!Item.m_Visible)
-			continue;
-
-		CUIRect FlagRect;
-		Item.m_Rect.Margin(5.0f, &FlagRect);
-		FlagRect.HSplitBottom(12.0f, &FlagRect, &Label);
-		Label.HSplitTop(2.0f, nullptr, &Label);
-		const float OldWidth = FlagRect.w;
-		FlagRect.w = FlagRect.h * 2;
-		FlagRect.x += (OldWidth - FlagRect.w) / 2.0f;
-		GameClient()->m_CountryFlags.Render(pEntry->m_CountryCode, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), FlagRect.x, FlagRect.y, FlagRect.w, FlagRect.h);
-
-		if(pEntry->m_Texture.IsValid() || pEntry->m_CountryCode == -1)
-		{
-			Ui()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, TEXTALIGN_MC);
-		}
-	}
-
-	const int NewSelected = s_ListBox.DoEnd();
-	if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < (int)s_vpFilteredFlags.size())
-	{
-		*pCountry = s_vpFilteredFlags[NewSelected]->m_CountryCode;
-		SetNeedSendInfo();
-	}
-
 	IUiContext PlayerFlagSearchCtx;
 	PlayerFlagSearchCtx.m_pUi = Ui();
 	PlayerFlagSearchCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
 	PlayerFlagSearchCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
 	PlayerFlagSearchCtx.m_ScopeHash = MakeUiScopeHash("settings_player_flag_search");
 	PlayerFlagSearchCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	ui_widget::InputField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, 14.0f, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+
+	const SSettingsCardSpec IdentitySpec{pIdentityDefault->m_pStableId, Localize(pIdentityDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec CountrySpec{pCountryDefault->m_pStableId, Localize(pCountryDefault->m_pTitle), nullptr};
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(2);
+	const auto AddCard = [&vCards](const SSettingsCardSpec &Spec, float ContentHeight, FSettingsCardRender Render) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = Spec;
+		Definition.m_Measure = [ContentHeight](float) { return ContentHeight; };
+		Definition.m_Render = Render;
+		vCards.push_back(Definition);
+	};
+	AddCard(IdentitySpec, 45.0f * UiScale, [this, &DrawAnimatedContent, &PlayerIdentityTextInputCtx, UiScale](CUIRect Content) {
+		CUIRect Label, NameRow, ClanRow;
+		char aBuf[128];
+		Content.HSplitTop(20.0f * UiScale, &NameRow, &Content);
+		DrawAnimatedContent(NameRow, [this, &Label, &PlayerIdentityTextInputCtx, &aBuf, UiScale](CUIRect Row) {
+			Row.VSplitLeft(80.0f * UiScale, &Label, &Row);
+			Row.VSplitLeft(150.0f * UiScale, &Row, nullptr);
+			str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
+			Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
+			if(ui_widget::InputField(PlayerIdentityTextInputCtx, &s_NameInput, Row, Client()->PlayerName(), 14.0f))
+				SetNeedSendInfo(m_Dummy);
+		});
+		Content.HSplitTop(5.0f * UiScale, nullptr, &Content);
+		Content.HSplitTop(20.0f * UiScale, &ClanRow, &Content);
+		DrawAnimatedContent(ClanRow, [this, &Label, &PlayerIdentityTextInputCtx, &aBuf, UiScale](CUIRect Row) {
+			Row.VSplitLeft(80.0f * UiScale, &Label, &Row);
+			Row.VSplitLeft(150.0f * UiScale, &Row, nullptr);
+			str_format(aBuf, sizeof(aBuf), "%s:", Localize("Clan"));
+			Ui()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
+			if(ui_widget::InputField(PlayerIdentityTextInputCtx, &s_ClanInput, Row, "", 14.0f))
+				SetNeedSendInfo();
+		});
+	});
+	AddCard(CountrySpec, 520.0f * UiScale, [this, pCountry, &PlayerFlagSearchCtx, UiScale](CUIRect Content) {
+		CUIRect QuickSearch, Label;
+		Content.HSplitBottom(20.0f * UiScale, &Content, &QuickSearch);
+		Content.HSplitBottom(5.0f * UiScale, &Content, nullptr);
+		QuickSearch.VSplitLeft(minimum(220.0f * UiScale, QuickSearch.w), &QuickSearch, nullptr);
+		int SelectedOld = -1;
+		static CListBox s_ListBox;
+		s_ListBox.SetWheelOwnerPriority(EUiWheelOwnerPriority::COMPOSITE_CONTROL);
+		s_ListBox.DoStart(48.0f * UiScale, s_vpFilteredFlags.size(), 10, 3, SelectedOld, &Content);
+		for(size_t i = 0; i < s_vpFilteredFlags.size(); i++)
+		{
+			const CCountryFlags::CCountryFlag *pEntry = s_vpFilteredFlags[i];
+			if(pEntry->m_CountryCode == *pCountry)
+				SelectedOld = i;
+			const CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, SelectedOld >= 0 && (size_t)SelectedOld == i);
+			if(!Item.m_Visible)
+				continue;
+			CUIRect FlagRect;
+			Item.m_Rect.Margin(5.0f * UiScale, &FlagRect);
+			FlagRect.HSplitBottom(12.0f * UiScale, &FlagRect, &Label);
+			Label.HSplitTop(2.0f * UiScale, nullptr, &Label);
+			const float OldWidth = FlagRect.w;
+			FlagRect.w = FlagRect.h * 2.0f;
+			FlagRect.x += (OldWidth - FlagRect.w) / 2.0f;
+			GameClient()->m_CountryFlags.Render(pEntry->m_CountryCode, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), FlagRect.x, FlagRect.y, FlagRect.w, FlagRect.h);
+			if(pEntry->m_Texture.IsValid() || pEntry->m_CountryCode == -1)
+				Ui()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f * UiScale, TEXTALIGN_MC);
+		}
+		const int NewSelected = s_ListBox.DoEnd();
+		if(SelectedOld != NewSelected && NewSelected >= 0 && NewSelected < (int)s_vpFilteredFlags.size())
+		{
+			*pCountry = s_vpFilteredFlags[NewSelected]->m_CountryCode;
+			SetNeedSendInfo();
+		}
+		ui_widget::InputField(PlayerFlagSearchCtx, &s_FlagFilterInput, QuickSearch, 14.0f * UiScale, !Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive());
+	});
+
+	const SSettingsPageLayoutFrame PlayerPage = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	CQmScrollState &ScrollState = s_PlayerSettingsScrollRegion.State();
+	// Deck 通过同一个 region 消费该状态；显式取得它以固定页面唯一的滚动状态所有权。
+	(void)ScrollState;
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = Ui()->MouseX();
+	InputState.m_MouseY = Ui()->MouseY();
+	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(PlayerCardCtx, PlayerPage, "player", vCards, SettingsCardOrderModel(), &s_PlayerSettingsScrollRegion, InputState, SettingsCardMotionSpec(), PlayerVisualOptions);
+	if(DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
+	LogSettingsSectionPerf(Client(), SETTINGS_PLAYER, -1, "player_page", RenderTimer.ElapsedMs(), "static_text", TextStats.Stats().m_New, TextStats.Stats().m_Reused);
+	LogPerfStage(Client(), "player_page_total", RenderTimer.ElapsedMs(), false, "page=player");
 }
 
 void CMenus::FinalizeTeeListDrainPerfSession()

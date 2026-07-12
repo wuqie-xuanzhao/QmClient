@@ -25,6 +25,7 @@ void CListBox::Reset()
 	m_ScrollRegion.Reset();
 	m_ScrollProfile = EQmScrollProfile::MENU_LIST;
 	const CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::MEDIUM);
+	m_WheelOwnerPriority = EUiWheelOwnerPriority::PAGE;
 	m_ScrollbarWidth = ScrollParams.m_ScrollbarThickness;
 	m_ScrollbarMargin = ScrollParams.m_ScrollbarMargin;
 	m_ScrollbarWidthOverridden = false;
@@ -115,6 +116,7 @@ void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsP
 	ScrollRequest.m_RowsPerStep = RowsPerScroll;
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest);
 	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	ScrollParams.m_WheelOwnerPriority = m_WheelOwnerPriority;
 	m_ScrollbarWidth = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarThickness, m_ScrollbarWidth, m_ScrollbarWidthOverridden);
 	m_ScrollbarMargin = QmListBoxScrollbarMetric(ScrollParams.m_ScrollbarMargin, m_ScrollbarMargin, m_ScrollbarMarginOverridden);
 	ScrollParams.m_ScrollbarThickness = m_ScrollbarWidth;
