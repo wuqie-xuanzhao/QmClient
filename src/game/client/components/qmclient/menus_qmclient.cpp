@@ -1859,6 +1859,39 @@ void CMenus::RenderQmHudNotificationsAdvancedContent(CUIRect &Content, float Lin
 	RenderValue("qmclient-notifications-edge-margin", "Edge margin", &s_QmHudNotificationEdgeMarginInputId, &g_Config.m_QmHudNotificationsEdgeMargin, 0, 32);
 }
 
+void CMenus::RenderQmHudPlayerStatsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsHud, "Show player stats HUD", Localize("Show player stats HUD"), &g_Config.m_QmPlayerStatsHud);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsMapProgress, "Map progress bar", Localize("Map progress bar"), &g_Config.m_QmPlayerStatsMapProgress);
+	if(g_Config.m_QmPlayerStatsMapProgress)
+	{
+		RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsMapProgressStyle, "Use embedded HUD progress bar", Localize("Use embedded HUD progress bar"), &g_Config.m_QmPlayerStatsMapProgressStyle);
+		if(g_Config.m_QmPlayerStatsMapProgressStyle == 0)
+		{
+			static CButtonContainer s_MapProgressColorId;
+			DoLine_ColorPicker(&s_MapProgressColorId, LineHeight, BodySize, LineSpacing, &Content, Localize("Progress bar color"), &g_Config.m_QmPlayerStatsMapProgressColor, ColorRGBA(36.0f / 255.0f, 199.0f / 255.0f, 100.0f / 255.0f, 1.0f), false, nullptr, true);
+			CUIRect Row, LabelColumn, ControlColumn;
+			auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+				Content.HSplitTop(LineHeight, &Row, &Content);
+				Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+				RenderQmHudLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+				RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
+				Content.HSplitTop(LineSpacing, nullptr, &Content);
+			};
+			static int s_QmPlayerStatsMapProgressWidthInputId;
+			static int s_QmPlayerStatsMapProgressHeightInputId;
+			static int s_QmPlayerStatsMapProgressPosXInputId;
+			static int s_QmPlayerStatsMapProgressPosYInputId;
+			RenderValue("qmclient-player-data-progress-bar-width", "Progress bar width", &s_QmPlayerStatsMapProgressWidthInputId, &g_Config.m_QmPlayerStatsMapProgressWidth, 10, 80);
+			RenderValue("qmclient-player-data-progress-bar-height", "Progress bar height", &s_QmPlayerStatsMapProgressHeightInputId, &g_Config.m_QmPlayerStatsMapProgressHeight, 6, 30);
+			RenderValue("qmclient-player-data-horizontal-position", "Horizontal position", &s_QmPlayerStatsMapProgressPosXInputId, &g_Config.m_QmPlayerStatsMapProgressPosX, 0, 100, "%");
+			RenderValue("qmclient-player-data-vertical-position", "Vertical position", &s_QmPlayerStatsMapProgressPosYInputId, &g_Config.m_QmPlayerStatsMapProgressPosY, 0, 100, "%");
+		}
+		RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsMapProgressDbgRoute, "Show dotted map route debug", Localize("Show dotted map route debug"), &g_Config.m_QmPlayerStatsMapProgressDbgRoute);
+	}
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsResetOnJoin, "Reset stats when joining a server", Localize("Reset stats when joining a server"), &g_Config.m_QmPlayerStatsResetOnJoin);
+}
+
 void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)
 {
 	using namespace qm_module;
@@ -6131,77 +6164,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 6, Localize("Player data"), Localize("Player stats and info display"));
 
-				// 显示统计HUD
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsHud, "Show player stats HUD", Localize("Show player stats HUD"), &g_Config.m_QmPlayerStatsHud, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsMapProgress, "Map progress bar", Localize("Map progress bar"), &g_Config.m_QmPlayerStatsMapProgress, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				if(g_Config.m_QmPlayerStatsMapProgress)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsMapProgressStyle, "Use embedded HUD progress bar", Localize("Use embedded HUD progress bar"), &g_Config.m_QmPlayerStatsMapProgressStyle, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					if(g_Config.m_QmPlayerStatsMapProgressStyle == 0)
-					{
-						static CButtonContainer s_MapProgressColorId;
-
-						DoLine_ColorPicker(&s_MapProgressColorId, LgLineHeight, LgBodySize, LgLineSpacing, &CardContent, Localize("Progress bar color"), &g_Config.m_QmPlayerStatsMapProgressColor, ColorRGBA(36.0f / 255.0f, 199.0f / 255.0f, 100.0f / 255.0f, 1.0f), false, nullptr, true);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						{
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-player-data-progress-bar-width", &LabelColValue, Localize("Progress bar width"), LgBodySize);
-							static int s_QmPlayerStatsMapProgressWidthInputId;
-							RenderSliderWithValueInput(&s_QmPlayerStatsMapProgressWidthInputId, ControlColValue, &g_Config.m_QmPlayerStatsMapProgressWidth, 10, 80);
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						{
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-player-data-progress-bar-height", &LabelColValue, Localize("Progress bar height"), LgBodySize);
-							static int s_QmPlayerStatsMapProgressHeightInputId;
-							RenderSliderWithValueInput(&s_QmPlayerStatsMapProgressHeightInputId, ControlColValue, &g_Config.m_QmPlayerStatsMapProgressHeight, 6, 30);
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						{
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-player-data-horizontal-position", &LabelColValue, Localize("Horizontal position"), LgBodySize);
-							static int s_QmPlayerStatsMapProgressPosXInputId;
-							RenderSliderWithValueInput(&s_QmPlayerStatsMapProgressPosXInputId, ControlColValue, &g_Config.m_QmPlayerStatsMapProgressPosX, 0, 100, "%");
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-						CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-						{
-							CUIRect LabelColValue, ControlColValue;
-							Row.VSplitLeft(LgLabelWidth, &LabelColValue, &ControlColValue);
-							DoQmSettingsLabel("qmclient-player-data-vertical-position", &LabelColValue, Localize("Vertical position"), LgBodySize);
-							static int s_QmPlayerStatsMapProgressPosYInputId;
-							RenderSliderWithValueInput(&s_QmPlayerStatsMapProgressPosYInputId, ControlColValue, &g_Config.m_QmPlayerStatsMapProgressPosY, 0, 100, "%");
-						}
-						CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					}
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsMapProgressDbgRoute, "Show dotted map route debug", Localize("Show dotted map route debug"), &g_Config.m_QmPlayerStatsMapProgressDbgRoute, &Row, LgLineHeight);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
-
-				// 进入服务器时重置统计
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmPlayerStatsResetOnJoin, "Reset stats when joining a server", Localize("Reset stats when joining a server"), &g_Config.m_QmPlayerStatsResetOnJoin, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
+				RenderQmHudPlayerStatsContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, PrewarmOnly);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;

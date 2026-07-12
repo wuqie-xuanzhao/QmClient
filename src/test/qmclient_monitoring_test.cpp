@@ -7595,6 +7595,26 @@ TEST(QmMonitoringHelpers, P6HudNotificationsContentExtractionKeepsDynamicOptions
 	EXPECT_EQ(QmClient.find("RenderHudNotificationsAdvancedSettings"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6HudPlayerStatsContentExtractionKeepsProgressBranchesMeasured)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string PlayerStatsBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmHudPlayerStatsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)");
+	const size_t CaseStart = QmClient.rfind("case EQmModuleId::PlayerStats:");
+	const size_t CaseEnd = QmClient.find("case EQmModuleId::CollisionHitbox:", CaseStart);
+	const std::string LegacyCase = CaseStart != std::string::npos && CaseEnd != std::string::npos ? QmClient.substr(CaseStart, CaseEnd - CaseStart) : "";
+	ASSERT_FALSE(PlayerStatsBody.empty());
+	ASSERT_FALSE(LegacyCase.empty());
+
+	EXPECT_NE(PlayerStatsBody.find("m_QmPlayerStatsMapProgress"), std::string::npos);
+	EXPECT_NE(PlayerStatsBody.find("m_QmPlayerStatsMapProgressStyle"), std::string::npos);
+	EXPECT_NE(PlayerStatsBody.find("DoLine_ColorPicker"), std::string::npos);
+	EXPECT_NE(PlayerStatsBody.find("RenderQmSettingsSliderWithValueInput"), std::string::npos);
+	EXPECT_EQ(PlayerStatsBody.find("RegisterModuleCard"), std::string::npos);
+	EXPECT_EQ(PlayerStatsBody.find("HandleModuleDragState"), std::string::npos);
+	EXPECT_NE(LegacyCase.find("RenderQmHudPlayerStatsContent"), std::string::npos);
+	EXPECT_EQ(LegacyCase.find("RenderSliderWithValueInput"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
