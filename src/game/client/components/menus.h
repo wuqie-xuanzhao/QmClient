@@ -2830,6 +2830,7 @@ private:
 	void RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float ContentGap, bool PrewarmOnly);
 	void RenderQmVisualChatBubbleContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
+	void RenderQmVisualFocusModeContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float ColumnGap, float LabelWidth);
 	void RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderGlobalSearchResultCard(CUIRect &MainView, const struct SQmGlobalSearchCard &Card, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);
 	void RenderGlobalSearchResults(CUIRect &MainView, const std::vector<const struct SQmGlobalSearchCard *> &vCards, const SQmSettingsCardStyle &QmCardStyle, float UiScale, bool PrewarmOnly, std::vector<CUIRect> &vGlassCards);

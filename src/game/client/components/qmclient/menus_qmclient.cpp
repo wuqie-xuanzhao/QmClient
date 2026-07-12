@@ -1079,6 +1079,75 @@ void CMenus::RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHei
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
+void CMenus::RenderQmVisualFocusModeContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float ColumnGap, float LabelWidth)
+{
+	static CButtonContainer s_ReaderButtonFocusToggle, s_ClearButtonFocusToggle;
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmFocusMode, "qmclient-focus-mode-enable", Localize("Enable Zen mode"), &g_Config.m_QmFocusMode);
+	CUIRect LeftColumn, RightColumn, Row;
+	Content.VSplitMid(&LeftColumn, &RightColumn, ColumnGap);
+	auto RenderSection = [&](CUIRect &Target, const char *pTextId, const char *pLabel) {
+		Target.HSplitTop(LineHeight * 0.72f, &Row, &Target);
+		TextRender()->TextColor(ColorRGBA(0.72f, 0.72f, 0.78f, 0.86f));
+		RenderQmVisualLabel(pTextId, &Row, Localize(pLabel), BodySize * 0.82f);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		Target.HSplitTop(LineSpacing * 0.45f, nullptr, &Target);
+	};
+	auto RenderCheckbox = [&](CUIRect &Target, int *pConfig, const char *pTextId, const char *pLabel) {
+		Target.HSplitTop(LineHeight, &Row, &Target);
+		if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, pConfig, pTextId, Localize(pLabel), *pConfig, &Row))
+			*pConfig ^= 1;
+		Target.HSplitTop(LineSpacing, nullptr, &Target);
+	};
+	RenderSection(LeftColumn, "qmclient-focus-section-interface", "Interface");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideHud, "qmclient-focus-hide-hud", "Hide HUD");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideMapProgress, "qmclient-focus-hide-map-progress", "Hide map progress");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideInfoMessages, "qmclient-focus-hide-info-messages", "Hide kill/finish messages");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideScoreboard, "qmclient-focus-hide-scoreboard", "Hide scoreboard");
+	RenderSection(LeftColumn, "qmclient-focus-section-players", "Players");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideNames, "qmclient-focus-hide-names", "Hide names");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideNameplates, "qmclient-focus-hide-nameplates", "Hide nameplates");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideDirectionIndicators, "qmclient-focus-hide-direction-indicators", "Hide direction indicators");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideGuideLines, "qmclient-focus-hide-guide-lines", "Hide guide lines");
+	RenderSection(LeftColumn, "qmclient-focus-section-visuals", "Visuals");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideJumpEffects, "qmclient-focus-hide-jump-effects", "Hide jump effects");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideKillEffects, "qmclient-focus-hide-kill-effects", "Hide death/respawn effects");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideExplosionEffects, "qmclient-focus-hide-explosion-effects", "Hide explosion effects");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideFreezeEffects, "qmclient-focus-hide-freeze-effects", "Hide freeze effects");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideHammerEffects, "qmclient-focus-hide-hammer-effects", "Hide hammer effects");
+	RenderCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideMuzzleEffects, "qmclient-focus-hide-muzzle-effects", "Hide weapon muzzle flashes");
+	RenderSection(RightColumn, "qmclient-focus-section-audio", "Audio");
+	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteJumpSounds, "qmclient-focus-mute-jump-sounds", "Mute jump sounds");
+	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteDeathSounds, "qmclient-focus-mute-death-sounds", "Mute death/respawn sounds");
+	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteHammerSounds, "qmclient-focus-mute-hammer-sounds", "Mute hammer sounds");
+	RenderSection(RightColumn, "qmclient-focus-section-chat", "Chat");
+	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeHideChat, "qmclient-focus-hide-chat", "Hide player messages");
+	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemInfoMessages, "qmclient-focus-hide-system-info-messages", "Hide join/version prompts");
+	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemMessages, "qmclient-focus-hide-system-messages", "Hide server prompt notifications");
+	RenderCheckbox(RightColumn, &g_Config.m_QmFocusModeHideEcho, "qmclient-focus-hide-echo", "Hide Echo messages");
+	Content.y = std::max(LeftColumn.y, RightColumn.y);
+	Content.HSplitTop(LineSpacing * 0.7f, nullptr, &Content);
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	CUIRect BindLabel, BindKey;
+	Row.VSplitLeft(LabelWidth, &BindLabel, &BindKey);
+	RenderQmVisualLabel("qmclient-focus-mode-key", &BindLabel, Localize("Zen mode key"), BodySize);
+	CBindSlot FocusBind(KEY_UNKNOWN, KeyModifier::NONE);
+	if(const auto FocusIt = g_CommandBindCache.find("toggle qm_focus_mode 0 1"); FocusIt != g_CommandBindCache.end())
+		FocusBind = FocusIt->second;
+	const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&s_ReaderButtonFocusToggle, &s_ClearButtonFocusToggle, &BindKey, FocusBind, false);
+	if(Result.m_Bind != FocusBind)
+	{
+		if(FocusBind.m_Key != KEY_UNKNOWN)
+			GameClient()->m_Binds.Bind(FocusBind.m_Key, "", false, FocusBind.m_ModifierMask);
+		if(Result.m_Bind.m_Key != KEY_UNKNOWN)
+		{
+			GameClient()->m_Binds.Bind(Result.m_Bind.m_Key, "toggle qm_focus_mode 0 1", false, Result.m_Bind.m_ModifierMask);
+			g_CommandBindCache.insert_or_assign(std::string("toggle qm_focus_mode 0 1"), Result.m_Bind);
+		}
+		else
+			g_CommandBindCache.erase("toggle qm_focus_mode 0 1");
+	}
+}
+
 void CMenus::FinishSettingsQmScrollContainer(CQmScrollState &ScrollState, CQmScrollContainer &ScrollContainer, SSettingsQmScrollFrame &Frame, const CUIRect &EndRect, float *pContentHeight, float *pPreviousOffsetY, bool TrackScrollActive)
 {
 	if(!Frame.m_Enabled)
@@ -4071,88 +4140,7 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 2, Localize("Zen Mode"), Localize("What kind of life do you want to run?"));
 
-				static CButtonContainer s_ReaderButtonFocusToggle, s_ClearButtonFocusToggle;
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckbox(&g_Config.m_QmFocusMode, "qmclient-focus-mode-enable", Localize("Enable Zen mode"), &g_Config.m_QmFocusMode, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				CUIRect LeftColumn, RightColumn;
-				CardContent.VSplitMid(&LeftColumn, &RightColumn, LgCardPadding);
-
-				auto DoFocusSectionLabel = [&](CUIRect &Target, const char *pTextId, const char *pLabel) {
-					Target.HSplitTop(LgLineHeight * 0.72f, &Row, &Target);
-					TextRender()->TextColor(ColorRGBA(0.72f, 0.72f, 0.78f, 0.86f));
-					DoQmSettingsLabel(pTextId, &Row, Localize(pLabel), LgBodySize * 0.82f);
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
-					Target.HSplitTop(LgLineSpacing * 0.45f, nullptr, &Target);
-				};
-				auto DoFocusCheckbox = [&](CUIRect &Target, int *pConfig, const char *pTextId, const char *pLabel) {
-					Target.HSplitTop(LgLineHeight, &Row, &Target);
-					DoQmSettingsCheckbox(pConfig, pTextId, Localize(pLabel), pConfig, &Row, LgLineHeight);
-					Target.HSplitTop(LgLineSpacing, nullptr, &Target);
-				};
-
-				DoFocusSectionLabel(LeftColumn, "qmclient-focus-section-interface", "Interface");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideHud, "qmclient-focus-hide-hud", "Hide HUD");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideMapProgress, "qmclient-focus-hide-map-progress", "Hide map progress");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideInfoMessages, "qmclient-focus-hide-info-messages", "Hide kill/finish messages");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideScoreboard, "qmclient-focus-hide-scoreboard", "Hide scoreboard");
-
-				DoFocusSectionLabel(LeftColumn, "qmclient-focus-section-players", "Players");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideNames, "qmclient-focus-hide-names", "Hide names");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideNameplates, "qmclient-focus-hide-nameplates", "Hide nameplates");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideDirectionIndicators, "qmclient-focus-hide-direction-indicators", "Hide direction indicators");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideGuideLines, "qmclient-focus-hide-guide-lines", "Hide guide lines");
-
-				DoFocusSectionLabel(LeftColumn, "qmclient-focus-section-visuals", "Visuals");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideJumpEffects, "qmclient-focus-hide-jump-effects", "Hide jump effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideKillEffects, "qmclient-focus-hide-kill-effects", "Hide death/respawn effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideExplosionEffects, "qmclient-focus-hide-explosion-effects", "Hide explosion effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideFreezeEffects, "qmclient-focus-hide-freeze-effects", "Hide freeze effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideHammerEffects, "qmclient-focus-hide-hammer-effects", "Hide hammer effects");
-				DoFocusCheckbox(LeftColumn, &g_Config.m_QmFocusModeHideMuzzleEffects, "qmclient-focus-hide-muzzle-effects", "Hide weapon muzzle flashes");
-
-				DoFocusSectionLabel(RightColumn, "qmclient-focus-section-audio", "Audio");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteJumpSounds, "qmclient-focus-mute-jump-sounds", "Mute jump sounds");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteDeathSounds, "qmclient-focus-mute-death-sounds", "Mute death/respawn sounds");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeMuteHammerSounds, "qmclient-focus-mute-hammer-sounds", "Mute hammer sounds");
-
-				DoFocusSectionLabel(RightColumn, "qmclient-focus-section-chat", "Chat");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideChat, "qmclient-focus-hide-chat", "Hide player messages");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemInfoMessages, "qmclient-focus-hide-system-info-messages", "Hide join/version prompts");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideSystemMessages, "qmclient-focus-hide-system-messages", "Hide server prompt notifications");
-				DoFocusCheckbox(RightColumn, &g_Config.m_QmFocusModeHideEcho, "qmclient-focus-hide-echo", "Hide Echo messages");
-				CardContent.y = std::max(LeftColumn.y, RightColumn.y);
-				CardContent.HSplitTop(LgLineSpacing * 0.7f, nullptr, &CardContent);
-
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				{
-					CUIRect BindLabel, BindKey;
-					Row.VSplitLeft(LgLabelWidth, &BindLabel, &BindKey);
-					DoQmSettingsLabel("qmclient-focus-mode-key", &BindLabel, Localize("Zen mode key"), LgBodySize);
-					CBindSlot FocusBind(KEY_UNKNOWN, KeyModifier::NONE);
-					{
-						const auto FocusIt = CommandBindCache.find("toggle qm_focus_mode 0 1");
-						if(FocusIt != CommandBindCache.end())
-							FocusBind = FocusIt->second;
-					}
-					const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&s_ReaderButtonFocusToggle, &s_ClearButtonFocusToggle, &BindKey, FocusBind, false);
-					if(Result.m_Bind != FocusBind)
-					{
-						if(FocusBind.m_Key != KEY_UNKNOWN)
-							GameClient()->m_Binds.Bind(FocusBind.m_Key, "", false, FocusBind.m_ModifierMask);
-						if(Result.m_Bind.m_Key != KEY_UNKNOWN)
-						{
-							GameClient()->m_Binds.Bind(Result.m_Bind.m_Key, "toggle qm_focus_mode 0 1", false, Result.m_Bind.m_ModifierMask);
-							CommandBindCache.insert_or_assign(std::string("toggle qm_focus_mode 0 1"), Result.m_Bind);
-						}
-						else
-						{
-							CommandBindCache.erase("toggle qm_focus_mode 0 1");
-						}
-					}
-				}
+				RenderQmVisualFocusModeContent(CardContent, LgLineHeight, LgBodySize, LgLineSpacing, LgCardPadding, LgLabelWidth);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
