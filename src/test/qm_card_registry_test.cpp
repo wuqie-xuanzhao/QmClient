@@ -162,6 +162,16 @@ TEST(QmCardRegistry, SoundStandardPageCardsPersistInVisualOrder)
 		(std::vector<std::string>{"deck:sound-audio-pack"}));
 }
 
+// 意图：DDNet 标准页的四张卡片必须按默认视觉顺序分布在左右列，重启后不能改变阅读顺序。
+TEST(QmCardRegistry, DDNetStandardPageCardsPersistInVisualOrder)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	EXPECT_EQ(Model.StableIdOrder("deck:", "ddnet", 1),
+		(std::vector<std::string>{"deck:ddnet-demo", "deck:ddnet-gameplay"}));
+	EXPECT_EQ(Model.StableIdOrder("deck:", "ddnet", 2),
+		(std::vector<std::string>{"deck:ddnet-background", "deck:ddnet-miscellaneous"}));
+}
+
 // 否则全局默认补位会把不同 appearance 子页混在同一个 tab 下，或留下 order 空洞。
 TEST(QmCardRegistry, AppearanceDeckDefaultsUseSubPagePlacements)
 {

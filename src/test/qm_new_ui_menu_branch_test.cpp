@@ -1844,18 +1844,21 @@ TEST(QmNewUiMenuBranches, DDNetSettingsPageUsesSharedQmCards)
 	const std::string RenderSettingsDDNet = FunctionBody(SettingsSource, "void CMenus::RenderSettingsDDNet(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsDDNet.empty());
 
-	EXPECT_NE(RenderSettingsDDNet.find("const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("static CScrollRegion s_DDNetSettingsScrollRegion;"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("SSettingsCardDeckLayout DDNetDeck = BeginSettingsCardDeck(MainView, s_DDNetSettingsScrollRegion"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("auto MeasureDDNetCardHeight ="), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-demo\", Localize(\"Demo\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-gameplay\", Localize(\"Gameplay\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("const SSettingsPageLayoutFrame DDNetPage = ResolveSettingsPageLayout(MainView, false, UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("const IUiContext DDNetCardCtx = SettingsUiContext(\"settings_ddnet\", UiScale);"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("static CScrollRegion s_DDNetSettingsCardScrollRegion;"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy("), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("m_SettingsCardDeck.Render(DDNetCardCtx, DDNetPage, \"ddnet\""), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("AddCard(DemoSpec"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("AddCard(GameplaySpec"), std::string::npos);
 	EXPECT_NE(RenderSettingsDDNet.find("CUIRect GameplayRow;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsDDNet.find("Gameplay.VSplitMid(&Left, &Right, 20.0f);"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-background\", Localize(\"Background\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-miscellaneous\", Localize(\"Miscellaneous\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("EndSettingsCardDeck(DDNetDeck, &s_PrevDDNetSettingsScrollY);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsDDNet.find("auto BeginDDNetCard ="), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("AddCard(BackgroundSpec"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("AddCard(MiscellaneousSpec"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("SaveSettingsCardOrderModel();"), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("BeginSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("EndSettingsCardDeck("), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("s_PrevDDNetSettingsScrollY"), std::string::npos);
 	EXPECT_EQ(RenderSettingsDDNet.find("MainView.HSplitTop(130.0f, &Demo, &MainView);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsDDNet.find("MainView.HSplitTop(GameplayHeight, &Gameplay, &MainView);"), std::string::npos);
 }
@@ -2058,11 +2061,13 @@ TEST(QmNewUiMenuBranches, SettingsCardFeedbackFixesUseStableLayouts)
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string RenderSettingsDDNet = FunctionBody(SettingsSource, "void CMenus::RenderSettingsDDNet(CUIRect MainView)");
 	ASSERT_FALSE(RenderSettingsDDNet.empty());
-	EXPECT_NE(RenderSettingsDDNet.find("SSettingsCardDeckLayout DDNetDeck = BeginSettingsCardDeck("), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-demo\", Localize(\"Demo\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-gameplay\", Localize(\"Gameplay\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-background\", Localize(\"Background\"),"), std::string::npos);
-	EXPECT_NE(RenderSettingsDDNet.find("BeginSettingsCardDeckCard(DDNetDeck, \"ddnet-miscellaneous\", Localize(\"Miscellaneous\"),"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("ResolveSettingsPageLayout("), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("AddCard(DemoSpec"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("AddCard(GameplaySpec"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("AddCard(BackgroundSpec"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("AddCard(MiscellaneousSpec"), std::string::npos);
+	EXPECT_NE(RenderSettingsDDNet.find("m_SettingsCardDeck.Render(DDNetCardCtx, DDNetPage, \"ddnet\""), std::string::npos);
+	EXPECT_EQ(RenderSettingsDDNet.find("BeginSettingsCardDeck("), std::string::npos);
 	EXPECT_EQ(RenderSettingsDDNet.find("BeginDDNetCard(MainView"), std::string::npos);
 
 	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");

@@ -7007,23 +7007,62 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	LogPerfStage(Client(), "ddnet_tab_shell", ShellTimer.ElapsedMs(), false, "page=ddnet");
 
 	const float UiScale = minimum(1.0f, maximum(0.85f, MainView.w / 800.0f));
-	const SQmSettingsCardStyle QmCardStyle = QmSettingsCardStyle(UiScale);
-	static CScrollRegion s_DDNetSettingsScrollRegion;
-	static float s_PrevDDNetSettingsScrollY = 0.0f;
+	static CScrollRegion s_DDNetSettingsCardScrollRegion;
 	static float s_DDNetMeasuredDemoCardHeight = 0.0f;
 	static float s_DDNetMeasuredGameplayCardHeight = 0.0f;
 	static float s_DDNetMeasuredBackgroundCardHeight = 0.0f;
 	static float s_DDNetMeasuredMiscellaneousCardHeight = 0.0f;
-	SSettingsCardDeckLayout DDNetDeck = BeginSettingsCardDeck(MainView, s_DDNetSettingsScrollRegion, s_PrevDDNetSettingsScrollY, UiScale, "ddnet", SETTINGS_DDNET);
-	auto MeasureDDNetCardHeight = [&](const CUIRect &Card, const CUIRect &Content, float MinHeight) {
-		return maximum(Content.y + QmCardStyle.m_Padding - Card.y, MinHeight);
+	const SSettingsPageLayoutFrame DDNetPage = ResolveSettingsPageLayout(MainView, false, UiScale);
+	const IUiContext DDNetCardCtx = SettingsUiContext("settings_ddnet", UiScale);
+	const SSettingsCardDeckVisualOptions DDNetVisualOptions = SettingsCardDeckVisualOptions();
+	const auto DoDDNetNumericField = [this, &DDNetCardCtx](const char *pTextId, const void *pId, int *pOption, const CUIRect &Rect, const char *pLabel, int Min, int Max, const IScrollbarScale *pScale = &CUi::ms_LinearScrollbarScale, unsigned Flags = 0u, const char *pSuffix = "", const char *pMaxText = nullptr) {
+		ui_widget::SNumericFieldOptions Options;
+		Options.m_pLabel = pLabel;
+		Options.m_pSuffix = pSuffix;
+		Options.m_pScale = pScale;
+		Options.m_Flags = Flags;
+		Options.m_pMaxText = pMaxText;
+		Options.m_FontSize = Rect.h * CUi::ms_FontmodHeight * 0.8f;
+		Options.m_LabelAlign = TEXTALIGN_ML;
+		Options.m_CommitPolicy = (Flags & CUi::SCROLLBAR_OPTION_DELAYUPDATE) != 0 ? ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT : ui_widget::EInputCommitPolicy::LIVE;
+		if(PrepareSettingsNumericFieldLabel(SETTINGS_DDNET, -1, -1, pTextId, Rect, pLabel, Flags, Options))
+			return false;
+		return ui_widget::NumericField(DDNetCardCtx, GetSettingsNumericFieldState(pId), pId, pOption, Min, Max, Rect, Options);
+	};
+	const qm_card_registry::SCardDefault *pDemoDefault = qm_card_registry::FindByStableId("deck:ddnet-demo");
+	const qm_card_registry::SCardDefault *pGameplayDefault = qm_card_registry::FindByStableId("deck:ddnet-gameplay");
+	const qm_card_registry::SCardDefault *pBackgroundDefault = qm_card_registry::FindByStableId("deck:ddnet-background");
+	const qm_card_registry::SCardDefault *pMiscellaneousDefault = qm_card_registry::FindByStableId("deck:ddnet-miscellaneous");
+	dbg_assert(pDemoDefault != nullptr && pGameplayDefault != nullptr && pBackgroundDefault != nullptr && pMiscellaneousDefault != nullptr, "DDNet settings cards must be registered");
+	if(pDemoDefault == nullptr || pGameplayDefault == nullptr || pBackgroundDefault == nullptr || pMiscellaneousDefault == nullptr)
+		return;
+	const SSettingsCardSpec DemoSpec{pDemoDefault->m_pStableId, Localize(pDemoDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec GameplaySpec{pGameplayDefault->m_pStableId, Localize(pGameplayDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec BackgroundSpec{pBackgroundDefault->m_pStableId, Localize(pBackgroundDefault->m_pTitle), nullptr};
+	const SSettingsCardSpec MiscellaneousSpec{pMiscellaneousDefault->m_pStableId, Localize(pMiscellaneousDefault->m_pTitle), nullptr};
+	const auto CardChromeHeight = [UiScale](const SSettingsCardSpec &Spec) {
+		return BuildSettingsCardFrame({0.0f, 0.0f, 1.0f, 0.0f}, Spec, 0.0f, UiScale).m_Rect.h;
+	};
+	const auto UpdateMeasuredCardHeight = [](float &LastHeight, float MinHeight, float ChromeHeight, const CUIRect &InitialContent, const CUIRect &RemainingContent) {
+		LastHeight = maximum(MinHeight, ChromeHeight + maximum(0.0f, RemainingContent.y - InitialContent.y));
+	};
+	std::vector<SSettingsCardDefinition> vCards;
+	vCards.reserve(4);
+	const auto AddCard = [&](const SSettingsCardSpec &Spec, float MinHeight, float &LastHeight, float ChromeHeight, FSettingsCardRender Render) {
+		SSettingsCardDefinition Definition;
+		Definition.m_Spec = Spec;
+		Definition.m_Measure = [MinHeight, &LastHeight, ChromeHeight](float) {
+			return maximum(0.0f, maximum(MinHeight, LastHeight) - ChromeHeight);
+		};
+		Definition.m_Render = Render;
+		vCards.push_back(Definition);
 	};
 
 	// demo
+	const float DemoMinCardHeight = CardChromeHeight(DemoSpec) + 20.0f * 4.0f;
+	AddCard(DemoSpec, DemoMinCardHeight, s_DDNetMeasuredDemoCardHeight, CardChromeHeight(DemoSpec), [&](CUIRect ContentRect) {
 	CPerfTimer DemoSectionTimer;
-	const float DemoMinCardHeight = 30.0f + 5.0f + 20.0f * 4.0f + QmCardStyle.m_Padding * 2.0f;
-	SSettingsCardDeckCard DemoCard = BeginSettingsCardDeckCard(DDNetDeck, "ddnet-demo", Localize("Demo"), DemoMinCardHeight, s_DDNetMeasuredDemoCardHeight);
-	CUIRect Demo = DemoCard.m_ContentRect;
+	CUIRect Demo = ContentRect;
 	Demo.VSplitMid(&Left, &Right, 20.0f);
 
 	Left.HSplitTop(20.0f, &Button, &Left);
@@ -7044,11 +7083,11 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 
 	Left.HSplitTop(20.0f, &Button, &Left);
 	if(g_Config.m_ClReplays)
-		DoSettingsScrollbarOption(SETTINGS_DDNET, -1, "ddnet-replay-default-length", &g_Config.m_ClReplayLength, &g_Config.m_ClReplayLength, &Button, Localize("Default length"), 10, 600, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE);
+		DoDDNetNumericField("ddnet-replay-default-length", &g_Config.m_ClReplayLength, &g_Config.m_ClReplayLength, Button, Localize("Default length"), 10, 600, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE);
 
 	Left.HSplitTop(20.0f, &Button, &Left);
 	if(g_Config.m_ClReplays)
-		DoSettingsScrollbarOption(SETTINGS_DDNET, -1, "ddnet-esc-replay-minutes", &g_Config.m_ClEscReplayLengthMinutes, &g_Config.m_ClEscReplayLengthMinutes, &Button, Localize("ESC replay minutes"), 1, 60, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE);
+		DoDDNetNumericField("ddnet-esc-replay-minutes", &g_Config.m_ClEscReplayLengthMinutes, &g_Config.m_ClEscReplayLengthMinutes, Button, Localize("ESC replay minutes"), 1, 60, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE);
 
 	Right.HSplitTop(20.0f, &Button, &Right);
 	if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClRaceGhost, "Enable ghost", Localize("Enable ghost"), g_Config.m_ClRaceGhost, &Button))
@@ -7065,7 +7104,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		{
 			g_Config.m_ClRaceShowGhost ^= 1;
 		}
-		DoSettingsScrollbarOption(SETTINGS_DDNET, -1, "ddnet-race-ghost-opacity", &g_Config.m_ClRaceGhostAlpha, &g_Config.m_ClRaceGhostAlpha, &Button, Localize("Opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
+		DoDDNetNumericField("ddnet-race-ghost-opacity", &g_Config.m_ClRaceGhostAlpha, &g_Config.m_ClRaceGhostAlpha, Button, Localize("Opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
 
 		Right.HSplitTop(20.0f, &Button, &Right);
 		if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClRaceSaveGhost, "Save ghost", Localize("Save ghost"), g_Config.m_ClRaceSaveGhost, &Button))
@@ -7083,17 +7122,18 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		}
 	}
 	LogPerfStage(Client(), "ddnet_demo_section", DemoSectionTimer.ElapsedMs(), false, "page=ddnet section=demo");
-	s_DDNetMeasuredDemoCardHeight = MeasureDDNetCardHeight(DemoCard.m_Rect, Demo, DemoMinCardHeight);
+	UpdateMeasuredCardHeight(s_DDNetMeasuredDemoCardHeight, DemoMinCardHeight, CardChromeHeight(DemoSpec), ContentRect, Demo);
+	});
 
 	// gameplay
+	const float GameplayMinCardHeight = CardChromeHeight(GameplaySpec) + 20.0f * (12.0f + (g_Config.m_ClTextEntities ? 1.0f : 0.0f) + (g_Config.m_ClAntiPing ? 3.0f : 0.0f));
+	AddCard(GameplaySpec, GameplayMinCardHeight, s_DDNetMeasuredGameplayCardHeight, CardChromeHeight(GameplaySpec), [&](CUIRect ContentRect) {
 	CPerfTimer GameplaySectionTimer;
-	const float GameplayMinCardHeight = 30.0f + 5.0f + 20.0f * (12.0f + (g_Config.m_ClTextEntities ? 1.0f : 0.0f) + (g_Config.m_ClAntiPing ? 3.0f : 0.0f)) + QmCardStyle.m_Padding * 2.0f;
-	SSettingsCardDeckCard GameplayCard = BeginSettingsCardDeckCard(DDNetDeck, "ddnet-gameplay", Localize("Gameplay"), GameplayMinCardHeight, s_DDNetMeasuredGameplayCardHeight);
-	CUIRect Gameplay = GameplayCard.m_ContentRect;
+	CUIRect Gameplay = ContentRect;
 	CUIRect GameplayRow;
 
 	Gameplay.HSplitTop(20.0f, &Button, &Gameplay);
-	DoSettingsScrollbarOption(SETTINGS_DDNET, -1, "ddnet-overlay-entities", &g_Config.m_ClOverlayEntities, &g_Config.m_ClOverlayEntities, &Button, Localize("Overlay entities"), 0, 100);
+	DoDDNetNumericField("ddnet-overlay-entities", &g_Config.m_ClOverlayEntities, &g_Config.m_ClOverlayEntities, Button, Localize("Overlay entities"), 0, 100);
 
 	Gameplay.HSplitTop(20.0f, &GameplayRow, &Gameplay);
 	GameplayRow.VSplitMid(&LeftLeft, &Button);
@@ -7104,7 +7144,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	if(g_Config.m_ClTextEntities)
 	{
 		Gameplay.HSplitTop(20.0f, &Button, &Gameplay);
-		if(DoSettingsScrollbarOption(SETTINGS_DDNET, -1, "ddnet-text-entities-size", &g_Config.m_ClTextEntitiesSize, &g_Config.m_ClTextEntitiesSize, &Button, Localize("Size"), 20, 100, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE))
+		if(DoDDNetNumericField("ddnet-text-entities-size", &g_Config.m_ClTextEntitiesSize, &g_Config.m_ClTextEntitiesSize, Button, Localize("Size"), 20, 100, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_DELAYUPDATE))
 			GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
 	}
 
@@ -7114,7 +7154,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClShowOthers, "Show others", Localize("Show others"), g_Config.m_ClShowOthers == SHOW_OTHERS_ON, &LeftLeft))
 		g_Config.m_ClShowOthers = g_Config.m_ClShowOthers != SHOW_OTHERS_ON ? SHOW_OTHERS_ON : SHOW_OTHERS_OFF;
 
-	DoSettingsScrollbarOption(SETTINGS_DDNET, -1, "ddnet-show-others-opacity", &g_Config.m_ClShowOthersAlpha, &g_Config.m_ClShowOthersAlpha, &Button, Localize("Opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
+	DoDDNetNumericField("ddnet-show-others-opacity", &g_Config.m_ClShowOthersAlpha, &g_Config.m_ClShowOthersAlpha, Button, Localize("Opacity"), 0, 100, &CUi::ms_LinearScrollbarScale, 0u, "%");
 
 	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ClShowOthersAlpha, &Button, Localize("Adjust the opacity of entities belonging to other teams, such as tees and name plates"));
 
@@ -7133,11 +7173,11 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	GameClient()->m_Tooltips.DoToolTip(&g_Config.m_ClShowQuads, &Button, Localize("Quads are used for background decoration"));
 
 	Gameplay.HSplitTop(20.0f, &Button, &Gameplay);
-	if(DoSettingsScrollbarOption(SETTINGS_DDNET, -1, "ddnet-default-zoom", &g_Config.m_ClDefaultZoom, &g_Config.m_ClDefaultZoom, &Button, Localize("Default zoom"), 0, 20))
+	if(DoDDNetNumericField("ddnet-default-zoom", &g_Config.m_ClDefaultZoom, &g_Config.m_ClDefaultZoom, Button, Localize("Default zoom"), 0, 20))
 		GameClient()->m_Camera.SetZoom(CCamera::ZoomStepsToValue(g_Config.m_ClDefaultZoom - 10), g_Config.m_ClSmoothZoomTime, true);
 
 	Gameplay.HSplitTop(20.0f, &Button, &Gameplay);
-	DoSettingsScrollbarOption(SETTINGS_DDNET, -1, "ddnet-prediction-margin", &g_Config.m_ClPredictionMargin, &g_Config.m_ClPredictionMargin, &Button, Localize("Prediction margin"), 1, 300, &CUi::ms_LinearScrollbarScale, 0, "");
+	DoDDNetNumericField("ddnet-prediction-margin", &g_Config.m_ClPredictionMargin, &g_Config.m_ClPredictionMargin, Button, Localize("Prediction margin"), 1, 300, &CUi::ms_LinearScrollbarScale, 0u, "");
 
 	Gameplay.HSplitTop(20.0f, &Button, &Gameplay);
 	if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClPredictEvents, "Predict events (experimental)", Localize("Predict events (experimental)"), g_Config.m_ClPredictEvents, &Button))
@@ -7173,16 +7213,13 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		}
 	}
 	LogPerfStage(Client(), "ddnet_gameplay_section", GameplaySectionTimer.ElapsedMs(), false, "page=ddnet section=gameplay");
-	s_DDNetMeasuredGameplayCardHeight = MeasureDDNetCardHeight(GameplayCard.m_Rect, Gameplay, GameplayMinCardHeight);
+	UpdateMeasuredCardHeight(s_DDNetMeasuredGameplayCardHeight, GameplayMinCardHeight, CardChromeHeight(GameplaySpec), ContentRect, Gameplay);
+	});
 
-	{
-		CPerfTimer ControlsSectionTimer;
-		const float BackgroundMinCardHeight = 30.0f + 5.0f + 25.0f * 2.0f + 5.0f * 2.0f + 20.0f * 3.0f + 2.0f + QmCardStyle.m_Padding * 2.0f;
-		const float MiscellaneousMinCardHeight = 30.0f + 5.0f + 20.0f * 3.0f + 5.0f + 2.0f + QmCardStyle.m_Padding * 2.0f;
-		SSettingsCardDeckCard BackgroundCard = BeginSettingsCardDeckCard(DDNetDeck, "ddnet-background", Localize("Background"), BackgroundMinCardHeight, s_DDNetMeasuredBackgroundCardHeight);
-		SSettingsCardDeckCard MiscellaneousCard = BeginSettingsCardDeckCard(DDNetDeck, "ddnet-miscellaneous", Localize("Miscellaneous"), MiscellaneousMinCardHeight, s_DDNetMeasuredMiscellaneousCardHeight);
-		CUIRect Background = BackgroundCard.m_ContentRect;
-		CUIRect Miscellaneous = MiscellaneousCard.m_ContentRect;
+	const float BackgroundMinCardHeight = CardChromeHeight(BackgroundSpec) + 25.0f * 2.0f + 5.0f * 2.0f + 20.0f * 3.0f + 2.0f;
+	CPerfTimer ControlsSectionTimer;
+	AddCard(BackgroundSpec, BackgroundMinCardHeight, s_DDNetMeasuredBackgroundCardHeight, CardChromeHeight(BackgroundSpec), [&](CUIRect ContentRect) {
+		CUIRect Background = ContentRect;
 
 		// background
 		ColorRGBA GreyDefault(0.5f, 0.5f, 0.5f, 1);
@@ -7262,6 +7299,12 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		if(DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClBackgroundShowTilesLayers, "Show tiles layers from BG map", Localize("Show tiles layers from BG map"), g_Config.m_ClBackgroundShowTilesLayers, &Button))
 			g_Config.m_ClBackgroundShowTilesLayers ^= 1;
 
+		UpdateMeasuredCardHeight(s_DDNetMeasuredBackgroundCardHeight, BackgroundMinCardHeight, CardChromeHeight(BackgroundSpec), ContentRect, Background);
+	});
+
+	const float MiscellaneousMinCardHeight = CardChromeHeight(MiscellaneousSpec) + 20.0f * 3.0f + 5.0f + 2.0f;
+	AddCard(MiscellaneousSpec, MiscellaneousMinCardHeight, s_DDNetMeasuredMiscellaneousCardHeight, CardChromeHeight(MiscellaneousSpec), [&](CUIRect ContentRect) {
+		CUIRect Miscellaneous = ContentRect;
 		// miscellaneous
 		static CButtonContainer s_ButtonTimeout;
 		Miscellaneous.HSplitTop(20.0f, &Button, &Miscellaneous);
@@ -7292,11 +7335,27 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 			Client()->ShellUnregister();
 		}
 #endif
-		s_DDNetMeasuredBackgroundCardHeight = MeasureDDNetCardHeight(BackgroundCard.m_Rect, Background, BackgroundMinCardHeight);
-		s_DDNetMeasuredMiscellaneousCardHeight = MeasureDDNetCardHeight(MiscellaneousCard.m_Rect, Miscellaneous, MiscellaneousMinCardHeight);
+		UpdateMeasuredCardHeight(s_DDNetMeasuredMiscellaneousCardHeight, MiscellaneousMinCardHeight, CardChromeHeight(MiscellaneousSpec), ContentRect, Miscellaneous);
 		LogPerfStage(Client(), "ddnet_controls_section", ControlsSectionTimer.ElapsedMs(), false, "page=ddnet section=background_misc");
-	}
-	EndSettingsCardDeck(DDNetDeck, &s_PrevDDNetSettingsScrollY);
+	});
+
+	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_PAGE};
+	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy(ScrollRequest, UiScale, 0.0f);
+	CScrollRegionParams ScrollParams = QmScrollRegionParamsFromPolicy(ScrollPolicy);
+	CQmScrollState &ScrollState = s_DDNetSettingsCardScrollRegion.State();
+	(void)ScrollState;
+	SSettingsCardDeckInput InputState;
+	InputState.m_MouseX = Ui()->MouseX();
+	InputState.m_MouseY = Ui()->MouseY();
+	InputState.m_MousePressed = Ui()->MouseButtonClicked(0);
+	InputState.m_MouseDown = Ui()->MouseButton(0);
+	InputState.m_MouseReleased = !InputState.m_MouseDown && Ui()->LastMouseButton(0);
+	InputState.m_CtrlPressed = Input()->ModifierIsPressed();
+	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	InputState.m_pScrollParams = &ScrollParams;
+	const SSettingsCardDeckResult DeckResult = m_SettingsCardDeck.Render(DDNetCardCtx, DDNetPage, "ddnet", vCards, SettingsCardOrderModel(), &s_DDNetSettingsCardScrollRegion, InputState, SettingsCardMotionSpec(), DDNetVisualOptions);
+	if(DeckResult.m_OrderChanged)
+		SaveSettingsCardOrderModel();
 }
 
 CUi::EPopupMenuFunctionResult CMenus::PopupSkinQueuePresetRename(void *pContext, CUIRect View, bool Active)
