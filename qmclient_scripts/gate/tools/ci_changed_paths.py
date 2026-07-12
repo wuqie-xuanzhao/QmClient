@@ -1,3 +1,4 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 """Classify changed paths for GitHub Actions jobs.
 
@@ -195,7 +196,7 @@ def self_test() -> int:
         ("src/game/client/gameclient.h", True, False),
         ("Cargo.toml", True, False),
         ("cmake/FindFoo.cmake", True, False),
-        ("docs/superpowers/specs/example.md", False, False),
+        ("docs/example.md", False, False),
         ("README.md", False, False),
         ("data/editor/entities.png", False, True, False),
         ("qmclient_scripts/gate/check_gate.py", False, True),

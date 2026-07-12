@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_QM_LYRICS_QM_LYRICS_SOURCE_AMLL_TTML_DB_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_QM_LYRICS_QM_LYRICS_SOURCE_AMLL_TTML_DB_H
 
@@ -8,6 +9,7 @@
 #include <string_view>
 
 class IHttp;
+class IEngine;
 class IStorage;
 
 namespace QmLyrics
@@ -31,7 +33,7 @@ namespace QmLyrics
 	public:
 		struct SImpl;
 
-		CLyricsSourceAmllTtmlDb(IHttp *pHttp, IStorage *pStorage, int TimeoutMs = 8000, const char *pBaseUrl = nullptr);
+		CLyricsSourceAmllTtmlDb(IHttp *pHttp, IStorage *pStorage, IEngine *pEngine, int TimeoutMs = 8000, const char *pBaseUrl = nullptr);
 		~CLyricsSourceAmllTtmlDb() override;
 
 		const char *Id() const override { return "amll-ttml-db"; }

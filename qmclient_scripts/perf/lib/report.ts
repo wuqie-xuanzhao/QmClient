@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 // report.ts — 生成自包含 ECharts HTML 报表（R-style 论文式排版，纸面图表主题）
 
 import { basename } from 'node:path';

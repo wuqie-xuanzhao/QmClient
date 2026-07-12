@@ -83,8 +83,10 @@ cmake --build cmake-build-release --target run_tests
 
 ## 📜 许可证
 
-本项目采用 zlib/png 许可证，与上游 DDNet / TaterClient 项目保持一致。  
+本项目基于 DDNet 和 TaterClient。上游代码仍遵循 zlib/libpng 许可证。
 修改版本必须明确标注来源，不得歪曲原作者身份。
+
+QmClient 中新增的原创代码、功能和素材，未经作者明确的书面许可，不得被其他项目复用、再分发或合并。
 
 ## 📮 说明
 

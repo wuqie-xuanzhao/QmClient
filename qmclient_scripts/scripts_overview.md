@@ -1,3 +1,4 @@
+> 请抬头享受阳光｜日子很好 我很我---------致咩子
 # scripts_overview
 
 这个文档统一说明 `qmclient_scripts/` 的脚本分层、推荐入口，以及 `check_gate.py` 相关工作流语义。

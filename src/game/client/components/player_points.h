@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 /* Player Points Query System */
 #ifndef GAME_CLIENT_COMPONENTS_PLAYER_POINTS_H
 #define GAME_CLIENT_COMPONENTS_PLAYER_POINTS_H

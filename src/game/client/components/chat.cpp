@@ -704,6 +704,221 @@ bool CChat::BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufS
 	return false;
 }
 
+void CChat::HideArgumentCandidates()
+{
+	m_vArgumentCandidates.clear();
+	m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
+	m_ArgumentCandidatePopup.m_RectValid = false;
+	m_ArgumentCandidatePopup.m_PressedIndex = -1;
+	m_ArgumentCandidateLastMousePos.reset();
+	m_ArgumentCompletionNextSourceCheck = 0;
+	m_ArgumentCompletionSelected = 0;
+	m_ArgumentCompletionScroll = 0;
+}
+
+void CChat::RefreshArgumentCandidates()
+{
+	if(m_Mode == MODE_NONE)
+	{
+		HideArgumentCandidates();
+		return;
+	}
+
+	QmChatCompletion::SContext Context;
+	const char *pInput = m_Input.GetString();
+	const size_t CursorOffset = m_Input.GetCursorOffset();
+	if(!QmChatCompletion::ParseContext(pInput, CursorOffset, Context))
+	{
+		m_ArgumentCompletionCachedInput = pInput;
+		m_ArgumentCompletionCachedCursor = CursorOffset;
+		HideArgumentCandidates();
+		return;
+	}
+	const int64_t Now = time();
+	const bool InputUnchanged = m_ArgumentCompletionCachedInput == pInput && m_ArgumentCompletionCachedCursor == CursorOffset;
+	if(InputUnchanged && Now < m_ArgumentCompletionNextSourceCheck)
+		return;
+	m_ArgumentCompletionNextSourceCheck = Now + time_freq() / 4;
+
+	uint64_t SourceSignature = 0;
+	if(Context.m_Provider == QmChatCompletion::EProvider::PLAYER)
+	{
+		for(const auto *pPlayerInfo : GameClient()->m_Snap.m_apInfoByName)
+		{
+			if(pPlayerInfo == nullptr)
+				continue;
+			const char *pName = GameClient()->m_aClients[pPlayerInfo->m_ClientId].m_aName;
+			SourceSignature = SourceSignature * 1099511628211ULL ^ str_quickhash(pName);
+		}
+	}
+	else if(Context.m_Provider == QmChatCompletion::EProvider::MAP)
+	{
+		for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption != nullptr; pOption = pOption->m_pNext)
+			SourceSignature = SourceSignature * 1099511628211ULL ^ str_quickhash(pOption->m_aDescription);
+		for(const std::string &MapName : Client()->MaplistEntries())
+			SourceSignature = SourceSignature * 1099511628211ULL ^ str_quickhash(MapName.c_str());
+	}
+
+	if(InputUnchanged && m_ArgumentCompletionSourceSignature == SourceSignature)
+		return;
+
+	m_ArgumentCompletionCachedInput = pInput;
+	m_ArgumentCompletionCachedCursor = CursorOffset;
+	m_ArgumentCompletionSourceSignature = SourceSignature;
+	m_ArgumentCompletionContext = Context;
+	m_vArgumentCandidates.clear();
+	m_ArgumentCandidatePopup.m_RectValid = false;
+	if(Context.m_Provider == QmChatCompletion::EProvider::PLAYER)
+	{
+		for(const auto *pPlayerInfo : GameClient()->m_Snap.m_apInfoByName)
+		{
+			if(pPlayerInfo == nullptr)
+				continue;
+			QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, GameClient()->m_aClients[pPlayerInfo->m_ClientId].m_aName, Context.m_Query.c_str(), true);
+		}
+	}
+	else if(Context.m_Provider == QmChatCompletion::EProvider::MAP)
+	{
+		for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption != nullptr; pOption = pOption->m_pNext)
+		{
+			std::string MapName;
+			if(QmChatCompletion::ExtractMapNameFromVoteOption(pOption->m_aDescription, MapName))
+				QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str());
+		}
+		for(const std::string &MapName : Client()->MaplistEntries())
+			QmChatCompletion::AddMatchingCandidate(m_vArgumentCandidates, MapName.c_str(), Context.m_Query.c_str());
+	}
+	QmChatCompletion::SortCandidates(m_vArgumentCandidates);
+	m_vArgumentCandidates.erase(std::unique(m_vArgumentCandidates.begin(), m_vArgumentCandidates.end(), [](const auto &Left, const auto &Right) {
+		return str_comp_nocase(Left.m_Value.c_str(), Right.m_Value.c_str()) == 0;
+	}),
+		m_vArgumentCandidates.end());
+	m_ArgumentCompletionSelected = 0;
+	m_ArgumentCompletionScroll = 0;
+	m_ArgumentCandidatePopup.m_PressedIndex = -1;
+	if(m_vArgumentCandidates.empty())
+		m_ArgumentCandidatePopup.m_RectValid = false;
+}
+
+void CChat::EnsureArgumentCandidateVisible()
+{
+	if(m_vArgumentCandidates.empty())
+		return;
+	m_ArgumentCompletionSelected = std::clamp(m_ArgumentCompletionSelected, 0, (int)m_vArgumentCandidates.size() - 1);
+	const int VisibleRows = maximum(1, m_ArgumentCandidatePopup.m_VisibleRows);
+	if(m_ArgumentCompletionSelected < m_ArgumentCompletionScroll)
+		m_ArgumentCompletionScroll = m_ArgumentCompletionSelected;
+	else if(m_ArgumentCompletionSelected >= m_ArgumentCompletionScroll + VisibleRows)
+		m_ArgumentCompletionScroll = m_ArgumentCompletionSelected - VisibleRows + 1;
+	m_ArgumentCompletionScroll = std::clamp(m_ArgumentCompletionScroll, 0, maximum(0, (int)m_vArgumentCandidates.size() - VisibleRows));
+}
+
+bool CChat::ApplyArgumentCandidate(int Index)
+{
+	if(Index < 0 || Index >= (int)m_vArgumentCandidates.size())
+		return false;
+	char aCompleted[MAX_LINE_LENGTH];
+	size_t CursorOffset = 0;
+	if(!QmChatCompletion::ApplyCandidate(m_Input.GetString(), m_ArgumentCompletionContext, m_vArgumentCandidates[Index].m_Value.c_str(), aCompleted, sizeof(aCompleted), CursorOffset))
+		return false;
+	m_Input.Set(aCompleted);
+	m_Input.SetCursorOffset(CursorOffset);
+	m_Input.Activate(EInputPriority::CHAT);
+	m_CompletionUsed = false;
+	m_CompletionChosen = -1;
+	m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
+	HideArgumentCandidates();
+	return true;
+}
+
+int CChat::ArgumentCandidateIndexAt(vec2 MousePos) const
+{
+	if(!m_ArgumentCandidatePopup.m_RectValid ||
+		MousePos.x < m_ArgumentCandidatePopup.m_X || MousePos.x > m_ArgumentCandidatePopup.m_X + m_ArgumentCandidatePopup.m_W ||
+		MousePos.y < m_ArgumentCandidatePopup.m_Y || MousePos.y > m_ArgumentCandidatePopup.m_Y + m_ArgumentCandidatePopup.m_H)
+		return -1;
+	const int Row = (int)((MousePos.y - m_ArgumentCandidatePopup.m_Y) / m_ArgumentCandidatePopup.m_RowHeight);
+	const int Index = m_ArgumentCompletionScroll + Row;
+	return Row >= 0 && Row < m_ArgumentCandidatePopup.m_VisibleRows && Index < (int)m_vArgumentCandidates.size() ? Index : -1;
+}
+
+void CChat::RenderArgumentCandidates(const CUIRect &InputRect, float Width)
+{
+	if(m_vArgumentCandidates.empty())
+	{
+		m_ArgumentCandidatePopup.m_RectValid = false;
+		return;
+	}
+
+	const float FontSize = maximum(7.0f, this->FontSize() * 0.95f);
+	const float RowHeight = FontSize + 5.0f;
+	const int VisibleRows = std::min({5, (int)m_vArgumentCandidates.size(), maximum(1, (int)((InputRect.y - 54.0f) / RowHeight))});
+	const float PopupHeight = RowHeight * VisibleRows;
+	const CUIRect PopupRect = {InputRect.x, InputRect.y - PopupHeight - 3.0f, maximum(80.0f, Width), PopupHeight};
+	m_ArgumentCandidatePopup.m_RectValid = true;
+	m_ArgumentCandidatePopup.m_X = PopupRect.x;
+	m_ArgumentCandidatePopup.m_Y = PopupRect.y;
+	m_ArgumentCandidatePopup.m_W = PopupRect.w;
+	m_ArgumentCandidatePopup.m_H = PopupRect.h;
+	m_ArgumentCandidatePopup.m_RowHeight = RowHeight;
+	m_ArgumentCandidatePopup.m_VisibleRows = VisibleRows;
+	m_ArgumentCompletionSelected = std::clamp(m_ArgumentCompletionSelected, 0, (int)m_vArgumentCandidates.size() - 1);
+	m_ArgumentCompletionScroll = std::clamp(m_ArgumentCompletionScroll, 0, maximum(0, (int)m_vArgumentCandidates.size() - VisibleRows));
+
+	PopupRect.Draw(ColorRGBA(0.045f, 0.055f, 0.075f, 0.94f), IGraphics::CORNER_ALL, 4.0f);
+	const vec2 MousePos = GetChatMousePos();
+	const int HoveredIndex = ArgumentCandidateIndexAt(MousePos);
+	const bool MouseMoved = !m_ArgumentCandidateLastMousePos.has_value() ||
+				m_ArgumentCandidateLastMousePos->x != MousePos.x || m_ArgumentCandidateLastMousePos->y != MousePos.y;
+	m_ArgumentCandidateLastMousePos = MousePos;
+	if(MouseMoved && HoveredIndex >= 0)
+		m_ArgumentCompletionSelected = HoveredIndex;
+
+	for(int Row = 0; Row < VisibleRows; ++Row)
+	{
+		const int Index = m_ArgumentCompletionScroll + Row;
+		if(Index >= (int)m_vArgumentCandidates.size())
+			break;
+		const QmChatCompletion::SCandidate &Candidate = m_vArgumentCandidates[Index];
+		CUIRect RowRect = {PopupRect.x, PopupRect.y + Row * RowHeight, PopupRect.w, RowHeight};
+		if(Index == m_ArgumentCompletionSelected)
+			RowRect.Draw(ColorRGBA(0.24f, 0.45f, 0.76f, 0.72f), IGraphics::CORNER_ALL, 3.0f);
+
+		CTextCursor Cursor;
+		Cursor.SetPosition(vec2(RowRect.x + 5.0f, RowRect.y + 2.5f));
+		Cursor.m_FontSize = FontSize;
+		Cursor.m_LineWidth = RowRect.w - 10.0f;
+		Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END;
+		TextRender()->TextColor(0.90f, 0.93f, 1.0f, 0.96f);
+		if(Candidate.m_MatchOffset >= 0 && Candidate.m_MatchLength > 0)
+		{
+			const std::string Prefix = Candidate.m_Value.substr(0, Candidate.m_MatchOffset);
+			const std::string Match = Candidate.m_Value.substr(Candidate.m_MatchOffset, Candidate.m_MatchLength);
+			const std::string Suffix = Candidate.m_Value.substr(Candidate.m_MatchOffset + Candidate.m_MatchLength);
+			TextRender()->TextEx(&Cursor, Prefix.c_str());
+			TextRender()->TextColor(1.0f, 0.82f, 0.34f, 1.0f);
+			TextRender()->TextEx(&Cursor, Match.c_str());
+			TextRender()->TextColor(0.90f, 0.93f, 1.0f, 0.96f);
+			TextRender()->TextEx(&Cursor, Suffix.c_str());
+		}
+		else
+			TextRender()->TextEx(&Cursor, Candidate.m_Value.c_str());
+	}
+
+	if((int)m_vArgumentCandidates.size() > VisibleRows)
+	{
+		const float RailWidth = 2.0f;
+		const float HandleHeight = maximum(8.0f, PopupRect.h * VisibleRows / (float)m_vArgumentCandidates.size());
+		const int MaxScroll = (int)m_vArgumentCandidates.size() - VisibleRows;
+		const float HandleY = PopupRect.y + (PopupRect.h - HandleHeight) * m_ArgumentCompletionScroll / maximum(1, MaxScroll);
+		CUIRect Rail = {PopupRect.x + PopupRect.w - RailWidth - 1.0f, PopupRect.y + 2.0f, RailWidth, PopupRect.h - 4.0f};
+		Rail.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.14f), IGraphics::CORNER_ALL, 1.0f);
+		CUIRect Handle = {Rail.x, HandleY, RailWidth, HandleHeight};
+		Handle.Draw(ColorRGBA(0.75f, 0.84f, 1.0f, 0.66f), IGraphics::CORNER_ALL, 1.0f);
+	}
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+}
+
 void CChat::RegisterCommand(const char *pName, const char *pParams, const char *pHelpText)
 {
 	// Don't allow duplicate commands.
@@ -851,6 +1066,10 @@ void CChat::OnWindowResize()
 void CChat::Reset()
 {
 	ClearLines();
+	HideArgumentCandidates();
+	m_ArgumentCompletionCachedInput.clear();
+	m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
+	m_ArgumentCompletionSourceSignature = 0;
 
 	m_Show = false;
 	m_CompletionUsed = false;
@@ -880,6 +1099,7 @@ void CChat::Reset()
 void CChat::OnRelease()
 {
 	m_Show = false;
+	HideArgumentCandidates();
 }
 
 void CChat::OnStateChange(int NewState, int OldState)
@@ -1046,6 +1266,68 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 	const bool ChatLineMenuOpen = Ui()->IsPopupOpen(&m_ChatLinePopupContext);
 	const bool AnyChatPopupOpen = LanguageMenuOpen || ChatLineMenuOpen;
 	const bool IsWheelEvent = Event.m_Key == KEY_MOUSE_WHEEL_UP || Event.m_Key == KEY_MOUSE_WHEEL_DOWN;
+	RefreshArgumentCandidates();
+	if(!AnyChatPopupOpen && m_ArgumentCandidatePopup.m_RectValid && !m_vArgumentCandidates.empty())
+	{
+		const vec2 MousePos = GetChatMousePos();
+		const int MouseIndex = ArgumentCandidateIndexAt(MousePos);
+		const bool InsideCandidates = MouseIndex >= 0 || (m_ArgumentCandidatePopup.m_RectValid &&
+									 MousePos.x >= m_ArgumentCandidatePopup.m_X && MousePos.x <= m_ArgumentCandidatePopup.m_X + m_ArgumentCandidatePopup.m_W &&
+									 MousePos.y >= m_ArgumentCandidatePopup.m_Y && MousePos.y <= m_ArgumentCandidatePopup.m_Y + m_ArgumentCandidatePopup.m_H);
+
+		if((Event.m_Flags & IInput::FLAG_PRESS) && IsWheelEvent && InsideCandidates)
+		{
+			const int Direction = Event.m_Key == KEY_MOUSE_WHEEL_UP ? -1 : 1;
+			const int MaxScroll = maximum(0, (int)m_vArgumentCandidates.size() - maximum(1, m_ArgumentCandidatePopup.m_VisibleRows));
+			m_ArgumentCompletionScroll = std::clamp(m_ArgumentCompletionScroll + Direction, 0, MaxScroll);
+			return true;
+		}
+		if((Event.m_Flags & IInput::FLAG_PRESS) && (Event.m_Key == KEY_UP || Event.m_Key == KEY_DOWN))
+		{
+			m_ArgumentCandidateLastMousePos = GetChatMousePos();
+			const int Direction = Event.m_Key == KEY_UP ? -1 : 1;
+			m_ArgumentCompletionSelected = (m_ArgumentCompletionSelected + Direction + (int)m_vArgumentCandidates.size()) % (int)m_vArgumentCandidates.size();
+			EnsureArgumentCandidateVisible();
+			return true;
+		}
+		if((Event.m_Flags & IInput::FLAG_PRESS) && Event.m_Key == KEY_TAB)
+		{
+			m_ArgumentCandidateLastMousePos = GetChatMousePos();
+			if(Input()->ShiftIsPressed())
+			{
+				m_ArgumentCompletionSelected = (m_ArgumentCompletionSelected - 1 + (int)m_vArgumentCandidates.size()) % (int)m_vArgumentCandidates.size();
+				EnsureArgumentCandidateVisible();
+			}
+			return ApplyArgumentCandidate(m_ArgumentCompletionSelected);
+		}
+		if((Event.m_Flags & IInput::FLAG_PRESS) && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
+		{
+			m_ArgumentCandidateLastMousePos = GetChatMousePos();
+			return ApplyArgumentCandidate(m_ArgumentCompletionSelected);
+		}
+
+		if(Event.m_Key == KEY_MOUSE_1)
+		{
+			if((Event.m_Flags & IInput::FLAG_PRESS) && MouseIndex >= 0)
+			{
+				m_ArgumentCompletionSelected = MouseIndex;
+				m_ArgumentCandidatePopup.m_PressedIndex = MouseIndex;
+				CLineInput::SMouseSelection *pMouseSelection = m_Input.GetMouseSelection();
+				if(pMouseSelection != nullptr)
+					pMouseSelection->m_Selecting = false;
+				return true;
+			}
+			if((Event.m_Flags & IInput::FLAG_RELEASE) && m_ArgumentCandidatePopup.m_PressedIndex >= 0)
+			{
+				const int PressedIndex = m_ArgumentCandidatePopup.m_PressedIndex;
+				m_ArgumentCandidatePopup.m_PressedIndex = -1;
+				if(MouseIndex == PressedIndex)
+					ApplyArgumentCandidate(PressedIndex);
+				m_Input.Activate(EInputPriority::CHAT);
+				return true;
+			}
+		}
+	}
 	if(!AnyChatPopupOpen && (Event.m_Flags & IInput::FLAG_PRESS) && IsWheelEvent)
 	{
 		const float Height = 300.0f;
@@ -1462,6 +1744,7 @@ void CChat::DisableMode()
 {
 	CloseLanguageMenu();
 	CloseChatLineMenu();
+	HideArgumentCandidates();
 
 	if(m_Mode != MODE_NONE)
 	{
@@ -2420,7 +2703,6 @@ void CChat::OnRender()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
-
 	const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
 	const bool FocusHideChat = FocusModeActive && g_Config.m_QmFocusModeHideChat;
 	const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
@@ -2428,10 +2710,18 @@ void CChat::OnRender()
 	const bool FocusHideEcho = FocusModeActive && g_Config.m_QmFocusModeHideEcho;
 	const bool HasForceVisibleLine = std::any_of(std::begin(m_aLines), std::end(m_aLines), [](const CLine &Line) { return Line.m_Initialized && Line.m_ForceVisible; });
 	if(!ShouldRenderAnyFocusFilteredChat(FocusHideChat, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, FocusHideEcho, HasForceVisibleLine))
+	{
+		m_ArgumentCandidatePopup.m_RectValid = false;
 		return;
+	}
 
 	const bool HudEditorPreview = GameClient()->m_HudEditor.IsActive();
 	const bool InputActive = m_Mode != MODE_NONE;
+	const bool ChatPopupOpen = m_LanguageMenuOpen || Ui()->IsPopupOpen(&m_LanguagePopupContext) || Ui()->IsPopupOpen(&m_ChatLinePopupContext);
+	if(InputActive && !ChatPopupOpen)
+		RefreshArgumentCandidates();
+	else
+		m_ArgumentCandidatePopup.m_RectValid = false;
 	const bool ShowLargeArea =
 		m_Show ||
 		(InputActive && g_Config.m_ClShowChat == 1) ||
@@ -2598,6 +2888,16 @@ void CChat::OnRender()
 			ExtendBounds(PreviewCursor.m_StartX, PreviewCursor.m_StartY, MessageMaxWidth, PreviewCursor.Height());
 		}
 
+		if(!ChatPopupOpen)
+			RenderArgumentCandidates(InputContentRect, MessageMaxWidth);
+		else
+			m_ArgumentCandidatePopup.m_RectValid = false;
+		if(m_ArgumentCandidatePopup.m_RectValid)
+		{
+			ExtendBounds(m_ArgumentCandidatePopup.m_X, m_ArgumentCandidatePopup.m_Y, m_ArgumentCandidatePopup.m_W, m_ArgumentCandidatePopup.m_H);
+			y = minimum(y, m_ArgumentCandidatePopup.m_Y);
+		}
+
 		// 渲染翻译按钮
 		CUIRect TranslateButtonRect = {InputContentRect.x + InputContentRect.w + TranslateButtonGap, InputContentRect.y, TranslateButtonSize, maximum(InputCursor.m_FontSize + 4.0f, 16.0f)};
 		RenderTranslateButton(TranslateButtonRect);
@@ -2605,6 +2905,7 @@ void CChat::OnRender()
 	else
 	{
 		m_TranslateButton.m_RectValid = false;
+		m_ArgumentCandidatePopup.m_RectValid = false;
 	}
 
 #if defined(CONF_VIDEORECORDER)
@@ -2723,13 +3024,19 @@ void CChat::OnRender()
 		MousePos.x <= m_TranslateButton.m_X + m_TranslateButton.m_W &&
 		MousePos.y >= m_TranslateButton.m_Y &&
 		MousePos.y <= m_TranslateButton.m_Y + m_TranslateButton.m_H;
+	const bool InsideArgumentCandidates =
+		m_ArgumentCandidatePopup.m_RectValid &&
+		MousePos.x >= m_ArgumentCandidatePopup.m_X &&
+		MousePos.x <= m_ArgumentCandidatePopup.m_X + m_ArgumentCandidatePopup.m_W &&
+		MousePos.y >= m_ArgumentCandidatePopup.m_Y &&
+		MousePos.y <= m_ArgumentCandidatePopup.m_Y + m_ArgumentCandidatePopup.m_H;
 	const bool InsideScrollbar =
 		ShowChatScrollbar &&
 		MousePos.x >= ScrollbarRect.x &&
 		MousePos.x <= ScrollbarRect.x + ScrollbarRect.w &&
 		MousePos.y >= ScrollbarRect.y &&
 		MousePos.y <= ScrollbarRect.y + ScrollbarRect.h;
-	const bool ChatCopyActive = m_Mode != MODE_NONE && !LanguageMenuOpen && !ChatLineMenuOpen && !InsideInputBlock && !InsideTranslateButton && !InsideScrollbar && !m_ScrollbarDragging;
+	const bool ChatCopyActive = m_Mode != MODE_NONE && !LanguageMenuOpen && !ChatLineMenuOpen && !InsideInputBlock && !InsideTranslateButton && !InsideArgumentCandidates && !InsideScrollbar && !m_ScrollbarDragging;
 	const bool CopyClickReleased = m_MouseIsPress && !MouseDown && IsCopyClickDrag(m_MousePress, MousePos);
 	const bool ChatLineMenuRequested = ChatCopyActive && Input()->KeyPress(KEY_MOUSE_2);
 	if(ChatCopyActive)

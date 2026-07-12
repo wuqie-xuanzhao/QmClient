@@ -1,3 +1,4 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 class LanguageDecodeError(Exception):
     def __init__(self, message, filename, line):
         error = f'File "{filename}", line {line + 1}: {message}'

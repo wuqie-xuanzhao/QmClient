@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "qm_lyrics.h"
 
 #include "qm_lyrics_cache.h"
@@ -27,6 +28,7 @@
 #include <engine/textrender.h>
 
 #include <game/client/components/hud_editor.h>
+#include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/system_media_controls.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui_rect.h>
@@ -472,7 +474,7 @@ void CQmLyrics::OnInit()
 	auto pLrclibSource = std::make_unique<QmLyrics::CLyricsSourceLrclib>(pHttp, g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsLrclibBase, g_Config.m_QmLyricsHttpProxy);
 	m_pImpl->m_pLrclibSource = pLrclibSource.get();
 	m_pImpl->m_vSources.emplace_back(std::move(pLrclibSource));
-	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceAmllTtmlDb>(pHttp, Storage(), g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsAmllTtmlDbBase));
+	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceAmllTtmlDb>(pHttp, Storage(), Kernel()->RequestInterface<IEngine>(), g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsAmllTtmlDbBase));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceAppleMusic>(pHttp, g_Config.m_QmLyricsHttpTimeoutMs, g_Config.m_QmLyricsAppleMusicMediaUserToken));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceLocalMusicFile>(Storage(), Kernel()->RequestInterface<IEngine>(), g_Config.m_QmLyricsLocalMediaFolders));
 	m_pImpl->m_vSources.emplace_back(std::make_unique<QmLyrics::CLyricsSourceLocalLyricsFile>(Storage(), QmLyrics::ELocalLyricsFileKind::LRC));
@@ -768,6 +770,7 @@ namespace
 
 void CQmLyrics::TickStateMachine()
 {
+	const int64_t PerfStartNs = QmPerfEnabled() ? time_get_nanoseconds().count() : 0;
 	if(!g_Config.m_QmLyrics)
 	{
 		if(m_pImpl->m_State == SImpl::EState::FETCHING)
@@ -936,6 +939,13 @@ void CQmLyrics::TickStateMachine()
 					DispatchSource(SourceIndex, Generation);
 			}
 		}
+	}
+	if(MediaIdentityChanged && PerfStartNs != 0)
+	{
+		char aExtra[128];
+		str_format(aExtra, sizeof(aExtra), "pending_sources=%d source_count=%d state=%d", m_pImpl->m_PendingSources, (int)m_pImpl->m_vSourceOrder.size(), (int)m_pImpl->m_State);
+		const double DurationMs = (time_get_nanoseconds().count() - PerfStartNs) / 1000000.0;
+		QmPerfLogStage("perf/lyrics", "media_identity_change", DurationMs, true, Client(), nullptr, nullptr, aExtra);
 	}
 
 	if(m_pImpl->m_State == SImpl::EState::FETCHING && m_pImpl->m_SequentialSearch && m_pImpl->m_PendingSources == 0)

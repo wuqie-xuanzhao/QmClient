@@ -2685,6 +2685,9 @@ if(CLIENT)
     components/censor.h
     components/chat.cpp
     components/chat.h
+    components/chat_completion.cpp
+    components/chat_completion.h
+    components/chat_completion_pinyin.inc
     components/community_icons.cpp
     components/community_icons.h
     components/console.cpp
@@ -3847,6 +3850,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   set(TESTS_EXTRA
     src/game/client/animstate.cpp
+    src/game/client/components/chat_completion.cpp
     src/game/client/race_parse.cpp
     src/game/client/skin.cpp
     src/game/client/components/tclient/map_history.cpp

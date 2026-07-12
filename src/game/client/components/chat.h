@@ -12,6 +12,7 @@
 #include <generated/protocol7.h>
 
 #include <game/client/component.h>
+#include <game/client/components/chat_completion.h>
 #include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
 #include <game/client/lineinput.h>
 #include <game/client/render.h>
@@ -19,8 +20,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <limits>
 #include <memory>
-#include <string_view>
+#include <string>
 #include <vector>
 
 class CTranslateResponse
@@ -180,6 +183,28 @@ private:
 	CRateablePlayer m_aPlayerCompletionList[MAX_CLIENTS];
 	int m_PlayerCompletionListLength;
 
+	struct SArgumentCandidatePopup
+	{
+		bool m_RectValid = false;
+		float m_X = 0.0f;
+		float m_Y = 0.0f;
+		float m_W = 0.0f;
+		float m_H = 0.0f;
+		float m_RowHeight = 0.0f;
+		int m_VisibleRows = 0;
+		int m_PressedIndex = -1;
+	};
+	std::vector<QmChatCompletion::SCandidate> m_vArgumentCandidates;
+	QmChatCompletion::SContext m_ArgumentCompletionContext;
+	SArgumentCandidatePopup m_ArgumentCandidatePopup;
+	std::optional<vec2> m_ArgumentCandidateLastMousePos;
+	int64_t m_ArgumentCompletionNextSourceCheck = 0;
+	std::string m_ArgumentCompletionCachedInput;
+	size_t m_ArgumentCompletionCachedCursor = std::numeric_limits<size_t>::max();
+	uint64_t m_ArgumentCompletionSourceSignature = 0;
+	int m_ArgumentCompletionSelected = 0;
+	int m_ArgumentCompletionScroll = 0;
+
 	struct CCommand
 	{
 		char m_aName[IConsole::TEMPCMD_NAME_LENGTH];
@@ -247,7 +272,12 @@ private:
 	const CCommand *FindServerCommand(const char *pName) const;
 	const char *LocalizeCommandPreviewText(const char *pText) const;
 	bool BuildCommandUsagePreview(const char *pInput, char *pBuf, size_t BufSize) const;
-	void RefreshSlashCommandSuggestions();
+	void RefreshArgumentCandidates();
+	void HideArgumentCandidates();
+	bool ApplyArgumentCandidate(int Index);
+	void EnsureArgumentCandidateVisible();
+	int ArgumentCandidateIndexAt(vec2 MousePos) const;
+	void RenderArgumentCandidates(const CUIRect &InputRect, float Width);
 	void SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation);
 	int CountInitializedLines() const;
 	int CountVisibleLinesFrom(int BacklogLine) const;

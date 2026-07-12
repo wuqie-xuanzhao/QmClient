@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include <base/system.h>
 
 #include <game/client/components/chat.h>
@@ -307,6 +308,93 @@ TEST(QmChatInteractions, ClampBacklogLine)
 	EXPECT_EQ(CChat::ClampBacklogLine(6, 10, 4), 6);
 	EXPECT_EQ(CChat::ClampBacklogLine(7, 10, 4), 6);
 	EXPECT_EQ(CChat::ClampBacklogLine(20, 10, 4), 6);
+}
+
+TEST(QmChatCompletion, ParsesSupportedFirstArguments)
+{
+	QmChatCompletion::SContext Context;
+	EXPECT_TRUE(QmChatCompletion::ParseContext("/w qi", 5, Context));
+	EXPECT_EQ(Context.m_Provider, QmChatCompletion::EProvider::PLAYER);
+	EXPECT_EQ(Context.m_Query, "qi");
+	EXPECT_EQ(Context.m_ReplaceStart, 3u);
+	EXPECT_EQ(Context.m_ReplaceEnd, 5u);
+
+	EXPECT_TRUE(QmChatCompletion::ParseContext("/map go", 7, Context));
+	EXPECT_EQ(Context.m_Provider, QmChatCompletion::EProvider::MAP);
+	EXPECT_EQ(Context.m_Query, "go");
+	EXPECT_FALSE(QmChatCompletion::ParseContext("/unknown qi", 11, Context));
+	EXPECT_FALSE(QmChatCompletion::ParseContext("/team 1", 7, Context));
+	EXPECT_FALSE(QmChatCompletion::ParseContext("hello", 5, Context));
+	EXPECT_FALSE(QmChatCompletion::ParseContext("", 0, Context));
+	EXPECT_TRUE(QmChatCompletion::ParseContext("/w", 2, Context));
+	EXPECT_TRUE(Context.m_Query.empty());
+}
+
+TEST(QmChatCompletion, HidesAfterFirstArgumentIsComplete)
+{
+	QmChatCompletion::SContext Context;
+	EXPECT_FALSE(QmChatCompletion::ParseContext("/w qi hello", 11, Context));
+	EXPECT_FALSE(QmChatCompletion::ParseContext("/w qi hello", 5, Context));
+	EXPECT_FALSE(QmChatCompletion::ParseContext("/w \"Qi Men\" hello", 17, Context));
+	EXPECT_FALSE(QmChatCompletion::ParseContext("/w \"Qi Men\"", 7, Context));
+	EXPECT_TRUE(QmChatCompletion::ParseContext("/w \"Qi M", 8, Context));
+	EXPECT_EQ(Context.m_Query, "Qi M");
+}
+
+TEST(QmChatCompletion, CompletesAndQuotesCandidateWithoutSubmitting)
+{
+	QmChatCompletion::SContext Context;
+	ASSERT_TRUE(QmChatCompletion::ParseContext("/w qi", 5, Context));
+	char aOutput[256];
+	size_t CursorOffset = 0;
+	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/w qi", Context, "Qi Men", aOutput, sizeof(aOutput), CursorOffset));
+	EXPECT_STREQ(aOutput, "/w \"Qi Men\" ");
+	EXPECT_EQ(CursorOffset, str_length(aOutput));
+
+	ASSERT_TRUE(QmChatCompletion::ParseContext("/w q", 4, Context));
+	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/w q", Context, "Qi \"Men\"", aOutput, sizeof(aOutput), CursorOffset));
+	EXPECT_STREQ(aOutput, "/w \"Qi \\\"Men\\\"\" ");
+	EXPECT_EQ(CursorOffset, str_length(aOutput));
+
+	ASSERT_TRUE(QmChatCompletion::ParseContext("/w foo", 6, Context));
+	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/w foo", Context, "foo\\bar", aOutput, sizeof(aOutput), CursorOffset));
+	EXPECT_STREQ(aOutput, "/w \"foo\\\\bar\" ");
+	EXPECT_EQ(CursorOffset, str_length(aOutput));
+}
+
+TEST(QmChatCompletion, RanksPrefixBeforeContains)
+{
+	std::vector<QmChatCompletion::SCandidate> vCandidates;
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "aQi", "qi");
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "Qimen", "qi");
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "奇门", "qi", true);
+	QmChatCompletion::SortCandidates(vCandidates);
+	ASSERT_EQ(vCandidates.size(), 3u);
+	EXPECT_EQ(vCandidates[0].m_Value, "Qimen");
+	EXPECT_EQ(vCandidates[0].m_MatchOffset, 0);
+	EXPECT_EQ(vCandidates[1].m_Value, "aQi");
+	EXPECT_EQ(vCandidates[2].m_Value, "奇门");
+}
+
+TEST(QmChatCompletion, MatchesChinesePlayerNamesByFullPinyinAndInitials)
+{
+	std::vector<QmChatCompletion::SCandidate> vCandidates;
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "奇门", "qimen", true);
+	QmChatCompletion::AddMatchingCandidate(vCandidates, "测试玩家", "cswj", true);
+	ASSERT_EQ(vCandidates.size(), 2u);
+	EXPECT_EQ(vCandidates[0].m_MatchOffset, -1);
+	EXPECT_EQ(vCandidates[1].m_MatchOffset, -1);
+}
+
+TEST(QmChatCompletion, ExtractsOrdinaryPlayerMapVoteNames)
+{
+	std::string MapName;
+	EXPECT_TRUE(QmChatCompletion::ExtractMapNameFromVoteOption("Map: gores", MapName));
+	EXPECT_EQ(MapName, "gores");
+	EXPECT_TRUE(QmChatCompletion::ExtractMapNameFromVoteOption("Kobra 3 by Fňokurka | 3/5 ★", MapName));
+	EXPECT_EQ(MapName, "Kobra 3");
+	EXPECT_FALSE(QmChatCompletion::ExtractMapNameFromVoteOption("Change server settings", MapName));
+	EXPECT_TRUE(MapName.empty());
 }
 
 TEST(QmChatInteractions, ScrollbarValueToBacklogLine)

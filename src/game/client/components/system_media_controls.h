@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #ifndef GAME_CLIENT_COMPONENTS_SYSTEM_MEDIA_CONTROLS_H
 #define GAME_CLIENT_COMPONENTS_SYSTEM_MEDIA_CONTROLS_H
 
@@ -9,6 +10,34 @@
 #include <cstdint>
 #include <memory>
 #include <thread>
+
+namespace SystemMediaControls
+{
+	constexpr uint32_t ALBUM_ART_MAX_DIMENSION = 256;
+
+	struct SAlbumArtDecodeSize
+	{
+		uint32_t m_Width = 0;
+		uint32_t m_Height = 0;
+	};
+
+	inline SAlbumArtDecodeSize CalculateAlbumArtDecodeSize(uint32_t Width, uint32_t Height)
+	{
+		if(Width == 0 || Height == 0)
+			return {};
+		if(Width <= ALBUM_ART_MAX_DIMENSION && Height <= ALBUM_ART_MAX_DIMENSION)
+			return {Width, Height};
+
+		if(Width >= Height)
+		{
+			const uint32_t ScaledHeight = (uint32_t)(((uint64_t)Height * ALBUM_ART_MAX_DIMENSION + Width / 2) / Width);
+			return {ALBUM_ART_MAX_DIMENSION, ScaledHeight > 0 ? ScaledHeight : 1};
+		}
+		const uint32_t ScaledWidth = (uint32_t)(((uint64_t)Width * ALBUM_ART_MAX_DIMENSION + Height / 2) / Height);
+		return {ScaledWidth > 0 ? ScaledWidth : 1, ALBUM_ART_MAX_DIMENSION};
+	}
+
+} // namespace SystemMediaControls
 
 #if defined(CONF_FAMILY_WINDOWS) && defined(_MSC_VER)
 #define SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED 1

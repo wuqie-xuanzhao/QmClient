@@ -1,3 +1,4 @@
+# 请抬头享受阳光｜日子很好 我很我---------致咩子
 #!/usr/bin/env python3
 """Normalize simplified Chinese typography in i18n TOML maintenance sources."""
 

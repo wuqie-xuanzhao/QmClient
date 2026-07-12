@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include <game/client/components/assets_author_persistence.h>
 #include <game/client/components/assets_preview_scale.h>
 #include <game/client/components/assets_resource_registry.h>

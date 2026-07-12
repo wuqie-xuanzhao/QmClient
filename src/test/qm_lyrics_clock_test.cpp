@@ -1,7 +1,14 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
+#include "test.h"
+
 #include <game/client/components/qmclient/qm_lyrics/qm_lyrics_clock.h>
+#include <game/client/components/system_media_controls.h>
 #include <game/client/components/system_media_controls_timeline.h>
 
 #include <gtest/gtest.h>
+
+#include <fstream>
+#include <sstream>
 
 using namespace QmLyrics;
 
@@ -51,6 +58,55 @@ TEST(SystemMediaTimeline, NormalizesNonZeroStartAndMapsSampleTick)
 	EXPECT_EQ(Snapshot.m_PositionMs, 30000);
 	EXPECT_EQ(Snapshot.m_DurationMs, 180000);
 	EXPECT_EQ(Snapshot.m_PositionUpdatedTick, MsToTicks(3000));
+}
+
+TEST(SystemMediaAlbumArt, DecodeSizeCapsLargeCoversAndPreservesAspectRatio)
+{
+	const SystemMediaControls::SAlbumArtDecodeSize Square = SystemMediaControls::CalculateAlbumArtDecodeSize(2048, 2048);
+	EXPECT_EQ(Square.m_Width, 256u);
+	EXPECT_EQ(Square.m_Height, 256u);
+
+	const SystemMediaControls::SAlbumArtDecodeSize Landscape = SystemMediaControls::CalculateAlbumArtDecodeSize(1200, 600);
+	EXPECT_EQ(Landscape.m_Width, 256u);
+	EXPECT_EQ(Landscape.m_Height, 128u);
+
+	const SystemMediaControls::SAlbumArtDecodeSize Portrait = SystemMediaControls::CalculateAlbumArtDecodeSize(600, 1200);
+	EXPECT_EQ(Portrait.m_Width, 128u);
+	EXPECT_EQ(Portrait.m_Height, 256u);
+}
+
+TEST(SystemMediaAlbumArt, DecodeSizeKeepsSmallCoversAndRejectsEmptyDimensions)
+{
+	const SystemMediaControls::SAlbumArtDecodeSize Small = SystemMediaControls::CalculateAlbumArtDecodeSize(200, 100);
+	EXPECT_EQ(Small.m_Width, 200u);
+	EXPECT_EQ(Small.m_Height, 100u);
+
+	const SystemMediaControls::SAlbumArtDecodeSize EmptyWidth = SystemMediaControls::CalculateAlbumArtDecodeSize(0, 100);
+	EXPECT_EQ(EmptyWidth.m_Width, 0u);
+	EXPECT_EQ(EmptyWidth.m_Height, 0u);
+	const SystemMediaControls::SAlbumArtDecodeSize EmptyHeight = SystemMediaControls::CalculateAlbumArtDecodeSize(100, 0);
+	EXPECT_EQ(EmptyHeight.m_Width, 0u);
+	EXPECT_EQ(EmptyHeight.m_Height, 0u);
+}
+
+TEST(SystemMediaAlbumArt, ExpensivePixelMaskRunsBeforeWorkerPublishesCover)
+{
+	std::ifstream File(TestSourcePath("src/game/client/components/system_media_controls.cpp"));
+	ASSERT_TRUE(File.good());
+	std::stringstream Buffer;
+	Buffer << File.rdbuf();
+	const std::string Source = Buffer.str();
+
+	const size_t DecodeBegin = Source.find("static void UpdateAlbumArtData");
+	const size_t MainThreadBegin = Source.find("static void ApplySharedAlbumArt");
+	ASSERT_NE(DecodeBegin, std::string::npos);
+	ASSERT_NE(MainThreadBegin, std::string::npos);
+	ASSERT_LT(DecodeBegin, MainThreadBegin);
+	const std::string DecodeBody = Source.substr(DecodeBegin, MainThreadBegin - DecodeBegin);
+	const std::string MainThreadBody = Source.substr(MainThreadBegin);
+	EXPECT_NE(DecodeBody.find("ApplyRoundedMask(Copy"), std::string::npos);
+	EXPECT_LT(DecodeBody.find("ApplyRoundedMask(Copy"), DecodeBody.find("SetSharedAlbumArt"));
+	EXPECT_EQ(MainThreadBody.find("ApplyRoundedMask"), std::string::npos);
 }
 
 TEST(SystemMediaTimeline, LastUpdatedChangeAdvancesTimelineGeneration)

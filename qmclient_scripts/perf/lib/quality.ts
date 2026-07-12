@@ -1,3 +1,4 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 import { basename } from 'node:path';
 
 import type { PerfEntry, ParseDiagnostics } from './parse.ts';

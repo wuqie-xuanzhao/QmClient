@@ -1,15 +1,19 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "qm_lyrics_source_amll_ttml_db.h"
 
 #include <base/system.h>
 
+#include <engine/engine.h>
 #include <engine/external/json-parser/json.h>
 #include <engine/http.h>
 #include <engine/shared/http.h>
+#include <engine/shared/jobs.h>
 #include <engine/storage.h>
 
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 #include <string_view>
 #include <vector>
 
@@ -277,44 +281,102 @@ namespace QmLyrics
 		return true;
 	}
 
-	bool FindAmllTtmlDbBestMatch(std::string_view IndexText, const SSourceQuery &Query, SAmllTtmlDbIndexHit *pOut, char *pErr, size_t ErrSize)
+	namespace
 	{
-		if(pOut == nullptr)
+		using TAmllTtmlDbIndex = std::vector<SAmllTtmlDbIndexHit>;
+
+		bool IndexSearchAborted(const IJob *pAbortJob)
 		{
-			SetError(pErr, ErrSize, "null output");
-			return false;
+			return pAbortJob != nullptr && pAbortJob->State() == IJob::STATE_ABORTED;
 		}
-		float BestScore = -1.0f;
-		SAmllTtmlDbIndexHit Best;
-		size_t Pos = 0;
-		while(Pos < IndexText.size())
+
+		bool ParseAmllTtmlDbIndex(
+			std::string_view IndexText,
+			const SSourceQuery &Query,
+			TAmllTtmlDbIndex *pIndex,
+			SAmllTtmlDbIndexHit *pOut,
+			const IJob *pAbortJob,
+			char *pErr = nullptr,
+			size_t ErrSize = 0)
 		{
-			size_t End = IndexText.find('\n', Pos);
-			if(End == std::string_view::npos)
-				End = IndexText.size();
-			std::string_view Line = IndexText.substr(Pos, End - Pos);
-			while(!Line.empty() && (Line.back() == '\r' || Line.back() == ' ' || Line.back() == '\t'))
-				Line.remove_suffix(1);
-			while(!Line.empty() && (Line.front() == ' ' || Line.front() == '\t'))
-				Line.remove_prefix(1);
-			if(!Line.empty())
+			if(pOut == nullptr)
 			{
-				SAmllTtmlDbIndexHit Hit;
-				if(ParseAmllTtmlDbIndexLine(Line.data(), Line.size(), Query, &Hit) && Hit.m_Score > BestScore)
+				SetError(pErr, ErrSize, "null output");
+				return false;
+			}
+			float BestScore = -1.0f;
+			SAmllTtmlDbIndexHit Best;
+			size_t Pos = 0;
+			while(Pos < IndexText.size())
+			{
+				if(IndexSearchAborted(pAbortJob))
+					return false;
+				size_t End = IndexText.find('\n', Pos);
+				if(End == std::string_view::npos)
+					End = IndexText.size();
+				std::string_view Line = IndexText.substr(Pos, End - Pos);
+				while(!Line.empty() && (Line.back() == '\r' || Line.back() == ' ' || Line.back() == '\t'))
+					Line.remove_suffix(1);
+				while(!Line.empty() && (Line.front() == ' ' || Line.front() == '\t'))
+					Line.remove_prefix(1);
+				if(!Line.empty())
 				{
-					BestScore = Hit.m_Score;
-					Best = std::move(Hit);
+					SAmllTtmlDbIndexHit Hit;
+					if(ParseAmllTtmlDbIndexLine(Line.data(), Line.size(), Query, &Hit))
+					{
+						if(Hit.m_Score > BestScore)
+						{
+							BestScore = Hit.m_Score;
+							Best = Hit;
+						}
+						if(pIndex != nullptr)
+							pIndex->push_back(std::move(Hit));
+					}
+				}
+				Pos = End + 1;
+			}
+			if(Best.m_RawLyricFile.empty())
+			{
+				SetError(pErr, ErrSize, "no amll match");
+				return false;
+			}
+			*pOut = std::move(Best);
+			return true;
+		}
+
+		bool FindAmllTtmlDbBestMatchInParsedIndex(
+			const TAmllTtmlDbIndex &Index,
+			const SSourceQuery &Query,
+			SAmllTtmlDbIndexHit *pOut,
+			const IJob *pAbortJob)
+		{
+			if(pOut == nullptr)
+				return false;
+			float BestScore = -1.0f;
+			const SAmllTtmlDbIndexHit *pBest = nullptr;
+			for(const SAmllTtmlDbIndexHit &Entry : Index)
+			{
+				if(IndexSearchAborted(pAbortJob))
+					return false;
+				const float EntryScore = Score(Query, Entry.m_Metadata);
+				if(EntryScore > BestScore)
+				{
+					BestScore = EntryScore;
+					pBest = &Entry;
 				}
 			}
-			Pos = End + 1;
+			if(pBest == nullptr)
+				return false;
+			*pOut = *pBest;
+			pOut->m_Score = BestScore;
+			return true;
 		}
-		if(Best.m_RawLyricFile.empty())
-		{
-			SetError(pErr, ErrSize, "no amll match");
-			return false;
-		}
-		*pOut = std::move(Best);
-		return true;
+
+	} // anonymous namespace
+
+	bool FindAmllTtmlDbBestMatch(std::string_view IndexText, const SSourceQuery &Query, SAmllTtmlDbIndexHit *pOut, char *pErr, size_t ErrSize)
+	{
+		return ParseAmllTtmlDbIndex(IndexText, Query, nullptr, pOut, nullptr, pErr, ErrSize);
 	}
 
 	bool ParseAmllTtmlDbLyricResponse(const char *pBody, size_t BodyLen, const SAmllTtmlDbIndexHit &Hit, SSourceCandidate *pOut, char *pErr, size_t ErrSize)
@@ -346,32 +408,184 @@ namespace QmLyrics
 		return true;
 	}
 
+	namespace
+	{
+
+		struct SAmllTtmlDbIndexSearchResult
+		{
+			std::shared_ptr<const TAmllTtmlDbIndex> m_pIndex;
+			SAmllTtmlDbIndexHit m_Hit;
+			bool m_IndexAvailable = false;
+			bool m_HasHit = false;
+		};
+
+		class CAmllTtmlDbIndexSearchJob : public IJob
+		{
+			IStorage *m_pStorage = nullptr;
+			SSourceQuery m_Query;
+			std::shared_ptr<const TAmllTtmlDbIndex> m_pCachedIndex;
+			std::shared_ptr<const std::string> m_pIndexText;
+			bool m_PersistIndex = false;
+			SAmllTtmlDbIndexSearchResult m_Result;
+
+		protected:
+			void Run() override
+			{
+				SAmllTtmlDbIndexSearchResult Result;
+				if(IndexSearchAborted(this))
+					return;
+
+				if(m_pCachedIndex)
+				{
+					Result.m_pIndex = m_pCachedIndex;
+					Result.m_IndexAvailable = true;
+					Result.m_HasHit = FindAmllTtmlDbBestMatchInParsedIndex(*m_pCachedIndex, m_Query, &Result.m_Hit, this);
+				}
+				else
+				{
+					std::shared_ptr<const std::string> pIndexText = m_pIndexText;
+					if(!pIndexText)
+						pIndexText = std::make_shared<const std::string>(ReadFileText(m_pStorage, AMLL_TTML_DB_INDEX_PATH));
+					if(pIndexText->empty() || IndexSearchAborted(this))
+					{
+						if(!IndexSearchAborted(this))
+							m_Result = std::move(Result);
+						return;
+					}
+
+					Result.m_IndexAvailable = true;
+					if(m_PersistIndex)
+						SaveIndex(m_pStorage, *pIndexText);
+					if(IndexSearchAborted(this))
+						return;
+
+					auto pIndex = std::make_shared<TAmllTtmlDbIndex>();
+					Result.m_HasHit = ParseAmllTtmlDbIndex(*pIndexText, m_Query, pIndex.get(), &Result.m_Hit, this);
+					if(IndexSearchAborted(this))
+						return;
+					Result.m_pIndex = std::move(pIndex);
+				}
+
+				if(!IndexSearchAborted(this))
+					m_Result = std::move(Result);
+			}
+
+		public:
+			CAmllTtmlDbIndexSearchJob(
+				IStorage *pStorage,
+				SSourceQuery Query,
+				std::shared_ptr<const TAmllTtmlDbIndex> pCachedIndex,
+				std::shared_ptr<const std::string> pIndexText,
+				bool PersistIndex) :
+				m_pStorage(pStorage),
+				m_Query(std::move(Query)),
+				m_pCachedIndex(std::move(pCachedIndex)),
+				m_pIndexText(std::move(pIndexText)),
+				m_PersistIndex(PersistIndex)
+			{
+				Abortable(true);
+			}
+
+			const SAmllTtmlDbIndexSearchResult &Result() const
+			{
+				return m_Result;
+			}
+		};
+
+	} // anonymous namespace
+
 	struct CLyricsSourceAmllTtmlDb::SImpl
 	{
 		enum class EStage
 		{
 			IDLE,
-			INDEX,
+			INDEX_DOWNLOAD,
+			INDEX_SEARCH,
 			LYRIC,
 		};
 
 		IHttp *m_pHttp = nullptr;
 		IStorage *m_pStorage = nullptr;
+		IEngine *m_pEngine = nullptr;
 		int m_TimeoutMs = 8000;
 		std::string m_BaseUrl = AMLL_TTML_DB_DEFAULT_BASE_URL;
 		EStage m_Stage = EStage::IDLE;
 		std::shared_ptr<CHttpRequest> m_pRequest;
+		std::shared_ptr<CAmllTtmlDbIndexSearchJob> m_pIndexSearchJob;
+		std::shared_ptr<const TAmllTtmlDbIndex> m_pParsedIndex;
 		FSourceDoneCallback m_Done;
 		FSourceErrorCallback m_Error;
 		SSourceQuery m_Query;
 		SAmllTtmlDbIndexHit m_Hit;
 	};
 
-	CLyricsSourceAmllTtmlDb::CLyricsSourceAmllTtmlDb(IHttp *pHttp, IStorage *pStorage, int TimeoutMs, const char *pBaseUrl) :
+	namespace
+	{
+
+		void CompleteAmllTtmlDbEmpty(CLyricsSourceAmllTtmlDb::SImpl *pImpl)
+		{
+			FSourceDoneCallback Done = std::move(pImpl->m_Done);
+			pImpl->m_Error = nullptr;
+			pImpl->m_pRequest.reset();
+			pImpl->m_pIndexSearchJob.reset();
+			pImpl->m_Stage = CLyricsSourceAmllTtmlDb::SImpl::EStage::IDLE;
+			if(Done)
+				Done({});
+		}
+
+		void DispatchAmllTtmlDbIndexDownload(CLyricsSourceAmllTtmlDb::SImpl *pImpl)
+		{
+			pImpl->m_Stage = CLyricsSourceAmllTtmlDb::SImpl::EStage::INDEX_DOWNLOAD;
+			pImpl->m_pRequest = std::make_shared<CHttpRequest>(BuildAmllTtmlDbIndexUrl(pImpl->m_BaseUrl.c_str()).c_str());
+			PrepareRequest(pImpl->m_pRequest.get(), pImpl->m_TimeoutMs);
+			pImpl->m_pHttp->Run(pImpl->m_pRequest);
+		}
+
+		void DispatchAmllTtmlDbLyric(CLyricsSourceAmllTtmlDb::SImpl *pImpl)
+		{
+			pImpl->m_Stage = CLyricsSourceAmllTtmlDb::SImpl::EStage::LYRIC;
+			pImpl->m_pRequest = std::make_shared<CHttpRequest>(BuildAmllTtmlDbLyricUrl(pImpl->m_Hit.m_RawLyricFile, pImpl->m_BaseUrl.c_str()).c_str());
+			PrepareRequest(pImpl->m_pRequest.get(), pImpl->m_TimeoutMs);
+			pImpl->m_pHttp->Run(pImpl->m_pRequest);
+		}
+
+		bool QueueAmllTtmlDbIndexSearch(
+			CLyricsSourceAmllTtmlDb::SImpl *pImpl,
+			std::shared_ptr<const std::string> pIndexText,
+			bool PersistIndex)
+		{
+			if(pImpl->m_pEngine == nullptr)
+			{
+				FSourceErrorCallback Error = std::move(pImpl->m_Error);
+				pImpl->m_Done = nullptr;
+				pImpl->m_Stage = CLyricsSourceAmllTtmlDb::SImpl::EStage::IDLE;
+				if(Error)
+					Error("no IEngine");
+				return false;
+			}
+
+			std::shared_ptr<const TAmllTtmlDbIndex> pCachedIndex;
+			if(!pIndexText)
+				pCachedIndex = pImpl->m_pParsedIndex;
+			pImpl->m_pIndexSearchJob = std::make_shared<CAmllTtmlDbIndexSearchJob>(
+				pImpl->m_pStorage,
+				pImpl->m_Query,
+				std::move(pCachedIndex),
+				std::move(pIndexText),
+				PersistIndex);
+			pImpl->m_Stage = CLyricsSourceAmllTtmlDb::SImpl::EStage::INDEX_SEARCH;
+			pImpl->m_pEngine->AddJob(pImpl->m_pIndexSearchJob);
+			return true;
+		}
+
+	} // anonymous namespace
+
+	CLyricsSourceAmllTtmlDb::CLyricsSourceAmllTtmlDb(IHttp *pHttp, IStorage *pStorage, IEngine *pEngine, int TimeoutMs, const char *pBaseUrl) :
 		m_pImpl(std::make_unique<SImpl>())
 	{
 		m_pImpl->m_pHttp = pHttp;
 		m_pImpl->m_pStorage = pStorage;
+		m_pImpl->m_pEngine = pEngine;
 		m_pImpl->m_TimeoutMs = TimeoutMs > 0 ? TimeoutMs : 8000;
 		m_pImpl->m_BaseUrl = NormalizeBaseUrl(pBaseUrl);
 	}
@@ -387,6 +601,11 @@ namespace QmLyrics
 		{
 			m_pImpl->m_pRequest->Abort();
 			m_pImpl->m_pRequest.reset();
+		}
+		if(m_pImpl->m_pIndexSearchJob)
+		{
+			m_pImpl->m_pIndexSearchJob->Abort();
+			m_pImpl->m_pIndexSearchJob.reset();
 		}
 		m_pImpl->m_Done = nullptr;
 		m_pImpl->m_Error = nullptr;
@@ -415,34 +634,46 @@ namespace QmLyrics
 
 		if(IsIndexFresh(m_pImpl->m_pStorage))
 		{
-			const std::string IndexText = ReadFileText(m_pImpl->m_pStorage, AMLL_TTML_DB_INDEX_PATH);
-			if(!IndexText.empty() && FindAmllTtmlDbBestMatch(IndexText, Query, &m_pImpl->m_Hit))
-			{
-				m_pImpl->m_Stage = SImpl::EStage::LYRIC;
-				m_pImpl->m_pRequest = std::make_shared<CHttpRequest>(BuildAmllTtmlDbLyricUrl(m_pImpl->m_Hit.m_RawLyricFile, m_pImpl->m_BaseUrl.c_str()).c_str());
-				PrepareRequest(m_pImpl->m_pRequest.get(), m_pImpl->m_TimeoutMs);
-				m_pImpl->m_pHttp->Run(m_pImpl->m_pRequest);
-				return;
-			}
-			if(!IndexText.empty())
-			{
-				FSourceDoneCallback DoneCallback = std::move(m_pImpl->m_Done);
-				m_pImpl->m_Error = nullptr;
-				m_pImpl->m_Stage = SImpl::EStage::IDLE;
-				if(DoneCallback)
-					DoneCallback({});
-				return;
-			}
+			QueueAmllTtmlDbIndexSearch(m_pImpl.get(), nullptr, false);
+			return;
 		}
 
-		m_pImpl->m_Stage = SImpl::EStage::INDEX;
-		m_pImpl->m_pRequest = std::make_shared<CHttpRequest>(BuildAmllTtmlDbIndexUrl(m_pImpl->m_BaseUrl.c_str()).c_str());
-		PrepareRequest(m_pImpl->m_pRequest.get(), m_pImpl->m_TimeoutMs);
-		m_pImpl->m_pHttp->Run(m_pImpl->m_pRequest);
+		m_pImpl->m_pParsedIndex.reset();
+		DispatchAmllTtmlDbIndexDownload(m_pImpl.get());
 	}
 
 	void CLyricsSourceAmllTtmlDb::Tick()
 	{
+		if(m_pImpl->m_Stage == SImpl::EStage::INDEX_SEARCH)
+		{
+			if(!m_pImpl->m_pIndexSearchJob || !m_pImpl->m_pIndexSearchJob->Done())
+				return;
+			std::shared_ptr<CAmllTtmlDbIndexSearchJob> pJob = std::move(m_pImpl->m_pIndexSearchJob);
+			if(pJob->State() != IJob::STATE_DONE)
+			{
+				CompleteAmllTtmlDbEmpty(m_pImpl.get());
+				return;
+			}
+
+			const SAmllTtmlDbIndexSearchResult &Result = pJob->Result();
+			if(Result.m_pIndex)
+				m_pImpl->m_pParsedIndex = Result.m_pIndex;
+			if(!Result.m_IndexAvailable)
+			{
+				m_pImpl->m_pParsedIndex.reset();
+				DispatchAmllTtmlDbIndexDownload(m_pImpl.get());
+				return;
+			}
+			if(Result.m_HasHit)
+			{
+				m_pImpl->m_Hit = Result.m_Hit;
+				DispatchAmllTtmlDbLyric(m_pImpl.get());
+				return;
+			}
+			CompleteAmllTtmlDbEmpty(m_pImpl.get());
+			return;
+		}
+
 		if(m_pImpl->m_Stage == SImpl::EStage::IDLE || !m_pImpl->m_pRequest || !m_pImpl->m_pRequest->Done())
 			return;
 
@@ -451,28 +682,17 @@ namespace QmLyrics
 		m_pImpl->m_pRequest.reset();
 		if(!Ok)
 		{
-			FSourceDoneCallback Done = std::move(m_pImpl->m_Done);
-			m_pImpl->m_Error = nullptr;
-			m_pImpl->m_Stage = SImpl::EStage::IDLE;
-			if(Done)
-				Done({});
+			CompleteAmllTtmlDbEmpty(m_pImpl.get());
 			return;
 		}
 
-		if(m_pImpl->m_Stage == SImpl::EStage::INDEX)
+		if(m_pImpl->m_Stage == SImpl::EStage::INDEX_DOWNLOAD)
 		{
-			const std::string IndexText((const char *)vBody.data(), vBody.size());
-			SaveIndex(m_pImpl->m_pStorage, IndexText);
-			if(FindAmllTtmlDbBestMatch(IndexText, m_pImpl->m_Query, &m_pImpl->m_Hit))
-			{
-				m_pImpl->m_Stage = SImpl::EStage::LYRIC;
-				m_pImpl->m_pRequest = std::make_shared<CHttpRequest>(BuildAmllTtmlDbLyricUrl(m_pImpl->m_Hit.m_RawLyricFile, m_pImpl->m_BaseUrl.c_str()).c_str());
-				PrepareRequest(m_pImpl->m_pRequest.get(), m_pImpl->m_TimeoutMs);
-				m_pImpl->m_pHttp->Run(m_pImpl->m_pRequest);
-				return;
-			}
+			auto pIndexText = std::make_shared<const std::string>((const char *)vBody.data(), vBody.size());
+			QueueAmllTtmlDbIndexSearch(m_pImpl.get(), std::move(pIndexText), true);
+			return;
 		}
-		else if(m_pImpl->m_Stage == SImpl::EStage::LYRIC)
+		if(m_pImpl->m_Stage == SImpl::EStage::LYRIC)
 		{
 			SSourceCandidate Candidate;
 			if(ParseAmllTtmlDbLyricResponse((const char *)vBody.data(), vBody.size(), m_pImpl->m_Hit, &Candidate))
@@ -486,11 +706,7 @@ namespace QmLyrics
 			}
 		}
 
-		FSourceDoneCallback Done = std::move(m_pImpl->m_Done);
-		m_pImpl->m_Error = nullptr;
-		m_pImpl->m_Stage = SImpl::EStage::IDLE;
-		if(Done)
-			Done({});
+		CompleteAmllTtmlDbEmpty(m_pImpl.get());
 	}
 
 } // namespace QmLyrics

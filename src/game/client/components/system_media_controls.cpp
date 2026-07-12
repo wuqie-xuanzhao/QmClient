@@ -1,13 +1,17 @@
+// 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "system_media_controls.h"
 
 #include "system_media_controls_timeline.h"
 
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
+#include <base/perf_timer.h>
 #include <base/str.h>
 #include <base/system.h>
 
 #include <engine/image.h>
 #include <engine/shared/config.h>
+
+#include <game/client/components/qmclient/perf_logging.h>
 
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.h>
@@ -202,6 +206,8 @@ static void ResetSharedState(CSystemMediaControls::SShared *pShared, SPlainState
 	pShared->m_HasMedia = false;
 }
 
+static void ApplyRoundedMask(std::vector<uint8_t> &Pixels, int Width, int Height, float Radius);
+
 static void UpdateAlbumArtData(CSystemMediaControls::SShared *pShared, const winrt::Windows::Storage::Streams::IRandomAccessStreamReference &Thumbnail, const std::atomic_bool &StopFlag)
 {
 	if(!Thumbnail)
@@ -237,18 +243,21 @@ static void UpdateAlbumArtData(CSystemMediaControls::SShared *pShared, const win
 			ClearSharedAlbumArt(pShared);
 			return;
 		}
-		const uint32_t Width = Decoder.PixelWidth();
-		const uint32_t Height = Decoder.PixelHeight();
-		if(Width == 0 || Height == 0)
+		const SystemMediaControls::SAlbumArtDecodeSize DecodeSize = SystemMediaControls::CalculateAlbumArtDecodeSize(Decoder.PixelWidth(), Decoder.PixelHeight());
+		if(DecodeSize.m_Width == 0 || DecodeSize.m_Height == 0)
 		{
 			ClearSharedAlbumArt(pShared);
 			return;
 		}
 
+		winrt::Windows::Graphics::Imaging::BitmapTransform Transform;
+		Transform.ScaledWidth(DecodeSize.m_Width);
+		Transform.ScaledHeight(DecodeSize.m_Height);
+		Transform.InterpolationMode(winrt::Windows::Graphics::Imaging::BitmapInterpolationMode::Fant);
 		const auto PixelDataOp = Decoder.GetPixelDataAsync(
 			winrt::Windows::Graphics::Imaging::BitmapPixelFormat::Rgba8,
 			winrt::Windows::Graphics::Imaging::BitmapAlphaMode::Premultiplied,
-			winrt::Windows::Graphics::Imaging::BitmapTransform(),
+			Transform,
 			winrt::Windows::Graphics::Imaging::ExifOrientationMode::IgnoreExifOrientation,
 			winrt::Windows::Graphics::Imaging::ColorManagementMode::DoNotColorManage);
 		if(!WaitForAsync(PixelDataOp, StopFlag))
@@ -264,7 +273,7 @@ static void UpdateAlbumArtData(CSystemMediaControls::SShared *pShared, const win
 		}
 
 		const auto Pixels = PixelData.DetachPixelData();
-		const size_t ExpectedSize = (size_t)Width * (size_t)Height * 4;
+		const size_t ExpectedSize = (size_t)DecodeSize.m_Width * (size_t)DecodeSize.m_Height * 4;
 		if(Pixels.size() < ExpectedSize)
 		{
 			ClearSharedAlbumArt(pShared);
@@ -272,7 +281,10 @@ static void UpdateAlbumArtData(CSystemMediaControls::SShared *pShared, const win
 		}
 
 		std::vector<uint8_t> Copy(Pixels.begin(), Pixels.begin() + ExpectedSize);
-		SetSharedAlbumArt(pShared, std::move(Copy), (int)Width, (int)Height);
+		const float RoundingRatio = 2.0f / 14.0f;
+		const float Radius = (float)std::min(DecodeSize.m_Width, DecodeSize.m_Height) * RoundingRatio;
+		ApplyRoundedMask(Copy, (int)DecodeSize.m_Width, (int)DecodeSize.m_Height, Radius);
+		SetSharedAlbumArt(pShared, std::move(Copy), (int)DecodeSize.m_Width, (int)DecodeSize.m_Height);
 	}
 	catch(const winrt::hresult_error &)
 	{
@@ -367,7 +379,7 @@ static void ApplyRoundedMask(std::vector<uint8_t> &Pixels, int Width, int Height
 	}
 }
 
-static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemMediaControls::SWinrt *pWinrt, IGraphics *pGraphics)
+static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemMediaControls::SWinrt *pWinrt, IGraphics *pGraphics, const IClient *pClient)
 {
 	if(!pShared || !pWinrt || !pGraphics)
 		return;
@@ -391,16 +403,13 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 
 	if(!AlbumArtDirty)
 		return;
+	CPerfTimer ApplyTimer;
 
 	ClearAlbumArtLocal(pWinrt, pGraphics);
 
 	const size_t ExpectedSize = (size_t)AlbumArtWidth * (size_t)AlbumArtHeight * 4;
 	if(AlbumArtWidth > 0 && AlbumArtHeight > 0 && AlbumArtPixels.size() >= ExpectedSize)
 	{
-		const float RoundingRatio = 2.0f / 14.0f;
-		const float Radius = (float)std::min(AlbumArtWidth, AlbumArtHeight) * RoundingRatio;
-		ApplyRoundedMask(AlbumArtPixels, AlbumArtWidth, AlbumArtHeight, Radius);
-
 		CImageInfo Image;
 		Image.m_Width = (size_t)AlbumArtWidth;
 		Image.m_Height = (size_t)AlbumArtHeight;
@@ -417,6 +426,10 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 			}
 		}
 	}
+
+	char aExtra[128];
+	str_format(aExtra, sizeof(aExtra), "width=%d height=%d bytes=%zu valid=%d", AlbumArtWidth, AlbumArtHeight, ExpectedSize, pWinrt->m_State.m_AlbumArt.IsValid() ? 1 : 0);
+	QmPerfLogStage("perf/system_media_controls", "album_art_apply", ApplyTimer.ElapsedMs(), true, pClient, nullptr, nullptr, aExtra);
 }
 #endif
 
@@ -776,7 +789,7 @@ void CSystemMediaControls::OnUpdate()
 		m_pWinrt->m_State.m_PlaybackRate = SharedState.m_PlaybackRate;
 	}
 
-	ApplySharedAlbumArt(m_pShared.get(), m_pWinrt.get(), Graphics());
+	ApplySharedAlbumArt(m_pShared.get(), m_pWinrt.get(), Graphics(), Client());
 #endif
 }
 
