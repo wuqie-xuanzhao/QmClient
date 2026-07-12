@@ -2136,6 +2136,199 @@ void CMenus::RenderQmFunctionKeywordReplyContent(CUIRect &Content, float UiScale
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
+void CMenus::RenderQmFunctionPieMenuContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float CardPadding, float CornerRadius, bool PrewarmOnly, bool LightFirstFrame)
+{
+	CPerfTimer LayoutTimer;
+	IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_pie_menu_text_inputs", 1.0f);
+	char aLayoutExtra[96];
+	str_format(aLayoutExtra, sizeof(aLayoutExtra), "tab=function module=pie_menu light=%d", LightFirstFrame ? 1 : 0);
+	LogQmPerfStage(Client(), "pie_menu_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aLayoutExtra);
+	CPerfTimer ControlsTimer;
+	CUIRect Row, LabelColumn, ControlColumn;
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	RenderQmFunctionCheckbox(&g_Config.m_QmPieMenuEnabled, "Enable pie menu", Localize("Enable pie menu"), &g_Config.m_QmPieMenuEnabled, &Row, PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	if(LightFirstFrame || !g_Config.m_QmPieMenuEnabled)
+	{
+		LogQmPerfStage(Client(), "pie_menu_controls", ControlsTimer.ElapsedMs(), LightFirstFrame, aLayoutExtra);
+		return;
+	}
+
+	auto RenderSlider = [this, &Content, &Row, &LabelColumn, &ControlColumn, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](const void *pId, const char *pTextId, const char *pText, int *pValue, int Min, int Max, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, Min, Max, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	static int s_PieMenuScaleInputId, s_PieMenuOpacityInputId, s_PieMenuMaxDistanceInputId;
+	RenderSlider(&s_PieMenuScaleInputId, "qmclient-pie-menu-ui-scale", "UI scale", &g_Config.m_QmPieMenuScale, 50, 200, "%");
+	RenderSlider(&s_PieMenuOpacityInputId, "qmclient-pie-menu-opacity", "Opacity", &g_Config.m_QmPieMenuOpacity, 0, 100, "%");
+	RenderSlider(&s_PieMenuMaxDistanceInputId, "qmclient-pie-menu-detection-distance", "Detection distance", &g_Config.m_QmPieMenuMaxDistance, 100, 2000);
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-pie-menu-rename-queue", &LabelColumn, Localize("Rename queue"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+	static CLineInput s_PieMenuRenameQueue(g_Config.m_QmPieMenuRenameQueue, sizeof(g_Config.m_QmPieMenuRenameQueue));
+	s_PieMenuRenameQueue.SetEmptyText(Localize("Example: name1|name2|name3"));
+	ui_widget::InputField(TextInputCtx, &s_PieMenuRenameQueue, ControlColumn, Localize("Example: name1|name2|name3"), BodySize);
+	Content.HSplitTop(LineSpacing * 2.0f, nullptr, &Content);
+
+	Content.HSplitTop(BodySize, &Row, &Content);
+	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-pie-menu-option-color", &Row, Localize("Option color"), BodySize, TEXTALIGN_ML, {}, (int)Row.w);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	struct SPieMenuColorEntry
+	{
+		const char *m_pName;
+		const char *m_pIcon;
+		unsigned int *m_pColorValue;
+		ColorRGBA m_DefaultColor;
+	};
+	const std::array<SPieMenuColorEntry, 6> aColorEntries = {{
+		{Localize("Friend"), "♥", (unsigned int *)&g_Config.m_QmPieMenuColorFriend, ColorRGBA(0.9f, 0.3f, 0.4f)},
+		{Localize("Whisper"), "✉", (unsigned int *)&g_Config.m_QmPieMenuColorWhisper, ColorRGBA(0.5f, 0.35f, 0.7f)},
+		{Localize("Mention"), "➤", (unsigned int *)&g_Config.m_QmPieMenuColorMention, ColorRGBA(0.85f, 0.5f, 0.2f)},
+		{Localize("Copy skin"), "⚡", (unsigned int *)&g_Config.m_QmPieMenuColorCopySkin, ColorRGBA(0.25f, 0.55f, 0.8f)},
+		{Localize("Switch"), "⇄", (unsigned int *)&g_Config.m_QmPieMenuColorSwap, ColorRGBA(0.8f, 0.3f, 0.3f)},
+		{Localize("Spectate"), "👁", (unsigned int *)&g_Config.m_QmPieMenuColorSpectate, ColorRGBA(0.45f, 0.55f, 0.6f)},
+	}};
+	auto OpenColorPopup = [&](unsigned int *pColorValue) {
+		const ColorHSLA HslaColor = ColorHSLA(*pColorValue, false);
+		m_ColorPickerPopupContext.m_pHslaColor = pColorValue;
+		m_ColorPickerPopupContext.m_HslaColor = HslaColor;
+		m_ColorPickerPopupContext.m_HsvaColor = color_cast<ColorHSVA>(HslaColor);
+		m_ColorPickerPopupContext.m_RgbaColor = color_cast<ColorRGBA>(m_ColorPickerPopupContext.m_HsvaColor);
+		m_ColorPickerPopupContext.m_Alpha = false;
+		Ui()->ShowPopupColorPicker(Ui()->MouseX(), Ui()->MouseY(), &m_ColorPickerPopupContext);
+	};
+	constexpr float PreviewStartAngle = -90.0f;
+	constexpr float PreviewSectorGap = 3.6f;
+	constexpr float PreviewInnerRatio = 108.0f / 288.0f;
+	constexpr float PreviewHighlightScale = 1.12f;
+	const float PreviewBaseSide = minimum(Content.w, std::clamp(Content.w * 0.88f, LineHeight * 10.0f, LineHeight * 13.5f));
+	const float PreviewSide = PreviewBaseSide * 0.8f;
+	CUIRect PreviewRow, PreviewRect, PreviewInfoRect;
+	Content.HSplitTop(PreviewSide, &PreviewRow, &Content);
+	PreviewRow.VSplitLeft(PreviewSide, &PreviewRect, &PreviewInfoRect);
+	PreviewInfoRect.VSplitLeft(maximum(CardPadding * 0.8f, LineSpacing * 2.0f), nullptr, &PreviewInfoRect);
+	PreviewRect.Margin(LineSpacing * 0.5f, &PreviewRect);
+	CUIRect PreviewFrame = PreviewRect;
+	PreviewFrame.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, CornerRadius * 0.8f);
+	PreviewRect.Margin(maximum(4.0f, LineSpacing * 0.6f), &PreviewRect);
+	const vec2 PreviewCenter = PreviewRect.Center();
+	const float BaseOuterRadius = maximum(1.0f, minimum(PreviewRect.w, PreviewRect.h) * 0.5f - LineSpacing * 0.8f);
+	const float InnerRadius = BaseOuterRadius * PreviewInnerRatio;
+	const float CenterRadius = maximum(1.0f, InnerRadius - maximum(4.0f, BaseOuterRadius * 0.03f));
+	const float AnglePerSector = 360.0f / (float)std::size(aColorEntries);
+	const float PreviewAlpha = std::clamp(g_Config.m_QmPieMenuOpacity / 100.0f, 0.2f, 1.0f);
+	int PopupSectorIndex = -1;
+	if(Ui()->IsPopupOpen(&m_ColorPickerPopupContext))
+	{
+		for(size_t i = 0; i < aColorEntries.size(); ++i)
+			if(m_ColorPickerPopupContext.m_pHslaColor == aColorEntries[i].m_pColorValue)
+				PopupSectorIndex = (int)i;
+	}
+	int HoveredSector = -1;
+	if(Ui()->MouseInside(&PreviewFrame))
+	{
+		const vec2 MouseDir = Ui()->MousePos() - PreviewCenter;
+		const float MouseDist = length(MouseDir);
+		if(MouseDist >= InnerRadius && MouseDist <= BaseOuterRadius * PreviewHighlightScale)
+		{
+			float MouseAngle = atan2(MouseDir.y, MouseDir.x) * 180.0f / pi;
+			while(MouseAngle < 0.0f)
+				MouseAngle += 360.0f;
+			const float AdjustedAngle = fmodf(MouseAngle - PreviewStartAngle + 360.0f, 360.0f);
+			const int SectorIndex = (int)(AdjustedAngle / AnglePerSector);
+			const float AngleInSector = AdjustedAngle - SectorIndex * AnglePerSector;
+			if(SectorIndex >= 0 && SectorIndex < (int)aColorEntries.size() && AngleInSector >= PreviewSectorGap * 0.5f && AngleInSector <= AnglePerSector - PreviewSectorGap * 0.5f)
+				HoveredSector = SectorIndex;
+		}
+	}
+	static CButtonContainer s_ColorPreviewButton;
+	if(!PrewarmOnly && Ui()->DoButtonLogic(&s_ColorPreviewButton, 0, &PreviewFrame, BUTTONFLAG_LEFT) && HoveredSector >= 0)
+		OpenColorPopup(aColorEntries[HoveredSector].m_pColorValue);
+	for(size_t i = 0; i < aColorEntries.size(); ++i)
+	{
+		const bool Highlighted = (int)i == HoveredSector || (int)i == PopupSectorIndex;
+		const float OuterRadius = BaseOuterRadius * (Highlighted ? PreviewHighlightScale : 1.0f);
+		const float StartAngle = PreviewStartAngle + AnglePerSector * i + PreviewSectorGap * 0.5f;
+		const float EndAngle = StartAngle + AnglePerSector - PreviewSectorGap;
+		ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(*aColorEntries[i].m_pColorValue));
+		if(Highlighted)
+		{
+			Color.r = minimum(Color.r * 1.3f, 1.0f);
+			Color.g = minimum(Color.g * 1.3f, 1.0f);
+			Color.b = minimum(Color.b * 1.3f, 1.0f);
+			Color.a = minimum(Color.a * 1.2f, 1.0f);
+		}
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * PreviewAlpha);
+		for(int Segment = 0; Segment < 24; ++Segment)
+		{
+			const float Rad1 = (StartAngle + (EndAngle - StartAngle) * (Segment / 24.0f)) * pi / 180.0f;
+			const float Rad2 = (StartAngle + (EndAngle - StartAngle) * ((Segment + 1) / 24.0f)) * pi / 180.0f;
+			const vec2 Inner1 = PreviewCenter + vec2(cos(Rad1), sin(Rad1)) * InnerRadius;
+			const vec2 Outer1 = PreviewCenter + vec2(cos(Rad1), sin(Rad1)) * OuterRadius;
+			const vec2 Inner2 = PreviewCenter + vec2(cos(Rad2), sin(Rad2)) * InnerRadius;
+			const vec2 Outer2 = PreviewCenter + vec2(cos(Rad2), sin(Rad2)) * OuterRadius;
+			const IGraphics::CFreeformItem Freeform(Inner1.x, Inner1.y, Outer1.x, Outer1.y, Inner2.x, Inner2.y, Outer2.x, Outer2.y);
+			Graphics()->QuadsDrawFreeform(&Freeform, 1);
+		}
+		Graphics()->QuadsEnd();
+		const float MidAngle = (StartAngle + EndAngle) * 0.5f * pi / 180.0f;
+		const vec2 ItemPos = PreviewCenter + vec2(cos(MidAngle), sin(MidAngle)) * ((InnerRadius + OuterRadius) * 0.5f);
+		const float IconSize = maximum(BodySize * 1.45f, BaseOuterRadius * (Highlighted ? 0.20f : 0.163f));
+		const float TextSize = maximum(BodySize * 0.95f, BaseOuterRadius * (Highlighted ? 0.10f : 0.08f));
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, PreviewAlpha);
+		const float IconWidth = TextRender()->TextWidth(IconSize, aColorEntries[i].m_pIcon);
+		const float IconYOffset = BaseOuterRadius * 0.0625f;
+		TextRender()->Text(ItemPos.x - IconWidth * 0.5f, ItemPos.y - IconSize * 0.5f - IconYOffset, IconSize, aColorEntries[i].m_pIcon);
+		const float NameWidth = TextRender()->TextWidth(TextSize, aColorEntries[i].m_pName);
+		TextRender()->Text(ItemPos.x - NameWidth * 0.5f, ItemPos.y + BaseOuterRadius * 0.0486f, TextSize, aColorEntries[i].m_pName);
+	}
+	Graphics()->TextureClear();
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0.15f, 0.15f, 0.2f, 0.9f * PreviewAlpha);
+	Graphics()->DrawCircle(PreviewCenter.x, PreviewCenter.y, CenterRadius, 48);
+	Graphics()->QuadsEnd();
+	const int FocusedSector = HoveredSector >= 0 ? HoveredSector : PopupSectorIndex;
+	const char *pCenterTitle = FocusedSector >= 0 ? aColorEntries[FocusedSector].m_pName : Localize("Click to set color");
+	const char *pCenterSubtitle = FocusedSector >= 0 ? Localize("Open color picker") : Localize("Set color");
+	const char *pHintText = FocusedSector >= 0 ? aColorEntries[FocusedSector].m_pName : Localize("Click to set color");
+	const float CenterTitleSize = maximum(BodySize * 1.05f, BaseOuterRadius * 0.095f);
+	const float CenterSubtitleSize = maximum(BodySize * 0.75f, BaseOuterRadius * 0.055f);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.98f);
+	const float CenterTitleWidth = TextRender()->TextWidth(CenterTitleSize, pCenterTitle);
+	TextRender()->Text(PreviewCenter.x - CenterTitleWidth * 0.5f, PreviewCenter.y - CenterTitleSize * 0.9f, CenterTitleSize, pCenterTitle);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.68f);
+	const float CenterSubtitleWidth = TextRender()->TextWidth(CenterSubtitleSize, pCenterSubtitle);
+	TextRender()->Text(PreviewCenter.x - CenterSubtitleWidth * 0.5f, PreviewCenter.y + CenterSubtitleSize * 0.1f, CenterSubtitleSize, pCenterSubtitle);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	CUIRect PreviewInfoContent = PreviewInfoRect;
+	const float InfoSpacing = LineSpacing * 0.75f;
+	const float InfoHeight = LineHeight * 2.0f + InfoSpacing;
+	if(PreviewInfoContent.h > InfoHeight)
+		PreviewInfoContent.HSplitTop((PreviewInfoContent.h - InfoHeight) * 0.5f, nullptr, &PreviewInfoContent);
+	CUIRect HintRow, ResetRow;
+	PreviewInfoContent.HSplitTop(LineHeight, &HintRow, &PreviewInfoContent);
+	PreviewInfoContent.HSplitTop(InfoSpacing, nullptr, &PreviewInfoContent);
+	PreviewInfoContent.HSplitTop(LineHeight, &ResetRow, &PreviewInfoContent);
+	Ui()->DoLabel(&HintRow, pHintText, BodySize * 0.9f, TEXTALIGN_MR);
+	static CButtonContainer s_ResetAllColorsButton;
+	CUIRect ResetButton;
+	ResetRow.VSplitRight(maximum(88.0f, 88.0f * UiScale), nullptr, &ResetButton);
+	if(!PrewarmOnly && DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, &s_ResetAllColorsButton, "qmclient-pie-menu-reset-colors", Localize("Reset"), 0, &ResetButton))
+		for(const auto &Entry : aColorEntries)
+			*Entry.m_pColorValue = color_cast<ColorHSLA>(Entry.m_DefaultColor).Pack(false);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+	LogQmPerfStage(Client(), "pie_menu_controls", ControlsTimer.ElapsedMs(), false, aLayoutExtra);
+}
+
 void CMenus::RenderQmFunctionFavoriteMapsContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly)
 {
 	const auto &FavMaps = GameClient()->TClientComponent().GetFavoriteMaps();
@@ -7509,288 +7702,21 @@ void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPa
 			case EQmModuleId::PieMenu:
 			{
 				const bool LightFirstFrame = FunctionFirstFrameLightPath && QmFunctionModuleUsesLightFirstFramePath(pModule->m_Id);
-				CPerfTimer LayoutTimer;
-				// ========== 模块: 饼菜单 ==========
 				Column.HSplitTop(LgCardSpacing, nullptr, &Column);
-				CUIRect Card36Start = Column;
-				s_GlassCards.push_back(Card36Start);
+				CUIRect CardPieMenuStart = Column;
+				s_GlassCards.push_back(CardPieMenuStart);
 
 				Column.HSplitTop(LgCardPadding, nullptr, &Column);
 				Column.VSplitLeft(LgCardPadding, nullptr, &CardContent);
 				CardContent.VSplitRight(LgCardPadding, &CardContent, nullptr);
 				RenderQmModuleHeadline(CardContent, 9, Localize("Pie Menu"), Localize("Drawing a big pie in the sky"));
-				IUiContext QmClientPieMenuTextInputCtx;
-				QmClientPieMenuTextInputCtx.m_pUi = Ui();
-				QmClientPieMenuTextInputCtx.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
-				QmClientPieMenuTextInputCtx.m_pTree = &GameClient()->UiRuntimeV2()->Tree();
-				QmClientPieMenuTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_pie_menu_text_inputs");
-				QmClientPieMenuTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-				char aPieMenuLayoutExtra[96];
-				str_format(aPieMenuLayoutExtra, sizeof(aPieMenuLayoutExtra), "tab=%s module=pie_menu light=%d", QmSettingsTabName(m_QmClientSettingsTab), LightFirstFrame ? 1 : 0);
-				LogQmPerfStage(Client(), "pie_menu_layout", LayoutTimer.ElapsedMs(), LightFirstFrame, aPieMenuLayoutExtra);
-				CPerfTimer ControlsTimer;
-				CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-				DoQmSettingsCheckboxAuto(&g_Config.m_QmPieMenuEnabled, "Enable pie menu", Localize("Enable pie menu"), &g_Config.m_QmPieMenuEnabled, &Row, LgLineHeight);
-				CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-				bool BlockPieMenuCardDrag = Ui()->IsPopupOpen(&m_ColorPickerPopupContext) || Ui()->IsPopupHovered();
-				if(LightFirstFrame)
-				{
-					CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
-					Column.y = CardContent.y;
-					s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
-					RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
-					HandleModuleDragState(pModule, s_GlassCards.back(), BlockPieMenuCardDrag);
-					LogQmPerfStage(Client(), "pie_menu_controls", ControlsTimer.ElapsedMs(), true, "tab=function module=pie_menu light=1");
-					break;
-				}
-				if(g_Config.m_QmPieMenuEnabled)
-				{
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-pie-menu-ui-scale", &LabelCol, Localize("UI scale"), LgBodySize);
-					static int s_QmPieMenuScaleInputId;
-					RenderSliderWithValueInput(&s_QmPieMenuScaleInputId, ControlCol, &g_Config.m_QmPieMenuScale, 50, 200, "%");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-pie-menu-opacity", &LabelCol, Localize("Opacity"), LgBodySize);
-					static int s_QmPieMenuOpacityInputId;
-					RenderSliderWithValueInput(&s_QmPieMenuOpacityInputId, ControlCol, &g_Config.m_QmPieMenuOpacity, 0, 100, "%");
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-pie-menu-detection-distance", &LabelCol, Localize("Detection distance"), LgBodySize);
-					static int s_QmPieMenuMaxDistanceInputId;
-					RenderSliderWithValueInput(&s_QmPieMenuMaxDistanceInputId, ControlCol, &g_Config.m_QmPieMenuMaxDistance, 100, 2000);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineHeight, &Row, &CardContent);
-					Row.VSplitLeft(LgLabelWidth, &LabelCol, &ControlCol);
-					DoQmSettingsLabel("qmclient-pie-menu-rename-queue", &LabelCol, Localize("Rename queue"), LgBodySize);
-					static CLineInput s_PieMenuRenameQueue(g_Config.m_QmPieMenuRenameQueue, sizeof(g_Config.m_QmPieMenuRenameQueue));
-					s_PieMenuRenameQueue.SetEmptyText(Localize("Example: name1|name2|name3"));
-					ui_widget::InputField(QmClientPieMenuTextInputCtx, &s_PieMenuRenameQueue, ControlCol, Localize("Example: name1|name2|name3"), LgBodySize);
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-					CardContent.HSplitTop(LgBodySize, &Row, &CardContent);
-					TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-					DoQmSettingsLabel("qmclient-pie-menu-option-color", &Row, Localize("Option color"), LgBodySize);
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-
-					struct SPieMenuColorEntry
-					{
-						const char *m_pName;
-						const char *m_pIcon;
-						unsigned int *m_pColorValue;
-						ColorRGBA m_DefaultColor;
-					};
-
-					const std::array<SPieMenuColorEntry, 6> aPieMenuColorEntries = {{
-						{Localize("Friend"), "♥", (unsigned int *)&g_Config.m_QmPieMenuColorFriend, ColorRGBA(0.9f, 0.3f, 0.4f)},
-						{Localize("Whisper"), "✉", (unsigned int *)&g_Config.m_QmPieMenuColorWhisper, ColorRGBA(0.5f, 0.35f, 0.7f)},
-						{Localize("Mention"), "➤", (unsigned int *)&g_Config.m_QmPieMenuColorMention, ColorRGBA(0.85f, 0.5f, 0.2f)},
-						{Localize("Copy skin"), "⚡", (unsigned int *)&g_Config.m_QmPieMenuColorCopySkin, ColorRGBA(0.25f, 0.55f, 0.8f)},
-						{Localize("Switch"), "⇄", (unsigned int *)&g_Config.m_QmPieMenuColorSwap, ColorRGBA(0.8f, 0.3f, 0.3f)},
-						{Localize("Spectate"), "👁", (unsigned int *)&g_Config.m_QmPieMenuColorSpectate, ColorRGBA(0.45f, 0.55f, 0.6f)},
-					}};
-
-					auto OpenPieMenuColorPopup = [&](unsigned int *pColorValue) {
-						ColorHSLA HslaColor = ColorHSLA(*pColorValue, false);
-						m_ColorPickerPopupContext.m_pHslaColor = pColorValue;
-						m_ColorPickerPopupContext.m_HslaColor = HslaColor;
-						m_ColorPickerPopupContext.m_HsvaColor = color_cast<ColorHSVA>(HslaColor);
-						m_ColorPickerPopupContext.m_RgbaColor = color_cast<ColorRGBA>(m_ColorPickerPopupContext.m_HsvaColor);
-						m_ColorPickerPopupContext.m_Alpha = false;
-						Ui()->ShowPopupColorPicker(Ui()->MouseX(), Ui()->MouseY(), &m_ColorPickerPopupContext);
-					};
-
-					constexpr float PieMenuPreviewStartAngle = -90.0f;
-					constexpr float PieMenuPreviewSectorGap = 3.6f;
-					constexpr float PieMenuPreviewInnerRatio = 108.0f / 288.0f;
-					constexpr float PieMenuPreviewHighlightScale = 1.12f;
-
-					const float PreviewBaseSide = minimum(CardContent.w, std::clamp(CardContent.w * 0.88f, LgLineHeight * 10.0f, LgLineHeight * 13.5f));
-					const float PreviewSide = PreviewBaseSide * 0.8f;
-					CUIRect PreviewRow;
-					CardContent.HSplitTop(PreviewSide, &PreviewRow, &CardContent);
-
-					CUIRect PreviewRect, PreviewInfoRect;
-					PreviewRow.VSplitLeft(PreviewSide, &PreviewRect, &PreviewInfoRect);
-					PreviewInfoRect.VSplitLeft(maximum(LgCardPadding * 0.8f, LgLineSpacing * 2.0f), nullptr, &PreviewInfoRect);
-					PreviewRect.Margin(LgLineSpacing * 0.5f, &PreviewRect);
-
-					CUIRect PreviewFrame = PreviewRect;
-					PreviewFrame.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.18f), IGraphics::CORNER_ALL, LgCornerRadius * 0.8f);
-					PreviewRect.Margin(maximum(4.0f, LgLineSpacing * 0.6f), &PreviewRect);
-
-					const vec2 PreviewCenter = PreviewRect.Center();
-					const float BaseOuterRadius = maximum(1.0f, minimum(PreviewRect.w, PreviewRect.h) * 0.5f - LgLineSpacing * 0.8f);
-					const float InnerRadius = BaseOuterRadius * PieMenuPreviewInnerRatio;
-					const float CenterRadius = maximum(1.0f, InnerRadius - maximum(4.0f, BaseOuterRadius * 0.03f));
-					const float AnglePerSector = 360.0f / (float)std::size(aPieMenuColorEntries);
-					const float PreviewAlpha = std::clamp(g_Config.m_QmPieMenuOpacity / 100.0f, 0.2f, 1.0f);
-
-					int PopupSectorIndex = -1;
-					if(Ui()->IsPopupOpen(&m_ColorPickerPopupContext))
-					{
-						for(size_t i = 0; i < aPieMenuColorEntries.size(); ++i)
-						{
-							if(m_ColorPickerPopupContext.m_pHslaColor == aPieMenuColorEntries[i].m_pColorValue)
-							{
-								PopupSectorIndex = (int)i;
-								break;
-							}
-						}
-					}
-
-					static bool s_PieMenuColorPreviewPressed = false;
-					if(!PrewarmOnly && Ui()->MouseButtonClicked(0) && Ui()->MouseHovered(&PreviewFrame))
-						s_PieMenuColorPreviewPressed = true;
-					if(!PrewarmOnly && !Ui()->MouseButton(0))
-						s_PieMenuColorPreviewPressed = false;
-					BlockPieMenuCardDrag = BlockPieMenuCardDrag || s_PieMenuColorPreviewPressed || Ui()->MouseHovered(&PreviewFrame);
-
-					int HoveredSector = -1;
-					if(Ui()->MouseInside(&PreviewFrame))
-					{
-						const vec2 MouseDir = Ui()->MousePos() - PreviewCenter;
-						const float MouseDist = length(MouseDir);
-						if(MouseDist >= InnerRadius && MouseDist <= BaseOuterRadius * PieMenuPreviewHighlightScale)
-						{
-							float MouseAngle = atan2(MouseDir.y, MouseDir.x) * 180.0f / pi;
-							while(MouseAngle < 0.0f)
-								MouseAngle += 360.0f;
-							while(MouseAngle >= 360.0f)
-								MouseAngle -= 360.0f;
-
-							float AdjustedAngle = MouseAngle - PieMenuPreviewStartAngle;
-							while(AdjustedAngle < 0.0f)
-								AdjustedAngle += 360.0f;
-							while(AdjustedAngle >= 360.0f)
-								AdjustedAngle -= 360.0f;
-
-							const int SectorIndex = (int)(AdjustedAngle / AnglePerSector);
-							const float AngleInSector = AdjustedAngle - SectorIndex * AnglePerSector;
-							if(SectorIndex >= 0 && SectorIndex < (int)aPieMenuColorEntries.size() && AngleInSector >= PieMenuPreviewSectorGap * 0.5f && AngleInSector <= AnglePerSector - PieMenuPreviewSectorGap * 0.5f)
-								HoveredSector = SectorIndex;
-						}
-					}
-
-					static CButtonContainer s_PieMenuColorPreviewButton;
-					if(Ui()->DoButtonLogic(&s_PieMenuColorPreviewButton, 0, &PreviewFrame, BUTTONFLAG_LEFT) && HoveredSector >= 0)
-						OpenPieMenuColorPopup(aPieMenuColorEntries[HoveredSector].m_pColorValue);
-
-					for(size_t i = 0; i < aPieMenuColorEntries.size(); ++i)
-					{
-						const bool Highlighted = (int)i == HoveredSector || (int)i == PopupSectorIndex;
-						const float HighlightScale = Highlighted ? PieMenuPreviewHighlightScale : 1.0f;
-						const float OuterRadius = BaseOuterRadius * HighlightScale;
-						const float StartAngle = PieMenuPreviewStartAngle + AnglePerSector * i + PieMenuPreviewSectorGap * 0.5f;
-						const float EndAngle = StartAngle + AnglePerSector - PieMenuPreviewSectorGap;
-
-						ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(*aPieMenuColorEntries[i].m_pColorValue));
-						if(Highlighted)
-						{
-							Color.r = minimum(Color.r * 1.3f, 1.0f);
-							Color.g = minimum(Color.g * 1.3f, 1.0f);
-							Color.b = minimum(Color.b * 1.3f, 1.0f);
-							Color.a = minimum(Color.a * 1.2f, 1.0f);
-						}
-
-						Graphics()->TextureClear();
-						Graphics()->QuadsBegin();
-						Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * PreviewAlpha);
-						for(int Segment = 0; Segment < 24; ++Segment)
-						{
-							const float Angle1 = StartAngle + (EndAngle - StartAngle) * (Segment / 24.0f);
-							const float Angle2 = StartAngle + (EndAngle - StartAngle) * ((Segment + 1) / 24.0f);
-							const float Rad1 = Angle1 * pi / 180.0f;
-							const float Rad2 = Angle2 * pi / 180.0f;
-
-							const vec2 Inner1 = PreviewCenter + vec2(cos(Rad1), sin(Rad1)) * InnerRadius;
-							const vec2 Outer1 = PreviewCenter + vec2(cos(Rad1), sin(Rad1)) * OuterRadius;
-							const vec2 Inner2 = PreviewCenter + vec2(cos(Rad2), sin(Rad2)) * InnerRadius;
-							const vec2 Outer2 = PreviewCenter + vec2(cos(Rad2), sin(Rad2)) * OuterRadius;
-
-							const IGraphics::CFreeformItem Freeform(
-								Inner1.x, Inner1.y,
-								Outer1.x, Outer1.y,
-								Inner2.x, Inner2.y,
-								Outer2.x, Outer2.y);
-							Graphics()->QuadsDrawFreeform(&Freeform, 1);
-						}
-						Graphics()->QuadsEnd();
-
-						const float MidRadius = (InnerRadius + OuterRadius) * 0.5f;
-						const float MidAngle = (StartAngle + EndAngle) * 0.5f * pi / 180.0f;
-						const vec2 ItemPos = PreviewCenter + vec2(cos(MidAngle), sin(MidAngle)) * MidRadius;
-						const float IconSize = maximum(LgBodySize * 1.45f, BaseOuterRadius * (Highlighted ? 0.20f : 0.163f));
-						const float IconYOffset = BaseOuterRadius * 0.0625f;
-						const float TextSize = maximum(LgBodySize * 0.95f, BaseOuterRadius * (Highlighted ? 0.10f : 0.08f));
-						const float TextYOffset = BaseOuterRadius * 0.0486f;
-
-						TextRender()->TextColor(1.0f, 1.0f, 1.0f, PreviewAlpha);
-						const float IconWidth = TextRender()->TextWidth(IconSize, aPieMenuColorEntries[i].m_pIcon);
-						TextRender()->Text(ItemPos.x - IconWidth * 0.5f, ItemPos.y - IconSize * 0.5f - IconYOffset, IconSize, aPieMenuColorEntries[i].m_pIcon);
-
-						const float NameWidth = TextRender()->TextWidth(TextSize, aPieMenuColorEntries[i].m_pName);
-						TextRender()->Text(ItemPos.x - NameWidth * 0.5f, ItemPos.y + TextYOffset, TextSize, aPieMenuColorEntries[i].m_pName);
-					}
-
-					Graphics()->TextureClear();
-					Graphics()->QuadsBegin();
-					Graphics()->SetColor(0.15f, 0.15f, 0.2f, 0.9f * PreviewAlpha);
-					Graphics()->DrawCircle(PreviewCenter.x, PreviewCenter.y, CenterRadius, 48);
-					Graphics()->QuadsEnd();
-
-					const int FocusedSector = HoveredSector >= 0 ? HoveredSector : PopupSectorIndex;
-					const char *pCenterTitle = FocusedSector >= 0 ? aPieMenuColorEntries[FocusedSector].m_pName : Localize("Click to set color");
-					const char *pCenterSubtitle = FocusedSector >= 0 ? Localize("Open color picker") : Localize("Set color");
-					const char *pHintText = FocusedSector >= 0 ? aPieMenuColorEntries[FocusedSector].m_pName : Localize("Click to set color");
-					const float CenterTitleSize = maximum(LgBodySize * 1.05f, BaseOuterRadius * 0.095f);
-					const float CenterSubtitleSize = maximum(LgTipSize, BaseOuterRadius * 0.055f);
-
-					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.98f);
-					const float CenterTitleWidth = TextRender()->TextWidth(CenterTitleSize, pCenterTitle);
-					TextRender()->Text(PreviewCenter.x - CenterTitleWidth * 0.5f, PreviewCenter.y - CenterTitleSize * 0.9f, CenterTitleSize, pCenterTitle);
-					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.68f);
-					const float CenterSubtitleWidth = TextRender()->TextWidth(CenterSubtitleSize, pCenterSubtitle);
-					TextRender()->Text(PreviewCenter.x - CenterSubtitleWidth * 0.5f, PreviewCenter.y + CenterSubtitleSize * 0.1f, CenterSubtitleSize, pCenterSubtitle);
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
-
-					CUIRect PreviewInfoContent = PreviewInfoRect;
-					const float InfoSpacing = LgLineSpacing * 0.75f;
-					const float InfoHeight = LgLineHeight * 2.0f + InfoSpacing;
-					if(PreviewInfoContent.h > InfoHeight)
-						PreviewInfoContent.HSplitTop((PreviewInfoContent.h - InfoHeight) * 0.5f, nullptr, &PreviewInfoContent);
-
-					CUIRect PieMenuColorHintRow, PieMenuColorResetRow;
-					PreviewInfoContent.HSplitTop(LgLineHeight, &PieMenuColorHintRow, &PreviewInfoContent);
-					PreviewInfoContent.HSplitTop(InfoSpacing, nullptr, &PreviewInfoContent);
-					PreviewInfoContent.HSplitTop(LgLineHeight, &PieMenuColorResetRow, &PreviewInfoContent);
-
-					Ui()->DoLabel(&PieMenuColorHintRow, pHintText, LgBodySize * 0.9f, TEXTALIGN_MR);
-
-					static CButtonContainer s_PieMenuColorResetAllButton;
-					CUIRect PieMenuColorResetButton;
-					PieMenuColorResetRow.VSplitRight(maximum(88.0f, 88.0f * UiScale), nullptr, &PieMenuColorResetButton);
-					if(DoQmSettingsMenuButton(&s_PieMenuColorResetAllButton, "qmclient-pie-menu-reset-colors", Localize("Reset"), &PieMenuColorResetButton))
-					{
-						for(const auto &Entry : aPieMenuColorEntries)
-							*Entry.m_pColorValue = color_cast<ColorHSLA>(Entry.m_DefaultColor).Pack(false);
-					}
-					CardContent.HSplitTop(LgLineSpacing, nullptr, &CardContent);
-				}
+				RenderQmFunctionPieMenuContent(CardContent, UiScale, LgLineHeight, LgBodySize, LgLineSpacing, LgLabelWidth, LgCardPadding, LgCornerRadius, PrewarmOnly, LightFirstFrame);
 
 				CardContent.HSplitTop(LgCardPadding, nullptr, &CardContent);
 				Column.y = CardContent.y;
 				s_GlassCards.back().h = Column.y - s_GlassCards.back().y;
 				RegisterModuleCard(pModule, ColumnId, s_GlassCards.back());
-				HandleModuleDragState(pModule, s_GlassCards.back(), BlockPieMenuCardDrag);
-				LogQmPerfStage(Client(), "pie_menu_controls", ControlsTimer.ElapsedMs(), false, "tab=function module=pie_menu light=0");
+				HandleModuleDragState(pModule, s_GlassCards.back());
 			}
 			break;
 			case EQmModuleId::CameraView:

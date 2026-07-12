@@ -7908,6 +7908,29 @@ TEST(QmMonitoringHelpers, P6FunctionFavoriteMapsKeepsItsIndependentContentOwner)
 	EXPECT_EQ(FavoriteMapsCase.find("GetCachedMapCategoryKey"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, P6FunctionPieMenuKeepsPopupPreviewInItsContentOwner)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
+	const std::string OwnerBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderQmFunctionPieMenuContent(");
+	const std::string FunctionPageBody = ExtractSourceFunctionBody(QmClient, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
+	const size_t PieMenuStart = FunctionPageBody.rfind("case EQmModuleId::PieMenu:");
+	const size_t PieMenuEnd = FunctionPageBody.find("case EQmModuleId::CameraView:", PieMenuStart);
+	const std::string PieMenuCase = PieMenuStart != std::string::npos && PieMenuEnd != std::string::npos ? FunctionPageBody.substr(PieMenuStart, PieMenuEnd - PieMenuStart) : std::string();
+	ASSERT_FALSE(OwnerBody.empty());
+	ASSERT_FALSE(PieMenuCase.empty());
+
+	EXPECT_NE(Header.find("RenderQmFunctionPieMenuContent"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("LightFirstFrame"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("ShowPopupColorPicker"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("DoButtonLogic"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("DrawCircle"), std::string::npos);
+	EXPECT_NE(OwnerBody.find("qmclient-pie-menu-reset-colors"), std::string::npos);
+	EXPECT_NE(PieMenuCase.find("RenderQmFunctionPieMenuContent"), std::string::npos);
+	EXPECT_EQ(PieMenuCase.find("ShowPopupColorPicker"), std::string::npos);
+	EXPECT_EQ(PieMenuCase.find("BlockPieMenuCardDrag"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, PublicSettingsCardDeckCoordinatesCanonicalDefinitions)
 {
 	const std::string Header = ReadRepoFile("src/game/client/QmUi/SettingsCardDeck.h");
